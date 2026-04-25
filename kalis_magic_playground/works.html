@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>작품 소개 - 칼리형의 마술 놀이터</title>
+    <!-- CSS Link -->
+    <link rel="stylesheet" href="style.css">
+    <!-- Fonts -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+    <style>
+        /* 네비게이션 버튼화 및 정렬 */
+        .nav-links {
+            gap: 8px !important;
+            display: flex;
+            align-items: center;
+        }
+
+        .nav-link {
+            padding: 6px 16px !important;
+            border-radius: 50px !important;
+            background: rgba(255, 255, 255, 0.05);
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.95rem;
+            color: var(--text-muted);
+        }
+
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.1) !important;
+            transform: translateY(-1px);
+        }
+
+        .nav-link.active:not(.nav-cta) {
+            background: rgba(255, 255, 255, 0.15) !important;
+            color: var(--text-main) !important;
+        }
+
+        .nav-link.nav-cta {
+            background: var(--point-gold) !important;
+            color: #121212 !important;
+            font-weight: 700 !important;
+            margin-left: 4px !important;
+        }
+        
+        .nav-link.nav-cta:hover {
+            background: var(--point-gold-hover) !important;
+            transform: translateY(-2px) !important;
+        }
+
+        @media (max-width: 768px) {
+            .nav-link {
+                padding: 4px 12px !important;
+                font-size: 0.85rem !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Nav -->
+    <header class="main-nav">
+        <a href="index.html" class="nav-logo">KALI</a>
+        <nav class="nav-links">
+            <a href="index.html" class="nav-link">홈</a>
+            <a href="works.html" class="nav-link active">작품</a>
+            <a href="lesson.html" class="nav-link nav-cta">레슨</a>
+        </nav>
+    </header>
+
+    <!-- Hero -->
+    <section class="section text-center" style="padding-top: 140px; padding-bottom: 40px;">
+        <div class="container">
+            <h1 class="hero-headline" style="font-size: 2.8rem; margin-bottom: 16px;">형이 만든 것들</h1>
+            <p class="text-muted fs-1-1">강의, 굿즈, 그리고 마술</p>
+        </div>
+    </section>
+
+    <!-- Curation Section -->
+    <section class="section" style="padding-top: 0;">
+        <div class="container">
+            
+            <div class="rec-box fade-in">
+                <p class="rec-badge">✦ 형의 추천</p>
+                <h2 class="rec-title">어디서 시작할지 모르겠어?</h2>
+                <p class="rec-desc">형이 골라줄게. 이것만 봐도 돼</p>
+
+                <div class="rec-grid">
+                    <a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1992" target="_blank" class="rec-card-link">
+                        <img src="imigi/클래식 콜렉션 1.jpg" alt="클래식 콜렉션" class="thumb-img">
+                        <div style="padding: 24px;">
+                            <p class="text-muted fs-0-8 mb-8">처음이라면</p>
+                            <h3 class="text-main mb-8">클래식 콜렉션</h3>
+                            <p class="text-muted fs-0-9 lh-1-8">마술 입문? 여기서 시작해. 기초 중의 기초, 근데 제일 써먹기 좋은 것들만 골랐어. 이거 하나로 오늘 당장 친구한테 보여줄 수 있어</p>
+                        </div>
+                    </a>
+
+                    <a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1000000123" target="_blank" class="rec-card-link">
+                        <img src="imigi/트레이스 2.jpg" alt="트레이스2" class="thumb-img">
+                        <div style="padding: 24px;">
+                            <p class="text-muted fs-0-8 mb-8">실전 마술을 늘리고 싶다면</p>
+                            <h3 class="text-main mb-8">트레이스2</h3>
+                            <p class="text-muted fs-0-9 lh-1-8">어느 정도 해봤는데 레퍼토리가 부족해? 실전에서 바로 꺼낼 수 있는 루틴들 담았어. 꺼낼 때마다 반응 나오는 루틴. 레퍼토리가 생기는 느낌 알잖아</p>
+                        </div>
+                    </a>
+
+                    <a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1000000238" target="_blank" class="rec-card-link">
+                        <img src="imigi/칼리 덱.jpg" alt="칼리 덱" class="thumb-img">
+                        <div style="padding: 24px;">
+                            <p class="text-muted fs-0-8 mb-8">형 굿즈가 궁금하다면</p>
+                            <h3 class="text-main mb-8">칼리 덱 · 틴 케이스</h3>
+                            <p class="text-muted fs-0-9 lh-1-8">형 이름 달린 카드랑 케이스야. 그냥 갖고 싶어서 만들었는데 반응이 좋더라고. 형이랑 같은 카드 들고 다니는 거야</p>
+                        </div>
+                    </a>
+                </div>
+
+                <!-- YouTube Playlist Section -->
+                <a href="https://www.youtube.com/watch?v=XVTkfBRyzg4&list=PLUv4hDx_1Qhs9PsFEqF_5-HOi2OwFzjsr" target="_blank" class="youtube-banner">
+                    <div class="youtube-text">
+                        <h4>YOUTUBE PLAYLIST</h4>
+                        <p>도구 고르기 힘들지? 형이 직접 써보고 골라준 유튜브 재생목록 봐봐</p>
+                    </div>
+                    <svg class="youtube-icon" viewBox="0 0 24 24">
+                        <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/>
+                    </svg>
+                </a>
+            </div>
+
+            <h2 class="section-title" style="text-align: left;">전체 작품 목록</h2>
+
+            <p class="category-title">📼 강의</p>
+            <div class="store-grid">
+                <a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1992" target="_blank" class="store-card">
+                    <div class="store-thumb"><img src="imigi/클래식 콜렉션 1.jpg" alt="클래식 콜렉션 vol.1"></div>
+                    <div class="store-info">
+                        <h4>클래식 콜렉션 vol.1</h4>
+                        <p>마술을 처음 시작한다면 반드시 알아야 할 카드 마술들</p>
+                    </div>
+                </a>
+                <a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1000000216" target="_blank" class="store-card">
+                    <div class="store-thumb"><img src="imigi/클래식 콜렉션 2.jpg" alt="클래식 콜렉션 vol.2"></div>
+                    <div class="store-info">
+                        <h4>클래식 콜렉션 vol.2</h4>
+                        <p>1편을 보고 만족했다면 꼭 보셨으면 하는 2편</p>
+                    </div>
+                </a>
+                <a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1570" target="_blank" class="store-card">
+                    <div class="store-thumb"><img src="imigi/나오 카드 트릭.jpg" alt="나오 카드 트릭"></div>
+                    <div class="store-info">
+                        <h4>나오 카드 트릭</h4>
+                        <p>절판되었던 한국 최초의 마술 전문 렉쳐노트, Nao Card Tricks가 스트리밍으로 부활했습니다. 모두가 극찬한 그 영상을 직접 확인해보세요</p>
+                    </div>
+                </a>
+                <a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1782" target="_blank" class="store-card">
+                    <div class="store-thumb"><img src="imigi/에피파니 리마스터.jpg" alt="에피파니 vol.1"></div>
+                    <div class="store-info">
+                        <h4>에피파니 vol.1</h4>
+                        <p>17가지의 카드 마술을 배울 수 있는 에피파니 vol.1</p>
+                    </div>
+                </a>
+                <a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1000000100" target="_blank" class="store-card">
+                    <div class="store-thumb"><img src="imigi/타겟.jpg" alt="타겟"></div>
+                    <div class="store-info">
+                        <h4>타겟</h4>
+                        <p>마술에 화려함을 더해주는 카드 샷과 활용법</p>
+                    </div>
+                </a>
+                <a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1297" target="_blank" class="store-card">
+                    <div class="store-thumb"><img src="imigi/트레이스.jpg" alt="트레이스"></div>
+                    <div class="store-info">
+                        <h4>트레이스</h4>
+                        <p>오랜 시간 다듬어 온 칼리 마술사의 자취. 10여 년의 노하우가 응축된 10가지 실전 마술을 담았습니다</p>
+                    </div>
+                </a>
+                <a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1000000123" target="_blank" class="store-card">
+                    <div class="store-thumb"><img src="imigi/트레이스 2.jpg" alt="트레이스2"></div>
+                    <div class="store-info">
+                        <h4>트레이스2</h4>
+                        <p>칼리 마술사의 색깔이 담긴 다채로운 카드 마술 10가지! 트레이스 1의 명성을 잇는 강력한 후속작입니다</p>
+                    </div>
+                </a>
+                <a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1000000327" target="_blank" class="store-card">
+                    <div class="store-thumb"><img src="imigi/두 에스 아이 두.jpg" alt="두 에스 아이 두"></div>
+                    <div class="store-info">
+                        <h4>두 에스 아이 두</h4>
+                        <p>'두 에스 아이 두' 플롯의 원안과 13가지 바리에이션을 담은 강의. 영상이 포함된 PDF가 함께 제공됩니다</p>
+                    </div>
+                </a>
+                <a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1000000466" target="_blank" class="store-card">
+                    <div class="store-thumb"><img src="imigi/슬라이디니 실크.jpg" alt="슬라이디니 실크"></div>
+                    <div class="store-info">
+                        <h4>슬라이디니 실크</h4>
+                        <p>마법같이 풀리고 묶이는 손수건 마술</p>
+                    </div>
+                </a>
+                <a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1000000382" target="_blank" class="store-card">
+                    <div class="store-thumb"><img src="imigi/카멜레온.jpg" alt="카멜레온"></div>
+                    <div class="store-info">
+                        <h4>카멜레온</h4>
+                        <p>카드의 색이 바뀌는 현상을 재미있는 플롯과 함께 보여줄 수 있는 칼리 마술사의 카멜레온입니다</p>
+                    </div>
+                </a>
+            </div>
+
+            <p class="category-title">🃏 굿즈</p>
+            <div class="store-grid">
+                <a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1000000238" target="_blank" class="store-card">
+                    <div class="store-thumb"><img src="imigi/칼리 덱.jpg" alt="칼리 덱"></div>
+                    <div class="store-info">
+                        <h4>칼리 덱</h4>
+                        <p>마술하기 좋은 재질의 일반 카드</p>
+                    </div>
+                </a>
+                <a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1000000241" target="_blank" class="store-card">
+                    <div class="store-thumb"><img src="imigi/칼리 틴 케이스.jpg" alt="칼리 틴 케이스"></div>
+                    <div class="store-info">
+                        <h4>틴 케이스</h4>
+                        <p>카드를 보관하기 좋은 틴 케이스</p>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Bottom Lesson CTA -->
+            <div class="secondary-cta-box fade-in">
+                <p class="fs-1-1 fw-600 mb-8">강의만으론 뭔가 부족하다는 거 알잖아</p>
+                <p class="mb-16">강의보다 직접 배우고 싶어?</p>
+                <a href="lesson.html" class="cta-button">칼리형한테 레슨 신청하기</a>
+            </div>
+
+        </div>
+    </section>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>레슨 - 칼리형의 마술 놀이터</title>
+    <!-- CSS Link -->
+    <link rel="stylesheet" href="style.css">
+    <!-- Fonts -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+    <style>
+        /* 네비게이션 버튼화 및 정렬 */
+        .nav-links {
+            gap: 8px !important;
+            display: flex;
+            align-items: center;
+        }
+
+        .nav-link {
+            padding: 6px 16px !important;
+            border-radius: 50px !important;
+            background: rgba(255, 255, 255, 0.05);
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.95rem;
+            color: var(--text-muted);
+        }
+
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.1) !important;
+            transform: translateY(-1px);
+        }
+
+        .nav-link.active:not(.nav-cta) {
+            background: rgba(255, 255, 255, 0.15) !important;
+            color: var(--text-main) !important;
+        }
+
+        .nav-link.nav-cta {
+            background: var(--point-gold) !important;
+            color: #121212 !important;
+            font-weight: 700 !important;
+            margin-left: 4px !important;
+        }
+        
+        .nav-link.nav-cta:hover {
+            background: var(--point-gold-hover) !important;
+            transform: translateY(-2px) !important;
+        }
+
+        @media (max-width: 768px) {
+            .nav-link {
+                padding: 4px 12px !important;
+                font-size: 0.85rem !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Nav -->
+    <header class="main-nav">
+        <a href="index.html" class="nav-logo">KALI</a>
+        <nav class="nav-links">
+            <a href="index.html" class="nav-link">홈</a>
+            <a href="works.html" class="nav-link">작품</a>
+            <a href="lesson.html" class="nav-link nav-cta active">레슨</a>
+        </nav>
+    </header>
+
+    <!-- Hero -->
+    <section class="lesson-hero">
+        <div class="container">
+            <h1 class="lesson-hero-title fade-in">왜 배우는지, 어떻게 배우는지<br>알려드릴게요</h1>
+            <p class="lesson-hero-sub fade-in mt-16">형한테 직접 배우는 게 어떤 건지</p>
+        </div>
+    </section>
+
+    <!-- Section 2: Quotes -->
+    <section class="section fade-in">
+        <div class="container">
+            <h2 class="section-title">이런 사람들이 찾아왔어</h2>
+            <div class="quote-grid">
+                <div class="quote-card">
+                    <p class="quote-text">"칼리형 특유의 뻔뻔한 재치와 기술을 배우고 싶어요"</p>
+                </div>
+                <div class="quote-card">
+                    <p class="quote-text">"클로즈업 마술 실력과 명성이 뛰어나서 마술에 대한 이해도가 높을 것 같아요"</p>
+                </div>
+                <div class="quote-card">
+                    <p class="quote-text">"혼자 공부했더니 뭔가 부실한 느낌이 들어서요"</p>
+                </div>
+                <div class="quote-card">
+                    <p class="quote-text">"무엇보다 형이라는 사람 자체가 좋은 것 같아요"</p>
+                </div>
+                <div class="quote-card">
+                    <p class="quote-text">"김준표 왈, 마술 제일 잘 가르친다고 해서요"</p>
+                </div>
+            </div>
+            <p class="text-muted lh-1-8 mt-40" style="max-width: 700px; margin-left: auto; margin-right: auto;">
+                저를 좋아해주고 기본을 제대로 쌓고 싶은 분이 많다는 게 느껴졌어요<br>
+                같이 좋은 마술로 좋은 습관을 쌓아서, 좋은 사람 그리고 좋은 마술사가 되었으면 좋겠어요<br>
+                이 글 읽고 오는 분들도 잘 왔어요
+            </p>
+        </div>
+    </section>
+
+    <!-- Section 3: Reviews -->
+    <section class="section bg-dark-alt fade-in">
+        <div class="container">
+            <h2 class="section-title">말로만 좋다고 하면 믿기 어렵잖아요</h2>
+            <p class="text-muted text-center mb-48" style="margin-top: -24px;">실제로 배우고 있는 수강생들한테 직접 물어봤습니다</p>
+            
+            <div style="max-width: 800px; margin: 0 auto;">
+                <div class="student-qa-card">
+                    <p class="student-q">레슨 받으면서 가장 좋았던 점이 뭐예요?</p>
+                    <p class="student-a">"이제야 진짜 마술을 하는 느낌입니다. 그냥 따라하는 게 아니라 왜 이렇게 하는지를 알게 됐어요."</p>
+                </div>
+                <div class="student-qa-card">
+                    <p class="student-q">형한테 배우는 게 어때요?</p>
+                    <p class="student-a">"정답지가 앞에 있는 느낌이에요. 어디서 막히면 바로 해결이 돼요."</p>
+                </div>
+                <div class="student-qa-card">
+                    <p class="student-q">한 달 지나고 어떻게 달라졌어요?</p>
+                    <p class="student-a">"마술을 이해하는 관점이 성숙해졌습니다. 손기술만 늘은 게 아니라 마술 자체를 보는 눈이 생겼어요."</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 4: FAQ -->
+    <section class="section fade-in">
+        <div class="container">
+            <h2 class="section-title">어떻게 배우는 건데?</h2>
+            <div class="faq-container">
+                <div class="faq-item">
+                    <p class="faq-q">교재는 뭐 써?</p>
+                    <div class="faq-a">
+                        <p>교재로 쓰는 <strong>카드 컬리지</strong> 안에 기술과 루틴이 둘 다 있어서 두 가지 모두 배울 수 있어요</p>
+                        <p>거기에 마술 하면서 제가 중요하다고 생각하는 <strong>프레젠테이션 포인트</strong>도 따로 알려드리고 있습니다. 기술만 배우고 끝나는 수업은 아니에요</p>
+                        <p>물론 카드 마술 외에도 방대한 레퍼런스를 바탕으로 <strong>링, 로프, 코인</strong> 등 다양한 도구를 활용한 마술도 함께 강의하고 있습니다</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <p class="faq-q">초보도 돼?</p>
+                    <div class="faq-a">
+                        <p>오히려 입문자분들이 훨씬 많이 신청하세요. 걱정하지 말고 도전해도 됩니다</p>
+                        <p>중상급자분들도 종종 오시는데, "혼자 익히다 보니 기초가 부실한 것 같다"는 이유로 오시는 경우예요. 사상누각 같다는 느낌, 생각보다 많은 분들이 갖고 계시더라고요</p>
+                        <p>그 부분 잡으러 오시는 분들도 다 만족하고 가셨어요</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <p class="faq-q">얼마나 해야 늘어?</p>
+                    <div class="faq-a">
+                        <p>저는 좋은 습관이 좋은 마술사를 만든다고 생각해요. 그래서 몇 시간 몰아서 하는 것보다 <strong>하루 10~20분, 매일 하는 걸</strong> 권장합니다</p>
+                        <p>한 달이 지날 때마다 실력이 달라진 게 보이거든요. 그게 제일 기분 좋은 순간이에요. 쉽지는 않아요. 근데 그 과정을 같이 걸어가는 게 제 역할이라고 생각하거든요</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <p class="faq-q">시간이랑 장소는?</p>
+                    <div class="faq-a">
+                        <p>레슨 시간은 <strong>1시간 30분</strong>입니다. 장소는 주로 렉쳐노트 또는 근처 카페에서 진행해요</p>
+                        
+                        <div class="persuasion-block mt-24 mb-24">
+                            <p class="persuasion-text">
+                                기술만 가르치는 레슨은 많아<br>
+                                형이랑 하면 습관이 바뀌고, 한 달 뒤에 마술을 대하는 눈이 달라져<br>
+                                수강생들이 직접 한 말이야. 위에서 확인했잖아
+                            </p>
+                        </div>
+
+                        <div class="price-grid">
+                            <div class="price-card">
+                                <h4>평일</h4>
+                                <p class="price-desc">1주 1회 · 총 4회 · 90분</p>
+                                <p class="price-amount">60만원</p>
+                            </div>
+                            <div class="price-card">
+                                <h4>주말</h4>
+                                <p class="price-desc">1주 1회 · 총 4회 · 90분</p>
+                                <p class="price-amount">70만원</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 5: Apply CTA -->
+    <section class="section fade-in">
+        <div class="container">
+            <div class="apply-box">
+                <h3>신청할게요</h3>
+                <p>다 읽었으면 이미 반은 결심한 거야<br>아래 질문 3개 답하고 DM 보내줘. 형이 확인하고 연락할게</p>
+                
+                <div class="apply-form-guide">
+                    <p class="text-muted mb-24">자유롭게 써줘. 형이 읽고 직접 연락할게. 2~3문장도 충분해</p>
+                    
+                    <div class="apply-form-item">
+                        <strong>Q1. 칼리형한테 배우고 싶은 이유가 뭐예요?</strong>
+                        <p class="sub-text">자유롭게 써줘. 짧아도 돼.</p>
+                    </div>
+                    
+                    <div class="apply-form-item">
+                        <strong>Q2. 마술을 배우고 나서 어떤 자리에서 가장 먼저 써먹고 싶어요?</strong>
+                        <p class="sub-text">예: 친구 생일 파티, 소개팅, 회사 모임 등</p>
+                    </div>
+                    
+                    <div class="apply-form-item">
+                        <strong>Q3. 지금 마술 실력이 어느 정도예요?</strong>
+                        <ul>
+                            <li>□ 완전 처음이에요</li>
+                            <li>□ 조금 해봤는데 기초가 부실해요</li>
+                            <li>□ 중급인데 더 발전하고 싶어요</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <a href="https://instagram.com/kalicerona" target="_blank" class="cta-button">인스타그램 @kalicerona 으로 DM 보내기</a>
+                <p class="text-muted fs-0-9 mt-20">DM이 숨김 처리될 수 있어요. 답장이 없으면 인스타 팔로우 후 다시 보내줘요</p>
+            </div>
+        </div>
+    </section>
+
+    <script src="script.js"></script>
+</body>
+</html>
