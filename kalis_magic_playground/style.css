@@ -695,6 +695,10 @@ ul {
         grid-template-columns: repeat(2, 1fr);
     }
     
+    .recommendation-section .store-card {
+        border-color: var(--point-gold);
+    }
+    
     .about-content {
         flex-direction: column;
         padding: 40px 20px;
