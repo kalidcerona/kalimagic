@@ -797,7 +797,8 @@ ul {
         grid-template-columns: 1fr;
     }
     .hero-headline, .lesson-hero-title {
-        font-size: 1.8rem;
+        font-size: 1.6rem;
+        word-break: keep-all;
     }
     .hero-sub, .lesson-hero-sub {
         font-size: 1rem;
@@ -830,10 +831,11 @@ ul {
 }
 
 .lesson-hero-title {
-    font-size: 2rem;
+    font-size: 1.8rem;
     font-weight: 800;
     line-height: 1.5;
     margin-bottom: 20px;
+    word-break: keep-all;
 }
 
 .lesson-hero-sub {
@@ -1053,19 +1055,18 @@ ul {
 }
 
 @media (max-width: 768px) {
+    .faq-item {
+        padding: 24px 16px;
+    }
     .price-grid {
         flex-direction: column;
         gap: 12px;
     }
     .price-card {
-        border: none;
-        background: rgba(255, 255, 255, 0.02);
-        padding: 20px;
+        padding: 16px;
     }
     .apply-box {
         padding: 40px 20px;
-        border: none;
-        background: transparent;
     }
     .cta-button {
         padding: 16px 20px;
