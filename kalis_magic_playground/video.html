@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>영상 - 칼리형의 마술 놀이터</title>
+    <!-- CSS Link -->
+    <link rel="stylesheet" href="style.css">
+    <!-- Fonts -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+    <style>
+        /* 네비게이션 버튼화 및 정렬 */
+        .nav-links {
+            gap: 8px !important;
+            display: flex;
+            align-items: center;
+        }
+
+        .nav-link {
+            padding: 6px 16px !important;
+            border-radius: 50px !important;
+            background: rgba(255, 255, 255, 0.05);
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.95rem;
+            color: var(--text-muted);
+        }
+
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.1) !important;
+            transform: translateY(-1px);
+        }
+
+        .nav-link.active:not(.nav-cta) {
+            background: rgba(255, 255, 255, 0.15) !important;
+            color: var(--text-main) !important;
+        }
+
+        .nav-link.nav-cta {
+            background: var(--point-gold) !important;
+            color: #121212 !important;
+            font-weight: 700 !important;
+            margin-left: 4px !important;
+        }
+        
+        .nav-link.nav-cta:hover {
+            background: var(--point-gold-hover) !important;
+            transform: translateY(-2px) !important;
+        }
+
+        @media (max-width: 768px) {
+            .nav-link {
+                padding: 4px 12px !important;
+                font-size: 0.85rem !important;
+            }
+        }
+        
+        /* Video cards custom layout */
+        .video-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 32px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .video-card {
+            display: flex;
+            flex-direction: row;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            overflow: hidden;
+            text-decoration: none;
+            transition: var(--transition);
+            align-items: center;
+        }
+        .video-card:hover {
+            transform: translateY(-4px);
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+        .video-thumb {
+            width: 280px;
+            min-width: 280px;
+            aspect-ratio: 16 / 9;
+            object-fit: cover;
+            display: block;
+        }
+        .video-info {
+            padding: 24px;
+        }
+        .video-desc {
+            color: var(--text-main);
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin: 0;
+            word-break: keep-all;
+        }
+        @media (max-width: 768px) {
+            .video-card {
+                flex-direction: column;
+            }
+            .video-thumb {
+                width: 100%;
+                min-width: unset;
+            }
+            .video-info {
+                padding: 16px;
+            }
+            .video-desc {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Nav -->
+    <header class="main-nav">
+        <a href="index.html" class="nav-logo">KALI</a>
+        <nav class="nav-links">
+            <a href="index.html" class="nav-link">홈</a>
+            <a href="works.html" class="nav-link">작품</a>
+            <a href="video.html" class="nav-link active">영상</a>
+            <a href="lesson.html" class="nav-link nav-cta">레슨</a>
+        </nav>
+    </header>
+
+    <!-- Hero -->
+    <section class="section text-center" style="padding-top: 140px; padding-bottom: 40px;">
+        <div class="container">
+            <h1 class="hero-headline" style="font-size: 2.8rem; margin-bottom: 16px; word-break: keep-all;">형이 추천하는 영상</h1>
+            <p class="text-muted" style="font-size: 1.1rem; margin-top: 8px; word-break: keep-all;">형이 직접 써보고 쓸만하다 싶은 것들만 골라놨어. 뭐 살지 고민되면 여기서 시작해.</p>
+        </div>
+    </section>
+
+    <!-- Video Section -->
+    <section class="section" style="padding-top: 0;">
+        <div class="container">
+            <div class="video-grid fade-in">
+                
+                <a href="https://www.youtube.com/watch?v=cXU-CkLlIr4&list=PLUv4hDx_1Qhs9PsFEqF_5-HOi2OwFzjsr&index=3" target="_blank" class="video-card">
+                    <img src="imigi3/1.jpg" alt="영상 썸네일 1" class="video-thumb">
+                    <div class="video-info">
+                        <p class="video-desc">손기술 없어도 돼. 사자마자 꺼낼 수 있는 도구들이야. 일반인도 바로 쓸 수 있는 것들만 골랐어.</p>
+                    </div>
+                </a>
+
+                <a href="https://www.youtube.com/watch?v=XVTkfBRyzg4&list=PLUv4hDx_1Qhs9PsFEqF_5-HOi2OwFzjsr&index=5" target="_blank" class="video-card">
+                    <img src="imigi3/2.jpg" alt="영상 썸네일 2" class="video-thumb">
+                    <div class="video-info">
+                        <p class="video-desc">마술 시작하고 싶은데 뭐 사야 할지 모르겠지? 형이 입문자한테 딱 맞는 카드 도구 5가지 골라놨어. 이것만 있으면 오늘 당장 시작할 수 있어.</p>
+                    </div>
+                </a>
+
+                <a href="https://www.youtube.com/watch?v=6h3dlFU9A10&list=PLUv4hDx_1Qhs9PsFEqF_5-HOi2OwFzjsr&index=2" target="_blank" class="video-card">
+                    <img src="imigi3/3.jpg" alt="영상 썸네일 3" class="video-thumb">
+                    <div class="video-info">
+                        <p class="video-desc">카드 마술 배우고 싶은데 어디서 시작해야 할지 감이 안 잡히면 여기서 시작해. 형이 입문자한테 꼭 필요한 강의들만 추려놨어.</p>
+                    </div>
+                </a>
+
+                <a href="https://www.youtube.com/watch?v=PZhk1poZzog&list=PLUv4hDx_1Qhs9PsFEqF_5-HOi2OwFzjsr&index=4" target="_blank" class="video-card">
+                    <img src="imigi3/4.jpg" alt="영상 썸네일 4" class="video-thumb">
+                    <div class="video-info">
+                        <p class="video-desc">기초는 어느 정도 됐는데 레퍼토리가 부족하다고 느끼면 이거 봐. 초급자가 쓰기 딱 좋은 카드 도구 3가지 소개해줄게.</p>
+                    </div>
+                </a>
+
+                <a href="https://www.youtube.com/watch?v=rUMfP1ZISzY&list=PLUv4hDx_1Qhs9PsFEqF_5-HOi2OwFzjsr&index=6" target="_blank" class="video-card">
+                    <img src="imigi3/5.jpg" alt="영상 썸네일 5" class="video-thumb">
+                    <div class="video-info">
+                        <p class="video-desc">손기술로 억지로 하려고 하지 마. 도구 하나 쓰면 어려운 마술이 훨씬 쉬워져. 형이 실제로 쓰는 카드 도구 소개해줄게.</p>
+                    </div>
+                </a>
+
+                <a href="https://www.youtube.com/watch?v=-kQ83LnHImQ&list=PLUv4hDx_1Qhs9PsFEqF_5-HOi2OwFzjsr&index=5" target="_blank" class="video-card">
+                    <img src="imigi3/6.jpg" alt="영상 썸네일 6" class="video-thumb">
+                    <div class="video-info">
+                        <p class="video-desc">겉으로 보면 완전 타짜 같은데 실제로는 일반인도 할 수 있어. 야바위처럼 보이는 마술 도구인데 생각보다 진입장벽 낮아.</p>
+                    </div>
+                </a>
+
+                <a href="https://www.youtube.com/watch?v=SfTNqwyHCFs&list=PLUv4hDx_1Qhs9PsFEqF_5-HOi2OwFzjsr&index=7" target="_blank" class="video-card">
+                    <img src="imigi3/7.jpg" alt="영상 썸네일 7" class="video-thumb">
+                    <div class="video-info">
+                        <p class="video-desc">친구들이랑 포커 칠 때 한 번씩 꺼내면 분위기 확 바뀌어. 타짜처럼 보일 수 있는 포커 마술 3가지야.</p>
+                    </div>
+                </a>
+
+                <a href="https://www.youtube.com/watch?v=7rJ6mzeG17A&list=PLUv4hDx_1Qhs9PsFEqF_5-HOi2OwFzjsr&index=8" target="_blank" class="video-card">
+                    <img src="imigi3/8.jpg" alt="영상 썸네일 8" class="video-thumb">
+                    <div class="video-info">
+                        <p class="video-desc">유튜브나 인스타 찍을 때 반응 나오는 마술 따로 있어. 인터넷 방송에서 쓰기 좋은 도구들만 골라서 소개해줄게.</p>
+                    </div>
+                </a>
+
+            </div>
+        </div>
+    </section>
+
+    <section class="section fade-in">
+        <div class="container">
+            <div class="secondary-cta-box">
+                <h2 style="font-size: 2.2rem; font-weight: 700; line-height: 1.5; margin-bottom: 60px; word-break: keep-all;">더 잘하고 싶다는 느낌 들었으면 지금이 타이밍이야.<br>'나중에'는 안 와.</h2>
+                <a href="lesson.html" class="cta-button">칼리형한테 레슨 신청하기</a>
+            </div>
+        </div>
+    </section>
+
+    <script src="script.js"></script>
+</body>
+</html>

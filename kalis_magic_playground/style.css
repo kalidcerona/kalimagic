@@ -625,10 +625,10 @@ ul {
 .secondary-cta-box {
     text-align: center;
     margin-top: 80px;
-    padding: 60px 24px;
-    background: rgba(201, 168, 76, 0.03);
+    padding: 100px 24px;
+    background: linear-gradient(to top, rgba(201, 168, 76, 0.07), transparent);
     border-radius: 20px;
-    border: 1px solid rgba(201, 168, 76, 0.15);
+    border: none;
 }
 
 .cta-message {
