@@ -135,6 +135,8 @@ ul {
 .fw-600 { font-weight: 600; }
 .fw-700 { font-weight: 700; }
 
+.mobile-only { display: none; }
+
 /* ==========================================================================
    Persuasion Block (Lesson Page)
    ========================================================================== */
@@ -831,7 +833,7 @@ ul {
 }
 
 .lesson-hero-title {
-    font-size: 1.8rem;
+    font-size: 2.8rem;
     font-weight: 800;
     line-height: 1.5;
     margin-bottom: 20px;
@@ -1055,6 +1057,9 @@ ul {
 }
 
 @media (max-width: 768px) {
+    .mobile-only {
+        display: initial;
+    }
     .faq-item {
         padding: 24px 16px;
     }
@@ -1064,6 +1069,9 @@ ul {
     }
     .price-card {
         padding: 16px;
+        width: 100%;
+        box-sizing: border-box;
+        margin: 0 auto;
     }
     .apply-box {
         padding: 40px 20px;
