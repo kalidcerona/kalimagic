@@ -840,6 +840,12 @@ ul {
     word-break: keep-all;
 }
 
+@media (max-width: 768px) {
+    .lesson-hero-title {
+        font-size: 1.4rem;
+    }
+}
+
 .lesson-hero-sub {
     font-size: 1.3rem;
     color: var(--text-muted);
