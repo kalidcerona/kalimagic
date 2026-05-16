@@ -774,7 +774,7 @@ ul {
     
     /* Lesson specific mobile adjustments */
     .lesson-hero-title {
-        font-size: 2rem;
+        font-size: 1.5rem;
     }
     .lesson-hero-sub {
         font-size: 1.1rem;
@@ -799,7 +799,7 @@ ul {
         grid-template-columns: 1fr;
     }
     .hero-headline, .lesson-hero-title {
-        font-size: 2rem;
+        font-size: 1.5rem;
         word-break: keep-all;
     }
     .hero-sub, .lesson-hero-sub {
@@ -1080,7 +1080,7 @@ ul {
         padding: 20px 20px;
         width: 100%;
         text-align: center;
-        font-size: 1.4rem;
+        font-size: 1.6rem;
         box-sizing: border-box;
     }
 }
