@@ -830,9 +830,9 @@ ul {
 }
 
 .lesson-hero-title {
-    font-size: 3rem;
+    font-size: 2rem;
     font-weight: 800;
-    line-height: 1.4;
+    line-height: 1.5;
     margin-bottom: 20px;
 }
 
@@ -1013,14 +1013,15 @@ ul {
 
 .apply-form-guide {
     text-align: left;
-    background-color: #121212;
-    padding: 30px;
-    border-radius: 12px;
+    background-color: transparent;
+    padding: 20px 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     margin-bottom: 40px;
 }
 
 .apply-form-item {
-    margin-bottom: 24px;
+    margin-bottom: 32px;
 }
 
 .apply-form-item:last-child {
@@ -1054,6 +1055,24 @@ ul {
 @media (max-width: 768px) {
     .price-grid {
         flex-direction: column;
+        gap: 12px;
+    }
+    .price-card {
+        border: none;
+        background: rgba(255, 255, 255, 0.02);
+        padding: 20px;
+    }
+    .apply-box {
+        padding: 40px 20px;
+        border: none;
+        background: transparent;
+    }
+    .cta-button {
+        padding: 16px 20px;
+        width: 100%;
+        text-align: center;
+        font-size: 1.1rem;
+        box-sizing: border-box;
     }
 }
 
