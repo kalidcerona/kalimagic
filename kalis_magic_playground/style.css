@@ -357,6 +357,14 @@ ul {
     background: rgba(201, 168, 76, 0.03);
 }
 
+.recommendation-section {
+    margin-bottom: 80px;
+    border: 1px solid var(--point-gold);
+    border-radius: 20px;
+    padding: 40px;
+    background: rgba(201, 168, 76, 0.03);
+}
+
 .rec-badge {
     color: var(--point-gold);
     font-size: 1.3rem;
@@ -693,6 +701,13 @@ ul {
     
     .store-grid {
         grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .recommendation-section {
+        border: none;
+        padding: 0;
+        background: none;
+        border-radius: 0;
     }
     
     .recommendation-section .store-card {
