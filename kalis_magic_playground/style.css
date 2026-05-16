@@ -666,6 +666,11 @@ ul {
    Responsive Design (Mobile)
    ========================================================================== */
 @media (max-width: 768px) {
+    .secondary-cta-box {
+        margin-top: 8px;
+        padding: 40px 24px;
+    }
+    
     .secondary-cta-box h2 {
         font-size: 1.4rem !important;
     }
