@@ -744,6 +744,12 @@ ul {
     .cta-message {
         font-size: 1.5rem;
     }
+
+    .cta-button {
+        font-size: 0.95rem;
+        padding: 14px 28px;
+        white-space: nowrap;
+    }
     
     .button-group {
         flex-direction: column;
@@ -791,11 +797,6 @@ ul {
     }
     .quote-card {
         padding: 24px 20px;
-    }
-
-    .cta-button {
-        font-size: 1rem;
-        padding: 14px 32px;
     }
 }
 
