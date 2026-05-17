@@ -792,6 +792,11 @@ ul {
     .quote-card {
         padding: 24px 20px;
     }
+
+    .cta-button {
+        font-size: 1rem;
+        padding: 14px 32px;
+    }
 }
 
 @media (max-width: 480px) {
