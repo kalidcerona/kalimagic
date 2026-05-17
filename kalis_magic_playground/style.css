@@ -638,7 +638,10 @@ ul {
     padding: 100px 24px;
     background: linear-gradient(to top, rgba(201, 168, 76, 0.07), transparent);
     border-radius: 20px;
-    border: none;
+    border: 1px solid rgba(201, 168, 76, 0.4);
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .cta-message {
@@ -743,8 +746,8 @@ ul {
     }
 
     .cta-button {
-        font-size: 0.95rem;
-        padding: 14px 28px;
+        font-size: 0.8rem;
+        padding: 12px 24px;
         white-space: nowrap;
     }
     
