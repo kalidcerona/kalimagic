@@ -4,19 +4,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>칼리형의 마술 놀이터</title>
+    <meta name="description" content="마술로 어딜 가나 기억에 남는 사람이 되는 법. 10년 넘게 마술샵을 지켜온 칼리형이 알려줄게.">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="칼리형의 마술 놀이터">
+    <meta property="og:description" content="마술로 어딜 가나 기억에 남는 사람이 되는 법. 10년 넘게 마술샵을 지켜온 칼리형이 알려줄게.">
+    <meta property="og:image" content="https://kalimagic.netlify.app/imigi/KakaoTalk_20260409_194426986.jpg">
+    <meta property="og:url" content="https://kalimagic.netlify.app">
+    <meta property="og:site_name" content="칼리형의 마술 놀이터">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <!-- CSS Link -->
     <link rel="stylesheet" href="style.css">
     <!-- Fonts -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
     <style>
-        /* 추가 스타일: Hero와 About을 한 화면에 담기 위한 조정 */
         .hero-section {
-            padding: 120px 0 60px; /* 기존 min-height: 100vh와 충돌하지 않게 조정 가능 */
+            padding: 120px 0 60px;
             display: flex;
             flex-direction: column;
             justify-content: center;
         }
-        
+
         .hero-combined-content {
             display: flex;
             flex-direction: column;
@@ -28,43 +36,6 @@
             text-align: center;
         }
 
-        /* 네비게이션 버튼화 및 정렬 */
-        .nav-links {
-            gap: 8px !important; /* 버튼 형태를 위해 간격 조정 */
-        }
-
-        .nav-link {
-            padding: 6px 16px !important;
-            border-radius: 50px !important;
-            background: rgba(255, 255, 255, 0.05);
-            transition: var(--transition);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .nav-link:hover {
-            background: rgba(255, 255, 255, 0.1) !important;
-            transform: translateY(-1px);
-        }
-
-        .nav-link.active:not(.nav-cta) {
-            background: rgba(255, 255, 255, 0.15) !important;
-            color: var(--text-main) !important;
-        }
-
-        .nav-link.nav-cta {
-            background: var(--point-gold) !important;
-            color: #121212 !important;
-            font-weight: 700 !important;
-            margin-left: 4px !important;
-        }
-        
-        .nav-link.nav-cta:hover {
-            background: var(--point-gold-hover) !important;
-            transform: translateY(-2px) !important;
-        }
-
         @media (max-width: 768px) {
             .hero-section {
                 padding: 100px 0 40px;
@@ -72,10 +43,6 @@
             }
             .hero-combined-content {
                 gap: 40px;
-            }
-            .nav-link {
-                padding: 4px 12px !important;
-                font-size: 0.85rem !important;
             }
         }
     </style>
@@ -160,14 +127,14 @@
             <div>
                 <h3 class="text-center mb-40">형이 마술하는 모습들</h3>
                 <div class="gallery-grid">
-                    <div class="gallery-item"><img src="imigi2/뒷풀이1.jpg" alt="뒷풀이 1"></div>
-                    <div class="gallery-item"><img src="imigi2/외부행사1.jpg" alt="외부행사 1"></div>
-                    <div class="gallery-item"><img src="imigi2/모임 끝1.jpg" alt="모임 끝 1"></div>
-                    <div class="gallery-item"><img src="imigi2/뒷풀이2.jpg" alt="뒷풀이 2"></div>
-                    <div class="gallery-item"><img src="imigi2/강의 중2.jpg" alt="강의 중 2"></div>
-                    <div class="gallery-item"><img src="imigi2/강의 중.jpg" alt="강의 중"></div>
-                    <div class="gallery-item"><img src="imigi2/외부행사2.jpg" alt="외부행사 2"></div>
-                    <div class="gallery-item"><img src="imigi2/모임 끝2.jpg" alt="모임 끝 2"></div>
+                    <div class="gallery-item"><img src="imigi2/뒷풀이1.jpg" alt="뒷풀이 1" loading="lazy"></div>
+                    <div class="gallery-item"><img src="imigi2/외부행사1.jpg" alt="외부행사 1" loading="lazy"></div>
+                    <div class="gallery-item"><img src="imigi2/모임 끝1.jpg" alt="모임 끝 1" loading="lazy"></div>
+                    <div class="gallery-item"><img src="imigi2/뒷풀이2.jpg" alt="뒷풀이 2" loading="lazy"></div>
+                    <div class="gallery-item"><img src="imigi2/강의 중2.jpg" alt="강의 중 2" loading="lazy"></div>
+                    <div class="gallery-item"><img src="imigi2/강의 중.jpg" alt="강의 중" loading="lazy"></div>
+                    <div class="gallery-item"><img src="imigi2/외부행사2.jpg" alt="외부행사 2" loading="lazy"></div>
+                    <div class="gallery-item"><img src="imigi2/모임 끝2.jpg" alt="모임 끝 2" loading="lazy"></div>
                 </div>
             </div>
 

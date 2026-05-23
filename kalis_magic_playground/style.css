@@ -90,22 +90,43 @@ ul {
 
 .nav-links {
     display: flex;
-    gap: 32px;
+    align-items: center;
+    gap: 8px;
 }
 
 .nav-link {
     font-size: 0.95rem;
     color: var(--text-muted);
     transition: var(--transition);
+    white-space: nowrap;
+    padding: 6px 16px;
+    border-radius: 50px;
+    background: rgba(255, 255, 255, 0.05);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .nav-link:hover {
-    color: var(--point-gold);
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-1px);
 }
 
-.nav-link.active {
+.nav-link.active:not(.nav-cta) {
+    background: rgba(255, 255, 255, 0.15);
     color: var(--text-main);
+}
+
+.nav-link.nav-cta {
+    background: var(--point-gold);
+    color: #121212;
     font-weight: 700;
+    margin-left: 4px;
+}
+
+.nav-link.nav-cta:hover {
+    background: var(--point-gold-hover);
+    transform: translateY(-2px);
 }
 
 /* ==========================================================================
@@ -775,18 +796,28 @@ ul {
         padding: 30px 20px;
     }
     
+    .nav-link {
+        padding: 4px 12px;
+        font-size: 0.85rem;
+    }
     /* Lesson specific mobile adjustments */
+    .mobile-only {
+        display: initial;
+    }
     .lesson-hero-title {
-        font-size: 1.5rem;
+        font-size: 1.6rem;
     }
     .lesson-hero-sub {
         font-size: 1.1rem;
     }
     .apply-box {
-        padding: 30px 20px;
+        padding: 40px 20px;
+    }
+    .apply-box h3 {
+        font-size: 1.5rem;
     }
     .faq-item {
-        padding: 24px 20px;
+        padding: 24px 16px;
     }
     .faq-a {
         padding-left: 0;
@@ -794,6 +825,58 @@ ul {
     }
     .quote-card {
         padding: 24px 20px;
+    }
+    .card h3 {
+        font-size: 1.2rem;
+    }
+    .price-grid {
+        flex-direction: column;
+        gap: 12px;
+    }
+    .price-card {
+        padding: 16px;
+        width: 100%;
+        box-sizing: border-box;
+        margin: 0 auto;
+    }
+    .cta-button {
+        padding: 20px;
+        width: 100%;
+        text-align: center;
+        font-size: 1.6rem;
+        box-sizing: border-box;
+    }
+}
+
+@media (max-width: 390px) {
+    .main-nav {
+        padding: 16px 16px;
+    }
+    .nav-logo {
+        font-size: 1.15rem;
+    }
+    .nav-links {
+        gap: 4px;
+    }
+    .nav-link {
+        padding: 3px 9px;
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 360px) {
+    .main-nav {
+        padding: 14px 12px;
+    }
+    .nav-logo {
+        font-size: 1rem;
+    }
+    .nav-links {
+        gap: 2px;
+    }
+    .nav-link {
+        padding: 2px 7px;
+        font-size: 0.75rem;
     }
 }
 
@@ -820,6 +903,12 @@ ul {
     .faq-q::before {
         font-size: 1.3rem;
     }
+    .apply-box h3 {
+        font-size: 1.3rem;
+    }
+    .card h3 {
+        font-size: 1.1rem;
+    }
 }
 
 /* ==========================================================================
@@ -843,11 +932,6 @@ ul {
     word-break: keep-all;
 }
 
-@media (max-width: 768px) {
-    .lesson-hero-title {
-        font-size: 1.6rem;
-    }
-}
 
 .lesson-hero-sub {
     font-size: 1.3rem;
@@ -1065,34 +1149,6 @@ ul {
     margin-bottom: 6px;
 }
 
-@media (max-width: 768px) {
-    .mobile-only {
-        display: initial;
-    }
-    .faq-item {
-        padding: 24px 16px;
-    }
-    .price-grid {
-        flex-direction: column;
-        gap: 12px;
-    }
-    .price-card {
-        padding: 16px;
-        width: 100%;
-        box-sizing: border-box;
-        margin: 0 auto;
-    }
-    .apply-box {
-        padding: 40px 20px;
-    }
-    .cta-button {
-        padding: 20px 20px;
-        width: 100%;
-        text-align: center;
-        font-size: 1.6rem;
-        box-sizing: border-box;
-    }
-}
 
 /* ==========================================================================
    Animations (JS Scroll)
@@ -1123,8 +1179,3 @@ ul {
   background-color: #1a1a1a;
 }
 
-/* 스크롤 힌트 바운스 */
-@keyframes bounce {
-  0%, 100% { transform: translateX(-50%) translateY(0); }
-  50%       { transform: translateX(-50%) translateY(8px); }
-}

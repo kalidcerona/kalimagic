@@ -4,59 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>영상 - 칼리형의 마술 놀이터</title>
+    <meta name="description" content="칼리형이 추천하는 마술 영상. 형이 직접 써보고 쓸만하다 싶은 것들만 골라놨어. 뭐 살지 고민되면 여기서 시작해.">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="영상 - 칼리형의 마술 놀이터">
+    <meta property="og:description" content="칼리형이 추천하는 마술 영상. 형이 직접 써보고 쓸만하다 싶은 것들만 골라놨어. 뭐 살지 고민되면 여기서 시작해.">
+    <meta property="og:image" content="https://kalimagic.netlify.app/imigi3/1.jpg">
+    <meta property="og:url" content="https://kalimagic.netlify.app/video.html">
+    <meta property="og:site_name" content="칼리형의 마술 놀이터">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <!-- CSS Link -->
     <link rel="stylesheet" href="style.css">
     <!-- Fonts -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
     <style>
-        /* 네비게이션 버튼화 및 정렬 */
-        .nav-links {
-            gap: 8px !important;
-            display: flex;
-            align-items: center;
-        }
-
-        .nav-link {
-            padding: 6px 16px !important;
-            border-radius: 50px !important;
-            background: rgba(255, 255, 255, 0.05);
-            transition: var(--transition);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.95rem;
-            color: var(--text-muted);
-        }
-
-        .nav-link:hover {
-            background: rgba(255, 255, 255, 0.1) !important;
-            transform: translateY(-1px);
-        }
-
-        .nav-link.active:not(.nav-cta) {
-            background: rgba(255, 255, 255, 0.15) !important;
-            color: var(--text-main) !important;
-        }
-
-        .nav-link.nav-cta {
-            background: var(--point-gold) !important;
-            color: #121212 !important;
-            font-weight: 700 !important;
-            margin-left: 4px !important;
-        }
-        
-        .nav-link.nav-cta:hover {
-            background: var(--point-gold-hover) !important;
-            transform: translateY(-2px) !important;
-        }
-
-        @media (max-width: 768px) {
-            .nav-link {
-                padding: 4px 12px !important;
-                font-size: 0.85rem !important;
-            }
-        }
-        
         /* Video cards custom layout */
         .video-grid {
             display: flex;
@@ -144,28 +105,28 @@
             <div class="video-grid">
                 
                 <a href="https://www.youtube.com/watch?v=cXU-CkLlIr4&list=PLUv4hDx_1Qhs9PsFEqF_5-HOi2OwFzjsr&index=3" target="_blank" class="video-card">
-                    <img src="imigi3/1.jpg" alt="영상 썸네일 1" class="video-thumb">
+                    <img loading="lazy" src="imigi3/1.jpg" alt="영상 썸네일 1" class="video-thumb">
                     <div class="video-info">
                         <p class="video-desc">사자마자 바로 꺼낼 수 있는 도구들이야<br>오늘 사면 오늘 쓸 수 있어</p>
                     </div>
                 </a>
 
                 <a href="https://www.youtube.com/watch?v=XVTkfBRyzg4&list=PLUv4hDx_1Qhs9PsFEqF_5-HOi2OwFzjsr&index=5" target="_blank" class="video-card">
-                    <img src="imigi3/2.jpg" alt="영상 썸네일 2" class="video-thumb">
+                    <img loading="lazy" src="imigi3/2.jpg" alt="영상 썸네일 2" class="video-thumb">
                     <div class="video-info">
                         <p class="video-desc">뭐 사야 할지 모르겠지?<br>입문자한테 딱 맞는 카드 도구 5가지야</p>
                     </div>
                 </a>
 
                 <a href="https://www.youtube.com/watch?v=6h3dlFU9A10&list=PLUv4hDx_1Qhs9PsFEqF_5-HOi2OwFzjsr&index=2" target="_blank" class="video-card">
-                    <img src="imigi3/3.jpg" alt="영상 썸네일 3" class="video-thumb">
+                    <img loading="lazy" src="imigi3/3.jpg" alt="영상 썸네일 3" class="video-thumb">
                     <div class="video-info">
                         <p class="video-desc">어디서 시작해야 할지 모르겠으면 여기서 시작해<br>꼭 필요한 강의들만 추렸어</p>
                     </div>
                 </a>
 
                 <a href="https://www.youtube.com/watch?v=PZhk1poZzog&list=PLUv4hDx_1Qhs9PsFEqF_5-HOi2OwFzjsr&index=4" target="_blank" class="video-card">
-                    <img src="imigi3/4.jpg" alt="영상 썸네일 4" class="video-thumb">
+                    <img loading="lazy" src="imigi3/4.jpg" alt="영상 썸네일 4" class="video-thumb">
                     <div class="video-info">
                         <p class="video-desc">기초는 됐는데 레퍼토리가 부족해?<br>초급자한테 딱 좋은 도구 3가지야</p>
                     </div>
@@ -177,28 +138,28 @@
                 </div>
 
                 <a href="https://www.youtube.com/watch?v=rUMfP1ZISzY&list=PLUv4hDx_1Qhs9PsFEqF_5-HOi2OwFzjsr&index=6" target="_blank" class="video-card">
-                    <img src="imigi3/5.jpg" alt="영상 썸네일 5" class="video-thumb">
+                    <img loading="lazy" src="imigi3/5.jpg" alt="영상 썸네일 5" class="video-thumb">
                     <div class="video-info">
                         <p class="video-desc">손기술로 억지로 하지 마<br>도구 하나면 어려운 마술이 그냥 돼</p>
                     </div>
                 </a>
 
                 <a href="https://www.youtube.com/watch?v=-kQ83LnHImQ&list=PLUv4hDx_1Qhs9PsFEqF_5-HOi2OwFzjsr&index=5" target="_blank" class="video-card">
-                    <img src="imigi3/6.jpg" alt="영상 썸네일 6" class="video-thumb">
+                    <img loading="lazy" src="imigi3/6.jpg" alt="영상 썸네일 6" class="video-thumb">
                     <div class="video-info">
                         <p class="video-desc">타짜처럼 보이는데 일반인도 할 수 있어<br>생각보다 진입장벽 낮아</p>
                     </div>
                 </a>
 
                 <a href="https://www.youtube.com/watch?v=SfTNqwyHCFs&list=PLUv4hDx_1Qhs9PsFEqF_5-HOi2OwFzjsr&index=7" target="_blank" class="video-card">
-                    <img src="imigi3/7.jpg" alt="영상 썸네일 7" class="video-thumb">
+                    <img loading="lazy" src="imigi3/7.jpg" alt="영상 썸네일 7" class="video-thumb">
                     <div class="video-info">
                         <p class="video-desc">포커 칠 때 한 번씩 꺼내봐<br>분위기 확 바뀌는 포커 마술 3가지야</p>
                     </div>
                 </a>
 
                 <a href="https://www.youtube.com/watch?v=7rJ6mzeG17A&list=PLUv4hDx_1Qhs9PsFEqF_5-HOi2OwFzjsr&index=8" target="_blank" class="video-card">
-                    <img src="imigi3/8.jpg" alt="영상 썸네일 8" class="video-thumb">
+                    <img loading="lazy" src="imigi3/8.jpg" alt="영상 썸네일 8" class="video-thumb">
                     <div class="video-info">
                         <p class="video-desc">유튜브나 인스타 찍을 때 터지는 마술 따로 있어<br>방송용 도구만 골랐어</p>
                     </div>
