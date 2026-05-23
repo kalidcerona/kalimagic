@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>입문 - 칼리형의 마술 놀이터</title>
+    <!-- CSS Link -->
+    <link rel="stylesheet" href="style.css">
+    <!-- Fonts -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+    <style>
+        /* 네비게이션 버튼화 및 정렬 */
+        .nav-links {
+            gap: 8px !important;
+            display: flex;
+            align-items: center;
+        }
+
+        .nav-link {
+            padding: 6px 16px !important;
+            border-radius: 50px !important;
+            background: rgba(255, 255, 255, 0.05);
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.95rem;
+            color: var(--text-muted);
+        }
+
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.1) !important;
+            transform: translateY(-1px);
+        }
+
+        .nav-link.active:not(.nav-cta) {
+            background: rgba(255, 255, 255, 0.15) !important;
+            color: var(--text-main) !important;
+        }
+
+        .nav-link.nav-cta {
+            background: var(--point-gold) !important;
+            color: #121212 !important;
+            font-weight: 700 !important;
+            margin-left: 4px !important;
+        }
+        
+        .nav-link.nav-cta:hover {
+            background: var(--point-gold-hover) !important;
+            transform: translateY(-2px) !important;
+        }
+
+        @media (max-width: 768px) {
+            .nav-link {
+                padding: 4px 12px !important;
+                font-size: 0.85rem !important;
+            }
+        }
+
+        /* 입문 페이지 전용 레이아웃 조정 */
+        .intro-hero {
+            min-height: 50vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            background: radial-gradient(circle at top, #2a2a2a 0%, #121212 80%);
+            padding-top: 80px;
+        }
+        
+        .intro-composition-box {
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            padding: 30px;
+            border: 1px solid rgba(201, 168, 76, 0.3);
+            text-align: center;
+            margin-top: 40px;
+            background: rgba(201, 168, 76, 0.02);
+        }
+        
+        .intro-composition-title {
+            color: var(--point-gold);
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .intro-composition-value {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--text-main);
+            word-break: keep-all;
+        }
+
+        .step-list {
+            text-align: left;
+            margin: 30px auto;
+            max-width: 500px;
+        }
+
+        .step-item {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+        }
+
+        .step-number {
+            background-color: var(--point-gold);
+            color: #121212;
+            font-weight: 800;
+            font-size: 1.1rem;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .step-text {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: var(--text-main);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Nav -->
+    <header class="main-nav">
+        <a href="index.html" class="nav-logo">KALI</a>
+        <nav class="nav-links">
+            <a href="index.html" class="nav-link">홈</a>
+            <a href="works.html" class="nav-link">작품</a>
+            <a href="video.html" class="nav-link">영상</a>
+            <a href="intro.html" class="nav-link active">입문</a>
+            <a href="lesson.html" class="nav-link nav-cta">레슨</a>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="intro-hero">
+        <div class="container">
+            <h1 class="lesson-hero-title fade-in">무료 영상 봤어?<br>그럼 이제 진짜 시작이야.</h1>
+            <p class="lesson-hero-sub fade-in mt-16" style="word-break: keep-all; max-width: 600px; margin-left: auto; margin-right: auto; line-height: 1.6;">
+                형 영상 보고 마술 더 배우고 싶어졌거나,<br>어디서부터 시작해야 할지 모르겠는 사람들을 위해 준비했어.
+            </p>
+        </div>
+    </section>
+
+    <!-- 소개 섹션 -->
+    <section class="section bg-dark-alt fade-in">
+        <div class="container">
+            <div style="max-width: 700px; margin: 0 auto; text-align: center; word-break: keep-all;">
+                <h2 class="section-title">쉽게, 하지만 확실하게</h2>
+                <p class="fs-1-1 lh-1-8 text-main mb-24">
+                    마술 교과서라고 불리는 렉쳐노트 책들에서 형이 직접 골랐어.
+                </p>
+                <p class="fs-1-1 lh-1-8 text-main mb-24">
+                    누구나 따라 할 수 있는 것만 뽑았는데, 쉽다고 별거 없는 거 아니야.
+                </p>
+                <p class="fs-1-1 lh-1-8 text-main mb-20" style="color: var(--point-gold); font-weight: 700;">
+                    이것만 제대로 익혀도 어디서든 기억에 남는 사람이 될 수 있어.
+                </p>
+
+                <div class="intro-composition-box">
+                    <div class="intro-composition-title">구성 안내</div>
+                    <div class="intro-composition-value">마술 이론 1편 + 카드·생활 마술 4~5가지 (총 5~6편)</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 가격 섹션 -->
+    <section class="section fade-in">
+        <div class="container">
+            <h2 class="section-title">수강료 및 옵션</h2>
+            <div class="price-grid" style="max-width: 800px; margin: 0 auto;">
+                <div class="price-card" style="background-color: var(--card-bg);">
+                    <h4 style="font-size: 1.4rem; color: var(--point-gold); font-weight: 700; margin-bottom: 12px;">강의만</h4>
+                    <p class="price-desc" style="margin-bottom: 24px;">동영상 강의 스트리밍 제공</p>
+                    <p class="price-amount" style="font-size: 2rem;">5,000원</p>
+                </div>
+                <div class="price-card" style="background-color: var(--card-bg); border-color: rgba(201, 168, 76, 0.4);">
+                    <h4 style="font-size: 1.4rem; color: var(--point-gold); font-weight: 700; margin-bottom: 12px;">강의 + 마술용 카드</h4>
+                    <p class="price-desc" style="margin-bottom: 24px;">동영상 강의 + 마술 전용 카드 1덱 배송<br><span style="font-size: 0.85rem; color: var(--text-muted);">(카드는 형이 직접 마술에 쓰는 거랑 같은 거야)</span></p>
+                    <p class="price-amount" style="font-size: 2rem;">15,000원</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 신청 방법 섹션 -->
+    <section class="section bg-dark-alt fade-in" style="padding-bottom: 120px;">
+        <div class="container">
+            <div class="apply-box" style="max-width: 700px;">
+                <h3>신청 방법</h3>
+                <p style="margin-bottom: 30px;">간단한 신청서 작성과 입금 확인 후 메일 등으로 강의 링크를 보내드려요.</p>
+                
+                <div class="step-list">
+                    <div class="step-item">
+                        <div class="step-number">1</div>
+                        <div class="step-text">아래 버튼 눌러서 간단한 정보 작성</div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-number">2</div>
+                        <div class="step-text">계좌로 입금 (강의만 5,000원 / 카드 포함 15,000원)</div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-number">3</div>
+                        <div class="step-text">형이 확인하고 영상 링크 보내줄게</div>
+                    </div>
+                </div>
+
+                <a href="https://smore.im/form/9lJCkgl77U" target="_blank" class="cta-button">신청하기 →</a>
+            </div>
+        </div>
+    </section>
+
+    <script src="script.js"></script>
+</body>
+</html>
