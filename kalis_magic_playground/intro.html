@@ -18,14 +18,6 @@
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
     <style>
-        /* 네비게이션 */
-        .nav-links { gap: 8px !important; display: flex; align-items: center; }
-        .nav-link { padding: 6px 16px !important; border-radius: 50px !important; background: rgba(255,255,255,0.05); transition: var(--transition); display: flex; align-items: center; justify-content: center; font-size: 0.95rem; color: var(--text-muted); }
-        .nav-link:hover { background: rgba(255,255,255,0.1) !important; transform: translateY(-1px); }
-        .nav-link.active:not(.nav-cta) { background: rgba(255,255,255,0.15) !important; color: var(--text-main) !important; }
-        .nav-link.nav-cta { background: var(--point-gold) !important; color: #121212 !important; font-weight: 700 !important; margin-left: 4px !important; }
-        .nav-link.nav-cta:hover { background: var(--point-gold-hover) !important; transform: translateY(-2px) !important; }
-
         /* 입문 페이지 전용 레이아웃 */
         .intro-hero {
             min-height: 50vh;
@@ -133,10 +125,72 @@
             color: var(--text-main);
         }
 
+        /* 히어로 서브 텍스트 */
+        .intro-hero-sub {
+            word-break: keep-all;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.6;
+        }
+
+        /* 앵커링 가격 블록 */
+        .intro-price-anchor {
+            text-align: center;
+            margin: 40px auto;
+            max-width: 400px;
+            padding: 0 16px;
+            box-sizing: border-box;
+        }
+
+        .intro-price-anchor-badge {
+            display: inline-block;
+            background: var(--point-gold);
+            color: #121212;
+            font-size: clamp(1rem, 3vw, 1.3rem);
+            font-weight: 800;
+            padding: 6px 20px;
+            border-radius: 50px;
+            letter-spacing: 0.08em;
+            margin-bottom: 20px;
+        }
+
+        .intro-price-anchor-original {
+            font-size: clamp(1.6rem, 5vw, 2.2rem);
+            color: var(--text-muted);
+            text-decoration: line-through;
+            margin-bottom: 12px;
+            font-weight: 700;
+        }
+
+        .intro-price-anchor-current {
+            font-size: clamp(3rem, 10vw, 4.4rem);
+            font-weight: 900;
+            color: var(--point-gold);
+            line-height: 1.1;
+            text-shadow: 0 0 40px rgba(201, 168, 76, 0.5);
+            margin-bottom: 0;
+        }
+
+        .intro-price-anchor-note {
+            font-size: clamp(0.85rem, 2.5vw, 0.95rem);
+            color: var(--text-muted);
+            margin-top: 12px;
+            word-break: keep-all;
+        }
+
+        /* 가격 카드 배경 */
+        .price-card--default {
+            background-color: var(--card-bg);
+        }
+
+        .price-card--featured {
+            background-color: var(--card-bg);
+            border-color: rgba(201, 168, 76, 0.4);
+        }
+
         /* 반응형 */
         @media (max-width: 768px) {
-            .nav-link { padding: 4px 12px !important; font-size: 0.85rem !important; }
-
             .intro-hero {
                 padding-top: 100px;
                 min-height: auto;
@@ -155,7 +209,7 @@
             }
 
             .price-grid {
-                grid-template-columns: 1fr !important;
+                flex-direction: column;
             }
 
             .apply-box {
@@ -182,7 +236,7 @@
     <section id="intro-hero" class="intro-hero">
         <div class="container">
             <h1 class="lesson-hero-title fade-in">무료 영상 봤어?<br>그럼 이제 진짜 시작이야.</h1>
-            <p class="lesson-hero-sub fade-in mt-16" style="word-break: keep-all; max-width: 600px; margin-left: auto; margin-right: auto; line-height: 1.6;">
+            <p class="lesson-hero-sub intro-hero-sub fade-in mt-16">
                 형 영상 보고 마술 더 배우고 싶어졌거나,<br>어디서부터 시작해야 할지 모르겠는 사람들을 위해 준비했어.
             </p>
         </div>
@@ -192,10 +246,11 @@
     <section id="intro-about" class="section bg-dark-alt fade-in section-compact">
         <div class="container">
             <div class="intro-content-center">
-                <h2 class="section-title" style="font-size: clamp(1.4rem, 5vw, 2rem);">쉽게, 하지만 확실하게</h2>
+                <h2 class="section-title" style="font-size: clamp(1.4rem, 5vw, 2rem);">형이 직접 골랐어</h2>
                 <p class="fs-1-1 lh-1-8 text-main mb-24">
-                    2~3만 원대 비싼 강의와 마술 서적에서<br>
-                    실전에서 먹히는 진짜배기 핵심만 골라 담았어
+                    2~3만 원대 마술 강의, 서적 직접 다 훑어봤어.<br>
+                    거기서 처음 시작하는 사람한테 진짜 필요한 것만 뽑았어.<br>
+                    이론, 카드 기본기, 생활 마술까지 — 형이 직접 쓰는 것들만.
                 </p>
                 <p class="fs-1-1 lh-1-8 text-main mb-24">
                     자료 가치만 따져도 7만 원 이상인데<br>
@@ -209,21 +264,23 @@
                     이것만 제대로 익혀도 어디서든<br>기억에 남는 사람이 될 수 있어
                 </p>
 
-                <!-- 앵커링 A: 배지 + 글로우 강조 -->
-                <div style="text-align: center; margin: 40px auto; max-width: 400px; padding: 0 16px; box-sizing: border-box;">
-                    <span style="display: inline-block; background: var(--point-gold); color: #121212; font-size: clamp(1rem, 3vw, 1.3rem); font-weight: 800; padding: 6px 20px; border-radius: 50px; letter-spacing: 0.08em; margin-bottom: 20px;">특별가</span>
-                    <p style="font-size: clamp(1.6rem, 5vw, 2.2rem); color: var(--text-muted); text-decoration: line-through; margin-bottom: 12px; font-weight: 700;">70,000원</p>
-                    <p style="font-size: clamp(3rem, 10vw, 4.4rem); font-weight: 900; color: var(--point-gold); line-height: 1.1; text-shadow: 0 0 40px rgba(201, 168, 76, 0.5); margin-bottom: 0;">5,000원</p>
-                    <p style="font-size: clamp(0.85rem, 2.5vw, 0.95rem); color: var(--text-muted); margin-top: 12px; word-break: keep-all;">형이 입문용으로 특별히 준비한 가격이야</p>
+                <div class="intro-price-anchor">
+                    <span class="intro-price-anchor-badge">특별가</span>
+                    <p class="intro-price-anchor-original">70,000원</p>
+                    <p class="intro-price-anchor-current">5,000원</p>
+                    <p class="intro-price-anchor-note">형이 입문용으로 특별히 준비한 가격이야</p>
                 </div>
 
                 <div class="intro-composition-box">
                     <div class="intro-composition-title">구성 안내</div>
                     <div class="intro-composition-value">
-                        마술이론 1편<br>
-                        카드 마술 3가지<br>
-                        생활 마술 1가지<br>
-                        <span style="font-size: 1.2rem; color: var(--text-muted);">(총 5편)</span>
+                        이론<br>
+                        카드 기본기<br>
+                        요동 치는 맥박<br>
+                        느낌으로 카드 찾기<br>
+                        카드 순간 이동<br>
+                        넵킨 톤 앤 리스토어<br>
+                        <span style="font-size: 1.2rem; color: var(--text-muted);">(총 6편)</span>
                     </div>
                 </div>
             </div>
@@ -233,15 +290,15 @@
     <!-- 가격 섹션 -->
     <section id="intro-price" class="section fade-in section-compact">
         <div class="container">
-            <h2 class="section-title">수강료 및 옵션</h2>
+            <h2 class="section-title">형이 골라서 준비했어</h2>
             <div class="price-grid intro-inner">
-                <div class="price-card" style="background-color: var(--card-bg);">
+                <div class="price-card price-card--default">
                     <h4 class="price-card-title">강의만</h4>
                     <p class="price-desc" style="margin-bottom: 16px;">동영상 강의 스트리밍 제공</p>
                     <p class="price-original">70,000원</p>
                     <p class="price-amount" style="font-size: 2rem;">5,000원</p>
                 </div>
-                <div class="price-card" style="background-color: var(--card-bg); border-color: rgba(201, 168, 76, 0.4);">
+                <div class="price-card price-card--featured">
                     <h4 class="price-card-title">강의 + 마술용 카드</h4>
                     <p class="price-desc" style="margin-bottom: 24px;">동영상 강의 + 마술 전용 카드 1덱 배송<br><span style="font-size: 0.85rem; color: var(--text-muted);">(카드는 형이 직접 마술에 쓰는 거랑 같은 거야)</span></p>
                     <p class="price-amount" style="font-size: 2rem;">15,000원</p>
@@ -255,7 +312,7 @@
         <div class="container">
             <div class="apply-box intro-inner">
                 <h3>신청 방법</h3>
-                <p style="margin-bottom: 30px;">간단한 신청서 작성과 입금 확인 후 메일 등으로 강의 링크를 보내드려요.</p>
+                <p style="margin-bottom: 30px;">폼 작성하고 입금하면 형이 확인하고 영상 링크 보내줄게.</p>
 
                 <div class="step-list">
                     <div class="step-item">
