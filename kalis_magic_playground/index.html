@@ -17,49 +17,12 @@
     <!-- Fonts -->
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
-    <style>
-        .hero-section {
-            padding: 120px 0 60px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-
-        .hero-combined-content {
-            display: flex;
-            flex-direction: column;
-            gap: 60px;
-            align-items: center;
-        }
-
-        .hero-text-part {
-            text-align: center;
-        }
-
-        @media (max-width: 768px) {
-            .hero-section {
-                padding: 100px 0 40px;
-                min-height: auto;
-            }
-            .hero-combined-content {
-                gap: 40px;
-            }
-        }
-    </style>
+    <script src="nav.js"></script>
 </head>
 <body>
 
-    <!-- Nav -->
-    <header class="main-nav">
-        <a href="index.html" class="nav-logo">KALI</a>
-        <nav class="nav-links">
-            <a href="index.html" class="nav-link active">홈</a>
-            <a href="works.html" class="nav-link">작품</a>
-            <a href="video.html" class="nav-link">영상</a>
-            <a href="intro.html" class="nav-link">입문</a>
-            <a href="lesson.html" class="nav-link nav-cta">레슨</a>
-        </nav>
-    </header>
+    <header id="nav-root"></header>
+    <script>renderNav('home')</script>
 
     <!-- Section 1: Hero & About Combined -->
     <section id="hero" class="section hero-section">

@@ -17,79 +17,12 @@
     <!-- Fonts -->
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
-    <style>
-        /* Video cards custom layout */
-        .video-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 32px;
-            max-width: 800px;
-            margin: 0 auto;
-        }
-        .video-card {
-            display: flex;
-            flex-direction: row;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 12px;
-            overflow: hidden;
-            text-decoration: none;
-            transition: var(--transition);
-            align-items: center;
-        }
-        .video-card:hover {
-            transform: translateY(-4px);
-            background: rgba(255, 255, 255, 0.06);
-            border-color: rgba(255, 255, 255, 0.1);
-        }
-        .video-thumb {
-            width: 40%;
-            min-width: 40%;
-            aspect-ratio: 16 / 9;
-            object-fit: cover;
-            display: block;
-            flex-shrink: 0;
-        }
-        .video-info {
-            padding: 24px;
-        }
-        .video-desc {
-            color: var(--text-main);
-            font-size: 1.1rem;
-            line-height: 1.6;
-            margin: 0;
-            word-break: keep-all;
-        }
-        @media (max-width: 768px) {
-            .video-card {
-                flex-direction: column;
-            }
-            .video-thumb {
-                width: 100%;
-                min-width: unset;
-            }
-            .video-info {
-                padding: 16px;
-            }
-            .video-desc {
-                font-size: 1rem;
-            }
-        }
-    </style>
+    <script src="nav.js"></script>
 </head>
 <body>
 
-    <!-- Nav -->
-    <header class="main-nav">
-        <a href="index.html" class="nav-logo">KALI</a>
-        <nav class="nav-links">
-            <a href="index.html" class="nav-link">홈</a>
-            <a href="works.html" class="nav-link">작품</a>
-            <a href="video.html" class="nav-link active">영상</a>
-            <a href="intro.html" class="nav-link">입문</a>
-            <a href="lesson.html" class="nav-link nav-cta">레슨</a>
-        </nav>
-    </header>
+    <header id="nav-root"></header>
+    <script>renderNav('video')</script>
 
     <!-- Hero -->
     <section class="section text-center" style="padding-top: 140px; padding-bottom: 40px;">
