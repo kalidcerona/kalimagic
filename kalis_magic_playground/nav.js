@@ -4,6 +4,7 @@ function renderNav(activePage) {
         { key: 'works',  label: '작품', href: 'works.html' },
         { key: 'video',  label: '영상', href: 'video.html' },
         { key: 'intro',  label: '입문', href: 'intro.html' },
+        { key: 'reviews',label: '후기', href: 'reviews.html' },
         { key: 'lesson', label: '레슨', href: 'lesson.html', cta: true },
     ];
 
