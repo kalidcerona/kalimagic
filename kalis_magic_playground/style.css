@@ -669,14 +669,131 @@ ul {
     line-height: 1.4;
 }
 
+/* Next-step combined CTA (입문 + 작품) */
+.next-step-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+    max-width: 880px;
+    margin: 40px auto 0;
+}
+
+.next-step-grid--single {
+    grid-template-columns: 1fr;
+    max-width: 520px;
+}
+
+.next-step-card {
+    position: relative;
+    text-align: center;
+    padding: 48px 28px;
+    border-radius: 20px;
+    border: 1px solid rgba(201, 168, 76, 0.25);
+    background: rgba(255, 255, 255, 0.02);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: var(--transition);
+}
+
+.next-step-card--primary {
+    border-color: rgba(201, 168, 76, 0.55);
+    background: linear-gradient(to top, rgba(201, 168, 76, 0.1), transparent);
+}
+
+.next-step-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(201, 168, 76, 0.55);
+}
+
+.next-step-badge {
+    display: inline-block;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: #121212;
+    background: var(--point-gold);
+    padding: 5px 14px;
+    border-radius: 50px;
+    margin-bottom: 20px;
+}
+
+.next-step-badge--muted {
+    color: var(--point-gold);
+    background: transparent;
+    border: 1px solid rgba(201, 168, 76, 0.4);
+}
+
+.next-step-title {
+    font-size: clamp(1.25rem, 3vw, 1.7rem);
+    font-weight: 700;
+    line-height: 1.45;
+    margin-bottom: 16px;
+    word-break: keep-all;
+}
+
+.next-step-desc {
+    color: var(--text-muted);
+    line-height: 1.8;
+    margin-bottom: 32px;
+    word-break: keep-all;
+    flex-grow: 1;
+}
+
+.cta-button--ghost {
+    background-color: transparent;
+    color: var(--point-gold);
+    border: 1px solid var(--point-gold);
+}
+
+.cta-button--ghost:hover {
+    background-color: var(--point-gold);
+    color: #121212;
+}
+
+/* 보조 텍스트 링크 (작품 CTA 위계 낮춤) */
+.next-step-link {
+    text-align: center;
+    max-width: 700px;
+    margin: 28px auto 0;
+    padding: 24px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    word-break: keep-all;
+}
+
+.next-step-link span {
+    display: block;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    margin-bottom: 10px;
+}
+
+.next-step-link a {
+    color: var(--point-gold);
+    font-weight: 600;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(201, 168, 76, 0.4);
+    padding-bottom: 2px;
+    transition: var(--transition);
+}
+
+.next-step-link a:hover {
+    border-bottom-color: var(--point-gold);
+}
+
 .cta-button {
     display: inline-block;
     background-color: var(--point-gold);
     color: #121212;
     font-size: 1.2rem;
     font-weight: 700;
-    padding: 18px 48px;
+    padding: 18px 24px;
     border-radius: 50px;
+    width: 260px;
+    max-width: 100%;
+    white-space: nowrap;
+    text-align: center;
+    box-sizing: border-box;
     transition: var(--transition);
 }
 
@@ -729,7 +846,17 @@ ul {
         margin-top: 8px;
         padding: 40px 24px;
     }
-    
+
+    .next-step-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+        margin-top: 24px;
+    }
+
+    .next-step-card {
+        padding: 36px 24px;
+    }
+
 
     .hero-headline {
         font-size: 2.2rem;
@@ -792,11 +919,13 @@ ul {
     }
 
     .cta-button {
-        font-size: 0.8rem;
-        padding: 12px 24px;
+        font-size: 1.1rem;
+        padding: 16px 24px;
+        width: 260px;
+        max-width: 100%;
         white-space: nowrap;
     }
-    
+
     .button-group {
         flex-direction: column;
         gap: 12px;
@@ -825,8 +954,9 @@ ul {
     }
     
     .nav-link {
-        padding: 4px 12px;
+        padding: 8px 12px;
         font-size: 0.85rem;
+        min-height: 38px;
     }
     /* Lesson specific mobile adjustments */
     .mobile-only {
@@ -867,13 +997,6 @@ ul {
         box-sizing: border-box;
         margin: 0 auto;
     }
-    .cta-button {
-        padding: 20px;
-        width: 100%;
-        text-align: center;
-        font-size: 1.6rem;
-        box-sizing: border-box;
-    }
 }
 
 @media (max-width: 390px) {
@@ -887,8 +1010,9 @@ ul {
         gap: 4px;
     }
     .nav-link {
-        padding: 3px 9px;
+        padding: 8px 9px;
         font-size: 0.8rem;
+        min-height: 36px;
     }
 }
 
@@ -903,8 +1027,9 @@ ul {
         gap: 2px;
     }
     .nav-link {
-        padding: 2px 7px;
+        padding: 7px 7px;
         font-size: 0.75rem;
+        min-height: 34px;
     }
 }
 
