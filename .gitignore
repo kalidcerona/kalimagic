@@ -2,20 +2,21 @@
 .agents/
 skills-lock.json
 
-# 루트 레벨 중복 파일 (실제 소스는 kalis_magic_playground/ 안에 있음)
-favicon.svg
-imigi/
-imigi2/
-imigi3/
-index.html
-intro.html
-lesson.html
-mmbs.html
-nav.js
-script.js
-style.css
-video.html
-works.html
+# 루트 레벨 중복 파일만 제외 (실제 소스는 kalis_magic_playground/ 안에 있음)
+# 루트 한정(/) — 경로 무관 패턴은 kalimagic-v2/* 까지 잡으므로 금지
+/favicon.svg
+/imigi/
+/imigi2/
+/imigi3/
+/index.html
+/intro.html
+/lesson.html
+/mmbs.html
+/nav.js
+/script.js
+/style.css
+/video.html
+/works.html
 
 # 로컬 Claude Code 설정
 .claude/
