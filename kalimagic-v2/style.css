@@ -334,7 +334,7 @@ img { max-width: 100%; display: block; }
 
 .video-card:hover {
     transform: translateY(-4px);
-    background: var(--border-dim);
+    background: var(--border-subtle);
     border-color: var(--border-light);
 }
 
@@ -424,7 +424,7 @@ img { max-width: 100%; display: block; }
     background: var(--card-bg);
     border-radius: 16px;
     overflow: hidden;
-    border: 1px solid var(--border-dim);
+    border: 1px solid var(--border-subtle);
     transition: var(--transition);
 }
 
