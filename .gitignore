@@ -19,3 +19,6 @@ works.html
 
 # 로컬 Claude Code 설정
 .claude/
+.gstack/
+kalimagic-v2/imigi3-orig/
+.superpowers/
