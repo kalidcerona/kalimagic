@@ -137,6 +137,7 @@ def main():
         raw = mmbs.read_text(encoding="utf-8")
         check('lang="ko"' in raw, "[메타] mmbs.html lang 없음")
         check("<title>" in raw, "[메타] mmbs.html title 없음")
+        check('name="viewport"' in raw, "[메타] mmbs.html viewport 없음")
         check("noindex" in raw, "[메타] mmbs.html noindex 없음")
 
     return report()
