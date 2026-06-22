@@ -39,6 +39,7 @@
             <h2 class="section-title">이런 판을 만드는 사람</h2>
             <p class="section-lead" style="margin-bottom: 8px;">형이 직접 모임을 열고, 무대를 만들고, 사람들 앞에 서. 후기는 그다음 얘기야.</p>
 
+            <div class="event-grid">
             <!-- 2026-garage -->
             <div class="event-block">
                 <p class="event-block-title">가레지 데모 · 2026.06</p>
@@ -169,6 +170,7 @@
                     <figure><img loading="lazy" src="assets/events/2023-wumu/KakaoTalk_20230806_221346420.jpg" alt="우뭉 행사 현장"></figure>
                 </div>
             </div>
+            </div><!-- /event-grid -->
 
         </div>
     </section>
@@ -226,7 +228,7 @@
         <div class="container">
             <div class="secondary-cta-box fade-in">
                 <h2>너도 이 형들처럼<br>될 수 있어</h2>
-                <a href="lesson.html" class="cta-button">형한테 직접 배우기</a>
+                <a href="intro.html" class="cta-button">5,000원으로 시작하기</a>
                 <div class="sub-link" style="margin-top: 24px;"><a href="works.html">강의·굿즈 먼저 둘러보기 →</a></div>
             </div>
         </div>
@@ -239,5 +241,74 @@
     </footer>
 
     <script src="script.js"></script>
+
+    <!-- 행사 갤러리 접기/펼치기 (클로드 디자인 인계 §4) — 대표 1장 + 행사명, 클릭 시 전체 펼침 -->
+    <style>
+    /* 행사 카드 2열 배치 — 펼친 카드는 전체폭 */
+    .event-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 28px 24px; align-items: start; }
+    .event-grid .event-block { margin-top: 0; }
+    .event-grid .event-block.is-open { grid-column: 1 / -1; }
+    @media (max-width: 640px) { .event-grid { grid-template-columns: 1fr; } }
+    .event-block-title.ev-toggle { cursor: pointer; user-select: none; }
+    .event-block-title .ev-count {
+        margin-left: auto; color: var(--text-muted); font-weight: 600;
+        font-size: 0.85rem; white-space: nowrap;
+    }
+    .event-block-title .ev-chevron { display: inline-block; margin-left: 4px; transition: transform 0.3s; }
+    .event-block.is-open .ev-chevron { transform: rotate(180deg); }
+    /* 접힘: 1열 + 첫 사진만 16:9 */
+    .event-block.is-collapsed .event-gallery { grid-template-columns: 1fr; }
+    .event-block.is-collapsed .event-gallery figure { display: none; }
+    .event-block.is-collapsed .event-gallery figure:first-child {
+        display: block; aspect-ratio: 16 / 9; cursor: pointer;
+    }
+    /* +N장 더 보기 뱃지 (첫 사진 오버레이) */
+    .ev-more {
+        position: absolute; right: 12px; bottom: 12px;
+        background: rgba(20,16,13,0.72); color: #fff; font-weight: 700;
+        font-size: 0.85rem; padding: 6px 12px; border-radius: 999px;
+        pointer-events: none; backdrop-filter: blur(2px);
+    }
+    .event-block.is-open .ev-more { display: none; }
+    </style>
+    <script>
+    (function () {
+        document.querySelectorAll('.event-block').forEach(function (block) {
+            var figures = block.querySelectorAll('.event-gallery figure');
+            var title = block.querySelector('.event-block-title');
+            if (!title || figures.length <= 1) return;  // 사진 1장 행사는 토글 없음
+
+            block.classList.add('is-collapsed');
+
+            var count = document.createElement('span');
+            count.className = 'ev-count';
+            count.innerHTML = '사진 ' + figures.length + '장 <span class="ev-chevron">▾</span>';
+            title.appendChild(count);
+
+            title.classList.add('ev-toggle');
+            title.setAttribute('role', 'button');
+            title.setAttribute('tabindex', '0');
+            title.setAttribute('aria-expanded', 'false');
+
+            var badge = document.createElement('span');
+            badge.className = 'ev-more';
+            badge.textContent = '+' + (figures.length - 1) + '장 더 보기';
+            figures[0].appendChild(badge);
+
+            function toggle() {
+                var open = block.classList.toggle('is-open');
+                block.classList.toggle('is-collapsed', !open);
+                title.setAttribute('aria-expanded', open ? 'true' : 'false');
+            }
+            title.addEventListener('click', toggle);
+            title.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
+            });
+            figures[0].addEventListener('click', function () {
+                if (block.classList.contains('is-collapsed')) toggle();
+            });
+        });
+    })();
+    </script>
 </body>
 </html>
