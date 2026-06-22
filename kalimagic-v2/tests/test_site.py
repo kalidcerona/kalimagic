@@ -6,6 +6,8 @@ RED(빌드 전)→GREEN(빌드 후) 회귀 가드. 실패 시 exit 1.
 """
 import os
 import re
+import shutil
+import subprocess
 import sys
 from html.parser import HTMLParser
 from pathlib import Path
@@ -121,6 +123,36 @@ def main():
     if "works.html" in parsed:
         check("lnmagic.co.kr" in (ROOT / "works.html").read_text(encoding="utf-8"),
               "[외부] works.html에 lnmagic.co.kr 링크 없음")
+
+    # 7-1. reviews.html deep JS modules
+    if "reviews.html" in parsed:
+        raw = (ROOT / "reviews.html").read_text(encoding="utf-8")
+        for module in ["collapsible.js", "modal.js"]:
+            check((ROOT / module).is_file(), f"[JS] {module} 없음")
+            check(f'<script src="{module}"></script>' in raw,
+                  f"[JS] reviews.html이 {module} 로드 안 함")
+        check('data-collapsible' in raw,
+              "[JS] reviews.html에 data-collapsible 진입점 없음")
+        check('class="field-reviews" data-modal' in raw,
+              "[JS] reviews.html에 data-modal 진입점 없음")
+        check('class="field-card" data-modal-card' in raw,
+              "[JS] reviews.html에 data-modal-card 카드 진입점 없음")
+        check("<script>\n    (function () {" not in raw,
+              "[JS] reviews.html에 이전 인라인 IIFE 스크립트가 남아 있음")
+
+    node = shutil.which("node")
+    if node:
+        for module in ["collapsible.js", "modal.js"]:
+            result = subprocess.run(
+                [node, "--check", str(ROOT / module)],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            check(result.returncode == 0,
+                  f"[JS] node --check {module} 실패: {result.stderr.strip()}")
+    else:
+        print("SKIP: node 없음 — collapsible.js/modal.js 구문 검사는 건너뜀")
 
     # 8. Hero primary CTA → intro.html (hero 섹션 안에 intro.html 링크)
     if "index.html" in parsed:

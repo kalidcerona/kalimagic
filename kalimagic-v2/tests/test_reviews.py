@@ -38,7 +38,7 @@ def main():
         c("과외 후기 verbatim(자판기)", "자판기 같아요" in reviews)
         c("과외 후기 verbatim(정답지)", "정답지가 앞에 있는 느낌" in reviews)
         c("nav active=reviews", "renderNav('reviews')" in reviews)
-        c("레슨 CTA 링크", "lesson.html" in reviews)
+        c("입문 CTA 링크(사다리)", "intro.html" in reviews)
 
     # --- works.html (제품 카드 개선) ---
     c("works.html 존재", works is not None)
