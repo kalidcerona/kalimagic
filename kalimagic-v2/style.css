@@ -228,13 +228,26 @@ img { max-width: 100%; display: block; }
 /* ---------- 행사 갤러리 (reviews, 확장 구조) ---------- */
 .event-block { margin-top: 52px; text-align: left; }
 .event-block-title {
-    font-size: 1rem; font-weight: 700; letter-spacing: 0.02em;
+    font-size: 0.96rem; font-weight: 700; letter-spacing: 0.02em; line-height: 1.35;
     color: var(--point-gold); text-transform: none; margin-bottom: 12px;
     display: flex; align-items: center; gap: 8px;
 }
 .event-block-title::before {
     content: ''; display: inline-block; width: 18px; height: 2px;
     background: var(--point-gold); border-radius: 2px; flex-shrink: 0;
+}
+.event-title-copy {
+    display: inline-flex; align-items: baseline; gap: 4px 5px; flex-wrap: wrap; min-width: 0;
+}
+.event-title-main,
+.event-title-year {
+    white-space: nowrap;
+}
+.event-title-sub {
+    color: var(--text-muted); font-size: 0.82em; font-weight: 600; white-space: nowrap;
+}
+.event-grid .event-block-title {
+    font-size: clamp(0.86rem, 0.78vw, 0.95rem);
 }
 .event-gallery { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 10px; }
 .event-gallery figure {
@@ -270,6 +283,44 @@ img { max-width: 100%; display: block; }
 }
 .cta-button:hover { background: var(--point-gold-hover); transform: translateY(-2px); }
 
+/* ---------- 오픈채팅 배너 ---------- */
+.oc-banner {
+    width: 100%;
+    display: flex; align-items: center; justify-content: space-between; gap: 24px;
+    background:
+        linear-gradient(135deg, rgba(255, 224, 0, 0.08), rgba(var(--point-gold-rgb), 0.06)),
+        var(--card-bg);
+    border: 1px solid rgba(var(--point-gold-rgb), 0.22);
+    border-radius: 16px;
+    padding: 26px 28px;
+}
+.oc-banner__copy { max-width: 620px; }
+.oc-banner__eyebrow {
+    color: var(--point-gold); font-size: 0.82rem; font-weight: 800;
+    letter-spacing: 0.1em; margin-bottom: 8px;
+}
+.oc-banner__title {
+    color: var(--text-main); font-size: clamp(1.12rem, 2.2vw, 1.45rem);
+    font-weight: 800; line-height: 1.35; margin-bottom: 8px;
+}
+.oc-banner__body {
+    color: var(--text-muted); font-size: 0.95rem; line-height: 1.75;
+}
+.oc-banner__button {
+    flex: 0 0 auto;
+    display: inline-flex; align-items: center; justify-content: center;
+    min-height: 44px; padding: 12px 18px; border-radius: 10px;
+    background: rgba(var(--point-gold-rgb), 0.12);
+    border: 1px solid rgba(var(--point-gold-rgb), 0.36);
+    color: var(--point-gold); font-size: 0.94rem; font-weight: 800;
+    transition: var(--transition);
+}
+.oc-banner__button:hover {
+    background: rgba(var(--point-gold-rgb), 0.2);
+    border-color: rgba(var(--point-gold-rgb), 0.55);
+    transform: translateY(-2px);
+}
+
 /* ---------- 유튜브 배너 (works) ---------- */
 .youtube-banner {
     display: flex; align-items: center; gap: 18px; margin-top: 36px;
@@ -296,6 +347,8 @@ img { max-width: 100%; display: block; }
     .hero { min-height: 80vh; }
     .nav-links { gap: 2px; }
     .nav-link { padding: 6px 9px; font-size: 0.85rem; }
+    .oc-banner { align-items: flex-start; flex-direction: column; padding: 24px 22px; }
+    .oc-banner__button { width: 100%; }
 }
 @media (max-width: 460px) {
     .nav-logo { font-size: 0.95rem; }
@@ -307,6 +360,8 @@ img { max-width: 100%; display: block; }
     .event-gallery { grid-template-columns: 1fr; }
     .store-grid { grid-template-columns: 1fr; }  /* 모바일 1열 */
     .secondary-cta-box { padding: 40px 20px; }
+    .oc-banner { padding: 22px 18px; }
+    .oc-banner__button { font-size: 0.9rem; }
 }
 
 /* ==========================================================================
