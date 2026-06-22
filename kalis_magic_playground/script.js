@@ -1,66 +1,14 @@
-// script.js
-
+// kalimagic v2 — 스크롤 fade-in
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. Smooth Scrolling for Anchor Links
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
-            e.preventDefault();
-            const targetId = this.getAttribute('href');
-            if (targetId === '#') return;
-            
-            const targetElement = document.querySelector(targetId);
-            if (targetElement) {
-                targetElement.scrollIntoView({
-                    behavior: 'smooth'
-                });
-            }
-        });
-    });
-
-    // 2. Intersection Observer for Fade-In Animation
-    const observerOptions = {
-        root: null,
-        rootMargin: '0px',
-        threshold: 0.15 // Trigger when 15% of the element is visible
-    };
-
-    const observer = new IntersectionObserver((entries, observer) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('visible');
-                // Stop observing once it has become visible
-                observer.unobserve(entry.target);
-            }
-        });
-    }, observerOptions);
-
-    // Select all elements with the .fade-in class and observe them
-    const fadeElements = document.querySelectorAll('.fade-in');
-    fadeElements.forEach(el => {
-        observer.observe(el);
-    });
-    // 3. Lightbox functionality
-    const modal = document.getElementById('image-modal');
-    const modalImg = document.getElementById('modal-img');
-    const galleryItems = document.querySelectorAll('.gallery-item img');
-
-    if (modal && modalImg) {
-        galleryItems.forEach(img => {
-            img.addEventListener('click', () => {
-                modal.classList.add('active');
-                modalImg.src = img.src;
-                document.body.style.overflow = 'hidden'; // Prevent scrolling
-            });
-        });
-
-        modal.addEventListener('click', () => {
-            modal.classList.remove('active');
-            document.body.style.overflow = 'auto'; // Restore scrolling
-        });
-
-        // 확대된 이미지를 클릭해도 모달이 닫히지 않게 — 클릭 버블링 차단 (top-level script.js와 동일 패치)
-        modalImg.addEventListener('click', (e) => {
-            e.stopPropagation();
-        });
+    const els = document.querySelectorAll('.fade-in');
+    if (!('IntersectionObserver' in window) || !els.length) {
+        els.forEach(el => el.classList.add('visible'));
+        return;
     }
+    const io = new IntersectionObserver((entries, obs) => {
+        entries.forEach(e => {
+            if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); }
+        });
+    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+    els.forEach(el => io.observe(el));
 });

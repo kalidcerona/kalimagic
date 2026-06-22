@@ -8,7 +8,7 @@
     <meta property="og:type" content="website">
     <meta property="og:title" content="입문 강의 영상 - 칼리형">
     <meta property="og:description" content="구매해줘서 고마워. 천천히, 여러 번 봐.">
-    <meta property="og:image" content="https://kalimagic.netlify.app/imigi3/g3.png">
+    <meta property="og:image" content="https://kalimagic.netlify.app/imigi3/g3.jpg">
     <meta property="og:url" content="https://kalimagic.netlify.app/mmbs.html">
     <meta property="og:site_name" content="칼리형의 마술 놀이터">
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
@@ -20,6 +20,7 @@
 
     <div class="members-header fade-in">
         <div class="members-logo">KALI</div>
+        <p style="color:#E0904E;font-weight:700;font-size:0.74rem;letter-spacing:0.16em;margin:0 0 12px;">구매자 전용</p>
         <h1 class="members-title">입문 강의 영상</h1>
         <p class="members-sub">구매해줘서 고마워. 천천히, 여러 번 봐.</p>
         <div class="members-divider"></div>
@@ -70,9 +71,12 @@
             wrapper.className = 'video-wrapper';
             wrapper.dataset.id = id;
             wrapper.dataset.title = title;
+            wrapper.tabIndex = 0;
+            wrapper.setAttribute('role', 'button');
+            wrapper.setAttribute('aria-label', title + ' 재생');
             const img = document.createElement('img');
             img.className = 'video-thumb';
-            img.src = `imigi3/g${num}.png`;
+            img.src = `imigi3/g${num}.jpg`;
             img.alt = title;
             img.loading = 'lazy';
             const btn = document.createElement('div');
@@ -86,11 +90,12 @@
             list.appendChild(item);
         });
 
-        list.addEventListener('click', e => {
-            const wrapper = e.target.closest('.video-wrapper[data-id]');
-            if (!wrapper) return;
+        function play(wrapper) {
+            if (!wrapper || !wrapper.dataset.id) return;
             const { id, title } = wrapper.dataset;
             wrapper.removeAttribute('data-id');
+            wrapper.removeAttribute('role');
+            wrapper.removeAttribute('tabindex');
             wrapper.style.cursor = 'default';
             const iframe = document.createElement('iframe');
             iframe.src = `https://www.youtube.com/embed/${encodeURIComponent(id)}?autoplay=1`;
@@ -98,6 +103,16 @@
             iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
             iframe.allowFullscreen = true;
             wrapper.replaceChildren(iframe);
+        }
+
+        list.addEventListener('click', e => {
+            play(e.target.closest('.video-wrapper[data-id]'));
+        });
+        list.addEventListener('keydown', e => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                const wrapper = e.target.closest('.video-wrapper[data-id]');
+                if (wrapper) { e.preventDefault(); play(wrapper); }
+            }
         });
     </script>
 </body>

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>영상 - 칼리형의 마술 놀이터</title>
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="description" content="칼리형이 추천하는 마술 영상. 형이 직접 써보고 쓸만하다 싶은 것들만 골라놨어. 뭐 살지 고민되면 여기서 시작해.">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="영상 - 칼리형의 마술 놀이터">
+    <meta property="og:description" content="칼리형이 추천하는 마술 영상. 형이 직접 써보고 쓸만하다 싶은 것들만 골라놨어. 뭐 살지 고민되면 여기서 시작해.">
+    <meta property="og:image" content="https://kalimagic.netlify.app/imigi3/1.jpg">
+    <meta property="og:url" content="https://kalimagic.netlify.app/video.html">
+    <meta property="og:site_name" content="칼리형의 마술 놀이터">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <!-- CSS Link -->
+    <link rel="stylesheet" href="style.css">
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+    <script src="nav.js"></script>
+</head>
+<body>
+
+    <header id="nav-root"></header>
+    <script>renderNav('video')</script>
+
+    <!-- Hero -->
+    <section id="hero" class="hero" style="--hero-img: url('assets/profile/street-magic.jpg'); --hero-pos: center 30%; min-height: 50vh;">
+        <div class="container center">
+            <p class="eyebrow" style="margin-bottom:14px;">형이 골라준 영상</p>
+            <h1 class="hero-headline" style="font-size: clamp(1.8rem, 5vw, 2.4rem); margin-bottom: 16px; word-break: keep-all;">형이 방금 한 마술,<br>너도 할 수 있어</h1>
+            <p class="hero-sub" style="font-size: 1.1rem; margin-top: 8px; word-break: keep-all;">먼저 무료로 하나 가져가. 마음에 들면 그때 더 배우면 돼.</p>
+        </div>
+    </section>
+
+    <!-- ===== 무료 강의 게이트 (가설 B · 고무줄 마술 placeholder) ===== -->
+    <section class="section" id="free-lesson" style="padding-top:48px;">
+        <div class="container">
+            <div style="position:relative;overflow:hidden;background:linear-gradient(155deg, rgba(224,144,78,0.1), rgba(255,255,255,0.02));border:1px solid rgba(224,144,78,0.28);border-radius:22px;max-width:920px;margin:0 auto;">
+                <div class="free-gate" style="display:grid;grid-template-columns:0.9fr 1.1fr;align-items:stretch;">
+                    <div style="position:relative;min-height:300px;background:linear-gradient(150deg,#2a2018,#15100c);display:flex;align-items:center;justify-content:center;border-right:1px solid rgba(255,255,255,0.06);">
+                        <div style="position:absolute;inset:0;background:radial-gradient(circle at 50% 42%,rgba(224,144,78,0.18),transparent 62%);"></div>
+                        <div style="position:relative;text-align:center;">
+                            <div style="width:66px;height:66px;border-radius:50%;margin:0 auto 14px;border:2px solid rgba(255,255,255,0.25);display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.35);">
+                                <div style="width:0;height:0;border-style:solid;border-width:11px 0 11px 18px;border-color:transparent transparent transparent #E0904E;margin-left:4px;"></div>
+                            </div>
+                            <span style="font-size:0.8rem;color:#cbbfb2;border:1px solid rgba(255,255,255,0.2);border-radius:999px;padding:5px 14px;">잠겨 있어 · 신청하면 열려</span>
+                        </div>
+                    </div>
+                    <div style="padding:42px 38px;">
+                        <p style="color:#E0904E;font-weight:700;font-size:0.78rem;letter-spacing:0.16em;margin:0 0 13px;">무료 강의</p>
+                        <h2 style="font-size:clamp(1.5rem,3.4vw,2.1rem);font-weight:800;line-height:1.3;letter-spacing:-0.01em;margin:0 0 14px;">고무줄 마술,<br>형이 영상으로 보내줄게</h2>
+                        <p style="color:#cbbfb2;font-size:1rem;line-height:1.8;margin:0 0 18px;">딱 하나, 따라 하기 쉬운 고무줄 마술이야. 연락처만 남기면 바로 쏴줄게 — 진짜 공짜야.</p>
+                        <p style="font-family:'Noto Serif KR',serif;font-style:italic;color:#E0904E;font-size:1.05rem;line-height:1.5;margin:0 0 26px;">공짜인데 이 정도면,<br>유료는 어떻겠어?</p>
+                        <!-- TODO: 무료 강의용 스모어 폼 준비되면 아래 span을 <a href="스모어URL" target="_blank" rel="noopener" class="cta-button">무료 강의 받기</a> 로 교체 -->
+                        <span style="display:inline-flex;align-items:center;gap:9px;background:rgba(224,144,78,0.16);border:1px dashed rgba(224,144,78,0.55);color:#E0904E;font-weight:700;font-size:1rem;padding:15px 28px;border-radius:12px;cursor:not-allowed;">무료 강의 받기 <span style="font-size:0.8rem;font-weight:600;color:#ab9f92;">· 곧 열려</span></span>
+                        <p style="color:#8a8075;font-size:0.82rem;margin:14px 0 0;">고무줄 마술 무료 강의 준비 중. 신청 폼이 열리면 여기서 바로 받을 수 있어.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Video Section -->
+    <section class="section" style="padding-top: 0;">
+        <div class="container">
+            <div class="video-grid">
+                
+                <a href="https://www.youtube.com/watch?v=cXU-CkLlIr4&list=PLUv4hDx_1Qhs9PsFEqF_5-HOi2OwFzjsr&index=3" target="_blank" rel="noopener" class="video-card">
+                    <img loading="lazy" src="imigi3/1.jpg" alt="영상 썸네일 1" class="video-thumb">
+                    <div class="video-info">
+                        <p class="video-desc">사자마자 바로 꺼낼 수 있는 도구들이야<br>오늘 사면 오늘 쓸 수 있어</p>
+                    </div>
+                </a>
+
+                <a href="https://www.youtube.com/watch?v=XVTkfBRyzg4&list=PLUv4hDx_1Qhs9PsFEqF_5-HOi2OwFzjsr&index=5" target="_blank" rel="noopener" class="video-card">
+                    <img loading="lazy" src="imigi3/2.jpg" alt="영상 썸네일 2" class="video-thumb">
+                    <div class="video-info">
+                        <p class="video-desc">뭐 사야 할지 모르겠지?<br>입문자한테 딱 맞는 카드 도구 5가지야</p>
+                    </div>
+                </a>
+
+                <a href="https://www.youtube.com/watch?v=6h3dlFU9A10&list=PLUv4hDx_1Qhs9PsFEqF_5-HOi2OwFzjsr&index=2" target="_blank" rel="noopener" class="video-card">
+                    <img loading="lazy" src="imigi3/3.jpg" alt="영상 썸네일 3" class="video-thumb">
+                    <div class="video-info">
+                        <p class="video-desc">어디서 시작해야 할지 모르겠으면 여기서 시작해<br>꼭 필요한 강의들만 추렸어</p>
+                    </div>
+                </a>
+
+                <a href="https://www.youtube.com/watch?v=PZhk1poZzog&list=PLUv4hDx_1Qhs9PsFEqF_5-HOi2OwFzjsr&index=4" target="_blank" rel="noopener" class="video-card">
+                    <img loading="lazy" src="imigi3/4.jpg" alt="영상 썸네일 4" class="video-thumb">
+                    <div class="video-info">
+                        <p class="video-desc">기초는 됐는데 레퍼토리가 부족해?<br>초급자한테 딱 좋은 도구 3가지야</p>
+                    </div>
+                </a>
+
+                <div class="secondary-cta-box fade-in" style="width: 100%; box-sizing: border-box;">
+                    <h2>영상 보고 직접 해보고 싶어졌지?<br>형이 입문용으로 준비한 강의가 있어</h2>
+                    <a href="intro.html" class="cta-button">입문 강의 보러 가기 →</a>
+                </div>
+
+                <a href="https://www.youtube.com/watch?v=rUMfP1ZISzY&list=PLUv4hDx_1Qhs9PsFEqF_5-HOi2OwFzjsr&index=6" target="_blank" rel="noopener" class="video-card">
+                    <img loading="lazy" src="imigi3/5.jpg" alt="영상 썸네일 5" class="video-thumb">
+                    <div class="video-info">
+                        <p class="video-desc">손기술로 억지로 하지 마<br>도구 하나면 어려운 마술이 그냥 돼</p>
+                    </div>
+                </a>
+
+                <a href="https://www.youtube.com/watch?v=-kQ83LnHImQ&list=PLUv4hDx_1Qhs9PsFEqF_5-HOi2OwFzjsr&index=5" target="_blank" rel="noopener" class="video-card">
+                    <img loading="lazy" src="imigi3/6.jpg" alt="영상 썸네일 6" class="video-thumb">
+                    <div class="video-info">
+                        <p class="video-desc">타짜처럼 보이는데 일반인도 할 수 있어<br>생각보다 진입장벽 낮아</p>
+                    </div>
+                </a>
+
+                <a href="https://www.youtube.com/watch?v=SfTNqwyHCFs&list=PLUv4hDx_1Qhs9PsFEqF_5-HOi2OwFzjsr&index=7" target="_blank" rel="noopener" class="video-card">
+                    <img loading="lazy" src="imigi3/7.jpg" alt="영상 썸네일 7" class="video-thumb">
+                    <div class="video-info">
+                        <p class="video-desc">포커 칠 때 한 번씩 꺼내봐<br>분위기 확 바뀌는 포커 마술 3가지야</p>
+                    </div>
+                </a>
+
+                <a href="https://www.youtube.com/watch?v=7rJ6mzeG17A&list=PLUv4hDx_1Qhs9PsFEqF_5-HOi2OwFzjsr&index=8" target="_blank" rel="noopener" class="video-card">
+                    <img loading="lazy" src="imigi3/8.jpg" alt="영상 썸네일 8" class="video-thumb">
+                    <div class="video-info">
+                        <p class="video-desc">유튜브나 인스타 찍을 때 터지는 마술 따로 있어<br>방송용 도구만 골랐어</p>
+                    </div>
+                </a>
+
+            </div>
+
+            <a href="https://www.youtube.com/@LectureNotePublishing" target="_blank" rel="noopener" class="youtube-banner" style="max-width: 800px; margin: 32px auto 0;">
+                <div class="youtube-text">
+                    <h4>LECTURENOTE YOUTUBE</h4>
+                    <p>전문가들이 수십만 원에 배우는 내용, 렉쳐노트 채널에서 배울 수 있어</p>
+                </div>
+                <svg class="youtube-icon" viewBox="0 0 24 24">
+                    <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/>
+                </svg>
+            </a>
+
+            <div class="secondary-cta-box fade-in" style="margin-top: 32px; width: 100%; box-sizing: border-box; max-width: 800px; margin-left: auto; margin-right: auto;">
+                <h2>형이 방금 한 그 마술,<br>제대로 배우고 싶어졌지?</h2>
+                <a href="intro.html" class="cta-button" style="max-width: 320px; width: 100%; box-sizing: border-box;">5,000원 입문 강의 보러 가기 →</a>
+            </div>
+        </div>
+    </section>
+
+    <script>
+// kalimagic v2 — 스크롤 fade-in
+document.addEventListener('DOMContentLoaded', () => {
+    const els = document.querySelectorAll('.fade-in');
+    if (!('IntersectionObserver' in window) || !els.length) {
+        els.forEach(el => el.classList.add('visible'));
+        return;
+    }
+    const io = new IntersectionObserver((entries, obs) => {
+        entries.forEach(e => {
+            if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); }
+        });
+    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+    els.forEach(el => io.observe(el));
+});
+
+</script>
+</body>
+</html>
