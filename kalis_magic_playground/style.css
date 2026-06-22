@@ -361,9 +361,9 @@ img { max-width: 100%; display: block; }
 @media (max-width: 820px) {
     .section { padding: 60px 0; }
     .card-container { grid-template-columns: 1fr; }
-    .store-grid { grid-template-columns: repeat(2, 1fr); }  /* 태블릿 2열 */
+    .store-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }  /* 태블릿 2열 */
     .event-gallery { grid-template-columns: repeat(2, 1fr); }
-    .cards { grid-template-columns: 1fr; }
+    .cards { grid-template-columns: repeat(2, 1fr); }  /* 태블릿 2열 */
     .split { grid-template-columns: 1fr; gap: 28px; }
     .split--reverse .split-media { order: 0; }
     .split-media img { max-height: 320px; }
@@ -380,11 +380,19 @@ img { max-width: 100%; display: block; }
 }
 @media (max-width: 600px) {
     .event-grid { grid-template-columns: 1fr; }
+    .cards { grid-template-columns: 1fr; gap: 14px; }
+    .store-grid { grid-template-columns: 1fr; gap: 12px; }
+    .beforeafter { gap: 20px; }
+    .review-grid { gap: 10px; }
+    .container { padding: 0 16px; }
+    .vcard { padding: 22px 18px; }
+    .final-cta { padding: 48px 20px; }
+    .hero { min-height: 70vh; padding: 72px 0 52px; }
 }
 @media (max-width: 460px) {
     .nav-logo { font-size: 0.95rem; }
-    .nav-links { gap: 1px; }
-    .nav-link { padding: 5px 7px; font-size: 0.78rem; }
+    .nav-links { gap: 4px; }
+    .nav-link { padding: 5px 8px; font-size: 0.82rem; }
     .final-cta { padding: 40px 20px; }
     .btn { width: 100%; text-align: center; }
     .cta-row { flex-direction: column; }
@@ -393,6 +401,7 @@ img { max-width: 100%; display: block; }
     .secondary-cta-box { padding: 40px 20px; }
     .oc-banner { padding: 22px 18px; }
     .oc-banner__button { font-size: 0.9rem; }
+    .hero { min-height: 58vh; padding: 60px 0 40px; }
 }
 
 /* ==========================================================================
@@ -715,3 +724,12 @@ body.field-modal-open { overflow: hidden; }
     .field-modal-overlay { padding: 14px; }
     .field-modal { max-height: 84vh; padding: 26px 22px 22px; }
 }
+
+/* ---------- index 전용 3열 그리드 ---------- */
+.kx-cards3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+}
+@media (max-width: 880px) { .kx-cards3 { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 600px) { .kx-cards3 { grid-template-columns: 1fr; gap: 14px; } }
