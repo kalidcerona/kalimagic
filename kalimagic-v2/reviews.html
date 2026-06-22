@@ -23,7 +23,7 @@
     <main>
 
     <!-- Hero -->
-    <section id="hero" class="hero" style="--hero-img: url('assets/profile/guitar.jpg'); --hero-pos: center 30%; min-height: 56vh;">
+    <section id="hero" class="hero" style="--hero-img: url('assets/profile/guitar.jpg'); --hero-pos: center 12%; min-height: 56vh;">
         <div class="container center">
             <p class="eyebrow fade-in">REAL REVIEWS</p>
             <h1 class="hero-headline fade-in" style="font-size: clamp(1.8rem, 6vw, 2.8rem); margin-bottom: 22px;">직접 배운 사람들 얘기</h1>
@@ -356,10 +356,14 @@
     <!-- 행사 갤러리 접기/펼치기 (클로드 디자인 인계 §4) — 대표 1장 + 행사명, 클릭 시 전체 펼침 -->
     <style>
     /* 행사 카드 2열 배치 — 펼친 카드는 전체폭 */
-    .event-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 28px 24px; align-items: start; }
+    .event-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px 18px; align-items: start; }
     .event-grid .event-block { margin-top: 0; }
     .event-grid .event-block.is-open { grid-column: 1 / -1; }
-    @media (max-width: 640px) { .event-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 960px) { .event-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 600px) { .event-grid { grid-template-columns: 1fr; } }
+    .event-block--main { margin-top: 0; margin-bottom: 30px; }
+    .event-block--main .event-block-title { font-size: 1.15rem; }
+    .event-block--main.is-collapsed .event-gallery figure:first-child { aspect-ratio: 21 / 9; }
     .event-block-title.ev-toggle { cursor: pointer; user-select: none; }
     .event-block-title .ev-count {
         margin-left: auto; color: var(--text-muted); font-weight: 600;
