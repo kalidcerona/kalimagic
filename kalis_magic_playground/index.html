@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;500;600;700&display=swap">
   <script src="nav.js"></script>
+  <script src="editor.js"></script>
   <style>
     *{ margin:0; padding:0; box-sizing:border-box; }
     html{ scroll-behavior:smooth; }
@@ -25,7 +26,7 @@
       .kx-grid2{ grid-template-columns:1fr !important; gap:30px !important; }
       .kx-cards2{ grid-template-columns:1fr !important; }
       .kx-revgrid{ grid-template-columns:1fr !important; }
-      .kx-scene{ grid-template-columns:1fr 1fr !important; }
+      .kx-scene{ grid-template-columns:1fr !important; }
       .kx-pad{ padding-left:18px !important; padding-right:18px !important; }
     }
   </style>
@@ -49,7 +50,7 @@
       <!-- HERO A · Cinematic Dark -->
       
         <div class="kx-fade" style="position:relative; min-height:76vh; display:flex; align-items:flex-end; overflow:hidden; margin-top:22px;">
-          <div style="position:absolute; inset:0; z-index:0;"><img src="assets/profile/magic-reaction.jpg" alt="관객이 놀라는 마술 시연 현장" style="width:100%; height:100%; object-fit:cover; object-position:center 38%;"></div>
+          <div style="position:absolute; inset:0; z-index:0;"><img src="assets/profile/magic-reaction.jpg" alt="관객이 놀라는 마술 시연 현장" style="width:100%; height:100%; object-fit:cover;" class="hero-main-img"></div>
           <div style="position:absolute; inset:0; z-index:1; background:linear-gradient(180deg, rgba(20,16,13,0.55) 0%, rgba(20,16,13,0.78) 55%, #1a1512 100%);"></div>
           <div style="position:absolute; left:-6%; bottom:-14%; width:60%; height:62%; z-index:1; pointer-events:none; background:radial-gradient(circle at 34% 70%, rgba(224,144,78,0.2), transparent 62%); filter:blur(10px);"></div>
           <div class="kx-pad" style="position:relative; z-index:2; width:100%; max-width:1140px; margin:0 auto; padding:0 26px 9vh;">
@@ -165,7 +166,7 @@
         <!-- SOLUTION A · Magic as Tool -->
         
           <div class="kx-fade kx-grid2" style="display:grid; grid-template-columns:1fr 1fr; gap:54px; align-items:center;">
-            <div style="position:relative; overflow:hidden; border-radius:10px; min-height:420px; height:100%; border:1px solid rgba(255,255,255,0.08);">
+            <div class="solution-img-wrap" style="position:relative; overflow:hidden; border-radius:10px; min-height:420px; height:100%; border:1px solid rgba(255,255,255,0.08);">
               <img src="assets/profile/magic-cards.jpg" alt="실내 카드 마술 시연" style="width:100%; height:100%; object-fit:cover; object-position:center 35%;">
               <div style="position:absolute; inset:0; pointer-events:none; box-shadow:inset 0 0 90px rgba(0,0,0,0.45);"></div>
             </div>
@@ -343,7 +344,7 @@
             <div style="position:absolute; left:50%; top:-30%; width:50%; height:80%; transform:translateX(-50%); pointer-events:none; background:radial-gradient(circle, rgba(224,144,78,0.16), transparent 65%); filter:blur(12px);"></div>
             <div style="position:relative;">
               <h3 style="font-size:clamp(1.7rem,4.2vw,2.5rem); font-weight:800; line-height:1.3; margin:0 0 16px;">일단 5,000원으로 해봐</h3>
-              <p style="color:#ab9f92; margin:0 auto 30px; line-height:1.9; max-width:34rem;">입문 강의 8편. <span style="text-decoration:line-through; opacity:0.65;">정가 70,000원</span>짜리를 <strong style="color:#E0904E;">5,000원</strong>에 풀어놨어.<br>맞으면 계속하면 되고, 아니면 그걸로 끝이야. 부담 없어.</p>
+              <p style="color:#ab9f92; margin:0 auto 30px; line-height:1.9; max-width:34rem;">입문 강의 8편. <span style="text-decoration:line-through; opacity:0.65;">70,000원</span>짜리를 <strong style="color:#E0904E;">5,000원</strong>에 풀어놨어.<br>맞으면 계속하면 되고, 아니면 그걸로 끝이야. 부담 없어.</p>
               <a href="intro.html" style="display:inline-block; padding:16px 34px; border-radius:10px; font-weight:700; font-size:1.04rem; background:#E0904E; color:#1a1410; box-shadow:0 12px 32px rgba(224,144,78,0.3);" data-hover="transform:translateY(-2px)">5,000원으로 시작하기</a>
             </div>
           </div>
