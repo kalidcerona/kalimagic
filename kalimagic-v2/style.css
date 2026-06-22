@@ -616,14 +616,71 @@ img { max-width: 100%; display: block; }
 }
 
 
-/* === 직접 써본 사람들 실전 후기 (masonry) === */
-.field-reviews { columns: 2; column-gap: 16px; margin-top: 36px; }
-.field-card { break-inside: avoid; background: var(--card-bg); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 22px 24px; margin-bottom: 16px; }
-.field-tag { display: inline-block; font-size: 0.72rem; font-weight: 700; color: var(--point-gold); border: 1px solid rgba(var(--point-gold-rgb), 0.4); border-radius: 999px; padding: 4px 12px; margin-bottom: 14px; }
-.field-quote { color: #e7ded3; font-size: 0.97rem; line-height: 1.8; margin: 0 0 14px; white-space: pre-line; }
-.field-author { color: var(--text-muted); font-size: 0.84rem; font-weight: 600; }
-@media (max-width: 820px) { .field-reviews { columns: 1; } }
+/* === 직접 써본 사람들 실전 후기 === */
+.field-reviews { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 34px; }
+.field-card {
+    position: relative; display: flex; flex-direction: column; min-height: 176px;
+    background: var(--card-bg); border: 1px solid var(--border-subtle); border-radius: 10px;
+    padding: 18px 20px; cursor: pointer; transition: var(--transition);
+}
+.field-card:hover,
+.field-card:focus-visible {
+    border-color: rgba(var(--point-gold-rgb), 0.42);
+    background: #2a201b;
+    transform: translateY(-2px);
+}
+.field-card:focus-visible { outline: 2px solid rgba(var(--point-gold-rgb), 0.75); outline-offset: 3px; }
+.field-card::after {
+    content: '+ 전문 보기'; display: block; margin-top: 10px;
+    color: rgba(var(--point-gold-rgb), 0.86); font-size: 0.78rem; font-weight: 800;
+}
+.field-tag {
+    display: inline-block; align-self: flex-start; font-size: 0.7rem; font-weight: 700;
+    color: var(--point-gold); border: 1px solid rgba(var(--point-gold-rgb), 0.4);
+    border-radius: 999px; padding: 3px 10px; margin-bottom: 10px;
+}
+.field-quote {
+    display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden;
+    color: #e7ded3; font-size: 0.92rem; line-height: 1.65; margin: 0 0 10px; white-space: pre-line;
+}
+.field-author { color: var(--text-muted); font-size: 0.82rem; font-weight: 600; margin-top: auto; }
+.field-quote.is-clamped { display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+.field-edited { display: block; color: var(--text-muted); font-size: 0.74rem; font-style: italic; margin-top: 6px; opacity: 0.85; }
 
-.field-quote.is-clamped { display: -webkit-box; -webkit-line-clamp: 6; -webkit-box-orient: vertical; overflow: hidden; }
-.field-more { display: block; background: none; border: none; color: var(--point-gold); font-weight: 700; font-size: 0.85rem; cursor: pointer; padding: 0; margin: -4px 0 12px; }
-.field-edited { display: block; color: var(--text-muted); font-size: 0.76rem; font-style: italic; margin-top: 8px; opacity: 0.85; }
+body.field-modal-open { overflow: hidden; }
+.field-modal-overlay {
+    position: fixed; inset: 0; z-index: 200; display: flex; align-items: center; justify-content: center;
+    padding: 24px; background: rgba(10, 7, 5, 0.78); backdrop-filter: blur(6px);
+}
+.field-modal-overlay[hidden] { display: none; }
+.field-modal {
+    position: relative; width: min(680px, 100%); max-height: min(78vh, 760px); overflow-y: auto;
+    background: #261d18; border: 1px solid rgba(var(--point-gold-rgb), 0.28); border-radius: 14px;
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.55); padding: 30px 30px 26px;
+}
+.field-modal:focus { outline: none; }
+.field-modal-close {
+    position: sticky; top: 0; float: right; width: 34px; height: 34px; margin: -12px -12px 8px 16px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: #1f1815; border: 1px solid rgba(var(--point-gold-rgb), 0.28); border-radius: 50%;
+    color: var(--point-gold); font-size: 1.45rem; line-height: 1; cursor: pointer; z-index: 1;
+}
+.field-modal-close:hover,
+.field-modal-close:focus-visible { border-color: rgba(var(--point-gold-rgb), 0.68); background: #2d211b; outline: none; }
+.field-modal-tag {
+    display: inline-block; color: var(--point-gold); border: 1px solid rgba(var(--point-gold-rgb), 0.42);
+    border-radius: 999px; padding: 5px 12px; font-size: 0.78rem; font-weight: 800; margin-bottom: 18px;
+}
+.field-modal-quote { clear: both; color: #f1e7dc; font-size: 1rem; line-height: 1.9; white-space: pre-line; margin: 0; }
+.field-modal-footer {
+    display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+    margin-top: 22px; padding-top: 16px; border-top: 1px solid var(--border-subtle);
+}
+.field-modal-author { color: var(--text-muted); font-size: 0.88rem; font-weight: 700; }
+.field-modal-edited { color: var(--text-muted); font-size: 0.78rem; font-style: italic; opacity: 0.9; }
+@media (max-width: 820px) {
+    .field-reviews { grid-template-columns: 1fr; }
+    .field-card { min-height: 0; padding: 17px 18px; }
+    .field-modal-overlay { padding: 14px; }
+    .field-modal { max-height: 84vh; padding: 26px 22px 22px; }
+}
