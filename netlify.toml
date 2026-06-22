@@ -1,5 +1,5 @@
 # Netlify 배포 설정
-# 배포 폴더 = kalimagic-v2 (랜딩 페이지 2, 라이브 본)
-# 이전엔 kalis_magic_playground였으나 kalimagic-v2로 전환 (2026-06-22)
+# 배포 폴더 = kalis_magic_playground (Netlify base dir 기준, v2 미러됨)
+# kalimagic-v2/ 작업본 → kalis_magic_playground/ 미러 → Netlify 배포
 [build]
-  publish = "kalimagic-v2"
+  publish = "kalis_magic_playground"
