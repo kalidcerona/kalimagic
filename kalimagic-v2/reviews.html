@@ -348,39 +348,6 @@
 
     <script src="script.js"></script>
 
-    <!-- 행사 갤러리 접기/펼치기 (클로드 디자인 인계 §4) — 대표 1장 + 행사명, 클릭 시 전체 펼침 -->
-    <style>
-    /* 행사 카드 2열 배치 — 펼친 카드는 전체폭 */
-    .event-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px 18px; align-items: start; }
-    .event-grid .event-block { margin-top: 0; }
-    .event-grid .event-block.is-open { grid-column: 1 / -1; }
-    @media (max-width: 960px) { .event-grid { grid-template-columns: repeat(2, 1fr); } }
-    @media (max-width: 600px) { .event-grid { grid-template-columns: 1fr; } }
-    .event-block--main { margin-top: 0; margin-bottom: 30px; }
-    .event-block--main .event-block-title { font-size: 1.15rem; }
-    .event-block--main.is-collapsed .event-gallery figure:first-child { aspect-ratio: 21 / 9; }
-    .event-block-title.ev-toggle { cursor: pointer; user-select: none; }
-    .event-block-title .ev-count {
-        margin-left: auto; color: var(--text-muted); font-weight: 600;
-        font-size: 0.85rem; white-space: nowrap;
-    }
-    .event-block-title .ev-chevron { display: inline-block; margin-left: 4px; transition: transform 0.3s; }
-    .event-block.is-open .ev-chevron { transform: rotate(180deg); }
-    /* 접힘: 1열 + 첫 사진만 16:9 */
-    .event-block.is-collapsed .event-gallery { grid-template-columns: 1fr; }
-    .event-block.is-collapsed .event-gallery figure { display: none; }
-    .event-block.is-collapsed .event-gallery figure:first-child {
-        display: block; aspect-ratio: 16 / 9; cursor: pointer;
-    }
-    /* +N장 더 보기 뱃지 (첫 사진 오버레이) */
-    .ev-more {
-        position: absolute; right: 12px; bottom: 12px;
-        background: rgba(20,16,13,0.72); color: #fff; font-weight: 700;
-        font-size: 0.85rem; padding: 6px 12px; border-radius: 999px;
-        pointer-events: none; backdrop-filter: blur(2px);
-    }
-    .event-block.is-open .ev-more { display: none; }
-    </style>
     <script>
     (function () {
         document.querySelectorAll('.event-block').forEach(function (block) {

@@ -227,6 +227,9 @@ img { max-width: 100%; display: block; }
 
 /* ---------- 행사 갤러리 (reviews, 확장 구조) ---------- */
 .event-block { margin-top: 52px; text-align: left; }
+.event-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px 18px; align-items: start; }
+.event-grid .event-block { margin-top: 0; }
+.event-grid .event-block.is-open { grid-column: 1 / -1; }
 .event-block-title {
     font-size: 0.96rem; font-weight: 700; letter-spacing: 0.02em; line-height: 1.35;
     color: var(--point-gold); text-transform: none; margin-bottom: 12px;
@@ -249,6 +252,15 @@ img { max-width: 100%; display: block; }
 .event-grid .event-block-title {
     font-size: clamp(0.86rem, 0.78vw, 0.95rem);
 }
+.event-block--main { margin-top: 0; margin-bottom: 30px; }
+.event-block--main .event-block-title { font-size: 1.15rem; }
+.event-block-title.ev-toggle { cursor: pointer; user-select: none; }
+.event-block-title .ev-count {
+    margin-left: auto; color: var(--text-muted); font-weight: 600;
+    font-size: 0.85rem; white-space: nowrap;
+}
+.event-block-title .ev-chevron { display: inline-block; margin-left: 4px; transition: transform 0.3s; }
+.event-block.is-open .ev-chevron { transform: rotate(180deg); }
 .event-gallery { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 10px; }
 .event-gallery figure {
     position: relative; border-radius: 16px; overflow: hidden; aspect-ratio: 4 / 3;
@@ -261,6 +273,19 @@ img { max-width: 100%; display: block; }
     background: linear-gradient(transparent, rgba(0,0,0,0.8)); color: #fff;
     font-size: 0.9rem; font-weight: 600;
 }
+.event-block--main.is-collapsed .event-gallery figure:first-child { aspect-ratio: 21 / 9; }
+.event-block.is-collapsed .event-gallery { grid-template-columns: 1fr; }
+.event-block.is-collapsed .event-gallery figure { display: none; }
+.event-block.is-collapsed .event-gallery figure:first-child {
+    display: block; aspect-ratio: 16 / 9; cursor: pointer;
+}
+.ev-more {
+    position: absolute; right: 12px; bottom: 12px;
+    background: rgba(20,16,13,0.72); color: #fff; font-weight: 700;
+    font-size: 0.85rem; padding: 6px 12px; border-radius: 999px;
+    pointer-events: none; backdrop-filter: blur(2px);
+}
+.event-block.is-open .ev-more { display: none; }
 
 /* ---------- 후기 Q&A (reviews) ---------- */
 .reviews-intro { text-align: center; max-width: 620px; margin: 0 auto 56px; }
@@ -349,6 +374,12 @@ img { max-width: 100%; display: block; }
     .nav-link { padding: 6px 9px; font-size: 0.85rem; }
     .oc-banner { align-items: flex-start; flex-direction: column; padding: 24px 22px; }
     .oc-banner__button { width: 100%; }
+}
+@media (max-width: 960px) {
+    .event-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 600px) {
+    .event-grid { grid-template-columns: 1fr; }
 }
 @media (max-width: 460px) {
     .nav-logo { font-size: 0.95rem; }

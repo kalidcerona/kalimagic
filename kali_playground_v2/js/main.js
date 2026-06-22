@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (entry.isIntersecting) {
                 entry.target.classList.add('active');
                 // Optional: Stop observing once revealed
-                // observer.unobserve(entry.target);
+                observer.unobserve(entry.target);
             }
         });
     }, observerOptions);

@@ -57,5 +57,10 @@ document.addEventListener('DOMContentLoaded', () => {
             modal.classList.remove('active');
             document.body.style.overflow = 'auto'; // Restore scrolling
         });
+
+        // 확대된 이미지를 클릭해도 모달이 닫히지 않게 — 클릭 버블링 차단 (top-level script.js와 동일 패치)
+        modalImg.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
     }
 });

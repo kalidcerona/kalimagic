@@ -15,6 +15,7 @@ function renderNav(activePage) {
     }).join('');
 
     const root = document.getElementById('nav-root');
+    if (!root) return;  // nav-root 없는 페이지에서 null deref로 전체 렌더가 죽지 않게 가드
     root.className = 'main-nav';
     root.innerHTML = `<a href="index.html" class="nav-logo">KALI</a><nav class="nav-links">${links}</nav>`;
 }
