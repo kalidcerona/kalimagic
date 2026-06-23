@@ -29,3 +29,9 @@ kalimagic-v2/imigi3-orig/
 
 # 구버전 폴더
 /kali_playground_v2/
+
+# kalis_magic_playground 배포 폴더 내 불필요 항목
+kalis_magic_playground/imigi3-orig/
+kalis_magic_playground/docs/
+kalis_magic_playground/archive/
+kalis_magic_playground/scripts/
