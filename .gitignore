@@ -23,3 +23,9 @@ skills-lock.json
 .gstack/
 kalimagic-v2/imigi3-orig/
 .superpowers/
+
+# Local Netlify folder
+.netlify
+
+# 구버전 폴더
+/kali_playground_v2/
