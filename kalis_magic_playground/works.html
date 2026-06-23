@@ -11,11 +11,16 @@
     <meta property="og:image" content="assets/profile/magic-booth.jpg">
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="mobile.css">
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
     <script src="nav.js"></script>
     <script src="editor.js"></script>
+    <style>
+        /* 이 페이지는 kx-mobile 없음 — 데스크탑 마크업을 모바일에서도 노출 */
+        @media (max-width: 1024px) {
+            .kx-desktop { display: block !important; }
+        }
+    </style>
 </head>
 <body>
 <div class="kx-desktop">
@@ -173,26 +178,26 @@
   </div>
   <!-- 추천 -->
   <div style="padding:32px 24px 0;">
-    <p style="color:#E08A4F; font-weight:800; font-size:13px; letter-spacing:0.08em; margin:0 0 14px;">✦ 추천</p>
+    <p style="color:var(--point-gold); font-weight:800; font-size:13px; letter-spacing:0.08em; margin:0 0 14px;">✦ 추천</p>
     <div style="display:flex; flex-direction:column; gap:12px;">
       <a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1992" target="_blank" rel="noopener" style="display:flex; gap:14px; background:#241712; border:1px solid rgba(255,255,255,0.08); border-radius:14px; overflow:hidden; text-decoration:none; padding:14px 16px; align-items:center;">
         <img loading="lazy" src="assets/products/클래식 콜렉션 1.jpg" alt="클래식 콜렉션" style="width:64px; height:64px; object-fit:cover; border-radius:8px; flex-shrink:0;">
-        <div><p style="margin:0 0 3px; color:#E08A4F; font-size:11px; font-weight:700; letter-spacing:0.04em;">처음이라면</p><h4 style="margin:0 0 4px; color:#F4E7DA; font-size:14.5px; font-weight:800;">클래식 콜렉션</h4><p style="margin:0; color:#A99685; font-size:12.5px; line-height:1.5;">제일 써먹기 좋은 것들만 골랐어.</p></div>
+        <div><p style="margin:0 0 3px; color:var(--point-gold); font-size:11px; font-weight:700; letter-spacing:0.04em;">처음이라면</p><h4 style="margin:0 0 4px; color:#F4E7DA; font-size:14.5px; font-weight:800;">클래식 콜렉션</h4><p style="margin:0; color:#A99685; font-size:12.5px; line-height:1.5;">제일 써먹기 좋은 것들만 골랐어.</p></div>
       </a>
       <a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1000000123" target="_blank" rel="noopener" style="display:flex; gap:14px; background:#241712; border:1px solid rgba(255,255,255,0.08); border-radius:14px; overflow:hidden; text-decoration:none; padding:14px 16px; align-items:center;">
         <img loading="lazy" src="assets/products/트레이스 2.jpg" alt="트레이스2" style="width:64px; height:64px; object-fit:cover; border-radius:8px; flex-shrink:0;">
-        <div><p style="margin:0 0 3px; color:#E08A4F; font-size:11px; font-weight:700; letter-spacing:0.04em;">실전 마술을 늘리고 싶다면</p><h4 style="margin:0 0 4px; color:#F4E7DA; font-size:14.5px; font-weight:800;">트레이스2</h4><p style="margin:0; color:#A99685; font-size:12.5px; line-height:1.5;">실전에서 바로 꺼낼 수 있는 루틴들.</p></div>
+        <div><p style="margin:0 0 3px; color:var(--point-gold); font-size:11px; font-weight:700; letter-spacing:0.04em;">실전 마술을 늘리고 싶다면</p><h4 style="margin:0 0 4px; color:#F4E7DA; font-size:14.5px; font-weight:800;">트레이스2</h4><p style="margin:0; color:#A99685; font-size:12.5px; line-height:1.5;">실전에서 바로 꺼낼 수 있는 루틴들.</p></div>
       </a>
       <a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1000000238" target="_blank" rel="noopener" style="display:flex; gap:14px; background:#241712; border:1px solid rgba(255,255,255,0.08); border-radius:14px; overflow:hidden; text-decoration:none; padding:14px 16px; align-items:center;">
         <img loading="lazy" src="assets/products/칼리 덱.jpg" alt="칼리 덱" style="width:64px; height:64px; object-fit:cover; border-radius:8px; flex-shrink:0;">
-        <div><p style="margin:0 0 3px; color:#E08A4F; font-size:11px; font-weight:700; letter-spacing:0.04em;">형 굿즈가 궁금하다면</p><h4 style="margin:0 0 4px; color:#F4E7DA; font-size:14.5px; font-weight:800;">칼리 덱 · 틴 케이스</h4><p style="margin:0; color:#A99685; font-size:12.5px; line-height:1.5;">형이랑 같은 카드 들고 다니는 거야.</p></div>
+        <div><p style="margin:0 0 3px; color:var(--point-gold); font-size:11px; font-weight:700; letter-spacing:0.04em;">형 굿즈가 궁금하다면</p><h4 style="margin:0 0 4px; color:#F4E7DA; font-size:14.5px; font-weight:800;">칼리 덱 · 틴 케이스</h4><p style="margin:0; color:#A99685; font-size:12.5px; line-height:1.5;">형이랑 같은 카드 들고 다니는 거야.</p></div>
       </a>
     </div>
   </div>
 
   <!-- 강의 -->
   <div style="padding:28px 24px 0;">
-    <p style="color:#E08A4F; font-weight:800; font-size:13px; letter-spacing:0.08em; margin:0 0 14px;">✦ 강의</p>
+    <p style="color:var(--point-gold); font-weight:800; font-size:13px; letter-spacing:0.08em; margin:0 0 14px;">✦ 강의</p>
     <div style="display:flex; flex-direction:column; gap:10px;">
       <a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1992" target="_blank" rel="noopener" style="display:flex; gap:14px; background:#1F140F; border:1px solid rgba(255,255,255,0.06); border-radius:12px; text-decoration:none; padding:12px 14px; align-items:center;">
         <img loading="lazy" src="assets/products/클래식 콜렉션 1.jpg" alt="클래식 콜렉션 vol.1" style="width:52px; height:52px; object-fit:cover; border-radius:6px; flex-shrink:0;">
@@ -239,7 +244,7 @@
 
   <!-- 굿즈 -->
   <div style="padding:28px 24px 0;">
-    <p style="color:#E08A4F; font-weight:800; font-size:13px; letter-spacing:0.08em; margin:0 0 14px;">✦ 굿즈</p>
+    <p style="color:var(--point-gold); font-weight:800; font-size:13px; letter-spacing:0.08em; margin:0 0 14px;">✦ 굿즈</p>
     <div style="display:flex; flex-direction:column; gap:10px;">
       <a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1000000238" target="_blank" rel="noopener" style="display:flex; gap:14px; background:#1F140F; border:1px solid rgba(255,255,255,0.06); border-radius:12px; text-decoration:none; padding:12px 14px; align-items:center;">
         <img loading="lazy" src="assets/products/칼리 덱.jpg" alt="칼리 덱" style="width:52px; height:52px; object-fit:cover; border-radius:6px; flex-shrink:0;">
@@ -254,7 +259,7 @@
 
   <div style="padding:32px 24px 40px;">
     <a href="https://lnmagic.co.kr" target="_blank" rel="noopener" class="kx-cta">작품·도구 구경하기</a>
-    <p style="text-align:center; margin:16px 0 0; color:#9A7560; font-size:13.5px;">입문 먼저 해보고 싶으면 · <a href="intro.html" style="color:#E08A4F;"><b>5,000원 입문 →</b></a></p>
+    <p style="text-align:center; margin:16px 0 0; color:#9A7560; font-size:13.5px;">입문 먼저 해보고 싶으면 · <a href="intro.html" style="color:var(--point-gold);"><b>5,000원 입문 →</b></a></p>
   </div>
 </div>
 </div><!-- /.kx-mobile -->

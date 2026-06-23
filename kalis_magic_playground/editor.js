@@ -44,6 +44,13 @@
     document.body.prepend(bar);
     document.body.style.paddingTop = BAR_H + 'px';
 
+    /* ── 편집 모드: 링크 이동 차단 (카드 클릭해도 페이지 안 바뀜) ── */
+    document.addEventListener('click', function (e) {
+      if (e.target.closest('#ke-bar')) return;          // 툴바는 정상 동작
+      const a = e.target.closest('a');
+      if (a) e.preventDefault();                          // 그 외 모든 링크 이동 차단
+    }, true);
+
     /* ── 뷰포트 너비 표시 ────────────────────────────────── */
     function updateVpLabel() {
       const el = document.getElementById('ke-vpw');

@@ -11,11 +11,17 @@
     <meta property="og:image" content="assets/profile/portrait.jpg">
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="mobile.css">
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
     <script src="nav.js"></script>
     <script src="editor.js"></script>
+    <script src="script.js"></script>
+    <style>
+        /* 이 페이지는 kx-mobile 없음 — 데스크탑 마크업을 모바일에서도 노출 */
+        @media (max-width: 1024px) {
+            .kx-desktop { display: block !important; }
+        }
+    </style>
 </head>
 <body>
 <div class="kx-desktop">
@@ -41,7 +47,7 @@
     <section class="section">
         <div class="container">
             <div style="max-width:760px;margin:0 auto;background:linear-gradient(150deg,rgba(224,144,78,0.08),rgba(255,255,255,0.02));border:1px solid rgba(224,144,78,0.22);border-radius:18px;padding:42px 40px;">
-                <p style="color:#E0904E;font-weight:700;font-size:0.78rem;letter-spacing:0.16em;margin:0 0 13px;">누가 오면 좋아</p>
+                <p style="color:var(--point-gold);font-weight:700;font-size:0.78rem;letter-spacing:0.16em;margin:0 0 13px;">누가 오면 좋아</p>
                 <h2 style="font-size:clamp(1.5rem,3.6vw,2rem);font-weight:800;line-height:1.32;letter-spacing:-0.01em;margin:0 0 16px;">처음이어도 괜찮아</h2>
                 <p style="color:#cbbfb2;font-size:1.04rem;line-height:1.9;margin:0;">오히려 입문자분들이 훨씬 많이 신청해. 처음이어도 괜찮아. 이미 하고 있는데 "혼자 익히다 보니 기초가 부실한 것 같다", 뭔가 비어있는 느낌 — 그 부분 잡으러 오는 사람들 대부분 만족하고 갔어. 형이 수준 보고 맞춰줄게.</p>
             </div>
@@ -52,7 +58,7 @@
     <section class="section bg-alt">
         <div class="container">
             <div style="text-align:center;max-width:600px;margin:0 auto 38px;">
-                <p style="color:#E0904E;font-weight:700;font-size:0.78rem;letter-spacing:0.16em;margin:0 0 13px;">궁금한 거</p>
+                <p style="color:var(--point-gold);font-weight:700;font-size:0.78rem;letter-spacing:0.16em;margin:0 0 13px;">궁금한 거</p>
                 <h2 style="font-size:clamp(1.6rem,4vw,2.3rem);font-weight:800;line-height:1.3;letter-spacing:-0.01em;margin:0;">자주 묻는 것들</h2>
             </div>
             <div style="max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:14px;">
@@ -67,19 +73,19 @@
     <section class="section">
         <div class="container">
             <div style="text-align:center;max-width:600px;margin:0 auto 38px;">
-                <p style="color:#E0904E;font-weight:700;font-size:0.78rem;letter-spacing:0.16em;margin:0 0 13px;">가격</p>
+                <p style="color:var(--point-gold);font-weight:700;font-size:0.78rem;letter-spacing:0.16em;margin:0 0 13px;">가격</p>
                 <h2 style="font-size:clamp(1.6rem,4vw,2.3rem);font-weight:800;line-height:1.3;letter-spacing:-0.01em;margin:0;">1주 1회 · 총 4회 · 90분</h2>
             </div>
             <div class="lesson-price" style="display:grid;grid-template-columns:1fr 1fr;gap:18px;max-width:680px;margin:0 auto;">
                 <div style="background:#261d18;border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:30px 28px;">
                     <p style="font-weight:800;font-size:1.1rem;margin:0 0 6px;">평일</p>
                     <p style="color:#9d9186;font-size:0.9rem;margin:0 0 18px;">1주 1회 · 총 4회 · 90분</p>
-                    <p style="font-size:1.9rem;font-weight:800;color:#E0904E;font-family:'Noto Serif KR',serif;margin:0;">60<span style="font-size:1.05rem;font-weight:600;">만원</span></p>
+                    <p style="font-size:1.9rem;font-weight:800;color:var(--point-gold);font-family:'Noto Serif KR',serif;margin:0;">60<span style="font-size:1.05rem;font-weight:600;">만원</span></p>
                 </div>
                 <div style="background:#261d18;border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:30px 28px;">
                     <p style="font-weight:800;font-size:1.1rem;margin:0 0 6px;">주말</p>
                     <p style="color:#9d9186;font-size:0.9rem;margin:0 0 18px;">1주 1회 · 총 4회 · 90분</p>
-                    <p style="font-size:1.9rem;font-weight:800;color:#E0904E;font-family:'Noto Serif KR',serif;margin:0;">70<span style="font-size:1.05rem;font-weight:600;">만원</span></p>
+                    <p style="font-size:1.9rem;font-weight:800;color:var(--point-gold);font-family:'Noto Serif KR',serif;margin:0;">70<span style="font-size:1.05rem;font-weight:600;">만원</span></p>
                 </div>
             </div>
         </div>
@@ -89,16 +95,16 @@
     <section class="section bg-alt">
         <div class="container">
             <div style="text-align:center;max-width:600px;margin:0 auto 38px;">
-                <p style="color:#E0904E;font-weight:700;font-size:0.78rem;letter-spacing:0.16em;margin:0 0 13px;">수강생이 한 말</p>
+                <p style="color:var(--point-gold);font-weight:700;font-size:0.78rem;letter-spacing:0.16em;margin:0 0 13px;">수강생이 한 말</p>
                 <h2 style="font-size:clamp(1.6rem,4vw,2.3rem);font-weight:800;line-height:1.3;letter-spacing:-0.01em;margin:0;">직접 배운 사람들 얘기</h2>
             </div>
             <div class="lesson-reviews" style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px;max-width:840px;margin:0 auto;">
-                <div style="background:#261d18;border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:26px;"><p style="color:#ede5dc;font-size:1rem;line-height:1.75;margin:0 0 12px;">"막히는 부분이 있을 때 바로바로 피드백이 있는 게 좋아요"</p><p style="color:#E0904E;font-size:0.85rem;font-weight:600;margin:0;">✦ 형의 마술 배운 사람</p></div>
-                <div style="background:#261d18;border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:26px;"><p style="color:#ede5dc;font-size:1rem;line-height:1.75;margin:0 0 12px;">"수강자 맞춤 난이도로 잘 맞춰주세요"</p><p style="color:#E0904E;font-size:0.85rem;font-weight:600;margin:0;">✦ 형의 마술 배운 사람</p></div>
-                <div style="background:#261d18;border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:26px;"><p style="color:#ede5dc;font-size:1rem;line-height:1.75;margin:0 0 12px;">"쉬워요! 어려워하면 다시 설명해주시거든요"</p><p style="color:#E0904E;font-size:0.85rem;font-weight:600;margin:0;">✦ 형의 마술 배운 사람</p></div>
-                <div style="background:#261d18;border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:26px;"><p style="color:#ede5dc;font-size:1rem;line-height:1.75;margin:0 0 12px;">"평소에 안 되던 동작, 기초, 기원까지 자세히 알 수 있어서 좋았어요"</p><p style="color:#E0904E;font-size:0.85rem;font-weight:600;margin:0;">✦ 형의 마술 배운 사람</p></div>
-                <div style="background:#261d18;border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:26px;"><p style="color:#ede5dc;font-size:1rem;line-height:1.75;margin:0 0 12px;">"마술을 보기만 좋아하던 학생에서, 남들에게 보여줄 수 있는 마술이 많아졌어요"</p><p style="color:#E0904E;font-size:0.85rem;font-weight:600;margin:0;">✦ 형의 마술 배운 사람</p></div>
-                <div style="background:#261d18;border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:26px;"><p style="color:#ede5dc;font-size:1rem;line-height:1.75;margin:0 0 12px;">"도구 수집만 하고 실제로 마술을 하고 다닐 엄두가 안 났는데 이제야 진짜 마술을 하는 느낌입니다"</p><p style="color:#E0904E;font-size:0.85rem;font-weight:600;margin:0;">✦ 형의 마술 배운 사람</p></div>
+                <div style="background:#261d18;border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:26px;"><p style="color:#ede5dc;font-size:1rem;line-height:1.75;margin:0 0 12px;">"막히는 부분이 있을 때 바로바로 피드백이 있는 게 좋아요"</p><p style="color:var(--point-gold);font-size:0.85rem;font-weight:600;margin:0;">✦ 형의 마술 배운 사람</p></div>
+                <div style="background:#261d18;border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:26px;"><p style="color:#ede5dc;font-size:1rem;line-height:1.75;margin:0 0 12px;">"수강자 맞춤 난이도로 잘 맞춰주세요"</p><p style="color:var(--point-gold);font-size:0.85rem;font-weight:600;margin:0;">✦ 형의 마술 배운 사람</p></div>
+                <div style="background:#261d18;border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:26px;"><p style="color:#ede5dc;font-size:1rem;line-height:1.75;margin:0 0 12px;">"쉬워요! 어려워하면 다시 설명해주시거든요"</p><p style="color:var(--point-gold);font-size:0.85rem;font-weight:600;margin:0;">✦ 형의 마술 배운 사람</p></div>
+                <div style="background:#261d18;border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:26px;"><p style="color:#ede5dc;font-size:1rem;line-height:1.75;margin:0 0 12px;">"평소에 안 되던 동작, 기초, 기원까지 자세히 알 수 있어서 좋았어요"</p><p style="color:var(--point-gold);font-size:0.85rem;font-weight:600;margin:0;">✦ 형의 마술 배운 사람</p></div>
+                <div style="background:#261d18;border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:26px;"><p style="color:#ede5dc;font-size:1rem;line-height:1.75;margin:0 0 12px;">"마술을 보기만 좋아하던 학생에서, 남들에게 보여줄 수 있는 마술이 많아졌어요"</p><p style="color:var(--point-gold);font-size:0.85rem;font-weight:600;margin:0;">✦ 형의 마술 배운 사람</p></div>
+                <div style="background:#261d18;border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:26px;"><p style="color:#ede5dc;font-size:1rem;line-height:1.75;margin:0 0 12px;">"도구 수집만 하고 실제로 마술을 하고 다닐 엄두가 안 났는데 이제야 진짜 마술을 하는 느낌입니다"</p><p style="color:var(--point-gold);font-size:0.85rem;font-weight:600;margin:0;">✦ 형의 마술 배운 사람</p></div>
             </div>
         </div>
     </section>
@@ -142,12 +148,12 @@
           <div style="flex:1; background:#1A0F0A; border-radius:10px; padding:14px 16px; text-align:center;">
             <p style="margin:0 0 4px; color:#F4E7DA; font-size:13px; font-weight:700;">평일</p>
             <p style="margin:0 0 6px; color:#9A7560; font-size:11px;">1주 1회 · 총 4회 · 90분</p>
-            <p style="margin:0; color:#E08A4F; font-size:20px; font-weight:800; font-family:'Noto Serif KR',serif;">60<span style="font-size:13px; font-weight:600;">만원</span></p>
+            <p style="margin:0; color:var(--point-gold); font-size:20px; font-weight:800; font-family:'Noto Serif KR',serif;">60<span style="font-size:13px; font-weight:600;">만원</span></p>
           </div>
           <div style="flex:1; background:#1A0F0A; border-radius:10px; padding:14px 16px; text-align:center;">
             <p style="margin:0 0 4px; color:#F4E7DA; font-size:13px; font-weight:700;">주말</p>
             <p style="margin:0 0 6px; color:#9A7560; font-size:11px;">1주 1회 · 총 4회 · 90분</p>
-            <p style="margin:0; color:#E08A4F; font-size:20px; font-weight:800; font-family:'Noto Serif KR',serif;">70<span style="font-size:13px; font-weight:600;">만원</span></p>
+            <p style="margin:0; color:var(--point-gold); font-size:20px; font-weight:800; font-family:'Noto Serif KR',serif;">70<span style="font-size:13px; font-weight:600;">만원</span></p>
           </div>
         </div>
       </div>
@@ -155,7 +161,7 @@
     <p style="color:#C9B3A2; font-size:13.5px; line-height:1.7; margin:18px 0 0; word-break:keep-all;">처음부터 배우고 싶은 사람도, 이미 하고 있는데 막히는 사람도 돼. 형이 수준 보고 맞춰줄게.</p>
   </div>
   <div style="padding:36px 24px 0;">
-    <h3 style="font-size:15px; font-weight:700; color:#E08A4F; margin:0 0 14px; letter-spacing:0.04em;">수강생이 한 말</h3>
+    <h3 style="font-size:15px; font-weight:700; color:var(--point-gold); margin:0 0 14px; letter-spacing:0.04em;">수강생이 한 말</h3>
     <div style="display:flex; flex-direction:column; gap:11px;">
       <div style="background:#231711; border-left:2px solid rgba(224,138,79,0.5); border-radius:0 12px 12px 0; padding:15px 18px;"><p style="margin:0; color:#E2D8CC; font-size:13.5px; line-height:1.65;">"막히는 부분이 있을 때 바로바로 피드백이 오는 게 좋아요 정답지가 앞에 있는 느낌이에요"</p></div>
       <div style="background:#231711; border-left:2px solid rgba(224,138,79,0.5); border-radius:0 12px 12px 0; padding:15px 18px;"><p style="margin:0; color:#E2D8CC; font-size:13.5px; line-height:1.65;">"수강자 맞춤 난이도로 잘 맞춰주세요"</p></div>
@@ -164,7 +170,7 @@
   </div>
   <div style="padding:30px 24px 40px;">
     <a href="https://smore.im/form/gGhx9MrYgu" target="_blank" rel="noopener" class="kx-cta">지금 신청하기</a>
-    <p style="text-align:center; margin:16px 0 0; color:#9A7560; font-size:13.5px;">입문부터 해보고 싶으면 · <a href="intro.html" style="color:#E08A4F;"><b>5,000원 입문 →</b></a></p>
+    <p style="text-align:center; margin:16px 0 0; color:#9A7560; font-size:13.5px;">입문부터 해보고 싶으면 · <a href="intro.html" style="color:var(--point-gold);"><b>5,000원 입문 →</b></a></p>
   </div>
 </div>
 </div><!-- /.kx-mobile -->

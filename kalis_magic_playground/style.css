@@ -6,9 +6,11 @@
     --card-bg: #261d18;
     --text-main: #f4efe9;
     --text-muted: #ab9f92;
-    --point-gold: #E0904E;
-    --point-gold-rgb: 224, 144, 78;
-    --point-gold-hover: #c87840;
+    --point-gold: #E8631F;
+    --point-gold-rgb: 232, 99, 31;
+    --point-gold-hover: #cf5212;
+    --kx-terra: #D94A1A;
+    --kx-terra-deep: #9E2F0C;
     --font-main: 'Pretendard', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
     --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
     --border-subtle: rgba(255, 255, 255, 0.06);
@@ -32,6 +34,40 @@ body {
 
 a { text-decoration: none; color: inherit; }
 img { max-width: 100%; display: block; }
+
+/* ---------- 공유 애니메이션 & 인터랙션 ---------- */
+@keyframes kxOptIn{ from{ opacity:0; transform:translateY(22px); filter:blur(5px); } to{ opacity:1; transform:translateY(0); filter:blur(0); } }
+@keyframes kxKen{ from{ transform:scale(1); } to{ transform:scale(1.09); } }
+@keyframes kxCue{ 0%,100%{ transform:translateY(0); opacity:.35; } 50%{ transform:translateY(8px); opacity:.95; } }
+
+.kx-ken{ animation:kxKen 22s ease-out forwards; }
+/* 서브페이지 히어로 켄번스 (CSS 배경 이미지) */
+.hero{ overflow:hidden; }
+.hero::before{ animation:kxKen 22s ease-out forwards; transform-origin:center; }
+/* split-media 호버줌 */
+.split-media{ overflow:hidden; border-radius:18px; }
+.split-media img{ transition:transform 1.05s cubic-bezier(.2,.7,.2,1); }
+.split-media:hover img{ transform:scale(1.06); }
+.kx-imgzoom img{ transition:transform 1.05s cubic-bezier(.2,.7,.2,1); }
+.kx-imgzoom:hover img{ transform:scale(1.06); }
+.kx-cue span{ display:block; width:1px; height:42px; background:linear-gradient(rgba(224,144,78,0), var(--point-gold)); animation:kxCue 1.9s ease-in-out infinite; }
+
+/* 서브페이지 fade-in 스크롤 트리거 */
+.js-anim .fade-in{ opacity:0; transform:translateY(26px); transition:opacity .75s cubic-bezier(.2,.7,.2,1), transform .75s cubic-bezier(.2,.7,.2,1); will-change:opacity,transform; }
+.js-anim .fade-in.visible{ opacity:1; transform:none; }
+
+/* ---------- 카드 텍스트 정렬 ---------- */
+.vcard{ text-align:center; }
+.store-card .store-info{ text-align:center; }
+.secondary-cta-box, .final-cta{ text-align:center; }
+.review-card{ text-align:left; }
+.review-quote{ text-align:left; }
+.field-card{ text-align:left; }
+
+@media (prefers-reduced-motion: reduce){
+  .kx-ken{ animation:none; }
+  .kx-cue{ display:none; }
+}
 
 /* ---------- 레이아웃 ---------- */
 .container { width: 100%; max-width: var(--maxw); margin: 0 auto; padding: 0 24px; }
@@ -206,8 +242,6 @@ img { max-width: 100%; display: block; }
 .site-footer { padding: 40px 0; border-top: 1px solid var(--border-subtle); text-align: center; color: var(--text-muted); font-size: 0.86rem; }
 
 /* ---------- fade-in (progressive enhancement: js-anim 있을 때만 숨김) ---------- */
-.js-anim .fade-in { opacity: 0; transform: translateY(24px); transition: opacity 0.7s ease, transform 0.7s ease; }
-.js-anim .fade-in.visible { opacity: 1; transform: none; }
 @media (prefers-reduced-motion: reduce) {
     .js-anim .fade-in { opacity: 1 !important; transform: none !important; transition: none; }
     html { scroll-behavior: auto; }
@@ -759,4 +793,63 @@ body.field-modal-open { overflow: hidden; }
         aspect-ratio: 16 / 9 !important;
         height: auto !important;
     }
+}
+
+/* ========== mobile.css 흡수 (듀얼 마크업 토글 + 모바일 전용 디자인) ========== */
+/* ==========================================================================
+   mobile.css — 듀얼 마크업 토글 + 모바일 전용 디자인 (색감통일 다크 톤)
+   적용 규칙: 1024px 초과 = 데스크톱(기존) 그대로 / 1024px 이하 = 모바일 디자인
+   모든 모바일 스타일은 .kx-mobile 하위로 스코프 → 데스크톱 CSS와 영구 격리
+   ========================================================================== */
+
+/* --- 토글: 기본(데스크톱) --- */
+.kx-mobile { display: none; }
+
+@media (max-width: 1024px) {
+  .kx-desktop { display: none !important; }
+  .kx-mobile  { display: block !important; }
+
+  /* 모바일에서 바깥 배경(셸 양옆 여백)도 다크로 통일 */
+  body { background: #0E0805 !important; }
+}
+
+/* --- 모바일 셸: 실제 폰 폭 컬럼(430px) 가운데 정렬 --- */
+.kx-mobile .kx-shell {
+  max-width: 430px;
+  margin: 0 auto;
+  background: #1A0F0A;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+/* --- 공유 컴포넌트 (.kx-mobile 스코프) --- */
+.kx-mobile .kx-cta {
+  display: flex; align-items: center; justify-content: center;
+  height: 54px; border-radius: 13px;
+  background: var(--kx-terra); color: #FBEFE6;
+  font-weight: 700; font-size: 16px; letter-spacing: -0.01em;
+  text-decoration: none;
+  box-shadow: 0 12px 28px rgba(217,74,26,0.4);
+}
+.kx-mobile .kx-eye {
+  display: flex; align-items: center; gap: 9px;
+  color: var(--point-gold); font-weight: 700; font-size: 12px; letter-spacing: 0.16em;
+  margin: 0 0 16px;
+}
+.kx-mobile .kx-eye span { width: 22px; height: 1px; background: var(--point-gold); display: block; }
+.kx-mobile .kx-h2 {
+  font-size: 27px; font-weight: 800; line-height: 1.3; letter-spacing: -0.02em;
+  color: #F4E7DA; margin: 0 0 16px; word-break: keep-all;
+}
+.kx-mobile .kx-serif {
+  font-family: 'Noto Serif KR', serif; font-weight: 500; font-style: italic; color: var(--point-gold);
+}
+
+/* ========== index.html 인라인 그리드 유틸리티 ========== */
+/* grid 속성만 단독으로 있는 인라인 style → 클래스 이전 */
+/* kx-scene: scene 카드 5열 그리드 */
+.kx-scene {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 13px;
 }
