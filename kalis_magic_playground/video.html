@@ -14,6 +14,7 @@
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <!-- CSS Link -->
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="mobile.css">
     <!-- Fonts -->
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
@@ -21,6 +22,7 @@
     <script src="editor.js"></script>
 </head>
 <body>
+<div class="kx-desktop">
 
     <header id="nav-root"></header>
     <script>renderNav('video')</script>
@@ -82,7 +84,7 @@
                 <a href="https://www.youtube.com/watch?v=-kQ83LnHImQ&list=PLUv4hDx_1Qhs9PsFEqF_5-HOi2OwFzjsr&index=5" target="_blank" rel="noopener" class="video-card">
                     <img loading="lazy" src="imigi3/6.jpg" alt="영상 썸네일 6" class="video-thumb">
                     <div class="video-info">
-                        <p class="video-desc">타짜처럼 보이는데 일반인도 할 수 있어<br>생각보다 진입장벽 낮아</p>
+                        <p class="video-desc">전문가처럼 보이는데 일반인도 할 수 있어<br>생각보다 진입장벽 낮아</p>
                     </div>
                 </a>
 
@@ -118,6 +120,76 @@
             </div>
         </div>
     </section>
+</div><!-- /.kx-desktop -->
+
+<!-- ===================== MOBILE (≤1024px) ===================== -->
+<div class="kx-mobile">
+<div class="kx-shell">
+  <div style="padding:48px 24px 0;">
+    <p class="kx-eye"><span></span>형이 골라준 영상</p>
+    <h2 style="font-size:34px; font-weight:800; line-height:1.14; letter-spacing:-0.03em; color:#F4E7DA; margin:0 0 16px; word-break:keep-all;">형이 한 마술<br><span class="kx-serif" style="font-size:34px;">너도 할 수 있어</span></h2>
+    <p style="color:#C9B3A2; font-size:15px; line-height:1.7; margin:0 0 8px; word-break:keep-all;">형이 추천하는 마술들 모아놨어. 마음에 들면 그때 더 배우면 돼.</p>
+  </div>
+
+  <div style="padding:30px 24px 0; display:flex; flex-direction:column; gap:16px;">
+    <a href="https://www.youtube.com/watch?v=cXU-CkLlIr4&list=PLUv4hDx_1Qhs9PsFEqF_5-HOi2OwFzjsr&index=3" target="_blank" rel="noopener" style="display:block; background:#241712; border:1px solid rgba(255,255,255,0.08); border-radius:16px; overflow:hidden; text-decoration:none;">
+      <img loading="lazy" src="imigi3/1.jpg" alt="영상 썸네일 1" style="width:100%; aspect-ratio:16/9; object-fit:cover; display:block;">
+      <p style="color:#D6C8BB; font-size:13.5px; line-height:1.6; margin:0; padding:14px 18px;">사자마자 바로 꺼낼 수 있는 도구들이야<br>오늘 사면 오늘 쓸 수 있어</p>
+    </a>
+    <a href="https://www.youtube.com/watch?v=XVTkfBRyzg4&list=PLUv4hDx_1Qhs9PsFEqF_5-HOi2OwFzjsr&index=5" target="_blank" rel="noopener" style="display:block; background:#241712; border:1px solid rgba(255,255,255,0.08); border-radius:16px; overflow:hidden; text-decoration:none;">
+      <img loading="lazy" src="imigi3/2.jpg" alt="영상 썸네일 2" style="width:100%; aspect-ratio:16/9; object-fit:cover; display:block;">
+      <p style="color:#D6C8BB; font-size:13.5px; line-height:1.6; margin:0; padding:14px 18px;">뭐 사야 할지 모르겠지?<br>입문자한테 딱 맞는 카드 도구 5가지야</p>
+    </a>
+    <a href="https://www.youtube.com/watch?v=6h3dlFU9A10&list=PLUv4hDx_1Qhs9PsFEqF_5-HOi2OwFzjsr&index=2" target="_blank" rel="noopener" style="display:block; background:#241712; border:1px solid rgba(255,255,255,0.08); border-radius:16px; overflow:hidden; text-decoration:none;">
+      <img loading="lazy" src="imigi3/3.jpg" alt="영상 썸네일 3" style="width:100%; aspect-ratio:16/9; object-fit:cover; display:block;">
+      <p style="color:#D6C8BB; font-size:13.5px; line-height:1.6; margin:0; padding:14px 18px;">어디서 시작해야 할지 모르겠으면 여기서 시작해<br>꼭 필요한 강의들만 추렸어</p>
+    </a>
+    <a href="https://www.youtube.com/watch?v=PZhk1poZzog&list=PLUv4hDx_1Qhs9PsFEqF_5-HOi2OwFzjsr&index=4" target="_blank" rel="noopener" style="display:block; background:#241712; border:1px solid rgba(255,255,255,0.08); border-radius:16px; overflow:hidden; text-decoration:none;">
+      <img loading="lazy" src="imigi3/4.jpg" alt="영상 썸네일 4" style="width:100%; aspect-ratio:16/9; object-fit:cover; display:block;">
+      <p style="color:#D6C8BB; font-size:13.5px; line-height:1.6; margin:0; padding:14px 18px;">기초는 됐는데 레퍼토리가 부족해?<br>초급자한테 딱 좋은 도구 3가지야</p>
+    </a>
+  </div>
+
+  <div style="margin:30px 24px 0; background:linear-gradient(135deg, rgba(194,96,58,0.2), rgba(194,96,58,0.07)); border:1px solid rgba(224,138,79,0.45); border-radius:16px; padding:24px 20px; text-align:center;">
+    <p style="color:#F4E7DA; font-size:16px; font-weight:800; line-height:1.45; margin:0 0 16px; word-break:keep-all;">영상 보고 직접 해보고 싶어졌지?<br>형이 입문용으로 준비한 강의가 있어</p>
+    <a href="intro.html" class="kx-cta">입문 강의 보러 가기 →</a>
+  </div>
+
+  <div style="padding:30px 24px 0; display:flex; flex-direction:column; gap:16px;">
+    <a href="https://www.youtube.com/watch?v=rUMfP1ZISzY&list=PLUv4hDx_1Qhs9PsFEqF_5-HOi2OwFzjsr&index=6" target="_blank" rel="noopener" style="display:block; background:#241712; border:1px solid rgba(255,255,255,0.08); border-radius:16px; overflow:hidden; text-decoration:none;">
+      <img loading="lazy" src="imigi3/5.jpg" alt="영상 썸네일 5" style="width:100%; aspect-ratio:16/9; object-fit:cover; display:block;">
+      <p style="color:#D6C8BB; font-size:13.5px; line-height:1.6; margin:0; padding:14px 18px;">손기술로 억지로 하지 마<br>도구 하나면 어려운 마술도 할 수 있어</p>
+    </a>
+    <a href="https://www.youtube.com/watch?v=-kQ83LnHImQ&list=PLUv4hDx_1Qhs9PsFEqF_5-HOi2OwFzjsr&index=5" target="_blank" rel="noopener" style="display:block; background:#241712; border:1px solid rgba(255,255,255,0.08); border-radius:16px; overflow:hidden; text-decoration:none;">
+      <img loading="lazy" src="imigi3/6.jpg" alt="영상 썸네일 6" style="width:100%; aspect-ratio:16/9; object-fit:cover; display:block;">
+      <p style="color:#D6C8BB; font-size:13.5px; line-height:1.6; margin:0; padding:14px 18px;">전문가처럼 보이는데 일반인도 할 수 있어<br>생각보다 진입장벽 낮아</p>
+    </a>
+    <a href="https://www.youtube.com/watch?v=SfTNqwyHCFs&list=PLUv4hDx_1Qhs9PsFEqF_5-HOi2OwFzjsr&index=7" target="_blank" rel="noopener" style="display:block; background:#241712; border:1px solid rgba(255,255,255,0.08); border-radius:16px; overflow:hidden; text-decoration:none;">
+      <img loading="lazy" src="imigi3/7.jpg" alt="영상 썸네일 7" style="width:100%; aspect-ratio:16/9; object-fit:cover; display:block;">
+      <p style="color:#D6C8BB; font-size:13.5px; line-height:1.6; margin:0; padding:14px 18px;">포커 칠 때 한 번씩 꺼내봐<br>분위기 확 바뀌는 포커 마술 3가지야</p>
+    </a>
+    <a href="https://www.youtube.com/watch?v=7rJ6mzeG17A&list=PLUv4hDx_1Qhs9PsFEqF_5-HOi2OwFzjsr&index=8" target="_blank" rel="noopener" style="display:block; background:#241712; border:1px solid rgba(255,255,255,0.08); border-radius:16px; overflow:hidden; text-decoration:none;">
+      <img loading="lazy" src="imigi3/8.jpg" alt="영상 썸네일 8" style="width:100%; aspect-ratio:16/9; object-fit:cover; display:block;">
+      <p style="color:#D6C8BB; font-size:13.5px; line-height:1.6; margin:0; padding:14px 18px;">유튜브나 인스타 찍을 때 터지는 마술 따로 있어<br>방송용 도구만 골랐어</p>
+    </a>
+  </div>
+
+  <a href="https://www.youtube.com/@LectureNotePublishing" target="_blank" rel="noopener" style="display:flex; align-items:center; gap:14px; margin:30px 24px 0; background:#1F140F; border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:18px 20px; text-decoration:none;">
+    <div style="flex:1;">
+      <h4 style="margin:0 0 5px; color:#E08A4F; font-size:13px; font-weight:800; letter-spacing:0.04em;">LECTURENOTE YOUTUBE</h4>
+      <p style="margin:0; color:#A99685; font-size:12.5px; line-height:1.5;">전문가들이 수십만 원에 배우는 내용, 렉쳐노트 채널에서 배울 수 있어</p>
+    </div>
+    <svg viewBox="0 0 24 24" style="width:34px; height:34px; flex:none; fill:#E08A4F;"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>
+  </a>
+
+  <div style="margin:30px 24px 0; background:linear-gradient(160deg, #C2603A, #94401F); border-radius:16px; padding:30px 22px 28px; text-align:center;">
+    <p style="color:#FFF3EA; font-size:17px; font-weight:800; line-height:1.45; margin:0 0 18px; word-break:keep-all;">형이 방금 한 그 마술<br>제대로 배우고 싶어졌지?</p>
+    <a href="lesson.html" style="display:flex; align-items:center; justify-content:center; height:54px; border-radius:13px; background:#241712; color:#FBEFE6; font-weight:700; font-size:16px; text-decoration:none;">레슨 알아보기 →</a>
+  </div>
+
+  <div style="height:44px;"></div>
+</div>
+</div><!-- /.kx-mobile -->
 
     <script>
 // kalimagic v2 — 스크롤 fade-in
