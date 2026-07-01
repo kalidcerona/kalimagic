@@ -9,6 +9,9 @@ Push workflow: edit files → `git add` → `git commit` → `git push`
 - 푸시 제외 파일: `nav.js`, `script.js`, `index-test.html`, `kali_playground_v2/`
 - **Netlify base dir = `kalis_magic_playground`** (대시보드 고정값) — netlify.toml에서 publish 경로는 반드시 `base = ""` 명시 후 `publish = "kalis_magic_playground"` 로 쓸 것. 안 그러면 `kalis_magic_playground/kalis_magic_playground` 이중경로 오류
 - **배포 흐름**: `kalimagic-v2/` 편집 → rsync 미러 → push → Netlify 자동 배포 (`kalis_magic_playground/`)
+- **kalimagic-v2/ git 제외**: `/kalimagic-v2/`가 .gitignore에 있어 git diff에 안 잡힘. rsync 명령: `rsync -av --exclude='imigi3-orig/' --exclude='docs/' --exclude='archive/' --exclude='scripts/' --exclude='index-test.html' --exclude='mobile-test.html' kalimagic-v2/ kalis_magic_playground/`
+- **Netlify 빌드 시간 리셋**: Free plan Effective from May 25 → 매월 25일 UTC 00:00 (한국시간 오전 9시) 리셋
+- **검증 워크플로우 순서**: 부리더 구현 → 테스트(test_site.py) → /code-review → Codex read-only 검증 → push
 
 ## CSS 주의사항 (CSS Gotchas)
 - `mmbs.html`은 `.secondary-cta-box` 안에 `.members-cta-title` 사용
@@ -19,6 +22,7 @@ Push workflow: edit files → `git add` → `git commit` → `git push`
 
 ## kalimagic-v2 (멀티페이지 7개, 2026-06-22)
 - 작업 폴더: `kalimagic-v2/` 전용. `kalis_magic_playground/`·`kali_playground_v2/` 절대 미수정
+- **kalimagic-v2는 이 레포(`kalis magic/`) 안에만 존재** — AiGo 루트에 동명 폴더를 새로 만들지 말 것(2026-07-01: planb 페이지를 AiGo 루트에 잘못 생성 후 재작업한 사례 있음)
 - 테스트: `PYTHONDONTWRITEBYTECODE=1 /opt/homebrew/bin/python3 kalimagic-v2/tests/test_site.py` (280검사, exit 0=GREEN). 7페이지: index(옵션조합 단일랜딩)·works·video·intro(스모어폼)·reviews(행사갤러리)·lesson·mmbs(nav미노출·noindex·JS동적썸네일)
 - **자체 git 레포** (AiGo와 별개) — 커밋은 이 디렉터리에서. `kalis_magic_playground`·`kali_playground_v2`의 오래된 modified 잔재는 이번 작업과 무관, 미수정
 - **`.gitignore` 루트 한정(`/`) 필수** — 경로무관 패턴(`style.css`·`*.html`·`imigi3/`·`nav.js`)은 kalimagic-v2/* 핵심파일까지 무시. 새 파일이 git에 안 잡히면 이거 확인
@@ -27,6 +31,13 @@ Push workflow: edit files → `git add` → `git commit` → `git push`
 - Deep modules (기본 수정 금지): `nav.js`·`scripts/optimize_images.py`·`tests/test_site.py` — 단 페이지 추가 같은 기능 확장 시엔 칼리형 승인 하 외과적 수정 가능
 - 셸 중복 deepening 트리거: 페이지 5개 이상 또는 OG/메타 자주 변경 → `scripts/build.py` + `_shell.html` 빌드 스텝
 - QSE 룰: "지금은" 제거(시한 암시), 전수 단정("다 만족") 금지 — offer-principles 핵심
+
+## kalimeeting PNG 생성 (네이버 카페용)
+- **3열 레이아웃**: 960px 뷰포트로 렌더링 → 양쪽 68px 크롭 → 824px 산출물
+- **모바일 1열**: 640px 이하 뷰포트 → 양쪽 14px 크롭 → 612px 산출물
+- 860px는 태블릿 브레이크포인트(641-900px)에 걸려 `.g3` 카드 2+1로 깨짐 — 사용 금지
+- **신규 이미지 푸시 누락 주의**: 이미지 추가 시 `git add img/파일명` 반드시 포함 (untracked 상태면 Netlify에 미배포)
+- 네이버 카페 HTML 소스 입력 여부: 직접 테스트 없이 단정 금지 (소스 모드에서도 `<a>` 태그 차단될 수 있음)
 
 ## Self-intro mechanism
 - UserPromptSubmit hook (~/.claude/settings.json) shows .claude-intro on first RC message
