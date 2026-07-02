@@ -113,6 +113,7 @@
     const SELECTOR = [
       'h1', 'h2', 'h3', 'h4', 'h5',
       'p', 'li',
+      '[data-editable]',
       '.eyebrow', '.hero-headline', '.hero-sub',
       '.video-desc',
       '.vcard h3', '.vcard p',
@@ -121,14 +122,14 @@
 
     document.querySelectorAll(SELECTOR).forEach(el => {
       if (el.closest('#ke-bar') || el.closest('script') || el.closest('style')) return;
-      if (!el.textContent.trim()) return;
+      if (!el.innerText.trim()) return;
       el.style.cursor = 'text';
 
       el.addEventListener('click', function (e) {
         if (document.getElementById('ke-preview')) return;
         e.stopPropagation();
         if (this.isContentEditable) return;
-        if (!changes.has(this)) changes.set(this, { original: this.textContent });
+        if (!changes.has(this)) changes.set(this, { original: this.innerText });
         this.contentEditable = 'true';
         this.style.outline = '2px solid ' + GOLD;
         this.style.outlineOffset = '2px';
@@ -141,7 +142,7 @@
         this.contentEditable = 'false';
         const entry = changes.get(this);
         if (entry) {
-          if (this.textContent.trim() === entry.original.trim()) {
+          if (this.innerText.trim() === entry.original.trim()) {
             changes.delete(this);
             this.style.outline = '';
             this.style.background = '';
@@ -152,6 +153,13 @@
           }
         }
         updateCount();
+      });
+
+      el.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          document.execCommand('insertLineBreak');
+        }
       });
     });
 
@@ -169,7 +177,7 @@
       let text = '[' + pageName + '] 수정 내용\n' + '─'.repeat(40) + '\n\n';
       let i = 1;
       changes.forEach(({ original }, el) => {
-        const current = el.textContent;
+        const current = el.innerText;
         if (current.trim() !== original.trim()) {
           text += i + '. 원본:  ' + original.trim() + '\n';
           text += '   수정:  ' + current.trim() + '\n\n';
