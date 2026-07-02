@@ -13,7 +13,7 @@ const CONTENT = {
   ],
   problemQuotes: [
     "나는 존재감이 없는 것 같아.",
-    "이성 앞에서 자연스럽게 행동을 못 해.",
+    "친해지고 싶은 애한테 먼저 말 거는 게 어려워.",
     "나만의 강점 하나가 있었으면 좋겠어.",
   ]
 };
@@ -28,7 +28,7 @@ function renderContent() {
     },
     'reviews-mobile': function() {
       return CONTENT.reviews.map(function(r) {
-        return '<div style="background:#241712; border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:18px 20px;"><p style="color:#F0E2D5; font-size:14.5px; line-height:1.65; margin:0 0 10px;">"' + r.quote + '"</p><p style="color:#9A8775; font-size:11.5px; margin:0;">— ' + r.label + '</p></div>';
+        return '<div style="background:#241712; border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:18px 20px;"><p style="color:#F0E2D5; font-size:14.5px; line-height:1.65; margin:0 0 10px;">"' + r.quote + '"</p><p style="color:#9A8775; font-size:11.5px; margin:0;">· ' + r.label + '</p></div>';
       }).join('');
     },
     'visitor-desktop': function() {
