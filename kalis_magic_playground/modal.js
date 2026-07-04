@@ -1,4 +1,4 @@
-// kalimagic v2 — reusable card-to-modal reviews
+// kalimagic v2 reusable card-to-modal reviews
 (function () {
     function textFrom(card, selector, fallback) {
         var el = selector ? card.querySelector(selector) : null;
@@ -9,6 +9,7 @@
         var cardSelector = root.getAttribute('data-modal-card-selector') || '[data-modal-card]';
         var tagSelector = root.getAttribute('data-modal-tag') || '.field-tag';
         var quoteSelector = root.getAttribute('data-modal-quote') || '.field-quote';
+        var fullSelector = root.getAttribute('data-modal-full') || '.field-full';
         var authorSelector = root.getAttribute('data-modal-author') || '.field-author';
         var editedSelector = root.getAttribute('data-modal-edited') || '.field-edited';
         var cards = root.querySelectorAll(cardSelector);
@@ -39,13 +40,15 @@
         var modalEdited = overlay.querySelector('.field-modal-edited');
 
         function openModal(card) {
+            var full = card.querySelector(fullSelector);
             var quote = card.querySelector(quoteSelector);
             var edited = card.querySelector(editedSelector);
-            if (!quote) return;
+            var body = full || quote;
+            if (!body) return;
 
             previousFocus = document.activeElement;
             modalTag.textContent = textFrom(card, tagSelector, '실전 후기');
-            modalQuote.textContent = quote.textContent;
+            modalQuote.textContent = body.textContent;
             modalAuthor.textContent = textFrom(card, authorSelector, '');
             modalEdited.textContent = edited ? edited.textContent : '';
             modalEdited.hidden = !edited;

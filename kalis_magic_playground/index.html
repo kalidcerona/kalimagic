@@ -32,7 +32,7 @@
     @keyframes cue{ 0%,100%{ transform:translateY(0); opacity:.35; } 50%{ transform:translateY(8px); opacity:.95; } }
     @keyframes kxKen{ from{ transform:scale(1); } to{ transform:scale(1.09); } }
 
-    /* 스크롤 진입 애니메이션 (JS 없으면 그냥 보임 — progressive enhancement) */
+    /* 스크롤 진입 애니메이션 (JS 없으면 그냥 보임 - progressive enhancement) */
     .js-anim .kx-desktop .kx-fade{ opacity:0; transform:translateY(28px); transition:opacity .8s cubic-bezier(.2,.7,.2,1), transform .8s cubic-bezier(.2,.7,.2,1); will-change:opacity, transform; }
     .js-anim .kx-desktop .kx-fade.kx-in{ opacity:1; transform:none; }
     /* 자식 스태거: 카드 그리드/리스트가 차례로 */
@@ -64,7 +64,7 @@
       .kx-scene{ grid-template-columns:1fr !important; }
       .kx-pad{ padding-left:18px !important; padding-right:18px !important; }
     }
-    /* 텍스트 정렬 — 카드 내부만 가운데, 나머지 좌정렬(원래 디자인) */
+    /* 텍스트 정렬 - 카드 내부만 가운데, 나머지 좌정렬(원래 디자인) */
     .kx-desktop .kx-cards3 > *{ text-align:center; }
     .kx-desktop .kx-scene > div{ text-align:center; }
     /* 후기 카드는 인용문이라 좌정렬 */
@@ -418,7 +418,7 @@
             <div style="position:absolute; left:50%; top:-30%; width:50%; height:80%; transform:translateX(-50%); pointer-events:none; background:radial-gradient(circle, rgba(224,144,78,0.16), transparent 65%); filter:blur(12px);"></div>
             <div style="position:relative;">
               <h3 style="font-size:clamp(1.7rem,4.2vw,2.5rem); font-weight:800; line-height:1.3; margin:0 0 16px;">일단 5,000원으로 <br>해봐</h3>
-              <p style="color:#ab9f92; margin:0 auto 30px; line-height:1.9; max-width:34rem;">입문 강의 6편. <span style="text-decoration:line-through; opacity:0.65;">70,000원</span>짜리를 <strong style="color:var(--point-gold);">5,000원</strong>에 풀어놨어.<br>맞으면 계속하면 되고, 아니면 그걸로 끝이야. 부담 없어.</p>
+              <p style="color:#ab9f92; margin:0 auto 30px; line-height:1.9; max-width:34rem;">입문 강의 6편. <span style="text-decoration:line-through; opacity:0.65;">70,000원</span>짜리를 <strong style="color:var(--point-gold);"><span class="kx-count" data-from="70000" data-to="5000">70,000</span>원</strong>에 풀어놨어.<br>맞으면 계속하면 되고, 아니면 그걸로 끝이야. 부담 없어.</p>
               <p style="color:#8a8075; margin:-14px auto 24px; line-height:1.8; max-width:34rem;">이론부터 카드 기본기, 실전에서 바로 쓰는 한 방까지. 6편, 형이 순서 직접 짰어.</p>
               <a href="intro.html" style="display:inline-block; padding:16px 34px; border-radius:10px; font-weight:700; font-size:1.04rem; background:var(--point-gold); color:#1a1410; box-shadow:0 12px 32px rgba(224,144,78,0.3);" data-hover="transform:translateY(-2px)">5,000원으로 시작하기</a>
             </div>
@@ -592,8 +592,26 @@
     var counters = document.querySelectorAll('.kx-count');
     if (!counters.length) return;
 
+    function formatNumber(value){
+      return Number(value).toLocaleString('en-US');
+    }
+
+    function getRange(el){
+      var hasRange = el.hasAttribute('data-from') && el.hasAttribute('data-to');
+      if (hasRange){
+        return {
+          from: parseInt(el.getAttribute('data-from'), 10) || 0,
+          to: parseInt(el.getAttribute('data-to'), 10) || 0
+        };
+      }
+      return {
+        from: 0,
+        to: parseInt(el.getAttribute('data-target'), 10) || 0
+      };
+    }
+
     function setTarget(el){
-      el.textContent = String(parseInt(el.getAttribute('data-target'), 10) || 0);
+      el.textContent = formatNumber(getRange(el).to);
     }
 
     var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -603,16 +621,18 @@
     }
 
     function animate(el){
-      var target = parseInt(el.getAttribute('data-target'), 10) || 0;
+      var range = getRange(el);
       var start = null;
       var duration = 1000;
 
       function tick(timestamp){
         if (!start) start = timestamp;
         var progress = Math.min((timestamp - start) / duration, 1);
-        el.textContent = String(Math.floor(progress * target));
+        var raw = range.from + ((range.to - range.from) * progress);
+        var current = range.to >= range.from ? Math.floor(raw) : Math.ceil(raw);
+        el.textContent = formatNumber(current);
         if (progress < 1) requestAnimationFrame(tick);
-        else el.textContent = String(target);
+        else el.textContent = formatNumber(range.to);
       }
 
       requestAnimationFrame(tick);

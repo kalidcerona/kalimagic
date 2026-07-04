@@ -1,4 +1,4 @@
-/* kalimagic v2 — 웜 다크 + 테라코타, 시네마틱 코칭 랜딩 */
+/* kalimagic v2 - 웜 다크 + 테라코타, 시네마틱 코칭 랜딩 */
 
 :root {
     --bg-color: #1a1512;
@@ -51,6 +51,13 @@ img { max-width: 100%; display: block; }
 .kx-imgzoom img{ transition:transform 1.05s cubic-bezier(.2,.7,.2,1); }
 .kx-imgzoom:hover img{ transform:scale(1.06); }
 .kx-cue span{ display:block; width:1px; height:42px; background:linear-gradient(rgba(224,144,78,0), var(--point-gold)); animation:kxCue 1.9s ease-in-out infinite; }
+.js-anim .kx-desktop .kx-fade{ opacity:0; transform:translateY(28px); transition:opacity .8s cubic-bezier(.2,.7,.2,1), transform .8s cubic-bezier(.2,.7,.2,1); will-change:opacity, transform; }
+.js-anim .kx-desktop .kx-fade.kx-in{ opacity:1; transform:none; }
+.js-anim .kx-desktop .kx-fade.kx-in > *{ animation:kxOptIn .7s cubic-bezier(.2,.7,.2,1) both; }
+.js-anim .kx-desktop .kx-fade.kx-in > *:nth-child(2){ animation-delay:.08s; }
+.js-anim .kx-desktop .kx-fade.kx-in > *:nth-child(3){ animation-delay:.16s; }
+.js-anim .kx-desktop .kx-fade.kx-in > *:nth-child(4){ animation-delay:.24s; }
+.js-anim .kx-desktop .kx-fade.kx-in > *:nth-child(5){ animation-delay:.32s; }
 
 /* 서브페이지 fade-in 스크롤 트리거 */
 .js-anim .fade-in{ opacity:0; transform:translateY(26px); transition:opacity .75s cubic-bezier(.2,.7,.2,1), transform .75s cubic-bezier(.2,.7,.2,1); will-change:opacity,transform; }
@@ -67,6 +74,8 @@ img { max-width: 100%; display: block; }
 @media (prefers-reduced-motion: reduce){
   .kx-ken{ animation:none; }
   .kx-cue{ display:none; }
+  .js-anim .kx-desktop .kx-fade{ opacity:1 !important; transform:none !important; transition:none; }
+  .js-anim .kx-desktop .kx-fade.kx-in > *{ animation:none; }
 }
 
 /* ---------- 레이아웃 ---------- */
@@ -140,7 +149,7 @@ img { max-width: 100%; display: block; }
 .sub-link a:hover { color: var(--point-gold); }
 
 /* ---------- Hero ---------- */
-/* index.html 히어로 사진 — 두 사람이 다 나오도록 반응형 */
+/* index.html 히어로 사진 - 두 사람이 다 나오도록 반응형 */
 .hero-main-img { object-position: 72% 38%; }
 @media (max-width: 768px) { .hero-main-img { object-position: 76% 38%; } }
 @media (max-width: 460px) { .hero-main-img { object-position: 80% 38%; } }
@@ -202,6 +211,7 @@ img { max-width: 100%; display: block; }
 .ba-before .ba-tag { color: var(--text-muted); font-weight: 700; letter-spacing: 0.06em; margin-bottom: 12px; font-size: 0.9rem; }
 .ba-before p { color: #c8bcae; line-height: 1.8; }
 .review-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.review-grid--wide { grid-template-columns: repeat(2, 1fr); }
 .review-card {
     background: var(--card-bg); border: 1px solid var(--border-subtle); border-radius: 14px; padding: 22px;
 }
@@ -448,7 +458,7 @@ img { max-width: 100%; display: block; }
 }
 
 /* ==========================================================================
-   video.html — 추천 영상 카드
+   video.html - 추천 영상 카드
    ========================================================================== */
 .video-grid {
     display: flex;
@@ -514,7 +524,7 @@ img { max-width: 100%; display: block; }
 }
 
 /* ==========================================================================
-   mmbs.html — 입문 강의 영상 플레이어
+   mmbs.html - 입문 강의 영상 플레이어
    ========================================================================== */
 .members-header {
     padding: 60px 24px 20px;
@@ -797,7 +807,7 @@ body.field-modal-open { overflow: hidden; }
 
 /* ========== mobile.css 흡수 (듀얼 마크업 토글 + 모바일 전용 디자인) ========== */
 /* ==========================================================================
-   mobile.css — 듀얼 마크업 토글 + 모바일 전용 디자인 (색감통일 다크 톤)
+   mobile.css - 듀얼 마크업 토글 + 모바일 전용 디자인 (색감통일 다크 톤)
    적용 규칙: 1024px 초과 = 데스크톱(기존) 그대로 / 1024px 이하 = 모바일 디자인
    모든 모바일 스타일은 .kx-mobile 하위로 스코프 → 데스크톱 CSS와 영구 격리
    ========================================================================== */
