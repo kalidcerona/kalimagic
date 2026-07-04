@@ -5,6 +5,7 @@ document.documentElement.classList.add('js-anim');
 function renderNav(activePage) {
     const pages = [
         { key: 'home',   label: '홈',   href: 'index.html' },
+        { key: 'about', label: '소개', href: 'about.html' },
         { key: 'works',  label: '작품', href: 'works.html' },
         { key: 'video',  label: '영상', href: 'video.html' },
         { key: 'intro',  label: '입문', href: 'intro.html' },
