@@ -37,6 +37,7 @@ img { max-width: 100%; display: block; }
 
 /* ---------- 공유 애니메이션 & 인터랙션 ---------- */
 @keyframes kxOptIn{ from{ opacity:0; transform:translateY(22px); filter:blur(5px); } to{ opacity:1; transform:translateY(0); filter:blur(0); } }
+@keyframes introCardIn{ from{ opacity:0; transform:translateY(40px); } to{ opacity:1; transform:translateY(0); } }
 @keyframes kxKen{ from{ transform:scale(1); } to{ transform:scale(1.09); } }
 @keyframes kxCue{ 0%,100%{ transform:translateY(0); opacity:.35; } 50%{ transform:translateY(8px); opacity:.95; } }
 
@@ -58,6 +59,12 @@ img { max-width: 100%; display: block; }
 .js-anim .kx-desktop .kx-fade.kx-in > *:nth-child(3){ animation-delay:.16s; }
 .js-anim .kx-desktop .kx-fade.kx-in > *:nth-child(4){ animation-delay:.24s; }
 .js-anim .kx-desktop .kx-fade.kx-in > *:nth-child(5){ animation-delay:.32s; }
+.js-anim .kx-desktop .intro-stagger.kx-fade.kx-in > *{ animation:introCardIn .82s cubic-bezier(.18,.72,.18,1) both; }
+.js-anim .kx-desktop .intro-stagger.kx-fade.kx-in > *:nth-child(2){ animation-delay:.13s; }
+.js-anim .kx-desktop .intro-stagger.kx-fade.kx-in > *:nth-child(3){ animation-delay:.26s; }
+.js-anim .kx-desktop .intro-stagger.kx-fade.kx-in > *:nth-child(4){ animation-delay:.39s; }
+.js-anim .kx-desktop .intro-stagger.kx-fade.kx-in > *:nth-child(5){ animation-delay:.52s; }
+.js-anim .kx-desktop .intro-stagger.kx-fade.kx-in > *:nth-child(6){ animation-delay:.65s; }
 
 /* 서브페이지 fade-in 스크롤 트리거 */
 .js-anim .fade-in{ opacity:0; transform:translateY(26px); transition:opacity .75s cubic-bezier(.2,.7,.2,1), transform .75s cubic-bezier(.2,.7,.2,1); will-change:opacity,transform; }
@@ -73,9 +80,11 @@ img { max-width: 100%; display: block; }
 
 @media (prefers-reduced-motion: reduce){
   .kx-ken{ animation:none; }
+  .hero-about::before{ animation:none; }
   .kx-cue{ display:none; }
   .js-anim .kx-desktop .kx-fade{ opacity:1 !important; transform:none !important; transition:none; }
   .js-anim .kx-desktop .kx-fade.kx-in > *{ animation:none; }
+  .js-anim .kx-desktop .intro-stagger.kx-fade.kx-in > *{ animation:none; }
 }
 
 /* ---------- 레이아웃 ---------- */
@@ -216,13 +225,90 @@ img { max-width: 100%; display: block; }
     background: var(--card-bg); border: 1px solid var(--border-subtle); border-radius: 14px; padding: 22px;
 }
 .review-quote { color: #ede5dc; font-size: 0.98rem; line-height: 1.7; margin-bottom: 12px; }
+.review-grid--wide .review-quote { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .review-label { color: var(--point-gold); font-size: 0.85rem; font-weight: 600; }
 .reviews-photo { margin-top: 36px; }
 .reviews-photo img { border-radius: 18px; max-height: 420px; width: 100%; object-fit: cover; }
 
 /* ---------- About ---------- */
+.hero-about {
+    position: relative;
+    overflow: hidden;
+    background: var(--bg-color);
+}
+.hero-about::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background:
+        linear-gradient(180deg, rgba(20,15,12,0.35) 0%, rgba(20,15,12,0.72) 45%, rgba(20,15,12,0.92) 100%),
+        var(--hero-img, none) var(--hero-pos, center 39%)/cover no-repeat;
+    transform-origin: center;
+    animation: kxKen 22s ease-out forwards;
+}
+.hero-about > * {
+    position: relative;
+    z-index: 1;
+}
+.hero-about .hero::before {
+    content: none;
+    animation: none;
+}
+.hero-about .section--tight {
+    padding-bottom: 72px;
+}
 .about-belief p { color: #dfd7ce; font-size: 1.08rem; line-height: 2; margin-bottom: 18px; }
 .about-belief strong { color: var(--point-gold); font-weight: 700; }
+.proof-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+    margin: 24px 0 24px;
+}
+.proof-card {
+    min-height: 148px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 14px;
+    padding: 24px 20px;
+    background: linear-gradient(160deg, rgba(var(--point-gold-rgb), 0.08), rgba(255,255,255,0.025)), var(--card-bg);
+    border: 1px solid rgba(255,255,255,0.09);
+    border-radius: 12px;
+    color: var(--text-main);
+    text-align: center;
+    transition: var(--transition);
+}
+.proof-card:hover,
+.proof-card:focus-visible {
+    border-color: rgba(var(--point-gold-rgb), 0.46);
+    transform: translateY(-3px);
+    outline: none;
+}
+.proof-icon {
+    display: block;
+    font-size: 2rem;
+    line-height: 1;
+}
+.proof-label {
+    color: #efe4da;
+    font-size: 0.95rem;
+    font-weight: 800;
+    line-height: 1.45;
+}
+.kx-mobile .proof-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin: 16px 0 18px;
+}
+.kx-mobile .proof-card {
+    min-height: 126px;
+    padding: 17px 12px;
+    border-radius: 13px;
+}
+.kx-mobile .proof-icon { font-size: 1.75rem; }
+.kx-mobile .proof-label { font-size: 0.82rem; }
 
 /* ---------- 최종 CTA ---------- */
 .final-cta {
@@ -422,6 +508,7 @@ img { max-width: 100%; display: block; }
     .split-media img { max-height: 320px; }
     .beforeafter { grid-template-columns: 1fr; }
     .review-grid { grid-template-columns: 1fr; }
+    .proof-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .hero { min-height: 80vh; }
     .nav-links { gap: 2px; }
     .nav-link { padding: 6px 9px; font-size: 0.85rem; }
@@ -439,6 +526,10 @@ img { max-width: 100%; display: block; }
     .review-grid { gap: 10px; }
     .container { padding: 0 16px; }
     .vcard { padding: 22px 18px; }
+    .proof-grid { grid-template-columns: 1fr; }
+    .proof-card { min-height: 132px; padding: 20px 18px; }
+    .kx-mobile .proof-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .kx-mobile .proof-card { min-height: 126px; padding: 17px 12px; }
     .final-cta { padding: 48px 20px; }
     .hero { min-height: 70vh; padding: 72px 0 52px; }
 }

@@ -14,11 +14,6 @@
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
     <style>
-        #hero::before {
-            background:
-                linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(20,15,12,0.46) 48%, rgba(20,15,12,0.88) 100%),
-                var(--hero-img, none) var(--hero-pos, center 39%)/cover no-repeat;
-        }
         .about-profile-pip {
             cursor: zoom-in;
         }
@@ -59,47 +54,49 @@
 
     <main>
 
-    <!-- Profile -->
-    <section id="hero" class="hero kx-fade" style="--hero-img: url('assets/profile/kali-about.jpg'); --hero-pos: center 39%; min-height: 76vh;">
-        <div class="container">
-            <img class="about-profile-pip js-profile-lightbox" src="assets/profile/kali-cards.jpg" alt="칼리" tabindex="0" style="width:148px; height:148px; object-fit:cover; object-position:center 27%; border-radius:18px; border:1px solid rgba(255,255,255,0.14); box-shadow:0 14px 32px rgba(0,0,0,0.36); margin-bottom:24px;">
-            <p class="eyebrow">ABOUT KALI</p>
-            <h1 class="hero-headline">칼리</h1>
-            <p class="hero-sub">Kali.D.Cerona</p>
-            <div class="cta-row">
-                <a href="https://www.instagram.com/kalicerona/" target="_blank" rel="noopener" class="btn btn--primary">인스타그램</a>
-                <a href="https://www.youtube.com/kalidcerona" target="_blank" rel="noopener" class="btn btn--ghost">유튜브</a>
+    <div class="hero-about" style="--hero-img: url('assets/profile/kali-about.jpg'); --hero-pos: center 39%;">
+        <!-- Profile -->
+        <section id="hero" class="hero kx-fade" style="min-height: 76vh;">
+            <div class="container">
+                <img class="about-profile-pip js-profile-lightbox" src="assets/profile/kali-cards.jpg" alt="칼리" tabindex="0" style="width:148px; height:148px; object-fit:cover; object-position:center 27%; border-radius:18px; border:1px solid rgba(255,255,255,0.14); box-shadow:0 14px 32px rgba(0,0,0,0.36); margin-bottom:24px;">
+                <p class="eyebrow">ABOUT KALI</p>
+                <h1 class="hero-headline">칼리</h1>
+                <p class="hero-sub">Kali.D.Cerona</p>
+                <div class="cta-row">
+                    <a href="https://www.instagram.com/kalicerona/" target="_blank" rel="noopener" class="btn btn--primary">인스타그램</a>
+                    <a href="https://www.youtube.com/kalidcerona" target="_blank" rel="noopener" class="btn btn--ghost">유튜브</a>
+                </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- About Me -->
-    <section class="section section--tight kx-fade">
-        <div class="container prose">
-            <p class="eyebrow">About Me</p>
-            <h2>형은 마술 <br>가르치는 사람이 아니야</h2>
-            <p class="lead">네가 어디서든 기억에 남는 사람이 되는 거, <br>그게 형 목표야</p>
-            <p>솔직히 말할게.<br>형이 진짜 하고 싶은 건 마술 기술을 가르치는 게 아니야.</p>
-            <p>처음 만난 사람 앞에서도 당당하고,<br>어떤 자리에서든 기억에 남는 사람.<br>나라는 사람 자체가 매력적인 것.<br>마술은 그걸 만드는 가장 빠른 방법이야.</p>
-            <p>형도 처음부터 그랬던 건 아니야.<br>근데 마술 하나 제대로 잡고 나서<br>사람들 앞에 서는 게 완전히 달라졌어.<br>그 길을 먼저 걸어봤으니까, 네 첫 발도 같이 떼줄게.</p>
-            <p>혹시 마술에 관심 생겼으면 '렉쳐노트' 들어봤을 거야.<br>한국 마술 입문자가 제일 먼저 찾는 그곳, 그 샵 매니저가 형이야.</p>
-            <p>취미로 가볍게든, 제대로 파고들든 다 좋아.<br>어디서 시작할지 모르겠으면 그 시작을 형이 같이 해줄게.</p>
-        </div>
-    </section>
+        <!-- About Me -->
+        <section class="section section--tight kx-fade">
+            <div class="container prose">
+                <p class="eyebrow">About Me</p>
+                <h2>형은 마술 <br>가르치는 사람이 아니야</h2>
+                <p class="lead">네가 어디서든 기억에 남는 사람이 되는 거, <br>그게 형 목표야</p>
+                <p>솔직히 말할게.<br>형이 진짜 하고 싶은 건 마술 기술을 가르치는 게 아니야.</p>
+                <p>처음 만난 사람 앞에서도 당당하고,<br>어떤 자리에서든 기억에 남는 사람.<br>나라는 사람 자체가 매력적인 것.<br>마술은 그걸 만드는 가장 빠른 방법이야.</p>
+                <p>형도 처음부터 그랬던 건 아니야.<br>근데 마술 하나 제대로 잡고 나서<br>사람들 앞에 서는 게 완전히 달라졌어.<br>그 길을 먼저 걸어봤으니까, 네 첫 발도 같이 떼줄게.</p>
+                <p>혹시 마술에 관심 생겼으면 '렉쳐노트' 들어봤을 거야.<br>한국 마술 입문자가 제일 먼저 찾는 그곳, 그 샵 매니저가 형이야.</p>
+                <p>취미로 가볍게든, 제대로 파고들든 다 좋아.<br>어디서 시작할지 모르겠으면 그 시작을 형이 같이 해줄게.</p>
+            </div>
+        </section>
+    </div>
 
     <!-- 신뢰의 증거 -->
     <section class="section bg-alt kx-fade">
         <div class="container prose">
             <h2>신뢰의 증거</h2>
             <p>말로만 하면 안 믿기잖아. 형이 실제로 해온 것들이야.</p>
-            <ul>
-                <li>침착맨이 선정한 '한국 마술 공모전 : 뉴노멀 부분' 우승자</li>
-                <li>SBS 꼬리에 꼬리를 무는 이야기 마술 자문</li>
-                <li>SBS 세상에 이런일이 "카드 수집가" 편 마술사</li>
-                <li>연세대, 고려대, 서강대, 한양대, 광운대 마술 특강</li>
-                <li><a href="http://lnmagic.com" target="_blank" rel="noopener">렉쳐노트 샵</a> 매니저</li>
-                <li>대표작 카멜레온, 트레이스, 칼리 덱</li>
-            </ul>
+            <div class="proof-grid">
+                <div class="proof-card"><span class="proof-icon" aria-hidden="true">🏆</span><span class="proof-label">침착맨 마술 공모전 '뉴노멀' 우승</span></div>
+                <div class="proof-card"><span class="proof-icon" aria-hidden="true">📺</span><span class="proof-label">SBS 꼬꼬무 마술 자문</span></div>
+                <div class="proof-card"><span class="proof-icon" aria-hidden="true">🎬</span><span class="proof-label">SBS 세상에 이런일이 출연</span></div>
+                <div class="proof-card"><span class="proof-icon" aria-hidden="true">🎓</span><span class="proof-label">연·고·서·한·광 대학 특강</span></div>
+                <a class="proof-card" href="http://lnmagic.com" target="_blank" rel="noopener"><span class="proof-icon" aria-hidden="true">🏪</span><span class="proof-label">렉쳐노트 샵 매니저</span></a>
+                <div class="proof-card"><span class="proof-icon" aria-hidden="true">🃏</span><span class="proof-label">대표작 카멜레온·트레이스·칼리 덱</span></div>
+            </div>
             <details>
                 <summary>형이 해온 것 전부 보기</summary>
                 <h3>주요 경력</h3>
@@ -213,13 +210,13 @@
   <div style="padding:34px 24px 0;">
     <p style="color:var(--point-gold); font-weight:800; font-size:13px; letter-spacing:0.08em; margin:0 0 14px;">✦ 신뢰의 증거</p>
     <p style="color:#A99685; font-size:14px; line-height:1.8; margin:0 0 14px; word-break:keep-all;">말로만 하면 안 믿기잖아. 형이 실제로 해온 것들이야.</p>
-    <div style="display:flex; flex-direction:column; gap:10px;">
-      <p style="margin:0; color:#D8C8BA; font-size:14px; line-height:1.7;">침착맨이 선정한 '한국 마술 공모전 : 뉴노멀 부분' 우승자</p>
-      <p style="margin:0; color:#D8C8BA; font-size:14px; line-height:1.7;">SBS 꼬리에 꼬리를 무는 이야기 마술 자문</p>
-      <p style="margin:0; color:#D8C8BA; font-size:14px; line-height:1.7;">SBS 세상에 이런일이 "카드 수집가" 편 마술사</p>
-      <p style="margin:0; color:#D8C8BA; font-size:14px; line-height:1.7;">연세대, 고려대, 서강대, 한양대, 광운대 마술 특강</p>
-      <p style="margin:0; color:#D8C8BA; font-size:14px; line-height:1.7;"><a href="http://lnmagic.com" target="_blank" rel="noopener" style="color:var(--point-gold);">렉쳐노트 샵</a> 매니저</p>
-      <p style="margin:0; color:#D8C8BA; font-size:14px; line-height:1.7;">대표작 카멜레온, 트레이스, 칼리 덱</p>
+    <div class="proof-grid proof-grid--mobile">
+      <div class="proof-card"><span class="proof-icon" aria-hidden="true">🏆</span><span class="proof-label">침착맨 마술 공모전 '뉴노멀' 우승</span></div>
+      <div class="proof-card"><span class="proof-icon" aria-hidden="true">📺</span><span class="proof-label">SBS 꼬꼬무 마술 자문</span></div>
+      <div class="proof-card"><span class="proof-icon" aria-hidden="true">🎬</span><span class="proof-label">SBS 세상에 이런일이 출연</span></div>
+      <div class="proof-card"><span class="proof-icon" aria-hidden="true">🎓</span><span class="proof-label">연·고·서·한·광 대학 특강</span></div>
+      <a class="proof-card" href="http://lnmagic.com" target="_blank" rel="noopener"><span class="proof-icon" aria-hidden="true">🏪</span><span class="proof-label">렉쳐노트 샵 매니저</span></a>
+      <div class="proof-card"><span class="proof-icon" aria-hidden="true">🃏</span><span class="proof-label">대표작 카멜레온·트레이스·칼리 덱</span></div>
     </div>
     <details style="margin-top:18px; color:#D8C8BA;">
       <summary style="color:var(--point-gold); font-weight:800; font-size:14px;">형이 해온 것 전부 보기</summary>
