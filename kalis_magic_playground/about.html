@@ -4,16 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>칼리 소개 | 칼리형</title>
-    <meta name="description" content="마술계 초절정 인기쟁이 칼리. 렉쳐노트 샵 매니저이자 마술 강의·작품 이력 소개.">
+    <meta name="description" content="어디서든 기억에 남는 사람이 되는 법. 렉쳐노트 샵 매니저 칼리의 소개와 이력.">
     <meta property="og:type" content="website">
     <meta property="og:title" content="칼리 소개 | 칼리형">
-    <meta property="og:description" content="마술계 초절정 인기쟁이 칼리. 렉쳐노트 샵 매니저이자 마술 강의·작품 이력 소개.">
-    <meta property="og:image" content="https://kalimagic.netlify.app/assets/profile/portrait.jpg">
+    <meta property="og:description" content="어디서든 기억에 남는 사람이 되는 법. 렉쳐노트 샵 매니저 칼리의 소개와 이력.">
+    <meta property="og:image" content="https://kalimagic.netlify.app/assets/profile/kali-about.jpg">
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
     <script src="nav.js"></script>
+    <script src="reveal.js"></script>
 </head>
 <body>
 <div class="kx-desktop">
@@ -24,92 +25,94 @@
     <main>
 
     <!-- Profile -->
-    <section id="hero" class="hero" style="--hero-img: url('assets/profile/portrait.jpg'); --hero-pos: center 22%; min-height: 64vh;">
+    <section id="hero" class="hero kx-fade" style="--hero-img: url('assets/profile/kali-about.jpg'); --hero-pos: center top; min-height: 64vh;">
         <div class="container">
-            <img src="assets/profile/portrait.jpg" alt="칼리" class="fade-in" style="width:148px; height:148px; object-fit:cover; object-position:center 22%; border-radius:18px; border:1px solid rgba(255,255,255,0.14); box-shadow:0 14px 32px rgba(0,0,0,0.36); margin-bottom:24px;">
-            <p class="eyebrow fade-in">ABOUT KALI</p>
-            <h1 class="hero-headline fade-in">칼리</h1>
-            <p class="hero-sub fade-in">Kali.D.Cerona</p>
-            <div class="cta-row fade-in">
+            <img src="assets/profile/kali-about.jpg" alt="칼리" style="width:148px; height:148px; object-fit:cover; object-position:center top; border-radius:18px; border:1px solid rgba(255,255,255,0.14); box-shadow:0 14px 32px rgba(0,0,0,0.36); margin-bottom:24px;">
+            <p class="eyebrow">ABOUT KALI</p>
+            <h1 class="hero-headline">칼리</h1>
+            <p class="hero-sub">Kali.D.Cerona</p>
+            <div class="cta-row">
                 <a href="https://www.instagram.com/kalicerona/" target="_blank" rel="noopener" class="btn btn--primary">인스타그램</a>
                 <a href="https://www.youtube.com/kalidcerona" target="_blank" rel="noopener" class="btn btn--ghost">유튜브</a>
-                <span class="btn btn--ghost">카카오 ID: kalidcerona</span>
             </div>
         </div>
     </section>
 
     <!-- About Me -->
-    <section class="section section--tight">
+    <section class="section section--tight kx-fade">
         <div class="container prose">
             <p class="eyebrow">About Me</p>
-            <h2>마덕 중에 마덕! 마술인이라면 누구나 다 아는 그 남자!<br>마술계 초절정 인기쟁이 칼리입니다!</h2>
-            <p>마술에 관심이 생겼다면, 아마 한 번쯤 렉쳐노트라는 이름을 듣게 될 거예요. 한국 마술 입문자들이 가장 먼저 찾는 그 공간의 샵 매니저, 칼리입니다.</p>
-            <p>저도 마술에 한 번 빠지고 나서 헤어 나오지 못한 마덕입니다. 그 덕분에 좋은 콘텐츠가 뭔지, 처음 배울 때 뭐가 진짜 도움이 되는지를 누구보다 많이 고민해왔습니다.</p>
-            <p>세미나, 특강, 과외, 강의 서적 집필, 스트리밍 강의 제작까지. 다양한 방식으로 마술을 전달해온 경험을 갖고 있습니다.</p>
-            <p>가볍게 취미로 시작하고 싶은 분도, 제대로 파고들고 싶은 분도 환영합니다. 첫 발을 어디서 떼야 할지 모르겠다면, 그 시작을 함께해드릴게요.</p>
+            <h2>형은 마술 <br>가르치는 사람이 아니야</h2>
+            <p class="lead">네가 어디서든 기억에 남는 사람이 되는 거, <br>그게 형 목표야</p>
+            <p>솔직히 말할게.<br>형이 진짜 하고 싶은 건 마술 기술을 가르치는 게 아니야.</p>
+            <p>처음 만난 사람 앞에서도 당당하고,<br>어떤 자리에서든 기억에 남는 사람.<br>나라는 사람 자체가 매력적인 것.<br>마술은 그걸 만드는 가장 빠른 방법이야.</p>
+            <p>형도 처음부터 그랬던 건 아니야.<br>근데 마술 하나 제대로 잡고 나서<br>사람들 앞에 서는 게 완전히 달라졌어.<br>그 길을 먼저 걸어봤으니까, 네 첫 발도 같이 떼줄게.</p>
+            <p>혹시 마술에 관심 생겼으면 '렉쳐노트' 들어봤을 거야.<br>한국 마술 입문자가 제일 먼저 찾는 그곳, 그 샵 매니저가 형이야.</p>
+            <p>취미로 가볍게든, 제대로 파고들든 다 좋아.<br>어디서 시작할지 모르겠으면 그 시작을 형이 같이 해줄게.</p>
         </div>
     </section>
 
-    <!-- 주요 경력 -->
-    <section class="section bg-alt">
+    <!-- 신뢰의 증거 -->
+    <section class="section bg-alt kx-fade">
         <div class="container prose">
-            <h2>주요 경력</h2>
+            <h2>신뢰의 증거</h2>
+            <p>말로만 하면 안 믿기잖아. 형이 실제로 해온 것들이야.</p>
             <ul>
-                <li>2015 - 현재 : <a href="http://lnmagic.com" target="_blank" rel="noopener">렉쳐노트 샵</a> 매니저</li>
-                <li>2026 : GARAGE LIFE FESTIVAL (Deus Ex Machina + RSG)</li>
-                <li>2026 : 연세대, 고려대, 서강대, 한양대 외 마술 특강</li>
-                <li>2025 : 한게임 포커 손모델</li>
-                <li>2025 : 고려대, 한양대 외 마술 특강</li>
                 <li>침착맨이 선정한 '한국 마술 공모전 : 뉴노멀 부분' 우승자</li>
                 <li>SBS 꼬리에 꼬리를 무는 이야기 마술 자문</li>
                 <li>SBS 세상에 이런일이 "카드 수집가" 편 마술사</li>
-                <li>2022 : 서울대학교 마술 동아리 '몽환' 특강</li>
-                <li>2019 : 서울대학교 마술 동아리 '몽환' 특강</li>
-                <li>2018 : 동아보건대학 마술학과 특강</li>
-                <li>2017 : JCMA Challengers Live 심사위원</li>
-                <li>2014 - 2015 : 원더매직 샵 매니저</li>
-                <li>2008 - 2014 : 마술 방과후교실 강사</li>
+                <li>연세대, 고려대, 서강대, 한양대, 광운대 마술 특강</li>
+                <li><a href="http://lnmagic.com" target="_blank" rel="noopener">렉쳐노트 샵</a> 매니저</li>
+                <li>대표작 카멜레온, 트레이스, 칼리 덱</li>
             </ul>
-        </div>
-    </section>
-
-    <!-- 주요 작품 -->
-    <section class="section">
-        <div class="container prose">
-            <h2>주요 작품</h2>
-            <ul>
-                <li><a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1000000382" target="_blank" rel="noopener">카드 마술 도구 "카멜레온" 제작</a></li>
-                <li><a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1000000123" target="_blank" rel="noopener">마술 영상 강의 "트레이스2" 저자</a></li>
-                <li><a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1297" target="_blank" rel="noopener">마술 강의 서적 "트레이스" 저자</a></li>
-                <li><a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1000000100" target="_blank" rel="noopener">마술 영상 강의 "타겟" 저자</a></li>
-                <li><a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1570" target="_blank" rel="noopener">마술 영상 강의 "Nao Card Tricks" 저자</a></li>
-                <li><a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1782" target="_blank" rel="noopener">마술 영상 강의 "에피파니 Vol.1 리마스터" 저자</a></li>
-                <li><a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1000000238" target="_blank" rel="noopener">마술 전용 일반 카드 "칼리 덱"</a></li>
-                <li><a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1000000241" target="_blank" rel="noopener">마술용품 보관 "틴 케이스"</a></li>
-            </ul>
-        </div>
-    </section>
-
-    <!-- 기타 활동 -->
-    <section class="section bg-alt">
-        <div class="container prose">
-            <h2>기타 활동</h2>
-            <ul>
-                <li><a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1000000216" target="_blank" rel="noopener">마술 강의 영상 "클래식 콜렉션 리마스터 vol.2" 제작 참여</a></li>
-                <li><a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1992" target="_blank" rel="noopener">마술 강의 영상 "클래식 콜렉션 리마스터 vol.1" 제작 참여</a></li>
-                <li>마술 강의 서적 "Do as I do" 제작 참여</li>
-                <li>마술 강의 서적 "리마커블" 비공개 강의 참여</li>
-                <li>마술 강의 서적 "글림스" 검수 및 고문</li>
-                <li>마술 강의 서적 "카드 마술의 왕도" 검수 및 고문</li>
-                <li>마술 강의 서적 "멘탈 마술 입문편 Vol.1" 고문</li>
-                <li>마술 강의 서적 "Greetings" 검수</li>
-                <li>마술 강의 노트 "Manoeda by Ever Elizalde" 검수</li>
-            </ul>
+            <details>
+                <summary>형이 해온 것 전부 보기</summary>
+                <h3>주요 경력</h3>
+                <ul>
+                    <li>2015 - 현재 : <a href="http://lnmagic.com" target="_blank" rel="noopener">렉쳐노트 샵</a> 매니저</li>
+                    <li>2026 : GARAGE LIFE FESTIVAL (Deus Ex Machina + RSG)</li>
+                    <li>2026 : 연세대, 고려대, 서강대, 한양대 외 마술 특강</li>
+                    <li>2025 : 한게임 포커 손모델</li>
+                    <li>2025 : 고려대, 한양대 외 마술 특강</li>
+                    <li>침착맨이 선정한 '한국 마술 공모전 : 뉴노멀 부분' 우승자</li>
+                    <li>SBS 꼬리에 꼬리를 무는 이야기 마술 자문</li>
+                    <li>SBS 세상에 이런일이 "카드 수집가" 편 마술사</li>
+                    <li>2022 : 서울대학교 마술 동아리 '몽환' 특강</li>
+                    <li>2019 : 서울대학교 마술 동아리 '몽환' 특강</li>
+                    <li>2018 : 동아보건대학 마술학과 특강</li>
+                    <li>2017 : JCMA Challengers Live 심사위원</li>
+                    <li>2014 - 2015 : 원더매직 샵 매니저</li>
+                    <li>2008 - 2014 : 마술 방과후교실 강사</li>
+                </ul>
+                <h3>주요 작품</h3>
+                <ul>
+                    <li><a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1000000382" target="_blank" rel="noopener">카드 마술 도구 "카멜레온" 제작</a></li>
+                    <li><a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1000000123" target="_blank" rel="noopener">마술 영상 강의 "트레이스2" 저자</a></li>
+                    <li><a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1297" target="_blank" rel="noopener">마술 강의 서적 "트레이스" 저자</a></li>
+                    <li><a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1000000100" target="_blank" rel="noopener">마술 영상 강의 "타겟" 저자</a></li>
+                    <li><a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1570" target="_blank" rel="noopener">마술 영상 강의 "Nao Card Tricks" 저자</a></li>
+                    <li><a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1782" target="_blank" rel="noopener">마술 영상 강의 "에피파니 Vol.1 리마스터" 저자</a></li>
+                    <li><a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1000000238" target="_blank" rel="noopener">마술 전용 일반 카드 "칼리 덱"</a></li>
+                    <li><a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1000000241" target="_blank" rel="noopener">마술용품 보관 "틴 케이스"</a></li>
+                </ul>
+                <h3>기타 활동</h3>
+                <ul>
+                    <li><a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1000000216" target="_blank" rel="noopener">마술 강의 영상 "클래식 콜렉션 리마스터 vol.2" 제작 참여</a></li>
+                    <li><a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1992" target="_blank" rel="noopener">마술 강의 영상 "클래식 콜렉션 리마스터 vol.1" 제작 참여</a></li>
+                    <li>마술 강의 서적 "Do as I do" 제작 참여</li>
+                    <li>마술 강의 서적 "리마커블" 비공개 강의 참여</li>
+                    <li>마술 강의 서적 "글림스" 검수 및 고문</li>
+                    <li>마술 강의 서적 "카드 마술의 왕도" 검수 및 고문</li>
+                    <li>마술 강의 서적 "멘탈 마술 입문편 Vol.1" 고문</li>
+                    <li>마술 강의 서적 "Greetings" 검수</li>
+                    <li>마술 강의 노트 "Manoeda by Ever Elizalde" 검수</li>
+                </ul>
+            </details>
         </div>
     </section>
 
     <!-- 저에 대해 더 궁금하다면 -->
-    <section class="section">
+    <section class="section kx-fade">
         <div class="container">
             <div class="center">
                 <h2 class="section-title">저에 대해 더 궁금하다면</h2>
@@ -130,9 +133,9 @@
     </section>
 
     <!-- 하단 CTA -->
-    <section class="section section--tight bg-alt">
+    <section class="section section--tight bg-alt kx-fade">
         <div class="container">
-            <div class="secondary-cta-box fade-in">
+            <div class="secondary-cta-box">
                 <h2>칼리형이 궁금했다면<br>이제 마술도 같이 봐요</h2>
                 <div class="cta-row center">
                     <a href="intro.html" class="cta-button">형이 만든 강의 보기 →</a>
@@ -155,70 +158,73 @@
   <div style="padding:48px 24px 0;">
     <p class="kx-eye"><span></span>소개</p>
     <h2 style="font-size:33px; font-weight:800; line-height:1.14; letter-spacing:-0.03em; color:#F4E7DA; margin:0 0 10px; word-break:keep-all;">칼리<br><span class="kx-serif" style="font-size:33px;">Kali.D.Cerona</span></h2>
-    <p style="color:#C9B3A2; font-size:15px; line-height:1.7; margin:0 0 22px; word-break:keep-all;">마술계 초절정 인기쟁이 칼리입니다!</p>
+    <p style="color:#C9B3A2; font-size:15px; line-height:1.7; margin:0 0 22px; word-break:keep-all;">네가 어디서든 기억에 남는 사람이 되는 거, 그게 형 목표야</p>
     <div style="margin:0 0 22px; position:relative; border-radius:18px; overflow:hidden; box-shadow:0 14px 30px rgba(0,0,0,0.42); border:1px solid rgba(255,255,255,0.06);">
-      <img src="assets/profile/portrait.jpg" alt="칼리" style="width:100%; height:300px; object-fit:cover; object-position:center 22%; display:block; filter:saturate(0.9) contrast(1.03);">
+      <img src="assets/profile/kali-about.jpg" alt="칼리" style="width:100%; height:300px; object-fit:cover; object-position:center top; display:block; filter:saturate(0.9) contrast(1.03);">
       <div style="position:absolute; inset:0; background:linear-gradient(180deg, rgba(178,83,46,0.08), rgba(138,79,50,0.32)); mix-blend-mode:multiply;"></div>
     </div>
     <div style="display:flex; flex-direction:column; gap:10px; margin:0 0 24px;">
       <a href="https://www.instagram.com/kalicerona/" target="_blank" rel="noopener" class="kx-cta">인스타그램</a>
       <a href="https://www.youtube.com/kalidcerona" target="_blank" rel="noopener" style="display:flex; align-items:center; justify-content:center; height:52px; border-radius:13px; border:1px solid rgba(255,255,255,0.12); color:#F4E7DA; font-weight:700;">유튜브</a>
-      <p style="text-align:center; color:#A99685; font-size:14px; margin:0;">카카오 ID: kalidcerona</p>
     </div>
-    <p style="color:#F4E7DA; font-size:18px; line-height:1.6; font-weight:800; margin:0 0 14px; word-break:keep-all;">마덕 중에 마덕! 마술인이라면 누구나 다 아는 그 남자!</p>
-    <p style="color:#A99685; font-size:14px; line-height:1.8; margin:0 0 14px; word-break:keep-all;">마술에 관심이 생겼다면, 아마 한 번쯤 렉쳐노트라는 이름을 듣게 될 거예요. 한국 마술 입문자들이 가장 먼저 찾는 그 공간의 샵 매니저, 칼리입니다.</p>
-    <p style="color:#A99685; font-size:14px; line-height:1.8; margin:0 0 14px; word-break:keep-all;">저도 마술에 한 번 빠지고 나서 헤어 나오지 못한 마덕입니다. 그 덕분에 좋은 콘텐츠가 뭔지, 처음 배울 때 뭐가 진짜 도움이 되는지를 누구보다 많이 고민해왔습니다.</p>
-    <p style="color:#A99685; font-size:14px; line-height:1.8; margin:0 0 14px; word-break:keep-all;">세미나, 특강, 과외, 강의 서적 집필, 스트리밍 강의 제작까지. 다양한 방식으로 마술을 전달해온 경험을 갖고 있습니다.</p>
-    <p style="color:#A99685; font-size:14px; line-height:1.8; margin:0; word-break:keep-all;">가볍게 취미로 시작하고 싶은 분도, 제대로 파고들고 싶은 분도 환영합니다. 첫 발을 어디서 떼야 할지 모르겠다면, 그 시작을 함께해드릴게요.</p>
+    <p style="color:#F4E7DA; font-size:18px; line-height:1.6; font-weight:800; margin:0 0 14px; word-break:keep-all;">형은 마술 가르치는 사람이 아니야</p>
+    <p style="color:#A99685; font-size:14px; line-height:1.8; margin:0 0 14px; word-break:keep-all;">솔직히 말할게.<br>형이 진짜 하고 싶은 건 마술 기술을 가르치는 게 아니야.</p>
+    <p style="color:#A99685; font-size:14px; line-height:1.8; margin:0 0 14px; word-break:keep-all;">처음 만난 사람 앞에서도 당당하고,<br>어떤 자리에서든 기억에 남는 사람.<br>나라는 사람 자체가 매력적인 것.<br>마술은 그걸 만드는 가장 빠른 방법이야.</p>
+    <p style="color:#A99685; font-size:14px; line-height:1.8; margin:0 0 14px; word-break:keep-all;">형도 처음부터 그랬던 건 아니야.<br>근데 마술 하나 제대로 잡고 나서<br>사람들 앞에 서는 게 완전히 달라졌어.<br>그 길을 먼저 걸어봤으니까, 네 첫 발도 같이 떼줄게.</p>
+    <p style="color:#A99685; font-size:14px; line-height:1.8; margin:0 0 14px; word-break:keep-all;">혹시 마술에 관심 생겼으면 '렉쳐노트' 들어봤을 거야.<br>한국 마술 입문자가 제일 먼저 찾는 그곳, 그 샵 매니저가 형이야.</p>
+    <p style="color:#A99685; font-size:14px; line-height:1.8; margin:0; word-break:keep-all;">취미로 가볍게든, 제대로 파고들든 다 좋아.<br>어디서 시작할지 모르겠으면 그 시작을 형이 같이 해줄게.</p>
   </div>
 
   <div style="padding:34px 24px 0;">
-    <p style="color:var(--point-gold); font-weight:800; font-size:13px; letter-spacing:0.08em; margin:0 0 14px;">✦ 주요 경력</p>
+    <p style="color:var(--point-gold); font-weight:800; font-size:13px; letter-spacing:0.08em; margin:0 0 14px;">✦ 신뢰의 증거</p>
+    <p style="color:#A99685; font-size:14px; line-height:1.8; margin:0 0 14px; word-break:keep-all;">말로만 하면 안 믿기잖아. 형이 실제로 해온 것들이야.</p>
     <div style="display:flex; flex-direction:column; gap:10px;">
-      <p style="margin:0; color:#D8C8BA; font-size:14px; line-height:1.7;">2015 - 현재 : <a href="http://lnmagic.com" target="_blank" rel="noopener" style="color:var(--point-gold);">렉쳐노트 샵</a> 매니저</p>
-      <p style="margin:0; color:#D8C8BA; font-size:14px; line-height:1.7;">2026 : GARAGE LIFE FESTIVAL (Deus Ex Machina + RSG)</p>
-      <p style="margin:0; color:#D8C8BA; font-size:14px; line-height:1.7;">2026 : 연세대, 고려대, 서강대, 한양대 외 마술 특강</p>
-      <p style="margin:0; color:#D8C8BA; font-size:14px; line-height:1.7;">2025 : 한게임 포커 손모델</p>
-      <p style="margin:0; color:#D8C8BA; font-size:14px; line-height:1.7;">2025 : 고려대, 한양대 외 마술 특강</p>
       <p style="margin:0; color:#D8C8BA; font-size:14px; line-height:1.7;">침착맨이 선정한 '한국 마술 공모전 : 뉴노멀 부분' 우승자</p>
       <p style="margin:0; color:#D8C8BA; font-size:14px; line-height:1.7;">SBS 꼬리에 꼬리를 무는 이야기 마술 자문</p>
       <p style="margin:0; color:#D8C8BA; font-size:14px; line-height:1.7;">SBS 세상에 이런일이 "카드 수집가" 편 마술사</p>
-      <p style="margin:0; color:#D8C8BA; font-size:14px; line-height:1.7;">2022 : 서울대학교 마술 동아리 '몽환' 특강</p>
-      <p style="margin:0; color:#D8C8BA; font-size:14px; line-height:1.7;">2019 : 서울대학교 마술 동아리 '몽환' 특강</p>
-      <p style="margin:0; color:#D8C8BA; font-size:14px; line-height:1.7;">2018 : 동아보건대학 마술학과 특강</p>
-      <p style="margin:0; color:#D8C8BA; font-size:14px; line-height:1.7;">2017 : JCMA Challengers Live 심사위원</p>
-      <p style="margin:0; color:#D8C8BA; font-size:14px; line-height:1.7;">2014 - 2015 : 원더매직 샵 매니저</p>
-      <p style="margin:0; color:#D8C8BA; font-size:14px; line-height:1.7;">2008 - 2014 : 마술 방과후교실 강사</p>
+      <p style="margin:0; color:#D8C8BA; font-size:14px; line-height:1.7;">연세대, 고려대, 서강대, 한양대, 광운대 마술 특강</p>
+      <p style="margin:0; color:#D8C8BA; font-size:14px; line-height:1.7;"><a href="http://lnmagic.com" target="_blank" rel="noopener" style="color:var(--point-gold);">렉쳐노트 샵</a> 매니저</p>
+      <p style="margin:0; color:#D8C8BA; font-size:14px; line-height:1.7;">대표작 카멜레온, 트레이스, 칼리 덱</p>
     </div>
-  </div>
-
-  <div style="padding:34px 24px 0;">
-    <p style="color:var(--point-gold); font-weight:800; font-size:13px; letter-spacing:0.08em; margin:0 0 14px;">✦ 주요 작품</p>
-    <div style="display:flex; flex-direction:column; gap:10px;">
-      <a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1000000382" target="_blank" rel="noopener" style="color:#D8C8BA; font-size:14px; line-height:1.7;">카드 마술 도구 "카멜레온" 제작</a>
-      <a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1000000123" target="_blank" rel="noopener" style="color:#D8C8BA; font-size:14px; line-height:1.7;">마술 영상 강의 "트레이스2" 저자</a>
-      <a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1297" target="_blank" rel="noopener" style="color:#D8C8BA; font-size:14px; line-height:1.7;">마술 강의 서적 "트레이스" 저자</a>
-      <a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1000000100" target="_blank" rel="noopener" style="color:#D8C8BA; font-size:14px; line-height:1.7;">마술 영상 강의 "타겟" 저자</a>
-      <a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1570" target="_blank" rel="noopener" style="color:#D8C8BA; font-size:14px; line-height:1.7;">마술 영상 강의 "Nao Card Tricks" 저자</a>
-      <a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1782" target="_blank" rel="noopener" style="color:#D8C8BA; font-size:14px; line-height:1.7;">마술 영상 강의 "에피파니 Vol.1 리마스터" 저자</a>
-      <a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1000000238" target="_blank" rel="noopener" style="color:#D8C8BA; font-size:14px; line-height:1.7;">마술 전용 일반 카드 "칼리 덱"</a>
-      <a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1000000241" target="_blank" rel="noopener" style="color:#D8C8BA; font-size:14px; line-height:1.7;">마술용품 보관 "틴 케이스"</a>
-    </div>
-  </div>
-
-  <div style="padding:34px 24px 0;">
-    <p style="color:var(--point-gold); font-weight:800; font-size:13px; letter-spacing:0.08em; margin:0 0 14px;">✦ 기타 활동</p>
-    <div style="display:flex; flex-direction:column; gap:10px;">
-      <a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1000000216" target="_blank" rel="noopener" style="color:#D8C8BA; font-size:14px; line-height:1.7;">마술 강의 영상 "클래식 콜렉션 리마스터 vol.2" 제작 참여</a>
-      <a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1992" target="_blank" rel="noopener" style="color:#D8C8BA; font-size:14px; line-height:1.7;">마술 강의 영상 "클래식 콜렉션 리마스터 vol.1" 제작 참여</a>
-      <p style="margin:0; color:#D8C8BA; font-size:14px; line-height:1.7;">마술 강의 서적 "Do as I do" 제작 참여</p>
-      <p style="margin:0; color:#D8C8BA; font-size:14px; line-height:1.7;">마술 강의 서적 "리마커블" 비공개 강의 참여</p>
-      <p style="margin:0; color:#D8C8BA; font-size:14px; line-height:1.7;">마술 강의 서적 "글림스" 검수 및 고문</p>
-      <p style="margin:0; color:#D8C8BA; font-size:14px; line-height:1.7;">마술 강의 서적 "카드 마술의 왕도" 검수 및 고문</p>
-      <p style="margin:0; color:#D8C8BA; font-size:14px; line-height:1.7;">마술 강의 서적 "멘탈 마술 입문편 Vol.1" 고문</p>
-      <p style="margin:0; color:#D8C8BA; font-size:14px; line-height:1.7;">마술 강의 서적 "Greetings" 검수</p>
-      <p style="margin:0; color:#D8C8BA; font-size:14px; line-height:1.7;">마술 강의 노트 "Manoeda by Ever Elizalde" 검수</p>
-    </div>
+    <details style="margin-top:18px; color:#D8C8BA;">
+      <summary style="color:var(--point-gold); font-weight:800; font-size:14px;">형이 해온 것 전부 보기</summary>
+      <div style="display:flex; flex-direction:column; gap:10px; margin-top:14px;">
+        <p style="color:var(--point-gold); font-weight:800; font-size:13px; letter-spacing:0.08em; margin:10px 0 0;">주요 경력</p>
+        <p style="margin:0; color:#D8C8BA; font-size:14px; line-height:1.7;">2015 - 현재 : <a href="http://lnmagic.com" target="_blank" rel="noopener" style="color:var(--point-gold);">렉쳐노트 샵</a> 매니저</p>
+        <p style="margin:0; color:#D8C8BA; font-size:14px; line-height:1.7;">2026 : GARAGE LIFE FESTIVAL (Deus Ex Machina + RSG)</p>
+        <p style="margin:0; color:#D8C8BA; font-size:14px; line-height:1.7;">2026 : 연세대, 고려대, 서강대, 한양대 외 마술 특강</p>
+        <p style="margin:0; color:#D8C8BA; font-size:14px; line-height:1.7;">2025 : 한게임 포커 손모델</p>
+        <p style="margin:0; color:#D8C8BA; font-size:14px; line-height:1.7;">2025 : 고려대, 한양대 외 마술 특강</p>
+        <p style="margin:0; color:#D8C8BA; font-size:14px; line-height:1.7;">침착맨이 선정한 '한국 마술 공모전 : 뉴노멀 부분' 우승자</p>
+        <p style="margin:0; color:#D8C8BA; font-size:14px; line-height:1.7;">SBS 꼬리에 꼬리를 무는 이야기 마술 자문</p>
+        <p style="margin:0; color:#D8C8BA; font-size:14px; line-height:1.7;">SBS 세상에 이런일이 "카드 수집가" 편 마술사</p>
+        <p style="margin:0; color:#D8C8BA; font-size:14px; line-height:1.7;">2022 : 서울대학교 마술 동아리 '몽환' 특강</p>
+        <p style="margin:0; color:#D8C8BA; font-size:14px; line-height:1.7;">2019 : 서울대학교 마술 동아리 '몽환' 특강</p>
+        <p style="margin:0; color:#D8C8BA; font-size:14px; line-height:1.7;">2018 : 동아보건대학 마술학과 특강</p>
+        <p style="margin:0; color:#D8C8BA; font-size:14px; line-height:1.7;">2017 : JCMA Challengers Live 심사위원</p>
+        <p style="margin:0; color:#D8C8BA; font-size:14px; line-height:1.7;">2014 - 2015 : 원더매직 샵 매니저</p>
+        <p style="margin:0; color:#D8C8BA; font-size:14px; line-height:1.7;">2008 - 2014 : 마술 방과후교실 강사</p>
+        <p style="color:var(--point-gold); font-weight:800; font-size:13px; letter-spacing:0.08em; margin:16px 0 0;">주요 작품</p>
+        <a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1000000382" target="_blank" rel="noopener" style="color:#D8C8BA; font-size:14px; line-height:1.7;">카드 마술 도구 "카멜레온" 제작</a>
+        <a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1000000123" target="_blank" rel="noopener" style="color:#D8C8BA; font-size:14px; line-height:1.7;">마술 영상 강의 "트레이스2" 저자</a>
+        <a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1297" target="_blank" rel="noopener" style="color:#D8C8BA; font-size:14px; line-height:1.7;">마술 강의 서적 "트레이스" 저자</a>
+        <a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1000000100" target="_blank" rel="noopener" style="color:#D8C8BA; font-size:14px; line-height:1.7;">마술 영상 강의 "타겟" 저자</a>
+        <a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1570" target="_blank" rel="noopener" style="color:#D8C8BA; font-size:14px; line-height:1.7;">마술 영상 강의 "Nao Card Tricks" 저자</a>
+        <a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1782" target="_blank" rel="noopener" style="color:#D8C8BA; font-size:14px; line-height:1.7;">마술 영상 강의 "에피파니 Vol.1 리마스터" 저자</a>
+        <a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1000000238" target="_blank" rel="noopener" style="color:#D8C8BA; font-size:14px; line-height:1.7;">마술 전용 일반 카드 "칼리 덱"</a>
+        <a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1000000241" target="_blank" rel="noopener" style="color:#D8C8BA; font-size:14px; line-height:1.7;">마술용품 보관 "틴 케이스"</a>
+        <p style="color:var(--point-gold); font-weight:800; font-size:13px; letter-spacing:0.08em; margin:16px 0 0;">기타 활동</p>
+        <a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1000000216" target="_blank" rel="noopener" style="color:#D8C8BA; font-size:14px; line-height:1.7;">마술 강의 영상 "클래식 콜렉션 리마스터 vol.2" 제작 참여</a>
+        <a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1992" target="_blank" rel="noopener" style="color:#D8C8BA; font-size:14px; line-height:1.7;">마술 강의 영상 "클래식 콜렉션 리마스터 vol.1" 제작 참여</a>
+        <p style="margin:0; color:#D8C8BA; font-size:14px; line-height:1.7;">마술 강의 서적 "Do as I do" 제작 참여</p>
+        <p style="margin:0; color:#D8C8BA; font-size:14px; line-height:1.7;">마술 강의 서적 "리마커블" 비공개 강의 참여</p>
+        <p style="margin:0; color:#D8C8BA; font-size:14px; line-height:1.7;">마술 강의 서적 "글림스" 검수 및 고문</p>
+        <p style="margin:0; color:#D8C8BA; font-size:14px; line-height:1.7;">마술 강의 서적 "카드 마술의 왕도" 검수 및 고문</p>
+        <p style="margin:0; color:#D8C8BA; font-size:14px; line-height:1.7;">마술 강의 서적 "멘탈 마술 입문편 Vol.1" 고문</p>
+        <p style="margin:0; color:#D8C8BA; font-size:14px; line-height:1.7;">마술 강의 서적 "Greetings" 검수</p>
+        <p style="margin:0; color:#D8C8BA; font-size:14px; line-height:1.7;">마술 강의 노트 "Manoeda by Ever Elizalde" 검수</p>
+      </div>
+    </details>
   </div>
 
   <div style="padding:34px 24px 0;">
