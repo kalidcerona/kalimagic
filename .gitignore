@@ -37,3 +37,18 @@ kalis_magic_playground/archive/
 kalis_magic_playground/scripts/
 /kalimagic-lead/
 /kalimagic-v2/
+
+# 백업 파일 패턴 (2026-07-06 정리)
+*.backup-*
+*.bak-*
+
+# 디자인 문서 — publish 폴더 안이라 추적되면 공개 URL 노출 (Netlify 노출 gotcha)
+kalis_magic_playground/COPY.md
+kalis_magic_playground/DESIGN.md
+kalis_magic_playground/DESIGN-BRIEFING.md
+
+# 로컬 참고 자료
+/docs/
+/.reference/
+/.claude-intro
+.DS_Store
