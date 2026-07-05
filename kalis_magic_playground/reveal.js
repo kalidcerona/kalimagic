@@ -1,6 +1,6 @@
 (function(){
   function setupReveal(){
-    var nodes = document.querySelectorAll('.kx-desktop .kx-fade');
+    var nodes = document.querySelectorAll('.kx-desktop .kx-fade, .kx-mobile .kx-shell > div');
     if (!('IntersectionObserver' in window) || !nodes.length){
       nodes.forEach(function(el){ el.classList.add('kx-in'); });
       return;

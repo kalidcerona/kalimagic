@@ -26,19 +26,15 @@
     <main>
 
     <!-- Hero -->
-    <section id="hero" class="hero kx-fade" style="--hero-img: url('assets/profile/magic-booth.jpg'); --hero-pos: center 30%; min-height: 60vh;">
-        <div class="container">
-            <p class="eyebrow">작품 · 도구</p>
-            <h1 class="hero-headline">형이 직접 <br>만든 것들</h1>
-            <p class="hero-sub">형이 직접 만든 것들이야</p>
+    <section class="kx-fade" style="position:relative; min-height:60vh; overflow:hidden; display:flex; flex-direction:column;">
+        <img src="assets/profile/magic-booth.jpg" alt="" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center 25%; filter:saturate(0.9) contrast(1.06) brightness(0.82); z-index:0;">
+        <div style="position:absolute; inset:0; background:linear-gradient(0deg, rgba(26,21,18,0.95) 12%, rgba(26,21,18,0.3) 55%, rgba(26,21,18,0.45)); z-index:0;"></div>
+        <div class="container" style="position:relative; z-index:1; padding-top:44px; display:flex; align-items:center; gap:12px;">
+            <span style="width:26px; height:2px; background:var(--point-gold); display:block;"></span>
+            <p style="color:#E8a06e; font-weight:800; letter-spacing:0.14em; font-size:14px; margin:0;">작품 · 도구</p>
         </div>
-    </section>
-
-    <!-- 소개 -->
-    <section class="section section--tight kx-fade">
-        <div class="container prose">
-            <p>마술 도구는 뭘 사야 할지 모르겠는 게 진짜 문제야<br>그래서 형이 직접 만든 것들만 올려뒀어</p>
-            <p>형 기준에서 실제로 쓰는 것들이야. 어디서나 꺼낼 수 있고, 상황에서 바로 통하는 것들.</p>
+        <div class="container" style="position:relative; z-index:1; margin-top:auto; padding-bottom:56px;">
+            <h1 style="color:#f4efe9; font-size:clamp(2.2rem, 5vw, 4.4rem); font-weight:900; line-height:0.98; margin:0; letter-spacing:-0.03em; white-space:nowrap;">형이 만든 <span style="color:var(--point-gold);">작품들</span></h1>
         </div>
     </section>
 
@@ -46,28 +42,30 @@
     <section class="section kx-fade" style="padding-top: 0;">
         <div class="container">
 
-            <p class="reco-label">✦ 칼리형의 추천</p>
+            <p class="reco-label" style="margin-bottom:6px;">✦ 칼리형의 추천</p>
+            <p style="color:var(--text-muted); font-size:0.86rem; margin:0 0 20px;">형이 직접 골라준 3개 — 아래 목록엔 다시 안 나와</p>
             <div class="store-grid">
                 <a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1992" target="_blank" rel="noopener" class="store-card store-card--reco">
+                    <span class="store-pick-badge">PICK</span>
                     <div class="store-thumb"><img loading="lazy" src="assets/products/클래식 콜렉션 1.jpg" alt="클래식 콜렉션"></div>
                     <div class="store-info"><p class="tag">처음이라면</p><h4>클래식 콜렉션</h4><p>입문이면 여기서 시작해. 제일 써먹기 좋은 것들만 골랐어.</p></div>
                 </a>
                 <a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1000000123" target="_blank" rel="noopener" class="store-card store-card--reco">
+                    <span class="store-pick-badge">PICK</span>
                     <div class="store-thumb"><img loading="lazy" src="assets/products/트레이스 2.jpg" alt="트레이스2"></div>
                     <div class="store-info"><p class="tag">실전 마술을 늘리고 싶다면</p><h4>트레이스2</h4><p>레퍼토리가 부족해? 실전에서 바로 꺼낼 수 있는 루틴들 담았어.</p></div>
                 </a>
                 <a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1000000238" target="_blank" rel="noopener" class="store-card store-card--reco">
+                    <span class="store-pick-badge">PICK</span>
                     <div class="store-thumb"><img loading="lazy" src="assets/products/칼리 덱.jpg" alt="칼리 덱"></div>
                     <div class="store-info"><p class="tag">형 굿즈가 궁금하다면</p><h4>칼리 덱 · 틴 케이스</h4><p>형이랑 같은 카드 들고 다니는 거야.</p></div>
                 </a>
             </div>
 
-            <h2 class="category-title">✦ 강의</h2>
+            <div style="height:1px; background:rgba(255,255,255,0.08); margin:36px 0 0;"></div>
+
+            <h2 class="category-title">✦ 강의 <span style="color:var(--text-muted); font-weight:500; font-size:0.72em;">(추천 제외)</span></h2>
             <div class="store-grid">
-                <a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1992" target="_blank" rel="noopener" class="store-card">
-                    <div class="store-thumb"><img loading="lazy" src="assets/products/클래식 콜렉션 1.jpg" alt="클래식 콜렉션 vol.1"></div>
-                    <div class="store-info"><h4>클래식 콜렉션 vol.1</h4><p>마술을 처음 시작한다면 반드시 알아야 할 카드 마술들</p></div>
-                </a>
                 <a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1000000216" target="_blank" rel="noopener" class="store-card">
                     <div class="store-thumb"><img loading="lazy" src="assets/products/클래식 콜렉션 2.jpg" alt="클래식 콜렉션 vol.2"></div>
                     <div class="store-info"><h4>클래식 콜렉션 vol.2</h4><p>1편을 보고 만족했다면 꼭 보셨으면 하는 2편</p></div>
@@ -87,10 +85,6 @@
                 <a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1297" target="_blank" rel="noopener" class="store-card">
                     <div class="store-thumb"><img loading="lazy" src="assets/products/트레이스.jpg" alt="트레이스"></div>
                     <div class="store-info"><h4>트레이스</h4><p>오랜 시간 다듬어 온 칼리 마술사의 자취. 10여 년의 노하우가 응축된 10가지 실전 마술을 담았습니다</p></div>
-                </a>
-                <a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1000000123" target="_blank" rel="noopener" class="store-card">
-                    <div class="store-thumb"><img loading="lazy" src="assets/products/트레이스 2.jpg" alt="트레이스2"></div>
-                    <div class="store-info"><h4>트레이스2</h4><p>칼리 마술사의 색깔이 담긴 다채로운 카드 마술 10가지! 트레이스 1의 명성을 잇는 강력한 후속작입니다</p></div>
                 </a>
                 <a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1000000327" target="_blank" rel="noopener" class="store-card">
                     <div class="store-thumb"><img loading="lazy" src="assets/products/두 에스 아이 두.jpg" alt="두 에스 아이 두"></div>
@@ -126,9 +120,11 @@
 
     <!-- 구매자 후기 -->
     <section class="section bg-alt kx-fade">
-        <div class="container prose">
-            <h2>산 사람들이 한 말</h2>
-            <div class="review-grid review-grid--wide" style="margin-top:8px;">
+        <div class="container">
+            <div style="text-align:center; max-width:640px; margin:0 auto;">
+                <h2 class="section-title">산 사람들이 한 말</h2>
+            </div>
+            <div class="review-grid review-grid--wide" style="margin-top:28px;">
                 <div class="review-card"><p class="review-quote">"오일앤워터 하나만으로도 살 가치 충분"</p><p class="review-label">✦ 작품 구매자</p></div>
                 <div class="review-card"><p class="review-quote">"칼리라는 사람은 정말 소비자를 생각하는 것 같아요"</p><p class="review-label">✦ 작품 구매자</p></div>
                 <div class="review-card"><p class="review-quote">"구매는 많이 하지만 리뷰는 딱히 안 남기던 편인데... (남깁니다)"</p><p class="review-label">✦ 작품 구매자</p></div>
@@ -160,44 +156,41 @@
 <!-- ===================== MOBILE (≤1024px) ===================== -->
 <div class="kx-mobile">
 <div class="kx-shell">
-  <div style="padding:48px 24px 0;">
-    <p class="kx-eye"><span></span>작품·도구</p>
-    <h2 style="font-size:33px; font-weight:800; line-height:1.14; letter-spacing:-0.03em; color:#F4E7DA; margin:0 0 16px; word-break:keep-all;">형이 직접<br><span class="kx-serif" style="font-size:33px;">만든 것들</span></h2>
-    <p style="color:#C9B3A2; font-size:15px; line-height:1.7; margin:0 0 22px; word-break:keep-all;">형이 직접 만든 것들이야.</p>
-    <div style="margin:0 0 22px; position:relative; border-radius:18px; overflow:hidden; box-shadow:0 14px 30px rgba(0,0,0,0.42); border:1px solid rgba(255,255,255,0.06);">
-      <img src="assets/profile/magic-booth.jpg" alt="관객 앞에서 마술을 선보이는 모습" style="width:100%; height:200px; object-fit:cover; object-position:center 32%; display:block; filter:saturate(0.9) contrast(1.03);">
-      <div style="position:absolute; inset:0; background:linear-gradient(180deg, rgba(178,83,46,0.16), rgba(138,79,50,0.4)); mix-blend-mode:multiply;"></div>
+  <div style="position:relative; min-height:56vh; overflow:hidden; display:flex; flex-direction:column;">
+    <img src="assets/profile/magic-booth.jpg" alt="" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center 25%; filter:saturate(0.9) contrast(1.06) brightness(0.82);">
+    <div style="position:absolute; inset:0; background:linear-gradient(0deg, rgba(26,21,18,0.96) 14%, rgba(26,21,18,0.3) 55%, rgba(26,21,18,0.5));"></div>
+    <div style="position:relative; z-index:1; padding:28px 24px 0; display:flex; align-items:center; justify-content:center; gap:9px;">
+      <span style="width:20px; height:2px; background:var(--point-gold); display:block;"></span>
+      <p style="color:#E8a06e; font-weight:800; letter-spacing:0.1em; font-size:12px; margin:0;">작품 · 도구</p>
     </div>
-    <p style="color:#A99685; font-size:14px; line-height:1.8; margin:0 0 14px; word-break:keep-all;">마술 도구는 뭘 사야 할지 모르겠는 게 진짜 문제야. 그래서 형이 직접 만든 것들만 올려뒀어.</p>
-    <p style="color:#A99685; font-size:14px; line-height:1.8; margin:0; word-break:keep-all;">어디서나 꺼낼 수 있고, 상황에서 바로 통하는 것들. 트레이스 시리즈, 카멜레온 포함해서 형이 직접 제작한 작품들도 있어.</p>
+    <div style="position:relative; z-index:1; margin-top:auto; padding:0 24px 32px; text-align:center;">
+      <h1 style="color:#F4E7DA; font-size:32px; font-weight:900; line-height:1; margin:0; letter-spacing:-0.03em; white-space:nowrap;">형이 만든 <span style="color:var(--point-gold);">작품들</span></h1>
+    </div>
   </div>
   <!-- 추천 -->
   <div style="padding:32px 24px 0;">
-    <p style="color:var(--point-gold); font-weight:800; font-size:13px; letter-spacing:0.08em; margin:0 0 14px;">✦ 추천</p>
-    <div style="display:flex; flex-direction:column; gap:12px;">
-      <a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1992" target="_blank" rel="noopener" style="display:flex; gap:14px; background:#241712; border:1px solid rgba(255,255,255,0.08); border-radius:14px; overflow:hidden; text-decoration:none; padding:14px 16px; align-items:center;">
-        <img loading="lazy" src="assets/products/클래식 콜렉션 1.jpg" alt="클래식 콜렉션" style="width:64px; height:64px; object-fit:cover; border-radius:8px; flex-shrink:0;">
-        <div><p style="margin:0 0 3px; color:var(--point-gold); font-size:11px; font-weight:700; letter-spacing:0.04em;">처음이라면</p><h4 style="margin:0 0 4px; color:#F4E7DA; font-size:14.5px; font-weight:800;">클래식 콜렉션</h4><p style="margin:0; color:#A99685; font-size:12.5px; line-height:1.5;">제일 써먹기 좋은 것들만 골랐어.</p></div>
+    <p style="text-align:center; color:var(--point-gold); font-weight:800; font-size:13px; letter-spacing:0.08em; margin:0 0 4px;">✦ 칼리형의 추천</p>
+    <p style="text-align:center; color:#8a7c6d; font-size:12px; margin:0 0 14px;">형이 골라준 3개 — 아래 목록엔 다시 안 나와</p>
+    <div style="display:flex; flex-direction:column; gap:16px;">
+      <a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1992" target="_blank" rel="noopener" style="display:block; background:#241712; border:1px solid rgba(232,99,31,0.4); border-radius:16px; overflow:hidden; text-decoration:none;">
+        <div style="position:relative;"><img loading="lazy" src="assets/products/클래식 콜렉션 1.jpg" alt="클래식 콜렉션" style="width:100%; aspect-ratio:1/1; object-fit:cover; display:block;"><span style="position:absolute; top:10px; left:10px; background:var(--point-gold); color:#1a1410; font-size:10px; font-weight:800; padding:4px 10px; border-radius:999px; letter-spacing:0.03em;">PICK · 처음이라면</span></div>
+        <div style="padding:16px 18px;"><h4 style="margin:0 0 5px; color:#F4E7DA; font-size:16px; font-weight:800;">클래식 콜렉션</h4><p style="margin:0; color:#A99685; font-size:13px; line-height:1.55; word-break:keep-all;">입문이면 여기서 시작해.<br>제일 써먹기 좋은 것들만 골랐어.</p></div>
       </a>
-      <a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1000000123" target="_blank" rel="noopener" style="display:flex; gap:14px; background:#241712; border:1px solid rgba(255,255,255,0.08); border-radius:14px; overflow:hidden; text-decoration:none; padding:14px 16px; align-items:center;">
-        <img loading="lazy" src="assets/products/트레이스 2.jpg" alt="트레이스2" style="width:64px; height:64px; object-fit:cover; border-radius:8px; flex-shrink:0;">
-        <div><p style="margin:0 0 3px; color:var(--point-gold); font-size:11px; font-weight:700; letter-spacing:0.04em;">실전 마술을 늘리고 싶다면</p><h4 style="margin:0 0 4px; color:#F4E7DA; font-size:14.5px; font-weight:800;">트레이스2</h4><p style="margin:0; color:#A99685; font-size:12.5px; line-height:1.5;">실전에서 바로 꺼낼 수 있는 루틴들.</p></div>
+      <a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1000000123" target="_blank" rel="noopener" style="display:block; background:#241712; border:1px solid rgba(232,99,31,0.4); border-radius:16px; overflow:hidden; text-decoration:none;">
+        <div style="position:relative;"><img loading="lazy" src="assets/products/트레이스 2.jpg" alt="트레이스2" style="width:100%; aspect-ratio:1/1; object-fit:cover; display:block;"><span style="position:absolute; top:10px; left:10px; background:var(--point-gold); color:#1a1410; font-size:10px; font-weight:800; padding:4px 10px; border-radius:999px; letter-spacing:0.03em;">PICK · 실전 늘리고 싶다면</span></div>
+        <div style="padding:16px 18px;"><h4 style="margin:0 0 5px; color:#F4E7DA; font-size:16px; font-weight:800;">트레이스2</h4><p style="margin:0; color:#A99685; font-size:13px; line-height:1.55; word-break:keep-all;">실전에서 바로 꺼낼 수 있는 루틴들.</p></div>
       </a>
-      <a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1000000238" target="_blank" rel="noopener" style="display:flex; gap:14px; background:#241712; border:1px solid rgba(255,255,255,0.08); border-radius:14px; overflow:hidden; text-decoration:none; padding:14px 16px; align-items:center;">
-        <img loading="lazy" src="assets/products/칼리 덱.jpg" alt="칼리 덱" style="width:64px; height:64px; object-fit:cover; border-radius:8px; flex-shrink:0;">
-        <div><p style="margin:0 0 3px; color:var(--point-gold); font-size:11px; font-weight:700; letter-spacing:0.04em;">형 굿즈가 궁금하다면</p><h4 style="margin:0 0 4px; color:#F4E7DA; font-size:14.5px; font-weight:800;">칼리 덱 · 틴 케이스</h4><p style="margin:0; color:#A99685; font-size:12.5px; line-height:1.5;">형이랑 같은 카드 들고 다니는 거야.</p></div>
+      <a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1000000238" target="_blank" rel="noopener" style="display:block; background:#241712; border:1px solid rgba(232,99,31,0.4); border-radius:16px; overflow:hidden; text-decoration:none;">
+        <div style="position:relative;"><img loading="lazy" src="assets/products/칼리 덱.jpg" alt="칼리 덱" style="width:100%; aspect-ratio:1/1; object-fit:cover; display:block;"><span style="position:absolute; top:10px; left:10px; background:var(--point-gold); color:#1a1410; font-size:10px; font-weight:800; padding:4px 10px; border-radius:999px; letter-spacing:0.03em;">PICK · 형 굿즈가 궁금하다면</span></div>
+        <div style="padding:16px 18px;"><h4 style="margin:0 0 5px; color:#F4E7DA; font-size:16px; font-weight:800;">칼리 덱 · 틴 케이스</h4><p style="margin:0; color:#A99685; font-size:13px; line-height:1.55; word-break:keep-all;">형이랑 같은 카드 들고 다니는 거야.</p></div>
       </a>
     </div>
   </div>
 
   <!-- 강의 -->
   <div style="padding:28px 24px 0;">
-    <p style="color:var(--point-gold); font-weight:800; font-size:13px; letter-spacing:0.08em; margin:0 0 14px;">✦ 강의</p>
+    <p style="text-align:center; color:var(--point-gold); font-weight:800; font-size:13px; letter-spacing:0.08em; margin:0 0 14px;">✦ 강의 <span style="color:#8a7c6d; font-weight:600;">(추천 제외)</span></p>
     <div style="display:flex; flex-direction:column; gap:10px;">
-      <a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1992" target="_blank" rel="noopener" style="display:flex; gap:14px; background:#1F140F; border:1px solid rgba(255,255,255,0.06); border-radius:12px; text-decoration:none; padding:12px 14px; align-items:center;">
-        <img loading="lazy" src="assets/products/클래식 콜렉션 1.jpg" alt="클래식 콜렉션 vol.1" style="width:52px; height:52px; object-fit:cover; border-radius:6px; flex-shrink:0;">
-        <div><h4 style="margin:0 0 3px; color:#F4E7DA; font-size:13.5px; font-weight:800;">클래식 콜렉션 vol.1</h4><p style="margin:0; color:#A99685; font-size:12px; line-height:1.45;">마술을 처음 시작한다면 반드시 알아야 할 카드 마술들</p></div>
-      </a>
       <a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1000000216" target="_blank" rel="noopener" style="display:flex; gap:14px; background:#1F140F; border:1px solid rgba(255,255,255,0.06); border-radius:12px; text-decoration:none; padding:12px 14px; align-items:center;">
         <img loading="lazy" src="assets/products/클래식 콜렉션 2.jpg" alt="클래식 콜렉션 vol.2" style="width:52px; height:52px; object-fit:cover; border-radius:6px; flex-shrink:0;">
         <div><h4 style="margin:0 0 3px; color:#F4E7DA; font-size:13.5px; font-weight:800;">클래식 콜렉션 vol.2</h4><p style="margin:0; color:#A99685; font-size:12px; line-height:1.45;">1편을 보고 만족했다면 꼭 보셨으면 하는 2편</p></div>
@@ -218,10 +211,6 @@
         <img loading="lazy" src="assets/products/트레이스.jpg" alt="트레이스" style="width:52px; height:52px; object-fit:cover; border-radius:6px; flex-shrink:0;">
         <div><h4 style="margin:0 0 3px; color:#F4E7DA; font-size:13.5px; font-weight:800;">트레이스</h4><p style="margin:0; color:#A99685; font-size:12px; line-height:1.45;">10여 년의 노하우가 응축된 10가지 실전 마술</p></div>
       </a>
-      <a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1000000123" target="_blank" rel="noopener" style="display:flex; gap:14px; background:#1F140F; border:1px solid rgba(255,255,255,0.06); border-radius:12px; text-decoration:none; padding:12px 14px; align-items:center;">
-        <img loading="lazy" src="assets/products/트레이스 2.jpg" alt="트레이스2" style="width:52px; height:52px; object-fit:cover; border-radius:6px; flex-shrink:0;">
-        <div><h4 style="margin:0 0 3px; color:#F4E7DA; font-size:13.5px; font-weight:800;">트레이스2</h4><p style="margin:0; color:#A99685; font-size:12px; line-height:1.45;">칼리 마술사의 색깔이 담긴 다채로운 카드 마술 10가지</p></div>
-      </a>
       <a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1000000327" target="_blank" rel="noopener" style="display:flex; gap:14px; background:#1F140F; border:1px solid rgba(255,255,255,0.06); border-radius:12px; text-decoration:none; padding:12px 14px; align-items:center;">
         <img loading="lazy" src="assets/products/두 에스 아이 두.jpg" alt="두 에스 아이 두" style="width:52px; height:52px; object-fit:cover; border-radius:6px; flex-shrink:0;">
         <div><h4 style="margin:0 0 3px; color:#F4E7DA; font-size:13.5px; font-weight:800;">두 에스 아이 두</h4><p style="margin:0; color:#A99685; font-size:12px; line-height:1.45;">13가지 바리에이션 강의 + 영상 포함 PDF</p></div>
@@ -239,7 +228,7 @@
 
   <!-- 굿즈 -->
   <div style="padding:28px 24px 0;">
-    <p style="color:var(--point-gold); font-weight:800; font-size:13px; letter-spacing:0.08em; margin:0 0 14px;">✦ 굿즈</p>
+    <p style="text-align:center; color:var(--point-gold); font-weight:800; font-size:13px; letter-spacing:0.08em; margin:0 0 14px;">✦ 굿즈</p>
     <div style="display:flex; flex-direction:column; gap:10px;">
       <a href="https://www.lnmagic.co.kr/goods/goods_view.php?goodsNo=1000000238" target="_blank" rel="noopener" style="display:flex; gap:14px; background:#1F140F; border:1px solid rgba(255,255,255,0.06); border-radius:12px; text-decoration:none; padding:12px 14px; align-items:center;">
         <img loading="lazy" src="assets/products/칼리 덱.jpg" alt="칼리 덱" style="width:52px; height:52px; object-fit:cover; border-radius:6px; flex-shrink:0;">
@@ -252,9 +241,26 @@
     </div>
   </div>
 
+  <!-- 산 사람들이 한 말 -->
+  <div style="padding:44px 24px 0;">
+    <h3 style="text-align:center; font-size:18px; font-weight:800; color:#F4E7DA; margin:0 0 16px;">산 사람들이 한 말</h3>
+    <div style="display:flex; flex-direction:column; gap:10px;">
+      <div style="background:linear-gradient(135deg, rgba(232,99,31,0.16), rgba(232,99,31,0.04)); border:1px solid rgba(232,99,31,0.3); border-radius:14px; padding:18px 20px; text-align:center;"><p style="margin:0; color:#FFF3EA; font-size:22px; font-weight:800; letter-spacing:-0.01em;">"무조건 사야됨"</p></div>
+      <div style="background:linear-gradient(135deg, rgba(232,99,31,0.16), rgba(232,99,31,0.04)); border:1px solid rgba(232,99,31,0.3); border-radius:14px; padding:18px 20px; text-align:center;"><p style="margin:0; color:#FFF3EA; font-size:22px; font-weight:800; letter-spacing:-0.01em;">"안 사면 인생 후회합니다"</p></div>
+      <div style="background:#241712; border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:14px 16px;"><p style="margin:0 0 5px; color:#D6C8BB; font-size:13px; line-height:1.6; word-break:keep-all;">"구매는 많이 하지만 리뷰는 딱히 안 남기던 편인데... (남깁니다)"</p><p style="margin:0; color:var(--point-gold); font-size:11.5px; font-weight:600;">✦ 작품 구매자</p></div>
+      <div style="background:#241712; border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:14px 16px;"><p style="margin:0 0 5px; color:#D6C8BB; font-size:13px; line-height:1.6; word-break:keep-all;">"칼리 마술사님 책도 궁금해지게 하는 강의였습니다"</p><p style="margin:0; color:var(--point-gold); font-size:11.5px; font-weight:600;">✦ 작품 구매자</p></div>
+    </div>
+  </div>
+
   <div style="padding:32px 24px 40px;">
-    <a href="https://lnmagic.co.kr" target="_blank" rel="noopener" class="kx-cta">작품·도구 구경하기</a>
+    <a href="https://lnmagic.co.kr" target="_blank" rel="noopener" class="kx-cta">더 많은 작품·도구 구경하기</a>
     <p style="text-align:center; margin:16px 0 0; color:#9A7560; font-size:13.5px;">입문 먼저 해보고 싶으면 · <a href="intro.html" style="color:var(--point-gold);"><b>5,000원 입문 →</b></a></p>
+  </div>
+
+  <!-- 레슨 CTA -->
+  <div style="margin-top:8px; background:linear-gradient(160deg, var(--kx-terra), var(--kx-terra-deep)); padding:36px 24px 34px; text-align:center;">
+    <h2 style="color:#FFF3EA; font-size:22px; font-weight:800; line-height:1.4; margin:0 0 18px; word-break:keep-all;">혼자 하면 부실해지는 법이야<br>형이랑 같이 잡아보자</h2>
+    <a href="lesson.html" style="display:flex; align-items:center; justify-content:center; height:54px; border-radius:13px; background:#241712; color:#FBEFE6; font-weight:700; font-size:16px; text-decoration:none;">칼리형한테 레슨 신청하기 →</a>
   </div>
 </div>
 </div><!-- /.kx-mobile -->

@@ -28,76 +28,84 @@
     <header id="nav-root"></header>
     <script>renderNav('video')</script>
 
-    <!-- Hero -->
-    <section id="hero" class="hero kx-fade" style="--hero-img: url('assets/profile/street-magic.jpg'); --hero-pos: center 12%; min-height: 50vh;">
-        <div class="container center">
-            <p class="eyebrow" style="margin-bottom:14px;">형이 골라준 영상</p>
-            <h1 class="hero-headline" style="font-size: clamp(1.8rem, 5vw, 2.4rem); margin-bottom: 16px; word-break: keep-all;">형이 한 마술 <br>너도 할 수 있어</h1>
-            <p class="hero-sub" style="font-size: 1.1rem; margin-top: 8px; word-break: keep-all;">형이 추천하는 마술들 모아놨어 <br>마음에 들면 그때 더 배우면 돼</p>
+    <!-- Hero (4a 분할 몰입) -->
+    <section id="hero" class="kx-fade" style="padding:40px 0 0;">
+        <div style="max-width:800px; margin:0 auto;">
+            <div style="display:grid; grid-template-columns:1fr 1fr; border-radius:14px; overflow:hidden; border:1px solid rgba(255,255,255,0.08); min-height:300px;">
+                <div style="background:#1a1512; padding:38px 34px; display:flex; flex-direction:column; justify-content:center;">
+                    <p style="color:var(--point-gold); font-weight:800; letter-spacing:0.12em; font-size:0.76rem; margin:0 0 14px;">형이 골라준 영상</p>
+                    <h1 style="font-size:clamp(1.5rem,2.6vw,1.9rem); font-weight:800; line-height:1.22; letter-spacing:-0.02em; color:#f4efe9; margin:0 0 14px; word-break:keep-all;">형이 한 마술<br>너도 할 수 있어</h1>
+                    <p style="color:#ab9f92; font-size:0.92rem; line-height:1.7; margin:0 0 22px; word-break:keep-all;">형이 실제로 써먹는 것만 골랐어. 따라 하면 바로 돼.<br>마음에 들면 그때 더 배우면 돼.</p>
+                    <a href="intro.html" class="btn btn--primary" style="align-self:flex-start; padding:12px 22px; font-size:0.92rem;">입문 강의 보러 가기 →</a>
+                </div>
+                <div style="position:relative; min-height:260px;">
+                    <img src="assets/profile/street-magic.jpg" alt="길거리 마술 시연" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center 15%;">
+                </div>
+            </div>
         </div>
     </section>
 
     <!-- Video Section -->
-    <section class="section" style="padding-top: 0;">
+    <section class="section" style="padding-top: 48px;">
         <div class="container">
             <div class="video-grid kx-fade">
                 
                 <a href="https://www.youtube.com/watch?v=cXU-CkLlIr4&list=PLUv4hDx_1Qhs9PsFEqF_5-HOi2OwFzjsr&index=3" target="_blank" rel="noopener" class="video-card">
-                    <img loading="lazy" src="imigi3/1.jpg" alt="영상 썸네일 1" class="video-thumb">
+                    <span class="vthumb"><img loading="lazy" src="imigi3/1.jpg" alt="영상 썸네일 1" class="video-thumb"><span class="vplay" aria-hidden="true">▶</span></span>
                     <div class="video-info">
                         <p class="video-desc">사자마자 바로 꺼낼 수 있는 도구들이야<br>오늘 사면 오늘 쓸 수 있어</p>
                     </div>
                 </a>
 
                 <a href="https://www.youtube.com/watch?v=XVTkfBRyzg4&list=PLUv4hDx_1Qhs9PsFEqF_5-HOi2OwFzjsr&index=5" target="_blank" rel="noopener" class="video-card">
-                    <img loading="lazy" src="imigi3/2.jpg" alt="영상 썸네일 2" class="video-thumb">
+                    <span class="vthumb"><img loading="lazy" src="imigi3/2.jpg" alt="영상 썸네일 2" class="video-thumb"><span class="vplay" aria-hidden="true">▶</span></span>
                     <div class="video-info">
                         <p class="video-desc">뭐 사야 할지 모르겠지?<br>입문자한테 딱 맞는 카드 도구 5가지야</p>
                     </div>
                 </a>
 
                 <a href="https://www.youtube.com/watch?v=6h3dlFU9A10&list=PLUv4hDx_1Qhs9PsFEqF_5-HOi2OwFzjsr&index=2" target="_blank" rel="noopener" class="video-card">
-                    <img loading="lazy" src="imigi3/3.jpg" alt="영상 썸네일 3" class="video-thumb">
+                    <span class="vthumb"><img loading="lazy" src="imigi3/3.jpg" alt="영상 썸네일 3" class="video-thumb"><span class="vplay" aria-hidden="true">▶</span></span>
                     <div class="video-info">
                         <p class="video-desc">어디서 시작해야 할지 모르겠으면 여기서 시작해<br>꼭 필요한 강의들만 추렸어</p>
                     </div>
                 </a>
 
                 <a href="https://www.youtube.com/watch?v=PZhk1poZzog&list=PLUv4hDx_1Qhs9PsFEqF_5-HOi2OwFzjsr&index=4" target="_blank" rel="noopener" class="video-card">
-                    <img loading="lazy" src="imigi3/4.jpg" alt="영상 썸네일 4" class="video-thumb">
+                    <span class="vthumb"><img loading="lazy" src="imigi3/4.jpg" alt="영상 썸네일 4" class="video-thumb"><span class="vplay" aria-hidden="true">▶</span></span>
                     <div class="video-info">
                         <p class="video-desc">기초는 됐는데 레퍼토리가 부족해?<br>초급자한테 딱 좋은 도구 3가지야</p>
                     </div>
                 </a>
 
-                <div class="secondary-cta-box" style="width: 100%; box-sizing: border-box;">
-                    <h2>영상 보고 직접 해보고 싶어졌지?<br>형이 입문용으로 준비한 강의가 있어</h2>
-                    <a href="intro.html" class="cta-button">입문 강의 보러 가기 →</a>
+                <div class="secondary-cta-box" style="width: 100%; box-sizing: border-box; margin-top: 0;">
+                    <h2>영상 속 그 도구들<br>형이 직접 만든 거야</h2>
+                    <a href="works.html" class="cta-button">작품·도구 보러 가기 →</a>
                 </div>
 
                 <a href="https://www.youtube.com/watch?v=rUMfP1ZISzY&list=PLUv4hDx_1Qhs9PsFEqF_5-HOi2OwFzjsr&index=6" target="_blank" rel="noopener" class="video-card">
-                    <img loading="lazy" src="imigi3/5.jpg" alt="영상 썸네일 5" class="video-thumb">
+                    <span class="vthumb"><img loading="lazy" src="imigi3/5.jpg" alt="영상 썸네일 5" class="video-thumb"><span class="vplay" aria-hidden="true">▶</span></span>
                     <div class="video-info">
                         <p class="video-desc">손기술로 억지로 하지 마<br>도구 하나면 어려운 마술도 할 수 있어</p>
                     </div>
                 </a>
 
                 <a href="https://www.youtube.com/watch?v=-kQ83LnHImQ&list=PLUv4hDx_1Qhs9PsFEqF_5-HOi2OwFzjsr&index=5" target="_blank" rel="noopener" class="video-card">
-                    <img loading="lazy" src="imigi3/6.jpg" alt="영상 썸네일 6" class="video-thumb">
+                    <span class="vthumb"><img loading="lazy" src="imigi3/6.jpg" alt="영상 썸네일 6" class="video-thumb"><span class="vplay" aria-hidden="true">▶</span></span>
                     <div class="video-info">
                         <p class="video-desc">전문가처럼 보이는데 일반인도 할 수 있어<br>생각보다 진입장벽 낮아</p>
                     </div>
                 </a>
 
                 <a href="https://www.youtube.com/watch?v=SfTNqwyHCFs&list=PLUv4hDx_1Qhs9PsFEqF_5-HOi2OwFzjsr&index=7" target="_blank" rel="noopener" class="video-card">
-                    <img loading="lazy" src="imigi3/7.jpg" alt="영상 썸네일 7" class="video-thumb">
+                    <span class="vthumb"><img loading="lazy" src="imigi3/7.jpg" alt="영상 썸네일 7" class="video-thumb"><span class="vplay" aria-hidden="true">▶</span></span>
                     <div class="video-info">
                         <p class="video-desc">포커 칠 때 한 번씩 꺼내봐<br>분위기 확 바뀌는 포커 마술 3가지야</p>
                     </div>
                 </a>
 
                 <a href="https://www.youtube.com/watch?v=7rJ6mzeG17A&list=PLUv4hDx_1Qhs9PsFEqF_5-HOi2OwFzjsr&index=8" target="_blank" rel="noopener" class="video-card">
-                    <img loading="lazy" src="imigi3/8.jpg" alt="영상 썸네일 8" class="video-thumb">
+                    <span class="vthumb"><img loading="lazy" src="imigi3/8.jpg" alt="영상 썸네일 8" class="video-thumb"><span class="vplay" aria-hidden="true">▶</span></span>
                     <div class="video-info">
                         <p class="video-desc">유튜브나 인스타 찍을 때 터지는 마술 따로 있어<br>방송용 도구만 골랐어</p>
                     </div>
@@ -126,66 +134,76 @@
 <!-- ===================== MOBILE (≤1024px) ===================== -->
 <div class="kx-mobile">
 <div class="kx-shell">
-  <div style="padding:48px 24px 0;">
-    <p class="kx-eye"><span></span>형이 골라준 영상</p>
-    <h2 style="font-size:34px; font-weight:800; line-height:1.14; letter-spacing:-0.03em; color:#F4E7DA; margin:0 0 16px; word-break:keep-all;">형이 한 마술<br><span class="kx-serif" style="font-size:34px;">너도 할 수 있어</span></h2>
-    <p style="color:#C9B3A2; font-size:15px; line-height:1.7; margin:0 0 8px; word-break:keep-all;">형이 추천하는 마술들 모아놨어 <br>마음에 들면 그때 더 배우면 돼</p>
+  <div style="position:relative;">
+    <img src="assets/profile/street-magic.jpg" alt="길거리 마술 시연" style="width:100%; height:300px; object-fit:cover; object-position:center 15%; display:block; filter:saturate(0.92) contrast(1.05) brightness(0.82);">
+    <div style="position:absolute; inset:0; background:linear-gradient(180deg, rgba(26,15,10,0.2) 30%, rgba(26,15,10,0.92));"></div>
+    <div style="position:absolute; left:0; right:0; bottom:0; padding:0 24px 24px; text-align:center;">
+      <p class="kx-eye"><span></span>형이 골라준 영상</p>
+      <h2 style="text-align:center; font-size:34px; font-weight:800; line-height:1.14; letter-spacing:-0.03em; color:#F4E7DA; margin:0; word-break:keep-all;">형이 한 마술<br><span class="kx-serif" style="font-size:34px; color:#F0A878;">너도 할 수 있어</span></h2>
+    </div>
+  </div>
+  <div style="padding:22px 24px 0;">
+    <p style="text-align:center; color:#C9B3A2; font-size:15px; line-height:1.7; margin:0; word-break:keep-all;">형이 실제로 써먹는 것만 골랐어.<br>따라 하면 바로 돼.</p>
   </div>
 
   <div style="padding:30px 24px 0; display:flex; flex-direction:column; gap:16px;">
     <a href="https://www.youtube.com/watch?v=cXU-CkLlIr4&list=PLUv4hDx_1Qhs9PsFEqF_5-HOi2OwFzjsr&index=3" target="_blank" rel="noopener" style="display:block; background:#241712; border:1px solid rgba(255,255,255,0.08); border-radius:16px; overflow:hidden; text-decoration:none;">
-      <img loading="lazy" src="imigi3/1.jpg" alt="영상 썸네일 1" style="width:100%; aspect-ratio:16/9; object-fit:cover; display:block;">
-      <p style="color:#D6C8BB; font-size:13.5px; line-height:1.6; margin:0; padding:14px 18px;">사자마자 바로 꺼낼 수 있는 도구들이야<br>오늘 사면 오늘 쓸 수 있어</p>
+      <span class="vthumb vthumb--m" style="display:block;"><img loading="lazy" src="imigi3/1.jpg" alt="영상 썸네일 1" style="width:100%; aspect-ratio:16/9; object-fit:cover; display:block;"><span class="vplay" aria-hidden="true">▶</span></span>
+      <div style="padding:13px 18px;"><p style="margin:0 0 4px; color:#F4E7DA; font-size:14px; font-weight:700;">오늘 사서 오늘 쓰는 도구</p><p style="margin:0; color:#A99685; font-size:12.5px; line-height:1.5;">사자마자 바로 꺼낼 수 있는 것들만</p></div>
     </a>
     <a href="https://www.youtube.com/watch?v=XVTkfBRyzg4&list=PLUv4hDx_1Qhs9PsFEqF_5-HOi2OwFzjsr&index=5" target="_blank" rel="noopener" style="display:block; background:#241712; border:1px solid rgba(255,255,255,0.08); border-radius:16px; overflow:hidden; text-decoration:none;">
-      <img loading="lazy" src="imigi3/2.jpg" alt="영상 썸네일 2" style="width:100%; aspect-ratio:16/9; object-fit:cover; display:block;">
-      <p style="color:#D6C8BB; font-size:13.5px; line-height:1.6; margin:0; padding:14px 18px;">뭐 사야 할지 모르겠지?<br>입문자한테 딱 맞는 카드 도구 5가지야</p>
+      <span class="vthumb vthumb--m" style="display:block;"><img loading="lazy" src="imigi3/2.jpg" alt="영상 썸네일 2" style="width:100%; aspect-ratio:16/9; object-fit:cover; display:block;"><span class="vplay" aria-hidden="true">▶</span></span>
+      <div style="padding:13px 18px;"><p style="margin:0 0 4px; color:#F4E7DA; font-size:14px; font-weight:700;">입문자 카드 도구 5가지</p><p style="margin:0; color:#A99685; font-size:12.5px; line-height:1.5;">뭐 사야 할지 모르겠으면 이거부터</p></div>
     </a>
     <a href="https://www.youtube.com/watch?v=6h3dlFU9A10&list=PLUv4hDx_1Qhs9PsFEqF_5-HOi2OwFzjsr&index=2" target="_blank" rel="noopener" style="display:block; background:#241712; border:1px solid rgba(255,255,255,0.08); border-radius:16px; overflow:hidden; text-decoration:none;">
-      <img loading="lazy" src="imigi3/3.jpg" alt="영상 썸네일 3" style="width:100%; aspect-ratio:16/9; object-fit:cover; display:block;">
-      <p style="color:#D6C8BB; font-size:13.5px; line-height:1.6; margin:0; padding:14px 18px;">어디서 시작해야 할지 모르겠으면 여기서 시작해<br>꼭 필요한 강의들만 추렸어</p>
+      <span class="vthumb vthumb--m" style="display:block;"><img loading="lazy" src="imigi3/3.jpg" alt="영상 썸네일 3" style="width:100%; aspect-ratio:16/9; object-fit:cover; display:block;"><span class="vplay" aria-hidden="true">▶</span></span>
+      <div style="padding:13px 18px;"><p style="margin:0 0 4px; color:#F4E7DA; font-size:14px; font-weight:700;">여기서 시작하는 입문 강의</p><p style="margin:0; color:#A99685; font-size:12.5px; line-height:1.5;">꼭 필요한 것들만 추렸어</p></div>
     </a>
     <a href="https://www.youtube.com/watch?v=PZhk1poZzog&list=PLUv4hDx_1Qhs9PsFEqF_5-HOi2OwFzjsr&index=4" target="_blank" rel="noopener" style="display:block; background:#241712; border:1px solid rgba(255,255,255,0.08); border-radius:16px; overflow:hidden; text-decoration:none;">
-      <img loading="lazy" src="imigi3/4.jpg" alt="영상 썸네일 4" style="width:100%; aspect-ratio:16/9; object-fit:cover; display:block;">
-      <p style="color:#D6C8BB; font-size:13.5px; line-height:1.6; margin:0; padding:14px 18px;">기초는 됐는데 레퍼토리가 부족해?<br>초급자한테 딱 좋은 도구 3가지야</p>
+      <span class="vthumb vthumb--m" style="display:block;"><img loading="lazy" src="imigi3/4.jpg" alt="영상 썸네일 4" style="width:100%; aspect-ratio:16/9; object-fit:cover; display:block;"><span class="vplay" aria-hidden="true">▶</span></span>
+      <div style="padding:13px 18px;"><p style="margin:0 0 4px; color:#F4E7DA; font-size:14px; font-weight:700;">초급자 도구 3가지</p><p style="margin:0; color:#A99685; font-size:12.5px; line-height:1.5;">기초는 됐는데 레퍼토리가 부족하면</p></div>
     </a>
   </div>
 
   <div style="margin:30px 24px 0; background:linear-gradient(135deg, rgba(194,96,58,0.2), rgba(194,96,58,0.07)); border:1px solid rgba(224,138,79,0.45); border-radius:16px; padding:24px 20px; text-align:center;">
-    <p style="color:#F4E7DA; font-size:16px; font-weight:800; line-height:1.45; margin:0 0 16px; word-break:keep-all;">영상 보고 직접 해보고 싶어졌지?<br>형이 입문용으로 준비한 강의가 있어</p>
-    <a href="intro.html" class="kx-cta">입문 강의 보러 가기 →</a>
+    <div style="width:44px; height:44px; border-radius:12px; background:rgba(232,99,31,0.18); display:flex; align-items:center; justify-content:center; margin:0 auto 12px; font-size:20px;">🛠</div>
+    <p style="color:#F4E7DA; font-size:16px; font-weight:800; line-height:1.45; margin:0 0 6px; word-break:keep-all;">영상 속 그 도구들<br>형이 직접 만든 거야</p>
+    <p style="color:#B79C8A; font-size:12.5px; margin:0 0 16px;">형이 실제로 쓰는 것만 올려놓았어</p>
+    <a href="works.html" class="kx-cta">작품·도구 보러 가기 →</a>
   </div>
 
   <div style="padding:30px 24px 0; display:flex; flex-direction:column; gap:16px;">
     <a href="https://www.youtube.com/watch?v=rUMfP1ZISzY&list=PLUv4hDx_1Qhs9PsFEqF_5-HOi2OwFzjsr&index=6" target="_blank" rel="noopener" style="display:block; background:#241712; border:1px solid rgba(255,255,255,0.08); border-radius:16px; overflow:hidden; text-decoration:none;">
-      <img loading="lazy" src="imigi3/5.jpg" alt="영상 썸네일 5" style="width:100%; aspect-ratio:16/9; object-fit:cover; display:block;">
-      <p style="color:#D6C8BB; font-size:13.5px; line-height:1.6; margin:0; padding:14px 18px;">손기술로 억지로 하지 마<br>도구 하나면 어려운 마술도 할 수 있어</p>
+      <span class="vthumb vthumb--m" style="display:block;"><img loading="lazy" src="imigi3/5.jpg" alt="영상 썸네일 5" style="width:100%; aspect-ratio:16/9; object-fit:cover; display:block;"><span class="vplay" aria-hidden="true">▶</span></span>
+      <div style="padding:13px 18px;"><p style="margin:0 0 4px; color:#F4E7DA; font-size:14px; font-weight:700;">도구 하나로 되는 마술</p><p style="margin:0; color:#A99685; font-size:12.5px; line-height:1.5;">손기술로 억지로 안 해도 돼</p></div>
     </a>
     <a href="https://www.youtube.com/watch?v=-kQ83LnHImQ&list=PLUv4hDx_1Qhs9PsFEqF_5-HOi2OwFzjsr&index=5" target="_blank" rel="noopener" style="display:block; background:#241712; border:1px solid rgba(255,255,255,0.08); border-radius:16px; overflow:hidden; text-decoration:none;">
-      <img loading="lazy" src="imigi3/6.jpg" alt="영상 썸네일 6" style="width:100%; aspect-ratio:16/9; object-fit:cover; display:block;">
-      <p style="color:#D6C8BB; font-size:13.5px; line-height:1.6; margin:0; padding:14px 18px;">전문가처럼 보이는데 일반인도 할 수 있어<br>생각보다 진입장벽 낮아</p>
+      <span class="vthumb vthumb--m" style="display:block;"><img loading="lazy" src="imigi3/6.jpg" alt="영상 썸네일 6" style="width:100%; aspect-ratio:16/9; object-fit:cover; display:block;"><span class="vplay" aria-hidden="true">▶</span></span>
+      <div style="padding:13px 18px;"><p style="margin:0 0 4px; color:#F4E7DA; font-size:14px; font-weight:700;">전문가처럼 보이는 마술</p><p style="margin:0; color:#A99685; font-size:12.5px; line-height:1.5;">생각보다 진입장벽 낮아</p></div>
     </a>
     <a href="https://www.youtube.com/watch?v=SfTNqwyHCFs&list=PLUv4hDx_1Qhs9PsFEqF_5-HOi2OwFzjsr&index=7" target="_blank" rel="noopener" style="display:block; background:#241712; border:1px solid rgba(255,255,255,0.08); border-radius:16px; overflow:hidden; text-decoration:none;">
-      <img loading="lazy" src="imigi3/7.jpg" alt="영상 썸네일 7" style="width:100%; aspect-ratio:16/9; object-fit:cover; display:block;">
-      <p style="color:#D6C8BB; font-size:13.5px; line-height:1.6; margin:0; padding:14px 18px;">포커 칠 때 한 번씩 꺼내봐<br>분위기 확 바뀌는 포커 마술 3가지야</p>
+      <span class="vthumb vthumb--m" style="display:block;"><img loading="lazy" src="imigi3/7.jpg" alt="영상 썸네일 7" style="width:100%; aspect-ratio:16/9; object-fit:cover; display:block;"><span class="vplay" aria-hidden="true">▶</span></span>
+      <div style="padding:13px 18px;"><p style="margin:0 0 4px; color:#F4E7DA; font-size:14px; font-weight:700;">포커 마술 3가지</p><p style="margin:0; color:#A99685; font-size:12.5px; line-height:1.5;">포커 칠 때 분위기 확 바뀌어</p></div>
     </a>
     <a href="https://www.youtube.com/watch?v=7rJ6mzeG17A&list=PLUv4hDx_1Qhs9PsFEqF_5-HOi2OwFzjsr&index=8" target="_blank" rel="noopener" style="display:block; background:#241712; border:1px solid rgba(255,255,255,0.08); border-radius:16px; overflow:hidden; text-decoration:none;">
-      <img loading="lazy" src="imigi3/8.jpg" alt="영상 썸네일 8" style="width:100%; aspect-ratio:16/9; object-fit:cover; display:block;">
-      <p style="color:#D6C8BB; font-size:13.5px; line-height:1.6; margin:0; padding:14px 18px;">유튜브나 인스타 찍을 때 터지는 마술 따로 있어<br>방송용 도구만 골랐어</p>
+      <span class="vthumb vthumb--m" style="display:block;"><img loading="lazy" src="imigi3/8.jpg" alt="영상 썸네일 8" style="width:100%; aspect-ratio:16/9; object-fit:cover; display:block;"><span class="vplay" aria-hidden="true">▶</span></span>
+      <div style="padding:13px 18px;"><p style="margin:0 0 4px; color:#F4E7DA; font-size:14px; font-weight:700;">방송·촬영용 도구</p><p style="margin:0; color:#A99685; font-size:12.5px; line-height:1.5;">유튜브·인스타에서 터지는 것들</p></div>
     </a>
   </div>
 
   <a href="https://www.youtube.com/@LectureNotePublishing" target="_blank" rel="noopener" style="display:flex; align-items:center; gap:14px; margin:30px 24px 0; background:#1F140F; border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:18px 20px; text-decoration:none;">
     <div style="flex:1;">
       <h4 style="margin:0 0 5px; color:var(--point-gold); font-size:13px; font-weight:800; letter-spacing:0.04em;">LECTURENOTE YOUTUBE</h4>
-      <p style="margin:0; color:#A99685; font-size:12.5px; line-height:1.5;">전문가들이 수십만 원에 배우는 내용, 렉쳐노트 채널에서 배울 수 있어</p>
+      <p style="margin:0; color:#A99685; font-size:12.5px; line-height:1.5; word-break:keep-all;">전문가들이 수십만 원에 배우는 내용,<br>렉쳐노트 채널에서 배울 수 있어</p>
     </div>
     <svg viewBox="0 0 24 24" style="width:34px; height:34px; flex:none; fill:var(--point-gold);"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>
   </a>
 
   <div style="margin:30px 24px 0; background:linear-gradient(160deg, var(--kx-terra), var(--kx-terra-deep)); border-radius:16px; padding:30px 22px 28px; text-align:center;">
+    <div style="width:44px; height:44px; border-radius:12px; background:rgba(0,0,0,0.22); display:flex; align-items:center; justify-content:center; margin:0 auto 12px; font-size:20px;">🎓</div>
     <p style="color:#FFF3EA; font-size:17px; font-weight:800; line-height:1.45; margin:0 0 18px; word-break:keep-all;">형이 한 그 마술<br>제대로 배우고 싶어졌지?</p>
     <a href="lesson.html" style="display:flex; align-items:center; justify-content:center; height:54px; border-radius:13px; background:#241712; color:#FBEFE6; font-weight:700; font-size:16px; text-decoration:none;">레슨 알아보기 →</a>
+    <a href="https://open.kakao.com/o/gQns7wzi" target="_blank" rel="noopener" style="display:flex; align-items:center; justify-content:center; height:50px; border-radius:13px; background:transparent; border:1px solid rgba(255,243,234,0.5); color:#FFF3EA; font-weight:700; font-size:14.5px; text-decoration:none; margin-top:10px;">칼리의 아이들 · 형 팬덤방 구경하기 →</a>
   </div>
 
   <div style="height:44px;"></div>
