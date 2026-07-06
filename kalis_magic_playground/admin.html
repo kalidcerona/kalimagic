@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>마술 놀이터 관리자 | 칼리형</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    window.MAGIC_PLAYGROUND_CONFIG = {
+      supabaseUrl: '',
+      supabasePublishableKey: ''
+    };
+  </script>
+  <script src="nav.js"></script>
+</head>
+<body>
+  <div id="nav-root"></div>
+  <script>renderNav('playground')</script>
+  <main class="admin-shell">
+    <header class="playground-header">
+      <p class="playground-eyebrow">Kali only</p>
+      <h1>관리자</h1>
+      <p>새 질문, 후기, 숨김 처리할 글을 한 곳에서 봅니다.</p>
+      <div class="playground-auth" data-auth-panel></div>
+    </header>
+    <nav class="playground-tabs admin-tabs" aria-label="관리자 필터">
+      <button type="button" data-admin-filter="all" class="is-active">전체</button>
+      <button type="button" data-admin-filter="waiting">답변 대기</button>
+      <button type="button" data-admin-filter="private">비공개</button>
+      <button type="button" data-admin-filter="event_reviews">모임 후기</button>
+      <button type="button" data-admin-filter="hidden">숨김</button>
+      <button type="button" data-admin-filter="magazine_candidates">매거진 후보</button>
+    </nav>
+    <section class="admin-list" data-admin-list aria-live="polite"></section>
+  </main>
+  <script src="auth.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>

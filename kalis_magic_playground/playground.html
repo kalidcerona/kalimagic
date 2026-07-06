@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>마술 놀이터 | 칼리형</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    window.MAGIC_PLAYGROUND_CONFIG = {
+      supabaseUrl: '',
+      supabasePublishableKey: ''
+    };
+  </script>
+  <script src="nav.js"></script>
+</head>
+<body>
+  <div id="nav-root"></div>
+  <script>renderNav('playground')</script>
+  <main class="playground-shell">
+    <header class="playground-header">
+      <p class="playground-eyebrow">마술인을 위한 양지 아카이브</p>
+      <h1>마술 놀이터</h1>
+      <p>질문은 묻히지 않게, 답변은 오래 남게.</p>
+      <div class="playground-auth" data-auth-panel></div>
+    </header>
+    <nav class="playground-tabs" aria-label="마술 놀이터 카테고리">
+      <button type="button" data-category="all" class="is-active">전체</button>
+      <button type="button" data-category="question">질문</button>
+      <button type="button" data-category="event_review">모임 후기</button>
+      <button type="button" data-category="review">리뷰/후기</button>
+      <button type="button" data-category="free">자유게시판</button>
+      <button type="button" data-category="magazine">매거진</button>
+    </nav>
+    <section class="playground-compose" aria-label="질문 작성">
+      <h2>질문 남기기</h2>
+      <form data-question-form>
+        <label>
+          <span>제목</span>
+          <input name="title" type="text" maxlength="120" required placeholder="이 마술은 어디서 배워야 하나요?">
+        </label>
+        <label>
+          <span>내용</span>
+          <textarea name="body" rows="5" required placeholder="궁금한 점과 현재 알고 있는 내용을 적어주세요."></textarea>
+        </label>
+        <div class="playground-field-grid">
+          <label>
+            <span>공개 범위</span>
+            <select name="visibility">
+              <option value="public">전체 공개</option>
+              <option value="kali_only">칼리에게만 공개</option>
+              <option value="expert_only">전문가 이상 공개</option>
+            </select>
+          </label>
+          <label>
+            <span>표시 이름</span>
+            <select name="displayMode">
+              <option value="nickname">닉네임 표시</option>
+              <option value="anonymous">익명</option>
+            </select>
+          </label>
+        </div>
+        <label>
+          <span>유튜브 링크 선택</span>
+          <input name="youtubeUrl" type="url" placeholder="https://youtu.be/...">
+        </label>
+        <button type="submit" class="playground-button">질문 올리기</button>
+        <p class="playground-form-status" data-question-status></p>
+      </form>
+    </section>
+    <div class="playground-board">
+      <section class="playground-list" data-post-list aria-live="polite"></section>
+      <section class="playground-detail" data-post-detail aria-live="polite">
+        <p class="playground-loading">글을 선택하면 상세 내용이 열립니다.</p>
+      </section>
+    </div>
+  </main>
+  <script src="auth.js"></script>
+  <script src="playground.js"></script>
+</body>
+</html>

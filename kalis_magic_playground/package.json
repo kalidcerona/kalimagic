@@ -1,0 +1,26 @@
+{
+  "name": "kalimagic-playground",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "20.x"
+  },
+  "scripts": {
+    "build": "node scripts/build-public.mjs",
+    "test": "node --test tests/community/*.test.mjs && python3 -m pytest tests",
+    "test:js": "node --test tests/community/*.test.mjs",
+    "test:py": "python3 -m pytest tests",
+    "check:dist": "node scripts/check-dist-safety.mjs",
+    "check:env": "node scripts/check-env.mjs",
+    "smoke:api": "node scripts/smoke-community-api.mjs",
+    "seed:event-photos": "node scripts/seed-event-photos.mjs",
+    "verify": "npm test && npm run build && node scripts/check-dist-safety.mjs && python3 tests/test_site.py"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "2.55.0"
+  },
+  "overrides": {
+    "@supabase/storage-js": "2.10.4"
+  },
+  "devDependencies": {}
+}

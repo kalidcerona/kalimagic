@@ -10,6 +10,7 @@ function renderNav(activePage) {
         { key: 'video',  label: '영상', href: 'video.html' },
         { key: 'intro',  label: '입문', href: 'intro.html' },
         { key: 'reviews', label: '후기', href: 'reviews.html' },
+        { key: 'playground', label: '마술 놀이터', href: 'playground.html' },
         { key: 'lesson', label: '레슨', href: 'lesson.html', cta: true },
     ];
 

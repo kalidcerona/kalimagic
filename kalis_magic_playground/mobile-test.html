@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>칼리형 모바일 테스트 — 색감통일</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;500;600;700&display=swap">
+<style>
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; }
+  body{
+    background:#0E0805;
+    font-family:'Pretendard',-apple-system,system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  /* 실제 모바일 폭으로 보이게 가운데 컬럼. 모바일에서는 100% 폭. */
+  .kx-shell{
+    max-width:430px;
+    margin:0 auto;
+    background:#1A0F0A;
+    min-height:100vh;
+    overflow:hidden;
+  }
+  .kx-cta{ display:flex; align-items:center; justify-content:center; height:54px; border-radius:13px; background:#C2603A; color:#FBEFE6; font-weight:700; font-size:16px; letter-spacing:-0.01em; text-decoration:none; box-shadow:0 12px 28px rgba(194,96,58,0.4); }
+  .kx-eye{ display:flex; align-items:center; gap:9px; color:#E08A4F; font-weight:700; font-size:12px; letter-spacing:0.16em; margin:0 0 16px; }
+  .kx-eye span{ width:22px; height:1px; background:#E08A4F; display:block; }
+  .kx-h2{ font-size:27px; font-weight:800; line-height:1.3; letter-spacing:-0.02em; color:#F4E7DA; margin:0 0 16px; word-break:keep-all; }
+  .kx-serif{ font-family:'Noto Serif KR',serif; font-weight:500; font-style:italic; color:#E08A4F; }
+</style>
+</head>
+<body>
+<div class="kx-shell">
+
+  <!-- §1 HERO -->
+  <div style="padding:48px 24px 0;">
+    <p class="kx-eye"><span></span>형이 알려줄게</p>
+    <h2 style="font-size:40px; font-weight:800; line-height:1.08; letter-spacing:-0.03em; color:#F4E7DA; margin:0 0 18px; word-break:keep-all;">마술 한 번에,<br><span style="color:#D26B3C;">그 자리가</span><br><span class="kx-serif" style="font-size:40px;">너를 기억해</span></h2>
+    <p style="color:#C9B3A2; font-size:15px; line-height:1.7; margin:0 0 24px; word-break:keep-all;">박수를 받는 게 아니라, 네가 기억에 남는 사람이 되는 거야.</p>
+    <a href="#" class="kx-cta">5,000원으로 시작하기</a>
+    <div style="display:flex; align-items:center; justify-content:center; gap:10px; margin-top:16px;">
+      <div style="display:flex;">
+        <div style="width:22px; height:22px; border-radius:50%; background:#C2603A; border:2px solid #1A0F0A;"></div>
+        <div style="width:22px; height:22px; border-radius:50%; background:#D98A5E; border:2px solid #1A0F0A; margin-left:-8px;"></div>
+        <div style="width:22px; height:22px; border-radius:50%; background:#8A4F32; border:2px solid #1A0F0A; margin-left:-8px;"></div>
+      </div>
+      <a href="#" style="color:#B79C8A; font-size:13.5px; font-weight:600; text-decoration:none;">칼리의 아이들 · <b style="color:#E08A4F;">형 팬덤방</b> →</a>
+    </div>
+    <div style="margin-top:24px; position:relative; border-radius:18px; overflow:hidden; box-shadow:0 14px 30px rgba(0,0,0,0.42); border:1px solid rgba(255,255,255,0.06);">
+      <img src="assets/profile/magic-reaction.jpg" alt="관객이 놀라는 마술 시연" style="width:100%; height:208px; object-fit:cover; object-position:center 40%; display:block; filter:saturate(0.9) contrast(1.04);">
+      <div style="position:absolute; inset:0; background:linear-gradient(180deg, rgba(178,83,46,0.18), rgba(138,79,50,0.46)); mix-blend-mode:multiply;"></div>
+    </div>
+    <div style="margin:22px 0 0; padding-top:18px; border-top:1px solid rgba(255,255,255,0.10); display:flex; gap:14px;">
+      <div style="flex:1;"><p style="font-family:'Noto Serif KR',serif; font-style:italic; color:#E08A4F; font-size:21px; line-height:1; margin:0 0 7px;">01</p><p style="color:#C9B3A2; font-size:11px; line-height:1.4; margin:0;">침착맨 콘테스트<br>우승</p></div>
+      <div style="flex:1;"><p style="font-family:'Noto Serif KR',serif; font-style:italic; color:#E08A4F; font-size:21px; line-height:1; margin:0 0 7px;">02</p><p style="color:#C9B3A2; font-size:11px; line-height:1.4; margin:0;">방송·대학<br>특강 출연</p></div>
+      <div style="flex:1;"><p style="font-family:'Noto Serif KR',serif; font-style:italic; color:#E08A4F; font-size:21px; line-height:1; margin:0 0 7px;">03</p><p style="color:#C9B3A2; font-size:11px; line-height:1.4; margin:0;">칼리의 아이들<br>팬덤방</p></div>
+    </div>
+  </div>
+
+  <!-- §2 VISITOR -->
+  <div style="padding:48px 24px 0;">
+    <p class="kx-eye"><span></span>어디서 왔든 환영이야</p>
+    <h2 class="kx-h2">너는 지금<br>어디쯤이야?</h2>
+    <div style="display:flex; flex-direction:column; gap:12px; margin-top:22px;">
+      <a href="#" style="display:block; background:#241712; border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:22px 20px; text-decoration:none;">
+        <p style="font-family:'Noto Serif KR',serif; font-style:italic; color:#E08A4F; font-size:14px; margin:0 0 10px;">01</p>
+        <h4 style="font-size:17px; font-weight:800; color:#F4E7DA; margin:0 0 8px; line-height:1.4;">마술 처음인데<br>뭐부터 해야 해?</h4>
+        <p style="color:#A99685; font-size:13px; line-height:1.65; margin:0 0 14px;">입문 강의 8편으로 딱 정리해뒀어. 커피 한 잔 값으로 오늘 시작할 수 있어.</p>
+        <span style="color:#E08A4F; font-weight:700; font-size:13.5px;">5,000원으로 시작하기 →</span>
+      </a>
+      <a href="#" style="display:block; background:#241712; border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:22px 20px; text-decoration:none;">
+        <p style="font-family:'Noto Serif KR',serif; font-style:italic; color:#E08A4F; font-size:14px; margin:0 0 10px;">02</p>
+        <h4 style="font-size:17px; font-weight:800; color:#F4E7DA; margin:0 0 8px; line-height:1.4;">더 깊이<br>들어가고 싶어?</h4>
+        <p style="color:#A99685; font-size:13px; line-height:1.65; margin:0 0 14px;">형이 직접 고른 작품이랑 도구. 배우는 거랑 진짜 쓰는 건 달라.</p>
+        <span style="color:#E08A4F; font-weight:700; font-size:13.5px;">형이 만든 것들 보기 →</span>
+      </a>
+      <a href="#" style="display:block; background:#241712; border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:22px 20px; text-decoration:none;">
+        <p style="font-family:'Noto Serif KR',serif; font-style:italic; color:#E08A4F; font-size:14px; margin:0 0 10px;">03</p>
+        <h4 style="font-size:17px; font-weight:800; color:#F4E7DA; margin:0 0 8px; line-height:1.4;">직접 가르쳐줬으면<br>좋겠어?</h4>
+        <p style="color:#A99685; font-size:13px; line-height:1.65; margin:0 0 14px;">1:1이나 소그룹으로 형이랑 같이. 먼저 상담부터, 결제 확정 아니야.</p>
+        <span style="color:#E08A4F; font-weight:700; font-size:13.5px;">레슨 상담 신청하기 →</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- §3 PROBLEM -->
+  <div style="margin-top:48px; background:#221512; padding:46px 24px;">
+    <p class="kx-eye"><span></span>그 감각, 형도 알아</p>
+    <h2 style="font-size:27px; font-weight:800; line-height:1.32; letter-spacing:-0.02em; color:#F4E7DA; margin:0 0 18px; word-break:keep-all;">분명히 친해지고 싶은데<br>첫마디가 안 나와</h2>
+    <p style="color:#A99685; font-size:14.5px; line-height:1.8; margin:0 0 20px; word-break:keep-all;">새로운 사람 앞에 서면 뭔가 막히는 느낌 알잖아. 대화는 하고 있는데 기억에 남는 사람은 아닌 것 같고, 분위기를 주도하고 싶은데 어떻게 해야 할지 모르겠고.</p>
+    <div style="display:flex; flex-direction:column; gap:12px; padding-left:16px; border-left:2px solid rgba(224,138,79,0.45);">
+      <p style="margin:0; color:#E08A4F; font-size:15px; font-weight:500; font-family:'Noto Serif KR',serif; font-style:italic;">"나는 존재감이 없는 것 같아."</p>
+      <p style="margin:0; color:#E08A4F; font-size:15px; font-weight:500; font-family:'Noto Serif KR',serif; font-style:italic;">"이성 앞에서 자연스럽게 행동을 못 해."</p>
+      <p style="margin:0; color:#E08A4F; font-size:15px; font-weight:500; font-family:'Noto Serif KR',serif; font-style:italic;">"나만의 강점 하나가 있었으면 좋겠어."</p>
+    </div>
+  </div>
+
+  <!-- §4 SOLUTION -->
+  <div style="padding:48px 24px 0;">
+    <p class="kx-eye"><span></span>그래서 마술이야</p>
+    <h2 class="kx-h2">마술은 기술이 아니야<br><span class="kx-serif" style="font-size:27px;">상황을 바꾸는 도구야</span></h2>
+    <div style="margin:6px 0 20px; position:relative; border-radius:18px; overflow:hidden; box-shadow:0 14px 30px rgba(0,0,0,0.42); border:1px solid rgba(255,255,255,0.06);">
+      <img src="assets/profile/magic-cards.jpg" alt="모임에서 카드 마술을 보며 웃는 사람들" style="width:100%; height:188px; object-fit:cover; object-position:center 42%; display:block; filter:saturate(0.92);">
+      <div style="position:absolute; inset:0; background:linear-gradient(180deg, transparent 55%, rgba(26,15,10,0.35));"></div>
+    </div>
+    <p style="color:#C9B3A2; font-size:14.5px; line-height:1.8; margin:0 0 18px; word-break:keep-all;">카드 한 장으로 공기가 달라져. 상대가 어느새 너한테 집중하고 있어. 박수를 받는 게 아니라, 네가 기억에 남는 사람이 되는 거야.</p>
+    <ul style="list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:11px;">
+      <li style="display:flex; gap:11px; color:#E2D8CC; font-size:14px;"><span style="color:#E08A4F; font-weight:800;">✦</span> 정적이 흐를 때 꺼내는 한 방</li>
+      <li style="display:flex; gap:11px; color:#E2D8CC; font-size:14px;"><span style="color:#E08A4F; font-weight:800;">✦</span> 말 없이 시선을 모으는 법</li>
+      <li style="display:flex; gap:11px; color:#E2D8CC; font-size:14px;"><span style="color:#E08A4F; font-weight:800;">✦</span> 입문자도 쉽게 따라 할 수 있는 순서</li>
+    </ul>
+  </div>
+
+  <!-- §5 PRODUCT STEPS -->
+  <div style="padding:48px 24px 0;">
+    <p class="kx-eye"><span></span>어디서든 시작할 수 있어</p>
+    <h2 class="kx-h2">너에게 맞는<br>다음 한 걸음</h2>
+    <div style="display:flex; flex-direction:column; gap:10px; margin-top:22px;">
+      <div style="display:flex; gap:14px; align-items:flex-start; background:#241712; border:1px solid rgba(255,255,255,0.07); border-radius:14px; padding:16px 18px;"><div style="flex:none; width:30px; height:30px; border-radius:50%; background:rgba(224,138,79,0.14); color:#E08A4F; font-weight:800; font-size:14px; display:flex; align-items:center; justify-content:center;">1</div><div><h4 style="margin:0 0 3px; font-size:15px; font-weight:800; color:#F4E7DA;">무료 영상</h4><p style="margin:0; color:#A99685; font-size:13px; line-height:1.55;">유튜브·인스타에 올라와 있어. 부담 없이 구경해봐.</p></div></div>
+      <div style="display:flex; gap:14px; align-items:flex-start; background:linear-gradient(135deg, rgba(194,96,58,0.2), rgba(194,96,58,0.08)); border:1px solid rgba(224,138,79,0.5); border-radius:14px; padding:16px 18px;"><div style="flex:none; width:30px; height:30px; border-radius:50%; background:#C2603A; color:#FBEFE6; font-weight:800; font-size:14px; display:flex; align-items:center; justify-content:center;">2</div><div><h4 style="margin:0 0 3px; font-size:15px; font-weight:800; color:#F4E7DA;">입문 강의 · 5,000원</h4><p style="margin:0; color:#D6C2B2; font-size:13px; line-height:1.55;">기초 마술 8편. 처음이어도 바로 따라할 수 있어.</p></div></div>
+      <div style="display:flex; gap:14px; align-items:flex-start; background:#241712; border:1px solid rgba(255,255,255,0.07); border-radius:14px; padding:16px 18px;"><div style="flex:none; width:30px; height:30px; border-radius:50%; background:rgba(224,138,79,0.14); color:#E08A4F; font-weight:800; font-size:14px; display:flex; align-items:center; justify-content:center;">3</div><div><h4 style="margin:0 0 3px; font-size:15px; font-weight:800; color:#F4E7DA;">작품·도구 · 2-3만원대</h4><p style="margin:0; color:#A99685; font-size:13px; line-height:1.55;">형이 직접 만들거나 골라온 것들. 진짜 쓰는 기준으로 추렸어.</p></div></div>
+      <div style="display:flex; gap:14px; align-items:flex-start; background:#241712; border:1px solid rgba(255,255,255,0.07); border-radius:14px; padding:16px 18px;"><div style="flex:none; width:30px; height:30px; border-radius:50%; background:rgba(224,138,79,0.14); color:#E08A4F; font-weight:800; font-size:14px; display:flex; align-items:center; justify-content:center;">4</div><div><h4 style="margin:0 0 3px; font-size:15px; font-weight:800; color:#F4E7DA;">1:1 / 소그룹 레슨</h4><p style="margin:0; color:#A99685; font-size:13px; line-height:1.55;">형이랑 직접. 네 수준에 맞춰서, 빠르게.</p></div></div>
+      <div style="display:flex; gap:14px; align-items:flex-start; background:#241712; border:1px solid rgba(255,255,255,0.07); border-radius:14px; padding:16px 18px;"><div style="flex:none; width:30px; height:30px; border-radius:50%; background:rgba(224,138,79,0.14); color:#E08A4F; font-weight:800; font-size:14px; display:flex; align-items:center; justify-content:center;">5</div><div><h4 style="margin:0 0 3px; font-size:15px; font-weight:800; color:#F4E7DA;">커뮤니티 · 칼리의 아이들</h4><p style="margin:0; color:#A99685; font-size:13px; line-height:1.55;">마술 배운 사람들끼리 모이는 곳. 형이랑 계속 연결돼 있어.</p></div></div>
+    </div>
+  </div>
+
+  <!-- §6 REVIEWS -->
+  <div style="padding:48px 24px 0;">
+    <p class="kx-eye"><span></span>배우고 나서 뭐가 달라졌냐고?</p>
+    <h2 class="kx-h2">사람들이<br>직접 한 말</h2>
+    <div style="background:#231711; border-left:2px solid rgba(224,138,79,0.5); border-radius:0 10px 10px 0; padding:14px 18px; margin:8px 0 18px;">
+      <p style="color:#9A8775; font-size:11px; letter-spacing:0.12em; font-weight:700; margin:0 0 6px;">BEFORE</p>
+      <p style="color:#B7A595; font-size:13.5px; line-height:1.7; margin:0;">새로움을 찾고 아우라를 원했어. 관계에서 막연히 채워지지 않는 느낌.</p>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:11px;">
+      <div style="background:#241712; border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:18px 20px;"><p style="color:#F0E2D5; font-size:14.5px; line-height:1.65; margin:0 0 10px;">"나라는 인간이 더 Natural해졌다"</p><p style="color:#9A8775; font-size:11.5px; margin:0;">— 형의 마술 배운 사람</p></div>
+      <div style="background:#241712; border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:18px 20px;"><p style="color:#F0E2D5; font-size:14.5px; line-height:1.65; margin:0 0 10px;">"마술이 나라는 인간 자체에 호기심을 갖게 만듬"</p><p style="color:#9A8775; font-size:11.5px; margin:0;">— 형의 마술 배운 사람</p></div>
+      <div style="background:#241712; border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:18px 20px;"><p style="color:#F0E2D5; font-size:14.5px; line-height:1.65; margin:0 0 10px;">"다른 사람이 내게 박수를 주었고 희열을 느꼈다"</p><p style="color:#9A8775; font-size:11.5px; margin:0;">— 형의 마술 배운 사람</p></div>
+      <div style="background:#241712; border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:18px 20px;"><p style="color:#F0E2D5; font-size:14.5px; line-height:1.65; margin:0 0 10px;">"칼리 덕분에 사람으로써 더 성장한 거 같아요"</p><p style="color:#9A8775; font-size:11.5px; margin:0;">— 형의 마술 배운 사람</p></div>
+    </div>
+  </div>
+
+  <!-- §7 ABOUT -->
+  <div style="padding:48px 24px 0;">
+    <p class="kx-eye"><span></span>형은 마술 선생이 아니야</p>
+    <div style="margin:6px 0 20px; border-radius:18px; overflow:hidden; box-shadow:0 14px 30px rgba(0,0,0,0.42); border:1px solid rgba(255,255,255,0.06);">
+      <img src="assets/profile/portrait.jpg" alt="칼리형 인터뷰 장면" style="width:100%; height:220px; object-fit:cover; object-position:center 28%; display:block; filter:saturate(0.92) brightness(0.96);">
+    </div>
+    <p style="color:#C9B3A2; font-size:14.5px; line-height:1.8; margin:0 0 16px; word-break:keep-all;">솔직히 말할게. 형이 하고 싶은 건 마술 기술 전수가 아니야. 형 옆에 있으면 뭔가 달라지는 느낌, 그게 너한테도 생기도록 하는 게 목표야.</p>
+    <p style="color:#C9B3A2; font-size:14.5px; line-height:1.8; margin:0 0 16px; word-break:keep-all;">처음 만난 사람 앞에서 당당하고, 어떤 자리에서든 기억에 남고, 나라는 사람 자체가 매력적인 것. 마술은 그걸 만드는 가장 빠른 방법이라고 생각해.</p>
+    <p style="color:#8A7868; font-size:13px; line-height:1.7; margin:0;">침착맨 마술 콘테스트 우승 · 대학 특강 · 방송 출연 — 그게 다가 아닌 것 같았어. 형이 진짜 하고 싶은 건, 이걸 배운 너가 달라지는 거 보는 거야.</p>
+  </div>
+
+  <!-- §8 FINAL CTA -->
+  <div style="margin-top:48px; background:linear-gradient(160deg, #C2603A, #94401F); padding:46px 24px 40px;">
+    <h2 style="font-size:30px; font-weight:800; color:#FFF3EA; margin:0 0 14px; line-height:1.25; letter-spacing:-0.02em;">일단 5,000원으로<br>해봐</h2>
+    <p style="color:#F6DBC9; font-size:14.5px; line-height:1.75; margin:0 0 26px; word-break:keep-all;">입문 강의 8편. 정가 70,000원짜리를 지금은 5,000원에 풀어놨어. 커피 한 잔 값이야. 맞으면 계속하면 되고, 아니면 그걸로 끝이야. 부담 없어.</p>
+    <a href="#" style="display:flex; align-items:center; justify-content:center; height:54px; border-radius:13px; background:#241712; color:#FBEFE6; font-weight:700; font-size:16px; text-decoration:none;">5,000원으로 시작하기</a>
+    <p style="text-align:center; margin:16px 0 0; color:#F6DBC9; font-size:13.5px;">레슨이 궁금하면 · <b>상담 먼저 해보기 →</b></p>
+  </div>
+
+  <!-- footer -->
+  <div style="padding:26px 24px 36px; text-align:center;">
+    <p style="color:#6E5A4C; font-size:12px; margin:0;">칼리형 · 마술로 기억에 남는 사람이 되는 법</p>
+    <p style="color:#9A7560; font-size:12.5px; margin:8px 0 0;">칼리의 아이들 · 형 팬덤 오픈채팅방 →</p>
+  </div>
+
+</div>
+</body>
+</html>
