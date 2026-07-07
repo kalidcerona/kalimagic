@@ -1,10 +1,21 @@
 const YOUTUBE_ID = /^[A-Za-z0-9_-]{11}$/;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const POST_TYPES = new Set(['question', 'event_review', 'review_comment', 'free', 'magazine']);
+const WRITABLE_POST_TYPES = new Set(['question', 'review_comment', 'magazine']);
+const LIST_CATEGORIES = new Set(['all', 'question', 'review', 'magazine']);
+const REVIEW_KINDS = new Set(['tool', 'meeting']);
 const DISPLAY_MODES = new Set(['nickname', 'anonymous']);
 const VISIBILITIES = new Set(['public', 'kali_only', 'expert_only']);
 const ANSWER_VISIBILITIES = new Set(['public', 'author_only']);
-const MODERATION_ACTIONS = new Set(['hide', 'restore', 'delete', 'mark_magazine_candidate', 'change_visibility']);
+const MODERATION_ACTIONS = new Set([
+  'hide',
+  'restore',
+  'delete',
+  'mark_magazine_candidate',
+  'change_visibility',
+  'pin_notice',
+  'unpin_notice'
+]);
 
 function clean(value) {
   return String(value ?? '').trim();
@@ -27,6 +38,20 @@ function lengthMessage(name, min, max) {
   };
   const label = labels[name] || name;
   return `${label}은 ${min}자 이상 ${max}자 이하로 적어주세요`;
+}
+
+function categoryForPostType(postType) {
+  if (postType === 'question') return 'question';
+  if (postType === 'review_comment') return 'review';
+  if (postType === 'magazine') return 'magazine';
+  return null;
+}
+
+function parseNonNegativeInteger(value, fallback) {
+  const raw = clean(value);
+  if (!raw) return fallback;
+  if (!/^\d+$/.test(raw)) throw new Error('페이지 위치가 올바르지 않습니다');
+  return Number(raw);
 }
 
 export function validateUuid(value) {
@@ -66,20 +91,54 @@ export function validatePostPayload(input) {
   const body = clean(input.body);
   const displayMode = clean(input.displayMode || 'nickname');
   const visibility = clean(input.visibility || 'public');
+
   if (!POST_TYPES.has(postType)) throw new Error('글 종류가 올바르지 않습니다');
+  if (postType === 'free') throw new Error('자유 기록은 아직 작성할 수 없어요');
+  if (postType === 'event_review') throw new Error('모임 후기는 모임 후기 API를 사용해주세요');
+  if (!WRITABLE_POST_TYPES.has(postType)) throw new Error('글 종류가 올바르지 않습니다');
   if (!DISPLAY_MODES.has(displayMode)) throw new Error('표시 이름 방식이 올바르지 않습니다');
   if (!VISIBILITIES.has(visibility)) throw new Error('공개 범위가 올바르지 않습니다');
+
   assertLength('title', title, 2, 120);
   assertLength('body', body, postType === 'question' ? 10 : 1, 5000);
+
   return {
     postType,
-    category: postType === 'question' ? 'question' : postType === 'event_review' ? 'event_review' : 'free',
+    category: categoryForPostType(postType),
     title,
     body,
     displayMode,
     visibility,
     youtubeVideoId: parseOptionalYouTubeVideoId(input.youtubeUrl)
   };
+}
+
+export function validateListQuery(query = {}) {
+  const category = clean(query.category || 'all');
+  const rawReviewKind = clean(query.reviewKind);
+  const rawLimit = clean(query.limit || '20');
+  const offset = parseNonNegativeInteger(query.offset, 0);
+
+  if (!LIST_CATEGORIES.has(category)) throw new Error('게시판 종류가 올바르지 않습니다');
+
+  let reviewKind = null;
+  if (rawReviewKind) {
+    if (category !== 'review') throw new Error('리뷰 말머리는 리뷰 탭에서만 사용할 수 있습니다');
+    if (!REVIEW_KINDS.has(rawReviewKind)) throw new Error('리뷰 말머리가 올바르지 않습니다');
+    reviewKind = rawReviewKind;
+  }
+
+  if (rawLimit && !/^\d+$/.test(rawLimit)) throw new Error('페이지 크기가 올바르지 않습니다');
+  const requestedLimit = rawLimit ? Number(rawLimit) : 20;
+  const limit = Math.min(Math.max(requestedLimit || 20, 1), 20);
+
+  return { category, reviewKind, limit, offset };
+}
+
+export function validatePostIdPayload(input = {}) {
+  const postId = clean(input.postId || input.id);
+  if (!validateUuid(postId)) throw new Error('게시글 ID가 올바르지 않습니다');
+  return { postId };
 }
 
 export function validateEventReviewPayload(input) {
