@@ -47,8 +47,9 @@ kalis_magic_playground/COPY.md
 kalis_magic_playground/DESIGN.md
 kalis_magic_playground/DESIGN-BRIEFING.md
 
-# 로컬 참고 자료
-/docs/
+# 로컬 참고 자료 (단, 설계 스펙은 추적)
+/docs/*
+!/docs/superpowers/
 /.reference/
 /.claude-intro
 .DS_Store
