@@ -2,7 +2,7 @@ import { canReadAuthor, canReadPostBody } from './_lib/access-policy.mjs';
 import { requireViewer } from './_lib/auth.mjs';
 import { json, readJsonBody } from './_lib/http.mjs';
 import { getSupabaseAdmin } from './_lib/supabase.mjs';
-import { validateListQuery, validatePostPayload } from './_lib/validators.mjs';
+import { validateListQuery, validatePostIdPayload, validatePostPayload } from './_lib/validators.mjs';
 
 async function optionalViewer(event) {
   try {
@@ -165,8 +165,83 @@ async function listPosts(event) {
 
 export async function handler(event) {
   if (event.httpMethod === 'POST') return createPost(event);
+  if (event.httpMethod === 'DELETE') return deletePost(event);
   if (event.httpMethod !== 'GET') return json(405, { error: 'method_not_allowed' });
   return listPosts(event);
+}
+
+export function deleteDecision(post, viewer, visibleAnswerCount) {
+  if (!post || post.status !== 'visible') {
+    return { ok: false, status: 404, body: { error: 'not_found' } };
+  }
+  if (post.author_user_id !== viewer.userId) {
+    return { ok: false, status: 403, body: { error: 'forbidden' } };
+  }
+  if (post.post_type === 'question' && visibleAnswerCount > 0) {
+    return {
+      ok: false,
+      status: 400,
+      body: {
+        error: 'answered_question',
+        message: '답변이 달린 질문은 삭제할 수 없어요'
+      }
+    };
+  }
+  return { ok: true, status: 200, body: { ok: true, status: 'deleted' } };
+}
+
+async function countVisibleAnswers(supabase, post) {
+  if (!post || post.post_type !== 'question') return 0;
+  const { data, error } = await supabase
+    .from('answers')
+    .select('id')
+    .eq('question_post_id', post.id)
+    .eq('status', 'visible')
+    .limit(1);
+  if (error) throw error;
+  return (data || []).length;
+}
+
+async function deletePost(event) {
+  let viewer;
+  try {
+    viewer = await requireViewer(event);
+  } catch {
+    return json(401, { error: 'auth_required' });
+  }
+
+  let payload;
+  try {
+    payload = validatePostIdPayload(readJsonBody(event));
+  } catch (error) {
+    return json(400, { error: 'invalid_payload', message: error.message });
+  }
+
+  const supabase = getSupabaseAdmin();
+  const { data: post, error: postError } = await supabase
+    .from('posts')
+    .select('id,post_type,author_user_id,status')
+    .eq('id', payload.postId)
+    .maybeSingle();
+  if (postError) return json(500, { error: 'db_error' });
+
+  let visibleAnswerCount = 0;
+  try {
+    visibleAnswerCount = await countVisibleAnswers(supabase, post);
+  } catch {
+    return json(500, { error: 'db_error' });
+  }
+
+  const decision = deleteDecision(post, viewer, visibleAnswerCount);
+  if (!decision.ok) return json(decision.status, decision.body);
+
+  const { error: updateError } = await supabase
+    .from('posts')
+    .update({ status: 'deleted' })
+    .eq('id', payload.postId);
+  if (updateError) return json(500, { error: 'db_error' });
+
+  return json(decision.status, decision.body);
 }
 
 async function createPost(event) {
