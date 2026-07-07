@@ -10,6 +10,14 @@
 
 제품 목표는 거대 커뮤니티가 아니라 마술인들이 가볍게 질문하고 기록을 남기는 작은 온라인 아지트다. 기능명은 현실적으로 유지하고, 문구, 빈 화면, 작성 안내, 포인트 일러스트에만 살짝 마법 감성을 둔다.
 
+### grill 확정 사항 (2026-07-07)
+
+- 작성자 본인의 글 삭제만 V2에 포함한다. 수정은 다음 단계로 둔다.
+- 답변이 달린 질문은 삭제할 수 없다. 사용자 안내 문구는 `"답변이 달린 질문은 삭제할 수 없어요"`로 고정한다.
+- 추천은 다시 누르면 취소되는 토글 방식으로 처리한다.
+- 목록 번호 컬럼은 두지 않고 말머리부터 시작한다.
+- 본문 읽기 권한이 없는 비공개 글은 조회수와 추천수를 `-`로 표시하고 추천 버튼을 숨긴다.
+
 우선순위는 다음 순서로 해석한다.
 
 1. `/Users/sumpie/.gstack/projects/kalidcerona-kalimagic/sumpie-main-design-20260707-magic-playground-v2.md`의 `office-hours 세션 답변`
@@ -31,7 +39,8 @@
 - 목록은 `말머리 | 제목[댓글수] | 글쓴이 | 날짜 | 조회 | 추천` 테이블 구조로 표시한다.
 - 공지글은 `📌` 표시와 함께 목록 상단에 고정한다.
 - 더보기 방식 페이지네이션을 20개 단위로 적용한다.
-- 조회수와 추천을 V2에 포함한다.
+- 조회수와 추천을 V2에 포함하되, 본문 읽기 권한 없는 비공개 글은 숫자 대신 `-`를 표시한다.
+- 작성자 본인의 글 삭제를 V2에 포함한다.
 - 카테고리별 글쓰기 가이드 문구를 폼 상단에 표시한다.
 - 빈 목록에는 탭별 세계관 문구를 표시한다.
 - 게시판 헤더와 빈 화면에 24x24 골드 라인아트 SVG 포인트 일러스트를 사용한다.
@@ -42,8 +51,9 @@
 - 배지 시스템 전체는 V2에서 제외한다. 배지 테이블이 이미 있어도 부여 로직, 표시 UI, 배지 SVG 제작은 다음 단계다.
 - 새 HTML 페이지를 만들지 않는다.
 - `자유 기록` 글쓰기는 열지 않는다.
+- 글 수정은 V2에서 제외하고 다음 단계로 둔다.
 - 페이지당 개수 선택 드롭다운은 넣지 않는다.
-- 조회수 어뷰징 방지는 넣지 않는다. 상세 열람 시 단순 증가만 한다.
+- 조회수 어뷰징 방지는 넣지 않는다. 본문 읽기 권한자의 상세 열람 시 단순 증가만 한다.
 - 직접 이미지 업로드는 넣지 않는다. 모임 후기는 기존 `event_photos` 사진 풀에서 2-5장을 선택한다.
 - 비공개 질문 접근 제어 로직인 `access-policy`는 변경하지 않는다.
 
@@ -81,15 +91,17 @@
 | 제목[댓글수] | 제목 뒤에 댓글 수를 `[3]` 형태로 표시한다. 댓글이 0개면 생략한다. |
 | 글쓴이 | 접근 권한과 `display_mode`에 따라 닉네임 또는 익명 |
 | 날짜 | 같은 해 글은 `MM.DD`, 다른 해 글은 `YYYY.MM.DD` |
-| 조회 | `view_count` |
-| 추천 | `likeCount` |
+| 조회 | `viewCount`. `canReadBody=false`면 `-` |
+| 추천 | `likeCount`. `canReadBody=false`면 `-` |
 
 공지글은 `posts.is_notice=true`인 글이다. 목록 정렬은 `is_notice desc`, `created_at desc` 순서다. 공지글 제목 앞에는 `📌`을 표시하고, 같은 공지끼리는 최신순으로 정렬한다.
+
+번호 컬럼은 두지 않는다. 목록은 항상 말머리부터 시작한다.
 
 모바일 목록은 2줄 압축 구조로 렌더링한다.
 
 - 1줄: 말머리 + 제목 + 댓글수
-- 2줄: 글쓴이 · 날짜 · 조회 · 추천
+- 2줄: 글쓴이 · 날짜 · 조회 · 추천. 본문 읽기 권한이 없는 비공개 글의 조회와 추천은 `-`로 표시한다.
 
 ### 더보기 페이지네이션
 
@@ -184,12 +196,14 @@
 
 ### 상세 화면
 
-- 상세 진입 시 `post-detail` API가 조회수를 1 증가시킨다.
+- 상세 진입 시 `post-detail` API가 본문 읽기 권한자에 한해 조회수를 1 증가시킨다.
 - 상세 상단에는 말머리, 글쓴이, 날짜, 조회수, 추천수를 보여준다.
-- 추천 버튼은 상세 화면에 둔다.
-- 추천 성공 시 추천수를 1 올리고 버튼 상태를 비활성으로 바꾼다.
-- 이미 추천한 글이면 서버 메시지 `"이미 추천했어요"`를 그대로 보여준다.
+- 본문 읽기 권한이 없는 비공개 글은 조회수와 추천수를 `-`로 표시하고 추천 버튼을 숨긴다.
+- 추천 버튼은 상세 화면에 둔다. 같은 버튼을 다시 누르면 추천을 취소한다.
+- 추천 응답의 `likeCount`와 `viewerLiked`로 추천수와 버튼 상태를 갱신한다.
 - 로그아웃 상태에서 추천 버튼을 누르면 `"로그인하면 추천할 수 있어요"`를 보여준다.
+- 작성자 본인 글에만 삭제 버튼을 보여준다.
+- 삭제 버튼은 확인 후 서버 삭제 API를 호출한다. 답변이 달린 질문은 삭제하지 않고 `"답변이 달린 질문은 삭제할 수 없어요"`를 보여준다.
 - 질문 답변, 댓글, 유튜브 lite embed, 비공개 본문 잠금 표시는 기존 상세 UX를 유지한다.
 
 ### 포인트 SVG 일러스트
@@ -300,11 +314,26 @@ V2의 매거진 탭은 두 출처를 합친다.
 
 DB에 저장하지 않고 서버 응답에서 계산한다.
 
-- `likeCount`: `post_likes`에서 `post_id`별 count
-- `viewerLiked`: 로그인 사용자가 해당 글을 추천했는지 여부
+- `canReadBody`: 기존 `canReadPostBody` 결과
+- `viewCount`: `posts.view_count`. `canReadBody=false`면 `null`
+- `likeCount`: `post_likes`에서 `post_id`별 count. `canReadBody=false`면 `null`
+- `viewerLiked`: 로그인 사용자가 해당 글을 추천했는지 여부. `canReadBody=false`면 `false`
 - `commentCount`: `comments.status='visible'`인 댓글 수
 - `prefix`: category 기반 말머리
 - `boardCategory`: UI 탭용 가상 카테고리. `event_review`와 `review`는 둘 다 `review`
+
+### 삭제 상태
+
+작성자 삭제는 기존 `posts.status` 체계를 재사용한다. 물리 삭제하지 않고 `status='deleted'`로 soft delete 처리한다.
+
+삭제 가능한 조건:
+
+- 로그인 사용자이며 `requireViewer`를 통과한다.
+- `posts.author_user_id = viewer.userId`다.
+- 대상 글이 visible 상태다.
+- 질문 글인 경우 연결된 답변이 없다.
+
+답변이 달린 질문은 아카이브 보호를 위해 삭제하지 않는다. 서버는 400을 반환하고 사용자 메시지 `"답변이 달린 질문은 삭제할 수 없어요"`를 내려준다.
 
 ## API 설계
 
@@ -357,6 +386,7 @@ Query parameters:
       "likeCount": 4,
       "viewerLiked": false,
       "isNotice": false,
+      "canReadBody": true,
       "bodyLocked": false
     }
   ],
@@ -367,6 +397,8 @@ Query parameters:
 ```
 
 목록 응답은 기존 `canReadPostBody`와 `canReadAuthor`를 계속 적용한다. 비공개 글의 본문과 유튜브 ID는 목록에서 노출하지 않는다.
+
+`canReadBody=false`인 글은 `viewCount=null`, `likeCount=null`, `viewerLiked=false`로 반환한다. 프론트는 목록에서 조회수와 추천수를 `-`로 렌더링한다.
 
 ### `POST /.netlify/functions/posts`
 
@@ -415,16 +447,55 @@ V2에서 `playground-compose`는 `[모임]` 선택 시 다음을 수행한다.
 
 V2 변경:
 
-- visible 글을 찾은 뒤 `posts.view_count = posts.view_count + 1`을 실행한다.
-- 접근 권한이 없어 본문이 잠긴 경우에도 상세 진입 자체는 조회로 센다.
+- visible 글을 찾은 뒤 기존 `canReadPostBody`로 본문 읽기 권한을 계산한다.
+- `canReadBody=true`일 때만 `posts.view_count = posts.view_count + 1`을 실행한다.
+- `canReadBody=false`이면 조회수를 올리지 않고 `viewCount=null`, `likeCount=null`, `viewerLiked=false`를 반환한다.
 - hidden 또는 deleted 글은 관리자와 칼리 외에는 404를 반환하고 조회수를 올리지 않는다.
-- 응답 `post`에 `viewCount`, `likeCount`, `viewerLiked`, `isNotice`를 포함한다.
+- 응답 `post`에 `viewCount`, `likeCount`, `viewerLiked`, `isNotice`, `canReadBody`를 포함한다.
 
 기존 답변, 댓글, 비공개 본문, 비공개 답변 정책은 유지한다.
 
+### `DELETE /.netlify/functions/posts`
+
+작성자 본인의 글 삭제 API다.
+
+인증:
+
+- `requireViewer` 필수
+- `posts.author_user_id = viewer.userId` 검증
+
+요청:
+
+```json
+{
+  "postId": "11111111-1111-4111-8111-111111111111"
+}
+```
+
+성공 응답:
+
+```json
+{
+  "ok": true,
+  "status": "deleted"
+}
+```
+
+에러 응답:
+
+| 상황 | HTTP | 응답 |
+|---|---|---|
+| 비로그인 | 401 | `{ "error": "auth_required" }` |
+| 본인 글 아님 | 403 | `{ "error": "forbidden" }` |
+| 답변이 달린 질문 | 400 | `{ "error": "answered_question", "message": "답변이 달린 질문은 삭제할 수 없어요" }` |
+| 없는 글 | 404 | `{ "error": "not_found" }` |
+| hidden 또는 deleted 글 | 404 | `{ "error": "not_found" }` |
+
+성공 시 `posts.status='deleted'`로 갱신한다. 기존 hidden/deleted 필터가 목록과 상세 노출을 막는다.
+
 ### `POST /.netlify/functions/post-likes`
 
-추천 API를 새로 만든다.
+추천 토글 API를 새로 만든다.
 
 인증:
 
@@ -448,16 +519,26 @@ V2 변경:
 }
 ```
 
+이미 추천한 글을 다시 누르면 `post_likes` 행을 삭제하고 다음 응답을 반환한다.
+
+```json
+{
+  "ok": true,
+  "likeCount": 4,
+  "viewerLiked": false
+}
+```
+
 에러 응답:
 
 | 상황 | HTTP | 응답 |
 |---|---|---|
 | 비로그인 | 401 | `{ "error": "auth_required", "message": "로그인하면 추천할 수 있어요" }` |
-| 중복 추천 | 409 | `{ "error": "already_liked", "message": "이미 추천했어요" }` |
+| 본문 읽기 권한 없음 | 403 | `{ "error": "forbidden" }` |
 | 없는 글 | 404 | `{ "error": "not_found" }` |
 | hidden 또는 deleted 글 | 404 | `{ "error": "not_found" }` |
 
-중복 추천은 `post_likes`의 `primary key (post_id, user_id)`로 막는다. Supabase insert에서 unique violation이 발생하면 `already_liked`로 변환한다.
+토글은 `post_likes`의 `primary key (post_id, user_id)`를 기준으로 한다. 기존 행이 없으면 insert, 있으면 delete를 수행한 뒤 현재 `likeCount`와 `viewerLiked`를 다시 계산해 반환한다.
 
 ### `POST /.netlify/functions/admin-moderate`
 
@@ -492,10 +573,10 @@ V2 변경:
 
 | 파일 | 책임 |
 |---|---|
-| `playground-api.js` | `fetchJson`, 목록, 상세, 글 작성, 추천, 모임 사진 API 호출 |
+| `playground-api.js` | `fetchJson`, 목록, 상세, 글 작성, 글 삭제, 추천 토글, 모임 사진 API 호출 |
 | `playground-list.js` | 탭 상태, 말머리 필터, 테이블 목록 렌더링, 빈 화면, 더보기 |
 | `playground-compose.js` | 글쓰기 버튼, 카테고리 가이드, 질문 폼, 도구 리뷰 폼, 모임 후기 폼, 매거진 관리자 폼 |
-| `playground-detail.js` | 상세 렌더링, 조회수와 추천 표시, 답변 폼, 댓글 폼, YouTube lite embed |
+| `playground-detail.js` | 상세 렌더링, 조회수와 추천 표시, 추천 토글, 본인 글 삭제 버튼, 답변 폼, 댓글 폼, YouTube lite embed |
 | `playground.js` | bootstrap, shared state 연결, `window.MagicPlayground` 공개 API |
 
 클래식 script 방식으로 유지한다. 각 파일은 `window.MagicPlaygroundApi`, `window.MagicPlaygroundList`, `window.MagicPlaygroundCompose`, `window.MagicPlaygroundDetail` 같은 명시적 namespace를 노출한다. 빌드 도구 없이 기존 정적 사이트 구조를 유지하기 위한 선택이다.
@@ -532,9 +613,9 @@ SVG 파일은 `assets` 디렉터리 아래에 두므로 `PUBLIC_DIRS`의 기존 
 
 | 파일 | 변경 |
 |---|---|
-| `netlify/functions/posts.mjs` | `limit`, `offset`, `reviewKind`, 공지 정렬, 계산 필드, free 작성 거부, review 작성 허용, magazine 관리자 작성 |
-| `netlify/functions/post-detail.mjs` | 상세 조회 시 `view_count` 증가, 추천 계산 필드 추가 |
-| `netlify/functions/post-likes.mjs` | 신규 추천 API |
+| `netlify/functions/posts.mjs` | `limit`, `offset`, `reviewKind`, 공지 정렬, 계산 필드, free 작성 거부, review 작성 허용, magazine 관리자 작성, 본인 글 삭제 |
+| `netlify/functions/post-detail.mjs` | 본문 읽기 권한자 상세 조회 시 `view_count` 증가, 추천 계산 필드 추가 |
+| `netlify/functions/post-likes.mjs` | 신규 추천 토글 API |
 | `netlify/functions/admin-moderate.mjs` | `pin_notice`, `unpin_notice` 처리 |
 | `netlify/functions/_lib/validators.mjs` | 작성 타입 매핑과 moderation action 검증 갱신 |
 
@@ -542,9 +623,11 @@ SVG 파일은 `assets` 디렉터리 아래에 두므로 `PUBLIC_DIRS`의 기존 
 
 ## 엣지 케이스
 
-- 중복 추천은 서버에서 409로 거부하고 `"이미 추천했어요"`를 보여준다.
+- 추천은 같은 사용자가 다시 누르면 취소된다. 취소 후 다시 누르면 재추천된다.
 - 로그아웃 추천은 클라이언트에서 먼저 막고, 서버 401도 `"로그인하면 추천할 수 있어요"`로 처리한다.
-- 상세 조회수는 단순 증가다. 새로고침, 뒤로가기 후 재진입, 같은 사용자의 반복 열람도 모두 증가한다.
+- 본문 읽기 권한자의 상세 조회수는 단순 증가다. 새로고침, 뒤로가기 후 재진입, 같은 사용자의 반복 열람도 모두 증가한다.
+- 본문 읽기 권한이 없는 비공개 글은 목록과 상세에서 조회수와 추천수를 `-`로 표시하고, 서버 응답은 `viewCount=null`, `likeCount=null`을 반환한다.
+- 본문 읽기 권한이 없는 비공개 글 상세 진입은 조회수를 증가시키지 않는다.
 - 기존 글은 `view_count=0`, `is_notice=false` 기본값으로 무해하게 호환된다.
 - migration 전 코드가 먼저 배포되면 `view_count`, `is_notice`, `post_likes` 참조에서 서버 오류가 난다. 배포 순서는 migration 먼저다.
 - `자유 기록🔒`은 UI에서 목록 API를 호출하지 않고 준비 중 화면을 보여준다.
@@ -554,6 +637,8 @@ SVG 파일은 `assets` 디렉터리 아래에 두므로 `PUBLIC_DIRS`의 기존 
 - 비공개 질문의 본문, 작성자명, 유튜브 ID 노출 정책은 기존 `access-policy` 결과를 따른다.
 - hidden 또는 deleted 글은 일반 사용자 목록과 상세에서 숨긴다.
 - `is_notice=true`인 글도 hidden 또는 deleted면 목록에 나오지 않는다.
+- 본인 글이어도 답변이 달린 질문은 삭제할 수 없다.
+- 본인 글 삭제는 `status='deleted'` soft delete만 수행한다.
 - 매거진 후보 지정은 질문 글에만 성공한다. 리뷰와 모임 후기는 관리자 큐레이션 글로 매거진에 남긴다.
 
 ## 테스트 계획
@@ -562,10 +647,11 @@ TDD 2단계에서 신규 테스트를 먼저 작성하고, 실패를 확인한 �
 
 ### 신규 테스트
 
-1. 추천 1인 1회
+1. 추천 토글
    - `post-likes.mjs`가 `requireViewer`를 사용한다.
-   - `post_likes` insert unique violation을 `already_liked`로 변환한다.
-   - 성공 응답에 `likeCount`와 `viewerLiked=true`가 있다.
+   - 첫 추천은 `post_likes`를 insert하고 `likeCount`, `viewerLiked=true`를 반환한다.
+   - 다시 추천하면 `post_likes`를 delete하고 `likeCount`, `viewerLiked=false`를 반환한다.
+   - 추천 취소 후 재추천하면 다시 `viewerLiked=true`를 반환한다.
 
 2. 공지 정렬
    - `posts.mjs` 목록 쿼리가 `is_notice desc`, `created_at desc` 순서로 정렬한다.
@@ -591,10 +677,21 @@ TDD 2단계에서 신규 테스트를 먼저 작성하고, 실패를 확인한 �
    - 자유 탭에서는 목록 API와 글쓰기 API를 호출하지 않는다.
 
 7. 조회수 증가
-   - `post-detail.mjs`가 visible 글 상세 요청에서 `view_count`를 증가시킨다.
+   - `post-detail.mjs`가 본문 읽기 권한자의 visible 글 상세 요청에서 `view_count`를 증가시킨다.
+   - 본문 읽기 권한이 없는 비공개 글 상세 요청에서는 `view_count`를 증가시키지 않는다.
    - hidden 또는 deleted 글의 404 응답에서는 조회수를 증가시키지 않는다.
 
-8. dist 참조 무결성
+8. 본인 글 삭제
+   - 본인이 아닌 글 삭제는 403으로 거부한다.
+   - 답변이 달린 질문 삭제는 400과 `"답변이 달린 질문은 삭제할 수 없어요"`로 거부한다.
+   - 본인 글 삭제 성공 시 `posts.status='deleted'`로 soft delete한다.
+
+9. 비공개 글 숫자 숨김
+   - 본문 읽기 권한이 없는 비공개 글 목록 응답은 `viewCount=null`, `likeCount=null`을 반환한다.
+   - 본문 읽기 권한이 없는 비공개 글 상세 응답은 `viewCount=null`, `likeCount=null`을 반환한다.
+   - 프론트는 해당 숫자를 `-`로 표시하고 추천 버튼을 렌더링하지 않는다.
+
+10. dist 참조 무결성
    - `build-public.test.mjs`가 신규 JS 파일의 `PUBLIC_FILES` 등록을 검증한다.
    - `public build includes every local src and href referenced by dist html` 테스트가 통과한다.
 
@@ -637,8 +734,9 @@ npm run verify
    - 리뷰 탭에서 `[도구]`, `[모임]` 노출
    - 자유 기록 잠금 화면
    - 상세 진입 시 조회수 증가
-   - 로그인 후 추천 성공
-   - 중복 추천 메시지
+   - 로그인 후 추천, 취소, 재추천
+   - 본인 글 삭제 성공
+   - 답변 달린 질문 삭제 거부
    - 관리자 공지 고정과 해제
 
 배포 순서는 반드시 migration 먼저, 코드 배포 나중이다.
@@ -651,8 +749,11 @@ npm run verify
 - 리뷰 말머리는 새 `review_kind` 컬럼 없이 기존 `category`로 확정했다.
 - 기존 `event_review` 글은 리뷰 탭 `[모임]`으로 노출한다.
 - 자유 기록은 탭만 있고 작성 불가로 확정했다.
-- 추천은 `post_likes` PK로 1인 1회만 허용한다.
-- 조회수는 상세 진입 시 단순 증가로 확정했다.
+- 추천은 `post_likes` insert/delete 토글로 확정했다.
+- 목록 번호 컬럼은 생략하고 말머리부터 시작한다.
+- 본인 글 삭제는 허용하되, 답변이 달린 질문은 삭제하지 않는다.
+- 조회수는 본문 읽기 권한자의 상세 진입 시 단순 증가로 확정했다.
+- 비공개 글 비권한자 응답의 `viewCount`와 `likeCount`는 `null`로 반환한다.
 - 비공개 질문 접근 제어는 변경하지 않는다.
 - 신규 JS 파일은 `build-public.mjs` `PUBLIC_FILES`에 등록한다.
 - 배포 순서는 Supabase migration 먼저, Netlify 코드 배포 나중으로 확정했다.
