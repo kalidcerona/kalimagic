@@ -549,6 +549,21 @@ img { max-width: 100%; display: block; }
 @media (max-width: 960px) {
     .event-grid { grid-template-columns: repeat(2, 1fr); }
 }
+@media (max-width: 700px) {
+    .main-nav {
+        height: auto;
+        align-items: flex-start;
+        gap: 8px 12px;
+    }
+    .nav-links {
+        flex: 1 1 auto;
+        min-width: 0;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        row-gap: 4px;
+        column-gap: 2px;
+    }
+}
 @media (max-width: 600px) {
     .event-grid { grid-template-columns: 1fr; }
     .cards { grid-template-columns: 1fr; gap: 14px; }
