@@ -65,12 +65,14 @@
     const titleText = escapeHtml(post.title);
     const title = post.bodyLocked ? `${titleText} <span class="pg-lock">비공개</span>` : titleText;
     const prefix = post.prefix || '[질문]';
+    const preview = post.bodyPreview ? `<p class="pg-row-preview">${escapeHtml(post.bodyPreview)}</p>` : '';
 
     return `
       <tr class="${post.isNotice ? 'pg-notice-row' : ''}">
         <td class="pg-prefix-cell"><span class="pg-prefix pg-prefix--${prefixClass(prefix)}">${escapeHtml(prefix)}</span></td>
         <td class="pg-title-cell">
-          <button type="button" class="pg-title-button" data-post-id="${escapeHtml(post.id)}">${pin}${title}${comment}</button>
+          <a class="pg-title-button" href="post.html?id=${encodeURIComponent(post.id)}" data-post-id="${escapeHtml(post.id)}">${pin}${title}${comment}</a>
+          ${preview}
         </td>
         <td class="pg-author-cell">${escapeHtml(post.authorLabel || '익명')}</td>
         <td class="pg-date-cell">${formatDate(post.createdAt)}</td>
@@ -193,26 +195,26 @@
     function render() {
       const tab = activeTab();
       if (tab.locked) {
-        root.innerHTML = renderFilters() + lockedHtml();
+        root.innerHTML = lockedHtml();
         return;
       }
 
       if (state.loading && state.posts.length === 0) {
-        root.innerHTML = renderFilters() + '<p class="pg-loading">목록을 불러오는 중입니다.</p>';
+        root.innerHTML = '<p class="pg-loading">목록을 불러오는 중입니다.</p>';
         return;
       }
 
       if (state.error) {
-        root.innerHTML = renderFilters() + errorHtml();
+        root.innerHTML = errorHtml();
         return;
       }
 
       if (state.posts.length === 0) {
-        root.innerHTML = renderFilters() + emptyHtml(tab.id);
+        root.innerHTML = emptyHtml(tab.id);
         return;
       }
 
-      root.innerHTML = renderFilters() + tableHtml(state.posts, state.hasMore);
+      root.innerHTML = tableHtml(state.posts, state.hasMore);
     }
 
     async function load({ append = false } = {}) {
@@ -269,14 +271,6 @@
     }
 
     root.addEventListener('click', (event) => {
-      const postButton = event.target.closest('[data-post-id]');
-      if (postButton) {
-        document.dispatchEvent(new CustomEvent('playground:select-post', {
-          detail: { postId: postButton.dataset.postId }
-        }));
-        return;
-      }
-
       const moreButton = event.target.closest('[data-load-more]');
       if (moreButton) {
         load({ append: true });
