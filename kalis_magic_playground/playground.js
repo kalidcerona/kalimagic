@@ -24,6 +24,13 @@
       onCreated: list.reload
     });
 
+    const mobileWrite = document.querySelector('[data-mobile-write]');
+    if (mobileWrite) {
+      mobileWrite.addEventListener('click', () => {
+        document.querySelector('[data-open-compose]')?.click();
+      });
+    }
+
     document.addEventListener('playground:post-deleted', () => {
       list.reload();
     });

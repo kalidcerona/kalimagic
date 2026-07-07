@@ -5,18 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>마술 놀이터 | 칼리형</title>
   <link rel="stylesheet" href="style.css">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
   <script>
     window.MAGIC_PLAYGROUND_CONFIG = {
       supabaseUrl: 'https://wjyvssvoavzuaaxlvobo.supabase.co',
       supabasePublishableKey: 'sb_publishable_FZwzcGFQ06F65Butggp6rQ_fv3zZfkq'
     };
   </script>
-  <script src="nav.js"></script>
+  <script src="nav.js" defer></script>
 </head>
 <body>
   <div id="nav-root"></div>
-  <script>renderNav('playground')</script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => renderNav('playground'));
+  </script>
   <main class="playground-shell">
     <header class="playground-header">
       <p class="playground-eyebrow">마술인을 위한 놀이터</p>
@@ -74,12 +76,13 @@
         <p class="playground-loading">글을 선택하면 상세 내용이 열립니다.</p>
       </section>
     </div>
+    <button type="button" class="pg-mobile-cta" data-mobile-write>기록 남기기</button>
   </main>
-  <script src="auth.js"></script>
-  <script src="playground-api.js"></script>
-  <script src="playground-list.js"></script>
-  <script src="playground-compose.js"></script>
-  <script src="playground-detail.js"></script>
-  <script src="playground.js"></script>
+  <script src="auth.js" defer></script>
+  <script src="playground-api.js" defer></script>
+  <script src="playground-list.js" defer></script>
+  <script src="playground-compose.js" defer></script>
+  <script src="playground-detail.js" defer></script>
+  <script src="playground.js" defer></script>
 </body>
 </html>
