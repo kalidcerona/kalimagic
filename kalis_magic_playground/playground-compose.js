@@ -261,7 +261,7 @@
 
       status.textContent = '올리는 중입니다.';
       try {
-        await api.createPost({
+        const result = await api.createPost({
           postType,
           title: formData.get('title'),
           body: formData.get('body'),
@@ -271,7 +271,7 @@
         });
         status.textContent = '글이 올라갔습니다.';
         close();
-        if (onCreated) onCreated();
+        if (onCreated) onCreated(result);
       } catch (error) {
         status.textContent = error.message || '글을 올리지 못했어요.';
       }

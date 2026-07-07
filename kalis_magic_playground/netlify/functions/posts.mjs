@@ -52,6 +52,7 @@ export function shapePostListRow(row, viewer, state = {}) {
     boardCategory: boardCategoryForCategory(row.category),
     prefix: prefixForCategory(row.category),
     title: row.title,
+    bodyPreview: canReadBody ? String(row.body || '').replace(/\s+/g, ' ').trim().slice(0, 140) : null,
     commentCount: commentCounts.get(row.id) || 0,
     youtubeVideoId: canReadBody ? row.youtube_video_id : null,
     authorLabel: canReadName && row.display_mode === 'nickname' ? row.profiles?.nickname || '마술인' : '익명',
