@@ -118,12 +118,16 @@ test('playground detail module renders counts, like toggle, owner delete, and hi
   assert.match(source, /return '-'/);
 });
 
-test('playground bootstrap only wires modules together', () => {
+test('playground bootstrap wires list, auth slot, and write links', () => {
   const source = read('playground.js');
 
   assert.match(source, /initPlaygroundList/);
-  assert.match(source, /initPlaygroundCompose/);
-  assert.match(source, /initPlaygroundDetail/);
+  assert.match(source, /data-auth-slot/);
+  assert.match(source, /data-write-link/);
+  assert.match(source, /data-mobile-write/);
+  assert.match(source, /admin-inbox/);
+  assert.doesNotMatch(source, /initPlaygroundCompose/);
+  assert.doesNotMatch(source, /initPlaygroundDetail/);
   assert.doesNotMatch(source, /async function loadQuestions/);
   assert.doesNotMatch(source, /addEventListener\('submit'/);
 });

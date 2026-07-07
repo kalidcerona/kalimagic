@@ -45,60 +45,13 @@
           <p>오늘 올라온 질문과 후기, 리뷰를 한 줄씩 훑어봅니다.</p>
         </div>
         <div class="phm-feed-actions">
-          <button type="button" class="phm-write-button" data-open-compose>기록 남기기</button>
-          <div class="playground-auth phm-feed-auth" data-auth-panel></div>
+          <span class="phm-feed-auth" data-auth-slot></span>
+          <a class="phm-write-button" data-write-link href="write.html">기록 남기기</a>
         </div>
       </header>
-      <section class="playground-compose phm-feed-compose" aria-label="질문 작성">
-        <h2>질문 남기기</h2>
-        <form data-question-form>
-          <label>
-            <span>제목</span>
-            <input name="title" type="text" maxlength="120" required placeholder="이 마술은 어디서 배워야 하나요?">
-          </label>
-          <label>
-            <span>내용</span>
-            <textarea name="body" rows="5" required placeholder="궁금한 점과 현재 알고 있는 내용을 적어주세요."></textarea>
-          </label>
-          <div class="playground-field-grid">
-            <label>
-              <span>공개 범위</span>
-              <select name="visibility">
-                <option value="public">전체 공개</option>
-                <option value="kali_only">칼리에게만 공개</option>
-                <option value="expert_only">전문가 이상 공개</option>
-              </select>
-            </label>
-            <label>
-              <span>표시 이름</span>
-              <select name="displayMode">
-                <option value="nickname">닉네임 표시</option>
-                <option value="anonymous">익명</option>
-              </select>
-            </label>
-          </div>
-          <label>
-            <span>유튜브 링크 선택</span>
-            <input name="youtubeUrl" type="url" placeholder="https://youtu.be/...">
-          </label>
-          <button type="submit" class="playground-button">질문 올리기</button>
-          <p class="playground-form-status" data-question-status></p>
-        </form>
-      </section>
       <section class="playground-list phm-feed-list" data-post-list aria-live="polite"></section>
     </section>
-    <aside class="phm-preview" aria-label="기록 안내와 상세">
-      <div class="phm-preview-card" data-archive-note>
-        <p class="phm-preview-eyebrow">ARCHIVE NOTE</p>
-        <h2>여기는 마술문화가 쌓이는 작은 기록소</h2>
-        <p>질문 하나, 후기 하나, 리뷰 하나가 나중에 누군가에게 길잡이가 됩니다.</p>
-        <div class="phm-guide-box" data-category-guide></div>
-      </div>
-      <section class="playground-detail phm-preview-detail" data-post-detail aria-live="polite">
-        <p class="playground-loading">글을 선택하면 상세 내용이 열립니다.</p>
-      </section>
-    </aside>
-    <button type="button" class="pg-mobile-cta" data-mobile-write>기록 남기기</button>
+    <a class="pg-mobile-cta" data-mobile-write href="write.html">기록 남기기</a>
   </main>
   <script src="auth.js" defer></script>
   <script src="playground-api.js" defer></script>
