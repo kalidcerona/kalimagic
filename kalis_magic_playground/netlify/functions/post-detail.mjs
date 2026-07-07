@@ -11,6 +11,10 @@ async function optionalViewer(event) {
   }
 }
 
+function canViewerAnswer(viewer) {
+  return ['admin', 'kali'].includes(viewer?.role);
+}
+
 function shapePost(row, viewer) {
   const policyPost = { visibility: row.visibility, authorUserId: row.author_user_id };
   const canReadBody = canReadPostBody(policyPost, viewer);
@@ -75,7 +79,9 @@ export async function handler(event) {
 
   const post = shapePost(row, viewer);
   const question = { visibility: row.visibility, authorUserId: row.author_user_id };
-  if (!post.canReadBody) return json(200, { post, answers: [], comments: [] });
+  if (!post.canReadBody) {
+    return json(200, { post, answers: [], comments: [], viewerCanAnswer: canViewerAnswer(viewer) });
+  }
 
   const { data: answers, error: answersError } = await supabase
     .from('answers')
@@ -97,6 +103,7 @@ export async function handler(event) {
   return json(200, {
     post,
     answers: answers.map((answer) => shapeAnswer(question, answer, viewer)).filter(Boolean),
-    comments: comments.map(shapeComment)
+    comments: comments.map(shapeComment),
+    viewerCanAnswer: canViewerAnswer(viewer)
   });
 }

@@ -21,6 +21,7 @@ export const PUBLIC_FILES = [
   'playground.html',
   'admin.html',
   'reviews.html',
+  'reveal.js',
   'script.js',
   'style.css',
   'video.html',

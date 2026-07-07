@@ -38,6 +38,14 @@
     }[visibility] || '전체 공개';
   }
 
+  function option(value, text, selected) {
+    var node = document.createElement('option');
+    node.value = value;
+    node.textContent = text;
+    if (selected) node.selected = true;
+    return node;
+  }
+
   function createYouTubeLiteEmbed(videoId, title) {
     var id = String(videoId || '').trim();
     if (!/^[A-Za-z0-9_-]{11}$/.test(id)) return null;
@@ -177,6 +185,7 @@
   }
 
   async function loadDetail(id) {
+    state.selectedPostId = id;
     showDetailLoading();
     var data = await fetchJson('/.netlify/functions/post-detail?id=' + encodeURIComponent(id));
     renderDetail(data);
@@ -198,30 +207,78 @@
     if (post.bodyLocked) return;
     var postVideo = createYouTubeLiteEmbed(post.youtubeVideoId, '질문에 첨부된 영상');
     if (postVideo) detailEl.appendChild(postVideo);
-    renderAnswers(data.answers || []);
+    renderAnswers(post, data.answers || [], data.viewerCanAnswer);
     renderComments(data.comments || []);
   }
 
-  function renderAnswers(answers) {
+  function renderAnswers(post, answers, viewerCanAnswer) {
     var section = el('section', 'playground-detail__section');
     section.appendChild(el('h3', '', '답변'));
     if (!answers.length) {
       section.appendChild(el('p', 'playground-loading', '아직 답변이 없습니다.'));
-      detailEl.appendChild(section);
-      return;
+    } else {
+      answers.forEach(function (answer) {
+        var item = el('article', 'playground-answer');
+        var meta = el('div', 'playground-post__meta');
+        meta.appendChild(el('span', '', answer.authorLabel || '답변자'));
+        meta.appendChild(el('span', '', visibilityLabel(answer.visibility)));
+        item.appendChild(meta);
+        item.appendChild(el('p', '', answer.body));
+        var answerVideo = createYouTubeLiteEmbed(answer.youtubeVideoId, '답변에 첨부된 영상');
+        if (answerVideo) item.appendChild(answerVideo);
+        section.appendChild(item);
+      });
     }
-    answers.forEach(function (answer) {
-      var item = el('article', 'playground-answer');
-      var meta = el('div', 'playground-post__meta');
-      meta.appendChild(el('span', '', answer.authorLabel || '답변자'));
-      meta.appendChild(el('span', '', visibilityLabel(answer.visibility)));
-      item.appendChild(meta);
-      item.appendChild(el('p', '', answer.body));
-      var answerVideo = createYouTubeLiteEmbed(answer.youtubeVideoId, '답변에 첨부된 영상');
-      if (answerVideo) item.appendChild(answerVideo);
-      section.appendChild(item);
-    });
+    if (viewerCanAnswer) section.appendChild(answerForm(post));
     detailEl.appendChild(section);
+  }
+
+  function answerForm(post) {
+    var form = el('form', 'playground-comment-form');
+    form.appendChild(el('h4', 'playground-answer-form-title', '답변 작성'));
+    var body = document.createElement('textarea');
+    body.name = 'body';
+    body.rows = 4;
+    body.required = true;
+    body.placeholder = '답변 내용을 적어주세요.';
+    var visibility = document.createElement('select');
+    visibility.name = 'visibility';
+    visibility.appendChild(option('public', '전체 공개', post.visibility === 'public'));
+    visibility.appendChild(option('author_only', '질문자에게만', post.visibility !== 'public'));
+    var youtubeUrl = document.createElement('input');
+    youtubeUrl.name = 'youtubeUrl';
+    youtubeUrl.type = 'url';
+    youtubeUrl.placeholder = '유튜브 링크 선택';
+    var submit = el('button', 'playground-button', '답변 등록');
+    submit.type = 'submit';
+    var status = el('p', 'playground-form-status');
+    form.appendChild(body);
+    form.appendChild(visibility);
+    form.appendChild(youtubeUrl);
+    form.appendChild(submit);
+    form.appendChild(status);
+    form.addEventListener('submit', async function (event) {
+      event.preventDefault();
+      var formData = new FormData(form);
+      status.classList.remove('is-error');
+      status.textContent = '답변을 등록하는 중입니다.';
+      try {
+        await fetchJson('/.netlify/functions/answers', {
+          method: 'POST',
+          body: JSON.stringify({
+            questionPostId: post.id,
+            body: formData.get('body'),
+            visibility: formData.get('visibility'),
+            youtubeUrl: formData.get('youtubeUrl')
+          })
+        });
+        await loadDetail(state.selectedPostId);
+      } catch (error) {
+        status.textContent = error.message || '답변을 등록하지 못했습니다.';
+        status.classList.add('is-error');
+      }
+    });
+    return form;
   }
 
   function renderComments(comments) {
