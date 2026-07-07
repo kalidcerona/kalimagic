@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>기록 남기기 | 칼리형</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+  <script>
+    window.MAGIC_PLAYGROUND_CONFIG = {
+      supabaseUrl: 'https://wjyvssvoavzuaaxlvobo.supabase.co',
+      supabasePublishableKey: 'sb_publishable_FZwzcGFQ06F65Butggp6rQ_fv3zZfkq'
+    };
+  </script>
+  <script src="nav.js" defer></script>
+</head>
+<body>
+  <div id="nav-root"></div>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => renderNav('playground'));
+  </script>
+  <main class="pgw-shell">
+    <a class="pgw-back" href="playground.html">← 목록으로</a>
+    <h1 class="pgw-title">기록 남기기</h1>
+    <div class="pgw-login" data-write-login hidden>
+      <p>기록을 남기려면 구글 로그인이 필요해요.</p>
+      <button type="button" class="pgw-login-button" data-login-button>구글로 로그인</button>
+    </div>
+    <section class="pgw-compose" data-write-compose></section>
+  </main>
+  <script src="auth.js" defer></script>
+  <script src="playground-api.js" defer></script>
+  <script src="playground-compose.js" defer></script>
+  <script src="write.js" defer></script>
+</body>
+</html>
