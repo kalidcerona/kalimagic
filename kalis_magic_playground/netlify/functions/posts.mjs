@@ -2,7 +2,7 @@ import { canReadAuthor, canReadPostBody } from './_lib/access-policy.mjs';
 import { requireViewer } from './_lib/auth.mjs';
 import { json, readJsonBody } from './_lib/http.mjs';
 import { getSupabaseAdmin } from './_lib/supabase.mjs';
-import { validatePostPayload } from './_lib/validators.mjs';
+import { validateListQuery, validatePostPayload } from './_lib/validators.mjs';
 
 async function optionalViewer(event) {
   try {
@@ -12,42 +12,161 @@ async function optionalViewer(event) {
   }
 }
 
-function publicShape(row, viewer) {
+export function hasPrivilegedRole(viewer) {
+  return ['admin', 'kali'].includes(viewer?.role);
+}
+
+export function boardCategoryForCategory(category) {
+  if (category === 'review' || category === 'event_review') return 'review';
+  return category;
+}
+
+export function prefixForCategory(category) {
+  if (category === 'question') return '질문';
+  if (category === 'review') return '도구';
+  if (category === 'event_review') return '모임';
+  if (category === 'magazine') return '매거진';
+  return '기록';
+}
+
+function countByPostId(rows) {
+  const counts = new Map();
+  for (const row of rows || []) {
+    counts.set(row.post_id, (counts.get(row.post_id) || 0) + 1);
+  }
+  return counts;
+}
+
+export function shapePostListRow(row, viewer, state = {}) {
   const policyPost = { visibility: row.visibility, authorUserId: row.author_user_id };
   const canReadBody = canReadPostBody(policyPost, viewer);
   const canReadName = canReadAuthor(policyPost, viewer);
+  const commentCounts = state.commentCounts || new Map();
+  const likeCounts = state.likeCounts || new Map();
+  const viewerLikedPostIds = state.viewerLikedPostIds || new Set();
+
   return {
     id: row.id,
     postType: row.post_type,
     category: row.category,
+    boardCategory: boardCategoryForCategory(row.category),
+    prefix: prefixForCategory(row.category),
     title: row.title,
-    body: canReadBody ? row.body : '',
-    bodyLocked: !canReadBody,
+    commentCount: commentCounts.get(row.id) || 0,
     youtubeVideoId: canReadBody ? row.youtube_video_id : null,
     authorLabel: canReadName && row.display_mode === 'nickname' ? row.profiles?.nickname || '마술인' : '익명',
     displayMode: row.display_mode,
     visibility: row.visibility,
     status: row.status,
-    createdAt: row.created_at
+    createdAt: row.created_at,
+    viewCount: canReadBody ? row.view_count || 0 : null,
+    likeCount: canReadBody ? likeCounts.get(row.id) || 0 : null,
+    viewerLiked: canReadBody ? viewerLikedPostIds.has(row.id) : false,
+    isNotice: Boolean(row.is_notice),
+    canReadBody,
+    bodyLocked: !canReadBody
   };
+}
+
+export function applyListFilters(query, params) {
+  if (params.category === 'all') return query.neq('category', 'free');
+  if (params.category === 'question') return query.eq('category', 'question');
+  if (params.category === 'review' && params.reviewKind === 'tool') return query.eq('category', 'review');
+  if (params.category === 'review' && params.reviewKind === 'meeting') return query.eq('category', 'event_review');
+  if (params.category === 'review') return query.in('category', ['review', 'event_review']);
+  if (params.category === 'magazine') {
+    return query.or('category.eq.magazine,and(category.eq.question,questions.magazine_candidate.eq.true)');
+  }
+  return query.neq('category', 'free');
+}
+
+async function loadListState(supabase, postIds, viewer) {
+  if (postIds.length === 0) {
+    return {
+      commentCounts: new Map(),
+      likeCounts: new Map(),
+      viewerLikedPostIds: new Set()
+    };
+  }
+
+  const { data: comments, error: commentsError } = await supabase
+    .from('comments')
+    .select('post_id')
+    .eq('status', 'visible')
+    .in('post_id', postIds);
+  if (commentsError) throw commentsError;
+
+  const { data: likes, error: likesError } = await supabase
+    .from('post_likes')
+    .select('post_id')
+    .in('post_id', postIds);
+  if (likesError) throw likesError;
+
+  let viewerLikes = [];
+  if (viewer) {
+    const { data, error } = await supabase
+      .from('post_likes')
+      .select('post_id')
+      .eq('user_id', viewer.userId)
+      .in('post_id', postIds);
+    if (error) throw error;
+    viewerLikes = data || [];
+  }
+
+  return {
+    commentCounts: countByPostId(comments),
+    likeCounts: countByPostId(likes),
+    viewerLikedPostIds: new Set(viewerLikes.map((row) => row.post_id))
+  };
+}
+
+async function listPosts(event) {
+  let params;
+  try {
+    params = validateListQuery(event.queryStringParameters || {});
+  } catch (error) {
+    return json(400, { error: 'invalid_query', message: error.message });
+  }
+
+  const viewer = await optionalViewer(event);
+  const supabase = getSupabaseAdmin();
+  let query = supabase
+    .from('posts')
+    .select('id,post_type,category,title,body,youtube_video_id,author_user_id,display_mode,visibility,status,created_at,view_count,is_notice,profiles(nickname),questions(magazine_candidate)')
+    .eq('status', 'visible')
+    .order('is_notice', { ascending: false })
+    .order('created_at', { ascending: false })
+    .range(params.offset, params.offset + params.limit);
+
+  query = applyListFilters(query, params);
+
+  const { data, error } = await query;
+  if (error) return json(500, { error: 'db_error' });
+
+  const rows = data || [];
+  const pageRows = rows.slice(0, params.limit);
+  const hasMore = rows.length > params.limit;
+  const postIds = pageRows.map((row) => row.id);
+
+  let state;
+  try {
+    state = await loadListState(supabase, postIds, viewer);
+  } catch {
+    return json(500, { error: 'db_error' });
+  }
+
+  return json(200, {
+    posts: pageRows.map((row) => shapePostListRow(row, viewer, state)),
+    limit: params.limit,
+    offset: params.offset,
+    hasMore
+  });
 }
 
 export async function handler(event) {
   if (event.httpMethod === 'POST') return createPost(event);
   if (event.httpMethod !== 'GET') return json(405, { error: 'method_not_allowed' });
-  const category = event.queryStringParameters?.category || 'all';
-  const viewer = await optionalViewer(event);
-  const supabase = getSupabaseAdmin();
-  let query = supabase
-    .from('posts')
-    .select('id,post_type,category,title,body,youtube_video_id,author_user_id,display_mode,visibility,status,created_at,profiles(nickname)')
-    .eq('status', 'visible')
-    .order('created_at', { ascending: false })
-    .limit(50);
-  if (category !== 'all') query = query.eq('category', category);
-  const { data, error } = await query;
-  if (error) return json(500, { error: 'db_error' });
-  return json(200, { posts: data.map((row) => publicShape(row, viewer)) });
+  return listPosts(event);
 }
 
 async function createPost(event) {
@@ -63,6 +182,10 @@ async function createPost(event) {
     payload = validatePostPayload(readJsonBody(event));
   } catch (error) {
     return json(400, { error: 'invalid_payload', message: error.message });
+  }
+
+  if (payload.postType === 'magazine' && !hasPrivilegedRole(viewer)) {
+    return json(403, { error: 'forbidden', message: '매거진 글쓰기는 관리자만 사용할 수 있어요' });
   }
 
   const supabase = getSupabaseAdmin();
