@@ -22,12 +22,12 @@ test('admin inbox API includes question YouTube ids for moderation rendering', (
 });
 
 test('playground renders lite YouTube embeds for questions and answers', () => {
-  const playground = source('playground.js');
-  assert.match(playground, /function createYouTubeLiteEmbed/);
-  assert.match(playground, /img\.youtube\.com\/vi\//);
-  assert.match(playground, /youtube-nocookie\.com\/embed\//);
-  assert.match(playground, /post\.youtubeVideoId/);
-  assert.match(playground, /answer\.youtubeVideoId/);
+  const detail = source('playground-detail.js');
+  assert.match(detail, /function createYouTubeLiteEmbed/);
+  assert.match(detail, /img\.youtube\.com\/vi\//);
+  assert.match(detail, /youtube-nocookie\.com\/embed\//);
+  assert.match(detail, /post\.youtubeVideoId/);
+  assert.match(detail, /answer\.youtubeVideoId/);
 });
 
 test('admin inbox can write answers and render question YouTube embeds', () => {
@@ -48,13 +48,13 @@ test('post detail exposes viewer answer permission in every readable response', 
 });
 
 test('playground detail can write answers only when post detail allows it', () => {
-  const playground = source('playground.js');
-  assert.match(playground, /data\.viewerCanAnswer/);
-  assert.match(playground, /function answerForm\(post\)/);
-  assert.match(playground, /답변 작성/);
-  assert.match(playground, /\/\.netlify\/functions\/answers/);
-  assert.match(playground, /questionPostId:\s*post\.id/);
-  assert.match(playground, /visibility:\s*formData\.get\('visibility'\)/);
-  assert.match(playground, /youtubeUrl:\s*formData\.get\('youtubeUrl'\)/);
-  assert.match(playground, /await loadDetail\(state\.selectedPostId\)/);
+  const detail = source('playground-detail.js');
+  assert.match(detail, /data\.viewerCanAnswer/);
+  assert.match(detail, /function answerForm\(post\)/);
+  assert.match(detail, /답변 작성/);
+  assert.match(detail, /\/\.netlify\/functions\/answers/);
+  assert.match(detail, /questionPostId:\s*currentPost\.id/);
+  assert.match(detail, /visibility:\s*formData\.get\('visibility'\)/);
+  assert.match(detail, /youtubeUrl:\s*formData\.get\('youtubeUrl'\)/);
+  assert.match(detail, /await loadPost\(currentPostId\)/);
 });
