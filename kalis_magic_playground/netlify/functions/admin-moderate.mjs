@@ -3,10 +3,16 @@ import { json, readJsonBody } from './_lib/http.mjs';
 import { getSupabaseAdmin } from './_lib/supabase.mjs';
 import { validateModerationPayload } from './_lib/validators.mjs';
 
-function nextStatus(action) {
+export function nextStatus(action) {
   if (action === 'hide') return 'hidden';
   if (action === 'restore') return 'visible';
   if (action === 'delete') return 'deleted';
+  return null;
+}
+
+export function noticeValueForAction(action) {
+  if (action === 'pin_notice') return true;
+  if (action === 'unpin_notice') return false;
   return null;
 }
 
@@ -30,7 +36,7 @@ export async function handler(event) {
   const supabase = getSupabaseAdmin();
   const { data: before, error: beforeError } = await supabase
     .from('posts')
-    .select('id,status,visibility')
+    .select('id,status,visibility,category,post_type,is_notice')
     .eq('id', payload.postId)
     .maybeSingle();
   if (beforeError) return json(500, { error: 'db_error' });
@@ -42,7 +48,22 @@ export async function handler(event) {
     if (error) return json(500, { error: 'db_error' });
   }
 
+  const noticeValue = noticeValueForAction(payload.action);
+  if (noticeValue !== null) {
+    const { error } = await supabase
+      .from('posts')
+      .update({ is_notice: noticeValue })
+      .eq('id', payload.postId);
+    if (error) return json(500, { error: 'db_error' });
+  }
+
   if (payload.action === 'mark_magazine_candidate') {
+    if (before.category !== 'question') {
+      return json(400, {
+        error: 'invalid_payload',
+        message: '매거진 후보 지정은 질문 글에서만 사용할 수 있어요'
+      });
+    }
     const { error } = await supabase.from('questions').update({ magazine_candidate: true }).eq('post_id', payload.postId);
     if (error) return json(500, { error: 'db_error' });
   }
