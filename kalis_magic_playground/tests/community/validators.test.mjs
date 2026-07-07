@@ -5,7 +5,9 @@ import {
   validateAnswerPayload,
   validateCommentPayload,
   validateEventReviewPayload,
+  validateListQuery,
   validateModerationPayload,
+  validatePostIdPayload,
   validatePostPayload
 } from '../../netlify/functions/_lib/validators.mjs';
 import { defaultProfileNickname } from '../../netlify/functions/_lib/auth.mjs';
@@ -145,6 +147,97 @@ test('validateAnswerPayload rejects invalid visibility', () => {
     action: 'hide',
     postId: 'FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF',
     reason: '확인 필요',
+    visibility: null
+  });
+});
+
+test('validatePostPayload rejects locked free and event review writes through posts api', () => {
+  assert.throws(() => validatePostPayload({
+    postType: 'free',
+    title: '오늘 연습 기록',
+    body: '오늘의 연습과 느낀 점을 남깁니다.',
+    displayMode: 'nickname',
+    visibility: 'public'
+  }), /자유 기록은 아직 작성할 수 없어요/);
+
+  assert.throws(() => validatePostPayload({
+    postType: 'event_review',
+    title: '이번 모임 다녀온 후기',
+    body: '모임에서 느낀 분위기와 기억을 남깁니다.',
+    displayMode: 'nickname',
+    visibility: 'public'
+  }), /모임 후기는 모임 후기 API를 사용해주세요/);
+});
+
+test('validatePostPayload maps review comments and magazine posts', () => {
+  const review = validatePostPayload({
+    postType: 'review_comment',
+    title: '이 덱 직접 써본 후기',
+    body: '실전에서 반응이 좋았고 입문자에게도 설명하기 쉬웠습니다.',
+    displayMode: 'nickname',
+    visibility: 'public'
+  });
+  assert.equal(review.postType, 'review_comment');
+  assert.equal(review.category, 'review');
+
+  const magazine = validatePostPayload({
+    postType: 'magazine',
+    title: '처음 마술을 배우는 사람에게 필요한 질문',
+    body: '입문자가 다시 찾아볼 수 있도록 핵심 질문과 답변을 정리합니다.',
+    displayMode: 'nickname',
+    visibility: 'public'
+  });
+  assert.equal(magazine.postType, 'magazine');
+  assert.equal(magazine.category, 'magazine');
+});
+
+test('validateListQuery clamps pagination and validates review filters', () => {
+  assert.deepEqual(validateListQuery({ category: 'review', reviewKind: 'tool', limit: '99', offset: '40' }), {
+    category: 'review',
+    reviewKind: 'tool',
+    limit: 20,
+    offset: 40
+  });
+  assert.deepEqual(validateListQuery({}), {
+    category: 'all',
+    reviewKind: null,
+    limit: 20,
+    offset: 0
+  });
+  assert.throws(() => validateListQuery({ category: 'free' }), /게시판 종류가 올바르지 않습니다/);
+  assert.throws(() => validateListQuery({ category: 'review', reviewKind: 'random' }), /리뷰 말머리가 올바르지 않습니다/);
+  assert.throws(() => validateListQuery({ offset: '-1' }), /페이지 위치가 올바르지 않습니다/);
+});
+
+test('validatePostIdPayload requires uuid post id', () => {
+  assert.deepEqual(validatePostIdPayload({
+    postId: '11111111-1111-4111-8111-111111111111'
+  }), {
+    postId: '11111111-1111-4111-8111-111111111111'
+  });
+  assert.throws(() => validatePostIdPayload({ postId: 'bad-id' }), /게시글 ID가 올바르지 않습니다/);
+});
+
+test('validateModerationPayload accepts notice pin actions', () => {
+  assert.deepEqual(validateModerationPayload({
+    action: 'pin_notice',
+    postId: 'ffffffff-ffff-ffff-ffff-ffffffffffff',
+    reason: '공지로 고정'
+  }), {
+    action: 'pin_notice',
+    postId: 'ffffffff-ffff-ffff-ffff-ffffffffffff',
+    reason: '공지로 고정',
+    visibility: null
+  });
+
+  assert.deepEqual(validateModerationPayload({
+    action: 'unpin_notice',
+    postId: 'ffffffff-ffff-ffff-ffff-ffffffffffff',
+    reason: ''
+  }), {
+    action: 'unpin_notice',
+    postId: 'ffffffff-ffff-ffff-ffff-ffffffffffff',
+    reason: null,
     visibility: null
   });
 });
