@@ -105,6 +105,19 @@
     `;
   }
 
+  function errorHtml() {
+    return `
+      <div class="pg-empty pg-error">
+        <svg class="pg-empty-icon" viewBox="0 0 24 24" fill="none" stroke="var(--point-gold)" aria-hidden="true">
+          <path d="M12 8v4"></path>
+          <path d="M12 16h.01"></path>
+          <path d="M10.3 3.9h3.4l8.1 14.2-1.7 2.9H3.9l-1.7-2.9 8.1-14.2Z"></path>
+        </svg>
+        <p>기록을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.</p>
+      </div>
+    `;
+  }
+
   function tableHtml(posts, hasMore) {
     const rows = posts.map(rowHtml).join('');
     return `
@@ -134,7 +147,8 @@
       posts: [],
       offset: 0,
       hasMore: false,
-      loading: false
+      loading: false,
+      error: false
     };
 
     const tabContainer = tabsRoot || document.querySelector('.playground-tabs');
@@ -188,6 +202,11 @@
         return;
       }
 
+      if (state.error) {
+        root.innerHTML = renderFilters() + errorHtml();
+        return;
+      }
+
       if (state.posts.length === 0) {
         root.innerHTML = renderFilters() + emptyHtml(tab.id);
         return;
@@ -202,11 +221,13 @@
         state.posts = [];
         state.offset = 0;
         state.hasMore = false;
+        state.error = false;
         render();
         return;
       }
 
       state.loading = true;
+      state.error = false;
       render();
       try {
         const query = queryForState();
@@ -221,6 +242,8 @@
         state.posts = append ? state.posts.concat(result.posts) : result.posts;
         state.offset = result.offset;
         state.hasMore = result.hasMore;
+      } catch {
+        state.error = true;
       } finally {
         state.loading = false;
         render();

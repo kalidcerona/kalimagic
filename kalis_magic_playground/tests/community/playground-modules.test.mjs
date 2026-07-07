@@ -68,6 +68,16 @@ test('playground list module has six tabs, prefix filters, table rendering, pagi
   assert.match(source, /자유 기록은 준비 중입니다\. 질문함과 리뷰가 자리 잡은 뒤 열립니다\./);
 });
 
+test('playground list module catches list load failures and renders a friendly error', () => {
+  const source = read('playground-list.js');
+
+  assert.match(source, /error:\s*false/);
+  assert.match(source, /state\.error\s*=\s*true/);
+  assert.match(source, /catch\s*(?:\([^)]*\)\s*)?\{/);
+  assert.match(source, /pg-error/);
+  assert.match(source, /기록을 불러오지 못했습니다\. 잠시 후 다시 시도해주세요\./);
+});
+
 test('playground compose module includes verbatim guide copy and never submits free or event_review post types', () => {
   const source = read('playground-compose.js');
   const requiredCopy = [
