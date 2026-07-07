@@ -39,6 +39,14 @@ Push workflow: edit files → `git add` → `git commit` → `git push`
 - **신규 이미지 푸시 누락 주의**: 이미지 추가 시 `git add img/파일명` 반드시 포함 (untracked 상태면 Netlify에 미배포)
 - 네이버 카페 HTML 소스 입력 여부: 직접 테스트 없이 단정 금지 (소스 모드에서도 `<a>` 태그 차단될 수 있음)
 
+## 마술 놀이터 커뮤니티 (kalis_magic_playground/, 2026-07-07)
+- 스택: 정적 HTML/JS + Netlify Functions(`netlify/functions/`) + Supabase(`supabase/migrations/`)
+- **루트 `.gitignore`의 광범위 exclude가 배포를 깬 전례 2건**: `kalis_magic_playground/scripts/`(빌드 스크립트 자체가 빠져 `MODULE_NOT_FOUND`) / `/docs/`(설계 스펙까지 막힘, `/docs/*` + `!/docs/superpowers/`로 좁혀서 해결). 새 `.gitignore` 패턴을 넓게 걸 때 배포·문서에 필요한 하위 폴더가 걸리는지 먼저 확인
+- **Netlify secrets 스캐너 오탐**: publishable key/URL처럼 원래 공개되는 값을 HTML에 하드코딩하면 빌드가 막힘 → `netlify.toml`의 `[build.environment]`에 `SECRETS_SCAN_OMIT_KEYS = "SUPABASE_PUBLISHABLE_KEY,SUPABASE_URL"` (secret key는 스캔 유지)
+- **`build-public.mjs`의 `PUBLIC_FILES` 목록에서 빠진 JS 하나가 사이트 전체를 깨뜨림**: `reveal.js` 누락 시 스크롤 리빌 대상 콘텐츠가 숨김 상태로 방치되어 여러 페이지가 빈 화면으로 보임 — 신규 JS/CSS 추가 시 반드시 `PUBLIC_FILES`/`PUBLIC_DIRS` 등록, `tests/community/build-public.test.mjs`가 dist 참조 무결성을 검사
+- **검증 명령**: `npm run verify` (test + build + `check-dist-safety.mjs` + `tests/test_site.py`) — 배포 전 항상 GREEN 확인
+- **Codex sandbox git-index 가드가 문서 전용 작업까지 오탐**: 프롬프트에 "git commit" 같은 설명 문구만 있어도 `bin/worker.sh`가 hang 방지로 거부 → 순수 문서(스펙·계획) 작업은 `WORKER_ALLOW_GIT=1` 접두로 우회
+
 ## Self-intro mechanism
 - UserPromptSubmit hook (~/.claude/settings.json) shows .claude-intro on first RC message
 - "자기 소개해봐" → runs `cat .claude-intro` via Bash
