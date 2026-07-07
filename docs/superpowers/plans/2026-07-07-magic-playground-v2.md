@@ -36,7 +36,7 @@
 - Consumes: Existing tables `public.posts`, `public.moderation_events`, `auth.users`
 - Produces: `posts.view_count integer`, `posts.is_notice boolean`, `public.post_likes(post_id uuid, user_id uuid, created_at timestamptz)`, indexes `post_likes_user_idx`, `posts_v2_public_list_idx`, `posts_v2_category_list_idx`, moderation actions `pin_notice`, `unpin_notice`
 
-- [ ] **Step 1: 실패 테스트 작성**
+- [x] **Step 1: 실패 테스트 작성**
 
 Create `kalis_magic_playground/tests/community/magic-playground-v2-migration.test.mjs`:
 
@@ -101,7 +101,7 @@ test('post_likes keeps deny-all RLS by enabling RLS without policies', () => {
 });
 ```
 
-- [ ] **Step 2: 실패 확인**
+- [x] **Step 2: 실패 확인**
 
 Run:
 
@@ -116,7 +116,7 @@ not ok ... magic playground v2 migration matches approved SQL exactly
 Error: ENOENT: no such file or directory, open .../supabase/migrations/20260707_magic_playground_v2.sql
 ```
 
-- [ ] **Step 3: 최소 구현**
+- [x] **Step 3: 최소 구현**
 
 Create `kalis_magic_playground/supabase/migrations/20260707_magic_playground_v2.sql`:
 
@@ -163,7 +163,7 @@ alter table public.moderation_events
 alter table public.post_likes enable row level security;
 ```
 
-- [ ] **Step 4: 통과 확인**
+- [x] **Step 4: 통과 확인**
 
 Run:
 
@@ -178,7 +178,7 @@ Expected:
 # fail 0
 ```
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 
 ```bash
 git add kalis_magic_playground/supabase/migrations/20260707_magic_playground_v2.sql kalis_magic_playground/tests/community/magic-playground-v2-migration.test.mjs
@@ -198,7 +198,7 @@ git commit -m "feat: 마술 놀이터 v2 마이그레이션 추가"
 - Produces: `validatePostIdPayload(input) -> { postId: string }`
 - Produces: `validateModerationPayload(input)` accepting actions `pin_notice` and `unpin_notice`
 
-- [ ] **Step 1: 실패 테스트 작성**
+- [x] **Step 1: 실패 테스트 작성**
 
 Append to `kalis_magic_playground/tests/community/validators.test.mjs`:
 
@@ -300,7 +300,7 @@ test('validateModerationPayload accepts notice pin actions', () => {
 });
 ```
 
-- [ ] **Step 2: 실패 확인**
+- [x] **Step 2: 실패 확인**
 
 Run:
 
@@ -315,7 +315,7 @@ not ok ... tests/community/validators.test.mjs
 SyntaxError: The requested module '../../netlify/functions/_lib/validators.mjs' does not provide an export named 'validateListQuery'
 ```
 
-- [ ] **Step 3: 최소 구현**
+- [x] **Step 3: 최소 구현**
 
 Modify `kalis_magic_playground/netlify/functions/_lib/validators.mjs` constants and add the new exports:
 
@@ -416,7 +416,7 @@ export function validatePostIdPayload(input = {}) {
 }
 ```
 
-- [ ] **Step 4: 통과 확인**
+- [x] **Step 4: 통과 확인**
 
 Run:
 
@@ -431,7 +431,7 @@ Expected:
 # fail 0
 ```
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 
 ```bash
 git add kalis_magic_playground/netlify/functions/_lib/validators.mjs kalis_magic_playground/tests/community/validators.test.mjs
@@ -451,7 +451,7 @@ git commit -m "feat: 마술 놀이터 v2 입력 검증 추가"
 - Produces: `applyListFilters(query, params) -> query`
 - Produces: `POST /.netlify/functions/posts` accepting `question`, `review_comment`, `magazine`; `magazine` requires `viewer.role` in `admin`, `kali`
 
-- [ ] **Step 1: 실패 테스트 작성**
+- [x] **Step 1: 실패 테스트 작성**
 
 Create `kalis_magic_playground/tests/community/posts-list.test.mjs`:
 
@@ -594,7 +594,7 @@ test('hasPrivilegedRole only allows admin and kali', () => {
 });
 ```
 
-- [ ] **Step 2: 실패 확인**
+- [x] **Step 2: 실패 확인**
 
 Run:
 
@@ -609,7 +609,7 @@ not ok ... tests/community/posts-list.test.mjs
 SyntaxError: The requested module '../../netlify/functions/posts.mjs' does not provide an export named 'applyListFilters'
 ```
 
-- [ ] **Step 3: 최소 구현**
+- [x] **Step 3: 최소 구현**
 
 Replace `kalis_magic_playground/netlify/functions/posts.mjs` with:
 
@@ -832,7 +832,7 @@ async function createPost(event) {
 }
 ```
 
-- [ ] **Step 4: 통과 확인**
+- [x] **Step 4: 통과 확인**
 
 Run:
 
@@ -847,7 +847,7 @@ Expected:
 # fail 0
 ```
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 
 ```bash
 git add kalis_magic_playground/netlify/functions/posts.mjs kalis_magic_playground/tests/community/posts-list.test.mjs
@@ -866,7 +866,7 @@ git commit -m "feat: 마술 놀이터 v2 목록 api 추가"
 - Produces: `shapePost(row, viewer, state) -> post` with `viewCount`, `likeCount`, `viewerLiked`, `isNotice`, `canReadBody`, `canDelete`
 - Produces: `shouldIncrementView(row, viewer) -> boolean`
 
-- [ ] **Step 1: 실패 테스트 작성**
+- [x] **Step 1: 실패 테스트 작성**
 
 Create `kalis_magic_playground/tests/community/post-detail-v2.test.mjs`:
 
@@ -947,7 +947,7 @@ test('shouldIncrementView only allows visible readable posts', () => {
 });
 ```
 
-- [ ] **Step 2: 실패 확인**
+- [x] **Step 2: 실패 확인**
 
 Run:
 
@@ -962,7 +962,7 @@ not ok ... tests/community/post-detail-v2.test.mjs
 SyntaxError: The requested module '../../netlify/functions/post-detail.mjs' does not provide an export named 'shapePost'
 ```
 
-- [ ] **Step 3: 최소 구현**
+- [x] **Step 3: 최소 구현**
 
 Replace `kalis_magic_playground/netlify/functions/post-detail.mjs` with:
 
@@ -1135,7 +1135,7 @@ export async function handler(event) {
 }
 ```
 
-- [ ] **Step 4: 통과 확인**
+- [x] **Step 4: 통과 확인**
 
 Run:
 
@@ -1150,7 +1150,7 @@ Expected:
 # fail 0
 ```
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 
 ```bash
 git add kalis_magic_playground/netlify/functions/post-detail.mjs kalis_magic_playground/tests/community/post-detail-v2.test.mjs
@@ -1170,7 +1170,7 @@ git commit -m "feat: 상세 조회수와 추천 상태 반환"
 - Produces: `nextLikeMutation(existingLike) -> 'insert'|'delete'`
 - Produces: `shapeLikeResponse(likeRows, viewer) -> { ok: true, likeCount, viewerLiked }`
 
-- [ ] **Step 1: 실패 테스트 작성**
+- [x] **Step 1: 실패 테스트 작성**
 
 Create `kalis_magic_playground/tests/community/post-likes.test.mjs`:
 
@@ -1210,7 +1210,7 @@ test('post-likes handler uses requireViewer and body permission before toggling'
 });
 ```
 
-- [ ] **Step 2: 실패 확인**
+- [x] **Step 2: 실패 확인**
 
 Run:
 
@@ -1225,7 +1225,7 @@ not ok ... tests/community/post-likes.test.mjs
 Error [ERR_MODULE_NOT_FOUND]: Cannot find module .../netlify/functions/post-likes.mjs
 ```
 
-- [ ] **Step 3: 최소 구현**
+- [x] **Step 3: 최소 구현**
 
 Create `kalis_magic_playground/netlify/functions/post-likes.mjs`:
 
@@ -1323,7 +1323,7 @@ export async function handler(event) {
 }
 ```
 
-- [ ] **Step 4: 통과 확인**
+- [x] **Step 4: 통과 확인**
 
 Run:
 
@@ -1338,7 +1338,7 @@ Expected:
 # fail 0
 ```
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 
 ```bash
 git add kalis_magic_playground/netlify/functions/post-likes.mjs kalis_magic_playground/tests/community/post-likes.test.mjs
@@ -1357,7 +1357,7 @@ git commit -m "feat: 게시글 추천 토글 api 추가"
 - Produces: success `{ ok: true, status: 'deleted' }`
 - Produces: `deleteDecision(post, viewer, visibleAnswerCount) -> { ok: boolean, status: number, body: object }`
 
-- [ ] **Step 1: 실패 테스트 작성**
+- [x] **Step 1: 실패 테스트 작성**
 
 Create `kalis_magic_playground/tests/community/posts-delete.test.mjs`:
 
@@ -1409,7 +1409,7 @@ test('posts handler exposes delete method and soft deletes status', () => {
 });
 ```
 
-- [ ] **Step 2: 실패 확인**
+- [x] **Step 2: 실패 확인**
 
 Run:
 
@@ -1424,7 +1424,7 @@ not ok ... tests/community/posts-delete.test.mjs
 SyntaxError: The requested module '../../netlify/functions/posts.mjs' does not provide an export named 'deleteDecision'
 ```
 
-- [ ] **Step 3: 최소 구현**
+- [x] **Step 3: 최소 구현**
 
 Modify the import in `kalis_magic_playground/netlify/functions/posts.mjs`:
 
@@ -1521,7 +1521,7 @@ async function deletePost(event) {
 }
 ```
 
-- [ ] **Step 4: 통과 확인**
+- [x] **Step 4: 통과 확인**
 
 Run:
 
@@ -1536,7 +1536,7 @@ Expected:
 # fail 0
 ```
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 
 ```bash
 git add kalis_magic_playground/netlify/functions/posts.mjs kalis_magic_playground/tests/community/posts-delete.test.mjs
@@ -1556,7 +1556,7 @@ git commit -m "feat: 본인 게시글 삭제 api 추가"
 - Produces: `noticeValueForAction(action) -> true|false|null`
 - Produces: `nextStatus(action) -> 'hidden'|'visible'|'deleted'|null`
 
-- [ ] **Step 1: 실패 테스트 작성**
+- [x] **Step 1: 실패 테스트 작성**
 
 Create `kalis_magic_playground/tests/community/admin-moderate-v2.test.mjs`:
 
@@ -1592,7 +1592,7 @@ test('admin moderate records notice events without changing status', () => {
 });
 ```
 
-- [ ] **Step 2: 실패 확인**
+- [x] **Step 2: 실패 확인**
 
 Run:
 
@@ -1607,7 +1607,7 @@ not ok ... tests/community/admin-moderate-v2.test.mjs
 SyntaxError: The requested module '../../netlify/functions/admin-moderate.mjs' does not provide an export named 'noticeValueForAction'
 ```
 
-- [ ] **Step 3: 최소 구현**
+- [x] **Step 3: 최소 구현**
 
 Replace `kalis_magic_playground/netlify/functions/admin-moderate.mjs` with:
 
@@ -1704,7 +1704,7 @@ export async function handler(event) {
 }
 ```
 
-- [ ] **Step 4: 통과 확인**
+- [x] **Step 4: 통과 확인**
 
 Run:
 
@@ -1719,7 +1719,7 @@ Expected:
 # fail 0
 ```
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 
 ```bash
 git add kalis_magic_playground/netlify/functions/admin-moderate.mjs kalis_magic_playground/tests/community/admin-moderate-v2.test.mjs
@@ -1756,7 +1756,7 @@ git commit -m "feat: 관리자 공지 고정 액션 추가"
 - Produces: `window.KalisPlaygroundCompose.initPlaygroundCompose({ api, root, getActiveTarget, onCreated }) -> { open, close }`
 - Produces: `window.KalisPlaygroundDetail.initPlaygroundDetail({ api, root }) -> { loadPost, clear }`
 
-- [ ] **Step 1: 실패 테스트 작성**
+- [x] **Step 1: 실패 테스트 작성**
 
 Create `kalis_magic_playground/tests/community/playground-modules.test.mjs`:
 
@@ -1881,7 +1881,7 @@ test('playground bootstrap only wires modules together', () => {
 });
 ```
 
-- [ ] **Step 2: 실패 확인**
+- [x] **Step 2: 실패 확인**
 
 Run:
 
@@ -1896,7 +1896,7 @@ not ok ... tests/community/playground-modules.test.mjs
 AssertionError [ERR_ASSERTION]: playground-api.js should exist
 ```
 
-- [ ] **Step 3: 최소 구현 작성**
+- [x] **Step 3: 최소 구현 작성**
 
 Create `kalis_magic_playground/playground-api.js`:
 
@@ -2784,7 +2784,7 @@ Modify the script block at the end of `kalis_magic_playground/playground.html` t
   <script src="playground.js"></script>
 ```
 
-- [ ] **Step 4: 통과 확인**
+- [x] **Step 4: 통과 확인**
 
 Run:
 
@@ -2799,7 +2799,7 @@ Expected:
 # fail 0
 ```
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 
 ```bash
 git add kalis_magic_playground/playground-api.js kalis_magic_playground/playground-list.js kalis_magic_playground/playground-compose.js kalis_magic_playground/playground-detail.js kalis_magic_playground/playground.js kalis_magic_playground/playground.html kalis_magic_playground/tests/community/playground-modules.test.mjs
@@ -2821,7 +2821,7 @@ git commit -m "feat: 마술 놀이터 프론트 모듈 분리"
 - Produces: mobile two-line compressed table layout under `@media (max-width: 720px)`
 - Produces: empty state copy area styles for the verbatim text from the spec
 
-- [ ] **Step 1: 실패 테스트 작성**
+- [x] **Step 1: 실패 테스트 작성**
 
 Create `kalis_magic_playground/tests/community/playground-style.test.mjs`:
 
@@ -2869,7 +2869,7 @@ test('playground v2 styles rely on existing color variables', () => {
 });
 ```
 
-- [ ] **Step 2: 실패 확인**
+- [x] **Step 2: 실패 확인**
 
 Run:
 
@@ -2884,7 +2884,7 @@ not ok ... tests/community/playground-style.test.mjs
 AssertionError [ERR_ASSERTION]: style.css should contain the playground v2 marker
 ```
 
-- [ ] **Step 3: 최소 구현 작성**
+- [x] **Step 3: 최소 구현 작성**
 
 Append this block to the end of `kalis_magic_playground/style.css`:
 
@@ -3370,7 +3370,7 @@ Append this block to the end of `kalis_magic_playground/style.css`:
 }
 ```
 
-- [ ] **Step 4: 통과 확인**
+- [x] **Step 4: 통과 확인**
 
 Run:
 
@@ -3459,7 +3459,7 @@ Expected:
 +@media (max-width: 720px) {
 ```
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 
 ```bash
 git add kalis_magic_playground/style.css kalis_magic_playground/tests/community/playground-style.test.mjs
@@ -3474,7 +3474,7 @@ git commit -m "feat: 마술 놀이터 테이블 스타일 추가"
 - Create: `kalis_magic_playground/assets/playground/empty-review.svg`
 - Test: `kalis_magic_playground/tests/community/playground-assets.test.mjs`
 
-- [ ] **Step 1: SVG 에셋 테스트를 먼저 추가**
+- [x] **Step 1: SVG 에셋 테스트를 먼저 추가**
 
 Create `kalis_magic_playground/tests/community/playground-assets.test.mjs`:
 
@@ -3507,7 +3507,7 @@ cd kalis_magic_playground
 node --test tests/community/playground-assets.test.mjs
 ```
 
-- [ ] **Step 2: 보드 헤더 모자 SVG 생성**
+- [x] **Step 2: 보드 헤더 모자 SVG 생성**
 
 Create `kalis_magic_playground/assets/playground/board-header.svg`:
 
@@ -3523,7 +3523,7 @@ Create `kalis_magic_playground/assets/playground/board-header.svg`:
 </svg>
 ```
 
-- [ ] **Step 3: 빈 질문 카드 SVG 생성**
+- [x] **Step 3: 빈 질문 카드 SVG 생성**
 
 Create `kalis_magic_playground/assets/playground/empty-question.svg`:
 
@@ -3537,7 +3537,7 @@ Create `kalis_magic_playground/assets/playground/empty-question.svg`:
 </svg>
 ```
 
-- [ ] **Step 4: 빈 후기 편지 SVG 생성**
+- [x] **Step 4: 빈 후기 편지 SVG 생성**
 
 Create `kalis_magic_playground/assets/playground/empty-review.svg`:
 
@@ -3553,7 +3553,7 @@ Create `kalis_magic_playground/assets/playground/empty-review.svg`:
 
 All three SVGs must keep `stroke="currentColor"` and avoid hardcoded color values so the consuming UI can apply `color: var(--point-gold)` from CSS.
 
-- [ ] **Step 5: 테스트와 커밋**
+- [x] **Step 5: 테스트와 커밋**
 
 ```bash
 cd kalis_magic_playground
@@ -3568,7 +3568,7 @@ git commit -m "feat: 마술 놀이터 포인트 SVG 추가"
 - Modify: `kalis_magic_playground/scripts/build-public.mjs`
 - Test: `kalis_magic_playground/tests/community/build-public.test.mjs`
 
-- [ ] **Step 1: assets 공개 디렉터리 등록 확인**
+- [x] **Step 1: assets 공개 디렉터리 등록 확인**
 
 `assets/`는 신규 SVG가 들어가는 디렉터리이므로 `PUBLIC_DIRS`에 이미 포함되어 있어야 한다. 포함되어 있지 않으면 이 Task에서 중단하고 `PUBLIC_DIRS`에 `assets`를 추가한 뒤 같은 테스트를 다시 실행한다.
 
@@ -3577,7 +3577,7 @@ cd kalis_magic_playground
 rg -n "PUBLIC_DIRS|assets" scripts/build-public.mjs
 ```
 
-- [ ] **Step 2: 신규 프론트 모듈을 PUBLIC_FILES에 등록**
+- [x] **Step 2: 신규 프론트 모듈을 PUBLIC_FILES에 등록**
 
 Modify `kalis_magic_playground/scripts/build-public.mjs` and add these entries to the existing `PUBLIC_FILES` array without removing existing entries:
 
@@ -3588,7 +3588,7 @@ Modify `kalis_magic_playground/scripts/build-public.mjs` and add these entries t
   'playground-detail.js',
 ```
 
-- [ ] **Step 3: 배포 allowlist 테스트 확인**
+- [x] **Step 3: 배포 allowlist 테스트 확인**
 
 Run the existing build-public test and confirm it covers the new JS files and the dist reference integrity test:
 
@@ -3597,7 +3597,7 @@ cd kalis_magic_playground
 node --test tests/community/build-public.test.mjs
 ```
 
-- [ ] **Step 4: dist 빌드 무결성 확인**
+- [x] **Step 4: dist 빌드 무결성 확인**
 
 Run the public build first, then rerun the same dist integrity test so generated output and allowlist stay aligned:
 
@@ -3607,7 +3607,7 @@ npm run build
 node --test tests/community/build-public.test.mjs
 ```
 
-- [ ] **Step 5: 커밋**
+- [x] **Step 5: 커밋**
 
 ```bash
 cd kalis_magic_playground
@@ -3620,7 +3620,7 @@ git commit -m "chore: 마술 놀이터 공개 빌드 등록"
 **Files:**
 - Commit files: none, verification-only empty commit
 
-- [ ] **Step 1: 전체 자동 검증 실행**
+- [x] **Step 1: 전체 자동 검증 실행**
 
 Run the project verification command from the package root. Expected result: GREEN.
 
@@ -3629,7 +3629,7 @@ cd kalis_magic_playground
 npm run verify
 ```
 
-- [ ] **Step 2: 로컬 http.server 실렌더 확인**
+- [x] **Step 2: 로컬 http.server 실렌더 확인**
 
 Build the public output, serve it locally, and inspect the actual rendered pages in a browser:
 
@@ -3649,7 +3649,7 @@ Open `http://localhost:4173/playground.html` and verify these rendered states:
 - 상세 화면에서 본문, 추천 버튼, 삭제 버튼, 답변 영역이 겹치지 않는다.
 - 모바일 폭에서 탭, 리스트, 상세, 작성 닫힘 안내가 가로 스크롤 없이 보인다.
 
-- [ ] **Step 3: 수동 QA 체크리스트**
+- [x] **Step 3: 수동 QA 체크리스트**
 
 스펙의 신규 테스트를 사용자 시나리오로 변환해 아래 8개 항목을 확인한다:
 
@@ -3662,7 +3662,7 @@ Open `http://localhost:4173/playground.html` and verify these rendered states:
 - 본인은 답변 없는 글을 삭제할 수 있고, 타인의 글이나 답변이 달린 질문 삭제는 사용자에게 거부 메시지로 안내된다.
 - 본문 권한이 없는 비공개 글은 조회수와 추천수가 `-`로 보이고 추천 버튼이 보이지 않는다.
 
-- [ ] **Step 4: 검증 결과 커밋**
+- [x] **Step 4: 검증 결과 커밋**
 
 This Task changes no code files. Create an empty verification commit so the integration pass is visible in history:
 
@@ -3672,7 +3672,7 @@ git status --short
 git commit --allow-empty -m "test: 마술 놀이터 v2 통합 검증"
 ```
 
-- [ ] **Step 5: 최종 상태 확인**
+- [x] **Step 5: 최종 상태 확인**
 
 ```bash
 cd kalis_magic_playground
