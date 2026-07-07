@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  handler,
   shapePost,
   shouldIncrementView
 } from '../../netlify/functions/post-detail.mjs';
@@ -21,6 +22,26 @@ const publicRow = {
   is_notice: true,
   profiles: { nickname: '마술인07' }
 };
+
+test('post detail rejects malformed ids before loading the post', async () => {
+  const response = await handler({
+    httpMethod: 'GET',
+    queryStringParameters: { id: 'not-a-uuid' }
+  });
+
+  assert.equal(response.statusCode, 400);
+  assert.deepEqual(JSON.parse(response.body), { error: 'invalid_id' });
+});
+
+test('post detail treats missing ids as invalid ids', async () => {
+  const response = await handler({
+    httpMethod: 'GET',
+    queryStringParameters: {}
+  });
+
+  assert.equal(response.statusCode, 400);
+  assert.deepEqual(JSON.parse(response.body), { error: 'invalid_id' });
+});
 
 test('post detail includes counts when body is readable', () => {
   const shaped = shapePost(publicRow, null, {

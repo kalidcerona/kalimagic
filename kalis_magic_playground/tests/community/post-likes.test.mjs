@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import {
   nextLikeMutation,
-  shapeLikeResponse
+  shapeLikeResponse,
+  shouldIgnoreLikeInsertError
 } from '../../netlify/functions/post-likes.mjs';
 
 test('nextLikeMutation inserts when viewer has not liked and deletes when liked', () => {
@@ -22,6 +23,12 @@ test('shapeLikeResponse returns current count and viewer state', () => {
     likeCount: 2,
     viewerLiked: true
   });
+});
+
+test('post-likes ignores concurrent insert unique violations', () => {
+  assert.equal(shouldIgnoreLikeInsertError({ code: '23505' }), true);
+  assert.equal(shouldIgnoreLikeInsertError({ code: '40001' }), false);
+  assert.equal(shouldIgnoreLikeInsertError(null), false);
 });
 
 test('post-likes handler uses requireViewer and body permission before toggling', () => {

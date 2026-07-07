@@ -2,6 +2,7 @@ import { canReadAnswer, canReadAuthor, canReadPostBody } from './_lib/access-pol
 import { requireViewer } from './_lib/auth.mjs';
 import { json } from './_lib/http.mjs';
 import { getSupabaseAdmin } from './_lib/supabase.mjs';
+import { validateUuid } from './_lib/validators.mjs';
 
 async function optionalViewer(event) {
   try {
@@ -100,7 +101,7 @@ async function incrementViewCount(supabase, row) {
 export async function handler(event) {
   if (event.httpMethod !== 'GET') return json(405, { error: 'method_not_allowed' });
   const id = event.queryStringParameters?.id;
-  if (!id) return json(400, { error: 'id_required' });
+  if (!validateUuid(id)) return json(400, { error: 'invalid_id' });
 
   const viewer = await optionalViewer(event);
   const supabase = getSupabaseAdmin();

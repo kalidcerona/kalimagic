@@ -8,6 +8,10 @@ export function nextLikeMutation(existingLike) {
   return existingLike ? 'delete' : 'insert';
 }
 
+export function shouldIgnoreLikeInsertError(error) {
+  return error?.code === '23505';
+}
+
 export function shapeLikeResponse(likeRows, viewer) {
   const rows = likeRows || [];
   return {
@@ -72,7 +76,7 @@ export async function handler(event) {
     const { error } = await supabase
       .from('post_likes')
       .insert({ post_id: payload.postId, user_id: viewer.userId });
-    if (error) return json(500, { error: 'db_error' });
+    if (error && !shouldIgnoreLikeInsertError(error)) return json(500, { error: 'db_error' });
   } else {
     const { error } = await supabase
       .from('post_likes')
