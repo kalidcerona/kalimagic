@@ -16,10 +16,13 @@
 
     const session = await window.MagicAuth.getSession();
     if (!session) {
+      // 비로그인: 폼을 아예 열지 않는다 — 로그인 후 redirectTo로 이 페이지에 복귀하면 폼이 열림
       if (loginBox) loginBox.hidden = false;
+      if (composeRoot) composeRoot.hidden = true;
       document.querySelector('[data-login-button]')?.addEventListener('click', () => {
         window.MagicAuth.login();
       });
+      return;
     }
 
     const compose = window.KalisPlaygroundCompose.initPlaygroundCompose({

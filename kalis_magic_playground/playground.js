@@ -9,7 +9,8 @@
       return;
     }
     const name = session.user?.user_metadata?.name || session.user?.email || '회원';
-    slot.innerHTML = `<span class="phm-auth-name">${name}</span> <button type="button" class="phm-auth-button" data-logout-button>로그아웃</button>`;
+    slot.innerHTML = '<span class="phm-auth-name"></span> <button type="button" class="phm-auth-button" data-logout-button>로그아웃</button>';
+    slot.querySelector('.phm-auth-name').textContent = name;
     slot.querySelector('[data-logout-button]').addEventListener('click', () => window.MagicAuth.logout());
     try {
       const headers = await window.MagicAuth.authHeader();
