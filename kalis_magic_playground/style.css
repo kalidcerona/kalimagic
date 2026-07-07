@@ -2737,3 +2737,169 @@ body.field-modal-open { overflow: hidden; }
   border-radius: 18px; padding: 16px;
 }
 }
+
+/* ---------- phm v3: two-column forum + write/post pages ---------- */
+.phm-forum-shell {
+  width: min(1120px, calc(100% - 36px)); max-width: 1120px; display: grid;
+  grid-template-columns: 250px minmax(0, 1fr); gap: 18px; align-items: start;
+  margin: 0 auto; padding-top: 118px;
+}
+
+.phm-feed { min-width: 0; }
+.phm-feed-header { align-items: center; }
+.phm-feed-actions { min-width: min(100%, 360px); }
+.phm-feed-auth {
+  display: inline-flex; flex-wrap: wrap; align-items: center; justify-content: flex-end;
+  gap: 8px; color: var(--text-muted); font-size: 0.84rem; line-height: 1.3;
+}
+
+.phm-auth-name {
+  max-width: 150px; overflow: hidden; color: var(--text-main); font-weight: 800;
+  text-overflow: ellipsis; white-space: nowrap;
+}
+
+.phm-auth-button {
+  display: inline-flex; min-height: 32px; align-items: center; justify-content: center;
+  border: 1px solid rgba(var(--brass-gold-rgb), 0.34); border-radius: 999px;
+  background: rgba(var(--brass-gold-rgb), 0.08); color: #f0c98d; cursor: pointer;
+  font: inherit; font-size: 0.78rem; font-weight: 900; padding: 0 11px; white-space: nowrap;
+}
+
+.phm-auth-button:hover {
+  border-color: rgba(var(--brass-gold-rgb), 0.58); background: rgba(var(--brass-gold-rgb), 0.14);
+}
+
+.phm-admin-link {
+  color: var(--brass-gold); font-size: 0.78rem; font-weight: 900;
+  text-decoration: underline; text-underline-offset: 4px; white-space: nowrap;
+}
+
+.phm-write-button,
+.pg-mobile-cta {
+  text-decoration: none;
+}
+
+.pg-row-preview {
+  display: -webkit-box; margin: 5px 0 0; max-width: 720px; overflow: hidden;
+  color: var(--text-muted); font-size: 0.72rem; line-height: 1.45;
+  -webkit-box-orient: vertical; -webkit-line-clamp: 2;
+}
+
+.phm-feed .pg-table--cards .pg-title-cell { display: grid; gap: 2px; }
+
+.phm-feed .pg-table--cards .pg-title-button {
+  display: inline-flex; align-items: baseline; gap: 5px; text-decoration: none;
+}
+
+.pgw-shell {
+  width: min(720px, calc(100% - 36px)); margin: 0 auto; padding: 118px 0 48px;
+}
+
+.pgw-shell--post { width: min(820px, calc(100% - 36px)); }
+.pgw-back {
+  display: inline-flex; align-items: center; min-height: 36px; color: var(--brass-gold);
+  font-size: 0.9rem; font-weight: 900; text-decoration: none;
+}
+
+.pgw-back:hover {
+  text-decoration: underline; text-underline-offset: 4px;
+}
+
+.pgw-title {
+  margin: 12px 0 18px; color: var(--text-main);
+  font-size: clamp(1.8rem, 4vw, 2.65rem); line-height: 1.08;
+}
+
+.pgw-compose,
+.pgw-detail,
+.pgw-login {
+  border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 18px;
+  background:
+    linear-gradient(180deg, rgba(var(--brass-gold-rgb), 0.07), rgba(255, 255, 255, 0.018)),
+    rgba(27, 19, 14, 0.9);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.26);
+}
+
+.pgw-compose,
+.pgw-detail {
+  padding: 18px;
+}
+
+.pgw-login {
+  display: grid; gap: 12px; margin: 0 0 18px; padding: 16px;
+}
+
+.pgw-login[hidden] { display: none; }
+.pgw-login p {
+  margin: 0; color: var(--text-muted); line-height: 1.65;
+}
+
+.pgw-login-button {
+  justify-self: start; min-height: 38px; border: 1px solid rgba(var(--point-gold-rgb), 0.28);
+  border-radius: 999px; background: linear-gradient(135deg, var(--point-gold), #ed8a4e);
+  color: #1a1512; cursor: pointer; font: inherit; font-weight: 900; padding: 0 16px;
+}
+
+@media (max-width: 1080px) {
+  .phm-forum-shell {
+    width: min(1040px, calc(100% - 28px));
+    max-width: 1040px;
+    grid-template-columns: 250px minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 760px) {
+  .phm-forum-shell {
+    display: block;
+    width: min(100% - 28px, 460px);
+    padding-top: 96px;
+  }
+
+  .phm-feed-header {
+    align-items: flex-start;
+  }
+
+  .phm-feed-actions,
+  .phm-feed-auth {
+    justify-content: flex-start;
+  }
+
+  .phm-auth-name {
+    max-width: 180px;
+  }
+
+  .pg-row-preview {
+    max-width: none;
+  }
+
+  .pgw-shell,
+  .pgw-shell--post {
+    width: min(100% - 28px, 460px);
+    padding: 96px 0 32px;
+  }
+
+  .pgw-compose,
+  .pgw-detail,
+  .pgw-login {
+    border-radius: 16px;
+  }
+
+  .pgw-compose,
+  .pgw-detail {
+    padding: 14px;
+  }
+}
+
+/* ---------- pgw write page: dedicated-screen trims ---------- */
+/* 전용 글쓰기 페이지: 가이드는 textarea placeholder로 충분 — 큰 가이드 박스·닫기 버튼·중복 제목 숨김 */
+.pgw-compose .pg-compose-guide,
+.pgw-compose .pg-compose-close,
+.pgw-compose .pg-compose-head h2 {
+  display: none;
+}
+
+.pgw-compose .pg-compose-head {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}

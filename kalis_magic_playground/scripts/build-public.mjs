@@ -19,6 +19,8 @@ export const PUBLIC_FILES = [
   'modal.js',
   'nav.js',
   'playground.html',
+  'write.html',
+  'post.html',
   'admin.html',
   'reviews.html',
   'reveal.js',
@@ -33,6 +35,8 @@ export const PUBLIC_FILES = [
   'playground-compose.js',
   'playground-detail.js',
   'playground.js',
+  'write.js',
+  'post.js',
   'reviews-community.js',
   'playground-youtube.mjs',
   'playground-youtube-lite.mjs'
