@@ -22,6 +22,7 @@ function shapePost(row, viewer) {
     title: row.title,
     body: canReadBody ? row.body : '',
     bodyLocked: !canReadBody,
+    youtubeVideoId: canReadBody ? row.youtube_video_id : null,
     authorLabel: canReadName && row.display_mode === 'nickname' ? row.profiles?.nickname || '마술인' : '익명',
     displayMode: row.display_mode,
     visibility: row.visibility,
@@ -63,7 +64,7 @@ export async function handler(event) {
   const supabase = getSupabaseAdmin();
   const { data: row, error } = await supabase
     .from('posts')
-    .select('id,post_type,category,title,body,author_user_id,display_mode,visibility,status,created_at,profiles(nickname)')
+    .select('id,post_type,category,title,body,youtube_video_id,author_user_id,display_mode,visibility,status,created_at,profiles(nickname)')
     .eq('id', id)
     .maybeSingle();
 

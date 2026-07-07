@@ -11,6 +11,7 @@ function shapePost(row) {
     title: row.title,
     status: row.status,
     visibility: row.visibility,
+    youtubeVideoId: row.youtube_video_id,
     authorLabel: row.profiles?.nickname || '마술인',
     createdAt: row.created_at
   };
@@ -28,7 +29,7 @@ export async function handler(event) {
   const supabase = getSupabaseAdmin();
   let query = supabase
     .from('posts')
-    .select('id,post_type,category,title,status,visibility,created_at,profiles(nickname),questions(answer_status,magazine_candidate)')
+    .select('id,post_type,category,title,status,visibility,youtube_video_id,created_at,profiles(nickname),questions(answer_status,magazine_candidate)')
     .order('created_at', { ascending: false })
     .limit(80);
 

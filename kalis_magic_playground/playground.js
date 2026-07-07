@@ -38,6 +38,32 @@
     }[visibility] || '전체 공개';
   }
 
+  function createYouTubeLiteEmbed(videoId, title) {
+    var id = String(videoId || '').trim();
+    if (!/^[A-Za-z0-9_-]{11}$/.test(id)) return null;
+    var wrapper = el('div', 'yt-lite');
+    var button = el('button', 'yt-lite__button');
+    button.type = 'button';
+    button.setAttribute('aria-label', (title || '첨부된 유튜브 영상') + ' 재생');
+    button.style.backgroundImage = 'url("https://img.youtube.com/vi/' + id + '/hqdefault.jpg")';
+    var play = el('span', 'yt-lite__play', '▶');
+    play.setAttribute('aria-hidden', 'true');
+    button.appendChild(play);
+    button.appendChild(el('span', 'yt-lite__label', title || '첨부된 유튜브 영상'));
+    button.addEventListener('click', function () {
+      var iframe = el('iframe', 'yt-lite__iframe');
+      iframe.src = 'https://www.youtube-nocookie.com/embed/' + id + '?autoplay=1';
+      iframe.title = title || '첨부된 유튜브 영상';
+      iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+      iframe.allowFullscreen = true;
+      iframe.loading = 'lazy';
+      wrapper.replaceChildren(iframe);
+      wrapper.classList.add('yt-lite--loaded');
+    }, { once: true });
+    wrapper.appendChild(button);
+    return wrapper;
+  }
+
   function setStatus(message, isError) {
     if (!questionStatus) return;
     questionStatus.textContent = message || '';
@@ -170,6 +196,8 @@
     detailEl.appendChild(title);
     detailEl.appendChild(body);
     if (post.bodyLocked) return;
+    var postVideo = createYouTubeLiteEmbed(post.youtubeVideoId, '질문에 첨부된 영상');
+    if (postVideo) detailEl.appendChild(postVideo);
     renderAnswers(data.answers || []);
     renderComments(data.comments || []);
   }
@@ -189,6 +217,8 @@
       meta.appendChild(el('span', '', visibilityLabel(answer.visibility)));
       item.appendChild(meta);
       item.appendChild(el('p', '', answer.body));
+      var answerVideo = createYouTubeLiteEmbed(answer.youtubeVideoId, '답변에 첨부된 영상');
+      if (answerVideo) item.appendChild(answerVideo);
       section.appendChild(item);
     });
     detailEl.appendChild(section);

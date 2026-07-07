@@ -44,7 +44,32 @@ test('validatePostPayload rejects invalid visibility and short body', () => {
     body: '짧음',
     displayMode: 'nickname',
     visibility: 'everyone'
-  }), /visibility/);
+  }), /공개 범위/);
+});
+
+test('validators return Korean user-facing messages', () => {
+  assert.throws(() => validatePostPayload({
+    postType: 'question',
+    title: '질',
+    body: '충분히 긴 질문 본문입니다.',
+    displayMode: 'nickname',
+    visibility: 'public'
+  }), /제목은 2자 이상 120자 이하로 적어주세요/);
+  assert.throws(() => validatePostPayload({
+    postType: 'question',
+    title: '질문 제목',
+    body: '짧음',
+    displayMode: 'nickname',
+    visibility: 'public'
+  }), /내용은 10자 이상 5000자 이하로 적어주세요/);
+  assert.throws(() => validatePostPayload({
+    postType: 'question',
+    title: '질문 제목',
+    body: '충분히 긴 질문 본문입니다.',
+    displayMode: 'nickname',
+    visibility: 'public',
+    youtubeUrl: 'https://example.com/watch?v=abcDEF123_4'
+  }), /유튜브 링크 형식이 올바르지 않습니다/);
 });
 
 test('validateEventReviewPayload requires 2 to 5 photo ids', () => {
@@ -55,7 +80,7 @@ test('validateEventReviewPayload requires 2 to 5 photo ids', () => {
     impressiveScene: '분위기가 인상 깊었습니다.',
     nextProgram: '다음엔 카드 코너가 더 있으면 좋겠습니다.',
     messageToFirstTimer: '처음 와도 편합니다.'
-  }), /photoIds/);
+  }), /사진은 2장 이상 5장 이하로 올려주세요/);
 });
 
 test('validateEventReviewPayload accepts optional YouTube links', () => {
@@ -101,17 +126,17 @@ test('validateAnswerPayload rejects invalid visibility', () => {
     questionPostId: '11111111-1111-4111-8111-111111111111',
     body: '좋은 질문입니다.',
     visibility: 'expert_only'
-  }), /visibility/);
+  }), /답변 공개 범위/);
   assert.throws(() => validateModerationPayload({
     action: 'hide',
     postId: 'not-a-uuid',
     reason: '확인 필요'
-  }), /postId/);
+  }), /게시글 ID/);
   assert.throws(() => validateModerationPayload({
     action: 'hide',
     postId: 'ffffffff-ffff-ffff-ffff-ffffffffffff',
     reason: 'x'.repeat(501)
-  }), /reason/);
+  }), /사유는 500자 이하로 적어주세요/);
   assert.deepEqual(validateModerationPayload({
     action: 'hide',
     postId: 'FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF',

@@ -12,8 +12,21 @@ function clean(value) {
 
 function assertLength(name, value, min, max) {
   if (value.length < min || value.length > max) {
-    throw new Error(`${name} must be ${min}-${max} characters`);
+    throw new Error(lengthMessage(name, min, max));
   }
+}
+
+function lengthMessage(name, min, max) {
+  const labels = {
+    title: '제목',
+    body: '내용',
+    goodMoment: '좋았던 순간',
+    impressiveScene: '인상 깊었던 장면',
+    nextProgram: '다음에 보고 싶은 프로그램',
+    messageToFirstTimer: '처음 오는 사람에게 남기는 말'
+  };
+  const label = labels[name] || name;
+  return `${label}은 ${min}자 이상 ${max}자 이하로 적어주세요`;
 }
 
 export function validateUuid(value) {
@@ -39,15 +52,23 @@ export function parseYouTubeVideoId(value) {
   return id && YOUTUBE_ID.test(id) ? id : null;
 }
 
+function parseOptionalYouTubeVideoId(value) {
+  const raw = clean(value);
+  if (!raw) return null;
+  const videoId = parseYouTubeVideoId(raw);
+  if (!videoId) throw new Error('유튜브 링크 형식이 올바르지 않습니다');
+  return videoId;
+}
+
 export function validatePostPayload(input) {
   const postType = clean(input.postType);
   const title = clean(input.title);
   const body = clean(input.body);
   const displayMode = clean(input.displayMode || 'nickname');
   const visibility = clean(input.visibility || 'public');
-  if (!POST_TYPES.has(postType)) throw new Error('postType is invalid');
-  if (!DISPLAY_MODES.has(displayMode)) throw new Error('displayMode is invalid');
-  if (!VISIBILITIES.has(visibility)) throw new Error('visibility is invalid');
+  if (!POST_TYPES.has(postType)) throw new Error('글 종류가 올바르지 않습니다');
+  if (!DISPLAY_MODES.has(displayMode)) throw new Error('표시 이름 방식이 올바르지 않습니다');
+  if (!VISIBILITIES.has(visibility)) throw new Error('공개 범위가 올바르지 않습니다');
   assertLength('title', title, 2, 120);
   assertLength('body', body, postType === 'question' ? 10 : 1, 5000);
   return {
@@ -57,17 +78,17 @@ export function validatePostPayload(input) {
     body,
     displayMode,
     visibility,
-    youtubeVideoId: parseYouTubeVideoId(input.youtubeUrl)
+    youtubeVideoId: parseOptionalYouTubeVideoId(input.youtubeUrl)
   };
 }
 
 export function validateEventReviewPayload(input) {
   const eventCode = clean(input.eventCode);
   const photoIds = Array.isArray(input.photoIds) ? input.photoIds : [];
-  if (!eventCode) throw new Error('eventCode is required');
-  if (photoIds.length < 2 || photoIds.length > 5) throw new Error('photoIds must include 2-5 photos');
+  if (!eventCode) throw new Error('모임 정보가 올바르지 않습니다');
+  if (photoIds.length < 2 || photoIds.length > 5) throw new Error('사진은 2장 이상 5장 이하로 올려주세요');
   for (const id of photoIds) {
-    if (!UUID.test(id)) throw new Error('photoIds must be UUIDs');
+    if (!UUID.test(id)) throw new Error('사진 정보가 올바르지 않습니다');
   }
   const goodMoment = clean(input.goodMoment);
   const impressiveScene = clean(input.impressiveScene);
@@ -84,7 +105,7 @@ export function validateEventReviewPayload(input) {
     impressiveScene,
     nextProgram,
     messageToFirstTimer,
-    youtubeVideoId: parseYouTubeVideoId(input.youtubeUrl)
+    youtubeVideoId: parseOptionalYouTubeVideoId(input.youtubeUrl)
   };
 }
 
@@ -93,9 +114,9 @@ export function validateCommentPayload(input) {
   const parentCommentId = clean(input.parentCommentId);
   const body = clean(input.body);
   const displayMode = clean(input.displayMode || 'nickname');
-  if (!UUID.test(postId)) throw new Error('postId must be a UUID');
-  if (parentCommentId && !UUID.test(parentCommentId)) throw new Error('parentCommentId must be a UUID');
-  if (!DISPLAY_MODES.has(displayMode)) throw new Error('displayMode is invalid');
+  if (!UUID.test(postId)) throw new Error('게시글 ID가 올바르지 않습니다');
+  if (parentCommentId && !UUID.test(parentCommentId)) throw new Error('부모 댓글 ID가 올바르지 않습니다');
+  if (!DISPLAY_MODES.has(displayMode)) throw new Error('표시 이름 방식이 올바르지 않습니다');
   assertLength('body', body, 1, 1200);
   return { postId, parentCommentId: parentCommentId || null, body, displayMode };
 }
@@ -104,14 +125,14 @@ export function validateAnswerPayload(input) {
   const questionPostId = clean(input.questionPostId);
   const body = clean(input.body);
   const visibility = clean(input.visibility || 'public');
-  if (!UUID.test(questionPostId)) throw new Error('questionPostId must be a UUID');
-  if (!ANSWER_VISIBILITIES.has(visibility)) throw new Error('visibility is invalid');
+  if (!UUID.test(questionPostId)) throw new Error('질문 ID가 올바르지 않습니다');
+  if (!ANSWER_VISIBILITIES.has(visibility)) throw new Error('답변 공개 범위가 올바르지 않습니다');
   assertLength('body', body, 1, 5000);
   return {
     questionPostId,
     body,
     visibility,
-    youtubeVideoId: parseYouTubeVideoId(input.youtubeUrl)
+    youtubeVideoId: parseOptionalYouTubeVideoId(input.youtubeUrl)
   };
 }
 
@@ -120,11 +141,11 @@ export function validateModerationPayload(input) {
   const postId = clean(input.postId || input.targetId);
   const reason = clean(input.reason);
   const visibility = clean(input.visibility);
-  if (!MODERATION_ACTIONS.has(action)) throw new Error('action is invalid');
-  if (!validateUuid(postId)) throw new Error('postId must be a UUID');
-  if (reason.length > 500) throw new Error('reason must be 0-500 characters');
+  if (!MODERATION_ACTIONS.has(action)) throw new Error('관리 작업이 올바르지 않습니다');
+  if (!validateUuid(postId)) throw new Error('게시글 ID가 올바르지 않습니다');
+  if (reason.length > 500) throw new Error('사유는 500자 이하로 적어주세요');
   if (action === 'change_visibility' && !VISIBILITIES.has(visibility)) {
-    throw new Error('visibility is invalid');
+    throw new Error('공개 범위가 올바르지 않습니다');
   }
   return {
     action,

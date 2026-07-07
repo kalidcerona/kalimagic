@@ -1,5 +1,5 @@
 (function () {
-  var state = { filter: 'all', session: null };
+  var state = { filter: 'all', session: null, flash: '' };
   var listEl = document.querySelector('[data-admin-list]');
   var authPanel = document.querySelector('[data-auth-panel]');
   var filterButtons = Array.prototype.slice.call(document.querySelectorAll('[data-admin-filter]'));
@@ -44,6 +44,32 @@
     return item.category + ' · ' + item.visibility + ' · ' + item.status;
   }
 
+  function createYouTubeLiteEmbed(videoId, title) {
+    var id = String(videoId || '').trim();
+    if (!/^[A-Za-z0-9_-]{11}$/.test(id)) return null;
+    var wrapper = el('div', 'yt-lite');
+    var button = el('button', 'yt-lite__button');
+    button.type = 'button';
+    button.setAttribute('aria-label', (title || '첨부된 유튜브 영상') + ' 재생');
+    button.style.backgroundImage = 'url("https://img.youtube.com/vi/' + id + '/hqdefault.jpg")';
+    var play = el('span', 'yt-lite__play', '▶');
+    play.setAttribute('aria-hidden', 'true');
+    button.appendChild(play);
+    button.appendChild(el('span', 'yt-lite__label', title || '첨부된 유튜브 영상'));
+    button.addEventListener('click', function () {
+      var iframe = el('iframe', 'yt-lite__iframe');
+      iframe.src = 'https://www.youtube-nocookie.com/embed/' + id + '?autoplay=1';
+      iframe.title = title || '첨부된 유튜브 영상';
+      iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+      iframe.allowFullscreen = true;
+      iframe.loading = 'lazy';
+      wrapper.replaceChildren(iframe);
+      wrapper.classList.add('yt-lite--loaded');
+    }, { once: true });
+    wrapper.appendChild(button);
+    return wrapper;
+  }
+
   function actionButton(label, action, postId) {
     var button = el('button', 'playground-button playground-button--ghost', label);
     button.type = 'button';
@@ -57,8 +83,86 @@
     return button;
   }
 
+  function answerButton(item, slot) {
+    var button = el('button', 'playground-button playground-button--ghost', '답변 작성');
+    button.type = 'button';
+    button.addEventListener('click', function () {
+      clear(slot);
+      slot.appendChild(answerForm(item));
+    });
+    return button;
+  }
+
+  function option(value, text, selected) {
+    var node = document.createElement('option');
+    node.value = value;
+    node.textContent = text;
+    if (selected) node.selected = true;
+    return node;
+  }
+
+  function answerForm(item) {
+    var form = el('form', 'playground-comment-form');
+    var body = document.createElement('textarea');
+    body.name = 'body';
+    body.rows = 4;
+    body.required = true;
+    body.placeholder = '답변 내용을 적어주세요.';
+    var visibility = document.createElement('select');
+    visibility.name = 'visibility';
+    visibility.appendChild(option('public', '전체 공개', item.visibility === 'public'));
+    visibility.appendChild(option('author_only', '질문자에게만', item.visibility !== 'public'));
+    var youtubeUrl = document.createElement('input');
+    youtubeUrl.name = 'youtubeUrl';
+    youtubeUrl.type = 'url';
+    youtubeUrl.placeholder = '유튜브 링크 선택';
+    var submit = el('button', 'playground-button', '답변 등록');
+    submit.type = 'submit';
+    var cancel = el('button', 'playground-button playground-button--ghost', '취소');
+    cancel.type = 'button';
+    var status = el('p', 'playground-form-status');
+    var controls = el('div', 'admin-card__actions');
+    controls.appendChild(submit);
+    controls.appendChild(cancel);
+    form.appendChild(body);
+    form.appendChild(visibility);
+    form.appendChild(youtubeUrl);
+    form.appendChild(controls);
+    form.appendChild(status);
+    cancel.addEventListener('click', function () {
+      form.remove();
+    });
+    form.addEventListener('submit', async function (event) {
+      event.preventDefault();
+      var formData = new FormData(form);
+      status.classList.remove('is-error');
+      status.textContent = '답변을 등록하는 중입니다.';
+      try {
+        await fetchJson('/.netlify/functions/answers', {
+          method: 'POST',
+          body: JSON.stringify({
+            questionPostId: item.id,
+            body: formData.get('body'),
+            visibility: formData.get('visibility'),
+            youtubeUrl: formData.get('youtubeUrl')
+          })
+        });
+        state.flash = '답변이 등록됐습니다';
+        await loadInbox();
+      } catch (error) {
+        status.textContent = error.message || '답변을 등록하지 못했습니다.';
+        status.classList.add('is-error');
+      }
+    });
+    return form;
+  }
+
   function renderItems(items) {
     clear(listEl);
+    if (state.flash) {
+      listEl.appendChild(el('p', 'playground-form-status', state.flash));
+      state.flash = '';
+    }
     if (!items.length) {
       var empty = el('article', 'playground-empty');
       empty.appendChild(el('h2', '', '확인할 항목이 없습니다'));
@@ -71,12 +175,17 @@
       card.appendChild(el('h2', '', item.title));
       card.appendChild(el('p', '', statusLabel(item)));
       card.appendChild(el('span', '', item.authorLabel || '마술인'));
+      var video = createYouTubeLiteEmbed(item.youtubeVideoId, '질문에 첨부된 영상');
+      if (video) card.appendChild(video);
       var actions = el('div', 'admin-card__actions');
+      var answerSlot = el('div', '');
+      if (item.postType === 'question') actions.appendChild(answerButton(item, answerSlot));
       actions.appendChild(actionButton('숨김', 'hide', item.id));
       actions.appendChild(actionButton('복구', 'restore', item.id));
       actions.appendChild(actionButton('삭제', 'delete', item.id));
       actions.appendChild(actionButton('매거진 후보', 'mark_magazine_candidate', item.id));
       card.appendChild(actions);
+      card.appendChild(answerSlot);
       listEl.appendChild(card);
     });
   }
