@@ -8,6 +8,12 @@
       .replaceAll("'", '&#039;');
   }
 
+  // Later authorRole/user_badges data can map into badge kinds here.
+  // Callers append this after already-escaped names so text escaping stays local.
+  function badgeHtml(kind, label) {
+    return '<span class="pg-badge pg-badge--' + kind + '">' + label + '</span>';
+  }
+
   function formatDate(value) {
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return '';
@@ -102,7 +108,7 @@
         <h3>댓글</h3>
         ${comments && comments.length ? comments.map((comment) => `
           <article class="${comment.parentCommentId ? 'pg-comment is-reply' : 'pg-comment'}">
-            <strong>${escapeHtml(comment.authorLabel || '익명')}</strong>
+            <strong>${escapeHtml(comment.authorLabel || '익명')} ${badgeHtml('answerer', '답변자')}</strong>
             <p>${escapeHtml(comment.body || '').replaceAll('\n', '<br>')}</p>
             ${comment.parentCommentId ? '' : `<button type="button" class="pg-reply-button" data-reply-to="${escapeHtml(comment.id)}">답글</button>`}
           </article>
@@ -114,6 +120,7 @@
 
   function detailHtml(data) {
     const { post, answers, comments } = data;
+    const authorBadge = post.category === 'question' ? ` ${badgeHtml('asker', '질문자')}` : '';
     const likeButton = post.canReadBody === false ? '' : `
       <button type="button" class="pg-like-button ${post.viewerLiked ? 'is-active' : ''}" data-like-post="${escapeHtml(post.id)}">
         ${post.viewerLiked ? '추천 취소' : '추천'}
@@ -129,7 +136,7 @@
           <span class="pg-prefix">${escapeHtml(post.prefix || '')}</span>
           <h2>${post.isNotice ? '📌 ' : ''}${escapeHtml(post.title)}</h2>
           <div class="pg-detail-meta">
-            <span>${escapeHtml(post.authorLabel || '익명')}</span>
+            <span>${escapeHtml(post.authorLabel || '익명')}${authorBadge}</span>
             <span>${formatDate(post.createdAt)}</span>
             <span>조회 ${countText(post, 'viewCount')}</span>
             <span data-like-count>추천 ${countText(post, 'likeCount')}</span>

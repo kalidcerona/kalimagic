@@ -122,7 +122,7 @@
     const rows = posts.map(rowHtml).join('');
     return `
       <div class="pg-table-wrap">
-        <table class="pg-table">
+        <table class="pg-table pg-table--cards">
           <thead>
             <tr>
               <th>말머리</th>
