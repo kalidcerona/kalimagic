@@ -12,8 +12,13 @@ test('public build allowlist includes visible site pages', () => {
   assert.ok(PUBLIC_FILES.includes('style.css'));
   assert.ok(PUBLIC_FILES.includes('nav.js'));
   assert.ok(PUBLIC_FILES.includes('reveal.js'));
+  assert.ok(PUBLIC_FILES.includes('playground-api.js'));
+  assert.ok(PUBLIC_FILES.includes('playground-list.js'));
+  assert.ok(PUBLIC_FILES.includes('playground-compose.js'));
+  assert.ok(PUBLIC_FILES.includes('playground-detail.js'));
   assert.ok(PUBLIC_FILES.includes('playground-youtube.mjs'));
   assert.ok(PUBLIC_FILES.includes('playground-youtube-lite.mjs'));
+  assert.ok(PUBLIC_DIRS.includes('assets'));
 });
 
 test('public build explicitly excludes local planning and source folders', () => {
