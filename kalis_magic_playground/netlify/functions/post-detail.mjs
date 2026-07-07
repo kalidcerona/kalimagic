@@ -15,7 +15,16 @@ function canViewerAnswer(viewer) {
   return ['admin', 'kali'].includes(viewer?.role);
 }
 
-function shapePost(row, viewer) {
+function canSeeHiddenPost(viewer) {
+  return ['admin', 'kali'].includes(viewer?.role);
+}
+
+export function shouldIncrementView(row, viewer) {
+  if (!row || row.status !== 'visible') return false;
+  return canReadPostBody({ visibility: row.visibility, authorUserId: row.author_user_id }, viewer);
+}
+
+export function shapePost(row, viewer, state = {}) {
   const policyPost = { visibility: row.visibility, authorUserId: row.author_user_id };
   const canReadBody = canReadPostBody(policyPost, viewer);
   const canReadName = canReadAuthor(policyPost, viewer);
@@ -32,7 +41,12 @@ function shapePost(row, viewer) {
     visibility: row.visibility,
     status: row.status,
     createdAt: row.created_at,
-    canReadBody
+    viewCount: canReadBody ? state.viewCount ?? row.view_count ?? 0 : null,
+    likeCount: canReadBody ? state.likeCount ?? 0 : null,
+    viewerLiked: canReadBody ? Boolean(state.viewerLiked) : false,
+    isNotice: Boolean(row.is_notice),
+    canReadBody,
+    canDelete: Boolean(viewer?.userId && viewer.userId === row.author_user_id && row.status === 'visible')
   };
 }
 
@@ -59,6 +73,30 @@ function shapeComment(row) {
   };
 }
 
+async function loadLikeState(supabase, postId, viewer) {
+  const { data: likes, error: likesError } = await supabase
+    .from('post_likes')
+    .select('user_id')
+    .eq('post_id', postId);
+  if (likesError) throw likesError;
+
+  const likeRows = likes || [];
+  return {
+    likeCount: likeRows.length,
+    viewerLiked: viewer ? likeRows.some((row) => row.user_id === viewer.userId) : false
+  };
+}
+
+async function incrementViewCount(supabase, row) {
+  const nextViewCount = (row.view_count || 0) + 1;
+  const { error } = await supabase
+    .from('posts')
+    .update({ view_count: nextViewCount })
+    .eq('id', row.id);
+  if (error) throw error;
+  return nextViewCount;
+}
+
 export async function handler(event) {
   if (event.httpMethod !== 'GET') return json(405, { error: 'method_not_allowed' });
   const id = event.queryStringParameters?.id;
@@ -68,16 +106,35 @@ export async function handler(event) {
   const supabase = getSupabaseAdmin();
   const { data: row, error } = await supabase
     .from('posts')
-    .select('id,post_type,category,title,body,youtube_video_id,author_user_id,display_mode,visibility,status,created_at,profiles(nickname)')
+    .select('id,post_type,category,title,body,youtube_video_id,author_user_id,display_mode,visibility,status,created_at,view_count,is_notice,profiles(nickname)')
     .eq('id', id)
     .maybeSingle();
 
   if (error) return json(500, { error: 'db_error' });
-  if (!row || (row.status !== 'visible' && !['admin', 'kali'].includes(viewer?.role))) {
+  if (!row || (row.status !== 'visible' && !canSeeHiddenPost(viewer))) {
     return json(404, { error: 'not_found' });
   }
 
-  const post = shapePost(row, viewer);
+  let state = { viewCount: row.view_count || 0, likeCount: 0, viewerLiked: false };
+  const canReadBody = canReadPostBody({ visibility: row.visibility, authorUserId: row.author_user_id }, viewer);
+
+  if (shouldIncrementView(row, viewer)) {
+    try {
+      state.viewCount = await incrementViewCount(supabase, row);
+    } catch {
+      return json(500, { error: 'db_error' });
+    }
+  }
+
+  if (canReadBody) {
+    try {
+      state = { ...state, ...await loadLikeState(supabase, row.id, viewer) };
+    } catch {
+      return json(500, { error: 'db_error' });
+    }
+  }
+
+  const post = shapePost(row, viewer, state);
   const question = { visibility: row.visibility, authorUserId: row.author_user_id };
   if (!post.canReadBody) {
     return json(200, { post, answers: [], comments: [], viewerCanAnswer: canViewerAnswer(viewer) });
