@@ -71,11 +71,30 @@
     });
   }
 
+  function markAnswerHelpful(answerId) {
+    return fetchJson('/.netlify/functions/answer-helpful', {
+      method: 'POST',
+      body: JSON.stringify({ answerId })
+    });
+  }
+
+  function unmarkAnswerHelpful(answerId) {
+    return fetchJson('/.netlify/functions/answer-helpful', {
+      method: 'DELETE',
+      body: JSON.stringify({ answerId })
+    });
+  }
+
   function deletePost(postId) {
     return fetchJson(POSTS_ENDPOINT, {
       method: 'DELETE',
       body: JSON.stringify({ postId })
     });
+  }
+
+  function getMemberBadges(userId) {
+    const suffix = userId ? `?userId=${encodeURIComponent(userId)}` : '';
+    return fetchJson(`/.netlify/functions/member-badges${suffix}`);
   }
 
   function createPost(payload) {
@@ -90,7 +109,10 @@
     listPosts,
     getPostDetail,
     togglePostLike,
+    markAnswerHelpful,
+    unmarkAnswerHelpful,
     deletePost,
+    getMemberBadges,
     createPost
   };
 })();

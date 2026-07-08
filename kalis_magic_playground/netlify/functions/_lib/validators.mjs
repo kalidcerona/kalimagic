@@ -1,8 +1,8 @@
 const YOUTUBE_ID = /^[A-Za-z0-9_-]{11}$/;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const POST_TYPES = new Set(['question', 'event_review', 'review_comment', 'free', 'magazine']);
-const WRITABLE_POST_TYPES = new Set(['question', 'review_comment', 'free', 'magazine']);
-const LIST_CATEGORIES = new Set(['all', 'question', 'review', 'magazine', 'free']);
+const POST_TYPES = new Set(['question', 'event_review', 'review_comment', 'free', 'routine', 'magazine']);
+const WRITABLE_POST_TYPES = new Set(['question', 'review_comment', 'free', 'routine', 'magazine']);
+const LIST_CATEGORIES = new Set(['all', 'question', 'review', 'free', 'routine', 'magazine']);
 const REVIEW_KINDS = new Set(['tool', 'meeting']);
 const DISPLAY_MODES = new Set(['nickname', 'anonymous']);
 const VISIBILITIES = new Set(['public', 'kali_only', 'expert_only']);
@@ -44,6 +44,7 @@ function categoryForPostType(postType) {
   if (postType === 'question') return 'question';
   if (postType === 'review_comment') return 'review';
   if (postType === 'free') return 'free';
+  if (postType === 'routine') return 'routine';
   if (postType === 'magazine') return 'magazine';
   return null;
 }
@@ -109,7 +110,8 @@ export function validatePostPayload(input) {
     body,
     displayMode,
     visibility,
-    youtubeVideoId: parseOptionalYouTubeVideoId(input.youtubeUrl)
+    youtubeVideoId: parseOptionalYouTubeVideoId(input.youtubeUrl),
+    badgeCode: clean(input.badgeCode) || null
   };
 }
 

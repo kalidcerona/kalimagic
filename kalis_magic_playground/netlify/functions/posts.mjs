@@ -1,7 +1,13 @@
 import { canReadAuthor, canReadPostBody } from './_lib/access-policy.mjs';
 import { requireViewer } from './_lib/auth.mjs';
-import { fetchBadgeMap } from './_lib/badges.mjs';
+import {
+  fetchBadgeMap,
+  fetchOwnedBadgeCodes,
+  resolvePostAuthorBadges,
+  validateBadgeSelection
+} from './_lib/badges.mjs';
 import { json, readJsonBody } from './_lib/http.mjs';
+import { awardQuestBadges } from './_lib/quest-badges.mjs';
 import { getSupabaseAdmin } from './_lib/supabase.mjs';
 import { validateListQuery, validatePostIdPayload, validatePostPayload } from './_lib/validators.mjs';
 
@@ -62,7 +68,7 @@ export function shapePostListRow(row, viewer, state = {}) {
     authorId,
     authorLabel: authorVisible ? row.profiles?.nickname || '마술인' : '익명',
     authorRole: authorVisible ? row.profiles?.role || null : null,
-    authorBadges: authorId ? badgeMap[authorId] || [] : [],
+    authorBadges: authorId ? resolvePostAuthorBadges(row, badgeMap, authorId) : [],
     displayMode: row.display_mode,
     visibility: row.visibility,
     status: row.status,
@@ -83,6 +89,7 @@ export function applyListFilters(query, params) {
   if (params.category === 'review' && params.reviewKind === 'meeting') return query.eq('category', 'event_review');
   if (params.category === 'review') return query.in('category', ['review', 'event_review']);
   if (params.category === 'free') return query.eq('post_type', 'free');
+  if (params.category === 'routine') return query.eq('post_type', 'routine');
   if (params.category === 'magazine') {
     return query.or('category.eq.magazine,and(category.eq.question,questions.magazine_candidate.eq.true)');
   }
@@ -145,7 +152,7 @@ async function listPosts(event) {
   const supabase = getSupabaseAdmin();
   let query = supabase
     .from('posts')
-    .select('id,post_type,category,title,body,youtube_video_id,author_user_id,display_mode,visibility,status,created_at,view_count,is_notice,profiles(nickname,role),questions(magazine_candidate)')
+    .select('id,post_type,category,title,body,youtube_video_id,author_user_id,author_badge_code,display_mode,visibility,status,created_at,view_count,is_notice,profiles(nickname,role,preferred_badge_code),questions(magazine_candidate)')
     .eq('status', 'visible')
     .order('is_notice', { ascending: false })
     .order('created_at', { ascending: false })
@@ -211,7 +218,6 @@ async function countVisibleAnswers(supabase, post) {
     .from('answers')
     .select('id')
     .eq('question_post_id', post.id)
-    .eq('status', 'visible')
     .limit(1);
   if (error) throw error;
   return (data || []).length;
@@ -279,6 +285,20 @@ async function createPost(event) {
   }
 
   const supabase = getSupabaseAdmin();
+
+  let selectedBadgeCode = null;
+  if (payload.badgeCode) {
+    let ownedCodes;
+    try {
+      ownedCodes = await fetchOwnedBadgeCodes(supabase, viewer.userId);
+    } catch {
+      return json(500, { error: 'db_error' });
+    }
+    const selection = validateBadgeSelection(ownedCodes, payload.badgeCode);
+    if (!selection.ok) return json(400, { error: selection.error });
+    selectedBadgeCode = selection.code;
+  }
+
   const { data: post, error: postError } = await supabase
     .from('posts')
     .insert({
@@ -287,6 +307,7 @@ async function createPost(event) {
       title: payload.title,
       body: payload.body,
       author_user_id: viewer.userId,
+      author_badge_code: selectedBadgeCode,
       display_mode: payload.displayMode,
       visibility: payload.visibility,
       youtube_video_id: payload.youtubeVideoId
@@ -301,6 +322,12 @@ async function createPost(event) {
       .from('questions')
       .insert({ post_id: post.id });
     if (questionError) return json(500, { error: 'db_error' });
+  }
+
+  try {
+    await awardQuestBadges(supabase, viewer.userId);
+  } catch (error) {
+    console.error('quest_badge_award_failed', error);
   }
 
   return json(201, { id: post.id });

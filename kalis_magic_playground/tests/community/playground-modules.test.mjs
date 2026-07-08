@@ -7,6 +7,12 @@ import { fileURLToPath } from 'node:url';
 const root = resolve(fileURLToPath(new URL('../..', import.meta.url)));
 const read = (path) => readFileSync(resolve(root, path), 'utf8');
 
+function assertInOrder(source, snippets, message) {
+  const indexes = snippets.map((snippet) => source.indexOf(snippet));
+  assert.equal(indexes.every((index) => index >= 0), true, `${message}: missing snippet`);
+  assert.deepEqual(indexes, indexes.slice().sort((a, b) => a - b), message);
+}
+
 test('playground front modules exist and html loads them in dependency order', () => {
   const files = [
     'playground-api.js',
@@ -50,21 +56,32 @@ test('playground api module wraps the v2 endpoints with auth headers', () => {
   assert.match(source, /createPost/);
 });
 
-test('playground list module has six tabs, table rendering, paging, and free lock copy', () => {
+test('playground list module has seven tabs, table rendering, paging, and free board copy', () => {
   const source = read('playground-list.js');
 
   assert.match(source, /PLAYGROUND_TABS/);
+  assertInOrder(source, [
+    "{ id: 'free', label: '자유게시판', category: 'free', reviewKind: null }",
+    "{ id: 'routine', label: '마술 보관소', category: 'routine', reviewKind: null }",
+    "{ id: 'question', label: '질문함', category: 'question', reviewKind: null }",
+    "{ id: 'all', label: '전체 기록', category: 'all', reviewKind: null }",
+    "{ id: 'review_tool', label: '도구 기록', category: 'review', reviewKind: 'tool' }",
+    "{ id: 'review_meeting', label: '모임 기록', category: 'review', reviewKind: 'meeting' }",
+    "{ id: 'magazine', label: '보관된 기록', category: 'magazine', reviewKind: null }"
+  ], 'playground tabs should follow the requested board order');
   assert.match(source, /전체/);
   assert.match(source, /질문함/);
-  assert.match(source, /도구 리뷰/);
-  assert.match(source, /모임 후기/);
+  assert.match(source, /마술 보관소/);
+  assert.match(source, /도구 기록/);
+  assert.match(source, /모임 기록/);
   assert.match(source, /매거진/);
-  assert.match(source, /자유 기록🔒/);
+  assert.match(source, /자유게시판/);
   assert.match(source, /reviewKind: 'tool'/);
   assert.match(source, /reviewKind: 'meeting'/);
   assert.match(source, /pg-table/);
   assert.match(source, /hasMore/);
-  assert.match(source, /자유 기록은 준비 중입니다\. 질문함과 리뷰가 자리 잡은 뒤 열립니다\./);
+  assert.match(source, /자유로운 마술 이야기를 기다리고 있습니다\./);
+  assert.match(source, /배운 마술 루틴과 기술을 보관할 첫 기록을 기다리고 있습니다\./);
 });
 
 test('playground list module catches list load failures and renders a friendly error', () => {
@@ -77,14 +94,16 @@ test('playground list module catches list load failures and renders a friendly e
   assert.match(source, /기록을 불러오지 못했습니다\. 잠시 후 다시 시도해주세요\./);
 });
 
-test('playground compose module includes verbatim guide copy and never submits free or event_review post types', () => {
+test('playground compose module includes verbatim guide copy and keeps event reviews on the dedicated api', () => {
   const source = read('playground-compose.js');
   const requiredCopy = [
-    '어떤 기록을 남길지 먼저 골라주면 됨. 질문, 모임 후기, 도구 리뷰, 자유 기록 중에서 가장 가까운 곳에 남기면 사람들이 더 잘 찾아볼 수 있음.',
+    '어떤 기록을 남길지 먼저 골라주면 됨. 자유게시판, 마술 보관소, 질문함, 도구 기록, 모임 기록, 보관된 기록 중에서 가장 가까운 곳에 남기면 사람들이 더 잘 찾아볼 수 있음.',
     '먼저 게시판을 선택하면 제목 예시가 나타남',
     '남기고 싶은 이야기에 가장 가까운 게시판을 선택하면, 그 글에 맞는 안내가 열림',
-    '오늘의 연습, 문득 든 생각, 마술하면서 생긴 작은 이야기를 편하게 남기는 공간임.',
-    '작은 기록도 쌓이면 누군가에게 길잡이가 됨.',
+    '자유 주제로 마술 문화와 연습, 공연, 사람들 이야기를 편하게 남기는 공간임.',
+    '자유로운 이야기도 쌓이면 누군가에게 길잡이가 됨.',
+    '내가 배운 마술 루틴과 기술을 제목과 내용으로 정리해두는 공간임.',
+    '개인 연습 기록도 쌓이면 나중에 다시 꺼내 볼 수 있는 보관소가 됨.',
     '마술을 배우다 막히는 순간이 있으면 질문을 남기는 공간임. 먼저 지나간 사람이 답을 알고 있을 수 있음.',
     '처음 묻는 질문도 좋음. 누군가에게는 같은 고민을 해결하는 첫 기록이 될 수 있음.',
     '모임에서 느낀 분위기와 기억에 남은 순간을 남기는 공간임. 그날의 기록이 다음 모임을 더 좋게 만듦.',
@@ -99,10 +118,20 @@ test('playground compose module includes verbatim guide copy and never submits f
     assert.equal(source.includes(copy), true, `missing copy: ${copy}`);
   }
 
+  assertInOrder(source, [
+    "['all', '게시판 선택']",
+    "['free', '자유게시판']",
+    "['routine', '마술 보관소']",
+    "['question', '질문함']",
+    "['tool', '도구 기록']",
+    "['meeting', '모임 기록']",
+    "['magazine', '보관된 기록']"
+  ], 'compose dropdown should follow the requested writable board order');
   assert.match(source, /question: 'question'/);
   assert.match(source, /tool: 'review_comment'/);
+  assert.match(source, /free: 'free'/);
+  assert.match(source, /routine: 'routine'/);
   assert.match(source, /magazine: 'magazine'/);
-  assert.doesNotMatch(source, /postType: 'free'/);
   assert.doesNotMatch(source, /postType: 'event_review'/);
 });
 

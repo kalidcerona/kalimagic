@@ -151,14 +151,27 @@ test('validateAnswerPayload rejects invalid visibility', () => {
   });
 });
 
-test('validatePostPayload rejects locked free and event review writes through posts api', () => {
-  assert.throws(() => validatePostPayload({
+test('validatePostPayload accepts free and routine posts and keeps event review writes on the event review api', () => {
+  const free = validatePostPayload({
     postType: 'free',
     title: '오늘 연습 기록',
     body: '오늘의 연습과 느낀 점을 남깁니다.',
     displayMode: 'nickname',
     visibility: 'public'
-  }), /자유 기록은 아직 작성할 수 없어요/);
+  });
+  assert.equal(free.postType, 'free');
+  assert.equal(free.category, 'free');
+
+  const routine = validatePostPayload({
+    postType: 'routine',
+    title: '오늘 배운 루틴',
+    body: '동작 순서와 연출 포인트를 정리합니다.',
+    displayMode: 'nickname',
+    visibility: 'expert_only'
+  });
+  assert.equal(routine.postType, 'routine');
+  assert.equal(routine.category, 'routine');
+  assert.equal(routine.visibility, 'expert_only');
 
   assert.throws(() => validatePostPayload({
     postType: 'event_review',
@@ -204,7 +217,18 @@ test('validateListQuery clamps pagination and validates review filters', () => {
     limit: 20,
     offset: 0
   });
-  assert.throws(() => validateListQuery({ category: 'free' }), /게시판 종류가 올바르지 않습니다/);
+  assert.deepEqual(validateListQuery({ category: 'free' }), {
+    category: 'free',
+    reviewKind: null,
+    limit: 20,
+    offset: 0
+  });
+  assert.deepEqual(validateListQuery({ category: 'routine' }), {
+    category: 'routine',
+    reviewKind: null,
+    limit: 20,
+    offset: 0
+  });
   assert.throws(() => validateListQuery({ category: 'review', reviewKind: 'random' }), /리뷰 말머리가 올바르지 않습니다/);
   assert.throws(() => validateListQuery({ offset: '-1' }), /페이지 위치가 올바르지 않습니다/);
 });

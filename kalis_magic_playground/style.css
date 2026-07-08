@@ -1334,6 +1334,268 @@ body.field-modal-open { overflow: hidden; }
   margin-top: 6px;
 }
 
+.mypage-badges {
+  display: grid;
+  gap: 12px;
+  margin: 14px 0 18px;
+}
+
+.mypage-section-title {
+  margin: 0;
+  color: var(--text-main);
+  font-size: 1.08rem;
+  line-height: 1.4;
+}
+
+.mypage-badge-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
+  gap: 10px;
+}
+
+.mypage-badge-tile {
+  position: relative;
+  display: grid;
+  gap: 8px;
+  min-height: 154px;
+  padding: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: rgba(38, 29, 24, 0.78);
+  color: var(--text-main);
+  font: inherit;
+  text-align: left;
+}
+
+button.mypage-badge-tile {
+  cursor: pointer;
+}
+
+button.mypage-badge-tile:hover,
+.mypage-badge-tile.is-active {
+  border-color: rgba(var(--point-gold-rgb), 0.58);
+  background: rgba(var(--point-gold-rgb), 0.11);
+}
+
+.mypage-badge-tile.is-active {
+  box-shadow: inset 0 0 0 1px rgba(var(--point-gold-rgb), 0.22);
+}
+
+.mypage-badge-tile.is-unowned {
+  opacity: 0.64;
+}
+
+.mypage-badge-tile__image {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.mypage-badge-tile.is-coming-soon .mypage-badge-tile__image {
+  filter: blur(3px);
+}
+
+.mypage-badge-tile__text {
+  display: grid;
+  gap: 4px;
+}
+
+.mypage-badge-tile__text strong {
+  color: var(--text-main);
+  font-size: 0.94rem;
+  line-height: 1.35;
+}
+
+.mypage-badge-tile__text span {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.mypage-badge-tile__overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(9, 5, 3, 0.94);
+  color: #f3ece3;
+  font-size: 0.84rem;
+  font-weight: 900;
+}
+
+.mypage-badge-tile__mark {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 2px 7px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.22);
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.mypage-quest-badges {
+  display: grid;
+  gap: 14px;
+  margin: 14px 0 20px;
+}
+
+.mypage-quest-badges .quest-badge-group {
+  display: grid;
+  gap: 9px;
+}
+
+.mypage-quest-badges .quest-badge-group__title {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  line-height: 1.4;
+}
+
+.mypage-quest-badges .quest-badge-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(168px, 1fr));
+  gap: 10px;
+}
+
+.mypage-quest-badges .quest-badge-tile {
+  --quest-metal: #4a4d50;
+  position: relative;
+  display: grid;
+  grid-template-columns: 54px minmax(0, 1fr);
+  gap: 10px;
+  min-height: 116px;
+  padding: 12px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--quest-metal) 54%, transparent);
+  border-radius: 8px;
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--quest-metal) 26%, transparent), rgba(26, 19, 15, 0.82)),
+    rgba(22, 16, 13, 0.88);
+  color: var(--text-main);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.035);
+}
+
+.mypage-quest-badges .quest-badge-tile--common { --quest-metal: #4a4d50; }
+.mypage-quest-badges .quest-badge-tile--uncommon { --quest-metal: #5f7f92; }
+.mypage-quest-badges .quest-badge-tile--rare { --quest-metal: #7c6d88; }
+.mypage-quest-badges .quest-badge-tile--epic { --quest-metal: #8d9ca3; }
+.mypage-quest-badges .quest-badge-tile--legendary { --quest-metal: #b7c9d9; }
+.mypage-quest-badges .quest-badge-tile--secret { --quest-metal: #7b6aa8; }
+
+.mypage-quest-badges .quest-badge-tile.is-unowned {
+  opacity: 0.78;
+}
+
+.mypage-quest-badges .quest-badge-tile__media {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--quest-metal) 58%, rgba(255, 255, 255, 0.16));
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 25%, rgba(255, 255, 255, 0.18), color-mix(in srgb, var(--quest-metal) 34%, rgba(0, 0, 0, 0.42)));
+}
+
+.mypage-quest-badges .quest-badge-tile__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.mypage-quest-badges .quest-badge-tile__placeholder {
+  display: none;
+  padding: 0 7px;
+  color: #f4efe8;
+  font-size: 0.7rem;
+  font-weight: 900;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.mypage-quest-badges .quest-badge-tile__media.is-placeholder .quest-badge-tile__placeholder {
+  display: block;
+}
+
+.mypage-quest-badges .quest-badge-tile__body {
+  display: grid;
+  align-content: start;
+  gap: 5px;
+  min-width: 0;
+}
+
+.mypage-quest-badges .quest-badge-tile__name {
+  color: var(--text-main);
+  font-size: 0.94rem;
+  line-height: 1.35;
+}
+
+.mypage-quest-badges .quest-badge-tile__meta,
+.mypage-quest-badges .quest-badge-tile__hint,
+.mypage-quest-badges .quest-badge-progress__text {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.mypage-quest-badges .quest-badge-progress {
+  display: grid;
+  gap: 4px;
+}
+
+.mypage-quest-badges .quest-badge-progress__bar {
+  display: block;
+  width: 100%;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.mypage-quest-badges .quest-badge-progress__fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--quest-metal), #f1eee8);
+}
+
+.mypage-quest-badges .quest-badge-tile__earned {
+  justify-self: start;
+  padding: 2px 7px;
+  border: 1px solid color-mix(in srgb, var(--quest-metal) 58%, rgba(255, 255, 255, 0.18));
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #f4efe8;
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.mypage-quest-badges .quest-badge-tile--secret {
+  background:
+    radial-gradient(circle at 15% 8%, rgba(183, 166, 231, 0.24), transparent 42%),
+    linear-gradient(145deg, rgba(64, 49, 88, 0.76), rgba(20, 14, 24, 0.92));
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.045),
+    0 0 18px rgba(123, 106, 168, 0.12);
+}
+
+.mypage-quest-badges .quest-badge-tile__media--secret {
+  filter: blur(0.2px);
+}
+
+.mypage-quest-badges .quest-badge-tile__unknown {
+  color: #f3edf8;
+  font-size: 0.86rem;
+  font-weight: 900;
+  text-shadow: 0 0 10px rgba(206, 190, 255, 0.45);
+}
+
 @media (max-width: 640px) {
   .playground-shell {
     width: min(100% - 28px, 430px);
@@ -1636,6 +1898,7 @@ body.field-modal-open { overflow: hidden; }
 .pg-submit,
 .pg-compose-close,
 .pg-like-button,
+.pg-answer-helpful-button,
 .pg-delete-button,
 .pg-compose-link {
   border: 1px solid var(--border-light);
@@ -1659,7 +1922,8 @@ body.field-modal-open { overflow: hidden; }
 .pg-prefix-filter-button.is-active,
 .pg-write-button,
 .pg-submit,
-.pg-like-button.is-active {
+.pg-like-button.is-active,
+.pg-answer-helpful-button.is-active {
   border-color: rgba(var(--point-gold-rgb), 0.55);
   background: rgba(var(--point-gold-rgb), 0.16);
   color: var(--point-gold);
@@ -1672,6 +1936,7 @@ body.field-modal-open { overflow: hidden; }
 .pg-submit:hover,
 .pg-compose-close:hover,
 .pg-like-button:hover,
+.pg-answer-helpful-button:hover,
 .pg-delete-button:hover,
 .pg-compose-link:hover {
   border-color: rgba(var(--point-gold-rgb), 0.55);
@@ -1913,6 +2178,19 @@ body.field-modal-open { overflow: hidden; }
   color: #ffb49d;
 }
 
+.pg-answer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.pg-answer-helpful-button {
+  min-height: 32px;
+  padding: 5px 10px;
+  font-size: 0.82rem;
+}
+
 .pg-detail-body,
 .pg-locked-body,
 .pg-answer,
@@ -2003,6 +2281,55 @@ body.field-modal-open { overflow: hidden; }
 
 .pg-compose-grid > label {
   flex: 1 1 220px;
+}
+
+.pg-compose-badge-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+}
+
+.pg-compose-badge-picker legend {
+  padding: 0 4px;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+
+.pg-compose .pg-compose-badge-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: auto;
+  min-height: 40px;
+  margin: 0;
+  padding: 7px 10px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.025);
+  color: var(--text-main);
+  cursor: pointer;
+}
+
+.pg-compose-badge-option:has(input:checked) {
+  border-color: rgba(var(--point-gold-rgb), 0.58);
+  background: rgba(var(--point-gold-rgb), 0.1);
+}
+
+.pg-compose .pg-compose-badge-option input {
+  width: auto;
+  margin: 0;
+}
+
+.pg-compose-badge-option img {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
 }
 
 @media (max-width: 720px) {

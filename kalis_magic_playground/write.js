@@ -4,7 +4,8 @@
     review_tool: { id: 'review_tool', category: 'review', reviewKind: 'tool' },
     review_meeting: { id: 'review_meeting', category: 'review', reviewKind: 'meeting' },
     magazine: { id: 'magazine', category: 'magazine' },
-    free: { id: 'free', category: 'free' }
+    free: { id: 'free', category: 'free' },
+    routine: { id: 'routine', category: 'routine' }
   };
 
   document.addEventListener('DOMContentLoaded', async () => {

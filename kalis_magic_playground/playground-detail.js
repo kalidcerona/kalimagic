@@ -66,6 +66,20 @@
     `;
   }
 
+  function answerHelpfulButton(answer) {
+    if (answer.canMarkHelpful === false) return '';
+    return `
+      <button
+        type="button"
+        class="pg-answer-helpful-button ${answer.viewerHelpful ? 'is-active' : ''}"
+        data-answer-helpful="${escapeHtml(answer.id)}"
+        aria-pressed="${answer.viewerHelpful ? 'true' : 'false'}"
+      >
+        ${answer.viewerHelpful ? '도움됐어요 취소' : '도움됐어요'}
+      </button>
+    `;
+  }
+
   function answerHtml(post, answers, viewerCanAnswer) {
     return `
       <section class="pg-detail-section">
@@ -75,6 +89,7 @@
             <p>${escapeHtml(answer.body || '').replaceAll('\n', '<br>')}</p>
             ${createYouTubeLiteEmbed(answer.youtubeVideoId, '답변에 첨부된 영상')}
             <small${authorIdAttr(answer.authorId)}>${escapeHtml(answer.authorLabel || '익명')}${roleBadgeHtml(answer.authorRole)}${imageBadgesHtml(answer.authorBadges)}</small>
+            <div class="pg-answer-actions">${answerHelpfulButton(answer)}</div>
           </article>
         `).join('') : '<p class="pg-loading">아직 답변이 없습니다.</p>'}
         ${viewerCanAnswer ? answerForm(post) : ''}
@@ -202,6 +217,33 @@
           if (likeCount) likeCount.textContent = `추천 ${result.likeCount}`;
         } catch (error) {
           if (status) status.textContent = error.status === 401 ? '로그인하면 추천할 수 있어요' : error.message;
+        }
+        return;
+      }
+
+      const answerHelpfulButton = event.target.closest('[data-answer-helpful]');
+      if (answerHelpfulButton) {
+        const status = root.querySelector('[data-detail-status]');
+        const answerId = answerHelpfulButton.dataset.answerHelpful;
+        const active = answerHelpfulButton.classList.contains('is-active');
+        answerHelpfulButton.disabled = true;
+        try {
+          const result = active
+            ? await api.unmarkAnswerHelpful(answerId)
+            : await api.markAnswerHelpful(answerId);
+          answerHelpfulButton.classList.toggle('is-active', result.helpful);
+          answerHelpfulButton.setAttribute('aria-pressed', result.helpful ? 'true' : 'false');
+          answerHelpfulButton.textContent = result.helpful ? '도움됐어요 취소' : '도움됐어요';
+        } catch (error) {
+          if (status) {
+            status.textContent = error.status === 401
+              ? '로그인하면 답변을 표시할 수 있어요'
+              : error.status === 403
+                ? '내 답변에는 표시할 수 없어요'
+                : error.message;
+          }
+        } finally {
+          answerHelpfulButton.disabled = false;
         }
         return;
       }

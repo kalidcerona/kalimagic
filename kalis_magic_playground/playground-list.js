@@ -2,12 +2,13 @@
   const PAGE_SIZE = 20;
 
   const PLAYGROUND_TABS = [
-    { id: 'all', label: '전체 기록', category: 'all', reviewKind: null },
+    { id: 'free', label: '자유게시판', category: 'free', reviewKind: null },
+    { id: 'routine', label: '마술 보관소', category: 'routine', reviewKind: null },
     { id: 'question', label: '질문함', category: 'question', reviewKind: null },
+    { id: 'all', label: '전체 기록', category: 'all', reviewKind: null },
     { id: 'review_tool', label: '도구 기록', category: 'review', reviewKind: 'tool' },
     { id: 'review_meeting', label: '모임 기록', category: 'review', reviewKind: 'meeting' },
-    { id: 'magazine', label: '보관된 기록', category: 'magazine', reviewKind: null },
-    { id: 'free', label: '자유게시판', category: 'free', reviewKind: null }
+    { id: 'magazine', label: '보관된 기록', category: 'magazine', reviewKind: null }
   ];
 
   const EMPTY_COPY = {
@@ -16,7 +17,8 @@
     review_tool: '아직 리뷰가 없습니다. 써본 도구와 모임 기억이 이곳에 쌓이면 누군가의 길잡이가 됩니다.',
     review_meeting: '아직 리뷰가 없습니다. 써본 도구와 모임 기억이 이곳에 쌓이면 누군가의 길잡이가 됩니다.',
     magazine: '아직 보관된 기록이 없습니다. 오래 남길 기록을 기다리고 있습니다.',
-    free: '아직 자유게시판에 올라온 기록이 없습니다. 자유로운 마술 이야기를 기다리고 있습니다.'
+    free: '아직 자유게시판에 올라온 기록이 없습니다. 자유로운 마술 이야기를 기다리고 있습니다.',
+    routine: '아직 마술 보관소에 올라온 기록이 없습니다. 배운 마술 루틴과 기술을 보관할 첫 기록을 기다리고 있습니다.'
   };
 
   const escapeHtml = window.PgUtil.escapeHtml;

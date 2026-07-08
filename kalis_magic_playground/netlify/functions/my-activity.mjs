@@ -84,10 +84,10 @@ async function listMyPosts(supabase, viewer) {
 export async function listReceivedActivity(supabase, viewer) {
   const { data: answers, error: answersError } = await supabase
     .from('answers')
-    .select('id,question_post_id,body,created_at,posts!inner(id,title,author_user_id,post_type)')
-    .eq('status', 'visible')
+    .select('id,question_post_id,body,created_at,posts!inner(id,title,author_user_id,post_type,status)')
     .eq('posts.author_user_id', viewer.userId)
     .eq('posts.post_type', 'question')
+    .eq('posts.status', 'visible')
     .neq('author_user_id', viewer.userId)
     .order('created_at', { ascending: false })
     .limit(50);
@@ -125,7 +125,6 @@ export async function listGivenActivity(supabase, viewer) {
     .from('answers')
     .select('id,question_post_id,body,created_at,posts!inner(id,title,status,visibility,author_user_id)')
     .eq('author_user_id', viewer.userId)
-    .eq('status', 'visible')
     .eq('posts.status', 'visible')
     .neq('posts.author_user_id', viewer.userId)
     .order('created_at', { ascending: false })

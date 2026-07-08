@@ -1,6 +1,6 @@
 import { canReadAnswer, canReadAuthor, canReadPostBody } from './_lib/access-policy.mjs';
 import { requireViewer } from './_lib/auth.mjs';
-import { fetchBadgeMap } from './_lib/badges.mjs';
+import { fetchBadgeMap, resolvePostAuthorBadges } from './_lib/badges.mjs';
 import { json } from './_lib/http.mjs';
 import { getSupabaseAdmin } from './_lib/supabase.mjs';
 import { validateUuid } from './_lib/validators.mjs';
@@ -44,7 +44,7 @@ export function shapePost(row, viewer, state = {}) {
     authorId,
     authorLabel: authorVisible ? row.profiles?.nickname || '마술인' : '익명',
     authorRole: authorVisible ? row.profiles?.role || null : null,
-    authorBadges: authorId ? badgeMap[authorId] || [] : [],
+    authorBadges: authorId ? resolvePostAuthorBadges(row, badgeMap, authorId) : [],
     displayMode: row.display_mode,
     visibility: row.visibility,
     status: row.status,
@@ -58,20 +58,23 @@ export function shapePost(row, viewer, state = {}) {
   };
 }
 
-function shapeAnswer(question, row, viewer, badgeMap = {}) {
+function shapeAnswer(question, row, viewer, badgeMap = {}, state = {}) {
   if (!canReadAnswer(question, { visibility: row.visibility }, viewer)) return null;
   const authorId = row.author_user_id || null;
+  const viewerHelpfulAnswerIds = state.viewerHelpfulAnswerIds || new Set();
   return {
     id: row.id,
     body: row.body,
     visibility: row.visibility,
-    isPinned: row.is_pinned,
+    isPinned: false,
     authorId,
     authorLabel: row.profiles?.nickname || '답변자',
     authorRole: row.profiles?.role || null,
     authorBadges: authorId ? badgeMap[authorId] || [] : [],
     youtubeVideoId: row.youtube_video_id,
-    createdAt: row.created_at
+    createdAt: row.created_at,
+    viewerHelpful: viewerHelpfulAnswerIds.has(row.id),
+    canMarkHelpful: !viewer || viewer.userId !== row.author_user_id
   };
 }
 
@@ -104,6 +107,19 @@ async function loadLikeState(supabase, postId, viewer) {
   };
 }
 
+async function loadAnswerHelpfulState(supabase, answerIds, viewer) {
+  if (!viewer || answerIds.length === 0) return { viewerHelpfulAnswerIds: new Set() };
+  const { data, error } = await supabase
+    .from('answer_helpful_votes')
+    .select('answer_id')
+    .eq('user_id', viewer.userId)
+    .in('answer_id', answerIds);
+  if (error) throw error;
+  return {
+    viewerHelpfulAnswerIds: new Set((data || []).map((row) => row.answer_id))
+  };
+}
+
 async function incrementViewCount(supabase, row) {
   const nextViewCount = (row.view_count || 0) + 1;
   const { error } = await supabase
@@ -123,7 +139,7 @@ export async function handler(event) {
   const supabase = getSupabaseAdmin();
   const { data: row, error } = await supabase
     .from('posts')
-    .select('id,post_type,category,title,body,youtube_video_id,author_user_id,display_mode,visibility,status,created_at,view_count,is_notice,profiles(nickname,role)')
+    .select('id,post_type,category,title,body,youtube_video_id,author_user_id,author_badge_code,display_mode,visibility,status,created_at,view_count,is_notice,profiles(nickname,role,preferred_badge_code)')
     .eq('id', id)
     .maybeSingle();
 
@@ -168,10 +184,8 @@ export async function handler(event) {
 
   const { data: answers, error: answersError } = await supabase
     .from('answers')
-    .select('id,body,visibility,is_pinned,youtube_video_id,created_at,author_user_id,profiles(nickname,role)')
+    .select('id,body,visibility,youtube_video_id,created_at,author_user_id,profiles(nickname,role)')
     .eq('question_post_id', row.id)
-    .eq('status', 'visible')
-    .order('is_pinned', { ascending: false })
     .order('created_at', { ascending: true });
   if (answersError) return json(500, { error: 'db_error' });
 
@@ -192,8 +206,10 @@ export async function handler(event) {
   ];
 
   let badgeMap = {};
+  let helpfulState = { viewerHelpfulAnswerIds: new Set() };
   try {
     badgeMap = await fetchBadgeMap(supabase, authorIds);
+    helpfulState = await loadAnswerHelpfulState(supabase, (answers || []).map((answer) => answer.id), viewer);
   } catch {
     return json(500, { error: 'db_error' });
   }
@@ -202,7 +218,7 @@ export async function handler(event) {
 
   return json(200, {
     post,
-    answers: answers.map((answer) => shapeAnswer(question, answer, viewer, badgeMap)).filter(Boolean),
+    answers: answers.map((answer) => shapeAnswer(question, answer, viewer, badgeMap, helpfulState)).filter(Boolean),
     comments: comments.map((comment) => shapeComment(comment, badgeMap)),
     viewerCanAnswer: canViewerAnswer(viewer)
   });

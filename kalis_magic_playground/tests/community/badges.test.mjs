@@ -1,8 +1,15 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { VALID_BADGE_CODES, validateBadgeChange } from '../../netlify/functions/_lib/badges.mjs';
+import {
+  SELECTABLE_BADGE_CODES,
+  VALID_BADGE_CODES,
+  resolvePostAuthorBadges,
+  validateBadgeChange,
+  validateBadgeSelection
+} from '../../netlify/functions/_lib/badges.mjs';
 import { changeMemberBadge } from '../../netlify/functions/admin-badges.mjs';
+import { shapeMemberBadges } from '../../netlify/functions/member-badges.mjs';
 
 test('VALID_BADGE_CODES has the 9 badge codes', () => {
   assert.deepEqual(
@@ -53,6 +60,64 @@ test('validateBadgeChange rejects invalid actions', () => {
   assert.deepEqual(
     validateBadgeChange({ badgeCode: 'user', action: '' }),
     { ok: false, error: 'invalid_action' }
+  );
+});
+
+test('badge selection is limited to owned user and expert badges', () => {
+  assert.deepEqual(SELECTABLE_BADGE_CODES, ['user', 'expert']);
+  assert.deepEqual(validateBadgeSelection(['user'], null), { ok: true, code: null });
+  assert.deepEqual(validateBadgeSelection(['user'], ''), { ok: true, code: null });
+  assert.deepEqual(validateBadgeSelection(['user', 'expert'], 'expert'), { ok: true, code: 'expert' });
+  assert.deepEqual(validateBadgeSelection(['user'], 'expert'), { ok: false, error: 'badge_not_owned' });
+  assert.deepEqual(validateBadgeSelection(['kali'], 'kali'), { ok: false, error: 'badge_not_selectable' });
+});
+
+test('post author badge selection prefers post code, then profile default, then live badge map', () => {
+  const badgeMap = { 'author-1': ['user', 'expert'] };
+
+  assert.deepEqual(resolvePostAuthorBadges({
+    author_badge_code: 'expert',
+    profiles: { preferred_badge_code: 'user' }
+  }, badgeMap, 'author-1'), ['expert']);
+
+  assert.deepEqual(resolvePostAuthorBadges({
+    author_badge_code: null,
+    profiles: { preferred_badge_code: 'user' }
+  }, badgeMap, 'author-1'), ['user']);
+
+  assert.deepEqual(resolvePostAuthorBadges({
+    author_badge_code: null,
+    profiles: { preferred_badge_code: null }
+  }, badgeMap, 'author-1'), ['user', 'expert']);
+});
+
+test('shapeMemberBadges includes catalog ownership and selectable flags', () => {
+  const profile = {
+    user_id: '11111111-1111-4111-8111-111111111111',
+    nickname: '마술인07',
+    role: 'member',
+    preferred_badge_code: 'user'
+  };
+  const badgeRows = [{
+    granted_at: '2026-07-08T00:00:00.000Z',
+    badges: { code: 'user', label: '브론즈 깃털', description: '첫 질문, 배움의 시작' }
+  }];
+  const catalogRows = [
+    { code: 'user', label: '브론즈 깃털', description: '첫 질문, 배움의 시작' },
+    { code: 'expert', label: '브론즈 촛불', description: '질문에 답을 비춰주는 첫 안내자' },
+    { code: 'kali', label: '칼리의 루비 문장', description: '칼리형' }
+  ];
+
+  const shaped = shapeMemberBadges(profile, badgeRows, catalogRows);
+  assert.equal(shaped.preferredBadgeCode, 'user');
+  assert.deepEqual(shaped.badges.map((badge) => badge.code), ['user']);
+  assert.deepEqual(
+    shaped.catalog.filter((badge) => badge.code === 'user' || badge.code === 'expert' || badge.code === 'kali'),
+    [
+      { code: 'user', label: '브론즈 깃털', description: '첫 질문, 배움의 시작', owned: true, selectable: true },
+      { code: 'expert', label: '브론즈 촛불', description: '질문에 답을 비춰주는 첫 안내자', owned: false, selectable: true },
+      { code: 'kali', label: '칼리의 루비 문장', description: '칼리형', owned: false, selectable: false }
+    ]
   );
 });
 

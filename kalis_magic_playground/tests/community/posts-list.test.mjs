@@ -100,7 +100,7 @@ test('posts list includes counts and notice flag when body can be read', () => {
 test('applyListFilters matches category and reviewKind rules', () => {
   const all = fakeQuery();
   applyListFilters(all, { category: 'all', reviewKind: null });
-  assert.deepEqual(all.calls, [['neq', 'category', 'free']]);
+  assert.deepEqual(all.calls, []);
 
   const review = fakeQuery();
   applyListFilters(review, { category: 'review', reviewKind: null });
@@ -117,6 +117,10 @@ test('applyListFilters matches category and reviewKind rules', () => {
   const question = fakeQuery();
   applyListFilters(question, { category: 'question', reviewKind: null });
   assert.deepEqual(question.calls, [['eq', 'category', 'question']]);
+
+  const routine = fakeQuery();
+  applyListFilters(routine, { category: 'routine', reviewKind: null });
+  assert.deepEqual(routine.calls, [['eq', 'post_type', 'routine']]);
 });
 
 test('magazine list combines magazine posts and candidate questions', () => {

@@ -1,5 +1,6 @@
 import { requireViewer } from './_lib/auth.mjs';
 import { json, readJsonBody } from './_lib/http.mjs';
+import { awardQuestBadges } from './_lib/quest-badges.mjs';
 import { getSupabaseAdmin } from './_lib/supabase.mjs';
 import { validateEventReviewPayload } from './_lib/validators.mjs';
 
@@ -98,6 +99,12 @@ async function createReview(event) {
   }));
   const { error: photoError } = await supabase.from('event_review_photos').insert(photoRows);
   if (photoError) return json(500, { error: 'db_error' });
+
+  try {
+    await awardQuestBadges(supabase, viewer.userId);
+  } catch (error) {
+    console.error('quest_badge_award_failed', error);
+  }
 
   return json(201, { id: post.id });
 }

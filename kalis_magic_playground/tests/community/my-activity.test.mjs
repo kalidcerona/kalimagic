@@ -126,7 +126,7 @@ test('my activity handler uses auth, tab validation, comment counts, and visible
   assert.match(source, /json\(401,\s*\{\s*error:\s*'auth_required'\s*\}\s*\)/);
   assert.match(source, /json\(400,\s*\{\s*error:\s*'invalid_tab'\s*\}\s*\)/);
   assert.match(source, /\.from\('comments'\)[\s\S]*\.eq\('status', 'visible'\)/);
-  assert.match(source, /\.from\('answers'\)[\s\S]*\.eq\('status', 'visible'\)/);
+  assert.match(source, /\.from\('answers'\)[\s\S]*\.eq\('posts\.status', 'visible'\)/);
   assert.match(source, /\.neq\('status', 'deleted'\)/);
 });
 
@@ -230,7 +230,8 @@ test('listReceivedActivity excludes self answers like self comments', async () =
           id: 'question-1',
           title: '내 질문',
           author_user_id: viewer.userId,
-          post_type: 'question'
+          post_type: 'question',
+          status: 'visible'
         }
       },
       {
@@ -244,7 +245,8 @@ test('listReceivedActivity excludes self answers like self comments', async () =
           id: 'question-1',
           title: '내 질문',
           author_user_id: viewer.userId,
-          post_type: 'question'
+          post_type: 'question',
+          status: 'visible'
         }
       }
     ],

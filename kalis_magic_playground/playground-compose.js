@@ -2,7 +2,7 @@
   const PLAYGROUND_GUIDES = {
     all: {
       label: '전체 기록',
-      categoryHelp: '어떤 기록을 남길지 먼저 골라주면 됨. 질문, 모임 기록, 도구 기록, 자유게시판 중에서 가장 가까운 곳에 남기면 사람들이 더 잘 찾아볼 수 있음.',
+      categoryHelp: '어떤 기록을 남길지 먼저 골라주면 됨. 자유게시판, 마술 보관소, 질문함, 도구 기록, 모임 기록, 보관된 기록 중에서 가장 가까운 곳에 남기면 사람들이 더 잘 찾아볼 수 있음.',
       titlePlaceholder: '먼저 게시판을 선택하면 제목 예시가 나타남',
       bodyPlaceholder: '남기고 싶은 이야기에 가장 가까운 게시판을 선택하면, 그 글에 맞는 안내가 열림',
       extra: ''
@@ -19,6 +19,19 @@
       titleGuide: '오늘 남기고 싶은 이야기를 한 줄로 적으면 좋음.',
       bodyGuide: '연습한 것, 느낀 점, 사람들 반응, 마술 문화 이야기를 편하게 적으면 됨. 짧아도 좋고, 기록처럼 남겨도 좋음.',
       extra: '자유로운 이야기도 쌓이면 누군가에게 길잡이가 됨.'
+    },
+    routine: {
+      label: '마술 보관소',
+      description: '내가 배운 마술 루틴과 기술을 제목과 내용으로 정리해두는 공간임.',
+      titleExamples: [
+        '오늘 배운 루틴 순서 정리',
+        '연습 중인 카드 기술 메모',
+        '다시 확인할 손동작 포인트',
+        '공연 전에 꺼내 볼 루틴 기록'
+      ],
+      titleGuide: '다시 찾아볼 수 있게 루틴이나 기술 이름이 드러나게 적으면 좋음.',
+      bodyGuide: '배운 순서, 핵심 손동작, 연출 포인트, 연습하면서 막힌 부분을 자유롭게 정리하면 됨.',
+      extra: '개인 연습 기록도 쌓이면 나중에 다시 꺼내 볼 수 있는 보관소가 됨.'
     },
     question: {
       label: '질문 게시판',
@@ -86,6 +99,7 @@
     question: 'question',
     tool: 'review_comment',
     free: 'free',
+    routine: 'routine',
     magazine: 'magazine'
   };
 
@@ -98,6 +112,7 @@
     if (target.id === 'review_meeting') return 'meeting';
     if (target.id === 'magazine') return 'magazine';
     if (target.id === 'free') return 'free';
+    if (target.id === 'routine') return 'routine';
     return 'all';
   }
 
@@ -186,11 +201,12 @@
   function selectHtml(selected) {
     const options = [
       ['all', '게시판 선택'],
+      ['free', '자유게시판'],
+      ['routine', '마술 보관소'],
       ['question', '질문함'],
       ['tool', '도구 기록'],
       ['meeting', '모임 기록'],
-      ['magazine', '보관된 기록'],
-      ['free', '자유게시판']
+      ['magazine', '보관된 기록']
     ];
     return `
       <label>
@@ -202,7 +218,30 @@
     `;
   }
 
-  function formHtml(category) {
+  function badgePickerHtml(badgeOptions) {
+    const options = (Array.isArray(badgeOptions) ? badgeOptions : [])
+      .filter((badge) => badge && badge.owned && badge.selectable);
+    if (options.length === 0) return '';
+
+    return `
+      <fieldset class="pg-compose-badge-picker">
+        <legend>배지</legend>
+        <label class="pg-compose-badge-option">
+          <input type="radio" name="badgeCode" value="" checked>
+          <span>선택 안 함</span>
+        </label>
+        ${options.map((badge) => `
+          <label class="pg-compose-badge-option">
+            <input type="radio" name="badgeCode" value="${escapeHtml(badge.code)}">
+            <img src="assets/playground/badges/${encodeURIComponent(badge.code)}.webp" alt="" loading="lazy">
+            <span>${escapeHtml(badge.label || badge.code)}</span>
+          </label>
+        `).join('')}
+      </fieldset>
+    `;
+  }
+
+  function formHtml(category, badgeOptions) {
     const guide = PLAYGROUND_GUIDES[category] || PLAYGROUND_GUIDES.all;
     const titlePlaceholder = guide.titleGuide || guide.titlePlaceholder || PLAYGROUND_GUIDES.all.titlePlaceholder;
     const bodyPlaceholder = guide.bodyGuide || guide.bodyPlaceholder || PLAYGROUND_GUIDES.all.bodyPlaceholder;
@@ -245,6 +284,7 @@
             </select>
           </label>
         </div>
+        ${badgePickerHtml(badgeOptions)}
         <label>
           <span>유튜브 링크 선택</span>
           <input name="youtubeUrl" type="url" placeholder="https://youtu.be/video-id">
@@ -258,6 +298,29 @@
   function initPlaygroundCompose({ api, root, getActiveTarget, onCreated }) {
     let openCategory = categoryFromTarget(getActiveTarget && getActiveTarget());
     let renderToken = 0;
+    let badgeOptionsPromise = null;
+
+    function composeShellHtml(body) {
+      return `
+        <section class="pg-compose" aria-label="글쓰기">
+          <div class="pg-compose-head">
+            <h2>글쓰기</h2>
+            <button type="button" class="pg-compose-close" data-close-compose>닫기</button>
+          </div>
+          ${body}
+        </section>
+      `;
+    }
+
+    function loadBadgeOptions() {
+      if (badgeOptionsPromise) return badgeOptionsPromise;
+      if (!api || typeof api.getMemberBadges !== 'function') return Promise.resolve([]);
+
+      badgeOptionsPromise = api.getMemberBadges()
+        .then((data) => (data.catalog || []).filter((badge) => badge.owned && badge.selectable))
+        .catch(() => []);
+      return badgeOptionsPromise;
+    }
 
     function renderClosed() {
       root.innerHTML = `
@@ -284,18 +347,13 @@
       }
     }
 
-    function open(category = categoryFromTarget(getActiveTarget && getActiveTarget())) {
+    async function open(category = categoryFromTarget(getActiveTarget && getActiveTarget())) {
       openCategory = category;
       const token = ++renderToken;
-      root.innerHTML = `
-        <section class="pg-compose" aria-label="글쓰기">
-          <div class="pg-compose-head">
-            <h2>글쓰기</h2>
-            <button type="button" class="pg-compose-close" data-close-compose>닫기</button>
-          </div>
-          ${formHtml(openCategory)}
-        </section>
-      `;
+      root.innerHTML = composeShellHtml('<p class="pg-compose-status">글쓰기 화면을 불러오는 중입니다.</p>');
+      const badgeOptions = openCategory === 'meeting' ? [] : await loadBadgeOptions();
+      if (token !== renderToken) return;
+      root.innerHTML = composeShellHtml(formHtml(openCategory, badgeOptions));
       if (openCategory === 'meeting') {
         mountMeetingReviewForm(root.querySelector('[data-meeting-review-compose]'), token);
       }
@@ -336,6 +394,7 @@
           body: formData.get('body'),
           visibility: formData.get('visibility'),
           displayMode: formData.get('displayMode'),
+          badgeCode: formData.get('badgeCode') || null,
           youtubeUrl: formData.get('youtubeUrl') || null
         });
         status.textContent = '글이 올라갔습니다.';
