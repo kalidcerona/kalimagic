@@ -20,6 +20,7 @@ export const PUBLIC_FILES = [
   'mmbs.html',
   'modal.js',
   'nav.js',
+  'pg-util.js',
   'playground.html',
   'mypage.html',
   'write.html',
