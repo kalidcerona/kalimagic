@@ -2,41 +2,19 @@
 .agents/
 skills-lock.json
 
-# 루트 레벨 중복 파일만 제외 (실제 소스는 kalis_magic_playground/ 안에 있음)
-# 루트 한정(/) — 경로 무관 패턴은 kalimagic-v2/* 까지 잡으므로 금지
-/favicon.svg
-/imigi/
-/imigi2/
-/imigi3/
-/index.html
-/intro.html
-/lesson.html
-/mmbs.html
-/nav.js
-/script.js
-/style.css
-/video.html
-/works.html
-
 # 로컬 Claude Code 설정
 .claude/
 .gstack/
-kalimagic-v2/imigi3-orig/
 .superpowers/
 
 # Local Netlify folder
 .netlify
-
-# 구버전 폴더
-/kali_playground_v2/
 
 # kalis_magic_playground 배포 폴더 내 불필요 항목
 kalis_magic_playground/imigi3-orig/
 kalis_magic_playground/docs/
 kalis_magic_playground/archive/
 kalis_magic_playground/scripts/optimize_images.py
-/kalimagic-lead/
-/kalimagic-v2/
 
 # 백업 파일 패턴 (2026-07-06 정리)
 *.backup-*
@@ -50,6 +28,5 @@ kalis_magic_playground/DESIGN-BRIEFING.md
 # 로컬 참고 자료 (단, 설계 스펙은 추적)
 /docs/*
 !/docs/superpowers/
-/.reference/
 /.claude-intro
 .DS_Store
