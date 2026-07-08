@@ -7,6 +7,8 @@ const DIST = path.join(ROOT, 'dist');
 
 export const PUBLIC_FILES = [
   'about.html',
+  'archive.css',
+  'badges.js',
   'collapsible.js',
   'content.js',
   'editor.js',

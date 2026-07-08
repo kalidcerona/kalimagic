@@ -1,5 +1,6 @@
 import { canReadAnswer, canReadAuthor, canReadPostBody } from './_lib/access-policy.mjs';
 import { requireViewer } from './_lib/auth.mjs';
+import { fetchBadgeMap } from './_lib/badges.mjs';
 import { json } from './_lib/http.mjs';
 import { getSupabaseAdmin } from './_lib/supabase.mjs';
 import { validateUuid } from './_lib/validators.mjs';
@@ -29,6 +30,9 @@ export function shapePost(row, viewer, state = {}) {
   const policyPost = { visibility: row.visibility, authorUserId: row.author_user_id };
   const canReadBody = canReadPostBody(policyPost, viewer);
   const canReadName = canReadAuthor(policyPost, viewer);
+  const badgeMap = state.badgeMap || {};
+  const authorVisible = canReadName && row.display_mode === 'nickname';
+  const authorId = authorVisible ? row.author_user_id : null;
   return {
     id: row.id,
     postType: row.post_type,
@@ -37,8 +41,10 @@ export function shapePost(row, viewer, state = {}) {
     body: canReadBody ? row.body : '',
     bodyLocked: !canReadBody,
     youtubeVideoId: canReadBody ? row.youtube_video_id : null,
-    authorLabel: canReadName && row.display_mode === 'nickname' ? row.profiles?.nickname || '마술인' : '익명',
-    authorRole: canReadName && row.display_mode === 'nickname' ? row.profiles?.role || null : null,
+    authorId,
+    authorLabel: authorVisible ? row.profiles?.nickname || '마술인' : '익명',
+    authorRole: authorVisible ? row.profiles?.role || null : null,
+    authorBadges: authorId ? badgeMap[authorId] || [] : [],
     displayMode: row.display_mode,
     visibility: row.visibility,
     status: row.status,
@@ -52,27 +58,34 @@ export function shapePost(row, viewer, state = {}) {
   };
 }
 
-function shapeAnswer(question, row, viewer) {
+function shapeAnswer(question, row, viewer, badgeMap = {}) {
   if (!canReadAnswer(question, { visibility: row.visibility }, viewer)) return null;
+  const authorId = row.author_user_id || null;
   return {
     id: row.id,
     body: row.body,
     visibility: row.visibility,
     isPinned: row.is_pinned,
+    authorId,
     authorLabel: row.profiles?.nickname || '답변자',
     authorRole: row.profiles?.role || null,
+    authorBadges: authorId ? badgeMap[authorId] || [] : [],
     youtubeVideoId: row.youtube_video_id,
     createdAt: row.created_at
   };
 }
 
-function shapeComment(row) {
+function shapeComment(row, badgeMap = {}) {
+  const authorVisible = row.display_mode === 'nickname';
+  const authorId = authorVisible ? row.author_user_id || null : null;
   return {
     id: row.id,
     parentCommentId: row.parent_comment_id,
     body: row.body,
-    authorLabel: row.display_mode === 'nickname' ? row.profiles?.nickname || '마술인' : '익명',
-    authorRole: row.display_mode === 'nickname' ? row.profiles?.role || null : null,
+    authorId,
+    authorLabel: authorVisible ? row.profiles?.nickname || '마술인' : '익명',
+    authorRole: authorVisible ? row.profiles?.role || null : null,
+    authorBadges: authorId ? badgeMap[authorId] || [] : [],
     createdAt: row.created_at
   };
 }
@@ -121,6 +134,8 @@ export async function handler(event) {
 
   let state = { viewCount: row.view_count || 0, likeCount: 0, viewerLiked: false };
   const canReadBody = canReadPostBody({ visibility: row.visibility, authorUserId: row.author_user_id }, viewer);
+  const canReadName = canReadAuthor({ visibility: row.visibility, authorUserId: row.author_user_id }, viewer);
+  const postAuthorId = canReadName && row.display_mode === 'nickname' ? row.author_user_id : null;
 
   if (shouldIncrementView(row, viewer)) {
     try {
@@ -138,15 +153,22 @@ export async function handler(event) {
     }
   }
 
-  const post = shapePost(row, viewer, state);
   const question = { visibility: row.visibility, authorUserId: row.author_user_id };
-  if (!post.canReadBody) {
+
+  if (!canReadBody) {
+    let badgeMap = {};
+    try {
+      badgeMap = await fetchBadgeMap(supabase, postAuthorId ? [postAuthorId] : []);
+    } catch {
+      return json(500, { error: 'db_error' });
+    }
+    const post = shapePost(row, viewer, { ...state, badgeMap });
     return json(200, { post, answers: [], comments: [], viewerCanAnswer: canViewerAnswer(viewer) });
   }
 
   const { data: answers, error: answersError } = await supabase
     .from('answers')
-    .select('id,body,visibility,is_pinned,youtube_video_id,created_at,profiles(nickname,role)')
+    .select('id,body,visibility,is_pinned,youtube_video_id,created_at,author_user_id,profiles(nickname,role)')
     .eq('question_post_id', row.id)
     .eq('status', 'visible')
     .order('is_pinned', { ascending: false })
@@ -155,16 +177,33 @@ export async function handler(event) {
 
   const { data: comments, error: commentsError } = await supabase
     .from('comments')
-    .select('id,parent_comment_id,body,display_mode,created_at,profiles(nickname,role)')
+    .select('id,parent_comment_id,body,display_mode,created_at,author_user_id,profiles(nickname,role)')
     .eq('post_id', row.id)
     .eq('status', 'visible')
     .order('created_at', { ascending: true });
   if (commentsError) return json(500, { error: 'db_error' });
 
+  const authorIds = [
+    postAuthorId,
+    ...(answers || []).map((answer) => answer.author_user_id),
+    ...(comments || [])
+      .filter((comment) => comment.display_mode === 'nickname')
+      .map((comment) => comment.author_user_id)
+  ];
+
+  let badgeMap = {};
+  try {
+    badgeMap = await fetchBadgeMap(supabase, authorIds);
+  } catch {
+    return json(500, { error: 'db_error' });
+  }
+
+  const post = shapePost(row, viewer, { ...state, badgeMap });
+
   return json(200, {
     post,
-    answers: answers.map((answer) => shapeAnswer(question, answer, viewer)).filter(Boolean),
-    comments: comments.map(shapeComment),
+    answers: answers.map((answer) => shapeAnswer(question, answer, viewer, badgeMap)).filter(Boolean),
+    comments: comments.map((comment) => shapeComment(comment, badgeMap)),
     viewerCanAnswer: canViewerAnswer(viewer)
   });
 }

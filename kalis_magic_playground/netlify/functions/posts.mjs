@@ -1,5 +1,6 @@
 import { canReadAuthor, canReadPostBody } from './_lib/access-policy.mjs';
 import { requireViewer } from './_lib/auth.mjs';
+import { fetchBadgeMap } from './_lib/badges.mjs';
 import { json, readJsonBody } from './_lib/http.mjs';
 import { getSupabaseAdmin } from './_lib/supabase.mjs';
 import { validateListQuery, validatePostIdPayload, validatePostPayload } from './_lib/validators.mjs';
@@ -44,6 +45,9 @@ export function shapePostListRow(row, viewer, state = {}) {
   const commentCounts = state.commentCounts || new Map();
   const likeCounts = state.likeCounts || new Map();
   const viewerLikedPostIds = state.viewerLikedPostIds || new Set();
+  const badgeMap = state.badgeMap || {};
+  const authorVisible = canReadName && row.display_mode === 'nickname';
+  const authorId = authorVisible ? row.author_user_id : null;
 
   return {
     id: row.id,
@@ -55,8 +59,10 @@ export function shapePostListRow(row, viewer, state = {}) {
     bodyPreview: canReadBody ? String(row.body || '').replace(/\s+/g, ' ').trim().slice(0, 140) : null,
     commentCount: commentCounts.get(row.id) || 0,
     youtubeVideoId: canReadBody ? row.youtube_video_id : null,
-    authorLabel: canReadName && row.display_mode === 'nickname' ? row.profiles?.nickname || '마술인' : '익명',
-    authorRole: canReadName && row.display_mode === 'nickname' ? row.profiles?.role || null : null,
+    authorId,
+    authorLabel: authorVisible ? row.profiles?.nickname || '마술인' : '익명',
+    authorRole: authorVisible ? row.profiles?.role || null : null,
+    authorBadges: authorId ? badgeMap[authorId] || [] : [],
     displayMode: row.display_mode,
     visibility: row.visibility,
     status: row.status,
@@ -83,12 +89,13 @@ export function applyListFilters(query, params) {
   return query.neq('category', 'free');
 }
 
-async function loadListState(supabase, postIds, viewer) {
+async function loadListState(supabase, postIds, viewer, authorUserIds) {
   if (postIds.length === 0) {
     return {
       commentCounts: new Map(),
       likeCounts: new Map(),
-      viewerLikedPostIds: new Set()
+      viewerLikedPostIds: new Set(),
+      badgeMap: {}
     };
   }
 
@@ -116,10 +123,13 @@ async function loadListState(supabase, postIds, viewer) {
     viewerLikes = data || [];
   }
 
+  const badgeMap = await fetchBadgeMap(supabase, authorUserIds);
+
   return {
     commentCounts: countByPostId(comments),
     likeCounts: countByPostId(likes),
-    viewerLikedPostIds: new Set(viewerLikes.map((row) => row.post_id))
+    viewerLikedPostIds: new Set(viewerLikes.map((row) => row.post_id)),
+    badgeMap
   };
 }
 
@@ -151,9 +161,11 @@ async function listPosts(event) {
   const hasMore = rows.length > params.limit;
   const postIds = pageRows.map((row) => row.id);
 
+  const authorUserIds = pageRows.map((row) => row.author_user_id);
+
   let state;
   try {
-    state = await loadListState(supabase, postIds, viewer);
+    state = await loadListState(supabase, postIds, viewer, authorUserIds);
   } catch {
     return json(500, { error: 'db_error' });
   }

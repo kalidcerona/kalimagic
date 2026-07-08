@@ -1,5 +1,6 @@
 import { canReadPostBody } from './_lib/access-policy.mjs';
 import { requireViewer } from './_lib/auth.mjs';
+import { fetchBadgeMap } from './_lib/badges.mjs';
 import { json, readJsonBody } from './_lib/http.mjs';
 import { getSupabaseAdmin } from './_lib/supabase.mjs';
 import { validateCommentPayload } from './_lib/validators.mjs';
@@ -12,13 +13,17 @@ async function optionalViewer(event) {
   }
 }
 
-function shapeComment(row) {
+function shapeComment(row, badgeMap = {}) {
+  const authorVisible = row.display_mode === 'nickname';
+  const authorId = authorVisible ? row.author_user_id || null : null;
   return {
     id: row.id,
     parentCommentId: row.parent_comment_id,
     body: row.body,
-    authorLabel: row.display_mode === 'nickname' ? row.profiles?.nickname || '마술인' : '익명',
-    authorRole: row.display_mode === 'nickname' ? row.profiles?.role || null : null,
+    authorId,
+    authorLabel: authorVisible ? row.profiles?.nickname || '마술인' : '익명',
+    authorRole: authorVisible ? row.profiles?.role || null : null,
+    authorBadges: authorId ? badgeMap[authorId] || [] : [],
     createdAt: row.created_at
   };
 }
@@ -50,12 +55,24 @@ async function listComments(event) {
 
   const { data, error } = await supabase
     .from('comments')
-    .select('id,parent_comment_id,body,display_mode,created_at,profiles(nickname,role)')
+    .select('id,parent_comment_id,body,display_mode,created_at,author_user_id,profiles(nickname,role)')
     .eq('post_id', postId)
     .eq('status', 'visible')
     .order('created_at', { ascending: true });
   if (error) return json(500, { error: 'db_error' });
-  return json(200, { comments: data.map(shapeComment) });
+
+  const authorIds = data
+    .filter((row) => row.display_mode === 'nickname')
+    .map((row) => row.author_user_id);
+
+  let badgeMap = {};
+  try {
+    badgeMap = await fetchBadgeMap(supabase, authorIds);
+  } catch {
+    return json(500, { error: 'db_error' });
+  }
+
+  return json(200, { comments: data.map((row) => shapeComment(row, badgeMap)) });
 }
 
 async function createComment(event) {
