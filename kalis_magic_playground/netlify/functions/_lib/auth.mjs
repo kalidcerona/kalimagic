@@ -22,7 +22,8 @@ async function createProfileForUser(supabase, user) {
     .upsert({
       user_id: user.id,
       nickname: defaultProfileNickname(user.email),
-      role: 'member'
+      role: 'member',
+      nickname_set: false
     }, {
       onConflict: 'user_id',
       ignoreDuplicates: true

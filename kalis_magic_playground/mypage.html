@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>기록 보기 | 칼리형</title>
+  <title>마이페이지 | 칼리형</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
   <script>
@@ -17,18 +17,19 @@
 <body>
   <div id="nav-root"></div>
   <script>
-    document.addEventListener('DOMContentLoaded', () => renderNav('playground'));
+    document.addEventListener('DOMContentLoaded', () => renderNav('mypage'));
   </script>
-  <main class="pgw-shell pgw-shell--post">
-    <a class="pgw-back" href="playground.html">← 목록으로</a>
-    <section class="playground-detail pgw-detail" data-post-detail>
-      <p class="playground-loading">기록을 불러오는 중...</p>
+  <main class="pgw-shell pgw-shell--post mypage-shell">
+    <a class="pgw-back" href="playground.html">← 마술 놀이터</a>
+    <h1 class="pgw-title">마이페이지</h1>
+    <section class="admin-card mypage-profile" data-mypage-profile aria-live="polite">
+      <p class="playground-loading">프로필을 불러오는 중...</p>
     </section>
+    <nav class="playground-tabs mypage-tabs" data-mypage-tabs aria-label="마이페이지 활동 탭"></nav>
+    <section class="admin-list mypage-list" data-mypage-list aria-live="polite"></section>
   </main>
   <script src="auth.js" defer></script>
   <script src="nickname-onboarding.js" defer></script>
-  <script src="playground-api.js" defer></script>
-  <script src="playground-detail.js" defer></script>
-  <script src="post.js" defer></script>
+  <script src="mypage.js" defer></script>
 </body>
 </html>

@@ -1,5 +1,5 @@
 (function () {
-  var state = { filter: 'all', session: null, flash: '' };
+  var state = { filter: 'all', session: null, flash: '', memberQuery: '' };
   var listEl = document.querySelector('[data-admin-list]');
   var authPanel = document.querySelector('[data-auth-panel]');
   var filterButtons = Array.prototype.slice.call(document.querySelectorAll('[data-admin-filter]'));
@@ -78,7 +78,7 @@
         method: 'POST',
         body: JSON.stringify({ action: action, postId: postId })
       });
-      await loadInbox();
+      await loadCurrentView();
     });
     return button;
   }
@@ -205,6 +205,116 @@
     }
   }
 
+  function memberSearchCard() {
+    var card = el('article', 'admin-card');
+    var form = el('form', 'playground-comment-form');
+    var input = document.createElement('input');
+    input.type = 'search';
+    input.name = 'q';
+    input.placeholder = '닉네임 검색';
+    input.value = state.memberQuery;
+    var actions = el('div', 'admin-card__actions');
+    var submit = el('button', 'playground-button', '검색');
+    submit.type = 'submit';
+    actions.appendChild(submit);
+    form.appendChild(input);
+    form.appendChild(actions);
+    form.addEventListener('submit', function (event) {
+      event.preventDefault();
+      state.memberQuery = input.value;
+      loadMembers();
+    });
+    card.appendChild(el('h2', '', '회원 관리'));
+    card.appendChild(el('p', '', '빈 검색은 최근 가입 30명을 보여줍니다.'));
+    card.appendChild(form);
+    return card;
+  }
+
+  function memberRoleButton(member, card) {
+    var targetRole = member.role === 'expert' ? 'member' : 'expert';
+    var label = member.role === 'expert' ? '전문가 해제' : '전문가 부여';
+    var button = el('button', 'playground-button playground-button--ghost', label);
+    button.type = 'button';
+    button.addEventListener('click', async function () {
+      var status = card.querySelector('[data-member-status]');
+      status.textContent = '처리 중입니다.';
+      status.classList.remove('is-error');
+      button.disabled = true;
+      try {
+        var data = await fetchJson('/.netlify/functions/admin-members', {
+          method: 'POST',
+          body: JSON.stringify(memberRolePayload(member, targetRole))
+        });
+        member.role = data.role || targetRole;
+        card.replaceWith(memberRow(member));
+      } catch (error) {
+        status.textContent = error.message || '역할을 변경하지 못했습니다.';
+        status.classList.add('is-error');
+        button.disabled = false;
+      }
+    });
+    return button;
+  }
+
+  function memberRolePayload(member, targetRole) {
+    if (targetRole === 'expert') return { userId: member.userId, role: 'expert' };
+    return { userId: member.userId, role: 'member' };
+  }
+
+  function memberRow(member) {
+    var card = el('article', 'admin-card');
+    var protectedRolePattern = /^(admin|kali)$/;
+    card.appendChild(el('h2', '', member.nickname || '닉네임 없음'));
+    card.appendChild(el('p', '', 'role ' + (member.role || 'member')));
+    card.appendChild(el('span', '', member.createdAt ? new Date(member.createdAt).toLocaleDateString('ko-KR') : '가입일 없음'));
+    var actions = el('div', 'admin-card__actions');
+    if (!protectedRolePattern.test(member.role || '')) {
+      actions.appendChild(memberRoleButton(member, card));
+    }
+    card.appendChild(actions);
+    var status = el('p', 'playground-form-status');
+    status.setAttribute('data-member-status', '');
+    card.appendChild(status);
+    return card;
+  }
+
+  function renderMembers(members) {
+    clear(listEl);
+    listEl.appendChild(memberSearchCard());
+    if (!members.length) {
+      var empty = el('article', 'playground-empty');
+      empty.appendChild(el('h2', '', '회원이 없습니다'));
+      empty.appendChild(el('p', '', '검색어를 바꿔 다시 시도해주세요.'));
+      listEl.appendChild(empty);
+      return;
+    }
+    members.forEach(function (member) {
+      listEl.appendChild(memberRow(member));
+    });
+  }
+
+  async function loadMembers() {
+    clear(listEl);
+    listEl.appendChild(memberSearchCard());
+    listEl.appendChild(el('p', 'playground-loading', '회원 목록을 불러오는 중입니다.'));
+    try {
+      var data = await fetchJson('/.netlify/functions/admin-members?q=' + encodeURIComponent(state.memberQuery));
+      renderMembers(data.members || []);
+    } catch (error) {
+      clear(listEl);
+      listEl.appendChild(memberSearchCard());
+      var box = el('article', 'playground-empty');
+      box.appendChild(el('h2', '', '회원 목록을 불러오지 못했습니다'));
+      box.appendChild(el('p', '', error.message || '잠시 후 다시 시도해주세요.'));
+      listEl.appendChild(box);
+    }
+  }
+
+  function loadCurrentView() {
+    if (state.filter === 'members') return loadMembers();
+    return loadInbox();
+  }
+
   function bindFilters() {
     filterButtons.forEach(function (button) {
       button.addEventListener('click', function () {
@@ -212,7 +322,7 @@
         filterButtons.forEach(function (tab) {
           tab.classList.toggle('is-active', tab === button);
         });
-        loadInbox();
+        loadCurrentView();
       });
     });
   }

@@ -24,4 +24,22 @@ function renderNav(activePage) {
     if (!root) return;  // nav-root 없는 페이지에서 null deref 가드
     root.className = 'main-nav';
     root.innerHTML = `<a href="index.html" class="nav-logo">KALI</a><nav class="nav-links">${links}</nav>`;
+    renderLoggedInNavLinks(root, activePage);
+}
+
+async function renderLoggedInNavLinks(root, activePage) {
+    if (!window.MagicAuth) {
+        document.addEventListener('DOMContentLoaded', () => renderLoggedInNavLinks(root, activePage), { once: true });
+        return;
+    }
+    const session = await window.MagicAuth.getSession();
+    if (!session || root.querySelector('[data-nav-mypage]')) return;
+    const nav = root.querySelector('.nav-links');
+    if (!nav) return;
+    const link = document.createElement('a');
+    link.href = 'mypage.html';
+    link.className = ['nav-link', activePage === 'mypage' && 'active'].filter(Boolean).join(' ');
+    link.dataset.navMypage = 'true';
+    link.textContent = '마이페이지';
+    nav.appendChild(link);
 }
