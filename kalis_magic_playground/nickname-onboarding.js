@@ -1,12 +1,7 @@
 (function () {
   var FLAG_PREFIX = 'nickname-onboarding-shown';
 
-  function el(tag, className, text) {
-    var node = document.createElement(tag);
-    if (className) node.className = className;
-    if (typeof text === 'string') node.textContent = text;
-    return node;
-  }
+  var el = window.PgUtil.el;
 
   function flagKey(session) {
     var user = session && session.user ? session.user : {};

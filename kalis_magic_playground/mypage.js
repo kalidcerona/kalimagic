@@ -14,37 +14,10 @@
     given: '아직 해준 답변이 없어요'
   };
 
-  function el(tag, className, text) {
-    var node = document.createElement(tag);
-    if (className) node.className = className;
-    if (typeof text === 'string') node.textContent = text;
-    return node;
-  }
-
-  function clear(node) {
-    while (node && node.firstChild) node.removeChild(node.firstChild);
-  }
-
-  async function fetchJson(url, options) {
-    var headers = window.MagicAuth ? await window.MagicAuth.authHeader() : {};
-    if (options && options.body) headers['content-type'] = 'application/json; charset=utf-8';
-    var response = await fetch(url, Object.assign({}, options, { headers: headers }));
-    var data = await response.json().catch(function () { return {}; });
-    if (!response.ok) {
-      var error = new Error(data.message || data.error || '요청을 처리하지 못했습니다.');
-      error.status = response.status;
-      error.code = data.error;
-      throw error;
-    }
-    return data;
-  }
-
-  function formatDate(value) {
-    if (!value) return '';
-    var date = new Date(value);
-    if (Number.isNaN(date.getTime())) return '';
-    return date.toLocaleDateString('ko-KR', { year: 'numeric', month: 'short', day: 'numeric' });
-  }
+  var el = window.PgUtil.el;
+  var clear = window.PgUtil.clear;
+  var fetchJson = window.PgUtil.fetchJson;
+  var formatDate = window.PgUtil.formatDate;
 
   function categoryLabel(value) {
     var labels = {

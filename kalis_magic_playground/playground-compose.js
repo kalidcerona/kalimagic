@@ -89,14 +89,7 @@
     magazine: 'magazine'
   };
 
-  function escapeHtml(value) {
-    return String(value || '')
-      .replaceAll('&', '&amp;')
-      .replaceAll('<', '&lt;')
-      .replaceAll('>', '&gt;')
-      .replaceAll('"', '&quot;')
-      .replaceAll("'", '&#039;');
-  }
+  var escapeHtml = window.PgUtil.escapeHtml;
 
   function categoryFromTarget(target) {
     if (!target || target.id === 'all') return 'all';

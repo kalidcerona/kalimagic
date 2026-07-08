@@ -19,14 +19,7 @@
     free: '아직 자유게시판에 올라온 기록이 없습니다. 자유로운 마술 이야기를 기다리고 있습니다.'
   };
 
-  function escapeHtml(value) {
-    return String(value || '')
-      .replaceAll('&', '&amp;')
-      .replaceAll('<', '&lt;')
-      .replaceAll('>', '&gt;')
-      .replaceAll('"', '&quot;')
-      .replaceAll("'", '&#039;');
-  }
+  const escapeHtml = window.PgUtil.escapeHtml;
 
   function prefixClass(prefix) {
     if (prefix === '[질문]') return 'question';
@@ -34,16 +27,6 @@
     if (prefix === '[모임]') return 'meeting';
     if (prefix === '[매거진]') return 'magazine';
     return 'default';
-  }
-
-  function formatDate(value) {
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return '';
-    const now = new Date();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    if (date.getFullYear() === now.getFullYear()) return `${month}.${day}`;
-    return `${date.getFullYear()}.${month}.${day}`;
   }
 
   function formatCount(post, key) {
@@ -74,7 +57,7 @@
           ${preview}
         </td>
         <td class="pg-author-cell">${escapeHtml(post.authorLabel || '익명')}${authorBadge}</td>
-        <td class="pg-date-cell">${formatDate(post.createdAt)}</td>
+        <td class="pg-date-cell">${window.PgUtil.formatDate(post.createdAt, 'short')}</td>
         <td class="pg-count-cell">${formatCount(post, 'viewCount')}</td>
         <td class="pg-count-cell">${formatCount(post, 'likeCount')}</td>
       </tr>

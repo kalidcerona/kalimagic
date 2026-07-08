@@ -14,30 +14,14 @@
 
   window.KALI_EVENTS = KALI_EVENTS;
 
-  function el(tag, className, text) {
-    var node = document.createElement(tag);
-    if (className) node.className = className;
-    if (typeof text === 'string') node.textContent = text;
-    return node;
-  }
-
-  function clear(node) {
-    while (node.firstChild) node.removeChild(node.firstChild);
-  }
+  var el = window.PgUtil.el;
+  var clear = window.PgUtil.clear;
+  var fetchJson = window.PgUtil.fetchJson;
 
   function roleBadgeHtml(role) {
     return window.KalisBadges && typeof window.KalisBadges.badgeHtml === 'function'
       ? window.KalisBadges.badgeHtml(role)
       : '';
-  }
-
-  async function fetchJson(url, options) {
-    var headers = window.MagicAuth ? await window.MagicAuth.authHeader() : {};
-    if (options && options.body) headers['content-type'] = 'application/json; charset=utf-8';
-    var response = await fetch(url, Object.assign({}, options, { headers: headers }));
-    var data = await response.json().catch(function () { return {}; });
-    if (!response.ok) throw new Error(data.message || data.error || '요청을 처리하지 못했습니다.');
-    return data;
   }
 
   function field(name, label, placeholder, rows) {

@@ -1,12 +1,5 @@
 (function () {
-  function escapeHtml(value) {
-    return String(value || '')
-      .replaceAll('&', '&amp;')
-      .replaceAll('<', '&lt;')
-      .replaceAll('>', '&gt;')
-      .replaceAll('"', '&quot;')
-      .replaceAll("'", '&#039;');
-  }
+  const escapeHtml = window.PgUtil.escapeHtml;
 
   function roleBadgeHtml(role) {
     return window.KalisBadges && typeof window.KalisBadges.badgeHtml === 'function'
@@ -14,15 +7,6 @@
       : '';
   }
 
-  function formatDate(value) {
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return '';
-    return date.toLocaleDateString('ko-KR', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
-    });
-  }
 
   function countText(post, key) {
     if (post.canReadBody === false || post[key] === null || post[key] === undefined) return '-';
@@ -137,7 +121,7 @@
           <h2>${post.isNotice ? '📌 ' : ''}${escapeHtml(post.title)}</h2>
           <div class="pg-detail-meta">
             <span>${escapeHtml(post.authorLabel || '익명')}${authorBadge}</span>
-            <span>${formatDate(post.createdAt)}</span>
+            <span>${window.PgUtil.formatDate(post.createdAt, 'detail')}</span>
             <span>조회 ${countText(post, 'viewCount')}</span>
             <span data-like-count>추천 ${countText(post, 'likeCount')}</span>
           </div>
