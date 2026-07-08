@@ -50,7 +50,7 @@ test('playground api module wraps the v2 endpoints with auth headers', () => {
   assert.match(source, /createPost/);
 });
 
-test('playground list module has six tabs, prefix filters, table rendering, paging, and free lock copy', () => {
+test('playground list module has six tabs, table rendering, paging, and free lock copy', () => {
   const source = read('playground-list.js');
 
   assert.match(source, /PLAYGROUND_TABS/);
@@ -62,7 +62,6 @@ test('playground list module has six tabs, prefix filters, table rendering, pagi
   assert.match(source, /자유 기록🔒/);
   assert.match(source, /reviewKind: 'tool'/);
   assert.match(source, /reviewKind: 'meeting'/);
-  assert.match(source, /PREFIX_FILTERS/);
   assert.match(source, /pg-table/);
   assert.match(source, /hasMore/);
   assert.match(source, /자유 기록은 준비 중입니다\. 질문함과 리뷰가 자리 잡은 뒤 열립니다\./);

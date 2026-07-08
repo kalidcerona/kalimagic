@@ -10,14 +10,6 @@
     { id: 'free', label: '자유 기록🔒', category: 'free', reviewKind: null, locked: true }
   ];
 
-  const PREFIX_FILTERS = [
-    { id: 'all', label: '전체 말머리', category: null, reviewKind: null },
-    { id: 'question', label: '[질문]', category: 'question', reviewKind: null },
-    { id: 'tool', label: '[도구]', category: 'review', reviewKind: 'tool' },
-    { id: 'meeting', label: '[모임]', category: 'review', reviewKind: 'meeting' },
-    { id: 'magazine', label: '[매거진]', category: 'magazine', reviewKind: null }
-  ];
-
   const EMPTY_COPY = {
     all: '아직 첫 기록이 올라오지 않았습니다. 질문과 후기가 쌓이면 이 놀이터의 지도가 됩니다.',
     question: '아직 질문이 없습니다. 처음 묻는 질문도 다음 사람에게는 같은 고민을 해결하는 첫 기록이 됩니다.',
@@ -145,7 +137,6 @@
   function initPlaygroundList({ api, root, tabsRoot }) {
     const state = {
       tabId: 'all',
-      prefixId: 'all',
       posts: [],
       offset: 0,
       hasMore: false,
@@ -165,31 +156,13 @@
       return PLAYGROUND_TABS.find((tab) => tab.id === state.tabId) || PLAYGROUND_TABS[0];
     }
 
-    function activePrefix() {
-      return PREFIX_FILTERS.find((filter) => filter.id === state.prefixId) || PREFIX_FILTERS[0];
-    }
-
     function getActiveTarget() {
       return activeTab();
     }
 
     function queryForState() {
-      const prefix = activePrefix();
-      if (prefix.category) {
-        return { category: prefix.category, reviewKind: prefix.reviewKind };
-      }
       const tab = activeTab();
       return { category: tab.category, reviewKind: tab.reviewKind };
-    }
-
-    function renderFilters() {
-      return `
-        <div class="pg-prefix-filter" aria-label="말머리 필터">
-          ${PREFIX_FILTERS.map((filter) => `
-            <button type="button" class="pg-prefix-filter-button ${filter.id === state.prefixId ? 'is-active' : ''}" data-prefix-id="${filter.id}">${filter.label}</button>
-          `).join('')}
-        </div>
-      `;
     }
 
     function render() {
@@ -261,7 +234,6 @@
         const button = event.target.closest('[data-tab-id]');
         if (!button) return;
         state.tabId = button.dataset.tabId;
-        state.prefixId = 'all';
         for (const tabButton of tabContainer.querySelectorAll('[data-tab-id]')) {
           tabButton.classList.toggle('is-active', tabButton.dataset.tabId === state.tabId);
         }
@@ -276,12 +248,6 @@
         load({ append: true });
         return;
       }
-
-      const prefixButton = event.target.closest('[data-prefix-id]');
-      if (prefixButton) {
-        state.prefixId = prefixButton.dataset.prefixId;
-        load({ append: false });
-      }
     });
 
     load({ append: false });
@@ -290,7 +256,6 @@
 
   window.KalisPlaygroundList = {
     initPlaygroundList,
-    PLAYGROUND_TABS,
-    PREFIX_FILTERS
+    PLAYGROUND_TABS
   };
 })();
