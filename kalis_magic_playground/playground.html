@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>마술 놀이터 | 칼리형</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="archive.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
   <script>
     window.MAGIC_PLAYGROUND_CONFIG = {
@@ -14,7 +15,7 @@
   </script>
   <script src="nav.js" defer></script>
 </head>
-<body>
+<body class="archive-room">
   <div id="nav-root"></div>
   <script>
     document.addEventListener('DOMContentLoaded', () => renderNav('playground'));
@@ -28,12 +29,12 @@
       </div>
       <div class="phm-sidebar-tabs">
         <nav class="playground-tabs" aria-label="마술 놀이터 카테고리">
-          <button type="button" data-category="all" class="is-active">전체</button>
-          <button type="button" data-category="question">질문</button>
-          <button type="button" data-category="event_review">모임 후기</button>
-          <button type="button" data-category="review">리뷰/후기</button>
+          <button type="button" data-category="all" class="is-active">전체 기록</button>
+          <button type="button" data-category="question">질문함</button>
+          <button type="button" data-category="event_review">모임 기록</button>
+          <button type="button" data-category="review">도구 기록</button>
           <button type="button" data-category="free">자유게시판</button>
-          <button type="button" data-category="magazine">매거진</button>
+          <button type="button" data-category="magazine">보관된 기록</button>
         </nav>
       </div>
     </aside>
@@ -55,6 +56,7 @@
   </main>
   <script src="auth.js" defer></script>
   <script src="nickname-onboarding.js" defer></script>
+  <script src="badges.js" defer></script>
   <script src="playground-api.js" defer></script>
   <script src="playground-list.js" defer></script>
   <script src="playground-compose.js" defer></script>

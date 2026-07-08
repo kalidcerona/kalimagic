@@ -18,6 +18,7 @@ function shapeComment(row) {
     parentCommentId: row.parent_comment_id,
     body: row.body,
     authorLabel: row.display_mode === 'nickname' ? row.profiles?.nickname || '마술인' : '익명',
+    authorRole: row.display_mode === 'nickname' ? row.profiles?.role || null : null,
     createdAt: row.created_at
   };
 }
@@ -49,7 +50,7 @@ async function listComments(event) {
 
   const { data, error } = await supabase
     .from('comments')
-    .select('id,parent_comment_id,body,display_mode,created_at,profiles(nickname)')
+    .select('id,parent_comment_id,body,display_mode,created_at,profiles(nickname,role)')
     .eq('post_id', postId)
     .eq('status', 'visible')
     .order('created_at', { ascending: true });

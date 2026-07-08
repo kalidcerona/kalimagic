@@ -15,6 +15,12 @@
     while (node.firstChild) node.removeChild(node.firstChild);
   }
 
+  function roleBadgeHtml(role) {
+    return window.KalisBadges && typeof window.KalisBadges.badgeHtml === 'function'
+      ? window.KalisBadges.badgeHtml(role)
+      : '';
+  }
+
   async function fetchJson(url, options) {
     var headers = window.MagicAuth ? await window.MagicAuth.authHeader() : {};
     if (options && options.body) headers['content-type'] = 'application/json; charset=utf-8';
@@ -261,11 +267,23 @@
     return { userId: member.userId, role: 'member' };
   }
 
+  function memberRoleNode(member) {
+    var role = member.role || 'member';
+    var row = el('p', '');
+    var badge = roleBadgeHtml(role);
+    if (badge) {
+      row.insertAdjacentHTML('beforeend', badge);
+      return row;
+    }
+    row.textContent = 'role ' + (role === 'member' ? '일반회원' : role);
+    return row;
+  }
+
   function memberRow(member) {
     var card = el('article', 'admin-card');
     var protectedRolePattern = /^(admin|kali)$/;
     card.appendChild(el('h2', '', member.nickname || '닉네임 없음'));
-    card.appendChild(el('p', '', 'role ' + (member.role || 'member')));
+    card.appendChild(memberRoleNode(member));
     card.appendChild(el('span', '', member.createdAt ? new Date(member.createdAt).toLocaleDateString('ko-KR') : '가입일 없음'));
     var actions = el('div', 'admin-card__actions');
     if (!protectedRolePattern.test(member.role || '')) {

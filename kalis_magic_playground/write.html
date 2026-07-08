@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>기록 남기기 | 칼리형</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="archive.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
   <script>
     window.MAGIC_PLAYGROUND_CONFIG = {
@@ -14,7 +15,7 @@
   </script>
   <script src="nav.js" defer></script>
 </head>
-<body>
+<body class="archive-room">
   <div id="nav-root"></div>
   <script>
     document.addEventListener('DOMContentLoaded', () => renderNav('playground'));
@@ -29,6 +30,7 @@
     <section class="pgw-compose" data-write-compose></section>
   </main>
   <script src="auth.js" defer></script>
+  <script src="badges.js" defer></script>
   <script src="playground-api.js" defer></script>
   <script src="playground-compose.js" defer></script>
   <script src="write.js" defer></script>

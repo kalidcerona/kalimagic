@@ -8,10 +8,10 @@
       .replaceAll("'", '&#039;');
   }
 
-  // Later authorRole/user_badges data can map into badge kinds here.
-  // Callers append this after already-escaped names so text escaping stays local.
-  function badgeHtml(kind, label) {
-    return '<span class="pg-badge pg-badge--' + kind + '">' + label + '</span>';
+  function roleBadgeHtml(role) {
+    return window.KalisBadges && typeof window.KalisBadges.badgeHtml === 'function'
+      ? window.KalisBadges.badgeHtml(role)
+      : '';
   }
 
   function formatDate(value) {
@@ -80,7 +80,7 @@
           <article class="pg-answer">
             <p>${escapeHtml(answer.body || '').replaceAll('\n', '<br>')}</p>
             ${createYouTubeLiteEmbed(answer.youtubeVideoId, '답변에 첨부된 영상')}
-            <small>${escapeHtml(answer.authorLabel || '익명')}</small>
+            <small>${escapeHtml(answer.authorLabel || '익명')}${roleBadgeHtml(answer.authorRole)}</small>
           </article>
         `).join('') : '<p class="pg-loading">아직 답변이 없습니다.</p>'}
         ${viewerCanAnswer ? answerForm(post) : ''}
@@ -108,7 +108,7 @@
         <h3>댓글</h3>
         ${comments && comments.length ? comments.map((comment) => `
           <article class="${comment.parentCommentId ? 'pg-comment is-reply' : 'pg-comment'}">
-            <strong>${escapeHtml(comment.authorLabel || '익명')} ${badgeHtml('answerer', '답변자')}</strong>
+            <strong>${escapeHtml(comment.authorLabel || '익명')}${roleBadgeHtml(comment.authorRole)}</strong>
             <p>${escapeHtml(comment.body || '').replaceAll('\n', '<br>')}</p>
             ${comment.parentCommentId ? '' : `<button type="button" class="pg-reply-button" data-reply-to="${escapeHtml(comment.id)}">답글</button>`}
           </article>
@@ -120,7 +120,7 @@
 
   function detailHtml(data) {
     const { post, answers, comments } = data;
-    const authorBadge = post.category === 'question' ? ` ${badgeHtml('asker', '질문자')}` : '';
+    const authorBadge = roleBadgeHtml(post.authorRole);
     const likeButton = post.canReadBody === false ? '' : `
       <button type="button" class="pg-like-button ${post.viewerLiked ? 'is-active' : ''}" data-like-post="${escapeHtml(post.id)}">
         ${post.viewerLiked ? '추천 취소' : '추천'}

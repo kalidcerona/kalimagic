@@ -38,6 +38,7 @@ export function shapePost(row, viewer, state = {}) {
     bodyLocked: !canReadBody,
     youtubeVideoId: canReadBody ? row.youtube_video_id : null,
     authorLabel: canReadName && row.display_mode === 'nickname' ? row.profiles?.nickname || '마술인' : '익명',
+    authorRole: canReadName && row.display_mode === 'nickname' ? row.profiles?.role || null : null,
     displayMode: row.display_mode,
     visibility: row.visibility,
     status: row.status,
@@ -59,6 +60,7 @@ function shapeAnswer(question, row, viewer) {
     visibility: row.visibility,
     isPinned: row.is_pinned,
     authorLabel: row.profiles?.nickname || '답변자',
+    authorRole: row.profiles?.role || null,
     youtubeVideoId: row.youtube_video_id,
     createdAt: row.created_at
   };
@@ -70,6 +72,7 @@ function shapeComment(row) {
     parentCommentId: row.parent_comment_id,
     body: row.body,
     authorLabel: row.display_mode === 'nickname' ? row.profiles?.nickname || '마술인' : '익명',
+    authorRole: row.display_mode === 'nickname' ? row.profiles?.role || null : null,
     createdAt: row.created_at
   };
 }
@@ -107,7 +110,7 @@ export async function handler(event) {
   const supabase = getSupabaseAdmin();
   const { data: row, error } = await supabase
     .from('posts')
-    .select('id,post_type,category,title,body,youtube_video_id,author_user_id,display_mode,visibility,status,created_at,view_count,is_notice,profiles(nickname)')
+    .select('id,post_type,category,title,body,youtube_video_id,author_user_id,display_mode,visibility,status,created_at,view_count,is_notice,profiles(nickname,role)')
     .eq('id', id)
     .maybeSingle();
 
@@ -143,7 +146,7 @@ export async function handler(event) {
 
   const { data: answers, error: answersError } = await supabase
     .from('answers')
-    .select('id,body,visibility,is_pinned,youtube_video_id,created_at,profiles(nickname)')
+    .select('id,body,visibility,is_pinned,youtube_video_id,created_at,profiles(nickname,role)')
     .eq('question_post_id', row.id)
     .eq('status', 'visible')
     .order('is_pinned', { ascending: false })
@@ -152,7 +155,7 @@ export async function handler(event) {
 
   const { data: comments, error: commentsError } = await supabase
     .from('comments')
-    .select('id,parent_comment_id,body,display_mode,created_at,profiles(nickname)')
+    .select('id,parent_comment_id,body,display_mode,created_at,profiles(nickname,role)')
     .eq('post_id', row.id)
     .eq('status', 'visible')
     .order('created_at', { ascending: true });

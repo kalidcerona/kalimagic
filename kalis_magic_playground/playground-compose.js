@@ -1,15 +1,15 @@
 (function () {
   const PLAYGROUND_GUIDES = {
     all: {
-      label: '전체 게시판',
-      categoryHelp: '어떤 기록을 남길지 먼저 골라주면 됨. 질문, 모임 후기, 도구 리뷰, 자유 기록 중에서 가장 가까운 곳에 남기면 사람들이 더 잘 찾아볼 수 있음.',
+      label: '전체 기록',
+      categoryHelp: '어떤 기록을 남길지 먼저 골라주면 됨. 질문, 모임 기록, 도구 기록, 자유게시판 중에서 가장 가까운 곳에 남기면 사람들이 더 잘 찾아볼 수 있음.',
       titlePlaceholder: '먼저 게시판을 선택하면 제목 예시가 나타남',
       bodyPlaceholder: '남기고 싶은 이야기에 가장 가까운 게시판을 선택하면, 그 글에 맞는 안내가 열림',
       extra: ''
     },
     free: {
-      label: '자유 게시판',
-      description: '오늘의 연습, 문득 든 생각, 마술하면서 생긴 작은 이야기를 편하게 남기는 공간임.',
+      label: '자유게시판',
+      description: '자유 주제로 마술 문화와 연습, 공연, 사람들 이야기를 편하게 남기는 공간임.',
       titleExamples: [
         '오늘 연습하다가 이런 생각이 들었음',
         '카드 한 벌 들고 나갔다가 생긴 일',
@@ -17,8 +17,8 @@
         '오늘 마술 보여주고 느낀 점'
       ],
       titleGuide: '오늘 남기고 싶은 이야기를 한 줄로 적으면 좋음.',
-      bodyGuide: '연습한 것, 느낀 점, 사람들 반응, 다음에 해보고 싶은 것을 편하게 적으면 됨. 짧아도 좋고, 기록처럼 남겨도 좋음.',
-      extra: '작은 기록도 쌓이면 누군가에게 길잡이가 됨.'
+      bodyGuide: '연습한 것, 느낀 점, 사람들 반응, 마술 문화 이야기를 편하게 적으면 됨. 짧아도 좋고, 기록처럼 남겨도 좋음.',
+      extra: '자유로운 이야기도 쌓이면 누군가에게 길잡이가 됨.'
     },
     question: {
       label: '질문 게시판',
@@ -51,13 +51,13 @@
       extra: '모임 후기는 처음 오는 사람에게 가장 큰 안내서가 됨.'
     },
     tool: {
-      label: '리뷰 후기 게시판',
+      label: '도구 기록 게시판',
       description: '직접 써본 도구와 강의 경험을 남기는 공간임. 좋은 점과 활용 장면을 남기면 다음 사람이 선택하기 쉬워짐.',
       titleExamples: [
         '이 덱 직접 써본 후기',
         '초보자가 쓰기 좋았던 카드 도구',
         '이 강의 보고 실제로 써본 느낌',
-        '실전에서 반응 좋았던 도구 리뷰',
+        '실전에서 반응 좋았던 도구 기록',
         '가격 대비 만족스러웠던 마술 도구'
       ],
       titleGuide: '무엇을 써봤는지와 어떤 느낌이었는지 드러나게 적으면 좋음.',
@@ -66,7 +66,7 @@
       extra: '내가 써본 경험이 누군가에게는 시행착오를 줄여주는 길잡이가 됨.'
     },
     magazine: {
-      label: '매거진 게시판',
+      label: '보관된 기록',
       description: '마술 놀이터에 쌓인 좋은 질문과 답변, 후기와 리뷰를 골라 오래 볼 수 있게 모아두는 공간임.',
       userGuide: '이곳은 마술 놀이터에서 오래 남기고 싶은 글을 모아두는 공간임. 좋은 질문, 좋은 답변, 좋은 후기, 좋은 리뷰가 매거진 후보가 될 수 있음.',
       titleExamples: [
@@ -85,6 +85,7 @@
   const POST_TYPE_BY_CATEGORY = {
     question: 'question',
     tool: 'review_comment',
+    free: 'free',
     magazine: 'magazine'
   };
 
@@ -131,14 +132,72 @@
     `;
   }
 
+  let eventReviewScriptPromise = null;
+
+  function ensureEventReviewForm() {
+    if (window.KalisEventReviewForm && window.KalisEventReviewForm.mount) {
+      return Promise.resolve(window.KalisEventReviewForm);
+    }
+    if (eventReviewScriptPromise) return eventReviewScriptPromise;
+
+    eventReviewScriptPromise = new Promise((resolve, reject) => {
+      function fail() {
+        window.clearTimeout(timeout);
+        reject(new Error('모임 후기 작성 폼을 불러오지 못했어요.'));
+      }
+
+      const timeout = window.setTimeout(fail, 5000);
+
+      function finish() {
+        if (window.KalisEventReviewForm && window.KalisEventReviewForm.mount) {
+          window.clearTimeout(timeout);
+          resolve(window.KalisEventReviewForm);
+          return;
+        }
+        window.clearTimeout(timeout);
+        reject(new Error('모임 후기 작성 폼을 불러오지 못했어요.'));
+      }
+
+      const existing = document.querySelector('script[src$="reviews-community.js"]');
+      if (existing) {
+        existing.addEventListener('load', finish, { once: true });
+        existing.addEventListener('error', fail, { once: true });
+        return;
+      }
+
+      const script = document.createElement('script');
+      script.src = 'reviews-community.js';
+      script.async = false;
+      script.addEventListener('load', finish, { once: true });
+      script.addEventListener('error', fail, { once: true });
+      document.head.appendChild(script);
+    });
+
+    return eventReviewScriptPromise;
+  }
+
+  function meetingFallbackHtml(message) {
+    return `
+      <p class="pg-compose-status">${escapeHtml(message || '모임 후기 작성 화면을 불러오지 못했어요.')}</p>
+      <a class="pg-compose-link" href="reviews.html">모임 후기 보러 가기</a>
+    `;
+  }
+
+  function meetingSuccessHtml() {
+    return `
+      <p class="pg-compose-status">후기가 올라갔습니다. 목록에서 확인할 수 있어요.</p>
+      <a class="pg-compose-link" href="playground.html">목록으로 가기</a>
+    `;
+  }
+
   function selectHtml(selected) {
     const options = [
       ['all', '게시판 선택'],
       ['question', '질문함'],
-      ['tool', '도구 리뷰'],
-      ['meeting', '모임 후기'],
-      ['magazine', '매거진'],
-      ['free', '자유 기록🔒']
+      ['tool', '도구 기록'],
+      ['meeting', '모임 기록'],
+      ['magazine', '보관된 기록'],
+      ['free', '자유게시판']
     ];
     return `
       <label>
@@ -155,18 +214,12 @@
     const titlePlaceholder = guide.titleGuide || guide.titlePlaceholder || PLAYGROUND_GUIDES.all.titlePlaceholder;
     const bodyPlaceholder = guide.bodyGuide || guide.bodyPlaceholder || PLAYGROUND_GUIDES.all.bodyPlaceholder;
 
-    if (category === 'free') {
-      return `
-        ${guideHtml('free')}
-        <p class="pg-compose-status">자유 기록은 준비 중입니다. 질문함과 리뷰가 자리 잡은 뒤 열립니다.</p>
-      `;
-    }
-
     if (category === 'meeting') {
       return `
         ${guideHtml('meeting')}
-        <p class="pg-compose-status">모임 후기는 기존 모임 후기 작성 화면에서 남깁니다.</p>
-        <a class="pg-compose-link" href="reviews.html">모임 후기 작성하러 가기</a>
+        <div data-meeting-review-compose>
+          <p class="pg-compose-status">모임 후기 작성 폼을 불러오는 중입니다.</p>
+        </div>
       `;
     }
 
@@ -211,6 +264,7 @@
 
   function initPlaygroundCompose({ api, root, getActiveTarget, onCreated }) {
     let openCategory = categoryFromTarget(getActiveTarget && getActiveTarget());
+    let renderToken = 0;
 
     function renderClosed() {
       root.innerHTML = `
@@ -220,8 +274,26 @@
       `;
     }
 
+    async function mountMeetingReviewForm(host, token) {
+      if (!host) return;
+      try {
+        const reviewForm = await ensureEventReviewForm();
+        if (token !== renderToken || !host.isConnected) return;
+        reviewForm.mount(host, {
+          showEventSelect: true,
+          onSuccess: () => {
+            host.innerHTML = meetingSuccessHtml();
+          }
+        });
+      } catch (error) {
+        if (token !== renderToken || !host.isConnected) return;
+        host.innerHTML = meetingFallbackHtml(error.message);
+      }
+    }
+
     function open(category = categoryFromTarget(getActiveTarget && getActiveTarget())) {
       openCategory = category;
+      const token = ++renderToken;
       root.innerHTML = `
         <section class="pg-compose" aria-label="글쓰기">
           <div class="pg-compose-head">
@@ -231,9 +303,13 @@
           ${formHtml(openCategory)}
         </section>
       `;
+      if (openCategory === 'meeting') {
+        mountMeetingReviewForm(root.querySelector('[data-meeting-review-compose]'), token);
+      }
     }
 
     function close() {
+      renderToken += 1;
       renderClosed();
     }
 

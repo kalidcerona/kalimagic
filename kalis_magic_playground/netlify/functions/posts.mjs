@@ -56,6 +56,7 @@ export function shapePostListRow(row, viewer, state = {}) {
     commentCount: commentCounts.get(row.id) || 0,
     youtubeVideoId: canReadBody ? row.youtube_video_id : null,
     authorLabel: canReadName && row.display_mode === 'nickname' ? row.profiles?.nickname || '마술인' : '익명',
+    authorRole: canReadName && row.display_mode === 'nickname' ? row.profiles?.role || null : null,
     displayMode: row.display_mode,
     visibility: row.visibility,
     status: row.status,
@@ -70,11 +71,12 @@ export function shapePostListRow(row, viewer, state = {}) {
 }
 
 export function applyListFilters(query, params) {
-  if (params.category === 'all') return query.neq('category', 'free');
+  if (params.category === 'all') return query;
   if (params.category === 'question') return query.eq('category', 'question');
   if (params.category === 'review' && params.reviewKind === 'tool') return query.eq('category', 'review');
   if (params.category === 'review' && params.reviewKind === 'meeting') return query.eq('category', 'event_review');
   if (params.category === 'review') return query.in('category', ['review', 'event_review']);
+  if (params.category === 'free') return query.eq('post_type', 'free');
   if (params.category === 'magazine') {
     return query.or('category.eq.magazine,and(category.eq.question,questions.magazine_candidate.eq.true)');
   }
@@ -133,7 +135,7 @@ async function listPosts(event) {
   const supabase = getSupabaseAdmin();
   let query = supabase
     .from('posts')
-    .select('id,post_type,category,title,body,youtube_video_id,author_user_id,display_mode,visibility,status,created_at,view_count,is_notice,profiles(nickname),questions(magazine_candidate)')
+    .select('id,post_type,category,title,body,youtube_video_id,author_user_id,display_mode,visibility,status,created_at,view_count,is_notice,profiles(nickname,role),questions(magazine_candidate)')
     .eq('status', 'visible')
     .order('is_notice', { ascending: false })
     .order('created_at', { ascending: false })

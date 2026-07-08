@@ -2,12 +2,12 @@
   const PAGE_SIZE = 20;
 
   const PLAYGROUND_TABS = [
-    { id: 'all', label: '전체', category: 'all', reviewKind: null },
+    { id: 'all', label: '전체 기록', category: 'all', reviewKind: null },
     { id: 'question', label: '질문함', category: 'question', reviewKind: null },
-    { id: 'review_tool', label: '도구 리뷰', category: 'review', reviewKind: 'tool' },
-    { id: 'review_meeting', label: '모임 후기', category: 'review', reviewKind: 'meeting' },
-    { id: 'magazine', label: '매거진', category: 'magazine', reviewKind: null },
-    { id: 'free', label: '자유 기록🔒', category: 'free', reviewKind: null, locked: true }
+    { id: 'review_tool', label: '도구 기록', category: 'review', reviewKind: 'tool' },
+    { id: 'review_meeting', label: '모임 기록', category: 'review', reviewKind: 'meeting' },
+    { id: 'magazine', label: '보관된 기록', category: 'magazine', reviewKind: null },
+    { id: 'free', label: '자유게시판', category: 'free', reviewKind: null }
   ];
 
   const EMPTY_COPY = {
@@ -15,8 +15,8 @@
     question: '아직 질문이 없습니다. 처음 묻는 질문도 다음 사람에게는 같은 고민을 해결하는 첫 기록이 됩니다.',
     review_tool: '아직 리뷰가 없습니다. 써본 도구와 모임 기억이 이곳에 쌓이면 누군가의 길잡이가 됩니다.',
     review_meeting: '아직 리뷰가 없습니다. 써본 도구와 모임 기억이 이곳에 쌓이면 누군가의 길잡이가 됩니다.',
-    magazine: '아직 매거진에 건져 올린 글이 없습니다. 오래 남길 기록을 기다리고 있습니다.',
-    free: '자유 기록은 준비 중입니다. 질문함과 리뷰가 자리 잡은 뒤 열립니다.'
+    magazine: '아직 보관된 기록이 없습니다. 오래 남길 기록을 기다리고 있습니다.',
+    free: '아직 자유게시판에 올라온 기록이 없습니다. 자유로운 마술 이야기를 기다리고 있습니다.'
   };
 
   function escapeHtml(value) {
@@ -51,6 +51,12 @@
     return String(post[key]);
   }
 
+  function roleBadgeHtml(role) {
+    return window.KalisBadges && typeof window.KalisBadges.badgeHtml === 'function'
+      ? window.KalisBadges.badgeHtml(role)
+      : '';
+  }
+
   function rowHtml(post) {
     const comment = post.commentCount > 0 ? `<span class="pg-comment-count">[${post.commentCount}]</span>` : '';
     const pin = post.isNotice ? '<span class="pg-pin" aria-label="공지">📌</span>' : '';
@@ -58,6 +64,7 @@
     const title = post.bodyLocked ? `${titleText} <span class="pg-lock">비공개</span>` : titleText;
     const prefix = post.prefix || '[질문]';
     const preview = post.bodyPreview ? `<p class="pg-row-preview">${escapeHtml(post.bodyPreview)}</p>` : '';
+    const authorBadge = roleBadgeHtml(post.authorRole);
 
     return `
       <tr class="${post.isNotice ? 'pg-notice-row' : ''}">
@@ -66,7 +73,7 @@
           <a class="pg-title-button" href="post.html?id=${encodeURIComponent(post.id)}" data-post-id="${escapeHtml(post.id)}">${pin}${title}${comment}</a>
           ${preview}
         </td>
-        <td class="pg-author-cell">${escapeHtml(post.authorLabel || '익명')}</td>
+        <td class="pg-author-cell">${escapeHtml(post.authorLabel || '익명')}${authorBadge}</td>
         <td class="pg-date-cell">${formatDate(post.createdAt)}</td>
         <td class="pg-count-cell">${formatCount(post, 'viewCount')}</td>
         <td class="pg-count-cell">${formatCount(post, 'likeCount')}</td>

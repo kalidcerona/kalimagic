@@ -30,17 +30,19 @@ def test_magic_playground_static_files_exist():
     check("마술 놀이터" in playground, "[놀이터] playground.html 제목 없음")
     check("playground.js" in playground, "[놀이터] playground.js 로드 없음")
     check("auth.js" in playground, "[놀이터] auth.js 로드 없음")
-    check("data-question-form" in playground, "[놀이터] 질문 작성 폼 없음")
-    check("data-post-detail" in playground, "[놀이터] 게시글 상세 영역 없음")
+    check("data-post-list" in playground, "[놀이터] 게시글 목록 영역 없음")
+    check("data-write-link" in playground and "write.html" in playground, "[놀이터] 글쓰기 링크 없음")
     check("playground.html" in nav, "[놀이터] nav.js 링크 없음")
     check(".playground-shell" in style, "[놀이터] style.css 스코프 없음")
     assert not failures
 
 
-def test_reviews_event_review_mount_exists():
+def test_reviews_event_review_list_exists_and_form_mounts_in_playground():
     reviews = (ROOT / "reviews.html").read_text(encoding="utf-8")
-    check("data-event-review-app" in reviews, "[후기] 모임 후기 작성 영역 없음")
+    compose = (ROOT / "playground-compose.js").read_text(encoding="utf-8")
+    check("data-event-review-list" in reviews, "[후기] 모임 후기 목록 영역 없음")
     check("reviews-community.js" in reviews, "[후기] reviews-community.js 로드 없음")
+    check("KalisEventReviewForm" in compose, "[놀이터] 모임 후기 작성 폼 연결 없음")
     assert not failures
 
 

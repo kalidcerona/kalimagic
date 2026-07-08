@@ -1,8 +1,8 @@
 const YOUTUBE_ID = /^[A-Za-z0-9_-]{11}$/;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const POST_TYPES = new Set(['question', 'event_review', 'review_comment', 'free', 'magazine']);
-const WRITABLE_POST_TYPES = new Set(['question', 'review_comment', 'magazine']);
-const LIST_CATEGORIES = new Set(['all', 'question', 'review', 'magazine']);
+const WRITABLE_POST_TYPES = new Set(['question', 'review_comment', 'free', 'magazine']);
+const LIST_CATEGORIES = new Set(['all', 'question', 'review', 'magazine', 'free']);
 const REVIEW_KINDS = new Set(['tool', 'meeting']);
 const DISPLAY_MODES = new Set(['nickname', 'anonymous']);
 const VISIBILITIES = new Set(['public', 'kali_only', 'expert_only']);
@@ -43,6 +43,7 @@ function lengthMessage(name, min, max) {
 function categoryForPostType(postType) {
   if (postType === 'question') return 'question';
   if (postType === 'review_comment') return 'review';
+  if (postType === 'free') return 'free';
   if (postType === 'magazine') return 'magazine';
   return null;
 }
@@ -93,7 +94,6 @@ export function validatePostPayload(input) {
   const visibility = clean(input.visibility || 'public');
 
   if (!POST_TYPES.has(postType)) throw new Error('글 종류가 올바르지 않습니다');
-  if (postType === 'free') throw new Error('자유 기록은 아직 작성할 수 없어요');
   if (postType === 'event_review') throw new Error('모임 후기는 모임 후기 API를 사용해주세요');
   if (!WRITABLE_POST_TYPES.has(postType)) throw new Error('글 종류가 올바르지 않습니다');
   if (!DISPLAY_MODES.has(displayMode)) throw new Error('표시 이름 방식이 올바르지 않습니다');

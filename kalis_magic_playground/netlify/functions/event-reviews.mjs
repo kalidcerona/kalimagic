@@ -13,6 +13,7 @@ function shapeReview(row) {
     title: row.title,
     body: row.body,
     authorLabel: row.display_mode === 'nickname' ? row.profiles?.nickname || '마술인' : '익명',
+    authorRole: row.display_mode === 'nickname' ? row.profiles?.role || null : null,
     youtubeVideoId: row.youtube_video_id,
     createdAt: row.created_at
   };
@@ -29,7 +30,7 @@ async function listReviews(event) {
   const supabase = getSupabaseAdmin();
   const { data, error } = await supabase
     .from('posts')
-    .select('id,title,body,display_mode,youtube_video_id,created_at,profiles(nickname),event_reviews!inner(event_code)')
+    .select('id,title,body,display_mode,youtube_video_id,created_at,profiles(nickname,role),event_reviews!inner(event_code)')
     .eq('post_type', 'event_review')
     .eq('status', 'visible')
     .eq('event_reviews.event_code', eventCode)
