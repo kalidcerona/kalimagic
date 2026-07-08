@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import {
   SELECTABLE_BADGE_CODES,
   VALID_BADGE_CODES,
+  fetchBadgeMap,
   resolvePostAuthorBadges,
   validateBadgeChange,
   validateBadgeSelection
@@ -89,6 +90,58 @@ test('post author badge selection prefers post code, then profile default, then 
     author_badge_code: null,
     profiles: { preferred_badge_code: null }
   }, badgeMap, 'author-1'), ['user', 'expert']);
+});
+
+test('public author badges never include kali from post, profile, or fallback sources', () => {
+  const badgeMap = { 'author-1': ['kali', 'user', 'expert'] };
+
+  assert.deepEqual(resolvePostAuthorBadges({
+    author_badge_code: 'kali',
+    profiles: { preferred_badge_code: 'user' }
+  }, badgeMap, 'author-1'), []);
+
+  assert.deepEqual(resolvePostAuthorBadges({
+    author_badge_code: null,
+    profiles: { preferred_badge_code: 'kali' }
+  }, badgeMap, 'author-1'), []);
+
+  assert.deepEqual(resolvePostAuthorBadges({
+    author_badge_code: null,
+    profiles: { preferred_badge_code: null }
+  }, badgeMap, 'author-1'), ['user', 'expert']);
+});
+
+test('fetchBadgeMap excludes kali from public author badge maps while keeping other codes', async () => {
+  const calls = [];
+  const rows = [
+    { user_id: 'author-1', badges: { code: 'kali' } },
+    { user_id: 'author-1', badges: { code: 'user' } },
+    { user_id: 'author-2', badges: { code: 'expert' } },
+    { user_id: 'author-2', badges: { code: '' } }
+  ];
+  const supabase = {
+    from(table) {
+      assert.equal(table, 'user_badges');
+      return {
+        select(columns) {
+          assert.equal(columns, 'user_id,badges(code)');
+          return this;
+        },
+        in(column, ids) {
+          calls.push([column, ids]);
+          return { data: rows, error: null };
+        }
+      };
+    }
+  };
+
+  const map = await fetchBadgeMap(supabase, ['author-1', 'author-1', 'author-2', null]);
+
+  assert.deepEqual(calls, [['user_id', ['author-1', 'author-2']]]);
+  assert.deepEqual(map, {
+    'author-1': ['user'],
+    'author-2': ['expert']
+  });
 });
 
 test('shapeMemberBadges includes catalog ownership and selectable flags', () => {

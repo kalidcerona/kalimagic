@@ -1419,7 +1419,7 @@ button.mypage-badge-tile:hover,
   inset: 0;
   display: grid;
   place-items: center;
-  background: rgba(9, 5, 3, 0.94);
+  background: rgba(9, 5, 3, 0.6);
   color: #f3ece3;
   font-size: 0.84rem;
   font-weight: 900;
@@ -1485,6 +1485,7 @@ button.mypage-badge-tile:hover,
 .mypage-quest-badges .quest-badge-tile--rare { --quest-metal: #7c6d88; }
 .mypage-quest-badges .quest-badge-tile--epic { --quest-metal: #8d9ca3; }
 .mypage-quest-badges .quest-badge-tile--legendary { --quest-metal: #b7c9d9; }
+.mypage-quest-badges .quest-badge-tile--locked { --quest-metal: #9a7a46; }
 .mypage-quest-badges .quest-badge-tile--secret { --quest-metal: #7b6aa8; }
 
 .mypage-quest-badges .quest-badge-tile.is-unowned {
@@ -1585,6 +1586,23 @@ button.mypage-badge-tile:hover,
     0 0 18px rgba(123, 106, 168, 0.12);
 }
 
+.mypage-quest-badges .quest-badge-tile--locked {
+  background:
+    radial-gradient(circle at 15% 8%, rgba(214, 166, 92, 0.22), transparent 42%),
+    linear-gradient(145deg, rgba(61, 46, 27, 0.78), rgba(21, 15, 11, 0.92));
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+    0 0 16px rgba(154, 122, 70, 0.1);
+}
+
+.mypage-quest-badges .quest-badge-tile--locked .quest-badge-tile__name {
+  color: #ead3a5;
+}
+
+.mypage-quest-badges .quest-badge-tile__media--locked {
+  filter: blur(0.2px) brightness(0.82);
+}
+
 .mypage-quest-badges .quest-badge-tile__media--secret {
   filter: blur(0.2px);
 }
@@ -1594,6 +1612,134 @@ button.mypage-badge-tile:hover,
   font-size: 0.86rem;
   font-weight: 900;
   text-shadow: 0 0 10px rgba(206, 190, 255, 0.45);
+}
+
+.badge-celebration-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: grid;
+  place-items: center;
+  padding: 22px;
+  background: rgba(8, 5, 3, 0.72);
+  backdrop-filter: blur(4px);
+}
+
+.badge-celebration-card {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  width: min(100%, 360px);
+  padding: 28px 24px 24px;
+  border: 1px solid rgba(var(--point-gold-rgb), 0.42);
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(var(--point-gold-rgb), 0.18), transparent 42%),
+    rgba(29, 21, 16, 0.96);
+  color: var(--text-main);
+  box-shadow:
+    0 22px 56px rgba(0, 0, 0, 0.46),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+  text-align: center;
+}
+
+.badge-celebration-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 6px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.18);
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.badge-celebration-close:hover,
+.badge-celebration-close:focus-visible {
+  border-color: rgba(var(--point-gold-rgb), 0.5);
+  color: var(--text-main);
+}
+
+.badge-celebration-media {
+  --quest-metal: #b7c9d9;
+  display: grid;
+  place-items: center;
+  width: 92px;
+  height: 92px;
+  margin-bottom: 14px;
+}
+
+.badge-celebration-media .quest-badge-tile__media,
+.badge-celebration-sponsor-media {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 82px;
+  height: 82px;
+  overflow: hidden;
+  border: 1px solid rgba(var(--point-gold-rgb), 0.5);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 35% 25%, rgba(255, 255, 255, 0.22), rgba(var(--point-gold-rgb), 0.12)),
+    rgba(0, 0, 0, 0.24);
+}
+
+.badge-celebration-media .quest-badge-tile__image,
+.badge-celebration-sponsor-media .mypage-badge-tile__image {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.badge-celebration-media .quest-badge-tile__placeholder {
+  display: none;
+  padding: 0 8px;
+  color: #f6efe5;
+  font-size: 0.9rem;
+  font-weight: 900;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.badge-celebration-media .quest-badge-tile__media.is-placeholder .quest-badge-tile__placeholder {
+  display: block;
+}
+
+.badge-celebration-title {
+  margin: 0;
+  color: var(--text-main);
+  font-size: 1.28rem;
+  line-height: 1.3;
+}
+
+.badge-celebration-meta {
+  margin: 6px 0 0;
+  color: rgba(var(--point-gold-rgb), 0.82);
+  font-size: 0.82rem;
+  font-weight: 800;
+  line-height: 1.4;
+}
+
+.badge-celebration-message,
+.badge-celebration-condition {
+  margin: 12px 0 0;
+  color: var(--text-muted);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.badge-celebration-condition {
+  margin-top: 6px;
+  color: #e8d9c4;
+}
+
+.badge-celebration-confirm {
+  margin-top: 18px;
 }
 
 @media (max-width: 640px) {

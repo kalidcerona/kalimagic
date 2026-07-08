@@ -13,6 +13,7 @@ export const VALID_BADGE_CODES = new Set([
 export const SELECTABLE_BADGE_CODES = ['user', 'expert'];
 
 const VALID_ACTIONS = new Set(['grant', 'revoke']);
+const HIDDEN_PUBLIC_AUTHOR_BADGE_CODES = new Set(['kali']);
 
 function clean(value) {
   return String(value ?? '').trim();
@@ -42,11 +43,16 @@ export function validateBadgeSelection(ownedCodes, code) {
   return { ok: true, code: selected };
 }
 
+function publicAuthorBadgeCodes(codes) {
+  return (Array.isArray(codes) ? codes : [codes])
+    .filter((code) => code && !HIDDEN_PUBLIC_AUTHOR_BADGE_CODES.has(code));
+}
+
 export function resolvePostAuthorBadges(row, badgeMap = {}, authorId = null) {
   const fallbackBadges = authorId ? badgeMap[authorId] || [] : [];
-  if (row?.author_badge_code) return [row.author_badge_code];
-  if (row?.profiles?.preferred_badge_code) return [row.profiles.preferred_badge_code];
-  return fallbackBadges;
+  if (row?.author_badge_code) return publicAuthorBadgeCodes(row.author_badge_code);
+  if (row?.profiles?.preferred_badge_code) return publicAuthorBadgeCodes(row.profiles.preferred_badge_code);
+  return publicAuthorBadgeCodes(fallbackBadges);
 }
 
 export async function fetchBadgeMap(supabase, userIds) {
@@ -62,7 +68,7 @@ export async function fetchBadgeMap(supabase, userIds) {
   const map = {};
   for (const row of data || []) {
     const code = row.badges?.code;
-    if (!code) continue;
+    if (!publicAuthorBadgeCodes(code).length) continue;
     if (!map[row.user_id]) map[row.user_id] = [];
     map[row.user_id].push(code);
   }

@@ -39,3 +39,10 @@ test('playground v2 styles rely on existing color variables', () => {
     assert.equal(block.includes(`var(${variable}`), true, `${variable} should be used`);
   }
 });
+
+test('mypage sponsor overlay is lighter and locked quest tiles have concealment styles', () => {
+  assert.match(css, /\.mypage-badge-tile__overlay\s*\{[^}]*background: rgba\(9, 5, 3, 0\.6\);/s);
+  assert.doesNotMatch(css, /\.mypage-badge-tile__overlay\s*\{[^}]*background: rgba\(9, 5, 3, 0\.94\);/s);
+  assert.match(css, /\.mypage-quest-badges \.quest-badge-tile--locked/);
+  assert.match(css, /\.mypage-quest-badges \.quest-badge-tile__media--locked/);
+});

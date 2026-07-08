@@ -33,11 +33,99 @@
     'tool_reviews',
     'total_records'
   ];
+  var QUEST_BADGE_SEEN_STORAGE_KEY = 'kalimagic_seen_quest_badges_v1';
+  var SPONSOR_BADGE_SEEN_STORAGE_KEY = 'kalimagic_seen_sponsor_badges_v1';
+  var sponsorComingSoonOverlayText = {
+    supporter_3000: '3천원 후원시 공개',
+    supporter_10000: '1만원 후원시 공개',
+    supporter_50000: '5만원 후원시 공개',
+    expert_3000: '3천원 후원시 공개',
+    expert_10000: '1만원 후원시 공개',
+    expert_50000: '5만원 후원시 공개'
+  };
+  var badgeCelebrationQueue = [];
+  var badgeCelebrationVisible = false;
 
   var el = window.PgUtil.el;
   var clear = window.PgUtil.clear;
   var fetchJson = window.PgUtil.fetchJson;
   var formatDate = window.PgUtil.formatDate;
+
+  function uniqueBadgeCodes(codes) {
+    var seen = {};
+    var unique = [];
+    (codes || []).forEach(function (code) {
+      var cleanCode = String(code || '').trim();
+      if (!cleanCode || seen[cleanCode]) return;
+      seen[cleanCode] = true;
+      unique.push(cleanCode);
+    });
+    return unique;
+  }
+
+  function diffNewlyOwnedBadgeCodes(previousSeenCodes, ownedNowCodes) {
+    var ownedNow = uniqueBadgeCodes(ownedNowCodes);
+    if (!Array.isArray(previousSeenCodes)) {
+      return { newlyOwnedCodes: [], seenCodes: ownedNow, seeded: true };
+    }
+
+    var previousSeen = uniqueBadgeCodes(previousSeenCodes);
+    var previousSeenMap = {};
+    previousSeen.forEach(function (code) {
+      previousSeenMap[code] = true;
+    });
+
+    var newlyOwnedCodes = ownedNow.filter(function (code) {
+      return !previousSeenMap[code];
+    });
+    return {
+      newlyOwnedCodes: newlyOwnedCodes,
+      seenCodes: uniqueBadgeCodes(previousSeen.concat(ownedNow)),
+      seeded: false
+    };
+  }
+
+  function readSeenBadgeCodes(storageKey) {
+    try {
+      if (!window.localStorage) return null;
+      var raw = window.localStorage.getItem(storageKey);
+      if (!raw) return null;
+      var parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : null;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function writeSeenBadgeCodes(storageKey, codes) {
+    try {
+      if (!window.localStorage) return false;
+      window.localStorage.setItem(storageKey, JSON.stringify(uniqueBadgeCodes(codes)));
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  function ownedBadgeCodes(catalog) {
+    return uniqueBadgeCodes((catalog || [])
+      .filter(function (badge) { return badge && badge.owned; })
+      .map(function (badge) { return badge.code; }));
+  }
+
+  function newlyOwnedBadges(storageKey, catalog) {
+    var diff = diffNewlyOwnedBadgeCodes(readSeenBadgeCodes(storageKey), ownedBadgeCodes(catalog));
+    if (!writeSeenBadgeCodes(storageKey, diff.seenCodes)) return [];
+    if (!diff.newlyOwnedCodes.length) return [];
+
+    var badgeByCode = {};
+    (catalog || []).forEach(function (badge) {
+      if (badge && badge.code) badgeByCode[badge.code] = badge;
+    });
+    return diff.newlyOwnedCodes.map(function (code) {
+      return badgeByCode[code];
+    }).filter(Boolean);
+  }
 
   function categoryLabel(value) {
     var labels = {
@@ -158,6 +246,10 @@
     return wrap;
   }
 
+  function comingSoonOverlayText(code) {
+    return sponsorComingSoonOverlayText[code] || '추후 공개';
+  }
+
   async function savePreferredBadge(code, button) {
     if (!badgeEl) return;
     var status = badgeEl.querySelector('[data-badge-status]');
@@ -168,7 +260,9 @@
         method: 'PATCH',
         body: JSON.stringify({ preferredBadgeCode: code })
       });
+      var newSponsorBadges = newlyOwnedBadges(SPONSOR_BADGE_SEEN_STORAGE_KEY, state.badgeData.catalog || []);
       renderBadges();
+      queueSponsorBadgeCelebrations(newSponsorBadges);
     } catch (error) {
       if (status) {
         status.textContent = error.message || '배지를 저장하지 못했습니다.';
@@ -200,7 +294,7 @@
     } else {
       tile.setAttribute('aria-disabled', 'true');
       if (isComingSoon) {
-        tile.appendChild(el('span', 'mypage-badge-tile__overlay', '추후 공개'));
+        tile.appendChild(el('span', 'mypage-badge-tile__overlay', comingSoonOverlayText(badge.code)));
       } else {
         tile.appendChild(el('span', 'mypage-badge-tile__mark', '미보유'));
       }
@@ -238,7 +332,9 @@
     renderBadges();
     try {
       state.badgeData = await fetchJson('/.netlify/functions/member-badges');
+      var newSponsorBadges = newlyOwnedBadges(SPONSOR_BADGE_SEEN_STORAGE_KEY, state.badgeData.catalog || []);
       renderBadges();
+      queueSponsorBadgeCelebrations(newSponsorBadges);
     } catch (error) {
       clear(badgeEl);
       badgeEl.appendChild(el('h2', 'mypage-section-title', '배지'));
@@ -288,6 +384,28 @@
     return tile;
   }
 
+  function shouldConcealQuestBadge(badge) {
+    return !badge.owned && Number(badge.level) >= 3;
+  }
+
+  function visibleQuestBadges(badges) {
+    var tier3 = badges.find(function (b) { return Number(b.level) === 3; });
+    var tier3Owned = Boolean(tier3 && tier3.owned);
+    return badges.filter(function (b) { return Number(b.level) !== 5 || tier3Owned; });
+  }
+
+  function questLockedTile(badge) {
+    var tile = el('article', 'quest-badge-tile quest-badge-tile--locked is-unowned');
+    var media = el('div', 'quest-badge-tile__media quest-badge-tile__media--locked');
+    media.appendChild(el('span', 'quest-badge-tile__unknown', '???'));
+    tile.appendChild(media);
+    var body = el('div', 'quest-badge-tile__body');
+    body.appendChild(el('strong', 'quest-badge-tile__name', '조건 획득 시 공개'));
+    body.appendChild(el('span', 'quest-badge-tile__hint', '획득하면 배지 문장이 열립니다'));
+    tile.appendChild(body);
+    return tile;
+  }
+
   function questSecretTile(badge) {
     var tile = el('article', 'quest-badge-tile quest-badge-tile--secret' + (badge.owned ? ' is-owned' : ' is-unowned'));
     var media = el('div', 'quest-badge-tile__media quest-badge-tile__media--secret');
@@ -299,6 +417,122 @@
     if (badge.owned) body.appendChild(el('span', 'quest-badge-tile__earned', '획득'));
     tile.appendChild(body);
     return tile;
+  }
+
+  function questCelebrationCondition(badge) {
+    var description = badge.publicDescription || badge.public_description;
+    if (description) return description;
+    if (badge.secretHint) return badge.secretHint;
+    var trackLabel = questTrackLabels[badge.track] || badge.track;
+    if (trackLabel && badge.threshold) return trackLabel + ' ' + badge.threshold + '회 달성';
+    return '조건을 달성했어요.';
+  }
+
+  function sponsorCelebrationCondition(badge) {
+    var label = badge.label || '';
+    var code = badge.code || '';
+    if (code.indexOf('expert') === 0 || label.indexOf('전문가') !== -1) {
+      return '전문가 등급으로 승급했어요.';
+    }
+    return '후원해주셔서 감사합니다.';
+  }
+
+  function badgeCelebrationName(item) {
+    var badge = item.badge || {};
+    if (item.kind === 'quest') return badge.name || (badge.isSecret ? '비밀 배지' : badge.code);
+    return badge.label || badge.name || badge.code;
+  }
+
+  function badgeCelebrationCondition(item) {
+    return item.kind === 'quest'
+      ? questCelebrationCondition(item.badge || {})
+      : sponsorCelebrationCondition(item.badge || {});
+  }
+
+  function badgeCelebrationMeta(item) {
+    var badge = item.badge || {};
+    if (item.kind !== 'quest') return badge.description || '';
+    return [badge.material, badge.symbol].filter(Boolean).join(' · ');
+  }
+
+  function badgeCelebrationMedia(item) {
+    if (item.kind === 'quest') return questBadgeMedia(item.badge || {});
+    var wrap = el('div', 'badge-celebration-sponsor-media');
+    wrap.appendChild(badgeImage((item.badge && item.badge.code) || '', badgeCelebrationName(item)));
+    return wrap;
+  }
+
+  function dismissBadgeCelebration(overlay) {
+    if (!badgeCelebrationVisible) return;
+    if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
+    badgeCelebrationVisible = false;
+    showNextBadgeCelebration();
+  }
+
+  function showNextBadgeCelebration() {
+    if (badgeCelebrationVisible || !badgeCelebrationQueue.length || !document.body) return;
+    var item = badgeCelebrationQueue.shift();
+    var name = badgeCelebrationName(item);
+    var titleId = 'badge-celebration-title';
+    var overlay = el('div', 'badge-celebration-overlay');
+    var card = el('article', 'badge-celebration-card');
+    var close = el('button', 'badge-celebration-close', '닫기');
+    var media = el('div', 'badge-celebration-media');
+    var title = el('h2', 'badge-celebration-title', name);
+    var meta = badgeCelebrationMeta(item);
+    var confirm = el('button', 'playground-button badge-celebration-confirm', '확인');
+
+    badgeCelebrationVisible = true;
+    overlay.tabIndex = -1;
+    overlay.setAttribute('role', 'presentation');
+    card.setAttribute('role', 'dialog');
+    card.setAttribute('aria-modal', 'true');
+    card.setAttribute('aria-labelledby', titleId);
+    title.id = titleId;
+    close.type = 'button';
+    close.setAttribute('aria-label', '배지 축하 팝업 닫기');
+    confirm.type = 'button';
+
+    media.appendChild(badgeCelebrationMedia(item));
+    card.appendChild(close);
+    card.appendChild(media);
+    card.appendChild(title);
+    if (meta) card.appendChild(el('p', 'badge-celebration-meta', meta));
+    card.appendChild(el('p', 'badge-celebration-message', "축하합니다! '" + name + "' 배지를 획득했어요."));
+    card.appendChild(el('p', 'badge-celebration-condition', badgeCelebrationCondition(item)));
+    card.appendChild(confirm);
+    overlay.appendChild(card);
+
+    close.addEventListener('click', function () {
+      dismissBadgeCelebration(overlay);
+    });
+    confirm.addEventListener('click', function () {
+      dismissBadgeCelebration(overlay);
+    });
+    overlay.addEventListener('click', function (event) {
+      if (event.target === overlay) dismissBadgeCelebration(overlay);
+    });
+    overlay.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape') dismissBadgeCelebration(overlay);
+    });
+
+    document.body.appendChild(overlay);
+    close.focus();
+  }
+
+  function queueBadgeCelebrations(badges, kind) {
+    (badges || []).forEach(function (badge) {
+      if (badge) badgeCelebrationQueue.push({ badge: badge, kind: kind });
+    });
+    showNextBadgeCelebration();
+  }
+
+  function queueQuestBadgeCelebrations(badges) {
+    queueBadgeCelebrations(badges, 'quest');
+  }
+
+  function queueSponsorBadgeCelebrations(badges) {
+    queueBadgeCelebrations(badges, 'sponsor');
   }
 
   function renderQuestBadges() {
@@ -321,8 +555,8 @@
       var group = el('section', 'quest-badge-group');
       group.appendChild(el('h3', 'quest-badge-group__title', questTrackLabels[track] || track));
       var grid = el('div', 'quest-badge-grid');
-      badges.forEach(function (badge) {
-        grid.appendChild(questPublicTile(badge));
+      visibleQuestBadges(badges).forEach(function (badge) {
+        grid.appendChild(shouldConcealQuestBadge(badge) ? questLockedTile(badge) : questPublicTile(badge));
       });
       group.appendChild(grid);
       questBadgeEl.appendChild(group);
@@ -346,7 +580,9 @@
     renderQuestBadges();
     try {
       state.questBadgeData = await fetchJson('/.netlify/functions/quest-badges');
+      var newQuestBadges = newlyOwnedBadges(QUEST_BADGE_SEEN_STORAGE_KEY, state.questBadgeData.catalog || []);
       renderQuestBadges();
+      queueQuestBadgeCelebrations(newQuestBadges);
     } catch (error) {
       clear(questBadgeEl);
       questBadgeEl.appendChild(el('h2', 'mypage-section-title', '퀘스트 배지'));

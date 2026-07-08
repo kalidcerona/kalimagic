@@ -2,10 +2,10 @@
   const PAGE_SIZE = 20;
 
   const PLAYGROUND_TABS = [
+    { id: 'all', label: '전체 기록', category: 'all', reviewKind: null },
     { id: 'free', label: '자유게시판', category: 'free', reviewKind: null },
     { id: 'routine', label: '마술 보관소', category: 'routine', reviewKind: null },
     { id: 'question', label: '질문함', category: 'question', reviewKind: null },
-    { id: 'all', label: '전체 기록', category: 'all', reviewKind: null },
     { id: 'review_tool', label: '도구 기록', category: 'review', reviewKind: 'tool' },
     { id: 'review_meeting', label: '모임 기록', category: 'review', reviewKind: 'meeting' },
     { id: 'magazine', label: '보관된 기록', category: 'magazine', reviewKind: null }

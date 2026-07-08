@@ -6,6 +6,25 @@ function source(path) {
   return readFileSync(new URL(`../../${path}`, import.meta.url), 'utf8');
 }
 
+function extractedFunctionBundle(js, names, exportedName) {
+  const parts = names.map((name) => {
+    const start = js.indexOf(`function ${name}`);
+    assert.notEqual(start, -1, `${name} should exist`);
+    const bodyStart = js.indexOf('{', start);
+    let depth = 0;
+    for (let index = bodyStart; index < js.length; index += 1) {
+      const char = js[index];
+      if (char === '{') depth += 1;
+      if (char === '}') {
+        depth -= 1;
+        if (depth === 0) return js.slice(start, index + 1);
+      }
+    }
+    throw new Error(`Could not extract ${name}`);
+  });
+  return Function(`${parts.join('\n')}\nreturn ${exportedName};`)();
+}
+
 test('mypage html loads the shared auth/nav stack and mypage module', () => {
   const html = source('mypage.html');
 
@@ -70,6 +89,54 @@ test('admin front includes member management endpoints and role actions', () => 
   assert.match(js, /전문가 부여/);
   assert.match(js, /전문가 해제/);
   assert.match(js, /admin\|kali/);
+});
+
+test('mypage quest badges conceal unowned public badges from tier 3 upward', () => {
+  const js = source('mypage.js');
+
+  assert.match(js, /function shouldConcealQuestBadge\(badge\)/);
+  assert.match(js, /!badge\.owned\s*&&\s*Number\(badge\.level\)\s*>=\s*3/);
+  assert.match(js, /function questLockedTile\(badge\)/);
+  assert.match(js, /quest-badge-tile--locked/);
+  assert.match(js, /조건 획득 시 공개/);
+  assert.match(js, /function visibleQuestBadges\(badges\)/);
+  assert.match(js, /Number\(b\.level\)\s*===\s*3/);
+  assert.match(js, /Number\(b\.level\)\s*!==\s*5\s*\|\|\s*tier3Owned/);
+  assert.match(js, /visibleQuestBadges\(badges\)\.forEach\(function \(badge\)/);
+  assert.match(js, /shouldConcealQuestBadge\(badge\)\s*\?\s*questLockedTile\(badge\)\s*:\s*questPublicTile\(badge\)/);
+});
+
+test('mypage sponsor coming-soon overlays show tier-specific amount copy', () => {
+  const js = source('mypage.js');
+
+  assert.match(js, /function comingSoonOverlayText\(code\)/);
+  assert.match(js, /supporter_3000:\s*'3천원 후원시 공개'/);
+  assert.match(js, /expert_3000:\s*'3천원 후원시 공개'/);
+  assert.match(js, /supporter_10000:\s*'1만원 후원시 공개'/);
+  assert.match(js, /expert_10000:\s*'1만원 후원시 공개'/);
+  assert.match(js, /supporter_50000:\s*'5만원 후원시 공개'/);
+  assert.match(js, /expert_50000:\s*'5만원 후원시 공개'/);
+  assert.match(js, /return sponsorComingSoonOverlayText\[code\]\s*\|\|\s*'추후 공개'/);
+  assert.match(js, /comingSoonOverlayText\(badge\.code\)/);
+});
+
+test('mypage badge ownership diff seeds first run and reports later new codes', () => {
+  const js = source('mypage.js');
+  const diffNewlyOwnedBadgeCodes = extractedFunctionBundle(
+    js,
+    ['uniqueBadgeCodes', 'diffNewlyOwnedBadgeCodes'],
+    'diffNewlyOwnedBadgeCodes'
+  );
+
+  const firstRun = diffNewlyOwnedBadgeCodes(null, ['questions_1', 'questions_1']);
+  assert.deepEqual(firstRun.newlyOwnedCodes, []);
+  assert.deepEqual(firstRun.seenCodes, ['questions_1']);
+  assert.equal(firstRun.seeded, true);
+
+  const secondRun = diffNewlyOwnedBadgeCodes(['questions_1'], ['questions_1', 'answers_1']);
+  assert.deepEqual(secondRun.newlyOwnedCodes, ['answers_1']);
+  assert.deepEqual(secondRun.seenCodes, ['questions_1', 'answers_1']);
+  assert.equal(secondRun.seeded, false);
 });
 
 test('nav exposes mypage link only through the logged-in branch', () => {

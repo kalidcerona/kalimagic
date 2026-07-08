@@ -61,10 +61,10 @@ test('playground list module has seven tabs, table rendering, paging, and free b
 
   assert.match(source, /PLAYGROUND_TABS/);
   assertInOrder(source, [
+    "{ id: 'all', label: '전체 기록', category: 'all', reviewKind: null }",
     "{ id: 'free', label: '자유게시판', category: 'free', reviewKind: null }",
     "{ id: 'routine', label: '마술 보관소', category: 'routine', reviewKind: null }",
     "{ id: 'question', label: '질문함', category: 'question', reviewKind: null }",
-    "{ id: 'all', label: '전체 기록', category: 'all', reviewKind: null }",
     "{ id: 'review_tool', label: '도구 기록', category: 'review', reviewKind: 'tool' }",
     "{ id: 'review_meeting', label: '모임 기록', category: 'review', reviewKind: 'meeting' }",
     "{ id: 'magazine', label: '보관된 기록', category: 'magazine', reviewKind: null }"
@@ -82,6 +82,20 @@ test('playground list module has seven tabs, table rendering, paging, and free b
   assert.match(source, /hasMore/);
   assert.match(source, /자유로운 마술 이야기를 기다리고 있습니다\./);
   assert.match(source, /배운 마술 루틴과 기술을 보관할 첫 기록을 기다리고 있습니다\./);
+});
+
+test('playground html fallback tabs put 전체 기록 first', () => {
+  const html = read('playground.html');
+
+  assertInOrder(html, [
+    '<button type="button" data-category="all" class="is-active">전체 기록</button>',
+    '<button type="button" data-category="free">자유게시판</button>',
+    '<button type="button" data-category="routine">마술 보관소</button>',
+    '<button type="button" data-category="question">질문함</button>',
+    '<button type="button" data-category="review">도구 기록</button>',
+    '<button type="button" data-category="event_review">모임 기록</button>',
+    '<button type="button" data-category="magazine">보관된 기록</button>'
+  ], 'static fallback tabs should follow the requested board order');
 });
 
 test('playground list module catches list load failures and renders a friendly error', () => {
