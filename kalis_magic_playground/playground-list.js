@@ -40,6 +40,12 @@
       : '';
   }
 
+  function imageBadgesHtml(codes) {
+    return window.KalisBadges && typeof window.KalisBadges.imageBadgesHtml === 'function'
+      ? window.KalisBadges.imageBadgesHtml(codes)
+      : '';
+  }
+
   function rowHtml(post) {
     const comment = post.commentCount > 0 ? `<span class="pg-comment-count">[${post.commentCount}]</span>` : '';
     const pin = post.isNotice ? '<span class="pg-pin" aria-label="공지">📌</span>' : '';
@@ -48,6 +54,7 @@
     const prefix = post.prefix || '[질문]';
     const preview = post.bodyPreview ? `<p class="pg-row-preview">${escapeHtml(post.bodyPreview)}</p>` : '';
     const authorBadge = roleBadgeHtml(post.authorRole);
+    const authorIdAttr = post.authorId ? ` data-author-id="${escapeHtml(post.authorId)}"` : '';
 
     return `
       <tr class="${post.isNotice ? 'pg-notice-row' : ''}">
@@ -56,7 +63,7 @@
           <a class="pg-title-button" href="post.html?id=${encodeURIComponent(post.id)}" data-post-id="${escapeHtml(post.id)}">${pin}${title}${comment}</a>
           ${preview}
         </td>
-        <td class="pg-author-cell">${escapeHtml(post.authorLabel || '익명')}${authorBadge}</td>
+        <td class="pg-author-cell"${authorIdAttr}>${escapeHtml(post.authorLabel || '익명')}${authorBadge}${imageBadgesHtml(post.authorBadges)}</td>
         <td class="pg-date-cell">${window.PgUtil.formatDate(post.createdAt, 'short')}</td>
         <td class="pg-count-cell">${formatCount(post, 'viewCount')}</td>
         <td class="pg-count-cell">${formatCount(post, 'likeCount')}</td>
@@ -239,6 +246,10 @@
         return;
       }
     });
+
+    if (window.KalisBadges && typeof window.KalisBadges.bindAuthorCells === 'function') {
+      window.KalisBadges.bindAuthorCells(root);
+    }
 
     load({ append: false });
     return { reload, getActiveTarget };

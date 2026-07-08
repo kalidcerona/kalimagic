@@ -266,7 +266,12 @@
   function memberRow(member) {
     var card = el('article', 'admin-card');
     var protectedRolePattern = /^(admin|kali)$/;
-    card.appendChild(el('h2', '', member.nickname || '닉네임 없음'));
+    var nameEl = el('h2', '', member.nickname || '닉네임 없음');
+    if (member.userId) {
+      nameEl.setAttribute('data-author-id', member.userId);
+      nameEl.setAttribute('data-author-nickname', member.nickname || '닉네임 없음');
+    }
+    card.appendChild(nameEl);
     card.appendChild(memberRoleNode(member));
     card.appendChild(el('span', '', member.createdAt ? new Date(member.createdAt).toLocaleDateString('ko-KR') : '가입일 없음'));
     var actions = el('div', 'admin-card__actions');
@@ -331,6 +336,9 @@
 
   async function init() {
     bindFilters();
+    if (window.KalisBadges && typeof window.KalisBadges.bindAuthorCells === 'function') {
+      window.KalisBadges.bindAuthorCells(listEl);
+    }
     await renderAuth();
     await loadInbox();
   }

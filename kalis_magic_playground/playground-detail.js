@@ -7,6 +7,16 @@
       : '';
   }
 
+  function imageBadgesHtml(codes) {
+    return window.KalisBadges && typeof window.KalisBadges.imageBadgesHtml === 'function'
+      ? window.KalisBadges.imageBadgesHtml(codes)
+      : '';
+  }
+
+  function authorIdAttr(authorId) {
+    return authorId ? ` data-author-id="${escapeHtml(authorId)}"` : '';
+  }
+
 
   function countText(post, key) {
     if (post.canReadBody === false || post[key] === null || post[key] === undefined) return '-';
@@ -64,7 +74,7 @@
           <article class="pg-answer">
             <p>${escapeHtml(answer.body || '').replaceAll('\n', '<br>')}</p>
             ${createYouTubeLiteEmbed(answer.youtubeVideoId, '답변에 첨부된 영상')}
-            <small>${escapeHtml(answer.authorLabel || '익명')}${roleBadgeHtml(answer.authorRole)}</small>
+            <small${authorIdAttr(answer.authorId)}>${escapeHtml(answer.authorLabel || '익명')}${roleBadgeHtml(answer.authorRole)}${imageBadgesHtml(answer.authorBadges)}</small>
           </article>
         `).join('') : '<p class="pg-loading">아직 답변이 없습니다.</p>'}
         ${viewerCanAnswer ? answerForm(post) : ''}
@@ -92,7 +102,7 @@
         <h3>댓글</h3>
         ${comments && comments.length ? comments.map((comment) => `
           <article class="${comment.parentCommentId ? 'pg-comment is-reply' : 'pg-comment'}">
-            <strong>${escapeHtml(comment.authorLabel || '익명')}${roleBadgeHtml(comment.authorRole)}</strong>
+            <strong${authorIdAttr(comment.authorId)}>${escapeHtml(comment.authorLabel || '익명')}${roleBadgeHtml(comment.authorRole)}${imageBadgesHtml(comment.authorBadges)}</strong>
             <p>${escapeHtml(comment.body || '').replaceAll('\n', '<br>')}</p>
             ${comment.parentCommentId ? '' : `<button type="button" class="pg-reply-button" data-reply-to="${escapeHtml(comment.id)}">답글</button>`}
           </article>
@@ -120,7 +130,7 @@
           <span class="pg-prefix">${escapeHtml(post.prefix || '')}</span>
           <h2>${post.isNotice ? '📌 ' : ''}${escapeHtml(post.title)}</h2>
           <div class="pg-detail-meta">
-            <span>${escapeHtml(post.authorLabel || '익명')}${authorBadge}</span>
+            <span${authorIdAttr(post.authorId)}>${escapeHtml(post.authorLabel || '익명')}${authorBadge}${imageBadgesHtml(post.authorBadges)}</span>
             <span>${window.PgUtil.formatDate(post.createdAt, 'detail')}</span>
             <span>조회 ${countText(post, 'viewCount')}</span>
             <span data-like-count>추천 ${countText(post, 'likeCount')}</span>
@@ -271,6 +281,10 @@
     document.addEventListener('playground:select-post', (event) => {
       loadPost(event.detail.postId);
     });
+
+    if (window.KalisBadges && typeof window.KalisBadges.bindAuthorCells === 'function') {
+      window.KalisBadges.bindAuthorCells(root);
+    }
 
     clear();
     return { loadPost, clear };

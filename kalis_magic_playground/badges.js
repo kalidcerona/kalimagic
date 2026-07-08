@@ -54,6 +54,7 @@
     var style = document.createElement('style');
     style.id = STYLE_ID;
     style.textContent =
+      '[data-author-id]{cursor:pointer;}' +
       '.kali-badge-img{width:18px;height:18px;border-radius:50%;object-fit:cover;margin-right:2px;vertical-align:middle;}' +
       '.kali-member-popover{position:fixed;z-index:9999;min-width:220px;max-width:280px;padding:14px;' +
       'background:#1c1009;border:1px solid rgba(201,154,91,0.4);border-radius:12px;color:#f3ece3;' +
@@ -245,6 +246,7 @@
   }
 
   function bindAuthorCells(root) {
+    ensureStyle();
     var container = root || document;
     container.addEventListener('click', function (event) {
       var target = event.target.closest('[data-author-id]');
