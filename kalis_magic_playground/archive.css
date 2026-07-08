@@ -6,8 +6,8 @@ body.archive-room {
   --archive-brass: #c99a5b;
   --archive-terra: #e8631f;
   --archive-line-brass: rgba(201,154,91,0.26);
-  --archive-hero-image: none;
-  --archive-hero-image-mobile: none;
+  --archive-hero-image: url("assets/playground/archive-salon-bg.webp");
+  --archive-hero-image-mobile: url("assets/playground/archive-salon-mobile.webp");
 
   min-height: 100vh;
   background:
@@ -93,6 +93,26 @@ body.archive-room .admin-card::before {
   pointer-events: none;
   background: linear-gradient(90deg, transparent, var(--archive-brass), rgba(232, 99, 31, 0.58), transparent);
   opacity: 0.72;
+}
+
+body.archive-room .phm-feed,
+body.archive-room .pgw-compose,
+body.archive-room .pgw-detail,
+body.archive-room .pgw-login,
+body.archive-room .admin-card {
+  background:
+    linear-gradient(180deg, rgba(243, 236, 227, 0.055), rgba(15, 9, 6, 0.1)),
+    url("assets/playground/texture-paper.webp") center / 520px repeat,
+    var(--archive-card);
+  background-blend-mode: normal, soft-light, normal;
+}
+
+body.archive-room .phm-sidebar {
+  background:
+    linear-gradient(180deg, rgba(243, 236, 227, 0.055), rgba(15, 9, 6, 0.1)),
+    url("assets/playground/texture-leather.webp") center / 640px repeat,
+    var(--archive-card);
+  background-blend-mode: normal, soft-light, normal;
 }
 
 body.archive-room .phm-sidebar {
@@ -201,6 +221,54 @@ body.archive-room .pg-prefix-filter-button[aria-selected="true"] {
   box-shadow:
     inset 3px 0 0 var(--archive-brass),
     0 0 20px rgba(201, 154, 91, 0.12);
+}
+
+body.archive-room .pg-tab[data-tab-id] {
+  justify-content: flex-start;
+  gap: 0.45em;
+}
+
+body.archive-room .playground-tabs button[data-category]::before,
+body.archive-room .pg-tab[data-tab-id]::before {
+  content: "";
+  display: inline-block;
+  width: 1.1em;
+  height: 1.1em;
+  margin-right: 0.45em;
+  vertical-align: -0.2em;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+
+body.archive-room .playground-tabs button[data-category="all"]::before,
+body.archive-room .pg-tab[data-tab-id="all"]::before {
+  background-image: url("assets/playground/icons/cat-all.webp");
+}
+
+body.archive-room .playground-tabs button[data-category="question"]::before,
+body.archive-room .pg-tab[data-tab-id="question"]::before {
+  background-image: url("assets/playground/icons/cat-question.webp");
+}
+
+body.archive-room .playground-tabs button[data-category="event_review"]::before,
+body.archive-room .pg-tab[data-tab-id="review_meeting"]::before {
+  background-image: url("assets/playground/icons/cat-event.webp");
+}
+
+body.archive-room .playground-tabs button[data-category="review"]::before,
+body.archive-room .pg-tab[data-tab-id="review_tool"]::before {
+  background-image: url("assets/playground/icons/cat-review.webp");
+}
+
+body.archive-room .playground-tabs button[data-category="free"]::before,
+body.archive-room .pg-tab[data-tab-id="free"]::before {
+  background-image: url("assets/playground/icons/cat-free.webp");
+}
+
+body.archive-room .playground-tabs button[data-category="magazine"]::before,
+body.archive-room .pg-tab[data-tab-id="magazine"]::before {
+  background-image: url("assets/playground/icons/cat-magazine.webp");
 }
 
 body.archive-room .phm-feed .pg-table-wrap:has(.pg-table--cards) {
