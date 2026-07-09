@@ -64,7 +64,7 @@ function callsInclude(query, expected) {
   return query.calls.some((call) => JSON.stringify(call) === JSON.stringify(expected));
 }
 
-test('validateRoleChange accepts expert and member role changes', () => {
+test('validateRoleChange accepts expert, god, and member role changes', () => {
   assert.deepEqual(validateRoleChange({
     targetRole: 'expert',
     targetCurrentRole: 'member',
@@ -78,11 +78,25 @@ test('validateRoleChange accepts expert and member role changes', () => {
     viewerUserId: 'admin-1',
     targetUserId: 'member-1'
   }), { ok: true, role: 'member' });
+
+  assert.deepEqual(validateRoleChange({
+    targetRole: 'god',
+    targetCurrentRole: 'expert',
+    viewerUserId: 'admin-1',
+    targetUserId: 'member-1'
+  }), { ok: true, role: 'god' });
 });
 
-test('validateRoleChange rejects roles outside expert and member', () => {
+test('validateRoleChange rejects roles outside expert, god, and member', () => {
   assert.deepEqual(validateRoleChange({
     targetRole: 'admin',
+    targetCurrentRole: 'member',
+    viewerUserId: 'admin-1',
+    targetUserId: 'member-1'
+  }), { ok: false, error: 'invalid_role' });
+
+  assert.deepEqual(validateRoleChange({
+    targetRole: 'wizard',
     targetCurrentRole: 'member',
     viewerUserId: 'admin-1',
     targetUserId: 'member-1'

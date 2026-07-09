@@ -84,10 +84,13 @@ test('admin front includes member management endpoints and role actions', () => 
   assert.match(html, /회원 관리/);
   assert.match(js, /\/\.netlify\/functions\/admin-members\?q=/);
   assert.match(js, /\/\.netlify\/functions\/admin-members/);
-  assert.match(js, /role:\s*'expert'/);
-  assert.match(js, /role:\s*'member'/);
+  assert.match(js, /memberRolePayload\(member,\s*targetRole\)/);
+  assert.match(js, /role:\s*targetRole/);
   assert.match(js, /전문가 부여/);
   assert.match(js, /전문가 해제/);
+  assert.match(js, /마술의 신 부여/);
+  assert.match(js, /마술의 신 해제/);
+  assert.match(js, /memberGodButton/);
   assert.match(js, /admin\|kali/);
 });
 

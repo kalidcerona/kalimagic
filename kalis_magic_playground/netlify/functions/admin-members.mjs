@@ -3,7 +3,7 @@ import { json, readJsonBody } from './_lib/http.mjs';
 import { getSupabaseAdmin } from './_lib/supabase.mjs';
 import { validateUuid } from './_lib/validators.mjs';
 
-const WRITABLE_ROLES = new Set(['expert', 'member']);
+const WRITABLE_ROLES = new Set(['expert', 'god', 'member']);
 const PROTECTED_ROLES = new Set(['admin', 'kali']);
 
 function clean(value) {

@@ -5,7 +5,7 @@ export function isElevated(viewer) {
 }
 
 export function isExpertOrHigher(viewer) {
-  return Boolean(viewer && (viewer.role === 'expert' || ELEVATED_ROLES.has(viewer.role)));
+  return Boolean(viewer && (viewer.role === 'expert' || viewer.role === 'god' || ELEVATED_ROLES.has(viewer.role)));
 }
 
 export function isAuthor(post, viewer) {

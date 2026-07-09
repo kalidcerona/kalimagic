@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import {
   SELECTABLE_BADGE_CODES,
   VALID_BADGE_CODES,
@@ -12,7 +12,7 @@ import {
 import { changeMemberBadge } from '../../netlify/functions/admin-badges.mjs';
 import { shapeMemberBadges } from '../../netlify/functions/member-badges.mjs';
 
-test('VALID_BADGE_CODES has the 9 badge codes', () => {
+test('VALID_BADGE_CODES has the 11 badge codes', () => {
   assert.deepEqual(
     Array.from(VALID_BADGE_CODES).sort(),
     [
@@ -20,6 +20,8 @@ test('VALID_BADGE_CODES has the 9 badge codes', () => {
       'expert_10000',
       'expert_3000',
       'expert_50000',
+      'hecate',
+      'hecate_2',
       'kali',
       'supporter_10000',
       'supporter_3000',
@@ -64,13 +66,34 @@ test('validateBadgeChange rejects invalid actions', () => {
   );
 });
 
-test('badge selection is limited to owned user and expert badges', () => {
-  assert.deepEqual(SELECTABLE_BADGE_CODES, ['user', 'expert']);
+test('badge selection is limited to owned selectable badges', () => {
+  assert.deepEqual(SELECTABLE_BADGE_CODES, ['user', 'expert', 'hecate', 'hecate_2']);
   assert.deepEqual(validateBadgeSelection(['user'], null), { ok: true, code: null });
   assert.deepEqual(validateBadgeSelection(['user'], ''), { ok: true, code: null });
   assert.deepEqual(validateBadgeSelection(['user', 'expert'], 'expert'), { ok: true, code: 'expert' });
   assert.deepEqual(validateBadgeSelection(['user'], 'expert'), { ok: false, error: 'badge_not_owned' });
+  assert.deepEqual(validateBadgeSelection(['hecate'], 'hecate'), { ok: true, code: 'hecate' });
+  assert.deepEqual(validateBadgeSelection([], 'hecate'), { ok: false, error: 'badge_not_owned' });
   assert.deepEqual(validateBadgeSelection(['kali'], 'kali'), { ok: false, error: 'badge_not_selectable' });
+});
+
+test('Hecate badge changes are valid for admin grant controls', () => {
+  assert.equal(VALID_BADGE_CODES.has('hecate'), true);
+  assert.equal(VALID_BADGE_CODES.has('hecate_2'), true);
+  assert.deepEqual(
+    validateBadgeChange({ badgeCode: 'hecate', action: 'grant' }),
+    { ok: true, badgeCode: 'hecate', action: 'grant' }
+  );
+});
+
+test('Hecate badge image assets exist at the client image paths', () => {
+  for (const code of ['hecate', 'hecate_2']) {
+    assert.equal(
+      existsSync(new URL(`../../assets/playground/badges/${code}.webp`, import.meta.url)),
+      true,
+      `${code}.webp should exist`
+    );
+  }
 });
 
 test('post author badge selection prefers post code, then profile default, then live badge map', () => {
@@ -109,6 +132,25 @@ test('public author badges never include kali from post, profile, or fallback so
     author_badge_code: null,
     profiles: { preferred_badge_code: null }
   }, badgeMap, 'author-1'), ['user', 'expert']);
+});
+
+test('public author badges include Hecate badges while still hiding kali', () => {
+  const badgeMap = { 'author-1': ['kali', 'hecate', 'hecate_2'] };
+
+  assert.deepEqual(resolvePostAuthorBadges({
+    author_badge_code: 'hecate',
+    profiles: { preferred_badge_code: 'kali' }
+  }, badgeMap, 'author-1'), ['hecate']);
+
+  assert.deepEqual(resolvePostAuthorBadges({
+    author_badge_code: null,
+    profiles: { preferred_badge_code: 'hecate_2' }
+  }, badgeMap, 'author-1'), ['hecate_2']);
+
+  assert.deepEqual(resolvePostAuthorBadges({
+    author_badge_code: null,
+    profiles: { preferred_badge_code: null }
+  }, badgeMap, 'author-1'), ['hecate', 'hecate_2']);
 });
 
 test('fetchBadgeMap excludes kali from public author badge maps while keeping other codes', async () => {

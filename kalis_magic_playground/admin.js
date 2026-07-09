@@ -223,6 +223,16 @@
   function memberRoleButton(member, card) {
     var targetRole = member.role === 'expert' ? 'member' : 'expert';
     var label = member.role === 'expert' ? '전문가 해제' : '전문가 부여';
+    return memberRoleChangeButton(member, card, targetRole, label);
+  }
+
+  function memberGodButton(member, card) {
+    var targetRole = member.role === 'god' ? 'member' : 'god';
+    var label = member.role === 'god' ? '마술의 신 해제' : '마술의 신 부여';
+    return memberRoleChangeButton(member, card, targetRole, label);
+  }
+
+  function memberRoleChangeButton(member, card, targetRole, label) {
     var button = el('button', 'playground-button playground-button--ghost', label);
     button.type = 'button';
     button.addEventListener('click', async function () {
@@ -247,8 +257,7 @@
   }
 
   function memberRolePayload(member, targetRole) {
-    if (targetRole === 'expert') return { userId: member.userId, role: 'expert' };
-    return { userId: member.userId, role: 'member' };
+    return { userId: member.userId, role: targetRole };
   }
 
   function memberRoleNode(member) {
@@ -277,6 +286,7 @@
     var actions = el('div', 'admin-card__actions');
     if (!protectedRolePattern.test(member.role || '')) {
       actions.appendChild(memberRoleButton(member, card));
+      actions.appendChild(memberGodButton(member, card));
     }
     card.appendChild(actions);
     var status = el('p', 'playground-form-status');

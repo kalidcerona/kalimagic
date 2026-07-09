@@ -1,6 +1,7 @@
 (function () {
   var BADGES = {
     expert: { label: '전문가', className: 'kali-badge--expert' },
+    god: { label: '마술의 신', className: 'kali-badge--god' },
     admin: { label: '칼리', className: 'kali-badge--kali' },
     kali: { label: '칼리', className: 'kali-badge--kali' }
   };
@@ -21,7 +22,9 @@
     expert_3000: { label: '은빛 봉인등', description: '신뢰 있는 답변자이자 기록소에 마음을 보탠 사람' },
     expert_10000: { label: '금빛 기록등', description: '오래 남을 답변과 지식을 보관하는 안내자' },
     expert_50000: { label: '오리할콘 수호등', description: '기록소를 지키는 상급 안내자' },
-    kali: { label: '칼리의 루비 문장', description: '칼리형' }
+    kali: { label: '칼리의 루비 문장', description: '칼리형' },
+    hecate: { label: '마술의 신', description: '마술의 신 — 헤카테의 열쇠 문양' },
+    hecate_2: { label: '마술의 신', description: '마술의 신 — 삼월 문양' }
   };
 
   var BADGE_CODES = Object.keys(BADGE_META);

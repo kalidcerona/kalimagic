@@ -7,10 +7,12 @@ export const VALID_BADGE_CODES = new Set([
   'expert_3000',
   'expert_10000',
   'expert_50000',
+  'hecate',
+  'hecate_2',
   'kali'
 ]);
 
-export const SELECTABLE_BADGE_CODES = ['user', 'expert'];
+export const SELECTABLE_BADGE_CODES = ['user', 'expert', 'hecate', 'hecate_2'];
 
 const VALID_ACTIONS = new Set(['grant', 'revoke']);
 const HIDDEN_PUBLIC_AUTHOR_BADGE_CODES = new Set(['kali']);

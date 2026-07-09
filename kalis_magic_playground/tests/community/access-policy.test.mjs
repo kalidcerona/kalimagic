@@ -4,7 +4,9 @@ import {
   canReadAnswer,
   canPublishAnswer,
   canReadAuthor,
-  canReadPostBody
+  canReadPostBody,
+  isElevated,
+  isExpertOrHigher
 } from '../../netlify/functions/_lib/access-policy.mjs';
 
 const author = { userId: 'u1', role: 'member' };
@@ -12,6 +14,7 @@ const other = { userId: 'u2', role: 'member' };
 const kali = { userId: 'u3', role: 'kali' };
 const admin = { userId: 'u5', role: 'admin' };
 const expert = { userId: 'u4', role: 'expert' };
+const god = { userId: 'u6', role: 'god' };
 
 test('public post body is readable by anonymous visitors', () => {
   assert.equal(canReadPostBody({ visibility: 'public', authorUserId: 'u1' }, null), true);
@@ -33,6 +36,13 @@ test('expert_only post body is readable by author, expert, kali, or admin', () =
   assert.equal(canReadPostBody(post, expert), true);
   assert.equal(canReadPostBody(post, kali), true);
   assert.equal(canReadPostBody(post, admin), true);
+});
+
+test('god role is expert-or-higher without elevated kali access', () => {
+  assert.equal(isExpertOrHigher(god), true);
+  assert.equal(isElevated(god), false);
+  assert.equal(canReadPostBody({ visibility: 'expert_only', authorUserId: 'u1' }, god), true);
+  assert.equal(canReadPostBody({ visibility: 'kali_only', authorUserId: 'u1' }, god), false);
 });
 
 test('private post author is hidden from unauthorized readers', () => {
