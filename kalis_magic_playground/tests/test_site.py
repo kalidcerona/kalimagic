@@ -27,7 +27,7 @@ def test_magic_playground_static_files_exist():
     playground = (ROOT / "playground.html").read_text(encoding="utf-8")
     nav = (ROOT / "nav.js").read_text(encoding="utf-8")
     style = (ROOT / "style.css").read_text(encoding="utf-8")
-    check("마술 놀이터" in playground, "[놀이터] playground.html 제목 없음")
+    check("마술문화 기록소" in playground, "[놀이터] playground.html 제목 없음")
     check("playground.js" in playground, "[놀이터] playground.js 로드 없음")
     check("auth.js" in playground, "[놀이터] auth.js 로드 없음")
     check("data-post-list" in playground, "[놀이터] 게시글 목록 영역 없음")

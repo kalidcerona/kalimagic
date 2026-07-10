@@ -1,6 +1,7 @@
 (function () {
-  var state = { session: null, profile: null, badgeData: null, questBadgeData: null, tab: 'posts' };
+  var state = { session: null, profile: null, mmbsRequest: null, badgeData: null, questBadgeData: null, tab: 'posts' };
   var profileEl = document.querySelector('[data-mypage-profile]');
+  var mmbsEl = document.querySelector('[data-mypage-mmbs]');
   var badgeEl = document.querySelector('[data-mypage-badges]');
   var questBadgeEl = document.querySelector('[data-mypage-quest-badges]');
   var tabsEl = document.querySelector('[data-mypage-tabs]');
@@ -151,6 +152,7 @@
 
   function showLogin() {
     clear(profileEl);
+    if (mmbsEl) clear(mmbsEl);
     clear(badgeEl);
     if (questBadgeEl) clear(questBadgeEl);
     clear(tabsEl);
@@ -233,6 +235,58 @@
     profileEl.appendChild(title);
     profileEl.appendChild(meta);
     profileEl.appendChild(actions);
+  }
+
+  function renderMmbsRequest() {
+    if (!mmbsEl) return;
+    clear(mmbsEl);
+    mmbsEl.appendChild(el('h2', 'mypage-section-title', '입문 강의 (구매자 전용)'));
+
+    var card = el('article', 'admin-card');
+    var status = state.mmbsRequest && state.mmbsRequest.status;
+    if (status === 'done') {
+      card.appendChild(el('p', '', '안내 완료 — 카카오톡을 확인해주세요'));
+    } else if (status === 'requested') {
+      var requestedButton = el('button', 'playground-button playground-button--ghost', '신청 접수됨 — 확인 중입니다');
+      requestedButton.type = 'button';
+      requestedButton.disabled = true;
+      card.appendChild(requestedButton);
+    } else {
+      card.appendChild(el('p', '', '구매 확인 후 카카오톡으로 입문 강의 링크를 안내드립니다.'));
+      var requestButton = el('button', 'playground-button', '열람 신청하기');
+      requestButton.type = 'button';
+      requestButton.addEventListener('click', async function () {
+        requestButton.disabled = true;
+        requestButton.textContent = '신청하는 중입니다.';
+        try {
+          state.mmbsRequest = await fetchJson('/.netlify/functions/mmbs-request', { method: 'POST' });
+          clear(card);
+          card.appendChild(el('p', 'playground-form-status', '신청이 접수되었습니다. 확인 후 카카오톡으로 안내드릴게요.'));
+        } catch (error) {
+          clear(card);
+          card.appendChild(el('p', 'playground-form-status is-error', '신청 기능을 준비 중입니다. 잠시 후 다시 시도해주세요.'));
+        }
+      });
+      card.appendChild(requestButton);
+    }
+    mmbsEl.appendChild(card);
+  }
+
+  async function loadMmbsRequest() {
+    if (!mmbsEl) return;
+    clear(mmbsEl);
+    mmbsEl.appendChild(el('h2', 'mypage-section-title', '입문 강의 (구매자 전용)'));
+    mmbsEl.appendChild(el('p', 'playground-loading', '신청 상태를 불러오는 중입니다.'));
+    try {
+      state.mmbsRequest = await fetchJson('/.netlify/functions/mmbs-request');
+      renderMmbsRequest();
+    } catch (error) {
+      clear(mmbsEl);
+      mmbsEl.appendChild(el('h2', 'mypage-section-title', '입문 강의 (구매자 전용)'));
+      var card = el('article', 'admin-card');
+      card.appendChild(el('p', 'playground-form-status is-error', '신청 기능을 준비 중입니다. 잠시 후 다시 시도해주세요.'));
+      mmbsEl.appendChild(card);
+    }
   }
 
   function badgeImage(code, label) {
@@ -689,6 +743,7 @@
       clear(profileEl);
       profileEl.appendChild(el('p', 'playground-form-status is-error', '프로필을 불러오지 못했습니다.'));
     }
+    await loadMmbsRequest();
     await loadBadges();
     await loadQuestBadges();
     renderTabs();

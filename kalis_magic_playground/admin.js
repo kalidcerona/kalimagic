@@ -327,8 +327,73 @@
     }
   }
 
+  function mmbsRequestRow(request) {
+    var card = el('article', 'admin-card');
+    card.appendChild(el('h2', '', request.nickname || '닉네임 없음'));
+    card.appendChild(el('p', '', request.requestedAt ? new Date(request.requestedAt).toLocaleString('ko-KR') : '신청일 없음'));
+    var actions = el('div', 'admin-card__actions');
+    var complete = el('button', 'playground-button', '처리 완료');
+    complete.type = 'button';
+    var status = el('p', 'playground-form-status');
+    complete.addEventListener('click', async function () {
+      status.textContent = '처리 중입니다.';
+      status.classList.remove('is-error');
+      complete.disabled = true;
+      try {
+        await fetchJson('/.netlify/functions/mmbs-request', {
+          method: 'PATCH',
+          body: JSON.stringify({ userId: request.userId })
+        });
+        state.flash = (request.nickname || '회원') + '님의 신청을 처리 완료했습니다.';
+        await loadMmbsRequests();
+      } catch (error) {
+        status.textContent = error.message || '신청을 처리하지 못했습니다.';
+        status.classList.add('is-error');
+        complete.disabled = false;
+      }
+    });
+    actions.appendChild(complete);
+    card.appendChild(actions);
+    card.appendChild(status);
+    return card;
+  }
+
+  function renderMmbsRequests(requests) {
+    clear(listEl);
+    if (state.flash) {
+      listEl.appendChild(el('p', 'playground-form-status', state.flash));
+      state.flash = '';
+    }
+    if (!requests.length) {
+      var empty = el('article', 'playground-empty');
+      empty.appendChild(el('h2', '', '대기 중인 신청이 없습니다'));
+      empty.appendChild(el('p', '', '새 입문 강의 신청이 접수되면 이곳에 표시됩니다.'));
+      listEl.appendChild(empty);
+      return;
+    }
+    requests.forEach(function (request) {
+      listEl.appendChild(mmbsRequestRow(request));
+    });
+  }
+
+  async function loadMmbsRequests() {
+    clear(listEl);
+    listEl.appendChild(el('p', 'playground-loading', '입문 강의 신청을 불러오는 중입니다.'));
+    try {
+      var data = await fetchJson('/.netlify/functions/mmbs-request?filter=mmbs_requests');
+      renderMmbsRequests(data.requests || []);
+    } catch (error) {
+      clear(listEl);
+      var box = el('article', 'playground-empty');
+      box.appendChild(el('h2', '', '입문 강의 신청을 불러오지 못했습니다'));
+      box.appendChild(el('p', '', '신청 기능을 준비 중입니다. 마이그레이션 적용 후 다시 시도해주세요.'));
+      listEl.appendChild(box);
+    }
+  }
+
   function loadCurrentView() {
     if (state.filter === 'members') return loadMembers();
+    if (state.filter === 'mmbs_requests') return loadMmbsRequests();
     return loadInbox();
   }
 
