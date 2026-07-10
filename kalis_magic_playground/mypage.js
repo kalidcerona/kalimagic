@@ -246,6 +246,9 @@
     var status = state.mmbsRequest && state.mmbsRequest.status;
     if (status === 'done') {
       card.appendChild(el('p', '', '안내 완료 — 카카오톡을 확인해주세요'));
+      var courseLink = el('a', 'playground-button', '강의 보러 가기');
+      courseLink.href = 'mmbs.html';
+      card.appendChild(courseLink);
     } else if (status === 'requested') {
       var requestedButton = el('button', 'playground-button playground-button--ghost', '신청 접수됨 — 확인 중입니다');
       requestedButton.type = 'button';

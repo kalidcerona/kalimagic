@@ -15,6 +15,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 PAGES = ["index.html", "intro.html", "lesson.html", "works.html",
          "reviews.html", "video.html"]
+LANDING_PAGES = PAGES + ["about.html"]
 # index = 옵션조합 9섹션 (landing-final 보정본)
 INDEX_SECTIONS = ["hero", "visitor", "problem", "solution", "path",
                   "review", "lesson", "faq", "final"]
@@ -142,6 +143,44 @@ def main():
         return report()
 
     parsed = {f: parse(ROOT / f) for f in existing}
+
+    # 공유 랜딩 내비는 데스크톱/모바일 변형 바깥에 한 번만 마운트되어야 한다.
+    nav = (ROOT / "nav.js").read_text(encoding="utf-8")
+    landing_nav = nav.split("const LANDING_PAGES = [", 1)[1].split("];", 1)[0]
+    check("playground.html" in landing_nav,
+          "[내비] LANDING_PAGES에 기록소(playground.html) 링크 없음")
+    check(0 <= landing_nav.find("playground.html") < landing_nav.find("lesson.html"),
+          "[내비] 기록소 링크가 레슨 CTA 앞에 있지 않음")
+    for f in LANDING_PAGES:
+        raw = (ROOT / f).read_text(encoding="utf-8")
+        nav_root = raw.find('id="nav-root"')
+        desktop = raw.find('class="kx-desktop"')
+        check(0 <= nav_root < desktop,
+              f"[모바일 내비] {f} nav-root가 kx-desktop 바깥/앞에 있지 않음")
+
+    # 첫 화면 히어로는 observer 실행 전에도 정적으로 보여야 한다.
+    for f in ["index.html", "intro.html"]:
+        raw = (ROOT / f).read_text(encoding="utf-8")
+        hero_match = re.search(r'<section\b[^>]*id="hero"[^>]*>.*?</section>', raw, re.S)
+        hero = hero_match.group(0) if hero_match else ""
+        hero_fade = re.search(r'<(?:section|div)\b[^>]*class="([^"]*\bkx-fade\b[^"]*)"', hero)
+        check(hero_fade is not None and "kx-in" in hero_fade.group(1).split(),
+              f"[첫 화면] {f} 데스크톱 hero kx-fade에 kx-in 없음")
+        mobile_first = re.search(
+            r'<div class="kx-mobile">\s*<div class="kx-shell">(?:\s|<!--.*?-->)*(<div\b[^>]*>)',
+            raw,
+            re.S,
+        )
+        check(mobile_first is not None and re.search(r'class="[^"]*\bkx-in\b', mobile_first.group(1)),
+              f"[첫 화면] {f} 첫 모바일 블록에 kx-in 없음")
+
+    index_raw = (ROOT / "index.html").read_text(encoding="utf-8")
+    index_hero = re.search(r'id="hero".*?</section>', index_raw, re.S)
+    check(index_hero is not None and re.search(
+        r'class="kx-pad"[^>]*max-width:1140px[^>]*>.*?<div class="[^"]*\bkx-grid2\b',
+        index_hero.group(0),
+        re.S,
+    ), "[히어로] index.html 데스크톱 hero grid가 1140px kx-pad 안에 없음")
 
     # 2. index 8섹션 id
     if "index.html" in parsed:

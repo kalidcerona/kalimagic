@@ -82,6 +82,8 @@ test('frontend exposes request, pending, done, and admin completion states', () 
   assert.match(mypageJs, /열람 신청하기/);
   assert.match(mypageJs, /신청 접수됨 — 확인 중입니다/);
   assert.match(mypageJs, /안내 완료 — 카카오톡을 확인해주세요/);
+  assert.match(mypageJs, /el\('a', 'playground-button', '강의 보러 가기'\)/);
+  assert.match(mypageJs, /courseLink\.href = 'mmbs\.html'/);
   assert.match(mypageJs, /신청이 접수되었습니다\. 확인 후 카카오톡으로 안내드릴게요\./);
   assert.match(adminHtml, /data-admin-filter="mmbs_requests"/);
   assert.match(adminJs, /mmbs-request\?filter=mmbs_requests/);

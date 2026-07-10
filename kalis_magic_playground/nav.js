@@ -9,6 +9,7 @@ const LANDING_PAGES = [
     { key: 'video', label: '영상', href: 'video.html' },
     { key: 'intro', label: '입문', href: 'intro.html' },
     { key: 'reviews', label: '후기', href: 'reviews.html' },
+    { key: 'playground', label: '기록소', href: 'playground.html' },
     { key: 'lesson', label: '레슨', href: 'lesson.html', cta: true },
 ];
 
