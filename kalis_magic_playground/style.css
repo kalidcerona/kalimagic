@@ -3158,8 +3158,8 @@ button.mypage-badge-tile:hover,
 }
   .phm-sidebar-tabs nav,
 .phm-sidebar-tabs .pg-tabs {
-  display: flex; flex-wrap: nowrap; gap: 7px; overflow-x: auto; overflow-y: hidden;
-  padding: 1px 2px 8px; scroll-snap-type: x proximity; scrollbar-width: none; -webkit-overflow-scrolling: touch;
+  display: flex; flex-wrap: wrap; gap: 7px;
+  padding: 1px 2px 4px;
 }
   .phm-sidebar-tabs nav::-webkit-scrollbar,
 .phm-sidebar-tabs .pg-tabs::-webkit-scrollbar {
@@ -3168,7 +3168,6 @@ button.mypage-badge-tile:hover,
   .phm-sidebar-tabs nav button,
 .phm-sidebar-tabs .pg-tab {
   flex: 0 0 auto; width: auto; min-width: max-content; min-height: 38px; padding: 0 12px;
-  scroll-snap-align: start;
 }
   .phm-sidebar-tabs nav button:hover,
 .phm-sidebar-tabs .pg-tab:hover {
