@@ -9,6 +9,21 @@
 [functions]
   node_bundler = "esbuild"
 
+[functions.post-og]
+  included_files = ["post.html"]
+
+[[redirects]]
+  from = "/post.html"
+  to = "/p/:id"
+  status = 301
+  force = true
+  query = { id = ":id" }
+
+[[redirects]]
+  from = "/p/:id"
+  to = "/.netlify/functions/post-og?id=:id"
+  status = 200
+
 [[headers]]
   for = "/*"
   [headers.values]

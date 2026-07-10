@@ -160,6 +160,18 @@ test('playground detail module renders counts, like toggle, owner delete, and hi
   assert.match(source, /return '-'/);
 });
 
+test('playground detail shares the canonical OG route with clipboard and Web Share fallbacks', () => {
+  const source = read('playground-detail.js');
+
+  assert.match(source, /const POST_SHARE_PATH = '\/p\/'/);
+  assert.match(source, /navigator\.clipboard\.writeText/);
+  assert.match(source, /window\.prompt/);
+  assert.match(source, /navigator\.share/);
+  assert.match(source, /링크 복사/);
+  assert.match(source, /공유하기/);
+  assert.match(source, /링크를 복사했어요/);
+});
+
 test('playground bootstrap wires list, auth slot, and write links', () => {
   const source = read('playground.js');
 

@@ -1,5 +1,10 @@
 (function () {
+  const POST_SHARE_PATH = '/p/';
   const escapeHtml = window.PgUtil.escapeHtml;
+
+  function postShareUrl(postId) {
+    return new URL(`${POST_SHARE_PATH}${encodeURIComponent(postId)}`, window.location.origin).href;
+  }
 
   function roleBadgeHtml(role) {
     return window.KalisBadges && typeof window.KalisBadges.badgeHtml === 'function'
@@ -142,6 +147,9 @@
     const deleteButton = post.canDelete ? `
       <button type="button" class="pg-delete-button" data-delete-post="${escapeHtml(post.id)}">삭제</button>
     ` : '';
+    const nativeShareButton = typeof navigator.share === 'function' ? `
+      <button type="button" class="pg-share-button" data-share-post>공유하기</button>
+    ` : '';
 
     return `
       <article class="pg-detail">
@@ -159,6 +167,11 @@
             ${deleteButton}
           </div>
         </header>
+        <div class="pg-share-row">
+          <button type="button" class="pg-share-button" data-copy-post-link>링크 복사</button>
+          ${nativeShareButton}
+          <span class="pg-share-status" data-share-status role="status" aria-live="polite"></span>
+        </div>
         ${bodyHtml(post)}
         ${post.canReadBody === false ? '' : answerHtml(post, answers || [], data.viewerCanAnswer)}
         ${post.canReadBody === false ? '' : commentHtml(comments || [], data.viewerCanComment)}
@@ -170,6 +183,17 @@
   function initPlaygroundDetail({ api, root }) {
     let currentPost = null;
     let currentPostId = null;
+    let shareStatusTimer = null;
+
+    function showShareStatus(message) {
+      const status = root.querySelector('[data-share-status]');
+      if (!status) return;
+      status.textContent = message;
+      window.clearTimeout(shareStatusTimer);
+      shareStatusTimer = window.setTimeout(() => {
+        status.textContent = '';
+      }, 2400);
+    }
 
     function clear() {
       currentPost = null;
@@ -215,6 +239,34 @@
       const commentLoginButton = event.target.closest('[data-comment-login]');
       if (commentLoginButton && window.MagicAuth && window.MagicAuth.login) {
         await window.MagicAuth.login();
+        return;
+      }
+
+      const copyLinkButton = event.target.closest('[data-copy-post-link]');
+      if (copyLinkButton && currentPost) {
+        const url = postShareUrl(currentPost.id);
+        try {
+          if (!navigator.clipboard || typeof navigator.clipboard.writeText !== 'function') {
+            throw new Error('clipboard_unavailable');
+          }
+          await navigator.clipboard.writeText(url);
+        } catch {
+          window.prompt('아래 링크를 복사해주세요.', url);
+        }
+        showShareStatus('링크를 복사했어요');
+        return;
+      }
+
+      const shareButton = event.target.closest('[data-share-post]');
+      if (shareButton && currentPost && typeof navigator.share === 'function') {
+        try {
+          await navigator.share({
+            title: currentPost.title,
+            url: postShareUrl(currentPost.id)
+          });
+        } catch (error) {
+          if (error.name !== 'AbortError') showShareStatus('공유하지 못했어요');
+        }
         return;
       }
 

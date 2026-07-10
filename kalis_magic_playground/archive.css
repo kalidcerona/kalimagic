@@ -161,6 +161,7 @@ body.archive-room .pg-loading,
 body.archive-room .playground-loading,
 body.archive-room .pg-detail-placeholder,
 body.archive-room .pg-detail-status,
+body.archive-room .pg-share-status,
 body.archive-room .pg-compose-status,
 body.archive-room .playground-form-status,
 body.archive-room .admin-card p,
@@ -221,6 +222,59 @@ body.archive-room .pg-prefix-filter-button[aria-selected="true"] {
   box-shadow:
     inset 3px 0 0 var(--archive-brass),
     0 0 20px rgba(201, 154, 91, 0.12);
+}
+
+body.archive-room .phm-sidebar-offer {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid rgba(201, 154, 91, 0.28);
+  border-radius: 12px;
+  background:
+    linear-gradient(135deg, rgba(201, 154, 91, 0.11), rgba(232, 99, 31, 0.05)),
+    rgba(22, 13, 8, 0.54);
+}
+
+body.archive-room .phm-sidebar-offer h2,
+body.archive-room .phm-sidebar-offer p {
+  margin: 0;
+}
+
+body.archive-room .phm-sidebar-offer h2 {
+  color: var(--archive-paper);
+  font-size: 0.98rem;
+  line-height: 1.4;
+}
+
+body.archive-room .phm-sidebar-offer p {
+  color: var(--archive-muted);
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+
+body.archive-room .phm-sidebar-offer a {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(201, 154, 91, 0.38);
+  border-radius: 9px;
+  background: linear-gradient(135deg, var(--archive-brass), var(--archive-terra));
+  color: #160d07;
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-decoration: none;
+  transition: filter 160ms ease, transform 160ms ease;
+}
+
+body.archive-room .phm-sidebar-offer a:hover {
+  filter: brightness(1.05);
+  transform: translateY(-1px);
+}
+
+body.archive-room .phm-sidebar-offer a:focus-visible {
+  outline: 2px solid rgba(243, 236, 227, 0.68);
+  outline-offset: 3px;
 }
 
 body.archive-room .pg-tab[data-tab-id] {
@@ -380,6 +434,7 @@ body.archive-room .pg-answer-helpful-button:hover {
 }
 
 body.archive-room .pg-delete-button,
+body.archive-room .pg-share-button,
 body.archive-room .pg-compose-close,
 body.archive-room .pg-reply-button,
 body.archive-room .phm-auth-button {
@@ -389,6 +444,7 @@ body.archive-room .phm-auth-button {
 }
 
 body.archive-room .pg-delete-button:hover,
+body.archive-room .pg-share-button:hover,
 body.archive-room .pg-compose-close:hover,
 body.archive-room .pg-reply-button:hover,
 body.archive-room .phm-auth-button:hover {

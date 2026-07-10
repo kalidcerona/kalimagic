@@ -50,7 +50,7 @@ test('mypage module loads profile, handles auth, tabs, and post navigation', () 
   assert.match(js, /data-mypage-tab="posts"/);
   assert.match(js, /data-mypage-tab="received"/);
   assert.match(js, /data-mypage-tab="given"/);
-  assert.match(js, /post\.html\?id=/);
+  assert.match(js, /'\/p\/'/);
   assert.match(js, /encodeURIComponent\(id\)/);
   assert.match(js, /clickableCard\(card, item\.id\)/);
   assert.match(js, /clickableCard\(card, item\.postId\)/);

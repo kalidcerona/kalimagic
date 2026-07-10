@@ -32,7 +32,7 @@
       getActiveTarget: () => target,
       onCreated: (result) => {
         if (result && result.id) {
-          location.href = 'post.html?id=' + encodeURIComponent(result.id);
+          location.href = '/p/' + encodeURIComponent(result.id);
         } else {
           location.href = 'playground.html';
         }

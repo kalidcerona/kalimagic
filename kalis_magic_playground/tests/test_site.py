@@ -59,15 +59,20 @@ def test_community_route_and_seo_files():
     reviews_community = (ROOT / "reviews-community.js").read_text(encoding="utf-8")
     playground = (ROOT / "playground.html").read_text(encoding="utf-8")
     playground_list = (ROOT / "playground-list.js").read_text(encoding="utf-8")
+    playground_detail = (ROOT / "playground-detail.js").read_text(encoding="utf-8")
     write = (ROOT / "write.html").read_text(encoding="utf-8")
     build_public = (ROOT / "scripts" / "build-public.mjs").read_text(encoding="utf-8")
 
-    check("post.html?id=" in reviews_community,
-          "[후기] reviews-community.js 상세 기록 링크가 post.html?id=가 아님")
+    check("/p/" in reviews_community,
+          "[후기] reviews-community.js 상세 기록 링크가 /p/가 아님")
     check("playground.html?post=" not in reviews_community,
           "[후기] reviews-community.js에 이전 playground.html?post= 링크가 남아 있음")
+    check("const POST_SHARE_PATH = '/p/'" in playground_detail,
+          "[공유] playground-detail.js에 OG 상세 공유 URL 패턴이 없음")
     check("MAGIC CULTURE ARCHIVE" in playground,
           "[기록소] playground.html 영문 눈썹 문구가 갱신되지 않음")
+    check('href="intro.html">5,000원 입문 강의 보기 →</a>' in playground,
+          "[기록소] 입문 강의 카드 문구 또는 intro.html 링크 없음")
     check("이 기록소의 지도" in playground_list,
           "[기록소] playground-list.js 빈 상태 문구가 갱신되지 않음")
     check("nickname-onboarding.js" in write,
@@ -136,6 +141,18 @@ def main():
     for img in imgs:
         kb = img.stat().st_size / 1024
         check(kb < 400, f"[예산] {img.name} {kb:.0f}KB ≥ 400KB")
+
+    hero_variants = [
+        assets / "profile" / "bar-reaction-1080w.jpg",
+        assets / "profile" / "bar-reaction-800w.jpg",
+        assets / "profile" / "magic-reaction-800w.jpg",
+        assets / "profile" / "magic-reaction-480w.jpg",
+    ]
+    for img in hero_variants:
+        check(img.is_file(), f"[히어로 이미지] {img.name} 없음")
+        if img.is_file():
+            kb = img.stat().st_size / 1024
+            check(kb < 400, f"[예산] {img.name} {kb:.0f}KB ≥ 400KB")
 
     # 페이지가 하나도 없으면 여기서 정리 (RED 단계)
     existing = [f for f in PAGES if (ROOT / f).is_file()]

@@ -62,7 +62,7 @@
       <tr class="${post.isNotice ? 'pg-notice-row' : ''}">
         <td class="pg-prefix-cell"><span class="pg-prefix pg-prefix--${prefixClass(prefix)}">${escapeHtml(prefix)}</span></td>
         <td class="pg-title-cell">
-          <a class="pg-title-button" href="post.html?id=${encodeURIComponent(post.id)}" data-post-id="${escapeHtml(post.id)}">${pin}${title}${comment}</a>
+          <a class="pg-title-button" href="/p/${encodeURIComponent(post.id)}" data-post-id="${escapeHtml(post.id)}">${pin}${title}${comment}</a>
           ${preview}
         </td>
         <td class="pg-author-cell"${authorIdAttr}>${escapeHtml(post.authorLabel || '익명')}${authorBadge}${imageBadgesHtml(post.authorBadges)}</td>

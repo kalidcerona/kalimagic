@@ -93,7 +93,10 @@
       
         <div class="kx-fade kx-in kx-grid2" style="display:grid; grid-template-columns:0.95fr 1.05fr; gap:0; align-items:stretch; margin-top:22px; border-radius:10px; overflow:hidden;">
           <div style="position:relative; min-height:560px; overflow:hidden;">
-            <img src="assets/profile/bar-reaction.jpg" alt="바에서 마술을 보여주며 사람들이 놀라는 순간" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center 38%; filter:saturate(0.92) brightness(0.86) contrast(1.05);" class="kx-ken" width="1200" height="800" fetchpriority="high" decoding="async">
+            <picture>
+              <source media="(min-width: 1025px)" type="image/jpeg" srcset="assets/profile/bar-reaction-800w.jpg 800w, assets/profile/bar-reaction-1080w.jpg 1080w" sizes="50vw">
+              <img src="assets/profile/bar-reaction.jpg" alt="바에서 마술을 보여주며 사람들이 놀라는 순간" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center 38%; filter:saturate(0.92) brightness(0.86) contrast(1.05);" class="kx-ken" width="1200" height="800" fetchpriority="high" decoding="async">
+            </picture>
             <div style="position:absolute; inset:0; background:rgba(20,16,13,0.24);"></div>
             <div style="position:absolute; inset:0; background:linear-gradient(90deg, rgba(26,21,18,0) 45%, #1a1512 100%);"></div>
           </div>
@@ -425,7 +428,10 @@
 
   <!-- §1 HERO -->
   <div class="kx-in" style="position:relative;">
-    <img src="assets/profile/magic-reaction.jpg" alt="관객이 놀라는 마술 시연" style="width:100%; height:300px; object-fit:cover; object-position:center 38%; display:block; filter:saturate(0.92) contrast(1.05) brightness(0.82);" width="1200" height="800" fetchpriority="high" decoding="async">
+    <picture>
+      <source media="(max-width: 1024px)" type="image/jpeg" srcset="assets/profile/magic-reaction-480w.jpg 480w, assets/profile/magic-reaction-800w.jpg 800w" sizes="430px">
+      <img src="assets/profile/magic-reaction.jpg" alt="관객이 놀라는 마술 시연" style="width:100%; height:300px; object-fit:cover; object-position:center 38%; display:block; filter:saturate(0.92) contrast(1.05) brightness(0.82);" width="1200" height="800" loading="lazy" decoding="async">
+    </picture>
     <div style="position:absolute; inset:0; background:linear-gradient(180deg, rgba(26,15,10,0.22) 30%, rgba(26,15,10,0.94));"></div>
     <div style="position:absolute; left:0; right:0; bottom:0; padding:0 24px 22px;">
       <p class="kx-eye" style="margin-bottom:10px;"><span></span>형이 알려줄게</p>

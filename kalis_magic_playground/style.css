@@ -2073,6 +2073,7 @@ button.mypage-badge-tile:hover,
 .pg-compose-close,
 .pg-like-button,
 .pg-answer-helpful-button,
+.pg-share-button,
 .pg-delete-button,
 .pg-compose-link {
   border: 1px solid var(--border-light);
@@ -2111,6 +2112,7 @@ button.mypage-badge-tile:hover,
 .pg-compose-close:hover,
 .pg-like-button:hover,
 .pg-answer-helpful-button:hover,
+.pg-share-button:hover,
 .pg-delete-button:hover,
 .pg-compose-link:hover {
   border-color: rgba(var(--point-gold-rgb), 0.55);
@@ -2340,11 +2342,25 @@ button.mypage-badge-tile:hover,
   margin-top: 14px;
 }
 
+.pg-share-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin: 12px 0 18px;
+}
+
 .pg-like-button,
+.pg-share-button,
 .pg-delete-button,
 .pg-compose-close {
   min-height: 36px;
   padding: 6px 11px;
+}
+
+.pg-share-status {
+  color: var(--text-muted);
+  font-size: 0.84rem;
 }
 
 .pg-delete-button {

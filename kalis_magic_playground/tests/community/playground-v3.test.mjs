@@ -26,11 +26,19 @@ test('post page exists with auth->api->detail->bootstrap order', () => {
   assert.match(html, /data-post-detail/);
 });
 
-test('list rows navigate to post.html and include body preview', () => {
+test('list rows navigate to the OG post route and include body preview', () => {
   const source = read('playground-list.js');
-  assert.match(source, /post\.html\?id=/);
+  assert.match(source, /href="\/p\//);
   assert.match(source, /bodyPreview/);
   assert.doesNotMatch(source, /playground:select-post/);
+});
+
+test('post bootstrap reads ids from the OG post route', () => {
+  const source = read('post.js');
+
+  assert.match(source, /POST_ROUTE_PREFIX = '\/p\/'/);
+  assert.match(source, /location\.pathname/);
+  assert.match(source, /URLSearchParams/);
 });
 
 test('posts API exposes bodyPreview additively', () => {

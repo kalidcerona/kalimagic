@@ -142,7 +142,7 @@
   }
 
   function postUrl(id) {
-    return 'post.html?id=' + encodeURIComponent(id);
+    return '/p/' + encodeURIComponent(id);
   }
 
   function goToPost(id) {
