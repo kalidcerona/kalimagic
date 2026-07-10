@@ -152,6 +152,7 @@
 
   function showLogin() {
     clear(profileEl);
+    profileEl.hidden = true;
     if (mmbsEl) clear(mmbsEl);
     clear(badgeEl);
     if (questBadgeEl) clear(questBadgeEl);
@@ -738,13 +739,14 @@
       showLogin();
       return;
     }
+    profileEl.hidden = false;
     profileEl.innerHTML = '<p class="playground-loading">프로필을 불러오는 중입니다.</p>';
     try {
       state.profile = await fetchJson('/.netlify/functions/profile');
       renderProfile();
     } catch (error) {
       clear(profileEl);
-      profileEl.appendChild(el('p', 'playground-form-status is-error', '프로필을 불러오지 못했습니다.'));
+      profileEl.hidden = true;
     }
     await loadMmbsRequest();
     await loadBadges();

@@ -213,7 +213,17 @@
         currentPost = data.post;
         root.innerHTML = detailHtml(data);
       } catch (error) {
-        root.innerHTML = `<p class="pg-detail-status">${escapeHtml(error.message || '글을 불러오지 못했어요.')}</p>`;
+        console.error('Failed to load playground post detail:', error);
+        root.innerHTML = `
+          <div class="pg-empty pg-error">
+            <svg class="pg-empty-icon" viewBox="0 0 24 24" fill="none" stroke="var(--point-gold)" aria-hidden="true">
+              <path d="M12 8v4"></path>
+              <path d="M12 16h.01"></path>
+              <path d="M10.3 3.9h3.4l8.1 14.2-1.7 2.9H3.9l-1.7-2.9 8.1-14.2Z"></path>
+            </svg>
+            <p>기록을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.</p>
+          </div>
+        `;
       }
     }
 

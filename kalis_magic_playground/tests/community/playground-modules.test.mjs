@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import vm from 'node:vm';
 
 const root = resolve(fileURLToPath(new URL('../..', import.meta.url)));
 const read = (path) => readFileSync(resolve(root, path), 'utf8');
@@ -158,6 +159,43 @@ test('playground detail module renders counts, like toggle, owner delete, and hi
   assert.match(source, /canDelete/);
   assert.match(source, /답변이 달린 질문은 삭제할 수 없어요/);
   assert.match(source, /return '-'/);
+});
+
+test('playground detail replaces post-load exceptions with the friendly error card', async () => {
+  const source = read('playground-detail.js');
+  const window = {
+    PgUtil: { escapeHtml: (value) => String(value) },
+    clearTimeout() {},
+    setTimeout() {}
+  };
+  const root = {
+    innerHTML: '',
+    addEventListener() {},
+    querySelector() { return null; }
+  };
+  vm.runInNewContext(source, {
+    window,
+    document: { addEventListener() {} },
+    navigator: {},
+    console: { error() {} },
+    URL
+  });
+
+  const detail = window.KalisPlaygroundDetail.initPlaygroundDetail({
+    api: { getPostDetail: async () => { throw new Error('Unexpected token <'); } },
+    root
+  });
+  await detail.loadPost('post-1');
+
+  assert.match(root.innerHTML, /pg-empty pg-error/);
+  assert.match(root.innerHTML, /기록을 불러오지 못했습니다\. 잠시 후 다시 시도해주세요\./);
+  assert.doesNotMatch(root.innerHTML, /Unexpected token/);
+});
+
+test('playground detail does not interpolate a post-load error message into error HTML', () => {
+  const source = read('playground-detail.js');
+
+  assert.doesNotMatch(source, /root\.innerHTML\s*=\s*`[^`]*error\.message/);
 });
 
 test('playground detail shares the canonical OG route with clipboard and Web Share fallbacks', () => {

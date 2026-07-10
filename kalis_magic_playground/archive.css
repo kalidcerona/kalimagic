@@ -443,6 +443,11 @@ body.archive-room .phm-auth-button {
   color: #e6c187;
 }
 
+body.archive-room .phm-auth-button {
+  min-height: 38px;
+  padding: 0 13px;
+}
+
 body.archive-room .pg-delete-button:hover,
 body.archive-room .pg-share-button:hover,
 body.archive-room .pg-compose-close:hover,
