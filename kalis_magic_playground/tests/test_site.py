@@ -54,6 +54,39 @@ def test_admin_page_static_shell_exists():
     assert not failures
 
 
+def test_community_route_and_seo_files():
+    reviews_community = (ROOT / "reviews-community.js").read_text(encoding="utf-8")
+    playground = (ROOT / "playground.html").read_text(encoding="utf-8")
+    playground_list = (ROOT / "playground-list.js").read_text(encoding="utf-8")
+    write = (ROOT / "write.html").read_text(encoding="utf-8")
+    build_public = (ROOT / "scripts" / "build-public.mjs").read_text(encoding="utf-8")
+
+    check("post.html?id=" in reviews_community,
+          "[후기] reviews-community.js 상세 기록 링크가 post.html?id=가 아님")
+    check("playground.html?post=" not in reviews_community,
+          "[후기] reviews-community.js에 이전 playground.html?post= 링크가 남아 있음")
+    check("MAGIC CULTURE ARCHIVE" in playground,
+          "[기록소] playground.html 영문 눈썹 문구가 갱신되지 않음")
+    check("이 기록소의 지도" in playground_list,
+          "[기록소] playground-list.js 빈 상태 문구가 갱신되지 않음")
+    check("nickname-onboarding.js" in write,
+          "[글쓰기] write.html이 nickname-onboarding.js를 로드하지 않음")
+
+    for page in ["admin.html", "write.html", "mypage.html"]:
+        raw = (ROOT / page).read_text(encoding="utf-8")
+        check("noindex" in raw, f"[메타] {page} noindex 없음")
+
+    sitemap = ROOT / "sitemap.xml"
+    robots = ROOT / "robots.txt"
+    check(sitemap.is_file(), "[SEO] sitemap.xml 없음")
+    if sitemap.is_file():
+        check("playground.html" in sitemap.read_text(encoding="utf-8"),
+              "[SEO] sitemap.xml에 playground.html 없음")
+    check(robots.is_file(), "[SEO] robots.txt 없음")
+    check("sitemap.xml" in build_public and "robots.txt" in build_public,
+          "[빌드] sitemap.xml 또는 robots.txt가 PUBLIC_FILES에 없음")
+
+
 def check(cond, msg):
     global checks
     checks += 1
@@ -202,6 +235,8 @@ def main():
         check("<title>" in raw, "[메타] mmbs.html title 없음")
         check('name="viewport"' in raw, "[메타] mmbs.html viewport 없음")
         check("noindex" in raw, "[메타] mmbs.html noindex 없음")
+
+    test_community_route_and_seo_files()
 
     return report()
 

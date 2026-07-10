@@ -92,7 +92,7 @@
     reviews.forEach(function (review) {
       var item = el('article', 'event-review-card');
       var link = el('a', '', review.title);
-      link.href = 'playground.html?post=' + encodeURIComponent(review.id);
+      link.href = 'post.html?id=' + encodeURIComponent(review.id);
       item.appendChild(link);
       item.appendChild(el('p', '', review.body));
       var author = el('span', '', review.authorLabel || '마술인');

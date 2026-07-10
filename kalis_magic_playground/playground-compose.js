@@ -198,7 +198,11 @@
     `;
   }
 
-  function selectHtml(selected) {
+  function isPrivilegedRole(viewerRole) {
+    return viewerRole === 'admin' || viewerRole === 'kali';
+  }
+
+  function selectHtml(selected, viewerRole) {
     const options = [
       ['all', '게시판 선택'],
       ['free', '자유게시판'],
@@ -208,11 +212,14 @@
       ['meeting', '모임 기록'],
       ['magazine', '보관된 기록']
     ];
+    const availableOptions = isPrivilegedRole(viewerRole)
+      ? options
+      : options.filter(([value]) => value !== 'magazine');
     return `
       <label>
         <span>게시판</span>
         <select name="category" required>
-          ${options.map(([value, label]) => `<option value="${value}" ${value === selected ? 'selected' : ''}>${label}</option>`).join('')}
+          ${availableOptions.map(([value, label]) => `<option value="${value}" ${value === selected ? 'selected' : ''}>${label}</option>`).join('')}
         </select>
       </label>
     `;
@@ -241,7 +248,7 @@
     `;
   }
 
-  function formHtml(category, badgeOptions) {
+  function formHtml(category, badgeOptions, viewerRole) {
     const guide = PLAYGROUND_GUIDES[category] || PLAYGROUND_GUIDES.all;
     const titlePlaceholder = guide.titleGuide || guide.titlePlaceholder || PLAYGROUND_GUIDES.all.titlePlaceholder;
     const bodyPlaceholder = guide.bodyGuide || guide.bodyPlaceholder || PLAYGROUND_GUIDES.all.bodyPlaceholder;
@@ -258,7 +265,7 @@
     return `
       ${guideHtml(category)}
       <form data-playground-compose-form>
-        ${selectHtml(category)}
+        ${selectHtml(category, viewerRole)}
         <label>
           <span>제목</span>
           <input name="title" type="text" maxlength="120" required placeholder="${escapeHtml(titlePlaceholder)}">
@@ -299,6 +306,7 @@
     let openCategory = categoryFromTarget(getActiveTarget && getActiveTarget());
     let renderToken = 0;
     let badgeOptionsPromise = null;
+    let viewerRolePromise = null;
 
     function composeShellHtml(body) {
       return `
@@ -320,6 +328,17 @@
         .then((data) => (data.catalog || []).filter((badge) => badge.owned && badge.selectable))
         .catch(() => []);
       return badgeOptionsPromise;
+    }
+
+    function loadViewerRole() {
+      if (viewerRolePromise) return viewerRolePromise;
+      if (!api || typeof api.fetchJson !== 'function' || !window.MagicAuth) return Promise.resolve(null);
+
+      viewerRolePromise = window.MagicAuth.getSession()
+        .then((session) => session ? api.fetchJson('/.netlify/functions/profile') : null)
+        .then((profile) => profile && profile.role ? profile.role : null)
+        .catch(() => null);
+      return viewerRolePromise;
     }
 
     function renderClosed() {
@@ -351,9 +370,13 @@
       openCategory = category;
       const token = ++renderToken;
       root.innerHTML = composeShellHtml('<p class="pg-compose-status">글쓰기 화면을 불러오는 중입니다.</p>');
-      const badgeOptions = openCategory === 'meeting' ? [] : await loadBadgeOptions();
+      const [badgeOptions, viewerRole] = await Promise.all([
+        openCategory === 'meeting' ? Promise.resolve([]) : loadBadgeOptions(),
+        loadViewerRole()
+      ]);
       if (token !== renderToken) return;
-      root.innerHTML = composeShellHtml(formHtml(openCategory, badgeOptions));
+      if (openCategory === 'magazine' && !isPrivilegedRole(viewerRole)) openCategory = 'free';
+      root.innerHTML = composeShellHtml(formHtml(openCategory, badgeOptions, viewerRole));
       if (openCategory === 'meeting') {
         mountMeetingReviewForm(root.querySelector('[data-meeting-review-compose]'), token);
       }

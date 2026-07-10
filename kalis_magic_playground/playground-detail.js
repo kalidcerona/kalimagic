@@ -111,7 +111,11 @@
     `;
   }
 
-  function commentHtml(comments) {
+  function commentLoginButtonHtml() {
+    return '<button type="button" class="playground-button" data-comment-login>로그인하고 댓글 남기기</button>';
+  }
+
+  function commentHtml(comments, viewerCanComment) {
     return `
       <section class="pg-detail-section">
         <h3>댓글</h3>
@@ -119,10 +123,10 @@
           <article class="${comment.parentCommentId ? 'pg-comment is-reply' : 'pg-comment'}">
             <strong${authorIdAttr(comment.authorId)}>${escapeHtml(comment.authorLabel || '익명')}${roleBadgeHtml(comment.authorRole)}${imageBadgesHtml(comment.authorBadges)}</strong>
             <p>${escapeHtml(comment.body || '').replaceAll('\n', '<br>')}</p>
-            ${comment.parentCommentId ? '' : `<button type="button" class="pg-reply-button" data-reply-to="${escapeHtml(comment.id)}">답글</button>`}
+            ${comment.parentCommentId || !viewerCanComment ? '' : `<button type="button" class="pg-reply-button" data-reply-to="${escapeHtml(comment.id)}">답글</button>`}
           </article>
         `).join('') : '<p class="pg-loading">아직 댓글이 없습니다.</p>'}
-        ${commentForm(null)}
+        ${viewerCanComment ? commentForm(null) : commentLoginButtonHtml()}
       </section>
     `;
   }
@@ -157,7 +161,7 @@
         </header>
         ${bodyHtml(post)}
         ${post.canReadBody === false ? '' : answerHtml(post, answers || [], data.viewerCanAnswer)}
-        ${post.canReadBody === false ? '' : commentHtml(comments || [])}
+        ${post.canReadBody === false ? '' : commentHtml(comments || [], data.viewerCanComment)}
         <p class="pg-detail-status" data-detail-status></p>
       </article>
     `;
@@ -178,6 +182,10 @@
       root.innerHTML = '<p class="pg-loading">글을 불러오는 중입니다.</p>';
       try {
         const data = await api.getPostDetail(postId);
+        const session = window.MagicAuth && window.MagicAuth.getSession
+          ? await window.MagicAuth.getSession()
+          : null;
+        data.viewerCanComment = Boolean(session);
         currentPost = data.post;
         root.innerHTML = detailHtml(data);
       } catch (error) {
@@ -201,6 +209,12 @@
           ></iframe>
         `;
         wrapper.classList.add('yt-lite--loaded');
+        return;
+      }
+
+      const commentLoginButton = event.target.closest('[data-comment-login]');
+      if (commentLoginButton && window.MagicAuth && window.MagicAuth.login) {
+        await window.MagicAuth.login();
         return;
       }
 

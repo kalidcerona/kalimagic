@@ -12,7 +12,7 @@
   ];
 
   const EMPTY_COPY = {
-    all: '아직 첫 기록이 올라오지 않았습니다. 질문과 후기가 쌓이면 이 놀이터의 지도가 됩니다.',
+    all: '아직 첫 기록이 올라오지 않았습니다. 질문과 후기가 쌓이면 이 기록소의 지도가 됩니다.',
     question: '아직 질문이 없습니다. 처음 묻는 질문도 다음 사람에게는 같은 고민을 해결하는 첫 기록이 됩니다.',
     review_tool: '아직 리뷰가 없습니다. 써본 도구와 모임 기억이 이곳에 쌓이면 누군가의 길잡이가 됩니다.',
     review_meeting: '아직 리뷰가 없습니다. 써본 도구와 모임 기억이 이곳에 쌓이면 누군가의 길잡이가 됩니다.',
@@ -74,12 +74,14 @@
   }
 
   function emptyHtml(tabId) {
+    const writeCategory = tabId === 'all' ? 'free' : tabId;
     return `
       <div class="pg-empty">
         <svg class="pg-empty-icon" viewBox="0 0 24 24" fill="none" stroke="var(--point-gold)" aria-hidden="true">
           <path d="M5 6.5h14M7 10h10M8 13.5h8M6.5 3.5h11l2 3v13H4.5v-13l2-3Z"></path>
         </svg>
         <p>${EMPTY_COPY[tabId] || EMPTY_COPY.all}</p>
+        <a class="phm-write-button" href="write.html?category=${encodeURIComponent(writeCategory)}">첫 기록 남기기</a>
       </div>
     `;
   }

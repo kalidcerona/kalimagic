@@ -13,7 +13,7 @@
     const composeRoot = document.querySelector('[data-write-compose]');
     const loginBox = document.querySelector('[data-write-login]');
     const params = new URLSearchParams(location.search);
-    const target = CATEGORY_TARGETS[params.get('category')] || { id: 'all' };
+    const target = CATEGORY_TARGETS[params.get('category')] || CATEGORY_TARGETS.free;
 
     const session = await window.MagicAuth.getSession();
     if (!session) {

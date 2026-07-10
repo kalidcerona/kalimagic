@@ -173,3 +173,26 @@ test('playground bootstrap wires list, auth slot, and write links', () => {
   assert.doesNotMatch(source, /async function loadQuestions/);
   assert.doesNotMatch(source, /addEventListener\('submit'/);
 });
+
+test('write affordances hide the magazine category for unprivileged members and preserve a category CTA', () => {
+  const compose = read('playground-compose.js');
+  const list = read('playground-list.js');
+  const write = read('write.js');
+
+  assert.match(compose, /\/\.netlify\/functions\/profile/);
+  assert.match(compose, /viewerRole === 'admin' \|\| viewerRole === 'kali'/);
+  assert.match(compose, /options\.filter\(\(\[value\]\) => value !== 'magazine'\)/);
+  assert.match(list, /첫 기록 남기기/);
+  assert.match(list, /write\.html\?category=/);
+  assert.match(write, /\|\| CATEGORY_TARGETS\.free/);
+});
+
+test('logged-out readers receive a Google-login comment CTA instead of a comment form', () => {
+  const source = read('playground-detail.js');
+
+  assert.match(source, /viewerCanComment/);
+  assert.match(source, /로그인하고 댓글 남기기/);
+  assert.match(source, /data-comment-login/);
+  assert.match(source, /window\.MagicAuth\.login\(\)/);
+  assert.match(source, /viewerCanComment \? commentForm\(null\)/);
+});

@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /admin.html
+Disallow: /write.html
+Disallow: /mypage.html
+Disallow: /mmbs.html
+
+Sitemap: https://kalimagic.netlify.app/sitemap.xml
