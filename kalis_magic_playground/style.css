@@ -2930,6 +2930,9 @@ button.mypage-badge-tile:hover,
 .phm-sidebar {
   display: grid; gap: 20px; padding: 22px;
 }
+.phm-sidebar > * {
+  min-width: 0;
+}
 .phm-sidebar-brand {
   display: grid; gap: 10px;
 }
