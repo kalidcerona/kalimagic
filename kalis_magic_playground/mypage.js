@@ -215,6 +215,11 @@
   function renderProfile() {
     clear(profileEl);
     var title = el('h2', 'playground-post__title', state.profile && state.profile.nickname ? state.profile.nickname : '닉네임 없음');
+    title.classList.add('mypage-profile__title');
+    var preferredBadgeCode = state.badgeData && state.badgeData.preferredBadgeCode;
+    if (preferredBadgeCode && window.KalisBadges && window.KalisBadges.imageBadgesHtml) {
+      title.insertAdjacentHTML('beforeend', window.KalisBadges.imageBadgesHtml([preferredBadgeCode]));
+    }
     var meta = el('p', 'playground-post__body', '역할 ' + ((state.profile && state.profile.role) || 'member'));
     var actions = el('div', 'admin-card__actions');
     var change = el('button', 'playground-button playground-button--ghost', '닉네임 변경');
@@ -261,6 +266,7 @@
         body: JSON.stringify({ preferredBadgeCode: code })
       });
       var newSponsorBadges = newlyOwnedBadges(SPONSOR_BADGE_SEEN_STORAGE_KEY, state.badgeData.catalog || []);
+      if (state.profile) renderProfile();
       renderBadges();
       queueSponsorBadgeCelebrations(newSponsorBadges);
     } catch (error) {
@@ -333,6 +339,7 @@
     try {
       state.badgeData = await fetchJson('/.netlify/functions/member-badges');
       var newSponsorBadges = newlyOwnedBadges(SPONSOR_BADGE_SEEN_STORAGE_KEY, state.badgeData.catalog || []);
+      if (state.profile) renderProfile();
       renderBadges();
       queueSponsorBadgeCelebrations(newSponsorBadges);
     } catch (error) {

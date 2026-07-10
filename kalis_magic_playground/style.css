@@ -148,7 +148,12 @@ img { max-width: 100%; display: block; }
     backdrop-filter: blur(10px);
     border-bottom: 1px solid var(--border-subtle);
 }
-.nav-logo { font-weight: 800; letter-spacing: 0.14em; color: var(--point-gold); font-size: 1.1rem; }
+.nav-brand { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
+.nav-logo { flex: 0 0 auto; font-weight: 800; letter-spacing: 0.14em; color: var(--point-gold); font-size: 1.1rem; }
+.nav-brand-sub {
+    min-width: 0; max-width: 10rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    color: rgba(var(--point-gold-rgb), 0.76); font-size: 0.76rem; font-weight: 700; letter-spacing: -0.01em;
+}
 .nav-links { display: flex; gap: 6px; align-items: center; }
 .nav-link {
     padding: 7px 13px; border-radius: 8px; font-size: 0.92rem; color: var(--text-muted);
@@ -156,6 +161,11 @@ img { max-width: 100%; display: block; }
 }
 .nav-link:hover { color: var(--text-main); }
 .nav-link.active { color: var(--text-main); }
+.nav-profile { display: inline-flex; align-items: center; gap: 4px; min-width: 0; max-width: 10rem; }
+.nav-profile__nickname { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nav-profile .kali-badge-img {
+    flex: 0 0 auto; width: 1em; height: 1em; margin: 0; border-radius: 50%; object-fit: cover;
+}
 .nav-cta {
     background: var(--point-gold); color: #1a1512 !important; font-weight: 700;
 }
@@ -581,8 +591,11 @@ img { max-width: 100%; display: block; }
 }
 @media (max-width: 460px) {
     .nav-logo { font-size: 0.95rem; }
+    .nav-brand { gap: 6px; }
+    .nav-brand-sub { max-width: 6.5rem; font-size: 0.68rem; }
     .nav-links { gap: 4px; }
     .nav-link { padding: 5px 8px; font-size: 0.82rem; }
+    .nav-profile { max-width: 7.5rem; }
     .final-cta { padding: 40px 20px; }
     .btn { width: 100%; text-align: center; }
     .cta-row { flex-direction: column; }
@@ -1233,6 +1246,21 @@ body.field-modal-open { overflow: hidden; }
 
 .playground-post__body.is-locked {
   color: #d0bba8;
+}
+
+.mypage-profile__title {
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+}
+
+.mypage-profile__title .kali-badge-img {
+  flex: 0 0 auto;
+  width: 1.1em;
+  height: 1.1em;
+  margin: 0;
+  border-radius: 50%;
+  object-fit: cover;
 }
 
 .playground-link-button {
