@@ -2446,6 +2446,37 @@ button.mypage-badge-tile:hover,
   font-size: 0.82rem;
 }
 
+.answer-role-chip {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  border: 1px solid rgba(var(--point-gold-rgb), 0.42);
+  border-radius: 999px;
+  color: var(--point-gold);
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.45;
+  vertical-align: middle;
+}
+
+.pg-report-button {
+  min-height: 28px;
+  margin-top: 8px;
+  padding: 3px 8px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.pg-report-button:hover {
+  border-color: rgba(var(--point-gold-rgb), 0.55);
+  color: var(--point-gold);
+}
+
 .pg-detail-body,
 .pg-locked-body,
 .pg-answer,

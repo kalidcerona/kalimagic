@@ -9,6 +9,8 @@ import { getSupabaseAdmin } from './_lib/supabase.mjs';
 import { validateUuid } from './_lib/validators.mjs';
 
 const BADGE_CATALOG_CODES = Array.from(VALID_BADGE_CODES);
+const OWNER_ONLY_CATALOG_CODES = new Set(['kali', 'hecate', 'hecate_2']);
+const HIDDEN_CATALOG_CODES = new Set(['user', 'expert']);
 
 function badgeCode(row) {
   return row?.badges?.code || row?.code || null;
@@ -31,16 +33,19 @@ export function shapeMemberBadges(profileRow, badgeRows, catalogRows = []) {
         description: row.badges.description,
         grantedAt: row.granted_at
       })),
-    catalog: BADGE_CATALOG_CODES.map((code) => {
-      const row = catalogByCode.get(code) || {};
-      return {
-        code,
-        label: row.label || code,
-        description: row.description || '',
-        owned: ownedCodes.has(code),
-        selectable: SELECTABLE_BADGE_CODES.includes(code)
-      };
-    })
+    catalog: BADGE_CATALOG_CODES
+      .filter((code) => !HIDDEN_CATALOG_CODES.has(code))
+      .filter((code) => !OWNER_ONLY_CATALOG_CODES.has(code) || ownedCodes.has(code))
+      .map((code) => {
+        const row = catalogByCode.get(code) || {};
+        return {
+          code,
+          label: row.label || code,
+          description: row.description || '',
+          owned: ownedCodes.has(code),
+          selectable: SELECTABLE_BADGE_CODES.includes(code)
+        };
+      })
   };
 }
 

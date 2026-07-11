@@ -69,6 +69,40 @@ export function validateUuid(value) {
   return UUID.test(clean(value));
 }
 
+export function validateReportPayload(input) {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) {
+    throw new Error('invalid report payload');
+  }
+
+  const targetType = clean(input.targetType);
+  const targetId = clean(input.targetId);
+  const reason = clean(input.reason);
+
+  if (!['post', 'comment'].includes(targetType)) throw new Error('invalid report target type');
+  if (!validateUuid(targetId)) throw new Error('invalid report target id');
+  if (Array.from(reason).length < 1 || Array.from(reason).length > 300) {
+    throw new Error('invalid report reason');
+  }
+
+  return { targetType, targetId, reason };
+}
+
+export function validateMagazinePublishPayload(input) {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) {
+    throw new Error('invalid magazine publish payload');
+  }
+
+  const sourcePostId = clean(input.sourcePostId);
+  const title = clean(input.title);
+  const body = clean(input.body);
+
+  if (sourcePostId && !validateUuid(sourcePostId)) throw new Error('invalid source post id');
+  assertLength('title', title, 3, 120);
+  assertLength('body', body, 10, 5000);
+
+  return { sourcePostId: sourcePostId || null, title, body };
+}
+
 export function validateLeadPayload(input) {
   if (!input || typeof input !== 'object' || Array.isArray(input)) {
     throw new Error('invalid lead payload');

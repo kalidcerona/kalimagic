@@ -47,6 +47,12 @@ test('post detail exposes viewer answer permission in every readable response', 
   assert.equal((detail.match(/viewerCanAnswer:\s*canViewerAnswer\(viewer\)/g) || []).length, 2);
 });
 
+test('post detail joins and returns answer author roles', () => {
+  const detail = source('netlify/functions/post-detail.mjs');
+  assert.match(detail, /\.from\('answers'\)[\s\S]*?\.select\('[^']*profiles\(nickname,role\)/);
+  assert.match(detail, /authorRole:\s*row\.profiles\?\.role\s*\|\|\s*null/);
+});
+
 test('playground detail can write answers only when post detail allows it', () => {
   const detail = source('playground-detail.js');
   assert.match(detail, /data\.viewerCanAnswer/);

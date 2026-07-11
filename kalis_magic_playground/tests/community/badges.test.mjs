@@ -186,7 +186,7 @@ test('fetchBadgeMap excludes kali from public author badge maps while keeping ot
   });
 });
 
-test('shapeMemberBadges includes catalog ownership and selectable flags', () => {
+test('shapeMemberBadges hides role and unowned owner-only catalog badges', () => {
   const profile = {
     user_id: '11111111-1111-4111-8111-111111111111',
     nickname: '마술인07',
@@ -208,11 +208,43 @@ test('shapeMemberBadges includes catalog ownership and selectable flags', () => 
   assert.deepEqual(shaped.badges.map((badge) => badge.code), ['user']);
   assert.deepEqual(
     shaped.catalog.filter((badge) => badge.code === 'user' || badge.code === 'expert' || badge.code === 'kali'),
-    [
-      { code: 'user', label: '브론즈 깃털', description: '첫 질문, 배움의 시작', owned: true, selectable: true },
-      { code: 'expert', label: '브론즈 촛불', description: '질문에 답을 비춰주는 첫 안내자', owned: false, selectable: true },
-      { code: 'kali', label: '칼리의 루비 문장', description: '칼리형', owned: false, selectable: false }
-    ]
+    []
+  );
+  assert.equal(shaped.catalog.some((badge) => ['kali', 'hecate', 'hecate_2'].includes(badge.code)), false);
+});
+
+test('shapeMemberBadges preserves a hidden expert preferred badge', () => {
+  const shaped = shapeMemberBadges({
+    user_id: '11111111-1111-4111-8111-111111111111',
+    nickname: '안내자',
+    role: 'expert',
+    preferred_badge_code: 'expert'
+  }, [{
+    granted_at: '2026-07-11T00:00:00.000Z',
+    badges: { code: 'expert', label: '브론즈 촛불', description: '첫 답변' }
+  }], [{ code: 'expert', label: '브론즈 촛불', description: '첫 답변' }]);
+
+  assert.equal(shaped.preferredBadgeCode, 'expert');
+  assert.deepEqual(shaped.badges.map((badge) => badge.code), ['expert']);
+  assert.equal(shaped.catalog.some((badge) => badge.code === 'expert'), false);
+});
+
+test('shapeMemberBadges keeps kali and hecate catalog entries for their owners', () => {
+  const ownedCodes = ['kali', 'hecate', 'hecate_2'];
+  const badgeRows = ownedCodes.map((code) => ({
+    granted_at: '2026-07-11T00:00:00.000Z',
+    badges: { code, label: code, description: `${code} badge` }
+  }));
+  const shaped = shapeMemberBadges({
+    user_id: '11111111-1111-4111-8111-111111111111',
+    nickname: '소유자',
+    role: 'member',
+    preferred_badge_code: 'hecate'
+  }, badgeRows, ownedCodes.map((code) => ({ code, label: code, description: `${code} badge` })));
+
+  assert.deepEqual(
+    shaped.catalog.filter((badge) => ownedCodes.includes(badge.code)).map((badge) => [badge.code, badge.owned]),
+    [['hecate', true], ['hecate_2', true], ['kali', true]]
   );
 });
 

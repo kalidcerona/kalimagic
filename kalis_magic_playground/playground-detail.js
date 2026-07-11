@@ -18,6 +18,18 @@
       : '';
   }
 
+  function answerRoleChipHtml(role) {
+    const labels = { expert: '전문가', god: '마술의 신' };
+    const key = String(role || '').trim().toLowerCase();
+    const label = labels[key];
+    return label ? `<span class="answer-role-chip answer-role-chip--${key}">${label}</span>` : '';
+  }
+
+  function reportButtonHtml(targetType, targetId, isOwn) {
+    if (isOwn || !targetId) return '';
+    return `<button type="button" class="pg-report-button" data-report-target-type="${targetType}" data-report-target-id="${escapeHtml(targetId)}">신고</button>`;
+  }
+
   function authorIdAttr(authorId) {
     return authorId ? ` data-author-id="${escapeHtml(authorId)}"` : '';
   }
@@ -93,7 +105,7 @@
           <article class="pg-answer">
             <p>${escapeHtml(answer.body || '').replaceAll('\n', '<br>')}</p>
             ${createYouTubeLiteEmbed(answer.youtubeVideoId, '답변에 첨부된 영상')}
-            <small${authorIdAttr(answer.authorId)}>${escapeHtml(answer.authorLabel || '익명')}${roleBadgeHtml(answer.authorRole)}${imageBadgesHtml(answer.authorBadges)}</small>
+            <small${authorIdAttr(answer.authorId)}>${escapeHtml(answer.authorLabel || '익명')}${answerRoleChipHtml(answer.authorRole)}${imageBadgesHtml(answer.authorBadges)}</small>
             <div class="pg-answer-actions">${answerHelpfulButton(answer)}</div>
           </article>
         `).join('') : '<p class="pg-loading">아직 답변이 없습니다.</p>'}
@@ -120,7 +132,7 @@
     return '<button type="button" class="playground-button" data-comment-login>로그인하고 댓글 남기기</button>';
   }
 
-  function commentHtml(comments, viewerCanComment) {
+  function commentHtml(comments, viewerCanComment, viewerUserId) {
     return `
       <section class="pg-detail-section">
         <h3>댓글</h3>
@@ -129,6 +141,7 @@
             <strong${authorIdAttr(comment.authorId)}>${escapeHtml(comment.authorLabel || '익명')}${roleBadgeHtml(comment.authorRole)}${imageBadgesHtml(comment.authorBadges)}</strong>
             <p>${escapeHtml(comment.body || '').replaceAll('\n', '<br>')}</p>
             ${comment.parentCommentId || !viewerCanComment ? '' : `<button type="button" class="pg-reply-button" data-reply-to="${escapeHtml(comment.id)}">답글</button>`}
+            ${viewerCanComment ? reportButtonHtml('comment', comment.id, comment.authorId === viewerUserId) : ''}
           </article>
         `).join('') : '<p class="pg-loading">아직 댓글이 없습니다.</p>'}
         ${viewerCanComment ? commentForm(null) : commentLoginButtonHtml()}
@@ -165,6 +178,7 @@
           <div class="pg-detail-actions">
             ${likeButton}
             ${deleteButton}
+            ${data.viewerCanComment ? reportButtonHtml('post', post.id, post.canDelete || post.authorId === data.viewerUserId) : ''}
           </div>
         </header>
         <div class="pg-share-row">
@@ -174,7 +188,7 @@
         </div>
         ${bodyHtml(post)}
         ${post.canReadBody === false ? '' : answerHtml(post, answers || [], data.viewerCanAnswer)}
-        ${post.canReadBody === false ? '' : commentHtml(comments || [], data.viewerCanComment)}
+        ${post.canReadBody === false ? '' : commentHtml(comments || [], data.viewerCanComment, data.viewerUserId)}
         <p class="pg-detail-status" data-detail-status></p>
       </article>
     `;
@@ -183,6 +197,7 @@
   function initPlaygroundDetail({ api, root }) {
     let currentPost = null;
     let currentPostId = null;
+    let currentViewerId = null;
     let shareStatusTimer = null;
 
     function showShareStatus(message) {
@@ -210,7 +225,9 @@
           ? await window.MagicAuth.getSession()
           : null;
         data.viewerCanComment = Boolean(session);
+        data.viewerUserId = session?.user?.id || null;
         currentPost = data.post;
+        currentViewerId = data.viewerUserId;
         root.innerHTML = detailHtml(data);
       } catch (error) {
         console.error('Failed to load playground post detail:', error);
@@ -293,6 +310,35 @@
           if (likeCount) likeCount.textContent = `추천 ${result.likeCount}`;
         } catch (error) {
           if (status) status.textContent = error.status === 401 ? '로그인하면 추천할 수 있어요' : error.message;
+        }
+        return;
+      }
+
+      const reportButton = event.target.closest('[data-report-target-type]');
+      if (reportButton && currentViewerId) {
+        const reason = window.prompt('신고 사유를 입력해주세요.');
+        if (reason === null) return;
+        const status = root.querySelector('[data-detail-status]');
+        const trimmedReason = reason.trim();
+        if (trimmedReason.length < 1 || trimmedReason.length > 300) {
+          if (status) status.textContent = '신고 사유는 1~300자로 입력해주세요.';
+          return;
+        }
+        reportButton.disabled = true;
+        try {
+          const result = await api.fetchJson('/.netlify/functions/report', {
+            method: 'POST',
+            body: JSON.stringify({
+              targetType: reportButton.dataset.reportTargetType,
+              targetId: reportButton.dataset.reportTargetId,
+              reason: trimmedReason
+            })
+          });
+          if (status) status.textContent = result.already ? '이미 신고했어' : '신고 접수됐어';
+        } catch (error) {
+          if (status) status.textContent = error.status === 401 ? '로그인하면 신고할 수 있어요' : (error.message || '신고를 접수하지 못했어요.');
+        } finally {
+          reportButton.disabled = false;
         }
         return;
       }

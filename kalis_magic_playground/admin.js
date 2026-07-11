@@ -83,6 +83,83 @@
     return button;
   }
 
+  function magazinePublishButton(item, slot) {
+    var button = el('button', 'playground-button', '발행하기');
+    button.type = 'button';
+    button.addEventListener('click', async function () {
+      clear(slot);
+      var status = el('p', 'playground-form-status', '원본 글을 불러오는 중입니다.');
+      slot.appendChild(status);
+      button.disabled = true;
+      try {
+        var detail = await fetchJson('/.netlify/functions/post-detail?id=' + encodeURIComponent(item.id));
+        clear(slot);
+        slot.appendChild(magazinePublishForm(item, detail.post || {}));
+      } catch (error) {
+        status.textContent = error.message || '원본 글을 불러오지 못했습니다.';
+        status.classList.add('is-error');
+      } finally {
+        button.disabled = false;
+      }
+    });
+    return button;
+  }
+
+  function magazinePublishForm(item, post) {
+    var form = el('form', 'playground-comment-form');
+    var titleLabel = el('label', '', '제목');
+    var title = document.createElement('input');
+    title.name = 'title';
+    title.required = true;
+    title.minLength = 3;
+    title.maxLength = 120;
+    title.value = post.title || item.title || '';
+    titleLabel.appendChild(title);
+    var bodyLabel = el('label', '', '본문 (각색·익명화 후 발행)');
+    var body = document.createElement('textarea');
+    body.name = 'body';
+    body.rows = 10;
+    body.required = true;
+    body.minLength = 10;
+    body.maxLength = 5000;
+    body.value = post.body || '';
+    bodyLabel.appendChild(body);
+    var submit = el('button', 'playground-button', '매거진으로 발행');
+    submit.type = 'submit';
+    var cancel = el('button', 'playground-button playground-button--ghost', '취소');
+    cancel.type = 'button';
+    var controls = el('div', 'admin-card__actions');
+    var status = el('p', 'playground-form-status');
+    controls.appendChild(submit);
+    controls.appendChild(cancel);
+    form.appendChild(titleLabel);
+    form.appendChild(bodyLabel);
+    form.appendChild(controls);
+    form.appendChild(status);
+    cancel.addEventListener('click', function () {
+      form.remove();
+    });
+    form.addEventListener('submit', async function (event) {
+      event.preventDefault();
+      status.classList.remove('is-error');
+      status.textContent = '매거진으로 발행하는 중입니다.';
+      submit.disabled = true;
+      try {
+        await fetchJson('/.netlify/functions/admin-magazine', {
+          method: 'POST',
+          body: JSON.stringify({ sourcePostId: item.id, title: title.value, body: body.value })
+        });
+        state.flash = '매거진으로 발행됐어';
+        await loadInbox();
+      } catch (error) {
+        status.textContent = error.message || '매거진으로 발행하지 못했습니다.';
+        status.classList.add('is-error');
+        submit.disabled = false;
+      }
+    });
+    return form;
+  }
+
   function option(value, text, selected) {
     var node = document.createElement('option');
     node.value = value;
@@ -170,6 +247,7 @@
       var actions = el('div', 'admin-card__actions');
       var answerSlot = el('div', '');
       if (item.postType === 'question') actions.appendChild(answerButton(item, answerSlot));
+      if (state.filter === 'magazine_candidates') actions.appendChild(magazinePublishButton(item, answerSlot));
       actions.appendChild(actionButton('숨김', 'hide', item.id));
       actions.appendChild(actionButton('복구', 'restore', item.id));
       actions.appendChild(actionButton('삭제', 'delete', item.id));
@@ -191,6 +269,47 @@
       var box = el('article', 'playground-empty');
       box.appendChild(el('h2', '', '관리자 권한이 필요합니다'));
       box.appendChild(el('p', '', error.message || '항목을 불러오지 못했습니다.'));
+      listEl.appendChild(box);
+    }
+  }
+
+  function reportRow(item) {
+    var card = el('article', 'admin-card');
+    var targetLabel = item.targetType === 'comment' ? '댓글 신고' : '게시글 신고';
+    card.appendChild(el('h2', '', item.title || '삭제된 게시글'));
+    card.appendChild(el('p', '', targetLabel + ' · 신고 ' + String(item.reportCount || 0) + '건 · ' + (item.status || 'deleted')));
+    card.appendChild(el('span', '', item.authorLabel || '알 수 없음'));
+    if (item.commentBody) card.appendChild(el('p', '', item.commentBody));
+    var actions = el('div', 'admin-card__actions');
+    if (item.postId) actions.appendChild(actionButton('숨김', 'hide', item.postId));
+    card.appendChild(actions);
+    return card;
+  }
+
+  function renderReports(items) {
+    clear(listEl);
+    if (!items.length) {
+      var empty = el('article', 'playground-empty');
+      empty.appendChild(el('h2', '', '접수된 신고가 없습니다'));
+      listEl.appendChild(empty);
+      return;
+    }
+    items.forEach(function (item) {
+      listEl.appendChild(reportRow(item));
+    });
+  }
+
+  async function loadReports() {
+    clear(listEl);
+    listEl.appendChild(el('p', 'playground-loading', '신고 항목을 불러오는 중입니다.'));
+    try {
+      var data = await fetchJson('/.netlify/functions/admin-inbox?filter=reports');
+      renderReports(data.items || []);
+    } catch (error) {
+      clear(listEl);
+      var box = el('article', 'playground-empty');
+      box.appendChild(el('h2', '', '신고 항목을 불러오지 못했습니다'));
+      box.appendChild(el('p', '', error.message || '관리자 권한이 필요합니다.'));
       listEl.appendChild(box);
     }
   }
@@ -496,6 +615,7 @@
     if (state.filter === 'members') return loadMembers();
     if (state.filter === 'mmbs_requests') return loadMmbsRequests();
     if (state.filter === 'analytics') return loadAnalytics();
+    if (state.filter === 'reports') return loadReports();
     return loadInbox();
   }
 

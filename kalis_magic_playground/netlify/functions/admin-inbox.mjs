@@ -17,6 +17,100 @@ function shapePost(row) {
   };
 }
 
+const REPORT_PAGE_SIZE = 1000;
+
+export function aggregateReports(rows = []) {
+  const groups = new Map();
+  for (const row of rows) {
+    const key = `${row.target_type}:${row.target_id}`;
+    const current = groups.get(key);
+    if (!current) {
+      groups.set(key, {
+        targetType: row.target_type,
+        targetId: row.target_id,
+        reportCount: 1,
+        latestReportedAt: row.created_at
+      });
+      continue;
+    }
+    current.reportCount += 1;
+    if (row.created_at > current.latestReportedAt) current.latestReportedAt = row.created_at;
+  }
+  return Array.from(groups.values()).sort((left, right) =>
+    right.latestReportedAt.localeCompare(left.latestReportedAt) || right.reportCount - left.reportCount
+  );
+}
+
+async function loadAllReports(supabase) {
+  const rows = [];
+  for (let offset = 0; ; offset += REPORT_PAGE_SIZE) {
+    const { data, error } = await supabase
+      .from('post_reports')
+      .select('target_type,target_id,created_at')
+      .order('created_at', { ascending: false })
+      .range(offset, offset + REPORT_PAGE_SIZE - 1);
+    if (error) throw error;
+    rows.push(...(data || []));
+    if ((data || []).length < REPORT_PAGE_SIZE) return rows;
+  }
+}
+
+async function loadTargets(supabase, groups) {
+  const postIds = groups.filter((group) => group.targetType === 'post').map((group) => group.targetId);
+  const commentIds = groups.filter((group) => group.targetType === 'comment').map((group) => group.targetId);
+  let posts = [];
+  let comments = [];
+
+  if (postIds.length) {
+    const { data, error } = await supabase
+      .from('posts')
+      .select('id,title,status,author_user_id,profiles(nickname)')
+      .in('id', postIds);
+    if (error) throw error;
+    posts = data || [];
+  }
+
+  if (commentIds.length) {
+    const { data, error } = await supabase
+      .from('comments')
+      .select('id,post_id,body,status,author_user_id,profiles(nickname),posts(id,title,status,profiles(nickname))')
+      .in('id', commentIds);
+    if (error) throw error;
+    comments = data || [];
+  }
+
+  return {
+    posts: new Map(posts.map((row) => [row.id, row])),
+    comments: new Map(comments.map((row) => [row.id, row]))
+  };
+}
+
+export function shapeReport(group, targets) {
+  const isPost = group.targetType === 'post';
+  const target = isPost ? targets.posts.get(group.targetId) : targets.comments.get(group.targetId);
+  const post = isPost ? target : target?.posts;
+  return {
+    id: group.targetId,
+    kind: 'report',
+    targetType: group.targetType,
+    targetId: group.targetId,
+    postId: isPost ? group.targetId : target?.post_id || null,
+    title: post?.title || (isPost ? '삭제된 게시글' : '삭제된 댓글의 게시글'),
+    authorLabel: target?.profiles?.nickname || '알 수 없음',
+    status: target?.status || 'deleted',
+    commentBody: isPost ? null : target?.body || null,
+    reportCount: group.reportCount,
+    latestReportedAt: group.latestReportedAt,
+    createdAt: group.latestReportedAt
+  };
+}
+
+async function listReports(supabase) {
+  const groups = aggregateReports(await loadAllReports(supabase));
+  const targets = await loadTargets(supabase, groups);
+  return groups.map((group) => shapeReport(group, targets));
+}
+
 export async function handler(event) {
   if (event.httpMethod !== 'GET') return json(405, { error: 'method_not_allowed' });
   try {
@@ -27,6 +121,14 @@ export async function handler(event) {
 
   const filter = event.queryStringParameters?.filter || 'all';
   const supabase = getSupabaseAdmin();
+  if (filter === 'reports') {
+    try {
+      return json(200, { items: await listReports(supabase) });
+    } catch {
+      return json(500, { error: 'db_error' });
+    }
+  }
+
   let query = supabase
     .from('posts')
     .select('id,post_type,category,title,status,visibility,youtube_video_id,created_at,profiles(nickname),questions(answer_status,magazine_candidate)')
