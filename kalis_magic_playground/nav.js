@@ -9,7 +9,6 @@ const LANDING_PAGES = [
     { key: 'video', label: '영상', href: 'video.html' },
     { key: 'intro', label: '입문', href: 'intro.html' },
     { key: 'reviews', label: '후기', href: 'reviews.html' },
-    { key: 'playground', label: '기록소', href: 'playground.html' },
     { key: 'lesson', label: '레슨', href: 'lesson.html', cta: true },
 ];
 
@@ -20,6 +19,16 @@ const COMMUNITY_PAGES = [
 
 const COMMUNITY_PAGE_KEYS = new Set(['playground', 'post', 'write', 'mypage', 'admin']);
 const NAV_PROFILE_CACHE_KEY = 'kali-nav-profile';
+
+// 랜딩(칼리)과 커뮤니티(마술문화 기록소)가 같은 톤의 네비로 보여 두 공간이라는 게
+// 안 읽힌다는 피드백에 따라, 브랜드 자리를 '공간 전환' 세그먼트 스위처로 바꾼다.
+// 현재 있는 공간 쪽 탭에 불이 들어오고, 다른 탭을 누르면 그 공간으로 이동한다.
+function buildNavBrandHtml(isCommunityPage) {
+    return '<div class="nav-space-switch" role="group" aria-label="공간 전환">' +
+        '<a href="index.html" class="nav-space-switch__item' + (isCommunityPage ? '' : ' is-active') + '">칼리</a>' +
+        '<a href="playground.html" class="nav-space-switch__item' + (isCommunityPage ? ' is-active' : '') + '">마술문화 기록소</a>' +
+        '</div>';
+}
 
 function renderNav(activePage) {
     const isCommunityPage = COMMUNITY_PAGE_KEYS.has(activePage);
@@ -34,9 +43,8 @@ function renderNav(activePage) {
     const root = document.getElementById('nav-root');
     if (!root) return;  // nav-root 없는 페이지에서 null deref 가드
     root.className = 'main-nav';
-    root.innerHTML = '<div class="nav-brand">' +
-        '<a href="index.html" class="nav-logo">KALI</a>' +
-        '<a href="playground.html" class="nav-brand-sub">마술문화 기록소</a>' +
+    root.dataset.space = isCommunityPage ? 'archive' : 'landing';
+    root.innerHTML = '<div class="nav-brand">' + buildNavBrandHtml(isCommunityPage) +
         '</div><nav class="nav-links">' + links + '</nav>';
     if (isCommunityPage) renderLoggedInNavLinks(root, activePage);
 }

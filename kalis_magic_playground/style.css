@@ -171,6 +171,21 @@ img { max-width: 100%; display: block; }
 }
 .nav-cta:hover { background: var(--point-gold-hover); }
 
+/* ---------- 네비: 공간 전환 스위처 ---------- */
+.nav-space-switch {
+    display: inline-flex; gap: 2px; padding: 3px; border-radius: 999px;
+    background: rgba(255, 255, 255, 0.055); border: 1px solid var(--border-subtle);
+}
+.nav-space-switch__item {
+    padding: 6px 13px; border-radius: 999px; font-size: 0.82rem; font-weight: 700;
+    color: var(--text-muted); white-space: nowrap; transition: var(--transition);
+}
+.nav-space-switch__item:hover { color: var(--text-main); }
+.nav-space-switch__item.is-active { background: var(--point-gold); color: #1a1512; }
+
+/* 의미 단위 줄바꿈 훅: 필요 시 특정 브레이크포인트에서 .brk{display:none}으로 끌 수 있다. */
+.brk { }
+
 /* ---------- 버튼 ---------- */
 .btn {
     display: inline-block; padding: 15px 30px; border-radius: 12px;
@@ -596,6 +611,8 @@ img { max-width: 100%; display: block; }
     .nav-links { gap: 4px; }
     .nav-link { padding: 5px 8px; font-size: 0.82rem; }
     .nav-profile { max-width: 7.5rem; }
+    .nav-space-switch { padding: 2px; }
+    .nav-space-switch__item { padding: 5px 10px; font-size: 0.76rem; }
     .final-cta { padding: 40px 20px; }
     .btn { width: 100%; text-align: center; }
     .cta-row { flex-direction: column; }
@@ -1361,6 +1378,53 @@ body.field-modal-open { overflow: hidden; }
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 6px;
+}
+
+.admin-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+  gap: 12px;
+}
+
+.admin-stat {
+  display: grid;
+  gap: 4px;
+}
+
+.admin-stat__label {
+  font-size: 0.85rem;
+}
+
+.admin-stat__value {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text-primary, inherit);
+}
+
+.admin-funnel {
+  display: grid;
+  gap: 6px;
+}
+
+.admin-funnel__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 6px;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.admin-table th,
+.admin-table td {
+  text-align: left;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 0.9rem;
 }
 
 .mypage-badges {

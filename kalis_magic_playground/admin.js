@@ -391,9 +391,111 @@
     }
   }
 
+  function analyticsStatItem(label, value) {
+    var item = el('div', 'admin-stat');
+    item.appendChild(el('p', 'admin-stat__label', label));
+    item.appendChild(el('p', 'admin-stat__value', String(value)));
+    return item;
+  }
+
+  function analyticsTotalsCard(totals) {
+    var card = el('article', 'admin-card');
+    card.appendChild(el('h2', '', '최근 30일 요약'));
+    var grid = el('div', 'admin-stat-grid');
+    grid.appendChild(analyticsStatItem('방문', totals.pageviews));
+    grid.appendChild(analyticsStatItem('세션', totals.sessions));
+    grid.appendChild(analyticsStatItem('CTA 클릭', totals.ctaClicks));
+    grid.appendChild(analyticsStatItem('리드', totals.leadSubmits));
+    grid.appendChild(analyticsStatItem('회원', totals.members));
+    card.appendChild(grid);
+    return card;
+  }
+
+  var FUNNEL_STEP_LABEL = { pageview: '방문', cta_click: 'CTA 클릭', lead_submit: '리드 제출' };
+
+  function analyticsFunnelCard(funnel) {
+    var card = el('article', 'admin-card');
+    card.appendChild(el('h2', '', '퍼널'));
+    var list = el('div', 'admin-funnel');
+    (funnel || []).forEach(function (step) {
+      var row = el('div', 'admin-funnel__row');
+      row.appendChild(el('span', '', FUNNEL_STEP_LABEL[step.step] || step.step));
+      row.appendChild(el('span', '', String(step.sessions) + '세션'));
+      row.appendChild(el('span', '', step.rate + '%'));
+      list.appendChild(row);
+    });
+    card.appendChild(list);
+    return card;
+  }
+
+  function analyticsTableCard(title, headers, rows) {
+    var card = el('article', 'admin-card');
+    card.appendChild(el('h2', '', title));
+    if (!rows.length) {
+      card.appendChild(el('p', '', '데이터가 없습니다.'));
+      return card;
+    }
+    var table = document.createElement('table');
+    table.className = 'admin-table';
+    var thead = document.createElement('thead');
+    var headRow = document.createElement('tr');
+    headers.forEach(function (label) {
+      var th = document.createElement('th');
+      th.textContent = label;
+      headRow.appendChild(th);
+    });
+    thead.appendChild(headRow);
+    table.appendChild(thead);
+    var tbody = document.createElement('tbody');
+    rows.forEach(function (cells) {
+      var tr = document.createElement('tr');
+      cells.forEach(function (cell) {
+        var td = document.createElement('td');
+        td.textContent = String(cell);
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+    card.appendChild(table);
+    return card;
+  }
+
+  function renderAnalytics(data) {
+    clear(listEl);
+    listEl.appendChild(analyticsTotalsCard(data.totals || {}));
+    listEl.appendChild(analyticsFunnelCard(data.funnel || []));
+    listEl.appendChild(analyticsTableCard(
+      'CTA별 클릭',
+      ['이름', '클릭', '세션'],
+      (data.byCta || []).map(function (row) { return [row.eventName, row.clicks, row.sessions]; })
+    ));
+    listEl.appendChild(analyticsTableCard(
+      '페이지별 조회',
+      ['페이지', '조회', '세션'],
+      (data.byPage || []).map(function (row) { return [row.page, row.pageviews, row.sessions]; })
+    ));
+  }
+
+  async function loadAnalytics() {
+    clear(listEl);
+    listEl.appendChild(el('p', 'playground-loading', '측정 데이터를 불러오는 중입니다.'));
+    try {
+      var data = await fetchJson('/.netlify/functions/admin-analytics');
+      renderAnalytics(data);
+    } catch (error) {
+      clear(listEl);
+      var box = el('article', 'playground-empty');
+      box.appendChild(el('h2', '', '관리자 권한이 필요합니다'));
+      box.appendChild(el('p', '', error.message || '측정 데이터를 불러오지 못했습니다.'));
+      listEl.appendChild(box);
+    }
+  }
+
   function loadCurrentView() {
     if (state.filter === 'members') return loadMembers();
     if (state.filter === 'mmbs_requests') return loadMmbsRequests();
+    if (state.filter === 'analytics') return loadAnalytics();
     return loadInbox();
   }
 

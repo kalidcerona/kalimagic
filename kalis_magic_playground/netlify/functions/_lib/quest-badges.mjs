@@ -5,7 +5,8 @@ export const QUEST_TRACKS = [
   'answer_helpful_votes',
   'free_posts',
   'event_reviews',
-  'tool_reviews'
+  'tool_reviews',
+  'invites'
 ];
 
 export function shouldIgnoreQuestBadgeInsertError(error) {
@@ -46,6 +47,14 @@ function countDayCappedFreePosts(rows) {
   return count;
 }
 
+export function countInviteRedemptions(inviteRows) {
+  return (inviteRows || []).reduce((count, invite) => {
+    const redemptions = invite?.invite_redemptions;
+    if (Array.isArray(redemptions)) return count + redemptions.length;
+    return count + (redemptions ? 1 : 0);
+  }, 0);
+}
+
 async function fetchRows(query) {
   const { data, error } = await query;
   if (error) throw error;
@@ -60,6 +69,7 @@ export async function getQuestProgress(supabase, userId) {
       free_posts: 0,
       event_reviews: 0,
       tool_reviews: 0,
+      invites: 0,
       total_records: 0,
       answer_helpful_votes: 0
     };
@@ -101,6 +111,11 @@ export async function getQuestProgress(supabase, userId) {
     .neq('post_type', 'event_review')
     .eq('status', 'visible'));
 
+  const inviteRows = await fetchRows(supabase
+    .from('invites')
+    .select('code,invite_redemptions(new_user_id)')
+    .eq('inviter_user_id', userId));
+
   const answerIds = answers.map((answer) => answer.id).filter(Boolean);
   const helpfulVotes = answerIds.length > 0
     ? await fetchRows(supabase
@@ -115,6 +130,7 @@ export async function getQuestProgress(supabase, userId) {
     free_posts: countDayCappedFreePosts(freeRows),
     event_reviews: eventReviews.length,
     tool_reviews: toolReviews.length,
+    invites: countInviteRedemptions(inviteRows),
     answer_helpful_votes: helpfulVotes.length
   };
   progress.total_records = progress.questions +

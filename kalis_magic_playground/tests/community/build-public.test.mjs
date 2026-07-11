@@ -11,7 +11,10 @@ test('public build allowlist includes visible site pages', () => {
   assert.ok(PUBLIC_FILES.includes('admin.js'));
   assert.ok(PUBLIC_FILES.includes('style.css'));
   assert.ok(PUBLIC_FILES.includes('nav.js'));
+  assert.ok(PUBLIC_FILES.includes('pg-util.js'));
+  assert.ok(PUBLIC_FILES.includes('invite-client.js'));
   assert.ok(PUBLIC_FILES.includes('reveal.js'));
+  assert.ok(PUBLIC_FILES.includes('track.js'));
   assert.ok(PUBLIC_FILES.includes('playground-api.js'));
   assert.ok(PUBLIC_FILES.includes('playground-list.js'));
   assert.ok(PUBLIC_FILES.includes('playground-compose.js'));

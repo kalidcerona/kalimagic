@@ -566,6 +566,54 @@ body.archive-room .pg-mobile-cta {
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.34);
 }
 
+/* 모바일 카테고리 셀렉트(M2) 기록소 테마 */
+body.archive-room .pg-tab-select {
+  border-color: rgba(201, 154, 91, 0.34);
+  background: rgba(10, 6, 4, 0.72);
+  color: var(--archive-paper);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+}
+body.archive-room .pg-tab-select-label,
+body.archive-room .pg-tab-select-arrow {
+  color: var(--archive-brass);
+}
+
+/* ---------- 네비: 공간 구분 — 기록소(커뮤니티) 테마 ----------
+   body 클래스가 아니라 .main-nav[data-space]에 걸어서 admin.html처럼
+   archive-room 클래스가 없는 페이지에도 자동 적용되게 한다. */
+.main-nav[data-space="archive"] {
+  --archive-brass: #c99a5b;
+  --archive-terra: #e8631f;
+  --archive-paper: #f3ece3;
+  background: rgba(15, 9, 6, 0.88);
+  border-bottom-color: rgba(201, 154, 91, 0.26);
+}
+.main-nav[data-space="archive"]::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 1px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, var(--archive-brass), rgba(232, 99, 31, 0.5), transparent);
+  opacity: 0.7;
+}
+.main-nav[data-space="archive"] .nav-link.active {
+  color: var(--archive-paper);
+}
+.main-nav[data-space="archive"] .nav-space-switch {
+  background: rgba(201, 154, 91, 0.08);
+  border-color: rgba(201, 154, 91, 0.24);
+}
+.main-nav[data-space="archive"] .nav-space-switch__item:hover {
+  color: var(--archive-paper);
+}
+.main-nav[data-space="archive"] .nav-space-switch__item.is-active {
+  background: linear-gradient(135deg, var(--archive-brass), var(--archive-terra));
+  color: #160d07;
+}
+
 @media (max-width: 760px) {
   body.archive-room::before {
     background-image:

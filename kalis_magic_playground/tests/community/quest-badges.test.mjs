@@ -44,7 +44,7 @@ function queryRows(rows, calls) {
   };
 }
 
-function makeProgressSupabase({ posts = [], answers = [], helpfulVotes = [] }) {
+function makeProgressSupabase({ posts = [], answers = [], helpfulVotes = [], invites = [] }) {
   const calls = { filters: [] };
   return {
     calls,
@@ -52,12 +52,13 @@ function makeProgressSupabase({ posts = [], answers = [], helpfulVotes = [] }) {
       if (table === 'posts') return queryRows(posts, calls);
       if (table === 'answers') return queryRows(answers, calls);
       if (table === 'answer_helpful_votes') return queryRows(helpfulVotes, calls);
+      if (table === 'invites') return queryRows(invites, calls);
       throw new Error(`unexpected table ${table}`);
     }
   };
 }
 
-test('QUEST_TRACKS exposes the seven public quest tracks in product order', () => {
+test('QUEST_TRACKS exposes the eight public quest tracks in product order', () => {
   assert.deepEqual(QUEST_TRACKS, [
     'total_records',
     'questions',
@@ -65,7 +66,8 @@ test('QUEST_TRACKS exposes the seven public quest tracks in product order', () =
     'answer_helpful_votes',
     'free_posts',
     'event_reviews',
-    'tool_reviews'
+    'tool_reviews',
+    'invites'
   ]);
 });
 
@@ -96,8 +98,13 @@ test('getQuestProgress counts visible records, Seoul day-capped free posts, and 
     { answer_id: 'a1', user_id: '33333333-3333-4333-8333-333333333333' },
     { answer_id: 'a2', user_id: otherId }
   ];
+  const invites = [{
+    code: 'Abcdef_12-XY',
+    inviter_user_id: userId,
+    invite_redemptions: [{ new_user_id: otherId }]
+  }];
 
-  const progress = await getQuestProgress(makeProgressSupabase({ posts, answers, helpfulVotes }), userId);
+  const progress = await getQuestProgress(makeProgressSupabase({ posts, answers, helpfulVotes, invites }), userId);
 
   assert.deepEqual(progress, {
     questions: 1,
@@ -105,6 +112,7 @@ test('getQuestProgress counts visible records, Seoul day-capped free posts, and 
     free_posts: 3,
     event_reviews: 1,
     tool_reviews: 1,
+    invites: 1,
     total_records: 7,
     answer_helpful_votes: 2
   });

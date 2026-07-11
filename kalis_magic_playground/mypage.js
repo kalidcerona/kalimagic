@@ -1,6 +1,7 @@
 (function () {
   var state = { session: null, profile: null, mmbsRequest: null, badgeData: null, questBadgeData: null, tab: 'posts' };
   var profileEl = document.querySelector('[data-mypage-profile]');
+  var inviteEl = document.querySelector('[data-mypage-invite]');
   var mmbsEl = document.querySelector('[data-mypage-mmbs]');
   var badgeEl = document.querySelector('[data-mypage-badges]');
   var questBadgeEl = document.querySelector('[data-mypage-quest-badges]');
@@ -23,6 +24,7 @@
     free_posts: '자유 기록',
     event_reviews: '모임 기록',
     tool_reviews: '도구 기록',
+    invites: '초대',
     total_records: '전체 기록'
   };
   var questTrackOrder = [
@@ -32,6 +34,7 @@
     'free_posts',
     'event_reviews',
     'tool_reviews',
+    'invites',
     'total_records'
   ];
   var QUEST_BADGE_SEEN_STORAGE_KEY = 'kalimagic_seen_quest_badges_v1';
@@ -153,6 +156,7 @@
   function showLogin() {
     clear(profileEl);
     profileEl.hidden = true;
+    if (inviteEl) clear(inviteEl);
     if (mmbsEl) clear(mmbsEl);
     clear(badgeEl);
     if (questBadgeEl) clear(questBadgeEl);
@@ -274,6 +278,70 @@
       card.appendChild(requestButton);
     }
     mmbsEl.appendChild(card);
+  }
+
+  function inviteLink(code) {
+    return window.location.origin + '/?ref=' + code;
+  }
+
+  function renderInvite(invite) {
+    if (!inviteEl) return;
+    clear(inviteEl);
+    inviteEl.appendChild(el('h2', 'mypage-section-title', '친구 초대'));
+
+    if (!invite || !invite.code) {
+      inviteEl.appendChild(el('p', 'playground-form-status is-error', '초대 링크를 만들지 못했습니다.'));
+      return;
+    }
+
+    var link = inviteLink(invite.code);
+    var input = document.createElement('input');
+    input.type = 'text';
+    input.value = link;
+    input.readOnly = true;
+    input.setAttribute('aria-label', '친구 초대 링크');
+    var linkField = el('div', 'playground-comment-form');
+    linkField.appendChild(input);
+    inviteEl.appendChild(linkField);
+
+    var actions = el('div', 'admin-card__actions');
+    var copyButton = el('button', 'playground-button', '링크 복사');
+    copyButton.type = 'button';
+    copyButton.setAttribute('data-track', 'invite_share');
+    copyButton.setAttribute('data-track-type', 'invite_click');
+    copyButton.setAttribute('data-track-placement', 'mypage');
+    copyButton.addEventListener('click', async function () {
+      try {
+        if (!navigator.clipboard || typeof navigator.clipboard.writeText !== 'function') {
+          throw new Error('clipboard_unavailable');
+        }
+        await navigator.clipboard.writeText(link);
+      } catch (error) {
+        window.prompt('아래 링크를 복사해주세요.', link);
+      }
+      copyButton.textContent = '링크를 복사했어요';
+    });
+    actions.appendChild(copyButton);
+    inviteEl.appendChild(actions);
+    inviteEl.appendChild(el('p', 'playground-form-status', Number(invite.redemptionCount || 0) + '명 초대함'));
+  }
+
+  async function loadInvite() {
+    if (!inviteEl) return;
+    clear(inviteEl);
+    inviteEl.appendChild(el('h2', 'mypage-section-title', '친구 초대'));
+    inviteEl.appendChild(el('p', 'playground-loading', '초대 링크를 불러오는 중입니다.'));
+    try {
+      var data = await fetchJson('/.netlify/functions/invite');
+      if (!data.invite || !data.invite.code) {
+        data = await fetchJson('/.netlify/functions/invite', { method: 'POST' });
+      }
+      renderInvite(data.invite);
+    } catch (error) {
+      clear(inviteEl);
+      inviteEl.appendChild(el('h2', 'mypage-section-title', '친구 초대'));
+      inviteEl.appendChild(el('p', 'playground-form-status is-error', '초대 링크를 불러오지 못했습니다.'));
+    }
   }
 
   async function loadMmbsRequest() {
@@ -748,6 +816,7 @@
       clear(profileEl);
       profileEl.hidden = true;
     }
+    await loadInvite();
     await loadMmbsRequest();
     await loadBadges();
     await loadQuestBadges();

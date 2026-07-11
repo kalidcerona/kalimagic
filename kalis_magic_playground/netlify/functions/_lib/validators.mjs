@@ -7,6 +7,15 @@ const REVIEW_KINDS = new Set(['tool', 'meeting']);
 const DISPLAY_MODES = new Set(['nickname', 'anonymous']);
 const VISIBILITIES = new Set(['public', 'kali_only', 'expert_only']);
 const ANSWER_VISIBILITIES = new Set(['public', 'author_only']);
+const LEAD_CONTACT_TYPES = new Set(['kakao', 'phone', 'email']);
+const TRACK_EVENT_TYPES = new Set(['pageview', 'cta_click', 'share_click', 'invite_click', 'lead_submit']);
+const TRACK_BATCH_LIMIT = 20;
+const TRACK_PAYLOAD_BYTES_LIMIT = 32 * 1024;
+const TRACK_META_BYTES_LIMIT = 2 * 1024;
+const TRACK_META_KEYS_LIMIT = 30;
+const TRACK_FUTURE_SKEW_MS = 5 * 60 * 1000;
+const TRACK_PAST_SKEW_MS = 7 * 24 * 60 * 60 * 1000;
+const ISO_DATE_TIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?(?:Z|[+-]\d{2}:\d{2})$/;
 const MODERATION_ACTIONS = new Set([
   'hide',
   'restore',
@@ -58,6 +67,135 @@ function parseNonNegativeInteger(value, fallback) {
 
 export function validateUuid(value) {
   return UUID.test(clean(value));
+}
+
+export function validateLeadPayload(input) {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) {
+    throw new Error('invalid lead payload');
+  }
+
+  const contactType = clean(input.contactType);
+  const contact = clean(input.contact);
+  const source = clean(input.source);
+  const sessionId = clean(input.sessionId);
+
+  if (!input.consent) throw new Error('lead consent is required');
+  if (!LEAD_CONTACT_TYPES.has(contactType)) throw new Error('invalid lead contact type');
+  if (contact.length < 2 || contact.length > 200) throw new Error('invalid lead contact');
+  if (source.length < 1 || source.length > 80) throw new Error('invalid lead source');
+  if (!validateUuid(sessionId)) throw new Error('invalid lead session id');
+
+  let page = '/';
+  if (clean(input.page)) {
+    try {
+      page = new URL(clean(input.page), 'https://local.invalid').pathname || '/';
+    } catch {
+      throw new Error('invalid lead page');
+    }
+    if (page.length > 300) throw new Error('invalid lead page');
+  }
+
+  return { contactType, contact, source, sessionId, page };
+}
+
+function utf8Size(value) {
+  return new TextEncoder().encode(value).byteLength;
+}
+
+function validIsoDateTime(value) {
+  if (typeof value !== 'string') return false;
+  const parts = value.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d{1,3})?(?:Z|[+-]\d{2}:\d{2})$/);
+  if (!parts || !ISO_DATE_TIME.test(value)) return false;
+  const timestamp = Date.parse(value);
+  if (!Number.isFinite(timestamp)) return false;
+
+  const [year, month, day, hour, minute, second] = parts.slice(1).map(Number);
+  const calendarDate = new Date(Date.UTC(year, month - 1, day));
+  return calendarDate.getUTCFullYear() === year &&
+    calendarDate.getUTCMonth() === month - 1 &&
+    calendarDate.getUTCDate() === day &&
+    hour <= 23 && minute <= 59 && second <= 59;
+}
+
+function trackNowMs(now) {
+  const value = now instanceof Date ? now.getTime() : Number(now);
+  if (!Number.isFinite(value)) throw new Error('invalid tracking clock');
+  return value;
+}
+
+export function validateTrackEvent(input, { now = Date.now() } = {}) {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) {
+    throw new Error('event must be an object');
+  }
+  if (Object.hasOwn(input, 'user_id') || Object.hasOwn(input, 'userId')) {
+    throw new Error('user id is server controlled');
+  }
+
+  const eventId = typeof input.eventId === 'string' ? input.eventId.trim() : '';
+  const sessionId = typeof input.sessionId === 'string' ? input.sessionId.trim() : '';
+  const eventType = typeof input.eventType === 'string' ? input.eventType.trim() : '';
+  const eventName = typeof input.eventName === 'string' ? input.eventName.trim() : '';
+  const rawPage = typeof input.page === 'string' ? input.page.trim() : '';
+  const page = rawPage.split('?')[0].trim();
+
+  if (!validateUuid(eventId) || !validateUuid(sessionId)) throw new Error('invalid event id');
+  if (!TRACK_EVENT_TYPES.has(eventType)) throw new Error('invalid event type');
+  if (eventName.length < 1 || eventName.length > 80) throw new Error('invalid event name');
+  if (page.length < 1 || page.length > 300) throw new Error('invalid page');
+
+  const meta = input.meta === undefined ? {} : input.meta;
+  if (!meta || typeof meta !== 'object' || Array.isArray(meta)) throw new Error('invalid event meta');
+  if (Object.keys(meta).length > TRACK_META_KEYS_LIMIT) throw new Error('too many event meta keys');
+  let serializedMeta;
+  try {
+    serializedMeta = JSON.stringify(meta);
+  } catch {
+    throw new Error('invalid event meta');
+  }
+  if (!serializedMeta || utf8Size(serializedMeta) > TRACK_META_BYTES_LIMIT) {
+    throw new Error('event meta is too large');
+  }
+
+  if (!validIsoDateTime(input.occurredAt)) throw new Error('invalid occurred at');
+  const occurredAtMs = Date.parse(input.occurredAt);
+  const nowMs = trackNowMs(now);
+  if (occurredAtMs > nowMs + TRACK_FUTURE_SKEW_MS || occurredAtMs < nowMs - TRACK_PAST_SKEW_MS) {
+    throw new Error('occurred at is outside the accepted window');
+  }
+
+  return {
+    eventId,
+    sessionId,
+    eventType,
+    eventName,
+    page,
+    occurredAt: new Date(occurredAtMs).toISOString(),
+    meta
+  };
+}
+
+export function validateEventBatch(input, { now = Date.now() } = {}) {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) {
+    throw new Error('payload must be an object');
+  }
+  if (Object.hasOwn(input, 'user_id') || Object.hasOwn(input, 'userId')) {
+    throw new Error('user id is server controlled');
+  }
+  if (!Array.isArray(input.events) || input.events.length < 1 || input.events.length > TRACK_BATCH_LIMIT) {
+    throw new Error('invalid event batch size');
+  }
+
+  let serializedPayload;
+  try {
+    serializedPayload = JSON.stringify(input);
+  } catch {
+    throw new Error('invalid event payload');
+  }
+  if (!serializedPayload || utf8Size(serializedPayload) > TRACK_PAYLOAD_BYTES_LIMIT) {
+    throw new Error('event payload is too large');
+  }
+
+  return input.events.map((event) => validateTrackEvent(event, { now }));
 }
 
 export function parseYouTubeVideoId(value) {

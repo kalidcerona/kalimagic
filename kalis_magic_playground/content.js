@@ -7,9 +7,9 @@ const CONTENT = {
     { quote: "마술에 대한 태도가 더 진지해졌습니다", label: "형의 마술 배운 사람" },
   ],
   visitorCards: [
-    { num: "01", title: "마술 처음인데<br>뭐부터 해야 해?", desc: "입문 강의 6편으로 딱 정리해뒀어. 커피 한 잔 값으로 오늘 시작할 수 있어", cta: "5,000원으로 시작하기 →", href: "intro.html" },
-    { num: "02", title: "더 깊이 들어가고 싶어?", desc: "형이 직접 만든 작품이랑 도구.", cta: "형이 만든 것들 보기 →", href: "works.html" },
-    { num: "03", title: "직접 배우고 싶어?", desc: "형이랑 1:1로 직접. 네 수준에 맞춰서, 빠르게.", cta: "레슨 신청하기 →", href: "lesson.html" },
+    { num: "01", title: "마술 처음인데<br>뭐부터 해야 해?", desc: "입문 강의 6편으로 딱 정리해뒀어. 커피 한 잔 값으로 오늘 시작할 수 있어", cta: "5,000원으로 시작하기 →", href: "intro.html", track: "home_intro" },
+    { num: "02", title: "더 깊이 들어가고 싶어?", desc: "형이 직접 만든 작품이랑 도구.", cta: "형이 만든 것들 보기 →", href: "works.html", track: "home_works" },
+    { num: "03", title: "직접 배우고 싶어?", desc: "형이랑 1:1로 직접. 네 수준에 맞춰서, 빠르게.", cta: "레슨 신청하기 →", href: "lesson.html", track: "home_lesson" },
   ],
   problemQuotes: [
     "나는 존재감이 없는 것 같아.",
@@ -33,12 +33,12 @@ function renderContent() {
     },
     'visitor-desktop': function() {
       return CONTENT.visitorCards.map(function(c) {
-        return '<a href="' + c.href + '" style="display:flex; flex-direction:column; background:#261d18; border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:30px 26px;" data-hover="transform:translateY(-5px); border-color:rgba(224,144,78,0.5)"><span style="font-family:\'Noto Serif KR\',serif; font-style:italic; color:var(--point-gold); font-size:1rem; margin-bottom:16px;">' + c.num + '</span><h4 style="font-size:1.2rem; font-weight:800; line-height:1.4; margin:0 0 12px;">' + c.title + '</h4><p style="color:#ab9f92; font-size:0.96rem; line-height:1.8; margin:0 0 22px; flex:1;">' + c.desc + '</p><span style="color:var(--point-gold); font-weight:700; font-size:0.92rem;">' + c.cta + '</span></a>';
+        return '<a href="' + c.href + '" style="display:flex; flex-direction:column; background:#261d18; border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:30px 26px;" data-hover="transform:translateY(-5px); border-color:rgba(224,144,78,0.5)" data-track="' + c.track + '" data-track-type="cta_click" data-track-placement="visitor_desktop"><span style="font-family:\'Noto Serif KR\',serif; font-style:italic; color:var(--point-gold); font-size:1rem; margin-bottom:16px;">' + c.num + '</span><h4 style="font-size:1.2rem; font-weight:800; line-height:1.4; margin:0 0 12px;">' + c.title + '</h4><p style="color:#ab9f92; font-size:0.96rem; line-height:1.8; margin:0 0 22px; flex:1;">' + c.desc + '</p><span style="color:var(--point-gold); font-weight:700; font-size:0.92rem;">' + c.cta + '</span></a>';
       }).join('');
     },
     'visitor-mobile': function() {
       return CONTENT.visitorCards.map(function(c) {
-        return '<a href="' + c.href + '" style="display:block; background:#241712; border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:22px 20px; text-decoration:none;"><p style="font-family:\'Noto Serif KR\',serif; font-style:italic; color:var(--point-gold); font-size:14px; margin:0 0 10px;">' + c.num + '</p><h4 style="font-size:17px; font-weight:800; color:#F4E7DA; margin:0 0 8px; line-height:1.4;">' + c.title + '</h4><p style="color:#A99685; font-size:13.5px; line-height:1.72; margin:0 0 14px;">' + c.desc + '</p><span style="color:var(--point-gold); font-weight:700; font-size:13.5px;">' + c.cta + '</span></a>';
+        return '<a href="' + c.href + '" style="display:block; background:#241712; border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:22px 20px; text-decoration:none;" data-track="' + c.track + '" data-track-type="cta_click" data-track-placement="visitor_mobile"><p style="font-family:\'Noto Serif KR\',serif; font-style:italic; color:var(--point-gold); font-size:14px; margin:0 0 10px;">' + c.num + '</p><h4 style="font-size:17px; font-weight:800; color:#F4E7DA; margin:0 0 8px; line-height:1.4;">' + c.title + '</h4><p style="color:#A99685; font-size:13.5px; line-height:1.72; margin:0 0 14px;">' + c.desc + '</p><span style="color:var(--point-gold); font-weight:700; font-size:13.5px;">' + c.cta + '</span></a>';
       }).join('');
     },
     'problem-desktop': function() {
