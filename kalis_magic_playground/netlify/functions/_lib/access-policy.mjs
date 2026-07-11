@@ -31,6 +31,14 @@ export function canPublishAnswer(question, answerVisibility) {
   return question.visibility === 'public';
 }
 
+export function canAnswerQuestion(question, viewer) {
+  if (!viewer) return false;
+  if (question.visibility === 'public') return true;
+  if (question.visibility === 'expert_only') return isExpertOrHigher(viewer);
+  if (question.visibility === 'kali_only' || question.visibility === 'author_only') return isElevated(viewer) || viewer.role === 'god';
+  return false;
+}
+
 export function canReadAnswer(question, answer, viewer) {
   if (answer.visibility === 'public') return canReadPostBody(question, viewer);
   if (answer.visibility === 'author_only') return isAuthor(question, viewer) || isElevated(viewer);

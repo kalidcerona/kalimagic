@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  canAnswerQuestion,
   canReadAnswer,
   canPublishAnswer,
   canReadAuthor,
@@ -56,6 +57,29 @@ test('answer cannot be more public than the question', () => {
   assert.equal(canPublishAnswer({ visibility: 'expert_only' }, 'public'), false);
   assert.equal(canPublishAnswer({ visibility: 'public' }, 'public'), true);
   assert.equal(canPublishAnswer({ visibility: 'kali_only' }, 'author_only'), true);
+});
+
+test('answer permissions follow the question visibility and viewer role matrix', () => {
+  const viewers = {
+    member: other,
+    expert,
+    god,
+    kali,
+    admin
+  };
+  const expected = {
+    member: { public: true, expert_only: false, kali_only: false },
+    expert: { public: true, expert_only: true, kali_only: false },
+    god: { public: true, expert_only: true, kali_only: true },
+    kali: { public: true, expert_only: true, kali_only: true },
+    admin: { public: true, expert_only: true, kali_only: true }
+  };
+
+  for (const [role, viewer] of Object.entries(viewers)) {
+    for (const [visibility, allowed] of Object.entries(expected[role])) {
+      assert.equal(canAnswerQuestion({ visibility }, viewer), allowed, `${role} answering ${visibility}`);
+    }
+  }
 });
 
 test('author only answers are readable by question author and elevated roles', () => {

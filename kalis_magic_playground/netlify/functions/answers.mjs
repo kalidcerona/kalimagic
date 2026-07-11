@@ -1,5 +1,5 @@
-import { canPublishAnswer } from './_lib/access-policy.mjs';
-import { requireAdmin } from './_lib/auth.mjs';
+import { canAnswerQuestion, canPublishAnswer } from './_lib/access-policy.mjs';
+import { requireViewer } from './_lib/auth.mjs';
 import { json, readJsonBody } from './_lib/http.mjs';
 import { awardQuestBadge, awardQuestBadges } from './_lib/quest-badges.mjs';
 import { getSupabaseAdmin } from './_lib/supabase.mjs';
@@ -34,9 +34,9 @@ export async function handler(event) {
 
   let viewer;
   try {
-    viewer = await requireAdmin(event);
+    viewer = await requireViewer(event);
   } catch {
-    return json(403, { error: 'admin_required' });
+    return json(401, { error: 'auth_required' });
   }
 
   let payload;
@@ -56,6 +56,9 @@ export async function handler(event) {
   if (questionError) return json(500, { error: 'db_error' });
   if (!question || question.post_type !== 'question' || question.status !== 'visible') {
     return json(404, { error: 'question_not_found' });
+  }
+  if (!canAnswerQuestion(question, viewer)) {
+    return json(403, { error: 'answer_role_insufficient' });
   }
   if (!canPublishAnswer(question, payload.visibility)) {
     return json(400, { error: 'answer_visibility_too_public' });
