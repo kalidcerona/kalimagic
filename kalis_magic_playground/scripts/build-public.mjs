@@ -83,7 +83,10 @@ async function exists(relativePath) {
 }
 
 async function copyIfExists(relativePath) {
-  if (!(await exists(relativePath))) return;
+  if (!(await exists(relativePath))) {
+    console.warn(`Skipping missing public item: ${relativePath}`);
+    return;
+  }
   await cp(path.join(ROOT, relativePath), path.join(DIST, relativePath), {
     recursive: true,
     filter: (source) => shouldCopy(path.relative(ROOT, source))
