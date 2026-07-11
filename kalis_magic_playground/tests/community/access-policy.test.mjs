@@ -82,6 +82,51 @@ test('answer permissions follow the question visibility and viewer role matrix',
   }
 });
 
+test('only god, kali, and admin can answer author-only questions', () => {
+  const viewers = {
+    member: other,
+    expert,
+    god,
+    kali,
+    admin
+  };
+  const expected = {
+    member: false,
+    expert: false,
+    god: true,
+    kali: true,
+    admin: true
+  };
+
+  for (const [role, viewer] of Object.entries(viewers)) {
+    assert.equal(canAnswerQuestion({ visibility: 'author_only' }, viewer), expected[role], `${role} answering author_only`);
+  }
+});
+
+test('answer permissions fail closed for missing or unsupported visibility', () => {
+  const viewers = {
+    member: other,
+    expert,
+    god,
+    kali,
+    admin
+  };
+
+  for (const [role, viewer] of Object.entries(viewers)) {
+    for (const visibility of [null, undefined, 'foo']) {
+      assert.equal(canAnswerQuestion({ visibility }, viewer), false, `${role} answering ${String(visibility)}`);
+    }
+  }
+});
+
+test('anonymous viewers cannot answer questions at any supported visibility', () => {
+  for (const viewer of [null, undefined]) {
+    for (const visibility of ['public', 'expert_only', 'kali_only', 'author_only']) {
+      assert.equal(canAnswerQuestion({ visibility }, viewer), false, `anonymous answering ${visibility}`);
+    }
+  }
+});
+
 test('author only answers are readable by question author and elevated roles', () => {
   const question = { visibility: 'kali_only', authorUserId: 'u1' };
   const answer = { visibility: 'author_only' };
