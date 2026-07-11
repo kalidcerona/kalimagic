@@ -1,4 +1,5 @@
 import { requireViewer } from './_lib/auth.mjs';
+import { canReadAnswer } from './_lib/access-policy.mjs';
 import { json, readJsonBody } from './_lib/http.mjs';
 import {
   awardQuestBadge as defaultAwardQuestBadge,
@@ -37,7 +38,7 @@ function isOlderThanDays(value, days, now = new Date()) {
 async function loadAnswer(supabase, answerId) {
   const { data, error } = await supabase
     .from('answers')
-    .select('id,author_user_id,created_at,posts!inner(id,author_user_id,created_at,status)')
+    .select('id,visibility,author_user_id,created_at,posts!inner(id,visibility,author_user_id,created_at,status)')
     .eq('id', answerId)
     .maybeSingle();
   if (error) throw error;
@@ -91,6 +92,14 @@ async function markHelpful(event, viewer, supabase, hooks) {
   if (viewer.userId === answer.author_user_id) {
     return json(403, { error: 'self_vote_forbidden' });
   }
+
+  const question = nestedQuestion(answer);
+  const canRead = canReadAnswer(
+    { visibility: question.visibility, authorUserId: question.author_user_id },
+    { visibility: answer.visibility },
+    viewer
+  );
+  if (!canRead) return json(403, { error: 'forbidden' });
 
   const { error } = await supabase
     .from('answer_helpful_votes')

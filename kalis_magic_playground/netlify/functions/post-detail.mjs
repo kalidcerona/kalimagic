@@ -32,7 +32,8 @@ export function shapePost(row, viewer, state = {}) {
   const canReadName = canReadAuthor(policyPost, viewer);
   const badgeMap = state.badgeMap || {};
   const authorVisible = canReadName && row.display_mode === 'nickname';
-  const authorId = authorVisible ? row.author_user_id : null;
+  const authorId = viewer && authorVisible ? row.author_user_id : null;
+  const badgeLookupId = authorVisible ? row.author_user_id : null;
   return {
     id: row.id,
     postType: row.post_type,
@@ -44,7 +45,7 @@ export function shapePost(row, viewer, state = {}) {
     authorId,
     authorLabel: authorVisible ? row.profiles?.nickname || '마술인' : '익명',
     authorRole: authorVisible ? row.profiles?.role || null : null,
-    authorBadges: authorId ? resolvePostAuthorBadges(row, badgeMap, authorId) : [],
+    authorBadges: badgeLookupId ? resolvePostAuthorBadges(row, badgeMap, badgeLookupId) : [],
     displayMode: row.display_mode,
     visibility: row.visibility,
     status: row.status,
@@ -60,7 +61,8 @@ export function shapePost(row, viewer, state = {}) {
 
 function shapeAnswer(question, row, viewer, badgeMap = {}, state = {}) {
   if (!canReadAnswer(question, { visibility: row.visibility }, viewer)) return null;
-  const authorId = row.author_user_id || null;
+  const authorId = viewer && row.author_user_id ? row.author_user_id : null;
+  const badgeLookupId = row.author_user_id || null;
   const viewerHelpfulAnswerIds = state.viewerHelpfulAnswerIds || new Set();
   return {
     id: row.id,
@@ -70,7 +72,7 @@ function shapeAnswer(question, row, viewer, badgeMap = {}, state = {}) {
     authorId,
     authorLabel: row.profiles?.nickname || '답변자',
     authorRole: row.profiles?.role || null,
-    authorBadges: authorId ? badgeMap[authorId] || [] : [],
+    authorBadges: badgeLookupId ? badgeMap[badgeLookupId] || [] : [],
     youtubeVideoId: row.youtube_video_id,
     createdAt: row.created_at,
     viewerHelpful: viewerHelpfulAnswerIds.has(row.id),
@@ -78,9 +80,10 @@ function shapeAnswer(question, row, viewer, badgeMap = {}, state = {}) {
   };
 }
 
-function shapeComment(row, badgeMap = {}) {
+function shapeComment(row, viewer, badgeMap = {}) {
   const authorVisible = row.display_mode === 'nickname';
-  const authorId = authorVisible ? row.author_user_id || null : null;
+  const authorId = viewer && authorVisible ? row.author_user_id || null : null;
+  const badgeLookupId = authorVisible ? row.author_user_id || null : null;
   return {
     id: row.id,
     parentCommentId: row.parent_comment_id,
@@ -88,7 +91,7 @@ function shapeComment(row, badgeMap = {}) {
     authorId,
     authorLabel: authorVisible ? row.profiles?.nickname || '마술인' : '익명',
     authorRole: authorVisible ? row.profiles?.role || null : null,
-    authorBadges: authorId ? badgeMap[authorId] || [] : [],
+    authorBadges: badgeLookupId ? badgeMap[badgeLookupId] || [] : [],
     createdAt: row.created_at
   };
 }
@@ -186,6 +189,7 @@ export async function handler(event) {
     .from('answers')
     .select('id,body,visibility,youtube_video_id,created_at,author_user_id,profiles(nickname,role)')
     .eq('question_post_id', row.id)
+    .eq('status', 'visible')
     .order('created_at', { ascending: true });
   if (answersError) return json(500, { error: 'db_error' });
 
@@ -219,7 +223,7 @@ export async function handler(event) {
   return json(200, {
     post,
     answers: answers.map((answer) => shapeAnswer(question, answer, viewer, badgeMap, helpfulState)).filter(Boolean),
-    comments: comments.map((comment) => shapeComment(comment, badgeMap)),
+    comments: comments.map((comment) => shapeComment(comment, viewer, badgeMap)),
     viewerCanAnswer: canViewerAnswer(viewer)
   });
 }

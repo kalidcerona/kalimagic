@@ -13,9 +13,10 @@ async function optionalViewer(event) {
   }
 }
 
-function shapeComment(row, badgeMap = {}) {
+function shapeComment(row, viewer, badgeMap = {}) {
   const authorVisible = row.display_mode === 'nickname';
-  const authorId = authorVisible ? row.author_user_id || null : null;
+  const authorId = viewer && authorVisible ? row.author_user_id || null : null;
+  const badgeLookupId = authorVisible ? row.author_user_id || null : null;
   return {
     id: row.id,
     parentCommentId: row.parent_comment_id,
@@ -23,7 +24,7 @@ function shapeComment(row, badgeMap = {}) {
     authorId,
     authorLabel: authorVisible ? row.profiles?.nickname || '마술인' : '익명',
     authorRole: authorVisible ? row.profiles?.role || null : null,
-    authorBadges: authorId ? badgeMap[authorId] || [] : [],
+    authorBadges: badgeLookupId ? badgeMap[badgeLookupId] || [] : [],
     createdAt: row.created_at
   };
 }
@@ -72,7 +73,7 @@ async function listComments(event) {
     return json(500, { error: 'db_error' });
   }
 
-  return json(200, { comments: data.map((row) => shapeComment(row, badgeMap)) });
+  return json(200, { comments: data.map((row) => shapeComment(row, viewer, badgeMap)) });
 }
 
 async function createComment(event) {

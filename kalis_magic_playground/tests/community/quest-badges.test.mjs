@@ -221,8 +221,9 @@ test('changeAnswerHelpful rejects self-votes before inserting a helpful vote', a
   const supabase = makeHelpfulSupabase({
     answer: {
       id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+      visibility: 'public',
       author_user_id: viewer.userId,
-      posts: { id: 'q1', author_user_id: 'asker-1', status: 'visible', created_at: '2026-07-01T00:00:00.000Z' }
+      posts: { id: 'q1', visibility: 'public', author_user_id: 'asker-1', status: 'visible', created_at: '2026-07-01T00:00:00.000Z' }
     }
   });
 
@@ -242,9 +243,10 @@ test('changeAnswerHelpful ignores duplicate helpful-vote inserts and skips badge
   const supabase = makeHelpfulSupabase({
     answer: {
       id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+      visibility: 'public',
       author_user_id: '11111111-1111-4111-8111-111111111111',
       created_at: '2026-07-01T00:00:00.000Z',
-      posts: { id: 'q1', author_user_id: viewer.userId, status: 'visible', created_at: '2026-07-01T00:00:00.000Z' }
+      posts: { id: 'q1', visibility: 'public', author_user_id: viewer.userId, status: 'visible', created_at: '2026-07-01T00:00:00.000Z' }
     },
     insertError: { code: '23505' }
   });

@@ -53,7 +53,8 @@ export function shapePostListRow(row, viewer, state = {}) {
   const viewerLikedPostIds = state.viewerLikedPostIds || new Set();
   const badgeMap = state.badgeMap || {};
   const authorVisible = canReadName && row.display_mode === 'nickname';
-  const authorId = authorVisible ? row.author_user_id : null;
+  const authorId = viewer && authorVisible ? row.author_user_id : null;
+  const badgeLookupId = authorVisible ? row.author_user_id : null;
 
   return {
     id: row.id,
@@ -68,7 +69,7 @@ export function shapePostListRow(row, viewer, state = {}) {
     authorId,
     authorLabel: authorVisible ? row.profiles?.nickname || '마술인' : '익명',
     authorRole: authorVisible ? row.profiles?.role || null : null,
-    authorBadges: authorId ? resolvePostAuthorBadges(row, badgeMap, authorId) : [],
+    authorBadges: badgeLookupId ? resolvePostAuthorBadges(row, badgeMap, badgeLookupId) : [],
     displayMode: row.display_mode,
     visibility: row.visibility,
     status: row.status,

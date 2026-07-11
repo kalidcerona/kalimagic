@@ -68,18 +68,19 @@ async function loadCatalogRows(supabase) {
 }
 
 async function getTargetUserId(event) {
+  let viewer;
+  try {
+    viewer = await requireViewer(event);
+  } catch {
+    return { authError: true };
+  }
+
   const userId = event.queryStringParameters?.userId;
   if (userId) {
     if (!validateUuid(userId)) return { error: 'invalid_user_id' };
     return { userId };
   }
-
-  try {
-    const viewer = await requireViewer(event);
-    return { userId: viewer.userId };
-  } catch {
-    return { authError: true };
-  }
+  return { userId: viewer.userId };
 }
 
 async function getMemberBadges(event, supabase) {
