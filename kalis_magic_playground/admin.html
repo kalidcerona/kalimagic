@@ -13,11 +13,11 @@
       supabasePublishableKey: 'sb_publishable_FZwzcGFQ06F65Butggp6rQ_fv3zZfkq'
     };
   </script>
-  <script src="nav.js"></script>
+  <script src="nav.js" defer></script>
 </head>
 <body>
   <div id="nav-root"></div>
-  <script>renderNav('admin')</script>
+  <script>document.addEventListener('DOMContentLoaded',function(){renderNav('admin')})</script>
   <main class="admin-shell">
     <header class="playground-header">
       <p class="playground-eyebrow">Kali only</p>
