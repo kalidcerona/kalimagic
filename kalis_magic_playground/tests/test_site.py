@@ -164,10 +164,13 @@ def main():
     # 공유 랜딩 내비는 데스크톱/모바일 변형 바깥에 한 번만 마운트되어야 한다.
     nav = (ROOT / "nav.js").read_text(encoding="utf-8")
     landing_nav = nav.split("const LANDING_PAGES = [", 1)[1].split("];", 1)[0]
-    check("playground.html" in landing_nav,
-          "[내비] LANDING_PAGES에 기록소(playground.html) 링크 없음")
-    check(0 <= landing_nav.find("playground.html") < landing_nav.find("lesson.html"),
-          "[내비] 기록소 링크가 레슨 CTA 앞에 있지 않음")
+    community_nav = nav.split("const COMMUNITY_PAGES = [", 1)[1].split("];", 1)[0]
+    # lesson 개편(2026-07): nav를 두 그룹으로 분리 — 레슨 CTA는 LANDING_PAGES,
+    # 마술문화 기록소(playground)는 COMMUNITY_PAGES로 이동. 옛 "기록소가 LANDING_PAGES에" 규칙은 폐기됨.
+    check("lesson.html" in landing_nav,
+          "[내비] LANDING_PAGES에 레슨 CTA(lesson.html) 링크 없음")
+    check("playground.html" in community_nav,
+          "[내비] COMMUNITY_PAGES에 기록소(playground.html) 링크 없음")
     for f in LANDING_PAGES:
         raw = (ROOT / f).read_text(encoding="utf-8")
         nav_root = raw.find('id="nav-root"')
