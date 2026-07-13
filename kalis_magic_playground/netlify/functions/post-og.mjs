@@ -4,7 +4,28 @@ import { getSupabaseAdmin } from './_lib/supabase.mjs';
 import { validateUuid } from './_lib/validators.mjs';
 
 const SITE_ORIGIN = 'https://kalimagic.netlify.app';
-const shellPromise = readFile('post.html', 'utf8');
+
+// post.html(SSR 셸)은 함수 번들에서 빌드 base(git 루트) 기준 상대경로로 포함돼
+// 위치가 환경마다 다르다. 여러 후보를 순서대로 시도하고 성공분을 1회 캐시한다.
+let shellCache;
+async function loadShell() {
+  if (shellCache !== undefined) return shellCache;
+  // esbuild 번들에서 import.meta.url이 불안정하므로 cwd(/var/task) 기준 문자열 경로만 사용.
+  const candidates = [
+    'kalis_magic_playground/post.html',
+    'post.html'
+  ];
+  for (const src of candidates) {
+    try {
+      shellCache = await readFile(src, 'utf8');
+      return shellCache;
+    } catch {
+      // 다음 후보 시도
+    }
+  }
+  shellCache = null;
+  return shellCache;
+}
 
 export async function loadPublicPost(supabase, id) {
   const { data, error } = await supabase
@@ -42,7 +63,14 @@ export async function handler(event) {
     ? `${SITE_ORIGIN}/p/${encodeURIComponent(id)}`
     : `${SITE_ORIGIN}/playground.html`;
   const meta = buildPostMeta(post, canonicalUrl);
-  const shell = await shellPromise;
+  const shell = await loadShell();
+  if (shell == null) {
+    return {
+      statusCode: 500,
+      headers: { 'content-type': 'text/plain; charset=utf-8' },
+      body: 'post shell unavailable'
+    };
+  }
 
   return {
     statusCode: 200,
