@@ -23,6 +23,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;500;600;700&display=swap">
   <script src="nav.js" defer></script>
   <script src="editor.js" defer></script>
+  <script src="reveal.js" defer></script>
   <style>
     *{ margin:0; padding:0; box-sizing:border-box; }
     html{ scroll-behavior:smooth; }
@@ -30,19 +31,10 @@
     a{ text-decoration:none; color:inherit; }
     img{ display:block; max-width:100%; }
     ::selection{ background:rgba(224,144,78,0.32); }
-    @keyframes optIn{ from{ opacity:0; transform:translateY(22px); filter:blur(6px); } to{ opacity:1; transform:translateY(0); filter:blur(0); } }
     @keyframes cue{ 0%,100%{ transform:translateY(0); opacity:.35; } 50%{ transform:translateY(8px); opacity:.95; } }
     @keyframes kxKen{ from{ transform:scale(1); } to{ transform:scale(1.09); } }
 
-    /* 스크롤 진입 애니메이션 (JS 없으면 그냥 보임 - progressive enhancement) */
-    .js-anim .kx-desktop .kx-fade{ opacity:0; transform:translateY(28px); transition:opacity .8s cubic-bezier(.2,.7,.2,1), transform .8s cubic-bezier(.2,.7,.2,1); will-change:opacity, transform; }
-    .js-anim .kx-desktop .kx-fade.kx-in{ opacity:1; transform:none; }
-    /* 자식 스태거: 카드 그리드/리스트가 차례로 */
-    .js-anim .kx-desktop .kx-fade.kx-in > *{ animation:optIn .7s cubic-bezier(.2,.7,.2,1) both; }
-    .js-anim .kx-desktop .kx-fade.kx-in > *:nth-child(2){ animation-delay:.08s; }
-    .js-anim .kx-desktop .kx-fade.kx-in > *:nth-child(3){ animation-delay:.16s; }
-    .js-anim .kx-desktop .kx-fade.kx-in > *:nth-child(4){ animation-delay:.24s; }
-    .js-anim .kx-desktop .kx-fade.kx-in > *:nth-child(5){ animation-delay:.32s; }
+    /* 스크롤 진입 애니메이션은 style.css 공용 규칙을 사용 (인라인 중복 제거) */
 
     /* 히어로 이미지 켄번스 */
     .kx-ken{ animation:kxKen 22s ease-out forwards; }
@@ -55,8 +47,6 @@
     .kx-cue span{ display:block; width:1px; height:42px; background:linear-gradient(rgba(224,144,78,0), var(--point-gold)); animation:cue 1.9s ease-in-out infinite; }
 
     @media (prefers-reduced-motion: reduce){
-      .js-anim .kx-desktop .kx-fade{ opacity:1 !important; transform:none !important; transition:none; }
-      .js-anim .kx-desktop .kx-fade.kx-in > *{ animation:none; }
       .kx-ken{ animation:none; } .kx-cue{ display:none; }
     }
     @media (max-width:880px){
@@ -328,8 +318,7 @@
             <div>
               <p style="color:var(--point-gold); font-weight:700; font-size:0.78rem; letter-spacing:0.16em; margin:0 0 14px;">형이 직접 봐줄게</p>
               <h3 style="font-size:clamp(1.6rem,4vw,2.4rem); font-weight:800; line-height:1.3; letter-spacing:-0.01em; margin:0 0 18px;">배우기 전에<br>형이 직접 맞는지 봐줄게</h3>
-              <p style="color:#cbbfb2; font-size:1.06rem; line-height:1.9; margin:0 0 28px; max-width:32rem;">어떤 자리에서도 기억에 남고 싶은 사람이라면,<br>일단 얘기는 해봐.<br>형도 아무한테나 가르치고 싶지 않아.<br>네가 지금 어디쯤 있는지 먼저 알아야<br>형이 제대로 가르칠 수 있거든.</p>
-              <p style="color:#cbbfb2; font-size:1.06rem; line-height:1.9; margin:0 0 28px; max-width:32rem;">작품까지 해보고 진짜 배우고 싶어진 사람도,<br>처음부터 제대로 배우고 싶은 사람도 좋아.<br>얘기 먼저, 결제는 그 다음이야.<br>신청해도 바로 구매 안 해도 돼.</p>
+              <p style="color:#cbbfb2; font-size:1.06rem; line-height:1.9; margin:0 0 22px; max-width:32rem;">어떤 자리에서도 기억에 남고 싶은 사람이라면,<br>일단 얘기는 해봐.<br>형도 아무한테나 가르치고 싶지 않아.<br>네가 지금 어디쯤 있는지 먼저 알아야<br>형이 제대로 가르칠 수 있거든.</p>
               <div style="display:flex; gap:0; flex-wrap:wrap; margin:0; border-top:1px solid rgba(255,255,255,0.08); padding-top:22px;">
                 <div style="flex:1; padding-right:20px; border-right:1px solid rgba(255,255,255,0.08);"><p style="font-size:1.7rem; font-weight:800; color:var(--point-gold); margin:0; font-family:'Noto Serif KR',serif;"><span class="kx-count" data-target="15">0</span>년+</p><p style="font-size:0.86rem; color:#8a8075; margin:2px 0 0;">마술샵 운영</p></div>
                 <div style="flex:1; padding:0 20px; border-right:1px solid rgba(255,255,255,0.08);"><p style="font-size:1.7rem; font-weight:800; color:var(--point-gold); margin:0; font-family:'Noto Serif KR',serif;"><span class="kx-count" data-target="100">0</span>명+</p><p style="font-size:0.86rem; color:#8a8075; margin:2px 0 0;">직접 가르친 사람</p></div>
@@ -341,8 +330,13 @@
               <div style="position:absolute; inset:0; pointer-events:none; box-shadow:inset 0 0 80px rgba(0,0,0,0.4);"></div>
             </div>
           </div>
-          <div class="kx-fade" style="text-align:center; margin-top:44px;">
-            <a href="lesson.html" style="display:inline-block; padding:15px 30px; border-radius:10px; font-weight:700; font-size:1rem; background:var(--point-gold); color:#1a1410;" data-hover="transform:translateY(-2px)" data-track="home_lesson" data-track-type="cta_click" data-track-placement="desktop_lesson_cta">얘기 먼저 해보기 (무료) →</a>
+          <div class="kx-fade" style="position:relative; overflow:hidden; margin-top:48px; display:flex; align-items:center; justify-content:space-between; gap:32px; flex-wrap:wrap; background:linear-gradient(160deg, rgba(224,144,78,0.1), rgba(255,255,255,0.02)); border:1px solid rgba(224,144,78,0.28); border-radius:16px; padding:32px 40px;">
+            <div style="position:absolute; left:-8%; top:-70%; width:42%; height:240%; pointer-events:none; background:radial-gradient(circle, rgba(224,144,78,0.15), transparent 65%); filter:blur(10px);"></div>
+            <div style="position:relative;">
+              <p style="font-size:1.4rem; font-weight:800; margin:0 0 6px; line-height:1.4;">배우기 전에, <span style="font-family:'Noto Serif KR',serif; font-style:italic; font-weight:500; color:var(--point-gold);">얘기 먼저 해보자</span></p>
+              <p style="color:#ab9f92; font-size:0.95rem; margin:0;">형이 직접 읽고 답해. 결제는 그 다음이야.</p>
+            </div>
+            <a href="lesson.html" style="position:relative; flex:none; display:inline-block; padding:16px 32px; border-radius:10px; font-weight:700; font-size:1rem; background:var(--point-gold); color:#1a1410; box-shadow:0 12px 32px rgba(224,144,78,0.3);" data-hover="transform:translateY(-2px)" data-track="home_lesson" data-track-type="cta_click" data-track-placement="desktop_lesson_cta">형이랑 무료로 이야기 해보기 →</a>
           </div>
         
       </div>
@@ -523,6 +517,18 @@
     <a href="about.html" style="display:inline-flex; align-items:center; gap:6px; color:var(--point-gold); font-weight:700; font-size:14px;">형 이야기 더 보기 →</a>
   </div>
 
+  <!-- §7.5 LESSON CTA (배너 승격형 1c) -->
+  <div style="padding:48px 24px 0;">
+    <div style="position:relative; overflow:hidden; background:linear-gradient(160deg, rgba(224,144,78,0.12), rgba(255,255,255,0.02)); border:1px solid rgba(224,144,78,0.3); border-radius:16px; padding:28px 22px; text-align:center;">
+      <div style="position:absolute; left:50%; top:-40%; width:60%; height:90%; transform:translateX(-50%); pointer-events:none; background:radial-gradient(circle, rgba(224,144,78,0.16), transparent 65%); filter:blur(10px);"></div>
+      <div style="position:relative;">
+        <p style="font-size:19px; font-weight:800; margin:0 0 6px; color:#F4E7DA; line-height:1.4;">배우기 전에, <span style="font-family:'Noto Serif KR',serif; font-style:italic; font-weight:500; color:var(--point-gold);">얘기 먼저 해보자</span></p>
+        <p style="color:#ab9f92; font-size:13.5px; margin:0 0 18px;">형이 직접 읽고 답해. 결제는 그 다음이야.</p>
+        <a href="lesson.html" style="display:flex; align-items:center; justify-content:center; height:52px; border-radius:13px; background:var(--point-gold); color:#1a1410; font-weight:700; font-size:15.5px; text-decoration:none;" data-track="home_lesson" data-track-type="cta_click" data-track-placement="mobile_lesson_cta">형이랑 무료로 이야기 해보기 →</a>
+      </div>
+    </div>
+  </div>
+
   <!-- §8 FINAL CTA (후기 + 버튼 2개) -->
   <div style="margin-top:48px; background:linear-gradient(160deg, var(--kx-terra), var(--kx-terra-deep)); padding:44px 24px 40px;">
     <div style="background:rgba(0,0,0,0.22); border-radius:12px; padding:16px 18px; margin:0 0 22px;">
@@ -561,23 +567,7 @@
     });
   }
   bindHover(document);
-
-  /* 스크롤 진입 리빌 (데스크탑) */
-  function setupReveal(){
-    var nodes = document.querySelectorAll('.kx-desktop .kx-fade, .kx-mobile .kx-shell > div');
-    if (!('IntersectionObserver' in window) || !nodes.length){
-      nodes.forEach(function(el){ el.classList.add('kx-in'); });
-      return;
-    }
-    var io = new IntersectionObserver(function(entries){
-      entries.forEach(function(e){
-        if (e.isIntersecting){ e.target.classList.add('kx-in'); io.unobserve(e.target); }
-      });
-    }, { threshold:0.12, rootMargin:'0px 0px -8% 0px' });
-    nodes.forEach(function(el){ io.observe(el); });
-  }
-  if (document.readyState !== 'loading') setupReveal();
-  else document.addEventListener('DOMContentLoaded', setupReveal);
+  /* 스크롤 진입 리빌은 reveal.js(공용, defer)가 담당 */
 })();
 </script>
 <script>

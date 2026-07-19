@@ -54,17 +54,8 @@ img { max-width: 100%; display: block; }
 .kx-cue span{ display:block; width:1px; height:42px; background:linear-gradient(rgba(224,144,78,0), var(--point-gold)); animation:kxCue 1.9s ease-in-out infinite; }
 .js-anim .kx-desktop .kx-fade{ opacity:0; transform:translateY(28px); transition:opacity .8s cubic-bezier(.2,.7,.2,1), transform .8s cubic-bezier(.2,.7,.2,1); will-change:opacity, transform; }
 .js-anim .kx-desktop .kx-fade.kx-in{ opacity:1; transform:none; }
-.js-anim .kx-desktop .kx-fade.kx-in > *{ animation:kxOptIn .7s cubic-bezier(.2,.7,.2,1) both; }
-.js-anim .kx-desktop .kx-fade.kx-in > *:nth-child(2){ animation-delay:.08s; }
-.js-anim .kx-desktop .kx-fade.kx-in > *:nth-child(3){ animation-delay:.16s; }
-.js-anim .kx-desktop .kx-fade.kx-in > *:nth-child(4){ animation-delay:.24s; }
-.js-anim .kx-desktop .kx-fade.kx-in > *:nth-child(5){ animation-delay:.32s; }
-.js-anim .kx-desktop .intro-stagger.kx-fade.kx-in > *{ animation:introCardIn .82s cubic-bezier(.18,.72,.18,1) both; }
-.js-anim .kx-desktop .intro-stagger.kx-fade.kx-in > *:nth-child(2){ animation-delay:.13s; }
-.js-anim .kx-desktop .intro-stagger.kx-fade.kx-in > *:nth-child(3){ animation-delay:.26s; }
-.js-anim .kx-desktop .intro-stagger.kx-fade.kx-in > *:nth-child(4){ animation-delay:.39s; }
-.js-anim .kx-desktop .intro-stagger.kx-fade.kx-in > *:nth-child(5){ animation-delay:.52s; }
-.js-anim .kx-desktop .intro-stagger.kx-fade.kx-in > *:nth-child(6){ animation-delay:.65s; }
+.js-anim .kx-desktop .kx-fade.kx-in > *{ animation:kxOptIn .7s cubic-bezier(.2,.7,.2,1) both; animation-delay:min(calc(var(--kx-i, 0) * .08s), .72s); }
+.js-anim .kx-desktop .intro-stagger.kx-fade.kx-in > *{ animation:introCardIn .82s cubic-bezier(.18,.72,.18,1) both; animation-delay:min(calc(var(--kx-i, 0) * .13s), 1.04s); }
 
 /* 서브페이지 fade-in 스크롤 트리거 */
 .js-anim .fade-in{ opacity:0; transform:translateY(26px); transition:opacity .75s cubic-bezier(.2,.7,.2,1), transform .75s cubic-bezier(.2,.7,.2,1); will-change:opacity,transform; }
@@ -76,17 +67,9 @@ img { max-width: 100%; display: block; }
 .js-anim .kx-mobile .kx-shell > div{ opacity:0; transform:translateY(22px); transition:opacity .6s cubic-bezier(.2,.7,.2,1), transform .6s cubic-bezier(.2,.7,.2,1); will-change:opacity,transform; }
 .js-anim .kx-mobile .kx-shell > div.kx-in{ opacity:1; transform:none; }
 /* 갤러리 사진: 스케일+페이드 스태거 */
-.js-anim .kx-mobile .kx-in figure{ animation:kxPhotoIn .6s cubic-bezier(.2,.7,.2,1) both; }
-.js-anim .kx-mobile .kx-in figure:nth-child(2){ animation-delay:.06s; }
-.js-anim .kx-mobile .kx-in figure:nth-child(3){ animation-delay:.12s; }
-.js-anim .kx-mobile .kx-in figure:nth-child(4){ animation-delay:.18s; }
-.js-anim .kx-mobile .kx-in figure:nth-child(5){ animation-delay:.24s; }
-.js-anim .kx-mobile .kx-in figure:nth-child(6){ animation-delay:.30s; }
+.js-anim .kx-mobile .kx-in figure{ animation:kxPhotoIn .6s cubic-bezier(.2,.7,.2,1) both; animation-delay:min(calc(var(--kx-i, 0) * .06s), .48s); }
 /* 카톡 스레드: 말풍선 순차 등장 */
-.js-anim .kx-mobile .kx-in .kx-thread > div{ animation:kxBubbleIn .55s cubic-bezier(.2,.7,.2,1) both; }
-.js-anim .kx-mobile .kx-in .kx-thread > div:nth-child(2){ animation-delay:.1s; }
-.js-anim .kx-mobile .kx-in .kx-thread > div:nth-child(3){ animation-delay:.2s; }
-.js-anim .kx-mobile .kx-in .kx-thread > div:nth-child(4){ animation-delay:.3s; }
+.js-anim .kx-mobile .kx-in .kx-thread > div{ animation:kxBubbleIn .55s cubic-bezier(.2,.7,.2,1) both; animation-delay:min(calc(var(--kx-i, 0) * .1s), .8s); }
 /* ---------- 탭 눌림 피드백 (모바일) ---------- */
 .kx-mobile a[href], .kx-mobile button, .kx-mobile .field-card, .kx-mobile details summary{ transition:transform .14s cubic-bezier(.2,.7,.2,1); }
 .kx-mobile a[href]:active, .kx-mobile button:active, .kx-mobile .field-card:active, .kx-mobile details summary:active{ transform:scale(.97); }
