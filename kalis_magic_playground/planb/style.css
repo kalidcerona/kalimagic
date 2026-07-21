@@ -1,9 +1,11 @@
 :root {
-  --bg: #efece3;
-  --ink: #1a1a1a;
-  --muted: #635d52;
-  --line: #d8d2c6;
-  --index: #b0a793;
+  --bg: #211710;
+  --surface: #2c1f15;
+  --ink: #e9e0cf;
+  --muted: #a8987f;
+  --line: #4a3828;
+  --index: #c9a96e;
+  --name-accent: #b9c6d3;
 }
 
 * {
@@ -16,7 +18,10 @@ html {
 
 body {
   margin: 0;
-  background: var(--bg);
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(233, 224, 207, .04), transparent 60%),
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, .12) 0 2px, transparent 2px 90px),
+    linear-gradient(180deg, #261a11, #211710 40%, #1c130d);
   color: var(--ink);
   font-family: 'Noto Serif KR', serif;
   line-height: 1.7;
@@ -36,8 +41,8 @@ a {
 }
 
 ::selection {
-  background: var(--ink);
-  color: var(--bg);
+  background: var(--index);
+  color: #211710;
 }
 
 main {
@@ -81,9 +86,11 @@ section {
   max-width: 100%;
   height: auto;
   margin: 0 auto;
-  border: 1px solid var(--line);
-  box-shadow: 0 18px 42px rgba(26, 26, 26, .12);
-  filter: saturate(.88) contrast(.96);
+  border: 1px solid #5c4632;
+  outline: 1px solid rgba(201, 169, 110, .35);
+  outline-offset: 6px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, .55);
+  filter: sepia(.12) saturate(.84) contrast(.98);
 }
 
 .cast-poster {
@@ -102,17 +109,16 @@ section {
 .section-kicker,
 .part-label {
   margin: 0 0 12px;
-  color: var(--muted);
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 0.9rem;
+  color: var(--index);
+  font-family: 'Pinyon Script', cursive;
+  font-size: 1.15rem;
   font-weight: 600;
-  letter-spacing: .18em;
-  text-transform: uppercase;
+  letter-spacing: .02em;
+  text-transform: none;
 }
 
 .eyebrow {
   margin-bottom: 16px;
-  letter-spacing: .22em;
 }
 
 h1,
@@ -159,7 +165,7 @@ h4 {
 }
 
 .dot {
-  color: #c8c1b3;
+  color: var(--muted);
 }
 
 .button {
@@ -169,9 +175,9 @@ h4 {
   min-height: 54px;
   width: min(100%, 260px);
   padding: 14px 24px;
-  border: 1px solid var(--ink);
-  background: var(--ink);
-  color: var(--bg);
+  border: 1px solid var(--index);
+  background: transparent;
+  color: var(--index);
   text-decoration: none;
   font-weight: 600;
   letter-spacing: .02em;
@@ -180,19 +186,21 @@ h4 {
 
 .button:hover,
 .button:focus-visible {
-  background: transparent;
-  color: var(--ink);
+  background: var(--index);
+  color: #211710;
 }
 
 .button.secondary {
+  border-color: var(--muted);
   background: transparent;
-  color: var(--ink);
+  color: var(--muted);
 }
 
 .button.secondary:hover,
 .button.secondary:focus-visible {
-  background: var(--ink);
-  color: var(--bg);
+  border-color: var(--index);
+  background: var(--index);
+  color: #211710;
 }
 
 .schedule {
@@ -203,9 +211,14 @@ h4 {
 }
 
 .schedule article {
-  padding: 24px 0;
-  border-top: 1px solid var(--line);
-  border-bottom: 1px solid var(--line);
+  padding: 24px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  box-shadow: inset 0 1px rgba(233, 224, 207, .03);
+}
+
+.schedule + .poster-image {
+  margin-top: clamp(34px, 5vw, 48px);
 }
 
 .schedule h3,
@@ -263,7 +276,8 @@ h4 {
   width: 100%;
   aspect-ratio: 4 / 5;
   object-fit: cover;
-  filter: saturate(.88) contrast(.96);
+  border: 1px solid var(--line);
+  filter: sepia(.3) saturate(.85) contrast(1.02);
 }
 
 .performer-name {
@@ -282,6 +296,10 @@ h4 {
 .performer-name h4,
 .advisor h4 {
   font-size: 1.3rem;
+}
+
+.performer-name h4 {
+  color: var(--name-accent);
 }
 
 .intro {
@@ -339,7 +357,7 @@ li + li {
   width: 100%;
   padding: 12px;
   border: 1px solid var(--line);
-  background: rgba(255, 255, 255, .35);
+  background: rgba(255, 255, 255, .92);
 }
 
 footer {
