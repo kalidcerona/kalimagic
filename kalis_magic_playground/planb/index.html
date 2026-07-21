@@ -1,85 +1,108 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="robots" content="noindex, nofollow">
-  <title>ABSTRACT — PLAN B</title>
-  <meta property="og:type" content="website">
-  <meta property="og:title" content="ABSTRACT — PLAN B">
-  <meta property="og:description" content="ABSTRACT — CLOSE-UP MAGIC SHOW">
-  <meta property="og:url" content="https://kalimagic.netlify.app/planb/">
-  <meta property="og:image" content="https://kalimagic.netlify.app/planb/img/logo.png">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Noto+Serif+KR:wght@400;500;600;700&family=Pinyon+Script&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>ABSTRACT — PLAN B</title>
+<meta property="og:type" content="website">
+<meta property="og:title" content="ABSTRACT — PLAN B">
+<meta property="og:description" content="ABSTRACT — CLOSE-UP MAGIC SHOW">
+<meta property="og:url" content="https://kalimagic.netlify.app/planb/">
+<meta property="og:image" content="https://kalimagic.netlify.app/planb/img/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Noto+Serif+KR:wght@400;500;600;700&family=Pinyon+Script&display=swap" rel="stylesheet">
+<style>
+  @keyframes planbReveal { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }
+  a { color: inherit; }
+  ::selection { background: #c9a96e; color: #211710; }
+  @media (prefers-reduced-motion: reduce) { .pb-reveal { animation: none !important; } }
+  .cta-gold, .cta-muted { transition: background .2s ease, color .2s ease, border-color .2s ease; }
+  .cta-gold:hover, .cta-gold:focus-visible { background: #c9a96e !important; color: #211710 !important; }
+  .cta-muted:hover, .cta-muted:focus-visible { border-color: #c9a96e !important; background: #c9a96e !important; color: #211710 !important; }
+</style>
 </head>
 <body>
-  <main>
-    <section class="hero" data-reveal aria-labelledby="hero-title">
-      <div class="container">
-        <p class="eyebrow">Close-up Magic Show</p>
-        <h1 id="hero-title">ABSTRACT</h1>
-        <p class="slogan">보이는 것은 단지, 생각의 일부일 뿐</p>
-        <div class="info-line">
-          <span>2026.08.23 (일)</span><span class="dot">·</span>
-          <span>서울 동작구 사당동 1047-31 B1층</span><span class="dot">·</span>
+
+<div style="background: radial-gradient(ellipse at 50% 0%, rgba(233,224,207,.04), transparent 60%), repeating-linear-gradient(90deg, rgba(0,0,0,.12) 0 2px, transparent 2px 90px), linear-gradient(180deg, #261a11, #211710 40%, #1c130d); color: #e9e0cf; font-family: 'Noto Serif KR', serif; line-height: 1.7; word-break: keep-all; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;">
+  <main style="overflow-x: hidden;">
+
+    <section class="pb-reveal" style="animation: planbReveal .85s cubic-bezier(.2,.6,.2,1) both; animation-timeline: view(); animation-range: entry 2% cover 24%; min-height: 82vh; display: flex; align-items: center; padding: clamp(72px,11vh,104px) 0 clamp(40px,6vw,58px);">
+      <div style="width: min(100% - 40px, 680px); margin: 0 auto;">
+        <p style="margin: 0 0 16px; color: #c9a96e; font-family: 'Pinyon Script', cursive; font-size: 1.15rem; font-weight: 600; letter-spacing: .02em;">Close-up Magic Show</p>
+        <h1 style="margin: 0; font-weight: 600; font-family: 'Cormorant Garamond', serif; font-size: clamp(3rem,15vw,6.2rem); line-height: .86; letter-spacing: .04em; overflow-wrap: break-word;">ABSTRACT</h1>
+        <p style="margin: clamp(26px,4vw,34px) 0 22px; font-size: clamp(1.1rem,3.4vw,1.3rem); font-weight: 600; line-height: 1.5;">보이는 것은 단지, 생각의 일부일 뿐</p>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px 18px; margin: 0 0 clamp(26px,4vw,34px); color: #a8987f; font-size: .98rem;">
+          <span>2026.08.23 (일)</span><span style="color: #a8987f;">·</span>
+          <span>서울 동작구 사당동 1047-31 B1층</span><span style="color: #a8987f;">·</span>
           <span>TICKET 20,000원</span>
         </div>
-        <a class="button" href="https://forms.gle/YDGreV5j1585todv9" target="_blank" rel="noopener">참석 신청 · 문의</a>
+        <a href="https://forms.gle/YDGreV5j1585todv9" target="_blank" rel="noopener" style="display: inline-flex; align-items: center; justify-content: center; min-height: 54px; width: min(100%, 260px); padding: 14px 24px; border: 1px solid #c9a96e; background: transparent; color: #c9a96e; text-decoration: none; font-weight: 600; letter-spacing: .02em;" class="cta-gold">참석 신청 · 문의</a>
       </div>
     </section>
 
-    <section class="poster-section" data-reveal aria-label="ABSTRACT 공연 메인 포스터">
-      <div class="container">
-        <img class="poster-image" src="img/poster-main.jpg" alt="ABSTRACT 공연 메인 포스터" loading="lazy">
+    <section class="pb-reveal" style="animation: planbReveal .85s cubic-bezier(.2,.6,.2,1) both; animation-timeline: view(); animation-range: entry 2% cover 24%; padding: clamp(40px,7vw,64px) 0;">
+      <div style="width: min(100% - 40px, 680px); margin: 0 auto;">
+        <img src="img/poster-main.jpg" alt="ABSTRACT 공연 메인 포스터" loading="lazy" style="display: block; width: 100%; height: auto; margin: 0 auto; border: 1px solid #5c4632; outline: 1px solid rgba(201,169,110,.35); outline-offset: 6px; box-shadow: 0 24px 60px rgba(0,0,0,.55); filter: sepia(.12) saturate(.84) contrast(.98);">
       </div>
     </section>
 
-    <section data-reveal aria-labelledby="program-title">
-      <div class="container">
-        <p class="section-kicker">Program</p>
-        <h2 id="program-title">공연 구성</h2>
-        <div class="schedule">
-          <article>
-            <p class="part-label">Part.1</p>
-            <h3>오후 2시</h3>
-            <p>강수현 · 조시훈</p>
+    <section class="pb-reveal" style="animation: planbReveal .85s cubic-bezier(.2,.6,.2,1) both; animation-timeline: view(); animation-range: entry 2% cover 24%; padding: clamp(40px,7vw,64px) 0; border-top: 1px solid #4a3828;">
+      <div style="width: min(100% - 40px, 680px); margin: 0 auto;">
+        <p style="margin: 0 0 12px; color: #c9a96e; font-family: 'Pinyon Script', cursive; font-size: 1.15rem; font-weight: 600; letter-spacing: .02em;">Program</p>
+        <h2 style="margin: 0; font-weight: 600; font-size: clamp(1.7rem,6vw,2.5rem); line-height: 1.15;">공연 구성</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: clamp(16px,3vw,20px); margin-top: clamp(24px,4vw,34px);">
+          <article style="padding: 26px 24px; background: #2c1f15; border: 1px solid #4a3828; border-top: 2px solid #c9a96e;">
+            <div style="display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 20px;">
+              <p style="margin: 0; color: #c9a96e; font-family: 'Cormorant Garamond', serif; font-size: .95rem; font-weight: 600; letter-spacing: .14em; text-transform: uppercase;">Part 1</p>
+              <span style="color: #6f6350; font-family: 'Cormorant Garamond', serif; font-size: 1.05rem;">01</span>
+            </div>
+            <h3 style="margin: 0 0 18px; font-family: 'Noto Serif KR', serif; font-weight: 600; font-size: 1.7rem; letter-spacing: .01em; line-height: 1; color: #e9e0cf;">오후 2시</h3>
+            <div style="display: flex; flex-wrap: wrap; gap: 7px;">
+              <span style="padding: 4px 11px; border: 1px solid #4a3828; border-radius: 999px; font-size: .85rem; color: #b9c6d3;">강수현</span>
+              <span style="padding: 4px 11px; border: 1px solid #4a3828; border-radius: 999px; font-size: .85rem; color: #b9c6d3;">조시훈</span>
+            </div>
           </article>
-          <article>
-            <p class="part-label">Part.2</p>
-            <h3>오후 5시</h3>
-            <p>전도현 · 조시훈</p>
+          <article style="padding: 26px 24px; background: #2c1f15; border: 1px solid #4a3828; border-top: 2px solid #c9a96e;">
+            <div style="display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 20px;">
+              <p style="margin: 0; color: #c9a96e; font-family: 'Cormorant Garamond', serif; font-size: .95rem; font-weight: 600; letter-spacing: .14em; text-transform: uppercase;">Part 2</p>
+              <span style="color: #6f6350; font-family: 'Cormorant Garamond', serif; font-size: 1.05rem;">02</span>
+            </div>
+            <h3 style="margin: 0 0 18px; font-family: 'Noto Serif KR', serif; font-weight: 600; font-size: 1.7rem; letter-spacing: .01em; line-height: 1; color: #e9e0cf;">오후 5시</h3>
+            <div style="display: flex; flex-wrap: wrap; gap: 7px;">
+              <span style="padding: 4px 11px; border: 1px solid #4a3828; border-radius: 999px; font-size: .85rem; color: #b9c6d3;">전도현</span>
+              <span style="padding: 4px 11px; border: 1px solid #4a3828; border-radius: 999px; font-size: .85rem; color: #b9c6d3;">조시훈</span>
+            </div>
           </article>
         </div>
-        <img class="poster-image" src="img/poster-program.jpg" alt="ABSTRACT 공연 내용 타임테이블 포스터" loading="lazy">
+        <img src="img/poster-program.jpg" alt="ABSTRACT 공연 내용 타임테이블 포스터" loading="lazy" style="display: block; width: 100%; height: auto; margin: clamp(34px,5vw,48px) auto 0; border: 1px solid #5c4632; outline: 1px solid rgba(201,169,110,.35); outline-offset: 6px; box-shadow: 0 24px 60px rgba(0,0,0,.55); filter: sepia(.12) saturate(.84) contrast(.98);">
       </div>
     </section>
 
-    <section data-reveal aria-labelledby="performers-title">
-      <div class="container">
-        <p class="section-kicker">Cast</p>
-        <h2 id="performers-title">공연자</h2>
-        <img class="poster-image cast-poster" src="img/poster-cast.jpg" alt="ABSTRACT 공연자 구성 포스터" loading="lazy">
+    <section class="pb-reveal" style="animation: planbReveal .85s cubic-bezier(.2,.6,.2,1) both; animation-timeline: view(); animation-range: entry 2% cover 24%; padding: clamp(40px,7vw,64px) 0; border-top: 1px solid #4a3828;">
+      <div style="width: min(100% - 40px, 680px); margin: 0 auto;">
+        <p style="margin: 0 0 12px; color: #c9a96e; font-family: 'Pinyon Script', cursive; font-size: 1.15rem; font-weight: 600;">Cast</p>
+        <h2 style="margin: 0; font-weight: 600; font-size: clamp(1.7rem,6vw,2.5rem); line-height: 1.15;">공연자</h2>
+        <img src="img/poster-cast.jpg" alt="ABSTRACT 공연자 구성 포스터" loading="lazy" style="display: block; width: 100%; height: auto; margin: clamp(24px,4vw,32px) auto 0; border: 1px solid #5c4632; outline: 1px solid rgba(201,169,110,.35); outline-offset: 6px; box-shadow: 0 24px 60px rgba(0,0,0,.55); filter: sepia(.12) saturate(.84) contrast(.98);">
 
-        <div class="part-group">
-          <div class="part-heading">
-            <p class="part-label">Part.1</p>
-            <h3>오후 2시</h3>
+        <div style="margin-top: clamp(34px,5vw,48px);">
+          <div style="display: flex; align-items: baseline; gap: 14px; margin-bottom: clamp(18px,3vw,24px); padding-bottom: 14px; border-bottom: 1px solid #4a3828;">
+            <p style="margin: 0; color: #c9a96e; font-family: 'Pinyon Script', cursive; font-size: 1.15rem; font-weight: 600;">Part.1</p>
+            <h3 style="margin: 0; font-weight: 600; font-family: 'Cormorant Garamond', 'Noto Serif KR', serif; letter-spacing: .03em; font-size: 1.35rem; line-height: 1.35;">오후 2시</h3>
           </div>
-          <div class="performer-grid">
-            <article class="performer-card">
-              <div class="performer-photo">
-                <img src="img/강수현.jpg" alt="공연자 강수현 프로필 사진" loading="lazy">
+          <div style="display: grid; gap: clamp(28px,4.5vw,42px);">
+            <article style="display: flex; flex-wrap: wrap; gap: clamp(18px,3.5vw,30px); align-items: flex-start;">
+              <div style="flex: 1 1 190px; max-width: 250px; min-width: 150px;">
+                <img src="img/kang.jpg" alt="공연자 강수현 프로필 사진" loading="lazy" style="width: 100%; aspect-ratio: 4/5; object-fit: cover; border: 1px solid #4a3828; filter: sepia(.3) saturate(.85) contrast(1.02);">
               </div>
-              <div class="performer-copy">
-                <div class="performer-name">
-                  <span>01</span>
-                  <h4>강수현 <small>(오후 2시)</small></h4>
+              <div style="flex: 2 1 300px; min-width: 0;">
+                <div style="display: flex; align-items: baseline; gap: 12px;">
+                  <span style="flex: 0 0 auto; color: #c9a96e; font-family: 'Cormorant Garamond', serif; font-size: 1.35rem; font-weight: 600; letter-spacing: .04em; line-height: 1;">01</span>
+                  <h4 style="margin: 0; display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px; font-weight: 600; font-size: 1.3rem; line-height: 1; color: #b9c6d3;">강수현 <span style="font-size: .82rem; font-weight: 500; color: #a8987f;">오후 2시</span></h4>
                 </div>
-                <p class="intro">Moment : Preview -순간의 연속성-</p>
-                <ul>
+                <p style="margin: 11px 0 0; font-weight: 600; line-height: 1.6;">Moment : Preview -순간의 연속성-</p>
+                <ul style="margin: 15px 0 0; padding-left: 1.05rem; color: #a8987f; font-size: .93rem; line-height: 1.7;">
                   <li>26년 상반기 "Challengers' Live in Seoul" 대회 2위</li>
                   <li>2026 성수 RSG &amp; DEUS 마술 팝업부스 운영</li>
                   <li>"No Plan" magic session 호스트 매지션</li>
@@ -88,17 +111,17 @@
               </div>
             </article>
 
-            <article class="performer-card">
-              <div class="performer-photo">
-                <img src="img/조시훈.jpg" alt="공연자 조시훈 프로필 사진" loading="lazy">
+            <article style="display: flex; flex-wrap: wrap; gap: clamp(18px,3.5vw,30px); align-items: flex-start;">
+              <div style="flex: 1 1 190px; max-width: 250px; min-width: 150px;">
+                <img src="img/cho.jpg" alt="공연자 조시훈 프로필 사진" loading="lazy" style="width: 100%; aspect-ratio: 4/5; object-fit: cover; border: 1px solid #4a3828; filter: sepia(.3) saturate(.85) contrast(1.02);">
               </div>
-              <div class="performer-copy">
-                <div class="performer-name">
-                  <span>02</span>
-                  <h4>조시훈 <small>(오후 2시, 5시)</small></h4>
+              <div style="flex: 2 1 300px; min-width: 0;">
+                <div style="display: flex; align-items: baseline; gap: 12px;">
+                  <span style="flex: 0 0 auto; color: #c9a96e; font-family: 'Cormorant Garamond', serif; font-size: 1.35rem; font-weight: 600; letter-spacing: .04em; line-height: 1;">02</span>
+                  <h4 style="margin: 0; display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px; font-weight: 600; font-size: 1.3rem; line-height: 1; color: #b9c6d3;">조시훈 <span style="font-size: .82rem; font-weight: 500; color: #a8987f;">오후 2시, 5시</span></h4>
                 </div>
-                <p class="intro">"가끔은 아무것도 정해지지 않은채로 여행을 떠나보는건 어떨까요?"</p>
-                <ul>
+                <p style="margin: 11px 0 0; font-weight: 600; line-height: 1.6;">"가끔은 아무것도 정해지지 않은채로 여행을 떠나보는건 어떨까요?"</p>
+                <ul style="margin: 15px 0 0; padding-left: 1.05rem; color: #a8987f; font-size: .93rem; line-height: 1.7;">
                   <li>2026 성수 RSG &amp; DEUS 팝업부스 운영</li>
                   <li>2025 돈블링크 vol.2 출연</li>
                 </ul>
@@ -107,23 +130,23 @@
           </div>
         </div>
 
-        <div class="part-group">
-          <div class="part-heading">
-            <p class="part-label">Part.2</p>
-            <h3>오후 5시</h3>
+        <div style="margin-top: clamp(34px,5vw,48px);">
+          <div style="display: flex; align-items: baseline; gap: 14px; margin-bottom: clamp(18px,3vw,24px); padding-bottom: 14px; border-bottom: 1px solid #4a3828;">
+            <p style="margin: 0; color: #c9a96e; font-family: 'Pinyon Script', cursive; font-size: 1.15rem; font-weight: 600;">Part.2</p>
+            <h3 style="margin: 0; font-weight: 600; font-family: 'Cormorant Garamond', 'Noto Serif KR', serif; letter-spacing: .03em; font-size: 1.35rem; line-height: 1.35;">오후 5시</h3>
           </div>
-          <div class="performer-grid">
-            <article class="performer-card">
-              <div class="performer-photo">
-                <img src="img/전도현.jpg" alt="공연자 전도현 프로필 사진" loading="lazy">
+          <div style="display: grid; gap: clamp(28px,4.5vw,42px);">
+            <article style="display: flex; flex-wrap: wrap; gap: clamp(18px,3.5vw,30px); align-items: flex-start;">
+              <div style="flex: 1 1 190px; max-width: 250px; min-width: 150px;">
+                <img src="img/jeon.jpg" alt="공연자 전도현 프로필 사진" loading="lazy" style="width: 100%; aspect-ratio: 4/5; object-fit: cover; border: 1px solid #4a3828; filter: sepia(.3) saturate(.85) contrast(1.02);">
               </div>
-              <div class="performer-copy">
-                <div class="performer-name">
-                  <span>03</span>
-                  <h4>전도현 <small>(오후 5시)</small></h4>
+              <div style="flex: 2 1 300px; min-width: 0;">
+                <div style="display: flex; align-items: baseline; gap: 12px;">
+                  <span style="flex: 0 0 auto; color: #c9a96e; font-family: 'Cormorant Garamond', serif; font-size: 1.35rem; font-weight: 600; letter-spacing: .04em; line-height: 1;">03</span>
+                  <h4 style="margin: 0; display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px; font-weight: 600; font-size: 1.3rem; line-height: 1; color: #b9c6d3;">전도현 <span style="font-size: .82rem; font-weight: 500; color: #a8987f;">오후 5시</span></h4>
                 </div>
-                <p class="intro">"지금까지 마술을 해오며 느낀 개인적인 변화들을 이야기 합니다"</p>
-                <ul>
+                <p style="margin: 11px 0 0; font-weight: 600; line-height: 1.6;">"지금까지 마술을 해오며 느낀 개인적인 변화들을 이야기 합니다"</p>
+                <ul style="margin: 15px 0 0; padding-left: 1.05rem; color: #a8987f; font-size: .93rem; line-height: 1.7;">
                   <li>2026 성수 RSG &amp; DEUS 마술 팝업부스 운영</li>
                   <li>버스킹 공연 12000회 이상 진행</li>
                   <li>"No Plan" magic session 게스트 매지션</li>
@@ -132,17 +155,17 @@
               </div>
             </article>
 
-            <article class="performer-card">
-              <div class="performer-photo">
-                <img src="img/조시훈.jpg" alt="공연자 조시훈 프로필 사진" loading="lazy">
+            <article style="display: flex; flex-wrap: wrap; gap: clamp(18px,3.5vw,30px); align-items: flex-start;">
+              <div style="flex: 1 1 190px; max-width: 250px; min-width: 150px;">
+                <img src="img/cho.jpg" alt="공연자 조시훈 프로필 사진" loading="lazy" style="width: 100%; aspect-ratio: 4/5; object-fit: cover; border: 1px solid #4a3828; filter: sepia(.3) saturate(.85) contrast(1.02);">
               </div>
-              <div class="performer-copy">
-                <div class="performer-name">
-                  <span>04</span>
-                  <h4>조시훈 <small>(오후 2시, 5시)</small></h4>
+              <div style="flex: 2 1 300px; min-width: 0;">
+                <div style="display: flex; align-items: baseline; gap: 12px;">
+                  <span style="flex: 0 0 auto; color: #c9a96e; font-family: 'Cormorant Garamond', serif; font-size: 1.35rem; font-weight: 600; letter-spacing: .04em; line-height: 1;">04</span>
+                  <h4 style="margin: 0; display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px; font-weight: 600; font-size: 1.3rem; line-height: 1; color: #b9c6d3;">조시훈 <span style="font-size: .82rem; font-weight: 500; color: #a8987f;">오후 2시, 5시</span></h4>
                 </div>
-                <p class="intro">"가끔은 아무것도 정해지지 않은채로 여행을 떠나보는건 어떨까요?"</p>
-                <ul>
+                <p style="margin: 11px 0 0; font-weight: 600; line-height: 1.6;">"가끔은 아무것도 정해지지 않은채로 여행을 떠나보는건 어떨까요?"</p>
+                <ul style="margin: 15px 0 0; padding-left: 1.05rem; color: #a8987f; font-size: .93rem; line-height: 1.7;">
                   <li>2026 성수 RSG &amp; DEUS 팝업부스 운영</li>
                   <li>2025 돈블링크 vol.2 출연</li>
                 </ul>
@@ -153,18 +176,18 @@
       </div>
     </section>
 
-    <section data-reveal aria-labelledby="advisor-title">
-      <div class="container">
-        <p class="section-kicker">Plan B</p>
-        <h2 id="advisor-title">PLAN B 참모</h2>
-        <article class="advisor">
-          <div class="performer-photo">
-            <img src="img/김훈.jpg" alt="PLAN B 참모 김훈 프로필 사진" loading="lazy">
+    <section class="pb-reveal" style="animation: planbReveal .85s cubic-bezier(.2,.6,.2,1) both; animation-timeline: view(); animation-range: entry 2% cover 24%; padding: clamp(40px,7vw,64px) 0; border-top: 1px solid #4a3828;">
+      <div style="width: min(100% - 40px, 680px); margin: 0 auto;">
+        <p style="margin: 0 0 12px; color: #c9a96e; font-family: 'Pinyon Script', cursive; font-size: 1.15rem; font-weight: 600;">Plan B</p>
+        <h2 style="margin: 0; font-weight: 600; font-size: clamp(1.7rem,6vw,2.5rem); line-height: 1.15;">PLAN B 참모</h2>
+        <article style="display: flex; flex-wrap: wrap; gap: clamp(18px,3.5vw,30px); align-items: flex-start; margin-top: clamp(24px,4vw,32px);">
+          <div style="flex: 1 1 190px; max-width: 250px; min-width: 150px;">
+            <img src="img/kim.jpg" alt="PLAN B 참모 김훈 프로필 사진" loading="lazy" style="width: 100%; aspect-ratio: 4/5; object-fit: cover; border: 1px solid #4a3828; filter: sepia(.3) saturate(.85) contrast(1.02);">
           </div>
-          <div class="performer-copy">
-            <h4>김훈</h4>
-            <p class="role">PLAN B 참모 · 감독 · 공연MC · 잡부</p>
-            <ul>
+          <div style="flex: 2 1 300px; min-width: 0;">
+            <h4 style="margin: 0; font-weight: 600; font-size: 1.3rem;">김훈</h4>
+            <p style="margin: 8px 0 16px; color: #a8987f; font-weight: 600;">PLAN B 참모 · 감독 · 공연MC · 잡부</p>
+            <ul style="margin: 15px 0 0; padding-left: 1.05rem; color: #a8987f; font-size: .93rem; line-height: 1.7;">
               <li>마술서적 Trace, philia 검수 및 아이디어 투고</li>
               <li>마술잡지 Arcana 창간호 및 다수 호에 아이디어 투고</li>
             </ul>
@@ -173,19 +196,19 @@
       </div>
     </section>
 
-    <section data-reveal aria-labelledby="staff-title">
-      <div class="container">
-        <p class="section-kicker">Staff</p>
-        <h2 id="staff-title">스텝</h2>
-        <article class="advisor">
-          <div class="performer-photo">
-            <img src="img/박준현.jpg" alt="스텝 박준현 프로필 사진" loading="lazy">
+    <section class="pb-reveal" style="animation: planbReveal .85s cubic-bezier(.2,.6,.2,1) both; animation-timeline: view(); animation-range: entry 2% cover 24%; padding: clamp(40px,7vw,64px) 0; border-top: 1px solid #4a3828;">
+      <div style="width: min(100% - 40px, 680px); margin: 0 auto;">
+        <p style="margin: 0 0 12px; color: #c9a96e; font-family: 'Pinyon Script', cursive; font-size: 1.15rem; font-weight: 600;">Staff</p>
+        <h2 style="margin: 0; font-weight: 600; font-size: clamp(1.7rem,6vw,2.5rem); line-height: 1.15;">스텝</h2>
+        <article style="display: flex; flex-wrap: wrap; gap: clamp(18px,3.5vw,30px); align-items: flex-start; margin-top: clamp(24px,4vw,32px);">
+          <div style="flex: 1 1 190px; max-width: 250px; min-width: 150px;">
+            <img src="img/park.jpg" alt="스텝 박준현 프로필 사진" loading="lazy" style="width: 100%; aspect-ratio: 4/5; object-fit: cover; border: 1px solid #4a3828; filter: sepia(.3) saturate(.85) contrast(1.02);">
           </div>
-          <div class="performer-copy">
-            <h4>박준현</h4>
-            <p class="role">스텝</p>
-            <p class="intro">마술사의 가방 속에는 무엇이 들어있을까? 모두가 궁금해하던 마술사의 가방, 그 안의 비밀을 보여드립니다</p>
-            <ul>
+          <div style="flex: 2 1 300px; min-width: 0;">
+            <h4 style="margin: 0; font-weight: 600; font-size: 1.3rem;">박준현</h4>
+            <p style="margin: 8px 0 16px; color: #a8987f; font-weight: 600;">스텝</p>
+            <p style="margin: 11px 0 0; font-weight: 600; line-height: 1.6;">마술사의 가방 속에는 무엇이 들어있을까? 모두가 궁금해하던 마술사의 가방, 그 안의 비밀을 보여드립니다</p>
+            <ul style="margin: 15px 0 0; padding-left: 1.05rem; color: #a8987f; font-size: .93rem; line-height: 1.7;">
               <li>매직피플아카데미 소속</li>
               <li>마술지도사 자격증 2급</li>
               <li>매직피플쇼 3회 출연</li>
@@ -196,30 +219,32 @@
       </div>
     </section>
 
-    <section data-reveal aria-labelledby="location-title">
-      <div class="container">
-        <p class="section-kicker">Location</p>
-        <h2 id="location-title">오시는 길</h2>
-        <p class="address">서울 동작구 사당동 1047-31 / B1층</p>
-        <a class="button secondary" href="https://zrr.kr/LJgFOw" target="_blank" rel="noopener">길찾기</a>
+    <section class="pb-reveal" style="animation: planbReveal .85s cubic-bezier(.2,.6,.2,1) both; animation-timeline: view(); animation-range: entry 2% cover 24%; padding: clamp(40px,7vw,64px) 0; border-top: 1px solid #4a3828;">
+      <div style="width: min(100% - 40px, 680px); margin: 0 auto;">
+        <p style="margin: 0 0 12px; color: #c9a96e; font-family: 'Pinyon Script', cursive; font-size: 1.15rem; font-weight: 600;">Location</p>
+        <h2 style="margin: 0; font-weight: 600; font-size: clamp(1.7rem,6vw,2.5rem); line-height: 1.15;">오시는 길</h2>
+        <p style="margin: clamp(20px,3vw,26px) 0; font-size: 1.15rem; font-weight: 600;">서울 동작구 사당동 1047-31 / B1층</p>
+        <a href="https://zrr.kr/LJgFOw" target="_blank" rel="noopener" style="display: inline-flex; align-items: center; justify-content: center; min-height: 54px; width: min(100%, 260px); padding: 14px 24px; border: 1px solid #a8987f; background: transparent; color: #a8987f; text-decoration: none; font-weight: 600; letter-spacing: .02em;" class="cta-muted">길찾기</a>
       </div>
     </section>
 
-    <section data-reveal aria-labelledby="contact-title">
-      <div class="container contact">
-        <p class="section-kicker">Reservation</p>
-        <h2 id="contact-title">신청 &amp; 문의</h2>
-        <a class="button" href="https://forms.gle/YDGreV5j1585todv9" target="_blank" rel="noopener">참석 신청 · 문의</a>
-        <div class="contact-assets">
-          <img class="qr" src="img/qr.png" alt="ABSTRACT 공연 참석 신청 QR 코드" loading="eager">
-          <img class="logo" src="img/logo.png" alt="PLAN B 로고" loading="eager">
+    <section class="pb-reveal" style="animation: planbReveal .85s cubic-bezier(.2,.6,.2,1) both; animation-timeline: view(); animation-range: entry 2% cover 24%; padding: clamp(40px,7vw,64px) 0; border-top: 1px solid #4a3828;">
+      <div style="width: min(100% - 40px, 680px); margin: 0 auto; text-align: center;">
+        <p style="margin: 0 0 12px; color: #c9a96e; font-family: 'Pinyon Script', cursive; font-size: 1.15rem; font-weight: 600;">Reservation</p>
+        <h2 style="margin: 0; font-weight: 600; font-size: clamp(1.7rem,6vw,2.5rem); line-height: 1.15;">신청 &amp; 문의</h2>
+        <a href="https://forms.gle/YDGreV5j1585todv9" target="_blank" rel="noopener" style="display: inline-flex; align-items: center; justify-content: center; min-height: 54px; width: min(100%, 260px); margin-top: clamp(22px,3vw,28px); padding: 14px 24px; border: 1px solid #c9a96e; background: transparent; color: #c9a96e; text-decoration: none; font-weight: 600; letter-spacing: .02em;" class="cta-gold">참석 신청 · 문의</a>
+        <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: stretch; justify-content: center; margin-top: clamp(28px,4vw,34px);">
+          <img src="img/qr.png" alt="ABSTRACT 공연 참석 신청 QR 코드" loading="eager" style="width: 150px; height: 150px; object-fit: contain; padding: 14px; border: 1px solid #4a3828; background: rgba(255,255,255,.92); box-sizing: border-box;">
+          <img src="img/logo.png" alt="PLAN B 로고" loading="eager" style="width: 150px; height: 150px; object-fit: contain; padding: 14px; border: 1px solid #4a3828; background: rgba(255,255,255,.92); box-sizing: border-box;">
         </div>
       </div>
     </section>
+
   </main>
 
-  <footer>
-    <div class="container">주최 PLAN B · 장소 대관 렉쳐노트</div>
+  <footer style="padding: 32px 0 44px; border-top: 1px solid #4a3828; color: #a8987f; font-size: .92rem;">
+    <div style="width: min(100% - 40px, 680px); margin: 0 auto;">주최 PLAN B · 장소 대관 렉쳐노트</div>
   </footer>
+</div>
 </body>
 </html>
