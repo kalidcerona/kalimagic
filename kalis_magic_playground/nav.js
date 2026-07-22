@@ -20,6 +20,13 @@ const COMMUNITY_PAGES = [
 const COMMUNITY_PAGE_KEYS = new Set(['playground', 'post', 'write', 'mypage', 'admin']);
 const NAV_PROFILE_CACHE_KEY = 'kali-nav-profile';
 
+function buildNavBrandHtml(isCommunityPage) {
+    return '<div class="nav-space-switch" role="group" aria-label="공간 전환">' +
+        '<a href="index.html" class="nav-space-switch__item' + (isCommunityPage ? '' : ' is-active') + '">칼리</a>' +
+        '<a href="playground.html" class="nav-space-switch__item' + (isCommunityPage ? ' is-active' : '') + '">마술문화 기록소</a>' +
+        '</div>';
+}
+
 function renderNav(activePage) {
     const isCommunityPage = COMMUNITY_PAGE_KEYS.has(activePage);
     const pages = isCommunityPage ? COMMUNITY_PAGES : LANDING_PAGES;
@@ -34,7 +41,7 @@ function renderNav(activePage) {
     if (!root) return;  // nav-root 없는 페이지에서 null deref 가드
     root.className = 'main-nav';
     root.dataset.space = isCommunityPage ? 'archive' : 'landing';
-    root.innerHTML = '<div class="nav-brand"><a href="index.html" class="nav-logo">KALI</a>' +
+    root.innerHTML = '<div class="nav-brand">' + buildNavBrandHtml(isCommunityPage) +
         '</div><nav class="nav-links">' + links + '</nav>';
     if (isCommunityPage) renderLoggedInNavLinks(root, activePage);
 }
