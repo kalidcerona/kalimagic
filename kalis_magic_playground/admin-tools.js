@@ -63,7 +63,7 @@
   function addCard() {
     var card = el('article', 'admin-card');
     card.appendChild(el('h2', '', '직접 추가'));
-    card.appendChild(el('p', '', '신청 없이 바로 등록합니다. 이메일을 넣으면 그 계정이 도구를 쓸 수 있습니다.'));
+    card.appendChild(el('p', '', '이메일로 이용 권한을 바로 등록합니다. 등록한 계정으로 도구를 쓸 수 있습니다.'));
 
     var form = el('form', 'playground-comment-form');
     var email = document.createElement('input');
@@ -120,17 +120,17 @@
     var card = el('article', 'admin-card');
     card.appendChild(el('h2', '', item.email || '이메일 없음'));
     card.appendChild(el('p', '', whoLine(item)));
-    card.appendChild(el('span', '', '신청 ' + (formatWhen(item.requestedAt || item.createdAt) || '시각 없음')));
+    card.appendChild(el('span', '', '접속 ' + (formatWhen(item.requestedAt || item.createdAt) || '시각 없음')));
 
     var tool = toolSelect(item.tool || 'calc');
     var lifetime = document.createElement('input');
     var note = noteInput();
     var status = el('p', 'playground-form-status');
 
-    var approve = el('button', 'playground-button', '승인');
+    var approve = el('button', 'playground-button', '권한 주기');
     approve.type = 'button';
     approve.addEventListener('click', function () {
-      mutate(status, approve, '승인하는 중입니다.', '승인하지 못했습니다.', function () {
+      mutate(status, approve, '권한을 주는 중입니다.', '권한을 주지 못했습니다.', function () {
         return fetchJson(ENDPOINT, {
           method: 'POST',
           body: JSON.stringify({
@@ -144,11 +144,11 @@
       });
     });
 
-    var reject = el('button', 'playground-button playground-button--ghost', '거절');
+    var reject = el('button', 'playground-button playground-button--ghost', '목록에서 삭제');
     reject.type = 'button';
     reject.addEventListener('click', function () {
-      if (!window.confirm((item.email || '이 신청') + ' 신청을 거절할까요?')) return;
-      mutate(status, reject, '거절하는 중입니다.', '거절하지 못했습니다.', function () {
+      if (!window.confirm((item.email ? item.email + ' 계정을' : '이 계정을') + ' 목록에서 삭제할까요?')) return;
+      mutate(status, reject, '목록에서 삭제하는 중입니다.', '목록에서 삭제하지 못했습니다.', function () {
         return fetchJson(ENDPOINT + '?id=' + encodeURIComponent(item.id), { method: 'DELETE' });
       });
     });
@@ -208,17 +208,17 @@
     var approved = data.approved || [];
     clear(root);
 
-    root.appendChild(el('h2', '', '승인 대기 ' + pending.length + '건'));
+    root.appendChild(el('h2', '', '권한 없이 접속한 사람 ' + pending.length + '건'));
     if (!pending.length) {
-      root.appendChild(emptyBox('대기 중인 신청이 없습니다', '누군가 도구 링크를 열고 로그인하면 여기에 올라옵니다.'));
+      root.appendChild(emptyBox('권한 없이 접속한 계정이 없습니다', '도구에 로그인했지만 아직 이용 권한이 없는 계정입니다. 구매가 확인되면 권한을 주세요.'));
     } else {
       pending.forEach(function (item) { root.appendChild(pendingCard(item)); });
     }
 
-    root.appendChild(el('h2', '', '승인됨 ' + approved.length + '건'));
+    root.appendChild(el('h2', '', '이용 권한 있음 ' + approved.length + '건'));
     root.appendChild(addCard());
     if (!approved.length) {
-      root.appendChild(emptyBox('등록된 권한이 없습니다', '위에서 이메일을 추가하거나 대기 중인 신청을 승인해주세요.'));
+      root.appendChild(emptyBox('등록된 권한이 없습니다', '위에서 이메일을 추가하거나 권한 없이 접속한 계정에 권한을 주세요.'));
       return;
     }
     approved.forEach(function (item) { root.appendChild(approvedCard(item)); });

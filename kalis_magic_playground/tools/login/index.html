@@ -3,7 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#000000">
+  <meta name="theme-color" content="#000000" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+  <meta name="color-scheme" content="dark">
   <meta name="robots" content="noindex, nofollow">
   <title>칼리형 도구</title>
   <style>
@@ -134,7 +136,7 @@
       }
 
       function showLogin() {
-        render('칼리형 도구', '승인된 분만 쓸 수 있는 도구입니다. 구글 계정으로 로그인해주세요.', [
+        render('칼리형 도구', '이용 권한이 있는 분만 쓸 수 있는 도구입니다. 구글 계정으로 로그인해주세요.', [
           {
             label: '구글로 로그인',
             onClick: function () {
@@ -146,25 +148,24 @@
       }
 
       function showPending(email) {
-        var lines = ['신청이 접수되었습니다. 칼리형이 승인하면 바로 쓸 수 있습니다.'];
+        var lines = ['권한이 없으니 구매한 뒤 사용해주세요.'];
         if (email) {
-          lines.push('아래 구글 계정으로 신청되었습니다.');
+          lines.push('구매 후 아래 이메일 계정으로 이용할 수 있습니다.');
           lines.push({ email: email });
-          lines.push('이 이메일 주소를 이름(또는 닉네임)과 함께 칼리형에게 보내주세요. 칼리형은 이 주소로 신청한 분을 확인합니다.');
         } else {
-          lines.push('로그인한 구글 이메일 주소를 이름(또는 닉네임)과 함께 칼리형에게 보내주세요.');
+          lines.push('구매 후 로그인한 구글 이메일 계정으로 이용할 수 있습니다.');
         }
-        lines.push('승인받은 뒤 아래 버튼을 눌러주세요.');
-        render('승인 대기 중입니다', lines, [
+        lines.push('구매가 확인된 뒤 아래 버튼을 눌러 권한을 다시 확인해주세요.');
+        render('이용 권한이 없습니다', lines, [
           { label: '다시 확인', onClick: start },
           { label: '다른 계정으로 로그인', onClick: function () { window.MagicAuth.logout(); } }
         ]);
       }
 
       function showDenied(email) {
-        var lines = ['이 계정은 다른 도구로 승인되어 있습니다. 지금 열려는 도구도 쓰려면 칼리형에게 문의해주세요.'];
+        var lines = ['이 계정은 다른 도구의 이용 권한만 있습니다. 지금 열려는 도구의 이용 권한은 없으니 칼리형에게 문의해주세요.'];
         if (email) lines.push({ email: email });
-        render('이 도구는 아직 열려 있지 않습니다', lines, [
+        render('이 도구는 아직 이용 권한이 없습니다', lines, [
           { label: '다시 확인', onClick: start },
           { label: '다른 계정으로 로그인', onClick: function () { window.MagicAuth.logout(); } }
         ]);
