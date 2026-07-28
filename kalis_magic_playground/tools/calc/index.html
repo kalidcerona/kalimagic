@@ -267,13 +267,21 @@
       assert(seq(["−","−","5"]) === "-5", "단항 − 연타 무시");
       assert(seq(["1","2","3","⌫"]) === "12", "백스페이스");
       assert(seq(["1","2","C"]) === "", "C 전체 클리어");
-      assert(seq(["1","2","3","4","5","6","7","8","9","0","1","2","3","4","5","6"]) === "123456789012345", "숫자 15자리 초과 무시");
-      assert(seq(["()","2","+","3","()"]) === "(2+3)", "() 스마트 열기→닫기");
-      assert(seq(["5","()"]) === "5×(", "숫자 뒤 ()는 ×( 자동 삽입");
-      assert(applyKey("(2+3", "()") === "(2+3)", "열린 괄호의 완성된 피연산자 뒤 ()는 닫기");
+      assert(seq("1234567890123456".split("")) === "1234567890123456", "16자리 입력 허용");
+      assert(seq("12345678901234567".split("")) === "1234567890123456", "17자리째 무시");
+      assert(seq(["()"]) === "", "() no-op");
+      assert(seq(["5","()"]) === "5", "() no-op 2");
       // tokenize + evaluate
       const ev = (expr) => { const t = tokenize(expr); return t === null ? null : evaluate(t); };
-      assert(show(ev("12+34×5")) === "182", "우선순위");
+      assert(show(ev(seq(["1","2","+","3","4","×","5"]))) === "230", "즉시계산: 12+34×5=230");
+      assert(show(ev(seq(["9","×","9"]))) === "81", "9×9=81");
+      assert(displayValue("") === "0", "display: 빈 수식 0");
+      assert(displayValue("9×9×") === "81", "display: 연산자 직후 중간결과 81");
+      assert(displayValue("9×9×3") === "3", "display: 숫자 입력 중엔 그 숫자");
+      assert(displayValue("12+34×") === "46", "display: 좌→우 중간결과 46");
+      assert(displayValue("-5") === "-5", "display: 단항 음수 입력 중");
+      assert(displayValue("7÷0×") === "오류", "display: ÷0 중간결과는 오류");
+      assert(displayValue("50%") === "0.5", "display: % 적용값");
       assert(show(ev("(2+3)×4")) === "20", "괄호");
       assert(ev("7÷0") === null, "÷0 오류");
       assert(show(ev("5+")) === "5", "dangling 연산자 드롭");
@@ -281,12 +289,11 @@
       assert(show(ev("50%")) === "0.5", "% 단항");
       assert(show(ev("200×10%")) === "20", "%는 즉시 적용");
       assert(show(ev("-5+3")) === "-2", "단항 − 평가");
-      assert(show(ev(seq(["−","()","2","+","3","()"]))) === "-5", "fix1: -(2+3) = -5");
-      assert(show(ev(seq(["5","×","−","()","2","+","3","()"]))) === "-25", "fix1: 5×-(2+3) = -25");
       // soleNumberText
       assert(soleNumberText("817") === "817", "단일 숫자");
       assert(soleNumberText("-5") === "-5", "단항 − 단일 숫자");
       assert(soleNumberText("08.17") === "08.17", "리터럴 그대로(선행 0 보존)");
+      assert(soleNumberText("1234567890123456") === "1234567890123456", "16자리 무장 판정 가능");
       assert(soleNumberText("12+34") === null, "연산자 있으면 null");
       assert(soleNumberText("(5)") === null, "괄호 있으면 null");
       assert(soleNumberText("") === null, "빈 수식 null");
@@ -317,7 +324,7 @@
       assert(show(ev(seq(["5","+"])))=== "5", "E2E7: 5+=5");
       assert(show(ev(seq(["5",".","5",".","5"]))) === "5.55", "E2E6: 5.5.5=5.55");
       assert(ev(seq(["7","÷","0"])) === null, "E2E4: 7÷0 오류");
-      assert(show(ev(seq(["1","2","+","3","4","×","5"]))) === "182", "E2E1: 12+34×5");
+      assert(show(ev(seq(["1","2","+","3","4","×","5"]))) === "230", "E2E1: 12+34×5=230");
 
       const panel = document.getElementById("selftest");
       const passed = failures.length === 0;
@@ -519,7 +526,7 @@
       if (/^\d$/.test(key)) {
         const currentNumber = /[\d.]+$/.exec(source)?.[0] ?? "";
         const digitCount = (currentNumber.match(/\d/g) ?? []).length;
-        if (digitCount >= 15) return source;
+        if (digitCount >= 16) return source;
         return withinTokenLimit(source + key);
       }
 
@@ -531,13 +538,7 @@
       }
 
       if (key === "()") {
-        const openCount =
-          (source.match(/\(/g) ?? []).length - (source.match(/\)/g) ?? []).length;
-        if (openCount > 0 && /[\d)%]/.test(last)) {
-          return withinTokenLimit(`${source})`);
-        }
-        const multiplication = /[\d)]/.test(last) ? "×" : "";
-        return withinTokenLimit(`${source}${multiplication}(`);
+        return source;
       }
 
       if (key === "%") {
@@ -660,7 +661,7 @@
 
       const values = [];
       const operators = [];
-      const precedence = { "+": 1, "-": 1, "*": 2, "/": 2 };
+      const precedence = { "+": 1, "-": 1, "*": 1, "/": 1 };
       const hundred = decFromString("100");
       let expectsOperand = true;
 
@@ -739,6 +740,32 @@
         if (operators.at(-1) === "(" || !applyTopOperator()) return null;
       }
       return values.length === 1 ? values[0] : null;
+    }
+
+    function displayValue(expr) {
+      const source = String(expr ?? "");
+      if (source === "") return "0";
+
+      if (/^-?(?:\d+(?:\.\d*)?|\.\d+)(?:E-?\d+)?$/.test(source)) {
+        return source;
+      }
+
+      const trailingNumber =
+        /(?:^|[+−×÷(])(-?(?:\d+(?:\.\d*)?|\.\d+))$/.exec(source);
+      if (trailingNumber) return trailingNumber[1];
+
+      let evaluable = source;
+      const last = source.at(-1);
+      if ("+−×÷".includes(last)) {
+        evaluable = source.slice(0, -1);
+      } else if (last === "-") {
+        evaluable = source.slice(0, -1);
+        if (evaluable === "") return "0";
+      }
+
+      const tokens = tokenize(evaluable);
+      const value = tokens === null ? null : evaluate(tokens);
+      return value === null ? "오류" : decToDisplay(value);
     }
 
     function soleNumberText(expr) {
@@ -860,7 +887,7 @@
       };
 
       const render = () => {
-        display.textContent = errorShown ? "오류" : (expr || "0");
+        display.textContent = errorShown ? "오류" : displayValue(expr);
         divideKey.classList.toggle("armed", trickState.armed);
         fitDisplayText(display);
       };
@@ -936,6 +963,11 @@
         }
 
         expr = applyKey(expr, key);
+        if ("+−×÷".includes(key) && displayValue(expr) === "오류") {
+          errorShown = true;
+          resultShown = false;
+          lastResult = null;
+        }
         render();
       };
 
