@@ -588,6 +588,11 @@
     } else {
       initApp();
     }
+    if ("serviceWorker" in navigator && location.hash !== "#selftest") {
+      window.addEventListener("load", function () {
+        navigator.serviceWorker.register("./sw.js").catch(function () {});
+      });
+    }
   </script>
 </body>
 </html>

@@ -34,6 +34,7 @@ async function listReviews(event) {
     .select('id,title,body,display_mode,youtube_video_id,created_at,profiles(nickname,role),event_reviews!inner(event_code)')
     .eq('post_type', 'event_review')
     .eq('status', 'visible')
+    .eq('visibility', 'public')
     .eq('event_reviews.event_code', eventCode)
     .order('created_at', { ascending: false })
     .limit(12);

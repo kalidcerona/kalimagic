@@ -38,6 +38,7 @@ export const PUBLIC_FILES = [
   'works.html',
   'auth.js',
   'admin.js',
+  'admin-tools.js',
   'mypage.js',
   'nickname-onboarding.js',
   'playground-api.js',

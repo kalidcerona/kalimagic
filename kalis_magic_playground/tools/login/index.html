@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#000000">
+  <meta name="robots" content="noindex, nofollow">
+  <title>칼리형 도구</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: #000;
+      color: #f5f5f5;
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    html, body { min-height: 100%; margin: 0; background: #000; }
+
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding:
+        max(24px, env(safe-area-inset-top))
+        24px
+        max(24px, env(safe-area-inset-bottom));
+    }
+
+    .panel {
+      width: min(100%, 420px);
+      text-align: center;
+    }
+
+    .panel h1 {
+      margin: 0 0 12px;
+      font-size: clamp(20px, 5vw, 24px);
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+
+    .panel p {
+      margin: 0 0 20px;
+      font-size: 15px;
+      line-height: 1.7;
+      color: #b8b8b8;
+      word-break: keep-all;
+    }
+
+    .panel p.email {
+      margin-bottom: 20px;
+      color: #f5f5f5;
+      font-size: 14px;
+    }
+
+    button {
+      font: inherit;
+      width: 100%;
+      padding: 15px 20px;
+      border: 0;
+      border-radius: 14px;
+      background: #f5f5f5;
+      color: #000;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    button + button {
+      margin-top: 10px;
+      background: transparent;
+      border: 1px solid #3a3a3a;
+      color: #d0d0d0;
+      font-weight: 500;
+    }
+
+    button:disabled { opacity: 0.5; cursor: default; }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    window.MAGIC_PLAYGROUND_CONFIG = {
+      supabaseUrl: 'https://wjyvssvoavzuaaxlvobo.supabase.co',
+      supabasePublishableKey: 'sb_publishable_FZwzcGFQ06F65Butggp6rQ_fv3zZfkq'
+    };
+  </script>
+  <script src="../../auth.js"></script>
+  <script src="gate-util.js"></script>
+</head>
+<body>
+  <main class="panel" data-panel aria-live="polite">
+    <p>확인하는 중입니다.</p>
+  </main>
+  <script>
+    (function () {
+      var panel = document.querySelector('[data-panel]');
+      var to = window.ToolGateUtil.safeTo(new URLSearchParams(location.search).get('to'));
+      var tool = window.ToolGateUtil.toolFromPath(to);
+
+      function render(title, message, buttons) {
+        panel.replaceChildren();
+        if (title) {
+          var h1 = document.createElement('h1');
+          h1.textContent = title;
+          panel.appendChild(h1);
+        }
+        (Array.isArray(message) ? message : [message]).forEach(function (line) {
+          if (!line) return;
+          var p = document.createElement('p');
+          if (line.email) {
+            p.className = 'email';
+            p.textContent = line.email;
+          } else {
+            p.textContent = line;
+          }
+          panel.appendChild(p);
+        });
+        (buttons || []).forEach(function (spec) {
+          var button = document.createElement('button');
+          button.type = 'button';
+          button.textContent = spec.label;
+          button.addEventListener('click', spec.onClick);
+          panel.appendChild(button);
+        });
+      }
+
+      function showLoading() {
+        render('', '확인하는 중입니다.', []);
+      }
+
+      function showLogin() {
+        render('칼리형 도구', '승인된 분만 쓸 수 있는 도구입니다. 구글 계정으로 로그인해주세요.', [
+          {
+            label: '구글로 로그인',
+            onClick: function () {
+              showLoading();
+              window.MagicAuth.login().catch(function () { showError(); });
+            }
+          }
+        ]);
+      }
+
+      function showDenied(email) {
+        var lines = ['이 계정에는 아직 사용 권한이 없습니다. 칼리형에게 문의해주세요.'];
+        if (email) lines.push({ email: email });
+        render('권한이 없습니다', lines, [
+          { label: '다른 계정으로 로그인', onClick: function () { window.MagicAuth.logout(); } }
+        ]);
+      }
+
+      function showError() {
+        render('연결에 실패했습니다', '네트워크 상태를 확인하고 다시 시도해주세요.', [
+          { label: '다시 시도', onClick: start }
+        ]);
+      }
+
+      async function requestAccess(session) {
+        var headers = await window.MagicAuth.authHeader();
+        headers['content-type'] = 'application/json; charset=utf-8';
+        var response = await fetch('/.netlify/functions/tool-access', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: headers,
+          body: JSON.stringify({ tool: tool })
+        });
+        if (response.ok) {
+          location.replace(to);
+          return;
+        }
+        if (response.status === 401) return showLogin();
+        if (response.status === 403) return showDenied(session.user && session.user.email);
+        showError();
+      }
+
+      async function start() {
+        showLoading();
+        try {
+          if (!window.MagicAuth) return showError();
+          var session = await window.MagicAuth.getSession();
+          if (!session) return showLogin();
+          await requestAccess(session);
+        } catch (error) {
+          showError();
+        }
+      }
+
+      start();
+    })();
+  </script>
+</body>
+</html>
