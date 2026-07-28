@@ -169,8 +169,30 @@
       letter-spacing: -0.08em;
     }
 
-    .key.armed {
-      opacity: 0.75;
+    .percent-glyph {
+      width: 0.86em;
+      height: 0.86em;
+      overflow: visible;
+      pointer-events: none;
+    }
+
+    .percent-glyph .percent-mark {
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2.15;
+      stroke-linecap: round;
+    }
+
+    .percent-glyph .trick-dot {
+      fill: currentColor;
+      stroke: none;
+      opacity: 0;
+      transition: opacity 60ms linear;
+    }
+
+    .key.trick-set .trick-dot-top,
+    .key.trick-ready .trick-dot {
+      opacity: 1;
     }
 
     #selftest {
@@ -217,7 +239,15 @@
     <section class="keypad" aria-label="계산기 키패드">
       <button class="key utility" type="button" data-key="C">C</button>
       <button class="key utility" type="button" data-key="⌫" aria-label="지우기">⌫</button>
-      <button class="key operator" type="button" data-key="%">%</button>
+      <button class="key operator" type="button" data-key="%" aria-label="퍼센트">
+        <svg class="percent-glyph" viewBox="0 0 32 32" aria-hidden="true">
+          <circle class="percent-mark" cx="8" cy="8" r="4.25"></circle>
+          <path class="percent-mark" d="M8 25 24 7"></path>
+          <circle class="percent-mark" cx="24" cy="24" r="4.25"></circle>
+          <circle class="trick-dot trick-dot-top" cx="8" cy="8" r="1.45"></circle>
+          <circle class="trick-dot trick-dot-bottom" cx="24" cy="24" r="1.45"></circle>
+        </svg>
+      </button>
       <button class="key operator" type="button" data-key="÷">÷</button>
 
       <button class="key" type="button" data-key="7">7</button>
@@ -336,26 +366,34 @@
       assert(soleNumberText("") === null, "빈 수식 null");
 
       // trickStep
-      const T0 = { armed:false, storedText:null, lastKey:null };
-      const step = (st,k,sole) => trickStep(st, k, {soleNumberText: sole});
-      let r = step(T0, "÷", "817");
-      assert(r.action === "none" && !r.state.armed, "1번째 ÷는 무동작");
-      r = step(r.state, "÷", "817");
-      assert(r.action === "arm" && r.state.armed && r.state.storedText === "817", "÷÷ 무장");
-      r = step(r.state, "=", null);
-      assert(r.action === "fire" && !r.state.armed && r.state.storedText === null, "무장 = 발동+해제");
-      assert(step(T0, "=", null).action === "none", "비무장 = none");
-      let q = step(T0, "÷", null); q = step(q.state, "÷", null);
-      assert(q.action === "none" && !q.state.armed, "12+34÷÷ 무장 안 됨");
-      let a = step(step(T0,"÷","5").state, "÷", "5");
-      let keep = step(a.state, "C", null);
-      assert(keep.state.armed && keep.state.storedText === "5" && keep.action === "none", "C 무장 보존");
-      keep = step(keep.state, "⌫", null);
-      assert(keep.state.armed, "⌫ 무장 보존");
-      let rearm = step(keep.state, "÷", "99"); rearm = step(rearm.state, "÷", "99");
-      assert(rearm.action === "arm" && rearm.state.storedText === "99", "÷÷ 재무장 값 교체");
-      let neg = step(T0, "÷", "-5"); neg = step(neg.state, "÷", "-5");
-      assert(neg.state.storedText === "-5", "-5÷÷ 무장");
+      const T0={phase:"off",storedText:null,eqCount:0,lastKey:null,pendingSole:null};
+      const st=(s,k,sole,ev)=>trickStep(s,k,{soleNumberText:sole},ev);
+      let a=st(T0,"%","817",false);
+      assert(a.action==="none","1번째 %는 평범");
+      a=st(a.state,"%","8.17",false);
+      assert(a.action==="set"&&a.state.phase==="set"&&a.state.storedText==="817","%% 세팅: 1번째 % 직전 리터럴 저장");
+      let b=st(a.state,"=",null,true);
+      assert(b.action==="none"&&b.state.eqCount===1,"set: 1번째 정상 =");
+      b=st(b.state,"=",null,false);
+      assert(b.state.eqCount===1,"no-op =는 미카운트");
+      b=st(b.state,"=",null,true);
+      assert(b.action==="ready-mark"&&b.state.phase==="ready","2번째 정상 = → ready");
+      let c=st(b.state,"=",null,false);
+      assert(c.action==="fire"&&c.state.phase==="off"&&c.state.storedText===null,"ready: =는 무조건 발동+초기화");
+      // 보존
+      let k=st(a.state,"C",null,false);
+      assert(k.state.phase==="set"&&k.state.storedText==="817","C 보존");
+      k=st(k.state,"⌫",null,false);
+      assert(k.state.phase==="set","⌫ 보존");
+      // 재세팅
+      let r=st(b.state,"%","55",false); r=st(r.state,"%","0.55",false);
+      assert(r.action==="set"&&r.state.storedText==="55"&&r.state.eqCount===0,"ready에서 %% 재세팅+카운터 리셋");
+      // ÷는 무관
+      let d0=st(T0,"÷","9",false); d0=st(d0.state,"÷","9",false);
+      assert(d0.state.phase==="off","÷÷는 이제 아무것도 안 함");
+      // 비연속 %
+      let n=st(T0,"%","9",false); n=st(n.state,"5",null,false); n=st(n.state,"%",null,false);
+      assert(n.state.phase==="off","% 사이 다른 키 = 세팅 안 됨");
 
       assert(show(ev(seq(["5","+","+","7"]))) === "12", "E2E5: 5++7=12");
       assert(show(ev(seq(["5","+"])))=== "5", "E2E7: 5+=5");
@@ -824,40 +862,36 @@
       return /^-?(?:\d+(?:\.\d*)?|\.\d+)$/.test(source) ? source : null;
     }
 
-    function trickStep(state, key, exprInfo) {
+    function trickStep(state, key, exprInfo, evalHappened) {
       const current = {
-        armed: state?.armed === true,
+        phase: ["off", "set", "ready"].includes(state?.phase)
+          ? state.phase
+          : "off",
         storedText: typeof state?.storedText === "string" ? state.storedText : null,
+        eqCount: Number.isInteger(state?.eqCount) ? state.eqCount : 0,
         lastKey: state?.lastKey ?? null,
         pendingSole: typeof state?.pendingSole === "string" ? state.pendingSole : null
       };
       const next = { ...current, lastKey: key };
 
-      if (key === "=" && current.armed) {
+      if (
+        key === "%" &&
+        current.lastKey === "%" &&
+        current.pendingSole !== null
+      ) {
         return {
           state: {
             ...next,
-            armed: false,
-            storedText: null,
+            phase: "set",
+            storedText: current.pendingSole,
+            eqCount: 0,
             pendingSole: null
           },
-          action: "fire"
+          action: "set"
         };
       }
 
-      if (key === "÷") {
-        if (current.lastKey === "÷" && current.pendingSole !== null) {
-          return {
-            state: {
-              ...next,
-              armed: true,
-              storedText: current.pendingSole,
-              pendingSole: null
-            },
-            action: "arm"
-          };
-        }
-
+      if (key === "%") {
         return {
           state: {
             ...next,
@@ -865,6 +899,47 @@
               typeof exprInfo?.soleNumberText === "string"
                 ? exprInfo.soleNumberText
                 : null
+          },
+          action: "none"
+        };
+      }
+
+      if (key === "=" && current.phase === "ready") {
+        return {
+          state: {
+            phase: "off",
+            storedText: null,
+            eqCount: 0,
+            lastKey: null,
+            pendingSole: null
+          },
+          action: "fire"
+        };
+      }
+
+      if (
+        key === "=" &&
+        current.phase === "set" &&
+        evalHappened === true
+      ) {
+        const eqCount = current.eqCount + 1;
+        if (eqCount === 2) {
+          return {
+            state: {
+              ...next,
+              phase: "ready",
+              eqCount,
+              pendingSole: null
+            },
+            action: "ready-mark"
+          };
+        }
+
+        return {
+          state: {
+            ...next,
+            eqCount,
+            pendingSole: null
           },
           action: "none"
         };
@@ -925,14 +1000,15 @@
     function setupCalculator() {
       const display = document.getElementById("display");
       const keypad = document.querySelector(".keypad");
-      const divideKey = keypad.querySelector('[data-key="÷"]');
+      const percentKey = keypad.querySelector('[data-key="%"]');
       let expr = "";
       let resultShown = false;
       let lastResult = null;
       let errorShown = false;
       let trickState = {
-        armed: false,
+        phase: "off",
         storedText: null,
+        eqCount: 0,
         lastKey: null,
         pendingSole: null
       };
@@ -940,33 +1016,88 @@
       const render = () => {
         const rawDisplay = errorShown ? "오류" : displayValue(expr);
         display.textContent = formatDisplay(rawDisplay);
-        divideKey.classList.toggle("armed", trickState.armed);
+        percentKey.classList.toggle("trick-set", trickState.phase === "set");
+        percentKey.classList.toggle("trick-ready", trickState.phase === "ready");
         fitDisplayText(display);
       };
 
       const handleKey = (key) => {
-        if (errorShown && key !== "C") return;
+        const readyWillFire = key === "=" && trickState.phase === "ready";
+        if (errorShown && key !== "C" && !readyWillFire) return;
 
-        const storedBeforeStep = trickState.storedText;
-        const transition = trickStep(trickState, key, {
-          soleNumberText: key === "÷" ? soleNumberText(expr) : null
-        });
-        trickState = transition.state;
+        if (key === "%") {
+          const transition = trickStep(
+            trickState,
+            key,
+            { soleNumberText: soleNumberText(expr) },
+            false
+          );
+          trickState = transition.state;
 
-        if (transition.action === "arm") {
-          expr = "";
-          resultShown = false;
-          errorShown = false;
+          if (transition.action === "set") {
+            expr = "";
+            resultShown = false;
+            lastResult = null;
+            errorShown = false;
+            render();
+            return;
+          }
+        } else if (key === "=") {
+          const storedBeforeStep = trickState.storedText;
+
+          if (trickState.phase === "ready") {
+            const transition = trickStep(
+              trickState,
+              key,
+              { soleNumberText: null },
+              false
+            );
+            trickState = transition.state;
+
+            if (transition.action === "fire") {
+              expr = storedBeforeStep ?? "";
+              resultShown = true;
+              lastResult = expr === "" ? null : decFromString(expr);
+              errorShown = false;
+              render();
+              return;
+            }
+          }
+
+          let evalHappened = false;
+          if (expr !== "" && !resultShown) {
+            const tokens = tokenize(expr);
+            const value = tokens === null ? null : evaluate(tokens);
+
+            if (value === null) {
+              errorShown = true;
+              resultShown = false;
+              lastResult = null;
+            } else {
+              expr = decToDisplay(value);
+              resultShown = true;
+              lastResult = value;
+              evalHappened = true;
+            }
+          }
+
+          const transition = trickStep(
+            trickState,
+            key,
+            { soleNumberText: null },
+            evalHappened
+          );
+          trickState = transition.state;
           render();
           return;
-        }
-
-        if (transition.action === "fire") {
-          expr = storedBeforeStep ?? "";
-          resultShown = true;
-          errorShown = false;
-          render();
-          return;
+        } else {
+          const transition = trickStep(
+            trickState,
+            key,
+            { soleNumberText: null },
+            false
+          );
+          trickState = transition.state;
         }
 
         if (key === "C") {
@@ -982,24 +1113,6 @@
           expr = "";
           resultShown = false;
           lastResult = null;
-          render();
-          return;
-        }
-
-        if (key === "=") {
-          if (expr === "" || resultShown) return;
-          const tokens = tokenize(expr);
-          const value = tokens === null ? null : evaluate(tokens);
-
-          if (value === null) {
-            errorShown = true;
-            resultShown = false;
-            lastResult = null;
-          } else {
-            expr = decToDisplay(value);
-            resultShown = true;
-            lastResult = value;
-          }
           render();
           return;
         }
