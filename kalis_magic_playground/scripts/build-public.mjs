@@ -56,7 +56,8 @@ export const PUBLIC_DIRS = [
   'assets',
   'imigi3',
   'kalimeeting',
-  'planb'
+  'planb',
+  'tools'
 ];
 
 export const PRIVATE_PATTERNS = [

@@ -1,0 +1,1022 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#000000">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <title>계산기</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: #000;
+      color: #f5f5f5;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html,
+    body {
+      min-height: 100%;
+      margin: 0;
+      background: #000;
+    }
+
+    button {
+      font: inherit;
+    }
+
+    .calculator {
+      container-type: inline-size;
+      width: min(100%, clamp(430px, 68vw, 560px));
+      min-height: 100dvh;
+      margin: 0 auto;
+      padding:
+        max(clamp(20px, 4cqw, 28px), env(safe-area-inset-top))
+        clamp(18px, 4cqw, 24px)
+        max(clamp(20px, 4cqw, 28px), env(safe-area-inset-bottom));
+      display: grid;
+      grid-template-rows: auto minmax(clamp(150px, 24dvh, 300px), 1fr) auto;
+      gap: clamp(16px, 4cqw, 24px);
+      background: #000;
+    }
+
+    .toolbar {
+      min-height: clamp(34px, 8cqw, 44px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: #b8b8b8;
+      pointer-events: none;
+    }
+
+    .toolbar-icon,
+    .toolbar-tools {
+      display: flex;
+      align-items: center;
+      gap: 17px;
+    }
+
+    .toolbar svg {
+      width: clamp(25px, 6cqw, 32px);
+      height: clamp(25px, 6cqw, 32px);
+      fill: none;
+      stroke: currentColor;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-width: 1.8;
+    }
+
+    .root-mark {
+      font-size: clamp(25px, 6cqw, 32px);
+      font-weight: 400;
+      line-height: 1;
+    }
+
+    .display {
+      min-width: 0;
+      display: flex;
+      align-items: end;
+      justify-content: end;
+      padding: clamp(12px, 3cqw, 18px) 8px clamp(9px, 2.5cqw, 14px);
+      overflow: hidden;
+      font-size: clamp(48px, 15cqw, 76px);
+      font-weight: 300;
+      line-height: 1.08;
+      letter-spacing: -0.04em;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .keypad {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: clamp(11px, 3.5cqw, 20px);
+    }
+
+    .key {
+      width: 100%;
+      aspect-ratio: 1;
+      border: 0;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: #292929;
+      color: #f1f1f1;
+      font-size: clamp(24px, 7cqw, 38px);
+      font-weight: 400;
+      cursor: default;
+      user-select: none;
+      touch-action: manipulation;
+      transition: background-color 80ms ease, filter 80ms ease, opacity 120ms ease;
+    }
+
+    .key:active,
+    .key.pressed {
+      filter: brightness(1.18);
+    }
+
+    .key.utility {
+      color: #ff625f;
+    }
+
+    .key.operator {
+      color: #d9d9d9;
+    }
+
+    .key.equals {
+      background: #00a99d;
+      color: #fff;
+      font-size: clamp(30px, 8cqw, 44px);
+    }
+
+    .key.parentheses {
+      font-size: clamp(20px, 6cqw, 32px);
+      letter-spacing: -0.08em;
+    }
+
+    .key.armed {
+      opacity: 0.75;
+    }
+
+    #selftest {
+      display: none;
+      min-height: 100dvh;
+      margin: 0;
+      padding: 24px;
+      background: #000;
+      color: #f5f5f5;
+      font: 16px/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      white-space: pre-wrap;
+    }
+
+    #selftest.pass {
+      color: #52d3a0;
+    }
+
+    #selftest.fail {
+      color: #ff6b68;
+    }
+  </style>
+</head>
+<body>
+  <main class="calculator" id="app" aria-label="계산기">
+    <div class="toolbar" aria-hidden="true">
+      <span class="toolbar-icon">
+        <svg viewBox="0 0 24 24">
+          <path d="M3.5 12a8.5 8.5 0 1 0 2.2-5.7"></path>
+          <path d="M3.5 4.5v4h4"></path>
+          <path d="M12 7.5V12l3 2"></path>
+        </svg>
+      </span>
+      <span class="toolbar-tools">
+        <svg viewBox="0 0 24 24">
+          <path d="m5 18 12-12 2 2L7 20H5v-2Z"></path>
+          <path d="m11 12 2 2m1-5 2 2m-8 4 2 2"></path>
+        </svg>
+        <span class="root-mark">√</span>
+      </span>
+    </div>
+
+    <output class="display" id="display" aria-live="polite">0</output>
+
+    <section class="keypad" aria-label="계산기 키패드">
+      <button class="key utility" type="button" data-key="C">C</button>
+      <button class="key utility" type="button" data-key="⌫" aria-label="지우기">⌫</button>
+      <button class="key operator" type="button" data-key="%">%</button>
+      <button class="key operator" type="button" data-key="÷">÷</button>
+
+      <button class="key" type="button" data-key="7">7</button>
+      <button class="key" type="button" data-key="8">8</button>
+      <button class="key" type="button" data-key="9">9</button>
+      <button class="key operator" type="button" data-key="×">×</button>
+
+      <button class="key" type="button" data-key="4">4</button>
+      <button class="key" type="button" data-key="5">5</button>
+      <button class="key" type="button" data-key="6">6</button>
+      <button class="key operator" type="button" data-key="−">−</button>
+
+      <button class="key" type="button" data-key="1">1</button>
+      <button class="key" type="button" data-key="2">2</button>
+      <button class="key" type="button" data-key="3">3</button>
+      <button class="key operator" type="button" data-key="+">+</button>
+
+      <button class="key parentheses" type="button" data-key="()">( )</button>
+      <button class="key" type="button" data-key="0">0</button>
+      <button class="key" type="button" data-key=".">.</button>
+      <button class="key equals" type="button" data-key="=">=</button>
+    </section>
+  </main>
+
+  <div id="selftest" role="status" aria-live="polite"></div>
+
+  <script>
+    function runSelfTests() {
+      const failures = [];
+      let assertions = 0;
+      const assert = (cond, name) => {
+        assertions += 1;
+        if (!cond) failures.push(name);
+      };
+
+      const d = (str) => decFromString(str);
+      const show = (a) => decToDisplay(a);
+      assert(show(d("8.17")) === "8.17", "roundtrip 8.17");
+      assert(show(d("-5")) === "-5", "roundtrip -5");
+      assert(show(d("0817")) === "817", "display normalizes leading zero");
+      assert(show(decAdd(d("0.1"), d("0.2"))) === "0.3", "0.1+0.2=0.3");
+      assert(show(decSub(d("5"), d("7"))) === "-2", "5-7=-2");
+      assert(show(decMul(d("1.5"), d("2"))) === "3", "1.5×2=3");
+      assert(show(decMul(d("999999999999999"), d("999999999999999"))) === "1E30" || show(decMul(d("999999999999999"), d("999999999999999"))).startsWith("9.99999999"), "big mul → exponent form");
+      assert(show(d("999999999999.4")) === "1E12" || show(d("999999999999.4")) === "999999999999", "1e12 경계(반올림 유효10자리 후 지수 판정)");
+      assert(show(d("0.0000000009")) === "9E-10", "small → exponent");
+      assert(show(decAdd(d("2.5"), d("2.5"))) === "5", "trailing zero removed");
+      assert(decDiv(d("1"), d("0")) === null, "÷0 → null");
+      assert(decDiv(d("0"), d("0")) === null, "0÷0 → null");
+      assert(show(decDiv(d("1"), d("3"))) === "0.3333333333", "1÷3 유효10자리");
+      assert(show(decDiv(d("2"), d("7"))) === "0.2857142857", "2÷7 순환소수");
+      assert(show(decDiv(d("2"), d("3"))) === "0.6666666667", "2÷3 round-half-up 마지막 자리 7");
+      assert(show(decDiv(d("10"), d("4"))) === "2.5", "10÷4 정확 종결");
+      assert(show(decDiv(d("-1"), d("3"))) === "-0.3333333333", "부호 -+");
+      assert(show(decDiv(d("-1"), d("-3"))) === "0.3333333333", "부호 --");
+      assert(show(decDiv(d("1"), d("-3"))) === "-0.3333333333", "부호 +-");
+      assert(show(decDiv(d("1"), d("0.0000000009"))) === "1111111111", "0 근접 나눗셈(1.11e9 — 지수 경계 미만이라 십진 표시)");
+      assert(show(decDiv(d("1000000000000"), d("0.001"))) === "1E15", "큰 결과 지수");
+      assert(decToPlainString(decFromString("1000000000000")) === "1000000000000", "fix2: plain 1e12");
+      assert(decToPlainString(decFromString("-0.0000000009")) === "-0.0000000009", "fix2: plain small negative");
+      assert(decToPlainString(decDiv(decFromString("1"),decFromString("3"))) === "0.333333333333333333333333333333", "fix2: plain 1/3 내부 30자리");
+
+      // applyKey — 연산자·소수점·편집
+      const seq = (keys, init="") => keys.reduce((e,k)=>applyKey(e,k), init);
+      assert(seq(["5","+","×"]) === "5×", "연산자 교체");
+      assert(seq(["5","+","+"]) === "5+", "같은 연산자 no-op");
+      assert(seq(["5",".","5",".","5"]) === "5.55", "2번째 소수점 무시");
+      assert(seq([".","5"]) === "0.5", "선두 . → 0.");
+      assert(seq(["5","+","."]) === "5+0.", "연산자 직후 . → 0.");
+      assert(seq(["+"]) === "", "빈 수식 이항연산자 무시");
+      assert(seq(["÷"]) === "", "빈 수식 ÷ 무시");
+      assert(seq(["−","5"]) === "-5", "빈 수식 − = 단항");
+      assert(seq(["5","+","−","3"]) === "5+-3", "연산자 직후 − = 단항");
+      assert(seq(["−","−","5"]) === "-5", "단항 − 연타 무시");
+      assert(seq(["1","2","3","⌫"]) === "12", "백스페이스");
+      assert(seq(["1","2","C"]) === "", "C 전체 클리어");
+      assert(seq(["1","2","3","4","5","6","7","8","9","0","1","2","3","4","5","6"]) === "123456789012345", "숫자 15자리 초과 무시");
+      assert(seq(["()","2","+","3","()"]) === "(2+3)", "() 스마트 열기→닫기");
+      assert(seq(["5","()"]) === "5×(", "숫자 뒤 ()는 ×( 자동 삽입");
+      assert(applyKey("(2+3", "()") === "(2+3)", "열린 괄호의 완성된 피연산자 뒤 ()는 닫기");
+      // tokenize + evaluate
+      const ev = (expr) => { const t = tokenize(expr); return t === null ? null : evaluate(t); };
+      assert(show(ev("12+34×5")) === "182", "우선순위");
+      assert(show(ev("(2+3)×4")) === "20", "괄호");
+      assert(ev("7÷0") === null, "÷0 오류");
+      assert(show(ev("5+")) === "5", "dangling 연산자 드롭");
+      assert(show(ev("(2+3")) === "5", "미폐괄호 자동 닫기");
+      assert(show(ev("50%")) === "0.5", "% 단항");
+      assert(show(ev("200×10%")) === "20", "%는 즉시 적용");
+      assert(show(ev("-5+3")) === "-2", "단항 − 평가");
+      assert(show(ev(seq(["−","()","2","+","3","()"]))) === "-5", "fix1: -(2+3) = -5");
+      assert(show(ev(seq(["5","×","−","()","2","+","3","()"]))) === "-25", "fix1: 5×-(2+3) = -25");
+      // soleNumberText
+      assert(soleNumberText("817") === "817", "단일 숫자");
+      assert(soleNumberText("-5") === "-5", "단항 − 단일 숫자");
+      assert(soleNumberText("08.17") === "08.17", "리터럴 그대로(선행 0 보존)");
+      assert(soleNumberText("12+34") === null, "연산자 있으면 null");
+      assert(soleNumberText("(5)") === null, "괄호 있으면 null");
+      assert(soleNumberText("") === null, "빈 수식 null");
+
+      // trickStep
+      const T0 = { armed:false, storedText:null, lastKey:null };
+      const step = (st,k,sole) => trickStep(st, k, {soleNumberText: sole});
+      let r = step(T0, "÷", "817");
+      assert(r.action === "none" && !r.state.armed, "1번째 ÷는 무동작");
+      r = step(r.state, "÷", "817");
+      assert(r.action === "arm" && r.state.armed && r.state.storedText === "817", "÷÷ 무장");
+      r = step(r.state, "=", null);
+      assert(r.action === "fire" && !r.state.armed && r.state.storedText === null, "무장 = 발동+해제");
+      assert(step(T0, "=", null).action === "none", "비무장 = none");
+      let q = step(T0, "÷", null); q = step(q.state, "÷", null);
+      assert(q.action === "none" && !q.state.armed, "12+34÷÷ 무장 안 됨");
+      let a = step(step(T0,"÷","5").state, "÷", "5");
+      let keep = step(a.state, "C", null);
+      assert(keep.state.armed && keep.state.storedText === "5" && keep.action === "none", "C 무장 보존");
+      keep = step(keep.state, "⌫", null);
+      assert(keep.state.armed, "⌫ 무장 보존");
+      let rearm = step(keep.state, "÷", "99"); rearm = step(rearm.state, "÷", "99");
+      assert(rearm.action === "arm" && rearm.state.storedText === "99", "÷÷ 재무장 값 교체");
+      let neg = step(T0, "÷", "-5"); neg = step(neg.state, "÷", "-5");
+      assert(neg.state.storedText === "-5", "-5÷÷ 무장");
+
+      assert(show(ev(seq(["5","+","+","7"]))) === "12", "E2E5: 5++7=12");
+      assert(show(ev(seq(["5","+"])))=== "5", "E2E7: 5+=5");
+      assert(show(ev(seq(["5",".","5",".","5"]))) === "5.55", "E2E6: 5.5.5=5.55");
+      assert(ev(seq(["7","÷","0"])) === null, "E2E4: 7÷0 오류");
+      assert(show(ev(seq(["1","2","+","3","4","×","5"]))) === "182", "E2E1: 12+34×5");
+
+      const panel = document.getElementById("selftest");
+      const passed = failures.length === 0;
+      const headline = passed
+        ? `ALL PASS (${assertions} assertions)`
+        : `FAIL (${failures.length}/${assertions})`;
+      panel.className = passed ? "pass" : "fail";
+      panel.textContent = passed
+        ? headline
+        : `${headline}\n${failures.map((name) => `- ${name}`).join("\n")}`;
+      console[passed ? "log" : "error"](panel.textContent);
+      return { assertions, failures };
+    }
+
+    function decPow10(exponent) {
+      if (!Number.isInteger(exponent) || exponent < 0) {
+        throw new RangeError("Decimal exponent must be a non-negative integer");
+      }
+      return 10n ** BigInt(exponent);
+    }
+
+    function decNormalize(sign, digits, scale) {
+      let d = digits < 0n ? -digits : digits;
+      let e = scale;
+
+      if (d === 0n) return { s: 1, d: 0n, e: 0 };
+
+      while (e > 0 && d % 10n === 0n) {
+        d /= 10n;
+        e -= 1;
+      }
+
+      return { s: sign < 0 ? -1 : 1, d, e };
+    }
+
+    function decFromString(str) {
+      const source = String(str).trim();
+      const match = /^([+\-−]?)(?:(\d+)(?:\.(\d*))?|\.(\d+))$/.exec(source);
+
+      if (!match) {
+        throw new TypeError(`Invalid decimal literal: ${source}`);
+      }
+
+      const sign = match[1] === "-" || match[1] === "−" ? -1 : 1;
+      const integer = match[2] ?? "";
+      const fraction = match[3] ?? match[4] ?? "";
+      const digits = BigInt(`${integer}${fraction}` || "0");
+
+      return decNormalize(sign, digits, fraction.length);
+    }
+
+    function decAdd(a, b) {
+      const scale = Math.max(a.e, b.e);
+      const left = BigInt(a.s) * a.d * decPow10(scale - a.e);
+      const right = BigInt(b.s) * b.d * decPow10(scale - b.e);
+      const sum = left + right;
+
+      return decNormalize(sum < 0n ? -1 : 1, sum, scale);
+    }
+
+    function decSub(a, b) {
+      return decAdd(a, { s: b.s * -1, d: b.d, e: b.e });
+    }
+
+    function decMul(a, b) {
+      return decNormalize(a.s === b.s ? 1 : -1, a.d * b.d, a.e + b.e);
+    }
+
+    function decDiv(a, b) {
+      if (b.d === 0n) return null;
+      if (a.d === 0n) return decNormalize(1, 0n, 0);
+
+      const digitDelta = a.d.toString().length - b.d.toString().length;
+      const belowPower = digitDelta >= 0
+        ? a.d < b.d * decPow10(digitDelta)
+        : a.d * decPow10(-digitDelta) < b.d;
+      const ratioExponent = belowPower ? digitDelta - 1 : digitDelta;
+      const longDivisionPower = 30 - ratioExponent;
+      const scaledNumerator = longDivisionPower >= 0
+        ? a.d * decPow10(longDivisionPower)
+        : a.d;
+      const scaledDenominator = longDivisionPower >= 0
+        ? b.d
+        : b.d * decPow10(-longDivisionPower);
+      const extendedQuotient = scaledNumerator / scaledDenominator;
+      const guardDigit = extendedQuotient % 10n;
+      let quotient = extendedQuotient / 10n;
+
+      if (guardDigit >= 5n) {
+        quotient += 1n;
+      }
+
+      const quotientExponent = ratioExponent + b.e - a.e;
+      const resultScale = 29 - quotientExponent;
+      const sign = a.s === b.s ? 1 : -1;
+
+      return resultScale >= 0
+        ? decNormalize(sign, quotient, resultScale)
+        : decNormalize(sign, quotient * decPow10(-resultScale), 0);
+    }
+
+    function decToPlainString(dec) {
+      const value = decNormalize(dec.s, dec.d, dec.e);
+      if (value.d === 0n) return "0";
+
+      const digits = value.d.toString();
+      const sign = value.s < 0 ? "-" : "";
+      const decimalPosition = digits.length - value.e;
+
+      if (decimalPosition <= 0) {
+        return `${sign}0.${"0".repeat(-decimalPosition)}${digits}`;
+      }
+      if (decimalPosition >= digits.length) {
+        return `${sign}${digits}${"0".repeat(decimalPosition - digits.length)}`;
+      }
+      return `${sign}${digits.slice(0, decimalPosition)}.${digits.slice(decimalPosition)}`;
+    }
+
+    function decToDisplay(dec) {
+      const value = decNormalize(dec.s, dec.d, dec.e);
+      if (value.d === 0n) return "0";
+
+      const rawDigits = value.d.toString();
+      let exponent = rawDigits.length - value.e - 1;
+      let roundedDigits = value.d;
+
+      if (rawDigits.length > 10) {
+        const cut = rawDigits.length - 10;
+        const divisor = decPow10(cut);
+        const remainder = roundedDigits % divisor;
+        roundedDigits /= divisor;
+
+        if (remainder * 2n >= divisor) {
+          roundedDigits += 1n;
+        }
+
+        if (roundedDigits.toString().length > 10) {
+          roundedDigits /= 10n;
+          exponent += 1;
+        }
+      }
+
+      const significant = roundedDigits.toString().replace(/0+$/, "");
+      const sign = value.s < 0 ? "-" : "";
+      const useExponent = exponent >= 12 || exponent < -9;
+
+      if (useExponent) {
+        const mantissa = significant.length === 1
+          ? significant
+          : `${significant[0]}.${significant.slice(1)}`;
+        return `${sign}${mantissa}E${exponent}`;
+      }
+
+      const decimalPosition = exponent + 1;
+      if (decimalPosition <= 0) {
+        return `${sign}0.${"0".repeat(-decimalPosition)}${significant}`;
+      }
+      if (decimalPosition >= significant.length) {
+        return `${sign}${significant}${"0".repeat(decimalPosition - significant.length)}`;
+      }
+      return `${sign}${significant.slice(0, decimalPosition)}.${significant.slice(decimalPosition)}`;
+    }
+
+    function expressionTokenCount(expr) {
+      let count = 0;
+      let index = 0;
+
+      while (index < expr.length) {
+        if (expr[index] === "-" && /[\d.]/.test(expr[index + 1] ?? "")) {
+          index += 1;
+        }
+
+        if (/[\d.]/.test(expr[index] ?? "")) {
+          while (index < expr.length && /[\d.]/.test(expr[index])) index += 1;
+        } else {
+          index += 1;
+        }
+        count += 1;
+      }
+
+      return count;
+    }
+
+    function applyKey(expr, key) {
+      const source = String(expr ?? "");
+      const acceptedKeys = /^(?:[0-9]|\.|\+|−|×|÷|\(\)|%|C|⌫)$/;
+
+      if (!acceptedKeys.test(key)) return source;
+      if (key === "C") return "";
+      if (key === "⌫") return source.slice(0, -1);
+
+      const withinTokenLimit = (candidate) =>
+        expressionTokenCount(candidate) <= 100 ? candidate : source;
+      const last = source.at(-1) ?? "";
+      const binaryOperators = "+−×÷";
+      const expectsOperand =
+        source === "" || binaryOperators.includes(last) || last === "(" || last === "-";
+
+      if (/^\d$/.test(key)) {
+        const currentNumber = /[\d.]+$/.exec(source)?.[0] ?? "";
+        const digitCount = (currentNumber.match(/\d/g) ?? []).length;
+        if (digitCount >= 15) return source;
+        return withinTokenLimit(source + key);
+      }
+
+      if (key === ".") {
+        if (expectsOperand) return withinTokenLimit(`${source}0.`);
+        const currentNumber = /[\d.]+$/.exec(source)?.[0] ?? "";
+        if (currentNumber === "" || currentNumber.includes(".")) return source;
+        return withinTokenLimit(`${source}.`);
+      }
+
+      if (key === "()") {
+        const openCount =
+          (source.match(/\(/g) ?? []).length - (source.match(/\)/g) ?? []).length;
+        if (openCount > 0 && /[\d)%]/.test(last)) {
+          return withinTokenLimit(`${source})`);
+        }
+        const multiplication = /[\d)]/.test(last) ? "×" : "";
+        return withinTokenLimit(`${source}${multiplication}(`);
+      }
+
+      if (key === "%") {
+        return /[\d.)%]/.test(last) ? withinTokenLimit(`${source}%`) : source;
+      }
+
+      if (key === "−") {
+        if (expectsOperand) {
+          return last === "-" ? source : withinTokenLimit(`${source}-`);
+        }
+        return withinTokenLimit(`${source}−`);
+      }
+
+      if (source === "" || last === "(" || last === "-") return source;
+      if (binaryOperators.includes(last)) {
+        return last === key
+          ? source
+          : withinTokenLimit(`${source.slice(0, -1)}${key}`);
+      }
+      return withinTokenLimit(`${source}${key}`);
+    }
+
+    function tokenize(expr) {
+      const source = String(expr ?? "");
+      const tokens = [];
+      let index = 0;
+      let openCount = 0;
+      let expectsOperand = true;
+      const push = (token) => {
+        tokens.push(token);
+        return tokens.length <= 100;
+      };
+
+      while (index < source.length) {
+        const char = source[index];
+
+        if (expectsOperand && (char === "-" || char === "−")) {
+          if (source[index + 1] === "(") {
+            if (!push({ t: "num", v: "-1" }) || !push({ t: "op", v: "*" })) {
+              return null;
+            }
+            index += 1;
+            continue;
+          }
+          const numberMatch = /^(?:\d+(?:\.\d*)?|\.\d+)/.exec(source.slice(index + 1));
+          if (!numberMatch || !push({ t: "num", v: `-${numberMatch[0]}` })) return null;
+          index += numberMatch[0].length + 1;
+          expectsOperand = false;
+          continue;
+        }
+
+        if (/[\d.]/.test(char)) {
+          if (!expectsOperand) return null;
+          const numberMatch = /^(?:\d+(?:\.\d*)?|\.\d+)/.exec(source.slice(index));
+          if (!numberMatch || !push({ t: "num", v: numberMatch[0] })) return null;
+          index += numberMatch[0].length;
+          expectsOperand = false;
+          continue;
+        }
+
+        if (char === "(") {
+          if (!expectsOperand || !push({ t: "lp" })) return null;
+          openCount += 1;
+          index += 1;
+          continue;
+        }
+
+        if (char === ")") {
+          if (expectsOperand || openCount === 0 || !push({ t: "rp" })) return null;
+          openCount -= 1;
+          index += 1;
+          expectsOperand = false;
+          continue;
+        }
+
+        if (char === "%") {
+          if (expectsOperand || !push({ t: "pct" })) return null;
+          index += 1;
+          continue;
+        }
+
+        const mappedOperator = {
+          "+": "+",
+          "−": "-",
+          "×": "*",
+          "÷": "/"
+        }[char];
+        if (mappedOperator) {
+          if (expectsOperand || !push({ t: "op", v: mappedOperator })) return null;
+          index += 1;
+          expectsOperand = true;
+          continue;
+        }
+
+        return null;
+      }
+
+      return tokens;
+    }
+
+    function evaluate(tokens) {
+      if (!Array.isArray(tokens) || tokens.length === 0 || tokens.length > 100) return null;
+
+      const prepared = tokens.map((token) => ({ ...token }));
+      while (prepared.at(-1)?.t === "op") prepared.pop();
+      if (prepared.length === 0) return null;
+
+      let balance = 0;
+      for (const token of prepared) {
+        if (token.t === "lp") balance += 1;
+        if (token.t === "rp") {
+          balance -= 1;
+          if (balance < 0) return null;
+        }
+      }
+      while (balance > 0) {
+        prepared.push({ t: "rp" });
+        balance -= 1;
+      }
+
+      const values = [];
+      const operators = [];
+      const precedence = { "+": 1, "-": 1, "*": 2, "/": 2 };
+      const hundred = decFromString("100");
+      let expectsOperand = true;
+
+      const applyTopOperator = () => {
+        const operator = operators.pop();
+        if (!operator || operator === "(" || values.length < 2) return false;
+        const right = values.pop();
+        const left = values.pop();
+        const result = operator === "+"
+          ? decAdd(left, right)
+          : operator === "-"
+            ? decSub(left, right)
+            : operator === "*"
+              ? decMul(left, right)
+              : decDiv(left, right);
+        if (result === null) return false;
+        values.push(result);
+        return true;
+      };
+
+      for (const token of prepared) {
+        if (token.t === "num") {
+          if (!expectsOperand || typeof token.v !== "string") return null;
+          try {
+            values.push(decFromString(token.v));
+          } catch {
+            return null;
+          }
+          expectsOperand = false;
+          continue;
+        }
+
+        if (token.t === "pct") {
+          if (expectsOperand || values.length === 0) return null;
+          const percentage = decDiv(values.pop(), hundred);
+          if (percentage === null) return null;
+          values.push(percentage);
+          continue;
+        }
+
+        if (token.t === "lp") {
+          if (!expectsOperand) return null;
+          operators.push("(");
+          continue;
+        }
+
+        if (token.t === "rp") {
+          if (expectsOperand) return null;
+          while (operators.length > 0 && operators.at(-1) !== "(") {
+            if (!applyTopOperator()) return null;
+          }
+          if (operators.pop() !== "(") return null;
+          expectsOperand = false;
+          continue;
+        }
+
+        if (token.t === "op" && Object.hasOwn(precedence, token.v)) {
+          if (expectsOperand) return null;
+          while (
+            operators.length > 0 &&
+            operators.at(-1) !== "(" &&
+            precedence[operators.at(-1)] >= precedence[token.v]
+          ) {
+            if (!applyTopOperator()) return null;
+          }
+          operators.push(token.v);
+          expectsOperand = true;
+          continue;
+        }
+
+        return null;
+      }
+
+      if (expectsOperand) return null;
+      while (operators.length > 0) {
+        if (operators.at(-1) === "(" || !applyTopOperator()) return null;
+      }
+      return values.length === 1 ? values[0] : null;
+    }
+
+    function soleNumberText(expr) {
+      const source = String(expr ?? "");
+      return /^-?(?:\d+(?:\.\d*)?|\.\d+)$/.test(source) ? source : null;
+    }
+
+    function trickStep(state, key, exprInfo) {
+      const current = {
+        armed: state?.armed === true,
+        storedText: typeof state?.storedText === "string" ? state.storedText : null,
+        lastKey: state?.lastKey ?? null,
+        pendingSole: typeof state?.pendingSole === "string" ? state.pendingSole : null
+      };
+      const next = { ...current, lastKey: key };
+
+      if (key === "=" && current.armed) {
+        return {
+          state: {
+            ...next,
+            armed: false,
+            storedText: null,
+            pendingSole: null
+          },
+          action: "fire"
+        };
+      }
+
+      if (key === "÷") {
+        if (current.lastKey === "÷" && current.pendingSole !== null) {
+          return {
+            state: {
+              ...next,
+              armed: true,
+              storedText: current.pendingSole,
+              pendingSole: null
+            },
+            action: "arm"
+          };
+        }
+
+        return {
+          state: {
+            ...next,
+            pendingSole:
+              typeof exprInfo?.soleNumberText === "string"
+                ? exprInfo.soleNumberText
+                : null
+          },
+          action: "none"
+        };
+      }
+
+      return {
+        state: { ...next, pendingSole: null },
+        action: "none"
+      };
+    }
+
+    function isPrimaryPointer(event) {
+      return (
+        event.isPrimary !== false &&
+        (event.button === undefined || event.button === 0)
+      );
+    }
+
+    function fitDisplayText(display) {
+      display.style.removeProperty("font-size");
+      const textLength = display.textContent?.length ?? 0;
+      const naturalStyle = getComputedStyle(display);
+      const naturalSize = Number.parseFloat(naturalStyle.fontSize);
+      const lengthScale =
+        textLength <= 10 ? 1 :
+        textLength <= 16 ? 0.82 :
+        textLength <= 24 ? 0.64 :
+        textLength <= 36 ? 0.48 : 0.36;
+      let fittedSize = naturalSize * lengthScale;
+      display.style.fontSize = `${fittedSize}px`;
+
+      const fittedStyle = getComputedStyle(display);
+      const availableWidth =
+        display.clientWidth -
+        Number.parseFloat(fittedStyle.paddingLeft) -
+        Number.parseFloat(fittedStyle.paddingRight);
+      const canvas =
+        fitDisplayText.canvas ??
+        (fitDisplayText.canvas = document.createElement("canvas"));
+      const context = canvas.getContext("2d");
+
+      if (context !== null && availableWidth > 0) {
+        context.font =
+          `${fittedStyle.fontStyle} ${fittedStyle.fontWeight} ` +
+          `${fittedSize}px ${fittedStyle.fontFamily}`;
+        const letterSpacing = Number.parseFloat(fittedStyle.letterSpacing) || 0;
+        const measuredWidth =
+          context.measureText(display.textContent ?? "").width +
+          Math.max(0, textLength - 1) * letterSpacing;
+
+        if (measuredWidth > availableWidth) {
+          fittedSize *= (availableWidth / measuredWidth) * 0.98;
+          display.style.fontSize = `${Math.max(1, fittedSize)}px`;
+        }
+      }
+    }
+
+    function setupCalculator() {
+      const display = document.getElementById("display");
+      const keypad = document.querySelector(".keypad");
+      const divideKey = keypad.querySelector('[data-key="÷"]');
+      let expr = "";
+      let resultShown = false;
+      let lastResult = null;
+      let errorShown = false;
+      let trickState = {
+        armed: false,
+        storedText: null,
+        lastKey: null,
+        pendingSole: null
+      };
+
+      const render = () => {
+        display.textContent = errorShown ? "오류" : (expr || "0");
+        divideKey.classList.toggle("armed", trickState.armed);
+        fitDisplayText(display);
+      };
+
+      const handleKey = (key) => {
+        if (errorShown && key !== "C") return;
+
+        const storedBeforeStep = trickState.storedText;
+        const transition = trickStep(trickState, key, {
+          soleNumberText: key === "÷" ? soleNumberText(expr) : null
+        });
+        trickState = transition.state;
+
+        if (transition.action === "arm") {
+          expr = "";
+          resultShown = false;
+          errorShown = false;
+          render();
+          return;
+        }
+
+        if (transition.action === "fire") {
+          expr = storedBeforeStep ?? "";
+          resultShown = true;
+          errorShown = false;
+          render();
+          return;
+        }
+
+        if (key === "C") {
+          expr = "";
+          resultShown = false;
+          lastResult = null;
+          errorShown = false;
+          render();
+          return;
+        }
+
+        if (key === "⌫" && resultShown) {
+          expr = "";
+          resultShown = false;
+          lastResult = null;
+          render();
+          return;
+        }
+
+        if (key === "=") {
+          if (expr === "" || resultShown) return;
+          const tokens = tokenize(expr);
+          const value = tokens === null ? null : evaluate(tokens);
+
+          if (value === null) {
+            errorShown = true;
+            resultShown = false;
+            lastResult = null;
+          } else {
+            expr = decToDisplay(value);
+            resultShown = true;
+            lastResult = value;
+          }
+          render();
+          return;
+        }
+
+        if (resultShown) {
+          if (/^(?:[0-9]|\.|\(\))$/.test(key)) {
+            expr = "";
+          } else if (lastResult !== null) {
+            expr = decToPlainString(lastResult);
+          }
+          resultShown = false;
+          lastResult = null;
+        }
+
+        expr = applyKey(expr, key);
+        render();
+      };
+
+      keypad.addEventListener("pointerdown", (event) => {
+        if (!isPrimaryPointer(event)) return;
+        const button = event.target.closest("button[data-key]");
+        if (!button || !keypad.contains(button)) return;
+
+        event.preventDefault();
+        button.classList.add("pressed");
+        window.setTimeout(() => button.classList.remove("pressed"), 140);
+        handleKey(button.dataset.key);
+      });
+
+      window.addEventListener("resize", () => fitDisplayText(display));
+      render();
+    }
+
+    let wakeLock = null;
+    let wakeLockPending = false;
+
+    async function acquireWakeLock() {
+      if (
+        !("wakeLock" in navigator) ||
+        document.visibilityState !== "visible" ||
+        wakeLock !== null ||
+        wakeLockPending
+      ) {
+        return;
+      }
+
+      wakeLockPending = true;
+      try {
+        const lock = await navigator.wakeLock.request("screen");
+
+        if (document.visibilityState !== "visible") {
+          await lock.release();
+          return;
+        }
+
+        wakeLock = lock;
+        lock.addEventListener("release", () => {
+          if (wakeLock === lock) wakeLock = null;
+          if (document.visibilityState === "visible") acquireWakeLock();
+        }, { once: true });
+      } catch {
+        wakeLock = null;
+      } finally {
+        wakeLockPending = false;
+      }
+    }
+
+    async function releaseWakeLock() {
+      const lock = wakeLock;
+      wakeLock = null;
+      if (lock === null) return;
+
+      try {
+        await lock.release();
+      } catch {
+        // Wake Lock API is optional; release failures need no UI.
+      }
+    }
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") {
+        acquireWakeLock();
+      } else {
+        releaseWakeLock();
+      }
+    });
+
+    if (location.hash === "#selftest") {
+      document.getElementById("app").hidden = true;
+      const panel = document.getElementById("selftest");
+      panel.style.display = "block";
+      runSelfTests();
+    } else {
+      setupCalculator();
+      acquireWakeLock();
+    }
+  </script>
+</body>
+</html>

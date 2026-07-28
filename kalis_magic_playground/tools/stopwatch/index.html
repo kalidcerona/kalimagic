@@ -1,0 +1,593 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#1C1C1E">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <title>Stopwatch</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: -apple-system, "SF Pro Display", system-ui, Roboto, sans-serif;
+      background: #1C1C1E;
+    }
+    * {
+      box-sizing: border-box;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-user-select: none; user-select: none;
+    }
+    html, body {
+      width: 100%; height: 100%; margin: 0; overflow: hidden;
+      overscroll-behavior: none;
+      background: #1C1C1E; color: #ffffff;
+    }
+    [hidden] { display: none !important; }
+    #app {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-evenly;
+      width: 100%; height: 100vh; height: 100dvh;
+      min-height: 100vh;
+      overflow: hidden;
+      background: #1C1C1E;
+      color: #ffffff;
+      padding-left: env(safe-area-inset-left);
+      padding-right: env(safe-area-inset-right);
+    }
+    #time-display {
+      display: flex;
+      flex: 0 0 auto;
+      align-items: center;
+      justify-content: center;
+      font-size: min(41vh, 26.4vw);
+      font-variant-numeric: tabular-nums;
+      font-weight: 200;
+      letter-spacing: -0.02em;
+      line-height: 1;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+    .digits {
+      display: inline-block;
+      min-width: 2ch; text-align: center;
+    }
+    #custom-display {
+      max-width: 100vw;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    #colon {
+      display: flex;
+      width: 0.2em; height: 0.52em;
+      margin: 0 0.075em;
+      flex: 0 0 auto;
+      flex-direction: column;
+      align-items: center; justify-content: space-between;
+    }
+    .colon-dot {
+      width: 0.11em; height: 0.11em;
+      flex: 0 0 auto;
+      border-radius: 50%;
+      background: #ffffff; opacity: 1;
+    }
+    #colon.trick .colon-dot:first-child { opacity: 0.82; }
+    #colon.trick-text .colon-dot { opacity: 0.6; }
+    #main-hit-zones {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 0;
+      margin-left: env(safe-area-inset-left);
+      margin-right: env(safe-area-inset-right);
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      z-index: 1;
+    }
+    .main-hit-zone {
+      min-width: 0;
+      border: 0;
+      background: transparent;
+    }
+    #control {
+      display: flex;
+      flex: 0 0 auto;
+      align-items: center;
+      justify-content: center;
+      width: min(92vw, 105.6vh, 1056px);
+      height: clamp(144px, 40.8vh, 408px);
+      margin: 0;
+      padding: 0;
+      border: 0;
+      border-radius: clamp(24px, 5.3vh, 53px);
+      appearance: none;
+      -webkit-appearance: none;
+      color: inherit;
+      font: inherit;
+      background: transparent;
+      cursor: pointer;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.25);
+      transition: background 200ms ease, transform 120ms ease;
+    }
+    #control-label {
+      font-size: max(62px, min(26.4vh, 15.6vw));
+      font-weight: 300;
+      letter-spacing: 0.01em;
+      line-height: 1;
+      color: #ffffff;
+      white-space: nowrap;
+    }
+    #selftest {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      padding: 6vh 6vw;
+      align-items: center; justify-content: center;
+      overflow: auto;
+      background: #1C1C1E;
+      font-size: clamp(2rem, 7vh, 7rem);
+      font-weight: 300; line-height: 1.25; text-align: center;
+      white-space: pre-wrap;
+      color: #ffffff;
+    }
+    #selftest-result.fail { color: #ff7b7b; }
+    #text-editor {
+      position: fixed;
+      inset: 0;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      gap: clamp(1rem, 3vh, 2rem);
+      padding: 6vh 6vw;
+      align-items: center;
+      justify-content: center;
+      background: #1C1C1E;
+    }
+    #text-editor-input {
+      width: min(88vw, 32rem);
+      padding: 0.7em 0.8em;
+      border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 0.5em;
+      background: rgba(255,255,255,0.1);
+      color: #ffffff;
+      font: inherit;
+      font-size: clamp(2rem, 8vw, 4rem);
+      text-align: center;
+      user-select: text;
+      -webkit-user-select: text;
+      touch-action: auto;
+    }
+    #text-editor-actions {
+      display: flex;
+      gap: clamp(0.75rem, 3vw, 1.5rem);
+    }
+    #text-editor-actions button {
+      min-width: 7rem;
+      padding: 0.7em 1.2em;
+      border: 0;
+      border-radius: 0.7em;
+      background: rgba(255,255,255,0.16);
+      color: #ffffff;
+      font: inherit;
+      font-size: clamp(1.25rem, 5vw, 2rem);
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div id="time-display" aria-label="스탑워치 시간">
+      <span id="seconds" class="digits">00</span>
+      <div id="colon" aria-hidden="true">
+        <div class="colon-dot"></div>
+        <div class="colon-dot"></div>
+      </div>
+      <span id="centiseconds" class="digits">00</span>
+      <span id="custom-display" class="digits" hidden></span>
+    </div>
+    <button id="control" type="button" aria-label="START">
+      <span id="control-label">START</span>
+    </button>
+    <div id="main-hit-zones" aria-hidden="true">
+      <div id="fullscreen-zone" class="main-hit-zone"></div>
+      <div id="trick-zone" class="main-hit-zone"></div>
+      <div id="text-zone" class="main-hit-zone"></div>
+    </div>
+  </div>
+  <div id="text-editor" hidden>
+    <input type="text" id="text-editor-input" maxlength="10" enterkeyhint="done">
+    <div id="text-editor-actions">
+      <button id="text-editor-save" type="button">저장</button>
+      <button id="text-editor-clear" type="button">지우기</button>
+    </div>
+  </div>
+  <div id="selftest" hidden>
+    <div id="selftest-result"></div>
+  </div>
+  <script>
+    function digitFromPoint(x, y, w, h) {
+      const width = Number.isFinite(w) && w > 0 ? w : 1;
+      const height = Number.isFinite(h) && h > 0 ? h : 1;
+      const px = Number.isFinite(x) ? Math.min(Math.max(x, 0), width) : 0;
+      const py = Number.isFinite(y) ? Math.min(Math.max(y, 0), height) : 0;
+      const col = Math.min(4, Math.floor(px / width * 5));
+      const row = Math.min(1, Math.floor(py / height * 2));
+      return row === 0 ? col + 1 : (col === 4 ? 0 : col + 6);
+    }
+    function composeCs(tens, ones) {
+      return tens * 10 + ones;
+    }
+    function nextTrickState(current) {
+      if (current === "off") return "digit";
+      if (current === "digit") return "text";
+      return "off";
+    }
+    function clampElapsed(ms) {
+      return Math.min(ms, 59990);
+    }
+    function formatCs(totalCs) {
+      const value = Math.min(5999, Math.max(0, Math.floor(totalCs)));
+      return {
+        sec: String(Math.floor(value / 100)).padStart(2, "0"),
+        cs: String(value % 100).padStart(2, "0")
+      };
+    }
+    // 정지 순간 표시할 1/100초 누적값을 정한다. 규칙 우선순위: 상한 > 트릭 합성 > 자연 경과.
+    function resolveStoppedCs({ elapsed, trickMode, reservedTens, stopDigit }) {
+      if (elapsed >= 59990) return 5999; // 상한 도달은 손댄 숫자가 아니라 실제 최대값
+      if (trickMode && reservedTens !== null && stopDigit !== null) {
+        return Math.floor(elapsed / 1000) * 100 + composeCs(reservedTens, stopDigit);
+      }
+      return Math.floor(elapsed / 10);
+    }
+    function runSelfTests() {
+      const failures = [];
+      const assert = (condition, name) => {
+        if (!condition) failures.push(name);
+      };
+      const expected = [[1, 2, 3, 4, 5], [6, 7, 8, 9, 0]];
+      for (let row = 0; row < 2; row += 1) {
+        for (let col = 0; col < 5; col += 1) {
+          const actual = digitFromPoint((col + 0.5) * 100, (row + 0.5) * 100, 500, 200);
+          assert(actual === expected[row][col], `grid row ${row} col ${col}`);
+        }
+      }
+      for (const [x, y] of [[-20, -20], [520, 220], [-1, 250], [900, -1]]) {
+        const digit = digitFromPoint(x, y, 500, 200);
+        assert(Number.isInteger(digit) && digit >= 0 && digit <= 9, `clamp ${x},${y}`);
+      }
+      assert(composeCs(2, 8) === 28, "compose 2,8");
+      assert(composeCs(0, 0) === 0, "compose 0,0");
+      assert(composeCs(9, 9) === 99, "compose 9,9");
+      assert(clampElapsed(59990) === 59990, "clamp elapsed at limit");
+      assert(clampElapsed(120000) === 59990, "clamp elapsed above limit");
+      const isFormat = (value, sec, cs) => {
+        const result = formatCs(value);
+        return result.sec === sec && result.cs === cs;
+      };
+      assert(isFormat(0, "00", "00"), "format 0");
+      assert(isFormat(728, "07", "28"), "format 728");
+      assert(isFormat(5999, "59", "99"), "format 5999");
+      const rs = (elapsed, trickMode, reservedTens, stopDigit) =>
+        resolveStoppedCs({ elapsed, trickMode, reservedTens, stopDigit });
+      assert(rs(59990, true, 2, 8) === 5999, "resolve: 상한이 트릭보다 우선");
+      assert(rs(3450, true, 2, 8) === 328, "resolve: 트릭 합성 03:28");
+      assert(rs(3450, true, null, 8) === 345, "resolve: 주행 중 트릭 켬(예약 없음)은 자연값");
+      assert(rs(3450, false, 2, 8) === 345, "resolve: 트릭 OFF는 좌표 무시");
+      assert(rs(1200, true, 0, 5) === 105, "resolve: 십의 자리 0");
+      assert(typeof nextTrickState === "function", "trick state: 순환 함수 존재");
+      if (typeof nextTrickState === "function") {
+        assert(nextTrickState("off") === "digit", "trick state: off → digit");
+        assert(nextTrickState("digit") === "text", "trick state: digit → text");
+        assert(nextTrickState("text") === "off", "trick state: text → off");
+      }
+      const message = failures.length ? `FAIL\n${failures.join("\n")}` : "ALL PASS";
+      const output = document.getElementById("selftest-result");
+      output.textContent = message;
+      output.className = failures.length ? "fail" : "";
+      console.log(message);
+    }
+    const app = document.getElementById("app");
+    const selftest = document.getElementById("selftest");
+    const fullscreenZone = document.getElementById("fullscreen-zone");
+    const trickZone = document.getElementById("trick-zone");
+    const textZone = document.getElementById("text-zone");
+    const mainHitZones = document.getElementById("main-hit-zones");
+    const control = document.getElementById("control");
+    const controlLabel = document.getElementById("control-label");
+    const seconds = document.getElementById("seconds");
+    const centiseconds = document.getElementById("centiseconds");
+    const customDisplay = document.getElementById("custom-display");
+    const colon = document.getElementById("colon");
+    const textEditor = document.getElementById("text-editor");
+    const textEditorInput = document.getElementById("text-editor-input");
+    const textEditorSave = document.getElementById("text-editor-save");
+    const textEditorClear = document.getElementById("text-editor-clear");
+    const CUSTOM_TEXT_STORAGE_KEY = "stopwatch_custom_text";
+    const TEXT_ZONE_HOLD_MS = 550;
+    const MAIN_HIT_ZONE_GAP = 4;
+    let state = "idle";
+    let trickState = "off";
+    let customText = "";
+    let reservedTens = null;
+    let startedAt = 0;
+    let stoppedCs = 0;
+    let frameId = 0;
+    let wakeLock = null;
+    let wakeLockPending = false;
+    let textZonePressTimer = 0;
+    let controlResizeObserver = null;
+    function renderCs(totalCs) {
+      const formatted = formatCs(totalCs);
+      customDisplay.hidden = true;
+      seconds.hidden = false;
+      colon.hidden = false;
+      centiseconds.hidden = false;
+      seconds.textContent = formatted.sec;
+      centiseconds.textContent = formatted.cs;
+    }
+    function renderCustomText(text) {
+      seconds.hidden = true;
+      colon.hidden = true;
+      centiseconds.hidden = true;
+      customDisplay.hidden = false;
+      customDisplay.textContent = text;
+    }
+    function gradient(base, pressed) {
+      const top = `color-mix(in srgb, ${base} 82%, #ffffff)`;
+      const value = `linear-gradient(180deg, ${top} 0%, ${base} 100%)`;
+      return pressed
+        ? `linear-gradient(180deg, rgba(0,0,0,0.12), rgba(0,0,0,0.12)), ${value}`
+        : value;
+    }
+    let pressed = false;
+    function renderState() {
+      const resetBase = "linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.12) 100%)";
+      const resetBackground = pressed
+        ? `linear-gradient(180deg, rgba(0,0,0,0.12), rgba(0,0,0,0.12)), ${resetBase}`
+        : resetBase;
+      let label = "START";
+      let background = gradient("#4C6EF5", pressed);
+      if (state === "running") {
+        label = "STOP";
+        background = gradient("#E03131", pressed);
+      } else if (state === "stopped") {
+        label = "RESET";
+        background = resetBackground;
+      }
+      controlLabel.textContent = label;
+      control.setAttribute("aria-label", label);
+      control.style.background = background;
+      control.style.transform = pressed
+        ? "scale(0.96)"
+        : "none";
+    }
+    function finalizeStop(cs) {
+      cancelAnimationFrame(frameId);
+      frameId = 0;
+      state = "stopped";
+      stoppedCs = cs;
+      renderCs(stoppedCs);
+      renderState();
+    }
+    function finalizeStopText(text) {
+      cancelAnimationFrame(frameId);
+      frameId = 0;
+      state = "stopped";
+      renderCustomText(text);
+      renderState();
+    }
+    function tick(now) {
+      const elapsed = clampElapsed(now - startedAt);
+      if (elapsed >= 59990) {
+        finalizeStop(resolveStoppedCs({
+          elapsed, trickMode: trickState === "digit", reservedTens, stopDigit: null
+        }));
+        return;
+      }
+      renderCs(Math.floor(elapsed / 10));
+      frameId = requestAnimationFrame(tick);
+    }
+    function startTimer() {
+      state = "running";
+      startedAt = performance.now();
+      renderCs(0);
+      renderState();
+      frameId = requestAnimationFrame(tick);
+    }
+    function digitFromEvent(event) {
+      const rect = control.getBoundingClientRect();
+      return digitFromPoint(event.clientX - rect.left, event.clientY - rect.top, rect.width, rect.height);
+    }
+    function stopTimer(event) {
+      const elapsed = clampElapsed(performance.now() - startedAt);
+      if (trickState === "text" && customText) {
+        finalizeStopText(customText);
+        return;
+      }
+      finalizeStop(resolveStoppedCs({
+        elapsed, trickMode: trickState === "digit",
+        reservedTens, stopDigit: digitFromEvent(event)
+      }));
+    }
+    function resetTimer() {
+      state = "idle";
+      reservedTens = null;
+      stoppedCs = 0;
+      renderCs(0);
+      renderState();
+    }
+    function isPrimaryPointer(event) {
+      return event.isPrimary !== false && (event.button === undefined || event.button === 0);
+    }
+    function handleControl(event) {
+      if (!isPrimaryPointer(event)) return;
+      event.preventDefault();
+      pressed = true;
+      if (state === "idle") {
+        if (trickState === "digit") reservedTens = digitFromEvent(event);
+        startTimer();
+      } else if (state === "running") {
+        stopTimer(event);
+      } else {
+        resetTimer();
+      }
+    }
+    function releasePress() {
+      if (!pressed) return;
+      pressed = false;
+      renderState();
+    }
+    async function enterFullscreen() {
+      if (document.fullscreenEnabled === false && !document.webkitFullscreenEnabled) return;
+      if (document.fullscreenElement || document.webkitFullscreenElement) return;
+      const targets = [document.documentElement, document.body];
+      for (const element of targets) {
+        if (!element) continue;
+        const request = element.requestFullscreen || element.webkitRequestFullscreen ||
+          element.webkitRequestFullScreen || element.msRequestFullscreen;
+        if (typeof request !== "function") continue;
+        try {
+          await request.call(element, { navigationUI: "hide" });
+          break;
+        } catch (_) {}
+      }
+      try {
+        if (screen.orientation && typeof screen.orientation.lock === "function") {
+          await screen.orientation.lock("landscape");
+        }
+      } catch (_) {}
+    }
+    function handleFullscreenZone(event) {
+      if (!isPrimaryPointer(event)) return;
+      event.preventDefault();
+      enterFullscreen();
+    }
+    function handleTrickZone(event) {
+      if (!isPrimaryPointer(event)) return;
+      event.preventDefault();
+      trickState = nextTrickState(trickState);
+      if (trickState !== "digit") reservedTens = null;
+      colon.classList.toggle("trick", trickState === "digit");
+      colon.classList.toggle("trick-text", trickState === "text");
+    }
+    function openTextEditor() {
+      textEditorInput.value = customText;
+      textEditor.hidden = false;
+      textEditorInput.focus();
+      textEditorInput.select();
+    }
+    function closeTextEditor() {
+      textEditor.hidden = true;
+    }
+    function handleTextZonePress(event) {
+      if (!isPrimaryPointer(event)) return;
+      event.preventDefault();
+      clearTextZonePress();
+      textZonePressTimer = setTimeout(() => {
+        textZonePressTimer = 0;
+        openTextEditor();
+      }, TEXT_ZONE_HOLD_MS);
+    }
+    function clearTextZonePress() {
+      if (!textZonePressTimer) return;
+      clearTimeout(textZonePressTimer);
+      textZonePressTimer = 0;
+    }
+    function saveCustomText() {
+      const value = textEditorInput.value.trim();
+      customText = value;
+      try {
+        localStorage.setItem(CUSTOM_TEXT_STORAGE_KEY, value);
+      } catch (_) {}
+      closeTextEditor();
+    }
+    function clearCustomText() {
+      customText = "";
+      try {
+        localStorage.removeItem(CUSTOM_TEXT_STORAGE_KEY);
+      } catch (_) {}
+      textEditorInput.value = "";
+      closeTextEditor();
+    }
+    function handleTextEditorBackground(event) {
+      if (event.target !== textEditorInput &&
+          event.target !== textEditorSave &&
+          event.target !== textEditorClear) {
+        closeTextEditor();
+      }
+    }
+    function loadCustomText() {
+      try {
+        customText = localStorage.getItem(CUSTOM_TEXT_STORAGE_KEY) || "";
+      } catch (_) {
+        customText = "";
+      }
+    }
+    function updateMainHitZonesHeight() {
+      const controlTop = control.getBoundingClientRect().top;
+      mainHitZones.style.height = `${Math.max(0, controlTop - MAIN_HIT_ZONE_GAP)}px`;
+    }
+    function observeControlLayout() {
+      updateMainHitZonesHeight();
+      if (typeof ResizeObserver !== "function") return;
+      controlResizeObserver = new ResizeObserver(updateMainHitZonesHeight);
+      controlResizeObserver.observe(control);
+      controlResizeObserver.observe(app);
+    }
+    async function acquireWakeLock() {
+      if (wakeLock || wakeLockPending || document.visibilityState !== "visible" ||
+          !navigator.wakeLock || typeof navigator.wakeLock.request !== "function") return;
+      wakeLockPending = true;
+      try {
+        const lock = await navigator.wakeLock.request("screen");
+        wakeLock = lock;
+        lock.addEventListener("release", () => {
+          if (wakeLock === lock) wakeLock = null;
+          if (document.visibilityState === "visible") acquireWakeLock();
+        });
+      } catch (_) {
+      } finally {
+        wakeLockPending = false;
+      }
+    }
+    function initApp() {
+      loadCustomText();
+      control.addEventListener("pointerdown", handleControl, { passive: false });
+      fullscreenZone.addEventListener("pointerdown", handleFullscreenZone, { passive: false });
+      trickZone.addEventListener("pointerdown", handleTrickZone, { passive: false });
+      textZone.addEventListener("pointerdown", handleTextZonePress, { passive: false });
+      textEditor.addEventListener("pointerdown", handleTextEditorBackground);
+      textEditorSave.addEventListener("click", saveCustomText);
+      textEditorClear.addEventListener("click", clearCustomText);
+      window.addEventListener("pointerup", releasePress);
+      window.addEventListener("pointercancel", releasePress);
+      window.addEventListener("pointerup", clearTextZonePress);
+      window.addEventListener("pointercancel", clearTextZonePress);
+      document.addEventListener("pointerdown", () => {
+        if (!wakeLock) acquireWakeLock();
+      });
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible") acquireWakeLock();
+      });
+      observeControlLayout();
+      renderState();
+      acquireWakeLock();
+    }
+    if (location.hash === "#selftest") {
+      app.hidden = true;
+      selftest.hidden = false;
+      runSelfTests();
+    } else {
+      initApp();
+    }
+  </script>
+</body>
+</html>
