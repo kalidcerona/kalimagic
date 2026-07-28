@@ -1,5 +1,11 @@
 (function () {
-  var state = { filter: 'all', session: null, flash: '', memberQuery: '' };
+  var state = {
+    filter: 'all',
+    session: null,
+    flash: '',
+    memberQuery: '',
+    memberToolAccessByUserId: null
+  };
   var listEl = document.querySelector('[data-admin-list]');
   var authPanel = document.querySelector('[data-auth-panel]');
   var filterButtons = Array.prototype.slice.call(document.querySelectorAll('[data-admin-filter]'));
@@ -391,6 +397,150 @@
     return row;
   }
 
+  var MEMBER_TOOL_LABELS = {
+    calc: '계산기',
+    stopwatch: '스톱워치',
+    all: '전체'
+  };
+
+  function memberToolAccessMap(data) {
+    var accessByUserId = Object.create(null);
+    (data.approved || []).forEach(function (access) {
+      if (!access.userId) return;
+      accessByUserId[access.userId] = {
+        id: access.id,
+        tool: access.tool,
+        lifetime: access.lifetime === true,
+        status: access.status
+      };
+    });
+    return accessByUserId;
+  }
+
+  async function loadMemberToolAccess() {
+    try {
+      var data = await fetchJson('/.netlify/functions/admin-tools');
+      state.memberToolAccessByUserId = memberToolAccessMap(data);
+    } catch {
+      state.memberToolAccessByUserId = null;
+    }
+  }
+
+  function memberToolAccess(member) {
+    if (!state.memberToolAccessByUserId || !member.userId) return null;
+    return state.memberToolAccessByUserId[member.userId] || null;
+  }
+
+  function memberToolAccessNode(member) {
+    if (state.memberToolAccessByUserId === null) return null;
+    var access = memberToolAccess(member);
+    var text = '도구 권한 없음';
+    if (access) {
+      text = '도구 권한 · ' + (MEMBER_TOOL_LABELS[access.tool] || access.tool);
+      if (access.lifetime) text += ' · 평생';
+    }
+    return el('p', '', text);
+  }
+
+  function setMemberToolBusy(toggle, panel, busy) {
+    toggle.disabled = busy;
+    Array.prototype.forEach.call(panel.querySelectorAll('button'), function (button) {
+      button.disabled = busy;
+    });
+  }
+
+  function memberToolPanel(member, card, toggle) {
+    var access = memberToolAccess(member);
+    var form = el('form', 'playground-comment-form');
+    form.hidden = true;
+    form.setAttribute('data-member-tool-panel', '');
+
+    var tool = document.createElement('select');
+    tool.name = 'tool';
+    tool.appendChild(option('calc', '계산기', access && access.tool === 'calc'));
+    tool.appendChild(option('stopwatch', '스톱워치', access && access.tool === 'stopwatch'));
+    tool.appendChild(option('all', '전체', access && access.tool === 'all'));
+
+    var lifetimeLabel = document.createElement('label');
+    var lifetime = document.createElement('input');
+    lifetime.type = 'checkbox';
+    lifetime.name = 'lifetime';
+    lifetime.checked = Boolean(access && access.lifetime);
+    lifetimeLabel.appendChild(lifetime);
+    lifetimeLabel.appendChild(document.createTextNode(' 평생 권한'));
+
+    var controls = el('div', 'admin-card__actions');
+    var add = el('button', 'playground-button', '추가');
+    add.type = 'submit';
+    controls.appendChild(add);
+
+    if (access && access.id) {
+      var revoke = el('button', 'playground-button playground-button--ghost', '권한 회수');
+      revoke.type = 'button';
+      revoke.addEventListener('click', async function () {
+        if (!window.confirm('이 회원의 도구 권한을 회수할까요?')) return;
+        var status = card.querySelector('[data-member-status]');
+        status.textContent = '처리 중입니다.';
+        status.classList.remove('is-error');
+        setMemberToolBusy(toggle, form, true);
+        try {
+          await fetchJson('/.netlify/functions/admin-tools?id=' + encodeURIComponent(access.id), {
+            method: 'DELETE'
+          });
+          delete state.memberToolAccessByUserId[member.userId];
+          card.replaceWith(memberRow(member));
+        } catch (error) {
+          status.textContent = error.message || '도구 권한을 회수하지 못했습니다.';
+          status.classList.add('is-error');
+          setMemberToolBusy(toggle, form, false);
+        }
+      });
+      controls.appendChild(revoke);
+    }
+
+    form.appendChild(tool);
+    form.appendChild(lifetimeLabel);
+    form.appendChild(controls);
+    form.addEventListener('submit', async function (event) {
+      event.preventDefault();
+      var status = card.querySelector('[data-member-status]');
+      status.textContent = '처리 중입니다.';
+      status.classList.remove('is-error');
+      setMemberToolBusy(toggle, form, true);
+      try {
+        await fetchJson('/.netlify/functions/admin-tools', {
+          method: 'POST',
+          body: JSON.stringify({
+            action: 'grantByUser',
+            userId: member.userId,
+            tool: tool.value,
+            lifetime: lifetime.checked
+          })
+        });
+        await loadMemberToolAccess();
+        card.replaceWith(memberRow(member));
+      } catch (error) {
+        status.textContent = error.message || '도구 권한을 부여하지 못했습니다.';
+        status.classList.add('is-error');
+        setMemberToolBusy(toggle, form, false);
+      }
+    });
+    return form;
+  }
+
+  function memberToolButton(member, card) {
+    var button = el('button', 'playground-button playground-button--ghost', '도구 권한');
+    button.type = 'button';
+    button.setAttribute('aria-expanded', 'false');
+    button.addEventListener('click', function () {
+      var panel = card.querySelector('[data-member-tool-panel]');
+      var willOpen = panel.hidden;
+      panel.hidden = !willOpen;
+      button.setAttribute('aria-expanded', String(willOpen));
+    });
+    return button;
+  }
+
   function memberRow(member) {
     var card = el('article', 'admin-card');
     var protectedRolePattern = /^(admin|kali)$/;
@@ -401,13 +551,18 @@
     }
     card.appendChild(nameEl);
     card.appendChild(memberRoleNode(member));
+    var toolAccessNode = memberToolAccessNode(member);
+    if (toolAccessNode) card.appendChild(toolAccessNode);
     card.appendChild(el('span', '', member.createdAt ? new Date(member.createdAt).toLocaleDateString('ko-KR') : '가입일 없음'));
     var actions = el('div', 'admin-card__actions');
     if (!protectedRolePattern.test(member.role || '')) {
       actions.appendChild(memberRoleButton(member, card));
       actions.appendChild(memberGodButton(member, card));
     }
+    var toolButton = memberToolButton(member, card);
+    actions.appendChild(toolButton);
     card.appendChild(actions);
+    card.appendChild(memberToolPanel(member, card, toolButton));
     var status = el('p', 'playground-form-status');
     status.setAttribute('data-member-status', '');
     card.appendChild(status);
@@ -434,7 +589,11 @@
     listEl.appendChild(memberSearchCard());
     listEl.appendChild(el('p', 'playground-loading', '회원 목록을 불러오는 중입니다.'));
     try {
-      var data = await fetchJson('/.netlify/functions/admin-members?q=' + encodeURIComponent(state.memberQuery));
+      var results = await Promise.all([
+        fetchJson('/.netlify/functions/admin-members?q=' + encodeURIComponent(state.memberQuery)),
+        loadMemberToolAccess()
+      ]);
+      var data = results[0];
       renderMembers(data.members || []);
     } catch (error) {
       clear(listEl);
