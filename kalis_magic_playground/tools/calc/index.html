@@ -261,21 +261,21 @@
       assert(show(decAdd(d("0.1"), d("0.2"))) === "0.3", "0.1+0.2=0.3");
       assert(show(decSub(d("5"), d("7"))) === "-2", "5-7=-2");
       assert(show(decMul(d("1.5"), d("2"))) === "3", "1.5×2=3");
-      assert(show(decMul(d("999999999999999"), d("999999999999999"))) === "1E30" || show(decMul(d("999999999999999"), d("999999999999999"))).startsWith("9.99999999"), "big mul → exponent form");
-      assert(show(d("999999999999.4")) === "1E12" || show(d("999999999999.4")) === "999999999999", "1e12 경계(반올림 유효10자리 후 지수 판정)");
-      assert(show(d("0.0000000009")) === "9E-10", "small → exponent");
+      assert(show(decMul(d("999999999999999"), d("999999999999999"))) === "9.99999999999998E29", "큰 곱셈 → 16자리 반올림 후 지수 표기");
+      assert(show(d("999999999999.4")) === "999999999999.4", "1e16 미만은 십진 표시");
+      assert(show(d("0.0000000009")) === "9E-10", "작은 쪽 지수 경계 유지");
       assert(show(decAdd(d("2.5"), d("2.5"))) === "5", "trailing zero removed");
       assert(decDiv(d("1"), d("0")) === null, "÷0 → null");
       assert(decDiv(d("0"), d("0")) === null, "0÷0 → null");
-      assert(show(decDiv(d("1"), d("3"))) === "0.3333333333", "1÷3 유효10자리");
-      assert(show(decDiv(d("2"), d("7"))) === "0.2857142857", "2÷7 순환소수");
-      assert(show(decDiv(d("2"), d("3"))) === "0.6666666667", "2÷3 round-half-up 마지막 자리 7");
+      assert(show(decDiv(d("1"), d("3"))) === "0.3333333333333333", "1÷3 유효16자리");
+      assert(show(decDiv(d("2"), d("7"))) === "0.2857142857142857", "2÷7 순환소수 유효16자리");
+      assert(show(decDiv(d("2"), d("3"))) === "0.6666666666666667", "2÷3 round-half-up 마지막 자리 7");
       assert(show(decDiv(d("10"), d("4"))) === "2.5", "10÷4 정확 종결");
-      assert(show(decDiv(d("-1"), d("3"))) === "-0.3333333333", "부호 -+");
-      assert(show(decDiv(d("-1"), d("-3"))) === "0.3333333333", "부호 --");
-      assert(show(decDiv(d("1"), d("-3"))) === "-0.3333333333", "부호 +-");
-      assert(show(decDiv(d("1"), d("0.0000000009"))) === "1111111111", "0 근접 나눗셈(1.11e9 — 지수 경계 미만이라 십진 표시)");
-      assert(show(decDiv(d("1000000000000"), d("0.001"))) === "1E15", "큰 결과 지수");
+      assert(show(decDiv(d("-1"), d("3"))) === "-0.3333333333333333", "부호 -+");
+      assert(show(decDiv(d("-1"), d("-3"))) === "0.3333333333333333", "부호 --");
+      assert(show(decDiv(d("1"), d("-3"))) === "-0.3333333333333333", "부호 +-");
+      assert(show(decDiv(d("1"), d("0.0000000009"))) === "1111111111.111111", "0 근접 나눗셈(1.11e9 — 유효16자리 십진 표시)");
+      assert(show(decDiv(d("1000000000000"), d("0.001"))) === "1000000000000000", "1e16 미만 큰 결과는 십진 표시");
       assert(decToPlainString(decFromString("1000000000000")) === "1000000000000", "fix2: plain 1e12");
       assert(decToPlainString(decFromString("-0.0000000009")) === "-0.0000000009", "fix2: plain small negative");
       assert(decToPlainString(decDiv(decFromString("1"),decFromString("3"))) === "0.333333333333333333333333333333", "fix2: plain 1/3 내부 30자리");
@@ -303,12 +303,15 @@
       assert(seq(["1","2","C"]) === "", "C 전체 클리어");
       assert(seq("1234567890123456".split("")) === "1234567890123456", "16자리 입력 허용");
       assert(seq("12345678901234567".split("")) === "1234567890123456", "17자리째 무시");
+      assert(displayValue("123456789012÷") === "123456789012", "16자리 표시: 12자리 보존");
+      assert(displayValue("1234567890123456×") === "1234567890123456", "16자리 표시: 16자리 보존");
       assert(seq(["()"]) === "", "() no-op");
       assert(seq(["5","()"]) === "5", "() no-op 2");
       // tokenize + evaluate
       const ev = (expr) => { const t = tokenize(expr); return t === null ? null : evaluate(t); };
       assert(show(ev(seq(["1","2","+","3","4","×","5"]))) === "230", "즉시계산: 12+34×5=230");
       assert(show(ev(seq(["9","×","9"]))) === "81", "9×9=81");
+      assert(show(ev(seq("999999999999".split("").concat(["+","1"])))) === "1000000000000", "13자리 결과 십진 표시(지수 아님)");
       assert(displayValue("") === "0", "display: 빈 수식 0");
       assert(displayValue("9×9×") === "81", "display: 연산자 직후 중간결과 81");
       assert(displayValue("9×9×3") === "3", "display: 숫자 입력 중엔 그 숫자");
@@ -477,6 +480,8 @@
       return `${sign}${digits.slice(0, decimalPosition)}.${digits.slice(decimalPosition)}`;
     }
 
+    const DISPLAY_SIG = 16;
+
     function decToDisplay(dec) {
       const value = decNormalize(dec.s, dec.d, dec.e);
       if (value.d === 0n) return "0";
@@ -485,8 +490,8 @@
       let exponent = rawDigits.length - value.e - 1;
       let roundedDigits = value.d;
 
-      if (rawDigits.length > 10) {
-        const cut = rawDigits.length - 10;
+      if (rawDigits.length > DISPLAY_SIG) {
+        const cut = rawDigits.length - DISPLAY_SIG;
         const divisor = decPow10(cut);
         const remainder = roundedDigits % divisor;
         roundedDigits /= divisor;
@@ -495,7 +500,7 @@
           roundedDigits += 1n;
         }
 
-        if (roundedDigits.toString().length > 10) {
+        if (roundedDigits.toString().length > DISPLAY_SIG) {
           roundedDigits /= 10n;
           exponent += 1;
         }
@@ -503,7 +508,7 @@
 
       const significant = roundedDigits.toString().replace(/0+$/, "");
       const sign = value.s < 0 ? "-" : "";
-      const useExponent = exponent >= 12 || exponent < -9;
+      const useExponent = exponent >= 16 || exponent < -9;
 
       if (useExponent) {
         const mantissa = significant.length === 1
