@@ -49,8 +49,6 @@ export const PUBLIC_FILES = [
   'write.js',
   'post.js',
   'reviews-community.js',
-  'playground-youtube.mjs',
-  'playground-youtube-lite.mjs'
 ];
 
 export const PUBLIC_DIRS = [

@@ -19,8 +19,6 @@ test('public build allowlist includes visible site pages', () => {
   assert.ok(PUBLIC_FILES.includes('playground-list.js'));
   assert.ok(PUBLIC_FILES.includes('playground-compose.js'));
   assert.ok(PUBLIC_FILES.includes('playground-detail.js'));
-  assert.ok(PUBLIC_FILES.includes('playground-youtube.mjs'));
-  assert.ok(PUBLIC_FILES.includes('playground-youtube-lite.mjs'));
   assert.ok(PUBLIC_DIRS.includes('assets'));
 });
 
