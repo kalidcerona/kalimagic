@@ -34,22 +34,31 @@
     }
 
     .calculator {
+      --pad-block-start: max(clamp(20px, 4vw, 28px), env(safe-area-inset-top));
+      --pad-block-end: max(clamp(20px, 4vw, 28px), env(safe-area-inset-bottom));
+      --layout-gap: clamp(16px, 4vw, 24px);
+      --toolbar-height: clamp(34px, 8vw, 44px);
+      --display-min: 96px;
       container-type: inline-size;
       width: min(100%, clamp(430px, 68vw, 560px));
-      min-height: 100dvh;
+      height: 100dvh;
       margin: 0 auto;
       padding:
-        max(clamp(20px, 4cqw, 28px), env(safe-area-inset-top))
-        clamp(18px, 4cqw, 24px)
-        max(clamp(20px, 4cqw, 28px), env(safe-area-inset-bottom));
+        var(--pad-block-start)
+        clamp(18px, 4vw, 24px)
+        var(--pad-block-end);
       display: grid;
-      grid-template-rows: auto minmax(clamp(150px, 24dvh, 300px), 1fr) auto;
-      gap: clamp(16px, 4cqw, 24px);
+      grid-template-rows:
+        var(--toolbar-height)
+        minmax(var(--display-min), 1fr)
+        auto;
+      gap: var(--layout-gap);
+      overflow: hidden;
       background: #000;
     }
 
     .toolbar {
-      min-height: clamp(34px, 8cqw, 44px);
+      min-height: var(--toolbar-height);
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -96,14 +105,32 @@
     }
 
     .keypad {
+      --key-gap: clamp(11px, 3.5cqw, 20px);
+      --btn-inline: calc((100cqw - 3 * var(--key-gap)) / 4);
+      --btn-block: max(
+        0px,
+        calc(
+          (
+            100dvh
+            - var(--pad-block-start)
+            - var(--pad-block-end)
+            - var(--toolbar-height)
+            - var(--display-min)
+            - 2 * var(--layout-gap)
+            - 4 * var(--key-gap)
+          ) / 5
+        )
+      );
+      --btn: min(var(--btn-inline), var(--btn-block));
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: clamp(11px, 3.5cqw, 20px);
+      grid-template-columns: repeat(4, var(--btn));
+      gap: var(--key-gap);
+      justify-content: space-between;
     }
 
     .key {
-      width: 100%;
-      aspect-ratio: 1;
+      width: var(--btn);
+      height: var(--btn);
       border: 0;
       border-radius: 50%;
       display: grid;
@@ -252,6 +279,13 @@
       assert(decToPlainString(decFromString("1000000000000")) === "1000000000000", "fix2: plain 1e12");
       assert(decToPlainString(decFromString("-0.0000000009")) === "-0.0000000009", "fix2: plain small negative");
       assert(decToPlainString(decDiv(decFromString("1"),decFromString("3"))) === "0.333333333333333333333333333333", "fix2: plain 1/3 내부 30자리");
+      assert(formatDisplay("931392") === "931,392", "쉼표: 정수");
+      assert(formatDisplay("-1234.5678") === "-1,234.5678", "쉼표: 음수+소수부(소수부 미적용)");
+      assert(formatDisplay("123") === "123", "쉼표: 3자리 이하 없음");
+      assert(formatDisplay("1234567890123456") === "1,234,567,890,123,456", "쉼표: 16자리");
+      assert(formatDisplay("1.234567891E15") === "1.234567891E15", "쉼표: 지수 표기 통과");
+      assert(formatDisplay("오류") === "오류", "쉼표: 오류 통과");
+      assert(formatDisplay("0.5") === "0.5", "쉼표: 소수만");
 
       // applyKey — 연산자·소수점·편집
       const seq = (keys, init="") => keys.reduce((e,k)=>applyKey(e,k), init);
@@ -768,6 +802,18 @@
       return value === null ? "오류" : decToDisplay(value);
     }
 
+    function formatDisplay(str) {
+      const source = String(str ?? "");
+      if (source === "오류" || source.includes("E")) return source;
+
+      const number = /^(-?)(\d+)(\.\d*)?$/.exec(source);
+      if (number === null) return source;
+
+      const [, sign, integer, fraction = ""] = number;
+      const grouped = integer.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+      return `${sign}${grouped}${fraction}`;
+    }
+
     function soleNumberText(expr) {
       const source = String(expr ?? "");
       return /^-?(?:\d+(?:\.\d*)?|\.\d+)$/.test(source) ? source : null;
@@ -887,7 +933,8 @@
       };
 
       const render = () => {
-        display.textContent = errorShown ? "오류" : displayValue(expr);
+        const rawDisplay = errorShown ? "오류" : displayValue(expr);
+        display.textContent = formatDisplay(rawDisplay);
         divideKey.classList.toggle("armed", trickState.armed);
         fitDisplayText(display);
       };
