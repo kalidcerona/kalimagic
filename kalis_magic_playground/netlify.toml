@@ -21,6 +21,11 @@
   function = "tools-gate"
 
 [[redirects]]
+  from = "/tools/_check"
+  to = "/.netlify/functions/tool-check"
+  status = 200
+
+[[redirects]]
   from = "/post.html"
   to = "/p/:id"
   status = 301

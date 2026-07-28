@@ -50,8 +50,14 @@
 
     .panel p.email {
       margin-bottom: 20px;
+      padding: 13px 16px;
+      border: 1px solid #3a3a3a;
+      border-radius: 12px;
+      background: #131313;
       color: #f5f5f5;
-      font-size: 14px;
+      font-size: 15px;
+      font-weight: 600;
+      word-break: break-all;
     }
 
     button {
@@ -139,10 +145,27 @@
         ]);
       }
 
+      function showPending(email) {
+        var lines = ['신청이 접수되었습니다. 칼리형이 승인하면 바로 쓸 수 있습니다.'];
+        if (email) {
+          lines.push('아래 구글 계정으로 신청되었습니다.');
+          lines.push({ email: email });
+          lines.push('이 이메일 주소를 이름(또는 닉네임)과 함께 칼리형에게 보내주세요. 칼리형은 이 주소로 신청한 분을 확인합니다.');
+        } else {
+          lines.push('로그인한 구글 이메일 주소를 이름(또는 닉네임)과 함께 칼리형에게 보내주세요.');
+        }
+        lines.push('승인받은 뒤 아래 버튼을 눌러주세요.');
+        render('승인 대기 중입니다', lines, [
+          { label: '다시 확인', onClick: start },
+          { label: '다른 계정으로 로그인', onClick: function () { window.MagicAuth.logout(); } }
+        ]);
+      }
+
       function showDenied(email) {
-        var lines = ['이 계정에는 아직 사용 권한이 없습니다. 칼리형에게 문의해주세요.'];
+        var lines = ['이 계정은 다른 도구로 승인되어 있습니다. 지금 열려는 도구도 쓰려면 칼리형에게 문의해주세요.'];
         if (email) lines.push({ email: email });
-        render('권한이 없습니다', lines, [
+        render('이 도구는 아직 열려 있지 않습니다', lines, [
+          { label: '다시 확인', onClick: start },
           { label: '다른 계정으로 로그인', onClick: function () { window.MagicAuth.logout(); } }
         ]);
       }
@@ -166,8 +189,13 @@
           location.replace(to);
           return;
         }
+        var data = await response.json().catch(function () { return {}; });
+        var email = session.user && session.user.email;
         if (response.status === 401) return showLogin();
-        if (response.status === 403) return showDenied(session.user && session.user.email);
+        if (response.status === 403) {
+          if (data.error === 'pending' || data.status === 'pending') return showPending(email);
+          return showDenied(email);
+        }
         showError();
       }
 

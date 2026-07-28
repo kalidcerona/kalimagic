@@ -31,6 +31,11 @@ function analyzePath(rawPathname) {
     return { mode: 'block', pathname };
   }
 
+  // 권한 회수 확인용 엔드포인트는 스스로 쿠키를 검증하므로 게이트를 통과시킨다.
+  if (pathname === '/tools/_check') {
+    return { mode: 'public', pathname };
+  }
+
   const isLoginPath =
     pathname === '/tools/login' || pathname.startsWith('/tools/login/');
   const isPublicAsset =
