@@ -97,16 +97,6 @@
       border: 0;
       background: transparent;
     }
-    #preset-zone {
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 33.333333%;
-      height: 0;
-      z-index: 1001;
-      background: transparent;
-      touch-action: none;
-    }
     #control {
       display: flex;
       flex: 0 0 auto;
@@ -265,7 +255,6 @@
       <div id="trick-zone" class="main-hit-zone"></div>
       <div id="text-zone" class="main-hit-zone"></div>
     </div>
-    <div id="preset-zone" aria-hidden="true"></div>
   </div>
   <div id="text-editor" hidden>
     <input type="text" id="text-editor-input" maxlength="10" enterkeyhint="done">
@@ -308,6 +297,9 @@
       const col = Math.min(4, Math.floor(px / width * 5));
       const row = Math.min(1, Math.floor(py / height * 2));
       return row === 0 ? col + 1 : (col === 4 ? 0 : col + 6);
+    }
+    function isLeftmostFifth(x, rect) {
+      return x < rect.left + rect.width / 5;
     }
     function composeCs(tens, ones) {
       return tens * 10 + ones;
@@ -365,6 +357,10 @@
         const digit = digitFromPoint(x, y, 500, 200);
         assert(Number.isInteger(digit) && digit >= 0 && digit <= 9, `clamp ${x},${y}`);
       }
+      const controlRect = { left: 100, width: 500 };
+      assert(isLeftmostFifth(199.99, controlRect), "preset hold: 왼쪽 1/5 안쪽");
+      assert(!isLeftmostFifth(200, controlRect), "preset hold: 1/5 경계 제외");
+      assert(!isLeftmostFifth(350, controlRect), "preset hold: 가운데 제외");
       assert(composeCs(2, 8) === 28, "compose 2,8");
       assert(composeCs(0, 0) === 0, "compose 0,0");
       assert(composeCs(9, 9) === 99, "compose 9,9");
@@ -449,7 +445,6 @@
     const trickZone = document.getElementById("trick-zone");
     const textZone = document.getElementById("text-zone");
     const mainHitZones = document.getElementById("main-hit-zones");
-    const presetZone = document.getElementById("preset-zone");
     const control = document.getElementById("control");
     const controlLabel = document.getElementById("control-label");
     const seconds = document.getElementById("seconds");
@@ -466,8 +461,8 @@
     const CUSTOM_TEXT_STORAGE_KEY = "stopwatch_custom_text";
     const PRESET_STORAGE_KEY = "stopwatch_preset_cs";
     const TEXT_ZONE_HOLD_MS = 550;
+    const PRESET_HOLD_MS = 1500;
     const MAIN_HIT_ZONE_GAP = 4;
-    const PRESET_ZONE_MIN_HEIGHT = 72;
     let state = "idle";
     let trickState = "off";
     let customText = "";
@@ -480,7 +475,7 @@
     let wakeLock = null;
     let wakeLockPending = false;
     let textZonePressTimer = 0;
-    let presetZonePressTimer = 0;
+    let presetHoldTimer = 0;
     let controlResizeObserver = null;
     function renderCs(totalCs) {
       const formatted = formatCs(totalCs);
@@ -574,6 +569,8 @@
       else finalizeStop(o.cs);
     }
     function resetTimer() {
+      cancelAnimationFrame(frameId);
+      frameId = 0;
       state = "idle";
       reservedTens = null;
       stoppedCs = 0;
@@ -586,6 +583,16 @@
     function handleControl(event) {
       if (!isPrimaryPointer(event)) return;
       event.preventDefault();
+      const stateAtPress = state;
+      const rect = control.getBoundingClientRect();
+      clearPresetHold();
+      if (stateAtPress !== "running" && isLeftmostFifth(event.clientX, rect)) {
+        presetHoldTimer = setTimeout(() => {
+          presetHoldTimer = 0;
+          resetTimer();
+          openPresetPad();
+        }, PRESET_HOLD_MS);
+      }
       pressed = true;
       if (state === "idle") {
         if (trickState === "digit") reservedTens = digitFromEvent(event);
@@ -670,22 +677,10 @@
     function closePresetPad() {
       presetPad.hidden = true;
     }
-    function handlePresetZonePress(event) {
-      if (!isPrimaryPointer(event) || state === "running") return;
-      event.preventDefault();
-      clearPresetZonePress();
-      presetZonePressTimer = setTimeout(() => {
-        presetZonePressTimer = 0;
-        openPresetPad();
-      }, TEXT_ZONE_HOLD_MS);
-      try {
-        presetZone.setPointerCapture(event.pointerId);
-      } catch (_) {}
-    }
-    function clearPresetZonePress() {
-      if (!presetZonePressTimer) return;
-      clearTimeout(presetZonePressTimer);
-      presetZonePressTimer = 0;
+    function clearPresetHold() {
+      if (!presetHoldTimer) return;
+      clearTimeout(presetHoldTimer);
+      presetHoldTimer = 0;
     }
     function savePreset() {
       if (presetEntry.length !== 4) return;
@@ -765,11 +760,7 @@
     }
     function updateMainHitZonesHeight() {
       const controlRect = control.getBoundingClientRect();
-      const viewportHeight = window.innerHeight || app.getBoundingClientRect().height;
-      const presetTop = Math.max(0, controlRect.bottom + MAIN_HIT_ZONE_GAP);
       mainHitZones.style.height = `${Math.max(0, controlRect.top - MAIN_HIT_ZONE_GAP)}px`;
-      presetZone.style.top = `${presetTop}px`;
-      presetZone.style.height = `${Math.max(PRESET_ZONE_MIN_HEIGHT, viewportHeight - presetTop)}px`;
     }
     function observeControlLayout() {
       updateMainHitZonesHeight();
@@ -801,9 +792,6 @@
       fullscreenZone.addEventListener("pointerdown", handleFullscreenZone, { passive: false });
       trickZone.addEventListener("pointerdown", handleTrickZone, { passive: false });
       textZone.addEventListener("pointerdown", handleTextZonePress, { passive: false });
-      presetZone.addEventListener("pointerdown", handlePresetZonePress, { passive: false });
-      presetZone.addEventListener("pointerup", clearPresetZonePress);
-      presetZone.addEventListener("pointercancel", clearPresetZonePress);
       textEditor.addEventListener("pointerdown", handleTextEditorBackground);
       textEditorSave.addEventListener("click", saveCustomText);
       textEditorClear.addEventListener("click", clearCustomText);
@@ -815,8 +803,8 @@
       window.addEventListener("pointercancel", releasePress);
       window.addEventListener("pointerup", clearTextZonePress);
       window.addEventListener("pointercancel", clearTextZonePress);
-      window.addEventListener("pointerup", clearPresetZonePress);
-      window.addEventListener("pointercancel", clearPresetZonePress);
+      window.addEventListener("pointerup", clearPresetHold);
+      window.addEventListener("pointercancel", clearPresetHold);
       document.addEventListener("pointerdown", () => {
         if (!wakeLock) acquireWakeLock();
       });
