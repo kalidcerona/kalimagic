@@ -367,6 +367,42 @@
       assert(soleNumberText("(5)") === null, "괄호 있으면 null");
       assert(soleNumberText("") === null, "빈 수식 null");
 
+      // trickErrorGate
+      const gate = typeof trickErrorGate === "function"
+        ? trickErrorGate
+        : () => "missing";
+      const gateState = (phase) => ({
+        phase, storedText: "817", lastKey: null, pendingSole: null
+      });
+      for (const phase of ["off", "set", "ready"]) {
+        assert(gate(gateState(phase), "C") === "pass", `error gate: C passes in ${phase}`);
+      }
+      for (const phase of ["off", "set", "ready"]) {
+        const expectedGate = phase === "ready" ? "pass" : "blocked";
+        assert(gate(gateState(phase), "=") === expectedGate, `error gate: = in ${phase}`);
+      }
+      for (const phase of ["off", "set", "ready"]) {
+        const expectedGate = phase === "set" ? "pass" : "blocked";
+        assert(gate(gateState(phase), "%") === expectedGate, `error gate: % in ${phase}`);
+      }
+      for (const phase of ["off", "set", "ready"]) {
+        for (const key of ["7", "+"]) {
+          assert(gate(gateState(phase), key) === "blocked", `error gate: ${key} blocked in ${phase}`);
+        }
+      }
+      let gatedState = gateState("set");
+      let gatedTransition = { state: gatedState, action: "blocked" };
+      for (const key of ["%", "%"]) {
+        gatedTransition = gate(gatedState, key) === "pass"
+          ? trickStep(gatedState, key, { soleNumberText: null })
+          : { state: gatedState, action: "blocked" };
+        gatedState = gatedTransition.state;
+      }
+      assert(
+        gatedTransition.action === "arm" && gatedState.phase === "ready",
+        "error gate: set 오류 상태에서도 %% → arm"
+      );
+
       // trickStep
       const T0={phase:"off",storedText:null,lastKey:null,pendingSole:null};
       const st=(s,k,sole)=>trickStep(s,k,{soleNumberText:sole});
@@ -867,6 +903,13 @@
       return /^-?(?:\d+(?:\.\d*)?|\.\d+)$/.test(source) ? source : null;
     }
 
+    function trickErrorGate(state, key) {
+      if (key === "C") return "pass";
+      if (key === "=" && state.phase === "ready") return "pass";
+      if (key === "%" && state.phase === "set") return "pass";
+      return "blocked";
+    }
+
     function trickStep(state, key, exprInfo) {
       const current = {
         phase: ["off", "set", "ready"].includes(state?.phase)
@@ -1011,9 +1054,7 @@
       };
 
       const handleKey = (key) => {
-        const readyWillFire = key === "=" && trickState.phase === "ready";
-        const setPercent = key === "%" && trickState.phase === "set";
-        if (errorShown && key !== "C" && !readyWillFire && !setPercent) return;
+        if (errorShown && trickErrorGate(trickState, key) === "blocked") return;
 
         if (key === "%") {
           const transition = trickStep(

@@ -1,4 +1,4 @@
-import { cp, mkdir, rm, stat } from 'node:fs/promises';
+import { cp, mkdir, readFile, rm, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -76,6 +76,13 @@ export const PRIVATE_PATTERNS = [
   /^package-lock\.json$/
 ];
 
+const MIRROR_PAIRS = [
+  ['../../magic-calculator-v2/index.html', 'zz2/index.html'],
+  ['../../magic-calculator-v2/sw.js', 'zz2/sw.js'],
+  ['../../magic-stopwatch/index.html', 'zz3/index.html'],
+  ['../../magic-stopwatch/sw.js', 'zz3/sw.js']
+];
+
 async function exists(relativePath) {
   try {
     await stat(path.join(ROOT, relativePath));
@@ -103,11 +110,33 @@ function shouldCopy(relativePath) {
   return !PRIVATE_PATTERNS.some((pattern) => pattern.test(normalized));
 }
 
+async function verifyMirrors() {
+  for (const [source, mirror] of MIRROR_PAIRS) {
+    if (!(await exists(source))) {
+      console.log(`mirror check skipped: ${source} not found`);
+      continue;
+    }
+    const [sourceContents, mirrorContents] = await Promise.all([
+      readFile(path.join(ROOT, source)),
+      readFile(path.join(ROOT, mirror))
+    ]);
+    if (!sourceContents.equals(mirrorContents)) {
+      throw new Error(`mirror drift: ${source} ↔ ${mirror}`);
+    }
+  }
+
+  const gatedCalculator = await readFile(path.join(ROOT, 'tools/calc/index.html'), 'utf8');
+  if (!gatedCalculator.includes('"arm"')) {
+    throw new Error('gated calculator missing v2 core marker: "arm"');
+  }
+}
+
 export async function buildPublic() {
   await rm(DIST, { recursive: true, force: true });
   await mkdir(DIST, { recursive: true });
   for (const file of PUBLIC_FILES) await copyIfExists(file);
   for (const dir of PUBLIC_DIRS) await copyIfExists(dir);
+  await verifyMirrors();
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {

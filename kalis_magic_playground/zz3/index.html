@@ -338,6 +338,16 @@
       }
       return Math.floor(elapsed / 10);
     }
+    function resolveStopOutcome({ trickState, presetCs, customText, elapsed, reservedTens, stopDigit }) {
+      if (trickState === "text") {
+        if (presetCs !== null) return { kind: "cs", cs: presetCs };
+        if (customText) return { kind: "text", text: customText };
+      }
+      return {
+        kind: "cs",
+        cs: resolveStoppedCs({ elapsed, trickMode: trickState === "digit", reservedTens, stopDigit })
+      };
+    }
     function runSelfTests() {
       const failures = [];
       const assert = (condition, name) => {
@@ -377,6 +387,49 @@
       assert(rs(3450, true, null, 8) === 345, "resolve: 주행 중 트릭 켬(예약 없음)은 자연값");
       assert(rs(3450, false, 2, 8) === 345, "resolve: 트릭 OFF는 좌표 무시");
       assert(rs(1200, true, 0, 5) === 105, "resolve: 십의 자리 0");
+      const outcome = (params) => typeof resolveStopOutcome === "function"
+        ? resolveStopOutcome(params)
+        : { kind: "missing" };
+      let ro = outcome({
+        trickState: "text", presetCs: 1187, customText: "KALI",
+        elapsed: 3450, reservedTens: 2, stopDigit: 8
+      });
+      assert(ro.kind === "cs" && ro.cs === 1187, "stop outcome: text preset 우선");
+      ro = outcome({
+        trickState: "text", presetCs: null, customText: "KALI",
+        elapsed: 3450, reservedTens: 2, stopDigit: 8
+      });
+      assert(ro.kind === "text" && ro.text === "KALI", "stop outcome: customText 차선");
+      ro = outcome({
+        trickState: "text", presetCs: null, customText: "",
+        elapsed: 3450, reservedTens: 2, stopDigit: 8
+      });
+      assert(ro.kind === "cs" && ro.cs === 345, "stop outcome: text 설정 없으면 실측");
+      ro = outcome({
+        trickState: "off", presetCs: 9999, customText: "KALI",
+        elapsed: 3450, reservedTens: 2, stopDigit: 8
+      });
+      assert(ro.kind === "cs" && ro.cs === 345, "stop outcome: off는 preset과 text 무시");
+      ro = outcome({
+        trickState: "digit", presetCs: 9999, customText: "KALI",
+        elapsed: 3450, reservedTens: 2, stopDigit: 8
+      });
+      assert(ro.kind === "cs" && ro.cs === 328, "stop outcome: digit는 preset 무시");
+      ro = outcome({
+        trickState: "digit", presetCs: null, customText: "",
+        elapsed: 3450, reservedTens: 2, stopDigit: 8
+      });
+      assert(ro.kind === "cs" && ro.cs === 328, "stop outcome: digit 합성");
+      ro = outcome({
+        trickState: "digit", presetCs: null, customText: "",
+        elapsed: 59990, reservedTens: 2, stopDigit: 8
+      });
+      assert(ro.kind === "cs" && ro.cs === 5999, "stop outcome: digit도 59.99 상한");
+      ro = outcome({
+        trickState: "text", presetCs: 9999, customText: "KALI",
+        elapsed: 59990, reservedTens: 2, stopDigit: 8
+      });
+      assert(ro.kind === "cs" && ro.cs === 9999, "stop outcome: preset 99.99는 무상한 통과");
       assert(typeof nextTrickState === "function", "trick state: 순환 함수 존재");
       if (typeof nextTrickState === "function") {
         assert(nextTrickState("off") === "digit", "trick state: off → digit");
@@ -512,14 +565,12 @@
     }
     function stopTimer(event) {
       const elapsed = clampElapsed(performance.now() - startedAt);
-      if (trickState === "text") {
-        if (presetCs !== null) { finalizeStop(presetCs); return; }
-        if (customText) { finalizeStopText(customText); return; }
-      }
-      finalizeStop(resolveStoppedCs({
-        elapsed, trickMode: trickState === "digit",
-        reservedTens, stopDigit: digitFromEvent(event)
-      }));
+      const stopDigit = digitFromEvent(event);
+      const o = resolveStopOutcome({
+        trickState, presetCs, customText, elapsed, reservedTens, stopDigit
+      });
+      if (o.kind === "text") finalizeStopText(o.text);
+      else finalizeStop(o.cs);
     }
     function resetTimer() {
       state = "idle";
