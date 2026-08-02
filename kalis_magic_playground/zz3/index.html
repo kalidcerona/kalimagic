@@ -97,6 +97,15 @@
       border: 0;
       background: transparent;
     }
+    #preset-zone {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 33.333333%;
+      height: 0;
+      z-index: 1;
+      background: transparent;
+    }
     #control {
       display: flex;
       flex: 0 0 auto;
@@ -179,6 +188,61 @@
       font: inherit;
       font-size: clamp(1.25rem, 5vw, 2rem);
     }
+    #preset-pad {
+      position: fixed;
+      inset: 0;
+      z-index: 2000;
+      display: flex;
+      flex-direction: column;
+      gap: clamp(0.75rem, 2vh, 1.25rem);
+      padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right))
+        max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+      align-items: center;
+      justify-content: center;
+      background: #1C1C1E;
+    }
+    #preset-preview {
+      color: #ffffff;
+      font-size: clamp(2.5rem, 10vh, 5rem);
+      font-weight: 200;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.04em;
+      line-height: 1;
+    }
+    #preset-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-rows: repeat(4, minmax(3rem, 1fr));
+      gap: clamp(0.4rem, 1.5vh, 0.75rem);
+      width: min(84vw, 30rem);
+      height: min(58vh, 24rem);
+    }
+    #preset-grid button,
+    #preset-actions button {
+      border: 0;
+      border-radius: 0.7em;
+      background: rgba(255,255,255,0.16);
+      color: #ffffff;
+      font: inherit;
+    }
+    #preset-grid button {
+      min-width: 0;
+      min-height: 3rem;
+      padding: 0;
+      font-size: clamp(1.75rem, 7vh, 3rem);
+    }
+    #preset-actions {
+      display: flex;
+      gap: clamp(0.5rem, 2vw, 1rem);
+    }
+    #preset-actions button {
+      min-width: 6.5rem;
+      padding: 0.65em 1em;
+      font-size: clamp(1.1rem, 4vh, 1.6rem);
+    }
+    #preset-actions button:disabled {
+      opacity: 0.35;
+    }
   </style>
 </head>
 <body>
@@ -200,12 +264,35 @@
       <div id="trick-zone" class="main-hit-zone"></div>
       <div id="text-zone" class="main-hit-zone"></div>
     </div>
+    <div id="preset-zone" aria-hidden="true"></div>
   </div>
   <div id="text-editor" hidden>
     <input type="text" id="text-editor-input" maxlength="10" enterkeyhint="done">
     <div id="text-editor-actions">
       <button id="text-editor-save" type="button">저장</button>
       <button id="text-editor-clear" type="button">지우기</button>
+    </div>
+  </div>
+  <div id="preset-pad" role="dialog" aria-modal="true" aria-label="스탑워치 프리셋" hidden>
+    <div id="preset-preview" aria-live="polite">--:--</div>
+    <div id="preset-grid">
+      <button type="button" data-preset-digit="1">1</button>
+      <button type="button" data-preset-digit="2">2</button>
+      <button type="button" data-preset-digit="3">3</button>
+      <button type="button" data-preset-digit="4">4</button>
+      <button type="button" data-preset-digit="5">5</button>
+      <button type="button" data-preset-digit="6">6</button>
+      <button type="button" data-preset-digit="7">7</button>
+      <button type="button" data-preset-digit="8">8</button>
+      <button type="button" data-preset-digit="9">9</button>
+      <button type="button" data-preset-action="backspace" aria-label="한 자리 지우기">⌫</button>
+      <button type="button" data-preset-digit="0">0</button>
+      <span aria-hidden="true"></span>
+    </div>
+    <div id="preset-actions">
+      <button id="preset-save" type="button" data-preset-action="save" disabled>저장</button>
+      <button type="button" data-preset-action="clear">지우기</button>
+      <button type="button" data-preset-action="close">닫기</button>
     </div>
   </div>
   <div id="selftest" hidden>
@@ -233,11 +320,15 @@
       return Math.min(ms, 59990);
     }
     function formatCs(totalCs) {
-      const value = Math.min(5999, Math.max(0, Math.floor(totalCs)));
+      const value = Math.min(9999, Math.max(0, Math.floor(totalCs)));
       return {
         sec: String(Math.floor(value / 100)).padStart(2, "0"),
         cs: String(value % 100).padStart(2, "0")
       };
+    }
+    function formatPresetEntry(entry) {
+      const padded = entry.padEnd(4, "-");
+      return `${padded.slice(0, 2)}:${padded.slice(2, 4)}`;
     }
     // 정지 순간 표시할 1/100초 누적값을 정한다. 규칙 우선순위: 상한 > 트릭 합성 > 자연 경과.
     function resolveStoppedCs({ elapsed, trickMode, reservedTens, stopDigit }) {
@@ -275,6 +366,10 @@
       assert(isFormat(0, "00", "00"), "format 0");
       assert(isFormat(728, "07", "28"), "format 728");
       assert(isFormat(5999, "59", "99"), "format 5999");
+      assert(isFormat(9999, "99", "99"), "format preset maximum");
+      assert(formatPresetEntry("") === "--:--", "preset preview empty");
+      assert(formatPresetEntry("118") === "11:8-", "preset preview partial");
+      assert(formatPresetEntry("1187") === "11:87", "preset preview complete");
       const rs = (elapsed, trickMode, reservedTens, stopDigit) =>
         resolveStoppedCs({ elapsed, trickMode, reservedTens, stopDigit });
       assert(rs(59990, true, 2, 8) === 5999, "resolve: 상한이 트릭보다 우선");
@@ -300,6 +395,7 @@
     const trickZone = document.getElementById("trick-zone");
     const textZone = document.getElementById("text-zone");
     const mainHitZones = document.getElementById("main-hit-zones");
+    const presetZone = document.getElementById("preset-zone");
     const control = document.getElementById("control");
     const controlLabel = document.getElementById("control-label");
     const seconds = document.getElementById("seconds");
@@ -310,12 +406,19 @@
     const textEditorInput = document.getElementById("text-editor-input");
     const textEditorSave = document.getElementById("text-editor-save");
     const textEditorClear = document.getElementById("text-editor-clear");
+    const presetPad = document.getElementById("preset-pad");
+    const presetPreview = document.getElementById("preset-preview");
+    const presetSave = document.getElementById("preset-save");
     const CUSTOM_TEXT_STORAGE_KEY = "stopwatch_custom_text";
+    const PRESET_STORAGE_KEY = "stopwatch_preset_cs";
     const TEXT_ZONE_HOLD_MS = 550;
     const MAIN_HIT_ZONE_GAP = 4;
+    const PRESET_ZONE_MIN_HEIGHT = 48;
     let state = "idle";
     let trickState = "off";
     let customText = "";
+    let presetCs = null;
+    let presetEntry = "";
     let reservedTens = null;
     let startedAt = 0;
     let stoppedCs = 0;
@@ -323,6 +426,7 @@
     let wakeLock = null;
     let wakeLockPending = false;
     let textZonePressTimer = 0;
+    let presetZonePressTimer = 0;
     let controlResizeObserver = null;
     function renderCs(totalCs) {
       const formatted = formatCs(totalCs);
@@ -408,9 +512,9 @@
     }
     function stopTimer(event) {
       const elapsed = clampElapsed(performance.now() - startedAt);
-      if (trickState === "text" && customText) {
-        finalizeStopText(customText);
-        return;
+      if (trickState === "text") {
+        if (presetCs !== null) { finalizeStop(presetCs); return; }
+        if (customText) { finalizeStopText(customText); return; }
       }
       finalizeStop(resolveStoppedCs({
         elapsed, trickMode: trickState === "digit",
@@ -501,6 +605,70 @@
       clearTimeout(textZonePressTimer);
       textZonePressTimer = 0;
     }
+    function renderPresetEntry() {
+      presetPreview.textContent = formatPresetEntry(presetEntry);
+      presetSave.disabled = presetEntry.length !== 4;
+    }
+    function openPresetPad() {
+      if (state === "running") return;
+      presetEntry = presetCs === null ? "" : String(presetCs).padStart(4, "0");
+      renderPresetEntry();
+      presetPad.hidden = false;
+    }
+    function closePresetPad() {
+      presetPad.hidden = true;
+    }
+    function handlePresetZonePress(event) {
+      if (!isPrimaryPointer(event) || state === "running") return;
+      event.preventDefault();
+      clearPresetZonePress();
+      presetZonePressTimer = setTimeout(() => {
+        presetZonePressTimer = 0;
+        openPresetPad();
+      }, TEXT_ZONE_HOLD_MS);
+    }
+    function clearPresetZonePress() {
+      if (!presetZonePressTimer) return;
+      clearTimeout(presetZonePressTimer);
+      presetZonePressTimer = 0;
+    }
+    function savePreset() {
+      if (presetEntry.length !== 4) return;
+      presetCs = Number(presetEntry);
+      try {
+        localStorage.setItem(PRESET_STORAGE_KEY, String(presetCs));
+      } catch (_) {}
+      closePresetPad();
+    }
+    function clearPreset() {
+      presetCs = null;
+      presetEntry = "";
+      try {
+        localStorage.removeItem(PRESET_STORAGE_KEY);
+      } catch (_) {}
+      closePresetPad();
+    }
+    function handlePresetPadClick(event) {
+      event.stopPropagation();
+      const digitButton = event.target.closest("button[data-preset-digit]");
+      if (digitButton) {
+        if (presetEntry.length < 4) presetEntry += digitButton.dataset.presetDigit;
+        renderPresetEntry();
+        return;
+      }
+      const actionButton = event.target.closest("button[data-preset-action]");
+      const action = actionButton ? actionButton.dataset.presetAction : null;
+      if (action === "backspace") {
+        presetEntry = presetEntry.slice(0, -1);
+        renderPresetEntry();
+      } else if (action === "save") {
+        savePreset();
+      } else if (action === "clear") {
+        clearPreset();
+      } else if (action === "close") {
+        closePresetPad();
+      }
+    }
     function saveCustomText() {
       const value = textEditorInput.value.trim();
       customText = value;
@@ -531,9 +699,22 @@
         customText = "";
       }
     }
+    function loadPreset() {
+      try {
+        const stored = localStorage.getItem(PRESET_STORAGE_KEY);
+        const value = stored !== null && /^\d{1,4}$/.test(stored) ? Number(stored) : NaN;
+        presetCs = Number.isInteger(value) && value >= 0 && value <= 9999 ? value : null;
+      } catch (_) {
+        presetCs = null;
+      }
+    }
     function updateMainHitZonesHeight() {
-      const controlTop = control.getBoundingClientRect().top;
-      mainHitZones.style.height = `${Math.max(0, controlTop - MAIN_HIT_ZONE_GAP)}px`;
+      const controlRect = control.getBoundingClientRect();
+      const viewportHeight = window.innerHeight || app.getBoundingClientRect().height;
+      const presetTop = Math.max(0, controlRect.bottom + MAIN_HIT_ZONE_GAP);
+      mainHitZones.style.height = `${Math.max(0, controlRect.top - MAIN_HIT_ZONE_GAP)}px`;
+      presetZone.style.top = `${presetTop}px`;
+      presetZone.style.height = `${Math.max(PRESET_ZONE_MIN_HEIGHT, viewportHeight - presetTop)}px`;
     }
     function observeControlLayout() {
       updateMainHitZonesHeight();
@@ -560,17 +741,28 @@
     }
     function initApp() {
       loadCustomText();
+      loadPreset();
       control.addEventListener("pointerdown", handleControl, { passive: false });
       fullscreenZone.addEventListener("pointerdown", handleFullscreenZone, { passive: false });
       trickZone.addEventListener("pointerdown", handleTrickZone, { passive: false });
       textZone.addEventListener("pointerdown", handleTextZonePress, { passive: false });
+      presetZone.addEventListener("pointerdown", handlePresetZonePress, { passive: false });
+      presetZone.addEventListener("pointerup", clearPresetZonePress);
+      presetZone.addEventListener("pointerleave", clearPresetZonePress);
+      presetZone.addEventListener("pointercancel", clearPresetZonePress);
       textEditor.addEventListener("pointerdown", handleTextEditorBackground);
       textEditorSave.addEventListener("click", saveCustomText);
       textEditorClear.addEventListener("click", clearCustomText);
+      presetPad.addEventListener("pointerdown", (event) => event.stopPropagation());
+      presetPad.addEventListener("pointerup", (event) => event.stopPropagation());
+      presetPad.addEventListener("pointercancel", (event) => event.stopPropagation());
+      presetPad.addEventListener("click", handlePresetPadClick);
       window.addEventListener("pointerup", releasePress);
       window.addEventListener("pointercancel", releasePress);
       window.addEventListener("pointerup", clearTextZonePress);
       window.addEventListener("pointercancel", clearTextZonePress);
+      window.addEventListener("pointerup", clearPresetZonePress);
+      window.addEventListener("pointercancel", clearPresetZonePress);
       document.addEventListener("pointerdown", () => {
         if (!wakeLock) acquireWakeLock();
       });

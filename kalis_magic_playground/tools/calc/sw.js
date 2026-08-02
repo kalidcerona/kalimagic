@@ -1,4 +1,4 @@
-const CACHE_NAME = "kali-calc-v2";
+const CACHE_NAME = "kali-calc-v3";
 const CACHE_PREFIX = "kali-calc-";
 const APP_SHELL = [
   "./",
