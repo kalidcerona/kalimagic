@@ -53,3 +53,18 @@
   for = "/tools/stopwatch/manifest.webmanifest"
   [headers.values]
     Content-Type = "application/manifest+json"
+
+[[headers]]
+  for = "/zz1/manifest.webmanifest"
+  [headers.values]
+    Content-Type = "application/manifest+json"
+
+[[headers]]
+  for = "/zz2/manifest.webmanifest"
+  [headers.values]
+    Content-Type = "application/manifest+json"
+
+[[headers]]
+  for = "/zz3/manifest.webmanifest"
+  [headers.values]
+    Content-Type = "application/manifest+json"

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="계산기">
+  <rect width="512" height="512" rx="112" fill="#000"/>
+  <rect x="116" y="64" width="280" height="384" rx="56" fill="#202022" stroke="#d8d8dc" stroke-width="12"/>
+  <rect x="148" y="104" width="216" height="80" rx="20" fill="#d8d8dc"/>
+  <g fill="none" stroke="#f4f4f5" stroke-linecap="round" stroke-width="14">
+    <path d="M194 246h52M220 220v52"/>
+    <path d="M286 246h52"/>
+    <path d="m195 324 48 48m0-48-48 48"/>
+    <path d="M286 348h52"/>
+  </g>
+  <g fill="#f4f4f5">
+    <circle cx="312" cy="324" r="8"/>
+    <circle cx="312" cy="372" r="8"/>
+  </g>
+</svg>
