@@ -1215,5 +1215,88 @@
       acquireWakeLock();
     }
   </script>
+  <style>
+    #install-nudge {
+      position: fixed;
+      left: 12px;
+      right: 12px;
+      bottom: 12px;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      background: #1c1c1e;
+      color: #fff;
+      border-radius: 14px;
+      font-size: 14px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+    }
+    #install-nudge span { flex: 1; }
+    #install-nudge button {
+      border: 0;
+      border-radius: 10px;
+      padding: 8px 14px;
+      font-size: 14px;
+      background: #ff9f0a;
+      color: #000;
+    }
+    #install-nudge button[data-act="close"] {
+      background: transparent;
+      color: #8e8e93;
+      padding: 8px;
+    }
+  </style>
+  <script>
+    (() => {
+      try {
+        const KEY = "installNudgeDone";
+        if (localStorage.getItem(KEY)) return;
+        const standalone = typeof window.matchMedia === "function" &&
+          window.matchMedia("(display-mode: standalone)").matches;
+        if (standalone || navigator.standalone) return;
+
+        let deferred = null;
+        let bar = null;
+        const done = () => {
+          try { localStorage.setItem(KEY, "1"); } catch (_) {}
+          if (bar) bar.remove();
+          bar = null;
+          deferred = null;
+        };
+
+        window.addEventListener("appinstalled", done);
+        window.addEventListener("beforeinstallprompt", (event) => {
+          event.preventDefault();
+          deferred = event;
+          if (bar) return;
+
+          bar = document.createElement("div");
+          bar.id = "install-nudge";
+          bar.innerHTML = '<span>홈 화면에 앱으로 설치할 수 있어요</span>' +
+            '<button type="button" data-act="install">설치</button>' +
+            '<button type="button" data-act="close" aria-label="닫기">✕</button>';
+          bar.addEventListener("pointerdown", (event) => event.stopPropagation());
+          bar.addEventListener("click", async (event) => {
+            event.stopPropagation();
+            const button = event.target.closest("button[data-act]");
+            const act = button ? button.dataset.act : null;
+            if (act === "install" && deferred) {
+              const promptEvent = deferred;
+              deferred = null;
+              try {
+                promptEvent.prompt();
+                await promptEvent.userChoice;
+              } catch (_) {}
+              done();
+            } else if (act === "close") {
+              done();
+            }
+          });
+          document.body.appendChild(bar);
+        });
+      } catch (_) {}
+    })();
+  </script>
 </body>
 </html>
