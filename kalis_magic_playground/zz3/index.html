@@ -105,6 +105,7 @@
       height: 0;
       z-index: 1001;
       background: transparent;
+      touch-action: none;
     }
     #control {
       display: flex;
@@ -466,7 +467,7 @@
     const PRESET_STORAGE_KEY = "stopwatch_preset_cs";
     const TEXT_ZONE_HOLD_MS = 550;
     const MAIN_HIT_ZONE_GAP = 4;
-    const PRESET_ZONE_MIN_HEIGHT = 48;
+    const PRESET_ZONE_MIN_HEIGHT = 72;
     let state = "idle";
     let trickState = "off";
     let customText = "";
@@ -677,6 +678,9 @@
         presetZonePressTimer = 0;
         openPresetPad();
       }, TEXT_ZONE_HOLD_MS);
+      try {
+        presetZone.setPointerCapture(event.pointerId);
+      } catch (_) {}
     }
     function clearPresetZonePress() {
       if (!presetZonePressTimer) return;
@@ -799,7 +803,6 @@
       textZone.addEventListener("pointerdown", handleTextZonePress, { passive: false });
       presetZone.addEventListener("pointerdown", handlePresetZonePress, { passive: false });
       presetZone.addEventListener("pointerup", clearPresetZonePress);
-      presetZone.addEventListener("pointerleave", clearPresetZonePress);
       presetZone.addEventListener("pointercancel", clearPresetZonePress);
       textEditor.addEventListener("pointerdown", handleTextEditorBackground);
       textEditorSave.addEventListener("click", saveCustomText);
