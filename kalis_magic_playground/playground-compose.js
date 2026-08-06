@@ -2,7 +2,7 @@
   const PLAYGROUND_GUIDES = {
     all: {
       label: '전체 기록',
-      categoryHelp: '어떤 기록을 남길지 먼저 골라주면 됨. 자유게시판, 마술 보관소, 질문함, 도구 기록, 모임 기록, 보관된 기록 중에서 가장 가까운 곳에 남기면 사람들이 더 잘 찾아볼 수 있음.',
+      categoryHelp: '어떤 기록을 남길지 먼저 골라주면 됨. 자유게시판, 마술 보관소, 질문함, 도구 기록, 보관된 기록 중에서 가장 가까운 곳에 남기면 사람들이 더 잘 찾아볼 수 있음.',
       titlePlaceholder: '먼저 게시판을 선택하면 제목 예시가 나타남',
       bodyPlaceholder: '남기고 싶은 이야기에 가장 가까운 게시판을 선택하면, 그 글에 맞는 안내가 열림',
       extra: ''
@@ -48,21 +48,6 @@
       youtubeGuide: '피드백을 받고 싶은 영상이 있다면 유튜브 링크를 함께 붙이면 좋음. 질문을 보는 사람이 장면을 바로 보고 답변할 수 있음.',
       extra: '처음 묻는 질문도 좋음. 누군가에게는 같은 고민을 해결하는 첫 기록이 될 수 있음.'
     },
-    meeting: {
-      label: '모임 후기 게시판',
-      description: '모임에서 느낀 분위기와 기억에 남은 순간을 남기는 공간임. 그날의 기록이 다음 모임을 더 좋게 만듦.',
-      titleExamples: [
-        '이번 모임 다녀온 후기',
-        '처음 참석해본 플랜비 후기',
-        '오늘 모임에서 기억에 남은 순간',
-        '마술 없이도 재밌었던 모임 기록',
-        '다음 모임에도 가고 싶은 이유'
-      ],
-      titleGuide: '어떤 모임을 다녀왔는지 알 수 있게 적으면 좋음.',
-      bodyGuide: '모임에서 좋았던 점, 기억에 남은 사람이나 순간, 다음에 추가되면 좋을 프로그램을 편하게 적으면 됨. 짧은 감상도 좋은 기록이 됨.',
-      photoGuide: '칼리형이 올린 사진 중에서 마음에 드는 사진 2-5장을 골라 함께 남길 수 있음.',
-      extra: '모임 후기는 처음 오는 사람에게 가장 큰 안내서가 됨.'
-    },
     tool: {
       label: '도구 기록 게시판',
       description: '직접 써본 도구와 강의 경험을 남기는 공간임. 좋은 점과 활용 장면을 남기면 다음 사람이 선택하기 쉬워짐.',
@@ -85,7 +70,6 @@
       titleExamples: [
         '처음 마술을 배우는 사람에게 필요한 질문',
         '입문자가 가장 많이 막히는 지점',
-        '모임 후기로 보는 마술문화 기록소 분위기',
         '실전에서 반응 좋았던 도구 모음',
         '이번 주 좋은 질문과 답변'
       ],
@@ -109,7 +93,6 @@
     if (!target || target.id === 'all') return 'all';
     if (target.id === 'question') return 'question';
     if (target.id === 'review_tool') return 'tool';
-    if (target.id === 'review_meeting') return 'meeting';
     if (target.id === 'magazine') return 'magazine';
     if (target.id === 'free') return 'free';
     if (target.id === 'routine') return 'routine';
@@ -140,64 +123,6 @@
     `;
   }
 
-  let eventReviewScriptPromise = null;
-
-  function ensureEventReviewForm() {
-    if (window.KalisEventReviewForm && window.KalisEventReviewForm.mount) {
-      return Promise.resolve(window.KalisEventReviewForm);
-    }
-    if (eventReviewScriptPromise) return eventReviewScriptPromise;
-
-    eventReviewScriptPromise = new Promise((resolve, reject) => {
-      function fail() {
-        window.clearTimeout(timeout);
-        reject(new Error('모임 후기 작성 폼을 불러오지 못했어요.'));
-      }
-
-      const timeout = window.setTimeout(fail, 5000);
-
-      function finish() {
-        if (window.KalisEventReviewForm && window.KalisEventReviewForm.mount) {
-          window.clearTimeout(timeout);
-          resolve(window.KalisEventReviewForm);
-          return;
-        }
-        window.clearTimeout(timeout);
-        reject(new Error('모임 후기 작성 폼을 불러오지 못했어요.'));
-      }
-
-      const existing = document.querySelector('script[src$="reviews-community.js"]');
-      if (existing) {
-        existing.addEventListener('load', finish, { once: true });
-        existing.addEventListener('error', fail, { once: true });
-        return;
-      }
-
-      const script = document.createElement('script');
-      script.src = 'reviews-community.js';
-      script.async = false;
-      script.addEventListener('load', finish, { once: true });
-      script.addEventListener('error', fail, { once: true });
-      document.head.appendChild(script);
-    });
-
-    return eventReviewScriptPromise;
-  }
-
-  function meetingFallbackHtml(message) {
-    return `
-      <p class="pg-compose-status">${escapeHtml(message || '모임 후기 작성 화면을 불러오지 못했어요.')}</p>
-      <a class="pg-compose-link" href="reviews.html">모임 후기 보러 가기</a>
-    `;
-  }
-
-  function meetingSuccessHtml() {
-    return `
-      <p class="pg-compose-status">후기가 올라갔습니다. 목록에서 확인할 수 있어요.</p>
-      <a class="pg-compose-link" href="playground.html">목록으로 가기</a>
-    `;
-  }
-
   function isPrivilegedRole(viewerRole) {
     return viewerRole === 'admin' || viewerRole === 'kali';
   }
@@ -209,7 +134,6 @@
       ['routine', '마술 보관소'],
       ['question', '질문함'],
       ['tool', '도구 기록'],
-      ['meeting', '모임 기록'],
       ['magazine', '보관된 기록']
     ];
     const availableOptions = isPrivilegedRole(viewerRole)
@@ -252,15 +176,6 @@
     const guide = PLAYGROUND_GUIDES[category] || PLAYGROUND_GUIDES.all;
     const titlePlaceholder = guide.titleGuide || guide.titlePlaceholder || PLAYGROUND_GUIDES.all.titlePlaceholder;
     const bodyPlaceholder = guide.bodyGuide || guide.bodyPlaceholder || PLAYGROUND_GUIDES.all.bodyPlaceholder;
-
-    if (category === 'meeting') {
-      return `
-        ${guideHtml('meeting')}
-        <div data-meeting-review-compose>
-          <p class="pg-compose-status">모임 후기 작성 폼을 불러오는 중입니다.</p>
-        </div>
-      `;
-    }
 
     return `
       ${guideHtml(category)}
@@ -349,37 +264,17 @@
       `;
     }
 
-    async function mountMeetingReviewForm(host, token) {
-      if (!host) return;
-      try {
-        const reviewForm = await ensureEventReviewForm();
-        if (token !== renderToken || !host.isConnected) return;
-        reviewForm.mount(host, {
-          showEventSelect: true,
-          onSuccess: () => {
-            host.innerHTML = meetingSuccessHtml();
-          }
-        });
-      } catch (error) {
-        if (token !== renderToken || !host.isConnected) return;
-        host.innerHTML = meetingFallbackHtml(error.message);
-      }
-    }
-
     async function open(category = categoryFromTarget(getActiveTarget && getActiveTarget())) {
       openCategory = category;
       const token = ++renderToken;
       root.innerHTML = composeShellHtml('<p class="pg-compose-status">글쓰기 화면을 불러오는 중입니다.</p>');
       const [badgeOptions, viewerRole] = await Promise.all([
-        openCategory === 'meeting' ? Promise.resolve([]) : loadBadgeOptions(),
+        loadBadgeOptions(),
         loadViewerRole()
       ]);
       if (token !== renderToken) return;
       if (openCategory === 'magazine' && !isPrivilegedRole(viewerRole)) openCategory = 'free';
       root.innerHTML = composeShellHtml(formHtml(openCategory, badgeOptions, viewerRole));
-      if (openCategory === 'meeting') {
-        mountMeetingReviewForm(root.querySelector('[data-meeting-review-compose]'), token);
-      }
     }
 
     function close() {
