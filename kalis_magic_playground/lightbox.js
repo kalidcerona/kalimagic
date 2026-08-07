@@ -221,7 +221,14 @@
         closeLightbox();
         injectStyles();
 
-        albumTitle = title ? title.textContent.trim() : '행사 앨범';
+        if (title) {
+            var titleClone = title.cloneNode(true);
+            var countEl = titleClone.querySelector('.ev-count');
+            if (countEl) countEl.parentNode.removeChild(countEl);
+            albumTitle = titleClone.textContent.trim();
+        } else {
+            albumTitle = '행사 앨범';
+        }
         albumImages = images.map(imageData);
 
         previousBodyOverflow = document.body.style.overflow;
@@ -240,7 +247,9 @@
     }
 
     function onGalleryClick(event) {
-        var image = event.target.closest('.event-gallery img');
+        var figure = event.target.closest('.event-gallery figure');
+        if (!figure) return;
+        var image = figure.querySelector('img');
         if (!image) return;
 
         event.preventDefault();
@@ -256,8 +265,8 @@
     }
 
     function bindGallery() {
-        document.querySelectorAll('.event-gallery img').forEach(function (image) {
-            image.style.cursor = 'zoom-in';
+        document.querySelectorAll('.event-gallery figure').forEach(function (figure) {
+            figure.style.cursor = 'zoom-in';
         });
         document.addEventListener('click', onGalleryClick);
         document.addEventListener('keydown', onKeydown);

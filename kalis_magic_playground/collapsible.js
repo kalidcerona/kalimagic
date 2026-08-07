@@ -20,32 +20,13 @@
 
             var count = document.createElement('span');
             count.className = 'ev-count';
-            count.innerHTML = '사진 ' + figures.length + '장 <span class="ev-chevron">▾</span>';
+            count.textContent = '사진 ' + figures.length + '장';
             title.appendChild(count);
-
-            title.classList.add('ev-toggle');
-            title.setAttribute('role', 'button');
-            title.setAttribute('tabindex', '0');
-            title.setAttribute('aria-expanded', 'false');
 
             var badge = document.createElement('span');
             badge.className = 'ev-more';
             badge.textContent = '+' + (figures.length - 1) + '장 더 보기';
             figures[0].appendChild(badge);
-
-            function toggle() {
-                var open = block.classList.toggle('is-open');
-                block.classList.toggle('is-collapsed', !open);
-                title.setAttribute('aria-expanded', open ? 'true' : 'false');
-            }
-
-            title.addEventListener('click', toggle);
-            title.addEventListener('keydown', function (e) {
-                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
-            });
-            figures[0].addEventListener('click', function () {
-                if (block.classList.contains('is-collapsed')) toggle();
-            });
         });
     }
 
