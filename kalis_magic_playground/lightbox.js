@@ -5,6 +5,7 @@
     var previousBodyOverflow = '';
     var albumTitle = '';
     var albumImages = [];
+    var albumReviews = [];
 
     function injectStyles() {
         if (document.getElementById('kx-lightbox-style')) return;
@@ -55,6 +56,17 @@
             '}',
             '.kx-lightbox-thumb img {',
             '    display: block; width: 100%; height: 100%; object-fit: cover;',
+            '}',
+            '.kx-lightbox-reviews {',
+            '    grid-column: 1 / -1; margin-top: 18px; padding-top: 22px;',
+            '    border-top: 1px solid rgba(255, 255, 255, .18);',
+            '    display: flex; flex-direction: column; gap: 18px;',
+            '}',
+            '.kx-lightbox-review p {',
+            '    margin: 0 0 6px; color: #f1e9df; font-size: 0.98rem; line-height: 1.7;',
+            '}',
+            '.kx-lightbox-review span {',
+            '    color: #e0904e; font-size: 0.82rem; font-weight: 800;',
             '}',
             '.kx-lightbox-viewer {',
             '    flex: 1; min-height: 0;',
@@ -131,6 +143,23 @@
             });
             content.appendChild(button);
         });
+
+        if (albumReviews.length > 0) {
+            var reviewsWrap = document.createElement('div');
+            reviewsWrap.className = 'kx-lightbox-reviews';
+            albumReviews.forEach(function (r) {
+                var item = document.createElement('div');
+                item.className = 'kx-lightbox-review';
+                var quote = document.createElement('p');
+                quote.textContent = r.quote;
+                var label = document.createElement('span');
+                label.textContent = r.label;
+                item.appendChild(quote);
+                item.appendChild(label);
+                reviewsWrap.appendChild(item);
+            });
+            content.appendChild(reviewsWrap);
+        }
     }
 
     function renderViewer(index) {
@@ -230,6 +259,12 @@
             albumTitle = '행사 앨범';
         }
         albumImages = images.map(imageData);
+        var reviewCards = Array.prototype.slice.call(block.querySelectorAll('.event-reviews-data .event-review-card'));
+        albumReviews = reviewCards.map(function (card) {
+            var p = card.querySelector('p');
+            var s = card.querySelector('span');
+            return { quote: p ? p.textContent : '', label: s ? s.textContent : '' };
+        });
 
         previousBodyOverflow = document.body.style.overflow;
         document.body.style.overflow = 'hidden';

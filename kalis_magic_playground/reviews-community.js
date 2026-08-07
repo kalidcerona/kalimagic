@@ -241,7 +241,6 @@
     var eventCode = list.dataset.eventCode || '2026-08';
     loadReviews(list, eventCode).catch(function (error) {
       clear(list);
-      list.appendChild(el('p', 'event-review-muted', error.message || '후기를 불러오지 못했습니다.'));
     });
   }
 
