@@ -5,68 +5,91 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>8월 2일 칼리의 번개 — 후기 리캡</title>
 <script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          ink:    '#1a1512',
+          'ink-alt': '#1f1815',
+          card:   '#261d18',
+          cream:  '#f4efe9',
+          muted:  '#ab9f92',
+          flame:  '#E8631F',
+          'flame-deep': '#9E2F0C',
+        },
+      },
+    },
+  }
+</script>
 <style>
-  body { font-family: 'Pretendard', -apple-system, 'Apple SD Gothic Neo', sans-serif; }
-  .quote { border-left: 4px solid #a78bfa; }
+  body {
+    font-family: 'Pretendard', -apple-system, 'Apple SD Gothic Neo', sans-serif;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+  }
+  h1, h2, h3, blockquote, .balance { text-wrap: balance; }
+  p, li { text-wrap: pretty; }
+  .quote { border-left: 4px solid #E8631F; }
 </style>
 </head>
-<body class="bg-slate-50 text-slate-800 antialiased">
+<body class="bg-ink text-cream antialiased">
 
   <section class="min-h-screen flex items-center px-5 py-16 sm:px-8">
     <div class="w-full max-w-5xl mx-auto">
-      <p class="mb-5 text-sm font-bold tracking-[0.2em] text-violet-600 sm:text-base">2026년 8월 2일</p>
-      <h1 class="text-5xl font-black tracking-tight text-slate-900 sm:text-6xl md:text-7xl">칼리의 번개</h1>
-      <p class="mt-5 max-w-3xl text-xl font-medium leading-relaxed text-slate-600 sm:text-2xl md:text-3xl">마술을 좋아하는 사람들이 한자리에 모인 날</p>
+      <p class="mb-5 text-sm font-bold tracking-[0.2em] text-flame sm:text-base">2026년 8월 2일</p>
+      <h1 class="text-5xl font-black tracking-tight text-cream sm:text-6xl md:text-7xl">칼리의 번개</h1>
+      <p class="mt-5 max-w-3xl text-xl font-medium leading-relaxed text-muted sm:text-2xl md:text-3xl">마술을 좋아하는 사람들이 한자리에 모인 날</p>
 
-      <div class="mt-14 grid grid-cols-1 gap-8 border-y border-slate-200 py-10 md:grid-cols-3 md:gap-4">
+      <div class="mt-14 grid grid-cols-1 gap-8 border-y border-white/10 py-10 md:grid-cols-3 md:gap-4">
         <div class="text-center md:text-left">
-          <p class="text-6xl font-black tracking-tight text-violet-600 md:text-7xl">4.69 / 5</p>
-          <p class="mt-3 text-sm font-semibold text-slate-500 sm:text-base">참가자 만족도</p>
+          <p class="text-6xl font-black tracking-tight text-flame md:text-7xl">4.69 / 5</p>
+          <p class="mt-3 text-sm font-semibold text-muted sm:text-base">참가자 만족도</p>
         </div>
         <div class="text-center md:text-left">
-          <p class="text-6xl font-black tracking-tight text-violet-600 md:text-7xl">NPS 64</p>
-          <p class="mt-3 text-sm font-semibold text-slate-500 sm:text-base">추천 지수</p>
+          <p class="text-6xl font-black tracking-tight text-flame md:text-7xl">NPS 64</p>
+          <p class="mt-3 text-sm font-semibold text-muted sm:text-base">추천 지수</p>
         </div>
         <div class="text-center md:text-left">
-          <p class="text-6xl font-black tracking-tight text-violet-600 md:text-7xl">39건</p>
-          <p class="mt-3 text-sm font-semibold text-slate-500 sm:text-base">도착한 후기</p>
+          <p class="text-6xl font-black tracking-tight text-flame md:text-7xl">39건</p>
+          <p class="mt-3 text-sm font-semibold text-muted sm:text-base">도착한 후기</p>
         </div>
       </div>
 
-      <p class="mt-9 text-lg font-semibold leading-relaxed text-slate-700 sm:text-xl">만족도 3점 이하 0명. 39명 중 28명이 추천 의향 9점에서 10점을 줬습니다.</p>
+      <p class="mt-9 text-lg font-semibold leading-relaxed text-cream sm:text-xl">만족도 3점 이하는 한 명도 없었고, 39명 중 28명이 추천 의향에 9점에서 10점을 주셨어요.</p>
     </div>
   </section>
 
-  <section class="min-h-screen flex items-center bg-white px-5 py-16 sm:px-8">
+  <section class="min-h-screen flex items-center bg-ink-alt px-5 py-16 sm:px-8">
     <div class="w-full max-w-5xl mx-auto">
-      <p class="text-sm font-bold tracking-[0.2em] text-violet-600">BEST MOMENTS</p>
-      <h2 class="mt-3 text-4xl font-black tracking-tight text-slate-900 sm:text-5xl">참가자들이 꼽은 순간들</h2>
+      <p class="text-sm font-bold tracking-[0.2em] text-flame">BEST MOMENTS</p>
+      <h2 class="mt-3 text-4xl font-black tracking-tight text-cream sm:text-5xl">참가자들이 꼽은 순간들</h2>
 
       <div class="mt-10 grid gap-5 md:grid-cols-2">
-        <article class="rounded-2xl border border-slate-200 bg-slate-50 p-6 sm:p-8">
-          <h3 class="text-xl font-bold text-violet-700 sm:text-2xl">초청 공연</h3>
-          <blockquote class="quote mt-5 pl-5 text-lg font-semibold leading-relaxed text-slate-800 sm:text-xl">“이 가격대에 볼 수 있는 공연이 아닌데 말도 안 되는 퀄리티”</blockquote>
-          <p class="mt-4 text-base leading-relaxed text-slate-600 sm:text-lg">“1시간 조금 넘은 공연이었는데 너무 짧게 느껴질 정도”</p>
-          <p class="mt-5 text-sm font-medium text-slate-400">참가자 후기</p>
+        <article class="flex h-full flex-col rounded-2xl border border-white/10 bg-card p-6 sm:p-8">
+          <h3 class="text-xl font-bold text-flame sm:text-2xl">초청 공연</h3>
+          <blockquote class="quote mt-5 pl-5 text-lg font-semibold leading-relaxed text-cream sm:text-xl">“이 가격대에 볼 수 있는 공연이 아닌데 말도 안 되는 퀄리티”</blockquote>
+          <p class="mt-4 text-base leading-relaxed text-muted sm:text-lg">“1시간 조금 넘은 공연이었는데 너무 짧게 느껴질 정도”</p>
+          <p class="mt-auto pt-5 text-sm font-medium text-muted">참가자 후기</p>
         </article>
 
-        <article class="rounded-2xl border border-slate-200 bg-slate-50 p-6 sm:p-8">
-          <h3 class="text-xl font-bold text-violet-700 sm:text-2xl">처음 만난 사람들의 교류</h3>
-          <blockquote class="quote mt-5 pl-5 text-lg font-semibold leading-relaxed text-slate-800 sm:text-xl">“초면인 사람들이 모여서 서로의 마술을 공유하던 순간”</blockquote>
-          <p class="mt-4 text-base leading-relaxed text-slate-600 sm:text-lg">“수준급 마술사들이 풀어주는 꿀팁”</p>
-          <p class="mt-5 text-sm font-medium text-slate-400">참가자 후기</p>
+        <article class="flex h-full flex-col rounded-2xl border border-white/10 bg-card p-6 sm:p-8">
+          <h3 class="text-xl font-bold text-flame sm:text-2xl">처음 만난 사람들의 교류</h3>
+          <blockquote class="quote mt-5 pl-5 text-lg font-semibold leading-relaxed text-cream sm:text-xl">“초면인 사람들이 모여서 서로의 마술을 공유하던 순간”</blockquote>
+          <p class="mt-4 text-base leading-relaxed text-muted sm:text-lg">“수준급 마술사들이 풀어주는 꿀팁”</p>
+          <p class="mt-auto pt-5 text-sm font-medium text-muted">참가자 후기</p>
         </article>
 
-        <article class="rounded-2xl border border-slate-200 bg-slate-50 p-6 sm:p-8">
-          <h3 class="text-xl font-bold text-violet-700 sm:text-2xl">진행</h3>
-          <blockquote class="quote mt-5 pl-5 text-lg font-semibold leading-relaxed text-slate-800 sm:text-xl">“MC분을 잘 모셔서 지루하지 않고 매끄럽고 재밌게 흘러갔다”</blockquote>
-          <p class="mt-5 text-sm font-medium text-slate-400">참가자 후기</p>
+        <article class="flex h-full flex-col rounded-2xl border border-white/10 bg-card p-6 sm:p-8">
+          <h3 class="text-xl font-bold text-flame sm:text-2xl">진행</h3>
+          <blockquote class="quote mt-5 pl-5 text-lg font-semibold leading-relaxed text-cream sm:text-xl">“MC분을 잘 모셔서 지루하지 않고 매끄럽고 재밌게 흘러갔다”</blockquote>
+          <p class="mt-auto pt-5 text-sm font-medium text-muted">참가자 후기</p>
         </article>
 
-        <article class="rounded-2xl border border-slate-200 bg-slate-50 p-6 sm:p-8">
-          <h3 class="text-xl font-bold text-violet-700 sm:text-2xl">무대에 오른 참가자들</h3>
-          <blockquote class="quote mt-5 pl-5 text-lg font-semibold leading-relaxed text-slate-800 sm:text-xl">“공연에 참여할 기회가 있어서 좋았어요”</blockquote>
-          <p class="mt-5 text-sm font-medium text-slate-400">참가자 후기</p>
+        <article class="flex h-full flex-col rounded-2xl border border-white/10 bg-card p-6 sm:p-8">
+          <h3 class="text-xl font-bold text-flame sm:text-2xl">무대에 오른 참가자들</h3>
+          <blockquote class="quote mt-5 pl-5 text-lg font-semibold leading-relaxed text-cream sm:text-xl">“공연에 참여할 기회가 있어서 좋았어요”</blockquote>
+          <p class="mt-auto pt-5 text-sm font-medium text-muted">참가자 후기</p>
         </article>
       </div>
     </div>
@@ -74,118 +97,123 @@
 
   <section class="min-h-screen flex items-center px-5 py-16 sm:px-8">
     <div class="w-full max-w-5xl mx-auto">
-      <p class="text-sm font-bold tracking-[0.2em] text-violet-600">AFTER THE EVENT</p>
-      <h2 class="mt-3 text-4xl font-black tracking-tight text-slate-900 sm:text-5xl">집에 돌아간 뒤에 일어난 일들</h2>
-      <p class="mt-5 text-lg leading-relaxed text-slate-600 sm:text-xl">모임은 끝났는데, 후기에는 그 다음 날들의 이야기가 이어졌습니다.</p>
+      <p class="text-sm font-bold tracking-[0.2em] text-flame">AFTER THE EVENT</p>
+      <h2 class="mt-3 text-4xl font-black tracking-tight text-cream sm:text-5xl">집에 가서도 계속됐다는 이야기들</h2>
+      <p class="mt-5 text-lg leading-relaxed text-muted sm:text-xl">모임은 그날 끝났는데, 후기를 읽어보니 그 다음 이야기가 더 많더라고요.</p>
 
       <div class="mt-10 grid gap-5 md:grid-cols-3">
-        <article class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 sm:p-8">
-          <p class="text-5xl font-black tracking-tight text-violet-600 sm:text-6xl">7건 이상</p>
-          <p class="mt-5 text-lg font-semibold leading-relaxed">집에서 연습·복기를 시작했다는 후기</p>
-          <blockquote class="quote mt-5 pl-4 text-base leading-relaxed text-slate-600 sm:text-lg">“자극받아서 풀 시퀀스를 집에서 연습하고 녹화하고 돌려봤어요”</blockquote>
-          <p class="mt-4 text-sm font-medium text-slate-400">참가자 후기</p>
+        <article class="flex h-full flex-col rounded-2xl bg-card p-6 shadow-sm ring-1 ring-white/10 sm:p-8">
+          <p class="text-5xl font-black tracking-tight text-flame sm:text-6xl">7건 이상</p>
+          <p class="balance mt-5 text-lg font-semibold leading-relaxed">집에서 연습·복기를 시작했다는 후기</p>
+          <blockquote class="quote mt-5 pl-4 text-base leading-relaxed text-muted sm:text-lg">“자극받아서 풀 시퀀스를 집에서 연습하고 녹화하고 돌려봤어요”</blockquote>
+          <p class="mt-auto pt-4 text-sm font-medium text-muted">참가자 후기</p>
         </article>
 
-        <article class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 sm:p-8">
-          <p class="text-5xl font-black tracking-tight text-violet-600 sm:text-6xl">6건</p>
-          <p class="mt-5 text-lg font-semibold leading-relaxed">마술 도구·렉처를 새로 구매하거나 알아봤다는 후기</p>
+        <article class="flex h-full flex-col rounded-2xl bg-card p-6 shadow-sm ring-1 ring-white/10 sm:p-8">
+          <p class="text-5xl font-black tracking-tight text-flame sm:text-6xl">6건</p>
+          <p class="balance mt-5 text-lg font-semibold leading-relaxed">마술 도구·렉처를 새로 구매하거나 알아봤다는 후기</p>
         </article>
 
-        <article class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 sm:p-8">
-          <p class="text-5xl font-black tracking-tight text-violet-600 sm:text-6xl">6건 이상</p>
-          <p class="mt-5 text-lg font-semibold leading-relaxed">가족·친구·동아리에 모임 이야기를 전했다는 후기</p>
+        <article class="flex h-full flex-col rounded-2xl bg-card p-6 shadow-sm ring-1 ring-white/10 sm:p-8">
+          <p class="text-5xl font-black tracking-tight text-flame sm:text-6xl">6건 이상</p>
+          <p class="balance mt-5 text-lg font-semibold leading-relaxed">가족·친구·동아리에 모임 이야기를 전했다는 후기</p>
         </article>
       </div>
 
-      <p class="mt-10 text-xl font-bold leading-relaxed text-slate-800 sm:text-2xl">다음엔 지인을 데려오겠다는 후기도 여럿이었습니다.</p>
+      <p class="mt-10 text-xl font-bold leading-relaxed text-cream sm:text-2xl">다음엔 아는 사람 데려오겠다는 후기도 여럿이었어요.</p>
     </div>
   </section>
 
-  <section class="min-h-screen flex items-center bg-white px-5 py-16 sm:px-8">
+  <section class="min-h-screen flex items-center bg-ink-alt px-5 py-16 sm:px-8">
     <div class="w-full max-w-5xl mx-auto">
-      <p class="text-sm font-bold tracking-[0.2em] text-violet-600">VOICES</p>
-      <h2 class="mt-3 text-4xl font-black tracking-tight text-slate-900 sm:text-5xl">후기, 그대로 읽어봅니다</h2>
-      <p class="mt-5 text-lg leading-relaxed text-slate-600 sm:text-xl">39건의 후기 중 몇 개를 원문 그대로 옮깁니다.</p>
+      <p class="text-sm font-bold tracking-[0.2em] text-flame">VOICES</p>
+      <h2 class="mt-3 text-4xl font-black tracking-tight text-cream sm:text-5xl">후기, 그대로 읽어봅니다</h2>
+      <p class="mt-5 text-lg leading-relaxed text-muted sm:text-xl">손대지 않고 그대로 옮겼습니다. 맞춤법도 원문 그대로예요.</p>
 
-      <div class="mt-12 space-y-8">
-        <article class="rounded-2xl bg-slate-50 p-6 ring-1 ring-slate-200 sm:p-8">
-          <blockquote class="text-xl font-semibold leading-relaxed text-slate-800 sm:text-2xl">"엄청난 내향인입니다! 많은 인파 속에서 혼자 과연 버틸 수 있을까 걱정했는데, 막상 가보니 여러 마술사 분들이 쉽게 다가와 주셨고 너무 즐겁게 즐기다 왔습니다"</blockquote>
-          <p class="mt-5 text-sm font-medium text-slate-400">참가자 후기</p>
+      <div class="mt-12 grid gap-5 md:grid-cols-2">
+        <article class="flex h-full flex-col rounded-2xl bg-card p-6 ring-1 ring-white/10 sm:p-8">
+          <blockquote class="text-lg font-semibold leading-relaxed text-cream sm:text-xl">"엄청난 내향인입니다! 많은 인파 속에서 혼자 과연 버틸 수 있을까 걱정했는데, 막상 가보니 여러 마술사 분들이 쉽게 다가와 주셨고 너무 즐겁게 즐기다 왔습니다"</blockquote>
+          <p class="mt-auto pt-5 text-sm font-medium text-muted">참가자 후기</p>
         </article>
 
-        <article class="rounded-2xl bg-slate-50 p-6 ring-1 ring-slate-200 sm:p-8">
-          <blockquote class="text-xl font-semibold leading-relaxed text-slate-800 sm:text-2xl">"혼자 오는 사람도 많고, 처음 오는 사람도 늘 있다는 말을 보고 딱 제 얘기라서 가봐야겠다는 생각을 하게 됐어요"</blockquote>
-          <p class="mt-5 text-sm font-medium text-slate-400">참가자 후기</p>
+        <article class="flex h-full flex-col rounded-2xl bg-card p-6 ring-1 ring-white/10 sm:p-8">
+          <blockquote class="text-lg font-semibold leading-relaxed text-cream sm:text-xl">"혼자 오는 사람도 많고, 처음 오는 사람도 늘 있다는 말을 보고 딱 제 얘기라서 가봐야겠다는 생각을 하게 됐어요"</blockquote>
+          <p class="mt-auto pt-5 text-sm font-medium text-muted">참가자 후기</p>
         </article>
 
-        <article class="rounded-2xl bg-slate-50 p-6 ring-1 ring-slate-200 sm:p-8">
-          <blockquote class="text-xl font-semibold leading-relaxed text-slate-800 sm:text-2xl">"혹시나 너무 친한 사람들끼리만 모여있으면 끼기 힘들 것 같은데라는 생각이 들었었는데 생각보다 다들 가까워지려는게 느껴졌어요."</blockquote>
-          <p class="mt-5 text-sm font-medium text-slate-400">참가자 후기</p>
+        <article class="flex h-full flex-col rounded-2xl bg-card p-6 ring-1 ring-white/10 sm:p-8">
+          <blockquote class="text-lg font-semibold leading-relaxed text-cream sm:text-xl">"혹시나 너무 친한 사람들끼리만 모여있으면 끼기 힘들 것 같은데라는 생각이 들었었는데 생각보다 다들 가까워지려는게 느껴졌어요."</blockquote>
+          <p class="mt-auto pt-5 text-sm font-medium text-muted">참가자 후기</p>
         </article>
 
-        <article class="rounded-2xl bg-slate-50 p-6 ring-1 ring-slate-200 sm:p-8">
-          <blockquote class="text-xl font-semibold leading-relaxed text-slate-800 sm:text-2xl">"뒷풀이 시간에 사람들과 같이 대화하면서 밥도먹고 마술도 했던 것"</blockquote>
-          <p class="mt-5 text-sm font-medium text-slate-400">참가자 후기</p>
+        <article class="flex h-full flex-col rounded-2xl bg-card p-6 ring-1 ring-white/10 sm:p-8">
+          <blockquote class="text-lg font-semibold leading-relaxed text-cream sm:text-xl">"뒷풀이 시간에 사람들과 같이 대화하면서 밥도먹고 마술도 했던 것"</blockquote>
+          <p class="mt-auto pt-5 text-sm font-medium text-muted">참가자 후기</p>
         </article>
 
-        <article class="rounded-2xl bg-slate-50 p-6 ring-1 ring-slate-200 sm:p-8">
-          <blockquote class="text-xl font-semibold leading-relaxed text-slate-800 sm:text-2xl">"일주일 뒤에 공연을 올려야되는데 자극받아서 풀 시퀀스를 집에서 연습하고 녹화하고 돌려봤어요"</blockquote>
-          <p class="mt-5 text-sm font-medium text-slate-400">참가자 후기</p>
+        <article class="flex h-full flex-col rounded-2xl bg-card p-6 ring-1 ring-white/10 sm:p-8">
+          <blockquote class="text-lg font-semibold leading-relaxed text-cream sm:text-xl">"일주일 뒤에 공연을 올려야되는데 자극받아서 풀 시퀀스를 집에서 연습하고 녹화하고 돌려봤어요"</blockquote>
+          <p class="mt-auto pt-5 text-sm font-medium text-muted">참가자 후기</p>
         </article>
 
-        <article class="rounded-2xl bg-slate-50 p-6 ring-1 ring-slate-200 sm:p-8">
-          <blockquote class="text-xl font-semibold leading-relaxed text-slate-800 sm:text-2xl">"다음부터는 3명이고 4명이고 되는 대로 다 불러서 참여할 생각"</blockquote>
-          <p class="mt-5 text-sm font-medium text-slate-400">참가자 후기</p>
+        <article class="flex h-full flex-col rounded-2xl bg-card p-6 ring-1 ring-white/10 sm:p-8">
+          <blockquote class="text-lg font-semibold leading-relaxed text-cream sm:text-xl">"다음부터는 3명이고 4명이고 되는 대로 다 불러서 참여할 생각"</blockquote>
+          <p class="mt-auto pt-5 text-sm font-medium text-muted">참가자 후기</p>
         </article>
 
-        <article class="rounded-2xl bg-slate-50 p-6 ring-1 ring-slate-200 sm:p-8">
-          <blockquote class="text-xl font-semibold leading-relaxed text-slate-800 sm:text-2xl">"이번 MC분 한번 더 초청해주세요"</blockquote>
-          <p class="mt-5 text-sm font-medium text-slate-400">참가자 후기</p>
+        <article class="flex h-full flex-col rounded-2xl bg-card p-6 ring-1 ring-white/10 sm:p-8">
+          <blockquote class="text-lg font-semibold leading-relaxed text-cream sm:text-xl">"이번 MC분 한번 더 초청해주세요"</blockquote>
+          <p class="mt-auto pt-5 text-sm font-medium text-muted">참가자 후기</p>
         </article>
 
-        <article class="rounded-2xl bg-slate-50 p-6 ring-1 ring-slate-200 sm:p-8">
-          <blockquote class="text-xl font-semibold leading-relaxed text-slate-800 sm:text-2xl">"소외되는 사람이 단한명도 없슴"</blockquote>
-          <p class="mt-5 text-sm font-medium text-slate-400">참가자 후기</p>
+        <article class="flex h-full flex-col rounded-2xl bg-card p-6 ring-1 ring-white/10 sm:p-8">
+          <blockquote class="text-lg font-semibold leading-relaxed text-cream sm:text-xl">"소외되는 사람이 단한명도 없슴"</blockquote>
+          <p class="mt-auto pt-5 text-sm font-medium text-muted">참가자 후기</p>
         </article>
       </div>
     </div>
   </section>
 
-  <section class="min-h-screen flex items-center bg-violet-50 px-5 py-16 sm:px-8">
+  <section class="min-h-screen flex items-center bg-ink-alt px-5 py-16 sm:px-8">
     <div class="w-full max-w-5xl mx-auto">
-      <p class="text-sm font-bold tracking-[0.2em] text-violet-600">WHAT’S NEXT</p>
-      <h2 class="mt-3 max-w-4xl text-4xl font-black tracking-tight text-slate-900 sm:text-5xl">후기를 읽고, 다음 모임을 위해 준비하고 있습니다</h2>
-      <p class="mt-5 text-lg leading-relaxed text-slate-600 sm:text-xl">39건의 후기를 한 줄 한 줄 읽고 네 가지를 준비하기로 했습니다.</p>
+      <p class="text-sm font-bold tracking-[0.2em] text-flame">WHAT’S NEXT</p>
+      <h2 class="mt-3 max-w-4xl text-4xl font-black tracking-tight text-cream sm:text-5xl">후기 읽고, 다음 모임 준비하고 있습니다</h2>
+      <p class="mt-5 text-lg leading-relaxed text-muted sm:text-xl">39건 전부 한 줄씩 다 읽었어요. 그래서 네 가지를 준비하고 있습니다.</p>
 
       <div class="mt-10 grid gap-5 md:grid-cols-2">
-        <article class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-violet-200 sm:p-8">
-          <h3 class="text-xl font-bold sm:text-2xl">🤝 혼자 온 분 웰컴 케어</h3>
-          <p class="mt-4 text-lg leading-relaxed text-slate-600">혼자 와도 처음부터 어울릴 수 있게, 웰컴 타임과 운영진의 다리 놓기를 시스템으로 만들려고 준비하고 있습니다.</p>
-          <blockquote class="mt-5 border-l-4 border-violet-400 pl-5 text-base leading-relaxed text-slate-800 sm:text-lg">“운영진 분들이 혼자 있는 저를 이리저리 챙겨서 마술사분들께 데려가주셔서 완전 내향인인 저도 어색하지 않게 어울릴 수 있었어요!”</blockquote>
-          <p class="mt-4 text-sm font-medium text-slate-400">참가자 후기</p>
+        <article class="flex h-full flex-col rounded-2xl bg-card p-6 shadow-sm ring-1 ring-flame/25 sm:p-8">
+          <h3 class="text-xl font-bold sm:text-2xl">🤝 네트워킹 파티 프로그램</h3>
+          <p class="balance mt-4 text-lg leading-relaxed text-muted">마술을 전혀 모르고 오신 분, 마술을 좋아해서 오신 분, 혼자 오신 분, 친구랑 같이 오신 분. 이분들이 다 섞여서 만날 수 있게 프로그램을 새로 짜고 있습니다.</p>
+          <blockquote class="mt-5 border-l-4 border-flame pl-5 text-base leading-relaxed text-cream sm:text-lg">“운영진 분들이 혼자 있는 저를 이리저리 챙겨서 마술사분들께 데려가주셔서 완전 내향인인 저도 어색하지 않게 어울릴 수 있었어요!”</blockquote>
+          <p class="mt-auto pt-4 text-sm font-medium text-muted">참가자 후기</p>
         </article>
 
-        <article class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-violet-200 sm:p-8">
-          <h3 class="text-xl font-bold sm:text-2xl">📺 어디서든 잘 보이는 공연</h3>
-          <p class="mt-4 text-lg leading-relaxed text-slate-600">클로즈업 마술의 손끝까지 뒷자리에서도 보이도록 카메라와 화면 중계를 검토하고 있습니다.</p>
+        <article class="flex h-full flex-col rounded-2xl bg-card p-6 shadow-sm ring-1 ring-flame/25 sm:p-8">
+          <h3 class="text-xl font-bold sm:text-2xl">📺 어디 앉아도 잘 보이게</h3>
+          <p class="balance mt-4 text-lg leading-relaxed text-muted">중계 화면(빔프로젝터나 TV)을 놓거나, 아예 뒷줄이 덜 생기는 배치로 가려고 합니다. 클로즈업 마술은 손끝이 안 보이면 재미가 반이거든요.</p>
         </article>
 
-        <article class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-violet-200 sm:p-8">
-          <h3 class="text-xl font-bold sm:text-2xl">🏟️ 더 넓은 공간</h3>
-          <p class="mt-4 text-lg leading-relaxed text-slate-600">더 여유 있게 다니고 어울릴 수 있는 공간을 알아보고 있습니다.</p>
+        <article class="flex h-full flex-col rounded-2xl bg-card p-6 shadow-sm ring-1 ring-flame/25 sm:p-8">
+          <h3 class="text-xl font-bold sm:text-2xl">🏟️ 공간, 도와주실 분 찾습니다</h3>
+          <p class="balance mt-4 text-lg leading-relaxed text-muted">솔직히 지금 대관하는 곳보다 나은 곳을 찾는 게 제일 어렵습니다. 혹시 이런 공간을 아시는 분이 계시면 연락 부탁드려요.</p>
+          <ul class="mt-5 space-y-2 text-base leading-relaxed text-cream">
+            <li class="flex gap-3"><span class="font-bold text-flame">·</span><span>80명 전후로 입장 가능한 곳</span></li>
+            <li class="flex gap-3"><span class="font-bold text-flame">·</span><span>의자 70개 이상</span></li>
+            <li class="flex gap-3"><span class="font-bold text-flame">·</span><span>6인이 앉을 수 있는 테이블 12개 이상</span></li>
+          </ul>
         </article>
 
-        <article class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-violet-200 sm:p-8">
-          <h3 class="text-xl font-bold sm:text-2xl">🔑 기념 입장 키링</h3>
-          <p class="mt-4 text-lg leading-relaxed text-slate-600">참가자 제안(기념 토큰)에서 출발한 아이디어입니다. 회차마다 모으는 재미가 있는 기념 입장 키링을 검토 중입니다.</p>
+        <article class="flex h-full flex-col rounded-2xl bg-card p-6 shadow-sm ring-1 ring-flame/25 sm:p-8">
+          <h3 class="text-xl font-bold sm:text-2xl">🔑 기념품 키링</h3>
+          <p class="balance mt-4 text-lg leading-relaxed text-muted">기념품 만들어달라는 건의를 받았어요. 회차마다 모으는 재미가 있는 키링으로 검토 중입니다.</p>
         </article>
       </div>
     </div>
   </section>
 
   <section class="min-h-screen flex items-center px-5 py-16 sm:px-8">
-    <footer class="w-full max-w-5xl mx-auto border-t border-slate-300 pt-8">
-      <p class="max-w-3xl text-sm leading-relaxed text-slate-500 sm:text-base">이 페이지는 8월 2일 모임 참가자 설문 39건을 바탕으로 정리했습니다. 모든 후기는 익명으로 인용했습니다.</p>
+    <footer class="w-full max-w-5xl mx-auto border-t border-white/10 pt-8">
+      <p class="max-w-3xl text-sm leading-relaxed text-muted sm:text-base">8월 2일 모임 참가자 설문 39건을 바탕으로 정리했습니다. 후기는 전부 익명으로 인용했어요.</p>
     </footer>
   </section>
 
