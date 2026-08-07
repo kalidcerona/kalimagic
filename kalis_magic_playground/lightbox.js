@@ -6,6 +6,7 @@
     var albumTitle = '';
     var albumImages = [];
     var albumReviews = [];
+    var albumCredits = [];
 
     function injectStyles() {
         if (document.getElementById('kx-lightbox-style')) return;
@@ -78,6 +79,18 @@
             '.kx-lightbox-review span {',
             '    color: #e0904e; font-size: 0.82rem; font-weight: 800;',
             '}',
+            '.kx-lightbox-credits {',
+            '    grid-column: 1 / -1; margin-top: 20px; padding-top: 16px;',
+            '    border-top: 1px solid rgba(255, 255, 255, .18);',
+            '    display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px;',
+            '}',
+            '.kx-lightbox-credits-label {',
+            '    color: #9A8775; font-size: 0.8rem; font-weight: 800;',
+            '}',
+            '.kx-lightbox-credits a {',
+            '    color: #e0904e; font-size: 0.86rem; font-weight: 700; text-decoration: none;',
+            '}',
+            '.kx-lightbox-credits a:hover { text-decoration: underline; }',
             '.kx-lightbox-viewer {',
             '    flex: 1; min-height: 0;',
             '    display: flex; align-items: center; justify-content: center;',
@@ -172,6 +185,25 @@
                 reviewsWrap.appendChild(item);
             });
             content.appendChild(reviewsWrap);
+        }
+
+        if (albumCredits.length > 0) {
+            var creditsWrap = document.createElement('div');
+            creditsWrap.className = 'kx-lightbox-credits';
+            var creditsLabel = document.createElement('span');
+            creditsLabel.className = 'kx-lightbox-credits-label';
+            creditsLabel.textContent = '출처';
+            creditsWrap.appendChild(creditsLabel);
+            albumCredits.forEach(function (c) {
+                var link = document.createElement('a');
+                link.href = c.href;
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
+                link.textContent = '@' + c.label;
+                link.addEventListener('click', function (event) { event.stopPropagation(); });
+                creditsWrap.appendChild(link);
+            });
+            content.appendChild(creditsWrap);
         }
     }
 
@@ -285,6 +317,10 @@
             var p = card.querySelector('p');
             var s = card.querySelector('span');
             return { quote: p ? p.textContent : '', label: s ? s.textContent : '' };
+        });
+        var creditLinks = Array.prototype.slice.call(block.querySelectorAll('.event-credits-data a'));
+        albumCredits = creditLinks.map(function (a) {
+            return { href: a.href, label: a.textContent.trim() };
         });
 
         previousBodyOverflow = document.body.style.overflow;
