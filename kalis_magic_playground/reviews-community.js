@@ -86,7 +86,6 @@
   function renderReviews(list, reviews) {
     clear(list);
     if (!reviews.length) {
-      list.appendChild(el('p', 'event-review-muted', '아직 기록이 없어요.'));
       return;
     }
     reviews.forEach(function (review) {

@@ -18,18 +18,28 @@
             '    display: flex; align-items: center; justify-content: center;',
             '    padding: 28px; background: rgba(0, 0, 0, .92);',
             '    opacity: 0; transition: opacity 180ms ease;',
-            '    overflow: auto; color: #fff;',
+            '    overflow: hidden; color: #fff;',
             '}',
             '.kx-lightbox-overlay.is-open { opacity: 1; }',
             '.kx-lightbox-shell {',
             '    width: min(1120px, 100%);',
+            '    max-height: 100%; min-height: 0;',
             '    display: flex; flex-direction: column; gap: 22px;',
             '}',
             '.kx-lightbox-header {',
             '    display: flex; align-items: center; justify-content: space-between; gap: 16px;',
-            '    position: sticky; top: 0; z-index: 1;',
-            '    padding: 4px 0 10px; background: linear-gradient(rgba(0, 0, 0, .92), rgba(0, 0, 0, .72));',
+            '    padding: 0;',
             '}',
+            '.kx-lightbox-content {',
+            '    flex: 1 1 auto; min-height: 0; overflow-y: auto;',
+            '    border: 1px solid rgba(255, 255, 255, .16); border-radius: 14px;',
+            '    background: rgba(255, 255, 255, .03);',
+            '    padding: 18px;',
+            '    scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.28) transparent;',
+            '}',
+            '.kx-lightbox-content::-webkit-scrollbar { width: 8px; }',
+            '.kx-lightbox-content::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, .25); border-radius: 8px; }',
+            '.kx-lightbox-content::-webkit-scrollbar-track { background: transparent; }',
             '.kx-lightbox-title {',
             '    margin: 0; font-size: clamp(20px, 3vw, 34px); line-height: 1.2; font-weight: 800;',
             '}',
@@ -47,10 +57,10 @@
             '}',
             '.kx-lightbox-grid {',
             '    display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));',
-            '    gap: 14px; padding-bottom: 24px;',
+            '    gap: 14px;',
             '}',
             '.kx-lightbox-thumb {',
-            '    display: block; width: 100%; aspect-ratio: 4 / 3;',
+            '    display: block; width: 100%; height: 160px;',
             '    border: 0; padding: 0; border-radius: 8px; overflow: hidden;',
             '    background: rgba(255, 255, 255, .08); cursor: zoom-in;',
             '}',
@@ -71,12 +81,13 @@
             '.kx-lightbox-viewer {',
             '    flex: 1; min-height: 0;',
             '    display: flex; align-items: center; justify-content: center;',
-            '    padding: 0 0 24px;',
+            '    padding: 0;',
             '}',
             '.kx-lightbox-image {',
-            '    display: block; max-width: 100%; max-height: calc(100vh - 130px);',
+            '    display: block; max-width: 100%; max-height: calc(100vh - 220px);',
             '    width: auto; height: auto; object-fit: contain;',
             '    box-shadow: 0 24px 80px rgba(0, 0, 0, .5);',
+            '    cursor: default;',
             '}',
             '.kx-lightbox-back[hidden] { display: none; }',
             '@media (max-width: 640px) {',
@@ -85,8 +96,10 @@
             '    .kx-lightbox-header { gap: 10px; }',
             '    .kx-lightbox-title { font-size: 20px; }',
             '    .kx-lightbox-button { width: 40px; height: 40px; font-size: 26px; }',
+            '    .kx-lightbox-content{ padding: 12px; border-radius: 10px; }',
             '    .kx-lightbox-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }',
-            '    .kx-lightbox-image { max-height: calc(100vh - 112px); }',
+            '    .kx-lightbox-thumb { height: 120px; }',
+            '    .kx-lightbox-image { max-height: calc(100vh - 190px); }',
             '}'
         ].join('\n');
         document.head.appendChild(style);
@@ -233,6 +246,12 @@
         });
         closeButton.addEventListener('click', closeLightbox);
         overlay.addEventListener('click', function (event) {
+            if (event.target.closest('.kx-lightbox-button')) return;
+            var isViewer = content.classList.contains('kx-lightbox-viewer');
+            if (isViewer) {
+                if (!event.target.closest('.kx-lightbox-image')) renderAlbum();
+                return;
+            }
             if (event.target === overlay) closeLightbox();
         });
 
