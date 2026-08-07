@@ -269,7 +269,9 @@
         closeLightbox();
         injectStyles();
 
-        if (title) {
+        if (block.dataset.albumTitle) {
+            albumTitle = block.dataset.albumTitle;
+        } else if (title) {
             var titleClone = title.cloneNode(true);
             var countEl = titleClone.querySelector('.ev-count');
             if (countEl) countEl.parentNode.removeChild(countEl);
