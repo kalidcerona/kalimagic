@@ -177,7 +177,7 @@
                 var item = document.createElement('div');
                 item.className = 'kx-lightbox-review';
                 var quote = document.createElement('p');
-                quote.textContent = r.quote;
+                quote.innerHTML = r.quote;
                 var label = document.createElement('span');
                 label.textContent = r.label;
                 item.appendChild(quote);
@@ -316,7 +316,7 @@
         albumReviews = reviewCards.map(function (card) {
             var p = card.querySelector('p');
             var s = card.querySelector('span');
-            return { quote: p ? p.textContent : '', label: s ? s.textContent : '' };
+            return { quote: p ? p.innerHTML : '', label: s ? s.textContent : '' };
         });
         var creditLinks = Array.prototype.slice.call(block.querySelectorAll('.event-credits-data a'));
         albumCredits = creditLinks.map(function (a) {
@@ -339,6 +339,18 @@
     }
 
     function onGalleryClick(event) {
+        var opener = event.target.closest('[data-album-open]');
+        if (opener) {
+            var albumBlock = document.querySelector('.event-block[data-album-id="' + opener.getAttribute('data-album-open') + '"]');
+            var albumImage = albumBlock ? albumBlock.querySelector('.event-gallery figure img') : null;
+            if (albumImage) {
+                event.preventDefault();
+                event.stopPropagation();
+                openAlbum(albumImage);
+                return;
+            }
+        }
+
         var figure = event.target.closest('.event-gallery figure');
         if (!figure) return;
         var image = figure.querySelector('img');
