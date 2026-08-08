@@ -6,8 +6,8 @@
 <title>8월 2일 칼리의 번개 — 후기 리캡</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
-:root{--sy:64px;--nx-pad:28px;--nx-gap:20px;--nx-qmt:18px;--nx-lh:1.65;--nx-qfs:15px;--bm-gap:44px;--bm-qmt:14px;--terra:#D94A1A;--terra-bright:#E2703A;--terra-deep:#9E2F0C;--brass:#C99A5B}
-@media (max-height:980px){:root{--sy:36px;--nx-pad:14px;--nx-gap:10px;--nx-qmt:7px;--nx-lh:1.45;--nx-qfs:14px;--bm-gap:26px;--bm-qmt:9px}}
+:root{--sy:64px;--nx-pad:28px;--nx-gap:20px;--nx-qmt:18px;--nx-lh:1.65;--nx-qfs:15px;--bm-gap:44px;--bm-qmt:14px;--cta-h2:92px;--cta-boxpad:24px;--cta-footmt:96px;--terra:#D94A1A;--terra-bright:#E2703A;--terra-deep:#9E2F0C;--brass:#C99A5B}
+@media (max-height:980px){:root{--sy:36px;--nx-pad:14px;--nx-gap:10px;--nx-qmt:7px;--nx-lh:1.45;--nx-qfs:14px;--bm-gap:26px;--bm-qmt:9px;--cta-h2:72px;--cta-boxpad:18px;--cta-footmt:40px}}
 html{scroll-snap-type:y proximity;scroll-behavior:smooth}
 body{margin:0;background:#f4efe9;font-family:'Pretendard Variable',Pretendard,-apple-system,'Apple SD Gothic Neo',sans-serif;word-break:keep-all;overflow-wrap:break-word}
 a{color:var(--terra-deep)}a:hover{color:var(--terra-deep)}
@@ -29,10 +29,6 @@ a{color:var(--terra-deep)}a:hover{color:var(--terra-deep)}
         <p style="margin:8px 0 0;font-size:14px;font-weight:700;color:#7c6f63">참가자 만족도</p>
       </div>
       <div>
-        <p style="margin:0;font-size:clamp(38px,4vw,54px);font-weight:900;letter-spacing:-0.02em;color:var(--terra-deep)"><span style="font-size:0.45em;font-weight:800;color:var(--terra-deep)">NPS </span><span data-count="61">61</span></p>
-        <p style="margin:8px 0 0;font-size:14px;font-weight:700;color:#7c6f63">추천 지수</p>
-      </div>
-      <div>
         <p style="margin:0;font-size:clamp(38px,4vw,54px);font-weight:900;letter-spacing:-0.02em;color:var(--terra-deep)"><span data-count="41">41</span><span style="font-size:0.45em;font-weight:800;color:var(--terra-deep)">건</span></p>
         <p style="margin:8px 0 0;font-size:14px;font-weight:700;color:#7c6f63">도착한 후기</p>
       </div>
@@ -44,7 +40,10 @@ a{color:var(--terra-deep)}a:hover{color:var(--terra-deep)}
     <p data-reveal="0s" style="margin:0;font-size:14px;font-weight:800;letter-spacing:0.2em;color:var(--terra-bright)">THE NUMBERS</p>
     <h2 data-reveal="0.1s" style="margin:16px 0 0;font-size:clamp(36px,5vw,60px);font-weight:900;letter-spacing:-0.03em;color:#f4efe9">그날의 숫자들</h2>
     <div style="margin-top:42px;text-align:left">
-      <p data-reveal="0.15s" style="margin:0 0 16px;text-align:right;font-size:13px;font-weight:700;letter-spacing:0.08em;color:#ab9f92">n=41</p>
+      <div data-reveal="0.15s" style="margin:0 0 16px;display:flex;justify-content:space-between;align-items:baseline">
+        <span style="font-size:13px;font-weight:800;letter-spacing:0.05em;color:#f4efe9">추천 의향 (10점 만점)</span>
+        <span style="font-size:13px;font-weight:700;letter-spacing:0.08em;color:#ab9f92">n=41</span>
+      </div>
       <div style="display:flex;flex-direction:column;gap:16px">
         <div data-histogram-row data-reveal="0.18s">
           <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:7px"><span style="font-size:16px;font-weight:700;color:#f4efe9">10점</span><span style="font-size:17px;font-weight:800;color:var(--terra-bright)">24명</span></div>
@@ -71,9 +70,9 @@ a{color:var(--terra-deep)}a:hover{color:var(--terra-deep)}
           <div style="height:14px;background:rgba(217,74,26,0.10);border-radius:7px;overflow:hidden"><div data-bar="4" style="height:100%;width:4%;background:var(--terra);border-radius:7px"></div></div>
         </div>
       </div>
-      <p data-reveal="0.42s" style="margin:28px 0 0;border-left:4px solid var(--terra);padding:10px 0 10px 16px;font-size:18px;font-weight:800;color:#f4efe9">만족도 3점 이하 <span style="color:var(--terra-bright)">0명</span></p>
+      <p data-reveal="0.42s" style="margin:28px 0 0;border-left:4px solid var(--terra);padding:10px 0 10px 16px;font-size:18px;font-weight:800;color:#f4efe9">만족도(5점 만점) 3점 이하 <span style="color:var(--terra-bright)">0명</span></p>
     </div>
-    <p data-reveal="0.45s" style="margin:36px auto 0;max-width:600px;font-size:clamp(19px,2vw,23px);font-weight:600;line-height:1.6;color:#f4efe9">만족도 3점 이하는 한 명도 없었어요.<br>41명 중 29명이 추천 의향에 9점 이상을 줬습니다.</p>
+    <p data-reveal="0.45s" style="margin:36px auto 0;max-width:600px;font-size:clamp(19px,2vw,23px);font-weight:600;line-height:1.6;color:#f4efe9">만족도는 5점 만점인데 3점 이하가 한 명도 없었어요.<br>추천 의향은 10점 만점이고, 41명 중 29명이 9점 이상을 줬습니다.</p>
   </div>
 </section>
 <section style="min-height:100svh;display:flex;align-items:center;scroll-snap-align:start;padding:var(--sy) 32px;box-sizing:border-box;background:#1f1815">
@@ -139,7 +138,7 @@ a{color:var(--terra-deep)}a:hover{color:var(--terra-deep)}
         <blockquote style="margin:0 auto;max-width:760px;font-size:clamp(22px,2.8vw,34px);font-weight:800;line-height:1.4;color:#1a1512">“MC분을 잘 모셔서 진행되는거에 있어서 지루하지 않고 매끄럽고 재밌게 흘러간 것 같고”</blockquote>
       </div>
       <div data-reveal="0.45s" data-fx="pop">
-        <p style="margin:0 0 var(--bm-qmt)"><span style="display:inline-block;border:1.5px solid var(--terra-deep);border-radius:999px;padding:6px 16px;font-size:13px;font-weight:800;letter-spacing:0.1em;color:var(--terra-deep);background:rgba(217,74,26,0.08)">무대에 오른 참가자들</span></p>
+        <p style="margin:0 0 var(--bm-qmt)"><span style="display:inline-block;border:1.5px solid var(--terra-deep);border-radius:999px;padding:6px 16px;font-size:13px;font-weight:800;letter-spacing:0.1em;color:var(--terra-deep);background:rgba(217,74,26,0.08)">공연에 직접 참여</span></p>
         <blockquote style="margin:0 auto;max-width:760px;font-size:clamp(22px,2.8vw,34px);font-weight:800;line-height:1.4;color:#1a1512">“공연에 참여할 기회가 있어서 좋았어요”</blockquote>
       </div>
     </div>
@@ -160,7 +159,7 @@ a{color:var(--terra-deep)}a:hover{color:var(--terra-deep)}
         <p style="margin:12px auto 0;max-width:260px;font-size:17px;font-weight:600;line-height:1.5;color:#f4efe9">가족·친구·동아리에 모임 이야기를 전했다는 후기</p>
       </div>
       <div data-reveal="0.45s" data-fx="pop">
-        <p style="margin:0;font-size:clamp(52px,6vw,84px);font-weight:900;letter-spacing:-0.03em;color:var(--terra)"><span data-count="6">6</span><span style="font-size:0.4em;font-weight:800;color:var(--brass)">건</span></p>
+        <p style="margin:0;font-size:clamp(52px,6vw,84px);font-weight:900;letter-spacing:-0.03em;color:var(--terra)"><span data-count="6">6</span></p>
         <p style="margin:12px auto 0;max-width:260px;font-size:17px;font-weight:600;line-height:1.5;color:#f4efe9">마술 도구·렉처를 새로 사거나 알아봤다는 후기</p>
       </div>
     </div>
@@ -232,19 +231,20 @@ a{color:var(--terra-deep)}a:hover{color:var(--terra-deep)}
       <article data-reveal="0.35s" style="display:flex;flex-direction:column;background:#261d18;border:1px solid rgba(217,74,26,0.28);border-radius:16px;padding:var(--nx-pad);box-sizing:border-box">
         <h3 style="margin:0;font-size:20px;font-weight:700;color:#f4efe9">📺 어디 앉아도 잘 보이게</h3>
         <p style="margin:14px 0 0;font-size:16px;line-height:var(--nx-lh);color:#ab9f92">중계 화면(빔프로젝터나 TV)을 두거나, 뒷줄이 덜 생기는 배치로 바꾸려고 합니다. 클로즈업 마술은 손끝이 안 보이면 재미가 반이거든요.</p>
+        <blockquote style="margin:var(--nx-qmt) 0 0;border-left:4px solid var(--terra);padding-left:16px;font-size:var(--nx-qfs);line-height:1.6;color:#f4efe9">“뒷자리에 있으면 앞에서 어떤 일이 벌어지는지 아예 보이질 않습니다”</blockquote>
+        <p style="margin:8px 0 0;font-size:13px;font-weight:500;color:#ab9f92">참가자 후기</p>
       </article>
       <article data-reveal="0.45s" style="display:flex;flex-direction:column;background:#261d18;border:1px solid rgba(217,74,26,0.28);border-radius:16px;padding:var(--nx-pad);box-sizing:border-box">
-        <h3 style="margin:0;font-size:20px;font-weight:700;color:#f4efe9">🏟️ 공간, 도와주실 분 찾습니다</h3>
-        <p style="margin:14px 0 0;font-size:16px;line-height:var(--nx-lh);color:#ab9f92">솔직히 지금 대관하는 곳보다 나은 공간을 찾는 게 제일 어렵습니다. 이런 곳을 아신다면 꼭 연락 주세요.</p>
-        <ul style="margin:16px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px;font-size:15px;line-height:1.6;color:#f4efe9">
-          <li style="display:flex;gap:12px"><span style="font-weight:700;color:var(--terra-bright)">·</span><span>80명 전후로 입장 가능한 곳</span></li>
-          <li style="display:flex;gap:12px"><span style="font-weight:700;color:var(--terra-bright)">·</span><span>의자 70개 이상</span></li>
-          <li style="display:flex;gap:12px"><span style="font-weight:700;color:var(--terra-bright)">·</span><span>6인이 앉을 수 있는 테이블 12개 이상</span></li>
-        </ul>
+        <h3 style="margin:0;font-size:20px;font-weight:700;color:#f4efe9">🚪 중간에 나갔다 들어오는 일 줄이기</h3>
+        <p style="margin:14px 0 0;font-size:16px;line-height:var(--nx-lh);color:#ab9f92">이번에는 공연 다음에 렉처, 그다음 본모임 순서라서 중간에 테이블을 넣고 빼야 했고 그래서 참가자들이 밖으로 나가 기다려야 했어요. 다음 모임은 렉처를 먼저 하고 공연, 본모임 순서로 바꿉니다. 테이블을 옮기지 않아도 되고, 중간에 나갔다 들어오는 일도 줄어들 거예요.</p>
+        <blockquote style="margin:var(--nx-qmt) 0 0;border-left:4px solid var(--terra);padding-left:16px;font-size:var(--nx-qfs);line-height:1.6;color:#f4efe9">“쉬는시간을 쉴때마다 자리가 바뀌는게 너무 아쉬웠습니다. 짐을 의자에 놓고 쉬어도 되는지 짐을 챙기고 밖으로 나가야되는건지 설명이 없어서 아쉬웠습니다.”</blockquote>
+        <p style="margin:8px 0 0;font-size:13px;font-weight:500;color:#ab9f92">참가자 후기</p>
       </article>
       <article data-reveal="0.55s" style="display:flex;flex-direction:column;background:#261d18;border:1px solid rgba(217,74,26,0.28);border-radius:16px;padding:var(--nx-pad);box-sizing:border-box">
         <h3 style="margin:0;font-size:20px;font-weight:700;color:#f4efe9">🔑 기념품 키링</h3>
         <p style="margin:14px 0 0;font-size:16px;line-height:var(--nx-lh);color:#ab9f92">기념품 건의를 받아, 회차마다 모으는 재미가 있는 키링을 검토 중입니다.</p>
+        <blockquote style="margin:var(--nx-qmt) 0 0;border-left:4px solid var(--terra);padding-left:16px;font-size:var(--nx-qfs);line-height:1.6;color:#f4efe9">“이건 그냥 바램인데... 입장토큰같은거 있으면 좋지 않을까 해요. 기념품처럼요.”</blockquote>
+        <p style="margin:8px 0 0;font-size:13px;font-weight:500;color:#ab9f92">참가자 후기</p>
       </article>
     </div>
   </div>
@@ -252,16 +252,23 @@ a{color:var(--terra-deep)}a:hover{color:var(--terra-deep)}
 <section style="min-height:100svh;display:flex;align-items:center;scroll-snap-align:start;padding:var(--sy) 32px;box-sizing:border-box;background:#f4efe9">
   <div style="width:100%;max-width:920px;margin:0 auto;text-align:center">
     <p data-reveal="0s" style="margin:0;font-size:14px;font-weight:800;letter-spacing:0.2em;color:var(--terra-deep)">SEE YOU NEXT TIME</p>
-    <h2 style="margin:20px 0 0;font-size:clamp(44px,7vw,92px);font-weight:900;letter-spacing:-0.04em;line-height:1.05;color:var(--terra-deep)">
+    <h2 style="margin:20px 0 0;font-size:clamp(44px,7vw,var(--cta-h2));font-weight:900;letter-spacing:-0.04em;line-height:1.05;color:var(--terra-deep)">
       <span style="display:block;overflow:hidden;padding-bottom:0.06em"><span data-reveal="0.1s" data-fx="clip" style="display:block">다음 모임에서</span></span>
       <span style="display:block;overflow:hidden;padding-bottom:0.06em"><span data-reveal="0.25s" data-fx="clip" style="display:block">만나요</span></span>
     </h2>
     <p data-reveal="0.4s" style="margin:24px auto 0;max-width:560px;font-size:clamp(18px,2vw,23px);font-weight:600;line-height:1.6;color:#7c6f63">처음이어도, 혼자여도 괜찮아요. 41건의 후기가 그렇게 말하고 있어요.</p>
     <div data-reveal="0.5s" data-fx="pop" style="margin-top:44px;display:flex;justify-content:center">
-      <p style="margin:0;max-width:600px;border:1.5px solid var(--terra-deep);border-radius:20px;padding:24px 32px;font-size:clamp(16px,1.8vw,20px);font-weight:700;line-height:1.6;color:#1a1512">80명이 모일 수 있는 공간을 아신다면, 운영진에게 편하게 말 걸어주세요.<br><span style="color:var(--terra-deep)">다음 모임이 한 뼘 더 좋아집니다.</span></p>
+      <div style="margin:0;max-width:600px;border:1.5px solid var(--terra-deep);border-radius:20px;padding:var(--cta-boxpad) 32px;box-sizing:border-box">
+        <p style="margin:0;font-size:clamp(16px,1.8vw,20px);font-weight:700;line-height:1.6;color:#1a1512">80명이 모일 수 있는 공간을 아신다면, 운영진에게 편하게 말 걸어주세요.<br><span style="color:var(--terra-deep)">다음 모임이 한 뼘 더 좋아집니다.</span></p>
+        <ul style="margin:16px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px;font-size:15px;line-height:1.6;color:#1a1512;text-align:left">
+          <li style="display:flex;gap:12px"><span style="font-weight:700;color:var(--terra-deep)">·</span><span>80명 전후로 입장 가능한 곳</span></li>
+          <li style="display:flex;gap:12px"><span style="font-weight:700;color:var(--terra-deep)">·</span><span>의자 70개 이상</span></li>
+          <li style="display:flex;gap:12px"><span style="font-weight:700;color:var(--terra-deep)">·</span><span>6인이 앉을 수 있는 테이블 12개 이상</span></li>
+        </ul>
+      </div>
     </div>
     <p data-reveal="0.55s" style="margin:32px auto 0;max-width:640px;text-align:center;font-size:clamp(16px,1.7vw,19px);line-height:1.65;color:#7c6f63">이번 모임 MC분이 다음 모임도 함께해주시기로 했어요. 벌써 같이 아이디어 회의를 했고, 모임 전에 한 번 더 만나서 나온 이야기를 반영할 예정입니다. 기대하셔도 좋습니다.</p>
-    <footer data-reveal="0.6s" style="margin-top:96px;border-top:1px solid rgba(26,21,18,0.12);padding-top:24px">
+    <footer data-reveal="0.6s" style="margin-top:var(--cta-footmt);border-top:1px solid rgba(26,21,18,0.12);padding-top:24px">
       <p style="margin:0 auto;max-width:640px;font-size:14px;line-height:1.6;color:#7c6f63">8월 2일 모임 참가자 설문 41건을 바탕으로 정리했습니다. 후기는 전부 익명, 원문 그대로 인용했어요.</p>
     </footer>
   </div>
