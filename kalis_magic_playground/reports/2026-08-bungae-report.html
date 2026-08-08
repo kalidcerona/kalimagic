@@ -6,7 +6,20 @@
 <title>8월 2일 칼리의 번개 후기 리포트 + 혼참자 집중 조사</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
-  body { font-family: 'Pretendard', -apple-system, 'Apple SD Gothic Neo', sans-serif; }
+  body {
+    font-family: 'Pretendard', -apple-system, 'Apple SD Gothic Neo', sans-serif;
+    font-size: 1rem;
+    line-height: 1.75;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+  }
+  h1, h2, h3, blockquote { text-wrap: balance; }
+  p, li, td { text-wrap: pretty; }
+  p, section ul { max-width: 46em; }
+  .prose-measure { max-width: 46em; }
+  .prose-measure + .prose-measure { margin-top: 0.75rem; }
+  .text-sm:not(.animated-chart *) { font-size: 1rem; line-height: 1.75; }
+  .text-xs:not(.animated-chart *) { font-size: 0.875rem; line-height: 1.5; }
   .quote { border-left: 3px solid #a78bfa; }
 </style>
 </head>
@@ -17,12 +30,51 @@
   <header class="mb-10">
     <p class="text-sm text-violet-600 font-semibold mb-1">2026-08-04 작성 · 08-08 갱신</p>
     <h1 class="text-3xl font-bold mb-3">8월 2일 칼리의 번개<br>후기 취합 + 혼자 온 참가자 집중 조사</h1>
-    <p class="text-sm text-slate-500">올해 모임 설문 응답 41건 기준. (8/8 접수 마감, 최종 41건)</p>
+    <p class="text-sm text-slate-500 prose-measure">올해 모임 설문 응답 41건 기준. (8/8 접수 마감, 최종 41건)</p>
   </header>
+
+  <!-- 문서 지도 -->
+  <nav id="document-map" class="mb-12 scroll-mt-6" aria-label="문서 지도">
+    <div class="flex flex-wrap items-end justify-between gap-2 mb-4">
+      <div>
+        <p class="text-sm font-semibold text-violet-600">DOCUMENT MAP</p>
+        <p class="text-xl font-bold">여덟 섹션을 세 단계로 읽기</p>
+      </div>
+      <p class="text-sm text-slate-500 prose-measure">필요한 단계부터 바로 이동할 수 있습니다.</p>
+    </div>
+    <div class="grid md:grid-cols-3 gap-4">
+      <div class="bg-violet-50 border border-violet-200 rounded-xl p-5">
+        <p class="inline-flex rounded-full bg-violet-600 px-3 py-1 text-sm font-bold text-white mb-2">진단</p>
+        <p class="font-semibold text-violet-900 mb-3 prose-measure">무슨 일이 있었나</p>
+        <ol class="space-y-2 text-sm">
+          <li><a href="#section-1" class="text-violet-800 hover:underline">1. 한눈에 요약</a></li>
+          <li><a href="#section-2" class="text-violet-800 hover:underline">2. 후기 취합 (41건)</a></li>
+          <li><a href="#section-3" class="text-violet-800 hover:underline">3. 혼자 온 참가자 분석</a></li>
+        </ol>
+      </div>
+      <div class="bg-amber-50 border border-amber-200 rounded-xl p-5">
+        <p class="inline-flex rounded-full bg-amber-500 px-3 py-1 text-sm font-bold text-white mb-2">해석</p>
+        <p class="font-semibold text-amber-900 mb-3 prose-measure">왜 그런가</p>
+        <ol class="space-y-2 text-sm">
+          <li><a href="#section-4" class="text-amber-800 hover:underline">4. 집중 조사: 혼자 온 사람이 잘 놀게 만드는 법</a></li>
+          <li><a href="#section-8" class="text-amber-800 hover:underline">8. 개선점별 대응 아이디어</a></li>
+        </ol>
+      </div>
+      <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-5">
+        <p class="inline-flex rounded-full bg-emerald-600 px-3 py-1 text-sm font-bold text-white mb-2">실행</p>
+        <p class="font-semibold text-emerald-900 mb-3 prose-measure">다음 모임에 뭘 하나</p>
+        <ol class="space-y-2 text-sm">
+          <li><a href="#section-5" class="text-emerald-800 hover:underline">5. 참가자 요청별 대응안</a></li>
+          <li><a href="#section-6" class="text-emerald-800 hover:underline">6. 네트워킹 파티 운영안</a></li>
+          <li><a href="#section-7" class="text-emerald-800 hover:underline">7. MC·운영진과 공유할 진행 노하우</a></li>
+        </ol>
+      </div>
+    </div>
+  </nav>
 
   <!-- 1. 요약 -->
   <section class="mb-12">
-    <h2 class="text-2xl font-bold mb-4 pb-2 border-b-2 border-violet-300">1. 한눈에 요약</h2>
+    <h2 id="section-1" class="text-2xl font-bold mb-4 pb-2 border-b-2 border-violet-300 scroll-mt-6"><span class="inline-flex align-middle rounded-full bg-violet-100 px-2.5 py-1 text-sm font-bold text-violet-700 mr-2">진단</span>1. 한눈에 요약</h2>
     <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
       <div class="bg-white rounded-xl shadow-sm p-4 text-center">
         <p class="text-3xl font-bold text-violet-600">4.66</p>
@@ -41,17 +93,18 @@
         <p class="text-xs text-slate-500 mt-1">입문·관심층 비율<br>(17명/41명)</p>
       </div>
     </div>
-    <ul class="space-y-2 text-[15px] leading-relaxed">
+    <ul class="space-y-2 text-base leading-relaxed prose-measure">
       <li>• 모임 자체는 <b>역대급 반응</b>입니다. 만족도 3점 이하가 0명이고, 추천 의향 9-10점이 41명 중 29명입니다. 료(RYO) 공연이 가격 대비 말이 안 된다는 반응으로 압도적 1등 순간이었습니다.</li>
       <li>• 다만 칼리형이 느낀 대로, <b>혼자 온 사람들의 어울림이 가장 약한 고리</b>로 데이터에 잡힙니다. 혼자 와도 어색하지 않았어요가 분위기 5문항 중 평균 최저(4.22)이고, 2점 응답이 3명으로 가장 많은 항목이며, 응답자 40명 중 8명(20%)이 3점 이하입니다.</li>
       <li>• 좋은 소식: 해결의 실마리가 이미 설문 안에 있습니다. 참가자들이 <b>구체적인 요청 4건</b>을 직접 남겼고, 운영진이 혼자 있는 저를 마술사분들께 데려가줘서 완전 내향인인 저도 어울렸다는 <b>성공 사례</b>도 있습니다. 이 수동 케어를 시스템으로 만들면 됩니다.</li>
       <li>• 별도 발견: 추천 점수가 낮은 응답(3-7점) 8건의 이유는 <b>비마술인 동반 문제(4건)</b>, 뉴비 배려 아쉬움(1건, "고인물들에게는 완벽했지만 뉴비에겐 조금 아쉬웠습니다"), 내향인 피로(1건), 낯가림 걱정(1건), 비열정·입문층 배려(1건, "마술 배울 열정이 없는 사람들은 어울리기 힘들 것 같아요")로 갈립니다. 8섹션에서 개선점별로 다룹니다.</li>
     </ul>
+    <a href="#document-map" class="inline-flex mt-6 text-sm font-semibold text-violet-700 hover:underline">문서 지도로 돌아가기 ↑</a>
   </section>
 
   <!-- 2. 2026 후기 취합 -->
   <section class="mb-12">
-    <h2 class="text-2xl font-bold mb-4 pb-2 border-b-2 border-violet-300">2. 후기 취합 (41건)</h2>
+    <h2 id="section-2" class="text-2xl font-bold mb-4 pb-2 border-b-2 border-violet-300 scroll-mt-6"><span class="inline-flex align-middle rounded-full bg-violet-100 px-2.5 py-1 text-sm font-bold text-violet-700 mr-2">진단</span>2. 후기 취합 (41건)</h2>
 
     <h3 class="text-lg font-bold mt-6 mb-3">정량 지표</h3>
     <div class="bg-white rounded-xl shadow-sm p-5 mb-4 overflow-x-auto">
@@ -183,12 +236,13 @@
       <p>제작처 후보: 네이버 스마트스토어 '아이텐션' 커스텀 아크릴 키링 (<a href="https://smartstore.naver.com/itension/products/7077118971" class="text-emerald-700 underline" target="_blank" rel="noopener">제품 페이지</a>). 가격·최소 주문 수량·제작 옵션은 확인 불가(페이지 접근 제한), 주문 전 직접 확인이 필요합니다.</p>
       <p class="text-slate-500">원 제안의 '동전을 만지작거리며 관련 스킬을 배우는 도구' 성격은 키링에서는 약해집니다. 이 안은 수집·브랜딩·입장 확인에 집중하는 선택입니다.</p>
     </div>
+    <a href="#document-map" class="inline-flex mt-6 text-sm font-semibold text-violet-700 hover:underline">문서 지도로 돌아가기 ↑</a>
   </section>
 
   <!-- 3. 혼참자 분석 -->
   <section class="mb-12">
-    <h2 class="text-2xl font-bold mb-4 pb-2 border-b-2 border-rose-300">3. 혼자 온 참가자 분석 (설문 원문)</h2>
-    <p class="text-sm mb-4">칼리형이 읽으신 대로, 혼자 온 사람들의 목소리가 뚜렷합니다. 원문 그대로 모았습니다.</p>
+    <h2 id="section-3" class="text-2xl font-bold mb-4 pb-2 border-b-2 border-rose-300 scroll-mt-6"><span class="inline-flex align-middle rounded-full bg-violet-100 px-2.5 py-1 text-sm font-bold text-violet-700 mr-2">진단</span>3. 혼자 온 참가자 분석 (설문 원문)</h2>
+    <p class="text-sm mb-4 prose-measure">칼리형이 읽으신 대로, 혼자 온 사람들의 목소리가 뚜렷합니다. 원문 그대로 모았습니다.</p>
 
     <h3 class="text-lg font-bold mb-3 text-rose-600">힘들었다는 목소리</h3>
     <div class="space-y-3 mb-6 text-sm">
@@ -245,12 +299,56 @@
       <p class="font-bold mb-1">진단 요약</p>
       <p>공연·렉처 등 "프로그램이 진행되는 시간"은 혼참자도 문제없이 즐깁니다. 문제는 <b>구조가 사라지는 두 구간</b>, 즉 ① 자유시간(부스 타임)과 ② 뒷풀이, 그리고 ③ 무대 준비로 밖에 나가 대기하는 시간입니다. 이 구간에서 이미 친한 무리는 뭉치고, 혼참자는 끼어들 명분이 없어 겉돌게 됩니다. 아래 조사 결과가 정확히 이 지점을 겨냥합니다.</p>
     </div>
+    <a href="#document-map" class="inline-flex mt-6 text-sm font-semibold text-violet-700 hover:underline">문서 지도로 돌아가기 ↑</a>
   </section>
 
   <!-- 4. 집중 조사 -->
   <section class="mb-12">
-    <h2 class="text-2xl font-bold mb-4 pb-2 border-b-2 border-violet-300">4. 집중 조사: 혼자 온 사람이 잘 놀게 만드는 법</h2>
-    <p class="text-sm mb-5">해외 이벤트·컨벤션 운영 사례와 국내 소셜모임 플랫폼(문토·남의집·넷플연가 등) 사례를 조사했습니다. 결론부터: <b>혼참자가 못 어울리는 건 용기 문제가 아니라 설계 문제</b>라는 게 업계 공통 결론입니다.</p>
+    <h2 id="section-4" class="text-2xl font-bold mb-4 pb-2 border-b-2 border-amber-300 scroll-mt-6"><span class="inline-flex align-middle rounded-full bg-amber-100 px-2.5 py-1 text-sm font-bold text-amber-700 mr-2">해석</span>4. 집중 조사: 혼자 온 사람이 잘 놀게 만드는 법</h2>
+
+    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 md:p-6 mb-6" aria-label="혼자 온 참가자가 겉도는 원인과 대응 장치">
+      <div class="grid md:grid-cols-[1fr_auto_1fr] gap-4 md:gap-6 items-stretch">
+        <div>
+          <p class="font-bold text-rose-700 mb-3 prose-measure">혼자 온 사람이 겉도는 이유 (3)</p>
+          <div class="space-y-3">
+            <div class="rounded-xl border border-rose-200 bg-rose-50 p-4">
+              <p class="font-bold text-rose-800">구조가 사라지는 시간대</p>
+              <p class="text-sm text-slate-600 prose-measure">자유시간, 뒷풀이, 무대 준비 대기</p>
+            </div>
+            <div class="rounded-xl border border-rose-200 bg-rose-50 p-4">
+              <p class="font-bold text-rose-800">말 걸 대상을 모름</p>
+              <p class="text-sm text-slate-600 prose-measure">누가 열려있는지 신호가 없음</p>
+            </div>
+            <div class="rounded-xl border border-rose-200 bg-rose-50 p-4">
+              <p class="font-bold text-rose-800">기존 무리의 벽</p>
+              <p class="text-sm text-slate-600 prose-measure">친한 사람끼리 뭉침</p>
+            </div>
+          </div>
+        </div>
+        <div class="flex md:flex-col items-center justify-center gap-2 text-2xl font-bold text-slate-300" aria-hidden="true">
+          <span class="hidden md:block h-14 border-l-2 border-dashed border-slate-300"></span>
+          <span class="rotate-90 md:rotate-0">→</span>
+          <span class="hidden md:block h-14 border-l-2 border-dashed border-slate-300"></span>
+        </div>
+        <div>
+          <p class="font-bold text-emerald-700 mb-3 prose-measure">그래서 다음 모임에 하는 것</p>
+          <div class="space-y-3">
+            <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+              <p class="font-bold text-emerald-800">네트워킹 파티</p>
+              <p class="text-sm text-slate-600 prose-measure">테이블 로테이션 + 네임카드 + 질문카드</p>
+            </div>
+            <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+              <p class="font-bold text-emerald-800">MC 리액션 멘트</p>
+            </div>
+            <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+              <p class="font-bold text-emerald-800">운영진 다리 놓기</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p class="text-sm mb-5 prose-measure">해외 이벤트·컨벤션 운영 사례와 국내 소셜모임 플랫폼(문토·남의집·넷플연가 등) 사례를 조사했습니다. 결론부터: <b>혼참자가 못 어울리는 건 용기 문제가 아니라 설계 문제</b>라는 게 업계 공통 결론입니다.</p>
 
     <h3 class="text-lg font-bold mb-3">왜 혼참자는 못 어울리는가 (원리 3가지)</h3>
     <div class="bg-white rounded-xl shadow-sm p-5 mb-6 text-sm space-y-3">
@@ -277,11 +375,16 @@
       <p><b>4. 한국 특유의 장벽: 존댓말·나이 서열.</b> 초면에 서열을 정하기 전까지 대화가 딱딱해지는 구조라, 닉네임제·별명 이름표 같은 완충 장치가 실제 모임들에서 쓰입니다. (출처: 당근 모임 사례 등)</p>
       <p><b>5. 텃세 문제의 현실적 우회:</b> 회차가 쌓이면 기존 멤버 무리가 자연 발생합니다. 신입을 기존 무리에 끼워 넣으려 하기보다, <b>혼참자끼리 먼저 서로 알게 하는 별도 접점</b>(혼참 테이블·초반 인사 시간)이 더 현실적이라는 게 국내 동호회 사례의 결론입니다. (출처: a-ha 답변, 나무위키 텃세 문서)</p>
     </div>
+    <a href="#document-map" class="inline-flex mt-6 text-sm font-semibold text-amber-700 hover:underline">문서 지도로 돌아가기 ↑</a>
   </section>
 
   <!-- 5. 요청 4건별 대응안 -->
   <section class="mb-12">
-    <h2 class="text-2xl font-bold mb-4 pb-2 border-b-2 border-emerald-300">5. 참가자 요청 4건별 대응안 (다음 모임 바로 적용 가능)</h2>
+    <h2 id="section-5" class="text-2xl font-bold mb-4 pb-2 border-b-2 border-emerald-300 scroll-mt-6"><span class="inline-flex align-middle rounded-full bg-emerald-100 px-2.5 py-1 text-sm font-bold text-emerald-700 mr-2">실행</span>5. 참가자 요청 4건별 대응안 (다음 모임 바로 적용 가능)</h2>
+
+    <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 mb-5 text-sm font-medium text-emerald-900">
+      이번 모임 MC분이 다음 모임도 함께해주시기로 했습니다. 이미 함께 아이디어 회의를 했고, 모임 전에 한 번 더 만나 나온 이야기를 반영할 예정입니다.
+    </div>
 
     <div class="space-y-5">
       <div class="bg-white rounded-xl shadow-sm p-5">
@@ -294,13 +397,20 @@
         </div>
       </div>
 
-      <div class="bg-white rounded-xl shadow-sm p-5">
-        <p class="text-xs font-bold text-emerald-600 mb-1">요청 2</p>
+      <div class="bg-slate-50 rounded-xl shadow-sm p-5 border border-slate-300">
+        <div class="flex flex-wrap items-center gap-2 mb-1">
+          <p class="text-xs font-bold text-slate-600">요청 2</p>
+          <span class="text-xs font-bold text-white bg-slate-600 rounded-full px-2 py-1">이번 회차 미적용</span>
+        </div>
         <h3 class="font-bold mb-2">경품 추첨이 내향인에게 힘든 구조다. 여러 사람에게 배분되게 해달라</h3>
         <div class="text-sm space-y-2">
-          <p><b>추천안: 무대 호명 없는 추첨.</b> 명찰 뒷면이나 좌석 밑에 당첨 표시를 미리 숨겨두고, "다들 명찰 뒤를 확인해보세요"로 전원이 동시에 확인하게 합니다. 당첨자는 손만 들면 스태프가 상품을 가져다줍니다. 무대로 걸어나가는 사회적 노출이 아예 사라집니다. (근거: 해외 사례인 F1 아부다비 골든티켓 이벤트. 좌석 밑 티켓 + DM 통보로 무대 호명 없이 진행. 국내 대규모 행사의 유사 사례는 확인 불가라 해외 방식을 축소 적용)</p>
-          <p><b>배분 보장:</b> 좌석을 8-10개 구역으로 나눠 구역마다 최소 1개 경품이 가도록 미리 설계하면 요청자가 말한 "적당히 배분"이 구조적으로 보장됩니다. (근거: door prize 테이블별 분산 배분 방식)</p>
-          <p class="text-slate-500">이미 있는 경품 예산 그대로, 진행 방식만 바꾸면 됩니다.</p>
+          <p><b>결정:</b> 경품은 적극적으로 참여한 분에게 가는 게 맞다고 봤고, 내향적이어도 노력하는 분들이 있다고 판단했습니다. 따라서 이번 회차에는 추첨 방식을 바꾸지 않습니다.</p>
+          <div class="bg-white border border-slate-200 rounded-lg p-4 text-slate-600 space-y-2">
+            <p class="font-bold text-slate-700">참고로 남겨둔 조사 내용</p>
+            <p><b>추천안: 무대 호명 없는 추첨.</b> 명찰 뒷면이나 좌석 밑에 당첨 표시를 미리 숨겨두고, "다들 명찰 뒤를 확인해보세요"로 전원이 동시에 확인하게 합니다. 당첨자는 손만 들면 스태프가 상품을 가져다줍니다. 무대로 걸어나가는 사회적 노출이 아예 사라집니다. (근거: 해외 사례인 F1 아부다비 골든티켓 이벤트. 좌석 밑 티켓 + DM 통보로 무대 호명 없이 진행. 국내 대규모 행사의 유사 사례는 확인 불가라 해외 방식을 축소 적용)</p>
+            <p><b>배분 보장:</b> 좌석을 8-10개 구역으로 나눠 구역마다 최소 1개 경품이 가도록 미리 설계하면 요청자가 말한 "적당히 배분"이 구조적으로 보장됩니다. (근거: door prize 테이블별 분산 배분 방식)</p>
+            <p class="text-slate-500">이미 있는 경품 예산 그대로, 진행 방식만 바꾸면 됩니다.</p>
+          </div>
         </div>
       </div>
 
@@ -325,27 +435,32 @@
       </div>
     </div>
 
-    <h3 class="text-lg font-bold mt-8 mb-3">종합: 다음 모임 혼참 케어 패키지 (우선순위순)</h3>
+    <h3 class="text-lg font-bold mt-8 mb-3">다음 모임 실행안: 네트워킹 파티로 통합</h3>
     <div class="bg-violet-50 border border-violet-200 rounded-xl p-5 text-sm">
+      <p class="mb-3 text-violet-900">혼참자 케어의 중심은 6섹션의 네트워킹 파티입니다. 네 가지 장치를 별도 프로그램으로 병렬 운영하지 않고 네트워킹 파티 안에 흡수합니다. MC 리액션 멘트만 공연 직전 별도로 실행합니다.</p>
       <table class="w-full">
-        <thead><tr class="text-left text-violet-500 border-b border-violet-200"><th class="py-2">순위</th><th>장치</th><th>노력</th><th>효과 근거</th></tr></thead>
+        <thead><tr class="text-left text-violet-500 border-b border-violet-200"><th class="py-2">구분</th><th>실행 내용</th><th>효과 근거</th></tr></thead>
         <tbody class="divide-y divide-violet-100">
-          <tr><td class="py-2 font-bold">1</td><td><b>운영진 다리 놓기 시스템화</b>: 자유시간 첫 15-20분, 스태프가 혼참자에게 먼저 다가가 무리에 소개</td><td>0원, 역할 배정만</td><td>이번 설문의 성공 사례 그 자체. 넷플연가 리텐션 사례</td></tr>
-          <tr><td class="py-2 font-bold">2</td><td><b>MC 리액션 멘트 30초</b> (요청 3)</td><td>0원, 대본 한 줄</td><td>코미디쇼 하우스룰 관행</td></tr>
-          <tr><td class="py-2 font-bold">3</td><td><b>무대 호명 없는 분산 추첨</b> (요청 2)</td><td>스티커 준비</td><td>F1 골든티켓 방식</td></tr>
-          <tr><td class="py-2 font-bold">4</td><td><b>"혼자 왔어요" 스티커 + 웰컴 타임</b> (요청 1)</td><td>스티커 + 스태프 15분</td><td>컨벤션 배지 표준 관행, Ticket Fairy</td></tr>
-          <tr><td class="py-2 font-bold">5</td><td><b>대화 카드 + 순환 테이블 토크</b> (요청 4)</td><td>카드 인쇄 1회</td><td>World Café, 남의집 "대화 꼭지" 교훈</td></tr>
-          <tr><td class="py-2 font-bold">6</td><td><b>뒷풀이 좌석 설계</b>: 친한 무리 분산 + 말 잘 트는 사람 테이블별 배치</td><td>좌석표 작성</td><td>디너파티 호스트 원칙, SAM 컨벤션</td></tr>
+          <tr><td class="py-2 font-bold">네트워킹 파티에 흡수</td><td><b>운영진 다리 놓기 시스템화</b>: 자유시간 첫 15-20분, 스태프가 혼참자에게 먼저 다가가 무리에 소개</td><td>이번 설문의 성공 사례 그 자체. 넷플연가 리텐션 사례</td></tr>
+          <tr><td class="py-2 font-bold">네트워킹 파티에 흡수</td><td><b>"혼자 왔어요" 스티커 + 웰컴 타임</b> (요청 1)</td><td>컨벤션 배지 표준 관행, Ticket Fairy</td></tr>
+          <tr><td class="py-2 font-bold">네트워킹 파티에 흡수</td><td><b>대화 카드 + 순환 테이블 토크</b> (요청 4)</td><td>World Café, 남의집 "대화 꼭지" 교훈</td></tr>
+          <tr><td class="py-2 font-bold">네트워킹 파티에 흡수</td><td><b>뒷풀이 좌석 설계</b>: 친한 무리 분산 + 말 잘 트는 사람 테이블별 배치</td><td>디너파티 호스트 원칙, SAM 컨벤션</td></tr>
+          <tr><td class="py-2 font-bold">별도 실행</td><td><b>MC 리액션 멘트 30초</b> (요청 3)</td><td>코미디쇼 하우스룰 관행</td></tr>
         </tbody>
       </table>
+      <p class="mt-3 text-slate-600"><b>이번 회차 제외:</b> 무대 호명 없는 분산 추첨은 적용하지 않습니다. 결정 이유와 조사 기록은 위 요청 2에 남겼습니다.</p>
       <p class="mt-3 text-violet-700">모집 카피 보너스: "혼자 오는 사람도 많다"는 문구가 실제 신청을 만든 게 확인됐으니, 위 장치들을 도입하면 <b>"혼자 와도 저희가 챙깁니다(혼참 웰컴 타임 운영)"</b>를 다음 모집 카피의 무기로 쓸 수 있습니다.</p>
     </div>
+    <a href="#document-map" class="inline-flex mt-6 text-sm font-semibold text-emerald-700 hover:underline">문서 지도로 돌아가기 ↑</a>
   </section>
 
   <!-- 6. 네트워킹 파티 운영안 -->
   <section class="mb-12">
-    <h2 class="text-2xl font-bold mb-4 pb-2 border-b-2 border-sky-300">6. 네트워킹 파티 프로그램 운영안</h2>
-    <p class="text-sm mb-5">본 모임의 네트워킹 파티(1시간 이상)를 테이블 로테이션 + 네임카드 + 질문카드 + 뒷풀이 식사로 구성하는 안입니다. 각 요소를 국내외에서 실제로 어떻게 운영하는지 조사해 실행 가능한 수치와 규칙으로 정리했습니다. 새로 영입할 진행자에게 그대로 넘길 수 있는 수준을 목표로 했습니다.</p>
+    <h2 id="section-6" class="text-2xl font-bold mb-4 pb-2 border-b-2 border-emerald-300 scroll-mt-6"><span class="inline-flex align-middle rounded-full bg-emerald-100 px-2.5 py-1 text-sm font-bold text-emerald-700 mr-2">실행</span>6. 네트워킹 파티 프로그램 운영안</h2>
+    <p class="text-sm mb-3 prose-measure">본 모임의 네트워킹 파티(1시간 이상)는 테이블 로테이션 + 네임카드 + 질문카드 + 뒷풀이 식사로 운영합니다. 각 요소를 국내외에서 실제로 어떻게 운영하는지 조사해 실행 가능한 수치와 규칙으로 정리했습니다. 기존 MC와 운영진이 함께 실행할 수 있는 수준으로 구체화했습니다.</p>
+    <div class="bg-sky-50 border border-sky-200 rounded-xl p-4 mb-5 text-sm text-sky-900">
+      <b>구분할 점:</b> 테이블을 중간에 넣고 빼지 않는 것과 네트워킹 파티의 테이블 로테이션은 다릅니다. 다음 회차에는 테이블을 한 번 설치한 뒤 그대로 두지만, 각 라운드마다 테이블별 3명이 이동하는 로테이션은 예정대로 진행합니다. 테이블이 계속 놓여 있으므로 번호와 이동석을 미리 표시할 수 있어 로테이션 운영도 더 쉬워집니다.
+    </div>
 
     <h3 class="text-lg font-bold mb-3">전체 타임라인 (60분 기준)</h3>
     <div class="bg-white rounded-xl shadow-sm p-5 mb-6 text-sm overflow-x-auto">
@@ -444,47 +559,46 @@
       <p class="mb-2"><b>사전 신청 폼에 3문항 추가:</b> 알레르기 유무(있으면 자유 기술), 채식 여부, 못 먹는 음식. 국내 법정 알레르기 항목 22개를 다 나열하면 과하니 계란·우유·땅콩·갑각류·밀 정도를 예시로 적어두는 정도면 충분합니다.</p>
       <p><b>로테이션과 음식의 충돌 주의:</b> 접시를 들고 자리를 옮기는 방식은 흘림·분실 위험이 있어 권장되지 않습니다. 네트워킹 프로그램은 식사 전에 끝내고 뒷풀이로 넘어가거나, 음식 코너를 프로그램 동선과 분리된 별도 구역에 두는 편이 낫습니다. 또한 상온에 2시간 이상 방치된 음식은 폐기가 원칙이므로, 세팅은 뒷풀이 시작 직전에 하세요.</p>
     </div>
+    <a href="#document-map" class="inline-flex mt-6 text-sm font-semibold text-emerald-700 hover:underline">문서 지도로 돌아가기 ↑</a>
   </section>
 
   <!-- 7. 위임 노하우 -->
   <section class="mb-12">
-    <h2 class="text-2xl font-bold mb-4 pb-2 border-b-2 border-sky-300">7. 새 진행자 영입·위임할 때 알면 좋은 것</h2>
+    <h2 id="section-7" class="text-2xl font-bold mb-4 pb-2 border-b-2 border-emerald-300 scroll-mt-6"><span class="inline-flex align-middle rounded-full bg-emerald-100 px-2.5 py-1 text-sm font-bold text-emerald-700 mr-2">실행</span>7. MC·운영진과 공유할 진행 노하우</h2>
+    <p class="text-sm mb-5 prose-measure">다음 모임에는 새 진행자를 영입하지 않고 기존 팀이 진행합니다. 아래 내용은 MC와 운영진이 함께 공유할 운영 노트입니다.</p>
     <div class="space-y-4 text-sm">
       <div class="bg-white rounded-xl shadow-sm p-5">
         <p class="font-bold mb-1">① 강제 아이스브레이킹은 역효과, 배제 리스트부터 브리핑</p>
-        <p>내향인에게 아이스브레이킹은 "낯선 사람 앞 즉흥 발언 + 주목"의 조합이라 불안 그 자체입니다. 새 진행자에게 "재미있는 활동을 짜라"보다 <b>"누구도 지목당해 억지로 말하지 않는 구조를 짜라"</b>를 먼저 브리핑하고, 원 돌며 자기소개·즉석 발표·벌칙성 미션은 배제 리스트에 명시할 것. (출처: Introvert Dear, 생생비즈)</p>
+        <p>내향인에게 아이스브레이킹은 "낯선 사람 앞 즉흥 발언 + 주목"의 조합이라 불안 그 자체입니다. MC와 운영진에게 "재미있는 활동을 짜라"보다 <b>"누구도 지목당해 억지로 말하지 않는 구조를 짜라"</b>를 먼저 브리핑하고, 원 돌며 자기소개·즉석 발표·벌칙성 미션은 배제 리스트에 명시할 것. (출처: Introvert Dear, 생생비즈)</p>
       </div>
       <div class="bg-white rounded-xl shadow-sm p-5">
         <p class="font-bold mb-1">② 참여 기본값 설계 (opt-out 프레이밍)</p>
-        <p>행동경제학의 기본값 효과: 미국 퇴직연금을 "가입 신청"에서 "기본 가입 + 원하면 탈퇴"로 바꾸자 가입률이 약 37%에서 85% 이상으로 뛴 게 표준 사례입니다. 적용: "연결 프로그램 참여하실 분 손 드세요"(참여 장벽 높음) 대신 <b>"혼자 오신 분은 기본으로 웰컴 타임에 초대되고, 원치 않으면 빠지셔도 됩니다"</b> 프레이밍. 단, 아래 ⑤ 안전 장치와 세트로 설계할 것. (출처: The Decision Lab)</p>
+        <p>행동경제학의 기본값 효과: 미국 퇴직연금을 "가입 신청"에서 "기본 가입 + 원하면 탈퇴"로 바꾸자 가입률이 약 37%에서 85% 이상으로 뛴 게 표준 사례입니다. 적용: "연결 프로그램 참여하실 분 손 드세요"(참여 장벽 높음) 대신 <b>"혼자 오신 분은 기본으로 웰컴 타임에 초대되고, 원치 않으면 빠지셔도 됩니다"</b> 프레이밍. 단, 아래 ④ 안전 장치와 세트로 설계할 것. (출처: The Decision Lab)</p>
       </div>
       <div class="bg-white rounded-xl shadow-sm p-5">
-        <p class="font-bold mb-1">③ 런시트(큐시트) 없이 위임하면 즉흥으로 굴러간다</p>
-        <p>행사 위임의 실무 표준은 시간·항목·담당·비고를 한 표로 만든 큐시트입니다. 프로그램 포맷만 넘기지 말고 "몇 시 몇 분에 누가 마이크를 잡는지"까지 첫 회부터 같이 작성하고, 스태프 1명을 타임키퍼로 붙이는 게 권장 관행. 정식 리허설이 부담스러우면 <b>첫 1-2회는 칼리형이 옆에서 같이 뛰는 동행 운영</b>이 현실적 대안입니다("혼자 던져놓고 지켜보기" 금지). (출처: 파란컴퍼니 큐시트 가이드, Onstage)</p>
+        <p class="font-bold mb-1">③ 런시트(큐시트) 없이 운영하면 즉흥으로 굴러간다</p>
+        <p>행사 운영의 실무 표준은 시간·항목·담당·비고를 한 표로 만든 큐시트입니다. 프로그램 포맷만 공유하지 말고 "몇 시 몇 분에 누가 마이크를 잡는지"까지 첫 회부터 같이 작성하고, 스태프 1명을 타임키퍼로 붙이는 게 권장 관행. 정식 리허설이 부담스러우면 <b>첫 1-2회는 칼리형이 옆에서 같이 뛰는 동행 운영</b>이 현실적 대안입니다("혼자 던져놓고 지켜보기" 금지). (출처: 파란컴퍼니 큐시트 가이드, Onstage)</p>
       </div>
       <div class="bg-white rounded-xl shadow-sm p-5">
-        <p class="font-bold mb-1">④ 페이 시세 감각 (두 개의 다른 시장)</p>
-        <p>전문 행사 MC 시장은 소규모 12만원대, 3-5시간 중대형 평균 32만원대(크몽·숨고 가격 가이드). 행사 보조 스텝 시장은 시급 1만2천원대, 일급 6만5천에서 13만5천원대(알바몬). 혼참 연결 진행자는 후자에 가까운 역할이라 <b>회당 6만5천에서 13만원대가 현실적 참고선</b>이되, 매회 반복하는 전담 역할이면 정기 계약으로 따로 협상. "혼참 프로그램 전담 진행자"라는 직무 특화 시세는 공개 자료로 확인 불가. 최종 금액은 지원자 견적으로 확정하는 게 안전합니다.</p>
-      </div>
-      <div class="bg-white rounded-xl shadow-sm p-5">
-        <p class="font-bold mb-1">⑤ 안전 장치 3가지는 "판단"이 아니라 "대본"으로 넘길 것</p>
+        <p class="font-bold mb-1">④ 안전 장치 3가지는 "판단"이 아니라 "대본"으로 넘길 것</p>
         <p>연결 프로그램은 자칫 원치 않는 접근의 통로가 될 수 있는데, 취미 모임용 명문화 사례가 드물어 자체 원칙이 필요합니다: ⑴ "짝매칭이 아니라 다 같이 어울리기가 목적"임을 진행자 멘트에 명시 ⑵ 본인 동의 없이 진행자가 연락처 교환을 주선하지 않기 ⑶ 불편하면 조용히 알릴 수 있는 담당 스태프 사전 공지. 이 3가지를 진행자 브리핑에 멘트 대본으로 못 박아 넘기면 판단 실수가 줄어듭니다.</p>
       </div>
       <div class="bg-white rounded-xl shadow-sm p-5">
-        <p class="font-bold mb-1">⑥ 효과 측정: 이미 갖고 있는 도구로 충분</p>
+        <p class="font-bold mb-1">⑤ 효과 측정: 이미 갖고 있는 도구로 충분</p>
         <p>복잡한 설문보다 단일 문항이 응답률을 높입니다(NPS 원리, 오픈서베이). 다행히 <b>현재 설문에 이미 혼자 와도 어색하지 않았어요 문항이 있으므로</b>, 프로그램 도입 후 이 점수(현재 4.22, 3점 이하 20%)가 오르는지 회차별로 추적하면 됩니다. 더 정직한 지표는 재참가율입니다. 참가자 명단에 "혼참 여부" 태그를 달아 다음 회 재방문을 몇 주 누적 추적하면 프로그램 효과가 숫자로 보입니다. 설문 점수는 참고, 재참가 데이터가 진짜 증거.</p>
       </div>
       <div class="bg-white rounded-xl shadow-sm p-5">
-        <p class="font-bold mb-1">⑦ 진행자 역할은 "버디 매니저"로 정의하면 1명으로 충분</p>
+        <p class="font-bold mb-1">⑥ 진행자 역할은 "버디 매니저"로 정의하면 1명으로 충분</p>
         <p>진행자 한 명이 60-80명의 혼참자를 다 챙기는 건 불가능합니다. 진행자는 웰컴 타임 진행 + 버디 2-3명(기존 참가자 섭외) 매칭·관리만 하고, 실제 다리 놓기는 버디들이 분산 수행하는 구조가 인력 대비 효율적입니다. 온보딩 버디 프로그램의 검증된 원리를 대상만 "신입사원 → 혼참자"로 바꾼 것. (출처: Binder 온보딩 버디 가이드)</p>
       </div>
     </div>
+    <a href="#document-map" class="inline-flex mt-6 text-sm font-semibold text-emerald-700 hover:underline">문서 지도로 돌아가기 ↑</a>
   </section>
 
   <!-- 8. 개선점별 대응 아이디어 -->
   <section class="mb-12">
-    <h2 class="text-2xl font-bold mb-4 pb-2 border-b-2 border-amber-300">8. 개선점별 대응 아이디어 (국내·해외 운영 사례)</h2>
-    <p class="text-sm mb-5">설문에 나온 개선 요청을 이슈별로 집중 조사했습니다. 각 항목마다 해외와 국내에서 실제로 어떻게 운영하는지 함께 정리했고, 확인 안 되는 부분은 그렇게 표기했습니다.</p>
+    <h2 id="section-8" class="text-2xl font-bold mb-4 pb-2 border-b-2 border-amber-300 scroll-mt-6"><span class="inline-flex align-middle rounded-full bg-amber-100 px-2.5 py-1 text-sm font-bold text-amber-700 mr-2">해석</span>8. 개선점별 대응 아이디어 (국내·해외 운영 사례)</h2>
+    <p class="text-sm mb-5 prose-measure">설문에 나온 개선 요청을 이슈별로 집중 조사했습니다. 각 항목마다 해외와 국내에서 실제로 어떻게 운영하는지 함께 정리했고, 확인 안 되는 부분은 그렇게 표기했습니다.</p>
 
     <div class="space-y-5 text-sm">
       <div class="bg-white rounded-xl shadow-sm p-5">
@@ -500,11 +614,13 @@
 
       <div class="bg-white rounded-xl shadow-sm p-5">
         <p class="text-xs font-bold text-amber-600 mb-1">개선점 2 · 중간 재배치(공연→뒷풀이 전환) 불편</p>
-        <h3 class="font-bold mb-2">"내보내기"가 아니라 "머물 이유가 있는 대기 공간"으로</h3>
+        <h3 class="font-bold mb-2">순서를 바꿔 테이블 재배치와 재입장을 없앤다</h3>
         <div class="space-y-2">
+          <p><b>적용안:</b> 이번 회차는 공연 -> 렉처 -> 본모임 순서라 중간에 테이블을 넣고 빼야 했고, 그래서 참가자를 밖으로 내보내야 했습니다. 다음 회차는 <b>렉처 -> 공연 -> 본모임</b> 순서로 바꿉니다. 테이블은 처음에 설치한 뒤 그대로 두므로 중간에 넣고 뺄 필요가 없고, 참가자가 나갔다 들어오는 횟수도 줄어듭니다.</p>
+          <p class="font-bold text-slate-600 pt-1">남는 전환 시간을 위한 참고 조사</p>
           <p><b>해외 운영:</b> 웨딩 업계의 룸 플립(room flip) 표준입니다. 하객을 밖으로 내보내는 대신 별도 공간(칵테일아워)에 음료·스낵·즐길 거리를 두고 붙잡아 둡니다. 전환 시간 동안 순회형 공연자(실제로 클로즈업 마술사가 인기)를 배치해 대기를 콘텐츠로 바꾸는 사례도 흔합니다(Bespoke-Bride). 시간 운영 요령은 스태프 목표 시간을 실제보다 짧게 줘서 완충을 확보하는 것(Wed KC의 예시는 60분 중 45분 목표로 15분 완충).</p>
           <p><b>국내 운영:</b> 웨딩홀들이 사회자 멘트와 안내판으로 이동 타이밍을 통제하고 "혼잡 시간 2-3분 뒤 천천히 이동"을 안내하는 관행이 있습니다(G4MARRY). 소규모 커뮤니티 행사 사례는 확인 불가.</p>
-          <p><b>적용안:</b> 더운 실외 대신 시원한 실내 대기 구역(로비·복도)을 지정하고 음료를 미리 세팅. 사회자가 "10분 뒤 시작합니다, 그동안 로비에서 자유롭게"라고 시간과 장소를 같이 공지. <b>짐 문제는 한 문장으로 해결됩니다:</b> "짐은 자리에 두고 이동하셔도 됩니다"를 공지 멘트에 고정(해외 예약석 사인 관행 + 국내 스터디카페의 "짐 두고 이동" 명시 기준 관행 참고). 좌석에 이름/번호 태그를 붙이면 "자리가 계속 바뀐다"는 불안도 같이 잡힙니다.</p>
+          <p><b>남는 전환에 적용:</b> 더운 실외 대신 시원한 실내 대기 구역(로비·복도)을 지정하고 음료를 미리 세팅. 사회자가 "10분 뒤 시작합니다, 그동안 로비에서 자유롭게"라고 시간과 장소를 같이 공지. <b>짐 문제는 한 문장으로 해결됩니다:</b> "짐은 자리에 두고 이동하셔도 됩니다"를 공지 멘트에 고정(해외 예약석 사인 관행 + 국내 스터디카페의 "짐 두고 이동" 명시 기준 관행 참고). 좌석에 이름/번호 태그를 붙이면 "자리가 계속 바뀐다"는 불안도 같이 잡힙니다.</p>
         </div>
       </div>
 
@@ -559,9 +675,10 @@
         </div>
       </div>
     </div>
+    <a href="#document-map" class="inline-flex mt-6 text-sm font-semibold text-amber-700 hover:underline">문서 지도로 돌아가기 ↑</a>
   </section>
 
-  <footer class="text-xs text-slate-400 border-t pt-4">
+  <footer class="text-sm text-slate-400 border-t pt-4">
     <p>데이터: 8월 2일 모임 참가자 설문 응답 41건 (8/8 접수 마감). 조사: 해외 이벤트·컨벤션 운영 사례 + 국내 소셜모임 사례 + 요청별 솔루션 + 네트워킹 파티 운영(로테이션·카드·뒷풀이) + 위임 노하우 + 개선점별 대응(시야·공간·냉방·렉처·비마술인), 전 항목 출처 확인(확인 불가 항목은 본문에 명시). 8/7 갱신: 입장 토큰→아크릴 키링 구현 검토, 새 장소 후보(사당 파티룸) 추가.</p>
   </footer>
 
