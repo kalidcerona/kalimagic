@@ -56,7 +56,6 @@ export const PUBLIC_DIRS = [
   'imigi3',
   'kalimeeting',
   'planb',
-  'reports',
   'tools',
   'zz1',
   'zz2',
