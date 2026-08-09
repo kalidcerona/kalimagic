@@ -4,10 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>8월 2일 칼리의 번개 후기 리포트 + 혼참자 집중 조사</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
   body {
-    font-family: 'Pretendard', -apple-system, 'Apple SD Gothic Neo', sans-serif;
+    font-family: 'Pretendard Variable', Pretendard, -apple-system, 'Apple SD Gothic Neo', sans-serif;
     font-size: 1rem;
     line-height: 1.75;
     word-break: keep-all;
@@ -18,8 +19,34 @@
   .text-sm:not(.animated-chart *) { font-size: 1rem; line-height: 1.75; }
   .text-xs:not(.animated-chart *) { font-size: 0.875rem; line-height: 1.5; }
   .animated-chart .text-xs { font-size: 13px; line-height: 1.5; }
+  table th, table td { padding-right: 12px; }
+  table th:last-child, table td:last-child { padding-right: 0; }
   .quote { border-left: 3px solid #a78bfa; }
 </style>
+<style>
+html{scroll-behavior:smooth}
+html .text-violet-500{color:#D95E2E}
+html .text-violet-600{color:#C24A16}
+html .text-violet-700{color:#9E2F0C}
+html .text-violet-800{color:#83270A}
+html .text-violet-900{color:#6B1F07}
+html .bg-violet-50{background-color:#FBF1EA}
+html .bg-violet-100{background-color:#F7E1D3}
+html .bg-violet-400{background-color:#E2703A}
+html .bg-violet-500{background-color:#D95E2E}
+html .bg-violet-600{background-color:#C24A16}
+html .bg-violet-700{background-color:#9E2F0C}
+html .border-violet-200{border-color:#F0CBB4}
+html .border-violet-300{border-color:#E8AE8C}
+html .divide-violet-100>:not([hidden])~:not([hidden]){border-color:#F7E1D3}
+html .quote{border-left-color:#E2703A}
+#mini-toc{position:fixed;right:28px;top:50%;transform:translateY(-50%);z-index:40;display:flex;flex-direction:column;gap:7px;font-size:12px;line-height:1.3;max-width:190px}
+#mini-toc a{color:#94a3b8;text-decoration:none;border-left:2px solid #e2e8f0;padding-left:10px}
+#mini-toc a.active{color:#C24A16;border-left-color:#C24A16;font-weight:700}
+@media (max-width:1279px){#mini-toc{display:none}}
+@media print{#mini-toc{display:none}}
+</style>
+
 </head>
 <body class="bg-slate-50 text-slate-800">
 <div class="max-w-[820px] mx-auto px-5 py-10">
@@ -120,7 +147,7 @@
       </table>
     </div>
     <div class="grid md:grid-cols-2 gap-4 mb-4">
-      <div class="animated-chart bg-white rounded-xl shadow-sm p-5" data-chart="histogram">
+      <div class="animated-chart bg-white rounded-xl shadow-sm p-5 md:col-span-2" data-chart="histogram">
         <div class="flex items-baseline justify-between gap-3 mb-3">
           <h3 class="text-lg font-bold">추천 의향 10점 분포</h3>
           <p class="text-xs text-slate-500">n=41</p>
@@ -200,14 +227,14 @@
       <table class="w-full">
         <thead><tr class="text-left text-slate-500 border-b"><th class="py-2">이슈</th><th>건수</th><th>내용</th></tr></thead>
         <tbody class="divide-y divide-slate-100">
-          <tr><td class="py-2 font-bold">뒷자리 시야</td><td>7건</td><td>최다 이슈. 뒷자리에선 앞에서 어떤 일이 벌어지는지 아예 안 보인다, 매트릭스·작은 도구·관객 참여 장면이 안 보임. 계단식 의자, 카메라+화면 중계("큰 스크린을 잠시 빌려서 무대를 멀리서도 볼 수 있게" 제안 포함), 스테이지 공연자만 부르기 등 해법 제안도 함께 나옴</td></tr>
-          <tr><td class="py-2 font-bold">혼참자 어울림</td><td>5건+</td><td>아래 3·6섹션에서 집중 분석</td></tr>
-          <tr><td class="py-2 font-bold">공간 협소·이동 제약</td><td>4건</td><td>"좁은 의자·부스 간격으로 이동이 제약", "통행이 불편했어서 다음번에는 조금 넓은 공간이었으면"</td></tr>
-          <tr><td class="py-2">중간 퇴장(재배치) 불편</td><td>3건</td><td>밖이 더운데 나가서 대기, 짐을 두고 가도 되는지 안내 부재, 쉴 때마다 자리가 바뀌는 아쉬움</td></tr>
-          <tr><td class="py-2">냉방 과다</td><td>3건</td><td>"에어컨 너무 추워요"</td></tr>
-          <tr><td class="py-2">렉처 난이도·시간</td><td>3건</td><td>초심자가 못 따라감(동작 따라하는 사이 다음 진행), 렉처가 공지보다 빨리 시작돼 퍼포밍을 놓침</td></tr>
-          <tr><td class="py-2 font-bold">뉴비·비마술인 케어</td><td>3건+</td><td>"마술에 대해 1도 모르는 지인을 데려갔는데 살짝 끼기 힘들어하는 것 같아 보였습니다. 뉴비를 더 챙길 필요가 있을거 같아요! 고인물(?)들은 알아서 잘 놀더라구요!", 일반인 참가자의 뭘 해야 할지 몰랐다는 목소리(원문은 8섹션). 8섹션에서 집중 분석</td></tr>
-          <tr><td class="py-2">기타</td><td>각 1건</td><td>공연 1시간 단위 휴식시간, 진행 순서(렉처쇼→공연→본모임 순 제안), 장소 접근성(역에서 도보 30분), 테이블 추가</td></tr>
+          <tr><td class="py-2 font-bold whitespace-nowrap align-top">뒷자리 시야</td><td class="whitespace-nowrap align-top">7건</td><td>최다 이슈. 뒷자리에선 앞에서 어떤 일이 벌어지는지 아예 안 보인다, 매트릭스·작은 도구·관객 참여 장면이 안 보임. 계단식 의자, 카메라+화면 중계("큰 스크린을 잠시 빌려서 무대를 멀리서도 볼 수 있게" 제안 포함), 스테이지 공연자만 부르기 등 해법 제안도 함께 나옴</td></tr>
+          <tr><td class="py-2 font-bold whitespace-nowrap align-top">혼참자 어울림</td><td class="whitespace-nowrap align-top">5건+</td><td>아래 3·6섹션에서 집중 분석</td></tr>
+          <tr><td class="py-2 font-bold whitespace-nowrap align-top">공간 협소·이동 제약</td><td class="whitespace-nowrap align-top">4건</td><td>"좁은 의자·부스 간격으로 이동이 제약", "통행이 불편했어서 다음번에는 조금 넓은 공간이었으면"</td></tr>
+          <tr><td class="py-2 whitespace-nowrap align-top">중간 퇴장(재배치) 불편</td><td class="whitespace-nowrap align-top">3건</td><td>밖이 더운데 나가서 대기, 짐을 두고 가도 되는지 안내 부재, 쉴 때마다 자리가 바뀌는 아쉬움</td></tr>
+          <tr><td class="py-2 whitespace-nowrap align-top">냉방 과다</td><td class="whitespace-nowrap align-top">3건</td><td>"에어컨 너무 추워요"</td></tr>
+          <tr><td class="py-2 whitespace-nowrap align-top">렉처 난이도·시간</td><td class="whitespace-nowrap align-top">3건</td><td>초심자가 못 따라감(동작 따라하는 사이 다음 진행), 렉처가 공지보다 빨리 시작돼 퍼포밍을 놓침</td></tr>
+          <tr><td class="py-2 font-bold whitespace-nowrap align-top">뉴비·비마술인 케어</td><td class="whitespace-nowrap align-top">3건+</td><td>"마술에 대해 1도 모르는 지인을 데려갔는데 살짝 끼기 힘들어하는 것 같아 보였습니다. 뉴비를 더 챙길 필요가 있을거 같아요! 고인물(?)들은 알아서 잘 놀더라구요!", 일반인 참가자의 뭘 해야 할지 몰랐다는 목소리(원문은 8섹션). 8섹션에서 집중 분석</td></tr>
+          <tr><td class="py-2 whitespace-nowrap align-top">기타</td><td class="whitespace-nowrap align-top">각 1건</td><td>공연 1시간 단위 휴식시간, 진행 순서(렉처쇼→공연→본모임 순 제안), 장소 접근성(역에서 도보 30분), 테이블 추가</td></tr>
         </tbody>
       </table>
     </div>
@@ -275,21 +302,21 @@
 
     <h3 class="text-lg font-bold mb-3 text-emerald-600">이미 작동한 성공 사례 (시스템화의 근거)</h3>
     <div class="space-y-3 mb-6 text-sm">
-      <div class="quote bg-white rounded-r-xl shadow-sm p-5" style="border-color:#34d399">
+      <div class="quote bg-white rounded-r-xl shadow-sm p-5" style="border-top-color:#34d399;border-right-color:#34d399;border-bottom-color:#34d399">
         <p>"우선 저는 혼자 방문을 했는데 <b>운영진 분들이 혼자 있는 저를 이리저리 챙겨서 마술사분들께 데려가주셔서 완전 내향인인 저도 어색하지 않게 어울릴 수 있었어요!</b>"</p>
         <p class="text-emerald-600 mt-1">→ 핵심 발견: 운영진의 "다리 놓기"가 실제로 통했다는 증거. 이걸 운에 맡기지 않고 시스템으로 만들면 됩니다.</p>
       </div>
-      <div class="quote bg-white rounded-r-xl shadow-sm p-5" style="border-color:#34d399">
+      <div class="quote bg-white rounded-r-xl shadow-sm p-5" style="border-top-color:#34d399;border-right-color:#34d399;border-bottom-color:#34d399">
         <p>엄청난 내향인입니다! 많은 인파 속에서 혼자 과연 버틸 수 있을까 걱정했는데, 막상 가보니 여러 마술사 분들이 쉽게 다가와 주셨고 너무 즐겁게 즐기다 왔습니다</p>
       </div>
-      <div class="quote bg-white rounded-r-xl shadow-sm p-5" style="border-color:#34d399">
+      <div class="quote bg-white rounded-r-xl shadow-sm p-5" style="border-top-color:#34d399;border-right-color:#34d399;border-bottom-color:#34d399">
         <p>"혹시나 너무 친한 사람들끼리만 모여있으면 끼기 힘들 것 같은데라는 생각이 들었었는데 생각보다 다들 가까워지려는게 느껴졌어요."</p>
       </div>
-      <div class="quote bg-white rounded-r-xl shadow-sm p-5" style="border-color:#34d399">
+      <div class="quote bg-white rounded-r-xl shadow-sm p-5" style="border-top-color:#34d399;border-right-color:#34d399;border-bottom-color:#34d399">
         <p>참석 결정 이유 중: "<b>혼자 오는 사람도 많고, 처음 오는 사람도 늘 있다는 말을 보고 딱 제 얘기라서 가봐야겠다</b>는 생각을 하게 됐어요"</p>
         <p class="text-emerald-600 mt-1">→ 모집 카피의 "혼참 환영" 문구가 실제 신청 전환을 만들었다는 증거. 혼참 케어를 강화하면 모집 무기로도 쓸 수 있습니다.</p>
       </div>
-      <div class="quote bg-white rounded-r-xl shadow-sm p-5" style="border-color:#34d399">
+      <div class="quote bg-white rounded-r-xl shadow-sm p-5" style="border-top-color:#34d399;border-right-color:#34d399;border-bottom-color:#34d399">
         <p>가장 좋았던 순간으로: "<b>소외되는 사람이 단한명도 없슴</b>" · 추천 이유: "여러 사람들과 소통하고 놀수있어서"</p>
         <p class="text-emerald-600 mt-1">→ 같은 모임을 정반대로 경험한 사람도 있다는 것. 케어가 닿은 사람과 안 닿은 사람의 편차가 크다는 뜻이고, 시스템화가 이 편차를 줄입니다.</p>
       </div>
@@ -555,27 +582,33 @@
       </div>
 
       <div class="bg-white rounded-xl shadow-sm p-5">
-        <p class="font-bold mb-2">⑦ 질문카드 12장 (3단계, 그대로 인쇄 가능)</p>
+        <p class="font-bold mb-2">⑦ 질문카드 18장 (3단계 × 6장, 그대로 인쇄 가능)</p>
         <p class="font-semibold mt-2 mb-1">1단계 · 가볍게</p>
         <ol class="space-y-1 mb-2">
-          <li>1. 오늘 여기 오기까지 제일 귀찮았던 건 뭐예요?</li>
+          <li>1. 오늘 여기 와서 제일 기대되는 건 뭐예요?</li>
           <li>2. 최근에 꽂힌 것(음식·영상·노래) 하나만 추천해주세요.</li>
           <li>3. 오늘 오기 전에는 뭐 하다 오셨어요?</li>
-          <li>4. 지금 이 테이블에서 제일 먼저 궁금한 사람은 누구예요, 왜요?</li>
+          <li>4. 요즘 나를 웃게 만드는 게 하나 있다면?</li>
+          <li>5. 최근에 산 것 중 제일 만족스러운 건 뭐예요?</li>
+          <li>6. 요즘 즐겨 듣는 노래나 즐겨 보는 채널이 있다면?</li>
         </ol>
         <p class="font-semibold mb-1">2단계 · 조금 더 깊게</p>
         <ol class="space-y-1 mb-2">
-          <li>5. 요즘 제일 진심으로 파고 있는 게 있다면?</li>
-          <li>6. 처음 보는 사람 앞에서 유독 긴장되는 순간이 있나요?</li>
-          <li>7. 남들은 잘 모르는 나만의 소소한 취미나 특기, 하나만 공개한다면?</li>
-          <li>8. 오늘 이 자리에서 어떤 대화를 하고 싶어서 왔어요?</li>
+          <li>7. 요즘 제일 진심으로 파고 있는 게 있다면?</li>
+          <li>8. 남들은 잘 모르는 나만의 소소한 취미나 특기, 하나만 공개한다면?</li>
+          <li>9. 오늘 이 자리에서 어떤 대화를 하고 싶어서 왔어요?</li>
+          <li>10. 하루가 통째로 비면 뭘 하면서 보내고 싶어요?</li>
+          <li>11. 최근에 "이건 잘했다" 싶었던 나의 선택은 뭐예요?</li>
+          <li>12. 어릴 때부터 지금까지 변하지 않고 좋아하는 게 있다면?</li>
         </ol>
         <p class="font-semibold mb-1">3단계 · 깊게</p>
         <ol class="space-y-1">
-          <li>9. 사람들 앞에서 나를 표현할 때 제일 나다운 방식은 뭐예요?</li>
-          <li>10. 최근에 누군가를 보고 "저렇게 되고 싶다"고 느낀 적 있어요?</li>
-          <li>11. 지금 이 순간, 딱 한 사람한테만 배우고 싶은 게 있다면 뭐예요?</li>
-          <li>12. 오늘 이 테이블에서 얻어가고 싶은 딱 한 가지가 있다면?</li>
+          <li>13. 사람들 앞에서 나를 표현할 때 제일 나다운 방식은 뭐예요?</li>
+          <li>14. 요즘 새로 배워보고 싶은 게 있다면 뭐예요?</li>
+          <li>15. 올해 안에 꼭 해보고 싶은 일이 하나 있다면?</li>
+          <li>16. 지금까지 받아본 말 중에 제일 힘이 됐던 한마디는?</li>
+          <li>17. 10년 뒤의 나에게 하나만 자랑한다면 뭘 자랑하고 싶어요?</li>
+          <li>18. 오늘 이 테이블에서 얻어가고 싶은 딱 한 가지가 있다면?</li>
         </ol>
       </div>
 
@@ -842,5 +875,22 @@
     });
   })();
 </script>
+<nav id="mini-toc" aria-label="목차">
+<a href="#document-map" data-sec="document-map">문서 지도</a>
+<a href="#section-1" data-sec="section-1">1 · 한눈에 요약</a>
+<a href="#section-2" data-sec="section-2">2 · 후기 취합</a>
+<a href="#section-3" data-sec="section-3">3 · 혼참자 분석</a>
+<a href="#section-4" data-sec="section-4">4 · 집중 조사</a>
+<a href="#section-5" data-sec="section-5">5 · 요청별 대응</a>
+<a href="#section-6" data-sec="section-6">6 · 네트워킹 파티</a>
+<a href="#section-7" data-sec="section-7">7 · 진행 노하우</a>
+<a href="#section-8" data-sec="section-8">8 · 개선 아이디어</a>
+</nav>
+<script>(function(){
+var ids=['document-map','section-1','section-2','section-3','section-4','section-5','section-6','section-7','section-8'];
+var links={};document.querySelectorAll('#mini-toc a').forEach(function(a){links[a.dataset.sec]=a});
+function upd(){var cur=ids[0];ids.forEach(function(id){var el=document.getElementById(id);if(el&&el.getBoundingClientRect().top<innerHeight*0.35)cur=id});for(var k in links)links[k].classList.toggle('active',k===cur)}
+addEventListener('scroll',upd,{passive:true});upd();
+})()</script>
 </body>
 </html>
