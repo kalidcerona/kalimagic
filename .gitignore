@@ -25,6 +25,10 @@ kalis_magic_playground/COPY.md
 kalis_magic_playground/DESIGN.md
 kalis_magic_playground/DESIGN-BRIEFING.md
 
+# 로컬 전용 페이지 — 공개 배포에서 내림 (2026-08-11, 칼리형 지시)
+kalis_magic_playground/kalimeeting/
+kalis_magic_playground/reports/
+
 # 로컬 참고 자료 (단, 설계 스펙은 추적)
 /docs/*
 !/docs/superpowers/
