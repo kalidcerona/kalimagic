@@ -192,6 +192,7 @@
     }
 
     async function load({ append = false } = {}) {
+      if (append && state.loading) return;
       const tab = activeTab();
       if (tab.locked) {
         state.posts = [];

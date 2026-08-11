@@ -253,7 +253,7 @@
           <iframe
             class="yt-lite__iframe"
             src="https://www.youtube-nocookie.com/embed/${escapeHtml(id)}?autoplay=1"
-            title="${escapeHtml(youtubeButton.textContent.trim() || '첨부된 유튜브 영상')}"
+            title="${escapeHtml((youtubeButton.querySelector('.yt-lite__label')?.textContent || '').trim() || '첨부된 유튜브 영상')}"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
             allowfullscreen
             loading="lazy"

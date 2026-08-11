@@ -34,7 +34,7 @@ def main():
     if reviews:
         c("행사 갤러리 event-gallery", "event-gallery" in reviews)
         c("갤러리 figure 3개 이상", reviews.count("<figure>") >= 3)
-        c("Q&A review-q-title 4블록", reviews.count("review-q-title") == 4)
+        c("Q&A 카톡 스레드(kx-thread + Q4)", "kx-thread" in reviews and "<!-- Q4 -->" in reviews)
         c("과외 후기 verbatim(자판기)", "자판기 같아요" in reviews)
         c("과외 후기 verbatim(정답지)", "정답지가 앞에 있는 느낌" in reviews)
         c("nav active=reviews", "renderNav('reviews')" in reviews)
