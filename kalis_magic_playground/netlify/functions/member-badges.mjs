@@ -4,6 +4,7 @@ import {
   VALID_BADGE_CODES,
   validateBadgeSelection
 } from './_lib/badges.mjs';
+import { isElevated } from './_lib/access-policy.mjs';
 import { json, readJsonBody } from './_lib/http.mjs';
 import { getSupabaseAdmin } from './_lib/supabase.mjs';
 import { validateUuid } from './_lib/validators.mjs';
@@ -16,7 +17,7 @@ function badgeCode(row) {
   return row?.badges?.code || row?.code || null;
 }
 
-export function shapeMemberBadges(profileRow, badgeRows, catalogRows = []) {
+export function shapeMemberBadges(profileRow, badgeRows, catalogRows = [], { canSeeOwnerOnly = true } = {}) {
   const ownedCodes = new Set((badgeRows || []).map(badgeCode).filter(Boolean));
   const catalogByCode = new Map((catalogRows || []).map((row) => [row.code, row]));
 
@@ -27,6 +28,7 @@ export function shapeMemberBadges(profileRow, badgeRows, catalogRows = []) {
     preferredBadgeCode: profileRow.preferred_badge_code || null,
     badges: (badgeRows || [])
       .filter((row) => row.badges?.code)
+      .filter((row) => canSeeOwnerOnly || !OWNER_ONLY_CATALOG_CODES.has(row.badges.code))
       .map((row) => ({
         code: row.badges.code,
         label: row.badges.label,
@@ -78,9 +80,9 @@ async function getTargetUserId(event) {
   const userId = event.queryStringParameters?.userId;
   if (userId) {
     if (!validateUuid(userId)) return { error: 'invalid_user_id' };
-    return { userId };
+    return { userId, viewer };
   }
-  return { userId: viewer.userId };
+  return { userId: viewer.userId, viewer };
 }
 
 async function getMemberBadges(event, supabase) {
@@ -101,7 +103,8 @@ async function getMemberBadges(event, supabase) {
   try {
     const badgeRows = await loadBadgeRows(supabase, userId);
     const catalogRows = await loadCatalogRows(supabase);
-    return json(200, shapeMemberBadges(profile, badgeRows, catalogRows));
+    const canSeeOwnerOnly = userId === target.viewer.userId || isElevated(target.viewer);
+    return json(200, shapeMemberBadges(profile, badgeRows, catalogRows, { canSeeOwnerOnly }));
   } catch {
     return json(500, { error: 'db_error' });
   }

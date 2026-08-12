@@ -213,6 +213,59 @@ test('shapeMemberBadges hides role and unowned owner-only catalog badges', () =>
   assert.equal(shaped.catalog.some((badge) => ['kali', 'hecate', 'hecate_2'].includes(badge.code)), false);
 });
 
+test('shapeMemberBadges hides owner-only badges from other members', () => {
+  const profile = {
+    user_id: '11111111-1111-4111-8111-111111111111',
+    nickname: '마술인07',
+    role: 'member',
+    preferred_badge_code: 'user'
+  };
+  const badgeRows = [
+    {
+      granted_at: '2026-07-08T00:00:00.000Z',
+      badges: { code: 'kali', label: '칼리의 루비 문장', description: '칼리형' }
+    },
+    {
+      granted_at: '2026-07-08T00:00:00.000Z',
+      badges: { code: 'user', label: '브론즈 깃털', description: '첫 질문, 배움의 시작' }
+    }
+  ];
+  const catalogRows = [
+    { code: 'user', label: '브론즈 깃털', description: '첫 질문, 배움의 시작' },
+    { code: 'kali', label: '칼리의 루비 문장', description: '칼리형' }
+  ];
+
+  const shaped = shapeMemberBadges(profile, badgeRows, catalogRows, { canSeeOwnerOnly: false });
+  assert.deepEqual(shaped.badges.map((badge) => badge.code), ['user']);
+  assert.equal(shaped.badges.some((badge) => ['kali', 'hecate', 'hecate_2'].includes(badge.code)), false);
+});
+
+test('shapeMemberBadges keeps owner-only badges for self and elevated viewers', () => {
+  const profile = {
+    user_id: '11111111-1111-4111-8111-111111111111',
+    nickname: '마술인07',
+    role: 'member',
+    preferred_badge_code: 'user'
+  };
+  const badgeRows = [
+    {
+      granted_at: '2026-07-08T00:00:00.000Z',
+      badges: { code: 'kali', label: '칼리의 루비 문장', description: '칼리형' }
+    },
+    {
+      granted_at: '2026-07-08T00:00:00.000Z',
+      badges: { code: 'user', label: '브론즈 깃털', description: '첫 질문, 배움의 시작' }
+    }
+  ];
+  const catalogRows = [
+    { code: 'user', label: '브론즈 깃털', description: '첫 질문, 배움의 시작' },
+    { code: 'kali', label: '칼리의 루비 문장', description: '칼리형' }
+  ];
+
+  const shaped = shapeMemberBadges(profile, badgeRows, catalogRows);
+  assert.equal(shaped.badges.some((badge) => badge.code === 'kali'), true);
+});
+
 test('shapeMemberBadges preserves a hidden expert preferred badge', () => {
   const shaped = shapeMemberBadges({
     user_id: '11111111-1111-4111-8111-111111111111',
