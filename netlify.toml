@@ -1,6 +1,0 @@
-# Netlify 배포 설정
-# base = "" → 레포 루트 기준 (대시보드 base dir 재정의)
-# publish = kalis_magic_playground (v2 미러 폴더)
-[build]
-  base = ""
-  publish = "kalis_magic_playground"
