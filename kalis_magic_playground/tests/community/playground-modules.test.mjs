@@ -112,7 +112,7 @@ test('playground list module catches list load failures and renders a friendly e
 test('playground compose module includes verbatim guide copy and keeps event reviews on the dedicated api', () => {
   const source = read('playground-compose.js');
   const requiredCopy = [
-    '어떤 기록을 남길지 먼저 골라주면 됨. 자유게시판, 마술 보관소, 질문함, 도구 기록, 모임 기록, 보관된 기록 중에서 가장 가까운 곳에 남기면 사람들이 더 잘 찾아볼 수 있음.',
+    '어떤 기록을 남길지 먼저 골라주면 됨. 자유게시판, 마술 보관소, 질문함, 도구 기록, 보관된 기록 중에서 가장 가까운 곳에 남기면 사람들이 더 잘 찾아볼 수 있음.',
     '먼저 게시판을 선택하면 제목 예시가 나타남',
     '남기고 싶은 이야기에 가장 가까운 게시판을 선택하면, 그 글에 맞는 안내가 열림',
     '자유 주제로 마술 문화와 연습, 공연, 사람들 이야기를 편하게 남기는 공간임.',
@@ -121,8 +121,6 @@ test('playground compose module includes verbatim guide copy and keeps event rev
     '개인 연습 기록도 쌓이면 나중에 다시 꺼내 볼 수 있는 보관소가 됨.',
     '마술을 배우다 막히는 순간이 있으면 질문을 남기는 공간임. 먼저 지나간 사람이 답을 알고 있을 수 있음.',
     '처음 묻는 질문도 좋음. 누군가에게는 같은 고민을 해결하는 첫 기록이 될 수 있음.',
-    '모임에서 느낀 분위기와 기억에 남은 순간을 남기는 공간임. 그날의 기록이 다음 모임을 더 좋게 만듦.',
-    '모임 후기는 처음 오는 사람에게 가장 큰 안내서가 됨.',
     '직접 써본 도구와 강의 경험을 남기는 공간임. 좋은 점과 활용 장면을 남기면 다음 사람이 선택하기 쉬워짐.',
     '내가 써본 경험이 누군가에게는 시행착오를 줄여주는 길잡이가 됨.',
     '마술문화 기록소에 쌓인 좋은 질문과 답변, 후기와 리뷰를 골라 오래 볼 수 있게 모아두는 공간임.',
@@ -139,7 +137,6 @@ test('playground compose module includes verbatim guide copy and keeps event rev
     "['routine', '마술 보관소']",
     "['question', '질문함']",
     "['tool', '도구 기록']",
-    "['meeting', '모임 기록']",
     "['magazine', '보관된 기록']"
   ], 'compose dropdown should follow the requested writable board order');
   assert.match(source, /question: 'question'/);
