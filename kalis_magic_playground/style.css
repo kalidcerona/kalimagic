@@ -2971,36 +2971,6 @@ button.mypage-badge-tile:hover,
   flex: 0 0 auto;
 }
 
-.pg-badge--asker {
-  --badge-bg: rgba(232, 99, 31, 0.13);
-  --badge-border: rgba(232, 99, 31, 0.46);
-  --badge-text: #f0a16d;
-}
-
-.pg-badge--answerer {
-  --badge-bg: rgba(var(--brass-gold-rgb), 0.15);
-  --badge-border: rgba(var(--brass-gold-rgb), 0.5);
-  --badge-text: #e6c28c;
-}
-
-.pg-badge--supporter {
-  --badge-bg: rgba(195, 125, 68, 0.14);
-  --badge-border: rgba(195, 125, 68, 0.5);
-  --badge-text: #efbb7a;
-}
-
-.pg-badge--expert {
-  --badge-bg: rgba(173, 151, 108, 0.15);
-  --badge-border: rgba(173, 151, 108, 0.5);
-  --badge-text: #ead9b3;
-}
-
-.pg-badge--kali {
-  --badge-bg: rgba(232, 99, 31, 0.18);
-  --badge-border: rgba(232, 99, 31, 0.62);
-  --badge-text: #ffb58b;
-}
-
 .pg-detail-meta .pg-badge,
 .pg-comment strong .pg-badge {
   margin-left: 6px;

@@ -1,4 +1,7 @@
 (function () {
+  var escapeHtml = window.PgUtil.escapeHtml;
+  var fetchJson = window.PgUtil.fetchJson;
+
   var BADGES = {
     expert: { label: '전문가', className: 'kali-badge--expert' },
     god: { label: '마술의 신', className: 'kali-badge--god' },
@@ -29,15 +32,6 @@
 
   var BADGE_CODES = Object.keys(BADGE_META);
   var BADGE_IMAGE_BASE = 'assets/playground/badges/';
-
-  function escapeHtml(value) {
-    return String(value || '')
-      .replaceAll('&', '&amp;')
-      .replaceAll('<', '&lt;')
-      .replaceAll('>', '&gt;')
-      .replaceAll('"', '&quot;')
-      .replaceAll("'", '&#039;');
-  }
 
   function imageBadgesHtml(codes) {
     var list = Array.isArray(codes) ? codes : [];
@@ -87,25 +81,6 @@
     if (activeKeyHandler) document.removeEventListener('keydown', activeKeyHandler, true);
     activeOutsideHandler = null;
     activeKeyHandler = null;
-  }
-
-  async function authHeader() {
-    if (window.MagicAuth && window.MagicAuth.authHeader) return window.MagicAuth.authHeader();
-    return {};
-  }
-
-  async function fetchJson(url, options) {
-    var headers = await authHeader();
-    if (options && options.body) headers['content-type'] = 'application/json; charset=utf-8';
-    var response = await fetch(url, Object.assign({}, options, { headers: headers }));
-    var data = await response.json().catch(function () { return {}; });
-    if (!response.ok) {
-      var error = new Error(data.message || data.error || '요청을 처리하지 못했습니다.');
-      error.status = response.status;
-      error.code = data.error;
-      throw error;
-    }
-    return data;
   }
 
   async function getViewerRole() {
