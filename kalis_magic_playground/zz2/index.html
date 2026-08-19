@@ -151,28 +151,6 @@
       white-space: nowrap;
     }
 
-    .date-hint {
-      position: absolute;
-      left: 2px;
-      width: 4px;
-      height: 4px;
-      display: none;
-      border-radius: 50%;
-      background: #8a8a8a;
-    }
-
-    .date-hint.show {
-      display: block;
-    }
-
-    .date-hint-plus {
-      top: 14px;
-    }
-
-    .date-hint-minus {
-      bottom: 14px;
-    }
-
     .keypad {
       --key-gap: clamp(11px, 3.5cqw, 20px);
       --btn-inline: calc((100cqw - 3 * var(--key-gap)) / 4);
@@ -198,6 +176,7 @@
     }
 
     .key {
+      position: relative;
       width: var(--btn);
       height: var(--btn);
       border: 0;
@@ -212,6 +191,20 @@
       user-select: none;
       touch-action: manipulation;
       transition: background-color 80ms ease, filter 80ms ease, opacity 120ms ease;
+    }
+
+    .key.date-key-hint::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: clamp(6px, 2cqw, 10px);
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: #fff;
+      opacity: 0.85;
+      pointer-events: none;
+      transform: translateX(-50%);
     }
 
     .key:active,
@@ -311,8 +304,6 @@
     </div>
 
     <div class="display-wrap">
-      <span class="date-hint date-hint-plus" id="date-hint-plus"></span>
-      <span class="date-hint date-hint-minus" id="date-hint-minus"></span>
       <output class="display" id="display" aria-live="polite">0</output>
     </div>
 
@@ -1207,8 +1198,11 @@
       const clockIcon = document.getElementById("clock-icon");
       const dateSettings = document.getElementById("date-settings");
       const dateDelayValue = document.getElementById("date-delay-value");
-      const dateHintPlus = document.getElementById("date-hint-plus");
-      const dateHintMinus = document.getElementById("date-hint-minus");
+      const dateHintKeys = keypad.querySelectorAll(
+        '[data-key="+"], [data-key="−"], [data-key="0"], [data-key="1"], ' +
+        '[data-key="2"], [data-key="3"], [data-key="4"], [data-key="5"], ' +
+        '[data-key="6"], [data-key="7"], [data-key="8"], [data-key="9"]'
+      );
       let expr = "";
       let resultShown = false;
       let lastResult = null;
@@ -1238,6 +1232,22 @@
           ? decToPlainString(lastResult)
           : soleNumberText(expr);
 
+      const computeDateTrickValues = (currentText, delaySeconds) => {
+        const targetText = formatDateTarget(
+          new Date(Date.now() + delaySeconds * 1000)
+        );
+        const diff = decSub(
+          decFromString(targetText),
+          decFromString(currentText)
+        );
+        return {
+          targetText,
+          diff,
+          neededOp: diff.s >= 0 ? "+" : "−",
+          queueText: decToPlainString(diff.s >= 0 ? diff : { ...diff, s: 1 })
+        };
+      };
+
       const render = () => {
         const rawDisplay = errorShown ? "오류" : displayValue(expr);
         display.textContent = formatDisplay(rawDisplay);
@@ -1247,19 +1257,25 @@
         dateDelayValue.textContent = `${dateDelaySeconds}초`;
 
         let neededOp = null;
+        let digitHintKey = null;
         const currentText = currentValueText();
         if (dateTrickState.phase === "armed" && currentText !== null) {
-          const targetText = formatDateTarget(
-            new Date(Date.now() + dateDelaySeconds * 1000)
+          const dateValues = computeDateTrickValues(
+            currentText,
+            dateDelaySeconds
           );
-          const diff = decSub(
-            decFromString(targetText),
-            decFromString(currentText)
-          );
-          neededOp = diff.s >= 0 ? "+" : "−";
+          neededOp = dateValues.neededOp;
+          const digitCount = (dateValues.queueText.match(/\d/g) ?? []).length;
+          if (digitCount >= 1 && digitCount <= 10) {
+            digitHintKey = String(digitCount % 10);
+          }
         }
-        dateHintPlus.classList.toggle("show", neededOp === "+");
-        dateHintMinus.classList.toggle("show", neededOp === "−");
+        dateHintKeys.forEach((key) => {
+          key.classList.toggle(
+            "date-key-hint",
+            key.dataset.key === neededOp || key.dataset.key === digitHintKey
+          );
+        });
         fitDisplayText(display);
       };
 
@@ -1273,17 +1289,9 @@
             (key === "+" || key === "−") &&
             currentText !== null
           ) {
-            const targetText = formatDateTarget(
-              new Date(Date.now() + dateDelaySeconds * 1000)
-            );
-            const diff = decSub(
-              decFromString(targetText),
-              decFromString(currentText)
-            );
-            ctx.targetText = targetText;
-            ctx.neededOp = diff.s >= 0 ? "+" : "−";
-            ctx.queueText = decToPlainString(
-              diff.s >= 0 ? diff : { ...diff, s: 1 }
+            Object.assign(
+              ctx,
+              computeDateTrickValues(currentText, dateDelaySeconds)
             );
           }
 
