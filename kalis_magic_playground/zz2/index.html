@@ -55,6 +55,7 @@
       gap: var(--layout-gap);
       overflow: hidden;
       background: #000;
+      position: relative;
     }
 
     .toolbar {
@@ -71,6 +72,7 @@
       display: flex;
       align-items: center;
       gap: 17px;
+      pointer-events: auto;
     }
 
     .toolbar svg {
@@ -89,8 +91,53 @@
       line-height: 1;
     }
 
+    #pen-icon.date-armed path:first-of-type {
+      fill: #fff;
+    }
+
+    .date-settings {
+      position: absolute;
+      z-index: 2;
+      top: calc(var(--pad-block-start) + var(--toolbar-height) + var(--layout-gap));
+      left: clamp(18px, 4vw, 24px);
+      display: none;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border: 1px solid #252525;
+      border-radius: 12px;
+      background: #090909;
+      color: #b8b8b8;
+      font-size: 15px;
+    }
+
+    .date-settings.open {
+      display: flex;
+    }
+
+    .date-settings button {
+      border: 0;
+      border-radius: 8px;
+      padding: 6px 10px;
+      background: #242424;
+      color: #d8d8d8;
+      touch-action: manipulation;
+    }
+
+    .date-settings-value {
+      min-width: 42px;
+      text-align: center;
+    }
+
+    .display-wrap {
+      position: relative;
+      min-width: 0;
+      display: flex;
+    }
+
     .display {
       min-width: 0;
+      width: 100%;
       display: flex;
       align-items: end;
       justify-content: end;
@@ -102,6 +149,28 @@
       letter-spacing: -0.04em;
       text-align: right;
       white-space: nowrap;
+    }
+
+    .date-hint {
+      position: absolute;
+      left: 2px;
+      width: 4px;
+      height: 4px;
+      display: none;
+      border-radius: 50%;
+      background: #8a8a8a;
+    }
+
+    .date-hint.show {
+      display: block;
+    }
+
+    .date-hint-plus {
+      top: 14px;
+    }
+
+    .date-hint-minus {
+      bottom: 14px;
     }
 
     .keypad {
@@ -219,14 +288,14 @@
   <main class="calculator" id="app" aria-label="계산기">
     <div class="toolbar" aria-hidden="true">
       <span class="toolbar-icon">
-        <svg viewBox="0 0 24 24">
+        <svg id="clock-icon" viewBox="0 0 24 24">
           <path d="M3.5 12a8.5 8.5 0 1 0 2.2-5.7"></path>
           <path d="M3.5 4.5v4h4"></path>
           <path d="M12 7.5V12l3 2"></path>
         </svg>
       </span>
       <span class="toolbar-tools">
-        <svg viewBox="0 0 24 24">
+        <svg id="pen-icon" viewBox="0 0 24 24">
           <path d="m5 18 12-12 2 2L7 20H5v-2Z"></path>
           <path d="m11 12 2 2m1-5 2 2m-8 4 2 2"></path>
         </svg>
@@ -234,7 +303,18 @@
       </span>
     </div>
 
-    <output class="display" id="display" aria-live="polite">0</output>
+    <div class="date-settings" id="date-settings" aria-hidden="true">
+      <button type="button" data-date-action="decrease">−</button>
+      <span class="date-settings-value" id="date-delay-value">20초</span>
+      <button type="button" data-date-action="increase">+</button>
+      <button type="button" data-date-action="close">닫기</button>
+    </div>
+
+    <div class="display-wrap">
+      <span class="date-hint date-hint-plus" id="date-hint-plus"></span>
+      <span class="date-hint date-hint-minus" id="date-hint-minus"></span>
+      <output class="display" id="display" aria-live="polite">0</output>
+    </div>
 
     <section class="keypad" aria-label="계산기 키패드">
       <button class="key utility" type="button" data-key="C">C</button>
@@ -433,6 +513,35 @@
       // 비연속 %
       let n=st(T0,"%","9"); n=st(n.state,"5",null); n=st(n.state,"%",null);
       assert(n.state.phase==="off","% 사이 다른 키 = 세팅 안 됨");
+
+      // date-time reveal
+      assert(formatDateTarget(new Date(2026, 7, 19, 21, 47)) === "2608192147", "date target: example");
+      assert(formatDateTarget(new Date(2026, 0, 9, 0, 5)) === "2601090005", "date target: January, midnight, day pad");
+      assert(formatDateTarget(new Date(2026, 11, 31, 23, 59)) === "2612312359", "date target: December");
+      const DT0={phase:"off",queue:null,queueIndex:0};
+      const DTARM={phase:"armed",queue:null,queueIndex:0};
+      const dt=(s,key,ctx={})=>dateTrickStep(s,key,ctx);
+      let dtStep=dt(DTARM,"+",{currentValueText:"100",targetText:"223",neededOp:"+",queueText:"123"});
+      assert(dtStep.state.phase==="entering"&&dtStep.state.queue==="123"&&dtStep.state.queueIndex===0,"date trick: correct op enters");
+      dtStep=dt(dtStep.state,"7");
+      assert(dtStep.replaceKey==="1"&&dtStep.state.queueIndex===1,"date trick: first forced digit");
+      dtStep=dt(dtStep.state,"8");
+      assert(dtStep.replaceKey==="2"&&dtStep.state.queueIndex===2,"date trick: second forced digit");
+      dtStep=dt(dtStep.state,"9");
+      assert(dtStep.replaceKey==="3"&&dtStep.state.queueIndex===3,"date trick: third forced digit");
+      dtStep=dt(dtStep.state,"0");
+      assert(dtStep.action==="swallow"&&dtStep.state.queueIndex===3,"date trick: extra digit swallowed");
+      dtStep=dt(dtStep.state,"⌫");
+      dtStep=dt(dtStep.state,"4");
+      assert(dtStep.replaceKey==="3"&&dtStep.state.queueIndex===3,"date trick: backspace rewinds queue");
+      assert(dt({phase:"entering",queue:"123",queueIndex:2},"C").state.phase==="off","date trick: C cancels");
+      assert(dt({phase:"entering",queue:"123",queueIndex:3},"=").state.phase==="off","date trick: equals is one-shot");
+      dtStep=dt(DTARM,"−",{currentValueText:"100",targetText:"223",neededOp:"+",queueText:"123"});
+      assert(dtStep.state.phase==="armed"&&dtStep.replaceKey==="−","date trick: wrong op stays armed");
+      for (const key of ["0","9",".","+","−","×","÷","%","()","⌫","C","="]) {
+        dtStep=dt(DT0,key);
+        assert(dtStep.state===DT0&&dtStep.replaceKey===key&&dtStep.action==="none",`date trick: off passes ${key}`);
+      }
 
       assert(show(ev(seq(["5","+","+","7"]))) === "12", "E2E5: 5++7=12");
       assert(show(ev(seq(["5","+"])))=== "5", "E2E7: 5+=5");
@@ -901,6 +1010,68 @@
       return /^-?(?:\d+(?:\.\d*)?|\.\d+)$/.test(source) ? source : null;
     }
 
+    function formatDateTarget(date) {
+      const pad = (value) => String(value).padStart(2, "0");
+      return (
+        pad(date.getFullYear() % 100) +
+        pad(date.getMonth() + 1) +
+        pad(date.getDate()) +
+        pad(date.getHours()) +
+        pad(date.getMinutes())
+      );
+    }
+
+    function dateTrickStep(state, key, ctx) {
+      if (
+        state.phase === "armed" &&
+        (key === "+" || key === "−") &&
+        typeof ctx?.currentValueText === "string" &&
+        typeof ctx?.targetText === "string"
+      ) {
+        if (key === ctx.neededOp) {
+          return {
+            state: {
+              phase: "entering",
+              queue: ctx.queueText,
+              queueIndex: 0
+            },
+            action: "none",
+            replaceKey: key
+          };
+        }
+        return { state, action: "none", replaceKey: key };
+      }
+
+      if (state.phase === "entering") {
+        if (/^[0-9.]$/.test(key)) {
+          if (state.queueIndex < state.queue.length) {
+            return {
+              state: { ...state, queueIndex: state.queueIndex + 1 },
+              action: "none",
+              replaceKey: state.queue[state.queueIndex]
+            };
+          }
+          return { state, action: "swallow", replaceKey: key };
+        }
+        if (key === "⌫") {
+          return {
+            state: { ...state, queueIndex: Math.max(0, state.queueIndex - 1) },
+            action: "none",
+            replaceKey: key
+          };
+        }
+        if (key === "C" || key === "=") {
+          return {
+            state: { phase: "off", queue: null, queueIndex: 0 },
+            action: "none",
+            replaceKey: key
+          };
+        }
+      }
+
+      return { state, action: "none", replaceKey: key };
+    }
+
     function trickErrorGate(state, key) {
       if (key === "C") return "pass";
       if (key === "=" && state.phase === "ready") return "pass";
@@ -1032,10 +1203,29 @@
       const display = document.getElementById("display");
       const keypad = document.querySelector(".keypad");
       const percentKey = keypad.querySelector('[data-key="%"]');
+      const penIcon = document.getElementById("pen-icon");
+      const clockIcon = document.getElementById("clock-icon");
+      const dateSettings = document.getElementById("date-settings");
+      const dateDelayValue = document.getElementById("date-delay-value");
+      const dateHintPlus = document.getElementById("date-hint-plus");
+      const dateHintMinus = document.getElementById("date-hint-minus");
       let expr = "";
       let resultShown = false;
       let lastResult = null;
       let errorShown = false;
+      let dateTrickState = { phase: "off", queue: null, queueIndex: 0 };
+      let dateDelaySeconds = 20;
+      try {
+        const savedDelay = Number.parseInt(
+          localStorage.getItem("magic-calc-date-delay"),
+          10
+        );
+        if (Number.isInteger(savedDelay)) {
+          dateDelaySeconds = Math.min(120, Math.max(5, savedDelay));
+        }
+      } catch {
+        // Storage is optional; keep the default delay when unavailable.
+      }
       let trickState = {
         phase: "off",
         storedText: null,
@@ -1043,15 +1233,66 @@
         pendingSole: null
       };
 
+      const currentValueText = () =>
+        resultShown && lastResult !== null
+          ? decToPlainString(lastResult)
+          : soleNumberText(expr);
+
       const render = () => {
         const rawDisplay = errorShown ? "오류" : displayValue(expr);
         display.textContent = formatDisplay(rawDisplay);
         percentKey.classList.toggle("trick-set", trickState.phase === "set");
         percentKey.classList.toggle("trick-ready", trickState.phase === "ready");
+        penIcon.classList.toggle("date-armed", dateTrickState.phase !== "off");
+        dateDelayValue.textContent = `${dateDelaySeconds}초`;
+
+        let neededOp = null;
+        const currentText = currentValueText();
+        if (dateTrickState.phase === "armed" && currentText !== null) {
+          const targetText = formatDateTarget(
+            new Date(Date.now() + dateDelaySeconds * 1000)
+          );
+          const diff = decSub(
+            decFromString(targetText),
+            decFromString(currentText)
+          );
+          neededOp = diff.s >= 0 ? "+" : "−";
+        }
+        dateHintPlus.classList.toggle("show", neededOp === "+");
+        dateHintMinus.classList.toggle("show", neededOp === "−");
         fitDisplayText(display);
       };
 
       const handleKey = (key) => {
+        if (dateTrickState.phase !== "off") {
+          const currentText = currentValueText();
+          const ctx = { currentValueText: currentText };
+
+          if (
+            dateTrickState.phase === "armed" &&
+            (key === "+" || key === "−") &&
+            currentText !== null
+          ) {
+            const targetText = formatDateTarget(
+              new Date(Date.now() + dateDelaySeconds * 1000)
+            );
+            const diff = decSub(
+              decFromString(targetText),
+              decFromString(currentText)
+            );
+            ctx.targetText = targetText;
+            ctx.neededOp = diff.s >= 0 ? "+" : "−";
+            ctx.queueText = decToPlainString(
+              diff.s >= 0 ? diff : { ...diff, s: 1 }
+            );
+          }
+
+          const dateTransition = dateTrickStep(dateTrickState, key, ctx);
+          dateTrickState = dateTransition.state;
+          if (dateTransition.action === "swallow") return;
+          key = dateTransition.replaceKey;
+        }
+
         if (errorShown && trickErrorGate(trickState, key) === "blocked") return;
 
         if (key === "%") {
@@ -1176,6 +1417,45 @@
         button.classList.add("pressed");
         window.setTimeout(() => button.classList.remove("pressed"), 140);
         handleKey(button.dataset.key);
+      });
+
+      penIcon.addEventListener("pointerdown", (event) => {
+        if (!isPrimaryPointer(event)) return;
+        event.preventDefault();
+        dateTrickState = dateTrickState.phase === "off"
+          ? { phase: "armed", queue: null, queueIndex: 0 }
+          : { phase: "off", queue: null, queueIndex: 0 };
+        render();
+      });
+
+      clockIcon.addEventListener("pointerdown", (event) => {
+        if (!isPrimaryPointer(event)) return;
+        event.preventDefault();
+        dateSettings.classList.toggle("open");
+      });
+
+      dateSettings.addEventListener("pointerdown", (event) => {
+        if (!isPrimaryPointer(event)) return;
+        const button = event.target.closest("button[data-date-action]");
+        if (!button || !dateSettings.contains(button)) return;
+        event.preventDefault();
+
+        if (button.dataset.dateAction === "close") {
+          dateSettings.classList.remove("open");
+          return;
+        }
+
+        const change = button.dataset.dateAction === "increase" ? 5 : -5;
+        dateDelaySeconds = Math.min(120, Math.max(5, dateDelaySeconds + change));
+        try {
+          localStorage.setItem(
+            "magic-calc-date-delay",
+            String(dateDelaySeconds)
+          );
+        } catch {
+          // Keep the in-memory setting when storage is unavailable.
+        }
+        render();
       });
 
       window.addEventListener("resize", () => fitDisplayText(display));

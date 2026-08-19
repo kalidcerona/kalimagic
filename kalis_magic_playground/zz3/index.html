@@ -487,6 +487,16 @@
       centiseconds.textContent = formatted.cs;
     }
     function renderCustomText(text) {
+      if (/^\d{1,2}:\d{2}$/.test(text)) {
+        const [sec, cs] = text.split(":");
+        customDisplay.hidden = true;
+        seconds.hidden = false;
+        colon.hidden = false;
+        centiseconds.hidden = false;
+        seconds.textContent = sec;
+        centiseconds.textContent = cs;
+        return;
+      }
       seconds.hidden = true;
       colon.hidden = true;
       centiseconds.hidden = true;
