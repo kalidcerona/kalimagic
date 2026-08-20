@@ -300,6 +300,7 @@
       <button type="button" data-date-action="decrease">−</button>
       <span class="date-settings-value" id="date-delay-value">20초</span>
       <button type="button" data-date-action="increase">+</button>
+      <button type="button" data-date-action="hour-cycle" id="date-hour-cycle">24h</button>
       <button type="button" data-date-action="close">닫기</button>
     </div>
 
@@ -506,9 +507,14 @@
       assert(n.state.phase==="off","% 사이 다른 키 = 세팅 안 됨");
 
       // date-time reveal
-      assert(formatDateTarget(new Date(2026, 7, 19, 21, 47)) === "2608192147", "date target: example");
-      assert(formatDateTarget(new Date(2026, 0, 9, 0, 5)) === "2601090005", "date target: January, midnight, day pad");
-      assert(formatDateTarget(new Date(2026, 11, 31, 23, 59)) === "2612312359", "date target: December");
+      assert(formatDateTarget(new Date(2026, 7, 20, 21, 47), "24") === "268202147", "date target: 24h example");
+      assert(formatDateTarget(new Date(2026, 7, 20, 8, 5), "24") === "2682085", "date target: 24h unpadded time");
+      assert(formatDateTarget(new Date(2026, 11, 31, 23, 59), "24") === "2612312359", "date target: 24h December");
+      assert(formatDateTarget(new Date(2026, 0, 9, 0, 5), "24") === "261905", "date target: 24h January midnight");
+      assert(formatDateTarget(new Date(2026, 7, 20, 21, 47), "12") === "26820947", "date target: 12h evening");
+      assert(formatDateTarget(new Date(2026, 7, 20, 0, 30), "12") === "268201230", "date target: 12h midnight");
+      assert(formatDateTarget(new Date(2026, 7, 20, 12, 5), "12") === "26820125", "date target: 12h noon");
+      assert(formatDateTarget(new Date(2026, 7, 20, 21, 47)) === "268202147", "date target: default 24h");
       const DT0={phase:"off",queue:null,queueIndex:0};
       const DTARM={phase:"armed",queue:null,queueIndex:0};
       const dt=(s,key,ctx={})=>dateTrickStep(s,key,ctx);
@@ -1001,14 +1007,16 @@
       return /^-?(?:\d+(?:\.\d*)?|\.\d+)$/.test(source) ? source : null;
     }
 
-    function formatDateTarget(date) {
-      const pad = (value) => String(value).padStart(2, "0");
+    function formatDateTarget(date, hourCycle = "24") {
+      const hour = hourCycle === "12"
+        ? ((date.getHours() + 11) % 12) + 1
+        : date.getHours();
       return (
-        pad(date.getFullYear() % 100) +
-        pad(date.getMonth() + 1) +
-        pad(date.getDate()) +
-        pad(date.getHours()) +
-        pad(date.getMinutes())
+        String(date.getFullYear() % 100) +
+        String(date.getMonth() + 1) +
+        String(date.getDate()) +
+        String(hour) +
+        String(date.getMinutes())
       );
     }
 
@@ -1198,6 +1206,7 @@
       const clockIcon = document.getElementById("clock-icon");
       const dateSettings = document.getElementById("date-settings");
       const dateDelayValue = document.getElementById("date-delay-value");
+      const dateHourCycleButton = document.getElementById("date-hour-cycle");
       const dateHintKeys = keypad.querySelectorAll(
         '[data-key="+"], [data-key="−"], [data-key="0"], [data-key="1"], ' +
         '[data-key="2"], [data-key="3"], [data-key="4"], [data-key="5"], ' +
@@ -1209,6 +1218,7 @@
       let errorShown = false;
       let dateTrickState = { phase: "off", queue: null, queueIndex: 0 };
       let dateDelaySeconds = 20;
+      let dateHourCycle = "24";
       try {
         const savedDelay = Number.parseInt(
           localStorage.getItem("magic-calc-date-delay"),
@@ -1217,8 +1227,12 @@
         if (Number.isInteger(savedDelay)) {
           dateDelaySeconds = Math.min(120, Math.max(5, savedDelay));
         }
+        const savedHourCycle = localStorage.getItem("magic-calc-hour-cycle");
+        if (savedHourCycle === "12" || savedHourCycle === "24") {
+          dateHourCycle = savedHourCycle;
+        }
       } catch {
-        // Storage is optional; keep the default delay when unavailable.
+        // Storage is optional; keep the default settings when unavailable.
       }
       let trickState = {
         phase: "off",
@@ -1234,7 +1248,8 @@
 
       const computeDateTrickValues = (currentText, delaySeconds) => {
         const targetText = formatDateTarget(
-          new Date(Date.now() + delaySeconds * 1000)
+          new Date(Date.now() + delaySeconds * 1000),
+          dateHourCycle
         );
         const diff = decSub(
           decFromString(targetText),
@@ -1255,6 +1270,7 @@
         percentKey.classList.toggle("trick-ready", trickState.phase === "ready");
         penIcon.classList.toggle("date-armed", dateTrickState.phase !== "off");
         dateDelayValue.textContent = `${dateDelaySeconds}초`;
+        dateHourCycleButton.textContent = `${dateHourCycle}h`;
 
         let neededOp = null;
         let digitHintKey = null;
@@ -1450,6 +1466,17 @@
 
         if (button.dataset.dateAction === "close") {
           dateSettings.classList.remove("open");
+          return;
+        }
+
+        if (button.dataset.dateAction === "hour-cycle") {
+          dateHourCycle = dateHourCycle === "24" ? "12" : "24";
+          try {
+            localStorage.setItem("magic-calc-hour-cycle", dateHourCycle);
+          } catch {
+            // Keep the in-memory setting when storage is unavailable.
+          }
+          render();
           return;
         }
 
