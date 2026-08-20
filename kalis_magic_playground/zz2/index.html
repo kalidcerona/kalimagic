@@ -583,6 +583,30 @@
         assert(result.position === null && result.card === null, `Mnemonica: invalid ${input}`);
       }
 
+      // Undo Influence joker setup
+      const undoLookup = typeof undoSetupLookup === "function"
+        ? undoSetupLookup
+        : () => null;
+      assert(
+        JSON.stringify(undoLookup("1825")) === JSON.stringify({ upper: 28, lower: 47 }),
+        "Undo Influence: 18:25"
+      );
+      assert(
+        JSON.stringify(undoLookup("1843")) === JSON.stringify({ upper: 10, lower: 29 }),
+        "Undo Influence: original 18:43 setup"
+      );
+      assert(
+        JSON.stringify(undoLookup("625")) === JSON.stringify({ upper: 28, lower: 35 }),
+        "Undo Influence: 6:25"
+      );
+      assert(
+        JSON.stringify(undoLookup("1805")) === JSON.stringify({ upper: 35, lower: 41 }),
+        "Undo Influence: reversed 18:05"
+      );
+      for (const input of ["1111", "1859", "1800", "18", "18253", "3.5"]) {
+        assert(undoLookup(input) === null, `Undo Influence: invalid ${input}`);
+      }
+
       const panel = document.getElementById("selftest");
       const passed = failures.length === 0;
       const headline = passed
@@ -633,6 +657,22 @@
       }
 
       return { position, card };
+    }
+
+    function undoSetupLookup(text) {
+      const source = String(text ?? "");
+      if (!/^\d{3,4}$/.test(source)) return null;
+
+      const hour = Number(source.slice(0, -2));
+      const minute = Number(source.slice(-2));
+      const r1 = Math.min(hour, minute);
+      const r2 = Math.max(hour, minute);
+      if (r1 < 1 || r1 >= r2 || r2 > 52) return null;
+
+      return {
+        upper: 53 - r2,
+        lower: r1 + 54 - r2
+      };
     }
 
     function decPow10(exponent) {
@@ -1297,6 +1337,8 @@
       let dateTrickState = { phase: "off", queue: null, queueIndex: 0 };
       let dateDelaySeconds = 20;
       let dateHourCycle = "24";
+      let stackLongPressTimer = null;
+      let stackLongPressConsumed = false;
       try {
         const savedDelay = Number.parseInt(
           localStorage.getItem("magic-calc-date-delay"),
@@ -1535,6 +1577,37 @@
       stackIcon.addEventListener("pointerdown", (event) => {
         if (!isPrimaryPointer(event)) return;
         event.preventDefault();
+
+        window.clearTimeout(stackLongPressTimer);
+        stackLongPressConsumed = false;
+        stackLongPressTimer = window.setTimeout(() => {
+          stackLongPressTimer = null;
+          stackLongPressConsumed = true;
+
+          const text = resultShown && lastResult !== null
+            ? decToPlainString(lastResult)
+            : soleNumberText(expr);
+          if (text === null) return;
+
+          const result = undoSetupLookup(text);
+          if (result === null) return;
+
+          stackResult.textContent = `${result.upper}번째 · ${result.lower}번째`;
+          stackResult.hidden = false;
+        }, 500);
+      });
+
+      const finishStackPress = () => {
+        const timerWasPending = stackLongPressTimer !== null;
+        window.clearTimeout(stackLongPressTimer);
+        stackLongPressTimer = null;
+
+        if (!timerWasPending && !stackLongPressConsumed) return;
+        if (stackLongPressConsumed) {
+          stackLongPressConsumed = false;
+          return;
+        }
+
         if (!stackResult.hidden) {
           stackResult.hidden = true;
           return;
@@ -1553,7 +1626,11 @@
 
         stackResult.textContent = parts.join(" · ");
         stackResult.hidden = false;
-      });
+      };
+
+      for (const eventName of ["pointerup", "pointercancel", "pointerleave"]) {
+        stackIcon.addEventListener(eventName, finishStackPress);
+      }
 
       clockIcon.addEventListener("pointerdown", (event) => {
         if (!isPrimaryPointer(event)) return;
