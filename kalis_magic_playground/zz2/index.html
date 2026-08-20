@@ -135,6 +135,17 @@
       display: flex;
     }
 
+    #stack-result {
+      position: absolute;
+      top: clamp(2px, 1cqw, 6px);
+      right: 8px;
+      font-size: clamp(15px, 4cqw, 20px);
+      color: #8a8a8a;
+      letter-spacing: 0;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
     .display {
       min-width: 0;
       width: 100%;
@@ -292,7 +303,7 @@
           <path d="m5 18 12-12 2 2L7 20H5v-2Z"></path>
           <path d="m11 12 2 2m1-5 2 2m-8 4 2 2"></path>
         </svg>
-        <span class="root-mark">√</span>
+        <span class="root-mark" id="stack-icon">√</span>
       </span>
     </div>
 
@@ -305,6 +316,7 @@
     </div>
 
     <div class="display-wrap">
+      <span id="stack-result" hidden></span>
       <output class="display" id="display" aria-live="polite">0</output>
     </div>
 
@@ -546,6 +558,31 @@
       assert(ev(seq(["7","÷","0"])) === null, "E2E4: 7÷0 오류");
       assert(show(ev(seq(["1","2","+","3","4","×","5"]))) === "230", "E2E1: 12+34×5=230");
 
+      // Mnemonica stack lookup
+      const stack = typeof MNEMONICA === "undefined" ? [] : MNEMONICA;
+      const lookup = typeof mnemonicaLookup === "function"
+        ? mnemonicaLookup
+        : () => ({ position: null, card: null });
+      assert(stack.length === 52, "Mnemonica: 52 cards");
+      assert(new Set(stack).size === 52, "Mnemonica: all cards unique");
+      assert(
+        ["S", "H", "C", "D"].every(
+          (suit) => stack.filter((entry) => entry.endsWith(suit)).length === 13
+        ),
+        "Mnemonica: 13 cards per suit"
+      );
+      assert(lookup("11").position === 7 && lookup("11").card === "♥Q", "Mnemonica: 11");
+      assert(lookup("113").position === 31 && lookup("113").card === null, "Mnemonica: 113");
+      assert(lookup("43").position === 12 && lookup("43").card === "♣A", "Mnemonica: 43");
+      assert(lookup("1").position === null && lookup("1").card === "♣4", "Mnemonica: 1");
+      assert(lookup("52").position === null && lookup("52").card === "♦9", "Mnemonica: 52");
+      assert(lookup("310").position === 24 && lookup("310").card === null, "Mnemonica: 310");
+      assert(lookup("413").position === 26 && lookup("413").card === null, "Mnemonica: 413");
+      for (const input of ["999", "-5", "3.5", ""]) {
+        const result = lookup(input);
+        assert(result.position === null && result.card === null, `Mnemonica: invalid ${input}`);
+      }
+
       const panel = document.getElementById("selftest");
       const passed = failures.length === 0;
       const headline = passed
@@ -557,6 +594,45 @@
         : `${headline}\n${failures.map((name) => `- ${name}`).join("\n")}`;
       console[passed ? "log" : "error"](panel.textContent);
       return { assertions, failures };
+    }
+
+    const MNEMONICA = [
+      "4C","2H","7D","3C","4H","6D","AS","5H","9S","2S",
+      "QH","3D","QC","8H","6S","5S","9H","KC","2D","JH",
+      "3S","8S","6H","10C","5D","KD","2C","3H","8D","5C",
+      "KS","JD","8C","10S","KH","JC","7S","10H","AD","4S",
+      "7H","4D","AC","9C","JS","QD","7C","QS","10D","6C",
+      "AH","9D"
+    ];
+
+    function mnemonicaLookup(text) {
+      const source = String(text ?? "");
+      if (!/^\d+$/.test(source)) return { position: null, card: null };
+
+      const suitLetters = { 1: "S", 2: "H", 3: "C", 4: "D" };
+      const suitSymbols = { S: "♠", H: "♥", C: "♣", D: "♦" };
+      const valueLabels = { 1: "A", 11: "J", 12: "Q", 13: "K" };
+      const code = /^([1-4])([1-9])$/.exec(source) ??
+        /^([1-4])(1[0-3])$/.exec(source);
+      let position = null;
+      let card = null;
+
+      if (code !== null) {
+        const value = Number(code[2]);
+        const stackCode = `${valueLabels[value] ?? value}${suitLetters[code[1]]}`;
+        const index = MNEMONICA.indexOf(stackCode);
+        position = index === -1 ? null : index + 1;
+      }
+
+      const stackPosition = Number(source);
+      if (Number.isInteger(stackPosition) && stackPosition >= 1 && stackPosition <= 52) {
+        const stackCard = /^(10|[2-9]|[AJQK])([SHCD])$/.exec(
+          MNEMONICA[stackPosition - 1]
+        );
+        card = `${suitSymbols[stackCard[2]]}${stackCard[1]}`;
+      }
+
+      return { position, card };
     }
 
     function decPow10(exponent) {
@@ -1204,6 +1280,8 @@
       const percentKey = keypad.querySelector('[data-key="%"]');
       const penIcon = document.getElementById("pen-icon");
       const clockIcon = document.getElementById("clock-icon");
+      const stackIcon = document.getElementById("stack-icon");
+      const stackResult = document.getElementById("stack-result");
       const dateSettings = document.getElementById("date-settings");
       const dateDelayValue = document.getElementById("date-delay-value");
       const dateHourCycleButton = document.getElementById("date-hour-cycle");
@@ -1296,6 +1374,8 @@
       };
 
       const handleKey = (key) => {
+        stackResult.hidden = true;
+
         if (dateTrickState.phase !== "off") {
           const currentText = currentValueText();
           const ctx = { currentValueText: currentText };
@@ -1450,6 +1530,29 @@
           ? { phase: "armed", queue: null, queueIndex: 0 }
           : { phase: "off", queue: null, queueIndex: 0 };
         render();
+      });
+
+      stackIcon.addEventListener("pointerdown", (event) => {
+        if (!isPrimaryPointer(event)) return;
+        event.preventDefault();
+        if (!stackResult.hidden) {
+          stackResult.hidden = true;
+          return;
+        }
+
+        const text = resultShown && lastResult !== null
+          ? decToPlainString(lastResult)
+          : soleNumberText(expr);
+        if (text === null) return;
+
+        const result = mnemonicaLookup(text);
+        const parts = [];
+        if (result.position !== null) parts.push(`${result.position}번째`);
+        if (result.card !== null) parts.push(result.card);
+        if (parts.length === 0) return;
+
+        stackResult.textContent = parts.join(" · ");
+        stackResult.hidden = false;
       });
 
       clockIcon.addEventListener("pointerdown", (event) => {
