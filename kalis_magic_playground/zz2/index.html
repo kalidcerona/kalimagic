@@ -368,7 +368,7 @@
       };
 
       const d = (str) => decFromString(str);
-      const show = (a) => decToDisplay(a);
+      const show = (a) => a === null ? "(null)" : decToDisplay(a);
       assert(show(d("8.17")) === "8.17", "roundtrip 8.17");
       assert(show(d("-5")) === "-5", "roundtrip -5");
       assert(show(d("0817")) === "817", "display normalizes leading zero");
@@ -527,6 +527,46 @@
       assert(formatDateTarget(new Date(2026, 7, 20, 0, 30), "12") === "268201230", "date target: 12h midnight");
       assert(formatDateTarget(new Date(2026, 7, 20, 12, 5), "12") === "26820125", "date target: 12h noon");
       assert(formatDateTarget(new Date(2026, 7, 20, 21, 47)) === "268202147", "date target: default 24h");
+      const dateTarget = typeof dateTrickTarget === "function"
+        ? dateTrickTarget
+        : () => null;
+      const dateNowMs = new Date(2026, 7, 20, 21, 46, 40).getTime();
+      const datePlus = dateTarget("86419746", dateNowMs, 20, "24");
+      assert(
+        datePlus?.targetText === "268202147" &&
+        datePlus.neededOp === "+" &&
+        datePlus.queueText === "181782401",
+        "date target round trip: plus values"
+      );
+      assert(
+        datePlus !== null &&
+        decToPlainString(decAdd(d("86419746"), d(datePlus.queueText))) === datePlus.targetText,
+        "date target round trip: plus arithmetic"
+      );
+      const dateMinus = dateTarget("999999999", dateNowMs, 20, "24");
+      assert(
+        dateMinus?.targetText === "268202147" &&
+        dateMinus.neededOp === "−" &&
+        dateMinus.queueText === "731797852",
+        "date target round trip: minus values"
+      );
+      assert(
+        dateMinus !== null &&
+        decToPlainString(decSub(d("999999999"), d(dateMinus.queueText))) === dateMinus.targetText,
+        "date target round trip: minus arithmetic"
+      );
+      const date12h = dateTarget("10000000", dateNowMs, 20, "12");
+      assert(
+        date12h?.targetText === "26820947" &&
+        date12h.neededOp === "+" &&
+        date12h.queueText === "16820947",
+        "date target round trip: 12h values"
+      );
+      assert(
+        date12h !== null &&
+        decToPlainString(decAdd(d("10000000"), d(date12h.queueText))) === date12h.targetText,
+        "date target round trip: 12h arithmetic"
+      );
       const DT0={phase:"off",queue:null,queueIndex:0};
       const DTARM={phase:"armed",queue:null,queueIndex:0};
       const dt=(s,key,ctx={})=>dateTrickStep(s,key,ctx);
@@ -546,7 +586,14 @@
       assert(dt({phase:"entering",queue:"123",queueIndex:2},"C").state.phase==="off","date trick: C cancels");
       assert(dt({phase:"entering",queue:"123",queueIndex:3},"=").state.phase==="off","date trick: equals is one-shot");
       dtStep=dt(DTARM,"−",{currentValueText:"100",targetText:"223",neededOp:"+",queueText:"123"});
-      assert(dtStep.state.phase==="armed"&&dtStep.replaceKey==="−","date trick: wrong op stays armed");
+      assert(dtStep.state===DTARM&&dtStep.action==="swallow","date trick: wrong op stays armed");
+      const DTENTER={phase:"entering",queue:"123",queueIndex:0};
+      for (const key of ["%", "×"]) {
+        dtStep=dt(DTENTER,key);
+        assert(dtStep.state===DTENTER&&dtStep.action==="swallow",`date trick: entering swallows ${key}`);
+      }
+      dtStep=dt(DTENTER,"⌫");
+      assert(dtStep.state===DTENTER&&dtStep.action==="swallow","date trick: queue-start backspace swallowed");
       for (const key of ["0","9",".","+","−","×","÷","%","()","⌫","C","="]) {
         dtStep=dt(DT0,key);
         assert(dtStep.state===DT0&&dtStep.replaceKey===key&&dtStep.action==="none",`date trick: off passes ${key}`);
@@ -653,31 +700,48 @@
       "AH","9D"
     ];
 
+    const CARD_SUIT_LETTERS = { 1: "S", 2: "H", 3: "C", 4: "D" };
+    const CARD_SUIT_SYMBOLS = { S: "♠", H: "♥", C: "♣", D: "♦" };
+    const CARD_VALUE_LABELS = { 1: "A", 11: "J", 12: "Q", 13: "K" };
+    const TWO_DIGIT_CARD_CODE = /^([1-4])([1-9])$/;
+    const THREE_DIGIT_CARD_CODE = /^([1-4])(1[0-3])$/;
+    const STACK_CARD_CODE = /^(10|[2-9]|[AJQK])([SHCD])$/;
+
+    function parseCardCode(str) {
+      const source = String(str ?? "");
+      const code = TWO_DIGIT_CARD_CODE.exec(source) ??
+        THREE_DIGIT_CARD_CODE.exec(source);
+      return code === null
+        ? null
+        : { suit: code[1], value: Number(code[2]) };
+    }
+
+    function cardToStackCode({ suit, value }) {
+      return `${CARD_VALUE_LABELS[value] ?? value}${CARD_SUIT_LETTERS[suit]}`;
+    }
+
+    function formatStackCard(stackCode) {
+      const card = STACK_CARD_CODE.exec(stackCode);
+      return `${CARD_SUIT_SYMBOLS[card[2]]}${card[1]}`;
+    }
+
     function mnemonicaLookup(text) {
       const source = String(text ?? "");
       if (!/^\d+$/.test(source)) return { position: null, card: null };
 
-      const suitLetters = { 1: "S", 2: "H", 3: "C", 4: "D" };
-      const suitSymbols = { S: "♠", H: "♥", C: "♣", D: "♦" };
-      const valueLabels = { 1: "A", 11: "J", 12: "Q", 13: "K" };
-      const code = /^([1-4])([1-9])$/.exec(source) ??
-        /^([1-4])(1[0-3])$/.exec(source);
+      const cardCode = parseCardCode(source);
       let position = null;
       let card = null;
 
-      if (code !== null) {
-        const value = Number(code[2]);
-        const stackCode = `${valueLabels[value] ?? value}${suitLetters[code[1]]}`;
+      if (cardCode !== null) {
+        const stackCode = cardToStackCode(cardCode);
         const index = MNEMONICA.indexOf(stackCode);
         position = index === -1 ? null : index + 1;
       }
 
       const stackPosition = Number(source);
       if (Number.isInteger(stackPosition) && stackPosition >= 1 && stackPosition <= 52) {
-        const stackCard = /^(10|[2-9]|[AJQK])([SHCD])$/.exec(
-          MNEMONICA[stackPosition - 1]
-        );
-        card = `${suitSymbols[stackCard[2]]}${stackCard[1]}`;
+        card = formatStackCard(MNEMONICA[stackPosition - 1]);
       }
 
       return { position, card };
@@ -689,21 +753,15 @@
 
       const cardCode = source.slice(0, -2);
       const target = Number(source.slice(-2));
-      const code = /^([1-4])([1-9])$/.exec(cardCode) ??
-        /^([1-4])(1[0-3])$/.exec(cardCode);
-      if (code === null || target < 1 || target > 52) return null;
+      const card = parseCardCode(cardCode);
+      if (card === null || target < 1 || target > 52) return null;
 
-      const suitLetters = { 1: "S", 2: "H", 3: "C", 4: "D" };
-      const suitSymbols = { S: "♠", H: "♥", C: "♣", D: "♦" };
-      const valueLabels = { 1: "A", 11: "J", 12: "Q", 13: "K" };
-      const value = Number(code[2]);
-      const stackCode = `${valueLabels[value] ?? value}${suitLetters[code[1]]}`;
+      const stackCode = cardToStackCode(card);
       const position = MNEMONICA.indexOf(stackCode) + 1;
       const cut = (position - target + 52) % 52;
       const bottomCode = MNEMONICA[cut === 0 ? 51 : cut - 1];
-      const bottomCard = /^(10|[2-9]|[AJQK])([SHCD])$/.exec(bottomCode);
 
-      return { cut, bottom: `${suitSymbols[bottomCard[2]]}${bottomCard[1]}` };
+      return { cut, bottom: formatStackCard(bottomCode) };
     }
 
     function undoSetupLookup(text) {
@@ -1183,6 +1241,22 @@
       );
     }
 
+    function dateTrickTarget(currentText, nowMs, delaySeconds, hourCycle) {
+      const targetText = formatDateTarget(
+        new Date(nowMs + delaySeconds * 1000),
+        hourCycle
+      );
+      const diff = decSub(
+        decFromString(targetText),
+        decFromString(currentText)
+      );
+      return {
+        targetText,
+        neededOp: diff.s >= 0 ? "+" : "−",
+        queueText: decToPlainString(diff.s >= 0 ? diff : { ...diff, s: 1 })
+      };
+    }
+
     function dateTrickStep(state, key, ctx) {
       if (
         state.phase === "armed" &&
@@ -1201,7 +1275,7 @@
             replaceKey: key
           };
         }
-        return { state, action: "none", replaceKey: key };
+        return { state, action: "swallow" };
       }
 
       if (state.phase === "entering") {
@@ -1216,8 +1290,11 @@
           return { state, action: "swallow", replaceKey: key };
         }
         if (key === "⌫") {
+          if (state.queueIndex === 0) {
+            return { state, action: "swallow" };
+          }
           return {
-            state: { ...state, queueIndex: Math.max(0, state.queueIndex - 1) },
+            state: { ...state, queueIndex: state.queueIndex - 1 },
             action: "none",
             replaceKey: key
           };
@@ -1229,6 +1306,7 @@
             replaceKey: key
           };
         }
+        return { state, action: "swallow" };
       }
 
       return { state, action: "none", replaceKey: key };
@@ -1413,22 +1491,18 @@
           ? decToPlainString(lastResult)
           : soleNumberText(expr);
 
-      const computeDateTrickValues = (currentText, delaySeconds) => {
-        const targetText = formatDateTarget(
-          new Date(Date.now() + delaySeconds * 1000),
+      const dateResultText = () =>
+        resultShown && lastResult !== null
+          ? decToPlainString(lastResult)
+          : null;
+
+      const computeDateTrickValues = (currentText) =>
+        dateTrickTarget(
+          currentText,
+          Date.now(),
+          dateDelaySeconds,
           dateHourCycle
         );
-        const diff = decSub(
-          decFromString(targetText),
-          decFromString(currentText)
-        );
-        return {
-          targetText,
-          diff,
-          neededOp: diff.s >= 0 ? "+" : "−",
-          queueText: decToPlainString(diff.s >= 0 ? diff : { ...diff, s: 1 })
-        };
-      };
 
       const render = () => {
         const rawDisplay = errorShown ? "오류" : displayValue(expr);
@@ -1441,12 +1515,9 @@
 
         let neededOp = null;
         let digitHintKey = null;
-        const currentText = currentValueText();
+        const currentText = dateResultText();
         if (dateTrickState.phase === "armed" && currentText !== null) {
-          const dateValues = computeDateTrickValues(
-            currentText,
-            dateDelaySeconds
-          );
+          const dateValues = computeDateTrickValues(currentText);
           neededOp = dateValues.neededOp;
           const digitCount = (dateValues.queueText.match(/\d/g) ?? []).length;
           if (digitCount >= 1 && digitCount <= 10) {
@@ -1466,7 +1537,7 @@
         stackResult.hidden = true;
 
         if (dateTrickState.phase !== "off") {
-          const currentText = currentValueText();
+          const currentText = dateResultText();
           const ctx = { currentValueText: currentText };
 
           if (
@@ -1476,7 +1547,7 @@
           ) {
             Object.assign(
               ctx,
-              computeDateTrickValues(currentText, dateDelaySeconds)
+              computeDateTrickValues(currentText)
             );
           }
 
@@ -1624,6 +1695,9 @@
       stackIcon.addEventListener("pointerdown", (event) => {
         if (!isPrimaryPointer(event)) return;
         event.preventDefault();
+        try {
+          stackIcon.setPointerCapture?.(event.pointerId);
+        } catch {}
 
         window.clearTimeout(stackLongPressTimer);
         stackLongPressConsumed = false;
@@ -1631,9 +1705,7 @@
           stackLongPressTimer = null;
           stackLongPressConsumed = true;
 
-          const text = resultShown && lastResult !== null
-            ? decToPlainString(lastResult)
-            : soleNumberText(expr);
+          const text = currentValueText();
           if (text === null) return;
 
           const result = undoSetupLookup(text);
@@ -1660,9 +1732,7 @@
           return;
         }
 
-        const text = resultShown && lastResult !== null
-          ? decToPlainString(lastResult)
-          : soleNumberText(expr);
+        const text = currentValueText();
         if (text === null) return;
 
         const cutResult = mnemonicaCutLookup(text);
@@ -1682,9 +1752,15 @@
         stackResult.hidden = false;
       };
 
-      for (const eventName of ["pointerup", "pointercancel", "pointerleave"]) {
-        stackIcon.addEventListener(eventName, finishStackPress);
-      }
+      const cancelStackPress = () => {
+        window.clearTimeout(stackLongPressTimer);
+        stackLongPressTimer = null;
+        stackLongPressConsumed = false;
+      };
+
+      stackIcon.addEventListener("pointerup", finishStackPress);
+      stackIcon.addEventListener("pointercancel", cancelStackPress);
+      stackIcon.addEventListener("pointerleave", cancelStackPress);
 
       clockIcon.addEventListener("pointerdown", (event) => {
         if (!isPrimaryPointer(event)) return;
