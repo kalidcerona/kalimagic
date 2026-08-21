@@ -583,6 +583,30 @@
         assert(result.position === null && result.card === null, `Mnemonica: invalid ${input}`);
       }
 
+      // Mnemonica cut lookup
+      const cutLookup = typeof mnemonicaCutLookup === "function"
+        ? mnemonicaCutLookup
+        : () => null;
+      assert(
+        JSON.stringify(cutLookup("1337")) === JSON.stringify({ cut: 36, bottom: "♣J" }),
+        "Mnemonica cut: ♠3 to position 37"
+      );
+      assert(
+        JSON.stringify(cutLookup("1101")) === JSON.stringify({ cut: 6, bottom: "♦6" }),
+        "Mnemonica cut: ♠A to position 01"
+      );
+      assert(
+        JSON.stringify(cutLookup("11001")) === JSON.stringify({ cut: 33, bottom: "♣8" }),
+        "Mnemonica cut: ♠10 to position 01"
+      );
+      assert(
+        JSON.stringify(cutLookup("1107")) === JSON.stringify({ cut: 0, bottom: "♦9" }),
+        "Mnemonica cut: no cut"
+      );
+      for (const input of ["1353", "5137", "137", "11", "113705", "3.5", ""]) {
+        assert(cutLookup(input) === null, `Mnemonica cut: invalid ${input}`);
+      }
+
       // Undo Influence joker setup
       const undoLookup = typeof undoSetupLookup === "function"
         ? undoSetupLookup
@@ -657,6 +681,29 @@
       }
 
       return { position, card };
+    }
+
+    function mnemonicaCutLookup(text) {
+      const source = String(text ?? "");
+      if (!/^\d{4,5}$/.test(source)) return null;
+
+      const cardCode = source.slice(0, -2);
+      const target = Number(source.slice(-2));
+      const code = /^([1-4])([1-9])$/.exec(cardCode) ??
+        /^([1-4])(1[0-3])$/.exec(cardCode);
+      if (code === null || target < 1 || target > 52) return null;
+
+      const suitLetters = { 1: "S", 2: "H", 3: "C", 4: "D" };
+      const suitSymbols = { S: "♠", H: "♥", C: "♣", D: "♦" };
+      const valueLabels = { 1: "A", 11: "J", 12: "Q", 13: "K" };
+      const value = Number(code[2]);
+      const stackCode = `${valueLabels[value] ?? value}${suitLetters[code[1]]}`;
+      const position = MNEMONICA.indexOf(stackCode) + 1;
+      const cut = (position - target + 52) % 52;
+      const bottomCode = MNEMONICA[cut === 0 ? 51 : cut - 1];
+      const bottomCard = /^(10|[2-9]|[AJQK])([SHCD])$/.exec(bottomCode);
+
+      return { cut, bottom: `${suitSymbols[bottomCard[2]]}${bottomCard[1]}` };
     }
 
     function undoSetupLookup(text) {
@@ -1617,6 +1664,13 @@
           ? decToPlainString(lastResult)
           : soleNumberText(expr);
         if (text === null) return;
+
+        const cutResult = mnemonicaCutLookup(text);
+        if (cutResult !== null) {
+          stackResult.textContent = `${cutResult.cut}장 · ${cutResult.bottom}`;
+          stackResult.hidden = false;
+          return;
+        }
 
         const result = mnemonicaLookup(text);
         const parts = [];
