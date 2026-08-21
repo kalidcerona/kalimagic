@@ -57,6 +57,7 @@
       gap: var(--layout-gap);
       overflow: hidden;
       background: #000;
+      position: relative;
     }
 
     .toolbar {
@@ -73,6 +74,7 @@
       display: flex;
       align-items: center;
       gap: 17px;
+      pointer-events: auto;
     }
 
     .toolbar svg {
@@ -91,8 +93,66 @@
       line-height: 1;
     }
 
+    #pen-icon.date-armed path:first-of-type {
+      fill: #fff;
+    }
+
+    .date-settings {
+      position: absolute;
+      z-index: 2;
+      top: calc(var(--pad-block-start) + var(--toolbar-height) + var(--layout-gap));
+      left: clamp(18px, 4vw, 24px);
+      display: none;
+      flex-wrap: wrap;
+      align-items: center;
+      max-width: calc(100vw - 36px);
+      gap: 10px;
+      padding: 10px 12px;
+      border: 1px solid #252525;
+      border-radius: 12px;
+      background: #090909;
+      color: #b8b8b8;
+      font-size: 15px;
+    }
+
+    .date-settings.open {
+      display: flex;
+    }
+
+    .date-settings button {
+      border: 0;
+      border-radius: 8px;
+      padding: 6px 10px;
+      background: #242424;
+      color: #d8d8d8;
+      touch-action: manipulation;
+    }
+
+    .date-settings-value {
+      min-width: 42px;
+      text-align: center;
+    }
+
+    .display-wrap {
+      position: relative;
+      min-width: 0;
+      display: flex;
+    }
+
+    #stack-result {
+      position: absolute;
+      top: clamp(2px, 1cqw, 6px);
+      right: 8px;
+      font-size: clamp(15px, 4cqw, 20px);
+      color: #8a8a8a;
+      letter-spacing: 0;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
     .display {
       min-width: 0;
+      width: 100%;
       display: flex;
       align-items: end;
       justify-content: end;
@@ -131,6 +191,7 @@
     }
 
     .key {
+      position: relative;
       width: var(--btn);
       height: var(--btn);
       border: 0;
@@ -145,6 +206,20 @@
       user-select: none;
       touch-action: manipulation;
       transition: background-color 80ms ease, filter 80ms ease, opacity 120ms ease;
+    }
+
+    .key.date-key-hint::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: clamp(6px, 2cqw, 10px);
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: #fff;
+      opacity: 0.85;
+      pointer-events: none;
+      transform: translateX(-50%);
     }
 
     .key:active,
@@ -197,6 +272,95 @@
       opacity: 1;
     }
 
+    .key.sign {
+      display: none;
+    }
+
+    .calculator.skin-iphone {
+      --iphone-digit-bg: #333333;
+      --iphone-function-bg: #a5a5a5;
+      --iphone-operator-bg: #ff9f0a;
+      background: #000;
+      color: #fff;
+      font-family: system-ui, sans-serif;
+    }
+
+    .skin-iphone .toolbar svg,
+    .skin-iphone .root-mark {
+      opacity: 0;
+    }
+
+    .skin-iphone .toolbar-tools {
+      position: relative;
+    }
+
+    .skin-iphone .toolbar-tools:has(#pen-icon.date-armed)::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: calc(clamp(25px, 6cqw, 32px) / 2 - 2.5px);
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: #5a5a5a;
+      pointer-events: none;
+      transform: translateY(-50%);
+    }
+
+    .skin-iphone .display {
+      color: #fff;
+      font-size: clamp(56px, 18cqw, 88px);
+      font-weight: 200;
+      letter-spacing: -0.055em;
+    }
+
+    .skin-iphone .key {
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: var(--iphone-digit-bg);
+      color: #fff;
+    }
+
+    .skin-iphone .key.sign {
+      display: grid;
+    }
+
+    .skin-iphone .key.backspace,
+    .skin-iphone .key.parentheses {
+      display: none;
+    }
+
+    .skin-iphone .key.utility,
+    .skin-iphone .key.sign,
+    .skin-iphone .key[data-key="%"] {
+      background: var(--iphone-function-bg);
+      color: #000;
+    }
+
+    .skin-iphone .key[data-key="÷"],
+    .skin-iphone .key[data-key="×"],
+    .skin-iphone .key[data-key="−"],
+    .skin-iphone .key[data-key="+"],
+    .skin-iphone .key[data-key="="] {
+      background: var(--iphone-operator-bg);
+      color: #fff;
+    }
+
+    .skin-iphone .key[data-key="0"] {
+      width: auto;
+      aspect-ratio: auto;
+      grid-column: span 2;
+      border-radius: 999px;
+      place-items: center start;
+      padding-left: clamp(24px, 7cqw, 36px);
+    }
+
+    .skin-iphone .key.utility.date-key-hint::after,
+    .skin-iphone .key.sign.date-key-hint::after,
+    .skin-iphone .key[data-key="%"].date-key-hint::after {
+      background: #333;
+    }
+
     #selftest {
       display: none;
       min-height: 100dvh;
@@ -221,26 +385,40 @@
   <main class="calculator" id="app" aria-label="계산기">
     <div class="toolbar" aria-hidden="true">
       <span class="toolbar-icon">
-        <svg viewBox="0 0 24 24">
+        <svg id="clock-icon" viewBox="0 0 24 24">
           <path d="M3.5 12a8.5 8.5 0 1 0 2.2-5.7"></path>
           <path d="M3.5 4.5v4h4"></path>
           <path d="M12 7.5V12l3 2"></path>
         </svg>
       </span>
       <span class="toolbar-tools">
-        <svg viewBox="0 0 24 24">
+        <svg id="pen-icon" viewBox="0 0 24 24">
           <path d="m5 18 12-12 2 2L7 20H5v-2Z"></path>
           <path d="m11 12 2 2m1-5 2 2m-8 4 2 2"></path>
         </svg>
-        <span class="root-mark">√</span>
+        <span class="root-mark" id="stack-icon">√</span>
       </span>
     </div>
 
-    <output class="display" id="display" aria-live="polite">0</output>
+    <div class="date-settings" id="date-settings" aria-hidden="true">
+      <button type="button" data-date-action="decrease">−</button>
+      <span class="date-settings-value" id="date-delay-value">20초</span>
+      <button type="button" data-date-action="increase">+</button>
+      <button type="button" data-date-action="hour-cycle" id="date-hour-cycle">24h</button>
+      <button type="button" data-date-action="skin" id="skin-toggle">스킨: 기본</button>
+      <button type="button" data-date-action="fullscreen">전체화면</button>
+      <button type="button" data-date-action="close">닫기</button>
+    </div>
+
+    <div class="display-wrap">
+      <span id="stack-result" hidden></span>
+      <output class="display" id="display" aria-live="polite">0</output>
+    </div>
 
     <section class="keypad" aria-label="계산기 키패드">
       <button class="key utility" type="button" data-key="C">C</button>
-      <button class="key utility" type="button" data-key="⌫" aria-label="지우기">⌫</button>
+      <button class="key utility backspace" type="button" data-key="⌫" aria-label="지우기">⌫</button>
+      <button class="key sign" type="button" data-key="±" aria-label="부호 전환">±</button>
       <button class="key operator" type="button" data-key="%" aria-label="퍼센트">
         <svg class="percent-glyph" viewBox="0 0 32 32" aria-hidden="true">
           <circle class="percent-mark" cx="8" cy="8" r="4.25"></circle>
@@ -286,7 +464,7 @@
       };
 
       const d = (str) => decFromString(str);
-      const show = (a) => decToDisplay(a);
+      const show = (a) => a === null ? "(null)" : decToDisplay(a);
       assert(show(d("8.17")) === "8.17", "roundtrip 8.17");
       assert(show(d("-5")) === "-5", "roundtrip -5");
       assert(show(d("0817")) === "817", "display normalizes leading zero");
@@ -333,6 +511,13 @@
       assert(seq(["−","−","5"]) === "-5", "단항 − 연타 무시");
       assert(seq(["1","2","3","⌫"]) === "12", "백스페이스");
       assert(seq(["1","2","C"]) === "", "C 전체 클리어");
+      assert(seq(["5","±"]) === "-5", "±: 양수 꼬리 숫자를 음수로");
+      assert(seq(["−","5","±"]) === "5", "±: 음수 꼬리 숫자를 양수로");
+      assert(seq(["1","2","+","3","±"]) === "12+-3", "±: 수식의 꼬리 숫자만 음수로");
+      assert(seq(["1","2","+","−","3","±"]) === "12+3", "±: 수식의 음수 꼬리 숫자만 양수로");
+      for (const expr of ["", "12+", "12×", "("]) {
+        assert(applyKey(expr, "±") === expr, `± no-op: ${expr || "empty"}`);
+      }
       assert(seq("1234567890123456".split("")) === "1234567890123456", "16자리 입력 허용");
       assert(seq("12345678901234567".split("")) === "1234567890123456", "17자리째 무시");
       assert(displayValue("123456789012÷") === "123456789012", "16자리 표시: 12자리 보존");
@@ -343,12 +528,14 @@
       const ev = (expr) => { const t = tokenize(expr); return t === null ? null : evaluate(t); };
       assert(show(ev(seq(["1","2","+","3","4","×","5"]))) === "230", "즉시계산: 12+34×5=230");
       assert(show(ev(seq(["9","×","9"]))) === "81", "9×9=81");
+      assert(show(ev(seq(["5","±","+","3"]))) === "-2", "± evaluate: 5 ± + 3 = -2");
       assert(show(ev(seq("999999999999".split("").concat(["+","1"])))) === "1000000000000", "13자리 결과 십진 표시(지수 아님)");
       assert(displayValue("") === "0", "display: 빈 수식 0");
       assert(displayValue("9×9×") === "81", "display: 연산자 직후 중간결과 81");
       assert(displayValue("9×9×3") === "3", "display: 숫자 입력 중엔 그 숫자");
       assert(displayValue("12+34×") === "46", "display: 좌→우 중간결과 46");
       assert(displayValue("-5") === "-5", "display: 단항 음수 입력 중");
+      assert(displayValue("12+-3") === "-3", "display: ±로 음수화한 꼬리 숫자");
       assert(displayValue("7÷0×") === "오류", "display: ÷0 중간결과는 오류");
       assert(displayValue("50%") === "0.5", "display: % 적용값");
       assert(show(ev("(2+3)×4")) === "20", "괄호");
@@ -436,11 +623,165 @@
       let n=st(T0,"%","9"); n=st(n.state,"5",null); n=st(n.state,"%",null);
       assert(n.state.phase==="off","% 사이 다른 키 = 세팅 안 됨");
 
+      // date-time reveal
+      assert(formatDateTarget(new Date(2026, 7, 20, 21, 47), "24") === "268202147", "date target: 24h example");
+      assert(formatDateTarget(new Date(2026, 7, 20, 8, 5), "24") === "2682085", "date target: 24h unpadded time");
+      assert(formatDateTarget(new Date(2026, 11, 31, 23, 59), "24") === "2612312359", "date target: 24h December");
+      assert(formatDateTarget(new Date(2026, 0, 9, 0, 5), "24") === "261905", "date target: 24h January midnight");
+      assert(formatDateTarget(new Date(2026, 7, 20, 21, 47), "12") === "26820947", "date target: 12h evening");
+      assert(formatDateTarget(new Date(2026, 7, 20, 0, 30), "12") === "268201230", "date target: 12h midnight");
+      assert(formatDateTarget(new Date(2026, 7, 20, 12, 5), "12") === "26820125", "date target: 12h noon");
+      assert(formatDateTarget(new Date(2026, 7, 20, 21, 47)) === "268202147", "date target: default 24h");
+      const dateTarget = typeof dateTrickTarget === "function"
+        ? dateTrickTarget
+        : () => null;
+      const dateNowMs = new Date(2026, 7, 20, 21, 46, 40).getTime();
+      const datePlus = dateTarget("86419746", dateNowMs, 20, "24");
+      assert(
+        datePlus?.targetText === "268202147" &&
+        datePlus.neededOp === "+" &&
+        datePlus.queueText === "181782401",
+        "date target round trip: plus values"
+      );
+      assert(
+        datePlus !== null &&
+        decToPlainString(decAdd(d("86419746"), d(datePlus.queueText))) === datePlus.targetText,
+        "date target round trip: plus arithmetic"
+      );
+      const dateMinus = dateTarget("999999999", dateNowMs, 20, "24");
+      assert(
+        dateMinus?.targetText === "268202147" &&
+        dateMinus.neededOp === "−" &&
+        dateMinus.queueText === "731797852",
+        "date target round trip: minus values"
+      );
+      assert(
+        dateMinus !== null &&
+        decToPlainString(decSub(d("999999999"), d(dateMinus.queueText))) === dateMinus.targetText,
+        "date target round trip: minus arithmetic"
+      );
+      const date12h = dateTarget("10000000", dateNowMs, 20, "12");
+      assert(
+        date12h?.targetText === "26820947" &&
+        date12h.neededOp === "+" &&
+        date12h.queueText === "16820947",
+        "date target round trip: 12h values"
+      );
+      assert(
+        date12h !== null &&
+        decToPlainString(decAdd(d("10000000"), d(date12h.queueText))) === date12h.targetText,
+        "date target round trip: 12h arithmetic"
+      );
+      const DT0={phase:"off",queue:null,queueIndex:0};
+      const DTARM={phase:"armed",queue:null,queueIndex:0};
+      const dt=(s,key,ctx={})=>dateTrickStep(s,key,ctx);
+      let dtStep=dt(DTARM,"+",{currentValueText:"100",targetText:"223",neededOp:"+",queueText:"123"});
+      assert(dtStep.state.phase==="entering"&&dtStep.state.queue==="123"&&dtStep.state.queueIndex===0,"date trick: correct op enters");
+      dtStep=dt(dtStep.state,"7");
+      assert(dtStep.replaceKey==="1"&&dtStep.state.queueIndex===1,"date trick: first forced digit");
+      dtStep=dt(dtStep.state,"8");
+      assert(dtStep.replaceKey==="2"&&dtStep.state.queueIndex===2,"date trick: second forced digit");
+      dtStep=dt(dtStep.state,"9");
+      assert(dtStep.replaceKey==="3"&&dtStep.state.queueIndex===3,"date trick: third forced digit");
+      dtStep=dt(dtStep.state,"0");
+      assert(dtStep.action==="swallow"&&dtStep.state.queueIndex===3,"date trick: extra digit swallowed");
+      dtStep=dt(dtStep.state,"⌫");
+      dtStep=dt(dtStep.state,"4");
+      assert(dtStep.replaceKey==="3"&&dtStep.state.queueIndex===3,"date trick: backspace rewinds queue");
+      assert(dt({phase:"entering",queue:"123",queueIndex:2},"C").state.phase==="off","date trick: C cancels");
+      assert(dt({phase:"entering",queue:"123",queueIndex:3},"=").state.phase==="off","date trick: equals is one-shot");
+      dtStep=dt(DTARM,"−",{currentValueText:"100",targetText:"223",neededOp:"+",queueText:"123"});
+      assert(dtStep.state===DTARM&&dtStep.action==="swallow","date trick: wrong op stays armed");
+      const DTENTER={phase:"entering",queue:"123",queueIndex:0};
+      for (const key of ["%", "×"]) {
+        dtStep=dt(DTENTER,key);
+        assert(dtStep.state===DTENTER&&dtStep.action==="swallow",`date trick: entering swallows ${key}`);
+      }
+      dtStep=dt(DTENTER,"⌫");
+      assert(dtStep.state===DTENTER&&dtStep.action==="swallow","date trick: queue-start backspace swallowed");
+      for (const key of ["0","9",".","+","−","×","÷","%","()","⌫","C","="]) {
+        dtStep=dt(DT0,key);
+        assert(dtStep.state===DT0&&dtStep.replaceKey===key&&dtStep.action==="none",`date trick: off passes ${key}`);
+      }
+
       assert(show(ev(seq(["5","+","+","7"]))) === "12", "E2E5: 5++7=12");
       assert(show(ev(seq(["5","+"])))=== "5", "E2E7: 5+=5");
       assert(show(ev(seq(["5",".","5",".","5"]))) === "5.55", "E2E6: 5.5.5=5.55");
       assert(ev(seq(["7","÷","0"])) === null, "E2E4: 7÷0 오류");
       assert(show(ev(seq(["1","2","+","3","4","×","5"]))) === "230", "E2E1: 12+34×5=230");
+
+      // Mnemonica stack lookup
+      const stack = typeof MNEMONICA === "undefined" ? [] : MNEMONICA;
+      const lookup = typeof mnemonicaLookup === "function"
+        ? mnemonicaLookup
+        : () => ({ position: null, card: null });
+      assert(stack.length === 52, "Mnemonica: 52 cards");
+      assert(new Set(stack).size === 52, "Mnemonica: all cards unique");
+      assert(
+        ["S", "H", "C", "D"].every(
+          (suit) => stack.filter((entry) => entry.endsWith(suit)).length === 13
+        ),
+        "Mnemonica: 13 cards per suit"
+      );
+      assert(lookup("11").position === 7 && lookup("11").card === "♥Q", "Mnemonica: 11");
+      assert(lookup("113").position === 31 && lookup("113").card === null, "Mnemonica: 113");
+      assert(lookup("43").position === 12 && lookup("43").card === "♣A", "Mnemonica: 43");
+      assert(lookup("1").position === null && lookup("1").card === "♣4", "Mnemonica: 1");
+      assert(lookup("52").position === null && lookup("52").card === "♦9", "Mnemonica: 52");
+      assert(lookup("310").position === 24 && lookup("310").card === null, "Mnemonica: 310");
+      assert(lookup("413").position === 26 && lookup("413").card === null, "Mnemonica: 413");
+      for (const input of ["999", "-5", "3.5", ""]) {
+        const result = lookup(input);
+        assert(result.position === null && result.card === null, `Mnemonica: invalid ${input}`);
+      }
+
+      // Mnemonica cut lookup
+      const cutLookup = typeof mnemonicaCutLookup === "function"
+        ? mnemonicaCutLookup
+        : () => null;
+      assert(
+        JSON.stringify(cutLookup("1337")) === JSON.stringify({ cut: 36, bottom: "♣J" }),
+        "Mnemonica cut: ♠3 to position 37"
+      );
+      assert(
+        JSON.stringify(cutLookup("1101")) === JSON.stringify({ cut: 6, bottom: "♦6" }),
+        "Mnemonica cut: ♠A to position 01"
+      );
+      assert(
+        JSON.stringify(cutLookup("11001")) === JSON.stringify({ cut: 33, bottom: "♣8" }),
+        "Mnemonica cut: ♠10 to position 01"
+      );
+      assert(
+        JSON.stringify(cutLookup("1107")) === JSON.stringify({ cut: 0, bottom: "♦9" }),
+        "Mnemonica cut: no cut"
+      );
+      for (const input of ["1353", "5137", "137", "11", "113705", "3.5", ""]) {
+        assert(cutLookup(input) === null, `Mnemonica cut: invalid ${input}`);
+      }
+
+      // Undo Influence joker setup
+      const undoLookup = typeof undoSetupLookup === "function"
+        ? undoSetupLookup
+        : () => null;
+      assert(
+        JSON.stringify(undoLookup("1825")) === JSON.stringify({ upper: 28, lower: 47 }),
+        "Undo Influence: 18:25"
+      );
+      assert(
+        JSON.stringify(undoLookup("1843")) === JSON.stringify({ upper: 10, lower: 29 }),
+        "Undo Influence: original 18:43 setup"
+      );
+      assert(
+        JSON.stringify(undoLookup("625")) === JSON.stringify({ upper: 28, lower: 35 }),
+        "Undo Influence: 6:25"
+      );
+      assert(
+        JSON.stringify(undoLookup("1805")) === JSON.stringify({ upper: 35, lower: 41 }),
+        "Undo Influence: reversed 18:05"
+      );
+      for (const input of ["1111", "1859", "1800", "18", "18253", "3.5"]) {
+        assert(undoLookup(input) === null, `Undo Influence: invalid ${input}`);
+      }
 
       const panel = document.getElementById("selftest");
       const passed = failures.length === 0;
@@ -453,6 +794,95 @@
         : `${headline}\n${failures.map((name) => `- ${name}`).join("\n")}`;
       console[passed ? "log" : "error"](panel.textContent);
       return { assertions, failures };
+    }
+
+    const MNEMONICA = [
+      "4C","2H","7D","3C","4H","6D","AS","5H","9S","2S",
+      "QH","3D","QC","8H","6S","5S","9H","KC","2D","JH",
+      "3S","8S","6H","10C","5D","KD","2C","3H","8D","5C",
+      "KS","JD","8C","10S","KH","JC","7S","10H","AD","4S",
+      "7H","4D","AC","9C","JS","QD","7C","QS","10D","6C",
+      "AH","9D"
+    ];
+
+    const CARD_SUIT_LETTERS = { 1: "S", 2: "H", 3: "C", 4: "D" };
+    const CARD_SUIT_SYMBOLS = { S: "♠", H: "♥", C: "♣", D: "♦" };
+    const CARD_VALUE_LABELS = { 1: "A", 11: "J", 12: "Q", 13: "K" };
+    const TWO_DIGIT_CARD_CODE = /^([1-4])([1-9])$/;
+    const THREE_DIGIT_CARD_CODE = /^([1-4])(1[0-3])$/;
+    const STACK_CARD_CODE = /^(10|[2-9]|[AJQK])([SHCD])$/;
+
+    function parseCardCode(str) {
+      const source = String(str ?? "");
+      const code = TWO_DIGIT_CARD_CODE.exec(source) ??
+        THREE_DIGIT_CARD_CODE.exec(source);
+      return code === null
+        ? null
+        : { suit: code[1], value: Number(code[2]) };
+    }
+
+    function cardToStackCode({ suit, value }) {
+      return `${CARD_VALUE_LABELS[value] ?? value}${CARD_SUIT_LETTERS[suit]}`;
+    }
+
+    function formatStackCard(stackCode) {
+      const card = STACK_CARD_CODE.exec(stackCode);
+      return `${CARD_SUIT_SYMBOLS[card[2]]}${card[1]}`;
+    }
+
+    function mnemonicaLookup(text) {
+      const source = String(text ?? "");
+      if (!/^\d+$/.test(source)) return { position: null, card: null };
+
+      const cardCode = parseCardCode(source);
+      let position = null;
+      let card = null;
+
+      if (cardCode !== null) {
+        const stackCode = cardToStackCode(cardCode);
+        const index = MNEMONICA.indexOf(stackCode);
+        position = index === -1 ? null : index + 1;
+      }
+
+      const stackPosition = Number(source);
+      if (Number.isInteger(stackPosition) && stackPosition >= 1 && stackPosition <= 52) {
+        card = formatStackCard(MNEMONICA[stackPosition - 1]);
+      }
+
+      return { position, card };
+    }
+
+    function mnemonicaCutLookup(text) {
+      const source = String(text ?? "");
+      if (!/^\d{4,5}$/.test(source)) return null;
+
+      const cardCode = source.slice(0, -2);
+      const target = Number(source.slice(-2));
+      const card = parseCardCode(cardCode);
+      if (card === null || target < 1 || target > 52) return null;
+
+      const stackCode = cardToStackCode(card);
+      const position = MNEMONICA.indexOf(stackCode) + 1;
+      const cut = (position - target + 52) % 52;
+      const bottomCode = MNEMONICA[cut === 0 ? 51 : cut - 1];
+
+      return { cut, bottom: formatStackCard(bottomCode) };
+    }
+
+    function undoSetupLookup(text) {
+      const source = String(text ?? "");
+      if (!/^\d{3,4}$/.test(source)) return null;
+
+      const hour = Number(source.slice(0, -2));
+      const minute = Number(source.slice(-2));
+      const r1 = Math.min(hour, minute);
+      const r2 = Math.max(hour, minute);
+      if (r1 < 1 || r1 >= r2 || r2 > 52) return null;
+
+      return {
+        upper: 53 - r2,
+        lower: r1 + 54 - r2
+      };
     }
 
     function decPow10(exponent) {
@@ -628,7 +1058,7 @@
 
     function applyKey(expr, key) {
       const source = String(expr ?? "");
-      const acceptedKeys = /^(?:[0-9]|\.|\+|−|×|÷|\(\)|%|C|⌫)$/;
+      const acceptedKeys = /^(?:[0-9]|\.|\+|−|×|÷|\(\)|%|±|C|⌫)$/;
 
       if (!acceptedKeys.test(key)) return source;
       if (key === "C") return "";
@@ -640,6 +1070,14 @@
       const binaryOperators = "+−×÷";
       const expectsOperand =
         source === "" || binaryOperators.includes(last) || last === "(" || last === "-";
+
+      if (key === "±") {
+        const trailingNumber = /(^|[+−×÷(])(-?)(\d+(?:\.\d*)?|\.\d+)$/.exec(source);
+        if (trailingNumber === null) return source;
+        const [numberText, prefix, sign, digits] = trailingNumber;
+        const toggledNumber = `${prefix}${sign === "-" ? "" : "-"}${digits}`;
+        return withinTokenLimit(`${source.slice(0, -numberText.length)}${toggledNumber}`);
+      }
 
       if (/^\d$/.test(key)) {
         const currentNumber = /[\d.]+$/.exec(source)?.[0] ?? "";
@@ -903,6 +1341,90 @@
       return /^-?(?:\d+(?:\.\d*)?|\.\d+)$/.test(source) ? source : null;
     }
 
+    function formatDateTarget(date, hourCycle = "24") {
+      const hour = hourCycle === "12"
+        ? ((date.getHours() + 11) % 12) + 1
+        : date.getHours();
+      return (
+        String(date.getFullYear() % 100) +
+        String(date.getMonth() + 1) +
+        String(date.getDate()) +
+        String(hour) +
+        String(date.getMinutes())
+      );
+    }
+
+    function dateTrickTarget(currentText, nowMs, delaySeconds, hourCycle) {
+      const targetText = formatDateTarget(
+        new Date(nowMs + delaySeconds * 1000),
+        hourCycle
+      );
+      const diff = decSub(
+        decFromString(targetText),
+        decFromString(currentText)
+      );
+      return {
+        targetText,
+        neededOp: diff.s >= 0 ? "+" : "−",
+        queueText: decToPlainString(diff.s >= 0 ? diff : { ...diff, s: 1 })
+      };
+    }
+
+    function dateTrickStep(state, key, ctx) {
+      if (
+        state.phase === "armed" &&
+        (key === "+" || key === "−") &&
+        typeof ctx?.currentValueText === "string" &&
+        typeof ctx?.targetText === "string"
+      ) {
+        if (key === ctx.neededOp) {
+          return {
+            state: {
+              phase: "entering",
+              queue: ctx.queueText,
+              queueIndex: 0
+            },
+            action: "none",
+            replaceKey: key
+          };
+        }
+        return { state, action: "swallow" };
+      }
+
+      if (state.phase === "entering") {
+        if (/^[0-9.]$/.test(key)) {
+          if (state.queueIndex < state.queue.length) {
+            return {
+              state: { ...state, queueIndex: state.queueIndex + 1 },
+              action: "none",
+              replaceKey: state.queue[state.queueIndex]
+            };
+          }
+          return { state, action: "swallow", replaceKey: key };
+        }
+        if (key === "⌫") {
+          if (state.queueIndex === 0) {
+            return { state, action: "swallow" };
+          }
+          return {
+            state: { ...state, queueIndex: state.queueIndex - 1 },
+            action: "none",
+            replaceKey: key
+          };
+        }
+        if (key === "C" || key === "=") {
+          return {
+            state: { phase: "off", queue: null, queueIndex: 0 },
+            action: "none",
+            replaceKey: key
+          };
+        }
+        return { state, action: "swallow" };
+      }
+
+      return { state, action: "none", replaceKey: key };
+    }
+
     function trickErrorGate(state, key) {
       if (key === "C") return "pass";
       if (key === "=" && state.phase === "ready") return "pass";
@@ -1031,13 +1553,55 @@
     }
 
     function setupCalculator() {
+      const app = document.getElementById("app");
       const display = document.getElementById("display");
       const keypad = document.querySelector(".keypad");
+      const clearKey = keypad.querySelector('[data-key="C"]');
       const percentKey = keypad.querySelector('[data-key="%"]');
+      const penIcon = document.getElementById("pen-icon");
+      const clockIcon = document.getElementById("clock-icon");
+      const stackIcon = document.getElementById("stack-icon");
+      const stackResult = document.getElementById("stack-result");
+      const dateSettings = document.getElementById("date-settings");
+      const dateDelayValue = document.getElementById("date-delay-value");
+      const dateHourCycleButton = document.getElementById("date-hour-cycle");
+      const skinToggleButton = document.getElementById("skin-toggle");
+      const dateHintKeys = keypad.querySelectorAll(
+        '[data-key="+"], [data-key="−"], [data-key="0"], [data-key="1"], ' +
+        '[data-key="2"], [data-key="3"], [data-key="4"], [data-key="5"], ' +
+        '[data-key="6"], [data-key="7"], [data-key="8"], [data-key="9"]'
+      );
       let expr = "";
       let resultShown = false;
       let lastResult = null;
       let errorShown = false;
+      let dateTrickState = { phase: "off", queue: null, queueIndex: 0 };
+      let dateDelaySeconds = 20;
+      let dateHourCycle = "24";
+      let skin = /iPhone|iPad|iPod/.test(navigator.userAgent)
+        ? "iphone"
+        : "default";
+      let stackLongPressTimer = null;
+      let stackLongPressConsumed = false;
+      try {
+        const savedDelay = Number.parseInt(
+          localStorage.getItem("magic-calc-date-delay"),
+          10
+        );
+        if (Number.isInteger(savedDelay)) {
+          dateDelaySeconds = Math.min(120, Math.max(5, savedDelay));
+        }
+        const savedHourCycle = localStorage.getItem("magic-calc-hour-cycle");
+        if (savedHourCycle === "12" || savedHourCycle === "24") {
+          dateHourCycle = savedHourCycle;
+        }
+        const savedSkin = localStorage.getItem("magic-calc-skin");
+        if (savedSkin === "default" || savedSkin === "iphone") {
+          skin = savedSkin;
+        }
+      } catch {
+        // Storage is optional; keep the default settings when unavailable.
+      }
       let trickState = {
         phase: "off",
         storedText: null,
@@ -1045,15 +1609,85 @@
         pendingSole: null
       };
 
+      const currentValueText = () =>
+        resultShown && lastResult !== null
+          ? decToPlainString(lastResult)
+          : soleNumberText(expr);
+
+      const dateResultText = () =>
+        resultShown && lastResult !== null
+          ? decToPlainString(lastResult)
+          : null;
+
+      const computeDateTrickValues = (currentText) =>
+        dateTrickTarget(
+          currentText,
+          Date.now(),
+          dateDelaySeconds,
+          dateHourCycle
+        );
+
+      const displayedValue = () =>
+        errorShown ? "오류" : displayValue(expr);
+
       const render = () => {
-        const rawDisplay = errorShown ? "오류" : displayValue(expr);
+        const rawDisplay = displayedValue();
+        app.classList.toggle("skin-iphone", skin === "iphone");
         display.textContent = formatDisplay(rawDisplay);
+        clearKey.textContent = skin === "iphone" && rawDisplay !== "0" && rawDisplay !== "오류"
+          ? "⌫"
+          : skin === "iphone" ? "AC" : "C";
         percentKey.classList.toggle("trick-set", trickState.phase === "set");
         percentKey.classList.toggle("trick-ready", trickState.phase === "ready");
+        penIcon.classList.toggle("date-armed", dateTrickState.phase !== "off");
+        dateDelayValue.textContent = `${dateDelaySeconds}초`;
+        dateHourCycleButton.textContent = `${dateHourCycle}h`;
+        skinToggleButton.textContent = skin === "iphone" ? "스킨: 아이폰" : "스킨: 기본";
+
+        let neededOp = null;
+        let digitHintKey = null;
+        const currentText = dateResultText();
+        if (dateTrickState.phase === "armed" && currentText !== null) {
+          const dateValues = computeDateTrickValues(currentText);
+          neededOp = dateValues.neededOp;
+          const digitCount = (dateValues.queueText.match(/\d/g) ?? []).length;
+          if (digitCount >= 1 && digitCount <= 10) {
+            digitHintKey = String(digitCount % 10);
+          }
+        }
+        dateHintKeys.forEach((key) => {
+          key.classList.toggle(
+            "date-key-hint",
+            key.dataset.key === neededOp || key.dataset.key === digitHintKey
+          );
+        });
         fitDisplayText(display);
       };
 
       const handleKey = (key) => {
+        stackResult.hidden = true;
+
+        if (dateTrickState.phase !== "off") {
+          const currentText = dateResultText();
+          const ctx = { currentValueText: currentText };
+
+          if (
+            dateTrickState.phase === "armed" &&
+            (key === "+" || key === "−") &&
+            currentText !== null
+          ) {
+            Object.assign(
+              ctx,
+              computeDateTrickValues(currentText)
+            );
+          }
+
+          const dateTransition = dateTrickStep(dateTrickState, key, ctx);
+          dateTrickState = dateTransition.state;
+          if (dateTransition.action === "swallow") return;
+          key = dateTransition.replaceKey;
+        }
+
         if (errorShown && trickErrorGate(trickState, key) === "blocked") return;
 
         if (key === "%") {
@@ -1177,7 +1811,160 @@
         event.preventDefault();
         button.classList.add("pressed");
         window.setTimeout(() => button.classList.remove("pressed"), 140);
-        handleKey(button.dataset.key);
+        const key = button.dataset.key === "C" &&
+          skin === "iphone" &&
+          displayedValue() !== "0" &&
+          displayedValue() !== "오류"
+          ? "⌫"
+          : button.dataset.key;
+        handleKey(key);
+      });
+
+      penIcon.addEventListener("pointerdown", (event) => {
+        if (!isPrimaryPointer(event)) return;
+        event.preventDefault();
+        dateTrickState = dateTrickState.phase === "off"
+          ? { phase: "armed", queue: null, queueIndex: 0 }
+          : { phase: "off", queue: null, queueIndex: 0 };
+        render();
+      });
+
+      stackIcon.addEventListener("pointerdown", (event) => {
+        if (!isPrimaryPointer(event)) return;
+        event.preventDefault();
+        try {
+          stackIcon.setPointerCapture?.(event.pointerId);
+        } catch {}
+
+        window.clearTimeout(stackLongPressTimer);
+        stackLongPressConsumed = false;
+        stackLongPressTimer = window.setTimeout(() => {
+          stackLongPressTimer = null;
+          stackLongPressConsumed = true;
+
+          const text = currentValueText();
+          if (text === null) return;
+
+          const result = undoSetupLookup(text);
+          if (result === null) return;
+
+          stackResult.textContent = `${result.upper}번째 · ${result.lower}번째`;
+          stackResult.hidden = false;
+        }, 500);
+      });
+
+      const finishStackPress = () => {
+        const timerWasPending = stackLongPressTimer !== null;
+        window.clearTimeout(stackLongPressTimer);
+        stackLongPressTimer = null;
+
+        if (!timerWasPending && !stackLongPressConsumed) return;
+        if (stackLongPressConsumed) {
+          stackLongPressConsumed = false;
+          return;
+        }
+
+        if (!stackResult.hidden) {
+          stackResult.hidden = true;
+          return;
+        }
+
+        const text = currentValueText();
+        if (text === null) return;
+
+        const cutResult = mnemonicaCutLookup(text);
+        if (cutResult !== null) {
+          stackResult.textContent = `${cutResult.cut}장 · ${cutResult.bottom}`;
+          stackResult.hidden = false;
+          return;
+        }
+
+        const result = mnemonicaLookup(text);
+        const parts = [];
+        if (result.position !== null) parts.push(`${result.position}번째`);
+        if (result.card !== null) parts.push(result.card);
+        if (parts.length === 0) return;
+
+        stackResult.textContent = parts.join(" · ");
+        stackResult.hidden = false;
+      };
+
+      const cancelStackPress = () => {
+        window.clearTimeout(stackLongPressTimer);
+        stackLongPressTimer = null;
+        stackLongPressConsumed = false;
+      };
+
+      stackIcon.addEventListener("pointerup", finishStackPress);
+      stackIcon.addEventListener("pointercancel", cancelStackPress);
+      stackIcon.addEventListener("pointerleave", cancelStackPress);
+
+      clockIcon.addEventListener("pointerdown", (event) => {
+        if (!isPrimaryPointer(event)) return;
+        event.preventDefault();
+        dateSettings.classList.toggle("open");
+      });
+
+      dateSettings.addEventListener("pointerdown", (event) => {
+        if (!isPrimaryPointer(event)) return;
+        const button = event.target.closest("button[data-date-action]");
+        if (!button || !dateSettings.contains(button)) return;
+        event.preventDefault();
+
+        if (button.dataset.dateAction === "close") {
+          dateSettings.classList.remove("open");
+          return;
+        }
+
+        if (button.dataset.dateAction === "hour-cycle") {
+          dateHourCycle = dateHourCycle === "24" ? "12" : "24";
+          try {
+            localStorage.setItem("magic-calc-hour-cycle", dateHourCycle);
+          } catch {
+            // Keep the in-memory setting when storage is unavailable.
+          }
+          render();
+          return;
+        }
+
+        if (button.dataset.dateAction === "skin") {
+          skin = skin === "iphone" ? "default" : "iphone";
+          try {
+            localStorage.setItem("magic-calc-skin", skin);
+          } catch {
+            // Keep the in-memory setting when storage is unavailable.
+          }
+          render();
+          return;
+        }
+
+        if (button.dataset.dateAction === "fullscreen") {
+          try {
+            if ((document.fullscreenElement ?? document.webkitFullscreenElement) != null) {
+              const fullscreenResult = (document.exitFullscreen ?? document.webkitExitFullscreen)?.call(document);
+              fullscreenResult?.catch?.(() => {});
+            } else {
+              const el = document.documentElement;
+              const fullscreenResult = (el.requestFullscreen ?? el.webkitRequestFullscreen)?.call(el);
+              fullscreenResult?.catch?.(() => {});
+            }
+          } catch {
+            // Fullscreen is unavailable on this browser.
+          }
+          return;
+        }
+
+        const change = button.dataset.dateAction === "increase" ? 5 : -5;
+        dateDelaySeconds = Math.min(120, Math.max(5, dateDelaySeconds + change));
+        try {
+          localStorage.setItem(
+            "magic-calc-date-delay",
+            String(dateDelaySeconds)
+          );
+        } catch {
+          // Keep the in-memory setting when storage is unavailable.
+        }
+        render();
       });
 
       window.addEventListener("resize", () => fitDisplayText(display));
@@ -1337,6 +2124,8 @@
         navigator.serviceWorker.register("./sw.js").catch(function () {});
       });
     }
+  </script>
+  <script>
     if (location.hash !== "#selftest") {
       // 권한이 회수됐는지 조용히 확인. 회수됐으면 캐시를 비우고 새로고침해 로그인으로 보낸다.
       setTimeout(function () {

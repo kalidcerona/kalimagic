@@ -101,7 +101,9 @@
       top: calc(var(--pad-block-start) + var(--toolbar-height) + var(--layout-gap));
       left: clamp(18px, 4vw, 24px);
       display: none;
+      flex-wrap: wrap;
       align-items: center;
+      max-width: calc(100vw - 36px);
       gap: 10px;
       padding: 10px 12px;
       border: 1px solid #252525;
@@ -268,6 +270,95 @@
       opacity: 1;
     }
 
+    .key.sign {
+      display: none;
+    }
+
+    .calculator.skin-iphone {
+      --iphone-digit-bg: #333333;
+      --iphone-function-bg: #a5a5a5;
+      --iphone-operator-bg: #ff9f0a;
+      background: #000;
+      color: #fff;
+      font-family: system-ui, sans-serif;
+    }
+
+    .skin-iphone .toolbar svg,
+    .skin-iphone .root-mark {
+      opacity: 0;
+    }
+
+    .skin-iphone .toolbar-tools {
+      position: relative;
+    }
+
+    .skin-iphone .toolbar-tools:has(#pen-icon.date-armed)::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: calc(clamp(25px, 6cqw, 32px) / 2 - 2.5px);
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: #5a5a5a;
+      pointer-events: none;
+      transform: translateY(-50%);
+    }
+
+    .skin-iphone .display {
+      color: #fff;
+      font-size: clamp(56px, 18cqw, 88px);
+      font-weight: 200;
+      letter-spacing: -0.055em;
+    }
+
+    .skin-iphone .key {
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: var(--iphone-digit-bg);
+      color: #fff;
+    }
+
+    .skin-iphone .key.sign {
+      display: grid;
+    }
+
+    .skin-iphone .key.backspace,
+    .skin-iphone .key.parentheses {
+      display: none;
+    }
+
+    .skin-iphone .key.utility,
+    .skin-iphone .key.sign,
+    .skin-iphone .key[data-key="%"] {
+      background: var(--iphone-function-bg);
+      color: #000;
+    }
+
+    .skin-iphone .key[data-key="÷"],
+    .skin-iphone .key[data-key="×"],
+    .skin-iphone .key[data-key="−"],
+    .skin-iphone .key[data-key="+"],
+    .skin-iphone .key[data-key="="] {
+      background: var(--iphone-operator-bg);
+      color: #fff;
+    }
+
+    .skin-iphone .key[data-key="0"] {
+      width: auto;
+      aspect-ratio: auto;
+      grid-column: span 2;
+      border-radius: 999px;
+      place-items: center start;
+      padding-left: clamp(24px, 7cqw, 36px);
+    }
+
+    .skin-iphone .key.utility.date-key-hint::after,
+    .skin-iphone .key.sign.date-key-hint::after,
+    .skin-iphone .key[data-key="%"].date-key-hint::after {
+      background: #333;
+    }
+
     #selftest {
       display: none;
       min-height: 100dvh;
@@ -312,6 +403,8 @@
       <span class="date-settings-value" id="date-delay-value">20초</span>
       <button type="button" data-date-action="increase">+</button>
       <button type="button" data-date-action="hour-cycle" id="date-hour-cycle">24h</button>
+      <button type="button" data-date-action="skin" id="skin-toggle">스킨: 기본</button>
+      <button type="button" data-date-action="fullscreen">전체화면</button>
       <button type="button" data-date-action="close">닫기</button>
     </div>
 
@@ -322,7 +415,8 @@
 
     <section class="keypad" aria-label="계산기 키패드">
       <button class="key utility" type="button" data-key="C">C</button>
-      <button class="key utility" type="button" data-key="⌫" aria-label="지우기">⌫</button>
+      <button class="key utility backspace" type="button" data-key="⌫" aria-label="지우기">⌫</button>
+      <button class="key sign" type="button" data-key="±" aria-label="부호 전환">±</button>
       <button class="key operator" type="button" data-key="%" aria-label="퍼센트">
         <svg class="percent-glyph" viewBox="0 0 32 32" aria-hidden="true">
           <circle class="percent-mark" cx="8" cy="8" r="4.25"></circle>
@@ -415,6 +509,13 @@
       assert(seq(["−","−","5"]) === "-5", "단항 − 연타 무시");
       assert(seq(["1","2","3","⌫"]) === "12", "백스페이스");
       assert(seq(["1","2","C"]) === "", "C 전체 클리어");
+      assert(seq(["5","±"]) === "-5", "±: 양수 꼬리 숫자를 음수로");
+      assert(seq(["−","5","±"]) === "5", "±: 음수 꼬리 숫자를 양수로");
+      assert(seq(["1","2","+","3","±"]) === "12+-3", "±: 수식의 꼬리 숫자만 음수로");
+      assert(seq(["1","2","+","−","3","±"]) === "12+3", "±: 수식의 음수 꼬리 숫자만 양수로");
+      for (const expr of ["", "12+", "12×", "("]) {
+        assert(applyKey(expr, "±") === expr, `± no-op: ${expr || "empty"}`);
+      }
       assert(seq("1234567890123456".split("")) === "1234567890123456", "16자리 입력 허용");
       assert(seq("12345678901234567".split("")) === "1234567890123456", "17자리째 무시");
       assert(displayValue("123456789012÷") === "123456789012", "16자리 표시: 12자리 보존");
@@ -425,12 +526,14 @@
       const ev = (expr) => { const t = tokenize(expr); return t === null ? null : evaluate(t); };
       assert(show(ev(seq(["1","2","+","3","4","×","5"]))) === "230", "즉시계산: 12+34×5=230");
       assert(show(ev(seq(["9","×","9"]))) === "81", "9×9=81");
+      assert(show(ev(seq(["5","±","+","3"]))) === "-2", "± evaluate: 5 ± + 3 = -2");
       assert(show(ev(seq("999999999999".split("").concat(["+","1"])))) === "1000000000000", "13자리 결과 십진 표시(지수 아님)");
       assert(displayValue("") === "0", "display: 빈 수식 0");
       assert(displayValue("9×9×") === "81", "display: 연산자 직후 중간결과 81");
       assert(displayValue("9×9×3") === "3", "display: 숫자 입력 중엔 그 숫자");
       assert(displayValue("12+34×") === "46", "display: 좌→우 중간결과 46");
       assert(displayValue("-5") === "-5", "display: 단항 음수 입력 중");
+      assert(displayValue("12+-3") === "-3", "display: ±로 음수화한 꼬리 숫자");
       assert(displayValue("7÷0×") === "오류", "display: ÷0 중간결과는 오류");
       assert(displayValue("50%") === "0.5", "display: % 적용값");
       assert(show(ev("(2+3)×4")) === "20", "괄호");
@@ -953,7 +1056,7 @@
 
     function applyKey(expr, key) {
       const source = String(expr ?? "");
-      const acceptedKeys = /^(?:[0-9]|\.|\+|−|×|÷|\(\)|%|C|⌫)$/;
+      const acceptedKeys = /^(?:[0-9]|\.|\+|−|×|÷|\(\)|%|±|C|⌫)$/;
 
       if (!acceptedKeys.test(key)) return source;
       if (key === "C") return "";
@@ -965,6 +1068,14 @@
       const binaryOperators = "+−×÷";
       const expectsOperand =
         source === "" || binaryOperators.includes(last) || last === "(" || last === "-";
+
+      if (key === "±") {
+        const trailingNumber = /(^|[+−×÷(])(-?)(\d+(?:\.\d*)?|\.\d+)$/.exec(source);
+        if (trailingNumber === null) return source;
+        const [numberText, prefix, sign, digits] = trailingNumber;
+        const toggledNumber = `${prefix}${sign === "-" ? "" : "-"}${digits}`;
+        return withinTokenLimit(`${source.slice(0, -numberText.length)}${toggledNumber}`);
+      }
 
       if (/^\d$/.test(key)) {
         const currentNumber = /[\d.]+$/.exec(source)?.[0] ?? "";
@@ -1440,8 +1551,10 @@
     }
 
     function setupCalculator() {
+      const app = document.getElementById("app");
       const display = document.getElementById("display");
       const keypad = document.querySelector(".keypad");
+      const clearKey = keypad.querySelector('[data-key="C"]');
       const percentKey = keypad.querySelector('[data-key="%"]');
       const penIcon = document.getElementById("pen-icon");
       const clockIcon = document.getElementById("clock-icon");
@@ -1450,6 +1563,7 @@
       const dateSettings = document.getElementById("date-settings");
       const dateDelayValue = document.getElementById("date-delay-value");
       const dateHourCycleButton = document.getElementById("date-hour-cycle");
+      const skinToggleButton = document.getElementById("skin-toggle");
       const dateHintKeys = keypad.querySelectorAll(
         '[data-key="+"], [data-key="−"], [data-key="0"], [data-key="1"], ' +
         '[data-key="2"], [data-key="3"], [data-key="4"], [data-key="5"], ' +
@@ -1462,6 +1576,9 @@
       let dateTrickState = { phase: "off", queue: null, queueIndex: 0 };
       let dateDelaySeconds = 20;
       let dateHourCycle = "24";
+      let skin = /iPhone|iPad|iPod/.test(navigator.userAgent)
+        ? "iphone"
+        : "default";
       let stackLongPressTimer = null;
       let stackLongPressConsumed = false;
       try {
@@ -1475,6 +1592,10 @@
         const savedHourCycle = localStorage.getItem("magic-calc-hour-cycle");
         if (savedHourCycle === "12" || savedHourCycle === "24") {
           dateHourCycle = savedHourCycle;
+        }
+        const savedSkin = localStorage.getItem("magic-calc-skin");
+        if (savedSkin === "default" || savedSkin === "iphone") {
+          skin = savedSkin;
         }
       } catch {
         // Storage is optional; keep the default settings when unavailable.
@@ -1504,14 +1625,22 @@
           dateHourCycle
         );
 
+      const displayedValue = () =>
+        errorShown ? "오류" : displayValue(expr);
+
       const render = () => {
-        const rawDisplay = errorShown ? "오류" : displayValue(expr);
+        const rawDisplay = displayedValue();
+        app.classList.toggle("skin-iphone", skin === "iphone");
         display.textContent = formatDisplay(rawDisplay);
+        clearKey.textContent = skin === "iphone" && rawDisplay !== "0" && rawDisplay !== "오류"
+          ? "⌫"
+          : skin === "iphone" ? "AC" : "C";
         percentKey.classList.toggle("trick-set", trickState.phase === "set");
         percentKey.classList.toggle("trick-ready", trickState.phase === "ready");
         penIcon.classList.toggle("date-armed", dateTrickState.phase !== "off");
         dateDelayValue.textContent = `${dateDelaySeconds}초`;
         dateHourCycleButton.textContent = `${dateHourCycle}h`;
+        skinToggleButton.textContent = skin === "iphone" ? "스킨: 아이폰" : "스킨: 기본";
 
         let neededOp = null;
         let digitHintKey = null;
@@ -1680,7 +1809,13 @@
         event.preventDefault();
         button.classList.add("pressed");
         window.setTimeout(() => button.classList.remove("pressed"), 140);
-        handleKey(button.dataset.key);
+        const key = button.dataset.key === "C" &&
+          skin === "iphone" &&
+          displayedValue() !== "0" &&
+          displayedValue() !== "오류"
+          ? "⌫"
+          : button.dataset.key;
+        handleKey(key);
       });
 
       penIcon.addEventListener("pointerdown", (event) => {
@@ -1787,6 +1922,33 @@
             // Keep the in-memory setting when storage is unavailable.
           }
           render();
+          return;
+        }
+
+        if (button.dataset.dateAction === "skin") {
+          skin = skin === "iphone" ? "default" : "iphone";
+          try {
+            localStorage.setItem("magic-calc-skin", skin);
+          } catch {
+            // Keep the in-memory setting when storage is unavailable.
+          }
+          render();
+          return;
+        }
+
+        if (button.dataset.dateAction === "fullscreen") {
+          try {
+            if ((document.fullscreenElement ?? document.webkitFullscreenElement) != null) {
+              const fullscreenResult = (document.exitFullscreen ?? document.webkitExitFullscreen)?.call(document);
+              fullscreenResult?.catch?.(() => {});
+            } else {
+              const el = document.documentElement;
+              const fullscreenResult = (el.requestFullscreen ?? el.webkitRequestFullscreen)?.call(el);
+              fullscreenResult?.catch?.(() => {});
+            }
+          } catch {
+            // Fullscreen is unavailable on this browser.
+          }
           return;
         }
 
