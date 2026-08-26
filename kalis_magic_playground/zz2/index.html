@@ -623,12 +623,12 @@
 
       // date-time reveal
       assert(formatDateTarget(new Date(2026, 7, 20, 21, 47), "24") === "268202147", "date target: 24h example");
-      assert(formatDateTarget(new Date(2026, 7, 20, 8, 5), "24") === "2682085", "date target: 24h unpadded time");
+      assert(formatDateTarget(new Date(2026, 7, 20, 8, 5), "24") === "26820805", "date target: 24h single-digit hour");
       assert(formatDateTarget(new Date(2026, 11, 31, 23, 59), "24") === "2612312359", "date target: 24h December");
-      assert(formatDateTarget(new Date(2026, 0, 9, 0, 5), "24") === "261905", "date target: 24h January midnight");
+      assert(formatDateTarget(new Date(2026, 0, 9, 0, 5), "24") === "2619005", "date target: 24h January midnight");
       assert(formatDateTarget(new Date(2026, 7, 20, 21, 47), "12") === "26820947", "date target: 12h evening");
       assert(formatDateTarget(new Date(2026, 7, 20, 0, 30), "12") === "268201230", "date target: 12h midnight");
-      assert(formatDateTarget(new Date(2026, 7, 20, 12, 5), "12") === "26820125", "date target: 12h noon");
+      assert(formatDateTarget(new Date(2026, 7, 20, 12, 5), "12") === "268201205", "date target: 12h noon");
       assert(formatDateTarget(new Date(2026, 7, 20, 21, 47)) === "268202147", "date target: default 24h");
       const dateTarget = typeof dateTrickTarget === "function"
         ? dateTrickTarget
@@ -1348,7 +1348,7 @@
         String(date.getMonth() + 1) +
         String(date.getDate()) +
         String(hour) +
-        String(date.getMinutes())
+        String(date.getMinutes()).padStart(2, "0")
       );
     }
 
