@@ -1,8 +1,17 @@
+import { canReadPostBody } from './_lib/access-policy.mjs';
 import { requireViewer } from './_lib/auth.mjs';
 import { json, readJsonBody } from './_lib/http.mjs';
 import { awardQuestBadges } from './_lib/quest-badges.mjs';
 import { getSupabaseAdmin } from './_lib/supabase.mjs';
 import { validateEventReviewPayload } from './_lib/validators.mjs';
+
+async function optionalViewer(event) {
+  try {
+    return await requireViewer(event);
+  } catch {
+    return null;
+  }
+}
 
 function reviewTitle(payload) {
   return payload.goodMoment.length > 42 ? payload.goodMoment.slice(0, 42) + '...' : payload.goodMoment;
@@ -28,10 +37,11 @@ export async function handler(event) {
 
 async function listReviews(event) {
   const eventCode = event.queryStringParameters?.eventCode || '2026-08';
+  const viewer = await optionalViewer(event);
   const supabase = getSupabaseAdmin();
   const { data, error } = await supabase
     .from('posts')
-    .select('id,title,body,display_mode,youtube_video_id,created_at,profiles(nickname,role),event_reviews!inner(event_code)')
+    .select('id,title,body,display_mode,youtube_video_id,created_at,visibility,authorUserId:author_user_id,profiles(nickname,role),event_reviews!inner(event_code)')
     .eq('post_type', 'event_review')
     .eq('status', 'visible')
     .eq('visibility', 'public')
@@ -39,7 +49,7 @@ async function listReviews(event) {
     .order('created_at', { ascending: false })
     .limit(12);
   if (error) return json(500, { error: 'db_error' });
-  return json(200, { reviews: data.map(shapeReview) });
+  return json(200, { reviews: data.filter((row) => canReadPostBody(row, viewer)).map(shapeReview) });
 }
 
 async function createReview(event) {

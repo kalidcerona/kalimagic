@@ -73,7 +73,7 @@ export async function handler(event) {
     if (error) return json(500, { error: 'db_error' });
   }
 
-  await supabase.from('moderation_events').insert({
+  const { error: auditError } = await supabase.from('moderation_events').insert({
     actor_user_id: viewer.userId,
     target_table: 'posts',
     target_id: payload.postId,
@@ -82,6 +82,7 @@ export async function handler(event) {
     before_status: before.status,
     after_status: status || before.status
   });
+  if (auditError) console.error('moderation_events insert failed', auditError);
 
-  return json(200, { ok: true });
+  return json(200, { ok: true, auditLogged: !auditError });
 }

@@ -22,7 +22,7 @@ Push workflow: `kalis_magic_playground/` 직접 수정 → `git add` → `git co
 - 테마 토큰: `--point-gold-rgb: 201, 168, 76` (rgba 리터럴 대신 `rgba(var(--point-gold-rgb), .4)` 형태로)
 - **index.html 인라인 grid 주의**: `kx-cards3`·`kx-grid2`·`kx-cards2` 등 `.kx-*` 클래스 요소에 `style="display:grid; grid-template-columns:..."` 인라인 값이 붙어있으면 CSS 미디어쿼리가 먹히지 않음. 반응형 작업 시 인라인 grid 속성 제거 후 style.css 클래스로 이전 필요
 - **index.html `<head>` 인라인 `<style>` 블록**: 880px에서 `.kx-*` 클래스들을 `!important`로 덮는 규칙 있음. 브레이크포인트 변경 시 이 블록도 확인
-- **Tailwind CDN은 유틸리티를 런타임에 주입해 정적 `<style>` 뒤에 붙는다** — 같은 특이도면 항상 Tailwind가 이긴다. `!important` 대신 `html ` 접두(0,1,1)로 올릴 것. 인라인 `style`은 어떤 선택자로도 못 이기므로, 선언을 쪼개 충돌하는 속성만 빼는 게 정석(`border-color` → `border-top/right/bottom-color`).
+- **Tailwind CDN은 제거됨** — 2026-09-05 확인 기준 어떤 HTML도 로드하지 않으며, 남은 레이어는 style.css와 index.html 인라인 `<style>`(880px `!important` 블록)이다. 인라인 `style` 속성 충돌은 선언을 쪼개 충돌하는 속성만 뺄 것(`border-color` → `border-top/right/bottom-color`).
 - **진입 애니메이션은 "최종값은 마크업에, 0은 JS가" 방향으로 쓴다** — CSS에 `width:0`·`opacity:0`을 두면 JS가 죽는 순간 콘텐츠가 영구히 사라진다. 최종 상태를 인라인 style에 두고 JS가 런타임에 0으로 만든 뒤 채울 것. 스크린샷·검증은 `prefers-reduced-motion: reduce`로 로드하면 스크립트가 early return 해 최종 상태 그대로 남는다.
 
 ## kalimeeting PNG 생성 (네이버 카페용)

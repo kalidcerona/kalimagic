@@ -31,24 +31,10 @@
     a{ text-decoration:none; color:inherit; }
     img{ display:block; max-width:100%; }
     ::selection{ background:rgba(224,144,78,0.32); }
-    @keyframes cue{ 0%,100%{ transform:translateY(0); opacity:.35; } 50%{ transform:translateY(8px); opacity:.95; } }
-    @keyframes kxKen{ from{ transform:scale(1); } to{ transform:scale(1.09); } }
-
     /* 스크롤 진입 애니메이션은 style.css 공용 규칙을 사용 (인라인 중복 제거) */
 
-    /* 히어로 이미지 켄번스 */
-    .kx-ken{ animation:kxKen 22s ease-out forwards; }
-    /* 이미지 호버 줌 */
-    .kx-imgzoom img{ transition:transform 1.05s cubic-bezier(.2,.7,.2,1); }
-    .kx-imgzoom:hover img{ transform:scale(1.06); }
     /* 링크/CTA 트랜지션 부드럽게 */
     .kx-desktop a[href]{ transition:color .25s ease, border-color .25s ease, background-color .25s ease, transform .3s cubic-bezier(.2,.7,.2,1), box-shadow .3s ease; }
-    /* 스크롤 큐 */
-    .kx-cue span{ display:block; width:1px; height:42px; background:linear-gradient(rgba(224,144,78,0), var(--point-gold)); animation:cue 1.9s ease-in-out infinite; }
-
-    @media (prefers-reduced-motion: reduce){
-      .kx-ken{ animation:none; } .kx-cue{ display:none; }
-    }
     @media (max-width:880px){
       .kx-grid2{ grid-template-columns:1fr !important; gap:30px !important; }
       .kx-cards2{ grid-template-columns:1fr !important; }
