@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readdir, readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { PUBLIC_FILES, PUBLIC_DIRS, PRIVATE_PATTERNS, buildPublic } from '../../scripts/build-public.mjs';
+import { PUBLIC_FILES, PUBLIC_DIRS, PRIVATE_PATTERNS, MIRROR_PAIRS, buildPublic } from '../../scripts/build-public.mjs';
 
 test('public build allowlist includes visible site pages', () => {
   assert.ok(PUBLIC_FILES.includes('index.html'));
@@ -28,6 +28,13 @@ test('public build explicitly excludes local planning and source folders', () =>
   assert.ok(PRIVATE_PATTERNS.some((pattern) => pattern.test('netlify/functions/posts.mjs')));
   assert.equal(PUBLIC_DIRS.includes('netlify'), false);
   assert.equal(PUBLIC_DIRS.includes('supabase'), false);
+});
+
+test('public build verifies gated tool mirrors', () => {
+  assert.ok(MIRROR_PAIRS.some(([source, mirror]) =>
+    source === '../../magic-stopwatch/index.html' && mirror === 'tools/stopwatch/index.html'));
+  assert.ok(MIRROR_PAIRS.some(([source, mirror]) =>
+    source === '../../magic-calculator-v2/index.html' && mirror === 'tools/calc/index.html'));
 });
 
 test('public build does not copy dotfiles from public directories', async () => {

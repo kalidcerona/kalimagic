@@ -40,10 +40,10 @@ def test_magic_playground_static_files_exist():
 
 def test_reviews_event_review_list_exists_and_form_mounts_in_playground():
     reviews = (ROOT / "reviews.html").read_text(encoding="utf-8")
-    compose = (ROOT / "playground-compose.js").read_text(encoding="utf-8")
+    reviews_community = (ROOT / "reviews-community.js").read_text(encoding="utf-8")
     check("data-event-review-list" in reviews, "[후기] 모임 후기 목록 영역 없음")
     check("reviews-community.js" in reviews, "[후기] reviews-community.js 로드 없음")
-    check("KalisEventReviewForm" in compose, "[놀이터] 모임 후기 작성 폼 연결 없음")
+    check("KalisEventReviewForm" in reviews_community, "[후기] 모임 후기 작성 폼 연결 없음")
     assert not failures
 
 

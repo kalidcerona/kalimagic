@@ -181,6 +181,61 @@
       font: inherit;
       font-size: clamp(1.25rem, 5vw, 2rem);
     }
+    #preset-pad {
+      position: fixed;
+      inset: 0;
+      z-index: 2000;
+      display: flex;
+      flex-direction: column;
+      gap: clamp(0.75rem, 2vh, 1.25rem);
+      padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right))
+        max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+      align-items: center;
+      justify-content: center;
+      background: #1C1C1E;
+    }
+    #preset-preview {
+      color: #ffffff;
+      font-size: clamp(2.5rem, 10vh, 5rem);
+      font-weight: 200;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.04em;
+      line-height: 1;
+    }
+    #preset-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-rows: repeat(4, minmax(3rem, 1fr));
+      gap: clamp(0.4rem, 1.5vh, 0.75rem);
+      width: min(84vw, 30rem);
+      height: min(58vh, 24rem);
+    }
+    #preset-grid button,
+    #preset-actions button {
+      border: 0;
+      border-radius: 0.7em;
+      background: rgba(255,255,255,0.16);
+      color: #ffffff;
+      font: inherit;
+    }
+    #preset-grid button {
+      min-width: 0;
+      min-height: 3rem;
+      padding: 0;
+      font-size: clamp(1.75rem, 7vh, 3rem);
+    }
+    #preset-actions {
+      display: flex;
+      gap: clamp(0.5rem, 2vw, 1rem);
+    }
+    #preset-actions button {
+      min-width: 6.5rem;
+      padding: 0.65em 1em;
+      font-size: clamp(1.1rem, 4vh, 1.6rem);
+    }
+    #preset-actions button:disabled {
+      opacity: 0.35;
+    }
   </style>
 </head>
 <body>
@@ -210,6 +265,28 @@
       <button id="text-editor-clear" type="button">지우기</button>
     </div>
   </div>
+  <div id="preset-pad" role="dialog" aria-modal="true" aria-label="스탑워치 프리셋" hidden>
+    <div id="preset-preview" aria-live="polite">--:--</div>
+    <div id="preset-grid">
+      <button type="button" data-preset-digit="1">1</button>
+      <button type="button" data-preset-digit="2">2</button>
+      <button type="button" data-preset-digit="3">3</button>
+      <button type="button" data-preset-digit="4">4</button>
+      <button type="button" data-preset-digit="5">5</button>
+      <button type="button" data-preset-digit="6">6</button>
+      <button type="button" data-preset-digit="7">7</button>
+      <button type="button" data-preset-digit="8">8</button>
+      <button type="button" data-preset-digit="9">9</button>
+      <button type="button" data-preset-action="backspace" aria-label="한 자리 지우기">⌫</button>
+      <button type="button" data-preset-digit="0">0</button>
+      <span aria-hidden="true"></span>
+    </div>
+    <div id="preset-actions">
+      <button id="preset-save" type="button" data-preset-action="save" disabled>저장</button>
+      <button type="button" data-preset-action="clear">지우기</button>
+      <button type="button" data-preset-action="close">닫기</button>
+    </div>
+  </div>
   <div id="selftest" hidden>
     <div id="selftest-result"></div>
   </div>
@@ -223,6 +300,9 @@
       const row = Math.min(1, Math.floor(py / height * 2));
       return row === 0 ? col + 1 : (col === 4 ? 0 : col + 6);
     }
+    function isLeftmostScreenFifth(x, width) {
+      return x < width / 5;
+    }
     function composeCs(tens, ones) {
       return tens * 10 + ones;
     }
@@ -235,11 +315,15 @@
       return Math.min(ms, 59990);
     }
     function formatCs(totalCs) {
-      const value = Math.min(5999, Math.max(0, Math.floor(totalCs)));
+      const value = Math.min(9999, Math.max(0, Math.floor(totalCs)));
       return {
         sec: String(Math.floor(value / 100)).padStart(2, "0"),
         cs: String(value % 100).padStart(2, "0")
       };
+    }
+    function formatPresetEntry(entry) {
+      const padded = entry.padEnd(4, "-");
+      return `${padded.slice(0, 2)}:${padded.slice(2, 4)}`;
     }
     // 정지 순간 표시할 1/100초 누적값을 정한다. 규칙 우선순위: 상한 > 트릭 합성 > 자연 경과.
     function resolveStoppedCs({ elapsed, trickMode, reservedTens, stopDigit }) {
@@ -248,6 +332,16 @@
         return Math.floor(elapsed / 1000) * 100 + composeCs(reservedTens, stopDigit);
       }
       return Math.floor(elapsed / 10);
+    }
+    function resolveStopOutcome({ trickState, presetCs, customText, elapsed, reservedTens, stopDigit }) {
+      if (trickState === "text") {
+        if (presetCs !== null) return { kind: "cs", cs: presetCs };
+        if (customText) return { kind: "text", text: customText };
+      }
+      return {
+        kind: "cs",
+        cs: resolveStoppedCs({ elapsed, trickMode: trickState === "digit", reservedTens, stopDigit })
+      };
     }
     function runSelfTests() {
       const failures = [];
@@ -265,6 +359,10 @@
         const digit = digitFromPoint(x, y, 500, 200);
         assert(Number.isInteger(digit) && digit >= 0 && digit <= 9, `clamp ${x},${y}`);
       }
+      const screenWidth = 1000;
+      assert(isLeftmostScreenFifth(screenWidth / 5 - 0.01, screenWidth), "preset hold: 화면 왼쪽 1/5 안쪽");
+      assert(!isLeftmostScreenFifth(screenWidth / 5, screenWidth), "preset hold: 화면 1/5 경계 제외");
+      assert(isLeftmostScreenFifth(0, screenWidth), "preset hold: 화면 왼쪽 끝");
       assert(composeCs(2, 8) === 28, "compose 2,8");
       assert(composeCs(0, 0) === 0, "compose 0,0");
       assert(composeCs(9, 9) === 99, "compose 9,9");
@@ -277,6 +375,10 @@
       assert(isFormat(0, "00", "00"), "format 0");
       assert(isFormat(728, "07", "28"), "format 728");
       assert(isFormat(5999, "59", "99"), "format 5999");
+      assert(isFormat(9999, "99", "99"), "format preset maximum");
+      assert(formatPresetEntry("") === "--:--", "preset preview empty");
+      assert(formatPresetEntry("118") === "11:8-", "preset preview partial");
+      assert(formatPresetEntry("1187") === "11:87", "preset preview complete");
       const rs = (elapsed, trickMode, reservedTens, stopDigit) =>
         resolveStoppedCs({ elapsed, trickMode, reservedTens, stopDigit });
       assert(rs(59990, true, 2, 8) === 5999, "resolve: 상한이 트릭보다 우선");
@@ -284,6 +386,49 @@
       assert(rs(3450, true, null, 8) === 345, "resolve: 주행 중 트릭 켬(예약 없음)은 자연값");
       assert(rs(3450, false, 2, 8) === 345, "resolve: 트릭 OFF는 좌표 무시");
       assert(rs(1200, true, 0, 5) === 105, "resolve: 십의 자리 0");
+      const outcome = (params) => typeof resolveStopOutcome === "function"
+        ? resolveStopOutcome(params)
+        : { kind: "missing" };
+      let ro = outcome({
+        trickState: "text", presetCs: 1187, customText: "KALI",
+        elapsed: 3450, reservedTens: 2, stopDigit: 8
+      });
+      assert(ro.kind === "cs" && ro.cs === 1187, "stop outcome: text preset 우선");
+      ro = outcome({
+        trickState: "text", presetCs: null, customText: "KALI",
+        elapsed: 3450, reservedTens: 2, stopDigit: 8
+      });
+      assert(ro.kind === "text" && ro.text === "KALI", "stop outcome: customText 차선");
+      ro = outcome({
+        trickState: "text", presetCs: null, customText: "",
+        elapsed: 3450, reservedTens: 2, stopDigit: 8
+      });
+      assert(ro.kind === "cs" && ro.cs === 345, "stop outcome: text 설정 없으면 실측");
+      ro = outcome({
+        trickState: "off", presetCs: 9999, customText: "KALI",
+        elapsed: 3450, reservedTens: 2, stopDigit: 8
+      });
+      assert(ro.kind === "cs" && ro.cs === 345, "stop outcome: off는 preset과 text 무시");
+      ro = outcome({
+        trickState: "digit", presetCs: 9999, customText: "KALI",
+        elapsed: 3450, reservedTens: 2, stopDigit: 8
+      });
+      assert(ro.kind === "cs" && ro.cs === 328, "stop outcome: digit는 preset 무시");
+      ro = outcome({
+        trickState: "digit", presetCs: null, customText: "",
+        elapsed: 3450, reservedTens: 2, stopDigit: 8
+      });
+      assert(ro.kind === "cs" && ro.cs === 328, "stop outcome: digit 합성");
+      ro = outcome({
+        trickState: "digit", presetCs: null, customText: "",
+        elapsed: 59990, reservedTens: 2, stopDigit: 8
+      });
+      assert(ro.kind === "cs" && ro.cs === 5999, "stop outcome: digit도 59.99 상한");
+      ro = outcome({
+        trickState: "text", presetCs: 9999, customText: "KALI",
+        elapsed: 59990, reservedTens: 2, stopDigit: 8
+      });
+      assert(ro.kind === "cs" && ro.cs === 9999, "stop outcome: preset 99.99는 무상한 통과");
       assert(typeof nextTrickState === "function", "trick state: 순환 함수 존재");
       if (typeof nextTrickState === "function") {
         assert(nextTrickState("off") === "digit", "trick state: off → digit");
@@ -312,12 +457,19 @@
     const textEditorInput = document.getElementById("text-editor-input");
     const textEditorSave = document.getElementById("text-editor-save");
     const textEditorClear = document.getElementById("text-editor-clear");
+    const presetPad = document.getElementById("preset-pad");
+    const presetPreview = document.getElementById("preset-preview");
+    const presetSave = document.getElementById("preset-save");
     const CUSTOM_TEXT_STORAGE_KEY = "stopwatch_custom_text";
+    const PRESET_STORAGE_KEY = "stopwatch_preset_cs";
     const TEXT_ZONE_HOLD_MS = 550;
+    const PRESET_HOLD_MS = 1500;
     const MAIN_HIT_ZONE_GAP = 4;
     let state = "idle";
     let trickState = "off";
     let customText = "";
+    let presetCs = null;
+    let presetEntry = "";
     let reservedTens = null;
     let startedAt = 0;
     let stoppedCs = 0;
@@ -325,6 +477,7 @@
     let wakeLock = null;
     let wakeLockPending = false;
     let textZonePressTimer = 0;
+    let presetHoldTimer = 0;
     let controlResizeObserver = null;
     function renderCs(totalCs) {
       const formatted = formatCs(totalCs);
@@ -420,16 +573,16 @@
     }
     function stopTimer(event) {
       const elapsed = clampElapsed(performance.now() - startedAt);
-      if (trickState === "text" && customText) {
-        finalizeStopText(customText);
-        return;
-      }
-      finalizeStop(resolveStoppedCs({
-        elapsed, trickMode: trickState === "digit",
-        reservedTens, stopDigit: digitFromEvent(event)
-      }));
+      const stopDigit = digitFromEvent(event);
+      const o = resolveStopOutcome({
+        trickState, presetCs, customText, elapsed, reservedTens, stopDigit
+      });
+      if (o.kind === "text") finalizeStopText(o.text);
+      else finalizeStop(o.cs);
     }
     function resetTimer() {
+      cancelAnimationFrame(frameId);
+      frameId = 0;
       state = "idle";
       reservedTens = null;
       stoppedCs = 0;
@@ -513,6 +666,75 @@
       clearTimeout(textZonePressTimer);
       textZonePressTimer = 0;
     }
+    function renderPresetEntry() {
+      presetPreview.textContent = formatPresetEntry(presetEntry);
+      presetSave.disabled = presetEntry.length !== 4;
+    }
+    function openPresetPad() {
+      if (state === "running") return;
+      presetEntry = presetCs === null ? "" : String(presetCs).padStart(4, "0");
+      renderPresetEntry();
+      presetPad.hidden = false;
+    }
+    function closePresetPad() {
+      presetPad.hidden = true;
+    }
+    function clearPresetHold() {
+      if (!presetHoldTimer) return;
+      clearTimeout(presetHoldTimer);
+      presetHoldTimer = 0;
+    }
+    function startPresetHold() {
+      clearPresetHold();
+      presetHoldTimer = setTimeout(() => {
+        presetHoldTimer = 0;
+        resetTimer();
+        openPresetPad();
+      }, PRESET_HOLD_MS);
+    }
+    function handleDocumentPresetPress(event) {
+      if (!isPrimaryPointer(event)) return;
+      if (state === "running") return;
+      if (event.target.closest && event.target.closest("#control, #preset-pad, #text-editor, #install-nudge")) return;
+      if (isLeftmostScreenFifth(event.clientX, window.innerWidth)) startPresetHold(event);
+    }
+    function savePreset() {
+      if (presetEntry.length !== 4) return;
+      presetCs = Number(presetEntry);
+      try {
+        localStorage.setItem(PRESET_STORAGE_KEY, String(presetCs));
+      } catch (_) {}
+      closePresetPad();
+    }
+    function clearPreset() {
+      presetCs = null;
+      presetEntry = "";
+      try {
+        localStorage.removeItem(PRESET_STORAGE_KEY);
+      } catch (_) {}
+      closePresetPad();
+    }
+    function handlePresetPadClick(event) {
+      event.stopPropagation();
+      const digitButton = event.target.closest("button[data-preset-digit]");
+      if (digitButton) {
+        if (presetEntry.length < 4) presetEntry += digitButton.dataset.presetDigit;
+        renderPresetEntry();
+        return;
+      }
+      const actionButton = event.target.closest("button[data-preset-action]");
+      const action = actionButton ? actionButton.dataset.presetAction : null;
+      if (action === "backspace") {
+        presetEntry = presetEntry.slice(0, -1);
+        renderPresetEntry();
+      } else if (action === "save") {
+        savePreset();
+      } else if (action === "clear") {
+        clearPreset();
+      } else if (action === "close") {
+        closePresetPad();
+      }
+    }
     function saveCustomText() {
       const value = textEditorInput.value.trim();
       customText = value;
@@ -543,9 +765,18 @@
         customText = "";
       }
     }
+    function loadPreset() {
+      try {
+        const stored = localStorage.getItem(PRESET_STORAGE_KEY);
+        const value = stored !== null && /^\d{1,4}$/.test(stored) ? Number(stored) : NaN;
+        presetCs = Number.isInteger(value) && value >= 0 && value <= 9999 ? value : null;
+      } catch (_) {
+        presetCs = null;
+      }
+    }
     function updateMainHitZonesHeight() {
-      const controlTop = control.getBoundingClientRect().top;
-      mainHitZones.style.height = `${Math.max(0, controlTop - MAIN_HIT_ZONE_GAP)}px`;
+      const controlRect = control.getBoundingClientRect();
+      mainHitZones.style.height = `${Math.max(0, controlRect.top - MAIN_HIT_ZONE_GAP)}px`;
     }
     function observeControlLayout() {
       updateMainHitZonesHeight();
@@ -572,6 +803,7 @@
     }
     function initApp() {
       loadCustomText();
+      loadPreset();
       control.addEventListener("pointerdown", handleControl, { passive: false });
       fullscreenZone.addEventListener("pointerdown", handleFullscreenZone, { passive: false });
       trickZone.addEventListener("pointerdown", handleTrickZone, { passive: false });
@@ -579,10 +811,17 @@
       textEditor.addEventListener("pointerdown", handleTextEditorBackground);
       textEditorSave.addEventListener("click", saveCustomText);
       textEditorClear.addEventListener("click", clearCustomText);
+      presetPad.addEventListener("pointerdown", (event) => event.stopPropagation());
+      presetPad.addEventListener("pointerup", (event) => event.stopPropagation());
+      presetPad.addEventListener("pointercancel", (event) => event.stopPropagation());
+      presetPad.addEventListener("click", handlePresetPadClick);
       window.addEventListener("pointerup", releasePress);
       window.addEventListener("pointercancel", releasePress);
       window.addEventListener("pointerup", clearTextZonePress);
       window.addEventListener("pointercancel", clearTextZonePress);
+      window.addEventListener("pointerup", clearPresetHold);
+      window.addEventListener("pointercancel", clearPresetHold);
+      document.addEventListener("pointerdown", handleDocumentPresetPress, { passive: true });
       document.addEventListener("pointerdown", () => {
         if (!wakeLock) acquireWakeLock();
       });
@@ -600,17 +839,105 @@
     } else {
       initApp();
     }
+  </script>
+  <style>
+    #install-nudge {
+      position: fixed;
+      left: 12px;
+      right: 12px;
+      bottom: 12px;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      background: #1c1c1e;
+      color: #fff;
+      border-radius: 14px;
+      font-size: 14px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+    }
+    #install-nudge span { flex: 1; }
+    #install-nudge button {
+      border: 0;
+      border-radius: 10px;
+      padding: 8px 14px;
+      font-size: 14px;
+      background: #ff9f0a;
+      color: #000;
+    }
+    #install-nudge button[data-act="close"] {
+      background: transparent;
+      color: #8e8e93;
+      padding: 8px;
+    }
+  </style>
+  <script>
+    (() => {
+      try {
+        const KEY = "installNudgeDone";
+        if (localStorage.getItem(KEY)) return;
+        const standalone = typeof window.matchMedia === "function" &&
+          window.matchMedia("(display-mode: standalone)").matches;
+        if (standalone || navigator.standalone) return;
+
+        let deferred = null;
+        let bar = null;
+        const done = () => {
+          try { localStorage.setItem(KEY, "1"); } catch (_) {}
+          if (bar) bar.remove();
+          bar = null;
+          deferred = null;
+        };
+
+        window.addEventListener("appinstalled", done);
+        window.addEventListener("beforeinstallprompt", (event) => {
+          event.preventDefault();
+          deferred = event;
+          if (bar) return;
+
+          bar = document.createElement("div");
+          bar.id = "install-nudge";
+          bar.innerHTML = '<span>홈 화면에 앱으로 설치할 수 있어요</span>' +
+            '<button type="button" data-act="install">설치</button>' +
+            '<button type="button" data-act="close" aria-label="닫기">✕</button>';
+          bar.addEventListener("pointerdown", (event) => event.stopPropagation());
+          bar.addEventListener("click", async (event) => {
+            event.stopPropagation();
+            const button = event.target.closest("button[data-act]");
+            const act = button ? button.dataset.act : null;
+            if (act === "install" && deferred) {
+              const promptEvent = deferred;
+              deferred = null;
+              try {
+                promptEvent.prompt();
+                await promptEvent.userChoice;
+              } catch (_) {}
+              done();
+            } else if (act === "close") {
+              done();
+            }
+          });
+          document.body.appendChild(bar);
+        });
+      } catch (_) {}
+    })();
+  </script>
+  <script>
     if ("serviceWorker" in navigator && location.hash !== "#selftest") {
       window.addEventListener("load", function () {
         navigator.serviceWorker.register("./sw.js").catch(function () {});
       });
     }
-    if (location.hash !== "#selftest") {
+  </script>
+  <script>
+    var m = location.pathname.match(/^\/tools\/([a-z0-9-]+)/);
+    if (m && location.hash !== "#selftest") {
       // 권한이 회수됐는지 조용히 확인. 회수됐으면 캐시를 비우고 새로고침해 로그인으로 보낸다.
       setTimeout(function () {
         try {
           if (!navigator.onLine) return;
-          fetch("/tools/_check?tool=stopwatch", { credentials: "same-origin" })
+          fetch("/tools/_check?tool=" + m[1], { credentials: "same-origin" })
             .then(function (response) { return response.json(); })
             .then(function (result) {
               if (!result || result.ok !== false || result.reason !== "revoked") return;

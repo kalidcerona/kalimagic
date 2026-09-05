@@ -6,7 +6,7 @@ Push workflow: `kalis_magic_playground/` 직접 수정 → `git add` → `git co
 
 ## 배포 구조 (Deployment)
 - `kalis_magic_playground/` = 유일한 SSOT, 직접 편집 (2026-07-06 전환)
-- **`zz2`·`zz3`·`tools/calc`는 미러 사본, 진짜 소스는 `../magic-calculator-v2`·`../magic-stopwatch`(별도 git repo, remote 없음 — push 불가, 로컬 커밋만).** 소스 수정 후 반드시 zz 폴더에 재미러. `build-public.mjs`의 `verifyMirrors()`가 소스↔zz 불일치 시 빌드를 막음(소스 없는 CI 환경에선 스킵).
+- **`zz2`·`zz3`·`tools/calc`·`tools/stopwatch`는 `../magic-calculator-v2`·`../magic-stopwatch`의 바이트 단위 동일 미러(별도 git repo, remote 없음 — push 불가, 로컬 커밋만).** 게이트 확인은 소스 내부에서 경로 기반(`/tools/<name>/` → `/tools/_check?tool=<name>`)으로 동작하므로 사본별 편집은 없으며, 소스 수정 후 네 폴더를 반드시 재미러한다. `build-public.mjs`의 `verifyMirrors()`가 소스↔미러 불일치 시 빌드를 막음(소스 없는 CI 환경에선 스킵).
 - `kali_playground_v2/`, `kalimagic-v2/`는 2026-07-08 폐기(휴지통) — 더 이상 존재하지 않음
 - 배포되는 폴더: `kalis_magic_playground/` (Netlify → kalidcerona/kalimagic GitHub 자동 배포)
 - **netlify.toml이 두 개고, 먹히는 건 `kalis_magic_playground/netlify.toml`(`publish = "dist"` + `command = "npm run build"`)이다.** 레포 루트의 `netlify.toml`(`base = ""` + `publish = "kalis_magic_playground"`, 2026-06-22 최종 수정)은 폐기된 v2 미러 시절 잔재라 현재 읽히지 않는다 — 실증: `DESIGN.md`·`MAGIC-PLAYGROUND-PRD.md`가 404(폴더 전체 배포였다면 200). **루트 쪽을 살려 고치면 큐레이션된 `dist/` 대신 폴더 전체가 공개된다** — 배포 설정은 하위 파일만 수정할 것. **루트 `netlify.toml`은 2026-08-12 삭제 완료**(대시보드 Build settings의 Base directory = `kalis_magic_playground` 확인 → 애초에 읽히지 않던 파일). 이제 배포 설정 파일은 하위 하나뿐.

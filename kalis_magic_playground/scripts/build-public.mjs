@@ -75,11 +75,13 @@ export const PRIVATE_PATTERNS = [
   /^package-lock\.json$/
 ];
 
-const MIRROR_PAIRS = [
+export const MIRROR_PAIRS = [
   ['../../magic-calculator-v2/index.html', 'zz2/index.html'],
   ['../../magic-calculator-v2/sw.js', 'zz2/sw.js'],
+  ['../../magic-calculator-v2/index.html', 'tools/calc/index.html'],
   ['../../magic-stopwatch/index.html', 'zz3/index.html'],
-  ['../../magic-stopwatch/sw.js', 'zz3/sw.js']
+  ['../../magic-stopwatch/sw.js', 'zz3/sw.js'],
+  ['../../magic-stopwatch/index.html', 'tools/stopwatch/index.html']
 ];
 
 async function exists(relativePath) {
@@ -122,11 +124,6 @@ async function verifyMirrors() {
     if (!sourceContents.equals(mirrorContents)) {
       throw new Error(`mirror drift: ${source} ↔ ${mirror}`);
     }
-  }
-
-  const gatedCalculator = await readFile(path.join(ROOT, 'tools/calc/index.html'), 'utf8');
-  if (!gatedCalculator.includes('"arm"')) {
-    throw new Error('gated calculator missing v2 core marker: "arm"');
   }
 }
 

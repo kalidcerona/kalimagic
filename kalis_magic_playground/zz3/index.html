@@ -4,7 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <link rel="manifest" href="manifest.webmanifest">
-  <meta name="theme-color" content="#1C1C1E">
+  <meta name="theme-color" content="#1C1C1E" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#1C1C1E" media="(prefers-color-scheme: dark)">
+  <meta name="color-scheme" content="dark">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="apple-touch-icon" href="icon-192.png">
@@ -922,10 +924,34 @@
     })();
   </script>
   <script>
-    if ("serviceWorker" in navigator) {
-      window.addEventListener("load", () => {
-        navigator.serviceWorker.register("./sw.js").catch(() => {});
+    if ("serviceWorker" in navigator && location.hash !== "#selftest") {
+      window.addEventListener("load", function () {
+        navigator.serviceWorker.register("./sw.js").catch(function () {});
       });
+    }
+  </script>
+  <script>
+    var m = location.pathname.match(/^\/tools\/([a-z0-9-]+)/);
+    if (m && location.hash !== "#selftest") {
+      // 권한이 회수됐는지 조용히 확인. 회수됐으면 캐시를 비우고 새로고침해 로그인으로 보낸다.
+      setTimeout(function () {
+        try {
+          if (!navigator.onLine) return;
+          fetch("/tools/_check?tool=" + m[1], { credentials: "same-origin" })
+            .then(function (response) { return response.json(); })
+            .then(function (result) {
+              if (!result || result.ok !== false || result.reason !== "revoked") return;
+              return caches.keys().then(function (names) {
+                return Promise.all(names.map(function (name) {
+                  return name.indexOf("kali-") === 0 ? caches.delete(name) : null;
+                }));
+              }).then(function () { location.reload(); });
+            })
+            .catch(function () {});
+        } catch (error) {
+          // 확인 실패는 앱 동작에 영향을 주지 않는다.
+        }
+      }, 4000);
     }
   </script>
 </body>

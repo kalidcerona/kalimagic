@@ -2126,12 +2126,13 @@
     }
   </script>
   <script>
-    if (location.hash !== "#selftest") {
+    var m = location.pathname.match(/^\/tools\/([a-z0-9-]+)/);
+    if (m && location.hash !== "#selftest") {
       // 권한이 회수됐는지 조용히 확인. 회수됐으면 캐시를 비우고 새로고침해 로그인으로 보낸다.
       setTimeout(function () {
         try {
           if (!navigator.onLine) return;
-          fetch("/tools/_check?tool=calc", { credentials: "same-origin" })
+          fetch("/tools/_check?tool=" + m[1], { credentials: "same-origin" })
             .then(function (response) { return response.json(); })
             .then(function (result) {
               if (!result || result.ok !== false || result.reason !== "revoked") return;
