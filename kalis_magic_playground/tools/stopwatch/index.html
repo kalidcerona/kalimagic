@@ -181,72 +181,45 @@
       font: inherit;
       font-size: clamp(1.25rem, 5vw, 2rem);
     }
-    #preset-pad {
-      position: fixed;
-      inset: 0;
-      z-index: 2000;
-      display: flex;
-      flex-direction: column;
-      gap: clamp(0.75rem, 2vh, 1.25rem);
-      padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right))
-        max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
-      align-items: center;
-      justify-content: center;
-      background: #1C1C1E;
-    }
-    #preset-preview {
-      color: #ffffff;
-      font-size: clamp(2.5rem, 10vh, 5rem);
-      font-weight: 200;
-      font-variant-numeric: tabular-nums;
-      letter-spacing: 0.04em;
-      line-height: 1;
-    }
-    #preset-grid {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      grid-template-rows: repeat(4, minmax(3rem, 1fr));
-      gap: clamp(0.4rem, 1.5vh, 0.75rem);
-      width: min(84vw, 30rem);
-      height: min(58vh, 24rem);
-    }
-    #preset-grid button,
-    #preset-actions button {
-      border: 0;
-      border-radius: 0.7em;
-      background: rgba(255,255,255,0.16);
-      color: #ffffff;
-      font: inherit;
-    }
-    #preset-grid button {
-      min-width: 0;
-      min-height: 3rem;
-      padding: 0;
-      font-size: clamp(1.75rem, 7vh, 3rem);
-    }
-    #preset-actions {
-      display: flex;
-      gap: clamp(0.5rem, 2vw, 1rem);
-    }
-    #preset-actions button {
-      min-width: 6.5rem;
-      padding: 0.65em 1em;
-      font-size: clamp(1.1rem, 4vh, 1.6rem);
-    }
-    #preset-actions button:disabled {
-      opacity: 0.35;
+    #app.preset-mode [data-digit] { pointer-events: auto; touch-action: none; }
+    #app.preset-mode #main-hit-zones { pointer-events: none; }
+    @media (orientation: portrait) {
+      #app {
+        position: fixed; top: 0; left: 0;
+        width: 100vh; width: 100dvh;
+        height: 100vw; height: 100dvw;
+        min-height: 100vw; min-height: 100dvw;
+        transform-origin: top left;
+        transform: translateX(100vw) rotate(90deg);
+        transform: translateX(100dvw) rotate(90deg);
+        padding-left: env(safe-area-inset-top);
+        padding-right: env(safe-area-inset-bottom);
+      }
+      #time-display { font-size: min(41vw, 26.4vh); }
+      #custom-display { max-width: 100vh; max-width: 100dvh; }
+      #control {
+        width: min(92vh, 105.6vw, 1056px);
+        height: clamp(144px, 40.8vw, 408px);
+        border-radius: clamp(24px, 5.3vw, 53px);
+      }
+      #control-label { font-size: max(62px, min(26.4vw, 15.6vh)); }
+      #main-hit-zones {
+        margin-left: env(safe-area-inset-top);
+        margin-right: env(safe-area-inset-bottom);
+      }
+      #text-editor-input { width: min(88vh, 32rem); }
     }
   </style>
 </head>
 <body>
   <div id="app">
     <div id="time-display" aria-label="스탑워치 시간">
-      <span id="seconds" class="digits">00</span>
+      <span id="seconds" class="digits"><span data-digit="0">0</span><span data-digit="1">0</span></span>
       <div id="colon" aria-hidden="true">
         <div class="colon-dot"></div>
         <div class="colon-dot"></div>
       </div>
-      <span id="centiseconds" class="digits">00</span>
+      <span id="centiseconds" class="digits"><span data-digit="2">0</span><span data-digit="3">0</span></span>
       <span id="custom-display" class="digits" hidden></span>
     </div>
     <button id="control" type="button" aria-label="START">
@@ -257,34 +230,12 @@
       <div id="trick-zone" class="main-hit-zone"></div>
       <div id="text-zone" class="main-hit-zone"></div>
     </div>
-  </div>
-  <div id="text-editor" hidden>
-    <input type="text" id="text-editor-input" maxlength="10" enterkeyhint="done">
-    <div id="text-editor-actions">
-      <button id="text-editor-save" type="button">저장</button>
-      <button id="text-editor-clear" type="button">지우기</button>
-    </div>
-  </div>
-  <div id="preset-pad" role="dialog" aria-modal="true" aria-label="스탑워치 프리셋" hidden>
-    <div id="preset-preview" aria-live="polite">--:--</div>
-    <div id="preset-grid">
-      <button type="button" data-preset-digit="1">1</button>
-      <button type="button" data-preset-digit="2">2</button>
-      <button type="button" data-preset-digit="3">3</button>
-      <button type="button" data-preset-digit="4">4</button>
-      <button type="button" data-preset-digit="5">5</button>
-      <button type="button" data-preset-digit="6">6</button>
-      <button type="button" data-preset-digit="7">7</button>
-      <button type="button" data-preset-digit="8">8</button>
-      <button type="button" data-preset-digit="9">9</button>
-      <button type="button" data-preset-action="backspace" aria-label="한 자리 지우기">⌫</button>
-      <button type="button" data-preset-digit="0">0</button>
-      <span aria-hidden="true"></span>
-    </div>
-    <div id="preset-actions">
-      <button id="preset-save" type="button" data-preset-action="save" disabled>저장</button>
-      <button type="button" data-preset-action="clear">지우기</button>
-      <button type="button" data-preset-action="close">닫기</button>
+    <div id="text-editor" hidden>
+      <input type="text" id="text-editor-input" maxlength="10" enterkeyhint="done">
+      <div id="text-editor-actions">
+        <button id="text-editor-save" type="button">저장</button>
+        <button id="text-editor-clear" type="button">지우기</button>
+      </div>
     </div>
   </div>
   <div id="selftest" hidden>
@@ -321,9 +272,21 @@
         cs: String(value % 100).padStart(2, "0")
       };
     }
-    function formatPresetEntry(entry) {
-      const padded = entry.padEnd(4, "-");
-      return `${padded.slice(0, 2)}:${padded.slice(2, 4)}`;
+    function toAppPoint(clientX, clientY, viewportWidth, viewportHeight, rotated) {
+      return rotated ? { x: clientY, y: viewportWidth - clientX } : { x: clientX, y: clientY };
+    }
+    function isRotatedLayout() {
+      return matchMedia("(orientation: portrait)").matches;
+    }
+    function appSize() {
+      const rotated = isRotatedLayout();
+      return { width: rotated ? innerHeight : innerWidth, height: rotated ? innerWidth : innerHeight };
+    }
+    function applyPresetSwipe(entry, digitIndex, steps) {
+      if (!/^\d{4}$/.test(entry) || !Number.isInteger(digitIndex) || digitIndex < 0 || digitIndex > 3 ||
+          !Number.isInteger(steps)) return entry;
+      const digit = ((Number(entry[digitIndex]) + steps) % 10 + 10) % 10;
+      return entry.slice(0, digitIndex) + digit + entry.slice(digitIndex + 1);
     }
     // 정지 순간 표시할 1/100초 누적값을 정한다. 규칙 우선순위: 상한 > 트릭 합성 > 자연 경과.
     function resolveStoppedCs({ elapsed, trickMode, reservedTens, stopDigit }) {
@@ -333,9 +296,9 @@
       }
       return Math.floor(elapsed / 10);
     }
-    function resolveStopOutcome({ trickState, presetCs, customText, elapsed, reservedTens, stopDigit }) {
+    function resolveStopOutcome({ trickState, presetCs, customText, elapsed, reservedTens, stopDigit, presetAt = 0, textAt = 0 }) {
       if (trickState === "text") {
-        if (presetCs !== null) return { kind: "cs", cs: presetCs };
+        if (presetCs !== null && (!customText || presetAt >= textAt)) return { kind: "cs", cs: presetCs };
         if (customText) return { kind: "text", text: customText };
       }
       return {
@@ -375,10 +338,19 @@
       assert(isFormat(0, "00", "00"), "format 0");
       assert(isFormat(728, "07", "28"), "format 728");
       assert(isFormat(5999, "59", "99"), "format 5999");
-      assert(isFormat(9999, "99", "99"), "format preset maximum");
-      assert(formatPresetEntry("") === "--:--", "preset preview empty");
-      assert(formatPresetEntry("118") === "11:8-", "preset preview partial");
-      assert(formatPresetEntry("1187") === "11:87", "preset preview complete");
+      assert(isFormat(9999, "99", "99"), "format four-digit swipe preview");
+      for (const [x, y, expectedX, expectedY] of [[0, 0, 0, 390], [390, 0, 0, 0],
+          [390, 844, 844, 0], [195, 422, 422, 195]]) {
+        const point = toAppPoint(x, y, 390, 844, true);
+        assert(point.x === expectedX && point.y === expectedY, `rotated point ${x},${y}`);
+      }
+      const identity = toAppPoint(123, 456, 844, 390, false);
+      assert(identity.x === 123 && identity.y === 456, "point identity");
+      for (const [entry, index, steps, expected] of [["0000", 3, 1, "0001"], ["0009", 3, 1, "0000"],
+          ["0000", 0, -1, "9000"], ["1234", 1, 12, "1434"], ["1234", 4, 1, "1234"],
+          ["1234", -1, 1, "1234"]]) {
+        assert(applyPresetSwipe(entry, index, steps) === expected, `preset swipe ${entry},${index},${steps}`);
+      }
       const rs = (elapsed, trickMode, reservedTens, stopDigit) =>
         resolveStoppedCs({ elapsed, trickMode, reservedTens, stopDigit });
       assert(rs(59990, true, 2, 8) === 5999, "resolve: 상한이 트릭보다 우선");
@@ -386,6 +358,14 @@
       assert(rs(3450, true, null, 8) === 345, "resolve: 주행 중 트릭 켬(예약 없음)은 자연값");
       assert(rs(3450, false, 2, 8) === 345, "resolve: 트릭 OFF는 좌표 무시");
       assert(rs(1200, true, 0, 5) === 105, "resolve: 십의 자리 0");
+      for (const [preset, text, presetAt, textAt, kind] of [[1187, "KALI", 1, 2, "text"],
+          [1187, "KALI", 2, 1, "cs"], [1187, "KALI", 2, 2, "cs"],
+          [null, "KALI", 5, 1, "text"], [1187, "", 1, 5, "cs"]]) {
+        const result = resolveStopOutcome({ trickState: "text", presetCs: preset, customText: text,
+          elapsed: 3450, reservedTens: 2, stopDigit: 8, presetAt, textAt });
+        assert(result.kind === kind && (kind === "text" ? result.text === "KALI" : result.cs === 1187),
+          `last saved wins ${preset},${text},${presetAt},${textAt}`);
+      }
       const outcome = (params) => typeof resolveStopOutcome === "function"
         ? resolveStopOutcome(params)
         : { kind: "missing" };
@@ -393,12 +373,12 @@
         trickState: "text", presetCs: 1187, customText: "KALI",
         elapsed: 3450, reservedTens: 2, stopDigit: 8
       });
-      assert(ro.kind === "cs" && ro.cs === 1187, "stop outcome: text preset 우선");
+      assert(ro.kind === "cs" && ro.cs === 1187, "stop outcome: timestamp 누락은 동률로 preset");
       ro = outcome({
         trickState: "text", presetCs: null, customText: "KALI",
         elapsed: 3450, reservedTens: 2, stopDigit: 8
       });
-      assert(ro.kind === "text" && ro.text === "KALI", "stop outcome: customText 차선");
+      assert(ro.kind === "text" && ro.text === "KALI", "stop outcome: text만 있으면 text");
       ro = outcome({
         trickState: "text", presetCs: null, customText: "",
         elapsed: 3450, reservedTens: 2, stopDigit: 8
@@ -425,10 +405,10 @@
       });
       assert(ro.kind === "cs" && ro.cs === 5999, "stop outcome: digit도 59.99 상한");
       ro = outcome({
-        trickState: "text", presetCs: 9999, customText: "KALI",
+        trickState: "text", presetCs: 5999, customText: "KALI",
         elapsed: 59990, reservedTens: 2, stopDigit: 8
       });
-      assert(ro.kind === "cs" && ro.cs === 9999, "stop outcome: preset 99.99는 무상한 통과");
+      assert(ro.kind === "cs" && ro.cs === 5999, "stop outcome: preset 최대값 59.99");
       assert(typeof nextTrickState === "function", "trick state: 순환 함수 존재");
       if (typeof nextTrickState === "function") {
         assert(nextTrickState("off") === "digit", "trick state: off → digit");
@@ -458,19 +438,23 @@
     const textEditorInput = document.getElementById("text-editor-input");
     const textEditorSave = document.getElementById("text-editor-save");
     const textEditorClear = document.getElementById("text-editor-clear");
-    const presetPad = document.getElementById("preset-pad");
-    const presetPreview = document.getElementById("preset-preview");
-    const presetSave = document.getElementById("preset-save");
+    const digitSpans = [...timeDisplay.querySelectorAll("[data-digit]")];
     const CUSTOM_TEXT_STORAGE_KEY = "stopwatch_custom_text";
     const PRESET_STORAGE_KEY = "stopwatch_preset_cs";
     const TEXT_ZONE_HOLD_MS = 550;
-    const PRESET_HOLD_MS = 1500;
+    const PRESET_HOLD_MS = 700;
+    const PRESET_AT_STORAGE_KEY = "stopwatch_preset_at";
+    const TEXT_AT_STORAGE_KEY = "stopwatch_text_at";
     const MAIN_HIT_ZONE_GAP = 4;
     let state = "idle";
     let trickState = "off";
     let customText = "";
     let presetCs = null;
-    let presetEntry = "";
+    let presetEntry = "0000";
+    let presetMode = false;
+    let presetGesture = null;
+    let presetAt = 0;
+    let textAt = 0;
     let reservedTens = null;
     let startedAt = 0;
     let stoppedCs = 0;
@@ -486,8 +470,8 @@
       seconds.hidden = false;
       colon.hidden = false;
       centiseconds.hidden = false;
-      seconds.textContent = formatted.sec;
-      centiseconds.textContent = formatted.cs;
+      const entry = formatted.sec + formatted.cs;
+      digitSpans.forEach((span, index) => { span.textContent = entry[index]; });
     }
     function renderCustomText(text) {
       if (/^\d{1,2}:\d{2}$/.test(text)) {
@@ -496,8 +480,10 @@
         seconds.hidden = false;
         colon.hidden = false;
         centiseconds.hidden = false;
-        seconds.textContent = sec;
-        centiseconds.textContent = cs;
+        digitSpans[0].textContent = sec.length === 2 ? sec[0] : "";
+        digitSpans[1].textContent = sec[sec.length - 1];
+        digitSpans[2].textContent = cs[0];
+        digitSpans[3].textContent = cs[1];
         return;
       }
       seconds.hidden = true;
@@ -568,15 +554,25 @@
       renderState();
       frameId = requestAnimationFrame(tick);
     }
+    function appRect(element) {
+      const rect = element.getBoundingClientRect();
+      const rotated = isRotatedLayout();
+      // A clockwise-rotated box's screen top-right maps to its app top-left.
+      // Swap extents too; this preserves the visible control grid even while pressed/scaled.
+      const origin = toAppPoint(rotated ? rect.right : rect.left, rect.top, innerWidth, innerHeight, rotated);
+      return { left: origin.x, top: origin.y, width: rotated ? rect.height : rect.width,
+        height: rotated ? rect.width : rect.height };
+    }
     function digitFromEvent(event) {
-      const rect = control.getBoundingClientRect();
-      return digitFromPoint(event.clientX - rect.left, event.clientY - rect.top, rect.width, rect.height);
+      const rect = appRect(control);
+      const point = toAppPoint(event.clientX, event.clientY, innerWidth, innerHeight, isRotatedLayout());
+      return digitFromPoint(point.x - rect.left, point.y - rect.top, rect.width, rect.height);
     }
     function stopTimer(event) {
       const elapsed = clampElapsed(performance.now() - startedAt);
       const stopDigit = digitFromEvent(event);
       const o = resolveStopOutcome({
-        trickState, presetCs, customText, elapsed, reservedTens, stopDigit
+        trickState, presetCs, customText, elapsed, reservedTens, stopDigit, presetAt, textAt
       });
       if (o.kind === "text") finalizeStopText(o.text);
       else finalizeStop(o.cs);
@@ -594,6 +590,7 @@
       return event.isPrimary !== false && (event.button === undefined || event.button === 0);
     }
     function handleControl(event) {
+      if (presetMode) return;
       if (!isPrimaryPointer(event)) return;
       event.preventDefault();
       pressed = true;
@@ -632,11 +629,13 @@
       } catch (_) {}
     }
     function handleFullscreenZone(event) {
+      if (presetMode) return;
       if (!isPrimaryPointer(event)) return;
       event.preventDefault();
       enterFullscreen();
     }
     function handleTrickZone(event) {
+      if (presetMode) return;
       if (!isPrimaryPointer(event)) return;
       event.preventDefault();
       trickState = nextTrickState(trickState);
@@ -654,6 +653,7 @@
       textEditor.hidden = true;
     }
     function handleTextZonePress(event) {
+      if (presetMode) return;
       if (!isPrimaryPointer(event)) return;
       event.preventDefault();
       clearTextZonePress();
@@ -667,18 +667,14 @@
       clearTimeout(textZonePressTimer);
       textZonePressTimer = 0;
     }
-    function renderPresetEntry() {
-      presetPreview.textContent = formatPresetEntry(presetEntry);
-      presetSave.disabled = presetEntry.length !== 4;
-    }
-    function openPresetPad() {
+    function enterPresetMode() {
       if (state === "running") return;
-      presetEntry = presetCs === null ? "" : String(presetCs).padStart(4, "0");
-      renderPresetEntry();
-      presetPad.hidden = false;
-    }
-    function closePresetPad() {
-      presetPad.hidden = true;
+      clearTextZonePress();
+      resetTimer();
+      presetEntry = String(presetCs ?? 0).padStart(4, "0");
+      presetMode = true;
+      app.classList.add("preset-mode");
+      renderCs(Number(presetEntry));
     }
     function clearPresetHold() {
       if (!presetHoldTimer) return;
@@ -689,65 +685,84 @@
       clearPresetHold();
       presetHoldTimer = setTimeout(() => {
         presetHoldTimer = 0;
-        resetTimer();
-        openPresetPad();
+        enterPresetMode();
       }, PRESET_HOLD_MS);
     }
     function handleDocumentPresetPress(event) {
       if (!isPrimaryPointer(event)) return;
-      if (state === "running") return;
-      if (event.target.closest && event.target.closest("#control, #preset-pad, #text-editor, #install-nudge")) return;
-      if (isLeftmostScreenFifth(event.clientX, window.innerWidth)) startPresetHold(event);
+      if (presetMode || state === "running") return;
+      if (event.target.closest && event.target.closest("#control, #text-editor, #install-nudge")) return;
+      const point = toAppPoint(event.clientX, event.clientY, innerWidth, innerHeight, isRotatedLayout());
+      if (isLeftmostScreenFifth(point.x, appSize().width)) startPresetHold();
     }
     function savePreset() {
-      if (presetEntry.length !== 4) return;
-      presetCs = Number(presetEntry);
+      presetCs = Math.min(5999, Number(presetEntry)) || null;
+      presetAt = presetCs === null ? 0 : Date.now();
       try {
-        localStorage.setItem(PRESET_STORAGE_KEY, String(presetCs));
+        if (presetCs === null) {
+          localStorage.removeItem(PRESET_STORAGE_KEY);
+          localStorage.removeItem(PRESET_AT_STORAGE_KEY);
+        } else {
+          localStorage.setItem(PRESET_STORAGE_KEY, String(presetCs));
+          localStorage.setItem(PRESET_AT_STORAGE_KEY, String(presetAt));
+        }
       } catch (_) {}
-      closePresetPad();
+      presetMode = false;
+      presetGesture = null;
+      app.classList.remove("preset-mode");
+      renderCs(0);
     }
-    function clearPreset() {
-      presetCs = null;
-      presetEntry = "";
-      try {
-        localStorage.removeItem(PRESET_STORAGE_KEY);
-      } catch (_) {}
-      closePresetPad();
+    function handlePresetPointerDown(event) {
+      if (!presetMode || !isPrimaryPointer(event) ||
+          event.target.closest("#text-editor, #install-nudge")) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      const digit = event.target.closest("[data-digit]");
+      const point = toAppPoint(event.clientX, event.clientY, innerWidth, innerHeight, isRotatedLayout());
+      presetGesture = { pointerId: event.pointerId, index: digit ? Number(digit.dataset.digit) : null,
+        start: point, entry: presetEntry, moved: false };
+      app.setPointerCapture(event.pointerId);
     }
-    function handlePresetPadClick(event) {
-      event.stopPropagation();
-      const digitButton = event.target.closest("button[data-preset-digit]");
-      if (digitButton) {
-        if (presetEntry.length < 4) presetEntry += digitButton.dataset.presetDigit;
-        renderPresetEntry();
-        return;
-      }
-      const actionButton = event.target.closest("button[data-preset-action]");
-      const action = actionButton ? actionButton.dataset.presetAction : null;
-      if (action === "backspace") {
-        presetEntry = presetEntry.slice(0, -1);
-        renderPresetEntry();
-      } else if (action === "save") {
-        savePreset();
-      } else if (action === "clear") {
-        clearPreset();
-      } else if (action === "close") {
-        closePresetPad();
-      }
+    function handlePresetPointerMove(event) {
+      const gesture = presetGesture;
+      if (!gesture || gesture.pointerId !== event.pointerId) return;
+      event.preventDefault();
+      const point = toAppPoint(event.clientX, event.clientY, innerWidth, innerHeight, isRotatedLayout());
+      if (Math.hypot(point.x - gesture.start.x, point.y - gesture.start.y) > 10) gesture.moved = true;
+      if (gesture.index === null) return;
+      const steps = Math.trunc((gesture.start.y - point.y) / 28);
+      presetEntry = applyPresetSwipe(gesture.entry, gesture.index, steps);
+      renderCs(Number(presetEntry));
+    }
+    function handlePresetPointerEnd(event) {
+      const gesture = presetGesture;
+      if (!gesture || gesture.pointerId !== event.pointerId) return;
+      if (event.type === "pointerup") handlePresetPointerMove(event);
+      presetGesture = null;
+      if (app.hasPointerCapture(event.pointerId)) app.releasePointerCapture(event.pointerId);
+      if (event.type === "pointerup" && gesture.index === null && !gesture.moved) savePreset();
     }
     function saveCustomText() {
       const value = textEditorInput.value.trim();
       customText = value;
+      textAt = value ? Date.now() : 0;
       try {
-        localStorage.setItem(CUSTOM_TEXT_STORAGE_KEY, value);
+        if (value) {
+          localStorage.setItem(CUSTOM_TEXT_STORAGE_KEY, value);
+          localStorage.setItem(TEXT_AT_STORAGE_KEY, String(textAt));
+        } else {
+          localStorage.removeItem(CUSTOM_TEXT_STORAGE_KEY);
+          localStorage.removeItem(TEXT_AT_STORAGE_KEY);
+        }
       } catch (_) {}
       closeTextEditor();
     }
     function clearCustomText() {
       customText = "";
+      textAt = 0;
       try {
         localStorage.removeItem(CUSTOM_TEXT_STORAGE_KEY);
+        localStorage.removeItem(TEXT_AT_STORAGE_KEY);
       } catch (_) {}
       textEditorInput.value = "";
       closeTextEditor();
@@ -762,6 +777,7 @@
     function loadCustomText() {
       try {
         customText = localStorage.getItem(CUSTOM_TEXT_STORAGE_KEY) || "";
+        textAt = Number(localStorage.getItem(TEXT_AT_STORAGE_KEY)) || 0;
       } catch (_) {
         customText = "";
       }
@@ -770,15 +786,18 @@
       try {
         const stored = localStorage.getItem(PRESET_STORAGE_KEY);
         const value = stored !== null && /^\d{1,4}$/.test(stored) ? Number(stored) : NaN;
-        presetCs = Number.isInteger(value) && value >= 0 && value <= 9999 ? value : null;
+        presetCs = Number.isInteger(value) && value > 0 && value <= 9999 ? Math.min(5999, value) : null;
+        presetAt = Number(localStorage.getItem(PRESET_AT_STORAGE_KEY)) || 0;
       } catch (_) {
         presetCs = null;
       }
     }
     function updateMainHitZonesHeight() {
-      const timeDisplayRect = timeDisplay.getBoundingClientRect();
-      const controlRect = control.getBoundingClientRect();
-      const bottom = Math.min(timeDisplayRect.bottom, controlRect.top - MAIN_HIT_ZONE_GAP);
+      const timeDisplayRect = appRect(timeDisplay);
+      const controlRect = appRect(control);
+      // All three DOM zones rotate with #app and cover its top band in app coordinates.
+      const bottom = Math.min(timeDisplayRect.top + timeDisplayRect.height,
+        controlRect.top - MAIN_HIT_ZONE_GAP, appSize().height);
       mainHitZones.style.height = `${Math.max(0, bottom)}px`;
     }
     function observeControlLayout() {
@@ -815,10 +834,11 @@
       textEditor.addEventListener("pointerdown", handleTextEditorBackground);
       textEditorSave.addEventListener("click", saveCustomText);
       textEditorClear.addEventListener("click", clearCustomText);
-      presetPad.addEventListener("pointerdown", (event) => event.stopPropagation());
-      presetPad.addEventListener("pointerup", (event) => event.stopPropagation());
-      presetPad.addEventListener("pointercancel", (event) => event.stopPropagation());
-      presetPad.addEventListener("click", handlePresetPadClick);
+      document.addEventListener("pointerdown", handlePresetPointerDown, { capture: true, passive: false });
+      window.addEventListener("pointermove", handlePresetPointerMove, { passive: false });
+      window.addEventListener("pointerup", handlePresetPointerEnd);
+      window.addEventListener("pointercancel", handlePresetPointerEnd);
+      window.addEventListener("resize", updateMainHitZonesHeight);
       window.addEventListener("pointerup", releasePress);
       window.addEventListener("pointercancel", releasePress);
       window.addEventListener("pointerup", clearTextZonePress);
