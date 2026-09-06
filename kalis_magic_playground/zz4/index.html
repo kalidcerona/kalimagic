@@ -1,0 +1,691 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#000000" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+  <meta name="color-scheme" content="dark">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <title>Stopwatch</title>
+  <style>
+    :root { color-scheme: dark; font-family: -apple-system, "SF Pro Display", system-ui, sans-serif; background: #000; }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; -webkit-user-select: none; user-select: none; touch-action: manipulation; }
+    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; overscroll-behavior: none; background: #000; color: #FFFFFF; }
+    [hidden] { display: none !important; }
+    button { appearance: none; -webkit-appearance: none; border: 0; font: inherit; color: inherit; padding: 0; outline: none; cursor: default; }
+    #app { position: relative; width: 100%; height: 100vh; height: 100dvh; overflow: hidden; background: #000; }
+    #text-zone { position: absolute; inset: 0 0 auto; height: 22%; touch-action: none; }
+    #time-display { position: absolute; top: 30%; left: 0; width: 100%; transform: translateY(-50%); display: flex; align-items: center; justify-content: center; font-size: min(26vw, 13dvh); font-weight: 200; font-variant-numeric: tabular-nums; letter-spacing: -0.045em; line-height: 1; white-space: nowrap; }
+    #numeric-display { display: flex; align-items: baseline; }
+    .digits { display: inline-flex; }
+    [data-digit] { display: inline-block; width: 0.56em; text-align: center; touch-action: none; }
+    #minutes { letter-spacing: -0.045em; }
+    #colon { display: inline-flex; align-self: center; flex-direction: column; justify-content: space-between; align-items: center; width: 0.22em; height: 0.40em; margin: 0 0.025em; transform: translateY(0.025em); }
+    .colon-dot { width: 0.1em; height: 0.1em; border-radius: 50%; background: #FFFFFF; }
+    #decimal { width: 0.20em; text-align: center; }
+    #custom-display { display: block; max-width: 94vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    #buttons { position: absolute; top: 52%; transform: translateY(-50%); left: 4vw; right: 4vw; display: flex; align-items: center; justify-content: space-between; }
+    .round { width: 23vw; height: 23vw; border-radius: 50%; font-size: 20px; font-weight: 400; }
+    #lap { background: #2C2C2E; color: #FFFFFF; }
+    #lap:disabled { color: #8E8E93; }
+    #control { background: #0A2E14; color: #30D158; }
+    #control.running { background: #3A0A0A; color: #FF453A; }
+    #pages { display: flex; gap: 8px; }
+    #pages i { width: 8px; height: 8px; border-radius: 50%; background: #48484A; }
+    #pages i:first-child { background: #FFFFFF; }
+    #lap-area { position: absolute; top: calc(52% + 11.5vw + 16px); bottom: calc(13dvh + env(safe-area-inset-bottom)); left: 4vw; right: 4vw; border-top: 1px solid #3A3A3C; overflow: hidden; touch-action: none; }
+    #lap-rows, .lap-row, .lap-row * { pointer-events: none; }
+    .lap-row { display: flex; justify-content: space-between; align-items: center; height: 44px; border-bottom: 0.5px solid #3A3A3C; font-size: 17px; font-variant-numeric: tabular-nums; }
+    #tabs { position: absolute; left: 4%; bottom: max(1.5dvh, env(safe-area-inset-bottom)); width: 92%; height: 11dvh; border-radius: 40px; background: #1C1C1E; display: flex; align-items: center; padding: 6px; }
+    .tab { flex: 1; min-width: 0; height: 100%; border-radius: 34px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; background: transparent; font-size: 12px; white-space: nowrap; }
+    .tab svg { width: 28px; height: 28px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+    .tab.active { color: #FF9F0A; background: #2C2C2E; }
+    .tab-world .core { fill: #1C1C1E; stroke: none; }
+    .tab-world.feedback .core { fill: #FFFFFF; }
+    #selftest { position: fixed; inset: 0; z-index: 10; padding: 6vh 6vw; display: flex; align-items: center; justify-content: center; overflow: auto; background: #000; font-size: 24px; white-space: pre-wrap; }
+    #selftest-result.fail { color: #ff7b7b; }
+    #text-editor {
+      position: fixed;
+      inset: 0;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      gap: clamp(1rem, 3vh, 2rem);
+      padding: 6vh 6vw;
+      align-items: center;
+      justify-content: center;
+      background: #1C1C1E;
+    }
+    #text-editor-input {
+      width: min(88vw, 32rem);
+      padding: 0.7em 0.8em;
+      border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 0.5em;
+      background: rgba(255,255,255,0.1);
+      color: #ffffff;
+      font: inherit;
+      font-size: clamp(2rem, 8vw, 4rem);
+      text-align: center;
+      user-select: text;
+      -webkit-user-select: text;
+      touch-action: auto;
+    }
+    #text-editor-actions {
+      display: flex;
+      gap: clamp(0.75rem, 3vw, 1.5rem);
+    }
+    #text-editor-actions button {
+      min-width: 7rem;
+      padding: 0.7em 1.2em;
+      border: 0;
+      border-radius: 0.7em;
+      background: rgba(255,255,255,0.16);
+      color: #ffffff;
+      font: inherit;
+      font-size: clamp(1.25rem, 5vw, 2rem);
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div id="text-zone" aria-hidden="true"></div>
+    <div id="time-display" aria-label="스톱워치 시간">
+      <span id="numeric-display"><span id="minutes">00</span><span id="colon" aria-hidden="true"><span class="colon-dot"></span><span class="colon-dot"></span></span><span id="seconds" class="digits"><span data-digit="0">0</span><span data-digit="1">0</span></span><span id="decimal">.</span><span id="centiseconds" class="digits"><span data-digit="2">0</span><span data-digit="3">0</span></span></span>
+      <span id="custom-display" hidden></span>
+    </div>
+    <div id="buttons">
+      <button id="lap" class="round" type="button" disabled>랩</button>
+      <span id="pages" aria-hidden="true"><i></i><i></i></span>
+      <button id="control" class="round" type="button">시작</button>
+    </div>
+    <div id="lap-area"><div id="lap-rows"></div></div>
+    <nav id="tabs" aria-label="시계">
+      <button class="tab tab-world" type="button"><svg viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="14" r="11"/><ellipse cx="14" cy="14" rx="5" ry="11"/><path d="M3 14h22M5 8h18M5 20h18M14 3v22"/><circle class="core" cx="14" cy="14" r="3"/></svg><span>세계 시계</span></button>
+      <button class="tab" type="button"><svg viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="15" r="9"/><path d="M14 9v6l4 2M5 4L2 8M23 4l3 4M8 23l-2 3M20 23l2 3M9 3L5 6M19 3l4 3"/></svg><span>알람</span></button>
+      <button class="tab active" type="button" aria-current="page"><svg viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="16" r="9"/><path d="M11 2h6M14 2v5M21 6l2 2M14 10v6l-3 3"/></svg><span>스톱워치</span></button>
+      <button class="tab" type="button"><svg viewBox="0 0 28 28" aria-hidden="true"><path d="M14 5a10 10 0 1 1-8 4M14 2v5M3 5v6h6M14 9v7l4 2"/></svg><span>타이머</span></button>
+    </nav>
+    <div id="text-editor" hidden>
+      <input type="text" id="text-editor-input" maxlength="10" enterkeyhint="done">
+      <div id="text-editor-actions">
+        <button id="text-editor-save" type="button">저장</button>
+        <button id="text-editor-clear" type="button">지우기</button>
+      </div>
+    </div>
+  </div>
+  <div id="selftest" hidden>
+    <div id="selftest-result"></div>
+  </div>
+  <script>
+    const COLON_COLOR_OFF = "#FFFFFF";
+    const COLON_COLOR_DIGIT = "#8E8E93";
+    const COLON_COLOR_TEXT = "#FF9F0A";
+    function digitFromPoint(x, y, w, h) {
+      const width = Number.isFinite(w) && w > 0 ? w : 1;
+      const height = Number.isFinite(h) && h > 0 ? h : 1;
+      const px = Number.isFinite(x) ? Math.min(Math.max(x, 0), width) : 0;
+      const py = Number.isFinite(y) ? Math.min(Math.max(y, 0), height) : 0;
+      const col = Math.min(4, Math.floor(px / width * 5));
+      const row = Math.min(1, Math.floor(py / height * 2));
+      return row === 0 ? col + 1 : (col === 4 ? 0 : col + 6);
+    }
+    function composeCs(tens, ones) {
+      return tens * 10 + ones;
+    }
+    function nextTrickState(current) {
+      if (current === "off") return "digit";
+      if (current === "digit") return "text";
+      return "off";
+    }
+    function clampElapsed(ms) {
+      return Math.min(ms, 59990);
+    }
+    function formatCs(totalCs) {
+      const value = Math.min(9999, Math.max(0, Math.floor(totalCs)));
+      return {
+        sec: String(Math.floor(value / 100)).padStart(2, "0"),
+        cs: String(value % 100).padStart(2, "0")
+      };
+    }
+    function resolveStoppedCs({ elapsed, trickMode, reservedTens, stopDigit }) {
+      if (elapsed >= 59990) return 5999; // 상한 도달은 손댄 숫자가 아니라 실제 최대값
+      if (trickMode && reservedTens !== null && stopDigit !== null) {
+        return Math.floor(elapsed / 1000) * 100 + composeCs(reservedTens, stopDigit);
+      }
+      return Math.floor(elapsed / 10);
+    }
+    function resolveStopOutcome({ trickState, presetCs, customText, elapsed, reservedTens, stopDigit, presetAt = 0, textAt = 0 }) {
+      if (trickState === "text") {
+        if (presetCs !== null && (!customText || presetAt >= textAt)) return { kind: "cs", cs: presetCs };
+        if (customText) return { kind: "text", text: customText };
+      }
+      return {
+        kind: "cs",
+        cs: resolveStoppedCs({ elapsed, trickMode: trickState === "digit", reservedTens, stopDigit })
+      };
+    }
+    function applyPresetSwipe(entry, digitIndex, steps) {
+      if (!/^\d{4}$/.test(entry) || !Number.isInteger(digitIndex) || digitIndex < 0 || digitIndex > 3 ||
+          !Number.isInteger(steps)) return entry;
+      const digit = ((Number(entry[digitIndex]) + steps) % 10 + 10) % 10;
+      return entry.slice(0, digitIndex) + digit + entry.slice(digitIndex + 1);
+    }
+    function runSelfTests() {
+      const failures = [];
+      const assert = (condition, name) => {
+        if (!condition) failures.push(name);
+      };
+      const expected = [[1, 2, 3, 4, 5], [6, 7, 8, 9, 0]];
+      for (let row = 0; row < 2; row += 1) {
+        for (let col = 0; col < 5; col += 1) {
+          const actual = digitFromPoint((col + 0.5) * 100, (row + 0.5) * 100, 500, 200);
+          assert(actual === expected[row][col], `grid row ${row} col ${col}`);
+        }
+      }
+      for (const [x, y] of [[-20, -20], [520, 220], [-1, 250], [900, -1]]) {
+        const digit = digitFromPoint(x, y, 500, 200);
+        assert(Number.isInteger(digit) && digit >= 0 && digit <= 9, `clamp ${x},${y}`);
+      }
+      assert(composeCs(2, 8) === 28, "compose 2,8");
+      assert(composeCs(0, 0) === 0, "compose 0,0");
+      assert(composeCs(9, 9) === 99, "compose 9,9");
+      assert(clampElapsed(59990) === 59990, "clamp elapsed at limit");
+      assert(clampElapsed(120000) === 59990, "clamp elapsed above limit");
+      const isFormat = (value, sec, cs) => {
+        const result = formatCs(value);
+        return result.sec === sec && result.cs === cs;
+      };
+      assert(isFormat(0, "00", "00"), "format 0");
+      assert(isFormat(728, "07", "28"), "format 728");
+      assert(isFormat(5999, "59", "99"), "format 5999");
+      assert(isFormat(9999, "99", "99"), "format four-digit swipe preview");
+      for (const [entry, index, steps, expected] of [["0000", 3, 1, "0001"], ["0009", 3, 1, "0000"],
+          ["0000", 0, -1, "9000"], ["1234", 1, 12, "1434"], ["1234", 4, 1, "1234"],
+          ["1234", -1, 1, "1234"]]) {
+        assert(applyPresetSwipe(entry, index, steps) === expected, `preset swipe ${entry},${index},${steps}`);
+      }
+      const rs = (elapsed, trickMode, reservedTens, stopDigit) =>
+        resolveStoppedCs({ elapsed, trickMode, reservedTens, stopDigit });
+      assert(rs(59990, true, 2, 8) === 5999, "resolve: 상한이 트릭보다 우선");
+      assert(rs(3450, true, 2, 8) === 328, "resolve: 트릭 합성 03:28");
+      assert(rs(3450, true, null, 8) === 345, "resolve: 주행 중 트릭 켬(예약 없음)은 자연값");
+      assert(rs(3450, false, 2, 8) === 345, "resolve: 트릭 OFF는 좌표 무시");
+      assert(rs(1200, true, 0, 5) === 105, "resolve: 십의 자리 0");
+      for (const [preset, text, presetAt, textAt, kind] of [[1187, "KALI", 1, 2, "text"],
+          [1187, "KALI", 2, 1, "cs"], [1187, "KALI", 2, 2, "cs"],
+          [null, "KALI", 5, 1, "text"], [1187, "", 1, 5, "cs"]]) {
+        const result = resolveStopOutcome({ trickState: "text", presetCs: preset, customText: text,
+          elapsed: 3450, reservedTens: 2, stopDigit: 8, presetAt, textAt });
+        assert(result.kind === kind && (kind === "text" ? result.text === "KALI" : result.cs === 1187),
+          `last saved wins ${preset},${text},${presetAt},${textAt}`);
+      }
+      const outcome = (params) => typeof resolveStopOutcome === "function"
+        ? resolveStopOutcome(params)
+        : { kind: "missing" };
+      let ro = outcome({
+        trickState: "text", presetCs: 1187, customText: "KALI",
+        elapsed: 3450, reservedTens: 2, stopDigit: 8
+      });
+      assert(ro.kind === "cs" && ro.cs === 1187, "stop outcome: timestamp 누락은 동률로 preset");
+      ro = outcome({
+        trickState: "text", presetCs: null, customText: "KALI",
+        elapsed: 3450, reservedTens: 2, stopDigit: 8
+      });
+      assert(ro.kind === "text" && ro.text === "KALI", "stop outcome: text만 있으면 text");
+      ro = outcome({
+        trickState: "text", presetCs: null, customText: "",
+        elapsed: 3450, reservedTens: 2, stopDigit: 8
+      });
+      assert(ro.kind === "cs" && ro.cs === 345, "stop outcome: text 설정 없으면 실측");
+      ro = outcome({
+        trickState: "off", presetCs: 9999, customText: "KALI",
+        elapsed: 3450, reservedTens: 2, stopDigit: 8
+      });
+      assert(ro.kind === "cs" && ro.cs === 345, "stop outcome: off는 preset과 text 무시");
+      ro = outcome({
+        trickState: "digit", presetCs: 9999, customText: "KALI",
+        elapsed: 3450, reservedTens: 2, stopDigit: 8
+      });
+      assert(ro.kind === "cs" && ro.cs === 328, "stop outcome: digit는 preset 무시");
+      ro = outcome({
+        trickState: "digit", presetCs: null, customText: "",
+        elapsed: 3450, reservedTens: 2, stopDigit: 8
+      });
+      assert(ro.kind === "cs" && ro.cs === 328, "stop outcome: digit 합성");
+      ro = outcome({
+        trickState: "digit", presetCs: null, customText: "",
+        elapsed: 59990, reservedTens: 2, stopDigit: 8
+      });
+      assert(ro.kind === "cs" && ro.cs === 5999, "stop outcome: digit도 59.99 상한");
+      ro = outcome({
+        trickState: "text", presetCs: 5999, customText: "KALI",
+        elapsed: 59990, reservedTens: 2, stopDigit: 8
+      });
+      assert(ro.kind === "cs" && ro.cs === 5999, "stop outcome: preset 최대값 59.99");
+      assert(typeof nextTrickState === "function", "trick state: 순환 함수 존재");
+      if (typeof nextTrickState === "function") {
+        assert(nextTrickState("off") === "digit", "trick state: off → digit");
+        assert(nextTrickState("digit") === "text", "trick state: digit → text");
+        assert(nextTrickState("text") === "off", "trick state: text → off");
+      }
+      const colors = [COLON_COLOR_OFF, COLON_COLOR_DIGIT, COLON_COLOR_TEXT];
+      assert(new Set(colors).size === 3, "colon colors distinct");
+      assert(colors.every(color => /^#[0-9A-F]{6}$/i.test(color)), "colon colors six-digit hex");
+      assert(rs(3450, true, 2, null) === 345, "missing stop grid tap uses measured time");
+      assert(rs(3450, true, null, null) === 345, "no grid taps uses measured time");
+      assert(applyPresetSwipe("123", 0, 1) === "123", "invalid preset length");
+      assert(applyPresetSwipe("1234", 0, 0.5) === "1234", "fractional swipe rejected");
+      const message = failures.length ? `FAIL\n${failures.join("\n")}` : "ALL PASS";
+      const output = document.getElementById("selftest-result");
+      output.textContent = message;
+      output.className = failures.length ? "fail" : "";
+      console.log(message);
+    }
+    const app = document.getElementById("app");
+    const selftest = document.getElementById("selftest");
+    const timeDisplay = document.getElementById("time-display");
+    const numericDisplay = document.getElementById("numeric-display");
+    const customDisplay = document.getElementById("custom-display");
+    const colon = document.getElementById("colon");
+    const control = document.getElementById("control");
+    const lapButton = document.getElementById("lap");
+    const lapArea = document.getElementById("lap-area");
+    const lapRows = document.getElementById("lap-rows");
+    const world = document.querySelector(".tab-world");
+    const textEditor = document.getElementById("text-editor");
+    const textEditorInput = document.getElementById("text-editor-input");
+    const textEditorSave = document.getElementById("text-editor-save");
+    const textEditorClear = document.getElementById("text-editor-clear");
+    const digitSpans = [...timeDisplay.querySelectorAll("[data-digit]")];
+    const CUSTOM_TEXT_STORAGE_KEY = "stopwatch2_custom_text";
+    const PRESET_STORAGE_KEY = "stopwatch2_preset_cs";
+    const PRESET_AT_STORAGE_KEY = "stopwatch2_preset_at";
+    const TEXT_AT_STORAGE_KEY = "stopwatch2_text_at";
+    let state = "idle", trickState = "off", customText = "";
+    let presetCs = null, presetAt = 0, textAt = 0, presetEntry = "0000", presetMode = false, presetGesture = null;
+    let reservedTens = null, stopDigit = null, startedAt = 0, elapsedBase = 0, frameId = 0;
+    let lapCount = 0, lastLapElapsed = 0, hold = null, tap = null, suppressClick = false;
+    function renderCs(totalCs) {
+      const formatted = formatCs(totalCs);
+      customDisplay.hidden = true;
+      numericDisplay.hidden = false;
+      const entry = formatted.sec + formatted.cs;
+      digitSpans.forEach((span, index) => { span.textContent = entry[index]; });
+    }
+    function renderCustomText(text) {
+      numericDisplay.hidden = true;
+      customDisplay.hidden = false;
+      customDisplay.textContent = text;
+    }
+    function renderState() {
+      control.textContent = state === "running" ? "중단" : "시작";
+      control.classList.toggle("running", state === "running");
+      lapButton.textContent = state === "stopped" && elapsedBase > 0 ? "재설정" : "랩";
+      lapButton.disabled = state !== "running" && elapsedBase === 0;
+      const color = trickState === "digit" ? COLON_COLOR_DIGIT : trickState === "text" ? COLON_COLOR_TEXT : COLON_COLOR_OFF;
+      colon.querySelectorAll(".colon-dot").forEach(dot => { dot.style.background = color; });
+    }
+    function elapsedNow() {
+      return clampElapsed(elapsedBase + (state === "running" ? performance.now() - startedAt : 0));
+    }
+    function stopTimer(atLimit = false) {
+      elapsedBase = elapsedNow();
+      cancelAnimationFrame(frameId);
+      state = "stopped";
+      world.classList.remove("feedback");
+      const outcome = atLimit ? { kind: "cs", cs: 5999 } : resolveStopOutcome({
+        trickState, presetCs, customText, elapsed: elapsedBase, reservedTens, stopDigit, presetAt, textAt
+      });
+      if (outcome.kind === "text") renderCustomText(outcome.text);
+      else renderCs(outcome.cs);
+      reservedTens = null;
+      stopDigit = null;
+      renderState();
+    }
+    function tick() {
+      if (state !== "running") return;
+      const elapsed = elapsedNow();
+      if (elapsed >= 59990) { stopTimer(true); return; }
+      renderCs(Math.floor(elapsed / 10));
+      frameId = requestAnimationFrame(tick);
+    }
+    function startTimer() {
+      if (elapsedBase >= 59990) return;
+      world.classList.remove("feedback");
+      stopDigit = null;
+      startedAt = performance.now();
+      state = "running";
+      renderState();
+      tick();
+    }
+    function resetTimer() {
+      cancelAnimationFrame(frameId);
+      state = "idle";
+      elapsedBase = 0;
+      reservedTens = stopDigit = null;
+      lapCount = lastLapElapsed = 0;
+      lapRows.replaceChildren();
+      world.classList.remove("feedback");
+      renderCs(0);
+      renderState();
+    }
+    function addLap() {
+      const elapsed = elapsedNow();
+      const split = formatCs(Math.floor((elapsed - lastLapElapsed) / 10));
+      lastLapElapsed = elapsed;
+      const row = document.createElement("div");
+      row.className = "lap-row";
+      const label = document.createElement("span"), value = document.createElement("span");
+      label.textContent = `랩 ${++lapCount}`;
+      value.textContent = `00:${split.sec}.${split.cs}`;
+      row.append(label, value);
+      lapRows.prepend(row);
+    }
+    function isPrimaryPointer(event) {
+      return event.isPrimary !== false && (event.button === undefined || event.button === 0);
+    }
+    function openTextEditor() {
+      textEditorInput.value = customText;
+      textEditor.hidden = false;
+      textEditorInput.focus();
+      textEditorInput.select();
+    }
+    function closeTextEditor() {
+      textEditor.hidden = true;
+    }
+    function saveCustomText() {
+      const value = textEditorInput.value.trim();
+      customText = value;
+      textAt = value ? Date.now() : 0;
+      try {
+        if (value) {
+          localStorage.setItem(CUSTOM_TEXT_STORAGE_KEY, value);
+          localStorage.setItem(TEXT_AT_STORAGE_KEY, String(textAt));
+        } else {
+          localStorage.removeItem(CUSTOM_TEXT_STORAGE_KEY);
+          localStorage.removeItem(TEXT_AT_STORAGE_KEY);
+        }
+      } catch (_) {}
+      closeTextEditor();
+    }
+    function clearCustomText() {
+      customText = "";
+      textAt = 0;
+      try {
+        localStorage.removeItem(CUSTOM_TEXT_STORAGE_KEY);
+        localStorage.removeItem(TEXT_AT_STORAGE_KEY);
+      } catch (_) {}
+      textEditorInput.value = "";
+      closeTextEditor();
+    }
+    function handleTextEditorBackground(event) {
+      if (event.target !== textEditorInput &&
+          event.target !== textEditorSave &&
+          event.target !== textEditorClear) {
+        closeTextEditor();
+      }
+    }
+    function loadCustomText() {
+      try {
+        customText = localStorage.getItem(CUSTOM_TEXT_STORAGE_KEY) || "";
+        textAt = Number(localStorage.getItem(TEXT_AT_STORAGE_KEY)) || 0;
+      } catch (_) {
+        customText = "";
+      }
+    }
+    function loadPreset() {
+      try {
+        const stored = localStorage.getItem(PRESET_STORAGE_KEY);
+        const value = stored !== null && /^\d{1,4}$/.test(stored) ? Number(stored) : NaN;
+        presetCs = Number.isInteger(value) && value > 0 && value <= 9999 ? Math.min(5999, value) : null;
+        presetAt = Number(localStorage.getItem(PRESET_AT_STORAGE_KEY)) || 0;
+      } catch (_) {
+        presetCs = null;
+      }
+    }
+    function savePreset() {
+      presetCs = Math.min(5999, Number(presetEntry)) || null;
+      presetAt = presetCs === null ? 0 : Date.now();
+      try {
+        if (presetCs === null) {
+          localStorage.removeItem(PRESET_STORAGE_KEY);
+          localStorage.removeItem(PRESET_AT_STORAGE_KEY);
+        } else {
+          localStorage.setItem(PRESET_STORAGE_KEY, String(presetCs));
+          localStorage.setItem(PRESET_AT_STORAGE_KEY, String(presetAt));
+        }
+      } catch (_) {}
+      presetMode = false;
+      presetGesture = null;
+      app.classList.remove("preset-mode");
+      renderCs(0);
+    }
+    function enterPresetMode() {
+      if (state === "running" || presetMode) return;
+      resetTimer();
+      presetEntry = String(presetCs ?? 0).padStart(4, "0");
+      presetMode = true;
+      app.classList.add("preset-mode");
+      renderCs(Number(presetEntry));
+    }
+    function clearHold() {
+      if (hold) clearTimeout(hold.timer);
+      hold = null;
+    }
+    function beginHold(event, delay, action) {
+      if (!isPrimaryPointer(event) || presetMode) return;
+      event.preventDefault();
+      clearHold();
+      hold = { pointerId: event.pointerId, x: event.clientX, y: event.clientY,
+        timer: setTimeout(() => { hold = null; action(); }, delay) };
+    }
+    function handlePresetPointerDown(event) {
+      if (!presetMode || !isPrimaryPointer(event) || event.target.closest("#text-editor")) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      const digit = event.target.closest("[data-digit]");
+      presetGesture = { pointerId: event.pointerId, index: digit ? Number(digit.dataset.digit) : null,
+        x: event.clientX, y: event.clientY, entry: presetEntry, moved: false };
+      app.setPointerCapture(event.pointerId);
+      suppressClick = true;
+    }
+    function handlePointerMove(event) {
+      if (hold && hold.pointerId === event.pointerId && Math.hypot(event.clientX - hold.x, event.clientY - hold.y) > 10) clearHold();
+      if (tap && tap.pointerId === event.pointerId && Math.hypot(event.clientX - tap.x, event.clientY - tap.y) > 10) tap = null;
+      const gesture = presetGesture;
+      if (!gesture || gesture.pointerId !== event.pointerId) return;
+      event.preventDefault();
+      if (Math.hypot(event.clientX - gesture.x, event.clientY - gesture.y) > 10) gesture.moved = true;
+      if (gesture.index === null) return;
+      presetEntry = applyPresetSwipe(gesture.entry, gesture.index, Math.trunc((gesture.y - event.clientY) / 28));
+      renderCs(Number(presetEntry));
+    }
+    function handlePointerEnd(event) {
+      clearHold();
+      const gesture = presetGesture;
+      if (gesture && gesture.pointerId === event.pointerId) {
+        if (event.type === "pointerup") handlePointerMove(event);
+        presetGesture = null;
+        if (app.hasPointerCapture(event.pointerId)) app.releasePointerCapture(event.pointerId);
+        if (event.type === "pointerup" && gesture.index === null && !gesture.moved) savePreset();
+        setTimeout(() => { suppressClick = false; }, 0);
+      }
+      if (tap && tap.pointerId === event.pointerId && event.type === "pointerup" && !presetMode && trickState === "digit") {
+        const rect = lapArea.getBoundingClientRect();
+        if (Math.hypot(event.clientX - tap.x, event.clientY - tap.y) <= 10 && event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom) {
+          const digit = digitFromPoint(event.clientX - rect.left, event.clientY - rect.top, rect.width, rect.height);
+          if (state === "running") stopDigit = digit;
+          else reservedTens = digit;
+          world.classList.add("feedback");
+        }
+      }
+      tap = null;
+    }
+    function initApp() {
+      loadCustomText();
+      loadPreset();
+      control.addEventListener("click", () => {
+        if (presetMode || suppressClick) return;
+        if (state === "running") stopTimer(); else startTimer();
+      });
+      lapButton.addEventListener("click", () => {
+        if (presetMode || suppressClick) return;
+        if (state === "running") addLap(); else resetTimer();
+      });
+      timeDisplay.addEventListener("click", () => {
+        if (presetMode || suppressClick) return;
+        trickState = nextTrickState(trickState);
+        reservedTens = stopDigit = null;
+        world.classList.remove("feedback");
+        renderState();
+      });
+      lapArea.addEventListener("pointerdown", event => {
+        if (presetMode || trickState !== "digit" || !isPrimaryPointer(event)) return;
+        tap = { pointerId: event.pointerId, x: event.clientX, y: event.clientY };
+      });
+      document.getElementById("text-zone").addEventListener("pointerdown", event => beginHold(event, 550, openTextEditor));
+      world.addEventListener("pointerdown", event => {
+        if (state !== "running") beginHold(event, 700, enterPresetMode);
+      });
+      document.addEventListener("pointerdown", handlePresetPointerDown, { capture: true, passive: false });
+      window.addEventListener("pointermove", handlePointerMove, { passive: false });
+      window.addEventListener("pointerup", handlePointerEnd);
+      window.addEventListener("pointercancel", handlePointerEnd);
+      window.addEventListener("blur", () => { clearHold(); tap = null; });
+      document.addEventListener("visibilitychange", () => { if (document.hidden) { clearHold(); tap = null; } });
+      document.addEventListener("contextmenu", event => event.preventDefault());
+      textEditor.addEventListener("pointerdown", handleTextEditorBackground);
+      textEditorSave.addEventListener("click", saveCustomText);
+      textEditorClear.addEventListener("click", clearCustomText);
+      textEditorInput.addEventListener("keydown", event => { if (event.key === "Enter") saveCustomText(); if (event.key === "Escape") closeTextEditor(); });
+      renderState();
+    }
+    if (location.hash === "#selftest") {
+      app.hidden = true;
+      selftest.hidden = false;
+      runSelfTests();
+    } else {
+      initApp();
+    }
+  </script>
+  <style>
+    #install-nudge {
+      position: fixed;
+      left: 12px;
+      right: 12px;
+      bottom: 12px;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      background: #1c1c1e;
+      color: #fff;
+      border-radius: 14px;
+      font-size: 14px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+    }
+    #install-nudge span { flex: 1; }
+    #install-nudge button {
+      border: 0;
+      border-radius: 10px;
+      padding: 8px 14px;
+      font-size: 14px;
+      background: #ff9f0a;
+      color: #000;
+    }
+    #install-nudge button[data-act="close"] {
+      background: transparent;
+      color: #8e8e93;
+      padding: 8px;
+    }
+  </style>
+  <script>
+    (() => {
+      try {
+        if (location.hash === "#selftest") return;
+        const KEY = "stopwatch2_installNudgeDone";
+        if (localStorage.getItem(KEY)) return;
+        const standalone = typeof window.matchMedia === "function" &&
+          window.matchMedia("(display-mode: standalone)").matches;
+        if (standalone || navigator.standalone) return;
+
+        let deferred = null;
+        let bar = null;
+        const done = () => {
+          try { localStorage.setItem(KEY, "1"); } catch (_) {}
+          if (bar) bar.remove();
+          bar = null;
+          deferred = null;
+        };
+
+        window.addEventListener("appinstalled", done);
+        window.addEventListener("beforeinstallprompt", (event) => {
+          event.preventDefault();
+          deferred = event;
+          if (bar) return;
+
+          bar = document.createElement("div");
+          bar.id = "install-nudge";
+          bar.innerHTML = '<span>홈 화면에 앱으로 설치할 수 있어요</span>' +
+            '<button type="button" data-act="install">설치</button>' +
+            '<button type="button" data-act="close" aria-label="닫기">✕</button>';
+          bar.addEventListener("pointerdown", (event) => event.stopPropagation());
+          bar.addEventListener("click", async (event) => {
+            event.stopPropagation();
+            const button = event.target.closest("button[data-act]");
+            const act = button ? button.dataset.act : null;
+            if (act === "install" && deferred) {
+              const promptEvent = deferred;
+              deferred = null;
+              try {
+                promptEvent.prompt();
+                await promptEvent.userChoice;
+              } catch (_) {}
+              done();
+            } else if (act === "close") {
+              done();
+            }
+          });
+          document.body.appendChild(bar);
+        });
+      } catch (_) {}
+    })();
+  </script>
+  <script>
+    if ("serviceWorker" in navigator && location.hash !== "#selftest") {
+      window.addEventListener("load", function () {
+        navigator.serviceWorker.register("./sw.js").catch(function () {});
+      });
+    }
+  </script>
+  <script>
+    var m = location.pathname.match(/^\/tools\/([a-z0-9-]+)/);
+    if (m && location.hash !== "#selftest") {
+      // 권한이 회수됐는지 조용히 확인. 회수됐으면 캐시를 비우고 새로고침해 로그인으로 보낸다.
+      setTimeout(function () {
+        try {
+          if (!navigator.onLine) return;
+          fetch("/tools/_check?tool=" + m[1], { credentials: "same-origin" })
+            .then(function (response) { return response.json(); })
+            .then(function (result) {
+              if (!result || result.ok !== false || result.reason !== "revoked") return;
+              return caches.keys().then(function (names) {
+                return Promise.all(names.map(function (name) {
+                  return name.indexOf("kali-") === 0 ? caches.delete(name) : null;
+                }));
+              }).then(function () { location.reload(); });
+            })
+            .catch(function () {});
+        } catch (error) {
+          // 확인 실패는 앱 동작에 영향을 주지 않는다.
+        }
+      }, 4000);
+    }
+  </script>
+</body>
+</html>
