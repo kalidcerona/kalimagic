@@ -447,6 +447,7 @@
     const trickZone = document.getElementById("trick-zone");
     const textZone = document.getElementById("text-zone");
     const mainHitZones = document.getElementById("main-hit-zones");
+    const timeDisplay = document.getElementById("time-display");
     const control = document.getElementById("control");
     const controlLabel = document.getElementById("control-label");
     const seconds = document.getElementById("seconds");
@@ -775,8 +776,10 @@
       }
     }
     function updateMainHitZonesHeight() {
+      const timeDisplayRect = timeDisplay.getBoundingClientRect();
       const controlRect = control.getBoundingClientRect();
-      mainHitZones.style.height = `${Math.max(0, controlRect.top - MAIN_HIT_ZONE_GAP)}px`;
+      const bottom = Math.min(timeDisplayRect.bottom, controlRect.top - MAIN_HIT_ZONE_GAP);
+      mainHitZones.style.height = `${Math.max(0, bottom)}px`;
     }
     function observeControlLayout() {
       updateMainHitZonesHeight();
@@ -784,6 +787,7 @@
       controlResizeObserver = new ResizeObserver(updateMainHitZonesHeight);
       controlResizeObserver.observe(control);
       controlResizeObserver.observe(app);
+      controlResizeObserver.observe(timeDisplay);
     }
     async function acquireWakeLock() {
       if (wakeLock || wakeLockPending || document.visibilityState !== "visible" ||
