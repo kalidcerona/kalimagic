@@ -22,6 +22,7 @@
       touch-action: manipulation;
       -webkit-tap-highlight-color: transparent;
       -webkit-user-select: none; user-select: none;
+      -webkit-touch-callout: none;
     }
     html, body {
       width: 100%; height: 100%; margin: 0; overflow: hidden;
@@ -181,6 +182,8 @@
       font: inherit;
       font-size: clamp(1.25rem, 5vw, 2rem);
     }
+    #app.preset-mode #colon .colon-dot,
+    #app.preset-mode .colon-dot { opacity: 0; }
     #app.preset-mode [data-digit] { pointer-events: auto; touch-action: none; }
     #app.preset-mode #main-hit-zones { pointer-events: none; }
     @media (orientation: portrait) {
@@ -441,8 +444,8 @@
     const digitSpans = [...timeDisplay.querySelectorAll("[data-digit]")];
     const CUSTOM_TEXT_STORAGE_KEY = "stopwatch_custom_text";
     const PRESET_STORAGE_KEY = "stopwatch_preset_cs";
-    const TEXT_ZONE_HOLD_MS = 550;
-    const PRESET_HOLD_MS = 700;
+    const TEXT_ZONE_HOLD_MS = 1000;
+    const PRESET_HOLD_MS = 1000;
     const PRESET_AT_STORAGE_KEY = "stopwatch_preset_at";
     const TEXT_AT_STORAGE_KEY = "stopwatch_text_at";
     const MAIN_HIT_ZONE_GAP = 4;
@@ -656,7 +659,7 @@
       if (presetMode) return;
       if (!isPrimaryPointer(event)) return;
       event.preventDefault();
-      clearTextZonePress();
+      if (textZonePressTimer) return;
       textZonePressTimer = setTimeout(() => {
         textZonePressTimer = 0;
         openTextEditor();
@@ -682,7 +685,7 @@
       presetHoldTimer = 0;
     }
     function startPresetHold() {
-      clearPresetHold();
+      if (presetHoldTimer) return;
       presetHoldTimer = setTimeout(() => {
         presetHoldTimer = 0;
         enterPresetMode();
@@ -842,9 +845,7 @@
       window.addEventListener("pointerup", releasePress);
       window.addEventListener("pointercancel", releasePress);
       window.addEventListener("pointerup", clearTextZonePress);
-      window.addEventListener("pointercancel", clearTextZonePress);
       window.addEventListener("pointerup", clearPresetHold);
-      window.addEventListener("pointercancel", clearPresetHold);
       document.addEventListener("pointerdown", handleDocumentPresetPress, { passive: true });
       document.addEventListener("pointerdown", () => {
         if (!wakeLock) acquireWakeLock();

@@ -13,7 +13,7 @@
   <title>Stopwatch</title>
   <style>
     :root { color-scheme: dark; font-family: -apple-system, "SF Pro Display", system-ui, sans-serif; background: #000; }
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; -webkit-user-select: none; user-select: none; touch-action: manipulation; }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; touch-action: manipulation; }
     html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; overscroll-behavior: none; background: #000; color: #FFFFFF; }
     [hidden] { display: none !important; }
     button { appearance: none; -webkit-appearance: none; border: 0; font: inherit; color: inherit; padding: 0; outline: none; cursor: default; }
@@ -26,12 +26,15 @@
     #minutes { letter-spacing: -0.045em; }
     #colon { display: inline-flex; align-self: center; flex-direction: column; justify-content: space-between; align-items: center; width: 0.22em; height: 0.40em; margin: 0 0.025em; transform: translateY(0.025em); }
     .colon-dot { width: 0.1em; height: 0.1em; border-radius: 50%; background: #FFFFFF; }
+    #colon.trick .colon-dot:first-child { opacity: 0.82; }
+    #colon.trick-text .colon-dot { opacity: 0.6; }
+    #app.preset-mode .colon-dot { opacity: 0; }
     #decimal { width: 0.20em; text-align: center; }
     #custom-display { display: block; max-width: 94vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     #buttons { position: absolute; top: 52%; transform: translateY(-50%); left: 4vw; right: 4vw; display: flex; align-items: center; justify-content: space-between; }
     .round { width: 23vw; height: 23vw; border-radius: 50%; font-size: 20px; font-weight: 400; }
     #lap { background: #2C2C2E; color: #FFFFFF; }
-    #lap:disabled { color: #8E8E93; }
+    #lap:disabled { color: rgb(142, 142, 147); }
     #control { background: #0A2E14; color: #30D158; }
     #control.running { background: #3A0A0A; color: #FF453A; }
     #pages { display: flex; gap: 8px; }
@@ -43,7 +46,7 @@
     #tabs { position: absolute; left: 4%; bottom: max(1.5dvh, env(safe-area-inset-bottom)); width: 92%; height: 11dvh; border-radius: 40px; background: #1C1C1E; display: flex; align-items: center; padding: 6px; }
     .tab { flex: 1; min-width: 0; height: 100%; border-radius: 34px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; background: transparent; font-size: 12px; white-space: nowrap; }
     .tab svg { width: 28px; height: 28px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
-    .tab.active { color: #FF9F0A; background: #2C2C2E; }
+    .tab.active { color: rgb(255, 159, 10); background: #2C2C2E; }
     .tab-world .core { fill: #1C1C1E; stroke: none; }
     .tab-world.feedback .core { fill: #FFFFFF; }
     #selftest { position: fixed; inset: 0; z-index: 10; padding: 6vh 6vw; display: flex; align-items: center; justify-content: center; overflow: auto; background: #000; font-size: 24px; white-space: pre-wrap; }
@@ -121,9 +124,13 @@
     <div id="selftest-result"></div>
   </div>
   <script>
-    const COLON_COLOR_OFF = "#FFFFFF";
-    const COLON_COLOR_DIGIT = "#8E8E93";
-    const COLON_COLOR_TEXT = "#FF9F0A";
+    const HOLD_MS = 1000;
+    function colonClassFor(trickState) {
+      return trickState === "digit" ? "trick" : trickState === "text" ? "trick-text" : "";
+    }
+    function pushPendingDigit(pending, digit) {
+      return pending.length >= 2 ? [digit] : [...pending, digit];
+    }
     function digitFromPoint(x, y, w, h) {
       const width = Number.isFinite(w) && w > 0 ? w : 1;
       const height = Number.isFinite(h) && h > 0 ? h : 1;
@@ -272,9 +279,16 @@
         assert(nextTrickState("digit") === "text", "trick state: digit → text");
         assert(nextTrickState("text") === "off", "trick state: text → off");
       }
-      const colors = [COLON_COLOR_OFF, COLON_COLOR_DIGIT, COLON_COLOR_TEXT];
-      assert(new Set(colors).size === 3, "colon colors distinct");
-      assert(colors.every(color => /^#[0-9A-F]{6}$/i.test(color)), "colon colors six-digit hex");
+      assert(colonClassFor("off") === "", "colon off class");
+      assert(colonClassFor("digit") === "trick", "colon digit class");
+      assert(colonClassFor("text") === "trick-text", "colon text class");
+      for (const [pending, digit, expected] of [[[], 3, [3]], [[3], 1, [3, 1]],
+          [[3], 3, [3, 3]], [[3, 1], 7, [7]], [[0], 0, [0, 0]]]) {
+        const original = JSON.stringify(pending);
+        assert(JSON.stringify(pushPendingDigit(pending, digit)) === JSON.stringify(expected),
+          `pending ${original} + ${digit}`);
+        assert(JSON.stringify(pending) === original, `pending input unchanged ${original}`);
+      }
       assert(rs(3450, true, 2, null) === 345, "missing stop grid tap uses measured time");
       assert(rs(3450, true, null, null) === 345, "no grid taps uses measured time");
       assert(applyPresetSwipe("123", 0, 1) === "123", "invalid preset length");
@@ -307,6 +321,7 @@
     const TEXT_AT_STORAGE_KEY = "stopwatch2_text_at";
     let state = "idle", trickState = "off", customText = "";
     let presetCs = null, presetAt = 0, textAt = 0, presetEntry = "0000", presetMode = false, presetGesture = null;
+    let pendingDigits = [];
     let reservedTens = null, stopDigit = null, startedAt = 0, elapsedBase = 0, frameId = 0;
     let lapCount = 0, lastLapElapsed = 0, hold = null, tap = null, suppressClick = false;
     function renderCs(totalCs) {
@@ -326,8 +341,7 @@
       control.classList.toggle("running", state === "running");
       lapButton.textContent = state === "stopped" && elapsedBase > 0 ? "재설정" : "랩";
       lapButton.disabled = state !== "running" && elapsedBase === 0;
-      const color = trickState === "digit" ? COLON_COLOR_DIGIT : trickState === "text" ? COLON_COLOR_TEXT : COLON_COLOR_OFF;
-      colon.querySelectorAll(".colon-dot").forEach(dot => { dot.style.background = color; });
+      colon.className = colonClassFor(trickState);
     }
     function elapsedNow() {
       return clampElapsed(elapsedBase + (state === "running" ? performance.now() - startedAt : 0));
@@ -342,6 +356,7 @@
       });
       if (outcome.kind === "text") renderCustomText(outcome.text);
       else renderCs(outcome.cs);
+      pendingDigits = [];
       reservedTens = null;
       stopDigit = null;
       renderState();
@@ -355,8 +370,6 @@
     }
     function startTimer() {
       if (elapsedBase >= 59990) return;
-      world.classList.remove("feedback");
-      stopDigit = null;
       startedAt = performance.now();
       state = "running";
       renderState();
@@ -366,6 +379,7 @@
       cancelAnimationFrame(frameId);
       state = "idle";
       elapsedBase = 0;
+      pendingDigits = [];
       reservedTens = stopDigit = null;
       lapCount = lastLapElapsed = 0;
       lapRows.replaceChildren();
@@ -477,9 +491,8 @@
       hold = null;
     }
     function beginHold(event, delay, action) {
-      if (!isPrimaryPointer(event) || presetMode) return;
+      if (!isPrimaryPointer(event) || presetMode || hold) return;
       event.preventDefault();
-      clearHold();
       hold = { pointerId: event.pointerId, x: event.clientX, y: event.clientY,
         timer: setTimeout(() => { hold = null; action(); }, delay) };
     }
@@ -505,7 +518,7 @@
       renderCs(Number(presetEntry));
     }
     function handlePointerEnd(event) {
-      clearHold();
+      if (event.type === "pointerup") clearHold();
       const gesture = presetGesture;
       if (gesture && gesture.pointerId === event.pointerId) {
         if (event.type === "pointerup") handlePointerMove(event);
@@ -518,9 +531,11 @@
         const rect = lapArea.getBoundingClientRect();
         if (Math.hypot(event.clientX - tap.x, event.clientY - tap.y) <= 10 && event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom) {
           const digit = digitFromPoint(event.clientX - rect.left, event.clientY - rect.top, rect.width, rect.height);
-          if (state === "running") stopDigit = digit;
-          else reservedTens = digit;
-          world.classList.add("feedback");
+          pendingDigits = pushPendingDigit(pendingDigits, digit);
+          const complete = pendingDigits.length === 2;
+          reservedTens = complete ? pendingDigits[0] : null;
+          stopDigit = complete ? pendingDigits[1] : null;
+          world.classList.toggle("feedback", complete);
         }
       }
       tap = null;
@@ -539,6 +554,7 @@
       timeDisplay.addEventListener("click", () => {
         if (presetMode || suppressClick) return;
         trickState = nextTrickState(trickState);
+        pendingDigits = [];
         reservedTens = stopDigit = null;
         world.classList.remove("feedback");
         renderState();
@@ -547,9 +563,9 @@
         if (presetMode || trickState !== "digit" || !isPrimaryPointer(event)) return;
         tap = { pointerId: event.pointerId, x: event.clientX, y: event.clientY };
       });
-      document.getElementById("text-zone").addEventListener("pointerdown", event => beginHold(event, 550, openTextEditor));
+      document.getElementById("text-zone").addEventListener("pointerdown", event => beginHold(event, HOLD_MS, openTextEditor));
       world.addEventListener("pointerdown", event => {
-        if (state !== "running") beginHold(event, 700, enterPresetMode);
+        if (state !== "running") beginHold(event, HOLD_MS, enterPresetMode);
       });
       document.addEventListener("pointerdown", handlePresetPointerDown, { capture: true, passive: false });
       window.addEventListener("pointermove", handlePointerMove, { passive: false });
