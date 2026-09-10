@@ -19,10 +19,11 @@
     button { appearance: none; -webkit-appearance: none; border: 0; font: inherit; color: inherit; padding: 0; outline: none; cursor: default; }
     #app { position: relative; width: 100%; height: 100vh; height: 100dvh; overflow: hidden; background: #000; }
     #text-zone { position: absolute; inset: 0 0 auto; height: 22%; touch-action: none; }
-    #time-display { position: absolute; top: 30%; left: 0; width: 100%; transform: translateY(-50%); display: flex; align-items: center; justify-content: center; font-size: min(26vw, 13dvh); font-weight: 200; font-variant-numeric: tabular-nums; letter-spacing: -0.045em; line-height: 1; white-space: nowrap; }
+    #time-display { position: absolute; top: 42%; left: 15%; width: 70%; transform: translateY(-50%); display: flex; align-items: center; justify-content: center; font-size: min(15vw, 8dvh); font-weight: 200; font-variant-numeric: tabular-nums; letter-spacing: -0.04em; line-height: 1; white-space: nowrap; touch-action: none; }
     #numeric-display { display: flex; align-items: baseline; }
     .digits { display: inline-flex; }
-    [data-digit] { display: inline-block; width: 0.56em; text-align: center; touch-action: none; }
+    [data-digit] { display: inline-block; width: 0.56em; border-radius: 0.12em; text-align: center; touch-action: none; transition: background-color 120ms ease, color 120ms ease; }
+    #app.preset-mode [data-digit].selected { background: #FFFFFF; color: #000000; }
     #minutes { letter-spacing: -0.045em; }
     #colon { display: inline-flex; align-self: center; flex-direction: column; justify-content: space-between; align-items: center; width: 0.22em; height: 0.40em; margin: 0 0.025em; transform: translateY(0.025em); }
     .colon-dot { width: 0.1em; height: 0.1em; border-radius: 50%; background: #FFFFFF; }
@@ -30,23 +31,23 @@
     #colon.trick-text .colon-dot { opacity: 0.6; }
     #app.preset-mode .colon-dot { opacity: 0; }
     #decimal { width: 0.20em; text-align: center; }
-    #custom-display { display: block; max-width: 94vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    #buttons { position: absolute; top: 52%; transform: translateY(-50%); left: 4vw; right: 4vw; display: flex; align-items: center; justify-content: space-between; }
-    .round { width: 23vw; height: 23vw; border-radius: 50%; font-size: 20px; font-weight: 400; }
+    #custom-display { display: block; max-width: 70vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    #buttons { position: absolute; top: 60%; transform: translateY(-50%); left: 8vw; right: 8vw; display: flex; align-items: center; justify-content: space-between; }
+    .round { width: min(18vw, 76px); height: min(18vw, 76px); border-radius: 50%; font-size: 17px; font-weight: 400; }
     #lap { background: #2C2C2E; color: #FFFFFF; }
     #lap:disabled { color: rgb(142, 142, 147); }
     #control { background: #0A2E14; color: #30D158; }
     #control.running { background: #3A0A0A; color: #FF453A; }
-    #pages { display: flex; gap: 8px; }
-    #pages i { width: 8px; height: 8px; border-radius: 50%; background: #48484A; }
+    #pages { display: flex; gap: 6px; }
+    #pages i { width: 6px; height: 6px; border-radius: 50%; background: #48484A; }
     #pages i:first-child { background: #FFFFFF; }
-    #lap-area { position: absolute; top: calc(52% + 11.5vw + 16px); bottom: calc(13dvh + env(safe-area-inset-bottom)); left: 4vw; right: 4vw; border-top: 1px solid #3A3A3C; overflow: hidden; touch-action: none; }
+    #lap-area { position: absolute; top: calc(60% + min(9vw, 38px) + 20px); bottom: calc(10dvh + env(safe-area-inset-bottom)); left: 8vw; right: 8vw; border-top: 1px solid #2C2C2E; overflow: hidden; touch-action: none; }
     #lap-rows, .lap-row, .lap-row * { pointer-events: none; }
     .lap-row { display: flex; justify-content: space-between; align-items: center; height: 44px; border-bottom: 0.5px solid #3A3A3C; font-size: 17px; font-variant-numeric: tabular-nums; }
-    #tabs { position: absolute; left: 4%; bottom: max(1.5dvh, env(safe-area-inset-bottom)); width: 92%; height: 11dvh; border-radius: 40px; background: #1C1C1E; display: flex; align-items: center; padding: 6px; }
-    .tab { flex: 1; min-width: 0; height: 100%; border-radius: 34px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; background: transparent; font-size: 12px; white-space: nowrap; }
-    .tab svg { width: 28px; height: 28px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
-    .tab.active { color: rgb(255, 159, 10); background: #2C2C2E; }
+    #tabs { position: absolute; left: 0; bottom: env(safe-area-inset-bottom); width: 100%; height: 9dvh; border-top: 0.5px solid #2C2C2E; background: #000; display: flex; align-items: center; padding: 4px 3vw; }
+    .tab { flex: 1; min-width: 0; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; background: transparent; color: #8E8E93; font-size: 10px; white-space: nowrap; }
+    .tab svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+    .tab.active { color: rgb(255, 159, 10); }
     .tab-world .core { fill: #1C1C1E; stroke: none; }
     .tab-world.feedback .core { fill: #FFFFFF; }
     #selftest { position: fixed; inset: 0; z-index: 10; padding: 6vh 6vw; display: flex; align-items: center; justify-content: center; overflow: auto; background: #000; font-size: 24px; white-space: pre-wrap; }
@@ -91,6 +92,20 @@
       font: inherit;
       font-size: clamp(1.25rem, 5vw, 2rem);
     }
+    #preset-hint {
+      position: fixed;
+      left: 50%;
+      top: calc(42% + min(12vw, 5rem));
+      z-index: 1;
+      transform: translateX(-50%);
+      padding: 0.55rem 0.8rem;
+      border-radius: 999px;
+      background: rgba(44,44,46,0.94);
+      color: #D1D1D6;
+      font-size: 13px;
+      white-space: nowrap;
+      pointer-events: none;
+    }
   </style>
 </head>
 <body>
@@ -112,8 +127,9 @@
       <button class="tab active" type="button" aria-current="page"><svg viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="16" r="9"/><path d="M11 2h6M14 2v5M21 6l2 2M14 10v6l-3 3"/></svg><span>스톱워치</span></button>
       <button class="tab" type="button"><svg viewBox="0 0 28 28" aria-hidden="true"><path d="M14 5a10 10 0 1 1-8 4M14 2v5M3 5v6h6M14 9v7l4 2"/></svg><span>타이머</span></button>
     </nav>
+    <div id="preset-hint" role="status" aria-live="polite" hidden>위아래로 밀어 숫자를 바꾸세요</div>
     <div id="text-editor" hidden>
-      <input type="text" id="text-editor-input" maxlength="10" enterkeyhint="done">
+      <input type="text" id="text-editor-input" value="00:00.00" placeholder="00:00.00" inputmode="numeric" pattern="[0-9]*" enterkeyhint="done" aria-label="정지 시간">
       <div id="text-editor-actions">
         <button id="text-editor-save" type="button">저장</button>
         <button id="text-editor-clear" type="button">지우기</button>
@@ -157,6 +173,21 @@
         sec: String(Math.floor(value / 100)).padStart(2, "0"),
         cs: String(value % 100).padStart(2, "0")
       };
+    }
+    function formatTimeInput(value) {
+      const digits = String(value ?? "").replace(/\D/g, "").slice(-6).padStart(6, "0");
+      return `${digits.slice(0, 2)}:${digits.slice(2, 4)}.${digits.slice(4)}`;
+    }
+    function parseTimeInput(value) {
+      const digits = String(value ?? "").replace(/\D/g, "").slice(-6).padStart(6, "0");
+      const totalCs = (Number(digits.slice(0, 2)) * 60 + Number(digits.slice(2, 4))) * 100 +
+        Number(digits.slice(4));
+      return Math.min(5999, totalCs);
+    }
+    function presetIndexFromX(x, left, width, count = 4) {
+      if (![x, left, width].every(Number.isFinite) || width <= 0 || !Number.isInteger(count) || count <= 0 ||
+          x < left || x > left + width) return null;
+      return Math.min(count - 1, Math.floor((x - left) / width * count));
     }
     function resolveStoppedCs({ elapsed, trickMode, reservedTens, stopDigit }) {
       if (elapsed >= 59990) return 5999; // 상한 도달은 손댄 숫자가 아니라 실제 최대값
@@ -210,6 +241,17 @@
       assert(isFormat(728, "07", "28"), "format 728");
       assert(isFormat(5999, "59", "99"), "format 5999");
       assert(isFormat(9999, "99", "99"), "format four-digit swipe preview");
+      for (const [input, formatted, parsed] of [["", "00:00.00", 0], ["7", "00:00.07", 7],
+          ["1234", "00:12.34", 1234], ["00:12.34", "00:12.34", 1234],
+          ["123456", "12:34.56", 5999], ["abc9x8", "00:00.98", 98]]) {
+        assert(formatTimeInput(input) === formatted, `typed format ${input}`);
+        assert(parseTimeInput(input) === parsed, `typed parse ${input}`);
+      }
+      for (const [x, expectedIndex] of [[99, null], [100, 0], [199, 0], [200, 1],
+          [399, 2], [499, 3], [500, 3], [501, null]]) {
+        assert(presetIndexFromX(x, 100, 400) === expectedIndex, `preset x ${x}`);
+      }
+      assert(presetIndexFromX(150, 100, 0) === null, "preset x invalid width");
       for (const [entry, index, steps, expected] of [["0000", 3, 1, "0001"], ["0009", 3, 1, "0000"],
           ["0000", 0, -1, "9000"], ["1234", 1, 12, "1434"], ["1234", 4, 1, "1234"],
           ["1234", -1, 1, "1234"]]) {
@@ -314,6 +356,7 @@
     const textEditorInput = document.getElementById("text-editor-input");
     const textEditorSave = document.getElementById("text-editor-save");
     const textEditorClear = document.getElementById("text-editor-clear");
+    const presetHint = document.getElementById("preset-hint");
     const digitSpans = [...timeDisplay.querySelectorAll("[data-digit]")];
     const CUSTOM_TEXT_STORAGE_KEY = "stopwatch2_custom_text";
     const PRESET_STORAGE_KEY = "stopwatch2_preset_cs";
@@ -324,6 +367,7 @@
     let pendingDigits = [];
     let reservedTens = null, stopDigit = null, startedAt = 0, elapsedBase = 0, frameId = 0;
     let lapCount = 0, lastLapElapsed = 0, hold = null, tap = null, suppressClick = false;
+    let typedDigits = "", hintTimer = 0;
     function renderCs(totalCs) {
       const formatted = formatCs(totalCs);
       customDisplay.hidden = true;
@@ -403,37 +447,40 @@
       return event.isPrimary !== false && (event.button === undefined || event.button === 0);
     }
     function openTextEditor() {
-      textEditorInput.value = customText;
+      typedDigits = "";
+      updateTypedInput();
       textEditor.hidden = false;
       textEditorInput.focus();
       textEditorInput.select();
     }
+    function updateTypedInput() {
+      textEditorInput.value = formatTimeInput(typedDigits);
+      textEditorInput.setSelectionRange(textEditorInput.value.length, textEditorInput.value.length);
+    }
     function closeTextEditor() {
       textEditor.hidden = true;
     }
-    function saveCustomText() {
-      const value = textEditorInput.value.trim();
-      customText = value;
-      textAt = value ? Date.now() : 0;
+    function storePresetCs(value) {
+      presetCs = value > 0 ? Math.min(5999, value) : null;
+      presetAt = presetCs === null ? 0 : Date.now();
       try {
-        if (value) {
-          localStorage.setItem(CUSTOM_TEXT_STORAGE_KEY, value);
-          localStorage.setItem(TEXT_AT_STORAGE_KEY, String(textAt));
+        if (presetCs === null) {
+          localStorage.removeItem(PRESET_STORAGE_KEY);
+          localStorage.removeItem(PRESET_AT_STORAGE_KEY);
         } else {
-          localStorage.removeItem(CUSTOM_TEXT_STORAGE_KEY);
-          localStorage.removeItem(TEXT_AT_STORAGE_KEY);
+          localStorage.setItem(PRESET_STORAGE_KEY, String(presetCs));
+          localStorage.setItem(PRESET_AT_STORAGE_KEY, String(presetAt));
         }
       } catch (_) {}
+    }
+    function saveTypedPreset() {
+      storePresetCs(parseTimeInput(textEditorInput.value));
       closeTextEditor();
     }
-    function clearCustomText() {
-      customText = "";
-      textAt = 0;
-      try {
-        localStorage.removeItem(CUSTOM_TEXT_STORAGE_KEY);
-        localStorage.removeItem(TEXT_AT_STORAGE_KEY);
-      } catch (_) {}
-      textEditorInput.value = "";
+    function clearTypedPreset() {
+      typedDigits = "";
+      textEditorInput.value = formatTimeInput(typedDigits);
+      storePresetCs(0);
       closeTextEditor();
     }
     function handleTextEditorBackground(event) {
@@ -462,29 +509,42 @@
       }
     }
     function savePreset() {
-      presetCs = Math.min(5999, Number(presetEntry)) || null;
-      presetAt = presetCs === null ? 0 : Date.now();
-      try {
-        if (presetCs === null) {
-          localStorage.removeItem(PRESET_STORAGE_KEY);
-          localStorage.removeItem(PRESET_AT_STORAGE_KEY);
-        } else {
-          localStorage.setItem(PRESET_STORAGE_KEY, String(presetCs));
-          localStorage.setItem(PRESET_AT_STORAGE_KEY, String(presetAt));
-        }
-      } catch (_) {}
+      storePresetCs(Number(presetEntry));
       presetMode = false;
       presetGesture = null;
       app.classList.remove("preset-mode");
+      digitSpans.forEach(span => span.classList.remove("selected"));
+      presetHint.hidden = true;
+      clearTimeout(hintTimer);
       renderCs(0);
     }
-    function enterPresetMode() {
+    function presetTrackRect() {
+      const first = digitSpans[0].getBoundingClientRect();
+      const last = digitSpans[digitSpans.length - 1].getBoundingClientRect();
+      return { left: first.left, width: last.right - first.left };
+    }
+    function selectPresetDigit(index) {
+      digitSpans.forEach((span, digitIndex) => span.classList.toggle("selected", digitIndex === index));
+    }
+    function showPresetHint() {
+      clearTimeout(hintTimer);
+      presetHint.hidden = false;
+      hintTimer = setTimeout(() => { presetHint.hidden = true; }, 2000);
+    }
+    function enterPresetMode(pointerId, x, y) {
       if (state === "running" || presetMode) return;
       resetTimer();
       presetEntry = String(presetCs ?? 0).padStart(4, "0");
       presetMode = true;
       app.classList.add("preset-mode");
       renderCs(Number(presetEntry));
+      const track = presetTrackRect();
+      const index = presetIndexFromX(x, track.left, track.width);
+      selectPresetDigit(index);
+      presetGesture = { pointerId, index, x, y, entry: presetEntry, moved: false };
+      try { app.setPointerCapture(pointerId); } catch (_) {}
+      suppressClick = true;
+      showPresetHint();
     }
     function clearHold() {
       if (hold) clearTimeout(hold.timer);
@@ -494,14 +554,16 @@
       if (!isPrimaryPointer(event) || presetMode || hold) return;
       event.preventDefault();
       hold = { pointerId: event.pointerId, x: event.clientX, y: event.clientY,
-        timer: setTimeout(() => { hold = null; action(); }, delay) };
+        timer: setTimeout(() => { const completed = hold; hold = null; action(completed); }, delay) };
     }
     function handlePresetPointerDown(event) {
       if (!presetMode || !isPrimaryPointer(event) || event.target.closest("#text-editor")) return;
       event.preventDefault();
       event.stopImmediatePropagation();
-      const digit = event.target.closest("[data-digit]");
-      presetGesture = { pointerId: event.pointerId, index: digit ? Number(digit.dataset.digit) : null,
+      const track = presetTrackRect();
+      const index = presetIndexFromX(event.clientX, track.left, track.width);
+      selectPresetDigit(index);
+      presetGesture = { pointerId: event.pointerId, index,
         x: event.clientX, y: event.clientY, entry: presetEntry, moved: false };
       app.setPointerCapture(event.pointerId);
       suppressClick = true;
@@ -564,8 +626,12 @@
         tap = { pointerId: event.pointerId, x: event.clientX, y: event.clientY };
       });
       document.getElementById("text-zone").addEventListener("pointerdown", event => beginHold(event, HOLD_MS, openTextEditor));
-      world.addEventListener("pointerdown", event => {
-        if (state !== "running") beginHold(event, HOLD_MS, enterPresetMode);
+      numericDisplay.addEventListener("pointerdown", event => {
+        const track = presetTrackRect();
+        if (state !== "running" && presetIndexFromX(event.clientX, track.left, track.width) !== null) {
+          beginHold(event, HOLD_MS, completed =>
+            enterPresetMode(completed.pointerId, completed.x, completed.y));
+        }
       });
       document.addEventListener("pointerdown", handlePresetPointerDown, { capture: true, passive: false });
       window.addEventListener("pointermove", handlePointerMove, { passive: false });
@@ -575,9 +641,33 @@
       document.addEventListener("visibilitychange", () => { if (document.hidden) { clearHold(); tap = null; } });
       document.addEventListener("contextmenu", event => event.preventDefault());
       textEditor.addEventListener("pointerdown", handleTextEditorBackground);
-      textEditorSave.addEventListener("click", saveCustomText);
-      textEditorClear.addEventListener("click", clearCustomText);
-      textEditorInput.addEventListener("keydown", event => { if (event.key === "Enter") saveCustomText(); if (event.key === "Escape") closeTextEditor(); });
+      textEditorSave.addEventListener("click", saveTypedPreset);
+      textEditorClear.addEventListener("click", clearTypedPreset);
+      textEditorInput.addEventListener("beforeinput", event => {
+        if (event.inputType === "deleteContentBackward") {
+          event.preventDefault();
+          typedDigits = typedDigits.slice(0, -1);
+          updateTypedInput();
+          return;
+        }
+        if (event.inputType.startsWith("insert") && event.data) {
+          const incoming = event.data.replace(/\D/g, "");
+          event.preventDefault();
+          if (incoming) typedDigits = (typedDigits + incoming).slice(-6);
+          updateTypedInput();
+        }
+      });
+      textEditorInput.addEventListener("paste", event => {
+        event.preventDefault();
+        const incoming = (event.clipboardData?.getData("text") || "").replace(/\D/g, "");
+        if (incoming) typedDigits = (typedDigits + incoming).slice(-6);
+        updateTypedInput();
+      });
+      textEditorInput.addEventListener("input", () => {
+        typedDigits = textEditorInput.value.replace(/\D/g, "").slice(-6);
+        updateTypedInput();
+      });
+      textEditorInput.addEventListener("keydown", event => { if (event.key === "Enter") saveTypedPreset(); if (event.key === "Escape") closeTextEditor(); });
       renderState();
     }
     if (location.hash === "#selftest") {

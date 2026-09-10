@@ -48,6 +48,12 @@ export function pushDigit(state, digit, now, delayMs) {
   };
 }
 
+export function attemptFeedback(state, previousAttemptCount) {
+  if (!Number.isInteger(previousAttemptCount)
+      || state.attempts.length <= previousAttemptCount) return 'pending';
+  return state.unlocked ? 'success' : 'failure';
+}
+
 export function deleteDigit(state) {
   if (state.unlocked || state.current.length === 0) return state;
   const current = state.current.slice(0, -1);

@@ -67,6 +67,23 @@
       text-overflow: ellipsis;
       white-space: nowrap;
     }
+    #preset-hint {
+      position: absolute;
+      top: 50%; left: 50%;
+      z-index: 3;
+      max-width: min(82vw, 32rem);
+      padding: 0.65em 0.9em;
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 0.8em;
+      background: rgba(28,28,30,0.92);
+      color: #ffffff;
+      font-size: clamp(1rem, 2.4vw, 1.5rem);
+      line-height: 1.35;
+      text-align: center;
+      box-shadow: 0 0.5em 1.5em rgba(0,0,0,0.28);
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+    }
     #colon {
       display: flex;
       width: 0.2em; height: 0.52em;
@@ -185,6 +202,34 @@
     #app.preset-mode #colon .colon-dot,
     #app.preset-mode .colon-dot { opacity: 0; }
     #app.preset-mode [data-digit] { pointer-events: auto; touch-action: none; }
+    #app.preset-mode [data-digit].preset-active {
+      position: relative;
+      display: inline-block;
+      border-radius: 0.12em;
+      background: rgba(255,159,10,0.2);
+      text-decoration: underline;
+      text-decoration-color: #ff9f0a;
+      text-decoration-thickness: 0.08em;
+      text-underline-offset: 0.12em;
+    }
+    #app.preset-mode [data-digit].preset-active::before,
+    #app.preset-mode [data-digit].preset-active::after {
+      position: absolute;
+      left: 50%;
+      color: #ff9f0a;
+      font-size: 0.2em;
+      font-weight: 600;
+      line-height: 1;
+      transform: translateX(-50%);
+    }
+    #app.preset-mode [data-digit].preset-active::before {
+      content: "▲";
+      top: -1.45em;
+    }
+    #app.preset-mode [data-digit].preset-active::after {
+      content: "▼";
+      bottom: -1.45em;
+    }
     #app.preset-mode #main-hit-zones { pointer-events: none; }
     @media (orientation: portrait) {
       #app {
@@ -225,6 +270,7 @@
       <span id="centiseconds" class="digits"><span data-digit="2">0</span><span data-digit="3">0</span></span>
       <span id="custom-display" class="digits" hidden></span>
     </div>
+    <div id="preset-hint" hidden role="status">위아래로 밀어 맞추고, 빈 곳을 탭하면 저장</div>
     <button id="control" type="button" aria-label="START">
       <span id="control-label">START</span>
     </button>
@@ -277,6 +323,15 @@
     }
     function toAppPoint(clientX, clientY, viewportWidth, viewportHeight, rotated) {
       return rotated ? { x: clientY, y: viewportWidth - clientX } : { x: clientX, y: clientY };
+    }
+    function presetDigitIndexFromX(x, left, width) {
+      if (!Number.isFinite(x) || !Number.isFinite(left) || !Number.isFinite(width) || width <= 0) return null;
+      if (x < left || x > left + width) return null;
+      return Math.min(3, Math.floor((x - left) / width * 4));
+    }
+    function presetDigitIndexFromPoint(x, y, rect) {
+      if (!rect || !Number.isFinite(y) || y < rect.top || y > rect.top + rect.height) return null;
+      return presetDigitIndexFromX(x, rect.left, rect.width);
     }
     function isRotatedLayout() {
       return matchMedia("(orientation: portrait)").matches;
@@ -349,6 +404,15 @@
       }
       const identity = toAppPoint(123, 456, 844, 390, false);
       assert(identity.x === 123 && identity.y === 456, "point identity");
+      const presetRect = { left: 100, top: 50, width: 400, height: 100 };
+      for (const [x, expectedIndex] of [[100, 0], [199.99, 0], [200, 1], [299.99, 1],
+          [300, 2], [399.99, 2], [400, 3], [500, 3]]) {
+        assert(presetDigitIndexFromPoint(x, 100, presetRect) === expectedIndex,
+          `preset coordinate x ${x}`);
+      }
+      assert(presetDigitIndexFromPoint(50, 100, presetRect) === null, "preset coordinate left outside");
+      assert(presetDigitIndexFromPoint(250, 49, presetRect) === null, "preset coordinate top outside");
+      assert(presetDigitIndexFromPoint(250, 151, presetRect) === null, "preset coordinate bottom outside");
       for (const [entry, index, steps, expected] of [["0000", 3, 1, "0001"], ["0009", 3, 1, "0000"],
           ["0000", 0, -1, "9000"], ["1234", 1, 12, "1434"], ["1234", 4, 1, "1234"],
           ["1234", -1, 1, "1234"]]) {
@@ -441,6 +505,7 @@
     const textEditorInput = document.getElementById("text-editor-input");
     const textEditorSave = document.getElementById("text-editor-save");
     const textEditorClear = document.getElementById("text-editor-clear");
+    const presetHint = document.getElementById("preset-hint");
     const digitSpans = [...timeDisplay.querySelectorAll("[data-digit]")];
     const CUSTOM_TEXT_STORAGE_KEY = "stopwatch_custom_text";
     const PRESET_STORAGE_KEY = "stopwatch_preset_cs";
@@ -466,6 +531,7 @@
     let wakeLockPending = false;
     let textZonePressTimer = 0;
     let presetHoldTimer = 0;
+    let presetHintTimer = 0;
     let controlResizeObserver = null;
     function renderCs(totalCs) {
       const formatted = formatCs(totalCs);
@@ -676,8 +742,10 @@
       resetTimer();
       presetEntry = String(presetCs ?? 0).padStart(4, "0");
       presetMode = true;
+      setPresetActiveIndex(null);
       app.classList.add("preset-mode");
       renderCs(Number(presetEntry));
+      showPresetHint();
     }
     function clearPresetHold() {
       if (!presetHoldTimer) return;
@@ -690,6 +758,26 @@
         presetHoldTimer = 0;
         enterPresetMode();
       }, PRESET_HOLD_MS);
+    }
+    function setPresetActiveIndex(index) {
+      digitSpans.forEach((span, spanIndex) => {
+        span.classList.toggle("preset-active", spanIndex === index);
+      });
+    }
+    function clearPresetHint() {
+      if (presetHintTimer) {
+        clearTimeout(presetHintTimer);
+        presetHintTimer = 0;
+      }
+      presetHint.hidden = true;
+    }
+    function showPresetHint() {
+      clearPresetHint();
+      presetHint.hidden = false;
+      presetHintTimer = setTimeout(() => {
+        presetHintTimer = 0;
+        presetHint.hidden = true;
+      }, 2000);
     }
     function handleDocumentPresetPress(event) {
       if (!isPrimaryPointer(event)) return;
@@ -712,6 +800,8 @@
       } catch (_) {}
       presetMode = false;
       presetGesture = null;
+      clearPresetHint();
+      setPresetActiveIndex(null);
       app.classList.remove("preset-mode");
       renderCs(0);
     }
@@ -720,9 +810,11 @@
           event.target.closest("#text-editor, #install-nudge")) return;
       event.preventDefault();
       event.stopImmediatePropagation();
-      const digit = event.target.closest("[data-digit]");
       const point = toAppPoint(event.clientX, event.clientY, innerWidth, innerHeight, isRotatedLayout());
-      presetGesture = { pointerId: event.pointerId, index: digit ? Number(digit.dataset.digit) : null,
+      const displayRect = appRect(timeDisplay);
+      const index = presetDigitIndexFromPoint(point.x, point.y, displayRect);
+      setPresetActiveIndex(index);
+      presetGesture = { pointerId: event.pointerId, index,
         start: point, entry: presetEntry, moved: false };
       app.setPointerCapture(event.pointerId);
     }
