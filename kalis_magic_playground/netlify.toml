@@ -73,3 +73,8 @@
   for = "/zz4/manifest.webmanifest"
   [headers.values]
     Content-Type = "application/manifest+json"
+
+[[headers]]
+  for = "/zz5/manifest.webmanifest"
+  [headers.values]
+    Content-Type = "application/manifest+json"

@@ -32,6 +32,13 @@ test('public build explicitly excludes local planning and source folders', () =>
 
 test('public build verifies gated tool mirrors', () => {
   assert.ok(PUBLIC_DIRS.includes('zz4'));
+  assert.ok(PUBLIC_DIRS.includes('zz5'));
+  assert.ok(MIRROR_PAIRS.some(([source, mirror]) =>
+    source === '../../magic-unlock/index.html' && mirror === 'zz5/index.html'));
+  assert.ok(MIRROR_PAIRS.some(([source, mirror]) =>
+    source === '../../magic-unlock/logic.js' && mirror === 'zz5/logic.js'));
+  assert.ok(MIRROR_PAIRS.some(([source, mirror]) =>
+    source === '../../magic-unlock/sw.js' && mirror === 'zz5/sw.js'));
   assert.ok(MIRROR_PAIRS.some(([source, mirror]) =>
     source === '../../magic-stopwatch-v2/index.html' && mirror === 'zz4/index.html'));
   assert.ok(MIRROR_PAIRS.some(([source, mirror]) =>

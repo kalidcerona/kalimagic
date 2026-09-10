@@ -59,7 +59,8 @@ export const PUBLIC_DIRS = [
   'zz1',
   'zz2',
   'zz3',
-  'zz4'
+  'zz4',
+  'zz5'
 ];
 
 export const PRIVATE_PATTERNS = [
@@ -84,7 +85,10 @@ export const MIRROR_PAIRS = [
   ['../../magic-stopwatch/sw.js', 'zz3/sw.js'],
   ['../../magic-stopwatch/index.html', 'tools/stopwatch/index.html'],
   ['../../magic-stopwatch-v2/index.html', 'zz4/index.html'],
-  ['../../magic-stopwatch-v2/sw.js', 'zz4/sw.js']
+  ['../../magic-stopwatch-v2/sw.js', 'zz4/sw.js'],
+  ['../../magic-unlock/index.html', 'zz5/index.html'],
+  ['../../magic-unlock/logic.js', 'zz5/logic.js'],
+  ['../../magic-unlock/sw.js', 'zz5/sw.js']
 ];
 
 async function exists(relativePath) {
