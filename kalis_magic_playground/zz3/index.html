@@ -199,12 +199,10 @@
       font: inherit;
       font-size: clamp(1.25rem, 5vw, 2rem);
     }
+    #app.preset-mode { touch-action: none; }
     #app.preset-mode #colon .colon-dot,
     #app.preset-mode .colon-dot { opacity: 0; }
-    #app.preset-mode [data-digit] { pointer-events: auto; touch-action: none; }
     #app.preset-mode [data-digit].preset-active {
-      position: relative;
-      display: inline-block;
       border-radius: 0.12em;
       background: rgba(255,159,10,0.2);
       text-decoration: underline;
@@ -212,8 +210,12 @@
       text-decoration-thickness: 0.08em;
       text-underline-offset: 0.12em;
     }
-    #app.preset-mode [data-digit].preset-active::before,
-    #app.preset-mode [data-digit].preset-active::after {
+    #app.preset-mode .digits.preset-active {
+      position: relative;
+      display: inline-block;
+    }
+    #app.preset-mode .digits.preset-active::before,
+    #app.preset-mode .digits.preset-active::after {
       position: absolute;
       left: 50%;
       color: #ff9f0a;
@@ -222,11 +224,11 @@
       line-height: 1;
       transform: translateX(-50%);
     }
-    #app.preset-mode [data-digit].preset-active::before {
+    #app.preset-mode .digits.preset-active::before {
       content: "▲";
       top: -1.45em;
     }
-    #app.preset-mode [data-digit].preset-active::after {
+    #app.preset-mode .digits.preset-active::after {
       content: "▼";
       bottom: -1.45em;
     }
@@ -270,7 +272,7 @@
       <span id="centiseconds" class="digits"><span data-digit="2">0</span><span data-digit="3">0</span></span>
       <span id="custom-display" class="digits" hidden></span>
     </div>
-    <div id="preset-hint" hidden role="status">위아래로 밀어 맞추고, 빈 곳을 탭하면 저장</div>
+    <div id="preset-hint" hidden role="status">위아래로 밀어 두 자리씩 맞추고, 빈 곳을 탭하면 저장</div>
     <button id="control" type="button" aria-label="START">
       <span id="control-label">START</span>
     </button>
@@ -324,15 +326,6 @@
     function toAppPoint(clientX, clientY, viewportWidth, viewportHeight, rotated) {
       return rotated ? { x: clientY, y: viewportWidth - clientX } : { x: clientX, y: clientY };
     }
-    function presetDigitIndexFromX(x, left, width) {
-      if (!Number.isFinite(x) || !Number.isFinite(left) || !Number.isFinite(width) || width <= 0) return null;
-      if (x < left || x > left + width) return null;
-      return Math.min(3, Math.floor((x - left) / width * 4));
-    }
-    function presetDigitIndexFromPoint(x, y, rect) {
-      if (!rect || !Number.isFinite(y) || y < rect.top || y > rect.top + rect.height) return null;
-      return presetDigitIndexFromX(x, rect.left, rect.width);
-    }
     function isRotatedLayout() {
       return matchMedia("(orientation: portrait)").matches;
     }
@@ -340,11 +333,55 @@
       const rotated = isRotatedLayout();
       return { width: rotated ? innerHeight : innerWidth, height: rotated ? innerWidth : innerHeight };
     }
-    function applyPresetSwipe(entry, digitIndex, steps) {
-      if (!/^\d{4}$/.test(entry) || !Number.isInteger(digitIndex) || digitIndex < 0 || digitIndex > 3 ||
+    // Group 0 = seconds (00-59), group 1 = centiseconds (00-99). Storage stays a 4-digit entry.
+    function applyPresetGroupSwipe(entry, groupIndex, steps) {
+      if (!/^\d{4}$/.test(entry) || !Number.isInteger(groupIndex) || groupIndex < 0 || groupIndex > 1 ||
           !Number.isInteger(steps)) return entry;
-      const digit = ((Number(entry[digitIndex]) + steps) % 10 + 10) % 10;
-      return entry.slice(0, digitIndex) + digit + entry.slice(digitIndex + 1);
+      if (groupIndex === 0) {
+        const sec = ((Number(entry.slice(0, 2)) + steps) % 60 + 60) % 60;
+        return String(sec).padStart(2, "0") + entry.slice(2);
+      }
+      const cs = ((Number(entry.slice(2, 4)) + steps) % 100 + 100) % 100;
+      return entry.slice(0, 2) + String(cs).padStart(2, "0");
+    }
+    // Calibration knobs: |velocity| px/ms → px per step. Slow <0.3 → 28, medium → 14, fast >1.5 → 5.
+    // Cap ±20 steps per move so one pointermove cannot skip more than 20. Sign: up +, down -.
+    function presetSwipePxPerStep(velocityPxPerMs) {
+      const speed = Math.abs(Number(velocityPxPerMs));
+      if (!Number.isFinite(speed) || speed < 0.3) return 28;
+      if (speed > 1.5) return 5;
+      return 14;
+    }
+    function presetSwipeSteps(deltaPx, velocityPxPerMs) {
+      if (!Number.isFinite(deltaPx) || deltaPx === 0) return 0;
+      const raw = Math.trunc(deltaPx / presetSwipePxPerStep(velocityPxPerMs));
+      if (raw > 20) return 20;
+      if (raw < -20) return -20;
+      return raw;
+    }
+    // After a capped burst, leftover acc must not fire another full cap on the next 2px move.
+    // Otherwise keep remainder in the open interval (-pxPerStep, pxPerStep).
+    function nextSwipeAccumulator(acc, steps, pxPerStep, cap) {
+      if (!Number.isFinite(acc)) return 0;
+      if (!Number.isFinite(steps) || !Number.isFinite(pxPerStep) || pxPerStep <= 0) return acc;
+      const capAbs = Number.isFinite(cap) ? Math.abs(cap) : 20;
+      if (Math.abs(steps) >= capAbs) return 0;
+      let remainder = acc - steps * pxPerStep;
+      if (!Number.isFinite(remainder)) return 0;
+      if (remainder >= pxPerStep) remainder = pxPerStep - Number.MIN_VALUE;
+      else if (remainder <= -pxPerStep) remainder = -pxPerStep + Number.MIN_VALUE;
+      return remainder;
+    }
+    // App-coordinate hit test for the time row. Vertical band = row height ± 40%.
+    // Left of colon center (rect midpoint) = seconds, right = centiseconds. Not glyph-exact.
+    function presetGroupIndexFromPoint(x, y, rect) {
+      if (!rect || !Number.isFinite(x) || !Number.isFinite(y)) return null;
+      const { left, top, width, height } = rect;
+      if (![left, top, width, height].every(Number.isFinite) || width <= 0 || height <= 0) return null;
+      const band = height * 0.4;
+      if (y < top - band || y > top + height + band) return null;
+      if (x < left || x > left + width) return null;
+      return x < left + width / 2 ? 0 : 1;
     }
     // 정지 순간 표시할 1/100초 누적값을 정한다. 규칙 우선순위: 상한 > 트릭 합성 > 자연 경과.
     function resolveStoppedCs({ elapsed, trickMode, reservedTens, stopDigit }) {
@@ -404,20 +441,49 @@
       }
       const identity = toAppPoint(123, 456, 844, 390, false);
       assert(identity.x === 123 && identity.y === 456, "point identity");
-      const presetRect = { left: 100, top: 50, width: 400, height: 100 };
-      for (const [x, expectedIndex] of [[100, 0], [199.99, 0], [200, 1], [299.99, 1],
-          [300, 2], [399.99, 2], [400, 3], [500, 3]]) {
-        assert(presetDigitIndexFromPoint(x, 100, presetRect) === expectedIndex,
-          `preset coordinate x ${x}`);
+      assert(applyPresetGroupSwipe("0000", 0, 1) === "0100", "group swipe sec +1");
+      assert(applyPresetGroupSwipe("5900", 0, 1) === "0000", "group swipe sec wrap +");
+      assert(applyPresetGroupSwipe("0000", 0, -1) === "5900", "group swipe sec wrap -");
+      assert(applyPresetGroupSwipe("0099", 1, 1) === "0000", "group swipe cs wrap +");
+      assert(applyPresetGroupSwipe("0000", 1, -1) === "0099", "group swipe cs wrap -");
+      assert(applyPresetGroupSwipe("1234", 1, 10) === "1244", "group swipe cs +10");
+      assert(presetSwipeSteps(28, 0.1) === 1, "presetSwipeSteps slow 28px = 1");
+      assert(presetSwipeSteps(28, 2) >= 4, "presetSwipeSteps fast 28px >= 4");
+      assert(presetSwipeSteps(-28, 0.1) === -1, "presetSwipeSteps sign follows delta");
+      assert(presetSwipeSteps(28, 0.1) > 0, "presetSwipeSteps up is positive");
+      let prevAbsSteps = 0;
+      for (const velocity of [0.05, 0.2, 0.29, 0.3, 0.8, 1.5, 1.51, 3]) {
+        const absSteps = Math.abs(presetSwipeSteps(28, velocity));
+        assert(absSteps >= prevAbsSteps, `presetSwipeSteps monotonic |v|=${velocity}`);
+        prevAbsSteps = absSteps;
       }
-      assert(presetDigitIndexFromPoint(50, 100, presetRect) === null, "preset coordinate left outside");
-      assert(presetDigitIndexFromPoint(250, 49, presetRect) === null, "preset coordinate top outside");
-      assert(presetDigitIndexFromPoint(250, 151, presetRect) === null, "preset coordinate bottom outside");
-      for (const [entry, index, steps, expected] of [["0000", 3, 1, "0001"], ["0009", 3, 1, "0000"],
-          ["0000", 0, -1, "9000"], ["1234", 1, 12, "1434"], ["1234", 4, 1, "1234"],
-          ["1234", -1, 1, "1234"]]) {
-        assert(applyPresetSwipe(entry, index, steps) === expected, `preset swipe ${entry},${index},${steps}`);
-      }
+      assert(presetSwipeSteps(10000, 10) === 20, "presetSwipeSteps cap +");
+      assert(presetSwipeSteps(-10000, 10) === -20, "presetSwipeSteps cap -");
+      const swipeCap = 20;
+      const fastV = 2;
+      const slowV = 0.1;
+      let swipeAcc = 200;
+      let swipeSteps = presetSwipeSteps(swipeAcc, fastV);
+      swipeAcc = nextSwipeAccumulator(swipeAcc, swipeSteps, presetSwipePxPerStep(fastV), swipeCap);
+      assert(swipeSteps === 20 && swipeAcc === 0, "capped 200px fast: 20 steps remainder 0");
+      swipeAcc += 2;
+      swipeSteps = presetSwipeSteps(swipeAcc, fastV);
+      swipeAcc = nextSwipeAccumulator(swipeAcc, swipeSteps, presetSwipePxPerStep(fastV), swipeCap);
+      assert(swipeSteps === 0, "after cap leftover 2px: 0 steps");
+      swipeAcc = 30;
+      swipeSteps = presetSwipeSteps(swipeAcc, slowV);
+      swipeAcc = nextSwipeAccumulator(swipeAcc, swipeSteps, presetSwipePxPerStep(slowV), swipeCap);
+      assert(swipeSteps === 1 && swipeAcc === 2, "slow 30px: 1 step remainder 2");
+      swipeAcc = 27;
+      swipeSteps = presetSwipeSteps(swipeAcc, slowV);
+      swipeAcc = nextSwipeAccumulator(swipeAcc, swipeSteps, presetSwipePxPerStep(slowV), swipeCap);
+      assert(swipeSteps === 0 && swipeAcc === 27, "slow 27px: 0 steps remainder 27");
+      const groupRect = { left: 100, top: 50, width: 400, height: 100 };
+      assert(presetGroupIndexFromPoint(150, 100, groupRect) === 0, "group hit left = seconds");
+      assert(presetGroupIndexFromPoint(450, 100, groupRect) === 1, "group hit right = cs");
+      assert(presetGroupIndexFromPoint(150, 20, groupRect) === 0, "group hit 40% band");
+      assert(presetGroupIndexFromPoint(150, -100, groupRect) === null, "group hit far above");
+      assert(presetGroupIndexFromPoint(50, 100, groupRect) === null, "group hit left outside");
       const rs = (elapsed, trickMode, reservedTens, stopDigit) =>
         resolveStoppedCs({ elapsed, trickMode, reservedTens, stopDigit });
       assert(rs(59990, true, 2, 8) === 5999, "resolve: 상한이 트릭보다 우선");
@@ -742,7 +808,7 @@
       resetTimer();
       presetEntry = String(presetCs ?? 0).padStart(4, "0");
       presetMode = true;
-      setPresetActiveIndex(null);
+      setPresetActiveGroup(null);
       app.classList.add("preset-mode");
       renderCs(Number(presetEntry));
       showPresetHint();
@@ -759,9 +825,12 @@
         enterPresetMode();
       }, PRESET_HOLD_MS);
     }
-    function setPresetActiveIndex(index) {
+    function setPresetActiveGroup(groupIndex) {
+      seconds.classList.toggle("preset-active", groupIndex === 0);
+      centiseconds.classList.toggle("preset-active", groupIndex === 1);
       digitSpans.forEach((span, spanIndex) => {
-        span.classList.toggle("preset-active", spanIndex === index);
+        const group = spanIndex < 2 ? 0 : 1;
+        span.classList.toggle("preset-active", group === groupIndex);
       });
     }
     function clearPresetHint() {
@@ -801,7 +870,7 @@
       presetMode = false;
       presetGesture = null;
       clearPresetHint();
-      setPresetActiveIndex(null);
+      setPresetActiveGroup(null);
       app.classList.remove("preset-mode");
       renderCs(0);
     }
@@ -810,12 +879,19 @@
           event.target.closest("#text-editor, #install-nudge")) return;
       event.preventDefault();
       event.stopImmediatePropagation();
+      // Coordinate hit test (toAppPoint + row rect), not event.target / glyph. dispatchEvent skips hit-testing.
       const point = toAppPoint(event.clientX, event.clientY, innerWidth, innerHeight, isRotatedLayout());
-      const displayRect = appRect(timeDisplay);
-      const index = presetDigitIndexFromPoint(point.x, point.y, displayRect);
-      setPresetActiveIndex(index);
-      presetGesture = { pointerId: event.pointerId, index,
-        start: point, entry: presetEntry, moved: false };
+      const groupIndex = presetGroupIndexFromPoint(point.x, point.y, appRect(timeDisplay));
+      setPresetActiveGroup(groupIndex);
+      presetGesture = {
+        pointerId: event.pointerId,
+        groupIndex,
+        start: point,
+        lastY: point.y,
+        lastT: event.timeStamp || performance.now(),
+        acc: 0,
+        moved: false
+      };
       app.setPointerCapture(event.pointerId);
     }
     function handlePresetPointerMove(event) {
@@ -824,9 +900,18 @@
       event.preventDefault();
       const point = toAppPoint(event.clientX, event.clientY, innerWidth, innerHeight, isRotatedLayout());
       if (Math.hypot(point.x - gesture.start.x, point.y - gesture.start.y) > 10) gesture.moved = true;
-      if (gesture.index === null) return;
-      const steps = Math.trunc((gesture.start.y - point.y) / 28);
-      presetEntry = applyPresetSwipe(gesture.entry, gesture.index, steps);
+      if (gesture.groupIndex === null) return;
+      const now = event.timeStamp || performance.now();
+      const deltaPx = gesture.lastY - point.y;
+      const dt = now - gesture.lastT;
+      const velocity = dt > 0 ? Math.abs(deltaPx) / dt : 0;
+      gesture.acc += deltaPx;
+      gesture.lastY = point.y;
+      gesture.lastT = now;
+      const steps = presetSwipeSteps(gesture.acc, velocity);
+      gesture.acc = nextSwipeAccumulator(gesture.acc, steps, presetSwipePxPerStep(velocity), 20);
+      if (steps === 0) return;
+      presetEntry = applyPresetGroupSwipe(presetEntry, gesture.groupIndex, steps);
       renderCs(Number(presetEntry));
     }
     function handlePresetPointerEnd(event) {
@@ -835,7 +920,7 @@
       if (event.type === "pointerup") handlePresetPointerMove(event);
       presetGesture = null;
       if (app.hasPointerCapture(event.pointerId)) app.releasePointerCapture(event.pointerId);
-      if (event.type === "pointerup" && gesture.index === null && !gesture.moved) savePreset();
+      if (event.type === "pointerup" && gesture.groupIndex === null && !gesture.moved) savePreset();
     }
     function saveCustomText() {
       const value = textEditorInput.value.trim();
@@ -929,7 +1014,7 @@
       textEditor.addEventListener("pointerdown", handleTextEditorBackground);
       textEditorSave.addEventListener("click", saveCustomText);
       textEditorClear.addEventListener("click", clearCustomText);
-      document.addEventListener("pointerdown", handlePresetPointerDown, { capture: true, passive: false });
+      app.addEventListener("pointerdown", handlePresetPointerDown, { capture: true, passive: false });
       window.addEventListener("pointermove", handlePresetPointerMove, { passive: false });
       window.addEventListener("pointerup", handlePresetPointerEnd);
       window.addEventListener("pointercancel", handlePresetPointerEnd);

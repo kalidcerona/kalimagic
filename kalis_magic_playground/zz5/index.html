@@ -21,8 +21,13 @@
     .screen, .wallpaper, .shade { position: absolute; inset: 0; width: 100%; height: 100%; }
     .screen { overflow: hidden; }
     .wallpaper { object-fit: cover; pointer-events: none; }
-    #input-screen { background: radial-gradient(ellipse at 20% 10%, #575d78, transparent 65%), linear-gradient(155deg, #343c50, #10151e); }
-    .shade { background: #0007; backdrop-filter: blur(13px); -webkit-backdrop-filter: blur(13px); }
+    #input-screen {
+      background: radial-gradient(ellipse at 20% 10%, #575d78, transparent 65%), linear-gradient(155deg, #343c50, #10151e);
+      --key-d: clamp(64px, 19.084vw, 82px);
+      --key-hgap: clamp(16px, 5.089vw, 22px);
+      --key-vgap: clamp(10px, 3.308vw, 15px);
+    }
+    .shade { background: rgba(0, 0, 0, 0.35); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); }
     .pin-layout { position: relative; height: 100%; max-width: 450px; margin: auto; display: flex; flex-direction: column; align-items: center; padding: clamp(12px, 4vh, 36px) 28px max(18px, env(safe-area-inset-bottom)); }
     #lock { background: none; width: 52px; height: 48px; display: grid; place-items: center; flex-shrink: 0; }
     #lock svg { width: 24px; height: 29px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
@@ -32,24 +37,79 @@
     .dot.filled { background: #fff; }
     #dots.shake { animation: shake .38s ease-in-out; }
     @keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-13px); } 40%, 80% { transform: translateX(13px); } }
-    .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(10px, 2vh, 19px) 25px; width: min(100%, 302px); margin-top: auto; padding-top: 20px; }
-    .key { border-radius: 50%; aspect-ratio: 1; background: #ffffff24; display: flex; align-items: center; justify-content: center; flex-direction: column; min-height: 0; padding: 0; transition: background .1s; }
-    .key:active { background: #ffffff65; }
-    .key .number { font-size: 35px; line-height: 1.05; font-weight: 300; }
-    .key .letters { font-size: 10px; line-height: 1.5; letter-spacing: 2px; padding-left: 2px; min-height: 15px; }
-    .key[data-digit="0"] .letters, .key[data-digit="1"] .letters { display: none; }
+    .keypad {
+      display: grid;
+      grid-template-columns: repeat(3, var(--key-d));
+      grid-template-rows: repeat(4, var(--key-d));
+      column-gap: var(--key-hgap);
+      row-gap: var(--key-vgap);
+      width: min(100%, calc(3 * var(--key-d) + 2 * var(--key-hgap)));
+      margin-top: auto;
+      padding-top: 20px;
+      justify-content: center;
+      justify-items: center;
+      align-items: center;
+    }
+    /*
+     * iOS lock-screen PIN keys. Source: research.md sections "아이폰 PIN 키패드"
+     * and "구현 메모 for zz5" (THPinNumButton / THPinNumPadView).
+     * Reference: 393 x 852 CSS px (iPhone 15 / 15 Pro logical size).
+     * Diameter 75px; horizontal gap 20px; vertical gap 13px;
+     * keypad 265 x 339 (3*75+2*20, 4*75+3*13).
+     * Fill rgba(255,255,255,0.18) + backdrop-filter blur(20px); no border
+     * (iOS 10-18 filled circle, not the iOS 7 1px ring).
+     * Digit 36px / weight 300; letters 10px / weight 400 / tracking 0.12em / uppercase.
+     * :active = opaque white fill + black glyph, ~0.2s fade.
+     * Scales with clamp/min so 375px and 430px widths keep the 75@393 ratio.
+     * Galaxy (One UI 3+): also circular, ~72px, 12 / 8 gaps, weight 500 digit,
+     * letters hidden, press = scale + denser fill (no black invert).
+     */
+    .key {
+      box-sizing: border-box;
+      width: var(--key-d);
+      height: var(--key-d);
+      border: none;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.18);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 1px;
+      padding: 0;
+      flex-shrink: 0;
+      overflow: hidden;
+      transition: background .2s, color .2s, transform .15s;
+    }
+    .key:active { background: rgba(255, 255, 255, 0.92); color: #000; backdrop-filter: none; -webkit-backdrop-filter: none; }
+    .key .number { font-size: calc(var(--key-d) * 36 / 75); line-height: 1; font-weight: 300; }
+    .key .letters {
+      font-size: calc(var(--key-d) * 10 / 75);
+      font-weight: 400;
+      line-height: 1.2;
+      letter-spacing: 0.12em;
+      padding-left: 0.12em;
+      text-transform: uppercase;
+      min-height: 1.2em;
+      opacity: 0.92;
+    }
+    .key[data-digit="1"] .letters { visibility: hidden; }
+    .key[data-digit="0"] .letters { display: none; }
     .key[data-digit="0"] { grid-column: 2; }
-    .footer { display: flex; justify-content: space-between; width: min(100%, 302px); margin-top: clamp(14px, 3vh, 30px); align-items: center; }
-    .footer button { background: none; font-size: 14px; min-height: 42px; padding: 8px 0; }
+    .footer { display: flex; justify-content: space-between; width: min(100%, calc(3 * var(--key-d) + 2 * var(--key-hgap))); margin-top: clamp(14px, 3vh, 30px); align-items: center; }
+    .footer button { background: none; font-size: 16px; min-height: 42px; padding: 8px 0; }
+    #input-screen.galaxy { --key-d: clamp(56px, 18.321vw, 72px); --key-hgap: clamp(10px, 3.053vw, 16px); --key-vgap: clamp(6px, 2.036vw, 10px); }
     .galaxy .pin-layout { padding-top: clamp(26px, 9vh, 80px); }
     .galaxy #lock { height: 34px; }
     .galaxy .prompt { font-size: 19px; margin-top: 22px; }
     .galaxy #dots { gap: 18px; }
     .galaxy .dot { width: 10px; height: 10px; }
-    .galaxy .keypad { width: min(100%, 330px); gap: 9px 18px; }
-    .galaxy .key { border-radius: 24px; aspect-ratio: 1.25; background: #ffffff08; }
-    .galaxy .key:active { background: #ffffff35; border-radius: 50%; }
-    .galaxy .key .number { font-size: 32px; font-weight: 400; }
+    .galaxy .key { background: rgba(255, 255, 255, 0.14); }
+    .galaxy .key:active { background: rgba(255, 255, 255, 0.42); color: #fff; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); transform: scale(1.07); }
+    .galaxy .key .number { font-size: calc(var(--key-d) * 30 / 72); font-weight: 500; }
     .galaxy .key .letters { display: none; }
     .galaxy .footer button:first-child { border: 1px solid #ffffff55; border-radius: 24px; padding: 7px 20px; }
     #unlocked-screen { z-index: 2; background: #111; will-change: transform, opacity; }
@@ -92,7 +152,15 @@
     #start { width: 100%; padding: 16px; border-radius: 12px; background: #c6c0ff; color: #191528; font-size: 15px; font-weight: 700; margin-top: 5px; }
     #storage-status, #offline-status { font-size: 12px; line-height: 1.65; color: #b9b3dd; }
     #toast { position: absolute; z-index: 10; left: 50%; bottom: max(26px, env(safe-area-inset-bottom)); transform: translateX(-50%); max-width: 90%; border-radius: 12px; padding: 12px 18px; background: #242631; color: #eee; font-size: 13px; text-align: center; pointer-events: none; }
-    @media (max-height: 640px) { .pin-layout { padding-top: 8px; } .prompt { margin: 8px 0 12px; } .keypad { width: 235px; gap: 8px 22px; padding-top: 10px; } .key .number { font-size: 29px; } .footer { margin-top: 6px; } .galaxy .pin-layout { padding-top: 10px; } .galaxy .keypad { width: 260px; } }
+    @media (max-height: 640px) {
+      .pin-layout { padding-top: 8px; }
+      .prompt { margin: 8px 0 12px; }
+      #input-screen { --key-d: clamp(56px, 16.285vw, 64px); --key-vgap: 8px; }
+      .keypad { padding-top: 10px; }
+      .footer { margin-top: 6px; }
+      #input-screen.galaxy { --key-d: clamp(52px, 15.267vw, 60px); --key-vgap: 6px; }
+      .galaxy .pin-layout { padding-top: 10px; }
+    }
     @media (prefers-reduced-motion: reduce) { #unlocked-screen.returning { transition-duration: 180ms; } #unlocked-screen.unlocking { animation-duration: 150ms; } }
   </style>
 </head>
