@@ -19,42 +19,51 @@
     #shell { position: relative; width: 100%; height: 100vh; height: 100dvh; overflow: hidden; background: #000; }
     .mode-view { position: absolute; inset: 0; overflow: hidden; }
 
-    /* Portrait: v2 iOS Clock surface. */
-    #portrait-app { background: #000; }
-    #p-top-band { position: absolute; top: env(safe-area-inset-top); left: 0; right: 0; height: 22%; touch-action: none; }
+    /* Portrait: v2 iOS Clock surface, verbatim declarations with renamed selectors. */
+    #portrait-app { position: relative; width: 100%; height: 100vh; height: 100dvh; overflow: hidden; background: #000; }
+    #p-top-band { position: absolute; inset: 0 0 auto; height: 22%; touch-action: none; }
     #p-time-display { position: absolute; top: 30%; left: 15%; width: 70%; transform: translateY(-50%); display: flex; align-items: center; justify-content: center; font-size: min(18vw, 9.6dvh); font-weight: 200; font-variant-numeric: tabular-nums; letter-spacing: -0.04em; line-height: 1; white-space: nowrap; touch-action: none; }
     #p-numeric-display { display: flex; align-items: baseline; }
     .p-digits { display: inline-flex; }
-    #p-time-display [data-p-digit] { display: inline-block; width: 0.56em; border-radius: 0.12em; text-align: center; touch-action: none; transition: background-color 120ms ease, color 120ms ease; }
-    #portrait-app.preset-mode [data-p-digit].selected { background: #fff; color: #000; }
+    [data-p-digit] { display: inline-block; width: 0.56em; border-radius: 0.12em; text-align: center; touch-action: none; transition: background-color 120ms ease, color 120ms ease; }
+    #portrait-app.preset-mode [data-p-digit].selected { background: #FFFFFF; color: #000000; }
     #p-minutes { letter-spacing: -0.045em; }
-    .colon { display: inline-flex; align-self: center; flex-direction: column; justify-content: space-between; align-items: center; width: 0.22em; height: 0.40em; margin: 0 0.025em; transform: translateY(0.025em); }
-    .colon-dot { width: 0.1em; height: 0.1em; border-radius: 50%; background: #fff; }
-    .colon.trick .colon-dot:first-child { opacity: 0.82; }
-    .colon.trick-text .colon-dot { opacity: 0.6; }
-    #portrait-app.preset-mode .colon-dot, #landscape-app.preset-mode .colon-dot { opacity: 0; }
+    #p-colon { display: inline-flex; align-self: center; flex-direction: column; justify-content: space-between; align-items: center; width: 0.22em; height: 0.40em; margin: 0 0.025em; transform: translateY(0.025em); }
+    .colon-dot { width: 0.1em; height: 0.1em; border-radius: 50%; background: #FFFFFF; }
+    #p-colon.trick .colon-dot:first-child { opacity: 0.82; }
+    #p-colon.trick-text .colon-dot { opacity: 0.6; }
+    #portrait-app.preset-mode .colon-dot { opacity: 0; }
     #p-decimal { width: 0.20em; text-align: center; }
     #p-custom-display { display: block; max-width: 70vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    #p-buttons { position: absolute; top: 50%; left: 8vw; right: 8vw; transform: translateY(-50%); display: flex; align-items: center; justify-content: space-between; }
-    .round { width: clamp(3.75rem, 18vw, 4.75rem); height: clamp(3.75rem, 18vw, 4.75rem); border-radius: 50%; font-size: clamp(0.875rem, 4.25vw, 1.0625rem); font-weight: 400; }
-    #p-lap { background: #2c2c2e; }
-    #p-lap:disabled { color: #8e8e93; }
-    #p-control { background: #0a2e14; color: #30d158; }
-    #p-control.running { background: #3a0a0a; color: #ff453a; }
-    #p-pages { display: flex; gap: clamp(0.25rem, 1.5vw, 0.5rem); }
-    #p-pages i { width: clamp(0.3rem, 1.5vw, 0.42rem); height: clamp(0.3rem, 1.5vw, 0.42rem); border-radius: 50%; background: #48484a; }
-    #p-pages i:first-child { background: #fff; }
-    #p-lap-area { position: absolute; top: calc(50% + clamp(1.875rem, 9vw, 2.375rem) + 2dvh); bottom: calc(10dvh + env(safe-area-inset-bottom)); left: 8vw; right: 8vw; border-top: 0.0625rem solid #2c2c2e; overflow: hidden; touch-action: none; }
+    #p-buttons { position: absolute; top: 50%; transform: translateY(-50%); left: 8vw; right: 8vw; display: flex; align-items: center; justify-content: space-between; }
+    .round { width: min(18vw, 76px); height: min(18vw, 76px); border-radius: 50%; font-size: 17px; font-weight: 400; }
+    #p-lap { background: #2C2C2E; color: #FFFFFF; }
+    #p-lap:disabled { color: rgb(142, 142, 147); }
+    #p-control { background: #0A2E14; color: #30D158; }
+    #p-control.running { background: #3A0A0A; color: #FF453A; }
+    #p-pages { display: flex; gap: 6px; }
+    #p-pages i { width: 6px; height: 6px; border-radius: 50%; background: #48484A; }
+    #p-pages i:first-child { background: #FFFFFF; }
+    #p-lap-area { position: absolute; top: calc(50% + min(9vw, 38px) + 16px); bottom: calc(10dvh + env(safe-area-inset-bottom)); left: 8vw; right: 8vw; border-top: 1px solid #2C2C2E; overflow: hidden; touch-action: none; }
     #p-lap-rows, .lap-row, .lap-row * { pointer-events: none; }
-    .lap-row { display: flex; justify-content: space-between; align-items: center; height: clamp(2.25rem, 6.6dvh, 2.75rem); border-bottom: 0.04rem solid #3a3a3c; font-size: clamp(0.875rem, 4.25vw, 1.0625rem); font-variant-numeric: tabular-nums; }
-    #p-tabs { position: absolute; left: 0; bottom: env(safe-area-inset-bottom); width: 100%; height: 9dvh; min-height: 3.25rem; border-top: 0.04rem solid #2c2c2e; background: #000; display: flex; align-items: center; padding: 0.25rem 3vw; }
-    .tab { flex: 1; min-width: 0; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.2rem; background: transparent; color: #8e8e93; font-size: clamp(0.625rem, 2.7vw, 0.75rem); white-space: nowrap; }
-    .tab svg { width: clamp(1.25rem, 6vw, 1.5rem); height: clamp(1.25rem, 6vw, 1.5rem); fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
-    .tab.active { color: #ff9f0a; }
-    .tab-world .core { fill: #1c1c1e; stroke: none; }
-    .tab-world.feedback .core { fill: #fff; }
+    .lap-row { display: flex; justify-content: space-between; align-items: center; height: 44px; border-bottom: 0.5px solid #3A3A3C; font-size: 17px; font-variant-numeric: tabular-nums; }
+    #p-tabs { position: absolute; left: 0; bottom: env(safe-area-inset-bottom); width: 100%; height: 9dvh; border-top: 0.5px solid #2C2C2E; background: #000; display: flex; align-items: center; padding: 4px 3vw; }
+    .tab { flex: 1; min-width: 0; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; background: transparent; color: #8E8E93; font-size: 10px; white-space: nowrap; }
+    .tab svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+    .tab.active { color: rgb(255, 159, 10); }
+    .tab-world .core { fill: #1C1C1E; stroke: none; }
+    .tab-world.feedback .core { fill: #FFFFFF; }
+    #shell[data-ui-mode="portrait"] #editor { position: fixed; inset: 0; z-index: 2; display: flex; flex-direction: column; gap: clamp(1rem, 3vh, 2rem); padding: 6vh 6vw; align-items: center; justify-content: center; background: #1C1C1E; }
+    #shell[data-ui-mode="portrait"] #editor-input { width: min(88vw, 32rem); padding: 0.7em 0.8em; border: 1px solid rgba(255,255,255,0.25); border-radius: 0.5em; background: rgba(255,255,255,0.1); color: #ffffff; font: inherit; font-size: clamp(2rem, 8vw, 4rem); text-align: center; user-select: text; -webkit-user-select: text; touch-action: auto; }
+    #shell[data-ui-mode="portrait"] #editor-actions { display: flex; gap: clamp(0.75rem, 3vw, 1.5rem); }
+    #shell[data-ui-mode="portrait"] #editor-actions button { min-width: 7rem; padding: 0.7em 1.2em; border: 0; border-radius: 0.7em; background: rgba(255,255,255,0.16); color: #ffffff; font: inherit; font-size: clamp(1.25rem, 5vw, 2rem); }
+    #shell[data-ui-mode="portrait"] #preset-hint { position: fixed; left: 50%; top: calc(30% + min(9vw, 4.8dvh) + 10px); z-index: 1; transform: translateX(-50%); padding: 0.55rem 0.8rem; border-radius: 999px; background: rgba(44,44,46,0.94); color: #D1D1D6; font-size: 13px; white-space: nowrap; pointer-events: none; }
 
     /* Landscape: v1 surface; portrait viewports rotate the whole app clockwise. */
+    #l-colon { display: inline-flex; align-self: center; flex-direction: column; justify-content: space-between; align-items: center; transform: translateY(0.025em); }
+    #l-colon.trick .colon-dot:first-child { opacity: 0.82; }
+    #l-colon.trick-text .colon-dot { opacity: 0.6; }
+    #landscape-app.preset-mode .colon-dot { opacity: 0; }
     #landscape-frame { position: absolute; inset: 0; overflow: hidden; background: #1c1c1e; }
     #landscape-app { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: space-evenly; width: 100%; height: 100vh; height: 100dvh; overflow: hidden; background: #1c1c1e; padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
     #l-time-display { display: flex; flex: 0 0 auto; align-items: center; justify-content: center; font-size: min(41vh, 26.4vw); font-variant-numeric: tabular-nums; font-weight: 200; letter-spacing: -0.02em; line-height: 1; white-space: nowrap; pointer-events: none; }
@@ -224,6 +233,22 @@
       const last = valid.slice(-3);
       return last[2].time - last[0].time <= 800;
     }
+    function transitionAlarmPreset(model, action) {
+      const next = { ...model };
+      if (action === "enter") {
+        if (next.uiMode !== "portrait" || next.timerState === "running" || next.presetMode || next.editorOpen) return next;
+        next.uiMode = "landscape";
+        next.presetMode = true;
+        next.presetReturnMode = "portrait";
+      } else if ((action === "save" || action === "cancel") && next.presetMode) {
+        next.presetMode = false;
+        if (next.presetReturnMode) {
+          next.uiMode = next.presetReturnMode;
+          next.presetReturnMode = null;
+        }
+      }
+      return next;
+    }
     function migrateV2Storage(storage) {
       const marker = "stopwatch_storage_migrated_v2";
       try {
@@ -281,6 +306,12 @@
       for(const [pending,d,want] of [[[],3,[3]],[[3],1,[3,1]],[[3],3,[3,3]],[[3,1],7,[7]],[[0],0,[0,0]]]){const original=JSON.stringify(pending);assert(JSON.stringify(pushPendingDigit(pending,d))===JSON.stringify(want),`v2 pending ${original}+${d}`);assert(JSON.stringify(pending)===original,`v2 pending unchanged ${original}`);}
       assert(resolveStoppedCs({elapsed:3450,trickMode:true,reservedTens:2,stopDigit:null})===345,"v2 missing stop tap");assert(resolveStoppedCs({elapsed:3450,trickMode:true,reservedTens:null,stopDigit:null})===345,"v2 no grid taps");assert(applyPresetSwipe("123",0,1)==="123","v2 invalid preset length");assert(applyPresetSwipe("1234",0,.5)==="1234","v2 fractional swipe");
       const emptyStore={getItem:()=>null};assert(storedMode(emptyStore)==="portrait","uni default portrait");
+      const alarmBase={uiMode:"portrait",timerState:"idle",presetMode:false,editorOpen:false,presetReturnMode:null,storedUiMode:"portrait"};
+      const alarmEntered=transitionAlarmPreset(alarmBase,"enter");assert(alarmEntered.uiMode==="landscape"&&alarmEntered.presetMode&&alarmEntered.presetReturnMode==="portrait","uni alarm enter portrait landscape preset");
+      const alarmSaved=transitionAlarmPreset(alarmEntered,"save");assert(alarmSaved.uiMode==="portrait"&&!alarmSaved.presetMode&&alarmSaved.presetReturnMode===null,"uni alarm exit save returns portrait");
+      const alarmCancelled=transitionAlarmPreset(alarmEntered,"cancel");assert(alarmCancelled.uiMode==="portrait"&&!alarmCancelled.presetMode&&alarmCancelled.presetReturnMode===null,"uni alarm exit cancel returns portrait");
+      const alarmRunning=transitionAlarmPreset({...alarmBase,timerState:"running"},"enter");assert(alarmRunning.uiMode==="portrait"&&!alarmRunning.presetMode&&alarmRunning.presetReturnMode===null,"uni alarm enter running no-op");
+      assert(alarmEntered.storedUiMode==="portrait"&&alarmSaved.storedUiMode==="portrait"&&alarmCancelled.storedUiMode==="portrait","uni alarm temporary switch leaves stored mode untouched");
       assert(elapsedAtAction(0,1000,1875)===875,"uni deferred stop uses actionNow snapshot");
       assert(recognizesModeToggle([{fingers:2,time:0,gap:40},{fingers:2,time:350,gap:50},{fingers:2,time:790,gap:80}]),"uni 3 two-finger taps");assert(!recognizesModeToggle([{fingers:2,time:0,gap:40},{fingers:2,time:300,gap:40}]),"uni reject 2 taps");assert(!recognizesModeToggle([{fingers:1,time:0,gap:0},{fingers:1,time:200,gap:0},{fingers:1,time:400,gap:0}]),"uni reject singles");assert(!recognizesModeToggle([{fingers:2,time:0,gap:40},{fingers:2,time:750,gap:40},{fingers:2,time:1500,gap:40}]),"uni reject spread taps");
       const data=new Map([["stopwatch2_preset_cs","1187"],["stopwatch2_custom_text","KALI"]]);const store={getItem:k=>data.has(k)?data.get(k):null,setItem:(k,v)=>data.set(k,String(v))};assert(migrateV2Storage(store)===true&&data.get("stopwatch_preset_cs")==="1187"&&data.get("stopwatch_custom_text")==="KALI","uni migration copies");data.set("stopwatch2_preset_cs","9999");assert(migrateV2Storage(store)===false&&data.get("stopwatch_preset_cs")==="1187","uni migration once");assert(data.get("stopwatch2_preset_cs")==="9999","uni old keys remain");
@@ -297,7 +328,7 @@
         setMode("portrait");void portraitApp.offsetWidth;
         center(pTime,"#p-time-display","browser portrait time display");
         const grid=pLapArea.getBoundingClientRect();for(let row=0;row<2;row+=1)for(let col=0;col<5;col+=1)hit(grid.left+(col+.5)*grid.width/5,grid.top+(row+.5)*grid.height/2,"#p-lap-area",`browser portrait digit grid ${row},${col}`);
-        center(document.getElementById("p-top-band"),"#p-top-band","browser portrait top band");center(pLap,"#p-lap","browser portrait lap button");center(pControl,"#p-control","browser portrait start button");
+        center(document.getElementById("p-top-band"),"#p-top-band","browser portrait top band");center(pLap,"#p-lap","browser portrait lap button");center(pControl,"#p-control","browser portrait start button");center(pAlarm,"#p-tabs .tab:nth-child(2)","browser portrait alarm tab");
         setMode(originalMode);try{if(hadStoredMode)localStorage.setItem(MODE_KEY,storedModeValue);else localStorage.removeItem(MODE_KEY);}catch(_){}shell.hidden=shellWasHidden;selftest.hidden=selftestWasHidden;
       }
       const message=failures.length?`FAIL\n${failures.join("\n")}`:"ALL PASS";const output=document.getElementById("selftest-result");output.textContent=message;output.className=failures.length?"fail":"";console.log(message);return message;
@@ -306,13 +337,13 @@
 
     const $ = id => document.getElementById(id);
     const shell=$("shell"), portraitApp=$("portrait-app"), landscapeFrame=$("landscape-frame"), landscapeApp=$("landscape-app");
-    const pTime=$("p-time-display"),pNumeric=$("p-numeric-display"),pCustom=$("p-custom-display"),pColon=$("p-colon"),pControl=$("p-control"),pLap=$("p-lap"),pLapArea=$("p-lap-area"),pLapRows=$("p-lap-rows"),pWorld=portraitApp.querySelector(".tab-world"),pDigits=[...pTime.querySelectorAll("[data-p-digit]")];
+    const pTime=$("p-time-display"),pNumeric=$("p-numeric-display"),pCustom=$("p-custom-display"),pColon=$("p-colon"),pControl=$("p-control"),pLap=$("p-lap"),pLapArea=$("p-lap-area"),pLapRows=$("p-lap-rows"),pWorld=portraitApp.querySelector(".tab-world"),pAlarm=portraitApp.querySelector("#p-tabs .tab:nth-child(2)"),pDigits=[...pTime.querySelectorAll("[data-p-digit]")];
     const lTime=$("l-time-display"),lSeconds=$("l-seconds"),lCs=$("l-centiseconds"),lCustom=$("l-custom-display"),lColon=$("l-colon"),lControl=$("l-control"),lControlLabel=$("l-control-label"),lHitZones=$("l-main-hit-zones"),lDigits=[...lTime.querySelectorAll("[data-l-digit]")];
     const editor=$("editor"),editorInput=$("editor-input"),editorSave=$("editor-save"),editorClear=$("editor-clear"),presetHint=$("preset-hint");
     const PRESET_KEY="stopwatch_preset_cs",PRESET_AT_KEY="stopwatch_preset_at",TEXT_KEY="stopwatch_custom_text",TEXT_AT_KEY="stopwatch_text_at",MODE_KEY="stopwatch_ui_mode";
     const HOLD_MS=1000,PAIR_MS=120,TRIPLE_MS=800;
-    let uiMode="portrait",state="idle",trickState="off",customText="",presetCs=null,presetAt=0,textAt=0,presetEntry="0000",presetMode=false,presetGesture=null;
-    let pendingDigits=[],reservedTens=null,stopDigit=null,startedAt=0,elapsedBase=0,frameId=0,lapCount=0,lastLapElapsed=0,hold=null,tap=null,suppressClick=false,typedDigits="",hintTimer=0,editorKind="",stoppedOutcome=null;
+    let uiMode="portrait",state="idle",trickState="off",customText="",presetCs=null,presetAt=0,textAt=0,presetEntry="0000",presetMode=false,presetGesture=null,presetReturnMode=null;
+    let pendingDigits=[],reservedTens=null,stopDigit=null,startedAt=0,elapsedBase=0,frameId=0,lapCount=0,lastLapElapsed=0,hold=null,tap=null,alarmTap=null,suppressClick=false,typedDigits="",hintTimer=0,editorKind="",stoppedOutcome=null;
     let pressed=false,wakeLock=null,wakeLockPending=false,resizeObserver=null;
     const activePointers=new Map(),pairedPointers=new Set(),pendingLandscapeActions=new Map();let pairCandidate=null,twoFingerTaps=[];
     function renderCs(totalCs){const f=formatCs(totalCs),entry=f.sec+f.cs;pCustom.hidden=true;pNumeric.hidden=false;pDigits.forEach((s,i)=>s.textContent=entry[i]);lCustom.hidden=true;lSeconds.hidden=false;lColon.hidden=false;lCs.hidden=false;lDigits.forEach((s,i)=>s.textContent=entry[i]);}
@@ -325,7 +356,7 @@
     function startTimer(event){if(elapsedBase>=59990)return;stoppedOutcome=null;if(uiMode==="landscape"){elapsedBase=0;lastLapElapsed=0;if(trickState==="digit"&&event)reservedTens=digitFromLandscapeEvent(event);}startedAt=event&&Number.isFinite(event.actionNow)?event.actionNow:performance.now();state="running";renderCs(Math.floor(elapsedBase/10));renderState();tick();}
     function resetTimer(){cancelAnimationFrame(frameId);frameId=0;state="idle";elapsedBase=0;stoppedOutcome=null;pendingDigits=[];reservedTens=stopDigit=null;lapCount=lastLapElapsed=0;pLapRows.replaceChildren();pWorld.classList.remove("feedback");renderCs(0);renderState();}
     function addLap(){const elapsed=elapsedNow(),split=formatCs(Math.floor((elapsed-lastLapElapsed)/10));lastLapElapsed=elapsed;const row=document.createElement("div"),label=document.createElement("span"),value=document.createElement("span");row.className="lap-row";label.textContent=`랩 ${++lapCount}`;value.textContent=`00:${split.sec}.${split.cs}`;row.append(label,value);pLapRows.prepend(row);}
-    function setMode(mode){uiMode=mode==="landscape"?"landscape":"portrait";portraitApp.hidden=uiMode!=="portrait";landscapeFrame.hidden=uiMode!=="landscape";try{localStorage.setItem(MODE_KEY,uiMode);}catch(_){}renderState();if(state==="stopped"&&stoppedOutcome){if(stoppedOutcome.kind==="text")renderCustomText(stoppedOutcome.text);else renderCs(stoppedOutcome.cs);}else renderCs(Math.floor(elapsedNow()/10));requestAnimationFrame(updateLandscapeHitZones);}
+    function setMode(mode,persist=true){uiMode=mode==="landscape"?"landscape":"portrait";shell.dataset.uiMode=uiMode;portraitApp.hidden=uiMode!=="portrait";landscapeFrame.hidden=uiMode!=="landscape";if(persist)try{localStorage.setItem(MODE_KEY,uiMode);}catch(_){}renderState();if(state==="stopped"&&stoppedOutcome){if(stoppedOutcome.kind==="text")renderCustomText(stoppedOutcome.text);else renderCs(stoppedOutcome.cs);}else renderCs(Math.floor(elapsedNow()/10));requestAnimationFrame(updateLandscapeHitZones);}
     function toggleMode(){exitPresetMode(false);clearHold();setMode(uiMode==="portrait"?"landscape":"portrait");}
     function isPrimaryPointer(e){return e.isPrimary!==false&&(e.button===undefined||e.button===0);}
     function clearHold(){if(hold)clearTimeout(hold.timer);hold=null;}
@@ -346,10 +377,11 @@
     function appRect(el){const rect=el.getBoundingClientRect(),rotated=isRotatedLayout(),origin=toAppPoint(rotated?rect.right:rect.left,rect.top,innerWidth,innerHeight,rotated);return{left:origin.x,top:origin.y,width:rotated?rect.height:rect.width,height:rotated?rect.width:rect.height};}
     function digitFromLandscapeEvent(e){const rect=appRect(lControl),p=toAppPoint(e.clientX,e.clientY,innerWidth,innerHeight,isRotatedLayout());return digitFromPoint(p.x-rect.left,p.y-rect.top,rect.width,rect.height);}
     function enterLandscapePreset(){if(state==="running"||presetMode)return;resetTimer();presetEntry=String(presetCs??0).padStart(4,"0");presetMode=true;landscapeApp.classList.add("preset-mode");setLandscapeGroup(null);renderCs(Number(presetEntry));showHint("위아래로 밀어 두 자리씩 맞추고, 빈 곳을 탭하면 저장");}
+    function enterAlarmPreset(){const next=transitionAlarmPreset({uiMode,timerState:state,presetMode,editorOpen:!editor.hidden,presetReturnMode,storedUiMode:uiMode},"enter");if(next.uiMode!=="landscape"||!next.presetMode||next.presetReturnMode!=="portrait")return;presetReturnMode=next.presetReturnMode;setMode(next.uiMode,false);enterLandscapePreset();}
     function setLandscapeGroup(group){lSeconds.classList.toggle("preset-active",group===0);lCs.classList.toggle("preset-active",group===1);lDigits.forEach((s,i)=>s.classList.toggle("preset-active",(i<2?0:1)===group));}
-    function exitPresetMode(save){if(!presetMode)return;if(save)storePresetCs(Number(presetEntry));presetMode=false;presetGesture=null;portraitApp.classList.remove("preset-mode");landscapeApp.classList.remove("preset-mode");selectPortraitDigit(null);setLandscapeGroup(null);presetHint.hidden=true;clearTimeout(hintTimer);renderCs(0);}
+    function exitPresetMode(save){if(!presetMode)return;if(save)storePresetCs(Number(presetEntry));presetMode=false;presetGesture=null;portraitApp.classList.remove("preset-mode");landscapeApp.classList.remove("preset-mode");selectPortraitDigit(null);setLandscapeGroup(null);presetHint.hidden=true;clearTimeout(hintTimer);renderCs(0);if(presetReturnMode){const returnMode=presetReturnMode;presetReturnMode=null;setMode(returnMode,false);}}
     function handlePresetDown(e){if(!presetMode||!isPrimaryPointer(e)||!editor.hidden)return;e.preventDefault();e.stopImmediatePropagation();if(uiMode==="portrait"){const track=pTrackRect(),index=presetIndexFromX(e.clientX,track.left,track.width);selectPortraitDigit(index);presetGesture={kind:"portrait",pointerId:e.pointerId,index,x:e.clientX,y:e.clientY,entry:presetEntry,moved:false};}else{const point=toAppPoint(e.clientX,e.clientY,innerWidth,innerHeight,isRotatedLayout());const group=presetGroupIndexFromPoint(point.x,point.y,appRect(lTime));setLandscapeGroup(group);presetGesture={kind:"landscape",pointerId:e.pointerId,groupIndex:group,start:point,lastY:point.y,lastT:e.timeStamp||performance.now(),acc:0,moved:false};}try{(uiMode==="portrait"?portraitApp:landscapeApp).setPointerCapture(e.pointerId);}catch(_){}}
-    function handlePointerMove(e){if(uiMode==="portrait"&&hold&&hold.pointerId===e.pointerId&&Math.hypot(e.clientX-hold.x,e.clientY-hold.y)>10)clearHold();if(tap&&tap.pointerId===e.pointerId&&Math.hypot(e.clientX-tap.x,e.clientY-tap.y)>10)tap=null;const p=activePointers.get(e.pointerId);if(p&&Math.hypot(e.clientX-p.x,e.clientY-p.y)>15)p.moved=true;const g=presetGesture;if(!g||g.pointerId!==e.pointerId)return;e.preventDefault();if(g.kind==="portrait"){if(Math.hypot(e.clientX-g.x,e.clientY-g.y)>10)g.moved=true;if(g.index!==null){presetEntry=applyPresetSwipe(g.entry,g.index,Math.trunc((g.y-e.clientY)/28));renderCs(Number(presetEntry));}}else{const point=toAppPoint(e.clientX,e.clientY,innerWidth,innerHeight,isRotatedLayout());if(Math.hypot(point.x-g.start.x,point.y-g.start.y)>10)g.moved=true;if(g.groupIndex===null)return;const now=e.timeStamp||performance.now(),delta=g.lastY-point.y,dt=now-g.lastT,velocity=dt>0?Math.abs(delta)/dt:0;g.acc+=delta;g.lastY=point.y;g.lastT=now;const steps=presetSwipeSteps(g.acc,velocity);g.acc=nextSwipeAccumulator(g.acc,steps,presetSwipePxPerStep(velocity),20);if(steps){presetEntry=applyPresetGroupSwipe(presetEntry,g.groupIndex,steps);renderCs(Number(presetEntry));}}}
+    function handlePointerMove(e){if(uiMode==="portrait"&&hold&&hold.pointerId===e.pointerId&&Math.hypot(e.clientX-hold.x,e.clientY-hold.y)>10)clearHold();if(tap&&tap.pointerId===e.pointerId&&Math.hypot(e.clientX-tap.x,e.clientY-tap.y)>10)tap=null;if(alarmTap&&alarmTap.pointerId===e.pointerId&&Math.hypot(e.clientX-alarmTap.x,e.clientY-alarmTap.y)>10)alarmTap=null;const p=activePointers.get(e.pointerId);if(p&&Math.hypot(e.clientX-p.x,e.clientY-p.y)>15)p.moved=true;const g=presetGesture;if(!g||g.pointerId!==e.pointerId)return;e.preventDefault();if(g.kind==="portrait"){if(Math.hypot(e.clientX-g.x,e.clientY-g.y)>10)g.moved=true;if(g.index!==null){presetEntry=applyPresetSwipe(g.entry,g.index,Math.trunc((g.y-e.clientY)/28));renderCs(Number(presetEntry));}}else{const point=toAppPoint(e.clientX,e.clientY,innerWidth,innerHeight,isRotatedLayout());if(Math.hypot(point.x-g.start.x,point.y-g.start.y)>10)g.moved=true;if(g.groupIndex===null)return;const now=e.timeStamp||performance.now(),delta=g.lastY-point.y,dt=now-g.lastT,velocity=dt>0?Math.abs(delta)/dt:0;g.acc+=delta;g.lastY=point.y;g.lastT=now;const steps=presetSwipeSteps(g.acc,velocity);g.acc=nextSwipeAccumulator(g.acc,steps,presetSwipePxPerStep(velocity),20);if(steps){presetEntry=applyPresetGroupSwipe(presetEntry,g.groupIndex,steps);renderCs(Number(presetEntry));}}}
     function handlePresetEnd(e){const g=presetGesture;if(!g||g.pointerId!==e.pointerId)return;if(e.type==="pointerup")handlePointerMove(e);presetGesture=null;const target=g.kind==="portrait"?portraitApp:landscapeApp;try{if(target.hasPointerCapture(e.pointerId))target.releasePointerCapture(e.pointerId);}catch(_){}const outside=g.kind==="portrait"?g.index===null:g.groupIndex===null;if(e.type==="pointerup"&&outside&&!g.moved)exitPresetMode(true);setTimeout(()=>suppressClick=false,0);}
     function updateLandscapeHitZones(){if(uiMode!=="landscape")return;const t=appRect(lTime),c=appRect(lControl),bottom=Math.min(t.top+t.height,c.top-4,appSize().height);lHitZones.style.height=`${Math.max(0,bottom)}px`;}
     function pointerSnapshot(e){return{pointerId:e.pointerId,clientX:e.clientX,clientY:e.clientY,isPrimary:true,button:0,actionNow:performance.now(),preventDefault(){}};}
@@ -357,7 +389,7 @@
     function deferLandscapeHold(e,action){if(pairedPointers.has(e.pointerId)||!editor.hidden)return;const snapshot=pointerSnapshot(e);const timer=setTimeout(()=>{pendingLandscapeActions.delete(e.pointerId);if(!pairedPointers.has(e.pointerId)&&activePointers.has(e.pointerId))beginHold(snapshot,action,HOLD_MS-PAIR_MS);},PAIR_MS+5);pendingLandscapeActions.set(e.pointerId,timer);}
     function cancelDeferred(id){const timer=pendingLandscapeActions.get(id);if(timer)clearTimeout(timer);pendingLandscapeActions.delete(id);}
     function cancelPendingInteractions(){clearHold();tap=null;pendingLandscapeActions.forEach(clearTimeout);pendingLandscapeActions.clear();activePointers.clear();pairedPointers.clear();pairCandidate=null;twoFingerTaps=[];pressed=false;renderState();}
-    function onGlobalPointerDown(e){if(!editor.hidden||presetMode)return;activePointers.set(e.pointerId,{time:e.timeStamp||performance.now(),x:e.clientX,y:e.clientY,moved:false});if(activePointers.size===2){const points=[...activePointers.entries()],gap=Math.abs(points[1][1].time-points[0][1].time);if(gap<=PAIR_MS){pairCandidate={ids:points.map(x=>x[0]),gap,time:Math.max(points[0][1].time,points[1][1].time),released:new Set(),valid:true};pairCandidate.ids.forEach(id=>{pairedPointers.add(id);cancelDeferred(id);});clearHold();tap=null;suppressClick=true;pressed=false;renderState();e.preventDefault();e.stopImmediatePropagation();}}else if(activePointers.size>2&&pairCandidate)pairCandidate.valid=false;}
+    function onGlobalPointerDown(e){if(!editor.hidden||presetMode)return;activePointers.set(e.pointerId,{time:e.timeStamp||performance.now(),x:e.clientX,y:e.clientY,moved:false});if(activePointers.size===2){alarmTap=null;const points=[...activePointers.entries()],gap=Math.abs(points[1][1].time-points[0][1].time);if(gap<=PAIR_MS){pairCandidate={ids:points.map(x=>x[0]),gap,time:Math.max(points[0][1].time,points[1][1].time),released:new Set(),valid:true};pairCandidate.ids.forEach(id=>{pairedPointers.add(id);cancelDeferred(id);});clearHold();tap=null;suppressClick=true;pressed=false;renderState();e.preventDefault();e.stopImmediatePropagation();}}else if(activePointers.size>2&&pairCandidate)pairCandidate.valid=false;}
     function onGlobalPointerEnd(e){const info=activePointers.get(e.pointerId);activePointers.delete(e.pointerId);if(pairCandidate&&pairCandidate.ids.includes(e.pointerId)){if(e.type!=="pointerup"||(info&&info.moved))pairCandidate.valid=false;pairCandidate.released.add(e.pointerId);if(pairCandidate.released.size===2){if(pairCandidate.valid){twoFingerTaps.push({fingers:2,time:pairCandidate.time,gap:pairCandidate.gap});twoFingerTaps=twoFingerTaps.filter(t=>pairCandidate.time-t.time<=TRIPLE_MS);if(recognizesModeToggle(twoFingerTaps)){twoFingerTaps=[];toggleMode();}}pairCandidate.ids.forEach(id=>pairedPointers.delete(id));pairCandidate=null;setTimeout(()=>suppressClick=false,0);}}}
     function landscapeControl(e){if(presetMode||!isPrimaryPointer(e))return;pressed=true;renderState();if(state==="idle")startTimer(e);else if(state==="running")stopTimer(e);else resetTimer();}
     function releasePress(){if(!pressed)return;pressed=false;renderState();}
@@ -368,6 +400,7 @@
       document.addEventListener("pointerdown",onGlobalPointerDown,{capture:true,passive:false});window.addEventListener("pointermove",handlePointerMove,{passive:false});window.addEventListener("pointerup",e=>{onGlobalPointerEnd(e);handlePresetEnd(e);if(hold&&hold.pointerId===e.pointerId)clearHold();releasePress();});window.addEventListener("pointercancel",e=>{onGlobalPointerEnd(e);handlePresetEnd(e);releasePress();});
       document.addEventListener("pointerdown",handlePresetDown,{capture:true,passive:false});
       pControl.addEventListener("click",()=>{if(presetMode||suppressClick)return;if(state==="running")stopTimer();else startTimer();});pLap.addEventListener("click",()=>{if(presetMode||suppressClick)return;if(state==="running")addLap();else resetTimer();});pTime.addEventListener("click",()=>{if(!suppressClick&&editor.hidden)cycleTrick();});
+      pAlarm.addEventListener("pointerdown",e=>{if(uiMode!=="portrait"||state==="running"||presetMode||!editor.hidden||!isPrimaryPointer(e)||activePointers.size!==1)return;alarmTap={pointerId:e.pointerId,x:e.clientX,y:e.clientY};});pAlarm.addEventListener("pointerup",e=>{const candidate=alarmTap;alarmTap=null;if(!candidate||candidate.pointerId!==e.pointerId||pairedPointers.has(e.pointerId)||Math.hypot(e.clientX-candidate.x,e.clientY-candidate.y)>10)return;enterAlarmPreset();});pAlarm.addEventListener("pointercancel",()=>alarmTap=null);
       pLapArea.addEventListener("pointerdown",e=>{if(presetMode||trickState!=="digit"||!isPrimaryPointer(e)||pairedPointers.has(e.pointerId))return;tap={pointerId:e.pointerId,x:e.clientX,y:e.clientY};});window.addEventListener("pointerup",e=>{if(tap&&tap.pointerId===e.pointerId&&!presetMode&&!suppressClick&&trickState==="digit"&&!pairedPointers.has(e.pointerId)){const r=pLapArea.getBoundingClientRect();if(Math.hypot(e.clientX-tap.x,e.clientY-tap.y)<=10&&e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom){const d=digitFromPoint(e.clientX-r.left,e.clientY-r.top,r.width,r.height);pendingDigits=pushPendingDigit(pendingDigits,d);const complete=pendingDigits.length===2;reservedTens=complete?pendingDigits[0]:null;stopDigit=complete?pendingDigits[1]:null;pWorld.classList.toggle("feedback",complete);}}tap=null;});
       $("p-top-band").addEventListener("pointerdown",e=>beginHold(e,openPortraitPresetEditor));pNumeric.addEventListener("pointerdown",e=>{const track=pTrackRect();if(state!=="running"&&presetIndexFromX(e.clientX,track.left,track.width)!==null)beginHold(e,d=>enterPortraitPreset(d.pointerId,d.x,d.y));});
       lControl.addEventListener("pointerdown",e=>deferLandscapeAction(e,landscapeControl));$("l-fullscreen-zone").addEventListener("pointerdown",e=>deferLandscapeAction(e,enterFullscreen));$("l-trick-zone").addEventListener("pointerdown",e=>deferLandscapeAction(e,cycleTrick));$("l-text-zone").addEventListener("pointerdown",e=>deferLandscapeHold(e,openLandscapeTextEditor));
