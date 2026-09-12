@@ -27,6 +27,12 @@
     .p-digits { display: inline-flex; }
     [data-p-digit] { display: inline-block; width: 0.56em; border-radius: 0.12em; text-align: center; touch-action: none; transition: background-color 120ms ease, color 120ms ease; }
     #portrait-app.preset-mode [data-p-digit].selected { background: #FFFFFF; color: #000000; }
+    #portrait-app.portrait-group-preset-mode { touch-action: none; }
+    #portrait-app.portrait-group-preset-mode .p-preset-group.preset-active { position: relative; border-radius: 0.12em; background: rgba(255,159,10,0.2); text-decoration: underline; text-decoration-color: #ff9f0a; text-decoration-thickness: 0.08em; text-underline-offset: 0.12em; }
+    #portrait-app.portrait-group-preset-mode .p-preset-group.preset-active::before, #portrait-app.portrait-group-preset-mode .p-preset-group.preset-active::after { position: absolute; left: 50%; color: #ff9f0a; font-size: 0.2em; font-weight: 600; line-height: 1; transform: translateX(-50%); }
+    #portrait-app.portrait-group-preset-mode .p-preset-group.preset-active::before { content: "▲"; top: -1.45em; }
+    #portrait-app.portrait-group-preset-mode .p-preset-group.preset-active::after { content: "▼"; bottom: -1.45em; }
+    #portrait-app.portrait-group-preset-mode .colon-dot { opacity: 1; }
     #p-minutes { letter-spacing: -0.045em; }
     #p-colon { display: inline-flex; align-self: center; flex-direction: column; justify-content: space-between; align-items: center; width: 0.22em; height: 0.40em; margin: 0 0.025em; transform: translateY(0.025em); }
     .colon-dot { width: 0.1em; height: 0.1em; border-radius: 50%; background: #FFFFFF; }
@@ -108,7 +114,7 @@
     <section id="portrait-app" class="mode-view" aria-label="세로 스톱워치">
       <div id="p-top-band" aria-hidden="true"></div>
       <div id="p-time-display" aria-label="스톱워치 시간">
-        <span id="p-numeric-display"><span id="p-minutes">00</span><span id="p-colon" class="colon" aria-hidden="true"><span class="colon-dot"></span><span class="colon-dot"></span></span><span class="p-digits"><span data-p-digit="0">0</span><span data-p-digit="1">0</span></span><span id="p-decimal">.</span><span class="p-digits"><span data-p-digit="2">0</span><span data-p-digit="3">0</span></span></span>
+        <span id="p-numeric-display"><span id="p-minutes" class="p-preset-group" data-p-group="0">00</span><span id="p-colon" class="colon" aria-hidden="true"><span class="colon-dot"></span><span class="colon-dot"></span></span><span id="p-seconds" class="p-digits p-preset-group" data-p-group="1"><span data-p-digit="0">0</span><span data-p-digit="1">0</span></span><span id="p-decimal">.</span><span id="p-centiseconds" class="p-digits p-preset-group" data-p-group="2"><span data-p-digit="2">0</span><span data-p-digit="3">0</span></span></span>
         <span id="p-custom-display" hidden></span>
       </div>
       <div id="p-buttons"><button id="p-lap" class="round" type="button" disabled>랩</button><span id="p-pages" aria-hidden="true"><i></i><i></i></span><button id="p-control" class="round" type="button">시작</button></div>
@@ -171,13 +177,13 @@
     }
     function toAppPoint(clientX, clientY, viewportWidth, viewportHeight, rotated) { return rotated ? { x: clientY, y: viewportWidth - clientX } : { x: clientX, y: clientY }; }
     function applyPresetGroupSwipe(entry, groupIndex, steps) {
-      if (!/^\d{4}$/.test(entry) || !Number.isInteger(groupIndex) || groupIndex < 0 || groupIndex > 1 || !Number.isInteger(steps)) return entry;
-      if (groupIndex === 0) {
-        const sec = ((Number(entry.slice(0, 2)) + steps) % 60 + 60) % 60;
-        return String(sec).padStart(2, "0") + entry.slice(2);
-      }
-      const cs = ((Number(entry.slice(2, 4)) + steps) % 100 + 100) % 100;
-      return entry.slice(0, 2) + String(cs).padStart(2, "0");
+      if (!/^\d{4}(?:\d{2})?$/.test(entry) || !Number.isInteger(groupIndex) || !Number.isInteger(steps)) return entry;
+      const groupCount = entry.length / 2;
+      if (groupIndex < 0 || groupIndex >= groupCount) return entry;
+      const limit = entry.length === 4 && groupIndex === 0 ? 60 : 100;
+      const offset = groupIndex * 2;
+      const value = ((Number(entry.slice(offset, offset + 2)) + steps) % limit + limit) % limit;
+      return entry.slice(0, offset) + String(value).padStart(2, "0") + entry.slice(offset + 2);
     }
     function presetSwipePxPerStep(velocityPxPerMs) {
       const speed = Math.abs(Number(velocityPxPerMs));
@@ -201,13 +207,31 @@
       else if (remainder <= -pxPerStep) remainder = -pxPerStep + Number.MIN_VALUE;
       return remainder;
     }
-    function presetGroupIndexFromPoint(x, y, rect) {
+    function presetGroupIndexFromPoint(x, y, rect, count = 2) {
       if (!rect || !Number.isFinite(x) || !Number.isFinite(y)) return null;
       const { left, top, width, height } = rect;
-      if (![left, top, width, height].every(Number.isFinite) || width <= 0 || height <= 0) return null;
+      if (![left, top, width, height].every(Number.isFinite) || width <= 0 || height <= 0 || !Number.isInteger(count) || count <= 0) return null;
       const band = height * 0.4;
       if (y < top - band || y > top + height + band || x < left || x > left + width) return null;
-      return x < left + width / 2 ? 0 : 1;
+      return Math.min(count - 1, Math.floor((x - left) / width * count));
+    }
+    function portraitPresetEntryFromCs(totalCs) {
+      const value = Math.min(603999, Math.max(0, Math.floor(Number(totalCs) || 0)));
+      const minutes = Math.min(99, Math.floor(value / 6000));
+      const remainder = value - minutes * 6000;
+      return String(minutes).padStart(2, "0") + String(Math.floor(remainder / 100)).padStart(2, "0") + String(remainder % 100).padStart(2, "0");
+    }
+    function portraitPresetEntryToCs(entry) {
+      if (!/^\d{6}$/.test(entry)) return null;
+      return Number(entry.slice(0, 2)) * 6000 + Number(entry.slice(2, 4)) * 100 + Number(entry.slice(4, 6));
+    }
+    function savePortraitGroupPreset(storage, entry, savedAt) {
+      const value = portraitPresetEntryToCs(entry);
+      if (value === null || !storage || typeof storage.setItem !== "function") return null;
+      const at = Number.isFinite(savedAt) ? savedAt : Date.now();
+      storage.setItem("stopwatch_preset_cs", String(value));
+      storage.setItem("stopwatch_preset_at", String(at));
+      return { presetCs: value, presetAt: at };
     }
     function resolveStoppedCs({ elapsed, trickMode, reservedTens, stopDigit }) {
       if (elapsed >= 59990) return 5999;
@@ -237,15 +261,11 @@
       const next = { ...model };
       if (action === "enter") {
         if (next.uiMode !== "portrait" || next.timerState === "running" || next.presetMode || next.editorOpen) return next;
-        next.uiMode = "landscape";
         next.presetMode = true;
-        next.presetReturnMode = "portrait";
-      } else if ((action === "save" || action === "cancel") && next.presetMode) {
+        next.presetKind = "portrait-group";
+      } else if ((action === "save" || action === "cancel") && next.presetMode && next.presetKind === "portrait-group") {
         next.presetMode = false;
-        if (next.presetReturnMode) {
-          next.uiMode = next.presetReturnMode;
-          next.presetReturnMode = null;
-        }
+        next.presetKind = null;
       }
       return next;
     }
@@ -306,12 +326,21 @@
       for(const [pending,d,want] of [[[],3,[3]],[[3],1,[3,1]],[[3],3,[3,3]],[[3,1],7,[7]],[[0],0,[0,0]]]){const original=JSON.stringify(pending);assert(JSON.stringify(pushPendingDigit(pending,d))===JSON.stringify(want),`v2 pending ${original}+${d}`);assert(JSON.stringify(pending)===original,`v2 pending unchanged ${original}`);}
       assert(resolveStoppedCs({elapsed:3450,trickMode:true,reservedTens:2,stopDigit:null})===345,"v2 missing stop tap");assert(resolveStoppedCs({elapsed:3450,trickMode:true,reservedTens:null,stopDigit:null})===345,"v2 no grid taps");assert(applyPresetSwipe("123",0,1)==="123","v2 invalid preset length");assert(applyPresetSwipe("1234",0,.5)==="1234","v2 fractional swipe");
       const emptyStore={getItem:()=>null};assert(storedMode(emptyStore)==="portrait","uni default portrait");
-      const alarmBase={uiMode:"portrait",timerState:"idle",presetMode:false,editorOpen:false,presetReturnMode:null,storedUiMode:"portrait"};
-      const alarmEntered=transitionAlarmPreset(alarmBase,"enter");assert(alarmEntered.uiMode==="landscape"&&alarmEntered.presetMode&&alarmEntered.presetReturnMode==="portrait","uni alarm enter portrait landscape preset");
-      const alarmSaved=transitionAlarmPreset(alarmEntered,"save");assert(alarmSaved.uiMode==="portrait"&&!alarmSaved.presetMode&&alarmSaved.presetReturnMode===null,"uni alarm exit save returns portrait");
-      const alarmCancelled=transitionAlarmPreset(alarmEntered,"cancel");assert(alarmCancelled.uiMode==="portrait"&&!alarmCancelled.presetMode&&alarmCancelled.presetReturnMode===null,"uni alarm exit cancel returns portrait");
-      const alarmRunning=transitionAlarmPreset({...alarmBase,timerState:"running"},"enter");assert(alarmRunning.uiMode==="portrait"&&!alarmRunning.presetMode&&alarmRunning.presetReturnMode===null,"uni alarm enter running no-op");
-      assert(alarmEntered.storedUiMode==="portrait"&&alarmSaved.storedUiMode==="portrait"&&alarmCancelled.storedUiMode==="portrait","uni alarm temporary switch leaves stored mode untouched");
+      const alarmBase={uiMode:"portrait",timerState:"idle",presetMode:false,presetKind:null,editorOpen:false,storedUiMode:"portrait"};
+      const alarmEntered=transitionAlarmPreset(alarmBase,"enter");assert(alarmEntered.uiMode==="portrait"&&alarmEntered.presetMode&&alarmEntered.presetKind==="portrait-group","u7 alarm enter stays portrait group mode");
+      assert(alarmEntered.storedUiMode==="portrait","u7 alarm enter does not touch stopwatch_ui_mode");
+      const alarmSaved=transitionAlarmPreset(alarmEntered,"save");assert(alarmSaved.uiMode==="portrait"&&!alarmSaved.presetMode&&alarmSaved.presetKind===null,"u7 alarm save exits group mode");
+      const alarmCancelled=transitionAlarmPreset(alarmEntered,"cancel");assert(alarmCancelled.uiMode==="portrait"&&!alarmCancelled.presetMode&&alarmCancelled.presetKind===null,"u7 alarm cancel exits group mode");
+      const alarmRunning=transitionAlarmPreset({...alarmBase,timerState:"running"},"enter");assert(!alarmRunning.presetMode&&alarmRunning.presetKind===null,"u7 alarm enter while running no-op");
+      const alarmEditor=transitionAlarmPreset({...alarmBase,presetMode:true,presetKind:"portrait-digit"},"enter");assert(alarmEditor.presetKind==="portrait-digit","u7 alarm enter while v2 preset editor open no-op");
+      const groupRect={left:100,top:50,width:600,height:100};for(const [x,want] of [[150,0],[400,1],[650,2]])assert(presetGroupIndexFromPoint(x,100,groupRect,3)===want,`u7 portrait group x ${x}`);
+      const slowSteps=presetSwipeSteps(84,.1);assert(slowSteps===3&&applyPresetGroupSwipe("000000",1,slowSteps)==="000300","u7 slow swipe N steps changes by N");
+      const fastSteps=presetSwipeSteps(84,2);assert(fastSteps>slowSteps&&applyPresetGroupSwipe("000000",1,fastSteps)!=="000300","u7 fast swipe changes by more than N");
+      assert(applyPresetGroupSwipe("990000",0,1)==="000000"&&applyPresetGroupSwipe("000000",0,-1)==="990000"&&applyPresetGroupSwipe("009900",1,1)==="000000"&&applyPresetGroupSwipe("000099",2,1)==="000000","u7 portrait groups wrap 00-99");
+      const presetData=new Map([["stopwatch_ui_mode","portrait"],["stopwatch_preset_cs","111"]]),presetStore={getItem:k=>presetData.has(k)?presetData.get(k):null,setItem:(k,v)=>presetData.set(k,String(v))};
+      const savedGroup=savePortraitGroupPreset(presetStore,"123456",777);assert(savedGroup.presetCs===12*6000+34*100+56&&presetData.get("stopwatch_preset_cs")===String(12*6000+34*100+56),"u7 save writes stopwatch_preset_cs mm ss cc");
+      assert(presetData.get("stopwatch_ui_mode")==="portrait","u7 save leaves stopwatch_ui_mode untouched");
+      const beforeCancel=presetData.get("stopwatch_preset_cs");transitionAlarmPreset(alarmEntered,"cancel");assert(presetData.get("stopwatch_preset_cs")===beforeCancel,"u7 cancel leaves preset key unchanged");
       assert(elapsedAtAction(0,1000,1875)===875,"uni deferred stop uses actionNow snapshot");
       assert(recognizesModeToggle([{fingers:2,time:0,gap:40},{fingers:2,time:350,gap:50},{fingers:2,time:790,gap:80}]),"uni 3 two-finger taps");assert(!recognizesModeToggle([{fingers:2,time:0,gap:40},{fingers:2,time:300,gap:40}]),"uni reject 2 taps");assert(!recognizesModeToggle([{fingers:1,time:0,gap:0},{fingers:1,time:200,gap:0},{fingers:1,time:400,gap:0}]),"uni reject singles");assert(!recognizesModeToggle([{fingers:2,time:0,gap:40},{fingers:2,time:750,gap:40},{fingers:2,time:1500,gap:40}]),"uni reject spread taps");
       const data=new Map([["stopwatch2_preset_cs","1187"],["stopwatch2_custom_text","KALI"]]);const store={getItem:k=>data.has(k)?data.get(k):null,setItem:(k,v)=>data.set(k,String(v))};assert(migrateV2Storage(store)===true&&data.get("stopwatch_preset_cs")==="1187"&&data.get("stopwatch_custom_text")==="KALI","uni migration copies");data.set("stopwatch2_preset_cs","9999");assert(migrateV2Storage(store)===false&&data.get("stopwatch_preset_cs")==="1187","uni migration once");assert(data.get("stopwatch2_preset_cs")==="9999","uni old keys remain");
@@ -327,6 +356,9 @@
         hit(holdScreen.x,holdScreen.y,"#landscape-app","browser landscape left-fifth hold zone");
         setMode("portrait");void portraitApp.offsetWidth;
         center(pTime,"#p-time-display","browser portrait time display");
+        enterAlarmPreset();void portraitApp.offsetWidth;
+        for(const id of ["p-minutes","p-seconds","p-centiseconds"])center(document.getElementById(id),`#${id}`,`browser u7 preset group ${id}`);
+        exitPresetMode(false);
         const grid=pLapArea.getBoundingClientRect();for(let row=0;row<2;row+=1)for(let col=0;col<5;col+=1)hit(grid.left+(col+.5)*grid.width/5,grid.top+(row+.5)*grid.height/2,"#p-lap-area",`browser portrait digit grid ${row},${col}`);
         center(document.getElementById("p-top-band"),"#p-top-band","browser portrait top band");center(pLap,"#p-lap","browser portrait lap button");center(pControl,"#p-control","browser portrait start button");center(pAlarm,"#p-tabs .tab:nth-child(2)","browser portrait alarm tab");
         setMode(originalMode);try{if(hadStoredMode)localStorage.setItem(MODE_KEY,storedModeValue);else localStorage.removeItem(MODE_KEY);}catch(_){}shell.hidden=shellWasHidden;selftest.hidden=selftestWasHidden;
@@ -337,16 +369,17 @@
 
     const $ = id => document.getElementById(id);
     const shell=$("shell"), portraitApp=$("portrait-app"), landscapeFrame=$("landscape-frame"), landscapeApp=$("landscape-app");
-    const pTime=$("p-time-display"),pNumeric=$("p-numeric-display"),pCustom=$("p-custom-display"),pColon=$("p-colon"),pControl=$("p-control"),pLap=$("p-lap"),pLapArea=$("p-lap-area"),pLapRows=$("p-lap-rows"),pWorld=portraitApp.querySelector(".tab-world"),pAlarm=portraitApp.querySelector("#p-tabs .tab:nth-child(2)"),pDigits=[...pTime.querySelectorAll("[data-p-digit]")];
+    const pTime=$("p-time-display"),pNumeric=$("p-numeric-display"),pMinutes=$("p-minutes"),pCustom=$("p-custom-display"),pColon=$("p-colon"),pControl=$("p-control"),pLap=$("p-lap"),pLapArea=$("p-lap-area"),pLapRows=$("p-lap-rows"),pWorld=portraitApp.querySelector(".tab-world"),pAlarm=portraitApp.querySelector("#p-tabs .tab:nth-child(2)"),pDigits=[...pTime.querySelectorAll("[data-p-digit]")],pGroups=[...pTime.querySelectorAll("[data-p-group]")];
     const lTime=$("l-time-display"),lSeconds=$("l-seconds"),lCs=$("l-centiseconds"),lCustom=$("l-custom-display"),lColon=$("l-colon"),lControl=$("l-control"),lControlLabel=$("l-control-label"),lHitZones=$("l-main-hit-zones"),lDigits=[...lTime.querySelectorAll("[data-l-digit]")];
     const editor=$("editor"),editorInput=$("editor-input"),editorSave=$("editor-save"),editorClear=$("editor-clear"),presetHint=$("preset-hint");
     const PRESET_KEY="stopwatch_preset_cs",PRESET_AT_KEY="stopwatch_preset_at",TEXT_KEY="stopwatch_custom_text",TEXT_AT_KEY="stopwatch_text_at",MODE_KEY="stopwatch_ui_mode";
     const HOLD_MS=1000,PAIR_MS=120,TRIPLE_MS=800;
-    let uiMode="portrait",state="idle",trickState="off",customText="",presetCs=null,presetAt=0,textAt=0,presetEntry="0000",presetMode=false,presetGesture=null,presetReturnMode=null;
+    let uiMode="portrait",state="idle",trickState="off",customText="",presetCs=null,presetAt=0,textAt=0,presetEntry="0000",presetMode=false,presetKind=null,presetGesture=null;
     let pendingDigits=[],reservedTens=null,stopDigit=null,startedAt=0,elapsedBase=0,frameId=0,lapCount=0,lastLapElapsed=0,hold=null,tap=null,alarmTap=null,suppressClick=false,typedDigits="",hintTimer=0,editorKind="",stoppedOutcome=null;
     let pressed=false,wakeLock=null,wakeLockPending=false,resizeObserver=null;
     const activePointers=new Map(),pairedPointers=new Set(),pendingLandscapeActions=new Map();let pairCandidate=null,twoFingerTaps=[];
-    function renderCs(totalCs){const f=formatCs(totalCs),entry=f.sec+f.cs;pCustom.hidden=true;pNumeric.hidden=false;pDigits.forEach((s,i)=>s.textContent=entry[i]);lCustom.hidden=true;lSeconds.hidden=false;lColon.hidden=false;lCs.hidden=false;lDigits.forEach((s,i)=>s.textContent=entry[i]);}
+    function renderCs(totalCs){const value=Math.max(0,Math.floor(Number(totalCs)||0)),f=formatCs(value),entry=f.sec+f.cs,portraitEntry=portraitPresetEntryFromCs(value);pCustom.hidden=true;pNumeric.hidden=false;pMinutes.textContent=portraitEntry.slice(0,2);pDigits.forEach((s,i)=>s.textContent=portraitEntry[i+2]);lCustom.hidden=true;lSeconds.hidden=false;lColon.hidden=false;lCs.hidden=false;lDigits.forEach((s,i)=>s.textContent=entry[i]);}
+    function renderPortraitPresetEntry(entry){pCustom.hidden=true;pNumeric.hidden=false;pMinutes.textContent=entry.slice(0,2);pDigits.forEach((s,i)=>s.textContent=entry[i+2]);}
     function renderCustomText(text){pNumeric.hidden=true;pCustom.hidden=false;pCustom.textContent=text;if(/^\d{1,2}:\d{2}$/.test(text)){const [s,c]=text.split(":");lCustom.hidden=true;lSeconds.hidden=false;lColon.hidden=false;lCs.hidden=false;lDigits[0].textContent=s.length===2?s[0]:"";lDigits[1].textContent=s[s.length-1];lDigits[2].textContent=c[0];lDigits[3].textContent=c[1];}else{lSeconds.hidden=true;lColon.hidden=true;lCs.hidden=true;lCustom.hidden=false;lCustom.textContent=text;}}
     function gradient(base,down){const top=`color-mix(in srgb, ${base} 82%, #ffffff)`,value=`linear-gradient(180deg, ${top} 0%, ${base} 100%)`;return down?`linear-gradient(180deg, rgba(0,0,0,.12), rgba(0,0,0,.12)), ${value}`:value;}
     function renderState(){pControl.textContent=state==="running"?"중단":"시작";pControl.classList.toggle("running",state==="running");pLap.textContent=state==="stopped"&&elapsedBase>0?"재설정":"랩";pLap.disabled=state!=="running"&&elapsedBase===0;pColon.className=`colon ${colonClassFor(trickState)}`;lColon.className=`colon ${colonClassFor(trickState)}`;let label="START",bg=gradient("#4c6ef5",pressed);if(state==="running"){label="STOP";bg=gradient("#e03131",pressed);}else if(state==="stopped"){label="RESET";const base="linear-gradient(180deg,rgba(255,255,255,.18),rgba(255,255,255,.12))";bg=pressed?`linear-gradient(180deg,rgba(0,0,0,.12),rgba(0,0,0,.12)),${base}`:base;}lControlLabel.textContent=label;lControl.setAttribute("aria-label",label);lControl.style.background=bg;lControl.style.transform=pressed?"scale(.96)":"none";}
@@ -368,21 +401,36 @@
     function closeEditor(){editor.hidden=true;editorKind="";}
     function saveEditor(){if(editorKind==="preset")storePresetCs(parseTimeInput(editorInput.value));else if(editorKind==="text"){customText=editorInput.value.trim();textAt=customText?Date.now():0;try{if(customText){localStorage.setItem(TEXT_KEY,customText);localStorage.setItem(TEXT_AT_KEY,String(textAt));}else{localStorage.removeItem(TEXT_KEY);localStorage.removeItem(TEXT_AT_KEY);}}catch(_){}}closeEditor();}
     function clearEditor(){if(editorKind==="preset")storePresetCs(0);else{customText="";textAt=0;try{localStorage.removeItem(TEXT_KEY);localStorage.removeItem(TEXT_AT_KEY);}catch(_){}}closeEditor();}
-    function loadStorage(){migrateV2Storage(localStorage);uiMode=storedMode(localStorage);try{customText=localStorage.getItem(TEXT_KEY)||"";textAt=Number(localStorage.getItem(TEXT_AT_KEY))||0;const raw=localStorage.getItem(PRESET_KEY),value=raw!==null&&/^\d{1,4}$/.test(raw)?Number(raw):NaN;presetCs=Number.isInteger(value)&&value>0&&value<=9999?Math.min(5999,value):null;presetAt=Number(localStorage.getItem(PRESET_AT_KEY))||0;}catch(_){customText="";presetCs=null;}}
+    function loadStorage(){migrateV2Storage(localStorage);uiMode=storedMode(localStorage);try{customText=localStorage.getItem(TEXT_KEY)||"";textAt=Number(localStorage.getItem(TEXT_AT_KEY))||0;const raw=localStorage.getItem(PRESET_KEY),value=raw!==null&&/^\d{1,6}$/.test(raw)?Number(raw):NaN;presetCs=Number.isInteger(value)&&value>=0&&value<=603999?value:null;presetAt=Number(localStorage.getItem(PRESET_AT_KEY))||0;}catch(_){customText="";presetCs=null;}}
     function pTrackRect(){const first=pDigits[0].getBoundingClientRect(),last=pDigits[3].getBoundingClientRect();return{left:first.left,width:last.right-first.left};}
     function selectPortraitDigit(index){pDigits.forEach((s,i)=>s.classList.toggle("selected",i===index));}
-    function enterPortraitPreset(pointerId,x,y){if(state==="running"||presetMode)return;resetTimer();presetEntry=String(presetCs??0).padStart(4,"0");presetMode=true;portraitApp.classList.add("preset-mode");renderCs(Number(presetEntry));const track=pTrackRect(),index=presetIndexFromX(x,track.left,track.width);selectPortraitDigit(index);presetGesture={kind:"portrait",pointerId,index,x,y,entry:presetEntry,moved:false};try{portraitApp.setPointerCapture(pointerId);}catch(_){}suppressClick=true;showHint("위아래로 밀어 숫자를 바꾸세요");}
+    function enterPortraitPreset(pointerId,x,y){if(state==="running"||presetMode)return;resetTimer();presetEntry=portraitPresetEntryFromCs(presetCs??0).slice(2);presetMode=true;presetKind="portrait-digit";portraitApp.classList.add("preset-mode");renderCs(Number(presetEntry));const track=pTrackRect(),index=presetIndexFromX(x,track.left,track.width);selectPortraitDigit(index);presetGesture={kind:"portrait-digit",pointerId,index,x,y,entry:presetEntry,moved:false};try{portraitApp.setPointerCapture(pointerId);}catch(_){}suppressClick=true;showHint("위아래로 밀어 숫자를 바꾸세요");}
     function isRotatedLayout(){return matchMedia("(orientation: portrait)").matches;}
     function appSize(){const r=isRotatedLayout();return{width:r?innerHeight:innerWidth,height:r?innerWidth:innerHeight};}
     function appRect(el){const rect=el.getBoundingClientRect(),rotated=isRotatedLayout(),origin=toAppPoint(rotated?rect.right:rect.left,rect.top,innerWidth,innerHeight,rotated);return{left:origin.x,top:origin.y,width:rotated?rect.height:rect.width,height:rotated?rect.width:rect.height};}
     function digitFromLandscapeEvent(e){const rect=appRect(lControl),p=toAppPoint(e.clientX,e.clientY,innerWidth,innerHeight,isRotatedLayout());return digitFromPoint(p.x-rect.left,p.y-rect.top,rect.width,rect.height);}
-    function enterLandscapePreset(){if(state==="running"||presetMode)return;resetTimer();presetEntry=String(presetCs??0).padStart(4,"0");presetMode=true;landscapeApp.classList.add("preset-mode");setLandscapeGroup(null);renderCs(Number(presetEntry));showHint("위아래로 밀어 두 자리씩 맞추고, 빈 곳을 탭하면 저장");}
-    function enterAlarmPreset(){const next=transitionAlarmPreset({uiMode,timerState:state,presetMode,editorOpen:!editor.hidden,presetReturnMode,storedUiMode:uiMode},"enter");if(next.uiMode!=="landscape"||!next.presetMode||next.presetReturnMode!=="portrait")return;presetReturnMode=next.presetReturnMode;setMode(next.uiMode,false);enterLandscapePreset();}
+    function enterLandscapePreset(){if(state==="running"||presetMode)return;resetTimer();presetEntry=portraitPresetEntryFromCs(presetCs??0).slice(2);presetMode=true;presetKind="landscape-group";landscapeApp.classList.add("preset-mode");setLandscapeGroup(null);renderCs(Number(presetEntry));showHint("위아래로 밀어 두 자리씩 맞추고, 빈 곳을 탭하면 저장");}
+    function enterAlarmPreset(){const next=transitionAlarmPreset({uiMode,timerState:state,presetMode,presetKind,editorOpen:!editor.hidden,storedUiMode:uiMode},"enter");if(!next.presetMode||next.presetKind!=="portrait-group")return;resetTimer();presetEntry=portraitPresetEntryFromCs(presetCs??0);presetMode=true;presetKind="portrait-group";portraitApp.classList.add("preset-mode","portrait-group-preset-mode");setPortraitGroup(null);renderPortraitPresetEntry(presetEntry);showHint("위아래로 밀어 두 자리씩 맞추고, 빈 곳을 탭하면 저장");}
+    function setPortraitGroup(group){pGroups.forEach((el,i)=>el.classList.toggle("preset-active",i===group));}
     function setLandscapeGroup(group){lSeconds.classList.toggle("preset-active",group===0);lCs.classList.toggle("preset-active",group===1);lDigits.forEach((s,i)=>s.classList.toggle("preset-active",(i<2?0:1)===group));}
-    function exitPresetMode(save){if(!presetMode)return;if(save)storePresetCs(Number(presetEntry));presetMode=false;presetGesture=null;portraitApp.classList.remove("preset-mode");landscapeApp.classList.remove("preset-mode");selectPortraitDigit(null);setLandscapeGroup(null);presetHint.hidden=true;clearTimeout(hintTimer);renderCs(0);if(presetReturnMode){const returnMode=presetReturnMode;presetReturnMode=null;setMode(returnMode,false);}}
-    function handlePresetDown(e){if(!presetMode||!isPrimaryPointer(e)||!editor.hidden)return;e.preventDefault();e.stopImmediatePropagation();if(uiMode==="portrait"){const track=pTrackRect(),index=presetIndexFromX(e.clientX,track.left,track.width);selectPortraitDigit(index);presetGesture={kind:"portrait",pointerId:e.pointerId,index,x:e.clientX,y:e.clientY,entry:presetEntry,moved:false};}else{const point=toAppPoint(e.clientX,e.clientY,innerWidth,innerHeight,isRotatedLayout());const group=presetGroupIndexFromPoint(point.x,point.y,appRect(lTime));setLandscapeGroup(group);presetGesture={kind:"landscape",pointerId:e.pointerId,groupIndex:group,start:point,lastY:point.y,lastT:e.timeStamp||performance.now(),acc:0,moved:false};}try{(uiMode==="portrait"?portraitApp:landscapeApp).setPointerCapture(e.pointerId);}catch(_){}}
-    function handlePointerMove(e){if(uiMode==="portrait"&&hold&&hold.pointerId===e.pointerId&&Math.hypot(e.clientX-hold.x,e.clientY-hold.y)>10)clearHold();if(tap&&tap.pointerId===e.pointerId&&Math.hypot(e.clientX-tap.x,e.clientY-tap.y)>10)tap=null;if(alarmTap&&alarmTap.pointerId===e.pointerId&&Math.hypot(e.clientX-alarmTap.x,e.clientY-alarmTap.y)>10)alarmTap=null;const p=activePointers.get(e.pointerId);if(p&&Math.hypot(e.clientX-p.x,e.clientY-p.y)>15)p.moved=true;const g=presetGesture;if(!g||g.pointerId!==e.pointerId)return;e.preventDefault();if(g.kind==="portrait"){if(Math.hypot(e.clientX-g.x,e.clientY-g.y)>10)g.moved=true;if(g.index!==null){presetEntry=applyPresetSwipe(g.entry,g.index,Math.trunc((g.y-e.clientY)/28));renderCs(Number(presetEntry));}}else{const point=toAppPoint(e.clientX,e.clientY,innerWidth,innerHeight,isRotatedLayout());if(Math.hypot(point.x-g.start.x,point.y-g.start.y)>10)g.moved=true;if(g.groupIndex===null)return;const now=e.timeStamp||performance.now(),delta=g.lastY-point.y,dt=now-g.lastT,velocity=dt>0?Math.abs(delta)/dt:0;g.acc+=delta;g.lastY=point.y;g.lastT=now;const steps=presetSwipeSteps(g.acc,velocity);g.acc=nextSwipeAccumulator(g.acc,steps,presetSwipePxPerStep(velocity),20);if(steps){presetEntry=applyPresetGroupSwipe(presetEntry,g.groupIndex,steps);renderCs(Number(presetEntry));}}}
-    function handlePresetEnd(e){const g=presetGesture;if(!g||g.pointerId!==e.pointerId)return;if(e.type==="pointerup")handlePointerMove(e);presetGesture=null;const target=g.kind==="portrait"?portraitApp:landscapeApp;try{if(target.hasPointerCapture(e.pointerId))target.releasePointerCapture(e.pointerId);}catch(_){}const outside=g.kind==="portrait"?g.index===null:g.groupIndex===null;if(e.type==="pointerup"&&outside&&!g.moved)exitPresetMode(true);setTimeout(()=>suppressClick=false,0);}
+    function exitPresetMode(save){if(!presetMode)return;if(save){if(presetKind==="portrait-group"){try{const saved=savePortraitGroupPreset(localStorage,presetEntry);if(saved){presetCs=saved.presetCs;presetAt=saved.presetAt;}}catch(_){}}else storePresetCs(Number(presetEntry));}presetMode=false;presetKind=null;presetGesture=null;portraitApp.classList.remove("preset-mode","portrait-group-preset-mode");landscapeApp.classList.remove("preset-mode");selectPortraitDigit(null);setPortraitGroup(null);setLandscapeGroup(null);presetHint.hidden=true;clearTimeout(hintTimer);renderCs(0);}
+    function handlePresetDown(e){
+      if(!presetMode||!isPrimaryPointer(e)||!editor.hidden)return;
+      if(presetKind==="portrait-group"&&e.target.closest("#p-control")){exitPresetMode(false);return;}
+      e.preventDefault();e.stopImmediatePropagation();
+      if(presetKind==="portrait-group"){
+        if(e.target.closest("#p-tabs .tab:nth-child(2)")){presetGesture={kind:"portrait-group-cancel",pointerId:e.pointerId,x:e.clientX,y:e.clientY,moved:false};}
+        else if(e.target.closest("#p-buttons,#p-tabs")){presetGesture={kind:"blocked",pointerId:e.pointerId,x:e.clientX,y:e.clientY,moved:false};}
+        else{const rect=pNumeric.getBoundingClientRect(),group=presetGroupIndexFromPoint(e.clientX,e.clientY,rect,3);setPortraitGroup(group);presetGesture={kind:"portrait-group",pointerId:e.pointerId,groupIndex:group,start:{x:e.clientX,y:e.clientY},lastY:e.clientY,lastT:e.timeStamp||performance.now(),acc:0,moved:false,saveOnTap:group===null&&!e.target.closest("#p-time-display,#p-tabs,#p-buttons,#editor,#install-nudge")};}
+      }else if(presetKind==="portrait-digit"){
+        const track=pTrackRect(),index=presetIndexFromX(e.clientX,track.left,track.width);selectPortraitDigit(index);presetGesture={kind:"portrait-digit",pointerId:e.pointerId,index,x:e.clientX,y:e.clientY,entry:presetEntry,moved:false};
+      }else{
+        const point=toAppPoint(e.clientX,e.clientY,innerWidth,innerHeight,isRotatedLayout()),group=presetGroupIndexFromPoint(point.x,point.y,appRect(lTime));setLandscapeGroup(group);presetGesture={kind:"landscape-group",pointerId:e.pointerId,groupIndex:group,start:point,lastY:point.y,lastT:e.timeStamp||performance.now(),acc:0,moved:false,saveOnTap:group===null};
+      }
+      try{(uiMode==="portrait"?portraitApp:landscapeApp).setPointerCapture(e.pointerId);}catch(_){}
+    }
+    function handlePointerMove(e){if(uiMode==="portrait"&&hold&&hold.pointerId===e.pointerId&&Math.hypot(e.clientX-hold.x,e.clientY-hold.y)>10)clearHold();if(tap&&tap.pointerId===e.pointerId&&Math.hypot(e.clientX-tap.x,e.clientY-tap.y)>10)tap=null;if(alarmTap&&alarmTap.pointerId===e.pointerId&&Math.hypot(e.clientX-alarmTap.x,e.clientY-alarmTap.y)>10)alarmTap=null;const p=activePointers.get(e.pointerId);if(p&&Math.hypot(e.clientX-p.x,e.clientY-p.y)>15)p.moved=true;const g=presetGesture;if(!g||g.pointerId!==e.pointerId)return;e.preventDefault();if(g.kind==="portrait-digit"){if(Math.hypot(e.clientX-g.x,e.clientY-g.y)>10)g.moved=true;if(g.index!==null){presetEntry=applyPresetSwipe(g.entry,g.index,Math.trunc((g.y-e.clientY)/28));renderCs(Number(presetEntry));}}else if(g.kind==="portrait-group"||g.kind==="landscape-group"){const point=g.kind==="portrait-group"?{x:e.clientX,y:e.clientY}:toAppPoint(e.clientX,e.clientY,innerWidth,innerHeight,isRotatedLayout());if(Math.hypot(point.x-g.start.x,point.y-g.start.y)>10)g.moved=true;if(g.groupIndex===null)return;const now=e.timeStamp||performance.now(),delta=g.lastY-point.y,dt=now-g.lastT,velocity=dt>0?Math.abs(delta)/dt:0;g.acc+=delta;g.lastY=point.y;g.lastT=now;const steps=presetSwipeSteps(g.acc,velocity);g.acc=nextSwipeAccumulator(g.acc,steps,presetSwipePxPerStep(velocity),20);if(steps){presetEntry=applyPresetGroupSwipe(presetEntry,g.groupIndex,steps);if(g.kind==="portrait-group")renderPortraitPresetEntry(presetEntry);else renderCs(Number(presetEntry));}}else if(Math.hypot(e.clientX-g.x,e.clientY-g.y)>10)g.moved=true;}
+    function handlePresetEnd(e){const g=presetGesture;if(!g||g.pointerId!==e.pointerId)return;if(e.type==="pointerup")handlePointerMove(e);presetGesture=null;const target=g.kind==="landscape-group"?landscapeApp:portraitApp;try{if(target.hasPointerCapture(e.pointerId))target.releasePointerCapture(e.pointerId);}catch(_){}if(e.type==="pointerup"&&!g.moved){if(g.kind==="portrait-group-cancel")exitPresetMode(false);else if((g.kind==="portrait-group"||g.kind==="landscape-group")&&g.saveOnTap)exitPresetMode(true);}setTimeout(()=>suppressClick=false,0);}
     function updateLandscapeHitZones(){if(uiMode!=="landscape")return;const t=appRect(lTime),c=appRect(lControl),bottom=Math.min(t.top+t.height,c.top-4,appSize().height);lHitZones.style.height=`${Math.max(0,bottom)}px`;}
     function pointerSnapshot(e){return{pointerId:e.pointerId,clientX:e.clientX,clientY:e.clientY,isPrimary:true,button:0,actionNow:performance.now(),preventDefault(){}};}
     function deferLandscapeAction(e,fn){if(pairedPointers.has(e.pointerId)||!editor.hidden)return;const snapshot=pointerSnapshot(e);const timer=setTimeout(()=>{pendingLandscapeActions.delete(e.pointerId);if(!pairedPointers.has(e.pointerId)){fn(snapshot);if(!activePointers.has(e.pointerId))releasePress();}},PAIR_MS+5);pendingLandscapeActions.set(e.pointerId,timer);}
@@ -399,7 +447,7 @@
     function initApp(){loadStorage();setMode(uiMode);
       document.addEventListener("pointerdown",onGlobalPointerDown,{capture:true,passive:false});window.addEventListener("pointermove",handlePointerMove,{passive:false});window.addEventListener("pointerup",e=>{onGlobalPointerEnd(e);handlePresetEnd(e);if(hold&&hold.pointerId===e.pointerId)clearHold();releasePress();});window.addEventListener("pointercancel",e=>{onGlobalPointerEnd(e);handlePresetEnd(e);releasePress();});
       document.addEventListener("pointerdown",handlePresetDown,{capture:true,passive:false});
-      pControl.addEventListener("click",()=>{if(presetMode||suppressClick)return;if(state==="running")stopTimer();else startTimer();});pLap.addEventListener("click",()=>{if(presetMode||suppressClick)return;if(state==="running")addLap();else resetTimer();});pTime.addEventListener("click",()=>{if(!suppressClick&&editor.hidden)cycleTrick();});
+      pControl.addEventListener("click",()=>{if(suppressClick)return;if(presetMode){if(presetKind!=="portrait-group")return;exitPresetMode(false);}if(state==="running")stopTimer();else startTimer();});pLap.addEventListener("click",()=>{if(presetMode||suppressClick)return;if(state==="running")addLap();else resetTimer();});pTime.addEventListener("click",()=>{if(!suppressClick&&editor.hidden)cycleTrick();});
       pAlarm.addEventListener("pointerdown",e=>{if(uiMode!=="portrait"||state==="running"||presetMode||!editor.hidden||!isPrimaryPointer(e)||activePointers.size!==1)return;alarmTap={pointerId:e.pointerId,x:e.clientX,y:e.clientY};});pAlarm.addEventListener("pointerup",e=>{const candidate=alarmTap;alarmTap=null;if(!candidate||candidate.pointerId!==e.pointerId||pairedPointers.has(e.pointerId)||Math.hypot(e.clientX-candidate.x,e.clientY-candidate.y)>10)return;enterAlarmPreset();});pAlarm.addEventListener("pointercancel",()=>alarmTap=null);
       pLapArea.addEventListener("pointerdown",e=>{if(presetMode||trickState!=="digit"||!isPrimaryPointer(e)||pairedPointers.has(e.pointerId))return;tap={pointerId:e.pointerId,x:e.clientX,y:e.clientY};});window.addEventListener("pointerup",e=>{if(tap&&tap.pointerId===e.pointerId&&!presetMode&&!suppressClick&&trickState==="digit"&&!pairedPointers.has(e.pointerId)){const r=pLapArea.getBoundingClientRect();if(Math.hypot(e.clientX-tap.x,e.clientY-tap.y)<=10&&e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom){const d=digitFromPoint(e.clientX-r.left,e.clientY-r.top,r.width,r.height);pendingDigits=pushPendingDigit(pendingDigits,d);const complete=pendingDigits.length===2;reservedTens=complete?pendingDigits[0]:null;stopDigit=complete?pendingDigits[1]:null;pWorld.classList.toggle("feedback",complete);}}tap=null;});
       $("p-top-band").addEventListener("pointerdown",e=>beginHold(e,openPortraitPresetEditor));pNumeric.addEventListener("pointerdown",e=>{const track=pTrackRect();if(state!=="running"&&presetIndexFromX(e.clientX,track.left,track.width)!==null)beginHold(e,d=>enterPortraitPreset(d.pointerId,d.x,d.y));});
