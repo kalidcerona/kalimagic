@@ -21,6 +21,19 @@ export function createState(digits = 6) {
   };
 }
 
+export const FINGERPRINT_HOLD_MS = 600;
+
+export function lockScreenCopy(style, hasDigits = false) {
+  if (style === 'galaxy') {
+    return { prompt: 'PIN을 입력하세요', emergency: '긴급전화', trailing: '' };
+  }
+  return {
+    prompt: '위로 쓸어올려서 Face ID 사용 또는 암호 입력',
+    emergency: '긴급 상황',
+    trailing: hasDigits ? '삭제' : '취소',
+  };
+}
+
 export function shouldUnlock(state, now, delayMs) {
   return state.current.length === state.digits
     && state.lastAttemptEndedAt !== null
@@ -29,19 +42,39 @@ export function shouldUnlock(state, now, delayMs) {
     && state.attemptStartedAt - state.lastAttemptEndedAt >= Math.max(0, delayMs);
 }
 
-export function pushDigit(state, digit, now, delayMs) {
+export function pushDigit(state, digit, now, delayMs, autoSubmit = true) {
   if (state.unlocked || !Number.isInteger(digit) || digit < 0 || digit > 9
-      || !Number.isFinite(now) || !Number.isFinite(delayMs)) return state;
+      || !Number.isFinite(now) || !Number.isFinite(delayMs)
+      || state.current.length >= state.digits) return state;
   const next = {
     ...state,
     current: [...state.current, digit],
     attemptStartedAt: state.attemptStartedAt ?? now,
   };
-  if (next.current.length < next.digits) return next;
+  if (next.current.length < next.digits || !autoSubmit) return next;
+  return submitPin(next, now, delayMs);
+}
+
+export function submitPin(state, now, delayMs) {
+  if (state.unlocked || state.current.length !== state.digits
+      || !Number.isFinite(now) || !Number.isFinite(delayMs)) return state;
   return {
-    ...next,
-    unlocked: shouldUnlock(next, now, delayMs),
-    attempts: [...state.attempts, next.current],
+    ...state,
+    unlocked: shouldUnlock(state, now, delayMs),
+    attempts: [...state.attempts, state.current],
+    lastAttemptEndedAt: now,
+    current: [],
+    attemptStartedAt: null,
+  };
+}
+
+export function fingerprintHold(state, heldMs, now, thresholdMs = FINGERPRINT_HOLD_MS) {
+  if (state.unlocked || !Number.isFinite(heldMs) || !Number.isFinite(now)
+      || !Number.isFinite(thresholdMs) || heldMs < Math.max(0, thresholdMs)) return state;
+  return {
+    ...state,
+    unlocked: true,
+    attempts: [...state.attempts, state.current],
     lastAttemptEndedAt: now,
     current: [],
     attemptStartedAt: null,

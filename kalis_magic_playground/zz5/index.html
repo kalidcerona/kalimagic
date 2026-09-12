@@ -28,24 +28,27 @@
       --key-vgap: clamp(10px, 3.308vw, 15px);
     }
     .shade { background: rgba(0, 0, 0, 0.35); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); }
-    .pin-layout { position: relative; height: 100%; max-width: 450px; margin: auto; display: flex; flex-direction: column; align-items: center; padding: clamp(12px, 4vh, 36px) 28px max(18px, env(safe-area-inset-bottom)); }
-    #lock { background: none; width: 52px; height: 48px; display: grid; place-items: center; flex-shrink: 0; }
-    #lock svg { width: 24px; height: 29px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-    .prompt { font-size: 21px; font-weight: 400; margin: clamp(12px, 3vh, 28px) 0 21px; }
-    #dots { display: flex; justify-content: center; gap: 21px; height: 18px; }
+    .pin-layout { position: relative; height: 100%; max-width: 450px; margin: auto; }
+    #lock { position: absolute; z-index: 1; top: 2.6%; left: 50%; transform: translateX(-50%); width: 44px; height: 44px; display: none; place-items: center; pointer-events: none; }
+    #lock svg { width: 18px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .prompt { position: absolute; z-index: 1; top: 19.5%; left: 50%; transform: translateX(-50%); width: min(330px, calc(100% - 44px)); min-height: 44px; padding: 0; background: none; font-size: 17px; line-height: 1.3; font-weight: 400; text-align: center; white-space: normal; }
+    #dots { position: absolute; z-index: 1; top: 28.5%; left: 50%; transform: translateX(-50%); display: flex; justify-content: center; gap: 21px; height: 18px; }
     .dot { display: block; width: 12px; height: 12px; border: 1.4px solid #ffffffe0; border-radius: 50%; }
     .dot.filled { background: #fff; }
     #dots.shake { animation: shake .38s ease-in-out; }
     @keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-13px); } 40%, 80% { transform: translateX(13px); } }
     .keypad {
+      position: absolute;
+      z-index: 1;
+      top: 35%;
+      left: 50%;
+      transform: translateX(-50%);
       display: grid;
       grid-template-columns: repeat(3, var(--key-d));
       grid-template-rows: repeat(4, var(--key-d));
       column-gap: var(--key-hgap);
       row-gap: var(--key-vgap);
       width: min(100%, calc(3 * var(--key-d) + 2 * var(--key-hgap)));
-      margin-top: auto;
-      padding-top: 20px;
       justify-content: center;
       justify-items: center;
       align-items: center;
@@ -58,7 +61,7 @@
      * keypad 265 x 339 (3*75+2*20, 4*75+3*13).
      * Fill rgba(255,255,255,0.18) + backdrop-filter blur(20px); no border
      * (iOS 10-18 filled circle, not the iOS 7 1px ring).
-     * Digit 36px / weight 300; letters 10px / weight 400 / tracking 0.12em / uppercase.
+     * Digit 34px / weight 500; letters 10px / weight 600 / tracking 0.1em / uppercase.
      * :active = opaque white fill + black glyph, ~0.2s fade.
      * Scales with clamp/min so 375px and 430px widths keep the 75@393 ratio.
      * Galaxy (One UI 3+): also circular, ~72px, 12 / 8 gaps, weight 500 digit,
@@ -70,7 +73,7 @@
       height: var(--key-d);
       border: none;
       border-radius: 50%;
-      background: rgba(255, 255, 255, 0.18);
+      background: rgba(255, 255, 255, 0.22);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
       color: #fff;
@@ -85,13 +88,13 @@
       transition: background .2s, color .2s, transform .15s;
     }
     .key:active { background: rgba(255, 255, 255, 0.92); color: #000; backdrop-filter: none; -webkit-backdrop-filter: none; }
-    .key .number { font-size: calc(var(--key-d) * 36 / 75); line-height: 1; font-weight: 300; }
+    .key .number { font-size: calc(var(--key-d) * 34 / 75); line-height: 1; font-weight: 500; }
     .key .letters {
       font-size: calc(var(--key-d) * 10 / 75);
-      font-weight: 400;
+      font-weight: 600;
       line-height: 1.2;
-      letter-spacing: 0.12em;
-      padding-left: 0.12em;
+      letter-spacing: 0.1em;
+      padding-left: 0.1em;
       text-transform: uppercase;
       min-height: 1.2em;
       opacity: 0.92;
@@ -99,19 +102,35 @@
     .key[data-digit="1"] .letters { visibility: hidden; }
     .key[data-digit="0"] .letters { display: none; }
     .key[data-digit="0"] { grid-column: 2; }
-    .footer { display: flex; justify-content: space-between; width: min(100%, calc(3 * var(--key-d) + 2 * var(--key-hgap))); margin-top: clamp(14px, 3vh, 30px); align-items: center; }
-    .footer button { background: none; font-size: 16px; min-height: 42px; padding: 8px 0; }
-    #input-screen.galaxy { --key-d: clamp(56px, 18.321vw, 72px); --key-hgap: clamp(10px, 3.053vw, 16px); --key-vgap: clamp(6px, 2.036vw, 10px); }
-    .galaxy .pin-layout { padding-top: clamp(26px, 9vh, 80px); }
-    .galaxy #lock { height: 34px; }
-    .galaxy .prompt { font-size: 19px; margin-top: 22px; }
-    .galaxy #dots { gap: 18px; }
+    .galaxy-only { display: none; }
+    .footer { position: absolute; z-index: 1; top: 87.5%; left: 50%; transform: translateX(-50%); display: flex; justify-content: space-between; width: min(calc(100% - 56px), calc(3 * var(--key-d) + 2 * var(--key-hgap))); align-items: center; }
+    .footer button { background: none; font-size: 17px; font-weight: 400; min-width: 44px; min-height: 44px; padding: 8px 0; }
+    #input-screen.galaxy { --key-d: clamp(58px, min(17.708vw, 8.197vh), 70px); --key-hgap: clamp(12px, 4.167vw, 18px); --key-vgap: clamp(4px, 1.923vw, 8px); }
+    .galaxy .pin-layout { display: flex; flex-direction: column; align-items: center; padding-top: 6vh; }
+    .galaxy #lock { position: static; display: grid; flex: 0 0 44px; transform: none; }
+    .galaxy .prompt { position: static; flex: 0 0 44px; margin-top: clamp(108px, calc(19.5vh - 44px), 118px); transform: none; font-size: 19px; line-height: 1.25; font-weight: 500; }
+    .galaxy #dots { position: static; flex: 0 0 18px; margin-top: 15px; gap: 18px; transform: none; }
     .galaxy .dot { width: 10px; height: 10px; }
-    .galaxy .key { background: rgba(255, 255, 255, 0.14); }
+    .galaxy .keypad { position: static; flex: 0 0 auto; margin-top: 18px; transform: none; }
+    .galaxy .key { background: rgba(255, 255, 255, 0.16); }
     .galaxy .key:active { background: rgba(255, 255, 255, 0.42); color: #fff; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); transform: scale(1.07); }
     .galaxy .key .number { font-size: calc(var(--key-d) * 30 / 72); font-weight: 500; }
     .galaxy .key .letters { display: none; }
-    .galaxy .footer button:first-child { border: 1px solid #ffffff55; border-radius: 24px; padding: 7px 20px; }
+    .galaxy .key.galaxy-only { display: flex; }
+    .key[data-action="backspace"] { grid-column: 1; grid-row: 4; }
+    .key[data-action="confirm"] { grid-column: 3; grid-row: 4; }
+    .key .action-icon { width: 31px; height: 31px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    #fingerprint { position: absolute; z-index: 2; top: 72%; left: 50%; transform: translate(-50%, -50%); width: 64px; height: 64px; padding: 0; background: none; place-items: center; touch-action: none; }
+    .galaxy #fingerprint { position: static; display: grid; flex: 0 0 64px; margin-top: 16px; transform: none; }
+    #fingerprint svg { width: 44px; height: 44px; fill: none; stroke: #fff; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    #fingerprint.holding svg { animation: fingerprint-hold 600ms ease-out both; }
+    #fingerprint.pulse svg { animation: fingerprint-pulse 220ms ease-out; }
+    @keyframes fingerprint-hold { from { opacity: .68; transform: scale(.92); } to { opacity: 1; transform: scale(1.08); } }
+    @keyframes fingerprint-pulse { 50% { opacity: .62; transform: scale(.94); } }
+    .galaxy .footer { position: static; flex: 0 0 44px; margin-top: clamp(3px, calc(69.7vh - 577px), 60px); transform: none; justify-content: center; }
+    .galaxy #emergency { width: 114px; height: 44px; padding: 3.5px 0; color: #2b1a14; font-size: 15px; font-weight: 500; }
+    .galaxy #emergency span { display: grid; place-items: center; width: 114px; height: 37px; border-radius: 999px; background: #F2A28C; }
+    .galaxy #delete { display: none; }
     #unlocked-screen { z-index: 2; background: #111; will-change: transform, opacity; }
     #unlocked-screen.unlocking { animation: unlock-in 200ms ease-out both; }
     @keyframes unlock-in { from { opacity: 0; transform: scale(1.012); } to { opacity: 1; transform: scale(1); } }
@@ -153,13 +172,13 @@
     #storage-status, #offline-status { font-size: 12px; line-height: 1.65; color: #b9b3dd; }
     #toast { position: absolute; z-index: 10; left: 50%; bottom: max(26px, env(safe-area-inset-bottom)); transform: translateX(-50%); max-width: 90%; border-radius: 12px; padding: 12px 18px; background: #242631; color: #eee; font-size: 13px; text-align: center; pointer-events: none; }
     @media (max-height: 640px) {
-      .pin-layout { padding-top: 8px; }
-      .prompt { margin: 8px 0 12px; }
       #input-screen { --key-d: clamp(56px, 16.285vw, 64px); --key-vgap: 8px; }
-      .keypad { padding-top: 10px; }
-      .footer { margin-top: 6px; }
       #input-screen.galaxy { --key-d: clamp(52px, 15.267vw, 60px); --key-vgap: 6px; }
-      .galaxy .pin-layout { padding-top: 10px; }
+      .galaxy .keypad { margin-top: 14px; }
+      #fingerprint { top: 76%; }
+    }
+    @media (max-height: 790px) {
+      .galaxy .prompt { margin-top: 18vh; }
     }
     @media (prefers-reduced-motion: reduce) { #unlocked-screen.returning { transition-duration: 180ms; } #unlocked-screen.unlocking { animation-duration: 150ms; } }
   </style>
@@ -170,13 +189,22 @@
       <img id="lock-image" class="wallpaper" alt="" hidden>
       <div class="shade"></div>
       <div class="pin-layout">
-        <button id="lock" type="button" aria-label="4자리로 전환">
+        <div id="lock" aria-hidden="true">
           <svg viewBox="0 0 24 29" aria-hidden="true"><rect x="4" y="12" width="16" height="14" rx="3"/><path d="M7 12V8a5 5 0 0 1 10 0v4"/></svg>
-        </button>
-        <h1 class="prompt">암호 입력</h1>
+        </div>
+        <button id="prompt" class="prompt" type="button" aria-label="4자리로 전환">위로 쓸어올려서 Face ID 사용 또는 암호 입력</button>
         <div id="dots" role="status" aria-label="6자리 중 0자리 입력"></div>
         <div id="keypad" class="keypad" aria-label="숫자 키패드"></div>
-        <div class="footer"><button id="emergency" type="button">긴급 통화</button><button id="delete" type="button">취소</button></div>
+        <button id="fingerprint" class="galaxy-only" type="button" aria-label="지문으로 잠금 해제">
+          <svg viewBox="0 0 48 48" aria-hidden="true">
+            <path d="M11.5 23.5C11.5 16.6 17 11 24 11s12.5 5.6 12.5 12.5c0 8.6-2.4 15.2-6.4 20"/>
+            <path d="M7.5 23.5C7.5 14.4 14.9 7 24 7s16.5 7.4 16.5 16.5c0 5.2-.7 10-2.5 14.5"/>
+            <path d="M16 23.5a8 8 0 0 1 16 0c0 7.1-1.6 12.2-4.8 17.5"/>
+            <path d="M20.5 24a3.5 3.5 0 0 1 7 0c0 8.2-2.4 14-5.7 18"/>
+            <path d="M12.8 31.5c.8 5 2.7 9 5.2 11.8M17 29c.4 4 1.4 7.1 3.2 10"/>
+          </svg>
+        </button>
+        <div class="footer"><button id="emergency" type="button"><span>긴급 상황</span></button><button id="delete" type="button">취소</button></div>
       </div>
     </section>
     <section id="peek-screen" class="screen" aria-label="시도 기록" hidden>
@@ -227,7 +255,7 @@
     <div id="toast" role="status" hidden></div>
   </main>
   <script type="module">
-    import { normalizeSettings, createState, pushDigit, attemptFeedback, deleteDigit, clearCurrent, toggleDigits, reset, isHomeGestureArea, peekOffset, registerTwoFingerTap, settleTwoFingerTaps } from './logic.js';
+    import { FINGERPRINT_HOLD_MS, normalizeSettings, lockScreenCopy, createState, pushDigit, submitPin, fingerprintHold, attemptFeedback, deleteDigit, clearCurrent, toggleDigits, reset, isHomeGestureArea, peekOffset, registerTwoFingerTap, settleTwoFingerTaps } from './logic.js';
 
     const $ = (id) => document.getElementById(id);
     const SETTINGS_KEY = 'unlock-settings-v1';
@@ -239,6 +267,8 @@
     let feedbackTimer = null;
     let feedback = null;
     let unlockTimer = null;
+    let fingerprintTimer = null;
+    let fingerprintPress = null;
     let toastTimer = null;
     let tapSequence = null;
     let tapTimer = null;
@@ -267,7 +297,9 @@
 
     function renderInput() {
       $('input-screen').classList.toggle('galaxy', settings.style === 'galaxy');
-      $('lock').setAttribute('aria-label', `${state.digits === 4 ? 6 : 4}자리로 전환`);
+      const copy = lockScreenCopy(settings.style, state.current.length > 0);
+      $('prompt').textContent = copy.prompt;
+      $('prompt').setAttribute('aria-label', `${copy.prompt}, ${state.digits === 4 ? 6 : 4}자리로 전환`);
       const count = feedback ? state.digits : state.current.length;
       $('dots').replaceChildren(...Array.from({ length: state.digits }, (_, i) => {
         const dot = document.createElement('span');
@@ -275,8 +307,8 @@
         return dot;
       }));
       $('dots').setAttribute('aria-label', `${state.digits}자리 중 ${count}자리 입력`);
-      $('emergency').textContent = settings.style === 'galaxy' ? '긴급 전화' : '긴급 통화';
-      $('delete').textContent = settings.style === 'galaxy' || state.current.length ? '삭제' : '취소';
+      $('emergency').querySelector('span').textContent = copy.emergency;
+      $('delete').textContent = copy.trailing;
     }
 
     function renderAttempts() {
@@ -322,16 +354,13 @@
       if (next === 'settings') { populateForm(); $('settings-screen').scrollTop = 0; }
     }
 
-    function inputDigit(digit) {
-      if (screen !== 'input' || feedback) return;
-      const previousCount = state.attempts.length;
-      state = pushDigit(state, digit, performance.now(), settings.delaySeconds * 1000);
+    function handleAttemptOutcome(previousCount) {
       const outcome = attemptFeedback(state, previousCount);
       if (outcome === 'success') {
         feedback = state.attempts.at(-1);
         renderInput();
         showScreen('unlocked', true);
-        return;
+        return true;
       }
       if (outcome === 'failure') {
         feedback = state.attempts.at(-1);
@@ -342,6 +371,15 @@
         }, 380);
       }
       renderInput();
+      return outcome !== 'pending';
+    }
+
+    function inputDigit(digit) {
+      if (screen !== 'input' || feedback) return;
+      const previousCount = state.attempts.length;
+      const autoSubmit = settings.style !== 'galaxy' || state.digits === 6;
+      state = pushDigit(state, digit, performance.now(), settings.delaySeconds * 1000, autoSubmit);
+      handleAttemptOutcome(previousCount);
     }
 
     const letters = ['', '', 'abc', 'def', 'ghi', 'jkl', 'mno', 'pqrs', 'tuv', 'wxyz'];
@@ -361,21 +399,81 @@
       key.addEventListener('click', () => inputDigit(digit));
       $('keypad').append(key);
     }
-    $('lock').addEventListener('click', () => {
+
+    function addActionKey(action, label, svg) {
+      const key = document.createElement('button');
+      key.type = 'button';
+      key.className = 'key galaxy-only';
+      key.dataset.action = action;
+      key.setAttribute('aria-label', label);
+      key.innerHTML = svg;
+      $('keypad').append(key);
+      return key;
+    }
+    const backspaceKey = addActionKey('backspace', '한 자리 삭제', '<svg class="action-icon" viewBox="0 0 32 32" aria-hidden="true"><path d="M13 8h13a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3H13L4 16l9-8Z"/><path d="m17 12 7 8m0-8-7 8"/></svg>');
+    const confirmKey = addActionKey('confirm', 'PIN 확인', '<svg class="action-icon" viewBox="0 0 32 32" aria-hidden="true"><path d="m7 16 6 6L26 9"/></svg>');
+
+    $('prompt').addEventListener('click', () => {
       if (state.unlocked) return;
       clearFeedback();
       state = toggleDigits(state);
       renderInput();
     });
-    $('delete').addEventListener('click', () => {
+    function removeDigit() {
       if (feedback) return;
       state = state.current.length ? deleteDigit(state) : clearCurrent(state);
       renderInput();
+    }
+    $('delete').addEventListener('click', removeDigit);
+    backspaceKey.addEventListener('click', removeDigit);
+    confirmKey.addEventListener('click', () => {
+      if (screen !== 'input' || settings.style !== 'galaxy' || feedback) return;
+      const previousCount = state.attempts.length;
+      state = submitPin(state, performance.now(), settings.delaySeconds * 1000);
+      handleAttemptOutcome(previousCount);
     });
+
+    function releaseFingerprint(pointerId, pulse) {
+      clearTimeout(fingerprintTimer);
+      fingerprintTimer = null;
+      fingerprintPress = null;
+      $('fingerprint').classList.remove('holding');
+      if ($('fingerprint').hasPointerCapture(pointerId)) $('fingerprint').releasePointerCapture(pointerId);
+      if (pulse) {
+        $('fingerprint').classList.remove('pulse');
+        void $('fingerprint').offsetWidth;
+        $('fingerprint').classList.add('pulse');
+      }
+    }
+    $('fingerprint').addEventListener('pointerdown', (event) => {
+      if (screen !== 'input' || settings.style !== 'galaxy' || feedback || fingerprintPress) return;
+      fingerprintPress = { pointerId: event.pointerId, startedAt: performance.now() };
+      $('fingerprint').setPointerCapture(event.pointerId);
+      $('fingerprint').classList.add('holding');
+      fingerprintTimer = setTimeout(() => {
+        if (!fingerprintPress) return;
+        const previousCount = state.attempts.length;
+        state = fingerprintHold(state, FINGERPRINT_HOLD_MS, performance.now());
+        const pointerId = fingerprintPress.pointerId;
+        releaseFingerprint(pointerId, false);
+        handleAttemptOutcome(previousCount);
+      }, FINGERPRINT_HOLD_MS);
+      event.preventDefault();
+    });
+    $('fingerprint').addEventListener('pointerup', (event) => {
+      if (!fingerprintPress || fingerprintPress.pointerId !== event.pointerId) return;
+      releaseFingerprint(event.pointerId, true);
+      event.preventDefault();
+    });
+    $('fingerprint').addEventListener('pointercancel', (event) => {
+      if (fingerprintPress?.pointerId === event.pointerId) releaseFingerprint(event.pointerId, false);
+    });
+    $('fingerprint').addEventListener('contextmenu', (event) => event.preventDefault());
     document.addEventListener('keydown', (event) => {
       if (screen !== 'input' || event.ctrlKey || event.metaKey || event.altKey) return;
       if (/^[0-9]$/.test(event.key)) { event.preventDefault(); inputDigit(Number(event.key)); }
-      if (event.key === 'Backspace') { event.preventDefault(); $('delete').click(); }
+      if (event.key === 'Backspace') { event.preventDefault(); removeDigit(); }
+      if (event.key === 'Enter' && settings.style === 'galaxy') { event.preventDefault(); confirmKey.click(); }
     });
 
     function gestureAction(action) {
