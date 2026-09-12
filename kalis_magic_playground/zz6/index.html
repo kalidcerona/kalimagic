@@ -110,8 +110,11 @@
     #settings h2 { margin: 1.5rem 0 0.65rem; color: #d1d1d6; font-size: 0.95rem; font-weight: 600; }
     #settings button { min-height: 2.75rem; padding: 0 1rem; border-radius: 0.7rem; background: #2c2c2e; }
     #settings-close { color: #ff9f0a; }
-    #sequence-input { width: 100%; min-height: 3rem; padding: 0.7rem 0.8rem; border: 1px solid #48484a; border-radius: 0.7rem; background: #1c1c1e; color: #fff; font: inherit; font-size: 1.1rem; user-select: text; -webkit-user-select: text; touch-action: auto; }
+    #sequence-input, #trick2-text { width: 100%; min-height: 3rem; padding: 0.7rem 0.8rem; border: 1px solid #48484a; border-radius: 0.7rem; background: #1c1c1e; color: #fff; font: inherit; font-size: 1.1rem; user-select: text; -webkit-user-select: text; touch-action: auto; }
     #sequence-apply { width: 100%; margin-top: 0.65rem; background: #ff9f0a !important; color: #000; font-weight: 600; }
+    #settings-mode-buttons, #trick-assign-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem; }
+    #current-preset { margin: 0.65rem 0; color: #aeaeb2; font-variant-numeric: tabular-nums; }
+    #trick-assign-buttons button { padding: 0 0.5rem; background: #ff9f0a; color: #000; font-weight: 600; }
     #sequence-slots { display: grid; gap: 0.55rem; }
     .sequence-slot { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 0.65rem; min-height: 3.5rem; padding: 0.35rem 0.35rem 0.35rem 0.85rem; border-radius: 0.8rem; background: #1c1c1e; }
     .sequence-slot-value { overflow: hidden; color: #fff; font-variant-numeric: tabular-nums; text-overflow: ellipsis; white-space: nowrap; }
@@ -157,6 +160,12 @@
     <section id="settings" aria-label="숨김 설정" hidden>
       <div id="settings-card">
         <header id="settings-header"><h1>설정</h1><button id="settings-close" type="button">닫기</button></header>
+        <h2>시작 화면 방향</h2>
+        <div id="settings-mode-buttons"><button id="mode-portrait" type="button">세로</button><button id="mode-landscape" type="button">가로</button></div>
+        <h2><label for="trick2-text">트릭 2 문구</label></h2>
+        <input id="trick2-text" type="text" enterkeyhint="done" maxlength="40" placeholder="문구 또는 00:06.47" autocomplete="off">
+        <p id="current-preset">현재 숫자 프리셋: 00:00.00</p>
+        <div id="trick-assign-buttons"><button id="use-trick2" type="button">트릭 2로 사용</button><button id="use-trick3" type="button">트릭 3로 사용</button></div>
         <h2><label for="sequence-input">시퀀스 입력</label></h2>
         <input id="sequence-input" type="text" enterkeyhint="done" placeholder="06,28,30,55" autocomplete="off" spellcheck="false">
         <button id="sequence-apply" type="button">시퀀스 적용</button>
@@ -169,192 +178,8 @@
     </section>
   </main>
   <div id="selftest" hidden><div id="selftest-result"></div></div>
-  <script>
-    // PURE FUNCTIONS BEGIN
-    function colonClassFor(trickState) { return trickState === "digit" ? "trick" : trickState === "text" ? "trick-text" : trickState === "seq" ? "trick-seq" : ""; }
-    function pushPendingDigit(pending, digit) { return pending.length >= 2 ? [digit] : [...pending, digit]; }
-    function digitFromPoint(x, y, w, h) {
-      const width = Number.isFinite(w) && w > 0 ? w : 1;
-      const height = Number.isFinite(h) && h > 0 ? h : 1;
-      const px = Number.isFinite(x) ? Math.min(Math.max(x, 0), width) : 0;
-      const py = Number.isFinite(y) ? Math.min(Math.max(y, 0), height) : 0;
-      const col = Math.min(4, Math.floor(px / width * 5));
-      const row = Math.min(1, Math.floor(py / height * 2));
-      return row === 0 ? col + 1 : (col === 4 ? 0 : col + 6);
-    }
-    function isLeftmostScreenFifth(x, width) { return x < width / 5; }
-    function composeCs(tens, ones) { return tens * 10 + ones; }
-    function normalizeTrickState(current, trick3Enabled) { return current === "seq" && !trick3Enabled ? "off" : ["off", "digit", "text", "seq"].includes(current) ? current : "off"; }
-    function nextTrickState(current, trick3Enabled = false) {
-      const state = normalizeTrickState(current, trick3Enabled);
-      if (state === "off") return "digit";
-      if (state === "digit") return "text";
-      if (state === "text") return trick3Enabled ? "seq" : "off";
-      return "off";
-    }
-    function parseSequence(value) {
-      const text = String(value ?? "").trim();
-      if (!text) return [];
-      return text.split(/[,\s]+/).filter(token => /^\d{1,2}$/.test(token)).map(Number).filter(value => value >= 0 && value <= 99).slice(0, 8);
-    }
-    function normalizeSequence(value) { return parseSequence(value).map(value => String(value).padStart(2, "0")).join(","); }
-    function loadSequenceSlots(storage) {
-      try {
-        const parsed = JSON.parse(storage.getItem("stopwatch_seq_slots") || "[]");
-        if (!Array.isArray(parsed)) return ["", "", ""];
-        return [0, 1, 2].map(index => typeof parsed[index] === "string" ? normalizeSequence(parsed[index]) : "");
-      } catch (_) { return ["", "", ""]; }
-    }
-    function saveSequenceSlots(storage, slots) {
-      const saved = [0, 1, 2].map(index => normalizeSequence(Array.isArray(slots) ? slots[index] : ""));
-      storage.setItem("stopwatch_seq_slots", JSON.stringify(saved));
-      return saved;
-    }
-    function clampElapsed(ms) { return Math.min(ms, 59990); }
-    function formatCs(totalCs) {
-      const value = Math.min(9999, Math.max(0, Math.floor(totalCs)));
-      return { sec: String(Math.floor(value / 100)).padStart(2, "0"), cs: String(value % 100).padStart(2, "0") };
-    }
-    function formatTimeInput(value) {
-      const digits = String(value ?? "").replace(/\D/g, "").slice(-6).padStart(6, "0");
-      return `${digits.slice(0, 2)}:${digits.slice(2, 4)}.${digits.slice(4)}`;
-    }
-    function parseTimeInput(value) {
-      const digits = String(value ?? "").replace(/\D/g, "").slice(-6).padStart(6, "0");
-      return Math.min(5999, (Number(digits.slice(0, 2)) * 60 + Number(digits.slice(2, 4))) * 100 + Number(digits.slice(4)));
-    }
-    function presetIndexFromX(x, left, width, count = 4) {
-      if (![x, left, width].every(Number.isFinite) || width <= 0 || !Number.isInteger(count) || count <= 0 || x < left || x > left + width) return null;
-      return Math.min(count - 1, Math.floor((x - left) / width * count));
-    }
-    function applyPresetSwipe(entry, digitIndex, steps) {
-      if (!/^\d{4}$/.test(entry) || !Number.isInteger(digitIndex) || digitIndex < 0 || digitIndex > 3 || !Number.isInteger(steps)) return entry;
-      const digit = ((Number(entry[digitIndex]) + steps) % 10 + 10) % 10;
-      return entry.slice(0, digitIndex) + digit + entry.slice(digitIndex + 1);
-    }
-    function toAppPoint(clientX, clientY, viewportWidth, viewportHeight, rotated) { return rotated ? { x: clientY, y: viewportWidth - clientX } : { x: clientX, y: clientY }; }
-    function applyPresetGroupSwipe(entry, groupIndex, steps) {
-      if (!/^\d{4}(?:\d{2})?$/.test(entry) || !Number.isInteger(groupIndex) || !Number.isInteger(steps)) return entry;
-      const groupCount = entry.length / 2;
-      if (groupIndex < 0 || groupIndex >= groupCount) return entry;
-      const limit = entry.length === 4 && groupIndex === 0 ? 60 : 100;
-      const offset = groupIndex * 2;
-      const value = ((Number(entry.slice(offset, offset + 2)) + steps) % limit + limit) % limit;
-      return entry.slice(0, offset) + String(value).padStart(2, "0") + entry.slice(offset + 2);
-    }
-    function presetSwipePxPerStep(velocityPxPerMs) {
-      const speed = Math.abs(Number(velocityPxPerMs));
-      if (!Number.isFinite(speed) || speed < 0.3) return 28;
-      if (speed > 1.5) return 5;
-      return 14;
-    }
-    function presetSwipeSteps(deltaPx, velocityPxPerMs) {
-      if (!Number.isFinite(deltaPx) || deltaPx === 0) return 0;
-      const raw = Math.trunc(deltaPx / presetSwipePxPerStep(velocityPxPerMs));
-      return Math.max(-20, Math.min(20, raw));
-    }
-    function nextSwipeAccumulator(acc, steps, pxPerStep, cap) {
-      if (!Number.isFinite(acc)) return 0;
-      if (!Number.isFinite(steps) || !Number.isFinite(pxPerStep) || pxPerStep <= 0) return acc;
-      const capAbs = Number.isFinite(cap) ? Math.abs(cap) : 20;
-      if (Math.abs(steps) >= capAbs) return 0;
-      let remainder = acc - steps * pxPerStep;
-      if (!Number.isFinite(remainder)) return 0;
-      if (remainder >= pxPerStep) remainder = pxPerStep - Number.MIN_VALUE;
-      else if (remainder <= -pxPerStep) remainder = -pxPerStep + Number.MIN_VALUE;
-      return remainder;
-    }
-    function presetGroupIndexFromPoint(x, y, rect, count = 2) {
-      if (!rect || !Number.isFinite(x) || !Number.isFinite(y)) return null;
-      const { left, top, width, height } = rect;
-      if (![left, top, width, height].every(Number.isFinite) || width <= 0 || height <= 0 || !Number.isInteger(count) || count <= 0) return null;
-      const band = height * 0.4;
-      if (y < top - band || y > top + height + band || x < left || x > left + width) return null;
-      return Math.min(count - 1, Math.floor((x - left) / width * count));
-    }
-    function portraitPresetEntryFromCs(totalCs) {
-      const value = Math.min(603999, Math.max(0, Math.floor(Number(totalCs) || 0)));
-      const minutes = Math.min(99, Math.floor(value / 6000));
-      const remainder = value - minutes * 6000;
-      return String(minutes).padStart(2, "0") + String(Math.floor(remainder / 100)).padStart(2, "0") + String(remainder % 100).padStart(2, "0");
-    }
-    function portraitPresetEntryToCs(entry) {
-      if (!/^\d{6}$/.test(entry)) return null;
-      return Number(entry.slice(0, 2)) * 6000 + Number(entry.slice(2, 4)) * 100 + Number(entry.slice(4, 6));
-    }
-    function savePortraitGroupPreset(storage, entry, savedAt) {
-      const value = portraitPresetEntryToCs(entry);
-      if (value === null || !storage || typeof storage.setItem !== "function") return null;
-      const at = Number.isFinite(savedAt) ? savedAt : Date.now();
-      storage.setItem("stopwatch_preset_cs", String(value));
-      storage.setItem("stopwatch_preset_at", String(at));
-      return { presetCs: value, presetAt: at };
-    }
-    function resolveStoppedCs({ elapsed, trickMode, reservedTens, stopDigit }) {
-      if (elapsed >= 59990) return 5999;
-      if (trickMode && reservedTens !== null && stopDigit !== null) return Math.floor(elapsed / 1000) * 100 + composeCs(reservedTens, stopDigit);
-      return Math.floor(elapsed / 10);
-    }
-    function resolveSequenceStop({ stopCount, sequence, elapsed }) {
-      const values = Array.isArray(sequence) ? sequence.filter(value => Number.isInteger(value) && value >= 0 && value <= 99).slice(0, 8) : [];
-      const realCs = Math.floor(clampElapsed(elapsed) / 10);
-      if (!values.length) return { cs: realCs, nextStopCount: 0 };
-      const current = Number.isInteger(stopCount) && stopCount >= 0 ? stopCount + 1 : 1;
-      if (current <= 2) return { cs: realCs, nextStopCount: current };
-      const sequenceIndex = current - 3;
-      const cs = elapsed >= 59990 ? realCs : Math.floor(realCs / 100) * 100 + values[sequenceIndex];
-      return { cs, nextStopCount: sequenceIndex === values.length - 1 ? 0 : current };
-    }
-    function elapsedAtAction(elapsed, started, actionNow) {
-      return clampElapsed(elapsed + actionNow - started);
-    }
-    function resolveStopOutcome({ trickState, presetCs, customText, elapsed, reservedTens, stopDigit, presetAt = 0, textAt = 0, stopCount = 0, sequence = [] }) {
-      if (trickState === "seq") {
-        const result = resolveSequenceStop({ stopCount, sequence, elapsed });
-        return { kind: "cs", cs: result.cs, nextStopCount: result.nextStopCount };
-      }
-      if (elapsed >= 59990) return { kind: "cs", cs: 5999, nextStopCount: stopCount };
-      if (trickState === "text") {
-        if (presetCs !== null && (!customText || presetAt >= textAt)) return { kind: "cs", cs: presetCs, nextStopCount: stopCount };
-        if (customText) return { kind: "text", text: customText, nextStopCount: stopCount };
-      }
-      return { kind: "cs", cs: resolveStoppedCs({ elapsed, trickMode: trickState === "digit", reservedTens, stopDigit }), nextStopCount: stopCount };
-    }
-    function storedMode(storage) {
-      try { return storage.getItem("stopwatch_ui_mode") === "landscape" ? "landscape" : "portrait"; } catch (_) { return "portrait"; }
-    }
-    function recognizesModeToggle(taps) {
-      const valid = taps.filter(tap => tap && tap.fingers === 2 && Number.isFinite(tap.time) && Number.isFinite(tap.gap) && tap.gap <= 120);
-      if (valid.length < 3) return false;
-      const last = valid.slice(-3);
-      return last[2].time - last[0].time <= 800;
-    }
-    function transitionAlarmPreset(model, action) {
-      const next = { ...model };
-      if (action === "enter") {
-        if (next.uiMode !== "portrait" || next.timerState === "running" || next.presetMode || next.editorOpen) return next;
-        next.presetMode = true;
-        next.presetKind = "portrait-group";
-      } else if ((action === "save" || action === "cancel") && next.presetMode && next.presetKind === "portrait-group") {
-        next.presetMode = false;
-        next.presetKind = null;
-      }
-      return next;
-    }
-    function migrateV2Storage(storage) {
-      const marker = "stopwatch_storage_migrated_v2";
-      try {
-        if (storage.getItem(marker) === "1") return false;
-        const pairs = [["stopwatch2_preset_cs", "stopwatch_preset_cs"], ["stopwatch2_preset_at", "stopwatch_preset_at"], ["stopwatch2_custom_text", "stopwatch_custom_text"], ["stopwatch2_text_at", "stopwatch_text_at"]];
-        let copied = false;
-        pairs.forEach(([oldKey, newKey]) => {
-          const value = storage.getItem(oldKey);
-          if (storage.getItem(newKey) === null && value !== null) { storage.setItem(newKey, value); copied = true; }
-        });
-        storage.setItem(marker, "1");
-        return copied;
-      } catch (_) { return false; }
-    }
+  <script type="module">
+    import { LANDSCAPE_CONTROL_IS_IMMEDIATE, applyPresetGroupSwipe, applyPresetSwipe, clampElapsed, colonClassFor, composeCs, digitFromPoint, elapsedAtAction, formatCs, formatTimeInput, isLeftmostScreenFifth, loadSequenceSlots, migrateV2Storage, nextSwipeAccumulator, nextTrickState, normalizeSequence, normalizeTrickState, parseSequence, parseStopwatchText, parseTimeInput, portraitPresetEntryFromCs, presetGroupIndexFromPoint, presetIndexFromX, presetSwipePxPerStep, presetSwipeSteps, pushPendingDigit, recognizesModeToggle, resolveSequenceStop, resolveStoppedCs, resolveStopOutcome, savePortraitGroupPreset, saveSequenceSlots, storedMode, toAppPoint, transitionAlarmPreset } from "./logic.js";
     function runSelfTests() {
       const failures = [];
       const assert = (condition, name) => { if (!condition) failures.push(name); };
@@ -370,15 +195,16 @@
         assert(isFormat(0,"00","00"), `${prefix} format 0`); assert(isFormat(728,"07","28"), `${prefix} format 728`); assert(isFormat(5999,"59","99"), `${prefix} format 5999`); assert(isFormat(9999,"99","99"), `${prefix} format four-digit swipe preview`);
         const rs=(elapsed,trickMode,reservedTens,stopDigit)=>resolveStoppedCs({elapsed,trickMode,reservedTens,stopDigit});
         assert(rs(59990,true,2,8)===5999, `${prefix} resolve limit first`); assert(rs(3450,true,2,8)===328, `${prefix} resolve trick 03:28`); assert(rs(3450,true,null,8)===345, `${prefix} resolve missing reserve`); assert(rs(3450,false,2,8)===345, `${prefix} resolve off`); assert(rs(1200,true,0,5)===105, `${prefix} resolve zero tens`);
-        for (const [preset,text,presetAt,textAt,kind] of [[1187,"KALI",1,2,"text"],[1187,"KALI",2,1,"cs"],[1187,"KALI",2,2,"cs"],[null,"KALI",5,1,"text"],[1187,"",1,5,"cs"]]) { const r=resolveStopOutcome({trickState:"text",presetCs:preset,customText:text,elapsed:3450,reservedTens:2,stopDigit:8,presetAt,textAt}); assert(r.kind===kind&&(kind==="text"?r.text==="KALI":r.cs===1187), `${prefix} last saved ${preset},${text},${presetAt},${textAt}`); }
-        let ro=resolveStopOutcome({trickState:"text",presetCs:1187,customText:"KALI",elapsed:3450,reservedTens:2,stopDigit:8}); assert(ro.kind==="cs"&&ro.cs===1187, `${prefix} outcome timestamp tie preset`);
+        let ro=resolveStopOutcome({trickState:"text",presetCs:1187,customText:"KALI",elapsed:3450,reservedTens:2,stopDigit:8,presetAt:999,textAt:1}); assert(ro.kind==="text"&&ro.text==="KALI", `${prefix} text beats newer numeric preset`);
         ro=resolveStopOutcome({trickState:"text",presetCs:null,customText:"KALI",elapsed:3450,reservedTens:2,stopDigit:8}); assert(ro.kind==="text"&&ro.text==="KALI", `${prefix} outcome text only`);
-        ro=resolveStopOutcome({trickState:"text",presetCs:null,customText:"",elapsed:3450,reservedTens:2,stopDigit:8}); assert(ro.kind==="cs"&&ro.cs===345, `${prefix} outcome measured`);
+        ro=resolveStopOutcome({trickState:"text",presetCs:1187,customText:"",elapsed:3450,reservedTens:2,stopDigit:8,presetAt:999}); assert(ro.kind==="cs"&&ro.cs===345, `${prefix} empty text uses measured`);
+        ro=resolveStopOutcome({trickState:"text",presetCs:1187,customText:"06.47",elapsed:3450,reservedTens:2,stopDigit:8}); assert(ro.kind==="cs"&&ro.cs===647, `${prefix} time-looking text uses native digits`);
+        ro=resolveStopOutcome({trickState:"text",presetCs:1187,customText:"00:06.47",elapsed:3450,reservedTens:2,stopDigit:8}); assert(ro.kind==="cs"&&ro.cs===647, `${prefix} full time-looking text uses native digits`);
         ro=resolveStopOutcome({trickState:"off",presetCs:9999,customText:"KALI",elapsed:3450,reservedTens:2,stopDigit:8}); assert(ro.kind==="cs"&&ro.cs===345, `${prefix} outcome off`);
         ro=resolveStopOutcome({trickState:"digit",presetCs:9999,customText:"KALI",elapsed:3450,reservedTens:2,stopDigit:8}); assert(ro.kind==="cs"&&ro.cs===328, `${prefix} outcome digit ignores preset`);
         ro=resolveStopOutcome({trickState:"digit",presetCs:null,customText:"",elapsed:3450,reservedTens:2,stopDigit:8}); assert(ro.kind==="cs"&&ro.cs===328, `${prefix} outcome digit`);
         ro=resolveStopOutcome({trickState:"digit",presetCs:null,customText:"",elapsed:59990,reservedTens:2,stopDigit:8}); assert(ro.kind==="cs"&&ro.cs===5999, `${prefix} outcome digit limit`);
-        ro=resolveStopOutcome({trickState:"text",presetCs:5999,customText:"KALI",elapsed:59990,reservedTens:2,stopDigit:8}); assert(ro.kind==="cs"&&ro.cs===5999, `${prefix} outcome preset limit`);
+        ro=resolveStopOutcome({trickState:"text",presetCs:5999,customText:"KALI",elapsed:59990,reservedTens:2,stopDigit:8}); assert(ro.kind==="text"&&ro.text==="KALI", `${prefix} text remains chosen at measured limit`);
         assert(nextTrickState("off")==="digit", `${prefix} state off-digit`); assert(nextTrickState("digit")==="text", `${prefix} state digit-text`); assert(nextTrickState("text")==="off", `${prefix} state text-off`);
       }
       shared("v1"); shared("v2");
@@ -397,7 +223,9 @@
       assert(colonClassFor("off")==="","v2 colon off");assert(colonClassFor("digit")==="trick","v2 colon digit");assert(colonClassFor("text")==="trick-text","v2 colon text");assert(colonClassFor("seq")==="trick-seq","u10 colon seq");
       for(const [pending,d,want] of [[[],3,[3]],[[3],1,[3,1]],[[3],3,[3,3]],[[3,1],7,[7]],[[0],0,[0,0]]]){const original=JSON.stringify(pending);assert(JSON.stringify(pushPendingDigit(pending,d))===JSON.stringify(want),`v2 pending ${original}+${d}`);assert(JSON.stringify(pending)===original,`v2 pending unchanged ${original}`);}
       assert(resolveStoppedCs({elapsed:3450,trickMode:true,reservedTens:2,stopDigit:null})===345,"v2 missing stop tap");assert(resolveStoppedCs({elapsed:3450,trickMode:true,reservedTens:null,stopDigit:null})===345,"v2 no grid taps");assert(applyPresetSwipe("123",0,1)==="123","v2 invalid preset length");assert(applyPresetSwipe("1234",0,.5)==="1234","v2 fractional swipe");
-      const emptyStore={getItem:()=>null};assert(storedMode(emptyStore)==="portrait","uni default portrait");
+      const emptyStore={getItem:()=>null};assert(storedMode(emptyStore)==="portrait","uni default portrait");assert(storedMode({getItem:()=>"landscape"})==="landscape","uni stored landscape");assert(storedMode({getItem:()=>"sideways"})==="portrait","uni invalid mode defaults portrait");
+      assert(parseStopwatchText("words")===null&&parseStopwatchText("06.47")===647&&parseStopwatchText("00:06.47")===647,"uni stopwatch-looking text parser");
+      assert(LANDSCAPE_CONTROL_IS_IMMEDIATE,"uni landscape control is immediate");
       const alarmBase={uiMode:"portrait",timerState:"idle",presetMode:false,presetKind:null,editorOpen:false,storedUiMode:"portrait"};
       const alarmEntered=transitionAlarmPreset(alarmBase,"enter");assert(alarmEntered.uiMode==="portrait"&&alarmEntered.presetMode&&alarmEntered.presetKind==="portrait-group","u7 alarm enter stays portrait group mode");
       assert(alarmEntered.storedUiMode==="portrait","u7 alarm enter does not touch stopwatch_ui_mode");
@@ -413,7 +241,7 @@
       const savedGroup=savePortraitGroupPreset(presetStore,"123456",777);assert(savedGroup.presetCs===12*6000+34*100+56&&presetData.get("stopwatch_preset_cs")===String(12*6000+34*100+56),"u7 save writes stopwatch_preset_cs mm ss cc");
       assert(presetData.get("stopwatch_ui_mode")==="portrait","u7 save leaves stopwatch_ui_mode untouched");
       const beforeCancel=presetData.get("stopwatch_preset_cs");transitionAlarmPreset(alarmEntered,"cancel");assert(presetData.get("stopwatch_preset_cs")===beforeCancel,"u7 cancel leaves preset key unchanged");
-      assert(elapsedAtAction(0,1000,1875)===875,"uni deferred stop uses actionNow snapshot");
+      assert(elapsedAtAction(0,1000,1875)===875,"uni actionNow snapshot");
       assert(recognizesModeToggle([{fingers:2,time:0,gap:40},{fingers:2,time:350,gap:50},{fingers:2,time:790,gap:80}]),"uni 3 two-finger taps");assert(!recognizesModeToggle([{fingers:2,time:0,gap:40},{fingers:2,time:300,gap:40}]),"uni reject 2 taps");assert(!recognizesModeToggle([{fingers:1,time:0,gap:0},{fingers:1,time:200,gap:0},{fingers:1,time:400,gap:0}]),"uni reject singles");assert(!recognizesModeToggle([{fingers:2,time:0,gap:40},{fingers:2,time:750,gap:40},{fingers:2,time:1500,gap:40}]),"uni reject spread taps");
       const data=new Map([["stopwatch2_preset_cs","1187"],["stopwatch2_custom_text","KALI"]]);const store={getItem:k=>data.has(k)?data.get(k):null,setItem:(k,v)=>data.set(k,String(v))};assert(migrateV2Storage(store)===true&&data.get("stopwatch_preset_cs")==="1187"&&data.get("stopwatch_custom_text")==="KALI","uni migration copies");data.set("stopwatch2_preset_cs","9999");assert(migrateV2Storage(store)===false&&data.get("stopwatch_preset_cs")==="1187","uni migration once");assert(data.get("stopwatch2_preset_cs")==="9999","uni old keys remain");
       assert(JSON.stringify(parseSequence("06, 28 30,55"))==="[6,28,30,55]","u10 sequence parsing mixed separators");
@@ -451,23 +279,21 @@
       }
       const message=failures.length?`FAIL\n${failures.join("\n")}`:"ALL PASS";const output=document.getElementById("selftest-result");output.textContent=message;output.className=failures.length?"fail":"";console.log(message);return message;
     }
-    // PURE FUNCTIONS END
-
     const $ = id => document.getElementById(id);
     const shell=$("shell"), portraitApp=$("portrait-app"), landscapeFrame=$("landscape-frame"), landscapeApp=$("landscape-app");
     const pTime=$("p-time-display"),pNumeric=$("p-numeric-display"),pMinutes=$("p-minutes"),pCustom=$("p-custom-display"),pColon=$("p-colon"),pControl=$("p-control"),pLap=$("p-lap"),pLapArea=$("p-lap-area"),pLapRows=$("p-lap-rows"),pWorld=portraitApp.querySelector(".tab-world"),pAlarm=portraitApp.querySelector("#p-tabs .tab:nth-child(2)"),pTimer=portraitApp.querySelector("#p-tabs .tab:nth-child(4)"),pDigits=[...pTime.querySelectorAll("[data-p-digit]")],pGroups=[...pTime.querySelectorAll("[data-p-group]")];
     const lTime=$("l-time-display"),lSeconds=$("l-seconds"),lCs=$("l-centiseconds"),lCustom=$("l-custom-display"),lColon=$("l-colon"),lControl=$("l-control"),lControlLabel=$("l-control-label"),lHitZones=$("l-main-hit-zones"),lDigits=[...lTime.querySelectorAll("[data-l-digit]")];
     const editor=$("editor"),editorInput=$("editor-input"),editorSave=$("editor-save"),editorClear=$("editor-clear"),presetHint=$("preset-hint");
-    const settings=$("settings"),settingsClose=$("settings-close"),sequenceInput=$("sequence-input"),sequenceApply=$("sequence-apply"),sequenceSlots=$("sequence-slots"),trick3Toggle=$("trick3-toggle"),sequenceStatus=$("sequence-status");
+    const settings=$("settings"),settingsClose=$("settings-close"),modePortrait=$("mode-portrait"),modeLandscape=$("mode-landscape"),trick2Text=$("trick2-text"),currentPreset=$("current-preset"),useTrick2=$("use-trick2"),useTrick3=$("use-trick3"),sequenceInput=$("sequence-input"),sequenceApply=$("sequence-apply"),sequenceSlots=$("sequence-slots"),trick3Toggle=$("trick3-toggle"),sequenceStatus=$("sequence-status");
     const PRESET_KEY="stopwatch_preset_cs",PRESET_AT_KEY="stopwatch_preset_at",TEXT_KEY="stopwatch_custom_text",TEXT_AT_KEY="stopwatch_text_at",MODE_KEY="stopwatch_ui_mode",SEQUENCE_KEY="stopwatch_seq",SEQUENCE_SLOTS_KEY="stopwatch_seq_slots",TRICK3_KEY="stopwatch_trick3";
     const HOLD_MS=1000,PAIR_MS=120,TRIPLE_MS=800;
     let uiMode="portrait",state="idle",trickState="off",trick3Enabled=false,sequence=[],sequenceSlotValues=["","",""],sequenceStopCount=0,customText="",presetCs=null,presetAt=0,textAt=0,presetEntry="0000",presetMode=false,presetKind=null,presetGesture=null;
     let pendingDigits=[],reservedTens=null,stopDigit=null,startedAt=0,elapsedBase=0,frameId=0,lapCount=0,lastLapElapsed=0,hold=null,tap=null,alarmTap=null,suppressClick=false,typedDigits="",hintTimer=0,editorKind="",stoppedOutcome=null;
     let pressed=false,wakeLock=null,wakeLockPending=false,resizeObserver=null;
     const activePointers=new Map(),pairedPointers=new Set(),pendingLandscapeActions=new Map();let pairCandidate=null,twoFingerTaps=[];
-    function renderCs(totalCs){const value=Math.max(0,Math.floor(Number(totalCs)||0)),f=formatCs(value),entry=f.sec+f.cs,portraitEntry=portraitPresetEntryFromCs(value);pCustom.hidden=true;pNumeric.hidden=false;pMinutes.textContent=portraitEntry.slice(0,2);pDigits.forEach((s,i)=>s.textContent=portraitEntry[i+2]);lCustom.hidden=true;lSeconds.hidden=false;lColon.hidden=false;lCs.hidden=false;lDigits.forEach((s,i)=>s.textContent=entry[i]);}
+    function renderCs(totalCs){const value=Math.max(0,Math.floor(Number(totalCs)||0)),f=formatCs(value),entry=f.sec+f.cs;if(uiMode==="portrait"){const portraitEntry=portraitPresetEntryFromCs(value);pCustom.hidden=true;pNumeric.hidden=false;pMinutes.textContent=portraitEntry.slice(0,2);pDigits.forEach((s,i)=>s.textContent=portraitEntry[i+2]);return;}lCustom.hidden=true;lSeconds.hidden=false;lColon.hidden=false;lCs.hidden=false;lDigits.forEach((s,i)=>s.textContent=entry[i]);}
     function renderPortraitPresetEntry(entry){pCustom.hidden=true;pNumeric.hidden=false;pMinutes.textContent=entry.slice(0,2);pDigits.forEach((s,i)=>s.textContent=entry[i+2]);}
-    function renderCustomText(text){pNumeric.hidden=true;pCustom.hidden=false;pCustom.textContent=text;if(/^\d{1,2}:\d{2}$/.test(text)){const [s,c]=text.split(":");lCustom.hidden=true;lSeconds.hidden=false;lColon.hidden=false;lCs.hidden=false;lDigits[0].textContent=s.length===2?s[0]:"";lDigits[1].textContent=s[s.length-1];lDigits[2].textContent=c[0];lDigits[3].textContent=c[1];}else{lSeconds.hidden=true;lColon.hidden=true;lCs.hidden=true;lCustom.hidden=false;lCustom.textContent=text;}}
+    function renderCustomText(text){if(uiMode==="portrait"){pNumeric.hidden=true;pCustom.hidden=false;pCustom.textContent=text;return;}lSeconds.hidden=true;lColon.hidden=true;lCs.hidden=true;lCustom.hidden=false;lCustom.textContent=text;}
     function gradient(base,down){const top=`color-mix(in srgb, ${base} 82%, #ffffff)`,value=`linear-gradient(180deg, ${top} 0%, ${base} 100%)`;return down?`linear-gradient(180deg, rgba(0,0,0,.12), rgba(0,0,0,.12)), ${value}`:value;}
     function renderState(){pControl.textContent=state==="running"?"중단":"시작";pControl.classList.toggle("running",state==="running");pLap.textContent=state==="stopped"&&elapsedBase>0?"재설정":"랩";pLap.disabled=state!=="running"&&elapsedBase===0;pColon.className=`colon ${colonClassFor(trickState)}`;lColon.className=`colon ${colonClassFor(trickState)}`;let label="START",bg=gradient("#4c6ef5",pressed);if(state==="running"){label="STOP";bg=gradient("#e03131",pressed);}else if(state==="stopped"){label="RESET";const base="linear-gradient(180deg,rgba(255,255,255,.18),rgba(255,255,255,.12))";bg=pressed?`linear-gradient(180deg,rgba(0,0,0,.12),rgba(0,0,0,.12)),${base}`:base;}lControlLabel.textContent=label;lControl.setAttribute("aria-label",label);lControl.style.background=bg;lControl.style.transform=pressed?"scale(.96)":"none";}
     function elapsedNow(){return clampElapsed(elapsedBase+(state==="running"?performance.now()-startedAt:0));}
@@ -483,16 +309,19 @@
     function beginHold(e,action,delay=HOLD_MS){if(!isPrimaryPointer(e)||presetMode||hold||!editor.hidden||!settings.hidden)return;e.preventDefault();hold={pointerId:e.pointerId,x:e.clientX,y:e.clientY,timer:setTimeout(()=>{const done=hold;hold=null;action(done);},delay)};}
     function showHint(text){clearTimeout(hintTimer);presetHint.textContent=text;presetHint.hidden=false;hintTimer=setTimeout(()=>presetHint.hidden=true,2000);}
     function storePresetCs(value){presetCs=value>0?Math.min(5999,value):null;presetAt=presetCs===null?0:Date.now();try{if(presetCs===null){localStorage.removeItem(PRESET_KEY);localStorage.removeItem(PRESET_AT_KEY);}else{localStorage.setItem(PRESET_KEY,String(presetCs));localStorage.setItem(PRESET_AT_KEY,String(presetAt));}}catch(_){}}
+    function storeCustomText(value){customText=String(value??"").trim();textAt=customText?Date.now():0;try{if(customText){localStorage.setItem(TEXT_KEY,customText);localStorage.setItem(TEXT_AT_KEY,String(textAt));}else{localStorage.removeItem(TEXT_KEY);localStorage.removeItem(TEXT_AT_KEY);}}catch(_){}return customText;}
     function openPortraitPresetEditor(){editorKind="preset";typedDigits="";editorInput.inputMode="numeric";editorInput.pattern="[0-9]*";editorInput.maxLength=8;editorInput.value=formatTimeInput(typedDigits);editor.hidden=false;editorInput.focus();editorInput.select();}
     function openLandscapeTextEditor(){editorKind="text";editorInput.inputMode="text";editorInput.removeAttribute("pattern");editorInput.maxLength=10;editorInput.value=customText;editor.hidden=false;editorInput.focus();editorInput.select();}
     function closeEditor(){editor.hidden=true;editorKind="";}
-    function saveEditor(){if(editorKind==="preset")storePresetCs(parseTimeInput(editorInput.value));else if(editorKind==="text"){customText=editorInput.value.trim();textAt=customText?Date.now():0;try{if(customText){localStorage.setItem(TEXT_KEY,customText);localStorage.setItem(TEXT_AT_KEY,String(textAt));}else{localStorage.removeItem(TEXT_KEY);localStorage.removeItem(TEXT_AT_KEY);}}catch(_){}}closeEditor();}
-    function clearEditor(){if(editorKind==="preset")storePresetCs(0);else{customText="";textAt=0;try{localStorage.removeItem(TEXT_KEY);localStorage.removeItem(TEXT_AT_KEY);}catch(_){}}closeEditor();}
+    function saveEditor(){if(editorKind==="preset")storePresetCs(parseTimeInput(editorInput.value));else if(editorKind==="text")storeCustomText(editorInput.value);closeEditor();}
+    function clearEditor(){if(editorKind==="preset")storePresetCs(0);else storeCustomText("");closeEditor();}
     function loadStorage(){migrateV2Storage(localStorage);uiMode=storedMode(localStorage);try{customText=localStorage.getItem(TEXT_KEY)||"";textAt=Number(localStorage.getItem(TEXT_AT_KEY))||0;const raw=localStorage.getItem(PRESET_KEY),value=raw!==null&&/^\d{1,6}$/.test(raw)?Number(raw):NaN;presetCs=Number.isInteger(value)&&value>=0&&value<=603999?value:null;presetAt=Number(localStorage.getItem(PRESET_AT_KEY))||0;sequence=parseSequence(localStorage.getItem(SEQUENCE_KEY)||"");sequenceSlotValues=loadSequenceSlots(localStorage);trick3Enabled=localStorage.getItem(TRICK3_KEY)==="1";trickState=normalizeTrickState(trickState,trick3Enabled);}catch(_){customText="";presetCs=null;sequence=[];sequenceSlotValues=["","",""];trick3Enabled=false;trickState="off";}}
     function updateSequenceStatus(){const active=normalizeSequence(sequence);sequenceStatus.textContent=`활성 시퀀스: ${active||"비어 있음"} · 트릭 3: ${trick3Enabled?"켜짐":"꺼짐"}`;}
     function renderSequenceSlots(){sequenceSlots.replaceChildren();sequenceSlotValues.forEach((value,index)=>{const row=document.createElement("div"),label=document.createElement("span"),save=document.createElement("button");row.className=`sequence-slot${value?"":" empty"}`;row.tabIndex=0;row.dataset.slot=String(index);label.className="sequence-slot-value";label.textContent=value||"비어 있음";save.className="sequence-slot-save";save.type="button";save.textContent="저장";save.setAttribute("aria-label",`${index+1}번 칸에 저장`);row.append(label,save);sequenceSlots.append(row);});}
-    function openSettings(){if(uiMode!=="portrait"||state==="running"||presetMode||!editor.hidden||!settings.hidden)return;sequenceInput.value=normalizeSequence(sequence);trick3Toggle.checked=trick3Enabled;renderSequenceSlots();updateSequenceStatus();settings.hidden=false;}
-    function closeSettings(){settings.hidden=true;sequenceInput.blur();}
+    function openSettings(){if(uiMode!=="portrait"||state==="running"||presetMode||!editor.hidden||!settings.hidden)return;trick2Text.value=customText;currentPreset.textContent=`현재 숫자 프리셋: ${formatTimeInput(portraitPresetEntryFromCs(presetCs??0))}`;sequenceInput.value=normalizeSequence(sequence);trick3Toggle.checked=trick3Enabled;renderSequenceSlots();updateSequenceStatus();settings.hidden=false;}
+    function closeSettings(){settings.hidden=true;trick2Text.blur();sequenceInput.blur();}
+    function useSettingsTrick2(){const entered=trick2Text.value.trim(),fallback=formatTimeInput(portraitPresetEntryFromCs(presetCs??0)),value=storeCustomText(entered||fallback);trick2Text.value=value;trickState="text";sequenceStopCount=0;renderState();}
+    function useSettingsTrick3(){setTrick3Enabled(true);setActiveSequence(sequenceInput.value);trickState="seq";renderState();}
     function setActiveSequence(value){const normalized=normalizeSequence(value);sequence=parseSequence(normalized);sequenceStopCount=0;sequenceInput.value=normalized;try{localStorage.setItem(SEQUENCE_KEY,normalized);}catch(_){}updateSequenceStatus();}
     function setTrick3Enabled(enabled){trick3Enabled=!!enabled;sequenceStopCount=0;if(!trick3Enabled&&trickState==="seq")trickState="off";try{localStorage.setItem(TRICK3_KEY,trick3Enabled?"1":"0");}catch(_){}trick3Toggle.checked=trick3Enabled;updateSequenceStatus();renderState();}
     function pTrackRect(){const first=pDigits[0].getBoundingClientRect(),last=pDigits[3].getBoundingClientRect();return{left:first.left,width:last.right-first.left};}
@@ -545,10 +374,11 @@
       pTimer.addEventListener("pointerdown",e=>{if(uiMode!=="portrait"||state==="running"||presetMode||!editor.hidden||!settings.hidden||activePointers.size!==1)return;beginHold(e,openSettings);});
       pLapArea.addEventListener("pointerdown",e=>{if(presetMode||trickState!=="digit"||!isPrimaryPointer(e)||pairedPointers.has(e.pointerId))return;tap={pointerId:e.pointerId,x:e.clientX,y:e.clientY};});window.addEventListener("pointerup",e=>{if(tap&&tap.pointerId===e.pointerId&&!presetMode&&!suppressClick&&trickState==="digit"&&!pairedPointers.has(e.pointerId)){const r=pLapArea.getBoundingClientRect();if(Math.hypot(e.clientX-tap.x,e.clientY-tap.y)<=10&&e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom){const d=digitFromPoint(e.clientX-r.left,e.clientY-r.top,r.width,r.height);pendingDigits=pushPendingDigit(pendingDigits,d);const complete=pendingDigits.length===2;reservedTens=complete?pendingDigits[0]:null;stopDigit=complete?pendingDigits[1]:null;pWorld.classList.toggle("feedback",complete);}}tap=null;});
       $("p-top-band").addEventListener("pointerdown",e=>beginHold(e,openPortraitPresetEditor));pNumeric.addEventListener("pointerdown",e=>{const track=pTrackRect();if(state!=="running"&&presetIndexFromX(e.clientX,track.left,track.width)!==null)beginHold(e,d=>enterPortraitPreset(d.pointerId,d.x,d.y));});
-      lControl.addEventListener("pointerdown",e=>deferLandscapeAction(e,landscapeControl));$("l-fullscreen-zone").addEventListener("pointerdown",e=>deferLandscapeAction(e,enterFullscreen));$("l-trick-zone").addEventListener("pointerdown",e=>deferLandscapeAction(e,cycleTrick));$("l-text-zone").addEventListener("pointerdown",e=>deferLandscapeHold(e,openLandscapeTextEditor));
+      lControl.addEventListener("pointerdown",landscapeControl);
+      $("l-fullscreen-zone").addEventListener("pointerdown",e=>deferLandscapeAction(e,enterFullscreen));$("l-trick-zone").addEventListener("pointerdown",e=>deferLandscapeAction(e,cycleTrick));$("l-text-zone").addEventListener("pointerdown",e=>deferLandscapeHold(e,openLandscapeTextEditor));
       document.addEventListener("pointerdown",e=>{if(uiMode!=="landscape"||presetMode||state==="running"||!isPrimaryPointer(e)||!editor.hidden||e.target.closest("#l-control,#editor,#install-nudge"))return;const p=toAppPoint(e.clientX,e.clientY,innerWidth,innerHeight,isRotatedLayout());if(isLeftmostScreenFifth(p.x,appSize().width))deferLandscapeHold(e,enterLandscapePreset);},{passive:true});
       editor.addEventListener("pointerdown",e=>{if(e.target!==editorInput&&e.target!==editorSave&&e.target!==editorClear)closeEditor();});editorSave.addEventListener("click",saveEditor);editorClear.addEventListener("click",clearEditor);editorInput.addEventListener("beforeinput",e=>{if(editorKind!=="preset")return;if(e.inputType==="deleteContentBackward"){e.preventDefault();typedDigits=typedDigits.slice(0,-1);}else if(e.inputType.startsWith("insert")&&e.data){e.preventDefault();typedDigits=(typedDigits+e.data.replace(/\D/g,"")).slice(-6);}else return;editorInput.value=formatTimeInput(typedDigits);editorInput.setSelectionRange(editorInput.value.length,editorInput.value.length);});editorInput.addEventListener("paste",e=>{if(editorKind!=="preset")return;e.preventDefault();typedDigits=(typedDigits+(e.clipboardData?.getData("text")||"").replace(/\D/g,"")).slice(-6);editorInput.value=formatTimeInput(typedDigits);});editorInput.addEventListener("input",()=>{if(editorKind==="preset"){typedDigits=editorInput.value.replace(/\D/g,"").slice(-6);editorInput.value=formatTimeInput(typedDigits);}});editorInput.addEventListener("keydown",e=>{if(e.key==="Enter")saveEditor();if(e.key==="Escape")closeEditor();});
-      settingsClose.addEventListener("click",closeSettings);sequenceApply.addEventListener("click",()=>setActiveSequence(sequenceInput.value));sequenceInput.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();setActiveSequence(sequenceInput.value);}else if(e.key==="Escape")closeSettings();});trick3Toggle.addEventListener("change",()=>setTrick3Enabled(trick3Toggle.checked));sequenceSlots.addEventListener("click",e=>{const row=e.target.closest(".sequence-slot");if(!row)return;const index=Number(row.dataset.slot);if(e.target.closest(".sequence-slot-save")){const normalized=normalizeSequence(sequenceInput.value);sequenceInput.value=normalized;sequenceSlotValues[index]=normalized;try{sequenceSlotValues=saveSequenceSlots(localStorage,sequenceSlotValues);}catch(_){}renderSequenceSlots();return;}setActiveSequence(sequenceSlotValues[index]);});sequenceSlots.addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&e.target.classList.contains("sequence-slot")){e.preventDefault();setActiveSequence(sequenceSlotValues[Number(e.target.dataset.slot)]);}});
+      settingsClose.addEventListener("click",closeSettings);modePortrait.addEventListener("click",()=>setMode("portrait"));modeLandscape.addEventListener("click",()=>setMode("landscape"));useTrick2.addEventListener("click",useSettingsTrick2);useTrick3.addEventListener("click",useSettingsTrick3);sequenceApply.addEventListener("click",()=>setActiveSequence(sequenceInput.value));sequenceInput.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();setActiveSequence(sequenceInput.value);}else if(e.key==="Escape")closeSettings();});trick2Text.addEventListener("keydown",e=>{if(e.key==="Escape")closeSettings();});trick3Toggle.addEventListener("change",()=>setTrick3Enabled(trick3Toggle.checked));sequenceSlots.addEventListener("click",e=>{const row=e.target.closest(".sequence-slot");if(!row)return;const index=Number(row.dataset.slot);if(e.target.closest(".sequence-slot-save")){const normalized=normalizeSequence(sequenceInput.value);sequenceInput.value=normalized;sequenceSlotValues[index]=normalized;try{sequenceSlotValues=saveSequenceSlots(localStorage,sequenceSlotValues);}catch(_){}renderSequenceSlots();return;}setActiveSequence(sequenceSlotValues[index]);});sequenceSlots.addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&e.target.classList.contains("sequence-slot")){e.preventDefault();setActiveSequence(sequenceSlotValues[Number(e.target.dataset.slot)]);}});
       window.addEventListener("resize",updateLandscapeHitZones);window.addEventListener("blur",cancelPendingInteractions);if(typeof ResizeObserver==="function"){resizeObserver=new ResizeObserver(updateLandscapeHitZones);resizeObserver.observe(lControl);resizeObserver.observe(lTime);resizeObserver.observe(landscapeApp);}document.addEventListener("contextmenu",e=>e.preventDefault());document.addEventListener("pointerdown",()=>{if(!wakeLock)acquireWakeLock();});document.addEventListener("visibilitychange",()=>{if(document.hidden){clearHold();tap=null;}else acquireWakeLock();});renderState();acquireWakeLock();}
     if(location.hash==="#selftest"){$("shell").hidden=true;$("selftest").hidden=false;runSelfTests();}else initApp();
   </script>

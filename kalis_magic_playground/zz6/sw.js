@@ -1,7 +1,8 @@
-const CACHE = "stopwatch-uni-v5";
+const CACHE = "stopwatch-uni-v6";
 const PREFIX = "stopwatch-uni-";
 const FILES = [
   './index.html',
+  './logic.js',
   './manifest.webmanifest',
   './sw.js',
   './icon-192.png',
