@@ -1,4 +1,4 @@
-const CACHE = "stopwatch-uni-v4";
+const CACHE = "stopwatch-uni-v5";
 const PREFIX = "stopwatch-uni-";
 const FILES = [
   './index.html',
