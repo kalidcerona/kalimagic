@@ -26,17 +26,29 @@ export function parseSequence(value) {
   return text.split(/[,\s]+/).filter(token => /^\d{1,2}$/.test(token)).map(Number).filter(value => value >= 0 && value <= 99).slice(0, 8);
 }
 export function normalizeSequence(value) { return parseSequence(value).map(value => String(value).padStart(2, "0")).join(","); }
-export function loadSequenceSlots(storage) {
+export function normalizePresetSlot(slot) {
+  if (typeof slot === "string") return { kind: "seq", value: normalizeSequence(slot) };
+  if (!slot || typeof slot !== "object" || !["text", "seq"].includes(slot.kind) || typeof slot.value !== "string") return { kind: "text", value: "" };
+  return slot.kind === "seq" ? { kind: "seq", value: normalizeSequence(slot.value) } : { kind: "text", value: slot.value.trim() };
+}
+export function loadPresetSlots(storage) {
+  const empty = () => ({ kind: "text", value: "" });
   try {
     const parsed = JSON.parse(storage.getItem("stopwatch_seq_slots") || "[]");
-    if (!Array.isArray(parsed)) return ["", "", ""];
-    return [0, 1, 2].map(index => typeof parsed[index] === "string" ? normalizeSequence(parsed[index]) : "");
-  } catch (_) { return ["", "", ""]; }
+    if (!Array.isArray(parsed)) return [empty(), empty(), empty()];
+    return [0, 1, 2].map(index => index < parsed.length ? normalizePresetSlot(parsed[index]) : empty());
+  } catch (_) { return [empty(), empty(), empty()]; }
 }
-export function saveSequenceSlots(storage, slots) {
-  const saved = [0, 1, 2].map(index => normalizeSequence(Array.isArray(slots) ? slots[index] : ""));
+export function savePresetSlots(storage, slots) {
+  const saved = [0, 1, 2].map(index => normalizePresetSlot(Array.isArray(slots) ? slots[index] : undefined));
   storage.setItem("stopwatch_seq_slots", JSON.stringify(saved));
   return saved;
+}
+export function applyPresetSlot(slot, current = {}) {
+  const normalized = normalizePresetSlot(slot);
+  if (!normalized.value) return null;
+  if (normalized.kind === "text") return { trickState: "text", customText: normalized.value, sequenceStopCount: 0, trick3Enabled: current.trick3Enabled, sequence: current.sequence };
+  return { trickState: "seq", sequence: parseSequence(normalized.value), trick3Enabled: true, sequenceStopCount: 0, customText: current.customText };
 }
 export function clampElapsed(ms) { return Math.min(ms, 59990); }
 export function formatCs(totalCs) {

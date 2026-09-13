@@ -3,7 +3,7 @@
   "short_name": "스톱워치",
   "start_url": "./index.html",
   "scope": "./",
-  "display": "standalone",
+  "display": "fullscreen",
   "orientation": "portrait-primary",
   "background_color": "#000000",
   "theme_color": "#000000",
