@@ -11,6 +11,10 @@ export function digitFromPoint(x, y, w, h) {
   return row === 0 ? col + 1 : (col === 4 ? 0 : col + 6);
 }
 export function isLeftmostScreenFifth(x, width) { return x < width / 5; }
+export function landscapePresetHoldApplies(target, appX, width) {
+  if (!isLeftmostScreenFifth(appX, width)) return false;
+  return !(target && typeof target.closest === "function" && target.closest("#l-trick-zone,#l-settings-zone"));
+}
 export function composeCs(tens, ones) { return tens * 10 + ones; }
 export function normalizeTrickState(current, trick3Enabled) { return current === "seq" && !trick3Enabled ? "off" : ["off", "digit", "text", "seq"].includes(current) ? current : "off"; }
 export function nextTrickState(current, trick3Enabled = false) {

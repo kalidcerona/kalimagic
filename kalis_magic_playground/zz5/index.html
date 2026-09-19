@@ -105,9 +105,9 @@
     .galaxy-only { display: none; }
     .footer { position: absolute; z-index: 1; top: 87.5%; left: 50%; transform: translateX(-50%); display: flex; justify-content: space-between; width: min(calc(100% - 56px), calc(3 * var(--key-d) + 2 * var(--key-hgap))); align-items: center; }
     .footer button { background: none; font-size: 17px; font-weight: 400; min-width: 44px; min-height: 44px; padding: 8px 0; }
-    #input-screen.galaxy { --key-d: clamp(58px, min(17.708vw, 8.197vh), 70px); --key-hgap: clamp(12px, 4.167vw, 18px); --key-vgap: clamp(4px, 1.923vw, 8px); }
+    #input-screen.galaxy { --key-d: clamp(62px, min(17.708vw, 8.197vh), 74px); --key-hgap: clamp(10px, 3.817vw, 16px); --key-vgap: clamp(4px, 1.6vw, 7px); }
     .galaxy .pin-layout { display: flex; flex-direction: column; align-items: center; padding-top: 6vh; }
-    .galaxy #lock { position: static; display: grid; flex: 0 0 44px; transform: none; }
+    .galaxy #lock { position: static; display: grid; flex: 0 0 44px; transform: none; pointer-events: auto; cursor: pointer; }
     .galaxy .prompt { position: static; flex: 0 0 44px; margin-top: clamp(108px, calc(19.5vh - 44px), 118px); transform: none; font-size: 19px; line-height: 1.25; font-weight: 500; }
     .galaxy #dots { position: static; flex: 0 0 18px; margin-top: 15px; gap: 18px; transform: none; }
     .galaxy .dot { width: 10px; height: 10px; }
@@ -132,14 +132,13 @@
     .galaxy #emergency span { display: grid; place-items: center; width: 114px; height: 37px; border-radius: 999px; background: #F2A28C; }
     .galaxy #delete { display: none; }
     #unlocked-screen { z-index: 2; background: #111; will-change: transform, opacity; }
-    #unlocked-screen.unlocking { animation: unlock-in 200ms ease-out both; }
+    #unlocked-screen.unlocking { animation: unlock-in 280ms ease-out both; }
     @keyframes unlock-in { from { opacity: 0; transform: scale(1.012); } to { opacity: 1; transform: scale(1); } }
     #unlocked-screen.returning { transition: transform 520ms cubic-bezier(.2, 1.35, .35, 1); }
     #peek-screen { z-index: 1; background: #0b0c10; padding: 28px 24px max(24px, env(safe-area-inset-bottom)); display: flex; flex-direction: column; justify-content: flex-end; }
-    .peek-heading { display: flex; justify-content: space-between; align-items: center; margin-bottom: 9px; color: #aaaebc; font-size: 12px; }
+    .peek-heading { margin-bottom: 9px; color: #aaaebc; font-size: 12px; }
     #attempt-list { list-style: none; margin: 0; padding: 0; overflow-y: auto; max-height: calc(100% - 54px); font-variant-numeric: tabular-nums; }
-    #attempt-list li { display: flex; align-items: baseline; gap: 10px; border-top: 1px solid #ffffff15; padding: 6px 0; white-space: nowrap; }
-    .attempt-number { color: #777c8b; font-size: 10px; width: 20px; flex: 0 0 20px; }
+    #attempt-list li { border-top: 1px solid #ffffff15; padding: 6px 0; white-space: nowrap; }
     .attempt-pin { letter-spacing: 3px; font-size: 12px; line-height: 1.25; font-weight: 600; }
     #settings-screen { z-index: 5; overflow-y: auto; background: #101115; padding: 28px 22px max(32px, env(safe-area-inset-bottom)); touch-action: pan-y; }
     .settings-inner { max-width: 480px; margin: auto; }
@@ -173,11 +172,15 @@
     #toast { position: absolute; z-index: 10; left: 50%; bottom: max(26px, env(safe-area-inset-bottom)); transform: translateX(-50%); max-width: 90%; border-radius: 12px; padding: 12px 18px; background: #242631; color: #eee; font-size: 13px; text-align: center; pointer-events: none; }
     @media (max-height: 640px) {
       #input-screen { --key-d: clamp(56px, 16.285vw, 64px); --key-vgap: 8px; }
-      #input-screen.galaxy { --key-d: clamp(52px, 15.267vw, 60px); --key-vgap: 6px; }
-      .galaxy .keypad { margin-top: 14px; }
+      #input-screen.galaxy { --key-d: clamp(52px, min(15.267vw, 8.75vh), 60px); --key-vgap: 4px; }
+      .galaxy .pin-layout { padding-top: 2vh; }
+      .galaxy .prompt { margin-top: clamp(28px, 8vh, 50px); }
+      .galaxy #dots { margin-top: 8px; }
+      .galaxy .keypad { margin-top: 8px; }
+      .galaxy #fingerprint { margin-top: 8px; }
       #fingerprint { top: 76%; }
     }
-    @media (max-height: 790px) {
+    @media (min-height: 641px) and (max-height: 790px) {
       .galaxy .prompt { margin-top: 18vh; }
     }
     @media (prefers-reduced-motion: reduce) { #unlocked-screen.returning { transition-duration: 180ms; } #unlocked-screen.unlocking { animation-duration: 150ms; } }
@@ -189,7 +192,7 @@
       <img id="lock-image" class="wallpaper" alt="" hidden>
       <div class="shade"></div>
       <div class="pin-layout">
-        <div id="lock" aria-hidden="true">
+        <div id="lock" aria-label="설정 열기" role="button" tabindex="0">
           <svg viewBox="0 0 24 29" aria-hidden="true"><rect x="4" y="12" width="16" height="14" rx="3"/><path d="M7 12V8a5 5 0 0 1 10 0v4"/></svg>
         </div>
         <button id="prompt" class="prompt" type="button" aria-label="4자리로 전환">위로 쓸어올려서 Face ID 사용 또는 암호 입력</button>
@@ -208,7 +211,7 @@
       </div>
     </section>
     <section id="peek-screen" class="screen" aria-label="시도 기록" hidden>
-      <div class="peek-heading"><span>시도 기록</span><span id="attempt-count">0회</span></div>
+      <div class="peek-heading">시도 기록</div>
       <ol id="attempt-list"></ol>
     </section>
     <section id="unlocked-screen" class="screen" aria-label="해제 화면" hidden>
@@ -246,7 +249,7 @@
             <label class="field">상태바 배경<input id="status-color" type="color" value="#000000"></label>
             <p class="hint">원본의 상단바를 잘라낸 뒤 남은 이미지를 꽉 채웁니다. OS 상태바 영역에는 이미지를 그리지 않습니다. 상태바 글자 변경은 홈 화면 앱을 닫고 다시 열어야 반영될 수 있으며, 기기별 확인이 필요합니다.</p>
           </div>
-          <p class="hint">자물쇠 탭: 4자리 ↔ 6자리<br>두 손가락 2회 탭: 기록 지우고 다시 잠금<br>입력 화면에서 두 손가락 3회 탭: 설정<br>각 연속 탭은 1.2초 안에 완료하세요. 입력 화면의 2회 탭은 판정 창이 끝나면 실행됩니다.</p>
+          <p class="hint">안내 문구 탭: 4자리 ↔ 6자리<br>두 손가락 2회 탭: 기록 지우고 다시 잠금<br>입력 화면에서 두 손가락 3회 탭: 설정<br>갤럭시 자물쇠 3회 탭: 설정<br>각 연속 탭은 1.2초 안에 완료하세요. 입력 화면의 2회 탭은 판정 창이 끝나면 실행됩니다.</p>
           <p id="offline-status" role="status">오프라인 준비 중…</p>
           <button id="start" type="submit">저장하고 시작</button>
         </form>
@@ -255,7 +258,7 @@
     <div id="toast" role="status" hidden></div>
   </main>
   <script type="module">
-    import { FINGERPRINT_HOLD_MS, normalizeSettings, lockScreenCopy, createState, pushDigit, submitPin, fingerprintHold, attemptFeedback, deleteDigit, clearCurrent, toggleDigits, reset, isHomeGestureArea, peekOffset, registerTwoFingerTap, settleTwoFingerTaps } from './logic.js';
+    import { FINGERPRINT_HOLD_MS, normalizeSettings, lockScreenCopy, createState, pushDigit, submitPin, fingerprintHold, attemptFeedback, deleteDigit, clearCurrent, toggleDigits, reset, isHomeGestureArea, peekOffset, registerTwoFingerTap, settleTwoFingerTaps, registerLockTap, formatAttemptLabel } from './logic.js';
 
     const $ = (id) => document.getElementById(id);
     const SETTINGS_KEY = 'unlock-settings-v1';
@@ -271,6 +274,7 @@
     let fingerprintPress = null;
     let toastTimer = null;
     let tapSequence = null;
+    let lockTapSequence = null;
     let tapTimer = null;
     let tapCandidate = null;
     let swipe = null;
@@ -312,19 +316,17 @@
     }
 
     function renderAttempts() {
-      $('attempt-count').textContent = `${state.attempts.length}회`;
-      $('attempt-list').replaceChildren(...state.attempts.map((digits, index) => {
+      const attempts = [...state.attempts].reverse();
+      $('attempt-list').replaceChildren(...attempts.map((digits, reverseIndex) => {
+        const index = state.attempts.length - reverseIndex - 1;
         const row = document.createElement('li');
-        const number = document.createElement('span');
-        number.className = 'attempt-number';
-        number.textContent = String(index + 1).padStart(2, '0');
         const pin = document.createElement('span');
         pin.className = 'attempt-pin';
-        pin.textContent = digits.join('');
-        row.append(number, pin);
+        pin.textContent = formatAttemptLabel(digits, index, new Date());
+        row.append(pin);
         return row;
       }));
-      requestAnimationFrame(() => { $('attempt-list').scrollTop = $('attempt-list').scrollHeight; });
+      requestAnimationFrame(() => { $('attempt-list').scrollTop = 0; });
     }
 
     function showScreen(next, animate = false) {
@@ -348,7 +350,7 @@
             $('peek-screen').hidden = false;
             $('unlocked-screen').classList.remove('unlocking');
             clearFeedback();
-          }, 200);
+          }, 280);
         }
       }
       if (next === 'settings') { populateForm(); $('settings-screen').scrollTop = 0; }
@@ -377,9 +379,10 @@
     function inputDigit(digit) {
       if (screen !== 'input' || feedback) return;
       const previousCount = state.attempts.length;
-      const autoSubmit = settings.style !== 'galaxy' || state.digits === 6;
+      const autoSubmit = settings.style !== 'galaxy';
       state = pushDigit(state, digit, performance.now(), settings.delaySeconds * 1000, autoSubmit);
-      handleAttemptOutcome(previousCount);
+      if (state.attempts.length > previousCount) handleAttemptOutcome(previousCount);
+      else renderInput();
     }
 
     const letters = ['', '', 'abc', 'def', 'ghi', 'jkl', 'mno', 'pqrs', 'tuv', 'wxyz'];
@@ -431,6 +434,19 @@
       const previousCount = state.attempts.length;
       state = submitPin(state, performance.now(), settings.delaySeconds * 1000);
       handleAttemptOutcome(previousCount);
+    });
+
+    function registerLockClick() {
+      if (screen !== 'input' || settings.style !== 'galaxy') return;
+      const result = registerLockTap(lockTapSequence, performance.now());
+      lockTapSequence = result.sequence;
+      gestureAction(result.action);
+    }
+    $('lock').addEventListener('click', registerLockClick);
+    $('lock').addEventListener('keydown', (event) => {
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+      event.preventDefault();
+      registerLockClick();
     });
 
     function releaseFingerprint(pointerId, pulse) {

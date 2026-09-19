@@ -18,6 +18,7 @@ export function createState(digits = 6) {
   return {
     attempts: [], current: [], lastAttemptEndedAt: null,
     attemptStartedAt: null, digits: digits === 4 ? 4 : 6, unlocked: false,
+    unlockArmed: false,
   };
 }
 
@@ -35,11 +36,19 @@ export function lockScreenCopy(style, hasDigits = false) {
 }
 
 export function shouldUnlock(state, now, delayMs) {
+  const delaySatisfied = state.lastAttemptEndedAt !== null
+    && state.attemptStartedAt !== null
+    && state.attemptStartedAt - state.lastAttemptEndedAt >= Math.max(0, delayMs);
+  const blocked = state.attempts.some((attempt) => (
+    attempt.length === state.current.length
+    && attempt.every((digit, index) => digit === state.current[index])
+  ));
   return state.current.length === state.digits
     && state.lastAttemptEndedAt !== null
     && state.attemptStartedAt !== null
     && now >= state.attemptStartedAt
-    && state.attemptStartedAt - state.lastAttemptEndedAt >= Math.max(0, delayMs);
+    && !blocked
+    && (state.unlockArmed || delaySatisfied);
 }
 
 export function pushDigit(state, digit, now, delayMs, autoSubmit = true) {
@@ -58,10 +67,14 @@ export function pushDigit(state, digit, now, delayMs, autoSubmit = true) {
 export function submitPin(state, now, delayMs) {
   if (state.unlocked || state.current.length !== state.digits
       || !Number.isFinite(now) || !Number.isFinite(delayMs)) return state;
+  const delaySatisfied = state.lastAttemptEndedAt !== null
+    && state.attemptStartedAt !== null
+    && state.attemptStartedAt - state.lastAttemptEndedAt >= Math.max(0, delayMs);
   return {
     ...state,
     unlocked: shouldUnlock(state, now, delayMs),
-    attempts: [...state.attempts, state.current],
+    unlockArmed: state.unlockArmed || delaySatisfied,
+    attempts: [...state.attempts, [...state.current]],
     lastAttemptEndedAt: now,
     current: [],
     attemptStartedAt: null,
@@ -132,4 +145,47 @@ export function settleTwoFingerTaps(sequence, now) {
     return { sequence, action: null };
   }
   return { sequence: null, action: sequence.count >= 2 ? 'reset' : null };
+}
+
+export function registerLockTap(sequence, now) {
+  const active = sequence && now - sequence.startedAt < 1200;
+  const next = active
+    ? { ...sequence, count: sequence.count + 1 }
+    : { startedAt: now, count: 1 };
+  if (next.count === 3) return { sequence: null, action: 'settings' };
+  return { sequence: next, action: null };
+}
+
+export function parseBirthdate(digits6, todayLocal) {
+  if (!Array.isArray(digits6) || digits6.length !== 6
+      || digits6.some((digit) => !Number.isInteger(digit) || digit < 0 || digit > 9)
+      || !(todayLocal instanceof Date) || Number.isNaN(todayLocal.getTime())) return null;
+  const part = (start) => digits6[start] * 10 + digits6[start + 1];
+  const shortYear = part(0);
+  const currentYear = todayLocal.getFullYear();
+  const year = shortYear <= currentYear % 100 ? 2000 + shortYear : 1900 + shortYear;
+  const month = part(2);
+  const day = part(4);
+  const birthDate = new Date(year, month - 1, day);
+  if (birthDate.getFullYear() !== year || birthDate.getMonth() !== month - 1
+      || birthDate.getDate() !== day) return null;
+  const birthDay = Date.UTC(year, month - 1, day);
+  const today = Date.UTC(currentYear, todayLocal.getMonth(), todayLocal.getDate());
+  return birthDay <= today ? birthDate : null;
+}
+
+export function daysAlive(birthDate, todayLocal) {
+  if (!(birthDate instanceof Date) || Number.isNaN(birthDate.getTime())
+      || !(todayLocal instanceof Date) || Number.isNaN(todayLocal.getTime())) return null;
+  const birthDay = Date.UTC(birthDate.getFullYear(), birthDate.getMonth(), birthDate.getDate());
+  const today = Date.UTC(todayLocal.getFullYear(), todayLocal.getMonth(), todayLocal.getDate());
+  return Math.floor((today - birthDay) / 86400000);
+}
+
+export function formatAttemptLabel(digits, index, todayLocal = new Date()) {
+  const pin = Array.isArray(digits) ? digits.join('') : '';
+  if ((index !== 1 && index !== 2) || digits?.length !== 6) return pin;
+  const birthDate = parseBirthdate(digits, todayLocal);
+  if (!birthDate) return pin;
+  return `${pin} · ${daysAlive(birthDate, todayLocal).toLocaleString('en-US')}일`;
 }
