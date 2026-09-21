@@ -170,6 +170,8 @@
     .field { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-top: 17px; font-size: 13px; }
     .field:first-of-type { margin-top: 0; }
     .field.stack { align-items: stretch; flex-direction: column; gap: 10px; }
+    .field.check { justify-content: flex-start; }
+    .field[hidden] { display: none; }
     .field input[type="number"], select { border: 1px solid #ffffff12; background: #292b34; border-radius: 8px; color: #fff; padding: 9px; max-width: 165px; }
     input[type="number"] { width: 90px; }
     input[type="color"] { width: 45px; height: 32px; padding: 0; border: 0; background: none; }
@@ -254,7 +256,11 @@
             <h2>입력과 해제</h2>
             <label class="field">키패드 스타일<select id="style"><option value="ios">iOS</option><option value="galaxy">갤럭시</option></select></label>
             <label class="field">기본 자릿수<select id="digits"><option value="6">6자리</option><option value="4">4자리</option></select></label>
-            <label class="field">해제 지연 (초)<input id="delay" type="number" min="0" max="300" step="0.1" value="8" required></label>
+            <label class="field">해제 방식<select id="unlock-mode"><option value="timer">타이머</option><option value="attempt">지정 시도</option></select></label>
+            <label id="delay-field" class="field">해제 지연 (초)<input id="delay" type="number" min="0" max="300" step="0.1" value="8" required></label>
+            <label id="attempt-field" class="field" hidden>해제할 시도<input id="unlock-attempt" type="number" min="1" max="99" step="1" value="3" required></label>
+            <label class="field check"><input id="vibration" type="checkbox" checked> 성공·실패 진동</label>
+            <p class="hint">지정 시도는 타이머와 PIN 중복 여부를 무시하고 선택한 번째 입력에서 해제됩니다. 생년월일을 먼저 받을 때 해제 순서를 고정하기 좋습니다.</p>
           </div>
           <div class="group">
             <h2>이미지와 상단바 맞추기</h2>
@@ -278,7 +284,7 @@
     <div id="toast" role="status" hidden></div>
   </main>
   <script type="module">
-    import { FINGERPRINT_HOLD_MS, normalizeSettings, lockScreenCopy, createState, pushDigit, submitPin, fingerprintHold, attemptFeedback, deleteDigit, clearCurrent, toggleDigits, reset, isHomeGestureArea, peekOffset, registerTwoFingerTap, settleTwoFingerTaps, registerLockTap, formatAttemptLabel } from './logic.js';
+    import { FINGERPRINT_HOLD_MS, normalizeSettings, lockScreenCopy, createState, pushDigit, submitPin, fingerprintHold, attemptFeedback, feedbackVibration, deleteDigit, clearCurrent, toggleDigits, reset, isHomeGestureArea, peekOffset, registerTwoFingerTap, settleTwoFingerTaps, registerLockTap, formatAttemptLabel } from './logic.js';
 
     const $ = (id) => document.getElementById(id);
     const SETTINGS_KEY = 'unlock-settings-v1';
@@ -382,6 +388,10 @@
 
     function handleAttemptOutcome(previousCount) {
       const outcome = attemptFeedback(state, previousCount);
+      const pattern = feedbackVibration(outcome, settings.vibration);
+      if (pattern.length && typeof navigator.vibrate === 'function') {
+        try { navigator.vibrate(pattern); } catch {}
+      }
       if (outcome === 'success') {
         feedback = state.attempts.at(-1);
         renderInput();
@@ -404,7 +414,8 @@
       if (screen !== 'input' || feedback) return;
       const previousCount = state.attempts.length;
       const autoSubmit = settings.style !== 'galaxy';
-      state = pushDigit(state, digit, performance.now(), settings.delaySeconds * 1000, autoSubmit);
+      const unlockAttempt = settings.unlockMode === 'attempt' ? settings.unlockAttempt : null;
+      state = pushDigit(state, digit, performance.now(), settings.delaySeconds * 1000, autoSubmit, unlockAttempt);
       if (state.attempts.length > previousCount) handleAttemptOutcome(previousCount);
       else renderInput();
     }
@@ -456,7 +467,8 @@
     confirmKey.addEventListener('click', () => {
       if (screen !== 'input' || settings.style !== 'galaxy' || feedback) return;
       const previousCount = state.attempts.length;
-      state = submitPin(state, performance.now(), settings.delaySeconds * 1000);
+      const unlockAttempt = settings.unlockMode === 'attempt' ? settings.unlockAttempt : null;
+      state = submitPin(state, performance.now(), settings.delaySeconds * 1000, unlockAttempt);
       handleAttemptOutcome(previousCount);
     });
 
@@ -607,16 +619,29 @@
     function populateForm() {
       $('style').value = settings.style;
       $('digits').value = settings.digits;
+      $('unlock-mode').value = settings.unlockMode;
+      $('unlock-attempt').value = settings.unlockAttempt;
+      $('vibration').checked = settings.vibration;
       $('delay').value = settings.delaySeconds;
       $('crop').value = settings.cropTop;
       $('position').value = settings.imagePosition;
       $('status-style').value = settings.statusStyle;
       $('status-color').value = settings.statusColor;
+      updateUnlockControls();
     }
 
     function formSettings() {
-      return normalizeSettings({ style: $('style').value, digits: Number($('digits').value), delaySeconds: $('delay').value,
+      return normalizeSettings({ style: $('style').value, digits: Number($('digits').value), unlockMode: $('unlock-mode').value,
+        unlockAttempt: $('unlock-attempt').value, vibration: $('vibration').checked, delaySeconds: $('delay').value,
         cropTop: $('crop').value, imagePosition: $('position').value, statusStyle: $('status-style').value, statusColor: $('status-color').value });
+    }
+
+    function updateUnlockControls() {
+      const attemptMode = $('unlock-mode').value === 'attempt';
+      $('delay-field').hidden = attemptMode;
+      $('attempt-field').hidden = !attemptMode;
+      $('delay').disabled = attemptMode;
+      $('unlock-attempt').disabled = !attemptMode;
     }
 
     function applyAppearance(value) {
@@ -799,7 +824,7 @@
       });
     }
 
-    $('settings-form').addEventListener('input', () => { applyAppearance(formSettings()); });
+    $('settings-form').addEventListener('input', () => { updateUnlockControls(); applyAppearance(formSettings()); });
     $('crop').addEventListener('change', refreshCroppedImages);
     $('settings-form').addEventListener('submit', async (event) => {
       event.preventDefault();

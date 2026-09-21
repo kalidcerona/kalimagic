@@ -6,6 +6,9 @@ export function normalizeSettings(value = {}) {
   return {
     style: value.style === 'galaxy' ? 'galaxy' : 'ios',
     digits: value.digits === 4 ? 4 : 6,
+    unlockMode: value.unlockMode === 'attempt' ? 'attempt' : 'timer',
+    unlockAttempt: Math.trunc(number('unlockAttempt', 3, 1, 99)),
+    vibration: value.vibration !== false,
     delaySeconds: number('delaySeconds', 8, 0, 300),
     cropTop: Math.round(number('cropTop', 0, 0, 2000)),
     imagePosition: number('imagePosition', 50, 0, 100),
@@ -35,7 +38,13 @@ export function lockScreenCopy(style, hasDigits = false) {
   };
 }
 
-export function shouldUnlock(state, now, delayMs) {
+export function shouldUnlock(state, now, delayMs, unlockAttempt = null) {
+  const complete = state.current.length === state.digits
+    && state.attemptStartedAt !== null
+    && now >= state.attemptStartedAt;
+  if (Number.isInteger(unlockAttempt) && unlockAttempt >= 1) {
+    return complete && state.attempts.length + 1 === unlockAttempt;
+  }
   const delaySatisfied = state.lastAttemptEndedAt !== null
     && state.attemptStartedAt !== null
     && state.attemptStartedAt - state.lastAttemptEndedAt >= Math.max(0, delayMs);
@@ -43,15 +52,13 @@ export function shouldUnlock(state, now, delayMs) {
     attempt.length === state.current.length
     && attempt.every((digit, index) => digit === state.current[index])
   ));
-  return state.current.length === state.digits
+  return complete
     && state.lastAttemptEndedAt !== null
-    && state.attemptStartedAt !== null
-    && now >= state.attemptStartedAt
     && !blocked
     && (state.unlockArmed || delaySatisfied);
 }
 
-export function pushDigit(state, digit, now, delayMs, autoSubmit = true) {
+export function pushDigit(state, digit, now, delayMs, autoSubmit = true, unlockAttempt = null) {
   if (state.unlocked || !Number.isInteger(digit) || digit < 0 || digit > 9
       || !Number.isFinite(now) || !Number.isFinite(delayMs)
       || state.current.length >= state.digits) return state;
@@ -61,10 +68,10 @@ export function pushDigit(state, digit, now, delayMs, autoSubmit = true) {
     attemptStartedAt: state.attemptStartedAt ?? now,
   };
   if (next.current.length < next.digits || !autoSubmit) return next;
-  return submitPin(next, now, delayMs);
+  return submitPin(next, now, delayMs, unlockAttempt);
 }
 
-export function submitPin(state, now, delayMs) {
+export function submitPin(state, now, delayMs, unlockAttempt = null) {
   if (state.unlocked || state.current.length !== state.digits
       || !Number.isFinite(now) || !Number.isFinite(delayMs)) return state;
   const delaySatisfied = state.lastAttemptEndedAt !== null
@@ -72,7 +79,7 @@ export function submitPin(state, now, delayMs) {
     && state.attemptStartedAt - state.lastAttemptEndedAt >= Math.max(0, delayMs);
   return {
     ...state,
-    unlocked: shouldUnlock(state, now, delayMs),
+    unlocked: shouldUnlock(state, now, delayMs, unlockAttempt),
     unlockArmed: state.unlockArmed || delaySatisfied,
     attempts: [...state.attempts, [...state.current]],
     lastAttemptEndedAt: now,
@@ -98,6 +105,13 @@ export function attemptFeedback(state, previousAttemptCount) {
   if (!Number.isInteger(previousAttemptCount)
       || state.attempts.length <= previousAttemptCount) return 'pending';
   return state.unlocked ? 'success' : 'failure';
+}
+
+export function feedbackVibration(outcome, enabled) {
+  if (!enabled) return [];
+  if (outcome === 'success') return [20];
+  if (outcome === 'failure') return [35, 30, 35];
+  return [];
 }
 
 export function deleteDigit(state) {
