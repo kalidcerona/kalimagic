@@ -117,6 +117,10 @@
     .sequence-slot { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 0.65rem; min-height: 3.5rem; padding: 0.35rem 0.35rem 0.35rem 0.85rem; border-radius: 0.8rem; background: #1c1c1e; }
     .sequence-slot-value { overflow: hidden; color: #fff; font-variant-numeric: tabular-nums; text-overflow: ellipsis; white-space: nowrap; }
     .sequence-slot.empty .sequence-slot-value { color: #8e8e93; }
+    .sequence-slot-actions { display: flex; gap: 0.35rem; }
+    .sequence-slot-actions button { min-width: 3.5rem; padding: 0 0.7rem !important; }
+    .sequence-slot-apply { color: #ff9f0a; }
+    .sequence-slot-apply:disabled { color: #636366; opacity: 0.7; }
     .sequence-slot-save { background: #3a3a3c !important; }
     #trick3-row { display: flex; align-items: center; justify-content: space-between; min-height: 3.5rem; padding: 0 0.85rem; border-radius: 0.8rem; background: #1c1c1e; }
     #trick3-toggle { width: 1.4rem; height: 1.4rem; accent-color: #30d158; touch-action: auto; }
@@ -277,7 +281,11 @@
         center(lControl,"#l-control","browser landscape control");
         const rotated=isRotatedLayout(),size=appSize(),holdApp={x:size.width/10,y:Math.min(size.height-1,appRect(lControl).top+appRect(lControl).height+(size.height-appRect(lControl).top-appRect(lControl).height)/2)},holdScreen=rotated?{x:innerWidth-holdApp.y,y:holdApp.x}:holdApp;
         const holdTarget=document.elementFromPoint(holdScreen.x,holdScreen.y),holdPoint=toAppPoint(holdScreen.x,holdScreen.y,innerWidth,innerHeight,rotated);hit(holdScreen.x,holdScreen.y,"#landscape-app","browser landscape left-fifth hold zone");assert(landscapePresetHoldApplies(holdTarget,holdPoint.x,size.width),"browser landscape left-fifth preset hold applies");
-        openSettings();assert(!settings.hidden,"browser landscape settings opens");closeSettings();setMode("portrait");void portraitApp.offsetWidth;
+        openSettings();assert(!settings.hidden,"browser landscape settings opens");
+        const slotApplyButtons=[...sequenceSlots.querySelectorAll(".sequence-slot-apply")],slotSaveButtons=[...sequenceSlots.querySelectorAll(".sequence-slot-save")];
+        assert(slotApplyButtons.length===3&&slotSaveButtons.length===3,"browser preset slots expose apply and save buttons");
+        assert(slotApplyButtons.every(button=>button.disabled),"browser empty preset apply buttons disabled");
+        closeSettings();setMode("portrait");void portraitApp.offsetWidth;
         center(pTime,"#p-time-display","browser portrait time display");
         enterAlarmPreset();void portraitApp.offsetWidth;
         for(const id of ["p-minutes","p-seconds","p-centiseconds"])center(document.getElementById(id),`#${id}`,`browser u7 preset group ${id}`);
@@ -323,7 +331,7 @@
     function storeCustomText(value){customText=String(value??"").trim();textAt=customText?Date.now():0;try{if(customText){localStorage.setItem(TEXT_KEY,customText);localStorage.setItem(TEXT_AT_KEY,String(textAt));}else{localStorage.removeItem(TEXT_KEY);localStorage.removeItem(TEXT_AT_KEY);}}catch(_){}return customText;}
     function loadStorage(){migrateV2Storage(localStorage);uiMode=storedMode(localStorage);try{customText=localStorage.getItem(TEXT_KEY)||"";textAt=Number(localStorage.getItem(TEXT_AT_KEY))||0;const raw=localStorage.getItem(PRESET_KEY),value=raw!==null&&/^\d{1,6}$/.test(raw)?Number(raw):NaN;presetCs=Number.isInteger(value)&&value>=0&&value<=603999?value:null;presetAt=Number(localStorage.getItem(PRESET_AT_KEY))||0;sequence=parseSequence(localStorage.getItem(SEQUENCE_KEY)||"");presetSlotValues=loadPresetSlots(localStorage);trick3Enabled=localStorage.getItem(TRICK3_KEY)==="1";trickState=normalizeTrickState(trickState,trick3Enabled);}catch(_){customText="";presetCs=null;sequence=[];presetSlotValues=[{kind:"text",value:""},{kind:"text",value:""},{kind:"text",value:""}];trick3Enabled=false;trickState="off";}}
     function updateSequenceStatus(){const active=normalizeSequence(sequence);sequenceStatus.textContent=`활성 시퀀스: ${active||"비어 있음"} · 트릭 3: ${trick3Enabled?"켜짐":"꺼짐"}`;}
-    function renderSequenceSlots(){sequenceSlots.replaceChildren();presetSlotValues.forEach((slot,index)=>{const row=document.createElement("div"),label=document.createElement("span"),save=document.createElement("button"),empty=!slot.value;row.className=`sequence-slot${empty?" empty":""}`;row.tabIndex=0;row.dataset.slot=String(index);label.className="sequence-slot-value";label.textContent=empty?"비어 있음":`${slot.kind==="text"?"2":"3"}  ${slot.value}`;save.className="sequence-slot-save";save.type="button";save.textContent="저장";save.setAttribute("aria-label",`${index+1}번 칸에 저장`);row.append(label,save);sequenceSlots.append(row);});}
+    function renderSequenceSlots(){sequenceSlots.replaceChildren();presetSlotValues.forEach((slot,index)=>{const row=document.createElement("div"),label=document.createElement("span"),actions=document.createElement("div"),apply=document.createElement("button"),save=document.createElement("button"),empty=!slot.value;row.className=`sequence-slot${empty?" empty":""}`;row.tabIndex=0;row.dataset.slot=String(index);label.className="sequence-slot-value";label.textContent=empty?"비어 있음":`${slot.kind==="text"?"2":"3"}  ${slot.value}`;actions.className="sequence-slot-actions";apply.className="sequence-slot-apply";apply.type="button";apply.textContent="적용";apply.disabled=empty;apply.setAttribute("aria-label",`${index+1}번 칸 적용`);save.className="sequence-slot-save";save.type="button";save.textContent="저장";save.setAttribute("aria-label",`${index+1}번 칸에 저장`);actions.append(apply,save);row.append(label,actions);sequenceSlots.append(row);});}
     function setSlotSaveKind(kind){slotSaveKind=kind==="text"?"text":"seq";slotKindText.setAttribute("aria-pressed",String(slotSaveKind==="text"));slotKindSeq.setAttribute("aria-pressed",String(slotSaveKind==="seq"));}
     function openSettings(){if(state==="running"||presetMode||!settings.hidden)return;trick2Text.value=customText;currentPreset.textContent=`현재 숫자 프리셋: ${formatTimeInput(portraitPresetEntryFromCs(presetCs??0))}`;sequenceInput.value=normalizeSequence(sequence);trick3Toggle.checked=trick3Enabled;updateModeButtons();setSlotSaveKind(slotSaveKind);renderSequenceSlots();updateSequenceStatus();settings.hidden=false;}
     function closeSettings(){settings.hidden=true;trick2Text.blur();sequenceInput.blur();}

@@ -35,8 +35,16 @@
     #dots { position: absolute; z-index: 1; top: 28.5%; left: 50%; transform: translateX(-50%); display: flex; justify-content: center; gap: 21px; height: 18px; }
     .dot { display: block; width: 12px; height: 12px; border: 1.4px solid #ffffffe0; border-radius: 50%; }
     .dot.filled { background: #fff; }
-    #dots.shake { animation: shake .38s ease-in-out; }
-    @keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-13px); } 40%, 80% { transform: translateX(13px); } }
+    #dots.shake { animation: shake-ios 420ms linear; }
+    @keyframes shake-ios {
+      0%, 100% { transform: translateX(-50%); }
+      14% { transform: translateX(calc(-50% - 12px)); }
+      28% { transform: translateX(calc(-50% + 10px)); }
+      42% { transform: translateX(calc(-50% - 8px)); }
+      56% { transform: translateX(calc(-50% + 6px)); }
+      70% { transform: translateX(calc(-50% - 4px)); }
+      84% { transform: translateX(calc(-50% + 2px)); }
+    }
     .keypad {
       position: absolute;
       z-index: 1;
@@ -110,6 +118,16 @@
     .galaxy #lock { position: static; display: grid; flex: 0 0 44px; transform: none; pointer-events: auto; cursor: pointer; }
     .galaxy .prompt { position: static; flex: 0 0 44px; margin-top: clamp(108px, calc(19.5vh - 44px), 118px); transform: none; font-size: 19px; line-height: 1.25; font-weight: 500; }
     .galaxy #dots { position: static; flex: 0 0 18px; margin-top: 15px; gap: 18px; transform: none; }
+    .galaxy #dots.shake { animation-name: shake-galaxy; }
+    @keyframes shake-galaxy {
+      0%, 100% { transform: translateX(0); }
+      14% { transform: translateX(-12px); }
+      28% { transform: translateX(10px); }
+      42% { transform: translateX(-8px); }
+      56% { transform: translateX(6px); }
+      70% { transform: translateX(-4px); }
+      84% { transform: translateX(2px); }
+    }
     .galaxy .dot { width: 10px; height: 10px; }
     .galaxy .keypad { position: static; flex: 0 0 auto; margin-top: 18px; transform: none; }
     .galaxy .key { background: rgba(255, 255, 255, 0.16); }
@@ -131,9 +149,11 @@
     .galaxy #emergency { width: 114px; height: 44px; padding: 3.5px 0; color: #2b1a14; font-size: 15px; font-weight: 500; }
     .galaxy #emergency span { display: grid; place-items: center; width: 114px; height: 37px; border-radius: 999px; background: #F2A28C; }
     .galaxy #delete { display: none; }
+    #input-screen.unlocking-out { pointer-events: none; animation: lock-out 440ms cubic-bezier(.32, .72, 0, 1) both; }
     #unlocked-screen { z-index: 2; background: #111; will-change: transform, opacity; }
-    #unlocked-screen.unlocking { animation: unlock-in 280ms ease-out both; }
-    @keyframes unlock-in { from { opacity: 0; transform: scale(1.012); } to { opacity: 1; transform: scale(1); } }
+    #unlocked-screen.unlocking { animation: unlock-in 440ms cubic-bezier(.32, .72, 0, 1) both; }
+    @keyframes lock-out { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(.965); } }
+    @keyframes unlock-in { from { opacity: 0; transform: scale(1.045); } to { opacity: 1; transform: scale(1); } }
     #unlocked-screen.returning { transition: transform 520ms cubic-bezier(.2, 1.35, .35, 1); }
     #peek-screen { z-index: 1; background: #0b0c10; padding: 28px 24px max(24px, env(safe-area-inset-bottom)); display: flex; flex-direction: column; justify-content: flex-end; }
     .peek-heading { margin-bottom: 9px; color: #aaaebc; font-size: 12px; }
@@ -183,7 +203,7 @@
     @media (min-height: 641px) and (max-height: 790px) {
       .galaxy .prompt { margin-top: 18vh; }
     }
-    @media (prefers-reduced-motion: reduce) { #unlocked-screen.returning { transition-duration: 180ms; } #unlocked-screen.unlocking { animation-duration: 150ms; } }
+    @media (prefers-reduced-motion: reduce) { #unlocked-screen.returning { transition-duration: 180ms; } #input-screen.unlocking-out, #unlocked-screen.unlocking { animation-duration: 150ms; } }
   </style>
 </head>
 <body>
@@ -262,6 +282,7 @@
 
     const $ = (id) => document.getElementById(id);
     const SETTINGS_KEY = 'unlock-settings-v1';
+    const UNLOCK_ANIMATION_MS = 440;
     let saved = null;
     try { saved = JSON.parse(localStorage.getItem(SETTINGS_KEY)); } catch {}
     let settings = normalizeSettings(saved && typeof saved === 'object' ? saved : {});
@@ -336,6 +357,7 @@
       $('unlocked-screen').hidden = next !== 'unlocked';
       $('peek-screen').hidden = next !== 'unlocked' || animate;
       $('settings-screen').hidden = next !== 'settings';
+      $('input-screen').classList.remove('unlocking-out');
       $('unlocked-screen').classList.remove('unlocking');
       $('unlocked-screen').style.transform = 'translateY(0px)';
       swipe = null;
@@ -344,13 +366,15 @@
         renderAttempts();
         if (animate) {
           void $('unlocked-screen').offsetWidth;
+          $('input-screen').classList.add('unlocking-out');
           $('unlocked-screen').classList.add('unlocking');
           unlockTimer = setTimeout(() => {
             $('input-screen').hidden = true;
             $('peek-screen').hidden = false;
+            $('input-screen').classList.remove('unlocking-out');
             $('unlocked-screen').classList.remove('unlocking');
             clearFeedback();
-          }, 280);
+          }, UNLOCK_ANIMATION_MS);
         }
       }
       if (next === 'settings') { populateForm(); $('settings-screen').scrollTop = 0; }
@@ -370,7 +394,7 @@
         feedbackTimer = setTimeout(() => {
           clearFeedback();
           renderInput();
-        }, 380);
+        }, 420);
       }
       renderInput();
       return outcome !== 'pending';
