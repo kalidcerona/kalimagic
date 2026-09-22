@@ -400,6 +400,7 @@
   var MEMBER_TOOL_LABELS = {
     calc: '계산기',
     stopwatch: '스톱워치',
+    'friend-apps': '언락 + 통합 스톱워치',
     all: '전체'
   };
 
@@ -459,6 +460,7 @@
     tool.name = 'tool';
     tool.appendChild(option('calc', '계산기', access && access.tool === 'calc'));
     tool.appendChild(option('stopwatch', '스톱워치', access && access.tool === 'stopwatch'));
+    tool.appendChild(option('friend-apps', '언락 + 통합 스톱워치', access && access.tool === 'friend-apps'));
     tool.appendChild(option('all', '전체', access && access.tool === 'all'));
 
     var lifetimeLabel = document.createElement('label');

@@ -20,6 +20,22 @@
   path = "/tools"
   function = "tools-gate"
 
+[[edge_functions]]
+  path = "/zz5/*"
+  function = "tools-gate"
+
+[[edge_functions]]
+  path = "/zz5"
+  function = "tools-gate"
+
+[[edge_functions]]
+  path = "/zz6/*"
+  function = "tools-gate"
+
+[[edge_functions]]
+  path = "/zz6"
+  function = "tools-gate"
+
 [[redirects]]
   from = "/tools/_check"
   to = "/.netlify/functions/tool-check"
@@ -76,5 +92,10 @@
 
 [[headers]]
   for = "/zz5/manifest.webmanifest"
+  [headers.values]
+    Content-Type = "application/manifest+json"
+
+[[headers]]
+  for = "/zz6/manifest.webmanifest"
   [headers.values]
     Content-Type = "application/manifest+json"

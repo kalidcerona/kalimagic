@@ -5,13 +5,13 @@
   var el = window.PgUtil.el;
   var clear = window.PgUtil.clear;
   var fetchJson = window.PgUtil.fetchJson;
-  var TOOL_LABELS = { calc: '계산기', stopwatch: '스톱워치', all: '전체' };
+  var TOOL_LABELS = { calc: '계산기', stopwatch: '스톱워치', 'friend-apps': '언락 + 통합 스톱워치', all: '전체' };
   var ENDPOINT = '/.netlify/functions/admin-tools';
 
   function toolSelect(selected) {
     var select = document.createElement('select');
     select.name = 'tool';
-    ['calc', 'stopwatch', 'all'].forEach(function (value) {
+    ['calc', 'stopwatch', 'friend-apps', 'all'].forEach(function (value) {
       var option = document.createElement('option');
       option.value = value;
       option.textContent = TOOL_LABELS[value];

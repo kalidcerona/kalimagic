@@ -1,7 +1,7 @@
 const encoder = new TextEncoder();
 const decoder = new TextDecoder('utf-8', { fatal: true });
 const GATE_LIFETIME_SECONDS = 7_776_000;
-const VALID_TOOLS = new Set(['stopwatch', 'calc', 'all']);
+const VALID_TOOLS = new Set(['stopwatch', 'calc', 'friend-apps', 'all']);
 const VALID_KINDS = new Set(['std', 'life']);
 
 function bytesToBase64Url(bytes) {

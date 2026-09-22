@@ -3,31 +3,44 @@ import { getSupabaseAdmin } from './_lib/supabase.mjs';
 import { verifyGateCookie } from './_lib/tool-gate.mjs';
 
 const COOKIE_NAME = 'kali_tool_gate';
-const CLEAR_COOKIE = [
-  `${COOKIE_NAME}=`,
-  'Path=/tools',
-  'Max-Age=0',
-  'HttpOnly',
-  'Secure',
-  'SameSite=Lax'
-].join('; ');
+export function clearGateCookie(tool) {
+  return [
+    `${COOKIE_NAME}=`,
+    tool === 'friend-apps' ? 'Path=/' : 'Path=/tools',
+    'Max-Age=0',
+    'HttpOnly',
+    'Secure',
+    'SameSite=Lax'
+  ].join('; ');
+}
 
-// 쿠키는 Path=/tools라 /tools/_check 리라이트로 들어올 때만 자동 전송된다.
-// 그 경로를 못 쓰는 호출자를 위해 본문 {cookie}도 받는다.
-function gateCookie(event) {
+export function allowOnCheckError(tool) {
+  return tool !== 'friend-apps';
+}
+
+export function selectGate(gates, requestedTool) {
+  return gates.find((gate) => gate.valid &&
+    (!requestedTool || gate.tool === requestedTool || gate.tool === 'all')) ||
+    { valid: false, reason: 'invalid' };
+}
+
+// Existing /tools cookies and the friend-apps root cookie may share a name.
+function gateCookieValues(event) {
   const header = event.headers?.cookie || event.headers?.Cookie || '';
+  const values = [];
   for (const part of header.split(';')) {
     const separator = part.indexOf('=');
     if (separator === -1) continue;
     if (part.slice(0, separator).trim() === COOKIE_NAME) {
-      return part.slice(separator + 1).trim();
+      values.push(part.slice(separator + 1).trim());
     }
   }
+  if (values.length) return values;
   try {
     const body = readJsonBody(event);
-    return body?.cookie ? String(body.cookie) : null;
+    return body?.cookie ? [String(body.cookie)] : [];
   } catch {
-    return null;
+    return [];
   }
 }
 
@@ -36,11 +49,10 @@ export async function handler(event) {
     return json(405, { error: 'method_not_allowed' });
   }
 
-  const gate = await verifyGateCookie(
-    gateCookie(event),
-    process.env.TOOL_GATE_SECRET,
-    Date.now()
-  );
+  const gates = await Promise.all(gateCookieValues(event).map((value) =>
+    verifyGateCookie(value, process.env.TOOL_GATE_SECRET, Date.now())));
+  const requestedTool = event.queryStringParameters?.tool || null;
+  const gate = selectGate(gates, requestedTool);
   if (!gate.valid) return json(200, { ok: false, reason: 'invalid' });
 
   try {
@@ -50,15 +62,15 @@ export async function handler(event) {
       .eq('email', gate.email)
       .limit(1)
       .maybeSingle();
-    // DB 장애로 공연 중 도구가 잠기면 안 되므로 조회 실패는 통과시킨다(fail-open).
-    if (error) return json(200, { ok: true });
+    // Legacy performance tools remain fail-open; friend distribution fails closed.
+    if (error) return json(200, { ok: allowOnCheckError(gate.tool) });
 
     const allowed =
       row?.status === 'approved' && (row.tool === gate.tool || row.tool === 'all');
     return allowed
       ? json(200, { ok: true })
-      : json(200, { ok: false, reason: 'revoked' }, { 'Set-Cookie': CLEAR_COOKIE });
+      : json(200, { ok: false, reason: 'revoked' }, { 'Set-Cookie': clearGateCookie(gate.tool) });
   } catch {
-    return json(200, { ok: true });
+    return json(200, { ok: allowOnCheckError(gate.tool) });
   }
 }

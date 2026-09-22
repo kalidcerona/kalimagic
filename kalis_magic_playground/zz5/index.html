@@ -8,6 +8,19 @@
   <meta name="theme-color" content="#000000">
   <title>언락 · Unlock</title>
   <link rel="manifest" href="./manifest.webmanifest">
+  <script id="friend-apps-check">
+    if (location.protocol === 'https:' && /^\/zz[56]\//.test(location.pathname)) {
+      document.documentElement.style.visibility = 'hidden';
+      const loginUrl = '/tools/login/?to=' + encodeURIComponent(location.pathname + location.search);
+      fetch('/tools/_check?tool=friend-apps', { credentials: 'same-origin', cache: 'no-store' })
+        .then((response) => response.json())
+        .then((result) => {
+          if (!result.ok) { location.replace(loginUrl); return; }
+          document.documentElement.style.visibility = '';
+        })
+        .catch(() => { location.replace(loginUrl); });
+    }
+  </script>
   <style>
     :root { color-scheme: dark; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; --status-color: #000; }
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }

@@ -1,7 +1,7 @@
 (function () {
   var g = typeof window !== 'undefined' ? window : globalThis;
   var DEFAULT_TO = '/tools/calc/';
-  var ALLOWED = /^\/tools\/(calc|stopwatch)\//;
+  var ALLOWED = /^\/(?:tools\/(?:calc|stopwatch)|zz5|zz6)\//;
 
   // 도구 게이트는 두 도구 경로로만 되돌려보낸다. 그 밖의 값은 전부 기본 경로로 떨어뜨린다.
   function safeTo(raw) {
@@ -14,6 +14,7 @@
   }
 
   function toolFromPath(path) {
+    if (/^\/zz[56]\//.test(path)) return 'friend-apps';
     return /^\/tools\/stopwatch\//.test(path) ? 'stopwatch' : 'calc';
   }
 
@@ -24,6 +25,8 @@
       ['/tools//evil.com', DEFAULT_TO],
       ['/tools/calc/', '/tools/calc/'],
       ['/tools/stopwatch/', '/tools/stopwatch/'],
+      ['/zz5/', '/zz5/'],
+      ['/zz6/', '/zz6/'],
       ['/tools/calc/?x=1', '/tools/calc/?x=1'],
       ['//evil.com', DEFAULT_TO],
       ['https://evil.com', DEFAULT_TO],
@@ -42,13 +45,13 @@
       if (!ok) failed += 1;
       lines.push((ok ? 'PASS' : 'FAIL') + ' safeTo(' + JSON.stringify(row[0]) + ') = ' + JSON.stringify(actual) + (ok ? '' : ' (expected ' + JSON.stringify(row[1]) + ')'));
     });
-    [['/tools/stopwatch/', 'stopwatch'], ['/tools/calc/', 'calc'], [DEFAULT_TO, 'calc']].forEach(function (row) {
+    [['/tools/stopwatch/', 'stopwatch'], ['/tools/calc/', 'calc'], ['/zz5/', 'friend-apps'], ['/zz6/', 'friend-apps'], [DEFAULT_TO, 'calc']].forEach(function (row) {
       var actual = toolFromPath(row[0]);
       var ok = actual === row[1];
       if (!ok) failed += 1;
       lines.push((ok ? 'PASS' : 'FAIL') + ' toolFromPath(' + JSON.stringify(row[0]) + ') = ' + JSON.stringify(actual));
     });
-    lines.push(failed === 0 ? 'ALL PASS (' + cases.length + '+3)' : failed + ' FAILED');
+    lines.push(failed === 0 ? 'ALL PASS (' + cases.length + '+5)' : failed + ' FAILED');
     return { failed: failed, text: lines.join('\n') };
   }
 

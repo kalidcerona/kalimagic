@@ -4,7 +4,7 @@ import { getSupabaseAdmin } from './_lib/supabase.mjs';
 import { signGateCookie } from './_lib/tool-gate.mjs';
 
 const COOKIE_MAX_AGE = 7_776_000;
-const REQUESTABLE_TOOLS = new Set(['stopwatch', 'calc']);
+const REQUESTABLE_TOOLS = new Set(['stopwatch', 'calc', 'friend-apps']);
 
 // 순수 분기 판정: 조회한 행 + 요청한 도구 → 무엇을 할지.
 export function decideAccess(row, tool) {
@@ -241,7 +241,7 @@ export async function handler(event) {
     return json(200, { ok: true, tool, exp, kind }, {
       'Set-Cookie': [
         `kali_tool_gate=${value}`,
-        'Path=/tools',
+        tool === 'friend-apps' ? 'Path=/' : 'Path=/tools',
         `Max-Age=${COOKIE_MAX_AGE}`,
         'HttpOnly',
         'Secure',

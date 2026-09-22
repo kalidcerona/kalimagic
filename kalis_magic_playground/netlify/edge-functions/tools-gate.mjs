@@ -26,6 +26,14 @@ function analyzePath(rawPathname) {
   }
 
   const pathname = lowerPath.replace(/\/{2,}/g, '/');
+  // Let an already-installed public PWA update its worker so online revocation can take effect.
+  if (pathname === '/zz5/sw.js' || pathname === '/zz6/sw.js') {
+    return { mode: 'public', pathname };
+  }
+  if (pathname === '/zz5' || pathname.startsWith('/zz5/') ||
+      pathname === '/zz6' || pathname.startsWith('/zz6/')) {
+    return { mode: 'gated', tool: 'friend-apps', pathname };
+  }
   const isToolsPath = pathname === '/tools' || pathname.startsWith('/tools/');
   if (!isToolsPath) {
     return { mode: 'block', pathname };
@@ -93,7 +101,9 @@ function gateSecret() {
 function safeReturnPath(pathname, search, fallback) {
   if (
     pathname.startsWith('/tools/calc/') ||
-    pathname.startsWith('/tools/stopwatch/')
+    pathname.startsWith('/tools/stopwatch/') ||
+    pathname.startsWith('/zz5/') ||
+    pathname.startsWith('/zz6/')
   ) {
     return `${pathname}${search}`;
   }
@@ -102,7 +112,7 @@ function safeReturnPath(pathname, search, fallback) {
 
 function loginRedirect(request, tool, pathname) {
   const requestUrl = new URL(request.url);
-  const fallback = `/tools/${tool}/`;
+  const fallback = tool === 'friend-apps' ? '/zz5/' : `/tools/${tool}/`;
   const redirectUrl = new URL('/tools/login/', requestUrl.origin);
   redirectUrl.searchParams.set(
     'to',
@@ -119,10 +129,10 @@ export function shouldRenewGateCookie(gate, nowMs = Date.now()) {
   return remainingSeconds > 0 && remainingSeconds < RENEWAL_WINDOW_SECONDS;
 }
 
-function gateCookieHeader(value) {
+function gateCookieHeader(value, tool) {
   return [
     `${COOKIE_NAME}=${value}`,
-    'Path=/tools',
+    tool === 'friend-apps' ? 'Path=/' : 'Path=/tools',
     `Max-Age=${COOKIE_MAX_AGE}`,
     'HttpOnly',
     'Secure',
@@ -130,9 +140,9 @@ function gateCookieHeader(value) {
   ].join('; ');
 }
 
-function withGateCookie(response, value) {
+function withGateCookie(response, value, tool) {
   const headers = new Headers(response.headers);
-  headers.append('Set-Cookie', gateCookieHeader(value));
+  headers.append('Set-Cookie', gateCookieHeader(value, tool));
   return new Response(response.body, {
     status: response.status,
     statusText: response.statusText,
@@ -169,7 +179,7 @@ export default async function toolsGate(request, context) {
       nowMs,
       gate.kind
     );
-    return withGateCookie(response, value);
+    return withGateCookie(response, value, gate.tool);
   }
 
   return loginRedirect(request, tool, path.pathname);

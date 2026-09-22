@@ -3,7 +3,7 @@ import { json, readJsonBody } from './_lib/http.mjs';
 import { getSupabaseAdmin } from './_lib/supabase.mjs';
 import { validateUuid } from './_lib/validators.mjs';
 
-const ALLOWED_TOOLS = new Set(['calc', 'stopwatch', 'all']);
+const ALLOWED_TOOLS = new Set(['calc', 'stopwatch', 'friend-apps', 'all']);
 const MAX_EMAIL_LENGTH = 254;
 const COLUMNS = 'id,user_id,email,display_name,nickname,tool,lifetime,note,status,requested_at,created_at';
 

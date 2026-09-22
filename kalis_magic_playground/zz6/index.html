@@ -4,6 +4,19 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <link rel="manifest" href="./manifest.webmanifest">
+  <script id="friend-apps-check">
+    if (location.protocol === 'https:' && /^\/zz[56]\//.test(location.pathname)) {
+      document.documentElement.style.visibility = 'hidden';
+      const loginUrl = '/tools/login/?to=' + encodeURIComponent(location.pathname + location.search);
+      fetch('/tools/_check?tool=friend-apps', { credentials: 'same-origin', cache: 'no-store' })
+        .then((response) => response.json())
+        .then((result) => {
+          if (!result.ok) { location.replace(loginUrl); return; }
+          document.documentElement.style.visibility = '';
+        })
+        .catch(() => { location.replace(loginUrl); });
+    }
+  </script>
   <meta name="theme-color" content="#000000">
   <meta name="color-scheme" content="dark">
   <meta name="apple-mobile-web-app-capable" content="yes">
