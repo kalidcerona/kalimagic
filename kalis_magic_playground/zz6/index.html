@@ -71,6 +71,7 @@
     #landscape-frame { position: absolute; inset: 0; overflow: hidden; background: #1c1c1e; }
     #landscape-app { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: space-evenly; width: 100%; height: 100vh; height: 100dvh; overflow: hidden; background: #1c1c1e; padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
     #l-time-display { display: flex; flex: 0 0 auto; align-items: center; justify-content: center; font-size: min(41vh, 26.4vw); font-variant-numeric: tabular-nums; font-weight: 200; letter-spacing: -0.02em; line-height: 1; white-space: nowrap; pointer-events: none; }
+    #l-time-display.with-minutes { font-size: min(27vh, 17.4vw); }
     .l-digits { display: inline-block; min-width: 2ch; text-align: center; }
     #l-custom-display { max-width: 100vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     #l-colon { width: 0.2em; height: 0.52em; margin: 0 0.075em; }
@@ -88,6 +89,7 @@
     @media (orientation: portrait) {
       #landscape-app { position: fixed; top: 0; left: 0; width: 100vh; width: 100dvh; height: 100vw; height: 100dvw; transform-origin: top left; transform: translateX(100vw) rotate(90deg); transform: translateX(100dvw) rotate(90deg); padding-left: env(safe-area-inset-top); padding-right: env(safe-area-inset-bottom); }
       #l-time-display { font-size: min(41vw, 26.4vh); }
+      #l-time-display.with-minutes { font-size: min(27vw, 17.4vh); }
       #l-custom-display { max-width: 100vh; max-width: 100dvh; }
       #l-control { width: min(92vh, 105.6vw); height: clamp(9rem, 40.8vw, 25.5rem); border-radius: clamp(1.5rem, 5.3vw, 3.3125rem); }
       #l-control-label { font-size: max(3.875rem, min(26.4vw, 15.6vh)); }
@@ -131,6 +133,8 @@
     #install-nudge span { flex: 1; }
     #install-nudge button { border-radius: 0.625rem; padding: 0.55em 0.9em; background: #ff9f0a; color: #000; }
     #install-nudge button[data-act="close"] { background: transparent; color: #8e8e93; }
+    #portrait-app, #landscape-app { touch-action: none; }
+    #settings { touch-action: pan-y; }
   </style>
 </head>
 <body>
@@ -152,7 +156,7 @@
     </section>
     <section id="landscape-frame" class="mode-view" hidden aria-label="가로 스톱워치">
       <div id="landscape-app">
-        <div id="l-time-display" aria-label="스톱워치 시간"><span id="l-seconds" class="l-digits"><span data-l-digit="0">0</span><span data-l-digit="1">0</span></span><span id="l-colon" class="colon" aria-hidden="true"><span class="colon-dot"></span><span class="colon-dot"></span></span><span id="l-centiseconds" class="l-digits"><span data-l-digit="2">0</span><span data-l-digit="3">0</span></span><span id="l-custom-display" class="l-digits" hidden></span></div>
+        <div id="l-time-display" aria-label="스톱워치 시간"><span id="l-minutes-prefix" hidden></span><span id="l-seconds" class="l-digits"><span data-l-digit="0">0</span><span data-l-digit="1">0</span></span><span id="l-colon" class="colon" aria-hidden="true"><span class="colon-dot"></span><span class="colon-dot"></span></span><span id="l-decimal-separator" hidden>.</span><span id="l-centiseconds" class="l-digits"><span data-l-digit="2">0</span><span data-l-digit="3">0</span></span><span id="l-custom-display" class="l-digits" hidden></span></div>
         <button id="l-control" type="button" aria-label="START"><span id="l-control-label">START</span></button>
         <div id="l-main-hit-zones" aria-hidden="true"><div class="main-hit-zone"></div><div id="l-trick-zone" class="main-hit-zone"></div><div id="l-settings-zone" class="main-hit-zone"></div></div>
       </div>
@@ -161,27 +165,68 @@
     <section id="settings" aria-label="숨김 설정" hidden>
       <div id="settings-card">
         <header id="settings-header"><h1>설정</h1><button id="settings-close" type="button">닫기</button></header>
-        <h2>시작 화면 방향</h2>
+        <h2>1. 공연 화면 방향</h2>
+        <p>관객에게 보여 줄 스톱워치 방향을 선택하세요.</p>
         <div id="settings-mode-buttons"><button id="mode-portrait" type="button" aria-pressed="false">세로</button><button id="mode-landscape" type="button" aria-pressed="false">가로</button></div>
-        <h2><label for="trick2-text">트릭 2 문구</label></h2>
+        <h2>2. 프리셋 만들기</h2>
+        <p>저장할 트릭을 선택하고 아래에서 그 트릭의 내용을 입력하세요.</p>
+        <div id="slot-kind-segment" aria-label="프리셋 트릭 선택"><button id="slot-kind-text" type="button" aria-pressed="false">트릭 2 · 문구/숫자</button><button id="slot-kind-seq" type="button" aria-pressed="true">트릭 3 · 숫자 순서</button></div>
+        <label for="trick2-text">트릭 2 · 정지할 때 보일 문구 또는 숫자</label>
         <input id="trick2-text" type="text" enterkeyhint="done" maxlength="40" placeholder="문구 또는 00:06.47" autocomplete="off">
         <p id="current-preset">현재 숫자 프리셋: 00:00.00</p>
-        <div id="trick-assign-buttons"><button id="use-trick2" type="button">트릭 2로 사용</button><button id="use-trick3" type="button">트릭 3로 사용</button></div>
-        <h2>슬롯 저장 종류</h2>
-        <div id="slot-kind-segment"><button id="slot-kind-text" type="button" aria-pressed="false">트릭 2</button><button id="slot-kind-seq" type="button" aria-pressed="true">트릭 3</button></div>
-        <h2><label for="sequence-input">시퀀스 입력</label></h2>
+        <label for="sequence-input">트릭 3 · 정지할 때마다 나올 숫자 순서</label>
         <input id="sequence-input" type="text" enterkeyhint="done" placeholder="06,28,30,55" autocomplete="off" spellcheck="false">
-        <button id="sequence-apply" type="button">시퀀스 적용</button>
-        <h2>저장 슬롯 3칸</h2>
+        <h2>3. 프리셋 저장과 적용</h2>
+        <p>각 칸의 저장은 선택한 트릭과 입력값을 기록합니다. 적용은 그 칸에 저장된 트릭을 즉시 활성화합니다.</p>
         <div id="sequence-slots"></div>
-        <h2>트릭 3번</h2>
-        <label id="trick3-row" for="trick3-toggle"><span>트릭 3번 사용</span><input id="trick3-toggle" type="checkbox"></label>
         <p id="sequence-status" aria-live="polite"></p>
       </div>
     </section>
   </main>
   <div id="selftest" hidden><div id="selftest-result"></div></div>
   <script type="module">
+// BEGIN SETTINGS SWIPE
+function installSettingsSwipe(open, cancel, enabled, cancelHold = cancel) {
+  const pointers = new Map();
+  let pair = null, blocked = false, suppressUntil = 0;
+  const options = { capture: true, passive: false };
+  window.addEventListener('pointerdown', event => {
+    if (event.pointerType !== 'touch') return;
+    pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    if (pointers.size > 2) { blocked = true; pair = null; }
+    if (pointers.size !== 2 || blocked || !enabled() || event.target.closest('input,textarea,button[data-date-action],#settings,#text-editor,#date-settings,#install-nudge')) return;
+    pair = [...pointers].map(([id, point]) => ({ id, ...point, dx: 0, dy: 0 }));
+    cancelHold();
+  }, options);
+  window.addEventListener('pointermove', event => {
+    if (!pair || blocked) return;
+    const point = pair.find(point => point.id === event.pointerId);
+    if (!point) return;
+    point.dx = event.clientX - point.x;
+    point.dy = event.clientY - point.y;
+    if (Math.hypot(point.dx, point.dy) > 15) cancel();
+    if (!pair.every(point => point.dy >= 60 && point.dy > Math.abs(point.dx) * 1.5)) return;
+    blocked = true;
+    pair = null;
+    suppressUntil = Date.now() + 700;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    if (enabled()) open();
+  }, options);
+  const release = event => {
+    pointers.delete(event.pointerId);
+    pair = null;
+    if (!pointers.size) blocked = false;
+  };
+  window.addEventListener('pointerup', release, options);
+  window.addEventListener('pointercancel', release, options);
+  window.addEventListener('blur', () => { pointers.clear(); pair = null; blocked = false; });
+  window.addEventListener('click', event => {
+    if (Date.now() < suppressUntil) { event.preventDefault(); event.stopImmediatePropagation(); }
+  }, options);
+}
+// END SETTINGS SWIPE
+
     import { LANDSCAPE_CONTROL_IS_IMMEDIATE, applyPresetGroupSwipe, applyPresetSlot, applyPresetSwipe, clampElapsed, colonClassFor, composeCs, digitFromPoint, elapsedAtAction, formatCs, formatTimeInput, isLeftmostScreenFifth, landscapePresetHoldApplies, loadPresetSlots, migrateV2Storage, nextSwipeAccumulator, nextTrickState, normalizePresetSlot, normalizeSequence, normalizeTrickState, parseSequence, parseStopwatchText, parseTimeInput, portraitPresetEntryFromCs, presetGroupIndexFromPoint, presetIndexFromX, presetSwipePxPerStep, presetSwipeSteps, pushPendingDigit, recognizesModeToggle, resolveSequenceStop, resolveStoppedCs, resolveStopOutcome, savePortraitGroupPreset, savePresetSlots, storedMode, toAppPoint, transitionAlarmPreset } from "./logic.js";
     function runSelfTests() {
       const failures = [];
@@ -228,6 +273,8 @@
       assert(resolveStoppedCs({elapsed:3450,trickMode:true,reservedTens:2,stopDigit:null})===345,"v2 missing stop tap");assert(resolveStoppedCs({elapsed:3450,trickMode:true,reservedTens:null,stopDigit:null})===345,"v2 no grid taps");assert(applyPresetSwipe("123",0,1)==="123","v2 invalid preset length");assert(applyPresetSwipe("1234",0,.5)==="1234","v2 fractional swipe");
       const emptyStore={getItem:()=>null};assert(storedMode(emptyStore)==="portrait","uni default portrait");assert(storedMode({getItem:()=>"landscape"})==="landscape","uni stored landscape");assert(storedMode({getItem:()=>"sideways"})==="portrait","uni invalid mode defaults portrait");
       assert(parseStopwatchText("words")===null&&parseStopwatchText("06.47")===647&&parseStopwatchText("00:06.47")===647,"uni stopwatch-looking text parser");
+      assert(parseStopwatchText("01:23.45")===8345&&parseStopwatchText("99:59.99")===599999,"uni explicit minute preset keeps range");
+      assert(clampElapsed(100000)===59990&&parseTimeInput("123456")===5999,"uni measured and legacy input limits stay capped");
       assert(LANDSCAPE_CONTROL_IS_IMMEDIATE,"uni landscape control is immediate");
       const alarmBase={uiMode:"portrait",timerState:"idle",presetMode:false,presetKind:null,editorOpen:false,storedUiMode:"portrait"};
       const alarmEntered=transitionAlarmPreset(alarmBase,"enter");assert(alarmEntered.uiMode==="portrait"&&alarmEntered.presetMode&&alarmEntered.presetKind==="portrait-group","u7 alarm enter stays portrait group mode");
@@ -300,18 +347,18 @@
     const $ = id => document.getElementById(id);
     const shell=$("shell"), portraitApp=$("portrait-app"), landscapeFrame=$("landscape-frame"), landscapeApp=$("landscape-app");
     const pTime=$("p-time-display"),pNumeric=$("p-numeric-display"),pMinutes=$("p-minutes"),pCustom=$("p-custom-display"),pColon=$("p-colon"),pControl=$("p-control"),pLap=$("p-lap"),pLapArea=$("p-lap-area"),pLapRows=$("p-lap-rows"),pWorld=portraitApp.querySelector(".tab-world"),pAlarm=portraitApp.querySelector("#p-tabs .tab:nth-child(2)"),pTimer=portraitApp.querySelector("#p-tabs .tab:nth-child(4)"),pDigits=[...pTime.querySelectorAll("[data-p-digit]")],pGroups=[...pTime.querySelectorAll("[data-p-group]")];
-    const lTime=$("l-time-display"),lSeconds=$("l-seconds"),lCs=$("l-centiseconds"),lCustom=$("l-custom-display"),lColon=$("l-colon"),lControl=$("l-control"),lControlLabel=$("l-control-label"),lHitZones=$("l-main-hit-zones"),lDigits=[...lTime.querySelectorAll("[data-l-digit]")];
+    const lTime=$("l-time-display"),lMinutesPrefix=$("l-minutes-prefix"),lDecimal=$("l-decimal-separator"),lSeconds=$("l-seconds"),lCs=$("l-centiseconds"),lCustom=$("l-custom-display"),lColon=$("l-colon"),lControl=$("l-control"),lControlLabel=$("l-control-label"),lHitZones=$("l-main-hit-zones"),lDigits=[...lTime.querySelectorAll("[data-l-digit]")];
     const presetHint=$("preset-hint");
-    const settings=$("settings"),settingsClose=$("settings-close"),modePortrait=$("mode-portrait"),modeLandscape=$("mode-landscape"),slotKindText=$("slot-kind-text"),slotKindSeq=$("slot-kind-seq"),trick2Text=$("trick2-text"),currentPreset=$("current-preset"),useTrick2=$("use-trick2"),useTrick3=$("use-trick3"),sequenceInput=$("sequence-input"),sequenceApply=$("sequence-apply"),sequenceSlots=$("sequence-slots"),trick3Toggle=$("trick3-toggle"),sequenceStatus=$("sequence-status");
+    const settings=$("settings"),settingsClose=$("settings-close"),modePortrait=$("mode-portrait"),modeLandscape=$("mode-landscape"),slotKindText=$("slot-kind-text"),slotKindSeq=$("slot-kind-seq"),trick2Text=$("trick2-text"),currentPreset=$("current-preset"),sequenceInput=$("sequence-input"),sequenceSlots=$("sequence-slots"),sequenceStatus=$("sequence-status");
     const PRESET_KEY="stopwatch_preset_cs",PRESET_AT_KEY="stopwatch_preset_at",TEXT_KEY="stopwatch_custom_text",TEXT_AT_KEY="stopwatch_text_at",MODE_KEY="stopwatch_ui_mode",SEQUENCE_KEY="stopwatch_seq",SEQUENCE_SLOTS_KEY="stopwatch_seq_slots",TRICK3_KEY="stopwatch_trick3";
     const HOLD_MS=1000,PAIR_MS=120,TRIPLE_MS=800;
     let uiMode="portrait",state="idle",trickState="off",trick3Enabled=false,sequence=[],presetSlotValues=[{kind:"text",value:""},{kind:"text",value:""},{kind:"text",value:""}],slotSaveKind="seq",sequenceStopCount=0,customText="",presetCs=null,presetAt=0,textAt=0,presetEntry="0000",presetMode=false,presetKind=null,presetGesture=null;
     let pendingDigits=[],reservedTens=null,stopDigit=null,startedAt=0,elapsedBase=0,frameId=0,lapCount=0,lastLapElapsed=0,hold=null,tap=null,alarmTap=null,suppressClick=false,hintTimer=0,stoppedOutcome=null;
     let pressed=false,wakeLock=null,wakeLockPending=false,resizeObserver=null;
     const activePointers=new Map(),pairedPointers=new Set(),pendingLandscapeActions=new Map();let pairCandidate=null,twoFingerTaps=[];
-    function renderCs(totalCs){const value=Math.max(0,Math.floor(Number(totalCs)||0)),f=formatCs(value),entry=f.sec+f.cs;if(uiMode==="portrait"){const portraitEntry=portraitPresetEntryFromCs(value);pCustom.hidden=true;pNumeric.hidden=false;pMinutes.textContent=portraitEntry.slice(0,2);pDigits.forEach((s,i)=>s.textContent=portraitEntry[i+2]);return;}lCustom.hidden=true;lSeconds.hidden=false;lColon.hidden=false;lCs.hidden=false;lDigits.forEach((s,i)=>s.textContent=entry[i]);}
+    function renderCs(totalCs){const value=Math.max(0,Math.floor(Number(totalCs)||0)),f=formatCs(value),entry=f.sec+f.cs;if(uiMode==="portrait"){const portraitEntry=portraitPresetEntryFromCs(value);pCustom.hidden=true;pNumeric.hidden=false;pMinutes.textContent=portraitEntry.slice(0,2);pDigits.forEach((s,i)=>s.textContent=portraitEntry[i+2]);return;}const hasMinutes=value>=6000,fullEntry=portraitPresetEntryFromCs(value),landscapeEntry=hasMinutes?fullEntry.slice(2):entry;lMinutesPrefix.hidden=!hasMinutes;lMinutesPrefix.textContent=hasMinutes?fullEntry.slice(0,2)+":":"";lTime.classList.toggle("with-minutes",hasMinutes);lCustom.hidden=true;lSeconds.hidden=false;lColon.hidden=hasMinutes;lDecimal.hidden=!hasMinutes;lCs.hidden=false;lDigits.forEach((s,i)=>s.textContent=landscapeEntry[i]);}
     function renderPortraitPresetEntry(entry){pCustom.hidden=true;pNumeric.hidden=false;pMinutes.textContent=entry.slice(0,2);pDigits.forEach((s,i)=>s.textContent=entry[i+2]);}
-    function renderCustomText(text){if(uiMode==="portrait"){pNumeric.hidden=true;pCustom.hidden=false;pCustom.textContent=text;return;}lSeconds.hidden=true;lColon.hidden=true;lCs.hidden=true;lCustom.hidden=false;lCustom.textContent=text;}
+    function renderCustomText(text){if(uiMode==="portrait"){pNumeric.hidden=true;pCustom.hidden=false;pCustom.textContent=text;return;}lMinutesPrefix.hidden=true;lDecimal.hidden=true;lTime.classList.remove("with-minutes");lSeconds.hidden=true;lColon.hidden=true;lCs.hidden=true;lCustom.hidden=false;lCustom.textContent=text;}
     function gradient(base,down){const top=`color-mix(in srgb, ${base} 82%, #ffffff)`,value=`linear-gradient(180deg, ${top} 0%, ${base} 100%)`;return down?`linear-gradient(180deg, rgba(0,0,0,.12), rgba(0,0,0,.12)), ${value}`:value;}
     function renderState(){pControl.textContent=state==="running"?"중단":"시작";pControl.classList.toggle("running",state==="running");pLap.textContent=state==="stopped"&&elapsedBase>0?"재설정":"랩";pLap.disabled=state!=="running"&&elapsedBase===0;pColon.className=`colon ${colonClassFor(trickState)}`;lColon.className=`colon ${colonClassFor(trickState)}`;let label="START",bg=gradient("#4c6ef5",pressed);if(state==="running"){label="STOP";bg=gradient("#e03131",pressed);}else if(state==="stopped"){label="RESET";const base="linear-gradient(180deg,rgba(255,255,255,.18),rgba(255,255,255,.12))";bg=pressed?`linear-gradient(180deg,rgba(0,0,0,.12),rgba(0,0,0,.12)),${base}`:base;}lControlLabel.textContent=label;lControl.setAttribute("aria-label",label);lControl.style.background=bg;lControl.style.transform=pressed?"scale(.96)":"none";}
     function elapsedNow(){return clampElapsed(elapsedBase+(state==="running"?performance.now()-startedAt:0));}
@@ -330,16 +377,12 @@
     function storePresetCs(value){presetCs=value>0?Math.min(5999,value):null;presetAt=presetCs===null?0:Date.now();try{if(presetCs===null){localStorage.removeItem(PRESET_KEY);localStorage.removeItem(PRESET_AT_KEY);}else{localStorage.setItem(PRESET_KEY,String(presetCs));localStorage.setItem(PRESET_AT_KEY,String(presetAt));}}catch(_){}}
     function storeCustomText(value){customText=String(value??"").trim();textAt=customText?Date.now():0;try{if(customText){localStorage.setItem(TEXT_KEY,customText);localStorage.setItem(TEXT_AT_KEY,String(textAt));}else{localStorage.removeItem(TEXT_KEY);localStorage.removeItem(TEXT_AT_KEY);}}catch(_){}return customText;}
     function loadStorage(){migrateV2Storage(localStorage);uiMode=storedMode(localStorage);try{customText=localStorage.getItem(TEXT_KEY)||"";textAt=Number(localStorage.getItem(TEXT_AT_KEY))||0;const raw=localStorage.getItem(PRESET_KEY),value=raw!==null&&/^\d{1,6}$/.test(raw)?Number(raw):NaN;presetCs=Number.isInteger(value)&&value>=0&&value<=603999?value:null;presetAt=Number(localStorage.getItem(PRESET_AT_KEY))||0;sequence=parseSequence(localStorage.getItem(SEQUENCE_KEY)||"");presetSlotValues=loadPresetSlots(localStorage);trick3Enabled=localStorage.getItem(TRICK3_KEY)==="1";trickState=normalizeTrickState(trickState,trick3Enabled);}catch(_){customText="";presetCs=null;sequence=[];presetSlotValues=[{kind:"text",value:""},{kind:"text",value:""},{kind:"text",value:""}];trick3Enabled=false;trickState="off";}}
-    function updateSequenceStatus(){const active=normalizeSequence(sequence);sequenceStatus.textContent=`활성 시퀀스: ${active||"비어 있음"} · 트릭 3: ${trick3Enabled?"켜짐":"꺼짐"}`;}
-    function renderSequenceSlots(){sequenceSlots.replaceChildren();presetSlotValues.forEach((slot,index)=>{const row=document.createElement("div"),label=document.createElement("span"),actions=document.createElement("div"),apply=document.createElement("button"),save=document.createElement("button"),empty=!slot.value;row.className=`sequence-slot${empty?" empty":""}`;row.tabIndex=0;row.dataset.slot=String(index);label.className="sequence-slot-value";label.textContent=empty?"비어 있음":`${slot.kind==="text"?"2":"3"}  ${slot.value}`;actions.className="sequence-slot-actions";apply.className="sequence-slot-apply";apply.type="button";apply.textContent="적용";apply.disabled=empty;apply.setAttribute("aria-label",`${index+1}번 칸 적용`);save.className="sequence-slot-save";save.type="button";save.textContent="저장";save.setAttribute("aria-label",`${index+1}번 칸에 저장`);actions.append(apply,save);row.append(label,actions);sequenceSlots.append(row);});}
+    function updateSequenceStatus(){const active=normalizeSequence(sequence);sequenceStatus.textContent=`현재 사용: ${trickState==="seq"?`트릭 3 (${active||"비어 있음"})`:trickState==="text"?"트릭 2":"일반 스톱워치"}`;}
+    function renderSequenceSlots(){sequenceSlots.replaceChildren();presetSlotValues.forEach((slot,index)=>{const row=document.createElement("div"),label=document.createElement("span"),actions=document.createElement("div"),apply=document.createElement("button"),save=document.createElement("button"),empty=!slot.value;row.className=`sequence-slot${empty?" empty":""}`;row.tabIndex=0;row.dataset.slot=String(index);label.className="sequence-slot-value";label.textContent=empty?"비어 있음":`트릭 ${slot.kind==="text"?"2":"3"}: ${slot.value}`;actions.className="sequence-slot-actions";apply.className="sequence-slot-apply";apply.type="button";apply.textContent="적용";apply.disabled=empty;apply.setAttribute("aria-label",`${index+1}번 칸 적용`);save.className="sequence-slot-save";save.type="button";save.textContent="저장";save.setAttribute("aria-label",`${index+1}번 칸에 저장`);actions.append(apply,save);row.append(label,actions);sequenceSlots.append(row);});}
     function setSlotSaveKind(kind){slotSaveKind=kind==="text"?"text":"seq";slotKindText.setAttribute("aria-pressed",String(slotSaveKind==="text"));slotKindSeq.setAttribute("aria-pressed",String(slotSaveKind==="seq"));}
-    function openSettings(){if(state==="running"||presetMode||!settings.hidden)return;trick2Text.value=customText;currentPreset.textContent=`현재 숫자 프리셋: ${formatTimeInput(portraitPresetEntryFromCs(presetCs??0))}`;sequenceInput.value=normalizeSequence(sequence);trick3Toggle.checked=trick3Enabled;updateModeButtons();setSlotSaveKind(slotSaveKind);renderSequenceSlots();updateSequenceStatus();settings.hidden=false;}
+    function openSettings(){if(state==="running"||presetMode||!settings.hidden)return;trick2Text.value=customText;currentPreset.textContent=`현재 숫자 프리셋: ${formatTimeInput(portraitPresetEntryFromCs(presetCs??0))}`;sequenceInput.value=normalizeSequence(sequence);updateModeButtons();setSlotSaveKind(slotSaveKind);renderSequenceSlots();updateSequenceStatus();settings.hidden=false;}
     function closeSettings(){settings.hidden=true;trick2Text.blur();sequenceInput.blur();}
-    function useSettingsTrick2(){const entered=trick2Text.value.trim(),fallback=formatTimeInput(portraitPresetEntryFromCs(presetCs??0)),value=storeCustomText(entered||fallback);trick2Text.value=value;trickState="text";sequenceStopCount=0;renderState();}
-    function useSettingsTrick3(){setTrick3Enabled(true);setActiveSequence(sequenceInput.value);trickState="seq";renderState();}
-    function setActiveSequence(value){const normalized=normalizeSequence(value);sequence=parseSequence(normalized);sequenceStopCount=0;sequenceInput.value=normalized;try{localStorage.setItem(SEQUENCE_KEY,normalized);}catch(_){}updateSequenceStatus();}
-    function setTrick3Enabled(enabled){trick3Enabled=!!enabled;sequenceStopCount=0;if(!trick3Enabled&&trickState==="seq")trickState="off";try{localStorage.setItem(TRICK3_KEY,trick3Enabled?"1":"0");}catch(_){}trick3Toggle.checked=trick3Enabled;updateSequenceStatus();renderState();}
-    function applyPresetSlotToDom(slot){const applied=applyPresetSlot(slot,{customText,sequence,trick3Enabled});if(applied){customText=applied.customText;sequence=applied.sequence;trickState=applied.trickState;trick3Enabled=applied.trick3Enabled;sequenceStopCount=0;textAt=customText?Date.now():0;try{if(customText){localStorage.setItem(TEXT_KEY,customText);localStorage.setItem(TEXT_AT_KEY,String(textAt));}else{localStorage.removeItem(TEXT_KEY);localStorage.removeItem(TEXT_AT_KEY);}localStorage.setItem(SEQUENCE_KEY,normalizeSequence(sequence));localStorage.setItem(TRICK3_KEY,trick3Enabled?"1":"0");}catch(_){}trick2Text.value=customText;sequenceInput.value=normalizeSequence(sequence);trick3Toggle.checked=trick3Enabled;updateSequenceStatus();renderState();}closeSettings();}
+    function applyPresetSlotToDom(slot){const applied=applyPresetSlot(slot,{customText,sequence,trick3Enabled});if(applied){customText=applied.customText;sequence=applied.sequence;trickState=applied.trickState;trick3Enabled=applied.trick3Enabled;sequenceStopCount=0;textAt=customText?Date.now():0;try{if(customText){localStorage.setItem(TEXT_KEY,customText);localStorage.setItem(TEXT_AT_KEY,String(textAt));}else{localStorage.removeItem(TEXT_KEY);localStorage.removeItem(TEXT_AT_KEY);}localStorage.setItem(SEQUENCE_KEY,normalizeSequence(sequence));localStorage.setItem(TRICK3_KEY,trick3Enabled?"1":"0");}catch(_){}trick2Text.value=customText;sequenceInput.value=normalizeSequence(sequence);updateSequenceStatus();renderState();}closeSettings();}
     function pTrackRect(){const first=pDigits[0].getBoundingClientRect(),last=pDigits[3].getBoundingClientRect();return{left:first.left,width:last.right-first.left};}
     function selectPortraitDigit(index){pDigits.forEach((s,i)=>s.classList.toggle("selected",i===index));}
     function enterPortraitPreset(pointerId,x,y){if(state==="running"||presetMode)return;resetTimer();presetEntry=portraitPresetEntryFromCs(presetCs??0).slice(2);presetMode=true;presetKind="portrait-digit";portraitApp.classList.add("preset-mode");renderCs(Number(presetEntry));const track=pTrackRect(),index=presetIndexFromX(x,track.left,track.width);selectPortraitDigit(index);presetGesture={kind:"portrait-digit",pointerId,index,x,y,entry:presetEntry,moved:false};try{portraitApp.setPointerCapture(pointerId);}catch(_){}suppressClick=true;showHint("위아래로 밀어 숫자를 바꾸세요");}
@@ -382,22 +425,23 @@
     function cycleTrick(){if(presetMode||!settings.hidden)return;const previous=trickState;trickState=nextTrickState(trickState,trick3Enabled);if(previous==="seq"&&trickState!=="seq")sequenceStopCount=0;pendingDigits=[];reservedTens=stopDigit=null;pWorld.classList.remove("feedback");renderState();}
     async function enterFullscreen(){if(document.fullscreenElement||document.webkitFullscreenElement)return;for(const el of [document.documentElement,document.body]){const request=el&&(el.requestFullscreen||el.webkitRequestFullscreen||el.webkitRequestFullScreen||el.msRequestFullscreen);if(typeof request==="function")try{await request.call(el,{navigationUI:"hide"});break;}catch(_){}}}
     async function acquireWakeLock(){if(wakeLock||wakeLockPending||document.visibilityState!=="visible"||!navigator.wakeLock)return;wakeLockPending=true;try{const lock=await navigator.wakeLock.request("screen");wakeLock=lock;lock.addEventListener("release",()=>{if(wakeLock===lock)wakeLock=null;if(document.visibilityState==="visible")acquireWakeLock();});}catch(_){}finally{wakeLockPending=false;}}
-    function initApp(){loadStorage();setMode(uiMode);
+    function initApp(){installSettingsSwipe(openSettings,cancelPendingInteractions,()=>!presetMode&&state!=="running"&&settings.hidden,()=>{clearHold();tap=null;alarmTap=null;});loadStorage();setMode(uiMode);
       document.addEventListener("pointerdown",enterFullscreen,{capture:true,once:true});document.addEventListener("pointerdown",onGlobalPointerDown,{capture:true,passive:false});window.addEventListener("pointermove",handlePointerMove,{passive:false});window.addEventListener("pointerup",e=>{onGlobalPointerEnd(e);handlePresetEnd(e);if(hold&&hold.pointerId===e.pointerId)clearHold();releasePress();});window.addEventListener("pointercancel",e=>{onGlobalPointerEnd(e);handlePresetEnd(e);if(hold&&hold.pointerId===e.pointerId)clearHold();releasePress();});
       document.addEventListener("pointerdown",handlePresetDown,{capture:true,passive:false});
       pControl.addEventListener("click",()=>{if(suppressClick)return;if(presetMode){if(presetKind!=="portrait-group")return;exitPresetMode(false);}if(state==="running")stopTimer();else startTimer();});pLap.addEventListener("click",()=>{if(presetMode||suppressClick)return;if(state==="running")addLap();else resetTimer();});pTime.addEventListener("click",()=>{if(!suppressClick)cycleTrick();});
       pAlarm.addEventListener("pointerdown",e=>{if(uiMode!=="portrait"||state==="running"||presetMode||!isPrimaryPointer(e)||activePointers.size!==1)return;alarmTap={pointerId:e.pointerId,x:e.clientX,y:e.clientY};});pAlarm.addEventListener("pointerup",e=>{const candidate=alarmTap;alarmTap=null;if(!candidate||candidate.pointerId!==e.pointerId||pairedPointers.has(e.pointerId)||Math.hypot(e.clientX-candidate.x,e.clientY-candidate.y)>10)return;enterAlarmPreset();});pAlarm.addEventListener("pointercancel",()=>alarmTap=null);
-      pTimer.addEventListener("pointerdown",e=>{if(uiMode!=="portrait"||state==="running"||presetMode||!settings.hidden||activePointers.size!==1)return;beginHold(e,openSettings);});
+
       pLapArea.addEventListener("pointerdown",e=>{if(presetMode||trickState!=="digit"||!isPrimaryPointer(e)||pairedPointers.has(e.pointerId))return;tap={pointerId:e.pointerId,x:e.clientX,y:e.clientY};});window.addEventListener("pointerup",e=>{if(tap&&tap.pointerId===e.pointerId&&!presetMode&&!suppressClick&&trickState==="digit"&&!pairedPointers.has(e.pointerId)){const r=pLapArea.getBoundingClientRect();if(Math.hypot(e.clientX-tap.x,e.clientY-tap.y)<=10&&e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom){const d=digitFromPoint(e.clientX-r.left,e.clientY-r.top,r.width,r.height);pendingDigits=pushPendingDigit(pendingDigits,d);const complete=pendingDigits.length===2;reservedTens=complete?pendingDigits[0]:null;stopDigit=complete?pendingDigits[1]:null;pWorld.classList.toggle("feedback",complete);}}tap=null;});
       pNumeric.addEventListener("pointerdown",e=>{const track=pTrackRect();if(state!=="running"&&presetIndexFromX(e.clientX,track.left,track.width)!==null)beginHold(e,d=>enterPortraitPreset(d.pointerId,d.x,d.y));});
       lControl.addEventListener("pointerdown",landscapeControl);
-      $("l-trick-zone").addEventListener("pointerdown",e=>deferLandscapeAction(e,cycleTrick));$("l-settings-zone").addEventListener("pointerdown",e=>deferLandscapeHold(e,openSettings));
+      $("l-trick-zone").addEventListener("pointerdown",e=>deferLandscapeAction(e,cycleTrick));
       document.addEventListener("pointerdown",e=>{if(uiMode!=="landscape"||presetMode||state==="running"||!isPrimaryPointer(e)||e.target.closest("#l-control,#l-trick-zone,#l-settings-zone,#settings,#install-nudge"))return;const p=toAppPoint(e.clientX,e.clientY,innerWidth,innerHeight,isRotatedLayout());if(landscapePresetHoldApplies(e.target,p.x,appSize().width))deferLandscapeHold(e,enterLandscapePreset);},{passive:true});
-      settingsClose.addEventListener("click",closeSettings);modePortrait.addEventListener("click",()=>setMode("portrait"));modeLandscape.addEventListener("click",()=>setMode("landscape"));slotKindText.addEventListener("click",()=>setSlotSaveKind("text"));slotKindSeq.addEventListener("click",()=>setSlotSaveKind("seq"));useTrick2.addEventListener("click",useSettingsTrick2);useTrick3.addEventListener("click",useSettingsTrick3);sequenceApply.addEventListener("click",()=>setActiveSequence(sequenceInput.value));sequenceInput.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();setActiveSequence(sequenceInput.value);}else if(e.key==="Escape")closeSettings();});trick2Text.addEventListener("keydown",e=>{if(e.key==="Escape")closeSettings();});trick3Toggle.addEventListener("change",()=>setTrick3Enabled(trick3Toggle.checked));sequenceSlots.addEventListener("click",e=>{const row=e.target.closest(".sequence-slot");if(!row)return;const index=Number(row.dataset.slot);if(e.target.closest(".sequence-slot-save")){const value=slotSaveKind==="text"?trick2Text.value.trim():normalizeSequence(sequenceInput.value);if(slotSaveKind==="seq")sequenceInput.value=value;presetSlotValues[index]={kind:slotSaveKind,value};try{presetSlotValues=savePresetSlots(localStorage,presetSlotValues);}catch(_){}renderSequenceSlots();return;}applyPresetSlotToDom(presetSlotValues[index]);});sequenceSlots.addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&e.target.classList.contains("sequence-slot")){e.preventDefault();applyPresetSlotToDom(presetSlotValues[Number(e.target.dataset.slot)]);}});
+      settingsClose.addEventListener("click",closeSettings);modePortrait.addEventListener("click",()=>setMode("portrait"));modeLandscape.addEventListener("click",()=>setMode("landscape"));slotKindText.addEventListener("click",()=>setSlotSaveKind("text"));slotKindSeq.addEventListener("click",()=>setSlotSaveKind("seq"));sequenceInput.addEventListener("keydown",e=>{if(e.key==="Escape")closeSettings();});trick2Text.addEventListener("keydown",e=>{if(e.key==="Escape")closeSettings();});sequenceSlots.addEventListener("click",e=>{const row=e.target.closest(".sequence-slot");if(!row)return;const index=Number(row.dataset.slot);if(e.target.closest(".sequence-slot-save")){const value=slotSaveKind==="text"?trick2Text.value.trim():normalizeSequence(sequenceInput.value);if(!value){sequenceStatus.textContent="먼저 선택한 트릭의 내용을 입력하세요.";return;}if(slotSaveKind==="seq")sequenceInput.value=value;presetSlotValues[index]={kind:slotSaveKind,value};try{presetSlotValues=savePresetSlots(localStorage,presetSlotValues);}catch(_){}renderSequenceSlots();return;}applyPresetSlotToDom(presetSlotValues[index]);});sequenceSlots.addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&e.target.classList.contains("sequence-slot")){e.preventDefault();applyPresetSlotToDom(presetSlotValues[Number(e.target.dataset.slot)]);}});
       window.addEventListener("resize",updateLandscapeHitZones);window.addEventListener("blur",cancelPendingInteractions);if(typeof ResizeObserver==="function"){resizeObserver=new ResizeObserver(updateLandscapeHitZones);resizeObserver.observe(lControl);resizeObserver.observe(lTime);resizeObserver.observe(landscapeApp);}document.addEventListener("contextmenu",e=>e.preventDefault());document.addEventListener("pointerdown",()=>{if(!wakeLock)acquireWakeLock();});document.addEventListener("visibilitychange",()=>{if(document.hidden){clearHold();tap=null;}else acquireWakeLock();});renderState();acquireWakeLock();}
     if(location.hash==="#selftest"){$("shell").hidden=true;$("selftest").hidden=false;runSelfTests();}else initApp();
   </script>
   <script>
+
     (()=>{try{if(location.hash==="#selftest")return;const KEY="stopwatch_uni_install_nudge_done";if(localStorage.getItem(KEY))return;const standalone=typeof matchMedia==="function"&&matchMedia("(display-mode: standalone)").matches;if(standalone||navigator.standalone)return;let deferred=null,bar=null;const done=()=>{try{localStorage.setItem(KEY,"1");}catch(_){}if(bar)bar.remove();bar=null;deferred=null;};window.addEventListener("appinstalled",done);window.addEventListener("beforeinstallprompt",event=>{event.preventDefault();deferred=event;if(bar)return;bar=document.createElement("div");bar.id="install-nudge";bar.innerHTML='<span>홈 화면에 앱으로 설치할 수 있어요</span><button type="button" data-act="install">설치</button><button type="button" data-act="close" aria-label="닫기">✕</button>';bar.addEventListener("pointerdown",e=>e.stopPropagation());bar.addEventListener("click",async e=>{e.stopPropagation();const b=e.target.closest("button[data-act]"),act=b?b.dataset.act:null;if(act==="install"&&deferred){const prompt=deferred;deferred=null;try{prompt.prompt();await prompt.userChoice;}catch(_){}done();}else if(act==="close")done();});document.body.appendChild(bar);});}catch(_){}})();
   </script>
   <script>

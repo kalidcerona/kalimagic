@@ -89,6 +89,7 @@ export const MIRROR_PAIRS = [
   ['../../magic-stopwatch-v2/sw.js', 'zz4/sw.js'],
   ['../../magic-unlock/index.html', 'zz5/index.html'],
   ['../../magic-unlock/logic.js', 'zz5/logic.js'],
+  ['../../magic-unlock/time-machine.js', 'zz5/time-machine.js'],
   ['../../magic-unlock/sw.js', 'zz5/sw.js'],
   ['../../magic-stopwatch-uni/index.html', 'zz6/index.html'],
   ['../../magic-stopwatch-uni/sw.js', 'zz6/sw.js'],

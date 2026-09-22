@@ -51,7 +51,7 @@ export function savePresetSlots(storage, slots) {
 export function applyPresetSlot(slot, current = {}) {
   const normalized = normalizePresetSlot(slot);
   if (!normalized.value) return null;
-  if (normalized.kind === "text") return { trickState: "text", customText: normalized.value, sequenceStopCount: 0, trick3Enabled: current.trick3Enabled, sequence: current.sequence };
+  if (normalized.kind === "text") return { trickState: "text", customText: normalized.value, sequenceStopCount: 0, trick3Enabled: false, sequence: current.sequence };
   return { trickState: "seq", sequence: parseSequence(normalized.value), trick3Enabled: true, sequenceStopCount: 0, customText: current.customText };
 }
 export function clampElapsed(ms) { return Math.min(ms, 59990); }
@@ -70,6 +70,8 @@ export function parseTimeInput(value) {
 export function parseStopwatchText(value) {
   const text = String(value ?? "").trim();
   if (!/^(?:\d{1,6}|\d{1,2}[.:]\d{2}(?:\.\d{2})?)$/.test(text)) return null;
+  // Explicit minute presets retain their stored range; measured time stays capped.
+  if (/^\d{1,2}:\d{2}\.\d{2}$/.test(text)) return portraitPresetEntryToCs(text.replace(/\D/g, "").padStart(6, "0"));
   return parseTimeInput(text);
 }
 export function presetIndexFromX(x, left, width, count = 4) {
