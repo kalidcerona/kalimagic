@@ -2,8 +2,9 @@ import { requireAdmin } from './_lib/auth.mjs';
 import { json, readJsonBody } from './_lib/http.mjs';
 import { getSupabaseAdmin } from './_lib/supabase.mjs';
 import { validateUuid } from './_lib/validators.mjs';
+import { FRIEND_APP_TOOLS, findFriendAccess } from './_lib/friend-app-access.mjs';
 
-const ALLOWED_TOOLS = new Set(['calc', 'stopwatch', 'friend-apps', 'all']);
+const ALLOWED_TOOLS = new Set(['calc', 'stopwatch', 'all', ...FRIEND_APP_TOOLS]);
 const MAX_EMAIL_LENGTH = 254;
 const COLUMNS = 'id,user_id,email,display_name,nickname,tool,lifetime,note,status,requested_at,created_at';
 
@@ -67,6 +68,10 @@ export function isValidTool(tool) {
   return ALLOWED_TOOLS.has(tool);
 }
 
+export function accessTableForTool(tool) {
+  return FRIEND_APP_TOOLS.has(tool) ? 'friend_app_access' : 'tool_access';
+}
+
 function shapeToolAccess(row) {
   return {
     id: row.id,
@@ -88,8 +93,12 @@ async function listToolAccess(supabase) {
     .from('tool_access')
     .select(COLUMNS);
   if (error) return json(500, { error: 'db_error' });
+  const { data: friendData, error: friendError } = await supabase
+    .from('friend_app_access')
+    .select(COLUMNS);
+  if (friendError) return json(500, { error: 'db_error' });
 
-  const rows = (data || []).map(shapeToolAccess);
+  const rows = [...(data || []), ...(friendData || [])].map(shapeToolAccess);
   const pending = rows
     .filter((row) => row.status !== 'approved')
     .sort((a, b) => String(a.requestedAt || '').localeCompare(String(b.requestedAt || '')));
@@ -110,7 +119,7 @@ async function approveToolAccess(payload, viewer, supabase) {
   }
 
   const { data, error } = await supabase
-    .from('tool_access')
+    .from(accessTableForTool(tool))
     .update({
       status: 'approved',
       tool,
@@ -158,6 +167,22 @@ async function grantToolAccessByUser(payload, viewer, supabase) {
     nickname = clean(profile?.nickname) || null;
   } catch {
     // 닉네임은 관리자 목록 표시용이므로 조회 실패를 무시한다.
+  }
+
+  if (FRIEND_APP_TOOLS.has(tool)) {
+    const { data: existing, error: lookupError } = await findFriendAccess(supabase, userId, email, tool);
+    if (lookupError) return json(500, { error: 'db_error' });
+    const patch = {
+      user_id: userId, email, tool, nickname,
+      status: 'approved', lifetime, note: note || null,
+      approved_at: new Date().toISOString(), approved_by: viewer.userId
+    };
+    const result = existing
+      ? await supabase.from('friend_app_access').update(patch).eq('id', existing.id)
+      : await supabase.from('friend_app_access').insert({ ...patch, created_by: viewer.userId });
+    if (result.error?.code === '23505') return json(409, { error: 'already_exists' });
+    if (result.error) return json(500, { error: 'db_error' });
+    return json(200, { ok: true });
   }
 
   const { data: userAccess, error: userAccessError } = await supabase
@@ -213,7 +238,7 @@ async function grantToolAccessByUser(payload, viewer, supabase) {
   }
 
   const { error } = await supabase
-    .from('tool_access')
+    .from(accessTableForTool(tool))
     .insert({
       user_id: userId,
       email,
@@ -241,7 +266,7 @@ async function addToolAccess(payload, viewer, supabase) {
   }
 
   const { error } = await supabase
-    .from('tool_access')
+    .from(accessTableForTool(tool))
     .insert({
       email,
       tool,
@@ -276,9 +301,10 @@ export async function postToolAccess(event, viewer, supabase) {
 export async function deleteToolAccess(event, supabase) {
   const id = clean(event.queryStringParameters?.id);
   if (!validateUuid(id)) return json(400, { error: 'invalid_payload' });
+  const tool = clean(event.queryStringParameters?.tool);
 
   const { error } = await supabase
-    .from('tool_access')
+    .from(accessTableForTool(tool))
     .delete()
     .eq('id', id);
   if (error) return json(500, { error: 'db_error' });

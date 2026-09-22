@@ -1,9 +1,9 @@
 import {
+  gateCookieName,
   signGateCookie,
   verifyGateCookie
 } from '../functions/_lib/tool-gate.mjs';
 
-const COOKIE_NAME = 'kali_tool_gate';
 const COOKIE_MAX_AGE = 7_776_000;
 const RENEWAL_WINDOW_SECONDS = 3_888_000;
 const DEFAULT_TOOL = 'calc';
@@ -30,10 +30,8 @@ function analyzePath(rawPathname) {
   if (pathname === '/zz5/sw.js' || pathname === '/zz6/sw.js') {
     return { mode: 'public', pathname };
   }
-  if (pathname === '/zz5' || pathname.startsWith('/zz5/') ||
-      pathname === '/zz6' || pathname.startsWith('/zz6/')) {
-    return { mode: 'gated', tool: 'friend-apps', pathname };
-  }
+  if (pathname === '/zz5' || pathname.startsWith('/zz5/')) return { mode: 'gated', tool: 'unlock', pathname };
+  if (pathname === '/zz6' || pathname.startsWith('/zz6/')) return { mode: 'gated', tool: 'stopwatch-uni', pathname };
   const isToolsPath = pathname === '/tools' || pathname.startsWith('/tools/');
   if (!isToolsPath) {
     return { mode: 'block', pathname };
@@ -112,7 +110,7 @@ function safeReturnPath(pathname, search, fallback) {
 
 function loginRedirect(request, tool, pathname) {
   const requestUrl = new URL(request.url);
-  const fallback = tool === 'friend-apps' ? '/zz5/' : `/tools/${tool}/`;
+  const fallback = tool === 'unlock' ? '/zz5/' : tool === 'stopwatch-uni' ? '/zz6/' : `/tools/${tool}/`;
   const redirectUrl = new URL('/tools/login/', requestUrl.origin);
   redirectUrl.searchParams.set(
     'to',
@@ -131,8 +129,8 @@ export function shouldRenewGateCookie(gate, nowMs = Date.now()) {
 
 function gateCookieHeader(value, tool) {
   return [
-    `${COOKIE_NAME}=${value}`,
-    tool === 'friend-apps' ? 'Path=/' : 'Path=/tools',
+    `${gateCookieName(tool)}=${value}`,
+    tool === 'unlock' || tool === 'stopwatch-uni' ? 'Path=/' : 'Path=/tools',
     `Max-Age=${COOKIE_MAX_AGE}`,
     'HttpOnly',
     'Secure',
@@ -164,11 +162,12 @@ export default async function toolsGate(request, context) {
 
   const nowMs = Date.now();
   const gate = await verifyGateCookie(
-    cookieValue(request, COOKIE_NAME),
+    cookieValue(request, gateCookieName(tool)),
     secret,
     nowMs
   );
-  if (gate.valid && (gate.tool === tool || gate.tool === 'all')) {
+  if (gate.valid && (gate.tool === tool ||
+      (tool !== 'unlock' && tool !== 'stopwatch-uni' && gate.tool === 'all'))) {
     const response = await context.next();
     if (!shouldRenewGateCookie(gate, nowMs)) return response;
 

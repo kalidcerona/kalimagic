@@ -1,4 +1,4 @@
-const CACHE = "stopwatch-uni-v13";
+const CACHE = "stopwatch-uni-v14";
 const PREFIX = "stopwatch-uni-";
 const FILES = [
   './index.html',
@@ -17,7 +17,7 @@ self.addEventListener("activate", (event) => {
 });
 self.addEventListener("fetch", (event) => {
   const request = event.request;
-  if (request.method !== "GET" || new URL(request.url).origin !== self.location.origin) return;
+  if (request.method !== "GET" || !request.url.startsWith(self.registration.scope)) return;
   if (request.mode === "navigate") { event.respondWith(fetch(request).catch(() => caches.match("./index.html"))); return; }
   event.respondWith(caches.match(request).then((cached) => cached || fetch(request).then((response) => {
     if (response.ok) caches.open(CACHE).then((cache) => cache.put(request, response.clone())).catch(() => {});

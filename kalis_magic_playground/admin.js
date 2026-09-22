@@ -400,14 +400,13 @@
   var MEMBER_TOOL_LABELS = {
     calc: '계산기',
     stopwatch: '스톱워치',
-    'friend-apps': '언락 + 통합 스톱워치',
     all: '전체'
   };
 
   function memberToolAccessMap(data) {
     var accessByUserId = Object.create(null);
     (data.approved || []).forEach(function (access) {
-      if (!access.userId) return;
+      if (!access.userId || access.tool === 'unlock' || access.tool === 'stopwatch-uni') return;
       accessByUserId[access.userId] = {
         id: access.id,
         tool: access.tool,
@@ -460,7 +459,6 @@
     tool.name = 'tool';
     tool.appendChild(option('calc', '계산기', access && access.tool === 'calc'));
     tool.appendChild(option('stopwatch', '스톱워치', access && access.tool === 'stopwatch'));
-    tool.appendChild(option('friend-apps', '언락 + 통합 스톱워치', access && access.tool === 'friend-apps'));
     tool.appendChild(option('all', '전체', access && access.tool === 'all'));
 
     var lifetimeLabel = document.createElement('label');

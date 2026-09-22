@@ -5,13 +5,13 @@
   var el = window.PgUtil.el;
   var clear = window.PgUtil.clear;
   var fetchJson = window.PgUtil.fetchJson;
-  var TOOL_LABELS = { calc: '계산기', stopwatch: '스톱워치', 'friend-apps': '언락 + 통합 스톱워치', all: '전체' };
+  var TOOL_LABELS = { calc: '계산기', stopwatch: '스톱워치', unlock: '언락', 'stopwatch-uni': '통합 스톱워치', all: '전체' };
   var ENDPOINT = '/.netlify/functions/admin-tools';
 
-  function toolSelect(selected) {
+  function toolSelect(selected, allowed) {
     var select = document.createElement('select');
     select.name = 'tool';
-    ['calc', 'stopwatch', 'friend-apps', 'all'].forEach(function (value) {
+    (allowed || ['calc', 'stopwatch', 'unlock', 'stopwatch-uni', 'all']).forEach(function (value) {
       var option = document.createElement('option');
       option.value = value;
       option.textContent = TOOL_LABELS[value];
@@ -122,7 +122,10 @@
     card.appendChild(el('p', '', whoLine(item)));
     card.appendChild(el('span', '', '접속 ' + (formatWhen(item.requestedAt || item.createdAt) || '시각 없음')));
 
-    var tool = toolSelect(item.tool || 'calc');
+    var tool = toolSelect(item.tool || 'calc',
+      item.tool === 'unlock' || item.tool === 'stopwatch-uni'
+        ? [item.tool]
+        : ['calc', 'stopwatch', 'all']);
     var lifetime = document.createElement('input');
     var note = noteInput();
     var status = el('p', 'playground-form-status');
@@ -149,7 +152,7 @@
     reject.addEventListener('click', function () {
       if (!window.confirm((item.email ? item.email + ' 계정을' : '이 계정을') + ' 목록에서 삭제할까요?')) return;
       mutate(status, reject, '목록에서 삭제하는 중입니다.', '목록에서 삭제하지 못했습니다.', function () {
-        return fetchJson(ENDPOINT + '?id=' + encodeURIComponent(item.id), { method: 'DELETE' });
+        return fetchJson(ENDPOINT + '?id=' + encodeURIComponent(item.id) + '&tool=' + encodeURIComponent(item.tool || ''), { method: 'DELETE' });
       });
     });
 
@@ -185,7 +188,7 @@
     revoke.addEventListener('click', function () {
       if (!window.confirm((item.email || '이 계정') + ' 권한을 회수할까요?')) return;
       mutate(status, revoke, '회수하는 중입니다.', '회수하지 못했습니다.', function () {
-        return fetchJson(ENDPOINT + '?id=' + encodeURIComponent(item.id), { method: 'DELETE' });
+        return fetchJson(ENDPOINT + '?id=' + encodeURIComponent(item.id) + '&tool=' + encodeURIComponent(item.tool || ''), { method: 'DELETE' });
       });
     });
 

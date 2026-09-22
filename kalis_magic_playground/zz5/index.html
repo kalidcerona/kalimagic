@@ -12,7 +12,7 @@
     if (location.protocol === 'https:' && /^\/zz[56]\//.test(location.pathname)) {
       document.documentElement.style.visibility = 'hidden';
       const loginUrl = '/tools/login/?to=' + encodeURIComponent(location.pathname + location.search);
-      fetch('/tools/_check?tool=friend-apps', { credentials: 'same-origin', cache: 'no-store' })
+      fetch('/tools/_check?tool=unlock', { credentials: 'same-origin', cache: 'no-store' })
         .then((response) => response.json())
         .then((result) => {
           if (!result.ok) { location.replace(loginUrl); return; }

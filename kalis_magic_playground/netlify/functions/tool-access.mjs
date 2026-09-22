@@ -1,10 +1,11 @@
 import { bearerToken, requireViewer } from './_lib/auth.mjs';
 import { json, readJsonBody } from './_lib/http.mjs';
 import { getSupabaseAdmin } from './_lib/supabase.mjs';
-import { signGateCookie } from './_lib/tool-gate.mjs';
+import { gateCookieName, signGateCookie } from './_lib/tool-gate.mjs';
+import { FRIEND_APP_TOOLS, findFriendAccess, friendAccessDecision } from './_lib/friend-app-access.mjs';
 
 const COOKIE_MAX_AGE = 7_776_000;
-const REQUESTABLE_TOOLS = new Set(['stopwatch', 'calc', 'friend-apps']);
+const REQUESTABLE_TOOLS = new Set(['stopwatch', 'calc', ...FRIEND_APP_TOOLS]);
 
 // 순수 분기 판정: 조회한 행 + 요청한 도구 → 무엇을 할지.
 export function decideAccess(row, tool) {
@@ -164,6 +165,51 @@ async function identity(event, viewer, supabase) {
   };
 }
 
+async function issueGateCookie(email, tool, access, secret) {
+  const nowMs = Date.now();
+  const exp = Math.floor(nowMs / 1000) + COOKIE_MAX_AGE;
+  const kind = access.lifetime === true ? 'life' : 'std';
+  const value = await signGateCookie(email, tool, secret, nowMs, kind);
+  return json(200, { ok: true, tool, exp, kind }, {
+    'Set-Cookie': [
+      `${gateCookieName(tool)}=${value}`,
+      FRIEND_APP_TOOLS.has(tool) ? 'Path=/' : 'Path=/tools',
+      `Max-Age=${COOKIE_MAX_AGE}`,
+      'HttpOnly',
+      'Secure',
+      'SameSite=Lax'
+    ].join('; ')
+  });
+}
+
+export async function requestFriendApp(supabase, viewer, identityInfo, tool, secret) {
+  const { email, displayName, nickname } = identityInfo;
+  const { data: access, error } = await findFriendAccess(supabase, viewer.userId, email, tool);
+  if (error) return json(500, { error: 'db_error' });
+
+  const decision = friendAccessDecision(access);
+  if (decision === 'create') {
+    const { error: insertError } = await supabase.from('friend_app_access').insert({
+      user_id: viewer.userId,
+      email,
+      tool,
+      status: 'pending',
+      display_name: displayName,
+      nickname,
+      requested_at: new Date().toISOString()
+    });
+    if (insertError && insertError.code !== '23505') return json(500, { error: 'db_error' });
+    return json(403, { error: 'pending', status: 'pending' });
+  }
+
+  if (!access.user_id || needsEmailSync(access.email, email)) {
+    const patch = { user_id: viewer.userId, email };
+    await supabase.from('friend_app_access').update(patch).eq('id', access.id).then(null, () => {});
+  }
+  if (decision === 'pending') return json(403, { error: 'pending', status: 'pending' });
+  return issueGateCookie(email, tool, access, secret);
+}
+
 export async function handler(event) {
   if (event.httpMethod !== 'POST') {
     return json(405, { error: 'method_not_allowed' });
@@ -193,8 +239,13 @@ export async function handler(event) {
 
   try {
     const supabase = getSupabaseAdmin();
-    const { email, displayName, nickname } = await identity(event, viewer, supabase);
+    const identityInfo = await identity(event, viewer, supabase);
+    const { email, displayName, nickname } = identityInfo;
     if (!email) return json(401, { error: 'auth_required' });
+
+    if (FRIEND_APP_TOOLS.has(tool)) {
+      return await requestFriendApp(supabase, viewer, identityInfo, tool, secret);
+    }
 
     const { data: access, error } = await findAccess(supabase, viewer.userId, email);
     if (error) return json(500, { error: 'db_error' });
@@ -234,20 +285,7 @@ export async function handler(event) {
 
     if (decision === 'deny') return json(403, { error: 'not_allowed' });
 
-    const nowMs = Date.now();
-    const exp = Math.floor(nowMs / 1000) + COOKIE_MAX_AGE;
-    const kind = access.lifetime === true ? 'life' : 'std';
-    const value = await signGateCookie(email, tool, secret, nowMs, kind);
-    return json(200, { ok: true, tool, exp, kind }, {
-      'Set-Cookie': [
-        `kali_tool_gate=${value}`,
-        tool === 'friend-apps' ? 'Path=/' : 'Path=/tools',
-        `Max-Age=${COOKIE_MAX_AGE}`,
-        'HttpOnly',
-        'Secure',
-        'SameSite=Lax'
-      ].join('; ')
-    });
+    return await issueGateCookie(email, tool, access, secret);
   } catch {
     return json(500, { error: 'db_error' });
   }

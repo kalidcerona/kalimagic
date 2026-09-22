@@ -148,9 +148,10 @@
       }
 
       function showPending(email) {
-        var friendApps = tool === 'friend-apps';
+        var friendApps = tool === 'unlock' || tool === 'stopwatch-uni';
+        var appName = tool === 'unlock' ? '언락' : '통합 스톱워치';
         var lines = friendApps
-          ? ['언락과 통합 스톱워치 이용 신청이 접수되었습니다.', '칼리형이 이 구글 계정에 권한을 주면 사용할 수 있습니다.']
+          ? [appName + ' 이용 신청이 접수되었습니다.', '칼리형이 이 구글 계정에 권한을 주면 사용할 수 있습니다.']
           : ['권한이 없으니 구매한 뒤 사용해주세요.'];
         if (email) lines.push({ email: email });
         if (!friendApps && !email) lines.push('구매 후 로그인한 구글 이메일 계정으로 이용할 수 있습니다.');

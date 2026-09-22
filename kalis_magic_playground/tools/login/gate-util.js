@@ -14,7 +14,8 @@
   }
 
   function toolFromPath(path) {
-    if (/^\/zz[56]\//.test(path)) return 'friend-apps';
+    if (/^\/zz5\//.test(path)) return 'unlock';
+    if (/^\/zz6\//.test(path)) return 'stopwatch-uni';
     return /^\/tools\/stopwatch\//.test(path) ? 'stopwatch' : 'calc';
   }
 
@@ -45,7 +46,7 @@
       if (!ok) failed += 1;
       lines.push((ok ? 'PASS' : 'FAIL') + ' safeTo(' + JSON.stringify(row[0]) + ') = ' + JSON.stringify(actual) + (ok ? '' : ' (expected ' + JSON.stringify(row[1]) + ')'));
     });
-    [['/tools/stopwatch/', 'stopwatch'], ['/tools/calc/', 'calc'], ['/zz5/', 'friend-apps'], ['/zz6/', 'friend-apps'], [DEFAULT_TO, 'calc']].forEach(function (row) {
+    [['/tools/stopwatch/', 'stopwatch'], ['/tools/calc/', 'calc'], ['/zz5/', 'unlock'], ['/zz6/', 'stopwatch-uni'], [DEFAULT_TO, 'calc']].forEach(function (row) {
       var actual = toolFromPath(row[0]);
       var ok = actual === row[1];
       if (!ok) failed += 1;

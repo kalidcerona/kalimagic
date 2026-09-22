@@ -1,8 +1,14 @@
 const encoder = new TextEncoder();
 const decoder = new TextDecoder('utf-8', { fatal: true });
 const GATE_LIFETIME_SECONDS = 7_776_000;
-const VALID_TOOLS = new Set(['stopwatch', 'calc', 'friend-apps', 'all']);
+const VALID_TOOLS = new Set(['stopwatch', 'calc', 'unlock', 'stopwatch-uni', 'all']);
 const VALID_KINDS = new Set(['std', 'life']);
+
+export function gateCookieName(tool) {
+  if (tool === 'unlock') return 'kali_unlock_gate';
+  if (tool === 'stopwatch-uni') return 'kali_stopwatch_uni_gate';
+  return 'kali_tool_gate';
+}
 
 function bytesToBase64Url(bytes) {
   let binary = '';
