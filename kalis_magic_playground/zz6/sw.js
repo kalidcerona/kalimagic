@@ -1,5 +1,5 @@
-const CACHE = "stopwatch-uni-v14";
-const PREFIX = "stopwatch-uni-";
+const PREFIX = "stopwatch-uni-" + encodeURIComponent(self.registration.scope) + "-";
+const CACHE = PREFIX + "v15";
 const FILES = [
   './index.html',
   './logic.js',

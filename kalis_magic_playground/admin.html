@@ -3,9 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>마술문화 기록소 관리자 | 칼리형</title>
+  <title>앱 권한 관리 | 칼리형</title>
   <meta name="robots" content="noindex, nofollow">
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="admin-apps.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     window.MAGIC_PLAYGROUND_CONFIG = {
@@ -13,37 +14,101 @@
       supabasePublishableKey: 'sb_publishable_FZwzcGFQ06F65Butggp6rQ_fv3zZfkq'
     };
   </script>
-  <script src="nav.js" defer></script>
 </head>
-<body>
-  <div id="nav-root"></div>
-  <script>document.addEventListener('DOMContentLoaded',function(){renderNav('admin')})</script>
-  <main class="admin-shell">
-    <header class="playground-header">
-      <p class="playground-eyebrow">Kali only</p>
-      <h1>관리자</h1>
-      <p>새 질문, 후기, 숨김 처리할 글을 한 곳에서 봅니다.</p>
-      <div class="playground-auth" data-auth-panel></div>
+<body class="admin-apps-page">
+  <main class="admin-apps-shell">
+    <header class="admin-apps-header">
+      <div class="admin-apps-header__topline">
+        <p class="admin-apps-eyebrow"><span aria-hidden="true"></span> PRIVATE WORKSPACE</p>
+        <a class="admin-community-link" href="admin-community.html">커뮤니티 관리 <span aria-hidden="true">↗</span></a>
+      </div>
+      <h1>앱 권한 관리</h1>
+      <p class="admin-apps-intro">앱별 배포 링크를 확인하고, 접근 권한을 필요한 계정에 관리합니다.</p>
+      <div class="admin-apps-auth" data-auth-panel aria-live="polite"></div>
     </header>
-    <nav class="playground-tabs admin-tabs" aria-label="관리자 필터">
-      <button type="button" data-admin-filter="all" class="is-active">전체</button>
-      <button type="button" data-admin-filter="waiting">답변 대기</button>
-      <button type="button" data-admin-filter="private">비공개</button>
-      <button type="button" data-admin-filter="event_reviews">모임 후기</button>
-      <button type="button" data-admin-filter="hidden">숨김</button>
-      <button type="button" data-admin-filter="reports">신고</button>
-      <button type="button" data-admin-filter="magazine_candidates">매거진 후보</button>
-      <button type="button" data-admin-filter="mmbs_requests">입문 강의 신청</button>
-      <button type="button" data-admin-filter="members">회원 관리</button>
-      <button type="button" data-admin-filter="analytics">측정</button>
-    </nav>
-    <section class="admin-list" data-admin-list aria-live="polite"></section>
-    <section class="admin-list" data-tools-root aria-live="polite"></section>
+
+    <section class="admin-app-catalog" aria-labelledby="admin-app-catalog-title">
+      <div class="admin-section-heading">
+        <div>
+          <p class="admin-section-kicker">DISTRIBUTION</p>
+          <h2 id="admin-app-catalog-title">배포 앱</h2>
+        </div>
+        <p>링크를 복사해 앱을 공유하세요.</p>
+      </div>
+      <div class="admin-app-grid">
+        <article class="admin-app-card" data-app-card="calc">
+          <div class="admin-app-card__icon" aria-hidden="true">∑</div>
+          <div class="admin-app-card__copy">
+            <h3>계산기</h3>
+            <p>마술 계산 도구</p>
+            <span class="admin-app-card__count" data-app-count="calc">권한 확인 중</span>
+          </div>
+          <a class="admin-app-card__open" href="/tools/calc/" target="_blank" rel="noopener noreferrer" aria-label="계산기 앱 열기">↗</a>
+          <div class="admin-app-card__link-row">
+            <code>…/tools/calc/</code>
+            <button type="button" class="admin-copy-link" data-copy-link="/tools/calc/" aria-label="계산기 배포 링크 복사">복사</button>
+          </div>
+        </article>
+        <article class="admin-app-card" data-app-card="stopwatch">
+          <div class="admin-app-card__icon" aria-hidden="true">◷</div>
+          <div class="admin-app-card__copy">
+            <h3>스톱워치</h3>
+            <p>마술 루틴 타이머</p>
+            <span class="admin-app-card__count" data-app-count="stopwatch">권한 확인 중</span>
+          </div>
+          <a class="admin-app-card__open" href="/tools/stopwatch/" target="_blank" rel="noopener noreferrer" aria-label="스톱워치 앱 열기">↗</a>
+          <div class="admin-app-card__link-row">
+            <code>…/tools/stopwatch/</code>
+            <button type="button" class="admin-copy-link" data-copy-link="/tools/stopwatch/" aria-label="스톱워치 배포 링크 복사">복사</button>
+          </div>
+        </article>
+        <article class="admin-app-card" data-app-card="unlock">
+          <div class="admin-app-card__icon" aria-hidden="true">◇</div>
+          <div class="admin-app-card__copy">
+            <h3>언락</h3>
+            <p>언락 도구</p>
+            <span class="admin-app-card__count" data-app-count="unlock">권한 확인 중</span>
+          </div>
+          <a class="admin-app-card__open" href="/tools/unlock/" target="_blank" rel="noopener noreferrer" aria-label="언락 앱 열기">↗</a>
+          <div class="admin-app-card__link-row">
+            <code>…/tools/unlock/</code>
+            <button type="button" class="admin-copy-link" data-copy-link="/tools/unlock/" aria-label="언락 배포 링크 복사">복사</button>
+          </div>
+        </article>
+        <article class="admin-app-card" data-app-card="stopwatch-uni">
+          <div class="admin-app-card__icon" aria-hidden="true">◴</div>
+          <div class="admin-app-card__copy">
+            <h3>통합 스톱워치</h3>
+            <p>통합 루틴 타이머</p>
+            <span class="admin-app-card__count" data-app-count="stopwatch-uni">권한 확인 중</span>
+          </div>
+          <a class="admin-app-card__open" href="/tools/stopwatch-uni/" target="_blank" rel="noopener noreferrer" aria-label="통합 스톱워치 앱 열기">↗</a>
+          <div class="admin-app-card__link-row">
+            <code>…/tools/stopwatch-uni/</code>
+            <button type="button" class="admin-copy-link" data-copy-link="/tools/stopwatch-uni/" aria-label="통합 스톱워치 배포 링크 복사">복사</button>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="admin-access-section" aria-labelledby="admin-access-title">
+      <div class="admin-section-heading admin-section-heading--access">
+        <div>
+          <p class="admin-section-kicker">ACCESS CONTROL</p>
+          <h2 id="admin-access-title">이용 권한</h2>
+        </div>
+        <p>신청을 확인하고 계정별 앱 권한을 관리합니다.</p>
+      </div>
+      <div class="admin-access-panel" data-tools-root aria-live="polite" aria-busy="true">
+        <p class="admin-loading" role="status">관리자 세션을 확인하고 있습니다.</p>
+      </div>
+    </section>
   </main>
+
   <script src="pg-util.js"></script>
   <script src="auth.js"></script>
-  <script src="badges.js"></script>
-  <script src="admin.js"></script>
-  <script src="admin-tools.js" defer></script>
+  <script src="admin-session.js"></script>
+  <script src="admin-app-model.js"></script>
+  <script src="admin-tools.js"></script>
 </body>
 </html>

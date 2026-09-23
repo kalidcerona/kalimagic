@@ -50,7 +50,9 @@ def test_reviews_event_review_list_exists_and_form_mounts_in_playground():
 def test_admin_page_static_shell_exists():
     admin = (ROOT / "admin.html").read_text(encoding="utf-8")
     check("관리자" in admin, "[관리자] admin.html 제목 없음")
-    check("admin.js" in admin, "[관리자] admin.js 로드 없음")
+    check("admin-tools.js" in admin, "[관리자] 앱 권한 관리 스크립트 로드 없음")
+    community = (ROOT / "admin-community.html").read_text(encoding="utf-8")
+    check("admin.js" in community, "[커뮤니티 관리자] admin.js 로드 없음")
     check("auth.js" in admin, "[관리자] auth.js 로드 없음")
     assert not failures
 

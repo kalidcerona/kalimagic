@@ -182,7 +182,8 @@ test('admin approval and revocation target only the selected app table', async (
   assert.equal(response.statusCode, 200);
   assert.deepEqual(tables, ['friend_app_access']);
   tables.length = 0;
-  await deleteToolAccess({ queryStringParameters: { id, tool: 'stopwatch-uni' } }, supabase);
+  const deleted = await deleteToolAccess({ queryStringParameters: { id, tool: 'stopwatch-uni' } }, supabase);
+  assert.equal(deleted.statusCode, 200);
   assert.deepEqual(tables, ['friend_app_access']);
 });
 

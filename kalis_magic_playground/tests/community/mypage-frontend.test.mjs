@@ -77,7 +77,7 @@ test('playground, post, and mypage pages include nickname onboarding', () => {
 });
 
 test('admin front includes member management endpoints and role actions', () => {
-  const html = source('admin.html');
+  const html = source('admin-community.html');
   const js = source('admin.js');
 
   assert.match(html, /data-admin-filter="members"/);

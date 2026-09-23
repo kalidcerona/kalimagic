@@ -75,7 +75,7 @@ test('handler routes viewer GET/POST and admin filtered GET/PATCH', () => {
 test('frontend exposes request, pending, done, and admin completion states', () => {
   const mypageHtml = readFileSync(new URL('../../mypage.html', import.meta.url), 'utf8');
   const mypageJs = readFileSync(new URL('../../mypage.js', import.meta.url), 'utf8');
-  const adminHtml = readFileSync(new URL('../../admin.html', import.meta.url), 'utf8');
+  const adminHtml = readFileSync(new URL('../../admin-community.html', import.meta.url), 'utf8');
   const adminJs = readFileSync(new URL('../../admin.js', import.meta.url), 'utf8');
 
   assert.match(mypageHtml, /data-mypage-mmbs/);

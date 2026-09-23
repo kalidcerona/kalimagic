@@ -72,6 +72,16 @@ export function accessTableForTool(tool) {
   return FRIEND_APP_TOOLS.has(tool) ? 'friend_app_access' : 'tool_access';
 }
 
+function mutationDbError(error, tool) {
+  if (FRIEND_APP_TOOLS.has(tool) && ['42P01', 'PGRST205'].includes(error?.code)) {
+    return json(503, {
+      error: 'friend_apps_unavailable',
+      message: '친구 앱 권한 저장소가 아직 준비되지 않았습니다. 잠시 후 다시 시도해주세요.'
+    });
+  }
+  return json(500, { error: 'db_error' });
+}
+
 function shapeToolAccess(row) {
   return {
     id: row.id,
@@ -88,17 +98,23 @@ function shapeToolAccess(row) {
   };
 }
 
-async function listToolAccess(supabase) {
-  const { data, error } = await supabase
-    .from('tool_access')
-    .select(COLUMNS);
-  if (error) return json(500, { error: 'db_error' });
-  const { data: friendData, error: friendError } = await supabase
-    .from('friend_app_access')
-    .select(COLUMNS);
-  if (friendError) return json(500, { error: 'db_error' });
+async function readAccessTable(supabase, table) {
+  try {
+    const { data, error } = await supabase.from(table).select(COLUMNS);
+    return error ? { available: false, rows: [] } : { available: true, rows: data || [] };
+  } catch {
+    return { available: false, rows: [] };
+  }
+}
 
-  const rows = [...(data || []), ...(friendData || [])].map(shapeToolAccess);
+export async function listToolAccess(supabase) {
+  const [legacy, friendApps] = await Promise.all([
+    readAccessTable(supabase, 'tool_access'),
+    readAccessTable(supabase, 'friend_app_access')
+  ]);
+  if (!legacy.available && !friendApps.available) return json(500, { error: 'db_error' });
+
+  const rows = [...legacy.rows, ...friendApps.rows].map(shapeToolAccess);
   const pending = rows
     .filter((row) => row.status !== 'approved')
     .sort((a, b) => String(a.requestedAt || '').localeCompare(String(b.requestedAt || '')));
@@ -106,7 +122,15 @@ async function listToolAccess(supabase) {
     .filter((row) => row.status === 'approved')
     .sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
 
-  return json(200, { pending, approved });
+  const warnings = [];
+  if (!legacy.available) warnings.push({ code: 'legacy_apps_unavailable' });
+  if (!friendApps.available) warnings.push({ code: 'friend_apps_unavailable' });
+  return json(200, {
+    pending,
+    approved,
+    availability: { legacy: legacy.available, friendApps: friendApps.available },
+    warnings
+  });
 }
 
 async function approveToolAccess(payload, viewer, supabase) {
@@ -118,19 +142,25 @@ async function approveToolAccess(payload, viewer, supabase) {
     return json(400, { error: 'invalid_payload' });
   }
 
-  const { data, error } = await supabase
-    .from(accessTableForTool(tool))
-    .update({
-      status: 'approved',
-      tool,
-      lifetime,
-      note: note || null,
-      approved_at: new Date().toISOString(),
-      approved_by: viewer.userId
-    })
-    .eq('id', id)
-    .select('id');
-  if (error) return json(500, { error: 'db_error' });
+  let result;
+  try {
+    result = await supabase
+      .from(accessTableForTool(tool))
+      .update({
+        status: 'approved',
+        tool,
+        lifetime,
+        note: note || null,
+        approved_at: new Date().toISOString(),
+        approved_by: viewer.userId
+      })
+      .eq('id', id)
+      .select('id');
+  } catch (error) {
+    return mutationDbError(error, tool);
+  }
+  const { data, error } = result;
+  if (error) return mutationDbError(error, tool);
   if (!data || data.length === 0) return json(404, { error: 'not_found' });
 
   return json(200, { ok: true });
@@ -170,19 +200,23 @@ async function grantToolAccessByUser(payload, viewer, supabase) {
   }
 
   if (FRIEND_APP_TOOLS.has(tool)) {
-    const { data: existing, error: lookupError } = await findFriendAccess(supabase, userId, email, tool);
-    if (lookupError) return json(500, { error: 'db_error' });
-    const patch = {
-      user_id: userId, email, tool, nickname,
-      status: 'approved', lifetime, note: note || null,
-      approved_at: new Date().toISOString(), approved_by: viewer.userId
-    };
-    const result = existing
-      ? await supabase.from('friend_app_access').update(patch).eq('id', existing.id)
-      : await supabase.from('friend_app_access').insert({ ...patch, created_by: viewer.userId });
-    if (result.error?.code === '23505') return json(409, { error: 'already_exists' });
-    if (result.error) return json(500, { error: 'db_error' });
-    return json(200, { ok: true });
+    try {
+      const { data: existing, error: lookupError } = await findFriendAccess(supabase, userId, email, tool);
+      if (lookupError) return mutationDbError(lookupError, tool);
+      const patch = {
+        user_id: userId, email, tool, nickname,
+        status: 'approved', lifetime, note: note || null,
+        approved_at: new Date().toISOString(), approved_by: viewer.userId
+      };
+      const result = existing
+        ? await supabase.from('friend_app_access').update(patch).eq('id', existing.id)
+        : await supabase.from('friend_app_access').insert({ ...patch, created_by: viewer.userId });
+      if (result.error?.code === '23505') return json(409, { error: 'already_exists' });
+      if (result.error) return mutationDbError(result.error, tool);
+      return json(200, { ok: true });
+    } catch (error) {
+      return mutationDbError(error, tool);
+    }
   }
 
   const { data: userAccess, error: userAccessError } = await supabase
@@ -265,20 +299,26 @@ async function addToolAccess(payload, viewer, supabase) {
     return json(400, { error: 'invalid_payload' });
   }
 
-  const { error } = await supabase
-    .from(accessTableForTool(tool))
-    .insert({
-      email,
-      tool,
-      note: note || null,
-      lifetime,
-      status: 'approved',
-      approved_at: new Date().toISOString(),
-      approved_by: viewer.userId,
-      created_by: viewer.userId
-    });
+  let result;
+  try {
+    result = await supabase
+      .from(accessTableForTool(tool))
+      .insert({
+        email,
+        tool,
+        note: note || null,
+        lifetime,
+        status: 'approved',
+        approved_at: new Date().toISOString(),
+        approved_by: viewer.userId,
+        created_by: viewer.userId
+      });
+  } catch (error) {
+    return mutationDbError(error, tool);
+  }
+  const { error } = result;
   if (error?.code === '23505') return json(409, { error: 'already_exists' });
-  if (error) return json(500, { error: 'db_error' });
+  if (error) return mutationDbError(error, tool);
 
   return json(200, { ok: true });
 }
@@ -302,12 +342,21 @@ export async function deleteToolAccess(event, supabase) {
   const id = clean(event.queryStringParameters?.id);
   if (!validateUuid(id)) return json(400, { error: 'invalid_payload' });
   const tool = clean(event.queryStringParameters?.tool);
+  if (tool && !isValidTool(tool)) return json(400, { error: 'invalid_payload' });
 
-  const { error } = await supabase
-    .from(accessTableForTool(tool))
-    .delete()
-    .eq('id', id);
-  if (error) return json(500, { error: 'db_error' });
+  let result;
+  try {
+    result = await supabase
+      .from(accessTableForTool(tool))
+      .delete()
+      .eq('id', id)
+      .select('id');
+  } catch (error) {
+    return mutationDbError(error, tool);
+  }
+  const { data, error } = result;
+  if (error) return mutationDbError(error, tool);
+  if (!data || data.length === 0) return json(404, { error: 'not_found' });
 
   return json(200, { ok: true });
 }
