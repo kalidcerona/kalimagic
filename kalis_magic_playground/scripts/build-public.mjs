@@ -1,4 +1,4 @@
-import { cp, mkdir, readFile, rm, stat } from 'node:fs/promises';
+import { cp, mkdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -96,6 +96,41 @@ export const MIRROR_PAIRS = [
   ['../../magic-stopwatch-uni/logic.js', 'zz6/logic.js']
 ];
 
+export const DISTRIBUTION_APPS = [
+  { source: 'zz5', target: 'unlock', tool: 'unlock' },
+  { source: 'zz6', target: 'stopwatch-uni', tool: 'stopwatch-uni' }
+];
+
+function accessGuard(tool, target) {
+  return `  <script id="friend-apps-check">
+    if (location.protocol === 'https:' && location.pathname.startsWith('/tools/${target}/')) {
+      document.documentElement.style.visibility = 'hidden';
+      const loginUrl = '/tools/login/?to=' + encodeURIComponent(location.pathname + location.search);
+      fetch('/tools/_check?tool=${tool}', { credentials: 'same-origin', cache: 'no-store' })
+        .then((response) => response.json())
+        .then((result) => {
+          if (!result.ok) { location.replace(loginUrl); return; }
+          document.documentElement.style.visibility = '';
+        })
+        .catch(() => { location.replace(loginUrl); });
+    }
+  </script>`;
+}
+
+async function buildDistributionApps() {
+  for (const app of DISTRIBUTION_APPS) {
+    const source = path.join(ROOT, app.source);
+    const target = path.join(DIST, 'tools', app.target);
+    await cp(source, target, {
+      recursive: true,
+      filter: (entry) => shouldCopy(path.relative(ROOT, entry))
+    });
+    const indexPath = path.join(target, 'index.html');
+    const html = await readFile(indexPath, 'utf8');
+    await writeFile(indexPath, html.replace('<head>', `<head>\n${accessGuard(app.tool, app.target)}`));
+  }
+}
+
 async function exists(relativePath) {
   try {
     await stat(path.join(ROOT, relativePath));
@@ -144,6 +179,7 @@ export async function buildPublic() {
   await mkdir(DIST, { recursive: true });
   for (const file of PUBLIC_FILES) await copyIfExists(file);
   for (const dir of PUBLIC_DIRS) await copyIfExists(dir);
+  await buildDistributionApps();
   await verifyMirrors();
 }
 

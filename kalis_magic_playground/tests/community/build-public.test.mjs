@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readdir, readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { PUBLIC_FILES, PUBLIC_DIRS, PRIVATE_PATTERNS, MIRROR_PAIRS, buildPublic } from '../../scripts/build-public.mjs';
+import { PUBLIC_FILES, PUBLIC_DIRS, PRIVATE_PATTERNS, MIRROR_PAIRS, DISTRIBUTION_APPS, buildPublic } from '../../scripts/build-public.mjs';
 
 test('public build allowlist includes visible site pages', () => {
   assert.ok(PUBLIC_FILES.includes('index.html'));
@@ -47,6 +47,24 @@ test('public build verifies gated tool mirrors', () => {
     source === '../../magic-stopwatch/index.html' && mirror === 'tools/stopwatch/index.html'));
   assert.ok(MIRROR_PAIRS.some(([source, mirror]) =>
     source === '../../magic-calculator-v2/index.html' && mirror === 'tools/calc/index.html'));
+  assert.deepEqual(DISTRIBUTION_APPS, [
+    { source: 'zz5', target: 'unlock', tool: 'unlock' },
+    { source: 'zz6', target: 'stopwatch-uni', tool: 'stopwatch-uni' }
+  ]);
+});
+
+test('public build creates separate gated copies without changing personal zz apps', async () => {
+  await buildPublic();
+  const personalUnlock = await readFile(new URL('../../dist/zz5/index.html', import.meta.url), 'utf8');
+  const personalStopwatch = await readFile(new URL('../../dist/zz6/index.html', import.meta.url), 'utf8');
+  const sharedUnlock = await readFile(new URL('../../dist/tools/unlock/index.html', import.meta.url), 'utf8');
+  const sharedStopwatch = await readFile(new URL('../../dist/tools/stopwatch-uni/index.html', import.meta.url), 'utf8');
+  assert.doesNotMatch(personalUnlock, /id="friend-apps-check"/);
+  assert.doesNotMatch(personalStopwatch, /id="friend-apps-check"/);
+  assert.match(sharedUnlock, /id="friend-apps-check"/);
+  assert.match(sharedUnlock, /tools\/_check\?tool=unlock/);
+  assert.match(sharedStopwatch, /id="friend-apps-check"/);
+  assert.match(sharedStopwatch, /tools\/_check\?tool=stopwatch-uni/);
 });
 
 test('public build does not copy dotfiles from public directories', async () => {

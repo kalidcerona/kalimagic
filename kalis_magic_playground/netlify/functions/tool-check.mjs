@@ -6,7 +6,7 @@ import { FRIEND_APP_TOOLS } from './_lib/friend-app-access.mjs';
 export function clearGateCookie(tool) {
   return [
     `${gateCookieName(tool)}=`,
-    FRIEND_APP_TOOLS.has(tool) ? 'Path=/' : 'Path=/tools',
+    'Path=/tools',
     'Max-Age=0',
     'HttpOnly',
     'Secure',

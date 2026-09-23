@@ -173,7 +173,7 @@ async function issueGateCookie(email, tool, access, secret) {
   return json(200, { ok: true, tool, exp, kind }, {
     'Set-Cookie': [
       `${gateCookieName(tool)}=${value}`,
-      FRIEND_APP_TOOLS.has(tool) ? 'Path=/' : 'Path=/tools',
+      'Path=/tools',
       `Max-Age=${COOKIE_MAX_AGE}`,
       'HttpOnly',
       'Secure',

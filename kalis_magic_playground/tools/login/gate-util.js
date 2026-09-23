@@ -1,7 +1,7 @@
 (function () {
   var g = typeof window !== 'undefined' ? window : globalThis;
   var DEFAULT_TO = '/tools/calc/';
-  var ALLOWED = /^\/(?:tools\/(?:calc|stopwatch)|zz5|zz6)\//;
+  var ALLOWED = /^\/tools\/(?:calc|stopwatch|unlock|stopwatch-uni)\//;
 
   // 도구 게이트는 두 도구 경로로만 되돌려보낸다. 그 밖의 값은 전부 기본 경로로 떨어뜨린다.
   function safeTo(raw) {
@@ -14,8 +14,8 @@
   }
 
   function toolFromPath(path) {
-    if (/^\/zz5\//.test(path)) return 'unlock';
-    if (/^\/zz6\//.test(path)) return 'stopwatch-uni';
+    if (/^\/tools\/unlock\//.test(path)) return 'unlock';
+    if (/^\/tools\/stopwatch-uni\//.test(path)) return 'stopwatch-uni';
     return /^\/tools\/stopwatch\//.test(path) ? 'stopwatch' : 'calc';
   }
 
@@ -26,8 +26,8 @@
       ['/tools//evil.com', DEFAULT_TO],
       ['/tools/calc/', '/tools/calc/'],
       ['/tools/stopwatch/', '/tools/stopwatch/'],
-      ['/zz5/', '/zz5/'],
-      ['/zz6/', '/zz6/'],
+      ['/tools/unlock/', '/tools/unlock/'],
+      ['/tools/stopwatch-uni/', '/tools/stopwatch-uni/'],
       ['/tools/calc/?x=1', '/tools/calc/?x=1'],
       ['//evil.com', DEFAULT_TO],
       ['https://evil.com', DEFAULT_TO],
@@ -46,7 +46,7 @@
       if (!ok) failed += 1;
       lines.push((ok ? 'PASS' : 'FAIL') + ' safeTo(' + JSON.stringify(row[0]) + ') = ' + JSON.stringify(actual) + (ok ? '' : ' (expected ' + JSON.stringify(row[1]) + ')'));
     });
-    [['/tools/stopwatch/', 'stopwatch'], ['/tools/calc/', 'calc'], ['/zz5/', 'unlock'], ['/zz6/', 'stopwatch-uni'], [DEFAULT_TO, 'calc']].forEach(function (row) {
+    [['/tools/stopwatch/', 'stopwatch'], ['/tools/calc/', 'calc'], ['/tools/unlock/', 'unlock'], ['/tools/stopwatch-uni/', 'stopwatch-uni'], [DEFAULT_TO, 'calc']].forEach(function (row) {
       var actual = toolFromPath(row[0]);
       var ok = actual === row[1];
       if (!ok) failed += 1;

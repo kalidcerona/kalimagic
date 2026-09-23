@@ -26,12 +26,10 @@ function analyzePath(rawPathname) {
   }
 
   const pathname = lowerPath.replace(/\/{2,}/g, '/');
-  // Let an already-installed public PWA update its worker so online revocation can take effect.
-  if (pathname === '/zz5/sw.js' || pathname === '/zz6/sw.js') {
+  if (pathname === '/zz5' || pathname.startsWith('/zz5/') ||
+      pathname === '/zz6' || pathname.startsWith('/zz6/')) {
     return { mode: 'public', pathname };
   }
-  if (pathname === '/zz5' || pathname.startsWith('/zz5/')) return { mode: 'gated', tool: 'unlock', pathname };
-  if (pathname === '/zz6' || pathname.startsWith('/zz6/')) return { mode: 'gated', tool: 'stopwatch-uni', pathname };
   const isToolsPath = pathname === '/tools' || pathname.startsWith('/tools/');
   if (!isToolsPath) {
     return { mode: 'block', pathname };
@@ -54,6 +52,12 @@ function analyzePath(rawPathname) {
 
   if (pathname === '/tools/stopwatch' || pathname.startsWith('/tools/stopwatch/')) {
     return { mode: 'gated', tool: 'stopwatch', pathname };
+  }
+  if (pathname === '/tools/unlock' || pathname.startsWith('/tools/unlock/')) {
+    return { mode: 'gated', tool: 'unlock', pathname };
+  }
+  if (pathname === '/tools/stopwatch-uni' || pathname.startsWith('/tools/stopwatch-uni/')) {
+    return { mode: 'gated', tool: 'stopwatch-uni', pathname };
   }
 
   return { mode: 'gated', tool: DEFAULT_TOOL, pathname };
@@ -100,8 +104,8 @@ function safeReturnPath(pathname, search, fallback) {
   if (
     pathname.startsWith('/tools/calc/') ||
     pathname.startsWith('/tools/stopwatch/') ||
-    pathname.startsWith('/zz5/') ||
-    pathname.startsWith('/zz6/')
+    pathname.startsWith('/tools/unlock/') ||
+    pathname.startsWith('/tools/stopwatch-uni/')
   ) {
     return `${pathname}${search}`;
   }
@@ -110,7 +114,7 @@ function safeReturnPath(pathname, search, fallback) {
 
 function loginRedirect(request, tool, pathname) {
   const requestUrl = new URL(request.url);
-  const fallback = tool === 'unlock' ? '/zz5/' : tool === 'stopwatch-uni' ? '/zz6/' : `/tools/${tool}/`;
+  const fallback = `/tools/${tool}/`;
   const redirectUrl = new URL('/tools/login/', requestUrl.origin);
   redirectUrl.searchParams.set(
     'to',
@@ -130,7 +134,7 @@ export function shouldRenewGateCookie(gate, nowMs = Date.now()) {
 function gateCookieHeader(value, tool) {
   return [
     `${gateCookieName(tool)}=${value}`,
-    tool === 'unlock' || tool === 'stopwatch-uni' ? 'Path=/' : 'Path=/tools',
+    'Path=/tools',
     `Max-Age=${COOKIE_MAX_AGE}`,
     'HttpOnly',
     'Secure',
