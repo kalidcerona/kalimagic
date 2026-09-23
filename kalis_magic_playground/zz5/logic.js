@@ -7,10 +7,6 @@ export function normalizeSettings(value = {}) {
     performance: value.performance === 'time-machine' ? 'time-machine' : 'pin',
     timeDelay: number('timeDelay', 3, 0, 60),
     timeDuration: number('timeDuration', 8, 1, 60),
-    gridValues: Array.from({ length: 9 }, (_, i) => {
-      const n = Number(value.gridValues?.[i] ?? i + 1);
-      return Number.isFinite(n) ? Math.min(99, Math.max(1, Math.trunc(n))) : i + 1;
-    }),
     style: value.style === 'galaxy' ? 'galaxy' : 'ios',
     digits: value.digits === 4 ? 4 : 6,
     unlockMode: value.unlockMode === 'attempt' ? 'attempt' : 'timer',

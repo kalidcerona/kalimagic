@@ -164,12 +164,14 @@
     .attempt-pin { letter-spacing: 3px; font-size: 12px; line-height: 1.25; font-weight: 600; }
     #time-black { z-index: 3; background: #000; touch-action: none; }
     #time-lock { z-index: 3; background: radial-gradient(ellipse at 20% 10%, #575d78, #10151e); text-align: center; touch-action: none; }
-    #time-date { padding-top: max(12vh, 45px); font-size: 20px; }
-    #time-clock { display: block; margin-top: 8px; font-size: clamp(68px, 22vw, 100px); line-height: 1; font-weight: 300; font-variant-numeric: tabular-nums; letter-spacing: -3px; }
-    #time-seconds { font-size: 24px; margin-top: 10px; font-variant-numeric: tabular-nums; }
-    .time-lock-icon { margin-top: 24px; font-size: 22px; }
-    #time-grid-fields { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-    #time-grid-fields input { width: 100%; }
+    #time-clock-backdrop { position: absolute; inset: 9% 0 auto; height: 51%; background: rgba(18, 22, 33, .12); backdrop-filter: blur(44px); -webkit-backdrop-filter: blur(44px); -webkit-mask-image: linear-gradient(transparent, #000 17%, #000 78%, transparent); mask-image: linear-gradient(transparent, #000 17%, #000 78%, transparent); pointer-events: none; }
+    #time-face { position: absolute; z-index: 1; top: 13%; width: 100%; text-shadow: 0 2px 12px #0005; pointer-events: none; }
+    #time-date { font-size: clamp(18px, 5.3vw, 24px); font-weight: 500; }
+    #time-clock { display: flex; justify-content: center; align-items: center; margin-top: 14px; font-size: clamp(70px, 22vw, 100px); line-height: 1; font-weight: 300; font-variant-numeric: tabular-nums; letter-spacing: -.045em; }
+    #time-lock.galaxy #time-clock { font-weight: 400; }
+    .time-colon { display: inline-flex; flex-direction: column; justify-content: center; gap: .26em; width: .16em; height: .8em; margin: 0 .025em; }
+    .time-colon::before, .time-colon::after { content: ''; display: block; width: .09em; height: .09em; border-radius: 50%; background: currentColor; }
+    @media (prefers-reduced-motion: reduce) { #time-clock span { animation: none !important; } }
     #settings-screen { z-index: 5; overflow-y: auto; background: #101115; padding: 28px 22px max(32px, env(safe-area-inset-bottom)); touch-action: pan-y; }
     .settings-inner { max-width: 480px; margin: auto; }
     .eyebrow { color: #aaa4f7; font-size: 11px; font-weight: 700; letter-spacing: 3px; }
@@ -258,7 +260,9 @@
     </section>
     <section id="time-black" class="screen" aria-label="타임머신 준비" hidden></section>
     <section id="time-lock" class="screen" aria-label="타임머신 잠금 화면" hidden>
-      <div id="time-date"></div><time id="time-clock"></time><div id="time-seconds"></div><div class="time-lock-icon" aria-hidden="true">🔒</div>
+      <img id="time-wallpaper" class="wallpaper" alt="" hidden draggable="false">
+      <div id="time-clock-backdrop"></div>
+      <div id="time-face"><div id="time-date"></div><time id="time-clock"><span id="time-hour"></span><span class="time-colon" aria-hidden="true"></span><span id="time-minute"></span></time></div>
     </section>
     <section id="settings-screen" class="screen" aria-label="설정" hidden>
       <div class="settings-inner">
@@ -276,11 +280,10 @@
             <h2>연출</h2>
             <label class="field">연출 선택<select id="performance"><option value="pin">PIN 언락</option><option value="time-machine">타임머신</option></select></label>
             <div id="time-options" hidden>
-              <p class="hint">검은 화면을 3×3으로 나눈 숨은 칸입니다. 각 칸의 숫자만큼 현재 시각에 분을 더합니다. 잠금 화면을 두 번 탭하면 대기 후 현재 시각으로 돌아옵니다.</p>
-              <div id="time-grid-fields"></div>
+              <p class="hint">PIN 화면의 긴급 상황(iPhone) 또는 긴급전화(갤럭시)를 빠르게 두 번 탭하면 검은 화면이 열립니다. 검은 화면은 보이지 않는 전화 숫자판입니다. 첫째 줄 1·2·3, 둘째 줄 4·5·6, 셋째 줄 7·8·9, 맨 아래 가운데 0을 두 번 입력하세요. 예: 0→3은 03분, 1→5는 15분입니다.</p>
               <label class="field">두 번 탭 후 대기 (초)<input id="time-delay" type="number" min="0" max="60" step="0.1" value="3"></label>
               <label class="field">되감기 시간 (초)<input id="time-duration" type="number" min="1" max="60" step="0.1" value="8"></label>
-              <p class="hint">이 연출은 앱 안의 잠금 화면입니다. 초 숫자도 함께 내려가며 마지막에는 기기의 현재 시각과 일치합니다.</p>
+              <p class="hint">두 번째 숫자를 누르면 등록한 잠금화면 이미지가 나타납니다. 이 화면을 빠르게 두 번 탭하면 대기 후 시각이 천천히 내려가 현재 시각과 일치합니다. 앱 안의 화면이며 휴대폰의 실제 시계는 바꾸지 않습니다.</p>
             </div>
           </div>
           <div class="group">
@@ -325,7 +328,7 @@
   <script type="module">
     import { FINGERPRINT_HOLD_MS, normalizeSettings, lockScreenCopy, createState, pushDigit, submitPin, fingerprintHold, attemptFeedback, feedbackVibration, deleteDigit, clearCurrent, toggleDigits, reset, isHomeGestureArea, peekOffset, registerTwoFingerTap, settleTwoFingerTaps, registerLockTap, formatAttemptLabel } from './logic.js';
 
-    import { gridMinutes, timeMachineOffset, isSettingsSwipe, horizontalPeekOffset } from './time-machine.js';
+    import { hiddenDigit, appendMinuteDigit, registerEmergencyTap, timeMachineOffset, isSettingsSwipe, horizontalPeekOffset } from './time-machine.js';
 
     const $ = (id) => document.getElementById(id);
     const SETTINGS_KEY = 'unlock-settings-v1';
@@ -348,8 +351,10 @@
     let swipe = null;
     let settingsSwipe = null;
     let timeMinutes = 0;
+    let timeDigits = [];
     let timeTriggeredAt = null;
     let timeLastTap = null;
+    let emergencyLastTap = null;
     let timeFrame = null;
     let timePointer = null;
     let timeSuppressUntil = 0;
@@ -410,8 +415,10 @@
       cancelAnimationFrame(timeFrame);
       timePointer = null;
       timeLastTap = null;
+      emergencyLastTap = null;
       $('time-black').hidden = next !== 'time-black';
       $('time-lock').hidden = next !== 'time-lock';
+      $('time-lock').classList.toggle('galaxy', settings.style === 'galaxy');
       if (next === 'time-lock') renderTimeMachine();
       $('input-screen').hidden = next !== 'input' && !(next === 'unlocked' && animate);
       $('unlocked-screen').hidden = next !== 'unlocked';
@@ -517,6 +524,17 @@
       renderInput();
     }
     $('delete').addEventListener('click', removeDigit);
+    $('emergency').addEventListener('click', () => {
+      if (screen !== 'input' || settings.performance !== 'time-machine') return;
+      const result = registerEmergencyTap(emergencyLastTap, performance.now());
+      emergencyLastTap = result.lastTap;
+      if (result.enter) {
+        timeDigits = [];
+        timeMinutes = 0;
+        timeTriggeredAt = null;
+        showScreen('time-black');
+      }
+    });
     backspaceKey.addEventListener('click', removeDigit);
     confirmKey.addEventListener('click', () => {
       if (screen !== 'input' || settings.style !== 'galaxy' || feedback) return;
@@ -572,7 +590,7 @@
     function gestureAction(action) {
       if (!action) return;
       clearFeedback();
-      if (action === 'reset') { state = reset(state); showScreen(settings.performance === 'time-machine' ? 'time-black' : 'input'); }
+      if (action === 'reset') { state = reset(state); timeDigits = []; timeTriggeredAt = null; showScreen('input'); }
       if (action === 'settings') { state = clearCurrent(state); showScreen('settings'); }
     }
 
@@ -681,7 +699,6 @@
       $('performance').value = settings.performance;
       $('time-delay').value = settings.timeDelay;
       $('time-duration').value = settings.timeDuration;
-      settings.gridValues.forEach((value, i) => { $('time-grid-' + i).value = value; });
       $('style').value = settings.style;
       $('digits').value = settings.digits;
       $('unlock-mode').value = settings.unlockMode;
@@ -696,7 +713,7 @@
     }
 
     function formSettings() {
-      return normalizeSettings({ performance: $('performance').value, timeDelay: $('time-delay').value, timeDuration: $('time-duration').value, gridValues: Array.from({length:9}, (_,i) => $('time-grid-' + i).value), style: $('style').value, digits: Number($('digits').value), unlockMode: $('unlock-mode').value,
+      return normalizeSettings({ performance: $('performance').value, timeDelay: $('time-delay').value, timeDuration: $('time-duration').value, style: $('style').value, digits: Number($('digits').value), unlockMode: $('unlock-mode').value,
         unlockAttempt: $('unlock-attempt').value, vibration: $('vibration').checked, delaySeconds: $('delay').value,
         cropTop: $('crop').value, imagePosition: $('position').value, statusStyle: $('status-style').value, statusColor: $('status-color').value });
     }
@@ -714,7 +731,7 @@
       document.documentElement.style.setProperty('--status-color', value.statusColor);
       document.querySelector('meta[name="theme-color"]').content = value.statusColor;
       document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]').content = value.statusStyle;
-      for (const id of ['lock-image', 'unlock-image', 'lock-preview', 'unlock-preview']) {
+      for (const id of ['lock-image', 'unlock-image', 'time-wallpaper', 'lock-preview', 'unlock-preview']) {
         $(id).style.objectPosition = `50% ${value.imagePosition}%`;
       }
       for (const preview of document.querySelectorAll('.preview')) {
@@ -804,6 +821,7 @@
       imageURLs.set(key, url);
       $(`${key}-image`).src = url;
       $(`${key}-image`).hidden = false;
+      if (key === 'lock') { $('time-wallpaper').src = url; $('time-wallpaper').hidden = false; }
       if (previous) URL.revokeObjectURL(previous);
       $(`${key}-info`).textContent = `등록됨 · ${img.naturalWidth} × ${img.naturalHeight}`;
       applyAppearance(formSettings());
@@ -890,21 +908,28 @@
       });
     }
 
-    for (let i = 0; i < 9; i += 1) {
-      const input = document.createElement('input');
-      input.id = 'time-grid-' + i;
-      input.type = 'number'; input.min = '1'; input.max = '99'; input.step = '1';
-      input.setAttribute('aria-label', `${Math.floor(i / 3) + 1}행 ${i % 3 + 1}열에 더할 분`);
-      $('time-grid-fields').append(input);
-    }
-
     function renderTimeMachine() {
       if (screen !== 'time-lock') return;
       const offset = timeMachineOffset(timeMinutes, timeTriggeredAt, performance.now(), settings.timeDelay, settings.timeDuration);
       const date = new Date(Date.now() + offset);
       $('time-date').textContent = date.toLocaleDateString('ko-KR', {month:'long',day:'numeric',weekday:'long'});
-      $('time-clock').textContent = `${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
-      $('time-seconds').textContent = String(date.getSeconds()).padStart(2,'0');
+      const hour = String(date.getHours()).padStart(2, '0');
+      const minute = String(date.getMinutes()).padStart(2, '0');
+      for (const [id, value] of [['time-hour', hour], ['time-minute', minute]]) {
+        const element = $(id);
+        if (element.textContent === value) continue;
+        const hadValue = element.textContent.length > 0;
+        element.textContent = value;
+        if (hadValue && timeTriggeredAt !== null && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          element.getAnimations().forEach((animation) => animation.cancel());
+          element.animate([
+            { opacity: .12, transform: 'translateY(-13px)', filter: 'blur(5px)' },
+            { opacity: 1, transform: 'translateY(0)', filter: 'blur(0)' },
+          ], { duration: 650, easing: 'cubic-bezier(.18,.75,.2,1)' });
+        }
+      }
+      $('time-clock').dateTime = date.toISOString();
+      $('time-clock').setAttribute('aria-label', `${hour}시 ${minute}분`);
       timeFrame = requestAnimationFrame(renderTimeMachine);
     }
 
@@ -921,9 +946,12 @@
             || performance.now() - point.at > 500 || Math.hypot(event.clientX-point.x,event.clientY-point.y)>12) return;
         if (screen === 'time-black') {
           const rect = $('time-black').getBoundingClientRect();
-          const minutes = gridMinutes(event.clientX-rect.left,event.clientY-rect.top,rect.width,rect.height,settings.gridValues);
-          if (minutes === null) return;
-          timeMinutes = minutes; timeTriggeredAt = null;
+          const digit = hiddenDigit(event.clientX-rect.left,event.clientY-rect.top,rect.width,rect.height);
+          if (digit === null) return;
+          const entry = appendMinuteDigit(timeDigits, digit);
+          timeDigits = entry.digits;
+          if (entry.minutes === null) return;
+          timeMinutes = entry.minutes; timeTriggeredAt = null;
           showScreen('time-lock');
         } else if (screen === 'time-lock' && timeTriggeredAt === null) {
           const now = performance.now();
@@ -949,7 +977,8 @@
         tapSequence = null;
         clearTimeout(tapTimer);
         timeTriggeredAt = null;
-        showScreen(settings.performance === 'time-machine' ? 'time-black' : 'input');
+        timeDigits = [];
+        showScreen('input');
       } catch { $('storage-status').textContent = '이미지 처리 실패. 잘라낼 높이와 이미지를 확인하세요.'; }
       finally { $('start').disabled = false; }
     });

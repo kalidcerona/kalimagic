@@ -1,8 +1,26 @@
-// Coordinates are local to the black performance screen.
-export function gridMinutes(x, y, width, height, values = [1,2,3,4,5,6,7,8,9]) {
+// Coordinates are local to the black performance screen's invisible phone keypad.
+export function hiddenDigit(x, y, width, height) {
   if (![x,y,width,height].every(Number.isFinite) || width <= 0 || height <= 0
       || x < 0 || y < 0 || x >= width || y >= height) return null;
-  return values[Math.floor(y / height * 3) * 3 + Math.floor(x / width * 3)];
+  const column = Math.floor(x / width * 3);
+  const row = Math.floor(y / height * 4);
+  if (row === 3) return column === 1 ? 0 : null;
+  return row * 3 + column + 1;
+}
+
+export function appendMinuteDigit(digits, digit) {
+  if (!Number.isInteger(digit) || digit < 0 || digit > 9 || digits.length >= 2) {
+    return { digits, minutes: null };
+  }
+  const next = [...digits, digit];
+  return { digits: next, minutes: next.length === 2 ? next[0] * 10 + next[1] : null };
+}
+
+export function registerEmergencyTap(lastTap, now) {
+  if (lastTap !== null && now - lastTap <= 450 && now >= lastTap) {
+    return { lastTap: null, enter: true };
+  }
+  return { lastTap: now, enter: false };
 }
 
 // Remove an offset from the live clock, never from a frozen clock snapshot.

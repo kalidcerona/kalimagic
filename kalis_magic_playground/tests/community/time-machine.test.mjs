@@ -1,12 +1,25 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { gridMinutes, timeMachineOffset, isSettingsSwipe } from '../../zz5/time-machine.js';
+import { hiddenDigit, appendMinuteDigit, registerEmergencyTap, timeMachineOffset, isSettingsSwipe } from '../../zz5/time-machine.js';
 
-test('time machine grid selects a stored minute and ignores outside touches', () => {
-  const values = [9,8,7,6,5,4,3,2,1];
-  assert.equal(gridMinutes(0, 0, 300, 600, values), 9);
-  assert.equal(gridMinutes(299, 599, 300, 600, values), 1);
-  assert.equal(gridMinutes(300, 1, 300, 600, values), null);
+test('hidden keypad includes zero and ignores unused bottom corners', () => {
+  assert.equal(hiddenDigit(10, 10, 300, 800), 1);
+  assert.equal(hiddenDigit(150, 700, 300, 800), 0);
+  assert.equal(hiddenDigit(10, 700, 300, 800), null);
+  assert.equal(hiddenDigit(290, 700, 300, 800), null);
+  assert.equal(hiddenDigit(300, 10, 300, 800), null);
+});
+
+test('two hidden digits select 03 and 15 minutes without leading-zero loss', () => {
+  assert.deepEqual(appendMinuteDigit([], 0), { digits: [0], minutes: null });
+  assert.deepEqual(appendMinuteDigit([0], 3), { digits: [0, 3], minutes: 3 });
+  assert.deepEqual(appendMinuteDigit([1], 5), { digits: [1, 5], minutes: 15 });
+});
+
+test('emergency entry requires two taps within the window', () => {
+  assert.deepEqual(registerEmergencyTap(null, 1000), { lastTap: 1000, enter: false });
+  assert.deepEqual(registerEmergencyTap(1000, 1400), { lastTap: null, enter: true });
+  assert.deepEqual(registerEmergencyTap(1000, 1600), { lastTap: 1600, enter: false });
 });
 
 test('time machine gradually rejoins the live clock after a delay', () => {
