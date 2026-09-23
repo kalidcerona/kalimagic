@@ -368,6 +368,41 @@
     meta.appendChild(el('span', '', '등록 ' + formatDate(item.createdAt, false)));
     card.appendChild(meta);
     if (item.note) card.appendChild(el('p', 'admin-access-card__note', item.note));
+    var availableToAdd = model.additionalToolOptions(item, state.data.approved, availability);
+    var grantForm = el('form', 'admin-access-card__grant');
+    var grantLabel = el('label', 'admin-field');
+    grantLabel.appendChild(el('span', 'admin-field__label', '이 계정에 앱 권한 추가'));
+    var grantSelect = selectControl('additionalTool', availableToAdd.map(function (toolId) {
+      return { value: toolId, label: model.toolLabel(toolId) };
+    }), availableToAdd[0]);
+    grantSelect.setAttribute('aria-label', (item.email || '계정') + ' 추가할 앱');
+    grantLabel.appendChild(grantSelect);
+    grantForm.appendChild(grantLabel);
+    var grantLifetime = makeLifetime();
+    grantForm.appendChild(grantLifetime.label);
+    var grantButton = el('button', 'admin-button admin-button--gold', '권한 추가');
+    grantButton.type = 'submit';
+    grantForm.appendChild(grantButton);
+    var grantStatus = el('p', 'admin-action-status');
+    grantStatus.setAttribute('role', 'status');
+    grantForm.appendChild(grantStatus);
+    if (availableToAdd.length) {
+      grantForm.addEventListener('submit', function (event) {
+        event.preventDefault();
+        runMutation(grantStatus, grantButton, '권한을 추가하고 있습니다.', function () {
+          return fetchJson(endpoint, { method: 'POST', body: JSON.stringify({
+            action: 'addToPerson', email: item.email, tool: grantSelect.value,
+            lifetime: grantLifetime.input.checked
+          }) });
+        });
+      });
+    } else {
+      grantSelect.disabled = true;
+      grantLifetime.input.disabled = true;
+      grantButton.disabled = true;
+      setStatus(grantStatus, '추가할 수 있는 앱 권한이 없습니다.', true);
+    }
+    card.appendChild(grantForm);
     var status = el('p', 'admin-action-status');
     status.setAttribute('role', 'status');
     var revoke = button('권한 회수', 'admin-button admin-button--quiet');

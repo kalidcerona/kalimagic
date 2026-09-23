@@ -323,6 +323,56 @@ async function addToolAccess(payload, viewer, supabase) {
   return json(200, { ok: true });
 }
 
+async function addAccessToPerson(payload, viewer, supabase) {
+  const email = normalizeEmail(payload?.email);
+  const tool = clean(payload?.tool);
+  const lifetime = payload?.lifetime ?? false;
+  if (!isValidEmail(email) || !isValidTool(tool) || tool === 'all' || typeof lifetime !== 'boolean') {
+    return json(400, { error: 'invalid_payload' });
+  }
+
+  const table = accessTableForTool(tool);
+  let lookup;
+  try {
+    let query = supabase.from(table).select('id,email,tool,status,lifetime').ilike('email', escapeIlikePattern(email));
+    if (FRIEND_APP_TOOLS.has(tool)) query = query.eq('tool', tool);
+    lookup = await query.limit(1).maybeSingle();
+  } catch (error) {
+    return mutationDbError(error, tool);
+  }
+  if (lookup.error) return mutationDbError(lookup.error, tool);
+
+  const existing = lookup.data;
+  if (existing?.status === 'approved' &&
+      (existing.tool === 'all' || existing.tool === tool)) {
+    return json(409, { error: 'already_exists' });
+  }
+
+  const nextTool = table === 'tool_access' && existing?.status === 'approved'
+    ? 'all' : tool;
+  const patch = {
+    tool: nextTool,
+    status: 'approved',
+    lifetime: Boolean(existing?.lifetime || lifetime),
+    approved_at: new Date().toISOString(),
+    approved_by: viewer.userId
+  };
+  let result;
+  try {
+    result = existing
+      ? await supabase.from(table).update(patch).eq('id', existing.id).select('id')
+      : await supabase.from(table).insert({ ...patch, email, created_by: viewer.userId });
+  } catch (error) {
+    return mutationDbError(error, tool);
+  }
+  if (result.error?.code === '23505') return json(409, { error: 'already_exists' });
+  if (result.error) return mutationDbError(result.error, tool);
+  if (existing && Array.isArray(result.data) && result.data.length === 0) {
+    return json(404, { error: 'not_found' });
+  }
+  return json(200, { ok: true });
+}
+
 export async function postToolAccess(event, viewer, supabase) {
   let payload;
   try {
@@ -334,6 +384,7 @@ export async function postToolAccess(event, viewer, supabase) {
   const action = clean(payload?.action);
   if (action === 'approve') return approveToolAccess(payload, viewer, supabase);
   if (action === 'add') return addToolAccess(payload, viewer, supabase);
+  if (action === 'addToPerson') return addAccessToPerson(payload, viewer, supabase);
   if (action === 'grantByUser') return grantToolAccessByUser(payload, viewer, supabase);
   return json(400, { error: 'invalid_payload' });
 }

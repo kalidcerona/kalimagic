@@ -113,6 +113,20 @@
     return counts;
   }
 
+  function additionalToolOptions(person, approvedRows, availability) {
+    var email = String(person && person.email || '').trim().toLowerCase();
+    if (!email) return [];
+    var owned = new Set();
+    (approvedRows || []).forEach(function (row) {
+      if (String(row.email || '').trim().toLowerCase() !== email) return;
+      if (row.tool === 'all') LEGACY_TOOLS.forEach(function (tool) { owned.add(tool); });
+      else owned.add(row.tool);
+    });
+    return APP_CATALOG.filter(function (app) {
+      return isToolAvailable(app.id, availability) && !owned.has(app.id);
+    }).map(function (app) { return app.id; });
+  }
+
   function errorMessage(error) {
     var code = error && error.code;
     var status = error && error.status;
@@ -138,6 +152,7 @@
     availabilityMessage: availabilityMessage,
     filterRows: filterRows,
     countByTool: countByTool,
+    additionalToolOptions: additionalToolOptions,
     errorMessage: errorMessage
   });
 });

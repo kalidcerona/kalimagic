@@ -75,3 +75,11 @@ test('admin API errors map duplicate grants and denied sessions to clear message
   assert.equal(model.errorMessage({ status: 409, code: 'already_exists' }), '이 이메일과 앱의 권한이 이미 등록되어 있습니다.');
   assert.equal(model.errorMessage({ status: 403 }), '관리자 권한이 확인되지 않았습니다. 다시 로그인해 주세요.');
 });
+
+test('an approved person can be offered only apps they do not already have', () => {
+  const person = { email: 'friend@example.com', tool: 'stopwatch' };
+  const approved = [person, { email: 'FRIEND@example.com', tool: 'unlock' }, { email: 'other@example.com', tool: 'calc' }];
+  assert.deepEqual(Array.from(model.additionalToolOptions(person, approved, { legacy: true, friendApps: true })), ['calc', 'stopwatch-uni']);
+  assert.deepEqual(Array.from(model.additionalToolOptions(person, approved, { legacy: true, friendApps: false })), ['calc']);
+  assert.deepEqual(Array.from(model.additionalToolOptions({ email: 'all@example.com', tool: 'all' }, [{ email: 'all@example.com', tool: 'all' }], { legacy: true, friendApps: true })), ['unlock', 'stopwatch-uni']);
+});
