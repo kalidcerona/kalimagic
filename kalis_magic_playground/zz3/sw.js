@@ -1,4 +1,4 @@
-const CACHE = "stopwatch-v2";
+const CACHE = "stopwatch-v6";
 const PREFIX = "stopwatch-";
 const SHELL = [
   "./",
@@ -19,7 +19,7 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys()
       .then((names) => Promise.all(names
-        .filter((name) => name.startsWith(PREFIX) && name !== CACHE)
+        .filter((name) => /^stopwatch-v\d+$/.test(name) && name !== CACHE)
         .map((name) => caches.delete(name))))
       .then(() => self.clients.claim()),
   );

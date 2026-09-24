@@ -1,4 +1,4 @@
-const CACHE = "calc2-v1";
+const CACHE = "calc2-v4";
 const PREFIX = "calc2-";
 const SHELL = [
   "./",

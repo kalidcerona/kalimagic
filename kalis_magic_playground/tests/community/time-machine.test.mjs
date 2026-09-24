@@ -31,6 +31,7 @@ test('time machine gradually rejoins the live clock after a delay', () => {
 
 test('settings gesture requires two matching downward swipes', () => {
   const start = [{id:1,x:20,y:50},{id:2,x:200,y:50}];
-  assert.equal(isSettingsSwipe(start,[{id:1,x:22,y:130},{id:2,x:203,y:140}]),true);
-  assert.equal(isSettingsSwipe(start,[{id:1,x:22,y:130},{id:2,x:203,y:55}]),false);
+  assert.equal(isSettingsSwipe(start,[{id:1,x:22,y:130},{id:2,x:203,y:140}]),false);
+  assert.equal(isSettingsSwipe(start,[{id:1,x:22,y:150},{id:2,x:203,y:160}]),true);
+  assert.equal(isSettingsSwipe(start,[{id:1,x:22,y:150},{id:2,x:203,y:55}]),false);
 });

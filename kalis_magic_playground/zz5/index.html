@@ -152,6 +152,14 @@
     .galaxy #delete { display: none; }
     #input-screen.unlocking-out { pointer-events: none; animation: lock-out 440ms cubic-bezier(.32, .72, 0, 1) both; }
     #unlocked-screen { z-index: 2; background: #111; will-change: transform, opacity; }
+    #home-track { position: absolute; inset: 0; width: 100%; height: 100%; transform: translate3d(0,0,0); transition: transform 360ms cubic-bezier(.22,.82,.23,1); will-change: transform; }
+    .home-page { position: absolute; top: 0; width: 100%; height: 100%; overflow: hidden; }
+    #home-one { left: 0; }
+    #home-two { left: 100%; background: #111; }
+    #reveal-page { left: 200%; display: grid; place-items: center; background: radial-gradient(ellipse at 50% 32%, #2b3144, #0d0e13 72%); text-align: center; }
+    #reveal-content { width: min(90%, 430px); font-variant-numeric: tabular-nums; }
+    #reveal-number { font-size: clamp(46px, 15vw, 76px); font-weight: 600; letter-spacing: .04em; overflow-wrap: anywhere; }
+    #reveal-days { margin-top: 18px; color: #d5d7e2; font-size: clamp(17px, 5vw, 23px); }
     #unlocked-screen.unlocking { animation: unlock-in 440ms cubic-bezier(.32, .72, 0, 1) both; }
     @keyframes lock-out { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(.965); } }
     @keyframes unlock-in { from { opacity: 0; transform: scale(1.045); } to { opacity: 1; transform: scale(1); } }
@@ -201,6 +209,7 @@
     .alignment-help { margin: -4px 0 12px; color: #c3c5cf; font-size: 12px; line-height: 1.55; }
     .preview-row { display: flex; gap: 12px; }
     .preview { position: relative; background: #101115; border: 1px solid #ffffff1c; border-radius: 14px; overflow: hidden; width: 50%; aspect-ratio: 9 / 19.5; touch-action: none; cursor: grab; }
+    .personal-home .preview-row .preview { width: 33.333%; }
     .preview:active { cursor: grabbing; }
     .preview img { object-fit: cover; width: 100%; height: 100%; pointer-events: none; }
     .preview-name { position: absolute; right: 7px; bottom: 7px; z-index: 3; font-size: 10px; background: #000a; border-radius: 4px; padding: 3px 6px; pointer-events: none; }
@@ -256,7 +265,11 @@
       <ol id="attempt-list"></ol>
     </section>
     <section id="unlocked-screen" class="screen" aria-label="해제 화면" hidden>
-      <img id="unlock-image" class="wallpaper" alt="" hidden draggable="false">
+      <div id="home-track">
+        <div id="home-one" class="home-page"><img id="unlock-image" class="wallpaper" alt="" hidden draggable="false"></div>
+        <div id="home-two" class="home-page"><img id="home2-image" class="wallpaper" alt="" hidden draggable="false"></div>
+        <div id="reveal-page" class="home-page"><div id="reveal-content"><div id="reveal-number">—</div><div id="reveal-days" hidden></div></div></div>
+      </div>
     </section>
     <section id="time-black" class="screen" aria-label="타임머신 준비" hidden></section>
     <section id="time-lock" class="screen" aria-label="타임머신 잠금 화면" hidden>
@@ -290,7 +303,8 @@
             <h2>내 폰의 화면</h2>
             <label class="field stack">잠금화면 이미지<input id="lock-file" type="file" accept="image/*"><span id="lock-info" class="image-info">등록된 이미지 없음</span></label>
             <label class="field stack">해제화면 이미지<input id="unlock-file" type="file" accept="image/*"><span id="unlock-info" class="image-info">등록된 이미지 없음</span></label>
-            <p class="hint">잠금에는 잠금화면 스크린샷, 해제에는 앱 아이콘이 보이는 홈 화면 스크린샷을 각각 등록하세요. 두 이미지가 같거나 해제 이미지에 시계·자물쇠가 포함되면 해제 후에도 그대로 보입니다. 앱은 휴대폰의 실제 배경화면을 바꾸지 않습니다.</p>
+            <label id="home2-field" class="field stack" hidden>해제화면 2페이지 이미지<input id="home2-file" type="file" accept="image/*"><span id="home2-info" class="image-info">등록된 이미지 없음</span></label>
+            <p class="hint">잠금에는 잠금화면, 해제에는 앱 아이콘이 보이는 홈 화면 스크린샷을 등록하세요. 개인용 언락에서는 해제화면 이미지가 첫 페이지이며 두 번째 페이지를 추가로 등록할 수 있습니다. 등록된 이미지 자체에 잠금 시계가 있으면 해제 후에도 보입니다.</p>
             <p id="storage-status" role="status">이미지 저장소 확인 중…</p>
           </div>
           <div class="group">
@@ -300,6 +314,7 @@
             <label class="field">해제 방식<select id="unlock-mode"><option value="timer">타이머</option><option value="attempt">지정 시도</option></select></label>
             <label id="delay-field" class="field">해제 지연 (초)<input id="delay" type="number" min="0" max="300" step="0.1" value="8" required></label>
             <label id="attempt-field" class="field" hidden>해제할 시도<input id="unlock-attempt" type="number" min="1" max="99" step="1" value="3" required></label>
+            <label id="reveal-attempt-field" class="field" hidden>중앙에 공개할 입력 순서<input id="reveal-attempt" type="number" min="1" max="99" step="1" value="2" required></label>
             <label class="field check"><input id="vibration" type="checkbox" checked> 성공·실패 진동</label>
             <p class="hint">지정 시도는 타이머와 PIN 중복 여부를 무시하고 선택한 번째 입력에서 해제됩니다. 생년월일을 먼저 받을 때 해제 순서를 고정하기 좋습니다.</p>
           </div>
@@ -309,6 +324,7 @@
             <div class="preview-row">
               <div class="preview" data-key="lock" aria-label="잠금화면 정렬 미리보기"><img id="lock-preview" alt="잠금화면 미리보기" hidden draggable="false"><div class="crop-overlay"><span class="crop-label">여기에 진짜 상태바가 보입니다</span></div><span class="crop-handle" role="slider" tabindex="0" aria-label="잠금화면 상단 자르기" aria-valuemin="0" aria-valuemax="2000" aria-valuenow="0"></span><span class="preview-name">잠금</span></div>
               <div class="preview" data-key="unlock" aria-label="해제화면 정렬 미리보기"><img id="unlock-preview" alt="해제화면 미리보기" hidden draggable="false"><div class="crop-overlay"><span class="crop-label">여기에 진짜 상태바가 보입니다</span></div><span class="crop-handle" role="slider" tabindex="0" aria-label="해제화면 상단 자르기" aria-valuemin="0" aria-valuemax="2000" aria-valuenow="0"></span><span class="preview-name">해제</span></div>
+              <div id="home2-preview-item" class="preview" data-key="home2" aria-label="해제화면 2페이지 정렬 미리보기" hidden><img id="home2-preview" alt="해제화면 2페이지 미리보기" hidden draggable="false"><div class="crop-overlay"><span class="crop-label">여기에 진짜 상태바가 보입니다</span></div><span class="crop-handle" role="slider" tabindex="0" aria-label="해제화면 2페이지 상단 자르기" aria-valuemin="0" aria-valuemax="2000" aria-valuenow="0"></span><span class="preview-name">홈 2</span></div>
             </div>
             <label class="field">상단 잘라내기 (원본 px)<input id="crop" type="number" min="0" max="2000" step="1" value="0" required></label>
             <label class="field">이미지 세로 위치 (%)<input id="position" type="number" min="0" max="100" step="1" value="50" required></label>
@@ -316,7 +332,7 @@
             <label class="field">상태바 배경<input id="status-color" type="color" value="#000000"></label>
             <p class="hint">원본의 상단바를 잘라낸 뒤 남은 이미지를 꽉 채웁니다. OS 상태바 영역에는 이미지를 그리지 않습니다. 상태바 글자 변경은 홈 화면 앱을 닫고 다시 열어야 반영될 수 있으며, 기기별 확인이 필요합니다.</p>
           </div>
-          <p class="hint">안내 문구 탭: 4자리 ↔ 6자리<br>두 손가락 2회 탭: 기록 지우고 다시 잠금<br>두 손가락을 아래로 쓸기: 설정<br>해제 화면에서 왼쪽 또는 위로 쓸기: 입력 기록<br>각 연속 탭은 1.2초 안에 완료하세요. 입력 화면의 2회 탭은 판정 창이 끝나면 실행됩니다.</p>
+          <p class="hint">안내 문구 탭: 4자리 ↔ 6자리<br>두 손가락 2회 탭: 기록 지우고 다시 잠금<br>두 손가락을 아래로 쓸기: 설정<br>개인용 해제 화면: 왼쪽으로 홈 2페이지 → 선택한 입력 공개, 위로 밀면 전체 기록<br>각 연속 탭은 1.2초 안에 완료하세요. 입력 화면의 2회 탭은 판정 창이 끝나면 실행됩니다.</p>
           <p id="offline-status" role="status">오프라인 준비 중…</p>
           <button id="start" type="submit">저장하고 시작</button>
         </form>
@@ -326,15 +342,25 @@
   </main>
   <script type="module" src="./install-prompt.js"></script>
   <script type="module">
-    import { FINGERPRINT_HOLD_MS, normalizeSettings, lockScreenCopy, createState, pushDigit, submitPin, fingerprintHold, attemptFeedback, feedbackVibration, deleteDigit, clearCurrent, toggleDigits, reset, isHomeGestureArea, peekOffset, registerTwoFingerTap, settleTwoFingerTaps, registerLockTap, formatAttemptLabel } from './logic.js';
+    import { FINGERPRINT_HOLD_MS, normalizeSettings, storageIdentityForPath, selectedAttemptReveal, homeSwipeTarget, lockScreenCopy, createState, pushDigit, submitPin, fingerprintHold, attemptFeedback, feedbackVibration, deleteDigit, clearCurrent, toggleDigits, reset, isHomeGestureArea, peekOffset, registerTwoFingerTap, settleTwoFingerTaps, registerLockTap, formatAttemptLabel } from './logic.js';
 
     import { hiddenDigit, appendMinuteDigit, registerEmergencyTap, timeMachineOffset, isSettingsSwipe, horizontalPeekOffset } from './time-machine.js';
 
     const $ = (id) => document.getElementById(id);
-    const SETTINGS_KEY = 'unlock-settings-v1';
+    const STORAGE = storageIdentityForPath(location.pathname);
+    const SETTINGS_KEY = STORAGE.settingsKey;
     const UNLOCK_ANIMATION_MS = 440;
+    document.body.classList.toggle('personal-home', STORAGE.personal);
+    $('home2-field').hidden = !STORAGE.personal;
+    $('home2-preview-item').hidden = !STORAGE.personal;
+    $('reveal-attempt-field').hidden = !STORAGE.personal;
+    $('reveal-attempt').disabled = !STORAGE.personal;
     let saved = null;
     try { saved = JSON.parse(localStorage.getItem(SETTINGS_KEY)); } catch {}
+    const ownSettingsSaved = !!saved;
+    if (!saved && STORAGE.personal) {
+      try { saved = JSON.parse(localStorage.getItem('unlock-settings-v1')); } catch {}
+    }
     let settings = normalizeSettings(saved && typeof saved === 'object' ? saved : {});
     let state = createState(settings.digits);
     let screen = 'settings';
@@ -349,6 +375,7 @@
     let tapTimer = null;
     let tapCandidate = null;
     let swipe = null;
+    let homePage = 'home1';
     let settingsSwipe = null;
     let timeMinutes = 0;
     let timeDigits = [];
@@ -409,6 +436,24 @@
       requestAnimationFrame(() => { $('attempt-list').scrollTop = 0; });
     }
 
+    function renderReveal() {
+      const selected = selectedAttemptReveal(state.attempts, settings.revealAttempt, new Date());
+      $('reveal-number').textContent = selected?.pin ?? '—';
+      $('reveal-days').hidden = selected?.days === null || selected?.days === undefined;
+      if (selected?.days !== null && selected?.days !== undefined) {
+        $('reveal-days').textContent = `태어난 지 ${selected.days.toLocaleString('ko-KR')}일`;
+      }
+    }
+
+    function setHomePage(next, animate = true) {
+      homePage = next;
+      const index = { home1: 0, home2: 1, reveal: 2 }[next] ?? 0;
+      const track = $('home-track');
+      track.style.transition = animate ? '' : 'none';
+      track.style.transform = `translate3d(${-index * 100}%, 0, 0)`;
+      if (next === 'reveal') renderReveal();
+    }
+
     function showScreen(next, animate = false) {
       clearTimeout(unlockTimer);
       screen = next;
@@ -431,6 +476,8 @@
       if (next === 'input') renderInput();
       if (next === 'unlocked') {
         renderAttempts();
+        setHomePage('home1', false);
+        requestAnimationFrame(() => { $('home-track').style.transition = ''; });
         if (animate) {
           void $('unlocked-screen').offsetWidth;
           $('input-screen').classList.add('unlocking-out');
@@ -615,6 +662,7 @@
     function returnSwipe() {
       $('unlocked-screen').classList.add('returning');
       $('unlocked-screen').style.transform = 'translateY(0px)';
+      if (STORAGE.personal) setHomePage(homePage);
       swipe = null;
     }
 
@@ -637,7 +685,7 @@
         returnSwipe();
       } else if (screen === 'unlocked' && event.touches.length === 1) {
         const touch = event.touches[0];
-        if (isHomeGestureArea(touch.clientX, touch.clientY, window.innerWidth, window.innerHeight)) return;
+        if (!STORAGE.personal && isHomeGestureArea(touch.clientX, touch.clientY, window.innerWidth, window.innerHeight)) return;
         swipe = { id: touch.identifier, x: touch.clientX, y: touch.clientY, axis: null };
         $('unlocked-screen').classList.remove('returning');
       }
@@ -668,6 +716,15 @@
         event.preventDefault();
         const dx = touch.clientX - swipe.x, dy = touch.clientY - swipe.y;
         if (!swipe.axis && Math.hypot(dx, dy) >= 10) swipe.axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+        if (STORAGE.personal && swipe.axis === 'x') {
+          const index = { home1: 0, home2: 1, reveal: 2 }[homePage];
+          const maxIndex = originals.has('home2') ? 2 : 0;
+          const width = $('app').clientWidth;
+          const drag = Math.max(index < maxIndex ? -width : 0, Math.min(index > 0 ? width : 0, dx));
+          $('home-track').style.transition = 'none';
+          $('home-track').style.transform = `translate3d(calc(${-index * 100}% + ${drag}px), 0, 0)`;
+          return;
+        }
         $('peek-screen').classList.toggle('side-peek', swipe.axis === 'x');
         const offset = swipe.axis === 'x'
           ? horizontalPeekOffset(swipe.x, touch.clientX, $('app').clientWidth)
@@ -690,7 +747,16 @@
           if (valid) finishTap();
         }
       }
-      if (swipe) returnSwipe();
+      if (swipe) {
+        if (STORAGE.personal && event.changedTouches.length === 1) {
+          const touch = event.changedTouches[0];
+          if (touch.identifier === swipe.id) {
+            const target = homeSwipeTarget(homePage, touch.clientX - swipe.x, touch.clientY - swipe.y, originals.has('home2'));
+            if (target !== 'peek') homePage = target;
+          }
+        }
+        returnSwipe();
+      }
     }, { passive: false });
     document.addEventListener('touchcancel', () => { settingsSwipe = null; timePointer = null; tapCandidate = null; returnSwipe(); });
     window.addEventListener('blur', () => { tapCandidate = null; returnSwipe(); });
@@ -703,6 +769,7 @@
       $('digits').value = settings.digits;
       $('unlock-mode').value = settings.unlockMode;
       $('unlock-attempt').value = settings.unlockAttempt;
+      $('reveal-attempt').value = settings.revealAttempt;
       $('vibration').checked = settings.vibration;
       $('delay').value = settings.delaySeconds;
       $('crop').value = settings.cropTop;
@@ -714,7 +781,7 @@
 
     function formSettings() {
       return normalizeSettings({ performance: $('performance').value, timeDelay: $('time-delay').value, timeDuration: $('time-duration').value, style: $('style').value, digits: Number($('digits').value), unlockMode: $('unlock-mode').value,
-        unlockAttempt: $('unlock-attempt').value, vibration: $('vibration').checked, delaySeconds: $('delay').value,
+        unlockAttempt: $('unlock-attempt').value, revealAttempt: $('reveal-attempt').value, vibration: $('vibration').checked, delaySeconds: $('delay').value,
         cropTop: $('crop').value, imagePosition: $('position').value, statusStyle: $('status-style').value, statusColor: $('status-color').value });
     }
 
@@ -731,7 +798,7 @@
       document.documentElement.style.setProperty('--status-color', value.statusColor);
       document.querySelector('meta[name="theme-color"]').content = value.statusColor;
       document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]').content = value.statusStyle;
-      for (const id of ['lock-image', 'unlock-image', 'time-wallpaper', 'lock-preview', 'unlock-preview']) {
+      for (const id of ['lock-image', 'unlock-image', 'home2-image', 'time-wallpaper', 'lock-preview', 'unlock-preview', 'home2-preview']) {
         $(id).style.objectPosition = `50% ${value.imagePosition}%`;
       }
       for (const preview of document.querySelectorAll('.preview')) {
@@ -747,7 +814,7 @@
     function openDB() {
       return new Promise((resolve, reject) => {
         let blocked = false;
-        const request = indexedDB.open('unlock-images', 1);
+        const request = indexedDB.open(STORAGE.imageDb, 1);
         request.onupgradeneeded = () => request.result.createObjectStore('images');
         request.onsuccess = () => {
           if (blocked) request.result.close();
@@ -828,7 +895,7 @@
     }
 
     async function refreshCroppedImages() {
-      try { await Promise.all(['lock', 'unlock'].map((key) => displayImage(key, formSettings().cropTop))); }
+      try { await Promise.all((STORAGE.personal ? ['lock', 'unlock', 'home2'] : ['lock', 'unlock']).map((key) => displayImage(key, formSettings().cropTop))); }
       catch { $('storage-status').textContent = '미리보기 처리 실패. 잘라낼 높이와 이미지를 확인하세요.'; }
     }
 
@@ -879,7 +946,7 @@
       });
     }
 
-    for (const key of ['lock', 'unlock']) {
+    for (const key of (STORAGE.personal ? ['lock', 'unlock', 'home2'] : ['lock', 'unlock'])) {
       $(`${key}-file`).addEventListener('change', async (event) => {
         const file = event.target.files[0];
         if (!file) return;
@@ -969,7 +1036,7 @@
       settings = formSettings();
       $('start').disabled = true;
       try {
-        await Promise.all(['lock', 'unlock'].map((key) => displayImage(key, settings.cropTop)));
+        await Promise.all((STORAGE.personal ? ['lock', 'unlock', 'home2'] : ['lock', 'unlock']).map((key) => displayImage(key, settings.cropTop)));
         applyAppearance(settings);
         try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); }
         catch { toast('설정을 저장하지 못했습니다. 이번 실행에만 적용됩니다.'); }
@@ -1011,21 +1078,22 @@
     applyAppearance(settings);
     showScreen('settings');
     $('start').disabled = true;
-    for (const key of ['lock', 'unlock']) $(`${key}-file`).disabled = true;
+    for (const key of (STORAGE.personal ? ['lock', 'unlock', 'home2'] : ['lock', 'unlock'])) $(`${key}-file`).disabled = true;
     prepareOffline();
     try {
       db = await openDB();
       db.onversionchange = () => { db.close(); db = null; };
-      for (const key of ['lock', 'unlock']) {
+      for (const key of (STORAGE.personal ? ['lock', 'unlock', 'home2'] : ['lock', 'unlock'])) {
         const blob = await readImage(key);
         if (blob) { originals.set(key, blob); await displayImage(key, settings.cropTop); }
       }
       $('storage-status').textContent = '이미지는 IndexedDB에 저장됩니다. 시도 기록은 앱을 다시 열면 지워집니다.';
-      if (saved) showScreen('input');
+      if (ownSettingsSaved && originals.has('lock') && originals.has('unlock')) showScreen('input');
+      else if (STORAGE.personal) $('storage-status').textContent = '개인용 이미지 저장소를 분리했습니다. 잠금·홈 1·홈 2 화면을 이 설정에서 다시 등록해 주세요.';
     } catch (error) { $('storage-status').textContent = `이미지 저장소를 불러오지 못했습니다. ${error.message} 기본 배경으로 연습할 수 있습니다.`; }
     finally {
       $('start').disabled = false;
-      for (const key of ['lock', 'unlock']) $(`${key}-file`).disabled = false;
+      for (const key of (STORAGE.personal ? ['lock', 'unlock', 'home2'] : ['lock', 'unlock'])) $(`${key}-file`).disabled = false;
     }
   </script>
 </body>

@@ -38,7 +38,7 @@ export function isSettingsSwipe(start, current) {
     const end = current.find((candidate) => candidate.id === point.id);
     if (!end) return false;
     const dx = end.x - point.x, dy = end.y - point.y;
-    return dy >= 60 && Math.abs(dx) <= dy * 0.65;
+    return dy >= 96 && Math.abs(dx) <= dy * 0.65;
   });
 }
 

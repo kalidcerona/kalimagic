@@ -1,4 +1,4 @@
-const CACHE = "stopwatch2-v2";
+const CACHE = "stopwatch2-v5";
 const PREFIX = "stopwatch2-";
 const SHELL = [
   "./",

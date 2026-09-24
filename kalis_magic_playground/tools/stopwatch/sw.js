@@ -1,4 +1,4 @@
-const CACHE_NAME = "kali-stopwatch-v2";
+const CACHE_NAME = "kali-stopwatch-v5";
 const CACHE_PREFIX = "kali-stopwatch-";
 const APP_SHELL = [
   "./",

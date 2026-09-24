@@ -48,6 +48,28 @@ export function savePresetSlots(storage, slots) {
   storage.setItem("stopwatch_seq_slots", JSON.stringify(saved));
   return saved;
 }
+export function normalizeNamedPreset(preset, index) {
+  const slot = normalizePresetSlot(preset);
+  const name = typeof preset?.name === "string" ? preset.name.trim().slice(0, 40) : "";
+  const count = Number(preset?.forceAfter);
+  return {
+    name: name || `프리셋 ${index + 1}`,
+    ...slot,
+    forceAfter: Number.isInteger(count) && count >= 0 && count <= 99 ? count : 2,
+  };
+}
+export function loadNamedPresets(storage) {
+  try {
+    const saved = JSON.parse(storage.getItem("stopwatch_named_presets_v1") || "null");
+    if (Array.isArray(saved)) return [0, 1, 2].map(index => normalizeNamedPreset(saved[index], index));
+  } catch (_) {}
+  return loadPresetSlots(storage).map(normalizeNamedPreset);
+}
+export function saveNamedPresets(storage, presets) {
+  const saved = [0, 1, 2].map(index => normalizeNamedPreset(Array.isArray(presets) ? presets[index] : undefined, index));
+  storage.setItem("stopwatch_named_presets_v1", JSON.stringify(saved));
+  return saved;
+}
 export function applyPresetSlot(slot, current = {}) {
   const normalized = normalizePresetSlot(slot);
   if (!normalized.value) return null;
@@ -146,20 +168,21 @@ export function resolveStoppedCs({ elapsed, trickMode, reservedTens, stopDigit }
   if (trickMode && reservedTens !== null && stopDigit !== null) return Math.floor(elapsed / 1000) * 100 + composeCs(reservedTens, stopDigit);
   return Math.floor(elapsed / 10);
 }
-export function resolveSequenceStop({ stopCount, sequence, elapsed }) {
+export function resolveSequenceStop({ stopCount, sequence, elapsed, forceAfter = 2 }) {
   const values = Array.isArray(sequence) ? sequence.filter(value => Number.isInteger(value) && value >= 0 && value <= 99).slice(0, 8) : [];
   const realCs = Math.floor(clampElapsed(elapsed) / 10);
   if (!values.length) return { cs: realCs, nextStopCount: 0 };
   const current = Number.isInteger(stopCount) && stopCount >= 0 ? stopCount + 1 : 1;
-  if (current <= 2) return { cs: realCs, nextStopCount: current };
-  const sequenceIndex = current - 3;
+  const wait = Number.isInteger(forceAfter) && forceAfter >= 0 && forceAfter <= 99 ? forceAfter : 2;
+  if (current <= wait) return { cs: realCs, nextStopCount: current };
+  const sequenceIndex = current - wait - 1;
   const cs = elapsed >= 59990 ? realCs : Math.floor(realCs / 100) * 100 + values[sequenceIndex];
   return { cs, nextStopCount: sequenceIndex === values.length - 1 ? 0 : current };
 }
 export function elapsedAtAction(elapsed, started, actionNow) { return clampElapsed(elapsed + actionNow - started); }
-export function resolveStopOutcome({ trickState, presetCs, customText, elapsed, reservedTens, stopDigit, stopCount = 0, sequence = [] }) {
+export function resolveStopOutcome({ trickState, presetCs, customText, elapsed, reservedTens, stopDigit, stopCount = 0, sequence = [], sequenceForceAfter = 2 }) {
   if (trickState === "seq") {
-    const result = resolveSequenceStop({ stopCount, sequence, elapsed });
+    const result = resolveSequenceStop({ stopCount, sequence, elapsed, forceAfter: sequenceForceAfter });
     return { kind: "cs", cs: result.cs, nextStopCount: result.nextStopCount };
   }
   if (trickState === "text" && customText) {

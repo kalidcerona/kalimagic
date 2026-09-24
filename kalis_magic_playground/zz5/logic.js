@@ -11,6 +11,7 @@ export function normalizeSettings(value = {}) {
     digits: value.digits === 4 ? 4 : 6,
     unlockMode: value.unlockMode === 'attempt' ? 'attempt' : 'timer',
     unlockAttempt: Math.trunc(number('unlockAttempt', 3, 1, 99)),
+    revealAttempt: Math.trunc(number('revealAttempt', 2, 1, 99)),
     vibration: value.vibration !== false,
     delaySeconds: number('delaySeconds', 8, 0, 300),
     cropTop: Math.round(number('cropTop', 0, 0, 2000)),
@@ -18,6 +19,13 @@ export function normalizeSettings(value = {}) {
     statusStyle: value.statusStyle === 'default' ? 'default' : 'black-translucent',
     statusColor: /^#[0-9a-f]{6}$/i.test(value.statusColor ?? '') ? value.statusColor : '#000000',
   };
+}
+
+export function storageIdentityForPath(pathname) {
+  const personal = !String(pathname).startsWith('/tools/unlock/');
+  return personal
+    ? { personal, settingsKey: 'unlock-settings-personal-v2', imageDb: 'unlock-images-personal' }
+    : { personal, settingsKey: 'unlock-settings-v1', imageDb: 'unlock-images' };
 }
 
 export function createState(digits = 6) {
@@ -205,4 +213,26 @@ export function formatAttemptLabel(digits, index, todayLocal = new Date()) {
   const birthDate = parseBirthdate(digits, todayLocal);
   if (!birthDate) return pin;
   return `${pin} · ${daysAlive(birthDate, todayLocal).toLocaleString('en-US')}일`;
+}
+
+export function selectedAttemptReveal(attempts, attemptNumber, todayLocal = new Date()) {
+  if (!Array.isArray(attempts) || !Number.isInteger(attemptNumber) || attemptNumber < 1) return null;
+  const digits = attempts[attemptNumber - 1];
+  if (!Array.isArray(digits) || !digits.length) return null;
+  const pin = digits.join('');
+  const birthDate = parseBirthdate(digits, todayLocal);
+  return { pin, days: birthDate ? daysAlive(birthDate, todayLocal) : null };
+}
+
+export function homeSwipeTarget(page, dx, dy, hasSecond) {
+  if (dy <= -90 && Math.abs(dy) > Math.abs(dx) * 1.2) return 'peek';
+  if (Math.abs(dx) < 70 || Math.abs(dx) <= Math.abs(dy) * 1.2) return page;
+  if (dx < 0) {
+    if (page === 'home1' && hasSecond) return 'home2';
+    if (page === 'home2') return 'reveal';
+  } else {
+    if (page === 'reveal') return 'home2';
+    if (page === 'home2') return 'home1';
+  }
+  return page;
 }
