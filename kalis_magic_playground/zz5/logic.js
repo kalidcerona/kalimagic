@@ -1,10 +1,10 @@
-export function normalizeSettings(value = {}) {
+export function normalizeSettings(value = {}, personal = false) {
   const number = (key, fallback, min, max) => {
     const n = Number(value[key] ?? fallback);
     return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : fallback;
   };
   return {
-    performance: value.performance === 'time-machine' ? 'time-machine' : 'pin',
+    performance: personal || value.performance === 'time-machine' ? 'time-machine' : 'pin',
     timeDelay: number('timeDelay', 3, 0, 60),
     timeDuration: number('timeDuration', 8, 1, 60),
     style: value.style === 'galaxy' ? 'galaxy' : 'ios',
@@ -43,7 +43,7 @@ export function lockScreenCopy(style, hasDigits = false) {
     return { prompt: 'PIN을 입력하세요', emergency: '긴급전화', trailing: '' };
   }
   return {
-    prompt: '위로 쓸어올려서 Face ID 사용 또는 암호 입력',
+    prompt: '암호 입력',
     emergency: '긴급 상황',
     trailing: hasDigits ? '삭제' : '취소',
   };

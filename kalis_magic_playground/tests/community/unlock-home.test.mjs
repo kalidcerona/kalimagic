@@ -22,6 +22,16 @@ test('personal and shared unlock use different persistent storage identities', (
   assert.equal(logic.storageIdentityForPath('/tools/unlock/').personal, false);
 });
 
+test('personal unlock always enables emergency time machine while shared unlock keeps its choice', () => {
+  assert.equal(logic.normalizeSettings({ performance: 'pin' }, true).performance, 'time-machine');
+  assert.equal(logic.normalizeSettings({ performance: 'pin' }, false).performance, 'pin');
+});
+
+test('iPhone PIN prompt stays concise while Galaxy keeps its native wording', () => {
+  assert.equal(logic.lockScreenCopy('ios').prompt, '암호 입력');
+  assert.equal(logic.lockScreenCopy('galaxy').prompt, 'PIN을 입력하세요');
+});
+
 test('reveal attempt setting is clamped to an available positive slot', () => {
   assert.equal(logic.normalizeSettings({ revealAttempt: 4 }).revealAttempt, 4);
   assert.equal(logic.normalizeSettings({ revealAttempt: 0 }).revealAttempt, 1);
