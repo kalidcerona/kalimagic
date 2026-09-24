@@ -1,5 +1,5 @@
 const CACHE_PREFIX = 'unlock-' + encodeURIComponent(self.registration.scope) + '-';
-const CACHE_NAME = CACHE_PREFIX + 'v13';
+const CACHE_NAME = CACHE_PREFIX + 'v14';
 // ⚠️ cache.addAll 은 하나라도 실패하면 전체가 거부되어 오프라인이 통째로 깨진다.
 //    배포본에 실제로 존재하는 파일만 넣을 것. selftest.mjs·README.md 는 배포하지 않는다.
 const FILES = ['./index.html', './logic.js', './time-machine.js', './install-prompt.js', './manifest.webmanifest', './sw.js',

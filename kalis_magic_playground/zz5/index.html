@@ -156,10 +156,11 @@
     .home-page { position: absolute; top: 0; width: 100%; height: 100%; overflow: hidden; }
     #home-one { left: 0; }
     #home-two { left: 100%; background: #111; }
-    #reveal-page { left: 200%; display: grid; place-items: center; background: radial-gradient(ellipse at 50% 32%, #2b3144, #0d0e13 72%); text-align: center; }
-    #reveal-content { width: min(90%, 430px); font-variant-numeric: tabular-nums; }
-    #reveal-number { font-size: clamp(46px, 15vw, 76px); font-weight: 600; letter-spacing: .04em; overflow-wrap: anywhere; }
-    #reveal-days { margin-top: 18px; color: #d5d7e2; font-size: clamp(17px, 5vw, 23px); }
+    #reveal-card { position: absolute; z-index: 3; top: 50%; left: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; width: min(54vw, 190px); min-height: 126px; max-width: calc(100% - 48px); padding: 17px 16px; border: 1px solid #ffffff45; border-radius: 22px; background: #32384370; box-shadow: 0 12px 40px #0004; backdrop-filter: blur(18px) saturate(1.1); -webkit-backdrop-filter: blur(18px) saturate(1.1); text-align: center; font-variant-numeric: tabular-nums; pointer-events: none; opacity: 0; visibility: hidden; transform: translate(-50%, -50%) scale(.94); transition: opacity 260ms ease, transform 260ms cubic-bezier(.2,.8,.2,1), visibility 0s linear 260ms; }
+    #reveal-card.visible { opacity: 1; visibility: visible; transform: translate(-50%, -50%) scale(1); transition-delay: 0s; }
+    #reveal-label { color: #f3f4f8e0; font-size: 12px; font-weight: 500; }
+    #reveal-number { margin-top: 14px; font-size: clamp(28px, 8vw, 38px); line-height: 1.08; font-weight: 600; letter-spacing: .08em; overflow-wrap: anywhere; }
+    #reveal-days { margin-top: 9px; color: #f3f4f8e0; font-size: 11px; }
     #unlocked-screen.unlocking { animation: unlock-in 440ms cubic-bezier(.32, .72, 0, 1) both; }
     @keyframes lock-out { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(.965); } }
     @keyframes unlock-in { from { opacity: 0; transform: scale(1.045); } to { opacity: 1; transform: scale(1); } }
@@ -241,7 +242,7 @@
       .galaxy .keypad { top: 35%; }
       .galaxy #fingerprint { top: 79%; }
     }
-    @media (prefers-reduced-motion: reduce) { #unlocked-screen.returning { transition-duration: 180ms; } #input-screen.unlocking-out, #unlocked-screen.unlocking { animation-duration: 150ms; } }
+    @media (prefers-reduced-motion: reduce) { #unlocked-screen.returning { transition-duration: 180ms; } #input-screen.unlocking-out, #unlocked-screen.unlocking { animation-duration: 150ms; } #reveal-card { transition-duration: 0s; } }
   </style>
 </head>
 <body>
@@ -276,8 +277,8 @@
       <div id="home-track">
         <div id="home-one" class="home-page"><img id="unlock-image" class="wallpaper" alt="" hidden draggable="false"></div>
         <div id="home-two" class="home-page"><img id="home2-image" class="wallpaper" alt="" hidden draggable="false"></div>
-        <div id="reveal-page" class="home-page"><div id="reveal-content"><div id="reveal-number">—</div><div id="reveal-days" hidden></div></div></div>
       </div>
+      <div id="reveal-card" role="status" aria-live="polite" aria-hidden="true"><div id="reveal-label"></div><div id="reveal-number">—</div><div id="reveal-days" hidden></div></div>
     </section>
     <section id="time-black" class="screen" aria-label="타임머신 준비" hidden></section>
     <section id="time-lock" class="screen" aria-label="타임머신 잠금 화면" hidden>
@@ -340,7 +341,7 @@
             <label class="field">상태바 배경<input id="status-color" type="color" value="#000000"></label>
             <p class="hint">원본의 상단바를 잘라낸 뒤 남은 이미지를 꽉 채웁니다. OS 상태바 영역에는 이미지를 그리지 않습니다. 상태바 글자 변경은 홈 화면 앱을 닫고 다시 열어야 반영될 수 있으며, 기기별 확인이 필요합니다.</p>
           </div>
-          <p class="hint">안내 문구 탭: 4자리 ↔ 6자리<br>두 손가락 2회 탭: 기록 지우고 다시 잠금<br>두 손가락을 아래로 쓸기: 설정<br>개인용 해제 화면: 왼쪽으로 홈 2페이지 → 선택한 입력 공개, 위로 밀면 전체 기록<br>각 연속 탭은 1.2초 안에 완료하세요. 입력 화면의 2회 탭은 판정 창이 끝나면 실행됩니다.</p>
+          <p class="hint">안내 문구 탭: 4자리 ↔ 6자리<br>두 손가락 2회 탭: 기록 지우고 다시 잠금<br>두 손가락을 아래로 쓸기: 설정<br>개인용 해제 화면: 왼쪽으로 홈 2페이지 → 한 번 더 왼쪽으로 밀면 중앙에 입력 정보 표시, 위로 밀면 전체 기록<br>각 연속 탭은 1.2초 안에 완료하세요. 입력 화면의 2회 탭은 판정 창이 끝나면 실행됩니다.</p>
           <p id="offline-status" role="status">오프라인 준비 중…</p>
           <button id="start" type="submit">저장하고 시작</button>
         </form>
@@ -386,6 +387,7 @@
     let tapCandidate = null;
     let swipe = null;
     let homePage = 'home1';
+    let revealVisible = false;
     let settingsSwipe = null;
     let timeMinutes = 0;
     let timeDigits = [];
@@ -448,6 +450,7 @@
 
     function renderReveal() {
       const selected = selectedAttemptReveal(state.attempts, settings.revealAttempt, new Date());
+      $('reveal-label').textContent = `${settings.revealAttempt}번째 입력 PIN`;
       $('reveal-number').textContent = selected?.pin ?? '—';
       $('reveal-days').hidden = selected?.days === null || selected?.days === undefined;
       if (selected?.days !== null && selected?.days !== undefined) {
@@ -455,13 +458,19 @@
       }
     }
 
+    function setRevealVisible(visible) {
+      revealVisible = visible;
+      if (visible) renderReveal();
+      $('reveal-card').classList.toggle('visible', visible);
+      $('reveal-card').setAttribute('aria-hidden', String(!visible));
+    }
+
     function setHomePage(next, animate = true) {
       homePage = next;
-      const index = { home1: 0, home2: 1, reveal: 2 }[next] ?? 0;
+      const index = next === 'home2' ? 1 : 0;
       const track = $('home-track');
       track.style.transition = animate ? '' : 'none';
       track.style.transform = `translate3d(${-index * 100}%, 0, 0)`;
-      if (next === 'reveal') renderReveal();
     }
 
     function showScreen(next, animate = false) {
@@ -483,6 +492,7 @@
       $('unlocked-screen').classList.remove('unlocking');
       $('unlocked-screen').style.transform = 'translateY(0px)';
       swipe = null;
+      setRevealVisible(false);
       if (next === 'input') renderInput();
       if (next === 'unlocked') {
         renderAttempts();
@@ -727,10 +737,10 @@
         const dx = touch.clientX - swipe.x, dy = touch.clientY - swipe.y;
         if (!swipe.axis && Math.hypot(dx, dy) >= 10) swipe.axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
         if (STORAGE.personal && swipe.axis === 'x') {
-          const index = { home1: 0, home2: 1, reveal: 2 }[homePage];
-          const maxIndex = originals.has('home2') ? 2 : 0;
+          const index = homePage === 'home2' ? 1 : 0;
           const width = $('app').clientWidth;
-          const drag = Math.max(index < maxIndex ? -width : 0, Math.min(index > 0 ? width : 0, dx));
+          const drag = Math.max(index === 0 && originals.has('home2') ? -width : 0,
+            Math.min(index === 1 && !revealVisible ? width : 0, dx));
           $('home-track').style.transition = 'none';
           $('home-track').style.transform = `translate3d(calc(${-index * 100}% + ${drag}px), 0, 0)`;
           return;
@@ -761,8 +771,9 @@
         if (STORAGE.personal && event.changedTouches.length === 1) {
           const touch = event.changedTouches[0];
           if (touch.identifier === swipe.id) {
-            const target = homeSwipeTarget(homePage, touch.clientX - swipe.x, touch.clientY - swipe.y, originals.has('home2'));
-            if (target !== 'peek') homePage = target;
+            const target = homeSwipeTarget(homePage, touch.clientX - swipe.x, touch.clientY - swipe.y, originals.has('home2'), revealVisible);
+            if (!target.peek) homePage = target.page;
+            setRevealVisible(target.revealVisible);
           }
         }
         returnSwipe();

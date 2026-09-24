@@ -38,13 +38,14 @@ test('reveal attempt setting is clamped to an available positive slot', () => {
   assert.equal(logic.normalizeSettings({ revealAttempt: 999 }).revealAttempt, 99);
 });
 
-test('home carousel advances through second screenshot to selected reveal', () => {
+test('personal home stays on the second screenshot when its reveal card opens', () => {
   assert.equal(typeof logic.homeSwipeTarget, 'function');
-  assert.equal(logic.homeSwipeTarget('home1', -180, 0, true), 'home2');
-  assert.equal(logic.homeSwipeTarget('home2', -180, 0, true), 'reveal');
-  assert.equal(logic.homeSwipeTarget('reveal', 180, 0, true), 'home2');
-  assert.equal(logic.homeSwipeTarget('home2', 180, 0, true), 'home1');
-  assert.equal(logic.homeSwipeTarget('home1', -180, 0, false), 'home1');
-  assert.equal(logic.homeSwipeTarget('home1', 0, -180, true), 'peek');
-  assert.equal(logic.homeSwipeTarget('home1', -20, 0, true), 'home1');
+  assert.deepEqual(logic.homeSwipeTarget('home1', -180, 0, true), { page: 'home2', revealVisible: false, peek: false });
+  assert.deepEqual(logic.homeSwipeTarget('home2', -180, 0, true), { page: 'home2', revealVisible: true, peek: false });
+  assert.deepEqual(logic.homeSwipeTarget('home2', 180, 0, true, true), { page: 'home2', revealVisible: false, peek: false });
+  assert.deepEqual(logic.homeSwipeTarget('home2', 180, 0, true), { page: 'home1', revealVisible: false, peek: false });
+  assert.deepEqual(logic.homeSwipeTarget('home1', -180, 0, false), { page: 'home1', revealVisible: false, peek: false });
+  assert.deepEqual(logic.homeSwipeTarget('home1', 0, -180, true), { page: 'home1', revealVisible: false, peek: true });
+  assert.deepEqual(logic.homeSwipeTarget('home2', 0, -180, true, true), { page: 'home2', revealVisible: false, peek: true });
+  assert.deepEqual(logic.homeSwipeTarget('home1', -20, 0, true), { page: 'home1', revealVisible: false, peek: false });
 });

@@ -224,15 +224,19 @@ export function selectedAttemptReveal(attempts, attemptNumber, todayLocal = new 
   return { pin, days: birthDate ? daysAlive(birthDate, todayLocal) : null };
 }
 
-export function homeSwipeTarget(page, dx, dy, hasSecond) {
-  if (dy <= -90 && Math.abs(dy) > Math.abs(dx) * 1.2) return 'peek';
-  if (Math.abs(dx) < 70 || Math.abs(dx) <= Math.abs(dy) * 1.2) return page;
-  if (dx < 0) {
-    if (page === 'home1' && hasSecond) return 'home2';
-    if (page === 'home2') return 'reveal';
-  } else {
-    if (page === 'reveal') return 'home2';
-    if (page === 'home2') return 'home1';
+export function homeSwipeTarget(page, dx, dy, hasSecond, revealVisible = false) {
+  if (dy <= -90 && Math.abs(dy) > Math.abs(dx) * 1.2) {
+    return { page, revealVisible: false, peek: true };
   }
-  return page;
+  if (Math.abs(dx) < 70 || Math.abs(dx) <= Math.abs(dy) * 1.2) {
+    return { page, revealVisible, peek: false };
+  }
+  if (dx < 0) {
+    if (page === 'home1' && hasSecond) return { page: 'home2', revealVisible: false, peek: false };
+    if (page === 'home2') return { page, revealVisible: true, peek: false };
+  } else {
+    if (page === 'home2' && revealVisible) return { page, revealVisible: false, peek: false };
+    if (page === 'home2') return { page: 'home1', revealVisible: false, peek: false };
+  }
+  return { page, revealVisible, peek: false };
 }
