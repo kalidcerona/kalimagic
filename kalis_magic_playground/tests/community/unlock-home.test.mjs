@@ -49,3 +49,8 @@ test('personal home stays on the second screenshot when its reveal card opens', 
   assert.deepEqual(logic.homeSwipeTarget('home2', 0, -180, true, true), { page: 'home2', revealVisible: false, peek: true });
   assert.deepEqual(logic.homeSwipeTarget('home1', -20, 0, true), { page: 'home1', revealVisible: false, peek: false });
 });
+
+test('personal home requires both uploaded home screenshots before starting', () => {
+  assert.equal(logic.personalHomeReady(new Set(['lock', 'unlock'])), false);
+  assert.equal(logic.personalHomeReady(new Set(['lock', 'unlock', 'home2'])), true);
+});

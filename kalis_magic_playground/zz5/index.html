@@ -151,8 +151,8 @@
     .galaxy #emergency span { display: grid; place-items: center; width: 114px; height: 37px; border-radius: 999px; background: #F2A28C; }
     .galaxy #delete { display: none; }
     #input-screen.unlocking-out { pointer-events: none; animation: lock-out 440ms cubic-bezier(.32, .72, 0, 1) both; }
-    #unlocked-screen { z-index: 2; background: #111; will-change: transform, opacity; }
-    #home-track { position: absolute; inset: 0; width: 100%; height: 100%; transform: translate3d(0,0,0); transition: transform 360ms cubic-bezier(.22,.82,.23,1); will-change: transform; }
+    #unlocked-screen { z-index: 2; background: #111; touch-action: none; will-change: transform, opacity; }
+    #home-track { position: absolute; inset: 0; width: 100%; height: 100%; transform: translate3d(0,0,0); transition: transform 420ms cubic-bezier(.2,.8,.2,1); will-change: transform; }
     .home-page { position: absolute; top: 0; width: 100%; height: 100%; overflow: hidden; }
     #home-one { left: 0; }
     #home-two { left: 100%; background: #111; }
@@ -313,7 +313,7 @@
             <label class="field stack">잠금화면 이미지<input id="lock-file" type="file" accept="image/*"><span id="lock-info" class="image-info">등록된 이미지 없음</span></label>
             <label class="field stack">해제화면 이미지<input id="unlock-file" type="file" accept="image/*"><span id="unlock-info" class="image-info">등록된 이미지 없음</span></label>
             <label id="home2-field" class="field stack" hidden>해제화면 2페이지 이미지<input id="home2-file" type="file" accept="image/*"><span id="home2-info" class="image-info">등록된 이미지 없음</span></label>
-            <p class="hint">잠금에는 잠금화면, 해제에는 앱 아이콘이 보이는 홈 화면 스크린샷을 등록하세요. 개인용 언락에서는 해제화면 이미지가 첫 페이지이며 두 번째 페이지를 추가로 등록할 수 있습니다. 등록된 이미지 자체에 잠금 시계가 있으면 해제 후에도 보입니다.</p>
+            <p class="hint">잠금에는 잠금화면, 해제에는 앱 아이콘이 보이는 홈 화면 스크린샷을 등록하세요. 개인용 언락은 홈 1·홈 2 이미지가 모두 있어야 좌우 이동과 중앙 정보 표시를 사용할 수 있습니다. 등록된 이미지 자체에 잠금 시계가 있으면 해제 후에도 보입니다.</p>
             <p id="storage-status" role="status">이미지 저장소 확인 중…</p>
           </div>
           <div class="group">
@@ -351,7 +351,7 @@
   </main>
   <script type="module" src="./install-prompt.js"></script>
   <script type="module">
-    import { FINGERPRINT_HOLD_MS, normalizeSettings, storageIdentityForPath, selectedAttemptReveal, homeSwipeTarget, lockScreenCopy, createState, pushDigit, submitPin, fingerprintHold, attemptFeedback, feedbackVibration, deleteDigit, clearCurrent, toggleDigits, reset, isHomeGestureArea, peekOffset, registerTwoFingerTap, settleTwoFingerTaps, registerLockTap, formatAttemptLabel } from './logic.js';
+    import { FINGERPRINT_HOLD_MS, normalizeSettings, storageIdentityForPath, personalHomeReady, selectedAttemptReveal, homeSwipeTarget, lockScreenCopy, createState, pushDigit, submitPin, fingerprintHold, attemptFeedback, feedbackVibration, deleteDigit, clearCurrent, toggleDigits, reset, isHomeGestureArea, peekOffset, registerTwoFingerTap, settleTwoFingerTaps, registerLockTap, formatAttemptLabel } from './logic.js';
 
     import { hiddenDigit, appendMinuteDigit, registerEmergencyTap, timeMachineOffset, isSettingsSwipe, horizontalPeekOffset } from './time-machine.js';
 
@@ -469,6 +469,7 @@
       homePage = next;
       const index = next === 'home2' ? 1 : 0;
       const track = $('home-track');
+      if (animate && track.style.transition === 'none') void track.offsetWidth;
       track.style.transition = animate ? '' : 'none';
       track.style.transform = `translate3d(${-index * 100}%, 0, 0)`;
     }
@@ -1054,6 +1055,11 @@
     $('settings-form').addEventListener('submit', async (event) => {
       event.preventDefault();
       if (pendingImages > 0) return;
+      if (STORAGE.personal && !personalHomeReady(originals)) {
+        $('storage-status').textContent = '홈 1·홈 2 화면 이미지를 모두 등록해야 시작할 수 있습니다. 위의 이미지 2장을 확인해 주세요.';
+        $('home2-field').scrollIntoView({ block: 'center', behavior: 'smooth' });
+        return;
+      }
       settings = formSettings();
       $('start').disabled = true;
       try {
@@ -1109,8 +1115,9 @@
         if (blob) { originals.set(key, blob); await displayImage(key, settings.cropTop); }
       }
       $('storage-status').textContent = '이미지는 IndexedDB에 저장됩니다. 시도 기록은 앱을 다시 열면 지워집니다.';
-      if (ownSettingsSaved && originals.has('lock') && originals.has('unlock')) showScreen('input');
-      else if (STORAGE.personal) $('storage-status').textContent = '개인용 이미지 저장소를 분리했습니다. 잠금·홈 1·홈 2 화면을 이 설정에서 다시 등록해 주세요.';
+      if (ownSettingsSaved && originals.has('lock') && originals.has('unlock')
+          && (!STORAGE.personal || personalHomeReady(originals))) showScreen('input');
+      else if (STORAGE.personal) $('storage-status').textContent = '잠금·홈 1·홈 2 이미지를 이 설정에서 모두 등록해 주세요. 홈 2 이미지가 없으면 화면 전환을 시작할 수 없습니다.';
     } catch (error) { $('storage-status').textContent = `이미지 저장소를 불러오지 못했습니다. ${error.message} 기본 배경으로 연습할 수 있습니다.`; }
     finally {
       $('start').disabled = false;

@@ -28,6 +28,10 @@ export function storageIdentityForPath(pathname) {
     : { personal, settingsKey: 'unlock-settings-v1', imageDb: 'unlock-images' };
 }
 
+export function personalHomeReady(registeredKeys) {
+  return registeredKeys.has('unlock') && registeredKeys.has('home2');
+}
+
 export function createState(digits = 6) {
   return {
     attempts: [], current: [], lastAttemptEndedAt: null,
