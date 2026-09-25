@@ -41,13 +41,30 @@ test('reveal attempt setting is clamped to an available positive slot', () => {
 test('personal home stays on the second screenshot when its reveal card opens', () => {
   assert.equal(typeof logic.homeSwipeTarget, 'function');
   assert.deepEqual(logic.homeSwipeTarget('home1', -180, 0, true), { page: 'home2', revealVisible: false, peek: false });
-  assert.deepEqual(logic.homeSwipeTarget('home2', -180, 0, true), { page: 'home2', revealVisible: true, peek: false });
+  assert.deepEqual(logic.homeSwipeTarget('home2', -24, 0, true, false, 390), { page: 'home2', revealVisible: true, peek: false });
+  assert.deepEqual(logic.homeSwipeTarget('home2', -23, 0, true, false, 390), { page: 'home2', revealVisible: false, peek: false });
   assert.deepEqual(logic.homeSwipeTarget('home2', 180, 0, true, true), { page: 'home2', revealVisible: false, peek: false });
   assert.deepEqual(logic.homeSwipeTarget('home2', 180, 0, true), { page: 'home1', revealVisible: false, peek: false });
   assert.deepEqual(logic.homeSwipeTarget('home1', -180, 0, false), { page: 'home1', revealVisible: false, peek: false });
   assert.deepEqual(logic.homeSwipeTarget('home1', 0, -180, true), { page: 'home1', revealVisible: false, peek: true });
   assert.deepEqual(logic.homeSwipeTarget('home2', 0, -180, true, true), { page: 'home2', revealVisible: false, peek: true });
   assert.deepEqual(logic.homeSwipeTarget('home1', -20, 0, true), { page: 'home1', revealVisible: false, peek: false });
+});
+
+test('releasing the reveal swipe keeps home two and immediately hides its value', () => {
+  assert.equal(typeof logic.completeHomeSwipe, 'function');
+  assert.deepEqual(logic.completeHomeSwipe('home2', -24, 0, true, 390), {
+    page: 'home2', revealVisible: false, peek: false,
+  });
+});
+
+test('small foldable viewports retain an early reveal threshold without revealing on arrival', () => {
+  assert.deepEqual(logic.homeSwipeTarget('home1', -40, 0, true, false, 320), {
+    page: 'home1', revealVisible: false, peek: false,
+  });
+  assert.deepEqual(logic.homeSwipeTarget('home2', -24, 0, true, false, 320), {
+    page: 'home2', revealVisible: true, peek: false,
+  });
 });
 
 test('personal home requires both uploaded home screenshots before starting', () => {

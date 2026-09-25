@@ -12,7 +12,7 @@
   <style>
     :root { color-scheme: dark; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; --status-color: #000; }
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: var(--status-color); }
+    html, body { margin: 0; width: 100%; height: 100%; height: 100dvh; overflow: hidden; background: var(--status-color); }
     body { touch-action: manipulation; -webkit-user-select: none; user-select: none; }
     button, input, select { font: inherit; }
     button { color: inherit; cursor: pointer; border: 0; }
@@ -156,7 +156,7 @@
     .home-page { position: absolute; top: 0; width: 100%; height: 100%; overflow: hidden; }
     #home-one { left: 0; }
     #home-two { left: 100%; background: #111; }
-    #reveal-card { position: absolute; z-index: 3; top: 50%; left: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; width: min(78vw, 320px); min-height: 180px; max-width: calc(100% - 36px); padding: 24px 22px; border: 1px solid #ffffff60; border-radius: 26px; background: #3238439c; box-shadow: 0 16px 46px #0008; backdrop-filter: blur(20px) saturate(1.1); -webkit-backdrop-filter: blur(20px) saturate(1.1); text-align: center; font-variant-numeric: tabular-nums; pointer-events: none; opacity: 0; visibility: hidden; transform: translate(-50%, -50%) scale(.94); transition: opacity 220ms ease, transform 220ms cubic-bezier(.2,.8,.2,1), visibility 0s linear 220ms; }
+    #reveal-card { position: absolute; z-index: 3; top: 50%; left: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; width: min(78vw, 320px); min-height: 180px; max-width: calc(100% - 36px); padding: 24px 22px; border: 1px solid #ffffff60; border-radius: 26px; background: #3238439c; box-shadow: 0 16px 46px #0008; backdrop-filter: blur(20px) saturate(1.1); -webkit-backdrop-filter: blur(20px) saturate(1.1); text-align: center; font-variant-numeric: tabular-nums; pointer-events: none; opacity: 0; visibility: hidden; transform: translate(-50%, -50%) scale(.94); transition: opacity 220ms ease, transform 220ms cubic-bezier(.2,.8,.2,1), visibility 0s; }
     #reveal-card.visible { opacity: 1; visibility: visible; transform: translate(-50%, -50%) scale(1); transition-delay: 0s; }
     #reveal-label { color: #f3f4f8e0; font-size: 14px; font-weight: 500; }
     #reveal-number { margin-top: 18px; font-size: clamp(40px, 11vw, 56px); line-height: 1.08; font-weight: 600; letter-spacing: .04em; overflow-wrap: anywhere; }
@@ -211,6 +211,13 @@
     .time-guide details { margin-top: 12px; padding: 12px 14px; border-radius: 11px; background: #272932; }
     .time-guide summary { color: #d9dce8; cursor: pointer; font-weight: 600; }
     .time-guide details p { margin: 9px 0 0; }
+    .usage-guide { margin: 0 0 20px; padding: 14px 16px; border: 1px solid #ffffff18; border-radius: 13px; background: #1b1c22; color: #c9cad3; }
+    .usage-guide summary { min-height: 28px; display: flex; align-items: center; color: #e5e3f4; font-size: 13px; font-weight: 650; cursor: pointer; }
+    .usage-guide p { margin: 10px 0 0; font-size: 12px; line-height: 1.65; }
+    .hidden-grid-example { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: repeat(4, minmax(0, 1fr)); width: min(100%, 240px); aspect-ratio: 3 / 4; margin: 14px auto 0; overflow: hidden; border: 1.5px solid #ff4545; background-color: #000; background-image: linear-gradient(to right, #ff4545 1.5px, transparent 1.5px), linear-gradient(to bottom, #ff4545 1.5px, transparent 1.5px); background-size: 33.333333% 100%, 100% 25%; color: #ff6969; }
+    .hidden-grid-example span { display: grid; place-items: center; font-size: clamp(17px, 6vw, 25px); font-weight: 650; }
+    .hidden-grid-example span[data-digit="0"] { grid-column: 2; grid-row: 4; }
+    .usage-guide .grid-caption { margin-top: 8px; color: #a5a6b1; text-align: center; }
     .image-info { margin: 0; }
     .alignment-help { margin: -4px 0 12px; color: #c3c5cf; font-size: 12px; line-height: 1.55; }
     .preview-row { display: flex; gap: 12px; }
@@ -235,6 +242,21 @@
       .galaxy #fingerprint { top: 75%; }
       .galaxy .footer { top: 88%; }
       #fingerprint { top: 76%; }
+    }
+    @media (max-height: 500px) and (orientation: landscape) {
+      #input-screen { --key-d: clamp(48px, 12vh, 58px); --key-hgap: clamp(10px, 2vw, 16px); --key-vgap: 3px; }
+      .prompt { top: 8%; font-size: 15px; }
+      #dots { top: 17%; }
+      .keypad, .galaxy .keypad { top: 24%; }
+      #fingerprint { top: 76%; }
+      .footer { top: 84%; }
+      #input-screen.galaxy { --key-d: clamp(48px, 12vh, 58px); }
+    }
+    @media (horizontal-viewport-segments: 2) {
+      #app { right: auto; width: env(viewport-segment-width 0 0); }
+    }
+    @media (vertical-viewport-segments: 2) {
+      #app { bottom: auto; height: calc(env(viewport-segment-height 0 0) - env(safe-area-inset-top, 0px)); }
     }
     @media (min-height: 641px) and (max-height: 790px) {
       .galaxy .prompt { top: 18%; }
@@ -302,7 +324,7 @@
             <h2 id="performance-heading">연출</h2>
             <label id="performance-field" class="field">연출 선택<select id="performance"><option value="pin">PIN 언락</option><option value="time-machine">타임머신</option></select></label>
             <div id="time-options" hidden>
-              <div class="time-guide hint"><div>PIN 화면에서 긴급 상황(iPhone) 또는 긴급전화(갤럭시)를 빠르게 두 번 누르면 타임머신이 열립니다.</div><details><summary>검은 화면 숫자 위치와 사용법</summary><p>보이지 않는 전화 숫자판입니다. 첫째 줄 1·2·3, 둘째 줄 4·5·6, 셋째 줄 7·8·9, 맨 아래 가운데 0을 누르세요. 두 자리 분을 입력합니다. 예: 0→3은 03분, 1→5는 15분입니다.</p></details></div>
+              <div class="time-guide hint"><div>PIN 화면에서 긴급 상황(iPhone) 또는 긴급전화(갤럭시)를 빠르게 두 번 누르면 타임머신이 열립니다.</div></div>
               <label class="field">두 번 탭 후 대기 (초)<input id="time-delay" type="number" min="0" max="60" step="0.1" value="3"></label>
               <label class="field">되감기 시간 (초)<input id="time-duration" type="number" min="1" max="60" step="0.1" value="8"></label>
               <p class="hint">두 번째 숫자 뒤 나타나는 잠금화면을 두 번 누르면, 설정한 대기 후 표시 시각이 천천히 현재 시각으로 돌아옵니다. 실제 휴대폰 시계는 바뀌지 않습니다.</p>
@@ -341,7 +363,16 @@
             <label class="field">상태바 배경<input id="status-color" type="color" value="#000000"></label>
             <p class="hint">원본의 상단바를 잘라낸 뒤 남은 이미지를 꽉 채웁니다. OS 상태바 영역에는 이미지를 그리지 않습니다. 상태바 글자 변경은 홈 화면 앱을 닫고 다시 열어야 반영될 수 있으며, 기기별 확인이 필요합니다.</p>
           </div>
-          <p class="hint">안내 문구 탭: 4자리 ↔ 6자리<br>두 손가락 2회 탭: 기록 지우고 다시 잠금<br>두 손가락을 아래로 쓸기: 설정<br>개인용 해제 화면: 왼쪽으로 홈 2페이지 → 한 번 더 왼쪽으로 밀면 중앙에 입력 정보 표시, 위로 밀면 전체 기록<br>각 연속 탭은 1.2초 안에 완료하세요. 입력 화면의 2회 탭은 판정 창이 끝나면 실행됩니다.</p>
+          <details class="usage-guide">
+            <summary>처음 사용하는 분을 위한 화면·숫자 입력 안내</summary>
+            <p>개인용 언락은 홈 1에서 왼쪽으로 밀어 홈 2로 이동합니다. 홈 2에서 왼쪽으로 계속 미는 동안에만 설정한 입력 정보가 보이고, 손가락을 떼면 바로 사라집니다. 위로 밀면 입력 기록을 볼 수 있습니다.</p>
+            <p>타임머신의 검은 화면은 화면 전체가 보이지 않는 숫자판입니다. 아래 그림처럼 화면을 가로 3칸, 세로 4칸으로 나눠 누릅니다. 각 칸의 가운데를 누르면 그 숫자로 인식됩니다. 마지막 줄은 가운데 0만 입력되고 양옆은 무시됩니다. 숫자 두 개를 차례로 눌러 분을 입력하세요. 예: 0 다음 3은 03분, 1 다음 5는 15분입니다.</p>
+            <div class="hidden-grid-example" role="img" aria-label="검은 화면의 숫자 입력 예시. 빨간 선으로 나뉜 첫 세 줄은 왼쪽부터 1 2 3, 4 5 6, 7 8 9이며 마지막 줄 가운데는 0입니다.">
+              <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span data-digit="0">0</span>
+            </div>
+            <p class="grid-caption">빨간 선은 설명용입니다. 실제 검은 화면에는 선과 숫자가 나타나지 않습니다.</p>
+            <p>설정 열기: 잠금 화면에서 두 손가락을 아래로 쓸기<br>홈 화면 4·6자리 안내 전환: 안내 문구 탭<br>기록 초기화 후 다시 잠금: 두 손가락으로 빠르게 두 번 탭</p>
+          </details>
           <p id="offline-status" role="status">오프라인 준비 중…</p>
           <button id="start" type="submit">저장하고 시작</button>
         </form>
@@ -351,7 +382,7 @@
   </main>
   <script type="module" src="./install-prompt.js"></script>
   <script type="module">
-    import { FINGERPRINT_HOLD_MS, normalizeSettings, storageIdentityForPath, personalHomeReady, selectedAttemptReveal, homeSwipeTarget, lockScreenCopy, createState, pushDigit, submitPin, fingerprintHold, attemptFeedback, feedbackVibration, deleteDigit, clearCurrent, toggleDigits, reset, isHomeGestureArea, peekOffset, registerTwoFingerTap, settleTwoFingerTaps, registerLockTap, formatAttemptLabel } from './logic.js';
+    import { FINGERPRINT_HOLD_MS, normalizeSettings, storageIdentityForPath, personalHomeReady, selectedAttemptReveal, homeSwipeTarget, completeHomeSwipe, lockScreenCopy, createState, pushDigit, submitPin, fingerprintHold, attemptFeedback, feedbackVibration, deleteDigit, clearCurrent, toggleDigits, reset, isHomeGestureArea, peekOffset, registerTwoFingerTap, settleTwoFingerTaps, registerLockTap, formatAttemptLabel } from './logic.js';
 
     import { hiddenDigit, appendMinuteDigit, registerEmergencyTap, timeMachineOffset, isSettingsSwipe, horizontalPeekOffset } from './time-machine.js';
 
@@ -388,7 +419,6 @@
     let swipe = null;
     let homePage = 'home1';
     let revealVisible = false;
-    let revealTimer = null;
     let settingsSwipe = null;
     let timeMinutes = 0;
     let timeDigits = [];
@@ -460,8 +490,6 @@
     }
 
     function setRevealVisible(visible) {
-      clearTimeout(revealTimer);
-      revealTimer = null;
       if (visible === revealVisible) return;
       revealVisible = visible;
       if (visible) renderReveal();
@@ -744,7 +772,7 @@
         const dx = touch.clientX - swipe.x, dy = touch.clientY - swipe.y;
         if (!swipe.axis && Math.hypot(dx, dy) >= 10) swipe.axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
         if (STORAGE.personal && swipe.axis === 'x') {
-          const reveal = homeSwipeTarget(homePage, dx, dy, originals.has('home2')).revealVisible;
+          const reveal = homeSwipeTarget(homePage, dx, dy, originals.has('home2'), false, $('app').clientWidth).revealVisible;
           setRevealVisible(reveal);
           const index = homePage === 'home2' ? 1 : 0;
           const width = $('app').clientWidth;
@@ -780,10 +808,10 @@
         if (STORAGE.personal && event.changedTouches.length === 1) {
           const touch = event.changedTouches[0];
           if (touch.identifier === swipe.id) {
-            const target = homeSwipeTarget(homePage, touch.clientX - swipe.x, touch.clientY - swipe.y, originals.has('home2'), revealVisible);
+            const target = completeHomeSwipe(homePage, touch.clientX - swipe.x, touch.clientY - swipe.y,
+              originals.has('home2'), $('app').clientWidth);
             if (!target.peek) homePage = target.page;
             setRevealVisible(target.revealVisible);
-            if (target.revealVisible) revealTimer = setTimeout(() => setRevealVisible(false), 2500);
           }
         }
         returnSwipe();

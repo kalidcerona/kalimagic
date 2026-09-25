@@ -110,6 +110,8 @@ export const DISTRIBUTION_APPS = [
 export const SHARED_UNLOCK_FILES = [
   'icon-192.png',
   'icon-512.png',
+  'icon-maskable-192.png',
+  'icon-maskable-512.png',
   'icon.svg',
   'index.html',
   'install-prompt.js',

@@ -228,11 +228,17 @@ export function selectedAttemptReveal(attempts, attemptNumber, todayLocal = new 
   return { pin, days: birthDate ? daysAlive(birthDate, todayLocal) : null };
 }
 
-export function homeSwipeTarget(page, dx, dy, hasSecond, revealVisible = false) {
+function homeSwipeThreshold(viewportWidth) {
+  const width = Number.isFinite(viewportWidth) ? viewportWidth : 390;
+  return Math.max(24, Math.min(36, width * 0.06));
+}
+
+export function homeSwipeTarget(page, dx, dy, hasSecond, revealVisible = false, viewportWidth = 390) {
   if (dy <= -90 && Math.abs(dy) > Math.abs(dx) * 1.2) {
     return { page, revealVisible: false, peek: true };
   }
-  if (Math.abs(dx) < 70 || Math.abs(dx) <= Math.abs(dy) * 1.2) {
+  const horizontalThreshold = page === 'home2' && dx < 0 ? homeSwipeThreshold(viewportWidth) : 70;
+  if (Math.abs(dx) < horizontalThreshold || Math.abs(dx) <= Math.abs(dy) * 1.2) {
     return { page, revealVisible, peek: false };
   }
   if (dx < 0) {
@@ -243,4 +249,9 @@ export function homeSwipeTarget(page, dx, dy, hasSecond, revealVisible = false) 
     if (page === 'home2') return { page: 'home1', revealVisible: false, peek: false };
   }
   return { page, revealVisible, peek: false };
+}
+
+export function completeHomeSwipe(page, dx, dy, hasSecond, viewportWidth = 390) {
+  const target = homeSwipeTarget(page, dx, dy, hasSecond, false, viewportWidth);
+  return { ...target, revealVisible: false };
 }

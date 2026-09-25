@@ -192,7 +192,7 @@ export function resolveStopOutcome({ trickState, presetCs, customText, elapsed, 
   return { kind: "cs", cs: resolveStoppedCs({ elapsed, trickMode: trickState === "digit", reservedTens, stopDigit }), nextStopCount: stopCount };
 }
 export function storedMode(storage) {
-  try { return storage.getItem("stopwatch_ui_mode") === "landscape" ? "landscape" : "portrait"; } catch (_) { return "portrait"; }
+  try { return storage.getItem("stopwatch_ui_mode") === "portrait" ? "portrait" : "landscape"; } catch (_) { return "landscape"; }
 }
 export function recognizesModeToggle(taps) {
   const valid = taps.filter(tap => tap && tap.fingers === 2 && Number.isFinite(tap.time) && Number.isFinite(tap.gap) && tap.gap <= 120);

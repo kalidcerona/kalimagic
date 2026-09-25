@@ -22,7 +22,7 @@
     /* Portrait: v2 iOS Clock surface, verbatim declarations with renamed selectors. */
     #portrait-app { position: relative; width: 100%; height: 100vh; height: 100dvh; overflow: hidden; background: #000; }
     #p-top-band { position: absolute; inset: 0 0 auto; height: 22%; touch-action: none; }
-    #p-time-display { position: absolute; top: 30%; left: 15%; width: 70%; transform: translateY(-50%); display: flex; align-items: center; justify-content: center; font-size: min(18vw, 9.6dvh); font-weight: 200; font-variant-numeric: tabular-nums; letter-spacing: -0.04em; line-height: 1; white-space: nowrap; touch-action: none; }
+    #p-time-display { position: absolute; top: 28%; left: max(5%, env(safe-area-inset-left)); right: max(5%, env(safe-area-inset-right)); transform: translateY(-50%); display: flex; align-items: center; justify-content: center; font-size: min(16.5vw, 9dvh, 7.5rem); font-weight: 200; font-variant-numeric: tabular-nums; letter-spacing: -0.04em; line-height: 1; white-space: nowrap; touch-action: none; }
     #p-numeric-display { display: flex; align-items: baseline; }
     .p-digits { display: inline-flex; }
     [data-p-digit] { display: inline-block; width: 0.56em; border-radius: 0.12em; text-align: center; touch-action: none; transition: background-color 120ms ease, color 120ms ease; }
@@ -41,9 +41,9 @@
     #p-colon.trick-seq .colon-dot:last-child { opacity: 0.82; }
     #portrait-app.preset-mode .colon-dot { opacity: 0; }
     #p-decimal { width: 0.20em; text-align: center; }
-    #p-custom-display { display: block; max-width: 70vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    #p-buttons { position: absolute; top: 50%; transform: translateY(-50%); left: 8vw; right: 8vw; display: flex; align-items: center; justify-content: space-between; }
-    .round { width: min(18vw, 76px); height: min(18vw, 76px); border-radius: 50%; font-size: 17px; font-weight: 400; }
+    #p-custom-display { display: block; max-width: 90vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    #p-buttons { position: absolute; top: 48%; transform: translateY(-50%); left: max(6vw, env(safe-area-inset-left)); right: max(6vw, env(safe-area-inset-right)); display: flex; align-items: center; justify-content: space-between; }
+    .round { width: clamp(56px, min(17vw, 9dvh), 78px); height: clamp(56px, min(17vw, 9dvh), 78px); border-radius: 50%; font-size: 17px; font-weight: 400; }
     #p-lap { background: #2C2C2E; color: #FFFFFF; }
     #p-lap:disabled { color: rgb(142, 142, 147); }
     #p-control { background: #0A2E14; color: #30D158; }
@@ -51,16 +51,16 @@
     #p-pages { display: flex; gap: 6px; }
     #p-pages i { width: 6px; height: 6px; border-radius: 50%; background: #48484A; }
     #p-pages i:first-child { background: #FFFFFF; }
-    #p-lap-area { position: absolute; top: calc(50% + min(9vw, 38px) + 16px); bottom: calc(10dvh + env(safe-area-inset-bottom)); left: 8vw; right: 8vw; border-top: 1px solid #2C2C2E; overflow: hidden; touch-action: none; }
+    #p-lap-area { position: absolute; top: calc(48% + clamp(28px, min(8.5vw, 4.5dvh), 39px) + 16px); bottom: calc(max(64px, 9dvh) + env(safe-area-inset-bottom)); left: max(6vw, env(safe-area-inset-left)); right: max(6vw, env(safe-area-inset-right)); border-top: 1px solid #2C2C2E; overflow: hidden; touch-action: none; }
     #p-lap-rows, .lap-row, .lap-row * { pointer-events: none; }
     .lap-row { display: flex; justify-content: space-between; align-items: center; height: 44px; border-bottom: 0.5px solid #3A3A3C; font-size: 17px; font-variant-numeric: tabular-nums; }
-    #p-tabs { position: absolute; left: 0; bottom: env(safe-area-inset-bottom); width: 100%; height: 9dvh; border-top: 0.5px solid #2C2C2E; background: #000; display: flex; align-items: center; padding: 4px 3vw; }
+    #p-tabs { position: absolute; left: 0; bottom: env(safe-area-inset-bottom); width: 100%; height: max(64px, 9dvh); border-top: 0.5px solid #2C2C2E; background: #000; display: flex; align-items: center; padding: 4px max(3vw, env(safe-area-inset-left)) 4px max(3vw, env(safe-area-inset-right)); }
     .tab { flex: 1; min-width: 0; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; background: transparent; color: #8E8E93; font-size: 10px; white-space: nowrap; }
     .tab svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
     .tab.active { color: rgb(255, 159, 10); }
     .tab-world .core { fill: #1C1C1E; stroke: none; }
     .tab-world.feedback .core { fill: #FFFFFF; }
-    #shell[data-ui-mode="portrait"] #preset-hint { position: fixed; left: 50%; top: calc(30% + min(9vw, 4.8dvh) + 10px); z-index: 1; transform: translateX(-50%); padding: 0.55rem 0.8rem; border-radius: 999px; background: rgba(44,44,46,0.94); color: #D1D1D6; font-size: 13px; white-space: nowrap; pointer-events: none; }
+    #shell[data-ui-mode="portrait"] #preset-hint { position: fixed; left: 50%; top: calc(28% + min(8.25vw, 4.5dvh) + 10px); z-index: 1; transform: translateX(-50%); padding: 0.55rem 0.8rem; border-radius: 999px; background: rgba(44,44,46,0.94); color: #D1D1D6; font-size: 13px; white-space: nowrap; pointer-events: none; }
 
     /* Landscape: v1 surface; portrait viewports rotate the whole app clockwise. */
     #l-colon { display: inline-flex; align-self: center; flex-direction: column; justify-content: space-between; align-items: center; transform: translateY(0.025em); }
@@ -104,6 +104,16 @@
     #settings h2 { margin: 1.5rem 0 0.65rem; color: #d1d1d6; font-size: 0.95rem; font-weight: 600; }
     #settings button { min-height: 2.75rem; padding: 0 1rem; border-radius: 0.7rem; background: #2c2c2e; }
     #settings-close { color: #ff9f0a; }
+    #stopwatch-help { margin-top: 1.5rem; }
+    #stopwatch-help summary { display: block; min-height: 44px; padding: 0.8rem 1rem; border-radius: 0.7rem; background: #2c2c2e; cursor: pointer; list-style: none; }
+    #stopwatch-help summary::-webkit-details-marker { display: none; }
+    #stopwatch-help summary::after { content: "⌄"; float: right; color: #ff9f0a; }
+    #stopwatch-help[open] summary::after { content: "⌃"; }
+    #stopwatch-help p { color: #d1d1d6; line-height: 1.5; }
+    .grid-guide { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); width: 100%; aspect-ratio: 5 / 2; border: 2px solid #ff453a; background: #000; }
+    .grid-guide span { display: grid; place-items: center; border-right: 1px solid #ff453a; border-bottom: 1px solid #ff453a; font-size: clamp(1rem, 5vw, 1.5rem); }
+    .grid-guide span:nth-child(5n) { border-right: 0; }
+    .grid-guide span:nth-child(n+6) { border-bottom: 0; }
     #sequence-input, #trick2-text { width: 100%; min-height: 3rem; padding: 0.7rem 0.8rem; border: 1px solid #48484a; border-radius: 0.7rem; background: #1c1c1e; color: #fff; font: inherit; font-size: 1.1rem; user-select: text; -webkit-user-select: text; touch-action: auto; }
     #sequence-apply { width: 100%; margin-top: 0.65rem; background: #ff9f0a !important; color: #000; font-weight: 600; }
     #settings-mode-buttons, #trick-assign-buttons, #slot-kind-segment { display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem; }
@@ -193,6 +203,7 @@
         <h2>1. 공연 화면 방향</h2>
         <p>관객에게 보여 줄 스톱워치 방향을 선택하세요.</p>
         <div id="settings-mode-buttons"><button id="mode-portrait" type="button" aria-pressed="false">세로</button><button id="mode-landscape" type="button" aria-pressed="false">가로</button></div>
+        <details id="stopwatch-help"><summary>보이지 않는 숫자 그리드 사용법</summary><p>숫자 모드에서는 화면에 구획선이 보이지 않아도 아래처럼 탭 위치를 숫자로 인식합니다. 빨간 선은 설명 화면에서만 보입니다.</p><p>가로 화면: START/STOP 버튼의 해당 칸을 누릅니다. 시작할 때 한 번, 정지할 때 한 번 누르면 두 자리 숫자가 됩니다.</p><div class="grid-guide" role="img" aria-label="위쪽 왼쪽부터 1, 2, 3, 4, 5. 아래쪽 왼쪽부터 6, 7, 8, 9, 0."><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>0</span></div><p>예: 24를 입력하려면 시작할 때 윗줄 두 번째 칸(2), 정지할 때 윗줄 네 번째 칸(4)을 누릅니다. 세로 화면에서는 랩 목록의 빈 영역을 같은 방식으로 두 번 누른 뒤 정지합니다.</p></details>
         </div>
         <div id="preset-section">
         <h2>프리셋</h2>
@@ -321,7 +332,7 @@ function installSettingsSwipe(open, cancel, enabled, cancelHold = cancel) {
       assert(colonClassFor("off")==="","v2 colon off");assert(colonClassFor("digit")==="trick","v2 colon digit");assert(colonClassFor("text")==="trick-text","v2 colon text");assert(colonClassFor("seq")==="trick-seq","u10 colon seq");
       for(const [pending,d,want] of [[[],3,[3]],[[3],1,[3,1]],[[3],3,[3,3]],[[3,1],7,[7]],[[0],0,[0,0]]]){const original=JSON.stringify(pending);assert(JSON.stringify(pushPendingDigit(pending,d))===JSON.stringify(want),`v2 pending ${original}+${d}`);assert(JSON.stringify(pending)===original,`v2 pending unchanged ${original}`);}
       assert(resolveStoppedCs({elapsed:3450,trickMode:true,reservedTens:2,stopDigit:null})===345,"v2 missing stop tap");assert(resolveStoppedCs({elapsed:3450,trickMode:true,reservedTens:null,stopDigit:null})===345,"v2 no grid taps");assert(applyPresetSwipe("123",0,1)==="123","v2 invalid preset length");assert(applyPresetSwipe("1234",0,.5)==="1234","v2 fractional swipe");
-      const emptyStore={getItem:()=>null};assert(storedMode(emptyStore)==="portrait","uni default portrait");assert(storedMode({getItem:()=>"landscape"})==="landscape","uni stored landscape");assert(storedMode({getItem:()=>"sideways"})==="portrait","uni invalid mode defaults portrait");
+      const emptyStore={getItem:()=>null};assert(storedMode(emptyStore)==="landscape","uni default landscape");assert(storedMode({getItem:()=>"landscape"})==="landscape","uni stored landscape");assert(storedMode({getItem:()=>"portrait"})==="portrait","uni stored portrait");assert(storedMode({getItem:()=>"sideways"})==="landscape","uni invalid mode defaults landscape");
       assert(parseStopwatchText("words")===null&&parseStopwatchText("06.47")===647&&parseStopwatchText("00:06.47")===647,"uni stopwatch-looking text parser");
       assert(parseStopwatchText("01:23.45")===8345&&parseStopwatchText("99:59.99")===599999,"uni explicit minute preset keeps range");
       assert(clampElapsed(100000)===59990&&parseTimeInput("123456")===5999,"uni measured and legacy input limits stay capped");

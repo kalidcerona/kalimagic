@@ -77,6 +77,11 @@ test('shared unlock stays on the pinned snapshot until explicit promotion', asyn
   const copiedFiles = (await readdir(target)).sort();
   assert.deepEqual(copiedFiles, [...SHARED_UNLOCK_FILES].sort());
 
+  const manifest = JSON.parse(await readFile(path.join(source, 'manifest.webmanifest'), 'utf8'));
+  for (const icon of manifest.icons) {
+    assert.ok(SHARED_UNLOCK_FILES.includes(icon.src.replace(/^\.\//, '')), `Missing manifest icon: ${icon.src}`);
+  }
+
   for (const file of SHARED_UNLOCK_FILES) {
     const [snapshot, distributed] = await Promise.all([
       readFile(path.join(source, file)),
