@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readdir, readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { PUBLIC_FILES, PUBLIC_DIRS, PRIVATE_PATTERNS, MIRROR_PAIRS, DISTRIBUTION_APPS, buildPublic } from '../../scripts/build-public.mjs';
+import { PUBLIC_FILES, PUBLIC_DIRS, PRIVATE_PATTERNS, MIRROR_PAIRS, DISTRIBUTION_APPS, SHARED_UNLOCK_FILES, buildPublic } from '../../scripts/build-public.mjs';
 
 test('public build allowlist includes visible site pages', () => {
   assert.ok(PUBLIC_FILES.includes('index.html'));
@@ -26,8 +26,10 @@ test('public build explicitly excludes local planning and source folders', () =>
   assert.ok(PRIVATE_PATTERNS.some((pattern) => pattern.test('MAGIC-PLAYGROUND-PRD.md')));
   assert.ok(PRIVATE_PATTERNS.some((pattern) => pattern.test('COMMUNITY-MVP-DESIGN.md')));
   assert.ok(PRIVATE_PATTERNS.some((pattern) => pattern.test('netlify/functions/posts.mjs')));
+  assert.ok(PRIVATE_PATTERNS.some((pattern) => pattern.test('distribution-snapshots/unlock/index.html')));
   assert.equal(PUBLIC_DIRS.includes('netlify'), false);
   assert.equal(PUBLIC_DIRS.includes('supabase'), false);
+  assert.equal(PUBLIC_DIRS.includes('distribution-snapshots'), false);
 });
 
 test('public build verifies gated tool mirrors', () => {
@@ -48,7 +50,7 @@ test('public build verifies gated tool mirrors', () => {
   assert.ok(MIRROR_PAIRS.some(([source, mirror]) =>
     source === '../../magic-calculator-v2/index.html' && mirror === 'tools/calc/index.html'));
   assert.deepEqual(DISTRIBUTION_APPS, [
-    { source: 'zz5', target: 'unlock', tool: 'unlock' },
+    { source: 'distribution-snapshots/unlock', target: 'unlock', tool: 'unlock' },
     { source: 'zz6', target: 'stopwatch-uni', tool: 'stopwatch-uni' }
   ]);
 });
@@ -65,6 +67,28 @@ test('public build creates separate gated copies without changing personal zz ap
   assert.match(sharedUnlock, /tools\/_check\?tool=unlock/);
   assert.match(sharedStopwatch, /id="friend-apps-check"/);
   assert.match(sharedStopwatch, /tools\/_check\?tool=stopwatch-uni/);
+});
+
+test('shared unlock stays on the pinned snapshot until explicit promotion', async () => {
+  await buildPublic();
+  const root = fileURLToPath(new URL('../..', import.meta.url));
+  const source = path.join(root, 'distribution-snapshots', 'unlock');
+  const target = path.join(root, 'dist', 'tools', 'unlock');
+  const copiedFiles = (await readdir(target)).sort();
+  assert.deepEqual(copiedFiles, [...SHARED_UNLOCK_FILES].sort());
+
+  for (const file of SHARED_UNLOCK_FILES) {
+    const [snapshot, distributed] = await Promise.all([
+      readFile(path.join(source, file)),
+      readFile(path.join(target, file))
+    ]);
+    if (file === 'index.html') {
+      const withoutGuard = distributed.toString('utf8').replace(/\n  <script id="friend-apps-check">[\s\S]*?<\/script>/, '');
+      assert.equal(withoutGuard, snapshot.toString('utf8'));
+    } else {
+      assert.deepEqual(distributed, snapshot, file);
+    }
+  }
 });
 
 test('public build does not copy dotfiles from public directories', async () => {

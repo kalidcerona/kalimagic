@@ -75,6 +75,7 @@ export const PRIVATE_PATTERNS = [
   /^netlify\/functions\//,
   /^supabase\//,
   /^tests\//,
+  /^distribution-snapshots\//,
   /^archive\//,
   /^docs\//,
   /^node_modules\//,
@@ -102,8 +103,20 @@ export const MIRROR_PAIRS = [
 ];
 
 export const DISTRIBUTION_APPS = [
-  { source: 'zz5', target: 'unlock', tool: 'unlock' },
+  { source: 'distribution-snapshots/unlock', target: 'unlock', tool: 'unlock' },
   { source: 'zz6', target: 'stopwatch-uni', tool: 'stopwatch-uni' }
+];
+
+export const SHARED_UNLOCK_FILES = [
+  'icon-192.png',
+  'icon-512.png',
+  'icon.svg',
+  'index.html',
+  'install-prompt.js',
+  'logic.js',
+  'manifest.webmanifest',
+  'sw.js',
+  'time-machine.js'
 ];
 
 function accessGuard(tool, target) {
@@ -128,11 +141,27 @@ async function buildDistributionApps() {
     const target = path.join(DIST, 'tools', app.target);
     await cp(source, target, {
       recursive: true,
-      filter: (entry) => shouldCopy(path.relative(ROOT, entry))
+      filter: (entry) => shouldCopy(path.relative(source, entry))
     });
     const indexPath = path.join(target, 'index.html');
     const html = await readFile(indexPath, 'utf8');
     await writeFile(indexPath, html.replace('<head>', `<head>\n${accessGuard(app.tool, app.target)}`));
+  }
+}
+
+// Run explicitly after the personal version is approved for shared distribution.
+export async function promoteSharedUnlock() {
+  const source = path.join(ROOT, 'zz5');
+  const snapshot = path.join(ROOT, 'distribution-snapshots', 'unlock');
+  for (const file of SHARED_UNLOCK_FILES) {
+    if (!(await exists(path.join('zz5', file)))) {
+      throw new Error(`Cannot promote missing unlock file: ${file}`);
+    }
+  }
+  await rm(snapshot, { recursive: true, force: true });
+  await mkdir(snapshot, { recursive: true });
+  for (const file of SHARED_UNLOCK_FILES) {
+    await cp(path.join(source, file), path.join(snapshot, file));
   }
 }
 
@@ -189,5 +218,11 @@ export async function buildPublic() {
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  await buildPublic();
+  if (process.argv.length === 3 && process.argv[2] === '--promote-unlock') {
+    await promoteSharedUnlock();
+  } else if (process.argv.length === 2) {
+    await buildPublic();
+  } else {
+    throw new Error('Usage: node scripts/build-public.mjs [--promote-unlock]');
+  }
 }
