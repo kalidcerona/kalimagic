@@ -24,6 +24,7 @@ import {
   mapPointerToCell,
   mapPointerToMask,
   maskDimensions,
+  normalizeCoverage,
   parseMeta,
   salvageMeta,
   stageBands,
@@ -35,6 +36,7 @@ import {
 const STORAGE_KEY = 'aletheia.meta.v1';
 const CUSTOM_KEY = 'aletheia.custom12.v1';
 const CELL_GUIDE_KEY = 'aletheia.cellGuide.v1';
+const COVERAGE_KEY = 'aletheia.coverage.v1';
 const CELL_GUIDE_HOLD_MS = 800;
 const CELL_GUIDE_FADE_MS = 200;
 const CUSTOM_COUNT = 12;
@@ -83,6 +85,8 @@ const recoverButton = document.querySelector('#recover-button');
 const resetStorageButton = document.querySelector('#reset-storage-button');
 const cellGuideInput = document.querySelector('#cell-guide-enable');
 const cellGuide = document.querySelector('#cell-guide');
+const coverageInput = document.querySelector('#coverage-size');
+const coverageReadout = document.querySelector('#coverage-readout');
 
 let meta = emptyMeta();
 let view = 'settings';
@@ -105,6 +109,7 @@ const customStoredUrls = Array.from({ length: CUSTOM_COUNT }, () => null);
 let running = null;
 let lastStageSample = 0;
 let cellGuideEnabled = false;
+let coverageSize = LIMITS.defaultCoverage;
 let cellGuideToken = 0;
 let cellGuideTimer = 0;
 let cellGuideFadeTimer = 0;
@@ -158,6 +163,7 @@ function syncControls() {
   recoverButton.disabled = busy || storageLocked;
   resetStorageButton.disabled = busy || storageLocked;
   if (cellGuideInput) cellGuideInput.disabled = busy || storageLocked;
+  if (coverageInput) coverageInput.disabled = busy || storageLocked;
   emptyHint.hidden = corrupt || meta.presets.length > 0;
 }
 
@@ -416,7 +422,7 @@ function renderList() {
     const info = document.createElement('p');
     info.className = 'preset-meta';
     const hiddenLabel = item.hiddenPercent == null ? '가림 100%' : `가림 ${item.hiddenPercent}%`;
-    info.textContent = `${MODE_LABELS[item.mode]} · 붓 ${item.brushSize} · ${hiddenLabel}`;
+    info.textContent = `${MODE_LABELS[item.mode]} · ${hiddenLabel}`;
 
     const actions = document.createElement('div');
     actions.className = 'preset-actions';
@@ -869,6 +875,34 @@ function loadCellGuidePreference() {
   if (cellGuideInput) cellGuideInput.checked = cellGuideEnabled;
 }
 
+function loadCoveragePreference() {
+  try {
+    const raw = localStorage.getItem(COVERAGE_KEY);
+    coverageSize = raw === null ? LIMITS.defaultCoverage : normalizeCoverage(JSON.parse(raw));
+  } catch {
+    coverageSize = LIMITS.defaultCoverage;
+  }
+  coverageInput.value = String(coverageSize);
+  coverageReadout.textContent = `${coverageSize}px`;
+}
+
+function onCoverageChange() {
+  if (coverageInput.disabled) return;
+  const next = normalizeCoverage(coverageInput.value);
+  try {
+    const payload = JSON.stringify(next);
+    localStorage.setItem(COVERAGE_KEY, payload);
+    if (localStorage.getItem(COVERAGE_KEY) !== payload) throw new Error('verify');
+  } catch {
+    coverageInput.value = String(coverageSize);
+    coverageReadout.textContent = `${coverageSize}px`;
+    setError('지우개 범위를 저장하지 못했습니다. 이전 설정을 유지합니다.');
+    return;
+  }
+  coverageSize = next;
+  coverageReadout.textContent = `${next}px`;
+}
+
 function persistCellGuideEnabled(enabled) {
   const payload = JSON.stringify({ version: 1, enabled: Boolean(enabled) });
   const previous = localStorage.getItem(CELL_GUIDE_KEY);
@@ -1005,7 +1039,7 @@ function lockCourtCard(cell) {
   running.cardPhase = 'reveal';
   running.pendingPointerId = null;
   running.pendingCell = null;
-  // The committed tap stays a fully black screen: drop the numbers before any scratch.
+  // Hide the guide before the selecting pointerdown paints its first scratch.
   hideCellGuide();
   paintOpaqueCardMask();
   redraw();
@@ -1135,7 +1169,7 @@ function currentBrushDiameter() {
     running.image.naturalHeight,
   );
   if (!imageRect) return 0;
-  return brushDiameterInMask(running.preset.brushSize, imageRect.w, running.mask.width);
+  return brushDiameterInMask(coverageSize, imageRect.w, running.mask.width);
 }
 
 function mapFromClient(clientX, clientY) {
@@ -1161,7 +1195,15 @@ function pointsFor(contact, clientX, clientY) {
   const mapped = mapFromClient(clientX, clientY);
   const previous = contact.last;
   contact.last = { x: mapped.x, y: mapped.y };
-  if (!previous) return mapped.inside ? [{ x: mapped.x, y: mapped.y }] : [];
+  if (!previous) {
+    if (mapped.inside) return [{ x: mapped.x, y: mapped.y }];
+    // A grid cell can be outside a letterboxed photo; reveal its closest edge immediately.
+    if (running.cardMode) return [{
+      x: Math.min(running.mask.width, Math.max(0, mapped.x)),
+      y: Math.min(running.mask.height, Math.max(0, mapped.y)),
+    }];
+    return [];
+  }
   try {
     return interpolatePoints(previous.x, previous.y, mapped.x, mapped.y, brushSpacing(diameter));
   } catch {
@@ -1171,7 +1213,7 @@ function pointsFor(contact, clientX, clientY) {
 
 function stampPoints(points) {
   if (!running || !points.length) return;
-  // The selecting tap must not leave a dot or open the veil.
+  // Card strokes only paint after the card selection is committed.
   if (running.cardMode && running.cardPhase !== 'reveal') return;
   hideCellGuide();
   const ctx = running.maskCtx;
@@ -1317,9 +1359,7 @@ function onPointerDown(event) {
       running.pendingCell = null;
     }
   } else if (isCardSelectPhase()) {
-    running.pendingPointerId = event.pointerId;
-    running.pendingCell = viewportCell(event.clientX, event.clientY);
-    return;
+    lockCourtCard(viewportCell(event.clientX, event.clientY));
   }
   if (isCardSelectPhase()) return;
   if (allowsRevealStroke(contacts.size, multiTouchGroup) && canPaintPointer(event)) {
@@ -1987,6 +2027,10 @@ function bindEvents() {
   if (cellGuideInput) {
     cellGuideInput.addEventListener('change', onCellGuideChange);
   }
+  coverageInput.addEventListener('input', () => {
+    coverageReadout.textContent = `${coverageInput.value}px`;
+  });
+  coverageInput.addEventListener('change', onCoverageChange);
   recoverButton.addEventListener('click', () => {
     void recoverStored();
   });
@@ -2041,6 +2085,7 @@ function bindEvents() {
 
 async function boot() {
   loadCellGuidePreference();
+  loadCoveragePreference();
   brushInput.min = String(LIMITS.minBrush);
   brushInput.max = String(LIMITS.maxBrush);
   brushInput.value = String(LIMITS.defaultBrush);

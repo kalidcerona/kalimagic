@@ -101,6 +101,17 @@ dialog {
 .card,
 .recovery { padding: 16px; }
 
+.settings-disclosure > summary {
+  min-height: 44px;
+  display: list-item;
+  cursor: pointer;
+  font-weight: 700;
+  padding: 10px 2px;
+}
+
+.settings-disclosure > summary:focus-visible { outline: 3px solid var(--burgundy); outline-offset: 3px; }
+.settings-disclosure[open] > summary { margin-bottom: 12px; }
+
 .install-card { margin-block: 0 18px; }
 .install-card p { margin: 6px 0 12px; color: var(--muted); }
 

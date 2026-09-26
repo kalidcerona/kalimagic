@@ -28,8 +28,9 @@
       <p class="lede">공연 전에만 확인합니다. 실제 측정이 아닙니다.</p>
       <div class="stack">
         <label class="field" for="truth-attempt">TRUE가 나올 시도
-          <input id="truth-attempt" type="number" inputmode="numeric" min="1" max="20" step="1" value="4" />
+          <input id="truth-attempt" type="text" autocomplete="off" value="4" aria-describedby="truth-attempt-help" />
         </label>
+        <p id="truth-attempt-help" class="field-help">여러 회차는 쉼표로 구분하세요. 예: 2,4 (각 회차는 1-20)</p>
         <label class="checkline" for="sound-enabled">
           <input id="sound-enabled" type="checkbox" checked />
           소리

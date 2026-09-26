@@ -241,6 +241,22 @@ h2 {
 
 .card-start h2 { margin-bottom: 4px; }
 
+.optional-settings {
+  margin: 4px 0 16px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--ivory);
+}
+
+.optional-settings > summary {
+  cursor: pointer;
+  color: var(--burgundy);
+  font-weight: 700;
+}
+
+.optional-settings[open] > summary { margin-bottom: 12px; }
+
 .cell-map {
   margin-top: 8px;
 }

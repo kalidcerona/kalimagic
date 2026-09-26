@@ -6,8 +6,7 @@
  * A spectator holds one button. Releasing before HOLD_THRESHOLD_MS, or moving
  * farther than HOLD_MOVE_TOLERANCE_PX from the initial contact, cancels the
  * hold and does not increment the attempt count. A completed hold is one attempt.
- * Attempts before settings.truthAttempt read LIE, the exact attempt reads TRUE,
- * and later attempts read LIE until resetAttempts.
+ * Attempts listed in settings.truthAttempts read TRUE; all others read LIE.
  */
 
 export const HOLD_THRESHOLD_MS = 2000;
@@ -29,7 +28,7 @@ export function createDefaultState() {
     version: 1,
     attemptCount: 0,
     settings: {
-      truthAttempt: TRUTH_ATTEMPT_DEFAULT,
+      truthAttempts: [TRUTH_ATTEMPT_DEFAULT],
     },
   };
 }
@@ -81,6 +80,24 @@ export function parseTruthAttempt(value) {
   return { ok: true, value: numeric };
 }
 
+/** Accept comma-separated 1..20 attempt indices, without duplicates. */
+export function parseTruthAttempts(value) {
+  const parts = Array.isArray(value) ? value : typeof value === "string" ? value.split(",") : [value];
+  if (parts.length === 0 || parts.length > TRUTH_ATTEMPT_MAX) return { ok: false, error: "truth-attempt" };
+  const parsed = [];
+  for (const part of parts) {
+    const item = parseTruthAttempt(part);
+    if (!item.ok || parsed.includes(item.value)) return { ok: false, error: "truth-attempt" };
+    parsed.push(item.value);
+  }
+  return { ok: true, value: parsed.sort((a, b) => a - b) };
+}
+
+export function coerceTruthAttempts(value) {
+  const parsed = parseTruthAttempts(value);
+  return parsed.ok ? parsed.value : [TRUTH_ATTEMPT_DEFAULT];
+}
+
 export function coerceTruthAttempt(value) {
   const parsed = parseTruthAttempt(value);
   return parsed.ok ? parsed.value : TRUTH_ATTEMPT_DEFAULT;
@@ -104,7 +121,7 @@ export function shapeAppState(input) {
       version: 1,
       attemptCount: coerceAttemptCount(input.attemptCount),
       settings: {
-        truthAttempt: coerceTruthAttempt(settings.truthAttempt),
+        truthAttempts: coerceTruthAttempts(settings.truthAttempts ?? settings.truthAttempt),
       },
     },
   };
@@ -167,7 +184,7 @@ export function mayOverwritePrimary({ preserveStoredRaw, backupSaved, acknowledg
 }
 
 export function trySetTruthAttempt(state, value) {
-  const parsed = parseTruthAttempt(value);
+  const parsed = parseTruthAttempts(value);
   if (!parsed.ok) return { ok: false, state, error: parsed.error };
   const shaped = shapeAppState(state);
   const base = shaped.ok ? shaped.state : createDefaultState();
@@ -175,7 +192,7 @@ export function trySetTruthAttempt(state, value) {
     ok: true,
     state: {
       ...base,
-      settings: { truthAttempt: parsed.value },
+      settings: { truthAttempts: parsed.value },
     },
     error: null,
   };
@@ -188,11 +205,11 @@ export function resetAttempts(state) {
 }
 
 /** Verdict for a 1-based completed attempt. Non-positive attempts have none. */
-export function verdictForAttempt(attemptNumber, truthAttempt) {
+export function verdictForAttempt(attemptNumber, truthAttempts) {
   const attempt = coerceAttemptCount(attemptNumber);
   if (attempt <= 0) return null;
-  const truth = coerceTruthAttempt(truthAttempt);
-  return attempt === truth ? "TRUE" : "LIE";
+  const truths = coerceTruthAttempts(truthAttempts);
+  return truths.includes(attempt) ? "TRUE" : "LIE";
 }
 
 export function beginHold(hold, nowMs, x, y) {
@@ -304,7 +321,7 @@ export function releaseHold(state, hold, nowMs, x, y) {
     counted: true,
     outcome: "completed",
     attempt,
-    verdict: verdictForAttempt(attempt, safeState.settings.truthAttempt),
+    verdict: verdictForAttempt(attempt, safeState.settings.truthAttempts),
     reason: "threshold",
     elapsedMs: elapsed,
     movementPx: moved,

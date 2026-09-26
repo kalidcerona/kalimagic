@@ -44,6 +44,9 @@ const coinEl = document.querySelector('#coin');
 const cueEl = document.querySelector('#cue');
 const recoveryEl = document.querySelector('#recovery');
 const presetList = document.querySelector('#preset-list');
+const presetPicker = document.querySelector('#preset-picker');
+const presetEditor = document.querySelector('#preset-editor');
+const selectedPresetName = document.querySelector('#selected-preset-name');
 const form = document.querySelector('#preset-form');
 const nameInput = document.querySelector('#preset-name');
 const sizeInput = document.querySelector('#coin-size');
@@ -268,6 +271,7 @@ function updateReadouts(preset) {
 
 function fillForm() {
   const preset = selected();
+  selectedPresetName.textContent = preset.name;
   nameInput.value = preset.name;
   sizeInput.value = String(preset.coinSize);
   xInput.value = String(preset.startX);
@@ -290,6 +294,7 @@ function selectPreset(id) {
   persist();
   renderList();
   fillForm();
+  presetPicker.open = true;
 }
 
 function labelFor(id) {
@@ -352,6 +357,8 @@ function addPreset() {
   persist();
   renderList();
   fillForm();
+  presetPicker.open = true;
+  presetEditor.open = true;
 }
 
 function deleteSelected() {

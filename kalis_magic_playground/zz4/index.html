@@ -50,7 +50,7 @@
 
       <section class="card" aria-labelledby="notes-entry-title">
         <h2 id="notes-entry-title">노트 연출</h2>
-        <p class="hint">저장된 목록은 지우거나 바꾸지 않습니다. 노트 하나에는 비어 있지 않은 항목 100개가 필요하고, 목표 항목은 목록 편집에서 목록마다 고릅니다. 조건에 맞는 목록이 다섯 개를 넘으면 저장된 순서의 앞 다섯 개만 노트가 됩니다.</p>
+        <p class="hint">저장된 목록은 지우거나 바꾸지 않습니다. 노트 하나에는 일반 항목 99개와 포스 항목 1개가 필요합니다. 조건에 맞는 목록이 다섯 개를 넘으면 저장된 순서의 앞 다섯 개만 노트가 됩니다.</p>
         <p id="notes-entry-message" class="message" role="alert"></p>
         <div class="actions">
           <button type="button" class="primary" id="start-notes-show">노트 연출 시작</button>
@@ -79,8 +79,8 @@
       </section>
 
       <div class="layout">
-        <section class="card" aria-labelledby="editor-title">
-          <h2 id="editor-title">목록 편집</h2>
+        <details class="card settings-disclosure" id="editor-panel" aria-labelledby="editor-title">
+          <summary id="editor-title">목록 편집</summary>
           <fieldset id="editor-fields">
             <form id="editor-form">
               <label for="preset-name">목록 이름
@@ -95,16 +95,14 @@
                   <option value="travel">여행</option>
                 </select>
               </label>
-              <label for="items">항목
+              <label for="force-item">포스 항목
+                <input id="force-item" name="forceItem" type="text" maxlength="120" autocomplete="off">
+              </label>
+              <label for="items">일반 항목
                 <textarea id="items" name="items" rows="8" spellcheck="false" placeholder="한 줄에 하나씩 입력"></textarea>
               </label>
-              <p id="item-hint" class="hint">한 줄에 하나씩 입력합니다. 빈 줄은 빠집니다. 최대 200개, 각 120자.</p>
+              <p id="item-hint" class="hint">포스 항목은 일반 항목에 넣지 마세요. 일반 항목은 한 줄에 하나씩, 최대 199개입니다.</p>
               <p id="item-count" class="hint" aria-live="polite">0개</p>
-              <label for="target">목표 항목
-                <select id="target" name="target">
-                  <option value="">목표 항목 선택</option>
-                </select>
-              </label>
               <p id="editor-message" class="message" role="alert"></p>
               <div class="actions">
                 <button type="button" class="primary" id="save-new">새 목록 저장</button>
@@ -114,19 +112,19 @@
                 <button type="button" id="reset-form">새로 작성</button>
                 <button type="button" class="primary" id="start-one">이 목록으로 시작</button>
               </div>
-              <p class="hint">새 목록 저장은 다른 이름으로 추가합니다. 이름 바꾸기는 항목을 바꾸지 않습니다. 덮어쓰기는 지금 입력한 항목, 목표, 모양만 현재 목록에 반영하고 이름은 그대로 둡니다.</p>
+              <p class="hint">새 목록 저장은 다른 이름으로 추가합니다. 이름 바꾸기는 항목을 바꾸지 않습니다. 덮어쓰기는 지금 입력한 일반 항목, 포스 항목, 모양만 현재 목록에 반영하고 이름은 그대로 둡니다.</p>
             </form>
           </fieldset>
-        </section>
+        </details>
 
         <div class="side">
-          <section class="card" aria-labelledby="saved-title">
-            <h2 id="saved-title">저장된 목록</h2>
+          <details class="card settings-disclosure" aria-labelledby="saved-title">
+            <summary id="saved-title">저장된 목록</summary>
             <div id="preset-list" class="preset-list"></div>
-          </section>
+          </details>
 
-          <section class="card" aria-labelledby="two-title">
-            <h2 id="two-title">두 목록</h2>
+          <details class="card settings-disclosure" aria-labelledby="two-title">
+            <summary id="two-title">두 목록</summary>
             <fieldset id="two-fields">
               <label class="checkline" for="two-enabled">
                 <input id="two-enabled" type="checkbox">
@@ -143,21 +141,21 @@
                 <button type="button" class="primary" id="start-two">두 목록으로 시작</button>
               </div>
             </fieldset>
-          </section>
+          </details>
 
           <details class="card help">
             <summary>사용 방법</summary>
             <div class="help-body">
               <ol>
-                <li>항목을 한 줄에 하나씩 적고, 모양과 목표 항목을 정한 뒤 저장합니다.</li>
+                <li>일반 항목을 한 줄에 하나씩 적고, 포스 항목과 모양을 정한 뒤 저장합니다.</li>
                 <li>공연을 시작하면 관객 화면에는 번호만 나옵니다. 목록 내용은 아직 보이지 않습니다.</li>
                 <li>관객이 1부터 항목 수까지의 번호를 고릅니다. 그 다음 ‘목록 보기’로 목록 전체를 한 번에 엽니다.</li>
-                <li>고른 번호 자리에 미리 정한 목표 항목이 오도록, 그 자리에 있던 항목과 맞바꿉니다. 항목은 빠지거나 늘지 않습니다.</li>
+                <li>고른 번호 자리에 포스 항목을 끼워 넣습니다. 일반 항목은 순서대로 모두 남습니다.</li>
                 <li>한 번 연 목록은 번호가 잠겨 실수로 바뀌지 않습니다.</li>
                 <li>설정으로 돌아오려면 공연 화면에서 두 손가락을 화면 아래로 96픽셀 이상 밀어 내리거나, 키보드에서 Shift+Esc를 누릅니다. 공연 화면에는 설정 버튼을 두지 않습니다.</li>
-                <li>두 목록을 켜면 서로 다른 저장 목록에 각각 번호를 받습니다. 목록마다 준비한 목표 항목을 그 번호에 놓고, 둘 다 연 뒤에 함께 보여 줍니다.</li>
+                <li>두 목록을 켜면 서로 다른 저장 목록에 각각 번호를 받습니다. 목록마다 준비한 포스 항목을 그 번호에 놓고, 둘 다 연 뒤에 함께 보여 줍니다.</li>
                 <li>공연을 시작한 뒤 설정을 고쳐도 진행 중인 화면은 바뀌지 않습니다. 시작 시점의 사본을 사용합니다.</li>
-                <li>노트 연출은 비어 있지 않은 항목이 정확히 100개이고 목표 항목이 있는 목록만 사용합니다. 그런 목록이 다섯 개를 넘으면 저장된 순서의 앞 다섯 개만 메모가 됩니다. 목표 항목은 목록마다 편집 화면에서 고릅니다.</li>
+                <li>노트 연출은 일반 항목 99개와 포스 항목 1개가 있는 목록만 사용합니다. 그런 목록이 다섯 개를 넘으면 저장된 순서의 앞 다섯 개만 메모가 됩니다.</li>
               </ol>
               <p>저장은 이 기기에만 남습니다. 손상된 저장본은 복구를 선택하기 전까지 지우지 않습니다.</p>
             </div>

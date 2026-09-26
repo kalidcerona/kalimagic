@@ -8,7 +8,8 @@ import {
   deletePreset,
   emptyState,
   fakeHomeDigit,
-  forceList,
+  insertForceItem,
+  splitForcePreset,
   isRehearsalShortcut,
   isTwoFingerDownSwipe,
   loadFromStorage,
@@ -28,7 +29,8 @@ const live = document.getElementById('performance-live');
 const nameInput = document.getElementById('preset-name');
 const appearanceInput = document.getElementById('appearance');
 const itemsInput = document.getElementById('items');
-const targetInput = document.getElementById('target');
+const forceInput = document.getElementById('force-item');
+const editorPanel = document.getElementById('editor-panel');
 const itemHint = document.getElementById('item-hint');
 const itemCount = document.getElementById('item-count');
 const editorMessage = document.getElementById('editor-message');
@@ -165,35 +167,21 @@ function readEditor() {
   return {
     name: nameInput.value,
     itemsText: itemsInput.value,
-    targetIndex: targetInput.value === '' ? null : Number(targetInput.value),
+    forceItem: forceInput.value,
     appearance: appearanceInput.value
   };
 }
 
-function renderTargets(preferred) {
+function renderTargets() {
   const parsed = parseItemText(itemsInput.value);
   const items = parsed.ok ? parsed.items : [];
-  const previous = preferred != null ? String(preferred) : targetInput.value;
-  targetInput.replaceChildren();
-  const placeholder = document.createElement('option');
-  placeholder.value = '';
-  placeholder.textContent = '목표 항목 선택';
-  targetInput.append(placeholder);
-  items.forEach((item, index) => {
-    const option = document.createElement('option');
-    option.value = String(index);
-    option.textContent = `${index + 1}. ${item}`;
-    targetInput.append(option);
-  });
-  if (previous !== '' && items[Number(previous)] != null) targetInput.value = previous;
-  else targetInput.value = '';
-  itemCount.textContent = `${items.length}개 / 200`;
+  itemCount.textContent = `${items.length}개 / 199 (포스 항목 제외)`;
   if (!itemsInput.value.trim()) {
-    itemHint.textContent = '한 줄에 하나씩 입력합니다. 빈 줄은 빠집니다. 최대 200개, 각 120자.';
+    itemHint.textContent = '포스 항목은 일반 항목에 넣지 마세요. 일반 항목은 한 줄에 하나씩, 최대 199개입니다.';
   } else if (!parsed.ok) {
     itemHint.textContent = parsed.error;
   } else {
-    itemHint.textContent = '빈 줄은 빠집니다. 목표 항목은 비어 있는 줄을 뺀 순서를 기준으로 합니다.';
+    itemHint.textContent = '빈 줄은 빠집니다. 포스 항목은 관객이 고른 번호에 끼워 넣습니다.';
   }
 }
 
@@ -201,23 +189,26 @@ function fillEditor(preset) {
   loadedId = preset ? preset.id : null;
   nameInput.value = preset ? preset.name : '';
   appearanceInput.value = preset && APPEARANCES[preset.appearance] ? preset.appearance : 'memo';
-  itemsInput.value = preset ? preset.items.join('\n') : '';
-  renderTargets(preset ? preset.targetIndex : '');
+  const split = preset ? splitForcePreset(preset) : null;
+  itemsInput.value = split ? split.items.join('\n') : '';
+  forceInput.value = split ? split.forceItem : '';
+  renderTargets();
   setEditorMessage('');
   renderSaved();
 }
 
 function isDirty() {
   if (!loadedId) {
-    return nameInput.value.trim() !== '' || itemsInput.value.trim() !== '' || targetInput.value !== '';
+    return nameInput.value.trim() !== '' || itemsInput.value.trim() !== '' || forceInput.value.trim() !== '';
   }
   const preset = store.presets.find((entry) => entry.id === loadedId);
   if (!preset) return true;
   const parsed = parseItemText(itemsInput.value);
-  const sameItems = parsed.ok && parsed.items.join('\n') === preset.items.join('\n');
+  const split = splitForcePreset(preset);
+  const sameItems = parsed.ok && parsed.items.join('\n') === split.items.join('\n');
   return nameInput.value.trim() !== preset.name
     || appearanceInput.value !== preset.appearance
-    || targetInput.value !== String(preset.targetIndex)
+    || forceInput.value.trim() !== split.forceItem
     || !sameItems;
 }
 
@@ -240,7 +231,8 @@ function renderSaved() {
     const meta = document.createElement('p');
     meta.className = 'hint';
     const appearance = APPEARANCES[preset.appearance]?.heading || preset.appearance;
-    meta.textContent = `${appearance} · ${preset.items.length}개 · 목표 ${preset.targetIndex + 1}. ${preset.targetItem}`;
+    const split = splitForcePreset(preset);
+    meta.textContent = `${appearance} · ${split.items.length + 1}개 · 포스 ${split.forceItem}`;
     const actions = document.createElement('div');
     actions.className = 'actions';
     const edit = document.createElement('button');
@@ -248,6 +240,7 @@ function renderSaved() {
     edit.textContent = '편집';
     edit.addEventListener('click', () => {
       fillEditor(preset);
+      editorPanel.open = true;
       nameInput.focus();
     });
     const start = document.createElement('button');
@@ -348,7 +341,7 @@ async function onOverwrite() {
     return;
   }
   const accepted = await confirmAsk(
-    `「${current.name}」의 항목, 목표 항목, 모양을 지금 입력으로 바꿀까요? 이름은 바뀌지 않습니다.`,
+    `「${current.name}」의 일반 항목, 포스 항목, 모양을 지금 입력으로 바꿀까요? 이름은 바뀌지 않습니다.`,
     '덮어쓰기'
   );
   if (!accepted) return;
@@ -844,11 +837,11 @@ function activeFakeHomeGrid() {
 }
 
 function isEligibleNotePreset(preset) {
-  if (!preset || !Array.isArray(preset.items) || preset.items.length !== NOTE_ITEM_COUNT) return false;
-  if (!preset.items.every((item) => typeof item === 'string' && item.trim() !== '')) return false;
-  return Number.isInteger(preset.targetIndex)
-    && preset.targetIndex >= 0
-    && preset.targetIndex < preset.items.length;
+  if (!preset || !Array.isArray(preset.items)) return false;
+  const split = splitForcePreset(preset);
+  return split.items.length + 1 === NOTE_ITEM_COUNT
+    && split.items.every((item) => typeof item === 'string' && item.trim() !== '')
+    && typeof split.forceItem === 'string' && split.forceItem.trim() !== '';
 }
 
 function snapshotEligibleNotes(presets) {
@@ -856,11 +849,12 @@ function snapshotEligibleNotes(presets) {
   if (!Array.isArray(presets)) return { notes: eligible, truncated: false };
   for (const preset of presets) {
     if (!isEligibleNotePreset(preset)) continue;
+    const split = splitForcePreset(preset);
     eligible.push({
       id: preset.id,
       name: preset.name,
-      items: preset.items.slice(),
-      targetIndex: preset.targetIndex,
+      items: split.items,
+      forceItem: split.forceItem,
       updatedAt: preset.updatedAt
     });
   }
@@ -965,7 +959,7 @@ function openFakeNote(noteId) {
   if (!current || current.page !== 'notes' || current.entry?.locked !== true) return;
   const note = current.notes.find((entry) => entry.id === noteId);
   if (!note) return;
-  const forced = forceList(note.items.slice(), note.targetIndex, current.entry.value);
+  const forced = insertForceItem(note.items.slice(), note.forceItem, current.entry.value);
   if (!forced.ok || !Array.isArray(forced.items)) return;
   current.openNoteId = noteId;
   renderFakeNoteDetail(note.name, forced.items);
@@ -1025,7 +1019,7 @@ function startNotesShow() {
   }
   const snapped = snapshotEligibleNotes(store.presets);
   if (!snapped.notes.length) {
-    setNotesEntryMessage('노트 연출에 쓸 수 있는 목록이 없습니다. 목록 편집에서 비어 있지 않은 항목 100개를 저장하고, 각 목록의 목표 항목을 고른 뒤 다시 노트 연출 시작을 누르세요.');
+    setNotesEntryMessage('노트 연출에 쓸 수 있는 목록이 없습니다. 일반 항목 99개와 포스 항목 1개를 저장한 뒤 다시 시작하세요.');
     return;
   }
   if (snapped.truncated) {

@@ -226,7 +226,15 @@ h1 {
 
 .field { display: grid; gap: 6px; font-weight: 700; }
 
-input[type="number"] {
+.field-help {
+  margin: -6px 0 0;
+  color: rgba(44, 33, 28, 0.72);
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+input[type="number"],
+input[type="text"] {
   width: 100%;
   min-height: 44px;
   padding: 10px 12px;

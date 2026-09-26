@@ -1,4 +1,4 @@
-const CACHE = 'magic-choice-shell-v5';
+const CACHE = 'magic-choice-shell-v6';
 const CACHE_PREFIX = 'magic-choice-shell-';
 const ASSETS = [
   './index.html',

@@ -43,15 +43,17 @@
       <p class="lede">공연에 올릴 물건을 정합니다. 시작 화면에는 물건이 없습니다.</p>
       <div id="recovery" class="recovery" hidden></div>
 
-      <section class="block" aria-labelledby="preset-heading">
-        <div class="row">
-          <h2 id="preset-heading">프리셋</h2>
-          <button type="button" id="add-preset" class="button button-quiet">추가</button>
+      <details id="preset-picker" class="settings-toggle">
+        <summary><span>프리셋 선택</span><span id="selected-preset-name" class="toggle-current"></span></summary>
+        <div class="toggle-body">
+          <button type="button" id="add-preset" class="button button-quiet add-preset">새 프리셋 추가</button>
+          <ul id="preset-list" class="preset-list"></ul>
         </div>
-        <ul id="preset-list" class="preset-list"></ul>
-      </section>
+      </details>
 
-      <form id="preset-form" class="block" autocomplete="off">
+      <details id="preset-editor" class="settings-toggle">
+        <summary>선택한 프리셋 설정</summary>
+        <form id="preset-form" class="toggle-body" autocomplete="off">
         <label class="field">
           <span class="field-label">이름</span>
           <input id="preset-name" class="text" type="text" maxlength="32" enterkeyhint="done">
@@ -109,7 +111,8 @@
 
         <p id="form-note" class="note" role="status"></p>
         <button type="button" id="delete-preset" class="button button-danger">삭제</button>
-      </form>
+        </form>
+      </details>
 
       <section class="install-panel" aria-labelledby="install-heading" hidden>
         <h2 id="install-heading">TOBIRA 설치</h2>

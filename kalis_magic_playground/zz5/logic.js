@@ -8,6 +8,9 @@ export const LIMITS = Object.freeze({
   minBrush: 12,
   maxBrush: 140,
   defaultBrush: 46,
+  minCoverage: 40,
+  maxCoverage: 260,
+  defaultCoverage: 110,
   minHidden: 0,
   maxHidden: 100,
   defaultHidden: 100,
@@ -410,6 +413,12 @@ export function brushDiameterInMask(brushCss, imageCssWidth, maskWidth) {
   if (!(brush > 0) || !(viewW > 0) || !(maskW > 0)) return 0;
   if (![brush, viewW, maskW].every(Number.isFinite)) return 0;
   return brush * (maskW / viewW);
+}
+
+export function normalizeCoverage(value) {
+  const number = Number(value);
+  return Number.isInteger(number) && number >= LIMITS.minCoverage && number <= LIMITS.maxCoverage
+    ? number : LIMITS.defaultCoverage;
 }
 
 function dominantDown(pointer) {

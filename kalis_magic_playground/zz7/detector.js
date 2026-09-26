@@ -106,7 +106,15 @@ function bootStorage() {
   appState = loaded.state;
   storageLocked = loaded.preserveStoredRaw === true;
   if (sound.ok) loadSoundPreference(sound.value);
-  truthInput.value = String(appState.settings.truthAttempt);
+  truthInput.value = appState.settings.truthAttempts.join(",");
+  if (!storageLocked && stored.value) {
+    try {
+      const old = JSON.parse(stored.value);
+      if (old?.settings && !Array.isArray(old.settings.truthAttempts) && old.settings.truthAttempt != null) {
+        persistState();
+      }
+    } catch { /* loadFromRaw already preserves unreadable content */ }
+  }
   if (storageLocked) {
     setStatus("저장된 기록을 읽지 못했습니다. 기존 값은 덮어쓰지 않습니다.");
   }
@@ -176,7 +184,7 @@ function showSettings() {
   performanceScreen.classList.remove("is-testing");
   detectorButton.classList.remove("is-testing");
   detectorButton.setAttribute("aria-busy", "false");
-  truthInput.value = String(appState.settings.truthAttempt);
+  truthInput.value = appState.settings.truthAttempts.join(",");
 }
 
 function showPerformance() {
@@ -198,7 +206,7 @@ function ensureAudio() {
   return audioContext;
 }
 
-function playTone(ctx, frequency, startAt, duration, type, peak) {
+function playTone(ctx, destination, frequency, startAt, duration, type, peak) {
   const oscillator = ctx.createOscillator();
   const gain = ctx.createGain();
   oscillator.type = type;
@@ -207,7 +215,7 @@ function playTone(ctx, frequency, startAt, duration, type, peak) {
   gain.gain.exponentialRampToValueAtTime(peak, startAt + 0.02);
   gain.gain.exponentialRampToValueAtTime(0.0001, startAt + duration);
   oscillator.connect(gain);
-  gain.connect(ctx.destination);
+  gain.connect(destination);
   oscillator.start(startAt);
   oscillator.stop(startAt + duration + 0.03);
   oscillator.onended = () => {
@@ -222,17 +230,22 @@ function playVerdictSound(result) {
     const ctx = ensureAudio();
     if (!ctx) return;
     const start = ctx.currentTime + 0.01;
+    const master = ctx.createGain();
+    master.gain.setValueAtTime(0.8, start);
+    master.connect(ctx.destination);
     if (result === "LIE") {
-      playTone(ctx, 196, start, 0.34, "square", 0.12);
-      playTone(ctx, 277, start, 0.34, "square", 0.06);
+      playTone(ctx, master, 196, start, 0.34, "square", 0.24);
+      playTone(ctx, master, 277, start, 0.34, "square", 0.12);
+      window.setTimeout(() => master.disconnect(), 500);
       return;
     }
     if (result === "TRUE") {
       // ding-dong-dang: three separated notes, not a chord.
       const notes = [784, 659.25, 1046.5];
       notes.forEach((frequency, index) => {
-        playTone(ctx, frequency, start + index * 0.2, 0.18, "sine", 0.16);
+        playTone(ctx, master, frequency, start + index * 0.2, 0.18, "sine", 0.32);
       });
+      window.setTimeout(() => master.disconnect(), 800);
     }
   } catch {
     /* Visual result still stands when audio is unavailable. */
@@ -383,12 +396,12 @@ function unlockFromGesture() {
 function commitTruthAttempt() {
   const next = trySetTruthAttempt(appState, truthInput.value);
   if (!next.ok) {
-    truthInput.value = String(appState.settings.truthAttempt);
-    setStatus("TRUE가 나올 시도는 1부터 20 사이의 정수여야 합니다.");
+    truthInput.value = appState.settings.truthAttempts.join(",");
+    setStatus("TRUE 회차는 1부터 20 사이의 서로 다른 정수를 쉼표로 구분해 입력하세요. 예: 2,4");
     return false;
   }
   appState = next.state;
-  truthInput.value = String(appState.settings.truthAttempt);
+  truthInput.value = appState.settings.truthAttempts.join(",");
   const saved = persistState();
   if (storageLocked) {
     setStatus("설정은 적용했습니다. 읽을 수 없는 저장값은 덮어쓰지 않습니다.");

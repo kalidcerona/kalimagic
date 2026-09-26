@@ -37,7 +37,8 @@ export const MSG = {
   badMode: '공연 방식이 올바르지 않습니다.',
   storageRead: '저장소를 읽지 못했습니다.',
   storageWrite: '저장 공간이 부족하거나 저장소에 쓸 수 없습니다.',
-  badTwoList: '두 목록 설정을 읽을 수 없습니다. 원본은 그대로 두었습니다.'
+  badTwoList: '두 목록 설정을 읽을 수 없습니다. 원본은 그대로 두었습니다.',
+  needForce: '포스 항목을 입력하세요.'
 };
 
 const MAX_ITEMS = 200;
@@ -119,7 +120,11 @@ export function createPreset(input, options = {}) {
     : normalizeItems(input?.items);
   if (!parsed.ok) return { ok: false, error: parsed.error };
   const { items } = parsed;
-  if (!Number.isInteger(input.targetIndex) || input.targetIndex < 0 || input.targetIndex >= items.length) {
+  const separate = Object.prototype.hasOwnProperty.call(input, 'forceItem');
+  const forceItem = separate ? String(input.forceItem ?? '').trim() : null;
+  if (separate && (!forceItem || charLength(forceItem) > MAX_CHARS)) return { ok: false, error: MSG.needForce };
+  if (separate && items.length >= MAX_ITEMS) return { ok: false, error: MSG.tooManyItems };
+  if (!separate && (!Number.isInteger(input.targetIndex) || input.targetIndex < 0 || input.targetIndex >= items.length)) {
     return { ok: false, error: MSG.needTarget };
   }
   if (!Object.prototype.hasOwnProperty.call(APPEARANCES, input.appearance)) {
@@ -131,8 +136,7 @@ export function createPreset(input, options = {}) {
       id: options.id || makeId(options.now, options.rand),
       name: name.name,
       items,
-      targetIndex: input.targetIndex,
-      targetItem: items[input.targetIndex],
+      ...(separate ? { forceItem } : { targetIndex: input.targetIndex, targetItem: items[input.targetIndex] }),
       appearance: input.appearance,
       updatedAt: options.now ?? Date.now()
     }
@@ -180,6 +184,7 @@ export function overwritePreset(presets, id, input, options = {}) {
     name: current.name,
     items: input?.items,
     itemsText: input?.itemsText,
+    ...(Object.prototype.hasOwnProperty.call(input ?? {}, 'forceItem') ? { forceItem: input.forceItem } : {}),
     targetIndex: input?.targetIndex,
     appearance: input?.appearance
   }, { id: current.id, now: options.now ?? current.updatedAt });
@@ -224,11 +229,36 @@ export function forceList(items, targetIndex, choice) {
   };
 }
 
+export function insertForceItem(items, forceItem, choice) {
+  // A valid legacy one-item list has no ordinary items after its force item is split out.
+  const normalized = Array.isArray(items) && items.length === 0
+    ? { ok: true, items: [] }
+    : normalizeItems(items);
+  if (!normalized.ok) return normalized;
+  if (typeof forceItem !== 'string' || !forceItem.trim() || charLength(forceItem.trim()) > MAX_CHARS) {
+    return { ok: false, error: MSG.needForce };
+  }
+  if (normalized.items.length >= MAX_ITEMS) return { ok: false, error: MSG.tooManyItems };
+  if (!Number.isInteger(choice) || choice < 1 || choice > normalized.items.length + 1) {
+    return { ok: false, error: MSG.badChoice };
+  }
+  const next = normalized.items.slice();
+  next.splice(choice - 1, 0, forceItem.trim());
+  return { ok: true, items: next, selectedItem: forceItem.trim(), choice, index: choice - 1 };
+}
+
+export function splitForcePreset(preset) {
+  if (typeof preset?.forceItem === 'string') return { items: preset.items.slice(), forceItem: preset.forceItem };
+  const items = preset.items.slice();
+  const [forceItem] = items.splice(preset.targetIndex, 1);
+  return { items, forceItem };
+}
+
 export function takeSnapshot(preset) {
   const created = createPreset({
     name: preset?.name,
     items: preset?.items,
-    targetIndex: preset?.targetIndex,
+    ...(typeof preset?.forceItem === 'string' ? { forceItem: preset.forceItem } : { targetIndex: preset?.targetIndex }),
     appearance: preset?.appearance
   }, { id: preset?.id, now: preset?.updatedAt });
   if (!created.ok) return created;
@@ -273,9 +303,7 @@ export function beginPerformance(state, options) {
       id: snap.snapshot.id,
       name: snap.snapshot.name,
       appearance: snap.snapshot.appearance,
-      items: snap.snapshot.items.slice(),
-      targetIndex: snap.snapshot.targetIndex,
-      targetItem: snap.snapshot.targetItem,
+      ...splitForcePreset(snap.snapshot),
       choice: null,
       revealed: false,
       ordered: null
@@ -288,7 +316,7 @@ export function chooseNumber(session, listIndex, choice) {
   const list = session?.lists?.[listIndex];
   if (!list) return { ok: false, error: MSG.missingList };
   if (session.locked || list.revealed) return { ok: false, error: MSG.locked };
-  const forced = forceList(list.items, list.targetIndex, choice);
+  const forced = insertForceItem(list.items, list.forceItem, choice);
   if (!forced.ok) return { ok: false, error: forced.error };
   return {
     ok: true,
@@ -304,7 +332,7 @@ export function revealList(session, listIndex) {
   if (!list) return { ok: false, error: MSG.missingList };
   if (session.locked || list.revealed) return { ok: false, error: MSG.locked };
   if (!Number.isInteger(list.choice)) return { ok: false, error: MSG.chooseFirst };
-  const forced = forceList(list.items, list.targetIndex, list.choice);
+  const forced = insertForceItem(list.items, list.forceItem, list.choice);
   if (!forced.ok) return { ok: false, error: forced.error };
   const lists = session.lists.map((entry, index) => cloneList(entry, index === listIndex
     ? { revealed: true, ordered: forced.items }
@@ -326,7 +354,7 @@ export function toPublic(session) {
       appearance: list.appearance,
       heading: APPEARANCES[list.appearance]?.heading ?? '',
       icon: APPEARANCES[list.appearance]?.icon ?? '',
-      count: list.items.length,
+      count: list.items.length + 1,
       choice: list.choice,
       revealed: list.revealed,
       numberPrompt: PUBLIC_COPY.choose,
@@ -378,6 +406,17 @@ function recoverPreset(entry, index) {
     return { ok: false, issue: `${label}: ${MSG.badAppearance}` };
   }
   const items = itemsResult.items;
+  if (Object.prototype.hasOwnProperty.call(entry, 'forceItem')) {
+    const forceItem = typeof entry.forceItem === 'string' ? entry.forceItem.trim() : '';
+    if (!forceItem || charLength(forceItem) > MAX_CHARS || items.length >= MAX_ITEMS) {
+      return { ok: false, issue: `${label}: ${MSG.needForce}` };
+    }
+    return { ok: true, issue: null, preset: {
+      id: entry.id, name: name.name, items, forceItem,
+      appearance: entry.appearance,
+      updatedAt: Number.isFinite(entry.updatedAt) ? entry.updatedAt : 0
+    } };
+  }
   let targetIndex = entry.targetIndex;
   let issue = null;
   const identity = typeof entry.targetItem === 'string' ? entry.targetItem : null;
@@ -494,8 +533,9 @@ export function serializeState(state) {
       id: preset.id,
       name: preset.name,
       items: preset.items.slice(),
-      targetIndex: preset.targetIndex,
-      targetItem: preset.targetItem,
+      ...(typeof preset.forceItem === 'string'
+        ? { forceItem: preset.forceItem }
+        : { targetIndex: preset.targetIndex, targetItem: preset.targetItem }),
       appearance: preset.appearance,
       updatedAt: preset.updatedAt
     })),
