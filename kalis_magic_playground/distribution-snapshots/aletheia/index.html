@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#4C1420">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="ALETHEIA">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>ALETHEIA</title>
+  <link rel="manifest" href="./manifest.webmanifest?v=aletheia-2">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="./icon-192.png?install=aletheia-v2">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="view-settings">
+  <main id="settings" class="settings">
+    <div class="settings-inner">
+      <img class="brand-logo" src="brand-logo.png" alt="ALETHEIA" draggable="false">
+      <h1>ALETHEIA</h1>
+      <p class="tagline">공연용 이미지 공개</p>
+
+      <section class="install-card" data-install-card aria-labelledby="install-title">
+        <h2 id="install-title">앱 설치</h2>
+        <p data-install-guidance>기기에 설치하면 홈 화면에서 바로 열 수 있습니다.</p>
+        <button type="button" id="install-button" data-install-button class="primary" hidden>앱 설치</button>
+      </section>
+
+      <details class="guide">
+        <summary>사용 안내</summary>
+        <h2>준비</h2>
+        <p>기본 카드 12장은 준비 없이 바로 시작할 수 있습니다. 지우개 범위는 설정에서 조절합니다. 내 사진은 세트 1부터 3까지 각각 12장씩 저장할 수 있습니다. 각 세트에서 사진 12장이 모두 저장되면 그 세트의 공연 버튼이 활성화됩니다. 이미지는 한 장당 6MB 이하의 JPEG, PNG, WEBP, GIF입니다.</p>
+        <h2>공개 방식</h2>
+        <ul>
+          <li>자유 스크래치: 문지른 경로가 바로 선명하게 열립니다. 처음 가림 비율이 100보다 작으면 아래쪽부터 그만큼 열려 있습니다.</li>
+          <li>서서히 공개: 같은 자리를 거듭 문질러야 베일이 조금씩 얇아집니다. 처음 가림 비율은 베일 전체의 처음 농도입니다.</li>
+          <li>단계 공개: 그림을 위부터 아래까지 네 개의 가로 구역으로 나눕니다. 현재 구역만 문지를 수 있고, 그 구역의 약 60%를 문지르면 구역 전체가 열린 뒤 다음 구역이 풀립니다. 앞 구역은 건너뛸 수 없습니다. 가림 비율을 낮추면 위쪽 구역이 25% 단위로 미리 열립니다.</li>
+        </ul>
+        <h2>공연</h2>
+        <p>기본 카드로 바로 시작하거나 선택한 내 사진 세트로 시작합니다. 이미지는 검은 화면 안에 비율을 유지한 채 최대한 크게 놓이고, 불투명한 거의 검은 베일이 그림을 덮습니다. 손가락, 펜 또는 마우스로 문지르면 그 경로를 따라 베일이 지워집니다. 빠르게 움직여도 획이 끊기지 않도록 사이를 채웁니다. 공연 중에는 설정 버튼이 없습니다.</p>
+        <h2>리셋</h2>
+        <p>두 손가락을 위로 96픽셀 이상, 대체로 곧게 밀면 설정으로 나가지 않고 베일만 처음 상태로 다시 덮입니다. 한 손가락 문지르기만으로는 리셋되지 않습니다.</p>
+        <h2>설정으로 돌아가기</h2>
+        <p>두 손가락을 아래로 96픽셀 이상, 대체로 곧게 끌어내리세요. 리허설에서 키보드가 있으면 Shift+Esc로도 설정에 들어올 수 있습니다. 설정으로 나가면 진행 중인 문지르기는 버려지고, 다시 공연을 시작하면 처음부터 덮입니다.</p>
+        <h2>저장</h2>
+        <p>사진과 세트 정보는 이 기기의 브라우저 안에만 있습니다. 서버로 보내지 않습니다. 저장에 실패하면 알리고, 이미 있는 데이터는 자동으로 지우지 않습니다. 저장된 형식이 손상되면 자동으로 초기화하지 않고 복구 또는 초기화를 고릅니다.</p>
+        <h2>기본 카드 12장</h2>
+        <p>저장된 프리셋과 별개로 기본 카드 12장으로 시작할 수 있습니다. 프리셋이 없어도 됩니다. 들어오면 무대 전체가 검고 카드는 보이지 않습니다. 화면 전체를 4행 3열로 나누어, 한 손가락으로 칸을 누릅니다. 첫 터치부터 검은 베일이 지워져 선택한 카드가 보입니다. 선택은 공연을 나갈 때까지 고정됩니다. 선택된 뒤에 다시 누르면 붓 자국은 남을 수 있지만 카드는 바뀌지 않습니다. 긁어 낸 결과는 공연 화면을 나가기 전까지 유지됩니다. 두 손가락을 위로 미는 리셋은 선택과 긁힌 결과를 바꾸지 않습니다. 처음 누른 위치로 선택한 카드는 공연을 나갈 때까지 고정됩니다. 두 손가락을 아래로 내리거나 Shift+Esc로 설정에 나가면 이번 선택이 끝납니다.</p>
+        <p>행은 위에서 아래로 스페이드, 다이아몬드, 클럽, 하트입니다. 열은 왼쪽에서 오른쪽으로 J, Q, K입니다.</p>
+        <ul>
+          <li>1행 스페이드: 1 스페이드 잭(J), 2 스페이드 퀸(Q), 3 스페이드 킹(K)</li>
+          <li>2행 다이아몬드: 4 다이아몬드 잭(J), 5 다이아몬드 퀸(Q), 6 다이아몬드 킹(K)</li>
+          <li>3행 클럽: 7 클럽 잭(J), 8 클럽 퀸(Q), 9 클럽 킹(K)</li>
+          <li>4행 하트: 10 하트 잭(J), 11 하트 퀸(Q), 12 하트 킹(K)</li>
+        </ul>
+        <h2>내 사진 세트</h2>
+        <p>세트마다 번호 1부터 12까지 사진을 따로 저장합니다. 세트 1에는 기존에 저장한 내 사진 12장이 그대로 이어집니다. 각 세트에서 사진을 모두 저장한 뒤 <strong>이 세팅으로 연출하기</strong>를 누르세요. 공연 중에는 처음 누른 칸의 사진이 고정되며, 두 손가락을 아래로 밀면 설정으로 돌아옵니다.</p>
+        <h2>칸 번호 안내</h2>
+        <p>아래 칸 번호 안내를 켜 두면, 기본 카드 12장과 내 사진 12장에 들어올 때만 하얀 번호 1–12가 고르는 칸 위에 약 0.8초 보였다가 사라집니다. 기본은 꺼져 있습니다. 번호는 고른 카드나 사진을 보여 주지 않고, 첫 터치부터 누른 자리의 이미지가 드러납니다.</p>
+        <h2>리허설</h2>
+        <p>연습 때는 Shift+Esc로 설정과 공연을 오갈 수 있습니다. 화면을 돌리거나 접어도 공연 중에 이미 지운 자국은 유지됩니다. 같은 공연 안에서 처음부터 다시 덮으려면 두 손가락을 위로 미세요. 기본 카드 공연에서는 그 리셋이 선택과 긁힌 결과를 바꾸지 않습니다. 마우스로는 두 손가락 제스처가 어려우면 설정으로 돌아온 뒤 공연을 다시 시작하면 됩니다. 설치하면 앱 이름은 ALETHEIA입니다.</p>
+      </details>
+
+      <div id="repair" class="banner" hidden>
+        <p>저장된 프리셋 정보를 해석할 수 없습니다. 기존 데이터는 자동으로 지우지 않았습니다. 읽을 수 있는 항목만 복구하거나, 목록을 직접 초기화할 수 있습니다.</p>
+        <div class="row-actions">
+          <button type="button" id="recover-button" class="secondary">읽을 수 있는 항목만 복구</button>
+          <button type="button" id="reset-storage-button" class="danger">초기화</button>
+        </div>
+      </div>
+      <p id="error" class="banner" role="alert" hidden></p>
+      <p id="status" class="status" role="status" hidden></p>
+
+      <section class="card-start" aria-labelledby="card-start-heading">
+        <h2 id="card-start-heading">기본 카드</h2>
+        <p class="hint">앱을 열면 기본으로 제공되는 12장의 그림 카드로 바로 공연을 시작할 수 있습니다.</p>
+        <button type="button" id="card-start-button" class="primary">기본 카드 12장으로 시작</button>
+        <p class="hint">들어오면 화면 전체가 검습니다. 한 손가락으로 칸을 누르는 순간 카드가 정해지고 그 자리부터 지워집니다. 고른 카드는 공연을 나갈 때까지 바뀌지 않습니다.</p>
+      </section>
+
+      <section class="card-start" aria-labelledby="coverage-heading">
+        <h2 id="coverage-heading">지우개 범위</h2>
+        <label for="coverage-size">한 번 문지를 때 지워지는 지름</label>
+        <div class="slider-line">
+          <input id="coverage-size" type="range" min="40" max="260" value="110">
+          <output id="coverage-readout" for="coverage-size">110px</output>
+        </div>
+        <p class="hint">기본 카드와 모든 내 사진 세트에 적용되며 이 기기에 저장됩니다.</p>
+      </section>
+
+      <section class="card-start cell-guide-setting" aria-labelledby="cell-guide-heading">
+        <h2 id="cell-guide-heading">칸 번호 안내</h2>
+        <label class="check" for="cell-guide-enable">
+          <input id="cell-guide-enable" type="checkbox">
+          <span>12칸 공연을 시작할 때 하얀 번호 1–12를 잠시 보여 주기</span>
+        </label>
+        <p class="hint">기본은 꺼져 있으며 이 기기에만 기억합니다. 켠 뒤에 기본 카드 12장 또는 내 사진 12장으로 들어오면, 선택 칸과 같은 자리에 번호만 약 0.8초 보였다가 사라집니다. 번호는 고른 카드나 사진을 드러내지 않습니다. 첫 터치 때 번호는 사라지고 누른 자리부터 이미지가 보입니다.</p>
+        <details class="cell-map">
+          <summary>4행 3열 번호 지도</summary>
+          <p>번호는 왼쪽에서 오른쪽으로, 위에서 아래로 1부터 12입니다. 열은 J, Q, K이고 행은 스페이드, 다이아몬드, 클럽, 하트입니다. 이 지도는 설정 안의 설명이며, 공연 화면의 번호는 이 항목을 켰을 때만 잠시 나타납니다.</p>
+          <div class="cell-map-scroll">
+            <table class="cell-map-table">
+              <caption>보이지 않는 공연 칸과 카드 대응</caption>
+              <thead>
+                <tr>
+                  <th scope="col">행</th>
+                  <th scope="col">J (1열)</th>
+                  <th scope="col">Q (2열)</th>
+                  <th scope="col">K (3열)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row">스페이드 (1행)</th>
+                  <td>1 스페이드 잭</td>
+                  <td>2 스페이드 퀸</td>
+                  <td>3 스페이드 킹</td>
+                </tr>
+                <tr>
+                  <th scope="row">다이아몬드 (2행)</th>
+                  <td>4 다이아몬드 잭</td>
+                  <td>5 다이아몬드 퀸</td>
+                  <td>6 다이아몬드 킹</td>
+                </tr>
+                <tr>
+                  <th scope="row">클럽 (3행)</th>
+                  <td>7 클럽 잭</td>
+                  <td>8 클럽 퀸</td>
+                  <td>9 클럽 킹</td>
+                </tr>
+                <tr>
+                  <th scope="row">하트 (4행)</th>
+                  <td>10 하트 잭</td>
+                  <td>11 하트 퀸</td>
+                  <td>12 하트 킹</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </details>
+      </section>
+
+      <details class="optional-settings">
+        <summary>내 사진 세트 1-3</summary>
+        <section class="card-start custom-photos" aria-labelledby="custom-start-heading">
+          <h2 id="custom-start-heading">내 사진 세트</h2>
+          <p class="hint">각 세트의 12칸은 독립적으로 저장됩니다. 기존 사진 12장은 세트 1에서 이어집니다.</p>
+          <p id="custom-repair" class="banner" hidden>저장된 사진 정보를 해석할 수 없습니다. 기존 데이터는 자동으로 지우지 않았습니다.</p>
+          <div id="custom-slots"></div>
+        </section>
+      </details>
+
+      <details class="optional-settings" hidden>
+        <summary>이전 이미지 프리셋 보관</summary>
+      <section class="preset-section" aria-labelledby="preset-heading">
+        <h2 id="preset-heading">저장된 프리셋</h2>
+        <p id="empty-hint">저장된 프리셋이 없습니다. 아래에서 이미지를 추가하세요.</p>
+        <div id="preset-list" class="preset-list"></div>
+      </section>
+
+      <div class="start-bar">
+        <button type="button" id="start-button" class="primary">공연 시작</button>
+        <p class="hint">저장된 선택 프리셋으로 시작합니다. 수정한 뒤에는 먼저 저장하세요.</p>
+      </div>
+
+      <form id="editor">
+        <fieldset id="editor-fields">
+          <legend id="editor-legend">새 프리셋</legend>
+          <div class="field">
+            <label for="preset-name">이름</label>
+            <input id="preset-name" name="name" type="text" autocomplete="off" enterkeyhint="done">
+          </div>
+          <div class="field">
+            <label for="preset-file">공개할 이미지</label>
+            <input id="preset-file" name="image" type="file" accept="image/jpeg,image/png,image/webp,image/gif">
+            <p id="file-status" class="hint">선택된 파일 없음</p>
+            <img id="file-preview" class="preview" alt="선택한 이미지 미리보기" hidden>
+          </div>
+          <div class="field">
+            <label for="preset-mode">공개 방식</label>
+            <select id="preset-mode" name="mode">
+              <option value="free">자유 스크래치</option>
+              <option value="gradual">서서히 공개</option>
+              <option value="stages">단계 공개</option>
+            </select>
+            <p id="mode-hint" class="hint">문지른 자리가 바로 열립니다.</p>
+          </div>
+          <div class="field" hidden>
+            <label for="preset-brush">붓 크기</label>
+            <div class="slider-line">
+              <input id="preset-brush" name="brush" type="range" min="12" max="140" value="46">
+              <span id="brush-readout">46</span>
+            </div>
+            <p class="hint">화면에서 지워지는 원의 지름입니다.</p>
+          </div>
+          <div class="field">
+            <label class="check" for="hidden-enable">
+              <input id="hidden-enable" type="checkbox">
+              <span>처음 가림 비율을 직접 지정 (끄면 100% 가림)</span>
+            </label>
+            <div class="slider-line">
+              <input id="preset-hidden" name="hidden" type="range" min="0" max="100" value="100" disabled>
+              <span id="hidden-readout">100</span>
+            </div>
+          </div>
+          <div class="row-actions">
+            <button type="submit" id="save-button" class="primary">프리셋 저장</button>
+            <button type="button" id="cancel-edit" class="secondary" hidden>수정 취소</button>
+          </div>
+        </fieldset>
+      </form>
+      </details>
+    </div>
+  </main>
+
+  <section id="stage" class="stage" hidden>
+    <canvas id="stage-canvas" tabindex="0" aria-label="공연 화면"></canvas>
+    <div id="cell-guide" class="cell-guide" hidden aria-hidden="true" style="pointer-events:none"></div>
+  </section>
+  <noscript>
+    <p class="noscript">이 도구는 자바스크립트가 필요합니다. 네트워크 연결은 필요하지 않습니다.</p>
+  </noscript>
+  <script type="module" src="./app.js"></script>
+  <script type="module" src="./install-prompt.js"></script>
+</body>
+</html>

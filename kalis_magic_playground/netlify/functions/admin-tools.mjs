@@ -144,7 +144,7 @@ async function approveToolAccess(payload, viewer, supabase) {
 
   let result;
   try {
-    result = await supabase
+    let query = supabase
       .from(accessTableForTool(tool))
       .update({
         status: 'approved',
@@ -154,8 +154,9 @@ async function approveToolAccess(payload, viewer, supabase) {
         approved_at: new Date().toISOString(),
         approved_by: viewer.userId
       })
-      .eq('id', id)
-      .select('id');
+      .eq('id', id);
+    if (FRIEND_APP_TOOLS.has(tool)) query = query.eq('tool', tool);
+    result = await query.select('id');
   } catch (error) {
     return mutationDbError(error, tool);
   }
@@ -397,11 +398,12 @@ export async function deleteToolAccess(event, supabase) {
 
   let result;
   try {
-    result = await supabase
+    let query = supabase
       .from(accessTableForTool(tool))
       .delete()
-      .eq('id', id)
-      .select('id');
+      .eq('id', id);
+    if (FRIEND_APP_TOOLS.has(tool)) query = query.eq('tool', tool);
+    result = await query.select('id');
   } catch (error) {
     return mutationDbError(error, tool);
   }

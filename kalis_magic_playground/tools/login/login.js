@@ -2,7 +2,7 @@
   var panel = document.querySelector('[data-panel]');
   var to = window.ToolGateUtil.safeTo(new URLSearchParams(location.search).get('to'));
   var tool = window.ToolGateUtil.toolFromPath(to);
-  var names = { calc: 'HITSUZEN', stopwatch: 'KAIROS', unlock: '레리즈', 'stopwatch-uni': 'KAIROS' };
+  var names = { calc: 'HITSUZEN', stopwatch: 'KAIROS', unlock: '레리즈', 'stopwatch-uni': 'KAIROS', aletheia: 'ALETHEIA', usotsuki: 'USOTSUKI' };
   var appName = names[tool];
   var busy = false;
   var signedIn = false;
@@ -55,7 +55,7 @@
   }
 
   function showPending(email) {
-    var friendApp = tool === 'unlock' || tool === 'stopwatch-uni';
+    var friendApp = tool === 'unlock' || tool === 'stopwatch-uni' || tool === 'aletheia' || tool === 'usotsuki';
     var lines = friendApp
       ? [appName + ' 이용 신청이 접수되었습니다.', '칼리형이 이 구글 계정에 권한을 주면 사용할 수 있습니다.']
       : [appName + ' 이용 권한을 확인 중입니다. 구매가 확인되면 사용할 수 있습니다.'];

@@ -164,6 +164,8 @@ export const MIRROR_PAIRS = [
 
 export const DISTRIBUTION_APPS = [
   { source: 'distribution-snapshots/unlock', target: 'unlock', tool: 'unlock' },
+  { source: 'distribution-snapshots/aletheia', target: 'aletheia', tool: 'aletheia' },
+  { source: 'distribution-snapshots/usotsuki', target: 'usotsuki', tool: 'usotsuki' },
   { source: 'zz1', target: 'stopwatch-uni', tool: 'stopwatch-uni' },
   { source: 'zz1', target: 'stopwatch', tool: 'stopwatch' }
 ];

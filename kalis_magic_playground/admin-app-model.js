@@ -9,13 +9,17 @@
     Object.freeze({ id: 'calc', name: 'HITSUZEN', path: '/tools/calc/', legacy: true }),
     Object.freeze({ id: 'stopwatch', name: 'KAIROS', path: '/tools/stopwatch/', legacy: true }),
     Object.freeze({ id: 'unlock', name: '레리즈', path: '/tools/unlock/', legacy: false }),
-    Object.freeze({ id: 'stopwatch-uni', name: 'KAIROS', path: '/tools/stopwatch-uni/', legacy: false })
+    Object.freeze({ id: 'stopwatch-uni', name: 'KAIROS', path: '/tools/stopwatch-uni/', legacy: false }),
+    Object.freeze({ id: 'aletheia', name: 'ALETHEIA', path: '/tools/aletheia/', legacy: false }),
+    Object.freeze({ id: 'usotsuki', name: 'USOTSUKI', path: '/tools/usotsuki/', legacy: false })
   ]);
   var TOOL_LABELS = Object.freeze({
     calc: 'HITSUZEN',
     stopwatch: 'KAIROS',
     unlock: '레리즈',
     'stopwatch-uni': 'KAIROS',
+    aletheia: 'ALETHEIA',
+    usotsuki: 'USOTSUKI',
     all: 'HITSUZEN + KAIROS'
   });
   var LEGACY_TOOLS = Object.freeze(['calc', 'stopwatch']);
@@ -56,7 +60,8 @@
 
   function pendingToolOptions(item, availability) {
     var tool = item && item.tool;
-    if (tool === 'unlock' || tool === 'stopwatch-uni') {
+    var app = APP_CATALOG.find(function (entry) { return entry.id === tool; });
+    if (app && !app.legacy) {
       return isToolAvailable(tool, availability) ? [tool] : [];
     }
     if (tool && LEGACY_TOOLS.indexOf(tool) === -1 && tool !== 'all') return [];
@@ -66,7 +71,8 @@
 
   function isPendingActionAvailable(item, selectedTool, availability) {
     var originalTool = item && item.tool;
-    if (originalTool === 'unlock' || originalTool === 'stopwatch-uni') {
+    var app = APP_CATALOG.find(function (entry) { return entry.id === originalTool; });
+    if (app && !app.legacy) {
       return selectedTool === originalTool && isToolAvailable(originalTool, availability);
     }
     return normalizeAvailability(availability).legacy && ['calc', 'stopwatch', 'all'].indexOf(selectedTool) !== -1;
@@ -76,7 +82,7 @@
     var state = normalizeAvailability(availability);
     var unavailable = [];
     if (!state.legacy) unavailable.push('HITSUZEN·KAIROS');
-    if (!state.friendApps) unavailable.push('레리즈·KAIROS');
+    if (!state.friendApps) unavailable.push('레리즈·KAIROS·ALETHEIA·USOTSUKI');
     if (!unavailable.length) return '';
     return unavailable.join(' 및 ') + ' 권한 서비스를 사용할 수 없습니다. 조회 가능한 앱의 권한만 표시됩니다.';
   }
@@ -101,7 +107,7 @@
   }
 
   function countByTool(rows) {
-    var counts = { calc: 0, stopwatch: 0, unlock: 0, 'stopwatch-uni': 0 };
+    var counts = { calc: 0, stopwatch: 0, unlock: 0, 'stopwatch-uni': 0, aletheia: 0, usotsuki: 0 };
     (rows || []).forEach(function (item) {
       if (item.tool === 'all') {
         counts.calc += 1;

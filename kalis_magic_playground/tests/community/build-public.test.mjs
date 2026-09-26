@@ -81,6 +81,8 @@ test('public build mirrors the current calculator and integrated stopwatch sourc
   assert.equal(MIRROR_PAIRS.some(([, mirror]) => mirror.startsWith('zz8/')), false);
   assert.deepEqual(DISTRIBUTION_APPS, [
     { source: 'distribution-snapshots/unlock', target: 'unlock', tool: 'unlock' },
+    { source: 'distribution-snapshots/aletheia', target: 'aletheia', tool: 'aletheia' },
+    { source: 'distribution-snapshots/usotsuki', target: 'usotsuki', tool: 'usotsuki' },
     { source: 'zz1', target: 'stopwatch-uni', tool: 'stopwatch-uni' },
     { source: 'zz1', target: 'stopwatch', tool: 'stopwatch' }
   ]);
@@ -91,12 +93,16 @@ test('public build serves integrated stopwatch on both retained entitlement rout
   const personalStopwatch = await readFile(new URL('../../dist/zz1/index.html', import.meta.url), 'utf8');
   const sharedUnlock = await readFile(new URL('../../dist/tools/unlock/index.html', import.meta.url), 'utf8');
   const sharedStopwatch = await readFile(new URL('../../dist/tools/stopwatch-uni/index.html', import.meta.url), 'utf8');
+  const sharedAletheia = await readFile(new URL('../../dist/tools/aletheia/index.html', import.meta.url), 'utf8');
+  const sharedUsotsuki = await readFile(new URL('../../dist/tools/usotsuki/index.html', import.meta.url), 'utf8');
   const legacyStopwatch = await readFile(new URL('../../dist/tools/stopwatch/index.html', import.meta.url), 'utf8');
   assert.doesNotMatch(personalStopwatch, /id="friend-apps-check"/);
   assert.match(sharedUnlock, /id="friend-apps-check"/);
   assert.match(sharedUnlock, /tools\/_check\?tool=unlock/);
   assert.match(sharedStopwatch, /id="friend-apps-check"/);
   assert.match(sharedStopwatch, /tools\/_check\?tool=stopwatch-uni/);
+  assert.match(sharedAletheia, /tools\/_check\?tool=aletheia/);
+  assert.match(sharedUsotsuki, /tools\/_check\?tool=usotsuki/);
   assert.match(legacyStopwatch, /tools\/_check\?tool=stopwatch/);
   const stripGate = (html) => html.replace(/\n  <script id="friend-apps-check">[\s\S]*?<\/script>/, '');
   assert.equal(stripGate(legacyStopwatch), stripGate(sharedStopwatch));
@@ -112,10 +118,16 @@ test('public build serves integrated stopwatch on both retained entitlement rout
 test('admin distribution catalog lists one integrated stopwatch while keeping its canonical route', async () => {
   const admin = await readFile(new URL('../../admin.html', import.meta.url), 'utf8');
   assert.match(admin, /data-app-card="stopwatch-uni"/);
+  assert.match(admin, /data-app-card="aletheia"/);
+  assert.match(admin, /data-app-card="usotsuki"/);
   assert.match(admin, /data-copy-link="\/tools\/stopwatch-uni\/"/);
+  assert.match(admin, /data-copy-link="\/tools\/aletheia\/"/);
+  assert.match(admin, /data-copy-link="\/tools\/usotsuki\/"/);
   assert.match(admin, /<h3>KAIROS<\/h3>/);
   assert.match(admin, /<h3>HITSUZEN<\/h3>/);
   assert.match(admin, /<h3>레리즈<\/h3>/);
+  assert.match(admin, /<h3>ALETHEIA<\/h3>/);
+  assert.match(admin, /<h3>USOTSUKI<\/h3>/);
   assert.doesNotMatch(admin, /data-app-card="stopwatch"/);
   assert.doesNotMatch(admin, /data-copy-link="\/tools\/stopwatch\/"/);
 });
@@ -143,6 +155,39 @@ test('shared unlock stays on the pinned snapshot until explicit promotion', asyn
       assert.equal(withoutGuard, snapshot.toString('utf8'));
     } else {
       assert.deepEqual(distributed, snapshot, file);
+    }
+  }
+});
+
+test('ALETHEIA and USOTSUKI distribution builds use pinned snapshots and separate PWA identities', async () => {
+  await buildPublic();
+  const root = fileURLToPath(new URL('../..', import.meta.url));
+  async function filesUnder(dir, prefix = '') {
+    const entries = await readdir(dir, { withFileTypes: true });
+    const parts = await Promise.all(entries.map(async (entry) => {
+      const name = path.join(prefix, entry.name);
+      return entry.isDirectory() ? filesUnder(path.join(dir, entry.name), name) : [name];
+    }));
+    return parts.flat().sort();
+  }
+  for (const app of ['aletheia', 'usotsuki']) {
+    const snapshot = path.join(root, 'distribution-snapshots', app);
+    const target = path.join(root, 'dist', 'tools', app);
+    const sourceFiles = await filesUnder(snapshot);
+    assert.deepEqual(await filesUnder(target), sourceFiles, `${app} file inventory`);
+    const manifest = JSON.parse(await readFile(path.join(target, 'manifest.webmanifest'), 'utf8'));
+    assert.equal(manifest.id, './');
+    for (const file of sourceFiles) {
+      const [sourceBytes, targetBytes] = await Promise.all([
+        readFile(path.join(snapshot, file)), readFile(path.join(target, file))
+      ]);
+      if (file === 'index.html') {
+        const html = targetBytes.toString('utf8');
+        assert.match(html, new RegExp(`tools\\/_check\\?tool=${app}`));
+        assert.equal(html.replace(/\n  <script id="friend-apps-check">[\s\S]*?<\/script>/, ''), sourceBytes.toString('utf8'));
+      } else {
+        assert.deepEqual(targetBytes, sourceBytes, `${app}/${file}`);
+      }
     }
   }
 });

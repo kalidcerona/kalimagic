@@ -1,7 +1,7 @@
 (function () {
   var g = typeof window !== 'undefined' ? window : globalThis;
   var DEFAULT_TO = '/tools/calc/';
-  var ALLOWED = /^\/tools\/(?:calc|stopwatch|unlock|stopwatch-uni)\//;
+  var ALLOWED = /^\/tools\/(?:calc|stopwatch|unlock|stopwatch-uni|aletheia|usotsuki)\//;
 
   // 도구 게이트는 두 도구 경로로만 되돌려보낸다. 그 밖의 값은 전부 기본 경로로 떨어뜨린다.
   function safeTo(raw) {
@@ -16,6 +16,8 @@
   function toolFromPath(path) {
     if (/^\/tools\/unlock\//.test(path)) return 'unlock';
     if (/^\/tools\/stopwatch-uni\//.test(path)) return 'stopwatch-uni';
+    if (/^\/tools\/aletheia\//.test(path)) return 'aletheia';
+    if (/^\/tools\/usotsuki\//.test(path)) return 'usotsuki';
     return /^\/tools\/stopwatch\//.test(path) ? 'stopwatch' : 'calc';
   }
 
@@ -28,6 +30,8 @@
       ['/tools/stopwatch/', '/tools/stopwatch/'],
       ['/tools/unlock/', '/tools/unlock/'],
       ['/tools/stopwatch-uni/', '/tools/stopwatch-uni/'],
+      ['/tools/aletheia/', '/tools/aletheia/'],
+      ['/tools/usotsuki/', '/tools/usotsuki/'],
       ['/tools/calc/?x=1', '/tools/calc/?x=1'],
       ['//evil.com', DEFAULT_TO],
       ['https://evil.com', DEFAULT_TO],
@@ -46,13 +50,13 @@
       if (!ok) failed += 1;
       lines.push((ok ? 'PASS' : 'FAIL') + ' safeTo(' + JSON.stringify(row[0]) + ') = ' + JSON.stringify(actual) + (ok ? '' : ' (expected ' + JSON.stringify(row[1]) + ')'));
     });
-    [['/tools/stopwatch/', 'stopwatch'], ['/tools/calc/', 'calc'], ['/tools/unlock/', 'unlock'], ['/tools/stopwatch-uni/', 'stopwatch-uni'], [DEFAULT_TO, 'calc']].forEach(function (row) {
+    [['/tools/stopwatch/', 'stopwatch'], ['/tools/calc/', 'calc'], ['/tools/unlock/', 'unlock'], ['/tools/stopwatch-uni/', 'stopwatch-uni'], ['/tools/aletheia/', 'aletheia'], ['/tools/usotsuki/', 'usotsuki'], [DEFAULT_TO, 'calc']].forEach(function (row) {
       var actual = toolFromPath(row[0]);
       var ok = actual === row[1];
       if (!ok) failed += 1;
       lines.push((ok ? 'PASS' : 'FAIL') + ' toolFromPath(' + JSON.stringify(row[0]) + ') = ' + JSON.stringify(actual));
     });
-    lines.push(failed === 0 ? 'ALL PASS (' + cases.length + '+5)' : failed + ' FAILED');
+    lines.push(failed === 0 ? 'ALL PASS (' + cases.length + '+7)' : failed + ' FAILED');
     return { failed: failed, text: lines.join('\n') };
   }
 

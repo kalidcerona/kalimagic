@@ -65,6 +65,16 @@
     Content-Type = "application/manifest+json"
 
 [[headers]]
+  for = "/tools/aletheia/manifest.webmanifest"
+  [headers.values]
+    Content-Type = "application/manifest+json"
+
+[[headers]]
+  for = "/tools/usotsuki/manifest.webmanifest"
+  [headers.values]
+    Content-Type = "application/manifest+json"
+
+[[headers]]
   for = "/zz1/manifest.webmanifest"
   [headers.values]
     Content-Type = "application/manifest+json"

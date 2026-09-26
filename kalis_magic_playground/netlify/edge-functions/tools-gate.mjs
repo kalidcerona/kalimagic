@@ -3,10 +3,12 @@ import {
   signGateCookie,
   verifyGateCookie
 } from '../functions/_lib/tool-gate.mjs';
+import { FRIEND_APP_TOOLS } from '../functions/_lib/friend-app-access.mjs';
 
 const COOKIE_MAX_AGE = 7_776_000;
 const RENEWAL_WINDOW_SECONDS = 3_888_000;
 const DEFAULT_TOOL = 'calc';
+const STRICT_DISTRIBUTION_TOOLS = new Set(['aletheia', 'usotsuki']);
 
 function analyzePath(rawPathname) {
   if (typeof rawPathname !== 'string') {
@@ -59,6 +61,12 @@ function analyzePath(rawPathname) {
   if (pathname === '/tools/stopwatch-uni' || pathname.startsWith('/tools/stopwatch-uni/')) {
     return { mode: 'gated', tool: 'stopwatch-uni', pathname };
   }
+  if (pathname === '/tools/aletheia' || pathname.startsWith('/tools/aletheia/')) {
+    return { mode: 'gated', tool: 'aletheia', pathname };
+  }
+  if (pathname === '/tools/usotsuki' || pathname.startsWith('/tools/usotsuki/')) {
+    return { mode: 'gated', tool: 'usotsuki', pathname };
+  }
 
   return { mode: 'gated', tool: DEFAULT_TOOL, pathname };
 }
@@ -105,7 +113,9 @@ function safeReturnPath(pathname, search, fallback) {
     pathname.startsWith('/tools/calc/') ||
     pathname.startsWith('/tools/stopwatch/') ||
     pathname.startsWith('/tools/unlock/') ||
-    pathname.startsWith('/tools/stopwatch-uni/')
+    pathname.startsWith('/tools/stopwatch-uni/') ||
+    pathname.startsWith('/tools/aletheia/') ||
+    pathname.startsWith('/tools/usotsuki/')
   ) {
     return `${pathname}${search}`;
   }
@@ -121,6 +131,21 @@ function loginRedirect(request, tool, pathname) {
     safeReturnPath(pathname, requestUrl.search, fallback)
   );
   return Response.redirect(redirectUrl, 302);
+}
+
+async function hasActiveDistributionGrant(request, tool) {
+  const checkUrl = new URL('/.netlify/functions/tool-check', request.url);
+  checkUrl.searchParams.set('tool', tool);
+  try {
+    const response = await fetch(checkUrl, {
+      headers: { cookie: request.headers.get('cookie') || '' },
+      cache: 'no-store',
+      signal: AbortSignal.timeout(5000)
+    });
+    return response.ok && (await response.json())?.ok === true;
+  } catch {
+    return false;
+  }
 }
 
 export function shouldRenewGateCookie(gate, nowMs = Date.now()) {
@@ -171,7 +196,10 @@ export default async function toolsGate(request, context) {
     nowMs
   );
   if (gate.valid && (gate.tool === tool ||
-      (tool !== 'unlock' && tool !== 'stopwatch-uni' && gate.tool === 'all'))) {
+      (!FRIEND_APP_TOOLS.has(tool) && gate.tool === 'all'))) {
+    if (STRICT_DISTRIBUTION_TOOLS.has(tool) && !(await hasActiveDistributionGrant(request, tool))) {
+      return loginRedirect(request, tool, path.pathname);
+    }
     const response = await context.next();
     if (!shouldRenewGateCookie(gate, nowMs)) return response;
 

@@ -47,10 +47,11 @@ function setup(path, response, overrides = {}) {
   return { panel, calls, location, flush, text, button };
 }
 
-test('all four destinations are named in the login prompt', async () => {
+test('all six destinations are named in the login prompt', async () => {
   for (const [path, name] of [
     ['/tools/calc/', 'HITSUZEN'], ['/tools/stopwatch/', 'KAIROS'],
-    ['/tools/unlock/', '레리즈'], ['/tools/stopwatch-uni/', 'KAIROS']
+    ['/tools/unlock/', '레리즈'], ['/tools/stopwatch-uni/', 'KAIROS'],
+    ['/tools/aletheia/', 'ALETHEIA'], ['/tools/usotsuki/', 'USOTSUKI']
   ]) {
     const ui = setup(path, null, { getSession: async () => null });
     await ui.flush();

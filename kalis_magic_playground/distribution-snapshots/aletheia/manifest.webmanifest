@@ -1,0 +1,27 @@
+{
+  "id": "./",
+  "name": "ALETHEIA",
+  "short_name": "ALETHEIA",
+  "description": "공연용 이미지 공개",
+  "lang": "ko",
+  "dir": "ltr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "icons": [
+    {
+      "src": "./icon-192.png?install=aletheia-v2",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icon-512.png?install=aletheia-v2",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
