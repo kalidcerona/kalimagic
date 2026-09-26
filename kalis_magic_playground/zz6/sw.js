@@ -1,7 +1,8 @@
 // Relative-scope shell cache. Network first, then this app's cached files.
 
 const CACHE_PREFIX = 'tobira-shell-';
-const CACHE_NAME = CACHE_PREFIX + 'v4';
+const LEGACY_CACHE_PREFIX = 'stopwatch-uni-' + encodeURIComponent(self.registration.scope) + '-';
+const CACHE_NAME = CACHE_PREFIX + 'v5';
 const SHELL_NAMES = new Set([
   '',
   'index.html',
@@ -9,6 +10,9 @@ const SHELL_NAMES = new Set([
   'app.js',
   'logic.js',
   'manifest.webmanifest',
+  'install-prompt.js',
+  'icon-192.png',
+  'icon-512.png',
   'icon.svg',
   'brand-logo.jpg',
   'brand-logo.png',
@@ -20,6 +24,9 @@ const SHELL_URLS = [
   './app.js',
   './logic.js',
   './manifest.webmanifest',
+  './install-prompt.js',
+  './icon-192.png',
+  './icon-512.png',
   './icon.svg',
   './brand-logo.jpg',
   './brand-logo.png',
@@ -34,7 +41,7 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys()
-      .then((keys) => Promise.all(keys.filter((key) => key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME).map((key) => caches.delete(key))))
+      .then((keys) => Promise.all(keys.filter((key) => (key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME) || key.startsWith(LEGACY_CACHE_PREFIX)).map((key) => caches.delete(key))))
       .then(() => self.clients.claim()),
   );
 });

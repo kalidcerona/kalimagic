@@ -7,11 +7,11 @@
   <meta name="color-scheme" content="light">
   <meta name="description" content="번호를 고르고 목록을 보는 앱">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="목록">
+  <meta name="apple-mobile-web-app-title" content="너의 선택은?">
   <title>너의 선택은?</title>
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="./icon.svg">
-  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="apple-touch-icon" href="./icon-192.png?install=choice-v2">
+  <link rel="manifest" href="./manifest.webmanifest?v=choice-2">
   <link rel="stylesheet" href="./style.css">
 </head>
 <body data-view="settings">
@@ -22,6 +22,12 @@
         <h1 tabindex="-1">너의 선택은?</h1>
         <p class="lede">목록을 미리 정리해 두고, 번호가 정해진 뒤에 목록을 엽니다.</p>
       </header>
+
+      <section class="card install-card" data-install-card aria-labelledby="install-title">
+        <h2 id="install-title">앱 설치</h2>
+        <p data-install-guidance>기기에 설치하면 홈 화면에서 바로 열 수 있습니다.</p>
+        <button type="button" class="primary" data-install-button hidden>앱 설치</button>
+      </section>
 
       <div id="recovery" class="recovery" hidden>
         <h2>저장본을 확인하세요</h2>
@@ -225,5 +231,6 @@
   </dialog>
   <noscript><p class="shell">이 앱은 자바스크립트가 필요합니다.</p></noscript>
   <script type="module" src="./app.js"></script>
+  <script type="module" src="./install-prompt.js"></script>
 </body>
 </html>

@@ -1,7 +1,8 @@
 {
-  "name": "동전",
-  "short_name": "동전",
-  "description": "테이블 위에 올려 두는 공연용 동전",
+  "name": "TOBIRA",
+  "short_name": "TOBIRA",
+  "id": "./tobira",
+  "description": "공연용 앱",
   "lang": "ko",
   "dir": "ltr",
   "start_url": "./",
@@ -12,9 +13,15 @@
   "theme_color": "#F3EBDF",
   "icons": [
     {
-      "src": "./icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
+      "src": "./icon-192.png?install=tobira-v2",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icon-512.png?install=tobira-v2",
+      "sizes": "512x512",
+      "type": "image/png",
       "purpose": "any"
     }
   ]

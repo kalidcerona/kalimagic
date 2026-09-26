@@ -103,8 +103,11 @@ export const SHARED_UNLOCK_FILES = [
 export const CHOICE_FILES = [
   'app.js',
   'brand-logo.jpg',
+  'icon-192.png',
+  'icon-512.png',
   'icon.svg',
   'index.html',
+  'install-prompt.js',
   'logic.js',
   'manifest.webmanifest',
   'style.css',

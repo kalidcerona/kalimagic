@@ -1,5 +1,6 @@
 // Network-first cache for the ALETHEIA app shell only.
-const CACHE_NAME = 'aletheia-shell-v3';
+const CACHE_NAME = 'aletheia-shell-v4';
+const LEGACY_CACHE_PREFIX = `unlock-${encodeURIComponent(self.registration.scope)}-`;
 
 const SHELL = [
   './index.html',
@@ -8,6 +9,9 @@ const SHELL = [
   './logic.js',
   './manifest.webmanifest',
   './icon.svg',
+  './icon-192.png',
+  './icon-512.png',
+  './install-prompt.js',
   './brand-logo.jpg',
   './brand-logo.png',
 ];
@@ -19,6 +23,9 @@ const SHELL_NAMES = new Set([
   'logic.js',
   'manifest.webmanifest',
   'icon.svg',
+  'icon-192.png',
+  'icon-512.png',
+  'install-prompt.js',
   'brand-logo.jpg',
   'brand-logo.png',
 ]);
@@ -78,7 +85,10 @@ self.addEventListener('activate', (event) => {
   event.waitUntil((async () => {
     const keys = await caches.keys();
     await Promise.all(keys
-      .filter((key) => key.startsWith('aletheia-shell-') && key !== CACHE_NAME)
+      .filter((key) => (
+        (key.startsWith('aletheia-shell-') && key !== CACHE_NAME)
+        || key.startsWith(LEGACY_CACHE_PREFIX)
+      ))
       .map((key) => caches.delete(key)));
     await self.clients.claim();
   })());

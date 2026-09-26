@@ -101,6 +101,9 @@ dialog {
 .card,
 .recovery { padding: 16px; }
 
+.install-card { margin-block: 0 18px; }
+.install-card p { margin: 6px 0 12px; color: var(--muted); }
+
 .side { display: grid; gap: 16px; min-width: 0; }
 
 fieldset {

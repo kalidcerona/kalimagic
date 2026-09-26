@@ -5,11 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#4C1420">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="이미지">
+  <meta name="apple-mobile-web-app-title" content="ALETHEIA">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>ALETHEIA</title>
-  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="manifest" href="./manifest.webmanifest?v=aletheia-2">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="./icon-192.png?install=aletheia-v2">
   <link rel="stylesheet" href="style.css">
 </head>
 <body class="view-settings">
@@ -18,6 +19,12 @@
       <img class="brand-logo" src="brand-logo.png" alt="ALETHEIA" draggable="false">
       <h1>ALETHEIA</h1>
       <p class="tagline">공연용 이미지 공개</p>
+
+      <section class="install-card" data-install-card aria-labelledby="install-title">
+        <h2 id="install-title">앱 설치</h2>
+        <p data-install-guidance>기기에 설치하면 홈 화면에서 바로 열 수 있습니다.</p>
+        <button type="button" id="install-button" data-install-button class="primary" hidden>앱 설치</button>
+      </section>
 
       <details class="guide">
         <summary>사용 안내</summary>
@@ -52,7 +59,7 @@
         <h2>칸 번호 안내</h2>
         <p>아래 칸 번호 안내를 켜 두면, 기본 카드 12장과 내 사진 12장에 들어올 때만 하얀 번호 1–12가 고르는 칸 위에 약 0.8초 보였다가 사라집니다. 기본은 꺼져 있습니다. 한 장짜리 프리셋에는 번호가 나오지 않습니다. 번호는 고른 카드나 사진을 보여 주지 않고, 첫 탭 뒤에는 화면이 검은 채로 남습니다.</p>
         <h2>리허설</h2>
-        <p>연습 때는 Shift+Esc로 설정과 공연을 오갈 수 있습니다. 화면을 돌리거나 접어도 공연 중에 이미 지운 자국은 유지됩니다. 같은 공연 안에서 처음부터 다시 덮으려면 두 손가락을 위로 미세요. 기본 카드 공연에서는 그 리셋이 선택과 긁힌 결과를 바꾸지 않습니다. 마우스로는 두 손가락 제스처가 어려우면 설정으로 돌아온 뒤 공연을 다시 시작하면 됩니다. 설치하면 앱 이름은 이미지입니다.</p>
+        <p>연습 때는 Shift+Esc로 설정과 공연을 오갈 수 있습니다. 화면을 돌리거나 접어도 공연 중에 이미 지운 자국은 유지됩니다. 같은 공연 안에서 처음부터 다시 덮으려면 두 손가락을 위로 미세요. 기본 카드 공연에서는 그 리셋이 선택과 긁힌 결과를 바꾸지 않습니다. 마우스로는 두 손가락 제스처가 어려우면 설정으로 돌아온 뒤 공연을 다시 시작하면 됩니다. 설치하면 앱 이름은 ALETHEIA입니다.</p>
       </details>
 
       <div id="repair" class="banner" hidden>
@@ -201,5 +208,6 @@
     <p class="noscript">이 도구는 자바스크립트가 필요합니다. 네트워크 연결은 필요하지 않습니다.</p>
   </noscript>
   <script type="module" src="./app.js"></script>
+  <script type="module" src="./install-prompt.js"></script>
 </body>
 </html>

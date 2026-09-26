@@ -1,5 +1,5 @@
 /* App-shell cache only. Never store question sets or other user data. */
-const CACHE = "usotsuki-shell-v4";
+const CACHE = "usotsuki-shell-v5";
 const CACHE_PREFIX = "usotsuki-shell-";
 const FILES = [
   "./",
@@ -8,6 +8,9 @@ const FILES = [
   "./detector.js",
   "./logic.js",
   "./manifest.webmanifest",
+  "./install-prompt.js",
+  "./icon-192.png",
+  "./icon-512.png",
   "./icon.svg",
   "./brand-logo.jpg",
   "./brand-logo.png",
@@ -21,6 +24,9 @@ const SHELL_PATHS = new Set([
   "/detector.js",
   "/logic.js",
   "/manifest.webmanifest",
+  "/install-prompt.js",
+  "/icon-192.png",
+  "/icon-512.png",
   "/icon.svg",
   "/brand-logo.jpg",
   "/brand-logo.png",

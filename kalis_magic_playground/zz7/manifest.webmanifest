@@ -1,25 +1,28 @@
 {
-  "name": "거짓말 탐지기",
-  "short_name": "거짓말 탐지기",
-  "description": "공연자가 진행하는 코미디 반응 화면. 실제 측정이 아닙니다.",
-  "start_url": "./index.html",
+  "name": "USOTSUKI",
+  "short_name": "USOTSUKI",
+  "id": "./usotsuki",
+  "description": "공연용 앱",
+  "lang": "ko",
+  "dir": "ltr",
+  "start_url": "./",
   "scope": "./",
   "display": "standalone",
+  "orientation": "any",
   "background_color": "#12100f",
   "theme_color": "#12100f",
-  "lang": "ko",
   "icons": [
     {
-      "src": "icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
+      "src": "./icon-192.png?install=usotsuki-v2",
+      "sizes": "192x192",
+      "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "maskable"
+      "src": "./icon-512.png?install=usotsuki-v2",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
     }
   ]
 }

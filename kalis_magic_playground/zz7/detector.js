@@ -448,3 +448,7 @@ function bind() {
 bootStorage();
 showSettings();
 bind();
+
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("./sw.js").catch(() => {});
+}

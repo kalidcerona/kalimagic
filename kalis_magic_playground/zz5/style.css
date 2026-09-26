@@ -99,6 +99,17 @@ button:disabled {
   padding-bottom: calc(28px + env(safe-area-inset-bottom));
 }
 
+.install-card {
+  margin: 16px 0;
+  padding: 16px;
+  border: 1px solid rgba(76, 20, 32, 0.16);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.72);
+}
+.install-card h2 { margin: 0 0 6px; font-size: 1.05rem; }
+.install-card p { margin: 0 0 12px; }
+.install-card[hidden] { display: none; }
+
 .brand-logo {
   display: block;
   width: auto;

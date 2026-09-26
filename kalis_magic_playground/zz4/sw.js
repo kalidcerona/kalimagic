@@ -1,4 +1,4 @@
-const CACHE = 'magic-choice-shell-v4';
+const CACHE = 'magic-choice-shell-v5';
 const CACHE_PREFIX = 'magic-choice-shell-';
 const ASSETS = [
   './index.html',
@@ -7,6 +7,9 @@ const ASSETS = [
   './logic.js',
   './manifest.webmanifest',
   './icon.svg',
+  './icon-192.png',
+  './icon-512.png',
+  './install-prompt.js',
   './brand-logo.jpg',
   './brand-logo.png'
 ];
@@ -22,7 +25,10 @@ self.addEventListener('install', (event) => {
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(caches.keys().then(async (keys) => {
-    await Promise.all(keys.filter((key) => key.startsWith(CACHE_PREFIX) && key !== CACHE).map((key) => caches.delete(key)));
+    await Promise.all(keys.filter((key) => (
+      (key.startsWith(CACHE_PREFIX) && key !== CACHE)
+      || key.startsWith('stopwatch2-')
+    )).map((key) => caches.delete(key)));
     await self.clients.claim();
   }));
 });

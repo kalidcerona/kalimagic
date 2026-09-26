@@ -7,10 +7,11 @@
     <meta name="color-scheme" content="light dark" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-title" content="거짓말 탐지기" />
+    <meta name="apple-mobile-web-app-title" content="USOTSUKI" />
     <title>거짓말 탐지기</title>
     <link rel="icon" href="icon.svg" type="image/svg+xml" />
-    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png?install=usotsuki-v2" />
+    <link rel="manifest" href="manifest.webmanifest?v=20260926-usotsuki-install" />
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
@@ -39,6 +40,12 @@
         </div>
         <p id="settings-status" role="status"></p>
       </div>
+      <section id="install-panel" class="install-panel" aria-labelledby="install-heading" hidden>
+        <h2 id="install-heading">USOTSUKI 설치</h2>
+        <p>홈 화면에 추가하면 전체 화면으로 빠르게 열 수 있습니다.</p>
+        <button id="install-action" type="button" hidden>설치</button>
+        <p id="install-instructions" role="status" hidden></p>
+      </section>
       <details id="performance-help">
         <summary>사용 방법</summary>
         <ul>
@@ -53,6 +60,7 @@
     <noscript>
       <p>이 공연 화면은 자바스크립트가 필요합니다. 네트워크 측정은 하지 않습니다.</p>
     </noscript>
+    <script type="module" src="install-prompt.js"></script>
     <script type="module" src="detector.js"></script>
   </body>
 </html>
