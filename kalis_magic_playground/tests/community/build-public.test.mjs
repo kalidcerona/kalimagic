@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readdir, readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { PUBLIC_FILES, PUBLIC_DIRS, PRIVATE_PATTERNS, MIRROR_PAIRS, DISTRIBUTION_APPS, SHARED_UNLOCK_FILES, CHOICE_FILES, USOTSUKI_FILES, ALETHEIA_COURT_FILES, buildPublic } from '../../scripts/build-public.mjs';
+import { PUBLIC_FILES, PUBLIC_DIRS, PRIVATE_PATTERNS, MIRROR_PAIRS, DISTRIBUTION_APPS, SHARED_UNLOCK_FILES, CHOICE_FILES, USOTSUKI_FILES, ASRAI_FILES, ALTER_FILES, ALETHEIA_COURT_FILES, buildPublic } from '../../scripts/build-public.mjs';
 
 test('public build allowlist includes visible site pages', () => {
   assert.ok(PUBLIC_FILES.includes('index.html'));
@@ -32,9 +32,10 @@ test('public build explicitly excludes local planning and source folders', () =>
   assert.equal(PUBLIC_DIRS.includes('distribution-snapshots'), false);
 });
 
-test('unfinished FALSE MEMORY is excluded from the public build', () => {
-  assert.deepEqual(PUBLIC_DIRS.filter((entry) => /^zz\d+$/.test(entry)), ['zz1', 'zz2', 'zz3', 'zz4', 'zz5', 'zz6', 'zz7']);
+test('personal ALTER and Asrai are included while unfinished FALSE MEMORY stays private', () => {
+  assert.deepEqual(PUBLIC_DIRS.filter((entry) => /^zz\d+$/.test(entry)), ['zz1', 'zz2', 'zz3', 'zz4', 'zz5', 'zz6', 'zz7', 'zz8', 'zz10']);
   assert.equal(MIRROR_PAIRS.some(([, mirror]) => mirror.startsWith('zz9/')), false);
+  assert.ok(PRIVATE_PATTERNS.some((pattern) => pattern.test('zz8/app.js')));
 });
 
 test('public build mirrors the current calculator and integrated stopwatch sources', () => {
@@ -60,6 +61,15 @@ test('public build mirrors the current calculator and integrated stopwatch sourc
     assert.ok(MIRROR_PAIRS.some(([source, mirror]) =>
       source === `../../magic-usotsuki/${file}` && mirror === `zz7/${file}`), `zz7 ${file}`);
   }
+  for (const [source, route, files] of [
+    ['magic-asrai', 'zz8', ASRAI_FILES],
+    ['magic-alter', 'zz10', ALTER_FILES]
+  ]) {
+    for (const file of files) {
+      assert.ok(MIRROR_PAIRS.some(([original, mirror]) =>
+        original === `../../${source}/${file}` && mirror === `${route}/${file}`), `${route} ${file}`);
+    }
+  }
   assert.equal(ALETHEIA_COURT_FILES.length, 12);
   for (const file of ALETHEIA_COURT_FILES) {
     assert.ok(MIRROR_PAIRS.some(([source, mirror]) =>
@@ -78,7 +88,6 @@ test('public build mirrors the current calculator and integrated stopwatch sourc
     assert.ok(MIRROR_PAIRS.some(([original, mirror]) =>
       original === `../../${source}/brand-logo.png` && mirror === `${route}/brand-logo.png`), `${route} high-resolution logo`);
   }
-  assert.equal(MIRROR_PAIRS.some(([, mirror]) => mirror.startsWith('zz8/')), false);
   assert.deepEqual(DISTRIBUTION_APPS, [
     { source: 'distribution-snapshots/unlock', target: 'unlock', tool: 'unlock' },
     { source: 'distribution-snapshots/aletheia', target: 'aletheia', tool: 'aletheia' },
@@ -111,7 +120,9 @@ test('public build serves integrated stopwatch on both retained entitlement rout
   await stat(new URL('../../dist/zz6/index.html', import.meta.url));
   await stat(new URL('../../dist/zz7/index.html', import.meta.url));
   await assert.rejects(stat(new URL('../../dist/zz7/app.js', import.meta.url)), { code: 'ENOENT' });
-  await assert.rejects(stat(new URL('../../dist/zz8/index.html', import.meta.url)), { code: 'ENOENT' });
+  await stat(new URL('../../dist/zz8/index.html', import.meta.url));
+  await stat(new URL('../../dist/zz10/index.html', import.meta.url));
+  await assert.rejects(stat(new URL('../../dist/zz8/app.js', import.meta.url)), { code: 'ENOENT' });
   await assert.rejects(stat(new URL('../../dist/zz9/index.html', import.meta.url)), { code: 'ENOENT' });
 });
 
@@ -190,6 +201,32 @@ test('ALETHEIA and USOTSUKI distribution builds use pinned snapshots and separat
       }
     }
   }
+});
+
+test('Asrai and ALTER personal builds keep exact runtime mirrors and distinct install identities', async () => {
+  await buildPublic();
+  const root = fileURLToPath(new URL('../..', import.meta.url));
+  for (const [source, route, files, name] of [
+    ['magic-asrai', 'zz8', ASRAI_FILES, '아스라이'],
+    ['magic-alter', 'zz10', ALTER_FILES, 'ALTER']
+  ]) {
+    const distDir = path.join(root, 'dist', route);
+    assert.deepEqual((await readdir(distDir)).sort(), [...files].sort());
+    const manifest = JSON.parse(await readFile(path.join(distDir, 'manifest.webmanifest'), 'utf8'));
+    assert.equal(manifest.id, './');
+    assert.equal(manifest.scope, './');
+    assert.equal(manifest.name, name);
+    assert.match(manifest.start_url, /^\.\/(?:index\.html)?$/);
+    for (const file of files) {
+      const [original, mirror] = await Promise.all([
+        readFile(path.join(root, '..', '..', source, file)),
+        readFile(path.join(distDir, file))
+      ]);
+      assert.deepEqual(mirror, original, `${route}/${file}`);
+    }
+    assert.doesNotMatch(await readFile(path.join(distDir, 'index.html'), 'utf8'), /id="friend-apps-check"/);
+  }
+  await assert.rejects(stat(path.join(root, 'dist', 'zz9', 'index.html')), { code: 'ENOENT' });
 });
 
 test('public build does not copy dotfiles from public directories', async () => {

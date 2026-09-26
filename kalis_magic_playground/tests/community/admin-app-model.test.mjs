@@ -85,6 +85,9 @@ test('legacy pending rows without a tool stay actionable only through the legacy
   assert.equal(model.isPendingActionAvailable(row, 'usotsuki', availability), false);
   assert.deepEqual(Array.from(model.filterRows([row], { tool: 'calc' })), [row]);
   assert.deepEqual(Array.from(model.filterRows([row], { tool: 'unlock' })), []);
+  const member = model.groupMembers([row]);
+  assert.equal(model.filterMembers(member, { tool: 'calc' }).length, 1);
+  assert.equal(model.filterMembers(member, { tool: 'unlock' }).length, 0);
   assert.deepEqual(Array.from(model.filterRows([row], { tool: 'aletheia' })), []);
   assert.equal(model.pendingToolOptions(row, model.normalizeAvailability({ legacy: false, friendApps: true })).length, 0);
 });
@@ -130,4 +133,39 @@ test('an approved person can be offered only apps they do not already have', () 
   assert.deepEqual(Array.from(model.additionalToolOptions({ email: 'friend@example.com' }, approved.concat([
     { email: 'friend@example.com', tool: 'aletheia' }
   ]), { legacy: true, friendApps: true })), ['calc', 'stopwatch-uni', 'usotsuki']);
+});
+
+test('member view has one entry per normalized email while preserving each grant', () => {
+  const rows = [
+    { id: 'a', email: ' Friend@Example.com ', tool: 'all', displayName: '친구' },
+    { id: 'b', email: 'friend@example.com', tool: 'unlock' },
+    { id: 'c', email: 'other@example.com', tool: 'aletheia' }
+  ];
+  const members = model.groupMembers(rows);
+  assert.equal(members.length, 2);
+  assert.equal(members[0].rows.length, 2);
+  assert.deepEqual(Array.from(members[0].tools), ['calc', 'stopwatch', 'unlock']);
+  assert.deepEqual(Array.from(model.filterMembers(members, { tool: 'unlock' })), [members[0]]);
+  assert.equal(members[0].rows[0].tool, 'all');
+  assert.deepEqual(Array.from(model.missingTools(members[0], { legacy: true, friendApps: true })), ['stopwatch-uni', 'aletheia', 'usotsuki']);
+});
+
+test('grouping scales by rows and displays one card for each member', () => {
+  const rows = Array.from({ length: 1200 }, (_, index) => ({
+    id: String(index), email: `person${index % 200}@example.com`, tool: index % 2 ? 'calc' : 'unlock'
+  }));
+  const members = model.groupMembers(rows);
+  assert.equal(members.length, 200);
+  assert.equal(members.reduce((total, member) => total + member.rows.length, 0), 1200);
+  assert.equal(model.filterMembers(members, { tool: 'unlock' }).length, 100);
+});
+
+test('pending member bulk choices expand legacy all and omit unavailable or unspecified apps', () => {
+  const members = model.groupMembers([
+    { id: 'a', email: 'friend@example.com', tool: 'all' },
+    { id: 'b', email: 'friend@example.com', tool: 'unlock' },
+    { id: 'c', email: 'friend@example.com', tool: null }
+  ]);
+  assert.deepEqual(Array.from(model.pendingBulkTools(members[0], { legacy: true, friendApps: true })), ['calc', 'stopwatch', 'unlock']);
+  assert.deepEqual(Array.from(model.pendingBulkTools(members[0], { legacy: true, friendApps: false })), ['calc', 'stopwatch']);
 });

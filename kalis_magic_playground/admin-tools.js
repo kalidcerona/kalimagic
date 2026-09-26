@@ -10,7 +10,7 @@
   var clear = window.PgUtil.clear;
   var fetchJson = window.PgUtil.fetchJson;
   var endpoint = '/.netlify/functions/admin-tools';
-  var state = { data: null, tab: 'pending', query: '', tool: '*', loadError: '' };
+  var state = { data: null, members: { pending: [], approved: [] }, tab: 'pending', query: '', tool: '*', loadError: '' };
 
   function setStatus(node, message, isError) {
     node.textContent = message;
@@ -77,6 +77,12 @@
     return result;
   }
 
+  function adminToolLabel(tool) {
+    if (tool === 'stopwatch') return 'KAIROS · 스톱워치';
+    if (tool === 'stopwatch-uni') return 'KAIROS · 통합 루틴 타이머';
+    return model.toolLabel(tool);
+  }
+
   function setAllDisabled(form, disabled) {
     Array.prototype.forEach.call(form.elements, function (control) {
       control.disabled = disabled;
@@ -85,11 +91,13 @@
 
   async function refresh(preserveOnFailure) {
     try {
-      var data = await fetchJson(endpoint);
+      var data = await fetchJson(endpoint, { cache: 'no-store' });
       if (!Array.isArray(data.pending) || !Array.isArray(data.approved)) {
         throw new Error('권한 목록 응답 형식이 올바르지 않습니다.');
       }
       state.data = data;
+      state.members.pending = model.groupMembers(data.pending);
+      state.members.approved = model.groupMembers(data.approved);
       state.loadError = '';
       render();
       return true;
@@ -169,8 +177,8 @@
   }
 
   function renderTabs() {
-    var approved = state.data.approved.length;
-    var pending = state.data.pending.length;
+    var approved = state.members.approved.length;
+    var pending = state.members.pending.length;
     var tabs = el('div', 'admin-view-tabs');
     tabs.setAttribute('role', 'tablist');
     tabs.setAttribute('aria-label', '권한 목록 상태');
@@ -194,7 +202,7 @@
 
   function appFilter() {
     var choices = [{ value: '*', label: '모든 앱' }].concat(model.APP_CATALOG.map(function (app) {
-      return { value: app.id, label: app.name };
+      return { value: app.id, label: adminToolLabel(app.id) };
     }));
     var select = selectControl('appFilter', choices, state.tool);
     select.setAttribute('aria-label', '앱별 권한 필터');
@@ -239,23 +247,75 @@
     return { input: input, label: label };
   }
 
+  function toolChecks(options) {
+    var fieldset = el('fieldset', 'admin-tool-choices');
+    fieldset.appendChild(el('legend', 'admin-field__label', '부여할 앱 선택'));
+    options.forEach(function (toolId) {
+      var label = el('label', 'admin-checkbox');
+      var input = document.createElement('input');
+      input.type = 'checkbox';
+      input.name = 'tools';
+      input.value = toolId;
+      label.appendChild(input);
+      label.appendChild(el('span', '', adminToolLabel(toolId)));
+      fieldset.appendChild(label);
+    });
+    return fieldset;
+  }
+
+  function selectedTools(fieldset) {
+    return Array.prototype.map.call(fieldset.querySelectorAll('input:checked'), function (input) { return input.value; });
+  }
+
+  async function grantBulk(email, tools, lifetime, note, status, submit) {
+    if (!tools.length) {
+      setStatus(status, '앱을 하나 이상 선택해 주세요.', true);
+      return;
+    }
+    submit.disabled = true;
+    setStatus(status, '선택한 앱 권한을 저장하고 있습니다.', false);
+    try {
+      var response = await fetchJson(endpoint, { method: 'POST', body: JSON.stringify({
+        action: 'grantBulk', email: email, tools: tools, lifetime: lifetime, note: note
+      }) });
+      var results = response.results || [];
+      if (results.length !== tools.length) throw new Error('권한 저장 결과를 확인할 수 없습니다. 목록을 새로고침해 주세요.');
+      var failed = results.filter(function (entry) { return entry.outcome === 'failed'; }).map(function (entry) { return entry.tool; });
+      var updated = await refresh(true);
+      if (!updated) return;
+      var notice = root.querySelector('[data-refresh-error]');
+      if (failed.length) {
+        setStatus(notice, (tools.length - failed.length) + '개 처리 완료, ' + failed.length + '개 실패. 실패한 앱만 다시 시도할 수 있습니다.', true);
+        var retry = button('실패한 앱 재시도', 'admin-button admin-button--quiet', function () {
+          grantBulk(email, failed, lifetime, note, notice, retry);
+        });
+        notice.appendChild(document.createTextNode(' '));
+        notice.appendChild(retry);
+      } else {
+        setStatus(notice, results.filter(function (entry) { return entry.outcome === 'granted'; }).length + '개 앱 권한을 추가했습니다.', false);
+      }
+    } catch (error) {
+      var message = actionError(error);
+      if (message) setStatus(status, message, true);
+      if (error.status !== 403) submit.disabled = false;
+    }
+  }
+
   function addForm(availability) {
     var card = el('section', 'admin-grant-card');
     card.setAttribute('aria-labelledby', 'admin-grant-title');
     var heading = el('div', 'admin-grant-card__heading');
     heading.appendChild(el('span', 'admin-card-kicker', 'NEW ACCESS'));
     heading.appendChild(el('h3', '', '앱 권한 추가'));
-    heading.appendChild(el('p', '', '이메일 주소와 앱을 선택해 바로 접근 권한을 부여합니다.'));
+    heading.appendChild(el('p', '', '이메일 주소와 여러 앱을 선택해 한 번에 권한을 부여합니다.'));
     card.appendChild(heading);
     var form = el('form', 'admin-grant-form');
     var email = textInput('email', 'email', 'name@example.com', true);
     email.autocomplete = 'email';
     form.appendChild(labeledControl('Google 계정 이메일', email, 'admin-grant-email'));
-    var options = availableOptions(availability, true);
-    var selected = options.length ? options[0].value : '';
-    var tool = selectControl('tool', options, selected);
-    tool.required = true;
-    form.appendChild(labeledControl('부여할 앱', tool, 'admin-grant-tool'));
+    var options = availableOptions(availability, false).map(function (entry) { return entry.value; });
+    var checks = toolChecks(options);
+    form.appendChild(checks);
     var note = textInput('text', 'note', '예: 구매 확인, 초대 대상', false);
     form.appendChild(labeledControl('메모 (선택)', note, 'admin-grant-note'));
     var lifetime = makeLifetime();
@@ -268,12 +328,7 @@
     form.appendChild(status);
     form.addEventListener('submit', function (event) {
       event.preventDefault();
-      runMutation(status, submit, '권한을 추가하고 있습니다.', function () {
-        return fetchJson(endpoint, {
-          method: 'POST',
-          body: JSON.stringify({ action: 'add', email: email.value.trim(), tool: tool.value, note: note.value.trim(), lifetime: lifetime.input.checked })
-        });
-      });
+      grantBulk(email.value.trim(), selectedTools(checks), lifetime.input.checked, note.value.trim(), status, submit);
     });
     var unavailable = options.length === 0;
     if (unavailable) {
@@ -292,25 +347,21 @@
   }
 
   function toolBadge(item) {
-    var badge = el('span', 'admin-tool-badge', model.toolLabel(item.tool));
+    var badge = el('span', 'admin-tool-badge', adminToolLabel(item.tool));
     return badge;
   }
 
   function pendingCard(item, availability) {
-    var card = el('article', 'admin-access-card');
+    var card = el('div', 'admin-pending-row');
     var top = el('div', 'admin-access-card__top');
-    var identity = el('div', 'admin-access-card__identity');
-    identity.appendChild(el('h3', '', item.email || '이메일 없음'));
-    identity.appendChild(el('p', '', personDetails(item)));
-    top.appendChild(identity);
     top.appendChild(toolBadge(item));
     card.appendChild(top);
     card.appendChild(el('p', 'admin-access-card__date', '요청 ' + formatDate(item.requestedAt || item.createdAt, true)));
     var form = el('div', 'admin-access-card__controls');
     var choices = model.pendingToolOptions(item, availability).map(function (toolId) {
-      return { value: toolId, label: model.toolLabel(toolId) };
+      return { value: toolId, label: adminToolLabel(toolId) };
     });
-    if (!choices.length) choices = [{ value: item.tool || '', label: model.toolLabel(item.tool) }];
+    if (!choices.length) choices = [{ value: item.tool || '', label: adminToolLabel(item.tool) }];
     var tool = selectControl('tool', choices, item.tool || choices[0].value);
     tool.setAttribute('aria-label', (item.email || '계정') + ' 승인 앱 선택');
     var note = textInput('text', 'note', '승인 메모 (선택)', false);
@@ -354,61 +405,20 @@
     return card;
   }
 
-  function approvedCard(item, availability) {
-    var card = el('article', 'admin-access-card');
-    var top = el('div', 'admin-access-card__top');
-    var identity = el('div', 'admin-access-card__identity');
-    identity.appendChild(el('h3', '', item.email || '이메일 없음'));
-    identity.appendChild(el('p', '', personDetails(item)));
-    top.appendChild(identity);
-    top.appendChild(toolBadge(item));
-    card.appendChild(top);
-    var meta = el('div', 'admin-access-card__meta');
-    meta.appendChild(el('span', '', item.lifetime ? '평생 권한' : '기간 권한'));
-    meta.appendChild(el('span', '', '등록 ' + formatDate(item.createdAt, false)));
-    card.appendChild(meta);
-    if (item.note) card.appendChild(el('p', 'admin-access-card__note', item.note));
-    var availableToAdd = model.additionalToolOptions(item, state.data.approved, availability);
-    var grantForm = el('form', 'admin-access-card__grant');
-    var grantLabel = el('label', 'admin-field');
-    grantLabel.appendChild(el('span', 'admin-field__label', '이 계정에 앱 권한 추가'));
-    var grantSelect = selectControl('additionalTool', availableToAdd.map(function (toolId) {
-      return { value: toolId, label: model.toolLabel(toolId) };
-    }), availableToAdd[0]);
-    grantSelect.setAttribute('aria-label', (item.email || '계정') + ' 추가할 앱');
-    grantLabel.appendChild(grantSelect);
-    grantForm.appendChild(grantLabel);
-    var grantLifetime = makeLifetime();
-    grantForm.appendChild(grantLifetime.label);
-    var grantButton = el('button', 'admin-button admin-button--gold', '권한 추가');
-    grantButton.type = 'submit';
-    grantForm.appendChild(grantButton);
-    var grantStatus = el('p', 'admin-action-status');
-    grantStatus.setAttribute('role', 'status');
-    grantForm.appendChild(grantStatus);
-    if (availableToAdd.length) {
-      grantForm.addEventListener('submit', function (event) {
-        event.preventDefault();
-        runMutation(grantStatus, grantButton, '권한을 추가하고 있습니다.', function () {
-          return fetchJson(endpoint, { method: 'POST', body: JSON.stringify({
-            action: 'addToPerson', email: item.email, tool: grantSelect.value,
-            lifetime: grantLifetime.input.checked
-          }) });
-        });
-      });
-    } else {
-      grantSelect.disabled = true;
-      grantLifetime.input.disabled = true;
-      grantButton.disabled = true;
-      setStatus(grantStatus, '추가할 수 있는 앱 권한이 없습니다.', true);
-    }
-    card.appendChild(grantForm);
+  function approvedRow(item, availability) {
+    var row = el('div', 'admin-member-app-row');
+    var info = el('div', 'admin-member-app-row__info');
+    info.appendChild(toolBadge(item));
+    info.appendChild(el('span', '', item.lifetime ? '평생 권한' : '기간 권한'));
+    info.appendChild(el('span', '', '등록 ' + formatDate(item.createdAt, false)));
+    if (item.note) info.appendChild(el('span', 'admin-member-app-row__note', item.note));
+    row.appendChild(info);
     var status = el('p', 'admin-action-status');
     status.setAttribute('role', 'status');
     var revoke = button('권한 회수', 'admin-button admin-button--quiet');
-    revoke.setAttribute('aria-label', (item.email || '계정') + '의 ' + model.toolLabel(item.tool) + ' 권한 회수');
+    revoke.setAttribute('aria-label', (item.email || '계정') + '의 ' + adminToolLabel(item.tool) + ' 권한 회수');
     revoke.addEventListener('click', function () {
-      if (!window.confirm((item.email || '이 계정') + '의 ' + model.toolLabel(item.tool) + ' 권한을 회수할까요?')) return;
+      if (!window.confirm((item.email || '이 계정') + '의 ' + adminToolLabel(item.tool) + ' 권한을 회수할까요?')) return;
       runMutation(status, revoke, '권한을 회수하고 있습니다.', function () {
         return fetchJson(endpoint + '?id=' + encodeURIComponent(item.id) + '&tool=' + encodeURIComponent(item.tool || ''), { method: 'DELETE' });
       });
@@ -417,10 +427,80 @@
       revoke.disabled = true;
       setStatus(status, '이 앱의 권한 서비스가 중단되어 회수를 잠시 사용할 수 없습니다.', true);
     }
-    var actions = el('div', 'admin-access-card__actions');
-    actions.appendChild(revoke);
-    card.appendChild(actions);
-    card.appendChild(status);
+    row.appendChild(revoke);
+    row.appendChild(status);
+    return row;
+  }
+
+  function approvedCard(member, availability) {
+    var card = el('article', 'admin-access-card');
+    var top = el('div', 'admin-access-card__top');
+    var identity = el('div', 'admin-access-card__identity');
+    identity.appendChild(el('h3', '', member.email || '이메일 없음'));
+    identity.appendChild(el('p', '', personDetails(member)));
+    top.appendChild(identity);
+    top.appendChild(el('span', 'admin-list-total', member.tools.size + '개 앱'));
+    card.appendChild(top);
+    var portfolio = el('div', 'admin-member-portfolio');
+    member.rows.forEach(function (item) { portfolio.appendChild(approvedRow(item, availability)); });
+    card.appendChild(portfolio);
+    var availableToAdd = model.missingTools(member, availability);
+    var grantForm = el('form', 'admin-access-card__grant');
+    var checks = toolChecks(availableToAdd);
+    grantForm.appendChild(checks);
+    var grantLifetime = makeLifetime();
+    grantForm.appendChild(grantLifetime.label);
+    var grantButton = el('button', 'admin-button admin-button--gold', '선택한 앱 추가');
+    grantButton.type = 'submit';
+    grantForm.appendChild(grantButton);
+    var grantStatus = el('p', 'admin-action-status');
+    grantStatus.setAttribute('role', 'status');
+    grantForm.appendChild(grantStatus);
+    if (availableToAdd.length) {
+      grantForm.addEventListener('submit', function (event) {
+        event.preventDefault();
+        grantBulk(member.email, selectedTools(checks), grantLifetime.input.checked, '', grantStatus, grantButton);
+      });
+    } else {
+      grantLifetime.input.disabled = true;
+      grantButton.disabled = true;
+      setStatus(grantStatus, '추가할 수 있는 앱 권한이 없습니다.', true);
+    }
+    card.appendChild(grantForm);
+    return card;
+  }
+
+  function pendingMemberCard(member, availability) {
+    var card = el('article', 'admin-access-card');
+    var identity = el('div', 'admin-access-card__identity');
+    identity.appendChild(el('h3', '', member.email || '이메일 없음'));
+    identity.appendChild(el('p', '', personDetails(member)));
+    card.appendChild(identity);
+    var bulkOptions = model.pendingBulkTools(member, availability);
+    if (bulkOptions.length && member.email) {
+      var bulkForm = el('form', 'admin-access-card__grant admin-pending-bulk');
+      var checks = toolChecks(bulkOptions);
+      bulkForm.appendChild(checks);
+      var lifetime = makeLifetime();
+      bulkForm.appendChild(lifetime.label);
+      var note = textInput('text', 'bulkNote', '일괄 승인 메모 (선택)', false);
+      note.setAttribute('aria-label', member.email + ' 일괄 승인 메모');
+      bulkForm.appendChild(note);
+      var submit = el('button', 'admin-button admin-button--gold', '선택한 신청 일괄 승인');
+      submit.type = 'submit';
+      bulkForm.appendChild(submit);
+      var status = el('p', 'admin-action-status');
+      status.setAttribute('role', 'status');
+      bulkForm.appendChild(status);
+      bulkForm.addEventListener('submit', function (event) {
+        event.preventDefault();
+        grantBulk(member.email, selectedTools(checks), lifetime.input.checked, note.value.trim(), status, submit);
+      });
+      card.appendChild(bulkForm);
+    }
+    var requests = el('div', 'admin-member-portfolio');
+    member.rows.forEach(function (item) { requests.appendChild(pendingCard(item, availability)); });
+    card.appendChild(requests);
     return card;
   }
 
@@ -428,9 +508,8 @@
     var list = root.querySelector('[data-access-list]');
     if (!list || !state.data) return;
     clear(list);
-    var allRows = state.tab === 'pending' ? state.data.pending : state.data.approved;
-    var rows = model.filterRows(allRows, { query: state.query, tool: state.tool });
-    if (!rows.length) {
+    var members = model.filterMembers(state.members[state.tab], { query: state.query, tool: state.tool });
+    if (!members.length) {
       var empty = el('div', 'admin-empty');
       empty.appendChild(el('span', 'admin-empty__mark', state.query || state.tool !== '*' ? '⌕' : '✓'));
       empty.appendChild(el('h3', '', state.query || state.tool !== '*' ? '조건에 맞는 계정이 없습니다' : (state.tab === 'pending' ? '승인을 기다리는 계정이 없습니다' : '등록된 권한이 없습니다')));
@@ -439,9 +518,11 @@
       return;
     }
     var availability = model.availabilityFromResponse(state.data);
-    rows.forEach(function (item) {
-      list.appendChild(state.tab === 'pending' ? pendingCard(item, availability) : approvedCard(item, availability));
+    var fragment = document.createDocumentFragment();
+    members.forEach(function (member) {
+      fragment.appendChild(state.tab === 'pending' ? pendingMemberCard(member, availability) : approvedCard(member, availability));
     });
+    list.appendChild(fragment);
   }
 
   function render() {
@@ -478,7 +559,7 @@
     root.appendChild(renderTabs());
     if (state.tab === 'approved') root.appendChild(addForm(availability));
     var listHead = el('div', 'admin-list-heading');
-    var count = state.tab === 'pending' ? data.pending.length : data.approved.length;
+    var count = state.members[state.tab].length;
     listHead.appendChild(el('h3', '', (state.tab === 'pending' ? '승인 대기 계정' : '승인된 계정')));
     listHead.appendChild(el('span', 'admin-list-total', count + '개 계정'));
     var refreshButton = button('새로고침', 'admin-button admin-button--quiet', function () {

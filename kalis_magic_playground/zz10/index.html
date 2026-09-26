@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#090c14">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="ALTER">
+  <meta name="description" content="실시간 카메라 카드 공연 도구">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="apple-touch-icon" href="./icon-192.png">
+  <link rel="icon" type="image/png" href="./icon-192.png">
+  <link rel="stylesheet" href="./style.css">
+  <title>ALTER</title>
+</head>
+<body>
+  <main id="setup" class="setup">
+    <div class="setup-inner">
+      <div class="eyebrow">KALI MAGIC · CAMERA EFFECT</div>
+      <h1>ALTER<span class="period">.</span></h1>
+      <p class="tagline">another face of reality</p>
+      <p class="intro">카드를 카메라에 보여 주면 화면 속 모습이 바뀝니다.</p>
+      <button id="start" class="primary-button" type="button">카메라 시작 <span aria-hidden="true">↗</span></button>
+      <button id="setup-settings" class="setup-settings" type="button">카메라 속 카드 설정</button>
+      <p id="setup-message" class="setup-message" role="status">카메라 권한이 필요합니다. 영상은 기기 밖으로 전송하거나 저장하지 않습니다.</p>
+      <p class="setup-hint">밝고 단순한 배경에서 카드를 세로로 들면 가장 안정적입니다.</p>
+    </div>
+    <div class="setup-orbit" aria-hidden="true"><div class="orbit-card">A <span>→</span> B</div></div>
+  </main>
+
+  <section id="stage" class="stage" aria-label="실시간 카메라 공연 화면" hidden>
+    <video id="camera" autoplay muted playsinline aria-label="실시간 후면 카메라"></video>
+    <div id="card-overlay" class="card-overlay" aria-hidden="true" hidden>
+      <div class="card-corner top"><span class="rank"></span><span class="suit"></span></div>
+      <div class="card-center"><span class="suit"></span></div>
+      <div class="card-corner bottom"><span class="rank"></span><span class="suit"></span></div>
+    </div>
+    <div id="stage-message" class="stage-message" role="status" hidden></div>
+  </section>
+
+  <section id="settings" class="settings" aria-label="공연 설정" role="dialog" aria-modal="true" hidden>
+    <div class="settings-panel">
+      <div class="settings-top">
+        <span class="settings-label">PERFORMANCE SETTINGS</span>
+        <button id="close-settings" class="icon-button" type="button" aria-label="설정 닫기">×</button>
+      </div>
+      <img class="brand-logo" src="./brand-logo.png" alt="ALTER — another face of reality">
+      <div class="settings-body">
+        <h2>카메라 속 카드</h2>
+        <p>공연 전에 관객에게 보일 카드 B를 정하세요. 실제 카드 A는 어떤 카드라도 가능합니다.</p>
+        <div class="form-row">
+          <label for="rank">숫자</label>
+          <select id="rank"><option>A</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>J</option><option>Q</option><option>K</option></select>
+        </div>
+        <div class="form-row">
+          <label for="suit">무늬</label>
+          <select id="suit"><option value="spade">스페이드 ♠</option><option value="heart">하트 ♥</option><option value="club">클럽 ♣</option><option value="diamond">다이아몬드 ♦</option></select>
+        </div>
+        <div class="form-row">
+          <label for="brightness">화면 밝기</label>
+          <input id="brightness" type="range" min="75" max="125" value="100" step="5">
+        </div>
+        <p class="detail">카드가 화면 가장자리로 움직인 뒤 완전히 보이지 않는 상태가 유지되면 자동 공개를 준비합니다. 조명·가림으로 검출이 끊겼을 때는 수동 공개를 사용하세요.</p>
+        <div class="actions">
+          <button id="reveal" type="button" class="primary-button compact">실제 카드 공개</button>
+          <button id="reset" type="button" class="secondary-button">공연 리셋</button>
+        </div>
+        <button id="stop" type="button" class="text-button">카메라 종료</button>
+        <p id="state-note" class="state-note" role="status"></p>
+        <div class="install-control" id="install-control" hidden>
+          <button type="button" id="install-app">ALTER 앱 설치</button>
+          <p id="install-help" role="status" aria-live="polite" hidden></p>
+        </div>
+      </div>
+      <p class="gesture-note">공연 화면에서 두 손가락을 아래로 스와이프하면 설정이 열립니다.</p>
+    </div>
+  </section>
+
+  <script type="module" src="./app.js"></script>
+  <script type="module" src="./install-ui.js"></script>
+</body>
+</html>

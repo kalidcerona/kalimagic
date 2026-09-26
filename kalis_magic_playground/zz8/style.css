@@ -1,0 +1,444 @@
+/* Settings ivory; performance views mimic a plain light contacts app. */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: #ffffff;
+  color: #000000;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans KR", "Apple SD Gothic Neo", sans-serif;
+  font-size: 16px;
+  line-height: 1.4;
+  overflow-x: hidden;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+  font-size: 1rem;
+}
+
+:focus-visible {
+  outline: 3px solid #0057b8;
+  outline-offset: 2px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+#settings-screen {
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: #f4efe6;
+  color: #1c140f;
+  padding: calc(12px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left));
+}
+
+#settings-brand {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: min(168px, 52vw);
+  max-height: 72px;
+  object-fit: contain;
+  object-position: left center;
+}
+
+.settings-wrap {
+  width: min(100%, 40rem);
+  margin: 0 auto;
+}
+
+#settings-screen h1 {
+  margin: 12px 0 0;
+  font-size: clamp(1.5rem, 5vw, 1.85rem);
+  line-height: 1.2;
+  color: #3d1018;
+}
+
+.instructions {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid #8a3d28;
+  border-radius: 12px;
+  background: #fffaf3;
+}
+
+.instructions h2 {
+  margin: 0;
+  font-size: 1rem;
+  color: #3d1018;
+}
+
+.instructions p,
+#settings-status {
+  margin: 8px 0 0;
+  overflow-wrap: anywhere;
+}
+
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-weight: 650;
+  color: #3d1018;
+}
+
+#settings-screen input,
+#settings-screen textarea {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 2px solid #6d2432;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #1c140f;
+  font-weight: 400;
+}
+
+#settings-screen textarea {
+  min-height: 15rem;
+  resize: vertical;
+  line-height: 1.45;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+#settings-screen button {
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  background: #6d2432;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+#reset-clicks {
+  background: transparent;
+  color: #6d2432;
+  border-color: #6d2432;
+}
+
+.install-control[hidden], .install-control [hidden] { display: none; }
+.install-control { margin-top: 18px; padding-top: 16px; border-top: 1px solid #d8d8de; }
+#install-app { width: 100%; background: transparent !important; color: #6d2432 !important; border-color: #6d2432 !important; }
+#install-help { margin: 10px 0 0; color: #555; line-height: 1.5; }
+
+#settings-status {
+  min-height: 1.4em;
+  font-weight: 700;
+  color: #6d2432;
+}
+
+#settings-status:empty {
+  margin: 0;
+}
+
+#contact-list-screen,
+#contact-detail-screen {
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: #ffffff;
+  color: #000000;
+}
+
+.list-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding: calc(10px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) 10px calc(16px + env(safe-area-inset-left));
+  background: #ffffff;
+}
+
+.list-header h1,
+#detail-name {
+  margin: 0;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+.list-header h1 {
+  margin-bottom: 10px;
+  font-size: clamp(1.75rem, 8vw, 2.125rem);
+}
+
+#contact-search {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  background: #e5e5ea;
+  color: #000000;
+}
+
+#contact-list {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 calc(12px + env(safe-area-inset-bottom));
+}
+
+#contact-list button,
+#contact-list a {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 48px;
+  padding: 12px calc(16px + env(safe-area-inset-right)) 12px calc(16px + env(safe-area-inset-left));
+  border: 0;
+  border-bottom: 1px solid #c7c7cc;
+  border-radius: 0;
+  background: transparent;
+  color: #000000;
+  text-align: left;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+  -webkit-touch-callout: none;
+}
+
+#contact-list button:active,
+#contact-list a:active {
+  background: #e5e5ea;
+}
+
+.detail-bar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  min-height: calc(44px + env(safe-area-inset-top));
+  padding: env(safe-area-inset-top) calc(8px + env(safe-area-inset-right)) 0 calc(8px + env(safe-area-inset-left));
+  background: #f2f2f7;
+}
+
+#back-list {
+  min-height: 44px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #0047ab;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+#back-list::before {
+  content: "‹ ";
+}
+
+#contact-detail-screen {
+  background: #f2f2f7;
+  padding-bottom: calc(24px + env(safe-area-inset-bottom));
+}
+
+#detail-name {
+  padding: 8px calc(16px + env(safe-area-inset-right)) 16px calc(16px + env(safe-area-inset-left));
+  font-size: clamp(1.75rem, 8vw, 2.4rem);
+  background: #f2f2f7;
+}
+
+.detail-card {
+  margin: 0 calc(16px + env(safe-area-inset-right)) 0 calc(16px + env(safe-area-inset-left));
+  border-radius: 12px;
+  background: #ffffff;
+  overflow: hidden;
+}
+
+.detail-row {
+  padding: 12px 16px;
+  border-top: 1px solid #c7c7cc;
+}
+
+.detail-row:first-child {
+  border-top: 0;
+}
+
+.detail-label {
+  margin: 0;
+  color: #3a3a3c;
+  font-size: 0.8125rem;
+}
+
+#detail-phone,
+#detail-region,
+#detail-note {
+  margin: 2px 0 0;
+  font-size: 1.125rem;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+#detail-phone {
+  font-variant-numeric: tabular-nums;
+  color: #0047ab;
+}
+
+@media (max-width: 359px) {
+  #settings-screen {
+    padding-left: calc(10px + env(safe-area-inset-left));
+    padding-right: calc(10px + env(safe-area-inset-right));
+  }
+
+  .list-header,
+  #detail-name {
+    padding-left: calc(12px + env(safe-area-inset-left));
+    padding-right: calc(12px + env(safe-area-inset-right));
+  }
+
+  .detail-card {
+    margin-left: calc(12px + env(safe-area-inset-left));
+    margin-right: calc(12px + env(safe-area-inset-right));
+  }
+
+  #contact-list button,
+  #contact-list a {
+    padding-left: calc(12px + env(safe-area-inset-left));
+    padding-right: calc(12px + env(safe-area-inset-right));
+  }
+}
+
+@media (max-height: 430px) {
+  #settings-brand {
+    max-height: 40px;
+  }
+
+  .list-header h1 {
+    margin-bottom: 6px;
+    font-size: 1.35rem;
+  }
+
+  .instructions p {
+    margin-top: 4px;
+  }
+}
+
+@media (min-width: 700px) {
+  #contact-list-screen,
+  #contact-detail-screen {
+    width: min(100%, 480px);
+    margin: 0 auto;
+    border-left: 1px solid #c7c7cc;
+    border-right: 1px solid #c7c7cc;
+  }
+}
+
+@media (min-width: 840px) {
+  .settings-wrap {
+    max-width: 46rem;
+  }
+
+  .fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 16px;
+  }
+
+  .field:first-child,
+  .field:last-child {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (prefers-contrast: more) {
+  #settings-screen {
+    background: #ffffff;
+    color: #000000;
+  }
+
+  .instructions,
+  #settings-screen input,
+  #settings-screen textarea,
+  #contact-search,
+  .detail-card {
+    border-color: #000000;
+    background: #ffffff;
+    color: #000000;
+  }
+
+  #settings-screen button,
+  #reset-clicks,
+  #back-list,
+  #detail-phone,
+  .detail-label,
+  #settings-screen h1,
+  .instructions h2,
+  .field {
+    color: #000000;
+    border-color: #000000;
+  }
+
+  #settings-screen button {
+    background: #ffffff;
+  }
+
+  #start-performance {
+    background: #000000;
+    color: #ffffff;
+  }
+
+  #contact-list button,
+  #contact-list a,
+  .detail-row {
+    border-bottom-color: #000000;
+    border-top-color: #000000;
+  }
+}
+
+@media (forced-colors: active) {
+  #settings-brand {
+    forced-color-adjust: auto;
+  }
+
+  button,
+  input,
+  textarea {
+    border: 1px solid ButtonText;
+  }
+
+  #back-list,
+  #detail-phone {
+    color: LinkText;
+  }
+}

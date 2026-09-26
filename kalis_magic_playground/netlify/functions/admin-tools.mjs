@@ -374,6 +374,114 @@ async function addAccessToPerson(payload, viewer, supabase) {
   return json(200, { ok: true });
 }
 
+async function grantOneBulkTool(supabase, viewer, email, tool, lifetime, note) {
+  const table = accessTableForTool(tool);
+  try {
+    let query = supabase.from(table)
+      .select('id,email,tool,status,lifetime')
+      .ilike('email', escapeIlikePattern(email));
+    if (FRIEND_APP_TOOLS.has(tool)) query = query.eq('tool', tool);
+    const lookup = await query;
+    if (lookup.error) return { tool, outcome: 'failed', error: 'db_error' };
+    const rows = lookup.data || [];
+    const approved = rows.find((row) => row.status === 'approved' &&
+      (row.tool === tool || (row.tool === 'all' && !FRIEND_APP_TOOLS.has(tool))));
+    if (approved) return { tool, outcome: 'alreadyGranted' };
+    const existing = rows.find((row) => row.status === 'approved') || rows[0];
+    const patch = {
+      status: 'approved',
+      tool: table === 'tool_access' && existing?.status === 'approved' ? 'all' : tool,
+      lifetime: Boolean(existing?.lifetime || lifetime),
+      approved_at: new Date().toISOString(),
+      approved_by: viewer.userId
+    };
+    if (note) patch.note = note;
+    let result;
+    if (existing) {
+      let update = supabase.from(table).update(patch).eq('id', existing.id);
+      if (table === 'tool_access') {
+        update = update.eq('status', existing.status);
+        if (existing.tool) update = update.eq('tool', existing.tool);
+      }
+      result = await update.select('id');
+    } else {
+      result = await supabase.from(table).insert({ ...patch, email, created_by: viewer.userId }).select('id');
+    }
+    if (result.error?.code === '23505') {
+      // A concurrent grant can win the race. The next request verifies current state.
+      return { tool, outcome: 'failed', error: 'concurrent_change' };
+    }
+    if (result.error || !result.data?.length) return { tool, outcome: 'failed', error: 'db_error' };
+    return { tool, outcome: 'granted' };
+  } catch {
+    return { tool, outcome: 'failed', error: 'db_error' };
+  }
+}
+
+async function grantLegacyPair(supabase, viewer, email, lifetime, note) {
+  const tools = ['calc', 'stopwatch'];
+  try {
+    const lookup = await supabase.from('tool_access')
+      .select('id,email,tool,status,lifetime')
+      .ilike('email', escapeIlikePattern(email));
+    if (lookup.error) return tools.map((tool) => ({ tool, outcome: 'failed', error: 'db_error' }));
+    const rows = lookup.data || [];
+    const owned = new Set();
+    for (const row of rows) {
+      if (row.status !== 'approved') continue;
+      if (row.tool === 'all') tools.forEach((tool) => owned.add(tool));
+      else if (tools.includes(row.tool)) owned.add(row.tool);
+    }
+    const missing = tools.filter((tool) => !owned.has(tool));
+    if (!missing.length) return tools.map((tool) => ({ tool, outcome: 'alreadyGranted' }));
+    const existing = rows.find((row) => row.status === 'approved') || rows[0];
+    const patch = {
+      status: 'approved', tool: 'all', lifetime: Boolean(existing?.lifetime || lifetime),
+      approved_at: new Date().toISOString(), approved_by: viewer.userId
+    };
+    if (note) patch.note = note;
+    let result;
+    if (existing) {
+      let update = supabase.from('tool_access').update(patch)
+        .eq('id', existing.id).eq('status', existing.status);
+      if (existing.tool) update = update.eq('tool', existing.tool);
+      result = await update.select('id');
+    } else {
+      result = await supabase.from('tool_access').insert({ ...patch, email, created_by: viewer.userId }).select('id');
+    }
+    const failed = Boolean(result.error || !result.data?.length);
+    return tools.map((tool) => owned.has(tool)
+      ? { tool, outcome: 'alreadyGranted' }
+      : failed ? { tool, outcome: 'failed', error: 'db_error' } : { tool, outcome: 'granted' });
+  } catch {
+    return tools.map((tool) => ({ tool, outcome: 'failed', error: 'db_error' }));
+  }
+}
+
+async function grantBulkAccess(payload, viewer, supabase) {
+  const email = normalizeEmail(payload?.email);
+  const tools = payload?.tools;
+  const lifetime = payload?.lifetime ?? false;
+  const note = clean(payload?.note);
+  if (!isValidEmail(email) || !Array.isArray(tools) || tools.length < 1 ||
+      tools.length > FRIEND_APP_TOOLS.size + 2 ||
+      tools.some((tool) => typeof tool !== 'string' || tool === 'all' || !isValidTool(tool)) ||
+      new Set(tools).size !== tools.length || typeof lifetime !== 'boolean' || note.length > 1000) {
+    return json(400, { error: 'invalid_payload' });
+  }
+  const results = [];
+  let legacyPair = null;
+  if (tools.includes('calc') && tools.includes('stopwatch')) {
+    legacyPair = await grantLegacyPair(supabase, viewer, email, lifetime, note);
+  }
+  for (const tool of tools) {
+    results.push(legacyPair && (tool === 'calc' || tool === 'stopwatch')
+      ? legacyPair.find((entry) => entry.tool === tool)
+      : await grantOneBulkTool(supabase, viewer, email, tool, lifetime, note));
+  }
+  return json(200, { results });
+}
+
 export async function postToolAccess(event, viewer, supabase) {
   let payload;
   try {
@@ -387,6 +495,7 @@ export async function postToolAccess(event, viewer, supabase) {
   if (action === 'add') return addToolAccess(payload, viewer, supabase);
   if (action === 'addToPerson') return addAccessToPerson(payload, viewer, supabase);
   if (action === 'grantByUser') return grantToolAccessByUser(payload, viewer, supabase);
+  if (action === 'grantBulk') return grantBulkAccess(payload, viewer, supabase);
   return json(400, { error: 'invalid_payload' });
 }
 

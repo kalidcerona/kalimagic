@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light">
+  <meta name="referrer" content="no-referrer">
+  <meta name="description" content="연락처">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="아스라이">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="theme-color" content="#ffffff">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self'; style-src 'self'; script-src 'self'; manifest-src 'self'; connect-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>연락처</title>
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main id="settings-screen">
+    <div class="settings-wrap">
+      <img id="settings-brand" src="brand-logo.png" alt="아스라이">
+      <h1>설정</h1>
+      <section class="instructions" aria-labelledby="howto-title">
+        <h2 id="howto-title">사용 안내</h2>
+        <p>이름을 누르면 그 이름의 상세가 바로 열립니다. 화면에 남는 이름은 누른 이름 그대로입니다.</p>
+        <p>몇 번째 상세에 고정 전화, 지역, 메모를 쓸지 정합니다. 기본은 4번째이고 1부터 20까지입니다. 그 횟수에만 아래에 적은 값이 나옵니다.</p>
+        <p>다른 상세는 이 브라우저에서 만든 가상 정보이며, 열 때마다 달라질 수 있습니다. 단계로 나눠 보여 주지 않습니다.</p>
+        <p>공연 중 두 손가락으로 아래로 쓸면 설정이 열립니다. 컴퓨터 리허설은 Shift+Escape입니다.</p>
+        <p>실제 연락처는 읽지 않고 권한도 요청하지 않습니다. 실존 인물 정보를 넣지 마세요.</p>
+      </section>
+
+      <div class="fields">
+        <label class="field" for="target-click">고정으로 보여줄 상세 횟수
+          <input id="target-click" type="number" min="1" max="20" step="1" value="4" inputmode="numeric" autocomplete="off">
+        </label>
+        <label class="field" for="fixed-phone">고정 전화번호
+          <input id="fixed-phone" type="text" inputmode="tel" autocomplete="off" spellcheck="false" placeholder="010-0000-0000">
+        </label>
+        <label class="field" for="fixed-region">고정 지역
+          <input id="fixed-region" type="text" autocomplete="off" spellcheck="false" placeholder="가상시 가상구">
+        </label>
+        <label class="field" for="fixed-note">고정 메모
+          <input id="fixed-note" type="text" autocomplete="off" spellcheck="false" placeholder="가상 메모">
+        </label>
+        <label class="field" for="contact-names">가상 이름 (한 줄에 하나)
+          <textarea id="contact-names" rows="10" autocomplete="off" spellcheck="false" autocapitalize="off">김도하
+이서준
+박하린
+최은호
+정다온
+한시윤
+오민재
+윤채원
+장시우
+신예준</textarea>
+        </label>
+      </div>
+
+      <div class="actions">
+        <button type="button" id="reset-clicks">열람 횟수 초기화</button>
+        <button type="button" id="start-performance">공연 시작</button>
+      </div>
+      <div class="install-control" id="install-control" hidden>
+        <button type="button" id="install-app">아스라이 앱 설치</button>
+        <p id="install-help" role="status" aria-live="polite" hidden></p>
+      </div>
+      <p id="settings-status" role="status" aria-live="polite"></p>
+    </div>
+  </main>
+
+  <main id="contact-list-screen" hidden>
+    <header class="list-header">
+      <h1>연락처</h1>
+      <label class="search">
+        <span class="sr-only">검색</span>
+        <input id="contact-search" type="search" placeholder="검색" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="search" name="contact-search">
+      </label>
+    </header>
+    <ul id="contact-list"></ul>
+  </main>
+
+  <main id="contact-detail-screen" hidden>
+    <header class="detail-bar">
+      <button type="button" id="back-list">연락처</button>
+    </header>
+    <h1 id="detail-name"></h1>
+    <div class="detail-card">
+      <div class="detail-row">
+        <p class="detail-label">휴대전화</p>
+        <p id="detail-phone"></p>
+      </div>
+      <div class="detail-row">
+        <p class="detail-label">지역</p>
+        <p id="detail-region"></p>
+      </div>
+      <div class="detail-row">
+        <p class="detail-label">메모</p>
+        <p id="detail-note"></p>
+      </div>
+    </div>
+  </main>
+  <script type="module" src="contacts.js"></script>
+  <script type="module" src="install-ui.js"></script>
+</body>
+</html>

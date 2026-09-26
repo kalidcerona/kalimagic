@@ -66,7 +66,9 @@ export const PUBLIC_DIRS = [
   'zz4',
   'zz5',
   'zz6',
-  'zz7'
+  'zz7',
+  'zz8',
+  'zz10'
 ];
 
 export const PRIVATE_PATTERNS = [
@@ -78,6 +80,7 @@ export const PRIVATE_PATTERNS = [
   /^tests\//,
   /^distribution-snapshots\//,
   /^zz7\/app\.js$/,
+  /^zz8\/app\.js$/,
   /^archive\//,
   /^docs\//,
   /^node_modules\//,
@@ -115,6 +118,16 @@ export const CHOICE_FILES = [
 ];
 export const NEW_APP_FILES = CHOICE_FILES;
 export const USOTSUKI_FILES = NEW_APP_FILES.filter((file) => file !== 'app.js').concat('detector.js');
+export const ASRAI_FILES = [
+  'brand-logo.jpg', 'brand-logo.png', 'contacts.js', 'icon-192.png',
+  'icon-512.png', 'icon.svg', 'index.html', 'install-ui.js',
+  'logic.js', 'manifest.webmanifest', 'style.css', 'sw.js'
+];
+export const ALTER_FILES = [
+  'app.js', 'brand-logo.png', 'camera-geometry.js', 'icon-192.png',
+  'icon-512.png', 'index.html', 'install-ui.js', 'logic.js',
+  'manifest.webmanifest', 'performance.js', 'style.css', 'sw.js', 'vision.js'
+];
 export const ALETHEIA_COURT_FILES = ['S-J', 'S-Q', 'S-K', 'D-J', 'D-Q', 'D-K',
   'C-J', 'C-Q', 'C-K', 'H-J', 'H-Q', 'H-K']
   .map((code) => `court-cards/${code}.png`);
@@ -150,6 +163,8 @@ export const MIRROR_PAIRS = [
   ['../../magic-tobira/coin-500won.svg', 'zz6/coin-500won.svg'],
   ...USOTSUKI_FILES.map((file) => [`../../magic-usotsuki/${file}`, `zz7/${file}`]),
   ['../../magic-usotsuki/detector-panel.jpg', 'zz7/detector-panel.jpg'],
+  ...ASRAI_FILES.map((file) => [`../../magic-asrai/${file}`, `zz8/${file}`]),
+  ...ALTER_FILES.map((file) => [`../../magic-alter/${file}`, `zz10/${file}`]),
   ...[
     ['magic-stopwatch-uni', 'zz1'],
     ['magic-unlock', 'zz2'],

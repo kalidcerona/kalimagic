@@ -41,9 +41,17 @@ for (const { route, name, id } of APPS) {
   });
 }
 
-test('public app identities remain distinct and private app routes stay excluded', async () => {
-  assert.equal(new Set(APPS.map(({ route, id }) => new URL(id, `https://example.test/${route}/`).href)).size, APPS.length);
+test('public app identities remain distinct while FALSE MEMORY stays private', async () => {
+  const identities = APPS.map(({ route, id }) => new URL(id, `https://example.test/${route}/`).href);
+  for (const route of ['zz8', 'zz10']) {
+    const manifest = JSON.parse(await readFile(new URL(`../../${route}/manifest.webmanifest`, import.meta.url), 'utf8'));
+    assert.equal(manifest.id, './');
+    assert.equal(manifest.scope, './');
+    identities.push(new URL(manifest.id, `https://example.test/${route}/`).href);
+  }
+  assert.equal(new Set(identities).size, identities.length);
   const { PUBLIC_DIRS } = await import('../../scripts/build-public.mjs');
-  assert.equal(PUBLIC_DIRS.includes('zz8'), false);
+  assert.equal(PUBLIC_DIRS.includes('zz8'), true);
+  assert.equal(PUBLIC_DIRS.includes('zz10'), true);
   assert.equal(PUBLIC_DIRS.includes('zz9'), false);
 });

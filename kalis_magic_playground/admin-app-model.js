@@ -133,6 +133,57 @@
     }).map(function (app) { return app.id; });
   }
 
+  function groupMembers(rows) {
+    var members = new Map();
+    (rows || []).forEach(function (row) {
+      var email = String(row.email || '').trim().toLowerCase();
+      var key = email || 'unknown:' + String(row.id || '');
+      var member = members.get(key);
+      if (!member) {
+        member = { email: email, displayName: row.displayName || '', nickname: row.nickname || '', rows: [], tools: new Set() };
+        members.set(key, member);
+      }
+      if (!member.displayName && row.displayName) member.displayName = row.displayName;
+      if (!member.nickname && row.nickname) member.nickname = row.nickname;
+      member.rows.push(row);
+      if (row.tool === 'all') LEGACY_TOOLS.forEach(function (tool) { member.tools.add(tool); });
+      else if (row.tool) member.tools.add(row.tool);
+    });
+    return Array.from(members.values());
+  }
+
+  function filterMembers(members, filters) {
+    var options = filters || {};
+    var query = String(options.query || '').trim().toLocaleLowerCase('ko-KR');
+    var tool = options.tool || '*';
+    return (members || []).filter(function (member) {
+      var legacyUnknown = member.rows.some(function (row) { return !row.tool; });
+      if (tool !== '*' && !member.tools.has(tool) &&
+          !(tool === 'all' && (member.tools.has('calc') || member.tools.has('stopwatch') || legacyUnknown)) &&
+          !(legacyUnknown && LEGACY_TOOLS.indexOf(tool) !== -1)) return false;
+      return !query || [member.email, member.displayName, member.nickname].some(function (value) {
+        return String(value || '').toLocaleLowerCase('ko-KR').indexOf(query) !== -1;
+      });
+    });
+  }
+
+  function missingTools(member, availability) {
+    return APP_CATALOG.filter(function (app) {
+      return isToolAvailable(app.id, availability) && !member.tools.has(app.id);
+    }).map(function (app) { return app.id; });
+  }
+
+  function pendingBulkTools(member, availability) {
+    var selected = new Set();
+    (member && member.rows || []).forEach(function (row) {
+      if (row.tool === 'all') LEGACY_TOOLS.forEach(function (tool) { selected.add(tool); });
+      else if (row.tool) selected.add(row.tool);
+    });
+    return APP_CATALOG.filter(function (app) {
+      return selected.has(app.id) && isToolAvailable(app.id, availability);
+    }).map(function (app) { return app.id; });
+  }
+
   function errorMessage(error) {
     var code = error && error.code;
     var status = error && error.status;
@@ -159,6 +210,10 @@
     filterRows: filterRows,
     countByTool: countByTool,
     additionalToolOptions: additionalToolOptions,
+    groupMembers: groupMembers,
+    filterMembers: filterMembers,
+    missingTools: missingTools,
+    pendingBulkTools: pendingBulkTools,
     errorMessage: errorMessage
   });
 });
