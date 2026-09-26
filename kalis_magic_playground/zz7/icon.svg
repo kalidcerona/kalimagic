@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="거짓말 탐지기">
+  <rect width="128" height="128" rx="28" fill="#5c1e2c"/>
+  <rect x="18" y="18" width="92" height="92" rx="22" fill="#f6f0e6"/>
+  <path d="M32 68h14l6-16 8 32 7-22 5 6h24" fill="none" stroke="#c4654a" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="64" cy="40" r="5" fill="#6e2433"/>
+</svg>

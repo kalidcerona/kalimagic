@@ -49,8 +49,8 @@ function setup(path, response, overrides = {}) {
 
 test('all four destinations are named in the login prompt', async () => {
   for (const [path, name] of [
-    ['/tools/calc/', '계산기'], ['/tools/stopwatch/', '스톱워치'],
-    ['/tools/unlock/', '언락'], ['/tools/stopwatch-uni/', '통합 스톱워치']
+    ['/tools/calc/', 'HITSUZEN'], ['/tools/stopwatch/', 'KAIROS'],
+    ['/tools/unlock/', '레리즈'], ['/tools/stopwatch-uni/', 'KAIROS']
   ]) {
     const ui = setup(path, null, { getSession: async () => null });
     await ui.flush();
@@ -62,12 +62,12 @@ test('all four destinations are named in the login prompt', async () => {
 test('pending approval and denial have distinct messages with the selected account', async () => {
   const pending = setup('/tools/unlock/', { ok: false, status: 403, json: async () => ({ status: 'pending' }) });
   await pending.flush();
-  assert.match(pending.text(), /언락.*신청이 접수/);
+  assert.match(pending.text(), /레리즈.*신청이 접수/);
   assert.match(pending.text(), /test@example.com/);
   assert.ok(pending.button('다른 계정으로 로그인'));
   const denied = setup('/tools/calc/', { ok: false, status: 403, json: async () => ({ error: 'denied' }) });
   await denied.flush();
-  assert.match(denied.text(), /계산기/);
+  assert.match(denied.text(), /HITSUZEN/);
   assert.doesNotMatch(denied.text(), /신청이 접수/);
 });
 
@@ -77,7 +77,7 @@ test('service failure offers retry and account change, with no duplicate request
     getSession: () => new Promise((resolve) => { finish = resolve; })
   });
   await ui.flush();
-  assert.match(ui.text(), /스톱워치/);
+  assert.match(ui.text(), /KAIROS/);
   assert.equal(ui.panel.attributes['aria-busy'], 'true');
   assert.equal(ui.calls.length, 0);
   finish({ user: { email: 'test@example.com' } });
@@ -111,7 +111,7 @@ test('failed account change remains recoverable', async () => {
   await ui.flush();
   ui.button('다른 계정으로 로그인').click();
   await ui.flush();
-  assert.match(ui.text(), /통합 스톱워치.*연결에 실패/);
+  assert.match(ui.text(), /KAIROS.*연결에 실패/);
   assert.ok(ui.button('다시 시도'));
   assert.ok(ui.button('다른 계정으로 로그인'));
 });

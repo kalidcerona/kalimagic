@@ -18,7 +18,10 @@ test('catalog exposes only the four distribution apps', () => {
 });
 
 test('legacy all access is labelled as calculator and stopwatch only', () => {
-  assert.equal(model.toolLabel('all'), '계산기 + 스톱워치');
+  assert.equal(model.toolLabel('all'), 'HITSUZEN + KAIROS');
+  assert.equal(model.toolLabel('stopwatch'), 'KAIROS');
+  assert.equal(model.toolLabel('stopwatch-uni'), 'KAIROS');
+  assert.equal(model.toolLabel('unlock'), '레리즈');
   assert.deepEqual(Array.from(model.toolsForFilter('all')), ['calc', 'stopwatch']);
   assert.equal(model.toolsForFilter('all').includes('unlock'), false);
 });
@@ -39,7 +42,7 @@ test('friend app availability is unknown when its service is down', () => {
   assert.equal(model.isToolAvailable('stopwatch', availability), true);
   assert.equal(model.isToolAvailable('unlock', availability), false);
   assert.equal(model.isToolAvailable('stopwatch-uni', availability), false);
-  assert.equal(model.availabilityMessage(availability), '언락·통합 스톱워치 권한 서비스를 사용할 수 없습니다. 조회 가능한 앱의 권한만 표시됩니다.');
+  assert.equal(model.availabilityMessage(availability), '레리즈·KAIROS 권한 서비스를 사용할 수 없습니다. 조회 가능한 앱의 권한만 표시됩니다.');
 });
 
 test('friend app outage warnings override legacy response defaults', () => {

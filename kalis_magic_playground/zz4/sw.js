@@ -1,49 +1,58 @@
-const CACHE = "stopwatch2-v5";
-const PREFIX = "stopwatch2-";
-const SHELL = [
-  "./",
-  "./index.html",
-  "./manifest.webmanifest",
-  "./icon-192.png",
-  "./icon-512.png",
-  "./icon.svg",
+const CACHE = 'magic-choice-shell-v4';
+const CACHE_PREFIX = 'magic-choice-shell-';
+const ASSETS = [
+  './index.html',
+  './style.css',
+  './app.js',
+  './logic.js',
+  './manifest.webmanifest',
+  './icon.svg',
+  './brand-logo.jpg',
+  './brand-logo.png'
 ];
 
-self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE).then((cache) => cache.addAll(SHELL)).then(() => self.skipWaiting()),
-  );
+self.addEventListener('install', (event) => {
+  event.waitUntil(caches.open(CACHE).then(async (cache) => {
+    await cache.addAll(ASSETS);
+    const index = await cache.match('./index.html');
+    if (index) await cache.put('./', index.clone());
+    await self.skipWaiting();
+  }));
 });
 
-self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    caches.keys()
-      .then((names) => Promise.all(names
-        .filter((name) => name.startsWith(PREFIX) && name !== CACHE)
-        .map((name) => caches.delete(name))))
-      .then(() => self.clients.claim()),
-  );
+self.addEventListener('activate', (event) => {
+  event.waitUntil(caches.keys().then(async (keys) => {
+    await Promise.all(keys.filter((key) => key.startsWith(CACHE_PREFIX) && key !== CACHE).map((key) => caches.delete(key)));
+    await self.clients.claim();
+  }));
 });
 
-self.addEventListener("fetch", (event) => {
-  const { request } = event;
-  if (request.method !== "GET" || new URL(request.url).origin !== self.location.origin) return;
+function inOwnScope(url) {
+  return url.href.startsWith(self.registration.scope);
+}
 
-  if (request.mode === "navigate") {
-    event.respondWith(fetch(request).catch(() => caches.match("./index.html")));
-    return;
-  }
+self.addEventListener('fetch', (event) => {
+  const request = event.request;
+  if (request.method !== 'GET') return;
+  const url = new URL(request.url);
+  if (!inOwnScope(url)) return;
 
   event.respondWith((async () => {
-    const cached = await caches.match(request);
-    if (cached) return cached;
-    const response = await fetch(request);
-    if (response.ok) {
-      try {
+    try {
+      const fresh = await fetch(request);
+      if (fresh && fresh.ok && fresh.type === 'basic') {
         const cache = await caches.open(CACHE);
-        await cache.put(request, response.clone());
-      } catch (_) {}
+        await cache.put(request, fresh.clone());
+      }
+      return fresh;
+    } catch (error) {
+      const cached = await caches.match(request);
+      if (cached) return cached;
+      if (request.mode === 'navigate') {
+        const fallback = await caches.match('./index.html');
+        if (fallback) return fallback;
+      }
+      throw error;
     }
-    return response;
   })());
 });

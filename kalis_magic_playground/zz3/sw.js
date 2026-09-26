@@ -1,5 +1,6 @@
-const CACHE = "stopwatch-v7";
-const PREFIX = "stopwatch-";
+const SCOPE_URL = new URL(self.registration.scope);
+const PREFIX = `calc2-${encodeURIComponent(SCOPE_URL.href)}-`;
+const CACHE = `${PREFIX}v6`;
 const SHELL = [
   "./",
   "./index.html",
@@ -7,7 +8,9 @@ const SHELL = [
   "./icon-192.png",
   "./icon-512.png",
   "./icon.svg",
-];
+  "./brand-logo.jpg",
+  "./brand-logo.png",
+].map((path) => new URL(path, SCOPE_URL).href);
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -19,7 +22,7 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys()
       .then((names) => Promise.all(names
-        .filter((name) => /^stopwatch-v\d+$/.test(name) && name !== CACHE)
+        .filter((name) => name.startsWith(PREFIX) && name !== CACHE)
         .map((name) => caches.delete(name))))
       .then(() => self.clients.claim()),
   );
@@ -27,20 +30,32 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   const { request } = event;
-  if (request.method !== "GET" || new URL(request.url).origin !== self.location.origin) return;
+  const requestUrl = new URL(request.url);
+  if (
+    request.method !== "GET" ||
+    requestUrl.origin !== SCOPE_URL.origin ||
+    !requestUrl.pathname.startsWith(SCOPE_URL.pathname)
+  ) return;
 
   if (request.mode === "navigate") {
-    event.respondWith(fetch(request).catch(() => caches.match("./index.html")));
+    event.respondWith((async () => {
+      const cache = await caches.open(CACHE);
+      try {
+        return await fetch(request);
+      } catch {
+        return cache.match(new URL("./index.html", SCOPE_URL).href);
+      }
+    })());
     return;
   }
 
   event.respondWith((async () => {
-    const cached = await caches.match(request);
+    const cache = await caches.open(CACHE);
+    const cached = await cache.match(request);
     if (cached) return cached;
     const response = await fetch(request);
     if (response.ok) {
       try {
-        const cache = await caches.open(CACHE);
         await cache.put(request, response.clone());
       } catch (_) {}
     }

@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#000000">
-  <title>언락 · Unlock</title>
+  <title>RELEASE · 레리즈</title>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="apple-touch-icon" href="./icon-192.png">
   <style>
@@ -130,7 +130,7 @@
       84% { transform: translateX(calc(-50% + 2px)); }
     }
     .galaxy .dot { width: 11px; height: 11px; }
-    .galaxy .keypad { top: 34%; }
+    .galaxy .keypad { top: 32%; }
     .galaxy .key { background: rgba(255, 255, 255, 0.16); }
     .galaxy .key:active { background: rgba(255, 255, 255, 0.42); color: #fff; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); transform: scale(1.07); }
     .galaxy .key .number { font-size: calc(var(--key-d) * 34 / 72); font-weight: 500; }
@@ -140,7 +140,7 @@
     .key[data-action="confirm"] { grid-column: 3; grid-row: 4; }
     .key .action-icon { width: 31px; height: 31px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
     #fingerprint { position: absolute; z-index: 2; top: 72%; left: 50%; transform: translate(-50%, -50%); width: 64px; height: 64px; padding: 0; background: none; place-items: center; touch-action: none; }
-    .galaxy #fingerprint { display: grid; top: 81%; }
+    .galaxy #fingerprint { display: grid; top: 80%; }
     #fingerprint svg { width: 44px; height: 44px; fill: none; stroke: #fff; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
     #fingerprint.holding svg { animation: fingerprint-hold 600ms ease-out both; }
     #fingerprint.pulse svg { animation: fingerprint-pulse 220ms ease-out; }
@@ -156,10 +156,10 @@
     .home-page { position: absolute; top: 0; width: 100%; height: 100%; overflow: hidden; }
     #home-one { left: 0; }
     #home-two { left: 100%; background: #111; }
-    #reveal-card { position: absolute; z-index: 3; top: 50%; left: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; width: min(78vw, 320px); min-height: 180px; max-width: calc(100% - 36px); padding: 24px 22px; border: 1px solid #ffffff60; border-radius: 26px; background: #3238439c; box-shadow: 0 16px 46px #0008; backdrop-filter: blur(20px) saturate(1.1); -webkit-backdrop-filter: blur(20px) saturate(1.1); text-align: center; font-variant-numeric: tabular-nums; pointer-events: none; opacity: 0; visibility: hidden; transform: translate(-50%, -50%) scale(.94); transition: opacity 220ms ease, transform 220ms cubic-bezier(.2,.8,.2,1), visibility 0s; }
-    #reveal-card.visible { opacity: 1; visibility: visible; transform: translate(-50%, -50%) scale(1); transition-delay: 0s; }
+    #reveal-card { position: absolute; z-index: 3; top: 50%; left: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; width: min(88vw, 390px); min-height: 220px; max-width: calc(100% - 24px); padding: 30px 24px; border: 1px solid #ffffff60; border-radius: 26px; background: #3238439c; box-shadow: 0 16px 46px #0008; backdrop-filter: blur(20px) saturate(1.1); -webkit-backdrop-filter: blur(20px) saturate(1.1); text-align: center; font-variant-numeric: tabular-nums; pointer-events: none; opacity: 0; visibility: hidden; transform: translate(-50%, -50%) scale(.94); transition: none; }
+    #reveal-card.visible { opacity: 1; visibility: visible; transform: translate(-50%, -50%) scale(1); transition: opacity 180ms ease, transform 180ms cubic-bezier(.2,.8,.2,1); }
     #reveal-label { color: #f3f4f8e0; font-size: 14px; font-weight: 500; }
-    #reveal-number { margin-top: 18px; font-size: clamp(40px, 11vw, 56px); line-height: 1.08; font-weight: 600; letter-spacing: .04em; overflow-wrap: anywhere; }
+    #reveal-number { margin-top: 18px; font-size: clamp(46px, 12vw, 68px); line-height: 1.08; font-weight: 600; letter-spacing: .025em; overflow-wrap: anywhere; }
     #reveal-days { margin-top: 13px; color: #f3f4f8e0; font-size: 13px; }
     #unlocked-screen.unlocking { animation: unlock-in 440ms cubic-bezier(.32, .72, 0, 1) both; }
     @keyframes lock-out { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(.965); } }
@@ -172,6 +172,10 @@
     #attempt-list li { border-top: 1px solid #ffffff15; padding: 6px 0; white-space: nowrap; }
     .attempt-pin { letter-spacing: 3px; font-size: 12px; line-height: 1.25; font-weight: 600; }
     #time-black { z-index: 3; background: #000; touch-action: none; }
+    #rewind-digit-guide { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: repeat(4, minmax(0, 1fr)); color: #fff; font-size: clamp(42px, 13vw, 76px); font-weight: 650; pointer-events: none; opacity: 1; transition: opacity 400ms ease; }
+    #rewind-digit-guide[hidden] { display: none !important; }
+    #rewind-digit-guide.is-fading { opacity: 0; }
+    #rewind-digit-guide span { display: grid; place-items: center; }
     #time-lock { z-index: 3; background: radial-gradient(ellipse at 20% 10%, #575d78, #10151e); text-align: center; touch-action: none; }
     #time-clock-backdrop { position: absolute; inset: 9% 0 auto; height: 51%; background: rgba(18, 22, 33, .12); backdrop-filter: blur(44px); -webkit-backdrop-filter: blur(44px); -webkit-mask-image: linear-gradient(transparent, #000 17%, #000 78%, transparent); mask-image: linear-gradient(transparent, #000 17%, #000 78%, transparent); pointer-events: none; }
     #time-face { position: absolute; z-index: 1; top: 12%; width: 100%; text-shadow: 0 2px 12px #0005; pointer-events: none; }
@@ -184,6 +188,7 @@
     @media (prefers-reduced-motion: reduce) { #time-clock span { animation: none !important; } }
     #settings-screen { z-index: 5; overflow-y: auto; background: #101115; padding: 28px 22px max(32px, env(safe-area-inset-bottom)); touch-action: pan-y; }
     .settings-inner { max-width: 480px; margin: auto; }
+    #settings-brand { display: block; width: min(100%, 300px); height: auto; max-height: 110px; object-fit: contain; margin: 0 auto 18px; }
     .eyebrow { color: #aaa4f7; font-size: 11px; font-weight: 700; letter-spacing: 3px; }
     h1 { font-size: 32px; letter-spacing: -1px; margin: 8px 0; }
     .intro { color: #a4a6b1; line-height: 1.65; font-size: 13px; margin: 0 0 28px; }
@@ -302,19 +307,20 @@
       </div>
       <div id="reveal-card" role="status" aria-live="polite" aria-hidden="true"><div id="reveal-label"></div><div id="reveal-number">—</div><div id="reveal-days" hidden></div></div>
     </section>
-    <section id="time-black" class="screen" aria-label="타임머신 준비" hidden></section>
-    <section id="time-lock" class="screen" aria-label="타임머신 잠금 화면" hidden>
+    <section id="time-black" class="screen" aria-label="리와인드 준비" hidden><div id="rewind-digit-guide" hidden aria-hidden="true"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span></span><span>0</span><span></span></div></section>
+    <section id="time-lock" class="screen" aria-label="리와인드 잠금 화면" hidden>
       <img id="time-wallpaper" class="wallpaper" alt="" hidden draggable="false">
       <div id="time-clock-backdrop"></div>
       <div id="time-face"><div id="time-date"></div><time id="time-clock"><span id="time-hour"></span><span class="time-colon" aria-hidden="true"></span><span id="time-minute"></span></time></div>
     </section>
     <section id="settings-screen" class="screen" aria-label="설정" hidden>
       <div class="settings-inner">
-        <div class="eyebrow">UNLOCK</div>
-        <h1>언락 설정</h1>
+        <img id="settings-brand" src="./brand-logo.jpg" alt="RELEASE" onerror="this.hidden=true">
+        <div class="eyebrow">RELEASE</div>
+        <h1>레리즈 설정</h1>
         <p class="intro">화면을 준비하고, 연출을 시작하세요.<br>이미지와 설정은 이 기기에만 저장됩니다.</p>
-        <section id="install-offer" class="install-offer" aria-label="언락 설치 안내" hidden>
-          <strong>홈 화면에 언락을 설치할까요?</strong>
+        <section id="install-offer" class="install-offer" aria-label="레리즈 설치 안내" hidden>
+          <strong>홈 화면에 레리즈를 설치할까요?</strong>
           <p>처음 한 번 추가하면 앱처럼 전체 화면으로 열 수 있습니다.</p>
           <p id="install-instructions" role="status" hidden></p>
           <div class="install-actions"><button id="install-action" type="button">설치 방법</button><button id="install-later" type="button">나중에</button></div>
@@ -322,12 +328,13 @@
         <form id="settings-form">
           <div class="group">
             <h2 id="performance-heading">연출</h2>
-            <label id="performance-field" class="field">연출 선택<select id="performance"><option value="pin">PIN 언락</option><option value="time-machine">타임머신</option></select></label>
+            <label id="performance-field" class="field">연출 선택<select id="performance"><option value="pin">PIN 잠금 해제</option><option value="time-machine">리와인드</option></select></label>
             <div id="time-options" hidden>
-              <div class="time-guide hint"><div>PIN 화면에서 긴급 상황(iPhone) 또는 긴급전화(갤럭시)를 빠르게 두 번 누르면 타임머신이 열립니다.</div></div>
+              <div class="time-guide hint"><div>PIN 화면에서 긴급 상황(iPhone) 또는 긴급전화(갤럭시)를 빠르게 두 번 누르면 리와인드가 열립니다.</div></div>
               <label class="field">두 번 탭 후 대기 (초)<input id="time-delay" type="number" min="0" max="60" step="0.1" value="3"></label>
               <label class="field">되감기 시간 (초)<input id="time-duration" type="number" min="1" max="60" step="0.1" value="8"></label>
               <p class="hint">두 번째 숫자 뒤 나타나는 잠금화면을 두 번 누르면, 설정한 대기 후 표시 시각이 천천히 현재 시각으로 돌아옵니다. 실제 휴대폰 시계는 바뀌지 않습니다.</p>
+              <label class="field check"><input id="rewind-grid-guide" type="checkbox"> 입장할 때 숫자를 잠깐 표시</label>
             </div>
           </div>
           <div class="group">
@@ -335,7 +342,7 @@
             <label class="field stack">잠금화면 이미지<input id="lock-file" type="file" accept="image/*"><span id="lock-info" class="image-info">등록된 이미지 없음</span></label>
             <label class="field stack">해제화면 이미지<input id="unlock-file" type="file" accept="image/*"><span id="unlock-info" class="image-info">등록된 이미지 없음</span></label>
             <label id="home2-field" class="field stack" hidden>해제화면 2페이지 이미지<input id="home2-file" type="file" accept="image/*"><span id="home2-info" class="image-info">등록된 이미지 없음</span></label>
-            <p class="hint">잠금에는 잠금화면, 해제에는 앱 아이콘이 보이는 홈 화면 스크린샷을 등록하세요. 개인용 언락은 홈 1·홈 2 이미지가 모두 있어야 좌우 이동과 중앙 정보 표시를 사용할 수 있습니다. 등록된 이미지 자체에 잠금 시계가 있으면 해제 후에도 보입니다.</p>
+            <p class="hint">잠금에는 잠금화면, 해제에는 앱 아이콘이 보이는 홈 화면 스크린샷을 등록하세요. 개인용 레리즈는 홈 1·홈 2 이미지가 모두 있어야 좌우 이동과 중앙 정보 표시를 사용할 수 있습니다. 등록된 이미지 자체에 잠금 시계가 있으면 해제 후에도 보입니다.</p>
             <p id="storage-status" role="status">이미지 저장소 확인 중…</p>
           </div>
           <div class="group">
@@ -365,12 +372,12 @@
           </div>
           <details class="usage-guide">
             <summary>처음 사용하는 분을 위한 화면·숫자 입력 안내</summary>
-            <p>개인용 언락은 홈 1에서 왼쪽으로 밀어 홈 2로 이동합니다. 홈 2에서 왼쪽으로 계속 미는 동안에만 설정한 입력 정보가 보이고, 손가락을 떼면 바로 사라집니다. 위로 밀면 입력 기록을 볼 수 있습니다.</p>
-            <p>타임머신의 검은 화면은 화면 전체가 보이지 않는 숫자판입니다. 아래 그림처럼 화면을 가로 3칸, 세로 4칸으로 나눠 누릅니다. 각 칸의 가운데를 누르면 그 숫자로 인식됩니다. 마지막 줄은 가운데 0만 입력되고 양옆은 무시됩니다. 숫자 두 개를 차례로 눌러 분을 입력하세요. 예: 0 다음 3은 03분, 1 다음 5는 15분입니다.</p>
+            <p>개인용 레리즈는 홈 1에서 왼쪽으로 밀어 홈 2로 이동합니다. 홈 2에서 왼쪽으로 700ms 동안 계속 미는 동안에만 설정한 입력 정보가 보이고, 손가락을 떼면 바로 사라집니다. 위로 밀면 입력 기록을 볼 수 있습니다.</p>
+            <p>리와인드의 검은 화면은 화면 전체가 보이지 않는 숫자판입니다. 아래 그림처럼 화면을 가로 3칸, 세로 4칸으로 나눠 누릅니다. 각 칸의 가운데를 누르면 그 숫자로 인식됩니다. 마지막 줄은 가운데 0만 입력되고 양옆은 무시됩니다. 숫자 두 개를 차례로 눌러 분을 입력하세요. 예: 0 다음 3은 03분, 1 다음 5는 15분입니다.</p>
             <div class="hidden-grid-example" role="img" aria-label="검은 화면의 숫자 입력 예시. 빨간 선으로 나뉜 첫 세 줄은 왼쪽부터 1 2 3, 4 5 6, 7 8 9이며 마지막 줄 가운데는 0입니다.">
               <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span data-digit="0">0</span>
             </div>
-            <p class="grid-caption">빨간 선은 설명용입니다. 실제 검은 화면에는 선과 숫자가 나타나지 않습니다.</p>
+            <p class="grid-caption">빨간 선은 항상 설명용입니다. 숫자는 ‘입장할 때 숫자를 잠깐 표시’를 켰을 때만 잠깐 보이며, 선은 실제 검은 화면에 나타나지 않습니다.</p>
             <p>설정 열기: 잠금 화면에서 두 손가락을 아래로 쓸기<br>홈 화면 4·6자리 안내 전환: 안내 문구 탭<br>기록 초기화 후 다시 잠금: 두 손가락으로 빠르게 두 번 탭</p>
           </details>
           <p id="offline-status" role="status">오프라인 준비 중…</p>
@@ -391,7 +398,7 @@
     const SETTINGS_KEY = STORAGE.settingsKey;
     const UNLOCK_ANIMATION_MS = 440;
     document.body.classList.toggle('personal-home', STORAGE.personal);
-    $('performance-heading').textContent = STORAGE.personal ? '타임머신' : '연출';
+    $('performance-heading').textContent = STORAGE.personal ? '리와인드' : '연출';
     $('performance-field').hidden = STORAGE.personal;
     $('home2-field').hidden = !STORAGE.personal;
     $('home2-preview-item').hidden = !STORAGE.personal;
@@ -419,6 +426,7 @@
     let swipe = null;
     let homePage = 'home1';
     let revealVisible = false;
+    let revealTimer = null;
     let settingsSwipe = null;
     let timeMinutes = 0;
     let timeDigits = [];
@@ -497,6 +505,23 @@
       $('reveal-card').setAttribute('aria-hidden', String(!visible));
     }
 
+    function cancelReveal() {
+      clearTimeout(revealTimer);
+      revealTimer = null;
+      setRevealVisible(false);
+    }
+
+    function scheduleReveal() {
+      if (!swipe || swipe.revealPending || revealVisible) return;
+      swipe.revealPending = true;
+      const activeSwipe = swipe;
+      revealTimer = setTimeout(() => {
+        revealTimer = null;
+        if (swipe === activeSwipe && screen === 'unlocked' && homePage === 'home2'
+            && originals.has('home2') && swipe.revealPending) setRevealVisible(true);
+      }, Math.max(0, 700 - (performance.now() - swipe.startedAt)));
+    }
+
     function setHomePage(next, animate = true) {
       homePage = next;
       const index = next === 'home2' ? 1 : 0;
@@ -504,6 +529,28 @@
       if (animate && track.style.transition === 'none') void track.offsetWidth;
       track.style.transition = animate ? '' : 'none';
       track.style.transform = `translate3d(${-index * 100}%, 0, 0)`;
+    }
+
+    const REWIND_GUIDE_KEY = 'release.rewindGridGuide.v1';
+    let rewindGuideTimers = [];
+    function stopRewindGuide() {
+      for (const timer of rewindGuideTimers) clearTimeout(timer);
+      rewindGuideTimers = [];
+      const guide = $('rewind-digit-guide');
+      guide.hidden = true;
+      guide.classList.remove('is-fading');
+    }
+    function startRewindGuide() {
+      stopRewindGuide();
+      if (!$('rewind-grid-guide').checked) return;
+      const guide = $('rewind-digit-guide');
+      void guide.offsetWidth;
+      guide.hidden = false;
+      rewindGuideTimers.push(setTimeout(() => {
+        if (guide.hidden) return;
+        guide.classList.add('is-fading');
+        rewindGuideTimers.push(setTimeout(stopRewindGuide, 400));
+      }, 800));
     }
 
     function showScreen(next, animate = false) {
@@ -525,7 +572,7 @@
       $('unlocked-screen').classList.remove('unlocking');
       $('unlocked-screen').style.transform = 'translateY(0px)';
       swipe = null;
-      setRevealVisible(false);
+      cancelReveal();
       if (next === 'input') renderInput();
       if (next === 'unlocked') {
         renderAttempts();
@@ -545,6 +592,8 @@
         }
       }
       if (next === 'settings') { populateForm(); $('settings-screen').scrollTop = 0; }
+      if (next === 'time-black') startRewindGuide();
+      else stopRewindGuide();
     }
 
     function handleAttemptOutcome(previousCount) {
@@ -717,12 +766,13 @@
       $('unlocked-screen').style.transform = 'translateY(0px)';
       if (STORAGE.personal) setHomePage(homePage);
       swipe = null;
+      cancelReveal();
     }
 
     document.addEventListener('touchstart', (event) => {
       if (screen === 'settings') return;
       if (event.touches.length === 2) {
-        setRevealVisible(false);
+        cancelReveal();
         settingsSwipe = Array.from(event.touches, (t) => ({id:t.identifier,x:t.clientX,y:t.clientY}));
         timePointer = null;
         timeLastTap = null;
@@ -738,10 +788,10 @@
         if (tapCandidate) tapCandidate.valid = false;
         returnSwipe();
       } else if (screen === 'unlocked' && event.touches.length === 1) {
-        setRevealVisible(false);
+        cancelReveal();
         const touch = event.touches[0];
         if (!STORAGE.personal && isHomeGestureArea(touch.clientX, touch.clientY, window.innerWidth, window.innerHeight)) return;
-        swipe = { id: touch.identifier, x: touch.clientX, y: touch.clientY, axis: null };
+        swipe = { id: touch.identifier, x: touch.clientX, y: touch.clientY, axis: null, startedAt: performance.now(), revealPending: false };
         $('unlocked-screen').classList.remove('returning');
       }
     }, { passive: false });
@@ -773,7 +823,8 @@
         if (!swipe.axis && Math.hypot(dx, dy) >= 10) swipe.axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
         if (STORAGE.personal && swipe.axis === 'x') {
           const reveal = homeSwipeTarget(homePage, dx, dy, originals.has('home2'), false, $('app').clientWidth).revealVisible;
-          setRevealVisible(reveal);
+          if (reveal) scheduleReveal();
+          else { swipe.revealPending = false; cancelReveal(); }
           const index = homePage === 'home2' ? 1 : 0;
           const width = $('app').clientWidth;
           const drag = Math.max(index === 0 && originals.has('home2') ? -width : 0,
@@ -811,14 +862,14 @@
             const target = completeHomeSwipe(homePage, touch.clientX - swipe.x, touch.clientY - swipe.y,
               originals.has('home2'), $('app').clientWidth);
             if (!target.peek) homePage = target.page;
-            setRevealVisible(target.revealVisible);
+            cancelReveal();
           }
         }
         returnSwipe();
       }
     }, { passive: false });
-    document.addEventListener('touchcancel', () => { settingsSwipe = null; timePointer = null; tapCandidate = null; setRevealVisible(false); returnSwipe(); });
-    window.addEventListener('blur', () => { tapCandidate = null; setRevealVisible(false); returnSwipe(); });
+    document.addEventListener('touchcancel', () => { settingsSwipe = null; timePointer = null; tapCandidate = null; returnSwipe(); });
+    window.addEventListener('blur', () => { tapCandidate = null; returnSwipe(); });
 
     function populateForm() {
       $('performance').value = settings.performance;
@@ -882,7 +933,7 @@
         request.onerror = () => reject(request.error);
         request.onblocked = () => {
           blocked = true;
-          reject(new Error('다른 언락 창을 닫고 다시 실행해 주세요.'));
+          reject(new Error('다른 레리즈 창을 닫고 다시 실행해 주세요.'));
         };
       });
     }
@@ -1138,6 +1189,10 @@
       } catch { $('offline-status').textContent = '오프라인 준비 실패. 보안 연결 또는 localhost에서 다시 열어 주세요.'; }
     }
 
+    try { $('rewind-grid-guide').checked = localStorage.getItem(REWIND_GUIDE_KEY) === '1'; } catch {}
+    $('rewind-grid-guide').addEventListener('change', () => {
+      try { localStorage.setItem(REWIND_GUIDE_KEY, $('rewind-grid-guide').checked ? '1' : '0'); } catch {}
+    });
     populateForm();
     applyAppearance(settings);
     showScreen('settings');

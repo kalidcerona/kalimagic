@@ -1,7 +1,7 @@
 {
   "id": "./",
-  "name": "언락 · Unlock",
-  "short_name": "언락",
+  "name": "레리즈",
+  "short_name": "레리즈",
   "lang": "ko",
   "start_url": "./index.html",
   "scope": "./",

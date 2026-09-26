@@ -1,15 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="계산기">
-  <rect width="512" height="512" rx="112" fill="#000"/>
-  <rect x="116" y="64" width="280" height="384" rx="56" fill="#202022" stroke="#d8d8dc" stroke-width="12"/>
-  <rect x="148" y="104" width="216" height="80" rx="20" fill="#d8d8dc"/>
-  <g fill="none" stroke="#f4f4f5" stroke-linecap="round" stroke-width="14">
-    <path d="M194 246h52M220 220v52"/>
-    <path d="M286 246h52"/>
-    <path d="m195 324 48 48m0-48-48 48"/>
-    <path d="M286 348h52"/>
-  </g>
-  <g fill="#f4f4f5">
-    <circle cx="312" cy="324" r="8"/>
-    <circle cx="312" cy="372" r="8"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <g transform="translate(256,268)">
+    <path d="M-78 -18 h156 a26 26 0 0 1 26 26 v112 a26 26 0 0 1 -26 26 h-156 a26 26 0 0 1 -26 -26 v-112 a26 26 0 0 1 26 -26 z" fill="#E8631F"/>
+    <path d="M-52 -18 v-46 a52 52 0 0 1 104 0 v12" fill="none" stroke="#E8631F" stroke-width="24" stroke-linecap="round"/>
+    <circle cy="52" r="17" fill="#1a1512"/>
+    <rect x="-7" y="52" width="14" height="34" rx="7" fill="#1a1512"/>
   </g>
 </svg>

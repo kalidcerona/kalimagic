@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#12100f" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="거짓말 탐지기" />
+    <title>거짓말 탐지기</title>
+    <link rel="icon" href="icon.svg" type="image/svg+xml" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div id="safe-probe" aria-hidden="true"></div>
+    <main id="performance-screen" hidden>
+      <button id="detector-button" type="button" aria-label="전원">POWER</button>
+      <p class="detector-title">Lie Detector</p>
+      <p id="test-indicator" role="status"></p>
+      <p id="verdict" role="status" aria-live="assertive"></p>
+    </main>
+    <section id="settings-screen">
+      <img id="settings-brand" src="brand-logo.png" alt="" width="168" height="168" />
+      <h1>거짓말 탐지기</h1>
+      <p class="lede">공연 전에만 확인합니다. 실제 측정이 아닙니다.</p>
+      <div class="stack">
+        <label class="field" for="truth-attempt">TRUE가 나올 시도
+          <input id="truth-attempt" type="number" inputmode="numeric" min="1" max="20" step="1" value="4" />
+        </label>
+        <label class="checkline" for="sound-enabled">
+          <input id="sound-enabled" type="checkbox" checked />
+          소리
+        </label>
+        <div class="row-actions">
+          <button id="reset-attempts" type="button">시도 초기화</button>
+          <button id="start-performance" type="button">공연 시작</button>
+        </div>
+        <p id="settings-status" role="status"></p>
+      </div>
+      <details id="performance-help">
+        <summary>사용 방법</summary>
+        <ul>
+          <li>초록 버튼을 직접 누른 채 약 2초 유지하면 검사가 진행됩니다.</li>
+          <li>일찍 손을 떼거나 움직이면 취소되며, 시도 횟수에 포함되지 않습니다.</li>
+          <li>설정한 시도에서만 TRUE가 나옵니다. 그 외 시도는 LIE입니다.</li>
+          <li>공연 화면에서 두 손가락으로 아래로 쓸면 설정이 열립니다.</li>
+          <li>Shift+Escape로 리허설 설정을 열 수 있습니다.</li>
+        </ul>
+      </details>
+    </section>
+    <noscript>
+      <p>이 공연 화면은 자바스크립트가 필요합니다. 네트워크 측정은 하지 않습니다.</p>
+    </noscript>
+    <script type="module" src="detector.js"></script>
+  </body>
+</html>

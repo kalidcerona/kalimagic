@@ -65,7 +65,8 @@ export const PUBLIC_DIRS = [
   'zz3',
   'zz4',
   'zz5',
-  'zz6'
+  'zz6',
+  'zz7'
 ];
 
 export const PRIVATE_PATTERNS = [
@@ -76,6 +77,7 @@ export const PRIVATE_PATTERNS = [
   /^supabase\//,
   /^tests\//,
   /^distribution-snapshots\//,
+  /^zz7\/app\.js$/,
   /^archive\//,
   /^docs\//,
   /^node_modules\//,
@@ -83,31 +85,8 @@ export const PRIVATE_PATTERNS = [
   /^package-lock\.json$/
 ];
 
-export const MIRROR_PAIRS = [
-  ['../../magic-calculator-v2/index.html', 'zz2/index.html'],
-  ['../../magic-calculator-v2/sw.js', 'zz2/sw.js'],
-  ['../../magic-calculator-v2/index.html', 'tools/calc/index.html'],
-  ['../../magic-stopwatch/index.html', 'zz3/index.html'],
-  ['../../magic-stopwatch/sw.js', 'zz3/sw.js'],
-  ['../../magic-stopwatch/index.html', 'tools/stopwatch/index.html'],
-  ['../../magic-stopwatch-v2/index.html', 'zz4/index.html'],
-  ['../../magic-stopwatch-v2/sw.js', 'zz4/sw.js'],
-  ['../../magic-unlock/index.html', 'zz5/index.html'],
-  ['../../magic-unlock/logic.js', 'zz5/logic.js'],
-  ['../../magic-unlock/time-machine.js', 'zz5/time-machine.js'],
-  ['../../magic-unlock/install-prompt.js', 'zz5/install-prompt.js'],
-  ['../../magic-unlock/sw.js', 'zz5/sw.js'],
-  ['../../magic-stopwatch-uni/index.html', 'zz6/index.html'],
-  ['../../magic-stopwatch-uni/sw.js', 'zz6/sw.js'],
-  ['../../magic-stopwatch-uni/logic.js', 'zz6/logic.js']
-];
-
-export const DISTRIBUTION_APPS = [
-  { source: 'distribution-snapshots/unlock', target: 'unlock', tool: 'unlock' },
-  { source: 'zz6', target: 'stopwatch-uni', tool: 'stopwatch-uni' }
-];
-
 export const SHARED_UNLOCK_FILES = [
+  'brand-logo.jpg',
   'icon-192.png',
   'icon-512.png',
   'icon-maskable-192.png',
@@ -119,6 +98,60 @@ export const SHARED_UNLOCK_FILES = [
   'manifest.webmanifest',
   'sw.js',
   'time-machine.js'
+];
+
+export const CHOICE_FILES = [
+  'app.js',
+  'brand-logo.jpg',
+  'icon.svg',
+  'index.html',
+  'logic.js',
+  'manifest.webmanifest',
+  'style.css',
+  'sw.js'
+];
+export const NEW_APP_FILES = CHOICE_FILES;
+export const USOTSUKI_FILES = NEW_APP_FILES.filter((file) => file !== 'app.js').concat('detector.js');
+
+export const MIRROR_PAIRS = [
+  ['../../magic-calculator-v2/index.html', 'zz3/index.html'],
+  ['../../magic-calculator-v2/sw.js', 'zz3/sw.js'],
+  ['../../magic-calculator-v2/icon-192.png', 'zz3/icon-192.png'],
+  ['../../magic-calculator-v2/icon-512.png', 'zz3/icon-512.png'],
+  ['../../magic-calculator-v2/icon.svg', 'zz3/icon.svg'],
+  ['../../magic-calculator-v2/manifest.webmanifest', 'zz3/manifest.webmanifest'],
+  ['../../magic-calculator-v2/brand-logo.jpg', 'zz3/brand-logo.jpg'],
+  ...['index.html', 'sw.js', 'icon-192.png', 'icon-512.png', 'icon.svg', 'manifest.webmanifest', 'brand-logo.jpg']
+    .map((file) => [`../../magic-calculator-v2/${file}`, `tools/calc/${file}`]),
+  ['../../magic-stopwatch-uni/index.html', 'zz1/index.html'],
+  ['../../magic-stopwatch-uni/sw.js', 'zz1/sw.js'],
+  ['../../magic-stopwatch-uni/logic.js', 'zz1/logic.js'],
+  ['../../magic-stopwatch-uni/brand-logo.jpg', 'zz1/brand-logo.jpg'],
+  ['../../magic-stopwatch-uni/icon-192.png', 'zz1/icon-192.png'],
+  ['../../magic-stopwatch-uni/icon-512.png', 'zz1/icon-512.png'],
+  ['../../magic-stopwatch-uni/icon.svg', 'zz1/icon.svg'],
+  ['../../magic-stopwatch-uni/manifest.webmanifest', 'zz1/manifest.webmanifest'],
+  ...SHARED_UNLOCK_FILES.map((file) => [`../../magic-unlock/${file}`, `zz2/${file}`]),
+  ...CHOICE_FILES.map((file) => [`../../magic-choice/${file}`, `zz4/${file}`]),
+  ...NEW_APP_FILES.map((file) => [`../../magic-aletheia/${file}`, `zz5/${file}`]),
+  ...NEW_APP_FILES.map((file) => [`../../magic-tobira/${file}`, `zz6/${file}`]),
+  ...USOTSUKI_FILES.map((file) => [`../../magic-usotsuki/${file}`, `zz7/${file}`]),
+  ...[
+    ['magic-stopwatch-uni', 'zz1'],
+    ['magic-unlock', 'zz2'],
+    ['magic-calculator-v2', 'zz3'],
+    ['magic-calculator-v2', 'tools/calc'],
+    ['magic-choice', 'zz4'],
+    ['magic-aletheia', 'zz5'],
+    ['magic-tobira', 'zz6'],
+    ['magic-usotsuki', 'zz7']
+  ].map(([source, route]) => [`../../${source}/brand-logo.png`, `${route}/brand-logo.png`])
+];
+
+export const DISTRIBUTION_APPS = [
+  { source: 'distribution-snapshots/unlock', target: 'unlock', tool: 'unlock' },
+  { source: 'zz1', target: 'stopwatch-uni', tool: 'stopwatch-uni' },
+  { source: 'zz1', target: 'stopwatch', tool: 'stopwatch' }
 ];
 
 function accessGuard(tool, target) {
@@ -153,10 +186,10 @@ async function buildDistributionApps() {
 
 // Run explicitly after the personal version is approved for shared distribution.
 export async function promoteSharedUnlock() {
-  const source = path.join(ROOT, 'zz5');
+  const source = path.resolve(ROOT, '../../magic-unlock');
   const snapshot = path.join(ROOT, 'distribution-snapshots', 'unlock');
   for (const file of SHARED_UNLOCK_FILES) {
-    if (!(await exists(path.join('zz5', file)))) {
+    if (!(await exists(path.relative(ROOT, path.join(source, file))))) {
       throw new Error(`Cannot promote missing unlock file: ${file}`);
     }
   }
@@ -183,7 +216,11 @@ async function copyIfExists(relativePath) {
   }
   await cp(path.join(ROOT, relativePath), path.join(DIST, relativePath), {
     recursive: true,
-    filter: (source) => shouldCopy(path.relative(ROOT, source))
+    filter: (source) => {
+      const publicPath = path.relative(ROOT, source).split(path.sep).join('/');
+      return shouldCopy(path.relative(ROOT, source)) &&
+        publicPath !== 'tools/stopwatch' && !publicPath.startsWith('tools/stopwatch/');
+    }
   });
 }
 

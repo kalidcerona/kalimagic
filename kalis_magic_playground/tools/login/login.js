@@ -2,7 +2,7 @@
   var panel = document.querySelector('[data-panel]');
   var to = window.ToolGateUtil.safeTo(new URLSearchParams(location.search).get('to'));
   var tool = window.ToolGateUtil.toolFromPath(to);
-  var names = { calc: '계산기', stopwatch: '스톱워치', unlock: '언락', 'stopwatch-uni': '통합 스톱워치' };
+  var names = { calc: 'HITSUZEN', stopwatch: 'KAIROS', unlock: '레리즈', 'stopwatch-uni': 'KAIROS' };
   var appName = names[tool];
   var busy = false;
   var signedIn = false;

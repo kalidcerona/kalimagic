@@ -6,17 +6,17 @@
   'use strict';
 
   var APP_CATALOG = Object.freeze([
-    Object.freeze({ id: 'calc', name: '계산기', path: '/tools/calc/', legacy: true }),
-    Object.freeze({ id: 'stopwatch', name: '스톱워치', path: '/tools/stopwatch/', legacy: true }),
-    Object.freeze({ id: 'unlock', name: '언락', path: '/tools/unlock/', legacy: false }),
-    Object.freeze({ id: 'stopwatch-uni', name: '통합 스톱워치', path: '/tools/stopwatch-uni/', legacy: false })
+    Object.freeze({ id: 'calc', name: 'HITSUZEN', path: '/tools/calc/', legacy: true }),
+    Object.freeze({ id: 'stopwatch', name: 'KAIROS', path: '/tools/stopwatch/', legacy: true }),
+    Object.freeze({ id: 'unlock', name: '레리즈', path: '/tools/unlock/', legacy: false }),
+    Object.freeze({ id: 'stopwatch-uni', name: 'KAIROS', path: '/tools/stopwatch-uni/', legacy: false })
   ]);
   var TOOL_LABELS = Object.freeze({
-    calc: '계산기',
-    stopwatch: '스톱워치',
-    unlock: '언락',
-    'stopwatch-uni': '통합 스톱워치',
-    all: '계산기 + 스톱워치'
+    calc: 'HITSUZEN',
+    stopwatch: 'KAIROS',
+    unlock: '레리즈',
+    'stopwatch-uni': 'KAIROS',
+    all: 'HITSUZEN + KAIROS'
   });
   var LEGACY_TOOLS = Object.freeze(['calc', 'stopwatch']);
 
@@ -75,8 +75,8 @@
   function availabilityMessage(availability) {
     var state = normalizeAvailability(availability);
     var unavailable = [];
-    if (!state.legacy) unavailable.push('계산기·스톱워치');
-    if (!state.friendApps) unavailable.push('언락·통합 스톱워치');
+    if (!state.legacy) unavailable.push('HITSUZEN·KAIROS');
+    if (!state.friendApps) unavailable.push('레리즈·KAIROS');
     if (!unavailable.length) return '';
     return unavailable.join(' 및 ') + ' 권한 서비스를 사용할 수 없습니다. 조회 가능한 앱의 권한만 표시됩니다.';
   }

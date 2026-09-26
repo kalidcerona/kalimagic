@@ -9,9 +9,12 @@ import { signGateCookie, verifyGateCookie, gateCookieName } from '../../netlify/
 import { clearGateCookie, allowOnCheckError, selectGate } from '../../netlify/functions/tool-check.mjs';
 import { friendAccessDecision, findFriendAccess } from '../../netlify/functions/_lib/friend-app-access.mjs';
 
-test('personal zz routes stay public while distribution routes require separate Google grants', () => {
-  for (const path of ['/zz5/', '/zz5/logic.js', '/zz6/', '/zz6/logic.js']) {
+test('only canonical personal routes stay public while distribution routes retain separate grants', () => {
+  for (const path of ['/zz1/', '/zz1/logic.js', '/zz2/', '/zz3/', '/zz3/sw.js', '/zz4/', '/zz4/app.js', '/zz5/', '/zz5/app.js', '/zz6/', '/zz6/app.js', '/zz7/', '/zz7/detector.js']) {
     assert.deepEqual(classifyPath(path), { mode: 'public' });
+  }
+  for (const path of ['/tools/stopwatch/', '/tools/stopwatch/logic.js']) {
+    assert.deepEqual(classifyPath(path), { mode: 'gated', tool: 'stopwatch' });
   }
   for (const path of ['/tools/unlock/', '/tools/unlock/logic.js']) {
     assert.deepEqual(classifyPath(path), { mode: 'gated', tool: 'unlock' });
@@ -19,7 +22,9 @@ test('personal zz routes stay public while distribution routes require separate 
   for (const path of ['/tools/stopwatch-uni/', '/tools/stopwatch-uni/logic.js']) {
     assert.deepEqual(classifyPath(path), { mode: 'gated', tool: 'stopwatch-uni' });
   }
-  assert.deepEqual(classifyPath('/zz5evil/'), { mode: 'block' });
+  for (const path of ['/zz1evil/', '/zz8/', '/zz9/', '/zz9/photo.js', '/zz10/', '/%7azz1%2f..%2fzz2/']) {
+    assert.deepEqual(classifyPath(path), { mode: 'block' });
+  }
   assert.equal(decideAccess({ status: 'approved', tool: 'unlock' }, 'unlock'), 'allow');
   assert.equal(decideAccess({ status: 'approved', tool: 'unlock' }, 'stopwatch-uni'), 'deny');
   assert.equal(isValidTool('unlock'), true);
@@ -31,7 +36,7 @@ test('personal zz routes stay public while distribution routes require separate 
 });
 
 test('an installed app checks the network before serving a cached screen', async () => {
-  for (const app of ['zz5', 'zz6']) {
+  for (const app of ['zz1', 'zz2', 'zz3', 'zz4', 'zz5', 'zz6', 'zz7']) {
     const source = readFileSync(new URL(`../../${app}/sw.js`, import.meta.url), 'utf8');
     const listeners = {};
     const networkResponse = { source: 'network' };
@@ -59,15 +64,15 @@ test('an installed app checks the network before serving a cached screen', async
   }
 });
 
-test('the stopwatch worker never caches the Google approval check', () => {
-  const source = readFileSync(new URL('../../zz6/sw.js', import.meta.url), 'utf8');
+test('the integrated stopwatch worker never caches the Google approval check', () => {
+  const source = readFileSync(new URL('../../zz1/sw.js', import.meta.url), 'utf8');
   const listeners = {};
   vm.runInNewContext(source, {
     URL,
     caches: { match: async () => null },
     fetch: async () => ({ ok: false }),
     self: {
-      registration: { scope: 'https://example.com/zz6/' },
+      registration: { scope: 'https://example.com/zz1/' },
       location: { origin: 'https://example.com' },
       addEventListener(name, callback) { listeners[name] = callback; }
     }
@@ -105,10 +110,12 @@ test('login return paths stay on the two distribution apps', () => {
   vm.runInContext(source, context);
   assert.equal(context.ToolGateUtil.safeTo('/tools/unlock/'), '/tools/unlock/');
   assert.equal(context.ToolGateUtil.safeTo('/tools/stopwatch-uni/?from=invite'), '/tools/stopwatch-uni/?from=invite');
+  assert.equal(context.ToolGateUtil.safeTo('/tools/stopwatch/?from=legacy'), '/tools/stopwatch/?from=legacy');
   assert.equal(context.ToolGateUtil.toolFromPath('/tools/unlock/'), 'unlock');
   assert.equal(context.ToolGateUtil.toolFromPath('/tools/stopwatch-uni/'), 'stopwatch-uni');
-  assert.equal(context.ToolGateUtil.safeTo('/zz5/'), '/tools/calc/');
-  assert.equal(context.ToolGateUtil.safeTo('/zz5/../admin.html'), '/tools/calc/');
+  assert.equal(context.ToolGateUtil.toolFromPath('/tools/stopwatch/'), 'stopwatch');
+  assert.equal(context.ToolGateUtil.safeTo('/zz2/'), '/tools/calc/');
+  assert.equal(context.ToolGateUtil.safeTo('/zz2/../admin.html'), '/tools/calc/');
 });
 
 test('friend app migration stores one approval per email and app', () => {

@@ -1,228 +1,390 @@
-export function colonClassFor(trickState) { return trickState === "digit" ? "trick" : trickState === "text" ? "trick-text" : trickState === "seq" ? "trick-seq" : ""; }
-export const LANDSCAPE_CONTROL_IS_IMMEDIATE = true;
-export function pushPendingDigit(pending, digit) { return pending.length >= 2 ? [digit] : [...pending, digit]; }
-export function digitFromPoint(x, y, w, h) {
-  const width = Number.isFinite(w) && w > 0 ? w : 1;
-  const height = Number.isFinite(h) && h > 0 ? h : 1;
-  const px = Number.isFinite(x) ? Math.min(Math.max(x, 0), width) : 0;
-  const py = Number.isFinite(y) ? Math.min(Math.max(y, 0), height) : 0;
-  const col = Math.min(4, Math.floor(px / width * 5));
-  const row = Math.min(1, Math.floor(py / height * 2));
-  return row === 0 ? col + 1 : (col === 4 ? 0 : col + 6);
+// Pure preset, geometry, and gesture helpers. No DOM and no storage.
+
+export const STORAGE_KEY = 'tobira.v1';
+export const RECOVERY_KEY = 'tobira.v1.recovery';
+export const GESTURE_THRESHOLD = 96;
+export const EXIT_EPSILON_PX = 0.5;
+export const REST_INSET_PX = 1;
+export const COIN_DIAMETER_CAP_PX = 260;
+export const EDGES = Object.freeze(['left', 'right', 'top', 'bottom']);
+
+export const LIMITS = Object.freeze({
+  coinSize: Object.freeze({ min: 0.18, max: 0.56 }),
+  position: Object.freeze({ min: 0, max: 1 }),
+  fadeDistance: Object.freeze({ min: 0.05, max: 0.75 }),
+  disappearDuration: Object.freeze({ min: 200, max: 4000 }),
+  nameLength: 32,
+  idLength: 80,
+});
+
+const EXIT_SCALE_DROP = 0.86;
+const ID_PATTERN = /^[A-Za-z0-9_-]+$/;
+
+export function clampNumber(value, min, max) {
+  if (!Number.isFinite(value) || !Number.isFinite(min) || !Number.isFinite(max)) {
+    throw new TypeError('value must be a finite number');
+  }
+  const low = Math.min(min, max);
+  const high = Math.max(min, max);
+  return Math.min(high, Math.max(low, value));
 }
-export function isLeftmostScreenFifth(x, width) { return x < width / 5; }
-export function landscapePresetHoldApplies(target, appX, width) {
-  if (!isLeftmostScreenFifth(appX, width)) return false;
-  return !(target && typeof target.closest === "function" && target.closest("#l-trick-zone,#l-settings-zone"));
+
+export function normalizeName(name) {
+  const cleaned = String(name)
+    .replace(/[\u0000-\u001F\u007F]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  const clipped = Array.from(cleaned).slice(0, LIMITS.nameLength).join('').trim();
+  return clipped || '동전';
 }
-export function composeCs(tens, ones) { return tens * 10 + ones; }
-export function normalizeTrickState(current, trick3Enabled) { return current === "seq" && !trick3Enabled ? "off" : ["off", "digit", "text", "seq"].includes(current) ? current : "off"; }
-export function nextTrickState(current, trick3Enabled = false) {
-  const state = normalizeTrickState(current, trick3Enabled);
-  if (state === "off") return "digit";
-  if (state === "digit") return "text";
-  if (state === "text") return trick3Enabled ? "seq" : "off";
-  return "off";
+
+function readNumber(value) {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return null;
+  return value;
 }
-export function parseSequence(value) {
-  const text = String(value ?? "").trim();
-  if (!text) return [];
-  return text.split(/[,\s]+/).filter(token => /^\d{1,2}$/.test(token)).map(Number).filter(value => value >= 0 && value <= 99).slice(0, 8);
-}
-export function normalizeSequence(value) { return parseSequence(value).map(value => String(value).padStart(2, "0")).join(","); }
-export function normalizePresetSlot(slot) {
-  if (typeof slot === "string") return { kind: "seq", value: normalizeSequence(slot) };
-  if (!slot || typeof slot !== "object" || !["text", "seq"].includes(slot.kind) || typeof slot.value !== "string") return { kind: "text", value: "" };
-  return slot.kind === "seq" ? { kind: "seq", value: normalizeSequence(slot.value) } : { kind: "text", value: slot.value.trim() };
-}
-export function loadPresetSlots(storage) {
-  const empty = () => ({ kind: "text", value: "" });
-  try {
-    const parsed = JSON.parse(storage.getItem("stopwatch_seq_slots") || "[]");
-    if (!Array.isArray(parsed)) return [empty(), empty(), empty()];
-    return [0, 1, 2].map(index => index < parsed.length ? normalizePresetSlot(parsed[index]) : empty());
-  } catch (_) { return [empty(), empty(), empty()]; }
-}
-export function savePresetSlots(storage, slots) {
-  const saved = [0, 1, 2].map(index => normalizePresetSlot(Array.isArray(slots) ? slots[index] : undefined));
-  storage.setItem("stopwatch_seq_slots", JSON.stringify(saved));
-  return saved;
-}
-export function normalizeNamedPreset(preset, index) {
-  const slot = normalizePresetSlot(preset);
-  const name = typeof preset?.name === "string" ? preset.name.trim().slice(0, 40) : "";
-  const count = Number(preset?.forceAfter);
+
+export function sanitizePreset(input) {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) {
+    return { ok: false, reason: 'not-an-object' };
+  }
+  if (typeof input.id !== 'string' || input.id.length > LIMITS.idLength || !ID_PATTERN.test(input.id)) {
+    return { ok: false, reason: 'id' };
+  }
+  if (typeof input.name !== 'string') return { ok: false, reason: 'name' };
+  const coinSize = readNumber(input.coinSize);
+  if (coinSize == null) return { ok: false, reason: 'coinSize' };
+  const startX = readNumber(input.startX);
+  if (startX == null) return { ok: false, reason: 'startX' };
+  const startY = readNumber(input.startY);
+  if (startY == null) return { ok: false, reason: 'startY' };
+  if (typeof input.exitEdge !== 'string' || !EDGES.includes(input.exitEdge)) {
+    return { ok: false, reason: 'exitEdge' };
+  }
+  const fadeDistance = readNumber(input.fadeDistance);
+  if (fadeDistance == null) return { ok: false, reason: 'fadeDistance' };
+  const disappearDuration = readNumber(input.disappearDuration);
+  if (disappearDuration == null) return { ok: false, reason: 'disappearDuration' };
+
   return {
-    name: name || `프리셋 ${index + 1}`,
-    ...slot,
-    forceAfter: Number.isInteger(count) && count >= 0 && count <= 99 ? count : 2,
+    ok: true,
+    preset: {
+      id: input.id,
+      name: normalizeName(input.name),
+      coinSize: clampNumber(coinSize, LIMITS.coinSize.min, LIMITS.coinSize.max),
+      startX: clampNumber(startX, LIMITS.position.min, LIMITS.position.max),
+      startY: clampNumber(startY, LIMITS.position.min, LIMITS.position.max),
+      exitEdge: input.exitEdge,
+      fadeDistance: clampNumber(fadeDistance, LIMITS.fadeDistance.min, LIMITS.fadeDistance.max),
+      disappearDuration: clampNumber(
+        disappearDuration,
+        LIMITS.disappearDuration.min,
+        LIMITS.disappearDuration.max,
+      ),
+    },
   };
 }
-export function loadNamedPresets(storage) {
+
+export function defaultPreset() {
+  return {
+    id: 'preset-default',
+    name: '기본 동전',
+    coinSize: 0.28,
+    startX: 0.5,
+    startY: 0.62,
+    exitEdge: 'top',
+    fadeDistance: 0.22,
+    disappearDuration: 700,
+  };
+}
+
+export function defaultState() {
+  const preset = defaultPreset();
+  return {
+    version: 1,
+    selectedId: preset.id,
+    mode: 'settings',
+    presets: [preset],
+  };
+}
+
+function collectPresets(list) {
+  const presets = [];
+  const dropped = [];
+  const seen = new Set();
+  list.forEach((item, index) => {
+    const result = sanitizePreset(item);
+    if (!result.ok) {
+      dropped.push({ index, reason: result.reason });
+      return;
+    }
+    if (seen.has(result.preset.id)) {
+      dropped.push({ index, reason: 'duplicate-id' });
+      return;
+    }
+    seen.add(result.preset.id);
+    presets.push(result.preset);
+  });
+  return { presets, dropped };
+}
+
+function stateFromPresets(presets, selectedId, mode) {
+  const selected = presets.some((preset) => preset.id === selectedId) ? selectedId : presets[0].id;
+  return {
+    version: 1,
+    selectedId: selected,
+    mode: mode === 'performance' ? 'performance' : 'settings',
+    presets,
+  };
+}
+
+export function parseStoredState(raw) {
+  if (raw == null || raw === '') {
+    return { ok: true, state: defaultState(), recovery: null };
+  }
+  if (typeof raw !== 'string') {
+    return {
+      ok: false,
+      state: defaultState(),
+      recovery: { reason: 'unreadable', preserved: null, dropped: [] },
+    };
+  }
+  let data;
   try {
-    const saved = JSON.parse(storage.getItem("stopwatch_named_presets_v1") || "null");
-    if (Array.isArray(saved)) return [0, 1, 2].map(index => normalizeNamedPreset(saved[index], index));
-  } catch (_) {}
-  return loadPresetSlots(storage).map(normalizeNamedPreset);
-}
-export function saveNamedPresets(storage, presets) {
-  const saved = [0, 1, 2].map(index => normalizeNamedPreset(Array.isArray(presets) ? presets[index] : undefined, index));
-  storage.setItem("stopwatch_named_presets_v1", JSON.stringify(saved));
-  return saved;
-}
-export function applyPresetSlot(slot, current = {}) {
-  const normalized = normalizePresetSlot(slot);
-  if (!normalized.value) return null;
-  if (normalized.kind === "text") return { trickState: "text", customText: normalized.value, sequenceStopCount: 0, trick3Enabled: false, sequence: current.sequence };
-  return { trickState: "seq", sequence: parseSequence(normalized.value), trick3Enabled: true, sequenceStopCount: 0, customText: current.customText };
-}
-export function clampElapsed(ms) { return Math.min(ms, 59990); }
-export function formatCs(totalCs) {
-  const value = Math.min(9999, Math.max(0, Math.floor(totalCs)));
-  return { sec: String(Math.floor(value / 100)).padStart(2, "0"), cs: String(value % 100).padStart(2, "0") };
-}
-export function formatTimeInput(value) {
-  const digits = String(value ?? "").replace(/\D/g, "").slice(-6).padStart(6, "0");
-  return `${digits.slice(0, 2)}:${digits.slice(2, 4)}.${digits.slice(4)}`;
-}
-export function parseTimeInput(value) {
-  const digits = String(value ?? "").replace(/\D/g, "").slice(-6).padStart(6, "0");
-  return Math.min(5999, (Number(digits.slice(0, 2)) * 60 + Number(digits.slice(2, 4))) * 100 + Number(digits.slice(4)));
-}
-export function parseStopwatchText(value) {
-  const text = String(value ?? "").trim();
-  if (!/^(?:\d{1,6}|\d{1,2}[.:]\d{2}(?:\.\d{2})?)$/.test(text)) return null;
-  // Explicit minute presets retain their stored range; measured time stays capped.
-  if (/^\d{1,2}:\d{2}\.\d{2}$/.test(text)) return portraitPresetEntryToCs(text.replace(/\D/g, "").padStart(6, "0"));
-  return parseTimeInput(text);
-}
-export function presetIndexFromX(x, left, width, count = 4) {
-  if (![x, left, width].every(Number.isFinite) || width <= 0 || !Number.isInteger(count) || count <= 0 || x < left || x > left + width) return null;
-  return Math.min(count - 1, Math.floor((x - left) / width * count));
-}
-export function applyPresetSwipe(entry, digitIndex, steps) {
-  if (!/^\d{4}$/.test(entry) || !Number.isInteger(digitIndex) || digitIndex < 0 || digitIndex > 3 || !Number.isInteger(steps)) return entry;
-  const digit = ((Number(entry[digitIndex]) + steps) % 10 + 10) % 10;
-  return entry.slice(0, digitIndex) + digit + entry.slice(digitIndex + 1);
-}
-export function toAppPoint(clientX, clientY, viewportWidth, viewportHeight, rotated) { return rotated ? { x: clientY, y: viewportWidth - clientX } : { x: clientX, y: clientY }; }
-export function applyPresetGroupSwipe(entry, groupIndex, steps) {
-  if (!/^\d{4}(?:\d{2})?$/.test(entry) || !Number.isInteger(groupIndex) || !Number.isInteger(steps)) return entry;
-  const groupCount = entry.length / 2;
-  if (groupIndex < 0 || groupIndex >= groupCount) return entry;
-  const limit = entry.length === 4 && groupIndex === 0 ? 60 : 100;
-  const offset = groupIndex * 2;
-  const value = ((Number(entry.slice(offset, offset + 2)) + steps) % limit + limit) % limit;
-  return entry.slice(0, offset) + String(value).padStart(2, "0") + entry.slice(offset + 2);
-}
-export function presetSwipePxPerStep(velocityPxPerMs) {
-  const speed = Math.abs(Number(velocityPxPerMs));
-  if (!Number.isFinite(speed) || speed < 0.3) return 28;
-  if (speed > 1.5) return 5;
-  return 14;
-}
-export function presetSwipeSteps(deltaPx, velocityPxPerMs) {
-  if (!Number.isFinite(deltaPx) || deltaPx === 0) return 0;
-  const raw = Math.trunc(deltaPx / presetSwipePxPerStep(velocityPxPerMs));
-  return Math.max(-20, Math.min(20, raw));
-}
-export function nextSwipeAccumulator(acc, steps, pxPerStep, cap) {
-  if (!Number.isFinite(acc)) return 0;
-  if (!Number.isFinite(steps) || !Number.isFinite(pxPerStep) || pxPerStep <= 0) return acc;
-  const capAbs = Number.isFinite(cap) ? Math.abs(cap) : 20;
-  if (Math.abs(steps) >= capAbs) return 0;
-  let remainder = acc - steps * pxPerStep;
-  if (!Number.isFinite(remainder)) return 0;
-  if (remainder >= pxPerStep) remainder = pxPerStep - Number.MIN_VALUE;
-  else if (remainder <= -pxPerStep) remainder = -pxPerStep + Number.MIN_VALUE;
-  return remainder;
-}
-export function presetGroupIndexFromPoint(x, y, rect, count = 2) {
-  if (!rect || !Number.isFinite(x) || !Number.isFinite(y)) return null;
-  const { left, top, width, height } = rect;
-  if (![left, top, width, height].every(Number.isFinite) || width <= 0 || height <= 0 || !Number.isInteger(count) || count <= 0) return null;
-  const band = height * 0.4;
-  if (y < top - band || y > top + height + band || x < left || x > left + width) return null;
-  return Math.min(count - 1, Math.floor((x - left) / width * count));
-}
-export function portraitPresetEntryFromCs(totalCs) {
-  const value = Math.min(603999, Math.max(0, Math.floor(Number(totalCs) || 0)));
-  const minutes = Math.min(99, Math.floor(value / 6000));
-  const remainder = value - minutes * 6000;
-  return String(minutes).padStart(2, "0") + String(Math.floor(remainder / 100)).padStart(2, "0") + String(remainder % 100).padStart(2, "0");
-}
-export function portraitPresetEntryToCs(entry) {
-  if (!/^\d{6}$/.test(entry)) return null;
-  return Number(entry.slice(0, 2)) * 6000 + Number(entry.slice(2, 4)) * 100 + Number(entry.slice(4, 6));
-}
-export function savePortraitGroupPreset(storage, entry, savedAt) {
-  const value = portraitPresetEntryToCs(entry);
-  if (value === null || !storage || typeof storage.setItem !== "function") return null;
-  const at = Number.isFinite(savedAt) ? savedAt : Date.now();
-  storage.setItem("stopwatch_preset_cs", String(value));
-  storage.setItem("stopwatch_preset_at", String(at));
-  return { presetCs: value, presetAt: at };
-}
-export function resolveStoppedCs({ elapsed, trickMode, reservedTens, stopDigit }) {
-  if (elapsed >= 59990) return 5999;
-  if (trickMode && reservedTens !== null && stopDigit !== null) return Math.floor(elapsed / 1000) * 100 + composeCs(reservedTens, stopDigit);
-  return Math.floor(elapsed / 10);
-}
-export function resolveSequenceStop({ stopCount, sequence, elapsed, forceAfter = 2 }) {
-  const values = Array.isArray(sequence) ? sequence.filter(value => Number.isInteger(value) && value >= 0 && value <= 99).slice(0, 8) : [];
-  const realCs = Math.floor(clampElapsed(elapsed) / 10);
-  if (!values.length) return { cs: realCs, nextStopCount: 0 };
-  const current = Number.isInteger(stopCount) && stopCount >= 0 ? stopCount + 1 : 1;
-  const wait = Number.isInteger(forceAfter) && forceAfter >= 0 && forceAfter <= 99 ? forceAfter : 2;
-  if (current <= wait) return { cs: realCs, nextStopCount: current };
-  const sequenceIndex = current - wait - 1;
-  const cs = elapsed >= 59990 ? realCs : Math.floor(realCs / 100) * 100 + values[sequenceIndex];
-  return { cs, nextStopCount: sequenceIndex === values.length - 1 ? 0 : current };
-}
-export function elapsedAtAction(elapsed, started, actionNow) { return clampElapsed(elapsed + actionNow - started); }
-export function resolveStopOutcome({ trickState, presetCs, customText, elapsed, reservedTens, stopDigit, stopCount = 0, sequence = [], sequenceForceAfter = 2 }) {
-  if (trickState === "seq") {
-    const result = resolveSequenceStop({ stopCount, sequence, elapsed, forceAfter: sequenceForceAfter });
-    return { kind: "cs", cs: result.cs, nextStopCount: result.nextStopCount };
+    data = JSON.parse(raw);
+  } catch {
+    return {
+      ok: false,
+      state: defaultState(),
+      recovery: { reason: 'unreadable', preserved: raw, dropped: [] },
+    };
   }
-  if (trickState === "text" && customText) {
-    const parsed = parseStopwatchText(customText);
-    return parsed === null ? { kind: "text", text: customText, nextStopCount: stopCount } : { kind: "cs", cs: parsed, nextStopCount: stopCount };
+  if (!data || typeof data !== 'object' || Array.isArray(data) || !Array.isArray(data.presets)) {
+    return {
+      ok: false,
+      state: defaultState(),
+      recovery: { reason: 'invalid-shape', preserved: raw, dropped: [] },
+    };
   }
-  return { kind: "cs", cs: resolveStoppedCs({ elapsed, trickMode: trickState === "digit", reservedTens, stopDigit }), nextStopCount: stopCount };
-}
-export function storedMode(storage) {
-  try { return storage.getItem("stopwatch_ui_mode") === "portrait" ? "portrait" : "landscape"; } catch (_) { return "landscape"; }
-}
-export function recognizesModeToggle(taps) {
-  const valid = taps.filter(tap => tap && tap.fingers === 2 && Number.isFinite(tap.time) && Number.isFinite(tap.gap) && tap.gap <= 120);
-  if (valid.length < 3) return false;
-  const last = valid.slice(-3);
-  return last[2].time - last[0].time <= 800;
-}
-export function transitionAlarmPreset(model, action) {
-  const next = { ...model };
-  if (action === "enter") {
-    if (next.uiMode !== "portrait" || next.timerState === "running" || next.presetMode || next.editorOpen) return next;
-    next.presetMode = true;
-    next.presetKind = "portrait-group";
-  } else if ((action === "save" || action === "cancel") && next.presetMode && next.presetKind === "portrait-group") {
-    next.presetMode = false;
-    next.presetKind = null;
+  const collected = collectPresets(data.presets);
+  if (collected.presets.length === 0) {
+    return {
+      ok: false,
+      state: defaultState(),
+      recovery: { reason: 'no-valid-presets', preserved: raw, dropped: collected.dropped },
+    };
   }
+  const state = stateFromPresets(collected.presets, data.selectedId, data.mode);
+  if (collected.dropped.length > 0) {
+    return {
+      ok: false,
+      state,
+      recovery: { reason: 'partial', preserved: raw, dropped: collected.dropped },
+    };
+  }
+  return { ok: true, state, recovery: null };
+}
+
+export function serializeState(state) {
+  const collected = collectPresets(Array.isArray(state?.presets) ? state.presets : []);
+  const presets = collected.presets.length ? collected.presets : defaultState().presets;
+  return JSON.stringify(stateFromPresets(presets, state?.selectedId, state?.mode));
+}
+
+export function nextPresetName(presets) {
+  const list = Array.isArray(presets) ? presets : [];
+  const names = new Set(list.map((preset) => preset?.name));
+  let index = list.length + 1;
+  let name = `프리셋 ${index}`;
+  while (names.has(name)) {
+    index += 1;
+    name = `프리셋 ${index}`;
+  }
+  return name;
+}
+
+export function stageToNormalized(x, y, width, height) {
+  if (!(width > 0) || !(height > 0) || !Number.isFinite(x) || !Number.isFinite(y)) {
+    return { x: 0.5, y: 0.5 };
+  }
+  return { x: x / width, y: y / height };
+}
+
+export function normalizedToStage(nx, ny, width, height) {
+  if (!(width > 0) || !(height > 0) || !Number.isFinite(nx) || !Number.isFinite(ny)) {
+    return { x: 0, y: 0 };
+  }
+  return { x: nx * width, y: ny * height };
+}
+
+export function coinMetrics(preset, stage) {
+  const width = Number(stage?.width) || 0;
+  const height = Number(stage?.height) || 0;
+  const minSide = width > 0 && height > 0 ? Math.min(width, height) : 0;
+  const fraction = clampNumber(
+    readNumber(preset?.coinSize) ?? LIMITS.coinSize.min,
+    LIMITS.coinSize.min,
+    LIMITS.coinSize.max,
+  );
+  let diameter = fraction * minSide;
+  if (minSide > 0) {
+    diameter = Math.min(diameter, COIN_DIAMETER_CAP_PX, Math.max(0, minSide - 2));
+  }
+  return { diameter, radius: diameter / 2 };
+}
+
+export function restingCenter(preset, stage) {
+  const metrics = coinMetrics(preset, stage);
+  const width = Number(stage?.width) || 0;
+  const height = Number(stage?.height) || 0;
+  if (!(width > 0) || !(height > 0)) {
+    return { x: 0, y: 0, radius: metrics.radius, diameter: metrics.diameter };
+  }
+  const minX = metrics.radius + REST_INSET_PX;
+  const maxX = width - metrics.radius - REST_INSET_PX;
+  const minY = metrics.radius + REST_INSET_PX;
+  const maxY = height - metrics.radius - REST_INSET_PX;
+  const startX = readNumber(preset?.startX) ?? 0.5;
+  const startY = readNumber(preset?.startY) ?? 0.5;
+  return {
+    x: maxX > minX ? clampNumber(startX * width, minX, maxX) : width / 2,
+    y: maxY > minY ? clampNumber(startY * height, minY, maxY) : height / 2,
+    radius: metrics.radius,
+    diameter: metrics.diameter,
+  };
+}
+
+export function grabOffset(pointer, center) {
+  return { x: pointer.x - center.x, y: pointer.y - center.y };
+}
+
+export function centerFromPointer(pointer, grab) {
+  return { x: pointer.x - grab.x, y: pointer.y - grab.y };
+}
+
+function clampSpan(value, min, max, fallback) {
+  if (!Number.isFinite(value)) return fallback;
+  if (!(max > min)) return fallback;
+  return Math.min(max, Math.max(min, value));
+}
+
+export function clampDragCenter(center, radius, stage, exitEdge) {
+  const width = Number(stage?.width) || 0;
+  const height = Number(stage?.height) || 0;
+  const r = Number.isFinite(radius) ? Math.max(0, radius) : 0;
+  let x = Number.isFinite(center?.x) ? center.x : width / 2;
+  let y = Number.isFinite(center?.y) ? center.y : height / 2;
+  const fitsX = width > r * 2;
+  const fitsY = height > r * 2;
+
+  if (!EDGES.includes(exitEdge)) {
+    return {
+      x: clampSpan(x, r, width - r, width / 2),
+      y: clampSpan(y, r, height - r, height / 2),
+    };
+  }
+
+  if (exitEdge === 'left' || exitEdge === 'right') {
+    y = clampSpan(y, r, height - r, height / 2);
+    if (exitEdge === 'right') x = Math.max(x, fitsX ? r : width / 2);
+    else x = Math.min(x, fitsX ? width - r : width / 2);
+  } else {
+    x = clampSpan(x, r, width - r, width / 2);
+    if (exitEdge === 'bottom') y = Math.max(y, fitsY ? r : height / 2);
+    else y = Math.min(y, fitsY ? height - r : height / 2);
+  }
+  return { x, y };
+}
+
+export function leadingEdgeOvershoot(center, radius, stage, edge) {
+  if (!center || !stage) return null;
+  if (!Number.isFinite(center.x) || !Number.isFinite(center.y) || !Number.isFinite(radius)) return null;
+  if (!Number.isFinite(stage.width) || !Number.isFinite(stage.height)) return null;
+  if (edge === 'left') return radius - center.x;
+  if (edge === 'right') return center.x + radius - stage.width;
+  if (edge === 'top') return radius - center.y;
+  if (edge === 'bottom') return center.y + radius - stage.height;
+  return null;
+}
+
+export function edgeProgress(center, radius, stage, edge, fadeDistance) {
+  const overshoot = leadingEdgeOvershoot(center, radius, stage, edge);
+  if (overshoot == null) return 0;
+  if (!(fadeDistance > 0)) return overshoot > 0 ? 1 : 0;
+  return clampNumber(overshoot / fadeDistance, 0, 1);
+}
+
+export function exitReached(overshoot) {
+  return Number.isFinite(overshoot) && overshoot > EXIT_EPSILON_PX;
+}
+
+export function contactCenter(center, radius, stage, edge) {
+  const next = {
+    x: Number.isFinite(center?.x) ? center.x : 0,
+    y: Number.isFinite(center?.y) ? center.y : 0,
+  };
+  const r = Number.isFinite(radius) ? radius : 0;
+  if (edge === 'left') next.x = r;
+  else if (edge === 'right') next.x = (Number(stage?.width) || 0) - r;
+  else if (edge === 'top') next.y = r;
+  else if (edge === 'bottom') next.y = (Number(stage?.height) || 0) - r;
   return next;
 }
-export function migrateV2Storage(storage) {
-  const marker = "stopwatch_storage_migrated_v2";
-  try {
-    if (storage.getItem(marker) === "1") return false;
-    const pairs = [["stopwatch2_preset_cs", "stopwatch_preset_cs"], ["stopwatch2_preset_at", "stopwatch_preset_at"], ["stopwatch2_custom_text", "stopwatch_custom_text"], ["stopwatch2_text_at", "stopwatch_text_at"]];
-    let copied = false;
-    pairs.forEach(([oldKey, newKey]) => {
-      const value = storage.getItem(oldKey);
-      if (storage.getItem(newKey) === null && value !== null) { storage.setItem(newKey, value); copied = true; }
-    });
-    storage.setItem(marker, "1");
-    return copied;
-  } catch (_) { return false; }
+
+export function fadeDistancePx(preset, stage) {
+  const horizontal = preset?.exitEdge === 'left' || preset?.exitEdge === 'right';
+  const axis = horizontal ? Number(stage?.width) || 0 : Number(stage?.height) || 0;
+  const fraction = readNumber(preset?.fadeDistance) ?? 0;
+  if (!(axis > 0) || !(fraction > 0)) return 0;
+  return fraction * axis;
+}
+
+export function travelDistancePx(fadeDistance, diameter) {
+  const fade = Number.isFinite(fadeDistance) && fadeDistance > 0 ? fadeDistance : 0;
+  const span = Number.isFinite(diameter) && diameter > 0 ? diameter : 0;
+  return fade + span;
+}
+
+export function outwardOffset(edge, distance) {
+  const span = Number.isFinite(distance) ? distance : 0;
+  if (edge === 'left') return { x: -span, y: 0 };
+  if (edge === 'right') return { x: span, y: 0 };
+  if (edge === 'top') return { x: 0, y: -span };
+  if (edge === 'bottom') return { x: 0, y: span };
+  return { x: 0, y: 0 };
+}
+
+export function smoothstep(value) {
+  const t = clampNumber(Number.isFinite(value) ? value : 0, 0, 1);
+  return t * t * (3 - 2 * t);
+}
+
+export function exitVisual(linear) {
+  const travel = smoothstep(linear);
+  return {
+    travel,
+    opacity: 1 - travel,
+    scale: 1 - EXIT_SCALE_DROP * travel,
+    gone: Number.isFinite(linear) && linear >= 1,
+  };
+}
+
+function isScreenPoint(value) {
+  return Boolean(value) && Number.isFinite(value.screenX) && Number.isFinite(value.screenY);
+}
+
+// Screen deltas are CSS pixels (screenX/screenY). Both fingers must agree.
+export function classifyTwoFingerSwipe(startA, startB, endA, endB, threshold = GESTURE_THRESHOLD) {
+  if (!isScreenPoint(startA) || !isScreenPoint(startB) || !isScreenPoint(endA) || !isScreenPoint(endB)) {
+    return 'none';
+  }
+  const limit = Number.isFinite(threshold) ? threshold : GESTURE_THRESHOLD;
+  const dxA = endA.screenX - startA.screenX;
+  const dyA = endA.screenY - startA.screenY;
+  const dxB = endB.screenX - startB.screenX;
+  const dyB = endB.screenY - startB.screenY;
+  const verticalA = Math.abs(dyA) > Math.abs(dxA);
+  const verticalB = Math.abs(dyB) > Math.abs(dxB);
+  if (dyA >= limit && dyB >= limit && verticalA && verticalB) return 'settings';
+  if (dyA <= -limit && dyB <= -limit && verticalA && verticalB) return 'reset';
+  return 'none';
 }

@@ -2,308 +2,470 @@
 <html lang="ko">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-  <link rel="manifest" href="manifest.webmanifest">
-  <meta name="theme-color" content="#1C1C1E" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#1C1C1E" media="(prefers-color-scheme: dark)">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#000000" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
   <meta name="color-scheme" content="dark">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="icon-192.png">
-  <title>Stopwatch</title>
+  <title>HITSUZEN</title>
   <style>
     :root {
       color-scheme: dark;
-      font-family: -apple-system, "SF Pro Display", system-ui, Roboto, sans-serif;
-      background: #1C1C1E;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: #000;
+      color: #f5f5f5;
     }
+
     * {
       box-sizing: border-box;
-      touch-action: manipulation;
       -webkit-tap-highlight-color: transparent;
-      -webkit-user-select: none; user-select: none;
-      -webkit-touch-callout: none;
     }
-    html, body {
-      width: 100%; height: 100%; margin: 0; overflow: hidden;
-      overscroll-behavior: none;
-      background: #1C1C1E; color: #ffffff;
-    }
-    [hidden] { display: none !important; }
-    #app {
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: space-evenly;
-      width: 100%; height: 100vh; height: 100dvh;
-      min-height: 100vh;
-      overflow: hidden;
-      background: #1C1C1E;
-      color: #ffffff;
-      padding-left: env(safe-area-inset-left);
-      padding-right: env(safe-area-inset-right);
-    }
-    #time-display {
-      display: flex;
-      flex: 0 0 auto;
-      align-items: center;
-      justify-content: center;
-      font-size: min(41vh, 26.4vw);
-      font-variant-numeric: tabular-nums;
-      font-weight: 200;
-      letter-spacing: -0.02em;
-      line-height: 1;
-      white-space: nowrap;
-      pointer-events: none;
-    }
-    .digits {
-      display: inline-block;
-      min-width: 2ch; text-align: center;
-    }
-    #custom-display {
-      max-width: 100vw;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    #preset-hint {
-      position: absolute;
-      top: 50%; left: 50%;
-      z-index: 3;
-      max-width: min(82vw, 32rem);
-      padding: 0.65em 0.9em;
-      border: 1px solid rgba(255,255,255,0.18);
-      border-radius: 0.8em;
-      background: rgba(28,28,30,0.92);
-      color: #ffffff;
-      font-size: clamp(1rem, 2.4vw, 1.5rem);
-      line-height: 1.35;
-      text-align: center;
-      box-shadow: 0 0.5em 1.5em rgba(0,0,0,0.28);
-      pointer-events: none;
-      transform: translate(-50%, -50%);
-    }
-    #colon {
-      display: flex;
-      width: 0.2em; height: 0.52em;
-      margin: 0 0.075em;
-      flex: 0 0 auto;
-      flex-direction: column;
-      align-items: center; justify-content: space-between;
-    }
-    .colon-dot {
-      width: 0.11em; height: 0.11em;
-      flex: 0 0 auto;
-      border-radius: 50%;
-      background: #ffffff; opacity: 1;
-    }
-    #colon.trick .colon-dot:first-child { opacity: 0.82; }
-    #colon.trick-text .colon-dot { opacity: 0.6; }
-    #main-hit-zones {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 0;
-      margin-left: env(safe-area-inset-left);
-      margin-right: env(safe-area-inset-right);
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      z-index: 1;
-    }
-    .main-hit-zone {
-      min-width: 0;
-      border: 0;
-      background: transparent;
-    }
-    #control {
-      display: flex;
-      flex: 0 0 auto;
-      align-items: center;
-      justify-content: center;
-      width: min(92vw, 105.6vh, 1056px);
-      height: clamp(144px, 40.8vh, 408px);
+
+    html,
+    body {
+      min-height: 100%;
       margin: 0;
-      padding: 0;
-      border: 0;
-      border-radius: clamp(24px, 5.3vh, 53px);
-      appearance: none;
-      -webkit-appearance: none;
-      color: inherit;
-      font: inherit;
-      background: transparent;
-      cursor: pointer;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.25);
-      transition: background 200ms ease, transform 120ms ease;
+      background: #000;
     }
-    #control-label {
-      font-size: max(62px, min(26.4vh, 15.6vw));
-      font-weight: 300;
-      letter-spacing: 0.01em;
+
+    button {
+      font: inherit;
+    }
+
+    .calculator {
+      --pad-block-start: max(clamp(20px, 4vw, 28px), env(safe-area-inset-top));
+      --pad-block-end: max(clamp(20px, 4vw, 28px), env(safe-area-inset-bottom));
+      --layout-gap: clamp(16px, 4vw, 24px);
+      --toolbar-height: clamp(34px, 8vw, 44px);
+      --display-min: 96px;
+      container-type: inline-size;
+      width: min(100%, clamp(430px, 68vw, 560px));
+      height: 100dvh;
+      margin: 0 auto;
+      padding:
+        var(--pad-block-start)
+        clamp(18px, 4vw, 24px)
+        var(--pad-block-end);
+      display: grid;
+      grid-template-rows:
+        var(--toolbar-height)
+        minmax(var(--display-min), 1fr)
+        auto;
+      gap: var(--layout-gap);
+      overflow: hidden;
+      background: #000;
+      position: relative;
+    }
+
+    .toolbar {
+      min-height: var(--toolbar-height);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: #b8b8b8;
+      pointer-events: none;
+    }
+
+    .toolbar-icon,
+    .toolbar-tools {
+      display: flex;
+      align-items: center;
+      gap: 17px;
+      pointer-events: auto;
+    }
+
+    .toolbar svg {
+      width: clamp(25px, 6cqw, 32px);
+      height: clamp(25px, 6cqw, 32px);
+      fill: none;
+      stroke: currentColor;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-width: 1.8;
+    }
+
+    .root-mark {
+      font-size: clamp(25px, 6cqw, 32px);
+      font-weight: 400;
       line-height: 1;
-      color: #ffffff;
+    }
+
+    #pen-icon.date-armed path:first-of-type {
+      fill: #fff;
+    }
+
+    .date-settings {
+      position: absolute;
+      z-index: 2;
+      top: calc(var(--pad-block-start) + var(--toolbar-height) + var(--layout-gap));
+      left: clamp(18px, 4vw, 24px);
+      display: none;
+      flex-wrap: wrap;
+      align-items: center;
+      max-width: calc(100vw - 36px);
+      gap: 10px;
+      padding: 10px 12px;
+      border: 1px solid #252525;
+      border-radius: 12px;
+      background: #090909;
+      color: #b8b8b8;
+      font-size: 15px;
+    }
+
+    .date-settings.open {
+      display: flex;
+    }
+
+    .date-settings-logo {
+      flex: 0 0 100%;
+      display: block;
+      width: min(100%, 220px);
+      height: auto;
+      margin: 0 auto 4px;
+    }
+
+    .date-settings button {
+      border: 0;
+      border-radius: 8px;
+      padding: 6px 10px;
+      background: #242424;
+      color: #d8d8d8;
+      touch-action: manipulation;
+    }
+
+    .date-settings-value {
+      min-width: 42px;
+      text-align: center;
+    }
+
+    .display-wrap {
+      position: relative;
+      min-width: 0;
+      display: flex;
+    }
+
+    #stack-result {
+      position: absolute;
+      top: clamp(2px, 1cqw, 6px);
+      right: 8px;
+      font-size: clamp(15px, 4cqw, 20px);
+      color: #8a8a8a;
+      letter-spacing: 0;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    .display {
+      min-width: 0;
+      width: 100%;
+      display: flex;
+      align-items: end;
+      justify-content: end;
+      padding: clamp(12px, 3cqw, 18px) 8px clamp(9px, 2.5cqw, 14px);
+      overflow: hidden;
+      font-size: clamp(48px, 15cqw, 76px);
+      font-weight: 300;
+      line-height: 1.08;
+      letter-spacing: -0.04em;
+      text-align: right;
       white-space: nowrap;
     }
-    #selftest {
-      position: fixed;
-      inset: 0;
-      display: flex;
-      padding: 6vh 6vw;
-      align-items: center; justify-content: center;
-      overflow: auto;
-      background: #1C1C1E;
-      font-size: clamp(2rem, 7vh, 7rem);
-      font-weight: 300; line-height: 1.25; text-align: center;
-      white-space: pre-wrap;
-      color: #ffffff;
+
+    .keypad {
+      --key-gap: clamp(11px, 3.5cqw, 20px);
+      --btn-inline: calc((100cqw - 3 * var(--key-gap)) / 4);
+      --btn-block: max(
+        0px,
+        calc(
+          (
+            100dvh
+            - var(--pad-block-start)
+            - var(--pad-block-end)
+            - var(--toolbar-height)
+            - var(--display-min)
+            - 2 * var(--layout-gap)
+            - 4 * var(--key-gap)
+          ) / 5
+        )
+      );
+      --btn: min(var(--btn-inline), var(--btn-block));
+      display: grid;
+      grid-template-columns: repeat(4, var(--btn));
+      gap: var(--key-gap);
+      justify-content: space-between;
     }
-    #selftest-result.fail { color: #ff7b7b; }
-    #text-editor {
-      position: fixed;
-      inset: 0;
-      z-index: 2;
-      display: flex;
-      flex-direction: column;
-      gap: clamp(1rem, 3vh, 2rem);
-      padding: 6vh 6vw;
-      align-items: center;
-      justify-content: flex-start;
-      background: #1C1C1E;
-      overflow-y: auto;
-    }
-    #text-editor-input {
-      width: min(88vw, 32rem);
-      padding: 0.7em 0.8em;
-      border: 1px solid rgba(255,255,255,0.25);
-      border-radius: 0.5em;
-      background: rgba(255,255,255,0.1);
-      color: #ffffff;
-      font: inherit;
-      font-size: clamp(2rem, 8vw, 4rem);
-      text-align: center;
-      user-select: text;
-      -webkit-user-select: text;
-      touch-action: auto;
-    }
-    #text-editor-actions {
-      display: flex;
-      gap: clamp(0.75rem, 3vw, 1.5rem);
-    }
-    #text-editor-actions button {
-      min-width: 7rem;
-      padding: 0.7em 1.2em;
-      border: 0;
-      border-radius: 0.7em;
-      background: rgba(255,255,255,0.16);
-      color: #ffffff;
-      font: inherit;
-      font-size: clamp(1.25rem, 5vw, 2rem);
-    }
-    #stopwatch-help { width: min(88%, 32rem); font-size: 1rem; line-height: 1.45; }
-    #stopwatch-help summary { min-height: 44px; padding: 0.7rem 0.9rem; border-radius: 0.7rem; background: #2c2c2e; cursor: pointer; }
-    #stopwatch-help p { margin: 0.8rem 0; color: #d1d1d6; }
-    .grid-guide { display: grid; grid-template-columns: repeat(5, 1fr); width: 100%; aspect-ratio: 5 / 2; border: 2px solid #ff453a; background: #000; }
-    .grid-guide span { display: grid; place-items: center; border-right: 1px solid #ff453a; border-bottom: 1px solid #ff453a; color: #fff; font-size: clamp(1rem, 4vw, 1.6rem); }
-    .grid-guide span:nth-child(5n) { border-right: 0; }
-    .grid-guide span:nth-child(n+6) { border-bottom: 0; }
-    #app.preset-mode { touch-action: none; }
-    #app.preset-mode #colon .colon-dot,
-    #app.preset-mode .colon-dot { opacity: 0; }
-    #app.preset-mode [data-digit].preset-active {
-      border-radius: 0.12em;
-      background: rgba(255,159,10,0.2);
-      text-decoration: underline;
-      text-decoration-color: #ff9f0a;
-      text-decoration-thickness: 0.08em;
-      text-underline-offset: 0.12em;
-    }
-    #app.preset-mode .digits.preset-active {
+
+    .key {
       position: relative;
-      display: inline-block;
+      width: var(--btn);
+      height: var(--btn);
+      border: 0;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: #292929;
+      color: #f1f1f1;
+      font-size: clamp(24px, 7cqw, 38px);
+      font-weight: 400;
+      cursor: default;
+      user-select: none;
+      touch-action: manipulation;
+      transition: background-color 80ms ease, filter 80ms ease, opacity 120ms ease;
     }
-    #app.preset-mode .digits.preset-active::before,
-    #app.preset-mode .digits.preset-active::after {
+
+    .key.date-key-hint::after {
+      content: "";
       position: absolute;
       left: 50%;
-      color: #ff9f0a;
-      font-size: 0.2em;
-      font-weight: 600;
-      line-height: 1;
+      bottom: clamp(6px, 2cqw, 10px);
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: #fff;
+      opacity: 0.85;
+      pointer-events: none;
       transform: translateX(-50%);
     }
-    #app.preset-mode .digits.preset-active::before {
-      content: "▲";
-      top: -1.45em;
+
+    .key:active,
+    .key.pressed {
+      filter: brightness(1.18);
     }
-    #app.preset-mode .digits.preset-active::after {
-      content: "▼";
-      bottom: -1.45em;
+
+    .key.utility {
+      color: #ff625f;
     }
-    #app.preset-mode #main-hit-zones { pointer-events: none; }
-    @media (orientation: portrait) {
-      #app {
-        position: fixed; top: 0; left: 0;
-        width: 100vh; width: 100dvh;
-        height: 100vw; height: 100dvw;
-        min-height: 100vw; min-height: 100dvw;
-        transform-origin: top left;
-        transform: translateX(100vw) rotate(90deg);
-        transform: translateX(100dvw) rotate(90deg);
-        padding-left: env(safe-area-inset-top);
-        padding-right: env(safe-area-inset-bottom);
-      }
-      #time-display { font-size: min(41vw, 26.4vh); }
-      #custom-display { max-width: 100vh; max-width: 100dvh; }
-      #control {
-        width: min(92vh, 105.6vw, 1056px);
-        height: clamp(144px, 40.8vw, 408px);
-        border-radius: clamp(24px, 5.3vw, 53px);
-      }
-      #control-label { font-size: max(62px, min(26.4vw, 15.6vh)); }
-      #main-hit-zones {
-        margin-left: env(safe-area-inset-top);
-        margin-right: env(safe-area-inset-bottom);
-      }
-      #text-editor-input { width: min(88vh, 32rem); }
+
+    .key.operator {
+      color: #d9d9d9;
+    }
+
+    .key.equals {
+      background: #00a99d;
+      color: #fff;
+      font-size: clamp(30px, 8cqw, 44px);
+    }
+
+    .key.parentheses {
+      font-size: clamp(20px, 6cqw, 32px);
+      letter-spacing: -0.08em;
+    }
+
+    .percent-glyph {
+      width: 0.86em;
+      height: 0.86em;
+      overflow: visible;
+      pointer-events: none;
+    }
+
+    .percent-glyph .percent-mark {
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2.15;
+      stroke-linecap: round;
+    }
+
+    .percent-glyph .trick-dot {
+      fill: currentColor;
+      stroke: none;
+      opacity: 0;
+      transition: opacity 60ms linear;
+    }
+
+    .key.trick-set .trick-dot-top,
+    .key.trick-ready .trick-dot {
+      opacity: 1;
+    }
+
+    .key.sign {
+      display: none;
+    }
+
+    .calculator.skin-iphone {
+      --iphone-digit-bg: #333333;
+      --iphone-function-bg: #a5a5a5;
+      --iphone-operator-bg: #ff9f0a;
+      background: #000;
+      color: #fff;
+      font-family: system-ui, sans-serif;
+    }
+
+    .skin-iphone .toolbar svg,
+    .skin-iphone .root-mark {
+      opacity: 0;
+    }
+
+    .skin-iphone .toolbar-tools {
+      position: relative;
+    }
+
+    .skin-iphone .toolbar-tools:has(#pen-icon.date-armed)::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: calc(clamp(25px, 6cqw, 32px) / 2 - 2.5px);
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: #5a5a5a;
+      pointer-events: none;
+      transform: translateY(-50%);
+    }
+
+    .skin-iphone .display {
+      color: #fff;
+      font-size: clamp(56px, 18cqw, 88px);
+      font-weight: 200;
+      letter-spacing: -0.055em;
+    }
+
+    .skin-iphone .key {
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: var(--iphone-digit-bg);
+      color: #fff;
+    }
+
+    .skin-iphone .key.sign {
+      display: grid;
+    }
+
+    .skin-iphone .key.backspace,
+    .skin-iphone .key.parentheses {
+      display: none;
+    }
+
+    .skin-iphone .key.utility,
+    .skin-iphone .key.sign,
+    .skin-iphone .key[data-key="%"] {
+      background: var(--iphone-function-bg);
+      color: #000;
+    }
+
+    .skin-iphone .key[data-key="÷"],
+    .skin-iphone .key[data-key="×"],
+    .skin-iphone .key[data-key="−"],
+    .skin-iphone .key[data-key="+"],
+    .skin-iphone .key[data-key="="] {
+      background: var(--iphone-operator-bg);
+      color: #fff;
+    }
+
+    .skin-iphone .key[data-key="0"] {
+      width: auto;
+      aspect-ratio: auto;
+      grid-column: span 2;
+      border-radius: 999px;
+      place-items: center start;
+      padding-left: clamp(24px, 7cqw, 36px);
+    }
+
+    .skin-iphone .key.utility.date-key-hint::after,
+    .skin-iphone .key.sign.date-key-hint::after,
+    .skin-iphone .key[data-key="%"].date-key-hint::after {
+      background: #333;
+    }
+
+    #selftest {
+      display: none;
+      min-height: 100dvh;
+      margin: 0;
+      padding: 24px;
+      background: #000;
+      color: #f5f5f5;
+      font: 16px/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      white-space: pre-wrap;
+    }
+
+    #selftest.pass {
+      color: #52d3a0;
+    }
+
+    #selftest.fail {
+      color: #ff6b68;
     }
     #app { touch-action: none; }
-    #app:has(> #text-editor:not([hidden])) { touch-action: auto; }
-    #text-editor { touch-action: pan-y; }
+    #app:has(> #date-settings.open) { touch-action: auto; }
+    #date-settings { touch-action: pan-y; }
   </style>
 </head>
 <body>
-  <div id="app">
-    <div id="time-display" aria-label="스탑워치 시간">
-      <span id="seconds" class="digits"><span data-digit="0">0</span><span data-digit="1">0</span></span>
-      <div id="colon" aria-hidden="true">
-        <div class="colon-dot"></div>
-        <div class="colon-dot"></div>
-      </div>
-      <span id="centiseconds" class="digits"><span data-digit="2">0</span><span data-digit="3">0</span></span>
-      <span id="custom-display" class="digits" hidden></span>
+  <main class="calculator" id="app" aria-label="계산기">
+    <div class="toolbar" aria-hidden="true">
+      <span class="toolbar-icon">
+        <svg id="clock-icon" viewBox="0 0 24 24">
+          <path d="M3.5 12a8.5 8.5 0 1 0 2.2-5.7"></path>
+          <path d="M3.5 4.5v4h4"></path>
+          <path d="M12 7.5V12l3 2"></path>
+        </svg>
+      </span>
+      <span class="toolbar-tools">
+        <svg id="pen-icon" viewBox="0 0 24 24">
+          <path d="m5 18 12-12 2 2L7 20H5v-2Z"></path>
+          <path d="m11 12 2 2m1-5 2 2m-8 4 2 2"></path>
+        </svg>
+        <span class="root-mark" id="stack-icon">√</span>
+      </span>
     </div>
-    <div id="preset-hint" hidden role="status">위아래로 밀어 두 자리씩 맞추고, 빈 곳을 탭하면 저장</div>
-    <button id="control" type="button" aria-label="START">
-      <span id="control-label">START</span>
-    </button>
-    <div id="main-hit-zones" aria-hidden="true">
-      <div id="fullscreen-zone" class="main-hit-zone"></div>
-      <div id="trick-zone" class="main-hit-zone"></div>
-      <div id="text-zone" class="main-hit-zone"></div>
+
+    <div class="date-settings" id="date-settings" aria-hidden="true">
+      <img class="date-settings-logo" src="brand-logo.png" alt="HITSUZEN">
+      <button type="button" data-date-action="decrease">−</button>
+      <span class="date-settings-value" id="date-delay-value">20초</span>
+      <button type="button" data-date-action="increase">+</button>
+      <button type="button" data-date-action="hour-cycle" id="date-hour-cycle">24h</button>
+      <button type="button" data-date-action="skin" id="skin-toggle">스킨: 기본</button>
+      <button type="button" data-date-action="fullscreen">전체화면</button>
+      <button type="button" data-date-action="close">닫기</button>
     </div>
-    <div id="text-editor" hidden>
-      <input type="text" id="text-editor-input" maxlength="10" enterkeyhint="done">
-      <div id="text-editor-actions">
-        <button id="text-editor-save" type="button">저장</button>
-        <button id="text-editor-clear" type="button">지우기</button>
-      </div>
-      <details id="stopwatch-help"><summary>보이지 않는 숫자 그리드 사용법</summary><p>숫자 모드에서는 START/STOP 버튼이 보이지 않는 5열·2행으로 나뉩니다. 해당 위치를 누르면 아래 숫자로 인식됩니다. 이 빨간 선은 설명에서만 보입니다.</p><div class="grid-guide" role="img" aria-label="위쪽 왼쪽부터 1, 2, 3, 4, 5. 아래쪽 왼쪽부터 6, 7, 8, 9, 0."><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>0</span></div><p>예: 2를 입력하려면 버튼 윗줄의 왼쪽 두 번째 칸을 누르세요. 처음 누른 숫자는 십의 자리, 다음 숫자는 일의 자리로 인식됩니다.</p></details>
+
+    <div class="display-wrap">
+      <span id="stack-result" hidden></span>
+      <output class="display" id="display" aria-live="polite">0</output>
     </div>
-  </div>
-  <div id="selftest" hidden>
-    <div id="selftest-result"></div>
-  </div>
+
+    <section class="keypad" aria-label="계산기 키패드">
+      <button class="key utility" type="button" data-key="C">C</button>
+      <button class="key utility backspace" type="button" data-key="⌫" aria-label="지우기">⌫</button>
+      <button class="key sign" type="button" data-key="±" aria-label="부호 전환">±</button>
+      <button class="key operator" type="button" data-key="%" aria-label="퍼센트">
+        <svg class="percent-glyph" viewBox="0 0 32 32" aria-hidden="true">
+          <circle class="percent-mark" cx="8" cy="8" r="4.25"></circle>
+          <path class="percent-mark" d="M8 25 24 7"></path>
+          <circle class="percent-mark" cx="24" cy="24" r="4.25"></circle>
+          <circle class="trick-dot trick-dot-top" cx="8" cy="8" r="1"></circle>
+          <circle class="trick-dot trick-dot-bottom" cx="24" cy="24" r="1"></circle>
+        </svg>
+      </button>
+      <button class="key operator" type="button" data-key="÷">÷</button>
+
+      <button class="key" type="button" data-key="7">7</button>
+      <button class="key" type="button" data-key="8">8</button>
+      <button class="key" type="button" data-key="9">9</button>
+      <button class="key operator" type="button" data-key="×">×</button>
+
+      <button class="key" type="button" data-key="4">4</button>
+      <button class="key" type="button" data-key="5">5</button>
+      <button class="key" type="button" data-key="6">6</button>
+      <button class="key operator" type="button" data-key="−">−</button>
+
+      <button class="key" type="button" data-key="1">1</button>
+      <button class="key" type="button" data-key="2">2</button>
+      <button class="key" type="button" data-key="3">3</button>
+      <button class="key operator" type="button" data-key="+">+</button>
+
+      <button class="key parentheses" type="button" data-key="()">( )</button>
+      <button class="key" type="button" data-key="0">0</button>
+      <button class="key" type="button" data-key=".">.</button>
+      <button class="key equals" type="button" data-key="=">=</button>
+    </section>
+  </main>
+
+  <div id="selftest" role="status" aria-live="polite"></div>
+
   <script>
 // BEGIN SETTINGS SWIPE
 function installSettingsSwipe(open, cancel, enabled, cancelHold = cancel) {
@@ -347,755 +509,1583 @@ function installSettingsSwipe(open, cancel, enabled, cancelHold = cancel) {
 }
 // END SETTINGS SWIPE
 
-    function digitFromPoint(x, y, w, h) {
-      const width = Number.isFinite(w) && w > 0 ? w : 1;
-      const height = Number.isFinite(h) && h > 0 ? h : 1;
-      const px = Number.isFinite(x) ? Math.min(Math.max(x, 0), width) : 0;
-      const py = Number.isFinite(y) ? Math.min(Math.max(y, 0), height) : 0;
-      const col = Math.min(4, Math.floor(px / width * 5));
-      const row = Math.min(1, Math.floor(py / height * 2));
-      return row === 0 ? col + 1 : (col === 4 ? 0 : col + 6);
-    }
-    function isLeftmostScreenFifth(x, width) {
-      return x < width / 5;
-    }
-    function composeCs(tens, ones) {
-      return tens * 10 + ones;
-    }
-    function nextTrickState(current) {
-      if (current === "off") return "digit";
-      if (current === "digit") return "text";
-      return "off";
-    }
-    function clampElapsed(ms) {
-      return Math.min(ms, 59990);
-    }
-    function formatCs(totalCs) {
-      const value = Math.min(9999, Math.max(0, Math.floor(totalCs)));
-      return {
-        sec: String(Math.floor(value / 100)).padStart(2, "0"),
-        cs: String(value % 100).padStart(2, "0")
-      };
-    }
-    function toAppPoint(clientX, clientY, viewportWidth, viewportHeight, rotated) {
-      return rotated ? { x: clientY, y: viewportWidth - clientX } : { x: clientX, y: clientY };
-    }
-    function isRotatedLayout() {
-      return matchMedia("(orientation: portrait)").matches;
-    }
-    function appSize() {
-      const rotated = isRotatedLayout();
-      return { width: rotated ? innerHeight : innerWidth, height: rotated ? innerWidth : innerHeight };
-    }
-    // Group 0 = seconds (00-59), group 1 = centiseconds (00-99). Storage stays a 4-digit entry.
-    function applyPresetGroupSwipe(entry, groupIndex, steps) {
-      if (!/^\d{4}$/.test(entry) || !Number.isInteger(groupIndex) || groupIndex < 0 || groupIndex > 1 ||
-          !Number.isInteger(steps)) return entry;
-      if (groupIndex === 0) {
-        const sec = ((Number(entry.slice(0, 2)) + steps) % 60 + 60) % 60;
-        return String(sec).padStart(2, "0") + entry.slice(2);
-      }
-      const cs = ((Number(entry.slice(2, 4)) + steps) % 100 + 100) % 100;
-      return entry.slice(0, 2) + String(cs).padStart(2, "0");
-    }
-    // Calibration knobs: |velocity| px/ms → px per step. Slow <0.3 → 28, medium → 14, fast >1.5 → 5.
-    // Cap ±20 steps per move so one pointermove cannot skip more than 20. Sign: up +, down -.
-    function presetSwipePxPerStep(velocityPxPerMs) {
-      const speed = Math.abs(Number(velocityPxPerMs));
-      if (!Number.isFinite(speed) || speed < 0.3) return 28;
-      if (speed > 1.5) return 5;
-      return 14;
-    }
-    function presetSwipeSteps(deltaPx, velocityPxPerMs) {
-      if (!Number.isFinite(deltaPx) || deltaPx === 0) return 0;
-      const raw = Math.trunc(deltaPx / presetSwipePxPerStep(velocityPxPerMs));
-      if (raw > 20) return 20;
-      if (raw < -20) return -20;
-      return raw;
-    }
-    // After a capped burst, leftover acc must not fire another full cap on the next 2px move.
-    // Otherwise keep remainder in the open interval (-pxPerStep, pxPerStep).
-    function nextSwipeAccumulator(acc, steps, pxPerStep, cap) {
-      if (!Number.isFinite(acc)) return 0;
-      if (!Number.isFinite(steps) || !Number.isFinite(pxPerStep) || pxPerStep <= 0) return acc;
-      const capAbs = Number.isFinite(cap) ? Math.abs(cap) : 20;
-      if (Math.abs(steps) >= capAbs) return 0;
-      let remainder = acc - steps * pxPerStep;
-      if (!Number.isFinite(remainder)) return 0;
-      if (remainder >= pxPerStep) remainder = pxPerStep - Number.MIN_VALUE;
-      else if (remainder <= -pxPerStep) remainder = -pxPerStep + Number.MIN_VALUE;
-      return remainder;
-    }
-    // App-coordinate hit test for the time row. Vertical band = row height ± 40%.
-    // Left of colon center (rect midpoint) = seconds, right = centiseconds. Not glyph-exact.
-    function presetGroupIndexFromPoint(x, y, rect) {
-      if (!rect || !Number.isFinite(x) || !Number.isFinite(y)) return null;
-      const { left, top, width, height } = rect;
-      if (![left, top, width, height].every(Number.isFinite) || width <= 0 || height <= 0) return null;
-      const band = height * 0.4;
-      if (y < top - band || y > top + height + band) return null;
-      if (x < left || x > left + width) return null;
-      return x < left + width / 2 ? 0 : 1;
-    }
-    // 정지 순간 표시할 1/100초 누적값을 정한다. 규칙 우선순위: 상한 > 트릭 합성 > 자연 경과.
-    function resolveStoppedCs({ elapsed, trickMode, reservedTens, stopDigit }) {
-      if (elapsed >= 59990) return 5999; // 상한 도달은 손댄 숫자가 아니라 실제 최대값
-      if (trickMode && reservedTens !== null && stopDigit !== null) {
-        return Math.floor(elapsed / 1000) * 100 + composeCs(reservedTens, stopDigit);
-      }
-      return Math.floor(elapsed / 10);
-    }
-    function resolveStopOutcome({ trickState, presetCs, customText, elapsed, reservedTens, stopDigit, presetAt = 0, textAt = 0 }) {
-      if (trickState === "text") {
-        if (presetCs !== null && (!customText || presetAt >= textAt)) return { kind: "cs", cs: presetCs };
-        if (customText) return { kind: "text", text: customText };
-      }
-      return {
-        kind: "cs",
-        cs: resolveStoppedCs({ elapsed, trickMode: trickState === "digit", reservedTens, stopDigit })
-      };
-    }
     function runSelfTests() {
       const failures = [];
-      const assert = (condition, name) => {
-        if (!condition) failures.push(name);
+      let assertions = 0;
+      const assert = (cond, name) => {
+        assertions += 1;
+        if (!cond) failures.push(name);
       };
-      const expected = [[1, 2, 3, 4, 5], [6, 7, 8, 9, 0]];
-      for (let row = 0; row < 2; row += 1) {
-        for (let col = 0; col < 5; col += 1) {
-          const actual = digitFromPoint((col + 0.5) * 100, (row + 0.5) * 100, 500, 200);
-          assert(actual === expected[row][col], `grid row ${row} col ${col}`);
+
+      const d = (str) => decFromString(str);
+      const show = (a) => a === null ? "(null)" : decToDisplay(a);
+      assert(show(d("8.17")) === "8.17", "roundtrip 8.17");
+      assert(show(d("-5")) === "-5", "roundtrip -5");
+      assert(show(d("0817")) === "817", "display normalizes leading zero");
+      assert(show(decAdd(d("0.1"), d("0.2"))) === "0.3", "0.1+0.2=0.3");
+      assert(show(decSub(d("5"), d("7"))) === "-2", "5-7=-2");
+      assert(show(decMul(d("1.5"), d("2"))) === "3", "1.5×2=3");
+      assert(show(decMul(d("999999999999999"), d("999999999999999"))) === "9.99999999999998E29", "큰 곱셈 → 16자리 반올림 후 지수 표기");
+      assert(show(d("999999999999.4")) === "999999999999.4", "1e16 미만은 십진 표시");
+      assert(show(d("0.0000000009")) === "9E-10", "작은 쪽 지수 경계 유지");
+      assert(show(decAdd(d("2.5"), d("2.5"))) === "5", "trailing zero removed");
+      assert(decDiv(d("1"), d("0")) === null, "÷0 → null");
+      assert(decDiv(d("0"), d("0")) === null, "0÷0 → null");
+      assert(show(decDiv(d("1"), d("3"))) === "0.3333333333333333", "1÷3 유효16자리");
+      assert(show(decDiv(d("2"), d("7"))) === "0.2857142857142857", "2÷7 순환소수 유효16자리");
+      assert(show(decDiv(d("2"), d("3"))) === "0.6666666666666667", "2÷3 round-half-up 마지막 자리 7");
+      assert(show(decDiv(d("10"), d("4"))) === "2.5", "10÷4 정확 종결");
+      assert(show(decDiv(d("-1"), d("3"))) === "-0.3333333333333333", "부호 -+");
+      assert(show(decDiv(d("-1"), d("-3"))) === "0.3333333333333333", "부호 --");
+      assert(show(decDiv(d("1"), d("-3"))) === "-0.3333333333333333", "부호 +-");
+      assert(show(decDiv(d("1"), d("0.0000000009"))) === "1111111111.111111", "0 근접 나눗셈(1.11e9 — 유효16자리 십진 표시)");
+      assert(show(decDiv(d("1000000000000"), d("0.001"))) === "1000000000000000", "1e16 미만 큰 결과는 십진 표시");
+      assert(decToPlainString(decFromString("1000000000000")) === "1000000000000", "fix2: plain 1e12");
+      assert(decToPlainString(decFromString("-0.0000000009")) === "-0.0000000009", "fix2: plain small negative");
+      assert(decToPlainString(decDiv(decFromString("1"),decFromString("3"))) === "0.333333333333333333333333333333", "fix2: plain 1/3 내부 30자리");
+      assert(formatDisplay("931392") === "931,392", "쉼표: 정수");
+      assert(formatDisplay("-1234.5678") === "-1,234.5678", "쉼표: 음수+소수부(소수부 미적용)");
+      assert(formatDisplay("123") === "123", "쉼표: 3자리 이하 없음");
+      assert(formatDisplay("1234567890123456") === "1,234,567,890,123,456", "쉼표: 16자리");
+      assert(formatDisplay("1.234567891E15") === "1.234567891E15", "쉼표: 지수 표기 통과");
+      assert(formatDisplay("오류") === "오류", "쉼표: 오류 통과");
+      assert(formatDisplay("0.5") === "0.5", "쉼표: 소수만");
+
+      // applyKey — 연산자·소수점·편집
+      const seq = (keys, init="") => keys.reduce((e,k)=>applyKey(e,k), init);
+      assert(seq(["5","+","×"]) === "5×", "연산자 교체");
+      assert(seq(["5","+","+"]) === "5+", "같은 연산자 no-op");
+      assert(seq(["5",".","5",".","5"]) === "5.55", "2번째 소수점 무시");
+      assert(seq([".","5"]) === "0.5", "선두 . → 0.");
+      assert(seq(["5","+","."]) === "5+0.", "연산자 직후 . → 0.");
+      assert(seq(["+"]) === "", "빈 수식 이항연산자 무시");
+      assert(seq(["÷"]) === "", "빈 수식 ÷ 무시");
+      assert(seq(["−","5"]) === "-5", "빈 수식 − = 단항");
+      assert(seq(["5","+","−","3"]) === "5+-3", "연산자 직후 − = 단항");
+      assert(seq(["−","−","5"]) === "-5", "단항 − 연타 무시");
+      assert(seq(["1","2","3","⌫"]) === "12", "백스페이스");
+      assert(seq(["1","2","C"]) === "", "C 전체 클리어");
+      assert(seq(["5","±"]) === "-5", "±: 양수 꼬리 숫자를 음수로");
+      assert(seq(["−","5","±"]) === "5", "±: 음수 꼬리 숫자를 양수로");
+      assert(seq(["1","2","+","3","±"]) === "12+-3", "±: 수식의 꼬리 숫자만 음수로");
+      assert(seq(["1","2","+","−","3","±"]) === "12+3", "±: 수식의 음수 꼬리 숫자만 양수로");
+      for (const expr of ["", "12+", "12×", "("]) {
+        assert(applyKey(expr, "±") === expr, `± no-op: ${expr || "empty"}`);
+      }
+      assert(seq("1234567890123456".split("")) === "1234567890123456", "16자리 입력 허용");
+      assert(seq("12345678901234567".split("")) === "1234567890123456", "17자리째 무시");
+      assert(displayValue("123456789012÷") === "123456789012", "16자리 표시: 12자리 보존");
+      assert(displayValue("1234567890123456×") === "1234567890123456", "16자리 표시: 16자리 보존");
+      assert(seq(["()"]) === "", "() no-op");
+      assert(seq(["5","()"]) === "5", "() no-op 2");
+      // tokenize + evaluate
+      const ev = (expr) => { const t = tokenize(expr); return t === null ? null : evaluate(t); };
+      assert(show(ev(seq(["1","2","+","3","4","×","5"]))) === "230", "즉시계산: 12+34×5=230");
+      assert(show(ev(seq(["9","×","9"]))) === "81", "9×9=81");
+      assert(show(ev(seq(["5","±","+","3"]))) === "-2", "± evaluate: 5 ± + 3 = -2");
+      assert(show(ev(seq("999999999999".split("").concat(["+","1"])))) === "1000000000000", "13자리 결과 십진 표시(지수 아님)");
+      assert(displayValue("") === "0", "display: 빈 수식 0");
+      assert(displayValue("9×9×") === "81", "display: 연산자 직후 중간결과 81");
+      assert(displayValue("9×9×3") === "3", "display: 숫자 입력 중엔 그 숫자");
+      assert(displayValue("12+34×") === "46", "display: 좌→우 중간결과 46");
+      assert(displayValue("-5") === "-5", "display: 단항 음수 입력 중");
+      assert(displayValue("12+-3") === "-3", "display: ±로 음수화한 꼬리 숫자");
+      assert(displayValue("7÷0×") === "오류", "display: ÷0 중간결과는 오류");
+      assert(displayValue("50%") === "0.5", "display: % 적용값");
+      assert(show(ev("(2+3)×4")) === "20", "괄호");
+      assert(ev("7÷0") === null, "÷0 오류");
+      assert(show(ev("5+")) === "5", "dangling 연산자 드롭");
+      assert(show(ev("(2+3")) === "5", "미폐괄호 자동 닫기");
+      assert(show(ev("50%")) === "0.5", "% 단항");
+      assert(show(ev("200×10%")) === "20", "%는 즉시 적용");
+      assert(show(ev("-5+3")) === "-2", "단항 − 평가");
+      // soleNumberText
+      assert(soleNumberText("817") === "817", "단일 숫자");
+      assert(soleNumberText("-5") === "-5", "단항 − 단일 숫자");
+      assert(soleNumberText("08.17") === "08.17", "리터럴 그대로(선행 0 보존)");
+      assert(soleNumberText("1234567890123456") === "1234567890123456", "16자리 무장 판정 가능");
+      assert(soleNumberText("12+34") === null, "연산자 있으면 null");
+      assert(soleNumberText("(5)") === null, "괄호 있으면 null");
+      assert(soleNumberText("") === null, "빈 수식 null");
+
+      // trickErrorGate
+      const gate = typeof trickErrorGate === "function"
+        ? trickErrorGate
+        : () => "missing";
+      const gateState = (phase) => ({
+        phase, storedText: "817", lastKey: null, pendingSole: null
+      });
+      for (const phase of ["off", "set", "ready"]) {
+        assert(gate(gateState(phase), "C") === "pass", `error gate: C passes in ${phase}`);
+      }
+      for (const phase of ["off", "set", "ready"]) {
+        const expectedGate = phase === "ready" ? "pass" : "blocked";
+        assert(gate(gateState(phase), "=") === expectedGate, `error gate: = in ${phase}`);
+      }
+      for (const phase of ["off", "set", "ready"]) {
+        const expectedGate = phase === "set" ? "pass" : "blocked";
+        assert(gate(gateState(phase), "%") === expectedGate, `error gate: % in ${phase}`);
+      }
+      for (const phase of ["off", "set", "ready"]) {
+        for (const key of ["7", "+"]) {
+          assert(gate(gateState(phase), key) === "blocked", `error gate: ${key} blocked in ${phase}`);
         }
       }
-      for (const [x, y] of [[-20, -20], [520, 220], [-1, 250], [900, -1]]) {
-        const digit = digitFromPoint(x, y, 500, 200);
-        assert(Number.isInteger(digit) && digit >= 0 && digit <= 9, `clamp ${x},${y}`);
+      let gatedState = gateState("set");
+      let gatedTransition = { state: gatedState, action: "blocked" };
+      for (const key of ["%", "%"]) {
+        gatedTransition = gate(gatedState, key) === "pass"
+          ? trickStep(gatedState, key, { soleNumberText: null })
+          : { state: gatedState, action: "blocked" };
+        gatedState = gatedTransition.state;
       }
-      const screenWidth = 1000;
-      assert(isLeftmostScreenFifth(screenWidth / 5 - 0.01, screenWidth), "preset hold: 화면 왼쪽 1/5 안쪽");
-      assert(!isLeftmostScreenFifth(screenWidth / 5, screenWidth), "preset hold: 화면 1/5 경계 제외");
-      assert(isLeftmostScreenFifth(0, screenWidth), "preset hold: 화면 왼쪽 끝");
-      assert(composeCs(2, 8) === 28, "compose 2,8");
-      assert(composeCs(0, 0) === 0, "compose 0,0");
-      assert(composeCs(9, 9) === 99, "compose 9,9");
-      assert(clampElapsed(59990) === 59990, "clamp elapsed at limit");
-      assert(clampElapsed(120000) === 59990, "clamp elapsed above limit");
-      const isFormat = (value, sec, cs) => {
-        const result = formatCs(value);
-        return result.sec === sec && result.cs === cs;
-      };
-      assert(isFormat(0, "00", "00"), "format 0");
-      assert(isFormat(728, "07", "28"), "format 728");
-      assert(isFormat(5999, "59", "99"), "format 5999");
-      assert(isFormat(9999, "99", "99"), "format four-digit swipe preview");
-      for (const [x, y, expectedX, expectedY] of [[0, 0, 0, 390], [390, 0, 0, 0],
-          [390, 844, 844, 0], [195, 422, 422, 195]]) {
-        const point = toAppPoint(x, y, 390, 844, true);
-        assert(point.x === expectedX && point.y === expectedY, `rotated point ${x},${y}`);
+      assert(
+        gatedTransition.action === "arm" && gatedState.phase === "ready",
+        "error gate: set 오류 상태에서도 %% → arm"
+      );
+
+      // trickStep
+      const T0={phase:"off",storedText:null,lastKey:null,pendingSole:null};
+      const st=(s,k,sole)=>trickStep(s,k,{soleNumberText:sole});
+      let a=st(T0,"%","817");
+      assert(a.action==="none","1번째 %는 평범");
+      a=st(a.state,"%","8.17");
+      assert(a.action==="set"&&a.state.phase==="set"&&a.state.storedText==="817","%% 세팅: 1번째 % 직전 리터럴 저장");
+      let b=st(a.state,"3",null); b=st(b.state,"+",null); b=st(b.state,"5",null); b=st(b.state,"=",null);
+      assert(b.action==="none"&&b.state.phase==="set"&&b.state.storedText==="817","set: 정상 계산 후에도 저장 유지");
+      b=st(b.state,"1",null); b=st(b.state,"2",null); b=st(b.state,"×",null); b=st(b.state,"9",null); b=st(b.state,"=",null);
+      assert(b.action==="none"&&b.state.phase==="set","set: 여러 계산에도 = 미카운트");
+      let r=st(b.state,"%","108"); r=st(r.state,"%",null);
+      assert(r.action==="arm"&&r.state.phase==="ready"&&r.state.storedText==="817","set에서 %% → ready, 저장값 보존");
+      let c=st(r.state,"=",null);
+      assert(c.action==="fire"&&c.state.phase==="off"&&c.state.storedText===null,"ready: =는 무조건 발동+초기화");
+      // 보존
+      let k=st(a.state,"C",null);
+      assert(k.state.phase==="set"&&k.state.storedText==="817","C 보존");
+      k=st(k.state,"⌫",null);
+      assert(k.state.phase==="set","⌫ 보존");
+      // ready에서 %% no-op
+      let p=st(r.state,"%","55"); p=st(p.state,"%","0.55");
+      assert(p.action==="none"&&p.state.phase==="ready"&&p.state.storedText==="817","ready에서 %% no-op");
+      // 단일 숫자가 아닌 수식에서는 저장 안 됨
+      let m=st(T0,"3",null); m=st(m.state,"+",null); m=st(m.state,"%",null); m=st(m.state,"%",null);
+      assert(m.action==="none"&&m.state.phase==="off"&&m.state.storedText===null,"수식 중 %%는 저장 안 됨");
+      // ÷는 무관
+      let d0=st(T0,"÷","9"); d0=st(d0.state,"÷","9");
+      assert(d0.state.phase==="off","÷÷는 이제 아무것도 안 함");
+      // 비연속 %
+      let n=st(T0,"%","9"); n=st(n.state,"5",null); n=st(n.state,"%",null);
+      assert(n.state.phase==="off","% 사이 다른 키 = 세팅 안 됨");
+
+      // date-time reveal
+      assert(formatDateTarget(new Date(2026, 7, 20, 21, 47), "24") === "268202147", "date target: 24h example");
+      assert(formatDateTarget(new Date(2026, 7, 20, 8, 5), "24") === "26820805", "date target: 24h single-digit hour");
+      assert(formatDateTarget(new Date(2026, 11, 31, 23, 59), "24") === "2612312359", "date target: 24h December");
+      assert(formatDateTarget(new Date(2026, 0, 9, 0, 5), "24") === "2619005", "date target: 24h January midnight");
+      assert(formatDateTarget(new Date(2026, 7, 20, 21, 47), "12") === "26820947", "date target: 12h evening");
+      assert(formatDateTarget(new Date(2026, 7, 20, 0, 30), "12") === "268201230", "date target: 12h midnight");
+      assert(formatDateTarget(new Date(2026, 7, 20, 12, 5), "12") === "268201205", "date target: 12h noon");
+      assert(formatDateTarget(new Date(2026, 7, 20, 21, 47)) === "268202147", "date target: default 24h");
+      const dateTarget = typeof dateTrickTarget === "function"
+        ? dateTrickTarget
+        : () => null;
+      const dateNowMs = new Date(2026, 7, 20, 21, 46, 40).getTime();
+      const datePlus = dateTarget("86419746", dateNowMs, 20, "24");
+      assert(
+        datePlus?.targetText === "268202147" &&
+        datePlus.neededOp === "+" &&
+        datePlus.queueText === "181782401",
+        "date target round trip: plus values"
+      );
+      assert(
+        datePlus !== null &&
+        decToPlainString(decAdd(d("86419746"), d(datePlus.queueText))) === datePlus.targetText,
+        "date target round trip: plus arithmetic"
+      );
+      const dateMinus = dateTarget("999999999", dateNowMs, 20, "24");
+      assert(
+        dateMinus?.targetText === "268202147" &&
+        dateMinus.neededOp === "−" &&
+        dateMinus.queueText === "731797852",
+        "date target round trip: minus values"
+      );
+      assert(
+        dateMinus !== null &&
+        decToPlainString(decSub(d("999999999"), d(dateMinus.queueText))) === dateMinus.targetText,
+        "date target round trip: minus arithmetic"
+      );
+      const date12h = dateTarget("10000000", dateNowMs, 20, "12");
+      assert(
+        date12h?.targetText === "26820947" &&
+        date12h.neededOp === "+" &&
+        date12h.queueText === "16820947",
+        "date target round trip: 12h values"
+      );
+      assert(
+        date12h !== null &&
+        decToPlainString(decAdd(d("10000000"), d(date12h.queueText))) === date12h.targetText,
+        "date target round trip: 12h arithmetic"
+      );
+      const DT0={phase:"off",queue:null,queueIndex:0};
+      const DTARM={phase:"armed",queue:null,queueIndex:0};
+      const dt=(s,key,ctx={})=>dateTrickStep(s,key,ctx);
+      let dtStep=dt(DTARM,"+",{currentValueText:"100",targetText:"223",neededOp:"+",queueText:"123"});
+      assert(dtStep.state.phase==="entering"&&dtStep.state.queue==="123"&&dtStep.state.queueIndex===0,"date trick: correct op enters");
+      dtStep=dt(dtStep.state,"7");
+      assert(dtStep.replaceKey==="1"&&dtStep.state.queueIndex===1,"date trick: first forced digit");
+      dtStep=dt(dtStep.state,"8");
+      assert(dtStep.replaceKey==="2"&&dtStep.state.queueIndex===2,"date trick: second forced digit");
+      dtStep=dt(dtStep.state,"9");
+      assert(dtStep.replaceKey==="3"&&dtStep.state.queueIndex===3,"date trick: third forced digit");
+      dtStep=dt(dtStep.state,"0");
+      assert(dtStep.action==="swallow"&&dtStep.state.queueIndex===3,"date trick: extra digit swallowed");
+      dtStep=dt(dtStep.state,"⌫");
+      dtStep=dt(dtStep.state,"4");
+      assert(dtStep.replaceKey==="3"&&dtStep.state.queueIndex===3,"date trick: backspace rewinds queue");
+      assert(dt({phase:"entering",queue:"123",queueIndex:2},"C").state.phase==="off","date trick: C cancels");
+      assert(dt({phase:"entering",queue:"123",queueIndex:3},"=").state.phase==="off","date trick: equals is one-shot");
+      dtStep=dt(DTARM,"−",{currentValueText:"100",targetText:"223",neededOp:"+",queueText:"123"});
+      assert(dtStep.state===DTARM&&dtStep.action==="swallow","date trick: wrong op stays armed");
+      const DTENTER={phase:"entering",queue:"123",queueIndex:0};
+      for (const key of ["%", "×"]) {
+        dtStep=dt(DTENTER,key);
+        assert(dtStep.state===DTENTER&&dtStep.action==="swallow",`date trick: entering swallows ${key}`);
       }
-      const identity = toAppPoint(123, 456, 844, 390, false);
-      assert(identity.x === 123 && identity.y === 456, "point identity");
-      assert(applyPresetGroupSwipe("0000", 0, 1) === "0100", "group swipe sec +1");
-      assert(applyPresetGroupSwipe("5900", 0, 1) === "0000", "group swipe sec wrap +");
-      assert(applyPresetGroupSwipe("0000", 0, -1) === "5900", "group swipe sec wrap -");
-      assert(applyPresetGroupSwipe("0099", 1, 1) === "0000", "group swipe cs wrap +");
-      assert(applyPresetGroupSwipe("0000", 1, -1) === "0099", "group swipe cs wrap -");
-      assert(applyPresetGroupSwipe("1234", 1, 10) === "1244", "group swipe cs +10");
-      assert(presetSwipeSteps(28, 0.1) === 1, "presetSwipeSteps slow 28px = 1");
-      assert(presetSwipeSteps(28, 2) >= 4, "presetSwipeSteps fast 28px >= 4");
-      assert(presetSwipeSteps(-28, 0.1) === -1, "presetSwipeSteps sign follows delta");
-      assert(presetSwipeSteps(28, 0.1) > 0, "presetSwipeSteps up is positive");
-      let prevAbsSteps = 0;
-      for (const velocity of [0.05, 0.2, 0.29, 0.3, 0.8, 1.5, 1.51, 3]) {
-        const absSteps = Math.abs(presetSwipeSteps(28, velocity));
-        assert(absSteps >= prevAbsSteps, `presetSwipeSteps monotonic |v|=${velocity}`);
-        prevAbsSteps = absSteps;
+      dtStep=dt(DTENTER,"⌫");
+      assert(dtStep.state===DTENTER&&dtStep.action==="swallow","date trick: queue-start backspace swallowed");
+      for (const key of ["0","9",".","+","−","×","÷","%","()","⌫","C","="]) {
+        dtStep=dt(DT0,key);
+        assert(dtStep.state===DT0&&dtStep.replaceKey===key&&dtStep.action==="none",`date trick: off passes ${key}`);
       }
-      assert(presetSwipeSteps(10000, 10) === 20, "presetSwipeSteps cap +");
-      assert(presetSwipeSteps(-10000, 10) === -20, "presetSwipeSteps cap -");
-      const swipeCap = 20;
-      const fastV = 2;
-      const slowV = 0.1;
-      let swipeAcc = 200;
-      let swipeSteps = presetSwipeSteps(swipeAcc, fastV);
-      swipeAcc = nextSwipeAccumulator(swipeAcc, swipeSteps, presetSwipePxPerStep(fastV), swipeCap);
-      assert(swipeSteps === 20 && swipeAcc === 0, "capped 200px fast: 20 steps remainder 0");
-      swipeAcc += 2;
-      swipeSteps = presetSwipeSteps(swipeAcc, fastV);
-      swipeAcc = nextSwipeAccumulator(swipeAcc, swipeSteps, presetSwipePxPerStep(fastV), swipeCap);
-      assert(swipeSteps === 0, "after cap leftover 2px: 0 steps");
-      swipeAcc = 30;
-      swipeSteps = presetSwipeSteps(swipeAcc, slowV);
-      swipeAcc = nextSwipeAccumulator(swipeAcc, swipeSteps, presetSwipePxPerStep(slowV), swipeCap);
-      assert(swipeSteps === 1 && swipeAcc === 2, "slow 30px: 1 step remainder 2");
-      swipeAcc = 27;
-      swipeSteps = presetSwipeSteps(swipeAcc, slowV);
-      swipeAcc = nextSwipeAccumulator(swipeAcc, swipeSteps, presetSwipePxPerStep(slowV), swipeCap);
-      assert(swipeSteps === 0 && swipeAcc === 27, "slow 27px: 0 steps remainder 27");
-      const groupRect = { left: 100, top: 50, width: 400, height: 100 };
-      assert(presetGroupIndexFromPoint(150, 100, groupRect) === 0, "group hit left = seconds");
-      assert(presetGroupIndexFromPoint(450, 100, groupRect) === 1, "group hit right = cs");
-      assert(presetGroupIndexFromPoint(150, 20, groupRect) === 0, "group hit 40% band");
-      assert(presetGroupIndexFromPoint(150, -100, groupRect) === null, "group hit far above");
-      assert(presetGroupIndexFromPoint(50, 100, groupRect) === null, "group hit left outside");
-      const rs = (elapsed, trickMode, reservedTens, stopDigit) =>
-        resolveStoppedCs({ elapsed, trickMode, reservedTens, stopDigit });
-      assert(rs(59990, true, 2, 8) === 5999, "resolve: 상한이 트릭보다 우선");
-      assert(rs(3450, true, 2, 8) === 328, "resolve: 트릭 합성 03:28");
-      assert(rs(3450, true, null, 8) === 345, "resolve: 주행 중 트릭 켬(예약 없음)은 자연값");
-      assert(rs(3450, false, 2, 8) === 345, "resolve: 트릭 OFF는 좌표 무시");
-      assert(rs(1200, true, 0, 5) === 105, "resolve: 십의 자리 0");
-      for (const [preset, text, presetAt, textAt, kind] of [[1187, "KALI", 1, 2, "text"],
-          [1187, "KALI", 2, 1, "cs"], [1187, "KALI", 2, 2, "cs"],
-          [null, "KALI", 5, 1, "text"], [1187, "", 1, 5, "cs"]]) {
-        const result = resolveStopOutcome({ trickState: "text", presetCs: preset, customText: text,
-          elapsed: 3450, reservedTens: 2, stopDigit: 8, presetAt, textAt });
-        assert(result.kind === kind && (kind === "text" ? result.text === "KALI" : result.cs === 1187),
-          `last saved wins ${preset},${text},${presetAt},${textAt}`);
+
+      assert(show(ev(seq(["5","+","+","7"]))) === "12", "E2E5: 5++7=12");
+      assert(show(ev(seq(["5","+"])))=== "5", "E2E7: 5+=5");
+      assert(show(ev(seq(["5",".","5",".","5"]))) === "5.55", "E2E6: 5.5.5=5.55");
+      assert(ev(seq(["7","÷","0"])) === null, "E2E4: 7÷0 오류");
+      assert(show(ev(seq(["1","2","+","3","4","×","5"]))) === "230", "E2E1: 12+34×5=230");
+
+      // Mnemonica stack lookup
+      const stack = typeof MNEMONICA === "undefined" ? [] : MNEMONICA;
+      const lookup = typeof mnemonicaLookup === "function"
+        ? mnemonicaLookup
+        : () => ({ position: null, card: null });
+      assert(stack.length === 52, "Mnemonica: 52 cards");
+      assert(new Set(stack).size === 52, "Mnemonica: all cards unique");
+      assert(
+        ["S", "H", "C", "D"].every(
+          (suit) => stack.filter((entry) => entry.endsWith(suit)).length === 13
+        ),
+        "Mnemonica: 13 cards per suit"
+      );
+      assert(lookup("11").position === 7 && lookup("11").card === "♥Q", "Mnemonica: 11");
+      assert(lookup("113").position === 31 && lookup("113").card === null, "Mnemonica: 113");
+      assert(lookup("43").position === 12 && lookup("43").card === "♣A", "Mnemonica: 43");
+      assert(lookup("1").position === null && lookup("1").card === "♣4", "Mnemonica: 1");
+      assert(lookup("52").position === null && lookup("52").card === "♦9", "Mnemonica: 52");
+      assert(lookup("310").position === 24 && lookup("310").card === null, "Mnemonica: 310");
+      assert(lookup("413").position === 26 && lookup("413").card === null, "Mnemonica: 413");
+      for (const input of ["999", "-5", "3.5", ""]) {
+        const result = lookup(input);
+        assert(result.position === null && result.card === null, `Mnemonica: invalid ${input}`);
       }
-      const outcome = (params) => typeof resolveStopOutcome === "function"
-        ? resolveStopOutcome(params)
-        : { kind: "missing" };
-      let ro = outcome({
-        trickState: "text", presetCs: 1187, customText: "KALI",
-        elapsed: 3450, reservedTens: 2, stopDigit: 8
-      });
-      assert(ro.kind === "cs" && ro.cs === 1187, "stop outcome: timestamp 누락은 동률로 preset");
-      ro = outcome({
-        trickState: "text", presetCs: null, customText: "KALI",
-        elapsed: 3450, reservedTens: 2, stopDigit: 8
-      });
-      assert(ro.kind === "text" && ro.text === "KALI", "stop outcome: text만 있으면 text");
-      ro = outcome({
-        trickState: "text", presetCs: null, customText: "",
-        elapsed: 3450, reservedTens: 2, stopDigit: 8
-      });
-      assert(ro.kind === "cs" && ro.cs === 345, "stop outcome: text 설정 없으면 실측");
-      ro = outcome({
-        trickState: "off", presetCs: 9999, customText: "KALI",
-        elapsed: 3450, reservedTens: 2, stopDigit: 8
-      });
-      assert(ro.kind === "cs" && ro.cs === 345, "stop outcome: off는 preset과 text 무시");
-      ro = outcome({
-        trickState: "digit", presetCs: 9999, customText: "KALI",
-        elapsed: 3450, reservedTens: 2, stopDigit: 8
-      });
-      assert(ro.kind === "cs" && ro.cs === 328, "stop outcome: digit는 preset 무시");
-      ro = outcome({
-        trickState: "digit", presetCs: null, customText: "",
-        elapsed: 3450, reservedTens: 2, stopDigit: 8
-      });
-      assert(ro.kind === "cs" && ro.cs === 328, "stop outcome: digit 합성");
-      ro = outcome({
-        trickState: "digit", presetCs: null, customText: "",
-        elapsed: 59990, reservedTens: 2, stopDigit: 8
-      });
-      assert(ro.kind === "cs" && ro.cs === 5999, "stop outcome: digit도 59.99 상한");
-      ro = outcome({
-        trickState: "text", presetCs: 5999, customText: "KALI",
-        elapsed: 59990, reservedTens: 2, stopDigit: 8
-      });
-      assert(ro.kind === "cs" && ro.cs === 5999, "stop outcome: preset 최대값 59.99");
-      assert(typeof nextTrickState === "function", "trick state: 순환 함수 존재");
-      if (typeof nextTrickState === "function") {
-        assert(nextTrickState("off") === "digit", "trick state: off → digit");
-        assert(nextTrickState("digit") === "text", "trick state: digit → text");
-        assert(nextTrickState("text") === "off", "trick state: text → off");
+
+      // Mnemonica cut lookup
+      const cutLookup = typeof mnemonicaCutLookup === "function"
+        ? mnemonicaCutLookup
+        : () => null;
+      assert(
+        JSON.stringify(cutLookup("1337")) === JSON.stringify({ cut: 36, bottom: "♣J" }),
+        "Mnemonica cut: ♠3 to position 37"
+      );
+      assert(
+        JSON.stringify(cutLookup("1101")) === JSON.stringify({ cut: 6, bottom: "♦6" }),
+        "Mnemonica cut: ♠A to position 01"
+      );
+      assert(
+        JSON.stringify(cutLookup("11001")) === JSON.stringify({ cut: 33, bottom: "♣8" }),
+        "Mnemonica cut: ♠10 to position 01"
+      );
+      assert(
+        JSON.stringify(cutLookup("1107")) === JSON.stringify({ cut: 0, bottom: "♦9" }),
+        "Mnemonica cut: no cut"
+      );
+      for (const input of ["1353", "5137", "137", "11", "113705", "3.5", ""]) {
+        assert(cutLookup(input) === null, `Mnemonica cut: invalid ${input}`);
       }
-      const message = failures.length ? `FAIL\n${failures.join("\n")}` : "ALL PASS";
-      const output = document.getElementById("selftest-result");
-      output.textContent = message;
-      output.className = failures.length ? "fail" : "";
-      console.log(message);
+
+      // Undo Influence joker setup
+      const undoLookup = typeof undoSetupLookup === "function"
+        ? undoSetupLookup
+        : () => null;
+      assert(
+        JSON.stringify(undoLookup("1825")) === JSON.stringify({ upper: 28, lower: 47 }),
+        "Undo Influence: 18:25"
+      );
+      assert(
+        JSON.stringify(undoLookup("1843")) === JSON.stringify({ upper: 10, lower: 29 }),
+        "Undo Influence: original 18:43 setup"
+      );
+      assert(
+        JSON.stringify(undoLookup("625")) === JSON.stringify({ upper: 28, lower: 35 }),
+        "Undo Influence: 6:25"
+      );
+      assert(
+        JSON.stringify(undoLookup("1805")) === JSON.stringify({ upper: 35, lower: 41 }),
+        "Undo Influence: reversed 18:05"
+      );
+      for (const input of ["1111", "1859", "1800", "18", "18253", "3.5"]) {
+        assert(undoLookup(input) === null, `Undo Influence: invalid ${input}`);
+      }
+
+      const panel = document.getElementById("selftest");
+      const passed = failures.length === 0;
+      const headline = passed
+        ? `ALL PASS (${assertions} assertions)`
+        : `FAIL (${failures.length}/${assertions})`;
+      panel.className = passed ? "pass" : "fail";
+      panel.textContent = passed
+        ? headline
+        : `${headline}\n${failures.map((name) => `- ${name}`).join("\n")}`;
+      console[passed ? "log" : "error"](panel.textContent);
+      return { assertions, failures };
     }
-    const app = document.getElementById("app");
-    const selftest = document.getElementById("selftest");
-    const fullscreenZone = document.getElementById("fullscreen-zone");
-    const trickZone = document.getElementById("trick-zone");
-    const textZone = document.getElementById("text-zone");
-    const mainHitZones = document.getElementById("main-hit-zones");
-    const timeDisplay = document.getElementById("time-display");
-    const control = document.getElementById("control");
-    const controlLabel = document.getElementById("control-label");
-    const seconds = document.getElementById("seconds");
-    const centiseconds = document.getElementById("centiseconds");
-    const customDisplay = document.getElementById("custom-display");
-    const colon = document.getElementById("colon");
-    const textEditor = document.getElementById("text-editor");
-    const textEditorInput = document.getElementById("text-editor-input");
-    const textEditorSave = document.getElementById("text-editor-save");
-    const textEditorClear = document.getElementById("text-editor-clear");
-    const presetHint = document.getElementById("preset-hint");
-    const digitSpans = [...timeDisplay.querySelectorAll("[data-digit]")];
-    const CUSTOM_TEXT_STORAGE_KEY = "stopwatch_custom_text";
-    const PRESET_STORAGE_KEY = "stopwatch_preset_cs";
-    const TEXT_ZONE_HOLD_MS = 1000;
-    const PRESET_HOLD_MS = 1000;
-    const PRESET_AT_STORAGE_KEY = "stopwatch_preset_at";
-    const TEXT_AT_STORAGE_KEY = "stopwatch_text_at";
-    const MAIN_HIT_ZONE_GAP = 4;
-    let state = "idle";
-    let trickState = "off";
-    let customText = "";
-    let presetCs = null;
-    let presetEntry = "0000";
-    let presetMode = false;
-    let presetGesture = null;
-    let presetAt = 0;
-    let textAt = 0;
-    let reservedTens = null;
-    let startedAt = 0;
-    let stoppedCs = 0;
-    let frameId = 0;
+
+    const MNEMONICA = [
+      "4C","2H","7D","3C","4H","6D","AS","5H","9S","2S",
+      "QH","3D","QC","8H","6S","5S","9H","KC","2D","JH",
+      "3S","8S","6H","10C","5D","KD","2C","3H","8D","5C",
+      "KS","JD","8C","10S","KH","JC","7S","10H","AD","4S",
+      "7H","4D","AC","9C","JS","QD","7C","QS","10D","6C",
+      "AH","9D"
+    ];
+
+    const CARD_SUIT_LETTERS = { 1: "S", 2: "H", 3: "C", 4: "D" };
+    const CARD_SUIT_SYMBOLS = { S: "♠", H: "♥", C: "♣", D: "♦" };
+    const CARD_VALUE_LABELS = { 1: "A", 11: "J", 12: "Q", 13: "K" };
+    const TWO_DIGIT_CARD_CODE = /^([1-4])([1-9])$/;
+    const THREE_DIGIT_CARD_CODE = /^([1-4])(1[0-3])$/;
+    const STACK_CARD_CODE = /^(10|[2-9]|[AJQK])([SHCD])$/;
+
+    function parseCardCode(str) {
+      const source = String(str ?? "");
+      const code = TWO_DIGIT_CARD_CODE.exec(source) ??
+        THREE_DIGIT_CARD_CODE.exec(source);
+      return code === null
+        ? null
+        : { suit: code[1], value: Number(code[2]) };
+    }
+
+    function cardToStackCode({ suit, value }) {
+      return `${CARD_VALUE_LABELS[value] ?? value}${CARD_SUIT_LETTERS[suit]}`;
+    }
+
+    function formatStackCard(stackCode) {
+      const card = STACK_CARD_CODE.exec(stackCode);
+      return `${CARD_SUIT_SYMBOLS[card[2]]}${card[1]}`;
+    }
+
+    function mnemonicaLookup(text) {
+      const source = String(text ?? "");
+      if (!/^\d+$/.test(source)) return { position: null, card: null };
+
+      const cardCode = parseCardCode(source);
+      let position = null;
+      let card = null;
+
+      if (cardCode !== null) {
+        const stackCode = cardToStackCode(cardCode);
+        const index = MNEMONICA.indexOf(stackCode);
+        position = index === -1 ? null : index + 1;
+      }
+
+      const stackPosition = Number(source);
+      if (Number.isInteger(stackPosition) && stackPosition >= 1 && stackPosition <= 52) {
+        card = formatStackCard(MNEMONICA[stackPosition - 1]);
+      }
+
+      return { position, card };
+    }
+
+    function mnemonicaCutLookup(text) {
+      const source = String(text ?? "");
+      if (!/^\d{4,5}$/.test(source)) return null;
+
+      const cardCode = source.slice(0, -2);
+      const target = Number(source.slice(-2));
+      const card = parseCardCode(cardCode);
+      if (card === null || target < 1 || target > 52) return null;
+
+      const stackCode = cardToStackCode(card);
+      const position = MNEMONICA.indexOf(stackCode) + 1;
+      const cut = (position - target + 52) % 52;
+      const bottomCode = MNEMONICA[cut === 0 ? 51 : cut - 1];
+
+      return { cut, bottom: formatStackCard(bottomCode) };
+    }
+
+    function undoSetupLookup(text) {
+      const source = String(text ?? "");
+      if (!/^\d{3,4}$/.test(source)) return null;
+
+      const hour = Number(source.slice(0, -2));
+      const minute = Number(source.slice(-2));
+      const r1 = Math.min(hour, minute);
+      const r2 = Math.max(hour, minute);
+      if (r1 < 1 || r1 >= r2 || r2 > 52) return null;
+
+      return {
+        upper: 53 - r2,
+        lower: r1 + 54 - r2
+      };
+    }
+
+    function decPow10(exponent) {
+      if (!Number.isInteger(exponent) || exponent < 0) {
+        throw new RangeError("Decimal exponent must be a non-negative integer");
+      }
+      return 10n ** BigInt(exponent);
+    }
+
+    function decNormalize(sign, digits, scale) {
+      let d = digits < 0n ? -digits : digits;
+      let e = scale;
+
+      if (d === 0n) return { s: 1, d: 0n, e: 0 };
+
+      while (e > 0 && d % 10n === 0n) {
+        d /= 10n;
+        e -= 1;
+      }
+
+      return { s: sign < 0 ? -1 : 1, d, e };
+    }
+
+    function decFromString(str) {
+      const source = String(str).trim();
+      const match = /^([+\-−]?)(?:(\d+)(?:\.(\d*))?|\.(\d+))$/.exec(source);
+
+      if (!match) {
+        throw new TypeError(`Invalid decimal literal: ${source}`);
+      }
+
+      const sign = match[1] === "-" || match[1] === "−" ? -1 : 1;
+      const integer = match[2] ?? "";
+      const fraction = match[3] ?? match[4] ?? "";
+      const digits = BigInt(`${integer}${fraction}` || "0");
+
+      return decNormalize(sign, digits, fraction.length);
+    }
+
+    function decAdd(a, b) {
+      const scale = Math.max(a.e, b.e);
+      const left = BigInt(a.s) * a.d * decPow10(scale - a.e);
+      const right = BigInt(b.s) * b.d * decPow10(scale - b.e);
+      const sum = left + right;
+
+      return decNormalize(sum < 0n ? -1 : 1, sum, scale);
+    }
+
+    function decSub(a, b) {
+      return decAdd(a, { s: b.s * -1, d: b.d, e: b.e });
+    }
+
+    function decMul(a, b) {
+      return decNormalize(a.s === b.s ? 1 : -1, a.d * b.d, a.e + b.e);
+    }
+
+    function decDiv(a, b) {
+      if (b.d === 0n) return null;
+      if (a.d === 0n) return decNormalize(1, 0n, 0);
+
+      const digitDelta = a.d.toString().length - b.d.toString().length;
+      const belowPower = digitDelta >= 0
+        ? a.d < b.d * decPow10(digitDelta)
+        : a.d * decPow10(-digitDelta) < b.d;
+      const ratioExponent = belowPower ? digitDelta - 1 : digitDelta;
+      const longDivisionPower = 30 - ratioExponent;
+      const scaledNumerator = longDivisionPower >= 0
+        ? a.d * decPow10(longDivisionPower)
+        : a.d;
+      const scaledDenominator = longDivisionPower >= 0
+        ? b.d
+        : b.d * decPow10(-longDivisionPower);
+      const extendedQuotient = scaledNumerator / scaledDenominator;
+      const guardDigit = extendedQuotient % 10n;
+      let quotient = extendedQuotient / 10n;
+
+      if (guardDigit >= 5n) {
+        quotient += 1n;
+      }
+
+      const quotientExponent = ratioExponent + b.e - a.e;
+      const resultScale = 29 - quotientExponent;
+      const sign = a.s === b.s ? 1 : -1;
+
+      return resultScale >= 0
+        ? decNormalize(sign, quotient, resultScale)
+        : decNormalize(sign, quotient * decPow10(-resultScale), 0);
+    }
+
+    function decToPlainString(dec) {
+      const value = decNormalize(dec.s, dec.d, dec.e);
+      if (value.d === 0n) return "0";
+
+      const digits = value.d.toString();
+      const sign = value.s < 0 ? "-" : "";
+      const decimalPosition = digits.length - value.e;
+
+      if (decimalPosition <= 0) {
+        return `${sign}0.${"0".repeat(-decimalPosition)}${digits}`;
+      }
+      if (decimalPosition >= digits.length) {
+        return `${sign}${digits}${"0".repeat(decimalPosition - digits.length)}`;
+      }
+      return `${sign}${digits.slice(0, decimalPosition)}.${digits.slice(decimalPosition)}`;
+    }
+
+    const DISPLAY_SIG = 16;
+
+    function decToDisplay(dec) {
+      const value = decNormalize(dec.s, dec.d, dec.e);
+      if (value.d === 0n) return "0";
+
+      const rawDigits = value.d.toString();
+      let exponent = rawDigits.length - value.e - 1;
+      let roundedDigits = value.d;
+
+      if (rawDigits.length > DISPLAY_SIG) {
+        const cut = rawDigits.length - DISPLAY_SIG;
+        const divisor = decPow10(cut);
+        const remainder = roundedDigits % divisor;
+        roundedDigits /= divisor;
+
+        if (remainder * 2n >= divisor) {
+          roundedDigits += 1n;
+        }
+
+        if (roundedDigits.toString().length > DISPLAY_SIG) {
+          roundedDigits /= 10n;
+          exponent += 1;
+        }
+      }
+
+      const significant = roundedDigits.toString().replace(/0+$/, "");
+      const sign = value.s < 0 ? "-" : "";
+      const useExponent = exponent >= 16 || exponent < -9;
+
+      if (useExponent) {
+        const mantissa = significant.length === 1
+          ? significant
+          : `${significant[0]}.${significant.slice(1)}`;
+        return `${sign}${mantissa}E${exponent}`;
+      }
+
+      const decimalPosition = exponent + 1;
+      if (decimalPosition <= 0) {
+        return `${sign}0.${"0".repeat(-decimalPosition)}${significant}`;
+      }
+      if (decimalPosition >= significant.length) {
+        return `${sign}${significant}${"0".repeat(decimalPosition - significant.length)}`;
+      }
+      return `${sign}${significant.slice(0, decimalPosition)}.${significant.slice(decimalPosition)}`;
+    }
+
+    function expressionTokenCount(expr) {
+      let count = 0;
+      let index = 0;
+
+      while (index < expr.length) {
+        if (expr[index] === "-" && /[\d.]/.test(expr[index + 1] ?? "")) {
+          index += 1;
+        }
+
+        if (/[\d.]/.test(expr[index] ?? "")) {
+          while (index < expr.length && /[\d.]/.test(expr[index])) index += 1;
+        } else {
+          index += 1;
+        }
+        count += 1;
+      }
+
+      return count;
+    }
+
+    function applyKey(expr, key) {
+      const source = String(expr ?? "");
+      const acceptedKeys = /^(?:[0-9]|\.|\+|−|×|÷|\(\)|%|±|C|⌫)$/;
+
+      if (!acceptedKeys.test(key)) return source;
+      if (key === "C") return "";
+      if (key === "⌫") return source.slice(0, -1);
+
+      const withinTokenLimit = (candidate) =>
+        expressionTokenCount(candidate) <= 100 ? candidate : source;
+      const last = source.at(-1) ?? "";
+      const binaryOperators = "+−×÷";
+      const expectsOperand =
+        source === "" || binaryOperators.includes(last) || last === "(" || last === "-";
+
+      if (key === "±") {
+        const trailingNumber = /(^|[+−×÷(])(-?)(\d+(?:\.\d*)?|\.\d+)$/.exec(source);
+        if (trailingNumber === null) return source;
+        const [numberText, prefix, sign, digits] = trailingNumber;
+        const toggledNumber = `${prefix}${sign === "-" ? "" : "-"}${digits}`;
+        return withinTokenLimit(`${source.slice(0, -numberText.length)}${toggledNumber}`);
+      }
+
+      if (/^\d$/.test(key)) {
+        const currentNumber = /[\d.]+$/.exec(source)?.[0] ?? "";
+        const digitCount = (currentNumber.match(/\d/g) ?? []).length;
+        if (digitCount >= 16) return source;
+        return withinTokenLimit(source + key);
+      }
+
+      if (key === ".") {
+        if (expectsOperand) return withinTokenLimit(`${source}0.`);
+        const currentNumber = /[\d.]+$/.exec(source)?.[0] ?? "";
+        if (currentNumber === "" || currentNumber.includes(".")) return source;
+        return withinTokenLimit(`${source}.`);
+      }
+
+      if (key === "()") {
+        return source;
+      }
+
+      if (key === "%") {
+        return /[\d.)%]/.test(last) ? withinTokenLimit(`${source}%`) : source;
+      }
+
+      if (key === "−") {
+        if (expectsOperand) {
+          return last === "-" ? source : withinTokenLimit(`${source}-`);
+        }
+        return withinTokenLimit(`${source}−`);
+      }
+
+      if (source === "" || last === "(" || last === "-") return source;
+      if (binaryOperators.includes(last)) {
+        return last === key
+          ? source
+          : withinTokenLimit(`${source.slice(0, -1)}${key}`);
+      }
+      return withinTokenLimit(`${source}${key}`);
+    }
+
+    function tokenize(expr) {
+      const source = String(expr ?? "");
+      const tokens = [];
+      let index = 0;
+      let openCount = 0;
+      let expectsOperand = true;
+      const push = (token) => {
+        tokens.push(token);
+        return tokens.length <= 100;
+      };
+
+      while (index < source.length) {
+        const char = source[index];
+
+        if (expectsOperand && (char === "-" || char === "−")) {
+          if (source[index + 1] === "(") {
+            if (!push({ t: "num", v: "-1" }) || !push({ t: "op", v: "*" })) {
+              return null;
+            }
+            index += 1;
+            continue;
+          }
+          const numberMatch = /^(?:\d+(?:\.\d*)?|\.\d+)/.exec(source.slice(index + 1));
+          if (!numberMatch || !push({ t: "num", v: `-${numberMatch[0]}` })) return null;
+          index += numberMatch[0].length + 1;
+          expectsOperand = false;
+          continue;
+        }
+
+        if (/[\d.]/.test(char)) {
+          if (!expectsOperand) return null;
+          const numberMatch = /^(?:\d+(?:\.\d*)?|\.\d+)/.exec(source.slice(index));
+          if (!numberMatch || !push({ t: "num", v: numberMatch[0] })) return null;
+          index += numberMatch[0].length;
+          expectsOperand = false;
+          continue;
+        }
+
+        if (char === "(") {
+          if (!expectsOperand || !push({ t: "lp" })) return null;
+          openCount += 1;
+          index += 1;
+          continue;
+        }
+
+        if (char === ")") {
+          if (expectsOperand || openCount === 0 || !push({ t: "rp" })) return null;
+          openCount -= 1;
+          index += 1;
+          expectsOperand = false;
+          continue;
+        }
+
+        if (char === "%") {
+          if (expectsOperand || !push({ t: "pct" })) return null;
+          index += 1;
+          continue;
+        }
+
+        const mappedOperator = {
+          "+": "+",
+          "−": "-",
+          "×": "*",
+          "÷": "/"
+        }[char];
+        if (mappedOperator) {
+          if (expectsOperand || !push({ t: "op", v: mappedOperator })) return null;
+          index += 1;
+          expectsOperand = true;
+          continue;
+        }
+
+        return null;
+      }
+
+      return tokens;
+    }
+
+    function evaluate(tokens) {
+      if (!Array.isArray(tokens) || tokens.length === 0 || tokens.length > 100) return null;
+
+      const prepared = tokens.map((token) => ({ ...token }));
+      while (prepared.at(-1)?.t === "op") prepared.pop();
+      if (prepared.length === 0) return null;
+
+      let balance = 0;
+      for (const token of prepared) {
+        if (token.t === "lp") balance += 1;
+        if (token.t === "rp") {
+          balance -= 1;
+          if (balance < 0) return null;
+        }
+      }
+      while (balance > 0) {
+        prepared.push({ t: "rp" });
+        balance -= 1;
+      }
+
+      const values = [];
+      const operators = [];
+      const precedence = { "+": 1, "-": 1, "*": 1, "/": 1 };
+      const hundred = decFromString("100");
+      let expectsOperand = true;
+
+      const applyTopOperator = () => {
+        const operator = operators.pop();
+        if (!operator || operator === "(" || values.length < 2) return false;
+        const right = values.pop();
+        const left = values.pop();
+        const result = operator === "+"
+          ? decAdd(left, right)
+          : operator === "-"
+            ? decSub(left, right)
+            : operator === "*"
+              ? decMul(left, right)
+              : decDiv(left, right);
+        if (result === null) return false;
+        values.push(result);
+        return true;
+      };
+
+      for (const token of prepared) {
+        if (token.t === "num") {
+          if (!expectsOperand || typeof token.v !== "string") return null;
+          try {
+            values.push(decFromString(token.v));
+          } catch {
+            return null;
+          }
+          expectsOperand = false;
+          continue;
+        }
+
+        if (token.t === "pct") {
+          if (expectsOperand || values.length === 0) return null;
+          const percentage = decDiv(values.pop(), hundred);
+          if (percentage === null) return null;
+          values.push(percentage);
+          continue;
+        }
+
+        if (token.t === "lp") {
+          if (!expectsOperand) return null;
+          operators.push("(");
+          continue;
+        }
+
+        if (token.t === "rp") {
+          if (expectsOperand) return null;
+          while (operators.length > 0 && operators.at(-1) !== "(") {
+            if (!applyTopOperator()) return null;
+          }
+          if (operators.pop() !== "(") return null;
+          expectsOperand = false;
+          continue;
+        }
+
+        if (token.t === "op" && Object.hasOwn(precedence, token.v)) {
+          if (expectsOperand) return null;
+          while (
+            operators.length > 0 &&
+            operators.at(-1) !== "(" &&
+            precedence[operators.at(-1)] >= precedence[token.v]
+          ) {
+            if (!applyTopOperator()) return null;
+          }
+          operators.push(token.v);
+          expectsOperand = true;
+          continue;
+        }
+
+        return null;
+      }
+
+      if (expectsOperand) return null;
+      while (operators.length > 0) {
+        if (operators.at(-1) === "(" || !applyTopOperator()) return null;
+      }
+      return values.length === 1 ? values[0] : null;
+    }
+
+    function displayValue(expr) {
+      const source = String(expr ?? "");
+      if (source === "") return "0";
+
+      if (/^-?(?:\d+(?:\.\d*)?|\.\d+)(?:E-?\d+)?$/.test(source)) {
+        return source;
+      }
+
+      const trailingNumber =
+        /(?:^|[+−×÷(])(-?(?:\d+(?:\.\d*)?|\.\d+))$/.exec(source);
+      if (trailingNumber) return trailingNumber[1];
+
+      let evaluable = source;
+      const last = source.at(-1);
+      if ("+−×÷".includes(last)) {
+        evaluable = source.slice(0, -1);
+      } else if (last === "-") {
+        evaluable = source.slice(0, -1);
+        if (evaluable === "") return "0";
+      }
+
+      const tokens = tokenize(evaluable);
+      const value = tokens === null ? null : evaluate(tokens);
+      return value === null ? "오류" : decToDisplay(value);
+    }
+
+    function formatDisplay(str) {
+      const source = String(str ?? "");
+      if (source === "오류" || source.includes("E")) return source;
+
+      const number = /^(-?)(\d+)(\.\d*)?$/.exec(source);
+      if (number === null) return source;
+
+      const [, sign, integer, fraction = ""] = number;
+      const grouped = integer.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+      return `${sign}${grouped}${fraction}`;
+    }
+
+    function soleNumberText(expr) {
+      const source = String(expr ?? "");
+      return /^-?(?:\d+(?:\.\d*)?|\.\d+)$/.test(source) ? source : null;
+    }
+
+    function formatDateTarget(date, hourCycle = "24") {
+      const hour = hourCycle === "12"
+        ? ((date.getHours() + 11) % 12) + 1
+        : date.getHours();
+      return (
+        String(date.getFullYear() % 100) +
+        String(date.getMonth() + 1) +
+        String(date.getDate()) +
+        String(hour) +
+        String(date.getMinutes()).padStart(2, "0")
+      );
+    }
+
+    function dateTrickTarget(currentText, nowMs, delaySeconds, hourCycle) {
+      const targetText = formatDateTarget(
+        new Date(nowMs + delaySeconds * 1000),
+        hourCycle
+      );
+      const diff = decSub(
+        decFromString(targetText),
+        decFromString(currentText)
+      );
+      return {
+        targetText,
+        neededOp: diff.s >= 0 ? "+" : "−",
+        queueText: decToPlainString(diff.s >= 0 ? diff : { ...diff, s: 1 })
+      };
+    }
+
+    function dateTrickStep(state, key, ctx) {
+      if (
+        state.phase === "armed" &&
+        (key === "+" || key === "−") &&
+        typeof ctx?.currentValueText === "string" &&
+        typeof ctx?.targetText === "string"
+      ) {
+        if (key === ctx.neededOp) {
+          return {
+            state: {
+              phase: "entering",
+              queue: ctx.queueText,
+              queueIndex: 0
+            },
+            action: "none",
+            replaceKey: key
+          };
+        }
+        return { state, action: "swallow" };
+      }
+
+      if (state.phase === "entering") {
+        if (/^[0-9.]$/.test(key)) {
+          if (state.queueIndex < state.queue.length) {
+            return {
+              state: { ...state, queueIndex: state.queueIndex + 1 },
+              action: "none",
+              replaceKey: state.queue[state.queueIndex]
+            };
+          }
+          return { state, action: "swallow", replaceKey: key };
+        }
+        if (key === "⌫") {
+          if (state.queueIndex === 0) {
+            return { state, action: "swallow" };
+          }
+          return {
+            state: { ...state, queueIndex: state.queueIndex - 1 },
+            action: "none",
+            replaceKey: key
+          };
+        }
+        if (key === "C" || key === "=") {
+          return {
+            state: { phase: "off", queue: null, queueIndex: 0 },
+            action: "none",
+            replaceKey: key
+          };
+        }
+        return { state, action: "swallow" };
+      }
+
+      return { state, action: "none", replaceKey: key };
+    }
+
+    function trickErrorGate(state, key) {
+      if (key === "C") return "pass";
+      if (key === "=" && state.phase === "ready") return "pass";
+      if (key === "%" && state.phase === "set") return "pass";
+      return "blocked";
+    }
+
+    function trickStep(state, key, exprInfo) {
+      const current = {
+        phase: ["off", "set", "ready"].includes(state?.phase)
+          ? state.phase
+          : "off",
+        storedText: typeof state?.storedText === "string" ? state.storedText : null,
+        lastKey: state?.lastKey ?? null,
+        pendingSole: typeof state?.pendingSole === "string" ? state.pendingSole : null
+      };
+      const next = { ...current, lastKey: key };
+
+      if (
+        key === "%" &&
+        current.lastKey === "%" &&
+        current.phase === "set"
+      ) {
+        return {
+          state: {
+            ...next,
+            phase: "ready",
+            pendingSole: null
+          },
+          action: "arm"
+        };
+      }
+
+      if (
+        key === "%" &&
+        current.lastKey === "%" &&
+        current.phase === "off" &&
+        current.pendingSole !== null
+      ) {
+        return {
+          state: {
+            ...next,
+            phase: "set",
+            storedText: current.pendingSole,
+            pendingSole: null
+          },
+          action: "set"
+        };
+      }
+
+      if (key === "%") {
+        return {
+          state: {
+            ...next,
+            pendingSole:
+              typeof exprInfo?.soleNumberText === "string"
+                ? exprInfo.soleNumberText
+                : null
+          },
+          action: "none"
+        };
+      }
+
+      if (key === "=" && current.phase === "ready") {
+        return {
+          state: {
+            phase: "off",
+            storedText: null,
+            lastKey: null,
+            pendingSole: null
+          },
+          action: "fire"
+        };
+      }
+
+      return {
+        state: { ...next, pendingSole: null },
+        action: "none"
+      };
+    }
+
+    function isPrimaryPointer(event) {
+      return (
+        event.isPrimary !== false &&
+        (event.button === undefined || event.button === 0)
+      );
+    }
+
+    function fitDisplayText(display) {
+      display.style.removeProperty("font-size");
+      const textLength = display.textContent?.length ?? 0;
+      const naturalStyle = getComputedStyle(display);
+      const naturalSize = Number.parseFloat(naturalStyle.fontSize);
+      const lengthScale =
+        textLength <= 10 ? 1 :
+        textLength <= 16 ? 0.82 :
+        textLength <= 24 ? 0.64 :
+        textLength <= 36 ? 0.48 : 0.36;
+      let fittedSize = naturalSize * lengthScale;
+      display.style.fontSize = `${fittedSize}px`;
+
+      const fittedStyle = getComputedStyle(display);
+      const availableWidth =
+        display.clientWidth -
+        Number.parseFloat(fittedStyle.paddingLeft) -
+        Number.parseFloat(fittedStyle.paddingRight);
+      const canvas =
+        fitDisplayText.canvas ??
+        (fitDisplayText.canvas = document.createElement("canvas"));
+      const context = canvas.getContext("2d");
+
+      if (context !== null && availableWidth > 0) {
+        context.font =
+          `${fittedStyle.fontStyle} ${fittedStyle.fontWeight} ` +
+          `${fittedSize}px ${fittedStyle.fontFamily}`;
+        const letterSpacing = Number.parseFloat(fittedStyle.letterSpacing) || 0;
+        const measuredWidth =
+          context.measureText(display.textContent ?? "").width +
+          Math.max(0, textLength - 1) * letterSpacing;
+
+        if (measuredWidth > availableWidth) {
+          fittedSize *= (availableWidth / measuredWidth) * 0.98;
+          display.style.fontSize = `${Math.max(1, fittedSize)}px`;
+        }
+      }
+    }
+
+    function setupCalculator() {
+      const app = document.getElementById("app");
+      const display = document.getElementById("display");
+      const keypad = document.querySelector(".keypad");
+      const clearKey = keypad.querySelector('[data-key="C"]');
+      const percentKey = keypad.querySelector('[data-key="%"]');
+      const penIcon = document.getElementById("pen-icon");
+      const clockIcon = document.getElementById("clock-icon");
+      const stackIcon = document.getElementById("stack-icon");
+      const stackResult = document.getElementById("stack-result");
+      const dateSettings = document.getElementById("date-settings");
+      const dateDelayValue = document.getElementById("date-delay-value");
+      const dateHourCycleButton = document.getElementById("date-hour-cycle");
+      const skinToggleButton = document.getElementById("skin-toggle");
+      const dateHintKeys = keypad.querySelectorAll(
+        '[data-key="+"], [data-key="−"], [data-key="0"], [data-key="1"], ' +
+        '[data-key="2"], [data-key="3"], [data-key="4"], [data-key="5"], ' +
+        '[data-key="6"], [data-key="7"], [data-key="8"], [data-key="9"]'
+      );
+      let expr = "";
+      let resultShown = false;
+      let lastResult = null;
+      let errorShown = false;
+      let dateTrickState = { phase: "off", queue: null, queueIndex: 0 };
+      let dateDelaySeconds = 20;
+      let dateHourCycle = "24";
+      let skin = /iPhone|iPad|iPod/.test(navigator.userAgent)
+        ? "iphone"
+        : "default";
+      let stackLongPressTimer = null;
+      let stackLongPressConsumed = false;
+      try {
+        const savedDelay = Number.parseInt(
+          localStorage.getItem("magic-calc-date-delay"),
+          10
+        );
+        if (Number.isInteger(savedDelay)) {
+          dateDelaySeconds = Math.min(120, Math.max(5, savedDelay));
+        }
+        const savedHourCycle = localStorage.getItem("magic-calc-hour-cycle");
+        if (savedHourCycle === "12" || savedHourCycle === "24") {
+          dateHourCycle = savedHourCycle;
+        }
+        const savedSkin = localStorage.getItem("magic-calc-skin");
+        if (savedSkin === "default" || savedSkin === "iphone") {
+          skin = savedSkin;
+        }
+      } catch {
+        // Storage is optional; keep the default settings when unavailable.
+      }
+      let trickState = {
+        phase: "off",
+        storedText: null,
+        lastKey: null,
+        pendingSole: null
+      };
+
+      const currentValueText = () =>
+        resultShown && lastResult !== null
+          ? decToPlainString(lastResult)
+          : soleNumberText(expr);
+
+      const dateResultText = () =>
+        resultShown && lastResult !== null
+          ? decToPlainString(lastResult)
+          : null;
+
+      const computeDateTrickValues = (currentText) =>
+        dateTrickTarget(
+          currentText,
+          Date.now(),
+          dateDelaySeconds,
+          dateHourCycle
+        );
+
+      const displayedValue = () =>
+        errorShown ? "오류" : displayValue(expr);
+
+      const render = () => {
+        const rawDisplay = displayedValue();
+        app.classList.toggle("skin-iphone", skin === "iphone");
+        display.textContent = formatDisplay(rawDisplay);
+        clearKey.textContent = skin === "iphone" && rawDisplay !== "0" && rawDisplay !== "오류"
+          ? "⌫"
+          : skin === "iphone" ? "AC" : "C";
+        percentKey.classList.toggle("trick-set", trickState.phase === "set");
+        percentKey.classList.toggle("trick-ready", trickState.phase === "ready");
+        penIcon.classList.toggle("date-armed", dateTrickState.phase !== "off");
+        dateDelayValue.textContent = `${dateDelaySeconds}초`;
+        dateHourCycleButton.textContent = `${dateHourCycle}h`;
+        skinToggleButton.textContent = skin === "iphone" ? "스킨: 아이폰" : "스킨: 기본";
+
+        let neededOp = null;
+        let digitHintKey = null;
+        const currentText = dateResultText();
+        if (dateTrickState.phase === "armed" && currentText !== null) {
+          const dateValues = computeDateTrickValues(currentText);
+          neededOp = dateValues.neededOp;
+          const digitCount = (dateValues.queueText.match(/\d/g) ?? []).length;
+          if (digitCount >= 1 && digitCount <= 10) {
+            digitHintKey = String(digitCount % 10);
+          }
+        }
+        dateHintKeys.forEach((key) => {
+          key.classList.toggle(
+            "date-key-hint",
+            key.dataset.key === neededOp || key.dataset.key === digitHintKey
+          );
+        });
+        fitDisplayText(display);
+      };
+
+      const handleKey = (key) => {
+        stackResult.hidden = true;
+
+        if (dateTrickState.phase !== "off") {
+          const currentText = dateResultText();
+          const ctx = { currentValueText: currentText };
+
+          if (
+            dateTrickState.phase === "armed" &&
+            (key === "+" || key === "−") &&
+            currentText !== null
+          ) {
+            Object.assign(
+              ctx,
+              computeDateTrickValues(currentText)
+            );
+          }
+
+          const dateTransition = dateTrickStep(dateTrickState, key, ctx);
+          dateTrickState = dateTransition.state;
+          if (dateTransition.action === "swallow") return;
+          key = dateTransition.replaceKey;
+        }
+
+        if (errorShown && trickErrorGate(trickState, key) === "blocked") return;
+
+        if (key === "%") {
+          const transition = trickStep(
+            trickState,
+            key,
+            { soleNumberText: soleNumberText(expr) }
+          );
+          trickState = transition.state;
+
+          if (transition.action === "set") {
+            expr = "";
+            resultShown = false;
+            lastResult = null;
+            errorShown = false;
+            render();
+            return;
+          }
+          if (transition.action === "arm") {
+            render();
+            return;
+          }
+          if (errorShown) {
+            render();
+            return;
+          }
+        } else if (key === "=") {
+          const storedBeforeStep = trickState.storedText;
+
+          if (trickState.phase === "ready") {
+            const transition = trickStep(
+              trickState,
+              key,
+              { soleNumberText: null }
+            );
+            trickState = transition.state;
+
+            if (transition.action === "fire") {
+              expr = storedBeforeStep ?? "";
+              resultShown = true;
+              lastResult = expr === "" ? null : decFromString(expr);
+              errorShown = false;
+              render();
+              return;
+            }
+          }
+
+          if (expr !== "" && !resultShown) {
+            const tokens = tokenize(expr);
+            const value = tokens === null ? null : evaluate(tokens);
+
+            if (value === null) {
+              errorShown = true;
+              resultShown = false;
+              lastResult = null;
+            } else {
+              expr = decToDisplay(value);
+              resultShown = true;
+              lastResult = value;
+            }
+          }
+
+          const transition = trickStep(
+            trickState,
+            key,
+            { soleNumberText: null }
+          );
+          trickState = transition.state;
+          render();
+          return;
+        } else {
+          const transition = trickStep(
+            trickState,
+            key,
+            { soleNumberText: null }
+          );
+          trickState = transition.state;
+        }
+
+        if (key === "C") {
+          expr = "";
+          resultShown = false;
+          lastResult = null;
+          errorShown = false;
+          render();
+          return;
+        }
+
+        if (key === "⌫" && resultShown) {
+          expr = "";
+          resultShown = false;
+          lastResult = null;
+          render();
+          return;
+        }
+
+        if (resultShown) {
+          if (/^(?:[0-9]|\.|\(\))$/.test(key)) {
+            expr = "";
+          } else if (lastResult !== null) {
+            expr = decToPlainString(lastResult);
+          }
+          resultShown = false;
+          lastResult = null;
+        }
+
+        expr = applyKey(expr, key);
+        if ("+−×÷".includes(key) && displayValue(expr) === "오류") {
+          errorShown = true;
+          resultShown = false;
+          lastResult = null;
+        }
+        render();
+      };
+
+      keypad.addEventListener("pointerdown", (event) => {
+        if (!isPrimaryPointer(event)) return;
+        const button = event.target.closest("button[data-key]");
+        if (!button || !keypad.contains(button)) return;
+
+        event.preventDefault();
+        button.classList.add("pressed");
+        window.setTimeout(() => button.classList.remove("pressed"), 140);
+        const key = button.dataset.key === "C" &&
+          skin === "iphone" &&
+          displayedValue() !== "0" &&
+          displayedValue() !== "오류"
+          ? "⌫"
+          : button.dataset.key;
+        handleKey(key);
+      });
+
+      penIcon.addEventListener("pointerdown", (event) => {
+        if (!isPrimaryPointer(event)) return;
+        event.preventDefault();
+        dateTrickState = dateTrickState.phase === "off"
+          ? { phase: "armed", queue: null, queueIndex: 0 }
+          : { phase: "off", queue: null, queueIndex: 0 };
+        render();
+      });
+
+      stackIcon.addEventListener("pointerdown", (event) => {
+        if (!isPrimaryPointer(event)) return;
+        event.preventDefault();
+        try {
+          stackIcon.setPointerCapture?.(event.pointerId);
+        } catch {}
+
+        window.clearTimeout(stackLongPressTimer);
+        stackLongPressConsumed = false;
+        stackLongPressTimer = window.setTimeout(() => {
+          stackLongPressTimer = null;
+          stackLongPressConsumed = true;
+
+          const text = currentValueText();
+          if (text === null) return;
+
+          const result = undoSetupLookup(text);
+          if (result === null) return;
+
+          stackResult.textContent = `${result.upper}번째 · ${result.lower}번째`;
+          stackResult.hidden = false;
+        }, 500);
+      });
+
+      const finishStackPress = () => {
+        const timerWasPending = stackLongPressTimer !== null;
+        window.clearTimeout(stackLongPressTimer);
+        stackLongPressTimer = null;
+
+        if (!timerWasPending && !stackLongPressConsumed) return;
+        if (stackLongPressConsumed) {
+          stackLongPressConsumed = false;
+          return;
+        }
+
+        if (!stackResult.hidden) {
+          stackResult.hidden = true;
+          return;
+        }
+
+        const text = currentValueText();
+        if (text === null) return;
+
+        const cutResult = mnemonicaCutLookup(text);
+        if (cutResult !== null) {
+          stackResult.textContent = `${cutResult.cut}장 · ${cutResult.bottom}`;
+          stackResult.hidden = false;
+          return;
+        }
+
+        const result = mnemonicaLookup(text);
+        const parts = [];
+        if (result.position !== null) parts.push(`${result.position}번째`);
+        if (result.card !== null) parts.push(result.card);
+        if (parts.length === 0) return;
+
+        stackResult.textContent = parts.join(" · ");
+        stackResult.hidden = false;
+      };
+
+      const cancelStackPress = () => {
+        window.clearTimeout(stackLongPressTimer);
+        stackLongPressTimer = null;
+        stackLongPressConsumed = false;
+      };
+
+      stackIcon.addEventListener("pointerup", finishStackPress);
+      stackIcon.addEventListener("pointercancel", cancelStackPress);
+      stackIcon.addEventListener("pointerleave", cancelStackPress);
+
+      installSettingsSwipe(() => {
+        dateSettings.classList.add("open");
+        dateSettings.setAttribute("aria-hidden", "false");
+      }, cancelStackPress, () => !dateSettings.classList.contains("open"));
+
+      dateSettings.addEventListener("pointerdown", (event) => {
+        if (!isPrimaryPointer(event)) return;
+        const button = event.target.closest("button[data-date-action]");
+        if (!button || !dateSettings.contains(button)) return;
+        event.preventDefault();
+
+        if (button.dataset.dateAction === "close") {
+          dateSettings.classList.remove("open");
+          return;
+        }
+
+        if (button.dataset.dateAction === "hour-cycle") {
+          dateHourCycle = dateHourCycle === "24" ? "12" : "24";
+          try {
+            localStorage.setItem("magic-calc-hour-cycle", dateHourCycle);
+          } catch {
+            // Keep the in-memory setting when storage is unavailable.
+          }
+          render();
+          return;
+        }
+
+        if (button.dataset.dateAction === "skin") {
+          skin = skin === "iphone" ? "default" : "iphone";
+          try {
+            localStorage.setItem("magic-calc-skin", skin);
+          } catch {
+            // Keep the in-memory setting when storage is unavailable.
+          }
+          render();
+          return;
+        }
+
+        if (button.dataset.dateAction === "fullscreen") {
+          try {
+            if ((document.fullscreenElement ?? document.webkitFullscreenElement) != null) {
+              const fullscreenResult = (document.exitFullscreen ?? document.webkitExitFullscreen)?.call(document);
+              fullscreenResult?.catch?.(() => {});
+            } else {
+              const el = document.documentElement;
+              const fullscreenResult = (el.requestFullscreen ?? el.webkitRequestFullscreen)?.call(el);
+              fullscreenResult?.catch?.(() => {});
+            }
+          } catch {
+            // Fullscreen is unavailable on this browser.
+          }
+          return;
+        }
+
+        const change = button.dataset.dateAction === "increase" ? 5 : -5;
+        dateDelaySeconds = Math.min(120, Math.max(5, dateDelaySeconds + change));
+        try {
+          localStorage.setItem(
+            "magic-calc-date-delay",
+            String(dateDelaySeconds)
+          );
+        } catch {
+          // Keep the in-memory setting when storage is unavailable.
+        }
+        render();
+      });
+
+      window.addEventListener("resize", () => fitDisplayText(display));
+      render();
+    }
+
     let wakeLock = null;
     let wakeLockPending = false;
-    let textZonePressTimer = 0;
-    let presetHoldTimer = 0;
-    let presetHintTimer = 0;
-    let controlResizeObserver = null;
-    function renderCs(totalCs) {
-      const formatted = formatCs(totalCs);
-      customDisplay.hidden = true;
-      seconds.hidden = false;
-      colon.hidden = false;
-      centiseconds.hidden = false;
-      const entry = formatted.sec + formatted.cs;
-      digitSpans.forEach((span, index) => { span.textContent = entry[index]; });
-    }
-    function renderCustomText(text) {
-      if (/^\d{1,2}:\d{2}$/.test(text)) {
-        const [sec, cs] = text.split(":");
-        customDisplay.hidden = true;
-        seconds.hidden = false;
-        colon.hidden = false;
-        centiseconds.hidden = false;
-        digitSpans[0].textContent = sec.length === 2 ? sec[0] : "";
-        digitSpans[1].textContent = sec[sec.length - 1];
-        digitSpans[2].textContent = cs[0];
-        digitSpans[3].textContent = cs[1];
-        return;
-      }
-      seconds.hidden = true;
-      colon.hidden = true;
-      centiseconds.hidden = true;
-      customDisplay.hidden = false;
-      customDisplay.textContent = text;
-    }
-    function gradient(base, pressed) {
-      const top = `color-mix(in srgb, ${base} 82%, #ffffff)`;
-      const value = `linear-gradient(180deg, ${top} 0%, ${base} 100%)`;
-      return pressed
-        ? `linear-gradient(180deg, rgba(0,0,0,0.12), rgba(0,0,0,0.12)), ${value}`
-        : value;
-    }
-    let pressed = false;
-    function renderState() {
-      const resetBase = "linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.12) 100%)";
-      const resetBackground = pressed
-        ? `linear-gradient(180deg, rgba(0,0,0,0.12), rgba(0,0,0,0.12)), ${resetBase}`
-        : resetBase;
-      let label = "START";
-      let background = gradient("#4C6EF5", pressed);
-      if (state === "running") {
-        label = "STOP";
-        background = gradient("#E03131", pressed);
-      } else if (state === "stopped") {
-        label = "RESET";
-        background = resetBackground;
-      }
-      controlLabel.textContent = label;
-      control.setAttribute("aria-label", label);
-      control.style.background = background;
-      control.style.transform = pressed
-        ? "scale(0.96)"
-        : "none";
-    }
-    function finalizeStop(cs) {
-      cancelAnimationFrame(frameId);
-      frameId = 0;
-      state = "stopped";
-      stoppedCs = cs;
-      renderCs(stoppedCs);
-      renderState();
-    }
-    function finalizeStopText(text) {
-      cancelAnimationFrame(frameId);
-      frameId = 0;
-      state = "stopped";
-      renderCustomText(text);
-      renderState();
-    }
-    function tick(now) {
-      const elapsed = clampElapsed(now - startedAt);
-      if (elapsed >= 59990) {
-        finalizeStop(resolveStoppedCs({
-          elapsed, trickMode: trickState === "digit", reservedTens, stopDigit: null
-        }));
-        return;
-      }
-      renderCs(Math.floor(elapsed / 10));
-      frameId = requestAnimationFrame(tick);
-    }
-    function startTimer() {
-      state = "running";
-      startedAt = performance.now();
-      renderCs(0);
-      renderState();
-      frameId = requestAnimationFrame(tick);
-    }
-    function appRect(element) {
-      const rect = element.getBoundingClientRect();
-      const rotated = isRotatedLayout();
-      // A clockwise-rotated box's screen top-right maps to its app top-left.
-      // Swap extents too; this preserves the visible control grid even while pressed/scaled.
-      const origin = toAppPoint(rotated ? rect.right : rect.left, rect.top, innerWidth, innerHeight, rotated);
-      return { left: origin.x, top: origin.y, width: rotated ? rect.height : rect.width,
-        height: rotated ? rect.width : rect.height };
-    }
-    function digitFromEvent(event) {
-      const rect = appRect(control);
-      const point = toAppPoint(event.clientX, event.clientY, innerWidth, innerHeight, isRotatedLayout());
-      return digitFromPoint(point.x - rect.left, point.y - rect.top, rect.width, rect.height);
-    }
-    function stopTimer(event) {
-      const elapsed = clampElapsed(performance.now() - startedAt);
-      const stopDigit = digitFromEvent(event);
-      const o = resolveStopOutcome({
-        trickState, presetCs, customText, elapsed, reservedTens, stopDigit, presetAt, textAt
-      });
-      if (o.kind === "text") finalizeStopText(o.text);
-      else finalizeStop(o.cs);
-    }
-    function resetTimer() {
-      cancelAnimationFrame(frameId);
-      frameId = 0;
-      state = "idle";
-      reservedTens = null;
-      stoppedCs = 0;
-      renderCs(0);
-      renderState();
-    }
-    function isPrimaryPointer(event) {
-      return event.isPrimary !== false && (event.button === undefined || event.button === 0);
-    }
-    function handleControl(event) {
-      if (presetMode) return;
-      if (!isPrimaryPointer(event)) return;
-      event.preventDefault();
-      pressed = true;
-      if (state === "idle") {
-        if (trickState === "digit") reservedTens = digitFromEvent(event);
-        startTimer();
-      } else if (state === "running") {
-        stopTimer(event);
-      } else {
-        resetTimer();
-      }
-    }
-    function releasePress() {
-      if (!pressed) return;
-      pressed = false;
-      renderState();
-    }
-    async function enterFullscreen() {
-      if (document.fullscreenEnabled === false && !document.webkitFullscreenEnabled) return;
-      if (document.fullscreenElement || document.webkitFullscreenElement) return;
-      const targets = [document.documentElement, document.body];
-      for (const element of targets) {
-        if (!element) continue;
-        const request = element.requestFullscreen || element.webkitRequestFullscreen ||
-          element.webkitRequestFullScreen || element.msRequestFullscreen;
-        if (typeof request !== "function") continue;
-        try {
-          await request.call(element, { navigationUI: "hide" });
-          break;
-        } catch (_) {}
-      }
-      try {
-        if (screen.orientation && typeof screen.orientation.lock === "function") {
-          await screen.orientation.lock("landscape");
-        }
-      } catch (_) {}
-    }
-    function handleFullscreenZone(event) {
-      if (presetMode) return;
-      if (!isPrimaryPointer(event)) return;
-      event.preventDefault();
-      enterFullscreen();
-    }
-    function handleTrickZone(event) {
-      if (presetMode) return;
-      if (!isPrimaryPointer(event)) return;
-      event.preventDefault();
-      trickState = nextTrickState(trickState);
-      if (trickState !== "digit") reservedTens = null;
-      colon.classList.toggle("trick", trickState === "digit");
-      colon.classList.toggle("trick-text", trickState === "text");
-    }
-    function openTextEditor() {
-      textEditorInput.value = customText;
-      textEditor.hidden = false;
-      textEditorInput.focus();
-      textEditorInput.select();
-    }
-    function closeTextEditor() {
-      textEditor.hidden = true;
-    }
-    function handleTextZonePress(event) {
-      if (presetMode) return;
-      if (!isPrimaryPointer(event)) return;
-      event.preventDefault();
-      if (textZonePressTimer) return;
-      textZonePressTimer = setTimeout(() => {
-        textZonePressTimer = 0;
-        openTextEditor();
-      }, TEXT_ZONE_HOLD_MS);
-    }
-    function clearTextZonePress() {
-      if (!textZonePressTimer) return;
-      clearTimeout(textZonePressTimer);
-      textZonePressTimer = 0;
-    }
-    function enterPresetMode() {
-      if (state === "running") return;
-      clearTextZonePress();
-      resetTimer();
-      presetEntry = String(presetCs ?? 0).padStart(4, "0");
-      presetMode = true;
-      setPresetActiveGroup(null);
-      app.classList.add("preset-mode");
-      renderCs(Number(presetEntry));
-      showPresetHint();
-    }
-    function clearPresetHold() {
-      if (!presetHoldTimer) return;
-      clearTimeout(presetHoldTimer);
-      presetHoldTimer = 0;
-    }
-    function startPresetHold() {
-      if (presetHoldTimer) return;
-      presetHoldTimer = setTimeout(() => {
-        presetHoldTimer = 0;
-        enterPresetMode();
-      }, PRESET_HOLD_MS);
-    }
-    function setPresetActiveGroup(groupIndex) {
-      seconds.classList.toggle("preset-active", groupIndex === 0);
-      centiseconds.classList.toggle("preset-active", groupIndex === 1);
-      digitSpans.forEach((span, spanIndex) => {
-        const group = spanIndex < 2 ? 0 : 1;
-        span.classList.toggle("preset-active", group === groupIndex);
-      });
-    }
-    function clearPresetHint() {
-      if (presetHintTimer) {
-        clearTimeout(presetHintTimer);
-        presetHintTimer = 0;
-      }
-      presetHint.hidden = true;
-    }
-    function showPresetHint() {
-      clearPresetHint();
-      presetHint.hidden = false;
-      presetHintTimer = setTimeout(() => {
-        presetHintTimer = 0;
-        presetHint.hidden = true;
-      }, 2000);
-    }
-    function handleDocumentPresetPress(event) {
-      if (!isPrimaryPointer(event)) return;
-      if (presetMode || state === "running") return;
-      if (event.target.closest && event.target.closest("#control, #text-editor, #install-nudge")) return;
-      const point = toAppPoint(event.clientX, event.clientY, innerWidth, innerHeight, isRotatedLayout());
-      if (isLeftmostScreenFifth(point.x, appSize().width)) startPresetHold();
-    }
-    function savePreset() {
-      presetCs = Math.min(5999, Number(presetEntry)) || null;
-      presetAt = presetCs === null ? 0 : Date.now();
-      try {
-        if (presetCs === null) {
-          localStorage.removeItem(PRESET_STORAGE_KEY);
-          localStorage.removeItem(PRESET_AT_STORAGE_KEY);
-        } else {
-          localStorage.setItem(PRESET_STORAGE_KEY, String(presetCs));
-          localStorage.setItem(PRESET_AT_STORAGE_KEY, String(presetAt));
-        }
-      } catch (_) {}
-      presetMode = false;
-      presetGesture = null;
-      clearPresetHint();
-      setPresetActiveGroup(null);
-      app.classList.remove("preset-mode");
-      renderCs(0);
-    }
-    function handlePresetPointerDown(event) {
-      if (!presetMode || !isPrimaryPointer(event) ||
-          event.target.closest("#text-editor, #install-nudge")) return;
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      // Coordinate hit test (toAppPoint + row rect), not event.target / glyph. dispatchEvent skips hit-testing.
-      const point = toAppPoint(event.clientX, event.clientY, innerWidth, innerHeight, isRotatedLayout());
-      const groupIndex = presetGroupIndexFromPoint(point.x, point.y, appRect(timeDisplay));
-      setPresetActiveGroup(groupIndex);
-      presetGesture = {
-        pointerId: event.pointerId,
-        groupIndex,
-        start: point,
-        lastY: point.y,
-        lastT: event.timeStamp || performance.now(),
-        acc: 0,
-        moved: false
-      };
-      app.setPointerCapture(event.pointerId);
-    }
-    function handlePresetPointerMove(event) {
-      const gesture = presetGesture;
-      if (!gesture || gesture.pointerId !== event.pointerId) return;
-      event.preventDefault();
-      const point = toAppPoint(event.clientX, event.clientY, innerWidth, innerHeight, isRotatedLayout());
-      if (Math.hypot(point.x - gesture.start.x, point.y - gesture.start.y) > 10) gesture.moved = true;
-      if (gesture.groupIndex === null) return;
-      const now = event.timeStamp || performance.now();
-      const deltaPx = gesture.lastY - point.y;
-      const dt = now - gesture.lastT;
-      const velocity = dt > 0 ? Math.abs(deltaPx) / dt : 0;
-      gesture.acc += deltaPx;
-      gesture.lastY = point.y;
-      gesture.lastT = now;
-      const steps = presetSwipeSteps(gesture.acc, velocity);
-      gesture.acc = nextSwipeAccumulator(gesture.acc, steps, presetSwipePxPerStep(velocity), 20);
-      if (steps === 0) return;
-      presetEntry = applyPresetGroupSwipe(presetEntry, gesture.groupIndex, steps);
-      renderCs(Number(presetEntry));
-    }
-    function handlePresetPointerEnd(event) {
-      const gesture = presetGesture;
-      if (!gesture || gesture.pointerId !== event.pointerId) return;
-      if (event.type === "pointerup") handlePresetPointerMove(event);
-      presetGesture = null;
-      if (app.hasPointerCapture(event.pointerId)) app.releasePointerCapture(event.pointerId);
-      if (event.type === "pointerup" && gesture.groupIndex === null && !gesture.moved) savePreset();
-    }
-    function saveCustomText() {
-      const value = textEditorInput.value.trim();
-      customText = value;
-      textAt = value ? Date.now() : 0;
-      try {
-        if (value) {
-          localStorage.setItem(CUSTOM_TEXT_STORAGE_KEY, value);
-          localStorage.setItem(TEXT_AT_STORAGE_KEY, String(textAt));
-        } else {
-          localStorage.removeItem(CUSTOM_TEXT_STORAGE_KEY);
-          localStorage.removeItem(TEXT_AT_STORAGE_KEY);
-        }
-      } catch (_) {}
-      closeTextEditor();
-    }
-    function clearCustomText() {
-      customText = "";
-      textAt = 0;
-      try {
-        localStorage.removeItem(CUSTOM_TEXT_STORAGE_KEY);
-        localStorage.removeItem(TEXT_AT_STORAGE_KEY);
-      } catch (_) {}
-      textEditorInput.value = "";
-      closeTextEditor();
-    }
-    function handleTextEditorBackground(event) {
-      if (event.target.closest("#stopwatch-help")) return;
-      if (event.target !== textEditorInput &&
-          event.target !== textEditorSave &&
-          event.target !== textEditorClear) {
-        closeTextEditor();
-      }
-    }
-    function loadCustomText() {
-      try {
-        customText = localStorage.getItem(CUSTOM_TEXT_STORAGE_KEY) || "";
-        textAt = Number(localStorage.getItem(TEXT_AT_STORAGE_KEY)) || 0;
-      } catch (_) {
-        customText = "";
-      }
-    }
-    function loadPreset() {
-      try {
-        const stored = localStorage.getItem(PRESET_STORAGE_KEY);
-        const value = stored !== null && /^\d{1,4}$/.test(stored) ? Number(stored) : NaN;
-        presetCs = Number.isInteger(value) && value > 0 && value <= 9999 ? Math.min(5999, value) : null;
-        presetAt = Number(localStorage.getItem(PRESET_AT_STORAGE_KEY)) || 0;
-      } catch (_) {
-        presetCs = null;
-      }
-    }
-    function updateMainHitZonesHeight() {
-      const timeDisplayRect = appRect(timeDisplay);
-      const controlRect = appRect(control);
-      // All three DOM zones rotate with #app and cover its top band in app coordinates.
-      const bottom = Math.min(timeDisplayRect.top + timeDisplayRect.height,
-        controlRect.top - MAIN_HIT_ZONE_GAP, appSize().height);
-      mainHitZones.style.height = `${Math.max(0, bottom)}px`;
-    }
-    function observeControlLayout() {
-      updateMainHitZonesHeight();
-      if (typeof ResizeObserver !== "function") return;
-      controlResizeObserver = new ResizeObserver(updateMainHitZonesHeight);
-      controlResizeObserver.observe(control);
-      controlResizeObserver.observe(app);
-      controlResizeObserver.observe(timeDisplay);
-    }
+
     async function acquireWakeLock() {
-      if (wakeLock || wakeLockPending || document.visibilityState !== "visible" ||
-          !navigator.wakeLock || typeof navigator.wakeLock.request !== "function") return;
+      if (
+        !("wakeLock" in navigator) ||
+        document.visibilityState !== "visible" ||
+        wakeLock !== null ||
+        wakeLockPending
+      ) {
+        return;
+      }
+
       wakeLockPending = true;
       try {
         const lock = await navigator.wakeLock.request("screen");
+
+        if (document.visibilityState !== "visible") {
+          await lock.release();
+          return;
+        }
+
         wakeLock = lock;
         lock.addEventListener("release", () => {
           if (wakeLock === lock) wakeLock = null;
           if (document.visibilityState === "visible") acquireWakeLock();
-        });
-      } catch (_) {
+        }, { once: true });
+      } catch {
+        wakeLock = null;
       } finally {
         wakeLockPending = false;
       }
     }
-    function initApp() {
-      installSettingsSwipe(openTextEditor, () => { clearTextZonePress(); clearPresetHold(); }, () => !presetMode && state !== "running" && textEditor.hidden);
-      loadCustomText();
-      loadPreset();
-      control.addEventListener("pointerdown", handleControl, { passive: false });
-      fullscreenZone.addEventListener("pointerdown", handleFullscreenZone, { passive: false });
-      trickZone.addEventListener("pointerdown", handleTrickZone, { passive: false });
 
-      textEditor.addEventListener("pointerdown", handleTextEditorBackground);
-      textEditorSave.addEventListener("click", saveCustomText);
-      textEditorClear.addEventListener("click", clearCustomText);
-      app.addEventListener("pointerdown", handlePresetPointerDown, { capture: true, passive: false });
-      window.addEventListener("pointermove", handlePresetPointerMove, { passive: false });
-      window.addEventListener("pointerup", handlePresetPointerEnd);
-      window.addEventListener("pointercancel", handlePresetPointerEnd);
-      window.addEventListener("resize", updateMainHitZonesHeight);
-      window.addEventListener("pointerup", releasePress);
-      window.addEventListener("pointercancel", releasePress);
-      window.addEventListener("pointerup", clearTextZonePress);
-      window.addEventListener("pointerup", clearPresetHold);
-      document.addEventListener("pointerdown", handleDocumentPresetPress, { passive: true });
-      document.addEventListener("pointerdown", () => {
-        if (!wakeLock) acquireWakeLock();
-      });
-      document.addEventListener("visibilitychange", () => {
-        if (document.visibilityState === "visible") acquireWakeLock();
-      });
-      observeControlLayout();
-      renderState();
-      acquireWakeLock();
+    async function releaseWakeLock() {
+      const lock = wakeLock;
+      wakeLock = null;
+      if (lock === null) return;
+
+      try {
+        await lock.release();
+      } catch {
+        // Wake Lock API is optional; release failures need no UI.
+      }
     }
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") {
+        acquireWakeLock();
+      } else {
+        releaseWakeLock();
+      }
+    });
+
     if (location.hash === "#selftest") {
-      app.hidden = true;
-      selftest.hidden = false;
+      document.getElementById("app").hidden = true;
+      const panel = document.getElementById("selftest");
+      panel.style.display = "block";
       runSelfTests();
     } else {
-      initApp();
+      setupCalculator();
+      acquireWakeLock();
     }
   </script>
   <style>

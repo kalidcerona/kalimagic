@@ -1,0 +1,25 @@
+{
+  "name": "거짓말 탐지기",
+  "short_name": "거짓말 탐지기",
+  "description": "공연자가 진행하는 코미디 반응 화면. 실제 측정이 아닙니다.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#12100f",
+  "theme_color": "#12100f",
+  "lang": "ko",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

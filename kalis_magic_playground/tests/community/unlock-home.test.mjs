@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import * as logic from '../../zz5/logic.js';
+import * as logic from '../../zz2/logic.js';
 
 test('personal reveal selects configured attempt and formats valid birthday separately', () => {
   const attempts = [[1, 2, 3, 4, 5, 6], [0, 8, 0, 2, 2, 9], [9, 9, 9, 9, 9, 9]];
@@ -17,8 +17,8 @@ test('personal reveal stays empty until the configured attempt exists', () => {
 
 test('personal and shared unlock use different persistent storage identities', () => {
   assert.equal(typeof logic.storageIdentityForPath, 'function');
-  assert.notDeepEqual(logic.storageIdentityForPath('/zz5/'), logic.storageIdentityForPath('/tools/unlock/'));
-  assert.equal(logic.storageIdentityForPath('/zz5/').personal, true);
+  assert.notDeepEqual(logic.storageIdentityForPath('/zz2/'), logic.storageIdentityForPath('/tools/unlock/'));
+  assert.equal(logic.storageIdentityForPath('/zz2/').personal, true);
   assert.equal(logic.storageIdentityForPath('/tools/unlock/').personal, false);
 });
 

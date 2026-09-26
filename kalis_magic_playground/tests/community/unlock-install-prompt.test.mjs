@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { installInstructions, shouldOfferInstall, installStorageKey } from '../../zz5/install-prompt.js';
+import { installInstructions, shouldOfferInstall, installStorageKey } from '../../zz2/install-prompt.js';
 
 test('Android Chrome keeps a menu fallback when the native install prompt is unavailable', () => {
   assert.match(installInstructions('Mozilla/5.0 (Linux; Android 15) Chrome/140.0'), /⋮.*홈 화면에 추가/);
@@ -22,7 +22,7 @@ test('installed or dismissed apps do not show the first-run offer', () => {
 });
 
 test('personal and shared unlock remember dismissal separately', () => {
-  assert.notEqual(installStorageKey('/zz5/'), installStorageKey('/tools/unlock/'));
+  assert.notEqual(installStorageKey('/zz2/'), installStorageKey('/tools/unlock/'));
 });
 
 test('the first Android visit offers installation and uses Chrome’s native prompt after a tap', async () => {
@@ -40,12 +40,12 @@ test('the first Android visit offers installation and uses Chrome’s native pro
     Object.assign(globalThis, {
       document: { getElementById: (id) => elements.get(id) },
       navigator: { userAgent: 'Mozilla/5.0 (Linux; Android 15) Chrome/140.0' },
-      location: { pathname: '/zz5/' },
+      location: { pathname: '/zz2/' },
       matchMedia: () => ({ matches: false }),
       localStorage: { getItem: (key) => saved.get(key), setItem: (key, value) => saved.set(key, value) },
       window: { addEventListener: (name, listener) => windowEvents.set(name, listener) }
     });
-    await import('../../zz5/install-prompt.js?runtime-android');
+    await import('../../zz2/install-prompt.js?runtime-android');
     assert.equal(elements.get('install-offer').hidden, false);
     let nativePromptCalls = 0;
     windowEvents.get('beforeinstallprompt')({
@@ -56,7 +56,7 @@ test('the first Android visit offers installation and uses Chrome’s native pro
     await elements.get('install-action').events.get('click')();
     assert.equal(nativePromptCalls, 1);
     assert.equal(elements.get('install-offer').hidden, true);
-    assert.equal(saved.get(installStorageKey('/zz5/')), '1');
+    assert.equal(saved.get(installStorageKey('/zz2/')), '1');
   } finally {
     for (const key of globals) {
       const descriptor = prior.get(key);

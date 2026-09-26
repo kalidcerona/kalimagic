@@ -336,7 +336,7 @@
       tool.disabled = true;
       approve.disabled = true;
       reject.disabled = true;
-      setStatus(status, item.tool ? '이 앱의 권한 서비스가 중단되어 승인과 삭제를 잠시 사용할 수 없습니다.' : '계산기·스톱워치 권한 서비스가 중단되어 이 기존 요청을 처리할 수 없습니다.', true);
+      setStatus(status, item.tool ? '이 앱의 권한 서비스가 중단되어 승인과 삭제를 잠시 사용할 수 없습니다.' : 'HITSUZEN·KAIROS 권한 서비스가 중단되어 이 기존 요청을 처리할 수 없습니다.', true);
     }
     tool.addEventListener('change', function () {
       var canAct = model.isPendingActionAvailable(item, tool.value, availability);

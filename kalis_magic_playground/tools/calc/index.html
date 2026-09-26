@@ -10,7 +10,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="icon-192.png">
-  <title>계산기</title>
+  <title>HITSUZEN</title>
   <style>
     :root {
       color-scheme: dark;
@@ -117,6 +117,14 @@
 
     .date-settings.open {
       display: flex;
+    }
+
+    .date-settings-logo {
+      flex: 0 0 100%;
+      display: block;
+      width: min(100%, 220px);
+      height: auto;
+      margin: 0 auto 4px;
     }
 
     .date-settings button {
@@ -404,6 +412,7 @@
     </div>
 
     <div class="date-settings" id="date-settings" aria-hidden="true">
+      <img class="date-settings-logo" src="brand-logo.png" alt="HITSUZEN">
       <button type="button" data-date-action="decrease">−</button>
       <span class="date-settings-value" id="date-delay-value">20초</span>
       <button type="button" data-date-action="increase">+</button>

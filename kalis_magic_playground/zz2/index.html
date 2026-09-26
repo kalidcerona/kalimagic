@@ -2,2195 +2,1218 @@
 <html lang="ko">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#000000" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
-  <meta name="color-scheme" content="dark">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="manifest" href="manifest.webmanifest">
-  <link rel="apple-touch-icon" href="icon-192.png">
-  <title>계산기</title>
+  <meta name="theme-color" content="#000000">
+  <title>RELEASE · 레리즈</title>
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="apple-touch-icon" href="./icon-192.png">
   <style>
-    :root {
-      color-scheme: dark;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background: #000;
-      color: #f5f5f5;
+    :root { color-scheme: dark; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; --status-color: #000; }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { margin: 0; width: 100%; height: 100%; height: 100dvh; overflow: hidden; background: var(--status-color); }
+    body { touch-action: manipulation; -webkit-user-select: none; user-select: none; }
+    button, input, select { font: inherit; }
+    button { color: inherit; cursor: pointer; border: 0; }
+    button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid #91baff; outline-offset: 4px; }
+    [hidden] { display: none !important; }
+    #app { position: absolute; top: env(safe-area-inset-top, 0px); bottom: 0; left: 0; right: 0; overflow: hidden; background: #000; color: #fff; }
+    .screen, .wallpaper, .shade { position: absolute; inset: 0; width: 100%; height: 100%; }
+    .screen { overflow: hidden; }
+    .wallpaper { object-fit: cover; pointer-events: none; }
+    #input-screen {
+      background: radial-gradient(ellipse at 20% 10%, #575d78, transparent 65%), linear-gradient(155deg, #343c50, #10151e);
+      --key-d: clamp(64px, 18.5vw, 76px);
+      --key-hgap: clamp(18px, 5vw, 22px);
+      --key-vgap: clamp(12px, 3.4vw, 15px);
     }
-
-    * {
-      box-sizing: border-box;
-      -webkit-tap-highlight-color: transparent;
+    .shade { background: rgba(0, 0, 0, 0.35); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); }
+    .pin-layout { position: relative; height: 100%; max-width: 450px; margin: auto; }
+    #lock { position: absolute; z-index: 1; top: 2.6%; left: 50%; transform: translateX(-50%); width: 44px; height: 44px; display: none; place-items: center; pointer-events: none; }
+    #lock svg { width: 18px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .prompt { position: absolute; z-index: 1; top: 19%; left: 50%; transform: translateX(-50%); width: min(330px, calc(100% - 44px)); min-height: 44px; padding: 0; background: none; font-size: 18px; line-height: 1.3; font-weight: 400; text-align: center; white-space: normal; }
+    #dots { position: absolute; z-index: 1; top: 28%; left: 50%; transform: translateX(-50%); display: flex; justify-content: center; gap: 21px; height: 18px; }
+    .dot { display: block; width: 12px; height: 12px; border: 1.4px solid #ffffffe0; border-radius: 50%; }
+    .dot.filled { background: #fff; }
+    #dots.shake { animation: shake-ios 420ms linear; }
+    @keyframes shake-ios {
+      0%, 100% { transform: translateX(-50%); }
+      14% { transform: translateX(calc(-50% - 12px)); }
+      28% { transform: translateX(calc(-50% + 10px)); }
+      42% { transform: translateX(calc(-50% - 8px)); }
+      56% { transform: translateX(calc(-50% + 6px)); }
+      70% { transform: translateX(calc(-50% - 4px)); }
+      84% { transform: translateX(calc(-50% + 2px)); }
     }
-
-    html,
-    body {
-      min-height: 100%;
-      margin: 0;
-      background: #000;
-    }
-
-    button {
-      font: inherit;
-    }
-
-    .calculator {
-      --pad-block-start: max(clamp(20px, 4vw, 28px), env(safe-area-inset-top));
-      --pad-block-end: max(clamp(20px, 4vw, 28px), env(safe-area-inset-bottom));
-      --layout-gap: clamp(16px, 4vw, 24px);
-      --toolbar-height: clamp(34px, 8vw, 44px);
-      --display-min: 96px;
-      container-type: inline-size;
-      width: min(100%, clamp(430px, 68vw, 560px));
-      height: 100dvh;
-      margin: 0 auto;
-      padding:
-        var(--pad-block-start)
-        clamp(18px, 4vw, 24px)
-        var(--pad-block-end);
-      display: grid;
-      grid-template-rows:
-        var(--toolbar-height)
-        minmax(var(--display-min), 1fr)
-        auto;
-      gap: var(--layout-gap);
-      overflow: hidden;
-      background: #000;
-      position: relative;
-    }
-
-    .toolbar {
-      min-height: var(--toolbar-height);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      color: #b8b8b8;
-      pointer-events: none;
-    }
-
-    .toolbar-icon,
-    .toolbar-tools {
-      display: flex;
-      align-items: center;
-      gap: 17px;
-      pointer-events: auto;
-    }
-
-    .toolbar svg {
-      width: clamp(25px, 6cqw, 32px);
-      height: clamp(25px, 6cqw, 32px);
-      fill: none;
-      stroke: currentColor;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-      stroke-width: 1.8;
-    }
-
-    .root-mark {
-      font-size: clamp(25px, 6cqw, 32px);
-      font-weight: 400;
-      line-height: 1;
-    }
-
-    #pen-icon.date-armed path:first-of-type {
-      fill: #fff;
-    }
-
-    .date-settings {
-      position: absolute;
-      z-index: 2;
-      top: calc(var(--pad-block-start) + var(--toolbar-height) + var(--layout-gap));
-      left: clamp(18px, 4vw, 24px);
-      display: none;
-      flex-wrap: wrap;
-      align-items: center;
-      max-width: calc(100vw - 36px);
-      gap: 10px;
-      padding: 10px 12px;
-      border: 1px solid #252525;
-      border-radius: 12px;
-      background: #090909;
-      color: #b8b8b8;
-      font-size: 15px;
-    }
-
-    .date-settings.open {
-      display: flex;
-    }
-
-    .date-settings button {
-      border: 0;
-      border-radius: 8px;
-      padding: 6px 10px;
-      background: #242424;
-      color: #d8d8d8;
-      touch-action: manipulation;
-    }
-
-    .date-settings-value {
-      min-width: 42px;
-      text-align: center;
-    }
-
-    .display-wrap {
-      position: relative;
-      min-width: 0;
-      display: flex;
-    }
-
-    #stack-result {
-      position: absolute;
-      top: clamp(2px, 1cqw, 6px);
-      right: 8px;
-      font-size: clamp(15px, 4cqw, 20px);
-      color: #8a8a8a;
-      letter-spacing: 0;
-      white-space: nowrap;
-      pointer-events: none;
-    }
-
-    .display {
-      min-width: 0;
-      width: 100%;
-      display: flex;
-      align-items: end;
-      justify-content: end;
-      padding: clamp(12px, 3cqw, 18px) 8px clamp(9px, 2.5cqw, 14px);
-      overflow: hidden;
-      font-size: clamp(48px, 15cqw, 76px);
-      font-weight: 300;
-      line-height: 1.08;
-      letter-spacing: -0.04em;
-      text-align: right;
-      white-space: nowrap;
-    }
-
     .keypad {
-      --key-gap: clamp(11px, 3.5cqw, 20px);
-      --btn-inline: calc((100cqw - 3 * var(--key-gap)) / 4);
-      --btn-block: max(
-        0px,
-        calc(
-          (
-            100dvh
-            - var(--pad-block-start)
-            - var(--pad-block-end)
-            - var(--toolbar-height)
-            - var(--display-min)
-            - 2 * var(--layout-gap)
-            - 4 * var(--key-gap)
-          ) / 5
-        )
-      );
-      --btn: min(var(--btn-inline), var(--btn-block));
-      display: grid;
-      grid-template-columns: repeat(4, var(--btn));
-      gap: var(--key-gap);
-      justify-content: space-between;
-    }
-
-    .key {
-      position: relative;
-      width: var(--btn);
-      height: var(--btn);
-      border: 0;
-      border-radius: 50%;
-      display: grid;
-      place-items: center;
-      background: #292929;
-      color: #f1f1f1;
-      font-size: clamp(24px, 7cqw, 38px);
-      font-weight: 400;
-      cursor: default;
-      user-select: none;
-      touch-action: manipulation;
-      transition: background-color 80ms ease, filter 80ms ease, opacity 120ms ease;
-    }
-
-    .key.date-key-hint::after {
-      content: "";
       position: absolute;
+      z-index: 1;
+      top: 36%;
       left: 50%;
-      bottom: clamp(6px, 2cqw, 10px);
-      width: 5px;
-      height: 5px;
-      border-radius: 50%;
-      background: #fff;
-      opacity: 0.85;
-      pointer-events: none;
       transform: translateX(-50%);
-    }
-
-    .key:active,
-    .key.pressed {
-      filter: brightness(1.18);
-    }
-
-    .key.utility {
-      color: #ff625f;
-    }
-
-    .key.operator {
-      color: #d9d9d9;
-    }
-
-    .key.equals {
-      background: #00a99d;
-      color: #fff;
-      font-size: clamp(30px, 8cqw, 44px);
-    }
-
-    .key.parentheses {
-      font-size: clamp(20px, 6cqw, 32px);
-      letter-spacing: -0.08em;
-    }
-
-    .percent-glyph {
-      width: 0.86em;
-      height: 0.86em;
-      overflow: visible;
-      pointer-events: none;
-    }
-
-    .percent-glyph .percent-mark {
-      fill: none;
-      stroke: currentColor;
-      stroke-width: 2.15;
-      stroke-linecap: round;
-    }
-
-    .percent-glyph .trick-dot {
-      fill: currentColor;
-      stroke: none;
-      opacity: 0;
-      transition: opacity 60ms linear;
-    }
-
-    .key.trick-set .trick-dot-top,
-    .key.trick-ready .trick-dot {
-      opacity: 1;
-    }
-
-    .key.sign {
-      display: none;
-    }
-
-    .calculator.skin-iphone {
-      --iphone-digit-bg: #333333;
-      --iphone-function-bg: #a5a5a5;
-      --iphone-operator-bg: #ff9f0a;
-      background: #000;
-      color: #fff;
-      font-family: system-ui, sans-serif;
-    }
-
-    .skin-iphone .toolbar svg,
-    .skin-iphone .root-mark {
-      opacity: 0;
-    }
-
-    .skin-iphone .toolbar-tools {
-      position: relative;
-    }
-
-    .skin-iphone .toolbar-tools:has(#pen-icon.date-armed)::after {
-      content: "";
-      position: absolute;
-      top: 50%;
-      left: calc(clamp(25px, 6cqw, 32px) / 2 - 2.5px);
-      width: 5px;
-      height: 5px;
-      border-radius: 50%;
-      background: #5a5a5a;
-      pointer-events: none;
-      transform: translateY(-50%);
-    }
-
-    .skin-iphone .display {
-      color: #fff;
-      font-size: clamp(56px, 18cqw, 88px);
-      font-weight: 200;
-      letter-spacing: -0.055em;
-    }
-
-    .skin-iphone .key {
-      aspect-ratio: 1;
-      border-radius: 50%;
-      background: var(--iphone-digit-bg);
-      color: #fff;
-    }
-
-    .skin-iphone .key.sign {
       display: grid;
+      grid-template-columns: repeat(3, var(--key-d));
+      grid-template-rows: repeat(4, var(--key-d));
+      column-gap: var(--key-hgap);
+      row-gap: var(--key-vgap);
+      width: min(100%, calc(3 * var(--key-d) + 2 * var(--key-hgap)));
+      justify-content: center;
+      justify-items: center;
+      align-items: center;
     }
-
-    .skin-iphone .key.backspace,
-    .skin-iphone .key.parentheses {
-      display: none;
-    }
-
-    .skin-iphone .key.utility,
-    .skin-iphone .key.sign,
-    .skin-iphone .key[data-key="%"] {
-      background: var(--iphone-function-bg);
-      color: #000;
-    }
-
-    .skin-iphone .key[data-key="÷"],
-    .skin-iphone .key[data-key="×"],
-    .skin-iphone .key[data-key="−"],
-    .skin-iphone .key[data-key="+"],
-    .skin-iphone .key[data-key="="] {
-      background: var(--iphone-operator-bg);
+    /*
+     * iOS lock-screen PIN keys. Source: research.md sections "아이폰 PIN 키패드"
+     * and "구현 메모 for zz5" (THPinNumButton / THPinNumPadView).
+     * Reference: 393 x 852 CSS px (iPhone 15 / 15 Pro logical size).
+     * Diameter 75px; horizontal gap 20px; vertical gap 13px;
+     * keypad 265 x 339 (3*75+2*20, 4*75+3*13).
+     * Fill rgba(255,255,255,0.18) + backdrop-filter blur(20px); no border
+     * (iOS 10-18 filled circle, not the iOS 7 1px ring).
+     * Digit 34px / weight 500; letters 10px / weight 600 / tracking 0.1em / uppercase.
+     * :active = opaque white fill + black glyph, ~0.2s fade.
+     * Scales with clamp/min so 375px and 430px widths keep the 75@393 ratio.
+     * Galaxy (One UI 3+): also circular, ~72px, 12 / 8 gaps, weight 500 digit,
+     * letters hidden, press = scale + denser fill (no black invert).
+     */
+    .key {
+      box-sizing: border-box;
+      width: var(--key-d);
+      height: var(--key-d);
+      border: none;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.18);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
       color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 1px;
+      padding: 0;
+      flex-shrink: 0;
+      overflow: hidden;
+      transition: background .2s, color .2s, transform .15s;
     }
-
-    .skin-iphone .key[data-key="0"] {
-      width: auto;
-      aspect-ratio: auto;
-      grid-column: span 2;
-      border-radius: 999px;
-      place-items: center start;
-      padding-left: clamp(24px, 7cqw, 36px);
+    .key:active { background: rgba(255, 255, 255, 0.92); color: #000; backdrop-filter: none; -webkit-backdrop-filter: none; }
+    .key .number { font-size: calc(var(--key-d) * 36 / 75); line-height: 1; font-weight: 500; }
+    .key .letters {
+      font-size: calc(var(--key-d) * 10 / 75);
+      font-weight: 600;
+      line-height: 1.2;
+      letter-spacing: 0.1em;
+      padding-left: 0.1em;
+      text-transform: uppercase;
+      min-height: 1.2em;
+      opacity: 0.92;
     }
-
-    .skin-iphone .key.utility.date-key-hint::after,
-    .skin-iphone .key.sign.date-key-hint::after,
-    .skin-iphone .key[data-key="%"].date-key-hint::after {
-      background: #333;
+    .key[data-digit="1"] .letters { visibility: hidden; }
+    .key[data-digit="0"] .letters { display: none; }
+    .key[data-digit="0"] { grid-column: 2; }
+    .galaxy-only { display: none; }
+    .footer { position: absolute; z-index: 1; top: 88%; left: 50%; transform: translateX(-50%); display: flex; justify-content: space-between; width: min(calc(100% - 56px), calc(3 * var(--key-d) + 2 * var(--key-hgap))); align-items: center; }
+    .footer button { background: none; font-size: 17px; font-weight: 400; min-width: 44px; min-height: 44px; padding: 8px 0; }
+    #input-screen.galaxy { --key-d: clamp(64px, min(19.5vw, 9.5vh), 82px); --key-hgap: clamp(11px, 3.817vw, 16px); --key-vgap: clamp(5px, 1.8vw, 8px); }
+    .galaxy .pin-layout { display: block; padding: 0; }
+    .galaxy #lock { display: grid; top: 5%; pointer-events: auto; cursor: pointer; }
+    .galaxy .prompt { top: 19.5%; margin: 0; font-size: clamp(20px, 5.35vw, 23px); line-height: 1.3; font-weight: 500; }
+    .galaxy #dots { top: 28%; gap: 20px; }
+    .galaxy #dots.shake { animation-name: shake-galaxy; }
+    @keyframes shake-galaxy {
+      0%, 100% { transform: translateX(-50%); }
+      14% { transform: translateX(calc(-50% - 12px)); }
+      28% { transform: translateX(calc(-50% + 10px)); }
+      42% { transform: translateX(calc(-50% - 8px)); }
+      56% { transform: translateX(calc(-50% + 6px)); }
+      70% { transform: translateX(calc(-50% - 4px)); }
+      84% { transform: translateX(calc(-50% + 2px)); }
     }
-
-    #selftest {
-      display: none;
-      min-height: 100dvh;
-      margin: 0;
-      padding: 24px;
-      background: #000;
-      color: #f5f5f5;
-      font: 16px/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-      white-space: pre-wrap;
+    .galaxy .dot { width: 11px; height: 11px; }
+    .galaxy .keypad { top: 32%; }
+    .galaxy .key { background: rgba(255, 255, 255, 0.16); }
+    .galaxy .key:active { background: rgba(255, 255, 255, 0.42); color: #fff; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); transform: scale(1.07); }
+    .galaxy .key .number { font-size: calc(var(--key-d) * 34 / 72); font-weight: 500; }
+    .galaxy .key .letters { display: none; }
+    .galaxy .key.galaxy-only { display: flex; }
+    .key[data-action="backspace"] { grid-column: 1; grid-row: 4; }
+    .key[data-action="confirm"] { grid-column: 3; grid-row: 4; }
+    .key .action-icon { width: 31px; height: 31px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    #fingerprint { position: absolute; z-index: 2; top: 72%; left: 50%; transform: translate(-50%, -50%); width: 64px; height: 64px; padding: 0; background: none; place-items: center; touch-action: none; }
+    .galaxy #fingerprint { display: grid; top: 80%; }
+    #fingerprint svg { width: 44px; height: 44px; fill: none; stroke: #fff; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    #fingerprint.holding svg { animation: fingerprint-hold 600ms ease-out both; }
+    #fingerprint.pulse svg { animation: fingerprint-pulse 220ms ease-out; }
+    @keyframes fingerprint-hold { from { opacity: .68; transform: scale(.92); } to { opacity: 1; transform: scale(1.08); } }
+    @keyframes fingerprint-pulse { 50% { opacity: .62; transform: scale(.94); } }
+    .galaxy .footer { top: 91%; justify-content: center; }
+    .galaxy #emergency { width: 114px; height: 44px; padding: 3.5px 0; color: #2b1a14; font-size: 15px; font-weight: 500; }
+    .galaxy #emergency span { display: grid; place-items: center; width: 114px; height: 37px; border-radius: 999px; background: #F2A28C; }
+    .galaxy #delete { display: none; }
+    #input-screen.unlocking-out { pointer-events: none; animation: lock-out 440ms cubic-bezier(.32, .72, 0, 1) both; }
+    #unlocked-screen { z-index: 2; background: #111; touch-action: none; will-change: transform, opacity; }
+    #home-track { position: absolute; inset: 0; width: 100%; height: 100%; transform: translate3d(0,0,0); transition: transform 420ms cubic-bezier(.2,.8,.2,1); will-change: transform; }
+    .home-page { position: absolute; top: 0; width: 100%; height: 100%; overflow: hidden; }
+    #home-one { left: 0; }
+    #home-two { left: 100%; background: #111; }
+    #reveal-card { position: absolute; z-index: 3; top: 50%; left: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; width: min(88vw, 390px); min-height: 220px; max-width: calc(100% - 24px); padding: 30px 24px; border: 1px solid #ffffff60; border-radius: 26px; background: #3238439c; box-shadow: 0 16px 46px #0008; backdrop-filter: blur(20px) saturate(1.1); -webkit-backdrop-filter: blur(20px) saturate(1.1); text-align: center; font-variant-numeric: tabular-nums; pointer-events: none; opacity: 0; visibility: hidden; transform: translate(-50%, -50%) scale(.94); transition: none; }
+    #reveal-card.visible { opacity: 1; visibility: visible; transform: translate(-50%, -50%) scale(1); transition: opacity 180ms ease, transform 180ms cubic-bezier(.2,.8,.2,1); }
+    #reveal-label { color: #f3f4f8e0; font-size: 14px; font-weight: 500; }
+    #reveal-number { margin-top: 18px; font-size: clamp(46px, 12vw, 68px); line-height: 1.08; font-weight: 600; letter-spacing: .025em; overflow-wrap: anywhere; }
+    #reveal-days { margin-top: 13px; color: #f3f4f8e0; font-size: 13px; }
+    #unlocked-screen.unlocking { animation: unlock-in 440ms cubic-bezier(.32, .72, 0, 1) both; }
+    @keyframes lock-out { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(.965); } }
+    @keyframes unlock-in { from { opacity: 0; transform: scale(1.045); } to { opacity: 1; transform: scale(1); } }
+    #unlocked-screen.returning { transition: transform 520ms cubic-bezier(.2, 1.35, .35, 1); }
+    #peek-screen { z-index: 1; background: #0b0c10; padding: 28px 24px max(24px, env(safe-area-inset-bottom)); display: flex; flex-direction: column; justify-content: flex-end; }
+    #peek-screen.side-peek { text-align: right; }
+    .peek-heading { margin-bottom: 9px; color: #aaaebc; font-size: 12px; }
+    #attempt-list { list-style: none; margin: 0; padding: 0; overflow-y: auto; max-height: calc(100% - 54px); font-variant-numeric: tabular-nums; }
+    #attempt-list li { border-top: 1px solid #ffffff15; padding: 6px 0; white-space: nowrap; }
+    .attempt-pin { letter-spacing: 3px; font-size: 12px; line-height: 1.25; font-weight: 600; }
+    #time-black { z-index: 3; background: #000; touch-action: none; }
+    #rewind-digit-guide { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: repeat(4, minmax(0, 1fr)); color: #fff; font-size: clamp(42px, 13vw, 76px); font-weight: 650; pointer-events: none; opacity: 1; transition: opacity 400ms ease; }
+    #rewind-digit-guide[hidden] { display: none !important; }
+    #rewind-digit-guide.is-fading { opacity: 0; }
+    #rewind-digit-guide span { display: grid; place-items: center; }
+    #time-lock { z-index: 3; background: radial-gradient(ellipse at 20% 10%, #575d78, #10151e); text-align: center; touch-action: none; }
+    #time-clock-backdrop { position: absolute; inset: 9% 0 auto; height: 51%; background: rgba(18, 22, 33, .12); backdrop-filter: blur(44px); -webkit-backdrop-filter: blur(44px); -webkit-mask-image: linear-gradient(transparent, #000 17%, #000 78%, transparent); mask-image: linear-gradient(transparent, #000 17%, #000 78%, transparent); pointer-events: none; }
+    #time-face { position: absolute; z-index: 1; top: 12%; width: 100%; text-shadow: 0 2px 12px #0005; pointer-events: none; }
+    #time-date { font-size: clamp(17px, 4.8vw, 21px); font-weight: 500; }
+    #time-clock { display: flex; justify-content: center; align-items: center; margin-top: 7px; font-size: clamp(72px, 21vw, 94px); line-height: 1; font-weight: 300; font-variant-numeric: tabular-nums; letter-spacing: -.045em; }
+    #time-lock.galaxy #time-face { top: 16%; }
+    #time-lock.galaxy #time-clock { font-size: clamp(70px, 19vw, 90px); font-weight: 400; }
+    .time-colon { display: inline-flex; flex-direction: column; justify-content: center; gap: .26em; width: .16em; height: .8em; margin: 0 .025em; }
+    .time-colon::before, .time-colon::after { content: ''; display: block; width: .09em; height: .09em; border-radius: 50%; background: currentColor; }
+    @media (prefers-reduced-motion: reduce) { #time-clock span { animation: none !important; } }
+    #settings-screen { z-index: 5; overflow-y: auto; background: #101115; padding: 28px 22px max(32px, env(safe-area-inset-bottom)); touch-action: pan-y; }
+    .settings-inner { max-width: 480px; margin: auto; }
+    #settings-brand { display: block; width: min(100%, 300px); height: auto; max-height: 110px; object-fit: contain; margin: 0 auto 18px; }
+    .eyebrow { color: #aaa4f7; font-size: 11px; font-weight: 700; letter-spacing: 3px; }
+    h1 { font-size: 32px; letter-spacing: -1px; margin: 8px 0; }
+    .intro { color: #a4a6b1; line-height: 1.65; font-size: 13px; margin: 0 0 28px; }
+    .group { margin: 0 0 20px; border: 1px solid #ffffff12; background: #1b1c22; border-radius: 18px; padding: 20px; }
+    .install-offer { margin: 0 0 20px; padding: 16px; border: 1px solid #c6c0ff58; border-radius: 14px; background: #252336; }
+    .install-offer strong { display: block; font-size: 15px; }
+    .install-offer p { margin: 7px 0 0; color: #cbc9d9; font-size: 12px; line-height: 1.55; }
+    .install-actions { display: flex; gap: 9px; margin-top: 13px; }
+    .install-actions button { min-height: 42px; padding: 0 14px; border-radius: 9px; font-size: 13px; font-weight: 700; }
+    #install-action { background: #c6c0ff; color: #191528; }
+    #install-later { background: #383646; color: #e5e2f2; }
+    .group h2 { font-size: 15px; margin: 0 0 18px; font-weight: 650; }
+    .field { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-top: 17px; font-size: 13px; }
+    .field:first-of-type { margin-top: 0; }
+    .field.stack { align-items: stretch; flex-direction: column; gap: 10px; }
+    .field.check { justify-content: flex-start; }
+    .field[hidden] { display: none; }
+    .field input[type="number"], select { border: 1px solid #ffffff12; background: #292b34; border-radius: 8px; color: #fff; padding: 9px; max-width: 165px; }
+    input[type="number"] { width: 90px; }
+    input[type="color"] { width: 45px; height: 32px; padding: 0; border: 0; background: none; }
+    input[type="file"] { width: 100%; color: #b6b8c4; font-size: 12px; }
+    input::file-selector-button { background: #30323c; color: #eee; border: 0; border-radius: 6px; padding: 9px 12px; margin-right: 10px; }
+    .image-info, .hint { color: #9699a6; font-size: 12px; line-height: 1.65; }
+    .time-guide { margin: 0 0 18px; }
+    .time-guide details { margin-top: 12px; padding: 12px 14px; border-radius: 11px; background: #272932; }
+    .time-guide summary { color: #d9dce8; cursor: pointer; font-weight: 600; }
+    .time-guide details p { margin: 9px 0 0; }
+    .usage-guide { margin: 0 0 20px; padding: 14px 16px; border: 1px solid #ffffff18; border-radius: 13px; background: #1b1c22; color: #c9cad3; }
+    .usage-guide summary { min-height: 28px; display: flex; align-items: center; color: #e5e3f4; font-size: 13px; font-weight: 650; cursor: pointer; }
+    .usage-guide p { margin: 10px 0 0; font-size: 12px; line-height: 1.65; }
+    .hidden-grid-example { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: repeat(4, minmax(0, 1fr)); width: min(100%, 240px); aspect-ratio: 3 / 4; margin: 14px auto 0; overflow: hidden; border: 1.5px solid #ff4545; background-color: #000; background-image: linear-gradient(to right, #ff4545 1.5px, transparent 1.5px), linear-gradient(to bottom, #ff4545 1.5px, transparent 1.5px); background-size: 33.333333% 100%, 100% 25%; color: #ff6969; }
+    .hidden-grid-example span { display: grid; place-items: center; font-size: clamp(17px, 6vw, 25px); font-weight: 650; }
+    .hidden-grid-example span[data-digit="0"] { grid-column: 2; grid-row: 4; }
+    .usage-guide .grid-caption { margin-top: 8px; color: #a5a6b1; text-align: center; }
+    .image-info { margin: 0; }
+    .alignment-help { margin: -4px 0 12px; color: #c3c5cf; font-size: 12px; line-height: 1.55; }
+    .preview-row { display: flex; gap: 12px; }
+    .preview { position: relative; background: #101115; border: 1px solid #ffffff1c; border-radius: 14px; overflow: hidden; width: 50%; aspect-ratio: 9 / 19.5; touch-action: none; cursor: grab; }
+    .personal-home .preview-row .preview { width: 33.333%; }
+    .preview:active { cursor: grabbing; }
+    .preview img { object-fit: cover; width: 100%; height: 100%; pointer-events: none; }
+    .preview-name { position: absolute; right: 7px; bottom: 7px; z-index: 3; font-size: 10px; background: #000a; border-radius: 4px; padding: 3px 6px; pointer-events: none; }
+    .crop-overlay { position: absolute; z-index: 2; top: 0; left: 0; right: 0; height: 0; min-height: 0; overflow: hidden; background: #796cff80; border-bottom: 2px solid #d7d2ff; pointer-events: none; }
+    .crop-label { position: absolute; left: 50%; top: 7px; width: max-content; max-width: calc(100% - 12px); transform: translateX(-50%); color: #fff; background: #30275ed9; border-radius: 4px; padding: 3px 5px; font-size: 8px; line-height: 1.25; text-align: center; }
+    .crop-handle { position: absolute; z-index: 4; left: 50%; top: 0; width: 48px; height: 18px; transform: translate(-50%, -8px); border-radius: 10px; background: #e2deff; box-shadow: 0 1px 5px #0008; cursor: ns-resize; touch-action: none; }
+    .crop-handle::after { content: ''; position: absolute; left: 13px; right: 13px; top: 8px; height: 2px; border-radius: 2px; background: #62599b; }
+    #start { width: 100%; padding: 16px; border-radius: 12px; background: #c6c0ff; color: #191528; font-size: 15px; font-weight: 700; margin-top: 5px; }
+    #storage-status, #offline-status { font-size: 12px; line-height: 1.65; color: #b9b3dd; }
+    #toast { position: absolute; z-index: 10; left: 50%; bottom: max(26px, env(safe-area-inset-bottom)); transform: translateX(-50%); max-width: 90%; border-radius: 12px; padding: 12px 18px; background: #242631; color: #eee; font-size: 13px; text-align: center; pointer-events: none; }
+    @media (max-height: 640px) {
+      #input-screen { --key-d: clamp(56px, 16.285vw, 64px); --key-vgap: 8px; }
+      #input-screen.galaxy { --key-d: clamp(52px, min(18vw, 8.75vh), 60px); --key-vgap: 4px; }
+      .galaxy .prompt { top: 16%; }
+      .galaxy #dots { top: 25%; }
+      .galaxy .keypad { top: 31%; }
+      .galaxy #fingerprint { top: 75%; }
+      .galaxy .footer { top: 88%; }
+      #fingerprint { top: 76%; }
     }
-
-    #selftest.pass {
-      color: #52d3a0;
+    @media (max-height: 500px) and (orientation: landscape) {
+      #input-screen { --key-d: clamp(48px, 12vh, 58px); --key-hgap: clamp(10px, 2vw, 16px); --key-vgap: 3px; }
+      .prompt { top: 8%; font-size: 15px; }
+      #dots { top: 17%; }
+      .keypad, .galaxy .keypad { top: 24%; }
+      #fingerprint { top: 76%; }
+      .footer { top: 84%; }
+      #input-screen.galaxy { --key-d: clamp(48px, 12vh, 58px); }
     }
-
-    #selftest.fail {
-      color: #ff6b68;
+    @media (horizontal-viewport-segments: 2) {
+      #app { right: auto; width: env(viewport-segment-width 0 0); }
     }
-    #app { touch-action: none; }
-    #app:has(> #date-settings.open) { touch-action: auto; }
-    #date-settings { touch-action: pan-y; }
+    @media (vertical-viewport-segments: 2) {
+      #app { bottom: auto; height: calc(env(viewport-segment-height 0 0) - env(safe-area-inset-top, 0px)); }
+    }
+    @media (min-height: 641px) and (max-height: 790px) {
+      .galaxy .prompt { top: 18%; }
+      .galaxy #dots { top: 26%; }
+      .galaxy .keypad { top: 31%; }
+      .galaxy #fingerprint { top: 82%; }
+    }
+    @media (prefers-reduced-motion: reduce) { #unlocked-screen.returning { transition-duration: 180ms; } #input-screen.unlocking-out, #unlocked-screen.unlocking { animation-duration: 150ms; } #reveal-card { transition-duration: 0s; } }
   </style>
 </head>
 <body>
-  <main class="calculator" id="app" aria-label="계산기">
-    <div class="toolbar" aria-hidden="true">
-      <span class="toolbar-icon">
-        <svg id="clock-icon" viewBox="0 0 24 24">
-          <path d="M3.5 12a8.5 8.5 0 1 0 2.2-5.7"></path>
-          <path d="M3.5 4.5v4h4"></path>
-          <path d="M12 7.5V12l3 2"></path>
-        </svg>
-      </span>
-      <span class="toolbar-tools">
-        <svg id="pen-icon" viewBox="0 0 24 24">
-          <path d="m5 18 12-12 2 2L7 20H5v-2Z"></path>
-          <path d="m11 12 2 2m1-5 2 2m-8 4 2 2"></path>
-        </svg>
-        <span class="root-mark" id="stack-icon">√</span>
-      </span>
-    </div>
-
-    <div class="date-settings" id="date-settings" aria-hidden="true">
-      <button type="button" data-date-action="decrease">−</button>
-      <span class="date-settings-value" id="date-delay-value">20초</span>
-      <button type="button" data-date-action="increase">+</button>
-      <button type="button" data-date-action="hour-cycle" id="date-hour-cycle">24h</button>
-      <button type="button" data-date-action="skin" id="skin-toggle">스킨: 기본</button>
-      <button type="button" data-date-action="fullscreen">전체화면</button>
-      <button type="button" data-date-action="close">닫기</button>
-    </div>
-
-    <div class="display-wrap">
-      <span id="stack-result" hidden></span>
-      <output class="display" id="display" aria-live="polite">0</output>
-    </div>
-
-    <section class="keypad" aria-label="계산기 키패드">
-      <button class="key utility" type="button" data-key="C">C</button>
-      <button class="key utility backspace" type="button" data-key="⌫" aria-label="지우기">⌫</button>
-      <button class="key sign" type="button" data-key="±" aria-label="부호 전환">±</button>
-      <button class="key operator" type="button" data-key="%" aria-label="퍼센트">
-        <svg class="percent-glyph" viewBox="0 0 32 32" aria-hidden="true">
-          <circle class="percent-mark" cx="8" cy="8" r="4.25"></circle>
-          <path class="percent-mark" d="M8 25 24 7"></path>
-          <circle class="percent-mark" cx="24" cy="24" r="4.25"></circle>
-          <circle class="trick-dot trick-dot-top" cx="8" cy="8" r="1"></circle>
-          <circle class="trick-dot trick-dot-bottom" cx="24" cy="24" r="1"></circle>
-        </svg>
-      </button>
-      <button class="key operator" type="button" data-key="÷">÷</button>
-
-      <button class="key" type="button" data-key="7">7</button>
-      <button class="key" type="button" data-key="8">8</button>
-      <button class="key" type="button" data-key="9">9</button>
-      <button class="key operator" type="button" data-key="×">×</button>
-
-      <button class="key" type="button" data-key="4">4</button>
-      <button class="key" type="button" data-key="5">5</button>
-      <button class="key" type="button" data-key="6">6</button>
-      <button class="key operator" type="button" data-key="−">−</button>
-
-      <button class="key" type="button" data-key="1">1</button>
-      <button class="key" type="button" data-key="2">2</button>
-      <button class="key" type="button" data-key="3">3</button>
-      <button class="key operator" type="button" data-key="+">+</button>
-
-      <button class="key parentheses" type="button" data-key="()">( )</button>
-      <button class="key" type="button" data-key="0">0</button>
-      <button class="key" type="button" data-key=".">.</button>
-      <button class="key equals" type="button" data-key="=">=</button>
+  <main id="app">
+    <section id="input-screen" class="screen" aria-label="PIN 입력" hidden>
+      <img id="lock-image" class="wallpaper" alt="" hidden>
+      <div class="shade"></div>
+      <div class="pin-layout">
+        <div id="lock" aria-label="잠금">
+          <svg viewBox="0 0 24 29" aria-hidden="true"><rect x="4" y="12" width="16" height="14" rx="3"/><path d="M7 12V8a5 5 0 0 1 10 0v4"/></svg>
+        </div>
+        <button id="prompt" class="prompt" type="button" aria-label="4자리로 전환">위로 쓸어올려서 Face ID 사용 또는 암호 입력</button>
+        <div id="dots" role="status" aria-label="6자리 중 0자리 입력"></div>
+        <div id="keypad" class="keypad" aria-label="숫자 키패드"></div>
+        <button id="fingerprint" class="galaxy-only" type="button" aria-label="지문으로 잠금 해제">
+          <svg viewBox="0 0 48 48" aria-hidden="true">
+            <path d="M11.5 23.5C11.5 16.6 17 11 24 11s12.5 5.6 12.5 12.5c0 8.6-2.4 15.2-6.4 20"/>
+            <path d="M7.5 23.5C7.5 14.4 14.9 7 24 7s16.5 7.4 16.5 16.5c0 5.2-.7 10-2.5 14.5"/>
+            <path d="M16 23.5a8 8 0 0 1 16 0c0 7.1-1.6 12.2-4.8 17.5"/>
+            <path d="M20.5 24a3.5 3.5 0 0 1 7 0c0 8.2-2.4 14-5.7 18"/>
+            <path d="M12.8 31.5c.8 5 2.7 9 5.2 11.8M17 29c.4 4 1.4 7.1 3.2 10"/>
+          </svg>
+        </button>
+        <div class="footer"><button id="emergency" type="button"><span>긴급 상황</span></button><button id="delete" type="button">취소</button></div>
+      </div>
     </section>
+    <section id="peek-screen" class="screen" aria-label="시도 기록" hidden>
+      <div class="peek-heading">시도 기록</div>
+      <ol id="attempt-list"></ol>
+    </section>
+    <section id="unlocked-screen" class="screen" aria-label="해제 화면" hidden>
+      <div id="home-track">
+        <div id="home-one" class="home-page"><img id="unlock-image" class="wallpaper" alt="" hidden draggable="false"></div>
+        <div id="home-two" class="home-page"><img id="home2-image" class="wallpaper" alt="" hidden draggable="false"></div>
+      </div>
+      <div id="reveal-card" role="status" aria-live="polite" aria-hidden="true"><div id="reveal-label"></div><div id="reveal-number">—</div><div id="reveal-days" hidden></div></div>
+    </section>
+    <section id="time-black" class="screen" aria-label="리와인드 준비" hidden><div id="rewind-digit-guide" hidden aria-hidden="true"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span></span><span>0</span><span></span></div></section>
+    <section id="time-lock" class="screen" aria-label="리와인드 잠금 화면" hidden>
+      <img id="time-wallpaper" class="wallpaper" alt="" hidden draggable="false">
+      <div id="time-clock-backdrop"></div>
+      <div id="time-face"><div id="time-date"></div><time id="time-clock"><span id="time-hour"></span><span class="time-colon" aria-hidden="true"></span><span id="time-minute"></span></time></div>
+    </section>
+    <section id="settings-screen" class="screen" aria-label="설정" hidden>
+      <div class="settings-inner">
+        <img id="settings-brand" src="./brand-logo.png" alt="RELEASE" onerror="this.hidden=true">
+        <div class="eyebrow">RELEASE</div>
+        <h1>레리즈 설정</h1>
+        <p class="intro">화면을 준비하고, 연출을 시작하세요.<br>이미지와 설정은 이 기기에만 저장됩니다.</p>
+        <section id="install-offer" class="install-offer" aria-label="레리즈 설치 안내" hidden>
+          <strong>홈 화면에 레리즈를 설치할까요?</strong>
+          <p>처음 한 번 추가하면 앱처럼 전체 화면으로 열 수 있습니다.</p>
+          <p id="install-instructions" role="status" hidden></p>
+          <div class="install-actions"><button id="install-action" type="button">설치 방법</button><button id="install-later" type="button">나중에</button></div>
+        </section>
+        <form id="settings-form">
+          <div class="group">
+            <h2 id="performance-heading">연출</h2>
+            <label id="performance-field" class="field">연출 선택<select id="performance"><option value="pin">PIN 잠금 해제</option><option value="time-machine">리와인드</option></select></label>
+            <div id="time-options" hidden>
+              <div class="time-guide hint"><div>PIN 화면에서 긴급 상황(iPhone) 또는 긴급전화(갤럭시)를 빠르게 두 번 누르면 리와인드가 열립니다.</div></div>
+              <label class="field">두 번 탭 후 대기 (초)<input id="time-delay" type="number" min="0" max="60" step="0.1" value="3"></label>
+              <label class="field">되감기 시간 (초)<input id="time-duration" type="number" min="1" max="60" step="0.1" value="8"></label>
+              <p class="hint">두 번째 숫자 뒤 나타나는 잠금화면을 두 번 누르면, 설정한 대기 후 표시 시각이 천천히 현재 시각으로 돌아옵니다. 실제 휴대폰 시계는 바뀌지 않습니다.</p>
+              <label class="field check"><input id="rewind-grid-guide" type="checkbox"> 입장할 때 숫자를 잠깐 표시</label>
+            </div>
+          </div>
+          <div class="group">
+            <h2>내 폰의 화면</h2>
+            <label class="field stack">잠금화면 이미지<input id="lock-file" type="file" accept="image/*"><span id="lock-info" class="image-info">등록된 이미지 없음</span></label>
+            <label class="field stack">해제화면 이미지<input id="unlock-file" type="file" accept="image/*"><span id="unlock-info" class="image-info">등록된 이미지 없음</span></label>
+            <label id="home2-field" class="field stack" hidden>해제화면 2페이지 이미지<input id="home2-file" type="file" accept="image/*"><span id="home2-info" class="image-info">등록된 이미지 없음</span></label>
+            <p class="hint">잠금에는 잠금화면, 해제에는 앱 아이콘이 보이는 홈 화면 스크린샷을 등록하세요. 개인용 레리즈는 홈 1·홈 2 이미지가 모두 있어야 좌우 이동과 중앙 정보 표시를 사용할 수 있습니다. 등록된 이미지 자체에 잠금 시계가 있으면 해제 후에도 보입니다.</p>
+            <p id="storage-status" role="status">이미지 저장소 확인 중…</p>
+          </div>
+          <div class="group">
+            <h2>입력과 해제</h2>
+            <label class="field">키패드 스타일<select id="style"><option value="ios">iOS</option><option value="galaxy">갤럭시</option></select></label>
+            <label class="field">기본 자릿수<select id="digits"><option value="6">6자리</option><option value="4">4자리</option></select></label>
+            <label class="field">해제 방식<select id="unlock-mode"><option value="timer">타이머</option><option value="attempt">지정 시도</option></select></label>
+            <label id="delay-field" class="field">해제 지연 (초)<input id="delay" type="number" min="0" max="300" step="0.1" value="8" required></label>
+            <label id="attempt-field" class="field" hidden>해제할 시도<input id="unlock-attempt" type="number" min="1" max="99" step="1" value="3" required></label>
+            <label id="reveal-attempt-field" class="field" hidden>중앙에 공개할 입력 순서<input id="reveal-attempt" type="number" min="1" max="99" step="1" value="2" required></label>
+            <label class="field check"><input id="vibration" type="checkbox" checked> 성공·실패 진동</label>
+            <p class="hint">지정 시도는 타이머와 PIN 중복 여부를 무시하고 선택한 번째 입력에서 해제됩니다. 생년월일을 먼저 받을 때 해제 순서를 고정하기 좋습니다.</p>
+          </div>
+          <div class="group">
+            <h2>이미지와 상단바 맞추기</h2>
+            <p class="alignment-help">보라색 영역의 아래 손잡이를 끌어 상단바를 자르고, 그 밖의 이미지를 위아래로 끌어 위치를 맞추세요.</p>
+            <div class="preview-row">
+              <div class="preview" data-key="lock" aria-label="잠금화면 정렬 미리보기"><img id="lock-preview" alt="잠금화면 미리보기" hidden draggable="false"><div class="crop-overlay"><span class="crop-label">여기에 진짜 상태바가 보입니다</span></div><span class="crop-handle" role="slider" tabindex="0" aria-label="잠금화면 상단 자르기" aria-valuemin="0" aria-valuemax="2000" aria-valuenow="0"></span><span class="preview-name">잠금</span></div>
+              <div class="preview" data-key="unlock" aria-label="해제화면 정렬 미리보기"><img id="unlock-preview" alt="해제화면 미리보기" hidden draggable="false"><div class="crop-overlay"><span class="crop-label">여기에 진짜 상태바가 보입니다</span></div><span class="crop-handle" role="slider" tabindex="0" aria-label="해제화면 상단 자르기" aria-valuemin="0" aria-valuemax="2000" aria-valuenow="0"></span><span class="preview-name">해제</span></div>
+              <div id="home2-preview-item" class="preview" data-key="home2" aria-label="해제화면 2페이지 정렬 미리보기" hidden><img id="home2-preview" alt="해제화면 2페이지 미리보기" hidden draggable="false"><div class="crop-overlay"><span class="crop-label">여기에 진짜 상태바가 보입니다</span></div><span class="crop-handle" role="slider" tabindex="0" aria-label="해제화면 2페이지 상단 자르기" aria-valuemin="0" aria-valuemax="2000" aria-valuenow="0"></span><span class="preview-name">홈 2</span></div>
+            </div>
+            <label class="field">상단 잘라내기 (원본 px)<input id="crop" type="number" min="0" max="2000" step="1" value="0" required></label>
+            <label class="field">이미지 세로 위치 (%)<input id="position" type="number" min="0" max="100" step="1" value="50" required></label>
+            <label class="field">상태바 글자<select id="status-style"><option value="black-translucent">밝게 · 어두운 배경</option><option value="default">어둡게 · 밝은 배경</option></select></label>
+            <label class="field">상태바 배경<input id="status-color" type="color" value="#000000"></label>
+            <p class="hint">원본의 상단바를 잘라낸 뒤 남은 이미지를 꽉 채웁니다. OS 상태바 영역에는 이미지를 그리지 않습니다. 상태바 글자 변경은 홈 화면 앱을 닫고 다시 열어야 반영될 수 있으며, 기기별 확인이 필요합니다.</p>
+          </div>
+          <details class="usage-guide">
+            <summary>처음 사용하는 분을 위한 화면·숫자 입력 안내</summary>
+            <p>개인용 레리즈는 홈 1에서 왼쪽으로 밀어 홈 2로 이동합니다. 홈 2에서 왼쪽으로 700ms 동안 계속 미는 동안에만 설정한 입력 정보가 보이고, 손가락을 떼면 바로 사라집니다. 위로 밀면 입력 기록을 볼 수 있습니다.</p>
+            <p>리와인드의 검은 화면은 화면 전체가 보이지 않는 숫자판입니다. 아래 그림처럼 화면을 가로 3칸, 세로 4칸으로 나눠 누릅니다. 각 칸의 가운데를 누르면 그 숫자로 인식됩니다. 마지막 줄은 가운데 0만 입력되고 양옆은 무시됩니다. 숫자 두 개를 차례로 눌러 분을 입력하세요. 예: 0 다음 3은 03분, 1 다음 5는 15분입니다.</p>
+            <div class="hidden-grid-example" role="img" aria-label="검은 화면의 숫자 입력 예시. 빨간 선으로 나뉜 첫 세 줄은 왼쪽부터 1 2 3, 4 5 6, 7 8 9이며 마지막 줄 가운데는 0입니다.">
+              <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span data-digit="0">0</span>
+            </div>
+            <p class="grid-caption">빨간 선은 항상 설명용입니다. 숫자는 ‘입장할 때 숫자를 잠깐 표시’를 켰을 때만 잠깐 보이며, 선은 실제 검은 화면에 나타나지 않습니다.</p>
+            <p>설정 열기: 잠금 화면에서 두 손가락을 아래로 쓸기<br>홈 화면 4·6자리 안내 전환: 안내 문구 탭<br>기록 초기화 후 다시 잠금: 두 손가락으로 빠르게 두 번 탭</p>
+          </details>
+          <p id="offline-status" role="status">오프라인 준비 중…</p>
+          <button id="start" type="submit">저장하고 시작</button>
+        </form>
+      </div>
+    </section>
+    <div id="toast" role="status" hidden></div>
   </main>
+  <script type="module" src="./install-prompt.js"></script>
+  <script type="module">
+    import { FINGERPRINT_HOLD_MS, normalizeSettings, storageIdentityForPath, personalHomeReady, selectedAttemptReveal, homeSwipeTarget, completeHomeSwipe, lockScreenCopy, createState, pushDigit, submitPin, fingerprintHold, attemptFeedback, feedbackVibration, deleteDigit, clearCurrent, toggleDigits, reset, isHomeGestureArea, peekOffset, registerTwoFingerTap, settleTwoFingerTaps, registerLockTap, formatAttemptLabel } from './logic.js';
 
-  <div id="selftest" role="status" aria-live="polite"></div>
+    import { hiddenDigit, appendMinuteDigit, registerEmergencyTap, timeMachineOffset, isSettingsSwipe, horizontalPeekOffset } from './time-machine.js';
 
-  <script>
-// BEGIN SETTINGS SWIPE
-function installSettingsSwipe(open, cancel, enabled, cancelHold = cancel) {
-  const pointers = new Map();
-  let pair = null, blocked = false, suppressUntil = 0;
-  const options = { capture: true, passive: false };
-  window.addEventListener('pointerdown', event => {
-    if (event.pointerType !== 'touch') return;
-    pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
-    if (pointers.size > 2) { blocked = true; pair = null; }
-    if (pointers.size !== 2 || blocked || !enabled() || event.target.closest('input,textarea,button[data-date-action],#settings,#text-editor,#date-settings,#install-nudge')) return;
-    pair = [...pointers].map(([id, point]) => ({ id, ...point, dx: 0, dy: 0 }));
-    cancelHold();
-  }, options);
-  window.addEventListener('pointermove', event => {
-    if (!pair || blocked) return;
-    const point = pair.find(point => point.id === event.pointerId);
-    if (!point) return;
-    point.dx = event.clientX - point.x;
-    point.dy = event.clientY - point.y;
-    if (Math.hypot(point.dx, point.dy) > 15) cancel();
-    if (!pair.every(point => point.dy >= 96 && point.dy > Math.abs(point.dx) * 1.5)) return;
-    blocked = true;
-    pair = null;
-    suppressUntil = Date.now() + 700;
-    event.preventDefault();
-    event.stopImmediatePropagation();
-    if (enabled()) open();
-  }, options);
-  const release = event => {
-    pointers.delete(event.pointerId);
-    pair = null;
-    if (!pointers.size) blocked = false;
-  };
-  window.addEventListener('pointerup', release, options);
-  window.addEventListener('pointercancel', release, options);
-  window.addEventListener('blur', () => { pointers.clear(); pair = null; blocked = false; });
-  window.addEventListener('click', event => {
-    if (Date.now() < suppressUntil) { event.preventDefault(); event.stopImmediatePropagation(); }
-  }, options);
-}
-// END SETTINGS SWIPE
+    const $ = (id) => document.getElementById(id);
+    const STORAGE = storageIdentityForPath(location.pathname);
+    const SETTINGS_KEY = STORAGE.settingsKey;
+    const UNLOCK_ANIMATION_MS = 440;
+    document.body.classList.toggle('personal-home', STORAGE.personal);
+    $('performance-heading').textContent = STORAGE.personal ? '리와인드' : '연출';
+    $('performance-field').hidden = STORAGE.personal;
+    $('home2-field').hidden = !STORAGE.personal;
+    $('home2-preview-item').hidden = !STORAGE.personal;
+    $('reveal-attempt-field').hidden = !STORAGE.personal;
+    $('reveal-attempt').disabled = !STORAGE.personal;
+    let saved = null;
+    try { saved = JSON.parse(localStorage.getItem(SETTINGS_KEY)); } catch {}
+    const ownSettingsSaved = !!saved;
+    if (!saved && STORAGE.personal) {
+      try { saved = JSON.parse(localStorage.getItem('unlock-settings-v1')); } catch {}
+    }
+    let settings = normalizeSettings(saved && typeof saved === 'object' ? saved : {}, STORAGE.personal);
+    let state = createState(settings.digits);
+    let screen = 'settings';
+    let feedbackTimer = null;
+    let feedback = null;
+    let unlockTimer = null;
+    let fingerprintTimer = null;
+    let fingerprintPress = null;
+    let toastTimer = null;
+    let tapSequence = null;
+    let lockTapSequence = null;
+    let tapTimer = null;
+    let tapCandidate = null;
+    let swipe = null;
+    let homePage = 'home1';
+    let revealVisible = false;
+    let revealTimer = null;
+    let settingsSwipe = null;
+    let timeMinutes = 0;
+    let timeDigits = [];
+    let timeTriggeredAt = null;
+    let timeLastTap = null;
+    let emergencyLastTap = null;
+    let timeFrame = null;
+    let timePointer = null;
+    let timeSuppressUntil = 0;
+    const originals = new Map();
+    const imageURLs = new Map();
+    const previewURLs = new Map();
+    const previewBlobs = new Map();
+    const imageVersions = new Map();
+    let db = null;
+    let pendingImages = 0;
 
-    function runSelfTests() {
-      const failures = [];
-      let assertions = 0;
-      const assert = (cond, name) => {
-        assertions += 1;
-        if (!cond) failures.push(name);
-      };
+    function toast(message) {
+      clearTimeout(toastTimer);
+      $('toast').textContent = message;
+      $('toast').hidden = false;
+      toastTimer = setTimeout(() => { $('toast').hidden = true; }, 2400);
+    }
 
-      const d = (str) => decFromString(str);
-      const show = (a) => a === null ? "(null)" : decToDisplay(a);
-      assert(show(d("8.17")) === "8.17", "roundtrip 8.17");
-      assert(show(d("-5")) === "-5", "roundtrip -5");
-      assert(show(d("0817")) === "817", "display normalizes leading zero");
-      assert(show(decAdd(d("0.1"), d("0.2"))) === "0.3", "0.1+0.2=0.3");
-      assert(show(decSub(d("5"), d("7"))) === "-2", "5-7=-2");
-      assert(show(decMul(d("1.5"), d("2"))) === "3", "1.5×2=3");
-      assert(show(decMul(d("999999999999999"), d("999999999999999"))) === "9.99999999999998E29", "큰 곱셈 → 16자리 반올림 후 지수 표기");
-      assert(show(d("999999999999.4")) === "999999999999.4", "1e16 미만은 십진 표시");
-      assert(show(d("0.0000000009")) === "9E-10", "작은 쪽 지수 경계 유지");
-      assert(show(decAdd(d("2.5"), d("2.5"))) === "5", "trailing zero removed");
-      assert(decDiv(d("1"), d("0")) === null, "÷0 → null");
-      assert(decDiv(d("0"), d("0")) === null, "0÷0 → null");
-      assert(show(decDiv(d("1"), d("3"))) === "0.3333333333333333", "1÷3 유효16자리");
-      assert(show(decDiv(d("2"), d("7"))) === "0.2857142857142857", "2÷7 순환소수 유효16자리");
-      assert(show(decDiv(d("2"), d("3"))) === "0.6666666666666667", "2÷3 round-half-up 마지막 자리 7");
-      assert(show(decDiv(d("10"), d("4"))) === "2.5", "10÷4 정확 종결");
-      assert(show(decDiv(d("-1"), d("3"))) === "-0.3333333333333333", "부호 -+");
-      assert(show(decDiv(d("-1"), d("-3"))) === "0.3333333333333333", "부호 --");
-      assert(show(decDiv(d("1"), d("-3"))) === "-0.3333333333333333", "부호 +-");
-      assert(show(decDiv(d("1"), d("0.0000000009"))) === "1111111111.111111", "0 근접 나눗셈(1.11e9 — 유효16자리 십진 표시)");
-      assert(show(decDiv(d("1000000000000"), d("0.001"))) === "1000000000000000", "1e16 미만 큰 결과는 십진 표시");
-      assert(decToPlainString(decFromString("1000000000000")) === "1000000000000", "fix2: plain 1e12");
-      assert(decToPlainString(decFromString("-0.0000000009")) === "-0.0000000009", "fix2: plain small negative");
-      assert(decToPlainString(decDiv(decFromString("1"),decFromString("3"))) === "0.333333333333333333333333333333", "fix2: plain 1/3 내부 30자리");
-      assert(formatDisplay("931392") === "931,392", "쉼표: 정수");
-      assert(formatDisplay("-1234.5678") === "-1,234.5678", "쉼표: 음수+소수부(소수부 미적용)");
-      assert(formatDisplay("123") === "123", "쉼표: 3자리 이하 없음");
-      assert(formatDisplay("1234567890123456") === "1,234,567,890,123,456", "쉼표: 16자리");
-      assert(formatDisplay("1.234567891E15") === "1.234567891E15", "쉼표: 지수 표기 통과");
-      assert(formatDisplay("오류") === "오류", "쉼표: 오류 통과");
-      assert(formatDisplay("0.5") === "0.5", "쉼표: 소수만");
+    function clearFeedback() {
+      clearTimeout(feedbackTimer);
+      feedback = null;
+      $('dots').classList.remove('shake');
+    }
 
-      // applyKey — 연산자·소수점·편집
-      const seq = (keys, init="") => keys.reduce((e,k)=>applyKey(e,k), init);
-      assert(seq(["5","+","×"]) === "5×", "연산자 교체");
-      assert(seq(["5","+","+"]) === "5+", "같은 연산자 no-op");
-      assert(seq(["5",".","5",".","5"]) === "5.55", "2번째 소수점 무시");
-      assert(seq([".","5"]) === "0.5", "선두 . → 0.");
-      assert(seq(["5","+","."]) === "5+0.", "연산자 직후 . → 0.");
-      assert(seq(["+"]) === "", "빈 수식 이항연산자 무시");
-      assert(seq(["÷"]) === "", "빈 수식 ÷ 무시");
-      assert(seq(["−","5"]) === "-5", "빈 수식 − = 단항");
-      assert(seq(["5","+","−","3"]) === "5+-3", "연산자 직후 − = 단항");
-      assert(seq(["−","−","5"]) === "-5", "단항 − 연타 무시");
-      assert(seq(["1","2","3","⌫"]) === "12", "백스페이스");
-      assert(seq(["1","2","C"]) === "", "C 전체 클리어");
-      assert(seq(["5","±"]) === "-5", "±: 양수 꼬리 숫자를 음수로");
-      assert(seq(["−","5","±"]) === "5", "±: 음수 꼬리 숫자를 양수로");
-      assert(seq(["1","2","+","3","±"]) === "12+-3", "±: 수식의 꼬리 숫자만 음수로");
-      assert(seq(["1","2","+","−","3","±"]) === "12+3", "±: 수식의 음수 꼬리 숫자만 양수로");
-      for (const expr of ["", "12+", "12×", "("]) {
-        assert(applyKey(expr, "±") === expr, `± no-op: ${expr || "empty"}`);
+    function renderInput() {
+      $('input-screen').classList.toggle('galaxy', settings.style === 'galaxy');
+      const copy = lockScreenCopy(settings.style, state.current.length > 0);
+      $('prompt').textContent = copy.prompt;
+      $('prompt').setAttribute('aria-label', `${copy.prompt}, ${state.digits === 4 ? 6 : 4}자리로 전환`);
+      const count = feedback ? state.digits : state.current.length;
+      $('dots').replaceChildren(...Array.from({ length: state.digits }, (_, i) => {
+        const dot = document.createElement('span');
+        dot.className = 'dot' + (i < count ? ' filled' : '');
+        return dot;
+      }));
+      $('dots').setAttribute('aria-label', `${state.digits}자리 중 ${count}자리 입력`);
+      $('emergency').querySelector('span').textContent = copy.emergency;
+      $('delete').textContent = copy.trailing;
+    }
+
+    function renderAttempts() {
+      const attempts = [...state.attempts].reverse();
+      $('attempt-list').replaceChildren(...attempts.map((digits, reverseIndex) => {
+        const index = state.attempts.length - reverseIndex - 1;
+        const row = document.createElement('li');
+        const pin = document.createElement('span');
+        pin.className = 'attempt-pin';
+        pin.textContent = formatAttemptLabel(digits, index, new Date());
+        row.append(pin);
+        return row;
+      }));
+      requestAnimationFrame(() => { $('attempt-list').scrollTop = 0; });
+    }
+
+    function renderReveal() {
+      const selected = selectedAttemptReveal(state.attempts, settings.revealAttempt, new Date());
+      $('reveal-label').textContent = `${settings.revealAttempt}번째 입력 PIN`;
+      $('reveal-number').textContent = selected?.pin ?? '—';
+      $('reveal-days').hidden = selected?.days === null || selected?.days === undefined;
+      if (selected?.days !== null && selected?.days !== undefined) {
+        $('reveal-days').textContent = `태어난 지 ${selected.days.toLocaleString('ko-KR')}일`;
       }
-      assert(seq("1234567890123456".split("")) === "1234567890123456", "16자리 입력 허용");
-      assert(seq("12345678901234567".split("")) === "1234567890123456", "17자리째 무시");
-      assert(displayValue("123456789012÷") === "123456789012", "16자리 표시: 12자리 보존");
-      assert(displayValue("1234567890123456×") === "1234567890123456", "16자리 표시: 16자리 보존");
-      assert(seq(["()"]) === "", "() no-op");
-      assert(seq(["5","()"]) === "5", "() no-op 2");
-      // tokenize + evaluate
-      const ev = (expr) => { const t = tokenize(expr); return t === null ? null : evaluate(t); };
-      assert(show(ev(seq(["1","2","+","3","4","×","5"]))) === "230", "즉시계산: 12+34×5=230");
-      assert(show(ev(seq(["9","×","9"]))) === "81", "9×9=81");
-      assert(show(ev(seq(["5","±","+","3"]))) === "-2", "± evaluate: 5 ± + 3 = -2");
-      assert(show(ev(seq("999999999999".split("").concat(["+","1"])))) === "1000000000000", "13자리 결과 십진 표시(지수 아님)");
-      assert(displayValue("") === "0", "display: 빈 수식 0");
-      assert(displayValue("9×9×") === "81", "display: 연산자 직후 중간결과 81");
-      assert(displayValue("9×9×3") === "3", "display: 숫자 입력 중엔 그 숫자");
-      assert(displayValue("12+34×") === "46", "display: 좌→우 중간결과 46");
-      assert(displayValue("-5") === "-5", "display: 단항 음수 입력 중");
-      assert(displayValue("12+-3") === "-3", "display: ±로 음수화한 꼬리 숫자");
-      assert(displayValue("7÷0×") === "오류", "display: ÷0 중간결과는 오류");
-      assert(displayValue("50%") === "0.5", "display: % 적용값");
-      assert(show(ev("(2+3)×4")) === "20", "괄호");
-      assert(ev("7÷0") === null, "÷0 오류");
-      assert(show(ev("5+")) === "5", "dangling 연산자 드롭");
-      assert(show(ev("(2+3")) === "5", "미폐괄호 자동 닫기");
-      assert(show(ev("50%")) === "0.5", "% 단항");
-      assert(show(ev("200×10%")) === "20", "%는 즉시 적용");
-      assert(show(ev("-5+3")) === "-2", "단항 − 평가");
-      // soleNumberText
-      assert(soleNumberText("817") === "817", "단일 숫자");
-      assert(soleNumberText("-5") === "-5", "단항 − 단일 숫자");
-      assert(soleNumberText("08.17") === "08.17", "리터럴 그대로(선행 0 보존)");
-      assert(soleNumberText("1234567890123456") === "1234567890123456", "16자리 무장 판정 가능");
-      assert(soleNumberText("12+34") === null, "연산자 있으면 null");
-      assert(soleNumberText("(5)") === null, "괄호 있으면 null");
-      assert(soleNumberText("") === null, "빈 수식 null");
+    }
 
-      // trickErrorGate
-      const gate = typeof trickErrorGate === "function"
-        ? trickErrorGate
-        : () => "missing";
-      const gateState = (phase) => ({
-        phase, storedText: "817", lastKey: null, pendingSole: null
-      });
-      for (const phase of ["off", "set", "ready"]) {
-        assert(gate(gateState(phase), "C") === "pass", `error gate: C passes in ${phase}`);
-      }
-      for (const phase of ["off", "set", "ready"]) {
-        const expectedGate = phase === "ready" ? "pass" : "blocked";
-        assert(gate(gateState(phase), "=") === expectedGate, `error gate: = in ${phase}`);
-      }
-      for (const phase of ["off", "set", "ready"]) {
-        const expectedGate = phase === "set" ? "pass" : "blocked";
-        assert(gate(gateState(phase), "%") === expectedGate, `error gate: % in ${phase}`);
-      }
-      for (const phase of ["off", "set", "ready"]) {
-        for (const key of ["7", "+"]) {
-          assert(gate(gateState(phase), key) === "blocked", `error gate: ${key} blocked in ${phase}`);
+    function setRevealVisible(visible) {
+      if (visible === revealVisible) return;
+      revealVisible = visible;
+      if (visible) renderReveal();
+      $('reveal-card').classList.toggle('visible', visible);
+      $('reveal-card').setAttribute('aria-hidden', String(!visible));
+    }
+
+    function cancelReveal() {
+      clearTimeout(revealTimer);
+      revealTimer = null;
+      setRevealVisible(false);
+    }
+
+    function scheduleReveal() {
+      if (!swipe || swipe.revealPending || revealVisible) return;
+      swipe.revealPending = true;
+      const activeSwipe = swipe;
+      revealTimer = setTimeout(() => {
+        revealTimer = null;
+        if (swipe === activeSwipe && screen === 'unlocked' && homePage === 'home2'
+            && originals.has('home2') && swipe.revealPending) setRevealVisible(true);
+      }, Math.max(0, 700 - (performance.now() - swipe.startedAt)));
+    }
+
+    function setHomePage(next, animate = true) {
+      homePage = next;
+      const index = next === 'home2' ? 1 : 0;
+      const track = $('home-track');
+      if (animate && track.style.transition === 'none') void track.offsetWidth;
+      track.style.transition = animate ? '' : 'none';
+      track.style.transform = `translate3d(${-index * 100}%, 0, 0)`;
+    }
+
+    const REWIND_GUIDE_KEY = 'release.rewindGridGuide.v1';
+    let rewindGuideTimers = [];
+    function stopRewindGuide() {
+      for (const timer of rewindGuideTimers) clearTimeout(timer);
+      rewindGuideTimers = [];
+      const guide = $('rewind-digit-guide');
+      guide.hidden = true;
+      guide.classList.remove('is-fading');
+    }
+    function startRewindGuide() {
+      stopRewindGuide();
+      if (!$('rewind-grid-guide').checked) return;
+      const guide = $('rewind-digit-guide');
+      void guide.offsetWidth;
+      guide.hidden = false;
+      rewindGuideTimers.push(setTimeout(() => {
+        if (guide.hidden) return;
+        guide.classList.add('is-fading');
+        rewindGuideTimers.push(setTimeout(stopRewindGuide, 400));
+      }, 800));
+    }
+
+    function showScreen(next, animate = false) {
+      clearTimeout(unlockTimer);
+      screen = next;
+      cancelAnimationFrame(timeFrame);
+      timePointer = null;
+      timeLastTap = null;
+      emergencyLastTap = null;
+      $('time-black').hidden = next !== 'time-black';
+      $('time-lock').hidden = next !== 'time-lock';
+      $('time-lock').classList.toggle('galaxy', settings.style === 'galaxy');
+      if (next === 'time-lock') renderTimeMachine();
+      $('input-screen').hidden = next !== 'input' && !(next === 'unlocked' && animate);
+      $('unlocked-screen').hidden = next !== 'unlocked';
+      $('peek-screen').hidden = next !== 'unlocked' || animate;
+      $('settings-screen').hidden = next !== 'settings';
+      $('input-screen').classList.remove('unlocking-out');
+      $('unlocked-screen').classList.remove('unlocking');
+      $('unlocked-screen').style.transform = 'translateY(0px)';
+      swipe = null;
+      cancelReveal();
+      if (next === 'input') renderInput();
+      if (next === 'unlocked') {
+        renderAttempts();
+        setHomePage('home1', false);
+        requestAnimationFrame(() => { $('home-track').style.transition = ''; });
+        if (animate) {
+          void $('unlocked-screen').offsetWidth;
+          $('input-screen').classList.add('unlocking-out');
+          $('unlocked-screen').classList.add('unlocking');
+          unlockTimer = setTimeout(() => {
+            $('input-screen').hidden = true;
+            $('peek-screen').hidden = false;
+            $('input-screen').classList.remove('unlocking-out');
+            $('unlocked-screen').classList.remove('unlocking');
+            clearFeedback();
+          }, UNLOCK_ANIMATION_MS);
         }
       }
-      let gatedState = gateState("set");
-      let gatedTransition = { state: gatedState, action: "blocked" };
-      for (const key of ["%", "%"]) {
-        gatedTransition = gate(gatedState, key) === "pass"
-          ? trickStep(gatedState, key, { soleNumberText: null })
-          : { state: gatedState, action: "blocked" };
-        gatedState = gatedTransition.state;
-      }
-      assert(
-        gatedTransition.action === "arm" && gatedState.phase === "ready",
-        "error gate: set 오류 상태에서도 %% → arm"
-      );
-
-      // trickStep
-      const T0={phase:"off",storedText:null,lastKey:null,pendingSole:null};
-      const st=(s,k,sole)=>trickStep(s,k,{soleNumberText:sole});
-      let a=st(T0,"%","817");
-      assert(a.action==="none","1번째 %는 평범");
-      a=st(a.state,"%","8.17");
-      assert(a.action==="set"&&a.state.phase==="set"&&a.state.storedText==="817","%% 세팅: 1번째 % 직전 리터럴 저장");
-      let b=st(a.state,"3",null); b=st(b.state,"+",null); b=st(b.state,"5",null); b=st(b.state,"=",null);
-      assert(b.action==="none"&&b.state.phase==="set"&&b.state.storedText==="817","set: 정상 계산 후에도 저장 유지");
-      b=st(b.state,"1",null); b=st(b.state,"2",null); b=st(b.state,"×",null); b=st(b.state,"9",null); b=st(b.state,"=",null);
-      assert(b.action==="none"&&b.state.phase==="set","set: 여러 계산에도 = 미카운트");
-      let r=st(b.state,"%","108"); r=st(r.state,"%",null);
-      assert(r.action==="arm"&&r.state.phase==="ready"&&r.state.storedText==="817","set에서 %% → ready, 저장값 보존");
-      let c=st(r.state,"=",null);
-      assert(c.action==="fire"&&c.state.phase==="off"&&c.state.storedText===null,"ready: =는 무조건 발동+초기화");
-      // 보존
-      let k=st(a.state,"C",null);
-      assert(k.state.phase==="set"&&k.state.storedText==="817","C 보존");
-      k=st(k.state,"⌫",null);
-      assert(k.state.phase==="set","⌫ 보존");
-      // ready에서 %% no-op
-      let p=st(r.state,"%","55"); p=st(p.state,"%","0.55");
-      assert(p.action==="none"&&p.state.phase==="ready"&&p.state.storedText==="817","ready에서 %% no-op");
-      // 단일 숫자가 아닌 수식에서는 저장 안 됨
-      let m=st(T0,"3",null); m=st(m.state,"+",null); m=st(m.state,"%",null); m=st(m.state,"%",null);
-      assert(m.action==="none"&&m.state.phase==="off"&&m.state.storedText===null,"수식 중 %%는 저장 안 됨");
-      // ÷는 무관
-      let d0=st(T0,"÷","9"); d0=st(d0.state,"÷","9");
-      assert(d0.state.phase==="off","÷÷는 이제 아무것도 안 함");
-      // 비연속 %
-      let n=st(T0,"%","9"); n=st(n.state,"5",null); n=st(n.state,"%",null);
-      assert(n.state.phase==="off","% 사이 다른 키 = 세팅 안 됨");
-
-      // date-time reveal
-      assert(formatDateTarget(new Date(2026, 7, 20, 21, 47), "24") === "268202147", "date target: 24h example");
-      assert(formatDateTarget(new Date(2026, 7, 20, 8, 5), "24") === "26820805", "date target: 24h single-digit hour");
-      assert(formatDateTarget(new Date(2026, 11, 31, 23, 59), "24") === "2612312359", "date target: 24h December");
-      assert(formatDateTarget(new Date(2026, 0, 9, 0, 5), "24") === "2619005", "date target: 24h January midnight");
-      assert(formatDateTarget(new Date(2026, 7, 20, 21, 47), "12") === "26820947", "date target: 12h evening");
-      assert(formatDateTarget(new Date(2026, 7, 20, 0, 30), "12") === "268201230", "date target: 12h midnight");
-      assert(formatDateTarget(new Date(2026, 7, 20, 12, 5), "12") === "268201205", "date target: 12h noon");
-      assert(formatDateTarget(new Date(2026, 7, 20, 21, 47)) === "268202147", "date target: default 24h");
-      const dateTarget = typeof dateTrickTarget === "function"
-        ? dateTrickTarget
-        : () => null;
-      const dateNowMs = new Date(2026, 7, 20, 21, 46, 40).getTime();
-      const datePlus = dateTarget("86419746", dateNowMs, 20, "24");
-      assert(
-        datePlus?.targetText === "268202147" &&
-        datePlus.neededOp === "+" &&
-        datePlus.queueText === "181782401",
-        "date target round trip: plus values"
-      );
-      assert(
-        datePlus !== null &&
-        decToPlainString(decAdd(d("86419746"), d(datePlus.queueText))) === datePlus.targetText,
-        "date target round trip: plus arithmetic"
-      );
-      const dateMinus = dateTarget("999999999", dateNowMs, 20, "24");
-      assert(
-        dateMinus?.targetText === "268202147" &&
-        dateMinus.neededOp === "−" &&
-        dateMinus.queueText === "731797852",
-        "date target round trip: minus values"
-      );
-      assert(
-        dateMinus !== null &&
-        decToPlainString(decSub(d("999999999"), d(dateMinus.queueText))) === dateMinus.targetText,
-        "date target round trip: minus arithmetic"
-      );
-      const date12h = dateTarget("10000000", dateNowMs, 20, "12");
-      assert(
-        date12h?.targetText === "26820947" &&
-        date12h.neededOp === "+" &&
-        date12h.queueText === "16820947",
-        "date target round trip: 12h values"
-      );
-      assert(
-        date12h !== null &&
-        decToPlainString(decAdd(d("10000000"), d(date12h.queueText))) === date12h.targetText,
-        "date target round trip: 12h arithmetic"
-      );
-      const DT0={phase:"off",queue:null,queueIndex:0};
-      const DTARM={phase:"armed",queue:null,queueIndex:0};
-      const dt=(s,key,ctx={})=>dateTrickStep(s,key,ctx);
-      let dtStep=dt(DTARM,"+",{currentValueText:"100",targetText:"223",neededOp:"+",queueText:"123"});
-      assert(dtStep.state.phase==="entering"&&dtStep.state.queue==="123"&&dtStep.state.queueIndex===0,"date trick: correct op enters");
-      dtStep=dt(dtStep.state,"7");
-      assert(dtStep.replaceKey==="1"&&dtStep.state.queueIndex===1,"date trick: first forced digit");
-      dtStep=dt(dtStep.state,"8");
-      assert(dtStep.replaceKey==="2"&&dtStep.state.queueIndex===2,"date trick: second forced digit");
-      dtStep=dt(dtStep.state,"9");
-      assert(dtStep.replaceKey==="3"&&dtStep.state.queueIndex===3,"date trick: third forced digit");
-      dtStep=dt(dtStep.state,"0");
-      assert(dtStep.action==="swallow"&&dtStep.state.queueIndex===3,"date trick: extra digit swallowed");
-      dtStep=dt(dtStep.state,"⌫");
-      dtStep=dt(dtStep.state,"4");
-      assert(dtStep.replaceKey==="3"&&dtStep.state.queueIndex===3,"date trick: backspace rewinds queue");
-      assert(dt({phase:"entering",queue:"123",queueIndex:2},"C").state.phase==="off","date trick: C cancels");
-      assert(dt({phase:"entering",queue:"123",queueIndex:3},"=").state.phase==="off","date trick: equals is one-shot");
-      dtStep=dt(DTARM,"−",{currentValueText:"100",targetText:"223",neededOp:"+",queueText:"123"});
-      assert(dtStep.state===DTARM&&dtStep.action==="swallow","date trick: wrong op stays armed");
-      const DTENTER={phase:"entering",queue:"123",queueIndex:0};
-      for (const key of ["%", "×"]) {
-        dtStep=dt(DTENTER,key);
-        assert(dtStep.state===DTENTER&&dtStep.action==="swallow",`date trick: entering swallows ${key}`);
-      }
-      dtStep=dt(DTENTER,"⌫");
-      assert(dtStep.state===DTENTER&&dtStep.action==="swallow","date trick: queue-start backspace swallowed");
-      for (const key of ["0","9",".","+","−","×","÷","%","()","⌫","C","="]) {
-        dtStep=dt(DT0,key);
-        assert(dtStep.state===DT0&&dtStep.replaceKey===key&&dtStep.action==="none",`date trick: off passes ${key}`);
-      }
-
-      assert(show(ev(seq(["5","+","+","7"]))) === "12", "E2E5: 5++7=12");
-      assert(show(ev(seq(["5","+"])))=== "5", "E2E7: 5+=5");
-      assert(show(ev(seq(["5",".","5",".","5"]))) === "5.55", "E2E6: 5.5.5=5.55");
-      assert(ev(seq(["7","÷","0"])) === null, "E2E4: 7÷0 오류");
-      assert(show(ev(seq(["1","2","+","3","4","×","5"]))) === "230", "E2E1: 12+34×5=230");
-
-      // Mnemonica stack lookup
-      const stack = typeof MNEMONICA === "undefined" ? [] : MNEMONICA;
-      const lookup = typeof mnemonicaLookup === "function"
-        ? mnemonicaLookup
-        : () => ({ position: null, card: null });
-      assert(stack.length === 52, "Mnemonica: 52 cards");
-      assert(new Set(stack).size === 52, "Mnemonica: all cards unique");
-      assert(
-        ["S", "H", "C", "D"].every(
-          (suit) => stack.filter((entry) => entry.endsWith(suit)).length === 13
-        ),
-        "Mnemonica: 13 cards per suit"
-      );
-      assert(lookup("11").position === 7 && lookup("11").card === "♥Q", "Mnemonica: 11");
-      assert(lookup("113").position === 31 && lookup("113").card === null, "Mnemonica: 113");
-      assert(lookup("43").position === 12 && lookup("43").card === "♣A", "Mnemonica: 43");
-      assert(lookup("1").position === null && lookup("1").card === "♣4", "Mnemonica: 1");
-      assert(lookup("52").position === null && lookup("52").card === "♦9", "Mnemonica: 52");
-      assert(lookup("310").position === 24 && lookup("310").card === null, "Mnemonica: 310");
-      assert(lookup("413").position === 26 && lookup("413").card === null, "Mnemonica: 413");
-      for (const input of ["999", "-5", "3.5", ""]) {
-        const result = lookup(input);
-        assert(result.position === null && result.card === null, `Mnemonica: invalid ${input}`);
-      }
-
-      // Mnemonica cut lookup
-      const cutLookup = typeof mnemonicaCutLookup === "function"
-        ? mnemonicaCutLookup
-        : () => null;
-      assert(
-        JSON.stringify(cutLookup("1337")) === JSON.stringify({ cut: 36, bottom: "♣J" }),
-        "Mnemonica cut: ♠3 to position 37"
-      );
-      assert(
-        JSON.stringify(cutLookup("1101")) === JSON.stringify({ cut: 6, bottom: "♦6" }),
-        "Mnemonica cut: ♠A to position 01"
-      );
-      assert(
-        JSON.stringify(cutLookup("11001")) === JSON.stringify({ cut: 33, bottom: "♣8" }),
-        "Mnemonica cut: ♠10 to position 01"
-      );
-      assert(
-        JSON.stringify(cutLookup("1107")) === JSON.stringify({ cut: 0, bottom: "♦9" }),
-        "Mnemonica cut: no cut"
-      );
-      for (const input of ["1353", "5137", "137", "11", "113705", "3.5", ""]) {
-        assert(cutLookup(input) === null, `Mnemonica cut: invalid ${input}`);
-      }
-
-      // Undo Influence joker setup
-      const undoLookup = typeof undoSetupLookup === "function"
-        ? undoSetupLookup
-        : () => null;
-      assert(
-        JSON.stringify(undoLookup("1825")) === JSON.stringify({ upper: 28, lower: 47 }),
-        "Undo Influence: 18:25"
-      );
-      assert(
-        JSON.stringify(undoLookup("1843")) === JSON.stringify({ upper: 10, lower: 29 }),
-        "Undo Influence: original 18:43 setup"
-      );
-      assert(
-        JSON.stringify(undoLookup("625")) === JSON.stringify({ upper: 28, lower: 35 }),
-        "Undo Influence: 6:25"
-      );
-      assert(
-        JSON.stringify(undoLookup("1805")) === JSON.stringify({ upper: 35, lower: 41 }),
-        "Undo Influence: reversed 18:05"
-      );
-      for (const input of ["1111", "1859", "1800", "18", "18253", "3.5"]) {
-        assert(undoLookup(input) === null, `Undo Influence: invalid ${input}`);
-      }
-
-      const panel = document.getElementById("selftest");
-      const passed = failures.length === 0;
-      const headline = passed
-        ? `ALL PASS (${assertions} assertions)`
-        : `FAIL (${failures.length}/${assertions})`;
-      panel.className = passed ? "pass" : "fail";
-      panel.textContent = passed
-        ? headline
-        : `${headline}\n${failures.map((name) => `- ${name}`).join("\n")}`;
-      console[passed ? "log" : "error"](panel.textContent);
-      return { assertions, failures };
+      if (next === 'settings') { populateForm(); $('settings-screen').scrollTop = 0; }
+      if (next === 'time-black') startRewindGuide();
+      else stopRewindGuide();
     }
 
-    const MNEMONICA = [
-      "4C","2H","7D","3C","4H","6D","AS","5H","9S","2S",
-      "QH","3D","QC","8H","6S","5S","9H","KC","2D","JH",
-      "3S","8S","6H","10C","5D","KD","2C","3H","8D","5C",
-      "KS","JD","8C","10S","KH","JC","7S","10H","AD","4S",
-      "7H","4D","AC","9C","JS","QD","7C","QS","10D","6C",
-      "AH","9D"
-    ];
-
-    const CARD_SUIT_LETTERS = { 1: "S", 2: "H", 3: "C", 4: "D" };
-    const CARD_SUIT_SYMBOLS = { S: "♠", H: "♥", C: "♣", D: "♦" };
-    const CARD_VALUE_LABELS = { 1: "A", 11: "J", 12: "Q", 13: "K" };
-    const TWO_DIGIT_CARD_CODE = /^([1-4])([1-9])$/;
-    const THREE_DIGIT_CARD_CODE = /^([1-4])(1[0-3])$/;
-    const STACK_CARD_CODE = /^(10|[2-9]|[AJQK])([SHCD])$/;
-
-    function parseCardCode(str) {
-      const source = String(str ?? "");
-      const code = TWO_DIGIT_CARD_CODE.exec(source) ??
-        THREE_DIGIT_CARD_CODE.exec(source);
-      return code === null
-        ? null
-        : { suit: code[1], value: Number(code[2]) };
-    }
-
-    function cardToStackCode({ suit, value }) {
-      return `${CARD_VALUE_LABELS[value] ?? value}${CARD_SUIT_LETTERS[suit]}`;
-    }
-
-    function formatStackCard(stackCode) {
-      const card = STACK_CARD_CODE.exec(stackCode);
-      return `${CARD_SUIT_SYMBOLS[card[2]]}${card[1]}`;
-    }
-
-    function mnemonicaLookup(text) {
-      const source = String(text ?? "");
-      if (!/^\d+$/.test(source)) return { position: null, card: null };
-
-      const cardCode = parseCardCode(source);
-      let position = null;
-      let card = null;
-
-      if (cardCode !== null) {
-        const stackCode = cardToStackCode(cardCode);
-        const index = MNEMONICA.indexOf(stackCode);
-        position = index === -1 ? null : index + 1;
+    function handleAttemptOutcome(previousCount) {
+      const outcome = attemptFeedback(state, previousCount);
+      const pattern = feedbackVibration(outcome, settings.vibration);
+      if (pattern.length && typeof navigator.vibrate === 'function') {
+        try { navigator.vibrate(pattern); } catch {}
       }
-
-      const stackPosition = Number(source);
-      if (Number.isInteger(stackPosition) && stackPosition >= 1 && stackPosition <= 52) {
-        card = formatStackCard(MNEMONICA[stackPosition - 1]);
-      }
-
-      return { position, card };
-    }
-
-    function mnemonicaCutLookup(text) {
-      const source = String(text ?? "");
-      if (!/^\d{4,5}$/.test(source)) return null;
-
-      const cardCode = source.slice(0, -2);
-      const target = Number(source.slice(-2));
-      const card = parseCardCode(cardCode);
-      if (card === null || target < 1 || target > 52) return null;
-
-      const stackCode = cardToStackCode(card);
-      const position = MNEMONICA.indexOf(stackCode) + 1;
-      const cut = (position - target + 52) % 52;
-      const bottomCode = MNEMONICA[cut === 0 ? 51 : cut - 1];
-
-      return { cut, bottom: formatStackCard(bottomCode) };
-    }
-
-    function undoSetupLookup(text) {
-      const source = String(text ?? "");
-      if (!/^\d{3,4}$/.test(source)) return null;
-
-      const hour = Number(source.slice(0, -2));
-      const minute = Number(source.slice(-2));
-      const r1 = Math.min(hour, minute);
-      const r2 = Math.max(hour, minute);
-      if (r1 < 1 || r1 >= r2 || r2 > 52) return null;
-
-      return {
-        upper: 53 - r2,
-        lower: r1 + 54 - r2
-      };
-    }
-
-    function decPow10(exponent) {
-      if (!Number.isInteger(exponent) || exponent < 0) {
-        throw new RangeError("Decimal exponent must be a non-negative integer");
-      }
-      return 10n ** BigInt(exponent);
-    }
-
-    function decNormalize(sign, digits, scale) {
-      let d = digits < 0n ? -digits : digits;
-      let e = scale;
-
-      if (d === 0n) return { s: 1, d: 0n, e: 0 };
-
-      while (e > 0 && d % 10n === 0n) {
-        d /= 10n;
-        e -= 1;
-      }
-
-      return { s: sign < 0 ? -1 : 1, d, e };
-    }
-
-    function decFromString(str) {
-      const source = String(str).trim();
-      const match = /^([+\-−]?)(?:(\d+)(?:\.(\d*))?|\.(\d+))$/.exec(source);
-
-      if (!match) {
-        throw new TypeError(`Invalid decimal literal: ${source}`);
-      }
-
-      const sign = match[1] === "-" || match[1] === "−" ? -1 : 1;
-      const integer = match[2] ?? "";
-      const fraction = match[3] ?? match[4] ?? "";
-      const digits = BigInt(`${integer}${fraction}` || "0");
-
-      return decNormalize(sign, digits, fraction.length);
-    }
-
-    function decAdd(a, b) {
-      const scale = Math.max(a.e, b.e);
-      const left = BigInt(a.s) * a.d * decPow10(scale - a.e);
-      const right = BigInt(b.s) * b.d * decPow10(scale - b.e);
-      const sum = left + right;
-
-      return decNormalize(sum < 0n ? -1 : 1, sum, scale);
-    }
-
-    function decSub(a, b) {
-      return decAdd(a, { s: b.s * -1, d: b.d, e: b.e });
-    }
-
-    function decMul(a, b) {
-      return decNormalize(a.s === b.s ? 1 : -1, a.d * b.d, a.e + b.e);
-    }
-
-    function decDiv(a, b) {
-      if (b.d === 0n) return null;
-      if (a.d === 0n) return decNormalize(1, 0n, 0);
-
-      const digitDelta = a.d.toString().length - b.d.toString().length;
-      const belowPower = digitDelta >= 0
-        ? a.d < b.d * decPow10(digitDelta)
-        : a.d * decPow10(-digitDelta) < b.d;
-      const ratioExponent = belowPower ? digitDelta - 1 : digitDelta;
-      const longDivisionPower = 30 - ratioExponent;
-      const scaledNumerator = longDivisionPower >= 0
-        ? a.d * decPow10(longDivisionPower)
-        : a.d;
-      const scaledDenominator = longDivisionPower >= 0
-        ? b.d
-        : b.d * decPow10(-longDivisionPower);
-      const extendedQuotient = scaledNumerator / scaledDenominator;
-      const guardDigit = extendedQuotient % 10n;
-      let quotient = extendedQuotient / 10n;
-
-      if (guardDigit >= 5n) {
-        quotient += 1n;
-      }
-
-      const quotientExponent = ratioExponent + b.e - a.e;
-      const resultScale = 29 - quotientExponent;
-      const sign = a.s === b.s ? 1 : -1;
-
-      return resultScale >= 0
-        ? decNormalize(sign, quotient, resultScale)
-        : decNormalize(sign, quotient * decPow10(-resultScale), 0);
-    }
-
-    function decToPlainString(dec) {
-      const value = decNormalize(dec.s, dec.d, dec.e);
-      if (value.d === 0n) return "0";
-
-      const digits = value.d.toString();
-      const sign = value.s < 0 ? "-" : "";
-      const decimalPosition = digits.length - value.e;
-
-      if (decimalPosition <= 0) {
-        return `${sign}0.${"0".repeat(-decimalPosition)}${digits}`;
-      }
-      if (decimalPosition >= digits.length) {
-        return `${sign}${digits}${"0".repeat(decimalPosition - digits.length)}`;
-      }
-      return `${sign}${digits.slice(0, decimalPosition)}.${digits.slice(decimalPosition)}`;
-    }
-
-    const DISPLAY_SIG = 16;
-
-    function decToDisplay(dec) {
-      const value = decNormalize(dec.s, dec.d, dec.e);
-      if (value.d === 0n) return "0";
-
-      const rawDigits = value.d.toString();
-      let exponent = rawDigits.length - value.e - 1;
-      let roundedDigits = value.d;
-
-      if (rawDigits.length > DISPLAY_SIG) {
-        const cut = rawDigits.length - DISPLAY_SIG;
-        const divisor = decPow10(cut);
-        const remainder = roundedDigits % divisor;
-        roundedDigits /= divisor;
-
-        if (remainder * 2n >= divisor) {
-          roundedDigits += 1n;
-        }
-
-        if (roundedDigits.toString().length > DISPLAY_SIG) {
-          roundedDigits /= 10n;
-          exponent += 1;
-        }
-      }
-
-      const significant = roundedDigits.toString().replace(/0+$/, "");
-      const sign = value.s < 0 ? "-" : "";
-      const useExponent = exponent >= 16 || exponent < -9;
-
-      if (useExponent) {
-        const mantissa = significant.length === 1
-          ? significant
-          : `${significant[0]}.${significant.slice(1)}`;
-        return `${sign}${mantissa}E${exponent}`;
-      }
-
-      const decimalPosition = exponent + 1;
-      if (decimalPosition <= 0) {
-        return `${sign}0.${"0".repeat(-decimalPosition)}${significant}`;
-      }
-      if (decimalPosition >= significant.length) {
-        return `${sign}${significant}${"0".repeat(decimalPosition - significant.length)}`;
-      }
-      return `${sign}${significant.slice(0, decimalPosition)}.${significant.slice(decimalPosition)}`;
-    }
-
-    function expressionTokenCount(expr) {
-      let count = 0;
-      let index = 0;
-
-      while (index < expr.length) {
-        if (expr[index] === "-" && /[\d.]/.test(expr[index + 1] ?? "")) {
-          index += 1;
-        }
-
-        if (/[\d.]/.test(expr[index] ?? "")) {
-          while (index < expr.length && /[\d.]/.test(expr[index])) index += 1;
-        } else {
-          index += 1;
-        }
-        count += 1;
-      }
-
-      return count;
-    }
-
-    function applyKey(expr, key) {
-      const source = String(expr ?? "");
-      const acceptedKeys = /^(?:[0-9]|\.|\+|−|×|÷|\(\)|%|±|C|⌫)$/;
-
-      if (!acceptedKeys.test(key)) return source;
-      if (key === "C") return "";
-      if (key === "⌫") return source.slice(0, -1);
-
-      const withinTokenLimit = (candidate) =>
-        expressionTokenCount(candidate) <= 100 ? candidate : source;
-      const last = source.at(-1) ?? "";
-      const binaryOperators = "+−×÷";
-      const expectsOperand =
-        source === "" || binaryOperators.includes(last) || last === "(" || last === "-";
-
-      if (key === "±") {
-        const trailingNumber = /(^|[+−×÷(])(-?)(\d+(?:\.\d*)?|\.\d+)$/.exec(source);
-        if (trailingNumber === null) return source;
-        const [numberText, prefix, sign, digits] = trailingNumber;
-        const toggledNumber = `${prefix}${sign === "-" ? "" : "-"}${digits}`;
-        return withinTokenLimit(`${source.slice(0, -numberText.length)}${toggledNumber}`);
-      }
-
-      if (/^\d$/.test(key)) {
-        const currentNumber = /[\d.]+$/.exec(source)?.[0] ?? "";
-        const digitCount = (currentNumber.match(/\d/g) ?? []).length;
-        if (digitCount >= 16) return source;
-        return withinTokenLimit(source + key);
-      }
-
-      if (key === ".") {
-        if (expectsOperand) return withinTokenLimit(`${source}0.`);
-        const currentNumber = /[\d.]+$/.exec(source)?.[0] ?? "";
-        if (currentNumber === "" || currentNumber.includes(".")) return source;
-        return withinTokenLimit(`${source}.`);
-      }
-
-      if (key === "()") {
-        return source;
-      }
-
-      if (key === "%") {
-        return /[\d.)%]/.test(last) ? withinTokenLimit(`${source}%`) : source;
-      }
-
-      if (key === "−") {
-        if (expectsOperand) {
-          return last === "-" ? source : withinTokenLimit(`${source}-`);
-        }
-        return withinTokenLimit(`${source}−`);
-      }
-
-      if (source === "" || last === "(" || last === "-") return source;
-      if (binaryOperators.includes(last)) {
-        return last === key
-          ? source
-          : withinTokenLimit(`${source.slice(0, -1)}${key}`);
-      }
-      return withinTokenLimit(`${source}${key}`);
-    }
-
-    function tokenize(expr) {
-      const source = String(expr ?? "");
-      const tokens = [];
-      let index = 0;
-      let openCount = 0;
-      let expectsOperand = true;
-      const push = (token) => {
-        tokens.push(token);
-        return tokens.length <= 100;
-      };
-
-      while (index < source.length) {
-        const char = source[index];
-
-        if (expectsOperand && (char === "-" || char === "−")) {
-          if (source[index + 1] === "(") {
-            if (!push({ t: "num", v: "-1" }) || !push({ t: "op", v: "*" })) {
-              return null;
-            }
-            index += 1;
-            continue;
-          }
-          const numberMatch = /^(?:\d+(?:\.\d*)?|\.\d+)/.exec(source.slice(index + 1));
-          if (!numberMatch || !push({ t: "num", v: `-${numberMatch[0]}` })) return null;
-          index += numberMatch[0].length + 1;
-          expectsOperand = false;
-          continue;
-        }
-
-        if (/[\d.]/.test(char)) {
-          if (!expectsOperand) return null;
-          const numberMatch = /^(?:\d+(?:\.\d*)?|\.\d+)/.exec(source.slice(index));
-          if (!numberMatch || !push({ t: "num", v: numberMatch[0] })) return null;
-          index += numberMatch[0].length;
-          expectsOperand = false;
-          continue;
-        }
-
-        if (char === "(") {
-          if (!expectsOperand || !push({ t: "lp" })) return null;
-          openCount += 1;
-          index += 1;
-          continue;
-        }
-
-        if (char === ")") {
-          if (expectsOperand || openCount === 0 || !push({ t: "rp" })) return null;
-          openCount -= 1;
-          index += 1;
-          expectsOperand = false;
-          continue;
-        }
-
-        if (char === "%") {
-          if (expectsOperand || !push({ t: "pct" })) return null;
-          index += 1;
-          continue;
-        }
-
-        const mappedOperator = {
-          "+": "+",
-          "−": "-",
-          "×": "*",
-          "÷": "/"
-        }[char];
-        if (mappedOperator) {
-          if (expectsOperand || !push({ t: "op", v: mappedOperator })) return null;
-          index += 1;
-          expectsOperand = true;
-          continue;
-        }
-
-        return null;
-      }
-
-      return tokens;
-    }
-
-    function evaluate(tokens) {
-      if (!Array.isArray(tokens) || tokens.length === 0 || tokens.length > 100) return null;
-
-      const prepared = tokens.map((token) => ({ ...token }));
-      while (prepared.at(-1)?.t === "op") prepared.pop();
-      if (prepared.length === 0) return null;
-
-      let balance = 0;
-      for (const token of prepared) {
-        if (token.t === "lp") balance += 1;
-        if (token.t === "rp") {
-          balance -= 1;
-          if (balance < 0) return null;
-        }
-      }
-      while (balance > 0) {
-        prepared.push({ t: "rp" });
-        balance -= 1;
-      }
-
-      const values = [];
-      const operators = [];
-      const precedence = { "+": 1, "-": 1, "*": 1, "/": 1 };
-      const hundred = decFromString("100");
-      let expectsOperand = true;
-
-      const applyTopOperator = () => {
-        const operator = operators.pop();
-        if (!operator || operator === "(" || values.length < 2) return false;
-        const right = values.pop();
-        const left = values.pop();
-        const result = operator === "+"
-          ? decAdd(left, right)
-          : operator === "-"
-            ? decSub(left, right)
-            : operator === "*"
-              ? decMul(left, right)
-              : decDiv(left, right);
-        if (result === null) return false;
-        values.push(result);
+      if (outcome === 'success') {
+        feedback = state.attempts.at(-1);
+        renderInput();
+        showScreen('unlocked', true);
         return true;
-      };
-
-      for (const token of prepared) {
-        if (token.t === "num") {
-          if (!expectsOperand || typeof token.v !== "string") return null;
-          try {
-            values.push(decFromString(token.v));
-          } catch {
-            return null;
-          }
-          expectsOperand = false;
-          continue;
-        }
-
-        if (token.t === "pct") {
-          if (expectsOperand || values.length === 0) return null;
-          const percentage = decDiv(values.pop(), hundred);
-          if (percentage === null) return null;
-          values.push(percentage);
-          continue;
-        }
-
-        if (token.t === "lp") {
-          if (!expectsOperand) return null;
-          operators.push("(");
-          continue;
-        }
-
-        if (token.t === "rp") {
-          if (expectsOperand) return null;
-          while (operators.length > 0 && operators.at(-1) !== "(") {
-            if (!applyTopOperator()) return null;
-          }
-          if (operators.pop() !== "(") return null;
-          expectsOperand = false;
-          continue;
-        }
-
-        if (token.t === "op" && Object.hasOwn(precedence, token.v)) {
-          if (expectsOperand) return null;
-          while (
-            operators.length > 0 &&
-            operators.at(-1) !== "(" &&
-            precedence[operators.at(-1)] >= precedence[token.v]
-          ) {
-            if (!applyTopOperator()) return null;
-          }
-          operators.push(token.v);
-          expectsOperand = true;
-          continue;
-        }
-
-        return null;
       }
-
-      if (expectsOperand) return null;
-      while (operators.length > 0) {
-        if (operators.at(-1) === "(" || !applyTopOperator()) return null;
+      if (outcome === 'failure') {
+        feedback = state.attempts.at(-1);
+        $('dots').classList.add('shake');
+        feedbackTimer = setTimeout(() => {
+          clearFeedback();
+          renderInput();
+        }, 420);
       }
-      return values.length === 1 ? values[0] : null;
+      renderInput();
+      return outcome !== 'pending';
     }
 
-    function displayValue(expr) {
-      const source = String(expr ?? "");
-      if (source === "") return "0";
-
-      if (/^-?(?:\d+(?:\.\d*)?|\.\d+)(?:E-?\d+)?$/.test(source)) {
-        return source;
-      }
-
-      const trailingNumber =
-        /(?:^|[+−×÷(])(-?(?:\d+(?:\.\d*)?|\.\d+))$/.exec(source);
-      if (trailingNumber) return trailingNumber[1];
-
-      let evaluable = source;
-      const last = source.at(-1);
-      if ("+−×÷".includes(last)) {
-        evaluable = source.slice(0, -1);
-      } else if (last === "-") {
-        evaluable = source.slice(0, -1);
-        if (evaluable === "") return "0";
-      }
-
-      const tokens = tokenize(evaluable);
-      const value = tokens === null ? null : evaluate(tokens);
-      return value === null ? "오류" : decToDisplay(value);
+    function inputDigit(digit) {
+      if (screen !== 'input' || feedback) return;
+      const previousCount = state.attempts.length;
+      const autoSubmit = settings.style !== 'galaxy';
+      const unlockAttempt = settings.unlockMode === 'attempt' ? settings.unlockAttempt : null;
+      state = pushDigit(state, digit, performance.now(), settings.delaySeconds * 1000, autoSubmit, unlockAttempt);
+      if (state.attempts.length > previousCount) handleAttemptOutcome(previousCount);
+      else renderInput();
     }
 
-    function formatDisplay(str) {
-      const source = String(str ?? "");
-      if (source === "오류" || source.includes("E")) return source;
-
-      const number = /^(-?)(\d+)(\.\d*)?$/.exec(source);
-      if (number === null) return source;
-
-      const [, sign, integer, fraction = ""] = number;
-      const grouped = integer.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-      return `${sign}${grouped}${fraction}`;
+    const letters = ['', '', 'abc', 'def', 'ghi', 'jkl', 'mno', 'pqrs', 'tuv', 'wxyz'];
+    for (const digit of [1, 2, 3, 4, 5, 6, 7, 8, 9, 0]) {
+      const key = document.createElement('button');
+      key.type = 'button';
+      key.className = 'key';
+      key.dataset.digit = digit;
+      key.setAttribute('aria-label', String(digit));
+      const number = document.createElement('span');
+      number.className = 'number';
+      number.textContent = digit;
+      const alphabet = document.createElement('span');
+      alphabet.className = 'letters';
+      alphabet.textContent = letters[digit];
+      key.append(number, alphabet);
+      key.addEventListener('click', () => inputDigit(digit));
+      $('keypad').append(key);
     }
 
-    function soleNumberText(expr) {
-      const source = String(expr ?? "");
-      return /^-?(?:\d+(?:\.\d*)?|\.\d+)$/.test(source) ? source : null;
+    function addActionKey(action, label, svg) {
+      const key = document.createElement('button');
+      key.type = 'button';
+      key.className = 'key galaxy-only';
+      key.dataset.action = action;
+      key.setAttribute('aria-label', label);
+      key.innerHTML = svg;
+      $('keypad').append(key);
+      return key;
     }
+    const backspaceKey = addActionKey('backspace', '한 자리 삭제', '<svg class="action-icon" viewBox="0 0 32 32" aria-hidden="true"><path d="M13 8h13a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3H13L4 16l9-8Z"/><path d="m17 12 7 8m0-8-7 8"/></svg>');
+    const confirmKey = addActionKey('confirm', 'PIN 확인', '<svg class="action-icon" viewBox="0 0 32 32" aria-hidden="true"><path d="m7 16 6 6L26 9"/></svg>');
 
-    function formatDateTarget(date, hourCycle = "24") {
-      const hour = hourCycle === "12"
-        ? ((date.getHours() + 11) % 12) + 1
-        : date.getHours();
-      return (
-        String(date.getFullYear() % 100) +
-        String(date.getMonth() + 1) +
-        String(date.getDate()) +
-        String(hour) +
-        String(date.getMinutes()).padStart(2, "0")
-      );
+    $('prompt').addEventListener('click', () => {
+      if (state.unlocked) return;
+      clearFeedback();
+      state = toggleDigits(state);
+      renderInput();
+    });
+    function removeDigit() {
+      if (feedback) return;
+      state = state.current.length ? deleteDigit(state) : clearCurrent(state);
+      renderInput();
     }
-
-    function dateTrickTarget(currentText, nowMs, delaySeconds, hourCycle) {
-      const targetText = formatDateTarget(
-        new Date(nowMs + delaySeconds * 1000),
-        hourCycle
-      );
-      const diff = decSub(
-        decFromString(targetText),
-        decFromString(currentText)
-      );
-      return {
-        targetText,
-        neededOp: diff.s >= 0 ? "+" : "−",
-        queueText: decToPlainString(diff.s >= 0 ? diff : { ...diff, s: 1 })
-      };
-    }
-
-    function dateTrickStep(state, key, ctx) {
-      if (
-        state.phase === "armed" &&
-        (key === "+" || key === "−") &&
-        typeof ctx?.currentValueText === "string" &&
-        typeof ctx?.targetText === "string"
-      ) {
-        if (key === ctx.neededOp) {
-          return {
-            state: {
-              phase: "entering",
-              queue: ctx.queueText,
-              queueIndex: 0
-            },
-            action: "none",
-            replaceKey: key
-          };
-        }
-        return { state, action: "swallow" };
-      }
-
-      if (state.phase === "entering") {
-        if (/^[0-9.]$/.test(key)) {
-          if (state.queueIndex < state.queue.length) {
-            return {
-              state: { ...state, queueIndex: state.queueIndex + 1 },
-              action: "none",
-              replaceKey: state.queue[state.queueIndex]
-            };
-          }
-          return { state, action: "swallow", replaceKey: key };
-        }
-        if (key === "⌫") {
-          if (state.queueIndex === 0) {
-            return { state, action: "swallow" };
-          }
-          return {
-            state: { ...state, queueIndex: state.queueIndex - 1 },
-            action: "none",
-            replaceKey: key
-          };
-        }
-        if (key === "C" || key === "=") {
-          return {
-            state: { phase: "off", queue: null, queueIndex: 0 },
-            action: "none",
-            replaceKey: key
-          };
-        }
-        return { state, action: "swallow" };
-      }
-
-      return { state, action: "none", replaceKey: key };
-    }
-
-    function trickErrorGate(state, key) {
-      if (key === "C") return "pass";
-      if (key === "=" && state.phase === "ready") return "pass";
-      if (key === "%" && state.phase === "set") return "pass";
-      return "blocked";
-    }
-
-    function trickStep(state, key, exprInfo) {
-      const current = {
-        phase: ["off", "set", "ready"].includes(state?.phase)
-          ? state.phase
-          : "off",
-        storedText: typeof state?.storedText === "string" ? state.storedText : null,
-        lastKey: state?.lastKey ?? null,
-        pendingSole: typeof state?.pendingSole === "string" ? state.pendingSole : null
-      };
-      const next = { ...current, lastKey: key };
-
-      if (
-        key === "%" &&
-        current.lastKey === "%" &&
-        current.phase === "set"
-      ) {
-        return {
-          state: {
-            ...next,
-            phase: "ready",
-            pendingSole: null
-          },
-          action: "arm"
-        };
-      }
-
-      if (
-        key === "%" &&
-        current.lastKey === "%" &&
-        current.phase === "off" &&
-        current.pendingSole !== null
-      ) {
-        return {
-          state: {
-            ...next,
-            phase: "set",
-            storedText: current.pendingSole,
-            pendingSole: null
-          },
-          action: "set"
-        };
-      }
-
-      if (key === "%") {
-        return {
-          state: {
-            ...next,
-            pendingSole:
-              typeof exprInfo?.soleNumberText === "string"
-                ? exprInfo.soleNumberText
-                : null
-          },
-          action: "none"
-        };
-      }
-
-      if (key === "=" && current.phase === "ready") {
-        return {
-          state: {
-            phase: "off",
-            storedText: null,
-            lastKey: null,
-            pendingSole: null
-          },
-          action: "fire"
-        };
-      }
-
-      return {
-        state: { ...next, pendingSole: null },
-        action: "none"
-      };
-    }
-
-    function isPrimaryPointer(event) {
-      return (
-        event.isPrimary !== false &&
-        (event.button === undefined || event.button === 0)
-      );
-    }
-
-    function fitDisplayText(display) {
-      display.style.removeProperty("font-size");
-      const textLength = display.textContent?.length ?? 0;
-      const naturalStyle = getComputedStyle(display);
-      const naturalSize = Number.parseFloat(naturalStyle.fontSize);
-      const lengthScale =
-        textLength <= 10 ? 1 :
-        textLength <= 16 ? 0.82 :
-        textLength <= 24 ? 0.64 :
-        textLength <= 36 ? 0.48 : 0.36;
-      let fittedSize = naturalSize * lengthScale;
-      display.style.fontSize = `${fittedSize}px`;
-
-      const fittedStyle = getComputedStyle(display);
-      const availableWidth =
-        display.clientWidth -
-        Number.parseFloat(fittedStyle.paddingLeft) -
-        Number.parseFloat(fittedStyle.paddingRight);
-      const canvas =
-        fitDisplayText.canvas ??
-        (fitDisplayText.canvas = document.createElement("canvas"));
-      const context = canvas.getContext("2d");
-
-      if (context !== null && availableWidth > 0) {
-        context.font =
-          `${fittedStyle.fontStyle} ${fittedStyle.fontWeight} ` +
-          `${fittedSize}px ${fittedStyle.fontFamily}`;
-        const letterSpacing = Number.parseFloat(fittedStyle.letterSpacing) || 0;
-        const measuredWidth =
-          context.measureText(display.textContent ?? "").width +
-          Math.max(0, textLength - 1) * letterSpacing;
-
-        if (measuredWidth > availableWidth) {
-          fittedSize *= (availableWidth / measuredWidth) * 0.98;
-          display.style.fontSize = `${Math.max(1, fittedSize)}px`;
-        }
-      }
-    }
-
-    function setupCalculator() {
-      const app = document.getElementById("app");
-      const display = document.getElementById("display");
-      const keypad = document.querySelector(".keypad");
-      const clearKey = keypad.querySelector('[data-key="C"]');
-      const percentKey = keypad.querySelector('[data-key="%"]');
-      const penIcon = document.getElementById("pen-icon");
-      const clockIcon = document.getElementById("clock-icon");
-      const stackIcon = document.getElementById("stack-icon");
-      const stackResult = document.getElementById("stack-result");
-      const dateSettings = document.getElementById("date-settings");
-      const dateDelayValue = document.getElementById("date-delay-value");
-      const dateHourCycleButton = document.getElementById("date-hour-cycle");
-      const skinToggleButton = document.getElementById("skin-toggle");
-      const dateHintKeys = keypad.querySelectorAll(
-        '[data-key="+"], [data-key="−"], [data-key="0"], [data-key="1"], ' +
-        '[data-key="2"], [data-key="3"], [data-key="4"], [data-key="5"], ' +
-        '[data-key="6"], [data-key="7"], [data-key="8"], [data-key="9"]'
-      );
-      let expr = "";
-      let resultShown = false;
-      let lastResult = null;
-      let errorShown = false;
-      let dateTrickState = { phase: "off", queue: null, queueIndex: 0 };
-      let dateDelaySeconds = 20;
-      let dateHourCycle = "24";
-      let skin = /iPhone|iPad|iPod/.test(navigator.userAgent)
-        ? "iphone"
-        : "default";
-      let stackLongPressTimer = null;
-      let stackLongPressConsumed = false;
-      try {
-        const savedDelay = Number.parseInt(
-          localStorage.getItem("magic-calc-date-delay"),
-          10
-        );
-        if (Number.isInteger(savedDelay)) {
-          dateDelaySeconds = Math.min(120, Math.max(5, savedDelay));
-        }
-        const savedHourCycle = localStorage.getItem("magic-calc-hour-cycle");
-        if (savedHourCycle === "12" || savedHourCycle === "24") {
-          dateHourCycle = savedHourCycle;
-        }
-        const savedSkin = localStorage.getItem("magic-calc-skin");
-        if (savedSkin === "default" || savedSkin === "iphone") {
-          skin = savedSkin;
-        }
-      } catch {
-        // Storage is optional; keep the default settings when unavailable.
-      }
-      let trickState = {
-        phase: "off",
-        storedText: null,
-        lastKey: null,
-        pendingSole: null
-      };
-
-      const currentValueText = () =>
-        resultShown && lastResult !== null
-          ? decToPlainString(lastResult)
-          : soleNumberText(expr);
-
-      const dateResultText = () =>
-        resultShown && lastResult !== null
-          ? decToPlainString(lastResult)
-          : null;
-
-      const computeDateTrickValues = (currentText) =>
-        dateTrickTarget(
-          currentText,
-          Date.now(),
-          dateDelaySeconds,
-          dateHourCycle
-        );
-
-      const displayedValue = () =>
-        errorShown ? "오류" : displayValue(expr);
-
-      const render = () => {
-        const rawDisplay = displayedValue();
-        app.classList.toggle("skin-iphone", skin === "iphone");
-        display.textContent = formatDisplay(rawDisplay);
-        clearKey.textContent = skin === "iphone" && rawDisplay !== "0" && rawDisplay !== "오류"
-          ? "⌫"
-          : skin === "iphone" ? "AC" : "C";
-        percentKey.classList.toggle("trick-set", trickState.phase === "set");
-        percentKey.classList.toggle("trick-ready", trickState.phase === "ready");
-        penIcon.classList.toggle("date-armed", dateTrickState.phase !== "off");
-        dateDelayValue.textContent = `${dateDelaySeconds}초`;
-        dateHourCycleButton.textContent = `${dateHourCycle}h`;
-        skinToggleButton.textContent = skin === "iphone" ? "스킨: 아이폰" : "스킨: 기본";
-
-        let neededOp = null;
-        let digitHintKey = null;
-        const currentText = dateResultText();
-        if (dateTrickState.phase === "armed" && currentText !== null) {
-          const dateValues = computeDateTrickValues(currentText);
-          neededOp = dateValues.neededOp;
-          const digitCount = (dateValues.queueText.match(/\d/g) ?? []).length;
-          if (digitCount >= 1 && digitCount <= 10) {
-            digitHintKey = String(digitCount % 10);
-          }
-        }
-        dateHintKeys.forEach((key) => {
-          key.classList.toggle(
-            "date-key-hint",
-            key.dataset.key === neededOp || key.dataset.key === digitHintKey
-          );
-        });
-        fitDisplayText(display);
-      };
-
-      const handleKey = (key) => {
-        stackResult.hidden = true;
-
-        if (dateTrickState.phase !== "off") {
-          const currentText = dateResultText();
-          const ctx = { currentValueText: currentText };
-
-          if (
-            dateTrickState.phase === "armed" &&
-            (key === "+" || key === "−") &&
-            currentText !== null
-          ) {
-            Object.assign(
-              ctx,
-              computeDateTrickValues(currentText)
-            );
-          }
-
-          const dateTransition = dateTrickStep(dateTrickState, key, ctx);
-          dateTrickState = dateTransition.state;
-          if (dateTransition.action === "swallow") return;
-          key = dateTransition.replaceKey;
-        }
-
-        if (errorShown && trickErrorGate(trickState, key) === "blocked") return;
-
-        if (key === "%") {
-          const transition = trickStep(
-            trickState,
-            key,
-            { soleNumberText: soleNumberText(expr) }
-          );
-          trickState = transition.state;
-
-          if (transition.action === "set") {
-            expr = "";
-            resultShown = false;
-            lastResult = null;
-            errorShown = false;
-            render();
-            return;
-          }
-          if (transition.action === "arm") {
-            render();
-            return;
-          }
-          if (errorShown) {
-            render();
-            return;
-          }
-        } else if (key === "=") {
-          const storedBeforeStep = trickState.storedText;
-
-          if (trickState.phase === "ready") {
-            const transition = trickStep(
-              trickState,
-              key,
-              { soleNumberText: null }
-            );
-            trickState = transition.state;
-
-            if (transition.action === "fire") {
-              expr = storedBeforeStep ?? "";
-              resultShown = true;
-              lastResult = expr === "" ? null : decFromString(expr);
-              errorShown = false;
-              render();
-              return;
-            }
-          }
-
-          if (expr !== "" && !resultShown) {
-            const tokens = tokenize(expr);
-            const value = tokens === null ? null : evaluate(tokens);
-
-            if (value === null) {
-              errorShown = true;
-              resultShown = false;
-              lastResult = null;
-            } else {
-              expr = decToDisplay(value);
-              resultShown = true;
-              lastResult = value;
-            }
-          }
-
-          const transition = trickStep(
-            trickState,
-            key,
-            { soleNumberText: null }
-          );
-          trickState = transition.state;
-          render();
-          return;
-        } else {
-          const transition = trickStep(
-            trickState,
-            key,
-            { soleNumberText: null }
-          );
-          trickState = transition.state;
-        }
-
-        if (key === "C") {
-          expr = "";
-          resultShown = false;
-          lastResult = null;
-          errorShown = false;
-          render();
-          return;
-        }
-
-        if (key === "⌫" && resultShown) {
-          expr = "";
-          resultShown = false;
-          lastResult = null;
-          render();
-          return;
-        }
-
-        if (resultShown) {
-          if (/^(?:[0-9]|\.|\(\))$/.test(key)) {
-            expr = "";
-          } else if (lastResult !== null) {
-            expr = decToPlainString(lastResult);
-          }
-          resultShown = false;
-          lastResult = null;
-        }
-
-        expr = applyKey(expr, key);
-        if ("+−×÷".includes(key) && displayValue(expr) === "오류") {
-          errorShown = true;
-          resultShown = false;
-          lastResult = null;
-        }
-        render();
-      };
-
-      keypad.addEventListener("pointerdown", (event) => {
-        if (!isPrimaryPointer(event)) return;
-        const button = event.target.closest("button[data-key]");
-        if (!button || !keypad.contains(button)) return;
-
-        event.preventDefault();
-        button.classList.add("pressed");
-        window.setTimeout(() => button.classList.remove("pressed"), 140);
-        const key = button.dataset.key === "C" &&
-          skin === "iphone" &&
-          displayedValue() !== "0" &&
-          displayedValue() !== "오류"
-          ? "⌫"
-          : button.dataset.key;
-        handleKey(key);
-      });
-
-      penIcon.addEventListener("pointerdown", (event) => {
-        if (!isPrimaryPointer(event)) return;
-        event.preventDefault();
-        dateTrickState = dateTrickState.phase === "off"
-          ? { phase: "armed", queue: null, queueIndex: 0 }
-          : { phase: "off", queue: null, queueIndex: 0 };
-        render();
-      });
-
-      stackIcon.addEventListener("pointerdown", (event) => {
-        if (!isPrimaryPointer(event)) return;
-        event.preventDefault();
-        try {
-          stackIcon.setPointerCapture?.(event.pointerId);
-        } catch {}
-
-        window.clearTimeout(stackLongPressTimer);
-        stackLongPressConsumed = false;
-        stackLongPressTimer = window.setTimeout(() => {
-          stackLongPressTimer = null;
-          stackLongPressConsumed = true;
-
-          const text = currentValueText();
-          if (text === null) return;
-
-          const result = undoSetupLookup(text);
-          if (result === null) return;
-
-          stackResult.textContent = `${result.upper}번째 · ${result.lower}번째`;
-          stackResult.hidden = false;
-        }, 500);
-      });
-
-      const finishStackPress = () => {
-        const timerWasPending = stackLongPressTimer !== null;
-        window.clearTimeout(stackLongPressTimer);
-        stackLongPressTimer = null;
-
-        if (!timerWasPending && !stackLongPressConsumed) return;
-        if (stackLongPressConsumed) {
-          stackLongPressConsumed = false;
-          return;
-        }
-
-        if (!stackResult.hidden) {
-          stackResult.hidden = true;
-          return;
-        }
-
-        const text = currentValueText();
-        if (text === null) return;
-
-        const cutResult = mnemonicaCutLookup(text);
-        if (cutResult !== null) {
-          stackResult.textContent = `${cutResult.cut}장 · ${cutResult.bottom}`;
-          stackResult.hidden = false;
-          return;
-        }
-
-        const result = mnemonicaLookup(text);
-        const parts = [];
-        if (result.position !== null) parts.push(`${result.position}번째`);
-        if (result.card !== null) parts.push(result.card);
-        if (parts.length === 0) return;
-
-        stackResult.textContent = parts.join(" · ");
-        stackResult.hidden = false;
-      };
-
-      const cancelStackPress = () => {
-        window.clearTimeout(stackLongPressTimer);
-        stackLongPressTimer = null;
-        stackLongPressConsumed = false;
-      };
-
-      stackIcon.addEventListener("pointerup", finishStackPress);
-      stackIcon.addEventListener("pointercancel", cancelStackPress);
-      stackIcon.addEventListener("pointerleave", cancelStackPress);
-
-      installSettingsSwipe(() => {
-        dateSettings.classList.add("open");
-        dateSettings.setAttribute("aria-hidden", "false");
-      }, cancelStackPress, () => !dateSettings.classList.contains("open"));
-
-      dateSettings.addEventListener("pointerdown", (event) => {
-        if (!isPrimaryPointer(event)) return;
-        const button = event.target.closest("button[data-date-action]");
-        if (!button || !dateSettings.contains(button)) return;
-        event.preventDefault();
-
-        if (button.dataset.dateAction === "close") {
-          dateSettings.classList.remove("open");
-          return;
-        }
-
-        if (button.dataset.dateAction === "hour-cycle") {
-          dateHourCycle = dateHourCycle === "24" ? "12" : "24";
-          try {
-            localStorage.setItem("magic-calc-hour-cycle", dateHourCycle);
-          } catch {
-            // Keep the in-memory setting when storage is unavailable.
-          }
-          render();
-          return;
-        }
-
-        if (button.dataset.dateAction === "skin") {
-          skin = skin === "iphone" ? "default" : "iphone";
-          try {
-            localStorage.setItem("magic-calc-skin", skin);
-          } catch {
-            // Keep the in-memory setting when storage is unavailable.
-          }
-          render();
-          return;
-        }
-
-        if (button.dataset.dateAction === "fullscreen") {
-          try {
-            if ((document.fullscreenElement ?? document.webkitFullscreenElement) != null) {
-              const fullscreenResult = (document.exitFullscreen ?? document.webkitExitFullscreen)?.call(document);
-              fullscreenResult?.catch?.(() => {});
-            } else {
-              const el = document.documentElement;
-              const fullscreenResult = (el.requestFullscreen ?? el.webkitRequestFullscreen)?.call(el);
-              fullscreenResult?.catch?.(() => {});
-            }
-          } catch {
-            // Fullscreen is unavailable on this browser.
-          }
-          return;
-        }
-
-        const change = button.dataset.dateAction === "increase" ? 5 : -5;
-        dateDelaySeconds = Math.min(120, Math.max(5, dateDelaySeconds + change));
-        try {
-          localStorage.setItem(
-            "magic-calc-date-delay",
-            String(dateDelaySeconds)
-          );
-        } catch {
-          // Keep the in-memory setting when storage is unavailable.
-        }
-        render();
-      });
-
-      window.addEventListener("resize", () => fitDisplayText(display));
-      render();
-    }
-
-    let wakeLock = null;
-    let wakeLockPending = false;
-
-    async function acquireWakeLock() {
-      if (
-        !("wakeLock" in navigator) ||
-        document.visibilityState !== "visible" ||
-        wakeLock !== null ||
-        wakeLockPending
-      ) {
-        return;
-      }
-
-      wakeLockPending = true;
-      try {
-        const lock = await navigator.wakeLock.request("screen");
-
-        if (document.visibilityState !== "visible") {
-          await lock.release();
-          return;
-        }
-
-        wakeLock = lock;
-        lock.addEventListener("release", () => {
-          if (wakeLock === lock) wakeLock = null;
-          if (document.visibilityState === "visible") acquireWakeLock();
-        }, { once: true });
-      } catch {
-        wakeLock = null;
-      } finally {
-        wakeLockPending = false;
-      }
-    }
-
-    async function releaseWakeLock() {
-      const lock = wakeLock;
-      wakeLock = null;
-      if (lock === null) return;
-
-      try {
-        await lock.release();
-      } catch {
-        // Wake Lock API is optional; release failures need no UI.
-      }
-    }
-
-    document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === "visible") {
-        acquireWakeLock();
-      } else {
-        releaseWakeLock();
+    $('delete').addEventListener('click', removeDigit);
+    $('emergency').addEventListener('click', () => {
+      if (screen !== 'input' || settings.performance !== 'time-machine') return;
+      const result = registerEmergencyTap(emergencyLastTap, performance.now());
+      emergencyLastTap = result.lastTap;
+      if (result.enter) {
+        timeDigits = [];
+        timeMinutes = 0;
+        timeTriggeredAt = null;
+        showScreen('time-black');
       }
     });
+    backspaceKey.addEventListener('click', removeDigit);
+    confirmKey.addEventListener('click', () => {
+      if (screen !== 'input' || settings.style !== 'galaxy' || feedback) return;
+      const previousCount = state.attempts.length;
+      const unlockAttempt = settings.unlockMode === 'attempt' ? settings.unlockAttempt : null;
+      state = submitPin(state, performance.now(), settings.delaySeconds * 1000, unlockAttempt);
+      handleAttemptOutcome(previousCount);
+    });
 
-    if (location.hash === "#selftest") {
-      document.getElementById("app").hidden = true;
-      const panel = document.getElementById("selftest");
-      panel.style.display = "block";
-      runSelfTests();
-    } else {
-      setupCalculator();
-      acquireWakeLock();
+    function releaseFingerprint(pointerId, pulse) {
+      clearTimeout(fingerprintTimer);
+      fingerprintTimer = null;
+      fingerprintPress = null;
+      $('fingerprint').classList.remove('holding');
+      if ($('fingerprint').hasPointerCapture(pointerId)) $('fingerprint').releasePointerCapture(pointerId);
+      if (pulse) {
+        $('fingerprint').classList.remove('pulse');
+        void $('fingerprint').offsetWidth;
+        $('fingerprint').classList.add('pulse');
+      }
     }
-  </script>
-  <style>
-    #install-nudge {
-      position: fixed;
-      left: 12px;
-      right: 12px;
-      bottom: 12px;
-      z-index: 1000;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 14px;
-      background: #1c1c1e;
-      color: #fff;
-      border-radius: 14px;
-      font-size: 14px;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
-    }
-    #install-nudge span { flex: 1; }
-    #install-nudge button {
-      border: 0;
-      border-radius: 10px;
-      padding: 8px 14px;
-      font-size: 14px;
-      background: #ff9f0a;
-      color: #000;
-    }
-    #install-nudge button[data-act="close"] {
-      background: transparent;
-      color: #8e8e93;
-      padding: 8px;
-    }
-  </style>
-  <script>
-    (() => {
-      try {
-        const KEY = "installNudgeDone";
-        if (localStorage.getItem(KEY)) return;
-        const standalone = typeof window.matchMedia === "function" &&
-          window.matchMedia("(display-mode: standalone)").matches;
-        if (standalone || navigator.standalone) return;
+    $('fingerprint').addEventListener('pointerdown', (event) => {
+      if (screen !== 'input' || settings.style !== 'galaxy' || feedback || fingerprintPress) return;
+      fingerprintPress = { pointerId: event.pointerId, startedAt: performance.now() };
+      $('fingerprint').setPointerCapture(event.pointerId);
+      $('fingerprint').classList.add('holding');
+      fingerprintTimer = setTimeout(() => {
+        if (!fingerprintPress) return;
+        const previousCount = state.attempts.length;
+        state = fingerprintHold(state, FINGERPRINT_HOLD_MS, performance.now());
+        const pointerId = fingerprintPress.pointerId;
+        releaseFingerprint(pointerId, false);
+        handleAttemptOutcome(previousCount);
+      }, FINGERPRINT_HOLD_MS);
+      event.preventDefault();
+    });
+    $('fingerprint').addEventListener('pointerup', (event) => {
+      if (!fingerprintPress || fingerprintPress.pointerId !== event.pointerId) return;
+      releaseFingerprint(event.pointerId, true);
+      event.preventDefault();
+    });
+    $('fingerprint').addEventListener('pointercancel', (event) => {
+      if (fingerprintPress?.pointerId === event.pointerId) releaseFingerprint(event.pointerId, false);
+    });
+    $('fingerprint').addEventListener('contextmenu', (event) => event.preventDefault());
+    document.addEventListener('keydown', (event) => {
+      if (screen !== 'input' || event.ctrlKey || event.metaKey || event.altKey) return;
+      if (/^[0-9]$/.test(event.key)) { event.preventDefault(); inputDigit(Number(event.key)); }
+      if (event.key === 'Backspace') { event.preventDefault(); removeDigit(); }
+      if (event.key === 'Enter' && settings.style === 'galaxy') { event.preventDefault(); confirmKey.click(); }
+    });
 
-        let deferred = null;
-        let bar = null;
-        const done = () => {
-          try { localStorage.setItem(KEY, "1"); } catch (_) {}
-          if (bar) bar.remove();
-          bar = null;
-          deferred = null;
+    function gestureAction(action) {
+      if (!action) return;
+      clearFeedback();
+      if (action === 'reset') { state = reset(state); timeDigits = []; timeTriggeredAt = null; showScreen('input'); }
+      if (action === 'settings') { state = clearCurrent(state); showScreen('settings'); }
+    }
+
+    function finishTap() {
+      const now = performance.now();
+      const expired = settleTwoFingerTaps(tapSequence, now);
+      tapSequence = expired.sequence;
+      gestureAction(expired.action);
+      const result = registerTwoFingerTap(tapSequence, now, screen);
+      tapSequence = result.sequence;
+      if (result.action !== 'settings') gestureAction(result.action);
+      clearTimeout(tapTimer);
+      if (tapSequence) {
+        tapTimer = setTimeout(() => {
+          const result = settleTwoFingerTaps(tapSequence, performance.now());
+          tapSequence = result.sequence;
+          gestureAction(result.action);
+        }, Math.max(0, tapSequence.startedAt + 1200 - now) + 1);
+      }
+    }
+
+    function returnSwipe() {
+      $('unlocked-screen').classList.add('returning');
+      $('unlocked-screen').style.transform = 'translateY(0px)';
+      if (STORAGE.personal) setHomePage(homePage);
+      swipe = null;
+      cancelReveal();
+    }
+
+    document.addEventListener('touchstart', (event) => {
+      if (screen === 'settings') return;
+      if (event.touches.length === 2) {
+        cancelReveal();
+        settingsSwipe = Array.from(event.touches, (t) => ({id:t.identifier,x:t.clientX,y:t.clientY}));
+        timePointer = null;
+        timeLastTap = null;
+        timeSuppressUntil = performance.now() + 800;
+        event.preventDefault();
+        returnSwipe();
+        tapCandidate = {
+          startedAt: performance.now(), valid: true,
+          points: Array.from(event.touches, (t) => ({ id: t.identifier, x: t.clientX, y: t.clientY })),
         };
+      } else if (event.touches.length > 2) {
+        settingsSwipe = null;
+        if (tapCandidate) tapCandidate.valid = false;
+        returnSwipe();
+      } else if (screen === 'unlocked' && event.touches.length === 1) {
+        cancelReveal();
+        const touch = event.touches[0];
+        if (!STORAGE.personal && isHomeGestureArea(touch.clientX, touch.clientY, window.innerWidth, window.innerHeight)) return;
+        swipe = { id: touch.identifier, x: touch.clientX, y: touch.clientY, axis: null, startedAt: performance.now(), revealPending: false };
+        $('unlocked-screen').classList.remove('returning');
+      }
+    }, { passive: false });
 
-        window.addEventListener("appinstalled", done);
-        window.addEventListener("beforeinstallprompt", (event) => {
-          event.preventDefault();
-          deferred = event;
-          if (bar) return;
+    document.addEventListener('touchmove', (event) => {
+      if (screen === 'settings') return;
+      if (settingsSwipe && event.touches.length === 2 && isSettingsSwipe(settingsSwipe,
+          Array.from(event.touches, (t) => ({id:t.identifier,x:t.clientX,y:t.clientY})))) {
+        event.preventDefault();
+        settingsSwipe = null;
+        tapCandidate = null;
+        tapSequence = null;
+        clearTimeout(tapTimer);
+        gestureAction('settings');
+        return;
+      }
+      if (tapCandidate) {
+        for (const touch of event.touches) {
+          const start = tapCandidate.points.find((p) => p.id === touch.identifier);
+          if (!start || Math.hypot(touch.clientX - start.x, touch.clientY - start.y) > 10) tapCandidate.valid = false;
+        }
+        event.preventDefault();
+      }
+      if (swipe && event.touches.length === 1) {
+        const touch = event.touches[0];
+        if (touch.identifier !== swipe.id) return;
+        event.preventDefault();
+        const dx = touch.clientX - swipe.x, dy = touch.clientY - swipe.y;
+        if (!swipe.axis && Math.hypot(dx, dy) >= 10) swipe.axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+        if (STORAGE.personal && swipe.axis === 'x') {
+          const reveal = homeSwipeTarget(homePage, dx, dy, originals.has('home2'), false, $('app').clientWidth).revealVisible;
+          if (reveal) scheduleReveal();
+          else { swipe.revealPending = false; cancelReveal(); }
+          const index = homePage === 'home2' ? 1 : 0;
+          const width = $('app').clientWidth;
+          const drag = Math.max(index === 0 && originals.has('home2') ? -width : 0,
+            Math.min(index === 1 ? width : 0, dx));
+          $('home-track').style.transition = 'none';
+          $('home-track').style.transform = `translate3d(calc(${-index * 100}% + ${drag}px), 0, 0)`;
+          return;
+        }
+        $('peek-screen').classList.toggle('side-peek', swipe.axis === 'x');
+        const offset = swipe.axis === 'x'
+          ? horizontalPeekOffset(swipe.x, touch.clientX, $('app').clientWidth)
+          : peekOffset(swipe.y, touch.clientY, $('app').clientHeight);
+        $('unlocked-screen').style.transform = swipe.axis === 'x' ? `translateX(${offset}px)` : `translateY(${offset}px)`;
+      }
+    }, { passive: false });
 
-          bar = document.createElement("div");
-          bar.id = "install-nudge";
-          bar.innerHTML = '<span>홈 화면에 앱으로 설치할 수 있어요</span>' +
-            '<button type="button" data-act="install">설치</button>' +
-            '<button type="button" data-act="close" aria-label="닫기">✕</button>';
-          bar.addEventListener("pointerdown", (event) => event.stopPropagation());
-          bar.addEventListener("click", async (event) => {
-            event.stopPropagation();
-            const button = event.target.closest("button[data-act]");
-            const act = button ? button.dataset.act : null;
-            if (act === "install" && deferred) {
-              const promptEvent = deferred;
-              deferred = null;
-              try {
-                promptEvent.prompt();
-                await promptEvent.userChoice;
-              } catch (_) {}
-              done();
-            } else if (act === "close") {
-              done();
-            }
-          });
-          document.body.appendChild(bar);
-        });
-      } catch (_) {}
-    })();
-  </script>
-  <script>
-    if ("serviceWorker" in navigator && location.hash !== "#selftest") {
-      window.addEventListener("load", function () {
-        navigator.serviceWorker.register("./sw.js").catch(function () {});
+    document.addEventListener('touchend', (event) => {
+      if (screen === 'settings') return;
+      if (tapCandidate) {
+        event.preventDefault();
+        for (const touch of event.changedTouches) {
+          const start = tapCandidate.points.find((p) => p.id === touch.identifier);
+          if (!start || Math.hypot(touch.clientX - start.x, touch.clientY - start.y) > 10) tapCandidate.valid = false;
+        }
+        if (event.touches.length === 0) {
+          const valid = tapCandidate.valid && performance.now() - tapCandidate.startedAt <= 300;
+          tapCandidate = null;
+          if (valid) finishTap();
+        }
+      }
+      if (swipe) {
+        if (STORAGE.personal && event.changedTouches.length === 1) {
+          const touch = event.changedTouches[0];
+          if (touch.identifier === swipe.id) {
+            const target = completeHomeSwipe(homePage, touch.clientX - swipe.x, touch.clientY - swipe.y,
+              originals.has('home2'), $('app').clientWidth);
+            if (!target.peek) homePage = target.page;
+            cancelReveal();
+          }
+        }
+        returnSwipe();
+      }
+    }, { passive: false });
+    document.addEventListener('touchcancel', () => { settingsSwipe = null; timePointer = null; tapCandidate = null; returnSwipe(); });
+    window.addEventListener('blur', () => { tapCandidate = null; returnSwipe(); });
+
+    function populateForm() {
+      $('performance').value = settings.performance;
+      $('time-delay').value = settings.timeDelay;
+      $('time-duration').value = settings.timeDuration;
+      $('style').value = settings.style;
+      $('digits').value = settings.digits;
+      $('unlock-mode').value = settings.unlockMode;
+      $('unlock-attempt').value = settings.unlockAttempt;
+      $('reveal-attempt').value = settings.revealAttempt;
+      $('vibration').checked = settings.vibration;
+      $('delay').value = settings.delaySeconds;
+      $('crop').value = settings.cropTop;
+      $('position').value = settings.imagePosition;
+      $('status-style').value = settings.statusStyle;
+      $('status-color').value = settings.statusColor;
+      updateUnlockControls();
+    }
+
+    function formSettings() {
+      return normalizeSettings({ performance: $('performance').value, timeDelay: $('time-delay').value, timeDuration: $('time-duration').value, style: $('style').value, digits: Number($('digits').value), unlockMode: $('unlock-mode').value,
+        unlockAttempt: $('unlock-attempt').value, revealAttempt: $('reveal-attempt').value, vibration: $('vibration').checked, delaySeconds: $('delay').value,
+        cropTop: $('crop').value, imagePosition: $('position').value, statusStyle: $('status-style').value, statusColor: $('status-color').value }, STORAGE.personal);
+    }
+
+    function updateUnlockControls() {
+      $('time-options').hidden = !STORAGE.personal && $('performance').value !== 'time-machine';
+      const attemptMode = $('unlock-mode').value === 'attempt';
+      $('delay-field').hidden = attemptMode;
+      $('attempt-field').hidden = !attemptMode;
+      $('delay').disabled = attemptMode;
+      $('unlock-attempt').disabled = !attemptMode;
+    }
+
+    function applyAppearance(value) {
+      document.documentElement.style.setProperty('--status-color', value.statusColor);
+      document.querySelector('meta[name="theme-color"]').content = value.statusColor;
+      document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]').content = value.statusStyle;
+      for (const id of ['lock-image', 'unlock-image', 'home2-image', 'time-wallpaper', 'lock-preview', 'unlock-preview', 'home2-preview']) {
+        $(id).style.objectPosition = `50% ${value.imagePosition}%`;
+      }
+      for (const preview of document.querySelectorAll('.preview')) {
+        const naturalHeight = Number(preview.dataset.naturalHeight);
+        const percent = naturalHeight > 0 ? Math.min(100, value.cropTop / naturalHeight * 100) : 0;
+        preview.querySelector('.crop-overlay').style.height = `${percent}%`;
+        const handle = preview.querySelector('.crop-handle');
+        handle.style.top = `${percent}%`;
+        handle.setAttribute('aria-valuenow', String(value.cropTop));
+      }
+    }
+
+    function openDB() {
+      return new Promise((resolve, reject) => {
+        let blocked = false;
+        const request = indexedDB.open(STORAGE.imageDb, 1);
+        request.onupgradeneeded = () => request.result.createObjectStore('images');
+        request.onsuccess = () => {
+          if (blocked) request.result.close();
+          else resolve(request.result);
+        };
+        request.onerror = () => reject(request.error);
+        request.onblocked = () => {
+          blocked = true;
+          reject(new Error('다른 레리즈 창을 닫고 다시 실행해 주세요.'));
+        };
       });
     }
-  </script>
-  <script>
-    var m = location.pathname.match(/^\/tools\/([a-z0-9-]+)/);
-    if (m && location.hash !== "#selftest") {
-      // 권한이 회수됐는지 조용히 확인. 회수됐으면 캐시를 비우고 새로고침해 로그인으로 보낸다.
-      setTimeout(function () {
-        try {
-          if (!navigator.onLine) return;
-          fetch("/tools/_check?tool=" + m[1], { credentials: "same-origin" })
-            .then(function (response) { return response.json(); })
-            .then(function (result) {
-              if (!result || result.ok !== false || result.reason !== "revoked") return;
-              return caches.keys().then(function (names) {
-                return Promise.all(names.map(function (name) {
-                  return name.indexOf("kali-") === 0 ? caches.delete(name) : null;
-                }));
-              }).then(function () { location.reload(); });
-            })
-            .catch(function () {});
-        } catch (error) {
-          // 확인 실패는 앱 동작에 영향을 주지 않는다.
+
+    function readImage(key) {
+      return new Promise((resolve, reject) => {
+        const request = db.transaction('images').objectStore('images').get(key);
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    function saveImage(key, blob) {
+      return new Promise((resolve, reject) => {
+        const transaction = db.transaction('images', 'readwrite');
+        transaction.objectStore('images').put(blob, key);
+        transaction.oncomplete = resolve;
+        transaction.onerror = () => reject(transaction.error);
+        transaction.onabort = () => reject(transaction.error);
+      });
+    }
+
+    function decodeImage(blob) {
+      return new Promise((resolve, reject) => {
+        const url = URL.createObjectURL(blob);
+        const img = new Image();
+        img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+        img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('이미지를 읽을 수 없습니다.')); };
+        img.src = url;
+      });
+    }
+
+    async function displayImage(key, cropTop) {
+      const blob = originals.get(key);
+      if (!blob) return;
+      const version = (imageVersions.get(key) ?? 0) + 1;
+      imageVersions.set(key, version);
+      const img = await decodeImage(blob);
+      const preview = $(`${key}-preview`);
+      if (previewBlobs.get(key) !== blob) {
+        const previewURL = URL.createObjectURL(blob);
+        const previousPreviewURL = previewURLs.get(key);
+        previewURLs.set(key, previewURL);
+        previewBlobs.set(key, blob);
+        preview.src = previewURL;
+        preview.hidden = false;
+        if (previousPreviewURL) URL.revokeObjectURL(previousPreviewURL);
+      }
+      preview.closest('.preview').dataset.naturalHeight = img.naturalHeight;
+      let displayBlob = blob;
+      const crop = Math.min(cropTop, img.naturalHeight - 1);
+      if (crop > 0) {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight - crop;
+        canvas.getContext('2d').drawImage(img, 0, crop, canvas.width, canvas.height, 0, 0, canvas.width, canvas.height);
+        displayBlob = await new Promise((resolve, reject) => canvas.toBlob((result) => result ? resolve(result) : reject(new Error('이미지 처리 실패')), 'image/png'));
+      }
+      if (imageVersions.get(key) !== version) return;
+      const url = URL.createObjectURL(displayBlob);
+      const previous = imageURLs.get(key);
+      imageURLs.set(key, url);
+      $(`${key}-image`).src = url;
+      $(`${key}-image`).hidden = false;
+      if (key === 'lock') { $('time-wallpaper').src = url; $('time-wallpaper').hidden = false; }
+      if (previous) URL.revokeObjectURL(previous);
+      $(`${key}-info`).textContent = `등록됨 · ${img.naturalWidth} × ${img.naturalHeight}`;
+      applyAppearance(formSettings());
+    }
+
+    async function refreshCroppedImages() {
+      try { await Promise.all((STORAGE.personal ? ['lock', 'unlock', 'home2'] : ['lock', 'unlock']).map((key) => displayImage(key, formSettings().cropTop))); }
+      catch { $('storage-status').textContent = '미리보기 처리 실패. 잘라낼 높이와 이미지를 확인하세요.'; }
+    }
+
+    let alignmentDrag = null;
+    for (const preview of document.querySelectorAll('.preview')) {
+      preview.addEventListener('pointerdown', (event) => {
+        const naturalHeight = Number(preview.dataset.naturalHeight);
+        if (!(naturalHeight > 0)) { toast('먼저 이미지를 등록하세요.'); return; }
+        const rect = preview.getBoundingClientRect();
+        const boundaryY = rect.top + rect.height * formSettings().cropTop / naturalHeight;
+        const cropMode = event.target.closest('.crop-handle') || Math.abs(event.clientY - boundaryY) <= 22;
+        alignmentDrag = {
+          preview, mode: cropMode ? 'crop' : 'position', startY: event.clientY,
+          startPosition: formSettings().imagePosition, naturalHeight,
+        };
+        preview.setPointerCapture(event.pointerId);
+        event.preventDefault();
+      });
+      preview.addEventListener('pointermove', (event) => {
+        if (!alignmentDrag || alignmentDrag.preview !== preview) return;
+        const rect = preview.getBoundingClientRect();
+        if (alignmentDrag.mode === 'crop') {
+          const ratio = Math.max(0, Math.min(1, (event.clientY - rect.top) / rect.height));
+          $('crop').value = Math.min(2000, Math.round(ratio * alignmentDrag.naturalHeight));
+        } else {
+          const next = alignmentDrag.startPosition - (event.clientY - alignmentDrag.startY) / rect.height * 100;
+          $('position').value = Math.round(Math.max(0, Math.min(100, next)));
         }
-      }, 4000);
+        applyAppearance(formSettings());
+        event.preventDefault();
+      });
+      const finishAlignmentDrag = (event) => {
+        if (!alignmentDrag || alignmentDrag.preview !== preview) return;
+        const shouldCrop = alignmentDrag.mode === 'crop';
+        alignmentDrag = null;
+        if (preview.hasPointerCapture(event.pointerId)) preview.releasePointerCapture(event.pointerId);
+        if (shouldCrop) refreshCroppedImages();
+      };
+      preview.addEventListener('pointerup', finishAlignmentDrag);
+      preview.addEventListener('pointercancel', finishAlignmentDrag);
+      preview.querySelector('.crop-handle').addEventListener('keydown', (event) => {
+        if (!['ArrowUp', 'ArrowDown'].includes(event.key)) return;
+        const step = event.shiftKey ? 10 : 1;
+        $('crop').value = Math.max(0, Math.min(2000, formSettings().cropTop + (event.key === 'ArrowDown' ? step : -step)));
+        applyAppearance(formSettings());
+        refreshCroppedImages();
+        event.preventDefault();
+      });
+    }
+
+    for (const key of (STORAGE.personal ? ['lock', 'unlock', 'home2'] : ['lock', 'unlock'])) {
+      $(`${key}-file`).addEventListener('change', async (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+        let stored = false;
+        pendingImages += 1;
+        event.target.disabled = true;
+        $('start').disabled = true;
+        try {
+          if (!db) throw new Error('이미지 저장소를 사용할 수 없습니다.');
+          await decodeImage(file);
+          await saveImage(key, file);
+          stored = true;
+          originals.set(key, file);
+          await displayImage(key, formSettings().cropTop);
+          $('storage-status').textContent = '이미지를 이 기기의 IndexedDB에 저장했습니다.';
+        } catch (error) {
+          $('storage-status').textContent = stored
+            ? '이미지는 저장했지만 미리보기를 만들지 못했습니다. 잘라낼 높이를 줄이고 다시 시작하세요.'
+            : `이미지 등록 실패: ${error.message} 저장 공간과 파일 형식을 확인하세요.`;
+        } finally {
+          pendingImages -= 1;
+          event.target.disabled = false;
+          $('start').disabled = pendingImages > 0;
+          event.target.value = '';
+        }
+      });
+    }
+
+    function renderTimeMachine() {
+      if (screen !== 'time-lock') return;
+      const offset = timeMachineOffset(timeMinutes, timeTriggeredAt, performance.now(), settings.timeDelay, settings.timeDuration);
+      const date = new Date(Date.now() + offset);
+      $('time-date').textContent = date.toLocaleDateString('ko-KR', {month:'long',day:'numeric',weekday:'long'});
+      const hour = String(date.getHours()).padStart(2, '0');
+      const minute = String(date.getMinutes()).padStart(2, '0');
+      for (const [id, value] of [['time-hour', hour], ['time-minute', minute]]) {
+        const element = $(id);
+        if (element.textContent === value) continue;
+        const hadValue = element.textContent.length > 0;
+        element.textContent = value;
+        if (hadValue && timeTriggeredAt !== null && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          element.getAnimations().forEach((animation) => animation.cancel());
+          element.animate([
+            { opacity: .12, transform: 'translateY(-13px)', filter: 'blur(5px)' },
+            { opacity: 1, transform: 'translateY(0)', filter: 'blur(0)' },
+          ], { duration: 650, easing: 'cubic-bezier(.18,.75,.2,1)' });
+        }
+      }
+      $('time-clock').dateTime = date.toISOString();
+      $('time-clock').setAttribute('aria-label', `${hour}시 ${minute}분`);
+      timeFrame = requestAnimationFrame(renderTimeMachine);
+    }
+
+    for (const id of ['time-black', 'time-lock']) {
+      $(id).addEventListener('pointerdown', (event) => {
+        if (!event.isPrimary || performance.now() < timeSuppressUntil) { timePointer = null; return; }
+        timePointer = {id:event.pointerId,x:event.clientX,y:event.clientY,at:performance.now()};
+      });
+      $(id).addEventListener('pointercancel', () => { timePointer = null; });
+      $(id).addEventListener('pointerup', (event) => {
+        const point = timePointer;
+        timePointer = null;
+        if (!point || point.id !== event.pointerId || performance.now() < timeSuppressUntil
+            || performance.now() - point.at > 500 || Math.hypot(event.clientX-point.x,event.clientY-point.y)>12) return;
+        if (screen === 'time-black') {
+          const rect = $('time-black').getBoundingClientRect();
+          const digit = hiddenDigit(event.clientX-rect.left,event.clientY-rect.top,rect.width,rect.height);
+          if (digit === null) return;
+          const entry = appendMinuteDigit(timeDigits, digit);
+          timeDigits = entry.digits;
+          if (entry.minutes === null) return;
+          timeMinutes = entry.minutes; timeTriggeredAt = null;
+          showScreen('time-lock');
+        } else if (screen === 'time-lock' && timeTriggeredAt === null) {
+          const now = performance.now();
+          if (timeLastTap !== null && now - timeLastTap <= 450) { timeTriggeredAt = now; timeLastTap = null; }
+          else timeLastTap = now;
+        }
+      });
+    }
+
+    $('settings-form').addEventListener('input', () => { updateUnlockControls(); applyAppearance(formSettings()); });
+    $('crop').addEventListener('change', refreshCroppedImages);
+    $('settings-form').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (pendingImages > 0) return;
+      if (STORAGE.personal && !personalHomeReady(originals)) {
+        $('storage-status').textContent = '홈 1·홈 2 화면 이미지를 모두 등록해야 시작할 수 있습니다. 위의 이미지 2장을 확인해 주세요.';
+        $('home2-field').scrollIntoView({ block: 'center', behavior: 'smooth' });
+        return;
+      }
+      settings = formSettings();
+      $('start').disabled = true;
+      try {
+        await Promise.all((STORAGE.personal ? ['lock', 'unlock', 'home2'] : ['lock', 'unlock']).map((key) => displayImage(key, settings.cropTop)));
+        applyAppearance(settings);
+        try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); }
+        catch { toast('설정을 저장하지 못했습니다. 이번 실행에만 적용됩니다.'); }
+        state = createState(settings.digits);
+        tapSequence = null;
+        clearTimeout(tapTimer);
+        timeTriggeredAt = null;
+        timeDigits = [];
+        showScreen('input');
+      } catch { $('storage-status').textContent = '이미지 처리 실패. 잘라낼 높이와 이미지를 확인하세요.'; }
+      finally { $('start').disabled = false; }
+    });
+
+    async function prepareOffline() {
+      if (!('serviceWorker' in navigator)) {
+        $('offline-status').textContent = '오프라인 저장 불가: 보안 연결 또는 localhost로 열어 주세요.';
+        return;
+      }
+      try {
+        const registration = await navigator.serviceWorker.register('./sw.js');
+        const updateStatus = () => {
+          if (navigator.serviceWorker.controller) $('offline-status').textContent = '오프라인 준비 완료 · 홈 화면에 추가한 뒤 비행기 모드에서 확인하세요.';
+        };
+        navigator.serviceWorker.addEventListener('controllerchange', updateStatus);
+        const watch = (worker) => {
+          if (!worker) return;
+          worker.addEventListener('statechange', () => {
+            if (worker.state === 'redundant') $('offline-status').textContent = '오프라인 파일 저장 실패. 연결 상태를 확인하고 다시 여세요.';
+            updateStatus();
+          });
+        };
+        watch(registration.installing);
+        registration.addEventListener('updatefound', () => watch(registration.installing));
+        updateStatus();
+      } catch { $('offline-status').textContent = '오프라인 준비 실패. 보안 연결 또는 localhost에서 다시 열어 주세요.'; }
+    }
+
+    try { $('rewind-grid-guide').checked = localStorage.getItem(REWIND_GUIDE_KEY) === '1'; } catch {}
+    $('rewind-grid-guide').addEventListener('change', () => {
+      try { localStorage.setItem(REWIND_GUIDE_KEY, $('rewind-grid-guide').checked ? '1' : '0'); } catch {}
+    });
+    populateForm();
+    applyAppearance(settings);
+    showScreen('settings');
+    $('start').disabled = true;
+    for (const key of (STORAGE.personal ? ['lock', 'unlock', 'home2'] : ['lock', 'unlock'])) $(`${key}-file`).disabled = true;
+    prepareOffline();
+    try {
+      db = await openDB();
+      db.onversionchange = () => { db.close(); db = null; };
+      for (const key of (STORAGE.personal ? ['lock', 'unlock', 'home2'] : ['lock', 'unlock'])) {
+        const blob = await readImage(key);
+        if (blob) { originals.set(key, blob); await displayImage(key, settings.cropTop); }
+      }
+      $('storage-status').textContent = '이미지는 IndexedDB에 저장됩니다. 시도 기록은 앱을 다시 열면 지워집니다.';
+      if (ownSettingsSaved && originals.has('lock') && originals.has('unlock')
+          && (!STORAGE.personal || personalHomeReady(originals))) showScreen('input');
+      else if (STORAGE.personal) $('storage-status').textContent = '잠금·홈 1·홈 2 이미지를 이 설정에서 모두 등록해 주세요. 홈 2 이미지가 없으면 화면 전환을 시작할 수 없습니다.';
+    } catch (error) { $('storage-status').textContent = `이미지 저장소를 불러오지 못했습니다. ${error.message} 기본 배경으로 연습할 수 있습니다.`; }
+    finally {
+      $('start').disabled = false;
+      for (const key of (STORAGE.personal ? ['lock', 'unlock', 'home2'] : ['lock', 'unlock'])) $(`${key}-file`).disabled = false;
     }
   </script>
 </body>

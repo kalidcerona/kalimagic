@@ -1,1165 +1,205 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#4C1420">
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="이미지">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="theme-color" content="#000000">
-  <title>언락 · Unlock</title>
-  <link rel="manifest" href="./manifest.webmanifest">
-  <link rel="apple-touch-icon" href="./icon-192.png">
-  <style>
-    :root { color-scheme: dark; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; --status-color: #000; }
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    html, body { margin: 0; width: 100%; height: 100%; height: 100dvh; overflow: hidden; background: var(--status-color); }
-    body { touch-action: manipulation; -webkit-user-select: none; user-select: none; }
-    button, input, select { font: inherit; }
-    button { color: inherit; cursor: pointer; border: 0; }
-    button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid #91baff; outline-offset: 4px; }
-    [hidden] { display: none !important; }
-    #app { position: absolute; top: env(safe-area-inset-top, 0px); bottom: 0; left: 0; right: 0; overflow: hidden; background: #000; color: #fff; }
-    .screen, .wallpaper, .shade { position: absolute; inset: 0; width: 100%; height: 100%; }
-    .screen { overflow: hidden; }
-    .wallpaper { object-fit: cover; pointer-events: none; }
-    #input-screen {
-      background: radial-gradient(ellipse at 20% 10%, #575d78, transparent 65%), linear-gradient(155deg, #343c50, #10151e);
-      --key-d: clamp(64px, 18.5vw, 76px);
-      --key-hgap: clamp(18px, 5vw, 22px);
-      --key-vgap: clamp(12px, 3.4vw, 15px);
-    }
-    .shade { background: rgba(0, 0, 0, 0.35); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); }
-    .pin-layout { position: relative; height: 100%; max-width: 450px; margin: auto; }
-    #lock { position: absolute; z-index: 1; top: 2.6%; left: 50%; transform: translateX(-50%); width: 44px; height: 44px; display: none; place-items: center; pointer-events: none; }
-    #lock svg { width: 18px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-    .prompt { position: absolute; z-index: 1; top: 19%; left: 50%; transform: translateX(-50%); width: min(330px, calc(100% - 44px)); min-height: 44px; padding: 0; background: none; font-size: 18px; line-height: 1.3; font-weight: 400; text-align: center; white-space: normal; }
-    #dots { position: absolute; z-index: 1; top: 28%; left: 50%; transform: translateX(-50%); display: flex; justify-content: center; gap: 21px; height: 18px; }
-    .dot { display: block; width: 12px; height: 12px; border: 1.4px solid #ffffffe0; border-radius: 50%; }
-    .dot.filled { background: #fff; }
-    #dots.shake { animation: shake-ios 420ms linear; }
-    @keyframes shake-ios {
-      0%, 100% { transform: translateX(-50%); }
-      14% { transform: translateX(calc(-50% - 12px)); }
-      28% { transform: translateX(calc(-50% + 10px)); }
-      42% { transform: translateX(calc(-50% - 8px)); }
-      56% { transform: translateX(calc(-50% + 6px)); }
-      70% { transform: translateX(calc(-50% - 4px)); }
-      84% { transform: translateX(calc(-50% + 2px)); }
-    }
-    .keypad {
-      position: absolute;
-      z-index: 1;
-      top: 36%;
-      left: 50%;
-      transform: translateX(-50%);
-      display: grid;
-      grid-template-columns: repeat(3, var(--key-d));
-      grid-template-rows: repeat(4, var(--key-d));
-      column-gap: var(--key-hgap);
-      row-gap: var(--key-vgap);
-      width: min(100%, calc(3 * var(--key-d) + 2 * var(--key-hgap)));
-      justify-content: center;
-      justify-items: center;
-      align-items: center;
-    }
-    /*
-     * iOS lock-screen PIN keys. Source: research.md sections "아이폰 PIN 키패드"
-     * and "구현 메모 for zz5" (THPinNumButton / THPinNumPadView).
-     * Reference: 393 x 852 CSS px (iPhone 15 / 15 Pro logical size).
-     * Diameter 75px; horizontal gap 20px; vertical gap 13px;
-     * keypad 265 x 339 (3*75+2*20, 4*75+3*13).
-     * Fill rgba(255,255,255,0.18) + backdrop-filter blur(20px); no border
-     * (iOS 10-18 filled circle, not the iOS 7 1px ring).
-     * Digit 34px / weight 500; letters 10px / weight 600 / tracking 0.1em / uppercase.
-     * :active = opaque white fill + black glyph, ~0.2s fade.
-     * Scales with clamp/min so 375px and 430px widths keep the 75@393 ratio.
-     * Galaxy (One UI 3+): also circular, ~72px, 12 / 8 gaps, weight 500 digit,
-     * letters hidden, press = scale + denser fill (no black invert).
-     */
-    .key {
-      box-sizing: border-box;
-      width: var(--key-d);
-      height: var(--key-d);
-      border: none;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.18);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      color: #fff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      gap: 1px;
-      padding: 0;
-      flex-shrink: 0;
-      overflow: hidden;
-      transition: background .2s, color .2s, transform .15s;
-    }
-    .key:active { background: rgba(255, 255, 255, 0.92); color: #000; backdrop-filter: none; -webkit-backdrop-filter: none; }
-    .key .number { font-size: calc(var(--key-d) * 36 / 75); line-height: 1; font-weight: 500; }
-    .key .letters {
-      font-size: calc(var(--key-d) * 10 / 75);
-      font-weight: 600;
-      line-height: 1.2;
-      letter-spacing: 0.1em;
-      padding-left: 0.1em;
-      text-transform: uppercase;
-      min-height: 1.2em;
-      opacity: 0.92;
-    }
-    .key[data-digit="1"] .letters { visibility: hidden; }
-    .key[data-digit="0"] .letters { display: none; }
-    .key[data-digit="0"] { grid-column: 2; }
-    .galaxy-only { display: none; }
-    .footer { position: absolute; z-index: 1; top: 88%; left: 50%; transform: translateX(-50%); display: flex; justify-content: space-between; width: min(calc(100% - 56px), calc(3 * var(--key-d) + 2 * var(--key-hgap))); align-items: center; }
-    .footer button { background: none; font-size: 17px; font-weight: 400; min-width: 44px; min-height: 44px; padding: 8px 0; }
-    #input-screen.galaxy { --key-d: clamp(64px, min(19.5vw, 9.5vh), 82px); --key-hgap: clamp(11px, 3.817vw, 16px); --key-vgap: clamp(5px, 1.8vw, 8px); }
-    .galaxy .pin-layout { display: block; padding: 0; }
-    .galaxy #lock { display: grid; top: 5%; pointer-events: auto; cursor: pointer; }
-    .galaxy .prompt { top: 19.5%; margin: 0; font-size: clamp(20px, 5.35vw, 23px); line-height: 1.3; font-weight: 500; }
-    .galaxy #dots { top: 28%; gap: 20px; }
-    .galaxy #dots.shake { animation-name: shake-galaxy; }
-    @keyframes shake-galaxy {
-      0%, 100% { transform: translateX(-50%); }
-      14% { transform: translateX(calc(-50% - 12px)); }
-      28% { transform: translateX(calc(-50% + 10px)); }
-      42% { transform: translateX(calc(-50% - 8px)); }
-      56% { transform: translateX(calc(-50% + 6px)); }
-      70% { transform: translateX(calc(-50% - 4px)); }
-      84% { transform: translateX(calc(-50% + 2px)); }
-    }
-    .galaxy .dot { width: 11px; height: 11px; }
-    .galaxy .keypad { top: 34%; }
-    .galaxy .key { background: rgba(255, 255, 255, 0.16); }
-    .galaxy .key:active { background: rgba(255, 255, 255, 0.42); color: #fff; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); transform: scale(1.07); }
-    .galaxy .key .number { font-size: calc(var(--key-d) * 34 / 72); font-weight: 500; }
-    .galaxy .key .letters { display: none; }
-    .galaxy .key.galaxy-only { display: flex; }
-    .key[data-action="backspace"] { grid-column: 1; grid-row: 4; }
-    .key[data-action="confirm"] { grid-column: 3; grid-row: 4; }
-    .key .action-icon { width: 31px; height: 31px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-    #fingerprint { position: absolute; z-index: 2; top: 72%; left: 50%; transform: translate(-50%, -50%); width: 64px; height: 64px; padding: 0; background: none; place-items: center; touch-action: none; }
-    .galaxy #fingerprint { display: grid; top: 81%; }
-    #fingerprint svg { width: 44px; height: 44px; fill: none; stroke: #fff; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-    #fingerprint.holding svg { animation: fingerprint-hold 600ms ease-out both; }
-    #fingerprint.pulse svg { animation: fingerprint-pulse 220ms ease-out; }
-    @keyframes fingerprint-hold { from { opacity: .68; transform: scale(.92); } to { opacity: 1; transform: scale(1.08); } }
-    @keyframes fingerprint-pulse { 50% { opacity: .62; transform: scale(.94); } }
-    .galaxy .footer { top: 91%; justify-content: center; }
-    .galaxy #emergency { width: 114px; height: 44px; padding: 3.5px 0; color: #2b1a14; font-size: 15px; font-weight: 500; }
-    .galaxy #emergency span { display: grid; place-items: center; width: 114px; height: 37px; border-radius: 999px; background: #F2A28C; }
-    .galaxy #delete { display: none; }
-    #input-screen.unlocking-out { pointer-events: none; animation: lock-out 440ms cubic-bezier(.32, .72, 0, 1) both; }
-    #unlocked-screen { z-index: 2; background: #111; touch-action: none; will-change: transform, opacity; }
-    #home-track { position: absolute; inset: 0; width: 100%; height: 100%; transform: translate3d(0,0,0); transition: transform 420ms cubic-bezier(.2,.8,.2,1); will-change: transform; }
-    .home-page { position: absolute; top: 0; width: 100%; height: 100%; overflow: hidden; }
-    #home-one { left: 0; }
-    #home-two { left: 100%; background: #111; }
-    #reveal-card { position: absolute; z-index: 3; top: 50%; left: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; width: min(78vw, 320px); min-height: 180px; max-width: calc(100% - 36px); padding: 24px 22px; border: 1px solid #ffffff60; border-radius: 26px; background: #3238439c; box-shadow: 0 16px 46px #0008; backdrop-filter: blur(20px) saturate(1.1); -webkit-backdrop-filter: blur(20px) saturate(1.1); text-align: center; font-variant-numeric: tabular-nums; pointer-events: none; opacity: 0; visibility: hidden; transform: translate(-50%, -50%) scale(.94); transition: opacity 220ms ease, transform 220ms cubic-bezier(.2,.8,.2,1), visibility 0s; }
-    #reveal-card.visible { opacity: 1; visibility: visible; transform: translate(-50%, -50%) scale(1); transition-delay: 0s; }
-    #reveal-label { color: #f3f4f8e0; font-size: 14px; font-weight: 500; }
-    #reveal-number { margin-top: 18px; font-size: clamp(40px, 11vw, 56px); line-height: 1.08; font-weight: 600; letter-spacing: .04em; overflow-wrap: anywhere; }
-    #reveal-days { margin-top: 13px; color: #f3f4f8e0; font-size: 13px; }
-    #unlocked-screen.unlocking { animation: unlock-in 440ms cubic-bezier(.32, .72, 0, 1) both; }
-    @keyframes lock-out { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(.965); } }
-    @keyframes unlock-in { from { opacity: 0; transform: scale(1.045); } to { opacity: 1; transform: scale(1); } }
-    #unlocked-screen.returning { transition: transform 520ms cubic-bezier(.2, 1.35, .35, 1); }
-    #peek-screen { z-index: 1; background: #0b0c10; padding: 28px 24px max(24px, env(safe-area-inset-bottom)); display: flex; flex-direction: column; justify-content: flex-end; }
-    #peek-screen.side-peek { text-align: right; }
-    .peek-heading { margin-bottom: 9px; color: #aaaebc; font-size: 12px; }
-    #attempt-list { list-style: none; margin: 0; padding: 0; overflow-y: auto; max-height: calc(100% - 54px); font-variant-numeric: tabular-nums; }
-    #attempt-list li { border-top: 1px solid #ffffff15; padding: 6px 0; white-space: nowrap; }
-    .attempt-pin { letter-spacing: 3px; font-size: 12px; line-height: 1.25; font-weight: 600; }
-    #time-black { z-index: 3; background: #000; touch-action: none; }
-    #time-lock { z-index: 3; background: radial-gradient(ellipse at 20% 10%, #575d78, #10151e); text-align: center; touch-action: none; }
-    #time-clock-backdrop { position: absolute; inset: 9% 0 auto; height: 51%; background: rgba(18, 22, 33, .12); backdrop-filter: blur(44px); -webkit-backdrop-filter: blur(44px); -webkit-mask-image: linear-gradient(transparent, #000 17%, #000 78%, transparent); mask-image: linear-gradient(transparent, #000 17%, #000 78%, transparent); pointer-events: none; }
-    #time-face { position: absolute; z-index: 1; top: 12%; width: 100%; text-shadow: 0 2px 12px #0005; pointer-events: none; }
-    #time-date { font-size: clamp(17px, 4.8vw, 21px); font-weight: 500; }
-    #time-clock { display: flex; justify-content: center; align-items: center; margin-top: 7px; font-size: clamp(72px, 21vw, 94px); line-height: 1; font-weight: 300; font-variant-numeric: tabular-nums; letter-spacing: -.045em; }
-    #time-lock.galaxy #time-face { top: 16%; }
-    #time-lock.galaxy #time-clock { font-size: clamp(70px, 19vw, 90px); font-weight: 400; }
-    .time-colon { display: inline-flex; flex-direction: column; justify-content: center; gap: .26em; width: .16em; height: .8em; margin: 0 .025em; }
-    .time-colon::before, .time-colon::after { content: ''; display: block; width: .09em; height: .09em; border-radius: 50%; background: currentColor; }
-    @media (prefers-reduced-motion: reduce) { #time-clock span { animation: none !important; } }
-    #settings-screen { z-index: 5; overflow-y: auto; background: #101115; padding: 28px 22px max(32px, env(safe-area-inset-bottom)); touch-action: pan-y; }
-    .settings-inner { max-width: 480px; margin: auto; }
-    .eyebrow { color: #aaa4f7; font-size: 11px; font-weight: 700; letter-spacing: 3px; }
-    h1 { font-size: 32px; letter-spacing: -1px; margin: 8px 0; }
-    .intro { color: #a4a6b1; line-height: 1.65; font-size: 13px; margin: 0 0 28px; }
-    .group { margin: 0 0 20px; border: 1px solid #ffffff12; background: #1b1c22; border-radius: 18px; padding: 20px; }
-    .install-offer { margin: 0 0 20px; padding: 16px; border: 1px solid #c6c0ff58; border-radius: 14px; background: #252336; }
-    .install-offer strong { display: block; font-size: 15px; }
-    .install-offer p { margin: 7px 0 0; color: #cbc9d9; font-size: 12px; line-height: 1.55; }
-    .install-actions { display: flex; gap: 9px; margin-top: 13px; }
-    .install-actions button { min-height: 42px; padding: 0 14px; border-radius: 9px; font-size: 13px; font-weight: 700; }
-    #install-action { background: #c6c0ff; color: #191528; }
-    #install-later { background: #383646; color: #e5e2f2; }
-    .group h2 { font-size: 15px; margin: 0 0 18px; font-weight: 650; }
-    .field { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-top: 17px; font-size: 13px; }
-    .field:first-of-type { margin-top: 0; }
-    .field.stack { align-items: stretch; flex-direction: column; gap: 10px; }
-    .field.check { justify-content: flex-start; }
-    .field[hidden] { display: none; }
-    .field input[type="number"], select { border: 1px solid #ffffff12; background: #292b34; border-radius: 8px; color: #fff; padding: 9px; max-width: 165px; }
-    input[type="number"] { width: 90px; }
-    input[type="color"] { width: 45px; height: 32px; padding: 0; border: 0; background: none; }
-    input[type="file"] { width: 100%; color: #b6b8c4; font-size: 12px; }
-    input::file-selector-button { background: #30323c; color: #eee; border: 0; border-radius: 6px; padding: 9px 12px; margin-right: 10px; }
-    .image-info, .hint { color: #9699a6; font-size: 12px; line-height: 1.65; }
-    .time-guide { margin: 0 0 18px; }
-    .time-guide details { margin-top: 12px; padding: 12px 14px; border-radius: 11px; background: #272932; }
-    .time-guide summary { color: #d9dce8; cursor: pointer; font-weight: 600; }
-    .time-guide details p { margin: 9px 0 0; }
-    .usage-guide { margin: 0 0 20px; padding: 14px 16px; border: 1px solid #ffffff18; border-radius: 13px; background: #1b1c22; color: #c9cad3; }
-    .usage-guide summary { min-height: 28px; display: flex; align-items: center; color: #e5e3f4; font-size: 13px; font-weight: 650; cursor: pointer; }
-    .usage-guide p { margin: 10px 0 0; font-size: 12px; line-height: 1.65; }
-    .hidden-grid-example { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: repeat(4, minmax(0, 1fr)); width: min(100%, 240px); aspect-ratio: 3 / 4; margin: 14px auto 0; overflow: hidden; border: 1.5px solid #ff4545; background-color: #000; background-image: linear-gradient(to right, #ff4545 1.5px, transparent 1.5px), linear-gradient(to bottom, #ff4545 1.5px, transparent 1.5px); background-size: 33.333333% 100%, 100% 25%; color: #ff6969; }
-    .hidden-grid-example span { display: grid; place-items: center; font-size: clamp(17px, 6vw, 25px); font-weight: 650; }
-    .hidden-grid-example span[data-digit="0"] { grid-column: 2; grid-row: 4; }
-    .usage-guide .grid-caption { margin-top: 8px; color: #a5a6b1; text-align: center; }
-    .image-info { margin: 0; }
-    .alignment-help { margin: -4px 0 12px; color: #c3c5cf; font-size: 12px; line-height: 1.55; }
-    .preview-row { display: flex; gap: 12px; }
-    .preview { position: relative; background: #101115; border: 1px solid #ffffff1c; border-radius: 14px; overflow: hidden; width: 50%; aspect-ratio: 9 / 19.5; touch-action: none; cursor: grab; }
-    .personal-home .preview-row .preview { width: 33.333%; }
-    .preview:active { cursor: grabbing; }
-    .preview img { object-fit: cover; width: 100%; height: 100%; pointer-events: none; }
-    .preview-name { position: absolute; right: 7px; bottom: 7px; z-index: 3; font-size: 10px; background: #000a; border-radius: 4px; padding: 3px 6px; pointer-events: none; }
-    .crop-overlay { position: absolute; z-index: 2; top: 0; left: 0; right: 0; height: 0; min-height: 0; overflow: hidden; background: #796cff80; border-bottom: 2px solid #d7d2ff; pointer-events: none; }
-    .crop-label { position: absolute; left: 50%; top: 7px; width: max-content; max-width: calc(100% - 12px); transform: translateX(-50%); color: #fff; background: #30275ed9; border-radius: 4px; padding: 3px 5px; font-size: 8px; line-height: 1.25; text-align: center; }
-    .crop-handle { position: absolute; z-index: 4; left: 50%; top: 0; width: 48px; height: 18px; transform: translate(-50%, -8px); border-radius: 10px; background: #e2deff; box-shadow: 0 1px 5px #0008; cursor: ns-resize; touch-action: none; }
-    .crop-handle::after { content: ''; position: absolute; left: 13px; right: 13px; top: 8px; height: 2px; border-radius: 2px; background: #62599b; }
-    #start { width: 100%; padding: 16px; border-radius: 12px; background: #c6c0ff; color: #191528; font-size: 15px; font-weight: 700; margin-top: 5px; }
-    #storage-status, #offline-status { font-size: 12px; line-height: 1.65; color: #b9b3dd; }
-    #toast { position: absolute; z-index: 10; left: 50%; bottom: max(26px, env(safe-area-inset-bottom)); transform: translateX(-50%); max-width: 90%; border-radius: 12px; padding: 12px 18px; background: #242631; color: #eee; font-size: 13px; text-align: center; pointer-events: none; }
-    @media (max-height: 640px) {
-      #input-screen { --key-d: clamp(56px, 16.285vw, 64px); --key-vgap: 8px; }
-      #input-screen.galaxy { --key-d: clamp(52px, min(18vw, 8.75vh), 60px); --key-vgap: 4px; }
-      .galaxy .prompt { top: 16%; }
-      .galaxy #dots { top: 25%; }
-      .galaxy .keypad { top: 31%; }
-      .galaxy #fingerprint { top: 75%; }
-      .galaxy .footer { top: 88%; }
-      #fingerprint { top: 76%; }
-    }
-    @media (max-height: 500px) and (orientation: landscape) {
-      #input-screen { --key-d: clamp(48px, 12vh, 58px); --key-hgap: clamp(10px, 2vw, 16px); --key-vgap: 3px; }
-      .prompt { top: 8%; font-size: 15px; }
-      #dots { top: 17%; }
-      .keypad, .galaxy .keypad { top: 24%; }
-      #fingerprint { top: 76%; }
-      .footer { top: 84%; }
-      #input-screen.galaxy { --key-d: clamp(48px, 12vh, 58px); }
-    }
-    @media (horizontal-viewport-segments: 2) {
-      #app { right: auto; width: env(viewport-segment-width 0 0); }
-    }
-    @media (vertical-viewport-segments: 2) {
-      #app { bottom: auto; height: calc(env(viewport-segment-height 0 0) - env(safe-area-inset-top, 0px)); }
-    }
-    @media (min-height: 641px) and (max-height: 790px) {
-      .galaxy .prompt { top: 18%; }
-      .galaxy #dots { top: 26%; }
-      .galaxy .keypad { top: 31%; }
-      .galaxy #fingerprint { top: 82%; }
-    }
-    @media (prefers-reduced-motion: reduce) { #unlocked-screen.returning { transition-duration: 180ms; } #input-screen.unlocking-out, #unlocked-screen.unlocking { animation-duration: 150ms; } #reveal-card { transition-duration: 0s; } }
-  </style>
+  <title>ALETHEIA</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css">
 </head>
-<body>
-  <main id="app">
-    <section id="input-screen" class="screen" aria-label="PIN 입력" hidden>
-      <img id="lock-image" class="wallpaper" alt="" hidden>
-      <div class="shade"></div>
-      <div class="pin-layout">
-        <div id="lock" aria-label="잠금">
-          <svg viewBox="0 0 24 29" aria-hidden="true"><rect x="4" y="12" width="16" height="14" rx="3"/><path d="M7 12V8a5 5 0 0 1 10 0v4"/></svg>
+<body class="view-settings">
+  <main id="settings" class="settings">
+    <div class="settings-inner">
+      <img class="brand-logo" src="brand-logo.png" alt="ALETHEIA" draggable="false">
+      <h1>ALETHEIA</h1>
+      <p class="tagline">공연용 이미지 공개</p>
+
+      <details class="guide">
+        <summary>사용 안내</summary>
+        <h2>준비</h2>
+        <p>공연 전에 프리셋을 저장합니다. 이름, 공개할 이미지, 공개 방식, 붓 크기, 필요하면 처음 가려 둘 비율을 정하세요. 이미지는 6MB 이하의 JPEG, PNG, WEBP, GIF이며 프리셋은 8개까지입니다.</p>
+        <h2>공개 방식</h2>
+        <ul>
+          <li>자유 스크래치: 문지른 경로가 바로 선명하게 열립니다. 처음 가림 비율이 100보다 작으면 아래쪽부터 그만큼 열려 있습니다.</li>
+          <li>서서히 공개: 같은 자리를 거듭 문질러야 베일이 조금씩 얇아집니다. 처음 가림 비율은 베일 전체의 처음 농도입니다.</li>
+          <li>단계 공개: 그림을 위부터 아래까지 네 개의 가로 구역으로 나눕니다. 현재 구역만 문지를 수 있고, 그 구역의 약 60%를 문지르면 구역 전체가 열린 뒤 다음 구역이 풀립니다. 앞 구역은 건너뛸 수 없습니다. 가림 비율을 낮추면 위쪽 구역이 25% 단위로 미리 열립니다.</li>
+        </ul>
+        <h2>공연</h2>
+        <p>저장된 프리셋을 고른 뒤 공연을 시작합니다. 이미지는 검은 화면 안에 비율을 유지한 채 최대한 크게 놓이고, 불투명한 거의 검은 베일이 그림을 덮습니다. 손가락, 펜 또는 마우스로 문지르면 그 경로를 따라 베일이 지워집니다. 빠르게 움직여도 획이 끊기지 않도록 사이를 채웁니다. 공연 중에는 설정 버튼이 없습니다.</p>
+        <h2>리셋</h2>
+        <p>두 손가락을 위로 96픽셀 이상, 대체로 곧게 밀면 설정으로 나가지 않고 베일만 처음 상태로 다시 덮입니다. 한 손가락 문지르기만으로는 리셋되지 않습니다.</p>
+        <h2>설정으로 돌아가기</h2>
+        <p>두 손가락을 아래로 96픽셀 이상, 대체로 곧게 끌어내리세요. 리허설에서 키보드가 있으면 Shift+Esc로도 설정에 들어올 수 있습니다. 설정으로 나가면 진행 중인 문지르기는 버려지고, 다시 공연을 시작하면 저장된 프리셋대로 덮입니다.</p>
+        <h2>저장</h2>
+        <p>프리셋과 이미지는 이 기기의 브라우저 안에만 있습니다. 서버로 보내지 않습니다. 저장에 실패하면 알리고, 이미 있는 데이터는 자동으로 지우지 않습니다. 저장된 형식이 손상되면 자동으로 초기화하지 않고 복구 또는 초기화를 고릅니다.</p>
+        <h2>기본 카드 12장</h2>
+        <p>저장된 프리셋과 별개로 기본 카드 12장으로 시작할 수 있습니다. 프리셋이 없어도 됩니다. 들어오면 무대 전체가 검고 카드는 보이지 않습니다. 화면 전체를 4행 3열로 나누어, 한 손가락으로 칸을 한 번 누릅니다. 이 첫 탭은 점을 긁거나 카드를 드러내지 않습니다. 손가락을 뗀 뒤의 다음 한 손가락 문지르기만 검은 베일을 손가락 경로를 따라 지우고 고른 카드를 보여 줍니다. 선택은 공연을 나갈 때까지 고정됩니다. 선택된 뒤에 다시 누르면 붓 자국은 남을 수 있지만 카드는 바뀌지 않습니다. 긁어 낸 결과는 공연 화면을 나가기 전까지 유지됩니다. 두 손가락을 위로 미는 리셋은 선택과 긁힌 결과를 바꾸지 않습니다. 선택을 확정하기 전에 포인터가 취소되면 카드는 고르지도 드러내지도 않습니다. 두 손가락을 아래로 내리거나 Shift+Esc로 설정에 나가면 이번 선택이 끝납니다.</p>
+        <p>행은 위에서 아래로 스페이드, 다이아몬드, 클럽, 하트입니다. 열은 왼쪽에서 오른쪽으로 J, Q, K입니다.</p>
+        <ul>
+          <li>1행 스페이드: 1 스페이드 잭(J), 2 스페이드 퀸(Q), 3 스페이드 킹(K)</li>
+          <li>2행 다이아몬드: 4 다이아몬드 잭(J), 5 다이아몬드 퀸(Q), 6 다이아몬드 킹(K)</li>
+          <li>3행 클럽: 7 클럽 잭(J), 8 클럽 퀸(Q), 9 클럽 킹(K)</li>
+          <li>4행 하트: 10 하트 잭(J), 11 하트 퀸(Q), 12 하트 킹(K)</li>
+        </ul>
+        <h2>내 사진 12장</h2>
+        <p>기본 카드 12장, 그리고 한 장짜리 프리셋과 별개입니다. 설정에 번호 1부터 12까지 칸이 있고, 줄 순서(왼쪽에서 오른쪽, 위에서 아래)는 기본 카드와 같습니다. 1=S-J, 2=S-Q, 3=S-K, 4=D-J, 5=D-Q, 6=D-K, 7=C-J, 8=C-Q, 9=C-K, 10=H-J, 11=H-Q, 12=H-K입니다. 각 칸에서 사진을 고른 뒤 그 칸의 올리기 또는 바꾸기로 저장합니다. JPEG, PNG, WEBP, GIF이며 한 장당 6MB 이하입니다. 12칸이 모두 저장되기 전에는 <strong>내 사진 12장으로 시작</strong>을 누를 수 없습니다.</p>
+        <p>시작하면 기본 카드와 같은 검은 무대입니다. 한 손가락으로 칸을 한 번 누르면 그 번호의 내 사진이 선택되고 화면은 검은 채로 남습니다. 이 첫 탭은 점을 긁거나 사진을 드러내지 않습니다. 손을 뗀 뒤의 다음 한 손가락 문지르기만 베일을 경로를 따라 지웁니다. 선택은 공연을 나갈 때까지 고정되고, 긁힌 결과는 나가기 전까지 유지됩니다. 사진은 비율을 유지한 채 화면 안에 들어갑니다. 찌그러뜨리지 않습니다. 서버로 보내지 않습니다. 저장된 파일이 없거나 열 수 없으면 알리고, 그때도 저장된 데이터는 바꾸지 않습니다.</p>
+        <h2>칸 번호 안내</h2>
+        <p>아래 칸 번호 안내를 켜 두면, 기본 카드 12장과 내 사진 12장에 들어올 때만 하얀 번호 1–12가 고르는 칸 위에 약 0.8초 보였다가 사라집니다. 기본은 꺼져 있습니다. 한 장짜리 프리셋에는 번호가 나오지 않습니다. 번호는 고른 카드나 사진을 보여 주지 않고, 첫 탭 뒤에는 화면이 검은 채로 남습니다.</p>
+        <h2>리허설</h2>
+        <p>연습 때는 Shift+Esc로 설정과 공연을 오갈 수 있습니다. 화면을 돌리거나 접어도 공연 중에 이미 지운 자국은 유지됩니다. 같은 공연 안에서 처음부터 다시 덮으려면 두 손가락을 위로 미세요. 기본 카드 공연에서는 그 리셋이 선택과 긁힌 결과를 바꾸지 않습니다. 마우스로는 두 손가락 제스처가 어려우면 설정으로 돌아온 뒤 공연을 다시 시작하면 됩니다. 설치하면 앱 이름은 이미지입니다.</p>
+      </details>
+
+      <div id="repair" class="banner" hidden>
+        <p>저장된 프리셋 정보를 해석할 수 없습니다. 기존 데이터는 자동으로 지우지 않았습니다. 읽을 수 있는 항목만 복구하거나, 목록을 직접 초기화할 수 있습니다.</p>
+        <div class="row-actions">
+          <button type="button" id="recover-button" class="secondary">읽을 수 있는 항목만 복구</button>
+          <button type="button" id="reset-storage-button" class="danger">초기화</button>
         </div>
-        <button id="prompt" class="prompt" type="button" aria-label="4자리로 전환">위로 쓸어올려서 Face ID 사용 또는 암호 입력</button>
-        <div id="dots" role="status" aria-label="6자리 중 0자리 입력"></div>
-        <div id="keypad" class="keypad" aria-label="숫자 키패드"></div>
-        <button id="fingerprint" class="galaxy-only" type="button" aria-label="지문으로 잠금 해제">
-          <svg viewBox="0 0 48 48" aria-hidden="true">
-            <path d="M11.5 23.5C11.5 16.6 17 11 24 11s12.5 5.6 12.5 12.5c0 8.6-2.4 15.2-6.4 20"/>
-            <path d="M7.5 23.5C7.5 14.4 14.9 7 24 7s16.5 7.4 16.5 16.5c0 5.2-.7 10-2.5 14.5"/>
-            <path d="M16 23.5a8 8 0 0 1 16 0c0 7.1-1.6 12.2-4.8 17.5"/>
-            <path d="M20.5 24a3.5 3.5 0 0 1 7 0c0 8.2-2.4 14-5.7 18"/>
-            <path d="M12.8 31.5c.8 5 2.7 9 5.2 11.8M17 29c.4 4 1.4 7.1 3.2 10"/>
-          </svg>
-        </button>
-        <div class="footer"><button id="emergency" type="button"><span>긴급 상황</span></button><button id="delete" type="button">취소</button></div>
       </div>
-    </section>
-    <section id="peek-screen" class="screen" aria-label="시도 기록" hidden>
-      <div class="peek-heading">시도 기록</div>
-      <ol id="attempt-list"></ol>
-    </section>
-    <section id="unlocked-screen" class="screen" aria-label="해제 화면" hidden>
-      <div id="home-track">
-        <div id="home-one" class="home-page"><img id="unlock-image" class="wallpaper" alt="" hidden draggable="false"></div>
-        <div id="home-two" class="home-page"><img id="home2-image" class="wallpaper" alt="" hidden draggable="false"></div>
+      <p id="error" class="banner" role="alert" hidden></p>
+      <p id="status" class="status" role="status" hidden></p>
+
+      <section class="preset-section" aria-labelledby="preset-heading">
+        <h2 id="preset-heading">저장된 프리셋</h2>
+        <p id="empty-hint">저장된 프리셋이 없습니다. 아래에서 이미지를 추가하세요.</p>
+        <div id="preset-list" class="preset-list"></div>
+      </section>
+
+      <section class="card-start cell-guide-setting" aria-labelledby="cell-guide-heading">
+        <h2 id="cell-guide-heading">칸 번호 안내</h2>
+        <label class="check" for="cell-guide-enable">
+          <input id="cell-guide-enable" type="checkbox">
+          <span>12칸 공연을 시작할 때 하얀 번호 1–12를 잠시 보여 주기</span>
+        </label>
+        <p class="hint">기본은 꺼져 있으며 이 기기에만 기억합니다. 켠 뒤에 기본 카드 12장 또는 내 사진 12장으로 들어오면, 선택 칸과 같은 자리에 번호만 약 0.8초 보였다가 사라집니다. 한 장짜리 프리셋에는 나오지 않습니다. 번호는 고른 카드나 사진을 드러내지 않습니다. 첫 탭으로 칸을 정한 뒤에도 화면은 검은 채로 남고, 문지르기 전이나 설정으로 나갈 때 번호는 사라집니다.</p>
+        <details class="cell-map">
+          <summary>4행 3열 번호 지도</summary>
+          <p>번호는 왼쪽에서 오른쪽으로, 위에서 아래로 1부터 12입니다. 열은 J, Q, K이고 행은 스페이드, 다이아몬드, 클럽, 하트입니다. 이 지도는 설정 안의 설명이며, 공연 화면의 번호는 이 항목을 켰을 때만 잠시 나타납니다.</p>
+          <div class="cell-map-scroll">
+            <table class="cell-map-table">
+              <caption>보이지 않는 공연 칸과 카드 대응</caption>
+              <thead>
+                <tr>
+                  <th scope="col">행</th>
+                  <th scope="col">J (1열)</th>
+                  <th scope="col">Q (2열)</th>
+                  <th scope="col">K (3열)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row">스페이드 (1행)</th>
+                  <td>1 스페이드 잭</td>
+                  <td>2 스페이드 퀸</td>
+                  <td>3 스페이드 킹</td>
+                </tr>
+                <tr>
+                  <th scope="row">다이아몬드 (2행)</th>
+                  <td>4 다이아몬드 잭</td>
+                  <td>5 다이아몬드 퀸</td>
+                  <td>6 다이아몬드 킹</td>
+                </tr>
+                <tr>
+                  <th scope="row">클럽 (3행)</th>
+                  <td>7 클럽 잭</td>
+                  <td>8 클럽 퀸</td>
+                  <td>9 클럽 킹</td>
+                </tr>
+                <tr>
+                  <th scope="row">하트 (4행)</th>
+                  <td>10 하트 잭</td>
+                  <td>11 하트 퀸</td>
+                  <td>12 하트 킹</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </details>
+      </section>
+
+      <section class="card-start" aria-labelledby="card-start-heading">
+        <h2 id="card-start-heading">기본 카드</h2>
+        <p class="hint">저장된 이미지 프리셋과 따로입니다. 프리셋이 하나도 없어도 12장의 기본 그림 카드로 공연을 시작합니다.</p>
+        <button type="button" id="card-start-button" class="secondary">기본 카드 12장으로 시작</button>
+        <p class="hint">들어오면 화면 전체가 검습니다. 한 손가락으로 칸을 한 번 눌러 카드를 고르고, 손을 뗀 다음 문질러 공개합니다. 고른 카드는 공연을 나갈 때까지 바뀌지 않습니다.</p>
+      </section>
+
+      <section class="card-start custom-photos" aria-labelledby="custom-start-heading">
+        <h2 id="custom-start-heading">내 사진 12장</h2>
+        <p class="hint">기본 그림 카드와 한 장짜리 프리셋과 따로 저장됩니다. 번호는 4행 3열의 줄 순서입니다. 1=S-J, 2=S-Q, 3=S-K, 4=D-J, 5=D-Q, 6=D-K, 7=C-J, 8=C-Q, 9=C-K, 10=H-J, 11=H-Q, 12=H-K.</p>
+        <p id="custom-repair" class="banner" hidden>저장된 내 사진 12장 정보를 해석할 수 없습니다. 기존 데이터는 자동으로 지우지 않았습니다.</p>
+        <div id="custom-slots" class="custom-slots"></div>
+        <p id="custom-ready-hint" class="hint">사진 12장이 모두 있어야 내 사진으로 시작할 수 있습니다. 비어 있는 칸이 있으면 시작 버튼은 눌리지 않습니다.</p>
+        <button type="button" id="custom-start-button" class="secondary" disabled>내 사진 12장으로 시작</button>
+      </section>
+
+      <div class="start-bar">
+        <button type="button" id="start-button" class="primary">공연 시작</button>
+        <p class="hint">저장된 선택 프리셋으로 시작합니다. 수정한 뒤에는 먼저 저장하세요.</p>
       </div>
-      <div id="reveal-card" role="status" aria-live="polite" aria-hidden="true"><div id="reveal-label"></div><div id="reveal-number">—</div><div id="reveal-days" hidden></div></div>
-    </section>
-    <section id="time-black" class="screen" aria-label="타임머신 준비" hidden></section>
-    <section id="time-lock" class="screen" aria-label="타임머신 잠금 화면" hidden>
-      <img id="time-wallpaper" class="wallpaper" alt="" hidden draggable="false">
-      <div id="time-clock-backdrop"></div>
-      <div id="time-face"><div id="time-date"></div><time id="time-clock"><span id="time-hour"></span><span class="time-colon" aria-hidden="true"></span><span id="time-minute"></span></time></div>
-    </section>
-    <section id="settings-screen" class="screen" aria-label="설정" hidden>
-      <div class="settings-inner">
-        <div class="eyebrow">UNLOCK</div>
-        <h1>언락 설정</h1>
-        <p class="intro">화면을 준비하고, 연출을 시작하세요.<br>이미지와 설정은 이 기기에만 저장됩니다.</p>
-        <section id="install-offer" class="install-offer" aria-label="언락 설치 안내" hidden>
-          <strong>홈 화면에 언락을 설치할까요?</strong>
-          <p>처음 한 번 추가하면 앱처럼 전체 화면으로 열 수 있습니다.</p>
-          <p id="install-instructions" role="status" hidden></p>
-          <div class="install-actions"><button id="install-action" type="button">설치 방법</button><button id="install-later" type="button">나중에</button></div>
-        </section>
-        <form id="settings-form">
-          <div class="group">
-            <h2 id="performance-heading">연출</h2>
-            <label id="performance-field" class="field">연출 선택<select id="performance"><option value="pin">PIN 언락</option><option value="time-machine">타임머신</option></select></label>
-            <div id="time-options" hidden>
-              <div class="time-guide hint"><div>PIN 화면에서 긴급 상황(iPhone) 또는 긴급전화(갤럭시)를 빠르게 두 번 누르면 타임머신이 열립니다.</div></div>
-              <label class="field">두 번 탭 후 대기 (초)<input id="time-delay" type="number" min="0" max="60" step="0.1" value="3"></label>
-              <label class="field">되감기 시간 (초)<input id="time-duration" type="number" min="1" max="60" step="0.1" value="8"></label>
-              <p class="hint">두 번째 숫자 뒤 나타나는 잠금화면을 두 번 누르면, 설정한 대기 후 표시 시각이 천천히 현재 시각으로 돌아옵니다. 실제 휴대폰 시계는 바뀌지 않습니다.</p>
+
+      <form id="editor">
+        <fieldset id="editor-fields">
+          <legend id="editor-legend">새 프리셋</legend>
+          <div class="field">
+            <label for="preset-name">이름</label>
+            <input id="preset-name" name="name" type="text" autocomplete="off" enterkeyhint="done">
+          </div>
+          <div class="field">
+            <label for="preset-file">공개할 이미지</label>
+            <input id="preset-file" name="image" type="file" accept="image/jpeg,image/png,image/webp,image/gif">
+            <p id="file-status" class="hint">선택된 파일 없음</p>
+            <img id="file-preview" class="preview" alt="선택한 이미지 미리보기" hidden>
+          </div>
+          <div class="field">
+            <label for="preset-mode">공개 방식</label>
+            <select id="preset-mode" name="mode">
+              <option value="free">자유 스크래치</option>
+              <option value="gradual">서서히 공개</option>
+              <option value="stages">단계 공개</option>
+            </select>
+            <p id="mode-hint" class="hint">문지른 자리가 바로 열립니다.</p>
+          </div>
+          <div class="field">
+            <label for="preset-brush">붓 크기</label>
+            <div class="slider-line">
+              <input id="preset-brush" name="brush" type="range" min="12" max="140" value="46">
+              <span id="brush-readout">46</span>
+            </div>
+            <p class="hint">화면에서 지워지는 원의 지름입니다.</p>
+          </div>
+          <div class="field">
+            <label class="check" for="hidden-enable">
+              <input id="hidden-enable" type="checkbox">
+              <span>처음 가림 비율을 직접 지정 (끄면 100% 가림)</span>
+            </label>
+            <div class="slider-line">
+              <input id="preset-hidden" name="hidden" type="range" min="0" max="100" value="100" disabled>
+              <span id="hidden-readout">100</span>
             </div>
           </div>
-          <div class="group">
-            <h2>내 폰의 화면</h2>
-            <label class="field stack">잠금화면 이미지<input id="lock-file" type="file" accept="image/*"><span id="lock-info" class="image-info">등록된 이미지 없음</span></label>
-            <label class="field stack">해제화면 이미지<input id="unlock-file" type="file" accept="image/*"><span id="unlock-info" class="image-info">등록된 이미지 없음</span></label>
-            <label id="home2-field" class="field stack" hidden>해제화면 2페이지 이미지<input id="home2-file" type="file" accept="image/*"><span id="home2-info" class="image-info">등록된 이미지 없음</span></label>
-            <p class="hint">잠금에는 잠금화면, 해제에는 앱 아이콘이 보이는 홈 화면 스크린샷을 등록하세요. 개인용 언락은 홈 1·홈 2 이미지가 모두 있어야 좌우 이동과 중앙 정보 표시를 사용할 수 있습니다. 등록된 이미지 자체에 잠금 시계가 있으면 해제 후에도 보입니다.</p>
-            <p id="storage-status" role="status">이미지 저장소 확인 중…</p>
+          <div class="row-actions">
+            <button type="submit" id="save-button" class="primary">프리셋 저장</button>
+            <button type="button" id="cancel-edit" class="secondary" hidden>수정 취소</button>
           </div>
-          <div class="group">
-            <h2>입력과 해제</h2>
-            <label class="field">키패드 스타일<select id="style"><option value="ios">iOS</option><option value="galaxy">갤럭시</option></select></label>
-            <label class="field">기본 자릿수<select id="digits"><option value="6">6자리</option><option value="4">4자리</option></select></label>
-            <label class="field">해제 방식<select id="unlock-mode"><option value="timer">타이머</option><option value="attempt">지정 시도</option></select></label>
-            <label id="delay-field" class="field">해제 지연 (초)<input id="delay" type="number" min="0" max="300" step="0.1" value="8" required></label>
-            <label id="attempt-field" class="field" hidden>해제할 시도<input id="unlock-attempt" type="number" min="1" max="99" step="1" value="3" required></label>
-            <label id="reveal-attempt-field" class="field" hidden>중앙에 공개할 입력 순서<input id="reveal-attempt" type="number" min="1" max="99" step="1" value="2" required></label>
-            <label class="field check"><input id="vibration" type="checkbox" checked> 성공·실패 진동</label>
-            <p class="hint">지정 시도는 타이머와 PIN 중복 여부를 무시하고 선택한 번째 입력에서 해제됩니다. 생년월일을 먼저 받을 때 해제 순서를 고정하기 좋습니다.</p>
-          </div>
-          <div class="group">
-            <h2>이미지와 상단바 맞추기</h2>
-            <p class="alignment-help">보라색 영역의 아래 손잡이를 끌어 상단바를 자르고, 그 밖의 이미지를 위아래로 끌어 위치를 맞추세요.</p>
-            <div class="preview-row">
-              <div class="preview" data-key="lock" aria-label="잠금화면 정렬 미리보기"><img id="lock-preview" alt="잠금화면 미리보기" hidden draggable="false"><div class="crop-overlay"><span class="crop-label">여기에 진짜 상태바가 보입니다</span></div><span class="crop-handle" role="slider" tabindex="0" aria-label="잠금화면 상단 자르기" aria-valuemin="0" aria-valuemax="2000" aria-valuenow="0"></span><span class="preview-name">잠금</span></div>
-              <div class="preview" data-key="unlock" aria-label="해제화면 정렬 미리보기"><img id="unlock-preview" alt="해제화면 미리보기" hidden draggable="false"><div class="crop-overlay"><span class="crop-label">여기에 진짜 상태바가 보입니다</span></div><span class="crop-handle" role="slider" tabindex="0" aria-label="해제화면 상단 자르기" aria-valuemin="0" aria-valuemax="2000" aria-valuenow="0"></span><span class="preview-name">해제</span></div>
-              <div id="home2-preview-item" class="preview" data-key="home2" aria-label="해제화면 2페이지 정렬 미리보기" hidden><img id="home2-preview" alt="해제화면 2페이지 미리보기" hidden draggable="false"><div class="crop-overlay"><span class="crop-label">여기에 진짜 상태바가 보입니다</span></div><span class="crop-handle" role="slider" tabindex="0" aria-label="해제화면 2페이지 상단 자르기" aria-valuemin="0" aria-valuemax="2000" aria-valuenow="0"></span><span class="preview-name">홈 2</span></div>
-            </div>
-            <label class="field">상단 잘라내기 (원본 px)<input id="crop" type="number" min="0" max="2000" step="1" value="0" required></label>
-            <label class="field">이미지 세로 위치 (%)<input id="position" type="number" min="0" max="100" step="1" value="50" required></label>
-            <label class="field">상태바 글자<select id="status-style"><option value="black-translucent">밝게 · 어두운 배경</option><option value="default">어둡게 · 밝은 배경</option></select></label>
-            <label class="field">상태바 배경<input id="status-color" type="color" value="#000000"></label>
-            <p class="hint">원본의 상단바를 잘라낸 뒤 남은 이미지를 꽉 채웁니다. OS 상태바 영역에는 이미지를 그리지 않습니다. 상태바 글자 변경은 홈 화면 앱을 닫고 다시 열어야 반영될 수 있으며, 기기별 확인이 필요합니다.</p>
-          </div>
-          <details class="usage-guide">
-            <summary>처음 사용하는 분을 위한 화면·숫자 입력 안내</summary>
-            <p>개인용 언락은 홈 1에서 왼쪽으로 밀어 홈 2로 이동합니다. 홈 2에서 왼쪽으로 계속 미는 동안에만 설정한 입력 정보가 보이고, 손가락을 떼면 바로 사라집니다. 위로 밀면 입력 기록을 볼 수 있습니다.</p>
-            <p>타임머신의 검은 화면은 화면 전체가 보이지 않는 숫자판입니다. 아래 그림처럼 화면을 가로 3칸, 세로 4칸으로 나눠 누릅니다. 각 칸의 가운데를 누르면 그 숫자로 인식됩니다. 마지막 줄은 가운데 0만 입력되고 양옆은 무시됩니다. 숫자 두 개를 차례로 눌러 분을 입력하세요. 예: 0 다음 3은 03분, 1 다음 5는 15분입니다.</p>
-            <div class="hidden-grid-example" role="img" aria-label="검은 화면의 숫자 입력 예시. 빨간 선으로 나뉜 첫 세 줄은 왼쪽부터 1 2 3, 4 5 6, 7 8 9이며 마지막 줄 가운데는 0입니다.">
-              <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span data-digit="0">0</span>
-            </div>
-            <p class="grid-caption">빨간 선은 설명용입니다. 실제 검은 화면에는 선과 숫자가 나타나지 않습니다.</p>
-            <p>설정 열기: 잠금 화면에서 두 손가락을 아래로 쓸기<br>홈 화면 4·6자리 안내 전환: 안내 문구 탭<br>기록 초기화 후 다시 잠금: 두 손가락으로 빠르게 두 번 탭</p>
-          </details>
-          <p id="offline-status" role="status">오프라인 준비 중…</p>
-          <button id="start" type="submit">저장하고 시작</button>
-        </form>
-      </div>
-    </section>
-    <div id="toast" role="status" hidden></div>
+        </fieldset>
+      </form>
+    </div>
   </main>
-  <script type="module" src="./install-prompt.js"></script>
-  <script type="module">
-    import { FINGERPRINT_HOLD_MS, normalizeSettings, storageIdentityForPath, personalHomeReady, selectedAttemptReveal, homeSwipeTarget, completeHomeSwipe, lockScreenCopy, createState, pushDigit, submitPin, fingerprintHold, attemptFeedback, feedbackVibration, deleteDigit, clearCurrent, toggleDigits, reset, isHomeGestureArea, peekOffset, registerTwoFingerTap, settleTwoFingerTaps, registerLockTap, formatAttemptLabel } from './logic.js';
 
-    import { hiddenDigit, appendMinuteDigit, registerEmergencyTap, timeMachineOffset, isSettingsSwipe, horizontalPeekOffset } from './time-machine.js';
-
-    const $ = (id) => document.getElementById(id);
-    const STORAGE = storageIdentityForPath(location.pathname);
-    const SETTINGS_KEY = STORAGE.settingsKey;
-    const UNLOCK_ANIMATION_MS = 440;
-    document.body.classList.toggle('personal-home', STORAGE.personal);
-    $('performance-heading').textContent = STORAGE.personal ? '타임머신' : '연출';
-    $('performance-field').hidden = STORAGE.personal;
-    $('home2-field').hidden = !STORAGE.personal;
-    $('home2-preview-item').hidden = !STORAGE.personal;
-    $('reveal-attempt-field').hidden = !STORAGE.personal;
-    $('reveal-attempt').disabled = !STORAGE.personal;
-    let saved = null;
-    try { saved = JSON.parse(localStorage.getItem(SETTINGS_KEY)); } catch {}
-    const ownSettingsSaved = !!saved;
-    if (!saved && STORAGE.personal) {
-      try { saved = JSON.parse(localStorage.getItem('unlock-settings-v1')); } catch {}
-    }
-    let settings = normalizeSettings(saved && typeof saved === 'object' ? saved : {}, STORAGE.personal);
-    let state = createState(settings.digits);
-    let screen = 'settings';
-    let feedbackTimer = null;
-    let feedback = null;
-    let unlockTimer = null;
-    let fingerprintTimer = null;
-    let fingerprintPress = null;
-    let toastTimer = null;
-    let tapSequence = null;
-    let lockTapSequence = null;
-    let tapTimer = null;
-    let tapCandidate = null;
-    let swipe = null;
-    let homePage = 'home1';
-    let revealVisible = false;
-    let settingsSwipe = null;
-    let timeMinutes = 0;
-    let timeDigits = [];
-    let timeTriggeredAt = null;
-    let timeLastTap = null;
-    let emergencyLastTap = null;
-    let timeFrame = null;
-    let timePointer = null;
-    let timeSuppressUntil = 0;
-    const originals = new Map();
-    const imageURLs = new Map();
-    const previewURLs = new Map();
-    const previewBlobs = new Map();
-    const imageVersions = new Map();
-    let db = null;
-    let pendingImages = 0;
-
-    function toast(message) {
-      clearTimeout(toastTimer);
-      $('toast').textContent = message;
-      $('toast').hidden = false;
-      toastTimer = setTimeout(() => { $('toast').hidden = true; }, 2400);
-    }
-
-    function clearFeedback() {
-      clearTimeout(feedbackTimer);
-      feedback = null;
-      $('dots').classList.remove('shake');
-    }
-
-    function renderInput() {
-      $('input-screen').classList.toggle('galaxy', settings.style === 'galaxy');
-      const copy = lockScreenCopy(settings.style, state.current.length > 0);
-      $('prompt').textContent = copy.prompt;
-      $('prompt').setAttribute('aria-label', `${copy.prompt}, ${state.digits === 4 ? 6 : 4}자리로 전환`);
-      const count = feedback ? state.digits : state.current.length;
-      $('dots').replaceChildren(...Array.from({ length: state.digits }, (_, i) => {
-        const dot = document.createElement('span');
-        dot.className = 'dot' + (i < count ? ' filled' : '');
-        return dot;
-      }));
-      $('dots').setAttribute('aria-label', `${state.digits}자리 중 ${count}자리 입력`);
-      $('emergency').querySelector('span').textContent = copy.emergency;
-      $('delete').textContent = copy.trailing;
-    }
-
-    function renderAttempts() {
-      const attempts = [...state.attempts].reverse();
-      $('attempt-list').replaceChildren(...attempts.map((digits, reverseIndex) => {
-        const index = state.attempts.length - reverseIndex - 1;
-        const row = document.createElement('li');
-        const pin = document.createElement('span');
-        pin.className = 'attempt-pin';
-        pin.textContent = formatAttemptLabel(digits, index, new Date());
-        row.append(pin);
-        return row;
-      }));
-      requestAnimationFrame(() => { $('attempt-list').scrollTop = 0; });
-    }
-
-    function renderReveal() {
-      const selected = selectedAttemptReveal(state.attempts, settings.revealAttempt, new Date());
-      $('reveal-label').textContent = `${settings.revealAttempt}번째 입력 PIN`;
-      $('reveal-number').textContent = selected?.pin ?? '—';
-      $('reveal-days').hidden = selected?.days === null || selected?.days === undefined;
-      if (selected?.days !== null && selected?.days !== undefined) {
-        $('reveal-days').textContent = `태어난 지 ${selected.days.toLocaleString('ko-KR')}일`;
-      }
-    }
-
-    function setRevealVisible(visible) {
-      if (visible === revealVisible) return;
-      revealVisible = visible;
-      if (visible) renderReveal();
-      $('reveal-card').classList.toggle('visible', visible);
-      $('reveal-card').setAttribute('aria-hidden', String(!visible));
-    }
-
-    function setHomePage(next, animate = true) {
-      homePage = next;
-      const index = next === 'home2' ? 1 : 0;
-      const track = $('home-track');
-      if (animate && track.style.transition === 'none') void track.offsetWidth;
-      track.style.transition = animate ? '' : 'none';
-      track.style.transform = `translate3d(${-index * 100}%, 0, 0)`;
-    }
-
-    function showScreen(next, animate = false) {
-      clearTimeout(unlockTimer);
-      screen = next;
-      cancelAnimationFrame(timeFrame);
-      timePointer = null;
-      timeLastTap = null;
-      emergencyLastTap = null;
-      $('time-black').hidden = next !== 'time-black';
-      $('time-lock').hidden = next !== 'time-lock';
-      $('time-lock').classList.toggle('galaxy', settings.style === 'galaxy');
-      if (next === 'time-lock') renderTimeMachine();
-      $('input-screen').hidden = next !== 'input' && !(next === 'unlocked' && animate);
-      $('unlocked-screen').hidden = next !== 'unlocked';
-      $('peek-screen').hidden = next !== 'unlocked' || animate;
-      $('settings-screen').hidden = next !== 'settings';
-      $('input-screen').classList.remove('unlocking-out');
-      $('unlocked-screen').classList.remove('unlocking');
-      $('unlocked-screen').style.transform = 'translateY(0px)';
-      swipe = null;
-      setRevealVisible(false);
-      if (next === 'input') renderInput();
-      if (next === 'unlocked') {
-        renderAttempts();
-        setHomePage('home1', false);
-        requestAnimationFrame(() => { $('home-track').style.transition = ''; });
-        if (animate) {
-          void $('unlocked-screen').offsetWidth;
-          $('input-screen').classList.add('unlocking-out');
-          $('unlocked-screen').classList.add('unlocking');
-          unlockTimer = setTimeout(() => {
-            $('input-screen').hidden = true;
-            $('peek-screen').hidden = false;
-            $('input-screen').classList.remove('unlocking-out');
-            $('unlocked-screen').classList.remove('unlocking');
-            clearFeedback();
-          }, UNLOCK_ANIMATION_MS);
-        }
-      }
-      if (next === 'settings') { populateForm(); $('settings-screen').scrollTop = 0; }
-    }
-
-    function handleAttemptOutcome(previousCount) {
-      const outcome = attemptFeedback(state, previousCount);
-      const pattern = feedbackVibration(outcome, settings.vibration);
-      if (pattern.length && typeof navigator.vibrate === 'function') {
-        try { navigator.vibrate(pattern); } catch {}
-      }
-      if (outcome === 'success') {
-        feedback = state.attempts.at(-1);
-        renderInput();
-        showScreen('unlocked', true);
-        return true;
-      }
-      if (outcome === 'failure') {
-        feedback = state.attempts.at(-1);
-        $('dots').classList.add('shake');
-        feedbackTimer = setTimeout(() => {
-          clearFeedback();
-          renderInput();
-        }, 420);
-      }
-      renderInput();
-      return outcome !== 'pending';
-    }
-
-    function inputDigit(digit) {
-      if (screen !== 'input' || feedback) return;
-      const previousCount = state.attempts.length;
-      const autoSubmit = settings.style !== 'galaxy';
-      const unlockAttempt = settings.unlockMode === 'attempt' ? settings.unlockAttempt : null;
-      state = pushDigit(state, digit, performance.now(), settings.delaySeconds * 1000, autoSubmit, unlockAttempt);
-      if (state.attempts.length > previousCount) handleAttemptOutcome(previousCount);
-      else renderInput();
-    }
-
-    const letters = ['', '', 'abc', 'def', 'ghi', 'jkl', 'mno', 'pqrs', 'tuv', 'wxyz'];
-    for (const digit of [1, 2, 3, 4, 5, 6, 7, 8, 9, 0]) {
-      const key = document.createElement('button');
-      key.type = 'button';
-      key.className = 'key';
-      key.dataset.digit = digit;
-      key.setAttribute('aria-label', String(digit));
-      const number = document.createElement('span');
-      number.className = 'number';
-      number.textContent = digit;
-      const alphabet = document.createElement('span');
-      alphabet.className = 'letters';
-      alphabet.textContent = letters[digit];
-      key.append(number, alphabet);
-      key.addEventListener('click', () => inputDigit(digit));
-      $('keypad').append(key);
-    }
-
-    function addActionKey(action, label, svg) {
-      const key = document.createElement('button');
-      key.type = 'button';
-      key.className = 'key galaxy-only';
-      key.dataset.action = action;
-      key.setAttribute('aria-label', label);
-      key.innerHTML = svg;
-      $('keypad').append(key);
-      return key;
-    }
-    const backspaceKey = addActionKey('backspace', '한 자리 삭제', '<svg class="action-icon" viewBox="0 0 32 32" aria-hidden="true"><path d="M13 8h13a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3H13L4 16l9-8Z"/><path d="m17 12 7 8m0-8-7 8"/></svg>');
-    const confirmKey = addActionKey('confirm', 'PIN 확인', '<svg class="action-icon" viewBox="0 0 32 32" aria-hidden="true"><path d="m7 16 6 6L26 9"/></svg>');
-
-    $('prompt').addEventListener('click', () => {
-      if (state.unlocked) return;
-      clearFeedback();
-      state = toggleDigits(state);
-      renderInput();
-    });
-    function removeDigit() {
-      if (feedback) return;
-      state = state.current.length ? deleteDigit(state) : clearCurrent(state);
-      renderInput();
-    }
-    $('delete').addEventListener('click', removeDigit);
-    $('emergency').addEventListener('click', () => {
-      if (screen !== 'input' || settings.performance !== 'time-machine') return;
-      const result = registerEmergencyTap(emergencyLastTap, performance.now());
-      emergencyLastTap = result.lastTap;
-      if (result.enter) {
-        timeDigits = [];
-        timeMinutes = 0;
-        timeTriggeredAt = null;
-        showScreen('time-black');
-      }
-    });
-    backspaceKey.addEventListener('click', removeDigit);
-    confirmKey.addEventListener('click', () => {
-      if (screen !== 'input' || settings.style !== 'galaxy' || feedback) return;
-      const previousCount = state.attempts.length;
-      const unlockAttempt = settings.unlockMode === 'attempt' ? settings.unlockAttempt : null;
-      state = submitPin(state, performance.now(), settings.delaySeconds * 1000, unlockAttempt);
-      handleAttemptOutcome(previousCount);
-    });
-
-    function releaseFingerprint(pointerId, pulse) {
-      clearTimeout(fingerprintTimer);
-      fingerprintTimer = null;
-      fingerprintPress = null;
-      $('fingerprint').classList.remove('holding');
-      if ($('fingerprint').hasPointerCapture(pointerId)) $('fingerprint').releasePointerCapture(pointerId);
-      if (pulse) {
-        $('fingerprint').classList.remove('pulse');
-        void $('fingerprint').offsetWidth;
-        $('fingerprint').classList.add('pulse');
-      }
-    }
-    $('fingerprint').addEventListener('pointerdown', (event) => {
-      if (screen !== 'input' || settings.style !== 'galaxy' || feedback || fingerprintPress) return;
-      fingerprintPress = { pointerId: event.pointerId, startedAt: performance.now() };
-      $('fingerprint').setPointerCapture(event.pointerId);
-      $('fingerprint').classList.add('holding');
-      fingerprintTimer = setTimeout(() => {
-        if (!fingerprintPress) return;
-        const previousCount = state.attempts.length;
-        state = fingerprintHold(state, FINGERPRINT_HOLD_MS, performance.now());
-        const pointerId = fingerprintPress.pointerId;
-        releaseFingerprint(pointerId, false);
-        handleAttemptOutcome(previousCount);
-      }, FINGERPRINT_HOLD_MS);
-      event.preventDefault();
-    });
-    $('fingerprint').addEventListener('pointerup', (event) => {
-      if (!fingerprintPress || fingerprintPress.pointerId !== event.pointerId) return;
-      releaseFingerprint(event.pointerId, true);
-      event.preventDefault();
-    });
-    $('fingerprint').addEventListener('pointercancel', (event) => {
-      if (fingerprintPress?.pointerId === event.pointerId) releaseFingerprint(event.pointerId, false);
-    });
-    $('fingerprint').addEventListener('contextmenu', (event) => event.preventDefault());
-    document.addEventListener('keydown', (event) => {
-      if (screen !== 'input' || event.ctrlKey || event.metaKey || event.altKey) return;
-      if (/^[0-9]$/.test(event.key)) { event.preventDefault(); inputDigit(Number(event.key)); }
-      if (event.key === 'Backspace') { event.preventDefault(); removeDigit(); }
-      if (event.key === 'Enter' && settings.style === 'galaxy') { event.preventDefault(); confirmKey.click(); }
-    });
-
-    function gestureAction(action) {
-      if (!action) return;
-      clearFeedback();
-      if (action === 'reset') { state = reset(state); timeDigits = []; timeTriggeredAt = null; showScreen('input'); }
-      if (action === 'settings') { state = clearCurrent(state); showScreen('settings'); }
-    }
-
-    function finishTap() {
-      const now = performance.now();
-      const expired = settleTwoFingerTaps(tapSequence, now);
-      tapSequence = expired.sequence;
-      gestureAction(expired.action);
-      const result = registerTwoFingerTap(tapSequence, now, screen);
-      tapSequence = result.sequence;
-      if (result.action !== 'settings') gestureAction(result.action);
-      clearTimeout(tapTimer);
-      if (tapSequence) {
-        tapTimer = setTimeout(() => {
-          const result = settleTwoFingerTaps(tapSequence, performance.now());
-          tapSequence = result.sequence;
-          gestureAction(result.action);
-        }, Math.max(0, tapSequence.startedAt + 1200 - now) + 1);
-      }
-    }
-
-    function returnSwipe() {
-      $('unlocked-screen').classList.add('returning');
-      $('unlocked-screen').style.transform = 'translateY(0px)';
-      if (STORAGE.personal) setHomePage(homePage);
-      swipe = null;
-    }
-
-    document.addEventListener('touchstart', (event) => {
-      if (screen === 'settings') return;
-      if (event.touches.length === 2) {
-        setRevealVisible(false);
-        settingsSwipe = Array.from(event.touches, (t) => ({id:t.identifier,x:t.clientX,y:t.clientY}));
-        timePointer = null;
-        timeLastTap = null;
-        timeSuppressUntil = performance.now() + 800;
-        event.preventDefault();
-        returnSwipe();
-        tapCandidate = {
-          startedAt: performance.now(), valid: true,
-          points: Array.from(event.touches, (t) => ({ id: t.identifier, x: t.clientX, y: t.clientY })),
-        };
-      } else if (event.touches.length > 2) {
-        settingsSwipe = null;
-        if (tapCandidate) tapCandidate.valid = false;
-        returnSwipe();
-      } else if (screen === 'unlocked' && event.touches.length === 1) {
-        setRevealVisible(false);
-        const touch = event.touches[0];
-        if (!STORAGE.personal && isHomeGestureArea(touch.clientX, touch.clientY, window.innerWidth, window.innerHeight)) return;
-        swipe = { id: touch.identifier, x: touch.clientX, y: touch.clientY, axis: null };
-        $('unlocked-screen').classList.remove('returning');
-      }
-    }, { passive: false });
-
-    document.addEventListener('touchmove', (event) => {
-      if (screen === 'settings') return;
-      if (settingsSwipe && event.touches.length === 2 && isSettingsSwipe(settingsSwipe,
-          Array.from(event.touches, (t) => ({id:t.identifier,x:t.clientX,y:t.clientY})))) {
-        event.preventDefault();
-        settingsSwipe = null;
-        tapCandidate = null;
-        tapSequence = null;
-        clearTimeout(tapTimer);
-        gestureAction('settings');
-        return;
-      }
-      if (tapCandidate) {
-        for (const touch of event.touches) {
-          const start = tapCandidate.points.find((p) => p.id === touch.identifier);
-          if (!start || Math.hypot(touch.clientX - start.x, touch.clientY - start.y) > 10) tapCandidate.valid = false;
-        }
-        event.preventDefault();
-      }
-      if (swipe && event.touches.length === 1) {
-        const touch = event.touches[0];
-        if (touch.identifier !== swipe.id) return;
-        event.preventDefault();
-        const dx = touch.clientX - swipe.x, dy = touch.clientY - swipe.y;
-        if (!swipe.axis && Math.hypot(dx, dy) >= 10) swipe.axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
-        if (STORAGE.personal && swipe.axis === 'x') {
-          const reveal = homeSwipeTarget(homePage, dx, dy, originals.has('home2'), false, $('app').clientWidth).revealVisible;
-          setRevealVisible(reveal);
-          const index = homePage === 'home2' ? 1 : 0;
-          const width = $('app').clientWidth;
-          const drag = Math.max(index === 0 && originals.has('home2') ? -width : 0,
-            Math.min(index === 1 ? width : 0, dx));
-          $('home-track').style.transition = 'none';
-          $('home-track').style.transform = `translate3d(calc(${-index * 100}% + ${drag}px), 0, 0)`;
-          return;
-        }
-        $('peek-screen').classList.toggle('side-peek', swipe.axis === 'x');
-        const offset = swipe.axis === 'x'
-          ? horizontalPeekOffset(swipe.x, touch.clientX, $('app').clientWidth)
-          : peekOffset(swipe.y, touch.clientY, $('app').clientHeight);
-        $('unlocked-screen').style.transform = swipe.axis === 'x' ? `translateX(${offset}px)` : `translateY(${offset}px)`;
-      }
-    }, { passive: false });
-
-    document.addEventListener('touchend', (event) => {
-      if (screen === 'settings') return;
-      if (tapCandidate) {
-        event.preventDefault();
-        for (const touch of event.changedTouches) {
-          const start = tapCandidate.points.find((p) => p.id === touch.identifier);
-          if (!start || Math.hypot(touch.clientX - start.x, touch.clientY - start.y) > 10) tapCandidate.valid = false;
-        }
-        if (event.touches.length === 0) {
-          const valid = tapCandidate.valid && performance.now() - tapCandidate.startedAt <= 300;
-          tapCandidate = null;
-          if (valid) finishTap();
-        }
-      }
-      if (swipe) {
-        if (STORAGE.personal && event.changedTouches.length === 1) {
-          const touch = event.changedTouches[0];
-          if (touch.identifier === swipe.id) {
-            const target = completeHomeSwipe(homePage, touch.clientX - swipe.x, touch.clientY - swipe.y,
-              originals.has('home2'), $('app').clientWidth);
-            if (!target.peek) homePage = target.page;
-            setRevealVisible(target.revealVisible);
-          }
-        }
-        returnSwipe();
-      }
-    }, { passive: false });
-    document.addEventListener('touchcancel', () => { settingsSwipe = null; timePointer = null; tapCandidate = null; setRevealVisible(false); returnSwipe(); });
-    window.addEventListener('blur', () => { tapCandidate = null; setRevealVisible(false); returnSwipe(); });
-
-    function populateForm() {
-      $('performance').value = settings.performance;
-      $('time-delay').value = settings.timeDelay;
-      $('time-duration').value = settings.timeDuration;
-      $('style').value = settings.style;
-      $('digits').value = settings.digits;
-      $('unlock-mode').value = settings.unlockMode;
-      $('unlock-attempt').value = settings.unlockAttempt;
-      $('reveal-attempt').value = settings.revealAttempt;
-      $('vibration').checked = settings.vibration;
-      $('delay').value = settings.delaySeconds;
-      $('crop').value = settings.cropTop;
-      $('position').value = settings.imagePosition;
-      $('status-style').value = settings.statusStyle;
-      $('status-color').value = settings.statusColor;
-      updateUnlockControls();
-    }
-
-    function formSettings() {
-      return normalizeSettings({ performance: $('performance').value, timeDelay: $('time-delay').value, timeDuration: $('time-duration').value, style: $('style').value, digits: Number($('digits').value), unlockMode: $('unlock-mode').value,
-        unlockAttempt: $('unlock-attempt').value, revealAttempt: $('reveal-attempt').value, vibration: $('vibration').checked, delaySeconds: $('delay').value,
-        cropTop: $('crop').value, imagePosition: $('position').value, statusStyle: $('status-style').value, statusColor: $('status-color').value }, STORAGE.personal);
-    }
-
-    function updateUnlockControls() {
-      $('time-options').hidden = !STORAGE.personal && $('performance').value !== 'time-machine';
-      const attemptMode = $('unlock-mode').value === 'attempt';
-      $('delay-field').hidden = attemptMode;
-      $('attempt-field').hidden = !attemptMode;
-      $('delay').disabled = attemptMode;
-      $('unlock-attempt').disabled = !attemptMode;
-    }
-
-    function applyAppearance(value) {
-      document.documentElement.style.setProperty('--status-color', value.statusColor);
-      document.querySelector('meta[name="theme-color"]').content = value.statusColor;
-      document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]').content = value.statusStyle;
-      for (const id of ['lock-image', 'unlock-image', 'home2-image', 'time-wallpaper', 'lock-preview', 'unlock-preview', 'home2-preview']) {
-        $(id).style.objectPosition = `50% ${value.imagePosition}%`;
-      }
-      for (const preview of document.querySelectorAll('.preview')) {
-        const naturalHeight = Number(preview.dataset.naturalHeight);
-        const percent = naturalHeight > 0 ? Math.min(100, value.cropTop / naturalHeight * 100) : 0;
-        preview.querySelector('.crop-overlay').style.height = `${percent}%`;
-        const handle = preview.querySelector('.crop-handle');
-        handle.style.top = `${percent}%`;
-        handle.setAttribute('aria-valuenow', String(value.cropTop));
-      }
-    }
-
-    function openDB() {
-      return new Promise((resolve, reject) => {
-        let blocked = false;
-        const request = indexedDB.open(STORAGE.imageDb, 1);
-        request.onupgradeneeded = () => request.result.createObjectStore('images');
-        request.onsuccess = () => {
-          if (blocked) request.result.close();
-          else resolve(request.result);
-        };
-        request.onerror = () => reject(request.error);
-        request.onblocked = () => {
-          blocked = true;
-          reject(new Error('다른 언락 창을 닫고 다시 실행해 주세요.'));
-        };
-      });
-    }
-
-    function readImage(key) {
-      return new Promise((resolve, reject) => {
-        const request = db.transaction('images').objectStore('images').get(key);
-        request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error);
-      });
-    }
-
-    function saveImage(key, blob) {
-      return new Promise((resolve, reject) => {
-        const transaction = db.transaction('images', 'readwrite');
-        transaction.objectStore('images').put(blob, key);
-        transaction.oncomplete = resolve;
-        transaction.onerror = () => reject(transaction.error);
-        transaction.onabort = () => reject(transaction.error);
-      });
-    }
-
-    function decodeImage(blob) {
-      return new Promise((resolve, reject) => {
-        const url = URL.createObjectURL(blob);
-        const img = new Image();
-        img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
-        img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('이미지를 읽을 수 없습니다.')); };
-        img.src = url;
-      });
-    }
-
-    async function displayImage(key, cropTop) {
-      const blob = originals.get(key);
-      if (!blob) return;
-      const version = (imageVersions.get(key) ?? 0) + 1;
-      imageVersions.set(key, version);
-      const img = await decodeImage(blob);
-      const preview = $(`${key}-preview`);
-      if (previewBlobs.get(key) !== blob) {
-        const previewURL = URL.createObjectURL(blob);
-        const previousPreviewURL = previewURLs.get(key);
-        previewURLs.set(key, previewURL);
-        previewBlobs.set(key, blob);
-        preview.src = previewURL;
-        preview.hidden = false;
-        if (previousPreviewURL) URL.revokeObjectURL(previousPreviewURL);
-      }
-      preview.closest('.preview').dataset.naturalHeight = img.naturalHeight;
-      let displayBlob = blob;
-      const crop = Math.min(cropTop, img.naturalHeight - 1);
-      if (crop > 0) {
-        const canvas = document.createElement('canvas');
-        canvas.width = img.naturalWidth;
-        canvas.height = img.naturalHeight - crop;
-        canvas.getContext('2d').drawImage(img, 0, crop, canvas.width, canvas.height, 0, 0, canvas.width, canvas.height);
-        displayBlob = await new Promise((resolve, reject) => canvas.toBlob((result) => result ? resolve(result) : reject(new Error('이미지 처리 실패')), 'image/png'));
-      }
-      if (imageVersions.get(key) !== version) return;
-      const url = URL.createObjectURL(displayBlob);
-      const previous = imageURLs.get(key);
-      imageURLs.set(key, url);
-      $(`${key}-image`).src = url;
-      $(`${key}-image`).hidden = false;
-      if (key === 'lock') { $('time-wallpaper').src = url; $('time-wallpaper').hidden = false; }
-      if (previous) URL.revokeObjectURL(previous);
-      $(`${key}-info`).textContent = `등록됨 · ${img.naturalWidth} × ${img.naturalHeight}`;
-      applyAppearance(formSettings());
-    }
-
-    async function refreshCroppedImages() {
-      try { await Promise.all((STORAGE.personal ? ['lock', 'unlock', 'home2'] : ['lock', 'unlock']).map((key) => displayImage(key, formSettings().cropTop))); }
-      catch { $('storage-status').textContent = '미리보기 처리 실패. 잘라낼 높이와 이미지를 확인하세요.'; }
-    }
-
-    let alignmentDrag = null;
-    for (const preview of document.querySelectorAll('.preview')) {
-      preview.addEventListener('pointerdown', (event) => {
-        const naturalHeight = Number(preview.dataset.naturalHeight);
-        if (!(naturalHeight > 0)) { toast('먼저 이미지를 등록하세요.'); return; }
-        const rect = preview.getBoundingClientRect();
-        const boundaryY = rect.top + rect.height * formSettings().cropTop / naturalHeight;
-        const cropMode = event.target.closest('.crop-handle') || Math.abs(event.clientY - boundaryY) <= 22;
-        alignmentDrag = {
-          preview, mode: cropMode ? 'crop' : 'position', startY: event.clientY,
-          startPosition: formSettings().imagePosition, naturalHeight,
-        };
-        preview.setPointerCapture(event.pointerId);
-        event.preventDefault();
-      });
-      preview.addEventListener('pointermove', (event) => {
-        if (!alignmentDrag || alignmentDrag.preview !== preview) return;
-        const rect = preview.getBoundingClientRect();
-        if (alignmentDrag.mode === 'crop') {
-          const ratio = Math.max(0, Math.min(1, (event.clientY - rect.top) / rect.height));
-          $('crop').value = Math.min(2000, Math.round(ratio * alignmentDrag.naturalHeight));
-        } else {
-          const next = alignmentDrag.startPosition - (event.clientY - alignmentDrag.startY) / rect.height * 100;
-          $('position').value = Math.round(Math.max(0, Math.min(100, next)));
-        }
-        applyAppearance(formSettings());
-        event.preventDefault();
-      });
-      const finishAlignmentDrag = (event) => {
-        if (!alignmentDrag || alignmentDrag.preview !== preview) return;
-        const shouldCrop = alignmentDrag.mode === 'crop';
-        alignmentDrag = null;
-        if (preview.hasPointerCapture(event.pointerId)) preview.releasePointerCapture(event.pointerId);
-        if (shouldCrop) refreshCroppedImages();
-      };
-      preview.addEventListener('pointerup', finishAlignmentDrag);
-      preview.addEventListener('pointercancel', finishAlignmentDrag);
-      preview.querySelector('.crop-handle').addEventListener('keydown', (event) => {
-        if (!['ArrowUp', 'ArrowDown'].includes(event.key)) return;
-        const step = event.shiftKey ? 10 : 1;
-        $('crop').value = Math.max(0, Math.min(2000, formSettings().cropTop + (event.key === 'ArrowDown' ? step : -step)));
-        applyAppearance(formSettings());
-        refreshCroppedImages();
-        event.preventDefault();
-      });
-    }
-
-    for (const key of (STORAGE.personal ? ['lock', 'unlock', 'home2'] : ['lock', 'unlock'])) {
-      $(`${key}-file`).addEventListener('change', async (event) => {
-        const file = event.target.files[0];
-        if (!file) return;
-        let stored = false;
-        pendingImages += 1;
-        event.target.disabled = true;
-        $('start').disabled = true;
-        try {
-          if (!db) throw new Error('이미지 저장소를 사용할 수 없습니다.');
-          await decodeImage(file);
-          await saveImage(key, file);
-          stored = true;
-          originals.set(key, file);
-          await displayImage(key, formSettings().cropTop);
-          $('storage-status').textContent = '이미지를 이 기기의 IndexedDB에 저장했습니다.';
-        } catch (error) {
-          $('storage-status').textContent = stored
-            ? '이미지는 저장했지만 미리보기를 만들지 못했습니다. 잘라낼 높이를 줄이고 다시 시작하세요.'
-            : `이미지 등록 실패: ${error.message} 저장 공간과 파일 형식을 확인하세요.`;
-        } finally {
-          pendingImages -= 1;
-          event.target.disabled = false;
-          $('start').disabled = pendingImages > 0;
-          event.target.value = '';
-        }
-      });
-    }
-
-    function renderTimeMachine() {
-      if (screen !== 'time-lock') return;
-      const offset = timeMachineOffset(timeMinutes, timeTriggeredAt, performance.now(), settings.timeDelay, settings.timeDuration);
-      const date = new Date(Date.now() + offset);
-      $('time-date').textContent = date.toLocaleDateString('ko-KR', {month:'long',day:'numeric',weekday:'long'});
-      const hour = String(date.getHours()).padStart(2, '0');
-      const minute = String(date.getMinutes()).padStart(2, '0');
-      for (const [id, value] of [['time-hour', hour], ['time-minute', minute]]) {
-        const element = $(id);
-        if (element.textContent === value) continue;
-        const hadValue = element.textContent.length > 0;
-        element.textContent = value;
-        if (hadValue && timeTriggeredAt !== null && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
-          element.getAnimations().forEach((animation) => animation.cancel());
-          element.animate([
-            { opacity: .12, transform: 'translateY(-13px)', filter: 'blur(5px)' },
-            { opacity: 1, transform: 'translateY(0)', filter: 'blur(0)' },
-          ], { duration: 650, easing: 'cubic-bezier(.18,.75,.2,1)' });
-        }
-      }
-      $('time-clock').dateTime = date.toISOString();
-      $('time-clock').setAttribute('aria-label', `${hour}시 ${minute}분`);
-      timeFrame = requestAnimationFrame(renderTimeMachine);
-    }
-
-    for (const id of ['time-black', 'time-lock']) {
-      $(id).addEventListener('pointerdown', (event) => {
-        if (!event.isPrimary || performance.now() < timeSuppressUntil) { timePointer = null; return; }
-        timePointer = {id:event.pointerId,x:event.clientX,y:event.clientY,at:performance.now()};
-      });
-      $(id).addEventListener('pointercancel', () => { timePointer = null; });
-      $(id).addEventListener('pointerup', (event) => {
-        const point = timePointer;
-        timePointer = null;
-        if (!point || point.id !== event.pointerId || performance.now() < timeSuppressUntil
-            || performance.now() - point.at > 500 || Math.hypot(event.clientX-point.x,event.clientY-point.y)>12) return;
-        if (screen === 'time-black') {
-          const rect = $('time-black').getBoundingClientRect();
-          const digit = hiddenDigit(event.clientX-rect.left,event.clientY-rect.top,rect.width,rect.height);
-          if (digit === null) return;
-          const entry = appendMinuteDigit(timeDigits, digit);
-          timeDigits = entry.digits;
-          if (entry.minutes === null) return;
-          timeMinutes = entry.minutes; timeTriggeredAt = null;
-          showScreen('time-lock');
-        } else if (screen === 'time-lock' && timeTriggeredAt === null) {
-          const now = performance.now();
-          if (timeLastTap !== null && now - timeLastTap <= 450) { timeTriggeredAt = now; timeLastTap = null; }
-          else timeLastTap = now;
-        }
-      });
-    }
-
-    $('settings-form').addEventListener('input', () => { updateUnlockControls(); applyAppearance(formSettings()); });
-    $('crop').addEventListener('change', refreshCroppedImages);
-    $('settings-form').addEventListener('submit', async (event) => {
-      event.preventDefault();
-      if (pendingImages > 0) return;
-      if (STORAGE.personal && !personalHomeReady(originals)) {
-        $('storage-status').textContent = '홈 1·홈 2 화면 이미지를 모두 등록해야 시작할 수 있습니다. 위의 이미지 2장을 확인해 주세요.';
-        $('home2-field').scrollIntoView({ block: 'center', behavior: 'smooth' });
-        return;
-      }
-      settings = formSettings();
-      $('start').disabled = true;
-      try {
-        await Promise.all((STORAGE.personal ? ['lock', 'unlock', 'home2'] : ['lock', 'unlock']).map((key) => displayImage(key, settings.cropTop)));
-        applyAppearance(settings);
-        try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); }
-        catch { toast('설정을 저장하지 못했습니다. 이번 실행에만 적용됩니다.'); }
-        state = createState(settings.digits);
-        tapSequence = null;
-        clearTimeout(tapTimer);
-        timeTriggeredAt = null;
-        timeDigits = [];
-        showScreen('input');
-      } catch { $('storage-status').textContent = '이미지 처리 실패. 잘라낼 높이와 이미지를 확인하세요.'; }
-      finally { $('start').disabled = false; }
-    });
-
-    async function prepareOffline() {
-      if (!('serviceWorker' in navigator)) {
-        $('offline-status').textContent = '오프라인 저장 불가: 보안 연결 또는 localhost로 열어 주세요.';
-        return;
-      }
-      try {
-        const registration = await navigator.serviceWorker.register('./sw.js');
-        const updateStatus = () => {
-          if (navigator.serviceWorker.controller) $('offline-status').textContent = '오프라인 준비 완료 · 홈 화면에 추가한 뒤 비행기 모드에서 확인하세요.';
-        };
-        navigator.serviceWorker.addEventListener('controllerchange', updateStatus);
-        const watch = (worker) => {
-          if (!worker) return;
-          worker.addEventListener('statechange', () => {
-            if (worker.state === 'redundant') $('offline-status').textContent = '오프라인 파일 저장 실패. 연결 상태를 확인하고 다시 여세요.';
-            updateStatus();
-          });
-        };
-        watch(registration.installing);
-        registration.addEventListener('updatefound', () => watch(registration.installing));
-        updateStatus();
-      } catch { $('offline-status').textContent = '오프라인 준비 실패. 보안 연결 또는 localhost에서 다시 열어 주세요.'; }
-    }
-
-    populateForm();
-    applyAppearance(settings);
-    showScreen('settings');
-    $('start').disabled = true;
-    for (const key of (STORAGE.personal ? ['lock', 'unlock', 'home2'] : ['lock', 'unlock'])) $(`${key}-file`).disabled = true;
-    prepareOffline();
-    try {
-      db = await openDB();
-      db.onversionchange = () => { db.close(); db = null; };
-      for (const key of (STORAGE.personal ? ['lock', 'unlock', 'home2'] : ['lock', 'unlock'])) {
-        const blob = await readImage(key);
-        if (blob) { originals.set(key, blob); await displayImage(key, settings.cropTop); }
-      }
-      $('storage-status').textContent = '이미지는 IndexedDB에 저장됩니다. 시도 기록은 앱을 다시 열면 지워집니다.';
-      if (ownSettingsSaved && originals.has('lock') && originals.has('unlock')
-          && (!STORAGE.personal || personalHomeReady(originals))) showScreen('input');
-      else if (STORAGE.personal) $('storage-status').textContent = '잠금·홈 1·홈 2 이미지를 이 설정에서 모두 등록해 주세요. 홈 2 이미지가 없으면 화면 전환을 시작할 수 없습니다.';
-    } catch (error) { $('storage-status').textContent = `이미지 저장소를 불러오지 못했습니다. ${error.message} 기본 배경으로 연습할 수 있습니다.`; }
-    finally {
-      $('start').disabled = false;
-      for (const key of (STORAGE.personal ? ['lock', 'unlock', 'home2'] : ['lock', 'unlock'])) $(`${key}-file`).disabled = false;
-    }
-  </script>
+  <section id="stage" class="stage" hidden>
+    <canvas id="stage-canvas" tabindex="0" aria-label="공연 화면"></canvas>
+    <div id="cell-guide" class="cell-guide" hidden aria-hidden="true" style="pointer-events:none"></div>
+  </section>
+  <noscript>
+    <p class="noscript">이 도구는 자바스크립트가 필요합니다. 네트워크 연결은 필요하지 않습니다.</p>
+  </noscript>
+  <script type="module" src="./app.js"></script>
 </body>
 </html>

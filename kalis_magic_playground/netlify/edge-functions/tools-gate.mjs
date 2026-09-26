@@ -26,8 +26,8 @@ function analyzePath(rawPathname) {
   }
 
   const pathname = lowerPath.replace(/\/{2,}/g, '/');
-  if (pathname === '/zz5' || pathname.startsWith('/zz5/') ||
-      pathname === '/zz6' || pathname.startsWith('/zz6/')) {
+  if (['/zz1', '/zz2', '/zz3', '/zz4', '/zz5', '/zz6', '/zz7'].some((route) =>
+    pathname === route || pathname.startsWith(`${route}/`))) {
     return { mode: 'public', pathname };
   }
   const isToolsPath = pathname === '/tools' || pathname.startsWith('/tools/');

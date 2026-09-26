@@ -1,32 +1,91 @@
-const CACHE_PREFIX = 'unlock-' + encodeURIComponent(self.registration.scope) + '-';
-const CACHE_NAME = CACHE_PREFIX + 'v16';
-// ⚠️ cache.addAll 은 하나라도 실패하면 전체가 거부되어 오프라인이 통째로 깨진다.
-//    배포본에 실제로 존재하는 파일만 넣을 것. selftest.mjs·README.md 는 배포하지 않는다.
-const FILES = ['./index.html', './logic.js', './time-machine.js', './install-prompt.js', './manifest.webmanifest', './sw.js',
-  './icon-192.png', './icon-512.png', './icon-maskable-192.png', './icon-maskable-512.png', './icon.svg'];
+// Network-first cache for the ALETHEIA app shell only.
+const CACHE_NAME = 'aletheia-shell-v3';
+
+const SHELL = [
+  './index.html',
+  './style.css',
+  './app.js',
+  './logic.js',
+  './manifest.webmanifest',
+  './icon.svg',
+  './brand-logo.jpg',
+  './brand-logo.png',
+];
+
+const SHELL_NAMES = new Set([
+  'index.html',
+  'style.css',
+  'app.js',
+  'logic.js',
+  'manifest.webmanifest',
+  'icon.svg',
+  'brand-logo.jpg',
+  'brand-logo.png',
+]);
+
+function relativePath(rawUrl) {
+  const url = new URL(rawUrl);
+  if (!url.href.startsWith(self.registration.scope)) return null;
+  return url.href.slice(self.registration.scope.length).split('#')[0].split('?')[0];
+}
+
+function isShellUrl(rawUrl) {
+  const relative = relativePath(rawUrl);
+  if (relative == null) return false;
+  return relative === '' || SHELL_NAMES.has(relative);
+}
+
+function offlineResponse() {
+  return new Response('오프라인 상태이며 저장된 화면이 없습니다.', {
+    status: 503,
+    headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+  });
+}
+
+async function networkFirst(event) {
+  const cache = await caches.open(CACHE_NAME);
+  try {
+    const response = await fetch(event.request);
+    if (response && response.ok && !response.redirected) {
+      try {
+        await cache.put(event.request, response.clone());
+      } catch {
+        // Keep the fresh response even when the cache cannot be updated.
+      }
+    }
+    return response;
+  } catch {
+    const cached = await cache.match(event.request, { ignoreSearch: true });
+    if (cached) return cached;
+    if (event.request.mode === 'navigate') {
+      return (await cache.match('./index.html'))
+        || (await cache.match('./'))
+        || offlineResponse();
+    }
+    return offlineResponse();
+  }
+}
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(FILES)).then(() => self.skipWaiting()));
+  event.waitUntil((async () => {
+    const cache = await caches.open(CACHE_NAME);
+    await cache.addAll(SHELL);
+    await self.skipWaiting();
+  })());
 });
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(caches.keys().then((names) => Promise.all(
-    names.filter((name) => name.startsWith(CACHE_PREFIX) && name !== CACHE_NAME)
-      .map((name) => caches.delete(name)),
-  )).then(() => self.clients.claim()));
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(keys
+      .filter((key) => key.startsWith('aletheia-shell-') && key !== CACHE_NAME)
+      .map((key) => caches.delete(key)));
+    await self.clients.claim();
+  })());
 });
 
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
-  const url = new URL(event.request.url);
-  if (url.origin !== self.location.origin || !url.href.startsWith(self.registration.scope)) return;
-  event.respondWith(caches.open(CACHE_NAME).then(async (cache) => {
-    if (event.request.mode === 'navigate') {
-      return fetch(event.request).catch(() => cache.match('./index.html'));
-    }
-    return fetch(event.request).catch(async () => (
-      await cache.match(event.request, { ignoreSearch: true })
-      || new Response('', { status: 404, statusText: 'Not cached' })
-    ));
-  }));
+  if (!isShellUrl(event.request.url)) return;
+  event.respondWith(networkFirst(event));
 });

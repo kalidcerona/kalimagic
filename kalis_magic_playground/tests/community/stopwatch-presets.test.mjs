@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { applyPresetSlot, loadNamedPresets, saveNamedPresets, normalizeNamedPreset, resolveSequenceStop } from '../../zz6/logic.js';
+import { applyPresetSlot, loadNamedPresets, saveNamedPresets, normalizeNamedPreset, resolveSequenceStop } from '../../zz1/logic.js';
 
 test('applying a text preset disables trick 3 left active by another preset', () => {
   const result = applyPresetSlot({ kind: 'text', value: 'KALI' }, {

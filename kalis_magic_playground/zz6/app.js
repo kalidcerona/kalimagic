@@ -1,0 +1,884 @@
+import {
+  GESTURE_THRESHOLD,
+  LIMITS,
+  RECOVERY_KEY,
+  STORAGE_KEY,
+  centerFromPointer,
+  coinMetrics,
+  contactCenter,
+  defaultPreset,
+  exitReached,
+  exitVisual,
+  fadeDistancePx,
+  grabOffset,
+  leadingEdgeOvershoot,
+  nextPresetName,
+  normalizedToStage,
+  outwardOffset,
+  parseStoredState,
+  restingCenter,
+  sanitizePreset,
+  serializeState,
+  stageToNormalized,
+  travelDistancePx,
+  classifyTwoFingerSwipe,
+} from './logic.js';
+
+const NOTICE_KEY = 'tobira.v1.notice';
+const SESSION_GONE = 'tobira.session-gone';
+const PREVIOUS_RECOVERY_KEY = `${RECOVERY_KEY}.previous`;
+// Appearance is global. It must not be written into the preset schema.
+const OBJECT_KIND_KEY = 'tobira.objectKind.v1';
+const OBJECT_KIND_CLASS = Object.freeze({
+  coin: 'kind-coin',
+  'playing card': 'kind-playing-card',
+  'business card': 'kind-business-card',
+});
+const EDGE_ORDER = ['top', 'left', 'right', 'bottom'];
+const MARK_MS = 460;
+const SPAWN_SLOP_PX = 12;
+
+const settingsEl = document.querySelector('#settings');
+const stageEl = document.querySelector('#stage');
+const coinEl = document.querySelector('#coin');
+const cueEl = document.querySelector('#cue');
+const recoveryEl = document.querySelector('#recovery');
+const presetList = document.querySelector('#preset-list');
+const form = document.querySelector('#preset-form');
+const nameInput = document.querySelector('#preset-name');
+const sizeInput = document.querySelector('#coin-size');
+const sizeValue = document.querySelector('#coin-size-value');
+const xInput = document.querySelector('#start-x');
+const xValue = document.querySelector('#start-x-value');
+const yInput = document.querySelector('#start-y');
+const yValue = document.querySelector('#start-y-value');
+const fadeInput = document.querySelector('#fade-distance');
+const fadeValue = document.querySelector('#fade-value');
+const durationInput = document.querySelector('#disappear-duration');
+const durationValue = document.querySelector('#duration-value');
+const edgeGroup = document.querySelector('#edge-group');
+const note = document.querySelector('#form-note');
+const addButton = document.querySelector('#add-preset');
+const deleteButton = document.querySelector('#delete-preset');
+const startButton = document.querySelector('#start-show');
+const objectKindInput = document.querySelector('#object-kind');
+
+const pointers = new Map();
+let state = null;
+let recovery = null;
+let dismissedToken = '';
+let storageWarning = '';
+let phase = 'awaiting';
+let center = { x: 0, y: 0 };
+let grab = { x: 0, y: 0 };
+let dragId = null;
+let dragClient = null;
+let dragBaseline = null;
+let objectLive = false;
+let moved = false;
+let gestureFired = false;
+let stageRect = null;
+let lastStage = { width: 0, height: 0 };
+let paintedDiameter = 0;
+let exitFrame = 0;
+let exitToken = 0;
+let deleteArmed = false;
+let deleteTimer = 0;
+let presetSerial = 0;
+let spawnId = null;
+let spawnClient = null;
+let spawnAtPoint = null;
+let spawnCancelled = false;
+
+function selected() {
+  return state.presets.find((preset) => preset.id === state.selectedId) || state.presets[0];
+}
+
+function replaceSelected(preset) {
+  const index = state.presets.findIndex((item) => item.id === preset.id);
+  if (index >= 0) state.presets[index] = preset;
+}
+
+function createPresetId() {
+  presetSerial += 1;
+  const random = Math.random().toString(36).slice(2, 8);
+  return `preset-${Date.now().toString(36)}-${presetSerial.toString(36)}-${random}`;
+}
+
+function formatPercent(fraction) {
+  return `${Math.round(fraction * 100)}%`;
+}
+
+function noticeToken(item) {
+  const preserved = typeof item?.preserved === 'string' ? item.preserved : '';
+  let hash = 0;
+  for (let index = 0; index < preserved.length; index += 1) {
+    hash = (hash * 31 + preserved.charCodeAt(index)) | 0;
+  }
+  return `${item?.reason || 'unknown'}:${preserved.length}:${hash}`;
+}
+
+function readGoneSession() {
+  try {
+    return sessionStorage.getItem(SESSION_GONE) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function setGoneSession(gone) {
+  try {
+    if (gone) sessionStorage.setItem(SESSION_GONE, '1');
+    else sessionStorage.removeItem(SESSION_GONE);
+  } catch {
+    // Session storage is only a reload guard.
+  }
+}
+
+function stashRecovery(raw) {
+  const current = localStorage.getItem(RECOVERY_KEY);
+  if (current === raw) return;
+  if (current != null) localStorage.setItem(PREVIOUS_RECOVERY_KEY, current);
+  localStorage.setItem(RECOVERY_KEY, raw);
+}
+
+function persist() {
+  try {
+    localStorage.setItem(STORAGE_KEY, serializeState(state));
+  } catch {
+    storageWarning = '이 브라우저 저장소를 쓸 수 없어 변경이 기기에 남지 않습니다.';
+    note.textContent = storageWarning;
+  }
+}
+
+function normalizeObjectKind(value) {
+  return Object.hasOwn(OBJECT_KIND_CLASS, value) ? value : 'coin';
+}
+
+function readObjectKind() {
+  try {
+    return normalizeObjectKind(localStorage.getItem(OBJECT_KIND_KEY));
+  } catch {
+    return 'coin';
+  }
+}
+
+function applyObjectKind(kind) {
+  const safe = normalizeObjectKind(kind);
+  for (const className of Object.values(OBJECT_KIND_CLASS)) coinEl.classList.remove(className);
+  coinEl.classList.add(OBJECT_KIND_CLASS[safe]);
+  if (objectKindInput) objectKindInput.value = safe;
+  return safe;
+}
+
+function persistObjectKind(kind) {
+  try {
+    localStorage.setItem(OBJECT_KIND_KEY, kind);
+  } catch {
+    storageWarning = '이 브라우저 저장소를 쓸 수 없어 변경이 기기에 남지 않습니다.';
+    note.textContent = storageWarning;
+  }
+}
+
+function loadState() {
+  let raw = null;
+  try {
+    raw = localStorage.getItem(STORAGE_KEY);
+    dismissedToken = localStorage.getItem(NOTICE_KEY) || '';
+  } catch {
+    storageWarning = '저장소를 열 수 없습니다. 이번 실행의 변경은 보관되지 않습니다.';
+    raw = null;
+  }
+  const parsed = parseStoredState(raw);
+  state = parsed.state;
+  recovery = parsed.recovery;
+  if (!parsed.recovery || typeof raw !== 'string') return;
+  try {
+    stashRecovery(raw);
+    localStorage.setItem(STORAGE_KEY, serializeState(parsed.state));
+  } catch {
+    storageWarning = '손상된 설정의 원본을 보관하지 못했습니다. 기존 기록은 덮어쓰지 않았습니다.';
+  }
+}
+
+function clearDeleteArm() {
+  deleteArmed = false;
+  window.clearTimeout(deleteTimer);
+}
+
+function renderRecovery() {
+  recoveryEl.replaceChildren();
+  const token = recovery ? noticeToken(recovery) : '';
+  if ((!recovery || token === dismissedToken) && !storageWarning) {
+    recoveryEl.hidden = true;
+    return;
+  }
+  recoveryEl.hidden = false;
+  const text = document.createElement('p');
+  if (storageWarning) text.textContent = storageWarning;
+  else if (recovery.reason === 'partial') {
+    text.textContent = '일부 프리셋은 형식이 맞지 않아 빼 두었습니다. 원래 기록은 이 기기에 그대로 보관했습니다.';
+  } else {
+    text.textContent = '저장된 설정을 읽지 못해 기본 프리셋으로 열었습니다. 원래 기록은 지우지 않고 이 기기에 보관했습니다.';
+  }
+  recoveryEl.append(text);
+  if (!recovery || token === dismissedToken) return;
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'button button-quiet';
+  button.textContent = '알림 닫기';
+  button.addEventListener('click', () => {
+    try {
+      localStorage.setItem(NOTICE_KEY, token);
+    } catch {
+      // The banner can stay if dismissal cannot be stored.
+    }
+    dismissedToken = token;
+    renderRecovery();
+  });
+  recoveryEl.append(button);
+}
+
+function renderList() {
+  const focusInside = presetList.contains(document.activeElement);
+  presetList.replaceChildren();
+  for (const preset of state.presets) {
+    const item = document.createElement('li');
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'preset';
+    button.dataset.id = preset.id;
+    button.textContent = preset.name;
+    const pressed = preset.id === state.selectedId;
+    button.setAttribute('aria-pressed', pressed ? 'true' : 'false');
+    button.addEventListener('click', () => selectPreset(preset.id));
+    item.append(button);
+    presetList.append(item);
+  }
+  if (focusInside) presetList.querySelector('[aria-pressed="true"]')?.focus();
+}
+
+function updateReadouts(preset) {
+  sizeValue.textContent = formatPercent(preset.coinSize);
+  xValue.textContent = formatPercent(preset.startX);
+  yValue.textContent = formatPercent(preset.startY);
+  fadeValue.textContent = formatPercent(preset.fadeDistance);
+  durationValue.textContent = `${(preset.disappearDuration / 1000).toFixed(2)}초`;
+}
+
+function fillForm() {
+  const preset = selected();
+  nameInput.value = preset.name;
+  sizeInput.value = String(preset.coinSize);
+  xInput.value = String(preset.startX);
+  yInput.value = String(preset.startY);
+  fadeInput.value = String(preset.fadeDistance);
+  durationInput.value = String(preset.disappearDuration);
+  updateReadouts(preset);
+  for (const button of edgeGroup.querySelectorAll('.edge')) {
+    const on = button.dataset.edge === preset.exitEdge;
+    button.setAttribute('aria-checked', on ? 'true' : 'false');
+    button.tabIndex = on ? 0 : -1;
+  }
+}
+
+function selectPreset(id) {
+  if (!state.presets.some((preset) => preset.id === id)) return;
+  state.selectedId = id;
+  clearDeleteArm();
+  note.textContent = '';
+  persist();
+  renderList();
+  fillForm();
+}
+
+function labelFor(id) {
+  const buttons = presetList.querySelectorAll('.preset');
+  for (const button of buttons) {
+    if (button.dataset.id === id) return button;
+  }
+  return null;
+}
+
+function commitName(fallbackEmpty) {
+  const limited = Array.from(nameInput.value).slice(0, LIMITS.nameLength).join('');
+  if (limited !== nameInput.value) nameInput.value = limited;
+  if (!limited.trim() && !fallbackEmpty) return;
+  const result = sanitizePreset({ ...selected(), name: limited.trim() ? limited : '동전' });
+  if (!result.ok) return;
+  replaceSelected(result.preset);
+  const button = labelFor(result.preset.id);
+  if (button) button.textContent = result.preset.name;
+  if (fallbackEmpty) nameInput.value = result.preset.name;
+  persist();
+}
+
+function commitNumbers() {
+  const result = sanitizePreset({
+    ...selected(),
+    coinSize: Number(sizeInput.value),
+    startX: Number(xInput.value),
+    startY: Number(yInput.value),
+    fadeDistance: Number(fadeInput.value),
+    disappearDuration: Number(durationInput.value),
+  });
+  if (!result.ok) return;
+  replaceSelected(result.preset);
+  updateReadouts(result.preset);
+  clearDeleteArm();
+  persist();
+}
+
+function setEdge(edge) {
+  const result = sanitizePreset({ ...selected(), exitEdge: edge });
+  if (!result.ok) return;
+  replaceSelected(result.preset);
+  clearDeleteArm();
+  fillForm();
+  persist();
+}
+
+function addPreset() {
+  const result = sanitizePreset({
+    ...selected(),
+    id: createPresetId(),
+    name: nextPresetName(state.presets),
+  });
+  if (!result.ok) return;
+  state.presets.push(result.preset);
+  state.selectedId = result.preset.id;
+  clearDeleteArm();
+  note.textContent = '';
+  persist();
+  renderList();
+  fillForm();
+}
+
+function deleteSelected() {
+  if (!deleteArmed) {
+    deleteArmed = true;
+    note.textContent = '한 번 더 누르면 이 프리셋을 삭제합니다.';
+    window.clearTimeout(deleteTimer);
+    deleteTimer = window.setTimeout(() => {
+      deleteArmed = false;
+      if (note.textContent.startsWith('한 번 더')) note.textContent = '';
+    }, 4000);
+    return;
+  }
+  clearDeleteArm();
+  const index = state.presets.findIndex((preset) => preset.id === state.selectedId);
+  if (index < 0) return;
+  state.presets.splice(index, 1);
+  if (state.presets.length === 0) {
+    const fresh = defaultPreset();
+    fresh.id = createPresetId();
+    const sanitized = sanitizePreset(fresh);
+    state.presets.push(sanitized.preset);
+    state.selectedId = sanitized.preset.id;
+    note.textContent = '마지막 프리셋 자리에는 기본 동전을 다시 두었습니다.';
+  } else {
+    const next = state.presets[Math.min(index, state.presets.length - 1)];
+    state.selectedId = next.id;
+    note.textContent = '';
+  }
+  persist();
+  renderList();
+  fillForm();
+}
+
+function applyChrome(mode) {
+  document.body.dataset.mode = mode;
+  document.documentElement.removeAttribute('data-boot');
+  const performing = mode === 'performance';
+  document.title = performing ? '동전' : 'TOBIRA';
+  const theme = document.querySelector('meta[name="theme-color"]');
+  if (theme) theme.setAttribute('content', performing ? '#E4DDD3' : '#F3EBDF');
+  settingsEl.inert = performing;
+  if (performing) settingsEl.setAttribute('inert', '');
+  else settingsEl.removeAttribute('inert');
+}
+
+function measureStage() {
+  const rect = stageEl.getBoundingClientRect();
+  return {
+    width: rect.width || window.innerWidth,
+    height: rect.height || window.innerHeight,
+  };
+}
+
+function paintCoin(x, y, radius, opacity, scale) {
+  const diameter = radius * 2;
+  if (paintedDiameter !== diameter) {
+    paintedDiameter = diameter;
+    coinEl.style.width = `${diameter}px`;
+    coinEl.style.height = `${diameter}px`;
+  }
+  coinEl.style.transform = `translate3d(${(x - radius).toFixed(3)}px, ${(y - radius).toFixed(3)}px, 0) scale(${scale.toFixed(4)})`;
+  coinEl.style.opacity = opacity.toFixed(4);
+}
+
+function cancelExit() {
+  exitToken += 1;
+  if (exitFrame) window.cancelAnimationFrame(exitFrame);
+  exitFrame = 0;
+}
+
+function endPointers() {
+  for (const pointerId of pointers.keys()) releaseCapture(pointerId);
+  pointers.clear();
+  dragId = null;
+  dragClient = null;
+  dragBaseline = null;
+  gestureFired = false;
+  resetSpawnTracking();
+}
+
+function concealCoin() {
+  objectLive = false;
+  coinEl.classList.add('is-gone');
+  coinEl.style.opacity = '0';
+  coinEl.style.visibility = 'hidden';
+}
+
+function releaseCoinVisibility() {
+  coinEl.classList.remove('is-gone');
+  coinEl.style.visibility = '';
+}
+
+function resetSpawnTracking() {
+  spawnId = null;
+  spawnClient = null;
+  spawnAtPoint = null;
+  spawnCancelled = false;
+}
+
+function spawnTravel(sample) {
+  if (!spawnClient || !Number.isFinite(sample.clientX) || !Number.isFinite(sample.clientY)) return 0;
+  return Math.hypot(sample.clientX - spawnClient.x, sample.clientY - spawnClient.y);
+}
+
+function revealSpawn(point) {
+  const stage = measureStage();
+  lastStage = stage;
+  stageRect = stageEl.getBoundingClientRect();
+  const metrics = coinMetrics(selected(), stage);
+  center = { x: point.x, y: point.y };
+  moved = true;
+  objectLive = true;
+  phase = 'idle';
+  releaseCoinVisibility();
+  stageEl.classList.remove('is-leaving', 'is-mark');
+  cueEl.style.opacity = '0';
+  paintCoin(center.x, center.y, metrics.radius, 1, 1);
+  resetSpawnTracking();
+}
+
+function placeAtRest() {
+  const stage = measureStage();
+  lastStage = stage;
+  stageRect = stageEl.getBoundingClientRect();
+  const rest = restingCenter(selected(), stage);
+  center = { x: rest.x, y: rest.y };
+  moved = false;
+  phase = 'awaiting';
+  stageEl.classList.remove('is-leaving', 'is-mark');
+  cueEl.style.opacity = '0';
+  concealCoin();
+  paintCoin(center.x, center.y, rest.radius, 0, 1);
+  resetSpawnTracking();
+}
+
+function showSettings() {
+  cancelExit();
+  endPointers();
+  setGoneSession(false);
+  state.mode = 'settings';
+  applyChrome('settings');
+  document.documentElement.removeAttribute('data-boot-gone');
+  renderList();
+  fillForm();
+  persist();
+}
+
+function showPerformance({ persistMode = true, keepGone = false } = {}) {
+  cancelExit();
+  endPointers();
+  state.mode = 'performance';
+  applyChrome('performance');
+  if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+  placeAtRest();
+  if (keepGone) {
+    phase = 'gone';
+    coinEl.classList.add('is-gone');
+    paintCoin(center.x, center.y, coinMetrics(selected(), lastStage).radius, 0, 1);
+  } else {
+    setGoneSession(false);
+  }
+  document.documentElement.removeAttribute('data-boot-gone');
+  if (persistMode) persist();
+}
+
+function beginExit(contact, edge) {
+  if (phase === 'exiting' || phase === 'gone') return;
+  if (!EDGE_ORDER.includes(edge)) return;
+  const capturedId = dragId;
+  phase = 'exiting';
+  dragId = null;
+  dragClient = null;
+  dragBaseline = null;
+  releaseCapture(capturedId);
+  const token = exitToken + 1;
+  exitToken = token;
+  const preset = selected();
+  // Direction is the edge the object reached. Do not rewrite the stored preset.
+  const motion = { ...preset, exitEdge: edge };
+  const startedAt = performance.now();
+  const originStage = measureStage();
+  const origin = stageToNormalized(contact.x, contact.y, originStage.width, originStage.height);
+  stageEl.classList.add('is-leaving');
+  stageEl.classList.remove('is-mark');
+  releaseCoinVisibility();
+
+  const step = (now) => {
+    if (token !== exitToken) return;
+    const stageNow = measureStage();
+    const metrics = coinMetrics(preset, stageNow);
+    const distance = travelDistancePx(fadeDistancePx(motion, stageNow), metrics.diameter);
+    const duration = Math.max(preset.disappearDuration, 1);
+    const linear = Math.min(1, (now - startedAt) / duration);
+    const visual = exitVisual(linear);
+    const base = normalizedToStage(origin.x, origin.y, stageNow.width, stageNow.height);
+    const offset = outwardOffset(edge, distance * visual.travel);
+    paintCoin(base.x + offset.x, base.y + offset.y, metrics.radius, visual.opacity, visual.scale);
+    cueEl.style.opacity = String(0.18 * visual.travel);
+    if (!visual.gone) {
+      exitFrame = window.requestAnimationFrame(step);
+      return;
+    }
+    phase = 'gone';
+    moved = true;
+    concealCoin();
+    stageEl.classList.remove('is-leaving');
+    cueEl.style.opacity = '';
+    stageEl.classList.add('is-mark');
+    setGoneSession(true);
+    window.setTimeout(() => {
+      if (token !== exitToken) return;
+      stageEl.classList.remove('is-mark');
+    }, MARK_MS);
+  };
+  exitFrame = window.requestAnimationFrame(step);
+}
+
+function screenPoint(event) {
+  return {
+    screenX: Number.isFinite(event.screenX) ? event.screenX : event.clientX,
+    screenY: Number.isFinite(event.screenY) ? event.screenY : event.clientY,
+  };
+}
+
+function pointInStage(event, rect) {
+  if (!rect || !Number.isFinite(event.clientX) || !Number.isFinite(event.clientY)) return null;
+  return { x: event.clientX - rect.left, y: event.clientY - rect.top };
+}
+
+function releaseCapture(pointerId) {
+  if (pointerId == null) return;
+  try {
+    if (stageEl.hasPointerCapture(pointerId)) stageEl.releasePointerCapture(pointerId);
+  } catch {
+    // The pointer may already have been released.
+  }
+}
+
+function rebasePointers() {
+  for (const entry of pointers.values()) {
+    entry.start = { screenX: entry.last.screenX, screenY: entry.last.screenY };
+  }
+}
+
+function maybeClassify() {
+  if (state.mode !== 'performance' || gestureFired || pointers.size !== 2) return;
+  const [first, second] = [...pointers.values()];
+  const kind = classifyTwoFingerSwipe(first.start, second.start, first.last, second.last, GESTURE_THRESHOLD);
+  if (kind === 'none') return;
+  gestureFired = true;
+  if (kind === 'settings') showSettings();
+  else resetCoin();
+}
+
+function resetCoin() {
+  cancelExit();
+  setGoneSession(false);
+  document.documentElement.removeAttribute('data-boot-gone');
+  placeAtRest();
+}
+
+function pointerTravel(sample, origin) {
+  if (!origin || !Number.isFinite(sample.clientX) || !Number.isFinite(sample.clientY)) return 0;
+  return Math.hypot(sample.clientX - origin.x, sample.clientY - origin.y);
+}
+
+// The exit edge is whichever stage edge this drag newly reaches.
+// A short tap, or an object that already overhangs where it was grabbed, does not count
+// until the finger actually pushes farther out.
+function exitEdgeReached(next, radius, stage, travel) {
+  let chosen = null;
+  let best = -Infinity;
+  for (const edge of EDGE_ORDER) {
+    const overshoot = leadingEdgeOvershoot(next, radius, stage, edge);
+    if (!exitReached(overshoot)) continue;
+    const baseline = dragBaseline && Number.isFinite(dragBaseline[edge]) ? dragBaseline[edge] : -Infinity;
+    if (exitReached(baseline)) {
+      if (!(travel > SPAWN_SLOP_PX) || !(overshoot > baseline)) continue;
+    } else if (!(overshoot > baseline)) {
+      continue;
+    }
+    if (overshoot > best) {
+      chosen = edge;
+      best = overshoot;
+    }
+  }
+  return chosen;
+}
+
+function captureDragBaseline(radius, stage) {
+  dragBaseline = {};
+  for (const edge of EDGE_ORDER) {
+    const overshoot = leadingEdgeOvershoot(center, radius, stage, edge);
+    dragBaseline[edge] = Number.isFinite(overshoot) ? overshoot : 0;
+  }
+}
+
+function applyDragSample(sample) {
+  if (phase !== 'dragging' || pointers.size !== 1 || gestureFired) return;
+  const local = pointInStage(sample, stageRect);
+  if (!local) return;
+  const preset = selected();
+  const metrics = coinMetrics(preset, lastStage);
+  const next = centerFromPointer(local, grab);
+  if (!Number.isFinite(next.x) || !Number.isFinite(next.y)) return;
+  const edge = exitEdgeReached(next, metrics.radius, lastStage, pointerTravel(sample, dragClient));
+  if (edge) {
+    beginExit(contactCenter(next, metrics.radius, lastStage, edge), edge);
+    return;
+  }
+  center = next;
+  moved = true;
+  objectLive = true;
+  paintCoin(center.x, center.y, metrics.radius, 1, 1);
+}
+
+function startDrag(event) {
+  phase = 'dragging';
+  dragId = event.pointerId;
+  stageRect = stageEl.getBoundingClientRect();
+  lastStage = measureStage();
+  dragClient = {
+    x: Number.isFinite(event.clientX) ? event.clientX : 0,
+    y: Number.isFinite(event.clientY) ? event.clientY : 0,
+  };
+  captureDragBaseline(coinMetrics(selected(), lastStage).radius, lastStage);
+  const local = pointInStage(event, stageRect);
+  if (!local) return;
+  grab = grabOffset(local, center);
+}
+
+function onPointerDown(event) {
+  if (state.mode !== 'performance') return;
+  if (event.pointerType === 'mouse' && event.button !== 0) return;
+  const screen = screenPoint(event);
+  pointers.set(event.pointerId, { start: screen, last: screen });
+  try {
+    stageEl.setPointerCapture(event.pointerId);
+  } catch {
+    // Some pointers cannot be captured; window listeners still track them.
+  }
+  if (event.cancelable) event.preventDefault();
+  if (pointers.size >= 2) {
+    rebasePointers();
+    if (phase === 'dragging') {
+      phase = 'idle';
+      dragId = null;
+      dragClient = null;
+      dragBaseline = null;
+    }
+    if (phase === 'awaiting') spawnCancelled = true;
+    return;
+  }
+  if (phase === 'awaiting') {
+    if (spawnCancelled) return;
+    stageRect = stageEl.getBoundingClientRect();
+    const local = pointInStage(event, stageRect);
+    const inside = local
+      && local.x >= 0
+      && local.y >= 0
+      && local.x <= stageRect.width
+      && local.y <= stageRect.height;
+    if (!inside) return;
+    spawnId = event.pointerId;
+    spawnClient = { x: event.clientX, y: event.clientY };
+    spawnAtPoint = { x: local.x, y: local.y };
+    return;
+  }
+  const onCoin = event.target instanceof Element && event.target.closest('#coin');
+  if (phase === 'idle' && onCoin) startDrag(event);
+}
+
+function onPointerMove(event) {
+  if (state.mode !== 'performance') return;
+  const entry = pointers.get(event.pointerId);
+  if (!entry) return;
+  if (event.cancelable) event.preventDefault();
+  const samples = typeof event.getCoalescedEvents === 'function' ? event.getCoalescedEvents() : null;
+  const list = samples && samples.length ? samples : [event];
+  for (const sample of list) {
+    entry.last = screenPoint(sample);
+    if (phase === 'dragging' && event.pointerId === dragId && pointers.size === 1) {
+      applyDragSample(sample);
+    }
+    if (phase === 'awaiting' && (pointers.size !== 1 || spawnTravel(sample) > SPAWN_SLOP_PX)) {
+      spawnCancelled = true;
+    }
+  }
+  maybeClassify();
+}
+
+function onPointerUp(event) {
+  const entry = pointers.get(event.pointerId);
+  if (entry) entry.last = screenPoint(event);
+  if (event.type === 'pointercancel') spawnCancelled = true;
+  maybeClassify();
+  const wasDrag = event.pointerId === dragId;
+  const canSpawn = phase === 'awaiting'
+    && event.pointerId === spawnId
+    && !spawnCancelled
+    && event.type !== 'pointercancel'
+    && spawnAtPoint
+    && pointers.size === 1
+    && spawnTravel(event) <= SPAWN_SLOP_PX;
+  pointers.delete(event.pointerId);
+  releaseCapture(event.pointerId);
+  if (canSpawn) revealSpawn(spawnAtPoint);
+  if (wasDrag && phase === 'dragging') {
+    dragId = null;
+    dragClient = null;
+    dragBaseline = null;
+    phase = 'idle';
+  }
+  if (pointers.size === 2) rebasePointers();
+  if (pointers.size === 0) {
+    gestureFired = false;
+    resetSpawnTracking();
+  }
+}
+
+function onResize() {
+  if (state.mode !== 'performance') return;
+  const next = measureStage();
+  stageRect = stageEl.getBoundingClientRect();
+  if (!(next.width > 0) || !(next.height > 0)) return;
+  if (phase === 'dragging') {
+    phase = 'idle';
+    dragId = null;
+    dragClient = null;
+    dragBaseline = null;
+  }
+  // Empty and leaving surfaces stay empty. A live object keeps its normalized center.
+  if (!objectLive || phase === 'exiting' || phase === 'gone' || phase === 'awaiting') {
+    lastStage = next;
+    return;
+  }
+  if (lastStage.width > 0 && lastStage.height > 0) {
+    const normalized = stageToNormalized(center.x, center.y, lastStage.width, lastStage.height);
+    center = normalizedToStage(normalized.x, normalized.y, next.width, next.height);
+  }
+  const metrics = coinMetrics(selected(), next);
+  paintCoin(center.x, center.y, metrics.radius, 1, 1);
+  lastStage = next;
+}
+
+function onEdgeKey(event) {
+  const keys = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'];
+  if (!keys.includes(event.key)) return;
+  event.preventDefault();
+  const current = EDGE_ORDER.indexOf(selected().exitEdge);
+  const forward = event.key === 'ArrowRight' || event.key === 'ArrowDown';
+  const next = EDGE_ORDER[(current + (forward ? 1 : EDGE_ORDER.length - 1)) % EDGE_ORDER.length];
+  setEdge(next);
+  edgeGroup.querySelector(`[data-edge="${next}"]`)?.focus();
+}
+
+function bind() {
+  sizeInput.min = String(LIMITS.coinSize.min);
+  sizeInput.max = String(LIMITS.coinSize.max);
+  fadeInput.min = String(LIMITS.fadeDistance.min);
+  fadeInput.max = String(LIMITS.fadeDistance.max);
+  durationInput.min = String(LIMITS.disappearDuration.min);
+  durationInput.max = String(LIMITS.disappearDuration.max);
+  form.addEventListener('submit', (event) => event.preventDefault());
+  nameInput.addEventListener('input', () => commitName(false));
+  nameInput.addEventListener('blur', () => commitName(true));
+  for (const input of [sizeInput, xInput, yInput, fadeInput, durationInput]) {
+    input.addEventListener('input', commitNumbers);
+  }
+  edgeGroup.addEventListener('click', (event) => {
+    const button = event.target.closest('.edge');
+    if (!button) return;
+    setEdge(button.dataset.edge);
+  });
+  edgeGroup.addEventListener('keydown', onEdgeKey);
+  if (objectKindInput) {
+    objectKindInput.addEventListener('change', () => {
+      persistObjectKind(applyObjectKind(objectKindInput.value));
+    });
+  }
+  addButton.addEventListener('click', addPreset);
+  deleteButton.addEventListener('click', deleteSelected);
+  startButton.addEventListener('click', () => showPerformance({ persistMode: true, keepGone: false }));
+  window.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape' || !event.shiftKey || event.repeat) return;
+    if (state.mode !== 'performance') return;
+    event.preventDefault();
+    showSettings();
+  });
+  window.addEventListener('pointerdown', onPointerDown, { capture: true, passive: false });
+  window.addEventListener('pointermove', onPointerMove, { capture: true, passive: false });
+  window.addEventListener('pointerup', onPointerUp, { capture: true, passive: false });
+  window.addEventListener('pointercancel', onPointerUp, { capture: true, passive: false });
+  if ('onpointerrawupdate' in window) {
+    window.addEventListener('pointerrawupdate', onPointerMove, { capture: true, passive: false });
+  }
+  stageEl.addEventListener('touchmove', (event) => {
+    if (state.mode === 'performance' && event.cancelable) event.preventDefault();
+  }, { passive: false });
+  stageEl.addEventListener('contextmenu', (event) => event.preventDefault());
+  stageEl.addEventListener('gesturestart', (event) => event.preventDefault());
+  stageEl.addEventListener('gesturechange', (event) => event.preventDefault());
+  window.addEventListener('resize', onResize);
+  window.addEventListener('orientationchange', onResize);
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', onResize);
+    window.visualViewport.addEventListener('scroll', onResize);
+  }
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(() => {
+      // file:// and locked-down browsers have no offline shell. The page still runs.
+    });
+  }
+}
+
+concealCoin();
+loadState();
+applyObjectKind(readObjectKind());
+bind();
+renderRecovery();
+renderList();
+fillForm();
+if (state.mode === 'performance') {
+  showPerformance({ persistMode: false, keepGone: readGoneSession() });
+} else {
+  applyChrome('settings');
+  setGoneSession(false);
+  document.documentElement.removeAttribute('data-boot-gone');
+}
