@@ -11,6 +11,7 @@ import {
   createHold,
   loadFromRaw,
   mayOverwritePrimary,
+  preparePerformance,
   releaseHold,
   resetAttempts,
   serializeState,
@@ -33,6 +34,7 @@ const soundInput = document.querySelector("#sound-enabled");
 const resetButton = document.querySelector("#reset-attempts");
 const startButton = document.querySelector("#start-performance");
 const settingsStatus = document.querySelector("#settings-status");
+const attemptProgress = document.querySelector("#attempt-progress");
 
 let appState = loadFromRaw(null).state;
 let storageLocked = false;
@@ -82,6 +84,10 @@ function setStatus(message) {
   settingsStatus.textContent = message;
 }
 
+function updateAttemptProgress() {
+  attemptProgress.textContent = `현재 완료한 시도: ${appState.attemptCount}회 · 공연 시작 시 0회로 초기화`;
+}
+
 function soundEnabled() {
   return soundInput.checked;
 }
@@ -109,6 +115,7 @@ function bootStorage() {
   storageLocked = loaded.preserveStoredRaw === true;
   if (sound.ok) loadSoundPreference(sound.value);
   truthInput.value = appState.settings.truthAttempts.join(",");
+  updateAttemptProgress();
   if (!storageLocked && stored.value) {
     try {
       const old = JSON.parse(stored.value);
@@ -160,7 +167,7 @@ function setStage(mode) {
     verdict.textContent = mode;
     return;
   }
-  testIndicator.textContent = "";
+  testIndicator.textContent = "READY TO SCAN";
   verdict.textContent = "";
 }
 
@@ -188,6 +195,7 @@ function showSettings() {
   detectorButton.classList.remove("is-testing");
   detectorButton.setAttribute("aria-busy", "false");
   truthInput.value = appState.settings.truthAttempts.join(",");
+  updateAttemptProgress();
 }
 
 function showPerformance() {
@@ -313,6 +321,7 @@ function applyRelease(nowMs, x, y) {
   hold = result.hold;
   appState = result.state;
   if (result.counted) {
+    updateAttemptProgress();
     const saved = persistState();
     setStage(result.verdict === "TRUE" ? "TRUE" : "LIE");
     playVerdictSound(result.verdict);
@@ -455,6 +464,7 @@ function commitTruthAttempt() {
     return false;
   }
   appState = next.state;
+  updateAttemptProgress();
   truthInput.value = appState.settings.truthAttempts.join(",");
   const saved = persistState();
   if (storageLocked) {
@@ -469,6 +479,7 @@ function commitTruthAttempt() {
 
 function onResetAttempts() {
   appState = resetAttempts(appState);
+  updateAttemptProgress();
   setStage("idle");
   const saved = persistState();
   if (storageLocked) {
@@ -481,7 +492,18 @@ function onResetAttempts() {
 }
 
 function onStartPerformance() {
-  if (!commitTruthAttempt()) return;
+  const next = preparePerformance(appState, truthInput.value);
+  if (!next.ok) {
+    setStatus("TRUE 회차는 1부터 20 사이의 서로 다른 정수를 쉼표로 구분해 입력하세요. 예: 4,7");
+    truthInput.focus();
+    return;
+  }
+  appState = next.state;
+  truthInput.value = appState.settings.truthAttempts.join(",");
+  updateAttemptProgress();
+  setStage("idle");
+  if (!persistState()) setStatus("이번 공연의 시도 횟수를 이 브라우저에 저장하지 못했습니다.");
+  else setStatus("");
   unlockFromGesture();
   showPerformance();
   startButton.blur();

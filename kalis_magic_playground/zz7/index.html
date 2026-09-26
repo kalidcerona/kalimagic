@@ -17,10 +17,27 @@
   <body>
     <div id="safe-probe" aria-hidden="true"></div>
     <main id="performance-screen" hidden>
-      <button id="detector-button" type="button" aria-label="전원">POWER</button>
-      <p class="detector-title">Lie Detector</p>
-      <p id="test-indicator" role="status"></p>
-      <p id="verdict" role="status" aria-live="assertive"></p>
+      <div class="stage-header" aria-hidden="true">
+        <span class="stage-monogram">U</span>
+        <span class="stage-brand">USOTSUKI <small>INTERACTIVE DETECTOR</small></span>
+        <span class="stage-led"></span>
+      </div>
+      <div class="stage-content">
+        <p class="stage-kicker">LIE DETECTOR / 01</p>
+        <h1 class="detector-title">Truth is in your hands.</h1>
+        <p class="stage-instruction">버튼을 2초간 누르고 유지하세요</p>
+        <div class="detector-dial">
+          <span class="dial-tick dial-tick-top" aria-hidden="true"></span>
+          <span class="dial-tick dial-tick-bottom" aria-hidden="true"></span>
+          <button id="detector-button" type="button" aria-label="검사를 시작하려면 2초간 누르기"><span class="button-icon" aria-hidden="true">⌁</span><span>PRESS &amp; HOLD</span></button>
+        </div>
+        <div class="result-panel" aria-live="polite">
+          <span class="result-label">ANALYSIS STATUS</span>
+          <p id="test-indicator" role="status"></p>
+          <p id="verdict" role="status" aria-live="assertive"></p>
+        </div>
+      </div>
+      <div class="stage-footer" aria-hidden="true"><span>USOTSUKI SYSTEMS</span><span>●&nbsp; STANDBY</span></div>
     </main>
     <section id="settings-screen">
       <img id="settings-brand" src="brand-logo.png" alt="" width="168" height="168" />
@@ -31,6 +48,7 @@
           <input id="truth-attempt" type="text" autocomplete="off" value="4" aria-describedby="truth-attempt-help" />
         </label>
         <p id="truth-attempt-help" class="field-help">여러 회차는 쉼표로 구분하세요. 예: 2,4 (각 회차는 1-20)</p>
+        <p id="attempt-progress" class="field-help" role="status"></p>
         <label class="checkline" for="sound-enabled">
           <input id="sound-enabled" type="checkbox" checked />
           소리
@@ -52,7 +70,7 @@
         <ul>
           <li>초록 버튼을 직접 누른 채 약 2초 유지하면 검사가 진행됩니다.</li>
           <li>일찍 손을 떼거나 움직이면 취소되며, 시도 횟수에 포함되지 않습니다.</li>
-          <li>설정한 시도에서만 TRUE가 나옵니다. 그 외 시도는 LIE입니다.</li>
+          <li>공연 시작을 누르면 시도 횟수가 0으로 초기화됩니다. 설정한 시도에서만 TRUE가 나옵니다.</li>
           <li>공연 화면에서 두 손가락으로 아래로 쓸면 설정이 열립니다.</li>
           <li>Shift+Escape로 리허설 설정을 열 수 있습니다.</li>
         </ul>

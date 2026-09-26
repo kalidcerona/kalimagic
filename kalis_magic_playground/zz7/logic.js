@@ -192,6 +192,8 @@ export function trySetTruthAttempt(state, value) {
     ok: true,
     state: {
       ...base,
+      attemptCount: parsed.value.some((attempt, index) => attempt !== base.settings.truthAttempts[index]) ||
+        parsed.value.length !== base.settings.truthAttempts.length ? 0 : base.attemptCount,
       settings: { truthAttempts: parsed.value },
     },
     error: null,
@@ -202,6 +204,13 @@ export function resetAttempts(state) {
   const shaped = shapeAppState(state);
   const base = shaped.ok ? shaped.state : createDefaultState();
   return { ...base, attemptCount: 0 };
+}
+
+/** A new performance always begins with attempt one after validating its schedule. */
+export function preparePerformance(state, truthAttempts) {
+  const configured = trySetTruthAttempt(state, truthAttempts);
+  if (!configured.ok) return configured;
+  return { ...configured, state: resetAttempts(configured.state) };
 }
 
 /** Verdict for a 1-based completed attempt. Non-positive attempts have none. */

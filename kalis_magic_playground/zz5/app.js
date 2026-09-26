@@ -34,6 +34,7 @@ import {
   validateImage,
   validatePresetInput,
 } from './logic.js';
+import { createDeckSlots } from './deck-loader.js';
 
 const STORAGE_KEY = 'aletheia.meta.v1';
 const CUSTOM_KEY = 'aletheia.custom12.v1';
@@ -797,27 +798,26 @@ async function loadVectorCourtDeck() {
   }
 }
 
-async function loadCardAssetDeck() {
-  const images = [];
-  try {
-    for (let index = 0; index < COURT_CARD_COUNT; index += 1) {
-      const card = cardAtIndex(index);
-      if (!card) throw new Error('decode');
-      images.push(await loadKeptImage(`./court-cards/${slotLabel(card)}.png`));
+function createCourtDeckSlots() {
+  const loaders = Array.from({ length: COURT_CARD_COUNT }, (_, index) => async () => {
+    const card = cardAtIndex(index);
+    if (!card) throw new Error('decode');
+    try {
+      return { image: await loadKeptImage(`./court-cards/${slotLabel(card)}.png`) };
+    } catch {
+      return loadSvgImage(courtCardSvg(card));
     }
-    return { images, urls: [] };
-  } catch (error) {
-    for (const image of images) image.src = '';
-    throw error;
-  }
+  });
+  return createDeckSlots(loaders, ({ image, url }) => {
+    if (url) revokeUrl(url);
+    if (image) image.src = '';
+  });
 }
 
-async function loadCourtDeck() {
-  try {
-    return await loadCardAssetDeck();
-  } catch {
-    return loadVectorCourtDeck();
-  }
+let warmedCourtSlots = null;
+
+function warmCourtDeck() {
+  if (!warmedCourtSlots) warmedCourtSlots = createCourtDeckSlots();
 }
 
 function isCardPerformance() {
@@ -1029,6 +1029,35 @@ function lockCourtCard(cell) {
   hideCellGuide();
   paintOpaqueCardMask();
   redraw();
+}
+
+function selectCourtCard(cell, clientX, clientY, pointerId) {
+  if (!isCardSelectPhase() || !cell || !running.deckSlots) return;
+  const session = running;
+  session.selectedIndex = cell.index;
+  session.cardPhase = 'loading';
+  session.queuedPoints = [{ x: clientX, y: clientY }];
+  hideCellGuide();
+  void session.deckSlots.get(cell.index).then(({ image, url }) => {
+    if (running !== session || view !== 'performance') return;
+    session.cards[cell.index] = image;
+    if (url) session.cardUrls.push(url);
+    session.cardPhase = 'select';
+    lockCourtCard(cell);
+    const contact = { last: null };
+    const points = [];
+    for (const point of session.queuedPoints) {
+      points.push(...pointsFor(contact, point.x, point.y));
+    }
+    session.queuedPoints = [];
+    if (points.length) stampPoints(points);
+    const activeContact = contacts.get(pointerId);
+    if (activeContact) activeContact.last = contact.last;
+  }).catch(() => {
+    if (running !== session || view !== 'performance') return;
+    stopPerformance();
+    setError('선택한 카드를 열 수 없습니다. 저장된 데이터는 바꾸지 않았습니다.');
+  });
 }
 
 function paintInitialMask() {
@@ -1269,6 +1298,7 @@ function resetVeil() {
 
 function destroyRunning() {
   if (!running) return;
+  if (running.deckSlots) running.deckSlots.close();
   if (Array.isArray(running.cardUrls)) {
     for (const url of running.cardUrls) revokeUrl(url);
     running.cardUrls = [];
@@ -1295,6 +1325,7 @@ function stopPerformance() {
   document.body.classList.add('view-settings');
   document.title = TITLES.settings;
   if (theme) theme.setAttribute('content', '#4C1420');
+  warmCourtDeck();
 }
 
 function openSettings() {
@@ -1345,9 +1376,10 @@ function onPointerDown(event) {
       running.pendingCell = null;
     }
   } else if (isCardSelectPhase()) {
-    lockCourtCard(viewportCell(event.clientX, event.clientY));
+    selectCourtCard(viewportCell(event.clientX, event.clientY), event.clientX, event.clientY, event.pointerId);
+    return;
   }
-  if (isCardSelectPhase()) return;
+  if (isCardSelectPhase() || (running && running.cardPhase === 'loading')) return;
   if (allowsRevealStroke(contacts.size, multiTouchGroup) && canPaintPointer(event)) {
     const points = pointsFor(contact, event.clientX, event.clientY);
     if (points.length) stampPoints(points);
@@ -1365,7 +1397,12 @@ function onPointerMove(event) {
     const point = screenPoint(sample);
     contact.x = point.x;
     contact.y = point.y;
-    if (isCardSelectPhase() || gestureResolved || !allowsRevealStroke(contacts.size, multiTouchGroup)) continue;
+    if (running && running.cardPhase === 'loading' && contacts.size === 1 && !multiTouchGroup
+      && running.queuedPoints.length < 256) {
+      running.queuedPoints.push({ x: sample.clientX, y: sample.clientY });
+    }
+    if (isCardSelectPhase() || (running && running.cardPhase === 'loading')
+      || gestureResolved || !allowsRevealStroke(contacts.size, multiTouchGroup)) continue;
     if (!canPaintPointer(sample)) continue;
     paint.push(...pointsFor(contact, sample.clientX, sample.clientY));
   }
@@ -1839,40 +1876,37 @@ function loadKeptImage(url) {
   });
 }
 
-async function loadCustomDeck(setIndex) {
-  const images = [];
-  const urls = [];
-  try {
-    for (let index = 0; index < CUSTOM_COUNT; index += 1) {
-      const id = customIds[setIndex * CUSTOM_COUNT + index];
-      if (typeof id !== 'string' || !IMAGE_ID_RE.test(id)) throw new Error('missing');
-      let record;
-      try {
-        record = await getImage(id);
-      } catch {
-        throw new Error('read');
-      }
-      const blob = record && record.blob;
-      if (!(blob instanceof Blob) || blob.size <= 0) throw new Error('missing');
-      const url = URL.createObjectURL(blob);
-      liveUrls.add(url);
-      urls.push(url);
-      const image = await loadKeptImage(url);
-      images.push(image);
+function createCustomDeckSlots(setIndex) {
+  const loaders = Array.from({ length: CUSTOM_COUNT }, (_, index) => async () => {
+    const id = customIds[setIndex * CUSTOM_COUNT + index];
+    if (typeof id !== 'string' || !IMAGE_ID_RE.test(id)) throw new Error('missing');
+    let record;
+    try {
+      record = await getImage(id);
+    } catch {
+      throw new Error('read');
     }
-    return { images, urls };
-  } catch (error) {
-    for (const url of urls) revokeUrl(url);
-    for (const image of images) image.src = '';
-    throw error;
-  }
+    const blob = record && record.blob;
+    if (!(blob instanceof Blob) || blob.size <= 0) throw new Error('missing');
+    const url = URL.createObjectURL(blob);
+    liveUrls.add(url);
+    try {
+      return { image: await loadKeptImage(url), url };
+    } catch (error) {
+      revokeUrl(url);
+      throw error;
+    }
+  });
+  return createDeckSlots(loaders, ({ image, url }) => {
+    if (url) revokeUrl(url);
+    if (image) image.src = '';
+  });
 }
 
-function beginCardSurface(deck) {
+function beginCardSurface(deckSlots) {
   let attached = false;
   try {
-    const sample = deck.images[0];
-    const size = maskDimensions(sample.naturalWidth, sample.naturalHeight, LIMITS.maxMaskSide);
+    const size = maskDimensions(600, 800, LIMITS.maxMaskSide);
     if (!size) throw new Error('decode');
     const mask = document.createElement('canvas');
     mask.width = size.w;
@@ -1886,8 +1920,10 @@ function beginCardSurface(deck) {
         hiddenPercent: 100,
       },
       image: null,
-      cards: deck.images,
-      cardUrls: deck.urls,
+      cards: Array(COURT_CARD_COUNT).fill(null),
+      cardUrls: [],
+      deckSlots,
+      queuedPoints: [],
       mask,
       maskCtx,
       ratios: initialStageRatios(100, LIMITS.stageCount),
@@ -1902,8 +1938,7 @@ function beginCardSurface(deck) {
     showPerformanceSurface();
   } catch (error) {
     if (!attached) {
-      for (const url of deck.urls) revokeUrl(url);
-      for (const image of deck.images) image.src = '';
+      deckSlots.close();
     }
     throw error;
   }
@@ -1918,8 +1953,11 @@ async function startCustomPerformance(setIndex) {
   busy = true;
   syncControls();
   try {
-    const deck = await loadCustomDeck(setIndex);
-    beginCardSurface(deck);
+    if (warmedCourtSlots) {
+      warmedCourtSlots.close();
+      warmedCourtSlots = null;
+    }
+    beginCardSurface(createCustomDeckSlots(setIndex));
   } catch (error) {
     destroyRunning();
     if (view !== 'settings') stopPerformance();
@@ -1942,35 +1980,9 @@ async function startCardPerformance() {
   busy = true;
   syncControls();
   try {
-    const deck = await loadCourtDeck();
-    const sample = deck.images[0];
-    const size = maskDimensions(sample.naturalWidth, sample.naturalHeight, LIMITS.maxMaskSide);
-    if (!size) throw new Error('decode');
-    const mask = document.createElement('canvas');
-    mask.width = size.w;
-    mask.height = size.h;
-    const maskCtx = mask.getContext('2d', { alpha: true, willReadFrequently: false });
-    if (!maskCtx) throw new Error('decode');
-    running = {
-      preset: {
-        mode: 'free',
-        brushSize: LIMITS.defaultBrush,
-        hiddenPercent: 100,
-      },
-      image: null,
-      cards: deck.images,
-      cardUrls: deck.urls,
-      mask,
-      maskCtx,
-      ratios: initialStageRatios(100, LIMITS.stageCount),
-      cardMode: true,
-      cardPhase: 'select',
-      pendingPointerId: null,
-      pendingCell: null,
-      selectedIndex: null,
-    };
-    paintOpaqueCardMask();
-    showPerformanceSurface();
+    const deckSlots = warmedCourtSlots || createCourtDeckSlots();
+    warmedCourtSlots = null;
+    beginCardSurface(deckSlots);
   } catch {
     destroyRunning();
     if (view !== 'settings') stopPerformance();
@@ -2174,4 +2186,7 @@ async function boot() {
 
 boot().catch(() => {
   setError(MESSAGES.storageReadFailed);
+});
+requestAnimationFrame(() => {
+  if (view === 'settings') warmCourtDeck();
 });

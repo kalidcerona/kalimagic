@@ -1,5 +1,5 @@
 // Network-first cache for the ALETHEIA app shell only.
-const CACHE_NAME = 'aletheia-shell-v7';
+const CACHE_NAME = 'aletheia-shell-v8';
 const LEGACY_CACHE_PREFIX = `unlock-${encodeURIComponent(self.registration.scope)}-`;
 const COURT_FILES = ['S-J', 'S-Q', 'S-K', 'D-J', 'D-Q', 'D-K',
   'C-J', 'C-Q', 'C-K', 'H-J', 'H-Q', 'H-K']
@@ -9,6 +9,7 @@ const SHELL = [
   './index.html',
   './style.css',
   './app.js',
+  './deck-loader.js',
   './logic.js',
   './manifest.webmanifest',
   './icon.svg',
@@ -46,11 +47,7 @@ async function networkFirst(event) {
   try {
     const response = await fetch(event.request);
     if (response && response.ok && !response.redirected) {
-      try {
-        await cache.put(event.request, response.clone());
-      } catch {
-        // Keep the fresh response even when the cache cannot be updated.
-      }
+      event.waitUntil(cache.put(event.request, response.clone()).catch(() => {}));
     }
     return response;
   } catch {
@@ -63,6 +60,13 @@ async function networkFirst(event) {
     }
     return offlineResponse();
   }
+}
+
+async function cachedCourtCard(event) {
+  const cache = await caches.open(CACHE_NAME);
+  const cached = await cache.match(event.request, { ignoreSearch: true });
+  if (cached) return cached;
+  return networkFirst(event);
 }
 
 self.addEventListener('install', (event) => {
@@ -89,5 +93,8 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   if (!isShellUrl(event.request.url)) return;
-  event.respondWith(networkFirst(event));
+  const relative = relativePath(event.request.url);
+  event.respondWith(relative && relative.startsWith('court-cards/')
+    ? cachedCourtCard(event)
+    : networkFirst(event));
 });

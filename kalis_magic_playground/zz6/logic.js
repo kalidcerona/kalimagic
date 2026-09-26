@@ -317,6 +317,44 @@ export function exitReached(overshoot) {
   return Number.isFinite(overshoot) && overshoot > EXIT_EPSILON_PX;
 }
 
+export function fullyOffscreen(center, radius, stage, edge) {
+  return leadingEdgeOvershoot(center, radius, stage, edge) >= 2 * radius;
+}
+
+export function exitVelocity(samples, edge) {
+  if (!Array.isArray(samples) || samples.length < 2) return 0;
+  const last = samples[samples.length - 1];
+  const first = samples[0];
+  const elapsed = last.t - first.t;
+  if (!(elapsed > 0)) return 0;
+  const axis = edge === 'left' || edge === 'right' ? 'x' : 'y';
+  const sign = edge === 'left' || edge === 'top' ? -1 : 1;
+  return Math.max(0, sign * (last[axis] - first[axis]) / elapsed);
+}
+
+export function wallpaperCropRect(width, height, percent) {
+  const top = Math.round(height * clampNumber(Number(percent) || 0, 0, 18) / 100);
+  return { x: 0, y: top, width, height: height - top };
+}
+
+export function createRevisionQueue() {
+  let revision = 0;
+  let tail = Promise.resolve();
+  return {
+    next() { return ++revision; },
+    current(token) { return token === revision; },
+    enqueue(token, work) {
+      const job = tail.then(async () => {
+        if (token !== revision) return false;
+        await work(() => token === revision);
+        return token === revision;
+      });
+      tail = job.catch(() => {});
+      return job;
+    },
+  };
+}
+
 export function contactCenter(center, radius, stage, edge) {
   const next = {
     x: Number.isFinite(center?.x) ? center.x : 0,

@@ -5,11 +5,11 @@ import {
   STORAGE_KEY,
   centerFromPointer,
   coinMetrics,
-  contactCenter,
+  createRevisionQueue,
   defaultPreset,
   exitReached,
-  exitVisual,
-  fadeDistancePx,
+  exitVelocity,
+  fullyOffscreen,
   grabOffset,
   leadingEdgeOvershoot,
   nextPresetName,
@@ -20,7 +20,7 @@ import {
   sanitizePreset,
   serializeState,
   stageToNormalized,
-  travelDistancePx,
+  wallpaperCropRect,
   classifyTwoFingerSwipe,
 } from './logic.js';
 
@@ -40,7 +40,7 @@ const SPAWN_SLOP_PX = 12;
 const SWIPE_REVEAL_PX = 24;
 const IMAGE_CHOICE_KEY = 'tobira.coinChoices.v1';
 const IMAGE_DB = 'tobira.localImages.v1';
-const DEFAULT_COIN_IMAGES = Object.freeze({ kennedy: './coin-kennedy.svg', won500: './coin-500won.svg' });
+const DEFAULT_COIN_IMAGES = Object.freeze({ kennedy: './coin-kennedy.png', won500: './coin-500won.png' });
 
 const settingsEl = document.querySelector('#settings');
 const stageEl = document.querySelector('#stage');
@@ -73,6 +73,13 @@ const wallpaperInput = document.querySelector('#wallpaper-upload');
 const wallpaperClear = document.querySelector('#wallpaper-clear');
 const wallpaperNote = document.querySelector('#wallpaper-note');
 const wallpaperEl = document.querySelector('#stage-wallpaper');
+const wallpaperCrop = document.querySelector('#wallpaper-crop');
+const wallpaperCropValue = document.querySelector('#wallpaper-crop-value');
+const wallpaperPreview = document.querySelector('#wallpaper-preview-image');
+const wallpaperControls = document.querySelector('#wallpaper-controls');
+const WALLPAPER_CROP_KEY = 'tobira.wallpaperCrop.v1';
+let wallpaperOriginal = null;
+const wallpaperJobs = createRevisionQueue();
 const imageChoiceInput = document.querySelector('#coin-image-choice');
 const coinImageInput = document.querySelector('#coin-image-upload');
 const coinImageNote = document.querySelector('#coin-image-note');
@@ -123,6 +130,55 @@ async function imageBlob(file, maxSide) {
   }
 }
 
+async function croppedWallpaper(blob, percent) {
+  const sourceUrl = URL.createObjectURL(blob);
+  try {
+    const image = new Image();
+    image.src = sourceUrl;
+    await image.decode();
+    const crop = wallpaperCropRect(image.naturalWidth, image.naturalHeight, percent);
+    const scale = Math.min(1, 1600 / Math.max(crop.width, crop.height));
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, Math.round(crop.width * scale));
+    canvas.height = Math.max(1, Math.round(crop.height * scale));
+    canvas.getContext('2d').drawImage(image, crop.x, crop.y, crop.width, crop.height, 0, 0, canvas.width, canvas.height);
+    const mime = blob.type === 'image/jpeg' ? 'image/jpeg' : 'image/png';
+    return await new Promise((resolve, reject) => canvas.toBlob((output) => output ? resolve(output) : reject(new Error('배경을 자르지 못했습니다.')), mime, 0.88));
+  } finally { URL.revokeObjectURL(sourceUrl); }
+}
+
+function showWallpaper(blob) {
+  const url = useImageUrl('wallpaper', blob);
+  wallpaperEl.src = url;
+  wallpaperPreview.src = url;
+  wallpaperControls.hidden = false;
+  stageEl.classList.add('has-wallpaper');
+}
+
+async function updateWallpaperCrop() {
+  const source = wallpaperOriginal;
+  if (!source) return false;
+  const token = wallpaperJobs.next();
+  const percent = Number(wallpaperCrop.value);
+  wallpaperCropValue.textContent = `${percent}%`;
+  try {
+    const output = await croppedWallpaper(source, percent);
+    if (!wallpaperJobs.current(token)) return false;
+    const saved = await wallpaperJobs.enqueue(token, async (current) => {
+      await imageRecord('wallpaper:original', 'put', source);
+      if (!current()) return;
+      await imageRecord('wallpaper', 'put', output);
+      if (current()) localStorage.setItem(WALLPAPER_CROP_KEY, String(percent));
+    });
+    if (!saved) return false;
+    showWallpaper(output);
+    return true;
+  } catch (error) {
+    if (!wallpaperJobs.current(token)) return false;
+    throw error;
+  }
+}
+
 function useImageUrl(key, blob) {
   const previous = imageUrls.get(key);
   if (previous) URL.revokeObjectURL(previous);
@@ -152,12 +208,54 @@ function persistImageChoices() {
 
 async function loadImages() {
   try {
+    const token = wallpaperJobs.next();
+    const savedCrop = localStorage.getItem(WALLPAPER_CROP_KEY);
+    wallpaperCrop.value = String(Math.min(18, Math.max(0, Number(savedCrop) || 0)));
+    wallpaperCropValue.textContent = `${wallpaperCrop.value}%`;
+    const storedOriginal = await imageRecord('wallpaper:original', 'get');
     const wallpaper = await imageRecord('wallpaper', 'get');
-    if (wallpaper) {
-      wallpaperEl.src = useImageUrl('wallpaper', wallpaper);
-      stageEl.classList.add('has-wallpaper');
+    if (wallpaperJobs.current(token) && wallpaper) {
+      wallpaperOriginal = storedOriginal || wallpaper;
+      showWallpaper(wallpaper);
       wallpaperNote.textContent = '배경 사진이 이 기기에 저장되어 있습니다.';
+      try {
+        if (savedCrop === null) {
+          // Older versions stored only a reduced wallpaper. Preserve that blob before one-time cropping.
+          const migrated = await croppedWallpaper(wallpaperOriginal, 5);
+          if (wallpaperJobs.current(token)) {
+            const saved = await wallpaperJobs.enqueue(token, async (current) => {
+              if (!storedOriginal) await imageRecord('wallpaper:original', 'put', wallpaperOriginal);
+              if (!current()) return;
+              await imageRecord('wallpaper', 'put', migrated);
+              if (current()) localStorage.setItem(WALLPAPER_CROP_KEY, '5');
+            });
+            if (saved) {
+              wallpaperCrop.value = '5';
+              wallpaperCropValue.textContent = '5%';
+              showWallpaper(migrated);
+              wallpaperNote.textContent = '기존 배경의 윗부분 5%를 잘랐습니다. 설정에서 다시 조절할 수 있습니다.';
+            }
+          }
+        } else if (!storedOriginal) {
+          await wallpaperJobs.enqueue(token, () => imageRecord('wallpaper:original', 'put', wallpaper));
+        }
+      } catch {
+        if (wallpaperJobs.current(token) && savedCrop === null) {
+          try {
+            await wallpaperJobs.enqueue(token, async (current) => {
+              if (current()) localStorage.setItem(WALLPAPER_CROP_KEY, '0');
+              if (!storedOriginal && current()) await imageRecord('wallpaper:original', 'put', wallpaper);
+            });
+          } catch { /* Keep the already displayed wallpaper. */ }
+          wallpaperCrop.value = '0';
+          wallpaperCropValue.textContent = '0%';
+          wallpaperNote.textContent = '기존 배경을 그대로 표시합니다. 윗부분 자동 자르기에 실패했습니다. 설정에서 다시 조절해 주세요.';
+        } else if (wallpaperJobs.current(token)) {
+          wallpaperNote.textContent = '기존 배경을 표시합니다. 원본 저장에 실패하여 자르기를 다시 조절할 수 없습니다.';
+        }
+      }
     }
+    if (wallpaperJobs.current(token)) wallpaperCrop.disabled = !wallpaperOriginal;
     for (const preset of state.presets) {
       const blob = await imageRecord(`coin:${preset.id}`, 'get');
       if (blob) useImageUrl(`coin:${preset.id}`, blob);
@@ -179,6 +277,8 @@ let grab = { x: 0, y: 0 };
 let dragId = null;
 let dragClient = null;
 let dragBaseline = null;
+let dragSamples = [];
+let dragExitEdge = null;
 let objectLive = false;
 let moved = false;
 let gestureFired = false;
@@ -636,9 +736,10 @@ function showPerformance({ persistMode = true, keepGone = false } = {}) {
   if (persistMode) persist();
 }
 
-function beginExit(contact, edge) {
+function beginExit(edge, speed) {
   if (phase === 'exiting' || phase === 'gone') return;
   if (!EDGE_ORDER.includes(edge)) return;
+  if (!(speed > 0)) { phase = 'idle'; return; }
   const capturedId = dragId;
   phase = 'exiting';
   dragId = null;
@@ -648,11 +749,9 @@ function beginExit(contact, edge) {
   const token = exitToken + 1;
   exitToken = token;
   const preset = selected();
-  // Direction is the edge the object reached. Do not rewrite the stored preset.
-  const motion = { ...preset, exitEdge: edge };
   const startedAt = performance.now();
   const originStage = measureStage();
-  const origin = stageToNormalized(contact.x, contact.y, originStage.width, originStage.height);
+  const origin = stageToNormalized(center.x, center.y, originStage.width, originStage.height);
   stageEl.classList.add('is-leaving');
   stageEl.classList.remove('is-mark');
   releaseCoinVisibility();
@@ -661,15 +760,11 @@ function beginExit(contact, edge) {
     if (token !== exitToken) return;
     const stageNow = measureStage();
     const metrics = coinMetrics(preset, stageNow);
-    const distance = travelDistancePx(fadeDistancePx(motion, stageNow), metrics.diameter);
-    const duration = Math.max(preset.disappearDuration, 1);
-    const linear = Math.min(1, (now - startedAt) / duration);
-    const visual = exitVisual(linear);
     const base = normalizedToStage(origin.x, origin.y, stageNow.width, stageNow.height);
-    const offset = outwardOffset(edge, distance * visual.travel);
-    paintCoin(base.x + offset.x, base.y + offset.y, metrics.radius, visual.opacity, visual.scale);
-    cueEl.style.opacity = String(0.18 * visual.travel);
-    if (!visual.gone) {
+    const offset = outwardOffset(edge, speed * Math.max(0, now - startedAt));
+    const next = { x: base.x + offset.x, y: base.y + offset.y };
+    paintCoin(next.x, next.y, metrics.radius, 1, 1);
+    if (!fullyOffscreen(next, metrics.radius, stageNow, edge)) {
       exitFrame = window.requestAnimationFrame(step);
       return;
     }
@@ -776,20 +871,30 @@ function applyDragSample(sample) {
   const metrics = coinMetrics(preset, lastStage);
   const next = centerFromPointer(local, grab);
   if (!Number.isFinite(next.x) || !Number.isFinite(next.y)) return;
+  const t = Number.isFinite(sample.timeStamp) ? sample.timeStamp : performance.now();
+  dragSamples.push({ x: next.x, y: next.y, t });
+  dragSamples = dragSamples.filter((item) => t - item.t <= 80);
   const edge = exitEdgeReached(next, metrics.radius, lastStage, pointerTravel(sample, dragClient));
-  if (edge) {
-    beginExit(contactCenter(next, metrics.radius, lastStage, edge), edge);
-    return;
-  }
+  if (edge) dragExitEdge = edge;
   center = next;
   moved = true;
   objectLive = true;
   paintCoin(center.x, center.y, metrics.radius, 1, 1);
+  if (dragExitEdge && fullyOffscreen(next, metrics.radius, lastStage, dragExitEdge)) {
+    phase = 'gone';
+    dragId = null;
+    dragClient = null;
+    dragBaseline = null;
+    concealCoin();
+    setGoneSession(true);
+  }
 }
 
 function startDrag(event) {
   phase = 'dragging';
   dragId = event.pointerId;
+  dragExitEdge = null;
+  dragSamples = [];
   stageRect = stageEl.getBoundingClientRect();
   lastStage = measureStage();
   dragClient = {
@@ -800,6 +905,7 @@ function startDrag(event) {
   const local = pointInStage(event, stageRect);
   if (!local) return;
   grab = grabOffset(local, center);
+  dragSamples.push({ x: center.x, y: center.y, t: Number.isFinite(event.timeStamp) ? event.timeStamp : performance.now() });
 }
 
 function onPointerDown(event) {
@@ -870,6 +976,7 @@ function onPointerUp(event) {
   if (entry) entry.last = screenPoint(event);
   if (event.type === 'pointercancel') spawnCancelled = true;
   maybeClassify();
+  if (event.type !== 'pointercancel' && phase === 'dragging' && event.pointerId === dragId) applyDragSample(event);
   const wasDrag = event.pointerId === dragId;
   const canSpawn = phase === 'awaiting'
     && event.pointerId === spawnId
@@ -884,10 +991,13 @@ function onPointerUp(event) {
   releaseCapture(event.pointerId);
   if (canSpawn) revealSpawn(releasePoint);
   if (wasDrag && phase === 'dragging') {
+    const edge = dragExitEdge;
+    const speed = edge ? exitVelocity(dragSamples, edge) : 0;
     dragId = null;
     dragClient = null;
     dragBaseline = null;
     phase = 'idle';
+    if (edge) beginExit(edge, speed);
   }
   if (pointers.size === 2) rebasePointers();
   if (pointers.size === 0) {
@@ -959,20 +1069,55 @@ function bind() {
   wallpaperInput.addEventListener('change', async () => {
     const file = wallpaperInput.files?.[0];
     if (!file) return;
+    const token = wallpaperJobs.next();
+    const previousOriginal = wallpaperOriginal;
+    wallpaperOriginal = file;
     try {
-      const blob = await imageBlob(file, 1600);
-      await imageRecord('wallpaper', 'put', blob);
-      wallpaperEl.src = useImageUrl('wallpaper', blob);
-      stageEl.classList.add('has-wallpaper');
-      wallpaperNote.textContent = '배경 사진을 이 기기에 저장했습니다.';
-    } catch (error) { wallpaperNote.textContent = error.message || '배경 사진을 저장하지 못했습니다.'; }
+      wallpaperCrop.value = '5';
+      const output = await croppedWallpaper(file, Number(wallpaperCrop.value));
+      if (wallpaperJobs.current(token)) {
+        const saved = await wallpaperJobs.enqueue(token, async (current) => {
+          await imageRecord('wallpaper:original', 'put', file);
+          if (!current()) return;
+          await imageRecord('wallpaper', 'put', output);
+          if (current()) localStorage.setItem(WALLPAPER_CROP_KEY, '5');
+        });
+        if (saved) {
+          wallpaperCropValue.textContent = '5%';
+          wallpaperCrop.disabled = false;
+          showWallpaper(output);
+          wallpaperNote.textContent = '배경 원본과 잘라낸 사진을 이 기기에 저장했습니다.';
+        }
+      }
+    } catch (error) {
+      if (wallpaperJobs.current(token)) {
+        wallpaperOriginal = previousOriginal;
+        wallpaperNote.textContent = error.message || '배경 사진을 저장하지 못했습니다.';
+      }
+    }
     wallpaperInput.value = '';
   });
-  wallpaperClear.addEventListener('click', async () => {
+  wallpaperCrop.addEventListener('change', async () => {
     try {
-      await imageRecord('wallpaper', 'delete');
+      if (await updateWallpaperCrop()) wallpaperNote.textContent = '조정한 배경을 저장했습니다.';
+    } catch (error) { wallpaperNote.textContent = error.message || '배경을 조정하지 못했습니다.'; }
+  });
+  wallpaperCrop.addEventListener('input', () => { wallpaperCropValue.textContent = `${wallpaperCrop.value}%`; });
+  wallpaperClear.addEventListener('click', async () => {
+    const token = wallpaperJobs.next();
+    wallpaperOriginal = null;
+    try {
+      const deleted = await wallpaperJobs.enqueue(token, async (current) => {
+        await imageRecord('wallpaper', 'delete');
+        if (!current()) return;
+        await imageRecord('wallpaper:original', 'delete');
+        if (current()) localStorage.removeItem(WALLPAPER_CROP_KEY);
+      });
+      if (!deleted) return;
       useImageUrl('wallpaper', null);
       wallpaperEl.removeAttribute('src');
+      wallpaperPreview.removeAttribute('src');
+      wallpaperControls.hidden = true;
       stageEl.classList.remove('has-wallpaper');
       wallpaperNote.textContent = '기본 배경을 사용합니다.';
     } catch { wallpaperNote.textContent = '배경 사진을 지우지 못했습니다.'; }

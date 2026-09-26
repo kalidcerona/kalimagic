@@ -338,7 +338,7 @@ input[type="range"]:focus-visible,
 .stage {
   display: none;
   position: fixed;
-  inset: 0;
+  inset: var(--safe-top) 0 0;
   overflow: hidden;
   background-color: var(--stage);
   background-image:
@@ -360,6 +360,22 @@ input[type="range"]:focus-visible,
   pointer-events: none;
   z-index: 0;
 }
+.wallpaper-controls[hidden] { display: none; }
+.wallpaper-preview {
+  width: min(100%, 220px);
+  border: 1px solid #b9aa96;
+  border-radius: 12px;
+  background: var(--stage);
+}
+.wallpaper-preview span {
+  display: block;
+  padding: 5px;
+  background: rgba(28, 25, 22, .82);
+  color: white;
+  text-align: center;
+  font-size: 11px;
+}
+.wallpaper-preview img { display: block; width: 100%; height: auto; }
 .stage.has-wallpaper .stage-wallpaper { display: block; }
 .stage.has-wallpaper .home { display: none; }
 
