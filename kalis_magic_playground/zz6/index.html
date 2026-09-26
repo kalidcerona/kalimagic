@@ -22,7 +22,7 @@
         if (!raw) return;
         var data = JSON.parse(raw);
         if (!data || data.mode !== 'performance' || !Array.isArray(data.presets)) return;
-        document.documentElement.setAttribute('data-boot', 'performance');
+        document.documentElement.setAttribute('data-boot', 'loading');
         document.title = '동전';
         var theme = document.querySelector('meta[name="theme-color"]');
         if (theme) theme.setAttribute('content', '#E4DDD3');
@@ -40,13 +40,20 @@
     <div class="sheet">
       <img class="brand-logo" src="./brand-logo.png" alt="TOBIRA">
       <h1>TOBIRA</h1>
-      <p class="lede">공연에 올릴 물건을 정합니다. 시작 화면에는 물건이 없습니다.</p>
+      <p class="lede">배경 화면과 동전 이미지를 준비합니다. 화면을 탭하거나 쓸면 동전이 나타납니다.</p>
       <div id="recovery" class="recovery" hidden></div>
 
+      <label class="field">
+        <span class="field-label">공연 배경 화면 업로드</span>
+        <input id="wallpaper-upload" type="file" accept="image/png,image/jpeg,image/webp">
+      </label>
+      <p id="wallpaper-note" class="hint">올린 사진이 공연 화면 전체를 채웁니다. 사진은 이 기기에만 저장됩니다.</p>
+      <button type="button" id="wallpaper-clear" class="button button-quiet">기본 배경 사용</button>
+
       <details id="preset-picker" class="settings-toggle">
-        <summary><span>프리셋 선택</span><span id="selected-preset-name" class="toggle-current"></span></summary>
+        <summary><span>동전 이미지 1, 2, 3</span><span id="selected-preset-name" class="toggle-current"></span></summary>
         <div class="toggle-body">
-          <button type="button" id="add-preset" class="button button-quiet add-preset">새 프리셋 추가</button>
+          <button type="button" id="add-preset" class="button button-quiet add-preset">다음 이미지 자리 추가</button>
           <ul id="preset-list" class="preset-list"></ul>
         </div>
       </details>
@@ -60,6 +67,20 @@
         </label>
 
         <label class="field">
+          <span class="field-label">이 자리에서 나올 동전</span>
+          <select id="coin-image-choice" class="text">
+            <option value="kennedy">케네디 하프 달러 그림</option>
+            <option value="won500">한국 500원 그림</option>
+            <option value="custom">업로드한 이미지</option>
+          </select>
+        </label>
+        <label class="field">
+          <span class="field-label">동전 이미지 업로드</span>
+          <input id="coin-image-upload" type="file" accept="image/png,image/jpeg,image/webp">
+        </label>
+        <p id="coin-image-note" class="hint">투명 배경 PNG를 권장합니다. 업로드하면 이 자리의 이미지로 선택됩니다.</p>
+
+        <label class="field" hidden>
           <span class="field-label" id="object-kind-label">물건</span>
           <select id="object-kind" class="text" autocomplete="off" aria-describedby="object-kind-help">
             <option value="coin" selected>동전</option>
@@ -67,7 +88,7 @@
             <option value="business card">명함</option>
           </select>
         </label>
-        <p id="object-kind-help" class="hint">동전, 플레잉 카드, 명함. 탭한 점 정중앙에 평평하게 나타납니다.</p>
+        <p id="object-kind-help" class="hint" hidden>동전, 플레잉 카드, 명함. 탭한 점 정중앙에 평평하게 나타납니다.</p>
 
         <label class="field">
           <span class="field-label">물건 크기 <strong id="coin-size-value"></strong></span>
@@ -125,11 +146,11 @@
         <summary>사용 안내</summary>
         <div class="guide-body">
           <h2>준비</h2>
-          <p>공연 화면은 앱 이름 없는 평범한 홈 화면입니다. 로고와 설명, 버튼은 설정에만 있습니다. 물건을 올리기 전에는 화면에 아무것도 없습니다.</p>
-          <p>물건에서 동전, 플레잉 카드, 명함 중 하나를 고치고, 크기와 퇴장 느낌을 정한 뒤 「공연 시작」을 누릅니다.</p>
+          <p>공연 배경으로 사용할 사진을 올립니다. 동전 이미지 자리는 최대 세 개입니다. 각 자리마다 기본 동전 그림을 고르거나 직접 이미지를 올립니다.</p>
+          <p>쓸 자리와 크기, 퇴장 느낌을 정한 뒤 「공연 시작」을 누릅니다.</p>
 
           <h2>정확한 위치에 두기</h2>
-          <p>원하는 지점을 한 손가락으로 탭합니다. 고른 물건이 그 터치의 정중앙에, 평평한 그림으로 나타납니다.</p>
+          <p>배경을 탭하면 손가락을 뗄 때 동전이 나타납니다. 배경을 쓸면 손가락이 움직이는 순간 동전이 나타납니다.</p>
 
           <h2>밀어 없애기</h2>
           <p>물건을 끌어 위, 아래, 왼쪽, 오른쪽 어느 가장자리로든 화면 밖으로 보내면 사라집니다.</p>
@@ -154,6 +175,7 @@
   </main>
 
   <div id="stage" class="stage">
+    <img id="stage-wallpaper" class="stage-wallpaper" alt="" aria-hidden="true">
     <div class="home" aria-hidden="true">
       <div class="home-icons">
         <span class="home-icon"></span>
@@ -171,7 +193,7 @@
       </div>
     </div>
     <div id="cue" class="cue" aria-hidden="true"></div>
-    <div id="coin" class="coin kind-coin" aria-hidden="true"></div>
+    <div id="coin" class="coin kind-coin" aria-hidden="true"><img id="coin-art" alt=""></div>
   </div>
   <noscript>
     <p class="noscript">이 도구는 JavaScript가 필요합니다.</p>

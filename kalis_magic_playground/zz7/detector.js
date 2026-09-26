@@ -42,6 +42,8 @@ let settled = true;
 let activePointerId = null;
 let gestureConsumed = false;
 let audioContext = null;
+let scanOscillator = null;
+let scanGain = null;
 
 /** @type {Map<number, {x: number, y: number, startX: number, startY: number, startedOnButton: boolean}>} */
 const pointers = new Map();
@@ -177,6 +179,7 @@ function settingsVisible() {
 }
 
 function showSettings() {
+  stopScanningSound();
   settingsScreen.hidden = false;
   performanceScreen.hidden = true;
   detectorButton.disabled = true;
@@ -229,7 +232,8 @@ function playVerdictSound(result) {
   try {
     const ctx = ensureAudio();
     if (!ctx) return;
-    const start = ctx.currentTime + 0.01;
+    // Let the scan tone's short release ramp finish before the verdict cue.
+    const start = ctx.currentTime + 0.06;
     const master = ctx.createGain();
     master.gain.setValueAtTime(0.8, start);
     master.connect(ctx.destination);
@@ -252,10 +256,59 @@ function playVerdictSound(result) {
   }
 }
 
+function stopScanningSound() {
+  if (!scanOscillator) return;
+  const oscillator = scanOscillator;
+  const gain = scanGain;
+  scanOscillator = null;
+  scanGain = null;
+  try {
+    const now = audioContext?.currentTime ?? 0;
+    gain?.gain.cancelScheduledValues(now);
+    if (gain) {
+      gain.gain.setValueAtTime(Math.max(gain.gain.value, 0.0001), now);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.035);
+    }
+    oscillator.stop(now + 0.045);
+  } catch {
+    try { oscillator.stop(); } catch { /* Oscillator may already have stopped. */ }
+  }
+}
+
+function startScanningSound() {
+  stopScanningSound();
+  if (!soundEnabled()) return;
+  try {
+    const ctx = ensureAudio();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    const oscillator = ctx.createOscillator();
+    const gain = ctx.createGain();
+    oscillator.type = "sine";
+    oscillator.frequency.setValueAtTime(148, now);
+    oscillator.frequency.linearRampToValueAtTime(226, now + 1.85);
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.055, now + 0.08);
+    oscillator.connect(gain);
+    gain.connect(ctx.destination);
+    oscillator.onended = () => {
+      oscillator.disconnect();
+      gain.disconnect();
+    };
+    scanOscillator = oscillator;
+    scanGain = gain;
+    oscillator.start(now);
+  } catch {
+    stopScanningSound();
+    /* Visual reaction still works when audio is unavailable. */
+  }
+}
+
 function applyRelease(nowMs, x, y) {
   if (settled) return;
   settled = true;
   clearHoldTimer();
+  stopScanningSound();
   const result = releaseHold(appState, hold, nowMs, x, y);
   hold = result.hold;
   appState = result.state;
@@ -289,6 +342,7 @@ function startHold(event) {
   settled = false;
   activePointerId = event.pointerId;
   setStage("testing");
+  startScanningSound();
   armThresholdTimer();
 }
 
@@ -436,6 +490,15 @@ function onStartPerformance() {
 function onSoundChange() {
   persistSoundPreference();
   if (soundInput.checked) unlockFromGesture();
+  else stopScanningSound();
+}
+
+function onVisibilityChange() {
+  if (!document.hidden) return;
+  if (!settled && hold.phase !== "idle") cancelUnsettledHold();
+  stopScanningSound();
+  pointers.clear();
+  activePointerId = null;
 }
 
 function onRehearsalKey(event) {
@@ -456,6 +519,7 @@ function bind() {
   startButton.addEventListener("click", onStartPerformance);
   soundInput.addEventListener("change", onSoundChange);
   window.addEventListener("keydown", onRehearsalKey);
+  document.addEventListener("visibilitychange", onVisibilityChange);
 }
 
 bootStorage();

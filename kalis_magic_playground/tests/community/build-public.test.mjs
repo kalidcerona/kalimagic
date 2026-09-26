@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readdir, readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { PUBLIC_FILES, PUBLIC_DIRS, PRIVATE_PATTERNS, MIRROR_PAIRS, DISTRIBUTION_APPS, SHARED_UNLOCK_FILES, CHOICE_FILES, USOTSUKI_FILES, buildPublic } from '../../scripts/build-public.mjs';
+import { PUBLIC_FILES, PUBLIC_DIRS, PRIVATE_PATTERNS, MIRROR_PAIRS, DISTRIBUTION_APPS, SHARED_UNLOCK_FILES, CHOICE_FILES, USOTSUKI_FILES, ALETHEIA_COURT_FILES, buildPublic } from '../../scripts/build-public.mjs';
 
 test('public build allowlist includes visible site pages', () => {
   assert.ok(PUBLIC_FILES.includes('index.html'));
@@ -59,6 +59,11 @@ test('public build mirrors the current calculator and integrated stopwatch sourc
   for (const file of USOTSUKI_FILES) {
     assert.ok(MIRROR_PAIRS.some(([source, mirror]) =>
       source === `../../magic-usotsuki/${file}` && mirror === `zz7/${file}`), `zz7 ${file}`);
+  }
+  assert.equal(ALETHEIA_COURT_FILES.length, 12);
+  for (const file of ALETHEIA_COURT_FILES) {
+    assert.ok(MIRROR_PAIRS.some(([source, mirror]) =>
+      source === `../../magic-aletheia/${file}` && mirror === `zz5/${file}`), `zz5 ${file}`);
   }
   for (const [source, route] of [
     ['magic-stopwatch-uni', 'zz1'],

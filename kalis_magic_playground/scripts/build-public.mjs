@@ -115,6 +115,9 @@ export const CHOICE_FILES = [
 ];
 export const NEW_APP_FILES = CHOICE_FILES;
 export const USOTSUKI_FILES = NEW_APP_FILES.filter((file) => file !== 'app.js').concat('detector.js');
+export const ALETHEIA_COURT_FILES = ['S-J', 'S-Q', 'S-K', 'D-J', 'D-Q', 'D-K',
+  'C-J', 'C-Q', 'C-K', 'H-J', 'H-Q', 'H-K']
+  .map((code) => `court-cards/${code}.png`);
 
 export const MIRROR_PAIRS = [
   ['../../magic-calculator-v2/index.html', 'zz3/index.html'],
@@ -137,7 +140,10 @@ export const MIRROR_PAIRS = [
   ...SHARED_UNLOCK_FILES.map((file) => [`../../magic-unlock/${file}`, `zz2/${file}`]),
   ...CHOICE_FILES.map((file) => [`../../magic-choice/${file}`, `zz4/${file}`]),
   ...NEW_APP_FILES.map((file) => [`../../magic-aletheia/${file}`, `zz5/${file}`]),
+  ...ALETHEIA_COURT_FILES.map((file) => [`../../magic-aletheia/${file}`, `zz5/${file}`]),
   ...NEW_APP_FILES.map((file) => [`../../magic-tobira/${file}`, `zz6/${file}`]),
+  ['../../magic-tobira/coin-kennedy.svg', 'zz6/coin-kennedy.svg'],
+  ['../../magic-tobira/coin-500won.svg', 'zz6/coin-500won.svg'],
   ...USOTSUKI_FILES.map((file) => [`../../magic-usotsuki/${file}`, `zz7/${file}`]),
   ...[
     ['magic-stopwatch-uni', 'zz1'],

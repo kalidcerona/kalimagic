@@ -2,7 +2,7 @@
 
 const CACHE_PREFIX = 'tobira-shell-';
 const LEGACY_CACHE_PREFIX = 'stopwatch-uni-' + encodeURIComponent(self.registration.scope) + '-';
-const CACHE_NAME = CACHE_PREFIX + 'v5';
+const CACHE_NAME = CACHE_PREFIX + 'v6';
 const SHELL_NAMES = new Set([
   '',
   'index.html',
@@ -16,6 +16,8 @@ const SHELL_NAMES = new Set([
   'icon.svg',
   'brand-logo.jpg',
   'brand-logo.png',
+  'coin-kennedy.svg',
+  'coin-500won.svg',
 ]);
 const SHELL_URLS = [
   './',
@@ -30,6 +32,8 @@ const SHELL_URLS = [
   './icon.svg',
   './brand-logo.jpg',
   './brand-logo.png',
+  './coin-kennedy.svg',
+  './coin-500won.svg',
 ];
 
 self.addEventListener('install', (event) => {

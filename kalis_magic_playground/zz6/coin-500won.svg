@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" role="img" aria-label="한국 500원 동전을 표현한 그림">
+<defs><radialGradient id="metal"><stop stop-color="#f3f3e9"/><stop offset=".7" stop-color="#bdc4c5"/><stop offset="1" stop-color="#747e83"/></radialGradient></defs>
+<circle cx="250" cy="250" r="240" fill="#737c82"/><circle cx="250" cy="250" r="228" fill="url(#metal)" stroke="#eef1ed" stroke-width="9"/><circle cx="250" cy="250" r="198" fill="none" stroke="#68767a" stroke-width="4"/>
+<g fill="#5b686d" font-family="Georgia,serif" text-anchor="middle"><text x="250" y="138" font-size="43" font-weight="bold">500</text><text x="250" y="397" font-size="37" font-weight="bold">오백원</text><text x="250" y="433" font-size="24">대한민국</text></g>
+<path d="M131 318c46-42 69-52 121-51 33 2 50-24 68-49-6 40-20 63-42 77 37-5 68-17 93-35-30 42-67 64-111 65-42 1-74-17-129-7z" fill="#758187" stroke="#536168" stroke-width="6"/><path d="M219 266c-12-40 6-71 31-78-6 26 0 45 10 65m-1 23c11-41 24-66 51-78" fill="none" stroke="#59676d" stroke-width="9" stroke-linecap="round"/>
+</svg>

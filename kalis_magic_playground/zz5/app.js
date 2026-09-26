@@ -17,6 +17,7 @@ import {
   containRect,
   createId,
   emptyMeta,
+  emptyPhotoSets,
   gradualStartAlpha,
   initialFreeClearRect,
   initialStageRatios,
@@ -26,6 +27,7 @@ import {
   maskDimensions,
   normalizeCoverage,
   parseMeta,
+  parsePhotoSets,
   salvageMeta,
   stageBands,
   stampAlpha,
@@ -35,6 +37,8 @@ import {
 
 const STORAGE_KEY = 'aletheia.meta.v1';
 const CUSTOM_KEY = 'aletheia.custom12.v1';
+const PHOTO_SETS_KEY = 'aletheia.photoSets.v2';
+const PHOTO_SET_COUNT = 3;
 const CELL_GUIDE_KEY = 'aletheia.cellGuide.v1';
 const COVERAGE_KEY = 'aletheia.coverage.v1';
 const CELL_GUIDE_HOLD_MS = 800;
@@ -62,8 +66,8 @@ const emptyHint = document.querySelector('#empty-hint');
 const startButton = document.querySelector('#start-button');
 const cardStartButton = document.querySelector('#card-start-button');
 const customSlotsRoot = document.querySelector('#custom-slots');
-const customStartButton = document.querySelector('#custom-start-button');
-const customReadyHint = document.querySelector('#custom-ready-hint');
+const customStartButtons = [];
+const customReadyHints = [];
 const customRepair = document.querySelector('#custom-repair');
 const editorForm = document.querySelector('#editor');
 const editorFields = document.querySelector('#editor-fields');
@@ -100,12 +104,12 @@ let resetArmed = false;
 let blockPointerUntil = 0;
 let previewUrl = null;
 let dbPromise = null;
-let customIds = Array.from({ length: CUSTOM_COUNT }, () => null);
+let customIds = emptyPhotoSets().flat();
 let customCorrupt = false;
 const customSlots = [];
-const customPendingFiles = Array.from({ length: CUSTOM_COUNT }, () => null);
-const customPendingUrls = Array.from({ length: CUSTOM_COUNT }, () => null);
-const customStoredUrls = Array.from({ length: CUSTOM_COUNT }, () => null);
+const customPendingFiles = Array.from({ length: CUSTOM_COUNT * PHOTO_SET_COUNT }, () => null);
+const customPendingUrls = Array.from({ length: CUSTOM_COUNT * PHOTO_SET_COUNT }, () => null);
+const customStoredUrls = Array.from({ length: CUSTOM_COUNT * PHOTO_SET_COUNT }, () => null);
 let running = null;
 let lastStageSample = 0;
 let cellGuideEnabled = false;
@@ -205,94 +209,53 @@ function commitMeta(next, options = {}) {
   return true;
 }
 
-function emptyCustomIds() {
-  return Array.from({ length: CUSTOM_COUNT }, () => null);
-}
-
-// Separate from preset meta. Exactly 12 slots; null means that slot is empty.
-function parseCustomMeta(raw) {
-  if (raw == null) return { ok: true, missing: true, ids: emptyCustomIds() };
-  let data;
-  try {
-    data = JSON.parse(raw);
-  } catch {
-    return { ok: false, ids: null };
-  }
-  if (!data || typeof data !== 'object' || Array.isArray(data)) return { ok: false, ids: null };
-  if (data.version !== 1 || !Array.isArray(data.imageIds) || data.imageIds.length !== CUSTOM_COUNT) {
-    return { ok: false, ids: null };
-  }
-  const ids = [];
-  for (const id of data.imageIds) {
-    if (id == null) {
-      ids.push(null);
-      continue;
-    }
-    if (typeof id !== 'string' || !IMAGE_ID_RE.test(id)) return { ok: false, ids: null };
-    ids.push(id);
-  }
-  return { ok: true, missing: false, ids };
+function setIds(setIndex) {
+  return customIds.slice(setIndex * CUSTOM_COUNT, (setIndex + 1) * CUSTOM_COUNT);
 }
 
 function commitCustom(ids) {
-  if (storageLocked) {
-    setError(MESSAGES.storageReadFailed);
+  if (storageLocked || customCorrupt || !Array.isArray(ids) || ids.length !== CUSTOM_COUNT * PHOTO_SET_COUNT) {
+    setError('내 사진 세트를 저장하지 못했습니다. 기존 사진은 바꾸지 않았습니다.');
     return false;
   }
-  if (customCorrupt) {
-    setError('저장된 내 사진 정보를 해석할 수 없습니다. 기존 데이터는 자동으로 지우지 않았습니다.');
+  const sets = Array.from({ length: PHOTO_SET_COUNT }, (_, index) => ids.slice(index * CUSTOM_COUNT, (index + 1) * CUSTOM_COUNT));
+  const raw = JSON.stringify({ version: 2, sets });
+  if (!parsePhotoSets(raw).ok) {
+    setError('내 사진 세트를 저장하지 못했습니다. 기존 사진은 바꾸지 않았습니다.');
     return false;
   }
-  if (!Array.isArray(ids) || ids.length !== CUSTOM_COUNT) {
-    setError('내 사진 목록을 저장하지 못했습니다. 기존 칸은 바꾸지 않았습니다.');
-    return false;
-  }
-  const payload = { version: 1, imageIds: ids.slice() };
-  let raw;
+  let previous;
   try {
-    raw = JSON.stringify(payload);
+    previous = localStorage.getItem(PHOTO_SETS_KEY);
+    localStorage.setItem(PHOTO_SETS_KEY, raw);
+    if (localStorage.getItem(PHOTO_SETS_KEY) !== raw) throw new Error('verify');
   } catch {
-    setError('내 사진 목록을 저장하지 못했습니다. 기존 칸은 바꾸지 않았습니다.');
+    try {
+      if (previous === null) localStorage.removeItem(PHOTO_SETS_KEY);
+      else if (previous !== undefined) localStorage.setItem(PHOTO_SETS_KEY, previous);
+    } catch { /* Preserve legacy and IndexedDB data. */ }
+    setError('내 사진 세트를 저장하지 못했습니다. 기존 사진은 바꾸지 않았습니다.');
     return false;
   }
-  if (!parseCustomMeta(raw).ok) {
-    setError('내 사진 목록을 저장하지 못했습니다. 기존 칸은 바꾸지 않았습니다.');
-    return false;
-  }
-  try {
-    const previous = localStorage.getItem(CUSTOM_KEY);
-    localStorage.setItem(CUSTOM_KEY, raw);
-    const stored = localStorage.getItem(CUSTOM_KEY);
-    if (stored !== raw || !parseCustomMeta(stored).ok) {
-      if (previous == null) localStorage.removeItem(CUSTOM_KEY);
-      else localStorage.setItem(CUSTOM_KEY, previous);
-      setError('내 사진 목록을 저장하지 못했습니다. 기존 칸은 바꾸지 않았습니다.');
-      return false;
-    }
-  } catch {
-    setError('내 사진 목록을 저장하지 못했습니다. 기존 칸은 바꾸지 않았습니다.');
-    return false;
-  }
-  customIds = payload.imageIds.slice();
+  customIds = ids.slice();
   return true;
 }
 
-function customDeckReady() {
-  return !customCorrupt && customIds.length === CUSTOM_COUNT && customIds.every((id) => typeof id === 'string' && id);
+function customDeckReady(setIndex) {
+  return !customCorrupt && setIds(setIndex).every((id) => typeof id === 'string' && id);
 }
 
 function syncCustomControls() {
-  const ready = customDeckReady();
-  if (customStartButton) customStartButton.disabled = busy || storageLocked || !ready;
-  if (customReadyHint) {
-    customReadyHint.hidden = false;
-    if (customCorrupt) {
-      customReadyHint.textContent = '저장된 내 사진 정보를 해석할 수 없어 시작할 수 없습니다. 기존 데이터는 자동으로 지우지 않았습니다.';
-    } else if (ready) {
-      customReadyHint.textContent = '12장이 준비되었습니다. 시작하면 화면은 검고, 칸을 한 번 누른 뒤 문질러 그 번호의 사진을 공개합니다. 기본 카드 그림이 아닙니다.';
-    } else {
-      const filled = customIds.filter((id) => typeof id === 'string' && id).length;
-      customReadyHint.textContent = `사진 ${filled}/12장이 저장되었습니다. 12장이 모두 있어야 내 사진 12장으로 시작할 수 있습니다. 시작 버튼은 그때까지 눌리지 않습니다.`;
+  for (let setIndex = 0; setIndex < PHOTO_SET_COUNT; setIndex += 1) {
+    const ready = customDeckReady(setIndex);
+    const button = customStartButtons[setIndex];
+    const hint = customReadyHints[setIndex];
+    if (button) button.disabled = busy || storageLocked || !ready;
+    if (hint) {
+      const filled = setIds(setIndex).filter(Boolean).length;
+      hint.textContent = customCorrupt
+        ? '저장된 사진 정보를 해석할 수 없습니다. 원본 데이터는 유지됩니다.'
+        : ready ? '12장이 준비되었습니다.' : `사진 ${filled}/12장 저장됨 · 12장이 모두 있어야 연출할 수 있습니다.`;
     }
   }
   const slotLocked = busy || storageLocked || customCorrupt;
@@ -816,7 +779,7 @@ function loadSvgImage(svg) {
   });
 }
 
-async function loadCourtDeck() {
+async function loadVectorCourtDeck() {
   const images = [];
   const urls = [];
   try {
@@ -831,6 +794,29 @@ async function loadCourtDeck() {
   } catch (error) {
     for (const url of urls) revokeUrl(url);
     throw error;
+  }
+}
+
+async function loadCardAssetDeck() {
+  const images = [];
+  try {
+    for (let index = 0; index < COURT_CARD_COUNT; index += 1) {
+      const card = cardAtIndex(index);
+      if (!card) throw new Error('decode');
+      images.push(await loadKeptImage(`./court-cards/${slotLabel(card)}.png`));
+    }
+    return { images, urls: [] };
+  } catch (error) {
+    for (const image of images) image.src = '';
+    throw error;
+  }
+}
+
+async function loadCourtDeck() {
+  try {
+    return await loadCardAssetDeck();
+  } catch {
+    return loadVectorCourtDeck();
   }
 }
 
@@ -1562,7 +1548,7 @@ function showSlotImage(index) {
     slot.preview.removeAttribute('src');
     return;
   }
-  slot.preview.alt = `${index + 1}번 칸 미리보기`;
+  slot.preview.alt = `${Math.floor(index / CUSTOM_COUNT) + 1}세트 ${index % CUSTOM_COUNT + 1}번 칸 미리보기`;
   slot.preview.src = url;
   slot.preview.hidden = false;
 }
@@ -1576,9 +1562,30 @@ function updateSlotAction(index) {
 
 function renderCustomSlots() {
   if (!customSlotsRoot || customSlots.length) return;
-  for (let index = 0; index < CUSTOM_COUNT; index += 1) {
-    const card = cardAtIndex(index);
-    const code = card ? slotLabel(card) : String(index + 1);
+  for (let index = 0; index < CUSTOM_COUNT * PHOTO_SET_COUNT; index += 1) {
+    const setIndex = Math.floor(index / CUSTOM_COUNT);
+    const slotNumber = index % CUSTOM_COUNT;
+    if (slotNumber === 0) {
+      const details = document.createElement('details');
+      details.className = 'photo-set';
+      const summary = document.createElement('summary');
+      summary.textContent = `사진 세트 ${setIndex + 1}`;
+      const slots = document.createElement('div');
+      slots.className = 'custom-slots';
+      const hint = document.createElement('p');
+      hint.className = 'hint';
+      const start = document.createElement('button');
+      start.type = 'button';
+      start.className = 'primary photo-set-start';
+      start.textContent = '이 세팅으로 연출하기';
+      start.addEventListener('click', () => { void startCustomPerformance(setIndex); });
+      details.append(summary, hint, start, slots);
+      customSlotsRoot.append(details);
+      customReadyHints.push(hint);
+      customStartButtons.push(start);
+    }
+    const card = cardAtIndex(slotNumber);
+    const code = card ? slotLabel(card) : String(slotNumber + 1);
     const article = document.createElement('article');
     article.className = 'custom-slot';
     article.dataset.slot = String(index);
@@ -1586,12 +1593,12 @@ function renderCustomSlots() {
     const title = document.createElement('h3');
     title.textContent = card
       ? `${card.guide} = ${code} · ${card.label}`
-      : `${index + 1}`;
+      : `${slotNumber + 1}`;
 
     const file = document.createElement('input');
     file.type = 'file';
     file.accept = 'image/jpeg,image/png,image/webp,image/gif';
-    file.setAttribute('aria-label', `${index + 1}번 ${code} 사진 파일`);
+    file.setAttribute('aria-label', `${setIndex + 1}세트 ${slotNumber + 1}번 ${code} 사진 파일`);
 
     const status = document.createElement('p');
     status.className = 'hint slot-status';
@@ -1608,7 +1615,7 @@ function renderCustomSlots() {
     button.textContent = '이 칸에 올리기';
 
     article.append(title, file, status, preview, button);
-    customSlotsRoot.append(article);
+    customSlotsRoot.lastElementChild.querySelector('.custom-slots').append(article);
     customSlots.push({ file, status, preview, button });
 
     file.addEventListener('change', () => onCustomFile(index));
@@ -1702,7 +1709,7 @@ async function refreshSlotPreview(index) {
 
 async function refreshCustomPreviews() {
   let failed = false;
-  for (let index = 0; index < CUSTOM_COUNT; index += 1) {
+  for (let index = 0; index < CUSTOM_COUNT * PHOTO_SET_COUNT; index += 1) {
     const ok = await refreshSlotPreview(index);
     if (!ok) failed = true;
   }
@@ -1797,7 +1804,7 @@ async function saveCustomSlot(index) {
       setError('이 칸은 새 사진으로 저장했습니다. 미리보기만 만들지 못했고, 저장된 데이터는 되돌리지 않았습니다.');
       return;
     }
-    const code = cardAtIndex(index) ? slotLabel(cardAtIndex(index)) : '';
+    const code = cardAtIndex(index % CUSTOM_COUNT) ? slotLabel(cardAtIndex(index % CUSTOM_COUNT)) : '';
     if (keptReason === 'corrupt') {
       setStatus('이 칸은 새 사진으로 바꿨습니다. 프리셋 정보를 해석할 수 없어 이전 사진 파일은 지우지 않았습니다.');
       return;
@@ -1810,7 +1817,7 @@ async function saveCustomSlot(index) {
       setStatus('이 칸은 새 사진으로 바꿨습니다. 이전 사진 파일은 지우지 못했습니다.');
       return;
     }
-    setStatus(`${index + 1}번 칸(${code})을 저장했습니다. 프리셋은 바꾸지 않았습니다.`);
+    setStatus(`${Math.floor(index / CUSTOM_COUNT) + 1}세트 ${index % CUSTOM_COUNT + 1}번 칸(${code})을 저장했습니다.`);
   } finally {
     busy = false;
     syncControls();
@@ -1832,12 +1839,12 @@ function loadKeptImage(url) {
   });
 }
 
-async function loadCustomDeck() {
+async function loadCustomDeck(setIndex) {
   const images = [];
   const urls = [];
   try {
     for (let index = 0; index < CUSTOM_COUNT; index += 1) {
-      const id = customIds[index];
+      const id = customIds[setIndex * CUSTOM_COUNT + index];
       if (typeof id !== 'string' || !IMAGE_ID_RE.test(id)) throw new Error('missing');
       let record;
       try {
@@ -1902,16 +1909,16 @@ function beginCardSurface(deck) {
   }
 }
 
-async function startCustomPerformance() {
+async function startCustomPerformance(setIndex) {
   if (busy || view !== 'settings' || storageLocked || customCorrupt) return;
-  if (!customDeckReady()) {
+  if (!customDeckReady(setIndex)) {
     setError('사진 12장이 모두 있어야 내 사진으로 시작할 수 있습니다. 저장된 데이터는 바꾸지 않았습니다.');
     return;
   }
   busy = true;
   syncControls();
   try {
-    const deck = await loadCustomDeck();
+    const deck = await loadCustomDeck(setIndex);
     beginCardSurface(deck);
   } catch (error) {
     destroyRunning();
@@ -2019,11 +2026,6 @@ function bindEvents() {
   cardStartButton.addEventListener('click', () => {
     void startCardPerformance();
   });
-  if (customStartButton) {
-    customStartButton.addEventListener('click', () => {
-      void startCustomPerformance();
-    });
-  }
   if (cellGuideInput) {
     cellGuideInput.addEventListener('change', onCellGuideChange);
   }
@@ -2121,13 +2123,21 @@ async function boot() {
     }
   }
   try {
-    const customRaw = localStorage.getItem(CUSTOM_KEY);
-    const parsedCustom = parseCustomMeta(customRaw);
+    const savedSets = localStorage.getItem(PHOTO_SETS_KEY);
+    const legacy = localStorage.getItem(CUSTOM_KEY);
+    const parsedCustom = parsePhotoSets(savedSets, legacy);
     if (!parsedCustom.ok) {
       customCorrupt = true;
-      customIds = emptyCustomIds();
     } else {
-      customIds = parsedCustom.ids.slice();
+      const ids = parsedCustom.sets.flat();
+      if (parsedCustom.needsMigration) {
+        if (!commitCustom(ids)) {
+          storageLocked = true;
+          return;
+        }
+      } else {
+        customIds = ids;
+      }
     }
   } catch {
     storageLocked = true;
@@ -2140,7 +2150,7 @@ async function boot() {
     setError('저장된 내 사진 12장 정보를 해석할 수 없습니다. 기존 데이터는 자동으로 지우지 않았습니다.');
   }
   if (customCorrupt) {
-    for (let index = 0; index < CUSTOM_COUNT; index += 1) {
+    for (let index = 0; index < CUSTOM_COUNT * PHOTO_SET_COUNT; index += 1) {
       setSlotStatus(index, '목록을 해석할 수 없어 이 칸을 표시하지 않습니다. 데이터는 지우지 않았습니다.');
     }
   }

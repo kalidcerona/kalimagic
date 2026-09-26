@@ -37,6 +37,10 @@ const OBJECT_KIND_CLASS = Object.freeze({
 const EDGE_ORDER = ['top', 'left', 'right', 'bottom'];
 const MARK_MS = 460;
 const SPAWN_SLOP_PX = 12;
+const SWIPE_REVEAL_PX = 24;
+const IMAGE_CHOICE_KEY = 'tobira.coinChoices.v1';
+const IMAGE_DB = 'tobira.localImages.v1';
+const DEFAULT_COIN_IMAGES = Object.freeze({ kennedy: './coin-kennedy.svg', won500: './coin-500won.svg' });
 
 const settingsEl = document.querySelector('#settings');
 const stageEl = document.querySelector('#stage');
@@ -65,6 +69,104 @@ const addButton = document.querySelector('#add-preset');
 const deleteButton = document.querySelector('#delete-preset');
 const startButton = document.querySelector('#start-show');
 const objectKindInput = document.querySelector('#object-kind');
+const wallpaperInput = document.querySelector('#wallpaper-upload');
+const wallpaperClear = document.querySelector('#wallpaper-clear');
+const wallpaperNote = document.querySelector('#wallpaper-note');
+const wallpaperEl = document.querySelector('#stage-wallpaper');
+const imageChoiceInput = document.querySelector('#coin-image-choice');
+const coinImageInput = document.querySelector('#coin-image-upload');
+const coinImageNote = document.querySelector('#coin-image-note');
+const coinArt = document.querySelector('#coin-art');
+
+let imageDbPromise;
+let imageChoices = {};
+const imageUrls = new Map();
+
+function openImageDb() {
+  if (imageDbPromise) return imageDbPromise;
+  imageDbPromise = new Promise((resolve, reject) => {
+    if (!window.indexedDB) { reject(new Error('IndexedDB unavailable')); return; }
+    const request = indexedDB.open(IMAGE_DB, 1);
+    request.onupgradeneeded = () => request.result.createObjectStore('images');
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+  return imageDbPromise;
+}
+
+async function imageRecord(key, operation, value) {
+  const db = await openImageDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('images', operation === 'get' ? 'readonly' : 'readwrite');
+    const store = tx.objectStore('images');
+    const request = operation === 'put' ? store.put(value, key) : operation === 'delete' ? store.delete(key) : store.get(key);
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function imageBlob(file, maxSide) {
+  if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) throw new Error('PNG, JPG, WebP 이미지만 올릴 수 있습니다.');
+  const sourceUrl = URL.createObjectURL(file);
+  try {
+    const image = new Image();
+    image.src = sourceUrl;
+    await image.decode();
+    const scale = Math.min(1, maxSide / Math.max(image.naturalWidth, image.naturalHeight));
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+    canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+    canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
+    return await new Promise((resolve, reject) => canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error('이미지를 읽지 못했습니다.')), file.type === 'image/jpeg' ? 'image/jpeg' : 'image/png', 0.85));
+  } finally {
+    URL.revokeObjectURL(sourceUrl);
+  }
+}
+
+function useImageUrl(key, blob) {
+  const previous = imageUrls.get(key);
+  if (previous) URL.revokeObjectURL(previous);
+  if (!blob) { imageUrls.delete(key); return null; }
+  const url = URL.createObjectURL(blob);
+  imageUrls.set(key, url);
+  return url;
+}
+
+function chosenCoin(id) {
+  const requested = imageChoices[id];
+  return requested === 'custom' && imageUrls.has(`coin:${id}`) ? imageUrls.get(`coin:${id}`) : DEFAULT_COIN_IMAGES[requested] || DEFAULT_COIN_IMAGES.kennedy;
+}
+
+function refreshCoinImage() {
+  coinArt.src = chosenCoin(selected().id);
+  imageChoiceInput.value = imageChoices[selected().id] || 'kennedy';
+  coinImageNote.textContent = imageUrls.has(`coin:${selected().id}`)
+    ? '이 자리에 업로드한 이미지가 저장되어 있습니다.'
+    : '투명 배경 PNG를 권장합니다. 업로드하면 이 자리의 이미지로 선택됩니다.';
+}
+
+function persistImageChoices() {
+  try { localStorage.setItem(IMAGE_CHOICE_KEY, JSON.stringify(imageChoices)); }
+  catch { coinImageNote.textContent = '이미지 선택을 저장하지 못했습니다.'; }
+}
+
+async function loadImages() {
+  try {
+    const wallpaper = await imageRecord('wallpaper', 'get');
+    if (wallpaper) {
+      wallpaperEl.src = useImageUrl('wallpaper', wallpaper);
+      stageEl.classList.add('has-wallpaper');
+      wallpaperNote.textContent = '배경 사진이 이 기기에 저장되어 있습니다.';
+    }
+    for (const preset of state.presets) {
+      const blob = await imageRecord(`coin:${preset.id}`, 'get');
+      if (blob) useImageUrl(`coin:${preset.id}`, blob);
+    }
+    refreshCoinImage();
+  } catch {
+    wallpaperNote.textContent = '이 브라우저에서는 업로드한 이미지를 불러오거나 저장할 수 없습니다.';
+  }
+}
 
 const pointers = new Map();
 let state = null;
@@ -245,19 +347,20 @@ function renderRecovery() {
 function renderList() {
   const focusInside = presetList.contains(document.activeElement);
   presetList.replaceChildren();
-  for (const preset of state.presets) {
+  for (const [index, preset] of state.presets.entries()) {
     const item = document.createElement('li');
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'preset';
     button.dataset.id = preset.id;
-    button.textContent = preset.name;
+    button.textContent = `${index + 1}. ${preset.name}`;
     const pressed = preset.id === state.selectedId;
     button.setAttribute('aria-pressed', pressed ? 'true' : 'false');
     button.addEventListener('click', () => selectPreset(preset.id));
     item.append(button);
     presetList.append(item);
   }
+  addButton.hidden = state.presets.length >= 3;
   if (focusInside) presetList.querySelector('[aria-pressed="true"]')?.focus();
 }
 
@@ -279,6 +382,7 @@ function fillForm() {
   fadeInput.value = String(preset.fadeDistance);
   durationInput.value = String(preset.disappearDuration);
   updateReadouts(preset);
+  refreshCoinImage();
   for (const button of edgeGroup.querySelectorAll('.edge')) {
     const on = button.dataset.edge === preset.exitEdge;
     button.setAttribute('aria-checked', on ? 'true' : 'false');
@@ -313,7 +417,7 @@ function commitName(fallbackEmpty) {
   if (!result.ok) return;
   replaceSelected(result.preset);
   const button = labelFor(result.preset.id);
-  if (button) button.textContent = result.preset.name;
+  if (button) button.textContent = `${state.presets.findIndex((item) => item.id === result.preset.id) + 1}. ${result.preset.name}`;
   if (fallbackEmpty) nameInput.value = result.preset.name;
   persist();
 }
@@ -344,6 +448,7 @@ function setEdge(edge) {
 }
 
 function addPreset() {
+  if (state.presets.length >= 3) return;
   const result = sanitizePreset({
     ...selected(),
     id: createPresetId(),
@@ -375,7 +480,12 @@ function deleteSelected() {
   clearDeleteArm();
   const index = state.presets.findIndex((preset) => preset.id === state.selectedId);
   if (index < 0) return;
+  const removedId = state.selectedId;
   state.presets.splice(index, 1);
+  delete imageChoices[removedId];
+  persistImageChoices();
+  useImageUrl(`coin:${removedId}`, null);
+  imageRecord(`coin:${removedId}`, 'delete').catch(() => {});
   if (state.presets.length === 0) {
     const fresh = defaultPreset();
     fresh.id = createPresetId();
@@ -511,6 +621,7 @@ function showPerformance({ persistMode = true, keepGone = false } = {}) {
   cancelExit();
   endPointers();
   state.mode = 'performance';
+  refreshCoinImage();
   applyChrome('performance');
   if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
   placeAtRest();
@@ -745,7 +856,10 @@ function onPointerMove(event) {
       applyDragSample(sample);
     }
     if (phase === 'awaiting' && (pointers.size !== 1 || spawnTravel(sample) > SPAWN_SLOP_PX)) {
-      spawnCancelled = true;
+      if (pointers.size === 1 && !spawnCancelled && event.pointerId === spawnId && spawnTravel(sample) >= SWIPE_REVEAL_PX) {
+        const local = pointInStage(sample, stageRect);
+        if (local) revealSpawn(local);
+      } else if (pointers.size !== 1) spawnCancelled = true;
     }
   }
   maybeClassify();
@@ -762,11 +876,13 @@ function onPointerUp(event) {
     && !spawnCancelled
     && event.type !== 'pointercancel'
     && spawnAtPoint
-    && pointers.size === 1
-    && spawnTravel(event) <= SPAWN_SLOP_PX;
+    && pointers.size === 1;
+  const releasePoint = canSpawn && spawnTravel(event) > SPAWN_SLOP_PX
+    ? pointInStage(event, stageRect) || spawnAtPoint
+    : spawnAtPoint;
   pointers.delete(event.pointerId);
   releaseCapture(event.pointerId);
-  if (canSpawn) revealSpawn(spawnAtPoint);
+  if (canSpawn) revealSpawn(releasePoint);
   if (wasDrag && phase === 'dragging') {
     dragId = null;
     dragClient = null;
@@ -840,6 +956,52 @@ function bind() {
       persistObjectKind(applyObjectKind(objectKindInput.value));
     });
   }
+  wallpaperInput.addEventListener('change', async () => {
+    const file = wallpaperInput.files?.[0];
+    if (!file) return;
+    try {
+      const blob = await imageBlob(file, 1600);
+      await imageRecord('wallpaper', 'put', blob);
+      wallpaperEl.src = useImageUrl('wallpaper', blob);
+      stageEl.classList.add('has-wallpaper');
+      wallpaperNote.textContent = '배경 사진을 이 기기에 저장했습니다.';
+    } catch (error) { wallpaperNote.textContent = error.message || '배경 사진을 저장하지 못했습니다.'; }
+    wallpaperInput.value = '';
+  });
+  wallpaperClear.addEventListener('click', async () => {
+    try {
+      await imageRecord('wallpaper', 'delete');
+      useImageUrl('wallpaper', null);
+      wallpaperEl.removeAttribute('src');
+      stageEl.classList.remove('has-wallpaper');
+      wallpaperNote.textContent = '기본 배경을 사용합니다.';
+    } catch { wallpaperNote.textContent = '배경 사진을 지우지 못했습니다.'; }
+  });
+  imageChoiceInput.addEventListener('change', () => {
+    const choice = imageChoiceInput.value;
+    if (choice === 'custom' && !imageUrls.has(`coin:${selected().id}`)) {
+      coinImageNote.textContent = '먼저 이 자리에 동전 이미지를 올려 주세요.';
+      imageChoiceInput.value = imageChoices[selected().id] || 'kennedy';
+      return;
+    }
+    imageChoices[selected().id] = choice;
+    persistImageChoices();
+    refreshCoinImage();
+  });
+  coinImageInput.addEventListener('change', async () => {
+    const file = coinImageInput.files?.[0];
+    if (!file) return;
+    const id = selected().id;
+    try {
+      const blob = await imageBlob(file, 600);
+      await imageRecord(`coin:${id}`, 'put', blob);
+      useImageUrl(`coin:${id}`, blob);
+      imageChoices[id] = 'custom';
+      persistImageChoices();
+      refreshCoinImage();
+    } catch (error) { coinImageNote.textContent = error.message || '동전 이미지를 저장하지 못했습니다.'; }
+    coinImageInput.value = '';
+  });
   addButton.addEventListener('click', addPreset);
   deleteButton.addEventListener('click', deleteSelected);
   startButton.addEventListener('click', () => showPerformance({ persistMode: true, keepGone: false }));
@@ -878,12 +1040,20 @@ function bind() {
 concealCoin();
 loadState();
 applyObjectKind(readObjectKind());
+try {
+  const storedChoices = JSON.parse(localStorage.getItem(IMAGE_CHOICE_KEY) || '{}');
+  if (storedChoices && typeof storedChoices === 'object' && !Array.isArray(storedChoices)) imageChoices = storedChoices;
+} catch { imageChoices = {}; }
 bind();
+const imagesReady = loadImages();
 renderRecovery();
 renderList();
 fillForm();
 if (state.mode === 'performance') {
-  showPerformance({ persistMode: false, keepGone: readGoneSession() });
+  imagesReady.then(
+    () => showPerformance({ persistMode: false, keepGone: readGoneSession() }),
+    () => showPerformance({ persistMode: false, keepGone: readGoneSession() }),
+  );
 } else {
   applyChrome('settings');
   setGoneSession(false);
