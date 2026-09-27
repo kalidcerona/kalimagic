@@ -1,8 +1,9 @@
 /**
  * Card-shaped geometry prototype for a live mobile camera.
  *
- * This module detects one high-contrast convex card quadrilateral from an RGBA
- * frame. It does not recognize a printed identity, suit, rank, or "card A",
+ * This module detects one convex card quadrilateral from an RGBA frame,
+ * optionally using a stored empty-scene reference. It does not recognize a
+ * printed identity, suit, rank, or "card A",
  * and it does not recover which physical edge is the top of the artwork.
  * Corner order is image-space only: clockwise, starting at the vertex with the
  * smallest x+y (top-left-most), then the smallest x, then the smallest y.
@@ -232,6 +233,89 @@ function buildLumaGrid(frame, step) {
     }
   }
   return { luma, gridWidth, gridHeight, step };
+}
+
+/** A compact, fixed camera reference. Capture while the stage is empty. */
+export function captureBackground(frame) {
+  assertFrame(frame);
+  const step = sampleStep(frame.width, frame.height);
+  const gridWidth = Math.ceil(frame.width / step);
+  const gridHeight = Math.ceil(frame.height / step);
+  const rgb = new Uint8Array(gridWidth * gridHeight * 3);
+  for (let gy = 0; gy < gridHeight; gy += 1) {
+    const y = Math.min(frame.height - 1, gy * step);
+    for (let gx = 0; gx < gridWidth; gx += 1) {
+      const x = Math.min(frame.width - 1, gx * step);
+      const src = (y * frame.width + x) * 4;
+      const dst = (gy * gridWidth + gx) * 3;
+      rgb[dst] = frame.data[src];
+      rgb[dst + 1] = frame.data[src + 1];
+      rgb[dst + 2] = frame.data[src + 2];
+    }
+  }
+  return { width: frame.width, height: frame.height, step, gridWidth, gridHeight, rgb };
+}
+
+function differenceGrid(frame, reference) {
+  if (!reference || reference.width !== frame.width || reference.height !== frame.height ||
+      reference.step !== sampleStep(frame.width, frame.height)) return null;
+  const { gridWidth, gridHeight, step, rgb } = reference;
+  const channels = [[], [], []];
+  // The outer band is normally empty. Its median shift cancels a camera-wide
+  // exposure or white-balance adjustment without learning the inserted card.
+  for (let gy = 0; gy < gridHeight; gy += 1) {
+    const y = Math.min(frame.height - 1, gy * step);
+    for (let gx = 0; gx < gridWidth; gx += 1) {
+      if (gx > 1 && gy > 1 && gx < gridWidth - 2 && gy < gridHeight - 2) continue;
+      const x = Math.min(frame.width - 1, gx * step);
+      const src = (y * frame.width + x) * 4;
+      const dst = (gy * gridWidth + gx) * 3;
+      for (let channel = 0; channel < 3; channel += 1) {
+        channels[channel].push(frame.data[src + channel] - rgb[dst + channel]);
+      }
+    }
+  }
+  const offset = channels.map(median);
+  const luma = new Float64Array(gridWidth * gridHeight);
+  const borderNoise = [];
+  for (let gy = 0; gy < gridHeight; gy += 1) {
+    const y = Math.min(frame.height - 1, gy * step);
+    for (let gx = 0; gx < gridWidth; gx += 1) {
+      const x = Math.min(frame.width - 1, gx * step);
+      const src = (y * frame.width + x) * 4;
+      const dst = (gy * gridWidth + gx) * 3;
+      let difference = 0;
+      for (let channel = 0; channel < 3; channel += 1) {
+        const delta = frame.data[src + channel] - rgb[dst + channel] - offset[channel];
+        difference += Math.abs(delta);
+      }
+      const value = difference / 3;
+      const index = gy * gridWidth + gx;
+      luma[index] = value;
+      if (gx <= 1 || gy <= 1 || gx >= gridWidth - 2 || gy >= gridHeight - 2) {
+        borderNoise.push(value);
+      }
+    }
+  }
+  const noise = median(borderNoise);
+  return { luma, gridWidth, gridHeight, step, noise };
+}
+
+/** Fraction of interior sample cells that differ from a stored scene. */
+export function sceneChangeFraction(frame, reference) {
+  assertFrame(frame);
+  const grid = differenceGrid(frame, reference);
+  if (!grid) return 1;
+  const threshold = Math.max(20, grid.noise * 3 + 14);
+  let changed = 0;
+  let total = 0;
+  for (let y = 2; y < grid.gridHeight - 2; y += 1) {
+    for (let x = 2; x < grid.gridWidth - 2; x += 1) {
+      total += 1;
+      if (grid.luma[y * grid.gridWidth + x] >= threshold) changed += 1;
+    }
+  }
+  return total ? changed / total : 1;
 }
 
 function cellToImage(gx, gy, step, width, height) {
@@ -819,6 +903,32 @@ export function detectCard(frame) {
   const midThreshold = Math.max(110, Math.min(235, bg + 18));
   if (midThreshold >= brightThreshold - 2) return null;
   return findBest(labelComponents(grid, midThreshold, bg, true), 0.25, 8);
+}
+
+/** Find a newly inserted card against the empty scene captured on camera start. */
+export function detectCardAgainstBackground(frame, reference) {
+  assertFrame(frame);
+  if (frame.width < 32 || frame.height < 32) return null;
+  const grid = differenceGrid(frame, reference);
+  if (!grid || grid.gridWidth < 12 || grid.gridHeight < 12) return null;
+  const threshold = Math.max(18, grid.noise * 3 + 14);
+  const { labels, components } = labelComponents(grid, threshold, 0, true);
+  const frameArea = frame.width * frame.height;
+  let considered = 0;
+  let best = null;
+  for (const component of components) {
+    if (considered >= 12) break;
+    if (component.touchesBorder) continue;
+    const estimatedArea = component.area * grid.step * grid.step;
+    if (estimatedArea < frameArea * 0.012 || estimatedArea > frameArea * 0.8) continue;
+    considered += 1;
+    const detection = detectFromComponent(component, labels, grid, frame, 0, 0.30);
+    if (!detection) continue;
+    if (!best || detection.confidence > best.confidence + 1e-9 ||
+        (Math.abs(detection.confidence - best.confidence) <= 1e-9 &&
+          quadArea(detection.corners) > quadArea(best.corners))) best = detection;
+  }
+  return best;
 }
 
 function normalizePoints(points) {

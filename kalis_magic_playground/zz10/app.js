@@ -1,7 +1,8 @@
 import { AlterState, createAlterState, updateAlterState } from "./logic.js";
-import { detectCard, mapSourceOntoCorners } from "./vision.js";
+import { detectCard, detectCardAgainstBackground, mapSourceOntoCorners } from "./vision.js";
 import { cameraShouldBeMasked, createObservationTracker, overlayCorners, trackObservation } from "./performance.js";
 import { coverGeometry, samplePointToView } from "./camera-geometry.js";
+import { claimCalibrationReady, createBackgroundCalibrator, observeCalibration } from "./calibration.js";
 
 const $ = (id) => document.getElementById(id);
 const setup = $("setup");
@@ -30,6 +31,7 @@ let tracker = createObservationTracker();
 let stream = null;
 let animation = 0;
 let lastSampleAt = 0;
+let calibrator = createBackgroundCalibrator();
 let touchStart = null;
 
 function shouldShowGestureGuide() {
@@ -149,7 +151,7 @@ function isPortrait(corners) {
 function processFrame(t) {
   if (!stream) return;
   animation = requestAnimationFrame(processFrame);
-  if (!settings.hidden || !gestureGuide.hidden || document.hidden || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) {
+  if (!settings.hidden || document.hidden || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) {
     if (video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) {
       hideOverlay();
       stage.classList.toggle("camera-masked", cameraShouldBeMasked(machine.state, false));
@@ -179,7 +181,14 @@ function processFrame(t) {
       0, 0, width, height,
     );
     const pixels = sampleContext.getImageData(0, 0, width, height);
-    const candidate = detectCard(pixels);
+    const singleFrameCandidate = detectCard(pixels);
+    if (machine.state === AlterState.IDLE && !calibrator.reference) {
+      observeCalibration(calibrator, pixels, t,
+        Boolean(singleFrameCandidate && isPortrait(singleFrameCandidate.corners)));
+    }
+    if (!gestureGuide.hidden) return;
+    if (claimCalibrationReady(calibrator)) showStageMessage("준비 완료", 1700);
+    const candidate = detectCardAgainstBackground(pixels, calibrator.reference) || singleFrameCandidate;
     const detection = candidate && isPortrait(candidate.corners) ? candidate : null;
     const result = trackObservation(tracker, detection, t, width, height);
     tracker = result.tracker;
@@ -203,11 +212,12 @@ function processFrame(t) {
 }
 
 let messageTimer = 0;
-function showStageMessage(message) {
+function showStageMessage(message, durationMs = 2200) {
   stageMessage.textContent = message;
   stageMessage.hidden = false;
   clearTimeout(messageTimer);
-  messageTimer = setTimeout(() => { stageMessage.hidden = true; }, 2200);
+  messageTimer = durationMs == null ? 0
+    : setTimeout(() => { stageMessage.hidden = true; }, durationMs);
 }
 
 function stopCamera(showSetup = true) {
@@ -221,6 +231,9 @@ function stopCamera(showSetup = true) {
   stage.classList.remove("camera-masked");
   machine = createAlterState({ exitDelayMs: 0 });
   tracker = createObservationTracker();
+  calibrator = createBackgroundCalibrator();
+  clearTimeout(messageTimer);
+  stageMessage.hidden = true;
   settings.hidden = true;
   stage.hidden = true;
   if (showSetup) setup.hidden = false;
@@ -252,11 +265,13 @@ async function startCamera() {
     });
     machine = createAlterState({ exitDelayMs: 0 });
     tracker = createObservationTracker();
+    calibrator = createBackgroundCalibrator();
     lastSampleAt = 0;
     stage.classList.remove("camera-masked");
     setup.hidden = true;
     stage.hidden = false;
     settings.hidden = true;
+    showStageMessage("카메라 준비 중 · 카드를 넣지 마세요", null);
     animation = requestAnimationFrame(processFrame);
     showGestureGuide();
     message.textContent = "시작을 누르면 브라우저가 카메라 사용 권한을 묻습니다. 허용을 선택해 주세요. 영상은 기기 밖으로 전송하거나 저장하지 않습니다.";
@@ -285,6 +300,8 @@ $("reveal").addEventListener("click", () => {
 $("reset").addEventListener("click", () => {
   machine = updateAlterState(machine, { type: "reset" });
   tracker = createObservationTracker();
+  calibrator = createBackgroundCalibrator();
+  showStageMessage("카메라 준비 중 · 카드를 넣지 마세요", null);
   hideOverlay();
   stage.classList.toggle("camera-masked", cameraShouldBeMasked(machine.state, false));
   closeSettings();
@@ -295,6 +312,8 @@ for (const control of [rank, suit, brightness]) {
     renderCard();
     machine = updateAlterState(machine, { type: "reset" });
     tracker = createObservationTracker();
+    calibrator = createBackgroundCalibrator();
+    showStageMessage("카메라 준비 중 · 카드를 넣지 마세요", null);
     hideOverlay();
     stage.classList.toggle("camera-masked", cameraShouldBeMasked(machine.state, false));
     updateStateNote();
@@ -330,6 +349,10 @@ window.addEventListener("resize", () => {
   if (!stream) return;
   machine = updateAlterState(machine, { type: "interrupt", t: performance.now() });
   tracker = createObservationTracker();
+  if (machine.state === AlterState.IDLE) {
+    calibrator = createBackgroundCalibrator();
+    showStageMessage("카메라 준비 중 · 카드를 넣지 마세요", null);
+  }
   hideOverlay();
   stage.classList.toggle("camera-masked", cameraShouldBeMasked(machine.state, false));
 });

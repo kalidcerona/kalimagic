@@ -15,6 +15,7 @@ export const AlterState = Object.freeze({
 
 const STATES = new Set(Object.values(AlterState));
 const DEFAULT_EXIT_DELAY_MS = 300;
+const PROVISIONAL_ABSENCE_MS = 350;
 
 function isPlainObject(value) {
   return value !== null && typeof value === "object";
@@ -150,13 +151,17 @@ function reduceDetected(state, obs) {
   if (stablePresent(obs)) {
     return cloneWith(state, { state: AlterState.ALTER_VISIBLE, absenceStart: null });
   }
-  // A single dropped detector frame is not an exit. A real full-frame exit
-  // before the alter was ever shown returns to idle with overlay B still off.
-  if (!obs.seen && !obs.fullFrameExit) {
-    return state;
-  }
-  if (obs.fullFrameExit || !obs.seen) {
+  // A brief miss is tolerated; a provisional sighting that stays absent must
+  // return to idle so camera calibration can resume.
+  if (obs.fullFrameExit) {
     return cloneWith(state, { state: AlterState.IDLE, absenceStart: null });
+  }
+  if (!obs.seen) {
+    const absenceStart = state.absenceStart ?? obs.t;
+    if (obs.t - absenceStart >= PROVISIONAL_ABSENCE_MS) {
+      return cloneWith(state, { state: AlterState.IDLE, absenceStart: null });
+    }
+    return cloneWith(state, { absenceStart });
   }
   return cloneWith(state, { absenceStart: null });
 }
