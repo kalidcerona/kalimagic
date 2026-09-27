@@ -1,5 +1,5 @@
 // Network-first cache for the ALETHEIA app shell only.
-const CACHE_NAME = 'aletheia-shell-v12';
+const CACHE_NAME = 'aletheia-shell-v13';
 const CACHE_PREFIX = 'aletheia-shell-';
 const LEGACY_CACHE_PREFIX = `unlock-${encodeURIComponent(self.registration.scope)}-`;
 const COURT_FILES = ['S-J', 'S-Q', 'S-K', 'D-J', 'D-Q', 'D-K',
@@ -8,6 +8,7 @@ const COURT_FILES = ['S-J', 'S-Q', 'S-K', 'D-J', 'D-Q', 'D-K',
 
 const SHELL = [
   './index.html',
+  './fullscreen.js',
   './style.css',
   './app.js',
   './deck-loader.js',

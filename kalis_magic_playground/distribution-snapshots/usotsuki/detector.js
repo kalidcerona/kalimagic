@@ -28,6 +28,7 @@ const performanceScreen = document.querySelector("#performance-screen");
 const detectorButton = document.querySelector("#detector-button");
 const testIndicator = document.querySelector("#test-indicator");
 const verdict = document.querySelector("#verdict");
+const signalMode = document.querySelector(".signal-mode");
 const settingsScreen = document.querySelector("#settings-screen");
 const truthInput = document.querySelector("#truth-attempt");
 const soundInput = document.querySelector("#sound-enabled");
@@ -137,6 +138,7 @@ function clearHoldTimer() {
 }
 
 function setStage(mode) {
+  if (signalMode) signalMode.textContent = mode === "testing" ? "측정 중" : mode === "cancelled" ? "취소" : mode === "TRUE" || mode === "LIE" ? "완료" : "대기";
   for (const node of [document.body, performanceScreen, detectorButton, verdict]) {
     node.classList.remove(...STAGE_CLASSES);
   }
@@ -164,10 +166,10 @@ function setStage(mode) {
     verdict.classList.add(tone);
     document.body.classList.add(tone);
     testIndicator.textContent = "";
-    verdict.textContent = mode;
+    verdict.textContent = mode === "TRUE" ? "진실" : "거짓";
     return;
   }
-  testIndicator.textContent = "READY TO SCAN";
+  testIndicator.textContent = "검사 대기 중";
   verdict.textContent = "";
 }
 

@@ -1,10 +1,11 @@
 /* App-shell cache only. Never store question sets or other user data. */
 const CACHE_PREFIX = "usotsuki-distribution-" + encodeURIComponent(self.registration.scope) + "-";
-const CACHE = CACHE_PREFIX + "v3";
+const CACHE = CACHE_PREFIX + "v4";
 const FILES = [
   "./",
   "./index.html",
   "./style.css",
+  "./fullscreen.js",
   "./detector.js",
   "./logic.js",
   "./manifest.webmanifest",
@@ -22,6 +23,7 @@ const SHELL_PATHS = new Set([
   "/",
   "/index.html",
   "/style.css",
+  "/fullscreen.js",
   "/detector.js",
   "/logic.js",
   "/manifest.webmanifest",

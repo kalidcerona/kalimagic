@@ -138,6 +138,15 @@ export const ALETHEIA_COURT_FILES = ['S-J', 'S-Q', 'S-K', 'D-J', 'D-Q', 'D-K',
   .map((code) => `court-cards/${code}.png`);
 
 export const MIRROR_PAIRS = [
+  ...[
+    ['magic-stopwatch-uni', 'zz1'],
+    ['magic-choice', 'zz4'],
+    ['magic-aletheia', 'zz5'],
+    ['magic-usotsuki', 'zz7'],
+    ['magic-asrai', 'zz8'],
+    ['magic-alter', 'zz10'],
+    ['magic-spinner', 'zz11']
+  ].map(([source, route]) => [`../../${source}/fullscreen.js`, `${route}/fullscreen.js`]),
   ['../../magic-calculator-v2/index.html', 'zz3/index.html'],
   ['../../magic-calculator-v2/sw.js', 'zz3/sw.js'],
   ['../../magic-calculator-v2/icon-192.png', 'zz3/icon-192.png'],

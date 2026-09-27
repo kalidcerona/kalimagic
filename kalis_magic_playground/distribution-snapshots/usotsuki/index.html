@@ -17,32 +17,48 @@
   </head>
   <body>
     <div id="safe-probe" aria-hidden="true"></div>
-    <main id="performance-screen" hidden>
-      <div class="stage-header" aria-hidden="true">
-        <span class="stage-monogram">U</span>
-        <span class="stage-brand">USOTSUKI <small>INTERACTIVE DETECTOR</small></span>
-        <span class="stage-led"></span>
+<main id="performance-screen" hidden>
+      <div class="instrument-shell" aria-hidden="true">
+        <span class="screw tl"></span>
+        <span class="screw tr"></span>
+        <span class="screw bl"></span>
+        <span class="screw br"></span>
+        <span class="vent left"></span>
+        <span class="vent right"></span>
       </div>
       <div class="stage-content">
-        <p class="stage-kicker">LIE DETECTOR / 01</p>
-        <h1 class="detector-title">Truth is in your hands.</h1>
-        <p class="stage-instruction">버튼을 2초간 누르고 유지하세요</p>
-        <div class="detector-dial">
-          <span class="dial-tick dial-tick-top" aria-hidden="true"></span>
-          <span class="dial-tick dial-tick-bottom" aria-hidden="true"></span>
-          <button id="detector-button" type="button" aria-label="검사를 시작하려면 2초간 누르기"><span class="button-icon" aria-hidden="true">⌁</span><span>PRESS &amp; HOLD</span></button>
-        </div>
-        <div class="result-panel" aria-live="polite">
-          <span class="result-label">ANALYSIS STATUS</span>
-          <p id="test-indicator" role="status"></p>
-          <p id="verdict" role="status" aria-live="assertive"></p>
-        </div>
+        <section class="stage-info" aria-label="검사 안내">
+          <h1 id="performance-title">거짓말 탐지기</h1>
+          <section class="signal-monitor" aria-label="신호 모니터">
+            <div class="signal-heading">
+              <span class="signal-dot" aria-hidden="true"></span>
+              <span class="signal-title">신호 모니터</span>
+              <span class="signal-mode">대기</span>
+            </div>
+            <svg class="signal-wave" viewBox="0 0 360 52" role="img" aria-label="신호 그래프">
+              <path class="signal-grid" d="M0 13.5H360M0 26H360M0 38.5H360M45 0V52M90 0V52M135 0V52M180 0V52M225 0V52M270 0V52M315 0V52" />
+              <path class="signal-trace" d="M0 27H44L54 25L64 29L75 27H111L119 24L126 30L135 26H157L166 26L173 8L180 43L188 19L196 28H226L235 26L244 27H265L274 24L281 30L289 26H318L327 26L336 17L343 35L350 27H360" />
+            </svg>
+          </section>
+        </section>
+        <section class="stage-action" aria-label="검사">
+          <div class="result-panel" aria-live="polite">
+            <span class="result-label">검사 결과</span>
+            <p id="test-indicator" role="status"></p>
+            <p id="verdict" role="status" aria-live="assertive"></p>
+          </div>
+          <div class="detector-dial">
+            <span class="dial-tick dial-tick-top" aria-hidden="true"></span>
+            <span class="dial-tick dial-tick-bottom" aria-hidden="true"></span>
+            <button id="detector-button" type="button" aria-label="검사를 시작하려면 2초간 누르기"><span class="button-icon" aria-hidden="true">⌁</span><span>길게 누르기</span></button>
+          </div>
+        </section>
       </div>
-      <div class="stage-footer" aria-hidden="true"><span>USOTSUKI SYSTEMS</span><span>●&nbsp; STANDBY</span></div>
     </main>
     <section id="settings-screen">
       <img id="settings-brand" src="brand-logo.png" alt="" width="168" height="168" />
       <h1>거짓말 탐지기</h1>
+      <p data-fullscreen-note hidden>이 브라우저는 상태 막대를 숨기는 전체 화면을 지원하지 않습니다. 홈 화면에 추가하면 주소창은 줄일 수 있지만, 기기에 따라 시간·배터리 표시는 남을 수 있습니다.</p>
       <p class="lede">공연 전에만 확인합니다. 실제 측정이 아닙니다.</p>
       <div class="stack">
         <label class="field" for="truth-attempt">TRUE가 나올 시도
@@ -80,6 +96,7 @@
     <noscript>
       <p>이 공연 화면은 자바스크립트가 필요합니다. 네트워크 측정은 하지 않습니다.</p>
     </noscript>
+    <script src="./fullscreen.js"></script>
     <script type="module" src="install-prompt.js"></script>
     <script type="module" src="detector.js"></script>
   </body>

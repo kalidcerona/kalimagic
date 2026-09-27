@@ -1,7 +1,8 @@
 const PREFIX = "stopwatch-uni-" + encodeURIComponent(self.registration.scope) + "-";
-const CACHE = PREFIX + "v23";
+const CACHE = PREFIX + "v24";
 const FILES = [
   './index.html',
+  './fullscreen.js',
   './logic.js',
   './manifest.webmanifest',
   './sw.js',

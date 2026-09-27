@@ -1,9 +1,10 @@
 // App-shell cache only. Non-shell responses are never stored.
 
-const CACHE = "asrai-shell-v7";
+const CACHE = "asrai-shell-v8";
 const CACHE_PREFIX = "asrai-shell-";
 const SHELL_FILES = [
   "index.html",
+  "fullscreen.js",
   "style.css",
   "contacts.js",
   "logic.js",

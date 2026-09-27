@@ -214,13 +214,14 @@ test('Asrai, ALTER, and spinner personal builds keep exact runtime mirrors and d
     ['magic-spinner', 'zz11', SPINNER_FILES, '회전판']
   ]) {
     const distDir = path.join(root, 'dist', route);
-    assert.deepEqual((await readdir(distDir)).sort(), [...files].sort());
+    const runtimeFiles = [...files, 'fullscreen.js'];
+    assert.deepEqual((await readdir(distDir)).sort(), runtimeFiles.sort());
     const manifest = JSON.parse(await readFile(path.join(distDir, 'manifest.webmanifest'), 'utf8'));
     assert.equal(manifest.id, './');
     assert.equal(manifest.scope, './');
     assert.equal(manifest.name, name);
     assert.match(manifest.start_url, /^\.\/(?:index\.html)?$/);
-    for (const file of files) {
+    for (const file of runtimeFiles) {
       const [original, mirror] = await Promise.all([
         readFile(path.join(root, '..', '..', source, file)),
         readFile(path.join(distDir, file))

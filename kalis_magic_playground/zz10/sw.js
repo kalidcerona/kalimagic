@@ -1,8 +1,8 @@
-const CACHE_NAME = "alter-v17";
+const CACHE_NAME = "alter-v20";
 const APP_FILES = [
   "./index.html", "./style.css", "./app.js", "./logic.js", "./vision.js",
   "./performance.js", "./camera-geometry.js", "./calibration.js", "./brand-logo.jpg", "./icon-192.png", "./icon-512.png",
-  "./manifest.webmanifest", "./install-ui.js",
+  "./manifest.webmanifest", "./install-ui.js", "./fullscreen.js",
 ];
 
 self.addEventListener("install", (event) => {

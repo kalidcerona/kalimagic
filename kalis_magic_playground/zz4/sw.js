@@ -1,7 +1,8 @@
-const CACHE = 'magic-choice-shell-v8';
+const CACHE = 'magic-choice-shell-v9';
 const CACHE_PREFIX = 'magic-choice-shell-';
 const ASSETS = [
   './index.html',
+  './fullscreen.js',
   './style.css',
   './app.js',
   './logic.js',

@@ -1,6 +1,6 @@
-const CACHE = 'zz11-spinner-v9';
+const CACHE = 'zz11-spinner-v11';
 const CACHE_PREFIX = 'zz11-spinner-';
-const FILES = ['./index.html', './style.css', './app.js', './logic.js', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
+const FILES = ['./index.html', './style.css', './app.js', './logic.js', './manifest.webmanifest', './icon-192.png', './icon-512.png', './fullscreen.js'];
 
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(FILES)).then(() => self.skipWaiting()));

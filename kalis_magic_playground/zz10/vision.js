@@ -17,12 +17,15 @@
  *   which for a card is a short convex chain, not the full camera image.
  *   Full-resolution work is limited to Sobel probes along four sides
  *   (4 sides × ~16 samples × a ±(s+2) pixel normal search). No full-frame
- *   grayscale buffer is allocated.
+ *   grayscale buffer is allocated. The final bright-paper fallback sorts at
+ *   most one grid of foreground luminance values (O(N log N), N <= 192²).
  *
  * Limitations:
- *   - Needs a silhouette that contrasts with a fairly uniform border. The
- *     border median is the background reference, so a card cut off by the frame
- *     or filling the border is rejected.
+ *   - Single-frame detection estimates the scene from its border. The stored
+ *     empty-scene path supports varied backgrounds. Both paths retry with warm
+ *     foreground removed to separate a held paper card from the hand; strongly
+ *     warm paper, neutral-colored grips, or invisible edges can still fail.
+ *     A card itself cut off by the frame is rejected.
  *   - The fitted shape is a rotated rectangle. Strong perspective keystone is
  *     only a limitation of detection; mapSourceOntoCorners still accepts a
  *     general convex destination quad.
@@ -355,12 +358,50 @@ function borderStats(grid) {
   return { bg, std, brightBorder };
 }
 
-function labelComponents(grid, threshold, bg, brightOnly = false) {
+function lightForegroundThreshold(frame, grid, changeThreshold) {
+  const values = [];
+  for (let y = 0; y < grid.gridHeight; y += 1) {
+    for (let x = 0; x < grid.gridWidth; x += 1) {
+      if (grid.luma[y * grid.gridWidth + x] < changeThreshold) continue;
+      values.push(lumaAt(frame.data, frame.width,
+        Math.min(frame.width - 1, x * grid.step), Math.min(frame.height - 1, y * grid.step)));
+    }
+  }
+  values.sort((a, b) => a - b);
+  // Recover the bright paper cluster even when the grip has neutral chroma.
+  // Keep this local to changed foreground when an empty-scene reference exists.
+  // Retain the antialiased off-white rim rather than selecting white highlights only.
+  return values.length ? Math.max(110, Math.min(230,
+    values[Math.floor((values.length - 1) * 0.95)] * 0.95)) : 255;
+}
+
+function labelComponents(grid, threshold, bg, brightOnly = false, frame = null, paleWarm = false,
+  paperFloor = 0) {
   const { luma, gridWidth, gridHeight } = grid;
   const count = gridWidth * gridHeight;
   const foreground = new Uint8Array(count);
   for (let i = 0; i < count; i += 1) {
     foreground[i] = (brightOnly ? luma[i] >= threshold : Math.abs(luma[i] - bg) >= threshold) ? 1 : 0;
+    if (foreground[i] && frame) {
+      const x = Math.min(frame.width - 1, (i % gridWidth) * grid.step);
+      const y = Math.min(frame.height - 1, Math.floor(i / gridWidth) * grid.step);
+      const offset = (y * frame.width + x) * 4;
+      const r = frame.data[offset];
+      const g = frame.data[offset + 1];
+      const b = frame.data[offset + 2];
+      if (lumaAt(frame.data, frame.width, x, y) < paperFloor) foreground[i] = 0;
+      // A holding hand joins the card's change silhouette to the frame edge.
+      // Split warm foreground away from the paper before fitting its geometry.
+      // This is a fallback mask, never a claim that a pixel identifies skin.
+      const high = Math.max(r, g, b);
+      // Retry pale/desaturated grips separately so the stronger first mask
+      // can still retain warm paper. Cream paper with r-g <= 6 survives both.
+      const blueGap = paleWarm ? Math.max(12, high * 0.05) : Math.max(26, high * 0.18);
+      const greenGap = paleWarm ? Math.max(6, high * 0.025) : Math.max(12, high * 0.07);
+      if (r - b > blueGap && r - g > greenGap) {
+        foreground[i] = 0;
+      }
+    }
   }
 
   const labels = new Int32Array(count);
@@ -805,8 +846,9 @@ function scoreQuad(corners, frame, contrast, anchor) {
   };
 }
 
-function detectFromComponent(component, labels, grid, frame, bg, minFill = 0.62) {
-  const contrast = Math.abs(component.mean - bg);
+function detectFromComponent(component, labels, grid, frame, bg, minFill = 0.62, maxContrast = Infinity) {
+  // The changed-scene magnitude is not the contrast at a paper/hand edge.
+  const contrast = Math.min(maxContrast, Math.abs(component.mean - bg));
   if (contrast < MIN_CONTRAST) return null;
 
   const boundary = componentBoundary(labels, component, grid, frame.width, frame.height);
@@ -865,7 +907,7 @@ export function detectCard(frame) {
   const primary = labelComponents(grid, threshold, bg);
   const frameArea = frame.width * frame.height;
 
-  function findBest({ labels, components }, minFill, limit) {
+  function findBest({ labels, components }, minFill, limit, maxContrast = Infinity) {
     let best = null;
     let considered = 0;
     for (const component of components) {
@@ -874,7 +916,7 @@ export function detectCard(frame) {
       const estimatedArea = component.area * step * step;
       if (estimatedArea < frameArea * 0.012 || estimatedArea > frameArea * 0.8) continue;
       considered += 1;
-      const detection = detectFromComponent(component, labels, grid, frame, bg, minFill);
+      const detection = detectFromComponent(component, labels, grid, frame, bg, minFill, maxContrast);
       if (!detection) continue;
       if (
         !best ||
@@ -901,8 +943,14 @@ export function detectCard(frame) {
   // Try a threshold relative to the median border, while retaining the same
   // geometry and edge checks that reject connected background regions.
   const midThreshold = Math.max(110, Math.min(235, bg + 18));
-  if (midThreshold >= brightThreshold - 2) return null;
-  return findBest(labelComponents(grid, midThreshold, bg, true), 0.25, 8);
+  if (midThreshold < brightThreshold - 2) {
+    const midHit = findBest(labelComponents(grid, midThreshold, bg, true), 0.25, 8);
+    if (midHit) return midHit;
+  }
+  return findBest(labelComponents(grid, 110, bg, true, frame), 0.25, 8, 60) ||
+    findBest(labelComponents(grid, 110, bg, true, frame, true), 0.25, 8, 60) ||
+    findBest(labelComponents(grid, 110, bg, true, frame, false,
+      lightForegroundThreshold(frame, grid, 110)), 0.25, 8, 60);
 }
 
 /** Find a newly inserted card against the empty scene captured on camera start. */
@@ -912,23 +960,29 @@ export function detectCardAgainstBackground(frame, reference) {
   const grid = differenceGrid(frame, reference);
   if (!grid || grid.gridWidth < 12 || grid.gridHeight < 12) return null;
   const threshold = Math.max(18, grid.noise * 3 + 14);
-  const { labels, components } = labelComponents(grid, threshold, 0, true);
   const frameArea = frame.width * frame.height;
-  let considered = 0;
-  let best = null;
-  for (const component of components) {
-    if (considered >= 12) break;
-    if (component.touchesBorder) continue;
-    const estimatedArea = component.area * grid.step * grid.step;
-    if (estimatedArea < frameArea * 0.012 || estimatedArea > frameArea * 0.8) continue;
-    considered += 1;
-    const detection = detectFromComponent(component, labels, grid, frame, 0, 0.30);
-    if (!detection) continue;
-    if (!best || detection.confidence > best.confidence + 1e-9 ||
-        (Math.abs(detection.confidence - best.confidence) <= 1e-9 &&
-          quadArea(detection.corners) > quadArea(best.corners))) best = detection;
+  function findBest({ labels, components }, maxContrast = Infinity) {
+    let considered = 0;
+    let best = null;
+    for (const component of components) {
+      if (considered >= 12) break;
+      if (component.touchesBorder) continue;
+      const estimatedArea = component.area * grid.step * grid.step;
+      if (estimatedArea < frameArea * 0.012 || estimatedArea > frameArea * 0.8) continue;
+      considered += 1;
+      const detection = detectFromComponent(component, labels, grid, frame, 0, 0.30, maxContrast);
+      if (!detection) continue;
+      if (!best || detection.confidence > best.confidence + 1e-9 ||
+          (Math.abs(detection.confidence - best.confidence) <= 1e-9 &&
+            quadArea(detection.corners) > quadArea(best.corners))) best = detection;
+    }
+    return best;
   }
-  return best;
+  return findBest(labelComponents(grid, threshold, 0, true)) ||
+    findBest(labelComponents(grid, threshold, 0, true, frame), 60) ||
+    findBest(labelComponents(grid, threshold, 0, true, frame, true), 60) ||
+    findBest(labelComponents(grid, threshold, 0, true, frame, false,
+      lightForegroundThreshold(frame, grid, threshold)), 60);
 }
 
 function normalizePoints(points) {
