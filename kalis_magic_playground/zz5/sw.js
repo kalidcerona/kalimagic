@@ -1,5 +1,6 @@
 // Network-first cache for the ALETHEIA app shell only.
-const CACHE_NAME = 'aletheia-shell-v10';
+const CACHE_NAME = 'aletheia-shell-v11';
+const CACHE_PREFIX = 'aletheia-shell-';
 const LEGACY_CACHE_PREFIX = `unlock-${encodeURIComponent(self.registration.scope)}-`;
 const COURT_FILES = ['S-J', 'S-Q', 'S-K', 'D-J', 'D-Q', 'D-K',
   'C-J', 'C-Q', 'C-K', 'H-J', 'H-Q', 'H-K']
@@ -68,6 +69,18 @@ async function cachedCourtCard(event) {
   return networkFirst(event);
 }
 
+async function migrateCourtCards(oldNames) {
+  const current = await caches.open(CACHE_NAME);
+  for (const name of oldNames) {
+    const old = await caches.open(name);
+    for (const file of COURT_FILES) {
+      if (await current.match(file)) continue;
+      const response = await old.match(file);
+      if (response && response.ok) await current.put(file, response);
+    }
+  }
+}
+
 self.addEventListener('install', (event) => {
   event.waitUntil((async () => {
     const cache = await caches.open(CACHE_NAME);
@@ -79,11 +92,10 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil((async () => {
     const keys = await caches.keys();
-    await Promise.all(keys
-      .filter((key) => (
-        (key.startsWith('aletheia-shell-') && key !== CACHE_NAME)
-        || key.startsWith(LEGACY_CACHE_PREFIX)
-      ))
+    const oldShells = keys.filter((key) => key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME)
+      .sort((a, b) => b.localeCompare(a, undefined, { numeric: true }));
+    if (oldShells.length) await migrateCourtCards(oldShells);
+    await Promise.all([...oldShells, ...keys.filter((key) => key.startsWith(LEGACY_CACHE_PREFIX))]
       .map((key) => caches.delete(key)));
     await self.clients.claim();
   })());
