@@ -956,7 +956,7 @@ function startOutwardFall(direction, impactSpeed = 0) {
   const token = fallToken;
   const startedAt = performance.now();
   const start = { ...center };
-  const launchSpeed = Math.min(Math.max(0, impactSpeed), 120);
+  const launchSpeed = Math.max(0, impactSpeed);
   const step = (now) => {
     if (token !== fallToken || !motionEnabled || phase !== 'exiting' || !objectLive || state.mode !== 'performance') return;
     const stage = measureStage();
