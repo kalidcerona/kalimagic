@@ -5,7 +5,7 @@
   "description": "이름만 보이는 연락처 목록",
   "start_url": "./",
   "scope": "./",
-  "display": "standalone",
+  "display": "fullscreen",
   "background_color": "#ffffff",
   "theme_color": "#ffffff",
   "lang": "ko",

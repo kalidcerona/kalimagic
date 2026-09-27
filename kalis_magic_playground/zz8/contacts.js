@@ -17,6 +17,7 @@ import {
 } from "./logic.js";
 
 const STORAGE_KEY = "asrai.prototype.v2";
+const GUIDE_KEY = "asrai.prototype.settings-guide.v1";
 const CLICK_SUPPRESS_MS = 500;
 const STORAGE_FAIL = "저장하지 못했습니다. 기존 저장 값은 바꾸지 않았고, 이번 변경은 이 화면에만 남습니다.";
 
@@ -46,12 +47,36 @@ let currentSettings = normalizePerformanceSettings({ targetClick: LIMITS.default
 let suppressClick = false;
 let suppressTimer = 0;
 let storageNote = "";
+let guideShown = false;
 
 const pointers = new Map();
 let peakPointers = 0;
 
 function setStatus(message) {
   statusNode.textContent = message;
+}
+
+function showGestureGuideOnce() {
+  if (guideShown) return;
+  try {
+    if (window.localStorage.getItem(GUIDE_KEY) === "1") return;
+    window.localStorage.setItem(GUIDE_KEY, "1");
+  } catch {
+    // The guide still appears once in this session when storage is unavailable.
+  }
+  guideShown = true;
+  const guide = document.createElement("div");
+  guide.className = "gesture-guide";
+  guide.innerHTML = `<div class="gesture-guide-card" role="dialog" aria-modal="true" aria-labelledby="gesture-guide-title" aria-describedby="gesture-guide-text">
+    <div class="gesture-guide-motion" aria-hidden="true"><span></span><span></span></div>
+    <h2 id="gesture-guide-title">설정으로 돌아가기</h2>
+    <p id="gesture-guide-text">공연 화면에서 손가락 두 개를 화면에 대고 아래로 쓸어내리세요.</p>
+    <button type="button">알겠습니다</button>
+  </div>`;
+  document.body.append(guide);
+  const button = guide.querySelector("button");
+  button.addEventListener("click", () => guide.remove(), { once: true });
+  button.focus();
 }
 
 function canonicalText(value) {
@@ -305,6 +330,7 @@ function startPerformance() {
     );
   }
   showScreen("list");
+  showGestureGuideOnce();
 }
 
 function resetClicks() {

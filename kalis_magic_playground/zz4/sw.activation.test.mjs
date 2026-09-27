@@ -34,6 +34,8 @@ it('activation deletes only stale magic-choice shell caches', async () => {
     'magic-choice-shell-v3',
     'magic-choice-shell-v4',
     'magic-choice-shell-v5',
+    'magic-choice-shell-v6',
+    'magic-choice-shell-v7',
     'stopwatch2-cache-v1',
     'another-app-shell-v9',
     'offline-notes-v1'
@@ -56,6 +58,9 @@ it('activation deletes only stale magic-choice shell caches', async () => {
   handlers.get('activate')({ waitUntil(promise) { activation = promise; } });
   await activation;
 
-  assert.deepEqual(deleted.sort(), ['magic-choice-shell-v2', 'magic-choice-shell-v3', 'magic-choice-shell-v4', 'stopwatch2-cache-v1']);
+  assert.deepEqual(deleted.sort(), [
+    'magic-choice-shell-v2', 'magic-choice-shell-v3', 'magic-choice-shell-v4',
+    'magic-choice-shell-v5', 'magic-choice-shell-v6', 'stopwatch2-cache-v1'
+  ]);
   assert.equal(claimed, true);
 });

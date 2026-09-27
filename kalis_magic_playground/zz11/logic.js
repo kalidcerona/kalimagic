@@ -1,22 +1,18 @@
-export const SEGMENTS = 12;
-export const STEP = 360 / SEGMENTS;
-
 export function mod(value, base = 360) {
   return ((value % base) + base) % base;
 }
 
-export function segmentAtPoint(x, y, centerX, centerY, rotation = 0) {
-  const angle = Math.atan2(x - centerX, centerY - y) * 180 / Math.PI;
-  return mod(Math.round(mod(angle - rotation) / STEP), SEGMENTS);
+export function angleAtPoint(x, y, centerX, centerY) {
+  return mod(Math.atan2(x - centerX, centerY - y) * 180 / Math.PI);
 }
 
-export function segmentAtArrow(rotation) {
-  return mod(Math.round(-rotation / STEP), SEGMENTS);
+export function angularDistance(first, second) {
+  return Math.abs(mod(first - second + 180) - 180);
 }
 
-export function landingRotation(current, index, direction, turns, jitter = 0) {
-  if (!Number.isInteger(index) || index < 0 || index >= SEGMENTS) throw new RangeError('Invalid segment');
-  const desired = -index * STEP + jitter;
+export function landingRotation(current, angle, direction, turns) {
+  if (!Number.isFinite(angle)) throw new RangeError('Invalid angle');
+  const desired = mod(angle);
   const fullTurns = Math.max(2, Math.floor(turns)) * 360;
   return direction < 0
     ? current - mod(current - desired) - fullTurns
@@ -32,9 +28,10 @@ export function randomInt(max, random = crypto.getRandomValues.bind(crypto)) {
   return sample[0] % max;
 }
 
-export function chooseOutcome(spinNumber, forceSpin, target, previous, draw = randomInt) {
-  if (spinNumber === forceSpin && target !== null) return target;
-  const candidates = Array.from({ length: SEGMENTS }, (_, index) => index)
-    .filter((index) => index !== target && index !== previous);
+export function chooseOutcome(spinNumber, forceSpin, targetAngle, previousAngle, draw = randomInt) {
+  if (spinNumber === forceSpin && targetAngle !== null) return mod(targetAngle);
+  const candidates = Array.from({ length: 360 }, (_, angle) => angle)
+    .filter((angle) => (targetAngle === null || angularDistance(angle, targetAngle) > 12)
+      && (previousAngle === null || angularDistance(angle, previousAngle) > 10));
   return candidates[draw(candidates.length)];
 }

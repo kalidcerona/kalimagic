@@ -22,6 +22,33 @@ import {
   toPublic
 } from './logic.js';
 
+const gestureGuide = document.getElementById('settings-gesture-guide');
+const gestureGuideDismiss = document.getElementById('settings-gesture-dismiss');
+const GESTURE_GUIDE_KEY = 'magic-choice.settings-gesture-guide.v1';
+let gestureGuideShown = false;
+
+function maybeShowGestureGuide() {
+  if (gestureGuideShown) return;
+  try {
+    if (localStorage.getItem(GESTURE_GUIDE_KEY) === 'done') return;
+  } catch { /* Private browsing can block storage. */ }
+  gestureGuideShown = true;
+  gestureGuide.hidden = false;
+  gestureGuideDismiss.focus();
+}
+
+function hideGestureGuide() {
+  gestureGuide.hidden = true;
+}
+
+gestureGuideDismiss.addEventListener('click', () => {
+  hideGestureGuide();
+  try { localStorage.setItem(GESTURE_GUIDE_KEY, 'done'); } catch { /* Keep this session dismissed. */ }
+});
+for (const type of ['touchstart', 'touchmove', 'touchend', 'touchcancel']) {
+  gestureGuide.addEventListener(type, (event) => event.stopPropagation());
+}
+
 const settingsEl = document.getElementById('settings');
 const performanceEl = document.getElementById('performance');
 const stage = document.getElementById('stage');
@@ -455,10 +482,12 @@ function enterPerformance(nextSession) {
   document.title = '목록';
   document.body.dataset.view = 'performance';
   renderPerformance();
+  maybeShowGestureGuide();
 }
 
 function exitPerformance() {
   if (!performing) return;
+  hideGestureGuide();
   performing = false;
   session = null;
   armed = null;
@@ -992,9 +1021,11 @@ function openFakeHome(notes) {
   document.title = '메모';
   document.body.dataset.view = 'fake-home';
   fakeHomeEl.focus();
+  maybeShowGestureGuide();
 }
 
 function closeFakeHome() {
+  hideGestureGuide();
   dismissInputGuide();
   if (!fakeHomeSession) return;
   fakeHomeSession = null;

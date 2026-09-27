@@ -7,6 +7,7 @@
   <meta name="color-scheme" content="light">
   <meta name="description" content="번호를 고르고 목록을 보는 앱">
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="너의 선택은?">
   <title>너의 선택은?</title>
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
@@ -174,7 +175,6 @@
     <div class="fake-home-frame">
       <div class="phone-shell" id="fake-phone">
         <div class="phone-status" aria-hidden="true">
-          <span class="phone-time">9:41</span>
           <span class="phone-status-icons">
             <span class="sig"></span>
             <span class="wifi"></span>
@@ -227,6 +227,14 @@
       </div>
     </form>
   </dialog>
+  <div id="settings-gesture-guide" class="gesture-guide" role="dialog" aria-modal="true" aria-labelledby="settings-gesture-title" hidden>
+    <div class="gesture-guide-card">
+      <div class="gesture-guide-demo" aria-hidden="true"><span></span><span></span></div>
+      <h2 id="settings-gesture-title">설정으로 돌아가기</h2>
+      <p>두 손가락을 화면 아래로 96픽셀 이상 밀어 내리세요.</p>
+      <button type="button" id="settings-gesture-dismiss">알겠어요</button>
+    </div>
+  </div>
   <noscript><p class="shell">이 앱은 자바스크립트가 필요합니다.</p></noscript>
   <script type="module" src="./app.js"></script>
   <script type="module" src="./install-prompt.js"></script>

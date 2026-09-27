@@ -979,3 +979,73 @@ dialog::backdrop { background: rgba(43, 16, 20, 0.46); }
     box-shadow: 0 18px 50px rgba(0, 0, 0, 0.28);
   }
 }
+
+/* First performance: show how to return to settings. */
+.gesture-guide[hidden] { display: none !important; }
+.gesture-guide {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, .78);
+  color: #fff;
+  text-align: center;
+  touch-action: none;
+}
+.gesture-guide-card {
+  width: min(100%, 340px);
+  padding: 28px 24px;
+  border: 1px solid rgba(255, 255, 255, .25);
+  border-radius: 20px;
+  background: #202127;
+  box-shadow: 0 16px 50px rgba(0, 0, 0, .45);
+}
+.gesture-guide-demo {
+  position: relative;
+  height: 150px;
+  margin: 0 auto 12px;
+  width: 130px;
+}
+.gesture-guide-demo::after {
+  content: '↓';
+  position: absolute;
+  inset: auto 0 0;
+  color: #fff;
+  font-size: 32px;
+}
+.gesture-guide-demo span {
+  position: absolute;
+  top: 5px;
+  width: 36px;
+  height: 44px;
+  border: 2px solid #fff;
+  border-radius: 20px;
+  background: #ddaf8e;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, .35);
+  animation: gesture-guide-down 2.2s ease-in-out infinite;
+}
+.gesture-guide-demo span:first-child { left: 24px; }
+.gesture-guide-demo span:last-child { right: 24px; }
+.gesture-guide h2 { margin: 0 0 10px; font-size: 1.35rem; color: #fff; }
+.gesture-guide p { margin: 0 0 22px; line-height: 1.6; color: #fff; }
+.gesture-guide button {
+  min-height: 44px;
+  padding: 10px 24px;
+  border: 0;
+  border-radius: 10px;
+  background: #fff;
+  color: #202127;
+  font: inherit;
+  font-weight: 700;
+}
+.gesture-guide button:focus-visible { outline: 3px solid #f7c46a; outline-offset: 3px; }
+@keyframes gesture-guide-down {
+  0%, 12% { transform: translateY(0); opacity: .6; }
+  55%, 72% { transform: translateY(96px); opacity: 1; }
+  100% { transform: translateY(96px); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gesture-guide-demo span { animation: none; transform: translateY(48px); }
+}

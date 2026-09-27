@@ -1,5 +1,5 @@
 // Network-first cache for the ALETHEIA app shell only.
-const CACHE_NAME = 'aletheia-shell-v8';
+const CACHE_NAME = 'aletheia-shell-v9';
 const LEGACY_CACHE_PREFIX = `unlock-${encodeURIComponent(self.registration.scope)}-`;
 const COURT_FILES = ['S-J', 'S-Q', 'S-K', 'D-J', 'D-Q', 'D-K',
   'C-J', 'C-Q', 'C-K', 'H-J', 'H-Q', 'H-K']

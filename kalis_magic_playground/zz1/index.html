@@ -174,6 +174,19 @@
     #quick-card label { display: block; margin: 1.5rem 0 0.5rem; }
     #quick-card p { color: #aeaeb2; line-height: 1.5; }
     #quick-apply { width: 100%; margin-top: 1rem; background: #ff9f0a !important; color: #000 !important; font-weight: 600 !important; }
+
+    #settings-entry-tutorial { position: fixed; inset: 0; z-index: 45; display: grid; place-items: center; padding: 24px; pointer-events: none; }
+    #settings-entry-tutorial[hidden] { display: none !important; }
+    #settings-entry-tutorial .tutorial-card { width: min(100%, 320px); padding: 22px; border: 1px solid #ffffff52; border-radius: 20px; background: #1b1b20f2; color: #fff; text-align: center; box-shadow: 0 16px 48px #0009; font: 500 16px/1.55 system-ui, sans-serif; }
+    #settings-entry-tutorial .tutorial-fingers { position: relative; height: 110px; width: 100px; margin: 0 auto 12px; }
+    #settings-entry-tutorial .tutorial-fingers span { position: absolute; top: 8px; width: 29px; height: 45px; border: 3px solid #fff; border-radius: 18px; background: #ffffff35; animation: tutorial-swipe 1.7s ease-in-out infinite; }
+    #settings-entry-tutorial .tutorial-fingers span:first-child { left: 15px; }
+    #settings-entry-tutorial .tutorial-fingers span:last-child { right: 15px; }
+    #settings-entry-tutorial .tutorial-fingers::after { content: '↓'; position: absolute; bottom: 0; left: 0; right: 0; color: #fff; font-size: 28px; }
+    #settings-entry-tutorial p { margin: 0 0 16px; }
+    #settings-entry-tutorial button { min-width: 120px; min-height: 44px; border: 0; border-radius: 12px; background: #fff; color: #111; font: 600 16px system-ui, sans-serif; pointer-events: auto; touch-action: manipulation; }
+    @keyframes tutorial-swipe { 0%, 16% { transform: translateY(0); opacity: .55; } 70%, 85% { transform: translateY(45px); opacity: 1; } 100% { transform: translateY(0); opacity: .55; } }
+    @media (prefers-reduced-motion: reduce) { #settings-entry-tutorial .tutorial-fingers span { animation: none; transform: translateY(25px); } }
   </style>
 </head>
 <body>
@@ -251,6 +264,9 @@
       </div>
     </section>
   </main>
+  <div id="settings-entry-tutorial" role="dialog" aria-label="설정 여는 방법" hidden>
+    <div class="tutorial-card"><div class="tutorial-fingers" aria-hidden="true"><span></span><span></span></div><p>설정을 열려면 두 손가락으로 화면을 아래로 쓸어내리세요.</p><button id="settings-entry-tutorial-dismiss" type="button">알겠어요</button></div>
+  </div>
   <div id="selftest" hidden><div id="selftest-result"></div></div>
   <script type="module">
 // BEGIN SETTINGS SWIPE
@@ -412,6 +428,16 @@ function installSettingsSwipe(open, cancel, enabled, cancelHold = cancel) {
       }
       const message=failures.length?`FAIL\n${failures.join("\n")}`:"ALL PASS";const output=document.getElementById("selftest-result");output.textContent=message;output.className=failures.length?"fail":"";console.log(message);return message;
     }
+    const SETTINGS_TUTORIAL_KEY = "stopwatch-settings-entry-tutorial-v1";
+    function showSettingsEntryTutorial() {
+      try { if (localStorage.getItem(SETTINGS_TUTORIAL_KEY) === "1") return; } catch (_) {}
+      const tutorial = document.getElementById("settings-entry-tutorial");
+      tutorial.hidden = false;
+      try { localStorage.setItem(SETTINGS_TUTORIAL_KEY, "1"); } catch (_) {}
+    }
+    document.getElementById("settings-entry-tutorial-dismiss").addEventListener("click", () => {
+      document.getElementById("settings-entry-tutorial").hidden = true;
+    });
     const $ = id => document.getElementById(id);
     const shell=$("shell"), portraitApp=$("portrait-app"), landscapeFrame=$("landscape-frame"), landscapeApp=$("landscape-app");
     const pTime=$("p-time-display"),pNumeric=$("p-numeric-display"),pMinutes=$("p-minutes"),pCustom=$("p-custom-display"),pColon=$("p-colon"),pControl=$("p-control"),pLap=$("p-lap"),pLapArea=$("p-lap-area"),pLapRows=$("p-lap-rows"),pDigitGuide=$("p-digit-guide"),pDigitGuideOn=$("p-digit-guide-enabled"),pWorld=portraitApp.querySelector(".tab-world"),pAlarm=portraitApp.querySelector("#p-tabs .tab:nth-child(2)"),pTimer=portraitApp.querySelector("#p-tabs .tab:nth-child(4)"),pDigits=[...pTime.querySelectorAll("[data-p-digit]")],pGroups=[...pTime.querySelectorAll("[data-p-group]")];
@@ -495,6 +521,7 @@ function installSettingsSwipe(open, cancel, enabled, cancelHold = cancel) {
     }
     function openSettings(section="general"){
       if(state==="running"||presetMode||!settings.hidden||!quickSettings.hidden)return;
+      $("settings-entry-tutorial").hidden=true;
       settings.classList.toggle("preset-focus",section==="presets");$("settings-title").textContent=section==="presets"?"프리셋":"설정";
       presetEditor.hidden=true;editingSlotIndex=null;updateModeButtons();renderSequenceSlots();updateSequenceStatus();settings.hidden=false;settings.scrollTop=0;
     }
@@ -583,7 +610,7 @@ function installSettingsSwipe(open, cancel, enabled, cancelHold = cancel) {
       sequenceSlots.addEventListener("click",e=>{const row=e.target.closest(".sequence-slot");if(!row)return;const index=Number(row.dataset.slot);if(e.target.closest(".sequence-slot-edit"))editPreset(index);else if(e.target.closest(".sequence-slot-apply"))applyPresetSlotToDom(presetSlotValues[index]);});
       $("quick-close").addEventListener("click",closeQuickSettings);$("quick-apply").addEventListener("click",applyQuickValue);
       quickValue.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();applyQuickValue();}else if(e.key==="Escape")closeQuickSettings();});
-      window.addEventListener("resize",updateLandscapeHitZones);window.addEventListener("blur",cancelPendingInteractions);if(typeof ResizeObserver==="function"){resizeObserver=new ResizeObserver(updateLandscapeHitZones);resizeObserver.observe(lControl);resizeObserver.observe(lTime);resizeObserver.observe(landscapeApp);}document.addEventListener("contextmenu",e=>e.preventDefault());document.addEventListener("pointerdown",()=>{if(!wakeLock)acquireWakeLock();});document.addEventListener("visibilitychange",()=>{if(document.hidden){clearHold();tap=null;}else acquireWakeLock();});renderState();acquireWakeLock();}
+      window.addEventListener("resize",updateLandscapeHitZones);window.addEventListener("blur",cancelPendingInteractions);if(typeof ResizeObserver==="function"){resizeObserver=new ResizeObserver(updateLandscapeHitZones);resizeObserver.observe(lControl);resizeObserver.observe(lTime);resizeObserver.observe(landscapeApp);}document.addEventListener("contextmenu",e=>e.preventDefault());document.addEventListener("pointerdown",()=>{if(!wakeLock)acquireWakeLock();});document.addEventListener("visibilitychange",()=>{if(document.hidden){clearHold();tap=null;}else acquireWakeLock();});renderState();acquireWakeLock();showSettingsEntryTutorial();}
     if(location.hash==="#selftest"){$("shell").hidden=true;$("selftest").hidden=false;runSelfTests();}else initApp();
   </script>
   <script>

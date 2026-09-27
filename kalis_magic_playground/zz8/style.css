@@ -442,3 +442,42 @@ textarea {
     color: LinkText;
   }
 }
+
+.gesture-guide {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.76);
+  color: #fff;
+}
+.gesture-guide-card {
+  width: min(100%, 360px);
+  padding: 28px 24px;
+  border-radius: 20px;
+  background: #242228;
+  text-align: center;
+  box-shadow: 0 14px 45px rgba(0, 0, 0, 0.35);
+}
+.gesture-guide-motion { height: 100px; display: flex; justify-content: center; gap: 24px; }
+.gesture-guide-motion span {
+  width: 34px;
+  height: 48px;
+  border: 3px solid #fff;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.18);
+  animation: guide-swipe-down 1.8s ease-in-out infinite;
+}
+.gesture-guide-motion span:nth-child(2) { animation-delay: 0.08s; }
+.gesture-guide-card h2 { margin: 0 0 10px; font-size: 1.35rem; color: #fff; }
+.gesture-guide-card p { margin: 0 0 22px; line-height: 1.55; color: #fff; }
+.gesture-guide-card button { min-height: 44px; padding: 0 24px; border: 0; border-radius: 10px; background: #fff; color: #242228; font-weight: 700; }
+@keyframes guide-swipe-down {
+  0%, 15%, 100% { transform: translateY(0); opacity: 0.55; }
+  55%, 75% { transform: translateY(42px); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gesture-guide-motion span { animation: none; transform: translateY(25px); opacity: 1; }
+}

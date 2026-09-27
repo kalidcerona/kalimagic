@@ -1,5 +1,5 @@
 // Network-first cache for the ALETHEIA app shell only.
-const CACHE_NAME = 'aletheia-distribution-shell-v2';
+const CACHE_NAME = 'aletheia-distribution-shell-v3';
 const COURT_FILES = ['S-J', 'S-Q', 'S-K', 'D-J', 'D-Q', 'D-K',
   'C-J', 'C-Q', 'C-K', 'H-J', 'H-Q', 'H-K']
   .map((code) => `./court-cards/${code}.png`);

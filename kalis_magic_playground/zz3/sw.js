@@ -1,6 +1,6 @@
 const SCOPE_URL = new URL(self.registration.scope);
 const PREFIX = `calc2-${encodeURIComponent(SCOPE_URL.href)}-`;
-const CACHE = `${PREFIX}v6`;
+const CACHE = `${PREFIX}v7`;
 const SHELL = [
   "./",
   "./index.html",

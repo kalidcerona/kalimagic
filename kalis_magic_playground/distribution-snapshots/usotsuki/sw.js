@@ -1,6 +1,6 @@
 /* App-shell cache only. Never store question sets or other user data. */
 const CACHE_PREFIX = "usotsuki-distribution-" + encodeURIComponent(self.registration.scope) + "-";
-const CACHE = CACHE_PREFIX + "v2";
+const CACHE = CACHE_PREFIX + "v3";
 const FILES = [
   "./",
   "./index.html",

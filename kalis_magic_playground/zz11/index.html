@@ -19,12 +19,16 @@
     <div class="stage-top"><span class="brand">KALI MAGIC</span><span class="stage-title">회전판</span></div>
     <div class="wheel-area">
       <div class="wheel-wrap" id="wheel-wrap">
-        <div class="pointer" aria-hidden="true"></div>
-        <div class="wheel" id="wheel" role="img" aria-label="1번부터 12번까지 있는 회전판"></div>
+        <div class="wheel" aria-hidden="true"></div>
+        <svg class="spinner-arrow" id="spinner-arrow" viewBox="0 0 100 100" role="img" aria-label="중심에서 바깥쪽을 가리키는 화살표">
+          <defs><linearGradient id="arrow-metal" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8e623d"/><stop offset=".32" stop-color="#f5dc9f"/><stop offset=".7" stop-color="#fff2c8"/><stop offset="1" stop-color="#9f7148"/></linearGradient></defs>
+          <path d="M50 5 64 29H56V51H44V29H36Z" fill="url(#arrow-metal)" stroke="#533820" stroke-width="1.4" stroke-linejoin="round"/>
+          <path d="M50 13V46" stroke="#fff8df" stroke-width="1.3" stroke-linecap="round" opacity=".7"/>
+        </svg>
         <div class="wheel-pin" aria-hidden="true"><span>✦</span></div>
       </div>
     </div>
-    <div class="stage-bottom"><p class="instruction">손가락으로 회전판을 돌려 보세요</p><p id="spin-status" class="spin-status" aria-live="polite"></p></div>
+    <div class="stage-bottom"><p class="instruction">화살표를 터치하거나 돌려 보세요</p><p id="spin-status" class="spin-status" aria-live="polite"></p></div>
   </main>
 
   <section id="guide" class="overlay guide" role="dialog" aria-modal="true" aria-label="설정 안내" hidden>
@@ -32,6 +36,7 @@
       <span class="eyebrow">처음 시작하기</span>
       <h1>설정 열기</h1>
       <div class="gesture-animation" aria-hidden="true"><i></i><i></i><span>↓</span></div>
+      <p>공연 전 목표 물건이 놓인 방향을 한 번 터치하세요. 이어서 화살표를 탭하거나 돌리면 회전합니다.</p>
       <p>화면을 <strong>두 손가락으로 아래로 쓸어내리면</strong> 공연 설정이 열립니다.</p>
       <button id="guide-close" class="primary" type="button">알겠어요</button>
     </div>
@@ -41,12 +46,12 @@
     <div class="panel settings-panel">
       <header><span class="eyebrow">PERFORMANCE SETTINGS</span><button id="settings-close" class="close" aria-label="설정 닫기" type="button">×</button></header>
       <h1>회전판 설정</h1>
-      <p class="setting-intro">공연 전에 목표 칸을 회전판에서 한 번 가볍게 누르세요. 선택한 칸은 공연 화면에 표시되지 않습니다.</p>
+      <p class="setting-intro">공연 전에 목표 물건이 놓인 방향을 화면에서 한 번 터치하세요. 선택한 방향은 공연 화면에 표시되지 않습니다.</p>
       <div class="setting-row"><span>선택한 목표</span><strong id="target-value">선택 전</strong></div>
       <label class="setting-row" for="force-spin"><span>목표에 멈출 차례</span><select id="force-spin"><option value="1">첫 번째</option><option value="2">두 번째</option><option value="3">세 번째</option><option value="4">네 번째</option><option value="5">다섯 번째</option><option value="6">여섯 번째</option><option value="7">일곱 번째</option><option value="8">여덟 번째</option></select></label>
       <div class="setting-row"><span>완료한 회전</span><strong id="spin-value">0회</strong></div>
       <div class="setting-actions"><button id="reset-run" type="button">회전 횟수 초기화</button><button id="clear-target" type="button">목표 다시 선택</button></div>
-      <p class="setting-note">지정한 차례 외에는 목표 칸을 제외하고 무작위로 멈춥니다. 같은 칸에 연속으로 멈추지 않도록 추첨합니다.</p>
+      <p class="setting-note">지정한 차례 외에는 목표 방향을 피해 무작위로 멈춥니다.</p>
       <div class="install"><button id="install-app" type="button">회전판 앱 설치</button><p id="install-help" hidden></p></div>
     </div>
   </section>

@@ -24,7 +24,7 @@ import {
   wallpaperCropRect,
   classifyTwoFingerSwipe,
 } from './logic.js';
-import { fallPosition, isBreakthroughSnap, isPhoneUpright, shakeImpulse } from './sensor-motion.js';
+import { fallPosition, gravityExitDirection, isBreakthroughSnap, isGravityUpright, isPhoneUpright, orientationExitDirection, shakeImpulse } from './sensor-motion.js';
 
 const gestureGuide = document.getElementById('settings-gesture-guide');
 const gestureGuideDismiss = document.getElementById('settings-gesture-dismiss');
@@ -371,6 +371,8 @@ let spawnCancelled = false;
 let motionEnabled = false;
 let motionRequestId = 0;
 let upright = false;
+let orientationHasReading = false;
+let activeOutwardDirection = null;
 let shakeSample = null;
 let lastShakeAt = -Infinity;
 let lastSnapAt = -Infinity;
@@ -733,6 +735,7 @@ function cancelFall() {
   fallToken += 1;
   if (fallFrame) window.cancelAnimationFrame(fallFrame);
   fallFrame = 0;
+  activeOutwardDirection = null;
 }
 
 function cancelWobble() {
@@ -840,6 +843,38 @@ function startFall() {
   fallFrame = window.requestAnimationFrame(step);
 }
 
+function startOutwardFall(direction) {
+  if (!motionEnabled || !direction || state.mode !== 'performance' || phase !== 'idle' ||
+    !objectLive || pointers.size !== 0 || stageEl.classList.contains('is-breaking')) return;
+  if (activeOutwardDirection === direction) return;
+  cancelFall();
+  activeOutwardDirection = direction;
+  const token = fallToken;
+  const startedAt = performance.now();
+  const start = { ...center };
+  const stage = measureStage();
+  const radius = coinMetrics(selected(), stage).radius;
+  const distance = direction === 'left' ? start.x + radius :
+    direction === 'right' ? stage.width + radius - start.x : start.y + radius;
+  const step = (now) => {
+    if (token !== fallToken || !motionEnabled || phase !== 'idle' || !objectLive || state.mode !== 'performance') return;
+    const travel = fallPosition(0, Math.max(0, distance), now - startedAt);
+    center.x = start.x + (direction === 'right' ? travel : direction === 'left' ? -travel : 0);
+    center.y = start.y - (direction === 'top' ? travel : 0);
+    paintCoin(center.x, center.y, radius, 1, 1);
+    if (travel < distance - 0.5) {
+      fallFrame = window.requestAnimationFrame(step);
+    } else {
+      fallFrame = 0;
+      phase = 'gone';
+      concealCoin();
+      setGoneSession(true);
+      activeOutwardDirection = null;
+    }
+  };
+  fallFrame = window.requestAnimationFrame(step);
+}
+
 function startWobble(magnitude) {
   if (!motionEnabled || state.mode !== 'performance' || phase !== 'idle' || !objectLive || pointers.size !== 0) return;
   cancelWobble();
@@ -864,21 +899,48 @@ function startWobble(magnitude) {
   wobbleFrame = window.requestAnimationFrame(step);
 }
 
+function applyTilt(next, direction) {
+  const wasUpright = upright;
+  const wasOutward = activeOutwardDirection !== null;
+  if (wasOutward && activeOutwardDirection !== direction) {
+    cancelFall();
+    paintLiveCoin();
+  }
+  upright = next;
+  if (direction) startOutwardFall(direction);
+  else if (next && (!wasUpright || wasOutward)) startFall();
+}
+
 function onDeviceOrientation(event) {
   if (!motionEnabled) return;
+  if (!Number.isFinite(event.beta) || !Number.isFinite(event.gamma)) return;
+  orientationHasReading = true;
+  const screenAngle = window.screen?.orientation?.angle ?? window.orientation;
+  const direction = orientationExitDirection({ beta: event.beta, gamma: event.gamma, screenAngle });
   const next = isPhoneUpright({
     beta: event.beta,
     gamma: event.gamma,
-    screenAngle: window.screen?.orientation?.angle ?? window.orientation,
+    screenAngle,
     screenOrientation: window.screen?.orientation?.type,
   });
-  const becameUpright = next && !upright;
-  upright = next;
-  if (becameUpright) startFall();
+  applyTilt(next, direction);
 }
 
 function onDeviceMotion(event) {
   if (!motionEnabled) return;
+  const gravity = event.accelerationIncludingGravity;
+  const gravityMagnitude = gravity && Number.isFinite(gravity.x) && Number.isFinite(gravity.y) && Number.isFinite(gravity.z)
+    ? Math.hypot(gravity.x, gravity.y, gravity.z) : 0;
+  if (!orientationHasReading && gravityMagnitude >= 7 && gravityMagnitude <= 12) {
+    const direction = gravityExitDirection(gravity, {
+      screenAngle: window.screen?.orientation?.angle ?? window.orientation,
+    });
+    const next = isGravityUpright(gravity, {
+      screenAngle: window.screen?.orientation?.angle ?? window.orientation,
+      screenOrientation: window.screen?.orientation?.type,
+    });
+    applyTilt(next, direction);
+  }
   if (state.mode !== 'performance') {
     shakeSample = null;
     return;
@@ -901,6 +963,7 @@ function disableMotion(message = '기기 움직임 연출을 껐습니다.') {
   motionRequestId += 1;
   motionEnabled = false;
   upright = false;
+  orientationHasReading = false;
   shakeSample = null;
   clearBreakthrough();
   cancelSensorEffects();
@@ -927,25 +990,34 @@ async function enableMotion() {
   try {
     // Start both permission requests in this user-initiated event before awaiting either one.
     const requests = [];
+    const requestedSensors = [];
     if (orientationAvailable && typeof window.DeviceOrientationEvent?.requestPermission === 'function') {
       requests.push(window.DeviceOrientationEvent.requestPermission());
+      requestedSensors.push('orientation');
     }
     if (motionAvailable && typeof window.DeviceMotionEvent?.requestPermission === 'function') {
       requests.push(window.DeviceMotionEvent.requestPermission());
+      requestedSensors.push('motion');
     }
-    const permissions = await Promise.all(requests);
+    const permissions = await Promise.allSettled(requests);
     if (requestId !== motionRequestId || !motionToggle.checked) return;
-    if (permissions.some((permission) => permission !== 'granted')) {
+    const allowed = (sensor) => {
+      const index = requestedSensors.indexOf(sensor);
+      return index < 0 || permissions[index].status === 'fulfilled' && permissions[index].value === 'granted';
+    };
+    const useOrientation = orientationAvailable && allowed('orientation');
+    const useMotion = motionAvailable && allowed('motion');
+    if (!useOrientation && !useMotion) {
       disableMotion('센서 권한이 없어 움직임 연출을 켜지 못했습니다.');
       return;
     }
     motionEnabled = true;
-    if (orientationAvailable) window.addEventListener('deviceorientation', onDeviceOrientation);
-    if (motionAvailable) window.addEventListener('devicemotion', onDeviceMotion);
-    motionNote.textContent = orientationAvailable && motionAvailable
+    if (useOrientation) window.addEventListener('deviceorientation', onDeviceOrientation);
+    if (useMotion) window.addEventListener('devicemotion', onDeviceMotion);
+    motionNote.textContent = useOrientation && useMotion
       ? '센서 연출을 켰습니다. 물건이 숨었을 때 강하게 스냅하면 중앙을 뚫고 나타납니다.'
-      : orientationAvailable ? '세우기 반응을 켰습니다. 이 기기에서는 흔들기 반응을 지원하지 않습니다.'
-        : '흔들기 반응을 켰습니다. 이 기기에서는 세우기 반응을 지원하지 않습니다.';
+      : useOrientation ? '세우기 반응을 켰습니다. 이 기기에서는 스냅 반응을 사용할 수 없습니다.'
+        : '움직임 반응을 켰습니다. 물건을 기울이거나 강하게 스냅해 보세요.';
   } catch {
     if (requestId === motionRequestId) disableMotion('센서 권한을 받지 못했습니다. 손가락 연출은 그대로 사용할 수 있습니다.');
   }
