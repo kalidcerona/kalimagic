@@ -15,6 +15,18 @@ test('personal reveal stays empty until the configured attempt exists', () => {
   assert.equal(logic.selectedAttemptReveal([[1, 2, 3, 4]], 2, new Date(2026, 8, 24)), null);
 });
 
+test('upward peek finds a valid birthday regardless of its attempt number', () => {
+  const birthday = [0, 8, 0, 2, 2, 9];
+  const other = [1, 2, 3, 4, 5, 6];
+  for (const index of [0, 1, 2]) {
+    const attempts = [other, other, other];
+    attempts[index] = birthday;
+    assert.deepEqual(logic.latestBirthdateAttempt(attempts, new Date(2026, 8, 24)), {
+      attemptNumber: index + 1, pin: '080229', days: 6782, zodiac: '물고기자리', animal: '쥐띠',
+    });
+  }
+});
+
 test('personal and shared unlock use different persistent storage identities', () => {
   assert.equal(typeof logic.storageIdentityForPath, 'function');
   assert.notDeepEqual(logic.storageIdentityForPath('/zz2/'), logic.storageIdentityForPath('/tools/unlock/'));
@@ -42,7 +54,8 @@ test('personal home stays on the second screenshot when its reveal card opens', 
   assert.equal(typeof logic.homeSwipeTarget, 'function');
   assert.deepEqual(logic.homeSwipeTarget('home1', -180, 0, true), { page: 'home2', revealVisible: false, peek: false });
   assert.deepEqual(logic.homeSwipeTarget('home2', -24, 0, true, false, 390), { page: 'home2', revealVisible: true, peek: false });
-  assert.deepEqual(logic.homeSwipeTarget('home2', -23, 0, true, false, 390), { page: 'home2', revealVisible: false, peek: false });
+  assert.deepEqual(logic.homeSwipeTarget('home2', -18, 0, true, false, 390), { page: 'home2', revealVisible: true, peek: false });
+  assert.deepEqual(logic.homeSwipeTarget('home2', -17, 0, true, false, 390), { page: 'home2', revealVisible: false, peek: false });
   assert.deepEqual(logic.homeSwipeTarget('home2', 180, 0, true, true), { page: 'home2', revealVisible: false, peek: false });
   assert.deepEqual(logic.homeSwipeTarget('home2', 180, 0, true), { page: 'home1', revealVisible: false, peek: false });
   assert.deepEqual(logic.homeSwipeTarget('home1', -180, 0, false), { page: 'home1', revealVisible: false, peek: false });
@@ -51,7 +64,7 @@ test('personal home stays on the second screenshot when its reveal card opens', 
   assert.deepEqual(logic.homeSwipeTarget('home1', -20, 0, true), { page: 'home1', revealVisible: false, peek: false });
 });
 
-test('releasing the reveal swipe keeps home two and immediately hides its value', () => {
+test('completing the reveal swipe keeps home two as the active page', () => {
   assert.equal(typeof logic.completeHomeSwipe, 'function');
   assert.deepEqual(logic.completeHomeSwipe('home2', -24, 0, true, 390), {
     page: 'home2', revealVisible: false, peek: false,

@@ -171,6 +171,7 @@
     #attempt-list { list-style: none; margin: 0; padding: 0; overflow: auto; max-height: calc(100% - 54px); font-variant-numeric: tabular-nums; }
     #attempt-list li { border-top: 1px solid #ffffff15; padding: 6px 0; width: max-content; min-width: 100%; white-space: nowrap; }
     .attempt-pin { letter-spacing: .02em; font-size: clamp(9px, 2.4vw, 11px); line-height: 1.25; font-weight: 600; }
+    #birthday-summary { flex-shrink: 0; margin-top: 8px; padding: 10px 0 2px; border-top: 1px solid #ffffff40; color: #f4f3ee; font-size: clamp(9px, 2.5vw, 11px); font-weight: 600; line-height: 1.4; font-variant-numeric: tabular-nums; }
     #time-black { z-index: 3; background: #000; touch-action: none; }
     #rewind-digit-guide { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: repeat(4, minmax(0, 1fr)); color: #fff; font-size: clamp(42px, 13vw, 76px); font-weight: 650; pointer-events: none; opacity: 1; transition: opacity 400ms ease; }
     #rewind-digit-guide[hidden] { display: none !important; }
@@ -270,6 +271,19 @@
       .galaxy #fingerprint { top: 82%; }
     }
     @media (prefers-reduced-motion: reduce) { #unlocked-screen.returning { transition-duration: 180ms; } #input-screen.unlocking-out, #unlocked-screen.unlocking { animation-duration: 150ms; } #reveal-card { transition-duration: 0s; } }
+
+    #settings-entry-tutorial { position: fixed; inset: 0; z-index: 45; display: grid; place-items: center; padding: 24px; pointer-events: none; }
+    #settings-entry-tutorial[hidden] { display: none !important; }
+    #settings-entry-tutorial .tutorial-card { width: min(100%, 320px); padding: 22px; border: 1px solid #ffffff52; border-radius: 20px; background: #1b1b20f2; color: #fff; text-align: center; box-shadow: 0 16px 48px #0009; font: 500 16px/1.55 system-ui, sans-serif; }
+    #settings-entry-tutorial .tutorial-fingers { position: relative; height: 110px; width: 100px; margin: 0 auto 12px; }
+    #settings-entry-tutorial .tutorial-fingers span { position: absolute; top: 8px; width: 29px; height: 45px; border: 3px solid #fff; border-radius: 18px; background: #ffffff35; animation: tutorial-swipe 1.7s ease-in-out infinite; }
+    #settings-entry-tutorial .tutorial-fingers span:first-child { left: 15px; }
+    #settings-entry-tutorial .tutorial-fingers span:last-child { right: 15px; }
+    #settings-entry-tutorial .tutorial-fingers::after { content: '↓'; position: absolute; bottom: 0; left: 0; right: 0; color: #fff; font-size: 28px; }
+    #settings-entry-tutorial p { margin: 0 0 16px; }
+    #settings-entry-tutorial button { min-width: 120px; min-height: 44px; border: 0; border-radius: 12px; background: #fff; color: #111; font: 600 16px system-ui, sans-serif; pointer-events: auto; touch-action: manipulation; }
+    @keyframes tutorial-swipe { 0%, 16% { transform: translateY(0); opacity: .55; } 70%, 85% { transform: translateY(45px); opacity: 1; } 100% { transform: translateY(0); opacity: .55; } }
+    @media (prefers-reduced-motion: reduce) { #settings-entry-tutorial .tutorial-fingers span { animation: none; transform: translateY(25px); } }
   </style>
 </head>
 <body>
@@ -299,6 +313,7 @@
     <section id="peek-screen" class="screen" aria-label="시도 기록" hidden>
       <div class="peek-heading">시도 기록</div>
       <ol id="attempt-list"></ol>
+      <div id="birthday-summary" hidden></div>
     </section>
     <section id="unlocked-screen" class="screen" aria-label="해제 화면" hidden>
       <div id="home-track">
@@ -388,13 +403,27 @@
     </section>
     <div id="toast" role="status" hidden></div>
   </main>
+  <div id="settings-entry-tutorial" role="dialog" aria-label="설정 여는 방법" hidden>
+    <div class="tutorial-card"><div class="tutorial-fingers" aria-hidden="true"><span></span><span></span></div><p>설정을 열려면 잠금 화면에서 두 손가락으로 아래로 쓸어내리세요.</p><button id="settings-entry-tutorial-dismiss" type="button">알겠어요</button></div>
+  </div>
   <script type="module" src="./install-prompt.js"></script>
   <script type="module">
-    import { FINGERPRINT_HOLD_MS, normalizeSettings, storageIdentityForPath, personalHomeReady, selectedAttemptReveal, homeSwipeTarget, completeHomeSwipe, lockScreenCopy, createState, pushDigit, submitPin, fingerprintHold, attemptFeedback, feedbackVibration, deleteDigit, clearCurrent, toggleDigits, reset, isHomeGestureArea, peekOffset, registerTwoFingerTap, settleTwoFingerTaps, registerLockTap, formatAttemptLabel } from './logic.js';
+    import { FINGERPRINT_HOLD_MS, normalizeSettings, storageIdentityForPath, personalHomeReady, selectedAttemptReveal, latestBirthdateAttempt, homeSwipeTarget, completeHomeSwipe, lockScreenCopy, createState, pushDigit, submitPin, fingerprintHold, attemptFeedback, feedbackVibration, deleteDigit, clearCurrent, toggleDigits, reset, isHomeGestureArea, peekOffset, registerTwoFingerTap, settleTwoFingerTaps, registerLockTap, formatAttemptLabel } from './logic.js';
 
     import { hiddenDigit, appendMinuteDigit, registerEmergencyTap, timeMachineOffset, isSettingsSwipe, horizontalPeekOffset } from './time-machine.js';
 
     const $ = (id) => document.getElementById(id);
+    const SETTINGS_TUTORIAL_KEY = "unlock-settings-entry-tutorial-v1";
+    function showSettingsEntryTutorial() {
+      try { if (localStorage.getItem(SETTINGS_TUTORIAL_KEY) === "1") return; } catch (_) {}
+      const tutorial = document.getElementById("settings-entry-tutorial");
+      tutorial.hidden = false;
+      try { localStorage.setItem(SETTINGS_TUTORIAL_KEY, "1"); } catch (_) {}
+    }
+    document.getElementById("settings-entry-tutorial-dismiss").addEventListener("click", () => {
+      document.getElementById("settings-entry-tutorial").hidden = true;
+    });
+
     const STORAGE = storageIdentityForPath(location.pathname);
     const SETTINGS_KEY = STORAGE.settingsKey;
     const UNLOCK_ANIMATION_MS = 440;
@@ -427,7 +456,8 @@
     let swipe = null;
     let homePage = 'home1';
     let revealVisible = false;
-    let revealTimer = null;
+    let revealShownAt = null;
+    let revealHideTimer = null;
     let settingsSwipe = null;
     let timeMinutes = 0;
     let timeDigits = [];
@@ -485,6 +515,11 @@
         row.append(pin);
         return row;
       }));
+      const birthdate = latestBirthdateAttempt(state.attempts, new Date());
+      $('birthday-summary').hidden = !birthdate;
+      $('birthday-summary').textContent = birthdate
+        ? `${birthdate.attemptNumber}번째 ${birthdate.pin} · ${birthdate.days.toLocaleString('ko-KR')}일 · ${birthdate.zodiac} · ${birthdate.animal}`
+        : '';
       requestAnimationFrame(() => { $('attempt-list').scrollTop = 0; });
     }
 
@@ -505,26 +540,20 @@
     function setRevealVisible(visible) {
       if (visible === revealVisible) return;
       revealVisible = visible;
-      if (visible) renderReveal();
+      if (visible) {
+        clearTimeout(revealHideTimer);
+        revealHideTimer = null;
+        revealShownAt = performance.now();
+        renderReveal();
+      } else revealShownAt = null;
       $('reveal-card').classList.toggle('visible', visible);
       $('reveal-card').setAttribute('aria-hidden', String(!visible));
     }
 
     function cancelReveal() {
-      clearTimeout(revealTimer);
-      revealTimer = null;
+      clearTimeout(revealHideTimer);
+      revealHideTimer = null;
       setRevealVisible(false);
-    }
-
-    function scheduleReveal() {
-      if (!swipe || swipe.revealPending || revealVisible) return;
-      swipe.revealPending = true;
-      const activeSwipe = swipe;
-      revealTimer = setTimeout(() => {
-        revealTimer = null;
-        if (swipe === activeSwipe && screen === 'unlocked' && homePage === 'home2'
-            && originals.has('home2') && swipe.revealPending) setRevealVisible(true);
-      }, Math.max(0, 700 - (performance.now() - swipe.startedAt)));
     }
 
     function setHomePage(next, animate = true) {
@@ -579,6 +608,7 @@
       swipe = null;
       cancelReveal();
       if (next === 'input') renderInput();
+      if (next === 'input') showSettingsEntryTutorial();
       if (next === 'unlocked') {
         renderAttempts();
         setHomePage('home1', false);
@@ -596,7 +626,7 @@
           }, UNLOCK_ANIMATION_MS);
         }
       }
-      if (next === 'settings') { populateForm(); $('settings-screen').scrollTop = 0; }
+      if (next === 'settings') { $('settings-entry-tutorial').hidden = true; populateForm(); $('settings-screen').scrollTop = 0; }
       if (next === 'time-black') startRewindGuide();
       else stopRewindGuide();
     }
@@ -766,12 +796,15 @@
       }
     }
 
-    function returnSwipe() {
+    function returnSwipe(keepBriefReveal = false) {
       $('unlocked-screen').classList.add('returning');
       $('unlocked-screen').style.transform = 'translateY(0px)';
       if (STORAGE.personal) setHomePage(homePage);
       swipe = null;
-      cancelReveal();
+      if (keepBriefReveal && revealVisible && revealShownAt !== null) {
+        const remaining = Math.max(0, 500 - (performance.now() - revealShownAt));
+        revealHideTimer = setTimeout(cancelReveal, remaining);
+      } else cancelReveal();
     }
 
     document.addEventListener('touchstart', (event) => {
@@ -796,7 +829,7 @@
         cancelReveal();
         const touch = event.touches[0];
         if (!STORAGE.personal && isHomeGestureArea(touch.clientX, touch.clientY, window.innerWidth, window.innerHeight)) return;
-        swipe = { id: touch.identifier, x: touch.clientX, y: touch.clientY, axis: null, startedAt: performance.now(), revealPending: false };
+        swipe = { id: touch.identifier, x: touch.clientX, y: touch.clientY, axis: null };
         $('unlocked-screen').classList.remove('returning');
       }
     }, { passive: false });
@@ -828,8 +861,8 @@
         if (!swipe.axis && Math.hypot(dx, dy) >= 10) swipe.axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
         if (STORAGE.personal && swipe.axis === 'x') {
           const reveal = homeSwipeTarget(homePage, dx, dy, originals.has('home2'), false, $('app').clientWidth).revealVisible;
-          if (reveal) scheduleReveal();
-          else { swipe.revealPending = false; cancelReveal(); }
+          if (reveal) setRevealVisible(true);
+          else cancelReveal();
           const index = homePage === 'home2' ? 1 : 0;
           const width = $('app').clientWidth;
           const drag = Math.max(index === 0 && originals.has('home2') ? -width : 0,
@@ -861,16 +894,22 @@
         }
       }
       if (swipe) {
+        let keepBriefReveal = false;
         if (STORAGE.personal && event.changedTouches.length === 1) {
           const touch = event.changedTouches[0];
           if (touch.identifier === swipe.id) {
-            const target = completeHomeSwipe(homePage, touch.clientX - swipe.x, touch.clientY - swipe.y,
+            const dx = touch.clientX - swipe.x;
+            const dy = touch.clientY - swipe.y;
+            const releaseTarget = homeSwipeTarget(homePage, dx, dy,
+              originals.has('home2'), false, $('app').clientWidth);
+            if (releaseTarget.revealVisible) setRevealVisible(true);
+            const target = completeHomeSwipe(homePage, dx, dy,
               originals.has('home2'), $('app').clientWidth);
             if (!target.peek) homePage = target.page;
-            cancelReveal();
+            keepBriefReveal = releaseTarget.revealVisible && homePage === 'home2';
           }
         }
-        returnSwipe();
+        returnSwipe(keepBriefReveal);
       }
     }, { passive: false });
     document.addEventListener('touchcancel', () => { settingsSwipe = null; timePointer = null; tapCandidate = null; returnSwipe(); });
