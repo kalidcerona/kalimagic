@@ -26,6 +26,8 @@ let busy = false;
 let twoFingerStart = null;
 let installPrompt = null;
 let statusTimer = null;
+// Each new app session starts with a fresh target touch, even if the last run was saved.
+let needsFirstTouchTarget = true;
 
 arrow.style.transform = `rotate(${rotation}deg)`;
 
@@ -52,7 +54,7 @@ wrap.addEventListener('pointerdown', event => {
   if (!settings.hidden || !guide.hidden || busy || event.isPrimary === false) return;
   const angle = angleAt(event);
   drag = { id: event.pointerId, startX: event.clientX, startY: event.clientY, startAngle: angle,
-    lastAngle: angle, amount: 0, started: performance.now(), selecting: state.targetAngle === null };
+    lastAngle: angle, amount: 0, started: performance.now(), selecting: needsFirstTouchTarget || state.targetAngle === null };
   wrap.setPointerCapture(event.pointerId);
 });
 wrap.addEventListener('pointermove', event => {
@@ -74,6 +76,7 @@ wrap.addEventListener('pointerup', event => {
     state.targetAngle = gesture.startAngle;
     state.spins = 0;
     state.previousAngle = null;
+    needsFirstTouchTarget = false;
     save();
     showStatus('준비 완료', 1500);
     navigator.vibrate?.(12);
@@ -137,8 +140,8 @@ document.addEventListener('touchend', event => { if (event.touches.length < 2) t
 
 document.getElementById('settings-close').addEventListener('click', closeSettings);
 document.getElementById('force-spin').addEventListener('change', event => { state.forceSpin = Number(event.target.value); save(); });
-document.getElementById('reset-run').addEventListener('click', () => { state.spins = 0; state.previousAngle = null; save(); refreshSettings(); });
-document.getElementById('clear-target').addEventListener('click', () => { state.targetAngle = null; state.spins = 0; state.previousAngle = null; save(); refreshSettings(); closeSettings(); });
+document.getElementById('reset-run').addEventListener('click', () => { state.spins = 0; state.previousAngle = null; needsFirstTouchTarget = state.targetAngle === null; save(); refreshSettings(); });
+document.getElementById('clear-target').addEventListener('click', () => { state.targetAngle = null; state.spins = 0; state.previousAngle = null; needsFirstTouchTarget = true; save(); refreshSettings(); closeSettings(); });
 document.getElementById('guide-close').addEventListener('click', () => { guide.hidden = true; try { localStorage.setItem('zz11-guide-seen-v2', '1'); } catch { /* Ignore storage failures. */ } });
 try { guide.hidden = localStorage.getItem('zz11-guide-seen-v2') === '1'; } catch { guide.hidden = false; }
 refreshSettings();
