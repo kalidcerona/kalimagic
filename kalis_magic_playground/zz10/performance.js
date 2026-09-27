@@ -4,10 +4,11 @@ import { AlterState } from "./logic.js";
 const MAX_SAMPLE_GAP_MS = 260;
 const EXIT_ABSENCE_MS = 350;
 
-/** Show live video only with a valid B cover or after the deliberate A reveal. */
+/** Keep the camera preview visible while waiting for a card. */
 export function cameraShouldBeMasked(state, overlayShown) {
-  if (state === AlterState.REAL_CARD || state === AlterState.DONE) return false;
-  return state !== AlterState.ALTER_VISIBLE || !overlayShown;
+  if (state === AlterState.CARD_DETECTED || state === AlterState.CARD_FULLY_OUT) return true;
+  if (state === AlterState.ALTER_VISIBLE) return !overlayShown;
+  return false;
 }
 
 export function createObservationTracker() {

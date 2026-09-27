@@ -238,7 +238,7 @@ async function startCamera() {
     if (!sampleContext) throw new Error("이 브라우저는 영상 분석을 지원하지 않습니다.");
     stream = await navigator.mediaDevices.getUserMedia({
       audio: false,
-      video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } },
+      video: { facingMode: { exact: "user" }, width: { ideal: 1280 }, height: { ideal: 720 } },
     });
     video.srcObject = stream;
     await video.play();
@@ -251,7 +251,7 @@ async function startCamera() {
     machine = createAlterState({ exitDelayMs: 0 });
     tracker = createObservationTracker();
     lastSampleAt = 0;
-    stage.classList.add("camera-masked");
+    stage.classList.remove("camera-masked");
     setup.hidden = true;
     stage.hidden = false;
     settings.hidden = true;
@@ -262,7 +262,9 @@ async function startCamera() {
     stopCamera();
     message.textContent = error.name === "NotAllowedError"
       ? "카메라 권한이 거부됐습니다. 브라우저 설정에서 권한을 허용한 뒤 다시 시작해 주세요."
-      : error.message || "카메라를 열 수 없습니다. 다른 앱의 카메라 사용을 종료한 뒤 다시 시도해 주세요.";
+      : error.name === "OverconstrainedError" || error.name === "NotFoundError"
+        ? "전면 카메라를 찾을 수 없습니다. 기기의 카메라 상태를 확인해 주세요."
+        : error.message || "카메라를 열 수 없습니다. 다른 앱의 카메라 사용을 종료한 뒤 다시 시도해 주세요.";
   } finally {
     button.disabled = false;
   }
@@ -282,7 +284,7 @@ $("reset").addEventListener("click", () => {
   machine = updateAlterState(machine, { type: "reset" });
   tracker = createObservationTracker();
   hideOverlay();
-  stage.classList.add("camera-masked");
+  stage.classList.toggle("camera-masked", cameraShouldBeMasked(machine.state, false));
   closeSettings();
 });
 $("stop").addEventListener("click", () => stopCamera());
@@ -292,7 +294,7 @@ for (const control of [rank, suit, brightness]) {
     machine = updateAlterState(machine, { type: "reset" });
     tracker = createObservationTracker();
     hideOverlay();
-    stage.classList.add("camera-masked");
+    stage.classList.toggle("camera-masked", cameraShouldBeMasked(machine.state, false));
     updateStateNote();
   });
 }
