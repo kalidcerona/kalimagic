@@ -24,6 +24,34 @@ import {
   wallpaperCropRect,
   classifyTwoFingerSwipe,
 } from './logic.js';
+import { fallPosition, isBreakthroughSnap, isPhoneUpright, shakeImpulse } from './sensor-motion.js';
+
+const gestureGuide = document.getElementById('settings-gesture-guide');
+const gestureGuideDismiss = document.getElementById('settings-gesture-dismiss');
+const GESTURE_GUIDE_KEY = 'tobira.settings-gesture-guide.v1';
+let gestureGuideShown = false;
+
+function maybeShowGestureGuide() {
+  if (gestureGuideShown) return;
+  try {
+    if (localStorage.getItem(GESTURE_GUIDE_KEY) === 'done') return;
+  } catch { /* Private browsing can block storage. */ }
+  gestureGuideShown = true;
+  gestureGuide.hidden = false;
+  gestureGuideDismiss.focus();
+}
+
+function hideGestureGuide() {
+  gestureGuide.hidden = true;
+}
+
+gestureGuideDismiss.addEventListener('click', () => {
+  hideGestureGuide();
+  try { localStorage.setItem(GESTURE_GUIDE_KEY, 'done'); } catch { /* Keep this session dismissed. */ }
+});
+for (const type of ['touchstart', 'touchmove', 'touchend', 'touchcancel']) {
+  gestureGuide.addEventListener(type, (event) => event.stopPropagation());
+}
 
 const NOTICE_KEY = 'tobira.v1.notice';
 const SESSION_GONE = 'tobira.session-gone';
@@ -40,7 +68,12 @@ const SPAWN_SLOP_PX = 12;
 const SWIPE_REVEAL_PX = 24;
 const IMAGE_CHOICE_KEY = 'tobira.coinChoices.v1';
 const IMAGE_DB = 'tobira.localImages.v1';
-const DEFAULT_COIN_IMAGES = Object.freeze({ kennedy: './coin-kennedy.png', won500: './coin-500won.png' });
+const DEFAULT_COIN_IMAGES = Object.freeze({
+  kennedy: './coin-kennedy.png',
+  won500: './coin-500won.png',
+  riderRed: './card-rider-red.jpg',
+  riderBlue: './card-rider-blue.jpg',
+});
 
 const settingsEl = document.querySelector('#settings');
 const stageEl = document.querySelector('#stage');
@@ -87,6 +120,8 @@ const imageChoiceInput = document.querySelector('#coin-image-choice');
 const coinImageInput = document.querySelector('#coin-image-upload');
 const coinImageNote = document.querySelector('#coin-image-note');
 const coinArt = document.querySelector('#coin-art');
+const motionToggle = document.querySelector('#motion-enabled');
+const motionNote = document.querySelector('#motion-note');
 
 let imageDbPromise;
 let imageChoices = {};
@@ -333,6 +368,21 @@ let spawnId = null;
 let spawnClient = null;
 let spawnAtPoint = null;
 let spawnCancelled = false;
+let motionEnabled = false;
+let motionRequestId = 0;
+let upright = false;
+let shakeSample = null;
+let lastShakeAt = -Infinity;
+let lastSnapAt = -Infinity;
+let breakTimer = 0;
+let audioContext = null;
+let fallFrame = 0;
+let fallToken = 0;
+let wobbleFrame = 0;
+let wobbleToken = 0;
+let wobbleX = 0;
+let wobbleY = 0;
+let wobbleAngle = 0;
 
 function selected() {
   return state.presets.find((preset) => preset.id === state.selectedId) || state.presets[0];
@@ -669,8 +719,236 @@ function paintCoin(x, y, radius, opacity, scale) {
     coinEl.style.width = `${diameter}px`;
     coinEl.style.height = `${diameter}px`;
   }
-  coinEl.style.transform = `translate3d(${(x - radius).toFixed(3)}px, ${(y - radius).toFixed(3)}px, 0) scale(${scale.toFixed(4)})`;
+  coinEl.style.transform = `translate3d(${(x - radius + wobbleX).toFixed(3)}px, ${(y - radius + wobbleY).toFixed(3)}px, 0) rotate(${wobbleAngle.toFixed(3)}deg) scale(${scale.toFixed(4)})`;
   coinEl.style.opacity = opacity.toFixed(4);
+}
+
+function paintLiveCoin() {
+  if (!objectLive || phase !== 'idle' || state.mode !== 'performance') return;
+  const metrics = coinMetrics(selected(), measureStage());
+  paintCoin(center.x, center.y, metrics.radius, 1, 1);
+}
+
+function cancelFall() {
+  fallToken += 1;
+  if (fallFrame) window.cancelAnimationFrame(fallFrame);
+  fallFrame = 0;
+}
+
+function cancelWobble() {
+  wobbleToken += 1;
+  if (wobbleFrame) window.cancelAnimationFrame(wobbleFrame);
+  wobbleFrame = 0;
+  wobbleX = 0;
+  wobbleY = 0;
+  wobbleAngle = 0;
+}
+
+function cancelSensorEffects() {
+  cancelFall();
+  cancelWobble();
+}
+
+function unlockBreakSound() {
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextClass) return;
+  try {
+    audioContext ||= new AudioContextClass();
+    if (audioContext.state === 'suspended') void audioContext.resume().catch(() => {});
+  } catch { audioContext = null; }
+}
+
+function playBreakSound() {
+  if (!audioContext || audioContext.state !== 'running') return;
+  try {
+    const now = audioContext.currentTime;
+    const length = Math.ceil(audioContext.sampleRate * .42);
+    const noise = audioContext.createBuffer(1, length, audioContext.sampleRate);
+    const samples = noise.getChannelData(0);
+    for (let i = 0; i < length; i += 1) samples[i] = (Math.random() * 2 - 1) * (1 - i / length);
+    const crack = audioContext.createBufferSource();
+    crack.buffer = noise;
+    const highpass = audioContext.createBiquadFilter();
+    highpass.type = 'highpass';
+    highpass.frequency.value = 850;
+    const crackGain = audioContext.createGain();
+    crackGain.gain.setValueAtTime(.45, now);
+    crackGain.gain.exponentialRampToValueAtTime(.001, now + .42);
+    crack.connect(highpass).connect(crackGain).connect(audioContext.destination);
+    crack.start(now);
+    crack.stop(now + .42);
+
+    const thump = audioContext.createOscillator();
+    thump.type = 'sine';
+    thump.frequency.setValueAtTime(125, now);
+    thump.frequency.exponentialRampToValueAtTime(48, now + .25);
+    const thumpGain = audioContext.createGain();
+    thumpGain.gain.setValueAtTime(.001, now);
+    thumpGain.gain.linearRampToValueAtTime(.65, now + .012);
+    thumpGain.gain.exponentialRampToValueAtTime(.001, now + .3);
+    thump.connect(thumpGain).connect(audioContext.destination);
+    thump.start(now);
+    thump.stop(now + .3);
+  } catch { /* Keep the visual effect if audio output fails. */ }
+}
+
+function clearBreakthrough() {
+  window.clearTimeout(breakTimer);
+  breakTimer = 0;
+  stageEl.classList.remove('is-breaking');
+}
+
+function breakthroughSpawn() {
+  if (state.mode !== 'performance' || !gestureGuide.hidden || pointers.size !== 0 ||
+    (phase !== 'awaiting' && phase !== 'gone')) return false;
+  cancelSensorEffects();
+  clearBreakthrough();
+  const stage = measureStage();
+  revealSpawn({ x: stage.width / 2, y: stage.height / 2 }, { sensorFall: false });
+  setGoneSession(false);
+  // Restart the CSS animation if a new valid snap follows a previous reveal.
+  void stageEl.offsetWidth;
+  stageEl.classList.add('is-breaking');
+  playBreakSound();
+  breakTimer = window.setTimeout(() => {
+    clearBreakthrough();
+    startFall();
+  }, 1350);
+  return true;
+}
+
+function startFall() {
+  if (!motionEnabled || !upright || state.mode !== 'performance' || phase !== 'idle' || !objectLive || pointers.size !== 0 || stageEl.classList.contains('is-breaking')) return;
+  const stage = measureStage();
+  const radius = coinMetrics(selected(), stage).radius;
+  const floor = Math.max(radius, stage.height - radius);
+  if (center.y >= floor - 1) return;
+  cancelFall();
+  const token = fallToken;
+  const startedAt = performance.now();
+  const startY = center.y;
+  const step = (now) => {
+    if (token !== fallToken || !motionEnabled || phase !== 'idle' || !objectLive || state.mode !== 'performance') return;
+    const currentStage = measureStage();
+    const currentRadius = coinMetrics(selected(), currentStage).radius;
+    const currentFloor = Math.max(currentRadius, currentStage.height - currentRadius);
+    center.y = fallPosition(startY, currentFloor, now - startedAt);
+    paintCoin(center.x, center.y, currentRadius, 1, 1);
+    if (center.y < currentFloor - 0.5) fallFrame = window.requestAnimationFrame(step);
+    else fallFrame = 0;
+  };
+  fallFrame = window.requestAnimationFrame(step);
+}
+
+function startWobble(magnitude) {
+  if (!motionEnabled || state.mode !== 'performance' || phase !== 'idle' || !objectLive || pointers.size !== 0) return;
+  cancelWobble();
+  const token = wobbleToken;
+  const startedAt = performance.now();
+  const amplitude = Math.min(15, Math.max(7, magnitude * 0.8));
+  const step = (now) => {
+    if (token !== wobbleToken || !motionEnabled || phase !== 'idle' || !objectLive || state.mode !== 'performance') return;
+    const elapsed = Math.max(0, now - startedAt);
+    if (elapsed >= 650) {
+      cancelWobble();
+      paintLiveCoin();
+      return;
+    }
+    const fade = (1 - elapsed / 650) ** 2;
+    wobbleX = Math.sin(elapsed * 0.057) * amplitude * fade;
+    wobbleY = Math.sin(elapsed * 0.043) * amplitude * 0.35 * fade;
+    wobbleAngle = Math.sin(elapsed * 0.065) * Math.min(11, amplitude * 0.75) * fade;
+    paintLiveCoin();
+    wobbleFrame = window.requestAnimationFrame(step);
+  };
+  wobbleFrame = window.requestAnimationFrame(step);
+}
+
+function onDeviceOrientation(event) {
+  if (!motionEnabled) return;
+  const next = isPhoneUpright({
+    beta: event.beta,
+    gamma: event.gamma,
+    screenAngle: window.screen?.orientation?.angle ?? window.orientation,
+    screenOrientation: window.screen?.orientation?.type,
+  });
+  const becameUpright = next && !upright;
+  upright = next;
+  if (becameUpright) startFall();
+}
+
+function onDeviceMotion(event) {
+  if (!motionEnabled) return;
+  if (state.mode !== 'performance') {
+    shakeSample = null;
+    return;
+  }
+  const impulse = shakeImpulse(event, shakeSample);
+  shakeSample = impulse.sample;
+  if (!impulse.detected) return;
+  const now = performance.now();
+  if (!objectLive && isBreakthroughSnap(impulse, now, lastSnapAt)) {
+    if (breakthroughSpawn()) lastSnapAt = now;
+    return;
+  }
+  if (!objectLive) return;
+  if (now - lastShakeAt < 700) return;
+  lastShakeAt = now;
+  startWobble(impulse.magnitude);
+}
+
+function disableMotion(message = '기기 움직임 연출을 껐습니다.') {
+  motionRequestId += 1;
+  motionEnabled = false;
+  upright = false;
+  shakeSample = null;
+  clearBreakthrough();
+  cancelSensorEffects();
+  window.removeEventListener('deviceorientation', onDeviceOrientation);
+  window.removeEventListener('devicemotion', onDeviceMotion);
+  motionToggle.checked = false;
+  motionNote.textContent = message;
+  paintLiveCoin();
+}
+
+async function enableMotion() {
+  const requestId = ++motionRequestId;
+  unlockBreakSound();
+  if (window.isSecureContext === false) {
+    disableMotion('센서는 HTTPS에서만 사용할 수 있습니다. 손가락 연출은 그대로 사용할 수 있습니다.');
+    return;
+  }
+  const orientationAvailable = 'DeviceOrientationEvent' in window || 'ondeviceorientation' in window;
+  const motionAvailable = 'DeviceMotionEvent' in window || 'ondevicemotion' in window;
+  if (!orientationAvailable && !motionAvailable) {
+    disableMotion('이 기기의 브라우저는 움직임 센서를 지원하지 않습니다.');
+    return;
+  }
+  try {
+    // Start both permission requests in this user-initiated event before awaiting either one.
+    const requests = [];
+    if (orientationAvailable && typeof window.DeviceOrientationEvent?.requestPermission === 'function') {
+      requests.push(window.DeviceOrientationEvent.requestPermission());
+    }
+    if (motionAvailable && typeof window.DeviceMotionEvent?.requestPermission === 'function') {
+      requests.push(window.DeviceMotionEvent.requestPermission());
+    }
+    const permissions = await Promise.all(requests);
+    if (requestId !== motionRequestId || !motionToggle.checked) return;
+    if (permissions.some((permission) => permission !== 'granted')) {
+      disableMotion('센서 권한이 없어 움직임 연출을 켜지 못했습니다.');
+      return;
+    }
+    motionEnabled = true;
+    if (orientationAvailable) window.addEventListener('deviceorientation', onDeviceOrientation);
+    if (motionAvailable) window.addEventListener('devicemotion', onDeviceMotion);
+    motionNote.textContent = orientationAvailable && motionAvailable
+      ? '센서 연출을 켰습니다. 물건이 숨었을 때 강하게 스냅하면 중앙을 뚫고 나타납니다.'
+      : orientationAvailable ? '세우기 반응을 켰습니다. 이 기기에서는 흔들기 반응을 지원하지 않습니다.'
+        : '흔들기 반응을 켰습니다. 이 기기에서는 세우기 반응을 지원하지 않습니다.';
+  } catch {
+    if (requestId === motionRequestId) disableMotion('센서 권한을 받지 못했습니다. 손가락 연출은 그대로 사용할 수 있습니다.');
+  }
 }
 
 function cancelExit() {
@@ -713,7 +991,7 @@ function spawnTravel(sample) {
   return Math.hypot(sample.clientX - spawnClient.x, sample.clientY - spawnClient.y);
 }
 
-function revealSpawn(point) {
+function revealSpawn(point, { sensorFall = true } = {}) {
   const stage = measureStage();
   lastStage = stage;
   stageRect = stageEl.getBoundingClientRect();
@@ -726,9 +1004,12 @@ function revealSpawn(point) {
   stageEl.classList.remove('is-leaving');
   paintCoin(center.x, center.y, metrics.radius, 1, 1);
   resetSpawnTracking();
+  if (sensorFall) startFall();
 }
 
 function placeAtRest() {
+  clearBreakthrough();
+  cancelSensorEffects();
   const stage = measureStage();
   lastStage = stage;
   stageRect = stageEl.getBoundingClientRect();
@@ -743,7 +1024,10 @@ function placeAtRest() {
 }
 
 function showSettings() {
+  clearBreakthrough();
+  hideGestureGuide();
   cancelExit();
+  cancelSensorEffects();
   endPointers();
   setGoneSession(false);
   state.mode = 'settings';
@@ -771,12 +1055,14 @@ function showPerformance({ persistMode = true, keepGone = false } = {}) {
   }
   document.documentElement.removeAttribute('data-boot-gone');
   if (persistMode) persist();
+  maybeShowGestureGuide();
 }
 
 function beginExit(edge, speed) {
   if (phase === 'exiting' || phase === 'gone') return;
   if (!EDGE_ORDER.includes(edge)) return;
   if (!(speed > 0)) { phase = 'idle'; return; }
+  cancelSensorEffects();
   const capturedId = dragId;
   phase = 'exiting';
   dragId = null;
@@ -921,6 +1207,8 @@ function applyDragSample(sample) {
 }
 
 function startDrag(event) {
+  cancelSensorEffects();
+  paintLiveCoin();
   phase = 'dragging';
   dragId = event.pointerId;
   dragExitEdge = null;
@@ -939,7 +1227,7 @@ function startDrag(event) {
 }
 
 function onPointerDown(event) {
-  if (state.mode !== 'performance') return;
+  if (state.mode !== 'performance' || !gestureGuide.hidden) return;
   if (event.pointerType === 'mouse' && event.button !== 0) return;
   const screen = screenPoint(event);
   pointers.set(event.pointerId, { start: screen, last: screen });
@@ -1033,11 +1321,13 @@ function onPointerUp(event) {
   if (pointers.size === 0) {
     gestureFired = false;
     resetSpawnTracking();
+    startFall();
   }
 }
 
 function onResize() {
   if (state.mode !== 'performance') return;
+  cancelSensorEffects();
   const next = measureStage();
   stageRect = stageEl.getBoundingClientRect();
   if (!(next.width > 0) || !(next.height > 0)) return;
@@ -1059,6 +1349,7 @@ function onResize() {
   const metrics = coinMetrics(selected(), next);
   paintCoin(center.x, center.y, metrics.radius, 1, 1);
   lastStage = next;
+  startFall();
 }
 
 function onEdgeKey(event) {
@@ -1073,6 +1364,10 @@ function onEdgeKey(event) {
 }
 
 function bind() {
+  motionToggle.addEventListener('change', () => {
+    if (motionToggle.checked) void enableMotion();
+    else disableMotion();
+  });
   sizeInput.min = String(LIMITS.coinSize.min);
   sizeInput.max = String(LIMITS.coinSize.max);
   fadeInput.min = String(LIMITS.fadeDistance.min);
@@ -1210,7 +1505,7 @@ function bind() {
   imageChoiceInput.addEventListener('change', () => {
     const choice = imageChoiceInput.value;
     if (choice === 'custom' && !imageUrls.has(`coin:${selected().id}`)) {
-      coinImageNote.textContent = '먼저 이 자리에 동전 이미지를 올려 주세요.';
+      coinImageNote.textContent = '먼저 이 자리에 물건 이미지를 올려 주세요.';
       imageChoiceInput.value = imageChoices[selected().id] || 'kennedy';
       return;
     }
@@ -1229,12 +1524,15 @@ function bind() {
       imageChoices[id] = 'custom';
       persistImageChoices();
       refreshCoinImage();
-    } catch (error) { coinImageNote.textContent = error.message || '동전 이미지를 저장하지 못했습니다.'; }
+    } catch (error) { coinImageNote.textContent = error.message || '물건 이미지를 저장하지 못했습니다.'; }
     coinImageInput.value = '';
   });
   addButton.addEventListener('click', addPreset);
   deleteButton.addEventListener('click', deleteSelected);
-  startButton.addEventListener('click', () => showPerformance({ persistMode: true, keepGone: false }));
+  startButton.addEventListener('click', () => {
+    if (motionEnabled) unlockBreakSound();
+    showPerformance({ persistMode: true, keepGone: false });
+  });
   window.addEventListener('keydown', (event) => {
     if (event.key !== 'Escape' || !event.shiftKey || event.repeat) return;
     if (state.mode !== 'performance') return;

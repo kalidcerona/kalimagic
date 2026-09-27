@@ -21,10 +21,16 @@
       <h1>ALTER<span class="period">.</span></h1>
       <p class="tagline">another face of reality</p>
       <p class="intro">카드를 카메라에 보여 주면 화면 속 모습이 바뀝니다.</p>
-      <button id="start" class="primary-button" type="button">카메라 시작 <span aria-hidden="true">↗</span></button>
+      <button id="start" class="primary-button" type="button">카메라 권한 허용하고 시작 <span aria-hidden="true">↗</span></button>
       <button id="setup-settings" class="setup-settings" type="button">카메라 속 카드 설정</button>
-      <p id="setup-message" class="setup-message" role="status">카메라 권한이 필요합니다. 영상은 기기 밖으로 전송하거나 저장하지 않습니다.</p>
+      <p id="setup-message" class="setup-message" role="status">시작을 누르면 브라우저가 카메라 사용 권한을 묻습니다. 허용을 선택해 주세요. 영상은 기기 밖으로 전송하거나 저장하지 않습니다.</p>
       <p class="setup-hint">밝고 단순한 배경에서 카드를 세로로 들면 가장 안정적입니다.</p>
+      <div class="install-control setup-install" id="setup-install-control" hidden>
+        <p class="install-title">ALTER 앱 설치하기</p>
+        <p class="install-description">기기에 설치하면 앱 아이콘으로 바로 열 수 있습니다.</p>
+        <button type="button" id="setup-install-app">ALTER 설치</button>
+        <p id="setup-install-help" role="status" aria-live="polite" hidden></p>
+      </div>
     </div>
     <div class="setup-orbit" aria-hidden="true"><div class="orbit-card">A <span>→</span> B</div></div>
   </main>
@@ -37,6 +43,19 @@
       <div class="card-corner bottom"><span class="rank"></span><span class="suit"></span></div>
     </div>
     <div id="stage-message" class="stage-message" role="status" hidden></div>
+  </section>
+
+  <section id="gesture-guide" class="gesture-guide" aria-label="설정 여는 방법" role="dialog" aria-modal="true" hidden>
+    <div class="gesture-guide-content">
+      <span class="gesture-guide-eyebrow">처음 시작하기</span>
+      <h2>설정 여는 방법</h2>
+      <div class="gesture-demo" aria-hidden="true">
+        <span class="gesture-finger"></span><span class="gesture-finger"></span>
+        <span class="gesture-arrow">↓</span>
+      </div>
+      <p>공연 화면에서 <strong>두 손가락을 함께 아래로 쓸어내리면</strong> 설정이 열립니다.</p>
+      <button id="close-gesture-guide" class="primary-button" type="button">알겠어요</button>
+    </div>
   </section>
 
   <section id="settings" class="settings" aria-label="공연 설정" role="dialog" aria-modal="true" hidden>
@@ -69,7 +88,7 @@
         <button id="stop" type="button" class="text-button">카메라 종료</button>
         <p id="state-note" class="state-note" role="status"></p>
         <div class="install-control" id="install-control" hidden>
-          <button type="button" id="install-app">ALTER 앱 설치</button>
+          <button type="button" id="install-app">ALTER 설치</button>
           <p id="install-help" role="status" aria-live="polite" hidden></p>
         </div>
       </div>

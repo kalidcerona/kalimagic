@@ -1,20 +1,27 @@
-// Install affordance is visible only in settings and only in a browser tab.
-const installControl = document.getElementById("install-control");
-const installButton = document.getElementById("install-app");
-const installHelp = document.getElementById("install-help");
+const installControls = [
+  ["setup-install-control", "setup-install-app", "setup-install-help"],
+  ["install-control", "install-app", "install-help"],
+].map(([controlId, buttonId, helpId]) => ({
+  control: document.getElementById(controlId),
+  button: document.getElementById(buttonId),
+  help: document.getElementById(helpId),
+}));
 let installPrompt = null;
+let installedInTab = false;
 
 function isInstalled() {
-  return window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+  return installedInTab || window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
 }
 
 function refreshInstallControl() {
-  installControl.hidden = isInstalled();
+  installControls.forEach(({ control }) => { control.hidden = isInstalled(); });
 }
 
 function showInstallHelp(message) {
-  installHelp.textContent = message;
-  installHelp.hidden = false;
+  installControls.forEach(({ help }) => {
+    help.textContent = message;
+    help.hidden = false;
+  });
 }
 
 window.addEventListener("beforeinstallprompt", (event) => {
@@ -24,11 +31,12 @@ window.addEventListener("beforeinstallprompt", (event) => {
 });
 window.addEventListener("appinstalled", () => {
   installPrompt = null;
-  installControl.hidden = true;
+  installedInTab = true;
+  refreshInstallControl();
 });
 window.matchMedia("(display-mode: standalone)").addEventListener?.("change", refreshInstallControl);
 
-installButton.addEventListener("click", async () => {
+async function requestInstall() {
   if (isInstalled()) return refreshInstallControl();
   if (installPrompt) {
     const prompt = installPrompt;
@@ -36,7 +44,10 @@ installButton.addEventListener("click", async () => {
     try {
       await prompt.prompt();
       const choice = await prompt.userChoice;
-      if (choice?.outcome === "accepted") return;
+      if (choice?.outcome === "accepted") {
+        showInstallHelp("설치가 진행 중입니다. 완료되면 앱 아이콘으로 ALTER를 열어 주세요.");
+        return;
+      }
     } catch {
       // Fall through to the browser's manual installation path.
     }
@@ -44,8 +55,10 @@ installButton.addEventListener("click", async () => {
   const ua = navigator.userAgent;
   const ios = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
   showInstallHelp(ios
-    ? "iPhone·iPad에서는 Safari 또는 Chrome의 공유 버튼 → 홈 화면에 추가를 누르세요."
-    : "브라우저 메뉴에서 앱 설치 또는 홈 화면에 추가를 선택하세요. HTTPS 또는 localhost 주소가 필요합니다.");
-});
+    ? "iPhone·iPad: Safari에서 이 주소를 열고 공유 버튼 → ‘홈 화면에 추가’를 선택하세요. 설치 후 홈 화면 아이콘으로 실행하세요."
+    : "브라우저 메뉴에서 ‘앱 설치’ 또는 ‘홈 화면에 추가’를 선택하세요. 설치 메뉴가 없으면 HTTPS 주소에서 다시 열어 주세요.");
+}
+
+installControls.forEach(({ button }) => button.addEventListener("click", requestInstall));
 
 refreshInstallControl();

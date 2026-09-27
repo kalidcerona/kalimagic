@@ -32,6 +32,18 @@ button { cursor: pointer; }
 .card-corner.bottom { top: auto; left: auto; right: 13px; bottom: 12px; transform: rotate(180deg); }
 .card-center { position: absolute; inset: 0; display: grid; place-items: center; font-family: Georgia, serif; font-size: 146px; line-height: 1; }
 .stage-message { position: absolute; left: 50%; bottom: calc(28px + env(safe-area-inset-bottom)); transform: translateX(-50%); border-radius: 30px; background: #0b0e18dd; padding: 9px 16px; color: #f8f2e7; font-size: 12px; white-space: nowrap; }
+.gesture-guide { position: fixed; inset: 0; z-index: 4; display: grid; place-items: center; padding: 24px; background: #090c14f2; text-align: center; }
+.gesture-guide-content { width: min(100%, 360px); }
+.gesture-guide-eyebrow { color: #cbb88e; font-size: 12px; letter-spacing: .16em; }
+.gesture-guide h2 { margin: 15px 0 0; font-size: 26px; }
+.gesture-guide p { color: #cbd0da; font-size: 15px; line-height: 1.7; }
+.gesture-demo { position: relative; display: flex; justify-content: center; gap: 28px; height: 150px; margin: 22px auto 10px; padding-top: 10px; }
+.gesture-finger { width: 38px; height: 38px; border: 2px solid #e2c589; border-radius: 50%; background: #cbb07c55; box-shadow: 0 0 0 7px #cbb07c18; animation: settings-swipe 2.2s ease-in-out infinite; }
+.gesture-finger:nth-child(2) { animation-delay: .08s; }
+.gesture-arrow { position: absolute; top: 87px; left: 50%; transform: translateX(-50%); color: #cbb88e; font-size: 30px; }
+.gesture-guide .primary-button { margin-top: 30px; justify-content: center; }
+@keyframes settings-swipe { 0%, 15% { transform: translateY(0); opacity: .35; } 35%, 65% { opacity: 1; } 75%, 100% { transform: translateY(75px); opacity: .3; } }
+@media (prefers-reduced-motion: reduce) { .gesture-finger { animation: none; transform: translateY(38px); opacity: 1; } }
 .settings { position: fixed; inset: 0; z-index: 5; display: flex; align-items: flex-end; justify-content: center; background: #000c; overflow: auto; }
 .settings[hidden] { display: none; }
 .settings-panel { width: min(100%, 520px); max-height: 95dvh; overflow: auto; border: 1px solid #ffffff1f; border-bottom: none; border-radius: 25px 25px 0 0; background: linear-gradient(#161c2a, #0e121d 42%); padding: 21px max(23px, env(safe-area-inset-right)) calc(20px + env(safe-area-inset-bottom)) max(23px, env(safe-area-inset-left)); box-shadow: 0 -20px 60px #0008; }
@@ -53,7 +65,10 @@ button { cursor: pointer; }
 .settings-body > p.state-note { margin: 0; min-height: 18px; text-align: center; color: #c5b386; font-size: 12px; }
 .install-control[hidden], .install-control [hidden] { display: none; }
 .install-control { margin-top: 16px; padding-top: 14px; border-top: 1px solid #ffffff18; }
-#install-app { width: 100%; min-height: 44px; border: 1px solid #cbb07c; border-radius: 12px; background: transparent; color: #f4f2ed; font-weight: 700; }
-#install-help { margin: 10px 0 0; color: #aeb5c3; font-size: 12px; line-height: 1.5; }
+.install-control button { width: 100%; min-height: 44px; border: 1px solid #cbb07c; border-radius: 12px; background: transparent; color: #f4f2ed; font-weight: 700; }
+.install-control [role="status"] { margin: 10px 0 0; color: #aeb5c3; font-size: 12px; line-height: 1.5; }
+.setup-install { margin-top: 22px; }
+.setup-install .install-title { margin: 0 0 4px; color: #e9ddc6; font-size: 14px; font-weight: 700; }
+.setup-install .install-description { margin: 0 0 12px; color: #aeb5c3; font-size: 12px; }
 .gesture-note { margin: 16px 0 0; border-top: 1px solid #ffffff18; padding-top: 14px; font-size: 11px; color: #7f899a; text-align: center; }
 @media (max-height: 650px) { .settings-panel { max-height: 100dvh; } .brand-logo { max-width: 330px; } .tagline { margin-bottom: 35px; } }

@@ -21,6 +21,8 @@ import {
 
 const STATE_KEY = "usotsuki.detector.v1";
 const SOUND_KEY = "usotsuki.detector.sound.v1";
+const VIBRATION_KEY = "usotsuki.detector.vibration.v1";
+const GUIDE_KEY = "usotsuki.detector.settings-guide.v1";
 const SWIPE_DOWN_PX = 96;
 const STAGE_CLASSES = ["is-testing", "is-lie", "is-true", "is-cancelled"];
 
@@ -31,6 +33,7 @@ const verdict = document.querySelector("#verdict");
 const settingsScreen = document.querySelector("#settings-screen");
 const truthInput = document.querySelector("#truth-attempt");
 const soundInput = document.querySelector("#sound-enabled");
+const vibrationInput = document.querySelector("#vibration-level");
 const resetButton = document.querySelector("#reset-attempts");
 const startButton = document.querySelector("#start-performance");
 const settingsStatus = document.querySelector("#settings-status");
@@ -46,6 +49,7 @@ let gestureConsumed = false;
 let audioContext = null;
 let scanOscillator = null;
 let scanGain = null;
+let guideShown = false;
 
 /** @type {Map<number, {x: number, y: number, startX: number, startY: number, startedOnButton: boolean}>} */
 const pointers = new Map();
@@ -65,6 +69,24 @@ function storageSet(key, value) {
   } catch {
     return false;
   }
+}
+
+function showGestureGuideOnce() {
+  if (guideShown || storageGet(GUIDE_KEY).value === "1") return;
+  guideShown = true;
+  storageSet(GUIDE_KEY, "1");
+  const guide = document.createElement("div");
+  guide.className = "gesture-guide";
+  guide.innerHTML = `<div class="gesture-guide-card" role="dialog" aria-modal="true" aria-labelledby="gesture-guide-title" aria-describedby="gesture-guide-text">
+    <div class="gesture-guide-motion" aria-hidden="true"><span></span><span></span></div>
+    <h2 id="gesture-guide-title">설정으로 돌아가기</h2>
+    <p id="gesture-guide-text">공연 화면에서 손가락 두 개를 화면에 대고 아래로 쓸어내리세요.</p>
+    <button type="button">알겠습니다</button>
+  </div>`;
+  document.body.append(guide);
+  const button = guide.querySelector("button");
+  button.addEventListener("click", () => guide.remove(), { once: true });
+  button.focus();
 }
 
 function canPersistState() {
@@ -101,9 +123,32 @@ function persistSoundPreference() {
   storageSet(SOUND_KEY, soundInput.checked ? "1" : "0");
 }
 
+function loadVibrationPreference(raw) {
+  if (["off", "low", "medium", "high"].includes(raw)) vibrationInput.value = raw;
+}
+
+function stopVibration() {
+  try {
+    if (typeof navigator.vibrate === "function") navigator.vibrate(0);
+  } catch { /* Haptics are optional. */ }
+}
+
+function startVibration() {
+  if (typeof navigator.vibrate !== "function") return;
+  const pulses = { low: [35, 165], medium: [100, 100], high: [180, 20] };
+  const pulse = pulses[vibrationInput.value];
+  if (!pulse) return;
+  try {
+    navigator.vibrate(Array.from({ length: 10 }, () => pulse).flat());
+  } catch { /* Visual scanning still works without haptics. */ }
+}
+
 function bootStorage() {
   const stored = storageGet(STATE_KEY);
   const sound = storageGet(SOUND_KEY);
+  const vibration = storageGet(VIBRATION_KEY);
+  if (sound.ok) loadSoundPreference(sound.value);
+  if (vibration.ok) loadVibrationPreference(vibration.value);
   if (!stored.ok) {
     appState = loadFromRaw(null).state;
     storageLocked = false;
@@ -113,7 +158,6 @@ function bootStorage() {
   const loaded = loadFromRaw(stored.value);
   appState = loaded.state;
   storageLocked = loaded.preserveStoredRaw === true;
-  if (sound.ok) loadSoundPreference(sound.value);
   truthInput.value = appState.settings.truthAttempts.join(",");
   updateAttemptProgress();
   if (!storageLocked && stored.value) {
@@ -164,10 +208,10 @@ function setStage(mode) {
     verdict.classList.add(tone);
     document.body.classList.add(tone);
     testIndicator.textContent = "";
-    verdict.textContent = mode;
+    verdict.textContent = mode === "TRUE" ? "진실" : "거짓";
     return;
   }
-  testIndicator.textContent = "READY TO SCAN";
+  testIndicator.textContent = "검사 대기 중";
   verdict.textContent = "";
 }
 
@@ -187,6 +231,7 @@ function settingsVisible() {
 
 function showSettings() {
   stopScanningSound();
+  stopVibration();
   settingsScreen.hidden = false;
   performanceScreen.hidden = true;
   detectorButton.disabled = true;
@@ -243,11 +288,12 @@ function playVerdictSound(result) {
     // Let the scan tone's short release ramp finish before the verdict cue.
     const start = ctx.currentTime + 0.06;
     const master = ctx.createGain();
-    master.gain.setValueAtTime(0.8, start);
+    master.gain.setValueAtTime(1, start);
     master.connect(ctx.destination);
     if (result === "LIE") {
-      playTone(ctx, master, 196, start, 0.34, "square", 0.24);
-      playTone(ctx, master, 277, start, 0.34, "square", 0.12);
+      // The two peaks sum to 0.76, leaving headroom at the output.
+      playTone(ctx, master, 196, start, 0.34, "square", 0.52);
+      playTone(ctx, master, 277, start, 0.34, "square", 0.24);
       window.setTimeout(() => master.disconnect(), 500);
       return;
     }
@@ -255,7 +301,7 @@ function playVerdictSound(result) {
       // ding-dong-dang: three separated notes, not a chord.
       const notes = [784, 659.25, 1046.5];
       notes.forEach((frequency, index) => {
-        playTone(ctx, master, frequency, start + index * 0.2, 0.18, "sine", 0.32);
+        playTone(ctx, master, frequency, start + index * 0.2, 0.18, "sine", 0.68);
       });
       window.setTimeout(() => master.disconnect(), 800);
     }
@@ -296,7 +342,7 @@ function startScanningSound() {
     oscillator.frequency.setValueAtTime(148, now);
     oscillator.frequency.linearRampToValueAtTime(226, now + 1.85);
     gain.gain.setValueAtTime(0.0001, now);
-    gain.gain.exponentialRampToValueAtTime(0.055, now + 0.08);
+    gain.gain.exponentialRampToValueAtTime(0.17, now + 0.08);
     oscillator.connect(gain);
     gain.connect(ctx.destination);
     oscillator.onended = () => {
@@ -317,6 +363,7 @@ function applyRelease(nowMs, x, y) {
   settled = true;
   clearHoldTimer();
   stopScanningSound();
+  stopVibration();
   const result = releaseHold(appState, hold, nowMs, x, y);
   hold = result.hold;
   appState = result.state;
@@ -352,6 +399,7 @@ function startHold(event) {
   activePointerId = event.pointerId;
   setStage("testing");
   startScanningSound();
+  startVibration();
   armThresholdTimer();
 }
 
@@ -460,7 +508,7 @@ function commitTruthAttempt() {
   const next = trySetTruthAttempt(appState, truthInput.value);
   if (!next.ok) {
     truthInput.value = appState.settings.truthAttempts.join(",");
-    setStatus("TRUE 회차는 1부터 20 사이의 서로 다른 정수를 쉼표로 구분해 입력하세요. 예: 2,4");
+    setStatus("진실 회차는 1부터 20 사이의 서로 다른 정수를 쉼표로 구분해 입력하세요. 예: 2,4");
     return false;
   }
   appState = next.state;
@@ -494,7 +542,7 @@ function onResetAttempts() {
 function onStartPerformance() {
   const next = preparePerformance(appState, truthInput.value);
   if (!next.ok) {
-    setStatus("TRUE 회차는 1부터 20 사이의 서로 다른 정수를 쉼표로 구분해 입력하세요. 예: 4,7");
+    setStatus("진실 회차는 1부터 20 사이의 서로 다른 정수를 쉼표로 구분해 입력하세요. 예: 4,7");
     truthInput.focus();
     return;
   }
@@ -507,6 +555,7 @@ function onStartPerformance() {
   unlockFromGesture();
   showPerformance();
   startButton.blur();
+  showGestureGuideOnce();
 }
 
 function onSoundChange() {
@@ -515,10 +564,15 @@ function onSoundChange() {
   else stopScanningSound();
 }
 
+function onVibrationChange() {
+  storageSet(VIBRATION_KEY, vibrationInput.value);
+}
+
 function onVisibilityChange() {
   if (!document.hidden) return;
   if (!settled && hold.phase !== "idle") cancelUnsettledHold();
   stopScanningSound();
+  stopVibration();
   pointers.clear();
   activePointerId = null;
 }
@@ -540,6 +594,7 @@ function bind() {
   resetButton.addEventListener("click", onResetAttempts);
   startButton.addEventListener("click", onStartPerformance);
   soundInput.addEventListener("change", onSoundChange);
+  vibrationInput.addEventListener("change", onVibrationChange);
   window.addEventListener("keydown", onRehearsalKey);
   document.addEventListener("visibilitychange", onVisibilityChange);
 }

@@ -14,6 +14,8 @@ const suit = $("suit");
 const brightness = $("brightness");
 const stateNote = $("state-note");
 const stageMessage = $("stage-message");
+const gestureGuide = $("gesture-guide");
+const gestureGuideKey = "alter-settings-gesture-guide-v1";
 const sample = document.createElement("canvas");
 const sampleContext = sample.getContext("2d", { willReadFrequently: true });
 const suits = {
@@ -29,6 +31,24 @@ let stream = null;
 let animation = 0;
 let lastSampleAt = 0;
 let touchStart = null;
+
+function shouldShowGestureGuide() {
+  try { return localStorage.getItem(gestureGuideKey) !== "seen"; }
+  catch { return true; }
+}
+
+function closeGestureGuide(remember = true) {
+  gestureGuide.hidden = true;
+  if (!remember) return;
+  try { localStorage.setItem(gestureGuideKey, "seen"); }
+  catch { /* The guide may reappear when storage is unavailable. */ }
+}
+
+function showGestureGuide() {
+  if (!shouldShowGestureGuide()) return;
+  gestureGuide.hidden = false;
+  $("close-gesture-guide").focus();
+}
 
 function readSavedSettings() {
   try {
@@ -81,6 +101,7 @@ function updateStateNote() {
 
 function openSettings() {
   if (!settings.hidden) return;
+  if (!gestureGuide.hidden) closeGestureGuide();
   if (stream) {
     machine = updateAlterState(machine, { type: "interrupt", t: performance.now() });
     tracker = createObservationTracker();
@@ -128,7 +149,7 @@ function isPortrait(corners) {
 function processFrame(t) {
   if (!stream) return;
   animation = requestAnimationFrame(processFrame);
-  if (!settings.hidden || document.hidden || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) {
+  if (!settings.hidden || !gestureGuide.hidden || document.hidden || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) {
     if (video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) {
       hideOverlay();
       stage.classList.toggle("camera-masked", cameraShouldBeMasked(machine.state, false));
@@ -188,6 +209,7 @@ function showStageMessage(message) {
 }
 
 function stopCamera(showSetup = true) {
+  closeGestureGuide(false);
   if (animation) cancelAnimationFrame(animation);
   animation = 0;
   if (stream) stream.getTracks().forEach((track) => track.stop());
@@ -234,7 +256,8 @@ async function startCamera() {
     stage.hidden = false;
     settings.hidden = true;
     animation = requestAnimationFrame(processFrame);
-    message.textContent = "카메라 권한이 필요합니다. 영상은 기기 밖으로 전송하거나 저장하지 않습니다.";
+    showGestureGuide();
+    message.textContent = "시작을 누르면 브라우저가 카메라 사용 권한을 묻습니다. 허용을 선택해 주세요. 영상은 기기 밖으로 전송하거나 저장하지 않습니다.";
   } catch (error) {
     stopCamera();
     message.textContent = error.name === "NotAllowedError"
@@ -246,6 +269,7 @@ async function startCamera() {
 }
 
 $("start").addEventListener("click", startCamera);
+$("close-gesture-guide").addEventListener("click", () => closeGestureGuide());
 $("setup-settings").addEventListener("click", openSettings);
 $("close-settings").addEventListener("click", closeSettings);
 $("reveal").addEventListener("click", () => {

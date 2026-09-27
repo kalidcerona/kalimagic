@@ -40,7 +40,7 @@
     <div class="sheet">
       <img class="brand-logo" src="./brand-logo.png" alt="TOBIRA">
       <h1>TOBIRA</h1>
-      <p class="lede">배경 화면과 동전 이미지를 준비합니다. 화면을 탭하거나 쓸면 동전이 나타납니다.</p>
+      <p class="lede">배경 화면과 물건 이미지를 준비합니다. 화면을 탭하거나 쓸면 선택한 물건이 나타납니다.</p>
       <div id="recovery" class="recovery" hidden></div>
 
       <label class="field">
@@ -62,8 +62,19 @@
       </div>
       <button type="button" id="wallpaper-clear" class="button button-quiet">기본 배경 사용</button>
 
+      <details class="settings-toggle">
+        <summary>기기 움직임 연출</summary>
+        <div class="toggle-body">
+          <label class="motion-option">
+            <input id="motion-enabled" type="checkbox">
+            <span>강하게 스냅하면 중앙을 뚫고 물건 나타내기, 세우기·흔들기 연출</span>
+          </label>
+          <p id="motion-note" class="hint" role="status">공연 전에 켜세요. 기기에서 센서 권한을 요청할 수 있습니다. 앱을 다시 열면 꺼집니다.</p>
+        </div>
+      </details>
+
       <details id="preset-picker" class="settings-toggle">
-        <summary><span>동전 이미지 1, 2, 3</span><span id="selected-preset-name" class="toggle-current"></span></summary>
+        <summary><span>물건 이미지 1, 2, 3</span><span id="selected-preset-name" class="toggle-current"></span></summary>
         <div class="toggle-body">
           <button type="button" id="add-preset" class="button button-quiet add-preset">다음 이미지 자리 추가</button>
           <ul id="preset-list" class="preset-list"></ul>
@@ -79,19 +90,22 @@
         </label>
 
         <label class="field">
-          <span class="field-label">이 자리에서 나올 동전</span>
+          <span class="field-label">이 자리에서 나올 물건</span>
           <select id="coin-image-choice" class="text">
             <option value="kennedy">케네디 하프 달러 사진</option>
             <option value="won500">한국 500원 사진</option>
+            <option value="riderRed">바이시클 라이더백 레드 카드</option>
+            <option value="riderBlue">바이시클 라이더백 블루 카드</option>
             <option value="custom">업로드한 이미지</option>
           </select>
         </label>
         <label class="field">
-          <span class="field-label">동전 이미지 업로드</span>
+          <span class="field-label">물건 이미지 업로드</span>
           <input id="coin-image-upload" type="file" accept="image/png,image/jpeg,image/webp">
         </label>
         <p id="coin-image-note" class="hint">투명 배경 PNG를 권장합니다. 업로드하면 이 자리의 이미지로 선택됩니다.</p>
         <p class="hint coin-source">기본 동전 사진 출처와 이용 조건: <a href="./COIN_CREDITS.md" target="_blank" rel="noopener noreferrer">이미지 출처 보기</a></p>
+        <p class="hint coin-source">기본 카드 사진 출처와 이용 조건: <a href="./CARD_CREDITS.md" target="_blank" rel="noopener noreferrer">이미지 출처 보기</a></p>
 
         <label class="field" hidden>
           <span class="field-label" id="object-kind-label">물건</span>
@@ -159,11 +173,12 @@
         <summary>사용 안내</summary>
         <div class="guide-body">
           <h2>준비</h2>
-          <p>공연 배경으로 사용할 사진을 올립니다. 미리보기에서 윗부분 경계를 끌어 사진에 찍힌 예전 상태 표시를 빼세요. 동전 이미지 자리는 최대 세 개입니다. 각 자리마다 기본 동전 그림을 고르거나 직접 이미지를 올립니다.</p>
+          <p>공연 배경으로 사용할 사진을 올립니다. 미리보기에서 윗부분 경계를 끌어 사진에 찍힌 예전 상태 표시를 빼세요. 물건 이미지 자리는 최대 세 개입니다. 각 자리마다 동전·카드 이미지를 고르거나 직접 올립니다.</p>
           <p>쓸 자리와 크기, 퇴장 느낌을 정한 뒤 「공연 시작」을 누릅니다.</p>
 
           <h2>정확한 위치에 두기</h2>
-          <p>배경을 탭하면 손가락을 뗄 때 동전이 나타납니다. 배경을 쓸면 손가락이 움직이는 순간 동전이 나타납니다.</p>
+          <p>배경을 탭하면 손가락을 뗄 때 물건이 나타납니다. 배경을 쓸면 손가락이 움직이는 순간 물건이 나타납니다.</p>
+          <p>기기 움직임 연출을 켜면 세워 들 때 나타난 물건이 아래로 떨어지고, 흔들면 잠깐 흔들립니다. 지원되지 않거나 권한을 거부하면 손가락 연출은 그대로 사용할 수 있습니다.</p>
 
           <h2>밀어 없애기</h2>
           <p>물건을 끌어 위, 아래, 왼쪽, 오른쪽 어느 가장자리로든 화면 밖으로 보내면 사라집니다.</p>
@@ -205,7 +220,30 @@
         <span class="home-icon"></span>
       </div>
     </div>
+    <div id="breakthrough" class="breakthrough" aria-hidden="true">
+      <svg viewBox="0 0 600 600" role="presentation" focusable="false">
+        <defs>
+          <radialGradient id="break-glow"><stop stop-color="#fff" stop-opacity=".9"/><stop offset=".22" stop-color="#eaf5ff" stop-opacity=".68"/><stop offset=".55" stop-color="#b9d3e9" stop-opacity=".18"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+          <filter id="break-shadow"><feGaussianBlur stdDeviation="3"/></filter>
+        </defs>
+        <circle cx="300" cy="300" r="285" fill="url(#break-glow)"/>
+        <g class="breakthrough-hole"><path d="M292 231 317 245 337 230 345 264 371 272 356 295 372 320 341 329 333 360 304 349 282 372 266 339 234 332 249 302 230 279 262 268 267 240Z" fill="#111923" stroke="#f7fcff" stroke-width="5"/><path d="M292 231 317 245 337 230 345 264 371 272 356 295 372 320 341 329 333 360 304 349 282 372 266 339 234 332 249 302 230 279 262 268 267 240Z" fill="none" stroke="#263644" stroke-width="12" opacity=".45" filter="url(#break-shadow)"/></g>
+        <g class="breakthrough-cracks" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M292 231 276 181 291 132 269 76 282 20 M317 245 338 183 326 151 365 96 355 28 M337 230 385 190 409 133 458 112 473 51 M345 264 406 257 436 221 485 237 551 190 M371 272 443 283 481 269 532 303 591 293 M372 320 434 340 473 387 542 375 580 430 M341 329 376 382 398 418 451 439 473 510 M333 360 333 405 358 452 344 509 369 583 M304 349 277 410 290 452 254 491 263 575 M266 339 213 386 191 434 143 449 103 512 M234 332 174 320 137 351 75 339 17 378 M249 302 188 283 155 247 101 253 24 216 M230 279 178 224 149 191 97 176 66 105 M262 268 237 208 198 177 209 129 180 48" stroke="#172d3d" stroke-opacity=".68" stroke-width="8"/>
+          <path d="M292 231 276 181 291 132 269 76 282 20 M317 245 338 183 326 151 365 96 355 28 M337 230 385 190 409 133 458 112 473 51 M345 264 406 257 436 221 485 237 551 190 M371 272 443 283 481 269 532 303 591 293 M372 320 434 340 473 387 542 375 580 430 M341 329 376 382 398 418 451 439 473 510 M333 360 333 405 358 452 344 509 369 583 M304 349 277 410 290 452 254 491 263 575 M266 339 213 386 191 434 143 449 103 512 M234 332 174 320 137 351 75 339 17 378 M249 302 188 283 155 247 101 253 24 216 M230 279 178 224 149 191 97 176 66 105 M262 268 237 208 198 177 209 129 180 48" stroke="#faffff" stroke-opacity=".94" stroke-width="3"/>
+          <path d="M276 181 229 161 194 112 M338 183 377 158 386 121 M406 257 435 280 468 278 M434 340 469 322 495 335 M277 410 247 430 230 469 M188 283 147 296 125 324 M178 224 178 182 158 151 M376 382 417 379 447 402" stroke="#e8f8ff" stroke-opacity=".78" stroke-width="2.5"/>
+        </g>
+      </svg>
+    </div>
     <div id="coin" class="coin kind-coin" aria-hidden="true"><img id="coin-art" alt=""></div>
+  </div>
+  <div id="settings-gesture-guide" class="gesture-guide" role="dialog" aria-modal="true" aria-labelledby="settings-gesture-title" hidden>
+    <div class="gesture-guide-card">
+      <div class="gesture-guide-demo" aria-hidden="true"><span></span><span></span></div>
+      <h2 id="settings-gesture-title">설정으로 돌아가기</h2>
+      <p>두 손가락을 화면 아래로 96픽셀 이상 밀어 내세요.</p>
+      <button type="button" id="settings-gesture-dismiss">알겠어요</button>
+    </div>
   </div>
   <noscript>
     <p class="noscript">이 도구는 JavaScript가 필요합니다.</p>

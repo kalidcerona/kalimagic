@@ -68,7 +68,8 @@ export const PUBLIC_DIRS = [
   'zz6',
   'zz7',
   'zz8',
-  'zz10'
+  'zz10',
+  'zz11'
 ];
 
 export const PRIVATE_PATTERNS = [
@@ -117,7 +118,7 @@ export const CHOICE_FILES = [
   'sw.js'
 ];
 export const NEW_APP_FILES = CHOICE_FILES;
-export const USOTSUKI_FILES = NEW_APP_FILES.filter((file) => file !== 'app.js').concat('detector.js');
+export const USOTSUKI_FILES = NEW_APP_FILES.filter((file) => file !== 'app.js').concat('detector.js', 'detector-panel-grok.svg');
 export const ASRAI_FILES = [
   'brand-logo.jpg', 'brand-logo.png', 'contacts.js', 'icon-192.png',
   'icon-512.png', 'icon.svg', 'index.html', 'install-ui.js',
@@ -127,6 +128,10 @@ export const ALTER_FILES = [
   'app.js', 'brand-logo.png', 'camera-geometry.js', 'icon-192.png',
   'icon-512.png', 'index.html', 'install-ui.js', 'logic.js',
   'manifest.webmanifest', 'performance.js', 'style.css', 'sw.js', 'vision.js'
+];
+export const SPINNER_FILES = [
+  'app.js', 'icon-192.png', 'icon-512.png', 'index.html',
+  'logic.js', 'manifest.webmanifest', 'style.css', 'sw.js'
 ];
 export const ALETHEIA_COURT_FILES = ['S-J', 'S-Q', 'S-K', 'D-J', 'D-Q', 'D-K',
   'C-J', 'C-Q', 'C-K', 'H-J', 'H-Q', 'H-K']
@@ -156,7 +161,11 @@ export const MIRROR_PAIRS = [
   ['../../magic-aletheia/deck-loader.js', 'zz5/deck-loader.js'],
   ...ALETHEIA_COURT_FILES.map((file) => [`../../magic-aletheia/${file}`, `zz5/${file}`]),
   ...NEW_APP_FILES.map((file) => [`../../magic-tobira/${file}`, `zz6/${file}`]),
+  ['../../magic-tobira/sensor-motion.js', 'zz6/sensor-motion.js'],
   ['../../magic-tobira/COIN_CREDITS.md', 'zz6/COIN_CREDITS.md'],
+  ['../../magic-tobira/CARD_CREDITS.md', 'zz6/CARD_CREDITS.md'],
+  ['../../magic-tobira/card-rider-red.jpg', 'zz6/card-rider-red.jpg'],
+  ['../../magic-tobira/card-rider-blue.jpg', 'zz6/card-rider-blue.jpg'],
   ['../../magic-tobira/coin-kennedy.png', 'zz6/coin-kennedy.png'],
   ['../../magic-tobira/coin-500won.png', 'zz6/coin-500won.png'],
   ['../../magic-tobira/coin-kennedy.svg', 'zz6/coin-kennedy.svg'],
@@ -165,6 +174,7 @@ export const MIRROR_PAIRS = [
   ['../../magic-usotsuki/detector-panel.jpg', 'zz7/detector-panel.jpg'],
   ...ASRAI_FILES.map((file) => [`../../magic-asrai/${file}`, `zz8/${file}`]),
   ...ALTER_FILES.map((file) => [`../../magic-alter/${file}`, `zz10/${file}`]),
+  ...SPINNER_FILES.map((file) => [`../../magic-spinner/${file}`, `zz11/${file}`]),
   ...[
     ['magic-stopwatch-uni', 'zz1'],
     ['magic-unlock', 'zz2'],
