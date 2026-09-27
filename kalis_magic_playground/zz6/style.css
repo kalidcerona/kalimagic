@@ -510,25 +510,6 @@ input[type="range"]:focus-visible,
 .home-icon:nth-child(3n)::before { border-radius: 50%; }
 .home-icon:nth-child(3n + 2)::before { border-radius: 8%; }
 
-.cue {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-  background: #241c17;
-  opacity: 0;
-}
-
-.stage.is-mark .cue {
-  background: #f8f4ee;
-  animation: tobira-mark 420ms ease-out forwards;
-}
-
-@keyframes tobira-mark {
-  0% { opacity: 0.22; }
-  100% { opacity: 0; }
-}
-
 .coin {
   position: absolute;
   left: 0;
@@ -697,10 +678,6 @@ body[data-mode="performance"] .stage { display: block; }
 
 @media (prefers-reduced-motion: reduce) {
   .button, .preset, .edge { transition: none; }
-  .stage.is-mark .cue {
-    animation: none;
-    opacity: 0.22;
-  }
 }
 
 

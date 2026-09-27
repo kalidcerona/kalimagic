@@ -36,7 +36,6 @@ const OBJECT_KIND_CLASS = Object.freeze({
   'business card': 'kind-business-card',
 });
 const EDGE_ORDER = ['top', 'left', 'right', 'bottom'];
-const MARK_MS = 460;
 const SPAWN_SLOP_PX = 12;
 const SWIPE_REVEAL_PX = 24;
 const IMAGE_CHOICE_KEY = 'tobira.coinChoices.v1';
@@ -46,7 +45,6 @@ const DEFAULT_COIN_IMAGES = Object.freeze({ kennedy: './coin-kennedy.png', won50
 const settingsEl = document.querySelector('#settings');
 const stageEl = document.querySelector('#stage');
 const coinEl = document.querySelector('#coin');
-const cueEl = document.querySelector('#cue');
 const recoveryEl = document.querySelector('#recovery');
 const presetList = document.querySelector('#preset-list');
 const presetPicker = document.querySelector('#preset-picker');
@@ -725,8 +723,7 @@ function revealSpawn(point) {
   objectLive = true;
   phase = 'idle';
   releaseCoinVisibility();
-  stageEl.classList.remove('is-leaving', 'is-mark');
-  cueEl.style.opacity = '0';
+  stageEl.classList.remove('is-leaving');
   paintCoin(center.x, center.y, metrics.radius, 1, 1);
   resetSpawnTracking();
 }
@@ -739,8 +736,7 @@ function placeAtRest() {
   center = { x: rest.x, y: rest.y };
   moved = false;
   phase = 'awaiting';
-  stageEl.classList.remove('is-leaving', 'is-mark');
-  cueEl.style.opacity = '0';
+  stageEl.classList.remove('is-leaving');
   concealCoin();
   paintCoin(center.x, center.y, rest.radius, 0, 1);
   resetSpawnTracking();
@@ -794,7 +790,6 @@ function beginExit(edge, speed) {
   const originStage = measureStage();
   const origin = stageToNormalized(center.x, center.y, originStage.width, originStage.height);
   stageEl.classList.add('is-leaving');
-  stageEl.classList.remove('is-mark');
   releaseCoinVisibility();
 
   const step = (now) => {
@@ -813,13 +808,7 @@ function beginExit(edge, speed) {
     moved = true;
     concealCoin();
     stageEl.classList.remove('is-leaving');
-    cueEl.style.opacity = '';
-    stageEl.classList.add('is-mark');
     setGoneSession(true);
-    window.setTimeout(() => {
-      if (token !== exitToken) return;
-      stageEl.classList.remove('is-mark');
-    }, MARK_MS);
   };
   exitFrame = window.requestAnimationFrame(step);
 }
