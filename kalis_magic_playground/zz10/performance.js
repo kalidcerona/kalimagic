@@ -3,11 +3,12 @@ import { AlterState } from "./logic.js";
 
 const MAX_SAMPLE_GAP_MS = 260;
 const EXIT_ABSENCE_MS = 350;
+const OVERLAY_HOLD_MS = 250;
 
-/** Keep the camera preview visible while waiting for a card. */
-export function cameraShouldBeMasked(state, overlayShown) {
+/** Cover live pixels whenever a projected card may lag behind the real card. */
+export function cameraShouldBeMasked(state, overlayShown, holdingPreviousCorners = false) {
   if (state === AlterState.CARD_DETECTED || state === AlterState.CARD_FULLY_OUT) return true;
-  if (state === AlterState.ALTER_VISIBLE) return !overlayShown;
+  if (state === AlterState.ALTER_VISIBLE) return holdingPreviousCorners || !overlayShown;
   return false;
 }
 
@@ -22,6 +23,16 @@ export function createObservationTracker() {
     outwardSteps: 0,
     exitArmed: false,
   };
+}
+
+/** Bridge a short missed detection without exposing the physical card. */
+export function overlayCorners(tracker, detection, t) {
+  if (detection) return detection.corners;
+  if (tracker.corners && tracker.seenAt != null &&
+      Number.isFinite(t) && t - tracker.seenAt >= 0 && t - tracker.seenAt <= OVERLAY_HOLD_MS) {
+    return tracker.corners;
+  }
+  return null;
 }
 
 function edgeDistances(corners, width, height) {

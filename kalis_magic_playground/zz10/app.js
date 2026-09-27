@@ -1,6 +1,6 @@
 import { AlterState, createAlterState, updateAlterState } from "./logic.js";
 import { detectCard, mapSourceOntoCorners } from "./vision.js";
-import { cameraShouldBeMasked, createObservationTracker, trackObservation } from "./performance.js";
+import { cameraShouldBeMasked, createObservationTracker, overlayCorners, trackObservation } from "./performance.js";
 import { coverGeometry, samplePointToView } from "./camera-geometry.js";
 
 const $ = (id) => document.getElementById(id);
@@ -187,10 +187,12 @@ function processFrame(t) {
     updateStateNote();
 
     let overlayShown = false;
-    if (machine.state === AlterState.ALTER_VISIBLE && detection) {
-      overlayShown = showOverlay(detection.corners, geometry);
+    const visibleCorners = overlayCorners(tracker, detection, t);
+    const holdingPreviousCorners = !detection && visibleCorners !== null;
+    if (machine.state === AlterState.ALTER_VISIBLE && visibleCorners) {
+      overlayShown = showOverlay(visibleCorners, geometry);
     } else hideOverlay();
-    stage.classList.toggle("camera-masked", cameraShouldBeMasked(machine.state, overlayShown));
+    stage.classList.toggle("camera-masked", cameraShouldBeMasked(machine.state, overlayShown, holdingPreviousCorners));
   } catch {
     machine = updateAlterState(machine, { type: "interrupt", t });
     tracker = createObservationTracker();
@@ -329,6 +331,7 @@ window.addEventListener("resize", () => {
   machine = updateAlterState(machine, { type: "interrupt", t: performance.now() });
   tracker = createObservationTracker();
   hideOverlay();
+  stage.classList.toggle("camera-masked", cameraShouldBeMasked(machine.state, false));
 });
 
 readSavedSettings();

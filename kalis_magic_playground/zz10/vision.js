@@ -33,7 +33,7 @@
  */
 
 const MAX_GRID_SIDE = 192;
-const MIN_CONTRAST = 26;
+const MIN_CONTRAST = 18;
 const MIN_ASPECT = 1.25;
 const MAX_ASPECT = 1.95;
 const IDEAL_ASPECT = 1.4;
@@ -810,7 +810,15 @@ export function detectCard(frame) {
   // A printed face can fragment the bright card region. Try its light
   // silhouette against the brightest part of the surrounding scene.
   const brightThreshold = Math.max(110, Math.min(235, brightBorder + 18));
-  return findBest(labelComponents(grid, brightThreshold, bg, true), 0.25, 8);
+  const brightHit = findBest(labelComponents(grid, brightThreshold, bg, true), 0.25, 8);
+  if (brightHit) return brightHit;
+
+  // A light card can be darker than highlights on a real room's boundary.
+  // Try a threshold relative to the median border, while retaining the same
+  // geometry and edge checks that reject connected background regions.
+  const midThreshold = Math.max(110, Math.min(235, bg + 18));
+  if (midThreshold >= brightThreshold - 2) return null;
+  return findBest(labelComponents(grid, midThreshold, bg, true), 0.25, 8);
 }
 
 function normalizePoints(points) {
