@@ -46,7 +46,7 @@ export function advanceTiltBody(body, tilt, stage, radius, elapsedMs, exitEdges 
     x: Math.max(-1800, Math.min(1800, (body.vx + tilt.x * drive * dt) * drag)),
     y: Math.max(-1800, Math.min(1800, (body.vy + tilt.y * drive * dt) * drag)),
   };
-  const next = { ...body, vx: velocity.x, vy: velocity.y,
+  const next = { ...body, exitHits: { ...body.exitHits }, vx: velocity.x, vy: velocity.y,
     x: body.x + velocity.x * dt, y: body.y + velocity.y * dt };
   const walls = [
     ['left', 'x', radius, -1], ['right', 'x', stage.width - radius, 1],
@@ -60,7 +60,10 @@ export function advanceTiltBody(body, tilt, stage, radius, elapsedMs, exitEdges 
     next[axis] = boundary;
     next[axis === 'x' ? 'vx' : 'vy'] *= -0.55;
     next.collisions = (next.collisions || 0) + 1;
-    if (next.collisions >= 2 && exitEdges.includes(edge)) {
+    if (exitEdges.includes(edge)) {
+      next.exitHits[edge] = (next.exitHits[edge] || 0) + 1;
+    }
+    if (exitEdges.includes(edge) && next.exitHits[edge] >= 2) {
       exit = edge;
       exitSpeed = impactSpeed;
     }
