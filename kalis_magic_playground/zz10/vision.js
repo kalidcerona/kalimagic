@@ -266,15 +266,17 @@ function borderStats(grid) {
     accum += delta * delta;
   }
   const std = Math.sqrt(accum / samples.length);
-  return { bg, std };
+  const sorted = samples.slice().sort((a, b) => a - b);
+  const brightBorder = sorted[Math.floor((sorted.length - 1) * 0.9)];
+  return { bg, std, brightBorder };
 }
 
-function labelComponents(grid, threshold, bg) {
+function labelComponents(grid, threshold, bg, brightOnly = false) {
   const { luma, gridWidth, gridHeight } = grid;
   const count = gridWidth * gridHeight;
   const foreground = new Uint8Array(count);
   for (let i = 0; i < count; i += 1) {
-    foreground[i] = Math.abs(luma[i] - bg) >= threshold ? 1 : 0;
+    foreground[i] = (brightOnly ? luma[i] >= threshold : Math.abs(luma[i] - bg) >= threshold) ? 1 : 0;
   }
 
   const labels = new Int32Array(count);
@@ -719,7 +721,7 @@ function scoreQuad(corners, frame, contrast, anchor) {
   };
 }
 
-function detectFromComponent(component, labels, grid, frame, bg) {
+function detectFromComponent(component, labels, grid, frame, bg, minFill = 0.62) {
   const contrast = Math.abs(component.mean - bg);
   if (contrast < MIN_CONTRAST) return null;
 
@@ -730,7 +732,7 @@ function detectFromComponent(component, labels, grid, frame, bg) {
   const estimatedArea = component.area * grid.step * grid.step;
   if (hullArea < 1) return null;
   // A card silhouette is solid. Sparse noise hulls fail this fill test.
-  if (estimatedArea < hullArea * 0.62 || estimatedArea > hullArea * 1.85) return null;
+  if (estimatedArea < hullArea * minFill || estimatedArea > hullArea * 1.85) return null;
 
   const coarse = minimumAreaRect(hull);
   if (!coarse) return null;
@@ -774,31 +776,41 @@ export function detectCard(frame) {
   const grid = buildLumaGrid(frame, step);
   if (grid.gridWidth < 12 || grid.gridHeight < 12) return null;
 
-  const { bg, std } = borderStats(grid);
+  const { bg, std, brightBorder } = borderStats(grid);
   const threshold = Math.max(MIN_CONTRAST, std * 4 + 12);
-  const { labels, components } = labelComponents(grid, threshold, bg);
+  const primary = labelComponents(grid, threshold, bg);
   const frameArea = frame.width * frame.height;
 
-  let best = null;
-  let considered = 0;
-  for (const component of components) {
-    if (considered >= 4) break;
-    if (component.touchesBorder) continue;
-    const estimatedArea = component.area * step * step;
-    if (estimatedArea < frameArea * 0.012 || estimatedArea > frameArea * 0.8) continue;
-    considered += 1;
-    const detection = detectFromComponent(component, labels, grid, frame, bg);
-    if (!detection) continue;
-    if (
-      !best ||
-      detection.confidence > best.confidence + 1e-9 ||
-      (Math.abs(detection.confidence - best.confidence) <= 1e-9 &&
-        quadArea(detection.corners) > quadArea(best.corners))
-    ) {
-      best = detection;
+  function findBest({ labels, components }, minFill, limit) {
+    let best = null;
+    let considered = 0;
+    for (const component of components) {
+      if (considered >= limit) break;
+      if (component.touchesBorder) continue;
+      const estimatedArea = component.area * step * step;
+      if (estimatedArea < frameArea * 0.012 || estimatedArea > frameArea * 0.8) continue;
+      considered += 1;
+      const detection = detectFromComponent(component, labels, grid, frame, bg, minFill);
+      if (!detection) continue;
+      if (
+        !best ||
+        detection.confidence > best.confidence + 1e-9 ||
+        (Math.abs(detection.confidence - best.confidence) <= 1e-9 &&
+          quadArea(detection.corners) > quadArea(best.corners))
+      ) {
+        best = detection;
+      }
     }
+    return best;
   }
-  return best;
+
+  const primaryHit = findBest(primary, 0.62, 4);
+  if (primaryHit) return primaryHit;
+
+  // A printed face can fragment the bright card region. Try its light
+  // silhouette against the brightest part of the surrounding scene.
+  const brightThreshold = Math.max(110, Math.min(235, brightBorder + 18));
+  return findBest(labelComponents(grid, brightThreshold, bg, true), 0.25, 8);
 }
 
 function normalizePoints(points) {
