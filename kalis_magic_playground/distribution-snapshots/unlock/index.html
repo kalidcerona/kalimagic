@@ -156,11 +156,11 @@
     .home-page { position: absolute; top: 0; width: 100%; height: 100%; overflow: hidden; }
     #home-one { left: 0; }
     #home-two { left: 100%; background: #111; }
-    #reveal-card { position: absolute; z-index: 3; top: 50%; left: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; width: min(88vw, 390px); min-height: 220px; max-width: calc(100% - 24px); padding: 30px 24px; border: 1px solid #ffffff60; border-radius: 26px; background: #3238439c; box-shadow: 0 16px 46px #0008; backdrop-filter: blur(20px) saturate(1.1); -webkit-backdrop-filter: blur(20px) saturate(1.1); text-align: center; font-variant-numeric: tabular-nums; pointer-events: none; opacity: 0; visibility: hidden; transform: translate(-50%, -50%) scale(.94); transition: none; }
+    #reveal-card { position: absolute; z-index: 3; top: 50%; left: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; width: min(88vw, 390px); min-height: 220px; max-width: calc(100% - 24px); padding: 30px 24px; border: 1px solid #ffffff60; border-radius: 26px; background: #32384366; box-shadow: 0 16px 46px #0008; backdrop-filter: blur(20px) saturate(1.1); -webkit-backdrop-filter: blur(20px) saturate(1.1); text-align: center; font-variant-numeric: tabular-nums; pointer-events: none; opacity: 0; visibility: hidden; transform: translate(-50%, -50%) scale(.94); transition: none; }
     #reveal-card.visible { opacity: 1; visibility: visible; transform: translate(-50%, -50%) scale(1); transition: opacity 180ms ease, transform 180ms cubic-bezier(.2,.8,.2,1); }
     #reveal-label { color: #f3f4f8e0; font-size: 14px; font-weight: 500; }
     #reveal-number { margin-top: 18px; font-size: clamp(46px, 12vw, 68px); line-height: 1.08; font-weight: 600; letter-spacing: .025em; overflow-wrap: anywhere; }
-    #reveal-days { margin-top: 13px; color: #f3f4f8e0; font-size: 13px; }
+    .reveal-detail { margin-top: 13px; color: #f3f4f8e0; font-size: 15px; }
     #unlocked-screen.unlocking { animation: unlock-in 440ms cubic-bezier(.32, .72, 0, 1) both; }
     @keyframes lock-out { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(.965); } }
     @keyframes unlock-in { from { opacity: 0; transform: scale(1.045); } to { opacity: 1; transform: scale(1); } }
@@ -168,9 +168,9 @@
     #peek-screen { z-index: 1; background: #0b0c10; padding: 28px 24px max(24px, env(safe-area-inset-bottom)); display: flex; flex-direction: column; justify-content: flex-end; }
     #peek-screen.side-peek { text-align: right; }
     .peek-heading { margin-bottom: 9px; color: #aaaebc; font-size: 12px; }
-    #attempt-list { list-style: none; margin: 0; padding: 0; overflow-y: auto; max-height: calc(100% - 54px); font-variant-numeric: tabular-nums; }
-    #attempt-list li { border-top: 1px solid #ffffff15; padding: 6px 0; white-space: nowrap; }
-    .attempt-pin { letter-spacing: 3px; font-size: 12px; line-height: 1.25; font-weight: 600; }
+    #attempt-list { list-style: none; margin: 0; padding: 0; overflow: auto; max-height: calc(100% - 54px); font-variant-numeric: tabular-nums; }
+    #attempt-list li { border-top: 1px solid #ffffff15; padding: 6px 0; width: max-content; min-width: 100%; white-space: nowrap; }
+    .attempt-pin { letter-spacing: .02em; font-size: clamp(9px, 2.4vw, 11px); line-height: 1.25; font-weight: 600; }
     #time-black { z-index: 3; background: #000; touch-action: none; }
     #rewind-digit-guide { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: repeat(4, minmax(0, 1fr)); color: #fff; font-size: clamp(42px, 13vw, 76px); font-weight: 650; pointer-events: none; opacity: 1; transition: opacity 400ms ease; }
     #rewind-digit-guide[hidden] { display: none !important; }
@@ -305,7 +305,7 @@
         <div id="home-one" class="home-page"><img id="unlock-image" class="wallpaper" alt="" hidden draggable="false"></div>
         <div id="home-two" class="home-page"><img id="home2-image" class="wallpaper" alt="" hidden draggable="false"></div>
       </div>
-      <div id="reveal-card" role="status" aria-live="polite" aria-hidden="true"><div id="reveal-label"></div><div id="reveal-number">—</div><div id="reveal-days" hidden></div></div>
+      <div id="reveal-card" role="status" aria-live="polite" aria-hidden="true"><div id="reveal-label"></div><div id="reveal-number">—</div><div id="reveal-days" class="reveal-detail" hidden></div><div id="reveal-zodiac" class="reveal-detail" hidden></div><div id="reveal-animal" class="reveal-detail" hidden></div></div>
     </section>
     <section id="time-black" class="screen" aria-label="리와인드 준비" hidden><div id="rewind-digit-guide" hidden aria-hidden="true"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span></span><span>0</span><span></span></div></section>
     <section id="time-lock" class="screen" aria-label="리와인드 잠금 화면" hidden>
@@ -355,6 +355,7 @@
             <label id="reveal-attempt-field" class="field" hidden>중앙에 공개할 입력 순서<input id="reveal-attempt" type="number" min="1" max="99" step="1" value="2" required></label>
             <label class="field check"><input id="vibration" type="checkbox" checked> 성공·실패 진동</label>
             <p class="hint">지정 시도는 타이머와 PIN 중복 여부를 무시하고 선택한 번째 입력에서 해제됩니다. 생년월일을 먼저 받을 때 해제 순서를 고정하기 좋습니다.</p>
+            <p class="hint">유효한 6자리 생년월일을 입력하면 태어난 날부터 지난 일수, 서양 별자리, 설날 기준 띠가 표시됩니다.</p>
           </div>
           <div class="group">
             <h2>이미지와 상단바 맞추기</h2>
@@ -495,6 +496,10 @@
       if (selected?.days !== null && selected?.days !== undefined) {
         $('reveal-days').textContent = `태어난 지 ${selected.days.toLocaleString('ko-KR')}일`;
       }
+      $('reveal-zodiac').hidden = !selected?.zodiac;
+      $('reveal-animal').hidden = !selected?.animal;
+      $('reveal-zodiac').textContent = selected?.zodiac ?? '';
+      $('reveal-animal').textContent = selected?.animal ?? '';
     }
 
     function setRevealVisible(visible) {

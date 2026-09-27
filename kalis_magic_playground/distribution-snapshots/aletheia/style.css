@@ -332,19 +332,18 @@ h2 {
   opacity: 0;
 }
 
-.cell-guide span {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0;
-  padding: 0;
-  background: transparent;
-  color: #ffffff;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  font-size: clamp(28px, min(12vw, 10vh), 80px);
-  line-height: 1;
+.cell-guide img {
+  display: block;
+  width: 58%;
+  height: 58%;
+  align-self: center;
+  justify-self: center;
+  object-fit: contain;
+  opacity: 0.24;
+  filter: blur(0.6px) saturate(0.75);
   pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
 }
 
 #card-start-button,

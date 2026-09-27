@@ -6,6 +6,7 @@ import { FRIEND_APP_TOOLS, findFriendAccess } from './_lib/friend-app-access.mjs
 
 const ALLOWED_TOOLS = new Set(['calc', 'stopwatch', 'all', ...FRIEND_APP_TOOLS]);
 const MAX_EMAIL_LENGTH = 254;
+const MAX_BATCH_MEMBERS = 25;
 const COLUMNS = 'id,user_id,email,display_name,nickname,tool,lifetime,note,status,requested_at,created_at';
 
 function clean(value) {
@@ -388,6 +389,9 @@ async function grantOneBulkTool(supabase, viewer, email, tool, lifetime, note) {
       (row.tool === tool || (row.tool === 'all' && !FRIEND_APP_TOOLS.has(tool))));
     if (approved) return { tool, outcome: 'alreadyGranted' };
     const existing = rows.find((row) => row.status === 'approved') || rows[0];
+    if (table === 'tool_access' && existing?.status !== 'approved' && existing?.tool === 'all') {
+      return { tool, outcome: 'failed', error: 'partial_legacy_request' };
+    }
     const patch = {
       status: 'approved',
       tool: table === 'tool_access' && existing?.status === 'approved' ? 'all' : tool,
@@ -482,6 +486,70 @@ async function grantBulkAccess(payload, viewer, supabase) {
   return json(200, { results });
 }
 
+async function grantMembersAccess(payload, viewer, supabase) {
+  const mode = clean(payload?.mode);
+  const members = payload?.members;
+  const lifetime = payload?.lifetime ?? false;
+  const note = clean(payload?.note);
+  const maxTools = FRIEND_APP_TOOLS.size + 2;
+  if (!['pending', 'approved'].includes(mode) || !Array.isArray(members) ||
+      members.length < 1 || members.length > MAX_BATCH_MEMBERS ||
+      typeof lifetime !== 'boolean' || note.length > 1000 ||
+      members.some((member) => !member || !isValidEmail(normalizeEmail(member.email)) ||
+        !Array.isArray(member.tools) || member.tools.length < 1 || member.tools.length > maxTools ||
+        member.tools.some((tool) => typeof tool !== 'string' || tool === 'all' || !isValidTool(tool)) ||
+        new Set(member.tools).size !== member.tools.length) ||
+      new Set(members.map((member) => normalizeEmail(member.email))).size !== members.length) {
+    return json(400, { error: 'invalid_payload' });
+  }
+
+  const results = [];
+  for (const member of members) {
+    const email = normalizeEmail(member.email);
+    const requested = member.tools;
+    const source = await Promise.all(['tool_access', 'friend_app_access'].map(async (table) => {
+      try {
+        return await supabase.from(table).select('tool,status').ilike('email', escapeIlikePattern(email));
+      } catch {
+        return { error: { code: 'db_error' }, data: null };
+      }
+    }));
+    const allowed = new Set();
+    let hasApproved = false;
+    for (let index = 0; index < source.length; index += 1) {
+      const table = index === 0 ? 'tool_access' : 'friend_app_access';
+      for (const row of source[index].data || []) {
+        if (row.status === 'approved') hasApproved = true;
+        if (row.status === 'approved' || mode !== 'pending') continue;
+        if (table === 'tool_access' && row.tool === 'all') {
+          allowed.add('calc'); allowed.add('stopwatch');
+        } else if (table === 'tool_access' && ['calc', 'stopwatch'].includes(row.tool)) {
+          allowed.add(row.tool);
+        } else if (table === 'friend_app_access' && FRIEND_APP_TOOLS.has(row.tool)) {
+          allowed.add(row.tool);
+        }
+      }
+    }
+    const safeTools = requested.filter((tool) => accessTableForTool(tool) === 'tool_access'
+      ? !source[0].error : !source[1].error);
+    let eligible = mode === 'pending'
+      ? safeTools.filter((tool) => allowed.has(tool))
+      : hasApproved ? safeTools : [];
+    const partialLegacy = (source[0].data || []).some((row) => row.status !== 'approved' && row.tool === 'all') &&
+      eligible.filter((tool) => tool === 'calc' || tool === 'stopwatch').length === 1;
+    if (partialLegacy) eligible = eligible.filter((tool) => tool !== 'calc' && tool !== 'stopwatch');
+    const grant = eligible.length
+      ? await grantBulkAccess({ email, tools: eligible, lifetime, note }, viewer, supabase)
+      : null;
+    const granted = grant ? JSON.parse(grant.body).results : [];
+    results.push({ email, results: requested.map((tool) => granted.find((item) => item.tool === tool) || {
+      tool, outcome: 'failed', error: (source[accessTableForTool(tool) === 'tool_access' ? 0 : 1].error
+        ? 'db_error' : partialLegacy && (tool === 'calc' || tool === 'stopwatch') ? 'partial_legacy_request' : 'not_eligible')
+    }) });
+  }
+  return json(200, { results });
+}
+
 export async function postToolAccess(event, viewer, supabase) {
   let payload;
   try {
@@ -496,6 +564,7 @@ export async function postToolAccess(event, viewer, supabase) {
   if (action === 'addToPerson') return addAccessToPerson(payload, viewer, supabase);
   if (action === 'grantByUser') return grantToolAccessByUser(payload, viewer, supabase);
   if (action === 'grantBulk') return grantBulkAccess(payload, viewer, supabase);
+  if (action === 'grantMembers') return grantMembersAccess(payload, viewer, supabase);
   return json(400, { error: 'invalid_payload' });
 }
 

@@ -9,6 +9,17 @@ const context = vm.createContext({});
 vm.runInContext(source, context);
 const model = context.AdminAppModel;
 
+test('select visible replaces stale selection and caps the batch at 25 accounts', () => {
+  const previous = new Set(['stale@example.com']);
+  const visible = Array.from({ length: 26 }, (_, index) => ({ email: `member${index}@example.com` }));
+  const result = model.replaceVisibleSelection(previous, visible, 25);
+  assert.equal(result.size, 25);
+  assert.equal(result.has('stale@example.com'), false);
+  assert.equal(result.has('member24@example.com'), true);
+  assert.equal(result.has('member25@example.com'), false);
+  assert.equal(previous.has('stale@example.com'), true);
+});
+
 test('catalog exposes all six distribution apps', () => {
   assert.deepEqual(Array.from(model.APP_CATALOG, (app) => [app.id, app.path]), [
     ['calc', '/tools/calc/'],

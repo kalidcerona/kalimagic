@@ -6,6 +6,7 @@ import {
   centerFromPointer,
   coinMetrics,
   createRevisionQueue,
+  cropPercentFromDrag,
   defaultPreset,
   exitReached,
   exitVelocity,
@@ -76,9 +77,13 @@ const wallpaperEl = document.querySelector('#stage-wallpaper');
 const wallpaperCrop = document.querySelector('#wallpaper-crop');
 const wallpaperCropValue = document.querySelector('#wallpaper-crop-value');
 const wallpaperPreview = document.querySelector('#wallpaper-preview-image');
+const wallpaperFrame = document.querySelector('#wallpaper-preview');
+const wallpaperCropOverlay = document.querySelector('#wallpaper-crop-overlay');
+const wallpaperCropHandle = document.querySelector('#wallpaper-crop-handle');
 const wallpaperControls = document.querySelector('#wallpaper-controls');
 const WALLPAPER_CROP_KEY = 'tobira.wallpaperCrop.v1';
 let wallpaperOriginal = null;
+let cropDrag = null;
 const wallpaperJobs = createRevisionQueue();
 const imageChoiceInput = document.querySelector('#coin-image-choice');
 const coinImageInput = document.querySelector('#coin-image-upload');
@@ -147,20 +152,58 @@ async function croppedWallpaper(blob, percent) {
   } finally { URL.revokeObjectURL(sourceUrl); }
 }
 
+function cropAmount(percent) {
+  const snapped = Math.round((Number(percent) || 0) * 2) / 2;
+  return Math.min(18, Math.max(0, snapped));
+}
+
+function cropLabel(percent) {
+  const value = cropAmount(percent);
+  return Number.isInteger(value) ? String(value) : value.toFixed(1);
+}
+
+function readCropPercent() {
+  return cropAmount(wallpaperCrop.value);
+}
+
+function paintCropChrome(percent) {
+  const label = cropLabel(percent);
+  wallpaperCrop.value = label;
+  wallpaperCropValue.textContent = `${label}%`;
+  wallpaperCropOverlay.style.height = `${label}%`;
+  wallpaperCropHandle.style.top = `${label}%`;
+  wallpaperCropHandle.setAttribute('aria-valuenow', label);
+  wallpaperCropHandle.setAttribute('aria-valuetext', `${label}%`);
+}
+
+function setCropEnabled(enabled) {
+  wallpaperCrop.disabled = !enabled;
+  wallpaperCropHandle.tabIndex = enabled ? 0 : -1;
+  wallpaperCropHandle.setAttribute('aria-disabled', enabled ? 'false' : 'true');
+}
+
 function showWallpaper(blob) {
   const url = useImageUrl('wallpaper', blob);
   wallpaperEl.src = url;
-  wallpaperPreview.src = url;
   wallpaperControls.hidden = false;
   stageEl.classList.add('has-wallpaper');
+}
+
+function showWallpaperOriginal(blob) {
+  const url = useImageUrl('wallpaper-preview', blob);
+  if (!url) wallpaperPreview.removeAttribute('src');
+  else {
+    wallpaperPreview.src = url;
+    wallpaperControls.hidden = false;
+  }
 }
 
 async function updateWallpaperCrop() {
   const source = wallpaperOriginal;
   if (!source) return false;
   const token = wallpaperJobs.next();
-  const percent = Number(wallpaperCrop.value);
-  wallpaperCropValue.textContent = `${percent}%`;
+  const percent = readCropPercent();
+  paintCropChrome(percent);
   try {
     const output = await croppedWallpaper(source, percent);
     if (!wallpaperJobs.current(token)) return false;
@@ -210,13 +253,13 @@ async function loadImages() {
   try {
     const token = wallpaperJobs.next();
     const savedCrop = localStorage.getItem(WALLPAPER_CROP_KEY);
-    wallpaperCrop.value = String(Math.min(18, Math.max(0, Number(savedCrop) || 0)));
-    wallpaperCropValue.textContent = `${wallpaperCrop.value}%`;
+    paintCropChrome(Math.min(18, Math.max(0, Number(savedCrop) || 0)));
     const storedOriginal = await imageRecord('wallpaper:original', 'get');
     const wallpaper = await imageRecord('wallpaper', 'get');
     if (wallpaperJobs.current(token) && wallpaper) {
       wallpaperOriginal = storedOriginal || wallpaper;
       showWallpaper(wallpaper);
+      showWallpaperOriginal(wallpaperOriginal);
       wallpaperNote.textContent = '배경 사진이 이 기기에 저장되어 있습니다.';
       try {
         if (savedCrop === null) {
@@ -230,8 +273,7 @@ async function loadImages() {
               if (current()) localStorage.setItem(WALLPAPER_CROP_KEY, '5');
             });
             if (saved) {
-              wallpaperCrop.value = '5';
-              wallpaperCropValue.textContent = '5%';
+              paintCropChrome(5);
               showWallpaper(migrated);
               wallpaperNote.textContent = '기존 배경의 윗부분 5%를 잘랐습니다. 설정에서 다시 조절할 수 있습니다.';
             }
@@ -247,15 +289,14 @@ async function loadImages() {
               if (!storedOriginal && current()) await imageRecord('wallpaper:original', 'put', wallpaper);
             });
           } catch { /* Keep the already displayed wallpaper. */ }
-          wallpaperCrop.value = '0';
-          wallpaperCropValue.textContent = '0%';
+          paintCropChrome(0);
           wallpaperNote.textContent = '기존 배경을 그대로 표시합니다. 윗부분 자동 자르기에 실패했습니다. 설정에서 다시 조절해 주세요.';
         } else if (wallpaperJobs.current(token)) {
           wallpaperNote.textContent = '기존 배경을 표시합니다. 원본 저장에 실패하여 자르기를 다시 조절할 수 없습니다.';
         }
       }
     }
-    if (wallpaperJobs.current(token)) wallpaperCrop.disabled = !wallpaperOriginal;
+    if (wallpaperJobs.current(token)) setCropEnabled(Boolean(wallpaperOriginal));
     for (const preset of state.presets) {
       const blob = await imageRecord(`coin:${preset.id}`, 'get');
       if (blob) useImageUrl(`coin:${preset.id}`, blob);
@@ -609,7 +650,7 @@ function applyChrome(mode) {
   const performing = mode === 'performance';
   document.title = performing ? '동전' : 'TOBIRA';
   const theme = document.querySelector('meta[name="theme-color"]');
-  if (theme) theme.setAttribute('content', performing ? '#E4DDD3' : '#F3EBDF');
+  if (theme) theme.setAttribute('content', '#000000');
   settingsEl.inert = performing;
   if (performing) settingsEl.setAttribute('inert', '');
   else settingsEl.removeAttribute('inert');
@@ -1066,15 +1107,24 @@ function bind() {
       persistObjectKind(applyObjectKind(objectKindInput.value));
     });
   }
+  async function commitWallpaperCrop() {
+    try {
+      if (await updateWallpaperCrop()) wallpaperNote.textContent = '조정한 배경을 저장했습니다.';
+    } catch (error) { wallpaperNote.textContent = error.message || '배경을 조정하지 못했습니다.'; }
+  }
+  setCropEnabled(false);
   wallpaperInput.addEventListener('change', async () => {
     const file = wallpaperInput.files?.[0];
     if (!file) return;
     const token = wallpaperJobs.next();
     const previousOriginal = wallpaperOriginal;
+    const previousPercent = readCropPercent();
     wallpaperOriginal = file;
+    cropDrag = null;
+    setCropEnabled(false);
     try {
-      wallpaperCrop.value = '5';
-      const output = await croppedWallpaper(file, Number(wallpaperCrop.value));
+      paintCropChrome(5);
+      const output = await croppedWallpaper(file, readCropPercent());
       if (wallpaperJobs.current(token)) {
         const saved = await wallpaperJobs.enqueue(token, async (current) => {
           await imageRecord('wallpaper:original', 'put', file);
@@ -1083,29 +1133,73 @@ function bind() {
           if (current()) localStorage.setItem(WALLPAPER_CROP_KEY, '5');
         });
         if (saved) {
-          wallpaperCropValue.textContent = '5%';
-          wallpaperCrop.disabled = false;
+          setCropEnabled(true);
           showWallpaper(output);
+          showWallpaperOriginal(file);
           wallpaperNote.textContent = '배경 원본과 잘라낸 사진을 이 기기에 저장했습니다.';
         }
       }
     } catch (error) {
       if (wallpaperJobs.current(token)) {
         wallpaperOriginal = previousOriginal;
+        paintCropChrome(previousPercent);
+        setCropEnabled(Boolean(previousOriginal));
         wallpaperNote.textContent = error.message || '배경 사진을 저장하지 못했습니다.';
       }
     }
     wallpaperInput.value = '';
   });
-  wallpaperCrop.addEventListener('change', async () => {
-    try {
-      if (await updateWallpaperCrop()) wallpaperNote.textContent = '조정한 배경을 저장했습니다.';
-    } catch (error) { wallpaperNote.textContent = error.message || '배경을 조정하지 못했습니다.'; }
+  wallpaperCrop.addEventListener('change', () => { commitWallpaperCrop(); });
+  wallpaperCrop.addEventListener('input', () => { paintCropChrome(wallpaperCrop.value); });
+  const finishCropDrag = (event) => {
+    if (!cropDrag || cropDrag.pointerId !== event.pointerId) return;
+    const startPercent = cropDrag.startPercent;
+    cropDrag = null;
+    if (wallpaperFrame.hasPointerCapture(event.pointerId)) wallpaperFrame.releasePointerCapture(event.pointerId);
+    if (event.type === 'pointercancel') paintCropChrome(startPercent);
+    else if (readCropPercent() !== startPercent) commitWallpaperCrop();
+  };
+  wallpaperFrame.addEventListener('pointerdown', (event) => {
+    if (wallpaperCrop.disabled || cropDrag) return;
+    if (event.pointerType === 'mouse' && event.button !== 0) return;
+    const rect = wallpaperFrame.getBoundingClientRect();
+    if (!(rect.height > 0)) return;
+    const boundaryY = rect.top + rect.height * readCropPercent() / 100;
+    const onHandle = Boolean(event.target.closest('#wallpaper-crop-handle'));
+    const onOverlay = Boolean(event.target.closest('#wallpaper-crop-overlay'));
+    const nearBoundary = Math.abs(event.clientY - boundaryY) <= 28;
+    if (!onHandle && !onOverlay && !nearBoundary) return;
+    cropDrag = { pointerId: event.pointerId, startY: event.clientY, startPercent: readCropPercent() };
+    wallpaperFrame.setPointerCapture(event.pointerId);
+    event.preventDefault();
   });
-  wallpaperCrop.addEventListener('input', () => { wallpaperCropValue.textContent = `${wallpaperCrop.value}%`; });
+  wallpaperFrame.addEventListener('pointermove', (event) => {
+    if (!cropDrag || cropDrag.pointerId !== event.pointerId) return;
+    const height = wallpaperFrame.getBoundingClientRect().height;
+    const next = cropPercentFromDrag(cropDrag.startPercent, cropDrag.startY, event.clientY, height);
+    paintCropChrome(next);
+    event.preventDefault();
+  });
+  wallpaperFrame.addEventListener('pointerup', finishCropDrag);
+  wallpaperFrame.addEventListener('pointercancel', finishCropDrag);
+  wallpaperCropHandle.addEventListener('keydown', (event) => {
+    if (wallpaperCrop.disabled) return;
+    if (!['ArrowUp', 'ArrowDown', 'Home', 'End'].includes(event.key)) return;
+    event.preventDefault();
+    const step = event.shiftKey ? 2 : 0.5;
+    const current = readCropPercent();
+    const next = event.key === 'Home' ? 0
+      : event.key === 'End' ? 18
+        : event.key === 'ArrowDown' ? current + step
+          : current - step;
+    if (cropLabel(next) === cropLabel(current)) return;
+    paintCropChrome(next);
+    commitWallpaperCrop();
+  });
   wallpaperClear.addEventListener('click', async () => {
     const token = wallpaperJobs.next();
     wallpaperOriginal = null;
+    cropDrag = null;
     try {
       const deleted = await wallpaperJobs.enqueue(token, async (current) => {
         await imageRecord('wallpaper', 'delete');
@@ -1116,7 +1210,9 @@ function bind() {
       if (!deleted) return;
       useImageUrl('wallpaper', null);
       wallpaperEl.removeAttribute('src');
-      wallpaperPreview.removeAttribute('src');
+      showWallpaperOriginal(null);
+      paintCropChrome(0);
+      setCropEnabled(false);
       wallpaperControls.hidden = true;
       stageEl.classList.remove('has-wallpaper');
       wallpaperNote.textContent = '기본 배경을 사용합니다.';

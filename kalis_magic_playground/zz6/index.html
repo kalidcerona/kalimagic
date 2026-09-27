@@ -3,15 +3,15 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no">
-  <meta name="color-scheme" content="light">
-  <meta name="theme-color" content="#F3EBDF">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#000000">
   <meta name="description" content="탭한 자리에 평평한 물건을 두는 공연용 화면">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="TOBIRA">
   <title>TOBIRA</title>
-  <link rel="manifest" href="./manifest.webmanifest?v=20260926-tobira-install">
+  <link rel="manifest" href="./manifest.webmanifest?v=20260927-tobira-status">
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" sizes="192x192" href="./icon-192.png?install=tobira-v2">
   <link rel="stylesheet" href="./style.css">
@@ -25,7 +25,7 @@
         document.documentElement.setAttribute('data-boot', 'loading');
         document.title = '동전';
         var theme = document.querySelector('meta[name="theme-color"]');
-        if (theme) theme.setAttribute('content', '#E4DDD3');
+        if (theme) theme.setAttribute('content', '#000000');
         if (sessionStorage.getItem('tobira.session-gone') === '1') {
           document.documentElement.setAttribute('data-boot-gone', '1');
         }
@@ -53,8 +53,12 @@
           <span class="field-label">사진 윗부분 자르기 <strong id="wallpaper-crop-value">0%</strong></span>
           <input id="wallpaper-crop" type="range" min="0" max="18" step="0.5" value="0">
         </label>
-        <p class="hint">사진에 찍힌 예전 시각과 상태 아이콘이 사라질 때까지 조절하세요. 원본은 이 기기에 보관되어 다시 조절할 수 있습니다.</p>
-        <div class="wallpaper-preview"><span>현재 기기 상태 표시줄</span><img id="wallpaper-preview-image" alt="잘라낸 공연 배경 미리보기"></div>
+        <p class="hint">미리보기는 원본입니다. 색이 칠해진 윗부분의 가로 경계를 위아래로 끌거나 슬라이더를 움직이세요. 그 영역만 공연 화면에서 빠지고, 잘린 자리에는 이 기기의 실제 시각과 배터리가 보입니다. 원본은 이 기기에 남아 다시 조절할 수 있습니다.</p>
+        <div id="wallpaper-preview" class="wallpaper-preview">
+          <img id="wallpaper-preview-image" alt="원본 공연 배경 미리보기" draggable="false">
+          <div id="wallpaper-crop-overlay" class="crop-overlay"><span class="crop-label">빼는 윗부분</span></div>
+          <span id="wallpaper-crop-handle" class="crop-handle" role="slider" tabindex="0" aria-orientation="vertical" aria-label="사진 윗부분 자르기 경계" aria-valuemin="0" aria-valuemax="18" aria-valuenow="0" aria-valuetext="0%"></span>
+        </div>
       </div>
       <button type="button" id="wallpaper-clear" class="button button-quiet">기본 배경 사용</button>
 
@@ -155,7 +159,7 @@
         <summary>사용 안내</summary>
         <div class="guide-body">
           <h2>준비</h2>
-          <p>공연 배경으로 사용할 사진을 올립니다. 동전 이미지 자리는 최대 세 개입니다. 각 자리마다 기본 동전 그림을 고르거나 직접 이미지를 올립니다.</p>
+          <p>공연 배경으로 사용할 사진을 올립니다. 미리보기에서 윗부분 경계를 끌어 사진에 찍힌 예전 상태 표시를 빼세요. 동전 이미지 자리는 최대 세 개입니다. 각 자리마다 기본 동전 그림을 고르거나 직접 이미지를 올립니다.</p>
           <p>쓸 자리와 크기, 퇴장 느낌을 정한 뒤 「공연 시작」을 누릅니다.</p>
 
           <h2>정확한 위치에 두기</h2>

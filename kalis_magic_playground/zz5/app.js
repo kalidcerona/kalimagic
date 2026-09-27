@@ -28,6 +28,7 @@ import {
   normalizeCoverage,
   parseMeta,
   parsePhotoSets,
+  remainingCellGuideMs,
   salvageMeta,
   stageBands,
   stampAlpha,
@@ -913,8 +914,8 @@ function onCellGuideChange() {
   }
   cellGuideEnabled = next;
   setStatus(next
-    ? '칸 번호 안내를 켰습니다. 12칸 공연을 시작할 때만 번호가 잠시 나타납니다.'
-    : '칸 번호 안내를 껐습니다. 공연 화면에 번호가 나타나지 않습니다.');
+    ? '칸 이미지 미리보기를 켰습니다. 12칸 공연을 시작할 때만 카드가 잠시 비칩니다.'
+    : '칸 이미지 미리보기를 껐습니다. 공연 화면은 검은 상태로 시작합니다.');
 }
 
 function clearCellGuideTimers() {
@@ -929,10 +930,7 @@ function clearCellGuideTimers() {
 }
 
 function hideCellGuide() {
-  const pending = cellGuideTimer || cellGuideFadeTimer;
-  const visible = Boolean(cellGuide && !cellGuide.hidden);
-  const filled = Boolean(cellGuide && cellGuide.childElementCount > 0);
-  if (!pending && !visible && !filled) return;
+  // Also invalidate a guide still waiting for its deck image promises.
   cellGuideToken += 1;
   clearCellGuideTimers();
   if (!cellGuide) return;
@@ -954,24 +952,38 @@ function alignCellGuide() {
   cellGuide.style.height = `${canvasRect.height}px`;
 }
 
-function fillCellGuideLabels() {
-  if (!cellGuide) return;
+function fillCellGuidePreviews() {
   const fragment = document.createDocumentFragment();
-  for (let number = 1; number <= COURT_CARD_COUNT; number += 1) {
-    const label = document.createElement('span');
-    label.textContent = String(number);
-    fragment.append(label);
-  }
+  const previews = Array.from({ length: COURT_CARD_COUNT }, (_, index) => {
+    const preview = document.createElement('img');
+    preview.alt = '';
+    preview.draggable = false;
+    preview.decoding = 'async';
+    preview.loading = 'eager';
+    preview.dataset.cell = String(index);
+    fragment.append(preview);
+    return preview;
+  });
   cellGuide.replaceChildren(fragment);
+  return previews;
 }
 
-// White 1-12 only, on the same canvas rectangle the 12-cell tap uses.
+// Fill each position as its card becomes ready, without delaying the 800ms guide window.
 function showCellGuide() {
   if (!cellGuide || !cellGuideEnabled || !isCardPerformance()) return;
+  const startedAt = performance.now();
   cellGuideToken += 1;
   const token = cellGuideToken;
   clearCellGuideTimers();
-  fillCellGuideLabels();
+  const session = running;
+  const previews = fillCellGuidePreviews();
+  previews.forEach((preview, index) => {
+    session.deckSlots.get(index).then(({ image }) => {
+      if (token !== cellGuideToken || running !== session || view !== 'performance' || !isCardPerformance()) return;
+      if (remainingCellGuideMs(startedAt, performance.now(), CELL_GUIDE_HOLD_MS) <= 0) return;
+      preview.src = image.currentSrc || image.src;
+    }, () => {});
+  });
   cellGuide.classList.remove('is-fading');
   cellGuide.hidden = false;
   cellGuide.setAttribute('aria-hidden', 'true');
@@ -979,16 +991,21 @@ function showCellGuide() {
   void cellGuide.offsetWidth;
   alignCellGuide();
   cellGuideTimer = window.setTimeout(() => {
-    cellGuideTimer = 0;
-    if (token !== cellGuideToken) return;
-    if (!cellGuide || cellGuide.hidden || view !== 'performance' || !isCardPerformance()) return;
-    cellGuide.classList.add('is-fading');
-    cellGuideFadeTimer = window.setTimeout(() => {
-      cellGuideFadeTimer = 0;
+      cellGuideTimer = 0;
       if (token !== cellGuideToken) return;
-      hideCellGuide();
-    }, CELL_GUIDE_FADE_MS);
-  }, CELL_GUIDE_HOLD_MS);
+      if (!cellGuide || cellGuide.hidden || view !== 'performance' || !isCardPerformance()) return;
+      const fadeMs = remainingCellGuideMs(startedAt, performance.now(), CELL_GUIDE_HOLD_MS);
+      if (fadeMs <= 0) {
+        hideCellGuide();
+        return;
+      }
+      cellGuide.classList.add('is-fading');
+      cellGuideFadeTimer = window.setTimeout(() => {
+        cellGuideFadeTimer = 0;
+        if (token !== cellGuideToken) return;
+        hideCellGuide();
+      }, Math.min(CELL_GUIDE_FADE_MS, fadeMs));
+  }, CELL_GUIDE_HOLD_MS - CELL_GUIDE_FADE_MS);
 }
 
 function maybeShowCellGuide() {

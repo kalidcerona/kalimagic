@@ -337,6 +337,12 @@ export function wallpaperCropRect(width, height, percent) {
   return { x: 0, y: top, width, height: height - top };
 }
 
+export function cropPercentFromDrag(startPercent, startY, currentY, previewHeight) {
+  if (!(previewHeight > 0)) return startPercent;
+  const percent = startPercent + (currentY - startY) / previewHeight * 100;
+  return Math.round(clampNumber(percent, 0, 18) * 2) / 2;
+}
+
 export function createRevisionQueue() {
   let revision = 0;
   let tail = Promise.resolve();

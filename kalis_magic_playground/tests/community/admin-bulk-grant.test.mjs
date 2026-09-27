@@ -36,6 +36,68 @@ async function grant(db, tools, extra = {}) {
   return { status: response.statusCode, body: JSON.parse(response.body), headers: response.headers };
 }
 
+async function grantMembers(db, mode, members) {
+  const response = await postToolAccess({ body: JSON.stringify({ action: 'grantMembers', mode, members }) }, viewer, db);
+  return { status: response.statusCode, body: JSON.parse(response.body) };
+}
+
+test('selected pending accounts grant only their requested apps and report per-account results', async () => {
+  const db = fakeDb({
+    tool_access: [
+      { id: 'a', email: 'a@example.com', tool: 'calc', status: 'pending' },
+      { id: 'b', email: 'b@example.com', tool: 'stopwatch', status: 'pending' }
+    ]
+  });
+  const result = await grantMembers(db, 'pending', [
+    { email: 'a@example.com', tools: ['calc', 'unlock'] },
+    { email: 'b@example.com', tools: ['stopwatch'] }
+  ]);
+  assert.equal(result.status, 200);
+  assert.deepEqual(result.body.results.map((member) => member.results.map((item) => item.outcome)),
+    [['granted', 'failed'], ['granted']]);
+  assert.equal(db.rows.friend_app_access.length, 0);
+  assert.equal(db.rows.tool_access.every((row) => row.status === 'approved'), true);
+});
+
+test('approved account batch cannot create a new account and does not overwrite existing access', async () => {
+  const db = fakeDb({ tool_access: [{ id: 'a', email: 'a@example.com', tool: 'calc', status: 'approved', lifetime: true, note: 'keep' }] });
+  const result = await grantMembers(db, 'approved', [
+    { email: 'a@example.com', tools: ['calc', 'unlock'] },
+    { email: 'missing@example.com', tools: ['unlock'] }
+  ]);
+  assert.deepEqual(result.body.results.map((member) => member.results.map((item) => item.outcome)),
+    [['alreadyGranted', 'granted'], ['failed']]);
+  assert.equal(db.rows.tool_access[0].lifetime, true);
+  assert.equal(db.rows.tool_access[0].note, 'keep');
+  assert.equal(db.rows.friend_app_access.length, 1);
+});
+
+test('member batch rejects duplicate email, invalid app and more than 25 accounts before database access', async () => {
+  const db = fakeDb();
+  const cases = [
+    [{ email: 'a@example.com', tools: ['calc'] }, { email: 'A@example.com', tools: ['unlock'] }],
+    [{ email: 'a@example.com', tools: ['all'] }],
+    Array.from({ length: 26 }, (_, index) => ({ email: `member${index}@example.com`, tools: ['calc'] }))
+  ];
+  for (const members of cases) assert.equal((await grantMembers(db, 'pending', members)).status, 400);
+  assert.equal(db.reads, 0);
+});
+
+test('a pending legacy all request cannot be reduced to one app by either bulk path', async () => {
+  const db = fakeDb({ tool_access: [{ id: 'both', email, tool: 'all', status: 'pending', note: 'request both' }] });
+  const single = await grant(db, ['calc']);
+  assert.deepEqual(single.body.results, [{ tool: 'calc', outcome: 'failed', error: 'partial_legacy_request' }]);
+  const memberBatch = await grantMembers(db, 'pending', [{ email, tools: ['stopwatch'] }]);
+  assert.deepEqual(memberBatch.body.results[0].results, [{ tool: 'stopwatch', outcome: 'failed', error: 'partial_legacy_request' }]);
+  assert.equal(db.writes, 0);
+  assert.equal(db.rows.tool_access[0].tool, 'all');
+  assert.equal(db.rows.tool_access[0].status, 'pending');
+  const both = await grantMembers(db, 'pending', [{ email, tools: ['calc', 'stopwatch'] }]);
+  assert.deepEqual(both.body.results[0].results.map((item) => item.outcome), ['granted', 'granted']);
+  assert.equal(db.rows.tool_access[0].tool, 'all');
+  assert.equal(db.rows.tool_access[0].status, 'approved');
+});
+
 test('bulk grant preserves legacy all, lifetime and note, and is idempotent', async () => {
   const db = fakeDb({ tool_access: [{ id: 'old', email, tool: 'calc', status: 'approved', lifetime: true, note: 'keep' }] });
   const first = await grant(db, ['calc', 'stopwatch', 'unlock'], { lifetime: false });

@@ -6,7 +6,7 @@ test('personal reveal selects configured attempt and formats valid birthday sepa
   const attempts = [[1, 2, 3, 4, 5, 6], [0, 8, 0, 2, 2, 9], [9, 9, 9, 9, 9, 9]];
   assert.equal(typeof logic.selectedAttemptReveal, 'function');
   assert.deepEqual(logic.selectedAttemptReveal(attempts, 2, new Date(2026, 8, 24)), {
-    pin: '080229', days: 6782,
+    pin: '080229', days: 6782, zodiac: '물고기자리', animal: '쥐띠',
   });
 });
 

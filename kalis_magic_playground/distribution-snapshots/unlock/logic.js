@@ -211,12 +211,70 @@ export function daysAlive(birthDate, todayLocal) {
   return Math.floor((today - birthDay) / 86400000);
 }
 
+// Gregorian dates of Korean lunar New Year, 1900-2099 (MMDD). Generated from
+// the ICU Dangi calendar; 1900, 2000, 2022 and 2024 boundaries are checked in tests.
+const LUNAR_NEW_YEAR = [
+  131, 219, 208, 129, 216, 204, 125, 213, 202, 122,
+  210, 130, 218, 206, 126, 214, 204, 123, 211, 201,
+  220, 208, 128, 216, 205, 124, 213, 202, 123, 210,
+  130, 217, 206, 126, 214, 204, 124, 211, 131, 219,
+  208, 127, 215, 205, 126, 213, 202, 122, 210, 129,
+  217, 206, 127, 214, 204, 124, 212, 131, 219, 208,
+  128, 215, 205, 125, 213, 202, 122, 209, 130, 217,
+  206, 127, 215, 203, 123, 211, 131, 218, 207, 128,
+  216, 205, 125, 213, 202, 220, 209, 129, 218, 206,
+  127, 215, 204, 123, 210, 131, 219, 208, 128, 216,
+  205, 124, 212, 201, 122, 209, 129, 218, 207, 126,
+  214, 203, 123, 210, 131, 219, 208, 128, 216, 205,
+  125, 212, 201, 122, 210, 129, 217, 207, 127, 213,
+  203, 123, 211, 131, 219, 208, 128, 215, 204, 124,
+  212, 201, 122, 210, 130, 217, 206, 126, 214, 202,
+  123, 211, 201, 219, 208, 128, 215, 204, 124, 212,
+  202, 122, 209, 129, 217, 205, 126, 214, 203, 123,
+  211, 131, 219, 207, 127, 215, 205, 124, 212, 202,
+  122, 209, 129, 217, 206, 126, 214, 203, 124, 211,
+  130, 218, 208, 127, 215, 205, 125, 212, 201, 121,
+];
+
+export function westernZodiac(birthDate) {
+  if (!(birthDate instanceof Date) || Number.isNaN(birthDate.getTime())) return null;
+  const md = (birthDate.getMonth() + 1) * 100 + birthDate.getDate();
+  if (md >= 1222 || md <= 119) return '염소자리';
+  if (md <= 218) return '물병자리';
+  if (md <= 320) return '물고기자리';
+  if (md <= 419) return '양자리';
+  if (md <= 520) return '황소자리';
+  if (md <= 620) return '쌍둥이자리';
+  if (md <= 722) return '게자리';
+  if (md <= 822) return '사자자리';
+  if (md <= 922) return '처녀자리';
+  if (md <= 1022) return '천칭자리';
+  if (md <= 1121) return '전갈자리';
+  return '사수자리';
+}
+
+export function koreanYearAnimal(birthDate) {
+  if (!(birthDate instanceof Date) || Number.isNaN(birthDate.getTime())) return null;
+  const year = birthDate.getFullYear();
+  const boundary = LUNAR_NEW_YEAR[year - 1900];
+  if (boundary === undefined) return null;
+  const md = (birthDate.getMonth() + 1) * 100 + birthDate.getDate();
+  const lunarYear = md < boundary ? year - 1 : year;
+  const animals = ['쥐띠', '소띠', '호랑이띠', '토끼띠', '용띠', '뱀띠', '말띠', '양띠', '원숭이띠', '닭띠', '개띠', '돼지띠'];
+  return animals[((lunarYear - 2020) % 12 + 12) % 12];
+}
+
+export function birthdateReveal(digits, todayLocal = new Date()) {
+  const birthDate = parseBirthdate(digits, todayLocal);
+  if (!birthDate) return null;
+  return { days: daysAlive(birthDate, todayLocal), zodiac: westernZodiac(birthDate), animal: koreanYearAnimal(birthDate) };
+}
+
 export function formatAttemptLabel(digits, index, todayLocal = new Date()) {
   const pin = Array.isArray(digits) ? digits.join('') : '';
-  if ((index !== 1 && index !== 2) || digits?.length !== 6) return pin;
-  const birthDate = parseBirthdate(digits, todayLocal);
-  if (!birthDate) return pin;
-  return `${pin} · ${daysAlive(birthDate, todayLocal).toLocaleString('en-US')}일`;
+  const reveal = birthdateReveal(digits, todayLocal);
+  if (!reveal) return pin;
+  return `${pin} · ${reveal.days.toLocaleString('ko-KR')}일 · ${reveal.zodiac} · ${reveal.animal}`;
 }
 
 export function selectedAttemptReveal(attempts, attemptNumber, todayLocal = new Date()) {
@@ -224,8 +282,8 @@ export function selectedAttemptReveal(attempts, attemptNumber, todayLocal = new 
   const digits = attempts[attemptNumber - 1];
   if (!Array.isArray(digits) || !digits.length) return null;
   const pin = digits.join('');
-  const birthDate = parseBirthdate(digits, todayLocal);
-  return { pin, days: birthDate ? daysAlive(birthDate, todayLocal) : null };
+  const reveal = birthdateReveal(digits, todayLocal);
+  return reveal ? { pin, ...reveal } : { pin, days: null };
 }
 
 function homeSwipeThreshold(viewportWidth) {

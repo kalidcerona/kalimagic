@@ -184,6 +184,18 @@
     }).map(function (app) { return app.id; });
   }
 
+  function replaceVisibleSelection(previous, members, maxMembers) {
+    var selected = new Set();
+    (members || []).slice(0, maxMembers).forEach(function (member) {
+      if (member && member.email) selected.add(member.email);
+    });
+    return selected;
+  }
+
+  function hasPendingLegacyPair(member) {
+    return Boolean(member && member.rows && member.rows.some(function (row) { return row.tool === 'all'; }));
+  }
+
   function errorMessage(error) {
     var code = error && error.code;
     var status = error && error.status;
@@ -214,6 +226,8 @@
     filterMembers: filterMembers,
     missingTools: missingTools,
     pendingBulkTools: pendingBulkTools,
+    replaceVisibleSelection: replaceVisibleSelection,
+    hasPendingLegacyPair: hasPendingLegacyPair,
     errorMessage: errorMessage
   });
 });

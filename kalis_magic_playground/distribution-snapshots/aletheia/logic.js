@@ -595,3 +595,9 @@ export function mapPointerToCell(x, y, rect) {
   if (col < 0 || row < 0) return null;
   return cellCard(row, col);
 }
+
+// Returns the remaining time in an overlay's lifetime, including delayed async work.
+export function remainingCellGuideMs(startedAt, now, lifetimeMs = 800) {
+  if (![startedAt, now, lifetimeMs].every(Number.isFinite) || lifetimeMs < 0) return 0;
+  return Math.max(0, lifetimeMs - Math.max(0, now - startedAt));
+}
