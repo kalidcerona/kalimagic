@@ -4,8 +4,8 @@ const UPRIGHT_ANGLE_DEGREES = 30;
 const DIRECT_SHAKE_THRESHOLD = 9;
 const GRAVITY_SHAKE_THRESHOLD = 7.5;
 const GRAVITY_SHAKE_MAX_GAP_MS = 200;
-const SNAP_DIRECT_THRESHOLD = 13;
-const SNAP_GRAVITY_THRESHOLD = 13;
+const SNAP_DIRECT_THRESHOLD = 18;
+const SNAP_GRAVITY_THRESHOLD = 17;
 const SNAP_COOLDOWN_MS = 1800;
 
 function finiteVector(value) {
@@ -168,7 +168,8 @@ export function shakeImpulse(motionEvent, previousSample = null) {
     sample: {
       source: 'gravity',
       ...gravity,
-      snap: shock && magnitude >= 9 && Math.abs(gravityMagnitude - 9.81) >= 7,
+      snap: shock && magnitude >= 11 && Math.abs(gravityMagnitude - 9.81) >= 10,
+      reversedSnap: reversed && magnitude >= SNAP_GRAVITY_THRESHOLD,
       pending: detected ? null : magnitude >= GRAVITY_SHAKE_THRESHOLD
         ? { ...delta, timeStamp } : pendingIsRecent ? previousSample.pending : null,
     },
@@ -178,8 +179,10 @@ export function shakeImpulse(motionEvent, previousSample = null) {
 export function isBreakthroughSnap(impulse, now, lastSnapAt = -Infinity) {
   if (!impulse?.detected || !Number.isFinite(now) || now - lastSnapAt < SNAP_COOLDOWN_MS) return false;
   const threshold = impulse.sample?.source === 'direct' ? SNAP_DIRECT_THRESHOLD : SNAP_GRAVITY_THRESHOLD;
-  return impulse.magnitude >= threshold || impulse.sample?.source === 'gravity' &&
-    impulse.sample.snap === true;
+  if (impulse.sample?.source === 'gravity') {
+    return impulse.sample.snap === true || impulse.sample.reversedSnap === true;
+  }
+  return impulse.magnitude >= threshold;
 }
 
 export function fallPosition(startY, floorY, elapsedMs, accelerationPxPerSecondSquared = 1800) {

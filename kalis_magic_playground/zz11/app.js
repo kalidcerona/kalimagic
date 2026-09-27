@@ -120,7 +120,7 @@ function spin(direction, travel, elapsed) {
   showStatus('회전 중…');
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const animation = arrow.animate([{ transform: `rotate(${from}deg)` }, { transform: `rotate(${end}deg)` }], {
-    duration: reduced ? 50 : 600,
+    duration: reduced ? 50 : 1100,
     easing: 'cubic-bezier(.12,.7,.13,1)', fill: 'forwards'
   });
   animation.onfinish = () => {

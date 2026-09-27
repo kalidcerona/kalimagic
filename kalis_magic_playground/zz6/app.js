@@ -410,6 +410,7 @@ let dragExitEdge = null;
 let objectLive = false;
 let moved = false;
 let gestureFired = false;
+let pinch = null;
 let stageRect = null;
 let lastStage = { width: 0, height: 0 };
 let paintedDiameter = 0;
@@ -1144,6 +1145,7 @@ function endPointers() {
   dragClient = null;
   dragBaseline = null;
   gestureFired = false;
+  pinch = null;
   resetSpawnTracking();
 }
 
@@ -1313,12 +1315,50 @@ function rebasePointers() {
   }
 }
 
+function pointerDistance(first, second) {
+  return Math.hypot(first.last.screenX - second.last.screenX,
+    first.last.screenY - second.last.screenY);
+}
+
+function finishPinch() {
+  if (!pinch) return;
+  if (pinch.active) {
+    persist();
+    if (state.mode === 'settings') fillForm();
+  }
+  pinch = null;
+}
+
+function maybePinch() {
+  if (!pinch || gestureFired || pointers.size !== 2 || state.mode !== 'performance') return false;
+  const [first, second] = [...pointers.values()];
+  const distance = pointerDistance(first, second);
+  if (!pinch.active) {
+    const driftX = ((first.last.screenX - first.start.screenX) +
+      (second.last.screenX - second.start.screenX)) / 2;
+    const driftY = ((first.last.screenY - first.start.screenY) +
+      (second.last.screenY - second.start.screenY)) / 2;
+    if (Math.abs(distance - pinch.startDistance) < 18 || Math.hypot(driftX, driftY) > 36) return false;
+    pinch.active = true;
+    cancelSensorEffects();
+  }
+  const size = Math.min(LIMITS.coinSize.max, Math.max(LIMITS.coinSize.min,
+    Math.round(pinch.startSize * distance / pinch.startDistance * 100) / 100));
+  if (size !== selected().coinSize) {
+    replaceSelected({ ...selected(), coinSize: size });
+    paintLiveCoin();
+  }
+  return true;
+}
+
 function maybeClassify() {
+  if (pinch?.active) return;
   if (state.mode !== 'performance' || gestureFired || pointers.size !== 2) return;
   const [first, second] = [...pointers.values()];
   const kind = classifyTwoFingerSwipe(first.start, second.start, first.last, second.last, GESTURE_THRESHOLD);
   if (kind === 'none') return;
   gestureFired = true;
+  pinch = null;
   if (kind === 'settings') showSettings();
   else resetCoin();
 }
@@ -1419,7 +1459,8 @@ function onPointerDown(event) {
   if (!motionEnabled && !motionPermissionDenied && Object.values(motionInputs).some((input) => input.checked)) void enableMotion();
   if (event.pointerType === 'mouse' && event.button !== 0) return;
   const screen = screenPoint(event);
-  pointers.set(event.pointerId, { start: screen, last: screen });
+  pointers.set(event.pointerId, { start: screen, last: screen,
+    onCoin: event.target instanceof Element && Boolean(event.target.closest('#coin')) });
   try {
     stageEl.setPointerCapture(event.pointerId);
   } catch {
@@ -1433,6 +1474,14 @@ function onPointerDown(event) {
       dragId = null;
       dragClient = null;
       dragBaseline = null;
+    }
+    if (pointers.size === 2 && phase === 'idle' && objectLive) {
+      const entries = [...pointers.values()];
+      const distance = pointerDistance(entries[0], entries[1]);
+      const nearCoin = event.target instanceof Element && Boolean(event.target.closest('#coin')) ||
+        entries.some((entry) => entry.onCoin);
+      pinch = nearCoin && distance >= 24 ?
+        { startDistance: distance, startSize: selected().coinSize, active: false } : null;
     }
     if (phase === 'awaiting') spawnCancelled = true;
     return;
@@ -1475,14 +1524,14 @@ function onPointerMove(event) {
       } else if (pointers.size !== 1) spawnCancelled = true;
     }
   }
-  maybeClassify();
+  if (!maybePinch()) maybeClassify();
 }
 
 function onPointerUp(event) {
   const entry = pointers.get(event.pointerId);
   if (entry) entry.last = screenPoint(event);
   if (event.type === 'pointercancel') spawnCancelled = true;
-  maybeClassify();
+  if (!maybePinch()) maybeClassify();
   if (event.type !== 'pointercancel' && phase === 'dragging' && event.pointerId === dragId) applyDragSample(event);
   const wasDrag = event.pointerId === dragId;
   const canSpawn = phase === 'awaiting'
@@ -1494,6 +1543,7 @@ function onPointerUp(event) {
   const releasePoint = canSpawn && spawnTravel(event) > SPAWN_SLOP_PX
     ? pointInStage(event, stageRect) || spawnAtPoint
     : spawnAtPoint;
+  if (pinch && pointers.size === 2) finishPinch();
   pointers.delete(event.pointerId);
   releaseCapture(event.pointerId);
   if (canSpawn) revealSpawn(releasePoint);
@@ -1508,6 +1558,7 @@ function onPointerUp(event) {
   }
   if (pointers.size === 2) rebasePointers();
   if (pointers.size === 0) {
+    pinch = null;
     gestureFired = false;
     resetSpawnTracking();
     startFall();

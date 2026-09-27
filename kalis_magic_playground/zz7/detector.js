@@ -124,7 +124,8 @@ function persistSoundPreference() {
 }
 
 function loadVibrationPreference(raw) {
-  if (["off", "low", "medium", "high"].includes(raw)) vibrationInput.value = raw;
+  if (raw === "low") vibrationInput.value = "medium";
+  else if (["off", "medium", "high", "max"].includes(raw)) vibrationInput.value = raw;
 }
 
 function stopVibration() {
@@ -135,11 +136,10 @@ function stopVibration() {
 
 function startVibration() {
   if (typeof navigator.vibrate !== "function") return;
-  const pulses = { low: [35, 165], medium: [100, 100], high: [180, 20] };
-  const pulse = pulses[vibrationInput.value];
-  if (!pulse) return;
   try {
-    navigator.vibrate(Array.from({ length: 10 }, () => pulse).flat());
+    const pulse = { medium: [100, 100], high: [150, 50] }[vibrationInput.value];
+    if (vibrationInput.value === "max") navigator.vibrate(HOLD_THRESHOLD_MS);
+    else if (pulse) navigator.vibrate(Array.from({ length: 10 }, () => pulse).flat());
   } catch { /* Visual scanning still works without haptics. */ }
 }
 

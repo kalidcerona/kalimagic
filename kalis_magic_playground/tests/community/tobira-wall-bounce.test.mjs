@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { advanceTiltBody, outwardTravel } from '../../zz6/sensor-motion.js';
+import { advanceTiltBody, isBreakthroughSnap, outwardTravel, shakeImpulse } from '../../zz6/sensor-motion.js';
 
 test('Tobira bounces at the selected wall before leaving on its second hit', () => {
   const stage = { width: 300, height: 600 };
@@ -22,4 +22,11 @@ test('Tobira bounces at the selected wall before leaving on its second hit', () 
   assert.equal(step.exit, 'right');
   assert.ok(step.exitSpeed > 0);
   assert.ok(outwardTravel(step.exitSpeed, 100, 550) > outwardTravel(0, 100, 550));
+});
+
+test('Tobira ignores a moderate shake and keeps a deliberate snap', () => {
+  const moderate = shakeImpulse({ acceleration: { x: 15, y: 0, z: 0 } });
+  const strong = shakeImpulse({ acceleration: { x: 19, y: 0, z: 0 } });
+  assert.equal(isBreakthroughSnap(moderate, 1000), false);
+  assert.equal(isBreakthroughSnap(strong, 1000), true);
 });

@@ -18,15 +18,8 @@
   <body>
     <div id="safe-probe" aria-hidden="true"></div>
     <main id="performance-screen" hidden>
-      <div class="stage-header" aria-hidden="true">
-        <span class="stage-monogram">U</span>
-        <span class="stage-brand">거짓말 탐지기 <small>USOTSUKI</small></span>
-        <span class="stage-led"></span>
-      </div>
       <div class="stage-content">
-        <p class="stage-kicker">USOTSUKI / 01</p>
-        <h1 class="detector-title">거짓말 탐지기</h1>
-        <p class="stage-instruction">버튼을 2초간 누르고 유지하세요</p>
+        <p class="stage-instruction">손가락을 2초간 올려두세요</p>
         <div class="detector-dial">
           <span class="dial-tick dial-tick-top" aria-hidden="true"></span>
           <span class="dial-tick dial-tick-bottom" aria-hidden="true"></span>
@@ -38,7 +31,6 @@
           <p id="verdict" role="status" aria-live="assertive"></p>
         </div>
       </div>
-      <div class="stage-footer" aria-hidden="true"><span>USOTSUKI SYSTEMS</span><span>●&nbsp; STANDBY</span></div>
     </main>
     <section id="settings-screen">
       <img id="settings-brand" src="brand-logo.png" alt="" width="168" height="168" />
@@ -57,12 +49,12 @@
         <label class="field" for="vibration-level">검사 중 진동
           <select id="vibration-level" aria-describedby="vibration-help">
             <option value="off">끄기</option>
-            <option value="low">약하게</option>
-            <option value="medium" selected>보통</option>
-            <option value="high">강하게</option>
+            <option value="medium" selected>보통 · 약 50%</option>
+            <option value="high">강하게 · 약 75%</option>
+            <option value="max">아주 강하게 · 최대</option>
           </select>
         </label>
-        <p id="vibration-help" class="field-help">진동 간격으로 체감을 조절합니다. 기기에 따라 진동이 지원되지 않을 수 있습니다.</p>
+        <p id="vibration-help" class="field-help">진동 시간 비율로 체감을 조절합니다. 모터 세기를 직접 설정할 수 없어 기기마다 다르게 느껴지거나 진동이 없을 수 있습니다.</p>
         <div class="row-actions">
           <button id="reset-attempts" type="button">시도 초기화</button>
           <button id="start-performance" type="button">공연 시작</button>

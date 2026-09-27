@@ -43,6 +43,9 @@
       <p class="lede">배경 화면과 물건 이미지를 준비합니다. 화면을 탭하거나 쓸면 선택한 물건이 나타납니다.</p>
       <div id="recovery" class="recovery" hidden></div>
 
+      <details class="settings-toggle">
+        <summary>공연 배경 화면</summary>
+        <div class="toggle-body">
       <label class="field">
         <span class="field-label">공연 배경 화면 업로드</span>
         <input id="wallpaper-upload" type="file" accept="image/png,image/jpeg,image/webp">
@@ -60,8 +63,10 @@
           <span id="wallpaper-crop-handle" class="crop-handle" role="slider" tabindex="0" aria-orientation="vertical" aria-label="사진 윗부분 자르기 경계" aria-valuemin="0" aria-valuemax="18" aria-valuenow="0" aria-valuetext="0%"></span>
         </div>
       </div>
-      <button type="button" id="wallpaper-clear" class="button button-quiet">기본 배경 사용</button>
+      <button type="button" id="wallpaper-clear" class="button button-danger">기본 배경 사용</button>
 
+        </div>
+      </details>
       <details class="settings-toggle">
         <summary>기기 움직임 연출</summary>
         <div class="toggle-body">
@@ -194,7 +199,7 @@
           <p>손가락이 물건을 화면 밖까지 끌어내면 바로 사라집니다. 가장자리에서 손가락을 떼면 마지막으로 민 속도로 화면 밖까지 이동합니다.</p>
 
           <h2>설정으로 들어가기</h2>
-          <p>공연 화면에는 설정 버튼이 없습니다. 두 손가락이 모두 닿은 뒤, 두 손가락을 함께 아래로 96픽셀 이상 움직이면 설정이 열립니다. 픽셀은 화면 좌표의 CSS 픽셀입니다.</p>
+          <p>공연 화면에는 설정 버튼이 없습니다. 두 손가락이 모두 닿은 뒤, 두 손가락을 함께 아래로 96픽셀 이상 움직이면 설정이 열립니다. 물건을 두 손가락으로 벌리거나 오므리면 크기가 바뀌고 저장됩니다. 픽셀은 화면 좌표의 CSS 픽셀입니다.</p>
 
           <h2>다시 준비</h2>
           <p>두 손가락이 모두 닿은 뒤, 두 손가락을 함께 위로 96픽셀 이상 움직이면 물건을 치우고 다시 탭할 수 있게 준비합니다. 아래로 내리는 설정 동작과는 다릅니다.</p>
