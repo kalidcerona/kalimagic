@@ -2,7 +2,7 @@
 
 const CACHE_PREFIX = 'tobira-shell-';
 const LEGACY_CACHE_PREFIX = 'stopwatch-uni-' + encodeURIComponent(self.registration.scope) + '-';
-const CACHE_NAME = CACHE_PREFIX + 'v22';
+const CACHE_NAME = CACHE_PREFIX + 'v23';
 const SHELL_NAMES = new Set([
   '',
   'index.html',

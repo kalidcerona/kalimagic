@@ -6,21 +6,21 @@
   'use strict';
 
   var APP_CATALOG = Object.freeze([
-    Object.freeze({ id: 'calc', name: 'HITSUZEN', path: '/tools/calc/', legacy: true }),
-    Object.freeze({ id: 'stopwatch', name: 'KAIROS', path: '/tools/stopwatch/', legacy: true }),
-    Object.freeze({ id: 'unlock', name: '레리즈', path: '/tools/unlock/', legacy: false }),
-    Object.freeze({ id: 'stopwatch-uni', name: 'KAIROS', path: '/tools/stopwatch-uni/', legacy: false }),
-    Object.freeze({ id: 'aletheia', name: 'ALETHEIA', path: '/tools/aletheia/', legacy: false }),
-    Object.freeze({ id: 'usotsuki', name: 'USOTSUKI', path: '/tools/usotsuki/', legacy: false })
+    Object.freeze({ id: 'calc', name: '히츠젠(HITSUZEN)', path: '/tools/calc/', legacy: true }),
+    Object.freeze({ id: 'stopwatch', name: '카이로스(KAIROS)', path: '/tools/stopwatch/', legacy: true }),
+    Object.freeze({ id: 'unlock', name: '레리즈(RELEASE)', path: '/tools/unlock/', legacy: false }),
+    Object.freeze({ id: 'stopwatch-uni', name: '카이로스(KAIROS)', path: '/tools/stopwatch-uni/', legacy: false }),
+    Object.freeze({ id: 'aletheia', name: '알레테이아(ALETHEIA)', path: '/tools/aletheia/', legacy: false }),
+    Object.freeze({ id: 'usotsuki', name: '우소츠키(USOTSUKI)', path: '/tools/usotsuki/', legacy: false })
   ]);
   var TOOL_LABELS = Object.freeze({
-    calc: 'HITSUZEN',
-    stopwatch: 'KAIROS',
-    unlock: '레리즈',
-    'stopwatch-uni': 'KAIROS',
-    aletheia: 'ALETHEIA',
-    usotsuki: 'USOTSUKI',
-    all: 'HITSUZEN + KAIROS'
+    calc: '히츠젠(HITSUZEN)',
+    stopwatch: '카이로스(KAIROS)',
+    unlock: '레리즈(RELEASE)',
+    'stopwatch-uni': '카이로스(KAIROS)',
+    aletheia: '알레테이아(ALETHEIA)',
+    usotsuki: '우소츠키(USOTSUKI)',
+    all: '히츠젠(HITSUZEN) + 카이로스(KAIROS)'
   });
   var LEGACY_TOOLS = Object.freeze(['calc', 'stopwatch']);
 
@@ -81,8 +81,8 @@
   function availabilityMessage(availability) {
     var state = normalizeAvailability(availability);
     var unavailable = [];
-    if (!state.legacy) unavailable.push('HITSUZEN·KAIROS');
-    if (!state.friendApps) unavailable.push('레리즈·KAIROS·ALETHEIA·USOTSUKI');
+    if (!state.legacy) unavailable.push('히츠젠(HITSUZEN)·카이로스(KAIROS)');
+    if (!state.friendApps) unavailable.push('레리즈(RELEASE)·카이로스(KAIROS)·알레테이아(ALETHEIA)·우소츠키(USOTSUKI)');
     if (!unavailable.length) return '';
     return unavailable.join(' 및 ') + ' 권한 서비스를 사용할 수 없습니다. 조회 가능한 앱의 권한만 표시됩니다.';
   }

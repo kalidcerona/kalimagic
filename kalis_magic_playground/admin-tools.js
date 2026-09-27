@@ -86,8 +86,8 @@
   }
 
   function adminToolLabel(tool) {
-    if (tool === 'stopwatch') return 'KAIROS · 스톱워치';
-    if (tool === 'stopwatch-uni') return 'KAIROS · 통합 루틴 타이머';
+    if (tool === 'stopwatch') return '카이로스(KAIROS) · 스톱워치';
+    if (tool === 'stopwatch-uni') return '카이로스(KAIROS) · 통합 루틴 타이머';
     return model.toolLabel(tool);
   }
 
@@ -322,7 +322,7 @@
         }).join('; ');
         var needsPair = failed.some(function (member) { return member.results.some(function (item) { return item.error === 'partial_legacy_request'; }); });
         setStatus(notice, completed + '건 처리, ' + failures + '건 실패: ' + details + '. ' +
-          (needsPair ? 'HITSUZEN+KAIROS 일괄 신청은 두 앱을 함께 선택해야 합니다. ' : '') + '목록을 확인해 주세요.', true);
+          (needsPair ? '히츠젠(HITSUZEN)+카이로스(KAIROS) 일괄 신청은 두 앱을 함께 선택해야 합니다. ' : '') + '목록을 확인해 주세요.', true);
         var retryable = failed.map(function (member) {
           return { email: member.email, tools: member.results.filter(function (item) { return item.error !== 'not_eligible' && item.error !== 'partial_legacy_request'; }).map(function (item) { return item.tool; }) };
         }).filter(function (member) { return member.tools.length; });
@@ -406,7 +406,7 @@
       var notice = root.querySelector('[data-refresh-error]');
       if (failed.length) {
         setStatus(notice, (tools.length - failed.length) + '개 처리 완료, ' + failed.length + '개 실패. ' +
-          (partialLegacy ? '기존 HITSUZEN+KAIROS 신청은 두 앱을 함께 선택해야 합니다.' : '실패한 앱만 다시 시도할 수 있습니다.'), true);
+          (partialLegacy ? '기존 히츠젠(HITSUZEN)+카이로스(KAIROS) 신청은 두 앱을 함께 선택해야 합니다.' : '실패한 앱만 다시 시도할 수 있습니다.'), true);
         if (!partialLegacy) {
           var retry = button('실패한 앱 재시도', 'admin-button admin-button--quiet', function () {
             grantBulk(email, failed, lifetime, note, notice, retry);
@@ -510,7 +510,7 @@
       tool.disabled = true;
       approve.disabled = true;
       reject.disabled = true;
-      setStatus(status, item.tool ? '이 앱의 권한 서비스가 중단되어 승인과 삭제를 잠시 사용할 수 없습니다.' : 'HITSUZEN·KAIROS 권한 서비스가 중단되어 이 기존 요청을 처리할 수 없습니다.', true);
+      setStatus(status, item.tool ? '이 앱의 권한 서비스가 중단되어 승인과 삭제를 잠시 사용할 수 없습니다.' : '히츠젠(HITSUZEN)·카이로스(KAIROS) 권한 서비스가 중단되어 이 기존 요청을 처리할 수 없습니다.', true);
     }
     tool.addEventListener('change', function () {
       var canAct = model.isPendingActionAvailable(item, tool.value, availability);
@@ -624,7 +624,7 @@
         });
       });
       bulkForm.appendChild(checks);
-      if (model.hasPendingLegacyPair(member)) bulkForm.appendChild(el('span', 'admin-batch-toolbar__hint', 'HITSUZEN+KAIROS 일괄 신청은 두 앱을 함께 승인합니다.'));
+      if (model.hasPendingLegacyPair(member)) bulkForm.appendChild(el('span', 'admin-batch-toolbar__hint', '히츠젠(HITSUZEN)+카이로스(KAIROS) 일괄 신청은 두 앱을 함께 승인합니다.'));
       var lifetime = makeLifetime();
       bulkForm.appendChild(lifetime.label);
       var note = textInput('text', 'bulkNote', '일괄 승인 메모 (선택)', false);

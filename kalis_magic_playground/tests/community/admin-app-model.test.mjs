@@ -32,7 +32,7 @@ test('catalog exposes all six distribution apps', () => {
 });
 
 test('new friend app cards expose separate links, copy controls and counters', () => {
-  for (const [id, name] of [['aletheia', 'ALETHEIA'], ['usotsuki', 'USOTSUKI']]) {
+  for (const [id, name] of [['aletheia', '알레테이아\\(ALETHEIA\\)'], ['usotsuki', '우소츠키\\(USOTSUKI\\)']]) {
     const card = adminHtml.match(new RegExp('<article class="admin-app-card" data-app-card="' + id + '">([\\s\\S]*?)</article>'))?.[1];
     assert.ok(card, name + ' card exists');
     assert.match(card, new RegExp('<h3>' + name + '</h3>'));
@@ -43,12 +43,12 @@ test('new friend app cards expose separate links, copy controls and counters', (
 });
 
 test('legacy all access is labelled as calculator and stopwatch only', () => {
-  assert.equal(model.toolLabel('all'), 'HITSUZEN + KAIROS');
-  assert.equal(model.toolLabel('stopwatch'), 'KAIROS');
-  assert.equal(model.toolLabel('stopwatch-uni'), 'KAIROS');
-  assert.equal(model.toolLabel('unlock'), '레리즈');
-  assert.equal(model.toolLabel('aletheia'), 'ALETHEIA');
-  assert.equal(model.toolLabel('usotsuki'), 'USOTSUKI');
+  assert.equal(model.toolLabel('all'), '히츠젠(HITSUZEN) + 카이로스(KAIROS)');
+  assert.equal(model.toolLabel('stopwatch'), '카이로스(KAIROS)');
+  assert.equal(model.toolLabel('stopwatch-uni'), '카이로스(KAIROS)');
+  assert.equal(model.toolLabel('unlock'), '레리즈(RELEASE)');
+  assert.equal(model.toolLabel('aletheia'), '알레테이아(ALETHEIA)');
+  assert.equal(model.toolLabel('usotsuki'), '우소츠키(USOTSUKI)');
   assert.deepEqual(Array.from(model.toolsForFilter('all')), ['calc', 'stopwatch']);
   assert.equal(model.toolsForFilter('all').includes('unlock'), false);
   assert.equal(model.toolsForFilter('all').includes('aletheia'), false);
@@ -77,7 +77,7 @@ test('friend app availability is unknown when its service is down', () => {
   assert.equal(model.isToolAvailable('stopwatch-uni', availability), false);
   assert.equal(model.isToolAvailable('aletheia', availability), false);
   assert.equal(model.isToolAvailable('usotsuki', availability), false);
-  assert.equal(model.availabilityMessage(availability), '레리즈·KAIROS·ALETHEIA·USOTSUKI 권한 서비스를 사용할 수 없습니다. 조회 가능한 앱의 권한만 표시됩니다.');
+  assert.equal(model.availabilityMessage(availability), '레리즈(RELEASE)·카이로스(KAIROS)·알레테이아(ALETHEIA)·우소츠키(USOTSUKI) 권한 서비스를 사용할 수 없습니다. 조회 가능한 앱의 권한만 표시됩니다.');
 });
 
 test('friend app outage warnings override legacy response defaults', () => {

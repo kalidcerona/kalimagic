@@ -839,7 +839,7 @@ function createCourtDeckSlots() {
   return createDeckSlots(loaders, ({ image, url }) => {
     if (url) revokeUrl(url);
     if (image) image.src = '';
-  });
+  }, { eager: false });
 }
 
 let warmedCourtSlots = null;
@@ -1946,7 +1946,7 @@ function createCustomDeckSlots(setIndex) {
   return createDeckSlots(loaders, ({ image, url }) => {
     if (url) revokeUrl(url);
     if (image) image.src = '';
-  });
+  }, { eager: false });
 }
 
 function beginCardSurface(deckSlots) {

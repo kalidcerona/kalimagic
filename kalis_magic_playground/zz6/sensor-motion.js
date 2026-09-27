@@ -54,9 +54,11 @@ export function advanceTiltBody(body, tilt, stage, radius, elapsedMs, exitEdges 
   ];
   let exit = null;
   let exitSpeed = 0;
+  const impacts = [];
   for (const [edge, axis, boundary, sign] of walls) {
     if ((next[axis] - boundary) * sign <= 0 || next[axis === 'x' ? 'vx' : 'vy'] * sign <= 0) continue;
     const impactSpeed = next[axis === 'x' ? 'vx' : 'vy'] * sign;
+    impacts.push({ edge, speed: impactSpeed });
     next[axis] = boundary;
     next[axis === 'x' ? 'vx' : 'vy'] *= -0.55;
     next.collisions = (next.collisions || 0) + 1;
@@ -68,7 +70,7 @@ export function advanceTiltBody(body, tilt, stage, radius, elapsedMs, exitEdges 
       exitSpeed = impactSpeed;
     }
   }
-  return { body: next, exit, exitSpeed };
+  return { body: next, exit, exitSpeed, impacts };
 }
 
 export function outwardTravel(initialSpeed, elapsedMs, accelerationPxPerSecondSquared = 2600) {

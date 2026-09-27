@@ -485,3 +485,170 @@ select {
 @media (prefers-reduced-motion: reduce) {
   .gesture-guide-motion span { animation: none; transform: translateY(25px); opacity: 1; }
 }
+
+/* The performance screen uses the same clear, familiar visual language as a
+   consumer utility app. Keep the dramatic color change limited to the result. */
+#performance-screen {
+  padding: calc(28px + var(--safe-top)) calc(22px + var(--safe-right))
+    calc(28px + var(--safe-bottom)) calc(22px + var(--safe-left));
+  background: #f4f6f4;
+  color: #202923;
+}
+
+.stage-content {
+  width: min(100%, 440px);
+  gap: 0;
+}
+
+#performance-title {
+  margin: 0 0 8px;
+  color: #202923;
+  font-size: clamp(1.35rem, 5vw, 1.7rem);
+  font-weight: 750;
+  letter-spacing: -0.04em;
+}
+
+.stage-instruction {
+  margin: 0 0 30px;
+  color: #68736c;
+  font-size: .95rem;
+  letter-spacing: 0;
+}
+
+.detector-dial {
+  width: min(64vw, 34vh, 280px);
+  min-width: min(150px, 40vw, 30vh);
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.detector-dial::before,
+.dial-tick { display: none; }
+
+#detector-button {
+  width: 76%;
+  border: 0;
+  background: #23834d;
+  color: #fff;
+  font-family: inherit;
+  font-size: clamp(.9rem, 3.5vw, 1rem);
+  font-weight: 700;
+  letter-spacing: 0;
+  box-shadow: 0 8px 20px rgba(25, 81, 49, .18);
+  transition: transform .15s ease, background-color .2s ease, box-shadow .2s ease;
+}
+
+#detector-button:active { transform: scale(.97); }
+.button-icon { font-size: clamp(2.2rem, 8vw, 3rem); }
+
+.result-panel {
+  width: min(100%, 360px);
+  min-height: 86px;
+  margin-top: 28px;
+  padding: 14px 18px;
+  gap: 4px;
+  border: 1px solid #e0e6e1;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 3px 12px rgba(29, 49, 36, .04);
+}
+
+.result-label {
+  color: #78827b;
+  font-family: inherit;
+  font-size: .75rem;
+  letter-spacing: 0;
+}
+
+#test-indicator, #verdict { color: #26332b; }
+#verdict { letter-spacing: .04em; }
+
+#performance-screen.is-testing,
+body.is-testing #performance-screen {
+  animation: none;
+  background: #eef5ef;
+}
+
+.is-testing #detector-button,
+#detector-button.is-testing,
+body.is-testing #detector-button {
+  animation: button-pulse .7s ease-in-out infinite;
+}
+
+#performance-screen.is-lie,
+.is-lie #performance-screen {
+  background: #fbf1f1;
+  color: #312526;
+}
+
+#performance-screen.is-lie #performance-title,
+#performance-screen.is-true #performance-title { color: inherit; }
+#performance-screen.is-lie .stage-instruction,
+#performance-screen.is-true .stage-instruction { color: #68736c; }
+
+#performance-screen.is-lie .detector-dial,
+#performance-screen.is-true .detector-dial {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+#performance-screen.is-lie #detector-button,
+#detector-button.is-lie,
+.is-lie #detector-button {
+  background: #c94a4a;
+  box-shadow: 0 8px 20px rgba(128, 39, 39, .18);
+}
+
+#performance-screen.is-lie .result-panel { border-color: #f0dddd; }
+#performance-screen.is-lie #verdict,
+#verdict.is-lie { color: #b52f36; }
+
+#performance-screen.is-true,
+.is-true #performance-screen {
+  background: #eef6f0;
+  color: #202923;
+}
+
+#performance-screen.is-true #detector-button,
+#detector-button.is-true,
+.is-true #detector-button {
+  background: #23834d;
+  box-shadow: 0 8px 20px rgba(25, 81, 49, .18);
+}
+
+#performance-screen.is-true .result-panel { border-color: #d8e9dc; }
+#performance-screen.is-true #verdict,
+#verdict.is-true { color: #1c7842; }
+
+#performance-screen.is-cancelled,
+.is-cancelled #performance-screen {
+  background: #f4f6f4;
+  color: #202923;
+}
+
+#performance-screen.is-cancelled #detector-button,
+#detector-button.is-cancelled,
+.is-cancelled #detector-button {
+  background: #23834d;
+}
+
+@media (max-height: 520px) {
+  #performance-screen { padding-block: calc(18px + var(--safe-top)) calc(16px + var(--safe-bottom)); }
+  #performance-title { margin-bottom: 4px; font-size: 1.2rem; }
+  .stage-instruction { margin-bottom: 8px; }
+  .detector-dial { width: min(32vh, 42vw, 190px); }
+  .result-panel { min-height: 58px; margin-top: 10px; }
+}
+
+@media (min-height: 521px) and (max-height: 620px) {
+  #performance-screen { padding-block: calc(22px + var(--safe-top)) calc(18px + var(--safe-bottom)); }
+  .stage-instruction { margin-bottom: 12px; }
+  .detector-dial { width: min(32vh, 42vw, 210px); }
+  .result-panel { min-height: 68px; margin-top: 14px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #detector-button { transition: none; }
+}

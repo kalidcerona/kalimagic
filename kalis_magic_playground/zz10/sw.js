@@ -1,4 +1,4 @@
-const CACHE_NAME = "alter-v9";
+const CACHE_NAME = "alter-v10";
 const APP_FILES = [
   "./index.html", "./style.css", "./app.js", "./logic.js", "./vision.js",
   "./performance.js", "./camera-geometry.js", "./brand-logo.png", "./icon-192.png", "./icon-512.png",
@@ -21,7 +21,8 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
-  if (event.request.method !== "GET" || new URL(event.request.url).origin !== self.location.origin) return;
+  const requestUrl = new URL(event.request.url);
+  if (event.request.method !== "GET" || !requestUrl.href.startsWith(self.registration.scope)) return;
   event.respondWith(fetch(event.request).then((response) => {
     if (response.ok) {
       const copy = response.clone();

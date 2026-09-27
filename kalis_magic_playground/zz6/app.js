@@ -167,7 +167,7 @@ function saveMotionEffects() {
   };
   try { localStorage.setItem(MOTION_SETTINGS_KEY, JSON.stringify(motionEffects)); }
   catch { motionNote.textContent = '센서 설정을 저장하지 못했습니다. 이번 실행에서는 계속 사용할 수 있습니다.'; }
-  if (motionEffects.breakthrough) unlockBreakSound();
+  unlockBreakSound();
   if (!motionEffects.tilt && tiltFrame) {
     window.cancelAnimationFrame(tiltFrame);
     tiltFrame = 0;
@@ -433,6 +433,7 @@ let shakeSample = null;
 let lastShakeAt = -Infinity;
 let lastSnapAt = -Infinity;
 let audioContext = null;
+let breakthroughLatched = false;
 let fallFrame = 0;
 let fallToken = 0;
 let wobbleFrame = 0;
@@ -491,11 +492,12 @@ function setGoneSession(gone) {
 }
 
 function readCrackSession() {
-  try { return sessionStorage.getItem(SESSION_CRACK) === '1'; }
-  catch { return false; }
+  try { return breakthroughLatched || sessionStorage.getItem(SESSION_CRACK) === '1'; }
+  catch { return breakthroughLatched; }
 }
 
 function setCrackSession(cracked) {
+  breakthroughLatched = cracked;
   try {
     if (cracked) sessionStorage.setItem(SESSION_CRACK, '1');
     else sessionStorage.removeItem(SESSION_CRACK);
@@ -871,20 +873,37 @@ function playBreakSound() {
   } catch { /* Keep the visual effect if audio output fails. */ }
 }
 
+function playWallSound(speed) {
+  if (!audioContext || audioContext.state !== 'running') return;
+  try {
+    const now = audioContext.currentTime;
+    const level = Math.min(0.22, Math.max(0.045, speed / 3600));
+    const tap = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+    tap.type = 'triangle';
+    tap.frequency.setValueAtTime(230, now);
+    tap.frequency.exponentialRampToValueAtTime(85, now + 0.075);
+    gain.gain.setValueAtTime(level, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+    tap.connect(gain).connect(audioContext.destination);
+    tap.start(now);
+    tap.stop(now + 0.09);
+  } catch { /* The collision remains visual when audio is unavailable. */ }
+}
+
 function clearBreakthrough() {
   stageEl.classList.remove('is-breaking');
   setCrackSession(false);
 }
 
 function breakthroughSpawn() {
-  if (!motionEffects.breakthrough || state.mode !== 'performance' || !gestureGuide.hidden || pointers.size !== 0 ||
+  if (readCrackSession() || !motionEffects.breakthrough || state.mode !== 'performance' || !gestureGuide.hidden || pointers.size !== 0 ||
     !['idle', 'awaiting', 'gone'].includes(phase)) return false;
   cancelSensorEffects();
-  clearBreakthrough();
   phase = 'gone';
   concealCoin();
   setGoneSession(true);
-  // Restart the crack animation while the object remains concealed.
+  // Force the first crack animation to start from its initial frame.
   void stageEl.offsetWidth;
   stageEl.classList.add('is-breaking');
   setCrackSession(true);
@@ -934,6 +953,7 @@ function startTiltTracking() {
     const exitEdges = motionEffects.exit ? motionEffects.edges : [];
     const result = advanceTiltBody(tiltBody, tiltVector, stage, radius, elapsed, exitEdges);
     tiltBody = result.body;
+    for (const impact of result.impacts) playWallSound(impact.speed);
     center = { x: tiltBody.x, y: tiltBody.y };
     paintLiveCoin();
     if (result.exit) {
@@ -1190,7 +1210,6 @@ function revealSpawn(point, { sensorFall = true } = {}) {
 }
 
 function placeAtRest() {
-  clearBreakthrough();
   cancelSensorEffects();
   const stage = measureStage();
   lastStage = stage;
@@ -1206,7 +1225,6 @@ function placeAtRest() {
 }
 
 function showSettings() {
-  clearBreakthrough();
   hideGestureGuide();
   cancelExit();
   cancelSensorEffects();
@@ -1223,6 +1241,7 @@ function showSettings() {
 
 function showPerformance({ persistMode = true, keepGone = false } = {}) {
   const keepCrack = keepGone && readCrackSession();
+  if (!keepGone) clearBreakthrough();
   cancelExit();
   endPointers();
   state.mode = 'performance';
@@ -1365,6 +1384,7 @@ function maybeClassify() {
 
 function resetCoin() {
   cancelExit();
+  clearBreakthrough();
   setGoneSession(false);
   document.documentElement.removeAttribute('data-boot-gone');
   placeAtRest();
@@ -1456,6 +1476,7 @@ function startDrag(event) {
 function onPointerDown(event) {
   if (state.mode !== 'performance' || !gestureGuide.hidden) return;
   if (event.target === motionActivation) return;
+  unlockBreakSound();
   if (!motionEnabled && !motionPermissionDenied && Object.values(motionInputs).some((input) => input.checked)) void enableMotion();
   if (event.pointerType === 'mouse' && event.button !== 0) return;
   const screen = screenPoint(event);

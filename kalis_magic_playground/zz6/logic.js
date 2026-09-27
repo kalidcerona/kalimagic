@@ -5,11 +5,11 @@ export const RECOVERY_KEY = 'tobira.v1.recovery';
 export const GESTURE_THRESHOLD = 96;
 export const EXIT_EPSILON_PX = 0.5;
 export const REST_INSET_PX = 1;
-export const COIN_DIAMETER_CAP_PX = 260;
+export const COIN_DIAMETER_CAP_PX = 340;
 export const EDGES = Object.freeze(['left', 'right', 'top', 'bottom']);
 
 export const LIMITS = Object.freeze({
-  coinSize: Object.freeze({ min: 0.18, max: 0.56 }),
+  coinSize: Object.freeze({ min: 0.18, max: 0.92 }),
   position: Object.freeze({ min: 0, max: 1 }),
   fadeDistance: Object.freeze({ min: 0.05, max: 0.75 }),
   disappearDuration: Object.freeze({ min: 200, max: 4000 }),

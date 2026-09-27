@@ -136,11 +136,11 @@ test('admin distribution catalog lists one integrated stopwatch while keeping it
   assert.match(admin, /data-copy-link="\/tools\/stopwatch-uni\/"/);
   assert.match(admin, /data-copy-link="\/tools\/aletheia\/"/);
   assert.match(admin, /data-copy-link="\/tools\/usotsuki\/"/);
-  assert.match(admin, /<h3>KAIROS<\/h3>/);
-  assert.match(admin, /<h3>HITSUZEN<\/h3>/);
-  assert.match(admin, /<h3>레리즈<\/h3>/);
-  assert.match(admin, /<h3>ALETHEIA<\/h3>/);
-  assert.match(admin, /<h3>USOTSUKI<\/h3>/);
+  assert.match(admin, /<h3>카이로스\(KAIROS\)<\/h3>/);
+  assert.match(admin, /<h3>히츠젠\(HITSUZEN\)<\/h3>/);
+  assert.match(admin, /<h3>레리즈\(RELEASE\)<\/h3>/);
+  assert.match(admin, /<h3>알레테이아\(ALETHEIA\)<\/h3>/);
+  assert.match(admin, /<h3>우소츠키\(USOTSUKI\)<\/h3>/);
   assert.doesNotMatch(admin, /data-app-card="stopwatch"/);
   assert.doesNotMatch(admin, /data-copy-link="\/tools\/stopwatch\/"/);
 });
