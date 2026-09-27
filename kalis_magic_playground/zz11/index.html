@@ -17,13 +17,6 @@
 <body>
   <main class="stage">
     <div class="wheel-area">
-      <aside class="table-side table-side-left" aria-label="조작 안내">
-        <span class="side-eyebrow">HOW TO PLAY</span>
-        <h2>간단한 조작</h2>
-        <div class="side-instruction"><span>01</span><p>화살표를 탭해 회전 시작</p></div>
-        <div class="side-instruction"><span>02</span><p>원 가장자리를 드래그해 회전</p></div>
-        <div class="side-instruction"><span>↻</span><p>멈춘 뒤 다시 탭해 다음 회전</p></div>
-      </aside>
       <div class="wheel-wrap" id="wheel-wrap">
         <div class="wheel" aria-hidden="true"></div>
         <svg class="spinner-arrow" id="spinner-arrow" viewBox="0 0 100 100" role="img" aria-label="중심에서 바깥쪽을 가리키는 화살표">
@@ -33,34 +26,25 @@
         </svg>
         <div class="wheel-pin" aria-hidden="true"><span>✦</span></div>
       </div>
-      <aside class="table-side table-side-right" aria-label="진행 안내">
-        <span class="side-eyebrow">SPIN STATUS</span>
-        <h2>회전 진행</h2>
-        <p>회전은 약 1.1초 동안 이어집니다.</p>
-        <p class="side-footnote">화살표가 멈추면 다음 회전을 시작할 수 있어요.</p>
-      </aside>
     </div>
-    <section class="stage-bottom" aria-label="회전판 이용 안내">
-      <div class="play-card">
-        <div class="play-card-heading"><span class="table-light" aria-hidden="true"></span><span>회전 방법</span></div>
-        <div class="play-steps">
-          <div class="play-step"><span class="step-number">01</span><span>화살표를 탭해 회전</span></div>
-          <div class="play-step"><span class="step-number">02</span><span>원을 따라 드래그해 회전</span></div>
-          <div class="play-step"><span class="step-number">03</span><span>멈춘 뒤 다시 탭해 다음 회전</span></div>
-        </div>
-      </div>
+    <section class="stage-bottom" aria-label="회전 상태">
+      <span class="status-jewel" aria-hidden="true"></span>
+      <span class="status-brand" aria-hidden="true">ROULETTE</span>
       <p id="spin-status" class="spin-status" aria-live="polite"></p>
     </section>
   </main>
 
-  <section id="guide" class="overlay guide" role="dialog" aria-modal="true" aria-label="설정 안내" hidden>
+  <section id="guide" class="overlay guide" role="dialog" aria-modal="true" aria-label="회전판 시작 안내" hidden>
     <div class="panel guide-panel">
-      <span class="eyebrow">처음 시작하기</span>
-      <h1>설정 열기</h1>
-      <div class="gesture-animation" aria-hidden="true"><i></i><i></i><span>↓</span></div>
-      <p>공연 전 목표 물건이 놓인 방향을 한 번 터치하세요. 이어서 화살표를 탭하거나 돌리면 회전합니다.</p>
-      <p>화면을 <strong>두 손가락으로 아래로 쓸어내리면</strong> 공연 설정이 열립니다.</p>
-      <button id="guide-close" class="primary" type="button">알겠어요</button>
+      <span class="eyebrow">ROULETTE</span>
+      <div class="guide-emblem" aria-hidden="true">✦</div>
+      <h1>회전판</h1>
+      <p class="guide-tagline">운을 맡기고, 흐름을 지켜보세요.</p>
+      <div class="guide-help">
+        <p><span aria-hidden="true">✦</span><span>공연 전 목표 방향을 한 번 지정하세요.</span></p>
+        <p><span aria-hidden="true">⌄</span><span>두 손가락을 아래로 쓸어 설정을 여세요.</span></p>
+      </div>
+      <button id="guide-close" class="primary" type="button">시작하기</button>
     </div>
   </section>
 

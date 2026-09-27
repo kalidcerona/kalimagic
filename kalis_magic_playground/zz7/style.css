@@ -81,94 +81,6 @@ button { min-height: 44px; cursor: pointer; }
 }
 #performance-screen.is-lie .dial-tick { background: #ff7e7b; box-shadow: 0 0 11px #e75c62; }
 
-.stage-content {
-  width: min(100%, 680px);
-  min-height: 0;
-  margin-inline: auto;
-  display: grid;
-  justify-items: center;
-  align-content: center;
-}
-.result-label {
-  margin: 0;
-  color: #75c29d;
-  font: 600 10px/1.4 "SFMono-Regular", Menlo, monospace;
-  letter-spacing: .25em;
-}
-.stage-instruction {
-  margin: 0 0 28px;
-  color: #a9c5b8;
-  font-size: clamp(.8rem, 3.2vw, .95rem);
-  letter-spacing: .03em;
-}
-.detector-dial {
-  position: relative;
-  display: grid;
-  place-items: center;
-  width: min(72vw, 37vh, 326px);
-  min-width: min(150px, 40vw, 30vh);
-  aspect-ratio: 1;
-  border: 1px solid rgba(106, 202, 151, .36);
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(14, 60, 44, .65) 0 50%, rgba(27, 100, 69, .14) 60%, transparent 72%);
-  box-shadow: 0 0 0 12px rgba(72, 166, 113, .045), 0 0 0 13px rgba(113, 197, 143, .16), 0 0 65px rgba(37, 131, 80, .12);
-}
-.detector-dial::before {
-  content: "";
-  position: absolute;
-  inset: 8px;
-  border: 1px dashed rgba(141, 224, 175, .22);
-  border-radius: 50%;
-  pointer-events: none;
-}
-.dial-tick { position: absolute; width: 1px; height: 13px; background: #7bc898; opacity: .7; }
-.dial-tick-top { top: -6px; }
-.dial-tick-bottom { bottom: -6px; }
-
-#detector-button {
-  position: relative;
-  width: 70%;
-  aspect-ratio: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  border: 1px solid rgba(205, 255, 220, .58);
-  border-radius: 50%;
-  background: radial-gradient(circle at 38% 28%, #9ff2b0, #38b778 35%, #147450 76%, #0e493c);
-  color: #ecfff1;
-  font: 700 clamp(.6rem, 2.6vw, .86rem)/1.3 "SFMono-Regular", Menlo, monospace;
-  letter-spacing: .13em;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, .55), inset 0 3px 9px rgba(255, 255, 255, .4), inset 0 -14px 30px rgba(1, 37, 22, .5), 0 0 38px rgba(70, 223, 128, .21);
-  -webkit-tap-highlight-color: transparent;
-}
-.button-icon { font: 400 clamp(2rem, 8vw, 3.5rem)/1 Georgia, serif; letter-spacing: 0; }
-
-.result-panel {
-  width: min(85%, 320px);
-  min-height: 72px;
-  display: grid;
-  place-items: center;
-  margin-top: 22px;
-  padding: 10px;
-  border-top: 1px solid rgba(130, 207, 163, .35);
-  border-bottom: 1px solid rgba(130, 207, 163, .35);
-  background: rgba(5, 23, 22, .44);
-}
-
-#test-indicator,
-#verdict {
-  margin: 0;
-  min-height: 0;
-  font-size: clamp(1rem, 4.2vw, 1.4rem);
-}
-
-#verdict {
-  font-weight: 800;
-  letter-spacing: 0.14em;
-}
-
 @keyframes screen-pulse {
   50% { background-color: #1c4630; }
 }
@@ -371,16 +283,9 @@ select {
     padding-right: calc(12px + var(--safe-right));
   }
 
-  #performance-screen { padding-inline: calc(13px + var(--safe-left)); }
-  .detector-dial { width: min(77vw, 37vh, 280px); }
 }
 
 @media (max-height: 520px) {
-  #performance-screen { grid-template-rows: 1fr; padding-block: calc(30px + var(--safe-top)) calc(24px + var(--safe-bottom)); }
-  .stage-instruction { margin-bottom: 4px; }
-  .detector-dial { width: min(34vh, 42vw, 210px); }
-  .result-panel { width: min(74%, 280px); min-height: 47px; margin-top: 8px; }
-
   #settings-brand {
     width: min(72px, 22vh);
     margin-bottom: 6px;
@@ -391,17 +296,6 @@ select {
   h1 { font-size: 1.25rem; margin-bottom: 4px; }
 
   .lede { margin-bottom: 8px; }
-}
-
-@media (min-height: 521px) and (max-height: 620px) {
-  #performance-screen { padding-block: calc(46px + var(--safe-top)) calc(38px + var(--safe-bottom)); }
-  .stage-instruction { margin-top: 2px; margin-bottom: 10px; }
-  .detector-dial { width: min(34vh, 42vw, 230px); }
-  .result-panel { width: min(74%, 280px); min-height: 58px; margin-top: 12px; }
-}
-
-@media (min-width: 700px) and (min-height: 700px) {
-  .detector-dial { width: min(36vw, 37vh, 340px); }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -486,38 +380,49 @@ select {
   .gesture-guide-motion span { animation: none; transform: translateY(25px); opacity: 1; }
 }
 
-/* The performance screen uses the same clear, familiar visual language as a
-   consumer utility app. Keep the dramatic color change limited to the result. */
+/* Keep the performance screen compact, centered, and legible while the button is held. */
 #performance-screen {
-  padding: calc(28px + var(--safe-top)) calc(22px + var(--safe-right))
-    calc(28px + var(--safe-bottom)) calc(22px + var(--safe-left));
+  padding: calc(24px + var(--safe-top)) calc(22px + var(--safe-right))
+    calc(24px + var(--safe-bottom)) calc(22px + var(--safe-left));
   background: #f4f6f4;
   color: #202923;
 }
 
 .stage-content {
+  display: grid;
   width: min(100%, 440px);
-  gap: 0;
+  margin-inline: auto;
+  gap: clamp(12px, 2.5vh, 20px);
+  align-content: center;
+  justify-items: stretch;
 }
 
+.stage-info,
+.stage-action {
+  width: 100%;
+  min-width: 0;
+}
+
+.stage-info { display: grid; justify-items: center; }
+
 #performance-title {
-  margin: 0 0 8px;
+  margin: 0 0 14px;
   color: #202923;
   font-size: clamp(1.35rem, 5vw, 1.7rem);
   font-weight: 750;
   letter-spacing: -0.04em;
-}
-
-.stage-instruction {
-  margin: 0 0 30px;
-  color: #68736c;
-  font-size: .95rem;
-  letter-spacing: 0;
+  line-height: 1.2;
+  white-space: nowrap;
 }
 
 .detector-dial {
+  position: relative;
+  display: grid;
+  place-items: center;
+  margin-inline: auto;
   width: min(64vw, 34vh, 280px);
   min-width: min(150px, 40vw, 30vh);
+  aspect-ratio: 1;
   border: 0;
   background: transparent;
   box-shadow: none;
@@ -527,8 +432,15 @@ select {
 .dial-tick { display: none; }
 
 #detector-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
   width: 76%;
+  aspect-ratio: 1;
   border: 0;
+  border-radius: 50%;
   background: #23834d;
   color: #fff;
   font-family: inherit;
@@ -543,11 +455,14 @@ select {
 .button-icon { font-size: clamp(2.2rem, 8vw, 3rem); }
 
 .result-panel {
-  width: min(100%, 360px);
-  min-height: 86px;
-  margin-top: 28px;
-  padding: 14px 18px;
-  gap: 4px;
+  display: grid;
+  place-items: center;
+  order: -1;
+  width: min(100%, 380px);
+  min-height: 112px;
+  margin: 0 auto 14px;
+  padding: 10px 16px;
+  gap: 2px;
   border: 1px solid #e0e6e1;
   border-radius: 16px;
   background: #fff;
@@ -557,115 +472,31 @@ select {
 .result-label {
   color: #78827b;
   font-family: inherit;
-  font-size: .75rem;
-  letter-spacing: 0;
+  font-size: .7rem;
+  letter-spacing: .08em;
 }
 
-#test-indicator, #verdict { color: #26332b; }
-#verdict { letter-spacing: .04em; }
-
-#performance-screen.is-testing,
-body.is-testing #performance-screen {
-  animation: none;
-  background: #eef5ef;
+#test-indicator {
+  margin: 0;
+  min-height: 0;
+  color: #68736c;
+  font-size: .85rem;
+  line-height: 1.25;
 }
 
-.is-testing #detector-button,
-#detector-button.is-testing,
-body.is-testing #detector-button {
-  animation: button-pulse .7s ease-in-out infinite;
-}
-
-#performance-screen.is-lie,
-.is-lie #performance-screen {
-  background: #fbf1f1;
-  color: #312526;
-}
-
-#performance-screen.is-lie #performance-title,
-#performance-screen.is-true #performance-title { color: inherit; }
-#performance-screen.is-lie .stage-instruction,
-#performance-screen.is-true .stage-instruction { color: #68736c; }
-
-#performance-screen.is-lie .detector-dial,
-#performance-screen.is-true .detector-dial {
-  border: 0;
-  background: transparent;
-  box-shadow: none;
-}
-
-#performance-screen.is-lie #detector-button,
-#detector-button.is-lie,
-.is-lie #detector-button {
-  background: #c94a4a;
-  box-shadow: 0 8px 20px rgba(128, 39, 39, .18);
-}
-
-#performance-screen.is-lie .result-panel { border-color: #f0dddd; }
-#performance-screen.is-lie #verdict,
-#verdict.is-lie { color: #b52f36; }
-
-#performance-screen.is-true,
-.is-true #performance-screen {
-  background: #eef6f0;
-  color: #202923;
-}
-
-#performance-screen.is-true #detector-button,
-#detector-button.is-true,
-.is-true #detector-button {
-  background: #23834d;
-  box-shadow: 0 8px 20px rgba(25, 81, 49, .18);
-}
-
-#performance-screen.is-true .result-panel { border-color: #d8e9dc; }
-#performance-screen.is-true #verdict,
-#verdict.is-true { color: #1c7842; }
-
-#performance-screen.is-cancelled,
-.is-cancelled #performance-screen {
-  background: #f4f6f4;
-  color: #202923;
-}
-
-#performance-screen.is-cancelled #detector-button,
-#detector-button.is-cancelled,
-.is-cancelled #detector-button {
-  background: #23834d;
-}
-
-@media (max-height: 520px) {
-  #performance-screen { padding-block: calc(18px + var(--safe-top)) calc(16px + var(--safe-bottom)); }
-  #performance-title { margin-bottom: 4px; font-size: 1.2rem; }
-  .stage-instruction { margin-bottom: 8px; }
-  .detector-dial { width: min(32vh, 42vw, 190px); }
-  .result-panel { min-height: 58px; margin-top: 10px; }
-}
-
-@media (min-height: 521px) and (max-height: 620px) {
-  #performance-screen { padding-block: calc(22px + var(--safe-top)) calc(18px + var(--safe-bottom)); }
-  .stage-instruction { margin-bottom: 12px; }
-  .detector-dial { width: min(32vh, 42vw, 210px); }
-  .result-panel { min-height: 68px; margin-top: 14px; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  #detector-button { transition: none; }
-}
-
-/* Give the performance screen a clear information/action layout at every size. */
-.stage-content {
-  gap: 16px;
-}
-
-.stage-info,
-.stage-action {
-  width: 100%;
+#verdict {
+  margin: 0;
+  min-height: 0;
+  color: #26332b;
+  font-size: clamp(2.8rem, 12vw, 4.2rem);
+  font-weight: 850;
+  line-height: 1.08;
+  letter-spacing: .02em;
 }
 
 .signal-monitor {
   width: min(100%, 380px);
-  margin: 0 auto 12px;
+  margin: 0 auto;
   padding: 12px 14px 10px;
   border: 1px solid #dce6de;
   border-radius: 14px;
@@ -692,7 +523,6 @@ body.is-testing #detector-button {
 }
 
 .signal-title { flex: 1; }
-
 .signal-mode {
   padding: 3px 7px;
   border-radius: 999px;
@@ -706,16 +536,11 @@ body.is-testing #detector-button {
   display: block;
   width: 100%;
   height: 48px;
-  margin: 8px 0 3px;
+  margin: 8px 0 0;
   overflow: visible;
 }
 
-.signal-grid {
-  fill: none;
-  stroke: #e8eee9;
-  stroke-width: 1;
-}
-
+.signal-grid { fill: none; stroke: #e8eee9; stroke-width: 1; }
 .signal-trace {
   fill: none;
   stroke: #23834d;
@@ -723,43 +548,6 @@ body.is-testing #detector-button {
   stroke-linecap: round;
   stroke-linejoin: round;
   vector-effect: non-scaling-stroke;
-}
-
-.signal-monitor > p {
-  margin: 0;
-  color: #707b73;
-  font-size: .72rem;
-  line-height: 1.4;
-}
-
-.stage-steps {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 6px;
-  max-width: 420px;
-  margin: 0 auto;
-  padding: 0;
-  list-style: none;
-  text-align: left;
-}
-
-.stage-steps li {
-  display: grid;
-  gap: 4px;
-  align-content: start;
-  min-height: 56px;
-  padding: 9px 8px;
-  border: 1px solid #e1e7e2;
-  border-radius: 11px;
-  background: rgba(255, 255, 255, .74);
-  color: #58645b;
-  font-size: .7rem;
-  line-height: 1.35;
-}
-
-.stage-steps li span {
-  color: #23834d;
-  font: 700 .64rem/1 "SFMono-Regular", Menlo, monospace;
 }
 
 #performance-screen.is-testing .signal-dot {
@@ -772,9 +560,61 @@ body.is-testing #detector-button {
   animation: signal-sweep 1.4s linear infinite;
 }
 
-@keyframes signal-sweep {
-  to { stroke-dashoffset: -378; }
+@keyframes signal-sweep { to { stroke-dashoffset: -378; } }
+
+#performance-screen.is-testing,
+body.is-testing #performance-screen {
+  animation: none;
+  background: #eef5ef;
 }
+
+.is-testing #detector-button,
+#detector-button.is-testing,
+body.is-testing #detector-button {
+  animation: button-pulse .7s ease-in-out infinite;
+}
+
+#performance-screen.is-lie,
+.is-lie #performance-screen { background: #fbf1f1; color: #312526; }
+#performance-screen.is-lie #performance-title,
+#performance-screen.is-true #performance-title { color: inherit; }
+
+#performance-screen.is-lie .detector-dial,
+#performance-screen.is-true .detector-dial {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+#performance-screen.is-lie #detector-button,
+#detector-button.is-lie,
+.is-lie #detector-button {
+  background: #c94a4a;
+  box-shadow: 0 8px 20px rgba(128, 39, 39, .18);
+}
+
+#performance-screen.is-lie .result-panel { border-color: #f0dddd; }
+#performance-screen.is-lie #verdict,
+#verdict.is-lie { color: #b52f36; }
+
+#performance-screen.is-true,
+.is-true #performance-screen { background: #eef6f0; color: #202923; }
+#performance-screen.is-true #detector-button,
+#detector-button.is-true,
+.is-true #detector-button {
+  background: #23834d;
+  box-shadow: 0 8px 20px rgba(25, 81, 49, .18);
+}
+
+#performance-screen.is-true .result-panel { border-color: #d8e9dc; }
+#performance-screen.is-true #verdict,
+#verdict.is-true { color: #1c7842; }
+
+#performance-screen.is-cancelled,
+.is-cancelled #performance-screen { background: #f4f6f4; color: #202923; }
+#performance-screen.is-cancelled #detector-button,
+#detector-button.is-cancelled,
+.is-cancelled #detector-button { background: #23834d; }
 
 @media (min-width: 760px) and (min-height: 521px) {
   #performance-screen {
@@ -794,7 +634,6 @@ body.is-testing #detector-button {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    min-width: 0;
     padding: clamp(22px, 3vw, 36px);
     border: 1px solid #e0e7e1;
     border-radius: 24px;
@@ -802,42 +641,36 @@ body.is-testing #detector-button {
     box-shadow: 0 12px 36px rgba(34, 57, 39, .06);
   }
 
-  #performance-title {
-    margin-bottom: 10px;
-    text-align: left;
-    font-size: clamp(1.7rem, 3vw, 2.2rem);
-  }
-
-  .stage-instruction { margin: 0 0 22px; }
-
-  .signal-monitor {
-    width: 100%;
-    margin: 0 0 16px;
-    padding: 16px;
-    background: #f8faf8;
-  }
-
+  #performance-title { margin-bottom: 18px; font-size: clamp(1.7rem, 3vw, 2.2rem); }
+  .signal-monitor { width: 100%; padding: 16px; background: #f8faf8; }
   .signal-wave { height: clamp(60px, 10vh, 84px); }
-  .signal-monitor > p { font-size: .8rem; }
-
-  .stage-steps { width: 100%; gap: 8px; }
-
-  .stage-steps li {
-    min-height: 70px;
-    padding: 11px 10px;
-    font-size: .76rem;
-  }
-
   .stage-action .detector-dial { width: min(34vw, 39vh, 320px); }
-  .stage-action .result-panel { margin-top: 20px; }
+  .result-panel { width: 100%; min-height: 136px; margin-bottom: 22px; }
+  #verdict { font-size: clamp(3.4rem, 7vw, 4.8rem); }
 }
 
-@media (max-height: 520px) {
+@media (max-height: 620px) {
+  #performance-screen { padding-block: calc(12px + var(--safe-top)) calc(12px + var(--safe-bottom)); }
   .stage-content { gap: 8px; }
-  .signal-monitor { padding: 7px 10px; margin-bottom: 7px; }
-  .signal-wave { height: 26px; margin: 3px 0 1px; }
-  .signal-monitor > p { font-size: .64rem; }
-  .stage-steps { display: none; }
+  #performance-title { margin-bottom: 8px; font-size: 1.2rem; }
+  .signal-monitor { padding: 7px 10px; }
+  .signal-wave { height: 28px; margin-top: 4px; }
+  .stage-action .detector-dial { width: min(32vh, 42vw, 210px); }
+  .result-panel { min-height: 82px; margin-bottom: 8px; }
+  #verdict { font-size: clamp(2.3rem, 9vw, 3rem); }
+}
+
+@media (max-width: 359px) {
+  #performance-screen { padding-inline: calc(13px + var(--safe-left)); }
+  .stage-content { gap: 8px; }
+  .signal-monitor { padding: 9px 10px 8px; }
+  .stage-action .detector-dial { width: min(68vw, 32vh, 250px); }
+  .result-panel { min-height: 96px; }
+  #verdict { font-size: 2.65rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #detector-button { transition: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {

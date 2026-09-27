@@ -21,7 +21,6 @@
       <div class="stage-content">
         <section class="stage-info" aria-label="검사 안내">
           <h1 id="performance-title">거짓말 탐지기</h1>
-          <p class="stage-instruction">검사를 시작하려면 버튼을 2초간 누르세요</p>
           <section class="signal-monitor" aria-label="신호 모니터">
             <div class="signal-heading">
               <span class="signal-dot" aria-hidden="true"></span>
@@ -32,24 +31,18 @@
               <path class="signal-grid" d="M0 13.5H360M0 26H360M0 38.5H360M45 0V52M90 0V52M135 0V52M180 0V52M225 0V52M270 0V52M315 0V52" />
               <path class="signal-trace" d="M0 27H44L54 25L64 29L75 27H111L119 24L126 30L135 26H157L166 26L173 8L180 43L188 19L196 28H226L235 26L244 27H265L274 24L281 30L289 26H318L327 26L336 17L343 35L350 27H360" />
             </svg>
-            <p>버튼을 누르면 신호 그래프가 움직입니다.</p>
           </section>
-          <ol class="stage-steps" aria-label="검사 순서">
-            <li><span>01</span> 버튼을 길게 누르기</li>
-            <li><span>02</span> 반응 그래프 확인하기</li>
-            <li><span>03</span> 화면의 판정 보기</li>
-          </ol>
         </section>
         <section class="stage-action" aria-label="검사">
-          <div class="detector-dial">
-            <span class="dial-tick dial-tick-top" aria-hidden="true"></span>
-            <span class="dial-tick dial-tick-bottom" aria-hidden="true"></span>
-            <button id="detector-button" type="button" aria-label="검사를 시작하려면 2초간 누르기"><span class="button-icon" aria-hidden="true">⌁</span><span>길게 누르기</span></button>
-          </div>
           <div class="result-panel" aria-live="polite">
             <span class="result-label">검사 결과</span>
             <p id="test-indicator" role="status"></p>
             <p id="verdict" role="status" aria-live="assertive"></p>
+          </div>
+          <div class="detector-dial">
+            <span class="dial-tick dial-tick-top" aria-hidden="true"></span>
+            <span class="dial-tick dial-tick-bottom" aria-hidden="true"></span>
+            <button id="detector-button" type="button" aria-label="검사를 시작하려면 2초간 누르기"><span class="button-icon" aria-hidden="true">⌁</span><span>길게 누르기</span></button>
           </div>
         </section>
       </div>
