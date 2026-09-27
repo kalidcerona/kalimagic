@@ -652,3 +652,194 @@ body.is-testing #detector-button {
 @media (prefers-reduced-motion: reduce) {
   #detector-button { transition: none; }
 }
+
+/* Give the performance screen a clear information/action layout at every size. */
+.stage-content {
+  gap: 16px;
+}
+
+.stage-info,
+.stage-action {
+  width: 100%;
+}
+
+.signal-monitor {
+  width: min(100%, 380px);
+  margin: 0 auto 12px;
+  padding: 12px 14px 10px;
+  border: 1px solid #dce6de;
+  border-radius: 14px;
+  background: #fff;
+  text-align: left;
+}
+
+.signal-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 20px;
+  color: #435248;
+  font-size: .76rem;
+  font-weight: 750;
+}
+
+.signal-dot {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: #9aa79d;
+}
+
+.signal-title { flex: 1; }
+
+.signal-mode {
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: #edf4ee;
+  color: #526b59;
+  font-size: .68rem;
+  font-weight: 700;
+}
+
+.signal-wave {
+  display: block;
+  width: 100%;
+  height: 48px;
+  margin: 8px 0 3px;
+  overflow: visible;
+}
+
+.signal-grid {
+  fill: none;
+  stroke: #e8eee9;
+  stroke-width: 1;
+}
+
+.signal-trace {
+  fill: none;
+  stroke: #23834d;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.signal-monitor > p {
+  margin: 0;
+  color: #707b73;
+  font-size: .72rem;
+  line-height: 1.4;
+}
+
+.stage-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 0;
+  list-style: none;
+  text-align: left;
+}
+
+.stage-steps li {
+  display: grid;
+  gap: 4px;
+  align-content: start;
+  min-height: 56px;
+  padding: 9px 8px;
+  border: 1px solid #e1e7e2;
+  border-radius: 11px;
+  background: rgba(255, 255, 255, .74);
+  color: #58645b;
+  font-size: .7rem;
+  line-height: 1.35;
+}
+
+.stage-steps li span {
+  color: #23834d;
+  font: 700 .64rem/1 "SFMono-Regular", Menlo, monospace;
+}
+
+#performance-screen.is-testing .signal-dot {
+  background: #23834d;
+  box-shadow: 0 0 0 4px rgba(35, 131, 77, .12);
+}
+
+#performance-screen.is-testing .signal-trace {
+  stroke-dasharray: 18 360;
+  animation: signal-sweep 1.4s linear infinite;
+}
+
+@keyframes signal-sweep {
+  to { stroke-dashoffset: -378; }
+}
+
+@media (min-width: 760px) and (min-height: 521px) {
+  #performance-screen {
+    padding: calc(32px + var(--safe-top)) calc(38px + var(--safe-right))
+      calc(32px + var(--safe-bottom)) calc(38px + var(--safe-left));
+  }
+
+  .stage-content {
+    width: min(100%, 1000px);
+    grid-template-columns: minmax(0, 1fr) minmax(340px, .95fr);
+    align-items: stretch;
+    gap: 20px;
+  }
+
+  .stage-info,
+  .stage-action {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
+    padding: clamp(22px, 3vw, 36px);
+    border: 1px solid #e0e7e1;
+    border-radius: 24px;
+    background: #fff;
+    box-shadow: 0 12px 36px rgba(34, 57, 39, .06);
+  }
+
+  #performance-title {
+    margin-bottom: 10px;
+    text-align: left;
+    font-size: clamp(1.7rem, 3vw, 2.2rem);
+  }
+
+  .stage-instruction { margin: 0 0 22px; }
+
+  .signal-monitor {
+    width: 100%;
+    margin: 0 0 16px;
+    padding: 16px;
+    background: #f8faf8;
+  }
+
+  .signal-wave { height: clamp(60px, 10vh, 84px); }
+  .signal-monitor > p { font-size: .8rem; }
+
+  .stage-steps { width: 100%; gap: 8px; }
+
+  .stage-steps li {
+    min-height: 70px;
+    padding: 11px 10px;
+    font-size: .76rem;
+  }
+
+  .stage-action .detector-dial { width: min(34vw, 39vh, 320px); }
+  .stage-action .result-panel { margin-top: 20px; }
+}
+
+@media (max-height: 520px) {
+  .stage-content { gap: 8px; }
+  .signal-monitor { padding: 7px 10px; margin-bottom: 7px; }
+  .signal-wave { height: 26px; margin: 3px 0 1px; }
+  .signal-monitor > p { font-size: .64rem; }
+  .stage-steps { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #performance-screen.is-testing .signal-trace { animation: none; }
+}

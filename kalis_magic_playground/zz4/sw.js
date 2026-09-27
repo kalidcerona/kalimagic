@@ -1,4 +1,4 @@
-const CACHE = 'magic-choice-shell-v7';
+const CACHE = 'magic-choice-shell-v8';
 const CACHE_PREFIX = 'magic-choice-shell-';
 const ASSETS = [
   './index.html',
@@ -11,7 +11,6 @@ const ASSETS = [
   './icon-512.png',
   './install-prompt.js',
   './brand-logo.jpg',
-  './brand-logo.png'
 ];
 
 self.addEventListener('install', (event) => {

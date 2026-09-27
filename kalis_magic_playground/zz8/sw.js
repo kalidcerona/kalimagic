@@ -1,6 +1,6 @@
 // App-shell cache only. Non-shell responses are never stored.
 
-const CACHE = "asrai-shell-v6";
+const CACHE = "asrai-shell-v7";
 const CACHE_PREFIX = "asrai-shell-";
 const SHELL_FILES = [
   "index.html",
@@ -13,7 +13,6 @@ const SHELL_FILES = [
   "icon-192.png",
   "icon-512.png",
   "brand-logo.jpg",
-  "brand-logo.png",
 ];
 
 function shellUrls() {

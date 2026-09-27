@@ -58,7 +58,7 @@ function showStatus(message, duration = 0) {
 }
 
 stage.addEventListener('pointerdown', event => {
-  if (!settings.hidden || !guide.hidden || event.isPrimary === false) return;
+  if (!event.target.closest('#wheel-wrap') || !settings.hidden || !guide.hidden || event.isPrimary === false) return;
   const angle = angleAt(event);
   drag = { id: event.pointerId, startX: event.clientX, startY: event.clientY, startAngle: angle,
     lastAngle: angle, amount: 0, started: performance.now(), selecting: needsFirstTouchTarget || state.targetAngle === null };

@@ -24,6 +24,8 @@ const SOUND_KEY = "usotsuki.detector.sound.v1";
 const VIBRATION_KEY = "usotsuki.detector.vibration.v1";
 const GUIDE_KEY = "usotsuki.detector.settings-guide.v1";
 const SWIPE_DOWN_PX = 96;
+const READY_FEEDBACK_MS = 600;
+const READY_HAPTIC_MS = { medium: 18, high: 28, max: 38 };
 const STAGE_CLASSES = ["is-testing", "is-lie", "is-true", "is-cancelled"];
 
 const performanceScreen = document.querySelector("#performance-screen");
@@ -50,6 +52,8 @@ let audioContext = null;
 let scanOscillator = null;
 let scanGain = null;
 let guideShown = false;
+let readyTimer = 0;
+let readyFeedbackShown = false;
 
 /** @type {Map<number, {x: number, y: number, startX: number, startY: number, startedOnButton: boolean}>} */
 const pointers = new Map();
@@ -181,6 +185,10 @@ function clearHoldTimer() {
 }
 
 function setStage(mode) {
+  if (readyTimer) {
+    window.clearTimeout(readyTimer);
+    readyTimer = 0;
+  }
   for (const node of [document.body, performanceScreen, detectorButton, verdict]) {
     node.classList.remove(...STAGE_CLASSES);
   }
@@ -215,6 +223,18 @@ function setStage(mode) {
   verdict.textContent = "";
 }
 
+function showReadyFeedback() {
+  testIndicator.textContent = "준비완료";
+  const pulseMs = READY_HAPTIC_MS[vibrationInput.value];
+  if (pulseMs && typeof navigator.vibrate === "function") {
+    try { navigator.vibrate(pulseMs); } catch { /* Visual feedback remains available. */ }
+  }
+  readyTimer = window.setTimeout(() => {
+    readyTimer = 0;
+    if (testIndicator.textContent === "준비완료") testIndicator.textContent = "검사 대기 중";
+  }, READY_FEEDBACK_MS);
+}
+
 function pointOnButton(x, y, target) {
   if (target instanceof Element && target.closest("#detector-button")) return true;
   const rect = detectorButton.getBoundingClientRect();
@@ -232,6 +252,10 @@ function settingsVisible() {
 function showSettings() {
   stopScanningSound();
   stopVibration();
+  if (readyTimer) {
+    window.clearTimeout(readyTimer);
+    readyTimer = 0;
+  }
   settingsScreen.hidden = false;
   performanceScreen.hidden = true;
   detectorButton.disabled = true;
@@ -245,6 +269,7 @@ function showSettings() {
 
 function showPerformance() {
   gestureConsumed = false;
+  readyFeedbackShown = false;
   pointers.clear();
   settingsScreen.hidden = true;
   performanceScreen.hidden = false;
@@ -462,6 +487,10 @@ function onPointerDown(event) {
     /* Capture can fail if the pointer already ended. */
   }
   unlockFromGesture();
+  if (!onButton && !readyFeedbackShown) {
+    readyFeedbackShown = true;
+    showReadyFeedback();
+  }
   if (pointers.size > 1) {
     if (!settled && hold.phase !== "idle") cancelUnsettledHold();
     return;

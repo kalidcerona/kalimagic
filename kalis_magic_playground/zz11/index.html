@@ -17,6 +17,13 @@
 <body>
   <main class="stage">
     <div class="wheel-area">
+      <aside class="table-side table-side-left" aria-label="조작 안내">
+        <span class="side-eyebrow">HOW TO PLAY</span>
+        <h2>간단한 조작</h2>
+        <div class="side-instruction"><span>01</span><p>화살표를 탭해 회전 시작</p></div>
+        <div class="side-instruction"><span>02</span><p>원 가장자리를 드래그해 회전</p></div>
+        <div class="side-instruction"><span>↻</span><p>멈춘 뒤 다시 탭해 다음 회전</p></div>
+      </aside>
       <div class="wheel-wrap" id="wheel-wrap">
         <div class="wheel" aria-hidden="true"></div>
         <svg class="spinner-arrow" id="spinner-arrow" viewBox="0 0 100 100" role="img" aria-label="중심에서 바깥쪽을 가리키는 화살표">
@@ -26,8 +33,24 @@
         </svg>
         <div class="wheel-pin" aria-hidden="true"><span>✦</span></div>
       </div>
+      <aside class="table-side table-side-right" aria-label="진행 안내">
+        <span class="side-eyebrow">SPIN STATUS</span>
+        <h2>회전 진행</h2>
+        <p>회전은 약 1.1초 동안 이어집니다.</p>
+        <p class="side-footnote">화살표가 멈추면 다음 회전을 시작할 수 있어요.</p>
+      </aside>
     </div>
-    <div class="stage-bottom"><p class="instruction">화살표를 터치하거나 돌려 보세요</p><p id="spin-status" class="spin-status" aria-live="polite"></p></div>
+    <section class="stage-bottom" aria-label="회전판 이용 안내">
+      <div class="play-card">
+        <div class="play-card-heading"><span class="table-light" aria-hidden="true"></span><span>회전 방법</span></div>
+        <div class="play-steps">
+          <div class="play-step"><span class="step-number">01</span><span>화살표를 탭해 회전</span></div>
+          <div class="play-step"><span class="step-number">02</span><span>원을 따라 드래그해 회전</span></div>
+          <div class="play-step"><span class="step-number">03</span><span>멈춘 뒤 다시 탭해 다음 회전</span></div>
+        </div>
+      </div>
+      <p id="spin-status" class="spin-status" aria-live="polite"></p>
+    </section>
   </main>
 
   <section id="guide" class="overlay guide" role="dialog" aria-modal="true" aria-label="설정 안내" hidden>

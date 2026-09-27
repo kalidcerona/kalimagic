@@ -1,5 +1,5 @@
 const PREFIX = "stopwatch-uni-" + encodeURIComponent(self.registration.scope) + "-";
-const CACHE = PREFIX + "v22";
+const CACHE = PREFIX + "v23";
 const FILES = [
   './index.html',
   './logic.js',
@@ -9,7 +9,6 @@ const FILES = [
   './icon-512.png',
   './icon.svg',
   './brand-logo.jpg',
-  './brand-logo.png',
 ];
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(FILES)).then(() => self.skipWaiting()));

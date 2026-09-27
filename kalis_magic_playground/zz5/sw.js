@@ -1,5 +1,5 @@
 // Network-first cache for the ALETHEIA app shell only.
-const CACHE_NAME = 'aletheia-shell-v11';
+const CACHE_NAME = 'aletheia-shell-v12';
 const CACHE_PREFIX = 'aletheia-shell-';
 const LEGACY_CACHE_PREFIX = `unlock-${encodeURIComponent(self.registration.scope)}-`;
 const COURT_FILES = ['S-J', 'S-Q', 'S-K', 'D-J', 'D-Q', 'D-K',
@@ -18,7 +18,6 @@ const SHELL = [
   './icon-512.png',
   './install-prompt.js',
   './brand-logo.jpg',
-  './brand-logo.png',
 ];
 
 const SHELL_NAMES = new Set([...SHELL, ...COURT_FILES].map((path) => path.slice(2)));

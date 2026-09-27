@@ -1,6 +1,6 @@
 const SCOPE_URL = new URL(self.registration.scope);
 const PREFIX = `calc2-${encodeURIComponent(SCOPE_URL.href)}-`;
-const CACHE = `${PREFIX}v7`;
+const CACHE = `${PREFIX}v8`;
 const SHELL = [
   "./",
   "./index.html",
@@ -9,7 +9,6 @@ const SHELL = [
   "./icon-512.png",
   "./icon.svg",
   "./brand-logo.jpg",
-  "./brand-logo.png",
 ].map((path) => new URL(path, SCOPE_URL).href);
 
 self.addEventListener("install", (event) => {

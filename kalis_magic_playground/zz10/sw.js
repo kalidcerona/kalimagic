@@ -1,7 +1,7 @@
-const CACHE_NAME = "alter-v10";
+const CACHE_NAME = "alter-v11";
 const APP_FILES = [
   "./index.html", "./style.css", "./app.js", "./logic.js", "./vision.js",
-  "./performance.js", "./camera-geometry.js", "./brand-logo.png", "./icon-192.png", "./icon-512.png",
+  "./performance.js", "./camera-geometry.js", "./brand-logo.jpg", "./icon-192.png", "./icon-512.png",
   "./manifest.webmanifest", "./install-ui.js",
 ];
 

@@ -125,7 +125,7 @@ export const ASRAI_FILES = [
   'logic.js', 'manifest.webmanifest', 'style.css', 'sw.js'
 ];
 export const ALTER_FILES = [
-  'app.js', 'brand-logo.png', 'camera-geometry.js', 'icon-192.png',
+  'app.js', 'brand-logo.jpg', 'brand-logo.png', 'camera-geometry.js', 'icon-192.png',
   'icon-512.png', 'index.html', 'install-ui.js', 'logic.js',
   'manifest.webmanifest', 'performance.js', 'style.css', 'sw.js', 'vision.js'
 ];

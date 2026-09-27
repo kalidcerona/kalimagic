@@ -1,5 +1,5 @@
 /* App-shell cache only. Never store question sets or other user data. */
-const CACHE = "usotsuki-shell-v17";
+const CACHE = "usotsuki-shell-v18";
 const CACHE_PREFIX = "usotsuki-shell-";
 const FILES = [
   "./",
@@ -13,7 +13,6 @@ const FILES = [
   "./icon-512.png",
   "./icon.svg",
   "./brand-logo.jpg",
-  "./brand-logo.png",
   "./sw.js",
 ];
 
@@ -29,7 +28,6 @@ const SHELL_PATHS = new Set([
   "/icon-512.png",
   "/icon.svg",
   "/brand-logo.jpg",
-  "/brand-logo.png",
   "/sw.js",
 ]);
 
