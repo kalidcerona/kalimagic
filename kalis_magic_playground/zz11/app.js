@@ -94,13 +94,13 @@ function spin(direction, travel, elapsed) {
   busy = true;
   const outcome = chooseOutcome(state.spins + 1, state.forceSpin, state.targetAngle, state.previousAngle);
   const strength = Math.min(1, travel / 240 + (travel / Math.max(250, elapsed)) / 2);
-  const turns = 3 + Math.floor(strength * 3) + randomInt(2);
+  const turns = 2 + Math.floor(strength) + randomInt(2);
   const end = landingRotation(rotation, outcome, direction, turns);
   const from = rotation;
   showStatus('회전 중…');
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const animation = arrow.animate([{ transform: `rotate(${from}deg)` }, { transform: `rotate(${end}deg)` }], {
-    duration: reduced ? 50 : 2700 + turns * 260 + randomInt(351),
+    duration: reduced ? 50 : 1600,
     easing: 'cubic-bezier(.12,.7,.13,1)', fill: 'forwards'
   });
   animation.onfinish = () => {

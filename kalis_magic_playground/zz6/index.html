@@ -67,9 +67,18 @@
         <div class="toggle-body">
           <label class="motion-option">
             <input id="motion-enabled" type="checkbox">
-            <span>강하게 스냅하면 중앙을 뚫고 물건 나타내기, 세우기·흔들기 연출</span>
+            <span>기울이면 물건 이동</span>
           </label>
-          <p id="motion-note" class="hint" role="status">공연 전에 켜세요. 기기에서 센서 권한을 요청할 수 있습니다. 앱을 다시 열면 꺼집니다.</p>
+          <label class="motion-option"><input id="motion-exit" type="checkbox"><span>벽에 두 번 부딪히면 선택한 방향으로 탈출 (기울기 이동 필요)</span></label>
+          <div class="motion-edges" aria-label="기울기 탈출 방향">
+            <label><input id="motion-edge-top" type="checkbox"> 위</label>
+            <label><input id="motion-edge-left" type="checkbox"> 왼쪽</label>
+            <label><input id="motion-edge-right" type="checkbox"> 오른쪽</label>
+            <label><input id="motion-edge-bottom" type="checkbox"> 아래</label>
+          </div>
+          <label class="motion-option"><input id="motion-breakthrough" type="checkbox"><span>숨은 물건이 강한 스냅에 화면을 뚫고 나타났다가 사라짐</span></label>
+          <label class="motion-option"><input id="motion-wobble" type="checkbox"><span>흔들면 보이는 물건이 떨림</span></label>
+          <p id="motion-note" class="hint" role="status">선택한 연출은 저장됩니다. 기기에 따라 공연 시작 시 센서 권한을 요청합니다.</p>
         </div>
       </details>
 

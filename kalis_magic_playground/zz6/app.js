@@ -24,7 +24,7 @@ import {
   wallpaperCropRect,
   classifyTwoFingerSwipe,
 } from './logic.js';
-import { fallPosition, gravityExitDirection, isBreakthroughSnap, isGravityUpright, isPhoneUpright, orientationExitDirection, shakeImpulse } from './sensor-motion.js';
+import { advanceTiltBody, fallPosition, gravityTiltVector, isBreakthroughSnap, orientationTiltVector, shakeImpulse } from './sensor-motion.js';
 
 const gestureGuide = document.getElementById('settings-gesture-guide');
 const gestureGuideDismiss = document.getElementById('settings-gesture-dismiss');
@@ -122,6 +122,55 @@ const coinImageNote = document.querySelector('#coin-image-note');
 const coinArt = document.querySelector('#coin-art');
 const motionToggle = document.querySelector('#motion-enabled');
 const motionNote = document.querySelector('#motion-note');
+const MOTION_SETTINGS_KEY = 'tobira.motion-effects.v1';
+const motionInputs = {
+  tilt: motionToggle,
+  exit: document.querySelector('#motion-exit'),
+  breakthrough: document.querySelector('#motion-breakthrough'),
+  wobble: document.querySelector('#motion-wobble'),
+};
+const motionEdges = Object.fromEntries(['top', 'left', 'right', 'bottom'].map((edge) =>
+  [edge, document.querySelector(`#motion-edge-${edge}`)]));
+const DEFAULT_MOTION_EFFECTS = Object.freeze({
+  tilt: true, exit: false, breakthrough: false, wobble: false,
+  edges: ['right'],
+});
+let motionEffects = { ...DEFAULT_MOTION_EFFECTS };
+let motionPermissionDenied = false;
+
+function loadMotionEffects() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(MOTION_SETTINGS_KEY) || 'null');
+    if (saved && typeof saved === 'object' && !Array.isArray(saved)) {
+      motionEffects = {
+        tilt: typeof saved.tilt === 'boolean' ? saved.tilt : true,
+        exit: saved.exit === true,
+        breakthrough: saved.breakthrough === true,
+        wobble: saved.wobble === true,
+        edges: Array.isArray(saved.edges) ? EDGE_ORDER.filter((edge) => saved.edges.includes(edge)) : ['right'],
+      };
+    }
+  } catch { /* Use safe defaults for damaged settings or unavailable storage. */ }
+  for (const [key, input] of Object.entries(motionInputs)) input.checked = motionEffects[key];
+  for (const [edge, input] of Object.entries(motionEdges)) input.checked = motionEffects.edges.includes(edge);
+}
+
+function saveMotionEffects() {
+  motionPermissionDenied = false;
+  motionEffects = {
+    ...Object.fromEntries(Object.entries(motionInputs).map(([key, input]) => [key, input.checked])),
+    edges: EDGE_ORDER.filter((edge) => motionEdges[edge].checked),
+  };
+  try { localStorage.setItem(MOTION_SETTINGS_KEY, JSON.stringify(motionEffects)); }
+  catch { motionNote.textContent = '센서 설정을 저장하지 못했습니다. 이번 실행에서는 계속 사용할 수 있습니다.'; }
+  if (motionEffects.breakthrough) unlockBreakSound();
+  if (!motionEffects.tilt && tiltFrame) {
+    window.cancelAnimationFrame(tiltFrame);
+    tiltFrame = 0;
+  }
+  if (!Object.values(motionInputs).some((input) => input.checked)) disableMotion();
+  else if (!motionEnabled) void enableMotion();
+}
 
 let imageDbPromise;
 let imageChoices = {};
@@ -385,6 +434,10 @@ let wobbleToken = 0;
 let wobbleX = 0;
 let wobbleY = 0;
 let wobbleAngle = 0;
+let tiltVector = { x: 0, y: 0 };
+let tiltBody = null;
+let tiltFrame = 0;
+let tiltLastAt = 0;
 
 function selected() {
   return state.presets.find((preset) => preset.id === state.selectedId) || state.presets[0];
@@ -750,6 +803,10 @@ function cancelWobble() {
 function cancelSensorEffects() {
   cancelFall();
   cancelWobble();
+  if (tiltFrame) window.cancelAnimationFrame(tiltFrame);
+  tiltFrame = 0;
+  tiltLastAt = 0;
+  tiltBody = null;
 }
 
 function unlockBreakSound() {
@@ -802,7 +859,7 @@ function clearBreakthrough() {
 }
 
 function breakthroughSpawn() {
-  if (state.mode !== 'performance' || !gestureGuide.hidden || pointers.size !== 0 ||
+  if (!motionEffects.breakthrough || state.mode !== 'performance' || !gestureGuide.hidden || pointers.size !== 0 ||
     (phase !== 'awaiting' && phase !== 'gone')) return false;
   cancelSensorEffects();
   clearBreakthrough();
@@ -815,12 +872,15 @@ function breakthroughSpawn() {
   playBreakSound();
   breakTimer = window.setTimeout(() => {
     clearBreakthrough();
-    startFall();
+    phase = 'gone';
+    concealCoin();
+    setGoneSession(true);
   }, 1350);
   return true;
 }
 
 function startFall() {
+  if (motionEffects.tilt) { startTiltTracking(); return; }
   if (!motionEnabled || !upright || state.mode !== 'performance' || phase !== 'idle' || !objectLive || pointers.size !== 0 || stageEl.classList.contains('is-breaking')) return;
   const stage = measureStage();
   const radius = coinMetrics(selected(), stage).radius;
@@ -843,9 +903,40 @@ function startFall() {
   fallFrame = window.requestAnimationFrame(step);
 }
 
+function startTiltTracking() {
+  if (!motionEnabled || !motionEffects.tilt || state.mode !== 'performance' ||
+    phase !== 'idle' || !objectLive || pointers.size !== 0 ||
+    stageEl.classList.contains('is-breaking') || tiltFrame) return;
+  tiltBody ||= { x: center.x, y: center.y, vx: 0, vy: 0, collisions: 0 };
+  tiltLastAt = 0;
+  const step = (now) => {
+    tiltFrame = 0;
+    if (!motionEnabled || !motionEffects.tilt || state.mode !== 'performance' ||
+      phase !== 'idle' || !objectLive || pointers.size !== 0 ||
+      stageEl.classList.contains('is-breaking')) return;
+    const stage = measureStage();
+    const radius = coinMetrics(selected(), stage).radius;
+    const elapsed = tiltLastAt ? now - tiltLastAt : 16;
+    tiltLastAt = now;
+    const exitEdges = motionEffects.exit ? motionEffects.edges : [];
+    const result = advanceTiltBody(tiltBody, tiltVector, stage, radius, elapsed, exitEdges);
+    tiltBody = result.body;
+    center = { x: tiltBody.x, y: tiltBody.y };
+    paintLiveCoin();
+    if (result.exit) {
+      startOutwardFall(result.exit);
+      return;
+    }
+    tiltFrame = window.requestAnimationFrame(step);
+  };
+  tiltFrame = window.requestAnimationFrame(step);
+}
+
 function startOutwardFall(direction) {
-  if (!motionEnabled || !direction || state.mode !== 'performance' || phase !== 'idle' ||
+  if (!motionEnabled || !motionEffects.exit || !motionEffects.edges.includes(direction) || !direction || state.mode !== 'performance' || phase !== 'idle' ||
     !objectLive || pointers.size !== 0 || stageEl.classList.contains('is-breaking')) return;
+  if (tiltFrame) window.cancelAnimationFrame(tiltFrame);
+  tiltFrame = 0;
   if (activeOutwardDirection === direction) return;
   cancelFall();
   activeOutwardDirection = direction;
@@ -855,12 +946,13 @@ function startOutwardFall(direction) {
   const stage = measureStage();
   const radius = coinMetrics(selected(), stage).radius;
   const distance = direction === 'left' ? start.x + radius :
-    direction === 'right' ? stage.width + radius - start.x : start.y + radius;
+    direction === 'right' ? stage.width + radius - start.x :
+      direction === 'bottom' ? stage.height + radius - start.y : start.y + radius;
   const step = (now) => {
     if (token !== fallToken || !motionEnabled || phase !== 'idle' || !objectLive || state.mode !== 'performance') return;
     const travel = fallPosition(0, Math.max(0, distance), now - startedAt);
     center.x = start.x + (direction === 'right' ? travel : direction === 'left' ? -travel : 0);
-    center.y = start.y - (direction === 'top' ? travel : 0);
+    center.y = start.y + (direction === 'bottom' ? travel : direction === 'top' ? -travel : 0);
     paintCoin(center.x, center.y, radius, 1, 1);
     if (travel < distance - 0.5) {
       fallFrame = window.requestAnimationFrame(step);
@@ -876,7 +968,8 @@ function startOutwardFall(direction) {
 }
 
 function startWobble(magnitude) {
-  if (!motionEnabled || state.mode !== 'performance' || phase !== 'idle' || !objectLive || pointers.size !== 0) return;
+  if (!motionEnabled || !motionEffects.wobble || state.mode !== 'performance' || phase !== 'idle' ||
+    !objectLive || pointers.size !== 0 || stageEl.classList.contains('is-breaking')) return;
   cancelWobble();
   const token = wobbleToken;
   const startedAt = performance.now();
@@ -899,16 +992,10 @@ function startWobble(magnitude) {
   wobbleFrame = window.requestAnimationFrame(step);
 }
 
-function applyTilt(next, direction) {
-  const wasUpright = upright;
-  const wasOutward = activeOutwardDirection !== null;
-  if (wasOutward && activeOutwardDirection !== direction) {
-    cancelFall();
-    paintLiveCoin();
-  }
-  upright = next;
-  if (direction) startOutwardFall(direction);
-  else if (next && (!wasUpright || wasOutward)) startFall();
+function applyTilt(vector) {
+  if (!vector) return;
+  tiltVector = vector;
+  if (motionEffects.tilt) startTiltTracking();
 }
 
 function onDeviceOrientation(event) {
@@ -916,14 +1003,7 @@ function onDeviceOrientation(event) {
   if (!Number.isFinite(event.beta) || !Number.isFinite(event.gamma)) return;
   orientationHasReading = true;
   const screenAngle = window.screen?.orientation?.angle ?? window.orientation;
-  const direction = orientationExitDirection({ beta: event.beta, gamma: event.gamma, screenAngle });
-  const next = isPhoneUpright({
-    beta: event.beta,
-    gamma: event.gamma,
-    screenAngle,
-    screenOrientation: window.screen?.orientation?.type,
-  });
-  applyTilt(next, direction);
+  applyTilt(orientationTiltVector({ beta: event.beta, gamma: event.gamma, screenAngle }));
 }
 
 function onDeviceMotion(event) {
@@ -932,14 +1012,9 @@ function onDeviceMotion(event) {
   const gravityMagnitude = gravity && Number.isFinite(gravity.x) && Number.isFinite(gravity.y) && Number.isFinite(gravity.z)
     ? Math.hypot(gravity.x, gravity.y, gravity.z) : 0;
   if (!orientationHasReading && gravityMagnitude >= 7 && gravityMagnitude <= 12) {
-    const direction = gravityExitDirection(gravity, {
+    applyTilt(gravityTiltVector(gravity, {
       screenAngle: window.screen?.orientation?.angle ?? window.orientation,
-    });
-    const next = isGravityUpright(gravity, {
-      screenAngle: window.screen?.orientation?.angle ?? window.orientation,
-      screenOrientation: window.screen?.orientation?.type,
-    });
-    applyTilt(next, direction);
+    }));
   }
   if (state.mode !== 'performance') {
     shakeSample = null;
@@ -949,17 +1024,17 @@ function onDeviceMotion(event) {
   shakeSample = impulse.sample;
   if (!impulse.detected) return;
   const now = performance.now();
-  if (!objectLive && isBreakthroughSnap(impulse, now, lastSnapAt)) {
+  if (motionEffects.breakthrough && !objectLive && isBreakthroughSnap(impulse, now, lastSnapAt)) {
     if (breakthroughSpawn()) lastSnapAt = now;
     return;
   }
-  if (!objectLive) return;
+  if (!motionEffects.wobble || !objectLive) return;
   if (now - lastShakeAt < 700) return;
   lastShakeAt = now;
   startWobble(impulse.magnitude);
 }
 
-function disableMotion(message = '기기 움직임 연출을 껐습니다.') {
+function disableMotion(message = '선택한 기기 움직임 연출이 없습니다.') {
   motionRequestId += 1;
   motionEnabled = false;
   upright = false;
@@ -969,21 +1044,23 @@ function disableMotion(message = '기기 움직임 연출을 껐습니다.') {
   cancelSensorEffects();
   window.removeEventListener('deviceorientation', onDeviceOrientation);
   window.removeEventListener('devicemotion', onDeviceMotion);
-  motionToggle.checked = false;
   motionNote.textContent = message;
   paintLiveCoin();
 }
 
 async function enableMotion() {
+  if (!Object.values(motionEffects).some((enabled) => enabled === true)) return;
   const requestId = ++motionRequestId;
-  unlockBreakSound();
+  if (motionEffects.breakthrough) unlockBreakSound();
   if (window.isSecureContext === false) {
+    motionPermissionDenied = true;
     disableMotion('센서는 HTTPS에서만 사용할 수 있습니다. 손가락 연출은 그대로 사용할 수 있습니다.');
     return;
   }
   const orientationAvailable = 'DeviceOrientationEvent' in window || 'ondeviceorientation' in window;
   const motionAvailable = 'DeviceMotionEvent' in window || 'ondevicemotion' in window;
   if (!orientationAvailable && !motionAvailable) {
+    motionPermissionDenied = true;
     disableMotion('이 기기의 브라우저는 움직임 센서를 지원하지 않습니다.');
     return;
   }
@@ -1000,7 +1077,7 @@ async function enableMotion() {
       requestedSensors.push('motion');
     }
     const permissions = await Promise.allSettled(requests);
-    if (requestId !== motionRequestId || !motionToggle.checked) return;
+    if (requestId !== motionRequestId) return;
     const allowed = (sensor) => {
       const index = requestedSensors.indexOf(sensor);
       return index < 0 || permissions[index].status === 'fulfilled' && permissions[index].value === 'granted';
@@ -1008,6 +1085,7 @@ async function enableMotion() {
     const useOrientation = orientationAvailable && allowed('orientation');
     const useMotion = motionAvailable && allowed('motion');
     if (!useOrientation && !useMotion) {
+      motionPermissionDenied = true;
       disableMotion('센서 권한이 없어 움직임 연출을 켜지 못했습니다.');
       return;
     }
@@ -1015,11 +1093,14 @@ async function enableMotion() {
     if (useOrientation) window.addEventListener('deviceorientation', onDeviceOrientation);
     if (useMotion) window.addEventListener('devicemotion', onDeviceMotion);
     motionNote.textContent = useOrientation && useMotion
-      ? '센서 연출을 켰습니다. 물건이 숨었을 때 강하게 스냅하면 중앙을 뚫고 나타납니다.'
-      : useOrientation ? '세우기 반응을 켰습니다. 이 기기에서는 스냅 반응을 사용할 수 없습니다.'
-        : '움직임 반응을 켰습니다. 물건을 기울이거나 강하게 스냅해 보세요.';
+      ? '선택한 움직임 연출을 사용할 수 있습니다.'
+      : useOrientation ? '기울기 연출을 사용할 수 있습니다. 이 기기에서는 스냅과 흔들기를 사용할 수 없습니다.'
+        : '움직임 센서를 사용할 수 있습니다.';
   } catch {
-    if (requestId === motionRequestId) disableMotion('센서 권한을 받지 못했습니다. 손가락 연출은 그대로 사용할 수 있습니다.');
+    if (requestId === motionRequestId) {
+      motionPermissionDenied = true;
+      disableMotion('센서 권한을 받지 못했습니다. 손가락 연출은 그대로 사용할 수 있습니다.');
+    }
   }
 }
 
@@ -1300,6 +1381,7 @@ function startDrag(event) {
 
 function onPointerDown(event) {
   if (state.mode !== 'performance' || !gestureGuide.hidden) return;
+  if (!motionEnabled && !motionPermissionDenied && Object.values(motionInputs).some((input) => input.checked)) void enableMotion();
   if (event.pointerType === 'mouse' && event.button !== 0) return;
   const screen = screenPoint(event);
   pointers.set(event.pointerId, { start: screen, last: screen });
@@ -1436,10 +1518,9 @@ function onEdgeKey(event) {
 }
 
 function bind() {
-  motionToggle.addEventListener('change', () => {
-    if (motionToggle.checked) void enableMotion();
-    else disableMotion();
-  });
+  for (const input of [...Object.values(motionInputs), ...Object.values(motionEdges)]) {
+    input.addEventListener('change', saveMotionEffects);
+  }
   sizeInput.min = String(LIMITS.coinSize.min);
   sizeInput.max = String(LIMITS.coinSize.max);
   fadeInput.min = String(LIMITS.fadeDistance.min);
@@ -1602,7 +1683,7 @@ function bind() {
   addButton.addEventListener('click', addPreset);
   deleteButton.addEventListener('click', deleteSelected);
   startButton.addEventListener('click', () => {
-    if (motionEnabled) unlockBreakSound();
+    if (!motionEnabled && Object.values(motionInputs).some((input) => input.checked)) void enableMotion();
     showPerformance({ persistMode: true, keepGone: false });
   });
   window.addEventListener('keydown', (event) => {
@@ -1639,12 +1720,15 @@ function bind() {
 
 concealCoin();
 loadState();
+loadMotionEffects();
 applyObjectKind(readObjectKind());
 try {
   const storedChoices = JSON.parse(localStorage.getItem(IMAGE_CHOICE_KEY) || '{}');
   if (storedChoices && typeof storedChoices === 'object' && !Array.isArray(storedChoices)) imageChoices = storedChoices;
 } catch { imageChoices = {}; }
 bind();
+if (typeof window.DeviceOrientationEvent?.requestPermission !== 'function' &&
+    typeof window.DeviceMotionEvent?.requestPermission !== 'function') void enableMotion();
 const imagesReady = loadImages();
 renderRecovery();
 renderList();

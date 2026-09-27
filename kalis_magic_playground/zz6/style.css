@@ -234,6 +234,16 @@ input[type="range"] {
   accent-color: var(--burgundy);
 }
 
+.motion-edges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin: 0 0 12px 32px;
+}
+
+.motion-edges label { display: inline-flex; align-items: center; gap: 5px; min-height: 36px; }
+.motion-edges input { width: 20px; height: 20px; accent-color: var(--burgundy); }
+
 .note:empty { display: none; }
 
 /* Kept in the DOM for app.js. Tap position replaces these until follow-up. */

@@ -24,6 +24,45 @@ function screenVector(x, y, screenAngle = 0) {
   return { x, y };
 }
 
+export function orientationTiltVector({ beta, gamma, screenAngle } = {}) {
+  if (!Number.isFinite(beta) || !Number.isFinite(gamma)) return null;
+  return screenVector(Math.sin(gamma * Math.PI / 180),
+    Math.sin(beta * Math.PI / 180), screenAngle);
+}
+
+export function gravityTiltVector(gravity, { screenAngle } = {}) {
+  const vector = finiteVector(gravity);
+  if (!vector) return null;
+  const magnitude = Math.hypot(vector.x, vector.y, vector.z);
+  if (magnitude < 7 || magnitude > 12) return null;
+  return screenVector(-vector.x / magnitude, vector.y / magnitude, screenAngle);
+}
+
+export function advanceTiltBody(body, tilt, stage, radius, elapsedMs, exitEdges = []) {
+  const dt = Math.min(0.05, Math.max(0, elapsedMs / 1000));
+  const drive = 1800;
+  const drag = Math.max(0, 1 - dt * 1.8);
+  const velocity = {
+    x: Math.max(-1200, Math.min(1200, (body.vx + tilt.x * drive * dt) * drag)),
+    y: Math.max(-1200, Math.min(1200, (body.vy + tilt.y * drive * dt) * drag)),
+  };
+  const next = { ...body, vx: velocity.x, vy: velocity.y,
+    x: body.x + velocity.x * dt, y: body.y + velocity.y * dt };
+  const walls = [
+    ['left', 'x', radius, -1], ['right', 'x', stage.width - radius, 1],
+    ['top', 'y', radius, -1], ['bottom', 'y', stage.height - radius, 1],
+  ];
+  let exit = null;
+  for (const [edge, axis, boundary, sign] of walls) {
+    if ((next[axis] - boundary) * sign <= 0 || next[axis === 'x' ? 'vx' : 'vy'] * sign <= 0) continue;
+    next[axis] = boundary;
+    next[axis === 'x' ? 'vx' : 'vy'] *= -0.55;
+    next.collisions = (next.collisions || 0) + 1;
+    if (next.collisions >= 2 && exitEdges.includes(edge)) exit = edge;
+  }
+  return { body: next, exit };
+}
+
 function exitDirection(vector) {
   if (Math.abs(vector.x) >= 0.5 && Math.abs(vector.x) >= Math.abs(vector.y) * 0.6) {
     return vector.x > 0 ? 'right' : 'left';
