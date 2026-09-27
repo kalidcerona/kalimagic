@@ -569,6 +569,23 @@ input[type="range"]:focus-visible,
 .stage.is-breaking .breakthrough { animation: screen-break 1.35s both; }
 .stage.is-breaking .breakthrough-hole { animation: break-hole 1.35s both; transform-origin: 50% 50%; }
 .stage.is-breaking .coin { visibility: hidden; }
+.motion-activate {
+  position: absolute;
+  z-index: 5;
+  right: max(12px, env(safe-area-inset-right));
+  bottom: max(12px, env(safe-area-inset-bottom));
+  padding: 9px 13px;
+  border: 1px solid rgba(255, 255, 255, .5);
+  border-radius: 18px;
+  background: rgba(16, 23, 31, .88);
+  color: #fff;
+  font: inherit;
+  font-size: 12px;
+  touch-action: manipulation;
+}
+.motion-activate[hidden] { display: none; }
+.motion-activate:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+.motion-activate:disabled { opacity: .65; }
 @keyframes screen-break {
   0% { opacity: 0; transform: translate(-50%, -50%) scale(.2); }
   10% { opacity: 1; transform: translate(-50%, -50%) scale(1.09); }

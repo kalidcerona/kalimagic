@@ -69,16 +69,16 @@
             <input id="motion-enabled" type="checkbox">
             <span>기울이면 물건 이동</span>
           </label>
-          <label class="motion-option"><input id="motion-exit" type="checkbox"><span>벽에 두 번 부딪히면 선택한 방향으로 탈출 (기울기 이동 필요)</span></label>
+          <label class="motion-option"><input id="motion-exit" type="checkbox"><span>벽에 두 번 부딪히면 선택한 방향으로 탈출 (기울기 이동도 켜짐)</span></label>
           <div class="motion-edges" aria-label="기울기 탈출 방향">
             <label><input id="motion-edge-top" type="checkbox"> 위</label>
             <label><input id="motion-edge-left" type="checkbox"> 왼쪽</label>
             <label><input id="motion-edge-right" type="checkbox"> 오른쪽</label>
             <label><input id="motion-edge-bottom" type="checkbox"> 아래</label>
           </div>
-          <label class="motion-option"><input id="motion-breakthrough" type="checkbox"><span>숨은 물건이 강한 스냅에 화면을 깨고 사라짐</span></label>
+          <label class="motion-option"><input id="motion-breakthrough" type="checkbox"><span>강한 스냅에 물건이 사라지고 화면이 깨짐</span></label>
           <label class="motion-option"><input id="motion-wobble" type="checkbox"><span>흔들면 보이는 물건이 떨림</span></label>
-          <p id="motion-note" class="hint" role="status">선택한 연출은 저장됩니다. 기기에 따라 공연 시작 시 센서 권한을 요청합니다.</p>
+          <p id="motion-note" class="hint" role="status">선택한 연출은 저장됩니다. 공연 화면을 다시 열었을 때 움직임 켜기를 눌러 센서를 연결하세요.</p>
         </div>
       </details>
 
@@ -212,6 +212,7 @@
   </main>
 
   <div id="stage" class="stage">
+    <button type="button" id="motion-activate" class="motion-activate" hidden>움직임 켜기</button>
     <img id="stage-wallpaper" class="stage-wallpaper" alt="" aria-hidden="true">
     <div class="home" aria-hidden="true">
       <div class="home-icons">

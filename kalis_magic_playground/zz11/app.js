@@ -1,5 +1,6 @@
 import { angleAtPoint, mod, landingRotation, randomInt, chooseOutcome } from './logic.js';
 
+const stage = document.querySelector('.stage');
 const wrap = document.getElementById('wheel-wrap');
 const arrow = document.getElementById('spinner-arrow');
 const settings = document.getElementById('settings');
@@ -26,6 +27,7 @@ let busy = false;
 let twoFingerStart = null;
 let installPrompt = null;
 let statusTimer = null;
+const pendingSpins = [];
 // Each new app session starts with a fresh target touch, even if the last run was saved.
 let needsFirstTouchTarget = true;
 
@@ -50,26 +52,26 @@ function showStatus(message, duration = 0) {
   if (duration) statusTimer = setTimeout(() => { if (!busy) spinStatus.textContent = ''; }, duration);
 }
 
-wrap.addEventListener('pointerdown', event => {
-  if (!settings.hidden || !guide.hidden || busy || event.isPrimary === false) return;
+stage.addEventListener('pointerdown', event => {
+  if (!settings.hidden || !guide.hidden || event.isPrimary === false) return;
   const angle = angleAt(event);
   drag = { id: event.pointerId, startX: event.clientX, startY: event.clientY, startAngle: angle,
     lastAngle: angle, amount: 0, started: performance.now(), selecting: needsFirstTouchTarget || state.targetAngle === null };
-  wrap.setPointerCapture(event.pointerId);
+  stage.setPointerCapture(event.pointerId);
 });
-wrap.addEventListener('pointermove', event => {
-  if (!drag || event.pointerId !== drag.id || busy) return;
+stage.addEventListener('pointermove', event => {
+  if (!drag || event.pointerId !== drag.id) return;
   const angle = angleAt(event);
   const delta = signedDifference(angle, drag.lastAngle);
   drag.amount += delta;
   drag.lastAngle = angle;
-  if (!drag.selecting && Math.abs(drag.amount) > 2) {
+  if (!busy && !drag.selecting && Math.abs(drag.amount) > 2) {
     rotation += delta;
     arrow.style.transform = `rotate(${rotation}deg)`;
   }
 });
-wrap.addEventListener('pointerup', event => {
-  if (!drag || event.pointerId !== drag.id || busy) return;
+stage.addEventListener('pointerup', event => {
+  if (!drag || event.pointerId !== drag.id) return;
   const gesture = drag;
   drag = null;
   if (gesture.selecting) {
@@ -84,14 +86,24 @@ wrap.addEventListener('pointerup', event => {
   }
   const distance = Math.hypot(event.clientX - gesture.startX, event.clientY - gesture.startY);
   const travel = Math.abs(gesture.amount);
-  spin(travel >= 8 ? (gesture.amount < 0 ? -1 : 1) : 1,
+  requestSpin(travel >= 8 ? (gesture.amount < 0 ? -1 : 1) : 1,
     Math.max(travel, distance), performance.now() - gesture.started);
 });
-wrap.addEventListener('pointercancel', () => {
+stage.addEventListener('pointercancel', () => {
   drag = null;
-  rotation = state.rotation;
-  arrow.style.transform = `rotate(${rotation}deg)`;
+  if (!busy) {
+    rotation = state.rotation;
+    arrow.style.transform = `rotate(${rotation}deg)`;
+  }
 });
+
+function requestSpin(direction, travel, elapsed) {
+  if (busy) {
+    if (pendingSpins.length < 8) pendingSpins.push({ direction, travel, elapsed });
+    return;
+  }
+  spin(direction, travel, elapsed);
+}
 
 function spin(direction, travel, elapsed) {
   busy = true;
@@ -116,6 +128,8 @@ function spin(direction, travel, elapsed) {
     save();
     busy = false;
     showStatus('', 0);
+    const next = pendingSpins.shift();
+    if (next) spin(next.direction, next.travel, next.elapsed);
   };
 }
 
@@ -123,8 +137,10 @@ document.addEventListener('touchstart', event => {
   if (event.touches.length === 2 && settings.hidden && guide.hidden) {
     twoFingerStart = (event.touches[0].clientY + event.touches[1].clientY) / 2;
     drag = null;
-    rotation = state.rotation;
-    arrow.style.transform = `rotate(${rotation}deg)`;
+    if (!busy) {
+      rotation = state.rotation;
+      arrow.style.transform = `rotate(${rotation}deg)`;
+    }
   }
 }, { passive: true });
 document.addEventListener('touchmove', event => {
@@ -139,7 +155,7 @@ document.addEventListener('touchmove', event => {
 document.addEventListener('touchend', event => { if (event.touches.length < 2) twoFingerStart = null; }, { passive: true });
 
 document.getElementById('settings-close').addEventListener('click', closeSettings);
-document.getElementById('force-spin').addEventListener('change', event => { state.forceSpin = Number(event.target.value); save(); });
+document.getElementById('force-spin').addEventListener('change', event => { state.forceSpin = Number(event.target.value); state.spins = 0; state.previousAngle = null; pendingSpins.length = 0; save(); refreshSettings(); });
 document.getElementById('reset-run').addEventListener('click', () => { state.spins = 0; state.previousAngle = null; needsFirstTouchTarget = state.targetAngle === null; save(); refreshSettings(); });
 document.getElementById('clear-target').addEventListener('click', () => { state.targetAngle = null; state.spins = 0; state.previousAngle = null; needsFirstTouchTarget = true; save(); refreshSettings(); closeSettings(); });
 document.getElementById('guide-close').addEventListener('click', () => { guide.hidden = true; try { localStorage.setItem('zz11-guide-seen-v2', '1'); } catch { /* Ignore storage failures. */ } });
