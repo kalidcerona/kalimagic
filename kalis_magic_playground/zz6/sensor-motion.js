@@ -40,11 +40,11 @@ export function gravityTiltVector(gravity, { screenAngle } = {}) {
 
 export function advanceTiltBody(body, tilt, stage, radius, elapsedMs, exitEdges = []) {
   const dt = Math.min(0.05, Math.max(0, elapsedMs / 1000));
-  const drive = 1800;
-  const drag = Math.max(0, 1 - dt * 1.8);
+  const drive = 3000;
+  const drag = Math.max(0, 1 - dt * 1.25);
   const velocity = {
-    x: Math.max(-1200, Math.min(1200, (body.vx + tilt.x * drive * dt) * drag)),
-    y: Math.max(-1200, Math.min(1200, (body.vy + tilt.y * drive * dt) * drag)),
+    x: Math.max(-1800, Math.min(1800, (body.vx + tilt.x * drive * dt) * drag)),
+    y: Math.max(-1800, Math.min(1800, (body.vy + tilt.y * drive * dt) * drag)),
   };
   const next = { ...body, vx: velocity.x, vy: velocity.y,
     x: body.x + velocity.x * dt, y: body.y + velocity.y * dt };
@@ -53,14 +53,25 @@ export function advanceTiltBody(body, tilt, stage, radius, elapsedMs, exitEdges 
     ['top', 'y', radius, -1], ['bottom', 'y', stage.height - radius, 1],
   ];
   let exit = null;
+  let exitSpeed = 0;
   for (const [edge, axis, boundary, sign] of walls) {
     if ((next[axis] - boundary) * sign <= 0 || next[axis === 'x' ? 'vx' : 'vy'] * sign <= 0) continue;
+    const impactSpeed = next[axis === 'x' ? 'vx' : 'vy'] * sign;
     next[axis] = boundary;
     next[axis === 'x' ? 'vx' : 'vy'] *= -0.55;
     next.collisions = (next.collisions || 0) + 1;
-    if (next.collisions >= 2 && exitEdges.includes(edge)) exit = edge;
+    if (next.collisions >= 2 && exitEdges.includes(edge)) {
+      exit = edge;
+      exitSpeed = impactSpeed;
+    }
   }
-  return { body: next, exit };
+  return { body: next, exit, exitSpeed };
+}
+
+export function outwardTravel(initialSpeed, elapsedMs, accelerationPxPerSecondSquared = 2600) {
+  const time = Number.isFinite(elapsedMs) ? Math.max(0, elapsedMs) / 1000 : 0;
+  const speed = Number.isFinite(initialSpeed) ? Math.max(0, initialSpeed) : 0;
+  return speed * time + 0.5 * accelerationPxPerSecondSquared * time * time;
 }
 
 function exitDirection(vector) {

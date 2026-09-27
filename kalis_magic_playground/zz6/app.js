@@ -24,7 +24,7 @@ import {
   wallpaperCropRect,
   classifyTwoFingerSwipe,
 } from './logic.js';
-import { advanceTiltBody, fallPosition, gravityTiltVector, isBreakthroughSnap, orientationTiltVector, shakeImpulse } from './sensor-motion.js';
+import { advanceTiltBody, fallPosition, gravityTiltVector, isBreakthroughSnap, orientationTiltVector, outwardTravel, shakeImpulse } from './sensor-motion.js';
 
 const gestureGuide = document.getElementById('settings-gesture-guide');
 const gestureGuideDismiss = document.getElementById('settings-gesture-dismiss');
@@ -863,10 +863,10 @@ function breakthroughSpawn() {
     (phase !== 'awaiting' && phase !== 'gone')) return false;
   cancelSensorEffects();
   clearBreakthrough();
-  const stage = measureStage();
-  revealSpawn({ x: stage.width / 2, y: stage.height / 2 }, { sensorFall: false });
-  setGoneSession(false);
-  // Restart the CSS animation if a new valid snap follows a previous reveal.
+  phase = 'gone';
+  concealCoin();
+  setGoneSession(true);
+  // Restart the crack animation while the object remains concealed.
   void stageEl.offsetWidth;
   stageEl.classList.add('is-breaking');
   playBreakSound();
@@ -924,7 +924,7 @@ function startTiltTracking() {
     center = { x: tiltBody.x, y: tiltBody.y };
     paintLiveCoin();
     if (result.exit) {
-      startOutwardFall(result.exit);
+      startOutwardFall(result.exit, result.exitSpeed);
       return;
     }
     tiltFrame = window.requestAnimationFrame(step);
@@ -932,7 +932,7 @@ function startTiltTracking() {
   tiltFrame = window.requestAnimationFrame(step);
 }
 
-function startOutwardFall(direction) {
+function startOutwardFall(direction, impactSpeed = 0) {
   if (!motionEnabled || !motionEffects.exit || !motionEffects.edges.includes(direction) || !direction || state.mode !== 'performance' || phase !== 'idle' ||
     !objectLive || pointers.size !== 0 || stageEl.classList.contains('is-breaking')) return;
   if (tiltFrame) window.cancelAnimationFrame(tiltFrame);
@@ -943,18 +943,16 @@ function startOutwardFall(direction) {
   const token = fallToken;
   const startedAt = performance.now();
   const start = { ...center };
-  const stage = measureStage();
-  const radius = coinMetrics(selected(), stage).radius;
-  const distance = direction === 'left' ? start.x + radius :
-    direction === 'right' ? stage.width + radius - start.x :
-      direction === 'bottom' ? stage.height + radius - start.y : start.y + radius;
+  const launchSpeed = Math.min(Math.max(0, impactSpeed), 420);
   const step = (now) => {
     if (token !== fallToken || !motionEnabled || phase !== 'idle' || !objectLive || state.mode !== 'performance') return;
-    const travel = fallPosition(0, Math.max(0, distance), now - startedAt);
+    const stage = measureStage();
+    const radius = coinMetrics(selected(), stage).radius;
+    const travel = outwardTravel(launchSpeed, now - startedAt);
     center.x = start.x + (direction === 'right' ? travel : direction === 'left' ? -travel : 0);
     center.y = start.y + (direction === 'bottom' ? travel : direction === 'top' ? -travel : 0);
     paintCoin(center.x, center.y, radius, 1, 1);
-    if (travel < distance - 0.5) {
+    if (!fullyOffscreen(center, radius, stage, direction)) {
       fallFrame = window.requestAnimationFrame(step);
     } else {
       fallFrame = 0;

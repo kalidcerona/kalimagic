@@ -31,7 +31,7 @@ export function randomInt(max, random = crypto.getRandomValues.bind(crypto)) {
 export function chooseOutcome(spinNumber, forceSpin, targetAngle, previousAngle, draw = randomInt) {
   if (spinNumber === forceSpin && targetAngle !== null) return mod(targetAngle);
   const candidates = Array.from({ length: 360 }, (_, angle) => angle)
-    .filter((angle) => (targetAngle === null || angularDistance(angle, targetAngle) > 12)
+    .filter((angle) => (targetAngle === null || angularDistance(angle, targetAngle) > 30)
       && (previousAngle === null || angularDistance(angle, previousAngle) > 10));
   return candidates[draw(candidates.length)];
 }
