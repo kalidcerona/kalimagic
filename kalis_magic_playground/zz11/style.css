@@ -11,3 +11,16 @@
 .wheel:after{inset:14%;border:1px solid #e9d6a145;box-shadow:0 0 0 1px #08131b,0 0 0 4px #d9bf7940}
 .spinner-arrow{position:absolute;inset:0;width:100%;height:100%;z-index:2;pointer-events:none;filter:drop-shadow(0 5px 4px #000a);will-change:transform;transform-box:view-box;transform-origin:50% 50%}
 .wheel-pin{z-index:3}
+
+/* Number-free roulette styling keeps the secret landing direction continuous. */
+:root{background:#082c21;color:#f8efda}
+.stage{background:radial-gradient(circle at 50% 46%,#176747 0%,#0d4935 39%,#082e25 72%,#041b18 100%)}
+.stage-top{color:#e5d3a2;text-shadow:0 1px 2px #03150f}.brand{font:700 11px Georgia,serif;letter-spacing:.25em}.stage-title{font:700 17px Georgia,"Apple SD Gothic Neo",serif;color:#f7e3a9;letter-spacing:.12em}
+.instruction{color:#f7ecd1}.spin-status{color:#e1cc93}
+.wheel-wrap{border-radius:50%;filter:drop-shadow(0 24px 22px #000a);box-shadow:0 0 0 6px #63411f,0 0 0 10px #bd914e,0 0 0 13px #332013,0 0 0 15px #e2bc70}
+.wheel{border:8px solid #c69a52;box-shadow:inset 0 0 0 4px #2c190e,inset 0 0 0 8px #e7c37a,inset 0 0 18px 13px #0009; background:radial-gradient(circle,#0b3e2d 0 24%,#d4ae6c 24.3% 25.1%,#21180f 25.4% 48%,transparent 48.3%),conic-gradient(from -7.5deg,#136441 0 15deg,transparent 15deg 360deg),repeating-conic-gradient(from -7.5deg,#a61827 0deg 14deg,#dfbb78 14deg 15deg,#151a19 15deg 29deg,#dfbb78 29deg 30deg)}
+.wheel:before{content:"";position:absolute;inset:11%;border-radius:50%;border:2px solid #e5c177;box-shadow:0 0 0 4px #28180e,0 0 0 7px #b38545,inset 0 0 0 2px #3e2b18;pointer-events:none}
+.wheel:after{inset:29%;border:3px solid #e2c07c;background:radial-gradient(circle at 37% 30%,#1b6046 0%,#0b3c2c 53%,#092a21 100%);box-shadow:0 0 0 5px #352012,0 0 0 9px #bf9659,inset 0 0 18px #0007}
+.spinner-arrow{filter:drop-shadow(0 4px 3px #000b)}
+.wheel-pin{width:13%;font-size:clamp(24px,6vw,42px);background:radial-gradient(circle at 35% 30%,#fae5ac,#af7e3e 48%,#64411d 82%);border:3px solid #f5d998;box-shadow:0 0 0 3px #503216,0 6px 12px #000a}
+.overlay{background:#03130fe8}.panel{background:#10392d;border-color:#b28a4d;color:#fbf1dc}.setting-row select,.setting-actions button,.install button{background:#154936;border-color:#a78953;color:#f8efd9}.setting-row strong,.install button{color:#f6d384}

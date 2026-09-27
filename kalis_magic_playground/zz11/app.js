@@ -21,6 +21,10 @@ try {
     }
   }
 } catch { /* Storage may be unavailable in a private browser. */ }
+// Keep the spin setting and arrow position, but require a new secret direction on every launch.
+state.targetAngle = null;
+state.spins = 0;
+state.previousAngle = null;
 let rotation = Number.isFinite(state.rotation) ? state.rotation : 0;
 let drag = null;
 let busy = false;
@@ -32,6 +36,7 @@ const pendingSpins = [];
 let needsFirstTouchTarget = true;
 
 arrow.style.transform = `rotate(${rotation}deg)`;
+save();
 
 function save() { try { localStorage.setItem(key, JSON.stringify(state)); } catch { /* Keep this performance in memory. */ } }
 function refreshSettings() {

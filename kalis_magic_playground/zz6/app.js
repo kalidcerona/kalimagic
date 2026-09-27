@@ -55,6 +55,7 @@ for (const type of ['touchstart', 'touchmove', 'touchend', 'touchcancel']) {
 
 const NOTICE_KEY = 'tobira.v1.notice';
 const SESSION_GONE = 'tobira.session-gone';
+const SESSION_CRACK = 'tobira.session-crack';
 const PREVIOUS_RECOVERY_KEY = `${RECOVERY_KEY}.previous`;
 // Appearance is global. It must not be written into the preset schema.
 const OBJECT_KIND_KEY = 'tobira.objectKind.v1';
@@ -430,7 +431,6 @@ let activeOutwardDirection = null;
 let shakeSample = null;
 let lastShakeAt = -Infinity;
 let lastSnapAt = -Infinity;
-let breakTimer = 0;
 let audioContext = null;
 let fallFrame = 0;
 let fallToken = 0;
@@ -487,6 +487,18 @@ function setGoneSession(gone) {
   } catch {
     // Session storage is only a reload guard.
   }
+}
+
+function readCrackSession() {
+  try { return sessionStorage.getItem(SESSION_CRACK) === '1'; }
+  catch { return false; }
+}
+
+function setCrackSession(cracked) {
+  try {
+    if (cracked) sessionStorage.setItem(SESSION_CRACK, '1');
+    else sessionStorage.removeItem(SESSION_CRACK);
+  } catch { /* Keep the current visual state in memory. */ }
 }
 
 function stashRecovery(raw) {
@@ -793,6 +805,7 @@ function cancelFall() {
   fallToken += 1;
   if (fallFrame) window.cancelAnimationFrame(fallFrame);
   fallFrame = 0;
+  if (activeOutwardDirection && phase === 'exiting') phase = 'idle';
   activeOutwardDirection = null;
 }
 
@@ -858,9 +871,8 @@ function playBreakSound() {
 }
 
 function clearBreakthrough() {
-  window.clearTimeout(breakTimer);
-  breakTimer = 0;
   stageEl.classList.remove('is-breaking');
+  setCrackSession(false);
 }
 
 function breakthroughSpawn() {
@@ -874,13 +886,8 @@ function breakthroughSpawn() {
   // Restart the crack animation while the object remains concealed.
   void stageEl.offsetWidth;
   stageEl.classList.add('is-breaking');
+  setCrackSession(true);
   playBreakSound();
-  breakTimer = window.setTimeout(() => {
-    clearBreakthrough();
-    phase = 'gone';
-    concealCoin();
-    setGoneSession(true);
-  }, 1350);
   return true;
 }
 
@@ -911,14 +918,14 @@ function startFall() {
 function startTiltTracking() {
   if (!motionEnabled || !motionEffects.tilt || state.mode !== 'performance' ||
     phase !== 'idle' || !objectLive || pointers.size !== 0 ||
-    stageEl.classList.contains('is-breaking') || tiltFrame) return;
+    stageEl.classList.contains('is-breaking') || activeOutwardDirection || tiltFrame) return;
   tiltBody ||= { x: center.x, y: center.y, vx: 0, vy: 0, collisions: 0 };
   tiltLastAt = 0;
   const step = (now) => {
     tiltFrame = 0;
     if (!motionEnabled || !motionEffects.tilt || state.mode !== 'performance' ||
       phase !== 'idle' || !objectLive || pointers.size !== 0 ||
-      stageEl.classList.contains('is-breaking')) return;
+      stageEl.classList.contains('is-breaking') || activeOutwardDirection) return;
     const stage = measureStage();
     const radius = coinMetrics(selected(), stage).radius;
     const elapsed = tiltLastAt ? now - tiltLastAt : 16;
@@ -945,15 +952,16 @@ function startOutwardFall(direction, impactSpeed = 0) {
   if (activeOutwardDirection === direction) return;
   cancelFall();
   activeOutwardDirection = direction;
+  phase = 'exiting';
   const token = fallToken;
   const startedAt = performance.now();
   const start = { ...center };
-  const launchSpeed = Math.min(Math.max(0, impactSpeed), 420);
+  const launchSpeed = Math.min(Math.max(0, impactSpeed), 120);
   const step = (now) => {
-    if (token !== fallToken || !motionEnabled || phase !== 'idle' || !objectLive || state.mode !== 'performance') return;
+    if (token !== fallToken || !motionEnabled || phase !== 'exiting' || !objectLive || state.mode !== 'performance') return;
     const stage = measureStage();
     const radius = coinMetrics(selected(), stage).radius;
-    const travel = outwardTravel(launchSpeed, now - startedAt);
+    const travel = outwardTravel(launchSpeed, now - startedAt, 550);
     center.x = start.x + (direction === 'right' ? travel : direction === 'left' ? -travel : 0);
     center.y = start.y + (direction === 'bottom' ? travel : direction === 'top' ? -travel : 0);
     paintCoin(center.x, center.y, radius, 1, 1);
@@ -1044,7 +1052,6 @@ function disableMotion(message = '선택한 기기 움직임 연출이 없습니
   upright = false;
   lastOrientationAt = -Infinity;
   shakeSample = null;
-  clearBreakthrough();
   cancelSensorEffects();
   window.removeEventListener('deviceorientation', onDeviceOrientation);
   window.removeEventListener('devicemotion', onDeviceMotion);
@@ -1213,6 +1220,7 @@ function showSettings() {
 }
 
 function showPerformance({ persistMode = true, keepGone = false } = {}) {
+  const keepCrack = keepGone && readCrackSession();
   cancelExit();
   endPointers();
   state.mode = 'performance';
@@ -1225,6 +1233,10 @@ function showPerformance({ persistMode = true, keepGone = false } = {}) {
     phase = 'gone';
     coinEl.classList.add('is-gone');
     paintCoin(center.x, center.y, coinMetrics(selected(), lastStage).radius, 0, 1);
+    if (keepCrack) {
+      stageEl.classList.add('is-breaking');
+      setCrackSession(true);
+    }
   } else {
     setGoneSession(false);
   }
@@ -1504,6 +1516,11 @@ function onPointerUp(event) {
 
 function onResize() {
   if (state.mode !== 'performance') return;
+  if (activeOutwardDirection && phase === 'exiting') {
+    lastStage = measureStage();
+    stageRect = stageEl.getBoundingClientRect();
+    return;
+  }
   cancelSensorEffects();
   const next = measureStage();
   stageRect = stageEl.getBoundingClientRect();
