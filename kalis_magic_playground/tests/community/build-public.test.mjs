@@ -217,7 +217,7 @@ test('Asrai, ALTER, and spinner personal builds keep exact runtime mirrors and d
   for (const [source, route, files, name] of [
     ['magic-asrai', 'zz8', ASRAI_FILES, '아스라이'],
     ['magic-alter', 'zz10', ALTER_FILES, 'ALTER'],
-    ['magic-spinner', 'zz11', SPINNER_FILES, '회전판']
+    ['magic-spinner', 'zz11', SPINNER_FILES, 'TYCHE']
   ]) {
     const distDir = path.join(root, 'dist', route);
     const runtimeFiles = [...files, 'fullscreen.js', ...SETTINGS_UI_FILES];

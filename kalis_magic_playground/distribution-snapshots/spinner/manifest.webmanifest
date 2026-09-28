@@ -1,7 +1,7 @@
 {
   "id": "./",
-  "name": "회전판",
-  "short_name": "회전판",
+  "name": "TYCHE",
+  "short_name": "TYCHE",
   "description": "손가락으로 돌리는 회전판",
   "start_url": "./",
   "scope": "./",
