@@ -1,6 +1,6 @@
 import { AlterState, createAlterState, updateAlterState } from "./logic.js";
 import { detectCard, detectCardAgainstBackground, mapSourceOntoCorners } from "./vision.js";
-import { cameraShouldBeMasked, createObservationTracker, overlayCorners, trackObservation } from "./performance.js";
+import { createObservationTracker, overlayCorners, trackObservation } from "./performance.js";
 import { coverGeometry, samplePointToView } from "./camera-geometry.js";
 import { claimCalibrationReady, createBackgroundCalibrator, observeCalibration } from "./calibration.js";
 
@@ -14,7 +14,7 @@ const rank = $("rank");
 const suit = $("suit");
 const brightness = $("brightness");
 const stateNote = $("state-note");
-const stageMessage = $("stage-message");
+const runtimeNote = $("runtime-note");
 const gestureGuide = $("gesture-guide");
 const gestureGuideKey = "alter-settings-gesture-guide-v1";
 const sample = document.createElement("canvas");
@@ -29,10 +29,32 @@ const suits = {
 let machine = createAlterState({ exitDelayMs: 0 });
 let tracker = createObservationTracker();
 let stream = null;
+let cameraEnded = false;
 let animation = 0;
 let lastSampleAt = 0;
 let calibrator = createBackgroundCalibrator();
 let touchStart = null;
+let sampleIntervalMs = 60;
+let sampleGeometry = null;
+const lifecycleCounts = Object.create(null);
+
+// Only event codes/counts are retained; frames and device details are never logged.
+function recordLifecycle(code) {
+  lifecycleCounts[code] = Math.min(999, (lifecycleCounts[code] || 0) + 1);
+  try { sessionStorage.setItem("alter-runtime-events", JSON.stringify(lifecycleCounts)); }
+  catch { /* Diagnostics are optional in private browsing. */ }
+}
+
+function setRuntimeStatus(message) {
+  runtimeNote.textContent = message;
+}
+
+function interruptTracking(t) {
+  machine = updateAlterState(machine, { type: "interrupt", t });
+  tracker = createObservationTracker();
+  hideOverlay();
+  lastSampleAt = 0;
+}
 
 function shouldShowGestureGuide() {
   try { return localStorage.getItem(gestureGuideKey) !== "seen"; }
@@ -108,7 +130,6 @@ function openSettings() {
     machine = updateAlterState(machine, { type: "interrupt", t: performance.now() });
     tracker = createObservationTracker();
     overlay.hidden = true;
-    stage.classList.toggle("camera-masked", cameraShouldBeMasked(machine.state, false));
   }
   settings.classList.toggle("is-running", Boolean(stream));
   updateStateNote();
@@ -119,6 +140,7 @@ function openSettings() {
 function closeSettings() {
   settings.hidden = true;
   lastSampleAt = 0;
+  tracker = createObservationTracker();
 }
 
 function showOverlay(corners, geometry) {
@@ -151,23 +173,31 @@ function isPortrait(corners) {
 function processFrame(t) {
   if (!stream) return;
   animation = requestAnimationFrame(processFrame);
-  if (!settings.hidden || document.hidden || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) {
+  if (document.hidden || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) {
     if (video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) {
-      hideOverlay();
-      stage.classList.toggle("camera-masked", cameraShouldBeMasked(machine.state, false));
+      interruptTracking(t);
+      setRuntimeStatus("카메라 영상을 기다리는 중");
     }
     return;
   }
-  if (t - lastSampleAt < 85) return;
+  if (t - lastSampleAt < sampleIntervalMs) return;
   lastSampleAt = t;
+  const analysisStarted = performance.now();
   try {
     const geometry = coverGeometry(
       video.videoWidth, video.videoHeight, stage.clientWidth, stage.clientHeight,
     );
     if (!geometry) {
-      hideOverlay();
-      stage.classList.toggle("camera-masked", cameraShouldBeMasked(machine.state, false));
+      interruptTracking(t);
+      setRuntimeStatus("카메라 화면 크기를 확인하는 중");
       return;
+    }
+    const geometryKey = `${geometry.sampleWidth}:${geometry.sampleHeight}:${stage.clientWidth}:${stage.clientHeight}`;
+    if (sampleGeometry !== geometryKey) {
+      interruptTracking(t);
+      calibrator = createBackgroundCalibrator();
+      sampleGeometry = geometryKey;
+      setRuntimeStatus("카메라 준비 중 · 빈 배경을 비춰 주세요");
     }
     const width = geometry.sampleWidth;
     const height = geometry.sampleHeight;
@@ -181,59 +211,57 @@ function processFrame(t) {
       0, 0, width, height,
     );
     const pixels = sampleContext.getImageData(0, 0, width, height);
-    const singleFrameCandidate = detectCard(pixels);
-    if (machine.state === AlterState.IDLE && !calibrator.reference) {
-      observeCalibration(calibrator, pixels, t,
-        Boolean(singleFrameCandidate && isPortrait(singleFrameCandidate.corners)));
+    let candidate;
+    if (calibrator.reference) {
+      candidate = detectCardAgainstBackground(pixels, calibrator.reference);
+      if (!candidate || !isPortrait(candidate.corners)) candidate = detectCard(pixels);
+    } else {
+      candidate = detectCard(pixels);
+      if (machine.state === AlterState.IDLE) {
+        observeCalibration(calibrator, pixels, t,
+          Boolean(candidate && isPortrait(candidate.corners)));
+      }
     }
-    if (!gestureGuide.hidden) return;
-    if (claimCalibrationReady(calibrator)) showStageMessage("준비 완료", 1700);
-    const candidate = detectCardAgainstBackground(pixels, calibrator.reference) || singleFrameCandidate;
+    if (claimCalibrationReady(calibrator)) setRuntimeStatus("준비 완료");
+    if (!settings.hidden) return;
     const detection = candidate && isPortrait(candidate.corners) ? candidate : null;
     const result = trackObservation(tracker, detection, t, width, height);
     tracker = result.tracker;
     machine = updateAlterState(machine, { type: "observe", ...result.observation });
     updateStateNote();
 
-    let overlayShown = false;
     const visibleCorners = overlayCorners(tracker, detection, t);
-    const holdingPreviousCorners = !detection && visibleCorners !== null;
     if (machine.state === AlterState.ALTER_VISIBLE && visibleCorners) {
-      overlayShown = showOverlay(visibleCorners, geometry);
+      showOverlay(visibleCorners, geometry);
     } else hideOverlay();
-    stage.classList.toggle("camera-masked", cameraShouldBeMasked(machine.state, overlayShown, holdingPreviousCorners));
   } catch {
     machine = updateAlterState(machine, { type: "interrupt", t });
     tracker = createObservationTracker();
     hideOverlay();
-    stage.classList.toggle("camera-masked", cameraShouldBeMasked(machine.state, false));
-    showStageMessage("카드를 다시 비춰 주세요");
+    recordLifecycle("analysis-error");
+    setRuntimeStatus("카드 분석을 다시 시도하는 중");
+  } finally {
+    const elapsed = performance.now() - analysisStarted;
+    sampleIntervalMs = Math.max(60, Math.min(120, elapsed * 1.5));
   }
-}
-
-let messageTimer = 0;
-function showStageMessage(message, durationMs = 2200) {
-  stageMessage.textContent = message;
-  stageMessage.hidden = false;
-  clearTimeout(messageTimer);
-  messageTimer = durationMs == null ? 0
-    : setTimeout(() => { stageMessage.hidden = true; }, durationMs);
 }
 
 function stopCamera(showSetup = true) {
   closeGestureGuide(false);
   if (animation) cancelAnimationFrame(animation);
   animation = 0;
-  if (stream) stream.getTracks().forEach((track) => track.stop());
+  const previousStream = stream;
   stream = null;
+  cameraEnded = false;
+  if (previousStream) previousStream.getTracks().forEach((track) => track.stop());
+  recordLifecycle("user-stop");
   video.srcObject = null;
   hideOverlay();
-  stage.classList.remove("camera-masked");
   machine = createAlterState({ exitDelayMs: 0 });
   tracker = createObservationTracker();
   calibrator = createBackgroundCalibrator();
-  clearTimeout(messageTimer);
-  stageMessage.hidden = true;
+  sampleGeometry = null;
+  setRuntimeStatus("카메라 시작 전");
   settings.hidden = true;
   stage.hidden = true;
   if (showSetup) setup.hidden = false;
@@ -255,25 +283,32 @@ async function startCamera() {
       audio: false,
       video: { facingMode: { exact: "user" }, width: { ideal: 1280 }, height: { ideal: 720 } },
     });
+    cameraEnded = false;
     video.srcObject = stream;
     await video.play();
+    const activeStream = stream;
     stream.getVideoTracks().forEach((track) => {
       track.addEventListener("ended", () => {
-        stopCamera();
-        message.textContent = "카메라 연결이 끊겼습니다. 다시 시작해 주세요.";
+        if (stream !== activeStream) return;
+        cameraEnded = true;
+        recordLifecycle("track-ended");
+        interruptTracking(performance.now());
+        setRuntimeStatus("카메라 연결이 끊겼습니다. 설정에서 종료한 뒤 다시 시작해 주세요.");
+        if (animation) cancelAnimationFrame(animation);
+        animation = 0;
       }, { once: true });
     });
+    recordLifecycle("camera-start");
     machine = createAlterState({ exitDelayMs: 0 });
     tracker = createObservationTracker();
     calibrator = createBackgroundCalibrator();
     lastSampleAt = 0;
-    stage.classList.remove("camera-masked");
     setup.hidden = true;
     stage.hidden = false;
     settings.hidden = true;
-    showStageMessage("카메라 준비 중 · 카드를 넣지 마세요", null);
+    setRuntimeStatus("카메라 준비 중 · 빈 배경을 비춰 주세요");
     animation = requestAnimationFrame(processFrame);
-    showGestureGuide();
+    closeGestureGuide(false);
     message.textContent = "시작을 누르면 브라우저가 카메라 사용 권한을 묻습니다. 허용을 선택해 주세요. 영상은 기기 밖으로 전송하거나 저장하지 않습니다.";
   } catch (error) {
     stopCamera();
@@ -294,16 +329,14 @@ $("close-settings").addEventListener("click", closeSettings);
 $("reveal").addEventListener("click", () => {
   machine = updateAlterState(machine, { type: "reveal", t: performance.now() });
   hideOverlay();
-  stage.classList.remove("camera-masked");
   closeSettings();
 });
 $("reset").addEventListener("click", () => {
   machine = updateAlterState(machine, { type: "reset" });
   tracker = createObservationTracker();
   calibrator = createBackgroundCalibrator();
-  showStageMessage("카메라 준비 중 · 카드를 넣지 마세요", null);
+  setRuntimeStatus("카메라 준비 중 · 빈 배경을 비춰 주세요");
   hideOverlay();
-  stage.classList.toggle("camera-masked", cameraShouldBeMasked(machine.state, false));
   closeSettings();
 });
 $("stop").addEventListener("click", () => stopCamera());
@@ -313,9 +346,8 @@ for (const control of [rank, suit, brightness]) {
     machine = updateAlterState(machine, { type: "reset" });
     tracker = createObservationTracker();
     calibrator = createBackgroundCalibrator();
-    showStageMessage("카메라 준비 중 · 카드를 넣지 마세요", null);
+    setRuntimeStatus("카메라 준비 중 · 빈 배경을 비춰 주세요");
     hideOverlay();
-    stage.classList.toggle("camera-masked", cameraShouldBeMasked(machine.state, false));
     updateStateNote();
   });
 }
@@ -339,24 +371,38 @@ document.addEventListener("keydown", (event) => {
   if (event.key.toLowerCase() === "s" && stream && settings.hidden) openSettings();
   if (event.key === "Escape" && !settings.hidden) closeSettings();
 });
+function suspendAnalysis(code) {
+  if (!stream) return;
+  recordLifecycle(code);
+  interruptTracking(performance.now());
+  if (animation) cancelAnimationFrame(animation);
+  animation = 0;
+}
+function resumeAnalysis() {
+  if (!stream || cameraEnded || document.hidden || animation) return;
+  recordLifecycle("visible-resume");
+  interruptTracking(performance.now());
+  animation = requestAnimationFrame(processFrame);
+}
 document.addEventListener("visibilitychange", () => {
-  if (document.hidden && stream) stopCamera();
+  if (document.hidden) suspendAnalysis("visibility-hidden");
+  else resumeAnalysis();
 });
-window.addEventListener("pagehide", () => {
-  if (stream) stopCamera(false);
-});
+window.addEventListener("pagehide", () => suspendAnalysis("page-hidden"));
+window.addEventListener("pageshow", resumeAnalysis);
 window.addEventListener("resize", () => {
   if (!stream) return;
   machine = updateAlterState(machine, { type: "interrupt", t: performance.now() });
   tracker = createObservationTracker();
-  if (machine.state === AlterState.IDLE) {
-    calibrator = createBackgroundCalibrator();
-    showStageMessage("카메라 준비 중 · 카드를 넣지 마세요", null);
-  }
+  calibrator = createBackgroundCalibrator();
+  sampleGeometry = null;
+  lastSampleAt = 0;
+  recordLifecycle("resize");
+  setRuntimeStatus("카메라 준비 중 · 빈 배경을 비춰 주세요");
   hideOverlay();
-  stage.classList.toggle("camera-masked", cameraShouldBeMasked(machine.state, false));
 });
 
+showGestureGuide();
 readSavedSettings();
 renderCard();
 updateStateNote();

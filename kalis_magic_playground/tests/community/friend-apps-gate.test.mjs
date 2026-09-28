@@ -44,7 +44,7 @@ test('only canonical personal routes stay public while distribution routes retai
   assert.equal(accessTableForTool('calc'), 'tool_access');
 });
 
-test('an installed app checks the network before serving a cached screen', async () => {
+test('personal installed apps serve their cached screen immediately and refresh in the background', async () => {
   for (const app of ['zz1', 'zz2', 'zz3', 'zz4', 'zz5', 'zz6', 'zz7']) {
     const source = readFileSync(new URL(`../../${app}/sw.js`, import.meta.url), 'utf8');
     const listeners = {};
@@ -67,9 +67,10 @@ test('an installed app checks the network before serving a cached screen', async
     let result;
     listeners.fetch({
       request: { method: 'GET', url: `https://example.com/${app}/`, mode: 'navigate' },
-      respondWith(promise) { result = promise; }
+      respondWith(promise) { result = promise; },
+      waitUntil() {}
     });
-    assert.equal((await result).source, 'network', `${app} must observe revoked online access`);
+    assert.equal((await result).source, 'cache', `${app} should start from the installed shell`);
   }
 });
 
@@ -172,8 +173,8 @@ test('login return paths stay on the two distribution apps', () => {
   assert.equal(context.ToolGateUtil.toolFromPath('/tools/aletheia/'), 'aletheia');
   assert.equal(context.ToolGateUtil.toolFromPath('/tools/usotsuki/'), 'usotsuki');
   assert.equal(context.ToolGateUtil.toolFromPath('/tools/stopwatch/'), 'stopwatch');
-  assert.equal(context.ToolGateUtil.safeTo('/zz2/'), '/tools/calc/');
-  assert.equal(context.ToolGateUtil.safeTo('/zz2/../admin.html'), '/tools/calc/');
+  assert.equal(context.ToolGateUtil.safeTo('/zz2/'), '/tools/hitsuzen/');
+  assert.equal(context.ToolGateUtil.safeTo('/zz2/../admin.html'), '/tools/hitsuzen/');
 });
 
 test('friend app migration stores one approval per email and app', () => {

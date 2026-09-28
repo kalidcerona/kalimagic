@@ -1,7 +1,7 @@
 (function () {
   var g = typeof window !== 'undefined' ? window : globalThis;
-  var DEFAULT_TO = '/tools/calc/';
-  var ALLOWED = /^\/tools\/(?:calc|stopwatch|unlock|stopwatch-uni|aletheia|usotsuki)\//;
+  var DEFAULT_TO = '/tools/hitsuzen/';
+  var ALLOWED = /^\/tools\/(?:calc|stopwatch|unlock|stopwatch-uni|aletheia|usotsuki|tobira|spinner|hitsuzen|release|kairos|kairos-classic|tyche)\//;
 
   // 도구 게이트는 두 도구 경로로만 되돌려보낸다. 그 밖의 값은 전부 기본 경로로 떨어뜨린다.
   function safeTo(raw) {
@@ -14,11 +14,13 @@
   }
 
   function toolFromPath(path) {
-    if (/^\/tools\/unlock\//.test(path)) return 'unlock';
-    if (/^\/tools\/stopwatch-uni\//.test(path)) return 'stopwatch-uni';
+    if (/^\/tools\/(?:unlock|release)\//.test(path)) return 'unlock';
+    if (/^\/tools\/(?:stopwatch-uni|kairos)\//.test(path)) return 'stopwatch-uni';
     if (/^\/tools\/aletheia\//.test(path)) return 'aletheia';
     if (/^\/tools\/usotsuki\//.test(path)) return 'usotsuki';
-    return /^\/tools\/stopwatch\//.test(path) ? 'stopwatch' : 'calc';
+    if (/^\/tools\/tobira\//.test(path)) return 'tobira';
+    if (/^\/tools\/(?:spinner|tyche)\//.test(path)) return 'spinner';
+    return /^\/tools\/(?:stopwatch|kairos-classic)\//.test(path) ? 'stopwatch' : 'calc';
   }
 
   function selfTest() {

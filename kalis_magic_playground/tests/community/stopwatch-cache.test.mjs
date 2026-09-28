@@ -15,6 +15,7 @@ test('integrated stopwatch worker keeps its cache isolated by app scope', async 
   ]) {
     const listeners = {};
     vm.runInNewContext(code, {
+      URL, Request,
       self: { registration: { scope }, clients: { claim: async () => {} },
         skipWaiting: async () => {}, addEventListener: (name, callback) => { listeners[name] = callback; } },
       caches: { open: async name => { names.push(name); return { addAll: async () => {} }; },

@@ -378,7 +378,7 @@
     lifetime.input.checked = state.batchLifetime;
     lifetime.input.addEventListener('change', function () { state.batchLifetime = lifetime.input.checked; });
     host.appendChild(lifetime.label);
-    var submit = button(state.tab === 'pending' ? '선택 계정 신청 승인' : '선택 계정에 앱 추가', 'admin-button admin-button--gold', function () {
+    var submit = button(state.tab === 'pending' ? '선택 계정의 선택 앱 승인' : '선택 계정에 앱 추가', 'admin-button admin-button--gold', function () {
       if (!window.confirm(entries.length + '명에게 총 ' + appCount + '개 앱 권한을 ' + (state.tab === 'pending' ? '신청 내용대로 승인' : '추가') + '할까요?')) return;
       submitMemberBatch(entries, state.tab, lifetime.input.checked, '', submit);
     });
@@ -605,21 +605,25 @@
     if (bulkOptions.length && member.email) {
       var bulkForm = el('form', 'admin-access-card__grant admin-pending-bulk');
       var checks = toolChecks(bulkOptions);
+      checks.querySelector('legend').textContent = '신청한 앱 중 승인할 앱 선택';
+      checks.setAttribute('aria-label', member.email + ' 승인할 신청 앱');
       var saved = state.pendingTools.get(member.email);
       if (!saved) {
-        saved = new Set(bulkOptions);
+        saved = new Set();
         state.pendingTools.set(member.email, saved);
       }
       Array.prototype.forEach.call(checks.querySelectorAll('input'), function (input) {
         input.checked = saved.has(input.value);
         input.addEventListener('change', function () {
+          var checked = input.checked;
           var pair = model.hasPendingLegacyPair(member) && (input.value === 'calc' || input.value === 'stopwatch');
           Array.prototype.forEach.call(checks.querySelectorAll('input'), function (choice) {
             if (!pair && choice !== input) return;
             if (pair && choice.value !== 'calc' && choice.value !== 'stopwatch') return;
-            choice.checked = input.checked;
-            if (input.checked) saved.add(choice.value); else saved.delete(choice.value);
+            choice.checked = checked;
+            if (checked) saved.add(choice.value); else saved.delete(choice.value);
           });
+          submit.disabled = !selectedTools(checks).length || state.busy;
           renderBatchToolbar();
         });
       });
@@ -630,15 +634,18 @@
       var note = textInput('text', 'bulkNote', '일괄 승인 메모 (선택)', false);
       note.setAttribute('aria-label', member.email + ' 일괄 승인 메모');
       bulkForm.appendChild(note);
-      var submit = el('button', 'admin-button admin-button--gold', '선택한 신청 일괄 승인');
+      var submit = el('button', 'admin-button admin-button--gold', '선택한 앱 승인');
       submit.type = 'submit';
+      submit.disabled = !selectedTools(checks).length || state.busy;
       bulkForm.appendChild(submit);
       var status = el('p', 'admin-action-status');
       status.setAttribute('role', 'status');
       bulkForm.appendChild(status);
       bulkForm.addEventListener('submit', function (event) {
         event.preventDefault();
-        grantBulk(member.email, selectedTools(checks), lifetime.input.checked, note.value.trim(), status, submit);
+        var tools = selectedTools(checks);
+        if (!tools.length) return;
+        submitMemberBatch([{ email: member.email, tools: tools }], 'pending', lifetime.input.checked, note.value.trim(), submit);
       });
       card.appendChild(bulkForm);
     }

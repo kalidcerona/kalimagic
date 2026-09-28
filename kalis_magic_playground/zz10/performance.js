@@ -1,14 +1,12 @@
 /** Observations for a card moving toward, then out of, the camera frame. */
-import { AlterState } from "./logic.js";
 
-const MAX_SAMPLE_GAP_MS = 260;
+const MAX_SAMPLE_GAP_MS = 1000;
+const MAX_EXIT_SAMPLE_GAP_MS = 260;
 const EXIT_ABSENCE_MS = 350;
 const OVERLAY_HOLD_MS = 250;
 
-/** Cover live pixels whenever a projected card may lag behind the real card. */
-export function cameraShouldBeMasked(state, overlayShown, holdingPreviousCorners = false) {
-  if (state === AlterState.CARD_DETECTED || state === AlterState.CARD_FULLY_OUT) return true;
-  if (state === AlterState.ALTER_VISIBLE) return holdingPreviousCorners || !overlayShown;
+/** The live camera remains visible during every effect state and recovery path. */
+export function cameraShouldBeMasked() {
   return false;
 }
 
@@ -25,7 +23,7 @@ export function createObservationTracker() {
   };
 }
 
-/** Bridge a short missed detection without exposing the physical card. */
+/** Bridge a short missed detection, then clear stale projection geometry. */
 export function overlayCorners(tracker, detection, t) {
   if (detection) return detection.corners;
   if (tracker.corners && tracker.seenAt != null &&
@@ -54,7 +52,7 @@ function closeQuads(first, second, width, height) {
 /**
  * A full exit needs repeated outward travel close to an edge, then absence.
  * This remains a visual heuristic: a hand can mimic an exit. The presentation
- * keeps the camera masked during absence until a stable reentry or manual reveal.
+ * keeps the effect state during absence without hiding the camera background.
  */
 export function trackObservation(tracker, detection, t, width, height) {
   if (!Number.isFinite(t) || width <= 0 || height <= 0) {
@@ -77,24 +75,25 @@ export function trackObservation(tracker, detection, t, width, height) {
   const continuous = tracker.corners != null && tracker.seenAt != null &&
     t - tracker.seenAt <= MAX_SAMPLE_GAP_MS &&
     closeQuads(tracker.corners, corners, width, height);
+  const exitContinuous = continuous && t - tracker.seenAt <= MAX_EXIT_SAMPLE_GAP_MS;
   const distances = edgeDistances(corners, width, height);
   const edgeDistance = Math.min(...distances);
   const edge = distances.indexOf(edgeDistance);
-  const outward = continuous && tracker.edge === edge &&
+  const outward = exitContinuous && tracker.edge === edge &&
     tracker.edgeDistance != null &&
     tracker.edgeDistance - edgeDistance >= 3;
-  const returning = continuous && tracker.edge === edge &&
+  const returning = exitContinuous && tracker.edge === edge &&
     tracker.edgeDistance != null && edgeDistance - tracker.edgeDistance >= 3;
   const exitOriginDistance = outward
     ? (tracker.outwardSteps ? tracker.exitOriginDistance : tracker.edgeDistance)
-    : (continuous && !returning && tracker.edge === edge ? tracker.exitOriginDistance : null);
+    : (exitContinuous && !returning && tracker.edge === edge ? tracker.exitOriginDistance : null);
   const outwardSteps = outward ? tracker.outwardSteps + 1
-    : (continuous && !returning && tracker.edge === edge ? tracker.outwardSteps : 0);
+    : (exitContinuous && !returning && tracker.edge === edge ? tracker.outwardSteps : 0);
   const nearBoundary = edgeDistance <= Math.max(12, Math.min(width, height) * 0.035);
   const traveledFarEnough = exitOriginDistance != null &&
     exitOriginDistance - edgeDistance >= Math.max(14, Math.min(width, height) * 0.05);
   const exitArmed = nearBoundary && outwardSteps >= 2 && traveledFarEnough &&
-    (outward || (continuous && tracker.exitArmed && !returning));
+    (outward || (exitContinuous && tracker.exitArmed && !returning));
   const next = {
     corners,
     seenAt: t,

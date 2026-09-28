@@ -1083,7 +1083,7 @@ function disableMotion(message = '선택한 기기 움직임 연출이 없습니
 
 function updateMotionActivation() {
   const selected = Object.values(motionInputs).some((input) => input.checked);
-  motionActivation.hidden = state?.mode !== 'performance' || !selected || motionEnabled;
+  motionActivation.hidden = state?.mode !== 'settings' || !selected || motionEnabled;
   motionActivation.disabled = motionRequestPending;
   motionActivation.textContent = motionRequestPending ? '센서 연결 중…' :
     motionPermissionDenied ? '센서 연결 실패 · 다시 시도' : '움직임 켜기';
@@ -1475,9 +1475,7 @@ function startDrag(event) {
 
 function onPointerDown(event) {
   if (state.mode !== 'performance' || !gestureGuide.hidden) return;
-  if (event.target === motionActivation) return;
   unlockBreakSound();
-  if (!motionEnabled && !motionPermissionDenied && Object.values(motionInputs).some((input) => input.checked)) void enableMotion();
   if (event.pointerType === 'mouse' && event.button !== 0) return;
   const screen = screenPoint(event);
   pointers.set(event.pointerId, { start: screen, last: screen,
@@ -1794,9 +1792,14 @@ function bind() {
   });
   addButton.addEventListener('click', addPreset);
   deleteButton.addEventListener('click', deleteSelected);
-  startButton.addEventListener('click', () => {
-    if (!motionEnabled && Object.values(motionInputs).some((input) => input.checked)) void enableMotion();
-    showPerformance({ persistMode: true, keepGone: false });
+  startButton.addEventListener('click', async () => {
+    startButton.disabled = true;
+    try {
+      if (!motionEnabled && Object.values(motionInputs).some((input) => input.checked)) await enableMotion();
+      showPerformance({ persistMode: true, keepGone: false });
+    } finally {
+      startButton.disabled = false;
+    }
   });
   motionActivation.addEventListener('click', () => { void enableMotion(); });
   window.addEventListener('keydown', (event) => {

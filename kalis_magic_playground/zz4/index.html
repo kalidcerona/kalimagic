@@ -14,16 +14,51 @@
   <link rel="apple-touch-icon" href="./icon-192.png?install=choice-v2">
   <link rel="manifest" href="./manifest.webmanifest?v=choice-2">
   <link rel="stylesheet" href="./style.css">
+  <link rel="stylesheet" href="./settings-ui.css">
+  <script src="./settings-ui.js" defer></script>
 </head>
-<body data-view="settings">
+<body data-magic-app="choice" data-view="settings">
   <div id="settings" class="screen">
-    <div class="shell">
+    <div class="shell" data-settings-root>
       <header class="masthead">
         <img class="brand-logo" src="./brand-logo.jpg" alt="너의 선택은?" width="1280" height="427">
         <h1 tabindex="-1">너의 선택은?</h1>
         <p class="lede">목록을 미리 정리해 두고, 번호가 정해진 뒤에 목록을 엽니다.</p>
       <p data-fullscreen-note hidden>이 브라우저는 상태 막대를 숨기는 전체 화면을 지원하지 않습니다. 홈 화면에 추가하면 주소창은 줄일 수 있지만, 기기에 따라 시간·배터리 표시는 남을 수 있습니다.</p>
       </header>
+
+      <section class="card" aria-labelledby="notes-entry-title">
+        <h2 id="notes-entry-title">마술 시작</h2>
+        <p id="notes-entry-message" class="message" role="alert"></p>
+        <div class="actions">
+          <button type="button" class="primary" id="start-notes-show">마술 시작 · 홈 화면 열기</button>
+        </div>
+        <details class="input-guide">
+          <summary>연출 준비와 숫자 입력 안내</summary>
+          <p class="hint">저장된 목록은 지우거나 바꾸지 않습니다. 노트 하나에는 일반 항목 99개와 포스 항목 1개가 필요합니다. 조건에 맞는 목록이 다섯 개를 넘으면 저장된 순서의 앞 다섯 개만 노트가 됩니다.</p>
+          <label class="checkline" for="input-guide">
+            <input id="input-guide" type="checkbox" aria-describedby="input-guide-hint">
+            <span>노트 연출에서 숫자 칸을 잠깐 보여 주기</span>
+          </label>
+          <p id="input-guide-hint" class="hint">기본은 꺼져 있습니다. 꺼져 있으면 연출 중에 숫자 겹침이 없습니다. 켜면 홈 첫 화면과 둘째 화면에 들어올 때 칸의 흰 숫자가 약 0.8초 보였다가 사라집니다. 메모로 바뀌기 전에 숫자는 없어지고, 방금 넘긴 자리나 고른 번호는 나오지 않습니다.</p>
+          <details class="input-guide">
+            <summary>숫자 칸 설명</summary>
+            <div class="input-guide-body">
+              <p>아이콘이 놓인 홈 영역은 가로 4칸, 세로 4칸입니다. 첫 번째 줄이거나 첫 번째 칸이면 그 칸은 0입니다. 그래서 맨 위 줄과 맨 왼쪽 줄은 모두 0입니다. 오른쪽 아래 3×3은 왼쪽에서 오른쪽으로, 위쪽 줄부터 1, 2, 3, 그리고 4, 5, 6, 그리고 7, 8, 9입니다.</p>
+              <figure class="digit-map">
+                <figcaption>4×4 숫자 칸. 첫 줄과 첫 칸은 0, 오른쪽 아래는 1부터 9</figcaption>
+                <div class="digit-map-grid">
+                  <span class="is-zero">0</span><span class="is-zero">0</span><span class="is-zero">0</span><span class="is-zero">0</span>
+                  <span class="is-zero">0</span><span class="is-value">1</span><span class="is-value">2</span><span class="is-value">3</span>
+                  <span class="is-zero">0</span><span class="is-value">4</span><span class="is-value">5</span><span class="is-value">6</span>
+                  <span class="is-zero">0</span><span class="is-value">7</span><span class="is-value">8</span><span class="is-value">9</span>
+                </div>
+              </figure>
+              <p>첫 번째 왼쪽 넘김은 십의 자리이고, 둘째 홈에서의 왼쪽 넘김은 일의 자리입니다. 두 자리를 이어서 읽되, 00은 100입니다. 그 외에는 십의 자리에 10을 곱하고 일의 자리를 더합니다.</p>
+            </div>
+          </details>
+        </details>
+      </section>
 
       <section class="card install-card" data-install-card aria-labelledby="install-title">
         <h2 id="install-title">앱 설치</h2>
@@ -49,36 +84,6 @@
         <button type="button" id="recovery-reopen">저장본 다시 보기</button>
       </p>
       <p id="repair-note" class="slim-note" hidden></p>
-
-      <section class="card" aria-labelledby="notes-entry-title">
-        <h2 id="notes-entry-title">노트 연출</h2>
-        <p class="hint">저장된 목록은 지우거나 바꾸지 않습니다. 노트 하나에는 일반 항목 99개와 포스 항목 1개가 필요합니다. 조건에 맞는 목록이 다섯 개를 넘으면 저장된 순서의 앞 다섯 개만 노트가 됩니다.</p>
-        <p id="notes-entry-message" class="message" role="alert"></p>
-        <div class="actions">
-          <button type="button" class="primary" id="start-notes-show">노트 연출 시작</button>
-        </div>
-        <label class="checkline" for="input-guide">
-          <input id="input-guide" type="checkbox" aria-describedby="input-guide-hint">
-          <span>노트 연출에서 숫자 칸을 잠깐 보여 주기</span>
-        </label>
-        <p id="input-guide-hint" class="hint">기본은 꺼져 있습니다. 꺼져 있으면 연출 중에 숫자 겹침이 없습니다. 켜면 홈 첫 화면과 둘째 화면에 들어올 때 칸의 흰 숫자가 약 0.8초 보였다가 사라집니다. 메모로 바뀌기 전에 숫자는 없어지고, 방금 넘긴 자리나 고른 번호는 나오지 않습니다.</p>
-        <details class="input-guide">
-          <summary>숫자 칸 설명</summary>
-          <div class="input-guide-body">
-            <p>아이콘이 놓인 홈 영역은 가로 4칸, 세로 4칸입니다. 첫 번째 줄이거나 첫 번째 칸이면 그 칸은 0입니다. 그래서 맨 위 줄과 맨 왼쪽 줄은 모두 0입니다. 오른쪽 아래 3×3은 왼쪽에서 오른쪽으로, 위쪽 줄부터 1, 2, 3, 그리고 4, 5, 6, 그리고 7, 8, 9입니다.</p>
-            <figure class="digit-map">
-              <figcaption>4×4 숫자 칸. 첫 줄과 첫 칸은 0, 오른쪽 아래는 1부터 9</figcaption>
-              <div class="digit-map-grid">
-                <span class="is-zero">0</span><span class="is-zero">0</span><span class="is-zero">0</span><span class="is-zero">0</span>
-                <span class="is-zero">0</span><span class="is-value">1</span><span class="is-value">2</span><span class="is-value">3</span>
-                <span class="is-zero">0</span><span class="is-value">4</span><span class="is-value">5</span><span class="is-value">6</span>
-                <span class="is-zero">0</span><span class="is-value">7</span><span class="is-value">8</span><span class="is-value">9</span>
-              </div>
-            </figure>
-            <p>첫 번째 왼쪽 넘김은 십의 자리이고, 둘째 홈에서의 왼쪽 넘김은 일의 자리입니다. 두 자리를 이어서 읽되, 00은 100입니다. 그 외에는 십의 자리에 10을 곱하고 일의 자리를 더합니다.</p>
-          </div>
-        </details>
-      </section>
 
       <div class="layout">
         <details class="card settings-disclosure" id="editor-panel" aria-labelledby="editor-title">

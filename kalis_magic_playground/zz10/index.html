@@ -13,8 +13,10 @@
   <link rel="icon" type="image/png" href="./icon-192.png">
   <link rel="stylesheet" href="./style.css">
   <title>ALTER</title>
+  <link rel="stylesheet" href="./settings-ui.css">
+  <script src="./settings-ui.js" defer></script>
 </head>
-<body>
+<body data-magic-app="alter">
   <main id="setup" class="setup">
     <div class="setup-inner">
       <div class="eyebrow">KALI MAGIC · CAMERA EFFECT</div>
@@ -33,18 +35,6 @@
       </div>
     </div>
     <div class="setup-orbit" aria-hidden="true"><div class="orbit-card">A <span>→</span> B</div></div>
-  </main>
-
-  <section id="stage" class="stage" aria-label="실시간 카메라 공연 화면" hidden>
-    <video id="camera" autoplay muted playsinline aria-label="실시간 전면 카메라"></video>
-    <div id="card-overlay" class="card-overlay" aria-hidden="true" hidden>
-      <div class="card-corner top"><span class="rank"></span><span class="suit"></span></div>
-      <div class="card-center"><span class="suit"></span></div>
-      <div class="card-corner bottom"><span class="rank"></span><span class="suit"></span></div>
-    </div>
-    <div id="stage-message" class="stage-message" role="status" hidden></div>
-  </section>
-
   <section id="gesture-guide" class="gesture-guide" aria-label="설정 여는 방법" role="dialog" aria-modal="true" hidden>
     <div class="gesture-guide-content">
       <span class="gesture-guide-eyebrow">처음 시작하기</span>
@@ -54,13 +44,25 @@
         <span class="gesture-arrow">↓</span>
       </div>
       <p>공연 화면에서 <strong>두 손가락을 함께 아래로 쓸어내리면</strong> 설정이 열립니다.</p>
-      <p>빈 배경을 비추고 <strong>준비 완료</strong>가 뜬 뒤 카드를 넣어 주세요.</p>
+      <p>공연 전에 빈 배경을 2-3초 비춰 주세요. 준비 상태는 설정에서 확인할 수 있습니다.</p>
       <button id="close-gesture-guide" class="primary-button" type="button">알겠어요</button>
     </div>
   </section>
+  </main>
+
+  <section id="stage" class="stage" aria-label="실시간 카메라 공연 화면" hidden>
+    <video id="camera" autoplay muted playsinline aria-label="실시간 전면 카메라"></video>
+    <div id="card-overlay" class="card-overlay" aria-hidden="true" hidden>
+      <div class="card-corner top"><span class="rank"></span><span class="suit"></span></div>
+      <div class="card-center"><span class="suit"></span></div>
+      <div class="card-corner bottom"><span class="rank"></span><span class="suit"></span></div>
+    </div>
+  </section>
+
+
 
   <section id="settings" class="settings" aria-label="공연 설정" role="dialog" aria-modal="true" hidden>
-    <div class="settings-panel">
+    <div class="settings-panel" data-settings-root>
       <div class="settings-top">
         <span class="settings-label">PERFORMANCE SETTINGS</span>
         <button id="close-settings" class="icon-button" type="button" aria-label="설정 닫기">×</button>
@@ -69,6 +71,8 @@
       <div class="settings-body">
         <h2>카메라 속 카드</h2>
         <p data-fullscreen-note hidden>이 브라우저는 상태 막대를 숨기는 전체 화면을 지원하지 않습니다. 홈 화면에 추가하면 주소창은 줄일 수 있지만, 기기에 따라 시간·배터리 표시는 남을 수 있습니다.</p>
+        <details class="settings-disclosure">
+          <summary>카드와 화면 밝기</summary>
         <p>공연 전에 관객에게 보일 카드 B를 정하세요. 실제 카드 A는 어떤 카드라도 가능합니다.</p>
         <div class="form-row">
           <label for="rank">숫자</label>
@@ -83,11 +87,16 @@
           <input id="brightness" type="range" min="75" max="125" value="100" step="5">
         </div>
         <p class="detail">카드가 화면 가장자리로 움직인 뒤 완전히 보이지 않는 상태가 유지되면 자동 공개를 준비합니다. 조명·가림으로 검출이 끊겼을 때는 수동 공개를 사용하세요.</p>
+        </details>
         <div class="actions">
           <button id="reveal" type="button" class="primary-button compact">실제 카드 공개</button>
           <button id="reset" type="button" class="secondary-button">공연 리셋</button>
         </div>
         <button id="stop" type="button" class="text-button">카메라 종료</button>
+        <details class="settings-disclosure">
+          <summary>카메라 실행 정보</summary>
+        <p id="runtime-note" class="state-note" role="status"></p>
+        </details>
         <p id="state-note" class="state-note" role="status"></p>
         <div class="install-control" id="install-control" hidden>
           <button type="button" id="install-app">ALTER 설치</button>

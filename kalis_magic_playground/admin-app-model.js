@@ -6,12 +6,14 @@
   'use strict';
 
   var APP_CATALOG = Object.freeze([
-    Object.freeze({ id: 'calc', name: '히츠젠(HITSUZEN)', path: '/tools/calc/', legacy: true }),
-    Object.freeze({ id: 'stopwatch', name: '카이로스(KAIROS)', path: '/tools/stopwatch/', legacy: true }),
-    Object.freeze({ id: 'unlock', name: '레리즈(RELEASE)', path: '/tools/unlock/', legacy: false }),
-    Object.freeze({ id: 'stopwatch-uni', name: '카이로스(KAIROS)', path: '/tools/stopwatch-uni/', legacy: false }),
+    Object.freeze({ id: 'calc', name: '히츠젠(HITSUZEN)', path: '/tools/hitsuzen/', legacy: true }),
+    Object.freeze({ id: 'stopwatch', name: '카이로스(KAIROS)', path: '/tools/kairos-classic/', legacy: true }),
+    Object.freeze({ id: 'unlock', name: '레리즈(RELEASE)', path: '/tools/release/', legacy: false }),
+    Object.freeze({ id: 'stopwatch-uni', name: '카이로스(KAIROS)', path: '/tools/kairos/', legacy: false }),
     Object.freeze({ id: 'aletheia', name: '알레테이아(ALETHEIA)', path: '/tools/aletheia/', legacy: false }),
-    Object.freeze({ id: 'usotsuki', name: '우소츠키(USOTSUKI)', path: '/tools/usotsuki/', legacy: false })
+    Object.freeze({ id: 'usotsuki', name: '우소츠키(USOTSUKI)', path: '/tools/usotsuki/', legacy: false }),
+    Object.freeze({ id: 'tobira', name: '토비라(TOBIRA)', path: '/tools/tobira/', legacy: false }),
+    Object.freeze({ id: 'spinner', name: '티케(TYCHE)', path: '/tools/tyche/', legacy: false })
   ]);
   var TOOL_LABELS = Object.freeze({
     calc: '히츠젠(HITSUZEN)',
@@ -20,6 +22,8 @@
     'stopwatch-uni': '카이로스(KAIROS)',
     aletheia: '알레테이아(ALETHEIA)',
     usotsuki: '우소츠키(USOTSUKI)',
+    tobira: '토비라(TOBIRA)',
+    spinner: '티케(TYCHE)',
     all: '히츠젠(HITSUZEN) + 카이로스(KAIROS)'
   });
   var LEGACY_TOOLS = Object.freeze(['calc', 'stopwatch']);
@@ -82,7 +86,7 @@
     var state = normalizeAvailability(availability);
     var unavailable = [];
     if (!state.legacy) unavailable.push('히츠젠(HITSUZEN)·카이로스(KAIROS)');
-    if (!state.friendApps) unavailable.push('레리즈(RELEASE)·카이로스(KAIROS)·알레테이아(ALETHEIA)·우소츠키(USOTSUKI)');
+    if (!state.friendApps) unavailable.push(APP_CATALOG.filter(function (app) { return !app.legacy; }).map(function (app) { return app.name; }).join('·'));
     if (!unavailable.length) return '';
     return unavailable.join(' 및 ') + ' 권한 서비스를 사용할 수 없습니다. 조회 가능한 앱의 권한만 표시됩니다.';
   }
@@ -107,7 +111,8 @@
   }
 
   function countByTool(rows) {
-    var counts = { calc: 0, stopwatch: 0, unlock: 0, 'stopwatch-uni': 0, aletheia: 0, usotsuki: 0 };
+    var counts = {};
+    APP_CATALOG.forEach(function (app) { counts[app.id] = 0; });
     (rows || []).forEach(function (item) {
       if (item.tool === 'all') {
         counts.calc += 1;

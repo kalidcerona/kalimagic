@@ -22,7 +22,7 @@ export function normalizeSettings(value = {}, personal = false) {
 }
 
 export function storageIdentityForPath(pathname) {
-  const personal = !String(pathname).startsWith('/tools/unlock/');
+  const personal = !/^\/tools\/(?:unlock|release)\//.test(String(pathname));
   return personal
     ? { personal, settingsKey: 'unlock-settings-personal-v2', imageDb: 'unlock-images-personal' }
     : { personal, settingsKey: 'unlock-settings-v1', imageDb: 'unlock-images' };

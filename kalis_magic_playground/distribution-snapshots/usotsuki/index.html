@@ -14,8 +14,10 @@
     <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png?install=usotsuki-v2" />
     <link rel="manifest" href="manifest.webmanifest?v=20260926-usotsuki-install" />
     <link rel="stylesheet" href="style.css" />
-  </head>
-  <body>
+    <link rel="stylesheet" href="./settings-ui.css">
+  <script src="./settings-ui.js" defer></script>
+</head>
+  <body data-magic-app="usotsuki">
     <div id="safe-probe" aria-hidden="true"></div>
 <main id="performance-screen" hidden>
       <div class="instrument-shell" aria-hidden="true">
@@ -55,21 +57,27 @@
         </section>
       </div>
     </main>
-    <section id="settings-screen">
+    <section id="settings-screen" data-settings-root>
       <img id="settings-brand" src="brand-logo.png" alt="" width="168" height="168" />
       <h1>거짓말 탐지기</h1>
       <p data-fullscreen-note hidden>이 브라우저는 상태 막대를 숨기는 전체 화면을 지원하지 않습니다. 홈 화면에 추가하면 주소창은 줄일 수 있지만, 기기에 따라 시간·배터리 표시는 남을 수 있습니다.</p>
       <p class="lede">공연 전에만 확인합니다. 실제 측정이 아닙니다.</p>
       <div class="stack">
+        <details class="settings-disclosure">
+          <summary>진실이 나올 시도</summary>
         <label class="field" for="truth-attempt">TRUE가 나올 시도
           <input id="truth-attempt" type="text" autocomplete="off" value="4" aria-describedby="truth-attempt-help" />
         </label>
         <p id="truth-attempt-help" class="field-help">여러 회차는 쉼표로 구분하세요. 예: 2,4 (각 회차는 1-20)</p>
+        </details>
         <p id="attempt-progress" class="field-help" role="status"></p>
-        <label class="checkline" for="sound-enabled">
+        <details class="settings-disclosure">
+          <summary>소리</summary>
+          <label class="checkline" for="sound-enabled">
           <input id="sound-enabled" type="checkbox" checked />
           소리
         </label>
+        </details>
         <div class="row-actions">
           <button id="reset-attempts" type="button">시도 초기화</button>
           <button id="start-performance" type="button">공연 시작</button>

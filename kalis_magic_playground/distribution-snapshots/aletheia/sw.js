@@ -1,108 +1,82 @@
-// Network-first cache for the ALETHEIA app shell only.
-const CACHE_NAME = 'aletheia-distribution-shell-v4';
-const COURT_FILES = ['S-J', 'S-Q', 'S-K', 'D-J', 'D-Q', 'D-K',
-  'C-J', 'C-Q', 'C-K', 'H-J', 'H-Q', 'H-K']
-  .map((code) => `./court-cards/${code}.png`);
-
+// Cache only the explicit app shell. API, authentication and user data stay on the network.
+const CACHE_PREFIX = 'friend-aletheia-shell-' + encodeURIComponent(self.registration.scope) + '-';
+const CACHE_NAME = CACHE_PREFIX + 'v20260928-1';
 const SHELL = [
-  './index.html',
-  './fullscreen.js',
-  './style.css',
-  './app.js',
-  './deck-loader.js',
-  './logic.js',
-  './manifest.webmanifest',
-  './icon.svg',
-  './icon-192.png',
-  './icon-512.png',
-  './install-prompt.js',
-  './brand-logo.jpg',
-  './brand-logo.png',
-  ...COURT_FILES,
+  "./settings-ui.js",
+  "./settings-ui.css",
+  "./index.html",
+  "./fullscreen.js",
+  "./style.css",
+  "./app.js",
+  "./deck-loader.js",
+  "./logic.js",
+  "./manifest.webmanifest",
+  "./icon.svg",
+  "./icon-192.png",
+  "./icon-512.png",
+  "./install-prompt.js",
+  "./brand-logo.jpg",
+  "./brand-logo.png",
+  "./court-cards/S-J.png",
+  "./court-cards/S-Q.png",
+  "./court-cards/S-K.png",
+  "./court-cards/D-J.png",
+  "./court-cards/D-Q.png",
+  "./court-cards/D-K.png",
+  "./court-cards/C-J.png",
+  "./court-cards/C-Q.png",
+  "./court-cards/C-K.png",
+  "./court-cards/H-J.png",
+  "./court-cards/H-Q.png",
+  "./court-cards/H-K.png"
 ];
-
-const SHELL_NAMES = new Set(SHELL.map((path) => path.slice(2)));
-
-function relativePath(rawUrl) {
-  const url = new URL(rawUrl);
-  if (!url.href.startsWith(self.registration.scope)) return null;
-  return url.href.slice(self.registration.scope.length).split('#')[0].split('?')[0];
-}
-
-function isShellUrl(rawUrl) {
-  const relative = relativePath(rawUrl);
-  if (relative == null) return false;
-  return relative === '' || SHELL_NAMES.has(relative);
-}
-
-function offlineResponse() {
-  return new Response('오프라인 상태이며 저장된 화면이 없습니다.', {
-    status: 503,
-    headers: { 'Content-Type': 'text/plain; charset=utf-8' },
-  });
-}
-
-async function networkFirst(event) {
-  const cache = await caches.open(CACHE_NAME);
-  try {
-    const response = await fetch(event.request);
-    if (response && response.ok && !response.redirected) {
-      event.waitUntil(cache.put(event.request, response.clone()).catch(() => {}));
-    }
-    return response;
-  } catch {
-    const cached = await cache.match(event.request, { ignoreSearch: true });
-    if (cached) return cached;
-    if (event.request.mode === 'navigate') {
-      return (await cache.match('./index.html'))
-        || (await cache.match('./'))
-        || offlineResponse();
-    }
-    return offlineResponse();
-  }
-}
-
-async function cachedCourtCard(event) {
-  const cache = await caches.open(CACHE_NAME);
-  const cached = await cache.match(event.request, { ignoreSearch: true });
-  if (cached) return cached;
-  return networkFirst(event);
-}
+const SHELL_NAMES = new Set(SHELL.map((file) => file.replace(/^\.\//, '')));
+const GUARDED = new URL(self.registration.scope).pathname.startsWith('/tools/');
 
 self.addEventListener('install', (event) => {
-  event.waitUntil((async () => {
-    const cache = await caches.open(CACHE_NAME);
-    await Promise.all(SHELL.map(async (path) => {
-      try {
-        const response = await fetch(path, { cache: 'no-store' });
-        if (response.ok && !response.redirected && response.type !== 'opaque') {
-          await cache.put(path, response);
-        }
-      } catch {
-        // A missing or gated asset must not prevent the app shell from installing.
-      }
-    }));
-    await self.skipWaiting();
-  })());
+  // Reject installation unless the whole critical shell is stored.
+  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(SHELL.map((file) => new Request(new URL(file, self.registration.scope).href, { cache: 'reload', redirect: 'error' })))).then(() => self.skipWaiting()));
 });
-
 self.addEventListener('activate', (event) => {
-  event.waitUntil((async () => {
-    const keys = await caches.keys();
-    await Promise.all(keys
-      .filter((key) => (
-        key.startsWith('aletheia-distribution-shell-') && key !== CACHE_NAME
-      ))
-      .map((key) => caches.delete(key)));
-    await self.clients.claim();
-  })());
+  event.waitUntil(caches.keys().then((names) => Promise.all(names
+    .filter((name) => name.startsWith(CACHE_PREFIX) && name !== CACHE_NAME)
+    .map((name) => caches.delete(name)))).then(() => self.clients.claim()));
 });
-
+function shellName(rawUrl) {
+  const url = new URL(rawUrl), scope = new URL(self.registration.scope);
+  if (url.origin !== scope.origin || !url.pathname.startsWith(scope.pathname)) return null;
+  const name = url.pathname.slice(scope.pathname.length);
+  return name === '' || SHELL_NAMES.has(name) ? name : null;
+}
+function unavailable() {
+  return new Response('오프라인 상태이며 저장된 화면이 없습니다.', { status: 503, headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
+}
+async function refresh(request, cache) {
+  const response = await fetch(request);
+  if (response.ok && !response.redirected && response.type !== 'opaque') {
+    const name = shellName(request.url);
+    // Keep one canonical entry per asset even when install/version query strings change.
+    await cache.put(new URL(name || 'index.html', self.registration.scope).href, response.clone());
+  }
+  return response;
+}
 self.addEventListener('fetch', (event) => {
-  if (event.request.method !== 'GET') return;
-  if (!isShellUrl(event.request.url)) return;
-  const relative = relativePath(event.request.url);
-  event.respondWith(relative && relative.startsWith('court-cards/')
-    ? cachedCourtCard(event)
-    : networkFirst(event));
+  const request = event.request;
+  if (request.method !== 'GET' || shellName(request.url) === null) return;
+  event.respondWith((async () => {
+    const cache = await caches.open(CACHE_NAME);
+    const name = shellName(request.url);
+    const page = name === '' || name === 'index.html';
+    const cached = await cache.match(new URL(page ? 'index.html' : name, self.registration.scope).href, { ignoreSearch: true });
+    // Friend distribution navigation must still reach the server entitlement gate.
+    // Its cached HTML also runs the fail-closed /tools/_check before revealing the app.
+    if (page && GUARDED) {
+      try { return await refresh(request, cache); } catch { return cached || unavailable(); }
+    }
+    if (cached) {
+      if (page) event.waitUntil(refresh(request, cache).catch(() => {}));
+      return cached;
+    }
+    try { return await refresh(request, cache); } catch { return unavailable(); }
+  })());
 });

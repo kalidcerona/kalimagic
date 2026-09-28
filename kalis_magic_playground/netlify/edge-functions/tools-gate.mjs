@@ -8,7 +8,8 @@ import { FRIEND_APP_TOOLS } from '../functions/_lib/friend-app-access.mjs';
 const COOKIE_MAX_AGE = 7_776_000;
 const RENEWAL_WINDOW_SECONDS = 3_888_000;
 const DEFAULT_TOOL = 'calc';
-const STRICT_DISTRIBUTION_TOOLS = new Set(['aletheia', 'usotsuki']);
+const PRODUCT_SLUGS = { calc: 'hitsuzen', unlock: 'release', 'stopwatch-uni': 'kairos', stopwatch: 'kairos-classic', spinner: 'tyche' };
+const STRICT_DISTRIBUTION_TOOLS = new Set(['aletheia', 'usotsuki', 'tobira', 'spinner']);
 
 function analyzePath(rawPathname) {
   if (typeof rawPathname !== 'string') {
@@ -68,6 +69,19 @@ function analyzePath(rawPathname) {
     return { mode: 'gated', tool: 'usotsuki', pathname };
   }
 
+  if (pathname === '/tools/tobira' || pathname.startsWith('/tools/tobira/')) {
+    return { mode: 'gated', tool: 'tobira', pathname };
+  }
+  if (pathname === '/tools/spinner' || pathname.startsWith('/tools/spinner/')) {
+    return { mode: 'gated', tool: 'spinner', pathname };
+  }
+
+  for (const [tool, slug] of Object.entries(PRODUCT_SLUGS)) {
+    if (pathname === `/tools/${slug}` || pathname.startsWith(`/tools/${slug}/`)) {
+      return { mode: 'gated', tool, pathname };
+    }
+  }
+
   return { mode: 'gated', tool: DEFAULT_TOOL, pathname };
 }
 
@@ -115,7 +129,10 @@ function safeReturnPath(pathname, search, fallback) {
     pathname.startsWith('/tools/unlock/') ||
     pathname.startsWith('/tools/stopwatch-uni/') ||
     pathname.startsWith('/tools/aletheia/') ||
-    pathname.startsWith('/tools/usotsuki/')
+    pathname.startsWith('/tools/usotsuki/') ||
+    pathname.startsWith('/tools/tobira/') ||
+    pathname.startsWith('/tools/spinner/') ||
+    Object.values(PRODUCT_SLUGS).some((slug) => pathname.startsWith(`/tools/${slug}/`))
   ) {
     return `${pathname}${search}`;
   }
@@ -124,7 +141,7 @@ function safeReturnPath(pathname, search, fallback) {
 
 function loginRedirect(request, tool, pathname) {
   const requestUrl = new URL(request.url);
-  const fallback = `/tools/${tool}/`;
+  const fallback = `/tools/${PRODUCT_SLUGS[tool] || tool}/`;
   const redirectUrl = new URL('/tools/login/', requestUrl.origin);
   redirectUrl.searchParams.set(
     'to',
@@ -179,6 +196,15 @@ function withGateCookie(response, value, tool) {
 
 export default async function toolsGate(request, context) {
   const path = analyzePath(rawPathnameFromUrl(request.url));
+  if (path.mode !== 'block') {
+    for (const [tool, slug] of Object.entries(PRODUCT_SLUGS)) {
+      if (path.pathname === `/tools/${tool}` || path.pathname.startsWith(`/tools/${tool}/`)) {
+        const destination = new URL(request.url);
+        destination.pathname = `/tools/${slug}/` + path.pathname.slice(`/tools/${tool}`.length).replace(/^\//, '');
+        return Response.redirect(destination, 301);
+      }
+    }
+  }
   if (path.mode === 'public') return context.next();
 
   const tool = path.tool || DEFAULT_TOOL;

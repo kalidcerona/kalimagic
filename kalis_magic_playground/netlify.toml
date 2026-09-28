@@ -55,22 +55,22 @@
     Permissions-Policy = "camera=(self), microphone=(), geolocation=()"
 
 [[headers]]
-  for = "/tools/calc/manifest.webmanifest"
+  for = "/tools/hitsuzen/manifest.webmanifest"
   [headers.values]
     Content-Type = "application/manifest+json"
 
 [[headers]]
-  for = "/tools/stopwatch/manifest.webmanifest"
+  for = "/tools/kairos-classic/manifest.webmanifest"
   [headers.values]
     Content-Type = "application/manifest+json"
 
 [[headers]]
-  for = "/tools/unlock/manifest.webmanifest"
+  for = "/tools/release/manifest.webmanifest"
   [headers.values]
     Content-Type = "application/manifest+json"
 
 [[headers]]
-  for = "/tools/stopwatch-uni/manifest.webmanifest"
+  for = "/tools/kairos/manifest.webmanifest"
   [headers.values]
     Content-Type = "application/manifest+json"
 
@@ -133,3 +133,74 @@
   for = "/zz11/manifest.webmanifest"
   [headers.values]
     Content-Type = "application/manifest+json"
+
+[[headers]]
+  for = "/tools/tobira/manifest.webmanifest"
+  [headers.values]
+    Content-Type = "application/manifest+json"
+
+[[headers]]
+  for = "/tools/tyche/manifest.webmanifest"
+  [headers.values]
+    Content-Type = "application/manifest+json"
+
+
+[[redirects]]
+  from = "/tools/calc/*"
+  to = "/tools/hitsuzen/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/tools/calc"
+  to = "/tools/hitsuzen/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/tools/unlock/*"
+  to = "/tools/release/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/tools/unlock"
+  to = "/tools/release/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/tools/stopwatch-uni/*"
+  to = "/tools/kairos/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/tools/stopwatch-uni"
+  to = "/tools/kairos/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/tools/stopwatch/*"
+  to = "/tools/kairos-classic/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/tools/stopwatch"
+  to = "/tools/kairos-classic/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/tools/spinner/*"
+  to = "/tools/tyche/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/tools/spinner"
+  to = "/tools/tyche/"
+  status = 301
+  force = true

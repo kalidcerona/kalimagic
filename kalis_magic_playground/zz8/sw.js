@@ -1,148 +1,68 @@
-// App-shell cache only. Non-shell responses are never stored.
-
-const CACHE = "asrai-shell-v8";
-const CACHE_PREFIX = "asrai-shell-";
-const SHELL_FILES = [
-  "index.html",
-  "fullscreen.js",
-  "style.css",
-  "contacts.js",
-  "logic.js",
-  "manifest.webmanifest",
-  "install-ui.js",
-  "icon.svg",
-  "icon-192.png",
-  "icon-512.png",
-  "brand-logo.jpg",
+// Cache only the explicit app shell. API, authentication and user data stay on the network.
+const CACHE_PREFIX = 'asrai-shell-' + encodeURIComponent(self.registration.scope) + '-';
+const CACHE_NAME = CACHE_PREFIX + 'v20260928-1';
+const SHELL = [
+  "./settings-ui.js",
+  "./settings-ui.css",
+  "./index.html",
+  "./fullscreen.js",
+  "./style.css",
+  "./contacts.js",
+  "./logic.js",
+  "./manifest.webmanifest",
+  "./install-ui.js",
+  "./icon.svg",
+  "./icon-192.png",
+  "./icon-512.png",
+  "./brand-logo.jpg"
 ];
+const SHELL_NAMES = new Set(SHELL.map((file) => file.replace(/^\.\//, '')));
+const GUARDED = new URL(self.registration.scope).pathname.startsWith('/tools/');
 
-function shellUrls() {
-  const scope = self.registration.scope;
-  return [new URL("./", scope).href, ...SHELL_FILES.map((file) => new URL(file, scope).href)];
-}
-
-async function storeResponse(cache, request, response) {
-  try {
-    await cache.put(request, response.clone());
-  } catch {
-    const body = await response.clone().blob();
-    await cache.put(
-      request,
-      new Response(body, {
-        status: response.status,
-        statusText: response.statusText,
-        headers: response.headers,
-      }),
-    );
-  }
-}
-
-function relativePath(url) {
-  const scopePath = new URL(self.registration.scope).pathname;
-  if (!url.pathname.startsWith(scopePath)) return null;
-  return url.pathname.slice(scopePath.length);
-}
-
-function isShellRequest(url) {
-  if (url.origin !== self.location.origin) return false;
-  const relative = relativePath(url);
-  if (relative == null) return false;
-  return relative === "" || relative === "/" || SHELL_FILES.includes(relative);
-}
-
-async function cachedIndex() {
-  const cache = await caches.open(CACHE);
-  return (
-    (await cache.match(new URL("index.html", self.registration.scope).href)) ||
-    (await cache.match(new URL("./", self.registration.scope).href))
-  );
-}
-
-async function networkThenShell(request, url) {
-  try {
-    const fresh = await fetch(request);
-    if (fresh && fresh.ok && fresh.type === "basic") {
-      const cache = await caches.open(CACHE);
-      await storeResponse(cache, request, fresh);
-    }
-    return fresh;
-  } catch {
-    const cache = await caches.open(CACHE);
-    const cached = await cache.match(request);
-    if (cached) return cached;
-    if (
-      request.mode === "navigate" ||
-      url.pathname.endsWith("/") ||
-      url.pathname.endsWith("/index.html")
-    ) {
-      const index = await cachedIndex();
-      if (index) return index;
-    }
-    return new Response("offline", {
-      status: 503,
-      headers: { "Content-Type": "text/plain; charset=utf-8" },
-    });
-  }
-}
-
-self.addEventListener("install", (event) => {
-  event.waitUntil(
-    (async () => {
-      const cache = await caches.open(CACHE);
-      await Promise.all(
-        shellUrls().map(async (url) => {
-          const response = await fetch(url, { cache: "no-store" });
-          if (!response.ok) throw new Error("shell unavailable");
-          await storeResponse(cache, url, response);
-        }),
-      );
-      await self.skipWaiting();
-    })(),
-  );
+self.addEventListener('install', (event) => {
+  // Reject installation unless the whole critical shell is stored.
+  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(SHELL.map((file) => new Request(new URL(file, self.registration.scope).href, { cache: 'reload', redirect: 'error' })))).then(() => self.skipWaiting()));
 });
-
-self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    (async () => {
-      const keys = await caches.keys();
-      await Promise.all(
-        keys.filter((key) => key.startsWith(CACHE_PREFIX) && key !== CACHE).map((key) => caches.delete(key)),
-      );
-      await self.clients.claim();
-    })(),
-  );
+self.addEventListener('activate', (event) => {
+  event.waitUntil(caches.keys().then((names) => Promise.all(names
+    .filter((name) => name.startsWith(CACHE_PREFIX) && name !== CACHE_NAME)
+    .map((name) => caches.delete(name)))).then(() => self.clients.claim()));
 });
-
-self.addEventListener("fetch", (event) => {
+function shellName(rawUrl) {
+  const url = new URL(rawUrl), scope = new URL(self.registration.scope);
+  if (url.origin !== scope.origin || !url.pathname.startsWith(scope.pathname)) return null;
+  const name = url.pathname.slice(scope.pathname.length);
+  return name === '' || SHELL_NAMES.has(name) ? name : null;
+}
+function unavailable() {
+  return new Response('오프라인 상태이며 저장된 화면이 없습니다.', { status: 503, headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
+}
+async function refresh(request, cache) {
+  const response = await fetch(request);
+  if (response.ok && !response.redirected && response.type !== 'opaque') {
+    const name = shellName(request.url);
+    // Keep one canonical entry per asset even when install/version query strings change.
+    await cache.put(new URL(name || 'index.html', self.registration.scope).href, response.clone());
+  }
+  return response;
+}
+self.addEventListener('fetch', (event) => {
   const request = event.request;
-  if (request.method !== "GET") return;
-  let url;
-  try {
-    url = new URL(request.url);
-  } catch {
-    return;
-  }
-  if (url.origin !== self.location.origin) return;
-
-  if (!isShellRequest(url)) {
-    event.respondWith(
-      (async () => {
-        try {
-          return await fetch(request);
-        } catch {
-          if (request.mode === "navigate") {
-            const index = await cachedIndex();
-            if (index) return index;
-          }
-          return new Response("offline", {
-            status: 503,
-            headers: { "Content-Type": "text/plain; charset=utf-8" },
-          });
-        }
-      })(),
-    );
-    return;
-  }
-
-  event.respondWith(networkThenShell(request, url));
+  if (request.method !== 'GET' || shellName(request.url) === null) return;
+  event.respondWith((async () => {
+    const cache = await caches.open(CACHE_NAME);
+    const name = shellName(request.url);
+    const page = name === '' || name === 'index.html';
+    const cached = await cache.match(new URL(page ? 'index.html' : name, self.registration.scope).href, { ignoreSearch: true });
+    // Friend distribution navigation must still reach the server entitlement gate.
+    // Its cached HTML also runs the fail-closed /tools/_check before revealing the app.
+    if (page && GUARDED) {
+      try { return await refresh(request, cache); } catch { return cached || unavailable(); }
+    }
+    if (cached) {
+      if (page) event.waitUntil(refresh(request, cache).catch(() => {}));
+      return cached;
+    }
+    try { return await refresh(request, cache); } catch { return unavailable(); }
+  })());
 });

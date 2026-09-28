@@ -137,7 +137,20 @@ export const ALETHEIA_COURT_FILES = ['S-J', 'S-Q', 'S-K', 'D-J', 'D-Q', 'D-K',
   'C-J', 'C-Q', 'C-K', 'H-J', 'H-Q', 'H-K']
   .map((code) => `court-cards/${code}.png`);
 
+export const SETTINGS_UI_FILES = ['settings-ui.js', 'settings-ui.css'];
+
 export const MIRROR_PAIRS = [
+  ...SETTINGS_UI_FILES.map((file) => [`../../magic-stopwatch-uni/${file}`, `zz1/${file}`]),
+  ...SETTINGS_UI_FILES.map((file) => [`../../magic-unlock/${file}`, `zz2/${file}`]),
+  ...SETTINGS_UI_FILES.map((file) => [`../../magic-calculator-v2/${file}`, `zz3/${file}`]),
+  ...SETTINGS_UI_FILES.map((file) => [`../../magic-choice/${file}`, `zz4/${file}`]),
+  ...SETTINGS_UI_FILES.map((file) => [`../../magic-aletheia/${file}`, `zz5/${file}`]),
+  ...SETTINGS_UI_FILES.map((file) => [`../../magic-tobira/${file}`, `zz6/${file}`]),
+  ...SETTINGS_UI_FILES.map((file) => [`../../magic-usotsuki/${file}`, `zz7/${file}`]),
+  ...SETTINGS_UI_FILES.map((file) => [`../../magic-asrai/${file}`, `zz8/${file}`]),
+  ...SETTINGS_UI_FILES.map((file) => [`../../magic-alter/${file}`, `zz10/${file}`]),
+  ...SETTINGS_UI_FILES.map((file) => [`../../magic-spinner/${file}`, `zz11/${file}`]),
+  ...SETTINGS_UI_FILES.map((file) => [`../../magic-calculator-v2/${file}`, `tools/calc/${file}`]),
   ...[
     ['magic-stopwatch-uni', 'zz1'],
     ['magic-choice', 'zz4'],
@@ -197,16 +210,19 @@ export const MIRROR_PAIRS = [
 ];
 
 export const DISTRIBUTION_APPS = [
-  { source: 'distribution-snapshots/unlock', target: 'unlock', tool: 'unlock' },
+  { source: 'tools/calc', target: 'hitsuzen', tool: 'calc' },
+  { source: 'distribution-snapshots/unlock', target: 'release', tool: 'unlock' },
   { source: 'distribution-snapshots/aletheia', target: 'aletheia', tool: 'aletheia' },
   { source: 'distribution-snapshots/usotsuki', target: 'usotsuki', tool: 'usotsuki' },
-  { source: 'zz1', target: 'stopwatch-uni', tool: 'stopwatch-uni' },
-  { source: 'zz1', target: 'stopwatch', tool: 'stopwatch' }
+  { source: 'distribution-snapshots/tobira', target: 'tobira', tool: 'tobira' },
+  { source: 'distribution-snapshots/spinner', target: 'tyche', tool: 'spinner' },
+  { source: 'zz1', target: 'kairos', tool: 'stopwatch-uni' },
+  { source: 'zz1', target: 'kairos-classic', tool: 'stopwatch' }
 ];
 
 function accessGuard(tool, target) {
   return `  <script id="friend-apps-check">
-    if (location.protocol === 'https:' && location.pathname.startsWith('/tools/${target}/')) {
+    if (location.protocol === 'https:' && location.pathname.startsWith('/tools/')) {
       document.documentElement.style.visibility = 'hidden';
       const loginUrl = '/tools/login/?to=' + encodeURIComponent(location.pathname + location.search);
       fetch('/tools/_check?tool=${tool}', { credentials: 'same-origin', cache: 'no-store' })
@@ -230,7 +246,17 @@ async function buildDistributionApps() {
     });
     const indexPath = path.join(target, 'index.html');
     const html = await readFile(indexPath, 'utf8');
-    await writeFile(indexPath, html.replace('<head>', `<head>\n${accessGuard(app.tool, app.target)}`));
+    const isolatedHtml = app.source === 'zz1' ? html.replaceAll('stopwatch_', `friend-${app.target}_`).replaceAll('stopwatch2_', `friend-${app.target}-legacy_`).replaceAll('stopwatch-settings-entry-tutorial-', `friend-${app.target}-settings-entry-tutorial-`) : html;
+    await writeFile(indexPath, isolatedHtml.replace('<head>', `<head>\n${accessGuard(app.tool, app.target)}`));
+    if (app.source === 'zz1') {
+      const logicPath = path.join(target, 'logic.js');
+      const logic = await readFile(logicPath, 'utf8');
+      await writeFile(logicPath, logic.replaceAll('stopwatch_', `friend-${app.target}_`).replaceAll('stopwatch2_', `friend-${app.target}-legacy_`));
+    }
+    const manifestPath = path.join(target, 'manifest.webmanifest');
+    const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
+    Object.assign(manifest, { id: './', start_url: './', scope: './' });
+    await writeFile(manifestPath, JSON.stringify(manifest, null, 2) + '\n');
   }
 }
 
@@ -269,7 +295,7 @@ async function copyIfExists(relativePath) {
     filter: (source) => {
       const publicPath = path.relative(ROOT, source).split(path.sep).join('/');
       return shouldCopy(path.relative(ROOT, source)) &&
-        publicPath !== 'tools/stopwatch' && !publicPath.startsWith('tools/stopwatch/');
+        !['tools/stopwatch', 'tools/stopwatch-uni', 'tools/calc'].some((route) => publicPath === route || publicPath.startsWith(route + '/'));
     }
   });
 }
