@@ -49,16 +49,16 @@ button { min-height: 44px; cursor: pointer; }
   display: flex;
   flex-direction: column;
   padding:
-    calc(24px + var(--safe-top))
-    calc(22px + var(--safe-right))
-    calc(24px + var(--safe-bottom))
-    calc(22px + var(--safe-left));
+    calc(16px + var(--safe-top))
+    calc(14px + var(--safe-right))
+    calc(12px + var(--safe-bottom))
+    calc(14px + var(--safe-left));
   overflow: hidden;
   isolation: isolate;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, .07), transparent 14%),
-    repeating-linear-gradient(90deg, rgba(255, 255, 255, .028) 0 1px, transparent 1px 3px),
-    linear-gradient(180deg, #414950 0%, #2c333a 28%, #23292f 100%);
+    linear-gradient(180deg, rgba(255, 255, 255, .09), transparent 11%),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, .03) 0 1px, transparent 1px 3px),
+    linear-gradient(165deg, #3b332e 0%, #2e2723 22%, #231e1b 58%, #171412 100%);
   color: var(--stage-ink);
   text-align: center;
   user-select: none;
@@ -66,9 +66,11 @@ button { min-height: 44px; cursor: pointer; }
   touch-action: none;
   color-scheme: dark;
   box-shadow:
-    inset 0 0 0 1px #101418,
-    inset 0 0 0 11px #1a2026,
-    inset 0 0 0 12px rgba(255, 255, 255, .08);
+    inset 0 0 0 1px #0d1013,
+    inset 0 0 0 7px #22272c,
+    inset 0 0 0 8px rgba(176, 98, 74, .72),
+    inset 0 0 0 13px #1a1f24,
+    inset 0 1px 0 rgba(255, 255, 255, .14);
 }
 
 .instrument-shell, .instrument-shell * { pointer-events: none; }
@@ -125,47 +127,86 @@ button { min-height: 44px; cursor: pointer; }
 .stage-content {
   position: relative;
   z-index: 1;
-  display: flex;
+  display: grid;
   flex: 1;
-  flex-direction: column;
+  grid-template-rows: auto minmax(0, 1fr) auto;
   width: min(100%, 520px);
   min-height: 0;
   margin-inline: auto;
-  gap: clamp(8px, 1.6vh, 14px);
+  gap: clamp(8px, 1.5vh, 12px);
 }
 
 .stage-info,
-.stage-action {
+.control-bay,
+.result-panel {
   width: 100%;
   min-width: 0;
 }
 
-.stage-info { display: flex; flex-direction: column; align-items: center; }
+.stage-info { display: flex; flex-direction: column; align-items: stretch; min-height: 0; }
+
+.instrument-code {
+  margin: 0 0 6px;
+  color: #c2a78f;
+  font-family: ui-monospace, "SFMono-Regular", monospace;
+  font-size: .62rem;
+  font-weight: 600;
+  letter-spacing: .13em;
+  line-height: 1.3;
+}
+
+@media (max-height: 340px) {
+  .instrument-code { margin-bottom: 3px; font-size: .52rem; }
+}
+
+.nameplate {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: 0 0 8px;
+  padding: 0 2px 7px;
+  border-bottom: 1px solid rgba(176, 98, 74, .7);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, .4);
+}
+
+.nameplate::before,
+.nameplate::after {
+  content: "";
+  width: 16px;
+  height: 3px;
+  flex: 0 0 auto;
+  border-radius: 1px;
+  background: #b0624a;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, .45);
+}
 
 #performance-title {
-  margin: 0 0 10px;
-  color: #f4f0e6;
-  font-size: clamp(1.35rem, 5vw, 1.7rem);
+  margin: 0;
+  color: #f3efe6;
+  font-size: clamp(1.2rem, 4.8vw, 1.6rem);
   font-weight: 750;
   letter-spacing: -0.03em;
   line-height: 1.15;
   text-align: center;
   white-space: nowrap;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, .16);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, .12);
 }
 
 .signal-monitor {
   width: 100%;
   margin: 0;
-  padding: 12px 14px 10px;
-  border: 1px solid #070b09;
-  border-radius: 14px;
+  padding: 10px 12px 6px;
+  border: 1px solid #070908;
+  border-left: 3px solid #b0624a;
+  border-radius: 4px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, .05), transparent 30%),
-    #101816;
+    linear-gradient(180deg, rgba(255, 255, 255, .04), transparent 26%),
+    repeating-linear-gradient(0deg, rgba(168, 196, 176, .05) 0 1px, transparent 1px 4px),
+    #0d1411;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, .06),
-    inset 0 12px 20px rgba(0, 0, 0, .45),
+    inset 0 1px 0 rgba(255, 255, 255, .05),
+    inset 0 12px 18px rgba(0, 0, 0, .5),
     0 1px 0 rgba(255, 255, 255, .05);
   text-align: left;
 }
@@ -193,7 +234,8 @@ button { min-height: 44px; cursor: pointer; }
 
 .signal-mode {
   padding: 3px 7px;
-  border-radius: 999px;
+  border-radius: 3px;
+  border: 1px solid #526759;
   background: #1b2822;
   color: #d5ebe0;
   font-size: .68rem;
@@ -204,12 +246,19 @@ button { min-height: 44px; cursor: pointer; }
 .signal-wave {
   display: block;
   width: 100%;
-  height: clamp(48px, 8vh, 72px);
-  margin: 8px 0 0;
+  height: clamp(56px, 9vh, 84px);
+  margin: 6px 0 0;
   overflow: visible;
 }
 
-.signal-grid { fill: none; stroke: rgba(190, 214, 198, .18); stroke-width: 1; }
+.signal-grid { fill: none; stroke: rgba(176, 204, 186, .22); stroke-width: 1; }
+
+.signal-scale {
+  fill: #9aab9f;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 650;
+}
 
 .signal-trace {
   fill: none;
@@ -220,38 +269,32 @@ button { min-height: 44px; cursor: pointer; }
   vector-effect: non-scaling-stroke;
 }
 
-.stage-action {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  justify-content: flex-end;
-  min-height: 0;
-  gap: clamp(8px, 1.4vh, 12px);
-  padding-top: 10px;
-  border-top: 1px solid rgba(255, 255, 255, .1);
-  box-shadow: inset 0 1px 0 rgba(0, 0, 0, .4);
-}
-
 .result-panel {
   display: grid;
-  flex: 1 1 auto;
-  place-items: center;
   align-content: center;
-  width: 100%;
-  min-height: 104px;
+  justify-items: center;
+  min-height: 0;
   margin: 0;
-  padding: 8px 14px 10px;
+  padding: 8px 12px;
   gap: 2px;
-  border: 1px solid #070b09;
-  border-radius: 16px;
+  border: 1px solid #070908;
+  border-radius: 4px;
   background:
-    radial-gradient(120% 80% at 50% -10%, rgba(156, 198, 170, .18), transparent 46%),
-    linear-gradient(180deg, #1c2823 0%, #101614 58%, #0c100e 100%);
+    linear-gradient(180deg, rgba(255, 255, 255, .04), transparent 22%),
+    linear-gradient(180deg, #1a2220 0%, #101614 62%, #0c100e 100%);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, .07),
-    inset 0 16px 28px rgba(0, 0, 0, .48),
-    0 1px 0 rgba(255, 255, 255, .05);
+    inset 0 1px 0 rgba(255, 255, 255, .06),
+    inset 0 16px 24px rgba(0, 0, 0, .46),
+    0 1px 0 rgba(255, 255, 255, .04);
   text-align: center;
+}
+
+.control-bay {
+  display: grid;
+  place-items: center;
+  padding: 8px 0 2px;
+  border-top: 1px solid rgba(255, 255, 255, .1);
+  box-shadow: inset 0 1px 0 rgba(0, 0, 0, .45);
 }
 
 .result-label {
@@ -277,33 +320,35 @@ button { min-height: 44px; cursor: pointer; }
 
 #verdict {
   margin: 0;
-  min-height: 1.08em;
+  min-height: 1.02em;
   color: #edf6f0;
-  font-size: clamp(2.8rem, 12vw, 4.2rem);
+  font-size: clamp(3.1rem, 15vw, 5.2rem);
   font-weight: 850;
-  line-height: 1.08;
-  letter-spacing: 0;
+  line-height: 1.02;
+  letter-spacing: -0.04em;
   text-align: center;
   white-space: nowrap;
 }
 
-/* Diameter below is the circular hit target measured by detector.js. */
+#verdict:empty { min-height: 0; font-size: 0; }
+
+/* The round button, not the outer dial, is the hold target measured by detector.js. */
 .detector-dial {
   position: relative;
   display: grid;
-  flex: 0 0 auto;
   place-items: center;
-  width: min(64vw, 34vh, 280px);
-  min-width: min(150px, 40vw, 30vh);
+  width: min(56vw, 28vh, 236px);
+  min-width: min(148px, 42vw);
   margin-inline: auto;
   aspect-ratio: 1;
   border-radius: 50%;
   background:
-    radial-gradient(circle at 50% 38%, #59636b, #2a3137 58%, #151a1e 100%);
+    radial-gradient(circle at 50% 36%, #6a727b, #3c444c 46%, #262c32 72%, #14181c 100%);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, .32),
-    inset 0 -10px 14px rgba(0, 0, 0, .38),
-    0 8px 16px rgba(0, 0, 0, .28);
+    inset 0 1px 0 rgba(255, 255, 255, .34),
+    inset 0 -10px 14px rgba(0, 0, 0, .42),
+    0 0 0 1px #0e1114,
+    0 8px 14px rgba(0, 0, 0, .28);
 }
 
 .detector-dial::before {
@@ -331,6 +376,17 @@ button { min-height: 44px; cursor: pointer; }
 
 .dial-tick-top { top: 5%; }
 .dial-tick-bottom { bottom: 5%; }
+
+.dial-tick-left,
+.dial-tick-right {
+  top: 50%;
+  width: 8px;
+  height: 2px;
+  transform: translateY(-50%);
+}
+
+.dial-tick-left { left: 5%; }
+.dial-tick-right { right: 5%; left: auto; }
 
 #detector-button {
   position: relative;
@@ -365,7 +421,7 @@ button { min-height: 44px; cursor: pointer; }
 .button-icon { font-size: clamp(1rem, 3.4vw, 1.25rem); line-height: 1; opacity: .92; }
 
 @keyframes button-pulse {
-  50% { filter: brightness(1.18); }
+  50% { box-shadow: inset 0 2px 1px rgba(255, 255, 255, .5), inset 0 -8px 10px rgba(0, 0, 0, .28), 0 0 0 3px rgba(196, 214, 204, .35); }
 }
 
 #performance-screen.is-testing .signal-dot {
@@ -507,7 +563,7 @@ body.is-testing #detector-button {
 .field { display: grid; gap: 6px; font-weight: 700; }
 
 .field-help {
-  margin: -6px 0 0;
+  margin: 10px 0 0;
   color: rgba(44, 33, 28, 0.78);
   font-size: 0.9rem;
   line-height: 1.45;
@@ -665,10 +721,11 @@ select {
   }
 
   .stage-content { gap: 8px; }
-  .signal-monitor { padding: 9px 10px 8px; }
-  .stage-action .detector-dial { width: min(68vw, 32vh, 250px); }
-  .result-panel { min-height: 96px; }
-  #verdict { font-size: 2.65rem; }
+  .signal-monitor { padding: 8px 8px 4px; }
+  .nameplate::before,
+  .nameplate::after { width: 10px; }
+  .detector-dial { width: min(54vw, 28vh, 200px); min-width: 0; }
+  #verdict { font-size: 2.7rem; }
   .vent { width: 5px; }
 }
 
@@ -682,66 +739,93 @@ select {
 @media (min-width: 760px) and (min-height: 521px) {
   #performance-screen {
     padding:
-      calc(32px + var(--safe-top))
-      calc(38px + var(--safe-right))
-      calc(32px + var(--safe-bottom))
-      calc(38px + var(--safe-left));
+      calc(22px + var(--safe-top))
+      calc(28px + var(--safe-right))
+      calc(18px + var(--safe-bottom))
+      calc(28px + var(--safe-left));
   }
 
   .stage-content {
-    display: grid;
-    width: min(100%, 1040px);
-    grid-template-columns: minmax(0, 1.15fr) minmax(300px, .9fr);
-    grid-template-rows: minmax(0, 1fr);
-    align-items: stretch;
-    gap: 22px;
+    width: min(100%, 980px);
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: auto minmax(0, 1fr);
+    column-gap: 22px;
+    row-gap: 12px;
   }
 
-  .stage-info,
-  .stage-action { justify-content: center; }
-
-  .stage-action {
-    padding: 4px 4px 4px 22px;
+  .stage-info { grid-column: 1; grid-row: 1; }
+  .result-panel { grid-column: 1; grid-row: 2; }
+  .control-bay {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-self: center;
+    padding: 0 0 0 18px;
     border-top: 0;
     border-left: 1px solid rgba(255, 255, 255, .1);
     box-shadow: none;
   }
 
-  #performance-title { margin-bottom: 18px; font-size: clamp(1.7rem, 3vw, 2.2rem); }
-  .signal-monitor { padding: 16px; }
-  .signal-wave { height: clamp(60px, 10vh, 84px); }
-  .stage-action .detector-dial { width: min(34vw, 39vh, 320px); }
-  .result-panel { flex: 0 1 auto; width: 100%; min-height: 148px; }
-  #verdict { font-size: clamp(3.4rem, 7vw, 4.8rem); }
+  #performance-title { font-size: clamp(1.5rem, 3vw, 2rem); }
+  .signal-monitor { padding: 14px 14px 8px; }
+  .signal-wave { height: clamp(64px, 12vh, 96px); }
+  .detector-dial { width: min(32vw, 42vh, 280px); }
+  #verdict { font-size: clamp(3.6rem, 8vw, 5.4rem); }
 }
 
 @media (max-height: 620px) {
   #performance-screen {
-    padding-top: calc(12px + var(--safe-top));
-    padding-bottom: calc(12px + var(--safe-bottom));
+    padding-top: calc(10px + var(--safe-top));
+    padding-bottom: calc(8px + var(--safe-bottom));
   }
 
-  .stage-content { gap: 8px; }
-  #performance-title { margin-bottom: 6px; font-size: 1.2rem; }
-  .signal-monitor { padding: 7px 10px; }
-  .signal-wave { height: 28px; margin-top: 4px; }
-  .stage-action { padding-top: 6px; gap: 6px; }
-  .stage-action .detector-dial { width: min(32vh, 42vw, 210px); }
-  .result-panel { min-height: 78px; padding-block: 4px; }
-  #verdict { font-size: clamp(2.3rem, 9vw, 3rem); }
+  .stage-content { gap: 6px; }
+  .nameplate { margin-bottom: 4px; padding-bottom: 4px; }
+  #performance-title { font-size: 1.15rem; }
+  .signal-monitor { padding: 6px 8px 2px; }
+  .signal-wave { height: 46px; margin-top: 2px; }
+  .control-bay { padding-top: 4px; }
+  .detector-dial { width: min(30vh, 42vw, 168px); min-width: 0; }
+  .result-panel { padding-block: 4px; }
+  #verdict { font-size: clamp(2.2rem, 8vh, 3.1rem); }
   .screw { width: 8px; height: 8px; }
   .screw::after { top: 3.5px; left: 1px; width: 6px; }
   .vent { height: 14%; }
 }
 
+@media (orientation: landscape) and (max-height: 520px) {
+  .stage-content {
+    width: min(100%, 980px);
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: auto minmax(0, 1fr);
+    column-gap: 14px;
+    row-gap: 6px;
+  }
+
+  .stage-info { grid-column: 1; grid-row: 1; }
+  .result-panel { grid-column: 1; grid-row: 2; min-height: 0; }
+  .control-bay {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-self: center;
+    padding: 0 0 0 12px;
+    border-top: 0;
+    border-left: 1px solid rgba(255, 255, 255, .1);
+    box-shadow: none;
+  }
+
+  .detector-dial { width: min(72vh, 188px); }
+  .signal-wave { height: 42px; }
+  #verdict { font-size: clamp(2.4rem, 12vh, 3.4rem); }
+}
+
 @media (max-height: 340px) {
   .stage-content { gap: 4px; }
-  #performance-title { margin-bottom: 2px; font-size: 1rem; }
+  .nameplate { margin-bottom: 2px; padding-bottom: 2px; }
+  #performance-title { font-size: 1rem; }
   .signal-heading { font-size: .68rem; }
-  .signal-wave { height: 16px; }
-  .result-panel { min-height: 52px; }
+  .signal-wave { height: 32px; }
   #verdict { font-size: 1.7rem; }
-  .stage-action .detector-dial { width: min(24vh, 30vw, 120px); min-width: 0; }
+  .detector-dial { width: min(64vh, 128px); min-width: 0; }
   .button-icon { font-size: .85rem; }
 }
 

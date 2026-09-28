@@ -463,6 +463,7 @@
     function renderInput() {
       $('input-screen').classList.toggle('galaxy', settings.style === 'galaxy');
       const copy = lockScreenCopy(settings.style, state.current.length > 0);
+      $('prompt').dataset.magicNativeLabel = copy.prompt;
       $('prompt').textContent = copy.prompt;
       $('prompt').setAttribute('aria-label', `${copy.prompt}, ${state.digits === 4 ? 6 : 4}자리로 전환`);
       const count = feedback ? state.digits : state.current.length;
@@ -472,7 +473,10 @@
         return dot;
       }));
       $('dots').setAttribute('aria-label', `${state.digits}자리 중 ${count}자리 입력`);
+      $('emergency').querySelector('span').dataset.magicNativeLabel = copy.emergency;
       $('emergency').querySelector('span').textContent = copy.emergency;
+      $('delete').dataset.magicNativeLabel = lockScreenCopy(settings.style, false).trailing;
+      $('delete').dataset.magicCustomIdle = String(state.current.length === 0);
       $('delete').textContent = copy.trailing;
     }
 
@@ -912,6 +916,13 @@
     }
 
     function applyAppearance(value) {
+      $('input-screen').classList.toggle('galaxy', value.style === 'galaxy');
+      $('time-lock').classList.toggle('galaxy', value.style === 'galaxy');
+      const previewCopy = lockScreenCopy(value.style, state.current.length > 0);
+      for (const [element, text] of [[$('prompt'), previewCopy.prompt], [$('emergency').querySelector('span'), previewCopy.emergency]]) { element.dataset.magicNativeLabel = text; element.textContent = text; }
+      $('delete').dataset.magicNativeLabel = lockScreenCopy(value.style, false).trailing;
+      $('delete').dataset.magicCustomIdle = String(state.current.length === 0);
+      $('delete').textContent = previewCopy.trailing;
       document.documentElement.style.setProperty('--status-color', value.statusColor);
       document.querySelector('meta[name="theme-color"]').content = value.statusColor;
       document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]').content = value.statusStyle;

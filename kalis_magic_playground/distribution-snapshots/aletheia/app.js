@@ -43,7 +43,7 @@ const PHOTO_SETS_KEY = 'aletheia.distribution.photoSets.v2';
 const PHOTO_SET_COUNT = 3;
 const CELL_GUIDE_KEY = 'aletheia.distribution.cellGuide.v1';
 const COVERAGE_KEY = 'aletheia.distribution.coverage.v1';
-const CELL_GUIDE_HOLD_MS = 800;
+const CELL_GUIDE_HOLD_MS = 2500;
 const CELL_GUIDE_FADE_MS = 200;
 const CUSTOM_COUNT = 12;
 const DB_NAME = 'aletheia-distribution';
@@ -968,7 +968,7 @@ function fillCellGuidePreviews() {
   return previews;
 }
 
-// Fill each position as its card becomes ready, without delaying the 800ms guide window.
+// Fill each position as its card becomes ready, without delaying the 2500ms guide window.
 function showCellGuide() {
   if (!cellGuide || !cellGuideEnabled || !isCardPerformance()) return;
   const startedAt = performance.now();

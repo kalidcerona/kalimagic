@@ -30,6 +30,7 @@ let drag = null;
 let busy = false;
 let twoFingerStart = null;
 let installPrompt = null;
+let installSuppressed = false;
 let statusTimer = null;
 const pendingSpins = [];
 // Each new app session starts with a fresh target touch, even if the last run was saved.
@@ -55,6 +56,27 @@ function showStatus(message, duration = 0) {
   clearTimeout(statusTimer);
   spinStatus.textContent = message;
   if (duration) statusTimer = setTimeout(() => { if (!busy) spinStatus.textContent = ''; }, duration);
+}
+function syncTargetCue() {
+  const acknowledged = state.targetAngle !== null;
+  const core = document.getElementById('green-sector-core');
+  // Keep the acknowledgement on the fixed green sector so the chosen angle stays hidden.
+  const cue = acknowledged ? 'acknowledged' : 'idle';
+  core.classList.toggle('is-acknowledged', acknowledged);
+  core.dataset.targetCue = cue;
+  wrap.classList.toggle('target-cue-acknowledged', acknowledged);
+  wrap.dataset.targetCue = cue;
+}
+function standaloneDisplay() {
+  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+}
+function syncInstallGroup() {
+  const group = document.getElementById('install-app-group');
+  const hide = installSuppressed || standaloneDisplay();
+  group.hidden = hide;
+  group.classList.toggle('is-installed', hide);
+  group.dataset.installState = hide ? 'hidden' : 'browser';
+  document.documentElement.classList.toggle('spinner-standalone', hide);
 }
 
 stage.addEventListener('pointerdown', event => {
@@ -85,7 +107,7 @@ stage.addEventListener('pointerup', event => {
     state.previousAngle = null;
     needsFirstTouchTarget = false;
     save();
-    showStatus('준비 완료', 1500);
+    syncTargetCue();
     navigator.vibrate?.(12);
     return;
   }
@@ -160,12 +182,23 @@ document.addEventListener('touchmove', event => {
 document.addEventListener('touchend', event => { if (event.touches.length < 2) twoFingerStart = null; }, { passive: true });
 
 document.getElementById('settings-close').addEventListener('click', closeSettings);
+document.getElementById('start-performance').addEventListener('click', closeSettings);
 document.getElementById('force-spin').addEventListener('change', event => { state.forceSpin = Number(event.target.value); state.spins = 0; state.previousAngle = null; pendingSpins.length = 0; save(); refreshSettings(); });
-document.getElementById('reset-run').addEventListener('click', () => { state.spins = 0; state.previousAngle = null; needsFirstTouchTarget = state.targetAngle === null; save(); refreshSettings(); });
-document.getElementById('clear-target').addEventListener('click', () => { state.targetAngle = null; state.spins = 0; state.previousAngle = null; needsFirstTouchTarget = true; save(); refreshSettings(); closeSettings(); });
+document.getElementById('clear-target').addEventListener('click', () => {
+  state.targetAngle = null;
+  state.spins = 0;
+  state.previousAngle = null;
+  pendingSpins.length = 0;
+  needsFirstTouchTarget = true;
+  save();
+  refreshSettings();
+  syncTargetCue();
+  closeSettings();
+});
 document.getElementById('guide-close').addEventListener('click', () => { guide.hidden = true; try { localStorage.setItem('zz11-guide-seen-v2', '1'); } catch { /* Ignore storage failures. */ } });
 try { guide.hidden = localStorage.getItem('zz11-guide-seen-v2') === '1'; } catch { guide.hidden = false; }
 refreshSettings();
+syncTargetCue();
 
 window.addEventListener('beforeinstallprompt', event => { event.preventDefault(); installPrompt = event; });
 document.getElementById('install-app').addEventListener('click', async () => {
@@ -178,6 +211,16 @@ document.getElementById('install-app').addEventListener('click', async () => {
   help.textContent = ios ? 'Safari에서 공유 → 홈 화면에 추가를 선택하세요.' : '브라우저 메뉴에서 앱 설치 또는 홈 화면에 추가를 선택하세요.';
   help.hidden = false;
 });
+syncInstallGroup();
+window.addEventListener('appinstalled', () => {
+  installSuppressed = true;
+  installPrompt = null;
+  syncInstallGroup();
+});
+const standaloneMedia = window.matchMedia('(display-mode: standalone)');
+const onStandaloneChange = () => syncInstallGroup();
+if (typeof standaloneMedia.addEventListener === 'function') standaloneMedia.addEventListener('change', onStandaloneChange);
+else standaloneMedia.addListener(onStandaloneChange);
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   const hadController = Boolean(navigator.serviceWorker.controller);
   let refreshedForUpdate = false;

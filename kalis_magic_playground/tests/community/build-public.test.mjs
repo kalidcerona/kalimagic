@@ -106,6 +106,7 @@ test('public build serves integrated stopwatch on both retained entitlement rout
   const personalStopwatch = await readFile(new URL('../../dist/zz1/index.html', import.meta.url), 'utf8');
   const sharedUnlock = await readFile(new URL('../../dist/tools/release/index.html', import.meta.url), 'utf8');
   const sharedStopwatch = await readFile(new URL('../../dist/tools/kairos/index.html', import.meta.url), 'utf8');
+  const sharedCalculator = await readFile(new URL('../../dist/tools/hitsuzen/index.html', import.meta.url), 'utf8');
   const sharedAletheia = await readFile(new URL('../../dist/tools/aletheia/index.html', import.meta.url), 'utf8');
   const sharedUsotsuki = await readFile(new URL('../../dist/tools/usotsuki/index.html', import.meta.url), 'utf8');
   const legacyStopwatch = await readFile(new URL('../../dist/tools/kairos-classic/index.html', import.meta.url), 'utf8');
@@ -114,6 +115,13 @@ test('public build serves integrated stopwatch on both retained entitlement rout
   assert.match(sharedUnlock, /tools\/_check\?tool=unlock/);
   assert.match(sharedStopwatch, /id="friend-apps-check"/);
   assert.match(sharedStopwatch, /tools\/_check\?tool=stopwatch-uni/);
+  assert.match(sharedStopwatch, /<title>KAIROS · 스톱워치<\/title>/);
+  assert.match(sharedStopwatch, /data-magic-app="stopwatch"/);
+  assert.match(sharedCalculator, /<title>HITSUZEN<\/title>/);
+  assert.match(sharedCalculator, /data-magic-app="calculator"/);
+  assert.match(sharedCalculator, /tools\/_check\?tool=calc/);
+  assert.doesNotMatch(sharedStopwatch, /data-magic-app="calculator"/);
+  assert.doesNotMatch(sharedCalculator, /data-magic-app="stopwatch"/);
   assert.match(sharedAletheia, /tools\/_check\?tool=aletheia/);
   assert.match(sharedUsotsuki, /tools\/_check\?tool=usotsuki/);
   assert.match(legacyStopwatch, /tools\/_check\?tool=stopwatch/);

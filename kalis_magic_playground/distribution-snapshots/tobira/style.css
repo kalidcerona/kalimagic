@@ -566,8 +566,13 @@ input[type="range"]:focus-visible,
   filter: drop-shadow(0 2px 1px rgba(10, 25, 36, .65));
 }
 .breakthrough svg { display: block; width: 100%; height: 100%; }
-.stage.is-breaking .breakthrough { animation: screen-break 1.35s both; }
-.stage.is-breaking .breakthrough-hole { animation: break-hole 1.35s both; transform-origin: 50% 50%; }
+.stage.is-breaking .breakthrough {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1.02);
+}
+.stage.is-breaking.is-breaking-play .breakthrough { animation: screen-break 1.35s both; }
+.stage.is-breaking .breakthrough-hole { opacity: 1; transform: scale(1); transform-origin: 50% 50%; }
+.stage.is-breaking.is-breaking-play .breakthrough-hole { animation: break-hole 1.35s both; transform-origin: 50% 50%; }
 .stage.is-breaking .coin { visibility: hidden; }
 .motion-activate {
   position: absolute;

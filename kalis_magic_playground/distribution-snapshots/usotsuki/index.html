@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#12100f" />
+    <meta name="theme-color" content="#1e2328" />
     <meta name="color-scheme" content="light dark" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -19,7 +19,7 @@
 </head>
   <body data-magic-app="usotsuki">
     <div id="safe-probe" aria-hidden="true"></div>
-<main id="performance-screen" hidden>
+    <main id="performance-screen" hidden>
       <div class="instrument-shell" aria-hidden="true">
         <span class="screw tl"></span>
         <span class="screw tr"></span>
@@ -29,32 +29,42 @@
         <span class="vent right"></span>
       </div>
       <div class="stage-content">
-        <section class="stage-info" aria-label="검사 안내">
-          <h1 id="performance-title">거짓말 탐지기</h1>
+        <header class="stage-info">
+          <p class="instrument-code" aria-hidden="true">USOTSUKI · SIGNAL ANALYSIS</p>
+          <div class="nameplate">
+            <h1 id="performance-title">거짓말 탐지기</h1>
+          </div>
           <section class="signal-monitor" aria-label="신호 모니터">
             <div class="signal-heading">
               <span class="signal-dot" aria-hidden="true"></span>
               <span class="signal-title">신호 모니터</span>
               <span class="signal-mode">대기</span>
             </div>
-            <svg class="signal-wave" viewBox="0 0 360 52" role="img" aria-label="신호 그래프">
-              <path class="signal-grid" d="M0 13.5H360M0 26H360M0 38.5H360M45 0V52M90 0V52M135 0V52M180 0V52M225 0V52M270 0V52M315 0V52" />
-              <path class="signal-trace" d="M0 27H44L54 25L64 29L75 27H111L119 24L126 30L135 26H157L166 26L173 8L180 43L188 19L196 28H226L235 26L244 27H265L274 24L281 30L289 26H318L327 26L336 17L343 35L350 27H360" />
+            <svg class="signal-wave" viewBox="0 0 360 68" role="img" aria-label="신호 그래프">
+              <path class="signal-grid" d="M8 8H352M8 22H352M8 36H352M8 8V36M44 8V36M80 8V36M116 8V36M152 8V36M188 8V36M224 8V36M260 8V36M296 8V36M332 8V36M352 8V36" />
+              <path class="signal-trace" d="M8 22H48L58 20L68 24L78 22H112L120 19L128 25L136 21H164L172 21L180 8L188 36L196 16L204 23H236L244 21L252 22H276L284 19L292 25L300 21H324L332 21L340 14L346 30L352 22" />
+              <g class="signal-scale" aria-hidden="true">
+                <text x="8" y="54">0</text>
+                <text x="180" y="54" text-anchor="middle">1s</text>
+                <text x="352" y="54" text-anchor="end">2s</text>
+              </g>
             </svg>
           </section>
+        </header>
+        <section class="result-panel" aria-label="판정" aria-live="polite">
+          <span class="result-label">판정</span>
+          <p id="test-indicator" role="status"></p>
+          <p id="verdict" role="status" aria-live="assertive"></p>
         </section>
-        <section class="stage-action" aria-label="검사">
-          <div class="result-panel" aria-live="polite">
-            <span class="result-label">검사 결과</span>
-            <p id="test-indicator" role="status"></p>
-            <p id="verdict" role="status" aria-live="assertive"></p>
-          </div>
+        <div class="control-bay">
           <div class="detector-dial">
             <span class="dial-tick dial-tick-top" aria-hidden="true"></span>
+            <span class="dial-tick dial-tick-right" aria-hidden="true"></span>
             <span class="dial-tick dial-tick-bottom" aria-hidden="true"></span>
+            <span class="dial-tick dial-tick-left" aria-hidden="true"></span>
             <button id="detector-button" type="button" aria-label="검사를 시작하려면 2초간 누르기"><span class="button-icon" aria-hidden="true">⌁</span><span>길게 누르기</span></button>
           </div>
-        </section>
+        </div>
       </div>
     </main>
     <section id="settings-screen" data-settings-root>
