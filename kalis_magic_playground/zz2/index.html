@@ -599,7 +599,31 @@
       }, 800));
     }
 
+    let rewindFullscreenOwned = false;
+    let rewindFullscreenPending = false;
+    function requestRewindFullscreen(event) {
+      if (!event?.isTrusted || rewindFullscreenPending || document.fullscreenElement || document.webkitFullscreenElement) return;
+      const root = document.documentElement;
+      const request = root.requestFullscreen || root.webkitRequestFullscreen;
+      if (typeof request !== 'function') return;
+      rewindFullscreenPending = true;
+      try {
+        Promise.resolve(request.call(root, { navigationUI: 'hide' })).then(() => {
+          rewindFullscreenOwned = true;
+          if (screen !== 'time-black' && screen !== 'time-lock') leaveRewindFullscreen();
+        }).catch(() => {}).finally(() => { rewindFullscreenPending = false; });
+      } catch { rewindFullscreenPending = false; }
+    }
+    function leaveRewindFullscreen() {
+      if (!rewindFullscreenOwned) return;
+      rewindFullscreenOwned = false;
+      const exit = document.exitFullscreen || document.webkitExitFullscreen;
+      if (!(document.fullscreenElement || document.webkitFullscreenElement) || typeof exit !== 'function') return;
+      try { Promise.resolve(exit.call(document)).catch(() => {}); } catch {}
+    }
+
     function showScreen(next, animate = false) {
+      if (next !== 'time-black' && next !== 'time-lock') leaveRewindFullscreen();
       clearTimeout(unlockTimer);
       screen = next;
       cancelAnimationFrame(timeFrame);
@@ -720,11 +744,12 @@
       renderInput();
     }
     $('delete').addEventListener('click', removeDigit);
-    $('emergency').addEventListener('click', () => {
+    $('emergency').addEventListener('click', (event) => {
       if (screen !== 'input' || settings.performance !== 'time-machine') return;
       const result = registerEmergencyTap(emergencyLastTap, performance.now());
       emergencyLastTap = result.lastTap;
       if (result.enter) {
+        requestRewindFullscreen(event);
         timeDigits = [];
         timeMinutes = 0;
         timeTriggeredAt = null;
@@ -1175,6 +1200,7 @@
 
     for (const id of ['time-black', 'time-lock']) {
       $(id).addEventListener('pointerdown', (event) => {
+        if (event.isPrimary) requestRewindFullscreen(event);
         if (!event.isPrimary || performance.now() < timeSuppressUntil) { timePointer = null; return; }
         timePointer = {id:event.pointerId,x:event.clientX,y:event.clientY,at:performance.now()};
       });
