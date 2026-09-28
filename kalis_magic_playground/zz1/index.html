@@ -158,7 +158,7 @@
     #settings.preset-focus #preset-section > h2 { margin-top: 0; }
     #preset-section input, #preset-section select, #quick-settings input { width: 100%; min-height: 3rem; padding: 0.7rem 0.8rem; border: 1px solid #48484a; border-radius: 0.7rem; background: #1c1c1e; color: #fff; font: inherit; user-select: text; -webkit-user-select: text; touch-action: auto; }
     #preset-section label { display: block; margin: 0.9rem 0 0.4rem; color: #d1d1d6; font-size: 0.9rem; }
-    #preset-new, #preset-save { width: 100%; margin: 0.65rem 0; background: #ff9f0a !important; color: #000; font-weight: 600; }
+    #preset-save { width: 100%; margin: 0.65rem 0; background: #ff9f0a !important; color: #000; font-weight: 600; }
     #preset-editor { margin-top: 1rem; padding: 1rem; border: 1px solid #48484a; border-radius: 0.8rem; }
     #preset-editor h3 { margin: 0 0 1rem; }
     #sequence-entry { display: flex; gap: 0.5rem; }
@@ -231,27 +231,26 @@
         <div id="settings-mode-buttons"><button id="mode-portrait" type="button" aria-pressed="false">세로</button><button id="mode-landscape" type="button" aria-pressed="false">가로</button></div>
         </details>
         <details id="stopwatch-help" data-settings-group="guide"><summary>보이지 않는 숫자 그리드 사용법</summary><p>숫자 모드에서는 화면에 구획선이 보이지 않아도 아래처럼 탭 위치를 숫자로 인식합니다. 빨간 선은 설명 화면에서만 보입니다.</p><p>가로 화면: START/STOP 버튼의 해당 칸을 누릅니다. 시작할 때 한 번, 정지할 때 한 번 누르면 두 자리 숫자가 됩니다.</p><div class="grid-guide" role="img" aria-label="위쪽 왼쪽부터 1, 2, 3, 4, 5. 아래쪽 왼쪽부터 6, 7, 8, 9, 0."><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>0</span></div><p>예: 24를 입력하려면 시작할 때 윗줄 두 번째 칸(2), 정지할 때 윗줄 네 번째 칸(4)을 누릅니다. 세로 화면에서는 랩 목록의 빈 영역을 같은 방식으로 두 번 누른 뒤 정지합니다. 이 옵션을 켜면 흰 숫자를 잠깐 표시할 수 있습니다.</p>
-        <label for="p-digit-guide-enabled"><input id="p-digit-guide-enabled" type="checkbox"> 세로 숫자 모드 시작 시 칸 번호 잠깐 표시</label>
+        <label for="p-digit-guide-enabled"><input id="p-digit-guide-enabled" type="checkbox"> 앱을 열 때 세로 일반 모드에서 칸 번호 한 번 표시</label>
         </details>
         </div>
         <div id="preset-section">
         <h2>프리셋</h2>
         <p>타이머 탭에서 저장한 프리셋을 고르거나 편집합니다. 기존 3칸도 그대로 불러옵니다.</p>
         <div id="sequence-slots"></div>
-        <button id="preset-new" type="button">빈 칸에 새 프리셋 만들기</button>
-        <details id="preset-editor-group" data-settings-group="preset-editor"><summary>프리셋 만들기·편집</summary>
+        <section id="preset-editor-group" data-settings-group="preset-editor">
         <div id="preset-editor" hidden>
         <h3 id="preset-editor-title">프리셋 만들기</h3>
         <label for="preset-name">이름</label>
         <input id="preset-name" type="text" maxlength="40" placeholder="예: 생일">
-        <label>사용할 트릭</label>
-        <div id="slot-kind-segment" aria-label="프리셋 트릭 선택"><button id="slot-kind-text" type="button" aria-pressed="false">트릭 2 · 문구/숫자</button><button id="slot-kind-seq" type="button" aria-pressed="true">트릭 3 · 숫자 순서</button></div>
+        <label>프리셋 모드</label>
+        <div id="slot-kind-segment" aria-label="프리셋 표시 방식 선택"><button id="slot-kind-text" type="button" aria-pressed="false">문구 숫자</button><button id="slot-kind-seq" type="button" aria-pressed="true">숫자 순서</button></div>
         <div id="preset-text-fields">
-        <label for="trick2-text">트릭 2 · 정지할 때 보일 문구 또는 숫자</label>
+        <label for="trick2-text">정지할 때 보일 문구 또는 숫자</label>
         <input id="trick2-text" type="text" enterkeyhint="done" maxlength="40" placeholder="문구 또는 00:06.47" autocomplete="off">
         </div>
         <div id="preset-sequence-fields">
-        <label for="sequence-input">트릭 3 · 순서대로 나올 값 (00-99)</label>
+        <label for="sequence-input">순서대로 나올 값 (00-99)</label>
         <div id="sequence-entry"><input id="sequence-input" type="text" inputmode="numeric" enterkeyhint="done" maxlength="2" placeholder="예: 05" autocomplete="off"><button id="sequence-add" type="button">값 추가</button></div>
         <div id="sequence-chips" aria-label="입력한 값 목록"></div>
         <label for="preset-force-after">몇 번 정지한 뒤 첫 값을 적용할까요?</label>
@@ -260,7 +259,7 @@
         </div>
         <button id="preset-save" type="button">이 칸에 저장</button>
         </div>
-        </details>
+        </section>
         <p id="sequence-status" aria-live="polite"></p>
         </div>
       </div>
@@ -399,7 +398,7 @@ function installSettingsSwipe(open, cancel, enabled, cancelHold = cancel) {
       sequenceResult=resolveSequenceStop({stopCount:5,sequence:[],elapsed:34560});assert(sequenceResult.cs===3456&&sequenceResult.nextStopCount===0,"u10 empty sequence always real");
       const sequenceOutcome=resolveStopOutcome({trickState:"seq",presetCs:1187,customText:"KALI",elapsed:34560,reservedTens:2,stopDigit:8,stopCount:2,sequence:sequenceValues});assert(sequenceOutcome.kind==="cs"&&sequenceOutcome.cs===3406&&sequenceOutcome.nextStopCount===3,"u10 sequence uses resolveStopOutcome SSOT");
       assert(nextTrickState(nextTrickState(nextTrickState("off",false),false),false)==="off","u10 trick cycle off excludes seq");
-      assert(nextTrickState("text",true)==="seq"&&nextTrickState("seq",true)==="off","u10 trick cycle on includes seq");
+      assert(nextTrickState("digit",true)==="seq"&&nextTrickState("seq",true)==="off"&&nextTrickState("text",true)==="off","preset subtype shares third cycle position");
       assert(normalizeTrickState("seq",false)==="off","u10 stored seq with trick3 off loads off");
       const slotData=new Map(),slotStore={getItem:key=>slotData.has(key)?slotData.get(key):null,setItem:(key,value)=>slotData.set(key,String(value))};
       const mixedInput=["06,28",{kind:"text",value:" KALI "},{kind:"seq",value:"7"}],mixedSnapshot=JSON.stringify(mixedInput);slotData.set("stopwatch_seq_slots",JSON.stringify(mixedInput));assert(JSON.stringify(loadPresetSlots(slotStore))==='[{"kind":"seq","value":"06,28"},{"kind":"text","value":"KALI"},{"kind":"seq","value":"07"}]',"u11 mixed legacy and object slots");assert(JSON.stringify(mixedInput)===mixedSnapshot,"u11 load input object not mutated");
@@ -459,7 +458,7 @@ function installSettingsSwipe(open, cancel, enabled, cancelHold = cancel) {
     const HOLD_MS=1000,PAIR_MS=120,TRIPLE_MS=800;
     let uiMode="portrait",state="idle",trickState="off",trick3Enabled=false,sequence=[],presetSlotValues=[0,1,2].map(index=>normalizeNamedPreset(null,index)),slotSaveKind="seq",sequenceStopCount=0,sequenceForceAfter=2,sequenceDraft=[],editingSlotIndex=null,customText="",presetCs=null,presetAt=0,textAt=0,presetEntry="0000",presetMode=false,presetKind=null,presetGesture=null;
     let pendingDigits=[],reservedTens=null,stopDigit=null,startedAt=0,elapsedBase=0,frameId=0,lapCount=0,lastLapElapsed=0,hold=null,tap=null,alarmTap=null,suppressClick=false,hintTimer=0,stoppedOutcome=null;
-    let pressed=false,wakeLock=null,wakeLockPending=false,resizeObserver=null,digitGuideToken=0,digitGuideHold=0,digitGuideFade=0;
+    let pressed=false,wakeLock=null,wakeLockPending=false,resizeObserver=null,digitGuideToken=0,digitGuideHold=0,digitGuideFade=0,digitGuideShown=false;
     const activePointers=new Map(),pairedPointers=new Set(),pendingLandscapeActions=new Map();let pairCandidate=null,twoFingerTaps=[];
     function renderCs(totalCs){const value=Math.max(0,Math.floor(Number(totalCs)||0)),f=formatCs(value),entry=f.sec+f.cs;if(uiMode==="portrait"){const portraitEntry=portraitPresetEntryFromCs(value);pCustom.hidden=true;pNumeric.hidden=false;pMinutes.textContent=portraitEntry.slice(0,2);pDigits.forEach((s,i)=>s.textContent=portraitEntry[i+2]);return;}const hasMinutes=value>=6000,fullEntry=portraitPresetEntryFromCs(value),landscapeEntry=hasMinutes?fullEntry.slice(2):entry;lMinutesPrefix.hidden=!hasMinutes;lMinutesPrefix.textContent=hasMinutes?fullEntry.slice(0,2)+":":"";lTime.classList.toggle("with-minutes",hasMinutes);lCustom.hidden=true;lSeconds.hidden=false;lColon.hidden=hasMinutes;lDecimal.hidden=!hasMinutes;lCs.hidden=false;lDigits.forEach((s,i)=>s.textContent=landscapeEntry[i]);}
     function renderPortraitPresetEntry(entry){pCustom.hidden=true;pNumeric.hidden=false;pMinutes.textContent=entry.slice(0,2);pDigits.forEach((s,i)=>s.textContent=entry[i+2]);}
@@ -470,12 +469,12 @@ function installSettingsSwipe(open, cancel, enabled, cancelHold = cancel) {
     function stopTimer(event,atLimit=false){elapsedBase=atLimit?59990:event&&Number.isFinite(event.actionNow)?elapsedAtAction(elapsedBase,startedAt,event.actionNow):elapsedNow();cancelAnimationFrame(frameId);frameId=0;state="stopped";if(uiMode==="landscape"&&event&&trickState==="digit")stopDigit=digitFromLandscapeEvent(event);const outcome=resolveStopOutcome({trickState,presetCs,customText,elapsed:elapsedBase,reservedTens,stopDigit,presetAt,textAt,stopCount:sequenceStopCount,sequence,sequenceForceAfter});sequenceStopCount=outcome.nextStopCount;stoppedOutcome=outcome;if(outcome.kind==="text")renderCustomText(outcome.text);else renderCs(outcome.cs);pendingDigits=[];reservedTens=stopDigit=null;pWorld.classList.remove("feedback");renderState();}
     function tick(){if(state!=="running")return;const elapsed=elapsedNow();if(elapsed>=59990){stopTimer(null,true);return;}renderCs(Math.floor(elapsed/10));frameId=requestAnimationFrame(tick);}
     function startTimer(event){if(elapsedBase>=59990)return;if(uiMode==="landscape")window.MagicFullscreen?.request(event);stoppedOutcome=null;if(uiMode==="landscape"){elapsedBase=0;lastLapElapsed=0;if(trickState==="digit"&&event)reservedTens=digitFromLandscapeEvent(event);}startedAt=event&&Number.isFinite(event.actionNow)?event.actionNow:performance.now();state="running";renderCs(Math.floor(elapsedBase/10));renderState();tick();}
-    function resetTimer(){cancelAnimationFrame(frameId);frameId=0;state="idle";elapsedBase=0;stoppedOutcome=null;sequenceStopCount=0;pendingDigits=[];reservedTens=stopDigit=null;lapCount=lastLapElapsed=0;pLapRows.replaceChildren();pWorld.classList.remove("feedback");renderCs(0);renderState();}
+    function resetTimer(preserveSequence=false){cancelAnimationFrame(frameId);frameId=0;state="idle";elapsedBase=0;stoppedOutcome=null;if(!preserveSequence)sequenceStopCount=0;pendingDigits=[];reservedTens=stopDigit=null;lapCount=lastLapElapsed=0;pLapRows.replaceChildren();pWorld.classList.remove("feedback");renderCs(0);renderState();}
     function addLap(){const elapsed=elapsedNow(),split=formatCs(Math.floor((elapsed-lastLapElapsed)/10));lastLapElapsed=elapsed;const row=document.createElement("div"),label=document.createElement("span"),value=document.createElement("span");row.className="lap-row";label.textContent=`랩 ${++lapCount}`;value.textContent=`00:${split.sec}.${split.cs}`;row.append(label,value);pLapRows.prepend(row);}
     function updateModeButtons(){modePortrait.setAttribute("aria-pressed",String(uiMode==="portrait"));modeLandscape.setAttribute("aria-pressed",String(uiMode==="landscape"));}
     function hidePortraitDigitGuide(){digitGuideToken++;clearTimeout(digitGuideHold);clearTimeout(digitGuideFade);digitGuideHold=digitGuideFade=0;pDigitGuide.classList.remove("is-fading");pDigitGuide.hidden=true;pDigitGuide.setAttribute("aria-hidden","true");}
-    function showPortraitDigitGuide(){hidePortraitDigitGuide();if(!pDigitGuideOn.checked||uiMode!=="portrait"||trickState!=="digit"||presetMode||!settings.hidden||!quickSettings.hidden)return;const token=digitGuideToken;pDigitGuide.hidden=false;pDigitGuide.setAttribute("aria-hidden","false");digitGuideHold=setTimeout(()=>{if(token!==digitGuideToken)return;pDigitGuide.classList.add("is-fading");digitGuideFade=setTimeout(()=>{if(token!==digitGuideToken)return;hidePortraitDigitGuide();},450);},800);}
-    function setMode(mode,persist=true){uiMode=mode==="landscape"?"landscape":"portrait";shell.dataset.uiMode=uiMode;document.body.toggleAttribute("data-fullscreen-skip",uiMode==="portrait");portraitApp.hidden=uiMode!=="portrait";landscapeFrame.hidden=uiMode!=="landscape";updateModeButtons();if(persist)try{localStorage.setItem(MODE_KEY,uiMode);}catch(_){}renderState();if(state==="stopped"&&stoppedOutcome){if(stoppedOutcome.kind==="text")renderCustomText(stoppedOutcome.text);else renderCs(stoppedOutcome.cs);}else renderCs(Math.floor(elapsedNow()/10));requestAnimationFrame(updateLandscapeHitZones);if(uiMode==="landscape")hidePortraitDigitGuide();else if(trickState==="digit")showPortraitDigitGuide();}
+    function showPortraitDigitGuide(){if(digitGuideShown||!pDigitGuideOn.checked||uiMode!=="portrait"||trickState!=="off"||presetMode||!settings.hidden||!quickSettings.hidden)return;digitGuideShown=true;hidePortraitDigitGuide();const token=digitGuideToken;pDigitGuide.hidden=false;pDigitGuide.setAttribute("aria-hidden","false");digitGuideHold=setTimeout(()=>{if(token!==digitGuideToken)return;pDigitGuide.classList.add("is-fading");digitGuideFade=setTimeout(()=>{if(token!==digitGuideToken)return;hidePortraitDigitGuide();},450);},800);}
+    function setMode(mode,persist=true){uiMode=mode==="landscape"?"landscape":"portrait";shell.dataset.uiMode=uiMode;document.body.toggleAttribute("data-fullscreen-skip",uiMode==="portrait");if(uiMode==="portrait"&&(document.fullscreenElement||document.webkitFullscreenElement)){const exit=document.exitFullscreen||document.webkitExitFullscreen;if(exit)try{Promise.resolve(exit.call(document)).catch(()=>{});}catch(_){}}portraitApp.hidden=uiMode!=="portrait";landscapeFrame.hidden=uiMode!=="landscape";updateModeButtons();if(persist)try{localStorage.setItem(MODE_KEY,uiMode);}catch(_){}renderState();if(state==="stopped"&&stoppedOutcome){if(stoppedOutcome.kind==="text")renderCustomText(stoppedOutcome.text);else renderCs(stoppedOutcome.cs);}else renderCs(Math.floor(elapsedNow()/10));requestAnimationFrame(updateLandscapeHitZones);if(uiMode==="landscape")hidePortraitDigitGuide();}
     function toggleMode(){exitPresetMode(false);clearHold();setMode(uiMode==="portrait"?"landscape":"portrait");}
     function isPrimaryPointer(e){return e.isPrimary!==false&&(e.button===undefined||e.button===0);}
     function clearHold(){if(hold)clearTimeout(hold.timer);hold=null;}
@@ -484,13 +483,13 @@ function installSettingsSwipe(open, cancel, enabled, cancelHold = cancel) {
     function storePresetCs(value){presetCs=value>0?Math.min(5999,value):null;presetAt=presetCs===null?0:Date.now();try{if(presetCs===null){localStorage.removeItem(PRESET_KEY);localStorage.removeItem(PRESET_AT_KEY);}else{localStorage.setItem(PRESET_KEY,String(presetCs));localStorage.setItem(PRESET_AT_KEY,String(presetAt));}}catch(_){}}
     function storeCustomText(value){customText=String(value??"").trim();textAt=customText?Date.now():0;try{if(customText){localStorage.setItem(TEXT_KEY,customText);localStorage.setItem(TEXT_AT_KEY,String(textAt));}else{localStorage.removeItem(TEXT_KEY);localStorage.removeItem(TEXT_AT_KEY);}}catch(_){}return customText;}
     function loadStorage(){migrateV2Storage(localStorage);uiMode=storedMode(localStorage);try{customText=localStorage.getItem(TEXT_KEY)||"";textAt=Number(localStorage.getItem(TEXT_AT_KEY))||0;const raw=localStorage.getItem(PRESET_KEY),value=raw!==null&&/^\d{1,6}$/.test(raw)?Number(raw):NaN;presetCs=Number.isInteger(value)&&value>=0&&value<=603999?value:null;presetAt=Number(localStorage.getItem(PRESET_AT_KEY))||0;sequence=parseSequence(localStorage.getItem(SEQUENCE_KEY)||"");presetSlotValues=loadNamedPresets(localStorage);trick3Enabled=localStorage.getItem(TRICK3_KEY)==="1";trickState=normalizeTrickState(trickState,trick3Enabled);}catch(_){customText="";presetCs=null;sequence=[];presetSlotValues=[0,1,2].map(index=>normalizeNamedPreset(null,index));trick3Enabled=false;trickState="off";}}
-    function updateSequenceStatus(){const active=normalizeSequence(sequence);sequenceStatus.textContent=`현재 사용: ${trickState==="seq"?`트릭 3 (${active||"비어 있음"})`:trickState==="text"?"트릭 2":"일반 스톱워치"}`;}
+    function updateSequenceStatus(){const active=normalizeSequence(sequence);sequenceStatus.textContent=`현재 사용: ${trickState==="seq"?`프리셋 모드 · 숫자 순서 (${active||"비어 있음"})`:trickState==="text"?"프리셋 모드 · 문구 숫자":trickState==="digit"?"숫자 모드":"일반 스톱워치"}`;}
     function renderSequenceSlots(){
       sequenceSlots.replaceChildren();
       presetSlotValues.forEach((slot,index)=>{
         const row=document.createElement("div"),label=document.createElement("span"),title=document.createElement("strong"),summary=document.createElement("small"),actions=document.createElement("div"),apply=document.createElement("button"),edit=document.createElement("button"),empty=!slot.value;
         row.className=`sequence-slot${empty?" empty":""}`;row.dataset.slot=String(index);label.className="sequence-slot-value";
-        title.textContent=slot.name;summary.textContent=empty?"비어 있음":slot.kind==="seq"?`트릭 3 · ${slot.value} · ${slot.forceAfter}번 정지 뒤`:`트릭 2 · ${slot.value}`;
+        title.textContent=slot.name;summary.textContent=empty?"비어 있음":slot.kind==="seq"?`숫자 순서 · ${slot.value} · ${slot.forceAfter}번 정지 뒤`:`문구 숫자 · ${slot.value}`;
         label.append(title,summary);actions.className="sequence-slot-actions";
         apply.className="sequence-slot-apply";apply.type="button";apply.textContent="적용";apply.disabled=empty;apply.setAttribute("aria-label",`${slot.name} 적용`);
         edit.className="sequence-slot-edit";edit.type="button";edit.textContent="편집";edit.setAttribute("aria-label",`${slot.name} 편집`);
@@ -514,7 +513,7 @@ function installSettingsSwipe(open, cancel, enabled, cancelHold = cancel) {
       trick2Text.value=slot.kind==="text"?slot.value:"";sequenceDraft=slot.kind==="seq"?parseSequence(slot.value):[];
       sequenceInput.value="";presetForceAfter.value=String(slot.forceAfter);setSlotSaveKind(slot.kind);
       $("preset-editor-title").textContent=`${index+1}번 프리셋 ${slot.value?"편집":"만들기"}`;
-      renderSequenceDraft();$("preset-editor-group").open=true;presetEditor.hidden=false;presetEditor.scrollIntoView({block:"nearest"});
+      renderSequenceDraft();presetEditor.hidden=false;presetEditor.scrollIntoView({block:"nearest"});
     }
     function savePresetEditor(){
       if(editingSlotIndex===null)return;
@@ -534,9 +533,9 @@ function installSettingsSwipe(open, cancel, enabled, cancelHold = cancel) {
       if(state==="running"||presetMode||!settings.hidden||!quickSettings.hidden)return;
       $("settings-entry-tutorial").hidden=true;
       settings.classList.toggle("preset-focus",section==="presets");$("settings-title").textContent=section==="presets"?"프리셋":"설정";
-      $("preset-editor-group").open=false;presetEditor.hidden=true;editingSlotIndex=null;updateModeButtons();renderSequenceSlots();updateSequenceStatus();settings.hidden=false;settings.scrollTop=0;
+      presetEditor.hidden=true;editingSlotIndex=null;updateModeButtons();renderSequenceSlots();updateSequenceStatus();settings.hidden=false;settings.scrollTop=0;
     }
-    function closeSettings(){cancelPendingInteractions();settings.hidden=true;trick2Text.blur();sequenceInput.blur();presetName.blur();showPortraitDigitGuide();}
+    function closeSettings(){cancelPendingInteractions();settings.hidden=true;trick2Text.blur();sequenceInput.blur();presetName.blur();hidePortraitDigitGuide();}
     function applyPresetSlotToDom(slot){
       const applied=applyPresetSlot(slot,{customText,sequence,trick3Enabled});
       if(applied){customText=applied.customText;sequence=applied.sequence;trickState=applied.trickState;trick3Enabled=applied.trick3Enabled;sequenceStopCount=0;sequenceForceAfter=slot.forceAfter??2;textAt=customText?Date.now():0;
@@ -594,11 +593,11 @@ function installSettingsSwipe(open, cancel, enabled, cancelHold = cancel) {
     function cancelPendingInteractions(){clearHold();tap=null;alarmTap=null;suppressClick=false;pendingLandscapeActions.forEach(clearTimeout);pendingLandscapeActions.clear();activePointers.clear();pairedPointers.clear();pairCandidate=null;twoFingerTaps=[];pressed=false;renderState();}
     function onGlobalPointerDown(e){if(presetMode||!settings.hidden||!quickSettings.hidden)return;activePointers.set(e.pointerId,{time:e.timeStamp||performance.now(),x:e.clientX,y:e.clientY,moved:false});if(activePointers.size===2){alarmTap=null;const points=[...activePointers.entries()],gap=Math.abs(points[1][1].time-points[0][1].time);if(gap<=PAIR_MS){pairCandidate={ids:points.map(x=>x[0]),gap,time:Math.max(points[0][1].time,points[1][1].time),released:new Set(),valid:true};pairCandidate.ids.forEach(id=>{pairedPointers.add(id);cancelDeferred(id);});clearHold();tap=null;suppressClick=true;pressed=false;renderState();e.preventDefault();e.stopImmediatePropagation();}}else if(activePointers.size>2&&pairCandidate)pairCandidate.valid=false;}
     function onGlobalPointerEnd(e){const info=activePointers.get(e.pointerId);activePointers.delete(e.pointerId);if(pairCandidate&&pairCandidate.ids.includes(e.pointerId)){if(e.type!=="pointerup"||(info&&info.moved))pairCandidate.valid=false;pairCandidate.released.add(e.pointerId);if(pairCandidate.released.size===2){if(pairCandidate.valid){twoFingerTaps.push({fingers:2,time:pairCandidate.time,gap:pairCandidate.gap});twoFingerTaps=twoFingerTaps.filter(t=>pairCandidate.time-t.time<=TRIPLE_MS);if(recognizesModeToggle(twoFingerTaps)){twoFingerTaps=[];toggleMode();}}pairCandidate.ids.forEach(id=>pairedPointers.delete(id));pairCandidate=null;setTimeout(()=>suppressClick=false,0);}}}
-    function landscapeControl(e){if(presetMode||!isPrimaryPointer(e))return;pressed=true;renderState();if(state==="idle")startTimer(e);else if(state==="running")stopTimer(e);else resetTimer();}
+    function landscapeControl(e){if(presetMode||!isPrimaryPointer(e))return;pressed=true;renderState();if(state==="idle")startTimer(e);else if(state==="running")stopTimer(e);else resetTimer(true);}
     function releasePress(){if(!pressed)return;pressed=false;renderState();}
-    function cycleTrick(){if(presetMode||!settings.hidden||!quickSettings.hidden)return;const previous=trickState;trickState=nextTrickState(trickState,trick3Enabled);if(previous==="seq"&&trickState!=="seq")sequenceStopCount=0;pendingDigits=[];reservedTens=stopDigit=null;pWorld.classList.remove("feedback");renderState();if(uiMode==="portrait"&&trickState==="digit")showPortraitDigitGuide();else hidePortraitDigitGuide();}
+    function cycleTrick(){if(presetMode||!settings.hidden||!quickSettings.hidden)return;const previous=trickState;trickState=nextTrickState(trickState,trick3Enabled);if(previous==="seq"&&trickState!=="seq")sequenceStopCount=0;pendingDigits=[];reservedTens=stopDigit=null;pWorld.classList.remove("feedback");renderState();hidePortraitDigitGuide();}
     async function acquireWakeLock(){if(wakeLock||wakeLockPending||document.visibilityState!=="visible"||!navigator.wakeLock)return;wakeLockPending=true;try{const lock=await navigator.wakeLock.request("screen");wakeLock=lock;lock.addEventListener("release",()=>{if(wakeLock===lock)wakeLock=null;if(document.visibilityState==="visible")acquireWakeLock();});}catch(_){}finally{wakeLockPending=false;}}
-    function initApp(){installSettingsSwipe(openSettings,cancelPendingInteractions,()=>!presetMode&&state!=="running"&&settings.hidden&&quickSettings.hidden,()=>{clearHold();tap=null;alarmTap=null;});loadStorage();try{pDigitGuideOn.checked=localStorage.getItem(DIGIT_GUIDE_KEY)==="1";}catch(_){pDigitGuideOn.checked=false;}setMode(uiMode);
+    function initApp(){installSettingsSwipe(openSettings,cancelPendingInteractions,()=>!presetMode&&state!=="running"&&settings.hidden&&quickSettings.hidden,()=>{clearHold();tap=null;alarmTap=null;});loadStorage();try{pDigitGuideOn.checked=localStorage.getItem(DIGIT_GUIDE_KEY)==="1";}catch(_){pDigitGuideOn.checked=false;}setMode(uiMode);showPortraitDigitGuide();
       document.addEventListener("pointerdown",onGlobalPointerDown,{capture:true,passive:false});window.addEventListener("pointermove",handlePointerMove,{passive:false});window.addEventListener("pointerup",e=>{onGlobalPointerEnd(e);handlePresetEnd(e);if(hold&&hold.pointerId===e.pointerId)clearHold();releasePress();});window.addEventListener("pointercancel",e=>{onGlobalPointerEnd(e);handlePresetEnd(e);if(hold&&hold.pointerId===e.pointerId)clearHold();releasePress();});
       document.addEventListener("pointerdown",handlePresetDown,{capture:true,passive:false});
       pControl.addEventListener("click",()=>{if(suppressClick)return;if(presetMode){if(presetKind!=="portrait-group")return;exitPresetMode(false);}if(state==="running")stopTimer();else startTimer();});pLap.addEventListener("click",()=>{if(presetMode||suppressClick)return;if(state==="running")addLap();else resetTimer();});pTime.addEventListener("click",()=>{if(!suppressClick)cycleTrick();});
@@ -612,7 +611,6 @@ function installSettingsSwipe(open, cancel, enabled, cancelHold = cancel) {
       document.addEventListener("pointerdown",e=>{if(uiMode!=="landscape"||presetMode||state==="running"||!isPrimaryPointer(e)||e.target.closest("#l-control,#l-trick-zone,#l-settings-zone,#settings,#install-nudge"))return;const p=toAppPoint(e.clientX,e.clientY,innerWidth,innerHeight,isRotatedLayout());if(landscapePresetHoldApplies(e.target,p.x,appSize().width))deferLandscapeHold(e,enterLandscapePreset);},{passive:true});
       settingsClose.addEventListener("click",closeSettings);modePortrait.addEventListener("click",()=>setMode("portrait"));modeLandscape.addEventListener("click",()=>setMode("landscape"));pDigitGuideOn.addEventListener("change",()=>{try{localStorage.setItem(DIGIT_GUIDE_KEY,pDigitGuideOn.checked?"1":"0");}catch(_){}if(!pDigitGuideOn.checked)hidePortraitDigitGuide();});
       slotKindText.addEventListener("click",()=>setSlotSaveKind("text"));slotKindSeq.addEventListener("click",()=>setSlotSaveKind("seq"));
-      $("preset-new").addEventListener("click",()=>{const index=presetSlotValues.findIndex(slot=>!slot.value);if(index<0){sequenceStatus.textContent="3칸이 모두 찼습니다. 기존 프리셋의 편집 버튼을 누르세요.";return;}editPreset(index);});
       $("preset-save").addEventListener("click",savePresetEditor);
       $("sequence-add").addEventListener("click",()=>{const raw=sequenceInput.value.trim();if(!/^\d{1,2}$/.test(raw)||sequenceDraft.length>=8){sequenceStatus.textContent="00-99 숫자를 최대 8개까지 추가할 수 있습니다.";return;}sequenceDraft.push(Number(raw));sequenceInput.value="";renderSequenceDraft();sequenceInput.focus();});
       sequenceInput.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();$("sequence-add").click();}else if(e.key==="Escape")closeSettings();});

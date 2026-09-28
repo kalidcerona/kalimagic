@@ -130,6 +130,7 @@ export const ALTER_FILES = [
   'manifest.webmanifest', 'performance.js', 'style.css', 'sw.js', 'vision.js'
 ];
 export const SPINNER_FILES = [
+  'casino-salon.jpg',
   'app.js', 'icon-192.png', 'icon-512.png', 'index.html',
   'logic.js', 'manifest.webmanifest', 'style.css', 'sw.js'
 ];
@@ -247,7 +248,7 @@ async function buildDistributionApps() {
     const indexPath = path.join(target, 'index.html');
     const html = await readFile(indexPath, 'utf8');
     const isolatedHtml = app.source === 'zz1' ? html.replaceAll('stopwatch_', `friend-${app.target}_`).replaceAll('stopwatch2_', `friend-${app.target}-legacy_`).replaceAll('stopwatch-settings-entry-tutorial-', `friend-${app.target}-settings-entry-tutorial-`) : html;
-    await writeFile(indexPath, isolatedHtml.replace('<head>', `<head>\n${accessGuard(app.tool, app.target)}`));
+    await writeFile(indexPath, isolatedHtml.replace(/<body\b/, '<body data-magic-customize="off"').replace('<head>', `<head>\n${accessGuard(app.tool, app.target)}`));
     if (app.source === 'zz1') {
       const logicPath = path.join(target, 'logic.js');
       const logic = await readFile(logicPath, 'utf8');

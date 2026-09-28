@@ -7,7 +7,7 @@
     calculator: { name: 'HITSUZEN', container: '#date-settings', targets: '.display-wrap', targetSelection: 'result', labels: [], elements: [{ id: 'result', name: '계산 결과', preview: '#app', hit: '.display-wrap' }, { id: 'keypad', name: '계산 버튼', preview: '#app', hit: '.keypad' }], story: ["HITSUZEN은 일본어로\n필연이라는 뜻이에요.\n마음대로 선택하고 계산했는데\n마지막엔 하나의 결과로\n이어지는 장면에서 시작했어요.", "자유롭게 흘러간 과정이\n처음부터 그 결론을 향하고\n있었던 것 같은 마술을\n만들고 싶었어요."], note: '미리보기에서 계산 결과나 계산 버튼을 누르면 그 요소의 크기와 위치만 나와요. 계산 내용과 버튼 동작은 그대로예요.' },
     choice: { name: '너의 선택은?', container: '#settings .shell', targets: '#fake-notes-title', labels: [{ selector: '#fake-notes-title', name: '메모 화면 이름', dynamic: true }], story: ["너의 이름은의 무스비와\n붉은 실에서 시작했어요.\n서로 멀리 떨어진 선택과 결과가\n보이지 않는 실로 이어져 있다는\n느낌이 좋았어요.", "선택은 자유로웠지만\n인연은 이미 있었던 것 같은\n순간을 만들고 싶었어요."] },
     aletheia: { name: 'ALETHEIA', container: '#settings .settings-inner', targets: '', labels: [], story: ["ALETHEIA는 가려져 있던\n진실이 드러난다는 이미지에서\n가져왔어요. 보이지 않았을 뿐,\n처음부터 거기에 있었던 것처럼\n말이에요.", "베일을 걷었을 때 무언가를\n새로 만드는 대신 발견하는\n느낌의 마술을 만들고 싶었어요."], note: '공연 이미지는 내 사진 세트에서, 지우는 범위와 칸 미리보기는 공연 설정에서 조절해 주세요.' },
-    tobira: { name: 'TOBIRA', container: '#settings .sheet', targets: '#settings .sheet > h1', labels: [{ selector: '#settings .sheet > h1', name: '준비 화면 이름' }], story: ["TOBIRA는 일본어로\n문이라는 뜻이에요.\n화면 속 세계와 현실 사이에도\n드나들 수 있는 작은 문이 있다면\n어떨까 생각했어요.", "안쪽의 물건이 밖으로 나오고\n다시 돌아가는, 두 세계 사이의\n문이 잠깐 열린 것 같은 마술을\n만들고 싶었어요."], note: '크기와 위치는 준비 화면 이름에 적용돼요. 공연 물건은 기존 크기 설정과 두 손가락 확대·축소로 맞춰 주세요.' },
+    tobira: { name: 'TOBIRA', container: '#settings .sheet', targets: '', labels: [], story: ["TOBIRA는 일본어로\n문이라는 뜻이에요.\n화면 속 세계와 현실 사이에도\n드나들 수 있는 작은 문이 있다면\n어떨까 생각했어요.", "안쪽의 물건이 밖으로 나오고\n다시 돌아가는, 두 세계 사이의\n문이 잠깐 열린 것 같은 마술을\n만들고 싶었어요."], note: '선택한 물건의 크기와 시작 위치를 조절해요. 공연 중 화면을 탭하면 그 위치에 물건이 나타납니다.' },
     usotsuki: { name: 'USOTSUKI', container: '#settings-screen', targets: '#performance-title', labels: [{ selector: '#performance-title', name: '검사 화면 이름' }], story: ["USOTSUKI는 일본어로\n거짓말쟁이라는 뜻이에요.\n완벽하게 숨겼다고 생각했는데\n작은 신호 하나로 새어 나오는\n순간에서 시작했어요.", "웃으면서 시작했는데\n마지막에는 정말 들킨 건가 싶은\n느낌이 남는 마술을\n만들고 싶었어요."] },
     asrai: { name: '아스라이', container: '#settings-screen .settings-wrap', targets: '#contact-list-screen .list-header > h1', labels: [{ selector: '#contact-list-screen .list-header > h1', name: '연락처 목록 이름' }], story: ["멀고 희미한 것이 어렴풋하게\n보이는 아스라이라는 말을\n기억과 연결해 봤어요.\n기억은 사라지기보다 잠깐\n멀어지는 것 같거든요.", "많은 사람의 흔적 사이에서\n한 사람만 다시 선명해지는,\n잊힌 흔적을 되찾는 마술을\n만들고 싶었어요."], note: '크기와 위치는 연락처 목록 이름에 적용돼요. 이름·번호·지역·메모는 기존 연락처 설정에서 준비해 주세요.' },
     'false-memory': { name: 'FALSE MEMORY', container: '#settings-screen .settings-panel', targets: '.result-title', labels: [{ selector: '.result-title', name: '사진 설명 이름' }], story: ["기억은 그대로 남는 기록보다\n지금의 정보로 다시 만들어지는\n것 같아요. 분명 다르게 봤는데\n지금 화면이 너무 자연스러우면\n기억부터 흔들리잖아요.", "처음부터 이랬던 건 아닐까 하는\n질문이 남는, 현실보다 기억의\n균열을 보여 주는 마술을\n만들고 싶었어요."] },
@@ -49,7 +49,8 @@
   }
   function translateFor(delta, rotated) { return rotated ? delta.y + 'px ' + (-delta.x) + 'px' : delta.x + 'px ' + delta.y + 'px'; }
   function controlVisible(controlSelection, selectedId, selective) { return !selective || controlSelection === selectedId; }
-  var api = { profiles: profiles, sanitize: sanitize, storageKey: storageKey, read: read, write: write, reset: reset, clipOffset: clipOffset, screenDelta: screenDelta, translateFor: translateFor, controlVisible: controlVisible };
+  function customizationAllowed(pathname, flag) { return flag !== 'off' && !/^\/tools(?:\/|$)/i.test(pathname || '') && !(pathname || '').includes('/distribution-snapshots/'); }
+  var api = { customizationAllowed: customizationAllowed, profiles: profiles, sanitize: sanitize, storageKey: storageKey, read: read, write: write, reset: reset, clipOffset: clipOffset, screenDelta: screenDelta, translateFor: translateFor, controlVisible: controlVisible };
   root.MagicSettingsUI = api;
   if (!root.document) return;
   function mount() {
@@ -73,7 +74,8 @@
     var overview = group('개요', 'magic-overview');
     overview.appendChild(node('h2', profile.name));
     profile.story.forEach(function (text) { overview.appendChild(node('p', text)); });
-    overview.appendChild(node('p', '친구들과 같이 즐기거나\n선물해 주려고 만들었어요.\n각자 편한 화면으로 조금씩\n바꿔서 써 주세요.'));
+    overview.appendChild(node('p', customizationAllowed(root.location.pathname, doc.body.dataset.magicCustomize) ? '친구들과 같이 즐기거나\n선물해 주려고 만들었어요.\n각자 편한 화면으로 조금씩\n바꿔서 써 주세요.' : '친구들과 같이 즐기거나\n선물해 주려고 만들었어요.\n편하게 즐겨 주세요.'));
+    if (!customizationAllowed(root.location.pathname, doc.body.dataset.magicCustomize)) { container.appendChild(overview); container.appendChild(node('p', '수정이 필요하거나 버그를 발견하셨다면, 개선할 점이나 새로운 아이디어가 있으셔도 카카오톡 KaliDCerona로 연락해 주세요.', 'magic-settings-footer')); return; }
     var link = node('div', null, 'magic-customize-link'), openCustomize = node('button', '화면 커스텀', 'magic-customize-open');
     openCustomize.type = 'button'; openCustomize.setAttribute('data-fullscreen-skip', ''); link.appendChild(openCustomize); container.appendChild(link);
     var customPage = node('section', null, 'magic-customize-page'); customPage.id = 'magic-customize-page'; customPage.hidden = true;
@@ -84,8 +86,8 @@
     preview.appendChild(node('p', '실시간 미리보기', 'magic-preview-label')); preview.appendChild(phone); customPage.appendChild(preview);
     var customize = node('div', null, 'magic-customize'); customPage.appendChild(customize); doc.body.appendChild(customPage);
     var previousFocus, previousUrl;
-    function closeCustom() { customPage.hidden = true; if (root.location.hash === '#customize' && root.history) root.history.replaceState(null, '', previousUrl || root.location.pathname + root.location.search); previousFocus?.focus?.(); }
-    openCustomize.addEventListener('click', function () { previousFocus = doc.activeElement; previousUrl = root.location.pathname + root.location.search + root.location.hash; customPage.hidden = false; if (root.history && root.location.hash !== '#customize') root.history.pushState(null, '', '#customize'); schedule(); back.focus?.(); });
+    function closeCustom() { customPage.hidden = true; if (app === 'calculator') { container.classList.add('open'); container.setAttribute('aria-hidden', 'false'); } if (app === 'spinner') { var settings = doc.querySelector('#settings'); if (settings) settings.hidden = false; } if (root.location.hash === '#customize' && root.history) root.history.replaceState(null, '', previousUrl || root.location.pathname + root.location.search); previousFocus?.focus?.(); }
+    openCustomize.addEventListener('click', function () { previousFocus = doc.activeElement; syncNativeAppearance(); previousUrl = root.location.pathname + root.location.search + root.location.hash; customPage.hidden = false; if (root.history && root.location.hash !== '#customize') root.history.pushState(null, '', '#customize'); schedule(); back.focus?.(); });
     back.addEventListener('click', closeCustom);
     root.addEventListener('popstate', function () { if (root.location.hash !== '#customize') { customPage.hidden = true; previousFocus?.focus?.(); } });
     customPage.addEventListener('keydown', function (event) { if (event.key === 'Escape') { closeCustom(); event.stopPropagation(); } });
@@ -118,6 +120,14 @@
       if (customPage.hidden || !root.getComputedStyle) return;
       var source = doc.querySelector(previewSelector), width = root.innerWidth, height = root.innerHeight;
       phone.replaceChildren();
+      if (app === 'tobira' && root.MagicTobiraAppearance) {
+        var model = root.MagicTobiraAppearance.preview(), sample = node('div', null, 'magic-object-preview'), object = node('div', null, 'magic-preview-object');
+        var sampleHeight = Math.max(1, Math.min(preview.clientHeight - 24, (preview.clientWidth - 48) * height / width)); phone.style.height = sampleHeight + 'px'; phone.style.width = (sampleHeight * width / height) + 'px'; phone.style.aspectRatio = width + '/' + height;
+        var art = node('img'); art.alt = '선택한 공연 물건'; art.src = model.image;
+        sample.style.setProperty('--object-width', (Math.min(1, model.widthRatio) * Math.min(phone.clientWidth, phone.clientHeight)) + 'px');
+        sample.style.setProperty('--object-x', (model.startX * 100) + '%'); sample.style.setProperty('--object-y', (model.startY * 100) + '%');
+        object.appendChild(art); sample.appendChild(object); phone.appendChild(sample); return;
+      }
       if (!source) { phone.appendChild(node('p', profile.name)); return; }
       if (!previewStyles) {
         previewStyles = Array.from(doc.styleSheets).map(function (sheet) { try { return Array.from(sheet.cssRules).map(function (rule) { return rule.cssText; }).join('\n'); } catch (_) { return ''; } }).join('\n')
@@ -184,11 +194,21 @@
       if (type === 'range') { input.min = min; input.max = max; input.step = 1; } else { input.maxLength = 40; input.autocomplete = 'off'; }
       input.value = value;
       var output = node('output'), row = node('div', null, 'magic-range-row'), unit = options.unit || (min >= 0 ? '%' : 'vh');
-      if (type === 'range') { var minus = node('button', '−'), plus = node('button', '+'); minus.type = plus.type = 'button'; minus.setAttribute('aria-label', title + ' 줄이기'); plus.setAttribute('aria-label', title + ' 늘리기'); [minus, plus].forEach(function (button, index) { button.addEventListener('click', function () { input.value = Number(input.value) + (index ? 1 : -1); input.dispatchEvent(new root.Event('input', { bubbles: true })); }); }); row.appendChild(minus); row.appendChild(input); row.appendChild(plus); label.appendChild(row); } else label.appendChild(input); label.appendChild(output); customize.appendChild(label); controls.push(input);
-      function update() { if (type === 'range') output.textContent = input.value + unit; }
+      if (type === 'range') { var minus = node('button', '−'), plus = node('button', '+'); minus.type = plus.type = 'button'; minus.setAttribute('aria-label', title + ' 줄이기'); plus.setAttribute('aria-label', title + ' 늘리기'); [minus, plus].forEach(function (button, index) { button.addEventListener('click', function () { input.value = Number(input.value) + (index ? 1 : -1) * (Number(input.step) || 1); input.dispatchEvent(new root.Event('input', { bubbles: true })); }); }); row.appendChild(minus); row.appendChild(input); row.appendChild(plus); label.appendChild(row); } else label.appendChild(input); label.appendChild(output); customize.appendChild(label); controls.push(input);
+      function update() { if (type === 'range') output.textContent = (options.ratio ? Math.round(Number(input.value) * 100) : input.value) + unit; }
       input.addEventListener('input', update); update(); return input;
     }
     var scale = field('표시 크기', 'range', prefs.scale, 70, 140, { selection: profile.targetSelection, unit: '%' }), offset = field('위아래 위치', 'range', prefs.offset, -12, 12, { selection: profile.targetSelection, unit: 'vh' }), axisX = field('좌우 위치', 'range', prefs.x, -12, 12, { selection: profile.targetSelection, unit: 'vw' });
+    var nativeAppearanceFields = [], syncingNativeAppearance = false;
+    if (app === 'tobira') {
+      [['coinSize', '#coin-size', '물건 크기'], ['startX', '#start-x', '시작 위치 · 좌우'], ['startY', '#start-y', '시작 위치 · 위아래']].forEach(function (item) {
+        var original = doc.querySelector(item[1]); if (!original) return;
+        var input = field(item[2], 'range', original.value || original.min, Number(original.min), Number(original.max), { unit: '%', ratio: true });
+        input.step = original.step || '0.01'; nativeAppearanceFields.push({ name: item[0], original: original, input: input });
+        input.addEventListener('input', function () { if (syncingNativeAppearance || !root.MagicTobiraAppearance) return; var value = {}; nativeAppearanceFields.forEach(function (entry) { value[entry.name] = Number(entry.input.value); }); Promise.resolve(root.MagicTobiraAppearance.update(value)).then(schedule).catch(function () { status.textContent = '물건 설정을 저장하지 못했어요. 다시 시도해 주세요.'; }); });
+      });
+    }
+    function syncNativeAppearance() { if (!nativeAppearanceFields.length || !root.MagicTobiraAppearance) return; var value = root.MagicTobiraAppearance.read(); syncingNativeAppearance = true; nativeAppearanceFields.forEach(function (entry) { entry.input.min = entry.original.min; entry.input.max = entry.original.max; entry.input.step = entry.original.step; entry.input.value = value[entry.name]; entry.input.dispatchEvent(new root.Event('input')); }); syncingNativeAppearance = false; }
     if (!profile.targets) { [scale, offset, axisX].forEach(function (input) { input.parentElement.hidden = true; }); }
     var labelFields = profile.labels.map(function (label) {
       var el = doc.querySelector(label.selector); if (!el) return null;
@@ -237,16 +257,17 @@
       doc.dispatchEvent(new root.CustomEvent('magic-appearance-change', { detail: { app: app } }));
     }
     var actions = node('div', null, 'magic-appearance-actions'), save = node('button', '저장'), clear = node('button', '꾸미기 초기화'), status = node('p', '', 'magic-appearance-status');
-    save.type = clear.type = 'button'; status.setAttribute('role', 'status'); status.setAttribute('aria-live', 'polite');
+    save.type = clear.type = 'button'; if (app === 'tobira') clear.hidden = true; status.setAttribute('role', 'status'); status.setAttribute('aria-live', 'polite');
     actions.appendChild(save); actions.appendChild(clear); customize.appendChild(actions); customize.appendChild(status);
     function collect() { var value = { scale: Number(scale.value), offset: Number(offset.value), x: Number(axisX.value), labels: {}, parts: {} }; labelFields.forEach(function (item) { if (item.input.value !== defaults[item.definition.selector]) value.labels[item.definition.selector] = item.input.value; }); partFields.forEach(function (part) { value.parts[part.definition.selector] = { scale: Number(part.scale.value), offset: Number(part.offset.value), x: Number(part.x.value) }; }); prefs = sanitize(value, profile); applyLabels(); schedule(); }
     controls.forEach(function (input) { input.addEventListener('input', collect); });
-    save.addEventListener('click', function () { collect(); status.textContent = write(storage, key, prefs, profile) ? '이 기기에 저장했어요.' : '화면에는 적용했어요. 이 브라우저에서는 저장할 수 없어요.'; });
+    save.addEventListener('click', function () { collect(); status.textContent = write(storage, key, prefs, profile) ? '이 기기에 저장했어요.' : '화면에는 적용했어요. 이 브라우저에서는 저장할 수 없어요.'; if (status.textContent === '이 기기에 저장했어요.') closeCustom(); });
     clear.addEventListener('click', function () { prefs = sanitize(null, profile); scale.value = 100; offset.value = 0; axisX.value = 0; partFields.forEach(function (part) { part.scale.value = 100; part.offset.value = 0; part.x.value = 0; }); labelFields.forEach(function (item) { item.input.value = defaults[item.definition.selector]; }); controls.filter(function (input) { return input.type === 'range'; }).forEach(function (input) { input.dispatchEvent(new root.Event('input')); }); var removed = reset(storage, key); applyLabels(); schedule(); status.textContent = removed ? '꾸미기를 처음 모습으로 돌렸어요.' : '처음 모습으로 돌렸어요. 저장된 설정은 지울 수 없어요.'; });
     container.appendChild(overview);
     container.appendChild(node('p', '수정이 필요하거나 버그를 발견하셨다면, 개선할 점이나 새로운 아이디어가 있으셔도 카카오톡 KaliDCerona로 연락해 주세요.', 'magic-settings-footer'));
     applyLabels(); applySelection(); schedule();
-    if (root.location.hash === '#customize') { customPage.hidden = false; schedule(); }
+    if (root.location.hash === '#customize') { customPage.hidden = false; syncNativeAppearance(); schedule(); }
+    root.addEventListener('load', function () { syncNativeAppearance(); schedule(); });
     root.addEventListener('resize', schedule); root.addEventListener('orientationchange', schedule);
     if (typeof root.ResizeObserver === 'function') { var sizeObserver = new root.ResizeObserver(schedule); targets.forEach(function (el) { sizeObserver.observe(el); }); }
     if (typeof root.MutationObserver === 'function') {

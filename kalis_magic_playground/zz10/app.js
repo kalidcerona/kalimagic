@@ -1,5 +1,5 @@
 import { AlterState, createAlterState, updateAlterState } from "./logic.js";
-import { detectCard, detectCardAgainstBackground, mapSourceOntoCorners } from "./vision.js";
+import { cardOcclusionMask, detectCard, detectCardAgainstBackground, mapSourceOntoCorners } from "./vision.js";
 import { createObservationTracker, overlayCorners, trackObservation } from "./performance.js";
 import { coverGeometry, samplePointToView } from "./camera-geometry.js";
 import { claimCalibrationReady, createBackgroundCalibrator, observeCalibration } from "./calibration.js";
@@ -19,6 +19,8 @@ const gestureGuide = $("gesture-guide");
 const gestureGuideKey = "alter-settings-gesture-guide-v1";
 const sample = document.createElement("canvas");
 const sampleContext = sample.getContext("2d", { willReadFrequently: true });
+const occlusionCanvas = document.createElement("canvas");
+const occlusionContext = occlusionCanvas.getContext("2d");
 const suits = {
   spade: { symbol: "♠", red: false },
   heart: { symbol: "♥", red: true },
@@ -143,7 +145,7 @@ function closeSettings() {
   tracker = createObservationTracker();
 }
 
-function showOverlay(corners, geometry) {
+function showOverlay(corners, geometry, frame, reference) {
   const mapped = corners.map((point) => samplePointToView(point, geometry));
   const h = mapSourceOntoCorners(240, 336, mapped);
   if (!h) {
@@ -156,6 +158,19 @@ function showOverlay(corners, geometry) {
     0, 0, 1, 0,
     h[2], h[5], 0, h[8],
   ].join(",")})`;
+  const mask = frame && cardOcclusionMask(frame, corners, reference);
+  if (mask && occlusionContext) {
+    occlusionCanvas.width = mask.width;
+    occlusionCanvas.height = mask.height;
+    const image = occlusionContext.createImageData(mask.width, mask.height);
+    image.data.set(mask.data);
+    occlusionContext.putImageData(image, 0, 0);
+    const url = `url("${occlusionCanvas.toDataURL("image/png")}")`;
+    overlay.style.maskImage = url;
+    overlay.style.webkitMaskImage = url;
+    overlay.style.maskSize = overlay.style.webkitMaskSize = "100% 100%";
+    overlay.style.maskRepeat = overlay.style.webkitMaskRepeat = "no-repeat";
+  }
   overlay.hidden = false;
   return true;
 }
@@ -232,7 +247,7 @@ function processFrame(t) {
 
     const visibleCorners = overlayCorners(tracker, detection, t);
     if (machine.state === AlterState.ALTER_VISIBLE && visibleCorners) {
-      showOverlay(visibleCorners, geometry);
+      showOverlay(visibleCorners, geometry, pixels, calibrator.reference);
     } else hideOverlay();
   } catch {
     machine = updateAlterState(machine, { type: "interrupt", t });

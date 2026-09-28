@@ -20,8 +20,7 @@ export function normalizeTrickState(current, trick3Enabled) { return current ===
 export function nextTrickState(current, trick3Enabled = false) {
   const state = normalizeTrickState(current, trick3Enabled);
   if (state === "off") return "digit";
-  if (state === "digit") return "text";
-  if (state === "text") return trick3Enabled ? "seq" : "off";
+  if (state === "digit") return trick3Enabled ? "seq" : "text";
   return "off";
 }
 export function parseSequence(value) {

@@ -113,6 +113,8 @@ test('public build serves integrated stopwatch on both retained entitlement rout
   assert.doesNotMatch(personalStopwatch, /id="friend-apps-check"/);
   assert.match(sharedUnlock, /id="friend-apps-check"/);
   assert.match(sharedUnlock, /tools\/_check\?tool=unlock/);
+  for (const html of [sharedUnlock, sharedStopwatch, sharedCalculator, sharedAletheia, sharedUsotsuki]) assert.match(html, /data-magic-customize="off"/);
+  assert.doesNotMatch(personalStopwatch, /data-magic-customize="off"/);
   assert.match(sharedStopwatch, /id="friend-apps-check"/);
   assert.match(sharedStopwatch, /tools\/_check\?tool=stopwatch-uni/);
   assert.match(sharedStopwatch, /<title>KAIROS · 스톱워치<\/title>/);
@@ -176,7 +178,7 @@ test('shared unlock stays on the pinned snapshot until explicit promotion', asyn
     ]);
     if (file === 'index.html') {
       const withoutGuard = distributed.toString('utf8').replace(/\n  <script id="friend-apps-check">[\s\S]*?<\/script>/, '');
-      assert.equal(withoutGuard, snapshot.toString('utf8'));
+      assert.equal(withoutGuard, snapshot.toString('utf8').replace(/<body\b/, '<body data-magic-customize="off"'));
     } else if (file === 'manifest.webmanifest') {
       const expected = { ...JSON.parse(snapshot), id: './', start_url: './', scope: './' };
       assert.deepEqual(JSON.parse(distributed), expected);
@@ -211,7 +213,7 @@ test('ALETHEIA and USOTSUKI distribution builds use pinned snapshots and separat
       if (file === 'index.html') {
         const html = targetBytes.toString('utf8');
         assert.match(html, new RegExp(`tools\\/_check\\?tool=${app}`));
-        assert.equal(html.replace(/\n  <script id="friend-apps-check">[\s\S]*?<\/script>/, ''), sourceBytes.toString('utf8'));
+        assert.equal(html.replace(/\n  <script id="friend-apps-check">[\s\S]*?<\/script>/, ''), sourceBytes.toString('utf8').replace(/<body\b/, '<body data-magic-customize="off"'));
       } else {
         assert.deepEqual(targetBytes, sourceBytes, `${app}/${file}`);
       }

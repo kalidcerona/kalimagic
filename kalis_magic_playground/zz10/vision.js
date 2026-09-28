@@ -749,6 +749,13 @@ function pointInConvex(point, corners) {
   return true;
 }
 
+function warmGripPixel(frame, x, y) {
+  const i = (Math.max(0, Math.min(frame.height - 1, Math.round(y))) * frame.width +
+    Math.max(0, Math.min(frame.width - 1, Math.round(x)))) * 4;
+  const r = frame.data[i], g = frame.data[i + 1], b = frame.data[i + 2];
+  return r - b > Math.max(16, r * 0.07) && r - g > Math.max(7, r * 0.03);
+}
+
 function edgeSupport(corners, frame, contrast) {
   const magMin = Math.max(28, contrast * 0.7);
   const samples = 18;
@@ -766,11 +773,15 @@ function edgeSupport(corners, frame, contrast) {
     const nx = -ty;
     const ny = tx;
     let hits = 0;
+    let available = 0;
 
     for (let i = 0; i < samples; i += 1) {
       const t = 0.12 + (0.76 * (i + 0.5)) / samples;
       const x = start.x + dx * t;
       const y = start.y + dy * t;
+      // A foreground grip can remove a real edge; require eight remaining probes.
+      if (warmGripPixel(frame, x, y)) continue;
+      available += 1;
       let best = null;
       for (let offset = -1; offset <= 1; offset += 1) {
         const gradient = sobelAt(
@@ -785,7 +796,8 @@ function edgeSupport(corners, frame, contrast) {
       if (alignment >= 0.55) hits += 1;
     }
 
-    const ratio = hits / samples;
+    if (available < 8) return 0;
+    const ratio = hits / available;
     if (ratio < MIN_SIDE_SUPPORT) return 0;
     supportSum += ratio;
   }
@@ -1148,4 +1160,86 @@ export function mapSourceOntoCorners(srcWidth, srcHeight, corners) {
     { x: 0, y: srcHeight },
   ];
   return computeHomography(source, corners);
+}
+
+
+/** Preserve changed foreground connected across a card edge, including neutral grips.
+ * Color similarity is local evidence, not identity/skin recognition. Static room
+ * pixels are excluded by the empty-scene reference; disconnected printed artwork
+ * cannot seed a hole. The returned alpha mask is in the replacement's own plane.
+ */
+export function cardOcclusionMask(frame, corners, reference = null, width = 120, height = 168) {
+  assertFrame(frame);
+  const quad = readQuad(corners);
+  const h = quad && mapSourceOntoCorners(width, height, quad);
+  if (!h) return null;
+  const step = sampleStep(frame.width, frame.height);
+  const gw = Math.ceil(frame.width / step), gh = Math.ceil(frame.height / step);
+  const inside = new Uint8Array(gw * gh), removed = new Uint8Array(gw * gh), ambiguous = new Uint8Array(gw * gh);
+  const changed = reference ? differenceGrid(frame, reference) : null;
+  const threshold = changed ? Math.max(18, changed.noise * 3 + 14) : 0;
+  const pixel = i => (Math.min(frame.height - 1, Math.floor(i / gw) * step) * frame.width +
+    Math.min(frame.width - 1, (i % gw) * step)) * 4;
+  for (let i = 0; i < inside.length; i += 1) {
+    inside[i] = pointInConvex({ x: (i % gw) * step, y: Math.floor(i / gw) * step }, quad) ? 1 : 0;
+  }
+  const cardCells = inside.reduce((sum,value) => sum + value, 0);
+  // Only an exterior foreground sample adjacent to the card can seed occlusion.
+  for (let i = 0; i < inside.length; i += 1) {
+    if (inside[i] || removed[i]) continue;
+    const x = i % gw, y = Math.floor(i / gw);
+    if (![[x-1,y],[x+1,y],[x,y-1],[x,y+1]].some(([nx,ny]) =>
+      nx >= 0 && nx < gw && ny >= 0 && ny < gh && inside[ny * gw + nx])) continue;
+    if (changed ? changed.luma[i] < threshold : !warmGripPixel(frame, x * step, y * step)) continue;
+    const seed = pixel(i), color = [frame.data[seed], frame.data[seed+1], frame.data[seed+2]];
+    const luminance = .299 * color[0] + .587 * color[1] + .114 * color[2];
+    const neutralGrip = luminance >= 120 && luminance <= 220 && Math.max(...color) - Math.min(...color) <= 35;
+    if (!neutralGrip && !warmGripPixel(frame, x * step, y * step)) continue;
+    // A one-pixel fitting error must not mistake the paper rim for a finger.
+    const extendsOutside = [[x-4,y],[x+4,y],[x,y-4],[x,y+4]].some(([nx,ny]) => {
+      if (nx < 0 || nx >= gw || ny < 0 || ny >= gh) return false;
+      const next = ny * gw + nx;
+      if (inside[next] || (changed && changed.luma[next] < threshold)) return false;
+      const p = pixel(next);
+      return color.every((c,ch) => Math.abs(frame.data[p+ch] - c) <= 18);
+    });
+    if (!extendsOutside) continue;
+    const queue = [i]; removed[i] = 1;
+    for (let head = 0; head < queue.length; head += 1) {
+      const at = queue[head], ax = at % gw, ay = Math.floor(at / gw);
+      for (const [nx,ny] of [[ax-1,ay],[ax+1,ay],[ax,ay-1],[ax,ay+1]]) {
+        if (nx < 0 || nx >= gw || ny < 0 || ny >= gh) continue;
+        const next = ny * gw + nx;
+        if (removed[next] || ambiguous[next] || (!inside[next] && next !== i)) continue;
+        const p = pixel(next);
+        // Neutral grips have little chroma evidence. Match both luminance and
+        // channel differences tightly rather than absorbing similarly lit paper.
+        const tolerance = neutralGrip ? 6 : 18;
+        if (color.some((c,ch) => Math.abs(frame.data[p+ch] - c) > tolerance)) continue;
+        if (neutralGrip && Math.abs((frame.data[p] - frame.data[p+2]) - (color[0] - color[2])) > 6) continue;
+        removed[next] = 1; queue.push(next);
+      }
+    }
+    // A paper-colored component spanning the card is uncertain, not a hand.
+    // Keep its replacement opaque; avoid growing a hole across printed paper.
+    const interiorCount = queue.reduce((sum,at) => sum + inside[at], 0);
+    if (interiorCount > cardCells * .18) {
+      for (const at of queue) { if (inside[at]) { removed[at] = 0; ambiguous[at] = 1; } }
+    }
+  }
+  const data = new Uint8ClampedArray(width * height * 4);
+  for (let y = 0; y < height; y += 1) for (let x = 0; x < width; x += 1) {
+    const point = applyHomography(h, x + .5, y + .5);
+    const gx = Math.max(0, Math.min(gw - 1, Math.round(point.x / step)));
+    const gy = Math.max(0, Math.min(gh - 1, Math.round(point.y / step)));
+    // One grid-cell safety rim keeps the grip's antialiasing in the live feed.
+    let covered = false;
+    for (let dy = -1; dy <= 1; dy += 1) for (let dx = -1; dx <= 1; dx += 1) {
+      const nx = gx + dx, ny = gy + dy;
+      if (nx >= 0 && nx < gw && ny >= 0 && ny < gh && removed[ny * gw + nx]) covered = true;
+    }
+    const i = (y * width + x) * 4;
+    data[i] = data[i+1] = data[i+2] = 255; data[i+3] = covered ? 0 : 255;
+  }
+  return { width, height, data };
 }

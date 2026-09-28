@@ -737,6 +737,68 @@ function commitNumbers() {
   persist();
 }
 
+// Narrow bridge for the shared customizer. Values stay on the selected preset.
+function appearanceNumber(value, fallback) {
+  const number = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(number) ? number : fallback;
+}
+
+function readAppearance() {
+  const preset = selected();
+  return {
+    coinSize: preset.coinSize,
+    startX: preset.startX,
+    startY: preset.startY,
+  };
+}
+
+function previewAspect(choice) {
+  if (choice === 'riderRed') return 649 / 929;
+  if (choice === 'riderBlue') return 661 / 1038;
+  const art = coinArt;
+  if (choice === 'custom' && art && art.naturalWidth > 0 && art.naturalHeight > 0) {
+    return art.naturalWidth / art.naturalHeight;
+  }
+  return 1;
+}
+
+function previewAppearance() {
+  const preset = selected();
+  const choice = imageChoices[preset.id] || 'kennedy';
+  const image = chosenCoin(preset.id);
+  const art = coinArt;
+  const loaded = art && art.naturalWidth > 0 && art.naturalHeight > 0
+    && typeof art.src === 'string' && art.src.endsWith(String(image).replace(/^\.\//, ''));
+  return {
+    image,
+    widthRatio: preset.coinSize,
+    aspectRatio: loaded ? art.naturalWidth / art.naturalHeight : previewAspect(choice),
+    startX: preset.startX,
+    startY: preset.startY,
+  };
+}
+
+function updateAppearance(value) {
+  const current = selected();
+  const patch = value && typeof value === 'object' ? value : {};
+  const result = sanitizePreset({
+    ...current,
+    coinSize: appearanceNumber(patch.coinSize, current.coinSize),
+    startX: appearanceNumber(patch.startX, current.startX),
+    startY: appearanceNumber(patch.startY, current.startY),
+  });
+  if (!result.ok) return Promise.resolve(readAppearance());
+  replaceSelected(result.preset);
+  sizeInput.value = String(result.preset.coinSize);
+  xInput.value = String(result.preset.startX);
+  yInput.value = String(result.preset.startY);
+  updateReadouts(result.preset);
+  clearDeleteArm();
+  persist();
+  if (objectLive && phase === 'idle' && state.mode === 'performance') paintLiveCoin();
+  return Promise.resolve(readAppearance());
+}
+
 function setEdge(edge) {
   const result = sanitizePreset({ ...selected(), exitEdge: edge });
   if (!result.ok) return;
@@ -878,7 +940,19 @@ function playBreakSound() {
   if (!audioContext || audioContext.state !== 'running') return;
   try {
     const now = audioContext.currentTime;
-    const length = Math.ceil(audioContext.sampleRate * .42);
+    // Start the audible transient before the noise buffer is filled.
+    const thump = audioContext.createOscillator();
+    thump.type = 'sine';
+    thump.frequency.setValueAtTime(125, now);
+    thump.frequency.exponentialRampToValueAtTime(48, now + .25);
+    const thumpGain = audioContext.createGain();
+    thumpGain.gain.setValueAtTime(.5, now);
+    thumpGain.gain.exponentialRampToValueAtTime(.001, now + .22);
+    thump.connect(thumpGain).connect(audioContext.destination);
+    thump.start(now);
+    thump.stop(now + .22);
+
+    const length = Math.ceil(audioContext.sampleRate * .28);
     const noise = audioContext.createBuffer(1, length, audioContext.sampleRate);
     const samples = noise.getChannelData(0);
     for (let i = 0; i < length; i += 1) samples[i] = (Math.random() * 2 - 1) * (1 - i / length);
@@ -889,22 +963,10 @@ function playBreakSound() {
     highpass.frequency.value = 850;
     const crackGain = audioContext.createGain();
     crackGain.gain.setValueAtTime(.45, now);
-    crackGain.gain.exponentialRampToValueAtTime(.001, now + .42);
+    crackGain.gain.exponentialRampToValueAtTime(.001, now + .28);
     crack.connect(highpass).connect(crackGain).connect(audioContext.destination);
     crack.start(now);
-    crack.stop(now + .42);
-
-    const thump = audioContext.createOscillator();
-    thump.type = 'sine';
-    thump.frequency.setValueAtTime(125, now);
-    thump.frequency.exponentialRampToValueAtTime(48, now + .25);
-    const thumpGain = audioContext.createGain();
-    thumpGain.gain.setValueAtTime(.001, now);
-    thumpGain.gain.linearRampToValueAtTime(.65, now + .012);
-    thumpGain.gain.exponentialRampToValueAtTime(.001, now + .3);
-    thump.connect(thumpGain).connect(audioContext.destination);
-    thump.start(now);
-    thump.stop(now + .3);
+    crack.stop(now + .28);
   } catch { /* Keep the visual effect if audio output fails. */ }
 }
 
@@ -1914,6 +1976,12 @@ function bind() {
     });
   }
 }
+
+window.MagicTobiraAppearance = {
+  read: readAppearance,
+  update: updateAppearance,
+  preview: previewAppearance,
+};
 
 concealCoin();
 loadState();

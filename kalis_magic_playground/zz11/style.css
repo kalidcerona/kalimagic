@@ -21,101 +21,16 @@ button { cursor: pointer; }
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
   overflow: hidden;
-  background:
-    radial-gradient(ellipse at 50% 46%, rgba(255, 220, 160, .16), transparent 24%),
-    radial-gradient(ellipse at 50% 50%, rgba(0, 0, 0, .16), transparent 58%),
-    repeating-linear-gradient(45deg, rgba(0, 0, 0, .05) 0 1px, transparent 1px 16px),
-    repeating-linear-gradient(-45deg, rgba(255, 255, 255, .028) 0 1px, transparent 1px 16px),
-    radial-gradient(ellipse at 50% 48%, #1f6b4c 0%, #14543c 40%, #0c3226 74%, #082018 100%);
-  box-shadow:
-    inset 0 0 0 1px #f4e7c4,
-    inset 0 0 0 8px #6a4324,
-    inset 0 0 0 10px #e7d09a,
-    inset 0 0 0 18px #3a2614,
-    inset 0 0 80px rgba(0, 0, 0, .32);
+  background: linear-gradient(180deg, rgba(2, 9, 7, .12), transparent 45%, rgba(2, 9, 7, .12)), url('./casino-salon.jpg') center/cover no-repeat #0c241c;
+  box-shadow: none;
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
 }
 
-.rail {
-  position: relative;
-  z-index: 2;
-  pointer-events: none;
-  background:
-    linear-gradient(180deg, rgba(255, 232, 190, .2), transparent 34%, rgba(0, 0, 0, .24)),
-    repeating-linear-gradient(90deg, #6e4a2c 0 3px, #5b3b22 3px 6px, #7d5736 6px 8px, #4e321c 8px 11px);
-  box-shadow: inset 0 1px 0 rgba(255, 236, 200, .32);
-}
-
-.rail::before {
-  content: "";
-  position: absolute;
-  left: 12%;
-  right: 12%;
-  top: 50%;
-  height: 3px;
-  transform: translateY(-50%);
-  border-radius: 2px;
-  background: linear-gradient(90deg, transparent, #8a6230 8%, #f3e2b0 28%, #c6a15e 50%, #f6e7c4 72%, #8a6230 92%, transparent);
-  box-shadow: 0 1px 0 rgba(0, 0, 0, .35);
-}
-
-.rail-top {
-  height: calc(clamp(72px, 26vh, 250px) + env(safe-area-inset-top));
-  padding-top: env(safe-area-inset-top);
-  border-bottom: 1px solid #e6d2a2;
-}
-
-.rail-bottom {
-  display: grid;
-  place-items: center;
-  height: calc(clamp(64px, 20vh, 210px) + env(safe-area-inset-bottom));
-  padding-bottom: env(safe-area-inset-bottom);
-  border-top: 1px solid #e6d2a2;
-}
-
-.rail-bottom::before { display: none; }
-
-.side-rail {
-  display: none;
-  position: absolute;
-  z-index: 2;
-  top: 18%;
-  bottom: 18%;
-  width: clamp(28px, calc((100vw - 94vh) / 2 - 20px), 200px);
-  pointer-events: none;
-  border-radius: 10px;
-  background:
-    linear-gradient(90deg, rgba(255, 232, 190, .16), transparent 40%, rgba(0, 0, 0, .2)),
-    repeating-linear-gradient(180deg, #6e4a2c 0 3px, #5b3b22 3px 6px, #7d5736 6px 8px, #4e321c 8px 11px);
-  box-shadow:
-    inset 0 0 0 1px rgba(244, 231, 196, .45),
-    inset 0 0 0 4px rgba(90, 58, 28, .45);
-}
-
-.side-rail-left { left: calc(14px + env(safe-area-inset-left)); }
-.side-rail-right { right: calc(14px + env(safe-area-inset-right)); transform: scaleX(-1); }
-
-.table-hardware { position: absolute; inset: 0; z-index: 4; pointer-events: none; }
-.table-hardware * { pointer-events: none; }
-.bracket { position: absolute; width: 18px; height: 18px; overflow: visible; }
-.bracket.tl { top: calc(3px + env(safe-area-inset-top)); left: calc(3px + env(safe-area-inset-left)); }
-.bracket.tr { top: calc(3px + env(safe-area-inset-top)); right: calc(3px + env(safe-area-inset-right)); transform: scaleX(-1); }
-.bracket.br { right: calc(3px + env(safe-area-inset-right)); bottom: calc(3px + env(safe-area-inset-bottom)); transform: rotate(180deg); }
-.bracket.bl { bottom: calc(3px + env(safe-area-inset-bottom)); left: calc(3px + env(safe-area-inset-left)); transform: scaleY(-1); }
-.edge-diamond {
-  position: absolute;
-  width: 7px;
-  height: 7px;
-  background: linear-gradient(135deg, #fff6dd, #c49a52 55%, #6d4a22);
-  box-shadow: 0 0 0 1px #2c1c10, inset 0 0 0 1px rgba(255, 248, 226, .45);
-  transform: translate(-50%, -50%) rotate(45deg);
-}
-.edge-diamond.n { top: calc(9px + env(safe-area-inset-top)); left: 50%; }
-.edge-diamond.s { bottom: calc(2px + env(safe-area-inset-bottom)); left: 50%; transform: translate(-50%, 50%) rotate(45deg); }
-.edge-diamond.e { top: 50%; right: 2px; transform: translate(50%, -50%) rotate(45deg); }
-.edge-diamond.w { top: 50%; left: calc(9px + env(safe-area-inset-left)); }
+.rail { position:relative; z-index:2; pointer-events:none; background:none; box-shadow:none; }
+.rail-top { height:calc(19dvh + env(safe-area-inset-top)); }
+.rail-bottom { display:grid; place-items:center; height:calc(10dvh + env(safe-area-inset-bottom)); }
 
 .wheel-area {
   position: relative;
@@ -361,33 +276,10 @@ button { cursor: pointer; }
 .install button { width: 100%; border-color: #c6a15e; color: #f0d9a0; }
 .install p { color: #d5ddd8; font-size: 12px; }
 
-@media (min-width: 720px) and (min-height: 640px) {
-  .bracket { width: 28px; height: 28px; }
-}
-@media (max-height: 640px) {
-  .edge-diamond { display: none; }
-}
-@media (orientation: landscape) {
-  .rail-top { height: calc(clamp(28px, 8vh, 64px) + env(safe-area-inset-top)); }
-  .rail-bottom { height: calc(clamp(30px, 9vh, 72px) + env(safe-area-inset-bottom)); }
-  .side-rail { display: block; }
-}
-@media (orientation: landscape) and (max-height: 520px) {
-  .rail-top { height: calc(26px + env(safe-area-inset-top)); }
-  .rail-bottom { height: calc(30px + env(safe-area-inset-bottom)); }
-  .rail::before { display: none; }
-  .stage {
-    box-shadow:
-      inset 0 0 0 1px #f3e7c8,
-      inset 0 0 0 4px #6b4426,
-      inset 0 0 0 5px #e4cf9f,
-      inset 0 0 0 9px #3a2616;
-  }
-  .bracket { width: 12px; height: 12px; }
-  .spin-status { font-size: 12px; }
-}
-@media (max-width: 420px) {
-  .side-rail { display: none; }
+@media (orientation:landscape) {
+  .rail-top { height:calc(20px + env(safe-area-inset-top)); }
+  .rail-bottom { height:calc(24px + env(safe-area-inset-bottom)); }
+  .wheel-wrap { width:min(84cqmin, 680px); }
 }
 @media (prefers-reduced-motion: reduce) {
   .wheel, .spinner-arrow, .wheel-pin { transition: none !important; }
