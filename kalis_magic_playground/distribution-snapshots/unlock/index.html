@@ -154,8 +154,8 @@
     #unlocked-screen { z-index: 2; background: #111; touch-action: none; will-change: transform, opacity; }
     #home-track { position: absolute; inset: 0; width: 100%; height: 100%; transform: translate3d(0,0,0); transition: transform 420ms cubic-bezier(.2,.8,.2,1); will-change: transform; }
     .home-page { position: absolute; top: 0; width: 100%; height: 100%; overflow: hidden; }
-    #home-one { left: 0; }
-    #home-two { left: 100%; background: #111; }
+    #home-one { left: 0; background: radial-gradient(ellipse at 30% 20%, #576681, transparent 65%), linear-gradient(155deg, #283349, #10151e); }
+    #home-two { left: 100%; background: radial-gradient(ellipse at 70% 30%, #675972, transparent 65%), linear-gradient(155deg, #343448, #10151e); }
     #reveal-card { position: absolute; z-index: 3; top: 50%; left: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; width: min(88vw, 390px); min-height: 220px; max-width: calc(100% - 24px); padding: 30px 24px; border: 1px solid #ffffff60; border-radius: 26px; background: #32384366; box-shadow: 0 16px 46px #0008; backdrop-filter: blur(20px) saturate(1.1); -webkit-backdrop-filter: blur(20px) saturate(1.1); text-align: center; font-variant-numeric: tabular-nums; pointer-events: none; opacity: 0; visibility: hidden; transform: translate(-50%, -50%) scale(.94); transition: none; }
     #reveal-card.visible { opacity: 1; visibility: visible; transform: translate(-50%, -50%) scale(1); transition: opacity 180ms ease, transform 180ms cubic-bezier(.2,.8,.2,1); }
     #reveal-label { color: #f3f4f8e0; font-size: 14px; font-weight: 500; }
@@ -392,7 +392,7 @@
   </main>
   <script type="module" src="./install-prompt.js"></script>
   <script type="module">
-    import { FINGERPRINT_HOLD_MS, normalizeSettings, storageIdentityForPath, personalHomeReady, selectedAttemptReveal, homeSwipeTarget, completeHomeSwipe, lockScreenCopy, createState, pushDigit, submitPin, fingerprintHold, attemptFeedback, feedbackVibration, deleteDigit, clearCurrent, toggleDigits, reset, isHomeGestureArea, peekOffset, registerTwoFingerTap, settleTwoFingerTaps, registerLockTap, formatAttemptLabel } from './logic.js';
+    import { FINGERPRINT_HOLD_MS, normalizeSettings, storageIdentityForPath, selectedAttemptReveal, homeSwipeTarget, completeHomeSwipe, lockScreenCopy, createState, pushDigit, submitPin, fingerprintHold, attemptFeedback, feedbackVibration, deleteDigit, clearCurrent, toggleDigits, reset, isHomeGestureArea, peekOffset, registerTwoFingerTap, settleTwoFingerTaps, registerLockTap, formatAttemptLabel } from './logic.js';
 
     import { hiddenDigit, appendMinuteDigit, registerEmergencyTap, timeMachineOffset, isSettingsSwipe, horizontalPeekOffset } from './time-machine.js';
 
@@ -409,7 +409,6 @@
     $('reveal-attempt').disabled = !STORAGE.personal;
     let saved = null;
     try { saved = JSON.parse(localStorage.getItem(SETTINGS_KEY)); } catch {}
-    const ownSettingsSaved = !!saved;
     if (!saved && STORAGE.personal) {
       try { saved = JSON.parse(localStorage.getItem('unlock-settings-v1')); } catch {}
     }
@@ -446,6 +445,14 @@
     const imageVersions = new Map();
     let db = null;
     let pendingImages = 0;
+    let performanceTouched = false;
+    let dbReady;
+    const decodedImages = new WeakMap();
+    const preparedImages = new Map();
+    const appliedImages = new Map();
+    const imageKeys = STORAGE.personal ? ['lock', 'unlock', 'home2'] : ['lock', 'unlock'];
+    document.addEventListener('pointerdown', () => { if (screen !== 'settings') performanceTouched = true; }, { capture: true });
+    document.addEventListener('keydown', () => { if (screen !== 'settings') performanceTouched = true; }, { capture: true });
 
     function toast(message) {
       clearTimeout(toastTimer);
@@ -529,7 +536,7 @@
       revealTimer = setTimeout(() => {
         revealTimer = null;
         if (swipe === activeSwipe && screen === 'unlocked' && homePage === 'home2'
-            && originals.has('home2') && swipe.revealPending) setRevealVisible(true);
+            && (STORAGE.personal || originals.has('home2')) && swipe.revealPending) setRevealVisible(true);
       }, Math.max(0, 700 - (performance.now() - swipe.startedAt)));
     }
 
@@ -609,6 +616,7 @@
       swipe = null;
       cancelReveal();
       if (next === 'input') renderInput();
+      if (next === 'settings') void refreshCroppedImages();
       if (next === 'unlocked') {
         renderAttempts();
         setHomePage('home1', false);
@@ -858,12 +866,12 @@
         const dx = touch.clientX - swipe.x, dy = touch.clientY - swipe.y;
         if (!swipe.axis && Math.hypot(dx, dy) >= 10) swipe.axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
         if (STORAGE.personal && swipe.axis === 'x') {
-          const reveal = homeSwipeTarget(homePage, dx, dy, originals.has('home2'), false, $('app').clientWidth).revealVisible;
+          const reveal = homeSwipeTarget(homePage, dx, dy, (STORAGE.personal || originals.has('home2')), false, $('app').clientWidth).revealVisible;
           if (reveal) scheduleReveal();
           else { swipe.revealPending = false; cancelReveal(); }
           const index = homePage === 'home2' ? 1 : 0;
           const width = $('app').clientWidth;
-          const drag = Math.max(index === 0 && originals.has('home2') ? -width : 0,
+          const drag = Math.max(index === 0 && (STORAGE.personal || originals.has('home2')) ? -width : 0,
             Math.min(index === 1 ? width : 0, dx));
           $('home-track').style.transition = 'none';
           $('home-track').style.transform = `translate3d(calc(${-index * 100}% + ${drag}px), 0, 0)`;
@@ -896,7 +904,7 @@
           const touch = event.changedTouches[0];
           if (touch.identifier === swipe.id) {
             const target = completeHomeSwipe(homePage, touch.clientX - swipe.x, touch.clientY - swipe.y,
-              originals.has('home2'), $('app').clientWidth);
+              (STORAGE.personal || originals.has('home2')), $('app').clientWidth);
             if (!target.peek) homePage = target.page;
             cancelReveal();
           }
@@ -968,13 +976,19 @@
       return new Promise((resolve, reject) => {
         let blocked = false;
         const request = indexedDB.open(STORAGE.imageDb, 1);
+        const timeout = setTimeout(() => {
+          blocked = true;
+          reject(new Error('이미지 저장소 응답이 늦습니다. 다시 열거나 기본 배경으로 공연해 주세요.'));
+        }, 2500);
         request.onupgradeneeded = () => request.result.createObjectStore('images');
         request.onsuccess = () => {
+          clearTimeout(timeout);
           if (blocked) request.result.close();
           else resolve(request.result);
         };
-        request.onerror = () => reject(request.error);
+        request.onerror = () => { clearTimeout(timeout); reject(request.error); };
         request.onblocked = () => {
+          clearTimeout(timeout);
           blocked = true;
           reject(new Error('다른 레리즈 창을 닫고 다시 실행해 주세요.'));
         };
@@ -1009,12 +1023,41 @@
       });
     }
 
-    async function displayImage(key, cropTop) {
+    function decodedImage(blob) {
+      if (!decodedImages.has(blob)) {
+        const promise = decodeImage(blob).catch((error) => { decodedImages.delete(blob); throw error; });
+        decodedImages.set(blob, promise);
+      }
+      return decodedImages.get(blob);
+    }
+
+    function preparedImage(key, blob, cropTop) {
+      const existing = preparedImages.get(key);
+      if (existing?.blob === blob && existing.cropTop === cropTop) return existing.promise;
+      const entry = { blob, cropTop, promise: null };
+      entry.promise = decodedImage(blob).then(async (img) => {
+        let displayBlob = blob;
+        const crop = Math.min(cropTop, img.naturalHeight - 1);
+        if (crop > 0) {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.naturalWidth;
+          canvas.height = img.naturalHeight - crop;
+          canvas.getContext('2d').drawImage(img, 0, crop, canvas.width, canvas.height, 0, 0, canvas.width, canvas.height);
+          displayBlob = await new Promise((resolve, reject) => canvas.toBlob((result) => result ? resolve(result) : reject(new Error('이미지 처리 실패')), 'image/png'));
+        }
+        return { displayBlob, width: img.naturalWidth, height: img.naturalHeight };
+      }).catch((error) => { if (preparedImages.get(key) === entry) preparedImages.delete(key); throw error; });
+      preparedImages.set(key, entry);
+      return entry.promise;
+    }
+
+    async function displayImage(key, cropTop, hydration = false) {
       const blob = originals.get(key);
-      if (!blob) return;
+      if (!blob) { $(`${key}-info`).textContent = '기본 배경 사용 · 사진을 등록하면 이 기기에 저장됩니다.'; return; }
       const version = (imageVersions.get(key) ?? 0) + 1;
       imageVersions.set(key, version);
-      const img = await decodeImage(blob);
+      const prepared = await preparedImage(key, blob, cropTop);
+      if (imageVersions.get(key) !== version || originals.get(key) !== blob) return;
       const preview = $(`${key}-preview`);
       if (previewBlobs.get(key) !== blob) {
         const previewURL = URL.createObjectURL(blob);
@@ -1025,26 +1068,21 @@
         preview.hidden = false;
         if (previousPreviewURL) URL.revokeObjectURL(previousPreviewURL);
       }
-      preview.closest('.preview').dataset.naturalHeight = img.naturalHeight;
-      let displayBlob = blob;
-      const crop = Math.min(cropTop, img.naturalHeight - 1);
-      if (crop > 0) {
-        const canvas = document.createElement('canvas');
-        canvas.width = img.naturalWidth;
-        canvas.height = img.naturalHeight - crop;
-        canvas.getContext('2d').drawImage(img, 0, crop, canvas.width, canvas.height, 0, 0, canvas.width, canvas.height);
-        displayBlob = await new Promise((resolve, reject) => canvas.toBlob((result) => result ? resolve(result) : reject(new Error('이미지 처리 실패')), 'image/png'));
-      }
-      if (imageVersions.get(key) !== version) return;
-      const url = URL.createObjectURL(displayBlob);
+      preview.closest('.preview').dataset.naturalHeight = prepared.height;
+      $(`${key}-info`).textContent = `등록됨 · ${prepared.width} × ${prepared.height}`;
+      // A late storage read must not change the audience's scene mid-gesture.
+      if (hydration && performanceTouched && screen !== 'settings') return;
+      const applied = appliedImages.get(key);
+      if (applied?.blob === blob && applied.cropTop === cropTop) return;
+      const url = URL.createObjectURL(prepared.displayBlob);
       const previous = imageURLs.get(key);
       imageURLs.set(key, url);
+      appliedImages.set(key, { blob, cropTop });
       $(`${key}-image`).src = url;
       $(`${key}-image`).hidden = false;
       if (key === 'lock') { $('time-wallpaper').src = url; $('time-wallpaper').hidden = false; }
       if (previous) URL.revokeObjectURL(previous);
-      $(`${key}-info`).textContent = `등록됨 · ${img.naturalWidth} × ${img.naturalHeight}`;
-      applyAppearance(formSettings());
+      applyAppearance(screen === 'settings' ? formSettings() : settings);
     }
 
     async function refreshCroppedImages() {
@@ -1108,8 +1146,9 @@
         event.target.disabled = true;
         $('start').disabled = true;
         try {
+          if (!db && dbReady) await dbReady;
           if (!db) throw new Error('이미지 저장소를 사용할 수 없습니다.');
-          await decodeImage(file);
+          await decodedImage(file);
           await saveImage(key, file);
           stored = true;
           originals.set(key, file);
@@ -1187,23 +1226,20 @@
     $('settings-form').addEventListener('submit', async (event) => {
       event.preventDefault();
       if (pendingImages > 0) return;
-      if (STORAGE.personal && !personalHomeReady(originals)) {
-        $('storage-status').textContent = '홈 1·홈 2 화면 이미지를 모두 등록해야 시작할 수 있습니다. 위의 이미지 2장을 확인해 주세요.';
-        $('home2-field').scrollIntoView({ block: 'center', behavior: 'smooth' });
-        return;
-      }
       settings = formSettings();
       $('start').disabled = true;
       try {
         await Promise.all((STORAGE.personal ? ['lock', 'unlock', 'home2'] : ['lock', 'unlock']).map((key) => displayImage(key, settings.cropTop)));
         applyAppearance(settings);
         try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); }
-        catch { toast('설정을 저장하지 못했습니다. 이번 실행에만 적용됩니다.'); }
+        catch { $('storage-status').textContent = '설정을 저장하지 못했습니다. 이번 실행에만 적용됩니다.'; }
         state = createState(settings.digits);
         tapSequence = null;
         clearTimeout(tapTimer);
         timeTriggeredAt = null;
         timeDigits = [];
+        // Explicit Start begins a new gesture sequence, outside the settings swipe.
+        timeSuppressUntil = 0;
         showScreen('input');
       } catch { $('storage-status').textContent = '이미지 처리 실패. 잘라낼 높이와 이미지를 확인하세요.'; }
       finally { $('start').disabled = false; }
@@ -1239,26 +1275,36 @@
     });
     populateForm();
     applyAppearance(settings);
-    showScreen('settings');
-    $('start').disabled = true;
-    for (const key of (STORAGE.personal ? ['lock', 'unlock', 'home2'] : ['lock', 'unlock'])) $(`${key}-file`).disabled = true;
+    // Performance does not depend on opening or decoding the image database.
+    showScreen('input');
+    imageKeys.forEach((key) => { $(`${key}-info`).textContent = '기본 배경 사용 · 저장된 사진을 확인하는 중입니다.'; });
     prepareOffline();
-    try {
-      db = await openDB();
-      db.onversionchange = () => { db.close(); db = null; };
-      for (const key of (STORAGE.personal ? ['lock', 'unlock', 'home2'] : ['lock', 'unlock'])) {
-        const blob = await readImage(key);
-        if (blob) { originals.set(key, blob); await displayImage(key, settings.cropTop); }
+    dbReady = openDB().then((connection) => {
+      db = connection;
+      db.onversionchange = () => { connection.close(); if (db === connection) db = null; };
+      return connection;
+    }).catch((error) => {
+      $('storage-status').textContent = `이미지 저장소를 불러오지 못했습니다. ${error.message} 기본 배경으로 공연할 수 있습니다.`;
+      return null;
+    });
+    void (async () => {
+      try {
+        if (!await dbReady) return;
+        await Promise.all(imageKeys.map(async (key) => {
+          const blob = await readImage(key);
+          // An upload selected while startup was loading owns the newest value.
+          if (blob && !originals.has(key)) {
+            originals.set(key, blob);
+            await displayImage(key, settings.cropTop, true);
+          } else if (!blob && !originals.has(key)) {
+            $(`${key}-info`).textContent = '기본 배경 사용 · 사진을 등록하면 이 기기에 저장됩니다.';
+          }
+        }));
+        if (!pendingImages) $('storage-status').textContent = '기본 배경으로 바로 공연할 수 있습니다. 등록한 사진은 이 기기에만 저장됩니다.';
+      } catch (error) {
+        $('storage-status').textContent = `이미지 저장소를 불러오지 못했습니다. ${error.message} 기본 배경으로 공연할 수 있습니다.`;
       }
-      $('storage-status').textContent = '이미지는 IndexedDB에 저장됩니다. 시도 기록은 앱을 다시 열면 지워집니다.';
-      if (ownSettingsSaved && originals.has('lock') && originals.has('unlock')
-          && (!STORAGE.personal || personalHomeReady(originals))) showScreen('input');
-      else if (STORAGE.personal) $('storage-status').textContent = '잠금·홈 1·홈 2 이미지를 이 설정에서 모두 등록해 주세요. 홈 2 이미지가 없으면 화면 전환을 시작할 수 없습니다.';
-    } catch (error) { $('storage-status').textContent = `이미지 저장소를 불러오지 못했습니다. ${error.message} 기본 배경으로 연습할 수 있습니다.`; }
-    finally {
-      $('start').disabled = false;
-      for (const key of (STORAGE.personal ? ['lock', 'unlock', 'home2'] : ['lock', 'unlock'])) $(`${key}-file`).disabled = false;
-    }
+    })();
   </script>
 </body>
 </html>
