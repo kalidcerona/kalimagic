@@ -7,6 +7,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#000000">
   <title>RELEASE · 레리즈</title>
+  <script src="./performance-link.js" defer></script>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="apple-touch-icon" href="./icon-192.png">
   <style>
@@ -351,10 +352,16 @@
             <div id="time-options" hidden>
               <div class="time-guide hint"><div>PIN 화면에서 긴급 상황(iPhone) 또는 긴급전화(갤럭시)를 빠르게 두 번 누르면 리와인드가 열립니다.</div></div>
               <label class="field">두 번 탭 후 대기 (초)<input id="time-delay" type="number" min="0" max="60" step="0.1" value="3"></label>
-              <label class="field">되감기 시간 (초)<input id="time-duration" type="number" min="1" max="60" step="0.1" value="8"></label>
-              <p class="hint">두 번째 숫자 뒤 나타나는 잠금화면을 두 번 누르면, 설정한 대기 후 표시 시각이 천천히 현재 시각으로 돌아옵니다. 실제 휴대폰 시계는 바뀌지 않습니다.</p>
+              <p class="hint">되감기 속도: 0.8초마다 1분씩 감소합니다. 총 되감기 시간은 입력한 분 수 × 0.8초입니다.</p>
+              <p class="hint">두 번째 숫자 뒤 나타나는 잠금화면을 두 번 누르면, 설정한 대기 후 표시 시각이 0.8초마다 1분씩 줄어들고, 마지막 숫자를 0.8초간 표시한 뒤 현재 시각으로 돌아옵니다. 실제 휴대폰 시계는 바뀌지 않습니다.</p>
               <label class="field check"><input id="rewind-grid-guide" type="checkbox"> 입장할 때 숫자를 잠깐 표시</label>
             </div>
+          </details>
+          <details class="group" data-settings-group>
+            <summary>히츠젠 연동</summary>
+            <label class="field check"><input id="birth-days-link" type="checkbox" checked> 히츠젠에 생일 D-day 전달</label>
+            <button id="hitsuzen-link" type="button">히츠젠 연동</button>
+            <p class="hint" id="hitsuzen-link-status" role="status">생일을 입력하면 생후 일수가 자동 저장됩니다.<br>연동 버튼으로 같은 브라우저의 히츠젠을 열어 주세요.<br>히츠젠에서 %를 두 번 누르면 받은 일수가 준비됩니다.</p>
           </details>
           <details class="group" data-settings-group>
             <summary>내 폰의 화면</summary>
@@ -414,7 +421,7 @@
   <script type="module">
     import { FINGERPRINT_HOLD_MS, normalizeSettings, storageIdentityForPath, selectedAttemptReveal, latestBirthdateAttempt, homeSwipeTarget, completeHomeSwipe, lockScreenCopy, createState, pushDigit, submitPin, fingerprintHold, attemptFeedback, feedbackVibration, deleteDigit, clearCurrent, toggleDigits, reset, isHomeGestureArea, peekOffset, registerTwoFingerTap, settleTwoFingerTaps, registerLockTap, formatAttemptLabel } from './logic.js';
 
-    import { hiddenDigit, appendMinuteDigit, registerEmergencyTap, timeMachineOffset, isSettingsSwipe, horizontalPeekOffset } from './time-machine.js';
+    import { hiddenDigit, appendMinuteDigit, registerEmergencyTap, timeMachineClock, isSettingsSwipe, horizontalPeekOffset } from './time-machine.js';
 
     const $ = (id) => document.getElementById(id);
     const SETTINGS_TUTORIAL_KEY = "unlock-settings-entry-tutorial-v1";
@@ -469,6 +476,7 @@
     let timeMinutes = 0;
     let timeDigits = [];
     let timeTriggeredAt = null;
+    let timeTriggeredWallAt = null;
     let timeLastTap = null;
     let emergencyLastTap = null;
     let timeFrame = null;
@@ -523,6 +531,38 @@
       $('delete').textContent = copy.trailing;
     }
 
+    let lastBirthDays = null;
+    function publishBirthDays(days) {
+      if (!Number.isInteger(days)) return false;
+      lastBirthDays = days;
+      if (!settings.birthDaysLink) return false;
+      try { return Boolean(window.MagicPerformanceLink?.write(localStorage, location.pathname, days)); } catch (_) { return false; }
+    }
+
+    $('birth-days-link').addEventListener('change', () => {
+      settings.birthDaysLink = $('birth-days-link').checked;
+      $('hitsuzen-link').disabled = !settings.birthDaysLink;
+      let stored = false;
+      try {
+        localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+        stored = settings.birthDaysLink || Boolean(window.MagicPerformanceLink?.clear(localStorage, location.pathname));
+      } catch (_) {}
+      if (settings.birthDaysLink && lastBirthDays !== null) publishBirthDays(lastBirthDays);
+      $('hitsuzen-link-status').textContent = !stored
+        ? '설정을 저장하지 못했습니다. 브라우저의 저장 공간을 확인해 주세요.'
+        : settings.birthDaysLink
+          ? '생일을 입력하면 일수가 자동 전달됩니다. 연동 버튼으로 히츠젠을 열어 주세요.'
+          : '자동 전달을 껐으며, 저장된 연동 일수도 지웠습니다.';
+    });
+    $('hitsuzen-link').addEventListener('click', () => {
+      if (!settings.birthDaysLink) return;
+      if (lastBirthDays !== null && !publishBirthDays(lastBirthDays)) {
+        $('hitsuzen-link-status').textContent = '일수를 저장하지 못했습니다. 브라우저의 저장 공간을 확인해 주세요.';
+        return;
+      }
+      location.assign(STORAGE.personal ? '/zz3/' : '/tools/hitsuzen/');
+    });
+
     function renderAttempts() {
       const attempts = [...state.attempts].reverse();
       $('attempt-list').replaceChildren(...attempts.map((digits, reverseIndex) => {
@@ -535,6 +575,7 @@
         return row;
       }));
       const birthdate = latestBirthdateAttempt(state.attempts, new Date());
+      if (birthdate) publishBirthDays(birthdate.days);
       $('birthday-summary').hidden = !birthdate;
       $('birthday-summary').textContent = birthdate
         ? `${birthdate.attemptNumber}번째 ${birthdate.pin} · ${birthdate.days.toLocaleString('ko-KR')}일 · ${birthdate.zodiac} · ${birthdate.animal}`
@@ -548,6 +589,7 @@
       $('reveal-number').textContent = selected?.pin ?? '—';
       $('reveal-days').hidden = selected?.days === null || selected?.days === undefined;
       if (selected?.days !== null && selected?.days !== undefined) {
+        publishBirthDays(selected.days);
         $('reveal-days').textContent = `태어난 지 ${selected.days.toLocaleString('ko-KR')}일`;
       }
       $('reveal-zodiac').hidden = !selected?.zodiac;
@@ -938,7 +980,9 @@
     function populateForm() {
       $('performance').value = settings.performance;
       $('time-delay').value = settings.timeDelay;
-      $('time-duration').value = settings.timeDuration;
+      $('birth-days-link').checked = settings.birthDaysLink;
+      $('hitsuzen-link').disabled = !settings.birthDaysLink;
+      if (!settings.birthDaysLink) $('hitsuzen-link-status').textContent = '자동 전달이 꺼져 있습니다. 체크하면 연동할 수 있습니다.';
       $('style').value = settings.style;
       $('digits').value = settings.digits;
       $('unlock-mode').value = settings.unlockMode;
@@ -954,7 +998,7 @@
     }
 
     function formSettings() {
-      return normalizeSettings({ performance: $('performance').value, timeDelay: $('time-delay').value, timeDuration: $('time-duration').value, style: $('style').value, digits: Number($('digits').value), unlockMode: $('unlock-mode').value,
+      return normalizeSettings({ birthDaysLink: $('birth-days-link').checked, performance: $('performance').value, timeDelay: $('time-delay').value, timeDuration: settings.timeDuration, style: $('style').value, digits: Number($('digits').value), unlockMode: $('unlock-mode').value,
         unlockAttempt: $('unlock-attempt').value, revealAttempt: $('reveal-attempt').value, vibration: $('vibration').checked, delaySeconds: $('delay').value,
         cropTop: $('crop').value, imagePosition: $('position').value, statusStyle: $('status-style').value, statusColor: $('status-color').value }, STORAGE.personal);
     }
@@ -1189,8 +1233,8 @@
 
     function renderTimeMachine() {
       if (screen !== 'time-lock') return;
-      const offset = timeMachineOffset(timeMinutes, timeTriggeredAt, performance.now(), settings.timeDelay, settings.timeDuration);
-      const date = new Date(Date.now() + offset);
+      const date = new Date(timeMachineClock(timeMinutes, timeTriggeredAt, performance.now(),
+        settings.timeDelay, Date.now(), timeTriggeredWallAt));
       $('time-date').textContent = date.toLocaleDateString('ko-KR', {month:'long',day:'numeric',weekday:'long'});
       const hour = String(date.getHours()).padStart(2, '0');
       const minute = String(date.getMinutes()).padStart(2, '0');
@@ -1234,7 +1278,7 @@
           showScreen('time-lock');
         } else if (screen === 'time-lock' && timeTriggeredAt === null) {
           const now = performance.now();
-          if (timeLastTap !== null && now - timeLastTap <= 450) { timeTriggeredAt = now; timeLastTap = null; }
+          if (timeLastTap !== null && now - timeLastTap <= 450) { timeTriggeredAt = now; timeTriggeredWallAt = Date.now(); timeLastTap = null; }
           else timeLastTap = now;
         }
       });

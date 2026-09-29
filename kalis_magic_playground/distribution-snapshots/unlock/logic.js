@@ -13,6 +13,7 @@ export function normalizeSettings(value = {}, personal = false) {
     unlockAttempt: Math.trunc(number('unlockAttempt', 3, 1, 99)),
     revealAttempt: Math.trunc(number('revealAttempt', 2, 1, 99)),
     vibration: value.vibration !== false,
+    birthDaysLink: value.birthDaysLink !== false,
     delaySeconds: number('delaySeconds', 8, 0, 300),
     cropTop: Math.round(number('cropTop', 0, 0, 2000)),
     imagePosition: number('imagePosition', 50, 0, 100),

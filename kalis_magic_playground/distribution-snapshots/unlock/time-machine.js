@@ -23,13 +23,35 @@ export function registerEmergencyTap(lastTap, now) {
   return { lastTap: now, enter: false };
 }
 
-// Remove an offset from the live clock, never from a frozen clock snapshot.
-export function timeMachineOffset(minutes, triggeredAt, now, delaySeconds, durationSeconds) {
-  const offset = Math.max(0, minutes) * 60000;
-  if (triggeredAt === null) return offset;
-  const elapsed = Math.max(0, now - triggeredAt - delaySeconds * 1000);
-  const progress = Math.min(1, elapsed / Math.max(1, durationSeconds * 1000));
-  return Math.round(offset * (1 - progress));
+export const REWIND_STEP_MS = 800;
+
+function rewindMinutes(minutes) {
+  return Number.isFinite(minutes) ? Math.max(0, Math.floor(minutes)) : 0;
+}
+function rewindDelay(delaySeconds) {
+  return Number.isFinite(delaySeconds) ? Math.max(0, delaySeconds) * 1000 : 0;
+}
+
+// The legacy duration argument is ignored: each full minute takes exactly 800ms.
+export function timeMachineOffset(minutes, triggeredAt, now, delaySeconds) {
+  const total = rewindMinutes(minutes);
+  if (!Number.isFinite(triggeredAt) || !Number.isFinite(now)) return total * 60000;
+  const elapsed = Math.max(0, now - triggeredAt - rewindDelay(delaySeconds));
+  const steps = Math.min(total, Math.floor(elapsed / REWIND_STEP_MS));
+  return (total - steps) * 60000;
+}
+
+// Freeze the wall-clock baseline during the steps so wall-minute rollover cannot
+// cancel a decrement. Hold the final anchored minute for one step before
+// resuming the live clock, so its rollover cannot swallow the final decrement.
+export function timeMachineClock(minutes, triggeredAt, now, delaySeconds, wallNow, triggeredWallAt) {
+  const total = rewindMinutes(minutes);
+  const offset = timeMachineOffset(minutes, triggeredAt, now, delaySeconds);
+  const delay = rewindDelay(delaySeconds);
+  if (!total || !Number.isFinite(triggeredAt) || !Number.isFinite(now)
+      || !Number.isFinite(triggeredWallAt) || now < triggeredAt + delay
+      || now >= triggeredAt + delay + (total + 1) * REWIND_STEP_MS) return wallNow + offset;
+  return triggeredWallAt + delay + offset;
 }
 
 export function isSettingsSwipe(start, current) {

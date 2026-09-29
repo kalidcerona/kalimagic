@@ -104,6 +104,13 @@ test('public build mirrors the current calculator and integrated stopwatch sourc
 
 test('public build serves integrated stopwatch on both retained entitlement routes', async () => {
   await buildPublic();
+  for (const route of ['zz2', 'zz3', 'tools/release', 'tools/hitsuzen']) {
+    const appRoot = new URL(`../../dist/${route}/`, import.meta.url);
+    assert.match(await readFile(new URL('index.html', appRoot), 'utf8'), /src=["']\.\/performance-link\.js["']/);
+    assert.match(await readFile(new URL('sw.js', appRoot), 'utf8'), /performance-link\.js/);
+    assert.equal(await readFile(new URL('performance-link.js', appRoot), 'utf8'),
+      await readFile(new URL('../../../../magic-app-common/performance-link.js', import.meta.url), 'utf8'));
+  }
   const personalStopwatch = await readFile(new URL('../../dist/zz1/index.html', import.meta.url), 'utf8');
   const sharedUnlock = await readFile(new URL('../../dist/tools/release/index.html', import.meta.url), 'utf8');
   const sharedStopwatch = await readFile(new URL('../../dist/tools/kairos/index.html', import.meta.url), 'utf8');

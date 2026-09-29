@@ -101,7 +101,8 @@ export const SHARED_UNLOCK_FILES = [
   'logic.js',
   'manifest.webmanifest',
   'sw.js',
-  'time-machine.js'
+  'time-machine.js',
+  'performance-link.js'
 ];
 
 export const CHOICE_FILES = [
@@ -163,12 +164,13 @@ export const MIRROR_PAIRS = [
   ].map(([source, route]) => [`../../${source}/fullscreen.js`, `${route}/fullscreen.js`]),
   ['../../magic-calculator-v2/index.html', 'zz3/index.html'],
   ['../../magic-calculator-v2/sw.js', 'zz3/sw.js'],
+  ['../../magic-calculator-v2/performance-link.js', 'zz3/performance-link.js'],
   ['../../magic-calculator-v2/icon-192.png', 'zz3/icon-192.png'],
   ['../../magic-calculator-v2/icon-512.png', 'zz3/icon-512.png'],
   ['../../magic-calculator-v2/icon.svg', 'zz3/icon.svg'],
   ['../../magic-calculator-v2/manifest.webmanifest', 'zz3/manifest.webmanifest'],
   ['../../magic-calculator-v2/brand-logo.jpg', 'zz3/brand-logo.jpg'],
-  ...['index.html', 'sw.js', 'icon-192.png', 'icon-512.png', 'icon.svg', 'manifest.webmanifest', 'brand-logo.jpg']
+  ...['index.html', 'sw.js', 'performance-link.js', 'icon-192.png', 'icon-512.png', 'icon.svg', 'manifest.webmanifest', 'brand-logo.jpg']
     .map((file) => [`../../magic-calculator-v2/${file}`, `tools/calc/${file}`]),
   ['../../magic-stopwatch-uni/index.html', 'zz1/index.html'],
   ['../../magic-stopwatch-uni/sw.js', 'zz1/sw.js'],

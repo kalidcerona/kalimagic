@@ -414,6 +414,7 @@
   </style>
   <link rel="stylesheet" href="./settings-ui.css">
   <script src="./settings-ui.js" defer></script>
+  <script src="./performance-link.js" defer></script>
 </head>
 <body data-magic-app="calculator">
   <main class="calculator" id="app" aria-label="계산기">
@@ -446,6 +447,11 @@
       <details data-settings-group="appearance"><summary>화면 모양</summary><div class="date-settings-controls">
       <button type="button" data-date-action="skin" id="skin-toggle">스킨: 기본</button>
       </div></details>
+      <details data-settings-group="release"><summary>RELEASE에서 받은 일수</summary>
+      <p id="release-days-value">아직 받은 값이 없어요.</p>
+      <p>%를 두 번 누르면 준비되고, =를 누르면 받은 일수가 나타나요.</p>
+      <button type="button" data-date-action="release-clear" id="release-days-clear" disabled>받은 일수 지우기</button>
+      </details>
       <button type="button" data-date-action="close">닫기</button>
     </div>
 
@@ -1661,6 +1667,8 @@ function installSettingsSwipe(open, cancel, enabled, cancelHold = cancel) {
       const dateDelayValue = document.getElementById("date-delay-value");
       const dateHourCycleButton = document.getElementById("date-hour-cycle");
       const skinToggleButton = document.getElementById("skin-toggle");
+      const releaseDaysValue = document.getElementById("release-days-value");
+      const releaseDaysClear = document.getElementById("release-days-clear");
       const dateHintKeys = keypad.querySelectorAll(
         '[data-key="+"], [data-key="−"], [data-key="0"], [data-key="1"], ' +
         '[data-key="2"], [data-key="3"], [data-key="4"], [data-key="5"], ' +
@@ -1703,6 +1711,9 @@ function installSettingsSwipe(open, cancel, enabled, cancelHold = cancel) {
         lastKey: null,
         pendingSole: null
       };
+      let receivedDays = null;
+      let receivedRevision = null;
+      let receivedTargetActive = false;
 
       const currentValueText = () =>
         resultShown && lastResult !== null
@@ -1738,6 +1749,8 @@ function installSettingsSwipe(open, cancel, enabled, cancelHold = cancel) {
         dateDelayValue.textContent = `${dateDelaySeconds}초`;
         dateHourCycleButton.textContent = `${dateHourCycle}h`;
         skinToggleButton.textContent = skin === "iphone" ? "스킨: 아이폰" : "스킨: 기본";
+        releaseDaysValue.textContent = receivedDays === null ? "아직 받은 값이 없어요." : `${receivedDays}일을 받았어요.`;
+        releaseDaysClear.disabled = receivedDays === null;
 
         let neededOp = null;
         let digitHintKey = null;
@@ -1794,6 +1807,7 @@ function installSettingsSwipe(open, cancel, enabled, cancelHold = cancel) {
           trickState = transition.state;
 
           if (transition.action === "set") {
+            receivedTargetActive = false;
             expr = "";
             resultShown = false;
             lastResult = null;
@@ -1821,6 +1835,7 @@ function installSettingsSwipe(open, cancel, enabled, cancelHold = cancel) {
             trickState = transition.state;
 
             if (transition.action === "fire") {
+              receivedTargetActive = false;
               expr = storedBeforeStep ?? "";
               resultShown = true;
               lastResult = expr === "" ? null : decFromString(expr);
@@ -1904,6 +1919,7 @@ function installSettingsSwipe(open, cancel, enabled, cancelHold = cancel) {
         if (!button || !keypad.contains(button)) return;
 
         event.preventDefault();
+
         button.classList.add("pressed");
         window.setTimeout(() => button.classList.remove("pressed"), 140);
         const key = button.dataset.key === "C" &&
@@ -2006,6 +2022,20 @@ function installSettingsSwipe(open, cancel, enabled, cancelHold = cancel) {
         if (!button || !dateSettings.contains(button)) return;
         event.preventDefault();
 
+        if (button.dataset.dateAction === "release-clear") {
+          const bridge = window.MagicPerformanceLink;
+          let cleared = false;
+          try { cleared = Boolean(bridge?.clear(localStorage, location.pathname)); } catch (_) {}
+          if (!cleared) return;
+          if (receivedTargetActive) {
+            trickState = { phase: "off", storedText: null, lastKey: null, pendingSole: null };
+          }
+          receivedDays = null;
+          receivedTargetActive = false;
+          render();
+          return;
+        }
+
         if (button.dataset.dateAction === "close") {
           dateSettings.classList.remove("open");
           return;
@@ -2047,6 +2077,37 @@ function installSettingsSwipe(open, cancel, enabled, cancelHold = cancel) {
       });
 
       window.addEventListener("resize", () => fitDisplayText(display));
+      const receiveReleaseDays = () => {
+        const bridge = window.MagicPerformanceLink;
+        if (!bridge) return;
+        let handoff = null;
+        try { handoff = bridge.read(localStorage, location.pathname); } catch (_) { return; }
+        // Removing a RELEASE handoff disarms only its imported target, preserving the expression.
+        if (!handoff) {
+          if (receivedDays !== null) {
+            if (receivedTargetActive) trickState = { phase: "off", storedText: null, lastKey: null, pendingSole: null };
+            receivedDays = null;
+            receivedRevision = null;
+            receivedTargetActive = false;
+            render();
+          }
+          return;
+        }
+        if (expr !== "" || resultShown || errorShown || dateTrickState.phase !== "off"
+          || !stackResult.hidden || stackLongPressTimer !== null
+          || (trickState.phase !== "off" && !(receivedTargetActive && trickState.phase === "set"))) return;
+        if (handoff.revision === receivedRevision) return;
+        receivedDays = handoff.days;
+        receivedRevision = handoff.revision;
+        receivedTargetActive = true;
+        trickState = { phase: "set", storedText: String(handoff.days), lastKey: null, pendingSole: null };
+        render();
+      };
+      // Deferred bridge scripts finish before DOMContentLoaded; focus can arrive earlier.
+      if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", receiveReleaseDays, { once: true });
+      else receiveReleaseDays();
+      window.addEventListener("pageshow", receiveReleaseDays);
+      window.addEventListener("focus", receiveReleaseDays);
       render();
       showSettingsEntryTutorial();
     }
