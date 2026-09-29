@@ -39,6 +39,9 @@ const settingsScreen = document.querySelector("#settings-screen");
 const truthInput = document.querySelector("#truth-attempt");
 const soundInput = document.querySelector("#sound-enabled");
 const vibrationInput = document.querySelector("#vibration-level");
+const vibrationHelp = document.querySelector("#vibration-help");
+const vibrationCapability = document.querySelector("#vibration-capability");
+const vibrationSummary = document.querySelector("#vibration-settings-summary");
 const scanDurationInput = document.querySelector("#scan-duration");
 const scanDurationHelp = document.querySelector("#scan-duration-help");
 const holdDurationHelp = document.querySelector("#hold-duration-help");
@@ -137,11 +140,8 @@ function persistSoundPreference() {
   storageSet(SOUND_KEY, soundInput.checked ? "1" : "0");
 }
 
-function setScanDuration(raw) {
-  const numeric = typeof raw === "string" && raw.trim() !== "" ? Number(raw) : Number.NaN;
-  scanDurationMs = normalizeHoldThresholdMs(numeric * 1000);
-  const seconds = scanDurationMs / 1000;
-  if (scanDurationInput) scanDurationInput.value = String(seconds);
+function paintScanDuration(ms) {
+  const seconds = ms / 1000;
   if (scanDurationHelp) scanDurationHelp.textContent = `버튼을 ${seconds}초 누르면 판정합니다. 0.5-10초 사이에서 0.5초 단위로 설정하세요.`;
   if (holdDurationHelp) holdDurationHelp.textContent = `초록 버튼을 직접 누른 채 ${seconds}초 유지하면 판정이 나옵니다.`;
   if (signalTimeMid) signalTimeMid.textContent = `${seconds / 2}s`;
@@ -149,9 +149,48 @@ function setScanDuration(raw) {
   detectorButton.setAttribute("aria-label", `검사를 시작하려면 ${seconds}초간 누르기`);
 }
 
+// A finished number can be applied immediately. Blank and partial text must not
+// replace the stored preference or the field the performer is still editing.
+function finishedScanDurationMs(raw) {
+  if (typeof raw !== "string") return null;
+  const trimmed = raw.trim();
+  if (!/^[-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?$/.test(trimmed)) return null;
+  const numeric = Number(trimmed);
+  if (!Number.isFinite(numeric)) return null;
+  return normalizeHoldThresholdMs(numeric * 1000);
+}
+
+function setScanDuration(raw) {
+  const numeric = typeof raw === "string" && raw.trim() !== "" ? Number(raw) : Number.NaN;
+  scanDurationMs = normalizeHoldThresholdMs(numeric * 1000);
+  const seconds = scanDurationMs / 1000;
+  if (scanDurationInput) scanDurationInput.value = String(seconds);
+  paintScanDuration(scanDurationMs);
+}
+
+function persistScanDuration() {
+  return storageSet(SCAN_DURATION_KEY, String(scanDurationMs / 1000));
+}
+
+// Safari can leave a focused number unchanged on `change` until after the
+// start control runs. Apply a finished value without rewriting partial text.
+function syncLiveScanDuration() {
+  if (!scanDurationInput) return false;
+  const ms = finishedScanDurationMs(scanDurationInput.value);
+  if (ms == null) return false;
+  scanDurationMs = ms;
+  // A hold already captured activeScanDurationMs. Do not move its scale mid-scan.
+  if (settled) paintScanDuration(ms);
+  return persistScanDuration();
+}
+
+function onScanDurationInput() {
+  syncLiveScanDuration();
+}
+
 function onScanDurationChange() {
   setScanDuration(scanDurationInput.value);
-  if (!storageSet(SCAN_DURATION_KEY, String(scanDurationMs / 1000))) {
+  if (!persistScanDuration()) {
     setStatus("검사 시간은 적용했지만 이 브라우저에 저장하지 못했습니다.");
   }
 }
@@ -159,6 +198,31 @@ function onScanDurationChange() {
 function loadVibrationPreference(raw) {
   if (raw === "low") vibrationInput.value = "medium";
   else if (["off", "medium", "high", "max"].includes(raw)) vibrationInput.value = raw;
+}
+
+function continuousVibrationAvailable() {
+  return typeof navigator.vibrate === "function";
+}
+
+// Settings only. Safari has no continuous vibration API; do not invent a pulse
+// or turn sound on. The stored intensity stays for a browser that can use it.
+function applyVibrationCapability() {
+  const available = continuousVibrationAvailable();
+  if (vibrationCapability) {
+    vibrationCapability.setAttribute("data-vibration-capability", available ? "available" : "unsupported");
+    vibrationCapability.hidden = available;
+    vibrationCapability.textContent = available
+      ? ""
+      : "이 브라우저는 연속 진동을 지원하지 않습니다. 스위치용 짧은 시스템 햅틱은 검사 진동을 대신하지 못합니다. 저장한 세기는 유지되며, 소리와 검사 화면은 그대로 동작합니다.";
+  }
+  if (vibrationHelp) vibrationHelp.hidden = !available;
+  if (vibrationInput) {
+    vibrationInput.disabled = !available;
+    if (!available) vibrationInput.setAttribute("aria-disabled", "true");
+  }
+  if (vibrationSummary && !available) {
+    vibrationSummary.textContent = "준비와 검사 진동 (이 브라우저에서는 사용할 수 없음)";
+  }
 }
 
 function stopVibration() {
@@ -192,6 +256,7 @@ function bootStorage() {
   setScanDuration(storageGet(SCAN_DURATION_KEY).value);
   if (sound.ok) loadSoundPreference(sound.value);
   if (vibration.ok) loadVibrationPreference(vibration.value);
+  applyVibrationCapability();
   if (!stored.ok) {
     appState = loadFromRaw(null).state;
     storageLocked = false;
@@ -465,6 +530,7 @@ function startHold(event) {
   const begun = beginHold(createHold(), performance.now(), event.clientX, event.clientY);
   if (!begun.accepted) return;
   hold = begun.hold;
+  syncLiveScanDuration();
   activeScanDurationMs = scanDurationMs;
   settled = false;
   activePointerId = event.pointerId;
@@ -615,6 +681,7 @@ function onResetAttempts() {
 }
 
 function onStartPerformance() {
+  syncLiveScanDuration();
   const next = preparePerformance(appState, truthInput.value);
   if (!next.ok) {
     setStatus("진실 회차는 1부터 20 사이의 서로 다른 정수를 쉼표로 구분해 입력하세요. 예: 4,7");
@@ -670,6 +737,8 @@ function bind() {
   startButton.addEventListener("click", onStartPerformance);
   soundInput.addEventListener("change", onSoundChange);
   vibrationInput.addEventListener("change", onVibrationChange);
+  scanDurationInput?.addEventListener("input", onScanDurationInput);
+  scanDurationInput?.addEventListener("blur", onScanDurationInput);
   scanDurationInput?.addEventListener("change", onScanDurationChange);
   window.addEventListener("keydown", onRehearsalKey);
   document.addEventListener("visibilitychange", onVisibilityChange);
