@@ -62,6 +62,8 @@ let settled = true;
 let activePointerId = null;
 let gestureConsumed = false;
 let audioContext = null;
+let audioResumePromise = null;
+let soundRequestId = 0;
 let scanOscillator = null;
 let scanGain = null;
 let guideShown = false;
@@ -390,11 +392,33 @@ function ensureAudio() {
   if (!soundEnabled()) return null;
   const AudioCtx = window.AudioContext || window.webkitAudioContext;
   if (!AudioCtx) return null;
-  if (!audioContext) audioContext = new AudioCtx();
-  if (audioContext.state === "suspended") {
-    audioContext.resume().catch(() => {});
+  if (!audioContext || audioContext.state === "closed") {
+    audioContext = new AudioCtx();
+    audioResumePromise = null;
   }
-  return audioContext;
+  const ctx = audioContext;
+  if (ctx.state !== "running") {
+    // Retry from each real gesture, including WebKit's interrupted state.
+    audioResumePromise = Promise.resolve(ctx.resume()).catch(() => {});
+  }
+  return ctx;
+}
+
+function withReadyAudio(play) {
+  try {
+    const ctx = ensureAudio();
+    if (!ctx) return;
+    const requestId = soundRequestId;
+    const playIfCurrent = () => {
+      if (requestId !== soundRequestId || ctx !== audioContext ||
+          ctx.state !== "running" || !soundEnabled() || document.hidden) return;
+      try { play(ctx); } catch { /* Visual feedback remains available. */ }
+    };
+    if (ctx.state === "running") playIfCurrent();
+    else audioResumePromise?.then(playIfCurrent);
+  } catch {
+    /* Audio support or permission may be unavailable. */
+  }
 }
 
 function playTone(ctx, destination, frequency, startAt, duration, type, peak) {
@@ -417,9 +441,7 @@ function playTone(ctx, destination, frequency, startAt, duration, type, peak) {
 
 function playVerdictSound(result) {
   if (!soundEnabled()) return;
-  try {
-    const ctx = ensureAudio();
-    if (!ctx) return;
+  withReadyAudio((ctx) => {
     // Let the scan tone's short release ramp finish before the verdict cue.
     const start = ctx.currentTime + 0.06;
     const master = ctx.createGain();
@@ -440,12 +462,12 @@ function playVerdictSound(result) {
       });
       window.setTimeout(() => master.disconnect(), 800);
     }
-  } catch {
-    /* Visual result still stands when audio is unavailable. */
-  }
+  });
 }
 
 function stopScanningSound() {
+  // Also cancel callbacks waiting for resume, even before a node exists.
+  soundRequestId += 1;
   if (!scanOscillator) return;
   const oscillator = scanOscillator;
   const gain = scanGain;
@@ -467,9 +489,8 @@ function stopScanningSound() {
 function startScanningSound() {
   stopScanningSound();
   if (!soundEnabled()) return;
-  try {
-    const ctx = ensureAudio();
-    if (!ctx) return;
+  withReadyAudio((ctx) => {
+    if (settled || hold.phase !== "holding" || activePointerId == null) return;
     const now = ctx.currentTime;
     const oscillator = ctx.createOscillator();
     const gain = ctx.createGain();
@@ -487,10 +508,7 @@ function startScanningSound() {
     scanOscillator = oscillator;
     scanGain = gain;
     oscillator.start(now);
-  } catch {
-    stopScanningSound();
-    /* Visual reaction still works when audio is unavailable. */
-  }
+  });
 }
 
 function applyRelease(nowMs, x, y) {
@@ -646,8 +664,19 @@ function onPointerCancel(event) {
 }
 
 function unlockFromGesture() {
-  if (!soundEnabled()) return;
-  ensureAudio();
+  if (!soundEnabled() || document.hidden) return;
+  try {
+    const ctx = ensureAudio();
+    if (!ctx) return;
+    // Start a silent source inside the gesture to unlock iOS audio output.
+    const source = ctx.createBufferSource();
+    source.buffer = ctx.createBuffer(1, 1, ctx.sampleRate);
+    source.connect(ctx.destination);
+    source.onended = () => source.disconnect();
+    source.start(0);
+  } catch {
+    /* A later gesture can retry without affecting the performance. */
+  }
 }
 
 function commitTruthAttempt() {
@@ -722,6 +751,11 @@ function onVisibilityChange() {
   stopVibration();
   pointers.clear();
   activePointerId = null;
+  // Discard contexts that iOS can leave frozen after backgrounding.
+  const ctx = audioContext;
+  audioContext = null;
+  audioResumePromise = null;
+  try { ctx?.close().catch(() => {}); } catch { /* Already closed. */ }
 }
 
 function onRehearsalKey(event) {
@@ -732,6 +766,9 @@ function onRehearsalKey(event) {
 }
 
 function bind() {
+  performanceScreen.addEventListener("touchstart", unlockFromGesture, { passive: true });
+  performanceScreen.addEventListener("touchend", unlockFromGesture, { passive: true });
+  performanceScreen.addEventListener("click", unlockFromGesture);
   performanceScreen.addEventListener("pointerdown", onPointerDown, { passive: false });
   performanceScreen.addEventListener("pointermove", onPointerMove);
   performanceScreen.addEventListener("pointerup", onPointerUp);
