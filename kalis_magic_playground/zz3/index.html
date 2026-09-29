@@ -445,7 +445,6 @@
       </div></details>
       <details data-settings-group="appearance"><summary>화면 모양</summary><div class="date-settings-controls">
       <button type="button" data-date-action="skin" id="skin-toggle">스킨: 기본</button>
-      <button type="button" data-date-action="fullscreen">전체화면</button>
       </div></details>
       <button type="button" data-date-action="close">닫기</button>
     </div>
@@ -2031,22 +2030,6 @@ function installSettingsSwipe(open, cancel, enabled, cancelHold = cancel) {
             // Keep the in-memory setting when storage is unavailable.
           }
           render();
-          return;
-        }
-
-        if (button.dataset.dateAction === "fullscreen") {
-          try {
-            if ((document.fullscreenElement ?? document.webkitFullscreenElement) != null) {
-              const fullscreenResult = (document.exitFullscreen ?? document.webkitExitFullscreen)?.call(document);
-              fullscreenResult?.catch?.(() => {});
-            } else {
-              const el = document.documentElement;
-              const fullscreenResult = (el.requestFullscreen ?? el.webkitRequestFullscreen)?.call(el);
-              fullscreenResult?.catch?.(() => {});
-            }
-          } catch {
-            // Fullscreen is unavailable on this browser.
-          }
           return;
         }
 

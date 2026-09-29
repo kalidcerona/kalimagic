@@ -66,16 +66,17 @@
     if (!profile) return;
     var container = doc.querySelector('[data-settings-root], [data-magic-settings-container]') || doc.querySelector(profile.container);
     if (!container || container.querySelector('.magic-overview')) return;
-    var storage;
-    try { storage = root.localStorage; } catch (_) { storage = null; }
-    var key = storageKey(app, root.location), prefs = read(storage, key, profile), defaults = {};
+    var customizeEnabled = customizationAllowed(root.location.pathname, doc.body.dataset.magicCustomize);
     function node(tag, text, className) { var el = doc.createElement(tag); if (text != null) el.textContent = text; if (className) el.className = className; return el; }
     function group(title, className) { var el = node('details', null, 'magic-settings-group ' + className); el.appendChild(node('summary', title)); return el; }
     var overview = group('개요', 'magic-overview');
     overview.appendChild(node('h2', profile.name));
     profile.story.forEach(function (text) { overview.appendChild(node('p', text)); });
-    overview.appendChild(node('p', customizationAllowed(root.location.pathname, doc.body.dataset.magicCustomize) ? '친구들과 같이 즐기거나\n선물해 주려고 만들었어요.\n각자 편한 화면으로 조금씩\n바꿔서 써 주세요.' : '친구들과 같이 즐기거나\n선물해 주려고 만들었어요.\n편하게 즐겨 주세요.'));
-    if (!customizationAllowed(root.location.pathname, doc.body.dataset.magicCustomize)) { container.appendChild(overview); container.appendChild(node('p', '수정이 필요하거나 버그를 발견하셨다면, 개선할 점이나 새로운 아이디어가 있으셔도 카카오톡 KaliDCerona로 연락해 주세요.', 'magic-settings-footer')); return; }
+    overview.appendChild(node('p', customizeEnabled ? '친구들과 같이 즐기거나\n선물해 주려고 만들었어요.\n각자 편한 화면으로 조금씩\n바꿔서 써 주세요.' : '친구들과 같이 즐기거나\n선물해 주려고 만들었어요.\n편하게 즐겨 주세요.'));
+    if (!customizeEnabled) { container.appendChild(overview); container.appendChild(node('p', '수정이 필요하거나 버그를 발견하셨다면, 개선할 점이나 새로운 아이디어가 있으셔도 카카오톡 KaliDCerona로 연락해 주세요.', 'magic-settings-footer')); return; }
+    var storage;
+    try { storage = root.localStorage; } catch (_) { storage = null; }
+    var key = storageKey(app, root.location), prefs = read(storage, key, profile), defaults = {};
     var link = node('div', null, 'magic-customize-link'), openCustomize = node('button', '화면 커스텀', 'magic-customize-open');
     openCustomize.type = 'button'; openCustomize.setAttribute('data-fullscreen-skip', ''); link.appendChild(openCustomize); container.appendChild(link);
     var customPage = node('section', null, 'magic-customize-page'); customPage.id = 'magic-customize-page'; customPage.hidden = true;
@@ -89,7 +90,7 @@
     function closeCustom() { customPage.hidden = true; if (app === 'calculator') { container.classList.add('open'); container.setAttribute('aria-hidden', 'false'); } if (app === 'spinner') { var settings = doc.querySelector('#settings'); if (settings) settings.hidden = false; } if (root.location.hash === '#customize' && root.history) root.history.replaceState(null, '', previousUrl || root.location.pathname + root.location.search); previousFocus?.focus?.(); }
     openCustomize.addEventListener('click', function () { previousFocus = doc.activeElement; syncNativeAppearance(); previousUrl = root.location.pathname + root.location.search + root.location.hash; customPage.hidden = false; if (root.history && root.location.hash !== '#customize') root.history.pushState(null, '', '#customize'); schedule(); back.focus?.(); });
     back.addEventListener('click', closeCustom);
-    root.addEventListener('popstate', function () { if (root.location.hash !== '#customize') { customPage.hidden = true; previousFocus?.focus?.(); } });
+    root.addEventListener('popstate', function () { if (root.location.hash !== '#customize' && !customPage.hidden) closeCustom(); });
     customPage.addEventListener('keydown', function (event) { if (event.key === 'Escape') { closeCustom(); event.stopPropagation(); } });
     ['pointerdown', 'pointermove', 'pointerup', 'touchstart', 'touchmove', 'touchend', 'click'].forEach(function (type) { customPage.addEventListener(type, function (event) { event.stopPropagation(); }); });
     var selectedId = profile.elements && profile.elements[0] ? profile.elements[0].id : '';

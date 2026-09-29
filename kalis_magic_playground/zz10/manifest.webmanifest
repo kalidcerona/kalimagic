@@ -5,7 +5,7 @@
   "description": "실시간 카메라 카드 공연 도구",
   "start_url": "./index.html",
   "scope": "./",
-  "display": "fullscreen",
+  "display": "standalone",
   "background_color": "#090c14",
   "theme_color": "#090c14",
   "icons": [

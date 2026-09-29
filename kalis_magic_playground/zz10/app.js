@@ -58,6 +58,22 @@ function interruptTracking(t) {
   lastSampleAt = 0;
 }
 
+function geometryKey(geometry) {
+  return [geometry.sourceX, geometry.sourceY, geometry.sourceWidth, geometry.sourceHeight,
+    geometry.sampleWidth, geometry.sampleHeight, geometry.viewWidth, geometry.viewHeight].join(":");
+}
+
+function resetGeometry(nextGeometry) {
+  // A changed crop invalidates both the old projection and its calibration.
+  machine = updateAlterState(machine, { type: "reset" });
+  tracker = createObservationTracker();
+  calibrator = createBackgroundCalibrator();
+  sampleGeometry = nextGeometry;
+  lastSampleAt = 0;
+  hideOverlay();
+  setRuntimeStatus("카메라 준비 중 · 빈 배경을 비춰 주세요");
+}
+
 function shouldShowGestureGuide() {
   try { return localStorage.getItem(gestureGuideKey) !== "seen"; }
   catch { return true; }
@@ -207,12 +223,9 @@ function processFrame(t) {
       setRuntimeStatus("카메라 화면 크기를 확인하는 중");
       return;
     }
-    const geometryKey = `${geometry.sampleWidth}:${geometry.sampleHeight}:${stage.clientWidth}:${stage.clientHeight}`;
-    if (sampleGeometry !== geometryKey) {
-      interruptTracking(t);
-      calibrator = createBackgroundCalibrator();
-      sampleGeometry = geometryKey;
-      setRuntimeStatus("카메라 준비 중 · 빈 배경을 비춰 주세요");
+    const nextGeometry = geometryKey(geometry);
+    if (sampleGeometry !== nextGeometry) {
+      resetGeometry(nextGeometry);
     }
     const width = geometry.sampleWidth;
     const height = geometry.sampleHeight;
@@ -407,14 +420,14 @@ window.addEventListener("pagehide", () => suspendAnalysis("page-hidden"));
 window.addEventListener("pageshow", resumeAnalysis);
 window.addEventListener("resize", () => {
   if (!stream) return;
-  machine = updateAlterState(machine, { type: "interrupt", t: performance.now() });
-  tracker = createObservationTracker();
-  calibrator = createBackgroundCalibrator();
-  sampleGeometry = null;
-  lastSampleAt = 0;
+  const geometry = coverGeometry(
+    video.videoWidth, video.videoHeight, stage.clientWidth, stage.clientHeight,
+  );
+  if (!geometry) return;
+  const nextGeometry = geometryKey(geometry);
+  if (sampleGeometry === nextGeometry) return;
+  resetGeometry(nextGeometry);
   recordLifecycle("resize");
-  setRuntimeStatus("카메라 준비 중 · 빈 배경을 비춰 주세요");
-  hideOverlay();
 });
 
 showGestureGuide();

@@ -1,9 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readdir, readFile, stat } from 'node:fs/promises';
+import { readdir, readFile, stat, mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises';
 import path from 'node:path';
+import os from 'node:os';
 import { fileURLToPath } from 'node:url';
-import { PUBLIC_FILES, PUBLIC_DIRS, PRIVATE_PATTERNS, MIRROR_PAIRS, DISTRIBUTION_APPS, SHARED_UNLOCK_FILES, CHOICE_FILES, USOTSUKI_FILES, ASRAI_FILES, ALTER_FILES, SPINNER_FILES, ALETHEIA_COURT_FILES, SETTINGS_UI_FILES, buildPublic } from '../../scripts/build-public.mjs';
+import { PUBLIC_FILES, PUBLIC_DIRS, PRIVATE_PATTERNS, MIRROR_PAIRS, DISTRIBUTION_APPS, SHARED_UNLOCK_FILES, CHOICE_FILES, USOTSUKI_FILES, ASRAI_FILES, ALTER_FILES, SPINNER_FILES, ALETHEIA_COURT_FILES, SETTINGS_UI_FILES, buildPublic, verifyAppDisplayPolicy } from '../../scripts/build-public.mjs';
 
 test('public build allowlist includes visible site pages', () => {
   assert.ok(PUBLIC_FILES.includes('index.html'));
@@ -303,4 +304,37 @@ test('public build includes every local src and href referenced by dist html', a
   }
 
   assert.deepEqual(missing.sort(), []);
+});
+
+
+test('final app policy rejects fullscreen and mixed personal/friend customization', async () => {
+  const fixture = await mkdtemp(path.join(os.tmpdir(), 'magic-display-policy-'));
+  const route = 'zz1';
+  const app = path.join(fixture, route);
+  await mkdir(app);
+  const manifest = path.join(app, 'manifest.webmanifest');
+  const html = path.join(app, 'index.html');
+  try {
+    await writeFile(manifest, JSON.stringify({ display: 'standalone' }));
+    await writeFile(html, '<body data-magic-app="stopwatch"></body>');
+    await verifyAppDisplayPolicy(fixture, [route]);
+    await writeFile(manifest, JSON.stringify({ display: 'fullscreen' }));
+    await assert.rejects(verifyAppDisplayPolicy(fixture, [route]), /must remain standalone/);
+    await writeFile(manifest, JSON.stringify({ display: 'standalone', display_override: ['fullscreen'] }));
+    await assert.rejects(verifyAppDisplayPolicy(fixture, [route]), /must remain standalone/);
+    await writeFile(manifest, JSON.stringify({ display: 'standalone' }));
+    await writeFile(html, '<body data-magic-customize="off"></body>');
+    await assert.rejects(verifyAppDisplayPolicy(fixture, [route]), /customization policy/);
+    await writeFile(html, '<body></body><script>document.documentElement.requestFullscreen()</script>');
+    await assert.rejects(verifyAppDisplayPolicy(fixture, [route]), /Fullscreen is disabled/);
+    const shared = path.join(fixture, 'tools', 'release');
+    await mkdir(shared, { recursive: true });
+    await writeFile(path.join(shared, 'manifest.webmanifest'), JSON.stringify({ display: 'standalone' }));
+    await writeFile(path.join(shared, 'index.html'), '<body></body>');
+    await assert.rejects(verifyAppDisplayPolicy(fixture, ['tools/release']), /customization policy/);
+    await writeFile(path.join(shared, 'index.html'), '<body data-magic-customize="off"></body>');
+    await verifyAppDisplayPolicy(fixture, ['tools/release']);
+  } finally {
+    await rm(fixture, { recursive: true, force: true });
+  }
 });

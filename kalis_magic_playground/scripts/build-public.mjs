@@ -1,4 +1,4 @@
-import { cp, mkdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
+import { cp, mkdir, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -324,6 +324,32 @@ async function verifyMirrors() {
   }
 }
 
+// Enforce the current display policy on the final artifact, including gated copies.
+export async function verifyAppDisplayPolicy(directory = DIST, routes = [
+  ...PUBLIC_DIRS.filter((entry) => /^zz\d+$/.test(entry)),
+  ...DISTRIBUTION_APPS.map((app) => `tools/${app.target}`)
+]) {
+  for (const route of routes) {
+    const appDirectory = path.join(directory, route);
+    const manifest = JSON.parse(await readFile(path.join(appDirectory, 'manifest.webmanifest'), 'utf8'));
+    if (manifest.display !== 'standalone' || (manifest.display_override || []).includes('fullscreen')) {
+      throw new Error(`App display policy: ${route} must remain standalone`);
+    }
+    const html = await readFile(path.join(appDirectory, 'index.html'), 'utf8');
+    const disabled = /<body\b[^>]*\bdata-magic-customize=["']off["']/.test(html);
+    if (disabled !== route.startsWith('tools/')) {
+      throw new Error(`App customization policy: ${route}`);
+    }
+    for (const entry of await readdir(appDirectory, { withFileTypes: true })) {
+      if (!entry.isFile() || !/\.(?:html|js)$/.test(entry.name)) continue;
+      const content = await readFile(path.join(appDirectory, entry.name), 'utf8');
+      if (/\b(?:requestFullscreen|webkitRequestFullscreen|webkitRequestFullScreen|mozRequestFullScreen|msRequestFullscreen)\b/.test(content)) {
+        throw new Error(`Fullscreen is disabled: ${route}/${entry.name}`);
+      }
+    }
+  }
+}
+
 export async function buildPublic() {
   await rm(DIST, { recursive: true, force: true });
   await mkdir(DIST, { recursive: true });
@@ -331,6 +357,7 @@ export async function buildPublic() {
   for (const dir of PUBLIC_DIRS) await copyIfExists(dir);
   await buildDistributionApps();
   await verifyMirrors();
+  await verifyAppDisplayPolicy();
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {

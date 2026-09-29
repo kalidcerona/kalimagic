@@ -5,7 +5,7 @@
   "description": "손가락으로 돌리는 회전판",
   "start_url": "./",
   "scope": "./",
-  "display": "fullscreen",
+  "display": "standalone",
   "background_color": "#082c21",
   "theme_color": "#092c21",
   "icons": [
