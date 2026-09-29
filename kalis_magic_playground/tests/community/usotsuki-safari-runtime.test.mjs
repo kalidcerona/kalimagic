@@ -15,7 +15,7 @@ test('personal and friend USOTSUKI commit focused scan input before Start withou
     class ElementStub {
       constructor() {
         this.value = ''; this.hidden = false; this.checked = false; this.disabled = false;
-        this.textContent = ''; this.listeners = new Map();
+        this.textContent = ''; this.listeners = new Map(); this.style = {};
         this.classList = { add() {}, remove() {} };
       }
       addEventListener(type, fn) { this.listeners.set(type, fn); }
@@ -46,6 +46,8 @@ test('personal and friend USOTSUKI commit focused scan input before Start withou
       start.dispatch('click');
       assert.equal(stored.get('usotsuki.detector.scan-duration.v1'), String(seconds), route);
       assert.equal(get('#vibration-level').disabled, true, route);
+      assert.equal(get('#vibration-settings').hidden, true, route);
+      assert.equal(get('#vibration-settings').style.display, 'none', route);
       screen.dispatch('pointerdown', { target:button });
       now += seconds * 1000 - 1;
       const earlyTimer = [...timers.values()][0]; timers.clear(); earlyTimer();

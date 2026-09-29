@@ -208,6 +208,11 @@ function continuousVibrationAvailable() {
 // or turn sound on. The stored intensity stays for a browser that can use it.
 function applyVibrationCapability() {
   const available = continuousVibrationAvailable();
+  const settings = document.querySelector("#vibration-settings");
+  if (settings) {
+    settings.hidden = !available;
+    settings.style.display = available ? "" : "none";
+  }
   if (vibrationCapability) {
     vibrationCapability.setAttribute("data-vibration-capability", available ? "available" : "unsupported");
     vibrationCapability.hidden = available;
