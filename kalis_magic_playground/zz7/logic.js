@@ -10,6 +10,12 @@
  */
 
 export const HOLD_THRESHOLD_MS = 2000;
+
+/** Scan boundaries stay on the supported 500ms grid; invalid input uses 2s. */
+export function normalizeHoldThresholdMs(value) {
+  if (typeof value !== "number" || !Number.isFinite(value)) return HOLD_THRESHOLD_MS;
+  return Math.round(Math.max(500, Math.min(10000, value)) / 500) * 500;
+}
 export const HOLD_MOVE_TOLERANCE_PX = 24;
 export const TRUTH_ATTEMPT_MIN = 1;
 export const TRUTH_ATTEMPT_MAX = 20;
@@ -284,9 +290,9 @@ function finishCancelled(state, reason, elapsedMs, movement) {
 
 /**
  * Release ends the gesture. Count increases only when the hold is still
- * active and elapsed time is at least HOLD_THRESHOLD_MS. Threshold is inclusive.
+ * active and elapsed time reaches the supplied threshold (default 2s), inclusively.
  */
-export function releaseHold(state, hold, nowMs, x, y) {
+export function releaseHold(state, hold, nowMs, x, y, thresholdMs = HOLD_THRESHOLD_MS) {
   const shaped = shapeAppState(state);
   const safeState = shaped.ok ? shaped.state : createDefaultState();
   const current = holdOf(hold);
@@ -319,7 +325,7 @@ export function releaseHold(state, hold, nowMs, x, y) {
   if (phase === "cancelled") {
     return finishCancelled(safeState, "movement", Number.isFinite(elapsed) ? elapsed : null, moved);
   }
-  if (!Number.isFinite(elapsed) || elapsed < HOLD_THRESHOLD_MS) {
+  if (!Number.isFinite(elapsed) || elapsed < normalizeHoldThresholdMs(thresholdMs)) {
     return finishCancelled(safeState, "early", Number.isFinite(elapsed) ? elapsed : null, moved);
   }
 

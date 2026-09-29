@@ -117,6 +117,11 @@ test('public build serves integrated stopwatch on both retained entitlement rout
   const sharedCalculator = await readFile(new URL('../../dist/tools/hitsuzen/index.html', import.meta.url), 'utf8');
   const sharedAletheia = await readFile(new URL('../../dist/tools/aletheia/index.html', import.meta.url), 'utf8');
   const sharedUsotsuki = await readFile(new URL('../../dist/tools/usotsuki/index.html', import.meta.url), 'utf8');
+  const personalUsotsuki = await readFile(new URL('../../dist/zz7/index.html', import.meta.url), 'utf8');
+  for (const html of [personalUsotsuki, sharedUsotsuki]) {
+    assert.match(html, /id="scan-duration"/);
+    assert.match(html, /id="vibration-level"/);
+  }
   const legacyStopwatch = await readFile(new URL('../../dist/tools/kairos-classic/index.html', import.meta.url), 'utf8');
   assert.doesNotMatch(personalStopwatch, /id="friend-apps-check"/);
   assert.match(sharedUnlock, /id="friend-apps-check"/);

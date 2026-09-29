@@ -37,8 +37,8 @@
               <path class="signal-trace" d="M8 22H48L58 20L68 24L78 22H112L120 19L128 25L136 21H164L172 21L180 8L188 36L196 16L204 23H236L244 21L252 22H276L284 19L292 25L300 21H324L332 21L340 14L346 30L352 22" />
               <g class="signal-scale" aria-hidden="true">
                 <text x="8" y="54">0</text>
-                <text x="180" y="54" text-anchor="middle">1s</text>
-                <text x="352" y="54" text-anchor="end">2s</text>
+                <text id="signal-time-mid" x="180" y="54" text-anchor="middle">1s</text>
+                <text id="signal-time-end" x="352" y="54" text-anchor="end">2s</text>
               </g>
             </svg>
           </section>
@@ -50,7 +50,7 @@
         </section>
         <div class="control-bay">
           <div class="detector-dial">
-            <button id="detector-button" type="button" aria-label="검사를 시작하려면 2초간 누르기"><span class="button-icon" aria-hidden="true"><svg viewBox="0 0 48 48" fill="none"><g stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M11 24a13 13 0 0 1 26 0M7 22a17 17 0 0 1 34 0M15 25a9 9 0 0 1 18 0c0 7-2 13-5 17M19 25a5 5 0 0 1 10 0c0 6-1 11-4 16M24 25c0 6-1 11-3 15M11 29c0 5-1 9-3 12M15 29c0 6-1 10-3 14M37 29c0 5-1 10-3 14"/></g></svg></span><span>길게 누르기</span></button>
+            <button id="detector-button" type="button" aria-label="검사를 시작하려면 설정한 시간 동안 누르기"><span class="button-icon" aria-hidden="true"><svg viewBox="0 0 48 48" fill="none"><g stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M11 24a13 13 0 0 1 26 0M7 22a17 17 0 0 1 34 0M15 25a9 9 0 0 1 18 0c0 7-2 13-5 17M19 25a5 5 0 0 1 10 0c0 6-1 11-4 16M24 25c0 6-1 11-3 15M11 29c0 5-1 9-3 12M15 29c0 6-1 10-3 14M37 29c0 5-1 10-3 14"/></g></svg></span><span>길게 누르기</span></button>
           </div>
         </div>
       </div>
@@ -75,6 +75,13 @@
           <input id="sound-enabled" type="checkbox" checked />
           소리
         </label>
+        </details>
+        <details class="settings-disclosure">
+          <summary>검사 시간</summary>
+          <label class="field" for="scan-duration">버튼을 누르는 시간 (초)
+            <input id="scan-duration" type="number" min="0.5" max="10" step="0.5" value="2" inputmode="decimal" aria-describedby="scan-duration-help" />
+          </label>
+          <p id="scan-duration-help" class="field-help">검사 시간을 0.5-10초 사이에서 0.5초 단위로 설정하세요.</p>
         </details>
         <details class="settings-disclosure">
           <summary>준비와 검사 진동</summary>
@@ -103,7 +110,7 @@
       <details id="performance-help">
         <summary>사용 방법</summary>
         <ul>
-          <li>초록 버튼을 직접 누른 채 약 2초 유지하면 검사가 진행됩니다.</li>
+          <li id="hold-duration-help">초록 버튼을 설정한 검사 시간 동안 누르면 판정이 나옵니다.</li>
           <li>일찍 손을 떼거나 움직이면 취소되며, 시도 횟수에 포함되지 않습니다.</li>
           <li>공연 시작을 누르면 시도 횟수가 0으로 초기화됩니다. 설정한 시도에서만 진실이 나옵니다.</li>
           <li>공연 화면에서 두 손가락으로 아래로 쓸면 설정이 열립니다.</li>

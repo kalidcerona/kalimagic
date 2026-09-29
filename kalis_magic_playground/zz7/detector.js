@@ -7,6 +7,7 @@
 
 import {
   HOLD_THRESHOLD_MS,
+  normalizeHoldThresholdMs,
   beginHold,
   createHold,
   loadFromRaw,
@@ -20,6 +21,7 @@ import {
 } from "./logic.js";
 
 const STATE_KEY = "usotsuki.detector.v1";
+const SCAN_DURATION_KEY = "usotsuki.detector.scan-duration.v1";
 const SOUND_KEY = "usotsuki.detector.sound.v1";
 const VIBRATION_KEY = "usotsuki.detector.vibration.v1";
 const GUIDE_KEY = "usotsuki.detector.settings-guide.v1";
@@ -37,6 +39,11 @@ const settingsScreen = document.querySelector("#settings-screen");
 const truthInput = document.querySelector("#truth-attempt");
 const soundInput = document.querySelector("#sound-enabled");
 const vibrationInput = document.querySelector("#vibration-level");
+const scanDurationInput = document.querySelector("#scan-duration");
+const scanDurationHelp = document.querySelector("#scan-duration-help");
+const holdDurationHelp = document.querySelector("#hold-duration-help");
+const signalTimeMid = document.querySelector("#signal-time-mid");
+const signalTimeEnd = document.querySelector("#signal-time-end");
 const resetButton = document.querySelector("#reset-attempts");
 const startButton = document.querySelector("#start-performance");
 const settingsStatus = document.querySelector("#settings-status");
@@ -46,6 +53,8 @@ let appState = loadFromRaw(null).state;
 let storageLocked = false;
 let hold = createHold();
 let holdTimer = 0;
+let scanDurationMs = HOLD_THRESHOLD_MS;
+let activeScanDurationMs = HOLD_THRESHOLD_MS;
 let settled = true;
 let activePointerId = null;
 let gestureConsumed = false;
@@ -128,6 +137,25 @@ function persistSoundPreference() {
   storageSet(SOUND_KEY, soundInput.checked ? "1" : "0");
 }
 
+function setScanDuration(raw) {
+  const numeric = typeof raw === "string" && raw.trim() !== "" ? Number(raw) : Number.NaN;
+  scanDurationMs = normalizeHoldThresholdMs(numeric * 1000);
+  const seconds = scanDurationMs / 1000;
+  if (scanDurationInput) scanDurationInput.value = String(seconds);
+  if (scanDurationHelp) scanDurationHelp.textContent = `버튼을 ${seconds}초 누르면 판정합니다. 0.5-10초 사이에서 0.5초 단위로 설정하세요.`;
+  if (holdDurationHelp) holdDurationHelp.textContent = `초록 버튼을 직접 누른 채 ${seconds}초 유지하면 판정이 나옵니다.`;
+  if (signalTimeMid) signalTimeMid.textContent = `${seconds / 2}s`;
+  if (signalTimeEnd) signalTimeEnd.textContent = `${seconds}s`;
+  detectorButton.setAttribute("aria-label", `검사를 시작하려면 ${seconds}초간 누르기`);
+}
+
+function onScanDurationChange() {
+  setScanDuration(scanDurationInput.value);
+  if (!storageSet(SCAN_DURATION_KEY, String(scanDurationMs / 1000))) {
+    setStatus("검사 시간은 적용했지만 이 브라우저에 저장하지 못했습니다.");
+  }
+}
+
 function loadVibrationPreference(raw) {
   if (raw === "low") vibrationInput.value = "medium";
   else if (["off", "medium", "high", "max"].includes(raw)) vibrationInput.value = raw;
@@ -139,12 +167,21 @@ function stopVibration() {
   } catch { /* Haptics are optional. */ }
 }
 
-function startVibration() {
+function startVibration(durationMs) {
   if (typeof navigator.vibrate !== "function") return;
   try {
     const pulse = { medium: [100, 100], high: [150, 50] }[vibrationInput.value];
-    if (vibrationInput.value === "max") navigator.vibrate(HOLD_THRESHOLD_MS);
-    else if (pulse) navigator.vibrate(Array.from({ length: 10 }, () => pulse).flat());
+    if (vibrationInput.value === "max") navigator.vibrate(durationMs);
+    else if (pulse) {
+      const pattern = [];
+      let remaining = durationMs;
+      while (remaining > 0) {
+        const segment = Math.min(pulse[pattern.length % 2], remaining);
+        pattern.push(segment);
+        remaining -= segment;
+      }
+      navigator.vibrate(pattern);
+    }
   } catch { /* Visual scanning still works without haptics. */ }
 }
 
@@ -152,6 +189,7 @@ function bootStorage() {
   const stored = storageGet(STATE_KEY);
   const sound = storageGet(SOUND_KEY);
   const vibration = storageGet(VIBRATION_KEY);
+  setScanDuration(storageGet(SCAN_DURATION_KEY).value);
   if (sound.ok) loadSoundPreference(sound.value);
   if (vibration.ok) loadVibrationPreference(vibration.value);
   if (!stored.ok) {
@@ -367,7 +405,7 @@ function startScanningSound() {
     const gain = ctx.createGain();
     oscillator.type = "sine";
     oscillator.frequency.setValueAtTime(148, now);
-    oscillator.frequency.linearRampToValueAtTime(226, now + 1.85);
+    oscillator.frequency.linearRampToValueAtTime(226, now + activeScanDurationMs / 1000 * 0.925);
     gain.gain.setValueAtTime(0.0001, now);
     gain.gain.exponentialRampToValueAtTime(0.17, now + 0.08);
     oscillator.connect(gain);
@@ -391,7 +429,7 @@ function applyRelease(nowMs, x, y) {
   clearHoldTimer();
   stopScanningSound();
   stopVibration();
-  const result = releaseHold(appState, hold, nowMs, x, y);
+  const result = releaseHold(appState, hold, nowMs, x, y, activeScanDurationMs);
   hold = result.hold;
   appState = result.state;
   if (result.counted) {
@@ -414,19 +452,25 @@ function armThresholdTimer() {
   holdTimer = window.setTimeout(() => {
     holdTimer = 0;
     if (settled || hold.phase !== "holding" || activePointerId == null) return;
-    applyRelease(performance.now(), hold.originX, hold.originY);
-  }, HOLD_THRESHOLD_MS);
+    const now = performance.now();
+    if (now - hold.startedAt < activeScanDurationMs) {
+      armThresholdTimer();
+      return;
+    }
+    applyRelease(now, hold.originX, hold.originY);
+  }, Math.max(0, activeScanDurationMs - (performance.now() - hold.startedAt)));
 }
 
 function startHold(event) {
   const begun = beginHold(createHold(), performance.now(), event.clientX, event.clientY);
   if (!begun.accepted) return;
   hold = begun.hold;
+  activeScanDurationMs = scanDurationMs;
   settled = false;
   activePointerId = event.pointerId;
   setStage("testing");
   startScanningSound();
-  startVibration();
+  startVibration(activeScanDurationMs);
   armThresholdTimer();
 }
 
@@ -626,6 +670,7 @@ function bind() {
   startButton.addEventListener("click", onStartPerformance);
   soundInput.addEventListener("change", onSoundChange);
   vibrationInput.addEventListener("change", onVibrationChange);
+  scanDurationInput?.addEventListener("change", onScanDurationChange);
   window.addEventListener("keydown", onRehearsalKey);
   document.addEventListener("visibilitychange", onVisibilityChange);
 }
