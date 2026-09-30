@@ -69,7 +69,9 @@ export const PUBLIC_DIRS = [
   'zz7',
   'zz8',
   'zz10',
-  'zz11'
+  'zz11',
+  'zz12',
+  'zz13'
 ];
 
 export const PRIVATE_PATTERNS = [
@@ -134,6 +136,15 @@ export const SPINNER_FILES = [
   'casino-salon.jpg',
   'app.js', 'icon-192.png', 'icon-512.png', 'index.html',
   'logic.js', 'manifest.webmanifest', 'style.css', 'sw.js'
+];
+export const MEMDECK_FILES = [
+  'index.html', 'style.css', 'app.mjs', 'core.mjs', 'data.mjs',
+  'manifest.webmanifest', 'sw.js', 'icon.svg', 'icon-192.png', 'icon-512.png'
+];
+export const QR_FILES = [
+  'index.html', 'style.css', 'app.mjs', 'core.mjs', 'manifest.webmanifest', 'sw.js',
+  'icons/icon-192.png', 'icons/icon-512.png', 'vendor/qrcodegen.js', 'vendor/jsQR.js',
+  'vendor/LICENSE-nayuki.txt', 'vendor/LICENSE-jsqr.txt'
 ];
 export const ALETHEIA_COURT_FILES = ['S-J', 'S-Q', 'S-K', 'D-J', 'D-Q', 'D-K',
   'C-J', 'C-Q', 'C-K', 'H-J', 'H-Q', 'H-K']
@@ -200,6 +211,8 @@ export const MIRROR_PAIRS = [
   ...ASRAI_FILES.map((file) => [`../../magic-asrai/${file}`, `zz8/${file}`]),
   ...ALTER_FILES.map((file) => [`../../magic-alter/${file}`, `zz10/${file}`]),
   ...SPINNER_FILES.map((file) => [`../../magic-spinner/${file}`, `zz11/${file}`]),
+  ...MEMDECK_FILES.map((file) => [`../../magic-memdeck/${file}`, `zz12/${file}`]),
+  ...QR_FILES.map((file) => [`../../magic-qr/${file}`, `zz13/${file}`]),
   ...[
     ['magic-stopwatch-uni', 'zz1'],
     ['magic-unlock', 'zz2'],

@@ -135,6 +135,11 @@
     Content-Type = "application/manifest+json"
 
 [[headers]]
+  for = "/zz12/manifest.webmanifest"
+  [headers.values]
+    Content-Type = "application/manifest+json"
+
+[[headers]]
   for = "/tools/tobira/manifest.webmanifest"
   [headers.values]
     Content-Type = "application/manifest+json"
@@ -204,3 +209,8 @@
   to = "/tools/tyche/"
   status = 301
   force = true
+
+[[headers]]
+  for = "/zz13/manifest.webmanifest"
+  [headers.values]
+    Content-Type = "application/manifest+json"

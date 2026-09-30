@@ -4,7 +4,7 @@ import { readdir, readFile, stat, mkdtemp, mkdir, writeFile, rm } from 'node:fs/
 import path from 'node:path';
 import os from 'node:os';
 import { fileURLToPath } from 'node:url';
-import { PUBLIC_FILES, PUBLIC_DIRS, PRIVATE_PATTERNS, MIRROR_PAIRS, DISTRIBUTION_APPS, SHARED_UNLOCK_FILES, CHOICE_FILES, USOTSUKI_FILES, ASRAI_FILES, ALTER_FILES, SPINNER_FILES, ALETHEIA_COURT_FILES, SETTINGS_UI_FILES, buildPublic, verifyAppDisplayPolicy } from '../../scripts/build-public.mjs';
+import { PUBLIC_FILES, PUBLIC_DIRS, PRIVATE_PATTERNS, MIRROR_PAIRS, DISTRIBUTION_APPS, SHARED_UNLOCK_FILES, CHOICE_FILES, USOTSUKI_FILES, ASRAI_FILES, ALTER_FILES, SPINNER_FILES, MEMDECK_FILES, QR_FILES, ALETHEIA_COURT_FILES, SETTINGS_UI_FILES, buildPublic, verifyAppDisplayPolicy } from '../../scripts/build-public.mjs';
 
 test('public build allowlist includes visible site pages', () => {
   assert.ok(PUBLIC_FILES.includes('index.html'));
@@ -34,7 +34,7 @@ test('public build explicitly excludes local planning and source folders', () =>
 });
 
 test('personal ALTER, Asrai, and spinner are included while unfinished FALSE MEMORY stays private', () => {
-  assert.deepEqual(PUBLIC_DIRS.filter((entry) => /^zz\d+$/.test(entry)), ['zz1', 'zz2', 'zz3', 'zz4', 'zz5', 'zz6', 'zz7', 'zz8', 'zz10', 'zz11']);
+  assert.deepEqual(PUBLIC_DIRS.filter((entry) => /^zz\d+$/.test(entry)), ['zz1', 'zz2', 'zz3', 'zz4', 'zz5', 'zz6', 'zz7', 'zz8', 'zz10', 'zz11', 'zz12', 'zz13']);
   assert.equal(MIRROR_PAIRS.some(([, mirror]) => mirror.startsWith('zz9/')), false);
   assert.ok(PRIVATE_PATTERNS.some((pattern) => pattern.test('zz8/app.js')));
 });
@@ -150,6 +150,39 @@ test('public build serves integrated stopwatch on both retained entitlement rout
   await stat(new URL('../../dist/zz8/index.html', import.meta.url));
   await stat(new URL('../../dist/zz10/index.html', import.meta.url));
   await stat(new URL('../../dist/zz11/index.html', import.meta.url));
+  const trainer = new URL('../../dist/zz12/', import.meta.url);
+  assert.deepEqual((await readdir(trainer)).sort(), [...MEMDECK_FILES].sort());
+  const trainerSource = await stat(new URL('../../../../magic-memdeck/', import.meta.url)).catch((error) => { if (error.code === 'ENOENT') return null; throw error; });
+  for (const file of MEMDECK_FILES) {
+    assert.ok(MIRROR_PAIRS.some(([source, mirror]) => source === `../../magic-memdeck/${file}` && mirror === `zz12/${file}`));
+    if (trainerSource) {
+      const original = await readFile(new URL(`../../../../magic-memdeck/${file}`, import.meta.url));
+      assert.deepEqual(await readFile(new URL(file, trainer)), original);
+    }
+  }
+  const qr = new URL('../../dist/zz13/', import.meta.url);
+  const qrFiles = [];
+  async function collectQrFiles(directory, prefix = '') {
+    for (const entry of await readdir(directory, { withFileTypes: true })) {
+      if (entry.isDirectory()) await collectQrFiles(new URL(`${entry.name}/`, directory), `${prefix}${entry.name}/`);
+      else qrFiles.push(`${prefix}${entry.name}`);
+    }
+  }
+  await collectQrFiles(qr);
+  assert.deepEqual(qrFiles.sort(), [...QR_FILES].sort());
+  const qrSource = await stat(new URL('../../../../magic-qr/', import.meta.url)).catch((error) => { if (error.code === 'ENOENT') return null; throw error; });
+  for (const file of QR_FILES) {
+    assert.ok(MIRROR_PAIRS.some(([source, mirror]) => source === `../../magic-qr/${file}` && mirror === `zz13/${file}`));
+    if (qrSource) assert.deepEqual(await readFile(new URL(file, qr)), await readFile(new URL(`../../../../magic-qr/${file}`, import.meta.url)));
+  }
+  const qrManifest = JSON.parse(await readFile(new URL('manifest.webmanifest', qr), 'utf8'));
+  assert.equal(qrManifest.display, 'standalone');
+  assert.equal(qrManifest.scope, './');
+  const trainerManifest = JSON.parse(await readFile(new URL('manifest.webmanifest', trainer), 'utf8'));
+  assert.equal(trainerManifest.display, 'standalone');
+  assert.equal(trainerManifest.scope, './');
+  const headers = await readFile(new URL('../../netlify.toml', import.meta.url), 'utf8');
+  assert.match(headers, /for = "\/zz12\/manifest\.webmanifest"\s+\[headers.values\]\s+Content-Type = "application\/manifest\+json"/);
   await assert.rejects(stat(new URL('../../dist/zz8/app.js', import.meta.url)), { code: 'ENOENT' });
   await assert.rejects(stat(new URL('../../dist/zz9/index.html', import.meta.url)), { code: 'ENOENT' });
 });
