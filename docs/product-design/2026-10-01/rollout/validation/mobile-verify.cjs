@@ -39,6 +39,8 @@ const profiles={
 };
 const apps=opts.apps?opts.apps.split(','):Object.keys(profiles);
 for(const app of apps) if(!profiles[app]) throw new Error(`Unknown app: ${app}`);
+const route=opts.route?opts.route.replace(/^\/+|\/+$/g,''):null;
+if(route && (apps.length!==1||!/^[-a-z0-9]+(?:\/[-a-z0-9]+)*$/.test(route)))throw new Error('--route requires exactly one app and a relative route');
 const results=[];const performanceResults=[];const runtimeErrors=[];const generated=[];
 const seeds={
  'stopwatch-settings-entry-tutorial-v1':'1','stopwatch_uni_install_nudge_done':'1','stopwatch_ui_mode':'portrait',
@@ -53,9 +55,11 @@ async function visible(page,sel){return page.locator(sel).first().isVisible().ca
 async function fresh(browser,url,app,width,height){
  const context=await browser.newContext({viewport:{width,height},screen:{width,height},deviceScaleFactor:1,isMobile:true,hasTouch:true,reducedMotion:'reduce',locale:'ko-KR',timezoneId:'Asia/Seoul',permissions:['camera'],serviceWorkers:'block'});
  const page=await context.newPage();page.setDefaultTimeout(4000);
- await page.addInitScript(values=>{for(const [k,v] of Object.entries(values)){try{localStorage.setItem(k,v);}catch{}}},seeds);
+ const sharedKairos=/^tools\/(kairos(?:-classic)?)$/.exec(route||'');
+ const contextSeeds=sharedKairos?Object.fromEntries(Object.entries(seeds).map(([key,value])=>[key.replaceAll('stopwatch_',`friend-${sharedKairos[1]}_`).replaceAll('stopwatch-settings-entry-tutorial-',`friend-${sharedKairos[1]}-settings-entry-tutorial-`),value])):seeds;
+ await page.addInitScript(values=>{for(const [k,v] of Object.entries(values)){try{localStorage.setItem(k,v);}catch{}}},contextSeeds);
  page.on('pageerror',error=>runtimeErrors.push({app,url,error:String(error)}));
- await page.goto(`${url}/${app}/`,{waitUntil:'load',timeout:20000});
+ await page.goto(`${url}/${route||app}/`,{waitUntil:'load',timeout:20000});
  await page.waitForTimeout(250);
  // Dismiss only source-backed onboarding controls, using their real click handlers.
  for(const sel of ['#settings-entry-tutorial-dismiss','#settings-gesture-dismiss','#guide-close','#close-gesture-guide','.gesture-guide button']){
@@ -327,7 +331,7 @@ function htmlEscape(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':
 function writeReports(){
  const failures=results.flatMap(r=>r.failures.map(message=>({app:r.app,class:r.class,message}))).concat(performanceResults.flatMap(r=>r.failures.map(message=>({app:r.app,kind:'performance',message}))),runtimeErrors.map(e=>({app:e.app,kind:'runtime',message:e.error,url:e.url})));
  const actualPngFiles=fs.readdirSync(out).filter(f=>f.endsWith('.png')).sort();
- const report={createdAt:new Date().toISOString(),baseUrl:base,baselineUrl:baseline||null,apps,classes,plannedSettingsCases:apps.length*classes.length,executedSettingsCases:results.length,failedSettingsCases:results.filter(r=>r.failures.length).length,failures,runtimeErrors,performanceResults,results,pngCount:actualPngFiles.length,generatedPngCount:generated.length,pngFiles:actualPngFiles,limitations:['Chromium 터치 에뮬레이션이며 실기 확인 아님','높이 축소는 합성 검사이며 OS IME 아님','safe-area는 실제 env() 대체 합성 검사이며 물리 기기 확인 아님','공연 픽셀 차이는 소스 보존 검토를 대체하지 않음']};
+ const report={createdAt:new Date().toISOString(),baseUrl:base,baselineUrl:baseline||null,routeOverride:route,apps,classes,plannedSettingsCases:apps.length*classes.length,executedSettingsCases:results.length,failedSettingsCases:results.filter(r=>r.failures.length).length,failures,runtimeErrors,performanceResults,results,pngCount:actualPngFiles.length,generatedPngCount:generated.length,pngFiles:actualPngFiles,limitations:['Chromium 터치 에뮬레이션이며 실기 확인 아님','높이 축소는 합성 검사이며 OS IME 아님','safe-area는 실제 env() 대체 합성 검사이며 물리 기기 확인 아님','공연 픽셀 차이는 소스 보존 검토를 대체하지 않음']};
  fs.writeFileSync(path.join(out,'report.json'),JSON.stringify(report,null,2)+'\n');
  const tabs=classes.map(([c,w,h])=>`<button data-class="${c}">${c} ${w}×${h}</button>`).join('');
  const rows=results.map(r=>`<section class="case" data-class="${r.class}"><h2>${r.app} · ${r.class} · ${r.failures.length?'실패':'통과'}</h2><p>${r.failures.map(htmlEscape).join('<br>')}</p><div class="shots">${[...r.screenshots,r.failureScreenshot,r.keyboard?.screenshotField,r.keyboard?.screenshot,r.safeArea?.screenshotTop,r.safeArea?.screenshotBottom,...(r.fold?.steps||[]).map(s=>s.screenshot)].filter(Boolean).map(s=>`<figure><a href="${s}"><img loading="lazy" src="${s}"></a><figcaption>${s}</figcaption></figure>`).join('')}</div></section>`).join('');

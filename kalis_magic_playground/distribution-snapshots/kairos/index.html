@@ -189,11 +189,6 @@
     #settings-entry-tutorial .tutorial-fingers::after { content: '↓'; position: absolute; bottom: 0; left: 0; right: 0; color: #fff; font-size: 28px; }
     #settings-entry-tutorial p { margin: 0 0 16px; }
     #settings-entry-tutorial button { min-width: 120px; min-height: 44px; border: 0; border-radius: 12px; background: #fff; color: #111; font: 600 16px system-ui, sans-serif; pointer-events: auto; touch-action: manipulation; }
-    .desktop-settings-entry { position: fixed; z-index: 12; top: max(12px, env(safe-area-inset-top)); right: max(12px, env(safe-area-inset-right)); min-height: 44px; padding: 0 14px; border: 1px solid #ffffff55; border-radius: 12px; background: #202024eF; color: #fff; font: 600 14px system-ui, sans-serif; }
-    .desktop-settings-help { display: none; }
-    @media (any-hover: hover) and (any-pointer: fine) {
-      .desktop-settings-help { display: block; color: #aeb0b8; font-size: 13px; }
-    }
     @keyframes tutorial-swipe { 0%, 16% { transform: translateY(0); opacity: .55; } 70%, 85% { transform: translateY(45px); opacity: 1; } 100% { transform: translateY(0); opacity: .55; } }
     @media (prefers-reduced-motion: reduce) { #settings-entry-tutorial .tutorial-fingers span { animation: none; transform: translateY(25px); } }
   </style>
@@ -228,14 +223,19 @@
     <section id="settings" aria-label="숨김 설정" hidden>
       <div id="settings-card" data-settings-root>
         <img id="settings-brand" src="./brand-logo.jpg" alt="KAIROS" onerror="this.hidden=true">
-        <header id="settings-header"><h1 id="settings-title">설정</h1><button id="settings-close" type="button">닫기</button></header>
+        <header id="settings-header"><div class="header-lead"><span class="eyebrow">카이로스 / 설정</span><h1 id="settings-title">설정</h1></div><button id="settings-close" type="button">닫기</button></header>
+        <div class="identity">
+          <div class="identity-copy"><span class="catalog-label">시간</span><p class="identity-name">KAIROS</p><p class="identity-desc">단 하나의 순간을 붙잡다.</p></div>
+          <svg class="sig" viewBox="0 0 104 36" aria-label="단 하나가 끊긴 직선 눈금"><path d="M4 26h43m9 0h44 M12 22v8 M28 22v8 M44 22v8 M60 17v15 M76 22v8 M92 22v8"/><path class="accent" d="M52 4v10"/></svg>
+        </div>
+        <div class="body-groups">
         <div id="general-settings">
-        <details data-settings-group="direction"><summary>공연 화면 방향</summary>
+        <details data-settings-group="direction" open><summary>공연 화면 방향</summary>
         <p>관객에게 보여 줄 스톱워치 방향을 선택하세요.</p>
         <div id="settings-mode-buttons"><button id="mode-portrait" type="button" aria-pressed="false">세로</button><button id="mode-landscape" type="button" aria-pressed="false">가로</button></div>
         </details>
         <details id="stopwatch-help" data-settings-group="guide"><summary>보이지 않는 숫자 그리드 사용법</summary><p>숫자 모드에서는 화면에 구획선이 보이지 않아도 아래처럼 탭 위치를 숫자로 인식합니다. 빨간 선은 설명 화면에서만 보입니다.</p><p>가로 화면: START/STOP 버튼의 해당 칸을 누릅니다. 시작할 때 한 번, 정지할 때 한 번 누르면 두 자리 숫자가 됩니다.</p><div class="grid-guide" role="img" aria-label="위쪽 왼쪽부터 1, 2, 3, 4, 5. 아래쪽 왼쪽부터 6, 7, 8, 9, 0."><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>0</span></div><p>예: 24를 입력하려면 시작할 때 윗줄 두 번째 칸(2), 정지할 때 윗줄 네 번째 칸(4)을 누릅니다. 세로 화면에서는 랩 목록의 빈 영역을 같은 방식으로 두 번 누른 뒤 정지합니다. 이 옵션을 켜면 흰 숫자를 잠깐 표시할 수 있습니다.</p>
-        <p>설정 열기: 화면에서 두 손가락을 아래로 쓸어내리세요. PC에서는 설정 버튼이나 Shift+Esc를 사용하세요.</p><label for="p-digit-guide-enabled"><input id="p-digit-guide-enabled" type="checkbox"> 앱을 열 때 세로 일반 모드에서 칸 번호 한 번 표시</label>
+        <p>설정 열기: 화면에서 두 손가락을 아래로 쓸어내리세요.</p><label for="p-digit-guide-enabled"><input id="p-digit-guide-enabled" type="checkbox"> 앱을 열 때 세로 일반 모드에서 칸 번호 한 번 표시</label>
         </details>
         </div>
         <div id="preset-section">
@@ -266,6 +266,7 @@
         </section>
         <p id="sequence-status" aria-live="polite"></p>
         </div>
+        </div>
       </div>
     </section>
     <section id="quick-settings" aria-label="즉흥 세팅" hidden>
@@ -279,36 +280,10 @@
     </section>
   </main>
   <div id="settings-entry-tutorial" role="dialog" aria-label="설정 여는 방법" hidden>
-    <div class="tutorial-card"><div class="tutorial-fingers" aria-hidden="true"><span></span><span></span></div><p>설정을 열려면 두 손가락으로 화면을 아래로 쓸어내리세요.</p><p class="desktop-settings-help">PC에서는 공연 화면의 ‘설정’ 버튼이나 Shift+Esc를 사용하세요.</p><button id="settings-entry-tutorial-dismiss" type="button">알겠어요</button></div>
+    <div class="tutorial-card"><div class="tutorial-fingers" aria-hidden="true"><span></span><span></span></div><p>설정을 열려면 두 손가락으로 화면을 아래로 쓸어내리세요.</p><button id="settings-entry-tutorial-dismiss" type="button">알겠어요</button></div>
   </div>
-  <button id="desktop-settings-entry" class="desktop-settings-entry" type="button" aria-label="PC 설정 열기, Shift+Escape" hidden>설정 · Shift+Esc</button>
   <div id="selftest" hidden><div id="selftest-result"></div></div>
   <script type="module">
-// BEGIN DESKTOP SETTINGS ACCESS
-function bindDesktopSettingsAccess(button, open, canOpen = () => true, canShow = canOpen) {
-  const media = window.matchMedia('(any-hover: hover) and (any-pointer: fine)');
-  const updateButton = () => { button.hidden = !media.matches || !canShow(); };
-  updateButton();
-  media.addEventListener?.('change', updateButton);
-  const isEditingTarget = (target) => {
-    const element = target?.nodeType === 3 ? target.parentElement : target;
-    return Boolean(element?.isContentEditable || element?.closest?.('input, textarea, select, [contenteditable]:not([contenteditable="false"])'));
-  };
-  const activate = (event) => {
-    if (isEditingTarget(event.target) || !canOpen()) return false;
-    event.preventDefault?.();
-    open();
-    updateButton();
-    return true;
-  };
-  button.addEventListener('click', activate);
-  window.addEventListener('keydown', (event) => {
-    if (event.key !== 'Escape' || !event.shiftKey || event.ctrlKey || event.metaKey || event.altKey || event.isComposing || event.repeat) return;
-    activate(event);
-  });
-  return { activate, updateButton };
-}
-// END DESKTOP SETTINGS ACCESS
 // BEGIN SETTINGS SWIPE
 function installSettingsSwipe(open, cancel, enabled, cancelHold = cancel) {
   const pointers = new Map();
@@ -494,8 +469,7 @@ function installSettingsSwipe(open, cancel, enabled, cancelHold = cancel) {
     function renderPortraitPresetEntry(entry){pCustom.hidden=true;pNumeric.hidden=false;pMinutes.textContent=entry.slice(0,2);pDigits.forEach((s,i)=>s.textContent=entry[i+2]);}
     function renderCustomText(text){if(uiMode==="portrait"){pNumeric.hidden=true;pCustom.hidden=false;pCustom.textContent=text;return;}lMinutesPrefix.hidden=true;lDecimal.hidden=true;lTime.classList.remove("with-minutes");lSeconds.hidden=true;lColon.hidden=true;lCs.hidden=true;lCustom.hidden=false;lCustom.textContent=text;}
     function gradient(base,down){const top=`color-mix(in srgb, ${base} 82%, #ffffff)`,value=`linear-gradient(180deg, ${top} 0%, ${base} 100%)`;return down?`linear-gradient(180deg, rgba(0,0,0,.12), rgba(0,0,0,.12)), ${value}`:value;}
-    let desktopSettingsAccess=null;
-    function renderState(){pControl.textContent=state==="running"?"중단":"시작";pControl.classList.toggle("running",state==="running");pLap.textContent=state==="stopped"&&elapsedBase>0?"재설정":"랩";pLap.disabled=state!=="running"&&elapsedBase===0;pColon.className=`colon ${colonClassFor(trickState)}`;lColon.className=`colon ${colonClassFor(trickState)}`;let label="START",bg=gradient("#4c6ef5",pressed);if(state==="running"){label="STOP";bg=gradient("#e03131",pressed);}else if(state==="stopped"){label="RESET";const base="linear-gradient(180deg,rgba(255,255,255,.18),rgba(255,255,255,.12))";bg=pressed?`linear-gradient(180deg,rgba(0,0,0,.12),rgba(0,0,0,.12)),${base}`:base;}lControlLabel.textContent=label;lControl.setAttribute("aria-label",label);lControl.style.background=bg;lControl.style.transform=pressed?"scale(.96)":"none";desktopSettingsAccess?.updateButton();}
+    function renderState(){pControl.textContent=state==="running"?"중단":"시작";pControl.classList.toggle("running",state==="running");pLap.textContent=state==="stopped"&&elapsedBase>0?"재설정":"랩";pLap.disabled=state!=="running"&&elapsedBase===0;pColon.className=`colon ${colonClassFor(trickState)}`;lColon.className=`colon ${colonClassFor(trickState)}`;let label="START",bg=gradient("#4c6ef5",pressed);if(state==="running"){label="STOP";bg=gradient("#e03131",pressed);}else if(state==="stopped"){label="RESET";const base="linear-gradient(180deg,rgba(255,255,255,.18),rgba(255,255,255,.12))";bg=pressed?`linear-gradient(180deg,rgba(0,0,0,.12),rgba(0,0,0,.12)),${base}`:base;}lControlLabel.textContent=label;lControl.setAttribute("aria-label",label);lControl.style.background=bg;lControl.style.transform=pressed?"scale(.96)":"none";}
     function elapsedNow(){return clampElapsed(elapsedBase+(state==="running"?performance.now()-startedAt:0));}
     function stopTimer(event,atLimit=false){elapsedBase=atLimit?59990:event&&Number.isFinite(event.actionNow)?elapsedAtAction(elapsedBase,startedAt,event.actionNow):elapsedNow();cancelAnimationFrame(frameId);frameId=0;state="stopped";if(uiMode==="landscape"&&event&&trickState==="digit")stopDigit=digitFromLandscapeEvent(event);const outcome=resolveStopOutcome({trickState,presetCs,customText,elapsed:elapsedBase,reservedTens,stopDigit,presetAt,textAt,stopCount:sequenceStopCount,sequence,sequenceForceAfter});sequenceStopCount=outcome.nextStopCount;stoppedOutcome=outcome;if(outcome.kind==="text")renderCustomText(outcome.text);else renderCs(outcome.cs);pendingDigits=[];reservedTens=stopDigit=null;pWorld.classList.remove("feedback");renderState();}
     function tick(){if(state!=="running")return;const elapsed=elapsedNow();if(elapsed>=59990){stopTimer(null,true);return;}renderCs(Math.floor(elapsed/10));frameId=requestAnimationFrame(tick);}
@@ -565,9 +539,8 @@ function installSettingsSwipe(open, cancel, enabled, cancelHold = cancel) {
       $("settings-entry-tutorial").hidden=true;
       settings.classList.toggle("preset-focus",section==="presets");$("settings-title").textContent=section==="presets"?"프리셋":"설정";
       presetEditor.hidden=true;editingSlotIndex=null;updateModeButtons();renderSequenceSlots();updateSequenceStatus();settings.hidden=false;settings.scrollTop=0;
-      desktopSettingsAccess?.updateButton();
     }
-    function closeSettings(){cancelPendingInteractions();settings.hidden=true;trick2Text.blur();sequenceInput.blur();presetName.blur();hidePortraitDigitGuide();desktopSettingsAccess?.updateButton();}
+    function closeSettings(){cancelPendingInteractions();settings.hidden=true;trick2Text.blur();sequenceInput.blur();presetName.blur();hidePortraitDigitGuide();}
     function applyPresetSlotToDom(slot){
       const applied=applyPresetSlot(slot,{customText,sequence,trick3Enabled});
       if(applied){customText=applied.customText;sequence=applied.sequence;trickState=applied.trickState;trick3Enabled=applied.trick3Enabled;sequenceStopCount=0;sequenceForceAfter=slot.forceAfter??2;textAt=customText?Date.now():0;
@@ -629,7 +602,7 @@ function installSettingsSwipe(open, cancel, enabled, cancelHold = cancel) {
     function releasePress(){if(!pressed)return;pressed=false;renderState();}
     function cycleTrick(){if(presetMode||!settings.hidden||!quickSettings.hidden)return;const previous=trickState;trickState=nextTrickState(trickState,trick3Enabled);if(previous==="seq"&&trickState!=="seq")sequenceStopCount=0;pendingDigits=[];reservedTens=stopDigit=null;pWorld.classList.remove("feedback");renderState();hidePortraitDigitGuide();}
     async function acquireWakeLock(){if(wakeLock||wakeLockPending||document.visibilityState!=="visible"||!navigator.wakeLock)return;wakeLockPending=true;try{const lock=await navigator.wakeLock.request("screen");wakeLock=lock;lock.addEventListener("release",()=>{if(wakeLock===lock)wakeLock=null;if(document.visibilityState==="visible")acquireWakeLock();});}catch(_){}finally{wakeLockPending=false;}}
-    function initApp(){installSettingsSwipe(openSettings,cancelPendingInteractions,()=>!presetMode&&state!=="running"&&settings.hidden&&quickSettings.hidden,()=>{clearHold();tap=null;alarmTap=null;});desktopSettingsAccess=bindDesktopSettingsAccess($("desktop-settings-entry"),openSettings,()=>!presetMode&&state!=="running"&&settings.hidden&&quickSettings.hidden,()=>!presetMode&&state!=="running"&&settings.hidden&&quickSettings.hidden);loadStorage();try{pDigitGuideOn.checked=localStorage.getItem(DIGIT_GUIDE_KEY)==="1";}catch(_){pDigitGuideOn.checked=false;}setMode(uiMode);showPortraitDigitGuide();
+    function initApp(){installSettingsSwipe(openSettings,cancelPendingInteractions,()=>!presetMode&&state!=="running"&&settings.hidden&&quickSettings.hidden,()=>{clearHold();tap=null;alarmTap=null;});loadStorage();try{pDigitGuideOn.checked=localStorage.getItem(DIGIT_GUIDE_KEY)==="1";}catch(_){pDigitGuideOn.checked=false;}setMode(uiMode);showPortraitDigitGuide();
       document.addEventListener("pointerdown",onGlobalPointerDown,{capture:true,passive:false});window.addEventListener("pointermove",handlePointerMove,{passive:false});window.addEventListener("pointerup",e=>{onGlobalPointerEnd(e);handlePresetEnd(e);if(hold&&hold.pointerId===e.pointerId)clearHold();releasePress();});window.addEventListener("pointercancel",e=>{onGlobalPointerEnd(e);handlePresetEnd(e);if(hold&&hold.pointerId===e.pointerId)clearHold();releasePress();});
       document.addEventListener("pointerdown",handlePresetDown,{capture:true,passive:false});
       pControl.addEventListener("click",()=>{if(suppressClick)return;if(presetMode){if(presetKind!=="portrait-group")return;exitPresetMode(false);}if(state==="running")stopTimer();else startTimer();});pLap.addEventListener("click",()=>{if(presetMode||suppressClick)return;if(state==="running")addLap();else resetTimer();});pTime.addEventListener("click",()=>{if(!suppressClick)cycleTrick();});

@@ -1,0 +1,134 @@
+{
+  "sourceFileCount": 12,
+  "sourceSnapshotAll12Equal": true,
+  "sourceFiles": [
+    {
+      "file": "brand-logo.jpg",
+      "equal": true,
+      "sha256": "1fbcc02dd7d96c0930295b51198cb25c9d7ccb09533ac5c09cce2f24c40a0c0d"
+    },
+    {
+      "file": "brand-logo.png",
+      "equal": true,
+      "sha256": "2e74e3b685911a8b5238e9e6b0bb923d8b68280e3d1d676e1c29f3eb92048939"
+    },
+    {
+      "file": "fullscreen.js",
+      "equal": true,
+      "sha256": "f2edda30898f546aea69efe29f5823ac7fbcd286c46787af12c88560a420bb9f"
+    },
+    {
+      "file": "icon-192.png",
+      "equal": true,
+      "sha256": "472958c13d69b9e17eb638e676957cb72ccbc5a9451ab717227772cc7bee88af"
+    },
+    {
+      "file": "icon-512.png",
+      "equal": true,
+      "sha256": "bf76ee3f581cba3f0470f96c4071c9d12fb53d8c7fcf7eed547dc61d8c0a92e1"
+    },
+    {
+      "file": "icon.svg",
+      "equal": true,
+      "sha256": "098b2c4935fa64ae7fbdf2c7d9197ea8d93c69bee82c83c12487214e095d79bd"
+    },
+    {
+      "file": "index.html",
+      "equal": true,
+      "sha256": "cded24d2d17b0aa50b70600744d634f78e02bb0b3d0ed720f8dde38d47e9b656"
+    },
+    {
+      "file": "logic.js",
+      "equal": true,
+      "sha256": "2bc832972ece0583a09b8af5b85c89769cb7cda623ac7d779e270b6d1e25dac4"
+    },
+    {
+      "file": "manifest.webmanifest",
+      "equal": true,
+      "sha256": "a0a90016f113efbdf1055244b659293a48c6484350830eebfeb1d91a066a6fd8"
+    },
+    {
+      "file": "settings-ui.css",
+      "equal": true,
+      "sha256": "23b33f8bc086228cfd9fc372ef5d7623733640a1904e9f8a9b139a60961527e8"
+    },
+    {
+      "file": "settings-ui.js",
+      "equal": true,
+      "sha256": "27823b5444472310bbf9bdc4d8d6e4ce9b56bb8782c9f1b3b6b19ffe33e1b4a1"
+    },
+    {
+      "file": "sw.js",
+      "equal": true,
+      "sha256": "cc791f6912f6d875ee653a312a9f3efdd35460e1e67e22c18da3832eb82be8ff"
+    }
+  ],
+  "compiledRoutes": [
+    {
+      "route": "tools/kairos",
+      "distFileList": [
+        "brand-logo.jpg",
+        "brand-logo.png",
+        "icon-192.png",
+        "icon-512.png",
+        "icon.svg",
+        "index.html",
+        "logic.js",
+        "manifest.webmanifest",
+        "settings-ui.css",
+        "settings-ui.js",
+        "sw.js"
+      ],
+      "snapshotVsDistDifferentFiles": [
+        "index.html",
+        "logic.js",
+        "manifest.webmanifest"
+      ],
+      "indexExactlyExpectedTransform": true,
+      "logicExactlyExpectedTransform": true,
+      "manifestExactlyExpectedObject": true,
+      "allOther8FilesExact": true,
+      "httpsAuthGuardRetained": true,
+      "customizationOff": true,
+      "privateFullscreenOmitted": true,
+      "distFileCount": 11
+    },
+    {
+      "route": "tools/kairos-classic",
+      "distFileList": [
+        "brand-logo.jpg",
+        "brand-logo.png",
+        "icon-192.png",
+        "icon-512.png",
+        "icon.svg",
+        "index.html",
+        "logic.js",
+        "manifest.webmanifest",
+        "settings-ui.css",
+        "settings-ui.js",
+        "sw.js"
+      ],
+      "snapshotVsDistDifferentFiles": [
+        "index.html",
+        "logic.js",
+        "manifest.webmanifest"
+      ],
+      "indexExactlyExpectedTransform": true,
+      "logicExactlyExpectedTransform": true,
+      "manifestExactlyExpectedObject": true,
+      "allOther8FilesExact": true,
+      "httpsAuthGuardRetained": true,
+      "customizationOff": true,
+      "privateFullscreenOmitted": true,
+      "distFileCount": 11
+    }
+  ],
+  "filteredFiles": [
+    {
+      "file": "fullscreen.js",
+      "source": "kalis_magic_playground/scripts/build-public.mjs:78",
+      "reason": "existing PRIVATE_PATTERNS"
+    }
+  ],
+  "accessGuardSourcePath": "/Users/sumpie/Desktop/AI/Projects/kalis magic/kalis_magic_playground/scripts/build-public.mjs"
+}

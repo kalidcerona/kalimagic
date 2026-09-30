@@ -1,6 +1,6 @@
 # KAIROS · 파일럿 설계
 
-상태: 2026-09-30 승인된 설정 B의 파일럿 구현 기준, 2026-10-01 PC 제거 정책 반영. 공연 화면은 현행 유지하며 승인된 PC 전용 진입 제거만 적용한다. [공통 디자인 SSOT](</Users/sumpie/Desktop/AI/Projects/kalis magic/PRODUCT_DESIGN_SYSTEM.md>)와 [앱별 정체성 기준](</Users/sumpie/Desktop/AI/Projects/kalis magic/docs/product-design/2026-09-30/APP_IDENTITY_MATRIX.md>)를 상속하며, 이 문서는 KAIROS의 차이만 기록한다. 아래 390px 배치는 정적 비교 시안을 위한 제안이며 실기 검증 결과가 아니다.
+상태: 2026-09-30 승인된 설정 B의 파일럿 구현 기준, 2026-10-01 PC 제거 및 개인용·배포용 동일 UI 승인 반영. 공연 화면은 현행 유지하며 승인된 PC 전용 진입 제거만 적용한다. [공통 디자인 SSOT](</Users/sumpie/Desktop/AI/Projects/kalis magic/PRODUCT_DESIGN_SYSTEM.md>)와 [앱별 정체성 기준](</Users/sumpie/Desktop/AI/Projects/kalis magic/docs/product-design/2026-09-30/APP_IDENTITY_MATRIX.md>)를 상속하며, 이 문서는 KAIROS의 차이만 기록한다. 아래 390px 배치는 정적 비교 시안을 위한 제안이며 실기 검증 결과가 아니다.
 
 ## 1. Product / Artifact concept
 
@@ -22,6 +22,9 @@ A의 열린 그룹, B의 묶음은 시안에서 보이는 상태를 뜻한다. �
 개요는 [개요 그룹 생성](</Users/sumpie/Desktop/AI/Projects/kalis magic/kalis_magic_playground/zz1/settings-ui.js>)에서 추가된다. 화면 커스텀은 [경로별 허용 조건](</Users/sumpie/Desktop/AI/Projects/kalis magic/kalis_magic_playground/zz1/settings-ui.js>)에 따라 제공되므로 비교 시안은 배포 경로에서 조건부 기능을 보장하지 않는다. 백업·복원처럼 확인되지 않은 기능은 새 그룹으로 만들지 않는다. 즉흥 세팅은 [현재 별도 즉흥 세팅](</Users/sumpie/Desktop/AI/Projects/kalis magic/kalis_magic_playground/zz1/index.html>)의 구분과 동작을 유지한다.
 
 기기 지원은 최신 [공통 디자인 SSOT](</Users/sumpie/Desktop/AI/Projects/kalis magic/PRODUCT_DESIGN_SYSTEM.md>)의 A–H 스마트폰·태블릿 클래스를 따른다. 390px 시안은 기준 화면이며 좁은 Fold cover와 태블릿에서도 설정 최대 폭 560px·44px 조작 타깃·스크롤·safe-area를 보존한다. 제품 지원은 스마트폰·태블릿만이다. PC 전용 설정 버튼·Shift+Esc·리허설 진입과 desktop 분기는 제거한다. OS·브라우저 식별 차단은 추가하지 않으며, 모바일 폼 입력·접근성 키보드·태블릿 펜·터치·개발 자동화는 보존한다.
+
+
+2026-10-01 추가 사용자 승인에 따라 개인용 zz1에서 먼저 확인한 설정 B를 기존 배포용 `/tools/kairos/`·`/tools/kairos-classic/`에도 같은 UI로 적용한다. 승인된 오른쪽 확대 상징·세로 중앙 정렬과 공연 외형 보존 원칙을 두 경로가 함께 따른다. 공유 원본은 [기존 KAIROS 스냅샷](</Users/sumpie/Desktop/AI/Projects/kalis magic/kalis_magic_playground/distribution-snapshots/kairos>)이며, [현재 공유 빌드 처리](</Users/sumpie/Desktop/AI/Projects/kalis magic/kalis_magic_playground/scripts/build-public.mjs>)의 인증 게이트·경로별 저장소 분리·manifest id와 scope·화면 커스텀 비활성 조건을 유지한다. 같은 UI를 쓰더라도 개인·공유 저장값이나 권한을 합치지 않는다. 다른 공유 앱의 스냅샷·UI는 유지한다. 이 문서는 KAIROS 동기화 범위의 승인을 기록하며 배포 완료를 뜻하지 않는다.
 
 ## 3. Settings accent / motif / texture / motion
 

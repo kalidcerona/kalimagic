@@ -45,3 +45,7 @@ zz6 C/D/F의 preset-name은 가까운 위치까지만 스크롤했을 때 고정
 최종 집중 재검증: 절대 Node 경로의 `mobile-verify.cjs --base-url http://127.0.0.1:19362 --baseline-url http://127.0.0.1:19365 --apps zz6,zz8 --out "/Users/sumpie/Desktop/AI/Projects/kalis magic/docs/product-design/2026-10-01/rollout/validation/diagnostic/focused"`: exit 0. 실제 출력은 `settingsCases:16`, `failedSettingsCases:0`, `failures:0`, `pngCount:108`이다. JSON 재계수로 설정 진입 16건, 합성 CSS 복원 16건, 실제 PNG 108개를 확인했다. 각 케이스의 실제 env() 대체 수는 zz6 14개, zz8 35개다. sizing 담당의 동시 수정이 반영된 현재 앱 서버를 확인했으며 이 도구는 앱 소스를 변경하지 않았다. 두 CJS의 `node --check`도 각각 exit 0, 출력 없음이다.
 
 RELEASE E의 최초 전체 실패는 `RELEASE_LANDSCAPE_DIAGNOSIS.md`에 별도로 기록했다. 현재·기준 각각 8회 진입 반복과 RELEASE A-H 재검증은 통과했으며 최초 결과는 보존했다. 요청한 네 앱의 가로 화면 설정·실제 동작 검사도 `release-entry/report.json`에 기록했다.
+
+공유 빌드의 별도 경로를 검사할 때만 `--apps zz1 --route tools/kairos` 또는 `--apps zz1 --route tools/kairos-classic`을 사용한다. `--route`는 앱 하나를 선택했을 때만 허용하고 탐색 경로만 바꾼다. 앱 프로필·설정 제스처·단언·개인 앱 기본 경로는 유지한다. HTTPS 접근 확인 코드를 우회하거나 네트워크를 가로채지 않는다.
+
+공유 KAIROS 승인 후 실제 dist 두 경로의 설정 16건과 세로·가로 타이머 4건을 확인했다. `KAIROS_SHARED_VALIDATION.md`에 원본12파일 동일성·빌드11파일 변환·실제 명령과 결과를 기록했다. 개인 기본 경로의 동작은 유지한다.
