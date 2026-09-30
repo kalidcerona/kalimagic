@@ -224,8 +224,8 @@ export const DISTRIBUTION_APPS = [
   { source: 'distribution-snapshots/usotsuki', target: 'usotsuki', tool: 'usotsuki' },
   { source: 'distribution-snapshots/tobira', target: 'tobira', tool: 'tobira' },
   { source: 'distribution-snapshots/spinner', target: 'tyche', tool: 'spinner' },
-  { source: 'zz1', target: 'kairos', tool: 'stopwatch-uni' },
-  { source: 'zz1', target: 'kairos-classic', tool: 'stopwatch' },
+  { source: 'distribution-snapshots/kairos', target: 'kairos', tool: 'stopwatch-uni' },
+  { source: 'distribution-snapshots/kairos', target: 'kairos-classic', tool: 'stopwatch' },
   { source: 'zz13', target: 'arosaegida', tool: 'arosaegida' }
 ];
 
@@ -255,9 +255,11 @@ async function buildDistributionApps() {
     });
     const indexPath = path.join(target, 'index.html');
     const html = await readFile(indexPath, 'utf8');
-    const isolatedHtml = app.source === 'zz1' ? html.replaceAll('stopwatch_', `friend-${app.target}_`).replaceAll('stopwatch2_', `friend-${app.target}-legacy_`).replaceAll('stopwatch-settings-entry-tutorial-', `friend-${app.target}-settings-entry-tutorial-`) : html;
+    // Key isolation follows the shared route, not the zz1 personal tree.
+    const isolateKairosStorage = app.target === 'kairos' || app.target === 'kairos-classic';
+    const isolatedHtml = isolateKairosStorage ? html.replaceAll('stopwatch_', `friend-${app.target}_`).replaceAll('stopwatch2_', `friend-${app.target}-legacy_`).replaceAll('stopwatch-settings-entry-tutorial-', `friend-${app.target}-settings-entry-tutorial-`) : html;
     await writeFile(indexPath, isolatedHtml.replace(/<body\b/, '<body data-magic-customize="off"').replace('<head>', `<head>\n${accessGuard(app.tool, app.target)}`));
-    if (app.source === 'zz1') {
+    if (isolateKairosStorage) {
       const logicPath = path.join(target, 'logic.js');
       const logic = await readFile(logicPath, 'utf8');
       await writeFile(logicPath, logic.replaceAll('stopwatch_', `friend-${app.target}_`).replaceAll('stopwatch2_', `friend-${app.target}-legacy_`));

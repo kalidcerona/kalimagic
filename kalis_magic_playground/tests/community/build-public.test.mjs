@@ -97,8 +97,8 @@ test('public build mirrors the current calculator and integrated stopwatch sourc
     { source: 'distribution-snapshots/usotsuki', target: 'usotsuki', tool: 'usotsuki' },
     { source: 'distribution-snapshots/tobira', target: 'tobira', tool: 'tobira' },
     { source: 'distribution-snapshots/spinner', target: 'tyche', tool: 'spinner' },
-    { source: 'zz1', target: 'kairos', tool: 'stopwatch-uni' },
-    { source: 'zz1', target: 'kairos-classic', tool: 'stopwatch' },
+    { source: 'distribution-snapshots/kairos', target: 'kairos', tool: 'stopwatch-uni' },
+    { source: 'distribution-snapshots/kairos', target: 'kairos-classic', tool: 'stopwatch' },
     { source: 'zz13', target: 'arosaegida', tool: 'arosaegida' }
   ]);
 });
@@ -213,6 +213,82 @@ test('admin distribution catalog lists one integrated stopwatch while keeping it
   assert.match(admin, /<h3>우소츠키\(USOTSUKI\)<\/h3>/);
   assert.doesNotMatch(admin, /data-app-card="stopwatch"/);
   assert.doesNotMatch(admin, /data-copy-link="\/tools\/kairos-classic\/"/);
+});
+
+test('personal KAIROS edits do not change either shared route', async () => {
+  await buildPublic();
+  const root = fileURLToPath(new URL('../..', import.meta.url));
+  const snapshotDir = path.join(root, 'distribution-snapshots', 'kairos');
+  const personalDir = path.join(root, 'zz1');
+  async function filesUnder(dir, prefix = '') {
+    const entries = await readdir(dir, { withFileTypes: true });
+    const parts = await Promise.all(entries.map(async (entry) => {
+      const name = path.join(prefix, entry.name);
+      return entry.isDirectory() ? filesUnder(path.join(dir, entry.name), name) : [name];
+    }));
+    return parts.flat().sort();
+  }
+  const snapshotFiles = (await filesUnder(snapshotDir)).filter((file) => !PRIVATE_PATTERNS.some((pattern) => pattern.test(file)));
+  assert.ok(snapshotFiles.includes('index.html') && snapshotFiles.includes('logic.js'));
+  assert.equal(snapshotFiles.includes('fullscreen.js'), false);
+  let personalDivergenceChecked = false;
+  for (const [target, tool] of [['kairos', 'stopwatch-uni'], ['kairos-classic', 'stopwatch']]) {
+    const distributedDir = path.join(root, 'dist', 'tools', target);
+    assert.deepEqual(await filesUnder(distributedDir), snapshotFiles, target);
+    const prefix = `friend-${target}_`;
+    for (const file of snapshotFiles) {
+      const [snapshotBytes, distributedBytes, personalBytes] = await Promise.all([
+        readFile(path.join(snapshotDir, file)),
+        readFile(path.join(distributedDir, file)),
+        readFile(path.join(personalDir, file)).catch((error) => { if (error.code === 'ENOENT') return null; throw error; })
+      ]);
+      let comparable = distributedBytes;
+      let expected = snapshotBytes;
+      let personalExpected = personalBytes;
+      if (file === 'index.html') {
+        const snapshotHtml = snapshotBytes.toString('utf8');
+        const personalHtml = personalBytes ? personalBytes.toString('utf8') : null;
+        const isolate = (html) => html
+          .replaceAll('stopwatch_', prefix)
+          .replaceAll('stopwatch2_', `friend-${target}-legacy_`)
+          .replaceAll('stopwatch-settings-entry-tutorial-', `friend-${target}-settings-entry-tutorial-`)
+          .replace(/<body\b/, '<body data-magic-customize="off"');
+        comparable = Buffer.from(distributedBytes.toString('utf8').replace(/\n  <script id="friend-apps-check">[\s\S]*?<\/script>/, ''));
+        expected = Buffer.from(isolate(snapshotHtml));
+        personalExpected = personalHtml === null ? null : Buffer.from(isolate(personalHtml));
+        const html = distributedBytes.toString('utf8');
+        assert.match(html, new RegExp(`tools\\/_check\\?tool=${tool}`));
+        assert.match(html, new RegExp(`${prefix}preset_cs`));
+        assert.match(html, new RegExp(`${prefix}ui_mode`));
+        assert.match(html, new RegExp(`friend-${target}-settings-entry-tutorial-v1`));
+        assert.doesNotMatch(html, /["']stopwatch_/);
+        assert.doesNotMatch(html, /["']stopwatch2_/);
+        assert.doesNotMatch(html, /["']stopwatch-settings-entry-tutorial-/);
+      } else if (file === 'logic.js') {
+        const isolate = (source) => source.replaceAll('stopwatch_', prefix).replaceAll('stopwatch2_', `friend-${target}-legacy_`);
+        const logic = distributedBytes.toString('utf8');
+        comparable = Buffer.from(logic);
+        expected = Buffer.from(isolate(snapshotBytes.toString('utf8')));
+        personalExpected = personalBytes ? Buffer.from(isolate(personalBytes.toString('utf8'))) : null;
+        assert.match(logic, new RegExp(`${prefix}preset_cs`));
+        assert.match(logic, new RegExp(`friend-${target}-legacy_preset_cs`));
+        assert.match(logic, new RegExp(`${prefix}storage_migrated_v2`));
+        assert.doesNotMatch(logic, /["']stopwatch_/);
+        assert.doesNotMatch(logic, /["']stopwatch2_/);
+      } else if (file === 'manifest.webmanifest') {
+        expected = Buffer.from(JSON.stringify({ ...JSON.parse(snapshotBytes), id: `/tools/${target}/`, start_url: './', scope: './' }, null, 2) + '\n');
+        personalExpected = personalBytes
+          ? Buffer.from(JSON.stringify({ ...JSON.parse(personalBytes), id: `/tools/${target}/`, start_url: './', scope: './' }, null, 2) + '\n')
+          : null;
+      }
+      assert.deepEqual(comparable, expected, `${target}/${file} must follow the kairos snapshot`);
+      if (personalExpected && !personalBytes.equals(snapshotBytes)) {
+        personalDivergenceChecked = true;
+        assert.notDeepEqual(comparable, personalExpected, `${target}/${file} leaked personal zz1`);
+      }
+    }
+  }
+  assert.equal(personalDivergenceChecked, true);
 });
 
 test('shared unlock stays on the pinned snapshot until explicit promotion', async () => {

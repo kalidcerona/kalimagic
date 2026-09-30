@@ -275,10 +275,13 @@
 
   <section id="settings" class="overlay" role="dialog" aria-modal="true" aria-label="공연 설정" hidden>
     <div class="panel settings-panel" data-settings-root>
-      <header><span class="eyebrow">PERFORMANCE SETTINGS</span><button id="settings-close" class="close" aria-label="설정 닫기" type="button">×</button></header>
-      <h1>티케 설정</h1>
-      <button id="start-performance" class="primary" type="button">마술 시작</button>
-      <details class="settings-disclosure">
+      <header><span class="eyebrow">티케 / 설정</span><button id="settings-close" class="close" aria-label="설정 닫기" type="button">닫기</button></header>
+      <div class="identity">
+        <div class="identity-copy"><span class="catalog-label">우연</span><h1>TYCHE</h1><p>우연이 잠깐 방향을 갖다.</p></div>
+        <svg class="sig" viewBox="24 0 58 48" aria-label="원과 고정 방향 표식"><circle cx="53" cy="27" r="17"/><path class="accent" d="M53 2v9 M53 27l9-9"/><circle cx="53" cy="27" r="1.5"/></svg>
+      </div>
+      <div class="body-groups">
+      <details class="settings-disclosure" open>
         <summary>목표 방향과 회전 차례</summary>
       <p class="setting-intro">공연 전에 목표 물건이 놓인 방향을 화면에서 한 번 터치하세요. 선택한 방향은 공연 화면에 표시되지 않습니다.</p>
       <div class="setting-row"><span>선택한 목표</span><strong id="target-value">선택 전</strong></div>
@@ -288,6 +291,8 @@
       <p class="setting-note">지정한 차례 외에는 목표 방향을 피해 무작위로 멈춥니다.</p>
       </details>
       <div class="install" id="install-app-group" data-install-state="browser"><button id="install-app" type="button">티케 앱 설치</button><p id="install-help" hidden></p></div>
+      </div>
+      <button id="start-performance" class="primary" type="button">마술 시작</button>
     </div>
   </section>
   <script type="module" src="./app.js"></script>

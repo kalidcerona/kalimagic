@@ -1,7 +1,7 @@
 :root {
   color-scheme: dark;
   font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
-  background: #0c241c;
+  background: #1a1512;
   color: #f6f1e6;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -21,7 +21,9 @@ button { cursor: pointer; }
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
   overflow: hidden;
-  background: linear-gradient(180deg, rgba(2, 9, 7, .12), transparent 45%, rgba(2, 9, 7, .12)), url('./casino-salon.jpg') center/cover no-repeat #0c241c;
+  /* Solid default only. An inline or more specific custom background still overrides these longhands. */
+  background-color: #1a1512;
+  background-image: none;
   box-shadow: none;
   touch-action: none;
   user-select: none;
@@ -283,4 +285,46 @@ button { cursor: pointer; }
 }
 @media (prefers-reduced-motion: reduce) {
   .wheel, .spinner-arrow, .wheel-pin { transition: none !important; }
+}
+
+/* Performance A surface. Geometry, hit area, and SVG path data stay in the rules above. */
+.wheel-area::before {
+  background: none;
+  box-shadow:
+    0 0 0 8px #1f1815,
+    0 0 0 10px #554632,
+    0 16px 24px rgba(0, 0, 0, .22);
+}
+.wheel-wrap {
+  background-color: #1a1512;
+  background-image: none;
+  box-shadow:
+    0 0 0 1px #1a120c,
+    0 16px 22px rgba(0, 0, 0, .42);
+}
+.wheel {
+  box-shadow:
+    inset 0 0 0 2px #24180f,
+    inset 0 0 0 5px #96815d,
+    inset 0 0 18px rgba(0, 0, 0, .35);
+}
+.wheel-face > circle:nth-of-type(1) { fill: #17120f; }
+.wheel-face > circle:nth-of-type(2) { fill: #96815d; }
+.wheel-face > circle:nth-of-type(3) { fill: #211912; }
+.wheel-face > circle:nth-of-type(4) { fill: #34261e; }
+.wheel-face > circle[r="24.6"] { fill: #96815d; }
+.wheel-face > circle[r="21.5"]:not([fill="none"]) { fill: #c3aa7d; }
+.wheel-face > circle:last-of-type { fill: #17120f; opacity: .12; }
+.spinner-arrow path:first-of-type { fill: #e5d6b9; stroke: #1a1512; }
+.spinner-arrow path:last-of-type { stroke: #f4efe9; opacity: .55; }
+.wheel-pin {
+  border-color: #c3aa7d;
+  background-color: #34261e;
+  background-image: none;
+  box-shadow: 0 0 0 3px #1a1512;
+}
+.wheel-pin span {
+  background-color: #c3aa7d;
+  background-image: none;
+  box-shadow: none;
 }

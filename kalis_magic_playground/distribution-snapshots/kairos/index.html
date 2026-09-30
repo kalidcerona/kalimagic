@@ -228,14 +228,9 @@
     <section id="settings" aria-label="숨김 설정" hidden>
       <div id="settings-card" data-settings-root>
         <img id="settings-brand" src="./brand-logo.jpg" alt="KAIROS" onerror="this.hidden=true">
-        <header id="settings-header"><div class="header-lead"><span class="eyebrow">카이로스 / 설정</span><h1 id="settings-title">설정</h1></div><button id="settings-close" type="button">닫기</button></header>
-        <div class="identity">
-          <div class="identity-copy"><span class="catalog-label">시간</span><p class="identity-name">KAIROS</p><p class="identity-desc">단 하나의 순간을 붙잡다.</p></div>
-          <svg class="sig" viewBox="0 0 104 36" aria-label="단 하나가 끊긴 직선 눈금"><path d="M4 26h43m9 0h44 M12 22v8 M28 22v8 M44 22v8 M60 17v15 M76 22v8 M92 22v8"/><path class="accent" d="M52 4v10"/></svg>
-        </div>
-        <div class="body-groups">
+        <header id="settings-header"><h1 id="settings-title">설정</h1><button id="settings-close" type="button">닫기</button></header>
         <div id="general-settings">
-        <details data-settings-group="direction" open><summary>공연 화면 방향</summary>
+        <details data-settings-group="direction"><summary>공연 화면 방향</summary>
         <p>관객에게 보여 줄 스톱워치 방향을 선택하세요.</p>
         <div id="settings-mode-buttons"><button id="mode-portrait" type="button" aria-pressed="false">세로</button><button id="mode-landscape" type="button" aria-pressed="false">가로</button></div>
         </details>
@@ -270,7 +265,6 @@
         </div>
         </section>
         <p id="sequence-status" aria-live="polite"></p>
-        </div>
         </div>
       </div>
     </section>
