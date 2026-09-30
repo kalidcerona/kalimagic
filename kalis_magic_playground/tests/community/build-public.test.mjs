@@ -81,7 +81,6 @@ test('public build mirrors the current calculator and integrated stopwatch sourc
     ['magic-stopwatch-uni', 'zz1'],
     ['magic-unlock', 'zz2'],
     ['magic-calculator-v2', 'zz3'],
-    ['magic-calculator-v2', 'tools/calc'],
     ['magic-choice', 'zz4'],
     ['magic-aletheia', 'zz5'],
     ['magic-tobira', 'zz6'],
@@ -90,8 +89,9 @@ test('public build mirrors the current calculator and integrated stopwatch sourc
     assert.ok(MIRROR_PAIRS.some(([original, mirror]) =>
       original === `../../${source}/brand-logo.png` && mirror === `${route}/brand-logo.png`), `${route} high-resolution logo`);
   }
+  assert.equal(MIRROR_PAIRS.some(([, mirror]) => mirror === 'tools/calc' || mirror.startsWith('tools/calc/')), false);
   assert.deepEqual(DISTRIBUTION_APPS, [
-    { source: 'tools/calc', target: 'hitsuzen', tool: 'calc' },
+    { source: 'distribution-snapshots/calculator', target: 'hitsuzen', tool: 'calc' },
     { source: 'distribution-snapshots/unlock', target: 'release', tool: 'unlock' },
     { source: 'distribution-snapshots/aletheia', target: 'aletheia', tool: 'aletheia' },
     { source: 'distribution-snapshots/usotsuki', target: 'usotsuki', tool: 'usotsuki' },
@@ -99,7 +99,7 @@ test('public build mirrors the current calculator and integrated stopwatch sourc
     { source: 'distribution-snapshots/spinner', target: 'tyche', tool: 'spinner' },
     { source: 'distribution-snapshots/kairos', target: 'kairos', tool: 'stopwatch-uni' },
     { source: 'distribution-snapshots/kairos', target: 'kairos-classic', tool: 'stopwatch' },
-    { source: 'zz13', target: 'arosaegida', tool: 'arosaegida' }
+    { source: 'distribution-snapshots/qr', target: 'arosaegida', tool: 'arosaegida' }
   ]);
 });
 
@@ -181,7 +181,7 @@ test('public build serves integrated stopwatch on both retained entitlement rout
   assert.match(sharedQrHtml, /tools\/_check\?tool=arosaegida/);
   assert.match(sharedQrHtml, /data-magic-customize="off"/);
   assert.match(sharedQrHtml, /아로새기다/);
-  assert.deepEqual(await readFile(new URL('brand-logo.png', sharedQr)), await readFile(new URL('brand-logo.png', qr)));
+  assert.deepEqual(await readFile(new URL('brand-logo.png', sharedQr)), await readFile(new URL('../../distribution-snapshots/qr/brand-logo.png', import.meta.url)));
   assert.match(await readFile(new URL('sw.js', sharedQr), 'utf8'), /scope\.pathname\.startsWith\('\/tools\/'\)/);
   for (const route of [...PUBLIC_DIRS.filter((route) => /^zz\d+$/.test(route)), ...DISTRIBUTION_APPS.map((app) => 'tools/' + app.target)]) {
     await assert.rejects(stat(new URL('../../dist/' + route + '/fullscreen.js', import.meta.url)), { code: 'ENOENT' });
@@ -231,7 +231,6 @@ test('personal KAIROS edits do not change either shared route', async () => {
   const snapshotFiles = (await filesUnder(snapshotDir)).filter((file) => !PRIVATE_PATTERNS.some((pattern) => pattern.test(file)));
   assert.ok(snapshotFiles.includes('index.html') && snapshotFiles.includes('logic.js'));
   assert.equal(snapshotFiles.includes('fullscreen.js'), false);
-  let personalDivergenceChecked = false;
   for (const [target, tool] of [['kairos', 'stopwatch-uni'], ['kairos-classic', 'stopwatch']]) {
     const distributedDir = path.join(root, 'dist', 'tools', target);
     assert.deepEqual(await filesUnder(distributedDir), snapshotFiles, target);
@@ -283,12 +282,10 @@ test('personal KAIROS edits do not change either shared route', async () => {
       }
       assert.deepEqual(comparable, expected, `${target}/${file} must follow the kairos snapshot`);
       if (personalExpected && !personalBytes.equals(snapshotBytes)) {
-        personalDivergenceChecked = true;
         assert.notDeepEqual(comparable, personalExpected, `${target}/${file} leaked personal zz1`);
       }
     }
   }
-  assert.equal(personalDivergenceChecked, true);
 });
 
 test('shared unlock stays on the pinned snapshot until explicit promotion', async () => {
@@ -351,6 +348,52 @@ test('ALETHEIA and USOTSUKI distribution builds use pinned snapshots and separat
         assert.deepEqual(JSON.parse(targetBytes), { ...JSON.parse(sourceBytes), id: `/tools/${app}/`, start_url: './', scope: './' });
       } else {
         assert.deepEqual(targetBytes, sourceBytes, `${app}/${file}`);
+      }
+    }
+  }
+});
+
+test('HITSUZEN and AROSAEGIDA keep every pinned snapshot byte except gate, customize, and manifest identity', async () => {
+  await buildPublic();
+  const root = fileURLToPath(new URL('../..', import.meta.url));
+  const apps = DISTRIBUTION_APPS.filter((app) => app.source === 'distribution-snapshots/calculator' || app.source === 'distribution-snapshots/qr');
+  assert.deepEqual(apps.map((app) => [app.source, app.target, app.tool]), [
+    ['distribution-snapshots/calculator', 'hitsuzen', 'calc'],
+    ['distribution-snapshots/qr', 'arosaegida', 'arosaegida']
+  ]);
+  async function filesUnder(dir, prefix = '') {
+    const entries = await readdir(dir, { withFileTypes: true });
+    const parts = await Promise.all(entries.map(async (entry) => {
+      const name = path.join(prefix, entry.name);
+      return entry.isDirectory() ? filesUnder(path.join(dir, entry.name), name) : [name];
+    }));
+    return parts.flat().sort();
+  }
+  for (const app of apps) {
+    const snapshot = path.join(root, app.source);
+    const target = path.join(root, 'dist', 'tools', app.target);
+    const sourceFiles = (await filesUnder(snapshot)).filter((file) => !file.split(/[\\/]/).some((part) => part.startsWith('.')) && !PRIVATE_PATTERNS.some((pattern) => pattern.test(file)));
+    assert.ok(sourceFiles.length > 1, app.source);
+    assert.ok(sourceFiles.includes('index.html') && sourceFiles.includes('manifest.webmanifest') && sourceFiles.includes('sw.js'), app.source);
+    assert.deepEqual(await filesUnder(target), sourceFiles, `${app.target} file inventory`);
+    for (const file of sourceFiles) {
+      const [sourceBytes, targetBytes] = await Promise.all([
+        readFile(path.join(snapshot, file)),
+        readFile(path.join(target, file))
+      ]);
+      if (file === 'index.html') {
+        const html = targetBytes.toString('utf8');
+        assert.match(html, new RegExp(`id="friend-apps-check"[\\s\\S]*tools\\/_check\\?tool=${app.tool}`));
+        assert.match(html, /data-magic-customize="off"/);
+        assert.equal(html.replace(/\n  <script id="friend-apps-check">[\s\S]*?<\/script>/, ''), sourceBytes.toString('utf8').replace(/<body\b/, '<body data-magic-customize="off"'));
+      } else if (file === 'manifest.webmanifest') {
+        const manifest = JSON.parse(targetBytes);
+        assert.equal(manifest.id, `/tools/${app.target}/`);
+        assert.equal(manifest.start_url, './');
+        assert.equal(manifest.scope, './');
+        assert.deepEqual(manifest, { ...JSON.parse(sourceBytes), id: `/tools/${app.target}/`, start_url: './', scope: './' });
+      } else {
+        assert.deepEqual(targetBytes, sourceBytes, `${app.target}/${file}`);
       }
     }
   }

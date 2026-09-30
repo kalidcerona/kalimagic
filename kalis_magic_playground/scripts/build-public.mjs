@@ -164,7 +164,6 @@ export const MIRROR_PAIRS = [
   ...SETTINGS_UI_FILES.map((file) => [`../../magic-asrai/${file}`, `zz8/${file}`]),
   ...SETTINGS_UI_FILES.map((file) => [`../../magic-alter/${file}`, `zz10/${file}`]),
   ...SETTINGS_UI_FILES.map((file) => [`../../magic-spinner/${file}`, `zz11/${file}`]),
-  ...SETTINGS_UI_FILES.map((file) => [`../../magic-calculator-v2/${file}`, `tools/calc/${file}`]),
   ['../../magic-calculator-v2/index.html', 'zz3/index.html'],
   ['../../magic-calculator-v2/sw.js', 'zz3/sw.js'],
   ['../../magic-calculator-v2/performance-link.js', 'zz3/performance-link.js'],
@@ -173,8 +172,6 @@ export const MIRROR_PAIRS = [
   ['../../magic-calculator-v2/icon.svg', 'zz3/icon.svg'],
   ['../../magic-calculator-v2/manifest.webmanifest', 'zz3/manifest.webmanifest'],
   ['../../magic-calculator-v2/brand-logo.jpg', 'zz3/brand-logo.jpg'],
-  ...['index.html', 'sw.js', 'performance-link.js', 'icon-192.png', 'icon-512.png', 'icon.svg', 'manifest.webmanifest', 'brand-logo.jpg']
-    .map((file) => [`../../magic-calculator-v2/${file}`, `tools/calc/${file}`]),
   ['../../magic-stopwatch-uni/index.html', 'zz1/index.html'],
   ['../../magic-stopwatch-uni/sw.js', 'zz1/sw.js'],
   ['../../magic-stopwatch-uni/logic.js', 'zz1/logic.js'],
@@ -209,7 +206,6 @@ export const MIRROR_PAIRS = [
     ['magic-stopwatch-uni', 'zz1'],
     ['magic-unlock', 'zz2'],
     ['magic-calculator-v2', 'zz3'],
-    ['magic-calculator-v2', 'tools/calc'],
     ['magic-choice', 'zz4'],
     ['magic-aletheia', 'zz5'],
     ['magic-tobira', 'zz6'],
@@ -217,8 +213,9 @@ export const MIRROR_PAIRS = [
   ].map(([source, route]) => [`../../${source}/brand-logo.png`, `${route}/brand-logo.png`])
 ];
 
+// Shared HITSUZEN and AROSAEGIDA copy pinned snapshots. tools/calc stays a legacy redirect, not a published tree.
 export const DISTRIBUTION_APPS = [
-  { source: 'tools/calc', target: 'hitsuzen', tool: 'calc' },
+  { source: 'distribution-snapshots/calculator', target: 'hitsuzen', tool: 'calc' },
   { source: 'distribution-snapshots/unlock', target: 'release', tool: 'unlock' },
   { source: 'distribution-snapshots/aletheia', target: 'aletheia', tool: 'aletheia' },
   { source: 'distribution-snapshots/usotsuki', target: 'usotsuki', tool: 'usotsuki' },
@@ -226,7 +223,7 @@ export const DISTRIBUTION_APPS = [
   { source: 'distribution-snapshots/spinner', target: 'tyche', tool: 'spinner' },
   { source: 'distribution-snapshots/kairos', target: 'kairos', tool: 'stopwatch-uni' },
   { source: 'distribution-snapshots/kairos', target: 'kairos-classic', tool: 'stopwatch' },
-  { source: 'zz13', target: 'arosaegida', tool: 'arosaegida' }
+  { source: 'distribution-snapshots/qr', target: 'arosaegida', tool: 'arosaegida' }
 ];
 
 function accessGuard(tool, target) {
