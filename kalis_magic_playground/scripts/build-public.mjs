@@ -143,7 +143,7 @@ export const MEMDECK_FILES = [
   'manifest.webmanifest', 'sw.js', 'icon.svg', 'icon-192.png', 'icon-512.png'
 ];
 export const QR_FILES = [
-  'index.html', 'style.css', 'app.mjs', 'core.mjs', 'manifest.webmanifest', 'sw.js', 'brand-logo.jpg',
+  'index.html', 'style.css', 'app.mjs', 'core.mjs', 'manifest.webmanifest', 'sw.js', 'brand-logo.png',
   'icons/icon-192.png', 'icons/icon-512.png', 'vendor/qrcodegen.js', 'vendor/jsQR.js',
   'vendor/LICENSE-nayuki.txt', 'vendor/LICENSE-jsqr.txt'
 ];

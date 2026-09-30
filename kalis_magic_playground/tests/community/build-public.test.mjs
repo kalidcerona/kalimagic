@@ -181,7 +181,7 @@ test('public build serves integrated stopwatch on both retained entitlement rout
   assert.match(sharedQrHtml, /tools\/_check\?tool=arosaegida/);
   assert.match(sharedQrHtml, /data-magic-customize="off"/);
   assert.match(sharedQrHtml, /아로새기다/);
-  assert.deepEqual(await readFile(new URL('brand-logo.jpg', sharedQr)), await readFile(new URL('brand-logo.jpg', qr)));
+  assert.deepEqual(await readFile(new URL('brand-logo.png', sharedQr)), await readFile(new URL('brand-logo.png', qr)));
   assert.match(await readFile(new URL('sw.js', sharedQr), 'utf8'), /scope\.pathname\.startsWith\('\/tools\/'\)/);
   for (const route of [...PUBLIC_DIRS.filter((route) => /^zz\d+$/.test(route)), ...DISTRIBUTION_APPS.map((app) => 'tools/' + app.target)]) {
     await assert.rejects(stat(new URL('../../dist/' + route + '/fullscreen.js', import.meta.url)), { code: 'ENOENT' });
