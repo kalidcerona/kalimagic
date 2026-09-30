@@ -47,11 +47,12 @@ function setup(path, response, overrides = {}) {
   return { panel, calls, location, flush, text, button };
 }
 
-test('all six destinations are named in the login prompt', async () => {
+test('all distribution destinations are named in the login prompt', async () => {
   for (const [path, name] of [
     ['/tools/calc/', 'HITSUZEN'], ['/tools/stopwatch/', 'KAIROS'],
     ['/tools/unlock/', '레리즈'], ['/tools/stopwatch-uni/', 'KAIROS'],
-    ['/tools/aletheia/', 'ALETHEIA'], ['/tools/usotsuki/', 'USOTSUKI']
+    ['/tools/aletheia/', 'ALETHEIA'], ['/tools/usotsuki/', 'USOTSUKI'],
+    ['/tools/tobira/', 'TOBIRA'], ['/tools/tyche/', 'TYCHE'], ['/tools/arosaegida/', '아로새기다']
   ]) {
     const ui = setup(path, null, { getSession: async () => null });
     await ui.flush();
@@ -115,4 +116,24 @@ test('failed account change remains recoverable', async () => {
   assert.match(ui.text(), /KAIROS.*연결에 실패/);
   assert.ok(ui.button('다시 시도'));
   assert.ok(ui.button('다른 계정으로 로그인'));
+});
+
+
+test('AROSAegida requests friend approval and returns to its own safe path after approval', async () => {
+  const path = '/tools/arosaegida/?from=invite';
+  const pending = setup(path, { ok: false, status: 403, json: async () => ({ status: 'pending' }) });
+  await pending.flush();
+  assert.match(pending.text(), /아로새기다.*신청이 접수/);
+  assert.doesNotMatch(pending.text(), /구매가 확인/);
+  assert.equal(JSON.parse(pending.calls[0][1].body).tool, 'arosaegida');
+  const approved = setup(path, { ok: true });
+  await approved.flush();
+  assert.equal(approved.location.replacedWith, path);
+  const context = vm.createContext({});
+  vm.runInContext(gateSource, context);
+  for (const bad of ['/tools/arosaegida/../admin.html', '/tools/arosaegida/%2e%2e/admin.html', '//evil.test/tools/arosaegida/', '/tools/arosaegida//evil.test']) {
+    assert.equal(context.ToolGateUtil.safeTo(bad), '/tools/hitsuzen/');
+  }
+  assert.equal(context.ToolGateUtil.toolFromPath(path), 'arosaegida');
+  assert.equal(context.ToolGateUtil.selfTest().failed, 0);
 });

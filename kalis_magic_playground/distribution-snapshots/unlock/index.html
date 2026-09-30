@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="theme-color" content="#000000">
   <title>RELEASE · 레리즈</title>
   <script src="./performance-link.js" defer></script>
@@ -188,6 +188,9 @@
     .time-colon::before, .time-colon::after { content: ''; display: block; width: .09em; height: .09em; border-radius: 50%; background: currentColor; }
     @media (prefers-reduced-motion: reduce) { #time-clock span { animation: none !important; } }
     #settings-screen { z-index: 5; overflow-y: auto; background: #101115; padding: 28px 22px max(32px, env(safe-area-inset-bottom)); touch-action: pan-y; }
+    .desktop-settings-entry { position: fixed; z-index: 50; top: max(12px, env(safe-area-inset-top)); right: max(12px, env(safe-area-inset-right)); min-height: 44px; padding: 0 14px; border: 1px solid #ffffff66; border-radius: 12px; background: #1b1b20eF; color: #fff; font: 600 14px system-ui, sans-serif; }
+    .desktop-settings-help { display: none; }
+    @media (any-hover: hover) and (any-pointer: fine) { .desktop-settings-help { display: block; color: #c4c5cc; font-size: 13px; } }
     .settings-inner { max-width: 480px; margin: auto; }
     #settings-brand { display: block; width: min(100%, 300px); height: auto; max-height: 110px; object-fit: contain; margin: 0 auto 18px; }
     .eyebrow { color: #aaa4f7; font-size: 11px; font-weight: 700; letter-spacing: 3px; }
@@ -318,6 +321,7 @@
     </section>
     <section id="settings-screen" class="screen" aria-label="설정" hidden>
       <div class="settings-inner" data-settings-root>
+        <p class="desktop-settings-help">PC에서는 공연 화면의 ‘설정’ 버튼이나 Shift+Esc를 사용하세요.</p>
         <img id="settings-brand" src="./brand-logo.jpg" alt="RELEASE" onerror="this.hidden=true">
         <div class="eyebrow">RELEASE</div>
         <h1>레리즈 설정</h1>
@@ -397,12 +401,38 @@
     </section>
     <div id="toast" role="status" hidden></div>
   </main>
+  <button id="desktop-settings-entry" class="desktop-settings-entry" type="button" aria-label="PC 설정 열기, Shift+Escape" hidden>설정 · Shift+Esc</button>
   <script type="module" src="./install-prompt.js"></script>
   <script type="module">
     import { FINGERPRINT_HOLD_MS, normalizeSettings, storageIdentityForPath, selectedAttemptReveal, homeSwipeTarget, completeHomeSwipe, lockScreenCopy, createState, pushDigit, submitPin, fingerprintHold, attemptFeedback, feedbackVibration, deleteDigit, clearCurrent, toggleDigits, reset, isHomeGestureArea, peekOffset, registerTwoFingerTap, settleTwoFingerTaps, registerLockTap, formatAttemptLabel } from './logic.js';
 
     import { hiddenDigit, appendMinuteDigit, registerEmergencyTap, timeMachineClock, isSettingsSwipe, horizontalPeekOffset } from './time-machine.js';
 
+    // BEGIN DESKTOP SETTINGS ACCESS
+    function bindDesktopSettingsAccess(button, open, canOpen = () => true, canShow = canOpen) {
+      const media = window.matchMedia('(any-hover: hover) and (any-pointer: fine)');
+      const updateButton = () => { button.hidden = !media.matches || !canShow(); };
+      updateButton();
+      media.addEventListener?.('change', updateButton);
+      const isEditingTarget = (target) => {
+        const element = target?.nodeType === 3 ? target.parentElement : target;
+        return Boolean(element?.isContentEditable || element?.closest?.('input, textarea, select, [contenteditable]:not([contenteditable="false"])'));
+      };
+      const activate = (event) => {
+        if (isEditingTarget(event.target) || !canOpen()) return false;
+        event.preventDefault?.();
+        open();
+        updateButton();
+        return true;
+      };
+      button.addEventListener('click', activate);
+      window.addEventListener('keydown', (event) => {
+        if (event.key !== 'Escape' || !event.shiftKey || event.ctrlKey || event.metaKey || event.altKey || event.isComposing || event.repeat) return;
+        activate(event);
+      });
+      return { activate, updateButton };
+    }
+    // END DESKTOP SETTINGS ACCESS
     const $ = (id) => document.getElementById(id);
     const STORAGE = storageIdentityForPath(location.pathname);
     const SETTINGS_KEY = STORAGE.settingsKey;
@@ -422,6 +452,7 @@
     let settings = normalizeSettings(saved && typeof saved === 'object' ? saved : {}, STORAGE.personal);
     let state = createState(settings.digits);
     let screen = 'settings';
+    let desktopSettingsAccess = null;
     let feedbackTimer = null;
     let feedback = null;
     let unlockTimer = null;
@@ -655,6 +686,7 @@
           }, UNLOCK_ANIMATION_MS);
         }
       }
+      desktopSettingsAccess?.updateButton();
       if (next === 'settings') { populateForm(); $('settings-screen').scrollTop = 0; }
       if (next === 'time-black') startRewindGuide();
       else stopRewindGuide();
@@ -1297,6 +1329,12 @@
     populateForm();
     applyAppearance(settings);
     // Performance does not depend on opening or decoding the image database.
+    desktopSettingsAccess = bindDesktopSettingsAccess(
+      $('desktop-settings-entry'),
+      () => gestureAction('settings'),
+      () => screen !== 'settings',
+      () => screen !== 'settings',
+    );
     showScreen('input');
     imageKeys.forEach((key) => { $(`${key}-info`).textContent = '기본 배경 사용 · 저장된 사진을 확인하는 중입니다.'; });
     prepareOffline();

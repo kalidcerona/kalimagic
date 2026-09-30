@@ -17,7 +17,7 @@ export function normalizeSettings(value = {}, personal = false) {
     delaySeconds: number('delaySeconds', 8, 0, 300),
     cropTop: Math.round(number('cropTop', 0, 0, 2000)),
     imagePosition: number('imagePosition', 50, 0, 100),
-    statusStyle: value.statusStyle === 'default' ? 'default' : 'black-translucent',
+    statusStyle: value.statusStyle === 'black-translucent' ? 'black-translucent' : 'default',
     statusColor: /^#[0-9a-f]{6}$/i.test(value.statusColor ?? '') ? value.statusColor : '#000000',
   };
 }

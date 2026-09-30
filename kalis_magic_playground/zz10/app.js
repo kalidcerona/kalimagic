@@ -296,6 +296,37 @@ function stopCamera(showSetup = true) {
   updateStateNote();
 }
 
+// Prefer the front camera without requiring facingMode. Many desktop webcams omit
+// that metadata and reject exact:user. The <video> stage is not CSS-mirrored;
+// analysis samples the same unmirrored buffer, so neither path may flip alone.
+const USER_CAMERA = { facingMode: { ideal: "user" }, width: { ideal: 1280 }, height: { ideal: 720 } };
+const GENERIC_CAMERA = { width: { ideal: 1280 }, height: { ideal: 720 } };
+
+function cameraConstraintMiss(error) {
+  return error?.name === "OverconstrainedError" || error?.name === "NotFoundError";
+}
+
+async function requestCameraStream() {
+  try {
+    return await navigator.mediaDevices.getUserMedia({ audio: false, video: USER_CAMERA });
+  } catch (error) {
+    // Permission denial must not be asked again. Only a missing or overconstrained
+    // camera may try one generic device.
+    if (error?.name === "NotAllowedError" || !cameraConstraintMiss(error)) throw error;
+    return navigator.mediaDevices.getUserMedia({ audio: false, video: GENERIC_CAMERA });
+  }
+}
+
+function cameraStartMessage(error) {
+  if (error?.name === "NotAllowedError") {
+    return "카메라 권한이 거부됐습니다. 브라우저 설정에서 권한을 허용한 뒤 다시 시작해 주세요.";
+  }
+  if (cameraConstraintMiss(error)) {
+    return "사용할 수 있는 카메라가 없습니다. 카메라 연결 상태를 확인해 주세요.";
+  }
+  return error?.message || "카메라를 열 수 없습니다. 다른 앱의 카메라 사용을 종료한 뒤 다시 시도해 주세요.";
+}
+
 async function startCamera() {
   if (stream) return;
   const button = $("start");
@@ -307,10 +338,7 @@ async function startCamera() {
       throw new Error("HTTPS 또는 localhost에서 열어야 카메라를 사용할 수 있습니다.");
     }
     if (!sampleContext) throw new Error("이 브라우저는 영상 분석을 지원하지 않습니다.");
-    stream = await navigator.mediaDevices.getUserMedia({
-      audio: false,
-      video: { facingMode: { exact: "user" }, width: { ideal: 1280 }, height: { ideal: 720 } },
-    });
+    stream = await requestCameraStream();
     cameraEnded = false;
     video.srcObject = stream;
     await video.play();
@@ -339,12 +367,13 @@ async function startCamera() {
     closeGestureGuide(false);
     message.textContent = "시작을 누르면 브라우저가 카메라 사용 권한을 묻습니다. 허용을 선택해 주세요. 영상은 기기 밖으로 전송하거나 저장하지 않습니다.";
   } catch (error) {
-    stopCamera();
-    message.textContent = error.name === "NotAllowedError"
-      ? "카메라 권한이 거부됐습니다. 브라우저 설정에서 권한을 허용한 뒤 다시 시작해 주세요."
-      : error.name === "OverconstrainedError" || error.name === "NotFoundError"
-        ? "전면 카메라를 찾을 수 없습니다. 기기의 카메라 상태를 확인해 주세요."
-        : error.message || "카메라를 열 수 없습니다. 다른 앱의 카메라 사용을 종료한 뒤 다시 시도해 주세요.";
+    if (stream) stopCamera();
+    else {
+      video.srcObject = null;
+      stage.hidden = true;
+      setup.hidden = false;
+    }
+    message.textContent = cameraStartMessage(error);
   } finally {
     button.disabled = false;
   }

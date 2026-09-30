@@ -471,7 +471,7 @@ async function startTwo() {
   enterPerformance(started.session);
 }
 
-function enterPerformance(nextSession) {
+function enterPerformance(nextSession, { showGuide = true } = {}) {
   session = nextSession;
   performing = true;
   liveSignature = '';
@@ -482,7 +482,7 @@ function enterPerformance(nextSession) {
   document.title = '목록';
   document.body.dataset.view = 'performance';
   renderPerformance();
-  maybeShowGestureGuide();
+  if (showGuide) maybeShowGestureGuide();
 }
 
 function exitPerformance() {
@@ -1217,6 +1217,27 @@ document.addEventListener('touchend', (event) => {
 
 document.addEventListener('touchcancel', () => { armed = null; }, { passive: true });
 
+// Boot uses a validated snapshot and never rewrites a saved or corrupt store.
+function startBootPerformance() {
+  const candidates = store.presets.length ? store.presets : (recoveryState?.partial?.presets || []);
+  for (const preset of candidates) {
+    const started = beginPerformance({ ...store, presets: candidates }, { mode: 'single', presetId: preset.id });
+    if (started.ok) {
+      enterPerformance(started.session, { showGuide: false });
+      return;
+    }
+  }
+  const sample = addPreset([], {
+    name: '기본 메모', appearance: 'memo',
+    items: Array.from({ length: 99 }, (_, index) => `메모 ${index + 1}`), forceItem: '별빛',
+  }, { now: 0, rand: 0 });
+  if (!sample.ok) return;
+  const startupStore = { ...emptyState(), presets: sample.presets };
+  if (!recoveryState) store = startupStore;
+  const started = beginPerformance(startupStore, { mode: 'single', presetId: sample.preset.id });
+  if (started.ok) enterPerformance(started.session, { showGuide: false });
+}
+
 loadInputGuidePreference();
 
 const loaded = loadFromStorage(localStorage);
@@ -1231,6 +1252,7 @@ renderRecovery();
 renderSaved();
 renderTwo();
 renderTargets('');
+startBootPerformance();
 
 if ('serviceWorker' in navigator && (location.protocol === 'http:' || location.protocol === 'https:')) {
   navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(() => {});

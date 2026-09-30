@@ -1,9 +1,9 @@
 (function () {
   var g = typeof window !== 'undefined' ? window : globalThis;
   var DEFAULT_TO = '/tools/hitsuzen/';
-  var ALLOWED = /^\/tools\/(?:calc|stopwatch|unlock|stopwatch-uni|aletheia|usotsuki|tobira|spinner|hitsuzen|release|kairos|kairos-classic|tyche)\//;
+  var ALLOWED = /^\/tools\/(?:calc|stopwatch|unlock|stopwatch-uni|aletheia|usotsuki|tobira|spinner|hitsuzen|release|kairos|kairos-classic|tyche|arosaegida)\//;
 
-  // 도구 게이트는 두 도구 경로로만 되돌려보낸다. 그 밖의 값은 전부 기본 경로로 떨어뜨린다.
+  // Return only to allow-listed local distribution paths.
   function safeTo(raw) {
     if (typeof raw !== 'string' || !raw) return DEFAULT_TO;
     if (raw.indexOf('\\') !== -1 || raw.indexOf('://') !== -1) return DEFAULT_TO;
@@ -19,6 +19,7 @@
     if (/^\/tools\/aletheia\//.test(path)) return 'aletheia';
     if (/^\/tools\/usotsuki\//.test(path)) return 'usotsuki';
     if (/^\/tools\/tobira\//.test(path)) return 'tobira';
+    if (/^\/tools\/arosaegida\//.test(path)) return 'arosaegida';
     if (/^\/tools\/(?:spinner|tyche)\//.test(path)) return 'spinner';
     return /^\/tools\/(?:stopwatch|kairos-classic)\//.test(path) ? 'stopwatch' : 'calc';
   }
@@ -34,6 +35,7 @@
       ['/tools/stopwatch-uni/', '/tools/stopwatch-uni/'],
       ['/tools/aletheia/', '/tools/aletheia/'],
       ['/tools/usotsuki/', '/tools/usotsuki/'],
+      ['/tools/arosaegida/', '/tools/arosaegida/'],
       ['/tools/calc/?x=1', '/tools/calc/?x=1'],
       ['//evil.com', DEFAULT_TO],
       ['https://evil.com', DEFAULT_TO],
@@ -52,13 +54,14 @@
       if (!ok) failed += 1;
       lines.push((ok ? 'PASS' : 'FAIL') + ' safeTo(' + JSON.stringify(row[0]) + ') = ' + JSON.stringify(actual) + (ok ? '' : ' (expected ' + JSON.stringify(row[1]) + ')'));
     });
-    [['/tools/stopwatch/', 'stopwatch'], ['/tools/calc/', 'calc'], ['/tools/unlock/', 'unlock'], ['/tools/stopwatch-uni/', 'stopwatch-uni'], ['/tools/aletheia/', 'aletheia'], ['/tools/usotsuki/', 'usotsuki'], [DEFAULT_TO, 'calc']].forEach(function (row) {
+    var toolCases = [['/tools/stopwatch/', 'stopwatch'], ['/tools/calc/', 'calc'], ['/tools/unlock/', 'unlock'], ['/tools/stopwatch-uni/', 'stopwatch-uni'], ['/tools/aletheia/', 'aletheia'], ['/tools/usotsuki/', 'usotsuki'], ['/tools/arosaegida/', 'arosaegida'], [DEFAULT_TO, 'calc']];
+    toolCases.forEach(function (row) {
       var actual = toolFromPath(row[0]);
       var ok = actual === row[1];
       if (!ok) failed += 1;
       lines.push((ok ? 'PASS' : 'FAIL') + ' toolFromPath(' + JSON.stringify(row[0]) + ') = ' + JSON.stringify(actual));
     });
-    lines.push(failed === 0 ? 'ALL PASS (' + cases.length + '+7)' : failed + ' FAILED');
+    lines.push(failed === 0 ? 'ALL PASS (' + cases.length + '+' + toolCases.length + ')' : failed + ' FAILED');
     return { failed: failed, text: lines.join('\n') };
   }
 

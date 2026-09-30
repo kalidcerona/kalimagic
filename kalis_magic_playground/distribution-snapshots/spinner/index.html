@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0c241c">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="TYCHE">
   <meta name="description" content="손가락으로 돌리는 회전판">
   <link rel="manifest" href="./manifest.webmanifest">
@@ -253,7 +253,6 @@
       <header><span class="eyebrow">PERFORMANCE SETTINGS</span><button id="settings-close" class="close" aria-label="설정 닫기" type="button">×</button></header>
       <h1>티케 설정</h1>
       <button id="start-performance" class="primary" type="button">마술 시작</button>
-      <p data-fullscreen-note hidden>이 브라우저는 상태 막대를 숨기는 전체 화면을 지원하지 않습니다. 홈 화면에 추가하면 주소창은 줄일 수 있지만, 기기에 따라 시간·배터리 표시는 남을 수 있습니다.</p>
       <details class="settings-disclosure">
         <summary>목표 방향과 회전 차례</summary>
       <p class="setting-intro">공연 전에 목표 물건이 놓인 방향을 화면에서 한 번 터치하세요. 선택한 방향은 공연 화면에 표시되지 않습니다.</p>
@@ -266,7 +265,6 @@
       <div class="install" id="install-app-group" data-install-state="browser"><button id="install-app" type="button">티케 앱 설치</button><p id="install-help" hidden></p></div>
     </div>
   </section>
-  <script src="./fullscreen.js"></script>
   <script type="module" src="./app.js"></script>
 </body>
 </html>

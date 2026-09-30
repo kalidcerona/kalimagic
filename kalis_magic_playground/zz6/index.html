@@ -8,7 +8,7 @@
   <meta name="description" content="탭한 자리에 평평한 물건을 두는 공연용 화면">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="TOBIRA">
   <title>TOBIRA</title>
   <link rel="manifest" href="./manifest.webmanifest?v=20260927-tobira-status">
@@ -17,18 +17,11 @@
   <link rel="stylesheet" href="./style.css">
   <script>
     (function () {
+      document.documentElement.setAttribute('data-boot', 'loading');
       try {
-        var raw = localStorage.getItem('tobira.v1');
-        if (!raw) return;
-        var data = JSON.parse(raw);
-        if (!data || data.mode !== 'performance' || !Array.isArray(data.presets)) return;
-        document.documentElement.setAttribute('data-boot', 'loading');
         document.title = '동전';
         var theme = document.querySelector('meta[name="theme-color"]');
         if (theme) theme.setAttribute('content', '#000000');
-        if (sessionStorage.getItem('tobira.session-gone') === '1') {
-          document.documentElement.setAttribute('data-boot-gone', '1');
-        }
       } catch (error) {
         document.title = 'TOBIRA';
       }
@@ -182,7 +175,7 @@
 
       <section class="install-panel" aria-labelledby="install-heading" hidden>
         <h2 id="install-heading">TOBIRA 설치</h2>
-        <p>홈 화면에 추가하면 전체 화면으로 빠르게 열 수 있습니다.</p>
+        <p>홈 화면에 추가하면 앱 아이콘으로 빠르게 열 수 있습니다.</p>
         <button type="button" class="button button-quiet" data-install-action hidden>설치</button>
         <p class="install-instructions" data-install-instructions role="status" hidden></p>
       </section>

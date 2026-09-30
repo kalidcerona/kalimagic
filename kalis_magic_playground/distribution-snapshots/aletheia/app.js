@@ -37,6 +37,34 @@ import {
 } from './logic.js';
 import { createDeckSlots } from './deck-loader.js';
 
+const gestureGuide = document.getElementById('settings-gesture-guide');
+const gestureGuideDismiss = document.getElementById('settings-gesture-dismiss');
+const GESTURE_GUIDE_KEY = 'aletheia.distribution.settings-gesture-guide.v1';
+let gestureGuideShown = false;
+let bootingPerformance = true;
+
+function maybeShowGestureGuide() {
+  if (bootingPerformance || gestureGuideShown) return;
+  try {
+    if (localStorage.getItem(GESTURE_GUIDE_KEY) === 'done') return;
+  } catch { /* Private browsing can block storage. */ }
+  gestureGuideShown = true;
+  gestureGuide.hidden = false;
+  gestureGuideDismiss.focus();
+}
+
+function hideGestureGuide() {
+  gestureGuide.hidden = true;
+}
+
+gestureGuideDismiss.addEventListener('click', () => {
+  hideGestureGuide();
+  try { localStorage.setItem(GESTURE_GUIDE_KEY, 'done'); } catch { /* Keep this session dismissed. */ }
+});
+for (const type of ['touchstart', 'touchmove', 'touchend', 'touchcancel']) {
+  gestureGuide.addEventListener(type, (event) => event.stopPropagation());
+}
+
 const STORAGE_KEY = 'aletheia.distribution.meta.v1';
 const CUSTOM_KEY = 'aletheia.distribution.custom12.v1';
 const PHOTO_SETS_KEY = 'aletheia.distribution.photoSets.v2';
@@ -1332,6 +1360,7 @@ function destroyRunning() {
 }
 
 function stopPerformance() {
+  hideGestureGuide();
   hideCellGuide();
   clearContacts();
   destroyRunning();
@@ -1581,6 +1610,7 @@ function showPerformanceSurface() {
   } catch {
     try { canvas.focus(); } catch { /* keyboard listener is on window */ }
   }
+  maybeShowGestureGuide();
 }
 
 function slotLabel(card) {
@@ -2201,8 +2231,28 @@ async function boot() {
   syncControls();
 }
 
+async function startBootPerformance() {
+  try {
+    if (!corrupt && !storageLocked) {
+      const selectedId = meta.selectedId;
+      const candidates = [...meta.presets].sort((a, b) => Number(b.id === selectedId) - Number(a.id === selectedId));
+      for (const preset of candidates) {
+        meta.selectedId = preset.id;
+        await startPerformance();
+        if (view === 'performance') return;
+      }
+      meta.selectedId = selectedId;
+    }
+    await startCardPerformance();
+  } finally {
+    bootingPerformance = false;
+  }
+}
+
 boot().catch(() => {
   setError(MESSAGES.storageReadFailed);
+}).then(startBootPerformance).catch(() => {
+  setError('공연 화면을 준비하지 못했습니다. 저장된 데이터는 바꾸지 않았습니다.');
 });
 requestAnimationFrame(() => {
   if (view === 'settings') warmCourtDeck();

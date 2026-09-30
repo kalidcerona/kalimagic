@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0c241c">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="TYCHE">
   <meta name="description" content="손가락으로 돌리는 회전판">
   <link rel="manifest" href="./manifest.webmanifest">
@@ -17,6 +17,29 @@
   <style>
     html.spinner-standalone #install-app-group { display: none !important; }
     #green-sector-core.is-acknowledged { fill: #2a9a6c; }
+    /* Pointer desktops only. Touch performances keep the stage clear. */
+    #desktop-settings {
+      position: fixed;
+      z-index: 4;
+      top: max(10px, env(safe-area-inset-top));
+      right: max(10px, env(safe-area-inset-right));
+      min-width: 44px;
+      min-height: 44px;
+      padding: 6px 10px;
+      border: 1px solid rgba(228, 207, 154, .28);
+      border-radius: 999px;
+      background: rgba(12, 24, 20, .38);
+      color: rgba(246, 237, 212, .62);
+      font-size: 11px;
+      letter-spacing: 0;
+      opacity: .45;
+    }
+    #desktop-settings:hover,
+    #desktop-settings:focus-visible {
+      opacity: 1;
+      background: rgba(12, 24, 20, .82);
+      color: #f6edd4;
+    }
   </style>
   <script src="./settings-ui.js" defer></script>
 </head>
@@ -233,6 +256,7 @@
       </section>
     </div>
   </main>
+  <button id="desktop-settings" type="button" hidden aria-label="설정 열기" aria-keyshortcuts="Shift+Escape" title="설정 열기 (Shift+Esc)">설정</button>
 
   <section id="guide" class="overlay guide" role="dialog" aria-modal="true" aria-label="회전판 시작 안내" hidden>
     <div class="panel guide-panel">
@@ -243,6 +267,7 @@
       <div class="guide-help">
         <p><span aria-hidden="true">1</span><span>공연 전 목표 방향을 한 번 지정하세요.</span></p>
         <p><span aria-hidden="true">⌄</span><span>두 손가락을 아래로 쓸어 설정을 여세요.</span></p>
+        <p><span aria-hidden="true">⇧</span><span>리허설에서 키보드가 있으면 Shift+Esc로 설정을 열 수 있습니다. 마우스를 쓰는 화면에서는 오른쪽 위의 설정을 누르세요. 관객 앞에서 쓰는 동작이 아닙니다.</span></p>
       </div>
       <button id="guide-close" class="primary" type="button">시작하기</button>
     </div>
@@ -253,7 +278,6 @@
       <header><span class="eyebrow">PERFORMANCE SETTINGS</span><button id="settings-close" class="close" aria-label="설정 닫기" type="button">×</button></header>
       <h1>티케 설정</h1>
       <button id="start-performance" class="primary" type="button">마술 시작</button>
-      <p data-fullscreen-note hidden>이 브라우저는 상태 막대를 숨기는 전체 화면을 지원하지 않습니다. 홈 화면에 추가하면 주소창은 줄일 수 있지만, 기기에 따라 시간·배터리 표시는 남을 수 있습니다.</p>
       <details class="settings-disclosure">
         <summary>목표 방향과 회전 차례</summary>
       <p class="setting-intro">공연 전에 목표 물건이 놓인 방향을 화면에서 한 번 터치하세요. 선택한 방향은 공연 화면에 표시되지 않습니다.</p>
@@ -266,7 +290,6 @@
       <div class="install" id="install-app-group" data-install-state="browser"><button id="install-app" type="button">티케 앱 설치</button><p id="install-help" hidden></p></div>
     </div>
   </section>
-  <script src="./fullscreen.js"></script>
   <script type="module" src="./app.js"></script>
 </body>
 </html>

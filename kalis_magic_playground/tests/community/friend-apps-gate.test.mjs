@@ -7,7 +7,7 @@ import { decideAccess, requestFriendApp } from '../../netlify/functions/tool-acc
 import { isValidTool, accessTableForTool, postToolAccess, deleteToolAccess } from '../../netlify/functions/admin-tools.mjs';
 import { signGateCookie, verifyGateCookie, gateCookieName } from '../../netlify/functions/_lib/tool-gate.mjs';
 import { clearGateCookie, allowOnCheckError, selectGate } from '../../netlify/functions/tool-check.mjs';
-import { friendAccessDecision, findFriendAccess } from '../../netlify/functions/_lib/friend-app-access.mjs';
+import { FRIEND_APP_TOOLS, friendAccessDecision, findFriendAccess } from '../../netlify/functions/_lib/friend-app-access.mjs';
 
 test('only canonical personal routes stay public while distribution routes retain separate grants', () => {
   for (const path of ['/zz1/', '/zz1/logic.js', '/zz2/', '/zz3/', '/zz3/sw.js', '/zz4/', '/zz4/app.js', '/zz5/', '/zz5/app.js', '/zz6/', '/zz6/app.js', '/zz7/', '/zz7/detector.js']) {
@@ -228,7 +228,8 @@ test('one Google account can request each friend app and receive only approved a
   assert.equal((await requestFriendApp(supabase, viewer, identity, 'stopwatch-uni', 'secret')).statusCode, 403);
   assert.equal((await requestFriendApp(supabase, viewer, identity, 'aletheia', 'secret')).statusCode, 403);
   assert.equal((await requestFriendApp(supabase, viewer, identity, 'usotsuki', 'secret')).statusCode, 403);
-  assert.deepEqual(rows.map((row) => row.tool), ['unlock', 'stopwatch-uni', 'aletheia', 'usotsuki']);
+  assert.equal((await requestFriendApp(supabase, viewer, identity, 'arosaegida', 'secret')).statusCode, 403);
+  assert.deepEqual(rows.map((row) => row.tool), ['unlock', 'stopwatch-uni', 'aletheia', 'usotsuki', 'arosaegida']);
   rows[0].status = 'approved';
   const unlock = await requestFriendApp(supabase, viewer, identity, 'unlock', 'secret');
   assert.equal(unlock.statusCode, 200);
@@ -238,6 +239,11 @@ test('one Google account can request each friend app and receive only approved a
   const aletheia = await requestFriendApp(supabase, viewer, identity, 'aletheia', 'secret');
   assert.equal(aletheia.statusCode, 200);
   assert.match(aletheia.headers['Set-Cookie'], /^kali_aletheia_gate=/);
+  assert.equal((await requestFriendApp(supabase, viewer, identity, 'usotsuki', 'secret')).statusCode, 403);
+  rows[4].status = 'approved';
+  const ar = await requestFriendApp(supabase, viewer, identity, 'arosaegida', 'secret');
+  assert.equal(ar.statusCode, 200);
+  assert.match(ar.headers['Set-Cookie'], /^kali_arosaegida_gate=/);
   assert.equal((await requestFriendApp(supabase, viewer, identity, 'usotsuki', 'secret')).statusCode, 403);
 });
 
@@ -307,4 +313,64 @@ test('admin direct email grants are stored per app', async () => {
   }) }, { userId: 'admin-1' }, supabase);
   assert.equal(response.statusCode, 200);
   assert.deepEqual(tables, ['friend_app_access']);
+});
+
+
+test('AROSAegida paths use an isolated cookie and require an active grant without self redirects', async () => {
+  for (const path of ['/tools/arosaegida', '/tools/arosaegida/', '/tools/arosaegida/core.mjs', '/tools/AROSAEGIDA/app.mjs', '/tools//arosaegida/app.mjs']) {
+    assert.deepEqual(classifyPath(path), { mode: 'gated', tool: 'arosaegida' });
+  }
+  assert.equal(isValidTool('arosaegida'), true);
+  assert.equal(accessTableForTool('arosaegida'), 'friend_app_access');
+  assert.equal(gateCookieName('arosaegida'), 'kali_arosaegida_gate');
+  assert.equal(new Set([...FRIEND_APP_TOOLS].map(gateCookieName)).size, FRIEND_APP_TOOLS.size);
+  assert.match(clearGateCookie('arosaegida'), /kali_arosaegida_gate=.*Path=\/tools/);
+  assert.equal(allowOnCheckError('arosaegida'), false);
+  assert.equal(selectGate([{ valid: true, tool: 'all' }], 'arosaegida').valid, false);
+  const beforeFetch = globalThis.fetch, beforeNetlify = globalThis.Netlify;
+  const secret = 'ar-gate-test';
+  let active = false, nextCalls = 0, checks = 0;
+  globalThis.Netlify = { env: { get: () => secret } };
+  try {
+    globalThis.fetch = async (url, options) => {
+      checks++;
+      assert.equal(new URL(url).searchParams.get('tool'), 'arosaegida');
+      assert.match(options.headers.cookie, /kali_arosaegida_gate=/);
+      return Response.json({ ok: active });
+    };
+    const context = { next: async () => { nextCalls++; return new Response('AR app'); } };
+    const all = await signGateCookie('friend@example.com', 'all', secret);
+    const bypass = await toolsGate(new Request('https://example.com/tools/arosaegida/', { headers: { cookie: `kali_tool_gate=${all}` } }), context);
+    assert.equal(bypass.status, 302);
+    assert.equal(checks, 0);
+    assert.equal(nextCalls, 0);
+    const token = await signGateCookie('friend@example.com', 'arosaegida', secret);
+    assert.equal((await verifyGateCookie(token, secret)).tool, 'arosaegida');
+    const request = new Request('https://example.com/tools/arosaegida/app.mjs?x=1', { headers: { cookie: `kali_arosaegida_gate=${token}` } });
+    const revoked = await toolsGate(request, context);
+    assert.equal(revoked.status, 302);
+    assert.equal(new URL(revoked.headers.get('location')).searchParams.get('to'), '/tools/arosaegida/app.mjs?x=1');
+    active = true;
+    assert.equal((await toolsGate(request, context)).status, 200);
+    assert.equal(nextCalls, 1);
+    globalThis.fetch = async () => { throw new Error('grant check unavailable'); };
+    assert.equal((await toolsGate(request, context)).status, 302);
+    assert.equal(nextCalls, 1);
+  } finally {
+    globalThis.fetch = beforeFetch;
+    if (beforeNetlify === undefined) delete globalThis.Netlify;
+    else globalThis.Netlify = beforeNetlify;
+  }
+});
+
+test('AROSAegida migration retains all seven friend tools and the existing RLS policy', () => {
+  const sql = readFileSync(new URL('../../supabase/migrations/20260930_friend_apps_arosaegida.sql', import.meta.url), 'utf8');
+  const values = [...sql.matchAll(/'([^']+)'/g)].map(match => match[1]);
+  assert.equal(values.length, 7);
+  assert.deepEqual(values, [...FRIEND_APP_TOOLS]);
+  assert.match(sql, /drop constraint if exists friend_app_access_tool_check/);
+  assert.match(sql, /add constraint friend_app_access_tool_check/);
+  assert.doesNotMatch(sql, /row level security|create policy|drop policy/i);
+  const hosting = readFileSync(new URL('../../netlify.toml', import.meta.url), 'utf8');
+  assert.match(hosting, /for = "\/tools\/arosaegida\/manifest\.webmanifest"\s*\[headers.values\]\s*Content-Type = "application\/manifest\+json"/);
 });

@@ -75,6 +75,7 @@ export const PUBLIC_DIRS = [
 ];
 
 export const PRIVATE_PATTERNS = [
+  /(?:^|\/)fullscreen\.js$/,
   /^MAGIC-PLAYGROUND-PRD\.md$/,
   /^MAGIC-PLAYGROUND-IMPLEMENTATION-PLAN\.md$/,
   /^COMMUNITY-MVP-DESIGN\.md$/,
@@ -142,7 +143,7 @@ export const MEMDECK_FILES = [
   'manifest.webmanifest', 'sw.js', 'icon.svg', 'icon-192.png', 'icon-512.png'
 ];
 export const QR_FILES = [
-  'index.html', 'style.css', 'app.mjs', 'core.mjs', 'manifest.webmanifest', 'sw.js',
+  'index.html', 'style.css', 'app.mjs', 'core.mjs', 'manifest.webmanifest', 'sw.js', 'brand-logo.jpg',
   'icons/icon-192.png', 'icons/icon-512.png', 'vendor/qrcodegen.js', 'vendor/jsQR.js',
   'vendor/LICENSE-nayuki.txt', 'vendor/LICENSE-jsqr.txt'
 ];
@@ -164,15 +165,6 @@ export const MIRROR_PAIRS = [
   ...SETTINGS_UI_FILES.map((file) => [`../../magic-alter/${file}`, `zz10/${file}`]),
   ...SETTINGS_UI_FILES.map((file) => [`../../magic-spinner/${file}`, `zz11/${file}`]),
   ...SETTINGS_UI_FILES.map((file) => [`../../magic-calculator-v2/${file}`, `tools/calc/${file}`]),
-  ...[
-    ['magic-stopwatch-uni', 'zz1'],
-    ['magic-choice', 'zz4'],
-    ['magic-aletheia', 'zz5'],
-    ['magic-usotsuki', 'zz7'],
-    ['magic-asrai', 'zz8'],
-    ['magic-alter', 'zz10'],
-    ['magic-spinner', 'zz11']
-  ].map(([source, route]) => [`../../${source}/fullscreen.js`, `${route}/fullscreen.js`]),
   ['../../magic-calculator-v2/index.html', 'zz3/index.html'],
   ['../../magic-calculator-v2/sw.js', 'zz3/sw.js'],
   ['../../magic-calculator-v2/performance-link.js', 'zz3/performance-link.js'],
@@ -233,7 +225,8 @@ export const DISTRIBUTION_APPS = [
   { source: 'distribution-snapshots/tobira', target: 'tobira', tool: 'tobira' },
   { source: 'distribution-snapshots/spinner', target: 'tyche', tool: 'spinner' },
   { source: 'zz1', target: 'kairos', tool: 'stopwatch-uni' },
-  { source: 'zz1', target: 'kairos-classic', tool: 'stopwatch' }
+  { source: 'zz1', target: 'kairos-classic', tool: 'stopwatch' },
+  { source: 'zz13', target: 'arosaegida', tool: 'arosaegida' }
 ];
 
 function accessGuard(tool, target) {
@@ -356,7 +349,7 @@ export async function verifyAppDisplayPolicy(directory = DIST, routes = [
       throw new Error(`App customization policy: ${route}`);
     }
     for (const entry of await readdir(appDirectory, { withFileTypes: true })) {
-      if (!entry.isFile() || !/\.(?:html|js)$/.test(entry.name)) continue;
+      if (!entry.isFile() || !/\.(?:html|js|mjs)$/.test(entry.name)) continue;
       const content = await readFile(path.join(appDirectory, entry.name), 'utf8');
       if (/\b(?:requestFullscreen|webkitRequestFullscreen|webkitRequestFullScreen|mozRequestFullScreen|msRequestFullscreen)\b/.test(content)) {
         throw new Error(`Fullscreen is disabled: ${route}/${entry.name}`);

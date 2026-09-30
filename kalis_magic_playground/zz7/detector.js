@@ -24,7 +24,6 @@ const STATE_KEY = "usotsuki.detector.v1";
 const SCAN_DURATION_KEY = "usotsuki.detector.scan-duration.v1";
 const SOUND_KEY = "usotsuki.detector.sound.v1";
 const VIBRATION_KEY = "usotsuki.detector.vibration.v1";
-const GUIDE_KEY = "usotsuki.detector.settings-guide.v1";
 const SWIPE_DOWN_PX = 96;
 const READY_FEEDBACK_MS = 600;
 const READY_HAPTIC_MS = { medium: 18, high: 28, max: 38 };
@@ -66,7 +65,6 @@ let audioResumePromise = null;
 let soundRequestId = 0;
 let scanOscillator = null;
 let scanGain = null;
-let guideShown = false;
 let readyTimer = 0;
 let readyFeedbackShown = false;
 
@@ -90,23 +88,6 @@ function storageSet(key, value) {
   }
 }
 
-function showGestureGuideOnce() {
-  if (guideShown || storageGet(GUIDE_KEY).value === "1") return;
-  guideShown = true;
-  storageSet(GUIDE_KEY, "1");
-  const guide = document.createElement("div");
-  guide.className = "gesture-guide";
-  guide.innerHTML = `<div class="gesture-guide-card" role="dialog" aria-modal="true" aria-labelledby="gesture-guide-title" aria-describedby="gesture-guide-text">
-    <div class="gesture-guide-motion" aria-hidden="true"><span></span><span></span></div>
-    <h2 id="gesture-guide-title">설정으로 돌아가기</h2>
-    <p id="gesture-guide-text">공연 화면에서 손가락 두 개를 화면에 대고 아래로 쓸어내리세요.</p>
-    <button type="button">알겠습니다</button>
-  </div>`;
-  document.body.append(guide);
-  const button = guide.querySelector("button");
-  button.addEventListener("click", () => guide.remove(), { once: true });
-  button.focus();
-}
 
 function canPersistState() {
   return mayOverwritePrimary({
@@ -731,7 +712,6 @@ function onStartPerformance() {
   unlockFromGesture();
   showPerformance();
   startButton.blur();
-  showGestureGuideOnce();
 }
 
 function onSoundChange() {
@@ -787,7 +767,11 @@ function bind() {
 }
 
 bootStorage();
-showSettings();
+appState = resetAttempts(appState);
+updateAttemptProgress();
+persistState();
+setStage("idle");
+showPerformance();
 bind();
 
 if ("serviceWorker" in navigator) {

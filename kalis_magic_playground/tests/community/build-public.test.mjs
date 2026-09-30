@@ -98,7 +98,8 @@ test('public build mirrors the current calculator and integrated stopwatch sourc
     { source: 'distribution-snapshots/tobira', target: 'tobira', tool: 'tobira' },
     { source: 'distribution-snapshots/spinner', target: 'tyche', tool: 'spinner' },
     { source: 'zz1', target: 'kairos', tool: 'stopwatch-uni' },
-    { source: 'zz1', target: 'kairos-classic', tool: 'stopwatch' }
+    { source: 'zz1', target: 'kairos-classic', tool: 'stopwatch' },
+    { source: 'zz13', target: 'arosaegida', tool: 'arosaegida' }
   ]);
 });
 
@@ -175,6 +176,16 @@ test('public build serves integrated stopwatch on both retained entitlement rout
     assert.ok(MIRROR_PAIRS.some(([source, mirror]) => source === `../../magic-qr/${file}` && mirror === `zz13/${file}`));
     if (qrSource) assert.deepEqual(await readFile(new URL(file, qr)), await readFile(new URL(`../../../../magic-qr/${file}`, import.meta.url)));
   }
+  const sharedQr = new URL('../../dist/tools/arosaegida/', import.meta.url);
+  const sharedQrHtml = await readFile(new URL('index.html', sharedQr), 'utf8');
+  assert.match(sharedQrHtml, /tools\/_check\?tool=arosaegida/);
+  assert.match(sharedQrHtml, /data-magic-customize="off"/);
+  assert.match(sharedQrHtml, /아로새기다/);
+  assert.deepEqual(await readFile(new URL('brand-logo.jpg', sharedQr)), await readFile(new URL('brand-logo.jpg', qr)));
+  assert.match(await readFile(new URL('sw.js', sharedQr), 'utf8'), /scope\.pathname\.startsWith\('\/tools\/'\)/);
+  for (const route of [...PUBLIC_DIRS.filter((route) => /^zz\d+$/.test(route)), ...DISTRIBUTION_APPS.map((app) => 'tools/' + app.target)]) {
+    await assert.rejects(stat(new URL('../../dist/' + route + '/fullscreen.js', import.meta.url)), { code: 'ENOENT' });
+  }
   const qrManifest = JSON.parse(await readFile(new URL('manifest.webmanifest', qr), 'utf8'));
   assert.equal(qrManifest.display, 'standalone');
   assert.equal(qrManifest.scope, './');
@@ -248,7 +259,7 @@ test('ALETHEIA and USOTSUKI distribution builds use pinned snapshots and separat
   for (const app of ['aletheia', 'usotsuki']) {
     const snapshot = path.join(root, 'distribution-snapshots', app);
     const target = path.join(root, 'dist', 'tools', app);
-    const sourceFiles = await filesUnder(snapshot);
+    const sourceFiles = (await filesUnder(snapshot)).filter((file) => !PRIVATE_PATTERNS.some((pattern) => pattern.test(file)));
     assert.deepEqual(await filesUnder(target), sourceFiles, `${app} file inventory`);
     const manifest = JSON.parse(await readFile(path.join(target, 'manifest.webmanifest'), 'utf8'));
     assert.equal(manifest.id, './');
@@ -276,7 +287,7 @@ test('Asrai, ALTER, and spinner personal builds keep exact runtime mirrors and d
     ['magic-spinner', 'zz11', SPINNER_FILES, 'TYCHE']
   ]) {
     const distDir = path.join(root, 'dist', route);
-    const runtimeFiles = [...files, 'fullscreen.js', ...SETTINGS_UI_FILES];
+    const runtimeFiles = [...files, ...SETTINGS_UI_FILES];
     assert.deepEqual((await readdir(distDir)).sort(), runtimeFiles.sort());
     const manifest = JSON.parse(await readFile(path.join(distDir, 'manifest.webmanifest'), 'utf8'));
     assert.equal(manifest.id, './');

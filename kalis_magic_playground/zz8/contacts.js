@@ -6,6 +6,7 @@
 
 import {
   LIMITS,
+  DEFAULT_FICTIONAL_NAMES,
   charLength,
   classifySettingsSwipe,
   createClickState,
@@ -113,6 +114,8 @@ function currentPayload() {
 }
 
 function saveRecord(payload) {
+  // Preserve unreadable original records while the fallback performance runs.
+  if (storageNote === "invalid" || storageNote === "unreadable") return false;
   try {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
     storageNote = "";
@@ -471,5 +474,15 @@ backButton.addEventListener("click", () => {
 resetButton.addEventListener("click", resetClicks);
 startButton.addEventListener("click", startPerformance);
 
+function startBootPerformance() {
+  if (activeNames.length) return;
+  applyRecord({
+    names: [...DEFAULT_FICTIONAL_NAMES], clickCount: 0,
+    targetClick: LIMITS.defaultTargetClick,
+    phone: currentSettings.phone, region: currentSettings.region, note: currentSettings.note,
+  }, true);
+}
+
 loadRecord();
+startBootPerformance();
 registerShell();

@@ -8,8 +8,8 @@ import { FRIEND_APP_TOOLS } from '../functions/_lib/friend-app-access.mjs';
 const COOKIE_MAX_AGE = 7_776_000;
 const RENEWAL_WINDOW_SECONDS = 3_888_000;
 const DEFAULT_TOOL = 'calc';
-const PRODUCT_SLUGS = { calc: 'hitsuzen', unlock: 'release', 'stopwatch-uni': 'kairos', stopwatch: 'kairos-classic', spinner: 'tyche' };
-const STRICT_DISTRIBUTION_TOOLS = new Set(['aletheia', 'usotsuki', 'tobira', 'spinner']);
+const PRODUCT_SLUGS = { calc: 'hitsuzen', unlock: 'release', 'stopwatch-uni': 'kairos', stopwatch: 'kairos-classic', spinner: 'tyche', arosaegida: 'arosaegida' };
+const STRICT_DISTRIBUTION_TOOLS = new Set(['aletheia', 'usotsuki', 'tobira', 'spinner', 'arosaegida']);
 
 function analyzePath(rawPathname) {
   if (typeof rawPathname !== 'string') {
@@ -198,7 +198,7 @@ export default async function toolsGate(request, context) {
   const path = analyzePath(rawPathnameFromUrl(request.url));
   if (path.mode !== 'block') {
     for (const [tool, slug] of Object.entries(PRODUCT_SLUGS)) {
-      if (path.pathname === `/tools/${tool}` || path.pathname.startsWith(`/tools/${tool}/`)) {
+      if (tool !== slug && (path.pathname === `/tools/${tool}` || path.pathname.startsWith(`/tools/${tool}/`))) {
         const destination = new URL(request.url);
         destination.pathname = `/tools/${slug}/` + path.pathname.slice(`/tools/${tool}`.length).replace(/^\//, '');
         return Response.redirect(destination, 301);

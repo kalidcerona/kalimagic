@@ -399,6 +399,7 @@ async function loadImages() {
 const pointers = new Map();
 let state = null;
 let recovery = null;
+let recoveryWriteBlocked = false;
 let dismissedToken = '';
 let storageWarning = '';
 let phase = 'awaiting';
@@ -544,14 +545,29 @@ function stashRecovery(raw) {
   if (current === raw) return;
   if (current != null) localStorage.setItem(PREVIOUS_RECOVERY_KEY, current);
   localStorage.setItem(RECOVERY_KEY, raw);
+  if (localStorage.getItem(RECOVERY_KEY) !== raw) throw new Error('Recovery backup verification failed');
 }
 
 function persist() {
+  // A playable fallback must not replace unreadable originals until their backup is verified.
+  if (recoveryWriteBlocked) {
+    try {
+      const original = localStorage.getItem(STORAGE_KEY);
+      if (typeof original === 'string' && original !== '') stashRecovery(original);
+      recoveryWriteBlocked = false;
+    } catch {
+      storageWarning = '기존 기록을 안전하게 보관하지 못해 저장하지 않았습니다. 이번 실행의 변경은 화면에서만 적용됩니다.';
+      note.textContent = storageWarning;
+      return false;
+    }
+  }
   try {
     localStorage.setItem(STORAGE_KEY, serializeState(state));
+    return true;
   } catch {
     storageWarning = '이 브라우저 저장소를 쓸 수 없어 변경이 기기에 남지 않습니다.';
     note.textContent = storageWarning;
+    return false;
   }
 }
 
@@ -591,14 +607,17 @@ function loadState() {
     dismissedToken = localStorage.getItem(NOTICE_KEY) || '';
   } catch {
     storageWarning = '저장소를 열 수 없습니다. 이번 실행의 변경은 보관되지 않습니다.';
+    recoveryWriteBlocked = true;
     raw = null;
   }
   const parsed = parseStoredState(raw);
   state = parsed.state;
   recovery = parsed.recovery;
   if (!parsed.recovery || typeof raw !== 'string') return;
+  recoveryWriteBlocked = true;
   try {
     stashRecovery(raw);
+    recoveryWriteBlocked = false;
     localStorage.setItem(STORAGE_KEY, serializeState(parsed.state));
   } catch {
     storageWarning = '손상된 설정의 원본을 보관하지 못했습니다. 기존 기록은 덮어쓰지 않았습니다.';
@@ -1378,7 +1397,7 @@ function showSettings() {
   persist();
 }
 
-function showPerformance({ persistMode = true, keepGone = false } = {}) {
+function showPerformance({ persistMode = true, keepGone = false, showGuide = true } = {}) {
   const keepCrack = keepGone && readCrackSession();
   if (!keepGone) clearBreakthrough();
   cancelExit();
@@ -1404,7 +1423,7 @@ function showPerformance({ persistMode = true, keepGone = false } = {}) {
   }
   document.documentElement.removeAttribute('data-boot-gone');
   if (persistMode) persist();
-  maybeShowGestureGuide();
+  if (showGuide) maybeShowGestureGuide();
 }
 
 function beginExit(edge, speed) {
@@ -1992,19 +2011,10 @@ try {
   if (storedChoices && typeof storedChoices === 'object' && !Array.isArray(storedChoices)) imageChoices = storedChoices;
 } catch { imageChoices = {}; }
 bind();
-if (typeof window.DeviceOrientationEvent?.requestPermission !== 'function' &&
-    typeof window.DeviceMotionEvent?.requestPermission !== 'function') void enableMotion();
 const imagesReady = loadImages();
 renderRecovery();
 renderList();
 fillForm();
-if (state.mode === 'performance') {
-  imagesReady.then(
-    () => showPerformance({ persistMode: false, keepGone: readGoneSession() }),
-    () => showPerformance({ persistMode: false, keepGone: readGoneSession() }),
-  );
-} else {
-  applyChrome('settings');
-  setGoneSession(false);
-  document.documentElement.removeAttribute('data-boot-gone');
-}
+// Start ready without writing the saved mode or requesting motion access.
+showPerformance({ persistMode: false, keepGone: false, showGuide: false });
+imagesReady.then(refreshCoinImage, refreshCoinImage);

@@ -13,7 +13,8 @@
     Object.freeze({ id: 'aletheia', name: '알레테이아(ALETHEIA)', path: '/tools/aletheia/', legacy: false }),
     Object.freeze({ id: 'usotsuki', name: '우소츠키(USOTSUKI)', path: '/tools/usotsuki/', legacy: false }),
     Object.freeze({ id: 'tobira', name: '토비라(TOBIRA)', path: '/tools/tobira/', legacy: false }),
-    Object.freeze({ id: 'spinner', name: '티케(TYCHE)', path: '/tools/tyche/', legacy: false })
+    Object.freeze({ id: 'spinner', name: '티케(TYCHE)', path: '/tools/tyche/', legacy: false }),
+    Object.freeze({ id: 'arosaegida', name: '아로새기다', path: '/tools/arosaegida/', legacy: false })
   ]);
   var TOOL_LABELS = Object.freeze({
     calc: '히츠젠(HITSUZEN)',
@@ -24,6 +25,7 @@
     usotsuki: '우소츠키(USOTSUKI)',
     tobira: '토비라(TOBIRA)',
     spinner: '티케(TYCHE)',
+    arosaegida: '아로새기다',
     all: '히츠젠(HITSUZEN) + 카이로스(KAIROS)'
   });
   var LEGACY_TOOLS = Object.freeze(['calc', 'stopwatch']);

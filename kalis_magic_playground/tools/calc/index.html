@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
   <meta name="color-scheme" content="dark">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="icon-192.png">
   <title>HITSUZEN</title>
@@ -409,6 +409,9 @@
     #settings-entry-tutorial .tutorial-fingers::after { content: '↓'; position: absolute; bottom: 0; left: 0; right: 0; color: #fff; font-size: 28px; }
     #settings-entry-tutorial p { margin: 0 0 16px; }
     #settings-entry-tutorial button { min-width: 120px; min-height: 44px; border: 0; border-radius: 12px; background: #fff; color: #111; font: 600 16px system-ui, sans-serif; pointer-events: auto; touch-action: manipulation; }
+    .desktop-settings-entry { position: fixed; z-index: 30; top: max(12px, env(safe-area-inset-top)); right: max(12px, env(safe-area-inset-right)); min-height: 44px; padding: 0 14px; border: 1px solid #ffffff55; border-radius: 12px; background: #202024eF; color: #fff; font: 600 14px system-ui, sans-serif; }
+    .desktop-settings-help { display: none; }
+    @media (any-hover: hover) and (any-pointer: fine) { .desktop-settings-help { display: block; color: #aeb0b8; font-size: 13px; } }
     @keyframes tutorial-swipe { 0%, 16% { transform: translateY(0); opacity: .55; } 70%, 85% { transform: translateY(45px); opacity: 1; } 100% { transform: translateY(0); opacity: .55; } }
     @media (prefers-reduced-motion: reduce) { #settings-entry-tutorial .tutorial-fingers span { animation: none; transform: translateY(25px); } }
   </style>
@@ -437,6 +440,7 @@
 
     <div class="date-settings" id="date-settings" data-settings-root aria-hidden="true">
       <img class="date-settings-logo" src="brand-logo.jpg" alt="HITSUZEN">
+      <p>설정 열기: 화면에서 두 손가락을 아래로 쓸어내리세요. PC에서는 설정 버튼이나 Shift+Esc를 사용하세요.</p>
       <details data-settings-group="date"><summary>날짜 리빌 · 시간 설정</summary>
       <div class="date-settings-controls">
       <button type="button" data-date-action="decrease">−</button>
@@ -498,12 +502,38 @@
   </main>
 
   <div id="settings-entry-tutorial" role="dialog" aria-label="설정 여는 방법" hidden>
-    <div class="tutorial-card"><div class="tutorial-fingers" aria-hidden="true"><span></span><span></span></div><p>설정을 열려면 두 손가락으로 화면을 아래로 쓸어내리세요.</p><button id="settings-entry-tutorial-dismiss" type="button">알겠어요</button></div>
+    <div class="tutorial-card"><div class="tutorial-fingers" aria-hidden="true"><span></span><span></span></div><p>설정을 열려면 두 손가락으로 화면을 아래로 쓸어내리세요.</p><p class="desktop-settings-help">PC에서는 화면의 ‘설정’ 버튼이나 Shift+Esc를 사용하세요.</p><button id="settings-entry-tutorial-dismiss" type="button">알겠어요</button></div>
   </div>
+  <button id="desktop-settings-entry" class="desktop-settings-entry" type="button" aria-label="PC 설정 열기, Shift+Escape" hidden>설정 · Shift+Esc</button>
   <div id="selftest" role="status" aria-live="polite"></div>
 
   <script>
 // BEGIN SETTINGS SWIPE
+// BEGIN DESKTOP SETTINGS ACCESS
+function bindDesktopSettingsAccess(button, open, canOpen = () => true, canShow = canOpen) {
+  const media = window.matchMedia('(any-hover: hover) and (any-pointer: fine)');
+  const updateButton = () => { button.hidden = !media.matches || !canShow(); };
+  updateButton();
+  media.addEventListener?.('change', updateButton);
+  const isEditingTarget = (target) => {
+    const element = target?.nodeType === 3 ? target.parentElement : target;
+    return Boolean(element?.isContentEditable || element?.closest?.('input, textarea, select, [contenteditable]:not([contenteditable="false"])'));
+  };
+  const activate = (event) => {
+    if (isEditingTarget(event.target) || !canOpen()) return false;
+    event.preventDefault?.();
+    open();
+    updateButton();
+    return true;
+  };
+  button.addEventListener('click', activate);
+  window.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape' || !event.shiftKey || event.ctrlKey || event.metaKey || event.altKey || event.isComposing || event.repeat) return;
+    activate(event);
+  });
+  return { activate, updateButton };
+}
+// END DESKTOP SETTINGS ACCESS
 function installSettingsSwipe(open, cancel, enabled, cancelHold = cancel) {
   const pointers = new Map();
   let pair = null, blocked = false, suppressUntil = 0;
@@ -1664,6 +1694,7 @@ function installSettingsSwipe(open, cancel, enabled, cancelHold = cancel) {
       const stackIcon = document.getElementById("stack-icon");
       const stackResult = document.getElementById("stack-result");
       const dateSettings = document.getElementById("date-settings");
+      let desktopSettingsAccess = null;
       const dateDelayValue = document.getElementById("date-delay-value");
       const dateHourCycleButton = document.getElementById("date-hour-cycle");
       const skinToggleButton = document.getElementById("skin-toggle");
@@ -2006,15 +2037,26 @@ function installSettingsSwipe(open, cancel, enabled, cancelHold = cancel) {
         stackLongPressConsumed = false;
       };
 
+      const openDateSettings = () => {
+        if (dateSettings.classList.contains("open")) return;
+        cancelStackPress();
+        document.getElementById("settings-entry-tutorial").hidden = true;
+        dateSettings.classList.add("open");
+        dateSettings.setAttribute("aria-hidden", "false");
+        desktopSettingsAccess?.updateButton();
+      };
+
       stackIcon.addEventListener("pointerup", finishStackPress);
       stackIcon.addEventListener("pointercancel", cancelStackPress);
       stackIcon.addEventListener("pointerleave", cancelStackPress);
 
-      installSettingsSwipe(() => {
-        document.getElementById("settings-entry-tutorial").hidden = true;
-        dateSettings.classList.add("open");
-        dateSettings.setAttribute("aria-hidden", "false");
-      }, cancelStackPress, () => !dateSettings.classList.contains("open"));
+      installSettingsSwipe(openDateSettings, cancelStackPress, () => !dateSettings.classList.contains("open"));
+      desktopSettingsAccess = bindDesktopSettingsAccess(
+        document.getElementById("desktop-settings-entry"),
+        openDateSettings,
+        () => !dateSettings.classList.contains("open"),
+        () => !dateSettings.classList.contains("open"),
+      );
 
       dateSettings.addEventListener("pointerdown", (event) => {
         if (!isPrimaryPointer(event)) return;
@@ -2038,6 +2080,8 @@ function installSettingsSwipe(open, cancel, enabled, cancelHold = cancel) {
 
         if (button.dataset.dateAction === "close") {
           dateSettings.classList.remove("open");
+          dateSettings.setAttribute("aria-hidden", "true");
+          desktopSettingsAccess?.updateButton();
           return;
         }
 
@@ -2109,7 +2153,6 @@ function installSettingsSwipe(open, cancel, enabled, cancelHold = cancel) {
       window.addEventListener("pageshow", receiveReleaseDays);
       window.addEventListener("focus", receiveReleaseDays);
       render();
-      showSettingsEntryTutorial();
     }
 
     let wakeLock = null;

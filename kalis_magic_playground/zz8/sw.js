@@ -1,11 +1,10 @@
 // Cache only the explicit app shell. API, authentication and user data stay on the network.
 const CACHE_PREFIX = 'asrai-shell-' + encodeURIComponent(self.registration.scope) + '-';
-const CACHE_NAME = CACHE_PREFIX + 'v20260929-1';
+const CACHE_NAME = CACHE_PREFIX + 'v20260930-2';
 const SHELL = [
   "./settings-ui.js",
   "./settings-ui.css",
   "./index.html",
-  "./fullscreen.js",
   "./style.css",
   "./contacts.js",
   "./logic.js",

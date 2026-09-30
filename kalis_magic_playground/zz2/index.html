@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="theme-color" content="#000000">
   <title>RELEASE · 레리즈</title>
   <script src="./performance-link.js" defer></script>
@@ -285,6 +285,9 @@
     #settings-entry-tutorial .tutorial-fingers::after { content: '↓'; position: absolute; bottom: 0; left: 0; right: 0; color: #fff; font-size: 28px; }
     #settings-entry-tutorial p { margin: 0 0 16px; }
     #settings-entry-tutorial button { min-width: 120px; min-height: 44px; border: 0; border-radius: 12px; background: #fff; color: #111; font: 600 16px system-ui, sans-serif; pointer-events: auto; touch-action: manipulation; }
+    .desktop-settings-entry { position: fixed; z-index: 50; top: max(12px, env(safe-area-inset-top)); right: max(12px, env(safe-area-inset-right)); min-height: 44px; padding: 0 14px; border: 1px solid #ffffff66; border-radius: 12px; background: #1b1b20eF; color: #fff; font: 600 14px system-ui, sans-serif; }
+    .desktop-settings-help { display: none; }
+    @media (any-hover: hover) and (any-pointer: fine) { .desktop-settings-help { display: block; color: #c4c5cc; font-size: 13px; } }
     @keyframes tutorial-swipe { 0%, 16% { transform: translateY(0); opacity: .55; } 70%, 85% { transform: translateY(45px); opacity: 1; } 100% { transform: translateY(0); opacity: .55; } }
     @media (prefers-reduced-motion: reduce) { #settings-entry-tutorial .tutorial-fingers span { animation: none; transform: translateY(25px); } }
   </style>
@@ -335,6 +338,7 @@
     </section>
     <section id="settings-screen" class="screen" aria-label="설정" hidden>
       <div class="settings-inner" data-settings-root>
+        <p class="desktop-settings-help">PC에서는 공연 화면의 ‘설정’ 버튼이나 Shift+Esc를 사용하세요.</p>
         <img id="settings-brand" src="./brand-logo.jpg" alt="RELEASE" onerror="this.hidden=true">
         <div class="eyebrow">RELEASE</div>
         <h1>레리즈 설정</h1>
@@ -414,14 +418,41 @@
     </section>
     <div id="toast" role="status" hidden></div>
   </main>
+  <button id="desktop-settings-entry" class="desktop-settings-entry" type="button" aria-label="PC 설정 열기, Shift+Escape" hidden>설정 · Shift+Esc</button>
   <div id="settings-entry-tutorial" role="dialog" aria-label="설정 여는 방법" hidden>
-    <div class="tutorial-card"><div class="tutorial-fingers" aria-hidden="true"><span></span><span></span></div><p>설정을 열려면 잠금 화면에서 두 손가락으로 아래로 쓸어내리세요.</p><button id="settings-entry-tutorial-dismiss" type="button">알겠어요</button></div>
+    <div class="tutorial-card"><div class="tutorial-fingers" aria-hidden="true"><span></span><span></span></div><p>설정을 열려면 잠금 화면에서 두 손가락으로 아래로 쓸어내리세요.</p><p class="desktop-settings-help">PC에서는 공연 화면의 ‘설정’ 버튼이나 Shift+Esc를 사용하세요.</p><button id="settings-entry-tutorial-dismiss" type="button">알겠어요</button></div>
   </div>
   <script type="module" src="./install-prompt.js"></script>
   <script type="module">
     import { FINGERPRINT_HOLD_MS, normalizeSettings, storageIdentityForPath, selectedAttemptReveal, latestBirthdateAttempt, homeSwipeTarget, completeHomeSwipe, lockScreenCopy, createState, pushDigit, submitPin, fingerprintHold, attemptFeedback, feedbackVibration, deleteDigit, clearCurrent, toggleDigits, reset, isHomeGestureArea, peekOffset, registerTwoFingerTap, settleTwoFingerTaps, registerLockTap, formatAttemptLabel } from './logic.js';
 
     import { hiddenDigit, appendMinuteDigit, registerEmergencyTap, timeMachineClock, isSettingsSwipe, horizontalPeekOffset } from './time-machine.js';
+
+    // BEGIN DESKTOP SETTINGS ACCESS
+    function bindDesktopSettingsAccess(button, open, canOpen = () => true, canShow = canOpen) {
+      const media = window.matchMedia('(any-hover: hover) and (any-pointer: fine)');
+      const updateButton = () => { button.hidden = !media.matches || !canShow(); };
+      updateButton();
+      media.addEventListener?.('change', updateButton);
+      const isEditingTarget = (target) => {
+        const element = target?.nodeType === 3 ? target.parentElement : target;
+        return Boolean(element?.isContentEditable || element?.closest?.('input, textarea, select, [contenteditable]:not([contenteditable="false"])'));
+      };
+      const activate = (event) => {
+        if (isEditingTarget(event.target) || !canOpen()) return false;
+        event.preventDefault?.();
+        open();
+        updateButton();
+        return true;
+      };
+      button.addEventListener('click', activate);
+      window.addEventListener('keydown', (event) => {
+        if (event.key !== 'Escape' || !event.shiftKey || event.ctrlKey || event.metaKey || event.altKey || event.isComposing || event.repeat) return;
+        activate(event);
+      });
+      return { activate, updateButton };
+    }
+    // END DESKTOP SETTINGS ACCESS
 
     const $ = (id) => document.getElementById(id);
     const SETTINGS_TUTORIAL_KEY = "unlock-settings-entry-tutorial-v1";
@@ -457,6 +488,7 @@
     let settings = normalizeSettings(saved && typeof saved === 'object' ? saved : {}, STORAGE.personal);
     let state = createState(settings.digits);
     let screen = 'settings';
+    let desktopSettingsAccess = null;
     let feedbackTimer = null;
     let feedback = null;
     let unlockTimer = null;
@@ -670,7 +702,6 @@
       cancelReveal();
       if (next === 'input') renderInput();
       if (next === 'settings') void refreshCroppedImages();
-      if (next === 'input') showSettingsEntryTutorial();
       if (next === 'unlocked') {
         renderAttempts();
         setHomePage('home1', false);
@@ -688,6 +719,7 @@
           }, UNLOCK_ANIMATION_MS);
         }
       }
+      desktopSettingsAccess?.updateButton();
       if (next === 'settings') { $('settings-entry-tutorial').hidden = true; populateForm(); $('settings-screen').scrollTop = 0; }
       if (next === 'time-black') startRewindGuide();
       else stopRewindGuide();
@@ -1339,6 +1371,12 @@
     populateForm();
     applyAppearance(settings);
     // Performance does not depend on opening or decoding the image database.
+    desktopSettingsAccess = bindDesktopSettingsAccess(
+      $('desktop-settings-entry'),
+      () => gestureAction('settings'),
+      () => screen !== 'settings',
+      () => screen !== 'settings',
+    );
     showScreen('input');
     imageKeys.forEach((key) => { $(`${key}-info`).textContent = '기본 배경 사용 · 저장된 사진을 확인하는 중입니다.'; });
     prepareOffline();

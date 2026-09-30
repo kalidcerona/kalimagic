@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#1e2328" />
     <meta name="color-scheme" content="light dark" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="USOTSUKI" />
     <title>거짓말 탐지기</title>
@@ -19,7 +19,7 @@
 </head>
   <body data-magic-app="usotsuki">
     <div id="safe-probe" aria-hidden="true"></div>
-    <main id="performance-screen" hidden>
+    <main id="performance-screen">
       <div class="instrument-frame" aria-hidden="true"></div>
       <div class="stage-content">
         <header class="stage-info">
@@ -55,10 +55,9 @@
         </div>
       </div>
     </main>
-    <section id="settings-screen" data-settings-root>
+    <section id="settings-screen" data-settings-root hidden>
       <img id="settings-brand" src="brand-logo.png" alt="" width="168" height="168" />
       <h1>거짓말 탐지기</h1>
-      <p data-fullscreen-note hidden>이 브라우저는 상태 막대를 숨기는 전체 화면을 지원하지 않습니다. 홈 화면에 추가하면 주소창은 줄일 수 있지만, 기기에 따라 시간·배터리 표시는 남을 수 있습니다.</p>
       <p class="lede">공연 전에만 확인합니다. 실제 측정이 아닙니다.</p>
       <div class="stack">
         <details class="settings-disclosure">
@@ -122,7 +121,6 @@
     <noscript>
       <p>이 공연 화면은 자바스크립트가 필요합니다. 네트워크 측정은 하지 않습니다.</p>
     </noscript>
-    <script src="./fullscreen.js"></script>
     <script type="module" src="install-prompt.js"></script>
     <script type="module" src="detector.js"></script>
   </body>

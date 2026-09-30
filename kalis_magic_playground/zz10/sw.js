@@ -1,6 +1,6 @@
 // Cache only the explicit app shell. API, authentication and user data stay on the network.
 const CACHE_PREFIX = 'alter-shell-' + encodeURIComponent(self.registration.scope) + '-';
-const CACHE_NAME = CACHE_PREFIX + 'v20260929-1';
+const CACHE_NAME = CACHE_PREFIX + 'v20260930-2';
 const SHELL = [
   "./settings-ui.js",
   "./settings-ui.css",
@@ -17,7 +17,6 @@ const SHELL = [
   "./icon-512.png",
   "./manifest.webmanifest",
   "./install-ui.js",
-  "./fullscreen.js"
 ];
 const SHELL_NAMES = new Set(SHELL.map((file) => file.replace(/^\.\//, '')));
 const GUARDED = new URL(self.registration.scope).pathname.startsWith('/tools/');

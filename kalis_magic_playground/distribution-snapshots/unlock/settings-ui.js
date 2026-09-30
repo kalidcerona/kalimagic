@@ -78,9 +78,9 @@
     try { storage = root.localStorage; } catch (_) { storage = null; }
     var key = storageKey(app, root.location), prefs = read(storage, key, profile), defaults = {};
     var link = node('div', null, 'magic-customize-link'), openCustomize = node('button', '화면 커스텀', 'magic-customize-open');
-    openCustomize.type = 'button'; openCustomize.setAttribute('data-fullscreen-skip', ''); link.appendChild(openCustomize); container.appendChild(link);
+    openCustomize.type = 'button'; link.appendChild(openCustomize); container.appendChild(link);
     var customPage = node('section', null, 'magic-customize-page'); customPage.id = 'magic-customize-page'; customPage.hidden = true;
-    customPage.setAttribute('role', 'dialog'); customPage.setAttribute('aria-modal', 'true'); customPage.setAttribute('aria-label', '화면 커스텀'); customPage.setAttribute('data-fullscreen-skip', '');
+    customPage.setAttribute('role', 'dialog'); customPage.setAttribute('aria-modal', 'true'); customPage.setAttribute('aria-label', '화면 커스텀');
     var header = node('header', null, 'magic-customize-header'), back = node('button', '‹ 설정으로', 'magic-customize-back'); back.type = 'button';
     header.appendChild(back); header.appendChild(node('h1', '화면 커스텀')); header.appendChild(node('span', profile.name, 'magic-customize-product')); customPage.appendChild(header);
     var preview = node('div', null, 'magic-customize-preview'), phone = node('div', null, 'magic-preview-phone');

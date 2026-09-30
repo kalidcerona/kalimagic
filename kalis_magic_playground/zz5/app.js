@@ -41,9 +41,10 @@ const gestureGuide = document.getElementById('settings-gesture-guide');
 const gestureGuideDismiss = document.getElementById('settings-gesture-dismiss');
 const GESTURE_GUIDE_KEY = 'aletheia.settings-gesture-guide.v1';
 let gestureGuideShown = false;
+let bootingPerformance = true;
 
 function maybeShowGestureGuide() {
-  if (gestureGuideShown) return;
+  if (bootingPerformance || gestureGuideShown) return;
   try {
     if (localStorage.getItem(GESTURE_GUIDE_KEY) === 'done') return;
   } catch { /* Private browsing can block storage. */ }
@@ -2230,8 +2231,28 @@ async function boot() {
   syncControls();
 }
 
+async function startBootPerformance() {
+  try {
+    if (!corrupt && !storageLocked) {
+      const selectedId = meta.selectedId;
+      const candidates = [...meta.presets].sort((a, b) => Number(b.id === selectedId) - Number(a.id === selectedId));
+      for (const preset of candidates) {
+        meta.selectedId = preset.id;
+        await startPerformance();
+        if (view === 'performance') return;
+      }
+      meta.selectedId = selectedId;
+    }
+    await startCardPerformance();
+  } finally {
+    bootingPerformance = false;
+  }
+}
+
 boot().catch(() => {
   setError(MESSAGES.storageReadFailed);
+}).then(startBootPerformance).catch(() => {
+  setError('공연 화면을 준비하지 못했습니다. 저장된 데이터는 바꾸지 않았습니다.');
 });
 requestAnimationFrame(() => {
   if (view === 'settings') warmCourtDeck();

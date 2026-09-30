@@ -765,7 +765,11 @@ function bind() {
 }
 
 bootStorage();
-showSettings();
+appState = resetAttempts(appState);
+updateAttemptProgress();
+persistState();
+setStage("idle");
+showPerformance();
 bind();
 
 if ("serviceWorker" in navigator) {

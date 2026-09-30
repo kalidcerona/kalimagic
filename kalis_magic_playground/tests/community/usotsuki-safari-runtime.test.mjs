@@ -7,6 +7,8 @@ test('personal and friend USOTSUKI commit focused scan input before Start withou
     let timerId = 0;
     const timers = new Map();
     const stored = new Map([
+      ['usotsuki.detector.v1', JSON.stringify({version:1, attemptCount:12, settings:{truthAttempts:[4,7]}})],
+      ['usotsuki.distribution.detector.v1', JSON.stringify({version:1, attemptCount:12, settings:{truthAttempts:[4,7]}})],
       ['usotsuki.detector.settings-guide.v1', '1'],
       ['usotsuki.detector.sound.v1', '0'],
       ['usotsuki.distribution.detector.sound.v1', '0'],
@@ -37,6 +39,10 @@ test('personal and friend USOTSUKI commit focused scan input before Start withou
     globalThis.performance = { now:()=>now };
     await import(`../../${route}/detector.js?scan-regression`);
     const stateKey = route === 'zz7' ? 'usotsuki.detector.v1' : 'usotsuki.distribution.detector.v1';
+    assert.equal(get('#settings-screen').hidden, true, `${route} opens ready to play`);
+    assert.equal(get('#performance-screen').hidden, false);
+    assert.equal(JSON.parse(stored.get(stateKey)).attemptCount, 0, `${route} reload resets only attempts`);
+    assert.deepEqual(JSON.parse(stored.get(stateKey)).settings.truthAttempts, [4,7]);
     const start = get('#start-performance');
     const input = get('#scan-duration');
     const screen = get('#performance-screen');

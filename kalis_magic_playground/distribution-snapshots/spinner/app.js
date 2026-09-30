@@ -182,7 +182,17 @@ document.addEventListener('touchmove', event => {
 document.addEventListener('touchend', event => { if (event.touches.length < 2) twoFingerStart = null; }, { passive: true });
 
 document.getElementById('settings-close').addEventListener('click', closeSettings);
-document.getElementById('start-performance').addEventListener('click', closeSettings);
+document.getElementById('start-performance').addEventListener('click', () => {
+  pendingSpins.length = 0;
+  state.targetAngle = null;
+  state.spins = 0;
+  state.previousAngle = null;
+  needsFirstTouchTarget = true;
+  save();
+  refreshSettings();
+  syncTargetCue();
+  closeSettings();
+});
 document.getElementById('force-spin').addEventListener('change', event => { state.forceSpin = Number(event.target.value); state.spins = 0; state.previousAngle = null; pendingSpins.length = 0; save(); refreshSettings(); });
 document.getElementById('clear-target').addEventListener('click', () => {
   state.targetAngle = null;
