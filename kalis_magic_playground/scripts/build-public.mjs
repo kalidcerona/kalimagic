@@ -264,7 +264,7 @@ async function buildDistributionApps() {
     }
     const manifestPath = path.join(target, 'manifest.webmanifest');
     const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
-    Object.assign(manifest, { id: './', start_url: './', scope: './' });
+    Object.assign(manifest, { id: `/tools/${app.target}/`, start_url: './', scope: './' });
     await writeFile(manifestPath, JSON.stringify(manifest, null, 2) + '\n');
   }
 }

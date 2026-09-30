@@ -237,7 +237,7 @@ test('shared unlock stays on the pinned snapshot until explicit promotion', asyn
       const withoutGuard = distributed.toString('utf8').replace(/\n  <script id="friend-apps-check">[\s\S]*?<\/script>/, '');
       assert.equal(withoutGuard, snapshot.toString('utf8').replace(/<body\b/, '<body data-magic-customize="off"'));
     } else if (file === 'manifest.webmanifest') {
-      const expected = { ...JSON.parse(snapshot), id: './', start_url: './', scope: './' };
+      const expected = { ...JSON.parse(snapshot), id: '/tools/release/', start_url: './', scope: './' };
       assert.deepEqual(JSON.parse(distributed), expected);
     } else {
       assert.deepEqual(distributed, snapshot, file);
@@ -262,7 +262,7 @@ test('ALETHEIA and USOTSUKI distribution builds use pinned snapshots and separat
     const sourceFiles = (await filesUnder(snapshot)).filter((file) => !PRIVATE_PATTERNS.some((pattern) => pattern.test(file)));
     assert.deepEqual(await filesUnder(target), sourceFiles, `${app} file inventory`);
     const manifest = JSON.parse(await readFile(path.join(target, 'manifest.webmanifest'), 'utf8'));
-    assert.equal(manifest.id, './');
+    assert.equal(manifest.id, `/tools/${app}/`);
     for (const file of sourceFiles) {
       const [sourceBytes, targetBytes] = await Promise.all([
         readFile(path.join(snapshot, file)), readFile(path.join(target, file))
@@ -271,6 +271,8 @@ test('ALETHEIA and USOTSUKI distribution builds use pinned snapshots and separat
         const html = targetBytes.toString('utf8');
         assert.match(html, new RegExp(`tools\\/_check\\?tool=${app}`));
         assert.equal(html.replace(/\n  <script id="friend-apps-check">[\s\S]*?<\/script>/, ''), sourceBytes.toString('utf8').replace(/<body\b/, '<body data-magic-customize="off"'));
+      } else if (file === 'manifest.webmanifest') {
+        assert.deepEqual(JSON.parse(targetBytes), { ...JSON.parse(sourceBytes), id: `/tools/${app}/`, start_url: './', scope: './' });
       } else {
         assert.deepEqual(targetBytes, sourceBytes, `${app}/${file}`);
       }
@@ -290,7 +292,7 @@ test('Asrai, ALTER, and spinner personal builds keep exact runtime mirrors and d
     const runtimeFiles = [...files, ...SETTINGS_UI_FILES];
     assert.deepEqual((await readdir(distDir)).sort(), runtimeFiles.sort());
     const manifest = JSON.parse(await readFile(path.join(distDir, 'manifest.webmanifest'), 'utf8'));
-    assert.equal(manifest.id, './');
+    assert.equal(manifest.id, undefined);
     assert.equal(manifest.scope, './');
     assert.equal(manifest.name, name);
     assert.match(manifest.start_url, /^\.\/(?:index\.html)?$/);
@@ -393,4 +395,21 @@ test('final app policy rejects fullscreen and mixed personal/friend customizatio
   } finally {
     await rm(fixture, { recursive: true, force: true });
   }
+});
+
+// Manifest id resolves against start_url's origin, not the manifest directory (W3C 1.11).
+test('all final apps resolve to distinct install identities', async () => {
+  await buildPublic();
+  const origin = 'https://kalimagic.netlify.app';
+  const routes = [...PUBLIC_DIRS.filter((entry) => /^zz\d+$/.test(entry)), ...DISTRIBUTION_APPS.map((app) => `tools/${app.target}`)];
+  const ids = [];
+  for (const route of routes) {
+    const manifest = JSON.parse(await readFile(new URL(`../../dist/${route}/manifest.webmanifest`, import.meta.url), 'utf8'));
+    const start = new URL(manifest.start_url, `${origin}/${route}/manifest.webmanifest`);
+    const id = manifest.id ? new URL(manifest.id, start.origin + '/') : start;
+    ids.push(id.href);
+    if (route.startsWith('tools/')) assert.equal(id.href, `${origin}/${route}/`);
+  }
+  assert.equal(new Set(ids).size, routes.length, JSON.stringify(ids));
+  assert.ok(ids.includes(origin + '/zz13/'));
 });
