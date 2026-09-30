@@ -17,29 +17,6 @@
   <style>
     html.spinner-standalone #install-app-group { display: none !important; }
     #green-sector-core.is-acknowledged { fill: #2a9a6c; }
-    /* Pointer desktops only. Touch performances keep the stage clear. */
-    #desktop-settings {
-      position: fixed;
-      z-index: 4;
-      top: max(10px, env(safe-area-inset-top));
-      right: max(10px, env(safe-area-inset-right));
-      min-width: 44px;
-      min-height: 44px;
-      padding: 6px 10px;
-      border: 1px solid rgba(228, 207, 154, .28);
-      border-radius: 999px;
-      background: rgba(12, 24, 20, .38);
-      color: rgba(246, 237, 212, .62);
-      font-size: 11px;
-      letter-spacing: 0;
-      opacity: .45;
-    }
-    #desktop-settings:hover,
-    #desktop-settings:focus-visible {
-      opacity: 1;
-      background: rgba(12, 24, 20, .82);
-      color: #f6edd4;
-    }
   </style>
   <script src="./settings-ui.js" defer></script>
 </head>
@@ -256,8 +233,6 @@
       </section>
     </div>
   </main>
-  <button id="desktop-settings" type="button" hidden aria-label="설정 열기" aria-keyshortcuts="Shift+Escape" title="설정 열기 (Shift+Esc)">설정</button>
-
   <section id="guide" class="overlay guide" role="dialog" aria-modal="true" aria-label="회전판 시작 안내" hidden>
     <div class="panel guide-panel">
       <span class="eyebrow">ROULETTE</span>
@@ -267,7 +242,6 @@
       <div class="guide-help">
         <p><span aria-hidden="true">1</span><span>공연 전 목표 방향을 한 번 지정하세요.</span></p>
         <p><span aria-hidden="true">⌄</span><span>두 손가락을 아래로 쓸어 설정을 여세요.</span></p>
-        <p><span aria-hidden="true">⇧</span><span>리허설에서 키보드가 있으면 Shift+Esc로 설정을 열 수 있습니다. 마우스를 쓰는 화면에서는 오른쪽 위의 설정을 누르세요. 관객 앞에서 쓰는 동작이 아닙니다.</span></p>
       </div>
       <button id="guide-close" class="primary" type="button">시작하기</button>
     </div>

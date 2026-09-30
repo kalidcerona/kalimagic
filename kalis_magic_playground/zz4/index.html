@@ -20,11 +20,15 @@
 <body data-magic-app="choice" data-view="settings">
   <div id="settings" class="screen">
     <div class="shell" data-settings-root>
-      <header class="masthead">
+      <header class="masthead" id="settings-header">
         <img class="brand-logo" src="./brand-logo.jpg" alt="너의 선택은?" width="1280" height="427">
-        <h1 tabindex="-1">너의 선택은?</h1>
-        <p class="lede">목록을 미리 정리해 두고, 번호가 정해진 뒤에 목록을 엽니다.</p>
+        <div class="header-lead"><span class="eyebrow">선택 / 설정</span><h1 tabindex="-1" id="settings-title">설정</h1></div>
       </header>
+      <div class="identity">
+        <div class="identity-copy"><span class="catalog-label">인연</span><p class="identity-name">너의 선택은?</p><p class="identity-desc">고른 뒤에 발견하는 하나의 연결.</p></div>
+        <svg class="settings-sig" viewBox="0 0 120 80" aria-hidden="true" focusable="false"><circle class="mark" cx="18" cy="40" r="4"/><circle class="mark" cx="102" cy="40" r="4"/><path class="accent" pathLength="100" d="M24 40H96"/></svg>
+      </div>
+      <p class="lede">목록을 미리 정리해 두고, 번호가 정해진 뒤에 목록을 엽니다.</p>
 
       <section class="card" aria-labelledby="notes-entry-title">
         <h2 id="notes-entry-title">마술 시작</h2>
@@ -158,7 +162,7 @@
                 <li>관객이 1부터 항목 수까지의 번호를 고릅니다. 그 다음 ‘목록 보기’로 목록 전체를 한 번에 엽니다.</li>
                 <li>고른 번호 자리에 포스 항목을 끼워 넣습니다. 일반 항목은 순서대로 모두 남습니다.</li>
                 <li>한 번 연 목록은 번호가 잠겨 실수로 바뀌지 않습니다.</li>
-                <li>설정으로 돌아오려면 공연 화면에서 두 손가락을 화면 아래로 96픽셀 이상 밀어 내리거나, 키보드에서 Shift+Esc를 누릅니다. 공연 화면에는 설정 버튼을 두지 않습니다.</li>
+                <li>설정으로 돌아오려면 공연 화면에서 두 손가락을 화면 아래로 96픽셀 이상 밀어 내리세요. 공연 화면에는 설정 버튼을 두지 않습니다.</li>
                 <li>두 목록을 켜면 서로 다른 저장 목록에 각각 번호를 받습니다. 목록마다 준비한 포스 항목을 그 번호에 놓고, 둘 다 연 뒤에 함께 보여 줍니다.</li>
                 <li>공연을 시작한 뒤 설정을 고쳐도 진행 중인 화면은 바뀌지 않습니다. 시작 시점의 사본을 사용합니다.</li>
                 <li>노트 연출은 일반 항목 99개와 포스 항목 1개가 있는 목록만 사용합니다. 그런 목록이 다섯 개를 넘으면 저장된 순서의 앞 다섯 개만 메모가 됩니다.</li>

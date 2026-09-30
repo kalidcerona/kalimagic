@@ -10,7 +10,6 @@ import {
   fakeHomeDigit,
   insertForceItem,
   splitForcePreset,
-  isRehearsalShortcut,
   isTwoFingerDownSwipe,
   loadFromStorage,
   overwritePreset,
@@ -1165,13 +1164,6 @@ document.getElementById('recovery-dismiss').addEventListener('click', () => {
 document.getElementById('recovery-reopen').addEventListener('click', () => {
   recoveryEl.hidden = false;
   recoverySlim.hidden = true;
-});
-
-document.addEventListener('keydown', (event) => {
-  if (!rehearsalSurfaceOpen() || event.repeat) return;
-  if (!isRehearsalShortcut(event)) return;
-  event.preventDefault();
-  leaveRehearsalSurface();
 });
 
 document.addEventListener('pointerdown', onFakeHomePointerDown);

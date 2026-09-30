@@ -285,9 +285,6 @@
     #settings-entry-tutorial .tutorial-fingers::after { content: '↓'; position: absolute; bottom: 0; left: 0; right: 0; color: #fff; font-size: 28px; }
     #settings-entry-tutorial p { margin: 0 0 16px; }
     #settings-entry-tutorial button { min-width: 120px; min-height: 44px; border: 0; border-radius: 12px; background: #fff; color: #111; font: 600 16px system-ui, sans-serif; pointer-events: auto; touch-action: manipulation; }
-    .desktop-settings-entry { position: fixed; z-index: 50; top: max(12px, env(safe-area-inset-top)); right: max(12px, env(safe-area-inset-right)); min-height: 44px; padding: 0 14px; border: 1px solid #ffffff66; border-radius: 12px; background: #1b1b20eF; color: #fff; font: 600 14px system-ui, sans-serif; }
-    .desktop-settings-help { display: none; }
-    @media (any-hover: hover) and (any-pointer: fine) { .desktop-settings-help { display: block; color: #c4c5cc; font-size: 13px; } }
     @keyframes tutorial-swipe { 0%, 16% { transform: translateY(0); opacity: .55; } 70%, 85% { transform: translateY(45px); opacity: 1; } 100% { transform: translateY(0); opacity: .55; } }
     @media (prefers-reduced-motion: reduce) { #settings-entry-tutorial .tutorial-fingers span { animation: none; transform: translateY(25px); } }
   </style>
@@ -338,10 +335,12 @@
     </section>
     <section id="settings-screen" class="screen" aria-label="설정" hidden>
       <div class="settings-inner" data-settings-root>
-        <p class="desktop-settings-help">PC에서는 공연 화면의 ‘설정’ 버튼이나 Shift+Esc를 사용하세요.</p>
         <img id="settings-brand" src="./brand-logo.jpg" alt="RELEASE" onerror="this.hidden=true">
-        <div class="eyebrow">RELEASE</div>
-        <h1>레리즈 설정</h1>
+        <header id="settings-header"><div class="header-lead"><span class="eyebrow">레리즈 / 설정</span><h1 id="settings-title">설정</h1></div></header>
+        <div class="identity">
+          <div class="identity-copy"><span class="catalog-label">개방</span><p class="identity-name">RELEASE</p><p class="identity-desc">닫혀 있던 안쪽이 짧게 열린다.</p></div>
+          <svg class="sig" viewBox="0 0 120 80" aria-hidden="true" focusable="false"><g class="seam-left"><path d="M8 30h46"/><path d="M8 36h42"/></g><g class="seam-right"><path d="M66 44h46"/><path d="M70 50h42"/></g><path class="accent" d="M56 32v16"/></svg>
+        </div>
         <p class="intro">화면을 준비하고, 연출을 시작하세요.<br>이미지와 설정은 이 기기에만 저장됩니다.</p>
         <section id="install-offer" class="install-offer" aria-label="레리즈 설치 안내" hidden>
           <strong>홈 화면에 레리즈를 설치할까요?</strong>
@@ -350,6 +349,7 @@
           <div class="install-actions"><button id="install-action" type="button">설치 방법</button><button id="install-later" type="button">나중에</button></div>
         </section>
         <form id="settings-form">
+          <div class="body-groups">
           <details class="group" data-settings-group>
             <summary id="performance-heading">연출</summary>
             <label id="performance-field" class="field">연출 선택<select id="performance"><option value="pin">PIN 잠금 해제</option><option value="time-machine">리와인드</option></select></label>
@@ -411,6 +411,7 @@
             <p class="grid-caption">빨간 선은 항상 설명용입니다. 숫자는 ‘입장할 때 숫자를 잠깐 표시’를 켰을 때만 잠깐 보이며, 선은 실제 검은 화면에 나타나지 않습니다.</p>
             <p>설정 열기: 잠금 화면에서 두 손가락을 아래로 쓸기<br>홈 화면 4·6자리 안내 전환: 안내 문구 탭<br>기록 초기화 후 다시 잠금: 두 손가락으로 빠르게 두 번 탭</p>
           </details>
+          </div>
           <p id="offline-status" role="status">오프라인 준비 중…</p>
           <button id="start" type="submit">저장하고 시작</button>
         </form>
@@ -418,41 +419,14 @@
     </section>
     <div id="toast" role="status" hidden></div>
   </main>
-  <button id="desktop-settings-entry" class="desktop-settings-entry" type="button" aria-label="PC 설정 열기, Shift+Escape" hidden>설정 · Shift+Esc</button>
   <div id="settings-entry-tutorial" role="dialog" aria-label="설정 여는 방법" hidden>
-    <div class="tutorial-card"><div class="tutorial-fingers" aria-hidden="true"><span></span><span></span></div><p>설정을 열려면 잠금 화면에서 두 손가락으로 아래로 쓸어내리세요.</p><p class="desktop-settings-help">PC에서는 공연 화면의 ‘설정’ 버튼이나 Shift+Esc를 사용하세요.</p><button id="settings-entry-tutorial-dismiss" type="button">알겠어요</button></div>
+    <div class="tutorial-card"><div class="tutorial-fingers" aria-hidden="true"><span></span><span></span></div><p>설정을 열려면 잠금 화면에서 두 손가락으로 아래로 쓸어내리세요.</p><button id="settings-entry-tutorial-dismiss" type="button">알겠어요</button></div>
   </div>
   <script type="module" src="./install-prompt.js"></script>
   <script type="module">
     import { FINGERPRINT_HOLD_MS, normalizeSettings, storageIdentityForPath, selectedAttemptReveal, latestBirthdateAttempt, homeSwipeTarget, completeHomeSwipe, lockScreenCopy, createState, pushDigit, submitPin, fingerprintHold, attemptFeedback, feedbackVibration, deleteDigit, clearCurrent, toggleDigits, reset, isHomeGestureArea, peekOffset, registerTwoFingerTap, settleTwoFingerTaps, registerLockTap, formatAttemptLabel } from './logic.js';
 
     import { hiddenDigit, appendMinuteDigit, registerEmergencyTap, timeMachineClock, isSettingsSwipe, horizontalPeekOffset } from './time-machine.js';
-
-    // BEGIN DESKTOP SETTINGS ACCESS
-    function bindDesktopSettingsAccess(button, open, canOpen = () => true, canShow = canOpen) {
-      const media = window.matchMedia('(any-hover: hover) and (any-pointer: fine)');
-      const updateButton = () => { button.hidden = !media.matches || !canShow(); };
-      updateButton();
-      media.addEventListener?.('change', updateButton);
-      const isEditingTarget = (target) => {
-        const element = target?.nodeType === 3 ? target.parentElement : target;
-        return Boolean(element?.isContentEditable || element?.closest?.('input, textarea, select, [contenteditable]:not([contenteditable="false"])'));
-      };
-      const activate = (event) => {
-        if (isEditingTarget(event.target) || !canOpen()) return false;
-        event.preventDefault?.();
-        open();
-        updateButton();
-        return true;
-      };
-      button.addEventListener('click', activate);
-      window.addEventListener('keydown', (event) => {
-        if (event.key !== 'Escape' || !event.shiftKey || event.ctrlKey || event.metaKey || event.altKey || event.isComposing || event.repeat) return;
-        activate(event);
-      });
-      return { activate, updateButton };
-    }
-    // END DESKTOP SETTINGS ACCESS
 
     const $ = (id) => document.getElementById(id);
     const SETTINGS_TUTORIAL_KEY = "unlock-settings-entry-tutorial-v1";
@@ -488,7 +462,6 @@
     let settings = normalizeSettings(saved && typeof saved === 'object' ? saved : {}, STORAGE.personal);
     let state = createState(settings.digits);
     let screen = 'settings';
-    let desktopSettingsAccess = null;
     let feedbackTimer = null;
     let feedback = null;
     let unlockTimer = null;
@@ -528,7 +501,6 @@
     const appliedImages = new Map();
     const imageKeys = STORAGE.personal ? ['lock', 'unlock', 'home2'] : ['lock', 'unlock'];
     document.addEventListener('pointerdown', () => { if (screen !== 'settings') performanceTouched = true; }, { capture: true });
-    document.addEventListener('keydown', () => { if (screen !== 'settings') performanceTouched = true; }, { capture: true });
 
     function toast(message) {
       clearTimeout(toastTimer);
@@ -719,7 +691,6 @@
           }, UNLOCK_ANIMATION_MS);
         }
       }
-      desktopSettingsAccess?.updateButton();
       if (next === 'settings') { $('settings-entry-tutorial').hidden = true; populateForm(); $('settings-screen').scrollTop = 0; }
       if (next === 'time-black') startRewindGuide();
       else stopRewindGuide();
@@ -858,12 +829,6 @@
       if (fingerprintPress?.pointerId === event.pointerId) releaseFingerprint(event.pointerId, false);
     });
     $('fingerprint').addEventListener('contextmenu', (event) => event.preventDefault());
-    document.addEventListener('keydown', (event) => {
-      if (screen !== 'input' || event.ctrlKey || event.metaKey || event.altKey) return;
-      if (/^[0-9]$/.test(event.key)) { event.preventDefault(); inputDigit(Number(event.key)); }
-      if (event.key === 'Backspace') { event.preventDefault(); removeDigit(); }
-      if (event.key === 'Enter' && settings.style === 'galaxy') { event.preventDefault(); confirmKey.click(); }
-    });
 
     function gestureAction(action) {
       if (!action) return;
@@ -1371,12 +1336,6 @@
     populateForm();
     applyAppearance(settings);
     // Performance does not depend on opening or decoding the image database.
-    desktopSettingsAccess = bindDesktopSettingsAccess(
-      $('desktop-settings-entry'),
-      () => gestureAction('settings'),
-      () => screen !== 'settings',
-      () => screen !== 'settings',
-    );
     showScreen('input');
     imageKeys.forEach((key) => { $(`${key}-info`).textContent = '기본 배경 사용 · 저장된 사진을 확인하는 중입니다.'; });
     prepareOffline();

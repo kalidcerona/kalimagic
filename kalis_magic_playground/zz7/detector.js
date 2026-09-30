@@ -738,13 +738,6 @@ function onVisibilityChange() {
   try { ctx?.close().catch(() => {}); } catch { /* Already closed. */ }
 }
 
-function onRehearsalKey(event) {
-  if (event.key !== "Escape" || !event.shiftKey || event.isComposing) return;
-  if (performanceScreen.hidden) return;
-  event.preventDefault();
-  openSettings();
-}
-
 function bind() {
   performanceScreen.addEventListener("touchstart", unlockFromGesture, { passive: true });
   performanceScreen.addEventListener("touchend", unlockFromGesture, { passive: true });
@@ -762,7 +755,6 @@ function bind() {
   scanDurationInput?.addEventListener("input", onScanDurationInput);
   scanDurationInput?.addEventListener("blur", onScanDurationInput);
   scanDurationInput?.addEventListener("change", onScanDurationChange);
-  window.addEventListener("keydown", onRehearsalKey);
   document.addEventListener("visibilitychange", onVisibilityChange);
 }
 

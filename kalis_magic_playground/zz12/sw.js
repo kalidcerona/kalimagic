@@ -1,5 +1,5 @@
 const CACHE_PREFIX=`magic-memdeck-${self.registration.scope}-`;
-const CACHE=`${CACHE_PREFIX}v3`;
+const CACHE=`${CACHE_PREFIX}v4`;
 const ASSETS=['./','./index.html','./style.css','./app.mjs','./core.mjs','./data.mjs','./manifest.webmanifest','./icon.svg','./icon-192.png','./icon-512.png'].map(path=>new URL(path,self.registration.scope).href);
 const INDEX=new URL('index.html',self.registration.scope).href;
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS))));

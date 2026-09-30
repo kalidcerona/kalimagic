@@ -431,13 +431,6 @@ function onPointerEnd(event) {
   peakPointers = 0;
 }
 
-function onKeyDown(event) {
-  if (event.key !== "Escape" || !event.shiftKey) return;
-  if (!performanceOpen()) return;
-  event.preventDefault();
-  openSettings();
-}
-
 function onSwallowClick(event) {
   if (!suppressClick) return;
   suppressClick = false;
@@ -459,7 +452,6 @@ function registerShell() {
 }
 
 document.addEventListener("click", onSwallowClick, true);
-document.addEventListener("keydown", onKeyDown);
 document.addEventListener("pointerdown", onPointerDown);
 document.addEventListener("pointermove", onPointerMove, { passive: false });
 document.addEventListener("pointerup", onPointerEnd);

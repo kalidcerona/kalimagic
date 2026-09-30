@@ -92,3 +92,109 @@
 
 [data-settings-root] .cell-map-table { min-width:0; width:100%; table-layout:fixed; }
 [data-settings-root] .cell-map-table :is(th,td) { overflow-wrap:anywhere; padding:8px 4px; }
+
+/* ALTER settings B. Stage, setup, and camera styles stay in style.css. */
+#settings:not([hidden]) {
+  align-items: flex-start;
+  justify-content: center;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: rgba(26, 21, 18, .92);
+  padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom), env(keyboard-inset-height, 0px)) max(16px, env(safe-area-inset-left));
+}
+#settings .settings-panel {
+  width: min(100%, 560px) !important;
+  max-width: 560px !important;
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  margin: 0 auto !important;
+  padding: 22px 24px 20px !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: #1a1512 !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  color: #f4efe9 !important;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+#settings .settings-panel > * { min-width: 0; max-width: 100%; }
+#settings .brand-logo { display: none !important; }
+#settings .settings-top { order: 0; display: flex !important; align-items: center !important; justify-content: space-between !important; gap: 12px !important; margin: 0 0 16px !important; }
+#settings .settings-label { color: #ab9f92 !important; font-size: 12px !important; font-weight: 700 !important; letter-spacing: .06em !important; }
+#settings #close-settings { width: auto !important; min-width: 44px !important; min-height: 44px !important; padding: 0 14px !important; border: 1px solid #ffffff24 !important; border-radius: 8px !important; background: transparent !important; color: #f4efe9 !important; font-size: 14px !important; font-weight: 600 !important; line-height: 1.2 !important; }
+#settings .identity { order: 1; display: flex !important; align-items: center !important; justify-content: space-between !important; gap: 8px !important; margin: 0 !important; padding: 24px 20px !important; border: 1px solid #ffffff14 !important; border-radius: 12px !important; background: #1f1815 !important; }
+#settings .identity-copy { min-width: 0; flex: 1 1 auto; }
+#settings .catalog-label { display: block; padding-bottom: 8px; color: #aab7bb !important; font-size: 12px !important; font-weight: 700 !important; letter-spacing: .12em !important; line-height: 1.4 !important; }
+#settings .identity-name { margin: 0 0 8px !important; color: #f4efe9 !important; font-size: 28px !important; font-weight: 800 !important; line-height: 1.2 !important; letter-spacing: -.035em !important; }
+#settings .identity-desc { margin: 0 !important; color: #d9cdc2 !important; font-size: 13px !important; line-height: 1.55 !important; }
+#settings .sig { display: block; width: 96px; height: 80px; flex: 0 0 96px; fill: none; stroke: #7f9598; stroke-width: 1.5; }
+#settings .sig .accent { stroke: #aab7bb; stroke-width: 2; }
+#settings .settings-body { order: 2; margin-top: 18px !important; padding: 4px 18px 8px !important; border: 1px solid #ffffff14 !important; border-radius: 12px !important; background: #1f1815 !important; background-image: none !important; }
+#settings .gesture-note { order: 3; margin: 12px 0 0 !important; border: 0 !important; padding: 0 !important; color: #ab9f92 !important; font-size: 13px !important; line-height: 1.6 !important; text-align: left !important; }
+#settings .settings-panel > .magic-overview { order: 4; margin-top: 18px !important; padding: 4px 18px 8px !important; border: 1px solid #ffffff14 !important; border-radius: 12px !important; background: #1f1815 !important; }
+#settings .settings-panel > .magic-customize-link { order: 5; margin-top: 18px !important; }
+#settings .settings-panel > .magic-settings-footer { order: 6; margin-top: 8px !important; padding: 16px 4px 4px !important; color: #ab9f92 !important; }
+#settings .body-groups :is(details, .settings-disclosure, .install-control) { margin: 0 !important; padding: 0 !important; border: 0 !important; border-radius: 0 !important; background: transparent !important; box-shadow: none !important; }
+#settings .body-groups details { border-bottom: 1px solid #ffffff14 !important; padding-bottom: 8px !important; }
+#settings .body-groups summary { display: flex !important; align-items: center !important; gap: 12px !important; min-height: 50px !important; margin: 0 !important; padding: 12px 0 !important; border: 0 !important; background: transparent !important; color: #f4efe9 !important; font-size: 16px !important; font-weight: 700 !important; }
+#settings .body-groups summary::after { content: "+"; margin-left: auto; color: #ab9f92; font-size: 18px; line-height: 1; }
+#settings .body-groups details[open] > summary::after { content: "−"; }
+#settings .body-groups details[open] > summary { margin-bottom: 4px !important; border-bottom: 0 !important; }
+#settings .settings-body h2 { margin: 14px 0 4px !important; color: #f4efe9 !important; font-size: 17px !important; }
+#settings .settings-body > p,
+#settings .detail,
+#settings .state-note { color: #ab9f92 !important; font-size: 13px !important; line-height: 1.65 !important; text-align: left !important; overflow-wrap: anywhere; }
+#settings .form-row { display: flex !important; flex-wrap: wrap !important; align-items: center !important; justify-content: space-between !important; gap: 8px 12px !important; min-height: 54px !important; margin: 0 !important; padding: 8px 0 !important; border: 0 !important; border-top: 1px solid #ffffff10 !important; background: transparent !important; }
+#settings .form-row label { color: #f4efe9 !important; }
+#settings .form-row select,
+#settings #brightness { width: auto !important; max-width: min(100%, 180px) !important; min-height: 44px !important; }
+#settings #brightness { accent-color: #aab7bb; flex: 1 1 140px; }
+#settings #reveal,
+#settings #reset,
+#settings #stop,
+#settings #install-app,
+#settings .magic-customize-open { width: 100% !important; min-height: 44px !important; border-radius: 8px !important; }
+#settings #reveal { min-height: 48px !important; background: #e8631f !important; color: #1a1512 !important; border: 0 !important; }
+#settings .actions { gap: 8px !important; }
+#settings #reset,
+#settings #stop { background: #1f1815 !important; color: #f4efe9 !important; border: 1px solid #625349 !important; }
+#settings .install-control { margin-top: 8px !important; padding-top: 12px !important; border-top: 1px solid #ffffff14 !important; }
+#settings :is(button, input, select, summary):focus-visible { outline: 2px solid #d99070 !important; outline-offset: 3px; }
+@media (max-width: 319px) {
+  #settings:not([hidden]) { padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom), env(keyboard-inset-height, 0px)) max(12px, env(safe-area-inset-left)); }
+  #settings .settings-panel { padding: 16px 12px 12px !important; }
+  #settings .identity { padding: 16px 12px !important; }
+  #settings .identity-name { font-size: 24px !important; }
+  #settings .identity-desc,
+  #settings .catalog-label { font-size: 12px !important; }
+  #settings .sig { width: 64px; height: 54px; flex-basis: 64px; }
+  #settings .settings-body,
+  #settings .settings-panel > .magic-overview { padding-left: 12px !important; padding-right: 12px !important; }
+  #settings .form-row select,
+  #settings #brightness { flex: 1 1 100%; max-width: none !important; }
+  #settings .actions { grid-template-columns: 1fr !important; }
+}
+@media (max-width: 389px) {
+  #settings .identity-name { font-size: 26px !important; }
+}
+@media (min-width: 744px) {
+  #settings .settings-panel { padding-top: 28px !important; }
+}
+@media (max-height: 500px) {
+  #settings .identity { padding: 14px 16px !important; }
+  #settings .identity-name { font-size: 24px !important; }
+  #settings .sig { width: 64px; height: 54px; flex-basis: 64px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  #settings .sig .accent { animation: alter-outline-settle .22s ease-out; }
+}
+@keyframes alter-outline-settle {
+  from { transform: translateX(4px); }
+  to { transform: none; }
+}

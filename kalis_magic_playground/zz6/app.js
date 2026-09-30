@@ -1964,12 +1964,6 @@ function bind() {
     }
   });
   motionActivation.addEventListener('click', () => { void enableMotion(); });
-  window.addEventListener('keydown', (event) => {
-    if (event.key !== 'Escape' || !event.shiftKey || event.repeat) return;
-    if (state.mode !== 'performance') return;
-    event.preventDefault();
-    showSettings();
-  });
   window.addEventListener('pointerdown', onPointerDown, { capture: true, passive: false });
   window.addEventListener('pointermove', onPointerMove, { capture: true, passive: false });
   window.addEventListener('pointerup', onPointerUp, { capture: true, passive: false });

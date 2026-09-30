@@ -2126,12 +2126,6 @@ function bindEvents() {
     if (view === 'performance' && event.cancelable) event.preventDefault();
   }, { passive: false });
   canvas.addEventListener('gesturestart', (event) => event.preventDefault());
-  window.addEventListener('keydown', (event) => {
-    if (view === 'performance' && event.shiftKey && event.key === 'Escape') {
-      event.preventDefault();
-      openSettings();
-    }
-  });
   window.addEventListener('resize', onViewportChange);
   window.visualViewport?.addEventListener('resize', onViewportChange);
   window.addEventListener('orientationchange', onViewportChange);

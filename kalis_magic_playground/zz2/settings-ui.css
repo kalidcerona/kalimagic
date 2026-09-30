@@ -92,3 +92,90 @@
 
 [data-settings-root] .cell-map-table { min-width:0; width:100%; table-layout:fixed; }
 [data-settings-root] .cell-map-table :is(th,td) { overflow-wrap:anywhere; padding:8px 4px; }
+
+/* RELEASE settings B. Scoped to the settings screen so the lock stage is unchanged. */
+#settings-screen { overflow-x:hidden; overflow-y:auto; overscroll-behavior:contain; background:#1a1512 !important; color:#f4efe9 !important; padding:max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(20px, calc(env(safe-area-inset-bottom) + env(keyboard-inset-height, 0px))) max(16px, env(safe-area-inset-left)) !important; touch-action:pan-y; }
+#settings-screen .settings-inner { width:min(100%, 560px) !important; max-width:560px !important; margin-inline:auto !important; background:transparent !important; background-image:none !important; border:0 !important; box-shadow:none !important; color:#f4efe9 !important; word-break:keep-all; overflow-wrap:break-word; }
+#settings-screen .settings-inner > * { min-width:0; max-width:100%; }
+#settings-screen #settings-brand { display:none !important; }
+#settings-screen .settings-inner > .magic-overview { order:4; }
+#settings-screen .settings-inner > .magic-customize-link { order:5; }
+#settings-screen .settings-inner > .magic-settings-footer { order:6; }
+#settings-screen .settings-inner { display:flex; flex-direction:column; }
+#settings-screen #settings-header { display:flex; align-items:center; justify-content:space-between; gap:12px; margin:0 0 16px; }
+#settings-screen .header-lead { min-width:0; display:flex; flex-direction:column; gap:2px; }
+#settings-screen .eyebrow { color:#ab9f92 !important; font-size:12px !important; font-weight:700 !important; letter-spacing:.06em !important; line-height:1.4 !important; }
+#settings-screen #settings-title { margin:0 !important; color:#ab9f92 !important; font-size:13px !important; font-weight:500 !important; line-height:1.4 !important; letter-spacing:0 !important; }
+#settings-screen .identity { display:flex; align-items:center; justify-content:space-between; gap:8px; margin:0 0 16px; padding:24px 20px; border:1px solid #ffffff14; border-radius:12px; background-color:#1f1815; background-image:repeating-linear-gradient(90deg, rgba(136, 85, 73, .2) 0 1px, transparent 1px 12px); }
+#settings-screen .identity-copy { min-width:0; flex:1 1 auto; }
+#settings-screen .catalog-label { display:block; padding-bottom:8px; color:#c88c76 !important; font-size:12px !important; font-weight:700 !important; letter-spacing:.12em !important; line-height:1.4 !important; }
+#settings-screen .identity-name { margin:0 0 8px !important; color:#f4efe9 !important; font-size:30px !important; font-weight:800 !important; line-height:1.2 !important; letter-spacing:-.035em !important; }
+#settings-screen .identity-desc,
+#settings-screen .intro { margin:0 !important; color:#d9cdc2 !important; font-size:13px !important; line-height:1.55 !important; }
+#settings-screen .intro { margin:0 0 16px !important; }
+#settings-screen .sig { display:block; width:120px; height:80px; flex:0 0 120px; max-width:38%; fill:none; stroke:#885549; stroke-width:1.6; stroke-linecap:round; pointer-events:none; }
+#settings-screen .sig .accent { stroke:#c88c76; stroke-width:2; }
+#settings-screen .body-groups { margin-top:2px; padding:0 18px 8px; border:1px solid #ffffff14; border-radius:12px; background:#1f1815; }
+#settings-screen .body-groups :is(details, .group, .usage-guide) { margin:0 !important; padding:0 !important; border:0 !important; border-bottom:1px solid #ffffff14 !important; border-radius:0 !important; background:transparent !important; background-color:transparent !important; box-shadow:none !important; color:#d9cdc2 !important; }
+#settings-screen .body-groups > :last-child { border-bottom:0 !important; }
+#settings-screen .body-groups summary { display:flex !important; align-items:center; justify-content:space-between; gap:12px; min-height:50px !important; margin:0 !important; padding:12px 0 !important; border:0 !important; background:transparent !important; color:#f4efe9 !important; font-size:15px !important; font-weight:650 !important; line-height:1.45 !important; }
+#settings-screen .body-groups summary::marker,
+#settings-screen .body-groups summary::-webkit-details-marker { color:#c88c76; }
+#settings-screen .body-groups details[open] > summary { margin-bottom:8px !important; }
+#settings-screen .body-groups :is(p, .hint, .alignment-help, .image-info, label) { color:#ab9f92 !important; overflow-wrap:anywhere; }
+#settings-screen .field { min-height:44px; }
+#settings-screen :is(input:not([type=checkbox]):not([type=color]):not([type=file]), select) { min-height:44px !important; }
+#settings-screen input[type=checkbox] { width:22px; height:22px; accent-color:#c88c76; }
+#settings-screen input[type=range] { accent-color:#c88c76; }
+#settings-screen :is(button, summary, .crop-handle) { touch-action:manipulation; }
+#settings-screen #start { width:100% !important; min-height:48px !important; margin-top:18px !important; border-radius:8px !important; }
+#settings-screen #install-action,
+#settings-screen #install-later,
+#settings-screen #hitsuzen-link { min-height:44px !important; }
+#settings-screen .install-offer { background-color:#1f1815 !important; border-color:#ffffff14 !important; }
+#settings-screen .preview,
+#settings-screen .preview img { background-image:none; }
+#settings-screen > .magic-overview,
+#settings-screen .settings-inner > .magic-overview { margin-top:18px !important; padding:4px 18px 8px !important; border:1px solid #ffffff14 !important; border-radius:12px !important; background:#1f1815 !important; background-color:#1f1815 !important; }
+#settings-screen .settings-inner > .magic-overview summary { min-height:50px !important; }
+#settings-screen .settings-inner > .magic-settings-footer { margin-top:8px !important; color:#ab9f92 !important; }
+#settings-screen :is(button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible) { outline:2px solid #c88c76; outline-offset:3px; }
+@media (max-width:480px) {
+  #settings-screen { padding-inline:max(16px, env(safe-area-inset-left)) !important; }
+}
+@media (max-width:390px) {
+  #settings-screen .identity { padding:18px 16px; }
+  #settings-screen .identity-name { font-size:28px !important; }
+}
+@media (max-width:320px) {
+  #settings-screen { padding-inline:max(12px, env(safe-area-inset-left)) !important; }
+  #settings-screen .identity-name { font-size:26px !important; }
+  #settings-screen .sig { width:92px; height:64px; flex-basis:92px; }
+  #settings-screen .body-groups,
+  #settings-screen .settings-inner > .magic-overview { padding-left:12px !important; padding-right:12px !important; }
+}
+@media (max-width:280px) {
+  #settings-screen .identity { padding:14px 12px; gap:6px; }
+  #settings-screen .identity-name { font-size:22px !important; }
+  #settings-screen .identity-desc,
+  #settings-screen .catalog-label { font-size:12px !important; }
+  #settings-screen .sig { width:72px; height:52px; flex-basis:72px; }
+}
+@media (min-width:744px) and (max-width:767px),
+       (min-width:768px) and (max-width:819px),
+       (min-width:820px) and (max-width:1279px),
+       (min-width:1280px) {
+  #settings-screen .settings-inner { width:min(100%, 560px) !important; max-width:560px !important; }
+  #settings-screen .identity { padding:24px 20px; }
+}
+@media (max-height:500px) {
+  #settings-screen .identity { padding:14px 16px; }
+  #settings-screen .identity-name { font-size:24px !important; }
+  #settings-screen .sig { width:84px; height:52px; flex-basis:84px; }
+}
+@media (prefers-reduced-motion:no-preference) {
+  #settings-screen .sig .seam-left { animation:release-seam-left .28s ease-out; }
+  #settings-screen .sig .seam-right { animation:release-seam-right .28s ease-out; }
+}
+@keyframes release-seam-left { from { transform:translateX(8px); } to { transform:none; } }
+@keyframes release-seam-right { from { transform:translateX(-8px); } to { transform:none; } }

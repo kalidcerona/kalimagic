@@ -381,15 +381,6 @@ export function isTwoFingerDownSwipe(moves, threshold = SWIPE_PX) {
   return moves.every((move) => typeof move === 'number' && Number.isFinite(move) && move >= threshold);
 }
 
-export function isRehearsalShortcut(eventLike) {
-  if (!eventLike) return false;
-  return eventLike.key === 'Escape'
-    && eventLike.shiftKey === true
-    && eventLike.altKey !== true
-    && eventLike.ctrlKey !== true
-    && eventLike.metaKey !== true;
-}
-
 function recoverPreset(entry, index) {
   const label = `${index + 1}번 목록`;
   if (!entry || typeof entry !== 'object' || Array.isArray(entry)) {

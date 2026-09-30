@@ -45,31 +45,14 @@ function refreshSettings() {
   document.getElementById('spin-value').textContent = `${state.spins}회`;
   document.getElementById('force-spin').value = String(state.forceSpin);
 }
-const desktopSettings = document.getElementById('desktop-settings');
-const desktopPointer = window.matchMedia('(any-hover: hover) and (any-pointer: fine)');
-function syncDesktopSettingsEntry() {
-  // Coarse touch screens keep the performance stage free of a settings control.
-  desktopSettings.hidden = !(desktopPointer.matches && settings.hidden && guide.hidden);
-}
 function showSettings() {
   if (busy || !guide.hidden) return;
   refreshSettings();
   settings.hidden = false;
   drag = null;
-  syncDesktopSettingsEntry();
 }
 function closeSettings() {
   settings.hidden = true;
-  syncDesktopSettingsEntry();
-}
-function isTypingTarget(event) {
-  if (event.isComposing || event.keyCode === 229) return true;
-  const target = event.target;
-  if (!target || typeof target !== 'object') return false;
-  const tag = String(target.tagName || '').toUpperCase();
-  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return true;
-  if (target.isContentEditable) return true;
-  return typeof target.closest === 'function' && Boolean(target.closest('[contenteditable="true"]'));
 }
 function angleAt(event) {
   const box = wrap.getBoundingClientRect();
@@ -205,18 +188,6 @@ document.addEventListener('touchmove', event => {
 }, { passive: false });
 document.addEventListener('touchend', event => { if (event.touches.length < 2) twoFingerStart = null; }, { passive: true });
 
-window.addEventListener('keydown', event => {
-  if (event.repeat || isTypingTarget(event)) return;
-  if (event.key !== 'Escape' || !event.shiftKey) return;
-  if (!settings.hidden || !guide.hidden || busy) return;
-  event.preventDefault();
-  showSettings();
-});
-desktopSettings.addEventListener('pointerdown', event => { event.stopPropagation(); });
-desktopSettings.addEventListener('click', () => { showSettings(); });
-if (typeof desktopPointer.addEventListener === 'function') desktopPointer.addEventListener('change', syncDesktopSettingsEntry);
-else desktopPointer.addListener(syncDesktopSettingsEntry);
-
 document.getElementById('settings-close').addEventListener('click', closeSettings);
 document.getElementById('start-performance').addEventListener('click', () => {
   pendingSpins.length = 0;
@@ -244,10 +215,8 @@ document.getElementById('clear-target').addEventListener('click', () => {
 document.getElementById('guide-close').addEventListener('click', () => {
   guide.hidden = true;
   try { localStorage.setItem('zz11-guide-seen-v2', '1'); } catch { /* Ignore storage failures. */ }
-  syncDesktopSettingsEntry();
 });
 try { guide.hidden = localStorage.getItem('zz11-guide-seen-v2') === '1'; } catch { guide.hidden = false; }
-syncDesktopSettingsEntry();
 refreshSettings();
 syncTargetCue();
 

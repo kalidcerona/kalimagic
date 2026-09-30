@@ -425,7 +425,6 @@ stage.addEventListener("touchend", (event) => {
   if (event.touches.length < 2) touchStart = null;
 }, { passive: true });
 document.addEventListener("keydown", (event) => {
-  if (event.key.toLowerCase() === "s" && stream && settings.hidden) openSettings();
   if (event.key === "Escape" && !settings.hidden) closeSettings();
 });
 function suspendAnalysis(code) {

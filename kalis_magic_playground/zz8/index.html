@@ -22,15 +22,20 @@
 </head>
 <body data-magic-app="asrai">
   <main id="settings-screen">
-    <div class="settings-wrap" data-settings-root>
-      <img id="settings-brand" src="brand-logo.jpg" alt="아스라이">
-      <h1>설정</h1>
+    <div class="settings-wrap settings-b" data-settings-root>
+      <img id="settings-brand" src="brand-logo.jpg" alt="">
+      <header class="settings-bar"><span class="eyebrow">아스라이 / 설정</span></header>
+      <div class="identity">
+        <div class="identity-copy"><span class="catalog-label">기억</span><h1>아스라이</h1><p class="identity-desc">이름은 그대로 두고, 정한 횟수에만 고정 상세가 나옵니다.</p></div>
+        <svg class="sig" viewBox="0 0 128 80" role="img" aria-label="구분선 끝에만 남은 희미한 이름표 흔적" focusable="false"><path d="M6 48h70"/><rect class="accent label" x="84" y="32" width="36" height="22" rx="2"/><path d="M92 43h20" opacity=".55"/></svg>
+      </div>
+      <div class="body-groups">
       <details class="instructions settings-disclosure" aria-labelledby="howto-title">
         <summary id="howto-title">사용 안내</summary>
         <p>이름을 누르면 그 이름의 상세가 바로 열립니다. 화면에 남는 이름은 누른 이름 그대로입니다.</p>
         <p>몇 번째 상세에 고정 전화, 지역, 메모를 쓸지 정합니다. 기본은 4번째이고 1부터 20까지입니다. 그 횟수에만 아래에 적은 값이 나옵니다.</p>
         <p>다른 상세는 이 브라우저에서 만든 가상 정보이며, 열 때마다 달라질 수 있습니다. 단계로 나눠 보여 주지 않습니다.</p>
-        <p>공연 중 두 손가락으로 아래로 쓸면 설정이 열립니다. 컴퓨터 리허설은 Shift+Escape입니다.</p>
+        <p>공연 중 두 손가락으로 아래로 쓸면 설정이 열립니다.</p>
         <p>실제 연락처는 읽지 않고 권한도 요청하지 않습니다. 실존 인물 정보를 넣지 마세요.</p>
       </details>
 
@@ -76,6 +81,7 @@
         <p id="install-help" role="status" aria-live="polite" hidden></p>
       </div>
       <p id="settings-status" role="status" aria-live="polite"></p>
+      </div>
     </div>
   </main>
 
