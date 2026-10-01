@@ -220,3 +220,6 @@
   overflow-wrap: normal;
   line-height: 1.35;
 }
+
+/* Table appearance uses the existing settings B form grammar. */
+#settings #table-theme { min-height: 44px; max-width: 100%; }

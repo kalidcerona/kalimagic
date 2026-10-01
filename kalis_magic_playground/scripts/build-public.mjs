@@ -134,6 +134,13 @@ export const ALTER_FILES = [
   'manifest.webmanifest', 'performance.js', 'style.css', 'sw.js', 'vision.js'
 ];
 export const SPINNER_FILES = [
+  'casino-assets/felt-emerald.svg',
+  'casino-assets/felt-burgundy.svg',
+  'casino-assets/wheel-emerald.svg',
+  'casino-assets/wheel-burgundy.svg',
+  'casino-assets/arrow.svg',
+  'casino-assets/wood-grain.svg',
+  'casino-assets/field-marks.svg',
   'casino-salon.jpg',
   'app.js', 'icon-192.png', 'icon-512.png', 'index.html',
   'logic.js', 'manifest.webmanifest', 'style.css', 'sw.js'

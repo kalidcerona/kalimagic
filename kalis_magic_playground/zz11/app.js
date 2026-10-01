@@ -66,14 +66,36 @@ function showStatus(message, duration = 0) {
 }
 function syncTargetCue() {
   const acknowledged = state.targetAngle !== null;
-  const core = document.getElementById('green-sector-core');
-  // Keep the acknowledgement on the fixed green sector so the chosen angle stays hidden.
   const cue = acknowledged ? 'acknowledged' : 'idle';
-  core.classList.toggle('is-acknowledged', acknowledged);
-  core.dataset.targetCue = cue;
+  stage.classList.toggle('target-cue-acknowledged', acknowledged);
+  stage.dataset.targetCue = cue;
+  for (const id of ['target-corner-left', 'target-corner-right']) {
+    const corner = document.getElementById(id);
+    corner.classList.toggle('is-acknowledged', acknowledged);
+    corner.dataset.targetCue = cue;
+  }
   wrap.classList.toggle('target-cue-acknowledged', acknowledged);
   wrap.dataset.targetCue = cue;
 }
+
+// Table appearance has its own storage and never changes the performance state.
+const tableThemeKey = 'zz11-table-theme-v1';
+const tableThemeSelect = document.getElementById('table-theme');
+function normalizeTableTheme(value) { return value === 'burgundy' ? 'burgundy' : 'emerald'; }
+function applyTableTheme(value) {
+  const theme = normalizeTableTheme(value);
+  stage.dataset.tableTheme = theme;
+  tableThemeSelect.value = theme;
+  return theme;
+}
+let savedTableTheme = null;
+try { savedTableTheme = localStorage.getItem(tableThemeKey); } catch { /* Use the default table without storage. */ }
+applyTableTheme(savedTableTheme);
+tableThemeSelect.addEventListener('change', event => {
+  const theme = applyTableTheme(event.target.value);
+  try { localStorage.setItem(tableThemeKey, theme); } catch { /* Keep the selected table for this session. */ }
+});
+
 function standaloneDisplay() {
   return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 }

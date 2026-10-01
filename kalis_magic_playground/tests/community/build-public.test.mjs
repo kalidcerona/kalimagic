@@ -402,6 +402,14 @@ test('HITSUZEN and AROSAEGIDA keep every pinned snapshot byte except gate, custo
 test('Asrai, ALTER, and spinner personal builds keep exact runtime mirrors and distinct install identities', async () => {
   await buildPublic();
   const root = fileURLToPath(new URL('../..', import.meta.url));
+  async function filesUnder(dir, prefix = '') {
+    const entries = await readdir(dir, { withFileTypes: true });
+    const parts = await Promise.all(entries.map(async (entry) => {
+      const name = path.join(prefix, entry.name);
+      return entry.isDirectory() ? filesUnder(path.join(dir, entry.name), name) : [name];
+    }));
+    return parts.flat().sort();
+  }
   for (const [source, route, files, name] of [
     ['magic-asrai', 'zz8', ASRAI_FILES, '아스라이'],
     ['magic-alter', 'zz10', ALTER_FILES, 'ALTER'],
@@ -409,7 +417,7 @@ test('Asrai, ALTER, and spinner personal builds keep exact runtime mirrors and d
   ]) {
     const distDir = path.join(root, 'dist', route);
     const runtimeFiles = [...files, ...SETTINGS_UI_FILES];
-    assert.deepEqual((await readdir(distDir)).sort(), runtimeFiles.sort());
+    assert.deepEqual(await filesUnder(distDir), runtimeFiles.sort());
     const manifest = JSON.parse(await readFile(path.join(distDir, 'manifest.webmanifest'), 'utf8'));
     assert.equal(manifest.id, undefined);
     assert.equal(manifest.scope, './');
