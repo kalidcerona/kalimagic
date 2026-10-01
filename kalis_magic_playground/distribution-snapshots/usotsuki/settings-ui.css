@@ -1,16 +1,16 @@
 /* Shared settings groups retain native app controls and layout. */
 .magic-settings-group { display: block; clear: both; width: 100%; box-sizing: border-box; margin: 16px 0; padding: 0; border: 1px solid #8885; border-radius: 12px; background: #8881; color: inherit; font: inherit; text-align: left; }
 .magic-settings-group > summary { padding: 14px 16px; min-height: 44px; box-sizing: border-box; cursor: pointer; font-weight: 600; touch-action: manipulation; }
-.magic-settings-group > p, .magic-settings-group > h2 { margin: 12px 16px; line-height: 1.65; overflow-wrap: anywhere; }
+.magic-settings-group > p, .magic-settings-group > h2 { margin: 12px 16px; line-height: 1.65; word-break:keep-all; overflow-wrap:normal; }
 .magic-settings-group > h2 { font-size: 1.1rem; }
-.magic-overview > p { white-space:pre-line; font-size:15px; line-height:1.8; word-break:keep-all; overflow-wrap:break-word; }
+.magic-overview > p { white-space:pre-line; font-size:15px; line-height:1.6; word-break:keep-all; overflow-wrap:normal; }
 .magic-appearance-field { display: grid !important; gap: 8px; margin: 16px !important; color: inherit; font: inherit; }
 .magic-appearance-field input { width: 100% !important; max-width: 100%; min-height: 44px; box-sizing: border-box; font: inherit; color: inherit; background: #8882; border: 1px solid #8887; border-radius: 8px; padding: 8px; touch-action: auto; user-select: text; -webkit-user-select: text; }
 .magic-appearance-field input[type="range"] { padding: 0; accent-color: #e5ab50; }
 .magic-appearance-field output { font-size: .85rem; opacity: .8; }
 .magic-appearance-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px; }
 .magic-appearance-actions button { min-height: 44px; padding: 8px 16px; font: inherit; color: inherit; border: 1px solid #8887; border-radius: 8px; background: #8882; touch-action: manipulation; }
-.magic-settings-footer { clear: both; width: 100%; box-sizing: border-box; margin: 28px 0 0; padding: 16px 4px max(20px, env(safe-area-inset-bottom)); font-size: .85rem; line-height: 1.65; opacity: .8; overflow-wrap: anywhere; text-align: left; }
+.magic-settings-footer { clear: both; width: 100%; box-sizing: border-box; margin: 28px 0 0; padding: 16px 4px max(20px, env(safe-area-inset-bottom)); font-size: .85rem; line-height: 1.65; opacity: .8; word-break:keep-all; overflow-wrap:normal; text-align: left; }
 
 #p-tabs .tab-world > span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
@@ -91,4 +91,185 @@
 .magic-object-preview img { display:block; width:100%; height:100%; max-width:none; max-height:none; object-fit:contain; }
 
 [data-settings-root] .cell-map-table { min-width:0; width:100%; table-layout:fixed; }
-[data-settings-root] .cell-map-table :is(th,td) { overflow-wrap:anywhere; padding:8px 4px; }
+[data-settings-root] .cell-map-table :is(th,td) { word-break:keep-all; overflow-wrap:normal; padding:8px 4px; }
+
+/* USOTSUKI settings B. Scoped to the settings root. Performance panel geometry is not targeted. */
+#settings-screen {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  min-height: 100dvh;
+  max-height: 100dvh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-x: none;
+  background: #1a1512 !important;
+  color: #f4efe9 !important;
+  padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) calc(16px + env(safe-area-inset-bottom, 0px) + env(keyboard-inset-height, 0px)) max(12px, env(safe-area-inset-left)) !important;
+  scroll-padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px) + env(keyboard-inset-height, 0px));
+}
+.settings-b {
+  --app-accent: #95b39c;
+  --app-secondary: #8a6862;
+  --app-texture: rgba(138, 104, 98, .16);
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  width: min(100%, 560px) !important;
+  max-width: 560px !important;
+  margin-inline: auto !important;
+  min-width: 0;
+  overflow-x: hidden;
+  background: transparent !important;
+  background-image: none !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  color: #f4efe9 !important;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+.settings-b > .settings-bar { order: 0; }
+.settings-b > .identity { order: 1; }
+.settings-b > .body-groups { order: 2; }
+.settings-b > .magic-overview { order: 3; }
+.settings-b > .magic-customize-link { order: 4; }
+.settings-b > .magic-settings-footer { order: 5; }
+.settings-b > :is(.brand-logo, #settings-brand) { display: none !important; }
+.settings-b .settings-bar { margin: 0 0 12px; }
+.settings-b .eyebrow { color: #ab9f92 !important; font-size: 12px !important; font-weight: 700 !important; letter-spacing: .06em !important; line-height: 1.4 !important; }
+.settings-b .identity { display: flex !important; align-items: center !important; justify-content: space-between !important; gap: 8px !important; margin: 0 !important; padding: 24px 20px !important; border: 1px solid #ffffff14 !important; border-radius: 12px !important; background-color: #1f1815 !important; background-image: linear-gradient(180deg, var(--app-texture), transparent 48%) !important; }
+.settings-b .identity-copy { min-width: 0; flex: 1 1 auto; }
+.settings-b .catalog-label { display: block; padding-bottom: 8px; color: var(--app-accent) !important; font-size: 12px !important; font-weight: 700 !important; letter-spacing: .12em !important; line-height: 1.4 !important; }
+.settings-b .identity h1 { margin: 0 0 8px !important; color: #f4efe9 !important; font-family: system-ui, sans-serif !important; font-size: 30px !important; font-weight: 800 !important; line-height: 1.2 !important; letter-spacing: -.035em !important; text-align: left !important; }
+.settings-b .identity-desc { margin: 0 !important; color: #d9cdc2 !important; font-size: 13px !important; font-weight: 400 !important; line-height: 1.55 !important; text-align: left !important; }
+.settings-b .sig { display: block; width: 120px; height: 76px; flex: 0 0 120px; fill: none; stroke: var(--app-secondary); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
+.settings-b .sig .accent { stroke: var(--app-accent); stroke-width: 2.2; }
+.settings-b .body-groups { margin-top: 18px !important; padding: 0 18px 8px !important; border: 1px solid #ffffff14 !important; border-radius: 12px !important; background: #1f1815 !important; background-image: none !important; min-width: 0; max-width: 100%; }
+.settings-b .body-groups :is(details, .install-card, .install-panel, .install-control, .card-start, .stack, .guide, .optional-settings, #performance-help) { margin: 0 !important; border: 0 !important; border-bottom: 1px solid #ffffff14 !important; border-radius: 0 !important; background: transparent !important; background-color: transparent !important; box-shadow: none !important; }
+.settings-b .body-groups summary { display: flex !important; align-items: center !important; gap: 12px !important; min-height: 48px !important; margin: 0 !important; padding: 12px 0 !important; border: 0 !important; background: transparent !important; color: #f4efe9 !important; font-size: 15px !important; font-weight: 650 !important; line-height: 1.45 !important; list-style: none !important; }
+.settings-b .body-groups summary::-webkit-details-marker { display: none; }
+.settings-b .body-groups summary::after { content: "+"; margin-left: auto; color: #ab9f92; font-size: 18px; line-height: 1; }
+.settings-b .body-groups details[open] > summary { margin-bottom: 8px !important; border-bottom: 0 !important; }
+.settings-b .body-groups details[open] > summary::after { content: "−"; }
+.settings-b .body-groups :is(h2, h3, legend, label, .field-label) { color: #f4efe9 !important; }
+.settings-b .body-groups :is(p, .hint, .note, .field-help) { color: #d9cdc2 !important; word-break:keep-all; overflow-wrap:normal; }
+.settings-b .body-groups :is(.field-label strong, .toggle-current) { color: var(--app-accent) !important; }
+.settings-b :is(button, input, select, textarea) { max-width: 100%; min-width: 0; }
+.settings-b button { min-height: 44px !important; }
+.settings-b :is(button.primary, button.button-primary, #card-start-button, #save-button, #start-button, #install-button, #start-performance, #install-action, #install-app, .magic-customize-open) { min-height: 48px !important; }
+.settings-b :is(input[type="checkbox"], input[type="range"]) { accent-color: var(--app-accent); }
+.settings-b :is(.preset[aria-pressed="true"], .edge[aria-checked="true"], button[aria-pressed="true"]) { box-shadow: inset 0 -2px var(--app-accent) !important; border-color: var(--app-accent) !important; }
+.settings-b :is(button, input, select, textarea, summary):focus-visible { outline: 2px solid var(--app-accent); outline-offset: 3px; }
+.settings-b > .magic-overview { margin-top: 18px !important; padding: 4px 18px 8px !important; border: 1px solid #ffffff14 !important; border-radius: 12px !important; background: #1f1815 !important; background-color: #1f1815 !important; }
+.settings-b > .magic-overview p { white-space: pre-line; }
+.settings-b > .magic-overview summary { min-height: 48px !important; }
+.settings-b > .magic-customize-link { margin-top: 18px !important; }
+.settings-b .magic-customize-open { width: 100% !important; }
+.settings-b > .magic-settings-footer { color: #ab9f92 !important; }
+.settings-b :is(#error, .message) { color: #ffb4a2 !important; }
+@media (max-width: 479px) {
+  .settings-b .sig { width: 104px; height: 66px; flex-basis: 104px; }
+  .settings-b .identity h1 { font-size: 26px !important; }
+}
+@media (max-width: 389px) {
+  .settings-b .sig { width: 92px; height: 58px; flex-basis: 92px; }
+  .settings-b .identity h1 { font-size: 24px !important; }
+}
+@media (max-width: 319px) {
+  .settings-b .identity { padding: 16px 12px !important; }
+  .settings-b .body-groups, .settings-b > .magic-overview { padding-left: 12px !important; padding-right: 12px !important; }
+}
+@media (max-width: 280px) {
+  .settings-b .sig { width: 64px; height: 44px; flex-basis: 64px; }
+  .settings-b .identity { padding: 14px 12px !important; gap: 8px !important; }
+  .settings-b .identity h1 { font-size: 22px !important; }
+  .settings-b .catalog-label { font-size: 12px !important; }
+}
+@media (min-width: 744px) {
+  /* Tablets 744, 768, 820, and 1280 keep the same 560px centered column. */
+  .settings-b .identity { padding: 28px 24px !important; }
+}
+@media (max-height: 500px) {
+  .settings-b .identity { padding: 12px 16px !important; }
+  .settings-b .sig { width: 84px; height: 52px; flex-basis: 84px; }
+  .settings-b .identity h1 { font-size: 24px !important; margin-bottom: 4px !important; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .settings-b .sig .accent { animation: usotsuki-sig .22s ease-out both; }
+}
+@keyframes usotsuki-sig { from { stroke-dasharray: 120; stroke-dashoffset: 120; opacity: .35; } to { stroke-dasharray: 120; stroke-dashoffset: 0; opacity: 1; } }
+@media (prefers-contrast: more) {
+  .settings-b, #settings-screen { background: #1a1512 !important; color: #fff !important; }
+  .settings-b :is(h1, p, label, summary, .identity-desc) { color: #fff !important; }
+  .settings-b .sig { stroke: #fff; }
+}
+@media (forced-colors: active) {
+  #settings-screen, .settings-b, .settings-b .identity, .settings-b .body-groups, .settings-b > .magic-overview { background: Canvas !important; color: CanvasText !important; forced-color-adjust: auto; }
+  .settings-b .sig { stroke: CanvasText; }
+  .settings-b button, .settings-b input, .settings-b select, .settings-b textarea { border: 1px solid ButtonText !important; }
+}
+
+/* Settings text: Korean labels wrap on spaces. Action rows stack at 280px. */
+[data-settings-root] :is(.actions, .row-actions, .preset-actions, .install-actions, .settings-actions, .setting-actions, .formbuttons, .magic-appearance-actions) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 8px;
+  min-width: 0;
+}
+[data-settings-root] :is(.actions, .row-actions, .preset-actions, .install-actions, .settings-actions, .setting-actions, .formbuttons, .magic-appearance-actions) > :is(button, .import) {
+  flex: 1 1 10rem;
+  min-width: 0;
+  max-width: 100%;
+  height: auto;
+  min-height: 44px;
+  padding: 10px 14px;
+  white-space: normal;
+  word-break: keep-all;
+  line-break: strict;
+  overflow-wrap: normal;
+  line-height: 1.35;
+}
+[data-settings-root] :is(.actions, .row-actions, .preset-actions, .install-actions, .settings-actions, .setting-actions, .formbuttons) > button:is(.primary, .primary-button, .button-primary) {
+  min-height: 48px;
+}
+[data-settings-root] .magic-range-row button {
+  flex: 0 0 44px;
+  width: 44px;
+  min-width: 44px;
+  padding: 0;
+}
+@media (max-width: 280px) {
+  [data-settings-root] :is(.actions, .row-actions, .preset-actions, .install-actions, .settings-actions, .setting-actions, .formbuttons, .magic-appearance-actions) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  [data-settings-root] :is(.actions, .row-actions, .preset-actions, .install-actions, .settings-actions, .setting-actions, .formbuttons, .magic-appearance-actions) > :is(button, .import) {
+    flex-basis: auto;
+    width: 100%;
+  }
+  [data-settings-root] .magic-range-row {
+    flex-direction: row;
+  }
+  [data-settings-root] .magic-range-row button {
+    width: 44px;
+    flex-basis: 44px;
+  }
+}
+
+[data-settings-root] :is(.install, .install-control) > button {
+  min-width: 0;
+  max-width: 100%;
+  height: auto;
+  min-height: 44px;
+  padding: 10px 14px;
+  white-space: normal;
+  word-break: keep-all;
+  line-break: strict;
+  overflow-wrap: normal;
+  line-height: 1.35;
+}
+
+/* Theme selection follows the existing settings B field contract. */
+#settings-screen #display-theme { min-height: 44px; max-width: 100%; }

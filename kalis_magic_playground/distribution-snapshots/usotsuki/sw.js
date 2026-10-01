@@ -1,7 +1,10 @@
 // Cache only the explicit app shell. API, authentication and user data stay on the network.
 const CACHE_PREFIX = 'friend-usotsuki-shell-' + encodeURIComponent(self.registration.scope) + '-';
-const CACHE_NAME = CACHE_PREFIX + 'v20260930-install-1';
+const CACHE_NAME = CACHE_PREFIX + 'v20261001-release-1';
 const SHELL = [
+  "./holdem-assets/felt-grain.svg",
+  "./holdem-assets/leather-grain.svg",
+  "./holdem-assets/table-rail.svg",
   "./settings-ui.js",
   "./settings-ui.css",
   "./index.html",
@@ -14,7 +17,6 @@ const SHELL = [
   "./icon-512.png",
   "./icon.svg",
   "./brand-logo.jpg",
-  "./brand-logo.png",
   "./detector-panel.jpg"
 ];
 const SHELL_NAMES = new Set(SHELL.map((file) => file.replace(/^\.\//, '')));

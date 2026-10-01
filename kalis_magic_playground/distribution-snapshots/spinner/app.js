@@ -45,8 +45,15 @@ function refreshSettings() {
   document.getElementById('spin-value').textContent = `${state.spins}회`;
   document.getElementById('force-spin').value = String(state.forceSpin);
 }
-function showSettings() { if (busy || !guide.hidden) return; refreshSettings(); settings.hidden = false; drag = null; }
-function closeSettings() { settings.hidden = true; }
+function showSettings() {
+  if (busy || !guide.hidden) return;
+  refreshSettings();
+  settings.hidden = false;
+  drag = null;
+}
+function closeSettings() {
+  settings.hidden = true;
+}
 function angleAt(event) {
   const box = wrap.getBoundingClientRect();
   return angleAtPoint(event.clientX, event.clientY, box.left + box.width / 2, box.top + box.height / 2);
@@ -59,14 +66,36 @@ function showStatus(message, duration = 0) {
 }
 function syncTargetCue() {
   const acknowledged = state.targetAngle !== null;
-  const core = document.getElementById('green-sector-core');
-  // Keep the acknowledgement on the fixed green sector so the chosen angle stays hidden.
   const cue = acknowledged ? 'acknowledged' : 'idle';
-  core.classList.toggle('is-acknowledged', acknowledged);
-  core.dataset.targetCue = cue;
+  stage.classList.toggle('target-cue-acknowledged', acknowledged);
+  stage.dataset.targetCue = cue;
+  for (const id of ['target-corner-left', 'target-corner-right']) {
+    const corner = document.getElementById(id);
+    corner.classList.toggle('is-acknowledged', acknowledged);
+    corner.dataset.targetCue = cue;
+  }
   wrap.classList.toggle('target-cue-acknowledged', acknowledged);
   wrap.dataset.targetCue = cue;
 }
+
+// Table appearance has its own storage and never changes the performance state.
+const tableThemeKey = 'friend-spinner-table-theme-v1';
+const tableThemeSelect = document.getElementById('table-theme');
+function normalizeTableTheme(value) { return value === 'burgundy' ? 'burgundy' : 'emerald'; }
+function applyTableTheme(value) {
+  const theme = normalizeTableTheme(value);
+  stage.dataset.tableTheme = theme;
+  tableThemeSelect.value = theme;
+  return theme;
+}
+let savedTableTheme = null;
+try { savedTableTheme = localStorage.getItem(tableThemeKey); } catch { /* Use the default table without storage. */ }
+applyTableTheme(savedTableTheme);
+tableThemeSelect.addEventListener('change', event => {
+  const theme = applyTableTheme(event.target.value);
+  try { localStorage.setItem(tableThemeKey, theme); } catch { /* Keep the selected table for this session. */ }
+});
+
 function standaloneDisplay() {
   return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 }
@@ -205,7 +234,10 @@ document.getElementById('clear-target').addEventListener('click', () => {
   syncTargetCue();
   closeSettings();
 });
-document.getElementById('guide-close').addEventListener('click', () => { guide.hidden = true; try { localStorage.setItem('friend-spinner-guide-seen-v2', '1'); } catch { /* Ignore storage failures. */ } });
+document.getElementById('guide-close').addEventListener('click', () => {
+  guide.hidden = true;
+  try { localStorage.setItem('friend-spinner-guide-seen-v2', '1'); } catch { /* Ignore storage failures. */ }
+});
 try { guide.hidden = localStorage.getItem('friend-spinner-guide-seen-v2') === '1'; } catch { guide.hidden = false; }
 refreshSettings();
 syncTargetCue();

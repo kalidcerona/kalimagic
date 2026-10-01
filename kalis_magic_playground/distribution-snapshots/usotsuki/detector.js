@@ -88,6 +88,7 @@ function storageSet(key, value) {
   }
 }
 
+
 function canPersistState() {
   return mayOverwritePrimary({
     preserveStoredRaw: storageLocked,
@@ -106,7 +107,7 @@ function setStatus(message) {
 }
 
 function updateAttemptProgress() {
-  attemptProgress.textContent = `현재 완료한 시도: ${appState.attemptCount}회 · 공연 시작 시 0회로 초기화`;
+  attemptProgress.textContent = `완료한 시도 ${appState.attemptCount}회. 공연을 시작하면 0이 됩니다.`;
 }
 
 function soundEnabled() {
@@ -124,8 +125,8 @@ function persistSoundPreference() {
 
 function paintScanDuration(ms) {
   const seconds = ms / 1000;
-  if (scanDurationHelp) scanDurationHelp.textContent = `버튼을 ${seconds}초 누르면 판정합니다. 0.5-10초 사이에서 0.5초 단위로 설정하세요.`;
-  if (holdDurationHelp) holdDurationHelp.textContent = `초록 버튼을 직접 누른 채 ${seconds}초 유지하면 판정이 나옵니다.`;
+  if (scanDurationHelp) scanDurationHelp.textContent = `버튼을 ${seconds}초 누르면 판정합니다. 0.5–10초, 0.5초 단위입니다.`;
+  if (holdDurationHelp) holdDurationHelp.textContent = `접촉 버튼을 ${seconds}초 누르고 있으면 판정합니다.`;
   if (signalTimeMid) signalTimeMid.textContent = `${seconds / 2}s`;
   if (signalTimeEnd) signalTimeEnd.textContent = `${seconds}s`;
   detectorButton.setAttribute("aria-label", `검사를 시작하려면 ${seconds}초간 누르기`);
@@ -330,11 +331,10 @@ function showReadyFeedback() {
 function pointOnButton(x, y, target) {
   if (target instanceof Element && target.closest("#detector-button")) return true;
   const rect = detectorButton.getBoundingClientRect();
-  const radius = rect.width / 2;
-  if (radius <= 0) return false;
-  const centerX = rect.left + radius;
-  const centerY = rect.top + rect.height / 2;
-  return Math.hypot(x - centerX, y - centerY) <= radius + 1;
+  // The approved contact surfaces are rectangular, so blank table space is not a hit.
+  if (rect.width <= 0 || rect.height <= 0) return false;
+  return x >= rect.left && x <= rect.left + rect.width &&
+    y >= rect.top && y <= rect.top + rect.height;
 }
 
 function settingsVisible() {
@@ -425,11 +425,12 @@ function playVerdictSound(result) {
     // Let the scan tone's short release ramp finish before the verdict cue.
     const start = ctx.currentTime + 0.06;
     const master = ctx.createGain();
-    master.gain.setValueAtTime(0.8, start);
+    master.gain.setValueAtTime(1, start);
     master.connect(ctx.destination);
     if (result === "LIE") {
-      playTone(ctx, master, 196, start, 0.34, "square", 0.24);
-      playTone(ctx, master, 277, start, 0.34, "square", 0.12);
+      // The two peaks sum to 0.76, leaving headroom at the output.
+      playTone(ctx, master, 196, start, 0.34, "square", 0.52);
+      playTone(ctx, master, 277, start, 0.34, "square", 0.24);
       window.setTimeout(() => master.disconnect(), 500);
       return;
     }
@@ -437,7 +438,7 @@ function playVerdictSound(result) {
       // ding-dong-dang: three separated notes, not a chord.
       const notes = [784, 659.25, 1046.5];
       notes.forEach((frequency, index) => {
-        playTone(ctx, master, frequency, start + index * 0.2, 0.18, "sine", 0.32);
+        playTone(ctx, master, frequency, start + index * 0.2, 0.18, "sine", 0.68);
       });
       window.setTimeout(() => master.disconnect(), 800);
     }
@@ -477,7 +478,7 @@ function startScanningSound() {
     oscillator.frequency.setValueAtTime(148, now);
     oscillator.frequency.linearRampToValueAtTime(226, now + activeScanDurationMs / 1000 * 0.925);
     gain.gain.setValueAtTime(0.0001, now);
-    gain.gain.exponentialRampToValueAtTime(0.055, now + 0.08);
+    gain.gain.exponentialRampToValueAtTime(0.17, now + 0.08);
     oscillator.connect(gain);
     gain.connect(ctx.destination);
     oscillator.onended = () => {
@@ -662,7 +663,7 @@ function commitTruthAttempt() {
   const next = trySetTruthAttempt(appState, truthInput.value);
   if (!next.ok) {
     truthInput.value = appState.settings.truthAttempts.join(",");
-    setStatus("TRUE 회차는 1부터 20 사이의 서로 다른 정수를 쉼표로 구분해 입력하세요. 예: 2,4");
+    setStatus("진실 회차는 1부터 20 사이의 서로 다른 정수를 쉼표로 구분해 입력하세요. 예: 2,4");
     return false;
   }
   appState = next.state;
@@ -697,7 +698,7 @@ function onStartPerformance() {
   syncLiveScanDuration();
   const next = preparePerformance(appState, truthInput.value);
   if (!next.ok) {
-    setStatus("TRUE 회차는 1부터 20 사이의 서로 다른 정수를 쉼표로 구분해 입력하세요. 예: 4,7");
+    setStatus("진실 회차는 1부터 20 사이의 서로 다른 정수를 쉼표로 구분해 입력하세요. 예: 4,7");
     truthInput.focus();
     return;
   }
@@ -736,13 +737,6 @@ function onVisibilityChange() {
   try { ctx?.close().catch(() => {}); } catch { /* Already closed. */ }
 }
 
-function onRehearsalKey(event) {
-  if (event.key !== "Escape" || !event.shiftKey || event.isComposing) return;
-  if (performanceScreen.hidden) return;
-  event.preventDefault();
-  openSettings();
-}
-
 function bind() {
   performanceScreen.addEventListener("touchstart", unlockFromGesture, { passive: true });
   performanceScreen.addEventListener("touchend", unlockFromGesture, { passive: true });
@@ -760,9 +754,24 @@ function bind() {
   scanDurationInput?.addEventListener("input", onScanDurationInput);
   scanDurationInput?.addEventListener("blur", onScanDurationInput);
   scanDurationInput?.addEventListener("change", onScanDurationChange);
-  window.addEventListener("keydown", onRehearsalKey);
   document.addEventListener("visibilitychange", onVisibilityChange);
 }
+
+// Display appearance is independent of the detector's performance state.
+const DISPLAY_THEME_KEY = "usotsuki.distribution.detector.theme.v1";
+const displayThemeSelect = document.querySelector("#display-theme");
+function normalizeDisplayTheme(value) { return value === "wine" ? "wine" : "green"; }
+function applyDisplayTheme(value) {
+  const theme = normalizeDisplayTheme(value);
+  performanceScreen.dataset.displayTheme = theme;
+  displayThemeSelect.value = theme;
+  return theme;
+}
+applyDisplayTheme(storageGet(DISPLAY_THEME_KEY).value);
+displayThemeSelect.addEventListener("change", (event) => {
+  const theme = applyDisplayTheme(event.target.value);
+  storageSet(DISPLAY_THEME_KEY, theme);
+});
 
 bootStorage();
 appState = resetAttempts(appState);

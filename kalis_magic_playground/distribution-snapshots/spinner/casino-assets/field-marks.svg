@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 760">
+  <title>Decorative roulette field marks</title>
+  <desc>Unnumbered cloth print. Not a bet layout and not a result.</desc>
+  <g fill="none" stroke="#fffaf6" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round" opacity=".92">
+    <path d="M78 118 A72 46 0 0 0 222 118"/>
+    <rect x="78" y="118" width="144" height="528" rx="2"/>
+    <path d="M126 118 V646"/>
+    <path d="M174 118 V646"/>
+    <path d="M78 162 H222"/>
+    <path d="M78 206 H222"/>
+    <path d="M78 250 H222"/>
+    <path d="M78 294 H222"/>
+    <path d="M78 338 H222"/>
+    <path d="M78 382 H222"/>
+    <path d="M78 426 H222"/>
+    <path d="M78 470 H222"/>
+    <path d="M78 514 H222"/>
+    <path d="M78 558 H222"/>
+    <path d="M78 602 H222"/>
+    <rect x="78" y="646" width="144" height="62"/>
+    <path d="M126 646 V708"/>
+    <path d="M174 646 V708"/>
+    <path d="M46 190 l8 8 l-8 8 l-8 -8 Z"/>
+    <path d="M46 330 l8 8 l-8 8 l-8 -8 Z"/>
+    <path d="M46 470 l8 8 l-8 8 l-8 -8 Z"/>
+    <path d="M254 190 l8 8 l-8 8 l-8 -8 Z"/>
+    <path d="M254 330 l8 8 l-8 8 l-8 -8 Z"/>
+    <path d="M254 470 l8 8 l-8 8 l-8 -8 Z"/>
+  </g>
+</svg>

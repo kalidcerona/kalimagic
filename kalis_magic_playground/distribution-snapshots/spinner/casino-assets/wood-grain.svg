@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 140" width="140" height="140">
+  <title>Polished wood grain</title>
+  <g fill="none" stroke="#6a4324" stroke-linecap="round" opacity=".22">
+    <path d="M-4 18 C 30 14, 70 24, 144 16" stroke-width="1.1"/>
+    <path d="M-4 36 C 40 40, 90 30, 144 38" stroke-width=".7"/>
+    <path d="M-4 58 C 36 52, 88 64, 144 54" stroke-width="1"/>
+    <path d="M-4 80 C 28 86, 96 74, 144 84" stroke-width=".8"/>
+    <path d="M-4 104 C 44 98, 92 112, 144 102" stroke-width="1.1"/>
+    <path d="M-4 126 C 38 130, 100 118, 144 128" stroke-width=".7"/>
+  </g>
+  <g fill="none" stroke="#fffaf2" stroke-linecap="round" opacity=".35">
+    <path d="M-4 26 C 48 22, 96 30, 144 24" stroke-width=".6"/>
+    <path d="M-4 70 C 50 66, 100 76, 144 68" stroke-width=".6"/>
+    <path d="M-4 112 C 42 116, 96 106, 144 114" stroke-width=".6"/>
+  </g>
+</svg>

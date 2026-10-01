@@ -1,7 +1,15 @@
 // Cache only the explicit app shell. API, authentication and user data stay on the network.
 const CACHE_PREFIX = 'spinner-shell-' + encodeURIComponent(self.registration.scope) + '-';
-const CACHE_NAME = CACHE_PREFIX + 'v20260930-install-1';
+const CACHE_NAME = CACHE_PREFIX + 'v20261001-release-1';
 const SHELL = [
+  "./casino-assets/felt-emerald.svg",
+  "./casino-assets/felt-burgundy.svg",
+  "./casino-assets/wheel-emerald.svg",
+  "./casino-assets/wheel-burgundy.svg",
+  "./casino-assets/arrow.svg",
+  "./casino-assets/wood-grain.svg",
+  "./casino-assets/field-marks.svg",
+
   "./casino-salon.jpg",
   "./settings-ui.js",
   "./settings-ui.css",
@@ -11,7 +19,7 @@ const SHELL = [
   "./logic.js",
   "./manifest.webmanifest",
   "./icon-192.png",
-  "./icon-512.png",
+  "./icon-512.png"
 ];
 const SHELL_NAMES = new Set(SHELL.map((file) => file.replace(/^\.\//, '')));
 const GUARDED = new URL(self.registration.scope).pathname.startsWith('/tools/');
