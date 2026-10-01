@@ -11,7 +11,7 @@ globalThis.jsQR = decoderContext.module.exports;
 
 test('finder regions including separator halos and every alignment pattern reject edits', () => {
   const q = core.createQR('https://example.com/', 40, 0);
-  for (const [x, y] of [[0, 0], [6, 6], [7, 7], [q.size - 1, 0], [q.size - 8, 7], [0, q.size - 1], [7, q.size - 8]]) {
+  for (const [x, y] of [[0, 0], [1, 1], [3, 3], [6, 6], [7, 7], [q.size - 2, 1], [q.size - 6, 3], [1, q.size - 2], [3, q.size - 6], [q.size - 1, 0], [q.size - 8, 7], [0, q.size - 1], [7, q.size - 8]]) {
     const before = { edits: [...q.edits], history: q.history.length };
     assert.deepEqual(core.toggle(q, x, y), { ok: false, reason: 'protected' });
     assert.deepEqual([...q.edits], before.edits);
