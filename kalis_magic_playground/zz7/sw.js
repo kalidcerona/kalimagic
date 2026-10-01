@@ -1,7 +1,10 @@
 // Cache only the explicit app shell. API, authentication and user data stay on the network.
 const CACHE_PREFIX = 'usotsuki-shell-' + encodeURIComponent(self.registration.scope) + '-';
-const CACHE_NAME = CACHE_PREFIX + 'v20261001-2';
+const CACHE_NAME = CACHE_PREFIX + 'v20261001-3';
 const SHELL = [
+  "./holdem-assets/felt-grain.svg",
+  "./holdem-assets/leather-grain.svg",
+  "./holdem-assets/table-rail.svg",
   "./settings-ui.js",
   "./settings-ui.css",
   "./index.html",

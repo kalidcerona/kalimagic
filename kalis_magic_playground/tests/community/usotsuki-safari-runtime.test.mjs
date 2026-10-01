@@ -17,7 +17,7 @@ test('personal and friend USOTSUKI commit focused scan input before Start withou
     class ElementStub {
       constructor() {
         this.value = ''; this.hidden = false; this.checked = false; this.disabled = false;
-        this.textContent = ''; this.listeners = new Map(); this.style = {};
+        this.textContent = ''; this.listeners = new Map(); this.style = {}; this.dataset = {};
         this.classList = { add() {}, remove() {} };
       }
       addEventListener(type, fn) { this.listeners.set(type, fn); }

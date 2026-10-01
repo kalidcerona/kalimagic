@@ -14,7 +14,7 @@ async function mount(route, sound = true) {
   ]);
   class ElementStub {
     constructor() {
-      this.hidden = false; this.checked = false; this.value = ''; this.style = {};
+      this.hidden = false; this.checked = false; this.value = ''; this.style = {}; this.dataset = {};
       this.classList = { add() {}, remove() {} }; this.listeners = new Map();
     }
     addEventListener(type, fn) { this.listeners.set(type, fn); }

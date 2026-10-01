@@ -126,7 +126,7 @@ function persistSoundPreference() {
 function paintScanDuration(ms) {
   const seconds = ms / 1000;
   if (scanDurationHelp) scanDurationHelp.textContent = `버튼을 ${seconds}초 누르면 판정합니다. 0.5–10초, 0.5초 단위입니다.`;
-  if (holdDurationHelp) holdDurationHelp.textContent = `초록 버튼을 ${seconds}초 누르고 있으면 판정합니다.`;
+  if (holdDurationHelp) holdDurationHelp.textContent = `접촉 버튼을 ${seconds}초 누르고 있으면 판정합니다.`;
   if (signalTimeMid) signalTimeMid.textContent = `${seconds / 2}s`;
   if (signalTimeEnd) signalTimeEnd.textContent = `${seconds}s`;
   detectorButton.setAttribute("aria-label", `검사를 시작하려면 ${seconds}초간 누르기`);
@@ -331,11 +331,10 @@ function showReadyFeedback() {
 function pointOnButton(x, y, target) {
   if (target instanceof Element && target.closest("#detector-button")) return true;
   const rect = detectorButton.getBoundingClientRect();
-  const radius = rect.width / 2;
-  if (radius <= 0) return false;
-  const centerX = rect.left + radius;
-  const centerY = rect.top + rect.height / 2;
-  return Math.hypot(x - centerX, y - centerY) <= radius + 1;
+  // The approved contact surfaces are rectangular, so blank table space is not a hit.
+  if (rect.width <= 0 || rect.height <= 0) return false;
+  return x >= rect.left && x <= rect.left + rect.width &&
+    y >= rect.top && y <= rect.top + rect.height;
 }
 
 function settingsVisible() {
@@ -757,6 +756,22 @@ function bind() {
   scanDurationInput?.addEventListener("change", onScanDurationChange);
   document.addEventListener("visibilitychange", onVisibilityChange);
 }
+
+// Display appearance is independent of the detector's performance state.
+const DISPLAY_THEME_KEY = "usotsuki.detector.theme.v1";
+const displayThemeSelect = document.querySelector("#display-theme");
+function normalizeDisplayTheme(value) { return value === "wine" ? "wine" : "green"; }
+function applyDisplayTheme(value) {
+  const theme = normalizeDisplayTheme(value);
+  performanceScreen.dataset.displayTheme = theme;
+  displayThemeSelect.value = theme;
+  return theme;
+}
+applyDisplayTheme(storageGet(DISPLAY_THEME_KEY).value);
+displayThemeSelect.addEventListener("change", (event) => {
+  const theme = applyDisplayTheme(event.target.value);
+  storageSet(DISPLAY_THEME_KEY, theme);
+});
 
 bootStorage();
 appState = resetAttempts(appState);

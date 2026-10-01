@@ -270,3 +270,6 @@
   overflow-wrap: normal;
   line-height: 1.35;
 }
+
+/* Theme selection follows the existing settings B field contract. */
+#settings-screen #display-theme { min-height: 44px; max-width: 100%; }

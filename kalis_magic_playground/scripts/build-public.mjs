@@ -122,7 +122,7 @@ export const CHOICE_FILES = [
   'sw.js'
 ];
 export const NEW_APP_FILES = CHOICE_FILES;
-export const USOTSUKI_FILES = NEW_APP_FILES.filter((file) => file !== 'app.js').concat('detector.js', 'detector-panel-grok.svg');
+export const USOTSUKI_FILES = NEW_APP_FILES.filter((file) => file !== 'app.js').concat('detector.js', 'detector-panel-grok.svg', 'holdem-assets/felt-grain.svg', 'holdem-assets/leather-grain.svg', 'holdem-assets/table-rail.svg');
 export const ASRAI_FILES = [
   'brand-logo.jpg', 'brand-logo.png', 'contacts.js', 'icon-192.png',
   'icon-512.png', 'icon.svg', 'index.html', 'install-ui.js',
