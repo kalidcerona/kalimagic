@@ -36,7 +36,7 @@
       <img class="brand-logo" src="./brand-logo.jpg" alt="">
       <header class="settings-bar"><span class="eyebrow">토비라 / 설정</span></header>
       <div class="identity">
-        <div class="identity-copy"><span class="catalog-label">경계</span><h1>TOBIRA</h1><p class="identity-desc">배경 화면과 물건 이미지를 준비합니다. 화면을 탭하거나 쓸면 선택한 물건이 나타납니다.</p></div>
+        <div class="identity-copy"><span class="catalog-label">경계</span><h1>TOBIRA</h1><p class="identity-desc">배경과 물건 이미지를 준비합니다.</p></div>
         <svg class="sig" viewBox="0 0 128 80" role="img" aria-label="한쪽 가장자리의 짧은 문턱선" focusable="false"><path d="M8 58h76"/><path class="accent" d="M84 58V36"/><path d="M84 36h32"/></svg>
       </div>
       <div class="body-groups">
@@ -73,7 +73,8 @@
             <input id="motion-enabled" type="checkbox">
             <span>기울이면 물건 이동</span>
           </label>
-          <label class="motion-option"><input id="motion-exit" type="checkbox"><span>벽에 두 번 부딪히면 선택한 방향으로 탈출 (기울기 이동도 켜짐)</span></label>
+          <label class="motion-option"><input id="motion-exit" type="checkbox"><span>벽에 두 번 부딪히면 탈출</span></label>
+          <p class="hint">기울기 이동도 함께 켜집니다. 방향은 아래에서 고릅니다.</p>
           <div class="motion-edges" aria-label="기울기 탈출 방향">
             <label><input id="motion-edge-top" type="checkbox"> 위</label>
             <label><input id="motion-edge-left" type="checkbox"> 왼쪽</label>
@@ -90,7 +91,7 @@
       <details id="preset-picker" class="settings-toggle">
         <summary><span>물건 이미지 1, 2, 3</span><span id="selected-preset-name" class="toggle-current"></span></summary>
         <div class="toggle-body">
-          <button type="button" id="add-preset" class="button button-quiet add-preset">다음 이미지 자리 추가</button>
+          <button type="button" id="add-preset" class="button button-quiet add-preset">이미지 자리 추가</button>
           <ul id="preset-list" class="preset-list"></ul>
         </div>
       </details>

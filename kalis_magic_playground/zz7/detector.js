@@ -107,7 +107,7 @@ function setStatus(message) {
 }
 
 function updateAttemptProgress() {
-  attemptProgress.textContent = `현재 완료한 시도: ${appState.attemptCount}회 · 공연 시작 시 0회로 초기화`;
+  attemptProgress.textContent = `완료한 시도 ${appState.attemptCount}회. 공연을 시작하면 0이 됩니다.`;
 }
 
 function soundEnabled() {
@@ -125,8 +125,8 @@ function persistSoundPreference() {
 
 function paintScanDuration(ms) {
   const seconds = ms / 1000;
-  if (scanDurationHelp) scanDurationHelp.textContent = `버튼을 ${seconds}초 누르면 판정합니다. 0.5-10초 사이에서 0.5초 단위로 설정하세요.`;
-  if (holdDurationHelp) holdDurationHelp.textContent = `초록 버튼을 직접 누른 채 ${seconds}초 유지하면 판정이 나옵니다.`;
+  if (scanDurationHelp) scanDurationHelp.textContent = `버튼을 ${seconds}초 누르면 판정합니다. 0.5–10초, 0.5초 단위입니다.`;
+  if (holdDurationHelp) holdDurationHelp.textContent = `초록 버튼을 ${seconds}초 누르고 있으면 판정합니다.`;
   if (signalTimeMid) signalTimeMid.textContent = `${seconds / 2}s`;
   if (signalTimeEnd) signalTimeEnd.textContent = `${seconds}s`;
   detectorButton.setAttribute("aria-label", `검사를 시작하려면 ${seconds}초간 누르기`);

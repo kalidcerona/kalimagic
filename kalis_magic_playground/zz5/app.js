@@ -1661,7 +1661,7 @@ function renderCustomSlots() {
       const start = document.createElement('button');
       start.type = 'button';
       start.className = 'primary photo-set-start';
-      start.textContent = '이 세팅으로 연출하기';
+      start.textContent = '이 세트로 시작';
       start.addEventListener('click', () => { void startCustomPerformance(setIndex); });
       details.append(summary, hint, start, slots);
       customSlotsRoot.append(details);

@@ -1,16 +1,16 @@
 /* Shared settings groups retain native app controls and layout. */
 .magic-settings-group { display: block; clear: both; width: 100%; box-sizing: border-box; margin: 16px 0; padding: 0; border: 1px solid #8885; border-radius: 12px; background: #8881; color: inherit; font: inherit; text-align: left; }
 .magic-settings-group > summary { padding: 14px 16px; min-height: 44px; box-sizing: border-box; cursor: pointer; font-weight: 600; touch-action: manipulation; }
-.magic-settings-group > p, .magic-settings-group > h2 { margin: 12px 16px; line-height: 1.65; overflow-wrap: anywhere; }
+.magic-settings-group > p, .magic-settings-group > h2 { margin: 12px 16px; line-height: 1.65; word-break:keep-all; overflow-wrap:normal; }
 .magic-settings-group > h2 { font-size: 1.1rem; }
-.magic-overview > p { white-space:pre-line; font-size:15px; line-height:1.8; word-break:keep-all; overflow-wrap:break-word; }
+.magic-overview > p { white-space:pre-line; font-size:15px; line-height:1.6; word-break:keep-all; overflow-wrap:normal; }
 .magic-appearance-field { display: grid !important; gap: 8px; margin: 16px !important; color: inherit; font: inherit; }
 .magic-appearance-field input { width: 100% !important; max-width: 100%; min-height: 44px; box-sizing: border-box; font: inherit; color: inherit; background: #8882; border: 1px solid #8887; border-radius: 8px; padding: 8px; touch-action: auto; user-select: text; -webkit-user-select: text; }
 .magic-appearance-field input[type="range"] { padding: 0; accent-color: #e5ab50; }
 .magic-appearance-field output { font-size: .85rem; opacity: .8; }
 .magic-appearance-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px; }
 .magic-appearance-actions button { min-height: 44px; padding: 8px 16px; font: inherit; color: inherit; border: 1px solid #8887; border-radius: 8px; background: #8882; touch-action: manipulation; }
-.magic-settings-footer { clear: both; width: 100%; box-sizing: border-box; margin: 28px 0 0; padding: 16px 4px max(20px, env(safe-area-inset-bottom)); font-size: .85rem; line-height: 1.65; opacity: .8; overflow-wrap: anywhere; text-align: left; }
+.magic-settings-footer { clear: both; width: 100%; box-sizing: border-box; margin: 28px 0 0; padding: 16px 4px max(20px, env(safe-area-inset-bottom)); font-size: .85rem; line-height: 1.65; opacity: .8; word-break:keep-all; overflow-wrap:normal; text-align: left; }
 
 #p-tabs .tab-world > span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
@@ -91,7 +91,7 @@
 .magic-object-preview img { display:block; width:100%; height:100%; max-width:none; max-height:none; object-fit:contain; }
 
 [data-settings-root] .cell-map-table { min-width:0; width:100%; table-layout:fixed; }
-[data-settings-root] .cell-map-table :is(th,td) { overflow-wrap:anywhere; padding:8px 4px; }
+[data-settings-root] .cell-map-table :is(th,td) { word-break:keep-all; overflow-wrap:normal; padding:8px 4px; }
 
 /* USOTSUKI settings B. Scoped to the settings root. Performance panel geometry is not targeted. */
 #settings-screen {
@@ -153,7 +153,7 @@
 .settings-b .body-groups details[open] > summary { margin-bottom: 8px !important; border-bottom: 0 !important; }
 .settings-b .body-groups details[open] > summary::after { content: "−"; }
 .settings-b .body-groups :is(h2, h3, legend, label, .field-label) { color: #f4efe9 !important; }
-.settings-b .body-groups :is(p, .hint, .note, .field-help) { color: #d9cdc2 !important; overflow-wrap: anywhere; }
+.settings-b .body-groups :is(p, .hint, .note, .field-help) { color: #d9cdc2 !important; word-break:keep-all; overflow-wrap:normal; }
 .settings-b .body-groups :is(.field-label strong, .toggle-current) { color: var(--app-accent) !important; }
 .settings-b :is(button, input, select, textarea) { max-width: 100%; min-width: 0; }
 .settings-b button { min-height: 44px !important; }
@@ -184,7 +184,7 @@
   .settings-b .sig { width: 64px; height: 44px; flex-basis: 64px; }
   .settings-b .identity { padding: 14px 12px !important; gap: 8px !important; }
   .settings-b .identity h1 { font-size: 22px !important; }
-  .settings-b .identity-desc, .settings-b .catalog-label { font-size: 12px !important; }
+  .settings-b .catalog-label { font-size: 12px !important; }
 }
 @media (min-width: 744px) {
   /* Tablets 744, 768, 820, and 1280 keep the same 560px centered column. */
@@ -208,4 +208,65 @@
   #settings-screen, .settings-b, .settings-b .identity, .settings-b .body-groups, .settings-b > .magic-overview { background: Canvas !important; color: CanvasText !important; forced-color-adjust: auto; }
   .settings-b .sig { stroke: CanvasText; }
   .settings-b button, .settings-b input, .settings-b select, .settings-b textarea { border: 1px solid ButtonText !important; }
+}
+
+/* Settings text: Korean labels wrap on spaces. Action rows stack at 280px. */
+[data-settings-root] :is(.actions, .row-actions, .preset-actions, .install-actions, .settings-actions, .setting-actions, .formbuttons, .magic-appearance-actions) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 8px;
+  min-width: 0;
+}
+[data-settings-root] :is(.actions, .row-actions, .preset-actions, .install-actions, .settings-actions, .setting-actions, .formbuttons, .magic-appearance-actions) > :is(button, .import) {
+  flex: 1 1 10rem;
+  min-width: 0;
+  max-width: 100%;
+  height: auto;
+  min-height: 44px;
+  padding: 10px 14px;
+  white-space: normal;
+  word-break: keep-all;
+  line-break: strict;
+  overflow-wrap: normal;
+  line-height: 1.35;
+}
+[data-settings-root] :is(.actions, .row-actions, .preset-actions, .install-actions, .settings-actions, .setting-actions, .formbuttons) > button:is(.primary, .primary-button, .button-primary) {
+  min-height: 48px;
+}
+[data-settings-root] .magic-range-row button {
+  flex: 0 0 44px;
+  width: 44px;
+  min-width: 44px;
+  padding: 0;
+}
+@media (max-width: 280px) {
+  [data-settings-root] :is(.actions, .row-actions, .preset-actions, .install-actions, .settings-actions, .setting-actions, .formbuttons, .magic-appearance-actions) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  [data-settings-root] :is(.actions, .row-actions, .preset-actions, .install-actions, .settings-actions, .setting-actions, .formbuttons, .magic-appearance-actions) > :is(button, .import) {
+    flex-basis: auto;
+    width: 100%;
+  }
+  [data-settings-root] .magic-range-row {
+    flex-direction: row;
+  }
+  [data-settings-root] .magic-range-row button {
+    width: 44px;
+    flex-basis: 44px;
+  }
+}
+
+[data-settings-root] :is(.install, .install-control) > button {
+  min-width: 0;
+  max-width: 100%;
+  height: auto;
+  min-height: 44px;
+  padding: 10px 14px;
+  white-space: normal;
+  word-break: keep-all;
+  line-break: strict;
+  overflow-wrap: normal;
+  line-height: 1.35;
 }

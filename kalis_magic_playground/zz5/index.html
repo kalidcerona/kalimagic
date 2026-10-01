@@ -60,7 +60,7 @@
           <li>4행 하트: 10 하트 잭(J), 11 하트 퀸(Q), 12 하트 킹(K)</li>
         </ul>
         <h2>내 사진 세트</h2>
-        <p>세트마다 번호 1부터 12까지 사진을 따로 저장합니다. 세트 1에는 기존에 저장한 내 사진 12장이 그대로 이어집니다. 각 세트에서 사진을 모두 저장한 뒤 <strong>이 세팅으로 연출하기</strong>를 누르세요. 공연 중에는 처음 누른 칸의 사진이 고정되며, 두 손가락을 아래로 밀면 설정으로 돌아옵니다.</p>
+        <p>세트마다 번호 1부터 12까지 사진을 따로 저장합니다. 세트 1에는 기존에 저장한 내 사진 12장이 그대로 이어집니다. 각 세트에서 사진을 모두 저장한 뒤 <strong>이 세트로 시작</strong>을 누르세요. 공연 중에는 처음 누른 칸의 사진이 고정되며, 두 손가락을 아래로 밀면 설정으로 돌아옵니다.</p>
         <h2>칸 이미지 미리보기</h2>
         <p>설정에서 칸 이미지 미리보기를 켜면 기본 카드 12장 또는 내 사진 12장 공연을 시작할 때 각 칸에 해당하는 이미지가 옅게 약 2.5초 보입니다. 첫 터치가 들어오면 즉시 사라지고, 처음 긁기 전까지 무대는 검게 유지됩니다.</p>
         <h2>리허설</h2>
@@ -70,7 +70,7 @@
       <div id="repair" class="banner" hidden>
         <p>저장된 프리셋 정보를 해석할 수 없습니다. 기존 데이터는 자동으로 지우지 않았습니다. 읽을 수 있는 항목만 복구하거나, 목록을 직접 초기화할 수 있습니다.</p>
         <div class="row-actions">
-          <button type="button" id="recover-button" class="secondary">읽을 수 있는 항목만 복구</button>
+          <button type="button" id="recover-button" class="secondary">항목 복구</button>
           <button type="button" id="reset-storage-button" class="danger">초기화</button>
         </div>
       </div>
@@ -79,9 +79,9 @@
 
       <section class="card-start" aria-labelledby="card-start-heading">
         <h2 id="card-start-heading">기본 카드</h2>
-        <p class="hint">앱을 열면 기본으로 제공되는 12장의 그림 카드로 바로 공연을 시작할 수 있습니다.</p>
-        <button type="button" id="card-start-button" class="primary">기본 카드 12장으로 시작</button>
-        <p class="hint">들어오면 화면 전체가 검습니다. 한 손가락으로 칸을 누르는 순간 카드가 정해지고 그 자리부터 지워집니다. 고른 카드는 공연을 나갈 때까지 바뀌지 않습니다.</p>
+        <p class="hint">기본 그림 카드 12장으로 바로 시작할 수 있습니다.</p>
+        <button type="button" id="card-start-button" class="primary">기본 카드로 시작</button>
+        <p class="hint">들어가면 화면은 검습니다. 칸을 누르면 그 카드가 고정됩니다.</p>
       </section>
 
       <details class="card-start" aria-labelledby="coverage-heading">

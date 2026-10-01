@@ -50,3 +50,11 @@ main[data-product-settings] :focus-visible{outline:2px solid #d99070;outline-off
 }
 @media(prefers-reduced-motion:no-preference){main[data-product-settings] .sig .accent{animation:mem-index-settle .22s ease-out}}
 @keyframes mem-index-settle{from{transform:translateX(4px)}to{transform:none}}
+
+main[data-product-settings] .controls{display:flex;flex-wrap:wrap;gap:8px;min-width:0}
+main[data-product-settings] button{min-width:0;height:auto;padding:10px 14px;white-space:normal;word-break:keep-all;line-break:strict;overflow-wrap:normal;line-height:1.35}
+main[data-product-settings] .subtle,main[data-product-settings] .hint,main[data-product-settings] .identity-note{word-break:keep-all;overflow-wrap:normal;line-height:1.55}
+@media (max-width:280px){
+  main[data-product-settings] .controls{flex-direction:column;align-items:stretch}
+  main[data-product-settings] .controls>button,main[data-product-settings] .file-label{width:100%}
+}
