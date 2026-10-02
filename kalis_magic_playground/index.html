@@ -17,7 +17,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="style.css">
-  <link rel="preload" as="image" href="assets/profile/bar-reaction-1080w.webp" type="image/webp" imagesrcset="assets/profile/bar-reaction-800w.webp 800w, assets/profile/bar-reaction-1080w.webp 1080w" imagesizes="100vw">
+  <link rel="preload" as="image" href="assets/profile/bar-reaction-1080w.webp" type="image/webp" media="(min-width: 1025px)" imagesrcset="assets/profile/bar-reaction-800w.webp 800w, assets/profile/bar-reaction-1080w.webp 1080w" imagesizes="100vw">
+  <link rel="preload" as="image" href="assets/profile/magic-reaction-800w.jpg" type="image/jpeg" media="(max-width: 1024px)" imagesrcset="assets/profile/magic-reaction-480w.jpg 480w, assets/profile/magic-reaction-800w.jpg 800w" imagesizes="430px" fetchpriority="high">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css"></noscript>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;500;600;700&display=swap">
@@ -73,7 +74,7 @@
           <div style="position:relative; min-height:560px; overflow:hidden;">
             <picture>
               <source type="image/webp" srcset="assets/profile/bar-reaction-800w.webp 800w, assets/profile/bar-reaction-1080w.webp 1080w" sizes="100vw">
-              <img src="assets/profile/bar-reaction-1080w.jpg" srcset="assets/profile/bar-reaction-800w.jpg 800w, assets/profile/bar-reaction-1080w.jpg 1080w" sizes="100vw" alt="바에서 마술을 보여주며 사람들이 놀라는 순간" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center 38%; filter:saturate(0.92) brightness(0.86) contrast(1.05);" class="kx-ken" width="1200" height="800" fetchpriority="high" decoding="async">
+              <img src="assets/profile/bar-reaction-1080w.jpg" srcset="assets/profile/bar-reaction-800w.jpg 800w, assets/profile/bar-reaction-1080w.jpg 1080w" sizes="100vw" alt="바에서 마술을 보여주며 사람들이 놀라는 순간" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center 38%; filter:saturate(0.92) brightness(0.86) contrast(1.05);" class="kx-ken" width="1200" height="800" loading="lazy" fetchpriority="high" decoding="async">
             </picture>
             <div style="position:absolute; inset:0; background:rgba(20,16,13,0.24);"></div>
             <div style="position:absolute; inset:0; background:linear-gradient(90deg, rgba(26,21,18,0) 45%, #1a1512 100%);"></div>
@@ -414,7 +415,7 @@
   <div class="kx-in" style="position:relative;">
     <picture>
       <source media="(max-width: 1024px)" type="image/jpeg" srcset="assets/profile/magic-reaction-480w.jpg 480w, assets/profile/magic-reaction-800w.jpg 800w" sizes="430px">
-      <img src="assets/profile/magic-reaction.jpg" alt="관객이 놀라는 마술 시연" style="width:100%; height:300px; object-fit:cover; object-position:center 38%; display:block; filter:saturate(0.92) contrast(1.05) brightness(0.82);" width="1200" height="800" loading="lazy" decoding="async">
+      <img src="assets/profile/magic-reaction.jpg" alt="관객이 놀라는 마술 시연" style="width:100%; height:300px; object-fit:cover; object-position:center 38%; display:block; filter:saturate(0.92) contrast(1.05) brightness(0.82);" width="1200" height="800" loading="eager" fetchpriority="high" decoding="async">
     </picture>
     <div style="position:absolute; inset:0; background:linear-gradient(180deg, rgba(26,15,10,0.22) 30%, rgba(26,15,10,0.94));"></div>
     <div style="position:absolute; left:0; right:0; bottom:0; padding:0 24px 22px;">

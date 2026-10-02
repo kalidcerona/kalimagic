@@ -1,6 +1,5 @@
 // kalimagic v2 공통 헤더
-// head에서 동기 로드되므로 즉시 js-anim 플래그를 단다 → JS 꺼지면 .fade-in이 그냥 보임(progressive enhancement)
-document.documentElement.classList.add('js-anim');
+// reveal.js adds js-anim only after its observer is ready; content stays visible if it fails.
 
 const LANDING_PAGES = [
     { key: 'home', label: '홈', href: 'index.html' },

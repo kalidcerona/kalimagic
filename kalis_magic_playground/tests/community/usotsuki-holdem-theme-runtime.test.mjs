@@ -7,7 +7,7 @@ const THEME = 'usotsuki.detector.theme.v1';
 const SCAN = 'usotsuki.detector.scan-duration.v1';
 let serial = 0;
 
-async function fixture({ theme, store = new Map(), readFails = false, writeFails = false, vibrateSupported = true, rect = { left: 20, top: 180, width: 300, height: 120 } } = {}) {
+async function fixture({ theme, store = new Map(), readFails = false, stateReadFails = false, writeFails = false, vibrateSupported = true, rect = { left: 20, top: 180, width: 300, height: 120 } } = {}) {
   if (theme !== undefined) store.set(THEME, theme);
   if (!store.has(SCAN)) store.set(SCAN, '0.5');
   if (!store.has('usotsuki.detector.sound.v1')) store.set('usotsuki.detector.sound.v1', '0');
@@ -77,7 +77,7 @@ async function fixture({ theme, store = new Map(), readFails = false, writeFails
   const vibrations = [];
   const win = {
     localStorage: {
-      getItem(key) { if (readFails && key === THEME) throw new Error('blocked storage'); return store.get(key) ?? null; },
+      getItem(key) { if ((readFails && key === THEME) || (stateReadFails && key === STATE)) throw new Error('blocked storage'); return store.get(key) ?? null; },
       setItem(key, value) { if (writeFails && key === THEME) throw new Error('blocked storage'); store.set(key, String(value)); },
     },
     setTimeout(fn, ms) { const id = ++nextTimer; timers.set(id, { fn, at: now + ms }); return id; },
@@ -115,6 +115,24 @@ test('approved themes validate saved values and keep working when theme storage 
   const f = await fixture({ writeFails: true });
   try { f.theme('wine'); assert.equal(f.element('performance-screen').dataset.displayTheme, 'wine'); assert.equal(f.store.has(THEME), false); assert.equal(f.state().attemptCount, 0); }
   finally { f.restore(); }
+});
+
+test('unreadable performance storage remains untouched during boot, settings and in-memory performance', async () => {
+  const original = 'temporarily unreadable user performance data';
+  const store = new Map([[STATE, original]]);
+  const f = await fixture({ store, stateReadFails: true });
+  try {
+    assert.equal(store.get(STATE), original, 'boot must not replace unreadable storage');
+    f.element('truth-attempt').value = '2,4';
+    f.element('truth-attempt').dispatch('change');
+    f.element('start-performance').dispatch('click');
+    f.pointer('pointerdown', 170, 240); f.tick(500); f.pointer('pointerup', 170, 240);
+    f.element('reset-attempts').dispatch('click');
+    assert.equal(store.get(STATE), original, 'normal actions must preserve the original');
+    f.theme('wine');
+    assert.equal(store.get(THEME), 'wine', 'independent theme storage remains usable');
+    assert.equal(store.get(STATE), original);
+  } finally { f.restore(); }
 });
 
 test('theme changes during a hold preserve timing, truth attempts and haptics, and survive restart/relaunch', async () => {

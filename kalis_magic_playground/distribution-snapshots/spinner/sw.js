@@ -1,6 +1,6 @@
 // Cache only the explicit app shell. API, authentication and user data stay on the network.
 const CACHE_PREFIX = 'spinner-shell-' + encodeURIComponent(self.registration.scope) + '-';
-const CACHE_NAME = CACHE_PREFIX + 'v20261001-release-1';
+const CACHE_NAME = CACHE_PREFIX + 'v20261002-release-2';
 const SHELL = [
   "./casino-assets/felt-emerald.svg",
   "./casino-assets/felt-burgundy.svg",

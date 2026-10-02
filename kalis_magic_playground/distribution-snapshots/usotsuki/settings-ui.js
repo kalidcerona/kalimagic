@@ -37,8 +37,18 @@
     return result;
   }
   function storageKey(app, location) { var pathname = location.pathname.replace(/^\/tools\/release(?=\/|$)/, '/tools/unlock').replace(/^\/tools\/hitsuzen(?=\/|$)/, '/tools/calc').replace(/^\/tools\/kairos-classic(?=\/|$)/, '/tools/stopwatch').replace(/^\/tools\/kairos(?=\/|$)/, '/tools/stopwatch-uni').replace(/^\/tools\/tyche(?=\/|$)/, '/tools/spinner'); return 'magic-appearance:v1:' + app + ':' + location.origin + pathname; }
-  function read(storage, key, profile) { try { return sanitize(JSON.parse(storage.getItem(key)), profile); } catch (_) { return sanitize(null, profile); } }
-  function write(storage, key, value, profile) { try { storage.setItem(key, JSON.stringify(sanitize(value, profile))); return true; } catch (_) { return false; } }
+  function load(storage, key, profile) {
+    var raw;
+    try { raw = storage.getItem(key); } catch (_) { return { status: 'unreadable', raw: null, value: sanitize(null, profile) }; }
+    if (raw === null) return { status: 'missing', raw: null, value: sanitize(null, profile) };
+    try {
+      var value = JSON.parse(raw);
+      if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('Invalid appearance');
+      return { status: 'valid', raw: raw, value: sanitize(value, profile) };
+    } catch (_) { return { status: 'invalid', raw: raw, value: sanitize(null, profile) }; }
+  }
+  function read(storage, key, profile) { return load(storage, key, profile).value; }
+  function write(storage, key, value, profile) { var loaded = load(storage, key, profile); if (loaded.status === 'invalid' || loaded.status === 'unreadable') return false; try { storage.setItem(key, JSON.stringify(sanitize(value, profile))); return true; } catch (_) { return false; } }
   function reset(storage, key) { try { storage.removeItem(key); return true; } catch (_) { return false; } }
   function clipOffset(rect, viewport, dx, dy) { return { x: Math.max(8 - rect.left, Math.min(viewport.width - 8 - rect.right, dx)), y: Math.max(8 - rect.top, Math.min(viewport.height - 8 - rect.bottom, dy)) }; }
   /* Horizontal percent uses the face's visible width; vertical uses its visible height. Portrait rotation swaps those screen axes. */
@@ -50,7 +60,7 @@
   function translateFor(delta, rotated) { return rotated ? delta.y + 'px ' + (-delta.x) + 'px' : delta.x + 'px ' + delta.y + 'px'; }
   function controlVisible(controlSelection, selectedId, selective) { return !selective || controlSelection === selectedId; }
   function customizationAllowed(pathname, flag) { return flag !== 'off' && !/^\/tools(?:\/|$)/i.test(pathname || '') && !(pathname || '').includes('/distribution-snapshots/'); }
-  var api = { customizationAllowed: customizationAllowed, profiles: profiles, sanitize: sanitize, storageKey: storageKey, read: read, write: write, reset: reset, clipOffset: clipOffset, screenDelta: screenDelta, translateFor: translateFor, controlVisible: controlVisible };
+  var api = { customizationAllowed: customizationAllowed, profiles: profiles, sanitize: sanitize, storageKey: storageKey, load: load, read: read, write: write, reset: reset, clipOffset: clipOffset, screenDelta: screenDelta, translateFor: translateFor, controlVisible: controlVisible };
   root.MagicSettingsUI = api;
   if (!root.document) return;
   function mount() {
@@ -76,7 +86,9 @@
     if (!customizeEnabled) { container.appendChild(overview); container.appendChild(node('p', '수정, 버그, 아이디어는 카카오톡 KaliDCerona로 알려 주세요.', 'magic-settings-footer')); return; }
     var storage;
     try { storage = root.localStorage; } catch (_) { storage = null; }
-    var key = storageKey(app, root.location), prefs = read(storage, key, profile), defaults = {};
+    var key = storageKey(app, root.location), loadedAppearance = load(storage, key, profile), prefs = loadedAppearance.value, defaults = {};
+    function recoveryNotice() { return '저장된 꾸미기를 읽지 못해 원본을 보존했어요. 저장하려면 꾸미기 초기화를 누르세요. 연출 설정은 유지돼요.'; }
+    function appearanceBlocked() { return loadedAppearance.status === 'invalid' || loadedAppearance.status === 'unreadable'; }
     var link = node('div', null, 'magic-customize-link'), openCustomize = node('button', '화면 커스텀', 'magic-customize-open');
     openCustomize.type = 'button'; link.appendChild(openCustomize); container.appendChild(link);
     var customPage = node('section', null, 'magic-customize-page'); customPage.id = 'magic-customize-page'; customPage.hidden = true;
@@ -258,12 +270,13 @@
       doc.dispatchEvent(new root.CustomEvent('magic-appearance-change', { detail: { app: app } }));
     }
     var actions = node('div', null, 'magic-appearance-actions'), save = node('button', '저장'), clear = node('button', '꾸미기 초기화'), status = node('p', '', 'magic-appearance-status');
-    save.type = clear.type = 'button'; if (app === 'tobira') clear.hidden = true; status.setAttribute('role', 'status'); status.setAttribute('aria-live', 'polite');
+    save.type = clear.type = 'button'; if (app === 'tobira' && !appearanceBlocked()) clear.hidden = true; status.setAttribute('role', 'status'); status.setAttribute('aria-live', 'polite');
     actions.appendChild(save); actions.appendChild(clear); customize.appendChild(actions); customize.appendChild(status);
+    if (appearanceBlocked()) status.textContent = recoveryNotice();
     function collect() { var value = { scale: Number(scale.value), offset: Number(offset.value), x: Number(axisX.value), labels: {}, parts: {} }; labelFields.forEach(function (item) { if (item.input.value !== defaults[item.definition.selector]) value.labels[item.definition.selector] = item.input.value; }); partFields.forEach(function (part) { value.parts[part.definition.selector] = { scale: Number(part.scale.value), offset: Number(part.offset.value), x: Number(part.x.value) }; }); prefs = sanitize(value, profile); applyLabels(); schedule(); }
     controls.forEach(function (input) { input.addEventListener('input', collect); });
-    save.addEventListener('click', function () { collect(); status.textContent = write(storage, key, prefs, profile) ? '이 기기에 저장했어요.' : '화면에는 적용했어요. 이 브라우저에서는 저장할 수 없어요.'; if (status.textContent === '이 기기에 저장했어요.') closeCustom(); });
-    clear.addEventListener('click', function () { prefs = sanitize(null, profile); scale.value = 100; offset.value = 0; axisX.value = 0; partFields.forEach(function (part) { part.scale.value = 100; part.offset.value = 0; part.x.value = 0; }); labelFields.forEach(function (item) { item.input.value = defaults[item.definition.selector]; }); controls.filter(function (input) { return input.type === 'range'; }).forEach(function (input) { input.dispatchEvent(new root.Event('input')); }); var removed = reset(storage, key); applyLabels(); schedule(); status.textContent = removed ? '꾸미기를 처음 모습으로 돌렸어요.' : '처음 모습으로 돌렸어요. 저장된 설정은 지울 수 없어요.'; });
+    save.addEventListener('click', function () { collect(); if (appearanceBlocked()) { status.textContent = recoveryNotice(); return; } var saved = write(storage, key, prefs, profile); if (!saved) loadedAppearance = load(storage, key, profile); status.textContent = saved ? '이 기기에 저장했어요.' : appearanceBlocked() ? recoveryNotice() : '화면에는 적용했어요. 이 브라우저에서는 저장할 수 없어요.'; if (saved) closeCustom(); });
+    clear.addEventListener('click', function () { prefs = sanitize(null, profile); scale.value = 100; offset.value = 0; axisX.value = 0; partFields.forEach(function (part) { part.scale.value = 100; part.offset.value = 0; part.x.value = 0; }); labelFields.forEach(function (item) { item.input.value = defaults[item.definition.selector]; }); controls.filter(function (input) { return input.type === 'range'; }).forEach(function (input) { input.dispatchEvent(new root.Event('input')); }); var removed = reset(storage, key); if (removed) loadedAppearance = { status: 'missing', raw: null, value: prefs }; applyLabels(); schedule(); status.textContent = removed ? '꾸미기를 처음 모습으로 돌렸어요.' : '처음 모습으로 돌렸어요. 저장된 설정은 지울 수 없어요.'; });
     container.appendChild(overview);
     container.appendChild(node('p', '수정, 버그, 아이디어는 카카오톡 KaliDCerona로 알려 주세요.', 'magic-settings-footer'));
     applyLabels(); applySelection(); schedule();

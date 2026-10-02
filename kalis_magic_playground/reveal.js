@@ -24,28 +24,42 @@
   window.PgReveal.assignStagger = assignStagger;
   function setupReveal(){
     if (window.__pgRevealDone) return;
-    window.__pgRevealDone = true;
     assignStagger();
     var kxNodes = Array.prototype.slice.call(document.querySelectorAll('.kx-desktop .kx-fade, .kx-mobile .kx-shell > div'));
     var fadeNodes = Array.prototype.slice.call(document.querySelectorAll('.fade-in')).filter(function(el){
       return kxNodes.indexOf(el) === -1;
     });
     var nodes = kxNodes.concat(fadeNodes);
-    if (!nodes.length) return;
-    if (!('IntersectionObserver' in window)){
-      nodes.forEach(function(el){ el.classList.add(targetClass(el)); });
+    if (!nodes.length){
+      window.__pgRevealDone = true;
+      document.documentElement.classList.add('js-anim');
       return;
     }
-    var io = new IntersectionObserver(function(entries){
-      entries.forEach(function(e){
-        if (e.isIntersecting){ assignStaggerFor(e.target); e.target.classList.add(targetClass(e.target)); io.unobserve(e.target); }
+    if (!('IntersectionObserver' in window)){
+      nodes.forEach(function(el){ el.classList.add(targetClass(el)); });
+      window.__pgRevealDone = true;
+      document.documentElement.classList.add('js-anim');
+      return;
+    }
+    try {
+      var io = new IntersectionObserver(function(entries){
+        entries.forEach(function(e){
+          if (e.isIntersecting){ assignStaggerFor(e.target); e.target.classList.add(targetClass(e.target)); io.unobserve(e.target); }
+        });
+      }, { threshold:0.12, rootMargin:'0px 0px -8% 0px' });
+      nodes.forEach(function(el){
+        if (el.dataset.pgRevealObserved) return; // 중복 관찰 방지 가드
+        io.observe(el);
+        el.dataset.pgRevealObserved = '1';
       });
-    }, { threshold:0.12, rootMargin:'0px 0px -8% 0px' });
-    nodes.forEach(function(el){
-      if (el.dataset.pgRevealObserved) return; // 중복 관찰 방지 가드
-      el.dataset.pgRevealObserved = '1';
-      io.observe(el);
-    });
+      window.__pgRevealDone = true;
+      document.documentElement.classList.add('js-anim');
+    } catch (_){
+      try { if (io) io.disconnect(); } catch (disconnectError) {}
+      nodes.forEach(function(el){ el.classList.add(targetClass(el)); });
+      window.__pgRevealDone = true;
+      document.documentElement.classList.remove('js-anim');
+    }
   }
   window.PgReveal.init = setupReveal;
   if (document.readyState !== 'loading') setupReveal();

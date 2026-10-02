@@ -247,7 +247,7 @@ function bootStorage() {
   applyVibrationCapability();
   if (!stored.ok) {
     appState = loadFromRaw(null).state;
-    storageLocked = false;
+    storageLocked = true;
     setStatus("브라우저 저장소를 사용할 수 없습니다. 이번 공연 값만 유지됩니다.");
     return;
   }

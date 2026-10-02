@@ -70,7 +70,7 @@
       </div>
       <div class="body-groups">
       <details class="settings-disclosure" open>
-        <summary>목표 방향과 회전 차례</summary>
+        <summary>연출 준비</summary>
       <p class="setting-intro">공연 전에 목표 물건 방향을 한 번 터치하세요. 공연 화면에는 안 보입니다.</p>
       <div class="setting-row"><span>선택한 목표</span><strong id="target-value">선택 전</strong></div>
       <label class="setting-row" for="force-spin"><span>목표에 멈출 차례</span><select id="force-spin"><option value="1">첫 번째</option><option value="2">두 번째</option><option value="3">세 번째</option><option value="4">네 번째</option><option value="5">다섯 번째</option><option value="6">여섯 번째</option><option value="7">일곱 번째</option><option value="8">여덟 번째</option></select></label>
@@ -78,12 +78,13 @@
       <div class="setting-actions"><button id="clear-target" type="button">목표 다시 선택</button></div>
       <p class="setting-note">지정한 차례 외에는 목표 방향을 피해 무작위로 멈춥니다.</p>
       </details>
-      <details class="settings-disclosure"><summary>테이블 색</summary>
+      <details class="settings-disclosure"><summary>화면 꾸미기</summary>
       <label class="setting-row" for="table-theme"><span>테이블 색</span><select id="table-theme"><option value="emerald">딥 그린</option><option value="burgundy">와인 버건디</option></select></label>
       </details>
       <div class="install" id="install-app-group" data-install-state="browser"><button id="install-app" type="button">앱 설치</button><p id="install-help" hidden></p></div>
       </div>
-      <button id="start-performance" class="primary" type="button">마술 시작</button>
+      <p class="setting-note">횟수·목표 방향을 초기화합니다.<br>지정 차례·테이블 색은 유지합니다.</p>
+      <button id="start-performance" class="primary" type="button">연출 다시 시작</button>
     </div>
   </section>
   <script type="module" src="./app.js"></script>

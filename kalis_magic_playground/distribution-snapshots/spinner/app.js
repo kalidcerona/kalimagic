@@ -264,14 +264,10 @@ const onStandaloneChange = () => syncInstallGroup();
 if (typeof standaloneMedia.addEventListener === 'function') standaloneMedia.addEventListener('change', onStandaloneChange);
 else standaloneMedia.addListener(onStandaloneChange);
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
-  const hadController = Boolean(navigator.serviceWorker.controller);
-  let refreshedForUpdate = false;
-  navigator.serviceWorker.addEventListener('controllerchange', () => {
-    if (!hadController || refreshedForUpdate) return;
-    refreshedForUpdate = true;
-    location.reload();
-  });
-  navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' })
-    .then(registration => registration.update())
-    .catch(() => {});
+  // A replacement shell may claim this page. Reloading would clear the live wheel, open settings, and custom preview edits.
+  try {
+    navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' })
+      .then(registration => registration.update())
+      .catch(() => {});
+  } catch { /* Registration failure stays on this performance. */ }
 }
