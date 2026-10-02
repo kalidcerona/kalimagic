@@ -59,6 +59,10 @@ test('the first Android visit offers installation and uses Chrome’s native pro
     assert.equal(saved.get(installStorageKey('/zz2/')), undefined);
     assert.match(elements.get('install-instructions').textContent, /설치 요청/);
     windowEvents.get('appinstalled')();
+    assert.equal(elements.get('install-offer').hidden, false);
+    assert.equal(saved.get(installStorageKey('/zz2/')), undefined);
+    assert.match(elements.get('install-instructions').textContent, /설치 요청.*아이콘.*메뉴/);
+    elements.get('install-later').events.get('click')();
     assert.equal(elements.get('install-offer').hidden, true);
     assert.equal(saved.get(installStorageKey('/zz2/')), '1');
   } finally {

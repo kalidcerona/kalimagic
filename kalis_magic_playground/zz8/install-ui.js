@@ -3,6 +3,7 @@ const installControl = document.getElementById("install-control");
 const installButton = document.getElementById("install-app");
 const installHelp = document.getElementById("install-help");
 let installPrompt = null;
+let installRevision = 0;
 
 function isInstalled() {
   return window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
@@ -18,29 +19,36 @@ function showInstallHelp(message) {
 }
 
 window.addEventListener("beforeinstallprompt", (event) => {
+  if (isInstalled()) return;
   event.preventDefault();
+  installRevision += 1;
   installPrompt = event;
   refreshInstallControl();
 });
 window.addEventListener("appinstalled", () => {
+  installRevision += 1;
   installPrompt = null;
-  installControl.hidden = true;
+  refreshInstallControl();
+  if (!isInstalled()) showInstallHelp("설치 요청을 받았습니다. 앱 아이콘을 확인하세요. 없으면 브라우저 메뉴에서 다시 시도하세요.");
 });
 window.matchMedia("(display-mode: standalone)").addEventListener?.("change", refreshInstallControl);
 
 installButton.addEventListener("click", async () => {
   if (isInstalled()) return refreshInstallControl();
   if (installPrompt) {
+    const revision = installRevision;
     const prompt = installPrompt;
     installPrompt = null;
     try {
       await prompt.prompt();
       const choice = await prompt.userChoice;
+      if (revision !== installRevision || isInstalled()) return;
       if (choice?.outcome === "accepted") {
-        if (!installControl.hidden) showInstallHelp("설치 요청을 보냈습니다. 완료 후 앱 아이콘으로 열어 주세요.");
+        if (!installControl.hidden) showInstallHelp("설치 요청을 보냈습니다. 앱 아이콘을 확인하세요. 없으면 브라우저 메뉴에서 다시 시도하세요.");
         return;
       }
     } catch {
+      if (revision !== installRevision || isInstalled()) return;
       // Fall through to the browser's manual installation path.
     }
   }

@@ -16,7 +16,7 @@ const apps = [
     state: 'tobira.v1',
     motion: 'tobira.motion-effects.v1',
     images: 'tobira.coinChoices.v1',
-    cache: 'v20261003-install-1',
+    cache: 'v20261003-install-2',
   },
   {
     name: 'shared',
@@ -27,7 +27,7 @@ const apps = [
     state: 'friend-tobira.v1',
     motion: 'friend-tobira.motion-effects.v1',
     images: 'friend-tobira.coinChoices.v1',
-    cache: 'v20261003-install-1',
+    cache: 'v20261003-install-2',
   },
 ];
 

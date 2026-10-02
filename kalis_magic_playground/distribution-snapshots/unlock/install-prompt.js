@@ -27,20 +27,31 @@ function setupInstallPrompt() {
   const later = document.getElementById('install-later');
   const instructions = document.getElementById('install-instructions');
   let deferredPrompt = null;
+  let installRevision = 0;
   offer.hidden = false;
 
   const finish = () => {
+    installRevision += 1;
     offer.hidden = true;
     deferredPrompt = null;
     try { localStorage.setItem(key, '1'); } catch {}
   };
 
   window.addEventListener('beforeinstallprompt', (event) => {
+    if (offer.hidden) return;
     event.preventDefault();
+    installRevision += 1;
     deferredPrompt = event;
     action.textContent = '설치';
   });
-  window.addEventListener('appinstalled', finish);
+  window.addEventListener('appinstalled', () => {
+    installRevision += 1;
+    deferredPrompt = null;
+    if (offer.hidden) return;
+    action.textContent = '설치 방법';
+    instructions.textContent = '설치 요청을 받았습니다. 앱 아이콘을 확인하세요. 없으면 브라우저 메뉴에서 다시 시도하세요.';
+    instructions.hidden = false;
+  });
   later.addEventListener('click', finish);
   action.addEventListener('click', async () => {
     if (!deferredPrompt) {
@@ -48,15 +59,18 @@ function setupInstallPrompt() {
       instructions.hidden = false;
       return;
     }
+    if (offer.hidden) return;
+    const revision = installRevision;
     const prompt = deferredPrompt;
     deferredPrompt = null;
     try {
       const choice = await prompt.prompt();
       const outcome = prompt.userChoice ? await prompt.userChoice : choice;
+      if (revision !== installRevision || offer.hidden) return;
       if (outcome?.outcome === 'accepted') {
         if (offer.hidden) return;
         action.textContent = '설치 방법';
-        instructions.textContent = '설치 요청을 보냈습니다. 완료 후 앱 아이콘으로 열어 주세요.';
+        instructions.textContent = '설치 요청을 보냈습니다. 앱 아이콘을 확인하세요. 없으면 브라우저 메뉴에서 다시 시도하세요.';
         instructions.hidden = false;
       }
       else {
@@ -65,6 +79,7 @@ function setupInstallPrompt() {
         instructions.hidden = false;
       }
     } catch {
+      if (revision !== installRevision || offer.hidden) return;
       action.textContent = '설치 방법';
       instructions.textContent = installInstructions(userAgent);
       instructions.hidden = false;

@@ -35,6 +35,7 @@ function setupInstallPrompt() {
   const platform = navigator.platform || "";
   const maxTouchPoints = navigator.maxTouchPoints || 0;
   let deferredPrompt = null;
+  let installRevision = 0;
   panel.hidden = false;
 
   const showInstructions = () => {
@@ -42,37 +43,45 @@ function setupInstallPrompt() {
     instructions.hidden = false;
     action.hidden = true;
   };
-  const finish = () => {
-    panel.hidden = true;
+  const showPending = () => {
+    installRevision += 1;
     deferredPrompt = null;
+    if (panel.hidden) return;
+    action.hidden = true;
+    instructions.textContent = "설치 요청을 받았습니다. 앱 아이콘을 확인하세요. 없으면 브라우저 메뉴에서 다시 시도하세요.";
+    instructions.hidden = false;
   };
 
   showInstructions();
   window.addEventListener("beforeinstallprompt", (event) => {
     event.preventDefault();
+    installRevision += 1;
     deferredPrompt = event;
     action.hidden = false;
     instructions.hidden = true;
   });
-  window.addEventListener("appinstalled", finish);
+  window.addEventListener("appinstalled", showPending);
   action.addEventListener("click", async () => {
     if (!deferredPrompt) {
       showInstructions();
       return;
     }
+    const revision = installRevision;
     const promptEvent = deferredPrompt;
     deferredPrompt = null;
     try {
       await promptEvent.prompt();
       const choice = await promptEvent.userChoice;
+      if (revision !== installRevision || panel.hidden) return;
       if (choice?.outcome === "accepted") {
         if (panel.hidden) return;
         action.hidden = true;
-        instructions.textContent = "설치 요청을 보냈습니다. 완료 후 앱 아이콘으로 열어 주세요.";
+        instructions.textContent = "설치 요청을 보냈습니다. 앱 아이콘을 확인하세요. 없으면 브라우저 메뉴에서 다시 시도하세요.";
         instructions.hidden = false;
       }
       else showInstructions();
     } catch {
+      if (revision !== installRevision || panel.hidden) return;
       showInstructions();
     }
   });

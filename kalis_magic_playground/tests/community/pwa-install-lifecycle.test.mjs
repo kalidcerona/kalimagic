@@ -55,7 +55,7 @@ async function runtime(file, kind) {
 }
 
 for (const [file, kind] of PROMPTS) {
-  test(`${file}: acceptance remains pending; only appinstalled hides the offer`, async () => {
+  test(`${file}: acceptance and appinstalled keep browser-tab help available`, async () => {
     const app = await runtime(file, kind);
     let calls = 0;
     app.events.get('beforeinstallprompt')({ preventDefault() {},
@@ -70,7 +70,9 @@ for (const [file, kind] of PROMPTS) {
     await app.click();
     assert.equal(calls, 1, 'the consumed browser event is never reused');
     app.events.get('appinstalled')();
-    assert.equal(app.box.hidden, true);
+    assert.equal(app.box.hidden, false);
+    assert.equal(app.saved.size, 0);
+    assert.match(app.description.textContent, /설치 요청.*아이콘.*메뉴/);
   });
 
   for (const result of ['dismissed', 'error']) {

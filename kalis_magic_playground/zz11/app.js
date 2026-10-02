@@ -30,7 +30,7 @@ let drag = null;
 let busy = false;
 let twoFingerStart = null;
 let installPrompt = null;
-let installSuppressed = false;
+let installRevision = 0;
 let statusTimer = null;
 const pendingSpins = [];
 // Each new app session starts with a fresh target touch, even if the last run was saved.
@@ -101,7 +101,7 @@ function standaloneDisplay() {
 }
 function syncInstallGroup() {
   const group = document.getElementById('install-app-group');
-  const hide = installSuppressed || standaloneDisplay();
+  const hide = standaloneDisplay();
   group.hidden = hide;
   group.classList.toggle('is-installed', hide);
   group.dataset.installState = hide ? 'hidden' : 'browser';
@@ -242,12 +242,19 @@ try { guide.hidden = localStorage.getItem('zz11-guide-seen-v2') === '1'; } catch
 refreshSettings();
 syncTargetCue();
 
-window.addEventListener('beforeinstallprompt', event => { event.preventDefault(); installPrompt = event; });
+window.addEventListener('beforeinstallprompt', event => { if (standaloneDisplay()) return; event.preventDefault(); installRevision += 1; installPrompt = event; syncInstallGroup(); });
 document.getElementById('install-app').addEventListener('click', async () => {
   const help = document.getElementById('install-help');
+  if (standaloneDisplay()) return syncInstallGroup();
   if (installPrompt) {
+    const revision = installRevision;
     const prompt = installPrompt; installPrompt = null;
-    try { await prompt.prompt(); if ((await prompt.userChoice)?.outcome === 'accepted') { help.textContent = '설치가 진행 중입니다.'; help.hidden = false; return; } } catch { /* Use manual instructions. */ }
+    try {
+      await prompt.prompt();
+      const choice = await prompt.userChoice;
+      if (revision !== installRevision || standaloneDisplay()) return;
+      if (choice?.outcome === 'accepted') { help.textContent = '설치 요청을 보냈습니다. 앱 아이콘을 확인하세요. 없으면 브라우저 메뉴에서 다시 시도하세요.'; help.hidden = false; return; }
+    } catch { if (revision !== installRevision || standaloneDisplay()) return; /* Use manual instructions. */ }
   }
   const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   help.textContent = ios ? 'Safari에서 공유 → 홈 화면에 추가를 선택하세요.' : '브라우저 메뉴에서 앱 설치 또는 홈 화면에 추가를 선택하세요.';
@@ -255,9 +262,14 @@ document.getElementById('install-app').addEventListener('click', async () => {
 });
 syncInstallGroup();
 window.addEventListener('appinstalled', () => {
-  installSuppressed = true;
+  installRevision += 1;
   installPrompt = null;
   syncInstallGroup();
+  if (!standaloneDisplay()) {
+    const help = document.getElementById('install-help');
+    help.textContent = '설치 요청을 받았습니다. 앱 아이콘을 확인하세요. 없으면 브라우저 메뉴에서 다시 시도하세요.';
+    help.hidden = false;
+  }
 });
 const standaloneMedia = window.matchMedia('(display-mode: standalone)');
 const onStandaloneChange = () => syncInstallGroup();

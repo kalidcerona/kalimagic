@@ -1,6 +1,6 @@
 // Cache only the explicit app shell. API, authentication and user data stay on the network.
 const CACHE_PREFIX = 'stopwatch-uni-shell-' + encodeURIComponent(self.registration.scope) + '-';
-const CACHE_NAME = CACHE_PREFIX + 'v20261003-install-1';
+const CACHE_NAME = CACHE_PREFIX + 'v20261003-install-2';
 const SHELL = [
   "./settings-ui.js",
   "./settings-ui.css",
@@ -42,12 +42,37 @@ async function refresh(request, cache) {
   }
   return response;
 }
+// Installation metadata must not remain stale while the performance shell stays cached.
+async function freshManifest(request, cache) {
+  const canonical = new URL('manifest.webmanifest', self.registration.scope).href;
+  const cached = await cache.match(canonical, { ignoreSearch: true });
+  try {
+    const response = await fetch(new Request(request, { cache: 'no-store', redirect: 'error' }));
+    const type = (response.headers.get('Content-Type') || '').split(';')[0].trim().toLowerCase();
+    if (!response.ok || response.redirected || response.type === 'opaque' ||
+        (response.url && new URL(response.url).origin !== new URL(self.registration.scope).origin) ||
+        !/^application\/(?:manifest\+json|json)$/.test(type)) throw new Error('Invalid manifest response');
+    const manifest = await response.clone().json();
+    if (!manifest || typeof manifest !== 'object' || Array.isArray(manifest) ||
+        typeof manifest.start_url !== 'string' ||
+        !(typeof manifest.name === 'string' || typeof manifest.short_name === 'string') ||
+        new URL(manifest.start_url, canonical).origin !== new URL(self.registration.scope).origin) {
+      throw new Error('Invalid manifest metadata');
+    }
+    // Cache writes are optional; a quota failure must not replace fresh metadata with stale metadata.
+    await cache.put(canonical, response.clone()).catch(() => {});
+    return response;
+  } catch {
+    return cached || Response.error();
+  }
+}
 self.addEventListener('fetch', (event) => {
   const request = event.request;
   if (request.method !== 'GET' || shellName(request.url) === null) return;
   event.respondWith((async () => {
     const cache = await caches.open(CACHE_NAME);
     const name = shellName(request.url);
+    if (name === 'manifest.webmanifest') return freshManifest(request, cache);
     const page = name === '' || name === 'index.html';
     const cached = await cache.match(new URL(page ? 'index.html' : name, self.registration.scope).href, { ignoreSearch: true });
     // Friend distribution navigation must still reach the server entitlement gate.

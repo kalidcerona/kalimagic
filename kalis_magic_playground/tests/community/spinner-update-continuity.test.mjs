@@ -147,8 +147,8 @@ async function loadApp(options) {
 }
 
 test('service worker updates do not reload a live personal or shared spinner', async () => {
-  assert.match(readFileSync(new URL('../../zz11/sw.js', import.meta.url), 'utf8'), /v20261002-4/);
-  assert.match(readFileSync(new URL('../../distribution-snapshots/spinner/sw.js', import.meta.url), 'utf8'), /v20261002-release-2/);
+  assert.match(readFileSync(new URL('../../zz11/sw.js', import.meta.url), 'utf8'), /v20261003-install-2/);
+  assert.match(readFileSync(new URL('../../distribution-snapshots/spinner/sw.js', import.meta.url), 'utf8'), /v20261003-install-2/);
   const apps = [
     {
       name: 'personal',

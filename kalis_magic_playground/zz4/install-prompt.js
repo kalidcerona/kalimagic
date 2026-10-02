@@ -2,6 +2,7 @@ const card = document.querySelector('[data-install-card]');
 const button = card?.querySelector('[data-install-button]');
 const guidance = card?.querySelector('[data-install-guidance]');
 let installEvent = null;
+let installRevision = 0;
 
 function isInstalled() {
   return window.matchMedia('(display-mode: standalone)').matches
@@ -33,7 +34,9 @@ if (card && button && guidance) {
   else describeManualInstall();
 
   window.addEventListener('beforeinstallprompt', (event) => {
+    if (isInstalled()) return;
     event.preventDefault();
+    installRevision += 1;
     installEvent = event;
     button.hidden = false;
     guidance.textContent = '버튼을 눌러 이 앱을 설치하세요.';
@@ -41,17 +44,19 @@ if (card && button && guidance) {
 
   button.addEventListener('click', async () => {
     if (installEvent) {
+      const revision = installRevision;
       const promptEvent = installEvent;
       installEvent = null;
       button.hidden = true;
       try {
         await promptEvent.prompt();
         const choice = await promptEvent.userChoice;
-        if (card.hidden) return;
+        if (revision !== installRevision || card.hidden) return;
         if (choice?.outcome === 'accepted') {
-          guidance.textContent = '설치 요청을 보냈습니다. 완료 후 앱 아이콘으로 열어 주세요.';
+          guidance.textContent = '설치 요청을 보냈습니다. 앱 아이콘을 확인하세요. 없으면 브라우저 메뉴에서 다시 시도하세요.';
         } else describeManualInstall();
       } catch {
+        if (revision !== installRevision || card.hidden) return;
         describeManualInstall();
       }
       return;
@@ -59,5 +64,11 @@ if (card && button && guidance) {
     describeManualInstall();
   });
 
-  window.addEventListener('appinstalled', hideCard);
+  window.addEventListener('appinstalled', () => {
+    installRevision += 1;
+    installEvent = null;
+    if (isInstalled()) return hideCard();
+    button.hidden = true;
+    guidance.textContent = '설치 요청을 받았습니다. 앱 아이콘을 확인하세요. 없으면 브라우저 메뉴에서 다시 시도하세요.';
+  });
 }
