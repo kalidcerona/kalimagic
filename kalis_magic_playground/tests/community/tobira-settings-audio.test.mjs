@@ -16,7 +16,7 @@ const apps = [
     state: 'tobira.v1',
     motion: 'tobira.motion-effects.v1',
     images: 'tobira.coinChoices.v1',
-    cache: 'v20261002-2',
+    cache: 'v20261003-install-1',
   },
   {
     name: 'shared',
@@ -27,7 +27,7 @@ const apps = [
     state: 'friend-tobira.v1',
     motion: 'friend-tobira.motion-effects.v1',
     images: 'friend-tobira.coinChoices.v1',
-    cache: 'v20261002-release-2',
+    cache: 'v20261003-install-1',
   },
 ];
 
@@ -178,6 +178,10 @@ test('guide diagram, cache scope and sound control exist in both Tobira copies',
     assert.doesNotMatch(css, /gesture-guide-down/);
     assert.match(sw, new RegExp(app.cache.replace(/[.]/g, '\\.')));
     assert.match(sw, /CACHE_PREFIX/);
+    const shell = sw.match(/const SHELL = \[([\s\S]*?)\];/)[1];
+    for (const asset of ['./app.js', './sensor-motion.js', './install-prompt.js']) {
+      assert.ok(shell.includes(JSON.stringify(asset)), `${app.name} precaches ${asset}`);
+    }
     assert.match(source, /classifyTwoFingerSwipe/);
     assert.match(source, /if \(!probe && !wallSoundEnabled\(\)\) return/);
     if (app.name === 'shared') {

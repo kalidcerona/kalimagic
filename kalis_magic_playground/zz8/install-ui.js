@@ -36,7 +36,10 @@ installButton.addEventListener("click", async () => {
     try {
       await prompt.prompt();
       const choice = await prompt.userChoice;
-      if (choice?.outcome === "accepted") return;
+      if (choice?.outcome === "accepted") {
+        if (!installControl.hidden) showInstallHelp("설치 요청을 보냈습니다. 완료 후 앱 아이콘으로 열어 주세요.");
+        return;
+      }
     } catch {
       // Fall through to the browser's manual installation path.
     }

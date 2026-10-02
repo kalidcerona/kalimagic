@@ -48,7 +48,9 @@ function analyzePath(rawPathname) {
   const isPublicAsset =
     pathname.endsWith('/manifest.webmanifest') ||
     pathname.endsWith('/icon-192.png') ||
-    pathname.endsWith('/icon-512.png');
+    pathname.endsWith('/icon-512.png') ||
+    pathname === '/tools/release/icon-maskable-192.png' ||
+    pathname === '/tools/release/icon-maskable-512.png';
   if (isLoginPath || isPublicAsset) {
     return { mode: 'public', pathname };
   }

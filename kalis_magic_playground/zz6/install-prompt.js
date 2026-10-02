@@ -65,7 +65,12 @@ function setupInstallPrompt() {
     try {
       await promptEvent.prompt();
       const choice = await promptEvent.userChoice;
-      if (choice?.outcome === "accepted") finish();
+      if (choice?.outcome === "accepted") {
+        if (panel.hidden) return;
+        action.hidden = true;
+        instructions.textContent = "설치 요청을 보냈습니다. 완료 후 앱 아이콘으로 열어 주세요.";
+        instructions.hidden = false;
+      }
       else showInstructions();
     } catch {
       showInstructions();

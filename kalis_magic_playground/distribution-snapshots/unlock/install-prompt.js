@@ -1,5 +1,5 @@
 export function installStorageKey(pathname) {
-  return pathname.startsWith('/tools/unlock/') ? 'unlock-install-shared-v1' : 'unlock-install-personal-v1';
+  return (/^\/tools\/(?:unlock|release)\//).test(pathname) ? 'unlock-install-shared-v1' : 'unlock-install-personal-v1';
 }
 
 export function shouldOfferInstall({ userAgent, standalone, dismissed }) {
@@ -53,7 +53,12 @@ function setupInstallPrompt() {
     try {
       const choice = await prompt.prompt();
       const outcome = prompt.userChoice ? await prompt.userChoice : choice;
-      if (outcome?.outcome === 'accepted') finish();
+      if (outcome?.outcome === 'accepted') {
+        if (offer.hidden) return;
+        action.textContent = '설치 방법';
+        instructions.textContent = '설치 요청을 보냈습니다. 완료 후 앱 아이콘으로 열어 주세요.';
+        instructions.hidden = false;
+      }
       else {
         action.textContent = '설치 방법';
         instructions.textContent = installInstructions(userAgent);

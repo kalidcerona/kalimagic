@@ -22,7 +22,7 @@ test('installed or dismissed apps do not show the first-run offer', () => {
 });
 
 test('personal and shared unlock remember dismissal separately', () => {
-  assert.notEqual(installStorageKey('/zz2/'), installStorageKey('/tools/unlock/'));
+  assert.notEqual(installStorageKey('/zz2/'), installStorageKey('/tools/release/'));
 });
 
 test('the first Android visit offers installation and uses Chrome’s native prompt after a tap', async () => {
@@ -55,6 +55,10 @@ test('the first Android visit offers installation and uses Chrome’s native pro
     assert.equal(elements.get('install-action').textContent, '설치');
     await elements.get('install-action').events.get('click')();
     assert.equal(nativePromptCalls, 1);
+    assert.equal(elements.get('install-offer').hidden, false);
+    assert.equal(saved.get(installStorageKey('/zz2/')), undefined);
+    assert.match(elements.get('install-instructions').textContent, /설치 요청/);
+    windowEvents.get('appinstalled')();
     assert.equal(elements.get('install-offer').hidden, true);
     assert.equal(saved.get(installStorageKey('/zz2/')), '1');
   } finally {

@@ -43,8 +43,17 @@ if (card && button && guidance) {
     if (installEvent) {
       const promptEvent = installEvent;
       installEvent = null;
-      await promptEvent.prompt();
-      await promptEvent.userChoice;
+      button.hidden = true;
+      try {
+        await promptEvent.prompt();
+        const choice = await promptEvent.userChoice;
+        if (card.hidden) return;
+        if (choice?.outcome === 'accepted') {
+          guidance.textContent = '설치 요청을 보냈습니다. 완료 후 앱 아이콘으로 열어 주세요.';
+        } else describeManualInstall();
+      } catch {
+        describeManualInstall();
+      }
       return;
     }
     describeManualInstall();

@@ -55,3 +55,46 @@ test('public app identities remain distinct while FALSE MEMORY stays private', a
   assert.equal(PUBLIC_DIRS.includes('zz10'), true);
   assert.equal(PUBLIC_DIRS.includes('zz9'), false);
 });
+
+test('all 21 app manifests resolve to stable distinct identities and usable PNG icons', async () => {
+  const { PUBLIC_DIRS, DISTRIBUTION_APPS } = await import('../../scripts/build-public.mjs');
+  const expectedPersonal = {
+    zz1: '/zz1/index.html', zz2: '/zz2/index.html', zz3: '/zz3/index.html',
+    zz4: '/choice', zz5: '/aletheia', zz6: '/tobira', zz7: '/usotsuki',
+    zz8: '/zz8/', zz10: '/zz10/index.html', zz11: '/zz11/index.html',
+    zz12: '/zz12/', zz13: '/zz13/',
+  };
+  const apps = [
+    ...PUBLIC_DIRS.filter((route) => /^zz\d+$/.test(route)).map((route) => ({ source: route, route })),
+    ...DISTRIBUTION_APPS.map((app) => ({ source: app.source, route: `tools/${app.target}`, shared: true })),
+  ];
+  const identities = [];
+  for (const { source, route, shared } of apps) {
+    const root = new URL(`../../${source}/`, import.meta.url);
+    const manifest = JSON.parse(await readFile(new URL('manifest.webmanifest', root), 'utf8'));
+    if (shared) Object.assign(manifest, { id: `/${route}/`, start_url: './', scope: './' });
+    const manifestUrl = new URL(`https://example.test/${route}/manifest.webmanifest`);
+    const start = new URL(manifest.start_url, manifestUrl);
+    const scope = new URL(manifest.scope, manifestUrl);
+    // The id base is the start URL's origin, not the manifest directory.
+    const id = new URL(manifest.id || start.href, start.origin);
+    id.hash = '';
+    identities.push(id.href);
+    assert.equal(id.pathname, shared ? `/${route}/` : expectedPersonal[route], route);
+    assert.equal(start.origin, scope.origin);
+    assert.ok(start.pathname.startsWith(scope.pathname), `${route} launch URL stays in scope`);
+    assert.equal(manifest.display, 'standalone');
+    assert.equal(manifest.prefer_related_applications, undefined);
+    for (const size of [192, 512]) {
+      const icon = manifest.icons.find((entry) => entry.sizes === `${size}x${size}`
+        && (entry.purpose || 'any').split(/\s+/).includes('any'));
+      assert.ok(icon, `${route} needs a ${size}px general-purpose icon`);
+      assert.equal(icon.type, 'image/png');
+      const iconUrl = new URL(icon.src, root);
+      iconUrl.search = '';
+      assert.deepEqual(pngSize(await readFile(iconUrl)), [size, size], route);
+    }
+  }
+  assert.equal(apps.length, 21);
+  assert.equal(new Set(identities).size, 21);
+});
