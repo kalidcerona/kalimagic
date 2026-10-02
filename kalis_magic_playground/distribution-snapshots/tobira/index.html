@@ -85,6 +85,13 @@
           </div>
           <label class="motion-option"><input id="motion-breakthrough" type="checkbox"><span>강한 스냅에 물건이 사라지고 화면이 깨짐</span></label>
           <label class="motion-option"><input id="motion-wobble" type="checkbox"><span>흔들면 보이는 물건이 떨림</span></label>
+          <label class="motion-option"><input id="motion-wall-sound" type="checkbox" checked><span>벽에 부딪히는 소리</span></label>
+          <label class="field" for="motion-wall-volume">
+            <span class="field-label">충돌 소리 크기 <strong id="motion-wall-volume-value">100%</strong></span>
+            <input id="motion-wall-volume" type="range" min="0" max="100" step="5" value="100">
+          </label>
+          <button type="button" id="motion-wall-test" class="button button-quiet">충돌 소리 들어보기</button>
+          <p class="hint">충돌 소리는 따로 설정할 수 있습니다.<br>들어보기는 연출 설정을 바꾸지 않습니다.</p>
           <button type="button" id="motion-activate" class="button" hidden>움직임 켜기</button>
           <p id="motion-note" class="hint" role="status">선택한 연출은 저장됩니다. 이 설정에서 움직임 켜기를 눌러 센서를 연결하세요. 공연 중에는 두 손가락을 아래로 내려 설정을 열 수 있습니다.</p>
         </div>
@@ -255,11 +262,38 @@
     </div>
     <div id="coin" class="coin kind-coin" aria-hidden="true"><img id="coin-art" alt=""></div>
   </div>
-  <div id="settings-gesture-guide" class="gesture-guide" role="dialog" aria-modal="true" aria-labelledby="settings-gesture-title" hidden>
+  <div id="settings-gesture-guide" class="gesture-guide" role="dialog" aria-modal="true" aria-labelledby="settings-gesture-title" aria-describedby="settings-gesture-text" hidden>
     <div class="gesture-guide-card">
-      <div class="gesture-guide-demo" aria-hidden="true"><span></span><span></span></div>
+      <div class="gesture-guide-demo" aria-hidden="true">
+        <svg class="gesture-story" viewBox="0 0 320 148" focusable="false">
+          <g fill="none" stroke="#fff" stroke-width="2">
+            <rect x="8" y="6" width="86" height="118" rx="14"/>
+            <rect x="118" y="6" width="86" height="118" rx="14"/>
+            <rect x="228" y="6" width="86" height="118" rx="14"/>
+          </g>
+          <path d="M98 64h12M106 60l8 4-8 4M208 64h12M216 60l8 4-8 4" fill="none" stroke="#f7c46a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <g fill="none" stroke="#f7c46a" stroke-width="2.4">
+            <circle cx="36" cy="42" r="7"/><circle cx="66" cy="42" r="7"/>
+            <circle cx="36" cy="42" r="1.6" fill="#f7c46a" stroke="none"/><circle cx="66" cy="42" r="1.6" fill="#f7c46a" stroke="none"/>
+          </g>
+          <g fill="none" stroke="#f7c46a" stroke-width="1.6" stroke-dasharray="3 3">
+            <line x1="146" y1="40" x2="146" y2="86"/><line x1="176" y1="40" x2="176" y2="86"/>
+          </g>
+          <g class="gesture-drop" fill="none" stroke="#f7c46a" stroke-width="2.4">
+            <circle cx="146" cy="86" r="7"/><circle cx="176" cy="86" r="7"/>
+            <circle cx="146" cy="86" r="1.6" fill="#f7c46a" stroke="none"/><circle cx="176" cy="86" r="1.6" fill="#f7c46a" stroke="none"/>
+          </g>
+          <rect x="242" y="58" width="58" height="48" rx="4" fill="rgba(255,255,255,.08)" stroke="#f7c46a" stroke-width="1.6"/>
+          <path d="M250 70h42M250 80h34M250 90h28" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+          <g fill="#fff" font-size="11" text-anchor="middle" font-family="sans-serif">
+            <text x="51" y="142">두 접점</text>
+            <text x="161" y="142">아래로</text>
+            <text x="271" y="142">설정</text>
+          </g>
+        </svg>
+      </div>
       <h2 id="settings-gesture-title">설정으로 돌아가기</h2>
-      <p>두 손가락을 화면 아래로 96픽셀 이상 밀어 내세요.</p>
+      <p id="settings-gesture-text">화면에 두 손가락을 올린 뒤<br>아래로 내려주세요.</p>
       <button type="button" id="settings-gesture-dismiss">알겠어요</button>
     </div>
   </div>

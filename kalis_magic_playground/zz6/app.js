@@ -1,7 +1,6 @@
 import {
   GESTURE_THRESHOLD,
   LIMITS,
-  RECOVERY_KEY,
   STORAGE_KEY,
   centerFromPointer,
   coinMetrics,
@@ -47,6 +46,8 @@ function hideGestureGuide() {
 
 gestureGuideDismiss.addEventListener('click', () => {
   hideGestureGuide();
+  // Dismissal is a user gesture, so audio may be unlocked here. Do not start sound by itself.
+  unlockBreakSound();
   try { localStorage.setItem(GESTURE_GUIDE_KEY, 'done'); } catch { /* Keep this session dismissed. */ }
 });
 for (const type of ['touchstart', 'touchmove', 'touchend', 'touchcancel']) {
@@ -57,7 +58,6 @@ const NOTICE_KEY = 'tobira.v1.notice';
 const SESSION_GONE = 'tobira.session-gone';
 const SESSION_CRACK = 'tobira.session-crack';
 const SESSION_CRACK_AT = `${SESSION_CRACK}-at`;
-const PREVIOUS_RECOVERY_KEY = `${RECOVERY_KEY}.previous`;
 // Appearance is global. It must not be written into the preset schema.
 const OBJECT_KIND_KEY = 'tobira.objectKind.v1';
 const OBJECT_KIND_CLASS = Object.freeze({
@@ -126,6 +126,10 @@ const coinArt = document.querySelector('#coin-art');
 const motionToggle = document.querySelector('#motion-enabled');
 const motionNote = document.querySelector('#motion-note');
 const motionActivation = document.querySelector('#motion-activate');
+const wallSoundInput = document.querySelector('#motion-wall-sound');
+const wallVolumeInput = document.querySelector('#motion-wall-volume');
+const wallVolumeValue = document.querySelector('#motion-wall-volume-value');
+const wallTestButton = document.querySelector('#motion-wall-test');
 const MOTION_SETTINGS_KEY = 'tobira.motion-effects.v1';
 const motionInputs = {
   tilt: motionToggle,
@@ -139,36 +143,119 @@ const DEFAULT_MOTION_EFFECTS = Object.freeze({
   tilt: true, exit: false, breakthrough: true, wobble: false,
   edges: ['right'],
 });
-let motionEffects = { ...DEFAULT_MOTION_EFFECTS };
+const DEFAULT_WALL_VOLUME = 100;
+const MOTION_OWNED_KEYS = new Set(['tilt', 'exit', 'breakthrough', 'wobble', 'edges', 'wallSound', 'wallVolume']);
+let motionEffects = { ...DEFAULT_MOTION_EFFECTS, wallSound: true, wallVolume: DEFAULT_WALL_VOLUME };
+let motionExtras = {};
+let motionStorageBlocked = false;
 let motionPermissionDenied = false;
 
-function loadMotionEffects() {
-  try {
-    const saved = JSON.parse(localStorage.getItem(MOTION_SETTINGS_KEY) || 'null');
-    if (saved && typeof saved === 'object' && !Array.isArray(saved)) {
-      motionEffects = {
-        tilt: typeof saved.tilt === 'boolean' ? saved.tilt : true,
-        exit: saved.exit === true,
-        breakthrough: typeof saved.breakthrough === 'boolean' ? saved.breakthrough : true,
-        wobble: saved.wobble === true,
-        edges: Array.isArray(saved.edges) ? EDGE_ORDER.filter((edge) => saved.edges.includes(edge)) : ['right'],
-      };
-      if (motionEffects.exit) motionEffects.tilt = true;
-    }
-  } catch { /* Use safe defaults for damaged settings or unavailable storage. */ }
-  for (const [key, input] of Object.entries(motionInputs)) input.checked = motionEffects[key];
+function sensorEffectEnabled() {
+  return ['tilt', 'exit', 'breakthrough', 'wobble'].some((key) => motionEffects[key] === true);
+}
+
+function wallSoundEnabled() {
+  return motionEffects.wallSound !== false;
+}
+
+function wallVolumeGain() {
+  const volume = Number.isFinite(motionEffects.wallVolume) ? motionEffects.wallVolume : DEFAULT_WALL_VOLUME;
+  return Math.min(1, Math.max(0, volume / 100));
+}
+
+function applyMotionForm() {
+  for (const [key, input] of Object.entries(motionInputs)) input.checked = Boolean(motionEffects[key]);
   for (const [edge, input] of Object.entries(motionEdges)) input.checked = motionEffects.edges.includes(edge);
+  if (wallSoundInput) wallSoundInput.checked = wallSoundEnabled();
+  if (wallVolumeInput) {
+    const volume = Number.isFinite(motionEffects.wallVolume) ? motionEffects.wallVolume : DEFAULT_WALL_VOLUME;
+    wallVolumeInput.value = String(volume);
+    if (wallVolumeValue) wallVolumeValue.textContent = `${volume}%`;
+  }
+}
+
+function loadMotionEffects() {
+  motionEffects = { ...DEFAULT_MOTION_EFFECTS, wallSound: true, wallVolume: DEFAULT_WALL_VOLUME };
+  motionExtras = {};
+  let raw = null;
+  try {
+    raw = localStorage.getItem(MOTION_SETTINGS_KEY);
+  } catch {
+    // Unreadable storage stays untouched. In-memory defaults are not written back.
+    motionStorageBlocked = true;
+    motionNote.textContent = '움직임 설정을 읽지 못했습니다. 기존 기록은 덮어쓰지 않습니다.';
+    applyMotionForm();
+    return;
+  }
+  if (raw == null || raw === '') {
+    applyMotionForm();
+    return;
+  }
+  let saved = null;
+  try {
+    saved = JSON.parse(raw);
+  } catch {
+    saved = null;
+  }
+  if (!saved || typeof saved !== 'object' || Array.isArray(saved)) {
+    motionStorageBlocked = true;
+    motionNote.textContent = '움직임 설정을 읽지 못했습니다. 이번 실행만 기본값을 쓰며, 기존 기록은 덮어쓰지 않았습니다.';
+    applyMotionForm();
+    return;
+  }
+  for (const [key, value] of Object.entries(saved)) {
+    if (!MOTION_OWNED_KEYS.has(key)) motionExtras[key] = value;
+  }
+  motionEffects = {
+    tilt: typeof saved.tilt === 'boolean' ? saved.tilt : true,
+    exit: saved.exit === true,
+    breakthrough: typeof saved.breakthrough === 'boolean' ? saved.breakthrough : true,
+    wobble: saved.wobble === true,
+    edges: Array.isArray(saved.edges) ? EDGE_ORDER.filter((edge) => saved.edges.includes(edge)) : ['right'],
+    wallSound: typeof saved.wallSound === 'boolean' ? saved.wallSound : true,
+    wallVolume: typeof saved.wallVolume === 'number' && Number.isFinite(saved.wallVolume)
+      ? Math.min(100, Math.max(0, saved.wallVolume)) : DEFAULT_WALL_VOLUME,
+  };
+  if (motionEffects.exit) motionEffects.tilt = true;
+  applyMotionForm();
+}
+
+function motionPayload() {
+  return {
+    ...motionExtras,
+    tilt: motionEffects.tilt === true,
+    exit: motionEffects.exit === true,
+    breakthrough: motionEffects.breakthrough === true,
+    wobble: motionEffects.wobble === true,
+    edges: motionEffects.edges,
+    wallSound: wallSoundEnabled(),
+    wallVolume: Number.isFinite(motionEffects.wallVolume) ? motionEffects.wallVolume : DEFAULT_WALL_VOLUME,
+  };
+}
+
+function writeMotionStorage() {
+  if (motionStorageBlocked) {
+    motionNote.textContent = '움직임 설정을 읽지 못해 저장하지 않았습니다. 기존 기록은 그대로입니다.';
+    return false;
+  }
+  try {
+    localStorage.setItem(MOTION_SETTINGS_KEY, JSON.stringify(motionPayload()));
+    return true;
+  } catch {
+    motionNote.textContent = '센서 설정을 저장하지 못했습니다. 이번 실행에서는 계속 사용할 수 있습니다.';
+    return false;
+  }
 }
 
 function saveMotionEffects() {
   motionPermissionDenied = false;
   if (motionInputs.exit.checked) motionInputs.tilt.checked = true;
   motionEffects = {
+    ...motionEffects,
     ...Object.fromEntries(Object.entries(motionInputs).map(([key, input]) => [key, input.checked])),
     edges: EDGE_ORDER.filter((edge) => motionEdges[edge].checked),
   };
-  try { localStorage.setItem(MOTION_SETTINGS_KEY, JSON.stringify(motionEffects)); }
-  catch { motionNote.textContent = '센서 설정을 저장하지 못했습니다. 이번 실행에서는 계속 사용할 수 있습니다.'; }
+  writeMotionStorage();
   unlockBreakSound();
   if (!motionEffects.tilt && tiltFrame) {
     window.cancelAnimationFrame(tiltFrame);
@@ -179,8 +266,22 @@ function saveMotionEffects() {
   updateMotionActivation();
 }
 
+function saveSoundPreferences() {
+  // Sound is independent of sensor permission and of the selected preset.
+  const volume = Math.min(100, Math.max(0, Number(wallVolumeInput?.value)));
+  motionEffects = {
+    ...motionEffects,
+    wallSound: Boolean(wallSoundInput?.checked),
+    wallVolume: Number.isFinite(volume) ? volume : DEFAULT_WALL_VOLUME,
+  };
+  if (wallVolumeValue) wallVolumeValue.textContent = `${motionEffects.wallVolume}%`;
+  writeMotionStorage();
+}
+
 let imageDbPromise;
 let imageChoices = {};
+let imageChoicesBlocked = false;
+let wallpaperStorageBlocked = false;
 const imageUrls = new Map();
 
 function openImageDb() {
@@ -300,7 +401,7 @@ async function updateWallpaperCrop() {
       await imageRecord('wallpaper:original', 'put', source);
       if (!current()) return;
       await imageRecord('wallpaper', 'put', output);
-      if (current()) localStorage.setItem(WALLPAPER_CROP_KEY, String(percent));
+      if (current()) writeWallpaperCrop(String(percent));
     });
     if (!saved) return false;
     showWallpaper(output);
@@ -328,20 +429,76 @@ function chosenCoin(id) {
 function refreshCoinImage() {
   coinArt.src = chosenCoin(selected().id);
   imageChoiceInput.value = imageChoices[selected().id] || 'kennedy';
+  if (imageChoicesBlocked) {
+    coinImageNote.textContent = '이미지 선택을 읽지 못했습니다. 기존 기록은 덮어쓰지 않았습니다.';
+    return;
+  }
   coinImageNote.textContent = imageUrls.has(`coin:${selected().id}`)
     ? '이 자리에 업로드한 이미지가 저장되어 있습니다.'
     : '투명 배경 PNG를 권장합니다. 업로드하면 이 자리의 이미지로 선택됩니다.';
 }
 
+function loadImageChoices() {
+  imageChoices = {};
+  let raw = null;
+  try {
+    raw = localStorage.getItem(IMAGE_CHOICE_KEY);
+  } catch {
+    imageChoicesBlocked = true;
+    coinImageNote.textContent = '이미지 선택을 읽지 못했습니다. 기존 기록은 덮어쓰지 않습니다.';
+    return;
+  }
+  if (raw == null || raw === '') return;
+  try {
+    const stored = JSON.parse(raw);
+    if (!stored || typeof stored !== 'object' || Array.isArray(stored)) throw new Error('invalid image choices');
+    imageChoices = stored;
+  } catch {
+    imageChoicesBlocked = true;
+    imageChoices = {};
+    coinImageNote.textContent = '이미지 선택을 읽지 못했습니다. 기존 기록은 덮어쓰지 않았습니다.';
+  }
+}
+
 function persistImageChoices() {
-  try { localStorage.setItem(IMAGE_CHOICE_KEY, JSON.stringify(imageChoices)); }
-  catch { coinImageNote.textContent = '이미지 선택을 저장하지 못했습니다.'; }
+  if (imageChoicesBlocked) {
+    coinImageNote.textContent = '이미지 선택을 읽지 못해 저장하지 않았습니다. 기존 기록은 그대로입니다.';
+    return false;
+  }
+  try {
+    localStorage.setItem(IMAGE_CHOICE_KEY, JSON.stringify(imageChoices));
+    return true;
+  } catch {
+    coinImageNote.textContent = '이미지 선택을 저장하지 못했습니다.';
+    return false;
+  }
+}
+
+function writeWallpaperCrop(value) {
+  if (wallpaperStorageBlocked) {
+    throw new Error('배경 자르기 설정을 읽지 못해 저장하지 않았습니다. 기존 기록은 그대로입니다.');
+  }
+  localStorage.setItem(WALLPAPER_CROP_KEY, value);
+}
+
+function removeWallpaperCrop() {
+  if (wallpaperStorageBlocked) {
+    throw new Error('배경 자르기 설정을 읽지 못해 지우지 않았습니다. 기존 기록은 그대로입니다.');
+  }
+  localStorage.removeItem(WALLPAPER_CROP_KEY);
 }
 
 async function loadImages() {
   try {
     const token = wallpaperJobs.next();
-    const savedCrop = localStorage.getItem(WALLPAPER_CROP_KEY);
+    let savedCrop = null;
+    try {
+      savedCrop = localStorage.getItem(WALLPAPER_CROP_KEY);
+    } catch (error) {
+      wallpaperStorageBlocked = true;
+      wallpaperNote.textContent = '배경 자르기 설정을 읽지 못했습니다. 기존 기록은 덮어쓰지 않습니다.';
+      throw error;
+    }
     paintCropChrome(Math.min(18, Math.max(0, Number(savedCrop) || 0)));
     const storedOriginal = await imageRecord('wallpaper:original', 'get');
     const wallpaper = await imageRecord('wallpaper', 'get');
@@ -359,7 +516,7 @@ async function loadImages() {
               if (!storedOriginal) await imageRecord('wallpaper:original', 'put', wallpaperOriginal);
               if (!current()) return;
               await imageRecord('wallpaper', 'put', migrated);
-              if (current()) localStorage.setItem(WALLPAPER_CROP_KEY, '5');
+              if (current()) writeWallpaperCrop('5');
             });
             if (saved) {
               paintCropChrome(5);
@@ -374,7 +531,7 @@ async function loadImages() {
         if (wallpaperJobs.current(token) && savedCrop === null) {
           try {
             await wallpaperJobs.enqueue(token, async (current) => {
-              if (current()) localStorage.setItem(WALLPAPER_CROP_KEY, '0');
+              if (current()) writeWallpaperCrop('0');
               if (!storedOriginal && current()) await imageRecord('wallpaper:original', 'put', wallpaper);
             });
           } catch { /* Keep the already displayed wallpaper. */ }
@@ -392,7 +549,7 @@ async function loadImages() {
     }
     refreshCoinImage();
   } catch {
-    wallpaperNote.textContent = '이 브라우저에서는 업로드한 이미지를 불러오거나 저장할 수 없습니다.';
+    if (!wallpaperStorageBlocked) wallpaperNote.textContent = '이 브라우저에서는 업로드한 이미지를 불러오거나 저장할 수 없습니다.';
   }
 }
 
@@ -540,29 +697,66 @@ function setCrackSession(cracked) {
   } catch { /* Keep the current visual state in memory. */ }
 }
 
-function stashRecovery(raw) {
-  const current = localStorage.getItem(RECOVERY_KEY);
-  if (current === raw) return;
-  if (current != null) localStorage.setItem(PREVIOUS_RECOVERY_KEY, current);
-  localStorage.setItem(RECOVERY_KEY, raw);
-  if (localStorage.getItem(RECOVERY_KEY) !== raw) throw new Error('Recovery backup verification failed');
+const STATE_OWNED_KEYS = new Set(['version', 'selectedId', 'mode', 'presets']);
+const PRESET_OWNED_KEYS = new Set(['id', 'name', 'coinSize', 'startX', 'startY', 'exitEdge', 'fadeDistance', 'disappearDuration']);
+let storedStateExtras = null;
+let objectKindBlocked = false;
+
+function rememberStateExtras(raw) {
+  storedStateExtras = { root: {}, presets: {} };
+  if (typeof raw !== 'string' || !raw) return;
+  let data;
+  try {
+    data = JSON.parse(raw);
+  } catch {
+    storedStateExtras = null;
+    return;
+  }
+  if (!data || typeof data !== 'object' || Array.isArray(data)) {
+    storedStateExtras = null;
+    return;
+  }
+  for (const [key, value] of Object.entries(data)) {
+    if (!STATE_OWNED_KEYS.has(key)) storedStateExtras.root[key] = value;
+  }
+  if (!Array.isArray(data.presets)) return;
+  for (const preset of data.presets) {
+    if (!preset || typeof preset !== 'object' || Array.isArray(preset) || typeof preset.id !== 'string') continue;
+    const extra = {};
+    for (const [key, value] of Object.entries(preset)) {
+      if (!PRESET_OWNED_KEYS.has(key)) extra[key] = value;
+    }
+    if (Object.keys(extra).length) storedStateExtras.presets[preset.id] = extra;
+  }
+}
+
+function configurationPayload() {
+  const next = JSON.parse(serializeState(state));
+  if (!storedStateExtras) return JSON.stringify(next);
+  return JSON.stringify({
+    ...storedStateExtras.root,
+    version: next.version,
+    selectedId: next.selectedId,
+    mode: next.mode,
+    presets: next.presets.map((preset) => ({
+      ...(storedStateExtras.presets[preset.id] || {}),
+      ...preset,
+    })),
+  });
 }
 
 function persist() {
-  // A playable fallback must not replace unreadable originals until their backup is verified.
+  // Never replace an unreadable original with the in-memory fallback.
   if (recoveryWriteBlocked) {
-    try {
-      const original = localStorage.getItem(STORAGE_KEY);
-      if (typeof original === 'string' && original !== '') stashRecovery(original);
-      recoveryWriteBlocked = false;
-    } catch {
-      storageWarning = '기존 기록을 안전하게 보관하지 못해 저장하지 않았습니다. 이번 실행의 변경은 화면에서만 적용됩니다.';
-      note.textContent = storageWarning;
-      return false;
-    }
+    storageWarning = '저장된 설정을 읽지 못해 변경을 덮어쓰지 않았습니다. 이번 실행의 변경은 화면에만 있습니다.';
+    note.textContent = storageWarning;
+    renderRecovery();
+    return false;
   }
   try {
-    localStorage.setItem(STORAGE_KEY, serializeState(state));
+    const raw = configurationPayload();
+    localStorage.setItem(STORAGE_KEY, raw);
+    rememberStateExtras(raw);
     return true;
   } catch {
     storageWarning = '이 브라우저 저장소를 쓸 수 없어 변경이 기기에 남지 않습니다.';
@@ -579,6 +773,8 @@ function readObjectKind() {
   try {
     return normalizeObjectKind(localStorage.getItem(OBJECT_KIND_KEY));
   } catch {
+    objectKindBlocked = true;
+    storageWarning = storageWarning || '물건 종류 설정을 읽지 못했습니다. 기존 기록은 덮어쓰지 않습니다.';
     return 'coin';
   }
 }
@@ -592,6 +788,11 @@ function applyObjectKind(kind) {
 }
 
 function persistObjectKind(kind) {
+  if (objectKindBlocked) {
+    storageWarning = '물건 종류 설정을 읽지 못해 저장하지 않았습니다. 기존 기록은 그대로입니다.';
+    note.textContent = storageWarning;
+    return;
+  }
   try {
     localStorage.setItem(OBJECT_KIND_KEY, kind);
   } catch {
@@ -613,15 +814,16 @@ function loadState() {
   const parsed = parseStoredState(raw);
   state = parsed.state;
   recovery = parsed.recovery;
-  if (!parsed.recovery || typeof raw !== 'string') return;
-  recoveryWriteBlocked = true;
-  try {
-    stashRecovery(raw);
-    recoveryWriteBlocked = false;
-    localStorage.setItem(STORAGE_KEY, serializeState(parsed.state));
-  } catch {
-    storageWarning = '손상된 설정의 원본을 보관하지 못했습니다. 기존 기록은 덮어쓰지 않았습니다.';
+  if (recoveryWriteBlocked) return;
+  if (parsed.recovery) {
+    // Keep the original bytes. A playable fallback must not be written back.
+    recoveryWriteBlocked = true;
+    storageWarning = parsed.recovery.reason === 'partial'
+      ? '일부 프리셋 기록을 읽지 못했습니다. 저장소의 원래 기록은 바꾸지 않았습니다.'
+      : '저장된 설정을 읽지 못했습니다. 이번 실행은 기본 화면으로 열었고, 저장소의 원래 기록은 바꾸지 않았습니다.';
+    return;
   }
+  rememberStateExtras(typeof raw === 'string' ? raw : '');
 }
 
 function clearDeleteArm() {
@@ -950,8 +1152,11 @@ function unlockBreakSound() {
   const AudioContextClass = window.AudioContext || window.webkitAudioContext;
   if (!AudioContextClass) return;
   try {
-    audioContext ||= new AudioContextClass();
-    if (audioContext.state === 'suspended') void audioContext.resume().catch(() => {});
+    if (!audioContext || audioContext.state === 'closed') audioContext = new AudioContextClass();
+    // iOS can report interrupted as well as suspended. Both need a user gesture.
+    if (audioContext.state === 'suspended' || audioContext.state === 'interrupted') {
+      Promise.resolve(audioContext.resume()).catch(() => {});
+    }
   } catch { audioContext = null; }
 }
 
@@ -989,11 +1194,27 @@ function playBreakSound() {
   } catch { /* Keep the visual effect if audio output fails. */ }
 }
 
-function playWallSound(speed) {
-  if (!audioContext || audioContext.state !== 'running') return;
+function playWallSound(speed, options = {}) {
+  const probe = options.probe === true;
+  if (!probe && !wallSoundEnabled()) return;
+  const gainScale = wallVolumeGain();
+  if (!(gainScale > 0)) {
+    if (probe) motionNote.textContent = '충돌 소리 크기가 0이라 소리가 나지 않습니다.';
+    return;
+  }
+  if (probe) unlockBreakSound();
+  if (!audioContext || (!probe && audioContext.state !== 'running')) {
+    if (probe) motionNote.textContent = '소리를 재생하지 못했습니다. 브라우저가 오디오를 시작하지 못했습니다.';
+    return;
+  }
   try {
+    if (probe && (audioContext.state === 'suspended' || audioContext.state === 'interrupted')) {
+      Promise.resolve(audioContext.resume()).catch(() => {
+        motionNote.textContent = '소리를 시작하지 못했습니다. 버튼을 다시 눌러 주세요.';
+      });
+    }
     const now = audioContext.currentTime;
-    const level = Math.min(0.22, Math.max(0.045, speed / 3600));
+    const level = Math.min(0.22, Math.max(0.045, speed / 3600)) * gainScale;
     const tap = audioContext.createOscillator();
     const gain = audioContext.createGain();
     tap.type = 'triangle';
@@ -1004,7 +1225,9 @@ function playWallSound(speed) {
     tap.connect(gain).connect(audioContext.destination);
     tap.start(now);
     tap.stop(now + 0.09);
-  } catch { /* The collision remains visual when audio is unavailable. */ }
+  } catch {
+    if (probe) motionNote.textContent = '소리를 재생하지 못했습니다.';
+  }
 }
 
 function clearBreakthrough() {
@@ -1248,12 +1471,12 @@ function updateMotionActivation() {
 }
 
 async function enableMotion() {
-  if (!Object.values(motionEffects).some((enabled) => enabled === true)) return;
+  if (!sensorEffectEnabled()) return;
   if (motionEnabled || motionRequestPending) return;
   const requestId = ++motionRequestId;
   motionRequestPending = true;
   updateMotionActivation();
-  if (motionEffects.breakthrough) unlockBreakSound();
+  unlockBreakSound();
   if (window.isSecureContext === false) {
     motionPermissionDenied = true;
     disableMotion('센서는 HTTPS에서만 사용할 수 있습니다. 손가락 연출은 그대로 사용할 수 있습니다.');
@@ -1793,6 +2016,19 @@ function bind() {
   for (const input of [...Object.values(motionInputs), ...Object.values(motionEdges)]) {
     input.addEventListener('change', saveMotionEffects);
   }
+  if (wallSoundInput) wallSoundInput.addEventListener('change', saveSoundPreferences);
+  if (wallVolumeInput) {
+    wallVolumeInput.addEventListener('input', () => {
+      if (wallVolumeValue) wallVolumeValue.textContent = `${wallVolumeInput.value}%`;
+    });
+    wallVolumeInput.addEventListener('change', saveSoundPreferences);
+  }
+  if (wallTestButton) {
+    wallTestButton.addEventListener('click', () => {
+      // Explicit preview only. It does not change presets or sensor permission.
+      playWallSound(720, { probe: true });
+    });
+  }
   sizeInput.min = String(LIMITS.coinSize.min);
   sizeInput.max = String(LIMITS.coinSize.max);
   fadeInput.min = String(LIMITS.fadeDistance.min);
@@ -1839,7 +2075,7 @@ function bind() {
           await imageRecord('wallpaper:original', 'put', file);
           if (!current()) return;
           await imageRecord('wallpaper', 'put', output);
-          if (current()) localStorage.setItem(WALLPAPER_CROP_KEY, '5');
+          if (current()) writeWallpaperCrop('5');
         });
         if (saved) {
           setCropEnabled(true);
@@ -1914,7 +2150,7 @@ function bind() {
         await imageRecord('wallpaper', 'delete');
         if (!current()) return;
         await imageRecord('wallpaper:original', 'delete');
-        if (current()) localStorage.removeItem(WALLPAPER_CROP_KEY);
+        if (current()) removeWallpaperCrop();
       });
       if (!deleted) return;
       useImageUrl('wallpaper', null);
@@ -1955,6 +2191,7 @@ function bind() {
   addButton.addEventListener('click', addPreset);
   deleteButton.addEventListener('click', deleteSelected);
   startButton.addEventListener('click', async () => {
+    unlockBreakSound();
     startButton.disabled = true;
     try {
       if (!motionEnabled && Object.values(motionInputs).some((input) => input.checked)) await enableMotion();
@@ -1964,6 +2201,10 @@ function bind() {
     }
   });
   motionActivation.addEventListener('click', () => { void enableMotion(); });
+  window.addEventListener('touchstart', () => {
+    if (state.mode !== 'performance' || !gestureGuide.hidden) return;
+    unlockBreakSound();
+  }, { capture: true, passive: true });
   window.addEventListener('pointerdown', onPointerDown, { capture: true, passive: false });
   window.addEventListener('pointermove', onPointerMove, { capture: true, passive: false });
   window.addEventListener('pointerup', onPointerUp, { capture: true, passive: false });
@@ -2000,15 +2241,13 @@ concealCoin();
 loadState();
 loadMotionEffects();
 applyObjectKind(readObjectKind());
-try {
-  const storedChoices = JSON.parse(localStorage.getItem(IMAGE_CHOICE_KEY) || '{}');
-  if (storedChoices && typeof storedChoices === 'object' && !Array.isArray(storedChoices)) imageChoices = storedChoices;
-} catch { imageChoices = {}; }
+loadImageChoices();
 bind();
 const imagesReady = loadImages();
 renderRecovery();
 renderList();
 fillForm();
 // Start ready without writing the saved mode or requesting motion access.
+// Coin disappearance and the crack stay in sessionStorage, not in this record.
 showPerformance({ persistMode: false, keepGone: false, showGuide: false });
 imagesReady.then(refreshCoinImage, refreshCoinImage);
