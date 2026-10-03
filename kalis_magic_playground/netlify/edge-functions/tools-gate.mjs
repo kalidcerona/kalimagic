@@ -4,6 +4,8 @@ import {
   verifyGateCookie
 } from '../functions/_lib/tool-gate.mjs';
 import { FRIEND_APP_TOOLS } from '../functions/_lib/friend-app-access.mjs';
+import { legacyWorkerSpecByPath } from '../../scripts/legacy-shared-contract.mjs';
+import { legacySharedWorkerResponse } from '../../scripts/legacy-sw-bridge.mjs';
 
 const COOKIE_MAX_AGE = 7_776_000;
 const RENEWAL_WINDOW_SECONDS = 3_888_000;
@@ -29,6 +31,12 @@ function analyzePath(rawPathname) {
   }
 
   const pathname = lowerPath.replace(/\/{2,}/g, '/');
+  // Exact normalized legacy worker scripts only. Unknown aliases such as
+  // /tools/stopwatch2 stay on the normal gate. No /tools/* exception.
+  const legacyWorker = legacyWorkerSpecByPath(pathname);
+  if (legacyWorker) {
+    return { mode: 'legacy-worker', tool: legacyWorker.tool, pathname };
+  }
   if (['/zz1', '/zz2', '/zz3', '/zz4', '/zz5', '/zz6', '/zz7'].some((route) =>
     pathname === route || pathname.startsWith(`${route}/`))) {
     return { mode: 'public', pathname };
@@ -198,6 +206,9 @@ function withGateCookie(response, value, tool) {
 
 export default async function toolsGate(request, context) {
   const path = analyzePath(rawPathnameFromUrl(request.url));
+  if (path.mode === 'legacy-worker') {
+    return legacySharedWorkerResponse(path.tool);
+  }
   if (path.mode !== 'block') {
     for (const [tool, slug] of Object.entries(PRODUCT_SLUGS)) {
       if (tool !== slug && (path.pathname === `/tools/${tool}` || path.pathname.startsWith(`/tools/${tool}/`))) {

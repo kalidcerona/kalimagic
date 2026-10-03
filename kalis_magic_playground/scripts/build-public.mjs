@@ -1,6 +1,8 @@
 import { cp, mkdir, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { LEGACY_SHARED_WORKERS, TRUSTED_START_SESSION_KEY, legacyWorkerSpecByTarget } from './legacy-shared-contract.mjs';
+import { legacyBridgeSource } from './legacy-sw-bridge.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = path.join(ROOT, 'dist');
@@ -221,6 +223,78 @@ export const MIRROR_PAIRS = [
 ];
 
 // Shared HITSUZEN and AROSAEGIDA copy pinned snapshots. tools/calc stays a legacy redirect, not a published tree.
+const LEGACY_MIGRATION_TARGETS = new Set(['kairos', 'kairos-classic', 'hitsuzen']);
+const INIT_APP_HOOK = 'else initApp();';
+
+export function isolateKairosStorageKeys(source, target) {
+  return source
+    .replaceAll('stopwatch_', `friend-${target}_`)
+    .replaceAll('stopwatch2_', `friend-${target}-legacy_`)
+    .replaceAll('stopwatch-settings-entry-tutorial-', `friend-${target}-settings-entry-tutorial-`);
+}
+
+export function isExcludedLegacyTree(publicPath) {
+  return ['tools/stopwatch', 'tools/stopwatch-uni', 'tools/calc'].some((route) =>
+    publicPath === route || publicPath.startsWith(`${route}/`));
+}
+
+function migrationStartup(target) {
+  const spec = legacyWorkerSpecByTarget(target);
+  // A late import must never mutate preferences after the fallback app starts.
+  return `else {
+    let trustedLegacyStart = false;
+    try { trustedLegacyStart = sessionStorage.getItem(${JSON.stringify(TRUSTED_START_SESSION_KEY)}) === ${JSON.stringify(spec.tool)}; } catch (error) {}
+    if (trustedLegacyStart) {
+      let migrationActive = true;
+      let migrationTimer;
+      try {
+        await Promise.race([
+          import("./legacy-storage-migration.mjs").then((mod) => {
+            if (migrationActive) mod.migrateTrustedLegacyStorage({ target: ${JSON.stringify(target)}, storage: localStorage, session: sessionStorage, pathname: location.pathname, search: location.search });
+          }),
+          new Promise((resolve) => { migrationTimer = setTimeout(() => { migrationActive = false; resolve(); }, 1500); })
+        ]);
+      } catch (error) {}
+      finally { migrationActive = false; clearTimeout(migrationTimer); }
+    }
+    initApp();
+  }`;
+}
+
+export function injectLegacyMigration(html, target) {
+  if (!LEGACY_MIGRATION_TARGETS.has(target)) return html;
+  if (target === 'hitsuzen') {
+    const tag = `<script type="module">import { migrateTrustedLegacyStorage } from "./legacy-storage-migration.mjs"; try { migrateTrustedLegacyStorage({ target: "hitsuzen", storage: localStorage, session: sessionStorage, pathname: location.pathname, search: location.search }); } catch (error) {}</script>`;
+    if (!html.includes('<head>')) throw new Error('missing head for HITSUZEN legacy migration');
+    return html.replace('<head>', `<head>\n${tag}`);
+  }
+  if (html.split(INIT_APP_HOOK).length !== 2) throw new Error(`missing legacy migration hook for ${target}`);
+  return html.replace(INIT_APP_HOOK, migrationStartup(target));
+}
+
+export function transformDistributionDocument(html, app) {
+  const isolate = app.target === 'kairos' || app.target === 'kairos-classic';
+  let next = isolate ? isolateKairosStorageKeys(html, app.target) : html;
+  next = next
+    .replace(/<body\b/, '<body data-magic-customize="off"')
+    .replace('<head>', `<head>\n${accessGuard(app.tool, app.target)}`);
+  return injectLegacyMigration(next, app.target);
+}
+
+export async function publishLegacyBridgeFiles(distRoot) {
+  for (const spec of LEGACY_SHARED_WORKERS) {
+    const destination = path.join(distRoot, spec.bridgeFile);
+    await mkdir(path.dirname(destination), { recursive: true });
+    await writeFile(destination, legacyBridgeSource(spec));
+  }
+}
+
+export async function publishLegacyMigrationModules(appDirectory) {
+  await mkdir(appDirectory, { recursive: true });
+  const directory = path.dirname(fileURLToPath(import.meta.url));
+  await cp(path.join(directory, 'legacy-shared-contract.mjs'), path.join(appDirectory, 'legacy-shared-contract.mjs'));
+  await cp(path.join(directory, 'legacy-storage-migration.mjs'), path.join(appDirectory, 'legacy-storage-migration.mjs'));
+}
 export const DISTRIBUTION_APPS = [
   { source: 'distribution-snapshots/calculator', target: 'hitsuzen', tool: 'calc' },
   { source: 'distribution-snapshots/unlock', target: 'release', tool: 'unlock' },
@@ -260,13 +334,15 @@ async function buildDistributionApps() {
     const indexPath = path.join(target, 'index.html');
     const html = await readFile(indexPath, 'utf8');
     // Key isolation follows the shared route, not the zz1 personal tree.
-    const isolateKairosStorage = app.target === 'kairos' || app.target === 'kairos-classic';
-    const isolatedHtml = isolateKairosStorage ? html.replaceAll('stopwatch_', `friend-${app.target}_`).replaceAll('stopwatch2_', `friend-${app.target}-legacy_`).replaceAll('stopwatch-settings-entry-tutorial-', `friend-${app.target}-settings-entry-tutorial-`) : html;
-    await writeFile(indexPath, isolatedHtml.replace(/<body\b/, '<body data-magic-customize="off"').replace('<head>', `<head>\n${accessGuard(app.tool, app.target)}`));
-    if (isolateKairosStorage) {
+    // Raw stopwatch_ values are copied later by the injected migration module.
+    await writeFile(indexPath, transformDistributionDocument(html, app));
+    if (app.target === 'kairos' || app.target === 'kairos-classic') {
       const logicPath = path.join(target, 'logic.js');
       const logic = await readFile(logicPath, 'utf8');
-      await writeFile(logicPath, logic.replaceAll('stopwatch_', `friend-${app.target}_`).replaceAll('stopwatch2_', `friend-${app.target}-legacy_`));
+      await writeFile(logicPath, isolateKairosStorageKeys(logic, app.target));
+    }
+    if (LEGACY_MIGRATION_TARGETS.has(app.target)) {
+      await publishLegacyMigrationModules(target);
     }
     const manifestPath = path.join(target, 'manifest.webmanifest');
     const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
@@ -309,8 +385,7 @@ async function copyIfExists(relativePath) {
     recursive: true,
     filter: (source) => {
       const publicPath = path.relative(ROOT, source).split(path.sep).join('/');
-      return shouldCopy(path.relative(ROOT, source)) &&
-        !['tools/stopwatch', 'tools/stopwatch-uni', 'tools/calc'].some((route) => publicPath === route || publicPath.startsWith(route + '/'));
+      return shouldCopy(path.relative(ROOT, source)) && !isExcludedLegacyTree(publicPath);
     }
   });
 }
@@ -370,6 +445,8 @@ export async function buildPublic() {
   for (const file of PUBLIC_FILES) await copyIfExists(file);
   for (const dir of PUBLIC_DIRS) await copyIfExists(dir);
   await buildDistributionApps();
+  // Bridge files are explicit. The legacy trees above stay excluded.
+  await publishLegacyBridgeFiles(DIST);
   await verifyMirrors();
   await verifyAppDisplayPolicy();
 }

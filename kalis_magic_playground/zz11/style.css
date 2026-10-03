@@ -16,12 +16,15 @@ button, select { font: inherit; }
 button { cursor: pointer; }
 
 .stage {
+  --table-safe-top: max(32px, env(safe-area-inset-top, 0px));
   position: relative;
   min-height: 100dvh;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
   overflow: hidden;
-  /* Solid default only. An inline or more specific custom background still overrides these longhands. */
+  /* Solid dark behind the status clock. Felt is painted only inside the safe area. */
+  --rail-top-extra: 31px;
+  --rail-bottom-extra: 56px;
   background-color: #1a1512;
   background-image: none;
   box-shadow: none;
@@ -31,8 +34,8 @@ button { cursor: pointer; }
 }
 
 .rail { position:relative; z-index:2; pointer-events:none; background:none; box-shadow:none; }
-.rail-top { height:calc(19dvh + env(safe-area-inset-top)); }
-.rail-bottom { display:grid; place-items:center; height:calc(10dvh + env(safe-area-inset-bottom)); }
+.rail-top { height: calc(var(--table-safe-top) + var(--rail-top-extra)); }
+.rail-bottom { display:grid; place-items:center; height: calc(env(safe-area-inset-bottom, 0px) + var(--rail-bottom-extra)); }
 
 .wheel-area {
   position: relative;
@@ -42,11 +45,22 @@ button { cursor: pointer; }
   place-items: center;
   margin: 0;
   container-type: size;
+  /* Inner brass edge is 19px. The 10px ring and 12px gutter stay inside that edge. */
+  --frame-inner: 19px;
+  --rim-out: 10px;
+  --felt-gutter: 12px;
+  --wheel-cap: 680px;
+  --side-safe: max(env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px));
+  --ring-box: min(
+    calc(100cqw - (var(--side-safe) * 2) - (var(--frame-inner) * 2) - (var(--felt-gutter) * 2) - (var(--rim-out) * 2)),
+    calc(100cqh - (var(--felt-gutter) * 2) - (var(--rim-out) * 2)),
+    var(--wheel-cap)
+  );
 }
 .wheel-area::before {
   content: "";
   position: absolute;
-  width: min(92vw, calc(100dvh - 160px), 760px);
+  width: min(calc(100vw - 82px), 760px);
   aspect-ratio: 1;
   border-radius: 50%;
   background: radial-gradient(circle, rgba(0, 0, 0, .22) 0 62%, transparent 63%);
@@ -56,11 +70,11 @@ button { cursor: pointer; }
     0 16px 24px rgba(0, 0, 0, .22);
   pointer-events: none;
 }
-/* #wheel-wrap stays circular. Angle math uses its center, not a fixed pixel size. */
+/* #wheel-wrap stays circular. Angle math uses its client rect center, not a fixed pixel size. */
 .wheel-wrap {
   position: relative;
   z-index: 1;
-  width: min(84vw, calc(100dvh - 190px), 640px);
+  width: min(calc((100vw - 82px) * 90 / 93), 640px);
   justify-self: center;
   aspect-ratio: 1;
   border-radius: 50%;
@@ -69,10 +83,6 @@ button { cursor: pointer; }
     0 0 0 1px #1a120c,
     0 1px 0 rgba(255, 236, 196, .28),
     0 16px 22px rgba(0, 0, 0, .42);
-}
-@supports (width: 1cqmin) {
-  .wheel-area::before { width: min(98cqmin, 760px); }
-  .wheel-wrap { width: min(90cqmin, 680px); }
 }
 .wheel {
   position: absolute;
@@ -167,7 +177,7 @@ button { cursor: pointer; }
   inset: 0;
   display: grid;
   place-items: center;
-  padding: max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
+  padding: max(20px, var(--table-safe-top)) max(20px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
   overflow: auto;
   background: rgba(6, 12, 10, .84);
 }
@@ -279,9 +289,7 @@ button { cursor: pointer; }
 .install p { color: #d5ddd8; font-size: 12px; }
 
 @media (orientation:landscape) {
-  .rail-top { height:calc(20px + env(safe-area-inset-top)); }
-  .rail-bottom { height:calc(24px + env(safe-area-inset-bottom)); }
-  .wheel-wrap { width:min(84cqmin, 680px); }
+  .stage { --rail-top-extra: 27px; --rail-bottom-extra: 48px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .wheel, .spinner-arrow, .wheel-pin { transition: none !important; }
@@ -359,28 +367,33 @@ button { cursor: pointer; }
 
 .stage {
   position: relative;
-  background-color: var(--felt);
-  background-image:
-    radial-gradient(ellipse 88% 36% at 50% 0%, var(--lamp), transparent 62%),
-    radial-gradient(ellipse 70% 28% at 50% 100%, rgba(255, 255, 255, .05), transparent 70%),
-    url("./casino-assets/felt-burgundy.svg");
-  background-size: auto, auto, 160px 160px;
-  background-repeat: no-repeat, no-repeat, repeat;
+  background-color: #1a1512;
+  background-image: none;
   touch-action: none;
   user-select: none;
-}
-.stage:not([data-table-theme="burgundy"]) {
-  background-image:
-    radial-gradient(ellipse 88% 36% at 50% 0%, var(--lamp), transparent 62%),
-    radial-gradient(ellipse 70% 28% at 50% 100%, rgba(255, 255, 255, .05), transparent 70%),
-    url("./casino-assets/felt-emerald.svg");
 }
 
 .nap {
   position: absolute;
-  inset: 0;
+  z-index: 0;
+  top: var(--table-safe-top);
+  right: env(safe-area-inset-right, 0px);
+  bottom: env(safe-area-inset-bottom, 0px);
+  left: env(safe-area-inset-left, 0px);
   pointer-events: none;
-  background: linear-gradient(112deg, rgba(255, 255, 255, .06), transparent 46%, rgba(70, 30, 16, .06) 100%);
+  background-color: var(--felt);
+  background-image:
+    radial-gradient(ellipse 88% 36% at 50% 0%, var(--lamp), transparent 62%),
+    linear-gradient(112deg, rgba(255, 255, 255, .06), transparent 46%, rgba(70, 30, 16, .06) 100%),
+    url("./casino-assets/felt-burgundy.svg");
+  background-size: auto, auto, 160px 160px;
+  background-repeat: no-repeat, no-repeat, repeat;
+}
+.stage:not([data-table-theme="burgundy"]) .nap {
+  background-image:
+    radial-gradient(ellipse 88% 36% at 50% 0%, var(--lamp), transparent 62%),
+    linear-gradient(112deg, rgba(255, 255, 255, .06), transparent 46%, rgba(70, 30, 16, .06) 100%),
+    url("./casino-assets/felt-emerald.svg");
 }
 
 .cushion,
@@ -397,7 +410,10 @@ button { cursor: pointer; }
   mask-composite: exclude;
 }
 .cushion {
-  inset: 5px;
+  top: calc(5px + var(--table-safe-top));
+  right: calc(5px + env(safe-area-inset-right, 0px));
+  bottom: calc(5px + env(safe-area-inset-bottom, 0px));
+  left: calc(5px + env(safe-area-inset-left, 0px));
   padding: 12px;
   background-color: var(--wood);
   background-image:
@@ -406,7 +422,10 @@ button { cursor: pointer; }
   background-size: auto, 140px 140px;
 }
 .brass-lip {
-  inset: 17px;
+  top: calc(17px + var(--table-safe-top));
+  right: calc(17px + env(safe-area-inset-right, 0px));
+  bottom: calc(17px + env(safe-area-inset-bottom, 0px));
+  left: calc(17px + env(safe-area-inset-left, 0px));
   padding: 2px;
   background: linear-gradient(180deg, var(--brass-hi), var(--brass-mid) 46%, var(--brass-deep));
 }
@@ -421,17 +440,17 @@ button { cursor: pointer; }
   transform: rotate(45deg);
   pointer-events: none;
 }
-.sight-a { top: calc(16px + env(safe-area-inset-top)); left: calc(16px + env(safe-area-inset-left)); }
-.sight-b { top: calc(16px + env(safe-area-inset-top)); right: calc(16px + env(safe-area-inset-right)); }
-.sight-c { bottom: 16px; left: 16px; }
-.sight-d { bottom: 16px; right: 16px; }
+.sight-a { top: calc(16px + var(--table-safe-top)); left: calc(16px + env(safe-area-inset-left, 0px)); }
+.sight-b { top: calc(16px + var(--table-safe-top)); right: calc(16px + env(safe-area-inset-right, 0px)); }
+.sight-c { bottom: calc(16px + env(safe-area-inset-bottom, 0px)); left: calc(16px + env(safe-area-inset-left, 0px)); }
+.sight-d { bottom: calc(16px + env(safe-area-inset-bottom, 0px)); right: calc(16px + env(safe-area-inset-right, 0px)); }
 
 .field {
   position: absolute;
   left: 50%;
-  top: 50%;
+  top: calc(var(--table-safe-top) + (100% - var(--table-safe-top) - env(safe-area-inset-bottom, 0px)) / 2);
   width: min(86%, 520px);
-  height: 92%;
+  height: calc((100% - var(--table-safe-top) - env(safe-area-inset-bottom, 0px)) * 0.92);
   transform: translate(-50%, -50%);
   object-fit: contain;
   opacity: .62;
@@ -444,7 +463,7 @@ button { cursor: pointer; }
   content: "";
   position: absolute;
   z-index: 0;
-  width: min(93cqmin, 700px);
+  width: min(calc(100vw - 82px), 700px);
   aspect-ratio: 1;
   border-radius: 50%;
   pointer-events: none;
@@ -452,6 +471,10 @@ button { cursor: pointer; }
     0 0 0 3px var(--brass-mid),
     0 0 0 8px var(--wood),
     0 0 0 10px var(--brass-deep);
+}
+@supports (width: 1cqw) {
+  .wheel-area::after { width: var(--ring-box); }
+  .wheel-wrap { width: calc(var(--ring-box) * 90 / 93); }
 }
 
 .wheel-area::before { content: none; background: none; box-shadow: none; }

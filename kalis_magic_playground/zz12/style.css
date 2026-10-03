@@ -101,3 +101,8 @@ summary{display:flex;align-items:center;min-height:44px;color:var(--support);cur
 .learn>h2,.learn>.subtle{margin:0}
 .panel>.train-actions{margin-top:8px}
 .panel>label{display:grid;gap:6px;margin-top:12px}
+.magic-settings-footer{min-width:0;margin-top:16px;padding-top:12px;border-top:1px solid var(--line)}
+.magic-contact-note{margin:0 0 8px;color:var(--support);font-size:14px;line-height:1.5;word-break:keep-all}
+.magic-contact-actions{display:flex;flex-wrap:wrap;gap:8px;min-width:0}
+.magic-contact-link,.magic-contact-copy{display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;padding:10px 14px;white-space:nowrap;text-decoration:none;border-radius:8px}
+.magic-contact-link{color:#f3c2a4;border:1px solid #625349;background:var(--raised)}

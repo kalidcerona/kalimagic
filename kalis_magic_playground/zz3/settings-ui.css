@@ -217,3 +217,115 @@
   overflow-wrap: normal;
   line-height: 1.35;
 }
+
+/* 2026-10-04 shared layout/contact refinement */
+/* Shared settings layout patch. Appended after each app's themed settings CSS.
+   App colors, performance screens, and radio/checkbox glyphs stay untouched. */
+
+:is([data-settings-root], [data-magic-settings-container]) {
+  min-width: 0;
+  max-width: 100%;
+}
+
+:is([data-settings-root], [data-magic-settings-container]) :is(
+  .setting-row,
+  .field,
+  .checkline,
+  .check,
+  .extrarow,
+  .formbuttons,
+  .row-actions,
+  .setting-actions,
+  .actions,
+  .magic-contact-actions,
+  label
+) {
+  min-width: 0;
+  max-width: 100%;
+}
+
+:is([data-settings-root], [data-magic-settings-container]) :is(.setting-row, .extrarow, .checkline, .check) {
+  flex-wrap: wrap;
+}
+
+:is([data-settings-root], [data-magic-settings-container]) :is(p, .hint, .field-help, .setting-note, .setting-intro, .magic-contact-note, li) {
+  min-width: 0;
+  max-width: 100%;
+  white-space: normal;
+  word-break: keep-all;
+  line-break: strict;
+}
+
+:is([data-settings-root], [data-magic-settings-container]) input[type="checkbox"],
+:is([data-settings-root], [data-magic-settings-container]) input[type="radio"] {
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  min-height: 22px;
+  flex: 0 0 22px;
+  margin: 0;
+}
+
+:is([data-settings-root], [data-magic-settings-container]) label:has(> input[type="checkbox"]),
+:is([data-settings-root], [data-magic-settings-container]) label:has(> input[type="radio"]) {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  min-width: 0;
+}
+
+:is([data-settings-root], [data-magic-settings-container]) input[type="range"] {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  height: 44px;
+}
+
+:is([data-settings-root], [data-magic-settings-container]) :is(
+  .magic-contact-link,
+  .magic-contact-copy,
+  .row-actions > button,
+  .setting-actions > button,
+  .formbuttons > button,
+  .actions > button
+) {
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.magic-settings-footer {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.magic-contact-note {
+  margin: 0 0 8px;
+  word-break: keep-all;
+  line-break: strict;
+}
+
+.magic-contact-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+}
+
+.magic-contact-link,
+.magic-contact-copy {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 10px 14px;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+/* Contact navigation shares the native settings button surface. */
+.magic-contact-link { color:#f4efe9; background:#34261e; border:1px solid #ab9f924d; border-radius:8px; font:inherit; touch-action:manipulation; }
+.magic-contact-link:focus-visible { outline:2px solid #d99070; outline-offset:3px; }

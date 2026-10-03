@@ -78,6 +78,15 @@ window.addEventListener('beforeinstallprompt',event=>{if(!promptReady(event)||st
 window.addEventListener('appinstalled',()=>{installRevision+=1;deferredPrompt=null;installSignal='appinstalled';renderInstall();});
 $('install').onclick=async()=>{const event=deferredPrompt;if(!promptReady(event)||standaloneDisplay())return;const revision=installRevision;deferredPrompt=null;renderInstall();try{await event.prompt();const choice=await event.userChoice;if(revision===installRevision)installSignal=choice&&choice.outcome==='accepted'?'accepted':'dismissed';}catch{if(revision===installRevision)installSignal='error';}renderInstall();};
 watchDisplay();
+function copyContactId(button){
+  const text='KaliDCerona';
+  const finish=ok=>{button.textContent=ok?'복사됨':'ID 복사';if(ok)setTimeout(()=>{if(button.textContent==='복사됨')button.textContent='ID 복사';},1500);};
+  const fallback=()=>{try{const area=document.createElement('textarea');area.value=text;area.setAttribute('readonly','');area.style.position='fixed';area.style.left='-999px';document.body.appendChild(area);area.select();const ok=document.execCommand('copy');area.remove();return ok;}catch{return false;}};
+  const clip=navigator.clipboard;
+  if(clip&&typeof clip.writeText==='function'){clip.writeText(text).then(()=>finish(true),()=>finish(fallback()));return;}
+  finish(fallback());
+}
+$('contact-copy').onclick=()=>copyContactId($('contact-copy'));
 loadStored();
 syncDot();
 persist();render();renderInstall();if(storageNote)notice(storageNote);if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js',{scope:'./'}).catch(()=>{});

@@ -2,17 +2,17 @@
 (function (root) {
   'use strict';
   var profiles = {
-    stopwatch: { name: 'KAIROS', container: '#settings-card', targets: '#p-time-display, #l-time-display', labels: [{ selector: '#p-tabs .tab-world > span', name: '세계 시계 이름' }], story: ["흘러가는 시간 중에도\n유난히 오래 남는\n순간이 있잖아요.\nKAIROS는 그런 결정적인\n순간에서 이름을 가져왔어요.", "우연히 멈춘 것 같은 시간이\n사실 가장 알맞은 때였다는\n이야기를 만들고 싶었어요."] },
-    unlock: { name: 'RELEASE', container: '#settings-screen .settings-inner', targets: '#time-face', targetSelection: 'clock', labels: [{ selector: '#emergency > span', name: '잠금 화면 안내 이름', dynamic: true, selection: 'pin' }, { selector: '#prompt', name: 'PIN 안내 문구', dynamic: true, selection: 'pin' }, { selector: '#delete', name: '취소 버튼 문구', dynamic: true, selection: 'pin', idleOnly: true }], elements: [{ id: 'pin', name: 'PIN 화면', preview: '#input-screen', hit: '#keypad, #prompt, #emergency' }, { id: 'clock', name: '리와인드 시계', preview: '#time-lock', hit: '#time-face' }], story: ["카드캡터 사쿠라의 봉인해제,\n레리즈에서 이름을 가져왔어요.\n잠금이 풀리는 순간,\n그 안에 있던 이야기도 함께\n열리는 느낌이 좋았거든요.", "하나의 숫자가 열쇠가 돼서\n닫혀 있던 시간과 기억의 문을\n여는 순간을 만들고 싶었어요."], note: '미리보기에서 PIN 화면이나 리와인드 시계를 누르면 그 요소의 크기와 위치만 나와요. 잠금·해제 배경은 기존 사진 정렬 설정에서 맞춰 주세요.' },
-    calculator: { name: 'HITSUZEN', container: '#date-settings', targets: '.display-wrap', targetSelection: 'result', labels: [], elements: [{ id: 'result', name: '계산 결과', preview: '#app', hit: '.display-wrap' }, { id: 'keypad', name: '계산 버튼', preview: '#app', hit: '.keypad' }], story: ["HITSUZEN은 일본어로\n필연이라는 뜻이에요.\n마음대로 선택하고 계산했는데\n마지막엔 하나의 결과로\n이어지는 장면에서 시작했어요.", "자유롭게 흘러간 과정이\n처음부터 그 결론을 향하고\n있었던 것 같은 마술을\n만들고 싶었어요."], note: '미리보기에서 계산 결과나 계산 버튼을 누르면 그 요소의 크기와 위치만 나와요. 계산 내용과 버튼 동작은 그대로예요.' },
-    choice: { name: '너의 선택은?', container: '#settings .shell', targets: '#fake-notes-title', labels: [{ selector: '#fake-notes-title', name: '메모 화면 이름', dynamic: true }], story: ["너의 이름은의 무스비와\n붉은 실에서 시작했어요.\n서로 멀리 떨어진 선택과 결과가\n보이지 않는 실로 이어져 있다는\n느낌이 좋았어요.", "선택은 자유로웠지만\n인연은 이미 있었던 것 같은\n순간을 만들고 싶었어요."] },
-    aletheia: { name: 'ALETHEIA', container: '#settings .settings-inner', targets: '', labels: [], story: ["ALETHEIA는 가려져 있던\n진실이 드러난다는 이미지에서\n가져왔어요. 보이지 않았을 뿐,\n처음부터 거기에 있었던 것처럼\n말이에요.", "베일을 걷었을 때 무언가를\n새로 만드는 대신 발견하는\n느낌의 마술을 만들고 싶었어요."], note: '공연 이미지는 내 사진 세트에서, 지우는 범위와 칸 미리보기는 공연 설정에서 조절해 주세요.' },
-    tobira: { name: 'TOBIRA', container: '#settings .sheet', targets: '', labels: [], story: ["TOBIRA는 일본어로\n문이라는 뜻이에요.\n화면 속 세계와 현실 사이에도\n드나들 수 있는 작은 문이 있다면\n어떨까 생각했어요.", "안쪽의 물건이 밖으로 나오고\n다시 돌아가는, 두 세계 사이의\n문이 잠깐 열린 것 같은 마술을\n만들고 싶었어요."], note: '선택한 물건의 크기와 시작 위치를 조절해요. 공연 중 화면을 탭하면 그 위치에 물건이 나타납니다.' },
-    usotsuki: { name: 'USOTSUKI', container: '#settings-screen', targets: '#performance-title', labels: [{ selector: '#performance-title', name: '검사 화면 이름' }], story: ["USOTSUKI는 일본어로\n거짓말쟁이라는 뜻이에요.\n완벽하게 숨겼다고 생각했는데\n작은 신호 하나로 새어 나오는\n순간에서 시작했어요.", "웃으면서 시작했는데\n마지막에는 정말 들킨 건가 싶은\n느낌이 남는 마술을\n만들고 싶었어요."] },
-    asrai: { name: '아스라이', container: '#settings-screen .settings-wrap', targets: '#contact-list-screen .list-header > h1', labels: [{ selector: '#contact-list-screen .list-header > h1', name: '연락처 목록 이름' }], story: ["멀고 희미한 것이 어렴풋하게\n보이는 아스라이라는 말을\n기억과 연결해 봤어요.\n기억은 사라지기보다 잠깐\n멀어지는 것 같거든요.", "많은 사람의 흔적 사이에서\n한 사람만 다시 선명해지는,\n잊힌 흔적을 되찾는 마술을\n만들고 싶었어요."], note: '크기와 위치는 연락처 목록 이름에 적용돼요. 이름·번호·지역·메모는 기존 연락처 설정에서 준비해 주세요.' },
-    'false-memory': { name: 'FALSE MEMORY', container: '#settings-screen .settings-panel', targets: '.result-title', labels: [{ selector: '.result-title', name: '사진 설명 이름' }], story: ["기억은 그대로 남는 기록보다\n지금의 정보로 다시 만들어지는\n것 같아요. 분명 다르게 봤는데\n지금 화면이 너무 자연스러우면\n기억부터 흔들리잖아요.", "처음부터 이랬던 건 아닐까 하는\n질문이 남는, 현실보다 기억의\n균열을 보여 주는 마술을\n만들고 싶었어요."] },
-    alter: { name: 'ALTER', container: '#settings .settings-panel', targets: '#setup .tagline', labels: [{ selector: '#setup .tagline', name: '시작 화면 문구' }], story: ["페르소나와 또 다른 자아에서\n시작했어요. 같은 존재도\n보는 방식이 달라지면\n전혀 다른 얼굴을 보여 줄 수\n있다고 생각했거든요.", "카메라가 단순한 기록 장치가\n아니라 현실의 또 다른 얼굴을\n비추는 창이 되는 마술을\n만들고 싶었어요."], note: '크기와 위치는 시작 화면 문구에 적용돼요. 카메라 속 카드의 정렬은 유지하고 밝기는 기존 설정에서 맞춰 주세요.' },
-    spinner: { name: 'TYCHE', container: '#settings .settings-panel', targets: '#wheel-wrap', labels: [{ selector: '.status-brand', name: '회전판 이름' }], story: ["TYCHE는 우연과 행운의\n이미지에서 가져온\n이름이에요.\n누구 편도 아닌 우연이\n단 한 번만 방향을 갖는다면\n어떨까 생각했어요.", "운명이라 하기엔 너무 짧고\n우연이라 하기엔\n너무 정확한\n순간을 만들고 싶었어요."] }
+    stopwatch: { name: 'KAIROS', container: '#settings-card', targets: '#p-time-display, #l-time-display', labels: [{ selector: '#p-tabs .tab-world > span', name: '세계 시계 이름' }], story: ["오래 남는 결정적 순간에서 KAIROS라는 이름을 가져왔어요.", "우연히 멈춘 듯한 시간이 가장 알맞은 때였으면 했어요."] },
+    unlock: { name: 'RELEASE', container: '#settings-screen .settings-inner', targets: '#time-face', targetSelection: 'clock', labels: [{ selector: '#emergency > span', name: '잠금 화면 안내 이름', dynamic: true, selection: 'pin' }, { selector: '#prompt', name: 'PIN 안내 문구', dynamic: true, selection: 'pin' }, { selector: '#delete', name: '취소 버튼 문구', dynamic: true, selection: 'pin', idleOnly: true }], elements: [{ id: 'pin', name: 'PIN 화면', preview: '#input-screen', hit: '#keypad, #prompt, #emergency' }, { id: 'clock', name: '리와인드 시계', preview: '#time-lock', hit: '#time-face' }], story: ["봉인해제처럼, 잠금이 열리며 안의 이야기도 열리길 바랐어요.", "숫자 하나가 시간과 기억의 문을 여는 열쇠예요."], note: '미리보기에서 PIN 화면이나 리와인드 시계를 누르면 그 요소의 크기와 위치만 나와요. 잠금·해제 배경은 기존 사진 정렬 설정에서 맞춰 주세요.' },
+    calculator: { name: 'HITSUZEN', container: '#date-settings', targets: '.display-wrap', targetSelection: 'result', labels: [], elements: [{ id: 'result', name: '계산 결과', preview: '#app', hit: '.display-wrap' }, { id: 'keypad', name: '계산 버튼', preview: '#app', hit: '.keypad' }], story: ["히츠젠은 필연. 자유롭게 계산해도 하나의 결과로 이어져요.", "흘러간 과정이 처음부터 그 결론을 향했던 마술이에요."], note: '미리보기에서 계산 결과나 계산 버튼을 누르면 그 요소의 크기와 위치만 나와요. 계산 내용과 버튼 동작은 그대로예요.' },
+    choice: { name: '너의 선택은?', container: '#settings .shell', targets: '#fake-notes-title', labels: [{ selector: '#fake-notes-title', name: '메모 화면 이름', dynamic: true }], story: ["멀리 떨어진 선택과 결과가 보이지 않는 실로 이어져요.", "선택은 자유로웠지만, 인연은 이미 있었어요."] },
+    aletheia: { name: 'ALETHEIA', container: '#settings .settings-inner', targets: '', labels: [], story: ["가려져 있던 진실이, 처음부터 거기 있었던 것처럼 드러나요.", "베일을 걷으면 새로 만들지 않고 발견하는 마술이에요."], note: '공연 이미지는 내 사진 세트에서, 지우는 범위와 칸 미리보기는 공연 설정에서 조절해 주세요.' },
+    tobira: { name: 'TOBIRA', container: '#settings .sheet', targets: '', labels: [], story: ["토비라는 문. 화면과 현실 사이를 드나드는 작은 문이에요.", "안쪽 물건이 나왔다 돌아가는, 잠깐 열린 문이에요."], note: '선택한 물건의 크기와 시작 위치를 조절해요. 공연 중 화면을 탭하면 그 위치에 물건이 나타납니다.' },
+    usotsuki: { name: 'USOTSUKI', container: '#settings-screen', targets: '#performance-title', labels: [{ selector: '#performance-title', name: '검사 화면 이름' }], story: ["우소츠키는 거짓말쟁이. 숨긴 마음이 작은 신호로 새어 나와요.", "웃으며 시작해도, 마지막엔 들킨 것 같은 느낌이 남아요."] },
+    asrai: { name: '아스라이', container: '#settings-screen .settings-wrap', targets: '#contact-list-screen .list-header > h1', labels: [{ selector: '#contact-list-screen .list-header > h1', name: '연락처 목록 이름' }], story: ["아스라이처럼, 기억은 사라지기보다 잠깐 멀어져요.", "많은 흔적 속에서 한 사람만 다시 선명해져요."], note: '크기와 위치는 연락처 목록 이름에 적용돼요. 이름·번호·지역·메모는 기존 연락처 설정에서 준비해 주세요.' },
+    'false-memory': { name: 'FALSE MEMORY', container: '#settings-screen .settings-panel', targets: '.result-title', labels: [{ selector: '.result-title', name: '사진 설명 이름' }], story: ["기억은 지금 정보로 다시 만들어져요. 자연스러운 화면이 기억을 흔들어요.", "처음부터 이랬나 싶은, 기억의 균열을 보여 주는 마술이에요."] },
+    alter: { name: 'ALTER', container: '#settings .settings-panel', targets: '#setup .tagline', labels: [{ selector: '#setup .tagline', name: '시작 화면 문구' }], story: ["같은 존재도 보는 방식이 달라지면 다른 얼굴을 보여요.", "카메라가 현실의 또 다른 얼굴을 비추는 창이 돼요."], note: '크기와 위치는 시작 화면 문구에 적용돼요. 카메라 속 카드의 정렬은 유지하고 밝기는 기존 설정에서 맞춰 주세요.' },
+    spinner: { name: 'TYCHE', container: '#settings .settings-panel', targets: '#wheel-wrap', labels: [{ selector: '.status-brand', name: '회전판 이름' }], story: ["티케는 우연. 누구 편도 아닌 우연이 한 번만 방향을 가져요.", "운명이라기엔 짧고, 우연이라기엔 정확한 순간이에요."] }
   };
   var parts = {
     stopwatch: [{ selector: '#p-buttons', name: '시작·랩 버튼' }, { selector: '#p-tabs', name: '하단 메뉴' }],
@@ -82,8 +82,51 @@
     var overview = group('개요', 'magic-overview');
     overview.appendChild(node('h2', profile.name));
     profile.story.forEach(function (text) { overview.appendChild(node('p', text)); });
-    overview.appendChild(node('p', customizeEnabled ? '친구들과 같이 즐기거나\n선물해 주려고 만들었어요.\n각자 편한 화면으로 조금씩\n바꿔서 써 주세요.' : '친구들과 같이 즐기거나\n선물해 주려고 만들었어요.\n편하게 즐겨 주세요.'));
-    if (!customizeEnabled) { container.appendChild(overview); container.appendChild(node('p', '수정이 필요하거나 버그를 발견하셨다면, 개선할 점이나 새로운 아이디어가 있으셔도 카카오톡 KaliDCerona로 연락해 주세요.', 'magic-settings-footer')); return; }
+    overview.appendChild(node('p', customizeEnabled ? '같이 쓰거나 선물하려고 만들었어요. 화면은 조금씩 바꿀 수 있어요.' : '같이 쓰거나 선물하려고 만들었어요. 편하게 즐겨 주세요.'));
+    var contactUrl = 'http://qr.kakao.com/talk/eshVqDvk7WKk0zDKtiC9UTa.T6Q-';
+    var contactId = 'KaliDCerona';
+    function fallbackCopy(text) {
+      try {
+        var area = doc.createElement('textarea');
+        area.value = text;
+        area.setAttribute('readonly', '');
+        area.style.position = 'fixed';
+        area.style.left = '-999px';
+        doc.body.appendChild(area);
+        area.select();
+        var ok = doc.execCommand('copy');
+        area.remove();
+        return ok;
+      } catch (_) { return false; }
+    }
+    function copyContactId(button) {
+      function finish(ok) {
+        button.textContent = ok ? '복사됨' : 'ID 복사';
+        if (ok) root.setTimeout(function () { if (button.textContent === '복사됨') button.textContent = 'ID 복사'; }, 1500);
+      }
+      var clipboard = root.navigator && root.navigator.clipboard;
+      if (clipboard && typeof clipboard.writeText === 'function') {
+        clipboard.writeText(contactId).then(function () { finish(true); }, function () { finish(fallbackCopy(contactId)); });
+        return;
+      }
+      finish(fallbackCopy(contactId));
+    }
+    function contactFooter() {
+      var footer = node('div', null, 'magic-settings-footer');
+      footer.appendChild(node('p', '수정·버그·아이디어', 'magic-contact-note'));
+      var actions = node('div', null, 'magic-contact-actions');
+      var link = node('a', '카카오톡 문의', 'magic-contact-link');
+      link.href = contactUrl;
+      link.rel = 'noopener noreferrer';
+      actions.appendChild(link);
+      var copy = node('button', 'ID 복사', 'magic-contact-copy');
+      copy.type = 'button';
+      copy.addEventListener('click', function () { copyContactId(copy); });
+      actions.appendChild(copy);
+      footer.appendChild(actions);
+      return footer;
+    }
+    if (!customizeEnabled) { container.appendChild(overview); container.appendChild(contactFooter()); return; }
     var storage;
     try { storage = root.localStorage; } catch (_) { storage = null; }
     var key = storageKey(app, root.location), loadedAppearance = load(storage, key, profile), prefs = loadedAppearance.value, defaults = {};
@@ -278,7 +321,7 @@
     save.addEventListener('click', function () { collect(); if (appearanceBlocked()) { status.textContent = recoveryNotice(); return; } var saved = write(storage, key, prefs, profile); if (!saved) loadedAppearance = load(storage, key, profile); status.textContent = saved ? '이 기기에 저장했어요.' : appearanceBlocked() ? recoveryNotice() : '화면에는 적용했어요. 이 브라우저에서는 저장할 수 없어요.'; if (saved) closeCustom(); });
     clear.addEventListener('click', function () { prefs = sanitize(null, profile); scale.value = 100; offset.value = 0; axisX.value = 0; partFields.forEach(function (part) { part.scale.value = 100; part.offset.value = 0; part.x.value = 0; }); labelFields.forEach(function (item) { item.input.value = defaults[item.definition.selector]; }); controls.filter(function (input) { return input.type === 'range'; }).forEach(function (input) { input.dispatchEvent(new root.Event('input')); }); var removed = reset(storage, key); if (removed) loadedAppearance = { status: 'missing', raw: null, value: prefs }; applyLabels(); schedule(); status.textContent = removed ? '꾸미기를 처음 모습으로 돌렸어요.' : '처음 모습으로 돌렸어요. 저장된 설정은 지울 수 없어요.'; });
     container.appendChild(overview);
-    container.appendChild(node('p', '수정이 필요하거나 버그를 발견하셨다면, 개선할 점이나 새로운 아이디어가 있으셔도 카카오톡 KaliDCerona로 연락해 주세요.', 'magic-settings-footer'));
+    container.appendChild(contactFooter());
     applyLabels(); applySelection(); schedule();
     if (root.location.hash === '#customize') { customPage.hidden = false; syncNativeAppearance(); schedule(); }
     root.addEventListener('load', function () { syncNativeAppearance(); schedule(); });

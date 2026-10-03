@@ -51,6 +51,7 @@ let storageNote = "";
 let guideShown = false;
 
 const pointers = new Map();
+const touches = new Map();
 let peakPointers = 0;
 
 function setStatus(message) {
@@ -431,6 +432,46 @@ function onPointerEnd(event) {
   peakPointers = 0;
 }
 
+function onTouchStart(event) {
+  if (!performanceOpen() || event.touches.length > 2) {
+    touches.clear();
+    return;
+  }
+  for (let index = 0; index < event.changedTouches.length; index += 1) {
+    const touch = event.changedTouches.item(index);
+    touches.set(touch.identifier, {
+      x0: touch.clientX,
+      y0: touch.clientY,
+      x: touch.clientX,
+      y: touch.clientY,
+    });
+  }
+}
+
+function onTouchMove(event) {
+  if (!performanceOpen() || event.touches.length !== 2 || touches.size !== 2) return;
+  for (let index = 0; index < event.touches.length; index += 1) {
+    const touch = event.touches.item(index);
+    const point = touches.get(touch.identifier);
+    if (!point) return;
+    point.x = touch.clientX;
+    point.y = touch.clientY;
+  }
+  const fingers = Array.from(touches.values(), (point) => ({
+    dx: point.x - point.x0,
+    dy: point.y - point.y0,
+  }));
+  const coordinatedDownward = fingers.every((finger) => finger.dy > 0 && Math.abs(finger.dx) <= finger.dy)
+    && Math.abs(fingers[0].dx - fingers[1].dx) <= 24
+    && Math.abs(fingers[0].dy - fingers[1].dy) <= 24;
+  if (coordinatedDownward && event.cancelable) event.preventDefault();
+  if (classifySettingsSwipe(fingers).type === "open-settings") openSettings();
+}
+
+function onTouchEnd() {
+  touches.clear();
+}
+
 function onSwallowClick(event) {
   if (!suppressClick) return;
   suppressClick = false;
@@ -456,6 +497,10 @@ document.addEventListener("pointerdown", onPointerDown);
 document.addEventListener("pointermove", onPointerMove, { passive: false });
 document.addEventListener("pointerup", onPointerEnd);
 document.addEventListener("pointercancel", onPointerEnd);
+document.addEventListener("touchstart", onTouchStart, { passive: true });
+document.addEventListener("touchmove", onTouchMove, { passive: false });
+document.addEventListener("touchend", onTouchEnd, { passive: true });
+document.addEventListener("touchcancel", onTouchEnd, { passive: true });
 contactList.addEventListener("click", onListClick);
 contactSearch.addEventListener("input", () => {
   renderList();

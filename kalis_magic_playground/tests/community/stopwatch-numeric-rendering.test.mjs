@@ -154,7 +154,7 @@ test('portrait and landscape numeral cells share fixed widths in the page', () =
   assert.match(page, /presetRenderModel\(text\)/);
   assert.match(page, /if\(model\.kind==="digits"\)\{renderNative\(model\);return;\}/);
   assert.doesNotMatch(page, /pMinutes\.textContent|lMinutesPrefix\.textContent/);
-  assert.match(worker, /v20261003-preset-3/);
+  assert.match(worker, /v20261004-polish-1/);
   assert.doesNotMatch(worker, /v20261003-install-2/);
   assert.match(worker, /async function freshManifest/);
   assert.match(worker, /const GUARDED = new URL\(self\.registration\.scope\)\.pathname\.startsWith\('\/tools\/'\)/);

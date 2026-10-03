@@ -1524,6 +1524,8 @@ async function enableMotion() {
       ? '선택한 움직임 연출을 사용할 수 있습니다.'
       : useOrientation ? '기울기 연출을 사용할 수 있습니다. 이 기기에서는 스냅과 흔들기를 사용할 수 없습니다.'
         : '움직임 센서를 사용할 수 있습니다.';
+    // The revealing tap may already have finished while permission was pending.
+    if (state.mode === 'performance') startFall();
     updateMotionActivation();
   } catch {
     if (requestId === motionRequestId) {
@@ -1857,9 +1859,18 @@ function startDrag(event) {
   dragSamples.push({ x: center.x, y: center.y, t: Number.isFinite(event.timeStamp) ? event.timeStamp : performance.now() });
 }
 
+function requestPerformanceMotion(event) {
+  // Cold start calls showPerformance directly, so the start button never enables motion.
+  // The first trusted performance tap is that missing gesture. Denial is not asked again here.
+  if (!event || event.isTrusted !== true) return;
+  if (!sensorEffectEnabled() || motionEnabled || motionRequestPending || motionPermissionDenied) return;
+  void enableMotion();
+}
+
 function onPointerDown(event) {
   if (state.mode !== 'performance' || !gestureGuide.hidden) return;
   unlockBreakSound();
+  requestPerformanceMotion(event);
   if (event.pointerType === 'mouse' && event.button !== 0) return;
   const screen = screenPoint(event);
   pointers.set(event.pointerId, { start: screen, last: screen,

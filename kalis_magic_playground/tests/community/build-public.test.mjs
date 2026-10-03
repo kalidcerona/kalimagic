@@ -4,7 +4,7 @@ import { readdir, readFile, stat, mkdtemp, mkdir, writeFile, rm } from 'node:fs/
 import path from 'node:path';
 import os from 'node:os';
 import { fileURLToPath } from 'node:url';
-import { PUBLIC_FILES, PUBLIC_DIRS, PRIVATE_PATTERNS, MIRROR_PAIRS, DISTRIBUTION_APPS, SHARED_UNLOCK_FILES, CHOICE_FILES, USOTSUKI_FILES, ASRAI_FILES, ALTER_FILES, SPINNER_FILES, MEMDECK_FILES, QR_FILES, ALETHEIA_COURT_FILES, SETTINGS_UI_FILES, buildPublic, verifyAppDisplayPolicy } from '../../scripts/build-public.mjs';
+import { PUBLIC_FILES, PUBLIC_DIRS, PRIVATE_PATTERNS, MIRROR_PAIRS, DISTRIBUTION_APPS, SHARED_UNLOCK_FILES, CHOICE_FILES, USOTSUKI_FILES, ASRAI_FILES, ALTER_FILES, SPINNER_FILES, MEMDECK_FILES, QR_FILES, ALETHEIA_COURT_FILES, SETTINGS_UI_FILES, buildPublic, verifyAppDisplayPolicy, injectLegacyMigration } from '../../scripts/build-public.mjs';
 
 test('public build allowlist includes visible site pages', () => {
   assert.ok(PUBLIC_FILES.includes('index.html'));
@@ -142,7 +142,7 @@ test('public build serves integrated stopwatch on both retained entitlement rout
   assert.match(sharedUsotsuki, /tools\/_check\?tool=usotsuki/);
   assert.match(legacyStopwatch, /tools\/_check\?tool=stopwatch/);
   const stripGate = (html) => html.replace(/\n  <script id="friend-apps-check">[\s\S]*?<\/script>/, '');
-  assert.equal(stripGate(legacyStopwatch).replaceAll('friend-kairos-classic', 'friend-kairos'), stripGate(sharedStopwatch));
+  assert.equal(stripGate(legacyStopwatch).replaceAll('friend-kairos-classic', 'friend-kairos').replaceAll('target: "kairos-classic"', 'target: "kairos"').replaceAll('=== "stopwatch"', '=== "stopwatch-uni"'), stripGate(sharedStopwatch));
   await stat(new URL('../../dist/zz4/index.html', import.meta.url));
   await stat(new URL('../../dist/zz5/index.html', import.meta.url));
   await stat(new URL('../../dist/zz6/index.html', import.meta.url));
@@ -233,7 +233,8 @@ test('personal KAIROS edits do not change either shared route', async () => {
   assert.equal(snapshotFiles.includes('fullscreen.js'), false);
   for (const [target, tool] of [['kairos', 'stopwatch-uni'], ['kairos-classic', 'stopwatch']]) {
     const distributedDir = path.join(root, 'dist', 'tools', target);
-    assert.deepEqual(await filesUnder(distributedDir), snapshotFiles, target);
+    assert.deepEqual(await filesUnder(distributedDir), [...snapshotFiles, 'legacy-shared-contract.mjs', 'legacy-storage-migration.mjs'].sort(), target);
+    for (const file of ['legacy-shared-contract.mjs', 'legacy-storage-migration.mjs']) assert.deepEqual(await readFile(path.join(distributedDir, file)), await readFile(path.join(root, 'scripts', file)), `${target}/${file}`);
     const prefix = `friend-${target}_`;
     for (const file of snapshotFiles) {
       const [snapshotBytes, distributedBytes, personalBytes] = await Promise.all([
@@ -253,8 +254,8 @@ test('personal KAIROS edits do not change either shared route', async () => {
           .replaceAll('stopwatch-settings-entry-tutorial-', `friend-${target}-settings-entry-tutorial-`)
           .replace(/<body\b/, '<body data-magic-customize="off"');
         comparable = Buffer.from(distributedBytes.toString('utf8').replace(/\n  <script id="friend-apps-check">[\s\S]*?<\/script>/, ''));
-        expected = Buffer.from(isolate(snapshotHtml));
-        personalExpected = personalHtml === null ? null : Buffer.from(isolate(personalHtml));
+        expected = Buffer.from(injectLegacyMigration(isolate(snapshotHtml), target));
+        personalExpected = personalHtml === null ? null : Buffer.from(injectLegacyMigration(isolate(personalHtml), target));
         const html = distributedBytes.toString('utf8');
         assert.match(html, new RegExp(`tools\\/_check\\?tool=${tool}`));
         assert.match(html, new RegExp(`${prefix}preset_cs`));
@@ -343,7 +344,7 @@ test('ALETHEIA and USOTSUKI distribution builds use pinned snapshots and separat
       if (file === 'index.html') {
         const html = targetBytes.toString('utf8');
         assert.match(html, new RegExp(`tools\\/_check\\?tool=${app}`));
-        assert.equal(html.replace(/\n  <script id="friend-apps-check">[\s\S]*?<\/script>/, ''), sourceBytes.toString('utf8').replace(/<body\b/, '<body data-magic-customize="off"'));
+        assert.equal(html.replace(/\n  <script id="friend-apps-check">[\s\S]*?<\/script>/, ''), injectLegacyMigration(sourceBytes.toString('utf8').replace(/<body\b/, '<body data-magic-customize="off"'), app.target));
       } else if (file === 'manifest.webmanifest') {
         assert.deepEqual(JSON.parse(targetBytes), { ...JSON.parse(sourceBytes), id: `/tools/${app}/`, start_url: './', scope: './' });
       } else {
@@ -375,7 +376,9 @@ test('HITSUZEN and AROSAEGIDA keep every pinned snapshot byte except gate, custo
     const sourceFiles = (await filesUnder(snapshot)).filter((file) => !file.split(/[\\/]/).some((part) => part.startsWith('.')) && !PRIVATE_PATTERNS.some((pattern) => pattern.test(file)));
     assert.ok(sourceFiles.length > 1, app.source);
     assert.ok(sourceFiles.includes('index.html') && sourceFiles.includes('manifest.webmanifest') && sourceFiles.includes('sw.js'), app.source);
-    assert.deepEqual(await filesUnder(target), sourceFiles, `${app.target} file inventory`);
+    const additional = app.target === 'hitsuzen' ? ['legacy-shared-contract.mjs', 'legacy-storage-migration.mjs'] : [];
+    assert.deepEqual(await filesUnder(target), [...sourceFiles, ...additional].sort(), `${app.target} file inventory`);
+    for (const file of additional) assert.deepEqual(await readFile(path.join(target, file)), await readFile(path.join(root, 'scripts', file)), `${app.target}/${file}`);
     for (const file of sourceFiles) {
       const [sourceBytes, targetBytes] = await Promise.all([
         readFile(path.join(snapshot, file)),
@@ -385,7 +388,7 @@ test('HITSUZEN and AROSAEGIDA keep every pinned snapshot byte except gate, custo
         const html = targetBytes.toString('utf8');
         assert.match(html, new RegExp(`id="friend-apps-check"[\\s\\S]*tools\\/_check\\?tool=${app.tool}`));
         assert.match(html, /data-magic-customize="off"/);
-        assert.equal(html.replace(/\n  <script id="friend-apps-check">[\s\S]*?<\/script>/, ''), sourceBytes.toString('utf8').replace(/<body\b/, '<body data-magic-customize="off"'));
+        assert.equal(html.replace(/\n  <script id="friend-apps-check">[\s\S]*?<\/script>/, ''), injectLegacyMigration(sourceBytes.toString('utf8').replace(/<body\b/, '<body data-magic-customize="off"'), app.target));
       } else if (file === 'manifest.webmanifest') {
         const manifest = JSON.parse(targetBytes);
         assert.equal(manifest.id, `/tools/${app.target}/`);

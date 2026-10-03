@@ -1,4 +1,4 @@
-const scope=new URL(self.registration.scope),PREFIX='magic-qr-'+encodeURIComponent(scope.href)+'-',CACHE=PREFIX+'v20261003-install-2';
+const scope=new URL(self.registration.scope),PREFIX='magic-qr-'+encodeURIComponent(scope.href)+'-',CACHE=PREFIX+'v20261004-polish-1';
 const GUARDED=scope.pathname.startsWith('/tools/');
 const ASSETS=['./','./index.html','./style.css','./brand-logo.png','./app.mjs','./core.mjs','./manifest.webmanifest','./icons/icon-192.png','./icons/icon-512.png','./vendor/qrcodegen.js','./vendor/jsQR.js','./vendor/LICENSE-nayuki.txt','./vendor/LICENSE-jsqr.txt'].filter(path=>!GUARDED||(path!=='./'&&path!=='./index.html'));
 const STATIC=new Set(ASSETS.map(path=>new URL(path,scope).href));

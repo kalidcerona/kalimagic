@@ -83,7 +83,50 @@
     overview.appendChild(node('h2', profile.name));
     profile.story.forEach(function (text) { overview.appendChild(node('p', text)); });
     overview.appendChild(node('p', customizeEnabled ? '같이 쓰거나 선물하려고 만들었어요. 화면은 조금씩 바꿀 수 있어요.' : '같이 쓰거나 선물하려고 만들었어요. 편하게 즐겨 주세요.'));
-    if (!customizeEnabled) { container.appendChild(overview); container.appendChild(node('p', '수정, 버그, 아이디어는 카카오톡 KaliDCerona로 알려 주세요.', 'magic-settings-footer')); return; }
+    var contactUrl = 'http://qr.kakao.com/talk/eshVqDvk7WKk0zDKtiC9UTa.T6Q-';
+    var contactId = 'KaliDCerona';
+    function fallbackCopy(text) {
+      try {
+        var area = doc.createElement('textarea');
+        area.value = text;
+        area.setAttribute('readonly', '');
+        area.style.position = 'fixed';
+        area.style.left = '-999px';
+        doc.body.appendChild(area);
+        area.select();
+        var ok = doc.execCommand('copy');
+        area.remove();
+        return ok;
+      } catch (_) { return false; }
+    }
+    function copyContactId(button) {
+      function finish(ok) {
+        button.textContent = ok ? '복사됨' : 'ID 복사';
+        if (ok) root.setTimeout(function () { if (button.textContent === '복사됨') button.textContent = 'ID 복사'; }, 1500);
+      }
+      var clipboard = root.navigator && root.navigator.clipboard;
+      if (clipboard && typeof clipboard.writeText === 'function') {
+        clipboard.writeText(contactId).then(function () { finish(true); }, function () { finish(fallbackCopy(contactId)); });
+        return;
+      }
+      finish(fallbackCopy(contactId));
+    }
+    function contactFooter() {
+      var footer = node('div', null, 'magic-settings-footer');
+      footer.appendChild(node('p', '수정·버그·아이디어', 'magic-contact-note'));
+      var actions = node('div', null, 'magic-contact-actions');
+      var link = node('a', '카카오톡 문의', 'magic-contact-link');
+      link.href = contactUrl;
+      link.rel = 'noopener noreferrer';
+      actions.appendChild(link);
+      var copy = node('button', 'ID 복사', 'magic-contact-copy');
+      copy.type = 'button';
+      copy.addEventListener('click', function () { copyContactId(copy); });
+      actions.appendChild(copy);
+      footer.appendChild(actions);
+      return footer;
+    }
+    if (!customizeEnabled) { container.appendChild(overview); container.appendChild(contactFooter()); return; }
     var storage;
     try { storage = root.localStorage; } catch (_) { storage = null; }
     var key = storageKey(app, root.location), loadedAppearance = load(storage, key, profile), prefs = loadedAppearance.value, defaults = {};
@@ -278,7 +321,7 @@
     save.addEventListener('click', function () { collect(); if (appearanceBlocked()) { status.textContent = recoveryNotice(); return; } var saved = write(storage, key, prefs, profile); if (!saved) loadedAppearance = load(storage, key, profile); status.textContent = saved ? '이 기기에 저장했어요.' : appearanceBlocked() ? recoveryNotice() : '화면에는 적용했어요. 이 브라우저에서는 저장할 수 없어요.'; if (saved) closeCustom(); });
     clear.addEventListener('click', function () { prefs = sanitize(null, profile); scale.value = 100; offset.value = 0; axisX.value = 0; partFields.forEach(function (part) { part.scale.value = 100; part.offset.value = 0; part.x.value = 0; }); labelFields.forEach(function (item) { item.input.value = defaults[item.definition.selector]; }); controls.filter(function (input) { return input.type === 'range'; }).forEach(function (input) { input.dispatchEvent(new root.Event('input')); }); var removed = reset(storage, key); if (removed) loadedAppearance = { status: 'missing', raw: null, value: prefs }; applyLabels(); schedule(); status.textContent = removed ? '꾸미기를 처음 모습으로 돌렸어요.' : '처음 모습으로 돌렸어요. 저장된 설정은 지울 수 없어요.'; });
     container.appendChild(overview);
-    container.appendChild(node('p', '수정, 버그, 아이디어는 카카오톡 KaliDCerona로 알려 주세요.', 'magic-settings-footer'));
+    container.appendChild(contactFooter());
     applyLabels(); applySelection(); schedule();
     if (root.location.hash === '#customize') { customPage.hidden = false; syncNativeAppearance(); schedule(); }
     root.addEventListener('load', function () { syncNativeAppearance(); schedule(); });
