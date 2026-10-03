@@ -146,7 +146,7 @@ export const SPINNER_FILES = [
   'logic.js', 'manifest.webmanifest', 'style.css', 'sw.js'
 ];
 export const MEMDECK_FILES = [
-  'index.html', 'style.css', 'app.mjs', 'core.mjs', 'data.mjs',
+  'index.html', 'style.css', 'app.mjs', 'core.mjs', 'data.mjs', 'mnemonic.mjs',
   'manifest.webmanifest', 'sw.js', 'icon.svg', 'icon-192.png', 'icon-512.png'
 ];
 export const QR_FILES = [

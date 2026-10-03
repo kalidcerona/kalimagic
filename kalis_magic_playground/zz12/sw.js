@@ -1,6 +1,6 @@
 const CACHE_PREFIX=`magic-memdeck-${self.registration.scope}-`;
-const CACHE=`${CACHE_PREFIX}v20261003-install-2`;
-const ASSETS=['./','./index.html','./style.css','./app.mjs','./core.mjs','./data.mjs','./manifest.webmanifest','./icon.svg','./icon-192.png','./icon-512.png'].map(path=>new URL(path,self.registration.scope).href);
+const CACHE=`${CACHE_PREFIX}v20261003-mnemonic-3`;
+const ASSETS=['./','./index.html','./style.css','./app.mjs','./core.mjs','./mnemonic.mjs','./data.mjs','./manifest.webmanifest','./icon.svg','./icon-192.png','./icon-512.png'].map(path=>new URL(path,self.registration.scope).href);
 const INDEX=new URL('index.html',self.registration.scope).href;
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS))));
 self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key.startsWith(CACHE_PREFIX)&&key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim())));

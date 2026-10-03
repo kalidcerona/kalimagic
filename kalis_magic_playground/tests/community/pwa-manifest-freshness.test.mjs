@@ -46,7 +46,7 @@ function worker(app, network, { emptyCache = false, failCacheWrite = false } = {
     },
     caches: {
       open: async name => { opened.push(name); return cache; },
-      keys: async () => [opened[0], opened[0].replace('v20261003-install-2', 'old-version'), 'foreign-app-cache'],
+      keys: async () => [opened[0], `${opened[0]}-old-version`, 'foreign-app-cache'],
       delete: async name => { deletes.push(name); return true; }
     },
     fetch: async request => { calls.push(request); return network(request); }

@@ -1,4 +1,5 @@
 import {DECK, STACKS, RANKS, SUITS} from './data.mjs';
+import {freshMnemonics, validateMnemonics} from './mnemonic.mjs';
 export function validateCards(cards) {
   if (!Array.isArray(cards) || cards.length!==52 || new Set(cards).size!==52 || cards.some(c=>!DECK.includes(c))) throw new Error('카드 순서는 중복 없이 52장이어야 합니다. 예: AS, 10H, QC');
   return [...cards];
@@ -30,6 +31,9 @@ export function validateState(input){
       for(const [key,r] of Object.entries(p.review??{})){if(!/^(?:[1-9]|[1-4][0-9]|5[0-2])$/.test(key)||!r||!integer(r.step)||r.step>5||!integer(r.due))throw new Error('복습 일정이 잘못되었습니다.');extra.review[key]={step:r.step,due:r.due};}
       for(const [key,r] of Object.entries(p.rankStats??{})){if(!RANKS.includes(key)||!r||!integer(r.attempts)||!integer(r.correct)||!integer(r.totalMs)||r.correct>r.attempts)throw new Error('포카드 기록이 잘못되었습니다.');extra.rankStats[key]={attempts:r.attempts,correct:r.correct,totalMs:r.totalMs};}
       extra.rankHistory=(p.rankHistory??[]).map(h=>{if(!h||!integer(h.at)||!integer(h.total)||h.total<1||h.total>13||!integer(h.correct)||h.correct>h.total||!integer(h.ms))throw new Error('포카드 세션 기록이 잘못되었습니다.');return {at:h.at,total:h.total,correct:h.correct,ms:h.ms};}).slice(0,100);
+      // A malformed additive payload rejects the backup so the stored original is left untouched.
+      extra.recall=validateRecall(p.recall);
+      extra.mnemonics=validateMnemonics(p.mnemonics);
     }
     out.progress[id]={...extra,stats,history};
   }
@@ -46,7 +50,17 @@ export function validateSession(s){
 export function loadState(text){const parsed=JSON.parse(text);const state=validateState(parsed);state.session=validateSession(parsed.session);return state;}
 export function totals(stats){return Object.values(stats).reduce((a,s)=>({attempts:a.attempts+s.attempts,correct:a.correct+s.correct,ms:a.ms+s.totalMs}),{attempts:0,correct:0,ms:0});}
 
-export function freshProgress(){return {stats:{},history:[],notes:{},review:{},rankStats:{},rankHistory:[]};}
+export function freshProgress(){return {stats:{},history:[],notes:{},review:{},rankStats:{},rankHistory:[],recall:{},mnemonics:freshMnemonics()};}
+function validateRecall(raw){
+  if(raw==null) return {};
+  if(typeof raw!=='object'||Array.isArray(raw)) throw new Error('회상 기록이 잘못되었습니다.');
+  const out={};
+  for(const [key,r] of Object.entries(raw)){
+    if(!/^(?:[1-9]|[1-4][0-9]|5[0-2])$/.test(key)||!r||['directCorrect','directWrong','hinted','revealed'].some(k=>!integer(r[k]))) throw new Error('회상 기록이 잘못되었습니다.');
+    out[key]={directCorrect:r.directCorrect,directWrong:r.directWrong,hinted:r.hinted,revealed:r.revealed};
+  }
+  return out;
+}
 export const REVIEW_DAYS=[1,3,7,14,30];
 export function scheduleReview(progress,position,correct,now=Date.now()){
   const p=structuredClone(progress),old=p.review[position];
@@ -56,6 +70,30 @@ export function scheduleReview(progress,position,correct,now=Date.now()){
   p.review[position]={step,due:now+REVIEW_DAYS[Math.max(0,step-1)]*86400000};return p;
 }
 export function duePositions(progress,now=Date.now()){return Object.entries(progress.review).filter(([,r])=>r.due<=now).map(([p])=>Number(p));}
+export function buildReviewQueue(progress,now=Date.now(),random=Math.random){
+  const due=duePositions(progress,now);
+  if(!due.length) throw new Error('오늘 복습할 카드가 없습니다.');
+  return shuffle(due,random).map(position=>({position,direction:random()<0.5?'position':'card',stage:'direct',retried:false,locus:''}));
+}
+// Direct hits update quiz stats. Hints, reveals, and learning passes never do.
+export function applyRecall(progress,position,outcome,ms,now=Date.now(),schedule=true){
+  if(!Number.isInteger(position)||position<1||position>52) throw new Error('잘못된 위치입니다.');
+  if(!['direct-correct','direct-wrong','hinted','revealed'].includes(outcome)) throw new Error('잘못된 채점입니다.');
+  if(!Number.isSafeInteger(ms)||ms<0) throw new Error('잘못된 시간입니다.');
+  const direct=outcome==='direct-correct'||outcome==='direct-wrong';
+  const correct=outcome==='direct-correct';
+  const p=schedule&&direct?record(progress,position,correct,ms):structuredClone(progress);
+  if(!p.recall||typeof p.recall!=='object'||Array.isArray(p.recall)) p.recall={};
+  const key=String(position);
+  const bucket=p.recall[key]??{directCorrect:0,directWrong:0,hinted:0,revealed:0};
+  if(outcome==='direct-correct') bucket.directCorrect++;
+  else if(outcome==='direct-wrong') bucket.directWrong++;
+  else if(outcome==='hinted') bucket.hinted++;
+  else bucket.revealed++;
+  p.recall[key]=bucket;
+  if(!schedule) return p;
+  return scheduleReview(p,position,correct,now);
+}
 export function rankPositions(cards,rank){if(!RANKS.includes(rank))throw new Error('잘못된 숫자·그림입니다.');const map=inverse(cards);return Object.fromEntries(Object.keys(SUITS).map(s=>[s,map[rank+s]]));}
 export function gradeRank(cards,rank,answers){
   const values=Object.keys(SUITS).map(s=>answers?.[s]);
