@@ -95,6 +95,26 @@ export function parseStopwatchText(value) {
   if (/^\d{1,2}:\d{2}\.\d{2}$/.test(text)) return portraitPresetEntryToCs(text.replace(/\D/g, "").padStart(6, "0"));
   return parseTimeInput(text);
 }
+// Native SS:CC and MM:SS.CC presets share the running numeral model. Ordinary text stays text.
+export function nativeStopwatchRender(totalCs) {
+  const value = Math.max(0, Math.floor(Number(totalCs) || 0));
+  const formatted = formatCs(value);
+  const portraitDigits = portraitPresetEntryFromCs(value);
+  const showLandscapeMinutes = value >= 6000;
+  return {
+    kind: "digits",
+    value,
+    portraitDigits,
+    landscapeDigits: showLandscapeMinutes ? portraitDigits.slice(2) : formatted.sec + formatted.cs,
+    landscapeMinutes: showLandscapeMinutes ? portraitDigits.slice(0, 2) : "",
+    showLandscapeMinutes,
+  };
+}
+export function presetRenderModel(text) {
+  const parsed = parseStopwatchText(text);
+  if (parsed === null) return { kind: "text", text: String(text ?? "") };
+  return nativeStopwatchRender(parsed);
+}
 export function presetIndexFromX(x, left, width, count = 4) {
   if (![x, left, width].every(Number.isFinite) || width <= 0 || !Number.isInteger(count) || count <= 0 || x < left || x > left + width) return null;
   return Math.min(count - 1, Math.floor((x - left) / width * count));
