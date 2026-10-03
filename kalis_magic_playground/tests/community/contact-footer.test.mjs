@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
 
-const URL_EXACT = 'http://qr.kakao.com/talk/eshVqDvk7WKk0zDKtiC9UTa.T6Q-';
+const URL_EXACT = 'https://qr.kakao.com/talk/eshVqDvk7WKk0zDKtiC9UTa.T6Q-';
 
 test('shared settings footer is a real link plus an ID copy button', () => {
   const source = fs.readFileSync(new URL('../../zz1/settings-ui.js', import.meta.url), 'utf8');
@@ -74,7 +74,7 @@ test('zz12 and zz13 contact lives in settings and uses the same url', () => {
   const zz13 = fs.readFileSync(new URL('../../zz13/index.html', import.meta.url), 'utf8');
   const css = fs.readFileSync(new URL('../../zz1/settings-ui.css', import.meta.url), 'utf8');
   assert.match(zz12, /function renderSettings\(\)\{[\s\S]*카카오톡 문의/);
-  assert.equal((zz12.match(new RegExp(URL_EXACT.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g')) || []).length, 1);
+  assert.match(zz12, /href="\$\{contactHref\(navigator\)\}"/);
   assert.match(zz13, /dialog id="settings"[^>]*data-settings-root/);
   assert.match(zz13, new RegExp(`href="${URL_EXACT.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}"`));
   assert.match(zz13, />카카오톡 문의</);
@@ -83,4 +83,22 @@ test('zz12 and zz13 contact lives in settings and uses the same url', () => {
   assert.match(css, /input\[type="checkbox"\]/);
   assert.match(css, /input\[type="range"\]/);
   assert.doesNotMatch(css, /input\[type="checkbox"\][\s\S]{0,120}min-height:\s*44px/);
+});
+
+// These URI values are the exact mobile redirects returned by the supplied Kakao QR page.
+test('contact anchors choose Kakao mobile launch URIs while retaining an HTTPS fallback', () => {
+  for (const path of ['zz1/settings-ui.js', 'zz12/app.mjs', 'zz13/app.mjs']) {
+    const source = fs.readFileSync(new URL('../../' + path, import.meta.url), 'utf8');
+    const match = source.match(/function contactHref\(nav\) \{[\s\S]*?\n\s*\}/);
+    assert.ok(match, path);
+    const context = vm.createContext({});
+    vm.runInContext(match[0], context);
+    const uri = (nav) => context.contactHref(nav);
+    const code = 'eshVqDvk7WKk0zDKtiC9UTa.T6Q-';
+    assert.equal(uri({userAgent:'Android Chrome'}), 'intent://viewer?#Intent;scheme=kakaotalkqrcode%3A%2F%2F' + code + ';action=android.intent.action.SEND;category=android.intent.category.BROWSABLE;package=com.kakao.talk;end;');
+    assert.equal(uri({userAgent:'iPhone'}), 'kakaotalkqrcode://' + code);
+    assert.equal(uri({userAgent:'Macintosh',platform:'MacIntel',maxTouchPoints:5}), 'kakaotalkqrcode://' + code);
+    assert.equal(uri({userAgent:''}), URL_EXACT);
+    assert.match(path === 'zz13/app.mjs' ? fs.readFileSync(new URL('../../zz13/index.html', import.meta.url), 'utf8') : source, /카카오톡 친구 추가에서/);
+  }
 });

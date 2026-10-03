@@ -58,3 +58,13 @@ main{justify-content:safe center}
 .magic-contact-actions{display:flex;flex-wrap:wrap;gap:8px;min-width:0}
 .magic-contact-link,.magic-contact-copy{display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;padding:10px 14px;white-space:nowrap;text-decoration:none;border-radius:12px;border:1px solid #ab9f924d;background:#34261e;color:#f4efe9;font:inherit}
 .magic-contact-link{color:#f3c2a4}
+
+/* Keep contact instructions in deliberate semantic lines. */
+.magic-contact-note > span, .magic-contact-help > span { display:block; }
+.magic-contact-help { margin:12px 0 0; color:#d9cdc2; font-size:14px; line-height:1.5; word-break:keep-all; }
+
+/* Flex summaries need an explicit disclosure indicator on mobile browsers. */
+:is([data-settings-root], [data-magic-settings-container]) details > summary { display:flex; align-items:center; gap:12px; list-style:none; }
+:is([data-settings-root], [data-magic-settings-container]) details > summary::-webkit-details-marker { display:none; }
+:is([data-settings-root], [data-magic-settings-container]) details > summary::after { content:"+"; margin-left:auto; flex:0 0 18px; width:18px; text-align:center; color:#ab9f92; font-size:20px; line-height:1; }
+:is([data-settings-root], [data-magic-settings-container]) details[open] > summary::after { content:"−"; }

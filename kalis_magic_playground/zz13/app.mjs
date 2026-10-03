@@ -1,3 +1,9 @@
+function contactHref(nav) {
+  var code = 'eshVqDvk7WKk0zDKtiC9UTa.T6Q-', ua = nav.userAgent || '';
+  if (/Android/i.test(ua)) return 'intent://viewer?#Intent;scheme=kakaotalkqrcode%3A%2F%2F' + code + ';action=android.intent.action.SEND;category=android.intent.category.BROWSABLE;package=com.kakao.talk;end;';
+  if (/iPhone|iPad|iPod/i.test(ua) || (nav.platform === 'MacIntel' && nav.maxTouchPoints > 1)) return 'kakaotalkqrcode://' + code;
+  return 'https://qr.kakao.com/talk/' + code;
+}
 import {DEFAULTS,settings,next,reset,restore,save,serialize,raster,toggle,undo,hit} from './core.mjs';
 const $=id=>document.getElementById(id), key=location.pathname.toLowerCase().startsWith('/tools/arosaegida')?'magic-qr-session-v1-arosaegida':'magic-qr-session-v1', preservedKey=key+'-preserved-raw';
 const NOTE_UNREADABLE='저장된 내용을 읽지 못했습니다.\n원본을 읽고 보관할 수 있을 때까지 저장과 복원을 멈췄습니다.';
@@ -86,6 +92,7 @@ function copyContactId(button){
   if(clip&&typeof clip.writeText==='function'){clip.writeText(text).then(()=>finish(true),()=>finish(fallback()));return;}
   finish(fallback());
 }
+const contactLink=$('contact-open');if(contactLink)contactLink.href=contactHref(navigator);
 $('contact-copy').onclick=()=>copyContactId($('contact-copy'));
 loadStored();
 syncDot();

@@ -83,7 +83,13 @@
     overview.appendChild(node('h2', profile.name));
     profile.story.forEach(function (text) { overview.appendChild(node('p', text)); });
     overview.appendChild(node('p', customizeEnabled ? '같이 쓰거나 선물하려고 만들었어요. 화면은 조금씩 바꿀 수 있어요.' : '같이 쓰거나 선물하려고 만들었어요. 편하게 즐겨 주세요.'));
-    var contactUrl = 'http://qr.kakao.com/talk/eshVqDvk7WKk0zDKtiC9UTa.T6Q-';
+    function contactHref(nav) {
+  var code = 'eshVqDvk7WKk0zDKtiC9UTa.T6Q-', ua = nav.userAgent || '';
+  if (/Android/i.test(ua)) return 'intent://viewer?#Intent;scheme=kakaotalkqrcode%3A%2F%2F' + code + ';action=android.intent.action.SEND;category=android.intent.category.BROWSABLE;package=com.kakao.talk;end;';
+  if (/iPhone|iPad|iPod/i.test(ua) || (nav.platform === 'MacIntel' && nav.maxTouchPoints > 1)) return 'kakaotalkqrcode://' + code;
+  return 'https://qr.kakao.com/talk/' + code;
+}
+    var contactUrl = contactHref(root.navigator || {});
     var contactId = 'KaliDCerona';
     function fallbackCopy(text) {
       try {
@@ -113,7 +119,9 @@
     }
     function contactFooter() {
       var footer = node('div', null, 'magic-settings-footer');
-      footer.appendChild(node('p', '수정·버그·아이디어', 'magic-contact-note'));
+      var note = node('p', null, 'magic-contact-note');
+      ['수정할 점이나 버그,', '새로운 아이디어가 있다면', '카카오톡으로 알려주세요.'].forEach(function (text) { note.appendChild(node('span', text)); });
+      footer.appendChild(note);
       var actions = node('div', null, 'magic-contact-actions');
       var link = node('a', '카카오톡 문의', 'magic-contact-link');
       link.href = contactUrl;
@@ -124,6 +132,9 @@
       copy.addEventListener('click', function () { copyContactId(copy); });
       actions.appendChild(copy);
       footer.appendChild(actions);
+      var help = node('p', null, 'magic-contact-help');
+      ['연결이 안 되면 ID를 복사해', '카카오톡 친구 추가에서', '검색해 주세요.', 'ID: ' + contactId].forEach(function (text) { help.appendChild(node('span', text)); });
+      footer.appendChild(help);
       return footer;
     }
     if (!customizeEnabled) { container.appendChild(overview); container.appendChild(contactFooter()); return; }

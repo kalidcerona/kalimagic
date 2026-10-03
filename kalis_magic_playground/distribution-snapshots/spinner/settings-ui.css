@@ -335,3 +335,13 @@
 /* Contact navigation shares the native settings button surface. */
 .magic-contact-link { color:#f4efe9; background:#34261e; border:1px solid #ab9f924d; border-radius:8px; font:inherit; touch-action:manipulation; }
 .magic-contact-link:focus-visible { outline:2px solid #d99070; outline-offset:3px; }
+
+/* Keep contact instructions in deliberate semantic lines. */
+.magic-contact-note > span, .magic-contact-help > span { display:block; }
+.magic-contact-help { margin:12px 0 0; color:#d9cdc2; font-size:14px; line-height:1.5; word-break:keep-all; }
+
+/* Flex summaries need an explicit disclosure indicator on mobile browsers. */
+:is([data-settings-root], [data-magic-settings-container]) details > summary { display:flex; align-items:center; gap:12px; list-style:none; }
+:is([data-settings-root], [data-magic-settings-container]) details > summary::-webkit-details-marker { display:none; }
+:is([data-settings-root], [data-magic-settings-container]) details > summary::after { content:"+"; margin-left:auto; flex:0 0 18px; width:18px; text-align:center; color:#ab9f92; font-size:20px; line-height:1; }
+:is([data-settings-root], [data-magic-settings-container]) details[open] > summary::after { content:"−"; }

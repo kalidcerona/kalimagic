@@ -270,7 +270,7 @@ test('missing storage is a normal default and is not reported as a failed read',
 test('the scoped service worker cache includes this app change', () => {
   const sw = fs.readFileSync(new URL('../../zz13/sw.js', import.meta.url), 'utf8');
   const app = fs.readFileSync(new URL('../../zz13/app.mjs', import.meta.url), 'utf8');
-  assert.match(sw, /CACHE=PREFIX\+'v20261004-polish-1'/);
+  assert.match(sw, /CACHE=PREFIX\+'v20261004-contact-2'/);
   assert.match(sw, /\.\/app\.mjs/);
   assert.match(app, /writesHeld/);
   assert.doesNotMatch(app, /distribution-snapshots/);
