@@ -29,25 +29,23 @@
     <i class="sight sight-c" id="table-corner-left" aria-hidden="true"></i>
     <i class="sight sight-d" id="table-corner-right" aria-hidden="true"></i>
     <img class="field" aria-hidden="true" src="./casino-assets/field-marks.svg" alt="">
-    <header class="instrument-header">
-      <div class="instrument-title">
-        <p class="wordmark">TYCHE</p>
-        <p class="instrument-kicker">회전판</p>
-      </div>
-      <p id="spin-status" class="spin-status" aria-live="polite"></p>
-    </header>
     <div class="rail rail-top" aria-hidden="true"></div>
     <div class="wheel-area">
       <div class="wheel-wrap" id="wheel-wrap" data-target-cue="idle">
         <div class="wheel" aria-hidden="true">
-          <img class="wheel-face wheel-emerald" src="./hybrid-assets/wheel-emerald.svg" alt="">
-          <img class="wheel-face wheel-burgundy" src="./hybrid-assets/wheel-burgundy.svg" alt="">
+          <img class="wheel-face wheel-emerald" src="./casino-assets/wheel-emerald.svg" alt="">
+          <img class="wheel-face wheel-burgundy" src="./casino-assets/wheel-burgundy.svg" alt="">
         </div>
-        <img class="spinner-arrow" id="spinner-arrow" src="./hybrid-assets/arrow.svg" alt="" aria-hidden="true">
+        <img class="spinner-arrow" id="spinner-arrow" src="./casino-assets/arrow.svg" alt="" aria-hidden="true">
         <div class="wheel-pin" aria-hidden="true"><span></span></div>
       </div>
     </div>
-    <div class="rail rail-bottom" aria-hidden="true"></div>
+    <div class="rail rail-bottom">
+      <section class="stage-bottom" aria-label="회전 상태">
+        <span class="status-jewel" aria-hidden="true"></span>
+        <p id="spin-status" class="spin-status" aria-live="polite"></p>
+      </section>
+    </div>
   </main>
   <section id="guide" class="overlay guide" role="dialog" aria-modal="true" aria-label="회전판 시작 안내" hidden>
     <div class="panel guide-panel">
