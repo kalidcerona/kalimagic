@@ -198,8 +198,8 @@
   <script src="./settings-ui.js" defer></script>
 </head>
 <body data-magic-app="stopwatch">
-  <main id="shell">
-    <section id="portrait-app" class="mode-view" aria-label="세로 스톱워치">
+  <main id="shell" data-ui-mode="landscape">
+    <section id="portrait-app" class="mode-view" hidden aria-label="세로 스톱워치">
       <div id="p-top-band" aria-hidden="true"></div>
       <div id="p-time-display" aria-label="스톱워치 시간">
         <span id="p-numeric-display"><span id="p-minutes" class="p-digits p-preset-group" data-p-group="0"><span data-p-minute="0">0</span><span data-p-minute="1">0</span></span><span id="p-colon" class="colon" aria-hidden="true"><span class="colon-dot"></span><span class="colon-dot"></span></span><span id="p-seconds" class="p-digits p-preset-group" data-p-group="1"><span data-p-digit="0">0</span><span data-p-digit="1">0</span></span><span id="p-decimal">.</span><span id="p-centiseconds" class="p-digits p-preset-group" data-p-group="2"><span data-p-digit="2">0</span><span data-p-digit="3">0</span></span></span>
@@ -214,7 +214,7 @@
         <button class="tab" type="button"><svg viewBox="0 0 28 28" aria-hidden="true"><path d="M14 5a10 10 0 1 1-8 4M14 2v5M3 5v6h6M14 9v7l4 2"/></svg><span>타이머</span></button>
       </nav>
     </section>
-    <section id="landscape-frame" class="mode-view" hidden aria-label="가로 스톱워치">
+    <section id="landscape-frame" class="mode-view" aria-label="가로 스톱워치">
       <div id="landscape-app">
         <div id="l-time-display" aria-label="스톱워치 시간"><span id="l-minutes-prefix" hidden><span data-l-minute="0">0</span><span data-l-minute="1">0</span>:</span><span id="l-seconds" class="l-digits"><span data-l-digit="0">0</span><span data-l-digit="1">0</span></span><span id="l-colon" class="colon" aria-hidden="true"><span class="colon-dot"></span><span class="colon-dot"></span></span><span id="l-decimal-separator" hidden>.</span><span id="l-centiseconds" class="l-digits"><span data-l-digit="2">0</span><span data-l-digit="3">0</span></span><span id="l-custom-display" class="l-digits" hidden></span></div>
         <button id="l-control" type="button" aria-label="START"><span id="l-control-label">START</span></button>
@@ -464,7 +464,7 @@ function installSettingsSwipe(open, cancel, enabled, cancelHold = cancel) {
     const settings=$("settings"),settingsClose=$("settings-close"),modePortrait=$("mode-portrait"),modeLandscape=$("mode-landscape"),slotKindText=$("slot-kind-text"),slotKindSeq=$("slot-kind-seq"),trick2Text=$("trick2-text"),sequenceInput=$("sequence-input"),sequenceSlots=$("sequence-slots"),sequenceStatus=$("sequence-status"),presetEditor=$("preset-editor"),presetName=$("preset-name"),presetForceAfter=$("preset-force-after"),sequenceChips=$("sequence-chips"),quickSettings=$("quick-settings"),quickValue=$("quick-value"),quickStatus=$("quick-status");
     const PRESET_KEY="stopwatch_preset_cs",PRESET_AT_KEY="stopwatch_preset_at",TEXT_KEY="stopwatch_custom_text",TEXT_AT_KEY="stopwatch_text_at",MODE_KEY="stopwatch_ui_mode",SEQUENCE_KEY="stopwatch_seq",SEQUENCE_SLOTS_KEY="stopwatch_seq_slots",TRICK3_KEY="stopwatch_trick3",DIGIT_GUIDE_KEY="stopwatch_portrait_digit_guide_v1";
     const HOLD_MS=1000,PAIR_MS=120,TRIPLE_MS=800;
-    let uiMode="portrait",state="idle",trickState="off",trick3Enabled=false,sequence=[],presetSlotValues=[0,1,2].map(index=>normalizeNamedPreset(null,index)),slotSaveKind="seq",sequenceStopCount=0,sequenceForceAfter=2,sequenceDraft=[],editingSlotIndex=null,customText="",presetCs=null,presetAt=0,textAt=0,presetEntry="0000",presetMode=false,presetKind=null,presetGesture=null;
+    let uiMode="landscape",state="idle",trickState="off",trick3Enabled=false,sequence=[],presetSlotValues=[0,1,2].map(index=>normalizeNamedPreset(null,index)),slotSaveKind="seq",sequenceStopCount=0,sequenceForceAfter=2,sequenceDraft=[],editingSlotIndex=null,customText="",presetCs=null,presetAt=0,textAt=0,presetEntry="0000",presetMode=false,presetKind=null,presetGesture=null;
     let pendingDigits=[],reservedTens=null,stopDigit=null,startedAt=0,elapsedBase=0,frameId=0,lapCount=0,lastLapElapsed=0,hold=null,tap=null,alarmTap=null,suppressClick=false,hintTimer=0,stoppedOutcome=null;
     let pressed=false,wakeLock=null,wakeLockPending=false,resizeObserver=null,digitGuideToken=0,digitGuideHold=0,digitGuideFade=0,digitGuideShown=false;
     const activePointers=new Map(),pairedPointers=new Set(),pendingLandscapeActions=new Map();let pairCandidate=null,twoFingerTaps=[];
