@@ -2240,6 +2240,7 @@ async function startBootPerformance() {
     await startCardPerformance();
   } finally {
     bootingPerformance = false;
+    if (view === 'performance') maybeShowGestureGuide();
   }
 }
 

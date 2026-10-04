@@ -78,6 +78,26 @@
     if (!container || container.querySelector('.magic-overview')) return;
     var customizeEnabled = customizationAllowed(root.location.pathname, doc.body.dataset.magicCustomize);
     function node(tag, text, className) { var el = doc.createElement(tag); if (text != null) el.textContent = text; if (className) el.className = className; return el; }
+    function removeRepeatedDisclosureLabels(scope) {
+      Array.from(scope.querySelectorAll('details > summary')).forEach(function (summary) {
+        var title = (summary.textContent || '').replace(/\s+/g, ' ').trim();
+        if (title !== '화면 디자인') return;
+        var details = summary.parentElement;
+        Array.from(details.querySelectorAll('label')).forEach(function (label) {
+          var selects = label.querySelectorAll('select'), controls = label.querySelectorAll('input, select, textarea, button');
+          if (selects.length !== 1 || controls.length !== 1) return;
+          var prefix = [], beforeSelect = true;
+          Array.from(label.childNodes).forEach(function (child) {
+            if (child === selects[0]) { beforeSelect = false; return; }
+            if (beforeSelect && child.nodeType === 3) prefix.push(child);
+            else if (beforeSelect && child.nodeType === 1) prefix.push(null);
+          });
+          if (prefix.length !== 1 || !prefix[0] || prefix[0].nodeValue.replace(/\s+/g, ' ').trim() !== title) return;
+          if (!selects[0].getAttribute('aria-label')) selects[0].setAttribute('aria-label', title);
+          label.removeChild(prefix[0]);
+        });
+      });
+    }
     function group(title, className) { var el = node('details', null, 'magic-settings-group ' + className); el.appendChild(node('summary', title)); return el; }
     var overview = group('개요', 'magic-overview');
     overview.appendChild(node('h2', profile.name));
@@ -119,6 +139,8 @@
     }
     function contactFooter() {
       var footer = node('div', null, 'magic-settings-footer');
+      var heading = node('h2', '의견 보내기', 'magic-contact-heading');
+      footer.appendChild(heading);
       var note = node('p', null, 'magic-contact-note');
       ['수정할 점이나 버그,', '새로운 아이디어가 있다면', '카카오톡으로 알려주세요.'].forEach(function (text) { note.appendChild(node('span', text)); });
       footer.appendChild(note);
@@ -132,11 +154,16 @@
       copy.addEventListener('click', function () { copyContactId(copy); });
       actions.appendChild(copy);
       footer.appendChild(actions);
-      var help = node('p', null, 'magic-contact-help');
-      ['연결이 안 되면 ID를 복사해', '카카오톡 친구 추가에서', '검색해 주세요.', 'ID: ' + contactId].forEach(function (text) { help.appendChild(node('span', text)); });
+      var help = node('details', null, 'magic-contact-help');
+      help.appendChild(node('summary', '연결이 안 될 때'));
+      var directions = node('p');
+      ['카카오톡이 열리지 않으면', 'ID를 복사해 주세요.', '카카오톡 친구 추가에서', 'ID 검색을 선택한 뒤', '복사한 ID로 찾아 주세요.'].forEach(function (text) { directions.appendChild(node('span', text)); });
+      help.appendChild(directions);
+      help.appendChild(node('p', 'ID: ' + contactId, 'magic-contact-id'));
       footer.appendChild(help);
       return footer;
     }
+    removeRepeatedDisclosureLabels(container);
     if (!customizeEnabled) { container.appendChild(overview); container.appendChild(contactFooter()); return; }
     var storage;
     try { storage = root.localStorage; } catch (_) { storage = null; }

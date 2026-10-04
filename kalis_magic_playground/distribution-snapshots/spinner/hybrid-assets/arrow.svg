@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img">
+  <title>Free spinning arrow</title>
+  <desc>Whole arrow. Pivot is the view center. Tip nears the rim and the tail is shorter. No dial numbers.</desc>
+  <defs>
+    <linearGradient id="hybrid-arrow" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#8f947c"/>
+      <stop offset=".42" stop-color="#f4f0df"/>
+      <stop offset=".5" stop-color="#c8c6ae"/>
+      <stop offset="1" stop-color="#6f7a68"/>
+    </linearGradient>
+  </defs>
+  <path d="M46.2 74.2 Q46.2 79.2 50 79.2 Q53.8 79.2 53.8 74.2 L53.8 29.2 L62.4 29.2 L50 5.2 L37.6 29.2 L46.2 29.2 Z" transform="translate(0.7 0.8)" fill="#07140c" opacity=".45"/>
+  <path d="M46.2 74.2 Q46.2 79.2 50 79.2 Q53.8 79.2 53.8 74.2 L53.8 29.2 L62.4 29.2 L50 5.2 L37.6 29.2 L46.2 29.2 Z" fill="url(#hybrid-arrow)" stroke="#243028" stroke-width=".7" stroke-linejoin="round"/>
+  <path d="M49.2 71.4 V31.2 L43.4 31.2 L50 12.4" fill="none" stroke="#fffaf0" stroke-opacity=".28" stroke-width=".8" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

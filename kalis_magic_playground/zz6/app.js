@@ -2260,5 +2260,5 @@ renderList();
 fillForm();
 // Start ready without writing the saved mode or requesting motion access.
 // Coin disappearance and the crack stay in sessionStorage, not in this record.
-showPerformance({ persistMode: false, keepGone: false, showGuide: false });
+showPerformance({ persistMode: false, keepGone: false, showGuide: true });
 imagesReady.then(refreshCoinImage, refreshCoinImage);

@@ -760,7 +760,7 @@ function bind() {
 // Display appearance is independent of the detector's performance state.
 const DISPLAY_THEME_KEY = "usotsuki.distribution.detector.theme.v1";
 const displayThemeSelect = document.querySelector("#display-theme");
-function normalizeDisplayTheme(value) { return value === "wine" ? "wine" : "green"; }
+function normalizeDisplayTheme(value) { return value === "wine" || value === "recorder" ? value : "green"; }
 function applyDisplayTheme(value) {
   const theme = normalizeDisplayTheme(value);
   performanceScreen.dataset.displayTheme = theme;

@@ -1245,6 +1245,7 @@ renderSaved();
 renderTwo();
 renderTargets('');
 startBootPerformance();
+maybeShowGestureGuide();
 
 if ('serviceWorker' in navigator && (location.protocol === 'http:' || location.protocol === 'https:')) {
   navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(() => {});

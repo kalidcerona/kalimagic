@@ -181,7 +181,7 @@
     #quick-card p { color: #aeaeb2; line-height: 1.5; }
     #quick-apply { width: 100%; margin-top: 1rem; background: #ff9f0a !important; color: #000 !important; font-weight: 600 !important; }
 
-    #settings-entry-tutorial { position: fixed; inset: 0; z-index: 45; display: grid; place-items: center; padding: 24px; pointer-events: none; }
+    #settings-entry-tutorial { position: fixed; inset: 0; z-index: 45; display: grid; place-items: center; padding: 24px; pointer-events: auto; }
     #settings-entry-tutorial[hidden] { display: none !important; }
     #settings-entry-tutorial .tutorial-card { width: min(100%, 320px); padding: 22px; border: 1px solid #ffffff52; border-radius: 20px; background: #1b1b20f2; color: #fff; text-align: center; box-shadow: 0 16px 48px #0009; font: 500 16px/1.55 system-ui, sans-serif; }
     #settings-entry-tutorial .tutorial-fingers { position: relative; height: 110px; width: 100px; margin: 0 auto 12px; }
@@ -282,7 +282,7 @@
     </section>
   </main>
   <div id="settings-entry-tutorial" role="dialog" aria-label="설정 여는 방법" hidden>
-    <div class="tutorial-card"><div class="tutorial-fingers" aria-hidden="true"><span></span><span></span></div><p>설정을 열려면 두 손가락으로 화면을 아래로 쓸어내리세요.</p><button id="settings-entry-tutorial-dismiss" type="button">알겠어요</button></div>
+    <div class="tutorial-card"><div class="tutorial-fingers" aria-hidden="true"><span></span><span></span></div><p>설정을 열려면 두 손가락으로 화면을 아래로 쓸어내리세요.<br>가로 화면에서는 오른쪽 위를 길게 누르면 설정이 열립니다.</p><button id="settings-entry-tutorial-dismiss" type="button">알겠어요</button></div>
   </div>
   <div id="selftest" hidden><div id="selftest-result"></div></div>
   <script type="module">
@@ -447,13 +447,20 @@ function installSettingsSwipe(open, cancel, enabled, cancelHold = cancel) {
     }
     const SETTINGS_TUTORIAL_KEY = "stopwatch-settings-entry-tutorial-v1";
     function showSettingsEntryTutorial() {
-      try { if (localStorage.getItem(SETTINGS_TUTORIAL_KEY) === "1") return; } catch (_) {}
       const tutorial = document.getElementById("settings-entry-tutorial");
+      if (!tutorial || !tutorial.hidden || location.hash.includes("selftest") || new URLSearchParams(location.search).has("selftest")) return;
+      try { if (localStorage.getItem(SETTINGS_TUTORIAL_KEY) === "1") return; } catch (_) {}
       tutorial.hidden = false;
-      try { localStorage.setItem(SETTINGS_TUTORIAL_KEY, "1"); } catch (_) {}
     }
+    document.getElementById("settings-entry-tutorial").addEventListener("pointerdown", (event) => {
+      if (event.target.closest("#settings-entry-tutorial-dismiss")) return;
+      event.preventDefault();
+      event.stopPropagation();
+    });
     document.getElementById("settings-entry-tutorial-dismiss").addEventListener("click", () => {
-      document.getElementById("settings-entry-tutorial").hidden = true;
+      const tutorial = document.getElementById("settings-entry-tutorial");
+      try { localStorage.setItem(SETTINGS_TUTORIAL_KEY, "1"); } catch (_) {}
+      tutorial.hidden = true;
     });
     const $ = id => document.getElementById(id);
     const shell=$("shell"), portraitApp=$("portrait-app"), landscapeFrame=$("landscape-frame"), landscapeApp=$("landscape-app");
@@ -601,13 +608,13 @@ function installSettingsSwipe(open, cancel, enabled, cancelHold = cancel) {
     function cancelDeferred(id){const timer=pendingLandscapeActions.get(id);if(timer)clearTimeout(timer);pendingLandscapeActions.delete(id);}
     // A canceled pointer pair will not reach its normal end handler; release its click guard here.
     function cancelPendingInteractions(){clearHold();tap=null;alarmTap=null;suppressClick=false;pendingLandscapeActions.forEach(clearTimeout);pendingLandscapeActions.clear();activePointers.clear();pairedPointers.clear();pairCandidate=null;twoFingerTaps=[];pressed=false;renderState();}
-    function onGlobalPointerDown(e){if(presetMode||!settings.hidden||!quickSettings.hidden)return;activePointers.set(e.pointerId,{time:e.timeStamp||performance.now(),x:e.clientX,y:e.clientY,moved:false});if(activePointers.size===2){alarmTap=null;const points=[...activePointers.entries()],gap=Math.abs(points[1][1].time-points[0][1].time);if(gap<=PAIR_MS){pairCandidate={ids:points.map(x=>x[0]),gap,time:Math.max(points[0][1].time,points[1][1].time),released:new Set(),valid:true};pairCandidate.ids.forEach(id=>{pairedPointers.add(id);cancelDeferred(id);});clearHold();tap=null;suppressClick=true;pressed=false;renderState();e.preventDefault();e.stopImmediatePropagation();}}else if(activePointers.size>2&&pairCandidate)pairCandidate.valid=false;}
+    function onGlobalPointerDown(e){if(!$("settings-entry-tutorial").hidden||presetMode||!settings.hidden||!quickSettings.hidden)return;activePointers.set(e.pointerId,{time:e.timeStamp||performance.now(),x:e.clientX,y:e.clientY,moved:false});if(activePointers.size===2){alarmTap=null;const points=[...activePointers.entries()],gap=Math.abs(points[1][1].time-points[0][1].time);if(gap<=PAIR_MS){pairCandidate={ids:points.map(x=>x[0]),gap,time:Math.max(points[0][1].time,points[1][1].time),released:new Set(),valid:true};pairCandidate.ids.forEach(id=>{pairedPointers.add(id);cancelDeferred(id);});clearHold();tap=null;suppressClick=true;pressed=false;renderState();e.preventDefault();e.stopImmediatePropagation();}}else if(activePointers.size>2&&pairCandidate)pairCandidate.valid=false;}
     function onGlobalPointerEnd(e){const info=activePointers.get(e.pointerId);activePointers.delete(e.pointerId);if(pairCandidate&&pairCandidate.ids.includes(e.pointerId)){if(e.type!=="pointerup"||(info&&info.moved))pairCandidate.valid=false;pairCandidate.released.add(e.pointerId);if(pairCandidate.released.size===2){if(pairCandidate.valid){twoFingerTaps.push({fingers:2,time:pairCandidate.time,gap:pairCandidate.gap});twoFingerTaps=twoFingerTaps.filter(t=>pairCandidate.time-t.time<=TRIPLE_MS);if(recognizesModeToggle(twoFingerTaps)){twoFingerTaps=[];toggleMode();}}pairCandidate.ids.forEach(id=>pairedPointers.delete(id));pairCandidate=null;setTimeout(()=>suppressClick=false,0);}}}
     function landscapeControl(e){if(presetMode||!isPrimaryPointer(e))return;pressed=true;renderState();if(state==="idle")startTimer(e);else if(state==="running")stopTimer(e);else resetTimer(true);}
     function releasePress(){if(!pressed)return;pressed=false;renderState();}
     function cycleTrick(){if(presetMode||!settings.hidden||!quickSettings.hidden)return;const previous=trickState;trickState=nextTrickState(trickState,trick3Enabled);if(previous==="seq"&&trickState!=="seq")sequenceStopCount=0;pendingDigits=[];reservedTens=stopDigit=null;pWorld.classList.remove("feedback");renderState();hidePortraitDigitGuide();}
     async function acquireWakeLock(){if(wakeLock||wakeLockPending||document.visibilityState!=="visible"||!navigator.wakeLock)return;wakeLockPending=true;try{const lock=await navigator.wakeLock.request("screen");wakeLock=lock;lock.addEventListener("release",()=>{if(wakeLock===lock)wakeLock=null;if(document.visibilityState==="visible")acquireWakeLock();});}catch(_){}finally{wakeLockPending=false;}}
-    function initApp(){installSettingsSwipe(openSettings,cancelPendingInteractions,()=>!presetMode&&state!=="running"&&settings.hidden&&quickSettings.hidden,()=>{clearHold();tap=null;alarmTap=null;});loadStorage();try{pDigitGuideOn.checked=localStorage.getItem(DIGIT_GUIDE_KEY)==="1";}catch(_){pDigitGuideOn.checked=false;}setMode(uiMode);showPortraitDigitGuide();
+    function initApp(){installSettingsSwipe(openSettings,cancelPendingInteractions,()=>$("settings-entry-tutorial").hidden&&!presetMode&&state!=="running"&&settings.hidden&&quickSettings.hidden,()=>{clearHold();tap=null;alarmTap=null;});loadStorage();try{pDigitGuideOn.checked=localStorage.getItem(DIGIT_GUIDE_KEY)==="1";}catch(_){pDigitGuideOn.checked=false;}setMode(uiMode);showPortraitDigitGuide();
       document.addEventListener("pointerdown",onGlobalPointerDown,{capture:true,passive:false});window.addEventListener("pointermove",handlePointerMove,{passive:false});window.addEventListener("pointerup",e=>{onGlobalPointerEnd(e);handlePresetEnd(e);if(hold&&hold.pointerId===e.pointerId)clearHold();releasePress();});window.addEventListener("pointercancel",e=>{onGlobalPointerEnd(e);handlePresetEnd(e);if(hold&&hold.pointerId===e.pointerId)clearHold();releasePress();});
       document.addEventListener("pointerdown",handlePresetDown,{capture:true,passive:false});
       pControl.addEventListener("click",()=>{if(suppressClick)return;if(presetMode){if(presetKind!=="portrait-group")return;exitPresetMode(false);}if(state==="running")stopTimer();else startTimer();});pLap.addEventListener("click",()=>{if(presetMode||suppressClick)return;if(state==="running")addLap();else resetTimer();});pTime.addEventListener("click",()=>{if(!suppressClick)cycleTrick();});
@@ -618,7 +625,8 @@ function installSettingsSwipe(open, cancel, enabled, cancelHold = cancel) {
       pNumeric.addEventListener("pointerdown",e=>{const track=pTrackRect();if(state!=="running"&&presetIndexFromX(e.clientX,track.left,track.width)!==null)beginHold(e,d=>enterPortraitPreset(d.pointerId,d.x,d.y));});
       lControl.addEventListener("pointerdown",landscapeControl);
       $("l-trick-zone").addEventListener("pointerdown",e=>deferLandscapeAction(e,cycleTrick));
-      document.addEventListener("pointerdown",e=>{if(uiMode!=="landscape"||presetMode||state==="running"||!isPrimaryPointer(e)||e.target.closest("#l-control,#l-trick-zone,#l-settings-zone,#settings,#install-nudge"))return;const p=toAppPoint(e.clientX,e.clientY,innerWidth,innerHeight,isRotatedLayout());if(landscapePresetHoldApplies(e.target,p.x,appSize().width))deferLandscapeHold(e,enterLandscapePreset);},{passive:true});
+      $("l-settings-zone").addEventListener("pointerdown",e=>{if(uiMode!=="landscape"||state==="running"||presetMode||!isPrimaryPointer(e)||!settings.hidden||!quickSettings.hidden)return;beginHold(e,()=>{if(uiMode==="landscape"&&state!=="running"&&!presetMode&&settings.hidden&&quickSettings.hidden)openSettings();});});
+      document.addEventListener("pointerdown",e=>{if(uiMode!=="landscape"||presetMode||state==="running"||!isPrimaryPointer(e)||e.target.closest("#l-control,#l-trick-zone,#l-settings-zone,#settings,#settings-entry-tutorial,#install-nudge"))return;const p=toAppPoint(e.clientX,e.clientY,innerWidth,innerHeight,isRotatedLayout());if(landscapePresetHoldApplies(e.target,p.x,appSize().width))deferLandscapeHold(e,enterLandscapePreset);},{passive:true});
       settingsClose.addEventListener("click",closeSettings);modePortrait.addEventListener("click",()=>setMode("portrait"));modeLandscape.addEventListener("click",()=>setMode("landscape"));pDigitGuideOn.addEventListener("change",()=>{try{localStorage.setItem(DIGIT_GUIDE_KEY,pDigitGuideOn.checked?"1":"0");}catch(_){}if(!pDigitGuideOn.checked)hidePortraitDigitGuide();});
       slotKindText.addEventListener("click",()=>setSlotSaveKind("text"));slotKindSeq.addEventListener("click",()=>setSlotSaveKind("seq"));
       $("preset-save").addEventListener("click",savePresetEditor);
@@ -629,7 +637,7 @@ function installSettingsSwipe(open, cancel, enabled, cancelHold = cancel) {
       sequenceSlots.addEventListener("click",e=>{const row=e.target.closest(".sequence-slot");if(!row)return;const index=Number(row.dataset.slot);if(e.target.closest(".sequence-slot-edit"))editPreset(index);else if(e.target.closest(".sequence-slot-apply"))applyPresetSlotToDom(presetSlotValues[index]);});
       $("quick-close").addEventListener("click",closeQuickSettings);$("quick-apply").addEventListener("click",applyQuickValue);
       quickValue.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();applyQuickValue();}else if(e.key==="Escape")closeQuickSettings();});
-      window.addEventListener("resize",updateLandscapeHitZones);document.addEventListener("magic-appearance-change",updateLandscapeHitZones);window.addEventListener("blur",cancelPendingInteractions);if(typeof ResizeObserver==="function"){resizeObserver=new ResizeObserver(updateLandscapeHitZones);resizeObserver.observe(lControl);resizeObserver.observe(lTime);resizeObserver.observe(landscapeApp);}document.addEventListener("contextmenu",e=>e.preventDefault());document.addEventListener("pointerdown",()=>{if(!wakeLock)acquireWakeLock();});document.addEventListener("visibilitychange",()=>{if(document.hidden){clearHold();tap=null;}else acquireWakeLock();});renderState();acquireWakeLock();}
+      window.addEventListener("resize",updateLandscapeHitZones);document.addEventListener("magic-appearance-change",updateLandscapeHitZones);window.addEventListener("blur",cancelPendingInteractions);if(typeof ResizeObserver==="function"){resizeObserver=new ResizeObserver(updateLandscapeHitZones);resizeObserver.observe(lControl);resizeObserver.observe(lTime);resizeObserver.observe(landscapeApp);}document.addEventListener("contextmenu",e=>e.preventDefault());document.addEventListener("pointerdown",()=>{if(!wakeLock)acquireWakeLock();});document.addEventListener("visibilitychange",()=>{if(document.hidden){clearHold();tap=null;}else acquireWakeLock();});renderState();showSettingsEntryTutorial();acquireWakeLock();}
     if(location.hash==="#selftest"){$("shell").hidden=true;$("selftest").hidden=false;runSelfTests();}else initApp();
   </script>
   <script>

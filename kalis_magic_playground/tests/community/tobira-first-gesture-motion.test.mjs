@@ -58,6 +58,8 @@ function element(id) {
 }
 
 async function boot({ storage = memoryStorage(), permission = 'granted' } = {}) {
+  // Motion tests begin after the separately verified first-run guide is acknowledged.
+  storage.setItem('tobira.settings-gesture-guide.v1', 'done');
   const elements = new Map();
   const el = (id) => {
     if (!elements.has(id)) elements.set(id, element(id));

@@ -107,7 +107,7 @@ async function fixture({ theme, store = new Map(), readFails = false, stateReadF
 }
 
 test('approved themes validate saved values and keep working when theme storage is blocked', async () => {
-  for (const [theme, expected, readFails] of [[undefined, 'green', false], ['green', 'green', false], ['wine', 'wine', false], ['invalid', 'green', false], ['', 'green', false], ['wine', 'green', true]]) {
+  for (const [theme, expected, readFails] of [[undefined, 'green', false], ['green', 'green', false], ['wine', 'wine', false], ['recorder', 'recorder', false], ['invalid', 'green', false], ['', 'green', false], ['wine', 'green', true]]) {
     const f = await fixture({ theme, readFails });
     try { assert.equal(f.element('performance-screen').dataset.displayTheme, expected); assert.equal(f.element('display-theme').value, expected); assert.equal(f.state().attemptCount, 0); }
     finally { f.restore(); }
@@ -180,6 +180,89 @@ test('both rectangular pad corners count, blank space never holds, and movement 
       f.pointer('pointerdown', 170, 240); f.tick(50); f.pointer('pointerup', 170, 240); assert.equal(f.state().attemptCount, 2);
     } finally { f.restore(); }
   }
+});
+
+test('recorder theme persists, falls back to green, and a hold keeps attempts, timing, sound and scan', async () => {
+  const html = readFileSync(new URL('../../zz7/index.html', import.meta.url), 'utf8');
+  const css = readFileSync(new URL('../../zz7/style.css', import.meta.url), 'utf8');
+  const sw = readFileSync(new URL('../../zz7/sw.js', import.meta.url), 'utf8');
+  assert.match(html, /<option value="recorder">기계식 기록기<\/option>/);
+  assert.match(css, /#performance-screen\[data-display-theme="recorder"\]/);
+  assert.match(css, /recorder-assets\/recorder-shell\.webp/);
+  assert.match(css, /#performance-screen\[data-display-theme="wine"\]/);
+  assert.match(css, /holdem-assets\/felt-grain\.svg/);
+  assert.match(css, /holdem-assets\/leather-grain\.svg/);
+  assert.match(sw, /v20261004-first-guide-1/);
+  assert.match(sw, /recorder-assets\/recorder-shell\.webp/);
+  assert.match(sw, /pathname\.startsWith\('\/tools\/'\)/);
+  const store = new Map([['usotsuki.detector.sound.v1', '0']]);
+  const f = await fixture({ store, theme: 'recorder' });
+  try {
+    assert.equal(f.element('performance-screen').dataset.displayTheme, 'recorder');
+    assert.equal(f.element('display-theme').value, 'recorder');
+    assert.equal(f.element('sound-enabled').checked, false);
+    assert.equal(f.element('scan-duration').value, '0.5');
+    assert.equal(f.state().attemptCount, 0);
+    f.element('truth-attempt').value = '2,4';
+    f.element('truth-attempt').dispatch('change');
+    f.element('start-performance').dispatch('click');
+    f.pointer('pointerdown', 170, 240);
+    assert.equal(f.element('test-indicator').textContent, '검사 중');
+    const state = f.store.get(STATE);
+    const timers = [...f.timers.entries()];
+    const pulses = JSON.stringify(f.vibrations);
+    f.theme('recorder');
+    assert.equal(f.store.get(THEME), 'recorder');
+    assert.equal(f.store.get(STATE), state);
+    assert.deepEqual([...f.timers.entries()], timers);
+    assert.equal(JSON.stringify(f.vibrations), pulses);
+    assert.equal(f.element('test-indicator').textContent, '검사 중');
+    assert.equal(f.element('sound-enabled').checked, false);
+    assert.equal(store.get('usotsuki.detector.sound.v1'), '0');
+    assert.equal(f.element('scan-duration').value, '0.5');
+    assert.equal(store.get(SCAN), '0.5');
+    f.tick(499);
+    assert.equal(f.state().attemptCount, 0);
+    f.tick(1);
+    assert.equal(f.state().attemptCount, 1);
+    assert.equal(f.element('verdict').textContent, '거짓');
+    assert.equal(f.element('performance-screen').dataset.displayTheme, 'recorder');
+    f.pointer('pointerup', 170, 240);
+    f.theme('green');
+    assert.equal(f.state().attemptCount, 1);
+    assert.equal(f.element('verdict').textContent, '거짓');
+    assert.equal(f.element('sound-enabled').checked, false);
+    f.theme('not-a-theme');
+    assert.equal(f.element('performance-screen').dataset.displayTheme, 'green');
+    assert.equal(store.get(THEME), 'green');
+    assert.equal(f.state().attemptCount, 1);
+    f.theme('recorder');
+    assert.equal(f.element('performance-screen').dataset.displayTheme, 'recorder');
+    assert.equal(f.state().attemptCount, 1);
+    assert.equal(f.element('verdict').textContent, '거짓');
+  } finally { f.restore(); }
+  const invalid = await fixture({ theme: 'chart-recorder' });
+  try {
+    assert.equal(invalid.element('performance-screen').dataset.displayTheme, 'green');
+    assert.equal(invalid.element('display-theme').value, 'green');
+    assert.equal(invalid.state().attemptCount, 0);
+  } finally { invalid.restore(); }
+  const blocked = await fixture({ writeFails: true });
+  try {
+    blocked.theme('recorder');
+    assert.equal(blocked.element('performance-screen').dataset.displayTheme, 'recorder');
+    assert.equal(blocked.store.has(THEME), false);
+    assert.equal(blocked.state().attemptCount, 0);
+    assert.equal(blocked.element('sound-enabled').checked, false);
+  } finally { blocked.restore(); }
+  const relaunched = await fixture({ store });
+  try {
+    assert.equal(relaunched.element('performance-screen').dataset.displayTheme, 'recorder');
+    assert.equal(relaunched.state().attemptCount, 0);
+    assert.deepEqual(relaunched.state().settings.truthAttempts, [2, 4]);
+    assert.equal(relaunched.element('scan-duration').value, '0.5');
+    assert.equal(relaunched.element('sound-enabled').checked, false);
+  } finally { relaunched.restore(); }
 });
 
 test('blank-space downward swipe opens settings and unsupported vibration help stays outside the hidden group', async () => {

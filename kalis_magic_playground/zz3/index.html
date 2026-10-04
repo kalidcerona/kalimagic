@@ -399,7 +399,7 @@
     #app:has(> #date-settings.open) { touch-action: auto; }
     #date-settings { touch-action: pan-y; }
 
-    #settings-entry-tutorial { position: fixed; inset: 0; z-index: 45; display: grid; place-items: center; padding: 24px; pointer-events: none; }
+    #settings-entry-tutorial { position: fixed; inset: 0; z-index: 45; display: grid; place-items: center; padding: 24px; pointer-events: auto; }
     #settings-entry-tutorial[hidden] { display: none !important; }
     #settings-entry-tutorial .tutorial-card { width: min(100%, 320px); padding: 22px; border: 1px solid #ffffff52; border-radius: 20px; background: #1b1b20f2; color: #fff; text-align: center; box-shadow: 0 16px 48px #0009; font: 500 16px/1.55 system-ui, sans-serif; }
     #settings-entry-tutorial .tutorial-fingers { position: relative; height: 110px; width: 100px; margin: 0 auto 12px; }
@@ -1655,10 +1655,10 @@ function installSettingsSwipe(open, cancel, enabled, cancelHold = cancel) {
       try { if (localStorage.getItem(SETTINGS_TUTORIAL_KEY) === "1") return; } catch (_) {}
       const tutorial = document.getElementById("settings-entry-tutorial");
       tutorial.hidden = false;
-      try { localStorage.setItem(SETTINGS_TUTORIAL_KEY, "1"); } catch (_) {}
     }
     document.getElementById("settings-entry-tutorial-dismiss").addEventListener("click", () => {
       document.getElementById("settings-entry-tutorial").hidden = true;
+      try { localStorage.setItem(SETTINGS_TUTORIAL_KEY, "1"); } catch (_) {}
     });
 
     function setupCalculator() {
@@ -2186,6 +2186,7 @@ function installSettingsSwipe(open, cancel, enabled, cancelHold = cancel) {
       runSelfTests();
     } else {
       setupCalculator();
+      showSettingsEntryTutorial();
       acquireWakeLock();
     }
   </script>

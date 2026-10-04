@@ -62,7 +62,6 @@ function showGestureGuideOnce() {
   if (guideShown) return;
   try {
     if (window.localStorage.getItem(GUIDE_KEY) === "1") return;
-    window.localStorage.setItem(GUIDE_KEY, "1");
   } catch {
     // The guide still appears once in this session when storage is unavailable.
   }
@@ -77,7 +76,10 @@ function showGestureGuideOnce() {
   </div>`;
   document.body.append(guide);
   const button = guide.querySelector("button");
-  button.addEventListener("click", () => guide.remove(), { once: true });
+  button.addEventListener("click", () => {
+    guide.remove();
+    try { window.localStorage.setItem(GUIDE_KEY, "1"); } catch {}
+  }, { once: true });
   button.focus();
 }
 
@@ -522,4 +524,5 @@ function startBootPerformance() {
 
 loadRecord();
 startBootPerformance();
+showGestureGuideOnce();
 registerShell();

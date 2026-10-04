@@ -7,8 +7,8 @@ const read = (route, file) => readFile(new URL(`../../${route}/${file}`, import.
 
 test('shared USOTSUKI and TYCHE retain the approved personal surfaces and artwork', async () => {
   for (const [personal, snapshot, files] of [
-    ['zz7', 'usotsuki', USOTSUKI_FILES.filter(f => /\.css$|^holdem-assets\//.test(f))],
-    ['zz11', 'spinner', SPINNER_FILES.filter(f => /\.css$|^casino-assets\//.test(f))],
+    ['zz7', 'usotsuki', USOTSUKI_FILES.filter(f => /\.css$|^(holdem-assets|recorder-assets)\//.test(f))],
+    ['zz11', 'spinner', SPINNER_FILES.filter(f => /\.css$|^(casino-assets|hybrid-assets)\//.test(f))],
   ]) {
     assert.ok(files.length > 3);
     for (const file of files) assert.deepEqual(await read(`distribution-snapshots/${snapshot}`, file), await read(personal, file), `${snapshot}/${file}`);

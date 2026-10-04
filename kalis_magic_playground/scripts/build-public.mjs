@@ -124,7 +124,7 @@ export const CHOICE_FILES = [
   'sw.js'
 ];
 export const NEW_APP_FILES = CHOICE_FILES;
-export const USOTSUKI_FILES = NEW_APP_FILES.filter((file) => file !== 'app.js').concat('detector.js', 'detector-panel-grok.svg', 'holdem-assets/felt-grain.svg', 'holdem-assets/leather-grain.svg', 'holdem-assets/table-rail.svg');
+export const USOTSUKI_FILES = NEW_APP_FILES.filter((file) => file !== 'app.js').concat('first-run-guide.js', 'detector.js', 'detector-panel-grok.svg', 'holdem-assets/felt-grain.svg', 'holdem-assets/leather-grain.svg', 'holdem-assets/table-rail.svg', 'recorder-assets/recorder-shell.webp');
 export const ASRAI_FILES = [
   'brand-logo.jpg', 'brand-logo.png', 'contacts.js', 'icon-192.png',
   'icon-512.png', 'icon.svg', 'index.html', 'install-ui.js',
@@ -136,6 +136,9 @@ export const ALTER_FILES = [
   'manifest.webmanifest', 'performance.js', 'style.css', 'sw.js', 'vision.js'
 ];
 export const SPINNER_FILES = [
+  'hybrid-assets/arrow.svg',
+  'hybrid-assets/wheel-emerald.svg',
+  'hybrid-assets/wheel-burgundy.svg',
   'casino-assets/felt-emerald.svg',
   'casino-assets/felt-burgundy.svg',
   'casino-assets/wheel-emerald.svg',
@@ -148,10 +151,12 @@ export const SPINNER_FILES = [
   'logic.js', 'manifest.webmanifest', 'style.css', 'sw.js'
 ];
 export const MEMDECK_FILES = [
+  'first-run-guide.js',
   'index.html', 'style.css', 'app.mjs', 'core.mjs', 'data.mjs', 'mnemonic.mjs',
   'manifest.webmanifest', 'sw.js', 'icon.svg', 'icon-192.png', 'icon-512.png'
 ];
 export const QR_FILES = [
+  'first-run-guide.js',
   'index.html', 'style.css', 'app.mjs', 'core.mjs', 'manifest.webmanifest', 'sw.js', 'brand-logo.png',
   'icons/icon-192.png', 'icons/icon-512.png', 'vendor/qrcodegen.js', 'vendor/jsQR.js',
   'vendor/LICENSE-nayuki.txt', 'vendor/LICENSE-jsqr.txt'
