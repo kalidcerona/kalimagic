@@ -481,8 +481,8 @@ button { cursor: pointer; }
 .wheel-wrap { background: transparent; box-shadow: 0 12px 18px var(--shadow), 0 2px 4px rgba(60, 32, 12, .16); }
 .wheel { background: transparent; box-shadow: none; }
 .wheel-face { display: none; width: 100%; height: 100%; }
-.stage:not([data-table-theme="burgundy"]) .wheel-emerald,
-.stage[data-table-theme="burgundy"] .wheel-burgundy { display: block; }
+.stage:not([data-screen-design="hybrid"]):not([data-table-theme="burgundy"]) .casino-face.wheel-emerald,
+.stage:not([data-screen-design="hybrid"])[data-table-theme="burgundy"] .casino-face.wheel-burgundy { display: block; }
 
 .wheel-pin {
   border: 2px solid var(--brass-hi);
@@ -514,3 +514,184 @@ button { cursor: pointer; }
 /* The original bright diamond is the acknowledged state; only the two top sights dim. */
 .sight-a:not(.is-acknowledged), .sight-b:not(.is-acknowledged) { filter: brightness(.38); }
 .sight-a.is-acknowledged, .sight-b.is-acknowledged { filter: none; }
+
+/* Hybrid chrome stays out of the casino grid until that screen design is selected. */
+.instrument-header { display: none; }
+
+/* Hybrid stage: fresh modern/concept ground, minimal rectangular instrument, free arrow. */
+.stage[data-screen-design="hybrid"] {
+  --bezel: #c6c7a5;
+  --bezel-deep: #1a2820;
+  --plate: #243028;
+  --pin-hi: #e8e4d2;
+  --pin-mid: #9a9c7c;
+  --pin-deep: #213e29;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: 100dvh;
+  padding:
+    max(32px, env(safe-area-inset-top, 0px))
+    max(12px, env(safe-area-inset-right, 0px))
+    max(12px, env(safe-area-inset-bottom, 0px))
+    max(12px, env(safe-area-inset-left, 0px));
+  color: #e9e6d8;
+  background-color: #19221d;
+  background-image:
+    repeating-linear-gradient(0deg, transparent 0 3px, #d8c9a703 3px 4px),
+    radial-gradient(ellipse at 28% 13%, #30382b 0, transparent 49%),
+    radial-gradient(ellipse at 8% 20%, #4b4439, transparent 55%),
+    linear-gradient(145deg, #393a30 0%, #262d24 50%, #182219 100%);
+}
+
+.stage[data-screen-design="hybrid"][data-table-theme="burgundy"] {
+  --bezel: #e4d0c4;
+  --bezel-deep: #241418;
+  --plate: #2a1c20;
+  --pin-hi: #f3e6de;
+  --pin-mid: #c4a498;
+  --pin-deep: #4a3034;
+  color: #f0e4dc;
+  background-color: #1a1214;
+  background-image:
+    repeating-linear-gradient(0deg, transparent 0 3px, #d8c9a703 3px 4px),
+    radial-gradient(ellipse at 28% 13%, #3a2a2c 0, transparent 49%),
+    radial-gradient(ellipse at 8% 20%, #4b3938, transparent 55%),
+    linear-gradient(145deg, #392e30 0%, #261c20 50%, #181214 100%);
+}
+
+.stage[data-screen-design="hybrid"] .nap,
+.stage[data-screen-design="hybrid"] .cushion,
+.stage[data-screen-design="hybrid"] .brass-lip,
+.stage[data-screen-design="hybrid"] .field,
+.stage[data-screen-design="hybrid"] .rail { display: none; }
+
+.stage[data-screen-design="hybrid"] .instrument-header {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 72px;
+  margin: 0;
+  padding: 0 6px;
+  border-bottom: 1px solid #a4ac9033;
+}
+
+.stage[data-screen-design="hybrid"] .instrument-title {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+}
+
+.stage[data-screen-design="hybrid"] .wordmark {
+  margin: 0;
+  font-family: inherit;
+  font-size: 21px;
+  font-weight: 550;
+  letter-spacing: .18em;
+  line-height: 1;
+}
+
+.stage[data-screen-design="hybrid"] .instrument-kicker {
+  margin: 0;
+  color: #a6ad94;
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  font-size: 9px;
+  font-weight: 400;
+  letter-spacing: .12em;
+  line-height: 1;
+}
+
+.stage[data-screen-design="hybrid"] .instrument-header .spin-status {
+  margin: 0;
+  color: #d9d4c4;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-align: right;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, .35);
+  white-space: nowrap;
+}
+
+.stage[data-screen-design="hybrid"] .instrument-header .spin-status:empty { display: none; }
+
+.stage[data-screen-design="hybrid"] .wheel-area {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  margin: 0;
+  display: grid;
+  place-items: center;
+  container-type: size;
+  background: none;
+  border: 0;
+  box-shadow: none;
+}
+
+.stage[data-screen-design="hybrid"] .wheel-area::before,
+.stage[data-screen-design="hybrid"] .wheel-area::after { content: none; background: none; box-shadow: none; border-radius: 0; }
+
+.stage[data-screen-design="hybrid"] .wheel-wrap {
+  position: relative;
+  z-index: 1;
+  width: min(calc((100vw - 32px) * 380 / 392), calc((100dvh - 132px) * 380 / 550), 420px);
+  aspect-ratio: 1;
+  justify-self: center;
+  overflow: visible;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.stage[data-screen-design="hybrid"] .wheel {
+  inset: auto;
+  left: 50%;
+  top: 50%;
+  width: calc(100% * 392 / 380);
+  height: calc(100% * 550 / 380);
+  overflow: visible;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  z-index: 0;
+  transform: translate(-50%, -48.9091%);
+  filter: drop-shadow(0 18px 16px rgba(7, 15, 10, .45));
+  pointer-events: none;
+}
+
+.stage[data-screen-design="hybrid"] .casino-face { display: none; }
+.stage[data-screen-design="hybrid"]:not([data-table-theme="burgundy"]) .hybrid-face.wheel-emerald,
+.stage[data-screen-design="hybrid"][data-table-theme="burgundy"] .hybrid-face.wheel-burgundy { display: block; }
+
+.stage[data-screen-design="hybrid"] .wheel-pin {
+  width: 11.58%;
+  border: .65px solid var(--bezel);
+  background: radial-gradient(circle at 32% 24%, var(--pin-hi) 0%, var(--pin-mid) 48%, #53654a 76%, var(--pin-deep) 100%);
+  box-shadow: 0 0 0 2px var(--bezel-deep);
+}
+
+.stage[data-screen-design="hybrid"] .wheel-pin span {
+  width: 46%;
+  height: 2px;
+  background: var(--pin-deep);
+  box-shadow: none;
+}
+
+.stage[data-screen-design="hybrid"][data-table-theme="burgundy"] .wheel-pin {
+  background: radial-gradient(circle at 32% 24%, var(--pin-hi) 0%, var(--pin-mid) 48%, #6a4548 76%, var(--pin-deep) 100%);
+}
+
+.stage[data-screen-design="hybrid"] .sight { z-index: 6; }
+.stage[data-screen-design="hybrid"] .sight-a { top: calc(10px + var(--table-safe-top)); left: calc(8px + env(safe-area-inset-left, 0px)); }
+.stage[data-screen-design="hybrid"] .sight-b { top: calc(10px + var(--table-safe-top)); right: calc(8px + env(safe-area-inset-right, 0px)); }
+.stage[data-screen-design="hybrid"] .sight-c { bottom: calc(10px + env(safe-area-inset-bottom, 0px)); left: calc(8px + env(safe-area-inset-left, 0px)); opacity: .45; }
+.stage[data-screen-design="hybrid"] .sight-d { bottom: calc(10px + env(safe-area-inset-bottom, 0px)); right: calc(8px + env(safe-area-inset-right, 0px)); opacity: .45; }
+
+@media (max-width: 390px) {
+  .stage[data-screen-design="hybrid"] .instrument-header { min-height: 64px; }
+  .stage[data-screen-design="hybrid"] .wordmark { font-size: 18px; }
+}

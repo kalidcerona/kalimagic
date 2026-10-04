@@ -2,13 +2,18 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readFileSync } from 'node:fs';
 import { angularDistance } from '../../zz11/logic.js';
+import { resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
+const appDir = resolve(import.meta.dirname, '../../zz11');
 
-function installDom({ guideSeen = true, finePointer = true, initialState = null, initialTheme, storageReadFails = false, storageWriteFails = false, reducedMotion = false, sharedStore = null } = {}) {
+function installDom({ guideSeen = true, finePointer = true, initialState = null, initialTheme, initialDesign, storageReadFails = false, storageWriteFails = false, reducedMotion = false, sharedStore = null } = {}) {
   const elements = new Map();
+  const allElements = [];
   const documentListeners = new Map();
   const windowListeners = new Map();
   const mediaQueries = [];
   const store = sharedStore || new Map();
+  if (initialDesign !== undefined) store.set('zz11-screen-design-v1', initialDesign);
   if (initialTheme !== undefined) store.set('zz11-table-theme-v1', initialTheme);
   if (guideSeen) store.set('zz11-guide-seen-v2', '1');
   if (initialState) store.set('zz11-spinner-state-v2', JSON.stringify(initialState));
@@ -41,22 +46,24 @@ function installDom({ guideSeen = true, finePointer = true, initialState = null,
       addEventListener(type, fn) { listeners.set(type, fn); },
       listeners,
       getBoundingClientRect() { return { left: 0, top: 0, width: 200, height: 200 }; },
+      get src() { return el.attributes.src || ''; },
+      set src(value) { el.attributes.src = value; },
       setPointerCapture() {},
-      closest(selector) { return selector === `#${id}` ? el : null; },
       appendChild(child) { child.parentElement = el; return child; },
+      closest(selector) { return selector === `#${id}` ? el : null; },
       focus() {},
     };
     elements.set(id, el);
+    allElements.push(el);
     return el;
   }
-  const html = readFileSync(new URL('../../zz11/index.html', import.meta.url), 'utf8');
+  const html = readFileSync(resolve(appDir, 'index.html'), 'utf8');
   let stage = null;
   for (const match of html.matchAll(/<([a-z][a-z0-9-]*)\b([^>]+)>/gi)) {
     const attributes = Object.fromEntries(Array.from(match[2].matchAll(/([\w-]+)="([^"]*)"/g), item => [item[1], item[2]]));
     const isStage = (attributes.class || '').split(/\s+/).includes('stage');
-    const isStatusSlot = (attributes.class || '').split(/\s+/).some(name => name === 'instrument-header' || name === 'stage-bottom');
-    if (!attributes.id && !isStage && !isStatusSlot) continue;
-    const el = make(attributes.id || (isStage ? 'stage' : attributes.class.split(/\s+/)[0]));
+
+    const el = make(attributes.id || (isStage ? 'stage' : `anon-${allElements.length}`));
     el.tagName = match[1].toUpperCase();
     el.attributes = attributes;
     el.hidden = /(?:^|\s)hidden(?:\s|$)/.test(match[2]);
@@ -69,7 +76,7 @@ function installDom({ guideSeen = true, finePointer = true, initialState = null,
   assert.ok(stage, 'real HTML provides the stage');
   const documentStub = {
     getElementById: (id) => elements.get(id) || null,
-    querySelector: (selector) => selector.startsWith('.') ? [...elements.values()].find(el => el.classList.contains(selector.slice(1))) || null : null,
+    querySelector: (selector) => selector === '.stage' ? stage : selector.startsWith('.') ? allElements.find(el => el.classList.contains(selector.slice(1))) || null : null,
     addEventListener(type, fn) { documentListeners.set(type, fn); },
     documentElement: make('documentElement'),
     body: make('body'),
@@ -95,8 +102,8 @@ function installDom({ guideSeen = true, finePointer = true, initialState = null,
   replace('navigator', windowStub.navigator);
   replace('matchMedia', (query) => windowStub.matchMedia(query));
   replace('localStorage', {
-    getItem: (key) => { if (storageReadFails && key === 'zz11-table-theme-v1') throw new Error('Storage unavailable'); return store.has(key) ? store.get(key) : null; },
-    setItem: (key, value) => { if (storageWriteFails && key === 'zz11-table-theme-v1') throw new Error('Storage unavailable'); store.set(key, String(value)); },
+    getItem: (key) => { if (storageReadFails && ['zz11-table-theme-v1','zz11-screen-design-v1'].includes(key)) throw new Error('Storage unavailable'); return store.has(key) ? store.get(key) : null; },
+    setItem: (key, value) => { if (storageWriteFails && ['zz11-table-theme-v1','zz11-screen-design-v1'].includes(key)) throw new Error('Storage unavailable'); store.set(key, String(value)); },
   });
   return {
     elements, documentListeners, windowListeners, mediaQueries, store, stage, html,
@@ -149,7 +156,7 @@ function assertCornerCue(dom, cue) {
 
 async function loadSpinner(options) {
   const dom = installDom(options);
-  await import(`../../zz11/app.js?casino=${options.moduleId}`);
+  await import(`${pathToFileURL(resolve(appDir, 'app.js')).href}?review=${options.moduleId}`);
   return dom;
 }
 
@@ -243,6 +250,11 @@ test('corner cues and theme preserve the forced outcome, eight-entry queue and a
       }
       assert.equal(animations.length, 1, 'pending inputs do not animate before current completion');
       const duringSpin = savedState(dom.store);
+      fire(dom.elements.get('screen-design').listeners, 'change', { target: { value: 'hybrid' } });
+      assert.deepEqual(savedState(dom.store), duringSpin);
+      assert.equal(animations.length, 1, 'design change preserves active animation');
+      assert.equal(animations[0].cancelled, undefined);
+      fire(dom.elements.get('screen-design').listeners, 'change', { target: { value: 'casino' } });
       fire(dom.elements.get('table-theme').listeners, 'change', { target: { value: 'burgundy' } });
       assert.deepEqual(savedState(dom.store), duringSpin, 'theme change during a spin preserves state');
       assertCornerCue(dom, 'acknowledged');
@@ -270,4 +282,65 @@ test('corner cues and theme preserve the forced outcome, eight-entry queue and a
       assert.equal(dom.stage.dataset.tableTheme, 'burgundy');
     } finally { dom.restore(); }
   }
+});
+
+for (const palette of ['emerald', 'burgundy']) {
+  for (const [stored, expected] of [[undefined, 'casino'], ['', 'casino'], ['invalid', 'casino'], ['casino', 'casino'], ['hybrid', 'hybrid']]) {
+    test(`${palette}/${String(stored)}: screen design validates and remains independent of palette/state`, async () => {
+      const dom = await loadSpinner({ moduleId: `design-${palette}-${stored}`, initialTheme: palette, initialDesign: stored });
+      try {
+        assert.match(dom.html, /data-screen-design="casino"/, 'initial HTML prevents hybrid flash');
+        assert.equal(dom.stage.dataset.screenDesign, expected);
+        assert.equal(dom.elements.get('screen-design').value, expected);
+        const before = savedState(dom.store), rotation = dom.elements.get('spinner-arrow').style.transform;
+        fire(dom.elements.get('screen-design').listeners, 'change', { target: { value: 'hybrid' } });
+        assert.equal(dom.stage.dataset.screenDesign, 'hybrid');
+        assert.equal(dom.elements.get('spin-status').parentElement.classList.contains('instrument-header'), true);
+        assert.equal(dom.elements.get('spinner-arrow').src, './hybrid-assets/arrow.svg');
+        assert.equal(dom.stage.dataset.tableTheme, palette);
+        assert.equal(dom.store.get('zz11-screen-design-v1'), 'hybrid');
+        assert.deepEqual(savedState(dom.store), before);
+        assert.equal(dom.elements.get('spinner-arrow').style.transform, rotation);
+        fire(dom.elements.get('screen-design').listeners, 'change', { target: { value: 'casino' } });
+        assert.equal(dom.stage.dataset.screenDesign, 'casino');
+        assert.equal(dom.elements.get('spin-status').parentElement.classList.contains('stage-bottom'), true);
+        assert.equal(dom.elements.get('spinner-arrow').src, './casino-assets/arrow.svg');
+        assert.equal(dom.stage.dataset.tableTheme, palette);
+        assert.deepEqual(savedState(dom.store), before);
+        const ids = [...dom.html.matchAll(/\bid="([^"]+)"/g)].map(m => m[1]);
+        assert.equal(ids.length, new Set(ids).size, 'actual HTML IDs are unique');
+      } finally { dom.restore(); }
+    });
+  }
+}
+for (const failure of ['read', 'write']) {
+  test(`screen design tolerates storage ${failure} failure`, async () => {
+    const dom = await loadSpinner({ moduleId: `design-storage-${failure}`, initialDesign: 'hybrid', storageReadFails: failure === 'read', storageWriteFails: failure === 'write' });
+    try {
+      assert.equal(dom.stage.dataset.screenDesign, failure === 'read' ? 'casino' : 'hybrid');
+      fire(dom.elements.get('screen-design').listeners, 'change', { target: { value: 'hybrid' } });
+      assert.equal(dom.stage.dataset.screenDesign, 'hybrid');
+      assert.equal(savedState(dom.store).targetAngle, null);
+    } finally { dom.restore(); }
+  });
+}
+
+test('screen design and palette survive restart/relaunch with independent keys', async () => {
+  const sharedStore = new Map();
+  const dom = await loadSpinner({ moduleId: 'screen-design-relaunch-first', sharedStore });
+  try {
+    fire(dom.elements.get('screen-design').listeners, 'change', { target: { value: 'hybrid' } });
+    fire(dom.elements.get('table-theme').listeners, 'change', { target: { value: 'burgundy' } });
+    fire(dom.elements.get('start-performance').listeners, 'click', {});
+    assert.equal(dom.stage.dataset.screenDesign, 'hybrid');
+    assert.equal(dom.stage.dataset.tableTheme, 'burgundy');
+  } finally { dom.restore(); }
+  const again = await loadSpinner({ moduleId: 'screen-design-relaunch-second', sharedStore });
+  try {
+    assert.equal(again.stage.dataset.screenDesign, 'hybrid');
+    assert.equal(again.stage.dataset.tableTheme, 'burgundy');
+    assert.equal(again.elements.get('spinner-arrow').src, './hybrid-assets/arrow.svg');
+    assert.equal(savedState(sharedStore).targetAngle, null);
+    assert.equal(savedState(sharedStore).spins, 0);
+  } finally { again.restore(); }
 });

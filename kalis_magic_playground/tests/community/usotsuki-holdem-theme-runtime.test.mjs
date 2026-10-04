@@ -188,12 +188,12 @@ test('recorder theme persists, falls back to green, and a hold keeps attempts, t
   const sw = readFileSync(new URL('../../zz7/sw.js', import.meta.url), 'utf8');
   assert.match(html, /<option value="recorder">기계식 기록기<\/option>/);
   assert.match(css, /#performance-screen\[data-display-theme="recorder"\]/);
-  assert.match(css, /recorder-assets\/recorder-shell\.webp/);
+  assert.match(css, /recorder-assets\/recorder-shell-blank\.webp/);
   assert.match(css, /#performance-screen\[data-display-theme="wine"\]/);
   assert.match(css, /holdem-assets\/felt-grain\.svg/);
   assert.match(css, /holdem-assets\/leather-grain\.svg/);
-  assert.match(sw, /v20261004-first-guide-1/);
-  assert.match(sw, /recorder-assets\/recorder-shell\.webp/);
+  assert.match(sw, /v20261004-recorder-fix-1/);
+  assert.match(sw, /recorder-assets\/recorder-shell-blank\.webp/);
   assert.match(sw, /pathname\.startsWith\('\/tools\/'\)/);
   const store = new Map([['usotsuki.detector.sound.v1', '0']]);
   const f = await fixture({ store, theme: 'recorder' });

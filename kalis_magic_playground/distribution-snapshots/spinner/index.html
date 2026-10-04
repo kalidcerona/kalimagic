@@ -20,7 +20,7 @@
   <script src="./settings-ui.js" defer></script>
 </head>
 <body data-magic-app="spinner">
-  <main class="stage" data-table-theme="emerald" data-target-cue="idle">
+  <main class="stage" data-table-theme="emerald" data-screen-design="casino" data-target-cue="idle">
     <div class="nap" aria-hidden="true"></div>
     <div class="cushion" aria-hidden="true"></div>
     <div class="brass-lip" aria-hidden="true"></div>
@@ -29,12 +29,20 @@
     <i class="sight sight-c" id="table-corner-left" aria-hidden="true"></i>
     <i class="sight sight-d" id="table-corner-right" aria-hidden="true"></i>
     <img class="field" aria-hidden="true" src="./casino-assets/field-marks.svg" alt="">
+    <header class="instrument-header">
+      <div class="instrument-title">
+        <p class="wordmark">TYCHE</p>
+        <p class="instrument-kicker">회전판</p>
+      </div>
+    </header>
     <div class="rail rail-top" aria-hidden="true"></div>
     <div class="wheel-area">
       <div class="wheel-wrap" id="wheel-wrap" data-target-cue="idle">
         <div class="wheel" aria-hidden="true">
-          <img class="wheel-face wheel-emerald" src="./casino-assets/wheel-emerald.svg" alt="">
-          <img class="wheel-face wheel-burgundy" src="./casino-assets/wheel-burgundy.svg" alt="">
+          <img class="wheel-face casino-face wheel-emerald" src="./casino-assets/wheel-emerald.svg" alt="">
+          <img class="wheel-face casino-face wheel-burgundy" src="./casino-assets/wheel-burgundy.svg" alt="">
+          <img class="wheel-face hybrid-face wheel-emerald" src="./hybrid-assets/wheel-emerald.svg" alt="">
+          <img class="wheel-face hybrid-face wheel-burgundy" src="./hybrid-assets/wheel-burgundy.svg" alt="">
         </div>
         <img class="spinner-arrow" id="spinner-arrow" src="./casino-assets/arrow.svg" alt="" aria-hidden="true">
         <div class="wheel-pin" aria-hidden="true"><span></span></div>
@@ -80,6 +88,7 @@
       </details>
       <details class="settings-disclosure"><summary>화면 꾸미기</summary>
       <label class="setting-row" for="table-theme"><span>테이블 색</span><select id="table-theme"><option value="emerald">딥 그린</option><option value="burgundy">와인 버건디</option></select></label>
+      <label class="setting-row" for="screen-design"><span>화면 디자인</span><select id="screen-design"><option value="casino">카지노 테이블</option><option value="hybrid">우연의 방향</option></select></label>
       </details>
       <div class="install" id="install-app-group" data-install-state="browser"><button id="install-app" type="button">앱 설치</button><p id="install-help" hidden></p></div>
       </div>

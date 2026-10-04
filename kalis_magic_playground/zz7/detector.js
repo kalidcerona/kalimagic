@@ -59,6 +59,8 @@ let scanDurationMs = HOLD_THRESHOLD_MS;
 let activeScanDurationMs = HOLD_THRESHOLD_MS;
 let settled = true;
 let activePointerId = null;
+let holdPointerId = null;
+let readyPointerId = null;
 let gestureConsumed = false;
 let audioContext = null;
 let audioResumePromise = null;
@@ -276,6 +278,27 @@ function clearHoldTimer() {
   }
 }
 
+function setLiveContact(active) {
+  for (const node of [performanceScreen, detectorButton]) {
+    if (active) node.classList.add("is-live");
+    else node.classList.remove("is-live");
+  }
+}
+
+// Decorative only. Text is already in the DOM; this must not wait on the scan clock.
+function presentInk(node) {
+  if (!node) return;
+  node.classList.remove("is-inked");
+  if (performanceScreen.dataset.displayTheme !== "recorder" || node.textContent === "") return;
+  if (typeof node.getClientRects === "function") node.getClientRects();
+  node.classList.add("is-inked");
+}
+
+function presentStatuses() {
+  presentInk(testIndicator);
+  presentInk(verdict);
+}
+
 function setStage(mode) {
   if (signalMode) signalMode.textContent = mode === "testing" ? "측정 중" : mode === "cancelled" ? "취소" : mode === "TRUE" || mode === "LIE" ? "완료" : "대기";
   if (readyTimer) {
@@ -292,6 +315,7 @@ function setStage(mode) {
     document.body.classList.add("is-testing");
     testIndicator.textContent = "검사 중";
     verdict.textContent = "";
+    presentStatuses();
     return;
   }
   if (mode === "cancelled") {
@@ -300,6 +324,7 @@ function setStage(mode) {
     verdict.classList.add("is-cancelled");
     testIndicator.textContent = "취소됨";
     verdict.textContent = "";
+    presentStatuses();
     return;
   }
   if (mode === "LIE" || mode === "TRUE") {
@@ -310,21 +335,27 @@ function setStage(mode) {
     document.body.classList.add(tone);
     testIndicator.textContent = "";
     verdict.textContent = mode === "TRUE" ? "진실" : "거짓";
+    presentStatuses();
     return;
   }
   testIndicator.textContent = "검사 대기 중";
   verdict.textContent = "";
+  presentStatuses();
 }
 
 function showReadyFeedback() {
   testIndicator.textContent = "준비완료";
+  presentInk(testIndicator);
   const pulseMs = READY_HAPTIC_MS[vibrationInput.value];
   if (pulseMs && typeof navigator.vibrate === "function") {
     try { navigator.vibrate(pulseMs); } catch { /* Visual feedback remains available. */ }
   }
   readyTimer = window.setTimeout(() => {
     readyTimer = 0;
-    if (testIndicator.textContent === "준비완료") testIndicator.textContent = "검사 대기 중";
+    if (testIndicator.textContent === "준비완료") {
+      testIndicator.textContent = "검사 대기 중";
+      presentInk(testIndicator);
+    }
   }, READY_FEEDBACK_MS);
 }
 
@@ -354,6 +385,7 @@ function showSettings() {
   document.body.classList.remove("is-testing");
   performanceScreen.classList.remove("is-testing");
   detectorButton.classList.remove("is-testing");
+  setLiveContact(false);
   detectorButton.setAttribute("aria-busy", "false");
   truthInput.value = appState.settings.truthAttempts.join(",");
   updateAttemptProgress();
@@ -500,6 +532,9 @@ function applyRelease(nowMs, x, y) {
   const result = releaseHold(appState, hold, nowMs, x, y, activeScanDurationMs);
   hold = result.hold;
   appState = result.state;
+  // A settled verdict can arrive while the finger is still down. Keep the
+  // recorder trace moving until that contact actually ends.
+  if (!(result.counted && holdPointerId != null)) setLiveContact(false);
   if (result.counted) {
     updateAttemptProgress();
     const saved = persistState();
@@ -537,6 +572,8 @@ function startHold(event) {
   activeScanDurationMs = scanDurationMs;
   settled = false;
   activePointerId = event.pointerId;
+  holdPointerId = event.pointerId;
+  setLiveContact(true);
   setStage("testing");
   startScanningSound();
   startVibration(activeScanDurationMs);
@@ -558,6 +595,9 @@ function openSettings() {
   if (!settled && hold.phase !== "idle") cancelUnsettledHold();
   pointers.clear();
   activePointerId = null;
+  holdPointerId = null;
+  readyPointerId = null;
+  setLiveContact(false);
   gestureConsumed = false;
   clearHoldTimer();
   showSettings();
@@ -602,8 +642,9 @@ function onPointerDown(event) {
     /* Capture can fail if the pointer already ended. */
   }
   unlockFromGesture();
-  if (!onButton && !readyFeedbackShown) {
+  if (!onButton && !readyFeedbackShown && holdPointerId == null) {
     readyFeedbackShown = true;
+    readyPointerId = event.pointerId;
     showReadyFeedback();
   }
   if (pointers.size > 1) {
@@ -631,16 +672,34 @@ function onPointerUp(event) {
   if (!contact) return;
   contact.x = event.clientX;
   contact.y = event.clientY;
+  const endsHold = event.pointerId === holdPointerId || event.pointerId === activePointerId;
+  const endsReady = event.pointerId === readyPointerId;
   if (event.pointerId === activePointerId && !settled) {
     applyRelease(performance.now(), event.clientX, event.clientY);
+  }
+  if (endsHold || endsReady) {
+    stopVibration();
+    if (endsReady) readyPointerId = null;
+    setLiveContact(false);
+    if (event.pointerId === holdPointerId) holdPointerId = null;
   }
   maybeOpenFromSwipe();
   forgetPointer(event.pointerId);
 }
 
 function onPointerCancel(event) {
-  if (event.pointerId === activePointerId) cancelUnsettledHold();
+  const endsHold = event.pointerId === holdPointerId || event.pointerId === activePointerId;
+  const endsReady = event.pointerId === readyPointerId;
+  if (endsHold && !settled && hold.phase !== "idle") cancelUnsettledHold();
+  if (endsHold || endsReady) stopVibration();
+  if (endsHold) { setLiveContact(false); holdPointerId = null; activePointerId = null; }
+  if (endsReady) readyPointerId = null;
   forgetPointer(event.pointerId);
+}
+
+function onLostPointerCapture(event) {
+  // A missing pointerup is a cancelled contact, never an extra attempt.
+  onPointerCancel(event);
 }
 
 function unlockFromGesture() {
@@ -728,13 +787,28 @@ function onVisibilityChange() {
   if (!settled && hold.phase !== "idle") cancelUnsettledHold();
   stopScanningSound();
   stopVibration();
+  setLiveContact(false);
   pointers.clear();
   activePointerId = null;
+  holdPointerId = null;
+  readyPointerId = null;
   // Discard contexts that iOS can leave frozen after backgrounding.
   const ctx = audioContext;
   audioContext = null;
   audioResumePromise = null;
   try { ctx?.close().catch(() => {}); } catch { /* Already closed. */ }
+}
+
+function onWindowBlur() {
+  if (!settled && hold.phase !== "idle") cancelUnsettledHold();
+  clearHoldTimer();
+  stopScanningSound();
+  stopVibration();
+  setLiveContact(false);
+  pointers.clear();
+  activePointerId = null;
+  holdPointerId = null;
+  readyPointerId = null;
 }
 
 function bind() {
@@ -745,6 +819,7 @@ function bind() {
   performanceScreen.addEventListener("pointermove", onPointerMove);
   performanceScreen.addEventListener("pointerup", onPointerUp);
   performanceScreen.addEventListener("pointercancel", onPointerCancel);
+  performanceScreen.addEventListener("lostpointercapture", onLostPointerCapture);
   performanceScreen.addEventListener("contextmenu", (event) => event.preventDefault());
   truthInput.addEventListener("change", commitTruthAttempt);
   resetButton.addEventListener("click", onResetAttempts);
@@ -755,6 +830,7 @@ function bind() {
   scanDurationInput?.addEventListener("blur", onScanDurationInput);
   scanDurationInput?.addEventListener("change", onScanDurationChange);
   document.addEventListener("visibilitychange", onVisibilityChange);
+  window.addEventListener("blur", onWindowBlur);
 }
 
 // Display appearance is independent of the detector's performance state.
@@ -771,6 +847,7 @@ applyDisplayTheme(storageGet(DISPLAY_THEME_KEY).value);
 displayThemeSelect.addEventListener("change", (event) => {
   const theme = applyDisplayTheme(event.target.value);
   storageSet(DISPLAY_THEME_KEY, theme);
+  presentStatuses();
 });
 
 bootStorage();

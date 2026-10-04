@@ -43,6 +43,7 @@ function installDom({ html, stateKey, guideKey, themeKey, initialState = null, c
       getBoundingClientRect() { return { left: 0, top: 0, width: 200, height: 200 }; },
       setPointerCapture() {},
       closest(selector) { return selector === `#${id}` ? el : null; },
+      appendChild(child) { child.parentElement = el; return child; },
       focus() {},
     };
     elements.set(id, el);
@@ -53,8 +54,9 @@ function installDom({ html, stateKey, guideKey, themeKey, initialState = null, c
   for (const match of source.matchAll(/<([a-z][a-z0-9-]*)\b([^>]+)>/gi)) {
     const attributes = Object.fromEntries(Array.from(match[2].matchAll(/([\w-]+)="([^"]*)"/g), item => [item[1], item[2]]));
     const isStage = (attributes.class || '').split(/\s+/).includes('stage');
-    if (!attributes.id && !isStage) continue;
-    const el = make(attributes.id || 'stage');
+    const isStatusSlot = (attributes.class || '').split(/\s+/).some(name => name === 'instrument-header' || name === 'stage-bottom');
+    if (!attributes.id && !isStage && !isStatusSlot) continue;
+    const el = make(attributes.id || (isStage ? 'stage' : attributes.class.split(/\s+/)[0]));
     el.tagName = match[1].toUpperCase();
     el.attributes = attributes;
     el.hidden = /(?:^|\s)hidden(?:\s|$)/.test(match[2]);
@@ -67,7 +69,7 @@ function installDom({ html, stateKey, guideKey, themeKey, initialState = null, c
   assert.ok(stage, 'real HTML provides the stage');
   const documentStub = {
     getElementById: (id) => elements.get(id) || null,
-    querySelector: (selector) => (selector === '.stage' ? stage : null),
+    querySelector: (selector) => selector.startsWith('.') ? [...elements.values()].find(el => el.classList.contains(selector.slice(1))) || null : null,
     addEventListener(type, fn) { documentListeners.set(type, fn); },
     documentElement: make('documentElement'),
     body: make('body'),
@@ -147,8 +149,8 @@ async function loadApp(options) {
 }
 
 test('service worker updates do not reload a live personal or shared spinner', async () => {
-  assert.match(readFileSync(new URL('../../zz11/sw.js', import.meta.url), 'utf8'), /v20261004-casino-restore-1/);
-  assert.match(readFileSync(new URL('../../distribution-snapshots/spinner/sw.js', import.meta.url), 'utf8'), /v20261004-casino-restore-1/);
+  assert.match(readFileSync(new URL('../../zz11/sw.js', import.meta.url), 'utf8'), /v20261004-design-choice-1/);
+  assert.match(readFileSync(new URL('../../distribution-snapshots/spinner/sw.js', import.meta.url), 'utf8'), /v20261004-design-choice-1/);
   const apps = [
     {
       name: 'personal',

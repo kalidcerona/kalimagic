@@ -1,12 +1,12 @@
 // Cache only the explicit app shell. API, authentication and user data stay on the network.
 const CACHE_PREFIX = 'friend-usotsuki-shell-' + encodeURIComponent(self.registration.scope) + '-';
-const CACHE_NAME = CACHE_PREFIX + 'v20261004-first-guide-1';
+const CACHE_NAME = CACHE_PREFIX + 'v20261004-recorder-fix-1';
 const SHELL = [
   "./first-run-guide.js",
   "./holdem-assets/felt-grain.svg",
   "./holdem-assets/leather-grain.svg",
   "./holdem-assets/table-rail.svg",
-  "./recorder-assets/recorder-shell.webp",
+  "./recorder-assets/recorder-shell-blank.webp",
   "./settings-ui.js",
   "./settings-ui.css",
   "./index.html",
