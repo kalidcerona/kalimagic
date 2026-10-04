@@ -61,6 +61,7 @@ let settled = true;
 let activePointerId = null;
 let holdPointerId = null;
 let readyPointerId = null;
+let primerPointerId = null;
 let gestureConsumed = false;
 let audioContext = null;
 let audioResumePromise = null;
@@ -222,7 +223,7 @@ function stopVibration() {
 }
 
 function startVibration(durationMs) {
-  if (typeof navigator.vibrate !== "function") return;
+  if (typeof navigator.vibrate !== "function" || vibrationInput.value === "off") return;
   try {
     const pulse = { medium: [100, 100], high: [150, 50] }[vibrationInput.value];
     if (vibrationInput.value === "max") navigator.vibrate(durationMs);
@@ -278,11 +279,122 @@ function clearHoldTimer() {
   }
 }
 
+const TRACE_SAMPLES = 80;
+const TRACE_WINDOW_SEC = 2.2;
+let traceRestD = null;
+let traceMode = "off";
+let traceFrame = 0;
+
+function traceNode() {
+  return document.querySelector(".signal-trace");
+}
+
+function prefersReducedMotion() {
+  try {
+    return window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches === true;
+  } catch {
+    return false;
+  }
+}
+
+function traceSampleY(timeMs, xNorm) {
+  const signalTime = timeMs / 1000 - (1 - xNorm) * TRACE_WINDOW_SEC;
+  const period = 0.86 + 0.16 * Math.sin(signalTime * 0.31);
+  let frac = signalTime / period;
+  frac -= Math.floor(frac);
+  if (frac < 0) frac += 1;
+  const bell = (center, width) => {
+    const delta = (frac - center) / width;
+    return Math.exp(-(delta * delta));
+  };
+  const beat = 0.58 + 0.42 * Math.sin(signalTime * 0.9);
+  let amp = 0;
+  amp += 0.16 * bell(0.16, 0.04);
+  amp += -0.22 * bell(0.3, 0.016);
+  amp += (0.72 + 0.5 * beat) * bell(0.345, 0.012);
+  amp += -0.36 * bell(0.39, 0.015);
+  amp += (0.2 + 0.16 * Math.sin(signalTime * 0.37 + 0.8)) * bell(0.56, 0.055);
+  const wander = 4 * Math.sin(signalTime * 0.67 + xNorm * 2.1);
+  return Math.min(108, Math.max(10, 58 - amp * 34 - wander));
+}
+
+function buildLiveTracePath(timeMs) {
+  let path = "";
+  for (let i = 0; i < TRACE_SAMPLES; i += 1) {
+    const xNorm = i / (TRACE_SAMPLES - 1);
+    const x = 8 + 344 * xNorm;
+    path += `${i === 0 ? "M" : "L"}${x.toFixed(1)} ${traceSampleY(timeMs, xNorm).toFixed(1)}`;
+  }
+  return path;
+}
+
+function rememberTraceRest(node) {
+  if (traceRestD != null) return;
+  const current = typeof node.getAttribute === "function" ? node.getAttribute("d") : "";
+  traceRestD = current || "M8 52C24 62 34 58 48 38S74 26 88 50S114 54 128 66S152 82 168 48S194 24 210 60S236 84 252 44S276 24 292 52S318 64 334 46S346 50 352 52";
+}
+
+function paintLiveTrace(node, timeMs) {
+  node.setAttribute("d", buildLiveTracePath(timeMs));
+}
+
+function restoreTracePath() {
+  const node = traceNode();
+  if (!node || traceRestD == null || typeof node.setAttribute !== "function") return;
+  node.setAttribute("d", traceRestD);
+}
+
+function stopLiveTrace() {
+  const restore = traceMode !== "off";
+  traceMode = "off";
+  if (traceFrame && typeof window.cancelAnimationFrame === "function") {
+    window.cancelAnimationFrame(traceFrame);
+  }
+  traceFrame = 0;
+  if (restore) restoreTracePath();
+}
+
+function onTraceFrame(timeMs) {
+  traceFrame = 0;
+  if (traceMode !== "run") return;
+  const node = traceNode();
+  if (!node) {
+    traceMode = "off";
+    return;
+  }
+  paintLiveTrace(node, Number.isFinite(timeMs) ? timeMs : performance.now());
+  if (traceMode !== "run" || typeof window.requestAnimationFrame !== "function") return;
+  traceFrame = window.requestAnimationFrame(onTraceFrame);
+}
+
+function startLiveTrace() {
+  if (performanceScreen.dataset.displayTheme !== "recorder") return;
+  const node = traceNode();
+  if (!node || typeof node.setAttribute !== "function") return;
+  rememberTraceRest(node);
+  if (prefersReducedMotion()) {
+    if (traceFrame && typeof window.cancelAnimationFrame === "function") window.cancelAnimationFrame(traceFrame);
+    traceFrame = 0;
+    traceMode = "static";
+    paintLiveTrace(node, 0);
+    return;
+  }
+  if (traceMode === "run" && traceFrame) return;
+  traceMode = "run";
+  if (typeof window.requestAnimationFrame !== "function") {
+    paintLiveTrace(node, performance.now());
+    return;
+  }
+  if (!traceFrame) traceFrame = window.requestAnimationFrame(onTraceFrame);
+}
+
 function setLiveContact(active) {
   for (const node of [performanceScreen, detectorButton]) {
     if (active) node.classList.add("is-live");
     else node.classList.remove("is-live");
   }
+  if (active) startLiveTrace();
+  else stopLiveTrace();
 }
 
 // Decorative only. Text is already in the DOM; this must not wait on the scan clock.
@@ -391,6 +503,24 @@ function showSettings() {
   updateAttemptProgress();
 }
 
+function needsHapticPreparation() {
+  return typeof navigator.vibrate === "function" && vibrationInput.value !== "off" &&
+    navigator.userActivation?.hasBeenActive === false;
+}
+
+function refreshHapticPreparation() {
+  if (performanceScreen.hidden || settingsVisible() || holdPointerId != null) return;
+  const preparing = needsHapticPreparation();
+  if (preparing) performanceScreen.classList.add("is-preparing");
+  else performanceScreen.classList.remove("is-preparing");
+  if (preparing) {
+    testIndicator.textContent = "한 번 터치해 준비";
+    presentInk(testIndicator);
+  } else if (testIndicator.textContent === "한 번 터치해 준비") {
+    setStage("idle");
+  }
+}
+
 function showPerformance() {
   gestureConsumed = false;
   readyFeedbackShown = false;
@@ -398,6 +528,8 @@ function showPerformance() {
   settingsScreen.hidden = true;
   performanceScreen.hidden = false;
   detectorButton.disabled = false;
+  primerPointerId = null;
+  refreshHapticPreparation();
 }
 
 function ensureAudio() {
@@ -597,6 +729,7 @@ function openSettings() {
   activePointerId = null;
   holdPointerId = null;
   readyPointerId = null;
+  primerPointerId = null;
   setLiveContact(false);
   gestureConsumed = false;
   clearHoldTimer();
@@ -642,6 +775,13 @@ function onPointerDown(event) {
     /* Capture can fail if the pointer already ended. */
   }
   unlockFromGesture();
+  // Touch activation occurs at lift, not down. Preparation never counts an attempt.
+  if (needsHapticPreparation()) {
+    if (onButton && pointers.size === 1) primerPointerId = event.pointerId;
+    refreshHapticPreparation();
+    return;
+  }
+  refreshHapticPreparation();
   if (!onButton && !readyFeedbackShown && holdPointerId == null) {
     readyFeedbackShown = true;
     readyPointerId = event.pointerId;
@@ -668,6 +808,13 @@ function onPointerMove(event) {
 }
 
 function onPointerUp(event) {
+  if (event.pointerId === primerPointerId) {
+    primerPointerId = null;
+    stopVibration();
+    forgetPointer(event.pointerId);
+    refreshHapticPreparation();
+    return;
+  }
   const contact = pointers.get(event.pointerId);
   if (!contact) return;
   contact.x = event.clientX;
@@ -688,6 +835,7 @@ function onPointerUp(event) {
 }
 
 function onPointerCancel(event) {
+  if (event.pointerId === primerPointerId) primerPointerId = null;
   const endsHold = event.pointerId === holdPointerId || event.pointerId === activePointerId;
   const endsReady = event.pointerId === readyPointerId;
   if (endsHold && !settled && hold.phase !== "idle") cancelUnsettledHold();
@@ -792,6 +940,7 @@ function onVisibilityChange() {
   activePointerId = null;
   holdPointerId = null;
   readyPointerId = null;
+  primerPointerId = null;
   // Discard contexts that iOS can leave frozen after backgrounding.
   const ctx = audioContext;
   audioContext = null;
@@ -809,9 +958,13 @@ function onWindowBlur() {
   activePointerId = null;
   holdPointerId = null;
   readyPointerId = null;
+  primerPointerId = null;
 }
 
 function bind() {
+  // Dismissing the first-run guide also arms this document through a trusted click.
+  document.addEventListener("click", refreshHapticPreparation);
+  performanceScreen.addEventListener("touchend", refreshHapticPreparation, { passive: true });
   performanceScreen.addEventListener("touchstart", unlockFromGesture, { passive: true });
   performanceScreen.addEventListener("touchend", unlockFromGesture, { passive: true });
   performanceScreen.addEventListener("click", unlockFromGesture);
@@ -841,6 +994,8 @@ function applyDisplayTheme(value) {
   const theme = normalizeDisplayTheme(value);
   performanceScreen.dataset.displayTheme = theme;
   displayThemeSelect.value = theme;
+  if (theme !== "recorder") stopLiveTrace();
+  else if (holdPointerId != null && performanceScreen.classList.contains("is-live")) startLiveTrace();
   return theme;
 }
 applyDisplayTheme(storageGet(DISPLAY_THEME_KEY).value);
