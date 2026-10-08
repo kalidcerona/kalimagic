@@ -172,6 +172,7 @@
     #attempt-list { list-style: none; margin: 0; padding: 0; overflow: auto; max-height: calc(100% - 54px); font-variant-numeric: tabular-nums; }
     #attempt-list li { border-top: 1px solid #ffffff15; padding: 6px 0; width: max-content; min-width: 100%; white-space: nowrap; }
     .attempt-pin { letter-spacing: .02em; font-size: clamp(9px, 2.4vw, 11px); line-height: 1.25; font-weight: 600; }
+    #birthday-summary { flex-shrink: 0; margin-top: 8px; padding: 10px 0 2px; border-top: 1px solid #ffffff40; color: #f4f3ee; font-size: clamp(9px, 2.5vw, 11px); font-weight: 600; line-height: 1.4; font-variant-numeric: tabular-nums; }
     #time-black { z-index: 3; background: #000; touch-action: none; }
     #rewind-digit-guide { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: repeat(4, minmax(0, 1fr)); color: #fff; font-size: clamp(42px, 13vw, 76px); font-weight: 650; pointer-events: none; opacity: 1; transition: opacity 400ms ease; }
     #rewind-digit-guide[hidden] { display: none !important; }
@@ -323,6 +324,7 @@
     <section id="peek-screen" class="screen" aria-label="시도 기록" hidden>
       <div class="peek-heading">시도 기록</div>
       <ol id="attempt-list"></ol>
+      <div id="birthday-summary" class="attempt-pin" hidden></div>
     </section>
     <section id="unlocked-screen" class="screen" aria-label="해제 화면" hidden>
       <div id="home-track">
@@ -403,7 +405,7 @@
           </details>
           <details class="usage-guide">
             <summary>처음 사용하는 분을 위한 화면·숫자 입력 안내</summary>
-            <p>개인용 레리즈는 홈 1에서 왼쪽으로 밀어 홈 2로 이동합니다. 홈 2에서 왼쪽으로 700ms 동안 계속 미는 동안에만 설정한 입력 정보가 보이고, 손가락을 떼면 바로 사라집니다. 위로 밀면 입력 기록을 볼 수 있습니다.</p>
+            <p>홈 2 이미지가 있으면 홈 1에서 왼쪽으로 밀어 홈 2로 이동합니다. 홈 2에서 왼쪽으로 밀면 설정한 입력 정보가 바로 보이고, 손가락을 떼면 최소 표시 시간(500ms)을 채운 뒤 자동으로 사라집니다. 홈 1·홈 2에서 위로 밀면 입력 기록을 보고, 손가락을 떼면 다시 숨깁니다.</p>
             <p>리와인드의 검은 화면은 화면 전체가 보이지 않는 숫자판입니다. 아래 그림처럼 화면을 가로 3칸, 세로 4칸으로 나눠 누릅니다. 각 칸의 가운데를 누르면 그 숫자로 인식됩니다. 마지막 줄은 가운데 0만 입력되고 양옆은 무시됩니다. 숫자 두 개를 차례로 눌러 분을 입력하세요. 예: 0 다음 3은 03분, 1 다음 5는 15분입니다.</p>
             <div class="hidden-grid-example" role="img" aria-label="검은 화면의 숫자 입력 예시. 빨간 선으로 나뉜 첫 세 줄은 왼쪽부터 1 2 3, 4 5 6, 7 8 9이며 마지막 줄 가운데는 0입니다.">
               <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span data-digit="0">0</span>
@@ -425,7 +427,7 @@
   </div>
   <script type="module" src="./install-prompt.js"></script>
   <script type="module">
-    import { FINGERPRINT_HOLD_MS, normalizeSettings, storageIdentityForPath, selectedAttemptReveal, homeSwipeTarget, completeHomeSwipe, lockScreenCopy, createState, pushDigit, submitPin, fingerprintHold, attemptFeedback, feedbackVibration, deleteDigit, clearCurrent, toggleDigits, reset, isHomeGestureArea, peekOffset, registerTwoFingerTap, settleTwoFingerTaps, registerLockTap, formatAttemptLabel } from './logic.js';
+    import { FINGERPRINT_HOLD_MS, normalizeSettings, storageIdentityForPath, selectedAttemptReveal, latestBirthdateAttempt, homeSwipeTarget, completeHomeSwipe, lockScreenCopy, createState, pushDigit, submitPin, fingerprintHold, attemptFeedback, feedbackVibration, deleteDigit, clearCurrent, toggleDigits, reset, isHomeGestureArea, peekOffset, registerTwoFingerTap, settleTwoFingerTaps, registerLockTap, formatAttemptLabel } from './logic.js';
 
     import { hiddenDigit, appendMinuteDigit, registerEmergencyTap, timeMachineClock, isSettingsSwipe, horizontalPeekOffset } from './time-machine.js';
 
@@ -474,8 +476,8 @@
     $('performance-field').hidden = STORAGE.personal;
     $('home2-field').hidden = false;
     $('home2-preview-item').hidden = false;
-    $('reveal-attempt-field').hidden = !STORAGE.personal;
-    $('reveal-attempt').disabled = !STORAGE.personal;
+    $('reveal-attempt-field').hidden = false;
+    $('reveal-attempt').disabled = false;
     let saved = null;
     try { saved = JSON.parse(localStorage.getItem(SETTINGS_KEY)); } catch {}
     if (!saved && STORAGE.personal) {
@@ -498,7 +500,8 @@
     let swipe = null;
     let homePage = 'home1';
     let revealVisible = false;
-    let revealTimer = null;
+    let revealShownAt = null;
+    let revealHideTimer = null;
     let settingsSwipe = null;
     let timeMinutes = 0;
     let timeDigits = [];
@@ -605,10 +608,12 @@
         row.append(pin);
         return row;
       }));
-      const birthdate = state.attempts.map((_, index) =>
-        selectedAttemptReveal(state.attempts, index + 1, new Date())).reverse()
-        .find((attempt) => Number.isInteger(attempt?.days));
+      const birthdate = latestBirthdateAttempt(state.attempts, new Date());
       if (birthdate) publishBirthDays(birthdate.days);
+      $('birthday-summary').hidden = !birthdate;
+      $('birthday-summary').textContent = birthdate
+        ? `${birthdate.attemptNumber}번째 ${birthdate.pin} · ${birthdate.days.toLocaleString('ko-KR')}일 · ${birthdate.zodiac} · ${birthdate.animal}`
+        : '';
       requestAnimationFrame(() => { $('attempt-list').scrollTop = 0; });
     }
 
@@ -630,26 +635,20 @@
     function setRevealVisible(visible) {
       if (visible === revealVisible) return;
       revealVisible = visible;
-      if (visible) renderReveal();
+      if (visible) {
+        clearTimeout(revealHideTimer);
+        revealHideTimer = null;
+        revealShownAt = performance.now();
+        renderReveal();
+      } else revealShownAt = null;
       $('reveal-card').classList.toggle('visible', visible);
       $('reveal-card').setAttribute('aria-hidden', String(!visible));
     }
 
     function cancelReveal() {
-      clearTimeout(revealTimer);
-      revealTimer = null;
+      clearTimeout(revealHideTimer);
+      revealHideTimer = null;
       setRevealVisible(false);
-    }
-
-    function scheduleReveal() {
-      if (!swipe || swipe.revealPending || revealVisible) return;
-      swipe.revealPending = true;
-      const activeSwipe = swipe;
-      revealTimer = setTimeout(() => {
-        revealTimer = null;
-        if (swipe === activeSwipe && screen === 'unlocked' && homePage === 'home2'
-            && (STORAGE.personal || originals.has('home2')) && swipe.revealPending) setRevealVisible(true);
-      }, Math.max(0, 700 - (performance.now() - swipe.startedAt)));
     }
 
     function setHomePage(next, animate = true) {
@@ -893,12 +892,16 @@
       }
     }
 
-    function returnSwipe() {
+    function returnSwipe(keepBriefReveal = false) {
       $('unlocked-screen').classList.add('returning');
       $('unlocked-screen').style.transform = 'translateY(0px)';
+      $('peek-screen').classList.remove('side-peek');
       if (STORAGE.personal || originals.has('home2')) setHomePage(homePage);
       swipe = null;
-      cancelReveal();
+      if (keepBriefReveal && revealVisible && revealShownAt !== null) {
+        const remaining = Math.max(0, 500 - (performance.now() - revealShownAt));
+        revealHideTimer = setTimeout(cancelReveal, remaining);
+      } else cancelReveal();
     }
 
     document.addEventListener('touchstart', (event) => {
@@ -923,7 +926,7 @@
         cancelReveal();
         const touch = event.touches[0];
         if (!STORAGE.personal && isHomeGestureArea(touch.clientX, touch.clientY, window.innerWidth, window.innerHeight)) return;
-        swipe = { id: touch.identifier, x: touch.clientX, y: touch.clientY, axis: null, startedAt: performance.now(), revealPending: false };
+        swipe = { id: touch.identifier, x: touch.clientX, y: touch.clientY, axis: null };
         $('unlocked-screen').classList.remove('returning');
       }
     }, { passive: false });
@@ -954,11 +957,9 @@
         const dx = touch.clientX - swipe.x, dy = touch.clientY - swipe.y;
         if (!swipe.axis && Math.hypot(dx, dy) >= 10) swipe.axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
         if ((STORAGE.personal || originals.has('home2')) && swipe.axis === 'x') {
-          if (STORAGE.personal) {
-            const reveal = homeSwipeTarget(homePage, dx, dy, (STORAGE.personal || originals.has('home2')), false, $('app').clientWidth).revealVisible;
-            if (reveal) scheduleReveal();
-            else { swipe.revealPending = false; cancelReveal(); }
-          }
+          const reveal = homeSwipeTarget(homePage, dx, dy, (STORAGE.personal || originals.has('home2')), false, $('app').clientWidth).revealVisible;
+          if (reveal) setRevealVisible(true);
+          else cancelReveal();
           const index = homePage === 'home2' ? 1 : 0;
           const width = $('app').clientWidth;
           const drag = Math.max(index === 0 && (STORAGE.personal || originals.has('home2')) ? -width : 0,
@@ -990,20 +991,31 @@
         }
       }
       if (swipe) {
+        let keepBriefReveal = false;
         if ((STORAGE.personal || originals.has('home2')) && event.changedTouches.length === 1) {
           const touch = event.changedTouches[0];
           if (touch.identifier === swipe.id) {
-            const target = completeHomeSwipe(homePage, touch.clientX - swipe.x, touch.clientY - swipe.y,
-              (STORAGE.personal || originals.has('home2')), $('app').clientWidth);
+            const dx = touch.clientX - swipe.x;
+            const dy = touch.clientY - swipe.y;
+            const hasSecond = STORAGE.personal || originals.has('home2');
+            const releaseTarget = homeSwipeTarget(homePage, dx, dy,
+              hasSecond, false, $('app').clientWidth);
+            if (releaseTarget.revealVisible) setRevealVisible(true);
+            const target = completeHomeSwipe(homePage, dx, dy,
+              hasSecond, $('app').clientWidth);
             if (!target.peek) homePage = target.page;
-            cancelReveal();
+            keepBriefReveal = releaseTarget.revealVisible && homePage === 'home2';
           }
         }
-        returnSwipe();
+        returnSwipe(keepBriefReveal);
       }
     }, { passive: false });
     document.addEventListener('touchcancel', () => { settingsSwipe = null; timePointer = null; tapCandidate = null; returnSwipe(); });
     window.addEventListener('blur', () => { tapCandidate = null; returnSwipe(); });
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') { tapCandidate = null; returnSwipe(); }
+    });
+    window.addEventListener('pagehide', () => { tapCandidate = null; returnSwipe(); });
 
     function populateForm() {
       $('performance').value = settings.performance;

@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import * as logic from '../../zz2/logic.js';
 
 test('personal reveal selects configured attempt and formats valid birthday separately', () => {
@@ -83,4 +84,24 @@ test('small foldable viewports retain an early reveal threshold without revealin
 test('personal home requires both uploaded home screenshots before starting', () => {
   assert.equal(logic.personalHomeReady(new Set(['lock', 'unlock'])), false);
   assert.equal(logic.personalHomeReady(new Set(['lock', 'unlock', 'home2'])), true);
+});
+
+
+test('RELEASE snapshot reveals home2 immediately and clears gestures safely', () => {
+  const html = readFileSync(new URL('../../distribution-snapshots/unlock/index.html', import.meta.url), 'utf8');
+  const script = html.match(/<script type="module">([\s\S]*?)<\/script>/)[1];
+  const paging = script.slice(script.indexOf("&& swipe.axis === 'x'"), script.indexOf("const index = homePage === 'home2'"));
+    assert.match(paging, /const reveal = homeSwipeTarget\(homePage, dx, dy, \(STORAGE\.personal \|\| originals\.has\('home2'\)\), false, \$\('app'\)\.clientWidth\)\.revealVisible;\s*if \(reveal\) setRevealVisible\(true\);\s*else cancelReveal\(\);/);
+    assert.doesNotMatch(paging, /if \(STORAGE\.personal\) \{/);
+    assert.match(script, /if \(releaseTarget\.revealVisible\) setRevealVisible\(true\)/);
+    assert.match(script, /keepBriefReveal = releaseTarget\.revealVisible && homePage === 'home2';[\s\S]*returnSwipe\(keepBriefReveal\);/);
+    assert.match(script, /revealShownAt = performance\.now\(\);/);
+    assert.match(script, /const remaining = Math\.max\(0, 500 - \(performance\.now\(\) - revealShownAt\)\);\s*revealHideTimer = setTimeout\(cancelReveal, remaining\);/);
+    assert.match(script, /document\.addEventListener\('visibilitychange', \(\) => \{\s*if \(document\.visibilityState === 'hidden'\) \{ tapCandidate = null; returnSwipe\(\); \}\s*\}\);/);
+    assert.match(script, /function returnSwipe\(keepBriefReveal = false\)[\s\S]*?\} else cancelReveal\(\);/);
+    assert.match(script, /function cancelReveal\(\) \{\s*clearTimeout\(revealHideTimer\);\s*revealHideTimer = null;\s*setRevealVisible\(false\);\s*\}/);
+  assert.match(script, /\$\('reveal-attempt-field'\)\.hidden = false;/);
+  assert.match(script, /\$\('reveal-attempt'\)\.disabled = false;/);
+  const sw = readFileSync(new URL('../../distribution-snapshots/unlock/sw.js', import.meta.url), 'utf8');
+  assert.ok(sw.includes('v20261008-home-gesture-parity-1'));
 });

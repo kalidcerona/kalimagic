@@ -287,9 +287,19 @@ export function selectedAttemptReveal(attempts, attemptNumber, todayLocal = new 
   return reveal ? { pin, ...reveal } : { pin, days: null };
 }
 
+export function latestBirthdateAttempt(attempts, todayLocal = new Date()) {
+  if (!Array.isArray(attempts)) return null;
+  for (let index = attempts.length - 1; index >= 0; index -= 1) {
+    const digits = attempts[index];
+    const reveal = birthdateReveal(digits, todayLocal);
+    if (reveal) return { attemptNumber: index + 1, pin: digits.join(''), ...reveal };
+  }
+  return null;
+}
+
 function homeSwipeThreshold(viewportWidth) {
   const width = Number.isFinite(viewportWidth) ? viewportWidth : 390;
-  return Math.max(24, Math.min(36, width * 0.06));
+  return Math.max(14, Math.min(22, width * 0.045));
 }
 
 export function homeSwipeTarget(page, dx, dy, hasSecond, revealVisible = false, viewportWidth = 390) {
