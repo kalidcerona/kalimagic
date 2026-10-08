@@ -16,6 +16,7 @@ async function fixture({ theme, store = new Map(), readFails = false, stateReadF
     saved.set(name, Object.getOwnPropertyDescriptor(globalThis, name));
     Object.defineProperty(globalThis, name, { configurable: true, writable: true, value });
   };
+  const writes = [];
   const nodes = new Map();
   const all = [];
   class FakeElement {
@@ -78,7 +79,7 @@ async function fixture({ theme, store = new Map(), readFails = false, stateReadF
   const win = {
     localStorage: {
       getItem(key) { if ((readFails && key === THEME) || (stateReadFails && key === STATE)) throw new Error('blocked storage'); return store.get(key) ?? null; },
-      setItem(key, value) { if (writeFails && key === THEME) throw new Error('blocked storage'); store.set(key, String(value)); },
+      setItem(key, value) { writes.push([key, String(value)]); if (writeFails && key === THEME) throw new Error('blocked storage'); store.set(key, String(value)); },
     },
     setTimeout(fn, ms) { const id = ++nextTimer; timers.set(id, { fn, at: now + ms }); return id; },
     clearTimeout(id) { timers.delete(id); },
@@ -89,6 +90,7 @@ async function fixture({ theme, store = new Map(), readFails = false, stateReadF
   await import(`../../zz7/detector.js?holdem-test=${++serial}`);
   const element = id => { const el = nodes.get(id); assert.ok(el, `${id} exists in actual HTML`); return el; };
   return {
+    writes,
     element, store, rect, timers, vibrations, doc,
     state: () => JSON.parse(store.get(STATE)),
     theme(value) { element('display-theme').value = value; element('display-theme').dispatch('change'); },
@@ -186,13 +188,13 @@ test('recorder theme persists, falls back to green, and a hold keeps attempts, t
   const html = readFileSync(new URL('../../zz7/index.html', import.meta.url), 'utf8');
   const css = readFileSync(new URL('../../zz7/style.css', import.meta.url), 'utf8');
   const sw = readFileSync(new URL('../../zz7/sw.js', import.meta.url), 'utf8');
-  assert.match(html, /<option value="recorder">기계식 기록기<\/option>/);
+  assert.match(html, /<option value="recorder">목재 드럼<\/option>/);
   assert.match(css, /#performance-screen\[data-display-theme="recorder"\]/);
   assert.match(css, /recorder-assets\/recorder-shell-blank\.webp/);
   assert.match(css, /#performance-screen\[data-display-theme="wine"\]/);
   assert.match(css, /holdem-assets\/felt-grain\.svg/);
   assert.match(css, /holdem-assets\/leather-grain\.svg/);
-  assert.match(sw, /v20261005-sensor-wave-1/);
+  assert.match(sw, /v20261008-three-recorders-12/);
   assert.match(sw, /recorder-assets\/recorder-shell-blank\.webp/);
   assert.match(sw, /pathname\.startsWith\('\/tools\/'\)/);
   const store = new Map([['usotsuki.detector.sound.v1', '0']]);
@@ -278,4 +280,18 @@ test('blank-space downward swipe opens settings and unsupported vibration help s
     assert.equal(group.style.display, 'none'); assert.equal(capability.hidden, false); assert.match(capability.textContent, /진동|사용/);
     for (let ancestor = capability.parentElement; ancestor; ancestor = ancestor.parentElement) assert.notEqual(ancestor, group, 'capability text is outside hidden disclosure');
   } finally { f.restore(); }
+});
+
+
+test('all five themes load without rewriting the stored raw preference; unknown remains raw',async()=>{
+ for(const raw of ['green','wine','recorder','recorder-a','recorder-d','future-theme']){
+  const f=await fixture({theme:raw});
+  try{
+   assert.equal(f.element('performance-screen').dataset.displayTheme,raw==='future-theme'?'green':raw);
+   assert.equal(f.store.get(THEME),raw);
+   assert.equal(f.writes.filter(([key])=>key===THEME).length,0);
+   f.element('start-performance').dispatch('click');
+   assert.equal(f.store.get(THEME),raw);
+  }finally{f.restore();}
+ }
 });

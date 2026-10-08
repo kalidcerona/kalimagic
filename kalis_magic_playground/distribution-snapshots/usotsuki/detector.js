@@ -18,6 +18,7 @@ import {
   serializeState,
   trySetTruthAttempt,
   updateHold,
+  verdictForAttempt,
 } from "./logic.js";
 
 const STATE_KEY = "usotsuki.distribution.detector.v1";
@@ -28,6 +29,8 @@ const SWIPE_DOWN_PX = 96;
 const READY_FEEDBACK_MS = 600;
 const READY_HAPTIC_MS = { medium: 18, high: 28, max: 38 };
 const STAGE_CLASSES = ["is-testing", "is-lie", "is-true", "is-cancelled"];
+
+import { createRecorderThemeController } from "./recorder-theme.js";
 
 const performanceScreen = document.querySelector("#performance-screen");
 const detectorButton = document.querySelector("#detector-button");
@@ -50,6 +53,13 @@ const resetButton = document.querySelector("#reset-attempts");
 const startButton = document.querySelector("#start-performance");
 const settingsStatus = document.querySelector("#settings-status");
 const attemptProgress = document.querySelector("#attempt-progress");
+
+const recorderThemes = createRecorderThemeController(performanceScreen, () => ({
+  sound: soundEnabled(), duration: activeScanDurationMs,
+  startedAt: hold.startedAt, holding: !settled && hold.phase === "holding",
+  verdict: verdictForAttempt(appState.attemptCount + 1, appState.settings.truthAttempts),
+  attempt: appState.attemptCount,
+}));
 
 let appState = loadFromRaw(null).state;
 let storageLocked = false;
@@ -389,6 +399,7 @@ function startLiveTrace() {
 }
 
 function setLiveContact(active) {
+  recorderThemes.setPressed(active);
   for (const node of [performanceScreen, detectorButton]) {
     if (active) node.classList.add("is-live");
     else node.classList.remove("is-live");
@@ -485,6 +496,7 @@ function settingsVisible() {
 }
 
 function showSettings() {
+  recorderThemes.suspend();
   stopScanningSound();
   stopVibration();
   if (readyTimer) {
@@ -527,6 +539,7 @@ function showPerformance() {
   pointers.clear();
   settingsScreen.hidden = true;
   performanceScreen.hidden = false;
+  resumeRecorderTheme();
   detectorButton.disabled = false;
   primerPointerId = null;
   refreshHapticPreparation();
@@ -584,6 +597,7 @@ function playTone(ctx, destination, frequency, startAt, duration, type, peak) {
 }
 
 function playVerdictSound(result) {
+  if (recorderThemes.active()) return;
   if (!soundEnabled()) return;
   withReadyAudio((ctx) => {
     // Let the scan tone's short release ramp finish before the verdict cue.
@@ -632,6 +646,7 @@ function stopScanningSound() {
 
 function startScanningSound() {
   stopScanningSound();
+  if (recorderThemes.active()) return;
   if (!soundEnabled()) return;
   withReadyAudio((ctx) => {
     if (settled || hold.phase !== "holding" || activePointerId == null) return;
@@ -667,6 +682,7 @@ function applyRelease(nowMs, x, y) {
   // A settled verdict can arrive while the finger is still down. Keep the
   // recorder trace moving until that contact actually ends.
   if (!(result.counted && holdPointerId != null)) setLiveContact(false);
+  recorderThemes.finish(result.counted, result.verdict, result.counted ? nowMs : performance.now());
   if (result.counted) {
     updateAttemptProgress();
     const saved = persistState();
@@ -707,6 +723,7 @@ function startHold(event) {
   holdPointerId = event.pointerId;
   setLiveContact(true);
   setStage("testing");
+  recorderThemes.begin();
   startScanningSound();
   startVibration(activeScanDurationMs);
   armThresholdTimer();
@@ -775,9 +792,11 @@ function onPointerDown(event) {
     /* Capture can fail if the pointer already ended. */
   }
   unlockFromGesture();
+  // Loading blocks only the contact pad; outside pointers still open settings.
+  if (onButton && performanceScreen.dataset.recorderLoading === "true") return;
   // Touch activation occurs at lift, not down. Preparation never counts an attempt.
   if (needsHapticPreparation()) {
-    if (onButton && pointers.size === 1) primerPointerId = event.pointerId;
+    if (onButton && pointers.size === 1) { primerPointerId = event.pointerId; recorderThemes.setPressed(true); }
     refreshHapticPreparation();
     return;
   }
@@ -810,6 +829,7 @@ function onPointerMove(event) {
 function onPointerUp(event) {
   if (event.pointerId === primerPointerId) {
     primerPointerId = null;
+    recorderThemes.setPressed(false);
     stopVibration();
     forgetPointer(event.pointerId);
     refreshHapticPreparation();
@@ -835,7 +855,7 @@ function onPointerUp(event) {
 }
 
 function onPointerCancel(event) {
-  if (event.pointerId === primerPointerId) primerPointerId = null;
+  if (event.pointerId === primerPointerId) { primerPointerId = null; recorderThemes.setPressed(false); }
   const endsHold = event.pointerId === holdPointerId || event.pointerId === activePointerId;
   const endsReady = event.pointerId === readyPointerId;
   if (endsHold && !settled && hold.phase !== "idle") cancelUnsettledHold();
@@ -851,7 +871,10 @@ function onLostPointerCapture(event) {
 }
 
 function unlockFromGesture() {
-  if (!soundEnabled() || document.hidden) return;
+  if (document.hidden || settingsVisible()) return;
+  recorderThemes.setSoundEnabled(soundEnabled());
+  recorderThemes.unlock();
+  if (recorderThemes.active() || !soundEnabled() || document.hidden) return;
   try {
     const ctx = ensureAudio();
     if (!ctx) return;
@@ -921,6 +944,7 @@ function onStartPerformance() {
 }
 
 function onSoundChange() {
+  recorderThemes.setSoundEnabled(soundEnabled());
   persistSoundPreference();
   if (soundInput.checked) unlockFromGesture();
   else stopScanningSound();
@@ -930,8 +954,13 @@ function onVibrationChange() {
   storageSet(VIBRATION_KEY, vibrationInput.value);
 }
 
+function resumeRecorderTheme() {
+  if (!document.hidden && !performanceScreen.hidden && !settingsVisible()) recorderThemes.resume();
+}
+
 function onVisibilityChange() {
-  if (!document.hidden) return;
+  if (!document.hidden) { resumeRecorderTheme(); return; }
+  recorderThemes.suspend();
   if (!settled && hold.phase !== "idle") cancelUnsettledHold();
   stopScanningSound();
   stopVibration();
@@ -949,6 +978,7 @@ function onVisibilityChange() {
 }
 
 function onWindowBlur() {
+  recorderThemes.suspend();
   if (!settled && hold.phase !== "idle") cancelUnsettledHold();
   clearHoldTimer();
   stopScanningSound();
@@ -984,14 +1014,23 @@ function bind() {
   scanDurationInput?.addEventListener("change", onScanDurationChange);
   document.addEventListener("visibilitychange", onVisibilityChange);
   window.addEventListener("blur", onWindowBlur);
+  window.addEventListener("focus", resumeRecorderTheme);
 }
 
 // Display appearance is independent of the detector's performance state.
 const DISPLAY_THEME_KEY = "usotsuki.distribution.detector.theme.v1";
 const displayThemeSelect = document.querySelector("#display-theme");
-function normalizeDisplayTheme(value) { return value === "wine" || value === "recorder" ? value : "green"; }
+function normalizeDisplayTheme(value) { return ["green", "wine", "recorder", "recorder-a", "recorder-d"].includes(value) ? value : "green"; }
 function applyDisplayTheme(value) {
   const theme = normalizeDisplayTheme(value);
+  if (performanceScreen.dataset.displayTheme !== theme) {
+    stopScanningSound();
+    const previousAudio = audioContext;
+    audioContext = null;
+    audioResumePromise = null;
+    try { previousAudio?.close().catch(() => {}); } catch { /* Already closed. */ }
+  }
+  recorderThemes.switchTheme(theme);
   performanceScreen.dataset.displayTheme = theme;
   displayThemeSelect.value = theme;
   if (theme !== "recorder") stopLiveTrace();

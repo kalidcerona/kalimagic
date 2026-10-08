@@ -13,6 +13,13 @@
     <link rel="icon" href="icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png?install=usotsuki-v2" />
     <link rel="manifest" href="manifest.webmanifest?v=20260926-usotsuki-install" />
+    <script id="theme-prepaint">
+      // Read only: invalid or unavailable storage falls back in memory.
+      try {
+        const saved = localStorage.getItem("usotsuki.detector.theme.v1");
+        document.documentElement.dataset.displayTheme = ["green", "wine", "recorder", "recorder-a", "recorder-d"].includes(saved) ? saved : "green";
+      } catch { document.documentElement.dataset.displayTheme = "green"; }
+    </script>
     <link rel="stylesheet" href="style.css" />
     <link rel="stylesheet" href="./settings-ui.css">
   <script src="./settings-ui.js" defer></script>
@@ -20,6 +27,15 @@
   <body data-magic-app="usotsuki">
     <div id="safe-probe" aria-hidden="true"></div>
     <main id="performance-screen" data-display-theme="green">
+      <script id="theme-screen-prepaint">
+        (() => {
+        const screen = document.currentScript.parentElement;
+        screen.dataset.displayTheme = document.documentElement.dataset.displayTheme;
+        if (screen.dataset.displayTheme.startsWith("recorder-")) {
+          screen.dataset.recorderLoading = "true";
+        }
+        })();
+      </script>
       <span class="pub-corner pub-corner-top" aria-hidden="true"></span>
       <span class="pub-corner pub-corner-bottom" aria-hidden="true"></span>
       <div class="stage-content">
@@ -78,7 +94,9 @@
         <details class="settings-disclosure">
           <summary>화면 디자인</summary>
           <label class="field" for="display-theme">화면 디자인
-            <select id="display-theme"><option value="green">딥 그린 테이블</option><option value="wine">와인 카드룸</option><option value="recorder">기계식 기록기</option></select>
+            <select id="display-theme"><option value="green">딥 그린 테이블</option><option value="wine">와인 카드룸</option><option value="recorder">목재 드럼</option>
+                <option value="recorder-a">강철 타자기</option>
+                <option value="recorder-d">황동 타자기</option></select>
           </label>
         </details>
         <details class="settings-disclosure">

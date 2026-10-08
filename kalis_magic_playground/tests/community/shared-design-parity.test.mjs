@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { USOTSUKI_FILES, SPINNER_FILES } from '../../scripts/build-public.mjs';
 
@@ -49,4 +50,28 @@ test('promotion preserves existing shared storage and isolates newly introduced 
   ]) assert.ok(detector.includes(`${constant} = "${key}"`), constant);
   const spinner = (await read('distribution-snapshots/spinner', 'app.js')).toString();
   for (const key of ['friend-spinner-state-v2', 'friend-spinner-state-v1', 'friend-spinner-guide-seen-v2', 'friend-spinner-table-theme-v1', 'friend-spinner-screen-design-v1']) assert.ok(spinner.includes(key), key);
+});
+
+
+test('Three recorder themes retain exact bytes and cache isolation', async () => {
+  for (const file of ['index.html', 'style.css', 'detector.js', 'sw.js', 'recorder-theme.js', 'recorder-engine.js', 'recorder-a.html', 'recorder-d.html']) {
+    const personal = await read('zz7', file);
+    let snapshot = (await read('distribution-snapshots/usotsuki', file)).toString();
+    if (file === 'index.html') snapshot = snapshot.replace('usotsuki.distribution.detector.theme.v1', 'usotsuki.detector.theme.v1');
+    if (file === 'detector.js') {
+      for (const [constant, key] of [['STATE_KEY','detector.v1'], ['SOUND_KEY','detector.sound.v1'], ['DISPLAY_THEME_KEY','detector.theme.v1']]) {
+        snapshot = snapshot.replace(`${constant} = "usotsuki.distribution.${key}"`, `${constant} = "usotsuki.${key}"`);
+      }
+    } else if (file === 'sw.js') {
+      snapshot = snapshot.replace('v20261008-three-recorders-12-distribution', 'v20261008-three-recorders-12');
+      assert.ok(personal.includes('v20261008-three-recorders-12'));
+    }
+    assert.equal(snapshot, personal.toString(), `normalized snapshot ${file}`);
+    if (file === 'style.css') {
+      const protectedPrefix = personal.toString().split('\n').slice(0, 929).join('\n') + '\n';
+      assert.equal(createHash('sha256').update(protectedPrefix).digest('hex'), '07ad81bbc85967754c072d262d8ef2337cf2e0077ec2d077b008139108a8e288');
+      assert.ok(personal.toString().includes('recorder-shell-blank.webp'));
+      assert.ok(personal.toString().includes('#performance-screen.is-preparing #test-indicator { font-size: clamp(12px, 3.5vw, 16px); letter-spacing: 0; white-space: nowrap; }'));
+    }
+  }
 });

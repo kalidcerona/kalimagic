@@ -1339,3 +1339,37 @@ select {
   font-size: clamp(12px, 9cqw, 17px); font-weight: 750; letter-spacing: .04em;
   text-shadow: 0 -1px 1px rgba(10, 7, 4, .9), 0 1px 0 rgba(255, 247, 224, .75);
 }
+
+/* A/D have isolated prototype skins. The native button remains the sole input. */
+#performance-screen[data-display-theme="recorder-a"],
+#performance-screen[data-display-theme="recorder-d"] { background: #121418; }
+#performance-screen[data-display-theme="recorder-d"] { background: #16120f; }
+#performance-screen[data-display-theme^="recorder-"] .stage-content > .nameplate,
+#performance-screen[data-display-theme^="recorder-"] .display-surface,
+#performance-screen[data-display-theme^="recorder-"] .stage-brand,
+#performance-screen[data-display-theme^="recorder-"] .stage-footer { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
+#performance-screen[data-display-theme^="recorder-"] #detector-button {
+ position:absolute; left:var(--ad-key-left); top:var(--ad-key-top); width:var(--ad-key-size); height:var(--ad-key-size);
+ min-width:0; min-height:0; margin:0; padding:0; border:0; border-radius:50%; background:transparent; box-shadow:none; transform:none; z-index:10; opacity:0;
+}
+#performance-screen[data-display-theme^="recorder-"] #detector-button:focus-visible { opacity:1; background:transparent; outline:2px solid #eee; }
+#performance-screen[data-display-theme^="recorder-"] #detector-button > * { visibility:hidden; }
+.recorder-theme-host { position:absolute; inset:0; overflow:hidden; pointer-events:none; z-index:3; }
+
+#performance-screen[data-display-theme^="recorder-"] .stage-content,
+#performance-screen[data-display-theme^="recorder-"] .control-bay,
+#performance-screen[data-display-theme^="recorder-"] .contact-pad { display:contents; }
+
+/* Before the isolated skin resolves, paint its own chassis material and block input. */
+#performance-screen[data-display-theme="recorder-a"][data-recorder-loading="true"] {
+ background:radial-gradient(ellipse at 16% 8%,#2e3238,#16181c 42%,#07080a 100%);
+}
+#performance-screen[data-display-theme="recorder-d"][data-recorder-loading="true"] {
+ background:radial-gradient(ellipse at 16% 8%,#3a3330,#1c1816 42%,#0c0a09);
+}
+#performance-screen[data-recorder-loading="true"] #detector-button { pointer-events:none; }
+@media (prefers-reduced-motion: reduce) {
+ #performance-screen[data-display-theme^="recorder-"].is-testing,
+ body.is-testing #performance-screen[data-display-theme^="recorder-"] { box-shadow:none; }
+ #performance-screen[data-display-theme^="recorder-"].is-testing #detector-button { animation:none; }
+}
