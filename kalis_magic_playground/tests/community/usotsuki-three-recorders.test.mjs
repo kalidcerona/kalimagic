@@ -1,3 +1,4 @@
+import { createContinuousTrace } from '../../zz7/recorder-trace.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -14,9 +15,9 @@ function engineFixture({ reduced=false, AudioContext }={}) {
   setAttribute(k,v){this.attrs[k]=v;} getAttribute(k){return this.attrs[k];}
  }
  const root={getElementById(id){if(!ids.has(id))ids.set(id,new Node());return ids.get(id);},replaceChildren(){ids.clear();}};
- const sandbox={performance:{now:()=>now},window:{AudioContext,matchMedia:()=>({matches:reduced})},document:{createElement:()=>new Node(),createElementNS:()=>new Node()},URLSearchParams,
+ const sandbox={createContinuousTrace,performance:{now:()=>now},window:{AudioContext,matchMedia:()=>({matches:reduced})},document:{createElement:()=>new Node(),createElementNS:()=>new Node()},URLSearchParams,
  requestAnimationFrame:fn=>{const id=++serial;frames.set(id,fn);return id;},cancelAnimationFrame:id=>frames.delete(id),setTimeout:(fn,ms)=>{const id=++serial;timers.set(id,{fn,at:now+ms});return id;},clearTimeout:id=>timers.delete(id)};
- const code=read('recorder-engine.js').replace('export function mountRecorder','function mountRecorder')+'\nthis.mountRecorder=mountRecorder;';
+ const code=read('recorder-engine.js').replace('import { createContinuousTrace } from "./recorder-trace.js";','').replace('export function mountRecorder','function mountRecorder')+'\nthis.mountRecorder=mountRecorder;';
  vm.runInNewContext(code,sandbox);const renderer=sandbox.mountRecorder(root,{skin:'a',ink:'#1a120c'});
  function advance(t){now=t;for(const [id,job]of [...timers])if(job.at<=now){timers.delete(id);job.fn();}const batch=[...frames];frames.clear();for(const [,fn]of batch)fn(now);}
  return {renderer,advance,timers,frames,ids,begin:(duration=500,verdict='LIE')=>renderer.begin({duration,startedAt:now,verdict,attempt:1,sound:false})};
@@ -41,7 +42,7 @@ test('early release leaves partial ink, no verdict strikes; teardown clears jobs
 test('repeat feed fits inside detector duration and previous glyph coordinates stay fixed',()=>{
  const f=engineFixture();f.begin();f.advance(500);f.renderer.finish(true,'LIE',500);f.advance(966);f.advance(1076);f.advance(1140);
  const positions=f.ids.get('glyphs').children.map(g=>g.style.top);
- f.begin();assert.equal(f.renderer.snapshot().feedMs,240);f.advance(1640);f.renderer.finish(true,'TRUE',1640);f.advance(2106);f.advance(2216);
+ f.begin();assert.equal(f.renderer.snapshot().feedMs,0);f.advance(1640);f.renderer.finish(true,'TRUE',1640);f.advance(2106);f.advance(2216);
  assert.deepEqual(f.ids.get('glyphs').children.slice(0,2).map(g=>g.style.top),positions);assert.equal(f.ids.get('glyphs').children.length,4);
 });
 test('reduced motion still prints two actual verdict glyphs without a delayed job',()=>{
@@ -89,7 +90,7 @@ test('font rejection or pending FontFaceSet cannot block the actual A/D loader a
   const module={mountRecorder(){mounts++;return {setSoundEnabled(){},setPressed(){},destroy(){}};}};
   const node=()=>({dataset:{},style:{setProperty(){}},setAttribute(){},attachShadow(){return this.shadowRoot={innerHTML:'',append(){},querySelector:()=>({getBoundingClientRect:()=>({x:.303466796875,y:0,width:389.39306640625,height:844})})};},remove(){}});
   const screen={dataset:{},attachShadow(){},getBoundingClientRect:()=>({width:390,height:844}),style:{setProperty(){}},append(){}};
-  const sandbox={URL,console:{error(){}},setTimeout,clearTimeout,document:{createElement:node,fonts:{ready:new Promise(()=>{}),add(){}}},
+  const sandbox={createContinuousTrace,URL,console:{error(){}},setTimeout,clearTimeout,document:{createElement:node,fonts:{ready:new Promise(()=>{}),add(){}}},
    FontFace:class{load(){fontCalls++;return outcome==='reject'?Promise.reject(new Error('NetworkError: A network error occurred.')):new Promise(()=>{});}},
    fetch:async()=>({ok:true,text:async()=>'<main></main>'}),importEngine:async()=>module};
   const code=read('recorder-theme.js').replaceAll('import.meta.url','"https://example.test/recorder-theme.js"').replace('import("./recorder-engine.js")','importEngine()').replace('export function createRecorderThemeController','function createRecorderThemeController');

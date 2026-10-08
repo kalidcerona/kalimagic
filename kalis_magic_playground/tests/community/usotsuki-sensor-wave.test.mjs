@@ -9,8 +9,11 @@ const STATE = 'usotsuki.detector.v1';
 const THEME = 'usotsuki.detector.theme.v1';
 const SCAN = 'usotsuki.detector.scan-duration.v1';
 let serial = 0;
+const allPaper=f=>f.paper();
 
 async function fixture({ theme, store = new Map(), readFails = false, stateReadFails = false, writeFails = false, vibrateSupported = true, active = true, activationKnown = true, reducedMotion = false, rect = { left: 20, top: 180, width: 300, height: 120 } } = {}) {
+  // Seed an existing empty record; load must no longer persist defaults.
+  if (!store.has(STATE)) store.set(STATE, JSON.stringify({version:1,attemptCount:0,settings:{truthAttempts:[4]}}));
   if (theme !== undefined) store.set(THEME, theme);
   if (!store.has(SCAN)) store.set(SCAN, '0.5');
   if (!store.has('usotsuki.detector.sound.v1')) store.set('usotsuki.detector.sound.v1', '0');
@@ -99,7 +102,8 @@ async function fixture({ theme, store = new Map(), readFails = false, stateReadF
   const element = id => { const el = nodes.get(id); assert.ok(el, `${id} exists in actual HTML`); return el; };
   return {
     element, store, rect, timers, frames, vibrations, doc, windowEvents, documentEvents, activation,
-    trace: () => all.find(x => x.classes.has('signal-trace')),
+    trace: () => all.find(x => x.classes.has('wood-trace')),
+    paper:()=>all.find(x=>x.classes.has('wood-paper-strip'))?.innerHTML,
     optional: id => nodes.get(id) || null,
     frame(ms = 16) { now += ms; const batch = [...frames.entries()]; frames.clear(); for (const [, fn] of batch) fn(now); },
     activateClick(id) { activation.hasBeenActive = true; activation.isActive = true; element(id).dispatch('click'); },
@@ -108,12 +112,11 @@ async function fixture({ theme, store = new Map(), readFails = false, stateReadF
     pointer(type, x, y, id = 1, target = element('performance-screen')) { element('performance-screen').dispatch(type, { target, clientX: x, clientY: y, pointerId: id }); },
     tick(ms) {
       const end = now + ms;
-      for (let i = 0; i < 100; i++) {
-        const ready = [...timers.entries()].filter(([, t]) => t.at <= end).sort((a, b) => a[1].at - b[1].at)[0];
-        if (!ready) break;
-        now = ready[1].at; timers.delete(ready[0]); ready[1].fn();
+      while (now < end) {
+        now = Math.min(end, now + 10);
+        for (const [id, job] of [...timers]) if (job.at <= now) { timers.delete(id); job.fn(); }
+        const batch=[...frames];frames.clear();for(const [,fn] of batch)fn(now);
       }
-      now = end;
     },
     restore() { for (const [name, descriptor] of saved) { if (descriptor) Object.defineProperty(globalThis, name, descriptor); else delete globalThis[name]; } },
   };
@@ -126,7 +129,8 @@ for (const endEvent of ['pointerup', 'pointercancel', 'lostpointercapture', 'blu
     try {
       f.pointer('pointerdown', 170, 240);
       assert.equal(f.frames.size, 1, 'exactly one frame is scheduled');
-      const paths = new Set([f.trace().getAttribute('d')]);
+      f.frame(50); // Accumulate samples before checking waveform density.
+      const paths = new Set(); // A fresh continuous trace starts at one endpoint.
       for (let i = 0; i < 12; i++) {
         f.frame(25);
         paths.add(f.trace().getAttribute('d'));
@@ -138,12 +142,13 @@ for (const endEvent of ['pointerup', 'pointercancel', 'lostpointercapture', 'blu
         const numbers = [...d.matchAll(/-?\d+(?:\.\d+)?/g)].map(x => Number(x[0]));
         assert.ok(numbers.length >= 20, 'trace contains a waveform, not a moving marker');
       }
-      // A verdict is allowed while the original finger is still held.
+      // A verdict freezes the trace even while the original finger is held.
       f.tick(500);
       assert.equal(f.state().attemptCount, 1);
       const settledPath = f.trace().getAttribute('d');
       f.frame(33);
-      assert.notEqual(f.trace().getAttribute('d'), settledPath, 'trace continues after verdict until physical termination');
+      assert.equal(f.trace().getAttribute('d'), settledPath, 'trace freezes at verdict');
+      assert.equal(f.frames.size, 0, 'verdict cancels the pending frame');
       if (endEvent === 'visibilitychange') { f.doc.hidden = true; f.documentEvents.get(endEvent)?.(); }
       else if (endEvent === 'blur') f.windowEvents.get(endEvent)?.();
       else f.pointer(endEvent, 170, 240);
@@ -161,7 +166,8 @@ for (const endEvent of ['pointerup', 'pointercancel', 'lostpointercapture', 'blu
 test('fresh touch requires an explicit activation tap before starting a counted hold', async () => {
   const f = await fixture({ theme: 'recorder', active: false, store: new Map([['usotsuki.detector.vibration.v1', 'high']]) });
   try {
-    assert.match(f.element('test-indicator').textContent, /터치.*준비/, 'fresh document shows sensor readiness instruction');
+    assert.equal(f.element('test-indicator').textContent, '', 'wood uses its paper renderer');
+    assert.equal(f.element('performance-screen').classes.has('is-preparing'),true,'fresh document retains sensor preparation state');
     f.pointer('pointerdown', 170, 240); f.tick(1000);
     assert.equal(f.state().attemptCount, 0, 'unarmed touch cannot silently consume a round');
     assert.equal(f.frames.size, 0, 'unarmed touch does not start ECG');
@@ -169,7 +175,7 @@ test('fresh touch requires an explicit activation tap before starting a counted 
     const beforeLift = f.vibrations.length;
     f.activation.hasBeenActive = true; f.activation.isActive = true;
     f.pointer('pointerup', 170, 240);
-    assert.equal(f.element('test-indicator').textContent, '검사 대기 중');
+    assert.match(allPaper(f),/검사 대기 중/);
     assert.ok(f.vibrations.slice(beforeLift).every(x => x === 0), 'primer lift never starts vibration');
     f.pointer('pointerdown', 170, 240);
     assert.ok(f.vibrations.some(x => Array.isArray(x) || x > 0), 'next actual hold requests vibration');
@@ -191,7 +197,7 @@ for (const config of [
       assert.doesNotMatch(f.element('test-indicator').textContent, /터치.*준비/);
       f.pointer('pointerdown', 170, 240); f.tick(500);
       assert.equal(f.state().attemptCount, 1);
-      f.pointer('pointerup', 170, 240);
+      f.pointer('pointerup', 170, 240); f.tick(220);
       assert.equal(f.frames.size, 0);
     } finally { f.restore(); }
   });
@@ -216,7 +222,9 @@ test('movement cancellation stops ECG and cannot count a delayed attempt', async
     f.pointer('pointerdown', 170, 240); f.frame(30);
     f.pointer('pointermove', 300, 370);
     assert.equal(f.frames.size, 0);
-    assert.equal(f.element('test-indicator').textContent, '취소됨');
+    assert.equal(f.element('performance-screen').classes.has('is-cancelled'),false);
+    assert.equal(f.element('performance-screen').classes.has('is-testing'),false);
+    assert.equal(f.element('test-indicator').textContent,'');
     const d = f.trace().getAttribute('d'); f.frame(100); f.tick(5000);
     assert.equal(f.trace().getAttribute('d'), d);
     assert.equal(f.state().attemptCount, 0);
@@ -229,7 +237,7 @@ test('repeated recorder contacts never accumulate RAF callbacks', async () => {
     for (let i = 0; i < 12; i++) {
       f.pointer('pointerdown', 170, 240); f.frame(20);
       assert.equal(f.frames.size, 1);
-      f.pointer('pointerup', 170, 240);
+      f.pointer('pointerup', 170, 240); f.tick(220);
       assert.equal(f.frames.size, 0);
     }
     assert.equal(f.state().attemptCount, 0);
@@ -263,21 +271,23 @@ test('visibility cancellation clears primer ownership before pointer id reuse', 
   } finally { f.restore(); }
 });
 
-test('palette switch away from recorder cancels recorder RAF and restores common trace', async () => {
+test('palette switch away freezes wood ink and leaves common trace unchanged', async () => {
   const f = await fixture({ theme: 'recorder' });
   try {
     const rest = f.trace().getAttribute('d');
     f.pointer('pointerdown', 170, 240); f.frame(40);
     assert.notEqual(f.trace().getAttribute('d'), rest);
+    const stopped=f.trace().getAttribute('d');
     f.theme('wine');
     assert.equal(f.frames.size, 0);
-    assert.equal(f.trace().getAttribute('d'), rest);
-    f.frame(100); assert.equal(f.trace().getAttribute('d'), rest);
+    assert.equal(f.trace().getAttribute('d'), stopped);
+    assert.equal(f.element('performance-screen').dataset.displayTheme,'wine');
+    f.frame(100); assert.equal(f.trace().getAttribute('d'), stopped);
     f.pointer('pointerup', 170, 240);
   } finally { f.restore(); }
 });
 
-test('reduced motion contact paints a finite static ECG without RAF', async () => {
+test('reduced motion records finite continuous ink and disables paper feed', async () => {
   const f = await fixture({ theme: 'recorder', reducedMotion: true });
   try {
     const rest = f.trace().getAttribute('d');
@@ -285,10 +295,12 @@ test('reduced motion contact paints a finite static ECG without RAF', async () =
     const live = f.trace().getAttribute('d');
     assert.notEqual(live, rest);
     assert.doesNotMatch(live, /NaN|Infinity/);
-    assert.equal(f.frames.size, 0);
-    f.frame(100); assert.equal(f.trace().getAttribute('d'), live);
+    assert.equal(f.frames.size, 1);
+    f.frame(100); assert.notEqual(f.trace().getAttribute('d'), live);
+    const stopped=f.trace().getAttribute('d');
     f.pointer('pointerup', 170, 240);
-    assert.equal(f.trace().getAttribute('d'), rest);
+    assert.equal(f.trace().getAttribute('d'), stopped, 'release preserves continuous ink');
+    assert.equal(f.frames.size,0);
   } finally { f.restore(); }
 });
 
@@ -298,7 +310,7 @@ for (const end of ['pointercancel', 'lostpointercapture']) {
     try {
       f.pointer('pointerdown', 170, 240, 1); f.pointer(end, 170, 240, 1);
       f.activation.hasBeenActive = true; f.documentEvents.get('click')?.();
-      assert.equal(f.element('test-indicator').textContent, '검사 대기 중');
+      assert.match(allPaper(f),/검사 대기 중/);
       f.pointer('pointerdown', 170, 240, 1); f.tick(100); f.pointer('pointerup', 170, 240, 1);
       assert.equal(f.frames.size, 0); f.tick(5000); assert.equal(f.state().attemptCount, 0);
     } finally { f.restore(); }

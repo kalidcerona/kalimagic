@@ -11,6 +11,8 @@ const SCAN = 'usotsuki.detector.scan-duration.v1';
 let serial = 0;
 
 async function fixture({ theme, store = new Map(), readFails = false, stateReadFails = false, writeFails = false, vibrateSupported = true, rect = { left: 20, top: 180, width: 300, height: 120 } } = {}) {
+  // Seed an existing empty record; load must no longer persist defaults.
+  if (!store.has(STATE)) store.set(STATE, JSON.stringify({version:1,attemptCount:0,settings:{truthAttempts:[4]}}));
   if (theme !== undefined) store.set(THEME, theme);
   if (!store.has(SCAN)) store.set(SCAN, '0.5');
   if (!store.has('usotsuki.detector.sound.v1')) store.set('usotsuki.detector.sound.v1', '0');
@@ -38,8 +40,8 @@ async function fixture({ theme, store = new Map(), readFails = false, stateReadF
       this.classList = { add: (...xs) => xs.forEach(x => this.classes.add(x)), remove: (...xs) => xs.forEach(x => this.classes.delete(x)), contains: x => this.classes.has(x), toggle: (x, force) => { const on = force === undefined ? !this.classes.has(x) : force; if (on) this.classes.add(x); else this.classes.delete(x); return on; } };
       for (const [key, value] of Object.entries(attrs)) if (key.startsWith('data-')) this.dataset[key.slice(5).replace(/-([a-z])/g, (_, c) => c.toUpperCase())] = value;
     }
-    addEventListener(type, fn) { this.listeners.set(type, fn); }
-    dispatch(type, props = {}) { this.listeners.get(type)?.({ target: this, pointerId: 1, clientX: 170, clientY: 240, cancelable: true, preventDefault() {}, ...props }); }
+    addEventListener(type, fn) { this.listeners.set(type, [...(this.listeners.get(type)||[]),fn]); }
+    dispatch(type, props = {}) { for (const fn of this.listeners.get(type) || []) fn({ target: this, pointerId: 1, clientX: 170, clientY: 240, cancelable: true, preventDefault() {}, ...props }); }
     closest(selector) { return selector === `#${this.id}` ? this : null; }
     getBoundingClientRect() { return rect; }
     setPointerCapture() {}
@@ -76,10 +78,12 @@ async function fixture({ theme, store = new Map(), readFails = false, stateReadF
   };
   let now = 0;
   let nextTimer = 0;
-  const timers = new Map();
+  const timers = new Map(), frames = new Map();
   const vibrations = [];
   const windowEvents = new Map();
   const win = {
+    requestAnimationFrame(fn) { const id=++nextTimer;frames.set(id,fn);return id; },
+    cancelAnimationFrame:id=>frames.delete(id),
     localStorage: {
       getItem(key) { if ((readFails && key === THEME) || (stateReadFails && key === STATE)) throw new Error('blocked storage'); return store.get(key) ?? null; },
       setItem(key, value) { if (writeFails && key === THEME) throw new Error('blocked storage'); store.set(key, String(value)); },
@@ -99,12 +103,11 @@ async function fixture({ theme, store = new Map(), readFails = false, stateReadF
     pointer(type, x, y, id = 1, target = element('performance-screen')) { element('performance-screen').dispatch(type, { target, clientX: x, clientY: y, pointerId: id }); },
     tick(ms) {
       const end = now + ms;
-      for (let i = 0; i < 100; i++) {
-        const ready = [...timers.entries()].filter(([, t]) => t.at <= end).sort((a, b) => a[1].at - b[1].at)[0];
-        if (!ready) break;
-        now = ready[1].at; timers.delete(ready[0]); ready[1].fn();
+      while (now < end) {
+        now = Math.min(end, now + 10);
+        for (const [id, job] of [...timers]) if (job.at <= now) { timers.delete(id); job.fn(); }
+        const batch=[...frames];frames.clear();for(const [,fn] of batch)fn(now);
       }
-      now = end;
     },
     restore() { for (const [name, descriptor] of saved) { if (descriptor) Object.defineProperty(globalThis, name, descriptor); else delete globalThis[name]; } },
   };
@@ -203,7 +206,7 @@ test('background clears ready pulse ownership before pointer id reuse', async ()
     const before = f.vibrations.length;
     f.pointer('pointerup', 10, 20, 1);
     assert.equal(f.vibrations.length, before, 'stale ready owner never ends an unrelated settled hold');
-    assert.equal(f.element('performance-screen').classList.contains('is-live'), true);
+    assert.equal(f.element('performance-screen').classList.contains('is-live'), false, 'wood contact freezes at verdict');
     f.pointer('pointerup', 170, 240, 2);
     assert.equal(f.vibrations.at(-1), 0);
     assert.equal(f.element('performance-screen').classList.contains('is-live'), false);

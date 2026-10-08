@@ -1,10 +1,3 @@
-/**
- * Performance UI for the lie detector.
- * Pointer timing and verdicts come from logic.js. This module only binds
- * gestures, visuals, sound, and storage. It never reads or writes the legacy
- * `usotsuki` localStorage key and never navigates or contacts a server.
- */
-
 import {
   HOLD_THRESHOLD_MS,
   normalizeHoldThresholdMs,
@@ -29,6 +22,77 @@ const SWIPE_DOWN_PX = 96;
 const READY_FEEDBACK_MS = 600;
 const READY_HAPTIC_MS = { medium: 18, high: 28, max: 38 };
 const STAGE_CLASSES = ["is-testing", "is-lie", "is-true", "is-cancelled"];
+
+// Entropy supplies the drawing; the approved lie reaction begins only at 75%.
+function buildHeartbeat({durationMs, seed, verdict = "TRUE"}) {
+  let state = seed >>> 0;
+  const random = () => { state = (Math.imul(state, 1664525) + 1013904223) >>> 0; return state / 4294967296; };
+  const smooth = x => x * x * (3 - 2 * x);
+  const points = [[0, 62]], beats = [];
+  let beat = 180, variation = 0;
+  while (beat < durationMs * 1.5) {
+    const progress = Math.min(1, beat / durationMs);
+    const rise = progress < .5 ? smooth(progress / .5) : 1 - smooth((progress - .5) / .5);
+    variation = variation * .5 + (random() - .5) * .03;
+    const period = 36000 / (62 + 34 * rise) * (1 + variation);
+    // Compensate the 16ms pen response and denser impulses; render stays within the roll.
+    const heightPx = (18 + 22 * rise) * (1 + (random() - .5) * .04);
+    const height = heightPx * 124 / 162.4 * 2.6;
+    beats.push({at: beat, period, height, heightPx, rise});
+    // One narrow engraved impulse; all inter-beat segments are straight.
+    points.push([beat, 62], [beat + period * .025, 77.6], [beat + period * .06, 62 - height], [beat + period * .095, 82.8], [beat + period * .13, 62]);
+    beat += period;
+  }
+  points.push([durationMs, 62]);
+  const raw = points.filter(([t]) => t <= durationMs);
+  const boundary = heartbeatValue({points: raw}, durationMs * .75);
+  const transformed = raw.filter(([t]) => t < durationMs * .75);
+  transformed.push([durationMs * .75, boundary]);
+  if (verdict === "LIE") {
+    const boundaryMs = durationMs * .75;
+    // Compress complete normal impulses, including the next scheduled beat.
+    // Height changes only the R tip; there is no separate recovery hump.
+    const latePoints = points.slice(0, -1).filter(([t]) => t > boundaryMs);
+    for (const [t, y] of latePoints) {
+      const at = boundaryMs + (t - boundaryMs) * .72;
+      transformed.push([at, y < 50 ? 62 + (y - 62) * 1.65 : y]);
+    }
+    if (!transformed.some(([t,y]) => t > boundaryMs && t <= durationMs && y < 50)) {
+      // Very short tests still receive one complete, narrow normal-shaped beat.
+      while (transformed.length && transformed[transformed.length-1][0] > boundaryMs) transformed.pop();
+      const period = Math.min(beats[0].period * .72, durationMs * 1.2);
+      const at = boundaryMs + durationMs * .025;
+      const height = beats[0].height * 1.65;
+      transformed.push([at,62],[at+period*.025,77.6],[at+period*.06,62-height],
+        [at+period*.095,82.8],[at+period*.13,62]);
+    }
+    transformed.sort((a,b) => a[0] - b[0]);
+    const end = heartbeatValue({points: transformed}, durationMs);
+    while (transformed.length && transformed[transformed.length-1][0] > durationMs) transformed.pop();
+    transformed.push([durationMs,end]);
+  } else {
+    transformed.push(...raw.filter(([t]) => t > durationMs * .75));
+  }
+  transformed.sort((a,b) => a[0] - b[0]);
+  return {durationMs, seed, beats: beats.filter(b => b.at < durationMs), points: transformed};
+}
+function heartbeatValue(model, elapsedMs) {
+  const end = Math.max(0, elapsedMs);
+  for (let i = 1; i < model.points.length; i++) {
+    const [t,y] = model.points[i], [a,b] = model.points[i-1];
+    if (end <= t) { const u = Math.max(0, Math.min(1, (end-a)/(t-a || 1))); return b + (y-b)*u*u*(3-2*u); }
+  }
+  return model.points[model.points.length-1][1];
+}
+function heartbeatPath(model, elapsedMs) {
+  let path = '';
+  for(let t=0; t<=elapsedMs; t+=4) path += `${t ? 'L' : 'M'}${(8+344*t/model.durationMs).toFixed(2)} ${heartbeatValue(model,t).toFixed(2)}`;
+  return path;
+}
+
+
+
+import { createContinuousTrace } from "./recorder-trace.js";
 
 import { createRecorderThemeController } from "./recorder-theme.js";
 
@@ -269,14 +333,6 @@ function bootStorage() {
   storageLocked = loaded.preserveStoredRaw === true;
   truthInput.value = appState.settings.truthAttempts.join(",");
   updateAttemptProgress();
-  if (!storageLocked && stored.value) {
-    try {
-      const old = JSON.parse(stored.value);
-      if (old?.settings && !Array.isArray(old.settings.truthAttempts) && old.settings.truthAttempt != null) {
-        persistState();
-      }
-    } catch { /* loadFromRaw already preserves unreadable content */ }
-  }
   if (storageLocked) {
     setStatus("저장된 기록을 읽지 못했습니다. 기존 값은 덮어쓰지 않습니다.");
   }
@@ -289,115 +345,120 @@ function clearHoldTimer() {
   }
 }
 
-const TRACE_SAMPLES = 80;
-const TRACE_WINDOW_SEC = 2.2;
-let traceRestD = null;
 let traceMode = "off";
 let traceFrame = 0;
-
-function traceNode() {
-  return document.querySelector(".signal-trace");
-}
-
+let woodHeartbeat = null;
+const woodTrace = createContinuousTrace({position: 62, retain: 472, responseMs: 16, integrationMs: 2, smooth: true});
+let woodRunEnd = 0;
+function traceNode() { return document.querySelector(".wood-trace"); }
 function prefersReducedMotion() {
-  try {
-    return window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches === true;
-  } catch {
-    return false;
-  }
+  return window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches === true;
 }
-
-function traceSampleY(timeMs, xNorm) {
-  const signalTime = timeMs / 1000 - (1 - xNorm) * TRACE_WINDOW_SEC;
-  const period = 0.86 + 0.16 * Math.sin(signalTime * 0.31);
-  let frac = signalTime / period;
-  frac -= Math.floor(frac);
-  if (frac < 0) frac += 1;
-  const bell = (center, width) => {
-    const delta = (frac - center) / width;
-    return Math.exp(-(delta * delta));
-  };
-  const beat = 0.58 + 0.42 * Math.sin(signalTime * 0.9);
-  let amp = 0;
-  amp += 0.16 * bell(0.16, 0.04);
-  amp += -0.22 * bell(0.3, 0.016);
-  amp += (0.72 + 0.5 * beat) * bell(0.345, 0.012);
-  amp += -0.36 * bell(0.39, 0.015);
-  amp += (0.2 + 0.16 * Math.sin(signalTime * 0.37 + 0.8)) * bell(0.56, 0.055);
-  const wander = 4 * Math.sin(signalTime * 0.67 + xNorm * 2.1);
-  return Math.min(108, Math.max(10, 58 - amp * 34 - wander));
+function validWoodContact() {
+  const contact = pointers.get(holdPointerId);
+  return performanceScreen.dataset.displayTheme === "recorder" && !document.hidden &&
+    !performanceScreen.hidden && !settingsVisible() && !settled && hold.phase === "holding" &&
+    !!contact && pointOnButton(contact.x, contact.y, null);
 }
-
-function buildLiveTracePath(timeMs) {
-  let path = "";
-  for (let i = 0; i < TRACE_SAMPLES; i += 1) {
-    const xNorm = i / (TRACE_SAMPLES - 1);
-    const x = 8 + 344 * xNorm;
-    path += `${i === 0 ? "M" : "L"}${x.toFixed(1)} ${traceSampleY(timeMs, xNorm).toFixed(1)}`;
-  }
-  return path;
+function renderWoodTrace(elapsed, freeze = false) {
+  woodRunEnd = Math.max(0, Math.min(activeScanDurationMs, elapsed));
+  const point = woodTrace.advance(elapsed, freeze);
+  traceNode()?.setAttribute("d", woodTrace.path(p => [328 + p.distance - point.distance, p.position]));
+  document.querySelector(".wood-paper-motion")?.setAttribute("transform", `translate(${-point.distance % 24} 0)`);
+  performanceScreen.dataset.woodDistance = String(point.distance);
 }
-
-function rememberTraceRest(node) {
-  if (traceRestD != null) return;
-  const current = typeof node.getAttribute === "function" ? node.getAttribute("d") : "";
-  traceRestD = current || "M8 52C24 62 34 58 48 38S74 26 88 50S114 54 128 66S152 82 168 48S194 24 210 60S236 84 252 44S276 24 292 52S318 64 334 46S346 50 352 52";
-}
-
-function paintLiveTrace(node, timeMs) {
-  node.setAttribute("d", buildLiveTracePath(timeMs));
-}
-
-function restoreTracePath() {
-  const node = traceNode();
-  if (!node || traceRestD == null || typeof node.setAttribute !== "function") return;
-  node.setAttribute("d", traceRestD);
-}
-
 function stopLiveTrace() {
-  const restore = traceMode !== "off";
   traceMode = "off";
-  if (traceFrame && typeof window.cancelAnimationFrame === "function") {
-    window.cancelAnimationFrame(traceFrame);
-  }
+  if (traceFrame) window.cancelAnimationFrame(traceFrame);
   traceFrame = 0;
-  if (restore) restoreTracePath();
 }
-
 function onTraceFrame(timeMs) {
   traceFrame = 0;
-  if (traceMode !== "run") return;
-  const node = traceNode();
-  if (!node) {
-    traceMode = "off";
-    return;
-  }
-  paintLiveTrace(node, Number.isFinite(timeMs) ? timeMs : performance.now());
-  if (traceMode !== "run" || typeof window.requestAnimationFrame !== "function") return;
+  if (traceMode !== "run" || !validWoodContact()) { stopLiveTrace(); return; }
+  renderWoodTrace(timeMs - hold.startedAt);
+  traceFrame = window.requestAnimationFrame(onTraceFrame);
+}
+function startLiveTrace() {
+  if (!validWoodContact() || traceMode === "run") return;
+  // Run seed comes from entropy alone, never the verdict or attempt schedule.
+  const seed = Math.floor(Math.random() * 4294967296) >>> 0;
+  const oldModel = woodHeartbeat, oldEnd = woodRunEnd;
+  woodHeartbeat = buildHeartbeat({durationMs: activeScanDurationMs, seed,
+    verdict: verdictForAttempt(appState.attemptCount + 1, appState.settings.truthAttempts)});
+  const carryEnd = oldModel?.points.find(([t,y]) => t > oldEnd && Math.abs(y-62)<.01)?.[0] ?? oldEnd;
+  const carry = Math.max(0, carryEnd-oldEnd);
+  woodTrace.begin({duration: activeScanDurationMs, travel: 344,
+    target: t => t < carry ? heartbeatValue(oldModel, oldEnd+t) : heartbeatValue(woodHeartbeat, t)});
+  woodRunEnd = 0;
+  performanceScreen.dataset.woodSeed = String(seed);
+  traceMode = "run";
+  renderWoodTrace(0);
   traceFrame = window.requestAnimationFrame(onTraceFrame);
 }
 
-function startLiveTrace() {
-  if (performanceScreen.dataset.displayTheme !== "recorder") return;
-  const node = traceNode();
-  if (!node || typeof node.setAttribute !== "function") return;
-  rememberTraceRest(node);
-  if (prefersReducedMotion()) {
-    if (traceFrame && typeof window.cancelAnimationFrame === "function") window.cancelAnimationFrame(traceFrame);
-    traceFrame = 0;
-    traceMode = "static";
-    paintLiveTrace(node, 0);
-    return;
-  }
-  if (traceMode === "run" && traceFrame) return;
-  traceMode = "run";
-  if (typeof window.requestAnimationFrame !== "function") {
-    paintLiveTrace(node, performance.now());
-    return;
-  }
-  if (!traceFrame) traceFrame = window.requestAnimationFrame(onTraceFrame);
+let paperTimers = [];
+let paperFrame = 0, paperStarted = 0;
+let paperFinal = "검사 대기 중";
+function printGlyphs(text) {
+  return `<svg class="wood-print-line${text.length < 3 ? ' wood-verdict-line' : ''}" width="100%" height="100%"><text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle" opacity=".9">${text}</text></svg>`;
 }
-
+function centerWoodText() {
+  const strip = document.querySelector(".wood-paper-strip");
+  const box = strip?.getBoundingClientRect();
+  if (!box || box.width <= 0 || box.height <= 0 || !strip.querySelectorAll) return;
+  for (const svg of strip.querySelectorAll(".wood-print-line")) {
+    const text = svg.querySelector("text");
+    if (!text?.getBBox) continue;
+    text.removeAttribute("transform");
+    const b = text.getBBox();
+    if (b.width <= 0 || b.height <= 0) continue;
+    const scale = Math.min(1, box.width * .84 / Math.max(1,b.width), box.height * .74 / Math.max(1,b.height));
+    text.setAttribute("transform", `translate(${box.width/2-scale*(b.x+b.width/2)} ${box.height/2-scale*(b.y+b.height/2)}) scale(${scale})`);
+  }
+}
+function onWoodPaperFrame(now) {
+  paperFrame = 0;
+  const strip = document.querySelector(".wood-paper-strip");
+  const u = Math.max(0, Math.min(1, (now-paperStarted)/220));
+  const eased = u*u*(3-2*u);
+  if (strip) strip.style.transform = `translateY(${-80*eased}%)`;
+  if (u < 1) paperFrame = window.requestAnimationFrame(onWoodPaperFrame);
+  else stopWoodPaper();
+}
+function stopWoodPaper(preserve = false) {
+  if (paperFrame) window.cancelAnimationFrame(paperFrame);
+  paperFrame = 0;
+  paperTimers.forEach(id => window.clearTimeout(id)); paperTimers = [];
+  const strip = document.querySelector(".wood-paper-strip");
+  if (!strip) return;
+  // Cancellation freezes the visible transport; never swap SVGs or reset its offset.
+  if (preserve) return;
+  strip.classList.remove("is-feeding");
+  strip.style.transform = "";
+  strip.innerHTML = printGlyphs(paperFinal);
+  centerWoodText();
+}
+function presentWoodPaper(text, feed = false) {
+  if (text === paperFinal && !paperFrame && document.querySelector(".wood-paper-strip")?.innerHTML?.includes("<svg")) { centerWoodText(); return; }
+  const previous = paperFinal;
+  stopWoodPaper();
+  const strip = document.querySelector(".wood-paper-strip");
+  if (!strip) return;
+  paperFinal = text;
+  if (!feed || previous === text || prefersReducedMotion()) { stopWoodPaper(); return; }
+  strip.innerHTML = printGlyphs(previous) + printGlyphs(text).replace('class="wood-print-line', 'class="wood-next-line wood-print-line');
+  centerWoodText(); strip.getBoundingClientRect(); strip.classList.add("is-feeding");
+  paperStarted = performance.now();
+  paperFrame = window.requestAnimationFrame(onWoodPaperFrame);
+}
+window.addEventListener("resize", centerWoodText);
+window.addEventListener("orientationchange", centerWoodText);
+document.fonts?.ready?.then(centerWoodText);
+document.fonts?.addEventListener?.("loadingdone", centerWoodText);
+// Hidden themes/settings can have zero layout bounds; observe the visible paper.
+const woodPaperObserver = typeof ResizeObserver === "function" ? new ResizeObserver(centerWoodText) : null;
+const woodPaperStrip = document.querySelector(".wood-paper-strip");
+if (woodPaperStrip) woodPaperObserver?.observe(woodPaperStrip);
 function setLiveContact(active) {
   recorderThemes.setPressed(active);
   for (const node of [performanceScreen, detectorButton]) {
@@ -405,12 +466,19 @@ function setLiveContact(active) {
     else node.classList.remove("is-live");
   }
   if (active) startLiveTrace();
-  else stopLiveTrace();
+  else {
+    if (traceMode === "run") {
+      woodRunEnd = Math.min(activeScanDurationMs, Math.max(0, performance.now()-hold.startedAt));
+      renderWoodTrace(woodRunEnd, true);
+    }
+    stopLiveTrace();
+  }
 }
 
 // Decorative only. Text is already in the DOM; this must not wait on the scan clock.
 function presentInk(node) {
   if (!node) return;
+  if (node === testIndicator && performanceScreen.dataset.displayTheme === "recorder") node.textContent = "";
   node.classList.remove("is-inked");
   if (performanceScreen.dataset.displayTheme !== "recorder" || node.textContent === "") return;
   if (typeof node.getClientRects === "function") node.getClientRects();
@@ -422,7 +490,11 @@ function presentStatuses() {
   presentInk(verdict);
 }
 
-function setStage(mode) {
+function setStage(mode, preservePaper = false) {
+  if (performanceScreen.dataset.displayTheme === "recorder") {
+    if (mode === "TRUE" || mode === "LIE") { woodRunEnd = activeScanDurationMs; renderWoodTrace(woodRunEnd, true); stopLiveTrace(); presentWoodPaper(mode === "TRUE" ? "진실" : "거짓", true); }
+    else if (!preservePaper && (mode === "testing" || mode === "idle")) presentWoodPaper("검사 대기 중");
+  }
   if (signalMode) signalMode.textContent = mode === "testing" ? "측정 중" : mode === "cancelled" ? "취소" : mode === "TRUE" || mode === "LIE" ? "완료" : "대기";
   if (readyTimer) {
     window.clearTimeout(readyTimer);
@@ -483,7 +555,7 @@ function showReadyFeedback() {
 }
 
 function pointOnButton(x, y, target) {
-  if (target instanceof Element && target.closest("#detector-button")) return true;
+  if (performanceScreen.dataset.displayTheme !== "recorder" && target instanceof Element && target.closest("#detector-button")) return true;
   const rect = detectorButton.getBoundingClientRect();
   // The approved contact surfaces are rectangular, so blank table space is not a hit.
   if (rect.width <= 0 || rect.height <= 0) return false;
@@ -496,6 +568,7 @@ function settingsVisible() {
 }
 
 function showSettings() {
+  stopWoodPaper();
   recorderThemes.suspend();
   stopScanningSound();
   stopVibration();
@@ -539,6 +612,7 @@ function showPerformance() {
   pointers.clear();
   settingsScreen.hidden = true;
   performanceScreen.hidden = false;
+  centerWoodText();
   resumeRecorderTheme();
   detectorButton.disabled = false;
   primerPointerId = null;
@@ -679,9 +753,8 @@ function applyRelease(nowMs, x, y) {
   const result = releaseHold(appState, hold, nowMs, x, y, activeScanDurationMs);
   hold = result.hold;
   appState = result.state;
-  // A settled verdict can arrive while the finger is still down. Keep the
-  // recorder trace moving until that contact actually ends.
-  if (!(result.counted && holdPointerId != null)) setLiveContact(false);
+  // Wood ink freezes at the verdict; other skins retain their lifecycle.
+  if (performanceScreen.dataset.displayTheme === "recorder" || !(result.counted && holdPointerId != null)) setLiveContact(false);
   recorderThemes.finish(result.counted, result.verdict, result.counted ? nowMs : performance.now());
   if (result.counted) {
     updateAttemptProgress();
@@ -695,7 +768,11 @@ function applyRelease(nowMs, x, y) {
     }
     return;
   }
-  if (result.outcome === "cancelled") setStage("cancelled");
+  if (result.outcome === "cancelled") {
+    stopWoodPaper(true);
+    // Return to idle without replaying ink or replacing the paper.
+    setStage(performanceScreen.dataset.displayTheme === "recorder" ? "idle" : "cancelled", true);
+  }
 }
 
 function armThresholdTimer() {
@@ -818,6 +895,11 @@ function onPointerMove(event) {
   if (!contact || performanceScreen.hidden) return;
   contact.x = event.clientX;
   contact.y = event.clientY;
+  if (performanceScreen.dataset.displayTheme === "recorder" && event.pointerId === holdPointerId && !pointOnButton(contact.x, contact.y, null)) {
+    if (!settled) cancelUnsettledHold();
+    setLiveContact(false);
+    holdPointerId = null;
+  }
   if (event.pointerId === activePointerId && !settled && hold.phase === "holding") {
     const updated = updateHold(hold, event.clientX, event.clientY);
     hold = updated.hold;
@@ -960,6 +1042,7 @@ function resumeRecorderTheme() {
 
 function onVisibilityChange() {
   if (!document.hidden) { resumeRecorderTheme(); return; }
+  stopWoodPaper(!settled && hold.phase !== "idle");
   recorderThemes.suspend();
   if (!settled && hold.phase !== "idle") cancelUnsettledHold();
   stopScanningSound();
@@ -978,6 +1061,7 @@ function onVisibilityChange() {
 }
 
 function onWindowBlur() {
+  stopWoodPaper(!settled && hold.phase !== "idle");
   recorderThemes.suspend();
   if (!settled && hold.phase !== "idle") cancelUnsettledHold();
   clearHoldTimer();
@@ -1014,6 +1098,9 @@ function bind() {
   scanDurationInput?.addEventListener("change", onScanDurationChange);
   document.addEventListener("visibilitychange", onVisibilityChange);
   window.addEventListener("blur", onWindowBlur);
+  const invalidateWoodContact = () => { if (performanceScreen.dataset.displayTheme === "recorder") onWindowBlur(); };
+  window.addEventListener("resize", invalidateWoodContact);
+  window.addEventListener("orientationchange", invalidateWoodContact);
   window.addEventListener("focus", resumeRecorderTheme);
 }
 
@@ -1032,6 +1119,7 @@ function applyDisplayTheme(value) {
   }
   recorderThemes.switchTheme(theme);
   performanceScreen.dataset.displayTheme = theme;
+  if (theme !== "recorder") stopWoodPaper();
   displayThemeSelect.value = theme;
   if (theme !== "recorder") stopLiveTrace();
   else if (holdPointerId != null && performanceScreen.classList.contains("is-live")) startLiveTrace();
@@ -1047,7 +1135,7 @@ displayThemeSelect.addEventListener("change", (event) => {
 bootStorage();
 appState = resetAttempts(appState);
 updateAttemptProgress();
-persistState();
+// Loading preserves the original stored bytes; saves happen only after user actions.
 setStage("idle");
 showPerformance();
 bind();

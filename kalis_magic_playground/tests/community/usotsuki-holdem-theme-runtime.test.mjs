@@ -8,6 +8,8 @@ const SCAN = 'usotsuki.detector.scan-duration.v1';
 let serial = 0;
 
 async function fixture({ theme, store = new Map(), readFails = false, stateReadFails = false, writeFails = false, vibrateSupported = true, rect = { left: 20, top: 180, width: 300, height: 120 } } = {}) {
+  // Seed an existing empty record; load must no longer persist defaults.
+  if (!store.has(STATE)) store.set(STATE, JSON.stringify({version:1,attemptCount:0,settings:{truthAttempts:[4]}}));
   if (theme !== undefined) store.set(THEME, theme);
   if (!store.has(SCAN)) store.set(SCAN, '0.5');
   if (!store.has('usotsuki.detector.sound.v1')) store.set('usotsuki.detector.sound.v1', '0');
@@ -74,9 +76,11 @@ async function fixture({ theme, store = new Map(), readFails = false, stateReadF
   };
   let now = 0;
   let nextTimer = 0;
-  const timers = new Map();
+  const timers = new Map(), frames = new Map();
   const vibrations = [];
   const win = {
+    requestAnimationFrame(fn) { const id=++nextTimer;frames.set(id,fn);return id; },
+    cancelAnimationFrame:id=>frames.delete(id),
     localStorage: {
       getItem(key) { if ((readFails && key === THEME) || (stateReadFails && key === STATE)) throw new Error('blocked storage'); return store.get(key) ?? null; },
       setItem(key, value) { writes.push([key, String(value)]); if (writeFails && key === THEME) throw new Error('blocked storage'); store.set(key, String(value)); },
@@ -97,12 +101,11 @@ async function fixture({ theme, store = new Map(), readFails = false, stateReadF
     pointer(type, x, y, id = 1, target = element('performance-screen')) { element('performance-screen').dispatch(type, { target, clientX: x, clientY: y, pointerId: id }); },
     tick(ms) {
       const end = now + ms;
-      for (let i = 0; i < 100; i++) {
-        const ready = [...timers.entries()].filter(([, t]) => t.at <= end).sort((a, b) => a[1].at - b[1].at)[0];
-        if (!ready) break;
-        now = ready[1].at; timers.delete(ready[0]); ready[1].fn();
+      while (now < end) {
+        now = Math.min(end, now + 10);
+        for (const [id, job] of [...timers]) if (job.at <= now) { timers.delete(id); job.fn(); }
+        const batch=[...frames];frames.clear();for(const [,fn] of batch)fn(now);
       }
-      now = end;
     },
     restore() { for (const [name, descriptor] of saved) { if (descriptor) Object.defineProperty(globalThis, name, descriptor); else delete globalThis[name]; } },
   };
@@ -145,10 +148,12 @@ test('theme changes during a hold preserve timing, truth attempts and haptics, a
     f.element('start-performance').dispatch('click');
     f.pointer('pointerdown', 170, 240);
     assert.equal(f.element('test-indicator').textContent, '검사 중');
+    assert.equal(f.element('performance-screen').classes.has('is-testing'),true);
     const state = f.store.get(STATE), timers = [...f.timers.entries()], pulses = JSON.stringify(f.vibrations);
     f.theme('wine');
     assert.equal(f.store.get(STATE), state); assert.deepEqual([...f.timers.entries()], timers); assert.equal(JSON.stringify(f.vibrations), pulses);
     assert.equal(f.element('test-indicator').textContent, '검사 중');
+    assert.equal(f.element('performance-screen').classes.has('is-testing'),true);
     f.tick(499); assert.equal(f.state().attemptCount, 0);
     f.tick(1); assert.equal(f.state().attemptCount, 1); assert.equal(f.element('verdict').textContent, '거짓');
     f.pointer('pointerup', 170, 240);
@@ -194,7 +199,7 @@ test('recorder theme persists, falls back to green, and a hold keeps attempts, t
   assert.match(css, /#performance-screen\[data-display-theme="wine"\]/);
   assert.match(css, /holdem-assets\/felt-grain\.svg/);
   assert.match(css, /holdem-assets\/leather-grain\.svg/);
-  assert.match(sw, /v20261008-three-recorders-12/);
+  assert.match(sw, /v20261009-continuous-paper-16/);
   assert.match(sw, /recorder-assets\/recorder-shell-blank\.webp/);
   assert.match(sw, /pathname\.startsWith\('\/tools\/'\)/);
   const store = new Map([['usotsuki.detector.sound.v1', '0']]);
@@ -209,7 +214,8 @@ test('recorder theme persists, falls back to green, and a hold keeps attempts, t
     f.element('truth-attempt').dispatch('change');
     f.element('start-performance').dispatch('click');
     f.pointer('pointerdown', 170, 240);
-    assert.equal(f.element('test-indicator').textContent, '검사 중');
+    assert.equal(f.element('test-indicator').textContent, '');
+    assert.equal(f.element('performance-screen').classes.has('is-testing'),true);
     const state = f.store.get(STATE);
     const timers = [...f.timers.entries()];
     const pulses = JSON.stringify(f.vibrations);
@@ -218,7 +224,8 @@ test('recorder theme persists, falls back to green, and a hold keeps attempts, t
     assert.equal(f.store.get(STATE), state);
     assert.deepEqual([...f.timers.entries()], timers);
     assert.equal(JSON.stringify(f.vibrations), pulses);
-    assert.equal(f.element('test-indicator').textContent, '검사 중');
+    assert.equal(f.element('test-indicator').textContent, '');
+    assert.equal(f.element('performance-screen').classes.has('is-testing'),true);
     assert.equal(f.element('sound-enabled').checked, false);
     assert.equal(store.get('usotsuki.detector.sound.v1'), '0');
     assert.equal(f.element('scan-duration').value, '0.5');
@@ -260,7 +267,8 @@ test('recorder theme persists, falls back to green, and a hold keeps attempts, t
   const relaunched = await fixture({ store });
   try {
     assert.equal(relaunched.element('performance-screen').dataset.displayTheme, 'recorder');
-    assert.equal(relaunched.state().attemptCount, 0);
+    assert.equal(relaunched.state().attemptCount, 1, 'read-only load preserves the last saved record');
+    assert.match(relaunched.element('attempt-progress').textContent,/0회/,'in-memory attempts reset for performance');
     assert.deepEqual(relaunched.state().settings.truthAttempts, [2, 4]);
     assert.equal(relaunched.element('scan-duration').value, '0.5');
     assert.equal(relaunched.element('sound-enabled').checked, false);

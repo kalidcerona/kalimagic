@@ -53,8 +53,21 @@ test('promotion preserves existing shared storage and isolates newly introduced 
 });
 
 
+test('USOTSUKI personal and snapshot preserve full HTML bytes and exclude unused assets from deployment', async () => {
+  assert.equal((await read('zz7', 'index.html')).toString(), (await read('distribution-snapshots/usotsuki', 'index.html')).toString().replace('usotsuki.distribution.detector.theme.v1', 'usotsuki.detector.theme.v1'));
+  for (const file of ['fonts/NanumGothicCoding-Regular.ttf', 'ink-print.svg']) {
+    assert.ok(!USOTSUKI_FILES.includes(file), file);
+    for (const route of ['zz7', 'distribution-snapshots/usotsuki']) assert.ok(!(await read(route, 'sw.js')).toString().includes(`"./${file}"`), `${route}/${file}`);
+    for (const route of ['zz7', 'distribution-snapshots/usotsuki']) {
+      for (const runtime of ['index.html', 'style.css', 'detector.js', 'recorder-theme.js', 'recorder-engine.js', 'recorder-trace.js', 'recorder-a.html', 'recorder-d.html']) assert.ok(!(await read(route, runtime)).toString().includes(file), `${route}/${runtime}: ${file}`);
+    }
+  }
+  assert.ok(USOTSUKI_FILES.includes('recorder-assets/recorder-shell-blank.webp'));
+});
+
+
 test('Three recorder themes retain exact bytes and cache isolation', async () => {
-  for (const file of ['index.html', 'style.css', 'detector.js', 'sw.js', 'recorder-theme.js', 'recorder-engine.js', 'recorder-a.html', 'recorder-d.html']) {
+  for (const file of ['index.html', 'style.css', 'detector.js', 'sw.js', 'recorder-theme.js', 'recorder-engine.js', 'recorder-trace.js', 'recorder-a.html', 'recorder-d.html']) {
     const personal = await read('zz7', file);
     let snapshot = (await read('distribution-snapshots/usotsuki', file)).toString();
     if (file === 'index.html') snapshot = snapshot.replace('usotsuki.distribution.detector.theme.v1', 'usotsuki.detector.theme.v1');
@@ -63,8 +76,9 @@ test('Three recorder themes retain exact bytes and cache isolation', async () =>
         snapshot = snapshot.replace(`${constant} = "usotsuki.distribution.${key}"`, `${constant} = "usotsuki.${key}"`);
       }
     } else if (file === 'sw.js') {
-      snapshot = snapshot.replace('v20261008-three-recorders-12-distribution', 'v20261008-three-recorders-12');
-      assert.ok(personal.includes('v20261008-three-recorders-12'));
+      assert.ok(snapshot.includes("CACHE_NAME = CACHE_PREFIX + 'v20261009-continuous-paper-16-distribution'"));
+      snapshot = snapshot.replace('v20261009-continuous-paper-16-distribution', 'v20261009-continuous-paper-16');
+      assert.ok(personal.includes('v20261009-continuous-paper-16'));
     }
     assert.equal(snapshot, personal.toString(), `normalized snapshot ${file}`);
     if (file === 'style.css') {

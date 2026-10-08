@@ -41,7 +41,7 @@ test('personal and friend USOTSUKI commit focused scan input before Start withou
     const stateKey = route === 'zz7' ? 'usotsuki.detector.v1' : 'usotsuki.distribution.detector.v1';
     assert.equal(get('#settings-screen').hidden, true, `${route} opens ready to play`);
     assert.equal(get('#performance-screen').hidden, false);
-    assert.equal(JSON.parse(stored.get(stateKey)).attemptCount, 0, `${route} reload resets only attempts`);
+    assert.equal(JSON.parse(stored.get(stateKey)).attemptCount, 12, `${route} load preserves stored attempts until a user action`);
     assert.deepEqual(JSON.parse(stored.get(stateKey)).settings.truthAttempts, [4,7]);
     const start = get('#start-performance');
     const input = get('#scan-duration');

@@ -1373,3 +1373,34 @@ select {
  body.is-testing #performance-screen[data-display-theme^="recorder-"] { box-shadow:none; }
  #performance-screen[data-display-theme^="recorder-"].is-testing #detector-button { animation:none; }
 }
+
+/* Round two: physical wood surfaces, scoped to the photographed skin. */
+.wood-wave, .wood-window-viewport, .wood-contact-socket { display: none; }
+#performance-screen[data-display-theme="recorder"] .control-bay { align-self: stretch; height: 100%; }
+#performance-screen[data-display-theme="recorder"] .signal-wave { display: none; }
+#performance-screen[data-display-theme="recorder"] .wood-wave { display: block; width: 100%; height: 100%; }
+#performance-screen[data-display-theme="recorder"] .wood-trace { fill: none; stroke: #514333; stroke-width: 2.15; opacity: .68; mix-blend-mode: multiply; stroke-linecap: round; stroke-linejoin: round; animation: none; transition: none; }
+#performance-screen[data-display-theme="recorder"] .result-panel { left: 27.59%; top: 50.43%; width: 44.83%; height: 5.99%; padding: 0; }
+#performance-screen[data-display-theme="recorder"] #test-indicator,
+#performance-screen[data-display-theme="recorder"] #verdict { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+#performance-screen[data-display-theme="recorder"] .wood-window-viewport { display: block; position: absolute; inset: 0; overflow: hidden; container-type: size; }
+#performance-screen[data-display-theme="recorder"] .wood-paper-strip { position: absolute; inset: 0; background: none; }
+#performance-screen[data-display-theme="recorder"] .wood-paper-strip.is-feeding { will-change: transform; }
+#performance-screen[data-display-theme="recorder"] .wood-print-line { position: absolute; inset: 0; overflow: visible; color: #303030; font-family: "AppleMyungjo", "Batang", "Noto Serif CJK KR", serif; font-size: clamp(9.6px,40.8cqh,22.8px); font-weight: 400; font-synthesis: none; letter-spacing: .03em; text-shadow: none; mix-blend-mode: multiply; }
+#performance-screen[data-display-theme="recorder"] .wood-print-line text { fill: currentColor; filter: url(#wood-graphite); }
+#performance-screen[data-display-theme="recorder"] .wood-verdict-line { font-size: 68cqh; letter-spacing: .08em; }
+#performance-screen[data-display-theme="recorder"] .wood-next-line { top: 80%; }
+#performance-screen[data-display-theme="recorder"] #detector-button,
+#performance-screen[data-display-theme="recorder"]:is(.is-testing,.is-lie,.is-true,.is-cancelled) #detector-button { left: 28%; top: 61.3%; width: 44%; height: 25%; min-width: 0; min-height: 0; transform: none; animation: none; background: transparent; box-shadow: none; border: 0; }
+#performance-screen[data-display-theme="recorder"] #detector-button .sensor-plate,
+#performance-screen[data-display-theme="recorder"] #detector-button .button-icon,
+#performance-screen[data-display-theme="recorder"] #detector-button .contact-label { display: none; }
+#performance-screen[data-display-theme="recorder"] #detector-button::before,
+#performance-screen[data-display-theme="recorder"] #detector-button::after { content: none; }
+#performance-screen[data-display-theme="recorder"] .wood-contact-socket { display: block; position: absolute; inset: 0; border-radius: 28% 28% 22% 22%; background: none; box-shadow: none; pointer-events: none; }
+#performance-screen[data-display-theme="recorder"] .wood-contact-socket > svg { width: 100%; height: 100%; display: block; }
+#performance-screen[data-display-theme="recorder"].is-live .wood-reflection { opacity: .42; }
+@media (prefers-reduced-motion: reduce) { #performance-screen[data-display-theme="recorder"] .wood-paper-strip { transition: none; } }
+
+#performance-screen[data-display-theme="recorder"] .wood-paper-motion { opacity: .16; mix-blend-mode: multiply; }
+@media (orientation: landscape) { #performance-screen[data-display-theme="recorder"] .wood-print-line text { filter: url(#wood-graphite-small); } }
