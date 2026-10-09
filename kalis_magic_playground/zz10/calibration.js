@@ -14,7 +14,11 @@ export function claimCalibrationReady(calibrator) {
   return true;
 }
 
-/** Arm only after a camera scene has remained still and card-free. */
+/**
+ * Arm only after the scene stays still and no card is seen.
+ * A hand already filling the view at startup is not separable from furniture,
+ * so the caller must capture a clean empty scene before fingers enter.
+ */
 export function observeCalibration(calibrator, frame, t, cardSeen = false) {
   if (calibrator.reference) return calibrator;
   if (cardSeen) {

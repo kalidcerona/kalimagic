@@ -22,10 +22,10 @@
  *
  * Limitations:
  *   - Single-frame detection estimates the scene from its border. The stored
- *     empty-scene path supports varied backgrounds. Both paths retry with warm
- *     foreground removed to separate a held paper card from the hand; strongly
- *     warm paper, neutral-colored grips, or invisible edges can still fail.
- *     A card itself cut off by the frame is rejected.
+ *     empty-scene path supports varied backgrounds. Both paths can separate a
+ *     border-touching grip, including a short-edge end grip, from the card.
+ *     Strongly warm paper or a grip that covers more than one side can still fail.
+ *     A card cut off by the frame is rejected. One covered short edge is not.
  *   - The fitted shape is a rotated rectangle. Strong perspective keystone is
  *     only a limitation of detection; mapSourceOntoCorners still accepts a
  *     general convex destination quad.
@@ -319,6 +319,19 @@ export function sceneChangeFraction(frame, reference) {
     }
   }
   return total ? changed / total : 1;
+}
+
+function channelDistance(first, second) {
+  return (Math.abs(first[0] - second[0]) + Math.abs(first[1] - second[1]) +
+    Math.abs(first[2] - second[2])) / 3;
+}
+
+function rgbAt(frame, x, y) {
+  const px = Math.round(x);
+  const py = Math.round(y);
+  if (px < 0 || py < 0 || px >= frame.width || py >= frame.height) return null;
+  const offset = (py * frame.width + px) * 4;
+  return [frame.data[offset], frame.data[offset + 1], frame.data[offset + 2]];
 }
 
 function cellToImage(gx, gy, step, width, height) {
@@ -631,34 +644,92 @@ function intersectLines(first, second) {
   return { x, y };
 }
 
+function sideGeometry(corners, side) {
+  const start = corners[side];
+  const end = corners[(side + 1) % 4];
+  const dx = end.x - start.x;
+  const dy = end.y - start.y;
+  const length = Math.hypot(dx, dy);
+  let cx = 0;
+  let cy = 0;
+  for (const point of corners) {
+    cx += point.x;
+    cy += point.y;
+  }
+  cx /= 4;
+  cy /= 4;
+  const midX = (start.x + end.x) * 0.5;
+  const midY = (start.y + end.y) * 0.5;
+  let nx = length ? -dy / length : 0;
+  let ny = length ? dx / length : 0;
+  if (nx * (midX - cx) + ny * (midY - cy) < 0) {
+    nx = -nx;
+    ny = -ny;
+  }
+  const previous = corners[(side + 3) % 4];
+  const adjacent = Math.hypot(start.x - previous.x, start.y - previous.y);
+  return {
+    start,
+    dx,
+    dy,
+    length,
+    nx,
+    ny,
+    inward: Math.max(28, Math.min(72, adjacent * 0.42)),
+  };
+}
+
+function lineThrough(start, end) {
+  const dx = end.x - start.x;
+  const dy = end.y - start.y;
+  const length = Math.hypot(dx, dy) || 1;
+  return { x: start.x, y: start.y, dx: dx / length, dy: dy / length };
+}
+
+// A short-edge grip continues across the boundary. That is not evidence the
+// card edge is missing, and it is not used as a skin classifier.
+function gripCoversProbe(frame, x, y, nx, ny, inward) {
+  if (warmGripPixel(frame, x, y)) return true;
+  const edge = rgbAt(frame, x, y);
+  const outside = rgbAt(frame, x + nx * 8, y + ny * 8);
+  const inside = rgbAt(frame, x - nx * 5, y - ny * 5);
+  const deep = rgbAt(frame, x - nx * inward, y - ny * inward);
+  if (!edge || !outside || !inside || !deep) return false;
+  if (channelDistance(edge, outside) > 14) return false;
+  if (channelDistance(inside, outside) > 18) return false;
+  return channelDistance(deep, outside) >= 16;
+}
+
 /**
  * Snap each side of a coarse rectangle to the strongest nearby image gradient
  * and replace the corners with line intersections. Returns null when a side
- * lacks enough gradient support for a stable fit.
+ * lacks enough gradient support for a stable fit. One grip-covered side may
+ * keep its coarse line.
  */
 function refineQuad(coarse, frame, step, contrast) {
   const radius = Math.max(3, step + 2);
   const magMin = Math.max(30, contrast * 0.75);
   const samples = 16;
   const lines = [];
+  let coveredSides = 0;
 
   for (let side = 0; side < 4; side += 1) {
-    const start = coarse[side];
-    const end = coarse[(side + 1) % 4];
-    const dx = end.x - start.x;
-    const dy = end.y - start.y;
-    const length = Math.hypot(dx, dy);
-    if (length < 8) return null;
-    const tx = dx / length;
-    const ty = dy / length;
+    const geometry = sideGeometry(coarse, side);
+    if (geometry.length < 8) return null;
+    const tx = geometry.dx / geometry.length;
+    const ty = geometry.dy / geometry.length;
     const nx = -ty;
     const ny = tx;
     const hits = [];
+    let covered = 0;
 
     for (let i = 0; i < samples; i += 1) {
       const t = 0.14 + (0.72 * (i + 0.5)) / samples;
-      const baseX = start.x + tx * length * t;
-      const baseY = start.y + ty * length * t;
+      const baseX = geometry.start.x + tx * geometry.length * t;
+      const baseY = geometry.start.y + ty * geometry.length * t;
+      if (gripCoversProbe(frame, baseX, baseY, geometry.nx, geometry.ny, geometry.inward)) {
+        covered += 1;
+      }
       let best = null;
       for (let offset = -radius; offset <= radius; offset += 1) {
         const x = baseX + nx * offset;
@@ -674,10 +745,15 @@ function refineQuad(coarse, frame, step, contrast) {
       if (best) hits.push(best);
     }
 
-    if (hits.length < samples * 0.55) return null;
-    const line = fitLine(hits);
-    if (!line) return null;
-    lines.push(line);
+    if (hits.length >= samples * 0.55) {
+      const line = fitLine(hits);
+      if (!line) return null;
+      lines.push(line);
+    } else if (covered >= samples * 0.45) {
+      coveredSides += 1;
+      if (coveredSides > 1) return null;
+      lines.push(lineThrough(geometry.start, coarse[(side + 1) % 4]));
+    } else return null;
   }
 
   const corners = [];
@@ -759,28 +835,30 @@ function warmGripPixel(frame, x, y) {
 function edgeSupport(corners, frame, contrast) {
   const magMin = Math.max(28, contrast * 0.7);
   const samples = 18;
-  let supportSum = 0;
+  const ratios = [];
+  let occludedSides = 0;
 
   for (let side = 0; side < 4; side += 1) {
-    const start = corners[side];
-    const end = corners[(side + 1) % 4];
-    const dx = end.x - start.x;
-    const dy = end.y - start.y;
-    const length = Math.hypot(dx, dy);
-    if (length < 8) return 0;
-    const tx = dx / length;
-    const ty = dy / length;
+    const geometry = sideGeometry(corners, side);
+    if (geometry.length < 8) return 0;
+    const tx = geometry.dx / geometry.length;
+    const ty = geometry.dy / geometry.length;
     const nx = -ty;
     const ny = tx;
     let hits = 0;
     let available = 0;
+    let covered = 0;
 
     for (let i = 0; i < samples; i += 1) {
       const t = 0.12 + (0.76 * (i + 0.5)) / samples;
-      const x = start.x + dx * t;
-      const y = start.y + dy * t;
-      // A foreground grip can remove a real edge; require eight remaining probes.
-      if (warmGripPixel(frame, x, y)) continue;
+      const x = geometry.start.x + geometry.dx * t;
+      const y = geometry.start.y + geometry.dy * t;
+      // A foreground grip can remove a real edge. One mostly covered side is
+      // allowed; the other three still need their own gradient support.
+      if (gripCoversProbe(frame, x, y, geometry.nx, geometry.ny, geometry.inward)) {
+        covered += 1;
+        continue;
+      }
       available += 1;
       let best = null;
       for (let offset = -1; offset <= 1; offset += 1) {
@@ -796,13 +874,21 @@ function edgeSupport(corners, frame, contrast) {
       if (alignment >= 0.55) hits += 1;
     }
 
+    const coveredSide = covered >= samples * 0.45 &&
+      (available < 8 || hits < available * MIN_SIDE_SUPPORT);
+    if (coveredSide) {
+      occludedSides += 1;
+      if (occludedSides > 1) return 0;
+      continue;
+    }
     if (available < 8) return 0;
     const ratio = hits / available;
     if (ratio < MIN_SIDE_SUPPORT) return 0;
-    supportSum += ratio;
+    ratios.push(ratio);
   }
 
-  return supportSum / 4;
+  if (!ratios.length || ratios.length + occludedSides !== 4) return 0;
+  return ratios.reduce((sum, ratio) => sum + ratio, 0) / ratios.length;
 }
 
 function cornersClose(first, second, limit) {
@@ -819,6 +905,7 @@ function scoreQuad(corners, frame, contrast, anchor) {
   if (!ordered || isDegenerateQuad(ordered)) return null;
   if (signedPolygonArea(ordered) <= 0) return null;
   if (!roughlyRectangular(ordered)) return null;
+  if (gluedToFrame(ordered, frame.width, frame.height)) return null;
 
   const shape = aspectOf(ordered);
   if (!shape) return null;
@@ -856,6 +943,252 @@ function scoreQuad(corners, frame, contrast, anchor) {
     confidence,
     aspectRatio: shape.aspect,
   };
+}
+
+function gluedToFrame(corners, width, height) {
+  for (let i = 0; i < 4; i += 1) {
+    const a = corners[i];
+    const b = corners[(i + 1) % 4];
+    if (a.x <= 2.5 && b.x <= 2.5) return true;
+    if (a.y <= 2.5 && b.y <= 2.5) return true;
+    if (a.x >= width - 2.5 && b.x >= width - 2.5) return true;
+    if (a.y >= height - 2.5 && b.y >= height - 2.5) return true;
+  }
+  return false;
+}
+
+function medianRgb(colors) {
+  return [0, 1, 2].map((channel) => median(colors.map((color) => color[channel])));
+}
+
+// Drop a grip that is connected to the frame edge when its color differs from
+// the far side of the same silhouette. A clipped card is the same material at
+// the frame and is left untouched.
+function peelBorderGrip(frame, grid, labels, component) {
+  const { gridWidth, gridHeight, step } = grid;
+  const colorAt = (gx, gy) => {
+    const x = Math.min(frame.width - 1, gx * step);
+    const y = Math.min(frame.height - 1, gy * step);
+    const offset = (y * frame.width + x) * 4;
+    return [frame.data[offset], frame.data[offset + 1], frame.data[offset + 2]];
+  };
+  const borderCells = [];
+  const farColors = [];
+  const cells = [];
+  let maxBorderDistance = 0;
+  for (let gy = component.minY; gy <= component.maxY; gy += 1) {
+    for (let gx = component.minX; gx <= component.maxX; gx += 1) {
+      const index = gy * gridWidth + gx;
+      if (labels[index] !== component.id) continue;
+      const borderDistance = Math.min(gx, gy, gridWidth - 1 - gx, gridHeight - 1 - gy);
+      if (borderDistance > maxBorderDistance) maxBorderDistance = borderDistance;
+      cells.push({ gx, gy, index, borderDistance });
+      if (borderDistance === 0) borderCells.push(colorAt(gx, gy));
+    }
+  }
+  if (borderCells.length < 2 || cells.length < 30) return null;
+  const farCut = Math.max(3, maxBorderDistance * 0.55);
+  for (const cell of cells) {
+    if (cell.borderDistance >= farCut) farColors.push(colorAt(cell.gx, cell.gy));
+  }
+  if (farColors.length < 12) return null;
+  const farMedian = medianRgb(farColors);
+  let cardLikeBorder = 0;
+  for (const color of borderCells) {
+    if (channelDistance(color, farMedian) < 5) cardLikeBorder += 1;
+  }
+  if (cardLikeBorder / borderCells.length > 0.35) return null;
+  const borderMedian = medianRgb(borderCells);
+  if (channelDistance(borderMedian, farMedian) < 5) return null;
+
+  const drop = new Uint8Array(gridWidth * gridHeight);
+  const queue = [];
+  const consider = (gx, gy) => {
+    if (gx < 0 || gy < 0 || gx >= gridWidth || gy >= gridHeight) return;
+    const index = gy * gridWidth + gx;
+    if (labels[index] !== component.id || drop[index]) return;
+    if (channelDistance(colorAt(gx, gy), borderMedian) > 4) return;
+    drop[index] = 1;
+    queue.push(index);
+  };
+  for (const cell of cells) {
+    if (cell.borderDistance === 0) consider(cell.gx, cell.gy);
+  }
+  for (let head = 0; head < queue.length; head += 1) {
+    const index = queue[head];
+    const gx = index % gridWidth;
+    const gy = (index - gx) / gridWidth;
+    consider(gx - 1, gy);
+    consider(gx + 1, gy);
+    consider(gx, gy - 1);
+    consider(gx, gy + 1);
+  }
+  if (!queue.length) return null;
+  const keep = new Uint8Array(gridWidth * gridHeight);
+  let keepCount = 0;
+  for (const cell of cells) {
+    if (drop[cell.index]) continue;
+    keep[cell.index] = 1;
+    keepCount += 1;
+  }
+  if (keepCount < cells.length * 0.45 || keepCount < 24) return null;
+
+  const nextLabels = new Int32Array(gridWidth * gridHeight);
+  const stack = [];
+  let best = null;
+  let nextId = 1;
+  for (let gy = component.minY; gy <= component.maxY; gy += 1) {
+    for (let gx = component.minX; gx <= component.maxX; gx += 1) {
+      const start = gy * gridWidth + gx;
+      if (!keep[start] || nextLabels[start]) continue;
+      const componentId = nextId;
+      nextId += 1;
+      nextLabels[start] = componentId;
+      stack.push(start);
+      let area = 0;
+      let sum = 0;
+      let sumX = 0;
+      let sumY = 0;
+      let minX = gx;
+      let maxX = gx;
+      let minY = gy;
+      let maxY = gy;
+      let touchesBorder = false;
+      while (stack.length > 0) {
+        const index = stack.pop();
+        const x = index % gridWidth;
+        const y = (index - x) / gridWidth;
+        area += 1;
+        sum += grid.luma[index];
+        sumX += x;
+        sumY += y;
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
+        if (x === 0 || y === 0 || x === gridWidth - 1 || y === gridHeight - 1) touchesBorder = true;
+        if (x > 0 && keep[index - 1] && !nextLabels[index - 1]) {
+          nextLabels[index - 1] = componentId;
+          stack.push(index - 1);
+        }
+        if (x + 1 < gridWidth && keep[index + 1] && !nextLabels[index + 1]) {
+          nextLabels[index + 1] = componentId;
+          stack.push(index + 1);
+        }
+        if (y > 0 && keep[index - gridWidth] && !nextLabels[index - gridWidth]) {
+          nextLabels[index - gridWidth] = componentId;
+          stack.push(index - gridWidth);
+        }
+        if (y + 1 < gridHeight && keep[index + gridWidth] && !nextLabels[index + gridWidth]) {
+          nextLabels[index + gridWidth] = componentId;
+          stack.push(index + gridWidth);
+        }
+      }
+      if (touchesBorder) continue;
+      const candidate = {
+        id: componentId,
+        area,
+        mean: sum / area,
+        minX,
+        maxX,
+        minY,
+        maxY,
+        touchesBorder: false,
+        cx: sumX / area,
+        cy: sumY / area,
+      };
+      if (!best || candidate.area > best.area) best = candidate;
+    }
+  }
+  if (!best) return null;
+  return { labels: nextLabels, component: best };
+}
+
+// Fingers left by a clipped card are a short solid slab. Apply this only to a
+// peeled border remainder, or to a slab sitting on a border-touching body.
+// An isolated silhouette, including a small card, is not rejected.
+// Geometry only, not a skin classification.
+function shortFingerSlab(component, grid) {
+  const spanX = component.maxX - component.minX + 1;
+  const spanY = component.maxY - component.minY + 1;
+  if (component.area < spanX * spanY * 0.85) return false;
+  const shortSide = Math.min(spanX, spanY) * grid.step;
+  const longSide = Math.max(spanX, spanY) * grid.step;
+  if (shortSide < 1 || shortSide >= 72) return false;
+  return longSide / shortSide >= 1.65;
+}
+
+function componentTone(component, labels, grid, frame) {
+  const colors = [];
+  const strideX = Math.max(1, Math.ceil((component.maxX - component.minX + 1) / 8));
+  const strideY = Math.max(1, Math.ceil((component.maxY - component.minY + 1) / 8));
+  for (let y = component.minY; y <= component.maxY; y += strideY) {
+    for (let x = component.minX; x <= component.maxX; x += strideX) {
+      if (labels[y * grid.gridWidth + x] !== component.id) continue;
+      const color = rgbAt(frame, x * grid.step, y * grid.step);
+      if (color) colors.push(color);
+    }
+  }
+  return colors.length ? medianRgb(colors) : null;
+}
+
+function besideBorderBody(component, components, labels, grid, frame) {
+  const gap = 2;
+  let tone;
+  for (const other of components) {
+    if (other.id === component.id || !other.touchesBorder) continue;
+    if (component.minX > other.maxX + gap || other.minX > component.maxX + gap) continue;
+    if (component.minY > other.maxY + gap || other.minY > component.maxY + gap) continue;
+    // Compare live RGB, not difference-grid magnitude, which varies with the room.
+    // Proximity to furniture alone is not evidence of a connected hand.
+    if (tone === undefined) tone = componentTone(component, labels, grid, frame);
+    const bodyTone = componentTone(other, labels, grid, frame);
+    if (tone && bodyTone && channelDistance(tone, bodyTone) <= 6) return true;
+    // A clipped printed card can separate a differently colored finger band
+    // from the wrist. Require the band to sit across the near end of that
+    // border body, rather than merely beside a large room panel.
+    if (acrossBorderBodyEnd(component, other, labels, grid, gap)) return true;
+  }
+  return false;
+}
+
+function acrossBorderBodyEnd(component, body, labels, grid, gap) {
+  const horizontal = component.maxX - component.minX >= component.maxY - component.minY;
+  const lo = horizontal ? component.minX : component.minY;
+  const hi = horizontal ? component.maxX : component.maxY;
+  const bodyLo = horizontal ? body.minX : body.minY;
+  const bodyHi = horizontal ? body.maxX : body.maxY;
+  const length = hi - lo + 1;
+  const bodyLength = bodyHi - bodyLo + 1;
+  const overlap = Math.min(hi, bodyHi) - Math.max(lo, bodyLo) + 1;
+  if (bodyLength < length * 0.7 || bodyLength > length * 1.6 || overlap < length * 0.7) return false;
+  let edge, direction;
+  if (horizontal && body.maxY === grid.gridHeight - 1 &&
+      body.minY > component.maxY && body.minY <= component.maxY + gap + 1) {
+    edge = component.maxY; direction = 1;
+  } else if (horizontal && body.minY === 0 &&
+      body.maxY < component.minY && body.maxY >= component.minY - gap - 1) {
+    edge = component.minY; direction = -1;
+  } else if (!horizontal && body.maxX === grid.gridWidth - 1 &&
+      body.minX > component.maxX && body.minX <= component.maxX + gap + 1) {
+    edge = component.maxX; direction = 1;
+  } else if (!horizontal && body.minX === 0 &&
+      body.maxX < component.minX && body.maxX >= component.minX - gap - 1) {
+    edge = component.minX; direction = -1;
+  } else return false;
+  let contacts = 0;
+  for (let i = 0; i < 8; i += 1) {
+    const along = Math.round(lo + (hi - lo) * (i + 0.5) / 8);
+    const x = horizontal ? along : edge, y = horizontal ? edge : along;
+    if (labels[y * grid.gridWidth + x] !== component.id) continue;
+    for (let distance = 1; distance <= gap + 2; distance += 1) {
+      const nx = horizontal ? x : x + direction * distance;
+      const ny = horizontal ? y + direction * distance : y;
+      if (nx < 0 || ny < 0 || nx >= grid.gridWidth || ny >= grid.gridHeight) break;
+      if (labels[ny * grid.gridWidth + nx] === body.id) { contacts += 1; break; }
+    }
+  }
+  return contacts >= 5;
 }
 
 function detectFromComponent(component, labels, grid, frame, bg, minFill = 0.62, maxContrast = Infinity) {
@@ -922,13 +1255,27 @@ export function detectCard(frame) {
   function findBest({ labels, components }, minFill, limit, maxContrast = Infinity) {
     let best = null;
     let considered = 0;
+    let peelAttempts = 0;
     for (const component of components) {
       if (considered >= limit) break;
-      if (component.touchesBorder) continue;
-      const estimatedArea = component.area * step * step;
+      let card = component;
+      let cardLabels = labels;
+      let peeledBorder = false;
+      if (component.touchesBorder) {
+        const bulk = component.area * grid.step * grid.step;
+        if (peelAttempts >= 3 || bulk < frameArea * 0.02 || bulk > frameArea * 0.85) continue;
+        peelAttempts += 1;
+        const peeled = peelBorderGrip(frame, grid, labels, component);
+        if (!peeled || peeled.component.touchesBorder) continue;
+        card = peeled.component;
+        cardLabels = peeled.labels;
+        peeledBorder = true;
+      }
+      const estimatedArea = card.area * grid.step * grid.step;
       if (estimatedArea < frameArea * 0.012 || estimatedArea > frameArea * 0.8) continue;
+      if (shortFingerSlab(card, grid) && (peeledBorder || besideBorderBody(card, components, labels, grid, frame))) continue;
       considered += 1;
-      const detection = detectFromComponent(component, labels, grid, frame, bg, minFill, maxContrast);
+      const detection = detectFromComponent(card, cardLabels, grid, frame, bg, minFill, maxContrast);
       if (!detection) continue;
       if (
         !best ||
@@ -975,14 +1322,28 @@ export function detectCardAgainstBackground(frame, reference) {
   const frameArea = frame.width * frame.height;
   function findBest({ labels, components }, maxContrast = Infinity) {
     let considered = 0;
+    let peelAttempts = 0;
     let best = null;
     for (const component of components) {
       if (considered >= 12) break;
-      if (component.touchesBorder) continue;
-      const estimatedArea = component.area * grid.step * grid.step;
+      let card = component;
+      let cardLabels = labels;
+      let peeledBorder = false;
+      if (component.touchesBorder) {
+        const bulk = component.area * grid.step * grid.step;
+        if (peelAttempts >= 3 || bulk < frameArea * 0.02 || bulk > frameArea * 0.85) continue;
+        peelAttempts += 1;
+        const peeled = peelBorderGrip(frame, grid, labels, component);
+        if (!peeled || peeled.component.touchesBorder) continue;
+        card = peeled.component;
+        cardLabels = peeled.labels;
+        peeledBorder = true;
+      }
+      const estimatedArea = card.area * grid.step * grid.step;
       if (estimatedArea < frameArea * 0.012 || estimatedArea > frameArea * 0.8) continue;
+      if (shortFingerSlab(card, grid) && (peeledBorder || besideBorderBody(card, components, labels, grid, frame))) continue;
       considered += 1;
-      const detection = detectFromComponent(component, labels, grid, frame, 0, 0.30, maxContrast);
+      const detection = detectFromComponent(card, cardLabels, grid, frame, 0, 0.30, maxContrast);
       if (!detection) continue;
       if (!best || detection.confidence > best.confidence + 1e-9 ||
           (Math.abs(detection.confidence - best.confidence) <= 1e-9 &&
@@ -995,6 +1356,21 @@ export function detectCardAgainstBackground(frame, reference) {
     findBest(labelComponents(grid, threshold, 0, true, frame, true), 60) ||
     findBest(labelComponents(grid, threshold, 0, true, frame, false,
       lightForegroundThreshold(frame, grid, threshold)), 60);
+}
+
+function distanceToQuadEdge(x, y, corners) {
+  let min = Infinity;
+  for (let i = 0; i < corners.length; i += 1) {
+    const a = corners[i];
+    const b = corners[(i + 1) % corners.length];
+    const dx = b.x - a.x;
+    const dy = b.y - a.y;
+    const length = Math.hypot(dx, dy);
+    if (length < 1e-6) continue;
+    const distance = Math.abs(dx * (a.y - y) - dy * (a.x - x)) / length;
+    if (distance < min) min = distance;
+  }
+  return min;
 }
 
 function normalizePoints(points) {
@@ -1220,11 +1596,28 @@ export function cardOcclusionMask(frame, corners, reference = null, width = 120,
         removed[next] = 1; queue.push(next);
       }
     }
-    // A paper-colored component spanning the card is uncertain, not a hand.
-    // Keep its replacement opaque; avoid growing a hole across printed paper.
-    const interiorCount = queue.reduce((sum,at) => sum + inside[at], 0);
-    if (interiorCount > cardCells * .18) {
-      for (const at of queue) { if (inside[at]) { removed[at] = 0; ambiguous[at] = 1; } }
+    // A broad end grip can cover more than a narrow pinch and still stay on
+    // one edge. Trim only the part that reaches the card center, and reject a
+    // flood that still covers most of the card.
+    const shortSide = Math.min(
+      Math.hypot(quad[1].x - quad[0].x, quad[1].y - quad[0].y),
+      Math.hypot(quad[2].x - quad[1].x, quad[2].y - quad[1].y),
+    );
+    const depthLimit = shortSide * 0.47;
+    let keptInterior = 0;
+    for (const at of queue) {
+      if (!inside[at]) continue;
+      const gx = at % gw;
+      const gy = Math.floor(at / gw);
+      if (distanceToQuadEdge(gx * step, gy * step, quad) > depthLimit) {
+        removed[at] = 0;
+        ambiguous[at] = 1;
+      } else keptInterior += 1;
+    }
+    if (keptInterior > cardCells * 0.42) {
+      for (const at of queue) {
+        if (inside[at]) { removed[at] = 0; ambiguous[at] = 1; }
+      }
     }
   }
   const data = new Uint8ClampedArray(width * height * 4);

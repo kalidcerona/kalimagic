@@ -1,8 +1,9 @@
 import { AlterState, createAlterState, updateAlterState } from "./logic.js";
 import { cardOcclusionMask, detectCard, detectCardAgainstBackground, mapSourceOntoCorners } from "./vision.js";
-import { createObservationTracker, overlayCorners, trackObservation } from "./performance.js";
+import { createDisplaySmoother, createObservationTracker, overlayCorners, smoothDisplayedCorners, trackObservation } from "./performance.js";
 import { coverGeometry, samplePointToView } from "./camera-geometry.js";
 import { claimCalibrationReady, createBackgroundCalibrator, observeCalibration } from "./calibration.js";
+import { createPaperMatch, remapOcclusionToDisplay, resolveOverlayMask, sampleCardPaper, updatePaperMatch } from "./appearance.js";
 
 const $ = (id) => document.getElementById(id);
 const setup = $("setup");
@@ -38,6 +39,9 @@ let calibrator = createBackgroundCalibrator();
 let touchStart = null;
 let sampleIntervalMs = 60;
 let sampleGeometry = null;
+let displaySmooth = createDisplaySmoother();
+let paperMatch = createPaperMatch();
+let occlusionSlot = { quadKey: "", mask: null };
 const lifecycleCounts = Object.create(null);
 
 // Only event codes/counts are retained; frames and device details are never logged.
@@ -51,9 +55,17 @@ function setRuntimeStatus(message) {
   runtimeNote.textContent = message;
 }
 
+function resetAppearance() {
+  displaySmooth = createDisplaySmoother();
+  paperMatch = createPaperMatch();
+  applyPaperStyle(null);
+  clearOverlayMask();
+}
+
 function interruptTracking(t) {
   machine = updateAlterState(machine, { type: "interrupt", t });
   tracker = createObservationTracker();
+  resetAppearance();
   hideOverlay();
   lastSampleAt = 0;
 }
@@ -70,6 +82,7 @@ function resetGeometry(nextGeometry) {
   calibrator = createBackgroundCalibrator();
   sampleGeometry = nextGeometry;
   lastSampleAt = 0;
+  resetAppearance();
   hideOverlay();
   setRuntimeStatus("카메라 준비 중 · 빈 배경을 비춰 주세요");
 }
@@ -147,6 +160,7 @@ function openSettings() {
   if (stream) {
     machine = updateAlterState(machine, { type: "interrupt", t: performance.now() });
     tracker = createObservationTracker();
+    resetAppearance();
     overlay.hidden = true;
   }
   settings.classList.toggle("is-running", Boolean(stream));
@@ -159,13 +173,36 @@ function closeSettings() {
   settings.hidden = true;
   lastSampleAt = 0;
   tracker = createObservationTracker();
+  resetAppearance();
 }
 
-function showOverlay(corners, geometry, frame, reference) {
-  const mapped = corners.map((point) => samplePointToView(point, geometry));
+function applyPaperStyle(color) {
+  const style = overlay.style;
+  if (!style || typeof style.setProperty !== "function") return;
+  if (!color) {
+    if (typeof style.removeProperty === "function") style.removeProperty("--card-paper");
+    return;
+  }
+  style.setProperty("--card-paper", `rgb(${color.r}, ${color.g}, ${color.b})`);
+}
+
+function clearOverlayMask() {
+  occlusionSlot = { quadKey: "", mask: null };
+  overlay.style.maskImage = "none";
+  overlay.style.webkitMaskImage = "none";
+}
+
+function quadKey(corners) {
+  if (!corners) return "";
+  return corners.map((point) => `${Math.round(point.x)},${Math.round(point.y)}`).join(";");
+}
+
+function showOverlay(displayCorners, mask, geometry) {
+  const mapped = displayCorners.map((point) => samplePointToView(point, geometry));
   const h = mapSourceOntoCorners(240, 336, mapped);
   if (!h) {
     overlay.hidden = true;
+    clearOverlayMask();
     return false;
   }
   overlay.style.transform = `matrix3d(${[
@@ -174,25 +211,29 @@ function showOverlay(corners, geometry, frame, reference) {
     0, 0, 1, 0,
     h[2], h[5], 0, h[8],
   ].join(",")})`;
-  const mask = frame && cardOcclusionMask(frame, corners, reference);
-  if (mask && occlusionContext) {
-    occlusionCanvas.width = mask.width;
-    occlusionCanvas.height = mask.height;
-    const image = occlusionContext.createImageData(mask.width, mask.height);
-    image.data.set(mask.data);
-    occlusionContext.putImageData(image, 0, 0);
-    const url = `url("${occlusionCanvas.toDataURL("image/png")}")`;
-    overlay.style.maskImage = url;
-    overlay.style.webkitMaskImage = url;
-    overlay.style.maskSize = overlay.style.webkitMaskSize = "100% 100%";
-    overlay.style.maskRepeat = overlay.style.webkitMaskRepeat = "no-repeat";
+  // A missing mask must not fall back to a solid card or a previous quad's bitmap.
+  if (!mask || !occlusionContext) {
+    overlay.hidden = true;
+    clearOverlayMask();
+    return false;
   }
+  occlusionCanvas.width = mask.width;
+  occlusionCanvas.height = mask.height;
+  const image = occlusionContext.createImageData(mask.width, mask.height);
+  image.data.set(mask.data);
+  occlusionContext.putImageData(image, 0, 0);
+  const url = `url("${occlusionCanvas.toDataURL("image/png")}")`;
+  overlay.style.maskImage = url;
+  overlay.style.webkitMaskImage = url;
+  overlay.style.maskSize = overlay.style.webkitMaskSize = "100% 100%";
+  overlay.style.maskRepeat = overlay.style.webkitMaskRepeat = "no-repeat";
   overlay.hidden = false;
   return true;
 }
 
 function hideOverlay() {
   overlay.hidden = true;
+  clearOverlayMask();
 }
 
 function isPortrait(corners) {
@@ -258,13 +299,40 @@ function processFrame(t) {
     machine = updateAlterState(machine, { type: "observe", ...result.observation });
     updateStateNote();
 
-    const visibleCorners = overlayCorners(tracker, detection, t);
-    if (machine.state === AlterState.ALTER_VISIBLE && visibleCorners) {
-      showOverlay(visibleCorners, geometry, pixels, calibrator.reference);
+    // Smoothing affects only the displayed quad. Exit and stability stay on the raw tracker.
+    // The occlusion mask is sampled on the raw quad, then remapped into the displayed plane.
+    const heldCorners = overlayCorners(tracker, detection, t);
+    let displayCorners = null;
+    if (detection?.corners) {
+      const smoothed = smoothDisplayedCorners(displaySmooth, detection.corners, t);
+      displaySmooth = smoothed.state;
+      displayCorners = smoothed.corners;
+    } else if (heldCorners) {
+      displayCorners = displaySmooth.corners || heldCorners;
+    } else {
+      displaySmooth = createDisplaySmoother();
+    }
+    if (machine.state === AlterState.ALTER_VISIBLE && displayCorners) {
+      const maskCorners = detection?.corners || heldCorners;
+      let mask = null;
+      if (maskCorners) {
+        mask = cardOcclusionMask(pixels, maskCorners, calibrator.reference);
+        if (detection?.corners) {
+          const matched = updatePaperMatch(paperMatch, sampleCardPaper(pixels, detection.corners, mask), t);
+          paperMatch = matched.state;
+          applyPaperStyle(matched.color);
+        }
+      }
+      occlusionSlot = resolveOverlayMask(occlusionSlot, quadKey(maskCorners), mask);
+      const displayMask = occlusionSlot.mask
+        ? remapOcclusionToDisplay(occlusionSlot.mask, maskCorners, displayCorners)
+        : null;
+      showOverlay(displayCorners, displayMask, geometry);
     } else hideOverlay();
   } catch {
     machine = updateAlterState(machine, { type: "interrupt", t });
     tracker = createObservationTracker();
+    resetAppearance();
     hideOverlay();
     recordLifecycle("analysis-error");
     setRuntimeStatus("카드 분석을 다시 시도하는 중");
@@ -289,6 +357,7 @@ function stopCamera(showSetup = true) {
   tracker = createObservationTracker();
   calibrator = createBackgroundCalibrator();
   sampleGeometry = null;
+  resetAppearance();
   setRuntimeStatus("카메라 시작 전");
   settings.hidden = true;
   stage.hidden = true;
@@ -358,6 +427,7 @@ async function startCamera() {
     machine = createAlterState({ exitDelayMs: 0 });
     tracker = createObservationTracker();
     calibrator = createBackgroundCalibrator();
+    resetAppearance();
     lastSampleAt = 0;
     setup.hidden = true;
     stage.hidden = false;
@@ -385,6 +455,7 @@ $("setup-settings").addEventListener("click", openSettings);
 $("close-settings").addEventListener("click", closeSettings);
 $("reveal").addEventListener("click", () => {
   machine = updateAlterState(machine, { type: "reveal", t: performance.now() });
+  resetAppearance();
   hideOverlay();
   closeSettings();
 });
@@ -392,6 +463,7 @@ $("reset").addEventListener("click", () => {
   machine = updateAlterState(machine, { type: "reset" });
   tracker = createObservationTracker();
   calibrator = createBackgroundCalibrator();
+  resetAppearance();
   setRuntimeStatus("카메라 준비 중 · 빈 배경을 비춰 주세요");
   hideOverlay();
   closeSettings();
@@ -403,6 +475,7 @@ for (const control of [rank, suit, brightness]) {
     machine = updateAlterState(machine, { type: "reset" });
     tracker = createObservationTracker();
     calibrator = createBackgroundCalibrator();
+    resetAppearance();
     setRuntimeStatus("카메라 준비 중 · 빈 배경을 비춰 주세요");
     hideOverlay();
     updateStateNote();
