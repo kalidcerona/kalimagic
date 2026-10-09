@@ -2,6 +2,7 @@ import {
   APPEARANCES,
   BOTTOM_GAP_RANGE,
   HOME_LAYOUT,
+  MSG,
   IMPORT_MAX_BYTES,
   ICON_SIZE_RANGE,
   LABEL_SIZE_RANGE,
@@ -25,7 +26,15 @@ import {
   emptyState,
   fakeHomeDigit,
   homeCellDigit,
-  isDesktopMouseDevice,
+  listCards,
+  normalizeHiddenIds,
+  parseWizardItems,
+  stripItemPrefixes,
+  presetFullList,
+  previewNote,
+  readinessSummary,
+  wizardPayload,
+  WIZARD_MAX_ITEMS,
   isZeroSlot,
   normalizeBuiltins,
   isTwoFingerDownSwipe,
@@ -50,7 +59,7 @@ import {
   validateListInput
 } from './logic.js';
 import { HOME_MANIFEST, iconSrc, manifestFiles } from './home-manifest.js';
-import { BUILTIN_LISTS } from './builtin-lists.js';
+import { BUILTIN_LISTS, builtinById } from './builtin-lists.js';
 
 const gestureGuide = document.getElementById('settings-gesture-guide');
 const gestureGuideDismiss = document.getElementById('settings-gesture-dismiss');
@@ -84,11 +93,9 @@ const nameInput = document.getElementById('preset-name');
 const appearanceInput = document.getElementById('appearance');
 const itemsInput = document.getElementById('items');
 const forceInput = document.getElementById('force-item');
-const editorPanel = document.getElementById('editor-panel');
 const itemHint = document.getElementById('item-hint');
 const itemCount = document.getElementById('item-count');
 const editorMessage = document.getElementById('editor-message');
-const presetList = document.getElementById('preset-list');
 const editorFields = document.getElementById('editor-fields');
 const recoveryEl = document.getElementById('recovery');
 const recoveryError = document.getElementById('recovery-error');
@@ -148,6 +155,7 @@ const RESET_CORNER_PX = 56;
 const PINCH_MIN_ZOOM = 0.8;
 const PINCH_MAX_ZOOM = 2.6;
 const LINE_HEIGHTS = { compact: 1.3, normal: 1.5, relaxed: 1.85 };
+const MAX_ITEM_CHARS = 120;
 const noteDateFormat = new Intl.DateTimeFormat('ko-KR', { month: 'long', day: 'numeric' });
 
 let store = emptyState();
@@ -235,7 +243,7 @@ function renderEditorPreview() {
     no.className = 'no';
     no.textContent = String(entry.number);
     const text = document.createElement('span');
-    text.textContent = entry.force ? `${entry.text} (포스 항목)` : entry.text;
+    text.textContent = entry.force ? `${entry.text} (예언 항목)` : entry.text;
     row.append(no, text);
     return row;
   }));
@@ -256,13 +264,13 @@ function renderTargets() {
   renderEditorPreview();
   const parsed = parseItemText(itemsInput.value);
   const items = parsed.ok ? parsed.items : [];
-  itemCount.textContent = `${items.length}개 / 199 (포스 항목 제외)`;
+  itemCount.textContent = `${items.length}개 / 199 (예언 항목 제외)`;
   if (!itemsInput.value.trim()) {
-    itemHint.textContent = '포스 항목은 일반 항목에 넣지 마세요. 일반 항목은 한 줄에 하나씩, 최대 199개입니다.';
+    itemHint.textContent = '예언 항목은 항목에 넣지 마세요. 항목은 한 줄에 하나씩, 최대 199개입니다.';
   } else if (!parsed.ok) {
     itemHint.textContent = parsed.error;
   } else {
-    itemHint.textContent = '빈 줄은 빠집니다. 포스 항목은 관객이 고른 번호에 끼워 넣습니다.';
+    itemHint.textContent = '빈 줄은 빠집니다. 예언 항목은 관객이 고른 번호에 끼워 넣습니다.';
   }
 }
 
@@ -276,58 +284,6 @@ function fillEditor(preset) {
   renderTargets();
   setEditorMessage('');
   renderSaved();
-}
-
-function isDirty() {
-  if (!loadedId) {
-    return nameInput.value.trim() !== '' || itemsInput.value.trim() !== '' || forceInput.value.trim() !== '';
-  }
-  const preset = store.presets.find((entry) => entry.id === loadedId);
-  if (!preset) return true;
-  const parsed = parseItemText(itemsInput.value);
-  const split = splitForcePreset(preset);
-  const sameItems = parsed.ok && parsed.items.join('\n') === split.items.join('\n');
-  return nameInput.value.trim() !== preset.name
-    || appearanceInput.value !== preset.appearance
-    || forceInput.value.trim() !== split.forceItem
-    || !sameItems;
-}
-
-function renderSaved() {
-  presetList.replaceChildren();
-  if (!store.presets.length) {
-    const empty = document.createElement('p');
-    empty.className = 'hint';
-    empty.textContent = '저장된 목록이 없습니다.';
-    presetList.append(empty);
-    return;
-  }
-  const sorted = store.presets.slice().sort((left, right) => right.updatedAt - left.updatedAt);
-  sorted.forEach((preset) => {
-    const card = document.createElement('article');
-    card.className = 'preset';
-    if (preset.id === loadedId) card.setAttribute('aria-current', 'true');
-    const title = document.createElement('h3');
-    title.textContent = preset.name;
-    const meta = document.createElement('p');
-    meta.className = 'hint';
-    const appearance = APPEARANCES[preset.appearance]?.heading || preset.appearance;
-    const split = splitForcePreset(preset);
-    meta.textContent = `${appearance} · ${split.items.length + 1}개 · 포스 ${split.forceItem}`;
-    const actions = document.createElement('div');
-    actions.className = 'actions';
-    const edit = document.createElement('button');
-    edit.type = 'button';
-    edit.textContent = '편집';
-    edit.addEventListener('click', () => {
-      fillEditor(preset);
-      editorPanel.open = true;
-      nameInput.focus();
-    });
-    actions.append(edit);
-    card.append(title, meta, actions);
-    presetList.append(card);
-  });
 }
 
 function renderOptions() {
@@ -410,7 +366,7 @@ function renderPrecheck(offline) {
   rows.push(precheckRow(block ? `공연 시작: 지금은 시작할 수 없습니다. ${block.text}` : '공연 시작: 가능합니다.', block ? 'warn' : 'ok'));
   rows.push(precheckRow(`노트 ${report.noteCount}개, 공연에 쓸 수 있는 노트 ${report.eligibleCount}개`, report.eligibleCount ? 'ok' : 'warn'));
   const shown = selectNotes(store);
-  rows.push(precheckRow(`노트 앱에 나오는 것: 목록 ${shown.forceCount}개, 더미 노트 ${shown.notes.length - shown.forceCount}개${shown.setName ? `, 세트 「${shown.setName}」` : ', 세트 없음'}`, shown.forceCount ? 'ok' : 'warn'));
+  rows.push(precheckRow(`노트 앱에 나오는 것: 목록 ${shown.forceCount}개, 일상 메모 ${shown.notes.length - shown.forceCount}개${shown.setName ? `, 묶음 「${shown.setName}」` : ', 묶음 없음'}`, shown.forceCount ? 'ok' : 'warn'));
   const readyCount = BUILTIN_LISTS.filter((list) => normalizeBuiltins(store.builtins)[list.id].enabled).length;
   rows.push(precheckRow(`기본 제공 목록: ${readyCount}개를 노트에 넣음`, ''));
   report.notes.forEach((note) => {
@@ -479,19 +435,6 @@ function currentPreset() {
   return store.presets.find((preset) => preset.id === loadedId) || null;
 }
 
-async function onSaveNew() {
-  if (!(await confirmSaveReport())) return;
-  const created = addPreset(store.presets, readEditor(), { now: Date.now() });
-  if (!created.ok) {
-    setEditorMessage(created.error);
-    return;
-  }
-  if (!persist({ ...store, presets: created.presets })) return;
-  const saved = store.presets.find((preset) => preset.id === created.preset.id) || created.preset;
-  fillEditor(saved);
-  setEditorMessage('새 목록을 저장했습니다.');
-}
-
 function onRename() {
   if (!loadedId) {
     setEditorMessage('저장된 목록을 먼저 불러오세요.');
@@ -505,28 +448,6 @@ function onRename() {
   if (!persist({ ...store, presets: renamed.presets })) return;
   fillEditor(store.presets.find((preset) => preset.id === loadedId) || renamed.preset);
   setEditorMessage('이름을 바꿨습니다. 항목은 그대로입니다.');
-}
-
-async function onOverwrite() {
-  const current = currentPreset();
-  if (!current) {
-    setEditorMessage('저장된 목록을 먼저 불러오세요.');
-    return;
-  }
-  const accepted = await confirmAsk(
-    `「${current.name}」의 일반 항목, 포스 항목, 모양을 지금 입력으로 바꿀까요? 이름은 바뀌지 않습니다.`,
-    '덮어쓰기'
-  );
-  if (!accepted) return;
-  if (!(await confirmSaveReport())) return;
-  const overwritten = overwritePreset(store.presets, current.id, readEditor(), { now: Date.now() });
-  if (!overwritten.ok) {
-    setEditorMessage(overwritten.error);
-    return;
-  }
-  if (!persist({ ...store, presets: overwritten.presets })) return;
-  fillEditor(store.presets.find((preset) => preset.id === current.id) || overwritten.preset);
-  setEditorMessage('목록 내용을 덮어썼습니다.');
 }
 
 async function onDelete() {
@@ -553,6 +474,558 @@ async function onDelete() {
   if (!persist({ ...store, presets: removed.presets, twoList })) return;
   fillEditor(null);
   setEditorMessage('목록을 삭제했습니다.');
+}
+
+// ===== Settings views: home with list cards, three step list wizard, list detail, templates =====
+const settingsViews = [...document.querySelectorAll('#settings .sv')];
+const homeLists = document.getElementById('home-lists');
+const templateList = document.getElementById('template-list');
+const homeSummary = document.getElementById('home-summary');
+let currentView = 'home';
+let wizard = null;
+let detailId = null;
+
+// History keeps only the view name, an index and a per page load token. Wizard and detail screens are restored
+// only while their in memory state exists; after a reload every older entry falls back to the settings home.
+const NAV_TOKEN = Math.random().toString(36).slice(2);
+let navIndex = 0;
+const navState = (name) => ({ sv: name, i: navIndex, t: NAV_TOKEN });
+
+function viewAllowed(name) {
+  if (name === 'w1') return Boolean(wizard) && wizard.mode === 'new';
+  if (name === 'w2') return Boolean(wizard) && (wizard.mode === 'new' || wizard.mode === 'edit');
+  if (name === 'w3') return Boolean(wizard) && Array.isArray(wizard.items) && wizard.items.length >= 2;
+  if (name === 'done') return false;
+  if (name === 'detail') return store.presets.some((entry) => entry.id === detailId);
+  return true;
+}
+
+function showView(name, { push = true } = {}) {
+  if (!settingsViews.some((view) => view.dataset.viewName === name)) name = 'home';
+  settingsViews.forEach((view) => { view.hidden = view.dataset.viewName !== name; });
+  currentView = name;
+  // A wizard only lives while one of its screens is open, so Back or Forward can never revive an abandoned one.
+  if (name !== 'w1' && name !== 'w2' && name !== 'w3') wizard = null;
+  if (push) { try { history.pushState({ sv: name, i: navIndex + 1, t: NAV_TOKEN }, ''); navIndex += 1; } catch { /* History can be blocked. */ } }
+  window.scrollTo(0, 0);
+  const view = document.getElementById(`view-${name}`);
+  view?.querySelector('.sv-title')?.focus({ preventScroll: true });
+  if (name === 'check') renderPrecheck();
+}
+
+// UI back buttons step back in the browser history, so the browser Back button never reopens a screen that was left.
+function goBack(fallback = 'home') {
+  const state = history.state;
+  if (state && state.t === NAV_TOKEN && state.i > 0) {
+    try { history.back(); return; } catch { /* Fall through to the fallback screen. */ }
+  }
+  showView(viewAllowed(fallback) ? fallback : 'home', { push: false });
+  navIndex = 0;
+  try { history.replaceState(navState(currentView), ''); } catch { /* History can be blocked. */ }
+}
+
+function onPopState(event) {
+  const state = event.state;
+  const ours = Boolean(state) && state.t === NAV_TOKEN && typeof state.sv === 'string' && Number.isInteger(state.i);
+  if (fakeHomeSession) {
+    // The performance stays open: undo the history step so the stack and the settings view still agree when it closes.
+    try { navIndex = (ours ? state.i : navIndex) + 1; history.pushState(navState(currentView), ''); } catch { /* History can be blocked. */ }
+    return;
+  }
+  try {
+    let name = ours ? state.sv : 'home';
+    navIndex = ours ? state.i : 0;
+    if (!viewAllowed(name)) name = 'home';
+    showView(name, { push: false });
+    if (name === 'detail') renderDetail();
+    else if (name === 'w3') renderWizardStep3();
+    if (!ours || name !== state.sv) { try { history.replaceState(navState(name), ''); } catch { /* History can be blocked. */ } }
+  } catch {
+    showView('home', { push: false });
+  }
+}
+
+function renderHomeSummary() {
+  if (!homeSummary) return;
+  const block = startBlockReason();
+  const summary = readinessSummary(store);
+  document.getElementById('notes-entry-title').textContent = block ? '공연 준비 필요' : '공연 준비 완료';
+  if (block) {
+    homeSummary.textContent = block.recovery ? '저장본을 먼저 확인해야 해요.' : '노트에 나올 목록이 없어요. 아래에서 켜거나 만들어 주세요.';
+  } else {
+    const extra = summary.tooLong ? ` 항목 수가 2개에서 100개가 아니라서 노트에 못 쓰는 목록이 ${summary.tooLong}개 있어요.` : ' 모두 예언 항목이 정해져 있습니다.';
+    const outside = summary.outsideSet ? ` 공연 묶음 밖이라 안 나오는 목록은 ${summary.outsideSet}개예요.` : '';
+    homeSummary.textContent = summary.setName
+      ? `공연 묶음 「${summary.setName}」 기준으로 노트 목록 ${summary.onCount}개가 나와요.${extra}${outside}`
+      : `노트 목록 ${summary.onCount}개가 켜져 있어요.${extra}`;
+  }
+  const check = document.getElementById('check-summary');
+  if (check) check.textContent = block ? '확인이 필요해요' : '문제 없음';
+}
+
+function makeCardSwitch(card) {
+  const toggle = document.createElement('button');
+  toggle.type = 'button';
+  toggle.className = 'sv-sw';
+  toggle.setAttribute('role', 'switch');
+  toggle.setAttribute('aria-checked', String(card.enabled));
+  toggle.setAttribute('aria-label', `${card.title} 노트에 넣기`);
+  toggle.addEventListener('click', (event) => { event.stopPropagation(); setListEnabled(card, !card.enabled); });
+  return toggle;
+}
+
+function cardSummary(card) {
+  const line = document.createElement('span');
+  line.className = 'sv-s';
+  line.append(document.createTextNode(`항목 ${card.count}개 · 예언 `));
+  const target = document.createElement('b');
+  target.textContent = card.target || '없음';
+  line.append(target);
+  if (!card.usable) line.append(document.createTextNode(' · 노트에는 2개에서 100개까지만 나와요'));
+  return line;
+}
+
+function makeListCard(card) {
+  const box = document.createElement('div');
+  box.className = 'sv-card sv-list';
+  box.dataset.listId = card.id;
+  const row = document.createElement('div');
+  row.className = 'sv-row';
+  const copy = document.createElement('span');
+  copy.className = 'sv-grow';
+  const title = document.createElement('span');
+  title.className = 'sv-t';
+  title.textContent = card.title;
+  if (card.builtin) {
+    const tag = document.createElement('span');
+    tag.className = 'sv-chip-tag';
+    tag.textContent = '기본 제공';
+    title.append(tag);
+  }
+  copy.append(title, cardSummary(card));
+  row.append(copy, makeCardSwitch(card));
+  const actions = document.createElement('div');
+  actions.className = 'sv-actions';
+  if (!card.builtin) {
+    const edit = document.createElement('button');
+    edit.type = 'button';
+    edit.className = 'sv-btn sv-sm';
+    edit.dataset.action = 'edit';
+    edit.textContent = '편집';
+    edit.addEventListener('click', (event) => { event.stopPropagation(); openDetail(card.id); });
+    actions.append(edit);
+  }
+  const change = document.createElement('button');
+  change.type = 'button';
+  change.className = 'sv-btn sv-sm';
+  change.dataset.action = 'target';
+  change.textContent = '예언 항목 바꾸기';
+  change.addEventListener('click', (event) => { event.stopPropagation(); openTargetPicker(card); });
+  actions.append(change);
+  box.append(row, actions);
+  if (!card.builtin) box.addEventListener('click', () => openDetail(card.id));
+  return box;
+}
+
+function renderHomeLists() {
+  if (!homeLists) return;
+  homeLists.replaceChildren(...listCards(store).map(makeListCard));
+}
+
+function renderTemplates() {
+  if (!templateList) return;
+  templateList.replaceChildren(...BUILTIN_LISTS.map((list) => {
+    const box = document.createElement('div');
+    box.className = 'sv-card sv-list';
+    const row = document.createElement('div');
+    row.className = 'sv-row';
+    const copy = document.createElement('span');
+    copy.className = 'sv-grow';
+    const title = document.createElement('span');
+    title.className = 'sv-t';
+    title.textContent = list.name;
+    const count = document.createElement('span');
+    count.className = 'sv-s';
+    count.textContent = `항목 ${list.items.length}개`;
+    copy.append(title, count);
+    const use = document.createElement('button');
+    use.type = 'button';
+    use.className = 'sv-btn sv-sm sv-primary';
+    use.dataset.template = list.id;
+    use.textContent = '쓰기';
+    use.addEventListener('click', () => openTargetPicker({ id: list.id, builtin: true, title: list.name }, 'templates'));
+    row.append(copy, use);
+    box.append(row);
+    return box;
+  }));
+}
+
+function renderSaved() {
+  renderHomeLists();
+  renderTemplates();
+  renderHomeSummary();
+}
+
+function setListEnabled(card, enabled) {
+  if (recoveryState) { showStartProblem(startBlockReason()); return; }
+  let next;
+  if (card.builtin) {
+    const builtins = normalizeBuiltins(store.builtins);
+    next = { ...store, builtins: { ...builtins, [card.id]: { ...builtins[card.id], enabled } } };
+  } else {
+    const hidden = new Set(normalizeHiddenIds(store.hiddenPresetIds));
+    if (enabled) hidden.delete(card.id); else hidden.add(card.id);
+    next = { ...store, hiddenPresetIds: [...hidden] };
+  }
+  persist(next);
+  if (currentView === 'detail') renderDetail();
+}
+
+// ----- list wizard (new list, edit items, choose the prophecy item) -----
+const wzTitle = document.getElementById('wz-title');
+const wzItems = document.getElementById('wz-items');
+const wzSave = document.getElementById('wz-save');
+
+function wizardLooks() {
+  if (!wizard) return;
+  document.querySelectorAll('#wz-looks .sv-chip').forEach((chip) => {
+    const on = chip.dataset.look === wizard.look;
+    chip.classList.toggle('on', on);
+    chip.setAttribute('aria-checked', String(on));
+  });
+}
+
+function openNewWizard() {
+  if (recoveryState) { showStartProblem(startBlockReason()); return; }
+  wizard = { mode: 'new', id: null, title: '', look: 'memo', items: [], target: -1, number: 1, returnTo: 'home', strip: true };
+  wzTitle.value = '';
+  wzItems.value = '';
+  setItemsLabels();
+  document.getElementById('wz-message1').textContent = '';
+  wizardLooks();
+  renderWizardCount();
+  showView('w1');
+  wzTitle.focus({ preventScroll: true });
+}
+
+function duplicateNumbers(items) {
+  const seen = new Map();
+  items.forEach((item, index) => {
+    const key = item.toLocaleLowerCase('ko-KR');
+    if (!seen.has(key)) seen.set(key, []);
+    seen.get(key).push(index + 1);
+  });
+  return [...seen.values()].filter((numbers) => numbers.length > 1);
+}
+
+// Existing items open as they are saved; only a new list strips "1. " / "- " from pasted lines. Editing a saved list offers "번호 지우기" instead.
+function setItemsLabels() {
+  const editing = Boolean(wizard) && wizard.mode === 'edit';
+  document.getElementById('wz-title2').textContent = editing ? '항목 편집' : '새 목록 만들기';
+  document.getElementById('wz-steps2').hidden = editing;
+  document.getElementById('wz-q2').textContent = editing ? '항목을 고치거나 붙여 넣으세요' : '2. 항목을 붙여 넣으세요';
+}
+
+function renderWizardCount() {
+  const stripPrefix = !wizard || wizard.strip !== false;
+  const parsed = parseWizardItems(wzItems.value, { stripPrefix });
+  document.getElementById('wz-strip').hidden = stripPrefix || stripItemPrefixes(wzItems.value) === wzItems.value;
+  const count = document.getElementById('wz-count');
+  count.replaceChildren();
+  const strong = document.createElement('b');
+  strong.textContent = `${parsed.count}개`;
+  if (!parsed.ok) strong.className = 'bad';
+  count.append(strong);
+  const warnings = [];
+  if (parsed.tooLongAt) warnings.push(`${parsed.tooLongAt}번 항목이 ${MAX_ITEM_CHARS}자를 넘습니다.`);
+  else if (parsed.count > WIZARD_MAX_ITEMS) warnings.push(`노트에는 ${WIZARD_MAX_ITEMS}개까지만 나옵니다. 줄여 주세요.`);
+  const dupes = duplicateNumbers(parsed.items);
+  if (dupes.length) warnings.push(`같은 항목이 겹칩니다: ${dupes.slice(0, 3).map((numbers) => `${numbers.join('번, ')}번`).join(' / ')}${dupes.length > 3 ? ' 외' : ''}`);
+  document.getElementById('wz-warnings').replaceChildren(...warnings.map((text) => { const li = document.createElement('li'); li.textContent = text; return li; }));
+  document.getElementById('wz-next2').disabled = !parsed.ok;
+  return parsed;
+}
+
+function wizardNext1() {
+  if (!wizard) { showView('home'); return; }
+  const title = wzTitle.value.trim();
+  const message = document.getElementById('wz-message1');
+  if (!title) { message.textContent = '목록 이름을 입력하세요.'; return; }
+  if (Array.from(title).length > 40) { message.textContent = '목록 이름은 40자까지 입력할 수 있습니다.'; return; }
+  if (store.presets.some((preset) => preset.name === title && preset.id !== wizard.id)) { message.textContent = '같은 이름의 목록이 있습니다. 다른 이름을 써 주세요.'; return; }
+  message.textContent = '';
+  wizard.title = title;
+  showView('w2');
+  wzItems.focus({ preventScroll: true });
+}
+
+function wizardNext2() {
+  if (!wizard) { showView('home'); return; }
+  const parsed = renderWizardCount();
+  if (!parsed.ok) return;
+  const previous = wizard.items[wizard.target];
+  const unchanged = parsed.items.length === wizard.items.length && parsed.items.every((text, index) => text === wizard.items[index]);
+  wizard.items = parsed.items;
+  // The prophecy item stays selected when the items are unchanged or its text is still in the list, otherwise it has to be picked again.
+  if (!unchanged) wizard.target = previous != null ? parsed.items.indexOf(previous) : -1;
+  wizard.number = Math.min(Math.max(wizard.number, 1), parsed.items.length);
+  showStep3();
+}
+
+function showStep3() {
+  const quick = wizard.mode === 'builtin' || wizard.mode === 'edit-target';
+  const plain = quick || wizard.mode === 'edit';
+  document.getElementById('wz-steps3').hidden = plain;
+  document.getElementById('wz-title3').textContent = quick ? '예언 항목 바꾸기' : (wizard.mode === 'new' ? '새 목록 만들기' : '항목 편집');
+  document.getElementById('wz-q3').textContent = plain ? '예언 항목을 탭하세요' : '3. 예언 항목을 탭하세요';
+  wzSave.textContent = wizard.mode === 'builtin' ? '이 목록 쓰기' : '목록 저장';
+  document.getElementById('wz-message3').textContent = '';
+  renderWizardStep3();
+  showView('w3');
+}
+
+function renderWizardStep3() {
+  const { items, target } = wizard;
+  document.getElementById('wz-pick-label').textContent = `항목 ${items.length}개 중 하나 고르기`;
+  const picks = items.map((text, index) => {
+    const pick = document.createElement('button');
+    pick.type = 'button';
+    pick.className = 'sv-pick';
+    pick.setAttribute('role', 'radio');
+    pick.setAttribute('aria-checked', String(index === target));
+    pick.dataset.index = String(index);
+    const n = document.createElement('span'); n.className = 'n'; n.textContent = String(index + 1);
+    const x = document.createElement('span'); x.className = 'x'; x.textContent = text;
+    const tag = document.createElement('span'); tag.className = 'tg'; tag.textContent = '예언';
+    pick.append(n, x, tag);
+    pick.addEventListener('click', () => { wizard.target = index; renderWizardStep3(); });
+    return pick;
+  });
+  document.getElementById('wz-picks').replaceChildren(...picks);
+  renderWizardPreview('wz-pv-title', 'wz-pv-lines', wizard.title, items, target, wizard.number);
+  document.getElementById('wz-num').textContent = String(wizard.number);
+  wzSave.disabled = target < 0;
+}
+
+// A small note drawn from the list, the way the notes app will show it for a sample number.
+function renderWizardPreview(titleId, linesId, title, items, target, number) {
+  document.getElementById(titleId).textContent = title;
+  const box = document.getElementById(linesId);
+  const view = target >= 0 ? previewNote(items, target, number) : null;
+  if (!view) { box.textContent = '예언 항목을 고르면 여기에 보여요.'; return; }
+  box.replaceChildren(...view.lines.map((line) => {
+    const row = document.createElement('div');
+    row.className = line.hit ? 'sv-pv-l hit' : 'sv-pv-l';
+    const n = document.createElement('span'); n.textContent = String(line.number);
+    const t = document.createElement('span'); t.textContent = line.text;
+    row.append(n, t);
+    return row;
+  }));
+}
+
+function stepWizardNumber(delta) {
+  if (!wizard) return;
+  wizard.number = Math.min(Math.max(1, wizard.number + delta), wizard.items.length);
+  renderWizardStep3();
+}
+
+// What the saved list does in the notes right now, given the switches and the active performance set.
+function notesFate(id, title) {
+  const picked = selectNotes(store);
+  if (picked.notes.some((note) => note.id === id)) return `「${title}」이 노트에 바로 나옵니다.`;
+  if (picked.setName) return `지금 쓰는 공연 묶음 「${picked.setName}」에 이 목록이 들어 있지 않아 노트에 나오지 않습니다. 더 보기의 공연 묶음에서 넣어 주세요.`;
+  return `「${title}」은 지금 노트에 나오지 않습니다. 목록의 스위치와 항목 수를 확인해 주세요.`;
+}
+
+function finishWizard(text, { detailId: back = null } = {}) {
+  wizard = null;
+  if (back) { openDetail(back, '저장했어요.'); return; }
+  document.getElementById('done-message').textContent = '';
+  document.getElementById('done-title').textContent = '저장했어요';
+  document.getElementById('done-text').textContent = text;
+  showView('done');
+}
+
+async function saveWizard() {
+  if (!wizard || wizard.target < 0) return;
+  const message = document.getElementById('wz-message3');
+  if (recoveryState) { message.textContent = '저장본을 먼저 확인해 주세요.'; return; }
+  const builtinTitle = wizard.title;
+  if (wizard.mode === 'builtin') {
+    const builtins = normalizeBuiltins(store.builtins);
+    if (!persist({ ...store, builtins: { ...builtins, [wizard.id]: { enabled: true, target: wizard.target + 1 } } })) { message.textContent = '저장하지 못했습니다. 저장된 목록은 그대로입니다.'; return; }
+    const fate = notesFate(wizard.id, builtinTitle);
+    finishWizard(`${fate} 예언 항목은 목록에서 언제든 바꿀 수 있어요.`);
+    return;
+  }
+  const payload = wizardPayload({ title: wizard.title, appearance: wizard.look, items: wizard.items, target: wizard.target });
+  if (!payload) { message.textContent = '예언 항목을 먼저 고르세요.'; return; }
+  // The checks read the same fields as before, so the saved form is filled first (the others, and the prophecy item apart).
+  nameInput.value = payload.name;
+  appearanceInput.value = payload.appearance;
+  itemsInput.value = payload.items.filter((_, index) => index !== payload.targetIndex).join('\n');
+  forceInput.value = payload.items[payload.targetIndex];
+  loadedId = wizard.id;
+  setEditorMessage('');
+  if (!(await confirmSaveReport())) { message.textContent = editorMessage.textContent; return; }
+  if (!wizard) return;
+  const now = Date.now();
+  const result = wizard.mode === 'new'
+    ? addPreset(store.presets, payload, { now })
+    : overwritePreset(store.presets, wizard.id, payload, { now });
+  if (!result.ok) { message.textContent = result.error === MSG.duplicateName ? '같은 이름의 목록이 있습니다. 1단계에서 이름을 바꿔 주세요.' : result.error; return; }
+  if (!persist({ ...store, presets: result.presets })) { message.textContent = '저장하지 못했습니다. 저장된 목록은 그대로입니다.'; return; }
+  if (wizard.mode === 'new') finishWizard(`${notesFate(result.preset.id, wizard.title)} 예언 항목은 목록에서 언제든 바꿀 수 있어요.`);
+  else finishWizard('', { detailId: wizard.id });
+}
+
+function openTargetPicker(card, returnTo = 'home') {
+  if (recoveryState) { showStartProblem(startBlockReason()); return; }
+  if (card.builtin) {
+    const list = builtinById(card.id);
+    const target = normalizeBuiltins(store.builtins)[card.id].target - 1;
+    wizard = { mode: 'builtin', id: card.id, title: list.name, look: 'memo', items: list.items.slice(), target, number: 1, returnTo };
+  } else {
+    const preset = store.presets.find((entry) => entry.id === card.id);
+    if (!preset) return;
+    const full = presetFullList(preset);
+    detailId = preset.id;
+    wizard = { mode: 'edit-target', id: preset.id, title: preset.name, look: preset.appearance, items: full.items, target: full.target, number: 1, returnTo: currentView === 'detail' ? 'detail' : 'home' };
+  }
+  wizard.number = Math.min(37, wizard.items.length);
+  showStep3();
+}
+
+function openEditItems() {
+  const preset = store.presets.find((entry) => entry.id === detailId);
+  if (!preset || recoveryState) return;
+  const full = presetFullList(preset);
+  wizard = { mode: 'edit', id: preset.id, title: preset.name, look: preset.appearance, items: full.items, target: full.target, number: Math.min(37, full.items.length), returnTo: 'detail', strip: false };
+  wzItems.value = full.items.join('\n');
+  setItemsLabels();
+  renderWizardCount();
+  showView('w2');
+}
+
+// ----- list detail -----
+function renderDetail() {
+  const preset = store.presets.find((entry) => entry.id === detailId);
+  if (!preset) { showView('home', { push: false }); return; }
+  const card = listCards(store).find((entry) => entry.id === detailId);
+  const full = presetFullList(preset);
+  document.getElementById('detail-title').textContent = preset.name;
+  document.getElementById('detail-switch').setAttribute('aria-checked', String(card.enabled));
+  document.getElementById('detail-target').textContent = card.target || '없음';
+  document.getElementById('detail-count').textContent = `${card.count}개 · 붙여 넣어서 한 번에 고칠 수 있어요`;
+  const number = Math.min(37, full.items.length);
+  document.getElementById('detail-pv-label').textContent = `미리보기 (관객 번호 ${number})`;
+  renderWizardPreview('detail-pv-title', 'detail-pv-lines', preset.name, full.items, full.target >= 0 ? full.target : full.items.length - 1, number);
+}
+
+function openDetail(id, message = '') {
+  if (!store.presets.some((entry) => entry.id === id)) { showView('home'); return; }
+  detailId = id;
+  document.getElementById('detail-message').textContent = message;
+  document.getElementById('detail-rename').hidden = true;
+  renderDetail();
+  showView('detail');
+}
+
+function saveRename() {
+  const preset = store.presets.find((entry) => entry.id === detailId);
+  if (!preset || recoveryState) return;
+  const renamed = renamePreset(store.presets, preset.id, document.getElementById('detail-rename-input').value, { now: Date.now() });
+  const message = document.getElementById('detail-message');
+  if (!renamed.ok) { message.textContent = renamed.error; return; }
+  if (!persist({ ...store, presets: renamed.presets })) { message.textContent = '저장하지 못했습니다.'; return; }
+  document.getElementById('detail-rename').hidden = true;
+  message.textContent = '이름을 바꿨어요.';
+  renderDetail();
+}
+
+async function deleteDetail() {
+  const preset = store.presets.find((entry) => entry.id === detailId);
+  if (!preset || recoveryState) return;
+  if (!(await confirmAsk(`「${preset.name}」 목록을 삭제할까요? 삭제한 목록은 되돌릴 수 없습니다.`, '삭제'))) return;
+  const removed = deletePreset(store.presets, preset.id);
+  if (!removed.ok) { document.getElementById('detail-message').textContent = removed.error; return; }
+  const twoList = {
+    ...store.twoList,
+    presetIdA: store.twoList.presetIdA === preset.id ? null : store.twoList.presetIdA,
+    presetIdB: store.twoList.presetIdB === preset.id ? null : store.twoList.presetIdB
+  };
+  const hidden = normalizeHiddenIds(store.hiddenPresetIds).filter((id) => id !== preset.id);
+  if (!persist({ ...store, presets: removed.presets, twoList, hiddenPresetIds: hidden })) return;
+  detailId = null;
+  showView('home');
+}
+
+// The soft keyboard must never cover the bottom buttons: lift them by what the keyboard takes away.
+function trackKeyboard() {
+  const viewport = window.visualViewport;
+  if (!viewport) return;
+  const apply = () => {
+    const covered = Math.max(0, Math.round(window.innerHeight - viewport.height - viewport.offsetTop));
+    settingsEl.style.setProperty('--kb', `${covered}px`);
+  };
+  viewport.addEventListener('resize', apply);
+  viewport.addEventListener('scroll', apply);
+  apply();
+  settingsEl.addEventListener('focusin', (event) => {
+    const field = event.target;
+    if (field instanceof HTMLElement && field.matches('input[type="text"], textarea')) setTimeout(() => field.scrollIntoView?.({ block: 'center', behavior: 'smooth' }), 250);
+  });
+}
+
+function bindSettingsViews() {
+  settingsEl.addEventListener('click', (event) => {
+    const go = event.target.closest?.('[data-sv-go]');
+    if (!go) return;
+    if (go.classList.contains('sv-ib') && go.textContent.trim() === '‹') goBack(go.dataset.svGo);
+    else showView(go.dataset.svGo);
+  });
+  document.getElementById('new-list').addEventListener('click', openNewWizard);
+  document.querySelectorAll('#wz-looks .sv-chip').forEach((chip) => chip.addEventListener('click', () => { if (!wizard) return; wizard.look = chip.dataset.look; wizardLooks(); }));
+  document.getElementById('wz-next1').addEventListener('click', wizardNext1);
+  wzTitle.addEventListener('keydown', (event) => { if (event.key === 'Enter') { event.preventDefault(); wizardNext1(); } });
+  wzItems.addEventListener('input', renderWizardCount);
+  document.getElementById('wz-next2').addEventListener('click', wizardNext2);
+  document.getElementById('wz-strip').addEventListener('click', () => {
+    if (!wizard) return;
+    const before = parseWizardItems(wzItems.value, { stripPrefix: false }).items;
+    wzItems.value = stripItemPrefixes(wzItems.value);
+    const after = parseWizardItems(wzItems.value, { stripPrefix: false }).items;
+    // The chosen prophecy item keeps its place when the lines were the saved ones.
+    if (before.length === wizard.items.length && before.every((text, index) => text === wizard.items[index])) wizard.items = after;
+    renderWizardCount();
+  });
+  const backFromItems = () => goBack(wizard && wizard.mode === 'edit' ? 'detail' : 'w1');
+  document.getElementById('wz-back2').addEventListener('click', backFromItems);
+  document.getElementById('wz-prev2').addEventListener('click', backFromItems);
+  document.getElementById('wz-back3').addEventListener('click', () => {
+    goBack(wizard && (wizard.mode === 'new' || wizard.mode === 'edit') ? 'w2' : (wizard?.returnTo || 'home'));
+  });
+  document.getElementById('wz-minus').addEventListener('click', () => stepWizardNumber(-1));
+  document.getElementById('wz-plus').addEventListener('click', () => stepWizardNumber(1));
+  wzSave.addEventListener('click', () => { saveWizard(); });
+  document.getElementById('done-start').addEventListener('click', startNotesShow);
+  document.getElementById('detail-switch').addEventListener('click', () => {
+    const card = listCards(store).find((entry) => entry.id === detailId);
+    if (card) setListEnabled(card, !card.enabled);
+  });
+  document.getElementById('detail-change').addEventListener('click', () => { const card = listCards(store).find((entry) => entry.id === detailId); if (card) openTargetPicker(card); });
+  document.getElementById('detail-edit').addEventListener('click', openEditItems);
+  document.getElementById('detail-rename-open').addEventListener('click', () => {
+    const box = document.getElementById('detail-rename');
+    box.hidden = !box.hidden;
+    if (!box.hidden) { const input = document.getElementById('detail-rename-input'); input.value = store.presets.find((entry) => entry.id === detailId)?.name || ''; input.focus(); }
+  });
+  document.getElementById('detail-rename-save').addEventListener('click', saveRename);
+  document.getElementById('detail-rename-cancel').addEventListener('click', () => { document.getElementById('detail-rename').hidden = true; });
+  document.getElementById('detail-delete').addEventListener('click', () => { deleteDetail(); });
+  window.addEventListener('popstate', onPopState);
+  try { history.replaceState(navState('home'), ''); } catch { /* History can be blocked. */ }
+  trackKeyboard();
 }
 
 // ----- Settings extras: dummy notes, performance sets, backup, own app icons, memory table -----
@@ -602,7 +1075,7 @@ function renderDummies() {
   if (!notes.length) {
     const empty = document.createElement('p');
     empty.className = 'hint';
-    empty.textContent = '더미 노트가 없습니다.';
+    empty.textContent = '일상 메모가 없습니다.';
     dummyList.append(empty);
     return;
   }
@@ -625,7 +1098,7 @@ function renderDummies() {
     remove.className = 'danger';
     remove.textContent = '삭제';
     remove.addEventListener('click', async () => {
-      if (!(await confirmAsk(`더미 노트 「${note.title}」를 삭제할까요?`, '삭제'))) return;
+      if (!(await confirmAsk(`일상 메모 「${note.title}」를 삭제할까요?`, '삭제'))) return;
       const removed = deleteDummyNote(store, note.id);
       if (!removed.ok) { dummyMessage.textContent = removed.error; return; }
       if (persistExtras({ dummyNotes: removed.dummyNotes, sets: removed.sets }, '삭제했습니다.', dummyMessage) && dummyLoadedId === note.id) fillDummyForm(null);
@@ -670,9 +1143,9 @@ function checkRow(container, id, label, checked) {
 
 function renderSets() {
   const sets = store.sets || [];
-  setActive.replaceChildren(new Option('세트 없음 (조건에 맞는 모든 목록)', ''), ...sets.map((set) => new Option(set.name, set.id)));
+  setActive.replaceChildren(new Option('묶음 없음 (조건에 맞는 모든 목록)', ''), ...sets.map((set) => new Option(set.name, set.id)));
   setActive.value = store.activeSetId || '';
-  setSelect.replaceChildren(new Option('새 세트', ''), ...sets.map((set) => new Option(set.name, set.id)));
+  setSelect.replaceChildren(new Option('새 묶음', ''), ...sets.map((set) => new Option(set.name, set.id)));
   if (!sets.some((set) => set.id === setLoadedId)) setLoadedId = null;
   setSelect.value = setLoadedId || '';
   const loaded = sets.find((set) => set.id === setLoadedId) || null;
@@ -683,7 +1156,7 @@ function renderSets() {
   setDummies.replaceChildren();
   (store.dummyNotes || []).forEach((note) => checkRow(setDummies, note.id, note.title, Boolean(loaded?.dummyIds.includes(note.id))));
   const shown = selectNotes(store);
-  setSummary.textContent = `지금 노트에 나오는 것: 목록 ${shown.forceCount}개, 더미 노트 ${shown.notes.length - shown.forceCount}개${shown.setName ? `, 세트 「${shown.setName}」` : ''}`;
+  setSummary.textContent = `지금 노트에 나오는 것: 목록 ${shown.forceCount}개, 일상 메모 ${shown.notes.length - shown.forceCount}개${shown.setName ? `, 묶음 「${shown.setName}」` : ''}`;
 }
 
 function checkedValues(container) {
@@ -694,13 +1167,13 @@ function onSetSave() {
   const result = saveSet(store, { id: setLoadedId, name: setName.value, presetIds: checkedValues(setPresets), dummyIds: checkedValues(setDummies) });
   if (!result.ok) { setMessage.textContent = result.error; return; }
   setLoadedId = result.set.id;
-  persistExtras({ sets: result.sets }, '세트를 저장했습니다.', setMessage);
+  persistExtras({ sets: result.sets }, '묶음을 저장했습니다.', setMessage);
 }
 
 async function onSetDelete() {
   const current = (store.sets || []).find((set) => set.id === setLoadedId);
-  if (!current) { setMessage.textContent = '지울 세트를 먼저 고르세요.'; return; }
-  if (!(await confirmAsk(`세트 「${current.name}」를 삭제할까요? 목록과 더미 노트는 그대로 남습니다.`, '삭제'))) return;
+  if (!current) { setMessage.textContent = '지울 묶음을 먼저 고르세요.'; return; }
+  if (!(await confirmAsk(`묶음 「${current.name}」를 삭제할까요? 목록과 일상 메모는 그대로 남습니다.`, '삭제'))) return;
   const removed = deleteSet(store, current.id);
   if (!removed.ok) { setMessage.textContent = removed.error; return; }
   setLoadedId = null;
@@ -719,7 +1192,7 @@ function onBackupExport() {
   link.click();
   link.remove();
   setTimeout(() => URL.revokeObjectURL(link.href), 4000);
-  backupMessage.textContent = `목록 ${backup.presets.length}개, 세트 ${backup.sets.length}개, 더미 노트 ${backup.dummyNotes.length}개를 내보냈습니다.`;
+  backupMessage.textContent = `목록 ${backup.presets.length}개, 묶음 ${backup.sets.length}개, 일상 메모 ${backup.dummyNotes.length}개를 내보냈습니다.`;
 }
 
 function renderImportPreview(plan, issues) {
@@ -730,8 +1203,8 @@ function renderImportPreview(plan, issues) {
     entry.action === 'skip' ? '' : (entry.action === 'full' ? 'warn' : 'ok')
   )));
   push('목록', plan.presets);
-  push('더미 노트', plan.dummies);
-  push('세트', plan.sets);
+  push('일상 메모', plan.dummies);
+  push('묶음', plan.sets);
   issues.forEach((issue) => rows.push(precheckRow(`읽지 못함: ${issue}`, 'warn')));
   rows.push(precheckRow(`합계: 추가 ${plan.counts.added}개 (그중 사본 ${plan.counts.copies}개), 건너뜀 ${plan.counts.skipped}개${plan.counts.dropped ? `, 한도 때문에 가져오지 못함 ${plan.counts.dropped}개` : ''}. 지금 저장된 것은 바꾸지 않습니다.`, plan.counts.dropped ? 'warn' : ''));
   importList.replaceChildren(...rows);
@@ -1089,51 +1562,7 @@ function renderMemoryTable() {
   table.replaceChildren(...rows);
 }
 
-// Ready made lists: switch on or off and pick which item is the target. Each one passes the same checks as a saved list.
-function renderBuiltins() {
-  const box = document.getElementById('builtin-list');
-  if (!box) return;
-  const settings = normalizeBuiltins(store.builtins);
-  box.replaceChildren(...BUILTIN_LISTS.map((list) => {
-    const card = document.createElement('article');
-    card.className = 'preset builtin-item';
-    const title = document.createElement('h3');
-    title.textContent = `${list.name} (${list.items.length}개)`;
-    const toggle = document.createElement('label');
-    toggle.className = 'checkline';
-    const check = document.createElement('input');
-    check.type = 'checkbox';
-    check.checked = settings[list.id].enabled;
-    check.setAttribute('aria-label', `${list.name} 노트에 넣기`);
-    const text = document.createElement('span');
-    text.textContent = '노트에 넣기 (끄면 숨김)';
-    toggle.append(check, text);
-    const pick = document.createElement('label');
-    pick.textContent = '포스 항목';
-    const select = document.createElement('select');
-    list.items.forEach((item, index) => select.append(new Option(`${index + 1}. ${item}`, String(index + 1))));
-    select.value = String(settings[list.id].target);
-    pick.append(select);
-    const split = list.items.slice();
-    const report = validateListInput({ itemsText: split.filter((_, index) => index + 1 !== settings[list.id].target).join('\n'), forceItem: list.items[settings[list.id].target - 1] });
-    const status = document.createElement('p');
-    status.className = 'hint';
-    status.textContent = report.ok && !report.warnings.length ? '점검 통과: 겹치는 항목과 빈 줄이 없습니다.' : `점검: ${[...report.errors, ...report.warnings.map((warning) => warning.message)].join(' ')}`;
-    const save = () => {
-      if (recoveryState) { document.getElementById('builtin-message').textContent = '저장본을 먼저 처리하세요.'; return; }
-      const next = { ...normalizeBuiltins(store.builtins), [list.id]: { enabled: check.checked, target: Number(select.value) } };
-      const ok = persist({ ...store, builtins: next });
-      document.getElementById('builtin-message').textContent = ok ? '' : '저장하지 못했습니다. 저장된 목록은 그대로입니다.';
-    };
-    check.addEventListener('change', save);
-    select.addEventListener('change', save);
-    card.append(title, toggle, pick, status);
-    return card;
-  }));
-}
-
 function renderExtras() {
-  renderBuiltins();
   renderDummies();
   renderSets();
   renderWallpaperState();
@@ -1708,7 +2137,9 @@ function closeFakeHome() {
   settingsEl.hidden = false;
   document.title = '너의 선택은?';
   document.body.dataset.view = 'settings';
-  settingsEl.querySelector('h1')?.focus();
+  showView('home', { push: false });
+  // The history entry under the performance must say what is visible now.
+  try { history.replaceState(navState('home'), ''); } catch { /* History can be blocked. */ }
 }
 
 // Secret next-spectator reset: clears the number, closes any open note and goes back to the first home.
@@ -1756,17 +2187,26 @@ function startBlockReason() {
   if (!selectNotes(store).forceCount) {
     return {
       recovery: false,
-      text: `노트에 넣을 목록이 없어 공연을 시작할 수 없습니다. 기본 제공 목록을 '노트에 넣기'로 켜거나, 포스 항목이 있고 전체 항목이 ${NOTE_MIN_ITEMS}개에서 ${NOTE_MAX_ITEMS}개인 목록을 저장하세요. 공연 세트를 쓰고 있다면 세트에 목록을 넣어야 합니다.`
+      text: `노트에 넣을 목록이 없어 공연을 시작할 수 없습니다. 기본 제공 목록을 '노트에 넣기'로 켜거나, 예언 항목이 있고 전체 항목이 ${NOTE_MIN_ITEMS}개에서 ${NOTE_MAX_ITEMS}개인 목록을 저장하세요. 공연 묶음을 쓰고 있다면 묶음에 목록을 넣어야 합니다.`
     };
   }
   return null;
 }
 
 // A blocking reason is always shown right under the button, with the way out when there is one.
+function startMessageElement() {
+  return (currentView === 'done' && document.getElementById('done-message')) || notesEntryMessage;
+}
+
+function setStartMessage(text) {
+  if (currentView === 'done') document.getElementById('done-message').textContent = text || '';
+  else setNotesEntryMessage(text);
+}
+
 function showStartProblem(problem, { scroll = true } = {}) {
-  setNotesEntryMessage(problem.text);
+  setStartMessage(problem.text);
   if (notesEntryAction) notesEntryAction.hidden = !problem.recovery;
-  if (scroll) notesEntryMessage?.scrollIntoView?.({ block: 'center', behavior: 'smooth' });
+  if (scroll) startMessageElement()?.scrollIntoView?.({ block: 'center', behavior: 'smooth' });
 }
 
 // Anything unexpected while opening the fake home leaves the settings screen usable and says what happened.
@@ -1791,9 +2231,9 @@ function startNotesShow() {
     const snapped = selectNotes(store);
     if (notesEntryAction) notesEntryAction.hidden = true;
     if (snapped.truncated) {
-      setNotesEntryMessage(`조건에 맞는 목록이 ${NOTE_LIST_LIMIT}개를 넘어, 앞 ${NOTE_LIST_LIMIT}개만 노트로 사용합니다. 저장본은 바꾸지 않았습니다.`);
+      setStartMessage(`조건에 맞는 목록이 ${NOTE_LIST_LIMIT}개를 넘어, 앞 ${NOTE_LIST_LIMIT}개만 노트로 사용합니다. 저장본은 바꾸지 않았습니다.`);
     } else {
-      setNotesEntryMessage('');
+      setStartMessage('');
     }
     openFakeHome(snapped.notes);
   } catch (error) {
@@ -1942,11 +2382,6 @@ function gestureMoves() {
   return [...armed.values()].map((record) => record.lastY - record.startY);
 }
 
-document.getElementById('save-new').addEventListener('click', () => { onSaveNew(); });
-document.getElementById('rename').addEventListener('click', onRename);
-document.getElementById('overwrite').addEventListener('click', () => { onOverwrite(); });
-document.getElementById('delete-preset').addEventListener('click', () => { onDelete(); });
-document.getElementById('reset-form').addEventListener('click', () => fillEditor(null));
 document.getElementById('start-notes-show').addEventListener('click', startNotesShow);
 inputGuideInput?.addEventListener('change', () => { persistInputGuidePreference(); renderPrecheck(); });
 for (const control of [optStartMode, optDisplay, optVibrate]) control?.addEventListener('change', saveOptionsFromControls);
@@ -2096,30 +2531,8 @@ function warmShellArtwork() {
   manifestFiles().forEach((file) => { fetch(iconSrc(file)).catch(() => {}); });
 }
 
-// Computer with a mouse only: a small settings button and Shift+Esc. Phones and tablets, even in desktop-site mode,
-// report touch points, so they never get the button, the shortcut or any text about it.
-function setupDesktopEntry() {
-  const button = document.getElementById('desktop-settings');
-  const desktop = isDesktopMouseDevice({
-    maxTouchPoints: typeof navigator !== 'undefined' ? navigator.maxTouchPoints : undefined,
-    pointerFine: typeof matchMedia === 'function' && matchMedia('(pointer: fine)').matches,
-    userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : ''
-  });
-  if (!button || !desktop) return false;
-  button.hidden = false;
-  button.title = '설정으로 돌아가기 (Shift+Esc)';
-  button.addEventListener('click', () => { if (fakeHomeSession) closeFakeHome(); });
-  document.addEventListener('keydown', (event) => {
-    if (event.shiftKey && event.key === 'Escape' && fakeHomeSession) {
-      event.preventDefault();
-      closeFakeHome();
-    }
-  });
-  return true;
-}
-
 loadInputGuidePreference();
-setupDesktopEntry();
+bindSettingsViews();
 
 const loaded = loadFromStorage(localStorage);
 if (!loaded.ok) {

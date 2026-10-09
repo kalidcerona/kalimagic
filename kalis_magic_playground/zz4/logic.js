@@ -40,7 +40,7 @@ export const MSG = {
   storageRead: '저장소를 읽지 못했습니다.',
   storageWrite: '저장 공간이 부족하거나 저장소에 쓸 수 없습니다.',
   badTwoList: '두 목록 설정을 읽을 수 없습니다. 원본은 그대로 두었습니다.',
-  needForce: '포스 항목을 입력하세요.'
+  needForce: '예언 항목을 입력하세요.'
 };
 
 const MAX_ITEMS = 200;
@@ -116,7 +116,8 @@ export function emptyState() {
     sets: [],
     activeSetId: null,
     dummyNotes: [],
-    builtins: normalizeBuiltins(undefined)
+    builtins: normalizeBuiltins(undefined),
+    hiddenPresetIds: []
   };
 }
 
@@ -574,6 +575,12 @@ export function normalizeSets(raw) {
 }
 
 /** Settings of the ready made lists: shown in the notes app or not, and which item is the target (1 based). */
+/** Ids of the performer's own lists that are switched off for the notes app (an optional, additive field). */
+export function normalizeHiddenIds(raw) {
+  if (!Array.isArray(raw)) return [];
+  return [...new Set(raw.filter((id) => typeof id === 'string' && id))];
+}
+
 export function normalizeBuiltins(raw) {
   const input = raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {};
   const out = {};
@@ -591,7 +598,7 @@ function readExtras(parsed) {
   const activeSetId = typeof parsed.activeSetId === 'string' && sets.some((set) => set.id === parsed.activeSetId)
     ? parsed.activeSetId
     : null;
-  return { sets, activeSetId, dummyNotes: normalizeDummyNotes(parsed.dummyNotes), builtins: normalizeBuiltins(parsed.builtins) };
+  return { sets, activeSetId, dummyNotes: normalizeDummyNotes(parsed.dummyNotes), builtins: normalizeBuiltins(parsed.builtins), hiddenPresetIds: normalizeHiddenIds(parsed.hiddenPresetIds) };
 }
 
 export function parseStorage(raw) {
@@ -674,7 +681,8 @@ export function serializeState(state) {
     sets: normalizeSets(state.sets),
     activeSetId: normalizeSets(state.sets).some((set) => set.id === state.activeSetId) ? state.activeSetId : null,
     dummyNotes: normalizeDummyNotes(state.dummyNotes),
-    builtins: normalizeBuiltins(state.builtins)
+    builtins: normalizeBuiltins(state.builtins),
+    hiddenPresetIds: normalizeHiddenIds(state.hiddenPresetIds)
   });
 }
 
@@ -954,7 +962,8 @@ export function selectNotes(state, { limit = NOTE_LIST_LIMIT, maxItems = NOTE_MA
     pickedDummies = active.dummyIds.map((id) => dummies.find((note) => note.id === id)).filter(Boolean);
     pickedBuiltinIds = active.presetIds.filter((id) => builtinById(id));
   }
-  const eligible = pickedPresets.filter((preset) => isNoteEligible(preset, maxItems));
+  const hidden = new Set(normalizeHiddenIds(state?.hiddenPresetIds));
+  const eligible = pickedPresets.filter((preset) => !hidden.has(preset.id) && isNoteEligible(preset, maxItems));
   const forced = eligible.slice(0, limit).map((preset) => {
     const split = splitForcePreset(preset);
     return {
@@ -1022,7 +1031,7 @@ export function validateListInput(input, { otherForceItems = [] } = {}) {
   if (items.length === 0) errors.push(MSG.emptyList);
   if (items.length > MAX_ITEMS - 1) errors.push(MSG.tooManyItems);
   if (!force) errors.push(MSG.needForce);
-  else if (charLength(force) > MAX_CHARS) errors.push(`포스 항목이 ${MAX_CHARS}자를 넘습니다.`);
+  else if (charLength(force) > MAX_CHARS) errors.push(`예언 항목이 ${MAX_CHARS}자를 넘습니다.`);
   if (blank > 0) warnings.push({ code: 'blank-lines', message: `빈 줄 ${blank}개는 저장하지 않고 건너뜁니다. 번호가 한 칸씩 당겨집니다.` });
   if (longLines.length) {
     warnings.push({ code: 'long-items', message: `${longLines.slice(0, 5).join(', ')}번 항목이 ${LONG_ITEM_CHARS}자보다 깁니다. 공개 화면에서 여러 줄로 보입니다.` });
@@ -1040,9 +1049,9 @@ export function validateListInput(input, { otherForceItems = [] } = {}) {
   }
   if (force) {
     const same = seen.get(force.toLocaleLowerCase('ko-KR'));
-    if (same) warnings.push({ code: 'force-in-items', message: `포스 항목과 같은 문장이 일반 항목 ${same.join('번, ')}번에 있습니다. 어느 줄이 포스인지 드러날 수 있습니다.` });
+    if (same) warnings.push({ code: 'force-in-items', message: `예언 항목과 같은 문장이 항목 ${same.join('번, ')}번에 있습니다. 어느 줄이 예언 항목인지 드러날 수 있습니다.` });
     if (otherForceItems.some((other) => typeof other === 'string' && other.trim().toLocaleLowerCase('ko-KR') === force.toLocaleLowerCase('ko-KR'))) {
-      warnings.push({ code: 'force-in-other-list', message: '다른 목록에도 같은 포스 항목이 있습니다.' });
+      warnings.push({ code: 'force-in-other-list', message: '다른 목록에도 같은 예언 항목이 있습니다.' });
     }
   }
   const total = items.length + (force ? 1 : 0);
@@ -1096,7 +1105,7 @@ export function parseBackup(text) {
   if (!Array.isArray(parsed.presets)) return { ok: false, error: '백업 파일에 목록이 없습니다.' };
   const arrayLength = (value) => (Array.isArray(value) ? value.length : 0);
   if (parsed.presets.length > IMPORT_MAX_PRESETS || arrayLength(parsed.dummyNotes) > IMPORT_MAX_DUMMIES || arrayLength(parsed.sets) > IMPORT_MAX_SETS) {
-    return { ok: false, error: `백업 파일의 항목이 너무 많습니다. 목록 ${IMPORT_MAX_PRESETS}개, 더미 노트 ${IMPORT_MAX_DUMMIES}개, 세트 ${IMPORT_MAX_SETS}개까지 가져올 수 있습니다.` };
+    return { ok: false, error: `백업 파일의 항목이 너무 많습니다. 목록 ${IMPORT_MAX_PRESETS}개, 일상 메모 ${IMPORT_MAX_DUMMIES}개, 묶음 ${IMPORT_MAX_SETS}개까지 가져올 수 있습니다.` };
   }
   const issues = [];
   const presets = [];
@@ -1178,11 +1187,11 @@ export function planImport(state, backup, { now = Date.now(), rand = Math.random
     const twin = currentDummies.find((note) => note.id === incoming.id || (note.title === incoming.title && note.body === incoming.body));
     if (twin && twin.title === incoming.title && twin.body === incoming.body) {
       dummyMap.set(incoming.id, twin.id);
-      dummies.push({ action: 'skip', name: incoming.title, reason: '이미 같은 더미 노트가 있습니다.' });
+      dummies.push({ action: 'skip', name: incoming.title, reason: '이미 같은 일상 메모가 있습니다.' });
       return;
     }
     if (dummyRoom <= 0) {
-      dummies.push({ action: 'full', name: incoming.title, reason: `더미 노트는 ${MAX_DUMMIES}개까지라 가져오지 못합니다. 지금 있는 더미 노트를 정리한 뒤 다시 가져오세요.` });
+      dummies.push({ action: 'full', name: incoming.title, reason: `일상 메모는 ${MAX_DUMMIES}개까지라 가져오지 못합니다. 지금 있는 일상 메모를 정리한 뒤 다시 가져오세요.` });
       return;
     }
     dummyRoom -= 1;
@@ -1201,11 +1210,11 @@ export function planImport(state, backup, { now = Date.now(), rand = Math.random
     const twin = currentSets.find((set) => set.name === incoming.name
       && JSON.stringify([set.presetIds, set.dummyIds]) === JSON.stringify([mapped.presetIds, mapped.dummyIds]));
     if (twin) {
-      sets.push({ action: 'skip', name: incoming.name, reason: '이미 같은 세트가 있습니다.' });
+      sets.push({ action: 'skip', name: incoming.name, reason: '이미 같은 묶음이 있습니다.' });
       return;
     }
     if (setRoom <= 0) {
-      sets.push({ action: 'full', name: incoming.name, reason: `세트는 ${MAX_SETS}개까지라 가져오지 못합니다. 지금 있는 세트를 정리한 뒤 다시 가져오세요.` });
+      sets.push({ action: 'full', name: incoming.name, reason: `묶음은 ${MAX_SETS}개까지라 가져오지 못합니다. 지금 있는 묶음을 정리한 뒤 다시 가져오세요.` });
       return;
     }
     setRoom -= 1;
@@ -1247,26 +1256,26 @@ export function applyImportPlan(state, plan) {
 
 export function addDummyNote(state, input, { now = Date.now(), rand = Math.random() } = {}) {
   const notes = normalizeDummyNotes(state?.dummyNotes);
-  if (notes.length >= MAX_DUMMIES) return { ok: false, error: `더미 노트는 ${MAX_DUMMIES}개까지 만들 수 있습니다.` };
+  if (notes.length >= MAX_DUMMIES) return { ok: false, error: `일상 메모는 ${MAX_DUMMIES}개까지 만들 수 있습니다.` };
   const note = normalizeDummyNote({ ...input, id: `dm_${now.toString(36)}_${Math.floor(rand * 1e9).toString(36)}`, updatedAt: input?.updatedAt ?? now }, null);
-  if (!note) return { ok: false, error: '더미 노트 제목을 입력하세요.' };
-  if (notes.some((entry) => entry.title === note.title)) return { ok: false, error: '같은 제목의 더미 노트가 있습니다.' };
+  if (!note) return { ok: false, error: '일상 메모 제목을 입력하세요.' };
+  if (notes.some((entry) => entry.title === note.title)) return { ok: false, error: '같은 제목의 일상 메모가 있습니다.' };
   return { ok: true, note, dummyNotes: notes.concat(note) };
 }
 
 export function updateDummyNote(state, id, input) {
   const notes = normalizeDummyNotes(state?.dummyNotes);
   const current = notes.find((note) => note.id === id);
-  if (!current) return { ok: false, error: '더미 노트를 찾을 수 없습니다.' };
+  if (!current) return { ok: false, error: '일상 메모를 찾을 수 없습니다.' };
   const next = normalizeDummyNote({ ...current, ...input, id, updatedAt: input?.updatedAt ?? current.updatedAt }, id);
-  if (!next) return { ok: false, error: '더미 노트 제목을 입력하세요.' };
-  if (notes.some((note) => note.id !== id && note.title === next.title)) return { ok: false, error: '같은 제목의 더미 노트가 있습니다.' };
+  if (!next) return { ok: false, error: '일상 메모 제목을 입력하세요.' };
+  if (notes.some((note) => note.id !== id && note.title === next.title)) return { ok: false, error: '같은 제목의 일상 메모가 있습니다.' };
   return { ok: true, note: next, dummyNotes: notes.map((note) => (note.id === id ? next : note)) };
 }
 
 export function deleteDummyNote(state, id) {
   const notes = normalizeDummyNotes(state?.dummyNotes);
-  if (!notes.some((note) => note.id === id)) return { ok: false, error: '더미 노트를 찾을 수 없습니다.' };
+  if (!notes.some((note) => note.id === id)) return { ok: false, error: '일상 메모를 찾을 수 없습니다.' };
   const sets = normalizeSets(state?.sets).map((set) => ({ ...set, dummyIds: set.dummyIds.filter((entry) => entry !== id) }));
   return { ok: true, dummyNotes: notes.filter((note) => note.id !== id), sets };
 }
@@ -1274,7 +1283,7 @@ export function deleteDummyNote(state, id) {
 export function saveSet(state, input, { now = Date.now(), rand = Math.random() } = {}) {
   const sets = normalizeSets(state?.sets);
   const name = cleanText(input?.name, MAX_NAME).trim();
-  if (!name) return { ok: false, error: '세트 이름을 입력하세요.' };
+  if (!name) return { ok: false, error: '묶음 이름을 입력하세요.' };
   const presetIds = new Set([...(state?.presets || []).map((preset) => preset.id), ...BUILTIN_LISTS.map((list) => list.id)]);
   const dummyIds = new Set(normalizeDummyNotes(state?.dummyNotes).map((note) => note.id));
   const next = {
@@ -1283,16 +1292,16 @@ export function saveSet(state, input, { now = Date.now(), rand = Math.random() }
     presetIds: (input?.presetIds || []).filter((id) => presetIds.has(id)),
     dummyIds: (input?.dummyIds || []).filter((id) => dummyIds.has(id))
   };
-  if (sets.some((set) => set.id !== next.id && set.name === name)) return { ok: false, error: '같은 이름의 세트가 있습니다.' };
+  if (sets.some((set) => set.id !== next.id && set.name === name)) return { ok: false, error: '같은 이름의 묶음이 있습니다.' };
   const exists = sets.some((set) => set.id === next.id);
-  if (!exists && sets.length >= MAX_SETS) return { ok: false, error: `세트는 ${MAX_SETS}개까지 만들 수 있습니다.` };
+  if (!exists && sets.length >= MAX_SETS) return { ok: false, error: `묶음은 ${MAX_SETS}개까지 만들 수 있습니다.` };
   const merged = exists ? sets.map((set) => (set.id === next.id ? next : set)) : sets.concat(next);
   return { ok: true, set: next, sets: merged };
 }
 
 export function deleteSet(state, id) {
   const sets = normalizeSets(state?.sets);
-  if (!sets.some((set) => set.id === id)) return { ok: false, error: '세트를 찾을 수 없습니다.' };
+  if (!sets.some((set) => set.id === id)) return { ok: false, error: '묶음을 찾을 수 없습니다.' };
   return { ok: true, sets: sets.filter((set) => set.id !== id), activeSetId: state.activeSetId === id ? null : state.activeSetId ?? null };
 }
 
@@ -1370,18 +1379,80 @@ export function saveUserIcons(storage, icons) {
   }
 }
 
-// ----- Desktop only settings entry -------------------------------------------------------
+// ----- Settings home, list wizard and previews (no change to what is stored) ---------------
 
-const MOBILE_AGENT = /Android|iPhone|iPad|iPod|Mobile|SamsungBrowser|Tablet|Silk|CriOS|FxiOS|EdgA|EdgiOS|OPR\/.*Mobile|Windows Phone|IEMobile|webOS|BlackBerry|Opera Mini|KAIOS/i;
+export const WIZARD_MIN_ITEMS = 2;
+export const WIZARD_MAX_ITEMS = 100;
 
-/**
- * True only for a computer with a mouse: no touch points, a fine pointer and no phone or tablet
- * user agent. A phone in desktop-site mode (Samsung Internet, Chrome) still reports touch points,
- * so it never counts. Only then the settings button and the Shift+Esc shortcut exist.
- */
-export function isDesktopMouseDevice({ maxTouchPoints, pointerFine, userAgent } = {}) {
-  if (maxTouchPoints !== 0) return false;
-  if (pointerFine !== true) return false;
-  if (typeof userAgent !== 'string' || !userAgent || MOBILE_AGENT.test(userAgent)) return false;
-  return true;
+const LIST_PREFIX = /^(?:\d{1,3}[.)]\s+|[-*\u2022]\s+)/;
+
+/** The text with a leading "1. " or "- " removed from every line (the explicit "번호 지우기" action and fresh pasted input). */
+export function stripItemPrefixes(text) {
+  return (typeof text === 'string' ? text.split(/\r?\n/) : []).map((line) => line.replace(LIST_PREFIX, '')).join('\n');
+}
+
+/** Items typed or pasted: one per line, blank lines dropped. A leading "1. " or "- " is removed unless stripPrefix is false (items loaded from a saved list stay as they are). */
+export function parseWizardItems(text, { stripPrefix = true } = {}) {
+  const raw = typeof text === 'string' ? text.split(/\r?\n/) : [];
+  const items = raw.map((line) => { const trimmed = line.trim(); return (stripPrefix ? trimmed.replace(LIST_PREFIX, '') : trimmed).trim(); }).filter(Boolean);
+  const long = items.findIndex((item) => charLength(item) > MAX_CHARS);
+  const ok = items.length >= WIZARD_MIN_ITEMS && items.length <= WIZARD_MAX_ITEMS && long === -1;
+  return { items, count: items.length, ok, tooLongAt: long === -1 ? null : long + 1 };
+}
+
+/** The full list of a saved preset with its prophecy item back inside (a list that kept the target in place keeps it there). */
+export function presetFullList(preset) {
+  if (!preset || !Array.isArray(preset.items)) return { items: [], target: -1 };
+  if (typeof preset.forceItem === 'string') return { items: preset.items.concat(preset.forceItem), target: preset.items.length };
+  const index = Number.isInteger(preset.targetIndex) ? preset.targetIndex : -1;
+  return { items: preset.items.slice(), target: index >= 0 && index < preset.items.length ? index : -1 };
+}
+
+/** What addPreset or overwritePreset takes. The whole list keeps its order and the prophecy item is a position in it (targetIndex). */
+export function wizardPayload({ title, appearance = 'memo', items, target }) {
+  if (!Array.isArray(items) || !Number.isInteger(target) || target < 0 || target >= items.length) return null;
+  return { name: title, appearance, items: items.slice(), targetIndex: target };
+}
+
+/** Lines of a note for a sample number, around the chosen place, to check the result before saving. */
+export function previewNote(items, target, number, { around = 2 } = {}) {
+  if (!Array.isArray(items) || items.length < 2 || !Number.isInteger(target) || target < 0 || target >= items.length) return null;
+  const rest = items.filter((_, index) => index !== target);
+  const place = Math.min(Math.max(1, Math.floor(number) || 1), items.length);
+  rest.splice(place - 1, 0, items[target]);
+  const from = Math.max(0, place - 1 - around);
+  const to = Math.min(rest.length, place + around);
+  return { number: place, total: rest.length, lines: rest.slice(from, to).map((text, offset) => ({ number: from + offset + 1, text, hit: from + offset + 1 === place })) };
+}
+
+/** One card per list for the settings home: the performer's own lists first, then the ready made ones. */
+export function listCards(state) {
+  const hidden = new Set(normalizeHiddenIds(state?.hiddenPresetIds));
+  const builtins = normalizeBuiltins(state?.builtins);
+  const own = (Array.isArray(state?.presets) ? state.presets : []).map((preset) => {
+    const split = splitForcePreset(preset);
+    const total = split.items.length + 1;
+    return {
+      id: preset.id, builtin: false, title: preset.name, count: total, target: split.forceItem,
+      enabled: !hidden.has(preset.id), usable: isNoteEligible(preset), updatedAt: preset.updatedAt
+    };
+  }).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+  const ready = BUILTIN_LISTS.map((list) => ({
+    id: list.id, builtin: true, title: list.name, count: list.items.length,
+    target: list.items[builtins[list.id].target - 1], enabled: builtins[list.id].enabled, usable: true
+  }));
+  return own.concat(ready);
+}
+
+/** The line under the start button: how many lists will really appear in the notes (the active performance set counts) and whether every one is usable. */
+export function readinessSummary(state) {
+  const cards = listCards(state);
+  const picked = selectNotes(state);
+  const sets = normalizeSets(state?.sets);
+  const active = sets.find((set) => set.id === state?.activeSetId) || null;
+  const inSet = (card) => !active || active.presetIds.includes(card.id);
+  const tooLong = cards.filter((card) => !card.builtin && card.enabled && !card.usable && inSet(card));
+  const onCount = picked.forceCount;
+  const switchedOn = cards.filter((card) => card.enabled && card.usable).length;
+  return { onCount, tooLong: tooLong.length, ready: onCount > 0, setName: picked.setName, outsideSet: active ? Math.max(0, switchedOn - onCount) : 0 };
 }
