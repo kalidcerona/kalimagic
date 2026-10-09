@@ -9,9 +9,9 @@
  * Attempts listed in settings.truthAttempts read TRUE; all others read LIE.
  */
 
-export const HOLD_THRESHOLD_MS = 2000;
+export const HOLD_THRESHOLD_MS = 3000;
 
-/** Scan boundaries stay on the supported 500ms grid; invalid input uses 2s. */
+/** Scan boundaries stay on the supported 500ms grid; invalid input uses 3s. */
 export function normalizeHoldThresholdMs(value) {
   if (typeof value !== "number" || !Number.isFinite(value)) return HOLD_THRESHOLD_MS;
   return Math.round(Math.max(500, Math.min(10000, value)) / 500) * 500;
@@ -290,7 +290,7 @@ function finishCancelled(state, reason, elapsedMs, movement) {
 
 /**
  * Release ends the gesture. Count increases only when the hold is still
- * active and elapsed time reaches the supplied threshold (default 2s), inclusively.
+ * active and elapsed time reaches the supplied threshold (default 3s), inclusively.
  */
 export function releaseHold(state, hold, nowMs, x, y, thresholdMs = HOLD_THRESHOLD_MS) {
   const shaped = shapeAppState(state);

@@ -73,7 +73,7 @@ test('personal and friend audio recover from iOS interruption and background, wi
     const restored = app.contexts[1];
     restored.finishResume(); await app.flush();
     assert.ok(restored.tones.length>0,`${route} active scan sounds after recovery`);
-    app.advance(2000);
+    app.advance(3000);
     for (const fn of [...app.timers.values()]) fn();
     await app.flush();
     assert.ok(restored.tones.length>1,`${route} verdict sound remains available`);

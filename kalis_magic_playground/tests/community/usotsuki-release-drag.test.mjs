@@ -7,7 +7,7 @@ import { pathToFileURL } from 'node:url';
 
 const read = (appDir, file) => readFileSync(resolve(appDir, file), 'utf8');
 const flush = () => new Promise(setImmediate);
-async function fixture(appDir, theme = 'recorder', layout = false) {
+async function fixture(appDir, theme = 'recorder', layout = false, scan = '0.5') {
   const { createContinuousTrace } = await import(pathToFileURL(resolve(appDir, 'recorder-trace.js')).href);
   const logic = await import(pathToFileURL(resolve(appDir, 'logic.js')).href);
   const source = read(appDir, 'detector.js');
@@ -32,7 +32,7 @@ async function fixture(appDir, theme = 'recorder', layout = false) {
   }
   function node(id) { if (!nodes.has(id)) nodes.set(id,new Node()); return nodes.get(id); }
   const doc = Object.assign(new EventTarget(), {body:new Node(),hidden:false,querySelector:node,createElement:()=>new Node()});
-  const stored = new Map([[key('DISPLAY_THEME_KEY'),theme],['usotsuki.detector.scan-duration.v1','0.5'],[key('SOUND_KEY'),'0'],['usotsuki.detector.vibration.v1','off']]);
+  const stored = new Map([[key('DISPLAY_THEME_KEY'),theme],...(scan == null ? [] : [['usotsuki.detector.scan-duration.v1',scan]]),[key('SOUND_KEY'),'0'],['usotsuki.detector.vibration.v1','off']]);
   const win = Object.assign(new EventTarget(), {
     localStorage:{getItem:k=>stored.get(k)??null,setItem:(k,v)=>stored.set(k,String(v))},
     requestAnimationFrame(fn){const id=++serial;frames.set(id,fn);return id;},cancelAnimationFrame:id=>frames.delete(id),
@@ -170,28 +170,46 @@ for(const appDir of appDirs) test(`${appDir}: first-load idle glyph centers befo
  f.dispatch(f.node('#start-performance'),'click');centered();assert.equal(f.frames.size,0);
 });
 
-for(const appDir of appDirs) test(`${appDir}: denser damped wood peaks remain inside paper with late lie ratios`,async()=>{
+for(const appDir of appDirs) test(`${appDir}: irregular damped wood peaks remain inside paper with late lie ratios`,async()=>{
  const source=read(appDir,'detector.js');
  const {buildHeartbeat,heartbeatValue}=vm.runInNewContext(source.slice(source.indexOf('function buildHeartbeat'),source.indexOf('import { createContinuousTrace'))+';({buildHeartbeat,heartbeatValue})');
  const {createContinuousTrace}=await import(pathToFileURL(resolve(appDir,'recorder-trace.js')).href);
- const duration=2500,seed=42,truth=buildHeartbeat({durationMs:duration,seed}),lie=buildHeartbeat({durationMs:duration,seed,verdict:'LIE'});
- for(let t=0;t<=1875;t+=2)assert.equal(heartbeatValue(truth,t),heartbeatValue(lie,t));
+ const duration=3000,seed=42,truth=buildHeartbeat({durationMs:duration,seed}),lie=buildHeartbeat({durationMs:duration,seed,verdict:'LIE'});
+ for(let t=0;t<=2250;t+=2)assert.equal(heartbeatValue(truth,t),heartbeatValue(lie,t));
  const results=[];
  for(const model of [truth,lie]){
   const trace=createContinuousTrace({position:62,retain:472,responseMs:16,integrationMs:2,smooth:true}),ys=[];
   trace.begin({duration,travel:344,target:t=>heartbeatValue(model,t)});
   for(let t=0;t<=duration;t+=2)ys.push(trace.advance(t).position);
-  const peaks=ys.filter((y,i)=>i>0&&i<ys.length-1&&y<60&&y<ys[i-1]&&y<=ys[i+1]);
+  const peaks=ys.map((y,i)=>({y,t:i*2})).filter((p,i)=>i>0&&i<ys.length-1&&p.y<60&&p.y<ys[i-1]&&p.y<=ys[i+1]);
   const height=(62-Math.min(...ys))/124;
-  assert.ok(height>=.12&&height<.4,`rendered R/paper ${height}`);assert.ok(peaks.length>=5&&peaks.length<=8);
+  const early=62-Math.min(...ys.slice(0,1126));
+  assert.ok(early/124>=.25&&early/124<=.34,`early rendered R/paper ${early/124}`);assert.ok(peaks.length>=6&&peaks.length<=7);
   assert.ok(Math.min(...ys)>7&&Math.max(...ys)<117);assert.ok(trace.snapshot().samples<=8192);
   assert.match(trace.path(p=>[p.distance,p.position]),/ C/);
-  results.push({late:62-Math.min(...ys.slice(938))});
+  const mean=a=>a.reduce((sum,p)=>sum+62-p.y,0)/a.length;
+  const earlyPeaks=peaks.filter(p=>p.t<=duration*.75),latePeaks=peaks.filter(p=>p.t>duration*.75);
+  if(model===lie)assert.ok(latePeaks.every(p=>62-p.y>Math.max(...earlyPeaks.map(p=>62-p.y))));
+  results.push({early:mean(earlyPeaks),late:mean(latePeaks)});
  }
- assert.ok(results[1].late>results[0].late);
- // Compare completed normal R tips to the transformed lie tips, excluding fallback.
- for(const [t,y] of truth.points.filter(([t,y])=>t>1875&&y<50)){
-  const late=lie.points.find(([at])=>Math.abs(at-(1875+(t-1875)*.72))<1e-8);
-  if(late)assert.ok(Math.abs((62-late[1])/(62-y)-1.65)<1e-9);
+ assert.ok(Math.abs(results[0].late/results[0].early-1)<.1);
+ assert.ok(results[1].late/results[1].early>=1.4&&results[1].late/results[1].early<=1.6);
+ assert.equal(results[0].early,results[1].early);
+ // Scheduled late R times retain the .72 compression after input calibration.
+ for(const [t,y] of truth.points.filter(([t,y])=>t>2250&&t<3000&&y<50)){
+  assert.ok(lie.points.some(([at])=>Math.abs(at-(2250+(t-2250)*.72))<1e-8));
+ }
+});
+
+for(const appDir of appDirs) test(`${appDir}: absent scan preference defaults to 3s with read-only load and saved short values retained`,async()=>{
+ for(const scan of [null,'0.5','2','6','10']){
+  const f=await fixture(appDir,'green',false,scan);
+  const expected=scan??'3';
+  assert.equal(f.node('#scan-duration').value,expected);
+  assert.equal(f.stored.get('usotsuki.detector.scan-duration.v1'),scan??undefined);
+  f.pointer('pointerdown',194,634);f.tick(Number(expected)*1000-10);
+  assert.equal(f.state().attemptCount,0);
+  f.tick(10);assert.equal(f.state().attemptCount,1);
+  assert.equal(f.stored.get('usotsuki.detector.scan-duration.v1'),expected);
  }
 });

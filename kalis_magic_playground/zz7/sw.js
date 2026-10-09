@@ -1,6 +1,6 @@
 // Cache only the explicit app shell. API, authentication and user data stay on the network.
 const CACHE_PREFIX = 'usotsuki-shell-' + encodeURIComponent(self.registration.scope) + '-';
-const CACHE_NAME = CACHE_PREFIX + 'v20261009-continuous-paper-16';
+const CACHE_NAME = CACHE_PREFIX + 'v20261009-continuous-paper-20';
 const SHELL = [
   "./recorder-trace.js",
   "./recorder-d.html",

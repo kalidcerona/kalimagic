@@ -199,7 +199,7 @@ test('recorder theme persists, falls back to green, and a hold keeps attempts, t
   assert.match(css, /#performance-screen\[data-display-theme="wine"\]/);
   assert.match(css, /holdem-assets\/felt-grain\.svg/);
   assert.match(css, /holdem-assets\/leather-grain\.svg/);
-  assert.match(sw, /v20261009-continuous-paper-16/);
+  assert.match(sw, /v20261009-continuous-paper-20/);
   assert.match(sw, /recorder-assets\/recorder-shell-blank\.webp/);
   assert.match(sw, /pathname\.startsWith\('\/tools\/'\)/);
   const store = new Map([['usotsuki.detector.sound.v1', '0']]);
