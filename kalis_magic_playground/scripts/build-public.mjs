@@ -61,6 +61,8 @@ export const PUBLIC_DIRS = [
   'assets',
   'imigi3',
   'planb',
+  'planb-busking',
+  'planb-sleeving',
   'tools',
   'zz1',
   'zz2',
