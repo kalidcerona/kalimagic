@@ -56,13 +56,13 @@ test('public app identities remain distinct while FALSE MEMORY stays private', a
   assert.equal(PUBLIC_DIRS.includes('zz9'), false);
 });
 
-test('all 21 app manifests resolve to stable distinct identities and usable PNG icons', async () => {
+test('all 23 app manifests resolve to stable distinct identities and usable PNG icons', async () => {
   const { PUBLIC_DIRS, DISTRIBUTION_APPS } = await import('../../scripts/build-public.mjs');
   const expectedPersonal = {
     zz1: '/zz1/index.html', zz2: '/zz2/index.html', zz3: '/zz3/index.html',
     zz4: '/choice', zz5: '/aletheia', zz6: '/tobira', zz7: '/usotsuki',
     zz8: '/zz8/', zz10: '/zz10/index.html', zz11: '/zz11/index.html',
-    zz12: '/zz12/', zz13: '/zz13/',
+    zz12: '/zz12/', zz13: '/zz13/', zz14: '/zz14/',
   };
   const apps = [
     ...PUBLIC_DIRS.filter((route) => /^zz\d+$/.test(route)).map((route) => ({ source: route, route })),
@@ -95,6 +95,6 @@ test('all 21 app manifests resolve to stable distinct identities and usable PNG 
       assert.deepEqual(pngSize(await readFile(iconUrl)), [size, size], route);
     }
   }
-  assert.equal(apps.length, 21);
-  assert.equal(new Set(identities).size, 21);
+  assert.equal(apps.length, 23);
+  assert.equal(new Set(identities).size, 23);
 });

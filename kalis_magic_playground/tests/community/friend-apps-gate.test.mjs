@@ -367,7 +367,8 @@ test('AROSAegida migration retains all seven friend tools and the existing RLS p
   const sql = readFileSync(new URL('../../supabase/migrations/20260930_friend_apps_arosaegida.sql', import.meta.url), 'utf8');
   const values = [...sql.matchAll(/'([^']+)'/g)].map(match => match[1]);
   assert.equal(values.length, 7);
-  assert.deepEqual(values, [...FRIEND_APP_TOOLS]);
+  // This historical migration predates the separately prepared Pi Max deployment.
+  assert.deepEqual(values, [...FRIEND_APP_TOOLS].filter(tool => tool !== 'pimax'));
   assert.match(sql, /drop constraint if exists friend_app_access_tool_check/);
   assert.match(sql, /add constraint friend_app_access_tool_check/);
   assert.doesNotMatch(sql, /row level security|create policy|drop policy/i);

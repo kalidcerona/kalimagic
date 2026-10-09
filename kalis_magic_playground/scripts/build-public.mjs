@@ -73,7 +73,8 @@ export const PUBLIC_DIRS = [
   'zz10',
   'zz11',
   'zz12',
-  'zz13'
+  'zz13',
+  'zz14'
 ];
 
 export const PRIVATE_PATTERNS = [
@@ -155,6 +156,12 @@ export const MEMDECK_FILES = [
   'index.html', 'style.css', 'app.mjs', 'core.mjs', 'data.mjs', 'mnemonic.mjs',
   'manifest.webmanifest', 'sw.js', 'icon.svg', 'icon-192.png', 'icon-512.png'
 ];
+export const PIMAX_FILES = ["index.html", "app.mjs", "core.mjs", "style.css", "sw.js", "manifest.webmanifest", "icon.svg", "icon-192.png", "icon-512.png"];
+
+export function shouldCopyPimax(relativePath) {
+  return relativePath === '' || PIMAX_FILES.includes(relativePath);
+}
+
 export const QR_FILES = [
   'first-run-guide.js',
   'index.html', 'style.css', 'app.mjs', 'core.mjs', 'manifest.webmanifest', 'sw.js', 'brand-logo.png',
@@ -216,6 +223,7 @@ export const MIRROR_PAIRS = [
   ...SPINNER_FILES.map((file) => [`../../magic-spinner/${file}`, `zz11/${file}`]),
   ...MEMDECK_FILES.map((file) => [`../../magic-memdeck/${file}`, `zz12/${file}`]),
   ...QR_FILES.map((file) => [`../../magic-qr/${file}`, `zz13/${file}`]),
+  ...PIMAX_FILES.map((file) => [`../../magic-pimax/${file}`, `zz14/${file}`]),
   ...[
     ['magic-stopwatch-uni', 'zz1'],
     ['magic-unlock', 'zz2'],
@@ -301,6 +309,7 @@ export async function publishLegacyMigrationModules(appDirectory) {
   await cp(path.join(directory, 'legacy-storage-migration.mjs'), path.join(appDirectory, 'legacy-storage-migration.mjs'));
 }
 export const DISTRIBUTION_APPS = [
+  { source: 'distribution-snapshots/pimax', target: 'pimax', tool: 'pimax' },
   { source: 'distribution-snapshots/calculator', target: 'hitsuzen', tool: 'calc' },
   { source: 'distribution-snapshots/unlock', target: 'release', tool: 'unlock' },
   { source: 'distribution-snapshots/aletheia', target: 'aletheia', tool: 'aletheia' },
@@ -334,7 +343,9 @@ async function buildDistributionApps() {
     const target = path.join(DIST, 'tools', app.target);
     await cp(source, target, {
       recursive: true,
-      filter: (entry) => shouldCopy(path.relative(source, entry))
+      filter: (entry) => app.target === 'pimax'
+        ? shouldCopyPimax(path.relative(source, entry))
+        : shouldCopy(path.relative(source, entry))
     });
     const indexPath = path.join(target, 'index.html');
     const html = await readFile(indexPath, 'utf8');
@@ -390,9 +401,24 @@ async function copyIfExists(relativePath) {
     recursive: true,
     filter: (source) => {
       const publicPath = path.relative(ROOT, source).split(path.sep).join('/');
+      if (relativePath === 'zz14') return shouldCopyPimax(path.relative(path.join(ROOT, 'zz14'), source));
       return shouldCopy(path.relative(ROOT, source)) && !isExcludedLegacyTree(publicPath);
     }
   });
+  if (relativePath === 'zz14') {
+    const appPath = path.join(DIST, 'zz14', 'app.mjs');
+    await writeFile(appPath, preparePimaxRuntime(await readFile(appPath, 'utf8')));
+  }
+}
+
+// Pi Max production ends at boot; trailing development controls stay in the source mirror.
+export function preparePimaxRuntime(source) {
+  const end = 'if (typeof document !== "undefined") boot();\n';
+  const offset = source.indexOf(end);
+  if (offset < 0 || source.indexOf(end, offset + end.length) !== -1) {
+    throw new Error('Pi Max runtime must have exactly one boot boundary');
+  }
+  return source.slice(0, offset + end.length);
 }
 
 function shouldCopy(relativePath) {
@@ -412,7 +438,11 @@ async function verifyMirrors() {
       readFile(path.join(ROOT, source)),
       readFile(path.join(ROOT, mirror))
     ]);
-    if (!sourceContents.equals(mirrorContents)) {
+    // A clean Pi Max commit may coexist with the source's appended development controls.
+    const matches = mirror === 'zz14/app.mjs'
+      ? preparePimaxRuntime(sourceContents.toString()) === preparePimaxRuntime(mirrorContents.toString())
+      : sourceContents.equals(mirrorContents);
+    if (!matches) {
       throw new Error(`mirror drift: ${source} ↔ ${mirror}`);
     }
   }

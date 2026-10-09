@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1a1512">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <meta name="color-scheme" content="dark">
+  <title>Pi Max 연습실</title>
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-tab="practice">
+  <div class="shell" id="shell">
+    <header class="identity">
+      <div class="identity-copy">
+        <p class="catalog-label">개인 연습</p>
+        <h1 class="identity-name">Pi Max<br>연습실</h1>
+        <p class="identity-desc">
+          <span>52자리 순환을 익힙니다.</span>
+          <span>짧은 문제로 반복 연습합니다.</span>
+        </p>
+      </div>
+      <svg class="sig" viewBox="0 0 128 96" aria-hidden="true">
+        <rect x="10" y="14" width="108" height="68" rx="12"></rect>
+        <path class="accent" d="M28 58c10-22 22-22 32 0 8 16 16 16 28-2"></path>
+        <text x="64" y="58" text-anchor="middle">π</text>
+      </svg>
+    </header>
+    <nav id="nav" aria-label="주요 메뉴">
+      <button type="button" data-action="tab" data-tab="learn">암기표</button>
+      <button type="button" data-action="tab" data-tab="practice" class="active" aria-current="page">연습</button>
+      <button type="button" data-action="tab" data-tab="settings">설정</button>
+    </nav>
+    <main id="app"></main>
+    <p id="notice" role="status"></p>
+    <footer>
+      <span>개인 연습실</span>
+      <span>기록은 이 기기에 저장됩니다.</span>
+    </footer>
+  </div>
+  <script type="module" src="app.mjs"></script>
+<script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(() => {});</script>
+</body>
+</html>

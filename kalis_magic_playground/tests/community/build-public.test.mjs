@@ -34,7 +34,7 @@ test('public build explicitly excludes local planning and source folders', () =>
 });
 
 test('personal ALTER, Asrai, and spinner are included while unfinished FALSE MEMORY stays private', () => {
-  assert.deepEqual(PUBLIC_DIRS.filter((entry) => /^zz\d+$/.test(entry)), ['zz1', 'zz2', 'zz3', 'zz4', 'zz5', 'zz6', 'zz7', 'zz8', 'zz10', 'zz11', 'zz12', 'zz13']);
+  assert.deepEqual(PUBLIC_DIRS.filter((entry) => /^zz\d+$/.test(entry)), ['zz1', 'zz2', 'zz3', 'zz4', 'zz5', 'zz6', 'zz7', 'zz8', 'zz10', 'zz11', 'zz12', 'zz13', 'zz14']);
   assert.equal(MIRROR_PAIRS.some(([, mirror]) => mirror.startsWith('zz9/')), false);
   assert.ok(PRIVATE_PATTERNS.some((pattern) => pattern.test('zz8/app.js')));
 });
@@ -91,6 +91,7 @@ test('public build mirrors the current calculator and integrated stopwatch sourc
   }
   assert.equal(MIRROR_PAIRS.some(([, mirror]) => mirror === 'tools/calc' || mirror.startsWith('tools/calc/')), false);
   assert.deepEqual(DISTRIBUTION_APPS, [
+    { source: 'distribution-snapshots/pimax', target: 'pimax', tool: 'pimax' },
     { source: 'distribution-snapshots/calculator', target: 'hitsuzen', tool: 'calc' },
     { source: 'distribution-snapshots/unlock', target: 'release', tool: 'unlock' },
     { source: 'distribution-snapshots/aletheia', target: 'aletheia', tool: 'aletheia' },

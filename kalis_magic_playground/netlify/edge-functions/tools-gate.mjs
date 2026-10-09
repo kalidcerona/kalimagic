@@ -11,7 +11,7 @@ const COOKIE_MAX_AGE = 7_776_000;
 const RENEWAL_WINDOW_SECONDS = 3_888_000;
 const DEFAULT_TOOL = 'calc';
 const PRODUCT_SLUGS = { calc: 'hitsuzen', unlock: 'release', 'stopwatch-uni': 'kairos', stopwatch: 'kairos-classic', spinner: 'tyche', arosaegida: 'arosaegida' };
-const STRICT_DISTRIBUTION_TOOLS = new Set(['aletheia', 'usotsuki', 'tobira', 'spinner', 'arosaegida']);
+const STRICT_DISTRIBUTION_TOOLS = new Set(['aletheia', 'usotsuki', 'tobira', 'spinner', 'arosaegida', 'pimax']);
 
 function analyzePath(rawPathname) {
   if (typeof rawPathname !== 'string') {
@@ -49,6 +49,14 @@ function analyzePath(rawPathname) {
   // 권한 회수 확인용 엔드포인트는 스스로 쿠키를 검증하므로 게이트를 통과시킨다.
   if (pathname === '/tools/_check') {
     return { mode: 'public', pathname };
+  }
+
+  if (pathname === '/tools/pimax' || pathname.startsWith('/tools/pimax/')) {
+    const publicFiles = ['manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
+    if (publicFiles.some((file) => pathname === `/tools/pimax/${file}`)) {
+      return { mode: 'public', pathname };
+    }
+    return { mode: 'gated', tool: 'pimax', pathname };
   }
 
   const isLoginPath =
@@ -140,6 +148,7 @@ function safeReturnPath(pathname, search, fallback) {
     pathname.startsWith('/tools/stopwatch-uni/') ||
     pathname.startsWith('/tools/aletheia/') ||
     pathname.startsWith('/tools/usotsuki/') ||
+    pathname.startsWith('/tools/pimax/') ||
     pathname.startsWith('/tools/tobira/') ||
     pathname.startsWith('/tools/spinner/') ||
     Object.values(PRODUCT_SLUGS).some((slug) => pathname.startsWith(`/tools/${slug}/`))
