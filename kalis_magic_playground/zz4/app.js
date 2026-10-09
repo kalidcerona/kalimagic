@@ -49,7 +49,7 @@ import {
   updateDummyNote,
   validateListInput
 } from './logic.js';
-import { HOME_MANIFEST, iconSrc } from './home-manifest.js';
+import { HOME_MANIFEST, iconSrc, manifestFiles } from './home-manifest.js';
 import { BUILTIN_LISTS } from './builtin-lists.js';
 
 const gestureGuide = document.getElementById('settings-gesture-guide');
@@ -101,6 +101,7 @@ const confirmText = document.getElementById('confirm-text');
 const confirmOk = document.getElementById('confirm-ok');
 const form = document.getElementById('editor-form');
 const notesEntryMessage = document.getElementById('notes-entry-message');
+const notesEntryAction = document.getElementById('notes-entry-action');
 const inputGuideInput = document.getElementById('input-guide');
 const fakeHomeEl = document.getElementById('fake-home');
 const fakeNotesEl = document.getElementById('fake-notes');
@@ -405,6 +406,8 @@ function renderPrecheck(offline) {
   if (!precheckList) return;
   const report = buildPrecheck(store.presets, { maxItems: NOTE_MAX_ITEMS });
   const rows = [];
+  const block = startBlockReason();
+  rows.push(precheckRow(block ? `공연 시작: 지금은 시작할 수 없습니다. ${block.text}` : '공연 시작: 가능합니다.', block ? 'warn' : 'ok'));
   rows.push(precheckRow(`노트 ${report.noteCount}개, 공연에 쓸 수 있는 노트 ${report.eligibleCount}개`, report.eligibleCount ? 'ok' : 'warn'));
   const shown = selectNotes(store);
   rows.push(precheckRow(`노트 앱에 나오는 것: 목록 ${shown.forceCount}개, 더미 노트 ${shown.notes.length - shown.forceCount}개${shown.setName ? `, 세트 「${shown.setName}」` : ', 세트 없음'}`, shown.forceCount ? 'ok' : 'warn'));
@@ -1742,22 +1745,60 @@ function backToFakeHome() {
   syncFakeHomeSurface();
 }
 
-function startNotesShow() {
+// Why the performance cannot start right now, or null. The same reason is shown under the start button and in the check panel.
+function startBlockReason() {
   if (recoveryState) {
-    setNotesEntryMessage('저장본을 먼저 처리한 다음 노트 연출을 시작하세요.');
-    return;
+    return {
+      recovery: true,
+      text: `저장본에 읽을 수 없는 부분이 있어 공연을 시작할 수 없습니다. ${recoveryState.error || ''} 아래 '저장본 확인하기'에서 가능한 항목만 저장하거나 새 목록으로 시작할 수 있습니다. 저장된 원본은 아직 바꾸지 않았습니다.`.replace(/\s+/g, ' ')
+    };
   }
-  const snapped = selectNotes(store);
-  if (!snapped.forceCount) {
-    setNotesEntryMessage(`노트 연출에 쓸 수 있는 목록이 없습니다. 포스 항목이 있고 전체 항목이 ${NOTE_MIN_ITEMS}개에서 ${NOTE_MAX_ITEMS}개인 목록을 저장하고, 세트를 쓰고 있다면 세트에 넣은 뒤 다시 시작하세요.`);
-    return;
+  if (!selectNotes(store).forceCount) {
+    return {
+      recovery: false,
+      text: `노트에 넣을 목록이 없어 공연을 시작할 수 없습니다. 기본 제공 목록을 '노트에 넣기'로 켜거나, 포스 항목이 있고 전체 항목이 ${NOTE_MIN_ITEMS}개에서 ${NOTE_MAX_ITEMS}개인 목록을 저장하세요. 공연 세트를 쓰고 있다면 세트에 목록을 넣어야 합니다.`
+    };
   }
-  if (snapped.truncated) {
-    setNotesEntryMessage(`조건에 맞는 목록이 ${NOTE_LIST_LIMIT}개를 넘어, 앞 ${NOTE_LIST_LIMIT}개만 노트로 사용합니다. 저장본은 바꾸지 않았습니다.`);
-  } else {
-    setNotesEntryMessage('');
+  return null;
+}
+
+// A blocking reason is always shown right under the button, with the way out when there is one.
+function showStartProblem(problem, { scroll = true } = {}) {
+  setNotesEntryMessage(problem.text);
+  if (notesEntryAction) notesEntryAction.hidden = !problem.recovery;
+  if (scroll) notesEntryMessage?.scrollIntoView?.({ block: 'center', behavior: 'smooth' });
+}
+
+// Anything unexpected while opening the fake home leaves the settings screen usable and says what happened.
+function abortStart(error) {
+  try { clearInterval(statusClock); } catch { /* Nothing to stop. */ }
+  fakeHomeSession = null;
+  fakeHomeGesture = null;
+  if (fakeHomeEl) fakeHomeEl.hidden = true;
+  if (settingsEl) settingsEl.hidden = false;
+  document.body.dataset.view = 'settings';
+  document.title = '너의 선택은?';
+  showStartProblem({ recovery: false, text: `공연 화면을 열지 못했습니다. (${error?.message || '알 수 없는 오류'}) 저장된 목록은 그대로입니다. 앱을 완전히 닫았다가 다시 열어 보세요.` });
+}
+
+function startNotesShow() {
+  try {
+    const problem = startBlockReason();
+    if (problem) {
+      showStartProblem(problem);
+      return;
+    }
+    const snapped = selectNotes(store);
+    if (notesEntryAction) notesEntryAction.hidden = true;
+    if (snapped.truncated) {
+      setNotesEntryMessage(`조건에 맞는 목록이 ${NOTE_LIST_LIMIT}개를 넘어, 앞 ${NOTE_LIST_LIMIT}개만 노트로 사용합니다. 저장본은 바꾸지 않았습니다.`);
+    } else {
+      setNotesEntryMessage('');
+    }
+    openFakeHome(snapped.notes);
+  } catch (error) {
+    abortStart(error);
   }
-  openFakeHome(snapped.notes);
 }
 
 function finishFakeHomePointer(event, canceled) {
@@ -2036,9 +2077,23 @@ document.addEventListener('click', (event) => {
 // Boot never rewrites a saved or corrupt store. The app opens on the settings screen unless the performer
 // chose to start in the performance, which always begins on the first page of the fake home screen.
 function startBootPerformance() {
-  if (store.options?.startMode !== 'performance' || recoveryState) return;
-  const snapped = selectNotes(store);
-  if (snapped.forceCount) openFakeHome(snapped.notes);
+  if (store.options?.startMode !== 'performance') return;
+  try {
+    const problem = startBlockReason();
+    if (problem) {
+      showStartProblem(problem, { scroll: false });
+      return;
+    }
+    openFakeHome(selectNotes(store).notes);
+  } catch (error) {
+    abortStart(error);
+  }
+}
+
+// Fetching the artwork now lets the service worker keep it for offline use without slowing the install.
+function warmShellArtwork() {
+  if (!navigator.serviceWorker?.controller) return;
+  manifestFiles().forEach((file) => { fetch(iconSrc(file)).catch(() => {}); });
 }
 
 // Computer with a mouse only: a small settings button and Shift+Esc. Phones and tablets, even in desktop-site mode,
@@ -2084,6 +2139,13 @@ renderExtras();
 renderPrecheck();
 renderTargets('');
 startBootPerformance();
+document.getElementById('notes-entry-recovery')?.addEventListener('click', () => {
+  recoveryEl.hidden = false;
+  recoverySlim.hidden = true;
+  recoveryEl.scrollIntoView?.({ block: 'start', behavior: 'smooth' });
+});
+document.documentElement.setAttribute('data-choice-ready', '1');
+setTimeout(warmShellArtwork, 1500);
 
 if ('serviceWorker' in navigator && (location.protocol === 'http:' || location.protocol === 'https:')) {
   navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(() => {});

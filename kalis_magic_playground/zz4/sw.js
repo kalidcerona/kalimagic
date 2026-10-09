@@ -1,6 +1,6 @@
 // Cache only the explicit app shell. API, authentication and user data stay on the network.
 const CACHE_PREFIX = 'choice-shell-' + encodeURIComponent(self.registration.scope) + '-';
-const CACHE_NAME = CACHE_PREFIX + 'v20261009-choice-cb-2';
+const CACHE_NAME = CACHE_PREFIX + 'v20261009-choice-cb-3';
 const SHELL = [
   "./settings-ui.js",
   "./settings-ui.css",
@@ -72,12 +72,15 @@ const SHELL = [
   "./home-icons/zb.svg",
   "./home-icons/zg.svg"
 ];
+// The install only stores what the first screen needs, so it finishes quickly even on a slow phone connection.
+// The artwork is cached the first time it is used (the app asks for all of it shortly after it starts).
+const PRECACHE = SHELL.filter((file) => !file.startsWith('./home-icons/'));
 const SHELL_NAMES = new Set(SHELL.map((file) => file.replace(/^\.\//, '')));
 const GUARDED = new URL(self.registration.scope).pathname.startsWith('/tools/');
 
 self.addEventListener('install', (event) => {
   // Reject installation unless the whole critical shell is stored.
-  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(SHELL.map((file) => new Request(new URL(file, self.registration.scope).href, { cache: 'reload', redirect: 'error' })))).then(() => self.skipWaiting()));
+  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE.map((file) => new Request(new URL(file, self.registration.scope).href, { cache: 'reload', redirect: 'error' })))).then(() => self.skipWaiting()));
 });
 self.addEventListener('activate', (event) => {
   event.waitUntil(caches.keys().then((names) => Promise.all(names

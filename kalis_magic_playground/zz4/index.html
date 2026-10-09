@@ -33,6 +33,9 @@
       <section class="card" aria-labelledby="notes-entry-title">
         <h2 id="notes-entry-title">공연 시작</h2>
         <p id="notes-entry-message" class="message" role="alert"></p>
+        <div id="notes-entry-action" class="actions" hidden>
+          <button type="button" id="notes-entry-recovery">저장본 확인하기</button>
+        </div>
         <div class="actions">
           <button type="button" class="primary" id="start-notes-show">공연 시작</button>
         </div>
@@ -449,6 +452,24 @@
     </div>
   </div>
   <noscript><p class="shell">이 앱은 자바스크립트가 필요합니다.</p></noscript>
+  <script>
+    // Self repair: when the page code did not finish starting (a half updated cache), drop this app's caches and
+    // its old service worker once and load again.
+    (function () {
+      var KEY = 'choice-self-repair';
+      setTimeout(function () {
+        if (document.documentElement.getAttribute('data-choice-ready') === '1') {
+          try { sessionStorage.removeItem(KEY); } catch (e) { /* storage may be blocked */ }
+          return;
+        }
+        try { if (sessionStorage.getItem(KEY)) return; sessionStorage.setItem(KEY, '1'); } catch (e) { return; }
+        var scope = new URL('./', location.href).href, jobs = [];
+        if (window.caches) jobs.push(caches.keys().then(function (names) { return Promise.all(names.filter(function (n) { return n.indexOf('choice-shell-') === 0; }).map(function (n) { return caches.delete(n); })); }));
+        if (navigator.serviceWorker) jobs.push(navigator.serviceWorker.getRegistrations().then(function (regs) { return Promise.all(regs.filter(function (r) { return r.scope === scope; }).map(function (r) { return r.unregister(); })); }));
+        Promise.all(jobs).catch(function () {}).then(function () { location.reload(); });
+      }, 3000);
+    })();
+  </script>
   <script type="module" src="./app.js"></script>
   <script type="module" src="./install-prompt.js"></script>
 </body>
