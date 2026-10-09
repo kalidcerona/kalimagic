@@ -111,7 +111,7 @@ export const SHARED_UNLOCK_FILES = [
   'performance-link.js'
 ];
 
-export const CHOICE_FILES = [
+export const NEW_APP_FILES = [
   'app.js',
   'brand-logo.jpg',
   'icon-192.png',
@@ -124,7 +124,67 @@ export const CHOICE_FILES = [
   'style.css',
   'sw.js'
 ];
-export const NEW_APP_FILES = CHOICE_FILES;
+// The choice app also ships its home screen artwork (manifest plus icons) and nothing else shares it.
+export const CHOICE_HOME_FILES = [
+  'home-manifest.js',
+  'builtin-lists.js',
+  'home-icons/a1.svg',
+  'home-icons/a2.svg',
+  'home-icons/a3.svg',
+  'home-icons/a4.svg',
+  'home-icons/a5.svg',
+  'home-icons/a6.svg',
+  'home-icons/a7.svg',
+  'home-icons/a8.svg',
+  'home-icons/a9.svg',
+  'home-icons/b1.svg',
+  'home-icons/b2.svg',
+  'home-icons/b3.svg',
+  'home-icons/b4.svg',
+  'home-icons/b5.svg',
+  'home-icons/b6.svg',
+  'home-icons/b7.svg',
+  'home-icons/b8.svg',
+  'home-icons/b9.svg',
+  'home-icons/f1.svg',
+  'home-icons/f2.svg',
+  'home-icons/f3.svg',
+  'home-icons/f4.svg',
+  'home-icons/f5.svg',
+  'home-icons/f6.svg',
+  'home-icons/f7.svg',
+  'home-icons/own-aletheia.png',
+  'home-icons/own-alter.png',
+  'home-icons/own-asrai.png',
+  'home-icons/own-memdeck.png',
+  'home-icons/own-release.png',
+  'home-icons/own-stopwatch.png',
+  'home-icons/own-tobira.png',
+  'home-icons/own-usotsuki.png',
+  'home-icons/y1.svg',
+  'home-icons/y10.svg',
+  'home-icons/y11.svg',
+  'home-icons/y2.svg',
+  'home-icons/y3.svg',
+  'home-icons/y4.svg',
+  'home-icons/y5.svg',
+  'home-icons/y7.svg',
+  'home-icons/y9.svg',
+  'home-icons/z1.svg',
+  'home-icons/z10.svg',
+  'home-icons/z11.svg',
+  'home-icons/z12.svg',
+  'home-icons/z13.svg',
+  'home-icons/z14.svg',
+  'home-icons/z2.svg',
+  'home-icons/z4.svg',
+  'home-icons/z5.svg',
+  'home-icons/z6.svg',
+  'home-icons/z8.svg',
+  'home-icons/zb.svg',
+  'home-icons/zg.svg'
+];
+export const CHOICE_FILES = [...NEW_APP_FILES, ...CHOICE_HOME_FILES];
 export const USOTSUKI_FILES = NEW_APP_FILES.filter((file) => file !== 'app.js').concat('first-run-guide.js', 'detector.js', 'detector-panel-grok.svg', 'holdem-assets/felt-grain.svg', 'holdem-assets/leather-grain.svg', 'holdem-assets/table-rail.svg', 'recorder-assets/recorder-shell-blank.webp', 'recorder-theme.js', 'recorder-engine.js', 'recorder-trace.js', 'recorder-a.html', 'recorder-d.html');
 export const ASRAI_FILES = [
   'brand-logo.jpg', 'brand-logo.png', 'contacts.js', 'icon-192.png',

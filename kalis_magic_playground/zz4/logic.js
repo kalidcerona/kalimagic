@@ -1,3 +1,5 @@
+import { BUILTIN_LISTS, builtinById } from './builtin-lists.js';
+
 export const STORAGE_KEY = 'magic-choice.v1.store';
 export const BACKUP_KEY = 'magic-choice.v1.store.backup';
 export const SWIPE_PX = 96;
@@ -49,11 +51,72 @@ export function charLength(value) {
   return Array.from(String(value)).length;
 }
 
+// Where the app opens: the settings screen, or the performance (fake home screen first).
+export const START_MODES = ['settings', 'performance'];
+export const DISPLAY_MODES = ['performance', 'practice'];
+
+export const NOTE_FONT_RANGE = { min: 14, max: 30, step: 1 };
+export const NOTE_LINE_HEIGHTS = ['compact', 'normal', 'relaxed'];
+export const NOTE_EMPHASES = ['none', 'bold', 'highlight', 'underline'];
+export const ICON_SIZE_RANGE = { min: 80, max: 120 };
+export const LABEL_SIZE_RANGE = { min: 10, max: 16 };
+export const BOTTOM_GAP_RANGE = { min: 0, max: 120 };
+export const WALLPAPERS = ['default', 'photo'];
+
+export function defaultOptions() {
+  return {
+    startMode: 'settings',
+    display: 'performance',
+    vibrate: false,
+    noteFont: 17,
+    noteLine: 'normal',
+    noteEmphasis: 'none',
+    iconSize: 100,
+    labelSize: 13,
+    bottomGap: 0,
+    wallpaper: 'default',
+    wallpaperId: ''
+  };
+}
+
+function clampNumber(value, range, fallback) {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return fallback;
+  return Math.max(range.min, Math.min(range.max, Math.round(value)));
+}
+
+// Lenient on purpose: an unknown or missing option falls back to its default and
+// never rejects the store, so saved notes and targets are not put at risk.
+export function normalizeOptions(value) {
+  const base = defaultOptions();
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return base;
+  return {
+    // Older saves used 'normal' (number picker) and 'home-notes'. Both now mean the performance.
+    startMode: START_MODES.includes(value.startMode) ? value.startMode
+      : (value.startMode === 'normal' || value.startMode === 'home-notes' ? 'performance' : base.startMode),
+    display: DISPLAY_MODES.includes(value.display) ? value.display : base.display,
+    vibrate: value.vibrate === true,
+    noteFont: clampNumber(value.noteFont, NOTE_FONT_RANGE, base.noteFont),
+    noteLine: NOTE_LINE_HEIGHTS.includes(value.noteLine) ? value.noteLine : base.noteLine,
+    noteEmphasis: NOTE_EMPHASES.includes(value.noteEmphasis) ? value.noteEmphasis : base.noteEmphasis,
+    iconSize: clampNumber(value.iconSize, ICON_SIZE_RANGE, base.iconSize),
+    labelSize: clampNumber(value.labelSize, LABEL_SIZE_RANGE, base.labelSize),
+    bottomGap: clampNumber(value.bottomGap, BOTTOM_GAP_RANGE, base.bottomGap),
+    wallpaper: WALLPAPERS.includes(value.wallpaper) ? value.wallpaper : base.wallpaper,
+    // Names the stored photo so a new photo can be written before the old one is dropped.
+    wallpaperId: typeof value.wallpaperId === 'string' && /^[A-Za-z0-9_-]{1,40}$/.test(value.wallpaperId) ? value.wallpaperId : base.wallpaperId
+  };
+}
+
 export function emptyState() {
   return {
     version: 1,
     presets: [],
-    twoList: { enabled: false, presetIdA: null, presetIdB: null }
+    twoList: { enabled: false, presetIdA: null, presetIdB: null },
+    options: defaultOptions(),
+    sets: [],
+    activeSetId: null,
+    dummyNotes: [],
+    builtins: normalizeBuiltins(undefined)
   };
 }
 
@@ -461,6 +524,76 @@ function readTwoList(value, present) {
   };
 }
 
+export const MAX_SETS = 20;
+export const MAX_DUMMIES = 30;
+const MAX_DUMMY_TITLE = 40;
+const MAX_DUMMY_BODY = 2000;
+
+function cleanText(value, max) {
+  if (typeof value !== 'string') return '';
+  return Array.from(value.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, '')).slice(0, max).join('');
+}
+
+export function normalizeDummyNote(entry, fallbackId) {
+  if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return null;
+  const title = cleanText(entry.title, MAX_DUMMY_TITLE).trim();
+  const body = cleanText(entry.body, MAX_DUMMY_BODY).replace(/\s+$/, '');
+  if (!title) return null;
+  const id = typeof entry.id === 'string' && entry.id.trim() ? entry.id : fallbackId;
+  if (!id) return null;
+  return { id, title, body, updatedAt: Number.isFinite(entry.updatedAt) ? entry.updatedAt : 0 };
+}
+
+export function normalizeDummyNotes(raw) {
+  if (!Array.isArray(raw)) return [];
+  const seen = new Set();
+  const notes = [];
+  raw.forEach((entry, index) => {
+    const note = normalizeDummyNote(entry, `dm_legacy_${index}`);
+    if (!note || seen.has(note.id) || notes.length >= MAX_DUMMIES) return;
+    seen.add(note.id);
+    notes.push(note);
+  });
+  return notes;
+}
+
+export function normalizeSets(raw) {
+  if (!Array.isArray(raw)) return [];
+  const seen = new Set();
+  const sets = [];
+  for (const entry of raw) {
+    if (!entry || typeof entry !== 'object' || Array.isArray(entry)) continue;
+    if (typeof entry.id !== 'string' || !entry.id.trim() || seen.has(entry.id)) continue;
+    const name = cleanText(entry.name, MAX_NAME).trim();
+    if (!name || sets.length >= MAX_SETS) continue;
+    const ids = (value) => (Array.isArray(value) ? [...new Set(value.filter((id) => typeof id === 'string' && id))] : []);
+    seen.add(entry.id);
+    sets.push({ id: entry.id, name, presetIds: ids(entry.presetIds), dummyIds: ids(entry.dummyIds) });
+  }
+  return sets;
+}
+
+/** Settings of the ready made lists: shown in the notes app or not, and which item is the target (1 based). */
+export function normalizeBuiltins(raw) {
+  const input = raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {};
+  const out = {};
+  for (const list of BUILTIN_LISTS) {
+    const entry = input[list.id] && typeof input[list.id] === 'object' ? input[list.id] : {};
+    const target = Number.isInteger(entry.target) && entry.target >= 1 && entry.target <= list.items.length ? entry.target : list.defaultTarget;
+    out[list.id] = { enabled: entry.enabled === false ? false : true, target };
+  }
+  return out;
+}
+
+// Extras never reject the store: unreadable entries are dropped from the view only.
+function readExtras(parsed) {
+  const sets = normalizeSets(parsed.sets);
+  const activeSetId = typeof parsed.activeSetId === 'string' && sets.some((set) => set.id === parsed.activeSetId)
+    ? parsed.activeSetId
+    : null;
+  return { sets, activeSetId, dummyNotes: normalizeDummyNotes(parsed.dummyNotes), builtins: normalizeBuiltins(parsed.builtins) };
+}
+
 export function parseStorage(raw) {
   if (raw == null || raw === '') {
     return { ok: true, data: emptyState(), issues: [], raw: raw == null ? null : raw };
@@ -488,6 +621,8 @@ export function parseStorage(raw) {
     presets.push(recovered.preset);
     if (recovered.issue) issues.push(recovered.issue);
   });
+  const options = normalizeOptions(parsed.options);
+  const extras = readExtras(parsed);
   const two = readTwoList(parsed.twoList, Object.prototype.hasOwnProperty.call(parsed, 'twoList'));
   if (!two.ok) {
     return {
@@ -496,7 +631,7 @@ export function parseStorage(raw) {
       raw,
       data: null,
       issues,
-      partial: { version: 1, presets, twoList: emptyState().twoList }
+      partial: { version: 1, presets, twoList: emptyState().twoList, options, ...extras }
     };
   }
   if (rejected > 0) {
@@ -506,12 +641,12 @@ export function parseStorage(raw) {
       raw,
       data: null,
       issues,
-      partial: { version: 1, presets, twoList: two.twoList }
+      partial: { version: 1, presets, twoList: two.twoList, options, ...extras }
     };
   }
   return {
     ok: true,
-    data: { version: 1, presets, twoList: two.twoList },
+    data: { version: 1, presets, twoList: two.twoList, options, ...extras },
     issues,
     raw
   };
@@ -534,7 +669,12 @@ export function serializeState(state) {
       enabled: Boolean(state.twoList?.enabled),
       presetIdA: state.twoList?.presetIdA ?? null,
       presetIdB: state.twoList?.presetIdB ?? null
-    }
+    },
+    options: normalizeOptions(state.options),
+    sets: normalizeSets(state.sets),
+    activeSetId: normalizeSets(state.sets).some((set) => set.id === state.activeSetId) ? state.activeSetId : null,
+    dummyNotes: normalizeDummyNotes(state.dummyNotes),
+    builtins: normalizeBuiltins(state.builtins)
   });
 }
 
@@ -568,7 +708,10 @@ export function replaceStoreKeepingBackup(storage, state) {
   }
 }
 
-const FAKE_HOME_CELLS = 4;
+// One UI style home: 5 columns, 6 rows. The number apps form a 3x3 keypad at rows 2-4,
+// columns 2-4 (zero based row 1-3, column 1-3). Every other cell is 0.
+export const HOME_LAYOUT = Object.freeze({ cols: 5, rows: 6, padRow: 1, padCol: 1 });
+export const HOME_PAGES = 3;
 
 function finiteNumber(value) {
   return typeof value === 'number' && Number.isFinite(value);
@@ -579,27 +722,23 @@ function isHomeDigit(value) {
 }
 
 /**
- * Hidden 4×4 fake-home digit for a pointer inside a rect.
- * The rect is { x, y, width, height } with (x, y) at the top-left.
- * Bands are equal quarters. Digit map (row, then column):
- *   0 0 0 0
- *   0 1 2 3
- *   0 4 5 6
- *   0 7 8 9
- * First row OR first column is 0. The bottom-right 3×3 is row-major 1-9.
- *
+ * Fake-home digit for a pointer inside a rect.
+ * The rect is { x, y, width, height } with (x, y) at the top-left of the icon grid.
+ * The grid is HOME_LAYOUT.cols x HOME_LAYOUT.rows equal bands. Digit map (row, column):
+ *   0 0 0 0 0
+ *   0 1 2 3 0
+ *   0 4 5 6 0
+ *   0 7 8 9 0
+ *   0 0 0 0 0
+ *   0 0 0 0 0
  * Edge behavior:
  * - The rect is closed: left/top and the exact right/bottom edges are inside.
  * - A point past any outer edge, even by a fraction, is outside and returns null.
- * - Internal grid lines belong to the higher index (Math.floor of the quarter
- *   ratio), so the shared edge is the cell to the right or below.
- * - The exact right edge is column 3 and the exact bottom edge is row 3
- *   (the ratio lands on 4 and is clamped back into the last band).
+ * - Internal grid lines belong to the higher index (Math.floor of the band ratio);
+ *   the exact right edge is the last column and the exact bottom edge the last row.
  * - Non-finite pointer or rect fields, width <= 0, and height <= 0 return null.
- * - Callers should pass sizes that divide cleanly when asserting exact lines;
- *   the band index is the floor of the raw ratio, not a rounded pixel.
  */
-export function fakeHomeDigit(rect, x, y) {
+export function fakeHomeDigit(rect, x, y, layout = HOME_LAYOUT) {
   if (!rect || typeof rect !== 'object' || Array.isArray(rect)) return null;
   const left = rect.x;
   const top = rect.y;
@@ -612,24 +751,47 @@ export function fakeHomeDigit(rect, x, y) {
   const right = left + width;
   const bottom = top + height;
   if (x < left || y < top || x > right || y > bottom) return null;
-  let col = Math.floor((x - left) / (width / FAKE_HOME_CELLS));
-  let row = Math.floor((y - top) / (height / FAKE_HOME_CELLS));
-  if (col >= FAKE_HOME_CELLS) col = FAKE_HOME_CELLS - 1;
-  if (row >= FAKE_HOME_CELLS) row = FAKE_HOME_CELLS - 1;
+  let col = Math.floor((x - left) / (width / layout.cols));
+  let row = Math.floor((y - top) / (height / layout.rows));
+  if (col >= layout.cols) col = layout.cols - 1;
+  if (row >= layout.rows) row = layout.rows - 1;
   if (col < 0 || row < 0) return null;
-  if (row === 0 || col === 0) return 0;
-  return (row - 1) * 3 + col;
+  return homeCellDigit(row, col, layout);
+}
+
+/** Digit of one grid cell (zero based row and column). */
+export function homeCellDigit(row, col, layout = HOME_LAYOUT) {
+  const r = row - layout.padRow;
+  const c = col - layout.padCol;
+  if (r < 0 || r > 2 || c < 0 || c > 2) return 0;
+  return r * 3 + c + 1;
 }
 
 /**
- * Tens and ones digits 0-9. Both zero encode 100; every other pair is
- * tens*10+ones (01 → 1, 37 → 37, 99 → 99). Anything that is not an
- * integer digit returns null.
+ * Tens and ones digits 0-9. Both zero mean "the last item number of the opened
+ * note" and are returned as 0 (resolveChoice maps it to that note's length).
+ * Every other pair is tens*10+ones (01 -> 1, 37 -> 37, 99 -> 99).
+ * Anything that is not an integer digit returns null.
  */
 export function fakeHomeNumber(tens, ones) {
   if (!isHomeDigit(tens) || !isHomeDigit(ones)) return null;
-  if (tens === 0 && ones === 0) return 100;
+  if (tens === 0 && ones === 0) return 0;
   return tens * 10 + ones;
+}
+
+/**
+ * Maps the entered number to a position in a note of `count` items.
+ * 00 (value 0) is the last item. A number above the note length is out of range:
+ * the note then shows its original list, with the target at the last item
+ * (the same place 00 uses), and inRange is false so the performer can be told quietly.
+ * Returns null for anything that cannot be resolved.
+ */
+export function resolveChoice(value, count) {
+  if (!Number.isInteger(count) || count < 1) return null;
+  if (value === 0) return { choice: count, inRange: true, last: true };
+  if (!Number.isInteger(value) || value < 1) return null;
+  if (value <= count) return { choice: value, inRange: true, last: false };
+  return { choice: count, inRange: false, last: false };
 }
 
 /** Idle two-step entry: no digits, unlocked, no result. */
@@ -649,6 +811,68 @@ function isValidLeftSwipe(swipe) {
   return true;
 }
 
+export const TAP_MAX_PX = 12;
+export const TAP_MAX_MS = 400;
+
+/**
+ * Classifies one finished pointer gesture as 'left', 'right', 'tap', or null.
+ * Left and right need at least SWIPE_PX and must be strictly more horizontal
+ * than vertical. A tap moves at most TAP_MAX_PX and lasts at most TAP_MAX_MS,
+ * so a long press never counts as a digit.
+ */
+export function classifyFakeHomeGesture(gesture) {
+  if (!gesture || typeof gesture !== 'object' || Array.isArray(gesture)) return null;
+  if (gesture.canceled === true) return null;
+  const { dx, dy } = gesture;
+  if (!finiteNumber(dx) || !finiteNumber(dy)) return null;
+  if (Math.abs(dx) > Math.abs(dy)) {
+    if (dx <= -SWIPE_PX) return 'left';
+    if (dx >= SWIPE_PX) return 'right';
+  }
+  const ms = gesture.ms;
+  if (finiteNumber(ms) && ms >= 0 && ms <= TAP_MAX_MS
+    && Math.abs(dx) <= TAP_MAX_PX && Math.abs(dy) <= TAP_MAX_PX) return 'tap';
+  return null;
+}
+
+function recordDigit(state, digit) {
+  if (state.tens == null) {
+    return { tens: digit, ones: null, value: null, locked: false };
+  }
+  return {
+    tens: state.tens,
+    ones: digit,
+    value: fakeHomeNumber(state.tens, digit),
+    locked: true
+  };
+}
+
+/**
+ * A short tap enters the digit under the finger exactly like a left swipe.
+ * Dummy icons and background resolve to 0 through fakeHomeDigit. Anything that
+ * is not a tap, and any tap after the number is locked, returns the same state.
+ */
+export function applyFakeHomeTap(state, tap) {
+  if (!state || typeof state !== 'object' || Array.isArray(state)) return state;
+  if (state.locked === true || state.ones != null) return state;
+  if (classifyFakeHomeGesture(tap) !== 'tap' || !isHomeDigit(tap.digit)) return state;
+  return recordDigit(state, tap.digit);
+}
+
+/**
+ * A right swipe removes the last entered digit (ones first, then tens) so it
+ * can be entered again. Once a note has been opened the number is locked for
+ * good: pass { noteOpened: true } and the same state comes back.
+ */
+export function applyFakeHomeUndo(state, swipe, { noteOpened = false } = {}) {
+  if (!state || typeof state !== 'object' || Array.isArray(state)) return state;
+  if (noteOpened === true) return state;
+  if (classifyFakeHomeGesture(swipe) !== 'right') return state;
+  if (state.ones != null) return { tens: state.tens, ones: null, value: null, locked: false };
+  if (state.tens != null) return createFakeHomeEntry();
+  return state;
+}
+
 /**
  * First valid left swipe stores `digit` as tens and leaves the entry unlocked.
  * Second valid left swipe stores ones, sets value via fakeHomeNumber, and locks.
@@ -661,13 +885,503 @@ export function applyFakeHomeSwipe(state, swipe) {
   if (!state || typeof state !== 'object' || Array.isArray(state)) return state;
   if (state.locked === true || state.ones != null) return state;
   if (!isValidLeftSwipe(swipe)) return state;
-  if (state.tens == null) {
-    return { tens: swipe.digit, ones: null, value: null, locked: false };
-  }
+  return recordDigit(state, swipe.digit);
+}
+
+export const NOTE_MAX_ITEMS = 100;
+export const NOTE_MIN_ITEMS = 2;
+export const NOTE_LIST_LIMIT = 30;
+export const LONG_ITEM_CHARS = 60;
+
+/** A list can be a note when it has a target, no blank items and 2-100 items in total. */
+export function isNoteEligible(preset, maxItems = NOTE_MAX_ITEMS) {
+  if (!preset || !Array.isArray(preset.items)) return false;
+  const split = splitForcePreset(preset);
+  if (typeof split.forceItem !== 'string' || split.forceItem.trim() === '') return false;
+  if (!split.items.every((item) => typeof item === 'string' && item.trim() !== '')) return false;
+  const total = split.items.length + 1;
+  return total >= NOTE_MIN_ITEMS && total <= maxItems;
+}
+
+/** Pre-show check rows for the settings screen. Pure: no storage or DOM access. */
+export function buildPrecheck(presets, { maxItems = NOTE_MAX_ITEMS } = {}) {
+  const list = Array.isArray(presets) ? presets : [];
+  const notes = list.map((preset) => {
+    const split = Array.isArray(preset?.items) ? splitForcePreset(preset) : { items: [], forceItem: '' };
+    const hasTarget = typeof split.forceItem === 'string' && split.forceItem.trim() !== '';
+    return {
+      id: preset?.id ?? null,
+      name: typeof preset?.name === 'string' ? preset.name : '',
+      itemCount: split.items.length + (hasTarget ? 1 : 0),
+      hasTarget,
+      eligible: isNoteEligible(preset, maxItems)
+    };
+  });
   return {
-    tens: state.tens,
-    ones: swipe.digit,
-    value: fakeHomeNumber(state.tens, swipe.digit),
-    locked: true
+    noteCount: notes.length,
+    eligibleCount: notes.filter((note) => note.eligible).length,
+    missingTargets: notes.filter((note) => !note.hasTarget).length,
+    notes
   };
+}
+
+/**
+ * Notes shown on the fake home. With an active set, only that set's lists and dummy notes,
+ * in the set's order. Without one, every eligible list in saved order and every dummy note.
+ * Returns plain snapshots so later edits never reach a running show.
+ */
+export function builtinNote(id, settings) {
+  const list = builtinById(id);
+  if (!list) return null;
+  const target = normalizeBuiltins({ [id]: settings })[id].target;
+  const items = list.items.slice();
+  const [forceItem] = items.splice(target - 1, 1);
+  // A fixed old date keeps the ready made lists below the performer's own lists in the index.
+  return { kind: 'force', id, name: list.name, items, forceItem, updatedAt: 1735689600000, builtin: true };
+}
+
+export function selectNotes(state, { limit = NOTE_LIST_LIMIT, maxItems = NOTE_MAX_ITEMS } = {}) {
+  const presets = Array.isArray(state?.presets) ? state.presets : [];
+  const dummies = normalizeDummyNotes(state?.dummyNotes);
+  const sets = normalizeSets(state?.sets);
+  const builtins = normalizeBuiltins(state?.builtins);
+  const active = sets.find((set) => set.id === state?.activeSetId) || null;
+  let pickedPresets = presets;
+  let pickedDummies = dummies;
+  let pickedBuiltinIds = BUILTIN_LISTS.map((list) => list.id);
+  if (active) {
+    pickedPresets = active.presetIds.map((id) => presets.find((preset) => preset?.id === id)).filter(Boolean);
+    pickedDummies = active.dummyIds.map((id) => dummies.find((note) => note.id === id)).filter(Boolean);
+    pickedBuiltinIds = active.presetIds.filter((id) => builtinById(id));
+  }
+  const eligible = pickedPresets.filter((preset) => isNoteEligible(preset, maxItems));
+  const forced = eligible.slice(0, limit).map((preset) => {
+    const split = splitForcePreset(preset);
+    return {
+      kind: 'force',
+      id: preset.id,
+      name: preset.name,
+      items: split.items,
+      forceItem: split.forceItem,
+      updatedAt: preset.updatedAt
+    };
+  });
+  const ready = pickedBuiltinIds.filter((id) => builtins[id].enabled).map((id) => builtinNote(id, builtins[id]));
+  const plain = pickedDummies.slice(0, limit).map((note) => ({
+    kind: 'dummy', id: note.id, name: note.title, body: note.body, updatedAt: note.updatedAt
+  }));
+  const index = forced.concat(ready, plain)
+    .map((note, order) => ({ note, order }))
+    .sort((left, right) => (right.note.updatedAt || 0) - (left.note.updatedAt || 0) || left.order - right.order)
+    .map((entry) => entry.note);
+  return {
+    notes: index,
+    forceCount: forced.length + ready.length,
+    truncated: eligible.length > limit,
+    setName: active ? active.name : null
+  };
+}
+
+/** Lines of a note for an entered number (see resolveChoice). */
+export function noteLines(note, value) {
+  const resolved = resolveChoice(value, note.items.length + 1);
+  if (!resolved) return { ok: false, error: MSG.badChoice };
+  const forced = insertForceItem(note.items.slice(), note.forceItem, resolved.choice);
+  if (!forced.ok) return { ok: false, error: forced.error };
+  return { ok: true, items: forced.items, choice: resolved.choice, inRange: resolved.inRange, last: resolved.last };
+}
+
+/**
+ * Checks a list before it is saved and builds the numbered preview.
+ * errors block saving, warnings are shown and need an explicit confirm.
+ * The preview puts the target at the last number as an example; at show time it goes
+ * to whatever number the spectator picks.
+ */
+export function validateListInput(input, { otherForceItems = [] } = {}) {
+  const errors = [];
+  const warnings = [];
+  const text = typeof input?.itemsText === 'string' ? input.itemsText : '';
+  const force = typeof input?.forceItem === 'string' ? input.forceItem.trim() : '';
+  const lines = text.length ? text.split(/\r?\n/) : [];
+  const items = [];
+  let blank = 0;
+  const longLines = [];
+  lines.forEach((line) => {
+    const trimmed = line.trim();
+    if (!trimmed) {
+      blank += 1;
+      return;
+    }
+    items.push(trimmed);
+    const length = charLength(trimmed);
+    if (length > MAX_CHARS) errors.push(`${items.length}번 항목이 ${MAX_CHARS}자를 넘습니다.`);
+    else if (length > LONG_ITEM_CHARS) longLines.push(items.length);
+  });
+  // Trailing newline in a textarea is not a blank line the performer typed on purpose.
+  if (lines.length && !lines[lines.length - 1].trim()) blank -= 1;
+  if (items.length === 0) errors.push(MSG.emptyList);
+  if (items.length > MAX_ITEMS - 1) errors.push(MSG.tooManyItems);
+  if (!force) errors.push(MSG.needForce);
+  else if (charLength(force) > MAX_CHARS) errors.push(`포스 항목이 ${MAX_CHARS}자를 넘습니다.`);
+  if (blank > 0) warnings.push({ code: 'blank-lines', message: `빈 줄 ${blank}개는 저장하지 않고 건너뜁니다. 번호가 한 칸씩 당겨집니다.` });
+  if (longLines.length) {
+    warnings.push({ code: 'long-items', message: `${longLines.slice(0, 5).join(', ')}번 항목이 ${LONG_ITEM_CHARS}자보다 깁니다. 공개 화면에서 여러 줄로 보입니다.` });
+  }
+  const seen = new Map();
+  items.forEach((item, index) => {
+    const key = item.toLocaleLowerCase('ko-KR');
+    if (!seen.has(key)) seen.set(key, []);
+    seen.get(key).push(index + 1);
+  });
+  const dupes = [...seen.values()].filter((numbers) => numbers.length > 1);
+  if (dupes.length) {
+    const sample = dupes.slice(0, 3).map((numbers) => `${numbers.join('번, ')}번`).join(' / ');
+    warnings.push({ code: 'duplicate-items', message: `같은 항목이 겹칩니다: ${sample}${dupes.length > 3 ? ' 외' : ''}.` });
+  }
+  if (force) {
+    const same = seen.get(force.toLocaleLowerCase('ko-KR'));
+    if (same) warnings.push({ code: 'force-in-items', message: `포스 항목과 같은 문장이 일반 항목 ${same.join('번, ')}번에 있습니다. 어느 줄이 포스인지 드러날 수 있습니다.` });
+    if (otherForceItems.some((other) => typeof other === 'string' && other.trim().toLocaleLowerCase('ko-KR') === force.toLocaleLowerCase('ko-KR'))) {
+      warnings.push({ code: 'force-in-other-list', message: '다른 목록에도 같은 포스 항목이 있습니다.' });
+    }
+  }
+  const total = items.length + (force ? 1 : 0);
+  if (total > NOTE_MAX_ITEMS) warnings.push({ code: 'too-long-for-notes', message: `항목이 ${total}개라 노트 연출에는 쓸 수 없습니다. 노트는 ${NOTE_MIN_ITEMS}개에서 ${NOTE_MAX_ITEMS}개까지입니다.` });
+  const preview = items.map((item, index) => ({ number: index + 1, text: item, force: false }));
+  if (force) preview.push({ number: items.length + 1, text: force, force: true });
+  return {
+    ok: errors.length === 0,
+    errors,
+    warnings,
+    items,
+    preview,
+    counts: { lines: lines.length, blank, items: items.length, total }
+  };
+}
+
+// ----- Backup and import -----------------------------------------------------------------
+
+export const BACKUP_FORMAT = 'magic-choice-backup';
+
+export function buildBackup(state, now = Date.now()) {
+  const serialized = JSON.parse(serializeState(state));
+  return {
+    format: BACKUP_FORMAT,
+    version: 1,
+    exportedAt: now,
+    presets: serialized.presets,
+    sets: serialized.sets,
+    dummyNotes: serialized.dummyNotes
+  };
+}
+
+export const IMPORT_MAX_BYTES = 2 * 1024 * 1024;
+export const IMPORT_MAX_PRESETS = 500;
+export const IMPORT_MAX_DUMMIES = 200;
+export const IMPORT_MAX_SETS = 100;
+
+export function parseBackup(text) {
+  if (typeof text !== 'string' || !text.trim()) return { ok: false, error: '파일이 비어 있습니다.' };
+  if (text.length > IMPORT_MAX_BYTES) return { ok: false, error: '파일이 너무 큽니다. 2MB 이하의 백업 파일만 가져올 수 있습니다.' };
+  let parsed;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    return { ok: false, error: '백업 파일을 읽을 수 없습니다. JSON 형식이 아닙니다.' };
+  }
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed) || parsed.format !== BACKUP_FORMAT) {
+    return { ok: false, error: '이 앱의 백업 파일이 아닙니다.' };
+  }
+  if (parsed.version !== 1) return { ok: false, error: '지원하지 않는 백업 버전입니다.' };
+  if (!Array.isArray(parsed.presets)) return { ok: false, error: '백업 파일에 목록이 없습니다.' };
+  const arrayLength = (value) => (Array.isArray(value) ? value.length : 0);
+  if (parsed.presets.length > IMPORT_MAX_PRESETS || arrayLength(parsed.dummyNotes) > IMPORT_MAX_DUMMIES || arrayLength(parsed.sets) > IMPORT_MAX_SETS) {
+    return { ok: false, error: `백업 파일의 항목이 너무 많습니다. 목록 ${IMPORT_MAX_PRESETS}개, 더미 노트 ${IMPORT_MAX_DUMMIES}개, 세트 ${IMPORT_MAX_SETS}개까지 가져올 수 있습니다.` };
+  }
+  const issues = [];
+  const presets = [];
+  parsed.presets.forEach((entry, index) => {
+    const recovered = recoverPreset(entry, index);
+    if (!recovered.ok) issues.push(recovered.issue);
+    else presets.push(recovered.preset);
+  });
+  return {
+    ok: true,
+    backup: {
+      presets,
+      sets: normalizeSets(parsed.sets),
+      dummyNotes: normalizeDummyNotes(parsed.dummyNotes)
+    },
+    issues
+  };
+}
+
+function presetFingerprint(preset) {
+  const split = splitForcePreset(preset);
+  return JSON.stringify([preset.name, preset.appearance, split.items, split.forceItem]);
+}
+
+function uniqueName(base, taken, max = MAX_NAME) {
+  const clip = (value) => Array.from(value).slice(0, max).join('');
+  if (!taken.has(base)) return base;
+  for (let n = 1; n < 1000; n += 1) {
+    const suffix = n === 1 ? ' (가져옴)' : ` (가져옴 ${n})`;
+    const room = Math.max(1, max - Array.from(suffix).length);
+    const candidate = Array.from(base).slice(0, room).join('') + suffix;
+    if (!taken.has(candidate)) return clip(candidate);
+  }
+  return base;
+}
+
+/**
+ * Previews what a merge import would do. Nothing already saved is replaced:
+ * identical entries are skipped, differing ones come in as renamed copies.
+ */
+export function planImport(state, backup, { now = Date.now(), rand = Math.random } = {}) {
+  const current = Array.isArray(state?.presets) ? state.presets : [];
+  const takenNames = new Set(current.map((preset) => preset.name));
+  const takenIds = new Set(current.map((preset) => preset.id));
+  const idMap = new Map();
+  const presets = [];
+  backup.presets.forEach((incoming, index) => {
+    const sameId = current.find((preset) => preset.id === incoming.id);
+    const sameName = current.find((preset) => preset.name === incoming.name);
+    const identical = [sameId, sameName].find((preset) => preset && presetFingerprint(preset) === presetFingerprint(incoming));
+    if (identical) {
+      idMap.set(incoming.id, identical.id);
+      presets.push({ action: 'skip', name: incoming.name, reason: '이미 같은 목록이 있습니다.' });
+      return;
+    }
+    const needsId = takenIds.has(incoming.id);
+    const newId = needsId ? makeId(now + index, rand()) : incoming.id;
+    const newName = uniqueName(incoming.name, takenNames);
+    takenIds.add(newId);
+    takenNames.add(newName);
+    idMap.set(incoming.id, newId);
+    presets.push({
+      action: newName === incoming.name && !needsId ? 'add' : 'add-copy',
+      name: incoming.name,
+      newName,
+      preset: { ...incoming, id: newId, name: newName, items: incoming.items.slice() },
+      reason: newName === incoming.name && !needsId ? '' : '같은 이름 또는 번호가 있어 사본으로 추가합니다.'
+    });
+  });
+  const currentSets = normalizeSets(state?.sets);
+  const setNames = new Set(currentSets.map((set) => set.name));
+  const setIds = new Set(currentSets.map((set) => set.id));
+  const currentDummies = normalizeDummyNotes(state?.dummyNotes);
+  const dummyIds = new Set(currentDummies.map((note) => note.id));
+  const dummyMap = new Map();
+  const dummies = [];
+  let dummyRoom = MAX_DUMMIES - currentDummies.length;
+  backup.dummyNotes.forEach((incoming, index) => {
+    const twin = currentDummies.find((note) => note.id === incoming.id || (note.title === incoming.title && note.body === incoming.body));
+    if (twin && twin.title === incoming.title && twin.body === incoming.body) {
+      dummyMap.set(incoming.id, twin.id);
+      dummies.push({ action: 'skip', name: incoming.title, reason: '이미 같은 더미 노트가 있습니다.' });
+      return;
+    }
+    if (dummyRoom <= 0) {
+      dummies.push({ action: 'full', name: incoming.title, reason: `더미 노트는 ${MAX_DUMMIES}개까지라 가져오지 못합니다. 지금 있는 더미 노트를 정리한 뒤 다시 가져오세요.` });
+      return;
+    }
+    dummyRoom -= 1;
+    const newId = dummyIds.has(incoming.id) ? makeId(now + 500 + index, rand()).replace('mc_', 'dm_') : incoming.id;
+    dummyIds.add(newId);
+    dummyMap.set(incoming.id, newId);
+    dummies.push({ action: newId === incoming.id ? 'add' : 'add-copy', name: incoming.title, note: { ...incoming, id: newId }, reason: '' });
+  });
+  const sets = [];
+  let setRoom = MAX_SETS - currentSets.length;
+  backup.sets.forEach((incoming, index) => {
+    const mapped = {
+      presetIds: incoming.presetIds.map((id) => idMap.get(id)).filter(Boolean),
+      dummyIds: incoming.dummyIds.map((id) => dummyMap.get(id)).filter(Boolean)
+    };
+    const twin = currentSets.find((set) => set.name === incoming.name
+      && JSON.stringify([set.presetIds, set.dummyIds]) === JSON.stringify([mapped.presetIds, mapped.dummyIds]));
+    if (twin) {
+      sets.push({ action: 'skip', name: incoming.name, reason: '이미 같은 세트가 있습니다.' });
+      return;
+    }
+    if (setRoom <= 0) {
+      sets.push({ action: 'full', name: incoming.name, reason: `세트는 ${MAX_SETS}개까지라 가져오지 못합니다. 지금 있는 세트를 정리한 뒤 다시 가져오세요.` });
+      return;
+    }
+    setRoom -= 1;
+    const newId = setIds.has(incoming.id) ? makeId(now + 900 + index, rand()).replace('mc_', 'st_') : incoming.id;
+    const newName = uniqueName(incoming.name, setNames);
+    setIds.add(newId);
+    setNames.add(newName);
+    sets.push({
+      action: newName === incoming.name && newId === incoming.id ? 'add' : 'add-copy',
+      name: incoming.name,
+      newName,
+      set: { id: newId, name: newName, presetIds: [...new Set(mapped.presetIds)], dummyIds: [...new Set(mapped.dummyIds)] },
+      reason: ''
+    });
+  });
+  const count = (list, action) => list.filter((entry) => entry.action === action).length;
+  return {
+    presets, dummies, sets,
+    counts: {
+      added: [presets, dummies, sets].reduce((sum, list) => sum + list.filter((entry) => entry.action === 'add' || entry.action === 'add-copy').length, 0),
+      skipped: [presets, dummies, sets].reduce((sum, list) => sum + count(list, 'skip'), 0),
+      dropped: [presets, dummies, sets].reduce((sum, list) => sum + count(list, 'full'), 0),
+      copies: [presets, dummies, sets].reduce((sum, list) => sum + count(list, 'add-copy'), 0)
+    }
+  };
+}
+
+/** Applies a plan by appending only. Existing lists, sets and dummy notes are kept as they are. */
+export function applyImportPlan(state, plan) {
+  return {
+    ...state,
+    presets: state.presets.concat(plan.presets.filter((entry) => entry.preset).map((entry) => entry.preset)),
+    sets: normalizeSets(state.sets).concat(plan.sets.filter((entry) => entry.set).map((entry) => entry.set)),
+    dummyNotes: normalizeDummyNotes(state.dummyNotes).concat(plan.dummies.filter((entry) => entry.note).map((entry) => entry.note))
+  };
+}
+
+// ----- Dummy notes and sets --------------------------------------------------------------
+
+export function addDummyNote(state, input, { now = Date.now(), rand = Math.random() } = {}) {
+  const notes = normalizeDummyNotes(state?.dummyNotes);
+  if (notes.length >= MAX_DUMMIES) return { ok: false, error: `더미 노트는 ${MAX_DUMMIES}개까지 만들 수 있습니다.` };
+  const note = normalizeDummyNote({ ...input, id: `dm_${now.toString(36)}_${Math.floor(rand * 1e9).toString(36)}`, updatedAt: input?.updatedAt ?? now }, null);
+  if (!note) return { ok: false, error: '더미 노트 제목을 입력하세요.' };
+  if (notes.some((entry) => entry.title === note.title)) return { ok: false, error: '같은 제목의 더미 노트가 있습니다.' };
+  return { ok: true, note, dummyNotes: notes.concat(note) };
+}
+
+export function updateDummyNote(state, id, input) {
+  const notes = normalizeDummyNotes(state?.dummyNotes);
+  const current = notes.find((note) => note.id === id);
+  if (!current) return { ok: false, error: '더미 노트를 찾을 수 없습니다.' };
+  const next = normalizeDummyNote({ ...current, ...input, id, updatedAt: input?.updatedAt ?? current.updatedAt }, id);
+  if (!next) return { ok: false, error: '더미 노트 제목을 입력하세요.' };
+  if (notes.some((note) => note.id !== id && note.title === next.title)) return { ok: false, error: '같은 제목의 더미 노트가 있습니다.' };
+  return { ok: true, note: next, dummyNotes: notes.map((note) => (note.id === id ? next : note)) };
+}
+
+export function deleteDummyNote(state, id) {
+  const notes = normalizeDummyNotes(state?.dummyNotes);
+  if (!notes.some((note) => note.id === id)) return { ok: false, error: '더미 노트를 찾을 수 없습니다.' };
+  const sets = normalizeSets(state?.sets).map((set) => ({ ...set, dummyIds: set.dummyIds.filter((entry) => entry !== id) }));
+  return { ok: true, dummyNotes: notes.filter((note) => note.id !== id), sets };
+}
+
+export function saveSet(state, input, { now = Date.now(), rand = Math.random() } = {}) {
+  const sets = normalizeSets(state?.sets);
+  const name = cleanText(input?.name, MAX_NAME).trim();
+  if (!name) return { ok: false, error: '세트 이름을 입력하세요.' };
+  const presetIds = new Set([...(state?.presets || []).map((preset) => preset.id), ...BUILTIN_LISTS.map((list) => list.id)]);
+  const dummyIds = new Set(normalizeDummyNotes(state?.dummyNotes).map((note) => note.id));
+  const next = {
+    id: input?.id || `st_${now.toString(36)}_${Math.floor(rand * 1e9).toString(36)}`,
+    name,
+    presetIds: (input?.presetIds || []).filter((id) => presetIds.has(id)),
+    dummyIds: (input?.dummyIds || []).filter((id) => dummyIds.has(id))
+  };
+  if (sets.some((set) => set.id !== next.id && set.name === name)) return { ok: false, error: '같은 이름의 세트가 있습니다.' };
+  const exists = sets.some((set) => set.id === next.id);
+  if (!exists && sets.length >= MAX_SETS) return { ok: false, error: `세트는 ${MAX_SETS}개까지 만들 수 있습니다.` };
+  const merged = exists ? sets.map((set) => (set.id === next.id ? next : set)) : sets.concat(next);
+  return { ok: true, set: next, sets: merged };
+}
+
+export function deleteSet(state, id) {
+  const sets = normalizeSets(state?.sets);
+  if (!sets.some((set) => set.id === id)) return { ok: false, error: '세트를 찾을 수 없습니다.' };
+  return { ok: true, sets: sets.filter((set) => set.id !== id), activeSetId: state.activeSetId === id ? null : state.activeSetId ?? null };
+}
+
+// ----- User app icons (device only) ------------------------------------------------------
+
+export const USER_ICON_KEY = 'magic-choice.v1.user-icons';
+export const USER_ICON_MAX = 24;
+export const USER_ICON_LABEL_MAX = 8;
+const USER_ICON_DATA = /^data:image\/(?:png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/;
+const USER_ICON_BYTES = 90000;
+
+/** Pages 0-1 keep the keypad block free; page 2 is an ordinary home, every cell is 0. */
+export function isZeroSlot(page, row, col) {
+  if (!Number.isInteger(page) || !Number.isInteger(row) || !Number.isInteger(col)) return false;
+  if (page < 0 || page >= HOME_PAGES || row < 0 || row >= HOME_LAYOUT.rows || col < 0 || col >= HOME_LAYOUT.cols) return false;
+  if (page === 2) return true;
+  return homeCellDigit(row, col) === 0;
+}
+
+// Cells that must keep their own behaviour (the notes app). reserved: [{ page, row, col }].
+export function isReservedSlot(page, row, col, reserved = []) {
+  return reserved.some((cell) => cell.page === page && cell.row === row && cell.col === col);
+}
+
+export function normalizeUserIcons(raw, reserved = []) {
+  if (!Array.isArray(raw)) return [];
+  const bySlot = new Map();
+  for (const entry of raw) {
+    if (!entry || typeof entry !== 'object' || Array.isArray(entry)) continue;
+    if (typeof entry.id !== 'string' || !entry.id) continue;
+    if (typeof entry.dataUrl !== 'string' || entry.dataUrl.length > USER_ICON_BYTES || !USER_ICON_DATA.test(entry.dataUrl)) continue;
+    if (!isZeroSlot(entry.page, entry.row, entry.col) || isReservedSlot(entry.page, entry.row, entry.col, reserved)) continue;
+    const label = cleanText(entry.label, USER_ICON_LABEL_MAX).trim();
+    if (!label) continue;
+    bySlot.set(`${entry.page}:${entry.row}:${entry.col}`, { id: entry.id, label, dataUrl: entry.dataUrl, page: entry.page, row: entry.row, col: entry.col });
+  }
+  return [...bySlot.values()].slice(0, USER_ICON_MAX);
+}
+
+export function placeUserIcon(icons, input, { now = Date.now(), rand = Math.random(), reserved = [] } = {}) {
+  const current = normalizeUserIcons(icons, reserved);
+  if (!isZeroSlot(input?.page, input?.row, input?.col)) return { ok: false, error: '이 칸은 숫자 칸이라 쓸 수 없습니다.' };
+  if (isReservedSlot(input.page, input.row, input.col, reserved)) return { ok: false, error: '이 칸은 노트 앱 자리라 쓸 수 없습니다.' };
+  const label = cleanText(input?.label, USER_ICON_LABEL_MAX).trim();
+  if (!label) return { ok: false, error: '앱 이름을 입력하세요.' };
+  const icon = { id: input.id || `ui_${now.toString(36)}_${Math.floor(rand * 1e9).toString(36)}`, label, dataUrl: input.dataUrl, page: input.page, row: input.row, col: input.col };
+  const checked = normalizeUserIcons([icon], reserved);
+  if (!checked.length) return { ok: false, error: '그림을 읽을 수 없거나 너무 큽니다.' };
+  const rest = current.filter((entry) => !(entry.page === icon.page && entry.row === icon.row && entry.col === icon.col) && entry.id !== icon.id);
+  if (rest.length >= USER_ICON_MAX) return { ok: false, error: `내 앱 아이콘은 ${USER_ICON_MAX}개까지 둘 수 있습니다.` };
+  return { ok: true, icon, icons: rest.concat(icon) };
+}
+
+export function removeUserIcon(icons, id, reserved = []) {
+  const current = normalizeUserIcons(icons, reserved);
+  if (!current.some((entry) => entry.id === id)) return { ok: false, error: '아이콘을 찾을 수 없습니다.' };
+  return { ok: true, icons: current.filter((entry) => entry.id !== id) };
+}
+
+export function loadUserIcons(storage, reserved = []) {
+  try {
+    const raw = storage.getItem(USER_ICON_KEY);
+    return raw ? normalizeUserIcons(JSON.parse(raw), reserved) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveUserIcons(storage, icons) {
+  try {
+    storage.setItem(USER_ICON_KEY, JSON.stringify(normalizeUserIcons(icons)));
+    return { ok: true };
+  } catch {
+    return { ok: false, error: MSG.storageWrite };
+  }
+}
+
+// ----- Desktop only settings entry -------------------------------------------------------
+
+const MOBILE_AGENT = /Android|iPhone|iPad|iPod|Mobile|SamsungBrowser|Tablet|Silk|CriOS|FxiOS|EdgA|EdgiOS|OPR\/.*Mobile|Windows Phone|IEMobile|webOS|BlackBerry|Opera Mini|KAIOS/i;
+
+/**
+ * True only for a computer with a mouse: no touch points, a fine pointer and no phone or tablet
+ * user agent. A phone in desktop-site mode (Samsung Internet, Chrome) still reports touch points,
+ * so it never counts. Only then the settings button and the Shift+Esc shortcut exist.
+ */
+export function isDesktopMouseDevice({ maxTouchPoints, pointerFine, userAgent } = {}) {
+  if (maxTouchPoints !== 0) return false;
+  if (pointerFine !== true) return false;
+  if (typeof userAgent !== 'string' || !userAgent || MOBILE_AGENT.test(userAgent)) return false;
+  return true;
 }

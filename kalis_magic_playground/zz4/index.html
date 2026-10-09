@@ -31,14 +31,14 @@
       <p class="lede">목록을 미리 정리해 두고, 번호가 정해진 뒤에 목록을 엽니다.</p>
 
       <section class="card" aria-labelledby="notes-entry-title">
-        <h2 id="notes-entry-title">마술 시작</h2>
+        <h2 id="notes-entry-title">공연 시작</h2>
         <p id="notes-entry-message" class="message" role="alert"></p>
         <div class="actions">
-          <button type="button" class="primary" id="start-notes-show">마술 시작</button>
+          <button type="button" class="primary" id="start-notes-show">공연 시작</button>
         </div>
         <details class="input-guide">
           <summary>연출 준비와 숫자 입력 안내</summary>
-          <p class="hint">저장된 목록은 지우거나 바꾸지 않습니다. 노트 하나에는 일반 항목 99개와 포스 항목 1개가 필요합니다. 조건에 맞는 목록이 다섯 개를 넘으면 저장된 순서의 앞 다섯 개만 노트가 됩니다.</p>
+          <p class="hint">저장된 목록은 지우거나 바꾸지 않습니다. 노트 하나에는 포스 항목 1개를 포함해 2개에서 100개까지의 항목이 필요합니다. 공연 세트를 고르면 그 세트의 목록과 더미 노트만 노트에 나오고, 세트가 없으면 조건에 맞는 모든 목록이 나옵니다.</p>
           <label class="checkline" for="input-guide">
             <input id="input-guide" type="checkbox" aria-describedby="input-guide-hint">
             <span>노트 연출에서 숫자 칸을 잠깐 보여 주기</span>
@@ -47,21 +47,235 @@
           <details class="input-guide">
             <summary>숫자 칸 설명</summary>
             <div class="input-guide-body">
-              <p>아이콘이 놓인 홈 영역은 가로 4칸, 세로 4칸입니다. 첫 번째 줄이거나 첫 번째 칸이면 그 칸은 0입니다. 그래서 맨 위 줄과 맨 왼쪽 줄은 모두 0입니다. 오른쪽 아래 3×3은 왼쪽에서 오른쪽으로, 위쪽 줄부터 1, 2, 3, 그리고 4, 5, 6, 그리고 7, 8, 9입니다.</p>
+              <p>홈 화면은 가로 5칸, 세로 6칸입니다. 숫자 앱 9개가 위에서 두 번째 줄부터 세 줄, 왼쪽에서 두 번째 칸부터 세 칸에 전화기 숫자판처럼 놓입니다. 위쪽 줄부터 1, 2, 3, 그리고 4, 5, 6, 그리고 7, 8, 9입니다. 나머지 아이콘, 폴더, 빈 칸, 배경, 아래쪽 앱 줄은 모두 0입니다.</p>
               <figure class="digit-map">
-                <figcaption>4×4 숫자 칸. 첫 줄과 첫 칸은 0, 오른쪽 아래는 1부터 9</figcaption>
-                <div class="digit-map-grid">
-                  <span class="is-zero">0</span><span class="is-zero">0</span><span class="is-zero">0</span><span class="is-zero">0</span>
-                  <span class="is-zero">0</span><span class="is-value">1</span><span class="is-value">2</span><span class="is-value">3</span>
-                  <span class="is-zero">0</span><span class="is-value">4</span><span class="is-value">5</span><span class="is-value">6</span>
-                  <span class="is-zero">0</span><span class="is-value">7</span><span class="is-value">8</span><span class="is-value">9</span>
+                <figcaption>5×6 숫자 칸. 가운데 3×3만 1부터 9, 나머지는 0</figcaption>
+                <div class="digit-map-grid" style="grid-template-columns: repeat(5, 1fr)">
+                  <span class="is-zero">0</span><span class="is-zero">0</span><span class="is-zero">0</span><span class="is-zero">0</span><span class="is-zero">0</span>
+                  <span class="is-zero">0</span><span class="is-value">1</span><span class="is-value">2</span><span class="is-value">3</span><span class="is-zero">0</span>
+                  <span class="is-zero">0</span><span class="is-value">4</span><span class="is-value">5</span><span class="is-value">6</span><span class="is-zero">0</span>
+                  <span class="is-zero">0</span><span class="is-value">7</span><span class="is-value">8</span><span class="is-value">9</span><span class="is-zero">0</span>
+                  <span class="is-zero">0</span><span class="is-zero">0</span><span class="is-zero">0</span><span class="is-zero">0</span><span class="is-zero">0</span>
+                  <span class="is-zero">0</span><span class="is-zero">0</span><span class="is-zero">0</span><span class="is-zero">0</span><span class="is-zero">0</span>
                 </div>
               </figure>
-              <p>첫 번째 왼쪽 넘김은 십의 자리이고, 둘째 홈에서의 왼쪽 넘김은 일의 자리입니다. 두 자리를 이어서 읽되, 00은 100입니다. 그 외에는 십의 자리에 10을 곱하고 일의 자리를 더합니다.</p>
+              <p>첫 번째 입력은 십의 자리이고, 둘째 홈에서의 입력은 일의 자리입니다. 입력은 아이콘을 짧게 탭하거나 왼쪽으로 넘기면 됩니다. 두 자리를 이어서 읽고 두 자리가 모두 끝나면 셋째 홈으로 넘어갑니다. 00은 열린 노트의 마지막 번호입니다. 노트 항목 수보다 큰 번호는 범위 밖이라 목록 원본 순서가 그대로 나오고, 마술사에게만 조용한 표시가 있습니다.</p>
+              <p>잘못 입력했다면 노트를 열기 전에 오른쪽으로 넘겨서 마지막 숫자를 지우고 다시 입력할 수 있습니다. 노트를 한 번 열면 번호는 잠깁니다. 다음 관객으로 넘어가려면 화면 오른쪽 위 구석을 빠르게 세 번 탭하면 입력이 지워지고 첫 홈으로 돌아갑니다.</p>
+              <p>숫자 앱 이름과 그림의 기억법은 아래 표에 있습니다. 아이콘은 모두 이 앱에서 새로 그린 가상의 앱입니다.</p>
+              <ul class="memory-table" id="memory-table"></ul>
             </div>
           </details>
         </details>
       </section>
+
+      <section class="card" aria-labelledby="options-title">
+        <h2 id="options-title">공연 설정</h2>
+        <fieldset id="options-fields">
+          <label for="opt-start-mode">시작 화면
+            <select id="opt-start-mode">
+              <option value="settings">설정</option>
+              <option value="performance">공연 (가짜 홈 화면)</option>
+            </select>
+          </label>
+          <p class="hint">앱을 열면 처음에 보이는 화면입니다. 공연을 고르면 항상 가짜 홈 첫 화면에서 시작하고, 숫자 두 번을 입력하면 셋째 홈의 노트 앱으로 이어집니다. 쓸 수 있는 노트가 하나도 없으면 설정에서 시작합니다. 처음 쓸 때는 설정이 먼저 열립니다.</p>
+          <label for="opt-display">입력 숫자 표시
+            <select id="opt-display">
+              <option value="performance">공연 모드 (숨김)</option>
+              <option value="practice">연습 모드 (항상 보임)</option>
+            </select>
+          </label>
+          <p class="hint">연습 모드는 입력한 숫자를 화면에 크게 보여 줍니다. 공연 모드는 평소에 아무것도 보이지 않고, 아래쪽 페이지 점이나 메모 제목을 0.4초 이상 누르고 있는 동안에만 숫자가 보이며 손을 떼면 사라집니다.</p>
+          <label class="checkline" for="opt-vibrate">
+            <input id="opt-vibrate" type="checkbox">
+            <span>숫자가 입력될 때 짧게 진동</span>
+          </label>
+          <p class="hint">진동을 지원하지 않는 기기에서는 아무 일도 일어나지 않으며 입력에는 영향이 없습니다.</p>
+          <label for="opt-note-font">노트 글자 크기 <output id="opt-note-font-value" for="opt-note-font"></output>
+            <input id="opt-note-font" type="range" min="14" max="30" step="1">
+          </label>
+          <label for="opt-note-line">줄 간격
+            <select id="opt-note-line">
+              <option value="compact">좁게</option>
+              <option value="normal">보통</option>
+              <option value="relaxed">넓게</option>
+            </select>
+          </label>
+          <label for="opt-note-emphasis">고른 번호 줄 강조
+            <select id="opt-note-emphasis">
+              <option value="none">강조 없음</option>
+              <option value="bold">굵게</option>
+              <option value="highlight">형광펜</option>
+              <option value="underline">밑줄</option>
+            </select>
+          </label>
+          <p id="note-style-sample" class="note-sample" aria-hidden="true">1  샘플 문장입니다. 공개된 노트는 이 크기로 보입니다.</p>
+          <p class="hint">노트가 열린 뒤에는 두 손가락을 벌리거나 모아서 글자를 키우고 줄일 수 있습니다. 설정에서 고른 크기는 그대로 저장되고, 확대한 크기는 그 노트를 닫으면 되돌아옵니다.</p>
+          <p id="options-message" class="message" role="alert"></p>
+        </fieldset>
+        <details class="input-guide" id="precheck-panel">
+          <summary>공연 전 점검</summary>
+          <ul id="precheck-list" class="precheck-list"></ul>
+          <div class="actions">
+            <button type="button" id="precheck-refresh">다시 점검</button>
+          </div>
+        </details>
+      </section>
+
+
+      <details class="card settings-disclosure" id="builtin-panel">
+        <summary>기본 제공 목록</summary>
+        <p class="hint">직접 입력하지 않아도 쓸 수 있는 목록입니다. 노트 앱에 내가 만든 목록과 함께 나옵니다. 포스 항목을 고르면 그 항목이 관객이 고른 번호 자리로 옮겨 가고, 나머지 항목은 순서대로 남습니다. 노트에 넣지 않으면 숨겨집니다.</p>
+        <fieldset id="builtin-fields">
+          <div id="builtin-list" class="preset-list"></div>
+          <p id="builtin-message" class="message" role="alert"></p>
+        </fieldset>
+      </details>
+
+      <details class="card settings-disclosure" id="home-panel">
+        <summary>홈 화면 꾸미기</summary>
+        <fieldset id="home-fields">
+          <label for="opt-icon-size">아이콘 크기 <output id="opt-icon-size-value" for="opt-icon-size"></output>
+            <input id="opt-icon-size" type="range" min="80" max="120" step="2">
+          </label>
+          <label for="opt-label-size">이름 글자 크기 <output id="opt-label-size-value" for="opt-label-size"></output>
+            <input id="opt-label-size" type="range" min="10" max="16" step="1">
+          </label>
+          <label for="opt-bottom-gap">아래쪽 여백 <output id="opt-bottom-gap-value" for="opt-bottom-gap"></output>
+            <input id="opt-bottom-gap" type="range" min="0" max="120" step="4">
+          </label>
+          <label for="wallpaper-file">배경화면 (갤러리에서 사진 고르기)
+            <input id="wallpaper-file" type="file" accept="image/*">
+          </label>
+          <p class="hint">폰 배경화면 원본 사진을 고르면 실제 폰처럼 보입니다. 원본이 없으면 아이콘이 없는 홈 화면을 캡처해 쓰세요.</p>
+          <div id="wallpaper-editor" hidden>
+            <div class="crop-wrap">
+              <canvas id="wallpaper-canvas" width="200" height="433" aria-label="배경화면 위치 미리보기"></canvas>
+            </div>
+            <label for="wallpaper-zoom">크기
+              <input id="wallpaper-zoom" type="range" min="100" max="400" step="1" value="100">
+            </label>
+            <p class="hint">사진을 손가락으로 끌어서 보이는 부분을 맞춥니다.</p>
+            <div class="actions">
+              <button type="button" class="primary" id="wallpaper-apply">이 배경으로 쓰기</button>
+              <button type="button" id="wallpaper-cancel">취소</button>
+            </div>
+          </div>
+          <div class="actions">
+            <button type="button" id="wallpaper-reset">기본 배경으로</button>
+          </div>
+          <p id="wallpaper-state" class="hint"></p>
+          <p class="hint">배경화면은 이 기기 안에만 저장되고 앱 파일에는 들어가지 않습니다. 큰 사진은 자동으로 줄여서 저장합니다. 웹 앱은 폰의 시스템 배경화면을 직접 읽을 수 없어서 사진을 직접 골라야 합니다.</p>
+          <p id="home-message" class="message" role="alert"></p>
+        </fieldset>
+      </details>
+
+      <details class="card settings-disclosure" id="usericon-panel">
+        <summary>내 앱 아이콘</summary>
+        <p class="hint">내 폰의 앱 그림을 홈 화면 빈 칸에 넣을 수 있습니다. 그림 파일을 고르거나, 홈 화면 캡처를 올려서 정사각형 영역을 잘라 냅니다. 숫자 칸(1부터 9)에는 넣을 수 없고, 나머지 칸은 모두 0입니다. 이 기기 안에만 저장되며 앱 파일이나 백업에는 들어가지 않습니다.</p>
+        <p class="hint">자주 쓰는 앱을 폰 화면 캡처에서 잘라 넣으면 더 자연스럽습니다. 아무것도 넣지 않은 칸에는 이 앱 모음의 마술 앱 아이콘이 보입니다.</p>
+        <label for="usericon-file">그림 또는 캡처 고르기
+          <input id="usericon-file" type="file" accept="image/png,image/jpeg,image/webp">
+        </label>
+        <div id="usericon-editor" hidden>
+          <div class="crop-wrap">
+            <canvas id="usericon-canvas" width="240" height="240" aria-label="자를 영역 미리보기"></canvas>
+          </div>
+          <label for="usericon-zoom">크기
+            <input id="usericon-zoom" type="range" min="100" max="1600" step="1" value="100">
+          </label>
+          <p class="hint">그림을 손가락으로 끌어서 위치를 맞추고, 슬라이더로 크기를 정합니다.</p>
+          <label for="usericon-label">앱 이름 (8자까지)
+            <input id="usericon-label" type="text" maxlength="8" autocomplete="off">
+          </label>
+          <label for="usericon-page">홈 화면
+            <select id="usericon-page">
+              <option value="0">첫째 홈</option>
+              <option value="1">둘째 홈</option>
+              <option value="2">셋째 홈</option>
+            </select>
+          </label>
+          <div id="usericon-slots" class="slot-grid" role="group" aria-label="넣을 칸"></div>
+          <p id="usericon-slot-text" class="hint"></p>
+          <div class="actions">
+            <button type="button" class="primary" id="usericon-add">이 칸에 넣기</button>
+            <button type="button" id="usericon-cancel">취소</button>
+          </div>
+        </div>
+        <p id="usericon-message" class="message" role="alert"></p>
+        <div id="usericon-list" class="preset-list"></div>
+      </details>
+
+      <details class="card settings-disclosure" id="dummy-panel">
+        <summary>더미 노트</summary>
+        <p class="hint">일상적인 메모처럼 보이는 노트입니다. 노트 목록에 함께 나오고, 열면 평범한 글이 보입니다. 번호 입력에는 영향이 없습니다.</p>
+        <fieldset id="dummy-fields">
+          <form id="dummy-form">
+            <label for="dummy-title">제목
+              <input id="dummy-title" type="text" maxlength="40" autocomplete="off">
+            </label>
+            <label for="dummy-body">내용
+              <textarea id="dummy-body" rows="5" maxlength="2000"></textarea>
+            </label>
+            <p id="dummy-message" class="message" role="alert"></p>
+            <div class="actions">
+              <button type="button" class="primary" id="dummy-save">저장</button>
+              <button type="button" id="dummy-new">새로 작성</button>
+              <button type="button" id="dummy-examples">예시 4개 넣기</button>
+            </div>
+          </form>
+        </fieldset>
+        <div id="dummy-list" class="preset-list"></div>
+      </details>
+
+      <details class="card settings-disclosure" id="set-panel">
+        <summary>공연 세트</summary>
+        <p class="hint">한 번의 공연에 쓸 목록과 더미 노트를 묶습니다. 세트를 고르면 노트에는 그 세트의 것만 나옵니다. 세트를 고르지 않으면 조건에 맞는 모든 목록이 나옵니다.</p>
+        <fieldset id="set-fields">
+          <label for="set-active">지금 쓰는 세트
+            <select id="set-active"></select>
+          </label>
+          <p id="set-summary" class="hint"></p>
+          <details class="input-guide">
+            <summary>세트 만들기와 고치기</summary>
+            <label for="set-select">고칠 세트
+              <select id="set-select"></select>
+            </label>
+            <label for="set-name">세트 이름
+              <input id="set-name" type="text" maxlength="40" autocomplete="off">
+            </label>
+            <p class="hint">넣을 목록</p>
+            <div id="set-presets" class="check-list"></div>
+            <p class="hint">넣을 더미 노트</p>
+            <div id="set-dummies" class="check-list"></div>
+            <p id="set-message" class="message" role="alert"></p>
+            <div class="actions">
+              <button type="button" class="primary" id="set-save">세트 저장</button>
+              <button type="button" class="danger" id="set-delete">세트 삭제</button>
+              <button type="button" id="set-new">새로 작성</button>
+            </div>
+          </details>
+        </fieldset>
+      </details>
+
+      <details class="card settings-disclosure" id="backup-panel">
+        <summary>백업과 가져오기</summary>
+        <p class="hint">목록, 포스 항목, 더미 노트, 공연 세트를 파일 하나로 내보내고 다른 기기에서 가져옵니다. 가져올 때는 먼저 무엇이 들어오는지 보여 주고, 지금 저장된 것은 절대 바꾸거나 지우지 않습니다. 같은 이름이 있으면 사본으로 추가합니다. 내 앱 아이콘, 배경 사진, 설정값은 파일에 들어가지 않습니다.</p>
+        <div class="actions">
+          <button type="button" class="primary" id="export-backup">백업 파일 내보내기</button>
+        </div>
+        <label for="import-file">백업 파일 가져오기
+          <input id="import-file" type="file" accept="application/json,.json">
+        </label>
+        <div id="import-preview" hidden>
+          <h3>가져올 내용 미리보기</h3>
+          <ul id="import-list" class="precheck-list"></ul>
+          <div class="actions">
+            <button type="button" class="primary" id="import-apply">합쳐서 가져오기</button>
+            <button type="button" id="import-cancel">취소</button>
+          </div>
+        </div>
+        <p id="backup-message" class="message" role="alert"></p>
+      </details>
 
       <section class="card install-card" data-install-card aria-labelledby="install-title">
         <h2 id="install-title">앱 설치</h2>
@@ -113,6 +327,12 @@
               </label>
               <p id="item-hint" class="hint">포스 항목은 일반 항목에 넣지 마세요. 일반 항목은 한 줄에 하나씩, 최대 199개입니다.</p>
               <p id="item-count" class="hint" aria-live="polite">0개</p>
+              <ul id="editor-warnings" class="precheck-list" aria-live="polite"></ul>
+              <details class="input-guide" id="editor-preview-panel">
+                <summary>번호 미리보기</summary>
+                <p class="hint">공연에서는 포스 항목이 관객이 고른 번호 자리에 들어갑니다. 아래는 마지막 번호에 놓은 예시입니다.</p>
+                <ol id="editor-preview" class="numbered-preview"></ol>
+              </details>
               <p id="editor-message" class="message" role="alert"></p>
               <div class="actions">
                 <button type="button" class="primary" id="save-new">새 목록 저장</button>
@@ -120,7 +340,6 @@
                 <button type="button" id="overwrite">덮어쓰기</button>
                 <button type="button" class="danger" id="delete-preset">삭제</button>
                 <button type="button" id="reset-form">새로 작성</button>
-                <button type="button" class="primary" id="start-one">이 목록으로 시작</button>
               </div>
               <p class="hint">새 목록 저장은 다른 이름으로 추가합니다. 이름 바꾸기는 항목을 바꾸지 않습니다. 덮어쓰기는 지금 입력한 일반 항목, 포스 항목, 모양만 현재 목록에 반영하고 이름은 그대로 둡니다.</p>
             </form>
@@ -133,39 +352,22 @@
             <div id="preset-list" class="preset-list"></div>
           </details>
 
-          <details class="card settings-disclosure" aria-labelledby="two-title">
-            <summary id="two-title">두 목록</summary>
-            <fieldset id="two-fields">
-              <label class="checkline" for="two-enabled">
-                <input id="two-enabled" type="checkbox">
-                <span>두 목록을 이어서 보여 주기</span>
-              </label>
-              <label for="two-a">첫 번째 목록
-                <select id="two-a"></select>
-              </label>
-              <label for="two-b">두 번째 목록
-                <select id="two-b"></select>
-              </label>
-              <p id="two-message" class="message" role="alert"></p>
-              <div class="actions">
-                <button type="button" class="primary" id="start-two">두 목록으로 시작</button>
-              </div>
-            </fieldset>
-          </details>
-
           <details class="card help">
             <summary>사용 방법</summary>
             <div class="help-body">
               <ol>
                 <li>일반 항목을 한 줄에 하나씩 적고, 포스 항목과 모양을 정한 뒤 저장합니다.</li>
-                <li>공연을 시작하면 관객 화면에는 번호만 나옵니다. 목록 내용은 아직 보이지 않습니다.</li>
-                <li>관객이 1부터 항목 수까지의 번호를 고릅니다. 그 다음 ‘목록 보기’로 목록 전체를 한 번에 엽니다.</li>
-                <li>고른 번호 자리에 포스 항목을 끼워 넣습니다. 일반 항목은 순서대로 모두 남습니다.</li>
+                <li>공연 시작을 누르면 가짜 홈 화면 첫 쪽이 나옵니다. 숫자를 입력하는 화면은 따로 없습니다.</li>
+                <li>첫째 홈에서 십의 자리, 둘째 홈에서 일의 자리를 아이콘 탭이나 왼쪽 쓸기로 입력하면 셋째 홈으로 넘어갑니다. 셋째 홈의 노트 앱을 누르면 노트 목록이 열립니다.</li>
+                <li>고른 노트를 열면 입력한 번호 자리에 포스 항목이 끼워져 있고, 일반 항목은 순서대로 모두 남습니다.</li>
                 <li>한 번 연 목록은 번호가 잠겨 실수로 바뀌지 않습니다.</li>
                 <li>설정으로 돌아오려면 공연 화면에서 두 손가락을 화면 아래로 96픽셀 이상 밀어 내리세요. 공연 화면에는 설정 버튼을 두지 않습니다.</li>
-                <li>두 목록을 켜면 서로 다른 저장 목록에 각각 번호를 받습니다. 목록마다 준비한 포스 항목을 그 번호에 놓고, 둘 다 연 뒤에 함께 보여 줍니다.</li>
+                <li>기본 제공 목록(영화, 음식, 여행지, 트럼프 카드)은 직접 입력하지 않아도 노트에 넣을 수 있습니다. 포스 항목은 항목 중에서 골라 정하고, 숨기면 노트에 나오지 않습니다.</li>
                 <li>공연을 시작한 뒤 설정을 고쳐도 진행 중인 화면은 바뀌지 않습니다. 시작 시점의 사본을 사용합니다.</li>
-                <li>노트 연출은 일반 항목 99개와 포스 항목 1개가 있는 목록만 사용합니다. 그런 목록이 다섯 개를 넘으면 저장된 순서의 앞 다섯 개만 메모가 됩니다.</li>
+                <li>노트 연출은 포스 항목이 있고 전체 항목이 2개에서 100개인 목록을 사용합니다. 공연 세트를 고르면 그 세트의 목록만, 고르지 않으면 조건에 맞는 모든 목록(30개까지)이 노트가 됩니다.</li>
+                <li>00은 열린 노트의 마지막 번호입니다. 노트 항목 수보다 큰 번호를 넣으면 목록 원본 순서가 나오고, 마술사에게만 조용한 표시가 있습니다.</li>
+                <li>번호가 정해진 뒤에는 관객이 노트 앱의 모든 노트를 훑어보고 열어 볼 수 있습니다. 아무것도 고칠 수 없고, 결과는 그대로 남습니다.</li>
+                <li>다음 관객을 위해 입력을 지우고 첫 홈으로 돌아가려면 화면 오른쪽 위 구석을 빠르게 세 번 탭하세요.</li>
               </ol>
               <p>저장은 이 기기에만 남습니다. 손상된 저장본은 복구를 선택하기 전까지 지우지 않습니다.</p>
             </div>
@@ -175,19 +377,19 @@
     </div>
   </div>
 
-  <div id="performance" class="screen" hidden>
-    <div id="performance-live" class="sr-only" aria-live="polite"></div>
-    <div id="stage" class="shell"></div>
-  </div>
-
   <div id="fake-home" class="screen fake-home" hidden tabindex="-1">
     <div class="fake-home-frame">
-      <div class="phone-shell" id="fake-phone">
+      <div class="phone-shell" id="fake-phone" data-wallpaper="default">
+        <div class="wallpaper" id="fake-wallpaper" aria-hidden="true">
+          <svg class="wallpaper-curve" viewBox="0 0 390 844" preserveAspectRatio="xMidYMid slice" focusable="false"><path d="M-20 150 C180 230 90 520 410 640" fill="none" stroke="#fff" stroke-opacity=".05" stroke-width="46"/></svg>
+          <i class="wallpaper-circle"></i>
+        </div>
         <div class="phone-status" aria-hidden="true">
-          <span class="phone-status-icons">
-            <span class="sig"></span>
-            <span class="wifi"></span>
-            <span class="batt"></span>
+          <span class="status-left"><b class="status-time" id="status-time">12:40</b><i class="status-glyph g1"></i><i class="status-glyph g2"></i></span>
+          <span class="status-right">
+            <svg width="16" height="12" viewBox="0 0 16 12" focusable="false"><path d="M8 11L1 4a10 10 0 0 1 14 0z" fill="#fff"/></svg>
+            <svg width="14" height="12" viewBox="0 0 14 12" focusable="false"><path d="M1 11L13 1V11z" fill="#fff"/></svg>
+            <b class="batt-pill">81</b>
           </span>
         </div>
         <div class="home-viewport">
@@ -198,24 +400,24 @@
             <section class="home-page" data-home-page="1" aria-label="홈" aria-hidden="true">
               <div class="icon-grid" data-home-grid="1"></div>
             </section>
+            <section class="home-page" data-home-page="2" aria-label="홈" aria-hidden="true">
+              <div class="icon-grid" data-home-grid="2"></div>
+            </section>
           </div>
         </div>
         <div class="home-dots" aria-hidden="true">
-          <span class="is-current"></span>
-          <span></span>
+          <span class="home-mark is-current"><svg width="14" height="13" viewBox="0 0 14 13" focusable="false"><path d="M7 0L0 6h2v7h4V9h2v4h4V6h2z" fill="currentColor"/></svg></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
         </div>
-        <div class="phone-dock" aria-hidden="true">
-          <span class="dock-app"><i class="dock-glyph tone-phone">☎</i><span>전화</span></span>
-          <span class="dock-app"><i class="dock-glyph tone-mail">✉</i><span>메시지</span></span>
-          <span class="dock-app"><i class="dock-glyph tone-safari">◎</i><span>사파리</span></span>
-          <span class="dock-app"><i class="dock-glyph tone-music">♪</i><span>음악</span></span>
-        </div>
+        <div class="phone-dock" id="phone-dock" aria-hidden="true"></div>
         <div class="home-indicator" aria-hidden="true"></div>
       </div>
+      <div id="entry-readout" class="entry-readout" hidden aria-hidden="true"></div>
       <div id="fake-notes" class="notes-landing" hidden>
         <header class="notes-landing-bar">
           <button type="button" id="fake-notes-back" class="notes-back" hidden>‹ 메모</button>
-          <h2 id="fake-notes-title" tabindex="-1">메모</h2>
+          <h2 id="fake-notes-title" tabindex="-1" data-magic-native-label="메모">메모</h2>
         </header>
         <div class="notes-search" aria-hidden="true">검색</div>
         <div class="notes-folder-row" aria-hidden="true">
@@ -223,8 +425,10 @@
           <span>모든 메모</span>
         </div>
         <div id="fake-notes-body" class="notes-landing-body"></div>
+        <button type="button" id="fake-notes-home" class="notes-home-bar" aria-label="홈 화면"></button>
       </div>
     </div>
+    <button type="button" id="desktop-settings" class="desktop-settings" hidden>설정</button>
   </div>
 
   <dialog id="confirm-dialog" aria-labelledby="confirm-text">

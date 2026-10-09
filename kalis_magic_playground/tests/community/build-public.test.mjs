@@ -4,7 +4,7 @@ import { readdir, readFile, stat, mkdtemp, mkdir, writeFile, rm } from 'node:fs/
 import path from 'node:path';
 import os from 'node:os';
 import { fileURLToPath } from 'node:url';
-import { PUBLIC_FILES, PUBLIC_DIRS, PRIVATE_PATTERNS, MIRROR_PAIRS, DISTRIBUTION_APPS, SHARED_UNLOCK_FILES, CHOICE_FILES, USOTSUKI_FILES, ASRAI_FILES, ALTER_FILES, SPINNER_FILES, MEMDECK_FILES, QR_FILES, ALETHEIA_COURT_FILES, SETTINGS_UI_FILES, buildPublic, verifyAppDisplayPolicy, injectLegacyMigration } from '../../scripts/build-public.mjs';
+import { PUBLIC_FILES, PUBLIC_DIRS, PRIVATE_PATTERNS, MIRROR_PAIRS, DISTRIBUTION_APPS, SHARED_UNLOCK_FILES, CHOICE_FILES, NEW_APP_FILES, USOTSUKI_FILES, ASRAI_FILES, ALTER_FILES, SPINNER_FILES, MEMDECK_FILES, QR_FILES, ALETHEIA_COURT_FILES, SETTINGS_UI_FILES, buildPublic, verifyAppDisplayPolicy, injectLegacyMigration } from '../../scripts/build-public.mjs';
 
 test('public build allowlist includes visible site pages', () => {
   assert.ok(PUBLIC_FILES.includes('index.html'));
@@ -52,8 +52,11 @@ test('public build mirrors the current calculator and integrated stopwatch sourc
     assert.ok(MIRROR_PAIRS.some(([source, mirror]) =>
       source === `../../magic-choice/${file}` && mirror === `zz4/${file}`), `choice ${file}`);
   }
+  // Only the choice app ships the home screen artwork; the shared new-app file list stays unchanged.
+  assert.ok(CHOICE_FILES.includes('home-manifest.js') && CHOICE_FILES.includes('home-icons/a1.svg') && CHOICE_FILES.includes('home-icons/own-memdeck.png'));
+  assert.equal(NEW_APP_FILES.some((file) => file.startsWith('home-')), false);
   for (const [source, route] of [['magic-aletheia', 'zz5'], ['magic-tobira', 'zz6']]) {
-    for (const file of CHOICE_FILES) {
+    for (const file of NEW_APP_FILES) {
       assert.ok(MIRROR_PAIRS.some(([original, mirror]) =>
         original === `../../${source}/${file}` && mirror === `${route}/${file}`), `${route} ${file}`);
     }
