@@ -531,6 +531,32 @@ test('final app policy rejects fullscreen and mixed personal/friend customizatio
   }
 });
 
+test('fullscreen exception is limited to RELEASE index files with the rewind function', async () => {
+  const fixture = await mkdtemp(path.join(os.tmpdir(), 'magic-rewind-policy-'));
+  const fullscreen = '<script>function enterRewindFullscreen() { document.documentElement.requestFullscreen(); }</script>';
+  try {
+    for (const route of ['zz2', 'tools/release', 'zz1']) {
+      const app = path.join(fixture, route);
+      await mkdir(app, { recursive: true });
+      await writeFile(path.join(app, 'manifest.webmanifest'), JSON.stringify({ display: 'standalone' }));
+      const body = route.startsWith('tools/') ? '<body data-magic-customize="off"></body>' : '<body></body>';
+      await writeFile(path.join(app, 'index.html'), body + fullscreen);
+      if (route === 'zz1') {
+        await assert.rejects(verifyAppDisplayPolicy(fixture, [route]), /Fullscreen is disabled/);
+      } else {
+        await verifyAppDisplayPolicy(fixture, [route]);
+        await writeFile(path.join(app, 'index.html'), body + '<script>document.documentElement.requestFullscreen()</script>');
+        await assert.rejects(verifyAppDisplayPolicy(fixture, [route]), /Fullscreen is disabled/);
+        await writeFile(path.join(app, 'index.html'), body + fullscreen);
+        await writeFile(path.join(app, 'extra.js'), fullscreen);
+        await assert.rejects(verifyAppDisplayPolicy(fixture, [route]), /Fullscreen is disabled/);
+      }
+    }
+  } finally {
+    await rm(fixture, { recursive: true, force: true });
+  }
+});
+
 // Manifest id resolves against start_url's origin, not the manifest directory (W3C 1.11).
 test('all final apps resolve to distinct install identities', async () => {
   await buildPublic();

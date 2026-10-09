@@ -29,6 +29,7 @@ function fixture(build) {
     timeDigits:[],emergencyLastTap:null,performance:{now:()=>now},matchMedia:()=>({matches:false}),
     setTimeout(fn,ms){const id=++serial;jobs.set(id,{fn,at:now+ms});return id;},clearTimeout(id){jobs.delete(id);},
     requestAnimationFrame(fn){const id=++serial;jobs.set(id,{fn,at:now+16});return id;},cancelAnimationFrame(id){jobs.delete(id);},
+    enterRewindFullscreen(){ctx.fullscreenRequested=true;},exitRewindFullscreen(){},
     enterRewindStatusCover(){ctx.statusCoverApplied=true;},
     ...clock,unlockTimer:null,UNLOCK_ANIMATION_MS:520,state:{unlocked:false},clearFeedback(){},renderAttempts(){},setHomePage(){},
     showScreen(next){ctx.screen=next;ctx.shown=next;}});
@@ -68,6 +69,7 @@ for (const build of builds) {
     vm.runInContext('renderTimeMachine()',f.ctx);
     assert.equal(f.node('time-minute').textContent,'01');
     assert.equal(f.ctx.statusCoverApplied,true);
+    assert.equal(f.ctx.fullscreenRequested,true);
     const lock=f.node('time-lock');
     const tap={isPrimary:true,pointerId:1,clientX:200,clientY:200};
     lock.events.get('pointerdown')[0](tap);lock.events.get('pointerup')[0](tap);
@@ -111,7 +113,7 @@ test('status-bar covering policy matches in manifest, meta, safe-area CSS and en
     assert.match(text,/<meta name="theme-color" content="#000000">/);
     assert.match(text,/#app \{ position: absolute; top: env\(safe-area-inset-top, 0px\)/);
     assert.match(text,/background: var\(--status-color\)/);
-    assert.match(text,/if \(result.enter\) \{\s*enterRewindStatusCover\(\);/);
+    assert.match(text,/if \(result.enter\) \{\s*enterRewindFullscreen\(\);\s*enterRewindStatusCover\(\);/);
     const properties=new Map(), metas=new Map();
     const document={documentElement:{style:{setProperty(k,v){properties.set(k,v);}}},querySelector(key){if(!metas.has(key))metas.set(key,{});return metas.get(key);}};
     const ctx=vm.createContext({document});
@@ -120,10 +122,12 @@ test('status-bar covering policy matches in manifest, meta, safe-area CSS and en
     assert.equal(properties.get('--status-color'),'#000000');
     assert.equal(metas.get('meta[name="theme-color"]').content,'#000000');
     assert.equal(metas.get('meta[name="apple-mobile-web-app-status-bar-style"]').content,'default');
-    assert.doesNotMatch(text,/requestFullscreen|webkitRequestFullscreen/);
-
+    // The only fullscreen call is inside the rewind entry helper.
+    const fullscreenCalls=text.match(/requestFullscreen|webkitRequestFullscreen/g)||[];
+    assert.equal(fullscreenCalls.length,2);
+    assert.equal(section(text,'    function enterRewindFullscreen()','    function exitRewindFullscreen()').match(/requestFullscreen|webkitRequestFullscreen/g).length,2);
   }
-  assert.equal(section(personal,'    function enterRewindStatusCover()',"    backspaceKey.addEventListener"),section(distribution,'    function enterRewindStatusCover()',"    backspaceKey.addEventListener"));
+  assert.equal(section(personal,'    function enterRewindFullscreen()',"    backspaceKey.addEventListener"),section(distribution,'    function enterRewindFullscreen()',"    backspaceKey.addEventListener"));
 });
 test('PIN success uses shared transition with reduced motion and upward lock/home frames',()=>{
   for(const build of builds) {
@@ -167,7 +171,7 @@ function motionFixture(build) {
   const f=fixture(build);
   Object.assign(f.ctx,{applyAppearance(){},cancelReveal(){},renderInput(){},refreshCroppedImages(){},
     populateForm(){},startRewindGuide(){},stopRewindGuide(){},STORAGE:{personal:true},originals:new Map(),
-    desktopSettingsAccess:null,swipe:null,homePage:'home1',settingsSwipe:null,tapCandidate:null,revealVisible:false,revealShownAt:null});
+    swipe:null,homePage:'home1',settingsSwipe:null,tapCandidate:null,revealVisible:false,revealShownAt:null});
   vm.runInContext(section(f.text,'    function showScreen(', '\n    }\n')+'\n    }\n',f.ctx);
   vm.runInContext(section(f.text,'    // One geometry read',"    for (const id of ['time-black', 'time-lock'])"),f.ctx);
   vm.runInContext(section(f.text,'    function returnSwipe(',"    document.addEventListener('touchmove'"),f.ctx);
@@ -226,5 +230,73 @@ for(const build of builds) {
     f.events.get('resize')();f.consistent('time-lock');
     f.pointer('pointerdown');assert.equal(vm.runInContext('unlockDrag.height',f.ctx),400);
     f.pointer('pointermove',450);f.pointer('pointerup',450);f.advance(520);assert.equal(f.ctx.screen,'unlocked');
+  });
+}
+
+for (const build of builds) {
+  test(`${build}: rewind fullscreen handles supported, unsupported and already fullscreen devices`, async () => {
+    const document = { documentElement: {} };
+    const ctx = vm.createContext({ document });
+    vm.runInContext(section(html(build), '    function enterRewindFullscreen()', '    function enterRewindStatusCover()'), ctx);
+    assert.doesNotThrow(() => vm.runInContext('enterRewindFullscreen(); exitRewindFullscreen()', ctx));
+    for (const [requestKey, elementKey, exitKey] of [
+      ['requestFullscreen', 'fullscreenElement', 'exitFullscreen'],
+      ['webkitRequestFullscreen', 'webkitFullscreenElement', 'webkitExitFullscreen']
+    ]) {
+      let enters = 0, exits = 0;
+      document.documentElement[requestKey] = function (options) {
+        assert.equal(this, document.documentElement);
+        assert.equal(options.navigationUI, 'hide');
+        enters++;
+        document[elementKey] = this;
+        return Promise.resolve();
+      };
+      document[exitKey] = function () {
+        assert.equal(this, document);
+        exits++;
+        document[elementKey] = null;
+        return Promise.resolve();
+      };
+      vm.runInContext('enterRewindFullscreen(); enterRewindFullscreen()', ctx);
+      assert.equal(enters, 1);
+      vm.runInContext('exitRewindFullscreen(); exitRewindFullscreen()', ctx);
+      assert.equal(exits, 1);
+      delete document.documentElement[requestKey];
+      delete document[exitKey];
+    }
+    for (const fail of [() => { throw new Error('denied'); }, () => Promise.reject(new Error('denied'))]) {
+      document.documentElement.requestFullscreen = fail;
+      assert.doesNotThrow(() => vm.runInContext('enterRewindFullscreen()', ctx));
+      document.fullscreenElement = document.documentElement;
+      document.exitFullscreen = fail;
+      assert.doesNotThrow(() => vm.runInContext('exitRewindFullscreen()', ctx));
+      document.fullscreenElement = null;
+      await new Promise(resolve => setImmediate(resolve));
+    }
+  });
+  test(`${build}: showScreen exits fullscreen only outside rewind screens`, () => {
+    const f = motionFixture(build);
+    let exits = 0;
+    f.ctx.document.documentElement = {};
+    f.ctx.document.exitFullscreen = () => { exits++; f.ctx.document.fullscreenElement = null; };
+    vm.runInContext(section(f.text, '    function enterRewindFullscreen()', '    function enterRewindStatusCover()'), f.ctx);
+    f.ctx.document.fullscreenElement = f.ctx.document.documentElement;
+    for (const next of ['time-black', 'time-lock']) {
+      vm.runInContext(`showScreen('${next}')`, f.ctx);
+      assert.equal(exits, 0);
+    }
+    for (const [index, next] of ['unlocked', 'settings', 'input'].entries()) {
+      f.ctx.document.fullscreenElement = f.ctx.document.documentElement;
+      vm.runInContext(`showScreen('${next}')`, f.ctx);
+      assert.equal(exits, index + 1);
+    }
+  });
+}
+
+for (const build of builds) {
+  test(`${build}: no desktop settings button, Shift+Esc handler or PC hint`, () => {
+    const text = html(build);
+    assert.doesNotMatch(text, /desktop-settings|bindDesktopSettingsAccess|desktopSettingsAccess|Shift\+Esc|Shift\+Escape|PC에서는|PC 설정/);
+    assert.doesNotMatch(text, /event\.key !== 'Escape'|key === 'Escape'/);
   });
 }

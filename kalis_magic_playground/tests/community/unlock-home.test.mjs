@@ -103,5 +103,5 @@ test('RELEASE snapshot reveals home2 immediately and clears gestures safely', ()
   assert.match(script, /\$\('reveal-attempt-field'\)\.hidden = false;/);
   assert.match(script, /\$\('reveal-attempt'\)\.disabled = false;/);
   const sw = readFileSync(new URL('../../distribution-snapshots/unlock/sw.js', import.meta.url), 'utf8');
-  assert.ok(sw.includes('v20261009-rewind-status-cover-3'));
+  assert.ok(sw.includes('v20261009-rewind-fullscreen-5'));
 });

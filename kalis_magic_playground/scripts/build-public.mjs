@@ -528,7 +528,9 @@ export async function verifyAppDisplayPolicy(directory = DIST, routes = [
       if (!entry.isFile() || !/\.(?:html|js|mjs)$/.test(entry.name)) continue;
       const content = await readFile(path.join(appDirectory, entry.name), 'utf8');
       if (/\b(?:requestFullscreen|webkitRequestFullscreen|webkitRequestFullScreen|mozRequestFullScreen|msRequestFullscreen)\b/.test(content)) {
-        throw new Error(`Fullscreen is disabled: ${route}/${entry.name}`);
+        const rewindException = (route === 'zz2' || route === 'tools/release')
+          && entry.name === 'index.html' && content.includes('function enterRewindFullscreen()');
+        if (!rewindException) throw new Error(`Fullscreen is disabled: ${route}/${entry.name}`);
       }
     }
   }

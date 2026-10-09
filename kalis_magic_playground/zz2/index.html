@@ -653,7 +653,10 @@
     function showScreen(next, animate = false) {
       clearTimeout(unlockTimer);
       screen = next;
-      if (next !== 'time-black' && next !== 'time-lock') applyAppearance(settings);
+      if (next !== 'time-black' && next !== 'time-lock') {
+        applyAppearance(settings);
+        exitRewindFullscreen();
+      }
       cancelAnimationFrame(timeFrame);
       cancelUnlockMotion();
       timePointer = null;
@@ -764,6 +767,26 @@
       renderInput();
     }
     $('delete').addEventListener('click', removeDigit);
+    function enterRewindFullscreen() {
+      const root = document.documentElement;
+      const request = root.requestFullscreen || root.webkitRequestFullscreen;
+      if (!request || document.fullscreenElement || document.webkitFullscreenElement) return;
+      try {
+        const pending = request.call(root, { navigationUI: 'hide' });
+        if (pending && typeof pending.catch === 'function') pending.catch(() => {});
+      } catch (_) {}
+    }
+
+    function exitRewindFullscreen() {
+      if (!document.fullscreenElement && !document.webkitFullscreenElement) return;
+      const exit = document.exitFullscreen || document.webkitExitFullscreen;
+      if (!exit) return;
+      try {
+        const pending = exit.call(document);
+        if (pending && typeof pending.catch === 'function') pending.catch(() => {});
+      } catch (_) {}
+    }
+
     function enterRewindStatusCover() {
       // Match the personal black safe-area paint and default status text at rewind entry.
       // The OS owns status-bar glyphs; CSS cannot draw over them.
@@ -778,6 +801,7 @@
       const result = registerEmergencyTap(emergencyLastTap, performance.now());
       emergencyLastTap = result.lastTap;
       if (result.enter) {
+        enterRewindFullscreen();
         enterRewindStatusCover();
         timeDigits = [];
         timeMinutes = 0;
