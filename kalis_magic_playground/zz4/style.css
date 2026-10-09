@@ -1329,3 +1329,64 @@ body[data-view="settings"] { background: #1a1512; }
 @media (prefers-reduced-motion: reduce) { #settings .sv-sw::after { transition: none; } }
 #settings [hidden] { display: none !important; }
 #settings .note-sample { color: #111 !important; }
+
+/* ===== Settings: step bar, in place item editing, live preview (settings only, never part of a performance) ===== */
+#settings .sv-steps .sv-stp {
+  flex: 1; min-height: 44px; padding: 8px 0 0; border: 0; border-top: 5px solid var(--line); border-radius: 3px;
+  background: transparent; color: var(--muted); font-size: 13px; font-weight: 600;
+}
+#settings .sv-steps .sv-stp.on { border-top-color: var(--sv-or); color: #f4efe9; }
+#settings .sv-steps .sv-stp[aria-current="step"] { color: var(--sv-or2); }
+#settings .sv-steps .sv-stp:disabled { opacity: 0.5; }
+#settings .sv-draft { margin: 8px 4px 0; padding: 10px 14px; border-radius: 14px; background: #3a2216; color: #f4efe9; font-size: 14px; }
+#settings .sv-link { border: 0; background: none; padding: 4px 2px; color: var(--sv-or2); font: inherit; font-weight: 700; text-decoration: underline; min-height: 32px; }
+#settings .sv-rowhead { display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; }
+#settings .sv-rowhead .sv-sec { margin-bottom: 0; flex: 1; }
+#settings .sv-rowhead .sv-btn { flex: none; }
+#settings .sv-edit { margin-top: 8px; }
+#settings .sv-erow { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+#settings .sv-erow .n { width: 26px; color: var(--muted); font-size: 13px; text-align: right; flex: none; }
+#settings .sv-einput { flex: 1; min-width: 0; padding: 10px 12px !important; border-radius: 12px !important; font-size: 16px; }
+#settings .sv-eb { flex: none; width: 36px; height: 44px; border: 0; border-radius: 10px; background: var(--sv-card2); color: #f4efe9; font-size: 14px; padding: 0; }
+#settings .sv-eb:disabled { opacity: 0.3; }
+#settings .sv-eb[data-act="target"][aria-pressed="true"] { background: var(--sv-or); color: #fff; }
+#settings .sv-eb[data-act="del"] { color: #ff8a7a; }
+#settings .sv-tabs { display: flex; gap: 6px; }
+#settings .sv-tab { flex: 1; min-height: 40px; border: 0; border-radius: 999px; background: var(--sv-card2); color: #f4efe9; font-size: 14px; font-weight: 600; padding: 0 8px; }
+#settings .sv-tab.on { background: var(--sv-or); color: #fff; }
+
+#settings .pv-stage {
+  --pv-s: 0.34; position: relative; box-sizing: content-box; flex: none;
+  width: calc(412px * var(--pv-s)); height: calc(891px * var(--pv-s)); margin: 8px auto;
+  overflow: hidden; border-radius: 14px; border: 2px solid var(--line); background: #121418;
+  pointer-events: none; user-select: none; -webkit-user-select: none;
+}
+#settings .pv-stage[hidden] { display: none; }
+.pv-scale { width: 412px; height: 891px; transform: scale(var(--pv-s)); transform-origin: 0 0; }
+.pv-home { width: 412px; height: 891px; --icon-scale: 1; --label-size: 13px; --bottom-gap: 0px; }
+.pv-home .fake-home-frame { width: 412px; height: 891px; border-radius: 0; box-shadow: none; }
+.pv-home .phone-shell { transition: none; }
+.pv-home .home-track { transition: none; }
+#settings .pv-stages { flex: none; }
+#settings .sv-pvcard { display: flex; gap: 12px; align-items: flex-start; }
+#settings .pv-side { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+#settings .pv-side .sv-tabs { flex-direction: column; }
+#settings .pv-cap { margin: 6px 0 0; }
+#settings .opt-what { margin: -6px 0 12px; font-size: 13px; }
+#settings .deco-live .sv-pvcard { position: sticky; top: 0; z-index: 5; box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35); }
+#settings .deco-live:has(#wallpaper-editor:not([hidden])) .sv-pvcard { position: static; }
+@media (max-height: 700px) { #settings .deco-live .sv-pvcard { position: static; } }
+#adv-pv-notes { --pv-s: 0.5; }
+@media (orientation: landscape) {
+  .pv-home .phone-status { min-height: 38px; font-size: 15px; padding-top: 0; }
+  .pv-home .home-viewport { padding-top: 4.6cqh; }
+  .pv-home .icon-grid { height: min(100%, 70.7cqh); }
+  .pv-home .dock-glyph { width: min(13.8cqw, 9.5cqh); height: min(13.8cqw, 9.5cqh); }
+  .pv-home .phone-dock { margin-bottom: 3.4cqh; }
+  .pv-home .home-dots { margin-bottom: 3.1cqh; }
+  .pv-home .home-indicator { margin-bottom: 6px; }
+}
+@media (orientation: landscape) and (max-height: 480px) {
+  .pv-home .app-icon { padding-top: 6%; gap: 5px; }
+  .pv-home .app-name { font-size: var(--label-size); }
+}

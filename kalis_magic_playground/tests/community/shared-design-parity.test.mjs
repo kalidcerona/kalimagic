@@ -76,9 +76,9 @@ test('Three recorder themes retain exact bytes and cache isolation', async () =>
         snapshot = snapshot.replace(`${constant} = "usotsuki.distribution.${key}"`, `${constant} = "usotsuki.${key}"`);
       }
     } else if (file === 'sw.js') {
-      assert.ok(snapshot.includes("CACHE_NAME = CACHE_PREFIX + 'v20261009-continuous-paper-20-distribution'"));
-      snapshot = snapshot.replace('v20261009-continuous-paper-20-distribution', 'v20261009-continuous-paper-20');
-      assert.ok(personal.includes('v20261009-continuous-paper-20'));
+      assert.ok(snapshot.includes("CACHE_NAME = CACHE_PREFIX + 'v20261009-continuous-paper-20-haptic-dip-manual-install-1-distribution'"));
+      snapshot = snapshot.replace('v20261009-continuous-paper-20-haptic-dip-manual-install-1-distribution', 'v20261009-continuous-paper-20-haptic-dip-manual-install-1');
+      assert.ok(personal.includes('v20261009-continuous-paper-20-haptic-dip-manual-install-1'));
     }
     assert.equal(snapshot, personal.toString(), `normalized snapshot ${file}`);
     if (file === 'style.css') {

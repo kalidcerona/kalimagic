@@ -70,8 +70,9 @@
       </section>
       <section class="sv sv-wiz" id="view-w1" data-view-name="w1" hidden>
         <header class="sv-bar"><button type="button" class="sv-ib" data-sv-go="home" aria-label="이전">‹</button><h2 class="sv-title" tabindex="-1">새 목록 만들기</h2></header>
-        <div class="sv-steps" aria-hidden="true"><i class="on"></i><i></i><i></i></div>
+        <div class="sv-steps" id="wz-steps1" role="group" aria-label="단계"><button type="button" class="sv-stp on" data-step="1" aria-current="step">1 이름</button><button type="button" class="sv-stp" data-step="2" disabled>2 항목</button><button type="button" class="sv-stp" data-step="3" disabled>3 예언</button></div>
         <div class="sv-body">
+          <p class="sv-draft" id="wz-draft-note" role="status" hidden>쓰던 내용을 불러왔어요. <button type="button" class="sv-link" id="wz-draft-clear">처음부터 새로</button></p>
           <div class="sv-q" id="wz-q1">1. 목록 이름은?</div>
           <p class="sv-hint">노트 앱에 보이는 제목이에요. 평범할수록 좋아요.</p>
           <input class="sv-input" id="wz-title" type="text" maxlength="40" autocomplete="off" aria-labelledby="wz-q1">
@@ -89,7 +90,7 @@
       </section>
       <section class="sv sv-wiz" id="view-w2" data-view-name="w2" hidden>
         <header class="sv-bar"><button type="button" class="sv-ib" id="wz-back2" aria-label="이전">‹</button><h2 class="sv-title" id="wz-title2" tabindex="-1">새 목록 만들기</h2></header>
-        <div class="sv-steps" id="wz-steps2" aria-hidden="true"><i class="on"></i><i class="on"></i><i></i></div>
+        <div class="sv-steps" id="wz-steps2" role="group" aria-label="단계"><button type="button" class="sv-stp on" data-step="1">1 이름</button><button type="button" class="sv-stp on" data-step="2" aria-current="step">2 항목</button><button type="button" class="sv-stp" data-step="3" disabled>3 예언</button></div>
         <div class="sv-body">
           <div class="sv-q" id="wz-q2">2. 항목을 붙여 넣으세요</div>
           <p class="sv-hint">한 줄에 하나씩. 다른 메모 앱에서 복사해 붙여 넣으면 편해요. 예언 항목도 여기에 함께 넣으세요.</p>
@@ -102,7 +103,7 @@
       </section>
       <section class="sv sv-wiz" id="view-w3" data-view-name="w3" hidden>
         <header class="sv-bar"><button type="button" class="sv-ib" id="wz-back3" aria-label="이전">‹</button><h2 class="sv-title" id="wz-title3" tabindex="-1">새 목록 만들기</h2></header>
-        <div class="sv-steps" id="wz-steps3" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i></div>
+        <div class="sv-steps" id="wz-steps3" role="group" aria-label="단계"><button type="button" class="sv-stp on" data-step="1">1 이름</button><button type="button" class="sv-stp on" data-step="2">2 항목</button><button type="button" class="sv-stp on" data-step="3" aria-current="step">3 예언</button></div>
         <div class="sv-body">
           <div class="sv-q" id="wz-q3">3. 예언 항목을 탭하세요</div>
           <p class="sv-hint">관객이 말한 번호 자리에 이 항목이 나타나요.</p>
@@ -111,8 +112,10 @@
             <div class="sv-pv-t" id="wz-pv-title"></div>
             <div id="wz-pv-lines"></div>
           </div>
-          <div class="sv-sec" id="wz-pick-label">항목 중 하나 고르기</div>
+          <div class="sv-rowhead"><div class="sv-sec" id="wz-pick-label">항목 중 하나 고르기</div><button type="button" class="sv-btn sv-sm" id="wz-edit-toggle" aria-pressed="false">항목 고치기</button></div>
+          <p class="sv-hint" id="wz-edit-hint" hidden>글자를 눌러 고치고, 화살표로 순서를 바꾸고, ✕로 빼요. 다 고치면 고치기 끝을 누르세요.</p>
           <div id="wz-picks" class="sv-picks" role="radiogroup" aria-labelledby="wz-pick-label"></div>
+          <button type="button" class="sv-add" id="wz-add" hidden>＋ 항목 추가</button>
           <p id="wz-message3" class="message" role="alert"></p>
         </div>
         <div class="sv-foot"><button type="button" class="sv-btn sv-primary" id="wz-save" disabled>목록 저장</button></div>
@@ -147,20 +150,39 @@
       <section class="sv " id="view-deco" data-view-name="deco" hidden>
         <header class="sv-bar"><button type="button" class="sv-ib" data-sv-go="home" aria-label="뒤로">‹</button><h2 class="sv-title" tabindex="-1">화면 꾸미기</h2></header>
         <div class="sv-body">
-          <div class="sv-sec sv-sec-first">배경 사진</div>
+          <div class="sv-sec sv-sec-first">미리보기와 홈 화면 모양</div>
+          <div class="deco-live">
+          <div class="sv-card sv-pvcard" id="deco-live">
+            <div class="pv-stages">
+              <div class="pv-stage" id="deco-pv-home" data-pv-kind="home"></div>
+              <div class="pv-stage" id="deco-pv-notes" data-pv-kind="notes" hidden></div>
+            </div>
+            <div class="pv-side">
+              <div class="sv-tabs" role="group" aria-label="미리볼 화면">
+                <button type="button" class="sv-tab on" data-pv="home" aria-pressed="true">홈 화면</button>
+                <button type="button" class="sv-tab" data-pv="notes" aria-pressed="false">메모 화면</button>
+              </div>
+              <p class="sv-hint pv-cap" id="deco-pv-cap">실제 홈 화면을 줄여서 보여 줘요. 아래 항목을 바꾸면 바로 달라져요. 눌러도 공연은 시작되지 않아요.</p>
+              <p class="sv-hint pv-cap" id="deco-pv-notes-cap" hidden>열린 메모의 모습이에요. 글자 크기, 줄 간격, 강조는 <button type="button" class="sv-link" data-sv-go="advanced">더 보기</button>에서 바꿔요.</p>
+            </div>
+          </div>
           <div class="sv-card sv-flat">        <fieldset id="home-fields">
           <label for="opt-icon-size">아이콘 크기 <output id="opt-icon-size-value" for="opt-icon-size"></output>
             <input id="opt-icon-size" type="range" min="80" max="120" step="2">
           </label>
+          <p class="hint opt-what">홈 화면 앱 그림의 크기예요.</p>
           <label for="opt-label-size">이름 글자 크기 <output id="opt-label-size-value" for="opt-label-size"></output>
             <input id="opt-label-size" type="range" min="10" max="16" step="1">
           </label>
+          <p class="hint opt-what">앱 그림 밑에 적힌 이름의 글자 크기예요.</p>
           <label for="opt-bottom-gap">아래쪽 여백 <output id="opt-bottom-gap-value" for="opt-bottom-gap"></output>
             <input id="opt-bottom-gap" type="range" min="0" max="120" step="4">
           </label>
+          <p class="hint opt-what">아이콘 칸 전체를 위로 올려 아래쪽을 띄워요.</p>
           <label for="wallpaper-file">배경화면 (갤러리에서 사진 고르기)
             <input id="wallpaper-file" type="file" accept="image/*">
           </label>
+          <p class="hint opt-what">홈 화면 뒤에 깔리는 사진이에요.</p>
           <p class="hint">폰 배경화면 원본 사진을 고르면 실제 폰처럼 보입니다. 원본이 없으면 아이콘이 없는 홈 화면을 캡처해 쓰세요.</p>
           <div id="wallpaper-editor" hidden>
             <div class="crop-wrap">
@@ -183,6 +205,7 @@
           <p id="home-message" class="message" role="alert"></p>
         </fieldset>
 </div>
+          </div>
           <div class="sv-sec">내 앱 아이콘</div>
           <div class="sv-card sv-flat" id="usericon-panel">        <p class="hint">내 폰의 앱 그림을 홈 화면 빈 칸에 넣을 수 있습니다. 그림 파일을 고르거나, 홈 화면 캡처를 올려서 정사각형 영역을 잘라 냅니다. 숫자 칸(1부터 9)에는 넣을 수 없고, 나머지 칸은 모두 0입니다. 이 기기 안에만 저장되며 앱 파일이나 백업에는 들어가지 않습니다.</p>
         <p class="hint">자주 쓰는 앱을 폰 화면 캡처에서 잘라 넣으면 더 자연스럽습니다. 아무것도 넣지 않은 칸에는 이 앱 모음의 마술 앱 아이콘이 보입니다.</p>
@@ -271,6 +294,8 @@
             </select>
           </label>
           <p id="note-style-sample" class="note-sample" aria-hidden="true">1  샘플 문장입니다. 공개된 노트는 이 크기로 보입니다.</p>
+          <p class="hint opt-what">위 세 가지(글자 크기, 줄 간격, 강조)는 열린 메모 안의 모습을 바꿔요. 아래 미리보기에서 바로 볼 수 있어요.</p>
+          <div class="pv-stage" id="adv-pv-notes" data-pv-kind="notes"></div>
           <p class="hint">노트가 열린 뒤에는 두 손가락을 벌리거나 모아서 글자를 키우고 줄일 수 있습니다. 설정에서 고른 크기는 그대로 저장되고, 확대한 크기는 그 노트를 닫으면 되돌아옵니다.</p>
           <p id="options-message" class="message" role="alert"></p>
         </fieldset>

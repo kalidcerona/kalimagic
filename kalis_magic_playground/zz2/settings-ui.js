@@ -60,9 +60,25 @@
   function translateFor(delta, rotated) { return rotated ? delta.y + 'px ' + (-delta.x) + 'px' : delta.x + 'px ' + delta.y + 'px'; }
   function controlVisible(controlSelection, selectedId, selective) { return !selective || controlSelection === selectedId; }
   function customizationAllowed(pathname, flag) { return flag !== 'off' && !/^\/tools(?:\/|$)/i.test(pathname || '') && !(pathname || '').includes('/distribution-snapshots/'); }
-  var api = { customizationAllowed: customizationAllowed, profiles: profiles, sanitize: sanitize, storageKey: storageKey, load: load, read: read, write: write, reset: reset, clipOffset: clipOffset, screenDelta: screenDelta, translateFor: translateFor, controlVisible: controlVisible };
+  /* Manual install help: plain Korean steps for the browser that is in use. */
+  function installGuide(nav, standalone) {
+    nav = nav || {};
+    var ua = nav.userAgent || '';
+    if (standalone) return { kind: 'standalone', title: '이미 설치된 앱으로 실행 중이에요.', steps: [] };
+    if (/iPhone|iPad|iPod/i.test(ua) || (nav.platform === 'MacIntel' && nav.maxTouchPoints > 1)) return { kind: 'ios', title: '아이폰과 아이패드는 직접 추가해요.', steps: ['화면의 공유 버튼(□↑)을 누르세요.', "'홈 화면에 추가'를 고르세요.", "오른쪽 위 '추가'를 누르세요."] };
+    if (/SamsungBrowser/i.test(ua)) return { kind: 'samsung', title: '삼성 인터넷은 메뉴에서 추가해요.', steps: ['메뉴(≡)를 누르세요.', "'현재 페이지 추가'를 누르세요.", "'홈 화면'을 고르세요."] };
+    if (/Android/i.test(ua) && /Chrome\//i.test(ua) && !/EdgA|OPR|Firefox|Vivaldi|DuckDuckGo/i.test(ua)) return { kind: 'android-chrome', title: '크롬이 예전에 설치한 앱을 기억하고 있을 수 있어요.', steps: ['홈 화면의 기존 앱 아이콘을 길게 눌러 삭제(설치 삭제)하세요.', '크롬에서 이 페이지를 다시 여세요.', "크롬 메뉴 ⋮ 에서 '홈 화면에 추가'를 누르세요.", "'설치'를 누르세요."] };
+    if (/Android/i.test(ua)) return { kind: 'android', title: '브라우저 메뉴에서 추가해요.', steps: ['브라우저 메뉴를 여세요.', "'홈 화면에 추가' 또는 '앱 설치'를 고르세요."] };
+    return { kind: 'other', title: '브라우저에서 직접 설치해요.', steps: ['주소창 오른쪽의 설치 아이콘을 누르세요.', "없으면 브라우저 메뉴에서 '앱 설치' 또는 '홈 화면에 추가'를 고르세요."] };
+  }
+  var api = { customizationAllowed: customizationAllowed, installGuide: installGuide, profiles: profiles, sanitize: sanitize, storageKey: storageKey, load: load, read: read, write: write, reset: reset, clipOffset: clipOffset, screenDelta: screenDelta, translateFor: translateFor, controlVisible: controlVisible };
   root.MagicSettingsUI = api;
   if (!root.document) return;
+  /* Keep the install event in one shared slot as early as possible. Other install scripts may hold the same event; prompt() works once, so every caller must handle a refusal. */
+  if (typeof root.addEventListener === 'function') {
+    root.addEventListener('beforeinstallprompt', function (event) { try { event.preventDefault(); } catch (_) {} root.__magicInstallPrompt = event; });
+    root.addEventListener('appinstalled', function () { root.__magicInstallPrompt = null; });
+  }
   function mount() {
     if (root.location.hash.indexOf('selftest') !== -1 || /(?:[?&])selftest(?:=|&|$)/.test(root.location.search)) return;
     var doc = root.document;
@@ -163,8 +179,52 @@
       footer.appendChild(help);
       return footer;
     }
+    function isStandalone() {
+      try {
+        if (root.navigator && root.navigator.standalone === true) return true;
+        return !!(root.matchMedia && (root.matchMedia('(display-mode: standalone)').matches || root.matchMedia('(display-mode: fullscreen)').matches));
+      } catch (_) { return false; }
+    }
+    function installBlock() {
+      var box = node('div', null, 'magic-install');
+      var button = node('button', '수동 설치', 'magic-install-button');
+      button.type = 'button';
+      var status = node('div', null, 'magic-install-status');
+      status.hidden = true;
+      status.setAttribute('role', 'status');
+      status.setAttribute('aria-live', 'polite');
+      box.appendChild(button);
+      box.appendChild(status);
+      /* Some settings pages reorder their children with flex order; follow the overview so the button stays directly below it. */
+      try { var order = root.getComputedStyle(overview).order; if (order && order !== '0') box.style.order = order; } catch (_) {}
+      function show(title, steps) {
+        status.textContent = '';
+        status.appendChild(node('p', title));
+        if (steps && steps.length) {
+          var list = node('ol');
+          steps.forEach(function (step) { list.appendChild(node('li', step)); });
+          status.appendChild(list);
+        }
+        status.hidden = false;
+      }
+      function showGuide() { var guide = installGuide(root.navigator, isStandalone()); show(guide.title, guide.steps); }
+      button.addEventListener('click', function () {
+        var event = root.__magicInstallPrompt;
+        if (isStandalone() || !event || typeof event.prompt !== 'function') { showGuide(); return; }
+        root.__magicInstallPrompt = null;
+        var result;
+        try { result = event.prompt(); } catch (_) { showGuide(); return; }
+        button.disabled = true;
+        Promise.resolve(event.userChoice || result).then(function (choice) {
+          button.disabled = false;
+          if (choice && choice.outcome === 'accepted') show('설치를 시작했어요. 홈 화면에서 앱 아이콘을 확인해 주세요.');
+          else show('설치를 취소했어요. 다시 누르면 직접 설치하는 방법을 알려드려요.');
+        }, function () { button.disabled = false; showGuide(); });
+      });
+      return box;
+    }
     removeRepeatedDisclosureLabels(container);
-    if (!customizeEnabled) { container.appendChild(overview); container.appendChild(contactFooter()); return; }
+    if (!customizeEnabled) { container.appendChild(overview); container.appendChild(installBlock()); container.appendChild(contactFooter()); return; }
     var storage;
     try { storage = root.localStorage; } catch (_) { storage = null; }
     var key = storageKey(app, root.location), loadedAppearance = load(storage, key, profile), prefs = loadedAppearance.value, defaults = {};
@@ -359,6 +419,7 @@
     save.addEventListener('click', function () { collect(); if (appearanceBlocked()) { status.textContent = recoveryNotice(); return; } var saved = write(storage, key, prefs, profile); if (!saved) loadedAppearance = load(storage, key, profile); status.textContent = saved ? '이 기기에 저장했어요.' : appearanceBlocked() ? recoveryNotice() : '화면에는 적용했어요. 이 브라우저에서는 저장할 수 없어요.'; if (saved) closeCustom(); });
     clear.addEventListener('click', function () { prefs = sanitize(null, profile); scale.value = 100; offset.value = 0; axisX.value = 0; partFields.forEach(function (part) { part.scale.value = 100; part.offset.value = 0; part.x.value = 0; }); labelFields.forEach(function (item) { item.input.value = defaults[item.definition.selector]; }); controls.filter(function (input) { return input.type === 'range'; }).forEach(function (input) { input.dispatchEvent(new root.Event('input')); }); var removed = reset(storage, key); if (removed) loadedAppearance = { status: 'missing', raw: null, value: prefs }; applyLabels(); schedule(); status.textContent = removed ? '꾸미기를 처음 모습으로 돌렸어요.' : '처음 모습으로 돌렸어요. 저장된 설정은 지울 수 없어요.'; });
     container.appendChild(overview);
+    container.appendChild(installBlock());
     container.appendChild(contactFooter());
     applyLabels(); applySelection(); schedule();
     if (root.location.hash === '#customize') { customPage.hidden = false; syncNativeAppearance(); schedule(); }

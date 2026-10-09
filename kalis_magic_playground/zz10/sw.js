@@ -1,6 +1,6 @@
 // Cache only the explicit app shell. API, authentication and user data stay on the network.
 const CACHE_PREFIX = 'alter-shell-' + encodeURIComponent(self.registration.scope) + '-';
-const CACHE_NAME = CACHE_PREFIX + 'v20261009-alter-grip-1';
+const CACHE_NAME = CACHE_PREFIX + 'v20261009-alter-grip-1-manual-install-1';
 const SHELL = [
   "./settings-ui.js",
   "./settings-ui.css",

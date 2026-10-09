@@ -301,6 +301,7 @@ function renderOptions() {
 }
 
 function renderOptionLabels() {
+  schedulePreviews();
   const set = (id, text) => { const node = document.getElementById(id); if (node) node.textContent = text; };
   set('opt-note-font-value', `${optNoteFont?.value}px`);
   set('opt-icon-size-value', `${optIconSize?.value}%`);
@@ -502,10 +503,18 @@ function viewAllowed(name) {
 
 function showView(name, { push = true } = {}) {
   if (!settingsViews.some((view) => view.dataset.viewName === name)) name = 'home';
+  if (currentView === 'w3' && name !== 'w3') commitItemEdits();
   settingsViews.forEach((view) => { view.hidden = view.dataset.viewName !== name; });
   currentView = name;
   // A wizard only lives while one of its screens is open, so Back or Forward can never revive an abandoned one.
-  if (name !== 'w1' && name !== 'w2' && name !== 'w3') wizard = null;
+  // A half written new list is kept as a draft in memory, so leaving by mistake never loses it.
+  if (name !== 'w1' && name !== 'w2' && name !== 'w3') {
+    if (wizard && wizard.mode === 'new') keepWizardDraft();
+    wizard = null;
+  }
+  if (name === 'w2') syncStep2();
+  if (name === 'home') renderDraftButton();
+  if (name === 'deco' || name === 'advanced') schedulePreviews();
   if (push) { try { history.pushState({ sv: name, i: navIndex + 1, t: NAV_TOKEN }, ''); navIndex += 1; } catch { /* History can be blocked. */ } }
   window.scrollTo(0, 0);
   const view = document.getElementById(`view-${name}`);
@@ -538,7 +547,9 @@ function onPopState(event) {
     if (!viewAllowed(name)) name = 'home';
     showView(name, { push: false });
     if (name === 'detail') renderDetail();
-    else if (name === 'w3') renderWizardStep3();
+    else if (name === 'w3') { renderWizardStep3(); markStep(3); }
+    else if (name === 'w2') markStep(2);
+    else if (name === 'w1') markStep(1);
     if (!ours || name !== state.sv) { try { history.replaceState(navState(name), ''); } catch { /* History can be blocked. */ } }
   } catch {
     showView('home', { push: false });
@@ -695,17 +706,85 @@ function wizardLooks() {
   });
 }
 
-function openNewWizard() {
+// The draft only lives in memory (no new storage), and only until the list is saved or started over.
+let wizardDraft = null;
+const draftNote = document.getElementById('wz-draft-note');
+
+function keepWizardDraft() {
+  const title = wzTitle.value;
+  const text = wzItems.value;
+  if (!title.trim() && !text.trim() && !wizard.items.length) { wizardDraft = null; return; }
+  wizardDraft = { title, text, look: wizard.look, items: wizard.items.slice(), target: wizard.target, number: wizard.number, reached: wizard.reached || 1, strip: wizard.strip };
+}
+
+function renderDraftButton() {
+  const button = document.getElementById('new-list');
+  if (!button) return;
+  const name = wizardDraft && wizardDraft.title.trim();
+  button.textContent = wizardDraft ? `✎ 쓰던 목록 이어서 만들기${name ? ` (${name})` : ''}` : '＋ 새 목록 만들기';
+}
+
+function openNewWizard({ fresh = false } = {}) {
   if (recoveryState) { showStartProblem(startBlockReason()); return; }
-  wizard = { mode: 'new', id: null, title: '', look: 'memo', items: [], target: -1, number: 1, returnTo: 'home', strip: true };
-  wzTitle.value = '';
-  wzItems.value = '';
+  if (fresh) wizardDraft = null;
+  const draft = wizardDraft;
+  wizard = { mode: 'new', id: null, title: '', look: 'memo', items: [], target: -1, number: 1, returnTo: 'home', strip: true, reached: 1, editing: false };
+  if (draft) {
+    Object.assign(wizard, { look: draft.look, items: draft.items.slice(), target: draft.target, number: draft.number, reached: draft.reached, strip: draft.strip });
+  }
+  wzTitle.value = draft ? draft.title : '';
+  wzItems.value = draft ? draft.text : '';
+  if (draftNote) draftNote.hidden = !draft;
   setItemsLabels();
   document.getElementById('wz-message1').textContent = '';
   wizardLooks();
   renderWizardCount();
   showView('w1');
+  markStep(1);
   wzTitle.focus({ preventScroll: true });
+}
+
+// Step bar: the current step is marked; earlier and already reached steps can be tapped to jump there.
+function currentStep() { return currentView === 'w1' ? 1 : currentView === 'w2' ? 2 : 3; }
+
+function markStep(step) {
+  if (!wizard) return;
+  const reached = Math.max(wizard.reached || 1, step);
+  wizard.reached = reached;
+  ['wz-steps1', 'wz-steps2', 'wz-steps3'].forEach((id) => {
+    document.querySelectorAll(`#${id} .sv-stp`).forEach((button) => {
+      const n = Number(button.dataset.step);
+      button.classList.toggle('on', n <= reached);
+      button.disabled = n > reached && n !== step;
+      if (n === step) button.setAttribute('aria-current', 'step'); else button.removeAttribute('aria-current');
+    });
+  });
+}
+
+function goWizardStep(target) {
+  if (!wizard || wizard.mode !== 'new') return;
+  const from = currentStep();
+  if (target === from || target > (wizard.reached || 1)) return;
+  if (target < from) {
+    if (from === 3) commitItemEdits();
+    showView(`w${target}`);
+    markStep(target);
+    return;
+  }
+  // Forward to a step that was already reached: the same checks as the Next buttons.
+  if (from === 1) { wizardNext1(); if (currentView !== 'w2') return; }
+  if (target === 3) wizardNext2();
+}
+
+// Items edited on step 3 are written back to the step 2 text, so both screens always agree.
+function syncStep2() {
+  if (!wizard) return;
+  if (wizard.itemsDirty) {
+    wzItems.value = wizard.items.join('\n');
+    wizard.itemsDirty = false;
+    wizard.strip = false;
+  }
+  renderWizardCount();
 }
 
 function duplicateNumbers(items) {
@@ -756,6 +835,7 @@ function wizardNext1() {
   message.textContent = '';
   wizard.title = title;
   showView('w2');
+  markStep(2);
   wzItems.focus({ preventScroll: true });
 }
 
@@ -769,6 +849,7 @@ function wizardNext2() {
   // The prophecy item stays selected when the items are unchanged or its text is still in the list, otherwise it has to be picked again.
   if (!unchanged) wizard.target = previous != null ? parsed.items.indexOf(previous) : -1;
   wizard.number = Math.min(Math.max(wizard.number, 1), parsed.items.length);
+  wizard.editing = false;
   showStep3();
 }
 
@@ -782,10 +863,108 @@ function showStep3() {
   document.getElementById('wz-message3').textContent = '';
   renderWizardStep3();
   showView('w3');
+  markStep(3);
+}
+
+// Items can be fixed in place while the list is being made: text, order and removal, and the prophecy item follows its text.
+function canEditItems() { return Boolean(wizard) && wizard.mode !== 'builtin'; }
+
+function commitItemEdits() {
+  if (!wizard || !wizard.editing) return;
+  wizard.editing = false;
+  const kept = [];
+  let target = -1;
+  wizard.items.forEach((text, index) => {
+    const clean = text.trim();
+    if (!clean) return;
+    if (index === wizard.target) target = kept.length;
+    kept.push(clean);
+  });
+  wizard.items = kept;
+  wizard.target = target;
+  wizard.number = Math.min(Math.max(wizard.number, 1), Math.max(kept.length, 1));
+}
+
+function moveItem(index, delta) {
+  const to = index + delta;
+  if (to < 0 || to >= wizard.items.length) return;
+  const items = wizard.items;
+  [items[index], items[to]] = [items[to], items[index]];
+  if (wizard.target === index) wizard.target = to;
+  else if (wizard.target === to) wizard.target = index;
+  wizard.itemsDirty = true;
+}
+
+function removeItem(index) {
+  wizard.items.splice(index, 1);
+  if (wizard.target === index) wizard.target = -1;
+  else if (wizard.target > index) wizard.target -= 1;
+  wizard.number = Math.min(Math.max(wizard.number, 1), Math.max(wizard.items.length, 1));
+  wizard.itemsDirty = true;
+}
+
+function editRow(text, index) {
+  const row = document.createElement('div');
+  row.className = 'sv-erow';
+  row.dataset.index = String(index);
+  const n = document.createElement('span'); n.className = 'n'; n.textContent = String(index + 1);
+  const input = document.createElement('input');
+  input.type = 'text'; input.className = 'sv-einput'; input.value = text; input.maxLength = MAX_ITEM_CHARS;
+  input.setAttribute('aria-label', `${index + 1}번 항목`);
+  input.autocomplete = 'off';
+  input.addEventListener('input', () => { wizard.items[index] = input.value; wizard.itemsDirty = true; renderWizardMeta(); });
+  const button = (act, label, glyph, disabled = false) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'sv-eb'; b.dataset.act = act; b.textContent = glyph; b.disabled = disabled;
+    b.setAttribute('aria-label', `${index + 1}번 ${label}`);
+    return b;
+  };
+  const star = button('target', '예언 항목으로', wizard.target === index ? '★' : '☆');
+  star.setAttribute('aria-pressed', String(wizard.target === index));
+  star.addEventListener('click', () => { wizard.target = index; renderWizardStep3(); });
+  const up = button('up', '위로', '▲', index === 0);
+  up.addEventListener('click', () => { moveItem(index, -1); renderWizardStep3(); });
+  const down = button('down', '아래로', '▼', index === wizard.items.length - 1);
+  down.addEventListener('click', () => { moveItem(index, 1); renderWizardStep3(); });
+  const del = button('del', '빼기', '✕');
+  del.addEventListener('click', () => { removeItem(index); renderWizardStep3(); });
+  row.append(n, input, star, up, down, del);
+  return row;
+}
+
+// Counts, the sample note and the save button follow the items, without redrawing the rows being typed in.
+function renderWizardMeta() {
+  const filled = wizard.items.filter((text) => text.trim());
+  const targetText = wizard.target >= 0 ? wizard.items[wizard.target] : '';
+  const targetOk = wizard.target >= 0 && targetText.trim();
+  const tooFew = filled.length < 2;
+  const tooMany = filled.length > WIZARD_MAX_ITEMS;
+  document.getElementById('wz-pick-label').textContent = wizard.editing ? `항목 ${filled.length}개 고치는 중` : `항목 ${wizard.items.length}개 중 하나 고르기`;
+  document.getElementById('wz-message3').textContent = tooFew ? '항목은 2개 이상 필요해요.' : tooMany ? `노트에는 ${WIZARD_MAX_ITEMS}개까지만 나옵니다. 줄여 주세요.` : '';
+  wzSave.disabled = !targetOk || tooFew || tooMany;
+  const previewTarget = targetOk ? wizard.items.slice(0, wizard.target).filter((text) => text.trim()).length : -1;
+  renderWizardPreview('wz-pv-title', 'wz-pv-lines', wizard.title, wizard.editing ? filled : wizard.items, wizard.editing ? previewTarget : wizard.target, Math.min(Math.max(wizard.number, 1), Math.max(filled.length, 1)));
 }
 
 function renderWizardStep3() {
   const { items, target } = wizard;
+  const editable = canEditItems();
+  const toggle = document.getElementById('wz-edit-toggle');
+  toggle.hidden = !editable;
+  toggle.textContent = wizard.editing ? '고치기 끝' : '항목 고치기';
+  toggle.setAttribute('aria-pressed', String(Boolean(wizard.editing)));
+  document.getElementById('wz-edit-hint').hidden = !wizard.editing;
+  document.getElementById('wz-add').hidden = !wizard.editing;
+  const picksBox = document.getElementById('wz-picks');
+  picksBox.classList.toggle('sv-edit', Boolean(wizard.editing));
+  if (wizard.editing) {
+    picksBox.removeAttribute('role');
+    picksBox.replaceChildren(...items.map(editRow));
+    document.getElementById('wz-num').textContent = String(wizard.number);
+    renderWizardMeta();
+    return;
+  }
+  picksBox.setAttribute('role', 'radiogroup');
   document.getElementById('wz-pick-label').textContent = `항목 ${items.length}개 중 하나 고르기`;
   const picks = items.map((text, index) => {
     const pick = document.createElement('button');
@@ -801,10 +980,26 @@ function renderWizardStep3() {
     pick.addEventListener('click', () => { wizard.target = index; renderWizardStep3(); });
     return pick;
   });
-  document.getElementById('wz-picks').replaceChildren(...picks);
+  picksBox.replaceChildren(...picks);
   renderWizardPreview('wz-pv-title', 'wz-pv-lines', wizard.title, items, target, wizard.number);
   document.getElementById('wz-num').textContent = String(wizard.number);
-  wzSave.disabled = target < 0;
+  document.getElementById('wz-message3').textContent = items.length < 2 ? '항목은 2개 이상 필요해요.' : '';
+  wzSave.disabled = target < 0 || items.length < 2 || items.length > WIZARD_MAX_ITEMS;
+}
+
+function toggleItemEditing() {
+  if (!wizard || !canEditItems()) return;
+  if (wizard.editing) commitItemEdits(); else wizard.editing = true;
+  renderWizardStep3();
+}
+
+function addItemRow() {
+  if (!wizard || !wizard.editing || wizard.items.length >= WIZARD_MAX_ITEMS) return;
+  wizard.items.push('');
+  wizard.itemsDirty = true;
+  renderWizardStep3();
+  const rows = document.querySelectorAll('#wz-picks .sv-einput');
+  rows[rows.length - 1]?.focus();
 }
 
 // A small note drawn from the list, the way the notes app will show it for a sample number.
@@ -840,6 +1035,7 @@ function notesFate(id, title) {
 function finishWizard(text, { detailId: back = null } = {}) {
   wizard = null;
   if (back) { openDetail(back, '저장했어요.'); return; }
+  wizardDraft = null;
   document.getElementById('done-message').textContent = '';
   document.getElementById('done-title').textContent = '저장했어요';
   document.getElementById('done-text').textContent = text;
@@ -847,6 +1043,7 @@ function finishWizard(text, { detailId: back = null } = {}) {
 }
 
 async function saveWizard() {
+  if (wizard && wizard.editing) { commitItemEdits(); renderWizardStep3(); }
   if (!wizard || wizard.target < 0) return;
   const message = document.getElementById('wz-message3');
   if (recoveryState) { message.textContent = '저장본을 먼저 확인해 주세요.'; return; }
@@ -884,13 +1081,13 @@ function openTargetPicker(card, returnTo = 'home') {
   if (card.builtin) {
     const list = builtinById(card.id);
     const target = normalizeBuiltins(store.builtins)[card.id].target - 1;
-    wizard = { mode: 'builtin', id: card.id, title: list.name, look: 'memo', items: list.items.slice(), target, number: 1, returnTo };
+    wizard = { mode: 'builtin', id: card.id, title: list.name, look: 'memo', items: list.items.slice(), target, number: 1, returnTo, editing: false };
   } else {
     const preset = store.presets.find((entry) => entry.id === card.id);
     if (!preset) return;
     const full = presetFullList(preset);
     detailId = preset.id;
-    wizard = { mode: 'edit-target', id: preset.id, title: preset.name, look: preset.appearance, items: full.items, target: full.target, number: 1, returnTo: currentView === 'detail' ? 'detail' : 'home' };
+    wizard = { mode: 'edit-target', id: preset.id, title: preset.name, look: preset.appearance, items: full.items, target: full.target, number: 1, returnTo: currentView === 'detail' ? 'detail' : 'home', editing: false };
   }
   wizard.number = Math.min(37, wizard.items.length);
   showStep3();
@@ -900,7 +1097,7 @@ function openEditItems() {
   const preset = store.presets.find((entry) => entry.id === detailId);
   if (!preset || recoveryState) return;
   const full = presetFullList(preset);
-  wizard = { mode: 'edit', id: preset.id, title: preset.name, look: preset.appearance, items: full.items, target: full.target, number: Math.min(37, full.items.length), returnTo: 'detail', strip: false };
+  wizard = { mode: 'edit', id: preset.id, title: preset.name, look: preset.appearance, items: full.items, target: full.target, number: Math.min(37, full.items.length), returnTo: 'detail', strip: false, editing: false };
   wzItems.value = full.items.join('\n');
   setItemsLabels();
   renderWizardCount();
@@ -984,7 +1181,26 @@ function bindSettingsViews() {
     if (go.classList.contains('sv-ib') && go.textContent.trim() === '‹') goBack(go.dataset.svGo);
     else showView(go.dataset.svGo);
   });
-  document.getElementById('new-list').addEventListener('click', openNewWizard);
+  document.getElementById('new-list').addEventListener('click', () => openNewWizard());
+  document.getElementById('wz-draft-clear').addEventListener('click', () => {
+    wizardDraft = null;
+    wizard = { mode: 'new', id: null, title: '', look: 'memo', items: [], target: -1, number: 1, returnTo: 'home', strip: true, reached: 1, editing: false };
+    wzTitle.value = ''; wzItems.value = '';
+    draftNote.hidden = true;
+    wizardLooks(); renderWizardCount(); markStep(1);
+    wzTitle.focus({ preventScroll: true });
+  });
+  document.querySelectorAll('.sv-steps .sv-stp').forEach((button) => button.addEventListener('click', () => goWizardStep(Number(button.dataset.step))));
+  document.getElementById('wz-edit-toggle').addEventListener('click', toggleItemEditing);
+  document.querySelectorAll('.sv-tab').forEach((tab) => tab.addEventListener('click', () => {
+    const kind = tab.dataset.pv;
+    document.querySelectorAll('.sv-tab').forEach((other) => { const on = other === tab; other.classList.toggle('on', on); other.setAttribute('aria-pressed', String(on)); });
+    document.getElementById('deco-pv-home').hidden = kind !== 'home';
+    document.getElementById('deco-pv-notes').hidden = kind !== 'notes';
+    document.getElementById('deco-pv-cap').hidden = kind !== 'home';
+    document.getElementById('deco-pv-notes-cap').hidden = kind !== 'notes';
+  }));
+  document.getElementById('wz-add').addEventListener('click', addItemRow);
   document.querySelectorAll('#wz-looks .sv-chip').forEach((chip) => chip.addEventListener('click', () => { if (!wizard) return; wizard.look = chip.dataset.look; wizardLooks(); }));
   document.getElementById('wz-next1').addEventListener('click', wizardNext1);
   wzTitle.addEventListener('keydown', (event) => { if (event.key === 'Enter') { event.preventDefault(); wizardNext1(); } });
@@ -1003,6 +1219,7 @@ function bindSettingsViews() {
   document.getElementById('wz-back2').addEventListener('click', backFromItems);
   document.getElementById('wz-prev2').addEventListener('click', backFromItems);
   document.getElementById('wz-back3').addEventListener('click', () => {
+    commitItemEdits();
     goBack(wizard && (wizard.mode === 'new' || wizard.mode === 'edit') ? 'w2' : (wizard?.returnTo || 'home'));
   });
   document.getElementById('wz-minus').addEventListener('click', () => stepWizardNumber(-1));
@@ -1382,6 +1599,7 @@ function renderUserIcons() {
     });
   }
   renderSlotPicker();
+  pvRefreshIcons();
 }
 
 function onIconAdd() {
@@ -1624,13 +1842,14 @@ function createAppIcon(cell) {
   return item;
 }
 
-function ensureFakeHomeIcons() {
-  fakeHomeEl.querySelectorAll('[data-home-grid]').forEach((grid) => {
+function ensureFakeHomeIcons(root = fakeHomeEl) {
+  root.querySelectorAll('[data-home-grid]').forEach((grid) => {
     const pageIndex = Number(grid.dataset.homeGrid);
     grid.replaceChildren(...homeDescriptors(pageIndex).map(createAppIcon));
   });
-  if (phoneDock) {
-    phoneDock.replaceChildren(...HOME_MANIFEST.dock.map((entry) => {
+  const dock = root === fakeHomeEl ? phoneDock : root.querySelector('.phone-dock');
+  if (dock) {
+    dock.replaceChildren(...HOME_MANIFEST.dock.map((entry) => {
       const app = document.createElement('span');
       app.className = 'dock-app';
       const glyph = document.createElement('img');
@@ -1642,13 +1861,123 @@ function ensureFakeHomeIcons() {
       return app;
     }));
   }
-  fakeHomeEl.dataset.ready = 'true';
+  if (root === fakeHomeEl) fakeHomeEl.dataset.ready = 'true';
 }
 
-function applyHomeStyle(options) {
-  fakeHomeEl.style.setProperty('--icon-scale', String(options.iconSize / 100));
-  fakeHomeEl.style.setProperty('--label-size', `${options.labelSize}px`);
-  fakeHomeEl.style.setProperty('--bottom-gap', `${options.bottomGap}px`);
+function applyHomeStyle(options, root = fakeHomeEl) {
+  root.style.setProperty('--icon-scale', String(options.iconSize / 100));
+  root.style.setProperty('--label-size', `${options.labelSize}px`);
+  root.style.setProperty('--bottom-gap', `${options.bottomGap}px`);
+}
+
+// ----- live preview of the home and notes screens (settings only) -----
+// A scaled copy of the real screens' markup, filled by the same icon code and styled by the same CSS and options.
+// It is inert and holds no handlers, never reads or writes the performance session, and its ids are removed.
+const PV_NOTE = { name: '샘플 목록', choice: 3, items: ['아침 산책하기', '커피 한 잔', '책 열 쪽 읽기', '점심 약속', '장보기', '저녁 요리', '일기 쓰기', '운동 30분', '빨래 널기', '내일 준비'] };
+const pvHomes = [];
+const pvNotes = [];
+let pvTick = 0;
+let pvWallpaperUrl = null;
+let pvWallpaperKey = null;
+let pvWallpaperToken = 0;
+
+function pvStage(host, markup, kind) {
+  const frame = document.createElement('div');
+  frame.className = 'fake-home-frame';
+  const clone = markup.cloneNode(true);
+  clone.removeAttribute('id');
+  clone.querySelectorAll('[id]').forEach((node) => node.removeAttribute('id'));
+  clone.querySelectorAll('[tabindex]').forEach((node) => node.removeAttribute('tabindex'));
+  clone.querySelectorAll('button').forEach((node) => { node.tabIndex = -1; });
+  clone.querySelectorAll('.digit-guide, .entry-readout').forEach((node) => node.remove());
+  clone.removeAttribute('aria-hidden');
+  frame.append(clone);
+  const home = document.createElement('div');
+  home.className = 'pv-home';
+  home.dataset.pv = kind;
+  home.append(frame);
+  const scale = document.createElement('div');
+  scale.className = 'pv-scale';
+  scale.append(home);
+  // A shadow root keeps the copy out of every document query and id lookup, so nothing in the app can find or drive it.
+  const root = host.shadowRoot || host.attachShadow({ mode: 'open' });
+  const sheet = document.createElement('link');
+  sheet.rel = 'stylesheet';
+  sheet.href = document.querySelector('link[rel="stylesheet"][href*="style.css"]')?.href || './style.css';
+  root.replaceChildren(sheet, scale);
+  host.setAttribute('aria-hidden', 'true');
+  host.inert = true;
+  return home;
+}
+
+function initPreviews() {
+  document.querySelectorAll('.pv-stage').forEach((host) => {
+    if (host.dataset.pvKind === 'home' && fakePhone) {
+      const home = pvStage(host, fakePhone, 'home');
+      home.querySelector('.phone-shell').dataset.wallpaper = 'default';
+      const wallpaper = home.querySelector('.wallpaper');
+      if (wallpaper) wallpaper.style.backgroundImage = '';
+      const time = home.querySelector('.status-time');
+      if (time) time.textContent = '12:40';
+      pvHomes.push(home);
+    } else if (host.dataset.pvKind === 'notes' && fakeNotesEl) {
+      const home = pvStage(host, fakeNotesEl, 'notes');
+      const notes = home.querySelector('.notes-landing');
+      notes.hidden = false;
+      notes.classList.add('is-detail');
+      const back = notes.querySelector('.notes-back');
+      if (back) back.hidden = false;
+      const title = notes.querySelector('h2');
+      if (title) title.textContent = PV_NOTE.name;
+      pvNotes.push(home);
+    }
+  });
+  pvRefreshIcons();
+  renderPreviews();
+}
+
+function pvRefreshIcons() {
+  pvHomes.forEach((home) => ensureFakeHomeIcons(home));
+}
+
+function renderPreviews() {
+  pvTick = 0;
+  if (!pvHomes.length && !pvNotes.length) return;
+  const options = controlOptions();
+  pvHomes.forEach((home) => applyHomeStyle(options, home));
+  pvNotes.forEach((home) => {
+    const body = home.querySelector('.notes-landing-body');
+    if (body) body.replaceChildren(buildNoteScroller(PV_NOTE.items, PV_NOTE.choice, options, { zoomable: false }));
+  });
+  pvApplyWallpaper(options);
+}
+
+function schedulePreviews() {
+  if (pvTick || (!pvHomes.length && !pvNotes.length)) return;
+  pvTick = requestAnimationFrame(renderPreviews);
+}
+
+async function pvApplyWallpaper(options) {
+  const key = options.wallpaper === 'photo' ? wallpaperKey(options) : null;
+  if (key === pvWallpaperKey) return;
+  pvWallpaperKey = key;
+  const token = ++pvWallpaperToken;
+  let url = null;
+  if (key) {
+    try {
+      const blob = await readWallpaper(key);
+      if (blob) url = URL.createObjectURL(blob);
+    } catch { /* A missing or blocked photo shows the default wallpaper. */ }
+  }
+  if (token !== pvWallpaperToken) { if (url) URL.revokeObjectURL(url); return; }
+  if (pvWallpaperUrl) URL.revokeObjectURL(pvWallpaperUrl);
+  pvWallpaperUrl = url;
+  pvHomes.forEach((home) => {
+    const wallpaper = home.querySelector('.wallpaper');
+    if (wallpaper) wallpaper.style.backgroundImage = url ? `url("${url}")` : '';
+    const shell = home.querySelector('.phone-shell');
+    if (shell) shell.dataset.wallpaper = url ? 'photo' : 'default';
+  });
 }
 
 // The wallpaper photo lives in IndexedDB on this device only and is never part of the app files.
@@ -2007,6 +2336,31 @@ function attachPinchZoom(scroller, lines) {
   scroller.addEventListener('touchend', () => { pinch = null; }, { passive: true });
 }
 
+// The numbered lines of an open list note, with the picked line emphasised; the settings preview draws the same thing.
+function buildNoteScroller(items, choice, options, { zoomable = true } = {}) {
+  const scroller = document.createElement('div');
+  scroller.className = 'notes-detail-scroll';
+  const lines = document.createElement('ol');
+  lines.className = 'notes-lines';
+  lines.style.setProperty('--note-size', `${options.noteFont}px`);
+  lines.style.setProperty('--note-leading', String(LINE_HEIGHTS[options.noteLine] || LINE_HEIGHTS.normal));
+  items.forEach((item, index) => {
+    const row = document.createElement('li');
+    const number = document.createElement('span');
+    number.className = 'notes-line-no';
+    number.textContent = String(index + 1);
+    const text = document.createElement('span');
+    text.className = 'notes-line-text';
+    text.textContent = item;
+    row.append(number, text);
+    if (index + 1 === choice) emphasisRow(row, options);
+    lines.append(row);
+  });
+  scroller.append(lines);
+  if (zoomable) attachPinchZoom(scroller, lines);
+  return scroller;
+}
+
 function renderFakeNoteDetail(note, detail) {
   if (!fakeNotesBody) return;
   const options = fakeHomeSession?.options || normalizeOptions(store.options);
@@ -2024,13 +2378,10 @@ function renderFakeNoteDetail(note, detail) {
   if (fakeNotesSearch) fakeNotesSearch.hidden = true;
   if (fakeNotesFolder) fakeNotesFolder.hidden = true;
   fakeNotesBody.replaceChildren();
-  const scroller = document.createElement('div');
-  scroller.className = 'notes-detail-scroll';
-  const lines = document.createElement('ol');
-  lines.className = 'notes-lines';
-  lines.style.setProperty('--note-size', `${options.noteFont}px`);
-  lines.style.setProperty('--note-leading', String(LINE_HEIGHTS[options.noteLine] || LINE_HEIGHTS.normal));
+  let scroller;
   if (note.kind === 'dummy') {
+    scroller = document.createElement('div');
+    scroller.className = 'notes-detail-scroll';
     const body = document.createElement('p');
     body.className = 'notes-dummy-body';
     body.textContent = note.body;
@@ -2039,20 +2390,7 @@ function renderFakeNoteDetail(note, detail) {
     scroller.append(body);
     attachPinchZoom(scroller, body);
   } else {
-    detail.items.forEach((item, index) => {
-      const row = document.createElement('li');
-      const number = document.createElement('span');
-      number.className = 'notes-line-no';
-      number.textContent = String(index + 1);
-      const text = document.createElement('span');
-      text.className = 'notes-line-text';
-      text.textContent = item;
-      row.append(number, text);
-      if (index + 1 === detail.choice) emphasisRow(row, options);
-      lines.append(row);
-    });
-    scroller.append(lines);
-    attachPinchZoom(scroller, lines);
+    scroller = buildNoteScroller(detail.items, detail.choice, options);
   }
   fakeNotesBody.append(scroller);
   fakeNotesBack?.focus();
@@ -2547,6 +2885,7 @@ renderSaved();
 renderOptions();
 userIcons = loadUserIcons(localStorage, reservedCells());
 renderUserIcons();
+initPreviews();
 renderMemoryTable();
 renderExtras();
 renderPrecheck();

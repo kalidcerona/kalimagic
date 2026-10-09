@@ -21,6 +21,11 @@ const VIBRATION_KEY = "usotsuki.detector.vibration.v1";
 const SWIPE_DOWN_PX = 96;
 const READY_FEEDBACK_MS = 600;
 const READY_HAPTIC_MS = { medium: 18, high: 28, max: 38 };
+// Pre-verdict sound dip, matched to recorder A: 420 ms of silence plus the 46 ms
+// to the first typebar strike. The verdict cue starts 60 ms after the release,
+// so the scan tone is silent for the last 406 ms (after a 35 ms fade).
+const SCAN_DIP_MS = 406;
+const SCAN_DIP_FADE_MS = 35;
 const STAGE_CLASSES = ["is-testing", "is-lie", "is-true", "is-cancelled"];
 
 // Entropy supplies the drawing; the approved lie reaction begins only at 75%.
@@ -363,13 +368,28 @@ function applyVibrationCapability() {
   }
 }
 
-function stopVibration() {
+let vibrationRecheckTimers = [];
+function clearVibrationRecheck() {
+  vibrationRecheckTimers.forEach((id) => window.clearTimeout(id));
+  vibrationRecheckTimers = [];
+}
+
+function cancelVibration() {
   try {
     if (typeof navigator.vibrate === "function") navigator.vibrate(0);
   } catch { /* Haptics are optional. */ }
 }
 
+function stopVibration() {
+  clearVibrationRecheck();
+  cancelVibration();
+  // Android can drop a cancel that races the vibration it cancels (reported on a
+  // Galaxy S25 Ultra); repeat it shortly after. A new start clears these first.
+  vibrationRecheckTimers = [60, 180].map((ms) => window.setTimeout(cancelVibration, ms));
+}
+
 function startVibration(durationMs) {
+  clearVibrationRecheck();
   if (typeof navigator.vibrate !== "function" || vibrationInput.value === "off") return;
   try {
     const pulse = { medium: [100, 100], high: [150, 50] }[vibrationInput.value];
@@ -615,6 +635,7 @@ function showReadyFeedback() {
   testIndicator.textContent = "준비완료";
   presentInk(testIndicator);
   const pulseMs = READY_HAPTIC_MS[vibrationInput.value];
+  clearVibrationRecheck();
   if (pulseMs && typeof navigator.vibrate === "function") {
     try { navigator.vibrate(pulseMs); } catch { /* Visual feedback remains available. */ }
   }
@@ -805,6 +826,12 @@ function startScanningSound() {
     oscillator.frequency.linearRampToValueAtTime(226, now + activeScanDurationMs / 1000 * 0.925);
     gain.gain.setValueAtTime(0.0001, now);
     gain.gain.exponentialRampToValueAtTime(0.17, now + 0.08);
+    const remainingS = (activeScanDurationMs - (performance.now() - hold.startedAt)) / 1000;
+    const dipFadeStart = now + remainingS - (SCAN_DIP_MS + SCAN_DIP_FADE_MS) / 1000;
+    if (dipFadeStart > now + 0.4) {
+      gain.gain.setValueAtTime(0.17, dipFadeStart);
+      gain.gain.exponentialRampToValueAtTime(0.0001, dipFadeStart + SCAN_DIP_FADE_MS / 1000);
+    }
     oscillator.connect(gain);
     gain.connect(ctx.destination);
     oscillator.onended = () => {
@@ -1154,6 +1181,10 @@ function bind() {
   performanceScreen.addEventListener("touchend", refreshHapticPreparation, { passive: true });
   performanceScreen.addEventListener("touchstart", unlockFromGesture, { passive: true });
   performanceScreen.addEventListener("touchend", unlockFromGesture, { passive: true });
+  // Independent of pointer events: once no finger is down, nothing may vibrate.
+  const stopWhenAllLifted = (event) => { if (!event.touches || event.touches.length === 0) stopVibration(); };
+  performanceScreen.addEventListener("touchend", stopWhenAllLifted, { passive: true });
+  performanceScreen.addEventListener("touchcancel", stopWhenAllLifted, { passive: true });
   performanceScreen.addEventListener("click", unlockFromGesture);
   performanceScreen.addEventListener("pointerdown", onPointerDown, { passive: false });
   performanceScreen.addEventListener("pointermove", onPointerMove);
