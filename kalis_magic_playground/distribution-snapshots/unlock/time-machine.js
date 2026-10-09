@@ -67,3 +67,7 @@ export function isSettingsSwipe(start, current) {
 export function horizontalPeekOffset(startX, currentX, width) {
   return Math.max(-width, Math.min(0, currentX - startX));
 }
+
+export function unlockDragTarget(distance, velocity, height) {
+  return distance / height >= .28 || (distance >= 24 && velocity >= .45);
+}

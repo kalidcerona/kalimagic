@@ -35,9 +35,9 @@ test('personal and shared unlock use different persistent storage identities', (
   assert.equal(logic.storageIdentityForPath('/tools/unlock/').personal, false);
 });
 
-test('personal unlock always enables emergency time machine while shared unlock keeps its choice', () => {
+test('personal and shared RELEASE always enable the same rewind entry', () => {
   assert.equal(logic.normalizeSettings({ performance: 'pin' }, true).performance, 'time-machine');
-  assert.equal(logic.normalizeSettings({ performance: 'pin' }, false).performance, 'pin');
+  assert.equal(logic.normalizeSettings({ performance: 'pin' }, false).performance, 'time-machine');
 });
 
 test('iPhone PIN prompt stays concise while Galaxy keeps its native wording', () => {
@@ -103,5 +103,5 @@ test('RELEASE snapshot reveals home2 immediately and clears gestures safely', ()
   assert.match(script, /\$\('reveal-attempt-field'\)\.hidden = false;/);
   assert.match(script, /\$\('reveal-attempt'\)\.disabled = false;/);
   const sw = readFileSync(new URL('../../distribution-snapshots/unlock/sw.js', import.meta.url), 'utf8');
-  assert.ok(sw.includes('v20261008-home-gesture-parity-1'));
+  assert.ok(sw.includes('v20261009-rewind-status-cover-3'));
 });

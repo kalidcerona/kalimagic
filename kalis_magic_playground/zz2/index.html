@@ -151,7 +151,7 @@
     .galaxy #emergency { width: 114px; height: 44px; padding: 3.5px 0; color: #2b1a14; font-size: 15px; font-weight: 500; }
     .galaxy #emergency span { display: grid; place-items: center; width: 114px; height: 37px; border-radius: 999px; background: #F2A28C; }
     .galaxy #delete { display: none; }
-    #input-screen.unlocking-out { pointer-events: none; animation: lock-out 440ms cubic-bezier(.32, .72, 0, 1) both; }
+    #input-screen, #time-lock { will-change: transform, opacity; }
     #unlocked-screen { z-index: 2; background: #111; touch-action: none; will-change: transform, opacity; }
     #home-track { position: absolute; inset: 0; width: 100%; height: 100%; transform: translate3d(0,0,0); transition: transform 420ms cubic-bezier(.2,.8,.2,1); will-change: transform; }
     .home-page { position: absolute; top: 0; width: 100%; height: 100%; overflow: hidden; }
@@ -162,9 +162,7 @@
     #reveal-label { color: #f3f4f8e0; font-size: 14px; font-weight: 500; }
     #reveal-number { margin-top: 18px; font-size: clamp(46px, 12vw, 68px); line-height: 1.08; font-weight: 600; letter-spacing: .025em; overflow-wrap: anywhere; }
     .reveal-detail { margin-top: 13px; color: #f3f4f8e0; font-size: 15px; }
-    #unlocked-screen.unlocking { animation: unlock-in 440ms cubic-bezier(.32, .72, 0, 1) both; }
-    @keyframes lock-out { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(.965); } }
-    @keyframes unlock-in { from { opacity: 0; transform: scale(1.045); } to { opacity: 1; transform: scale(1); } }
+    /* Unlock motion is shared by PIN success and interactive rewind-lock drag. */
     #unlocked-screen.returning { transition: transform 520ms cubic-bezier(.2, 1.35, .35, 1); }
     #peek-screen { z-index: 1; background: #0b0c10; padding: 28px 24px max(24px, env(safe-area-inset-bottom)); display: flex; flex-direction: column; justify-content: flex-end; }
     #peek-screen.side-peek { text-align: right; }
@@ -426,7 +424,7 @@
   <script type="module">
     import { FINGERPRINT_HOLD_MS, normalizeSettings, storageIdentityForPath, selectedAttemptReveal, latestBirthdateAttempt, homeSwipeTarget, completeHomeSwipe, lockScreenCopy, createState, pushDigit, submitPin, fingerprintHold, attemptFeedback, feedbackVibration, deleteDigit, clearCurrent, toggleDigits, reset, isHomeGestureArea, peekOffset, registerTwoFingerTap, settleTwoFingerTaps, registerLockTap, formatAttemptLabel } from './logic.js';
 
-    import { hiddenDigit, appendMinuteDigit, registerEmergencyTap, timeMachineClock, isSettingsSwipe, horizontalPeekOffset } from './time-machine.js';
+    import { hiddenDigit, appendMinuteDigit, registerEmergencyTap, timeMachineClock, isSettingsSwipe, horizontalPeekOffset, unlockDragTarget } from './time-machine.js';
 
     const $ = (id) => document.getElementById(id);
     const SETTINGS_TUTORIAL_KEY = "unlock-settings-entry-tutorial-v1";
@@ -446,10 +444,10 @@
       if (group) group.open = true;
     }, true);
     const SETTINGS_KEY = STORAGE.settingsKey;
-    const UNLOCK_ANIMATION_MS = 440;
+    const UNLOCK_ANIMATION_MS = 520;
     document.body.classList.toggle('personal-home', STORAGE.personal);
-    $('performance-heading').textContent = STORAGE.personal ? '리와인드' : '연출';
-    $('performance-field').hidden = STORAGE.personal;
+    $('performance-heading').textContent = '리와인드';
+    $('performance-field').hidden = true;
     $('home2-field').hidden = !STORAGE.personal;
     $('home2-preview-item').hidden = !STORAGE.personal;
     $('reveal-attempt-field').hidden = !STORAGE.personal;
@@ -655,7 +653,9 @@
     function showScreen(next, animate = false) {
       clearTimeout(unlockTimer);
       screen = next;
+      if (next !== 'time-black' && next !== 'time-lock') applyAppearance(settings);
       cancelAnimationFrame(timeFrame);
+      cancelUnlockMotion();
       timePointer = null;
       timeLastTap = null;
       emergencyLastTap = null;
@@ -669,7 +669,7 @@
       $('settings-screen').hidden = next !== 'settings';
       $('input-screen').classList.remove('unlocking-out');
       $('unlocked-screen').classList.remove('unlocking');
-      $('unlocked-screen').style.transform = 'translateY(0px)';
+      $('unlocked-screen').style.transform = '';
       swipe = null;
       cancelReveal();
       if (next === 'input') renderInput();
@@ -679,16 +679,7 @@
         setHomePage('home1', false);
         requestAnimationFrame(() => { $('home-track').style.transition = ''; });
         if (animate) {
-          void $('unlocked-screen').offsetWidth;
-          $('input-screen').classList.add('unlocking-out');
-          $('unlocked-screen').classList.add('unlocking');
-          unlockTimer = setTimeout(() => {
-            $('input-screen').hidden = true;
-            $('peek-screen').hidden = false;
-            $('input-screen').classList.remove('unlocking-out');
-            $('unlocked-screen').classList.remove('unlocking');
-            clearFeedback();
-          }, UNLOCK_ANIMATION_MS);
+          settleUnlockMotion($('input-screen'), 0, true);
         }
       }
       if (next === 'settings') { $('settings-entry-tutorial').hidden = true; populateForm(); $('settings-screen').scrollTop = 0; }
@@ -773,14 +764,25 @@
       renderInput();
     }
     $('delete').addEventListener('click', removeDigit);
+    function enterRewindStatusCover() {
+      // Match the personal black safe-area paint and default status text at rewind entry.
+      // The OS owns status-bar glyphs; CSS cannot draw over them.
+      document.documentElement.style.setProperty('--status-color', '#000000');
+      document.querySelector('meta[name="theme-color"]').content = '#000000';
+      document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]').content = 'default';
+
+    }
+
     $('emergency').addEventListener('click', (event) => {
       if (screen !== 'input' || settings.performance !== 'time-machine') return;
       const result = registerEmergencyTap(emergencyLastTap, performance.now());
       emergencyLastTap = result.lastTap;
       if (result.enter) {
+        enterRewindStatusCover();
         timeDigits = [];
         timeMinutes = 0;
         timeTriggeredAt = null;
+        timeTriggeredWallAt = null;
         showScreen('time-black');
       }
     });
@@ -876,6 +878,7 @@
         timeSuppressUntil = performance.now() + 800;
         event.preventDefault();
         returnSwipe();
+        interruptUnlockMotion();
         tapCandidate = {
           startedAt: performance.now(), valid: true,
           points: Array.from(event.touches, (t) => ({ id: t.identifier, x: t.clientX, y: t.clientY })),
@@ -1001,7 +1004,7 @@
     }
 
     function updateUnlockControls() {
-      $('time-options').hidden = !STORAGE.personal && $('performance').value !== 'time-machine';
+      $('time-options').hidden = false;
       const attemptMode = $('unlock-mode').value === 'attempt';
       $('delay-field').hidden = attemptMode;
       $('attempt-field').hidden = !attemptMode;
@@ -1253,6 +1256,118 @@
       timeFrame = requestAnimationFrame(renderTimeMachine);
     }
 
+    // One geometry read at drag start; all frames update compositor properties only.
+    let unlockDrag = null;
+    let unlockAnimations = [];
+    function cancelUnlockMotion() {
+      clearTimeout(unlockTimer);
+      unlockTimer = null;
+      if (unlockDrag && $('time-lock').hasPointerCapture(unlockDrag.id)) {
+        $('time-lock').releasePointerCapture(unlockDrag.id);
+      }
+      unlockDrag = null;
+      for (const animation of unlockAnimations) animation.cancel();
+      unlockAnimations = [];
+      for (const id of ['input-screen', 'time-lock', 'unlocked-screen']) {
+        const element = $(id);
+        element.style.transform = '';
+        element.style.opacity = '';
+        element.style.pointerEvents = '';
+      }
+      $('time-face').style.opacity = '';
+      if (screen !== 'unlocked') $('unlocked-screen').hidden = true;
+    }
+    function unlockPose(distance, height) {
+      const progress = Math.min(1, distance / height);
+      return { lock: `translate3d(0,${-distance}px,0)`,
+        home: `translate3d(0,${(1-progress)*28}px,0) scale(${.96+.04*progress})`,
+        opacity: String(1-progress*.8), homeOpacity: String(.7+.3*progress) };
+    }
+    function settleUnlockMotion(lock, distance, complete, height = window.innerHeight) {
+      const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const start = unlockPose(distance, height);
+      const end = unlockPose(complete ? height : 0, height);
+      const options = {duration: reduced ? 0 : UNLOCK_ANIMATION_MS,
+        easing: complete ? 'cubic-bezier(.22,.82,.18,1)' : 'cubic-bezier(.2,1.25,.35,1)', fill: 'both'};
+      lock.style.pointerEvents = 'none';
+      $('unlocked-screen').style.pointerEvents = 'none';
+      unlockAnimations = [
+        lock.animate([{transform:start.lock,opacity:start.opacity}, {transform:end.lock,opacity:complete?'0':'1'}], options),
+        $('unlocked-screen').animate([{transform:start.home,opacity:start.homeOpacity}, {transform:end.home,opacity:complete?'1':'.7'}], options),
+      ];
+      const finish = () => {
+        lock.style.pointerEvents = '';
+        cancelUnlockMotion();
+        if (complete) {
+          lock.hidden = true;
+          $('unlocked-screen').hidden = false;
+          $('peek-screen').hidden = false;
+          clearFeedback();
+        } else $('unlocked-screen').hidden = true;
+      };
+      unlockTimer = setTimeout(finish, options.duration);
+    }
+    const rewindLock = $('time-lock');
+    rewindLock.addEventListener('pointerdown', (event) => {
+      if (screen !== 'time-lock' || !event.isPrimary || performance.now() < timeSuppressUntil) return;
+      unlockDrag = {id:event.pointerId,y:event.clientY,distance:0,height:rewindLock.getBoundingClientRect().height,
+        samples:[{y:event.clientY,at:performance.now()}],active:false};
+    });
+    rewindLock.addEventListener('pointermove', (event) => {
+      const drag = unlockDrag;
+      if (!drag || drag.id !== event.pointerId) return;
+      drag.distance = Math.max(0, drag.y-event.clientY);
+      if (!drag.active && drag.distance < 12) return;
+      drag.active = true;
+      timePointer = null;
+      timeLastTap = null;
+      rewindLock.setPointerCapture(event.pointerId);
+      const now = performance.now();
+      drag.samples.push({y:event.clientY,at:now});
+      drag.samples = drag.samples.filter((sample) => now-sample.at <= 80);
+      const pose = unlockPose(drag.distance, drag.height);
+      $('unlocked-screen').hidden = false;
+      rewindLock.style.transform = pose.lock;
+      $('time-face').style.opacity = pose.opacity;
+      $('unlocked-screen').style.transform = pose.home;
+      $('unlocked-screen').style.opacity = pose.homeOpacity;
+    });
+    function finishUnlockDrag(event, cancelled = false) {
+      const drag = unlockDrag;
+      if (!drag || drag.id !== event.pointerId) return;
+      unlockDrag = null;
+      if (!drag.active) return;
+      if (rewindLock.hasPointerCapture(event.pointerId)) rewindLock.releasePointerCapture(event.pointerId);
+      const sample = drag.samples[0];
+      const velocity = (sample.y-event.clientY)/Math.max(1,performance.now()-sample.at);
+      const complete = !cancelled && unlockDragTarget(drag.distance,velocity,drag.height);
+      if (complete) {
+        screen = 'unlocked';
+          cancelAnimationFrame(timeFrame);
+        state = {...state, unlocked:true};
+        renderAttempts();
+        setHomePage('home1',false);
+      }
+      settleUnlockMotion(rewindLock,drag.distance,complete,drag.height);
+    }
+    rewindLock.addEventListener('pointerup', (event) => finishUnlockDrag(event));
+    rewindLock.addEventListener('pointercancel', (event) => finishUnlockDrag(event,true));
+    function interruptUnlockMotion() {
+      if (unlockDrag || unlockAnimations.length) {
+        clearTimeout(unlockTimer);
+        cancelUnlockMotion();
+        showScreen(screen);
+      }
+    }
+    // Resolve the current logical screen before another gesture or viewport takes over.
+    document.addEventListener('pointerdown', interruptUnlockMotion, {capture:true});
+    window.addEventListener('resize', interruptUnlockMotion);
+    window.addEventListener('orientationchange', interruptUnlockMotion);
+    window.addEventListener('blur', interruptUnlockMotion);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') interruptUnlockMotion();
+    });
+
     for (const id of ['time-black', 'time-lock']) {
       $(id).addEventListener('pointerdown', (event) => {
         if (!event.isPrimary || performance.now() < timeSuppressUntil) { timePointer = null; return; }
@@ -1271,7 +1386,7 @@
           const entry = appendMinuteDigit(timeDigits, digit);
           timeDigits = entry.digits;
           if (entry.minutes === null) return;
-          timeMinutes = entry.minutes; timeTriggeredAt = null;
+          timeMinutes = entry.minutes; timeTriggeredAt = null; timeTriggeredWallAt = null;
           showScreen('time-lock');
         } else if (screen === 'time-lock' && timeTriggeredAt === null) {
           const now = performance.now();

@@ -4,7 +4,7 @@ export function normalizeSettings(value = {}, personal = false) {
     return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : fallback;
   };
   return {
-    performance: personal || value.performance === 'time-machine' ? 'time-machine' : 'pin',
+    performance: 'time-machine',
     timeDelay: number('timeDelay', 3, 0, 60),
     timeDuration: number('timeDuration', 8, 1, 60),
     style: value.style === 'galaxy' ? 'galaxy' : 'ios',

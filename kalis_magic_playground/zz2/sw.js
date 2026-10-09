@@ -1,6 +1,6 @@
 // Cache only the explicit app shell. API, authentication and user data stay on the network.
 const CACHE_PREFIX = 'unlock-shell-' + encodeURIComponent(self.registration.scope) + '-';
-const CACHE_NAME = CACHE_PREFIX + 'v20261004-first-guide-1';
+const CACHE_NAME = CACHE_PREFIX + 'v20261009-rewind-status-cover-3';
 const SHELL = [
   "./settings-ui.js",
   "./settings-ui.css",
