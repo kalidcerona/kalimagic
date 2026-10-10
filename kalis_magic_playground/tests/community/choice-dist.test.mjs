@@ -27,7 +27,7 @@ function normalize(file, bytes) {
   let source = bytes.toString();
   if (file === 'app.js' || file === 'logic.js') source = source.replaceAll('magic-choice-dist.', 'magic-choice.');
   if (file === 'app.js' || file === 'sw.js' || file === 'index.html') source = source.replaceAll('choice-dist-shell-', 'choice-shell-');
-  if (file === 'sw.js') source = source.replace('ready-1-distribution\';', 'ready-1\';');
+  if (file === 'sw.js') source = source.replace('ready-1-nostatus-1-distribution\';', 'ready-1-nostatus-1\';');
   if (file === 'manifest.webmanifest') source = source.replace('"id": "./"', '"id": "./choice"');
   return Buffer.from(source);
 }

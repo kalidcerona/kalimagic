@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile, readdir, stat } from 'node:fs/promises';
 import vm from 'node:vm';
+import * as core from '../../zz14/core.mjs';
 import { PIMAX_FILES, PUBLIC_DIRS, MIRROR_PAIRS, DISTRIBUTION_APPS, shouldCopyPimax, preparePimaxRuntime, transformDistributionDocument } from '../../scripts/build-public.mjs';
 import gate, { classifyPath } from '../../netlify/edge-functions/tools-gate.mjs';
 import { gateCookieName, signGateCookie } from '../../netlify/functions/_lib/tool-gate.mjs';
@@ -10,6 +11,47 @@ import { accessTableForTool, isValidTool } from '../../netlify/functions/admin-t
 const read = (route, file) => readFile(new URL(`../../${route}/${file}`, import.meta.url));
 const personal = 'zz14';
 const shared = 'distribution-snapshots/pimax';
+
+test('revealed map answers draw the look-alike and plain symbol in both directions', async () => {
+  for (const route of [personal, shared]) {
+    const source = (await read(route, 'app.mjs')).toString()
+      .replace(/^import\s+\{([\s\S]*?)\}\s+from "\.\/core\.mjs";/, 'const {$1} = globalThis.__core;');
+    const context = vm.createContext({ __core: core, Date, Math, JSON });
+    vm.runInContext(source + '\nglobalThis.quiz = { state, practiceHtml, onClick };', context);
+    const { state, practiceHtml, onClick } = context.quiz;
+    // Exercise the actual tap handler and rendered button without booting a browser.
+    const app = { innerHTML: '', setAttribute() {}, removeAttribute() {} };
+    context.document = {
+      body: { dataset: {} },
+      querySelector: selector => selector === '#app' ? app : selector === '#notice' ? {} : null,
+      querySelectorAll: () => [],
+    };
+    context.localStorage = { setItem() {} };
+    for (const kind of ['digit', 'letter']) {
+      state.session = core.buildSession({ mode: 'map', count: 5, seed: 2,
+        mapSymbols: [{ kind, symbol: kind === 'digit' ? '2' : 'N' }] });
+      assert.doesNotMatch(practiceHtml(), /class="map-answer-pictures"/);
+      const tap = () => onClick({ target: { closest: () => ({ dataset: { action: 'tap' } }) } });
+      tap();
+      const html = practiceHtml();
+      const button = html.match(/<button[^>]*data-action="tap"[^>]*>([\s\S]*?)<\/button>/)[1];
+      const glyphs = [...button.matchAll(/<svg class="ink-glyph"[\s\S]*?<\/svg>/g)].map(m => m[0]);
+      assert.equal(glyphs.length, 2);
+      const path = kind === 'digit' ? 'M9 10v28M27 10v28M9 10L27 38' : 'M8 15h18L10 38h18';
+      assert.ok(glyphs[0].includes(`transform="rotate(${kind === 'digit' ? '90' : '-90'} 18 24)"`));
+      for (const glyph of glyphs) {
+        assert.ok(glyph.includes(`d="${path}"`));
+        assert.ok(glyph.includes('aria-hidden="true"'));
+      }
+      assert.doesNotMatch(glyphs[1], /transform=/);
+      assert.ok(button.includes(`<span class="map-answer-text">${kind === 'digit' ? 'N' : '2'}</span>`));
+      assert.equal(state.session.index, 0);
+      tap();
+      assert.equal(state.session.index, 1);
+      assert.doesNotMatch(practiceHtml(), /class="map-answer-pictures"/);
+    }
+  }
+});
 
 test('Pi Max has explicit runtime allowlists and source mirror checks', () => {
   assert.equal(PIMAX_FILES.length, 9);
@@ -43,7 +85,7 @@ test('Pi Max pinned snapshot excludes development controls and isolates three st
       const normalized = d.toString().replaceAll('pimax.distribution.settings', 'pimax-practice-settings').replaceAll('pimax.distribution.stats', 'pimax-practice-stats').replaceAll('pimax.distribution.session', 'pimax-practice-session');
       assert.equal(normalized, preparePimaxRuntime(p.toString()));
     } else if (file === 'sw.js') {
-      assert.equal(d.toString().replace('v20261005-7-coherent-1-compat-1-distribution', 'v20261005-7-coherent-1-compat-1'), p.toString());
+      assert.equal(d.toString().replace('v20261005-7-coherent-1-compat-1-mapimg-1-distribution', 'v20261005-7-coherent-1-compat-1-mapimg-1'), p.toString());
     } else assert.deepEqual(d, p, file);
   }
 });

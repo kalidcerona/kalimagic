@@ -474,6 +474,11 @@ main[data-product-settings] { max-width: 560px; margin-inline: auto; }
   text-align: center;
 }
 
+.blind-answer.map-answer { flex-direction: column; gap: 4px; padding: 8px; }
+.map-answer-pictures { display: flex; align-items: center; justify-content: center; gap: 36px; }
+.map-answer-pictures .ink-glyph { width: 54px; height: 72px; flex: 0 0 54px; }
+.map-answer-text { font-size: 20px; line-height: 1.2; }
+
 .blind-answer:disabled { opacity: 1; color: var(--text, #eee9da); }
 
 .quiz-status {

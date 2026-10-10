@@ -1191,7 +1191,7 @@ test('visible check view updates readiness when artwork warm-up finishes', async
   const urls = manifest.manifestFiles().map((file) => new URL(manifest.iconSrc(file), scope).href);
   const prefix = 'choice-shell-' + encodeURIComponent(scope) + '-';
   const stored = new Set();
-  const stores = new Map([[prefix + 'v20261010-choice-perf-1-coherent-1-compat-1-wake-1-ready-1', stored]]);
+  const stores = new Map([[prefix + 'v20261010-choice-perf-1-coherent-1-compat-1-wake-1-ready-1-nostatus-1', stored]]);
   const pendingFetches = [];
   let resolveReady = () => {};
   const ready = new Promise((resolve) => { resolveReady = resolve; });

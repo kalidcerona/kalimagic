@@ -123,7 +123,6 @@ const fakeNotesSearch = fakeHomeEl?.querySelector('.notes-search');
 const fakeNotesFolder = fakeHomeEl?.querySelector('.notes-folder-row');
 const fakeHomeDots = fakeHomeEl?.querySelector('.home-dots');
 const fakePhone = fakeHomeEl?.querySelector('#fake-phone');
-const fakeStatus = fakeHomeEl?.querySelector('.phone-status');
 const entryReadout = document.getElementById('entry-readout');
 const optStartMode = document.getElementById('opt-start-mode');
 const optDisplay = document.getElementById('opt-display');
@@ -142,7 +141,6 @@ const noteSample = document.getElementById('note-style-sample');
 const fakeNotesHome = document.getElementById('fake-notes-home');
 const fakeWallpaper = document.getElementById('fake-wallpaper');
 const phoneDock = document.getElementById('phone-dock');
-const statusTime = document.getElementById('status-time');
 const editorWarnings = document.getElementById('editor-warnings');
 const editorPreview = document.getElementById('editor-preview');
 
@@ -183,7 +181,6 @@ let realHomeIconStamp;
 let resetTaps = null;
 let cornerDown = null;
 let wallpaperUrl = null;
-let statusClock = 0;
 
 function setEditorMessage(text) {
   editorMessage.textContent = text || '';
@@ -2301,8 +2298,6 @@ function initPreviews() {
       home.querySelector('.phone-shell').dataset.wallpaper = 'default';
       const wallpaper = home.querySelector('.wallpaper');
       if (wallpaper) wallpaper.style.backgroundImage = '';
-      const time = home.querySelector('.status-time');
-      if (time) time.textContent = '12:40';
       pvHomes.push(home);
     } else if (host.dataset.pvKind === 'notes' && fakeNotesEl) {
       const home = pvStage(host, fakeNotesEl, 'notes');
@@ -2529,12 +2524,6 @@ function loadImageFile(file) {
 
 function canvasBlob(canvas, type, quality) {
   return new Promise((resolve) => canvas.toBlob(resolve, type, quality));
-}
-
-function updateStatusTime() {
-  if (!statusTime) return;
-  const now = new Date();
-  statusTime.textContent = `${now.getHours() % 12 || 12}:${String(now.getMinutes()).padStart(2, '0')}`;
 }
 
 function isInputGuideEnabled() {
@@ -2989,9 +2978,6 @@ function openFakeHome(notes) {
   applyHomeStyle(fakeHomeSession.options);
   fakeHomeEl.classList.remove('is-notes');
   fakeNotesEl.hidden = true;
-  updateStatusTime();
-  clearInterval(statusClock);
-  statusClock = setInterval(updateStatusTime, 20000);
   syncFakeHomeSurface();
   settingsEl.hidden = true;
   fakeHomeEl.hidden = false;
@@ -3010,8 +2996,6 @@ function closeFakeHome() {
   fakeHomeSession = null;
   fakeHomeGesture = null;
   resetTaps = null;
-  clearInterval(statusClock);
-  statusClock = 0;
   releaseWallpaper();
   endPeek();
   clearFakeNotesView();
@@ -3099,7 +3083,6 @@ function showStartProblem(problem, { scroll = true } = {}) {
 
 // Anything unexpected while opening the fake home leaves the settings screen usable and says what happened.
 function abortStart(error) {
-  try { clearInterval(statusClock); } catch { /* Nothing to stop. */ }
   fakeHomeSession = null;
   fakeHomeGesture = null;
   if (fakeHomeEl) fakeHomeEl.hidden = true;
@@ -3192,8 +3175,8 @@ function onFakeHomePointerDown(event) {
         event.clientX,
         event.clientY
       );
-    } else if (fakePhone?.contains(event.target) && !fakeStatus?.contains(event.target) && !fakeHomeDots?.contains(event.target)) {
-      // Wallpaper and dock count as 0, like the dummy icons. The page dots and status bar do not.
+    } else if (fakePhone?.contains(event.target) && !fakeHomeDots?.contains(event.target)) {
+      // Wallpaper and dock count as 0, like the dummy icons. The page dots do not.
       digit = 0;
     } else return;
   } else if (fakeHomeSession.page !== 'notes' || fakeHomeSession.numberLocked || !fakeNotesEl.contains(event.target)) {
@@ -3211,15 +3194,12 @@ function onFakeHomePointerDown(event) {
   };
 }
 
-// The reset zone is the top right corner, where the status bar sits. It never takes digits.
+// The reset zone is the top right corner above the icon grid. It never takes digits.
 function inResetCorner(event) {
   const frame = fakeHomeEl.querySelector('.fake-home-frame');
   if (!frame) return false;
   const rect = frame.getBoundingClientRect();
-  let height = 40;
-  if (fakeHomeSession.page !== 'notes' && fakeStatus) {
-    height = Math.min(height, Math.max(24, fakeStatus.getBoundingClientRect().bottom - rect.top));
-  }
+  const height = 40;
   return event.clientX >= rect.right - rect.width * 0.32 && event.clientX <= rect.right
     && event.clientY >= rect.top && event.clientY <= rect.top + height;
 }

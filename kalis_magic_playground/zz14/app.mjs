@@ -498,6 +498,10 @@ function practiceHtml() {
     const markedWeak = isWeakMarked(question);
     const bigClass = ["big", question.public.bigClass || ""].filter(Boolean).join(" ");
     const answerText = showAnswer ? esc(canonicalAnswerText(question).replaceAll("|", " / ")) : "?";
+    const mapPictures = showAnswer && question.answer.type === "map"
+      ? `<span class="map-answer-pictures">${inkGlyph(question.answer.letter, question.answer.kind === "digit" ? "letter-digit" : "digit-letter")}${inkGlyph(question.answer.letter, question.answer.kind === "digit" ? "letter" : "digit")}</span>`
+      : "";
+    const answerContent = mapPictures ? `${mapPictures}<span class="map-answer-text">${answerText}</span>` : answerText;
     const answerName = showAnswer ? "" : ` aria-label="탭해서 답 확인"`;
     body = `<article class="practice-card">
       <p class="kicker">${esc(question.public.kicker)}</p>
@@ -505,7 +509,7 @@ function practiceHtml() {
       <p class="caption">${esc(question.public.note.replaceAll("입력합니다", "떠올립니다").replaceAll("다시 쓰지 않습니다", "포함하지 않습니다"))}</p>
     </article>
     <div class="quiz-actions">
-      <button type="button" class="blind-answer" data-action="tap"${answerName}>${answerText}</button>
+      <button type="button" class="blind-answer${mapPictures ? " map-answer" : ""}" data-action="tap"${answerName}>${answerContent}</button>
       <p class="quiz-status">${showAnswer ? "한 번 더 탭하면 다음" : ""}</p>
       <button type="button" data-action="weak-toggle" aria-pressed="${markedWeak ? "true" : "false"}" class="weak-toggle">약점</button>
       <button type="button" data-action="new-session">새 회차</button>

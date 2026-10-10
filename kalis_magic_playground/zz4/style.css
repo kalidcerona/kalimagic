@@ -551,39 +551,12 @@ dialog::backdrop { background: rgba(43, 16, 20, 0.46); }
   z-index: 2;
 }
 
-.phone-status {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  min-height: 38px;
-  padding:
-    max(0px, env(safe-area-inset-top))
-    max(16px, env(safe-area-inset-right))
-    0
-    max(16px, env(safe-area-inset-left));
-  font-size: 15px;
-}
-.status-left,
-.status-right { display: inline-flex; align-items: center; gap: 6px; }
-.status-time { font-weight: 700; letter-spacing: 0.01em; }
-.status-glyph { display: inline-block; width: 13px; height: 13px; border-radius: 50%; background: #fff; opacity: 0.85; }
-.status-glyph.g2 { border-radius: 4px; background: #c9b7f7; opacity: 1; }
-.batt-pill {
-  padding: 0 6px;
-  border-radius: 9px;
-  background: #fff;
-  color: #2b2a35;
-  font-size: 13px;
-  font-weight: 700;
-  line-height: 18px;
-}
-
 .home-viewport {
   flex: 1;
   min-height: 0;
   overflow: hidden;
-  /* Proportions measured on a 412x891 phone: the first icon row starts about 79px down. */
-  padding-top: 4.6cqh;
+  /* Leave comfortable space below the real status bar without drawing a second one. */
+  padding-top: max(6cqh, calc(env(safe-area-inset-top) + 16px));
   padding-bottom: var(--bottom-gap);
 }
 
@@ -965,8 +938,7 @@ dialog::backdrop { background: rgba(43, 16, 20, 0.46); }
     width: min(460px, 100%);
     height: 100dvh;
   }
-  .phone-status { min-height: 22px; font-size: 13px; padding-top: max(4px, env(safe-area-inset-top)); }
-  .home-viewport { padding-top: 0; }
+  .home-viewport { padding-top: max(8px, env(safe-area-inset-top)); }
   .icon-grid { height: 100%; }
   .dock-glyph { width: min(9cqh, 40px); height: min(9cqh, 40px); }
   .phone-dock { margin-bottom: 4px; }
@@ -1378,8 +1350,7 @@ body[data-view="settings"] { background: #1a1512; }
 @media (max-height: 700px) { #settings .deco-live .sv-pvcard { position: static; } }
 #adv-pv-notes { --pv-s: 0.5; }
 @media (orientation: landscape) {
-  .pv-home .phone-status { min-height: 38px; font-size: 15px; padding-top: 0; }
-  .pv-home .home-viewport { padding-top: 4.6cqh; }
+  .pv-home .home-viewport { padding-top: max(6cqh, calc(env(safe-area-inset-top) + 16px)); }
   .pv-home .icon-grid { height: min(100%, 70.7cqh); }
   .pv-home .dock-glyph { width: min(13.8cqw, 9.5cqh); height: min(13.8cqw, 9.5cqh); }
   .pv-home .phone-dock { margin-bottom: 3.4cqh; }

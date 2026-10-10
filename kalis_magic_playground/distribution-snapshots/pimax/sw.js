@@ -1,6 +1,6 @@
 // Cache only the explicit app shell. API, authentication and user data stay on the network.
 const CACHE_PREFIX = 'pimax-practice-';
-const CACHE_NAME = CACHE_PREFIX + 'v20261005-7-coherent-1-compat-1-distribution';
+const CACHE_NAME = CACHE_PREFIX + 'v20261005-7-coherent-1-compat-1-mapimg-1-distribution';
 const SHELL = [
   "./index.html",
   "./style.css",
