@@ -29,6 +29,10 @@
   *, *::before, *::after { box-sizing:border-box; }
   body { background:var(--bg); color:var(--ink); font-family:'Pretendard','Apple SD Gothic Neo','Noto Sans KR',sans-serif; font-size:16px; word-break:keep-all; overflow-wrap:break-word; -webkit-font-smoothing:antialiased; line-height:1.6; overflow-x:hidden; }
   img { display:block; max-width:100%; height:auto; }
+  .sponsor-logo { width:120px; max-width:100%; padding:8px; background:#000; border-radius:10px; }
+  .sponsor-logo img { width:100%; height:auto; }
+  .sponsor-strip { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:10px 16px; padding:18px 0 28px; border-top:1px solid var(--chip); color:var(--muted); font-size:13px; }
+  .sponsor-strip p { margin:0; }
   a { transition:background .15s, color .15s; }
   ::selection { background:#f2d49a; color:var(--ink); }
   main { max-width:820px; margin:0 auto; padding:0 22px; text-align:center; }
@@ -274,7 +278,7 @@
       <span>📍 양재역 강의실 · 양재</span>
       <span>🕐 오후 2시-5시 <span class="todo-tag">임시</span></span>
     </div>
-    <p class="hero-price">슈퍼 얼리버드 <span class="price-pair">단독 <b>2.5만원</b></span> · <span class="price-pair">통합권 <b>4.5만원</b></span> <span class="until">10/27(화)까지</span></p>
+    <p class="hero-price">슈퍼 얼리버드 <span class="price-pair">단독 <b>3만원</b></span> · <span class="price-pair">통합권 <b>5만원</b></span> <span class="until">10/27(화)까지</span></p>
     <a href="#ticket" class="btn">자리 신청하기 →</a>
     <p class="deadline deadline-slim" data-deadline><span class="deadline-text">10월 17일(토) 판매 시작 · 슈퍼 얼리버드는 11일 동안만</span></p>
     <p style="font-size:12.5px; color:var(--soft); margin:16px 0;"><span class="todo-tag">신청 폼 링크 미정</span></p>
@@ -377,7 +381,7 @@
       <div class="card" style="text-align:center;"><p class="serif" style="font-size:20px; font-weight:700; margin:0 0 10px;">한 회차만 신청해도 되나요?</p><p style="font-size:15.5px; color:var(--muted); margin:0;">네. 버스킹과 슬리빙은 각각 신청할 수 있어요.</p></div>
       <div class="card" style="text-align:center;"><p class="serif" style="font-size:20px; font-weight:700; margin:0 0 10px;">버스킹을 안 들어도 괜찮나요?</p><p style="font-size:15.5px; color:var(--muted); margin:0;">네. 슬리빙만 신청해도 돼요. 버스킹도 같이 신청하면, 두 회차를 통합권 가격으로 들을 수 있어요.</p></div>
       <div class="card" style="text-align:center;"><p class="serif" style="font-size:20px; font-weight:700; margin:0 0 10px;">버스킹을 듣고 나서 슬리빙을 신청해도 할인되나요?</p><p style="font-size:15.5px; color:var(--muted); margin:0;">네. 버스킹에 참가한 분이 슬리빙을 따로 신청하면 1만원 할인해 드려요.</p></div>
-      <div class="card" style="text-align:center;"><p class="serif" style="font-size:20px; font-weight:700; margin:0 0 10px;">단독권을 샀는데 통합권으로 바꿀 수 있나요?</p><p style="font-size:15.5px; color:var(--muted); margin:0;">단독권을 먼저 샀어도 11월 8일까지는 차액만 내면 통합권으로 바꿀 수 있어요. 차액은 바꾸는 시점의 통합권 가격에서 이미 낸 금액을 뺀 만큼이에요.<br>예: 슈퍼 얼리버드에 버스킹 단독권(4만원)을 사고 얼리버드 기간에 바꾸면 7만원에서 4만원을 뺀 3만원을 내요.</p></div>
+      <div class="card" style="text-align:center;"><p class="serif" style="font-size:20px; font-weight:700; margin:0 0 10px;">단독권을 샀는데 통합권으로 바꿀 수 있나요?</p><p style="font-size:15.5px; color:var(--muted); margin:0;">단독권을 먼저 샀어도 11월 8일까지는 차액만 내면 통합권으로 바꿀 수 있어요. 차액은 바꾸는 시점의 통합권 가격에서 이미 낸 금액을 뺀 만큼이에요.<br>예: 슈퍼 얼리버드에 버스킹 단독권(4만원)을 사고 얼리버드 기간에 바꾸면 8만원에서 4만원을 뺀 4만원을 내요.</p></div>
       <div class="card" style="text-align:center;"><p class="serif" style="font-size:20px; font-weight:700; margin:0 0 10px;">한 회차를 못 가게 되면요?</p><p style="font-size:15.5px; color:var(--muted); margin:0;">회차별 환불·양도 기준은 곧 안내할게요. <span class="todo-tag">통합권 부분 환불 기준 확정 전</span></p></div>
     </div>
   </section>
@@ -403,21 +407,21 @@
             <tbody>
               <tr data-tier="super">
                 <th scope="row" class="tier-super"><span class="tier-name">슈퍼 얼리버드</span><span class="period">10/17(토)-10/27(화)</span></th>
-                <td><span class="price-stack"><span class="price-now">4만원</span><span class="price-meta"><s class="was">5만원</s><span class="off">20%</span></span></span></td>
-                <td><span class="price-stack"><span class="price-now">2.5만원</span><span class="price-meta"><s class="was">4만원</s><span class="off">37%</span></span></span></td>
-                <td class="combo-col"><span class="price-stack"><span class="price-meta"><s class="was">6.5만원</s></span><span class="combo-line"><span class="combo-price combo-best price-now">4.5만원</span><span class="low">최저가</span></span></span></td>
+                <td><span class="price-stack"><span class="price-now">4만원</span><span class="price-meta"><s class="was">6만원</s><span class="off">33%</span></span></span></td>
+                <td><span class="price-stack"><span class="price-now">3만원</span><span class="price-meta"><s class="was">5만원</s><span class="off">40%</span></span></span></td>
+                <td class="combo-col"><span class="price-stack"><span class="price-meta"><s class="was">7만원</s></span><span class="combo-line"><span class="combo-price combo-best price-now">5만원</span><span class="low">최저가</span></span></span></td>
                 <td class="save"><span class="save-pill">2만원 절약</span></td>
               </tr>
               <tr data-tier="early">
                 <th scope="row" class="tier-early"><span class="tier-name">얼리버드</span><span class="period">10/28(수)-11/8(일)</span></th>
-                <td><span class="price-stack"><span class="price-now">4.5만원</span><span class="price-meta"><s class="was">5만원</s><span class="off">10%</span></span></span></td>
-                <td><span class="price-stack"><span class="price-now">3.5만원</span><span class="price-meta"><s class="was">4만원</s><span class="off">12%</span></span></span></td>
-                <td class="combo-col"><span class="price-stack"><span class="price-meta"><s class="was">8만원</s></span><span class="combo-price price-now">7만원</span></span></td>
+                <td><span class="price-stack"><span class="price-now">5만원</span><span class="price-meta"><s class="was">6만원</s><span class="off">16%</span></span></span></td>
+                <td><span class="price-stack"><span class="price-now">4만원</span><span class="price-meta"><s class="was">5만원</s><span class="off">20%</span></span></span></td>
+                <td class="combo-col"><span class="price-stack"><span class="price-meta"><s class="was">9만원</s></span><span class="combo-price price-now">8만원</span></span></td>
                 <td class="save"><span class="save-pill">1만원 절약</span></td>
               </tr>
               <tr data-tier="full">
                 <th scope="row" class="tier-full"><span class="tier-name">정상가</span><span class="period">11/9(월)부터</span></th>
-                <td data-seminar="busking"><span class="price-now">5만원</span></td><td data-seminar="sleeving"><span class="price-now">4만원</span></td><td class="combo-col ended">판매 종료</td><td class="save save-empty">-</td>
+                <td data-seminar="busking"><span class="price-now">6만원</span></td><td data-seminar="sleeving"><span class="price-now">5만원</span></td><td class="combo-col ended">판매 종료</td><td class="save save-empty">-</td>
               </tr>
             </tbody>
           </table>
@@ -428,9 +432,9 @@
           <h3 class="serif"><span class="tier-name">슈퍼 얼리버드</span></h3>
           <p class="period">10/17(토)-10/27(화)</p>
           <dl>
-            <div><dt>버스킹 단독</dt><dd><span class="price-stack"><span class="price-now">4만원</span><span class="price-meta"><s class="was">5만원</s><span class="off">20%</span></span></span></dd></div>
-            <div><dt>슬리빙 단독</dt><dd><span class="price-stack"><span class="price-now">2.5만원</span><span class="price-meta"><s class="was">4만원</s><span class="off">37%</span></span></span></dd></div>
-            <div class="is-combo"><dt>통합권<span class="rec">추천</span></dt><dd><span class="price-stack"><span class="price-meta"><s class="was">6.5만원</s></span><span class="combo-line"><span class="combo-price combo-best price-now">4.5만원</span><span class="low">최저가</span></span></span></dd></div>
+            <div><dt>버스킹 단독</dt><dd><span class="price-stack"><span class="price-now">4만원</span><span class="price-meta"><s class="was">6만원</s><span class="off">33%</span></span></span></dd></div>
+            <div><dt>슬리빙 단독</dt><dd><span class="price-stack"><span class="price-now">3만원</span><span class="price-meta"><s class="was">5만원</s><span class="off">40%</span></span></span></dd></div>
+            <div class="is-combo"><dt>통합권<span class="rec">추천</span></dt><dd><span class="price-stack"><span class="price-meta"><s class="was">7만원</s></span><span class="combo-line"><span class="combo-price combo-best price-now">5만원</span><span class="low">최저가</span></span></span></dd></div>
             <div><dt>통합권으로 아끼는 금액</dt><dd class="save"><span class="save-pill">2만원 절약</span></dd></div>
           </dl>
         </article>
@@ -438,9 +442,9 @@
           <h3 class="serif"><span class="tier-name">얼리버드</span></h3>
           <p class="period">10/28(수)-11/8(일)</p>
           <dl>
-            <div><dt>버스킹 단독</dt><dd><span class="price-stack"><span class="price-now">4.5만원</span><span class="price-meta"><s class="was">5만원</s><span class="off">10%</span></span></span></dd></div>
-            <div><dt>슬리빙 단독</dt><dd><span class="price-stack"><span class="price-now">3.5만원</span><span class="price-meta"><s class="was">4만원</s><span class="off">12%</span></span></span></dd></div>
-            <div class="is-combo"><dt>통합권<span class="rec">추천</span></dt><dd><span class="price-stack"><span class="price-meta"><s class="was">8만원</s></span><span class="combo-price price-now">7만원</span></span></dd></div>
+            <div><dt>버스킹 단독</dt><dd><span class="price-stack"><span class="price-now">5만원</span><span class="price-meta"><s class="was">6만원</s><span class="off">16%</span></span></span></dd></div>
+            <div><dt>슬리빙 단독</dt><dd><span class="price-stack"><span class="price-now">4만원</span><span class="price-meta"><s class="was">5만원</s><span class="off">20%</span></span></span></dd></div>
+            <div class="is-combo"><dt>통합권<span class="rec">추천</span></dt><dd><span class="price-stack"><span class="price-meta"><s class="was">9만원</s></span><span class="combo-price price-now">8만원</span></span></dd></div>
             <div><dt>통합권으로 아끼는 금액</dt><dd class="save"><span class="save-pill">1만원 절약</span></dd></div>
           </dl>
         </article>
@@ -448,8 +452,8 @@
           <h3 class="serif"><span class="tier-name">정상가</span></h3>
           <p class="period">11/9(월)부터</p>
           <dl>
-            <div data-seminar="busking"><dt>버스킹 단독</dt><dd><span class="price-now">5만원</span></dd></div>
-            <div data-seminar="sleeving"><dt>슬리빙 단독</dt><dd><span class="price-now">4만원</span></dd></div>
+            <div data-seminar="busking"><dt>버스킹 단독</dt><dd><span class="price-now">6만원</span></dd></div>
+            <div data-seminar="sleeving"><dt>슬리빙 단독</dt><dd><span class="price-now">5만원</span></dd></div>
             <div class="is-combo is-ended"><dt>통합권<span class="rec">추천</span></dt><dd class="ended">판매 종료</dd></div>
             <div><dt>통합권으로 아끼는 금액</dt><dd class="save-empty">-</dd></div>
           </dl>
@@ -508,6 +512,10 @@
     <p style="font-size:15px; color:var(--muted); margin:18px 0 0;">환불 문의는 카카오톡 <b style="color:var(--accent);">KaliDCerona</b>로 연락 주세요.</p>
   </section>
 
+  <footer class="sponsor-strip" aria-label="후원">
+    <div class="sponsor-logo"><img src="../planb-busking/img/snack-logo.jpg" alt="스넥 연습실 로고" width="1158" height="573" loading="eager"></div>
+    <p>후원 스넥 연습실</p>
+  </footer>
 </main>
 <div class="sticky-ticket" hidden><span class="sticky-ticket-text"></span><a class="btn" href="#ticket">신청하기</a></div>
 <script>
@@ -598,25 +606,25 @@
         : "얼리버드·통합권 마감까지 " + countdown(EARLY_END, today) + " · 11/8(일) 23:59";
     } else { phase = "full"; text = ""; }
     var early = phase === "early", full = phase === "full", done = phase === "done";
-    var busking = full || done ? "5만원" : early ? "4.5만원" : "4만원";
-    var sleeving = full || done ? "4만원" : early ? "3.5만원" : "2.5만원";
+    var busking = full || done ? "6만원" : early ? "5만원" : "4만원";
+    var sleeving = full || done ? "5만원" : early ? "4만원" : "3만원";
     function pricePair(label, price) {
       return '<span class="price-pair">' + label + ' <b>' + price + '</b></span>';
     }
     var singles = PAGE === "november" ? pricePair("버스킹", busking) + " · " + pricePair("슬리빙", sleeving)
       : pricePair("단독", PAGE === "busking" ? busking : sleeving);
     var hero = full ? "정상가 " + singles
-      : (early ? "얼리버드 " : "슈퍼 얼리버드 ") + singles + " · " + pricePair("통합권", early ? "7만원" : "4.5만원")
+      : (early ? "얼리버드 " : "슈퍼 얼리버드 ") + singles + " · " + pricePair("통합권", early ? "8만원" : "5만원")
         + ' <span class="until">' + (early ? "11/8(일)까지" : "10/27(화)까지") + "</span>";
-    var sticky = full ? (PAGE === "november" ? "버스킹 5만원 · 슬리빙 4만원" : "단독 " + (PAGE === "busking" ? busking : sleeving))
-      : "통합권 " + (early ? "7만원 · 11/8까지" : "4.5만원 · 10/27까지");
+    var sticky = full ? (PAGE === "november" ? "버스킹 6만원 · 슬리빙 5만원" : "단독 " + (PAGE === "busking" ? busking : sleeving))
+      : "통합권 " + (early ? "8만원 · 11/8까지" : "5만원 · 10/27까지");
     if (PAGE === "november" && today > 20261115 && today <= 20261122) {
-      hero = '버스킹은 끝났어요 · ' + pricePair("슬리빙", "4만원") + ' <span class="until">11/22(일)</span>';
-      sticky = "슬리빙 4만원 · 11/22(일)";
+      hero = '버스킹은 끝났어요 · ' + pricePair("슬리빙", "5만원") + ' <span class="until">11/22(일)</span>';
+      sticky = "슬리빙 5만원 · 11/22(일)";
     }
     if (done) {
       hero = PAGE === "busking" && today <= 20261122
-        ? '이번 세미나는 끝났어요 · <a href="../planb-sleeving/"><span class="price-pair">슬리빙 4만원</span> · <span class="until">11/22(일)</span></a>' : "이번 세미나는 끝났어요";
+        ? '이번 세미나는 끝났어요 · <a href="../planb-sleeving/"><span class="price-pair">슬리빙 5만원</span> · <span class="until">11/22(일)</span></a>' : "이번 세미나는 끝났어요";
       sticky = "이번 세미나는 끝났어요";
     }
     return {
