@@ -8,7 +8,9 @@
 <meta property="og:type" content="website">
 <meta property="og:title" content="PLAN B 슬리빙 세미나">
 <meta property="og:description" content="소매 하나로 사라지게 하는 기술. 2026년 11월 22일(일) · 양재역 36인 대형 강의실.">
-<!-- og:image, og:url: 사진·주소 확정 후 추가 -->
+<meta property="og:url" content="https://kalimagic.netlify.app/planb-sleeving/">
+<meta property="og:image" content="https://kalimagic.netlify.app/planb-sleeving/img/cover.jpg">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap" rel="stylesheet">
@@ -154,8 +156,9 @@
 
   /* Urgency accent is #d9381e. Sentence text stays ink so it clears AA on the tint. */
   .hero-price { margin:0 0 26px; font-size:16px; font-weight:700; line-height:1.5; color:#2f2923; }
+  .hero-price .price-pair { white-space:nowrap; }
   .hero-price b { color:#d9381e; font-size:20px; font-weight:900; line-height:1; }
-  .hero-price .until { display:inline-block; margin-left:6px; font-size:12.5px; font-weight:700; color:#5c5148; }
+  .hero-price .until { white-space:nowrap; display:inline-block; margin-left:6px; font-size:12.5px; font-weight:700; color:#5c5148; }
   .host-line:has(+ .hero-price) { margin-bottom:10px; }
   .deadline { margin:0 auto 14px; max-width:640px; padding:12px 16px 12px 18px; border-radius:14px; background:rgba(217,56,30,0.08); border:1px solid rgba(217,56,30,0.28); box-shadow:inset 4px 0 0 #d9381e; color:#2f2923; font-size:15px; font-weight:800; line-height:1.5; }
   .deadline-slim { margin:14px auto 0; padding:8px 12px 8px 14px; font-size:13.5px; font-weight:700; }
@@ -218,9 +221,36 @@
     .photo-slot, .teacher .photo-slot { font-size:15px; }
     .refund .row { flex-wrap:wrap; justify-content:center; gap:6px 12px; font-size:15px; text-align:center; }
   }
+
+  .other-tiers summary { cursor:pointer; font-weight:700; padding:12px; }
+  .other-tiers .tier-card { margin-top:12px; }
+  .sticky-ticket { display:none; }
+  .sticky-ticket[hidden] { display:none; }
+  .btn[aria-disabled="true"] { background:var(--chip); color:var(--muted); box-shadow:none; cursor:default; }
+  @media (max-width:760px) {
+    body { padding-bottom:calc(90px + env(safe-area-inset-bottom, 0px)); }
+    .sticky-ticket { position:fixed; bottom:0; left:0; right:0; z-index:20; display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px 16px calc(12px + env(safe-area-inset-bottom, 0px)); background:var(--bg); border-top:1px solid var(--soft); box-shadow:var(--shadow); }
+    .sticky-ticket-text { font-size:13px; font-weight:800; }
+    .sticky-ticket .btn { width:auto; flex:none; padding:10px 16px; font-size:14px; }
+  }
+  @media (max-width:640px) {
+    main > .hero { padding-top:18px; }
+    .hero .badge-row { margin-bottom:12px; }
+    .hero h1 { font-size:28px; margin-bottom:14px; }
+    .hero .lead { font-size:15px; line-height:1.6; margin-bottom:14px; }
+    .hero .hero-meta { gap:4px; font-size:14px; }
+    .hero .hero-price { margin-bottom:14px; font-size:14px; }
+    .hero .hero-price b { font-size:18px; }
+    .hero .cover { max-height:180px; }
+    .series-band { margin-top:12px; padding:12px; }
+    .series-tagline { margin-bottom:8px; font-size:15px; }
+    .series-steps { gap:4px; margin-bottom:6px; }
+    .series-steps a, .series-steps [aria-current] { padding:6px 10px; }
+    .series-steps li + li::before { margin-bottom:4px; }
+  }
 </style>
 </head>
-<body>
+<body data-planb-page="sleeving">
 <div class="draft-bar"><b>작성 중인 틀</b> · 점선은 아직 채울 곳입니다(시간·가격·주소·문구). 완성 후 이 줄은 지웁니다.</div>
 <main>
 
@@ -235,7 +265,7 @@
   </div>
 
   <!-- ============ HERO ============ -->
-  <section>
+  <section class="hero">
     <div class="badge-row"><span class="dot"></span><span class="pill">PLAN B 세미나 · 슬리빙</span></div>
     <h1 class="todo">소매 하나로 사라지게 하는 기술</h1>
     <p class="lead todo">큰 문구 자리(초안)<br>예: 손에 있던 게 감쪽같이 사라지는 그 순간, 비밀은 소매에 있어요</p>
@@ -244,7 +274,7 @@
       <span>📍 양재역 강의실 · 양재</span>
       <span>🕐 오후 2시-5시 <span class="todo-tag">임시</span></span>
     </div>
-    <p class="hero-price">슈퍼 얼리버드 단독 <b>4만원</b> · 통합권 <b>6만원</b> <span class="until">10/27(화)까지</span></p>
+    <p class="hero-price">슈퍼 얼리버드 <span class="price-pair">단독 <b>2.5만원</b></span> · <span class="price-pair">통합권 <b>4.5만원</b></span> <span class="until">10/27(화)까지</span></p>
     <a href="#ticket" class="btn">자리 신청하기 →</a>
     <p class="deadline deadline-slim" data-deadline><span class="deadline-text">10월 17일(토) 판매 시작 · 슈퍼 얼리버드는 11일 동안만</span></p>
     <p style="font-size:12.5px; color:var(--soft); margin:16px 0;"><span class="todo-tag">신청 폼 링크 미정</span></p>
@@ -347,7 +377,7 @@
       <div class="card" style="text-align:center;"><p class="serif" style="font-size:20px; font-weight:700; margin:0 0 10px;">한 회차만 신청해도 되나요?</p><p style="font-size:15.5px; color:var(--muted); margin:0;">네. 버스킹과 슬리빙은 각각 신청할 수 있어요.</p></div>
       <div class="card" style="text-align:center;"><p class="serif" style="font-size:20px; font-weight:700; margin:0 0 10px;">버스킹을 안 들어도 괜찮나요?</p><p style="font-size:15.5px; color:var(--muted); margin:0;">네. 슬리빙만 신청해도 돼요. 버스킹도 같이 신청하면, 두 회차를 통합권 가격으로 들을 수 있어요.</p></div>
       <div class="card" style="text-align:center;"><p class="serif" style="font-size:20px; font-weight:700; margin:0 0 10px;">버스킹을 듣고 나서 슬리빙을 신청해도 할인되나요?</p><p style="font-size:15.5px; color:var(--muted); margin:0;">네. 버스킹에 참가한 분이 슬리빙을 따로 신청하면 1만원 할인해 드려요.</p></div>
-      <div class="card" style="text-align:center;"><p class="serif" style="font-size:20px; font-weight:700; margin:0 0 10px;">단독권을 샀는데 통합권으로 바꿀 수 있나요?</p><p style="font-size:15.5px; color:var(--muted); margin:0;">단독권을 먼저 샀어도 11월 8일까지는 차액만 내면 통합권으로 바꿀 수 있어요. 차액은 바꾸는 시점의 통합권 가격에서 이미 낸 금액을 뺀 만큼이에요.<br>예: 슈퍼 얼리버드에 단독권(4만원)을 사고 얼리버드 기간에 바꾸면 8만원에서 4만원을 뺀 4만원을 내요.</p></div>
+      <div class="card" style="text-align:center;"><p class="serif" style="font-size:20px; font-weight:700; margin:0 0 10px;">단독권을 샀는데 통합권으로 바꿀 수 있나요?</p><p style="font-size:15.5px; color:var(--muted); margin:0;">단독권을 먼저 샀어도 11월 8일까지는 차액만 내면 통합권으로 바꿀 수 있어요. 차액은 바꾸는 시점의 통합권 가격에서 이미 낸 금액을 뺀 만큼이에요.<br>예: 슈퍼 얼리버드에 버스킹 단독권(4만원)을 사고 얼리버드 기간에 바꾸면 7만원에서 4만원을 뺀 3만원을 내요.</p></div>
       <div class="card" style="text-align:center;"><p class="serif" style="font-size:20px; font-weight:700; margin:0 0 10px;">한 회차를 못 가게 되면요?</p><p style="font-size:15.5px; color:var(--muted); margin:0;">회차별 환불·양도 기준은 곧 안내할게요. <span class="todo-tag">통합권 부분 환불 기준 확정 전</span></p></div>
     </div>
   </section>
@@ -374,20 +404,20 @@
               <tr data-tier="super">
                 <th scope="row" class="tier-super"><span class="tier-name">슈퍼 얼리버드</span><span class="period">10/17(토)-10/27(화)</span></th>
                 <td><span class="price-stack"><span class="price-now">4만원</span><span class="price-meta"><s class="was">5만원</s><span class="off">20%</span></span></span></td>
-                <td><span class="price-stack"><span class="price-now">4만원</span><span class="price-meta"><s class="was">5만원</s><span class="off">20%</span></span></span></td>
-                <td class="combo-col"><span class="price-stack"><span class="price-meta"><s class="was">8만원</s></span><span class="combo-line"><span class="combo-price combo-best price-now">6만원</span><span class="low">최저가</span></span></span></td>
+                <td><span class="price-stack"><span class="price-now">2.5만원</span><span class="price-meta"><s class="was">4만원</s><span class="off">37%</span></span></span></td>
+                <td class="combo-col"><span class="price-stack"><span class="price-meta"><s class="was">6.5만원</s></span><span class="combo-line"><span class="combo-price combo-best price-now">4.5만원</span><span class="low">최저가</span></span></span></td>
                 <td class="save"><span class="save-pill">2만원 절약</span></td>
               </tr>
               <tr data-tier="early">
                 <th scope="row" class="tier-early"><span class="tier-name">얼리버드</span><span class="period">10/28(수)-11/8(일)</span></th>
                 <td><span class="price-stack"><span class="price-now">4.5만원</span><span class="price-meta"><s class="was">5만원</s><span class="off">10%</span></span></span></td>
-                <td><span class="price-stack"><span class="price-now">4.5만원</span><span class="price-meta"><s class="was">5만원</s><span class="off">10%</span></span></span></td>
-                <td class="combo-col"><span class="price-stack"><span class="price-meta"><s class="was">9만원</s></span><span class="combo-price price-now">8만원</span></span></td>
+                <td><span class="price-stack"><span class="price-now">3.5만원</span><span class="price-meta"><s class="was">4만원</s><span class="off">12%</span></span></span></td>
+                <td class="combo-col"><span class="price-stack"><span class="price-meta"><s class="was">8만원</s></span><span class="combo-price price-now">7만원</span></span></td>
                 <td class="save"><span class="save-pill">1만원 절약</span></td>
               </tr>
               <tr data-tier="full">
                 <th scope="row" class="tier-full"><span class="tier-name">정상가</span><span class="period">11/9(월)부터</span></th>
-                <td><span class="price-now">5만원</span></td><td><span class="price-now">5만원</span></td><td class="combo-col ended">판매 종료</td><td class="save save-empty">-</td>
+                <td data-seminar="busking"><span class="price-now">5만원</span></td><td data-seminar="sleeving"><span class="price-now">4만원</span></td><td class="combo-col ended">판매 종료</td><td class="save save-empty">-</td>
               </tr>
             </tbody>
           </table>
@@ -399,8 +429,8 @@
           <p class="period">10/17(토)-10/27(화)</p>
           <dl>
             <div><dt>버스킹 단독</dt><dd><span class="price-stack"><span class="price-now">4만원</span><span class="price-meta"><s class="was">5만원</s><span class="off">20%</span></span></span></dd></div>
-            <div><dt>슬리빙 단독</dt><dd><span class="price-stack"><span class="price-now">4만원</span><span class="price-meta"><s class="was">5만원</s><span class="off">20%</span></span></span></dd></div>
-            <div class="is-combo"><dt>통합권<span class="rec">추천</span></dt><dd><span class="price-stack"><span class="price-meta"><s class="was">8만원</s></span><span class="combo-line"><span class="combo-price combo-best price-now">6만원</span><span class="low">최저가</span></span></span></dd></div>
+            <div><dt>슬리빙 단독</dt><dd><span class="price-stack"><span class="price-now">2.5만원</span><span class="price-meta"><s class="was">4만원</s><span class="off">37%</span></span></span></dd></div>
+            <div class="is-combo"><dt>통합권<span class="rec">추천</span></dt><dd><span class="price-stack"><span class="price-meta"><s class="was">6.5만원</s></span><span class="combo-line"><span class="combo-price combo-best price-now">4.5만원</span><span class="low">최저가</span></span></span></dd></div>
             <div><dt>통합권으로 아끼는 금액</dt><dd class="save"><span class="save-pill">2만원 절약</span></dd></div>
           </dl>
         </article>
@@ -409,8 +439,8 @@
           <p class="period">10/28(수)-11/8(일)</p>
           <dl>
             <div><dt>버스킹 단독</dt><dd><span class="price-stack"><span class="price-now">4.5만원</span><span class="price-meta"><s class="was">5만원</s><span class="off">10%</span></span></span></dd></div>
-            <div><dt>슬리빙 단독</dt><dd><span class="price-stack"><span class="price-now">4.5만원</span><span class="price-meta"><s class="was">5만원</s><span class="off">10%</span></span></span></dd></div>
-            <div class="is-combo"><dt>통합권<span class="rec">추천</span></dt><dd><span class="price-stack"><span class="price-meta"><s class="was">9만원</s></span><span class="combo-price price-now">8만원</span></span></dd></div>
+            <div><dt>슬리빙 단독</dt><dd><span class="price-stack"><span class="price-now">3.5만원</span><span class="price-meta"><s class="was">4만원</s><span class="off">12%</span></span></span></dd></div>
+            <div class="is-combo"><dt>통합권<span class="rec">추천</span></dt><dd><span class="price-stack"><span class="price-meta"><s class="was">8만원</s></span><span class="combo-price price-now">7만원</span></span></dd></div>
             <div><dt>통합권으로 아끼는 금액</dt><dd class="save"><span class="save-pill">1만원 절약</span></dd></div>
           </dl>
         </article>
@@ -418,8 +448,8 @@
           <h3 class="serif"><span class="tier-name">정상가</span></h3>
           <p class="period">11/9(월)부터</p>
           <dl>
-            <div><dt>버스킹 단독</dt><dd><span class="price-now">5만원</span></dd></div>
-            <div><dt>슬리빙 단독</dt><dd><span class="price-now">5만원</span></dd></div>
+            <div data-seminar="busking"><dt>버스킹 단독</dt><dd><span class="price-now">5만원</span></dd></div>
+            <div data-seminar="sleeving"><dt>슬리빙 단독</dt><dd><span class="price-now">4만원</span></dd></div>
             <div class="is-combo is-ended"><dt>통합권<span class="rec">추천</span></dt><dd class="ended">판매 종료</dd></div>
             <div><dt>통합권으로 아끼는 금액</dt><dd class="save-empty">-</dd></div>
           </dl>
@@ -479,10 +509,15 @@
   </section>
 
 </main>
+<div class="sticky-ticket" hidden><span class="sticky-ticket-text"></span><a class="btn" href="#ticket">신청하기</a></div>
 <script>
 (function () {
   // KST calendar for the 2026 ticket window. A bad date leaves the static fallback.
   // Pass a Date, YYYY-MM-DD, or YYYYMMDD to planbDeadlineState, or set PLANB_NOW. Default is the real KST date.
+  var root = typeof globalThis !== "undefined" ? globalThis : window;
+  var PAGE = typeof document !== "undefined" && document.body
+    ? document.body.getAttribute("data-planb-page") : root.PLANB_PAGE || "busking";
+  var EVENT_END = PAGE === "busking" ? 20261115 : 20261122;
   var OPEN = 20261017;
   var SUPER_END = 20261027;
   var EARLY_END = 20261108;
@@ -539,88 +574,134 @@
   }
 
   function chipFor(phase, tier) {
-    var state = "";
-    if (phase === "before" && tier === "super") state = "soon";
-    else if (phase === "super" && tier === "super") state = "now";
-    else if (phase === "early" && tier === "super") state = "past";
-    else if (phase === "early" && tier === "early") state = "now";
-    else if (phase === "full" && (tier === "super" || tier === "early")) state = "past";
-    else if (phase === "full" && tier === "full") state = "now";
-    if (state === "now") return "판매 중";
-    if (state === "soon") return "오픈 예정";
-    if (state === "past") return "마감";
+    if (phase === "done") return "마감";
+    if (phase === "before") return tier === "super" ? "오픈 예정" : "";
+    if (tier === phase) return "판매 중";
+    if (tier === "super" || (phase === "full" && tier === "early")) return "마감";
     return "";
   }
-
   function planbDeadlineState(now) {
     var today = resolveToday(now);
     if (today < 20200101 || today > 21001231) throw new Error("range");
-    var phase = "before";
-    var text = FALLBACK;
-    if (today < OPEN) {
+    var phase = "before", text = FALLBACK;
+    if (today > EVENT_END) {
+      phase = "done"; text = "이번 세미나는 끝났어요";
+    } else if (today < OPEN) {
       phase = "before";
     } else if (today <= SUPER_END) {
       phase = "super";
-      text = today === SUPER_END
-        ? "슈퍼 얼리버드 오늘 마감 · 10/27(화) 23:59"
+      text = today === SUPER_END ? "슈퍼 얼리버드 오늘 마감 · 10/27(화) 23:59"
         : "슈퍼 얼리버드 마감까지 " + countdown(SUPER_END, today) + " · 10/27(화) 23:59";
     } else if (today <= EARLY_END) {
       phase = "early";
-      text = today === EARLY_END
-        ? "얼리버드·통합권 오늘 마감 · 11/8(일) 23:59"
+      text = today === EARLY_END ? "얼리버드·통합권 오늘 마감 · 11/8(일) 23:59"
         : "얼리버드·통합권 마감까지 " + countdown(EARLY_END, today) + " · 11/8(일) 23:59";
-    } else {
-      phase = "full";
-      text = "";
+    } else { phase = "full"; text = ""; }
+    var early = phase === "early", full = phase === "full", done = phase === "done";
+    var busking = full || done ? "5만원" : early ? "4.5만원" : "4만원";
+    var sleeving = full || done ? "4만원" : early ? "3.5만원" : "2.5만원";
+    function pricePair(label, price) {
+      return '<span class="price-pair">' + label + ' <b>' + price + '</b></span>';
+    }
+    var singles = PAGE === "november" ? pricePair("버스킹", busking) + " · " + pricePair("슬리빙", sleeving)
+      : pricePair("단독", PAGE === "busking" ? busking : sleeving);
+    var hero = full ? "정상가 " + singles
+      : (early ? "얼리버드 " : "슈퍼 얼리버드 ") + singles + " · " + pricePair("통합권", early ? "7만원" : "4.5만원")
+        + ' <span class="until">' + (early ? "11/8(일)까지" : "10/27(화)까지") + "</span>";
+    var sticky = full ? (PAGE === "november" ? "버스킹 5만원 · 슬리빙 4만원" : "단독 " + (PAGE === "busking" ? busking : sleeving))
+      : "통합권 " + (early ? "7만원 · 11/8까지" : "4.5만원 · 10/27까지");
+    if (PAGE === "november" && today > 20261115 && today <= 20261122) {
+      hero = '버스킹은 끝났어요 · ' + pricePair("슬리빙", "4만원") + ' <span class="until">11/22(일)</span>';
+      sticky = "슬리빙 4만원 · 11/22(일)";
+    }
+    if (done) {
+      hero = PAGE === "busking" && today <= 20261122
+        ? '이번 세미나는 끝났어요 · <a href="../planb-sleeving/"><span class="price-pair">슬리빙 4만원</span> · <span class="until">11/22(일)</span></a>' : "이번 세미나는 끝났어요";
+      sticky = "이번 세미나는 끝났어요";
     }
     return {
-      today: today,
-      phase: phase,
-      banner: text,
-      hidden: phase === "full",
-      chips: {
-        super: chipFor(phase, "super"),
-        early: chipFor(phase, "early"),
-        full: chipFor(phase, "full")
+      today: today, phase: phase, banner: text, hidden: full,
+      chips: { super: chipFor(phase, "super"), early: chipFor(phase, "early"), full: chipFor(phase, "full") },
+      hero: hero, sticky: sticky,
+      singleChips: {
+        busking: today > 20261115 ? "마감" : today > EARLY_END ? "판매 중" : "",
+        sleeving: today > 20261122 ? "마감" : today > EARLY_END ? "판매 중" : ""
       }
     };
   }
-
+  function setChip(parent, label) {
+    var chip = parent.querySelector(".sale-chip");
+    if (!label) { if (chip) chip.remove(); return; }
+    if (!chip) { chip = document.createElement("span"); parent.appendChild(chip); }
+    chip.className = "sale-chip sale-" + (label === "판매 중" ? "now" : label === "오픈 예정" ? "soon" : "done");
+    chip.textContent = label;
+  }
   function applyPlanbDeadline(state) {
     if (typeof document === "undefined" || !document.querySelectorAll) return;
-    var banners = document.querySelectorAll("[data-deadline]");
-    var b;
-    for (b = 0; b < banners.length; b++) {
-      if (state.hidden) {
-        banners[b].hidden = true;
-        continue;
-      }
-      var slot = banners[b].querySelector(".deadline-text");
+    document.querySelectorAll("[data-deadline]").forEach(function (banner) {
+      banner.hidden = state.hidden;
+      var slot = banner.querySelector(".deadline-text");
       if (slot) slot.textContent = state.banner;
-    }
-    var rows = document.querySelectorAll("[data-tier]");
-    var r;
-    for (r = 0; r < rows.length; r++) {
-      var row = rows[r];
+    });
+    document.querySelectorAll(".hero-price").forEach(function (hero) { hero.innerHTML = state.hero; });
+    document.querySelectorAll("[data-tier]").forEach(function (row) {
       var label = state.chips[row.getAttribute("data-tier")] || "";
-      if (!label) continue;
-      if (label === "마감") row.classList.add("is-past");
-      if (label === "판매 중") row.classList.add("is-active");
+      row.classList.toggle("is-past", label === "마감");
+      row.classList.toggle("is-active", label === "판매 중");
       var name = row.querySelector(".tier-name");
-      if (!name || !name.parentNode || row.querySelector(".sale-chip")) continue;
-      var chip = document.createElement("span");
-      var kind = label === "판매 중" ? "now" : label === "오픈 예정" ? "soon" : "done";
-      chip.className = "sale-chip sale-" + kind;
-      chip.textContent = label;
-      name.parentNode.insertBefore(chip, name.nextSibling);
+      if (name) setChip(name.parentNode, label);
+    });
+    document.querySelectorAll("[data-seminar]").forEach(function (cell) {
+      setChip(cell.tagName === "DIV" ? cell.querySelector("dd") : cell, state.singleChips[cell.getAttribute("data-seminar")]);
+    });
+    var cards = document.querySelector(".price-cards");
+    if (cards) {
+      var others = cards.querySelector(".other-tiers");
+      if (!others) {
+        others = document.createElement("details"); others.className = "other-tiers";
+        var summary = document.createElement("summary"); summary.textContent = "다른 기간 가격 보기";
+        others.appendChild(summary); cards.appendChild(others);
+      }
+      var current = state.phase === "before" ? "super" : state.phase === "done" ? "full" : state.phase;
+      cards.querySelectorAll(".tier-card").forEach(function (card) {
+        if (card.getAttribute("data-tier") === current) cards.insertBefore(card, others);
+        else others.appendChild(card);
+      });
+    }
+    document.querySelectorAll('a.btn[href="#ticket"], a.btn[data-ended-cta]').forEach(function (button) {
+      if (!button.hasAttribute("data-original-label")) button.setAttribute("data-original-label", button.textContent);
+      if (state.phase === "done") {
+        button.textContent = "이번 세미나는 끝났어요"; button.setAttribute("aria-disabled", "true");
+        button.setAttribute("data-ended-cta", ""); button.removeAttribute("href");
+      } else {
+        button.textContent = button.getAttribute("data-original-label"); button.removeAttribute("aria-disabled"); button.setAttribute("href", "#ticket");
+      }
+    });
+    var sticky = document.querySelector(".sticky-ticket"), ticket = document.querySelector("#ticket");
+    var heroButton = document.querySelector('.hero a.btn');
+    if (sticky) {
+      sticky.querySelector(".sticky-ticket-text").textContent = state.sticky;
+      sticky.hidden = true;
+      if (root.planbTicketObserver) root.planbTicketObserver.disconnect();
+      if (heroButton && ticket && typeof IntersectionObserver !== "undefined" && state.phase !== "done") {
+        var heroAbove = false, ticketVisible = true;
+        root.planbTicketObserver = new IntersectionObserver(function (entries) {
+          entries.forEach(function (entry) {
+            if (entry.target === heroButton) {
+              heroAbove = !entry.isIntersecting && entry.boundingClientRect.bottom <= (entry.rootBounds ? entry.rootBounds.top : 0);
+            }
+            if (entry.target === ticket) ticketVisible = entry.isIntersecting;
+          });
+          sticky.hidden = !heroAbove || ticketVisible;
+        });
+        root.planbTicketObserver.observe(heroButton);
+        root.planbTicketObserver.observe(ticket);
+      }
     }
   }
-
-  var root = typeof globalThis !== "undefined" ? globalThis : window;
   root.planbDeadlineState = planbDeadlineState;
-  try {
-    applyPlanbDeadline(planbDeadlineState());
-  } catch (err) {}
+  root.applyPlanbDeadline = applyPlanbDeadline;
+  try { applyPlanbDeadline(planbDeadlineState()); } catch (err) {}
 })();
 </script>
 </body>
