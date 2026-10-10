@@ -94,6 +94,7 @@ test('public build mirrors the current calculator and integrated stopwatch sourc
   }
   assert.equal(MIRROR_PAIRS.some(([, mirror]) => mirror === 'tools/calc' || mirror.startsWith('tools/calc/')), false);
   assert.deepEqual(DISTRIBUTION_APPS, [
+    { source: 'distribution-snapshots/choice', target: 'choice', tool: 'choice' },
     { source: 'distribution-snapshots/pimax', target: 'pimax', tool: 'pimax' },
     { source: 'distribution-snapshots/calculator', target: 'hitsuzen', tool: 'calc' },
     { source: 'distribution-snapshots/unlock', target: 'release', tool: 'unlock' },

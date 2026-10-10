@@ -14,7 +14,9 @@
     Object.freeze({ id: 'usotsuki', name: '우소츠키(USOTSUKI)', path: '/tools/usotsuki/', legacy: false }),
     Object.freeze({ id: 'tobira', name: '토비라(TOBIRA)', path: '/tools/tobira/', legacy: false }),
     Object.freeze({ id: 'spinner', name: '티케(TYCHE)', path: '/tools/tyche/', legacy: false }),
-    Object.freeze({ id: 'arosaegida', name: '아로새기다', path: '/tools/arosaegida/', legacy: false })
+    Object.freeze({ id: 'arosaegida', name: '아로새기다', path: '/tools/arosaegida/', legacy: false }),
+    Object.freeze({ id: 'pimax', name: 'Pi Max 연습실', path: '/tools/pimax/', legacy: false }),
+    Object.freeze({ id: 'choice', name: '너의 선택은?', path: '/tools/choice/', legacy: false })
   ]);
   var TOOL_LABELS = Object.freeze({
     calc: '히츠젠(HITSUZEN)',
@@ -26,6 +28,8 @@
     tobira: '토비라(TOBIRA)',
     spinner: '티케(TYCHE)',
     arosaegida: '아로새기다',
+    pimax: 'Pi Max 연습실',
+    choice: '너의 선택은?',
     all: '히츠젠(HITSUZEN) + 카이로스(KAIROS)'
   });
   var LEGACY_TOOLS = Object.freeze(['calc', 'stopwatch']);

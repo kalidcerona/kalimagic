@@ -190,6 +190,11 @@ export const CHOICE_HOME_FILES = [
   'home-icons/zg.svg'
 ];
 export const CHOICE_FILES = [...NEW_APP_FILES, ...CHOICE_HOME_FILES];
+export const CHOICE_DISTRIBUTION_FILES = [...CHOICE_FILES, 'brand-logo.png', 'fullscreen.js', 'settings-ui.js', 'settings-ui.css'];
+
+export function shouldCopyChoice(relativePath) {
+  return relativePath === '' || relativePath === 'home-icons' || CHOICE_DISTRIBUTION_FILES.includes(relativePath.split(path.sep).join('/'));
+}
 export const USOTSUKI_FILES = NEW_APP_FILES.filter((file) => file !== 'app.js').concat('first-run-guide.js', 'detector.js', 'detector-panel-grok.svg', 'holdem-assets/felt-grain.svg', 'holdem-assets/leather-grain.svg', 'holdem-assets/table-rail.svg', 'recorder-assets/recorder-shell-blank.webp', 'recorder-theme.js', 'recorder-engine.js', 'recorder-trace.js', 'recorder-a.html', 'recorder-d.html');
 export const ASRAI_FILES = [
   'brand-logo.jpg', 'brand-logo.png', 'contacts.js', 'icon-192.png',
@@ -417,6 +422,7 @@ export function injectLegacyShellModules(source) {
   return withLegacyCacheSuffix(withShell);
 }
 export const DISTRIBUTION_APPS = [
+  { source: 'distribution-snapshots/choice', target: 'choice', tool: 'choice' },
   { source: 'distribution-snapshots/pimax', target: 'pimax', tool: 'pimax' },
   { source: 'distribution-snapshots/calculator', target: 'hitsuzen', tool: 'calc' },
   { source: 'distribution-snapshots/unlock', target: 'release', tool: 'unlock' },
@@ -492,7 +498,9 @@ async function buildDistributionApps() {
       recursive: true,
       filter: (entry) => app.target === 'pimax'
         ? shouldCopyPimax(path.relative(source, entry))
-        : shouldCopy(path.relative(source, entry))
+        : app.target === 'choice'
+          ? shouldCopyChoice(path.relative(source, entry))
+          : shouldCopy(path.relative(source, entry))
     });
     const indexPath = path.join(target, 'index.html');
     const html = await readFile(indexPath, 'utf8');

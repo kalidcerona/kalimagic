@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#6d2432">
+  <meta name="color-scheme" content="light">
+  <meta name="description" content="번호를 고르고 목록을 보는 앱">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="너의 선택은?">
+  <title>너의 선택은?</title>
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="./icon-192.png?install=choice-v2">
+  <link rel="manifest" href="./manifest.webmanifest?v=choice-2">
+  <link rel="stylesheet" href="./style.css">
+  <link rel="stylesheet" href="./settings-ui.css">
+  <script src="./settings-ui.js" defer></script>
+</head>
+<body data-magic-app="choice" data-view="settings">
+  <div id="settings" class="screen" data-settings-screen>
+    <div class="sv-root">
+      <section class="sv" id="view-home" data-view-name="home">
+        <header class="sv-bar sv-bar-home"><h1 class="sv-title sv-title-home" tabindex="-1" id="home-title">설정</h1><button type="button" class="sv-ib" data-sv-go="advanced" aria-label="더 보기">⋯</button></header>
+        <div class="sv-body">
+      <div id="recovery" class="recovery" hidden>
+          <h2>저장본을 확인하세요</h2>
+          <p id="recovery-error"></p>
+          <ul id="recovery-issues"></ul>
+          <label for="recovery-raw">원본 데이터
+            <textarea id="recovery-raw" readonly></textarea>
+          </label>
+          <div class="actions">
+            <button type="button" class="primary" id="recovery-partial">가능 항목 저장</button>
+            <button type="button" id="recovery-fresh">새 목록으로 시작</button>
+            <button type="button" id="recovery-dismiss">원본 유지</button>
+          </div>
+        </div>
+        <p id="recovery-slim" class="slim-note" hidden>
+          손상된 저장본을 아직 바꾸지 않았습니다.
+          <button type="button" id="recovery-reopen">저장본 다시 보기</button>
+        </p>
+        <p id="repair-note" class="slim-note" hidden></p>
+          <div class="sv-card sv-hero">
+            <h2 class="sv-hero-title" id="notes-entry-title">공연 준비</h2>
+            <p class="sv-hero-text" id="home-summary"></p>
+            <button type="button" class="sv-btn sv-primary sv-big" id="start-notes-show">▶ 공연 시작</button>
+            <p id="notes-entry-message" class="message" role="alert"></p>
+            <div id="notes-entry-action" class="sv-actions" hidden>
+              <button type="button" class="sv-btn" id="notes-entry-recovery">저장본 확인하기</button>
+            </div>
+          </div>
+
+          <div class="sv-sec">노트에 나올 목록</div>
+          <div id="home-lists" class="sv-lists"></div>
+          <button type="button" class="sv-add" id="new-list">＋ 새 목록 만들기</button>
+          <button type="button" class="sv-nav" data-sv-go="templates"><span class="sv-ic">📋</span><span class="sv-grow"><span class="sv-t">기본 목록에서 시작</span><span class="sv-s">영화, 음식, 장소, 카드 52장</span></span><span class="sv-ch">›</span></button>
+
+          <div class="sv-sec">화면과 기타</div>
+          <button type="button" class="sv-nav" data-sv-go="deco"><span class="sv-ic">🎨</span><span class="sv-grow"><span class="sv-t">화면 꾸미기</span><span class="sv-s">배경 사진, 내 앱 아이콘, 아이콘 크기</span></span><span class="sv-ch">›</span></button>
+          <button type="button" class="sv-nav" data-sv-go="advanced"><span class="sv-ic">⚙️</span><span class="sv-grow"><span class="sv-t">더 보기</span><span class="sv-s">일상 메모, 공연 묶음, 백업, 표시 방식</span></span><span class="sv-ch">›</span></button>
+        </div>
+      </section>
+      <section class="sv " id="view-templates" data-view-name="templates" hidden>
+        <header class="sv-bar"><button type="button" class="sv-ib" data-sv-go="home" aria-label="뒤로">‹</button><h2 class="sv-title" tabindex="-1">기본 목록에서 시작</h2></header>
+        <div class="sv-body">
+          <p class="sv-hint">고른 목록을 노트에 넣고, 예언 항목을 탭해서 정해요.</p>
+          <div id="template-list" class="sv-lists"></div>
+        </div>
+      </section>
+      <section class="sv sv-wiz" id="view-w1" data-view-name="w1" hidden>
+        <header class="sv-bar"><button type="button" class="sv-ib" data-sv-go="home" aria-label="이전">‹</button><h2 class="sv-title" tabindex="-1">새 목록 만들기</h2></header>
+        <div class="sv-steps" id="wz-steps1" role="group" aria-label="단계"><button type="button" class="sv-stp on" data-step="1" aria-current="step">1 이름</button><button type="button" class="sv-stp" data-step="2" disabled>2 항목</button><button type="button" class="sv-stp" data-step="3" disabled>3 예언</button></div>
+        <div class="sv-body">
+          <p class="sv-draft" id="wz-draft-note" role="status" hidden>쓰던 내용을 불러왔어요. <button type="button" class="sv-link" id="wz-draft-clear">처음부터 새로</button></p>
+          <div class="sv-q" id="wz-q1">1. 목록 이름은?</div>
+          <p class="sv-hint">노트 앱에 보이는 제목이에요. 평범할수록 좋아요.</p>
+          <input class="sv-input" id="wz-title" type="text" maxlength="40" autocomplete="off" aria-labelledby="wz-q1">
+          <div class="sv-sec">보이는 모양</div>
+          <div class="sv-chips" id="wz-looks" role="radiogroup" aria-label="보이는 모양">
+            <button type="button" class="sv-chip on" role="radio" aria-checked="true" data-look="memo">메모</button>
+            <button type="button" class="sv-chip" role="radio" aria-checked="false" data-look="ranking">순위</button>
+            <button type="button" class="sv-chip" role="radio" aria-checked="false" data-look="todo">할 일</button>
+            <button type="button" class="sv-chip" role="radio" aria-checked="false" data-look="menu">메뉴</button>
+            <button type="button" class="sv-chip" role="radio" aria-checked="false" data-look="travel">여행</button>
+          </div>
+          <p id="wz-message1" class="message" role="alert"></p>
+        </div>
+        <div class="sv-foot"><button type="button" class="sv-btn sv-primary" id="wz-next1">다음</button></div>
+      </section>
+      <section class="sv sv-wiz" id="view-w2" data-view-name="w2" hidden>
+        <header class="sv-bar"><button type="button" class="sv-ib" id="wz-back2" aria-label="이전">‹</button><h2 class="sv-title" id="wz-title2" tabindex="-1">새 목록 만들기</h2></header>
+        <div class="sv-steps" id="wz-steps2" role="group" aria-label="단계"><button type="button" class="sv-stp on" data-step="1">1 이름</button><button type="button" class="sv-stp on" data-step="2" aria-current="step">2 항목</button><button type="button" class="sv-stp" data-step="3" disabled>3 예언</button></div>
+        <div class="sv-body">
+          <div class="sv-q" id="wz-q2">2. 항목을 붙여 넣으세요</div>
+          <p class="sv-hint">한 줄에 하나씩. 다른 메모 앱에서 복사해 붙여 넣으면 편해요. 예언 항목도 여기에 함께 넣으세요.</p>
+          <textarea class="sv-input sv-area" id="wz-items" spellcheck="false" placeholder="한 줄에 하나씩" aria-labelledby="wz-q2"></textarea>
+          <div class="sv-count"><span id="wz-count" aria-live="polite"></span><span>2개 이상, 100개까지</span></div>
+          <ul id="wz-warnings" class="sv-warn" aria-live="polite"></ul>
+          <button type="button" class="sv-btn sv-third" id="wz-strip">번호 지우기</button>
+        </div>
+        <div class="sv-foot"><button type="button" class="sv-btn sv-third" id="wz-prev2">이전</button><button type="button" class="sv-btn sv-primary" id="wz-next2">다음</button></div>
+      </section>
+      <section class="sv sv-wiz" id="view-w3" data-view-name="w3" hidden>
+        <header class="sv-bar"><button type="button" class="sv-ib" id="wz-back3" aria-label="이전">‹</button><h2 class="sv-title" id="wz-title3" tabindex="-1">새 목록 만들기</h2></header>
+        <div class="sv-steps" id="wz-steps3" role="group" aria-label="단계"><button type="button" class="sv-stp on" data-step="1">1 이름</button><button type="button" class="sv-stp on" data-step="2">2 항목</button><button type="button" class="sv-stp on" data-step="3" aria-current="step">3 예언</button></div>
+        <div class="sv-body">
+          <div class="sv-q" id="wz-q3">3. 예언 항목을 탭하세요</div>
+          <p class="sv-hint">관객이 말한 번호 자리에 이 항목이 나타나요.</p>
+          <div class="sv-pv" aria-live="polite">
+            <div class="sv-pv-h"><span>노트 미리보기</span><span class="sv-stepper">관객 번호 <button type="button" id="wz-minus" aria-label="번호 줄이기">−</button><b id="wz-num">1</b><button type="button" id="wz-plus" aria-label="번호 늘리기">＋</button></span></div>
+            <div class="sv-pv-t" id="wz-pv-title"></div>
+            <div id="wz-pv-lines"></div>
+          </div>
+          <div class="sv-rowhead"><div class="sv-sec" id="wz-pick-label">항목 중 하나 고르기</div><button type="button" class="sv-btn sv-sm" id="wz-edit-toggle" aria-pressed="false">항목 고치기</button></div>
+          <p class="sv-hint" id="wz-edit-hint" hidden>글자를 눌러 고치고, 화살표로 순서를 바꾸고, ✕로 빼요. 다 고치면 고치기 끝을 누르세요.</p>
+          <div id="wz-picks" class="sv-picks" role="radiogroup" aria-labelledby="wz-pick-label"></div>
+          <button type="button" class="sv-add" id="wz-add" hidden>＋ 항목 추가</button>
+          <p id="wz-message3" class="message" role="alert"></p>
+        </div>
+        <div class="sv-foot"><button type="button" class="sv-btn sv-primary" id="wz-save" disabled>목록 저장</button></div>
+      </section>
+      <section class="sv" id="view-done" data-view-name="done" hidden>
+        <header class="sv-bar"><h2 class="sv-title" tabindex="-1">완료</h2></header>
+        <div class="sv-body sv-center">
+          <div class="sv-check" aria-hidden="true">✅</div>
+          <div class="sv-q sv-q-center" id="done-title">저장했어요</div>
+          <p class="message" id="done-message" role="alert"></p>
+          <p class="sv-hint" id="done-text">예언 항목은 목록에서 언제든 바꿀 수 있어요.</p>
+        </div>
+        <div class="sv-foot sv-foot-col"><button type="button" class="sv-btn sv-primary" id="done-start">▶ 공연 시작</button><button type="button" class="sv-btn" data-sv-go="home">설정 홈으로</button></div>
+      </section>
+      <section class="sv" id="view-detail" data-view-name="detail" hidden>
+        <header class="sv-bar"><button type="button" class="sv-ib" data-sv-go="home" aria-label="뒤로">‹</button><h2 class="sv-title" id="detail-title" tabindex="-1"></h2><button type="button" class="sv-ib" id="detail-rename-open" aria-label="이름 바꾸기">✎</button></header>
+        <div class="sv-body">
+          <div class="sv-card" id="detail-rename" hidden>
+            <label class="sv-lab" for="detail-rename-input">새 이름</label>
+            <input class="sv-input" id="detail-rename-input" type="text" maxlength="40" autocomplete="off">
+            <div class="sv-actions"><button type="button" class="sv-btn sv-primary sv-sm" id="detail-rename-save">이름 저장</button><button type="button" class="sv-btn sv-sm" id="detail-rename-cancel">취소</button></div>
+          </div>
+          <div class="sv-card"><div class="sv-row"><span class="sv-grow"><span class="sv-t">노트에 넣기</span><span class="sv-s">끄면 공연 노트에서 숨겨져요</span></span><button type="button" class="sv-sw" role="switch" aria-checked="false" id="detail-switch" aria-label="노트에 넣기"></button></div></div>
+          <div class="sv-card"><div class="sv-s">예언 항목</div><div class="sv-target" id="detail-target"></div>
+            <div class="sv-actions"><button type="button" class="sv-btn sv-primary sv-sm" id="detail-change">예언 항목 바꾸기</button></div></div>
+          <div class="sv-card"><div class="sv-row"><span class="sv-grow"><span class="sv-t">항목 편집</span><span class="sv-s" id="detail-count"></span></span><button type="button" class="sv-btn sv-sm" id="detail-edit">열기</button></div></div>
+          <div class="sv-card"><div class="sv-s" id="detail-pv-label"></div><div class="sv-pv sv-pv-inline"><div class="sv-pv-t" id="detail-pv-title"></div><div id="detail-pv-lines"></div></div></div>
+          <p id="detail-message" class="message" role="alert"></p>
+          <button type="button" class="sv-btn sv-danger" id="detail-delete">이 목록 삭제</button>
+        </div>
+      </section>
+      <section class="sv " id="view-deco" data-view-name="deco" hidden>
+        <header class="sv-bar"><button type="button" class="sv-ib" data-sv-go="home" aria-label="뒤로">‹</button><h2 class="sv-title" tabindex="-1">화면 꾸미기</h2></header>
+        <div class="sv-body">
+          <div class="sv-sec sv-sec-first">미리보기와 홈 화면 모양</div>
+          <div class="deco-live">
+          <div class="sv-card sv-pvcard" id="deco-live">
+            <div class="pv-stages">
+              <div class="pv-stage" id="deco-pv-home" data-pv-kind="home"></div>
+              <div class="pv-stage" id="deco-pv-notes" data-pv-kind="notes" hidden></div>
+            </div>
+            <div class="pv-side">
+              <div class="sv-tabs" role="group" aria-label="미리볼 화면">
+                <button type="button" class="sv-tab on" data-pv="home" aria-pressed="true">홈 화면</button>
+                <button type="button" class="sv-tab" data-pv="notes" aria-pressed="false">메모 화면</button>
+              </div>
+              <p class="sv-hint pv-cap" id="deco-pv-cap">실제 홈 화면을 줄여서 보여 줘요. 아래 항목을 바꾸면 바로 달라져요. 눌러도 공연은 시작되지 않아요.</p>
+              <p class="sv-hint pv-cap" id="deco-pv-notes-cap" hidden>열린 메모의 모습이에요. 글자 크기, 줄 간격, 강조는 <button type="button" class="sv-link" data-sv-go="advanced">더 보기</button>에서 바꿔요.</p>
+            </div>
+          </div>
+          <div class="sv-card sv-flat">        <fieldset id="home-fields">
+          <label for="opt-icon-size">아이콘 크기 <output id="opt-icon-size-value" for="opt-icon-size"></output>
+            <input id="opt-icon-size" type="range" min="80" max="120" step="2">
+          </label>
+          <p class="hint opt-what">홈 화면 앱 그림의 크기예요.</p>
+          <label for="opt-label-size">이름 글자 크기 <output id="opt-label-size-value" for="opt-label-size"></output>
+            <input id="opt-label-size" type="range" min="10" max="16" step="1">
+          </label>
+          <p class="hint opt-what">앱 그림 밑에 적힌 이름의 글자 크기예요.</p>
+          <label for="opt-bottom-gap">아래쪽 여백 <output id="opt-bottom-gap-value" for="opt-bottom-gap"></output>
+            <input id="opt-bottom-gap" type="range" min="0" max="120" step="4">
+          </label>
+          <p class="hint opt-what">아이콘 칸 전체를 위로 올려 아래쪽을 띄워요.</p>
+          <label for="wallpaper-file">배경화면 (갤러리에서 사진 고르기)
+            <input id="wallpaper-file" type="file" accept="image/*">
+          </label>
+          <p class="hint opt-what">홈 화면 뒤에 깔리는 사진이에요.</p>
+          <p class="hint">폰 배경화면 원본 사진을 고르면 실제 폰처럼 보입니다. 원본이 없으면 아이콘이 없는 홈 화면을 캡처해 쓰세요.</p>
+          <div id="wallpaper-editor" hidden>
+            <div class="crop-wrap">
+              <canvas id="wallpaper-canvas" width="200" height="433" aria-label="배경화면 위치 미리보기"></canvas>
+            </div>
+            <label for="wallpaper-zoom">크기
+              <input id="wallpaper-zoom" type="range" min="100" max="400" step="1" value="100">
+            </label>
+            <p class="hint">사진을 손가락으로 끌어서 보이는 부분을 맞춥니다.</p>
+            <div class="actions">
+              <button type="button" class="primary" id="wallpaper-apply">이 배경으로 쓰기</button>
+              <button type="button" id="wallpaper-cancel">취소</button>
+            </div>
+          </div>
+          <div class="actions">
+            <button type="button" id="wallpaper-reset">기본 배경으로</button>
+          </div>
+          <p id="wallpaper-state" class="hint"></p>
+          <p class="hint">배경화면은 이 기기 안에만 저장되고 앱 파일에는 들어가지 않습니다. 큰 사진은 자동으로 줄여서 저장합니다. 웹 앱은 폰의 시스템 배경화면을 직접 읽을 수 없어서 사진을 직접 골라야 합니다.</p>
+          <p id="home-message" class="message" role="alert"></p>
+        </fieldset>
+</div>
+          </div>
+          <div class="sv-sec">내 앱 아이콘</div>
+          <div class="sv-card sv-flat" id="usericon-panel">        <p class="hint">내 폰의 앱 그림을 홈 화면 빈 칸에 넣을 수 있습니다. 그림 파일을 고르거나, 홈 화면 캡처를 올려서 정사각형 영역을 잘라 냅니다. 숫자 칸(1부터 9)에는 넣을 수 없고, 나머지 칸은 모두 0입니다. 이 기기 안에만 저장되며 앱 파일이나 백업에는 들어가지 않습니다.</p>
+        <p class="hint">자주 쓰는 앱을 폰 화면 캡처에서 잘라 넣으면 더 자연스럽습니다. 아무것도 넣지 않은 칸에는 이 앱 모음의 마술 앱 아이콘이 보입니다.</p>
+        <label for="usericon-file">그림 또는 캡처 고르기
+          <input id="usericon-file" type="file" accept="image/png,image/jpeg,image/webp">
+        </label>
+        <div id="usericon-editor" hidden>
+          <div class="crop-wrap">
+            <canvas id="usericon-canvas" width="240" height="240" aria-label="자를 영역 미리보기"></canvas>
+          </div>
+          <label for="usericon-zoom">크기
+            <input id="usericon-zoom" type="range" min="100" max="1600" step="1" value="100">
+          </label>
+          <p class="hint">그림을 손가락으로 끌어서 위치를 맞추고, 슬라이더로 크기를 정합니다.</p>
+          <label for="usericon-label">앱 이름 (8자까지)
+            <input id="usericon-label" type="text" maxlength="8" autocomplete="off">
+          </label>
+          <label for="usericon-page">홈 화면
+            <select id="usericon-page">
+              <option value="0">첫째 홈</option>
+              <option value="1">둘째 홈</option>
+              <option value="2">셋째 홈</option>
+            </select>
+          </label>
+          <div id="usericon-slots" class="slot-grid" role="group" aria-label="넣을 칸"></div>
+          <p id="usericon-slot-text" class="hint"></p>
+          <div class="actions">
+            <button type="button" class="primary" id="usericon-add">이 칸에 넣기</button>
+            <button type="button" id="usericon-cancel">취소</button>
+          </div>
+        </div>
+        <p id="usericon-message" class="message" role="alert"></p>
+        <div id="usericon-list" class="preset-list"></div></div>
+        </div>
+      </section>
+      <section class="sv" id="view-advanced" data-view-name="advanced" hidden>
+        <header class="sv-bar"><button type="button" class="sv-ib" data-sv-go="home" aria-label="뒤로">‹</button><h2 class="sv-title" tabindex="-1">더 보기</h2></header>
+        <div class="sv-body">
+          <div class="shell" data-settings-root>
+          <div class="sv-sec sv-sec-first">공연 구성</div>
+          <button type="button" class="sv-nav" data-sv-go="sets"><span class="sv-ic">🗂️</span><span class="sv-grow"><span class="sv-t">공연 묶음</span><span class="sv-s">목록과 일상 메모를 묶어 공연별로 골라 써요</span></span><span class="sv-ch">›</span></button>
+          <button type="button" class="sv-nav" data-sv-go="dummy"><span class="sv-ic">📝</span><span class="sv-grow"><span class="sv-t">일상 메모</span><span class="sv-s">노트에 함께 보일 평범한 메모</span></span><span class="sv-ch">›</span></button>
+          <div class="sv-sec">공연 방식과 노트 글씨</div>
+          <div class="sv-card sv-flat" id="options-card">
+        <fieldset id="options-fields">
+          <label for="opt-start-mode">시작 화면
+            <select id="opt-start-mode">
+              <option value="settings">설정</option>
+              <option value="performance">공연 (가짜 홈 화면)</option>
+            </select>
+          </label>
+          <p class="hint">앱을 열면 처음에 보이는 화면입니다. 공연을 고르면 항상 가짜 홈 첫 화면에서 시작하고, 숫자 두 번을 입력하면 셋째 홈의 노트 앱으로 이어집니다. 쓸 수 있는 노트가 하나도 없으면 설정에서 시작합니다. 처음 쓸 때는 설정이 먼저 열립니다.</p>
+          <label for="opt-display">입력 숫자 표시
+            <select id="opt-display">
+              <option value="performance">공연 모드 (숨김)</option>
+              <option value="practice">연습 모드 (항상 보임)</option>
+            </select>
+          </label>
+          <p class="hint">연습 모드는 입력한 숫자를 화면에 크게 보여 줍니다. 공연 모드는 평소에 아무것도 보이지 않고, 아래쪽 페이지 점이나 메모 제목을 0.4초 이상 누르고 있는 동안에만 숫자가 보이며 손을 떼면 사라집니다.</p>
+          <label class="checkline" for="opt-vibrate">
+            <input id="opt-vibrate" type="checkbox">
+            <span>숫자가 입력될 때 짧게 진동</span>
+          </label>
+          <p id="vibrate-capability" class="hint" hidden></p>
+          <p class="hint">진동을 지원하지 않는 기기에서는 아무 일도 일어나지 않으며 입력에는 영향이 없습니다.</p>
+          <label class="checkline" for="input-guide">
+            <input id="input-guide" type="checkbox" aria-describedby="input-guide-hint">
+            <span>숫자 칸을 잠깐 보여 주기 (연습용)</span>
+          </label>
+          <p id="input-guide-hint" class="hint">켜면 홈 첫 화면과 둘째 화면에 들어올 때 칸의 흰 숫자가 약 0.8초 보였다가 사라집니다. 공연 모드에서도 관객에게 보이니 공연 전에는 꺼 두세요.</p>
+          <label for="opt-note-font">노트 글자 크기 <output id="opt-note-font-value" for="opt-note-font"></output>
+            <input id="opt-note-font" type="range" min="14" max="30" step="1">
+          </label>
+          <label for="opt-note-line">줄 간격
+            <select id="opt-note-line">
+              <option value="compact">좁게</option>
+              <option value="normal">보통</option>
+              <option value="relaxed">넓게</option>
+            </select>
+          </label>
+          <label for="opt-note-emphasis">고른 번호 줄 강조
+            <select id="opt-note-emphasis">
+              <option value="none">강조 없음</option>
+              <option value="bold">굵게</option>
+              <option value="highlight">형광펜</option>
+              <option value="underline">밑줄</option>
+            </select>
+          </label>
+          <p id="note-style-sample" class="note-sample" aria-hidden="true">1  샘플 문장입니다. 공개된 노트는 이 크기로 보입니다.</p>
+          <p class="hint opt-what">위 세 가지(글자 크기, 줄 간격, 강조)는 열린 메모 안의 모습을 바꿔요. 아래 미리보기에서 바로 볼 수 있어요.</p>
+          <div class="pv-stage" id="adv-pv-notes" data-pv-kind="notes"></div>
+          <p class="hint">노트가 열린 뒤에는 두 손가락을 벌리거나 모아서 글자를 키우고 줄일 수 있습니다. 설정에서 고른 크기는 그대로 저장되고, 확대한 크기는 그 노트를 닫으면 되돌아옵니다.</p>
+          <p id="options-message" class="message" role="alert"></p>
+        </fieldset>
+          </div>
+          <div class="sv-sec">관리</div>
+          <button type="button" class="sv-nav" data-sv-go="check"><span class="sv-ic">✔️</span><span class="sv-grow"><span class="sv-t">공연 전 점검</span><span class="sv-s" id="check-summary"></span></span><span class="sv-ch">›</span></button>
+          <button type="button" class="sv-nav" data-sv-go="backup"><span class="sv-ic">💾</span><span class="sv-grow"><span class="sv-t">백업과 가져오기</span><span class="sv-s">파일 하나로 내보내고 다른 폰에서 가져오기</span></span><span class="sv-ch">›</span></button>
+          <button type="button" class="sv-nav" data-sv-go="install"><span class="sv-ic">📲</span><span class="sv-grow"><span class="sv-t">앱 설치</span></span><span class="sv-ch">›</span></button>
+          <button type="button" class="sv-nav" data-sv-go="help"><span class="sv-ic">❓</span><span class="sv-grow"><span class="sv-t">사용 방법</span></span><span class="sv-ch">›</span></button>
+          </div>
+        </div>
+      </section>
+      <section class="sv " id="view-sets" data-view-name="sets" hidden>
+        <header class="sv-bar"><button type="button" class="sv-ib" data-sv-go="advanced" aria-label="뒤로">‹</button><h2 class="sv-title" tabindex="-1">공연 묶음</h2></header>
+        <div class="sv-body"><div class="sv-card sv-flat" id="set-panel">        <p class="hint">한 번의 공연에 쓸 목록과 일상 메모를 묶습니다. 묶음을 고르면 노트에는 그 묶음의 것만 나옵니다. 묶음을 고르지 않으면 조건에 맞는 모든 목록이 나옵니다.</p>
+        <fieldset id="set-fields">
+          <label for="set-active">지금 쓰는 묶음
+            <select id="set-active"></select>
+          </label>
+          <p id="set-summary" class="hint"></p>
+          <details class="input-guide" open>
+            <summary>묶음 만들기와 고치기</summary>
+            <label for="set-select">고칠 묶음
+              <select id="set-select"></select>
+            </label>
+            <label for="set-name">묶음 이름
+              <input id="set-name" type="text" maxlength="40" autocomplete="off">
+            </label>
+            <p class="hint">넣을 목록</p>
+            <div id="set-presets" class="check-list"></div>
+            <p class="hint">넣을 일상 메모</p>
+            <div id="set-dummies" class="check-list"></div>
+            <p id="set-message" class="message" role="alert"></p>
+            <div class="actions">
+              <button type="button" class="primary" id="set-save">묶음 저장</button>
+              <button type="button" class="danger" id="set-delete">묶음 삭제</button>
+              <button type="button" id="set-new">새로 작성</button>
+            </div>
+          </details>
+        </fieldset>
+</div>
+        </div>
+      </section>
+      <section class="sv " id="view-dummy" data-view-name="dummy" hidden>
+        <header class="sv-bar"><button type="button" class="sv-ib" data-sv-go="advanced" aria-label="뒤로">‹</button><h2 class="sv-title" tabindex="-1">일상 메모</h2></header>
+        <div class="sv-body"><div class="sv-card sv-flat" id="dummy-panel">        <p class="hint">일상적인 메모처럼 보이는 노트입니다. 노트 목록에 함께 나오고, 열면 평범한 글이 보입니다. 번호 입력에는 영향이 없습니다.</p>
+        <fieldset id="dummy-fields">
+          <form id="dummy-form">
+            <label for="dummy-title">제목
+              <input id="dummy-title" type="text" maxlength="40" autocomplete="off">
+            </label>
+            <label for="dummy-body">내용
+              <textarea id="dummy-body" rows="5" maxlength="2000"></textarea>
+            </label>
+            <p id="dummy-message" class="message" role="alert"></p>
+            <div class="actions">
+              <button type="button" class="primary" id="dummy-save">저장</button>
+              <button type="button" id="dummy-new">새로 작성</button>
+              <button type="button" id="dummy-examples">예시 4개 넣기</button>
+            </div>
+          </form>
+        </fieldset>
+        <div id="dummy-list" class="preset-list"></div></div>
+        </div>
+      </section>
+      <section class="sv " id="view-backup" data-view-name="backup" hidden>
+        <header class="sv-bar"><button type="button" class="sv-ib" data-sv-go="advanced" aria-label="뒤로">‹</button><h2 class="sv-title" tabindex="-1">백업과 가져오기</h2></header>
+        <div class="sv-body"><div class="sv-card sv-flat" id="backup-panel">        <p class="hint">목록, 예언 항목, 일상 메모, 공연 묶음을 파일 하나로 내보내고 다른 기기에서 가져옵니다. 가져올 때는 먼저 무엇이 들어오는지 보여 주고, 지금 저장된 것은 절대 바꾸거나 지우지 않습니다. 같은 이름이 있으면 사본으로 추가합니다. 내 앱 아이콘, 배경 사진, 설정값은 파일에 들어가지 않습니다.</p>
+        <div class="actions">
+          <button type="button" class="primary" id="export-backup">백업 파일 내보내기</button>
+        </div>
+        <label for="import-file">백업 파일 가져오기
+          <input id="import-file" type="file" accept="application/json,.json">
+        </label>
+        <div id="import-preview" hidden>
+          <h3>가져올 내용 미리보기</h3>
+          <ul id="import-list" class="precheck-list"></ul>
+          <div class="actions">
+            <button type="button" class="primary" id="import-apply">합쳐서 가져오기</button>
+            <button type="button" id="import-cancel">취소</button>
+          </div>
+        </div>
+        <p id="backup-message" class="message" role="alert"></p></div>
+        </div>
+      </section>
+      <section class="sv " id="view-check" data-view-name="check" hidden>
+        <header class="sv-bar"><button type="button" class="sv-ib" data-sv-go="advanced" aria-label="뒤로">‹</button><h2 class="sv-title" tabindex="-1">공연 전 점검</h2></header>
+        <div class="sv-body">
+          <ul id="precheck-list" class="precheck-list"></ul>
+          <div class="sv-actions"><button type="button" class="sv-btn" id="precheck-refresh">다시 점검</button></div>
+        </div>
+      </section>
+      <section class="sv " id="view-help" data-view-name="help" hidden>
+        <header class="sv-bar"><button type="button" class="sv-ib" data-sv-go="advanced" aria-label="뒤로">‹</button><h2 class="sv-title" tabindex="-1">사용 방법</h2></header>
+        <div class="sv-body"><div class="sv-card sv-flat help-body">
+              <ol>
+                <li>항목을 한 줄에 하나씩 적고, 예언 항목과 모양을 정한 뒤 저장합니다.</li>
+                <li>공연 시작을 누르면 가짜 홈 화면 첫 쪽이 나옵니다. 숫자를 입력하는 화면은 따로 없습니다.</li>
+                <li>첫째 홈에서 십의 자리, 둘째 홈에서 일의 자리를 아이콘 탭이나 왼쪽 쓸기로 입력하면 셋째 홈으로 넘어갑니다. 셋째 홈의 노트 앱을 누르면 노트 목록이 열립니다.</li>
+                <li>고른 노트를 열면 입력한 번호 자리에 예언 항목이 끼워져 있고, 항목은 순서대로 모두 남습니다.</li>
+                <li>한 번 연 목록은 번호가 잠겨 실수로 바뀌지 않습니다.</li>
+                <li>설정으로 돌아오려면 공연 화면에서 두 손가락을 화면 아래로 96픽셀 이상 밀어 내리세요. 공연 화면에는 설정 버튼을 두지 않습니다.</li>
+                <li>기본 제공 목록(영화, 음식, 여행지, 트럼프 카드)은 직접 입력하지 않아도 노트에 넣을 수 있습니다. 예언 항목은 항목 중에서 골라 정하고, 숨기면 노트에 나오지 않습니다.</li>
+                <li>공연을 시작한 뒤 설정을 고쳐도 진행 중인 화면은 바뀌지 않습니다. 시작 시점의 사본을 사용합니다.</li>
+                <li>노트 연출은 예언 항목이 있고 전체 항목이 2개에서 100개인 목록을 사용합니다. 공연 묶음을 고르면 그 묶음의 목록만, 고르지 않으면 조건에 맞는 모든 목록(30개까지)이 노트가 됩니다.</li>
+                <li>00은 열린 노트의 마지막 번호입니다. 노트 항목 수보다 큰 번호를 넣으면 목록 원본 순서가 나오고, 마술사에게만 조용한 표시가 있습니다.</li>
+                <li>번호가 정해진 뒤에는 관객이 노트 앱의 모든 노트를 훑어보고 열어 볼 수 있습니다. 아무것도 고칠 수 없고, 결과는 그대로 남습니다.</li>
+                <li>다음 관객을 위해 입력을 지우고 첫 홈으로 돌아가려면 화면 오른쪽 위 구석을 빠르게 세 번 탭하세요.</li>
+              </ol>
+              <p>저장은 이 기기에만 남습니다. 손상된 저장본은 복구를 선택하기 전까지 지우지 않습니다.</p>
+            </div>
+          <div class="sv-card sv-flat">          <details class="input-guide">
+            <summary>숫자 칸 설명</summary>
+            <div class="input-guide-body">
+              <p>홈 화면은 가로 5칸, 세로 6칸입니다. 숫자 앱 9개가 위에서 두 번째 줄부터 세 줄, 왼쪽에서 두 번째 칸부터 세 칸에 전화기 숫자판처럼 놓입니다. 위쪽 줄부터 1, 2, 3, 그리고 4, 5, 6, 그리고 7, 8, 9입니다. 나머지 아이콘, 폴더, 빈 칸, 배경, 아래쪽 앱 줄은 모두 0입니다.</p>
+              <figure class="digit-map">
+                <figcaption>5×6 숫자 칸. 가운데 3×3만 1부터 9, 나머지는 0</figcaption>
+                <div class="digit-map-grid" style="grid-template-columns: repeat(5, 1fr)">
+                  <span class="is-zero">0</span><span class="is-zero">0</span><span class="is-zero">0</span><span class="is-zero">0</span><span class="is-zero">0</span>
+                  <span class="is-zero">0</span><span class="is-value">1</span><span class="is-value">2</span><span class="is-value">3</span><span class="is-zero">0</span>
+                  <span class="is-zero">0</span><span class="is-value">4</span><span class="is-value">5</span><span class="is-value">6</span><span class="is-zero">0</span>
+                  <span class="is-zero">0</span><span class="is-value">7</span><span class="is-value">8</span><span class="is-value">9</span><span class="is-zero">0</span>
+                  <span class="is-zero">0</span><span class="is-zero">0</span><span class="is-zero">0</span><span class="is-zero">0</span><span class="is-zero">0</span>
+                  <span class="is-zero">0</span><span class="is-zero">0</span><span class="is-zero">0</span><span class="is-zero">0</span><span class="is-zero">0</span>
+                </div>
+              </figure>
+              <p>첫 번째 입력은 십의 자리이고, 둘째 홈에서의 입력은 일의 자리입니다. 입력은 아이콘을 짧게 탭하거나 왼쪽으로 넘기면 됩니다. 두 자리를 이어서 읽고 두 자리가 모두 끝나면 셋째 홈으로 넘어갑니다. 00은 열린 노트의 마지막 번호입니다. 노트 항목 수보다 큰 번호는 범위 밖이라 목록 원본 순서가 그대로 나오고, 마술사에게만 조용한 표시가 있습니다.</p>
+              <p>잘못 입력했다면 노트를 열기 전에 오른쪽으로 넘겨서 마지막 숫자를 지우고 다시 입력할 수 있습니다. 노트를 한 번 열면 번호는 잠깁니다. 다음 관객으로 넘어가려면 화면 오른쪽 위 구석을 빠르게 세 번 탭하면 입력이 지워지고 첫 홈으로 돌아갑니다.</p>
+              <p>숫자 앱 이름과 그림의 기억법은 아래 표에 있습니다. 아이콘은 모두 이 앱에서 새로 그린 가상의 앱입니다.</p>
+              <ul class="memory-table" id="memory-table"></ul>
+            </div>
+          </details></div>
+        </div>
+      </section>
+      <section class="sv " id="view-install" data-view-name="install" hidden>
+        <header class="sv-bar"><button type="button" class="sv-ib" data-sv-go="advanced" aria-label="뒤로">‹</button><h2 class="sv-title" tabindex="-1">앱 설치</h2></header>
+        <div class="sv-body"><div class="sv-card sv-flat">      <div data-install-card>
+
+        <p data-install-guidance>기기에 설치하면 홈 화면에서 바로 열 수 있습니다.</p>
+        <button type="button" class="primary" data-install-button hidden>앱 설치</button>
+      </div></div>
+        </div>
+      </section>
+      <form id="editor-form" hidden aria-hidden="true">
+        <fieldset id="editor-fields">
+          <input id="preset-name" type="text"><select id="appearance"><option value="memo">메모</option><option value="ranking">순위</option><option value="todo">할 일</option><option value="menu">메뉴</option><option value="travel">여행</option></select>
+          <input id="force-item" type="text"><textarea id="items"></textarea>
+          <p id="item-hint"></p><p id="item-count"></p><ul id="editor-warnings"></ul><ol id="editor-preview"></ol><p id="editor-message"></p>
+          <button type="button" id="save-new"></button><button type="button" id="rename"></button><button type="button" id="overwrite"></button><button type="button" id="delete-preset"></button><button type="button" id="reset-form"></button>
+        </fieldset>
+      </form>
+    </div>
+  </div>
+
+  <div id="fake-home" class="screen fake-home" hidden tabindex="-1">
+    <div class="fake-home-frame">
+      <div class="phone-shell" id="fake-phone" data-wallpaper="default">
+        <div class="wallpaper" id="fake-wallpaper" aria-hidden="true">
+          <svg class="wallpaper-curve" viewBox="0 0 390 844" preserveAspectRatio="xMidYMid slice" focusable="false"><path d="M-20 150 C180 230 90 520 410 640" fill="none" stroke="#fff" stroke-opacity=".05" stroke-width="46"/></svg>
+          <i class="wallpaper-circle"></i>
+        </div>
+        <div class="phone-status" aria-hidden="true">
+          <span class="status-left"><b class="status-time" id="status-time">12:40</b><i class="status-glyph g1"></i><i class="status-glyph g2"></i></span>
+          <span class="status-right">
+            <svg width="16" height="12" viewBox="0 0 16 12" focusable="false"><path d="M8 11L1 4a10 10 0 0 1 14 0z" fill="#fff"/></svg>
+            <svg width="14" height="12" viewBox="0 0 14 12" focusable="false"><path d="M1 11L13 1V11z" fill="#fff"/></svg>
+            <b class="batt-pill">81</b>
+          </span>
+        </div>
+        <div class="home-viewport">
+          <div class="home-track" id="fake-home-track">
+            <section class="home-page" data-home-page="0" aria-label="홈">
+              <div class="icon-grid" data-home-grid="0"></div>
+            </section>
+            <section class="home-page" data-home-page="1" aria-label="홈" aria-hidden="true">
+              <div class="icon-grid" data-home-grid="1"></div>
+            </section>
+            <section class="home-page" data-home-page="2" aria-label="홈" aria-hidden="true">
+              <div class="icon-grid" data-home-grid="2"></div>
+            </section>
+          </div>
+        </div>
+        <div class="home-dots" aria-hidden="true">
+          <span class="home-mark is-current"><svg width="14" height="13" viewBox="0 0 14 13" focusable="false"><path d="M7 0L0 6h2v7h4V9h2v4h4V6h2z" fill="currentColor"/></svg></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+        </div>
+        <div class="phone-dock" id="phone-dock" aria-hidden="true"></div>
+        <div class="home-indicator" aria-hidden="true"></div>
+      </div>
+      <div id="entry-readout" class="entry-readout" hidden aria-hidden="true"></div>
+      <div id="fake-notes" class="notes-landing" hidden>
+        <header class="notes-landing-bar">
+          <button type="button" id="fake-notes-back" class="notes-back" hidden>‹ 메모</button>
+          <h2 id="fake-notes-title" tabindex="-1" data-magic-native-label="메모">메모</h2>
+        </header>
+        <div class="notes-search" aria-hidden="true">검색</div>
+        <div class="notes-folder-row" aria-hidden="true">
+          <span class="notes-folder-mark"></span>
+          <span>모든 메모</span>
+        </div>
+        <div id="fake-notes-body" class="notes-landing-body"></div>
+        <button type="button" id="fake-notes-home" class="notes-home-bar" aria-label="홈 화면"></button>
+      </div>
+    </div>
+  </div>
+
+  <dialog id="confirm-dialog" aria-labelledby="confirm-text">
+    <form method="dialog">
+      <p id="confirm-text"></p>
+      <div class="actions">
+        <button type="submit" value="cancel">취소</button>
+        <button type="submit" class="primary" id="confirm-ok" value="ok">확인</button>
+      </div>
+    </form>
+  </dialog>
+  <div id="settings-gesture-guide" class="gesture-guide" role="dialog" aria-modal="true" aria-labelledby="settings-gesture-title" hidden>
+    <div class="gesture-guide-card">
+      <div class="gesture-guide-demo" aria-hidden="true"><span></span><span></span></div>
+      <h2 id="settings-gesture-title">설정으로 돌아가기</h2>
+      <p>화면에 두 손가락을 올린 뒤<br>아래로 쓸어내리세요.</p>
+      <button type="button" id="settings-gesture-dismiss">알겠어요</button>
+    </div>
+  </div>
+  <noscript><p class="shell">이 앱은 자바스크립트가 필요합니다.</p></noscript>
+  <script type="module" src="./app.js"></script>
+  <script id="choice-repair">
+    // Self repair: when this page's module never finishes starting (often a half-updated cache), drop this
+    // app's caches and its old service worker once, then load again. The 3s clock starts when the module
+    // starts, when that module script errors, or 8s after DOMContentLoaded if it still has not started.
+    // Repair runs only if data-choice-ready is still unset, and only after sw.js answers from the network
+    // (the service worker does not intercept sw.js). Offline, or if that probe fails, nothing is deleted.
+    // Only this registration scope's encoded cache family is deleted. Nothing else in storage is touched.
+    (function () {
+      var KEY = 'choice-self-repair';
+      var armed = false;
+      var moduleStarted = false;
+      function arm() {
+        if (armed) return;
+        armed = true;
+        setTimeout(repair, 3000);
+      }
+      function repair() {
+        if (document.documentElement.getAttribute('data-choice-ready') === '1') {
+          try { sessionStorage.removeItem(KEY); } catch (e) { /* storage may be blocked */ }
+          return;
+        }
+        try { if (sessionStorage.getItem(KEY)) return; } catch (e) { return; }
+        if (navigator.onLine === false) return;
+        // sw.js is not part of the precached shell, so this request is not served by the service worker.
+        fetch('sw.js?probe=' + Date.now(), { cache: 'no-store' }).then(function (response) {
+          if (!response || response.ok !== true) return;
+          try { sessionStorage.setItem(KEY, '1'); } catch (e) { return; }
+          var scopeGuess = new URL('./', location.href).href;
+          var registration = (navigator.serviceWorker && typeof navigator.serviceWorker.getRegistration === 'function')
+            ? navigator.serviceWorker.getRegistration('./').catch(function () { return null; })
+            : Promise.resolve(null);
+          return registration.then(function (reg) {
+            var scope = (reg && reg.scope) || scopeGuess;
+            var prefix = 'choice-dist-shell-' + encodeURIComponent(scope) + '-';
+            var clearing = (window.caches && typeof caches.keys === 'function')
+              ? caches.keys().then(function (names) {
+                return Promise.all(names.filter(function (n) { return n.indexOf(prefix) === 0; }).map(function (n) { return caches.delete(n); }));
+              })
+              : Promise.resolve();
+            return clearing.then(function () {
+              var done = (!navigator.serviceWorker || typeof navigator.serviceWorker.getRegistrations !== 'function')
+                ? Promise.resolve()
+                : navigator.serviceWorker.getRegistrations().then(function (regs) {
+                  return Promise.all(regs.filter(function (r) { return r.scope === scope; }).map(function (r) { return r.unregister(); }));
+                });
+              return done.then(function () { location.reload(); });
+            });
+          });
+        }).catch(function () {});
+      }
+      function watchModuleScript() {
+        if (typeof document.querySelector !== 'function') return;
+        var moduleScript = document.querySelector('script[type="module"][src="./app.js"]');
+        if (!moduleScript || moduleScript.__choiceRepairBound || typeof moduleScript.addEventListener !== 'function') return;
+        moduleScript.__choiceRepairBound = true;
+        moduleScript.addEventListener('error', arm);
+      }
+      watchModuleScript();
+      document.addEventListener('choice-module-start', function () {
+        moduleStarted = true;
+        arm();
+      });
+      document.addEventListener('DOMContentLoaded', function () {
+        watchModuleScript();
+        setTimeout(function () {
+          if (!moduleStarted) arm();
+        }, 8000);
+      });
+    })();
+  </script>
+  <script type="module" src="./install-prompt.js"></script>
+</body>
+</html>

@@ -329,3 +329,8 @@
   for = "/assets/profile/portrait-1200w.webp"
   [headers.values]
     Cache-Control = "public, max-age=2592000"
+
+[[headers]]
+  for = "/tools/choice/manifest.webmanifest"
+  [headers.values]
+    Content-Type = "application/manifest+json"

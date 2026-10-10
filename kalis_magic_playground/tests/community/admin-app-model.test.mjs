@@ -20,7 +20,7 @@ test('select visible replaces stale selection and caps the batch at 25 accounts'
   assert.equal(previous.has('stale@example.com'), true);
 });
 
-test('catalog exposes all nine distribution apps', () => {
+test('catalog exposes all eleven distribution apps', () => {
   assert.deepEqual(Array.from(model.APP_CATALOG, (app) => [app.id, app.path]), [
     ['calc', '/tools/hitsuzen/'],
     ['stopwatch', '/tools/kairos-classic/'],
@@ -30,12 +30,14 @@ test('catalog exposes all nine distribution apps', () => {
     ['usotsuki', '/tools/usotsuki/'],
     ['tobira', '/tools/tobira/'],
     ['spinner', '/tools/tyche/'],
-    ['arosaegida', '/tools/arosaegida/']
+    ['arosaegida', '/tools/arosaegida/'],
+    ['pimax', '/tools/pimax/'],
+    ['choice', '/tools/choice/']
   ]);
 });
 
 test('new friend app cards expose separate links, copy controls and counters', () => {
-  for (const [id, name] of [['aletheia', '알레테이아\\(ALETHEIA\\)'], ['usotsuki', '우소츠키\\(USOTSUKI\\)'], ['arosaegida', '아로새기다']]) {
+  for (const [id, name] of [['aletheia', '알레테이아\\(ALETHEIA\\)'], ['usotsuki', '우소츠키\\(USOTSUKI\\)'], ['arosaegida', '아로새기다'], ['pimax', 'Pi Max 연습실'], ['choice', '너의 선택은\\?']]) {
     const card = adminHtml.match(new RegExp('<article class="admin-app-card" data-app-card="' + id + '">([\\s\\S]*?)</article>'))?.[1];
     assert.ok(card, name + ' card exists');
     assert.match(card, new RegExp('<h3>' + name + '</h3>'));
@@ -80,7 +82,7 @@ test('friend app availability is unknown when its service is down', () => {
   assert.equal(model.isToolAvailable('stopwatch-uni', availability), false);
   assert.equal(model.isToolAvailable('aletheia', availability), false);
   assert.equal(model.isToolAvailable('usotsuki', availability), false);
-  assert.equal(model.availabilityMessage(availability), '레리즈(RELEASE)·카이로스(KAIROS)·알레테이아(ALETHEIA)·우소츠키(USOTSUKI)·토비라(TOBIRA)·티케(TYCHE)·아로새기다 권한 서비스를 사용할 수 없습니다. 조회 가능한 앱의 권한만 표시됩니다.');
+  assert.equal(model.availabilityMessage(availability), '레리즈(RELEASE)·카이로스(KAIROS)·알레테이아(ALETHEIA)·우소츠키(USOTSUKI)·토비라(TOBIRA)·티케(TYCHE)·아로새기다·Pi Max 연습실·너의 선택은? 권한 서비스를 사용할 수 없습니다. 조회 가능한 앱의 권한만 표시됩니다.');
 });
 
 test('friend app outage warnings override legacy response defaults', () => {
@@ -107,7 +109,7 @@ test('legacy pending rows without a tool stay actionable only through the legacy
 });
 
 test('each new friend app can only approve its own pending entitlement while available', () => {
-  for (const tool of ['aletheia', 'usotsuki', 'tobira', 'spinner', 'arosaegida']) {
+  for (const tool of ['aletheia', 'usotsuki', 'tobira', 'spinner', 'arosaegida', 'pimax', 'choice']) {
     const row = { email: 'friend@example.com', tool };
     assert.deepEqual(Array.from(model.pendingToolOptions(row, { friendApps: true })), [tool]);
     assert.equal(model.isPendingActionAvailable(row, tool, { friendApps: true }), true);
@@ -145,12 +147,12 @@ test('admin API errors map duplicate grants and denied sessions to clear message
 test('an approved person can be offered only apps they do not already have', () => {
   const person = { email: 'friend@example.com', tool: 'stopwatch' };
   const approved = [person, { email: 'FRIEND@example.com', tool: 'unlock' }, { email: 'other@example.com', tool: 'calc' }];
-  assert.deepEqual(Array.from(model.additionalToolOptions(person, approved, { legacy: true, friendApps: true })), ['calc', 'stopwatch-uni', 'aletheia', 'usotsuki', 'tobira', 'spinner', 'arosaegida']);
+  assert.deepEqual(Array.from(model.additionalToolOptions(person, approved, { legacy: true, friendApps: true })), ['calc', 'stopwatch-uni', 'aletheia', 'usotsuki', 'tobira', 'spinner', 'arosaegida', 'pimax', 'choice']);
   assert.deepEqual(Array.from(model.additionalToolOptions(person, approved, { legacy: true, friendApps: false })), ['calc']);
-  assert.deepEqual(Array.from(model.additionalToolOptions({ email: 'all@example.com', tool: 'all' }, [{ email: 'all@example.com', tool: 'all' }], { legacy: true, friendApps: true })), ['unlock', 'stopwatch-uni', 'aletheia', 'usotsuki', 'tobira', 'spinner', 'arosaegida']);
+  assert.deepEqual(Array.from(model.additionalToolOptions({ email: 'all@example.com', tool: 'all' }, [{ email: 'all@example.com', tool: 'all' }], { legacy: true, friendApps: true })), ['unlock', 'stopwatch-uni', 'aletheia', 'usotsuki', 'tobira', 'spinner', 'arosaegida', 'pimax', 'choice']);
   assert.deepEqual(Array.from(model.additionalToolOptions({ email: 'friend@example.com' }, approved.concat([
     { email: 'friend@example.com', tool: 'aletheia' }
-  ]), { legacy: true, friendApps: true })), ['calc', 'stopwatch-uni', 'usotsuki', 'tobira', 'spinner', 'arosaegida']);
+  ]), { legacy: true, friendApps: true })), ['calc', 'stopwatch-uni', 'usotsuki', 'tobira', 'spinner', 'arosaegida', 'pimax', 'choice']);
 });
 
 test('member view has one entry per normalized email while preserving each grant', () => {
@@ -165,7 +167,7 @@ test('member view has one entry per normalized email while preserving each grant
   assert.deepEqual(Array.from(members[0].tools), ['calc', 'stopwatch', 'unlock']);
   assert.deepEqual(Array.from(model.filterMembers(members, { tool: 'unlock' })), [members[0]]);
   assert.equal(members[0].rows[0].tool, 'all');
-  assert.deepEqual(Array.from(model.missingTools(members[0], { legacy: true, friendApps: true })), ['stopwatch-uni', 'aletheia', 'usotsuki', 'tobira', 'spinner', 'arosaegida']);
+  assert.deepEqual(Array.from(model.missingTools(members[0], { legacy: true, friendApps: true })), ['stopwatch-uni', 'aletheia', 'usotsuki', 'tobira', 'spinner', 'arosaegida', 'pimax', 'choice']);
 });
 
 test('grouping scales by rows and displays one card for each member', () => {
