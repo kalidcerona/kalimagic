@@ -43,7 +43,7 @@
 .magic-customize-open { width:100%; min-height:50px; border-radius:12px; font:700 16px/1.4 system-ui,sans-serif; cursor:pointer; }
 .magic-customize-page { position:fixed; inset:0; z-index:200; display:grid; grid-template-rows:auto minmax(170px,30dvh) minmax(0,1fr); color:#f4efe9; background:#1a1512; font:15px/1.6 system-ui,sans-serif; text-align:left; touch-action:pan-y; }
 .magic-customize-page[hidden] { display:none !important; }
-.magic-customize-header { display:flex; flex-wrap:wrap; gap:8px 16px; align-items:center; padding:calc(12px + env(safe-area-inset-top)) 16px 12px; border-bottom:1px solid #ab9f922b; background:#1f1815; }
+.magic-customize-header { display:flex; flex-wrap:wrap; gap:8px 16px; align-items:center; padding:calc(12px + env(safe-area-inset-top)) max(16px, env(safe-area-inset-right, 0px)) 12px max(16px, env(safe-area-inset-left, 0px)); border-bottom:1px solid #ab9f922b; background:#1f1815; }
 .magic-customize-header h1 { margin:0; font-size:18px; line-height:1.4; color:#f4efe9; }
 .magic-customize-product { margin-left:auto; font-size:11px; color:#ab9f92; letter-spacing:.1em; }
 .magic-customize-page button { min-height:44px; padding:8px 14px; color:#f4efe9; background:#34261e; border:1px solid #ab9f923d; border-radius:10px; font:inherit; touch-action:manipulation; cursor:pointer; }
@@ -57,7 +57,7 @@
 .magic-appearance-field[hidden], .magic-customize-subtitle[hidden] { display:none !important; }
 .magic-preview-surface { position:absolute; top:0; left:0; transform-origin:0 0; pointer-events:none; }
 .magic-preview-placeholder { position:absolute; bottom:20px; padding:8px; color:#eee; font-size:10px; }
-.magic-customize { min-height:0; overflow-y:auto; overscroll-behavior:contain; padding:8px 16px calc(24px + env(safe-area-inset-bottom)); -webkit-overflow-scrolling:touch; }
+.magic-customize { min-height:0; overflow-y:auto; overscroll-behavior:contain; padding:8px max(16px, env(safe-area-inset-right, 0px)) calc(24px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left, 0px)); -webkit-overflow-scrolling:touch; }
 .magic-customize > p { color:#ab9f92; margin:12px 0; font-size:13px; }
 .magic-customize .magic-appearance-field { margin:18px 0 !important; padding:16px; border:1px solid #ab9f9229; border-radius:12px; background:#261d18; }
 .magic-customize input { color:#f4efe9; background:#1a1512; border-color:#ab9f924d; accent-color:#e8631f; }

@@ -11,6 +11,7 @@
   var fetchJson = window.PgUtil.fetchJson;
   var endpoint = '/.netlify/functions/admin-tools';
   var state = { data: null, members: { pending: [], approved: [] }, tab: 'pending', query: '', tool: '*', loadError: '', selected: new Set(), pendingTools: new Map(), batchTools: new Set(), batchLifetime: false, busy: false };
+  var permissionRefreshEpoch = 0;
   var MAX_BATCH_MEMBERS = 25;
 
   function clearSelection() {
@@ -97,21 +98,34 @@
     });
   }
 
+  function permissionSnapshot(data) {
+    return JSON.stringify({
+      pending: data.pending,
+      approved: data.approved,
+      availability: data.availability || null,
+      warnings: data.warnings || []
+    });
+  }
+
   async function refresh(preserveOnFailure) {
+    var epoch = ++permissionRefreshEpoch;
     try {
       var data = await fetchJson(endpoint, { cache: 'no-store' });
+      if (epoch !== permissionRefreshEpoch) return true;
       if (!Array.isArray(data.pending) || !Array.isArray(data.approved)) {
         throw new Error('권한 목록 응답 형식이 올바르지 않습니다.');
       }
+      var unchanged = Boolean(state.data) && permissionSnapshot(state.data) === permissionSnapshot(data);
       state.data = data;
       state.members.pending = model.groupMembers(data.pending);
       state.members.approved = model.groupMembers(data.approved);
       var currentEmails = new Set(state.members[state.tab].map(function (member) { return member.email; }));
       state.selected.forEach(function (email) { if (!currentEmails.has(email)) state.selected.delete(email); });
       state.loadError = '';
-      render();
+      if (!unchanged) render();
       return true;
     } catch (error) {
+      if (epoch !== permissionRefreshEpoch) return true;
       state.loadError = model.errorMessage(error);
       if (error.status === 403) {
         renderDenied();
@@ -135,18 +149,90 @@
     return model.errorMessage(error);
   }
 
+  function accessEmailKey(email) {
+    return String(email || '').trim().toLowerCase();
+  }
+
+  function updateAccessCounts() {
+    if (!state.data) return;
+    var availability = model.availabilityFromResponse(state.data);
+    var approvedCounts = model.countByTool(state.data.approved);
+    Array.prototype.forEach.call(document.querySelectorAll('[data-app-count]'), function (counter) {
+      var appId = counter.getAttribute('data-app-count');
+      if (!model.isToolAvailable(appId, availability)) {
+        counter.textContent = '권한 조회 불가';
+        counter.classList.add('is-unavailable');
+      } else {
+        counter.textContent = approvedCounts[appId] + '개 권한';
+        counter.classList.remove('is-unavailable');
+      }
+    });
+    var tabCounts = root.querySelectorAll('.admin-view-tab__count');
+    if (tabCounts[0]) tabCounts[0].textContent = String(state.members.pending.length);
+    if (tabCounts[1]) tabCounts[1].textContent = String(state.members.approved.length);
+    var heading = root.querySelector('.admin-list-heading .admin-list-total');
+    if (heading) heading.textContent = state.members[state.tab].length + '개 계정';
+  }
+
+  function replaceAccessCard(email, control) {
+    state.members.pending = model.groupMembers(state.data.pending);
+    state.members.approved = model.groupMembers(state.data.approved);
+    updateAccessCounts();
+    var member = (state.members[state.tab] || []).find(function (entry) {
+      return accessEmailKey(entry.email) === accessEmailKey(email);
+    });
+    var card = control && typeof control.closest === 'function' ? control.closest('.admin-access-card') : null;
+    if (!card || !member) {
+      renderList();
+      return;
+    }
+    var availability = model.availabilityFromResponse(state.data);
+    card.replaceWith(state.tab === 'pending' ? pendingMemberCard(member, availability) : approvedCard(member, availability));
+    renderBatchToolbar();
+  }
+
+  function applyLocalPermissionRow(change, control) {
+    if (!state.data || !change || !change.item) return false;
+    if (change.action === 'approve') {
+      var current = state.data.pending.find(function (row) { return row.id === change.item.id; });
+      if (!current) return false;
+      state.data.pending = state.data.pending.filter(function (row) { return row.id !== change.item.id; });
+      state.data.approved = state.data.approved.concat([Object.assign({}, current, {
+        tool: change.tool,
+        lifetime: Boolean(change.lifetime),
+        note: change.note || '',
+        status: 'approved'
+      })]);
+    } else if (change.action === 'reject') {
+      var pendingBefore = state.data.pending.length;
+      state.data.pending = state.data.pending.filter(function (row) { return row.id !== change.item.id; });
+      if (state.data.pending.length === pendingBefore) return false;
+    } else if (change.action === 'revoke') {
+      var approvedBefore = state.data.approved.length;
+      state.data.approved = state.data.approved.filter(function (row) { return row.id !== change.item.id; });
+      if (state.data.approved.length === approvedBefore) return false;
+    } else return false;
+    // Drop an in-flight list GET so it cannot paint over the row just updated locally.
+    permissionRefreshEpoch += 1;
+    replaceAccessCard(change.item.email, control);
+    return true;
+  }
+
   async function runMutation(status, control, busyMessage, run) {
     status.classList.remove('is-error', 'is-success');
     status.textContent = busyMessage;
     control.disabled = true;
+    var result;
     try {
-      await run();
+      result = await run();
     } catch (error) {
       var message = actionError(error);
       if (message) setStatus(status, message, true);
       if (error.status !== 403) control.disabled = false;
       return;
     }
+
+    if (result && result.localRow && applyLocalPermissionRow(result.localRow, control)) return;
 
     var updated = await refresh(true);
     if (!updated && state.data) {
@@ -200,6 +286,7 @@
         clearSelection();
         state.tab = tab.id;
         render();
+        refresh(true);
       });
       control.setAttribute('role', 'tab');
       control.setAttribute('aria-selected', state.tab === tab.id ? 'true' : 'false');
@@ -494,15 +581,17 @@
     status.setAttribute('role', 'status');
     var approve = button('승인', 'admin-button admin-button--gold');
     approve.addEventListener('click', function () {
-      runMutation(status, approve, '권한을 승인하고 있습니다.', function () {
-        return fetchJson(endpoint, { method: 'POST', body: JSON.stringify({ action: 'approve', id: item.id, tool: tool.value, lifetime: lifetime.input.checked, note: note.value.trim() }) });
+      runMutation(status, approve, '권한을 승인하고 있습니다.', async function () {
+        await fetchJson(endpoint, { method: 'POST', body: JSON.stringify({ action: 'approve', id: item.id, tool: tool.value, lifetime: lifetime.input.checked, note: note.value.trim() }) });
+        return { localRow: { action: 'approve', item: item, tool: tool.value, lifetime: lifetime.input.checked, note: note.value.trim() } };
       });
     });
     var reject = button('요청 삭제', 'admin-button admin-button--quiet');
     reject.addEventListener('click', function () {
       if (!window.confirm((item.email || '이 계정') + '의 권한 요청을 삭제할까요?')) return;
-      runMutation(status, reject, '요청을 삭제하고 있습니다.', function () {
-        return fetchJson(endpoint + '?id=' + encodeURIComponent(item.id) + '&tool=' + encodeURIComponent(item.tool || ''), { method: 'DELETE' });
+      runMutation(status, reject, '요청을 삭제하고 있습니다.', async function () {
+        await fetchJson(endpoint + '?id=' + encodeURIComponent(item.id) + '&tool=' + encodeURIComponent(item.tool || ''), { method: 'DELETE' });
+        return { localRow: { action: 'reject', item: item } };
       });
     });
     var isUnavailable = !model.isPendingActionAvailable(item, tool.value, availability);
@@ -542,8 +631,9 @@
     revoke.setAttribute('aria-label', (item.email || '계정') + '의 ' + adminToolLabel(item.tool) + ' 권한 회수');
     revoke.addEventListener('click', function () {
       if (!window.confirm((item.email || '이 계정') + '의 ' + adminToolLabel(item.tool) + ' 권한을 회수할까요?')) return;
-      runMutation(status, revoke, '권한을 회수하고 있습니다.', function () {
-        return fetchJson(endpoint + '?id=' + encodeURIComponent(item.id) + '&tool=' + encodeURIComponent(item.tool || ''), { method: 'DELETE' });
+      runMutation(status, revoke, '권한을 회수하고 있습니다.', async function () {
+        await fetchJson(endpoint + '?id=' + encodeURIComponent(item.id) + '&tool=' + encodeURIComponent(item.tool || ''), { method: 'DELETE' });
+        return { localRow: { action: 'revoke', item: item } };
       });
     });
     if (!model.isToolAvailable(item.tool, availability)) {
@@ -710,17 +800,7 @@
       renderLoadError();
       return;
     }
-    var approvedCounts = model.countByTool(data.approved);
-    Array.prototype.forEach.call(document.querySelectorAll('[data-app-count]'), function (counter) {
-      var appId = counter.getAttribute('data-app-count');
-      if (!model.isToolAvailable(appId, availability)) {
-        counter.textContent = '권한 조회 불가';
-        counter.classList.add('is-unavailable');
-      } else {
-        counter.textContent = approvedCounts[appId] + '개 권한';
-        counter.classList.remove('is-unavailable');
-      }
-    });
+    updateAccessCounts();
     root.setAttribute('aria-busy', 'false');
     clear(root);
     var warningText = model.availabilityMessage(availability);

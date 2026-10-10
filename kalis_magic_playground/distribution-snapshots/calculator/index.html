@@ -224,6 +224,35 @@
       transition: background-color 80ms ease, filter 80ms ease, opacity 120ms ease;
     }
 
+    @media (max-height: 520px) {
+      .calculator {
+        --pad-block-start: max(6px, env(safe-area-inset-top));
+        --pad-block-end: max(6px, env(safe-area-inset-bottom));
+        --layout-gap: 6px;
+      }
+      .keypad {
+        --row-gap: 6px;
+        row-gap: var(--row-gap);
+        --btn-block: max(
+          36px,
+          calc(
+            (
+              100dvh
+              - var(--pad-block-start)
+              - var(--pad-block-end)
+              - var(--toolbar-height)
+              - var(--display-min)
+              - 2 * var(--layout-gap)
+              - 4 * var(--row-gap)
+            ) / 5
+          )
+        );
+      }
+      .key {
+        min-height: 36px;
+      }
+    }
+
     .key.date-key-hint::after {
       content: "";
       position: absolute;
@@ -401,7 +430,7 @@
 
     #settings-entry-tutorial { position: fixed; inset: 0; z-index: 45; display: grid; place-items: center; padding: 24px; pointer-events: auto; }
     #settings-entry-tutorial[hidden] { display: none !important; }
-    #settings-entry-tutorial .tutorial-card { width: min(100%, 320px); padding: 22px; border: 1px solid #ffffff52; border-radius: 20px; background: #1b1b20f2; color: #fff; text-align: center; box-shadow: 0 16px 48px #0009; font: 500 16px/1.55 system-ui, sans-serif; }
+    #settings-entry-tutorial .tutorial-card { width: min(100%, 320px); padding: 22px; border: 1px solid #ffffff52; border-radius: 20px; background: #1b1b20f2; color: #fff; text-align: center; box-shadow: 0 16px 48px #0009; font: 500 16px/1.55 system-ui, sans-serif; max-height: calc(100vh - 32px); max-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 32px); overflow-y: auto; }
     #settings-entry-tutorial .tutorial-fingers { position: relative; height: 110px; width: 100px; margin: 0 auto 12px; }
     #settings-entry-tutorial .tutorial-fingers span { position: absolute; top: 8px; width: 29px; height: 45px; border: 3px solid #fff; border-radius: 18px; background: #ffffff35; animation: tutorial-swipe 1.7s ease-in-out infinite; }
     #settings-entry-tutorial .tutorial-fingers span:first-child { left: 15px; }

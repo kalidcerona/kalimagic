@@ -269,6 +269,7 @@
             <input id="opt-vibrate" type="checkbox">
             <span>숫자가 입력될 때 짧게 진동</span>
           </label>
+          <p id="vibrate-capability" class="hint" hidden></p>
           <p class="hint">진동을 지원하지 않는 기기에서는 아무 일도 일어나지 않으며 입력에는 영향이 없습니다.</p>
           <label class="checkline" for="input-guide">
             <input id="input-guide" type="checkbox" aria-describedby="input-guide-hint">
@@ -521,25 +522,77 @@
     </div>
   </div>
   <noscript><p class="shell">이 앱은 자바스크립트가 필요합니다.</p></noscript>
-  <script>
-    // Self repair: when the page code did not finish starting (a half updated cache), drop this app's caches and
-    // its old service worker once and load again.
+  <script type="module" src="./app.js"></script>
+  <script id="choice-repair">
+    // Self repair: when this page's module never finishes starting (often a half-updated cache), drop this
+    // app's caches and its old service worker once, then load again. The 3s clock starts when the module
+    // starts, when that module script errors, or 8s after DOMContentLoaded if it still has not started.
+    // Repair runs only if data-choice-ready is still unset, and only after sw.js answers from the network
+    // (the service worker does not intercept sw.js). Offline, or if that probe fails, nothing is deleted.
+    // Only this registration scope's encoded cache family is deleted. Nothing else in storage is touched.
     (function () {
       var KEY = 'choice-self-repair';
-      setTimeout(function () {
+      var armed = false;
+      var moduleStarted = false;
+      function arm() {
+        if (armed) return;
+        armed = true;
+        setTimeout(repair, 3000);
+      }
+      function repair() {
         if (document.documentElement.getAttribute('data-choice-ready') === '1') {
           try { sessionStorage.removeItem(KEY); } catch (e) { /* storage may be blocked */ }
           return;
         }
-        try { if (sessionStorage.getItem(KEY)) return; sessionStorage.setItem(KEY, '1'); } catch (e) { return; }
-        var scope = new URL('./', location.href).href, jobs = [];
-        if (window.caches) jobs.push(caches.keys().then(function (names) { return Promise.all(names.filter(function (n) { return n.indexOf('choice-shell-') === 0; }).map(function (n) { return caches.delete(n); })); }));
-        if (navigator.serviceWorker) jobs.push(navigator.serviceWorker.getRegistrations().then(function (regs) { return Promise.all(regs.filter(function (r) { return r.scope === scope; }).map(function (r) { return r.unregister(); })); }));
-        Promise.all(jobs).catch(function () {}).then(function () { location.reload(); });
-      }, 3000);
+        try { if (sessionStorage.getItem(KEY)) return; } catch (e) { return; }
+        if (navigator.onLine === false) return;
+        // sw.js is not part of the precached shell, so this request is not served by the service worker.
+        fetch('sw.js?probe=' + Date.now(), { cache: 'no-store' }).then(function (response) {
+          if (!response || response.ok !== true) return;
+          try { sessionStorage.setItem(KEY, '1'); } catch (e) { return; }
+          var scopeGuess = new URL('./', location.href).href;
+          var registration = (navigator.serviceWorker && typeof navigator.serviceWorker.getRegistration === 'function')
+            ? navigator.serviceWorker.getRegistration('./').catch(function () { return null; })
+            : Promise.resolve(null);
+          return registration.then(function (reg) {
+            var scope = (reg && reg.scope) || scopeGuess;
+            var prefix = 'choice-shell-' + encodeURIComponent(scope) + '-';
+            var clearing = (window.caches && typeof caches.keys === 'function')
+              ? caches.keys().then(function (names) {
+                return Promise.all(names.filter(function (n) { return n.indexOf(prefix) === 0; }).map(function (n) { return caches.delete(n); }));
+              })
+              : Promise.resolve();
+            return clearing.then(function () {
+              var done = (!navigator.serviceWorker || typeof navigator.serviceWorker.getRegistrations !== 'function')
+                ? Promise.resolve()
+                : navigator.serviceWorker.getRegistrations().then(function (regs) {
+                  return Promise.all(regs.filter(function (r) { return r.scope === scope; }).map(function (r) { return r.unregister(); }));
+                });
+              return done.then(function () { location.reload(); });
+            });
+          });
+        }).catch(function () {});
+      }
+      function watchModuleScript() {
+        if (typeof document.querySelector !== 'function') return;
+        var moduleScript = document.querySelector('script[type="module"][src="./app.js"]');
+        if (!moduleScript || moduleScript.__choiceRepairBound || typeof moduleScript.addEventListener !== 'function') return;
+        moduleScript.__choiceRepairBound = true;
+        moduleScript.addEventListener('error', arm);
+      }
+      watchModuleScript();
+      document.addEventListener('choice-module-start', function () {
+        moduleStarted = true;
+        arm();
+      });
+      document.addEventListener('DOMContentLoaded', function () {
+        watchModuleScript();
+        setTimeout(function () {
+          if (!moduleStarted) arm();
+        }, 8000);
+      });
     })();
   </script>
-  <script type="module" src="./app.js"></script>
   <script type="module" src="./install-prompt.js"></script>
 </body>
 </html>

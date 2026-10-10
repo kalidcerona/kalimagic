@@ -43,7 +43,7 @@ test('Pi Max pinned snapshot excludes development controls and isolates three st
       const normalized = d.toString().replaceAll('pimax.distribution.settings', 'pimax-practice-settings').replaceAll('pimax.distribution.stats', 'pimax-practice-stats').replaceAll('pimax.distribution.session', 'pimax-practice-session');
       assert.equal(normalized, preparePimaxRuntime(p.toString()));
     } else if (file === 'sw.js') {
-      assert.equal(d.toString().replace('v20261005-7-distribution', 'v20261005-7'), p.toString());
+      assert.equal(d.toString().replace('v20261005-7-coherent-1-compat-1-distribution', 'v20261005-7-coherent-1-compat-1'), p.toString());
     } else assert.deepEqual(d, p, file);
   }
 });

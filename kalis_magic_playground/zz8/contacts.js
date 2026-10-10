@@ -53,6 +53,8 @@ let guideShown = false;
 const pointers = new Map();
 const touches = new Map();
 let peakPointers = 0;
+let gestureRejected = false;
+let touchRejected = false;
 
 function setStatus(message) {
   statusNode.textContent = message;
@@ -87,15 +89,77 @@ function canonicalText(value) {
   return String(value).replace(/\u0000/g, "").normalize("NFC").trim().replace(/\s+/g, " ");
 }
 
+let wakeLock = null;
+let wakeLockPending = false;
+
 function showScreen(screen) {
   settingsScreen.hidden = screen !== "settings";
   listScreen.hidden = screen !== "list";
   detailScreen.hidden = screen !== "detail";
+  syncPerformanceWakeLock();
 }
 
 function performanceOpen() {
   return settingsScreen.hidden;
 }
+
+function performanceWakeWanted() {
+  return performanceOpen();
+}
+
+async function acquireWakeLock() {
+  if (
+    !performanceWakeWanted() ||
+    !("wakeLock" in navigator) ||
+    document.visibilityState !== "visible" ||
+    wakeLock !== null ||
+    wakeLockPending
+  ) {
+    return;
+  }
+
+  wakeLockPending = true;
+  try {
+    const lock = await navigator.wakeLock.request("screen");
+
+    if (!performanceWakeWanted() || document.visibilityState !== "visible") {
+      await lock.release();
+      return;
+    }
+
+    wakeLock = lock;
+    lock.addEventListener("release", () => {
+      if (wakeLock === lock) wakeLock = null;
+      if (document.visibilityState === "visible") acquireWakeLock();
+    }, { once: true });
+  } catch {
+    wakeLock = null;
+  } finally {
+    wakeLockPending = false;
+  }
+}
+
+async function releaseWakeLock() {
+  const lock = wakeLock;
+  wakeLock = null;
+  if (lock === null) return;
+
+  try {
+    await lock.release();
+  } catch {
+    // Wake Lock API is optional; release failures need no UI.
+  }
+}
+
+function syncPerformanceWakeLock() {
+  if (performanceWakeWanted()) acquireWakeLock();
+  else releaseWakeLock();
+}
+
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") acquireWakeLock();
+  else releaseWakeLock();
+});
 
 function armClickSuppression() {
   suppressClick = true;
@@ -402,6 +466,13 @@ function swipeFingers() {
   return fingers;
 }
 
+function rebaseOrigins(points) {
+  for (const point of points.values()) {
+    point.x0 = point.x;
+    point.y0 = point.y;
+  }
+}
+
 function onPointerDown(event) {
   if (!performanceOpen()) return;
   if (event.pointerType === "mouse") return;
@@ -412,6 +483,12 @@ function onPointerDown(event) {
     y: event.clientY,
   });
   peakPointers = Math.max(peakPointers, pointers.size);
+  if (pointers.size > 2) {
+    gestureRejected = true;
+    return;
+  }
+  // Travel before the second finger lands does not count toward the 96px rule.
+  if (pointers.size === 2 && !gestureRejected) rebaseOrigins(pointers);
 }
 
 function onPointerMove(event) {
@@ -419,7 +496,7 @@ function onPointerMove(event) {
   if (!point || !performanceOpen()) return;
   point.x = event.clientX;
   point.y = event.clientY;
-  if (pointers.size !== 2) return;
+  if (gestureRejected || pointers.size !== 2) return;
   const fingers = swipeFingers();
   const downward = fingers.every((finger) => finger.dy > 0 && Math.abs(finger.dx) <= finger.dy);
   if (downward && event.cancelable) event.preventDefault();
@@ -432,28 +509,51 @@ function onPointerEnd(event) {
   if (pointers.size > 0) return;
   if (peakPointers >= 2) armClickSuppression();
   peakPointers = 0;
+  gestureRejected = false;
+}
+
+function onPointerCancel(event) {
+  pointers.delete(event.pointerId);
+  rebaseOrigins(pointers);
+  gestureRejected = pointers.size > 2;
+  if (pointers.size > 0) return;
+  if (peakPointers >= 2) armClickSuppression();
+  peakPointers = 0;
+  gestureRejected = false;
 }
 
 function onTouchStart(event) {
-  if (!performanceOpen() || event.touches.length > 2) {
+  if (!performanceOpen()) {
     touches.clear();
     return;
   }
-  for (let index = 0; index < event.changedTouches.length; index += 1) {
-    const touch = event.changedTouches.item(index);
-    touches.set(touch.identifier, {
+  if (event.touches.length > 2) {
+    touches.clear();
+    touchRejected = true;
+    return;
+  }
+  const live = new Set();
+  for (const touch of Array.from(event.touches)) {
+    live.add(touch.identifier);
+    const point = touches.get(touch.identifier) || {
       x0: touch.clientX,
       y0: touch.clientY,
       x: touch.clientX,
       y: touch.clientY,
-    });
+    };
+    point.x = touch.clientX;
+    point.y = touch.clientY;
+    touches.set(touch.identifier, point);
   }
+  for (const id of touches.keys()) {
+    if (!live.has(id)) touches.delete(id);
+  }
+  if (event.touches.length === 2 && !touchRejected) rebaseOrigins(touches);
 }
 
 function onTouchMove(event) {
-  if (!performanceOpen() || event.touches.length !== 2 || touches.size !== 2) return;
-  for (let index = 0; index < event.touches.length; index += 1) {
-    const touch = event.touches.item(index);
+  if (!performanceOpen() || touchRejected || event.touches.length !== 2 || touches.size !== 2) return;
+  for (const touch of Array.from(event.touches)) {
     const point = touches.get(touch.identifier);
     if (!point) return;
     point.x = touch.clientX;
@@ -472,6 +572,12 @@ function onTouchMove(event) {
 
 function onTouchEnd() {
   touches.clear();
+  touchRejected = false;
+}
+
+function onTouchCancel() {
+  touches.clear();
+  touchRejected = false;
 }
 
 function onSwallowClick(event) {
@@ -498,11 +604,11 @@ document.addEventListener("click", onSwallowClick, true);
 document.addEventListener("pointerdown", onPointerDown);
 document.addEventListener("pointermove", onPointerMove, { passive: false });
 document.addEventListener("pointerup", onPointerEnd);
-document.addEventListener("pointercancel", onPointerEnd);
+document.addEventListener("pointercancel", onPointerCancel);
 document.addEventListener("touchstart", onTouchStart, { passive: true });
 document.addEventListener("touchmove", onTouchMove, { passive: false });
 document.addEventListener("touchend", onTouchEnd, { passive: true });
-document.addEventListener("touchcancel", onTouchEnd, { passive: true });
+document.addEventListener("touchcancel", onTouchCancel, { passive: true });
 contactList.addEventListener("click", onListClick);
 contactSearch.addEventListener("input", () => {
   renderList();

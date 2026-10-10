@@ -36,7 +36,8 @@ let cameraEnded = false;
 let animation = 0;
 let lastSampleAt = 0;
 let calibrator = createBackgroundCalibrator();
-let touchStart = null;
+let settingsOrigins = null;
+let settingsGestureBlocked = false;
 let sampleIntervalMs = 60;
 let sampleGeometry = null;
 let displaySmooth = createDisplaySmoother();
@@ -154,6 +155,62 @@ function updateStateNote() {
   stateNote.textContent = stream ? stateLabel() : "카메라 시작 전";
 }
 
+let wakeLock = null;
+let wakeLockPending = false;
+
+function performanceWakeWanted() {
+  return Boolean(stream) && settings.hidden;
+}
+
+async function acquireWakeLock() {
+  if (
+    !performanceWakeWanted() ||
+    !("wakeLock" in navigator) ||
+    document.visibilityState !== "visible" ||
+    wakeLock !== null ||
+    wakeLockPending
+  ) {
+    return;
+  }
+
+  wakeLockPending = true;
+  try {
+    const lock = await navigator.wakeLock.request("screen");
+
+    if (!performanceWakeWanted() || document.visibilityState !== "visible") {
+      await lock.release();
+      return;
+    }
+
+    wakeLock = lock;
+    lock.addEventListener("release", () => {
+      if (wakeLock === lock) wakeLock = null;
+      if (document.visibilityState === "visible") acquireWakeLock();
+    }, { once: true });
+  } catch {
+    wakeLock = null;
+  } finally {
+    wakeLockPending = false;
+  }
+}
+
+async function releaseWakeLock() {
+  const lock = wakeLock;
+  wakeLock = null;
+  if (lock === null) return;
+
+  try {
+    await lock.release();
+  } catch {
+    // Wake Lock API is optional; release failures need no UI.
+  }
+}
+
+function syncPerformanceWakeLock() {
+  if (performanceWakeWanted()) acquireWakeLock();
+  else releaseWakeLock();
+}
+
 function openSettings() {
   if (!settings.hidden) return;
   if (!gestureGuide.hidden) closeGestureGuide();
@@ -167,6 +224,7 @@ function openSettings() {
   updateStateNote();
   settings.hidden = false;
   $("close-settings").focus();
+  syncPerformanceWakeLock();
 }
 
 function closeSettings() {
@@ -174,6 +232,7 @@ function closeSettings() {
   lastSampleAt = 0;
   tracker = createObservationTracker();
   resetAppearance();
+  syncPerformanceWakeLock();
 }
 
 function applyPaperStyle(color) {
@@ -363,6 +422,7 @@ function stopCamera(showSetup = true) {
   stage.hidden = true;
   if (showSetup) setup.hidden = false;
   updateStateNote();
+  syncPerformanceWakeLock();
 }
 
 // Prefer the front camera without requiring facingMode. Many desktop webcams omit
@@ -436,6 +496,7 @@ async function startCamera() {
     animation = requestAnimationFrame(processFrame);
     closeGestureGuide(false);
     message.textContent = "시작을 누르면 브라우저가 카메라 사용 권한을 묻습니다. 허용을 선택해 주세요. 영상은 기기 밖으로 전송하거나 저장하지 않습니다.";
+    syncPerformanceWakeLock();
   } catch (error) {
     if (stream) stopCamera();
     else {
@@ -481,21 +542,46 @@ for (const control of [rank, suit, brightness]) {
     updateStateNote();
   });
 }
+function settingsContacts(list) {
+  return Array.from(list || [], (touch) => ({ id: touch.identifier, x: touch.clientX, y: touch.clientY }));
+}
+// Origins are the positions at the moment the pair forms, in viewport coordinates.
+function settingsPairReady(origins, contacts) {
+  return origins.every((origin) => {
+    const end = contacts.find((point) => point.id === origin.id);
+    if (!end) return false;
+    const dx = end.x - origin.x;
+    const dy = end.y - origin.y;
+    return dy >= 96 && dy > Math.abs(dx) * 1.5;
+  });
+}
 stage.addEventListener("touchstart", (event) => {
-  if (event.touches.length !== 2) { touchStart = null; return; }
-  touchStart = (event.touches[0].clientY + event.touches[1].clientY) / 2;
+  if (event.touches.length > 2) {
+    settingsGestureBlocked = true;
+    settingsOrigins = null;
+    return;
+  }
+  if (event.touches.length === 2 && !settingsGestureBlocked) {
+    settingsOrigins = settingsContacts(event.touches);
+    return;
+  }
+  settingsOrigins = null;
 }, { passive: true });
 stage.addEventListener("touchmove", (event) => {
-  if (touchStart == null || event.touches.length !== 2) return;
-  const y = (event.touches[0].clientY + event.touches[1].clientY) / 2;
-  if (y - touchStart >= 55) {
-    touchStart = null;
-    event.preventDefault();
-    openSettings();
-  }
+  if (settingsGestureBlocked || !settingsOrigins || event.touches.length !== 2) return;
+  if (!settingsPairReady(settingsOrigins, settingsContacts(event.touches))) return;
+  settingsOrigins = null;
+  settingsGestureBlocked = true;
+  event.preventDefault();
+  openSettings();
 }, { passive: false });
 stage.addEventListener("touchend", (event) => {
-  if (event.touches.length < 2) touchStart = null;
+  if (event.touches.length < 2) settingsOrigins = null;
+  if (event.touches.length === 0) settingsGestureBlocked = false;
+}, { passive: true });
+stage.addEventListener("touchcancel", () => {
+  settingsOrigins = null;
+  settingsGestureBlocked = false;
 }, { passive: true });
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape" && !settings.hidden) closeSettings();
@@ -514,8 +600,13 @@ function resumeAnalysis() {
   animation = requestAnimationFrame(processFrame);
 }
 document.addEventListener("visibilitychange", () => {
-  if (document.hidden) suspendAnalysis("visibility-hidden");
-  else resumeAnalysis();
+  if (document.hidden) {
+    suspendAnalysis("visibility-hidden");
+    releaseWakeLock();
+  } else {
+    resumeAnalysis();
+    acquireWakeLock();
+  }
 });
 window.addEventListener("pagehide", () => suspendAnalysis("page-hidden"));
 window.addEventListener("pageshow", resumeAnalysis);

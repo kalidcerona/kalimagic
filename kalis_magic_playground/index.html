@@ -17,11 +17,12 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="style.css">
-  <link rel="preload" as="image" href="assets/profile/bar-reaction-1080w.webp" type="image/webp" media="(min-width: 1025px)" imagesrcset="assets/profile/bar-reaction-800w.webp 800w, assets/profile/bar-reaction-1080w.webp 1080w" imagesizes="100vw">
-  <link rel="preload" as="image" href="assets/profile/magic-reaction-800w.jpg" type="image/jpeg" media="(max-width: 1024px)" imagesrcset="assets/profile/magic-reaction-480w.jpg 480w, assets/profile/magic-reaction-800w.jpg 800w" imagesizes="430px" fetchpriority="high">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" media="print" onload="this.media='all'">
-  <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css"></noscript>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;500;600;700&display=swap">
+  <link rel="preload" as="image" href="assets/profile/bar-reaction-800w.webp" type="image/webp" media="(min-width: 1025px)" imagesrcset="assets/profile/bar-reaction-800w.webp 800w, assets/profile/bar-reaction-1080w.webp 1080w" imagesizes="(min-width:1025px) 540px, 100vw">
+  <link rel="preload" as="image" href="assets/profile/magic-reaction-800w.webp" type="image/webp" media="(max-width: 1024px)" imagesrcset="assets/profile/magic-reaction-480w.webp 480w, assets/profile/magic-reaction-800w.webp 800w" imagesizes="430px" fetchpriority="high">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.css" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.css"></noscript>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;700&display=swap" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;700&display=swap"></noscript>
   <script src="nav.js" defer></script>
   <script src="editor.js" defer></script>
   <script src="reveal.js" defer></script>
@@ -73,8 +74,9 @@
         <div class="kx-fade kx-in kx-grid2" style="display:grid; grid-template-columns:0.95fr 1.05fr; gap:0; align-items:stretch; margin-top:22px; border-radius:10px; overflow:hidden;">
           <div style="position:relative; min-height:560px; overflow:hidden;">
             <picture>
-              <source type="image/webp" srcset="assets/profile/bar-reaction-800w.webp 800w, assets/profile/bar-reaction-1080w.webp 1080w" sizes="100vw">
-              <img src="assets/profile/bar-reaction-1080w.jpg" srcset="assets/profile/bar-reaction-800w.jpg 800w, assets/profile/bar-reaction-1080w.jpg 1080w" sizes="100vw" alt="바에서 마술을 보여주며 사람들이 놀라는 순간" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center 38%; filter:saturate(0.92) brightness(0.86) contrast(1.05);" class="kx-ken" width="1200" height="800" loading="lazy" fetchpriority="high" decoding="async">
+              <source media="(max-width: 1024px)" srcset="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==">
+              <source type="image/webp" srcset="assets/profile/bar-reaction-800w.webp 800w, assets/profile/bar-reaction-1080w.webp 1080w" sizes="(min-width:1025px) 540px, 100vw">
+              <img src="assets/profile/bar-reaction-1080w.jpg" srcset="assets/profile/bar-reaction-800w.jpg 800w, assets/profile/bar-reaction-1080w.jpg 1080w" sizes="(min-width:1025px) 540px, 100vw" alt="바에서 마술을 보여주며 사람들이 놀라는 순간" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center 38%; filter:saturate(0.92) brightness(0.86) contrast(1.05);" class="kx-ken" width="1200" height="800" loading="eager" fetchpriority="high" decoding="async">
             </picture>
             <div style="position:absolute; inset:0; background:rgba(20,16,13,0.24);"></div>
             <div style="position:absolute; inset:0; background:linear-gradient(90deg, rgba(26,21,18,0) 45%, #1a1512 100%);"></div>
@@ -161,7 +163,11 @@
         
           <div class="kx-fade kx-grid2" style="display:grid; grid-template-columns:1fr 1fr; gap:54px; align-items:center;">
             <div class="solution-img-wrap kx-imgzoom" style="position:relative; overflow:hidden; border-radius:10px; min-height:420px; height:100%; border:1px solid rgba(255,255,255,0.08);">
-              <img src="assets/profile/magic-cards.jpg" alt="실내 카드 마술 시연" style="width:100%; height:100%; object-fit:cover; object-position:center 35%;" loading="lazy" decoding="async" width="1200" height="951">
+              <picture style="display:contents">
+                <source media="(max-width: 1024px)" srcset="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==">
+                <source type="image/webp" srcset="assets/profile/magic-cards-800w.webp 800w, assets/profile/magic-cards-1200w.webp 1200w" sizes="520px">
+                <img src="assets/profile/magic-cards.jpg" alt="실내 카드 마술 시연" style="width:100%; height:100%; object-fit:cover; object-position:center 35%;" loading="lazy" decoding="async" width="1200" height="951">
+              </picture>
               <div style="position:absolute; inset:0; pointer-events:none; box-shadow:inset 0 0 90px rgba(0,0,0,0.45);"></div>
             </div>
             <div>
@@ -200,12 +206,16 @@
         
           <div class="kx-fade" style="display:grid; grid-template-columns:1.35fr 1fr; gap:20px; align-items:stretch;">
             <a href="intro.html" style="display:flex; flex-direction:column; justify-content:flex-end; position:relative; min-height:340px; border-radius:10px; overflow:hidden; border:1px solid rgba(224,144,78,0.32);" data-hover="transform:translateY(-4px)" data-track="home_intro" data-track-type="cta_click" data-track-placement="desktop_product_path">
-              <img src="assets/profile/magic-table.jpg" alt="테이블 위 마술 도구" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center 42%;" loading="lazy" decoding="async" width="1200" height="900">
+              <picture style="display:contents">
+                <source media="(max-width: 1024px)" srcset="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==">
+                <source type="image/webp" srcset="assets/profile/magic-table-800w.webp 800w, assets/profile/magic-table-1200w.webp 1200w" sizes="620px">
+                <img src="assets/profile/magic-table.jpg" alt="테이블 위 마술 도구" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center 42%;" loading="lazy" decoding="async" width="1200" height="900">
+              </picture>
               <div style="position:absolute; inset:0; background:linear-gradient(0deg, #1a1512 12%, rgba(26,21,18,0.15) 75%);"></div>
               <div style="position:relative; padding:32px 30px;">
                 <span style="font-size:0.74rem; font-weight:700; color:#1a1410; background:var(--point-gold); border-radius:999px; padding:4px 12px; align-self:flex-start; display:inline-block; margin-bottom:18px;">처음이면</span>
                 <h4 style="font-size:1.5rem; font-weight:800; margin:0 0 10px;">5,000원 입문 강의</h4>
-                <p style="color:#dccdbe; font-size:0.98rem; line-height:1.8; margin:0 0 20px; max-width:26rem;">기초 마술 6편. 형이 직접 짠 순서로, 처음이어도 바로 따라할 수 있어.</p>
+                <p style="color:#dccdbe; font-size:0.98rem; line-height:1.8; margin:0 0 20px; max-width:26rem; text-wrap:pretty;">기초 마술 6편. 형이 직접 짠 순서로, 처음이어도 바로 따라할 수&nbsp;있어.</p>
                 <span style="color:var(--point-gold); font-weight:700; font-size:0.94rem;">시작하기 →</span>
               </div>
             </a>
@@ -279,12 +289,16 @@
 
         <div class="kx-fade kx-grid2" style="display:grid; grid-template-columns:0.92fr 1.08fr; gap:54px; align-items:center;">
           <div class="kx-imgzoom" style="position:relative; overflow:hidden; border-radius:10px; min-height:420px; height:100%; border:1px solid rgba(255,255,255,0.08);">
-            <img src="assets/profile/portrait.jpg" alt="칼리형 인터뷰 장면" style="width:100%; height:100%; object-fit:cover; object-position:center 28%; filter:saturate(0.92) brightness(0.96);" loading="lazy" decoding="async" width="1200" height="808">
+            <picture style="display:contents">
+              <source media="(max-width: 1024px)" srcset="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==">
+              <source type="image/webp" srcset="assets/profile/portrait-800w.webp 800w, assets/profile/portrait-1200w.webp 1200w" sizes="520px">
+              <img src="assets/profile/portrait.jpg" alt="칼리형 인터뷰 장면" style="width:100%; height:100%; object-fit:cover; object-position:center 28%; filter:saturate(0.92) brightness(0.96);" loading="lazy" decoding="async" width="1200" height="808">
+            </picture>
             <div style="position:absolute; inset:0; pointer-events:none; box-shadow:inset 0 0 90px rgba(0,0,0,0.45);"></div>
           </div>
           <div>
             <p style="color:var(--point-gold); font-weight:700; font-size:0.78rem; letter-spacing:0.16em; margin:0 0 13px;">형은 마술 선생이 아니야</p>
-            <h3 style="font-size:clamp(1.6rem,4vw,2.4rem); font-weight:800; line-height:1.32; letter-spacing:-0.01em; margin:0 0 20px;">형이 진짜 하고 싶은 건,<br><span style="font-family:'Noto Serif KR',serif; font-style:italic; font-weight:500; color:var(--point-gold);">이걸 배운 네가 달라지는 거</span><br>보는 거야.</h3>
+            <h3 style="font-size:clamp(1.6rem,4vw,2.4rem); font-weight:800; line-height:1.32; letter-spacing:-0.01em; margin:0 0 20px; text-wrap:balance;">형이 진짜 하고 싶은 건,<br><span style="font-family:'Noto Serif KR',serif; font-style:italic; font-weight:500; color:var(--point-gold);">이걸 배운 네가 달라지는 거</span><br>보는 거야.</h3>
             <p style="color:#cbbfb2; font-size:1.05rem; line-height:1.9; max-width:32rem; margin:0 0 18px;">솔직히 말할게.<br>형이 하고 싶은 건 마술 기술 전수가 아니야.<br>형 옆에 있으면 뭔가 달라지는 느낌, 그게 너한테도 생기도록 하는 게 목표야.</p>
             <p style="color:#cbbfb2; font-size:1.05rem; line-height:1.9; max-width:32rem; margin:0 0 18px;">처음 만난 사람 앞에서 당당하고,<br>어떤 자리에서든 기억에 남고,<br>나라는 사람 자체가 매력적인 것.<br>마술은 그걸 만드는 가장 빠른 방법이라고 생각해.</p>
             <p style="color:#8a8075; font-size:0.96rem; line-height:1.8; max-width:32rem; margin:0;">침착맨 마술 콘테스트 우승 · 대학 특강 · 방송 출연, 그게 다가 아닌 것 같았어.<br>형이 진짜 하고 싶은 건, 이걸 배운 너가 달라지는 거 보는 거야.</p>
@@ -313,7 +327,11 @@
               </div>
             </div>
             <div class="kx-imgzoom" style="position:relative; overflow:hidden; border-radius:14px; aspect-ratio:4/3; width:100%; border:1px solid rgba(255,255,255,0.08);">
-              <img src="assets/profile/lecture-outdoor.jpg" alt="야외 특강 현장" style="width:100%; height:100%; object-fit:cover; object-position:center 28%;" loading="lazy" decoding="async" width="1200" height="900">
+              <picture style="display:contents">
+                <source media="(max-width: 1024px)" srcset="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==">
+                <source type="image/webp" srcset="assets/profile/lecture-outdoor-800w.webp 800w, assets/profile/lecture-outdoor-1200w.webp 1200w" sizes="600px">
+                <img src="assets/profile/lecture-outdoor.jpg" alt="야외 특강 현장" style="width:100%; height:100%; object-fit:cover; object-position:center 28%;" loading="lazy" decoding="async" width="1200" height="900">
+              </picture>
               <div style="position:absolute; inset:0; pointer-events:none; box-shadow:inset 0 0 80px rgba(0,0,0,0.4);"></div>
             </div>
           </div>
@@ -414,13 +432,15 @@
   <!-- §1 HERO -->
   <div class="kx-in" style="position:relative;">
     <picture>
+      <source media="(min-width: 1025px)" srcset="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==">
+      <source media="(max-width: 1024px)" type="image/webp" srcset="assets/profile/magic-reaction-480w.webp 480w, assets/profile/magic-reaction-800w.webp 800w" sizes="430px">
       <source media="(max-width: 1024px)" type="image/jpeg" srcset="assets/profile/magic-reaction-480w.jpg 480w, assets/profile/magic-reaction-800w.jpg 800w" sizes="430px">
       <img src="assets/profile/magic-reaction.jpg" alt="관객이 놀라는 마술 시연" style="width:100%; height:300px; object-fit:cover; object-position:center 38%; display:block; filter:saturate(0.92) contrast(1.05) brightness(0.82);" width="1200" height="800" loading="eager" fetchpriority="high" decoding="async">
     </picture>
     <div style="position:absolute; inset:0; background:linear-gradient(180deg, rgba(26,15,10,0.22) 30%, rgba(26,15,10,0.94));"></div>
     <div style="position:absolute; left:0; right:0; bottom:0; padding:0 24px 22px;">
       <p class="kx-eye" style="margin-bottom:10px;"><span></span>형이 알려줄게</p>
-      <h2 style="text-align:center; font-size:36px; font-weight:800; line-height:1.14; letter-spacing:-0.03em; color:#F4E7DA; margin:0; word-break:keep-all;">마술 한 번에 <span style="color:#F0A878;">그 자리가</span><br><span class="kx-serif" style="font-size:36px;color:#F0A878;">너를 기억해</span></h2>
+      <h1 style="text-align:center; font-size:36px; font-weight:800; line-height:1.14; letter-spacing:-0.03em; color:#F4E7DA; margin:0; word-break:keep-all;">마술 한 번에 <span style="color:#F0A878;">그 자리가</span><br><span class="kx-serif" style="font-size:36px;color:#F0A878;">너를 기억해</span></h1>
     </div>
   </div>
   <div style="padding:22px 24px 0;">
@@ -433,7 +453,7 @@
         <div style="width:20px; height:20px; border-radius:50%; background:#D98A5E; border:2px solid #1A0F0A; margin-left:-7px;"></div>
         <div style="width:20px; height:20px; border-radius:50%; background:#8A4F32; border:2px solid #1A0F0A; margin-left:-7px;"></div>
       </div>
-      <a href="https://open.kakao.com/o/gQns7wzi" target="_blank" rel="noopener" style="color:#B79C8A; font-size:12.5px; font-weight:600; text-decoration:none;" data-track="home_open_chat" data-track-type="cta_click" data-track-placement="mobile_open_chat">칼리의 아이들 · <b style="color:var(--point-gold);">형 팬덤방</b> →</a>
+      <a href="https://open.kakao.com/o/gQns7wzi" target="_blank" rel="noopener" style="color:#B79C8A; font-size:12.5px; font-weight:600; text-decoration:none; display:inline-block; padding:15px 0; margin:-15px 0;" data-track="home_open_chat" data-track-type="cta_click" data-track-placement="mobile_open_chat">칼리의 아이들 · <b style="color:var(--point-gold);">형 팬덤방</b> →</a>
     </div>
   </div>
 
@@ -457,7 +477,11 @@
     <p class="kx-eye"><span></span>그래서 마술이야</p>
     <h2 class="kx-h2">마술은 기술이 아니야<br><span class="kx-serif" style="font-size:27px;">상황을 바꾸는 도구야</span></h2>
     <div style="margin:6px 0 20px; position:relative; border-radius:18px; overflow:hidden; box-shadow:0 14px 30px rgba(0,0,0,0.42); border:1px solid rgba(255,255,255,0.06);">
-      <img src="assets/profile/magic-cards.jpg" alt="모임에서 카드 마술을 보며 웃는 사람들" style="width:100%; height:204px; object-fit:cover; object-position:center 42%; display:block; filter:saturate(0.92);" loading="lazy" decoding="async" width="1200" height="951">
+      <picture style="display:contents">
+        <source media="(min-width: 1025px)" srcset="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==">
+        <source type="image/webp" srcset="assets/profile/magic-cards-800w.webp 800w, assets/profile/magic-cards-1200w.webp 1200w" sizes="400px">
+        <img src="assets/profile/magic-cards.jpg" alt="모임에서 카드 마술을 보며 웃는 사람들" style="width:100%; height:204px; object-fit:cover; object-position:center 42%; display:block; filter:saturate(0.92);" loading="lazy" decoding="async" width="1200" height="951">
+      </picture>
       <div style="position:absolute; inset:0; background:linear-gradient(180deg, transparent 55%, rgba(26,15,10,0.35));"></div>
     </div>
     <p style="text-align:center; color:#C9B3A2; font-size:14.5px; line-height:1.8; margin:0 0 18px; word-break:keep-all;">카드 한 장으로 공기가 달라져.<br>상대가 어느새 너한테 집중하고 있어.<br>박수를 받는 게 아니라,<br>네가 기억에 남는 사람이 되는 거야.</p>
@@ -475,8 +499,8 @@
     <h2 class="kx-h2">너에게 맞는<br>다음 한 걸음</h2>
     <div style="display:flex; flex-direction:column; gap:10px; margin-top:22px;">
       <a href="video.html" style="text-decoration:none; color:inherit; display:block;" data-track="home_video" data-track-type="cta_click" data-track-placement="mobile_step"><div style="display:flex; gap:14px; align-items:flex-start; background:#241712; border:1px solid rgba(255,255,255,0.07); border-radius:14px; padding:16px 18px;"><div style="flex:none; width:30px; height:30px; border-radius:50%; background:rgba(224,138,79,0.14); color:var(--point-gold); font-weight:800; font-size:14px; display:flex; align-items:center; justify-content:center;">1</div><div><h4 style="margin:0 0 3px; font-size:15px; font-weight:800; color:#F4E7DA;">무료 영상</h4><p style="margin:0; color:#A99685; font-size:13.5px; line-height:1.62;">유튜브·인스타에 올라와 있어. 부담 없이 구경해봐.</p></div></div></a>
-      <a href="intro.html" style="text-decoration:none; color:inherit; display:block;" data-track="home_intro" data-track-type="cta_click" data-track-placement="mobile_step"><div style="display:flex; gap:14px; align-items:flex-start; background:linear-gradient(135deg, rgba(194,96,58,0.2), rgba(194,96,58,0.08)); border:1px solid rgba(224,138,79,0.5); border-radius:14px; padding:16px 18px;"><div style="flex:none; width:30px; height:30px; border-radius:50%; background:var(--kx-terra); color:#FBEFE6; font-weight:800; font-size:14px; display:flex; align-items:center; justify-content:center;">2</div><div><h4 style="margin:0 0 3px; font-size:15px; font-weight:800; color:#F4E7DA;">입문 강의 · 5,000원</h4><p style="margin:0; color:#D6C2B2; font-size:13.5px; line-height:1.62;">기초 마술 6편. 처음이어도 바로 따라할 수 있어.</p></div></div></a>
-      <a href="works.html" style="text-decoration:none; color:inherit; display:block;" data-track="home_works" data-track-type="cta_click" data-track-placement="mobile_step"><div style="display:flex; gap:14px; align-items:flex-start; background:#241712; border:1px solid rgba(255,255,255,0.07); border-radius:14px; padding:16px 18px;"><div style="flex:none; width:30px; height:30px; border-radius:50%; background:rgba(224,138,79,0.14); color:var(--point-gold); font-weight:800; font-size:14px; display:flex; align-items:center; justify-content:center;">3</div><div><h4 style="margin:0 0 3px; font-size:15px; font-weight:800; color:#F4E7DA;">작품·도구 · 2-3만원대</h4><p style="margin:0; color:#A99685; font-size:13.5px; line-height:1.62;">형이 직접 만든 것들. 용돈으로 시작할 수 있는 가격이야.</p></div></div></a>
+      <a href="intro.html" style="text-decoration:none; color:inherit; display:block;" data-track="home_intro" data-track-type="cta_click" data-track-placement="mobile_step"><div style="display:flex; gap:14px; align-items:flex-start; background:linear-gradient(135deg, rgba(194,96,58,0.2), rgba(194,96,58,0.08)); border:1px solid rgba(224,138,79,0.5); border-radius:14px; padding:16px 18px;"><div style="flex:none; width:30px; height:30px; border-radius:50%; background:var(--kx-terra); color:#FBEFE6; font-weight:800; font-size:14px; display:flex; align-items:center; justify-content:center;">2</div><div><h4 style="margin:0 0 3px; font-size:15px; font-weight:800; color:#F4E7DA;">입문 강의 · 5,000원</h4><p style="margin:0; color:#D6C2B2; font-size:13.5px; line-height:1.62; text-wrap:pretty;">기초 마술 6편. 처음이어도 바로 따라할 수&nbsp;있어.</p></div></div></a>
+      <a href="works.html" style="text-decoration:none; color:inherit; display:block;" data-track="home_works" data-track-type="cta_click" data-track-placement="mobile_step"><div style="display:flex; gap:14px; align-items:flex-start; background:#241712; border:1px solid rgba(255,255,255,0.07); border-radius:14px; padding:16px 18px;"><div style="flex:none; width:30px; height:30px; border-radius:50%; background:rgba(224,138,79,0.14); color:var(--point-gold); font-weight:800; font-size:14px; display:flex; align-items:center; justify-content:center;">3</div><div><h4 style="margin:0 0 3px; font-size:15px; font-weight:800; color:#F4E7DA;">작품·도구 · 2-3만원대</h4><p style="margin:0; color:#A99685; font-size:13.5px; line-height:1.62; text-wrap:balance; word-break:keep-all;">형이 직접 만든 것들. 용돈으로 시작할 수 있는 가격이야.</p></div></div></a>
       <a href="lesson.html" style="text-decoration:none; color:inherit; display:block;" data-track="home_lesson" data-track-type="cta_click" data-track-placement="mobile_step"><div style="display:flex; gap:14px; align-items:flex-start; background:#241712; border:1px solid rgba(255,255,255,0.07); border-radius:14px; padding:16px 18px;"><div style="flex:none; width:30px; height:30px; border-radius:50%; background:rgba(224,138,79,0.14); color:var(--point-gold); font-weight:800; font-size:14px; display:flex; align-items:center; justify-content:center;">4</div><div><h4 style="margin:0 0 3px; font-size:15px; font-weight:800; color:#F4E7DA;">무료 상담</h4><p style="margin:0; color:#A99685; font-size:13.5px; line-height:1.62;">배우기 전에 형이 직접 맞는지 봐줄게.</p></div></div></a>
       <a href="https://open.kakao.com/o/gQns7wzi" target="_blank" rel="noopener" style="text-decoration:none; color:inherit; display:block;" data-track="home_open_chat" data-track-type="cta_click" data-track-placement="mobile_step"><div style="display:flex; gap:14px; align-items:flex-start; background:#241712; border:1px solid rgba(255,255,255,0.07); border-radius:14px; padding:16px 18px;"><div style="flex:none; width:30px; height:30px; border-radius:50%; background:rgba(224,138,79,0.14); color:var(--point-gold); font-weight:800; font-size:14px; display:flex; align-items:center; justify-content:center;">5</div><div><h4 style="margin:0 0 3px; font-size:15px; font-weight:800; color:#F4E7DA;">커뮤니티 · 칼리의 아이들</h4><p style="margin:0; color:#A99685; font-size:13.5px; line-height:1.62;">마술 배운 사람들끼리 모이는 곳. 형이랑 계속 연결돼 있어.</p></div></div></a>
     </div>
@@ -498,10 +522,14 @@
   <div style="padding:56px 24px 0; text-align:center;">
     <p class="kx-eye"><span></span>형은 마술 선생이 아니야</p>
     <div style="margin:6px 0 20px; border-radius:18px; overflow:hidden; box-shadow:0 14px 30px rgba(0,0,0,0.42); border:1px solid rgba(255,255,255,0.06);">
-      <img src="assets/profile/portrait.jpg" alt="칼리형 인터뷰 장면" style="width:100%; height:200px; object-fit:cover; object-position:center 28%; display:block; filter:saturate(0.92) brightness(0.96);" loading="lazy" decoding="async" width="1200" height="808">
+      <picture style="display:contents">
+        <source media="(min-width: 1025px)" srcset="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==">
+        <source type="image/webp" srcset="assets/profile/portrait-800w.webp 800w, assets/profile/portrait-1200w.webp 1200w" sizes="400px">
+        <img src="assets/profile/portrait.jpg" alt="칼리형 인터뷰 장면" style="width:100%; height:200px; object-fit:cover; object-position:center 28%; display:block; filter:saturate(0.92) brightness(0.96);" loading="lazy" decoding="async" width="1200" height="808">
+      </picture>
     </div>
     <p style="color:#C9B3A2; font-size:14.5px; line-height:1.8; margin:0 0 20px; word-break:keep-all;">형이 하고 싶은 건 마술 기술 전수가 아니야.<br>처음 만난 사람 앞에서 당당하고,<br>어떤 자리에서든 기억에 남는 것.<br>마술은 그걸 만드는 가장 빠른 방법이야.</p>
-    <a href="about.html" style="display:inline-flex; align-items:center; gap:6px; color:var(--point-gold); font-weight:700; font-size:14px;">형 이야기 더 보기 →</a>
+    <a href="about.html" style="display:inline-flex; align-items:center; gap:6px; color:var(--point-gold); font-weight:700; font-size:14px; padding:12px 0; margin:-12px 0;">형 이야기 더 보기 →</a>
   </div>
 
   <!-- §7.5 LESSON CTA (배너 승격형 1c) -->
@@ -533,7 +561,7 @@
   <!-- footer -->
   <div style="padding:26px 24px 36px; text-align:center;">
     <p style="color:#6E5A4C; font-size:12px; margin:0;">칼리형 · 마술로 기억에 남는 사람이 되는 법</p>
-    <p style="color:#9A7560; font-size:12.5px; margin:8px 0 0;"><a href="https://open.kakao.com/o/gQns7wzi" target="_blank" rel="noopener" style="color:#9A7560;" data-track="home_open_chat" data-track-type="cta_click" data-track-placement="mobile_footer">칼리의 아이들 · 형 팬덤 오픈채팅방 →</a></p>
+    <p style="color:#9A7560; font-size:12.5px; margin:8px 0 0;"><a href="https://open.kakao.com/o/gQns7wzi" target="_blank" rel="noopener" style="color:#9A7560; display:inline-block; vertical-align:top; padding:6px 0 24px; margin:-6px 0 -24px;" data-track="home_open_chat" data-track-type="cta_click" data-track-placement="mobile_footer">칼리의 아이들 · 형 팬덤 오픈채팅방 →</a></p>
   </div>
 
 </div>

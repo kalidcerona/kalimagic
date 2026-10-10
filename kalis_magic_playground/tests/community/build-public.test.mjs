@@ -4,7 +4,7 @@ import { readdir, readFile, stat, mkdtemp, mkdir, writeFile, rm } from 'node:fs/
 import path from 'node:path';
 import os from 'node:os';
 import { fileURLToPath } from 'node:url';
-import { PUBLIC_FILES, PUBLIC_DIRS, PRIVATE_PATTERNS, MIRROR_PAIRS, DISTRIBUTION_APPS, SHARED_UNLOCK_FILES, CHOICE_FILES, NEW_APP_FILES, USOTSUKI_FILES, ASRAI_FILES, ALTER_FILES, SPINNER_FILES, MEMDECK_FILES, QR_FILES, ALETHEIA_COURT_FILES, SETTINGS_UI_FILES, buildPublic, verifyAppDisplayPolicy, injectLegacyMigration } from '../../scripts/build-public.mjs';
+import { PUBLIC_FILES, PUBLIC_DIRS, PRIVATE_PATTERNS, MIRROR_PAIRS, DISTRIBUTION_APPS, SHARED_UNLOCK_FILES, CHOICE_FILES, NEW_APP_FILES, USOTSUKI_FILES, ASRAI_FILES, ALTER_FILES, SPINNER_FILES, MEMDECK_FILES, QR_FILES, ALETHEIA_COURT_FILES, SETTINGS_UI_FILES, buildPublic, verifyAppDisplayPolicy, injectLegacyMigration, injectLegacyShellModules } from '../../scripts/build-public.mjs';
 
 test('public build allowlist includes visible site pages', () => {
   assert.ok(PUBLIC_FILES.includes('index.html'));
@@ -219,6 +219,26 @@ test('admin distribution catalog lists one integrated stopwatch while keeping it
   assert.doesNotMatch(admin, /data-copy-link="\/tools\/kairos-classic\/"/);
 });
 
+test('legacy shell injection appends legacy-1 before a distribution suffix and stays idempotent', () => {
+  const distributed = [
+    "const CACHE_NAME = CACHE_PREFIX + 'v20261004-coherent-1-distribution';",
+    'const SHELL = [',
+    '  "./index.html"',
+    '];',
+    ''
+  ].join('\n');
+  const once = injectLegacyShellModules(distributed);
+  assert.equal(injectLegacyShellModules(once), once);
+  assert.match(once, /const CACHE_NAME = CACHE_PREFIX \+ 'v20261004-coherent-1-legacy-1-distribution';/);
+  assert.doesNotMatch(once, /-distribution-legacy-1/);
+  assert.match(once, /"\.\/legacy-shared-contract\.mjs"/);
+  assert.match(once, /"\.\/legacy-storage-migration\.mjs"/);
+  const plain = distributed.replace('-distribution', '');
+  const plainOnce = injectLegacyShellModules(plain);
+  assert.equal(injectLegacyShellModules(plainOnce), plainOnce);
+  assert.match(plainOnce, /const CACHE_NAME = CACHE_PREFIX \+ 'v20261004-coherent-1-legacy-1';/);
+});
+
 test('personal KAIROS edits do not change either shared route', async () => {
   await buildPublic();
   const root = fileURLToPath(new URL('../..', import.meta.url));
@@ -284,6 +304,13 @@ test('personal KAIROS edits do not change either shared route', async () => {
         personalExpected = personalBytes
           ? Buffer.from(JSON.stringify({ ...JSON.parse(personalBytes), id: `/tools/${target}/`, start_url: './', scope: './' }, null, 2) + '\n')
           : null;
+      } else if (file === 'sw.js') {
+        const snapshotSource = snapshotBytes.toString('utf8');
+        const injected = injectLegacyShellModules(snapshotSource);
+        assert.equal(injectLegacyShellModules(injected), injected);
+        assert.match(injected, /const CACHE_NAME = CACHE_PREFIX \+ '[^']*-legacy-1';/);
+        assert.doesNotMatch(snapshotSource, /-legacy-1/);
+        expected = Buffer.from(injected);
       }
       assert.deepEqual(comparable, expected, `${target}/${file} must follow the kairos snapshot`);
       if (personalExpected && !personalBytes.equals(snapshotBytes)) {
@@ -399,6 +426,14 @@ test('HITSUZEN and AROSAEGIDA keep every pinned snapshot byte except gate, custo
         assert.equal(manifest.start_url, './');
         assert.equal(manifest.scope, './');
         assert.deepEqual(manifest, { ...JSON.parse(sourceBytes), id: `/tools/${app.target}/`, start_url: './', scope: './' });
+      } else if (file === 'sw.js' && app.target === 'hitsuzen') {
+        const snapshotSource = sourceBytes.toString('utf8');
+        const injected = injectLegacyShellModules(snapshotSource);
+        assert.equal(injectLegacyShellModules(injected), injected);
+        assert.match(injected, /const CACHE_NAME = CACHE_PREFIX \+ '[^']*-legacy-1';/);
+        assert.doesNotMatch(injected, /-legacy-1-legacy-1/);
+        assert.doesNotMatch(snapshotSource, /-legacy-1/);
+        assert.equal(targetBytes.toString('utf8'), injected);
       } else {
         assert.deepEqual(targetBytes, sourceBytes, `${app.target}/${file}`);
       }

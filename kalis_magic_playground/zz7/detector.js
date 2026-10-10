@@ -223,7 +223,7 @@ let scanGain = null;
 let readyTimer = 0;
 let readyFeedbackShown = false;
 
-/** @type {Map<number, {x: number, y: number, startX: number, startY: number, startedOnButton: boolean}>} */
+/** @type {Map<number, {x: number, y: number, startX: number, startY: number, startedOnButton: boolean, pointerType: string}>} */
 const pointers = new Map();
 
 function storageGet(key) {
@@ -661,6 +661,62 @@ function settingsVisible() {
   return !settingsScreen.hidden;
 }
 
+let wakeLock = null;
+let wakeLockPending = false;
+
+function performanceWakeWanted() {
+  return !performanceScreen.hidden && !settingsVisible();
+}
+
+async function acquireWakeLock() {
+  if (
+    !performanceWakeWanted() ||
+    !("wakeLock" in navigator) ||
+    document.visibilityState !== "visible" ||
+    wakeLock !== null ||
+    wakeLockPending
+  ) {
+    return;
+  }
+
+  wakeLockPending = true;
+  try {
+    const lock = await navigator.wakeLock.request("screen");
+
+    if (!performanceWakeWanted() || document.visibilityState !== "visible") {
+      await lock.release();
+      return;
+    }
+
+    wakeLock = lock;
+    lock.addEventListener("release", () => {
+      if (wakeLock === lock) wakeLock = null;
+      if (document.visibilityState === "visible") acquireWakeLock();
+    }, { once: true });
+  } catch {
+    wakeLock = null;
+  } finally {
+    wakeLockPending = false;
+  }
+}
+
+async function releaseWakeLock() {
+  const lock = wakeLock;
+  wakeLock = null;
+  if (lock === null) return;
+
+  try {
+    await lock.release();
+  } catch {
+    // Wake Lock API is optional; release failures need no UI.
+  }
+}
+
+function syncPerformanceWakeLock() {
+  if (performanceWakeWanted()) acquireWakeLock();
+  else releaseWakeLock();
+}
+
 function showSettings() {
   stopWoodPaper();
   recorderThemes.suspend();
@@ -680,6 +736,7 @@ function showSettings() {
   detectorButton.setAttribute("aria-busy", "false");
   truthInput.value = appState.settings.truthAttempts.join(",");
   updateAttemptProgress();
+  syncPerformanceWakeLock();
 }
 
 function needsHapticPreparation() {
@@ -711,6 +768,7 @@ function showPerformance() {
   detectorButton.disabled = false;
   primerPointerId = null;
   refreshHapticPreparation();
+  syncPerformanceWakeLock();
 }
 
 function ensureAudio() {
@@ -962,7 +1020,15 @@ function onPointerDown(event) {
     startX: event.clientX,
     startY: event.clientY,
     startedOnButton: onButton,
+    pointerType: event.pointerType,
   });
+  // Travel before the second finger lands does not count toward the 96px rule.
+  if (pointers.size === 2 && [...pointers.values()].every((contact) => contact.pointerType === 'touch')) {
+    for (const contact of pointers.values()) {
+      contact.startX = contact.x;
+      contact.startY = contact.y;
+    }
+  }
   try {
     performanceScreen.setPointerCapture(event.pointerId);
   } catch {
@@ -1141,7 +1207,12 @@ function resumeRecorderTheme() {
 }
 
 function onVisibilityChange() {
-  if (!document.hidden) { resumeRecorderTheme(); return; }
+  if (!document.hidden) {
+    resumeRecorderTheme();
+    acquireWakeLock();
+    return;
+  }
+  releaseWakeLock();
   stopWoodPaper(!settled && hold.phase !== "idle");
   recorderThemes.suspend();
   if (!settled && hold.phase !== "idle") cancelUnsettledHold();

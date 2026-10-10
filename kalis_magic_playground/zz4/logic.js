@@ -659,8 +659,11 @@ export function parseStorage(raw) {
   };
 }
 
-export function serializeState(state) {
-  return JSON.stringify({
+// The object that serializeState writes. Callers that just saved this value already have it
+// and must not read the storage string back.
+export function canonicalState(state) {
+  const sets = normalizeSets(state.sets);
+  return {
     version: 1,
     presets: state.presets.map((preset) => ({
       id: preset.id,
@@ -678,12 +681,16 @@ export function serializeState(state) {
       presetIdB: state.twoList?.presetIdB ?? null
     },
     options: normalizeOptions(state.options),
-    sets: normalizeSets(state.sets),
-    activeSetId: normalizeSets(state.sets).some((set) => set.id === state.activeSetId) ? state.activeSetId : null,
+    sets,
+    activeSetId: sets.some((set) => set.id === state.activeSetId) ? state.activeSetId : null,
     dummyNotes: normalizeDummyNotes(state.dummyNotes),
     builtins: normalizeBuiltins(state.builtins),
     hiddenPresetIds: normalizeHiddenIds(state.hiddenPresetIds)
-  });
+  };
+}
+
+export function serializeState(state) {
+  return JSON.stringify(canonicalState(state));
 }
 
 export function loadFromStorage(storage) {
@@ -698,8 +705,9 @@ export function loadFromStorage(storage) {
 
 export function saveState(storage, state) {
   try {
-    storage.setItem(STORAGE_KEY, serializeState(state));
-    return { ok: true };
+    const data = canonicalState(state);
+    storage.setItem(STORAGE_KEY, JSON.stringify(data));
+    return { ok: true, data };
   } catch {
     return { ok: false, error: MSG.storageWrite };
   }
@@ -709,8 +717,9 @@ export function replaceStoreKeepingBackup(storage, state) {
   try {
     const raw = storage.getItem(STORAGE_KEY);
     if (raw != null) storage.setItem(BACKUP_KEY, raw);
-    storage.setItem(STORAGE_KEY, serializeState(state));
-    return { ok: true };
+    const data = canonicalState(state);
+    storage.setItem(STORAGE_KEY, JSON.stringify(data));
+    return { ok: true, data };
   } catch {
     return { ok: false, error: MSG.storageWrite };
   }
@@ -1391,13 +1400,24 @@ export function stripItemPrefixes(text) {
   return (typeof text === 'string' ? text.split(/\r?\n/) : []).map((line) => line.replace(LIST_PREFIX, '')).join('\n');
 }
 
-/** Items typed or pasted: one per line, blank lines dropped. A leading "1. " or "- " is removed unless stripPrefix is false (items loaded from a saved list stay as they are). */
+/** Items typed or pasted: one per line, blank lines dropped. A leading "1. " or "- " is removed unless stripPrefix is false (items loaded from a saved list stay as they are). One pass trims, strips and finds the first over-long line. */
 export function parseWizardItems(text, { stripPrefix = true } = {}) {
   const raw = typeof text === 'string' ? text.split(/\r?\n/) : [];
-  const items = raw.map((line) => { const trimmed = line.trim(); return (stripPrefix ? trimmed.replace(LIST_PREFIX, '') : trimmed).trim(); }).filter(Boolean);
-  const long = items.findIndex((item) => charLength(item) > MAX_CHARS);
-  const ok = items.length >= WIZARD_MIN_ITEMS && items.length <= WIZARD_MAX_ITEMS && long === -1;
-  return { items, count: items.length, ok, tooLongAt: long === -1 ? null : long + 1 };
+  const items = [];
+  let tooLongAt = null;
+  for (let index = 0; index < raw.length; index += 1) {
+    let trimmed = raw[index].trim();
+    if (!trimmed) continue;
+    if (stripPrefix) {
+      trimmed = trimmed.replace(LIST_PREFIX, '').trim();
+      if (!trimmed) continue;
+    }
+    if (tooLongAt == null && charLength(trimmed) > MAX_CHARS) tooLongAt = items.length + 1;
+    items.push(trimmed);
+  }
+  const count = items.length;
+  const ok = count >= WIZARD_MIN_ITEMS && count <= WIZARD_MAX_ITEMS && tooLongAt == null;
+  return { items, count, ok, tooLongAt };
 }
 
 /** The full list of a saved preset with its prophecy item back inside (a list that kept the target in place keeps it there). */

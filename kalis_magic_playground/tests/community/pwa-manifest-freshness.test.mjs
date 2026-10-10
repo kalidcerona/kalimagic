@@ -144,10 +144,13 @@ for (const app of routes) {
     assert.ok(instance.deletes[0].endsWith('old-version'));
     assert.ok(!instance.deletes.includes('foreign-app-cache'));
     assert.equal(instance.claims(), 1);
-    assert.equal(instance.skips(), app.route === 'zz12' ? 0 : 1);
+    // zz12 used to omit skipWaiting. A first install (no active worker in this harness) now skips once, like the others.
+    assert.equal(instance.skips(), 1);
     assert.ok(instance.added.some(asset => String(asset instanceof Request ? asset.url : asset).includes('manifest.webmanifest')));
     if (app.route === 'tools/arosaegida') {
-      assert.ok(!instance.added.includes('./') && !instance.added.includes('./index.html'));
+      // Guarded navigation serves this release's index.html, so the snapshot precaches it instead of omitting HTML.
+      const names = instance.added.map(asset => asset instanceof Request ? new URL(asset.url).pathname : String(asset));
+      assert.ok(names.some(name => name.endsWith('/index.html')));
     }
   });
 }

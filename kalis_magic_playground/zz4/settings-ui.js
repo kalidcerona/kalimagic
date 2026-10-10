@@ -240,7 +240,7 @@
     preview.appendChild(node('p', '실시간 미리보기', 'magic-preview-label')); preview.appendChild(phone); customPage.appendChild(preview);
     var customize = node('div', null, 'magic-customize'); customPage.appendChild(customize); doc.body.appendChild(customPage);
     var previousFocus, previousUrl;
-    function closeCustom() { customPage.hidden = true; if (app === 'calculator') { container.classList.add('open'); container.setAttribute('aria-hidden', 'false'); } if (app === 'spinner') { var settings = doc.querySelector('#settings'); if (settings) settings.hidden = false; } if (root.location.hash === '#customize' && root.history) root.history.replaceState(null, '', previousUrl || root.location.pathname + root.location.search); previousFocus?.focus?.(); }
+    function closeCustom() { customPage.hidden = true; discardPreview(); if (app === 'calculator') { container.classList.add('open'); container.setAttribute('aria-hidden', 'false'); } if (app === 'spinner') { var settings = doc.querySelector('#settings'); if (settings) settings.hidden = false; } if (root.location.hash === '#customize' && root.history) root.history.replaceState(null, '', previousUrl || root.location.pathname + root.location.search); previousFocus?.focus?.(); }
     openCustomize.addEventListener('click', function () { previousFocus = doc.activeElement; syncNativeAppearance(); previousUrl = root.location.pathname + root.location.search + root.location.hash; customPage.hidden = false; if (root.history && root.location.hash !== '#customize') root.history.pushState(null, '', '#customize'); schedule(); back.focus?.(); });
     back.addEventListener('click', closeCustom);
     root.addEventListener('popstate', function () { if (root.location.hash !== '#customize' && !customPage.hidden) closeCustom(); });
@@ -269,27 +269,63 @@
       applySelection();
       if (previewSelector !== previousPreview) schedule();
     }
-    var previewStyles;
-    function updatePreview() {
-      if (customPage.hidden || !root.getComputedStyle) return;
-      var source = doc.querySelector(previewSelector), width = root.innerWidth, height = root.innerHeight;
-      phone.replaceChildren();
-      if (app === 'tobira' && root.MagicTobiraAppearance) {
-        var model = root.MagicTobiraAppearance.preview(), sample = node('div', null, 'magic-object-preview'), object = node('div', null, 'magic-preview-object');
-        var sampleHeight = Math.max(1, Math.min(preview.clientHeight - 24, (preview.clientWidth - 48) * height / width)); phone.style.height = sampleHeight + 'px'; phone.style.width = (sampleHeight * width / height) + 'px'; phone.style.aspectRatio = width + '/' + height;
-        var art = node('img'); art.alt = '선택한 공연 물건'; art.src = model.image;
-        sample.style.setProperty('--object-width', (Math.min(1, model.widthRatio) * Math.min(phone.clientWidth, phone.clientHeight)) + 'px');
-        sample.style.setProperty('--object-x', (model.startX * 100) + '%'); sample.style.setProperty('--object-y', (model.startY * 100) + '%');
-        object.appendChild(art); sample.appendChild(object); phone.appendChild(sample); return;
+    var previewStyles, previewMount = null;
+    function previewFrameCss(width, height) {
+      return '\n.magic-preview-body {position:relative !important;margin:0 !important;width:' + width + 'px !important;height:' + height + 'px !important;overflow:hidden !important;}';
+    }
+    /* Icon grids and wallpaper only. A slider tick must not walk or clone the whole source. */
+    function descendantCount(el) {
+      if (el && typeof el.getElementsByTagName === 'function') return el.getElementsByTagName('*').length;
+      if (el && typeof el.querySelectorAll === 'function') return el.querySelectorAll('*').length;
+      return (el && el.childElementCount) || 0;
+    }
+    function wallpaperToken(el) {
+      var token = '';
+      try { token += el.getAttribute('data-wallpaper') || ''; } catch (_) {}
+      try { token += '\n' + ((el.style && el.style.backgroundImage) || ''); } catch (_) {}
+      if (el && typeof el.querySelector === 'function') {
+        var wall = el.querySelector('.wallpaper, [data-wallpaper]');
+        if (wall && wall !== el) {
+          try { token += '\n' + (wall.getAttribute('data-wallpaper') || ''); } catch (_) {}
+          try { token += '\n' + ((wall.style && wall.style.backgroundImage) || ''); } catch (_) {}
+        }
       }
-      if (!source) { phone.appendChild(node('p', profile.name)); return; }
+      return token;
+    }
+    function gridStamp(el) {
+      if (!el || typeof el.querySelectorAll !== 'function') return '';
+      var grids = el.querySelectorAll('[data-home-grid], .phone-dock');
+      var stamp = String(grids.length);
+      for (var i = 0; i < grids.length; i++) stamp += ':' + (grids[i].childElementCount || 0);
+      return stamp;
+    }
+    function probeNode(el) {
+      if (!el || typeof el.querySelector !== 'function') return el;
+      return el.querySelector('[data-home-grid] img, .phone-dock img, img') || el;
+    }
+    function previewStructure(el) {
+      return descendantCount(el) + '|' + gridStamp(el) + '|' + wallpaperToken(el);
+    }
+    function discardPreview() {
+      previewMount = null;
+      if (phone && typeof phone.replaceChildren === 'function') phone.replaceChildren();
+    }
+    /* Live #time-hour and #time-minute stay empty until the rewind screen runs, so a later text sync would blank the preview copy. */
+    function fillUnlockPreviewClock(shadow) {
+      if (app !== 'unlock' || previewSelector !== '#time-lock' || !shadow || typeof shadow.querySelector !== 'function') return;
+      var now = new Date();
+      [['#time-hour', String(now.getHours()).padStart(2, '0')], ['#time-minute', String(now.getMinutes()).padStart(2, '0')]].forEach(function (item) {
+        var el = shadow.querySelector(item[0]);
+        if (el && !el.textContent.trim()) el.textContent = item[1];
+      });
+    }
+    function buildPreview(source, width, height) {
       if (!previewStyles) {
         previewStyles = Array.from(doc.styleSheets).map(function (sheet) { try { return Array.from(sheet.cssRules).map(function (rule) { return rule.cssText; }).join('\n'); } catch (_) { return ''; } }).join('\n')
           .replace(/:root/g, ':host').replace(/\bhtml\b/g, ':host').replace(/\bbody\b/g, '.magic-preview-body');
       }
       var surface = node('div', null, 'magic-preview-surface'); surface.style.width = width + 'px'; surface.style.height = height + 'px';
-      var shadow = surface.attachShadow({ mode: 'open' }), style = node('style', previewStyles);
-      style.textContent += '\n.magic-preview-body {position:relative !important;margin:0 !important;width:' + width + 'px !important;height:' + height + 'px !important;overflow:hidden !important;}';
+      var shadow = surface.attachShadow({ mode: 'open' }), style = node('style', previewStyles + previewFrameCss(width, height));
       shadow.appendChild(style);
       var body = node('div', null, 'magic-preview-body'); body.style.color = root.getComputedStyle(doc.body).color; body.style.font = root.getComputedStyle(doc.body).font; shadow.appendChild(body);
       var ancestors = [], ancestor = source.parentElement;
@@ -304,28 +340,77 @@
         if (/^(SCRIPT|STYLE|IFRAME|VIDEO|AUDIO)$/.test(copy.tagName) || originals[index].closest('[data-settings-root], .magic-customize-page, #settings-entry-tutorial, #install-nudge')) { copy.remove(); return; }
         if (copy.tagName === 'CANVAS' && originals[index].width && originals[index].height) { try { copy.getContext('2d').drawImage(originals[index], 0, 0); } catch (_) {} }
       });
-      surface.inert = true; surface.setAttribute('aria-hidden', 'true'); surface.style.transform = 'scale(1)'; phone.appendChild(surface);
-      if (app === 'unlock' && previewSelector === '#time-lock') { var now = new Date(); [['#time-hour', String(now.getHours()).padStart(2, '0')], ['#time-minute', String(now.getMinutes()).padStart(2, '0')]].forEach(function (item) { var el = shadow.querySelector(item[0]); if (el && !el.textContent.trim()) el.textContent = item[1]; }); }
-      function previewLayout(selector, value) {
+      surface.inert = true; surface.setAttribute('aria-hidden', 'true'); surface.style.transform = 'scale(1)';
+      phone.replaceChildren(surface);
+      fillUnlockPreviewClock(shadow);
+      previewMount = { kind: 'screen', selector: previewSelector, source: source, structure: previewStructure(source), probe: probeNode(source), surface: surface, shadow: shadow, style: style, originals: originals, copies: copies, width: width, height: height };
+    }
+    function syncPreviewCopy() {
+      var mount = previewMount;
+      mount.copies.forEach(function (copy, index) {
+        var from = mount.originals[index];
+        if (!from || !copy || !copy.parentNode) return;
+        if (index !== 0 && from.hidden !== copy.hidden) copy.hidden = from.hidden;
+        if (!from.children.length && from.textContent !== copy.textContent) copy.textContent = from.textContent;
+        if (typeof from.className === 'string' && copy.className !== from.className) copy.className = from.className;
+        var style = from.getAttribute && from.getAttribute('style');
+        if (style != null && copy.getAttribute('style') !== style) {
+          var scale = copy.style.scale, translate = copy.style.translate;
+          copy.setAttribute('style', style);
+          if (scale) copy.style.scale = scale;
+          if (translate) copy.style.translate = translate;
+        }
+        var src = from.getAttribute && from.getAttribute('src');
+        if (src && copy.getAttribute('src') !== src) copy.setAttribute('src', src);
+      });
+      fillUnlockPreviewClock(mount.shadow);
+    }
+    function layoutMountedPreview(width, height) {
+      var mount = previewMount, shadow = mount.shadow, surface = mount.surface, viewport = { width: width, height: height }, jobs = [];
+      function consider(selector, value) {
         Array.from(shadow.querySelectorAll(selector)).forEach(function (el) {
           var rotated = app === 'stopwatch' && el.id === 'l-time-display' && root.matchMedia && root.matchMedia('(orientation: portrait)').matches;
-          var viewport = { width: width, height: height };
-          el.style.removeProperty('scale'); el.style.removeProperty('translate');
-          if ((value.scale || 100) === 100 && !(value.offset || 0) && !(value.x || 0)) return;
-          function bounds() { if ((app === 'stopwatch' || app === 'unlock') && selector === profile.targets && el.textContent.trim()) { var range = doc.createRange(); range.selectNodeContents(app === 'unlock' ? (el.querySelector('#time-clock') || el) : el); return range.getBoundingClientRect(); } return el.getBoundingClientRect(); }
-          var box = bounds(); if (!box.width || !box.height) return;
-          el.style.scale = String(Math.min(value.scale / 100, (width - 16) / box.width, (height - 16) / box.height));
-          var moved = bounds(), origin = surface.getBoundingClientRect();
-          var rect = { left: moved.left - origin.left, right: moved.right - origin.left, top: moved.top - origin.top, bottom: moved.bottom - origin.top, width: moved.width, height: moved.height };
-          var screen = screenDelta(value.x || 0, value.offset || 0, viewport, rotated);
-          el.style.translate = translateFor(clipOffset(rect, viewport, screen.x, screen.y), rotated);
+          if ((value.scale || 100) === 100 && !(value.offset || 0) && !(value.x || 0)) {
+            el.style.removeProperty('scale'); el.style.removeProperty('translate');
+            return;
+          }
+          jobs.push({ el: el, value: value, selector: selector, rotated: rotated });
         });
       }
-      if (profile.targets) previewLayout(profile.targets, prefs);
-      (profile.parts || []).forEach(function (part) { previewLayout(part.selector, prefs.parts[part.selector] || { scale: 100, offset: 0, x: 0 }); });
-      var fit = Math.min(phone.clientWidth / width, phone.clientHeight / height); surface.style.transform = 'scale(' + fit + ')';
-      if (!profile.elements) return;
-      var host = phone.getBoundingClientRect();
+      if (profile.targets) consider(profile.targets, prefs);
+      (profile.parts || []).forEach(function (part) { consider(part.selector, prefs.parts[part.selector] || { scale: 100, offset: 0, x: 0 }); });
+      function previewBounds(job) {
+        var el = job.el;
+        if ((app === 'stopwatch' || app === 'unlock') && job.selector === profile.targets && el.textContent.trim()) {
+          var range = doc.createRange();
+          range.selectNodeContents(app === 'unlock' ? (el.querySelector('#time-clock') || el) : el);
+          return range.getBoundingClientRect();
+        }
+        return el.getBoundingClientRect();
+      }
+      jobs.forEach(function (job) { job.el.style.removeProperty('scale'); job.el.style.removeProperty('translate'); });
+      jobs.forEach(function (job) { job.base = previewBounds(job); });
+      jobs.forEach(function (job) {
+        var base = job.base;
+        if (!base || !base.width || !base.height) return;
+        var value = job.value;
+        job.el.style.scale = String(Math.min(value.scale / 100, (width - 16) / base.width, (height - 16) / base.height));
+      });
+      var surfaceBox = surface.getBoundingClientRect();
+      jobs.forEach(function (job) {
+        if (!job.el.style.scale) return;
+        var moved = previewBounds(job);
+        var rect = { left: moved.left - surfaceBox.left, right: moved.right - surfaceBox.left, top: moved.top - surfaceBox.top, bottom: moved.bottom - surfaceBox.top, width: moved.width, height: moved.height };
+        var screen = screenDelta(job.value.x || 0, job.value.offset || 0, viewport, job.rotated);
+        job.el.style.translate = translateFor(clipOffset(rect, viewport, screen.x, screen.y), job.rotated);
+      });
+      var fit = Math.min(phone.clientWidth / width, phone.clientHeight / height);
+      surface.style.transform = 'scale(' + fit + ')';
+    }
+    function placePreviewHits() {
+      Array.from(phone.children).forEach(function (child) { if (child.className === 'magic-preview-hit') child.remove(); });
+      if (!profile.elements || !previewMount) return;
+      var host = phone.getBoundingClientRect(), shadow = previewMount.shadow;
       profile.elements.forEach(function (item) {
         if ((item.preview || profile.preview) !== previewSelector) return;
         Array.from(shadow.querySelectorAll(item.hit)).forEach(function (el) {
@@ -336,6 +421,47 @@
           hit.addEventListener('click', function () { choose(item.id); }); phone.appendChild(hit);
         });
       });
+    }
+    function updateTobiraPreview(width, height) {
+      var model = root.MagicTobiraAppearance.preview();
+      var sampleHeight = Math.max(1, Math.min(preview.clientHeight - 24, (preview.clientWidth - 48) * height / width));
+      phone.style.height = sampleHeight + 'px'; phone.style.width = (sampleHeight * width / height) + 'px'; phone.style.aspectRatio = width + '/' + height;
+      var mount = previewMount && previewMount.kind === 'tobira' ? previewMount : null;
+      if (!mount || !mount.sample.parentNode) {
+        var sample = node('div', null, 'magic-object-preview'), object = node('div', null, 'magic-preview-object'), art = node('img');
+        art.alt = '선택한 공연 물건';
+        object.appendChild(art); sample.appendChild(object); phone.replaceChildren(sample);
+        mount = previewMount = { kind: 'tobira', sample: sample, art: art };
+      }
+      mount.art.src = model.image;
+      mount.sample.style.setProperty('--object-width', (Math.min(1, model.widthRatio) * Math.min(phone.clientWidth, phone.clientHeight)) + 'px');
+      mount.sample.style.setProperty('--object-x', (model.startX * 100) + '%');
+      mount.sample.style.setProperty('--object-y', (model.startY * 100) + '%');
+    }
+    function screenMountStale(source) {
+      var mount = previewMount;
+      if (!mount || mount.kind !== 'screen' || mount.selector !== previewSelector || mount.source !== source) return true;
+      if (mount.probe && mount.probe !== source && mount.probe.isConnected === false) return true;
+      return mount.structure !== previewStructure(source);
+    }
+    function updatePreview() {
+      if (customPage.hidden || !root.getComputedStyle) return;
+      var width = root.innerWidth, height = root.innerHeight;
+      if (app === 'tobira' && root.MagicTobiraAppearance) { updateTobiraPreview(width, height); return; }
+      var source = doc.querySelector(previewSelector);
+      if (!source) { discardPreview(); phone.appendChild(node('p', profile.name)); return; }
+      if (screenMountStale(source)) buildPreview(source, width, height);
+      else {
+        if (previewMount.width !== width || previewMount.height !== height) {
+          previewMount.width = width; previewMount.height = height;
+          previewMount.surface.style.width = width + 'px'; previewMount.surface.style.height = height + 'px';
+          previewMount.style.textContent = previewStyles + previewFrameCss(width, height);
+        }
+        syncPreviewCopy();
+      }
+      previewMount.surface.style.transform = 'scale(1)';
+      layoutMountedPreview(width, height);
+      placePreviewHits();
     }
     customize.appendChild(node('p', profile.note || '크기와 위치는 화면의 표시 영역에만 적용돼요. 아래 이름도 원하는 문구로 바꿔 주세요.'));
     var targets = profile.targets ? Array.from(doc.querySelectorAll(profile.targets)) : [];
@@ -387,26 +513,64 @@
       var value = prefs.labels[definition.selector] || defaults[definition.selector];
       if (el.textContent !== value) el.textContent = value;
     }); }
-    var pending = false;
+    var pending = false, layoutInvalid = true, appliedLayout = '';
+    function layoutStamp() {
+      var parts = (profile.parts || []).map(function (part) {
+        var value = prefs.parts[part.selector] || { scale: 100, offset: 0, x: 0 };
+        return part.selector + ':' + value.scale + ':' + value.offset + ':' + (value.x || 0);
+      }).join('|');
+      return [prefs.scale, prefs.offset, prefs.x || 0, root.innerWidth, root.innerHeight, parts].join(',');
+    }
     function schedule() { if (!pending) { pending = true; root.requestAnimationFrame(function () { pending = false; applyLayout(); updatePreview(); }); } }
+    function invalidateLayout() { layoutInvalid = true; schedule(); }
     function applyLayout() {
+      var stamp = layoutStamp();
+      if (!layoutInvalid && stamp === appliedLayout) return;
+      var viewport = { width: root.innerWidth, height: root.innerHeight }, jobs = [];
+      function cleared(el) {
+        if (el.style && (el.style.scale || el.style.translate)) { el.style.removeProperty('scale'); el.style.removeProperty('translate'); }
+      }
       targets.forEach(function (el) {
-        var rotated = app === 'stopwatch' && el.id === 'l-time-display' && root.matchMedia && root.matchMedia('(orientation: portrait)').matches;
-        el.style.removeProperty('scale'); el.style.removeProperty('translate');
-        if (prefs.scale === 100 && prefs.offset === 0 && !prefs.x) return;
-        function visualRect() {
-          if ((el.children.length === 0 || app === 'stopwatch' || app === 'unlock') && el.textContent.trim()) { var range = doc.createRange(); range.selectNodeContents(app === 'unlock' ? (el.querySelector('#time-clock') || el) : el); return range.getBoundingClientRect(); }
-          return el.getBoundingClientRect();
-        }
-        var base = visualRect(); if (!base.width || !base.height) return;
-        var viewport = { width: root.innerWidth, height: root.innerHeight };
-        var s = Math.min(prefs.scale / 100, (viewport.width - 16) / base.width, (viewport.height - 16) / base.height);
-        el.style.scale = String(Math.max(0.01, s));
-        var rect = visualRect();
-        var screen = screenDelta(prefs.x || 0, prefs.offset, viewport, rotated);
-        el.style.translate = translateFor(clipOffset(rect, viewport, screen.x, screen.y), rotated);
+        if (prefs.scale === 100 && prefs.offset === 0 && !prefs.x) { cleared(el); return; }
+        jobs.push({ el: el, value: prefs, floor: 0.01, text: true });
       });
-      partFields.forEach(function (part) { var value = prefs.parts[part.definition.selector] || { scale: 100, offset: 0, x: 0 }; part.elements.forEach(function (el) { var rotated = app === 'stopwatch' && el.id === 'l-time-display' && root.matchMedia && root.matchMedia('(orientation: portrait)').matches; el.style.removeProperty('scale'); el.style.removeProperty('translate'); if (value.scale === 100 && value.offset === 0 && !(value.x || 0)) return; var base = el.getBoundingClientRect(), viewport = { width: root.innerWidth, height: root.innerHeight }; var factor = base.width && base.height ? Math.min(value.scale / 100, (viewport.width - 16) / base.width, (viewport.height - 16) / base.height) : value.scale / 100; el.style.scale = String(factor); var rect = el.getBoundingClientRect(); var screen = screenDelta(value.x || 0, value.offset || 0, viewport, rotated); el.style.translate = translateFor(clipOffset(rect, viewport, screen.x, screen.y), rotated); }); });
+      partFields.forEach(function (part) {
+        var value = prefs.parts[part.definition.selector] || { scale: 100, offset: 0, x: 0 };
+        part.elements.forEach(function (el) {
+          if (value.scale === 100 && value.offset === 0 && !(value.x || 0)) { cleared(el); return; }
+          jobs.push({ el: el, value: value, floor: null, text: false });
+        });
+      });
+      function liveBounds(job) {
+        var el = job.el;
+        if (job.text && (el.children.length === 0 || app === 'stopwatch' || app === 'unlock') && el.textContent.trim()) {
+          var range = doc.createRange();
+          range.selectNodeContents(app === 'unlock' ? (el.querySelector('#time-clock') || el) : el);
+          return range.getBoundingClientRect();
+        }
+        return el.getBoundingClientRect();
+      }
+      jobs.forEach(function (job) { job.el.style.removeProperty('scale'); job.el.style.removeProperty('translate'); });
+      jobs.forEach(function (job) {
+        job.rotated = app === 'stopwatch' && job.el.id === 'l-time-display' && root.matchMedia && root.matchMedia('(orientation: portrait)').matches;
+        job.base = liveBounds(job);
+      });
+      jobs.forEach(function (job) {
+        var base = job.base || { width: 0, height: 0 };
+        var value = job.value;
+        if (job.floor != null && (!base.width || !base.height)) return;
+        var factor = base.width && base.height ? Math.min(value.scale / 100, (viewport.width - 16) / base.width, (viewport.height - 16) / base.height) : value.scale / 100;
+        if (job.floor != null) factor = Math.max(job.floor, factor);
+        job.el.style.scale = String(factor);
+      });
+      jobs.forEach(function (job) {
+        if (!job.el.style.scale) return;
+        var moved = liveBounds(job);
+        var screen = screenDelta(job.value.x || 0, job.value.offset || 0, viewport, job.rotated);
+        job.el.style.translate = translateFor(clipOffset(moved, viewport, screen.x, screen.y), job.rotated);
+      });
+      appliedLayout = stamp;
+      layoutInvalid = false;
       /* The stopwatch's native hit zones recalculate from the displayed rectangle. */
       doc.dispatchEvent(new root.CustomEvent('magic-appearance-change', { detail: { app: app } }));
     }
@@ -424,14 +588,14 @@
     applyLabels(); applySelection(); schedule();
     if (root.location.hash === '#customize') { customPage.hidden = false; syncNativeAppearance(); schedule(); }
     root.addEventListener('load', function () { syncNativeAppearance(); schedule(); });
-    root.addEventListener('resize', schedule); root.addEventListener('orientationchange', schedule);
-    if (typeof root.ResizeObserver === 'function') { var sizeObserver = new root.ResizeObserver(schedule); targets.forEach(function (el) { sizeObserver.observe(el); }); }
+    root.addEventListener('resize', invalidateLayout); root.addEventListener('orientationchange', invalidateLayout);
+    if (typeof root.ResizeObserver === 'function') { var sizeObserver = new root.ResizeObserver(function () { layoutInvalid = true; schedule(); }); targets.forEach(function (el) { sizeObserver.observe(el); }); }
     if (typeof root.MutationObserver === 'function') {
       /* Watch visibility on known target ancestors, never the whole document subtree. */
-      var visibility = new root.MutationObserver(schedule), observed = new Set();
+      var visibility = new root.MutationObserver(function () { layoutInvalid = true; schedule(); }), observed = new Set();
       (profile.elements || [{ preview: profile.preview }]).forEach(function (item) { var el = doc.querySelector(item.preview); if (el) { visibility.observe(el, { attributes: true, attributeFilter: ['hidden', 'class'] }); observed.add(el); } });
       targets.concat(partFields.flatMap(function (part) { return part.elements; })).forEach(function (el) { for (var ancestor = el.parentElement; ancestor && ancestor !== doc.body; ancestor = ancestor.parentElement) { if (!observed.has(ancestor)) { observed.add(ancestor); visibility.observe(ancestor, { attributes: true, attributeFilter: ['hidden', 'class'] }); } } });
-      labelFields.forEach(function (item) { if (item.definition.dynamic) new root.MutationObserver(function () { applyLabels(); schedule(); }).observe(item.element, { attributes: true, attributeFilter: ['data-magic-native-label', 'data-magic-custom-idle'], childList: true, characterData: true, subtree: true }); });
+      labelFields.forEach(function (item) { if (item.definition.dynamic) new root.MutationObserver(function () { layoutInvalid = true; applyLabels(); schedule(); }).observe(item.element, { attributes: true, attributeFilter: ['data-magic-native-label', 'data-magic-custom-idle'], childList: true, characterData: true, subtree: true }); });
     }
   }
   if (root.document.readyState === 'loading') root.document.addEventListener('DOMContentLoaded', mount, { once: true }); else mount();

@@ -55,16 +55,20 @@ test('static launch ignores a stalled network while auth and unknown files are n
     }
   }
 });
-test('friend navigation observes server denial instead of a cached app', async () => {
+test('friend navigation serves the cached release instead of a network denial', async () => {
   for (const [app, slug] of [['unlock', 'release'], ['aletheia', 'aletheia'], ['usotsuki', 'usotsuki'], ['tobira', 'tobira'], ['spinner', 'tyche']]) {
     const source = await readFile(new URL(`../../distribution-snapshots/${app}/sw.js`, import.meta.url), 'utf8');
+    const cached = new Response('cached app');
     const denial = new Response('', { status: 302, headers: { Location: '/tools/login/' } });
+    let fetched = 0;
     const listeners = worker(source, `https://example.test/tools/${slug}/`, {
-      caches: { open: async () => ({ match: async () => new Response('cached app') }) }, fetch: async () => denial
+      caches: { open: async () => ({ match: async () => cached }) },
+      fetch: async () => { fetched += 1; return denial; }
     });
     let result;
-    listeners.fetch({ request: { method: 'GET', mode: 'navigate', url: `https://example.test/tools/${slug}/` }, respondWith(p) { result = p; } });
-    assert.equal(await result, denial);
+    listeners.fetch({ request: { method: 'GET', mode: 'navigate', url: `https://example.test/tools/${slug}/` }, respondWith(p) { result = p; }, waitUntil() { throw new Error('no background refresh'); } });
+    assert.equal(await result, cached);
+    assert.equal(fetched, 0);
   }
 });
 test('product slugs preserve stable entitlement IDs and redirect legacy links with their queries', async () => {

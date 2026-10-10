@@ -53,6 +53,7 @@ import {
   saveSet,
   saveState,
   saveUserIcons,
+  USER_ICON_KEY,
   selectNotes,
   splitForcePreset,
   updateDummyNote,
@@ -60,6 +61,9 @@ import {
 } from './logic.js';
 import { HOME_MANIFEST, iconSrc, manifestFiles } from './home-manifest.js';
 import { BUILTIN_LISTS, builtinById } from './builtin-lists.js';
+
+// The self-repair clock in index.html starts here, after this module has been fetched.
+document.dispatchEvent(new Event('choice-module-start'));
 
 const gestureGuide = document.getElementById('settings-gesture-guide');
 const gestureGuideDismiss = document.getElementById('settings-gesture-dismiss');
@@ -124,6 +128,7 @@ const entryReadout = document.getElementById('entry-readout');
 const optStartMode = document.getElementById('opt-start-mode');
 const optDisplay = document.getElementById('opt-display');
 const optVibrate = document.getElementById('opt-vibrate');
+const vibrateCapability = document.getElementById('vibrate-capability');
 const optionsMessage = document.getElementById('options-message');
 const precheckList = document.getElementById('precheck-list');
 const precheckRefresh = document.getElementById('precheck-refresh');
@@ -172,6 +177,9 @@ let peek = null;
 let clickGuardUntil = 0;
 let readoutCleared = false;
 let userIcons = [];
+let iconCacheRaw;
+let iconCacheReady = false;
+let realHomeIconStamp;
 let resetTaps = null;
 let cornerDown = null;
 let wallpaperUrl = null;
@@ -195,6 +203,7 @@ function confirmAsk(text, okLabel) {
 }
 
 function persist(next) {
+  const previous = store;
   const replacing = Boolean(recoveryState);
   const result = replacing
     ? replaceStoreKeepingBackup(localStorage, next)
@@ -206,13 +215,11 @@ function persist(next) {
   }
   recoveryState = null;
   repairIssues = [];
-  const reloaded = loadFromStorage(localStorage);
-  store = reloaded.ok ? reloaded.data : next;
+  // The write already normalized the value. Reading it back would parse the same JSON again.
+  store = result.data || next;
+  noteStoreDirty(previous, next);
   renderRecovery();
-  renderSaved();
-  renderOptions();
-  renderExtras();
-  renderPrecheck();
+  flushDirtyViews();
   return true;
 }
 
@@ -300,8 +307,7 @@ function renderOptions() {
   renderOptionLabels();
 }
 
-function renderOptionLabels() {
-  schedulePreviews();
+function renderOptionLabels(event) {
   const set = (id, text) => { const node = document.getElementById(id); if (node) node.textContent = text; };
   set('opt-note-font-value', `${optNoteFont?.value}px`);
   set('opt-icon-size-value', `${optIconSize?.value}%`);
@@ -313,6 +319,27 @@ function renderOptionLabels() {
     noteSample.style.fontWeight = optNoteEmphasis?.value === 'bold' ? '800' : '400';
     noteSample.style.textDecoration = optNoteEmphasis?.value === 'underline' ? 'underline' : 'none';
     noteSample.style.background = optNoteEmphasis?.value === 'highlight' ? '#fff9a8' : '#fff';
+  }
+  // Home sliders and note sliders are separate groups. An icon-size drag must not rebuild note scrollers.
+  markPreviewGroup(event?.target?.id || '');
+  schedulePreviews();
+  applyVibrationCapability();
+}
+
+// Settings only. iPhone Safari has no Vibration API. Do not play a sound
+// instead, and do not rewrite the saved checkbox value.
+function applyVibrationCapability() {
+  const available = typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function';
+  if (optVibrate) {
+    optVibrate.disabled = !available;
+    if (!available) optVibrate.setAttribute('aria-disabled', 'true');
+    else optVibrate.removeAttribute('aria-disabled');
+  }
+  if (vibrateCapability) {
+    vibrateCapability.hidden = available;
+    vibrateCapability.textContent = available
+      ? ''
+      : '이 브라우저는 진동을 지원하지 않아요. 나머지 기능은 그대로 쓸 수 있어요.';
   }
 }
 
@@ -340,13 +367,42 @@ function saveOptionsFromControls() {
   if (optionsMessage) optionsMessage.textContent = ok ? '' : '설정을 저장하지 못했습니다. 저장된 목록은 그대로입니다.';
 }
 
-// Offline readiness: a registered, activated service worker owns the app shell cache.
+// This registration's cache family. The worker stores the same encoded scope prefix.
+function choiceScopeHref() {
+  return new URL('./', location.href).href;
+}
+
+function choiceCachePrefix() {
+  return 'choice-shell-' + encodeURIComponent(choiceScopeHref()) + '-';
+}
+
+function choiceArtworkUrls() {
+  return manifestFiles().map((file) => new URL(iconSrc(file), choiceScopeHref()).href);
+}
+
+// Offline readiness: every artwork URL is in this scope's cache. An active worker is not enough.
+async function choiceArtworkCached(url) {
+  if (typeof caches === 'undefined' || !caches || typeof caches.keys !== 'function') return false;
+  const prefix = choiceCachePrefix();
+  const names = await caches.keys();
+  for (const name of names) {
+    if (typeof name !== 'string' || name.indexOf(prefix) !== 0) continue;
+    const cache = await caches.open(name);
+    if (await cache.match(url, { ignoreSearch: true })) return true;
+  }
+  return false;
+}
+
 async function checkOfflineReady() {
   try {
-    if (!('serviceWorker' in navigator)) return 'unsupported';
+    if (!('serviceWorker' in navigator) || !navigator.serviceWorker) return 'unsupported';
     const registration = await navigator.serviceWorker.getRegistration('./');
-    if (registration?.active?.state === 'activated') return 'ready';
-    return 'pending';
+    if (registration?.active?.state !== 'activated') return 'pending';
+    const urls = choiceArtworkUrls();
+    for (const url of urls) {
+      if (!(await choiceArtworkCached(url))) return 'pending';
+    }
+    return 'ready';
   } catch {
     return 'unsupported';
   }
@@ -361,6 +417,8 @@ function precheckRow(text, tone) {
 
 function renderPrecheck(offline) {
   if (!precheckList) return;
+  if (currentView !== 'check') { dirtyViews.check = true; return; }
+  dirtyViews.check = false;
   const report = buildPrecheck(store.presets, { maxItems: NOTE_MAX_ITEMS });
   const rows = [];
   const block = startBlockReason();
@@ -375,13 +433,7 @@ function renderPrecheck(offline) {
     const size = note.eligible ? '' : ` (노트에는 ${NOTE_MIN_ITEMS}개에서 ${NOTE_MAX_ITEMS}개가 필요합니다)`;
     rows.push(precheckRow(`${note.name || '이름 없음'}: 항목 ${note.itemCount}개, ${target}${size}`, note.hasTarget && note.eligible ? 'ok' : 'warn'));
   });
-  const offlineText = {
-    ready: '오프라인 저장: 준비됨',
-    pending: '오프라인 저장: 아직 준비되지 않았습니다. 인터넷이 연결된 상태에서 한 번 더 열어 주세요.',
-    unsupported: '오프라인 저장: 이 브라우저에서는 확인할 수 없습니다.',
-    checking: '오프라인 저장: 확인 중'
-  };
-  rows.push(precheckRow(offlineText[offline || 'checking'], offline === 'ready' ? 'ok' : 'warn'));
+  rows.push(precheckRow(offlineReadyCopy(offline || 'checking'), offline === 'ready' ? 'ok' : 'warn'));
   let guideDone = false;
   try { guideDone = localStorage.getItem(GESTURE_GUIDE_KEY) === 'done'; } catch { /* Unknown counts as not done. */ }
   rows.push(precheckRow(guideDone ? '설정 이동 안내: 확인함' : '설정 이동 안내: 첫 공연 시작 때 한 번 나옵니다', guideDone ? 'ok' : ''));
@@ -400,8 +452,48 @@ function renderPrecheck(offline) {
   }
   precheckList.replaceChildren(...rows);
   if (!offline) {
-    checkOfflineReady().then((state) => renderPrecheck(state));
+    const epoch = ++offlineReadyEpoch;
+    checkOfflineReady().then((state) => {
+      if (epoch !== offlineReadyEpoch) return;
+      renderPrecheck(state);
+    });
   }
+}
+
+const OFFLINE_READY_TEXT = {
+  ready: '오프라인 저장: 준비됨',
+  pending: '오프라인 저장: 아직 준비되지 않았습니다. 인터넷이 연결된 상태에서 한 번 더 열어 주세요.',
+  unsupported: '오프라인 저장: 이 브라우저에서는 확인할 수 없습니다.',
+  checking: '오프라인 저장: 확인 중'
+};
+let offlineReadyEpoch = 0;
+
+function offlineReadyCopy(state) {
+  return OFFLINE_READY_TEXT[state] || OFFLINE_READY_TEXT.checking;
+}
+
+// Artwork warm-up finishes after the check screen has already read the cache.
+// Replace only that line, and only while the screen is open. A hidden screen reads the cache the next time it opens.
+function paintOfflineReadyLine(state) {
+  if (!precheckList) return false;
+  const kids = precheckList.children;
+  for (let index = 0; index < kids.length; index += 1) {
+    const row = kids[index];
+    if (!String(row.textContent || '').startsWith('오프라인 저장:')) continue;
+    row.textContent = offlineReadyCopy(state);
+    row.dataset.tone = state === 'ready' ? 'ok' : 'warn';
+    return true;
+  }
+  return false;
+}
+
+function refreshVisibleOfflineReady() {
+  if (currentView !== 'check' || !precheckList) return;
+  const epoch = ++offlineReadyEpoch;
+  checkOfflineReady().then((state) => {
+    if (epoch !== offlineReadyEpoch || currentView !== 'check') return;
+    if (!paintOfflineReadyLine(state)) renderPrecheck(state);
+  });
 }
 
 function renderRecovery() {
@@ -485,6 +577,51 @@ const homeSummary = document.getElementById('home-summary');
 let currentView = 'home';
 let wizard = null;
 let detailId = null;
+// Hidden screens keep a dirty bit instead of being rebuilt on every save.
+const dirtyViews = { home: false, dummy: true, sets: true, check: true, detail: false, options: false, wallpaper: true };
+
+function noteStoreDirty(previous, next) {
+  const presets = previous.presets !== next.presets
+    || previous.hiddenPresetIds !== next.hiddenPresetIds
+    || previous.builtins !== next.builtins
+    || previous.twoList !== next.twoList;
+  const options = previous.options !== next.options;
+  const dummies = previous.dummyNotes !== next.dummyNotes;
+  const sets = previous.sets !== next.sets || previous.activeSetId !== next.activeSetId;
+  if (presets || sets || dummies || options) dirtyViews.home = true;
+  if (presets || sets || dummies) dirtyViews.sets = true;
+  if (dummies) dirtyViews.dummy = true;
+  if (presets) dirtyViews.detail = true;
+  if (options) dirtyViews.options = true;
+  if (options) dirtyViews.wallpaper = true;
+  dirtyViews.check = true;
+}
+
+function flushDirtyViews() {
+  if (currentView === 'home' && dirtyViews.home) {
+    dirtyViews.home = false;
+    renderHomeLists();
+    renderHomeSummary();
+  } else if (currentView === 'advanced') {
+    if (dirtyViews.home) renderHomeSummary();
+    if (dirtyViews.options) { dirtyViews.options = false; renderOptions(); }
+  } else if (currentView === 'detail' && dirtyViews.detail && store.presets.some((entry) => entry.id === detailId)) {
+    dirtyViews.detail = false;
+    renderDetail();
+  } else if (currentView === 'dummy' && dirtyViews.dummy) {
+    dirtyViews.dummy = false;
+    renderDummies();
+  } else if (currentView === 'sets' && dirtyViews.sets) {
+    dirtyViews.sets = false;
+    renderSets();
+  } else if (currentView === 'check') {
+    dirtyViews.check = false;
+    renderPrecheck();
+  } else if (currentView === 'deco') {
+    if (dirtyViews.wallpaper) { dirtyViews.wallpaper = false; renderWallpaperState(); }
+    if (dirtyViews.options) { dirtyViews.options = false; renderOptions(); }
+  }
+}
 
 // History keeps only the view name, an index and a per page load token. Wizard and detail screens are restored
 // only while their in memory state exists; after a reload every older entry falls back to the settings home.
@@ -504,6 +641,7 @@ function viewAllowed(name) {
 function showView(name, { push = true } = {}) {
   if (!settingsViews.some((view) => view.dataset.viewName === name)) name = 'home';
   if (currentView === 'w3' && name !== 'w3') commitItemEdits();
+  if (name === 'deco' || name === 'advanced') warmPreviews(name);
   settingsViews.forEach((view) => { view.hidden = view.dataset.viewName !== name; });
   currentView = name;
   // A wizard only lives while one of its screens is open, so Back or Forward can never revive an abandoned one.
@@ -513,8 +651,24 @@ function showView(name, { push = true } = {}) {
     wizard = null;
   }
   if (name === 'w2') syncStep2();
-  if (name === 'home') renderDraftButton();
-  if (name === 'deco' || name === 'advanced') schedulePreviews();
+  if (name === 'home') {
+    if (dirtyViews.home) { dirtyViews.home = false; renderHomeLists(); renderHomeSummary(); }
+    renderDraftButton();
+  }
+  if (name === 'dummy' && dirtyViews.dummy) { dirtyViews.dummy = false; renderDummies(); }
+  if (name === 'sets' && dirtyViews.sets) { dirtyViews.sets = false; renderSets(); }
+  if (name === 'detail' && dirtyViews.detail && store.presets.some((entry) => entry.id === detailId)) {
+    dirtyViews.detail = false;
+    renderDetail();
+  }
+  if (name === 'advanced') {
+    if (dirtyViews.options) { dirtyViews.options = false; renderOptions(); }
+    if (dirtyViews.home) renderHomeSummary();
+  }
+  if (name === 'deco') {
+    if (dirtyViews.wallpaper) { dirtyViews.wallpaper = false; renderWallpaperState(); }
+    if (dirtyViews.options) { dirtyViews.options = false; renderOptions(); }
+  }
   if (push) { try { history.pushState({ sv: name, i: navIndex + 1, t: NAV_TOKEN }, ''); navIndex += 1; } catch { /* History can be blocked. */ } }
   window.scrollTo(0, 0);
   const view = document.getElementById(`view-${name}`);
@@ -708,6 +862,8 @@ function wizardLooks() {
 
 // The draft only lives in memory (no new storage), and only until the list is saved or started over.
 let wizardDraft = null;
+// Step 2 parses on each keystroke. Next must reuse that result instead of walking the lines again.
+let wizardCountCache = null;
 const draftNote = document.getElementById('wz-draft-note');
 
 function keepWizardDraft() {
@@ -807,8 +963,10 @@ function setItemsLabels() {
 
 function renderWizardCount() {
   const stripPrefix = !wizard || wizard.strip !== false;
-  const parsed = parseWizardItems(wzItems.value, { stripPrefix });
-  document.getElementById('wz-strip').hidden = stripPrefix || stripItemPrefixes(wzItems.value) === wzItems.value;
+  const text = wzItems.value;
+  if (wizardCountCache && wizardCountCache.text === text && wizardCountCache.stripPrefix === stripPrefix) return wizardCountCache.parsed;
+  const parsed = parseWizardItems(text, { stripPrefix });
+  document.getElementById('wz-strip').hidden = stripPrefix || stripItemPrefixes(text) === text;
   const count = document.getElementById('wz-count');
   count.replaceChildren();
   const strong = document.createElement('b');
@@ -822,6 +980,7 @@ function renderWizardCount() {
   if (dupes.length) warnings.push(`같은 항목이 겹칩니다: ${dupes.slice(0, 3).map((numbers) => `${numbers.join('번, ')}번`).join(' / ')}${dupes.length > 3 ? ' 외' : ''}`);
   document.getElementById('wz-warnings').replaceChildren(...warnings.map((text) => { const li = document.createElement('li'); li.textContent = text; return li; }));
   document.getElementById('wz-next2').disabled = !parsed.ok;
+  wizardCountCache = { text, stripPrefix, parsed };
   return parsed;
 }
 
@@ -844,8 +1003,15 @@ function wizardNext2() {
   const parsed = renderWizardCount();
   if (!parsed.ok) return;
   const previous = wizard.items[wizard.target];
-  const unchanged = parsed.items.length === wizard.items.length && parsed.items.every((text, index) => text === wizard.items[index]);
-  wizard.items = parsed.items;
+  const nextItems = parsed.items;
+  let unchanged = nextItems.length === wizard.items.length;
+  if (unchanged) {
+    for (let index = 0; index < nextItems.length; index += 1) {
+      if (nextItems[index] !== wizard.items[index]) { unchanged = false; break; }
+    }
+  }
+  // Copy so later edits do not rewrite the cached parse.
+  wizard.items = nextItems.slice();
   // The prophecy item stays selected when the items are unchanged or its text is still in the list, otherwise it has to be picked again.
   if (!unchanged) wizard.target = previous != null ? parsed.items.indexOf(previous) : -1;
   wizard.number = Math.min(Math.max(wizard.number, 1), parsed.items.length);
@@ -887,12 +1053,13 @@ function commitItemEdits() {
 
 function moveItem(index, delta) {
   const to = index + delta;
-  if (to < 0 || to >= wizard.items.length) return;
+  if (to < 0 || to >= wizard.items.length) return false;
   const items = wizard.items;
   [items[index], items[to]] = [items[to], items[index]];
   if (wizard.target === index) wizard.target = to;
   else if (wizard.target === to) wizard.target = index;
   wizard.itemsDirty = true;
+  return true;
 }
 
 function removeItem(index) {
@@ -903,33 +1070,197 @@ function removeItem(index) {
   wizard.itemsDirty = true;
 }
 
-function editRow(text, index) {
+function renumberEditRows(box) {
+  [...box.children].forEach((row, index) => {
+    row.dataset.index = String(index);
+    const n = row.querySelector('.n');
+    if (n) n.textContent = String(index + 1);
+    const input = row.querySelector('input');
+    if (input) input.setAttribute('aria-label', `${index + 1}번 항목`);
+    row.querySelectorAll('button').forEach((button) => {
+      const act = button.dataset.act;
+      const label = act === 'target' ? '예언 항목으로' : act === 'up' ? '위로' : act === 'down' ? '아래로' : '빼기';
+      button.setAttribute('aria-label', `${index + 1}번 ${label}`);
+      if (act === 'up') button.disabled = index === 0;
+      if (act === 'down') button.disabled = index === wizard.items.length - 1;
+      if (act === 'target') {
+        const on = wizard.target === index;
+        button.textContent = on ? '★' : '☆';
+        button.setAttribute('aria-pressed', String(on));
+      }
+    });
+  });
+}
+
+function chooseWizardTarget(index) {
+  const previous = wizard.target;
+  wizard.target = index;
+  const box = document.getElementById('wz-picks');
+  if (!box) { renderWizardStep3(); return; }
+  if (wizard.editing) {
+    const rows = [...box.children];
+    if (rows.length !== wizard.items.length) { renderWizardStep3(); return; }
+    [previous, index].forEach((at) => {
+      const star = rows[at]?.querySelector('[data-act="target"]');
+      if (!star) return;
+      const on = at === index;
+      star.textContent = on ? '★' : '☆';
+      star.setAttribute('aria-pressed', String(on));
+    });
+    renderWizardMeta();
+    return;
+  }
+  const picks = [...box.children];
+  if (picks.length !== wizard.items.length) { renderWizardStep3(); return; }
+  if (previous >= 0 && picks[previous]) picks[previous].setAttribute('aria-checked', 'false');
+  if (picks[index]) picks[index].setAttribute('aria-checked', 'true');
+  renderWizardPreview('wz-pv-title', 'wz-pv-lines', wizard.title, wizard.items, wizard.target, wizard.number);
+  document.getElementById('wz-message3').textContent = wizard.items.length < 2 ? '항목은 2개 이상 필요해요.' : '';
+  wzSave.disabled = wizard.target < 0 || wizard.items.length < 2 || wizard.items.length > WIZARD_MAX_ITEMS;
+}
+
+function shiftEditRow(index, delta) {
+  const from = index;
+  if (!moveItem(from, delta)) return;
+  const to = from + delta;
+  const box = document.getElementById('wz-picks');
+  const rows = box ? [...box.children] : [];
+  if (!wizard.editing || rows.length !== wizard.items.length) { renderWizardStep3(); return; }
+  const row = rows[from];
+  const anchor = rows[to];
+  if (to > from) box.insertBefore(row, anchor.nextSibling);
+  else box.insertBefore(row, anchor);
+  renumberEditRows(box);
+  renderWizardMeta();
+  row.querySelector(`[data-act="${delta < 0 ? 'up' : 'down'}"]`)?.focus();
+}
+
+function deleteEditRow(index) {
+  const box = document.getElementById('wz-picks');
+  const rows = box ? [...box.children] : [];
+  removeItem(index);
+  const num = document.getElementById('wz-num');
+  if (num) num.textContent = String(wizard.number);
+  if (!wizard.editing || rows.length !== wizard.items.length + 1) { renderWizardStep3(); return; }
+  const next = rows[index + 1] || rows[index - 1] || null;
+  rows[index].remove();
+  renumberEditRows(box);
+  renderWizardMeta();
+  (next?.querySelector('.sv-einput') || document.getElementById('wz-add'))?.focus();
+}
+
+let pickRowTemplate = null;
+let editRowTemplate = null;
+
+function pickRowTemplateNode() {
+  if (pickRowTemplate) return pickRowTemplate;
+  const pick = document.createElement('button');
+  pick.type = 'button';
+  pick.className = 'sv-pick';
+  pick.setAttribute('role', 'radio');
+  const n = document.createElement('span'); n.className = 'n';
+  const x = document.createElement('span'); x.className = 'x';
+  const tag = document.createElement('span'); tag.className = 'tg'; tag.textContent = '예언';
+  pick.append(n, x, tag);
+  pickRowTemplate = pick;
+  return pickRowTemplate;
+}
+
+function editRowTemplateNode() {
+  if (editRowTemplate) return editRowTemplate;
   const row = document.createElement('div');
   row.className = 'sv-erow';
-  row.dataset.index = String(index);
-  const n = document.createElement('span'); n.className = 'n'; n.textContent = String(index + 1);
+  const n = document.createElement('span'); n.className = 'n';
   const input = document.createElement('input');
-  input.type = 'text'; input.className = 'sv-einput'; input.value = text; input.maxLength = MAX_ITEM_CHARS;
-  input.setAttribute('aria-label', `${index + 1}번 항목`);
-  input.autocomplete = 'off';
-  input.addEventListener('input', () => { wizard.items[index] = input.value; wizard.itemsDirty = true; renderWizardMeta(); });
-  const button = (act, label, glyph, disabled = false) => {
+  input.type = 'text'; input.className = 'sv-einput'; input.maxLength = MAX_ITEM_CHARS; input.autocomplete = 'off';
+  const button = (act, glyph) => {
     const b = document.createElement('button');
-    b.type = 'button'; b.className = 'sv-eb'; b.dataset.act = act; b.textContent = glyph; b.disabled = disabled;
-    b.setAttribute('aria-label', `${index + 1}번 ${label}`);
+    b.type = 'button'; b.className = 'sv-eb'; b.dataset.act = act; b.textContent = glyph;
     return b;
   };
-  const star = button('target', '예언 항목으로', wizard.target === index ? '★' : '☆');
-  star.setAttribute('aria-pressed', String(wizard.target === index));
-  star.addEventListener('click', () => { wizard.target = index; renderWizardStep3(); });
-  const up = button('up', '위로', '▲', index === 0);
-  up.addEventListener('click', () => { moveItem(index, -1); renderWizardStep3(); });
-  const down = button('down', '아래로', '▼', index === wizard.items.length - 1);
-  down.addEventListener('click', () => { moveItem(index, 1); renderWizardStep3(); });
-  const del = button('del', '빼기', '✕');
-  del.addEventListener('click', () => { removeItem(index); renderWizardStep3(); });
-  row.append(n, input, star, up, down, del);
+  row.append(n, input, button('target', '☆'), button('up', '▲'), button('down', '▼'), button('del', '✕'));
+  editRowTemplate = row;
+  return editRowTemplate;
+}
+
+function wizardPickContext(target) {
+  let act = null;
+  let row = null;
+  let node = target;
+  while (node && node.id !== 'wz-picks') {
+    if (node.nodeType === 1) {
+      if (!act && node.dataset && node.dataset.act) act = node;
+      if (!row && node.classList && (node.classList.contains('sv-pick') || node.classList.contains('sv-erow'))) row = node;
+    }
+    node = node.parentElement;
+  }
+  return { act, row };
+}
+
+function onWizardPicksClick(event) {
+  if (!wizard) return;
+  const { act, row } = wizardPickContext(event.target);
+  if (!row) return;
+  const index = Number(row.dataset.index);
+  if (!Number.isInteger(index)) return;
+  if (row.classList.contains('sv-pick')) { chooseWizardTarget(index); return; }
+  if (!act) return;
+  const action = act.dataset.act;
+  if (action === 'target') chooseWizardTarget(index);
+  else if (action === 'up') shiftEditRow(index, -1);
+  else if (action === 'down') shiftEditRow(index, 1);
+  else if (action === 'del') deleteEditRow(index);
+}
+
+function onWizardPicksInput(event) {
+  if (!wizard || !wizard.editing) return;
+  const input = event.target;
+  if (!input || !input.classList || !input.classList.contains('sv-einput')) return;
+  const at = Number(input.parentElement && input.parentElement.dataset.index);
+  if (!Number.isInteger(at) || at < 0 || at >= wizard.items.length) return;
+  wizard.items[at] = input.value;
+  wizard.itemsDirty = true;
+  renderWizardMeta();
+}
+
+function editRow(text, index) {
+  const row = editRowTemplateNode().cloneNode(true);
+  const number = index + 1;
+  row.dataset.index = String(index);
+  row.children[0].textContent = String(number);
+  const input = row.children[1];
+  input.value = text;
+  input.setAttribute('aria-label', `${number}번 항목`);
+  const star = row.children[2];
+  const up = row.children[3];
+  const down = row.children[4];
+  const del = row.children[5];
+  const on = wizard.target === index;
+  star.textContent = on ? '★' : '☆';
+  star.setAttribute('aria-pressed', String(on));
+  star.setAttribute('aria-label', `${number}번 예언 항목으로`);
+  up.disabled = index === 0;
+  up.setAttribute('aria-label', `${number}번 위로`);
+  down.disabled = index === wizard.items.length - 1;
+  down.setAttribute('aria-label', `${number}번 아래로`);
+  del.setAttribute('aria-label', `${number}번 빼기`);
   return row;
+}
+
+function pickRow(text, index, selected) {
+  const pick = pickRowTemplateNode().cloneNode(true);
+  pick.dataset.index = String(index);
+  pick.setAttribute('aria-checked', String(selected));
+  pick.children[0].textContent = String(index + 1);
+  pick.children[1].textContent = text;
+  return pick;
+}
+
+// Build every row off-document, then insert the fragment once. Clicks and typing are handled on the list.
+function mountWizardRows(box, items, build) {
+  const fragment = document.createDocumentFragment();
+  for (let index = 0; index < items.length; index += 1) fragment.appendChild(build(items[index], index));
+  box.replaceChildren(fragment);
 }
 
 // Counts, the sample note and the save button follow the items, without redrawing the rows being typed in.
@@ -959,28 +1290,14 @@ function renderWizardStep3() {
   picksBox.classList.toggle('sv-edit', Boolean(wizard.editing));
   if (wizard.editing) {
     picksBox.removeAttribute('role');
-    picksBox.replaceChildren(...items.map(editRow));
+    mountWizardRows(picksBox, items, editRow);
     document.getElementById('wz-num').textContent = String(wizard.number);
     renderWizardMeta();
     return;
   }
   picksBox.setAttribute('role', 'radiogroup');
   document.getElementById('wz-pick-label').textContent = `항목 ${items.length}개 중 하나 고르기`;
-  const picks = items.map((text, index) => {
-    const pick = document.createElement('button');
-    pick.type = 'button';
-    pick.className = 'sv-pick';
-    pick.setAttribute('role', 'radio');
-    pick.setAttribute('aria-checked', String(index === target));
-    pick.dataset.index = String(index);
-    const n = document.createElement('span'); n.className = 'n'; n.textContent = String(index + 1);
-    const x = document.createElement('span'); x.className = 'x'; x.textContent = text;
-    const tag = document.createElement('span'); tag.className = 'tg'; tag.textContent = '예언';
-    pick.append(n, x, tag);
-    pick.addEventListener('click', () => { wizard.target = index; renderWizardStep3(); });
-    return pick;
-  });
-  picksBox.replaceChildren(...picks);
+  mountWizardRows(picksBox, items, (text, index) => pickRow(text, index, index === target));
   renderWizardPreview('wz-pv-title', 'wz-pv-lines', wizard.title, items, target, wizard.number);
   document.getElementById('wz-num').textContent = String(wizard.number);
   document.getElementById('wz-message3').textContent = items.length < 2 ? '항목은 2개 이상 필요해요.' : '';
@@ -1021,7 +1338,10 @@ function renderWizardPreview(titleId, linesId, title, items, target, number) {
 function stepWizardNumber(delta) {
   if (!wizard) return;
   wizard.number = Math.min(Math.max(1, wizard.number + delta), wizard.items.length);
-  renderWizardStep3();
+  const num = document.getElementById('wz-num');
+  if (num) num.textContent = String(wizard.number);
+  if (wizard.editing) renderWizardMeta();
+  else renderWizardPreview('wz-pv-title', 'wz-pv-lines', wizard.title, wizard.items, wizard.target, wizard.number);
 }
 
 // What the saved list does in the notes right now, given the switches and the active performance set.
@@ -1195,12 +1515,16 @@ function bindSettingsViews() {
   document.querySelectorAll('.sv-tab').forEach((tab) => tab.addEventListener('click', () => {
     const kind = tab.dataset.pv;
     document.querySelectorAll('.sv-tab').forEach((other) => { const on = other === tab; other.classList.toggle('on', on); other.setAttribute('aria-pressed', String(on)); });
+    warmDecoTab(kind);
     document.getElementById('deco-pv-home').hidden = kind !== 'home';
     document.getElementById('deco-pv-notes').hidden = kind !== 'notes';
     document.getElementById('deco-pv-cap').hidden = kind !== 'home';
     document.getElementById('deco-pv-notes-cap').hidden = kind !== 'notes';
   }));
   document.getElementById('wz-add').addEventListener('click', addItemRow);
+  const wizardPicks = document.getElementById('wz-picks');
+  wizardPicks.addEventListener('click', onWizardPicksClick);
+  wizardPicks.addEventListener('input', onWizardPicksInput);
   document.querySelectorAll('#wz-looks .sv-chip').forEach((chip) => chip.addEventListener('click', () => { if (!wizard) return; wizard.look = chip.dataset.look; wizardLooks(); }));
   document.getElementById('wz-next1').addEventListener('click', wizardNext1);
   wzTitle.addEventListener('keydown', (event) => { if (event.key === 'Enter') { event.preventDefault(); wizardNext1(); } });
@@ -1571,8 +1895,32 @@ function renderSlotPicker() {
   iconSlotText.textContent = iconPick ? `고른 칸: ${iconPick.row + 1}행 ${iconPick.col + 1}열` : '넣을 칸을 고르세요. 숫자 칸은 고를 수 없습니다.';
 }
 
-function renderUserIcons() {
+function syncUserIconsFromStorage() {
+  let raw;
+  try { raw = localStorage.getItem(USER_ICON_KEY); } catch { return false; }
+  if (iconCacheReady && raw === iconCacheRaw) return false;
+  iconCacheRaw = raw;
+  iconCacheReady = true;
   userIcons = loadUserIcons(localStorage, reservedCells());
+  return true;
+}
+
+function rememberSavedIcons(icons) {
+  userIcons = icons;
+  try { iconCacheRaw = localStorage.getItem(USER_ICON_KEY); } catch { iconCacheRaw = null; }
+  iconCacheReady = true;
+  realHomeIconStamp = undefined;
+}
+
+function revokeGridObjectUrls(grid) {
+  if (!grid || typeof grid.querySelectorAll !== 'function') return;
+  grid.querySelectorAll('img').forEach((img) => {
+    const src = typeof img.src === 'string' && img.src ? img.src : (img.getAttribute?.('src') || '');
+    if (src.startsWith('blob:')) URL.revokeObjectURL(src);
+  });
+}
+
+function renderUserIcons() {
   if (iconList) {
     iconList.replaceChildren();
     userIcons.forEach((icon) => {
@@ -1592,6 +1940,8 @@ function renderUserIcons() {
         if (!result.ok) { iconMessage.textContent = result.error; return; }
         const saved = saveUserIcons(localStorage, result.icons);
         iconMessage.textContent = saved.ok ? '뺐습니다.' : saved.error;
+        if (!saved.ok) return;
+        rememberSavedIcons(result.icons);
         renderUserIcons();
       });
       row.append(img, text, remove);
@@ -1600,6 +1950,8 @@ function renderUserIcons() {
   }
   renderSlotPicker();
   pvRefreshIcons();
+  realHomeIconStamp = undefined;
+  if (fakeHomeEl) ensureFakeHomeIcons();
 }
 
 function onIconAdd() {
@@ -1617,24 +1969,36 @@ function onIconAdd() {
   const saved = saveUserIcons(localStorage, result.icons);
   if (!saved.ok) { iconMessage.textContent = saved.error; return; }
   iconMessage.textContent = `「${result.icon.label}」를 넣었습니다.`;
+  rememberSavedIcons(result.icons);
   closeIconEditor();
   renderUserIcons();
 }
 
 function bindIconCropper() {
   let drag = null;
+  let pixelsPerCss = 1;
+  let paint = false;
+  const measure = () => {
+    const width = iconCanvas.getBoundingClientRect().width;
+    pixelsPerCss = width > 0 ? CROP_VIEW / width : 1;
+  };
+  const drawSoon = () => {
+    if (paint) return;
+    paint = true;
+    requestAnimationFrame(() => { paint = false; drawCrop(); });
+  };
   iconCanvas.addEventListener('pointerdown', (event) => {
     if (!crop) return;
+    measure();
     drag = { id: event.pointerId, x: event.clientX, y: event.clientY, ox: crop.ox, oy: crop.oy };
     iconCanvas.setPointerCapture?.(event.pointerId);
   });
   iconCanvas.addEventListener('pointermove', (event) => {
     if (!drag || !crop || event.pointerId !== drag.id) return;
-    const scale = CROP_VIEW / iconCanvas.getBoundingClientRect().width;
-    crop.ox = drag.ox + (event.clientX - drag.x) * scale;
-    crop.oy = drag.oy + (event.clientY - drag.y) * scale;
+    crop.ox = drag.ox + (event.clientX - drag.x) * pixelsPerCss;
+    crop.oy = drag.oy + (event.clientY - drag.y) * pixelsPerCss;
     clampCrop();
-    drawCrop();
+    drawSoon();
   });
   const end = (event) => { if (drag && event.pointerId === drag.id) drag = null; };
   iconCanvas.addEventListener('pointerup', end);
@@ -1723,18 +2087,29 @@ async function onWallpaperApply() {
 
 function bindWallpaperCropper() {
   let drag = null;
+  let pixelsPerCss = 1;
+  let paint = false;
+  const measure = () => {
+    const width = wpCanvas.getBoundingClientRect().width;
+    pixelsPerCss = width > 0 ? WP_VIEW.width / width : 1;
+  };
+  const drawSoon = () => {
+    if (paint) return;
+    paint = true;
+    requestAnimationFrame(() => { paint = false; drawWallpaperCrop(); });
+  };
   wpCanvas.addEventListener('pointerdown', (event) => {
     if (!wp) return;
+    measure();
     drag = { id: event.pointerId, x: event.clientX, y: event.clientY, ox: wp.ox, oy: wp.oy };
     wpCanvas.setPointerCapture?.(event.pointerId);
   });
   wpCanvas.addEventListener('pointermove', (event) => {
     if (!drag || !wp || event.pointerId !== drag.id) return;
-    const scale = WP_VIEW.width / wpCanvas.getBoundingClientRect().width;
-    wp.ox = drag.ox + (event.clientX - drag.x) * scale;
-    wp.oy = drag.oy + (event.clientY - drag.y) * scale;
+    wp.ox = drag.ox + (event.clientX - drag.x) * pixelsPerCss;
+    wp.oy = drag.oy + (event.clientY - drag.y) * pixelsPerCss;
     clampWallpaperCrop();
-    drawWallpaperCrop();
+    drawSoon();
   });
   const end = (event) => { if (drag && event.pointerId === drag.id) drag = null; };
   wpCanvas.addEventListener('pointerup', end);
@@ -1843,12 +2218,16 @@ function createAppIcon(cell) {
 }
 
 function ensureFakeHomeIcons(root = fakeHomeEl) {
+  const real = root === fakeHomeEl;
+  if (real && realHomeIconStamp === iconCacheRaw && root?.dataset?.ready === 'true') return;
   root.querySelectorAll('[data-home-grid]').forEach((grid) => {
     const pageIndex = Number(grid.dataset.homeGrid);
+    revokeGridObjectUrls(grid);
     grid.replaceChildren(...homeDescriptors(pageIndex).map(createAppIcon));
   });
   const dock = root === fakeHomeEl ? phoneDock : root.querySelector('.phone-dock');
   if (dock) {
+    revokeGridObjectUrls(dock);
     dock.replaceChildren(...HOME_MANIFEST.dock.map((entry) => {
       const app = document.createElement('span');
       app.className = 'dock-app';
@@ -1861,7 +2240,10 @@ function ensureFakeHomeIcons(root = fakeHomeEl) {
       return app;
     }));
   }
-  if (root === fakeHomeEl) fakeHomeEl.dataset.ready = 'true';
+  if (real) {
+    fakeHomeEl.dataset.ready = 'true';
+    realHomeIconStamp = iconCacheRaw;
+  }
 }
 
 function applyHomeStyle(options, root = fakeHomeEl) {
@@ -1876,6 +2258,8 @@ function applyHomeStyle(options, root = fakeHomeEl) {
 const PV_NOTE = { name: '샘플 목록', choice: 3, items: ['아침 산책하기', '커피 한 잔', '책 열 쪽 읽기', '점심 약속', '장보기', '저녁 요리', '일기 쓰기', '운동 30분', '빨래 널기', '내일 준비'] };
 const pvHomes = [];
 const pvNotes = [];
+const pvDirty = { home: false, notes: false };
+const pvPainted = new WeakMap();
 let pvTick = 0;
 let pvWallpaperUrl = null;
 let pvWallpaperKey = null;
@@ -1933,6 +2317,8 @@ function initPreviews() {
     }
   });
   pvRefreshIcons();
+  pvDirty.home = true;
+  pvDirty.notes = true;
   renderPreviews();
 }
 
@@ -1940,16 +2326,122 @@ function pvRefreshIcons() {
   pvHomes.forEach((home) => ensureFakeHomeIcons(home));
 }
 
+function markPreviewGroup(id) {
+  const home = id === 'opt-icon-size' || id === 'opt-label-size' || id === 'opt-bottom-gap';
+  const notes = id === 'opt-note-font' || id === 'opt-note-line' || id === 'opt-note-emphasis';
+  if (!id || (!home && !notes)) {
+    pvDirty.home = true;
+    pvDirty.notes = true;
+    return;
+  }
+  if (home) pvDirty.home = true;
+  if (notes) pvDirty.notes = true;
+}
+
+function previewStage(node) {
+  const root = typeof node.getRootNode === 'function' ? node.getRootNode() : null;
+  return root && root.host ? root.host : null;
+}
+
+function previewWillShow(node, { openingView = null, openingStageId = null } = {}) {
+  const stage = previewStage(node);
+  if (!stage) return false;
+  let current = stage;
+  while (current) {
+    if (current.hidden) {
+      const opening = (openingView && current.dataset?.viewName === openingView)
+        || (openingStageId && current.id === openingStageId);
+      if (!opening) return false;
+    }
+    current = current.parentElement;
+  }
+  return true;
+}
+
+function homeStamp(options) {
+  return `${options.iconSize}\0${options.labelSize}\0${options.bottomGap}`;
+}
+
+function notesStamp(options) {
+  return `${options.noteFont}\0${options.noteLine}\0${options.noteEmphasis}`;
+}
+
+function paintHomePreview(node, options) {
+  const stamp = pvPainted.get(node) || {};
+  const next = homeStamp(options);
+  if (stamp.home === next) return;
+  applyHomeStyle(options, node);
+  stamp.home = next;
+  pvPainted.set(node, stamp);
+}
+
+function paintNotePreview(node, options) {
+  const body = node.querySelector('.notes-landing-body');
+  if (!body) return;
+  const stamp = pvPainted.get(node) || {};
+  const next = notesStamp(options);
+  const lines = body.querySelector('.notes-lines');
+  if (!lines) {
+    body.replaceChildren(buildNoteScroller(PV_NOTE.items, PV_NOTE.choice, options, { zoomable: false }));
+    stamp.notes = next;
+    pvPainted.set(node, stamp);
+    return;
+  }
+  if (stamp.notes === next) return;
+  lines.style.setProperty('--note-size', `${options.noteFont}px`);
+  lines.style.setProperty('--note-leading', String(LINE_HEIGHTS[options.noteLine] || LINE_HEIGHTS.normal));
+  [...lines.children].forEach((row, index) => {
+    row.classList.remove('is-emphasis');
+    if (row.dataset && Object.prototype.hasOwnProperty.call(row.dataset, 'emphasis')) delete row.dataset.emphasis;
+    if (index + 1 === PV_NOTE.choice) emphasisRow(row, options);
+  });
+  stamp.notes = next;
+  pvPainted.set(node, stamp);
+}
+
+function syncPreviewGroup(group, options, opening) {
+  const list = group === 'home' ? pvHomes : pvNotes;
+  list.forEach((node) => {
+    if (!previewWillShow(node, opening)) return;
+    if (group === 'home') paintHomePreview(node, options);
+    else paintNotePreview(node, options);
+  });
+}
+
+function recomputePreviewDirty(options) {
+  const home = homeStamp(options);
+  const notes = notesStamp(options);
+  pvDirty.home = pvHomes.some((node) => pvPainted.get(node)?.home !== home);
+  pvDirty.notes = pvNotes.some((node) => pvPainted.get(node)?.notes !== notes);
+}
+
 function renderPreviews() {
   pvTick = 0;
   if (!pvHomes.length && !pvNotes.length) return;
   const options = controlOptions();
-  pvHomes.forEach((home) => applyHomeStyle(options, home));
-  pvNotes.forEach((home) => {
-    const body = home.querySelector('.notes-landing-body');
-    if (body) body.replaceChildren(buildNoteScroller(PV_NOTE.items, PV_NOTE.choice, options, { zoomable: false }));
-  });
-  pvApplyWallpaper(options);
+  if (pvDirty.home) {
+    syncPreviewGroup('home', options, {});
+    pvApplyWallpaper(options);
+  }
+  if (pvDirty.notes) syncPreviewGroup('notes', options, {});
+  recomputePreviewDirty(options);
+}
+
+// Paint what is about to become visible, while the view or tab is still hidden.
+function warmPreviews(viewName) {
+  if (!pvHomes.length && !pvNotes.length) return;
+  const options = controlOptions();
+  syncPreviewGroup('home', options, { openingView: viewName });
+  syncPreviewGroup('notes', options, { openingView: viewName });
+  recomputePreviewDirty(options);
+}
+
+function warmDecoTab(kind) {
+  if (!pvHomes.length && !pvNotes.length) return;
+  const options = controlOptions();
+  const group = kind === 'notes' ? 'notes' : 'home';
+  syncPreviewGroup(group, options, { openingStageId: kind === 'notes' ? 'deco-pv-notes' : 'deco-pv-home' });
+  recomputePreviewDirty(options);
 }
 
 function schedulePreviews() {
@@ -2421,8 +2913,64 @@ function backToFakeNotesIndex() {
   renderFakeNotesIndex(focusId);
 }
 
+let wakeLock = null;
+let wakeLockPending = false;
+
+function performanceWakeWanted() {
+  return rehearsalSurfaceOpen();
+}
+
+async function acquireWakeLock() {
+  if (
+    !performanceWakeWanted() ||
+    !("wakeLock" in navigator) ||
+    document.visibilityState !== "visible" ||
+    wakeLock !== null ||
+    wakeLockPending
+  ) {
+    return;
+  }
+
+  wakeLockPending = true;
+  try {
+    const lock = await navigator.wakeLock.request("screen");
+
+    if (!performanceWakeWanted() || document.visibilityState !== "visible") {
+      await lock.release();
+      return;
+    }
+
+    wakeLock = lock;
+    lock.addEventListener("release", () => {
+      if (wakeLock === lock) wakeLock = null;
+      if (document.visibilityState === "visible") acquireWakeLock();
+    }, { once: true });
+  } catch {
+    wakeLock = null;
+  } finally {
+    wakeLockPending = false;
+  }
+}
+
+async function releaseWakeLock() {
+  const lock = wakeLock;
+  wakeLock = null;
+  if (lock === null) return;
+
+  try {
+    await lock.release();
+  } catch {
+    // Wake Lock API is optional; release failures need no UI.
+  }
+}
+
+function syncPerformanceWakeLock() {
+  if (performanceWakeWanted()) acquireWakeLock();
+  else releaseWakeLock();
+}
+
 function openFakeHome(notes) {
-  userIcons = loadUserIcons(localStorage, reservedCells());
+  syncUserIconsFromStorage();
   ensureFakeHomeIcons();
   fakeHomeGesture = null;
   resetTaps = null;
@@ -2452,6 +3000,7 @@ function openFakeHome(notes) {
   applyWallpaper(fakeHomeSession.options);
   fakeHomeEl.focus();
   maybeShowGestureGuide();
+  syncPerformanceWakeLock();
 }
 
 function closeFakeHome() {
@@ -2478,6 +3027,7 @@ function closeFakeHome() {
   showView('home', { push: false });
   // The history entry under the performance must say what is visible now.
   try { history.replaceState(navState('home'), ''); } catch { /* History can be blocked. */ }
+  syncPerformanceWakeLock();
 }
 
 // Secret next-spectator reset: clears the number, closes any open note and goes back to the first home.
@@ -2557,6 +3107,7 @@ function abortStart(error) {
   document.body.dataset.view = 'settings';
   document.title = '너의 선택은?';
   showStartProblem({ recovery: false, text: `공연 화면을 열지 못했습니다. (${error?.message || '알 수 없는 오류'}) 저장된 목록은 그대로입니다. 앱을 완전히 닫았다가 다시 열어 보세요.` });
+  syncPerformanceWakeLock();
 }
 
 function startNotesShow() {
@@ -2831,7 +3382,11 @@ document.addEventListener('touchcancel', resetTransientInput, { passive: true })
 window.addEventListener('blur', resetTransientInput);
 window.addEventListener('pagehide', resetTransientInput);
 window.addEventListener('resize', resetTransientInput);
-document.addEventListener('visibilitychange', resetTransientInput);
+document.addEventListener('visibilitychange', () => {
+  resetTransientInput();
+  if (document.visibilityState === 'visible') acquireWakeLock();
+  else releaseWakeLock();
+});
 
 // While a performance surface is open nothing may lead to editing or a menu. Only the
 // two-finger downward swipe above leaves it.
@@ -2864,9 +3419,53 @@ function startBootPerformance() {
 }
 
 // Fetching the artwork now lets the service worker keep it for offline use without slowing the install.
+// Three tries, with a short bounded pause between them. A miss must not retry forever.
+const ARTWORK_ATTEMPTS = 3;
+const ARTWORK_BACKOFF_MS = 300;
+let artworkWarmStarted = false;
+let artworkWarmPending = 0;
+
+function artworkWarmSettled() {
+  artworkWarmPending -= 1;
+  if (artworkWarmPending === 0) refreshVisibleOfflineReady();
+}
+
+function warmOneArtwork(url, attempt) {
+  fetch(url, { cache: 'reload' }).then((response) => {
+    if (!response || response.ok === false) throw new Error('artwork miss');
+    artworkWarmSettled();
+  }).catch(() => {
+    if (attempt >= ARTWORK_ATTEMPTS) {
+      artworkWarmSettled();
+      return;
+    }
+    setTimeout(() => warmOneArtwork(url, attempt + 1), ARTWORK_BACKOFF_MS * attempt);
+  });
+}
+
 function warmShellArtwork() {
-  if (!navigator.serviceWorker?.controller) return;
-  manifestFiles().forEach((file) => { fetch(iconSrc(file)).catch(() => {}); });
+  if (artworkWarmStarted || !navigator.serviceWorker?.controller) return;
+  artworkWarmStarted = true;
+  const urls = choiceArtworkUrls();
+  artworkWarmPending = urls.length;
+  if (!urls.length) {
+    refreshVisibleOfflineReady();
+    return;
+  }
+  urls.forEach((url) => warmOneArtwork(url, 1));
+}
+
+// Wait until a controller exists. ready covers a page that is already controlled;
+// controllerchange covers the first claim. Neither path is a timed guess.
+function armArtworkWarmup() {
+  try {
+    if (!('serviceWorker' in navigator) || !navigator.serviceWorker) return;
+    const worker = navigator.serviceWorker;
+    const kick = () => { if (worker.controller) warmShellArtwork(); };
+    if (typeof worker.addEventListener === 'function') worker.addEventListener('controllerchange', kick);
+    const ready = worker.ready;
+    if (ready && typeof ready.then === 'function') ready.then(kick, () => {});
+  } catch { /* A blocked worker must not stop the app. */ }
 }
 
 loadInputGuidePreference();
@@ -2883,7 +3482,7 @@ if (!loaded.ok) {
 renderRecovery();
 renderSaved();
 renderOptions();
-userIcons = loadUserIcons(localStorage, reservedCells());
+syncUserIconsFromStorage();
 renderUserIcons();
 initPreviews();
 renderMemoryTable();
@@ -2896,8 +3495,9 @@ document.getElementById('notes-entry-recovery')?.addEventListener('click', () =>
   recoverySlim.hidden = true;
   recoveryEl.scrollIntoView?.({ block: 'start', behavior: 'smooth' });
 });
+// A caught performance-start failure still finished booting. The repair watchdog only runs when this flag never arrives.
 document.documentElement.setAttribute('data-choice-ready', '1');
-setTimeout(warmShellArtwork, 1500);
+armArtworkWarmup();
 
 if ('serviceWorker' in navigator && (location.protocol === 'http:' || location.protocol === 'https:')) {
   navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(() => {});

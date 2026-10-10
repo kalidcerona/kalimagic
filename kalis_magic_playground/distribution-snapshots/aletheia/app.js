@@ -832,7 +832,7 @@ function createCourtDeckSlots() {
     const card = cardAtIndex(index);
     if (!card) throw new Error('decode');
     try {
-      return { image: await loadKeptImage(`./court-cards/${slotLabel(card)}.png`) };
+      return { image: await loadKeptImage(`./court-cards/${slotLabel(card)}.webp`) };
     } catch {
       return loadSvgImage(courtCardSvg(card));
     }
@@ -1359,6 +1359,67 @@ function destroyRunning() {
   running = null;
 }
 
+let wakeLock = null;
+let wakeLockPending = false;
+
+function performanceWakeWanted() {
+  return view === 'performance';
+}
+
+async function acquireWakeLock() {
+  if (
+    !performanceWakeWanted() ||
+    !("wakeLock" in navigator) ||
+    document.visibilityState !== "visible" ||
+    wakeLock !== null ||
+    wakeLockPending
+  ) {
+    return;
+  }
+
+  wakeLockPending = true;
+  try {
+    const lock = await navigator.wakeLock.request("screen");
+
+    if (!performanceWakeWanted() || document.visibilityState !== "visible") {
+      await lock.release();
+      return;
+    }
+
+    wakeLock = lock;
+    lock.addEventListener("release", () => {
+      if (wakeLock === lock) wakeLock = null;
+      if (document.visibilityState === "visible") acquireWakeLock();
+    }, { once: true });
+  } catch {
+    wakeLock = null;
+  } finally {
+    wakeLockPending = false;
+  }
+}
+
+async function releaseWakeLock() {
+  const lock = wakeLock;
+  wakeLock = null;
+  if (lock === null) return;
+
+  try {
+    await lock.release();
+  } catch {
+    // Wake Lock API is optional; release failures need no UI.
+  }
+}
+
+function syncPerformanceWakeLock() {
+  if (performanceWakeWanted()) acquireWakeLock();
+  else releaseWakeLock();
+}
+
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") acquireWakeLock();
+  else releaseWakeLock();
+});
+
 function stopPerformance() {
   hideGestureGuide();
   hideCellGuide();
@@ -1372,6 +1433,7 @@ function stopPerformance() {
   document.title = TITLES.settings;
   if (theme) theme.setAttribute('content', '#4C1420');
   warmCourtDeck();
+  syncPerformanceWakeLock();
 }
 
 function openSettings() {
@@ -1412,8 +1474,16 @@ function onPointerDown(event) {
     x: point.x,
     y: point.y,
     last: null,
+    pointerType: event.pointerType,
   };
   contacts.set(event.pointerId, contact);
+  // Travel before the second finger lands does not count toward the 96px rule.
+  if (contacts.size === 2 && [...contacts.values()].every((item) => item.pointerType === 'touch')) {
+    for (const item of contacts.values()) {
+      item.startX = item.x;
+      item.startY = item.y;
+    }
+  }
   if (contacts.size > 1) {
     multiTouchGroup = true;
     for (const item of contacts.values()) item.last = null;
@@ -1611,6 +1681,7 @@ function showPerformanceSurface() {
     try { canvas.focus(); } catch { /* keyboard listener is on window */ }
   }
   maybeShowGestureGuide();
+  syncPerformanceWakeLock();
 }
 
 function slotLabel(card) {

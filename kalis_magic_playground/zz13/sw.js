@@ -1,9 +1,51 @@
-const scope=new URL(self.registration.scope),PREFIX='magic-qr-'+encodeURIComponent(scope.href)+'-',CACHE=PREFIX+'v20261004-first-guide-1';
+// Cache only the explicit app shell. API, authentication and user data stay on the network.
+const scope=new URL(self.registration.scope),PREFIX='magic-qr-'+encodeURIComponent(scope.href)+'-',CACHE=PREFIX+'v20261004-first-guide-1-coherent-1-gesture-1-compat-1-wake-1-defer-1';
 const GUARDED=scope.pathname.startsWith('/tools/');
-const ASSETS=['./first-run-guide.js','./','./index.html','./style.css','./brand-logo.png','./app.mjs','./core.mjs','./manifest.webmanifest','./icons/icon-192.png','./icons/icon-512.png','./vendor/qrcodegen.js','./vendor/jsQR.js','./vendor/LICENSE-nayuki.txt','./vendor/LICENSE-jsqr.txt'].filter(path=>!GUARDED||(path!=='./'&&path!=='./index.html'));
-const STATIC=new Set(ASSETS.map(path=>new URL(path,scope).href));
-self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)).then(()=>self.skipWaiting())));
-self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key.startsWith(PREFIX)&&key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim())));
+const SHELL = [
+  "./first-run-guide.js",
+  "./index.html",
+  "./style.css",
+  "./brand-logo.png",
+  "./app.mjs",
+  "./core.mjs",
+  "./manifest.webmanifest",
+  "./icons/icon-192.png",
+  "./icons/icon-512.png",
+  "./vendor/qrcodegen.js",
+  "./vendor/jsQR.js",
+  "./vendor/LICENSE-nayuki.txt",
+  "./vendor/LICENSE-jsqr.txt"
+];
+const SHELL_NAMES = new Set(SHELL.map((file) => file.replace(/^\.\//, '')));
+
+self.addEventListener('install', (event) => {
+  // Reject installation unless the whole critical shell is stored.
+  // A later version stays waiting until every client of this app has closed, so the next launch applies it.
+  event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(SHELL.map((file) => new Request(new URL(file, self.registration.scope).href, { cache: 'reload', redirect: 'error' })))).then(() => { if (!self.registration.active) return self.skipWaiting(); }));
+});
+self.addEventListener('activate', (event) => {
+  event.waitUntil(caches.keys().then((names) => Promise.all(names
+    .filter((name) => name.startsWith(PREFIX) && name !== CACHE)
+    .map((name) => caches.delete(name)))).then(() => self.clients.claim()));
+});
+function shellName(rawUrl) {
+  const url = new URL(rawUrl), base = new URL(self.registration.scope);
+  if (url.origin !== base.origin || !url.pathname.startsWith(base.pathname)) return null;
+  const name = url.pathname.slice(base.pathname.length);
+  return name === '' || SHELL_NAMES.has(name) ? name : null;
+}
+function unavailable() {
+  return new Response('오프라인 상태이며 저장된 화면이 없습니다.', { status: 503, headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
+}
+async function refresh(request, cache) {
+  const response = await fetch(request);
+  if (response.ok && !response.redirected && response.type !== 'opaque') {
+    const name = shellName(request.url);
+    // Keep one canonical entry per asset even when install/version query strings change.
+    await cache.put(new URL(name || 'index.html', self.registration.scope).href, response.clone());
+  }
+  return response;
+}
 // Installation metadata must not remain stale while the performance shell stays cached.
 async function freshManifest(request, cache) {
   const canonical = new URL('manifest.webmanifest', self.registration.scope).href;
@@ -28,4 +70,25 @@ async function freshManifest(request, cache) {
     return cached || Response.error();
   }
 }
-self.addEventListener('fetch',event=>{if(event.request.method!=='GET')return;const u=new URL(event.request.url);if(u.origin!==scope.origin||!u.href.startsWith(scope.href)||u.pathname.includes('/_check')||u.pathname.includes('/api/'))return;if(u.pathname===new URL('manifest.webmanifest',scope).pathname){event.respondWith(caches.open(CACHE).then(cache=>freshManifest(event.request,cache)));return;}if(!STATIC.has(u.href))return;event.respondWith(caches.open(CACHE).then(cache=>cache.match(event.request)).then(hit=>hit||fetch(event.request)));});
+self.addEventListener('fetch', (event) => {
+  const request = event.request;
+  if (request.method !== 'GET' || shellName(request.url) === null) return;
+  event.respondWith((async () => {
+    const cache = await caches.open(CACHE);
+    const name = shellName(request.url);
+    if (name === 'manifest.webmanifest') return freshManifest(request, cache);
+    const page = name === '' || name === 'index.html' || name.endsWith('.html');
+    const executable = page || /\.(?:js|mjs|css)$/.test(name);
+    const cached = await cache.match(new URL(name === '' ? 'index.html' : name, self.registration.scope).href, { ignoreSearch: true });
+    // Friend distribution navigation serves this release's cached index.html, the same as a personal app.
+    // That is safe: the cached HTML still runs the injected /tools/_check entitlement script before revealing anything,
+    // and the edge gate still protects every network fetch.
+    if (page && GUARDED && cached) return cached;
+    if (executable) {
+      if (cached) return cached;
+      try { return await fetch(request); } catch { return page ? unavailable() : Response.error(); }
+    }
+    if (cached) return cached;
+    try { return await refresh(request, cache); } catch { return unavailable(); }
+  })());
+});

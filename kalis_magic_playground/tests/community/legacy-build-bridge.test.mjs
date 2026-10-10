@@ -101,8 +101,13 @@ test('distribution transform injects migration without editing canonical snapsho
     assert.equal(html.includes('stopwatch2_'), false);
     assert.match(html, new RegExp(`${prefix}preset_cs`));
     assert.match(html, /id="friend-apps-check"/);
-    assert.match(html, /if \(!result\.ok\) \{ location\.replace\(loginUrl\); return; \}/);
-    assert.match(html, /\.catch\(\(\) => \{ location\.replace\(loginUrl\); \}\)/);
+    assert.match(html, /friend-apps-ok:/);
+    assert.match(html, /result\.ok === false/);
+    assert.match(html, /response\.status === 401 \|\| response\.status === 403/);
+    assert.match(html, /localStorage\.removeItem\(storageKey\)/);
+    assert.match(html, /setTimeout\(\(\) => controller\.abort\(\), 6000\)/);
+    assert.match(html, /90 \* dayMs/);
+    assert.doesNotMatch(html, /\.catch\(\(\) => \{ location\.replace\(loginUrl\); \}\)/);
     assert.match(html, /data-magic-customize="off"/);
     assert.match(html, /legacy-storage-migration\.mjs/);
     assert.equal(html.includes('else initApp();'), false);

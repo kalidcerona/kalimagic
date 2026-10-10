@@ -11,6 +11,69 @@
   var el = window.PgUtil.el;
   var clear = window.PgUtil.clear;
   var fetchJson = window.PgUtil.fetchJson;
+  // Page-lifetime list cache only. Never written to storage.
+  var viewCache = Object.create(null);
+  var viewEpoch = Object.create(null);
+
+  function viewCacheKey() {
+    return state.filter === 'members' ? 'members\n' + state.memberQuery : state.filter;
+  }
+
+  function readViewCache(key) {
+    return Object.prototype.hasOwnProperty.call(viewCache, key) ? viewCache[key] : null;
+  }
+
+  function writeViewCache(key, payload) {
+    viewCache[key] = payload;
+  }
+
+  function payloadsEqual(left, right) {
+    return JSON.stringify(left) === JSON.stringify(right);
+  }
+
+  function beginViewRequest(key) {
+    var epoch = (viewEpoch[key] || 0) + 1;
+    viewEpoch[key] = epoch;
+    return epoch;
+  }
+
+  function viewRequestCurrent(key, epoch) {
+    return viewEpoch[key] === epoch;
+  }
+
+  // A role POST must win over an in-flight list GET from the same tab.
+  function noteMemberRole(member) {
+    Object.keys(viewCache).forEach(function (key) {
+      var entry = viewCache[key];
+      if (!entry || !Array.isArray(entry.members)) return;
+      var touched = false;
+      entry.members.forEach(function (row) {
+        if (row.userId && row.userId === member.userId) {
+          row.role = member.role;
+          touched = true;
+        }
+      });
+      if (touched) viewEpoch[key] = (viewEpoch[key] || 0) + 1;
+    });
+  }
+
+  async function loadCachedView(key, renderCached, showLoading, request, renderFresh, renderError) {
+    var cached = readViewCache(key);
+    var epoch = beginViewRequest(key);
+    if (cached) renderCached(cached);
+    else showLoading();
+    try {
+      var payload = await request();
+      if (!viewRequestCurrent(key, epoch)) return;
+      var changed = !cached || !payloadsEqual(cached, payload);
+      if (changed) writeViewCache(key, payload);
+      if (changed && viewCacheKey() === key) renderFresh(payload);
+    } catch (error) {
+      if (!viewRequestCurrent(key, epoch) || viewCacheKey() !== key) return;
+      if (cached) return;
+      renderError(error);
+    }
+  }
 
   function roleBadgeHtml(role) {
     return window.KalisBadges && typeof window.KalisBadges.badgeHtml === 'function'
@@ -247,19 +310,29 @@
     });
   }
 
-  async function loadInbox() {
-    clear(listEl);
-    listEl.appendChild(el('p', 'playground-loading', '관리자 항목을 불러오는 중입니다.'));
-    try {
-      var data = await fetchJson('/.netlify/functions/admin-inbox?filter=' + encodeURIComponent(state.filter));
-      renderItems(data.items || []);
-    } catch (error) {
-      clear(listEl);
-      var box = el('article', 'playground-empty');
-      box.appendChild(el('h2', '', '관리자 권한이 필요합니다'));
-      box.appendChild(el('p', '', error.message || '항목을 불러오지 못했습니다.'));
-      listEl.appendChild(box);
-    }
+  function loadInbox() {
+    var key = viewCacheKey();
+    var filter = state.filter;
+    return loadCachedView(
+      key,
+      function (payload) { renderItems(payload.items); },
+      function () {
+        clear(listEl);
+        listEl.appendChild(el('p', 'playground-loading', '관리자 항목을 불러오는 중입니다.'));
+      },
+      async function () {
+        var data = await fetchJson('/.netlify/functions/admin-inbox?filter=' + encodeURIComponent(filter));
+        return { items: data.items || [] };
+      },
+      function (payload) { renderItems(payload.items); },
+      function (error) {
+        clear(listEl);
+        var box = el('article', 'playground-empty');
+        box.appendChild(el('h2', '', '관리자 권한이 필요합니다'));
+        box.appendChild(el('p', '', error.message || '항목을 불러오지 못했습니다.'));
+        listEl.appendChild(box);
+      }
+    );
   }
 
   function reportRow(item) {
@@ -288,19 +361,28 @@
     });
   }
 
-  async function loadReports() {
-    clear(listEl);
-    listEl.appendChild(el('p', 'playground-loading', '신고 항목을 불러오는 중입니다.'));
-    try {
-      var data = await fetchJson('/.netlify/functions/admin-inbox?filter=reports');
-      renderReports(data.items || []);
-    } catch (error) {
-      clear(listEl);
-      var box = el('article', 'playground-empty');
-      box.appendChild(el('h2', '', '신고 항목을 불러오지 못했습니다'));
-      box.appendChild(el('p', '', error.message || '관리자 권한이 필요합니다.'));
-      listEl.appendChild(box);
-    }
+  function loadReports() {
+    var key = viewCacheKey();
+    return loadCachedView(
+      key,
+      function (payload) { renderReports(payload.items); },
+      function () {
+        clear(listEl);
+        listEl.appendChild(el('p', 'playground-loading', '신고 항목을 불러오는 중입니다.'));
+      },
+      async function () {
+        var data = await fetchJson('/.netlify/functions/admin-inbox?filter=reports');
+        return { items: data.items || [] };
+      },
+      function (payload) { renderReports(payload.items); },
+      function (error) {
+        clear(listEl);
+        var box = el('article', 'playground-empty');
+        box.appendChild(el('h2', '', '신고 항목을 불러오지 못했습니다'));
+        box.appendChild(el('p', '', error.message || '관리자 권한이 필요합니다.'));
+        listEl.appendChild(box);
+      }
+    );
   }
 
   function memberSearchCard() {
@@ -354,6 +436,7 @@
           body: JSON.stringify(memberRolePayload(member, targetRole))
         });
         member.role = data.role || targetRole;
+        noteMemberRole(member);
         card.replaceWith(memberRow(member));
       } catch (error) {
         status.textContent = error.message || '역할을 변경하지 못했습니다.';
@@ -422,21 +505,31 @@
     });
   }
 
-  async function loadMembers() {
-    clear(listEl);
-    listEl.appendChild(memberSearchCard());
-    listEl.appendChild(el('p', 'playground-loading', '회원 목록을 불러오는 중입니다.'));
-    try {
-      var data = await fetchJson('/.netlify/functions/admin-members?q=' + encodeURIComponent(state.memberQuery));
-      renderMembers(data.members || []);
-    } catch (error) {
-      clear(listEl);
-      listEl.appendChild(memberSearchCard());
-      var box = el('article', 'playground-empty');
-      box.appendChild(el('h2', '', '회원 목록을 불러오지 못했습니다'));
-      box.appendChild(el('p', '', error.message || '잠시 후 다시 시도해주세요.'));
-      listEl.appendChild(box);
-    }
+  function loadMembers() {
+    var key = viewCacheKey();
+    var query = state.memberQuery;
+    return loadCachedView(
+      key,
+      function (payload) { renderMembers(payload.members); },
+      function () {
+        clear(listEl);
+        listEl.appendChild(memberSearchCard());
+        listEl.appendChild(el('p', 'playground-loading', '회원 목록을 불러오는 중입니다.'));
+      },
+      async function () {
+        var data = await fetchJson('/.netlify/functions/admin-members?q=' + encodeURIComponent(query));
+        return { members: data.members || [] };
+      },
+      function (payload) { renderMembers(payload.members); },
+      function (error) {
+        clear(listEl);
+        listEl.appendChild(memberSearchCard());
+        var box = el('article', 'playground-empty');
+        box.appendChild(el('h2', '', '회원 목록을 불러오지 못했습니다'));
+        box.appendChild(el('p', '', error.message || '잠시 후 다시 시도해주세요.'));
+        listEl.appendChild(box);
+      }
+    );
   }
 
   function mmbsRequestRow(request) {
@@ -488,19 +581,28 @@
     });
   }
 
-  async function loadMmbsRequests() {
-    clear(listEl);
-    listEl.appendChild(el('p', 'playground-loading', '입문 강의 신청을 불러오는 중입니다.'));
-    try {
-      var data = await fetchJson('/.netlify/functions/mmbs-request?filter=mmbs_requests');
-      renderMmbsRequests(data.requests || []);
-    } catch (error) {
-      clear(listEl);
-      var box = el('article', 'playground-empty');
-      box.appendChild(el('h2', '', '입문 강의 신청을 불러오지 못했습니다'));
-      box.appendChild(el('p', '', '신청 기능을 준비 중입니다. 마이그레이션 적용 후 다시 시도해주세요.'));
-      listEl.appendChild(box);
-    }
+  function loadMmbsRequests() {
+    var key = viewCacheKey();
+    return loadCachedView(
+      key,
+      function (payload) { renderMmbsRequests(payload.requests); },
+      function () {
+        clear(listEl);
+        listEl.appendChild(el('p', 'playground-loading', '입문 강의 신청을 불러오는 중입니다.'));
+      },
+      async function () {
+        var data = await fetchJson('/.netlify/functions/mmbs-request?filter=mmbs_requests');
+        return { requests: data.requests || [] };
+      },
+      function (payload) { renderMmbsRequests(payload.requests); },
+      function (error) {
+        clear(listEl);
+        var box = el('article', 'playground-empty');
+        box.appendChild(el('h2', '', '입문 강의 신청을 불러오지 못했습니다'));
+        box.appendChild(el('p', '', '신청 기능을 준비 중입니다. 마이그레이션 적용 후 다시 시도해주세요.'));
+        listEl.appendChild(box);
+      }
+    );
   }
 
   function analyticsStatItem(label, value) {
@@ -589,19 +691,33 @@
     ));
   }
 
-  async function loadAnalytics() {
-    clear(listEl);
-    listEl.appendChild(el('p', 'playground-loading', '측정 데이터를 불러오는 중입니다.'));
-    try {
-      var data = await fetchJson('/.netlify/functions/admin-analytics');
-      renderAnalytics(data);
-    } catch (error) {
-      clear(listEl);
-      var box = el('article', 'playground-empty');
-      box.appendChild(el('h2', '', '관리자 권한이 필요합니다'));
-      box.appendChild(el('p', '', error.message || '측정 데이터를 불러오지 못했습니다.'));
-      listEl.appendChild(box);
-    }
+  function loadAnalytics() {
+    var key = viewCacheKey();
+    return loadCachedView(
+      key,
+      function (payload) { renderAnalytics(payload); },
+      function () {
+        clear(listEl);
+        listEl.appendChild(el('p', 'playground-loading', '측정 데이터를 불러오는 중입니다.'));
+      },
+      async function () {
+        var data = await fetchJson('/.netlify/functions/admin-analytics');
+        return {
+          totals: data.totals || {},
+          funnel: data.funnel || [],
+          byCta: data.byCta || [],
+          byPage: data.byPage || []
+        };
+      },
+      function (payload) { renderAnalytics(payload); },
+      function (error) {
+        clear(listEl);
+        var box = el('article', 'playground-empty');
+        box.appendChild(el('h2', '', '관리자 권한이 필요합니다'));
+        box.appendChild(el('p', '', error.message || '측정 데이터를 불러오지 못했습니다.'));
+        listEl.appendChild(box);
+      }
+    );
   }
 
   function loadCurrentView() {

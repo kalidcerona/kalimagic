@@ -164,7 +164,7 @@
     .reveal-detail { margin-top: 13px; color: #f3f4f8e0; font-size: 15px; }
     /* Unlock motion is shared by PIN success and interactive rewind-lock drag. */
     #unlocked-screen.returning { transition: transform 520ms cubic-bezier(.2, 1.35, .35, 1); }
-    #peek-screen { z-index: 1; background: #0b0c10; padding: 28px 24px max(24px, env(safe-area-inset-bottom)); display: flex; flex-direction: column; justify-content: flex-end; }
+    #peek-screen { z-index: 1; background: #0b0c10; padding: 28px max(24px, env(safe-area-inset-right, 0px)) max(24px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left, 0px)); display: flex; flex-direction: column; justify-content: flex-end; }
     #peek-screen.side-peek { text-align: right; }
     .peek-heading { margin-bottom: 9px; color: #aaaebc; font-size: 12px; }
     #attempt-list { list-style: none; margin: 0; padding: 0; overflow: auto; max-height: calc(100% - 54px); font-variant-numeric: tabular-nums; }
@@ -650,6 +650,62 @@
       }, 800));
     }
 
+    let wakeLock = null;
+    let wakeLockPending = false;
+
+    function performanceWakeWanted() {
+      return screen !== "settings";
+    }
+
+    async function acquireWakeLock() {
+      if (
+        !performanceWakeWanted() ||
+        !("wakeLock" in navigator) ||
+        document.visibilityState !== "visible" ||
+        wakeLock !== null ||
+        wakeLockPending
+      ) {
+        return;
+      }
+
+      wakeLockPending = true;
+      try {
+        const lock = await navigator.wakeLock.request("screen");
+
+        if (!performanceWakeWanted() || document.visibilityState !== "visible") {
+          await lock.release();
+          return;
+        }
+
+        wakeLock = lock;
+        lock.addEventListener("release", () => {
+          if (wakeLock === lock) wakeLock = null;
+          if (document.visibilityState === "visible") acquireWakeLock();
+        }, { once: true });
+      } catch {
+        wakeLock = null;
+      } finally {
+        wakeLockPending = false;
+      }
+    }
+
+    async function releaseWakeLock() {
+      const lock = wakeLock;
+      wakeLock = null;
+      if (lock === null) return;
+
+      try {
+        await lock.release();
+      } catch {
+        // Wake Lock API is optional; release failures need no UI.
+      }
+    }
+
+    function syncPerformanceWakeLock() {
+      if (performanceWakeWanted()) acquireWakeLock();
+      else releaseWakeLock();
+    }
+
     function showScreen(next, animate = false) {
       clearTimeout(unlockTimer);
       screen = next;
@@ -688,6 +744,8 @@
       if (next === 'settings') { $('settings-entry-tutorial').hidden = true; populateForm(); $('settings-screen').scrollTop = 0; }
       if (next === 'time-black') startRewindGuide();
       else stopRewindGuide();
+      // Extracted rewind tests run showScreen without this helper in scope.
+      if (typeof syncPerformanceWakeLock === 'function') syncPerformanceWakeLock();
     }
 
     function handleAttemptOutcome(previousCount) {
@@ -1389,7 +1447,13 @@
     window.addEventListener('orientationchange', interruptUnlockMotion);
     window.addEventListener('blur', interruptUnlockMotion);
     document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'hidden') interruptUnlockMotion();
+      if (document.visibilityState === 'hidden') {
+        interruptUnlockMotion();
+        // The drag fixture extracts this listener without the wake-lock helpers.
+        if (typeof releaseWakeLock === 'function') releaseWakeLock();
+      } else if (typeof acquireWakeLock === 'function') {
+        acquireWakeLock();
+      }
     });
 
     for (const id of ['time-black', 'time-lock']) {

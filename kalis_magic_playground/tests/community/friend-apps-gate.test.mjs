@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { transformDistributionDocument } from '../../scripts/build-public.mjs';
 import vm from 'node:vm';
 import toolsGate, { classifyPath } from '../../netlify/edge-functions/tools-gate.mjs';
 import { decideAccess, requestFriendApp } from '../../netlify/functions/tool-access.mjs';
@@ -44,7 +45,7 @@ test('only canonical personal routes stay public while distribution routes retai
   assert.equal(accessTableForTool('calc'), 'tool_access');
 });
 
-test('personal installed apps serve their cached screen immediately and refresh in the background', async () => {
+test('personal installed apps serve their cached screen immediately', async () => {
   for (const app of ['zz1', 'zz2', 'zz3', 'zz4', 'zz5', 'zz6', 'zz7']) {
     const source = readFileSync(new URL(`../../${app}/sw.js`, import.meta.url), 'utf8');
     const listeners = {};
@@ -374,4 +375,21 @@ test('AROSAegida migration retains all seven friend tools and the existing RLS p
   assert.doesNotMatch(sql, /row level security|create policy|drop policy/i);
   const hosting = readFileSync(new URL('../../netlify.toml', import.meta.url), 'utf8');
   assert.match(hosting, /for = "\/tools\/arosaegida\/manifest\.webmanifest"\s*\[headers.values\]\s*Content-Type = "application\/manifest\+json"/);
+});
+
+test('distribution pages keep a 90-day offline launch and still revoke an explicit denial', () => {
+  const html = transformDistributionDocument('<head></head>', { tool: 'unlock', target: 'release' });
+  const guard = html.match(/<script id="friend-apps-check">[\s\S]*?<\/script>/)[0];
+  assert.match(guard, /document\.documentElement\.style\.visibility = 'hidden'/);
+  assert.match(guard, /friend-apps-ok:unlock:/);
+  assert.match(guard, /\/tools\/' \+ segments\[2\] \+ '\/'/);
+  assert.match(guard, /90 \* dayMs/);
+  assert.match(guard, /result\.ok === true/);
+  assert.match(guard, /result\.ok === false/);
+  assert.match(guard, /response\.status === 401 \|\| response\.status === 403/);
+  assert.match(guard, /localStorage\.removeItem\(storageKey\)/);
+  assert.match(guard, /response\.type === 'opaque' \|\| response\.status === 0 \|\| response\.status >= 500/);
+  assert.match(guard, /setTimeout\(\(\) => controller\.abort\(\), 6000\)/);
+  assert.match(guard, /catch \(error\) \{ redirect\(\); return; \}/);
+  assert.doesNotMatch(guard, /\.catch\(\(\) => \{ location\.replace\(loginUrl\); \}\)/);
 });

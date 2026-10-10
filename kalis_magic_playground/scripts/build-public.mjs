@@ -95,7 +95,9 @@ export const PRIVATE_PATTERNS = [
   /^docs\//,
   /^node_modules\//,
   /^\.env/,
-  /^package-lock\.json$/
+  /^package-lock\.json$/,
+  /(?:^|\/)[^/]*\.test\.mjs$/,
+  /(?:^|\/)[^/]*\.test\.js$/
 ];
 
 export const SHARED_UNLOCK_FILES = [
@@ -233,7 +235,7 @@ export const QR_FILES = [
 ];
 export const ALETHEIA_COURT_FILES = ['S-J', 'S-Q', 'S-K', 'D-J', 'D-Q', 'D-K',
   'C-J', 'C-Q', 'C-K', 'H-J', 'H-Q', 'H-K']
-  .map((code) => `court-cards/${code}.png`);
+  .map((code) => `court-cards/${code}.webp`);
 
 export const SETTINGS_UI_FILES = ['settings-ui.js', 'settings-ui.css'];
 
@@ -275,8 +277,8 @@ export const MIRROR_PAIRS = [
   ['../../magic-tobira/CARD_CREDITS.md', 'zz6/CARD_CREDITS.md'],
   ['../../magic-tobira/card-rider-red.jpg', 'zz6/card-rider-red.jpg'],
   ['../../magic-tobira/card-rider-blue.jpg', 'zz6/card-rider-blue.jpg'],
-  ['../../magic-tobira/coin-kennedy.png', 'zz6/coin-kennedy.png'],
-  ['../../magic-tobira/coin-500won.png', 'zz6/coin-500won.png'],
+  ['../../magic-tobira/coin-kennedy.webp', 'zz6/coin-kennedy.webp'],
+  ['../../magic-tobira/coin-500won.webp', 'zz6/coin-500won.webp'],
   ['../../magic-tobira/coin-kennedy.svg', 'zz6/coin-kennedy.svg'],
   ['../../magic-tobira/coin-500won.svg', 'zz6/coin-500won.svg'],
   ...USOTSUKI_FILES.map((file) => [`../../magic-usotsuki/${file}`, `zz7/${file}`]),
@@ -371,6 +373,49 @@ export async function publishLegacyMigrationModules(appDirectory) {
   await cp(path.join(directory, 'legacy-shared-contract.mjs'), path.join(appDirectory, 'legacy-shared-contract.mjs'));
   await cp(path.join(directory, 'legacy-storage-migration.mjs'), path.join(appDirectory, 'legacy-storage-migration.mjs'));
 }
+
+// Dist copies only. Snapshot source workers stay unchanged; the published worker precaches the injected modules.
+const LEGACY_SHELL_MODULES = ['./legacy-shared-contract.mjs', './legacy-storage-migration.mjs'];
+
+// A changed precache must install into a new cache. Keep -distribution last so family filters still match.
+function withLegacyCacheSuffix(source) {
+  const patterns = [
+    /const CACHE_NAME = CACHE_PREFIX \+ '([^']*)'/,
+    /CACHE=PREFIX\+'([^']*)'/
+  ];
+  let found = null;
+  for (const pattern of patterns) {
+    const match = pattern.exec(source);
+    if (match && (!found || match.index < found.index)) found = match;
+  }
+  if (!found) throw new Error('distribution worker is missing a cache name');
+  const literal = found[1];
+  const distribution = '-distribution';
+  const marker = '-legacy-1';
+  const hasDistribution = literal.endsWith(distribution);
+  const stem = hasDistribution ? literal.slice(0, -distribution.length) : literal;
+  if (stem.endsWith(marker)) return source;
+  const nextLiteral = `${stem}${marker}${hasDistribution ? distribution : ''}`;
+  const nextAssignment = found[0].replace(literal, nextLiteral);
+  return source.replace(found[0], nextAssignment);
+}
+
+export function injectLegacyShellModules(source) {
+  const match = source.match(/const SHELL = \[([\s\S]*?)\];/);
+  if (!match) throw new Error('distribution worker is missing a SHELL array');
+  let body = match[1];
+  let shellChanged = false;
+  for (const file of LEGACY_SHELL_MODULES) {
+    const literal = JSON.stringify(file);
+    if (body.includes(literal)) continue;
+    shellChanged = true;
+    body = body.replace(/\s*$/, '');
+    if (!body.endsWith(',')) body += ',';
+    body += `\n  ${literal}`;
+  }
+  const withShell = shellChanged ? source.replace(match[0], `const SHELL = [${body}\n];`) : source;
+  return withLegacyCacheSuffix(withShell);
+}
 export const DISTRIBUTION_APPS = [
   { source: 'distribution-snapshots/pimax', target: 'pimax', tool: 'pimax' },
   { source: 'distribution-snapshots/calculator', target: 'hitsuzen', tool: 'calc' },
@@ -385,17 +430,56 @@ export const DISTRIBUTION_APPS = [
 ];
 
 function accessGuard(tool, target) {
+  // target is not part of the storage key. The open pathname keeps kairos and kairos-classic apart.
   return `  <script id="friend-apps-check">
     if (location.protocol === 'https:' && location.pathname.startsWith('/tools/')) {
       document.documentElement.style.visibility = 'hidden';
       const loginUrl = '/tools/login/?to=' + encodeURIComponent(location.pathname + location.search);
-      fetch('/tools/_check?tool=${tool}', { credentials: 'same-origin', cache: 'no-store' })
-        .then((response) => response.json())
-        .then((result) => {
-          if (!result.ok) { location.replace(loginUrl); return; }
-          document.documentElement.style.visibility = '';
+      const segments = location.pathname.split('/');
+      const scope = '/tools/' + segments[2] + '/';
+      const storageKey = 'friend-apps-ok:${tool}:' + scope;
+      const dayMs = 24 * 60 * 60 * 1000;
+      const graceMs = 90 * dayMs;
+      const reveal = () => { document.documentElement.style.visibility = ''; };
+      const redirect = () => { location.replace(loginUrl); };
+      const freshStamp = (raw) => {
+        if (raw == null || raw === '') return false;
+        const stamp = Number(raw);
+        if (!Number.isFinite(stamp)) return false;
+        const now = Date.now();
+        return (now - stamp) <= graceMs && (stamp - now) <= dayMs;
+      };
+      const allowOffline = () => {
+        let raw;
+        try { raw = localStorage.getItem(storageKey); }
+        catch (error) { redirect(); return; }
+        if (freshStamp(raw)) reveal();
+        else redirect();
+      };
+      const revoke = () => {
+        try { localStorage.removeItem(storageKey); }
+        catch (error) {}
+        redirect();
+      };
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 6000);
+      fetch('/tools/_check?tool=${tool}', { credentials: 'same-origin', cache: 'no-store', signal: controller.signal })
+        .then((response) => {
+          if (response.type === 'opaque' || response.status === 0 || response.status >= 500) { clearTimeout(timeoutId); allowOffline(); return; }
+          if (response.status === 401 || response.status === 403) { clearTimeout(timeoutId); revoke(); return; }
+          return response.json().then((result) => {
+            clearTimeout(timeoutId);
+            if (response.ok && result && result.ok === true) {
+              try { localStorage.setItem(storageKey, String(Date.now())); }
+              catch (error) {}
+              reveal();
+              return;
+            }
+            if (result && result.ok === false && response.status >= 200 && response.status < 500) { revoke(); return; }
+            allowOffline();
+          }, () => { clearTimeout(timeoutId); allowOffline(); });
         })
-        .catch(() => { location.replace(loginUrl); });
+        .catch(() => { clearTimeout(timeoutId); allowOffline(); });
     }
   </script>`;
 }
@@ -422,6 +506,8 @@ async function buildDistributionApps() {
     }
     if (LEGACY_MIGRATION_TARGETS.has(app.target)) {
       await publishLegacyMigrationModules(target);
+      const swPath = path.join(target, 'sw.js');
+      await writeFile(swPath, injectLegacyShellModules(await readFile(swPath, 'utf8')));
     }
     const manifestPath = path.join(target, 'manifest.webmanifest');
     const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));

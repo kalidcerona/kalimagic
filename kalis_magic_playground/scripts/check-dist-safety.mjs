@@ -94,6 +94,10 @@ function hasContiguousSegments(segments, forbiddenSegments) {
   ));
 }
 
+function isPublishedTestArtifact(filePath) {
+  return /\.test\.[^/]+$/.test(path.basename(filePath));
+}
+
 function pathContainsForbiddenPart(relativePath) {
   const segments = relativePath.split('/').filter(Boolean);
   return FORBIDDEN_PATH_PARTS.filter((forbidden) => {
@@ -126,6 +130,9 @@ const envSecretValues = getEnvSecretValues();
 
 for (const file of files) {
   const relative = relativeFromCwd(file);
+  if (isPublishedTestArtifact(file)) {
+    failures.push(`테스트 파일이 배포본에 포함됨: ${relative}`);
+  }
   const forbiddenPathParts = pathContainsForbiddenPart(relative);
   for (const forbidden of forbiddenPathParts) {
     failures.push(`금지된 경로 포함: ${relative} / matched=${forbidden}`);

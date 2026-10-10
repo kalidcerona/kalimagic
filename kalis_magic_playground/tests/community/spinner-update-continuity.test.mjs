@@ -149,8 +149,8 @@ async function loadApp(options) {
 }
 
 test('service worker updates do not reload a live personal or shared spinner', async () => {
-  assert.match(readFileSync(new URL('../../zz11/sw.js', import.meta.url), 'utf8'), /v20261004-design-choice-1/);
-  assert.match(readFileSync(new URL('../../distribution-snapshots/spinner/sw.js', import.meta.url), 'utf8'), /v20261004-design-choice-1/);
+  assert.match(readFileSync(new URL('../../zz11/sw.js', import.meta.url), 'utf8'), /v20261004-design-choice-1-manual-install-1-perf-1-coherent-1-gesture-1-compat-1-wake-1/);
+  assert.match(readFileSync(new URL('../../distribution-snapshots/spinner/sw.js', import.meta.url), 'utf8'), /v20261004-design-choice-1-manual-install-1-perf-1-coherent-1-gesture-1-compat-1-wake-1/);
   const apps = [
     {
       name: 'personal',
@@ -187,8 +187,8 @@ test('service worker updates do not reload a live personal or shared spinner', a
       fire(dom.stage.listeners, 'pointerdown', pointer(wheel, 200, 100));
       fire(dom.stage.listeners, 'pointerup', pointer(wheel, 200, 100));
       assert.equal(savedState(dom).targetAngle, 90);
-      fire(dom.documentListeners, 'touchstart', { touches: [{ clientY: 0 }, { clientY: 0 }] });
-      fire(dom.documentListeners, 'touchmove', { touches: [{ clientY: 80 }, { clientY: 80 }], preventDefault() {} });
+      fire(dom.documentListeners, 'touchstart', { touches: [{ identifier: 1, clientX: 30, clientY: 0 }, { identifier: 2, clientX: 90, clientY: 0 }] });
+      fire(dom.documentListeners, 'touchmove', { touches: [{ identifier: 1, clientX: 30, clientY: 96 }, { identifier: 2, clientX: 90, clientY: 96 }], preventDefault() {} });
       assert.equal(dom.elements.get('settings').hidden, false);
       dom.elements.get('force-spin').value = '7';
       dom.dispatchControllerChange();

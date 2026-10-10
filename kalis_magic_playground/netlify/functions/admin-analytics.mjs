@@ -119,6 +119,108 @@ export function aggregateAnalyticsEvents(events) {
   };
 }
 
+const SUMMARY_TOTAL_KEYS = ['events', 'pageviews', 'sessions', 'members', 'ctaClicks', 'leadSubmits'];
+const SUMMARY_FUNNEL_STEPS = ['pageview', 'cta_click', 'lead_submit'];
+
+function finiteNumber(value) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : 0;
+}
+
+function finiteRate(value) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return 0;
+  return Number(number.toFixed(1));
+}
+
+export function analyticsSummaryDays(query = {}, range, now = Date.now()) {
+  const hasTo = query.to !== undefined && query.to !== '';
+  const toMs = Date.parse(range.to);
+  const fromMs = Date.parse(range.from);
+  if (!Number.isFinite(toMs) || !Number.isFinite(fromMs)) return null;
+  const span = toMs - fromMs;
+  if (span <= 0 || span % DAY_MS !== 0) return null;
+  const days = span / DAY_MS;
+  if (!Number.isInteger(days) || days < 1 || days > 90) return null;
+  const nowMs = now instanceof Date ? now.getTime() : Number(now);
+  // admin_analytics_summary only knows "the last p_days ending now".
+  // A pinned historical window stays on the paging path so its bounds do not move.
+  if (hasTo && Number.isFinite(nowMs) && Math.abs(toMs - nowMs) > 5000) return null;
+  return days;
+}
+
+function summaryRows(rows, nameKey, countKey) {
+  if (!Array.isArray(rows)) return null;
+  const normalized = [];
+  for (const row of rows) {
+    if (!row || typeof row !== 'object' || typeof row[nameKey] !== 'string') return null;
+    if (!Number.isFinite(Number(row[countKey])) || !Number.isFinite(Number(row.sessions))) return null;
+    normalized.push({
+      [nameKey]: row[nameKey],
+      [countKey]: finiteNumber(row[countKey]),
+      sessions: finiteNumber(row.sessions)
+    });
+  }
+  return normalized;
+}
+
+export function summaryFromRpc(data) {
+  let value = data;
+  if (typeof value === 'string') {
+    try {
+      value = JSON.parse(value);
+    } catch {
+      return null;
+    }
+  }
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  if (!value.totals || typeof value.totals !== 'object') return null;
+  if (!SUMMARY_TOTAL_KEYS.every((key) => Object.prototype.hasOwnProperty.call(value.totals, key))) return null;
+  if (!Array.isArray(value.funnel) || value.funnel.length !== SUMMARY_FUNNEL_STEPS.length) return null;
+  const funnel = [];
+  for (let index = 0; index < SUMMARY_FUNNEL_STEPS.length; index += 1) {
+    const step = value.funnel[index];
+    if (!step || step.step !== SUMMARY_FUNNEL_STEPS[index]) return null;
+    if (!Number.isFinite(Number(step.sessions)) || !Number.isFinite(Number(step.rate))) return null;
+    funnel.push({
+      step: step.step,
+      sessions: finiteNumber(step.sessions),
+      rate: finiteRate(step.rate)
+    });
+  }
+  const byCta = summaryRows(value.byCta, 'eventName', 'clicks');
+  const byPage = summaryRows(value.byPage, 'page', 'pageviews');
+  if (!byCta || !byPage) return null;
+  return {
+    totals: {
+      events: finiteNumber(value.totals.events),
+      pageviews: finiteNumber(value.totals.pageviews),
+      sessions: finiteNumber(value.totals.sessions),
+      members: finiteNumber(value.totals.members),
+      ctaClicks: finiteNumber(value.totals.ctaClicks),
+      leadSubmits: finiteNumber(value.totals.leadSubmits)
+    },
+    funnel,
+    byCta,
+    byPage
+  };
+}
+
+export async function loadAdminAnalytics(supabase, range, query = {}, now = Date.now()) {
+  const pDays = analyticsSummaryDays(query, range, now);
+  if (pDays != null) {
+    try {
+      const { data, error } = await supabase.rpc('admin_analytics_summary', { p_days: pDays });
+      const summary = !error ? summaryFromRpc(data) : null;
+      if (summary) return { range, ...summary };
+    } catch {
+      // Missing function or a client without rpc keeps the paging path.
+    }
+  }
+  const events = await fetchAnalyticsEvents(supabase, range);
+  return { range, ...aggregateAnalyticsEvents(events) };
+}
+
 export async function fetchAnalyticsEvents(supabase, range) {
   const events = [];
   for (let offset = 0; ; offset += PAGE_SIZE) {
@@ -151,17 +253,17 @@ export async function handler(event) {
     return json(403, { error: 'admin_required' });
   }
 
+  const query = event.queryStringParameters || {};
   let range;
   try {
-    range = parseAnalyticsRange(event.queryStringParameters || {});
+    range = parseAnalyticsRange(query);
   } catch {
     return json(400, { error: 'invalid_payload' });
   }
 
   try {
     const supabase = getSupabaseAdmin();
-    const events = await fetchAnalyticsEvents(supabase, range);
-    return json(200, { range, ...aggregateAnalyticsEvents(events) });
+    return json(200, await loadAdminAnalytics(supabase, range, query));
   } catch {
     return json(500, { error: 'db_error' });
   }

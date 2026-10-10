@@ -183,10 +183,10 @@ function openSettings(dom) {
   const background = dom.elements.get('empty');
   fire(dom, 'pointerdown', { pointerId: 1, clientX: 20, clientY: 20, target: background, button: 0 });
   fire(dom, 'pointerdown', { pointerId: 2, clientX: 70, clientY: 20, target: background, button: 0 });
-  fire(dom, 'pointermove', { pointerId: 1, clientX: 20, clientY: 100, target: background });
-  fire(dom, 'pointermove', { pointerId: 2, clientX: 70, clientY: 100, target: background });
-  fire(dom, 'pointerup', { pointerId: 1, clientX: 20, clientY: 100, target: background, button: 0 });
-  fire(dom, 'pointerup', { pointerId: 2, clientX: 70, clientY: 100, target: background, button: 0 });
+  fire(dom, 'pointermove', { pointerId: 1, clientX: 20, clientY: 116, target: background });
+  fire(dom, 'pointermove', { pointerId: 2, clientX: 70, clientY: 116, target: background });
+  fire(dom, 'pointerup', { pointerId: 1, clientX: 20, clientY: 116, target: background, button: 0 });
+  fire(dom, 'pointerup', { pointerId: 2, clientX: 70, clientY: 116, target: background, button: 0 });
   assert.equal(dom.elements.get('settings').open, true);
 }
 
@@ -270,7 +270,7 @@ test('missing storage is a normal default and is not reported as a failed read',
 test('the scoped service worker cache includes this app change', () => {
   const sw = fs.readFileSync(new URL('../../zz13/sw.js', import.meta.url), 'utf8');
   const app = fs.readFileSync(new URL('../../zz13/app.mjs', import.meta.url), 'utf8');
-  assert.match(sw, /CACHE=PREFIX\+'v20261004-first-guide-1'/);
+  assert.match(sw, /CACHE=PREFIX\+'v20261004-first-guide-1-coherent-1-gesture-1-compat-1-wake-1-defer-1'/);
   assert.match(sw, /\.\/app\.mjs/);
   assert.match(app, /writesHeld/);
   assert.doesNotMatch(app, /distribution-snapshots/);

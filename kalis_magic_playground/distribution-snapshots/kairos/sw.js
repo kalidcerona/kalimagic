@@ -1,6 +1,6 @@
 // Cache only the explicit app shell. API, authentication and user data stay on the network.
 const CACHE_PREFIX = 'stopwatch-uni-shell-' + encodeURIComponent(self.registration.scope) + '-';
-const CACHE_NAME = CACHE_PREFIX + 'v20261004-landscape-3-manual-install-1';
+const CACHE_NAME = CACHE_PREFIX + 'v20261004-landscape-3-manual-install-1-perf-1-coherent-1-compat-1';
 const SHELL = [
   "./settings-ui.js",
   "./settings-ui.css",
@@ -17,7 +17,8 @@ const GUARDED = new URL(self.registration.scope).pathname.startsWith('/tools/');
 
 self.addEventListener('install', (event) => {
   // Reject installation unless the whole critical shell is stored.
-  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(SHELL.map((file) => new Request(new URL(file, self.registration.scope).href, { cache: 'reload', redirect: 'error' })))).then(() => self.skipWaiting()));
+  // A later version stays waiting until every client of this app has closed, so the next launch applies it.
+  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(SHELL.map((file) => new Request(new URL(file, self.registration.scope).href, { cache: 'reload', redirect: 'error' })))).then(() => { if (!self.registration.active) return self.skipWaiting(); }));
 });
 self.addEventListener('activate', (event) => {
   event.waitUntil(caches.keys().then((names) => Promise.all(names
@@ -73,17 +74,18 @@ self.addEventListener('fetch', (event) => {
     const cache = await caches.open(CACHE_NAME);
     const name = shellName(request.url);
     if (name === 'manifest.webmanifest') return freshManifest(request, cache);
-    const page = name === '' || name === 'index.html';
-    const cached = await cache.match(new URL(page ? 'index.html' : name, self.registration.scope).href, { ignoreSearch: true });
-    // Friend distribution navigation must still reach the server entitlement gate.
-    // Its cached HTML also runs the fail-closed /tools/_check before revealing the app.
-    if (page && GUARDED) {
-      try { return await refresh(request, cache); } catch { return cached || unavailable(); }
+    const page = name === '' || name === 'index.html' || name.endsWith('.html');
+    const executable = page || /\.(?:js|mjs|css)$/.test(name);
+    const cached = await cache.match(new URL(name === '' ? 'index.html' : name, self.registration.scope).href, { ignoreSearch: true });
+    // Friend distribution navigation serves this release's cached index.html, the same as a personal app.
+    // That is safe: the cached HTML still runs the injected /tools/_check entitlement script before revealing anything,
+    // and the edge gate still protects every network fetch.
+    if (page && GUARDED && cached) return cached;
+    if (executable) {
+      if (cached) return cached;
+      try { return await fetch(request); } catch { return page ? unavailable() : Response.error(); }
     }
-    if (cached) {
-      if (page) event.waitUntil(refresh(request, cache).catch(() => {}));
-      return cached;
-    }
+    if (cached) return cached;
     try { return await refresh(request, cache); } catch { return unavailable(); }
   })());
 });

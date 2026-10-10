@@ -119,10 +119,12 @@ test('normal observer setup enables animation only after observing, then reveals
 test('hero preloads match the visible responsive image and elevate the mobile hero', () => {
   const preloadTags = [...htmlSource.matchAll(/<link rel="preload" as="image"[^>]*>/g)].map(([tag]) => tag);
   const desktop = preloadTags.find((tag) => tag.includes('bar-reaction-1080w.webp'));
-  const mobile = preloadTags.find((tag) => tag.includes('magic-reaction-800w.jpg'));
+  const mobile = preloadTags.find((tag) => tag.includes('magic-reaction-800w.webp'));
   assert.ok(desktop);
   assert.match(desktop, /media="\(min-width: 1025px\)"/);
+  assert.match(desktop, /imagesizes="\(min-width:1025px\) 540px, 100vw"/);
   assert.ok(mobile);
+  assert.match(mobile, /type="image\/webp"/);
   assert.match(mobile, /media="\(max-width: 1024px\)"/);
   assert.match(mobile, /imagesizes="430px"/);
   const hero = htmlSource.match(/<img src="assets\/profile\/magic-reaction\.jpg"[^>]*>/)?.[0];

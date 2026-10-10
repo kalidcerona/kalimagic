@@ -28,7 +28,8 @@ state.previousAngle = null;
 let rotation = Number.isFinite(state.rotation) ? state.rotation : 0;
 let drag = null;
 let busy = false;
-let twoFingerStart = null;
+let settingsOrigins = null;
+let settingsGestureBlocked = false;
 let installPrompt = null;
 let installRevision = 0;
 let statusTimer = null;
@@ -45,14 +46,77 @@ function refreshSettings() {
   document.getElementById('spin-value').textContent = `${state.spins}회`;
   document.getElementById('force-spin').value = String(state.forceSpin);
 }
+let wakeLock = null;
+let wakeLockPending = false;
+
+function performanceWakeWanted() {
+  return settings.hidden;
+}
+
+async function acquireWakeLock() {
+  if (
+    !performanceWakeWanted() ||
+    !("wakeLock" in navigator) ||
+    document.visibilityState !== "visible" ||
+    wakeLock !== null ||
+    wakeLockPending
+  ) {
+    return;
+  }
+
+  wakeLockPending = true;
+  try {
+    const lock = await navigator.wakeLock.request("screen");
+
+    if (!performanceWakeWanted() || document.visibilityState !== "visible") {
+      await lock.release();
+      return;
+    }
+
+    wakeLock = lock;
+    lock.addEventListener("release", () => {
+      if (wakeLock === lock) wakeLock = null;
+      if (document.visibilityState === "visible") acquireWakeLock();
+    }, { once: true });
+  } catch {
+    wakeLock = null;
+  } finally {
+    wakeLockPending = false;
+  }
+}
+
+async function releaseWakeLock() {
+  const lock = wakeLock;
+  wakeLock = null;
+  if (lock === null) return;
+
+  try {
+    await lock.release();
+  } catch {
+    // Wake Lock API is optional; release failures need no UI.
+  }
+}
+
+function syncPerformanceWakeLock() {
+  if (performanceWakeWanted()) acquireWakeLock();
+  else releaseWakeLock();
+}
+
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") acquireWakeLock();
+  else releaseWakeLock();
+});
+
 function showSettings() {
   if (busy || !guide.hidden) return;
   refreshSettings();
   settings.hidden = false;
   drag = null;
+  syncPerformanceWakeLock();
 }
 function closeSettings() {
   settings.hidden = true;
+  syncPerformanceWakeLock();
 }
 function angleAt(event) {
   const box = wrap.getBoundingClientRect();
@@ -215,26 +279,52 @@ function spin(direction, travel, elapsed) {
   };
 }
 
+function settingsContacts(list) {
+  return Array.from(list || [], (touch) => ({ id: touch.identifier, x: touch.clientX, y: touch.clientY }));
+}
+// Origins are the positions at the moment the pair forms, in viewport coordinates.
+function settingsPairReady(origins, contacts) {
+  return origins.every((origin) => {
+    const end = contacts.find((point) => point.id === origin.id);
+    if (!end) return false;
+    const dx = end.x - origin.x;
+    const dy = end.y - origin.y;
+    return dy >= 96 && dy > Math.abs(dx) * 1.5;
+  });
+}
 document.addEventListener('touchstart', event => {
-  if (event.touches.length === 2 && settings.hidden && guide.hidden) {
-    twoFingerStart = (event.touches[0].clientY + event.touches[1].clientY) / 2;
+  if (event.touches.length > 2) {
+    settingsOrigins = null;
+    settingsGestureBlocked = true;
+    return;
+  }
+  if (event.touches.length === 2 && !settingsGestureBlocked && settings.hidden && guide.hidden) {
+    settingsOrigins = settingsContacts(event.touches);
     drag = null;
     if (!busy) {
       rotation = state.rotation;
       arrow.style.transform = `rotate(${rotation}deg)`;
     }
+    return;
   }
+  settingsOrigins = null;
 }, { passive: true });
 document.addEventListener('touchmove', event => {
-  if (twoFingerStart === null || event.touches.length !== 2) return;
-  const current = (event.touches[0].clientY + event.touches[1].clientY) / 2;
-  if (current - twoFingerStart > 65) {
-    event.preventDefault();
-    twoFingerStart = null;
-    showSettings();
-  }
+  if (settingsGestureBlocked || !settingsOrigins || event.touches.length !== 2) return;
+  if (!settingsPairReady(settingsOrigins, settingsContacts(event.touches))) return;
+  event.preventDefault();
+  settingsOrigins = null;
+  settingsGestureBlocked = true;
+  showSettings();
 }, { passive: false });
-document.addEventListener('touchend', event => { if (event.touches.length < 2) twoFingerStart = null; }, { passive: true });
+document.addEventListener('touchend', event => {
+  if (event.touches.length < 2) settingsOrigins = null;
+  if (event.touches.length === 0) settingsGestureBlocked = false;
+}, { passive: true });
+document.addEventListener('touchcancel', () => {
+  settingsOrigins = null;
+  settingsGestureBlocked = false;
+}, { passive: true });
 
 document.getElementById('settings-close').addEventListener('click', closeSettings);
 document.getElementById('start-performance').addEventListener('click', () => {
@@ -265,6 +355,7 @@ document.getElementById('guide-close').addEventListener('click', () => {
   try { localStorage.setItem('zz11-guide-seen-v2', '1'); } catch { /* Ignore storage failures. */ }
 });
 try { guide.hidden = localStorage.getItem('zz11-guide-seen-v2') === '1'; } catch { guide.hidden = false; }
+syncPerformanceWakeLock();
 refreshSettings();
 syncTargetCue();
 

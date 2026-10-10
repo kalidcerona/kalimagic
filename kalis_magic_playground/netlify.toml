@@ -274,3 +274,58 @@
   for = "/tools/pimax/manifest.webmanifest"
   [headers.values]
     Content-Type = "application/manifest+json"
+
+[[headers]]
+  for = "/admin.html"
+  [headers.values]
+    Cache-Control = "private, no-store"
+
+[[headers]]
+  for = "/admin-community.html"
+  [headers.values]
+    Cache-Control = "private, no-store"
+
+[[headers]]
+  for = "/admin"
+  [headers.values]
+    Cache-Control = "private, no-store"
+
+[[headers]]
+  for = "/assets/profile/lecture-outdoor-800w.webp"
+  [headers.values]
+    Cache-Control = "public, max-age=2592000"
+
+[[headers]]
+  for = "/assets/profile/lecture-outdoor-1200w.webp"
+  [headers.values]
+    Cache-Control = "public, max-age=2592000"
+
+[[headers]]
+  for = "/assets/profile/magic-cards-800w.webp"
+  [headers.values]
+    Cache-Control = "public, max-age=2592000"
+
+[[headers]]
+  for = "/assets/profile/magic-cards-1200w.webp"
+  [headers.values]
+    Cache-Control = "public, max-age=2592000"
+
+[[headers]]
+  for = "/assets/profile/magic-table-800w.webp"
+  [headers.values]
+    Cache-Control = "public, max-age=2592000"
+
+[[headers]]
+  for = "/assets/profile/magic-table-1200w.webp"
+  [headers.values]
+    Cache-Control = "public, max-age=2592000"
+
+[[headers]]
+  for = "/assets/profile/portrait-800w.webp"
+  [headers.values]
+    Cache-Control = "public, max-age=2592000"
+
+[[headers]]
+  for = "/assets/profile/portrait-1200w.webp"
+  [headers.values]
+    Cache-Control = "public, max-age=2592000"

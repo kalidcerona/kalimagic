@@ -71,8 +71,8 @@ const SWIPE_REVEAL_PX = 24;
 const IMAGE_CHOICE_KEY = 'tobira.coinChoices.v1';
 const IMAGE_DB = 'tobira.localImages.v1';
 const DEFAULT_COIN_IMAGES = Object.freeze({
-  kennedy: './coin-kennedy.png',
-  won500: './coin-500won.png',
+  kennedy: './coin-kennedy.webp',
+  won500: './coin-500won.webp',
   riderRed: './card-rider-red.jpg',
   riderBlue: './card-rider-blue.jpg',
 });
@@ -1607,6 +1607,67 @@ function placeAtRest() {
   resetSpawnTracking();
 }
 
+let wakeLock = null;
+let wakeLockPending = false;
+
+function performanceWakeWanted() {
+  return state.mode === 'performance';
+}
+
+async function acquireWakeLock() {
+  if (
+    !performanceWakeWanted() ||
+    !("wakeLock" in navigator) ||
+    document.visibilityState !== "visible" ||
+    wakeLock !== null ||
+    wakeLockPending
+  ) {
+    return;
+  }
+
+  wakeLockPending = true;
+  try {
+    const lock = await navigator.wakeLock.request("screen");
+
+    if (!performanceWakeWanted() || document.visibilityState !== "visible") {
+      await lock.release();
+      return;
+    }
+
+    wakeLock = lock;
+    lock.addEventListener("release", () => {
+      if (wakeLock === lock) wakeLock = null;
+      if (document.visibilityState === "visible") acquireWakeLock();
+    }, { once: true });
+  } catch {
+    wakeLock = null;
+  } finally {
+    wakeLockPending = false;
+  }
+}
+
+async function releaseWakeLock() {
+  const lock = wakeLock;
+  wakeLock = null;
+  if (lock === null) return;
+
+  try {
+    await lock.release();
+  } catch {
+    // Wake Lock API is optional; release failures need no UI.
+  }
+}
+
+function syncPerformanceWakeLock() {
+  if (performanceWakeWanted()) acquireWakeLock();
+  else releaseWakeLock();
+}
+
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") acquireWakeLock();
+  else releaseWakeLock();
+});
+
 function showSettings() {
   hideGestureGuide();
   cancelExit();
@@ -1620,6 +1681,7 @@ function showSettings() {
   renderList();
   fillForm();
   persist();
+  syncPerformanceWakeLock();
 }
 
 function showPerformance({ persistMode = true, keepGone = false, showGuide = true } = {}) {
@@ -1649,6 +1711,7 @@ function showPerformance({ persistMode = true, keepGone = false, showGuide = tru
   document.documentElement.removeAttribute('data-boot-gone');
   if (persistMode) persist();
   if (showGuide) maybeShowGestureGuide();
+  syncPerformanceWakeLock();
 }
 
 function beginExit(edge, speed) {

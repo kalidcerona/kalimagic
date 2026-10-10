@@ -35,22 +35,80 @@ function syncDot(){const value=String(state.config.dot);$('dot').value=value;sho
 function extraRow(ordinal='',target=''){const row=document.createElement('div');row.className='extrarow';const ordinalLabel=document.createElement('label');ordinalLabel.textContent='순서';const ordinalInput=document.createElement('input');ordinalInput.className='extra-ordinal';ordinalInput.type='number';ordinalInput.min='1';ordinalInput.max='1000000';ordinalInput.step='1';ordinalInput.value=ordinal===''||ordinal===undefined||ordinal===null?'':String(ordinal);ordinalInput.setAttribute('aria-label','순서');ordinalInput.autocomplete='off';ordinalLabel.appendChild(ordinalInput);const targetLabel=document.createElement('label');targetLabel.textContent='사이트';const targetInput=document.createElement('input');targetInput.className='extra-target';targetInput.type='url';targetInput.placeholder='https://';targetInput.value=target||'';targetInput.setAttribute('aria-label','사이트');targetInput.autocomplete='off';targetInput.spellcheck=false;targetLabel.appendChild(targetInput);const remove=document.createElement('button');remove.type='button';remove.className='extra-delete';remove.textContent='삭제';remove.onclick=()=>row.remove();row.appendChild(ordinalLabel);row.appendChild(targetLabel);row.appendChild(remove);return row;}
 function renderExtras(list){const box=$('extras');while(box.firstChild)box.removeChild(box.firstChild);for(const item of list||[])box.appendChild(extraRow(item.ordinal,item.target));}
 function readExtras(){return [...$('extras').querySelectorAll('.extrarow')].map(row=>({ordinal:row.querySelector('.extra-ordinal').value,target:row.querySelector('.extra-target').value}));}
-function open(){if(dropPreview())render();renderInstall();$('target').value=state.config.target;$('ordinal').value=state.config.ordinal;renderExtras(state.config.extraTargets||[]);$('decoys').value=state.config.decoys.join('\n');syncDot();$('session').textContent=`현재 생성 횟수: ${state.counter}${state.frozen?' · 고정 중':''}`;$('error').textContent=storageNote;if(!$('settings').open)$('settings').showModal();}
-$('close').onclick=()=>$('settings').close();
+let wakeLock = null;
+let wakeLockPending = false;
+
+function performanceWakeWanted() {
+  return $('settings').open !== true;
+}
+
+async function acquireWakeLock() {
+  if (
+    !performanceWakeWanted() ||
+    !("wakeLock" in navigator) ||
+    document.visibilityState !== "visible" ||
+    wakeLock !== null ||
+    wakeLockPending
+  ) {
+    return;
+  }
+
+  wakeLockPending = true;
+  try {
+    const lock = await navigator.wakeLock.request("screen");
+
+    if (!performanceWakeWanted() || document.visibilityState !== "visible") {
+      await lock.release();
+      return;
+    }
+
+    wakeLock = lock;
+    lock.addEventListener("release", () => {
+      if (wakeLock === lock) wakeLock = null;
+      if (document.visibilityState === "visible") acquireWakeLock();
+    }, { once: true });
+  } catch {
+    wakeLock = null;
+  } finally {
+    wakeLockPending = false;
+  }
+}
+
+async function releaseWakeLock() {
+  const lock = wakeLock;
+  wakeLock = null;
+  if (lock === null) return;
+
+  try {
+    await lock.release();
+  } catch {
+    // Wake Lock API is optional; release failures need no UI.
+  }
+}
+
+function syncPerformanceWakeLock() {
+  if (performanceWakeWanted()) acquireWakeLock();
+  else releaseWakeLock();
+}
+
+function open(){if(dropPreview())render();renderInstall();$('target').value=state.config.target;$('ordinal').value=state.config.ordinal;renderExtras(state.config.extraTargets||[]);$('decoys').value=state.config.decoys.join('\n');syncDot();$('session').textContent=`현재 생성 횟수: ${state.counter}${state.frozen?' · 고정 중':''}`;$('error').textContent=storageNote;if(!$('settings').open)$('settings').showModal();syncPerformanceWakeLock();}
+$('close').onclick=()=>{$('settings').close();syncPerformanceWakeLock();};
+if (typeof $('settings').addEventListener === 'function') $('settings').addEventListener('close', () => syncPerformanceWakeLock());
 $('dot').oninput=()=>showDot($('dot').value);
 $('add-extra').onclick=()=>$('extras').appendChild(extraRow());
-$('form').onsubmit=e=>{e.preventDefault();try{const config=settings({target:$('target').value,ordinal:$('ordinal').value,decoys:$('decoys').value,dot:$('dot').value,extraTargets:readExtras()});const replaced=prepareExplicitWrite();if(replaced==='blocked')return;dropPreview();undoPointer=null;state.config=config;reset(state);const saved=persist(true);render();if(!saved){$('error').textContent=storageNote;return;}$('settings').close();const note=replacementNote(replaced);if(note)notice(note);}catch(err){$('error').textContent=err.message;}};
+$('form').onsubmit=e=>{e.preventDefault();try{const config=settings({target:$('target').value,ordinal:$('ordinal').value,decoys:$('decoys').value,dot:$('dot').value,extraTargets:readExtras()});const replaced=prepareExplicitWrite();if(replaced==='blocked')return;dropPreview();undoPointer=null;state.config=config;reset(state);const saved=persist(true);render();if(!saved){$('error').textContent=storageNote;return;}$('settings').close();syncPerformanceWakeLock();const note=replacementNote(replaced);if(note)notice(note);}catch(err){$('error').textContent=err.message;}};
 $('generate').onclick=()=>{dropPreview();undoPointer=null;try{if(next(state)){if(persist())notice('');}render();}catch(err){notice('생성할 수 없습니다. 설정을 확인하세요.');render();console.error(err);}};
 $('freeze').onclick=()=>{state.frozen=true;persist();render();};
 $('undo').onclick=()=>{if(preview){dropPreview();render();return;}if(undoPointer!=null){undoPointer=null;return;}if(state.current){undo(state.current);persist();render();}};
 $('clean').onclick=()=>{if(!state.current)return;dropPreview();undoPointer=null;state.current.edits.clear();state.current.history=[];persist();render();};
-const pointers=new Map();let gesture=null,blocked=false;
-document.addEventListener('pointerdown',e=>{if(preview){const cell=preview;preview=null;if(e.target===$('undo')){undoPointer=e.pointerId;armedSuppress=null;}else{undoPointer=null;armedSuppress={x:cell.x,y:cell.y,pointerId:e.pointerId};}render();}else if(e.target!==$('undo'))undoPointer=null;if($('settings').open)return;pointers.set(e.pointerId,{x:e.clientX,y:e.clientY,startX:e.clientX,startY:e.clientY,target:e.target});if(pointers.size===1)blocked=false;if(pointers.size===2){blocked=true;gesture={ids:[...pointers.keys()],start:[...pointers.values()].map(p=>({x:p.x,y:p.y}))};}});
-document.addEventListener('pointermove',e=>{const p=pointers.get(e.pointerId);if(p){p.x=e.clientX;p.y=e.clientY;if(Math.hypot(p.x-p.startX,p.y-p.startY)>8)p.drag=true;}if(gesture&&!$('settings').open){const pair=gesture.ids.map(id=>pointers.get(id));if(pair.every(Boolean)&&pair.every((p,i)=>p.y-gesture.start[i].y>65&&Math.abs(p.x-gesture.start[i].x)<90)){open();gesture=null;}}});
-document.addEventListener('pointerup',e=>{const p=pointers.get(e.pointerId);const suppress=armedSuppress&&armedSuppress.pointerId===e.pointerId?armedSuppress:null;if(suppress)armedSuppress=null;if(undoPointer===e.pointerId){const keep=e.target===$('undo')&&p&&!p.drag;if(!keep)undoPointer=null;else{const id=e.pointerId;setTimeout(()=>{if(undoPointer===id)undoPointer=null;},0);}}if(p&&p.target===$('qr')&&!p.drag&&Math.hypot(e.clientX-p.startX,e.clientY-p.startY)<=8&&!blocked&&!$('settings').open&&state.current){const cell=hit($('qr').getBoundingClientRect(),state.current.size,e.clientX,e.clientY);if(cell&&!(suppress&&suppress.x===cell.x&&suppress.y===cell.y)){const result=toggle(state.current,cell.x,cell.y);if(result.ok){preview=null;if(persist())notice('');render();}else if(result.reason==='protected'){notice('이 점은 QR 인식 표식입니다.\n지우면 카메라가 읽지 못할 수 있어요.');}else if(result.reason==='decode'||result.reason==='budget'){preview={x:cell.x,y:cell.y};notice('');render();}}}pointers.delete(e.pointerId);if(!pointers.size){gesture=null;blocked=false;}});
-document.addEventListener('pointercancel',e=>{pointers.delete(e.pointerId);blocked=true;gesture=null;if(armedSuppress?.pointerId===e.pointerId)armedSuppress=null;if(undoPointer===e.pointerId)undoPointer=null;});
-window.addEventListener('blur',()=>{pointers.clear();gesture=null;blocked=false;undoPointer=null;if(dropPreview())render();});
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){undoPointer=null;if(dropPreview())render();}});
+const pointers=new Map();let gesture=null,blocked=false,gestureRejected=false;
+document.addEventListener('pointerdown',e=>{if(preview){const cell=preview;preview=null;if(e.target===$('undo')){undoPointer=e.pointerId;armedSuppress=null;}else{undoPointer=null;armedSuppress={x:cell.x,y:cell.y,pointerId:e.pointerId};}render();}else if(e.target!==$('undo'))undoPointer=null;if($('settings').open)return;pointers.set(e.pointerId,{x:e.clientX,y:e.clientY,startX:e.clientX,startY:e.clientY,ox:e.clientX,oy:e.clientY,target:e.target});if(pointers.size===1){blocked=false;gestureRejected=false;}if(pointers.size>2){gesture=null;blocked=true;gestureRejected=true;return;}if(pointers.size===2&&!gestureRejected){blocked=true;for(const point of pointers.values()){point.ox=point.x;point.oy=point.y;}gesture={ids:[...pointers.keys()]};}});
+document.addEventListener('pointermove',e=>{const p=pointers.get(e.pointerId);if(p){p.x=e.clientX;p.y=e.clientY;if(Math.hypot(p.x-p.startX,p.y-p.startY)>8)p.drag=true;}if(gesture&&!gestureRejected&&pointers.size===2&&!$('settings').open){const pair=gesture.ids.map(id=>pointers.get(id));if(pair.every(Boolean)&&pair.every(p=>p.y-p.oy>=96&&Math.abs(p.x-p.ox)<90)){open();gesture=null;}}});
+document.addEventListener('pointerup',e=>{const p=pointers.get(e.pointerId);const suppress=armedSuppress&&armedSuppress.pointerId===e.pointerId?armedSuppress:null;if(suppress)armedSuppress=null;if(undoPointer===e.pointerId){const keep=e.target===$('undo')&&p&&!p.drag;if(!keep)undoPointer=null;else{const id=e.pointerId;setTimeout(()=>{if(undoPointer===id)undoPointer=null;},0);}}if(p&&p.target===$('qr')&&!p.drag&&Math.hypot(e.clientX-p.startX,e.clientY-p.startY)<=8&&!blocked&&!$('settings').open&&state.current){const cell=hit($('qr').getBoundingClientRect(),state.current.size,e.clientX,e.clientY);if(cell&&!(suppress&&suppress.x===cell.x&&suppress.y===cell.y)){const result=toggle(state.current,cell.x,cell.y);if(result.ok){preview=null;if(persist())notice('');render();}else if(result.reason==='protected'){notice('이 점은 QR 인식 표식입니다.\n지우면 카메라가 읽지 못할 수 있어요.');}else if(result.reason==='decode'||result.reason==='budget'){preview={x:cell.x,y:cell.y};notice('');render();}}}pointers.delete(e.pointerId);if(!pointers.size){gesture=null;blocked=false;gestureRejected=false;}});
+document.addEventListener('pointercancel',e=>{pointers.delete(e.pointerId);gesture=null;for(const point of pointers.values()){point.ox=point.x;point.oy=point.y;}gestureRejected=pointers.size>2;blocked=pointers.size>0;if(!pointers.size)gestureRejected=false;if(armedSuppress?.pointerId===e.pointerId)armedSuppress=null;if(undoPointer===e.pointerId)undoPointer=null;});
+document.addEventListener('touchcancel',()=>{pointers.clear();gesture=null;blocked=false;gestureRejected=false;armedSuppress=null;undoPointer=null;});
+window.addEventListener('blur',()=>{pointers.clear();gesture=null;blocked=false;gestureRejected=false;undoPointer=null;if(dropPreview())render();});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){undoPointer=null;if(dropPreview())render();releaseWakeLock();}else acquireWakeLock();});
 function download(blob,name){const link=document.createElement('a'),href=URL.createObjectURL(blob);link.href=href;link.download=name;link.click();setTimeout(()=>URL.revokeObjectURL(href),1000);}
 function exportPng(){dropPreview();undoPointer=null;render();const q=state.current,epoch=viewEpoch;if(!q)return;$('qr').toBlob(blob=>{if(!blob||viewEpoch!==epoch||preview||state.current!==q)return;download(blob,'QR.png');});}
 $('png').onclick=exportPng;
@@ -97,3 +155,4 @@ $('contact-copy').onclick=()=>copyContactId($('contact-copy'));
 loadStored();
 syncDot();
 persist();render();renderInstall();if(storageNote)notice(storageNote);if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js',{scope:'./'}).catch(()=>{});
+syncPerformanceWakeLock();

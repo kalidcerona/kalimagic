@@ -575,6 +575,9 @@ input[type="range"] {
   border-radius: 20px;
   background: #202127;
   box-shadow: 0 16px 50px rgba(0, 0, 0, .45);
+  max-height: calc(100vh - 32px);
+  max-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 32px);
+  overflow-y: auto;
 }
 .gesture-guide-demo {
   position: relative;
