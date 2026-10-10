@@ -54,7 +54,7 @@
   .badge-row { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:10px; max-width:100%; margin-bottom:32px; }
   .dot { width:11px; height:11px; border-radius:50%; background:var(--accent); flex:none; }
   .pill { display:inline-block; max-width:100%; border:1px solid rgba(232,160,32,0.4); background:rgba(255,255,255,0.65); border-radius:999px; padding:8px 16px; font-size:13.5px; font-weight:600; line-height:1.45; color:var(--muted); }
-  .hero-meta { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:8px 24px; margin-bottom:32px; font-size:15px; font-weight:600; }
+  .hero-meta { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:8px 24px; margin-bottom:10px; font-size:15px; font-weight:600; }
 
   /* 진행 순서 */
   .timeline { display:grid; gap:var(--space); }
@@ -112,27 +112,76 @@
   .price-table th, .price-table td { padding:12px 6px; text-align:center; vertical-align:middle; border-bottom:1px solid rgba(47,41,35,0.08); font-size:13px; line-height:1.35; overflow-wrap:break-word; }
   .price-table thead th { background:var(--chip); font-weight:800; color:var(--ink); }
   .price-table tbody th { font-weight:800; color:var(--ink); background:#fff; }
-  .price-table td { font-weight:800; color:var(--accent-text); background:#fff; }
+  .price-table td { font-weight:900; color:var(--accent-text); background:#fff; }
   .price-table tr:last-child th, .price-table tr:last-child td { border-bottom:0; }
-  .price-table thead .combo-col { background:#fff6e8; }
+  .price-table thead th.combo-col { background:#e8a020; color:#2f2923; }
+  .price-table tbody td.combo-col { background:rgba(232,160,32,0.12); color:#2f2923; }
+  .price-table td.combo-col.ended { background:#fff; color:var(--muted); font-weight:700; }
+  .combo-price { font-size:1.15em; font-weight:900; color:#2f2923; line-height:1.2; }
+  .low { display:inline-block; margin-left:4px; padding:1px 6px; border-radius:999px; background:#7c3aed; color:#fff; font-family:'Pretendard','Apple SD Gothic Neo','Noto Sans KR',sans-serif; font-size:11px; font-weight:800; line-height:1.45; letter-spacing:0; vertical-align:middle; white-space:nowrap; }
+  .save-pill { display:inline-block; max-width:100%; padding:2px 7px; border-radius:999px; background:rgba(16,185,129,0.12); color:#0f8a63; font-size:12px; font-weight:800; line-height:1.45; }
+  .price-table td.save { font-weight:700; color:var(--muted); background:#fff; }
+  .price-table td.save-empty, .tier-card dd.save-empty { color:var(--muted); font-weight:600; }
+  .tier-name { display:inline-flex; align-items:center; justify-content:center; gap:6px; }
+  .tier-name::before { content:""; width:8px; height:8px; border-radius:50%; background:#9a8c7b; flex:none; }
+  .tier-super .tier-name::before { background:#7c3aed; }
+  .tier-early .tier-name::before { background:#e8a020; }
+  .tier-full .tier-name::before { background:#9a8c7b; }
   .period { display:block; margin-top:2px; font-size:11.5px; font-weight:600; color:var(--soft); }
-  .rec { display:block; width:fit-content; margin:4px auto 0; background:var(--accent); color:var(--ink); border-radius:999px; padding:1px 7px; font-size:11px; font-weight:800; line-height:1.5; }
+  .rec { display:block; width:fit-content; margin:4px auto 0; background:#2f2923; color:#fff; border-radius:999px; padding:1px 7px; font-size:11px; font-weight:800; line-height:1.5; }
   .price-cards { display:none; }
   .price-caption { font-size:15px; color:var(--body); margin:16px auto 8px; max-width:560px; }
   .upgrade-line { font-size:15px; font-weight:700; color:var(--ink); margin:0 auto; max-width:560px; line-height:1.65; }
   .tier-card { text-align:left; }
   .tier-card h3 { margin:0; font-size:20px; }
+  .tier-card .tier-name { justify-content:flex-start; }
   .tier-card .period { margin:4px 0 12px; }
   .tier-card dl { margin:0; display:grid; gap:8px; }
   .tier-card dl > div { display:flex; justify-content:space-between; align-items:center; gap:10px; background:var(--chip); border-radius:10px; padding:10px 12px; min-width:0; }
   .tier-card dt { font-size:14px; font-weight:700; min-width:0; }
-  .tier-card dd { margin:0; font-size:15px; font-weight:800; color:var(--accent-text); flex:none; }
+  .tier-card dd { margin:0; font-size:15px; font-weight:900; color:var(--accent-text); flex:none; text-align:right; }
   .price-table td.ended, .tier-card dd.ended { color:var(--muted); font-weight:700; }
-  .tier-card .is-combo { background:#fff6e8; }
+  .tier-card .is-combo { background:rgba(232,160,32,0.12); }
+  .tier-card .is-combo.is-ended { background:var(--chip); }
+  .tier-card .is-combo dd { display:inline-flex; align-items:center; justify-content:flex-end; flex-wrap:wrap; gap:4px; color:#2f2923; }
+  .tier-card .is-combo dd.ended { color:var(--muted); font-weight:700; }
+  .tier-card .low { margin-left:0; }
+  .tier-card dd.save { color:var(--muted); font-weight:700; }
   .tier-card .rec { display:inline-block; width:auto; margin:0 0 0 4px; vertical-align:middle; }
   .final-actions { display:flex; flex-direction:column; align-items:center; gap:12px; margin-top:36px; max-width:100%; }
   .faq-list { display:grid; gap:16px; max-width:660px; margin:0 auto; }
   .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+
+  /* Urgency accent is #d9381e. Sentence text stays ink so it clears AA on the tint. */
+  .hero-price { margin:0 0 26px; font-size:16px; font-weight:700; line-height:1.5; color:#2f2923; }
+  .hero-price b { color:#d9381e; font-size:20px; font-weight:900; line-height:1; }
+  .hero-price .until { display:inline-block; margin-left:6px; font-size:12.5px; font-weight:700; color:#5c5148; }
+  .host-line:has(+ .hero-price) { margin-bottom:10px; }
+  .deadline { margin:0 auto 14px; max-width:640px; padding:12px 16px 12px 18px; border-radius:14px; background:rgba(217,56,30,0.08); border:1px solid rgba(217,56,30,0.28); box-shadow:inset 4px 0 0 #d9381e; color:#2f2923; font-size:15px; font-weight:800; line-height:1.5; }
+  .deadline-slim { margin:14px auto 0; padding:8px 12px 8px 14px; font-size:13.5px; font-weight:700; }
+  .deadline[hidden] { display:none; }
+  .price-stack { display:inline-flex; flex-direction:column; align-items:center; gap:2px; vertical-align:middle; max-width:100%; }
+  .tier-card .price-stack { align-items:flex-end; }
+  .price-now { font-weight:900; }
+  .price-meta { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:4px; line-height:1.2; }
+  .tier-card .price-meta { justify-content:flex-end; }
+  .was { color:#5c5148; font-size:11px; font-weight:700; text-decoration:line-through; }
+  .off { display:inline-block; padding:0 5px; border-radius:999px; background:#d9381e; color:#fff; font-size:11px; font-weight:800; line-height:1.55; letter-spacing:0; white-space:nowrap; }
+  .combo-line { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:4px; }
+  .tier-card .combo-line { justify-content:flex-end; }
+  .combo-price.combo-best { font-size:22px; line-height:1.05; color:#d9381e; }
+  .tier-card .combo-price.combo-best { font-size:28px; }
+  .combo-line .low { margin-left:0; }
+  .sale-chip { display:block; width:fit-content; margin:4px auto 0; padding:1px 6px; border-radius:999px; font-family:'Pretendard','Apple SD Gothic Neo','Noto Sans KR',sans-serif; font-size:11px; font-weight:800; line-height:1.45; letter-spacing:0; white-space:nowrap; }
+  .tier-card .sale-chip { margin:6px 0 0; }
+  .sale-now { background:#d9381e; color:#fff; }
+  .sale-soon { background:rgba(232,160,32,0.28); color:#2f2923; }
+  .sale-done { background:#efe8df; color:#5c5148; }
+  .price-table tr.is-active th { box-shadow:inset 3px 0 0 #d9381e; }
+  .tier-card.is-active { box-shadow:0 0 0 2px #d9381e, var(--shadow); }
+  .price-table tr.is-past .price-now,
+  .tier-card.is-past .price-now { color:#5c5148; text-decoration:line-through; }
+  .is-past .off { background:#5c5148; }
 
   @media (max-width:900px) {
     main { padding:0 28px; }
@@ -156,6 +205,10 @@
     .series-steps a, .series-steps [aria-current] { display:block; width:100%; }
     .price-table-wrap { display:none; }
     .price-cards { display:grid; gap:12px; }
+    .tier-card { border-top:4px solid #9a8c7b; }
+    .tier-card.tier-super { border-top-color:#7c3aed; }
+    .tier-card.tier-early { border-top-color:#e8a020; }
+    .tier-card.tier-full { border-top-color:#9a8c7b; }
     .final-actions, .final-actions .btn { width:100%; }
     .price-table th, .price-table td { font-size:12px; padding:10px 4px; }
     .final { padding:40px 16px; border-radius:24px; }
@@ -191,7 +244,9 @@
       <span>📍 양재역 강의실 · 양재</span>
       <span>🕐 오후 2시-5시 <span class="todo-tag">임시</span></span>
     </div>
+    <p class="hero-price">슈퍼 얼리버드 단독 <b>4만원</b> · 통합권 <b>6만원</b> <span class="until">10/27(화)까지</span></p>
     <a href="#ticket" class="btn">자리 신청하기 →</a>
+    <p class="deadline deadline-slim" data-deadline><span class="deadline-text">10월 17일(토) 판매 시작 · 슈퍼 얼리버드는 11일 동안만</span></p>
     <p style="font-size:12.5px; color:var(--soft); margin:16px 0;"><span class="todo-tag">신청 폼 링크 미정</span></p>
     <p class="host-line"><span class="host-mark"><img src="img/planb-logo.png" alt="" width="160" height="147"></span>PLAN B가 여는 세미나</p>
     <img class="shot cover" src="img/cover.jpg" alt="벤치에 앉은 관객에게 카드를 보여 주는 근접 카드 마술 장면" width="1400" height="1033" fetchpriority="high">
@@ -302,6 +357,7 @@
     <p class="eyebrow">Ticket</p>
     <h2>참가비</h2>
     <div class="price-board">
+      <p class="deadline" data-deadline><span class="deadline-text">10월 17일(토) 판매 시작 · 슈퍼 얼리버드는 11일 동안만</span></p>
       <div class="price-table-wrap">
         <div class="price-table-clip">
           <table class="price-table">
@@ -315,51 +371,57 @@
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <th scope="row">슈퍼 얼리버드<span class="period">10/17(토)-10/27(화)</span></th>
-                <td>4만원</td><td>4만원</td><td class="combo-col">6만원</td><td>2만원</td>
+              <tr data-tier="super">
+                <th scope="row" class="tier-super"><span class="tier-name">슈퍼 얼리버드</span><span class="period">10/17(토)-10/27(화)</span></th>
+                <td><span class="price-stack"><span class="price-now">4만원</span><span class="price-meta"><s class="was">5만원</s><span class="off">20%</span></span></span></td>
+                <td><span class="price-stack"><span class="price-now">4만원</span><span class="price-meta"><s class="was">5만원</s><span class="off">20%</span></span></span></td>
+                <td class="combo-col"><span class="price-stack"><span class="price-meta"><s class="was">8만원</s></span><span class="combo-line"><span class="combo-price combo-best price-now">6만원</span><span class="low">최저가</span></span></span></td>
+                <td class="save"><span class="save-pill">2만원 절약</span></td>
               </tr>
-              <tr>
-                <th scope="row">얼리버드<span class="period">10/28(수)-11/8(일)</span></th>
-                <td>4.5만원</td><td>4.5만원</td><td class="combo-col">8만원</td><td>1만원</td>
+              <tr data-tier="early">
+                <th scope="row" class="tier-early"><span class="tier-name">얼리버드</span><span class="period">10/28(수)-11/8(일)</span></th>
+                <td><span class="price-stack"><span class="price-now">4.5만원</span><span class="price-meta"><s class="was">5만원</s><span class="off">10%</span></span></span></td>
+                <td><span class="price-stack"><span class="price-now">4.5만원</span><span class="price-meta"><s class="was">5만원</s><span class="off">10%</span></span></span></td>
+                <td class="combo-col"><span class="price-stack"><span class="price-meta"><s class="was">9만원</s></span><span class="combo-price price-now">8만원</span></span></td>
+                <td class="save"><span class="save-pill">1만원 절약</span></td>
               </tr>
-              <tr>
-                <th scope="row">정상가<span class="period">11/9(월)부터</span></th>
-                <td>5만원</td><td>5만원</td><td class="combo-col ended">판매 종료</td><td>-</td>
+              <tr data-tier="full">
+                <th scope="row" class="tier-full"><span class="tier-name">정상가</span><span class="period">11/9(월)부터</span></th>
+                <td><span class="price-now">5만원</span></td><td><span class="price-now">5만원</span></td><td class="combo-col ended">판매 종료</td><td class="save save-empty">-</td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
       <div class="price-cards">
-        <article class="card tier-card">
-          <h3 class="serif">슈퍼 얼리버드</h3>
+        <article class="card tier-card tier-super" data-tier="super">
+          <h3 class="serif"><span class="tier-name">슈퍼 얼리버드</span></h3>
           <p class="period">10/17(토)-10/27(화)</p>
           <dl>
-            <div><dt>버스킹 단독</dt><dd>4만원</dd></div>
-            <div><dt>슬리빙 단독</dt><dd>4만원</dd></div>
-            <div class="is-combo"><dt>통합권<span class="rec">추천</span></dt><dd>6만원</dd></div>
-            <div><dt>통합권으로 아끼는 금액</dt><dd>2만원</dd></div>
+            <div><dt>버스킹 단독</dt><dd><span class="price-stack"><span class="price-now">4만원</span><span class="price-meta"><s class="was">5만원</s><span class="off">20%</span></span></span></dd></div>
+            <div><dt>슬리빙 단독</dt><dd><span class="price-stack"><span class="price-now">4만원</span><span class="price-meta"><s class="was">5만원</s><span class="off">20%</span></span></span></dd></div>
+            <div class="is-combo"><dt>통합권<span class="rec">추천</span></dt><dd><span class="price-stack"><span class="price-meta"><s class="was">8만원</s></span><span class="combo-line"><span class="combo-price combo-best price-now">6만원</span><span class="low">최저가</span></span></span></dd></div>
+            <div><dt>통합권으로 아끼는 금액</dt><dd class="save"><span class="save-pill">2만원 절약</span></dd></div>
           </dl>
         </article>
-        <article class="card tier-card">
-          <h3 class="serif">얼리버드</h3>
+        <article class="card tier-card tier-early" data-tier="early">
+          <h3 class="serif"><span class="tier-name">얼리버드</span></h3>
           <p class="period">10/28(수)-11/8(일)</p>
           <dl>
-            <div><dt>버스킹 단독</dt><dd>4.5만원</dd></div>
-            <div><dt>슬리빙 단독</dt><dd>4.5만원</dd></div>
-            <div class="is-combo"><dt>통합권<span class="rec">추천</span></dt><dd>8만원</dd></div>
-            <div><dt>통합권으로 아끼는 금액</dt><dd>1만원</dd></div>
+            <div><dt>버스킹 단독</dt><dd><span class="price-stack"><span class="price-now">4.5만원</span><span class="price-meta"><s class="was">5만원</s><span class="off">10%</span></span></span></dd></div>
+            <div><dt>슬리빙 단독</dt><dd><span class="price-stack"><span class="price-now">4.5만원</span><span class="price-meta"><s class="was">5만원</s><span class="off">10%</span></span></span></dd></div>
+            <div class="is-combo"><dt>통합권<span class="rec">추천</span></dt><dd><span class="price-stack"><span class="price-meta"><s class="was">9만원</s></span><span class="combo-price price-now">8만원</span></span></dd></div>
+            <div><dt>통합권으로 아끼는 금액</dt><dd class="save"><span class="save-pill">1만원 절약</span></dd></div>
           </dl>
         </article>
-        <article class="card tier-card">
-          <h3 class="serif">정상가</h3>
+        <article class="card tier-card tier-full" data-tier="full">
+          <h3 class="serif"><span class="tier-name">정상가</span></h3>
           <p class="period">11/9(월)부터</p>
           <dl>
-            <div><dt>버스킹 단독</dt><dd>5만원</dd></div>
-            <div><dt>슬리빙 단독</dt><dd>5만원</dd></div>
-            <div class="is-combo"><dt>통합권<span class="rec">추천</span></dt><dd class="ended">판매 종료</dd></div>
-            <div><dt>통합권으로 아끼는 금액</dt><dd>-</dd></div>
+            <div><dt>버스킹 단독</dt><dd><span class="price-now">5만원</span></dd></div>
+            <div><dt>슬리빙 단독</dt><dd><span class="price-now">5만원</span></dd></div>
+            <div class="is-combo is-ended"><dt>통합권<span class="rec">추천</span></dt><dd class="ended">판매 종료</dd></div>
+            <div><dt>통합권으로 아끼는 금액</dt><dd class="save-empty">-</dd></div>
           </dl>
         </article>
       </div>
@@ -417,5 +479,149 @@
   </section>
 
 </main>
+<script>
+(function () {
+  // KST calendar for the 2026 ticket window. A bad date leaves the static fallback.
+  // Pass a Date, YYYY-MM-DD, or YYYYMMDD to planbDeadlineState, or set PLANB_NOW. Default is the real KST date.
+  var OPEN = 20261017;
+  var SUPER_END = 20261027;
+  var EARLY_END = 20261108;
+  var FALLBACK = "10월 17일(토) 판매 시작 · 슈퍼 얼리버드는 11일 동안만";
+
+  function ymdFromClock(clock) {
+    var fmt = new Intl.DateTimeFormat("en-US", {
+      timeZone: "Asia/Seoul",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit"
+    });
+    var parts = fmt.formatToParts(clock);
+    var y = 0;
+    var m = 0;
+    var d = 0;
+    var i;
+    for (i = 0; i < parts.length; i++) {
+      if (parts[i].type === "year") y = parseInt(parts[i].value, 10);
+      if (parts[i].type === "month") m = parseInt(parts[i].value, 10);
+      if (parts[i].type === "day") d = parseInt(parts[i].value, 10);
+    }
+    if (!y || !m || !d) throw new Error("kst");
+    return y * 10000 + m * 100 + d;
+  }
+
+  function resolveToday(now) {
+    if (now == null && typeof globalThis !== "undefined" && globalThis.PLANB_NOW != null) {
+      now = globalThis.PLANB_NOW;
+    }
+    if (now == null) return ymdFromClock(new Date());
+    if (typeof now === "number") return now;
+    if (typeof now === "string") {
+      var digits = now.replace(/-/g, "");
+      if (!/^\d{8}$/.test(digits)) throw new Error("now");
+      return parseInt(digits, 10);
+    }
+    if (Object.prototype.toString.call(now) === "[object Date]") return ymdFromClock(now);
+    throw new Error("now");
+  }
+
+  function utcDay(ymd) {
+    var y = Math.floor(ymd / 10000);
+    var m = Math.floor((ymd % 10000) / 100);
+    var d = ymd % 100;
+    return Date.UTC(y, m - 1, d);
+  }
+
+  function countdown(endYmd, today) {
+    var n = Math.round((utcDay(endYmd) - utcDay(today)) / 86400000);
+    if (n === 0) return "오늘 마감";
+    if (n > 0) return "D-" + n;
+    throw new Error("countdown");
+  }
+
+  function chipFor(phase, tier) {
+    var state = "";
+    if (phase === "before" && tier === "super") state = "soon";
+    else if (phase === "super" && tier === "super") state = "now";
+    else if (phase === "early" && tier === "super") state = "past";
+    else if (phase === "early" && tier === "early") state = "now";
+    else if (phase === "full" && (tier === "super" || tier === "early")) state = "past";
+    else if (phase === "full" && tier === "full") state = "now";
+    if (state === "now") return "판매 중";
+    if (state === "soon") return "오픈 예정";
+    if (state === "past") return "마감";
+    return "";
+  }
+
+  function planbDeadlineState(now) {
+    var today = resolveToday(now);
+    if (today < 20200101 || today > 21001231) throw new Error("range");
+    var phase = "before";
+    var text = FALLBACK;
+    if (today < OPEN) {
+      phase = "before";
+    } else if (today <= SUPER_END) {
+      phase = "super";
+      text = today === SUPER_END
+        ? "슈퍼 얼리버드 오늘 마감 · 10/27(화) 23:59"
+        : "슈퍼 얼리버드 마감까지 " + countdown(SUPER_END, today) + " · 10/27(화) 23:59";
+    } else if (today <= EARLY_END) {
+      phase = "early";
+      text = today === EARLY_END
+        ? "얼리버드·통합권 오늘 마감 · 11/8(일) 23:59"
+        : "얼리버드·통합권 마감까지 " + countdown(EARLY_END, today) + " · 11/8(일) 23:59";
+    } else {
+      phase = "full";
+      text = "";
+    }
+    return {
+      today: today,
+      phase: phase,
+      banner: text,
+      hidden: phase === "full",
+      chips: {
+        super: chipFor(phase, "super"),
+        early: chipFor(phase, "early"),
+        full: chipFor(phase, "full")
+      }
+    };
+  }
+
+  function applyPlanbDeadline(state) {
+    if (typeof document === "undefined" || !document.querySelectorAll) return;
+    var banners = document.querySelectorAll("[data-deadline]");
+    var b;
+    for (b = 0; b < banners.length; b++) {
+      if (state.hidden) {
+        banners[b].hidden = true;
+        continue;
+      }
+      var slot = banners[b].querySelector(".deadline-text");
+      if (slot) slot.textContent = state.banner;
+    }
+    var rows = document.querySelectorAll("[data-tier]");
+    var r;
+    for (r = 0; r < rows.length; r++) {
+      var row = rows[r];
+      var label = state.chips[row.getAttribute("data-tier")] || "";
+      if (!label) continue;
+      if (label === "마감") row.classList.add("is-past");
+      if (label === "판매 중") row.classList.add("is-active");
+      var name = row.querySelector(".tier-name");
+      if (!name || !name.parentNode || row.querySelector(".sale-chip")) continue;
+      var chip = document.createElement("span");
+      var kind = label === "판매 중" ? "now" : label === "오픈 예정" ? "soon" : "done";
+      chip.className = "sale-chip sale-" + kind;
+      chip.textContent = label;
+      name.parentNode.insertBefore(chip, name.nextSibling);
+    }
+  }
+
+  var root = typeof globalThis !== "undefined" ? globalThis : window;
+  root.planbDeadlineState = planbDeadlineState;
+  try {
+    applyPlanbDeadline(planbDeadlineState());
+  } catch (err) {}
+})();
+</script>
 </body>
 </html>
