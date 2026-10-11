@@ -56,7 +56,7 @@ test('public app identities remain distinct while FALSE MEMORY stays private', a
   assert.equal(PUBLIC_DIRS.includes('zz9'), false);
 });
 
-test('all 24 app manifests resolve to stable distinct identities and usable PNG icons', async () => {
+test('all 25 app manifests resolve to stable distinct identities and usable PNG icons', async () => {
   const { PUBLIC_DIRS, DISTRIBUTION_APPS } = await import('../../scripts/build-public.mjs');
   const expectedPersonal = {
     zz1: '/zz1/index.html', zz2: '/zz2/index.html', zz3: '/zz3/index.html',
@@ -83,7 +83,7 @@ test('all 24 app manifests resolve to stable distinct identities and usable PNG 
     assert.equal(id.pathname, shared ? `/${route}/` : expectedPersonal[route], route);
     assert.equal(start.origin, scope.origin);
     assert.ok(start.pathname.startsWith(scope.pathname), `${route} launch URL stays in scope`);
-    assert.equal(manifest.display, 'standalone');
+    assert.equal(manifest.display, route === 'tools/magicshow' ? 'fullscreen' : 'standalone');
     assert.equal(manifest.prefer_related_applications, undefined);
     for (const size of [192, 512]) {
       const icon = manifest.icons.find((entry) => entry.sizes === `${size}x${size}`
@@ -95,6 +95,6 @@ test('all 24 app manifests resolve to stable distinct identities and usable PNG 
       assert.deepEqual(pngSize(await readFile(iconUrl)), [size, size], route);
     }
   }
-  assert.equal(apps.length, 24);
-  assert.equal(new Set(identities).size, 24);
+  assert.equal(apps.length, 25);
+  assert.equal(new Set(identities).size, 25);
 });

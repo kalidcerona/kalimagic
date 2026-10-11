@@ -334,3 +334,8 @@
   for = "/tools/choice/manifest.webmanifest"
   [headers.values]
     Content-Type = "application/manifest+json"
+
+[[headers]]
+  for = "/tools/magicshow/manifest.webmanifest"
+  [headers.values]
+    Content-Type = "application/manifest+json"

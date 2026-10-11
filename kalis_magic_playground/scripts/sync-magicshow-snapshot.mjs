@@ -1,0 +1,63 @@
+import { createHash } from 'node:crypto';
+import { lstat, mkdir, readFile, readdir, realpath, rm, writeFile } from 'node:fs/promises';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { accessGuard, shouldCopyMagicshow } from './build-public.mjs';
+
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const SOURCE = '/Users/sumpie/Desktop/AI/AiGo/magic-show-game/v3';
+const SNAPSHOT = path.join(ROOT, 'distribution-snapshots/magicshow');
+const ADDITIONS = path.join(ROOT, 'scripts/magicshow-dist');
+const files = new Map();
+async function readRegular(base, file) {
+  const full = path.join(base, file);
+  if (!(await lstat(full)).isFile()) throw new Error(`Expected regular file: ${full}`);
+  return readFile(full);
+}
+function replaceOnce(source, anchor, addition) {
+  if (source.split(anchor).length !== 2) throw new Error(`Missing or ambiguous index anchor: ${anchor}`);
+  return source.replace(anchor, addition);
+}
+for (const file of ['index.html', 'style.css', 'data.js', 'core.js', 'audio.js', 'ui.js']) {
+  files.set(file, await readRegular(SOURCE, file));
+}
+for (const entry of (await readdir(path.join(SOURCE, 'assets'), { withFileTypes: true })).sort((a, b) => a.name.localeCompare(b.name, 'en'))) {
+  const file = `assets/${entry.name}`;
+  if (entry.isFile() && shouldCopyMagicshow(file)) files.set(file, await readRegular(SOURCE, file));
+}
+for (const size of [192, 512]) files.set(`icon-${size}.png`, await readRegular(ADDITIONS, `icon-${size}.png`));
+files.set('manifest.webmanifest', Buffer.from(JSON.stringify({
+  name: '칼리 마술 성장기 (베타)', short_name: '칼리마술',
+  id: '/tools/magicshow/', start_url: '/tools/magicshow/', scope: '/tools/magicshow/',
+  display: 'fullscreen', orientation: 'landscape', theme_color: '#151020', background_color: '#151020',
+  icons: [192, 512].map(size => ({ src: `icon-${size}.png`, sizes: `${size}x${size}`, type: 'image/png', purpose: 'any' }))
+}, null, 2) + '\n'));
+let html = files.get('index.html').toString();
+html = replaceOnce(html, '<head>', `<head>\n${accessGuard('magicshow', 'magicshow')}\n`);
+html = replaceOnce(html, '</head>', '<link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="theme-color" content="#151020"></head>');
+html = replaceOnce(html, '<body>', '<body data-magic-customize="off">');
+html = replaceOnce(html, '</body>', `<script>if ('serviceWorker' in navigator) { window.addEventListener('load', function () { navigator.serviceWorker.register('./sw.js').catch(function () {}); }); }</script></body>`);
+files.set('index.html', Buffer.from(html));
+let worker = (await readRegular(ADDITIONS, 'sw-template.js')).toString();
+const shell = [...files.keys(), 'sw.js'].sort().map(file => `./${file}`);
+if (!/const SHELL = \[[\s\S]*?\];/.test(worker)) throw new Error('Missing service worker shell anchor');
+worker = worker.replace(/const SHELL = \[[\s\S]*?\];/, `const SHELL = ${JSON.stringify(shell, null, 2)};`);
+const hash = createHash('sha256').update(worker);
+for (const [name, bytes] of [...files].sort(([a], [b]) => a.localeCompare(b, 'en'))) hash.update(name).update('\0').update(bytes);
+worker = replaceOnce(worker, '__VERSION__', hash.digest('hex').slice(0, 16));
+files.set('sw.js', Buffer.from(worker));
+// Validate paths before deleting anything; source and generated icons stay read-only.
+const parent = await realpath(path.dirname(SNAPSHOT));
+if (!parent.startsWith((await realpath(ROOT)) + path.sep)) throw new Error('Snapshot parent escapes project');
+try {
+  if (!(await lstat(SNAPSHOT)).isDirectory() || (await lstat(SNAPSHOT)).isSymbolicLink()) throw new Error('Snapshot must be a real directory');
+} catch (error) { if (error.code !== 'ENOENT') throw error; }
+await rm(SNAPSHOT, { recursive: true, force: true });
+await mkdir(path.join(SNAPSHOT, 'assets'), { recursive: true });
+let bytes = 0;
+for (const [file, content] of files) {
+  if (!shouldCopyMagicshow(file)) throw new Error(`Disallowed snapshot file: ${file}`);
+  await writeFile(path.join(SNAPSHOT, file), content);
+  bytes += content.length;
+}
+console.log(`magicshow snapshot: ${files.size} files, ${bytes} bytes`);

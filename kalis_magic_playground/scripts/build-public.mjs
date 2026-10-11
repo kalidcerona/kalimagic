@@ -356,6 +356,8 @@ export function injectLegacyMigration(html, target) {
 }
 
 export function transformDistributionDocument(html, app) {
+  // The sync script already applies the shared gate to this pinned game snapshot.
+  if (app.target === 'magicshow' && html.includes('id="friend-apps-check"')) return html;
   const isolate = app.target === 'kairos' || app.target === 'kairos-classic';
   let next = isolate ? isolateKairosStorageKeys(html, app.target) : html;
   next = next
@@ -421,7 +423,15 @@ export function injectLegacyShellModules(source) {
   const withShell = shellChanged ? source.replace(match[0], `const SHELL = [${body}\n];`) : source;
   return withLegacyCacheSuffix(withShell);
 }
+export function shouldCopyMagicshow(relativePath) {
+  const file = relativePath.split(path.sep).join('/');
+  return file === '' || file === 'assets' ||
+    ['index.html', 'style.css', 'data.js', 'core.js', 'audio.js', 'ui.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'sw.js'].includes(file) ||
+    /^assets\/[A-Za-z0-9_-]+\.png$/.test(file);
+}
+
 export const DISTRIBUTION_APPS = [
+  { source: 'distribution-snapshots/magicshow', target: 'magicshow', tool: 'magicshow' },
   { source: 'distribution-snapshots/choice', target: 'choice', tool: 'choice' },
   { source: 'distribution-snapshots/pimax', target: 'pimax', tool: 'pimax' },
   { source: 'distribution-snapshots/calculator', target: 'hitsuzen', tool: 'calc' },
@@ -435,7 +445,7 @@ export const DISTRIBUTION_APPS = [
   { source: 'distribution-snapshots/qr', target: 'arosaegida', tool: 'arosaegida' }
 ];
 
-function accessGuard(tool, target) {
+export function accessGuard(tool, target) {
   // target is not part of the storage key. The open pathname keeps kairos and kairos-classic apart.
   return `  <script id="friend-apps-check">
     if (location.protocol === 'https:' && location.pathname.startsWith('/tools/')) {
@@ -496,7 +506,9 @@ async function buildDistributionApps() {
     const target = path.join(DIST, 'tools', app.target);
     await cp(source, target, {
       recursive: true,
-      filter: (entry) => app.target === 'pimax'
+      filter: (entry) => app.target === 'magicshow'
+        ? shouldCopyMagicshow(path.relative(source, entry))
+        : app.target === 'pimax'
         ? shouldCopyPimax(path.relative(source, entry))
         : app.target === 'choice'
           ? shouldCopyChoice(path.relative(source, entry))
@@ -519,7 +531,7 @@ async function buildDistributionApps() {
     }
     const manifestPath = path.join(target, 'manifest.webmanifest');
     const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
-    Object.assign(manifest, { id: `/tools/${app.target}/`, start_url: './', scope: './' });
+    if (app.target !== 'magicshow') Object.assign(manifest, { id: `/tools/${app.target}/`, start_url: './', scope: './' });
     await writeFile(manifestPath, JSON.stringify(manifest, null, 2) + '\n');
   }
 }
@@ -613,8 +625,9 @@ export async function verifyAppDisplayPolicy(directory = DIST, routes = [
   for (const route of routes) {
     const appDirectory = path.join(directory, route);
     const manifest = JSON.parse(await readFile(path.join(appDirectory, 'manifest.webmanifest'), 'utf8'));
-    if (manifest.display !== 'standalone' || (manifest.display_override || []).includes('fullscreen')) {
-      throw new Error(`App display policy: ${route} must remain standalone`);
+    const expectedDisplay = route === 'tools/magicshow' ? 'fullscreen' : 'standalone';
+    if (manifest.display !== expectedDisplay || (route !== 'tools/magicshow' && (manifest.display_override || []).includes('fullscreen'))) {
+      throw new Error(`App display policy: ${route} must remain ${expectedDisplay}`);
     }
     const html = await readFile(path.join(appDirectory, 'index.html'), 'utf8');
     const disabled = /<body\b[^>]*\bdata-magic-customize=["']off["']/.test(html);

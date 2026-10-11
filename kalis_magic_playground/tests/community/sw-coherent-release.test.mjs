@@ -23,6 +23,7 @@ const WORKERS = [
   ['distribution-snapshots/kairos/sw.js', 'https://example.test/tools/kairos/'],
   ['distribution-snapshots/kairos/sw.js', 'https://example.test/tools/kairos-classic/'],
   ['distribution-snapshots/choice/sw.js', 'https://example.test/tools/choice/'],
+  ['distribution-snapshots/magicshow/sw.js', 'https://example.test/tools/magicshow/'],
   ['distribution-snapshots/pimax/sw.js', 'https://example.test/tools/pimax/'],
   ['distribution-snapshots/qr/sw.js', 'https://example.test/tools/arosaegida/'],
   ['distribution-snapshots/spinner/sw.js', 'https://example.test/tools/tyche/'],
@@ -148,9 +149,9 @@ async function dispatch(worker, url) {
   return { response: await result, background };
 }
 
-test('coherent release covers the 24 deployed worker scopes', () => {
-  assert.equal(WORKERS.length, 24);
-  assert.equal(new Set(WORKERS.map(([file, scope]) => `${file}@${scope}`)).size, 24);
+test('coherent release covers the 25 deployed worker scopes', () => {
+  assert.equal(WORKERS.length, 25);
+  assert.equal(new Set(WORKERS.map(([file, scope]) => `${file}@${scope}`)).size, 25);
 });
 
 for (const [file, scope] of WORKERS) {

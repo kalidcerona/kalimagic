@@ -11,7 +11,7 @@ const COOKIE_MAX_AGE = 7_776_000;
 const RENEWAL_WINDOW_SECONDS = 3_888_000;
 const DEFAULT_TOOL = 'calc';
 const PRODUCT_SLUGS = { calc: 'hitsuzen', unlock: 'release', 'stopwatch-uni': 'kairos', stopwatch: 'kairos-classic', spinner: 'tyche', arosaegida: 'arosaegida' };
-const STRICT_DISTRIBUTION_TOOLS = new Set(['aletheia', 'usotsuki', 'tobira', 'spinner', 'arosaegida', 'pimax', 'choice']);
+const STRICT_DISTRIBUTION_TOOLS = new Set(['aletheia', 'usotsuki', 'tobira', 'spinner', 'arosaegida', 'pimax', 'choice', 'magicshow']);
 
 function analyzePath(rawPathname) {
   if (typeof rawPathname !== 'string') {
@@ -65,6 +65,14 @@ function analyzePath(rawPathname) {
       return { mode: 'public', pathname };
     }
     return { mode: 'gated', tool: 'choice', pathname };
+  }
+
+  if (pathname === '/tools/magicshow' || pathname.startsWith('/tools/magicshow/')) {
+    const publicFiles = ['manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
+    if (publicFiles.some((file) => pathname === `/tools/magicshow/${file}`)) {
+      return { mode: 'public', pathname };
+    }
+    return { mode: 'gated', tool: 'magicshow', pathname };
   }
 
   const isLoginPath =
@@ -158,6 +166,7 @@ function safeReturnPath(pathname, search, fallback) {
     pathname.startsWith('/tools/usotsuki/') ||
     pathname.startsWith('/tools/pimax/') ||
     pathname.startsWith('/tools/choice/') ||
+    pathname.startsWith('/tools/magicshow/') ||
     pathname.startsWith('/tools/tobira/') ||
     pathname.startsWith('/tools/spinner/') ||
     Object.values(PRODUCT_SLUGS).some((slug) => pathname.startsWith(`/tools/${slug}/`))
