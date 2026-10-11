@@ -205,16 +205,52 @@ globalThis.Guidance = (() => {
   const canvas = $('effects'), ctx = canvas.getContext('2d');
   const animations = new WeakMap();
   const patterns = ['111101101101111','010110010010111','111001111100111','111001111001111','101101111001001','111100111001111','111100111101111','111001001001001','111101111101111','111101111001111'];
-  let corrupt = false, inaccessible = false;
+  let corrupt = false, inaccessible = false, newerSave = false, restoring = false;
+  let saveStore = null;
   let state = C.newGame(Date.now() >>> 0);
+  const launchQuery = new URLSearchParams(location.search);
   try {
-    const raw = localStorage.getItem(KEY);
-    if (raw !== null) {
-      const loaded = C.deserialize(raw);
-      if (loaded) state = loaded;
-      else corrupt = true;
-    }
+    saveStore = C.createSaveStore(localStorage);
+    const loaded = saveStore.load();
+    if (loaded.state) state = loaded.state;
+    corrupt = loaded.backedUp;
+    newerSave = loaded.newer;
   } catch (error) { inaccessible = true; }
+  const giftApplied = !newerSave && !inaccessible && C.grantGrowthGift(state, launchQuery.get('gift'));
+
+  function showSaveNotice() {
+    if ($('saveVersionNotice')) return;
+    const host = document.createElement('div');
+    host.id = 'saveVersionNotice'; host.className = 'save-version-notice'; host.setAttribute('role','status');
+    host.append(document.createTextNode('새 버전이 있어요. 페이지를 새로고침해 주세요 '));
+    const link = document.createElement('a'); link.href = 'update.html'; link.textContent = '새 버전 열기'; link.className = 'save-update-button';
+    host.append(link); document.body.append(host);
+  }
+  function openRestore() {
+    openPanel('restore', '저장 백업 복원');
+    try {
+      const backups = saveStore.list();
+      if (!backups.length) $('panelBody').append(element('p','복원할 백업이 없어요.'));
+      for (const item of backups) {
+        const date = item.date ? new Date(item.date).toLocaleString('ko-KR') : '날짜 확인 불가';
+        const stage = item.stage ? D.venues[item.stage-1].name : '무대 확인 불가';
+        const coins = item.coins === null ? '동전 확인 불가' : `동전 ${C.formatNumber(item.coins)}`;
+        const label = `${item.key.endsWith('.auto') ? '자동 백업 · ' : ''}${date} · ${stage} · ${coins}`;
+        $('panelBody').append(action(label, () => {
+          openPanel('restore', '이 백업을 복원할까요?');
+          $('panelBody').append(element('p',label),element('p','현재 저장도 백업한 뒤 선택한 저장으로 바꿔요.'));
+          $('panelBody').append(action('복원하기', () => {
+            try {
+              if (!saveStore.restore(item.key,true)) { toast('이 백업은 복원할 수 없어요'); return; }
+              restoring = true;
+              const url = new URL(location.href); url.searchParams.delete('restore'); url.searchParams.delete('gift');
+              location.replace(url.href);
+            } catch (error) { toast('복원할 수 없어요. 기존 저장은 유지돼요'); }
+          }),action('취소',openRestore));
+        }, !item.restorable));
+      }
+    } catch (error) { $('panelBody').append(element('p','백업을 읽을 수 없어요.')); }
+  }
 
   function num(el, value) {
     const text = typeof value === 'number' ? C.formatNumber(value) : String(value);
@@ -353,6 +389,7 @@ globalThis.Guidance = (() => {
     return randomLine(D.pools.win.filter(line => !line.includes('커튼콜')));
   }
   function save() {
+    if (restoring || newerSave || !saveStore) return false;
     try {
       // Core's expired timers can be slightly negative at real frame boundaries.
       // Its validator expects nonnegative saved timers. Normalize only the save
@@ -364,10 +401,14 @@ globalThis.Guidance = (() => {
       });
       if (!document.hidden) state.idle.wallMs = Math.max(state.idle.wallMs,Date.now());
       snapshot.idle=state.idle;
-      localStorage.setItem(KEY, C.serialize(snapshot));
+      const result = saveStore.write(C.serialize(snapshot));
+      if (result.newer) { newerSave = true; showSaveNotice(); }
+      if (result.backedUp) toast('저장을 불러오지 못해 백업해 두었어요');
+      return result.saved;
     }
     catch (error) {
       if (!saveWarning) { toast('저장할 수 없어요. 이번 공연은 계속돼요'); saveWarning = true; }
+      return false;
     }
   }
   let bannerTimer, stageRewardTimer, stageRewardHost = null;
@@ -2331,10 +2372,14 @@ globalThis.Guidance = (() => {
   });
   $('banner').addEventListener('click', () => { if (phone) { dismissBanner(); nextBanner(); } });
   setInterval(save, 5000);
+  setInterval(() => {
+    if (newerSave || restoring || !saveStore) return;
+    try { saveStore.rollingBackup(); } catch (error) { /* Keep the current save when backup storage is full. */ }
+  }, 300000);
   // Stable screen/audio integration hooks for U4 and U5.
   window.MagicShowUI = {
     getState: () => state, startScene:C.startScene, storyList, renderU15, getHolds: () => boardHolds, startIntro, buyAll: buyAllUI, events, save, toast, banner, openPanel, closePanel, render,
-    openBook: tree, focusNode, openBestiary: bestiary, openMissions:drawMissions, renderCoach,
+    openRestore, openBook: tree, focusNode, openBestiary: bestiary, openMissions:drawMissions, renderCoach,
     openDealer: dealer, openGemShop:gemShop, openMap:openStageMap, openCustomize:customize, drawDealer, openEnding: () => { if (state.seenEnding) { revealEnding = false; showEnding(); } },
     openRebirth: () => { if (state.seenEnding) showRebirth(); }, isPaused: paused
   };
@@ -2347,11 +2392,24 @@ globalThis.Guidance = (() => {
   revealEnding = state.mode === 'ending' && state.endings.length === 1;
   updateSoundButton();
   initIdleControls();
-  receiveOffline(Date.now()); save();
+  receiveOffline(Date.now());
+  const launchSaved = save();
+  if (launchQuery.get('gift') === 'KALI5X' && launchSaved) {
+    const url = new URL(location.href); url.searchParams.delete('gift');
+    history.replaceState(history.state, '', url.href);
+    if (giftApplied) banner('선물: 성장 5배가 적용됐어요', '');
+  }
+  if (state.growth5x === true) {
+    const chip = element('span','성장 5배','growth-gift-chip');
+    document.querySelector('.menu').append(chip);
+    $('phoneMore').append(element('span','성장 5배','growth-gift-chip'));
+  }
   fit(); render(); showOffline();
   if(state.u18.map)openStageMap();
   if (!state.onboarding.intro) startIntro(false);
-  if (corrupt) toast('저장 파일을 읽을 수 없어 새 공연을 시작해요');
+  if (corrupt) toast('저장을 불러오지 못해 백업해 두었어요');
+  if (newerSave) showSaveNotice();
+  if (launchQuery.get('restore') === '1') openRestore();
   if (inaccessible) toast('저장을 사용할 수 없어요. 공연은 계속돼요');
   requestAnimationFrame(loop);
 })();

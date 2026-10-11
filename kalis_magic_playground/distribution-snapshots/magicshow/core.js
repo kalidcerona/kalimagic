@@ -323,19 +323,19 @@
     var zero={awayMs:0,coins:0,xp:state.board.map(function(){return 0;})};
     if(!Number.isFinite(now)||!state.idle.wallMs||now-state.idle.wallMs<60000)return zero;
     var ms=Math.min(now-state.idle.wallMs,(8+state.tree.nightShow)*3600000), eff=.5+.1*state.tree.manager, rates=idleRates(state);
-    return {awayMs:ms,coins:Math.floor(rates.coins*ms/1000*eff),xp:rates.xp.map(function(x,i){var c=state.board[i],remaining=0;for(var lv=c.lv;lv<caseCap(state);lv++)remaining+=caseNeed(lv);remaining=Math.max(0,remaining-(c.xp||0));return Math.min(remaining,x*ms/1000*eff);})};
+    return {awayMs:ms,coins:Math.floor(rates.coins*ms/1000*eff),xp:rates.xp.map(function(x,i){var c=state.board[i],remaining=0;for(var lv=c.lv;lv<caseCap(state);lv++)remaining+=caseNeed(lv);remaining=Math.max(0,remaining-(c.xp||0));return Math.min(remaining,x*ms/1000*eff*growthMultiplier(state));})};
   }
   function collectOffline(state,now) {
     var gain=offlineGain(state,now);
     if(!Number.isFinite(now)||now<state.idle.wallMs)return gain;
     state.idle.wallMs=now;
     if(!gain.awayMs)return gain;
-    earnCoins(state,gain.coins);state.u14.visitor.incomeCoins=Math.max(0,state.u14.visitor.incomeCoins-gain.coins);dailyProgress(state,'offline',1);var levels=0;
+    var baseCoins=gain.coins;gain.coins=earnCoins(state,baseCoins);state.u14.visitor.incomeCoins=Math.max(0,state.u14.visitor.incomeCoins-baseCoins);dailyProgress(state,'offline',1);var levels=0;
     state.board.forEach(function(c,i){if(c.lv>=caseCap(state))return;c.xp+=gain.xp[i];while(c.lv<caseCap(state)&&c.xp>=caseNeed(c.lv)){c.xp-=caseNeed(c.lv);c.lv++;levels++;}if(c.lv>=caseCap(state))c.xp=0;});
     state.idle.reward={awayMs:gain.awayMs,coins:gain.coins,levels:levels,doubled:false};
     return gain;
   }
-  function doubleOffline(state) { var r=state.idle.reward;if(!r||r.doubled)return false;earnCoins(state,r.coins);state.u14.visitor.incomeCoins=Math.max(0,state.u14.visitor.incomeCoins-r.coins);r.doubled=true;return true; }
+  function doubleOffline(state) { var r=state.idle.reward;if(!r||r.doubled)return false;earnCoins(state,r.coins,true);state.u14.visitor.incomeCoins=Math.max(0,state.u14.visitor.incomeCoins-r.coins);r.doubled=true;return true; }
 
   function emptyStars() {
     return { trick: 0, guard: 0, tempo: 0, bounty: 0 };
@@ -639,7 +639,19 @@
   function caseTier(cell) { return cell.golden ? 'box-golden' : 'box-' + Math.min(4, Math.floor(((cell.lv || 1) - 1) / 3)); }
   function caseItems(lv) { return 1 + Math.floor((lv - 1) / 3); }
   function branchBonus(state, branch) { var id='infinite-'+branch; return (1 + .02 * ((state.tree[id] || 0) + (state.tree['hidden-' + branch] || 0))) * statMultiplier(state,id); }
-  function earnCoins(state, amount) { state.u14.visitor.incomeCoins+=amount; state.coins += amount; state.features.progress.coinsEarned += amount; }
+  function growthMultiplier(state) { return state.growth5x === true ? 5 : 1; }
+  function grantGrowthGift(state, code) {
+    if (code !== 'KALI5X' || state.growth5x === true) return false;
+    state.growth5x = true;
+    return true;
+  }
+  function earnCoins(state, amount, alreadyScaled) {
+    // Keep the income estimator in base units so income-based prizes scale once.
+    state.u14.visitor.incomeCoins += amount;
+    amount *= alreadyScaled ? 1 : growthMultiplier(state);
+    state.coins += amount; state.features.progress.coinsEarned += amount;
+    return amount;
+  }
   function fillBox(state, cell) {
     cell.lv = cell.lv || Math.min(caseCap(state), 1 + (state.tree.caseStart || 0) + (hasReward(state, 4) ? 1 : 0));
     cell.xp = cell.xp || 0;
@@ -1147,7 +1159,7 @@
     reviewOpen(state,i,source,ev);
     var itemLv = cell.lv || 1, oldTier = caseTier(cell);
     cell.lv = itemLv; cell.xp = cell.xp || 0;
-    if (cell.lv < caseCap(state)) cell.xp += 1 + .15 * (state.tree.caseXp || 0);
+    if (cell.lv < caseCap(state)) cell.xp += (1 + .15 * (state.tree.caseXp || 0)) * growthMultiplier(state);
     while (cell.lv < caseCap(state) && cell.xp >= caseNeed(cell.lv)) {
       cell.xp -= caseNeed(cell.lv); cell.lv++;
       if ([10,25,50].indexOf(cell.lv)>=0) emit(ev,{type:'milestone',cell:i,level:cell.lv});
@@ -1189,7 +1201,7 @@
       }
     }
     checkAchievements(state, ev);
-    state.xp += CONST.xpPerBox * nodeEffects(state).boxXP;
+    state.xp += CONST.xpPerBox * nodeEffects(state).boxXP * growthMultiplier(state);
     state.shield = Math.min(state.mentalMax * nodeEffects(state).shieldRatio, state.shield + nodeEffects(state).boxShield);
     state.mental = Math.min(state.mentalMax, state.mental + nodeEffects(state).boxHeal);
     checkLevel(state, ev);
@@ -1387,7 +1399,7 @@
       } else if (f.kind === "coin") {
         earnCoins(state, Math.max(0, Math.round(f.amount)));
       } else if (f.effect === "xpBurst") {
-        state.xp += f.amount;
+        state.xp += f.amount * growthMultiplier(state);
         checkLevel(state, ev);
       } else if (f.effect === "finisher") {
         state.finisher += 5;
@@ -2154,6 +2166,7 @@
     for (i = 0; i < STAR_KEYS.length; i++) stars[STAR_KEYS[i]] = state.stars[STAR_KEYS[i]] | 0;
     var obj = {
       v: 14,
+      growth5x: state.growth5x === true,
       u15: state.u15,
       u14: state.u14,
       idle: state.idle, skills: state.skills, u17: state.u17, u18: state.u18,
@@ -2231,6 +2244,76 @@
     return JSON.stringify(obj);
   }
 
+  function isNewerSave(raw) {
+    try { var o=JSON.parse(raw); return !!o && typeof o.v==='number' && isFinite(o.v) && o.v>14; }
+    catch (error) { return false; }
+  }
+
+  function createSaveStore(storage, now) {
+    var key='magicShowBuster.v3', prefix=key+'.backup.', blocked=false;
+    now=now || Date.now;
+    function keys() {
+      var result=[];
+      for(var i=0;i<storage.length;i++) { var k=storage.key(i); if(k && k.indexOf(prefix)===0 && /^\d+$/.test(k.slice(prefix.length)))result.push(k); }
+      return result.sort(function(a,b){return Number(b.slice(prefix.length))-Number(a.slice(prefix.length));});
+    }
+    function backup(raw) {
+      if(raw===null)return;
+      var latest=keys()[0];
+      var stamp=Math.max(now(),latest?Number(latest.slice(prefix.length))+1:0);
+      while(storage.getItem(prefix+stamp)!==null)stamp++;
+      storage.setItem(prefix+stamp,raw);
+      keys().slice(3).forEach(function(k){storage.removeItem(k);});
+    }
+    function load() {
+      var raw=storage.getItem(key), newer=raw!==null && isNewerSave(raw);
+      blocked=blocked || newer;
+      var state=raw===null?null:deserialize(raw), backedUp=false;
+      if(raw!==null && !state) { backup(raw); backedUp=true; }
+      return {state:state,newer:newer,backedUp:backedUp};
+    }
+    function write(raw) {
+      if(blocked)return {saved:false,newer:true};
+      var old=storage.getItem(key);
+      if(old!==null && isNewerSave(old)) { blocked=true;return {saved:false,newer:true}; }
+      var backedUp=false;
+      if(old!==null && !deserialize(old)) {
+        // An unsuccessful backup throws before any replacement can happen.
+        var existing=keys().some(function(k){return storage.getItem(k)===old;});
+        if(!existing)backup(old);
+        backedUp=!existing;
+      }
+      storage.setItem(key,raw);
+      return {saved:true,backedUp:backedUp};
+    }
+    function rollingBackup() {
+      if(blocked)return false;
+      var raw=storage.getItem(key);
+      if(raw===null || isNewerSave(raw) || !deserialize(raw))return false;
+      storage.setItem(prefix+'auto',raw);
+      return true;
+    }
+    function list() {
+      var all=keys(), auto=storage.getItem(prefix+'auto');
+      if(auto!==null)all.unshift(prefix+'auto');
+      return all.map(function(k){
+        var raw=storage.getItem(k), state=deserialize(raw);
+        return {key:k,date:k===prefix+'auto'?(state && state.idle.wallMs || null):Number(k.slice(prefix.length)),stage:state?state.vMax:null,coins:state?state.coins:null,restorable:!!state};
+      });
+    }
+    function restore(k, confirmed) {
+      if(confirmed!==true || (k!==prefix+'auto' && keys().indexOf(k)<0))return false;
+      var raw=storage.getItem(k);
+      if(raw===null || !deserialize(raw))return false;
+      // Preserve the displaced save, including a forward save, before explicit restore.
+      backup(storage.getItem(key));
+      storage.setItem(key,raw);
+      blocked=isNewerSave(raw);
+      return true;
+    }
+    return {load:load,write:write,backup:backup,rollingBackup:rollingBackup,list:list,restore:restore};
+  }
+
   function savedTimer(x, hi) {
     return typeof x === "number" && isFinite(x) ? Math.min(hi, Math.max(0, x)) : 0;
   }
@@ -2256,6 +2339,8 @@
       if (typeof str !== "string" || str.length > 2000000) return null;
       var o = JSON.parse(str);
       if (!o || typeof o !== "object" || Array.isArray(o)) return null;
+      // Forward saves may share our known schema. Never persist this projection.
+      if (isNewerSave(str)) o.v = 14;
       if (o.v !== 1 && o.v !== 2 && o.v !== 3 && o.v !== 4 && o.v !== 5 && o.v !== 6 && o.v !== 7 && o.v !== 8 && o.v !== 9 && o.v !== 10 && o.v !== 11 && o.v !== 12 && o.v !== 13 && o.v !== 14) return null;
       if (o.v === 7 && o.venueSlug === "lecturenote") {
         // Preserve the old index contract, then migrate by stable audience ID.
@@ -2351,6 +2436,7 @@
         if (sv == null) return null;
         state.stars[STAR_KEYS[i]] = sv;
       }
+      state.growth5x = o.growth5x === true;
       state.coins = coins;
       state.gems = gems;
       state.keys = keys;
@@ -2733,6 +2819,7 @@
   function finishTutorial(state){
     var t=state.u15.tutorial;if(!t.active)return false;
     var main=deserialize(t.baseline);if(!main)return false;
+    main.growth5x = state.growth5x === true || main.growth5x === true;
     Object.keys(state).forEach(function(k){delete state[k];});Object.assign(state,main);
     state.u15.tutorial={done:true,active:false,won:false,baseline:null};
     state.onboarding={intro:true,panel:0,step:8,facts:[]};return true;
@@ -2946,6 +3033,7 @@
     forceCost: forceCost,
     dealerClose: dealerClose,
     rebirth: rebirth,
+    createSaveStore: createSaveStore, isNewerSave: isNewerSave, grantGrowthGift: grantGrowthGift, growthMultiplier: growthMultiplier,
     serialize: serialize,
     deserialize: deserialize,
     starCost: starCost,

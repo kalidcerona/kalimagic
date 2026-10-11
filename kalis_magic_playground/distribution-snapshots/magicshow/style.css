@@ -899,3 +899,8 @@ html,body,#stage{background:var(--bg);color:var(--ink)}
 #stage .shield-label{font-size:inherit;flex:none}
 #stage #shieldNumber{flex:none}
 #stage .shield>span[aria-hidden]{flex:none}
+
+/* U18k: save recovery and the permanent growth gift. */
+.save-version-notice{position:fixed;z-index:10000;left:12px;right:12px;top:12px;padding:10px 14px;border-radius:12px;background:#252039;color:#fff;text-align:center;font-size:14px;box-shadow:0 2px 12px #0008}
+.save-update-button{display:inline-block;padding:6px 10px;border-radius:8px;background:#f6db89;color:#241c38;text-decoration:none;font-weight:700}
+.growth-gift-chip{display:inline-block;align-self:center;white-space:nowrap;padding:3px 7px;border-radius:12px;background:#f6db89;color:#241c38;font-size:11px;font-weight:700}
