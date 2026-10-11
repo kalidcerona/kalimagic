@@ -1961,26 +1961,42 @@ GAME_DATA.tree.filter(n=>n.u4b).forEach(n=>{
     },
     "a-lecturenote-hecate": {
       "name": "헤카테",
-      "flavor": "부장님, 준비물을 점검한다.",
+      "flavor": "부장 마술사, 꼼꼼 점검.",
       "heckles": [
-        "리허설은 하셨죠?",
-        "소품 체크는 하셨죠?",
-        "일정에 맞춰 오셨네요.",
-        "부장은 꼼꼼히 봅니다."
+            "동선은 확인했나요?",
+            "손놀림이 궁금하네요.",
+            "큐 시트는 챙겼죠?",
+            "부장 눈은 못 속입니다."
       ],
-      "winLine": "준비가 완벽했네요!"
-    },
+      "winLine": "점검 통과입니다, 칼리!",
+      "title": "부장",
+      "gender": "male"
+},
+    "a-lecturenote-serona": {
+      "name": "세로나",
+      "flavor": "히든 직원, 서프라이즈 담당.",
+      "heckles": [
+            "저 히든 직원이에요.",
+            "뭔가 숨겨 뒀답니다.",
+            "눈치채셨나요?",
+            "반전은 제 몫이죠."
+      ],
+      "winLine": "히든 직원도 반했어요!",
+      "title": "히든 직원",
+      "gender": "female"
+},
     "a-lecturenote-jung": {
       "name": "정희수",
-      "flavor": "히든 직원, 장난기 가득.",
+      "flavor": "직원, 포장은 맡겨 주세요.",
       "heckles": [
-        "저 히든 직원인데요.",
-        "혹시 숨긴 거 있죠?",
-        "오늘도 재밌겠네요.",
-        "그건 제가 먼저 봤어요."
+            "주문 상자 포장 중!",
+            "선반 정리 끝났어요.",
+            "택배 왔어요, 칼리!",
+            "테이프 어디 갔지?"
       ],
-      "winLine": "히든 직원도 놀랐어요!"
-    },
+      "winLine": "박수 소리가 택배급!",
+      "title": "직원"
+},
     "h-lecturenote-kim": {
       "name": "김정명",
       "flavor": "렉쳐노트를 세운 베테랑.",
@@ -2010,9 +2026,9 @@ GAME_DATA.tree.filter(n=>n.u4b).forEach(n=>{
     venueAsset:'venue-05-meetup.png', crowdAsset:'crowd-05-meetup.png', palette:{bg1:'#242d34',bg2:'#766446',accent:'#f7cc70'},
     audiences:['busan','daegu','changwon','incheon','geoje','cheonan','suwon'].map((city,i) => character('a-meetup-'+city,'aud-meetup-'+city+'.png', [{type:'combo',value:16},{type:'combo',value:18},{type:'finisher',value:1},{type:'timeLimit',value:60},{type:'none',value:0},{type:'timeLimit',value:60},{type:'noDamage',value:0}][i])),
     headliner:Object.assign(character('h-meetup-seoul','headliner-meetup-seoul.png'),{pattern:'friendlyReview'})},content.venues.meetup);
-  const home = Object.assign({slug:'lecturenote', balanceRank:13, hpFactor:1.2, bossHpFactor:0.9, name:'렉쳐노트', crowd:3, crowdEmoji:'👏✨',
+  const home = Object.assign({slug:'lecturenote', balanceRank:13, hpFactor:1.2, bossHpFactor:0.9, name:'렉쳐노트', crowd:4, crowdEmoji:'👏✨',
     venueAsset:'venue-16-lecturenote.png', crowdAsset:'crowd-16-lecturenote.png', palette:{bg1:'#392b26',bg2:'#8f6844',accent:'#ffdc99'},
-    audiences:[character('a-lecturenote-hecate','aud-lecturenote-hecate.png',{type:'finisher',value:1}),character('a-lecturenote-jung','aud-lecturenote-jung.png')],
+    audiences:[character('a-lecturenote-hecate','aud-lecturenote-hecate.png',{type:'finisher',value:1}),character('a-lecturenote-serona','aud-lecturenote-serona.png'),character('a-lecturenote-jung','aud-lecturenote-jung.png')],
     headliner:Object.assign(character('h-lecturenote-kim','headliner-lecturenote-kim.png'),{pattern:'homecoming',bossProfile:'homecoming'})},content.venues.lecturenote);
   D.venues.splice(4,0,meetup); D.venues.push(home);
   D.venues.forEach((v,i) => { v.id = i + 1; });

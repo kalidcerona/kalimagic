@@ -73,6 +73,45 @@ globalThis.PhoneLayout = (() => {
   }
   return { measure, transform };
 })();
+/* U11 guidance is read-only: purchases remain explicit Core actions. */
+globalThis.Guidance = (() => {
+  function target(state, D, C) {
+    const pinned = D.tree.find(n => n.id === state.guidance.pin);
+    if (pinned) return pinned;
+    return D.tree.filter(n => {
+      const i = C.nodeInfo(state, n.id);
+      return i.revealed && !i.level && i.currency === 'coins' && i.cost !== null &&
+        (!i.blockedReason || i.blockedReason.endsWith(' 부족'));
+    }).sort((a,b) => C.nodeInfo(state,a.id).cost - C.nodeInfo(state,b.id).cost)[0] || null;
+  }
+  function goal(state, D, C) {
+    const live = state.board.filter(c => c.hp > 0 && !c.sealed);
+    const next = live.sort((a,b) => a.hp / a.hpMax - b.hp / b.hpMax)[0];
+    const progress = next ? Math.max(0, Math.min(99, Math.floor(100 * (1-next.hp/next.hpMax)))) : 0;
+    const node = target(state,D,C), info = node && C.nodeInfo(state,node.id);
+    const remaining = info && info.cost !== null ? Math.max(0, Math.ceil(info.cost - state[info.currency])) : 0;
+    const costText = !node ? '' : info.cost === null ? '완성' : info.purchasable ? '배울 수 있어요!' : remaining ? `${{coins:'동전',keys:'열쇠',starlight:'별빛'}[info.currency]} ${remaining} 더` : info.blockedReason;
+    const nodeText = node ? node.name : '비법 완성';
+    const learn = node ? `${nodeText} · ${costText}` : nodeText;
+    const venue = D.venues[state.venue];
+    return { node, progress, nodeText, costText, caseText: `개봉 ${progress}%`, targetText: learn, venueText: venue ? `다음 ${venue.name}` : '귀환 엔딩', text: `다음 목표 · 개봉 ${progress}% · ${learn} · ${venue ? venue.name : '귀환 엔딩'}` };
+  }
+  function failure(state,D,C) {
+    const ids = ['mental','openingShield','calm','attack','power'];
+    const node = ids.map(id => D.tree.find(n=>n.id===id)).find(n => n && C.nodeInfo(state,n.id).revealed && C.nodeInfo(state,n.id).cost !== null) || target(state,D,C) || D.tree[0];
+    return { line: '야유를 버틸 멘탈이 부족했어요', node };
+  }
+  function firstEffects(state,list) {
+    const hits = list.filter(e => (e.type === 'boxHit' || e.type === 'boxBreak') && e.source === 'manual');
+    return [
+      ['range', state.tree.area > 0 && new Set(hits.map(e=>e.cell)).size > 1, '범위 비법 덕분에 여러 케이스를 함께 두드렸어요!'],
+      ['helper', list.some(e=>e.type==='worker' && e.phase==='work' || ['dove','rabbit','magicHit','magicCoins'].includes(e.type)), '도우미 비법 덕분에 칼리와 함께 마술을 하고 있어요!'],
+      ['chain', list.some(e=>e.type==='chain'), '연쇄 비법 덕분에 옆 케이스까지 타격이 이어졌어요!'],
+      ['case', list.some(e=>e.type==='caseLevelUp'), '개봉으로 케이스가 성장했어요! 다음 소품이 더 강해져요.']
+    ].filter(([id,worked]) => worked && !state.guidance.seen.includes(id));
+  }
+  return {target,goal,failure,firstEffects};
+})();
 /* DOM presentation only. All combat, progression and purchases use Core. */
 (function () {
   'use strict';
@@ -211,6 +250,7 @@ globalThis.PhoneLayout = (() => {
     if (phone) {
       moveChrome(document.querySelector('.venue-heading'), $('phoneVenue'));
       moveChrome(document.querySelector('.hud'), $('phoneWallet'));
+      moveChrome($('goalStrip'),$('phoneTop'));
       for (const id of ['dealerButton','rebirthButton','soundButton','retreatButton','helperControls','debug']) moveChrome($(id), $('phoneMore'));
       $('bookButton').textContent = '📖 비법'; $('bestiaryButton').textContent = '📚 도감';
       $('closePanel').textContent = '← 뒤로';
@@ -389,6 +429,11 @@ globalThis.PhoneLayout = (() => {
   }
 
   function events(list) {
+    for (const [id,,message] of Guidance.firstEffects(state,list)) {
+      state.guidance.seen.push(id); toast(message);
+      animate($('board'), [{filter:'brightness(1)'},{filter:'brightness(1.4)'},{filter:'brightness(1)'}], 450);
+      save();
+    }
     const recentBadges = events.recentBadges || (events.recentBadges = new Map());
     const opens = new Map();
     list.filter(e => e.type === 'boxBreak').forEach(e => {
@@ -432,8 +477,10 @@ globalThis.PhoneLayout = (() => {
       if (sounds[e.type]) sound(sounds[e.type], { combo: e.n, auto: !pointer.held && ['boxBreak','combo','audHit'].includes(e.type) });
       if (e.type === 'heckle' && e.dmg > e.shieldDmg) sound('mental');
       if (e.type === 'itemLand' && e.effect === 'coins') sound('coin');
+      if (e.type === 'finisher') kaliPose(1,400);
       if (e.type === 'boxHit') squash(e.cell);
       if (e.type === 'boxBreak') {
+        if (e.source === 'manual') kaliPose(1,400);
         squash(e.cell);
         const p = cellCenter(e.cell);
         const rarity = D.items.rarities.find(r => r.id === e.rarity);
@@ -510,6 +557,7 @@ globalThis.PhoneLayout = (() => {
       } else if (e.type === 'levelUp') {
         toast(`레벨 ${e.level}! 멘탈 회복`);
       } else if (e.type === 'win') {
+        kaliPose(2,C.CONST.winTransitionMs);
         const v = D.venues[e.venue - 1], a = v.audiences[e.j - 1] || v.headliner;
         const context = { ...U5.encounter(D.venues, state), venueSlug: v.slug, audId: a.id,
           encounterId: `${state.dimension}:${state.wins}:${state.fails}:${a.id}` };
@@ -614,8 +662,41 @@ globalThis.PhoneLayout = (() => {
       $('stage').style.setProperty('--dimension-hue', `${dimension ? dimension.hue : (state.dimension * 47) % 360}deg`);
     }
   }
+  let kaliUntil = 0;
+  function kaliPose(frame,ms) {
+    kaliUntil = clock + ms;
+    $('magicianMini').dataset.frame = String(frame);
+    if (!$('magicianMini').classList.contains('performance-ready')) sprite($('magicianMini'),`assets/magician-${frame === 2 ? 'bow' : 'perform'}.png`);
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches)
+      animate($('magicianMini'), [{transform:'translateY(0)'},{transform:'translateY(-8px)'},{transform:'translateY(0)'}], 220);
+  }
+  function renderGuidance() {
+    const goal = Guidance.goal(state,D,C);
+    const strip = $('goalStrip');
+    if (!strip.children.length) {
+      const target = element('span','','goal-target');
+      target.append(element('span','','goal-node'),element('span','','goal-cost'));
+      strip.append(element('span','다음 목표','goal-title'),element('span','','goal-case'),target,element('span','','goal-venue'));
+    }
+    for (const [name,text] of [['case',goal.caseText],['node',goal.nodeText],['cost',goal.costText],['venue',goal.venueText]]) {
+      const label = strip.querySelector(`.goal-${name}`); if (label.textContent !== text) label.textContent = text;
+    }
+    strip.setAttribute('aria-label',goal.text); strip.title = goal.text;
+    $('goalStrip').dataset.nodeId = goal.node?.id || '';
+    if (clock >= kaliUntil && $('magicianMini').dataset.frame !== '0') {
+      $('magicianMini').dataset.frame = '0';
+      if (!$('magicianMini').classList.contains('performance-ready')) sprite($('magicianMini'),'assets/magician-idle.png');
+    }
+  }
+  function focusNode(id) {
+    const node = D.tree.find(n=>n.id===id); if (!node) return;
+    treeView.selected = id; treeView.sheet = true; treeView.centerPending = true;
+    treeView.x = -node.x * 140 * treeView.zoom;
+    treeView.y = -node.y * 140 * treeView.zoom;
+    tree(true);
+  }
   function render() {
-    buildBoard(); audience(); nextBanner(); renderFeatures(); renderMagic();
+    buildBoard(); audience(); nextBanner(); renderFeatures(); renderMagic(); renderGuidance();
     const home=C.bossProfile(state)==='homecoming';
     const boss = C.bossProfile(state)==='mirror';
     $('audienceCard').classList.toggle('final-boss', boss);
@@ -771,6 +852,8 @@ globalThis.PhoneLayout = (() => {
     focusBeforePanel = document.activeElement;
     $('panel').dataset.screen = kind;
     $('panel').classList.remove('climax-dialogue');
+    $('panel').querySelector('header').querySelectorAll('.tree-wallet,.constellation-controls').forEach(el=>el.remove());
+    $('closePanel').textContent = '닫기';
     $('panelTitle').textContent = title;
     $('panelBody').replaceChildren(); $('panelBody').scrollTop = 0; $('panel').hidden = false;
     $('closePanel').hidden = kind === 'fail'; $('closePanel').disabled = false;
@@ -786,6 +869,7 @@ globalThis.PhoneLayout = (() => {
       for (let i = 0; i < 2 && state.mode === 'dealer'; i++) C.dealerClose(state);
       save();
     }
+    if (menu === 'book' && failure !== null) { showFailure(); return; }
     menu = ''; $('panel').hidden = true; previous = 0;
     if (focusBeforePanel && focusBeforePanel.isConnected) focusBeforePanel.focus();
     render();
@@ -802,9 +886,11 @@ globalThis.PhoneLayout = (() => {
       previous = 0; flights.length = 0; particles.length = 0; numbers.length = 0; badges.length = 0; events.recentBadges?.clear(); wonMoment = null;
       save(); render(); $('bookButton').focus();
     });
-    result.append(icon, title, reason, button); $('panelBody').append(result); button.focus();
+    const advice = Guidance.failure(state,D,C);
+    const related = action(`${advice.node.name} 비법 보기`, () => focusNode(advice.node.id));
+    result.append(icon, title, reason, element('p',advice.line,'fail-cause'), related, button); $('panelBody').append(result); button.focus();
   }
-  const treeView = { x: 0, y: 0, zoom: 1, selected: 'root', revealed: new Set(), ready: false };
+  const treeView = { x: 0, y: 0, zoom: 1, selected: 'root', sheet: false, centerPending: false, lastTap: null, revealed: new Set(), ready: false };
   function treePreview(node) {
     const lv = C.nodeInfo(state, node.id).level;
     const next = Math.min(node.max, lv + 1), k = C.CONST;
@@ -898,7 +984,12 @@ globalThis.PhoneLayout = (() => {
     }
     world.append(svg);
     let suppressClick = false;
-    const select = id => { treeView.selected = id; tree(true); };
+    const select = id => {
+      const now = performance.now(), last = treeView.lastTap;
+      treeView.lastTap = {id, at: now}; treeView.selected = id; treeView.sheet = true;
+      if (last && last.id === id && now-last.at < 350) { focusNode(id); return; }
+      tree(true);
+    };
     const newly = new Set();
     for (const node of D.tree) {
       const info = infos.get(node.id);
@@ -934,18 +1025,22 @@ globalThis.PhoneLayout = (() => {
         if (!count) return;
         sound('coin'); toast(`×${count} 구매 · ${selected.name}`); save(); tree(); render();
       };
-      const buy = action('배우기 · Shift 또는 꾹 눌러 최대 구매', e => {
+      const buy = action(window.matchMedia('(pointer: coarse)').matches ? '배우기 · 꾹 눌러 최대 구매' : '배우기 · Shift 또는 꾹 눌러 최대 구매', e => {
         clearTimeout(heldTimer); if (!longBought) purchase(e.shiftKey); longBought = false;
       }, !info.purchasable);
       buy.addEventListener('pointerdown', () => { longBought = false; heldTimer = setTimeout(() => {longBought = true; purchase(true);}, 600); });
       for (const type of ['pointerup','pointercancel','pointerleave']) buy.addEventListener(type, () => clearTimeout(heldTimer));
-      detail.append(buy);
+      buy.classList.add('tree-buy');
+      const pin = action(state.guidance.pin === selected.id ? '고정 해제' : '목표로 고정', () => {
+        state.guidance.pin = state.guidance.pin === selected.id ? null : selected.id;
+        save(); tree(); render();
+      }); pin.classList.add('tree-pin');
+      detail.append(pin,buy);
     }
     if (typeof phone !== 'undefined' && phone) {
-      const buy = detail.querySelector('button');
-      const copy = element('div', '', 'phone-detail-copy');
-      for (const child of [...detail.children]) if (child !== buy) copy.append(child);
-      detail.prepend(copy);
+      detail.hidden = !treeView.sheet;
+      const dismiss = action('상세 닫기', () => { treeView.sheet = false; detail.hidden = true; });
+      dismiss.classList.add('tree-detail-dismiss'); detail.prepend(dismiss);
     }
     const transform = () => { world.style.transform = `translate(${map.clientWidth / 2 + treeView.x}px,${map.clientHeight / 2 + treeView.y}px) scale(${treeView.zoom})`; };
     const zoom = (factor, point = { x: map.clientWidth / 2, y: map.clientHeight / 2 }) => {
@@ -983,7 +1078,7 @@ globalThis.PhoneLayout = (() => {
       // Pointer capture targets clicks at the viewport, so resolve a stationary node tap here.
       if (drag && !drag.moved && e.type === 'pointerup') {
         const target = document.elementFromPoint(e.clientX, e.clientY)?.closest('.constellation-node');
-        if (target && map.contains(target)) { suppressClick = true; treeView.selected = target.dataset.nodeId; tree(true); }
+        if (target && map.contains(target)) { suppressClick = true; select(target.dataset.nodeId); }
       }
       pointers.delete(e.pointerId);
       if (pointers.size) { const point = [...pointers.values()][0]; drag = { point, x: treeView.x, y: treeView.y, moved: true }; } else drag = null;
@@ -998,6 +1093,17 @@ globalThis.PhoneLayout = (() => {
       else { treeView.x += e.key === 'ArrowLeft' ? 70 : e.key === 'ArrowRight' ? -70 : 0; treeView.y += e.key === 'ArrowUp' ? 70 : e.key === 'ArrowDown' ? -70 : 0; transform(); }
     });
     map.append(world); layout.append(map, detail); body.append(wallet, controls, layout, element('p', '드래그·방향키로 이동 · 휠·두 손가락으로 확대 · 열쇠는 관객 도감 완성으로 얻어요.', 'tree-note'));
+    if (typeof phone !== 'undefined' && phone) {
+      const header = $('panel').querySelector('header');
+      header.querySelectorAll('.tree-wallet,.constellation-controls').forEach(el=>el.remove());
+      header.insertBefore(wallet,$('closePanel')); header.insertBefore(controls,$('closePanel'));
+      $('closePanel').textContent = '뒤로';
+    }
+    if (treeView.centerPending) {
+      // Keep the centered node in the visible map above the phone sheet.
+      if (typeof phone !== 'undefined' && phone && treeView.sheet) treeView.y -= (detail.getBoundingClientRect().height + 6) / 2;
+      treeView.centerPending = false;
+    }
     transform();
     if (focusMap) map.focus({ preventScroll: true });
   }
@@ -1539,7 +1645,7 @@ globalThis.PhoneLayout = (() => {
   function drawEffects() {
     const stageRect = $('stage').getBoundingClientRect?.();
     if (stageRect) {
-      const reserved = [...document.querySelectorAll('.stat-label, .hud, .menu')];
+      const reserved = [...document.querySelectorAll('.stat-label, .hud, .menu, #goalStrip')];
       if (phone) reserved.push(...document.querySelectorAll('#phoneTop, #toasts, .doubt, .mental, .shield, .xp-row'));
       const zones = reserved.map(el => {
         const r = el.getBoundingClientRect();
@@ -1665,11 +1771,16 @@ globalThis.PhoneLayout = (() => {
   // Stable screen/audio integration hooks for U4 and U5.
   window.MagicShowUI = {
     getState: () => state, events, save, toast, banner, openPanel, closePanel, render,
-    openBook: tree, openBestiary: bestiary,
+    openBook: tree, focusNode, openBestiary: bestiary,
     openDealer: dealer, openEnding: () => { if (state.seenEnding) { revealEnding = false; showEnding(); } },
     openRebirth: () => { if (state.seenEnding) showRebirth(); }, isPaused: paused
   };
   sprite($('magicianMini'), 'assets/magician-mini.png');
+  const performanceStrip = assetImage('assets/kali-performance.png');
+  const stripReady = () => { if (performanceStrip.naturalWidth === 768 && performanceStrip.naturalHeight === 256) $('magicianMini').classList.add('performance-ready'); };
+  if (performanceStrip.complete) stripReady(); else performanceStrip.addEventListener('load',stripReady,{once:true});
+  $('magicianMini').dataset.frame = '0';
+  $('goalStrip').addEventListener('click', () => { const id = $('goalStrip').dataset.nodeId; if (id) focusNode(id); });
   $('gameLogo').textContent = D.title;
   $('gameLogo').setAttribute('aria-label', D.title);
   revealEnding = state.mode === 'ending' && state.endings.length === 1;

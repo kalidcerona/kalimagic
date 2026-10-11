@@ -915,7 +915,7 @@
     if (state.audHpMax > 0) pct = Math.round(100 * state.audHp / state.audHpMax);
     if (pct < 0) pct = 0;
     if (pct > 100) pct = 100;
-    emit(ev, { type: "fail", reasonPct: pct });
+    emit(ev, { type: "fail", reasonPct: pct, cause: "mental" });
     state.fails++;
     restartRun(state);
   }
@@ -1102,7 +1102,7 @@
     state.features.damage[role] += Math.min(c.hp, dmg);
     c.hp -= dmg;
     if (c.hp <= 0) breakCell(state, i, ev, source, chain);
-    else emit(ev, { type: "boxHit", cell: i, pct: Math.round((1 - c.hp / c.hpMax) * 100) });
+    else emit(ev, { type: "boxHit", source: role, cell: i, pct: Math.round((1 - c.hp / c.hpMax) * 100) });
   }
 
   function dedupe(taps, n) {
@@ -1741,6 +1741,7 @@
       stars: emptyStars(),
       endings: [],
       seenEnding: false,
+      guidance: { pin: null, seen: [] },
       homecomingCleared: false, visited: [], knownAudiences: [], helpersUsed: [], review: emptyReview(),
       coins: 0,
       gems: 0,
@@ -1865,7 +1866,8 @@
     var stars = {};
     for (i = 0; i < STAR_KEYS.length; i++) stars[STAR_KEYS[i]] = state.stars[STAR_KEYS[i]] | 0;
     var obj = {
-      v: 7,
+      v: 8,
+      guidance: state.guidance,
       venueSlug: VENUES[state.venue-1].slug, maxVenueSlug:VENUES[state.vMax-1].slug,
       homecomingCleared:state.homecomingCleared, visited:state.visited.slice(), knownAudiences:state.knownAudiences.slice(), helpersUsed:state.helpersUsed.slice(), review:JSON.parse(JSON.stringify(state.review)),
       features: featureSnap(state.features),
@@ -1963,7 +1965,15 @@
       if (typeof str !== "string" || str.length > 2000000) return null;
       var o = JSON.parse(str);
       if (!o || typeof o !== "object" || Array.isArray(o)) return null;
-      if (o.v !== 1 && o.v !== 2 && o.v !== 3 && o.v !== 4 && o.v !== 5 && o.v !== 6 && o.v !== 7) return null;
+      if (o.v !== 1 && o.v !== 2 && o.v !== 3 && o.v !== 4 && o.v !== 5 && o.v !== 6 && o.v !== 7 && o.v !== 8) return null;
+      if (o.v === 7 && o.venueSlug === "lecturenote") {
+        // Preserve the old index contract, then migrate by stable audience ID.
+        var previousOrder = ["a-lecturenote-hecate", "a-lecturenote-jung", "h-lecturenote-kim"];
+        if (previousOrder[o.j - 1] !== o.audId || o.crowd !== 3) return null;
+        var home = VENUES.filter(function (v) { return v.slug === "lecturenote"; })[0];
+        o.j = home.audiences.concat([home.headliner]).findIndex(function (a) { return a.id === o.audId; }) + 1;
+        o.crowd = home.crowd;
+      }
       if (o.v < 5) VENUES = OLD_VENUES;
       else if (o.v < 7) VENUES = U6_VENUES;
       var seed = integer(o.seed, 0, 4294967295);
@@ -2017,6 +2027,12 @@
       if (!o.tree || !o.stars || !o.bestiary || !o.board || !o.flights || !o.trophies || !o.invited || !o.endings) return null;
       if (!Array.isArray(o.board) || !Array.isArray(o.flights) || (o.v < 7 && (!Array.isArray(o.trophies) || !Array.isArray(o.invited))) || !Array.isArray(o.endings)) return null;
       var state = fresh(seed);
+      if (o.v >= 8) {
+        var g = o.guidance;
+        if (!g || (g.pin !== null && (typeof g.pin !== "string" || !NODE_BY_ID[g.pin])) || !Array.isArray(g.seen) || g.seen.length > 4 ||
+            g.seen.some(function (id) { return ["range", "helper", "chain", "case"].indexOf(id) < 0; }) || new Set(g.seen).size !== g.seen.length) return null;
+        state.guidance = { pin: g.pin, seen: g.seen.slice() };
+      }
       state.rngState = rngState >>> 0;
       state.dimension = dimension;
       state.starlight = starlight;
@@ -2100,6 +2116,7 @@
       for (i = 0; i < AUD_IDS.length; i++) {
         var id = AUD_IDS[i];
         var rec = o.bestiary[id];
+        if (!rec && o.v < 8 && id === "a-lecturenote-serona") continue;
         if (!rec && o.v < 7 && /^(a-meetup-|a-lecturenote-)/.test(id)) continue;
         if (!rec && o.v < 5 && /^a11[2-7]$/.test(id)) continue;
         if (!rec) return null;
