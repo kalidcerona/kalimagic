@@ -654,11 +654,11 @@ body:not(.phone) #goalStrip:after{content:"";position:absolute;inset:0 0 auto;he
 .phone #activeSkills{left:-50px;top:0;display:flex;flex-direction:column;gap:4px}
 .phone #audience,.phone #audience.headliner,.phone.phone-tight #audience,.phone.phone-tight #audience.headliner{height:calc(100% - 72px)}
 .phone #audienceCard:has(#storyDialog:not([hidden])) #audience{bottom:64px;height:calc(100% - 94px)}
-.phone #storyDialog{height:56px;grid-template-columns:30px minmax(0,1fr) 44px 66px;padding:4px;gap:4px}
+.phone #storyDialog{height:auto;min-height:56px;grid-template-columns:30px minmax(0,1fr) 44px 66px;padding:4px;gap:4px}
 .phone #storyDialog .story-portrait{width:30px;height:44px}
-.phone #storyDialog .story-copy{min-width:0;overflow:hidden}
+#storyDialog .story-copy{min-width:0}
 .phone #storyDialog .story-copy strong{display:block;white-space:nowrap;font-size:10px;line-height:14px}
-.phone #storyDialog .story-copy p{margin:0;white-space:nowrap;overflow-x:auto;line-height:18px;touch-action:pan-x}
+.phone #storyDialog .story-copy p{margin:0;white-space:normal;overflow-wrap:anywhere;font-size:11px;line-height:13px}
 .phone #stage #storyDialog button{height:44px;min-height:44px;max-height:44px;padding:8px 2px;border-width:2px;line-height:24px}
 .phone #board .cell .lv{height:12px;line-height:12px;font-size:8px;letter-spacing:-.6px;white-space:nowrap;overflow:hidden;text-overflow:clip}
 .phone #wand{overflow:hidden}
@@ -674,3 +674,27 @@ body:not(.phone) #goalStrip:after{content:"";position:absolute;inset:0 0 auto;he
 .phone #stage #phoneMore button{position:static;width:100%;min-width:0;font-size:11px;white-space:nowrap;padding-left:5px;padding-right:5px}
 .phone #phoneMore #helperControls,.phone #phoneMore #debug{grid-column:1 / -1}
 .phone.phone-tight .mental,.phone.phone-tight .shield,.phone.phone-tight .combo{top:auto;bottom:4px;height:30px}
+
+/* U16f: allow the learning badge to cross the button corner without clipping. */
+.phone #phoneTop{overflow:visible}
+
+/* U16d: expose phone learning and keep case labels inside their cells. */
+.phone #phoneTop #bookButton{position:relative;flex:none;width:72px;min-width:72px;height:44px;min-height:44px;font-size:11px;line-height:24px;white-space:nowrap;margin:0;padding:3px}
+.phone #phoneTop #bookButton:after{right:-6px;top:-1px;width:16px;height:16px;min-width:0;padding:0;border-radius:50%;line-height:14px;text-align:center}
+.phone #phoneTop #moreButton{flex:none}
+.phone #phoneTop #goalStrip{width:72px;min-width:0;flex-shrink:1}
+.phone #phoneTop #goalStrip .goal-title{display:none}
+@media(max-width:740px){.phone #phoneTop #goalStrip{display:none}}
+#board .cell .lv,.phone #board .cell .lv{position:absolute;left:2px;right:auto;top:2px;width:auto;height:13px;padding:1px 3px;font:400 9px/11px Galmuri9,monospace;letter-spacing:0;text-align:left;white-space:nowrap;background:#101522cc;text-shadow:none;z-index:5;pointer-events:none}
+#board .cell .lv:empty{display:none}
+
+/* U16e: give narrow-phone dialogue two readable lines above its touch actions. */
+@media(max-width:740px){
+ .phone #storyDialog .story-portrait{grid-column:1;grid-row:1 / 3;justify-self:center}
+ .phone #storyDialog .story-copy{grid-column:2 / -1;grid-row:1}
+ .phone #storyDialog button{grid-row:2}
+ .phone #storyDialog button:first-of-type{grid-column:3}
+ .phone #storyDialog button:last-of-type{grid-column:4}
+}
+/* U16g: the case box starts 20px below the cell top; pin the level badge inside the box corner. */
+#board .cell .lv,.phone #board .cell .lv{top:22px;left:4px}

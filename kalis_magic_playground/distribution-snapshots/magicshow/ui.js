@@ -280,8 +280,9 @@ globalThis.Guidance = (() => {
       moveChrome(document.querySelector('.venue-heading'), $('phoneVenue'));
       moveChrome(document.querySelector('.hud'), $('phoneWallet'));
       moveChrome($('goalStrip'),$('phoneTop'));
+      moveChrome($('bookButton'),$('phoneTop'));
       moveChrome($('moreButton'),$('phoneTop')); $('moreButton').textContent='☰ 메뉴';
-      for (const id of ['bookButton','buyAllButton','bestiaryButton','storyButton','installButton','statsButton','dealerButton','rebirthButton','missionsButton','soundButton','hapticsButton','retreatButton','helperControls','debug']) moveChrome($(id), $('phoneMore'));
+      for (const id of ['buyAllButton','bestiaryButton','storyButton','installButton','statsButton','dealerButton','rebirthButton','missionsButton','soundButton','hapticsButton','retreatButton','helperControls','debug']) moveChrome($(id), $('phoneMore'));
       $('bookButton').textContent = '📖 비법'; $('bestiaryButton').textContent = '📚 도감';
       $('closePanel').textContent = '← 뒤로';
     } else {
@@ -921,10 +922,7 @@ globalThis.Guidance = (() => {
       dom.el.setAttribute('aria-label', next ? slotCondition() : locked ? '잠긴 자리' : `카드 케이스 ${i + 1}`);
       if (locked) { dom.lv.textContent = ''; continue; }
       const pct = cell.hpMax ? Math.min(100, Math.max(0, Math.round((1 - cell.hp / cell.hpMax) * 100))) : 0;
-      const milestone=C.nextMilestone(cell.lv||1,[10,25,50],50);
-      dom.lv.textContent = (cell.lv || 1) >= C.caseCap(state) ? `LV ${cell.lv || 1} MAX` : `LV ${cell.lv || 1}`;
-      if(phone)dom.lv.textContent=dom.lv.textContent.replace("LV ","LV");
-      if(milestone)dom.lv.textContent+=phone ? `·${milestone-cell.lv}개 더` : ` · ${milestone}까지 ${milestone-cell.lv}`;
+      dom.lv.textContent = `LV${cell.lv || 1}`;
       const chest = dom.el.querySelector('.chest');
       dom.el.classList.toggle('golden', !!cell.golden);
       dom.el.classList.toggle('golden-broken', !!cell.goldenBroken && cell.hp <= 0);

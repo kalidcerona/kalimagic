@@ -16,8 +16,8 @@ const GUARDED = new URL(self.registration.scope).pathname.startsWith('/tools/');
 
 self.addEventListener('install', (event) => {
   // Reject installation unless the whole critical shell is stored.
-  // A later version stays waiting until every client of this app has closed, so the next launch applies it.
-  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(SHELL.map((file) => new Request(new URL(file, self.registration.scope).href, { cache: 'reload', redirect: 'error' })))).then(() => { if (!self.registration.active) return self.skipWaiting(); }));
+  // Once the new shell is fully stored, take over immediately; the page reloads once on controllerchange.
+  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(SHELL.map((file) => new Request(new URL(file, self.registration.scope).href, { cache: 'reload', redirect: 'error' })))).then(() => self.skipWaiting()));
 });
 self.addEventListener('activate', (event) => {
   // Only this game's distribution owns the cache prefix.

@@ -277,3 +277,88 @@ test('Magicshow in-app browsers explain external opening and copy the current li
   assert.match(css, /min-height:44px;min-width:44px/);
   assert.match(css, /max-height:calc\(100dvh/);
 });
+
+async function runWorker({ active }) {
+  const listeners = new Map(), calls = { skipWaiting: 0, claim: 0, deleted: [] };
+  let cachedAll = null, installDone;
+  const self = {
+    registration: { scope: 'https://example.test/tools/magicshow/', active },
+    skipWaiting() { calls.skipWaiting++; return Promise.resolve(); },
+    clients: { claim() { calls.claim++; return Promise.resolve(); } },
+    addEventListener: (name, callback) => listeners.set(name, callback)
+  };
+  const caches = {
+    open: async () => ({ addAll: async requests => { cachedAll = requests.length; if (self.failCache) throw Error('offline'); } }),
+    keys: async () => ['magicshow-dist-old', 'other-cache'],
+    delete: async name => { calls.deleted.push(name); return true; }
+  };
+  vm.runInNewContext((await read('scripts/magicshow-dist/sw-template.js')).toString(), { self, caches, URL, Request, Promise, Response, fetch: async () => new Response('') });
+  return { listeners, calls, self, cached: () => cachedAll };
+}
+const waitFor = async (listeners, name) => { let promise; listeners.get(name)({ waitUntil: p => { promise = p; } }); return promise; };
+
+test('Magicshow service worker skips waiting on every install after the whole shell is cached, and still claims and prunes', async () => {
+  for (const active of [null, { state: 'activated' }]) {
+    const worker = await runWorker({ active });
+    await waitFor(worker.listeners, 'install');
+    assert.equal(worker.calls.skipWaiting, 1, `active=${Boolean(active)}`);
+    assert.ok(worker.cached() > 0);
+    await waitFor(worker.listeners, 'activate');
+    assert.equal(worker.calls.claim, 1);
+    assert.deepEqual(worker.calls.deleted, ['magicshow-dist-old']);
+  }
+  const failing = await runWorker({ active: { state: 'activated' } });
+  failing.self.failCache = true;
+  await assert.rejects(waitFor(failing.listeners, 'install'));
+  assert.equal(failing.calls.skipWaiting, 0, 'incomplete shell must not take over');
+});
+
+async function runRegistration({ controller }) {
+  const source = (await readFile(new URL('scripts/sync-magicshow-snapshot.mjs', root), 'utf8')).match(/const REGISTER_SW = `([\s\S]*?)`;/)[1];
+  const listen = () => { const map = new Map(); return { map, addEventListener: (name, callback) => map.set(name, callback) }; };
+  const sw = Object.assign(listen(), { controller, register: async () => registration });
+  let updates = 0, reloads = 0, now = 1000000000;
+  const registration = { update: async () => { updates++; } };
+  const win = listen(), doc = Object.assign(listen(), { visibilityState: 'visible' });
+  const saved = [];
+  win.dispatchEvent = event => saved.push(event.type);
+  win.MagicShowUI = { save: () => saved.push('save') };
+  win.location = { reload: () => { reloads++; } };
+  vm.runInNewContext(source, { navigator: { serviceWorker: sw }, window: win, document: doc, location: win.location, Date: { now: () => now }, Event: class { constructor(type) { this.type = type; } } });
+  await win.map.get('load')();
+  await Promise.resolve();
+  return { sw, doc, saved, tick: ms => { now += ms; }, count: () => ({ updates, reloads }) };
+}
+
+test('Magicshow page reloads exactly once when a new worker replaces a previous controller, after saving', async () => {
+  const page = await runRegistration({ controller: {} });
+  const change = page.sw.map.get('controllerchange');
+  change(); change();
+  assert.equal(page.count().reloads, 1);
+  assert.deepEqual(page.saved, ['pagehide', 'save']);
+});
+
+test('Magicshow first install does not reload; a later update in the same page does', async () => {
+  const page = await runRegistration({ controller: null });
+  const change = page.sw.map.get('controllerchange');
+  change();
+  assert.equal(page.count().reloads, 0);
+  change();
+  assert.equal(page.count().reloads, 1);
+});
+
+test('Magicshow page checks for updates when visible again at most once per ten minutes', async () => {
+  const page = await runRegistration({ controller: {} });
+  const visible = page.doc.map.get('visibilitychange');
+  visible();
+  assert.equal(page.count().updates, 0, 'too soon after load');
+  page.tick(10 * 60 * 1000);
+  page.doc.visibilityState = 'hidden'; visible();
+  assert.equal(page.count().updates, 0, 'hidden does not check');
+  page.doc.visibilityState = 'visible'; visible();
+  assert.equal(page.count().updates, 1);
+  page.tick(9 * 60 * 1000); visible();
+  assert.equal(page.count().updates, 1, 'throttled');
+  page.tick(60 * 1000); visible();
+  assert.equal(page.count().updates, 2);
+});
