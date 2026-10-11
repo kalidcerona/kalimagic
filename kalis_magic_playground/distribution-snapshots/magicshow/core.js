@@ -248,7 +248,7 @@
     if(reward===2){amount=1;state.keys++;}
     dailyProgress(state,'events',1);emit(ev,{type:'visitorCatch',reward:['power','coins','key'][reward],amount:amount});return ev||[];
   }
-  function emptyIdle() { return {wallMs:0,autoAdvance:true,waiting:false,autoAcc:0,cursor:0,reward:null,milestones:[]}; }
+  function emptyIdle() { return {wallMs:0,autoAdvance:false,waiting:false,autoAcc:0,cursor:0,reward:null,milestones:[]}; }
   function emptySkills() { return {showtimeLeft:0,cheerGuard:false,cooldowns:{showtime:0,cardrain:0,cheer:0}}; }
   function milestoneMultiplier(level, marks) { return Math.pow(2,(marks||[10,25]).filter(function(n){return level>=n;}).length); }
   function statMultiplier(state,id) { return NODE_BY_ID[id] && NODE_BY_ID[id].statMilestone ? milestoneMultiplier(nodeLevel(state,NODE_BY_ID[id])||0) : 1; }
@@ -415,7 +415,7 @@
     return null;
   }
   function wandDamage(state) {
-    return (state.u14.visitor.buff>0?2:1) * (1+.03*state.u14.sets.length) * (state.skills.showtimeLeft > 0 ? 3 : 1) * (state._wand || CONST.wandBase) * (hasReward(state, 2) ? 1.2 : 1) * (state.tree.encore && state.features.encoreLeft > 0 ? 1 + nodeEffects(state).encorePower : 1);
+    return (state.u14.visitor.buff>0?2:1) * (1+.03*state.u14.sets.length+.05*state.u18.sets.length) * (state.skills.showtimeLeft > 0 ? 3 : 1) * (state._wand || CONST.wandBase) * (hasReward(state, 2) ? 1.2 : 1) * (state.features.encoreLeft > 0 ? 2 * (state.tree.encore ? 1 + nodeEffects(state).encorePower : 1) : 1);
   }
 
   // Shared formula modifiers.
@@ -453,7 +453,7 @@
       finaleNeed: Math.max(18, CONST.finisherNeed - t.finaleNeed),
       comboValue: 1 + 0.2 * t.comboValue,
       encorePower: 0.2 + 0.05 * t.encorePower,
-      encoreSpan: 15000 + 3000 * t.encoreSpan
+      encoreSpan: 12000 + 3000 * t.encoreSpan
     };
   }
 
@@ -524,7 +524,7 @@
 
   function wandRate(state) {
     if (state._rate == null) recompute(state, true);
-    return state._rate;
+    return state._rate * (state.features.encoreLeft>0 ? 1.25 : 1);
   }
 
   function wandArea(state) {
@@ -674,6 +674,7 @@
     state.heckleMs = st.interval * 1000;
     state.telegraphed = false;
     state.fightMs = 0;
+    state.u17.potionUsed = false;
     state.tookMental = false;
     state.maxCombo = 0;
     state.finisherFired = false;
@@ -701,11 +702,11 @@
     state.features.climax.confidence = 0; state.features.climax.milestone = 0;
     state.review = emptyReview();
     if (profile(state) === "homecoming") emit(ev,{type:"homecomingAct",act:1,line:aud.act1Line});
-    if (isFinalBoss(state) && !state.features.climax.paradeDone) {
+    if (isFinalBoss(state) && !state.u18.anchor && !state.features.climax.paradeDone) {
       state.features.climax.left = 30000;
       emit(ev, { type: 'curtainCall', cell: 0 });
     }
-    if(!state.u15.tutorial.active){
+    if(!state.u15.tutorial.active && !state.u18.anchor){
       if(j===1)queueScene(state,VENUES[v-1].slug,'opening');
       if(j===headlinerJ(v))queueScene(state,VENUES[v-1].slug,'beforeHeadliner');
     }
@@ -747,6 +748,7 @@
   function onWin(state, ev) {
     if (state.resolved || state._skillBatch) return;
     if(state.u15.tutorial.active){state.resolved=true;state.u15.tutorial.won=true;emit(ev,{type:'tutorialWin'});return;}
+    if(state.u18.challenge&&state.u18.challenge.kind==='trueFan'){var rule=trueFanRule(state.u18.challenge.slug);if(rule.type==='combo'&&!metExtra(state,rule)){state.audHp=1;return;}finishTravel(state,ev,true);return;}
     state.resolved = true;
     unseal(state);
     var venue = state.venue;
@@ -760,7 +762,7 @@
     if(j===headlinerJ(venue)){dailyProgress(state,'clear',1);var tier=VENUES[venue-1].slug==='moon'?3:VENUES[venue-1].slug==='audition'?2:1;if(tier>state.u14.outfit){state.u14.outfit=tier;emit(ev,{type:'outfit',tier:tier});}}
     checkSets(state,ev);recompute(state,false);
     if (state.knownAudiences.indexOf(audId) < 0) state.knownAudiences.push(audId);
-    if (profile(state) === "mirror") {
+    if (profile(state) === "mirror" && !state.u18.anchor) {
       state.seenEnding = true;
       if (state.endings.indexOf(state.dimension) < 0) state.endings.push(state.dimension);
       emit(ev,{type:"selfReconciliation",lines:DATA.story.reveal.slice()});
@@ -811,6 +813,8 @@
     }
     state.buff = 0;
     emit(ev, { type: "win", venue: venue, crowd: state.crowd, j: j, coins: coins, removed: removed, trophy: trophy, keys: keys });
+    checkTrueFanReveal(state,ev);unlockCosmetics(state);
+    if(state.u18.anchor){finishTravel(state,ev,true);return;}
     var next = advanceFrom(state);
     if (isFinalBoss(state)) {
       state.mental = Math.min(state.mentalMax, state.mental + state.mentalMax * nodeEffects(state).winHeal);
@@ -819,7 +823,8 @@
       state.after = state.homecomingCleared ? "stay" : "ending";
       return;
     }
-    state.idle.waiting = next.v > venue && !state.idle.autoAdvance;
+    state.idle.autoAdvance = false;
+    state.idle.waiting = next.v > venue;
     beginAudience(state, next.v, next.j, ev);
     state.mental = Math.min(state.mentalMax, state.mental + state.mentalMax * nodeEffects(state).winHeal);
     state.mode = "transition";
@@ -832,7 +837,7 @@
     state.dealer = null;
     state.dealerQueued = false;
     state.flights = []; cancelWorkers(state);
-    state.homecomingCleared = true;
+    state.homecomingCleared = true;unlockCosmetics(state);
     state.seenEnding = true;
     if (state.endings.indexOf(state.dimension) < 0) state.endings.push(state.dimension);
     emit(ev, {type:'ending', dimension:state.dimension, title:DATA.title});
@@ -879,9 +884,10 @@
       risk: 1 / n,
       banned: {},
       grid: ["", "", "", "", "", "", "", "", ""],
-      spun: false
+      spun: false, games: {cups:null,monte:null}
     };
     state.dealerQueued = false;
+    state.gems+=2;
     refreshRisk(state.dealer);
   }
 
@@ -1033,6 +1039,7 @@
   }
 
   function restartRun(state) {
+    if(state.u18.anchor){finishTravel(state,null,false);return state;}
     cancelWorkers(state);
     unseal(state);
     state.doveMs = nodeEffects(state).doveEvery;
@@ -1075,10 +1082,12 @@
   }
 
   function retreat(state) {
+    if(state.u18.anchor){finishTravel(state,null,false);return state;}
     return restartRun(state);
   }
 
   function failRun(state, ev) {
+    if(state.u18.anchor){finishTravel(state,ev,false);return;}
     var pct = 0;
     if (state.audHpMax > 0) pct = Math.round(100 * state.audHp / state.audHpMax);
     if (pct < 0) pct = 0;
@@ -1164,6 +1173,7 @@
     cell.spawn = state._tau || 350;
     cell.sealed = false;
     state.combo++;
+    if(!state.features.encoreLeft) state.u17.feverPending=Math.min(100,state.u17.feverPending+1+Math.min(1,state.combo/50));
     if (state.combo > state.maxCombo) state.maxCombo = state.combo;
     f.progress.comboMax = Math.max(f.progress.comboMax, state.combo);dailyProgress(state,'combo',state.combo,true);
     state.comboMs = nodeEffects(state).comboMs;
@@ -1227,7 +1237,8 @@
     else if (effect === "boxFill") amount = 0.3;
     amount *= milestoneMultiplier(itemLv,[10,25,50]) * Math.pow(1.10, itemLv - 1) * branchBonus(state, "box");
     var gem = 0;
-    if (ri >= 1 && rngNext(state) < CONST.gemChance[ri] + nodeEffects(state).gemFind) {
+    if (ri >= 1 && rngNext(state) < CONST.gemChance[ri] + nodeEffects(state).gemFind && state.u17.gemWait<=0) {
+      state.u17.gemWait=90000;
       state.gems++;
       gem = 1;
     }
@@ -1329,7 +1340,7 @@
     var dmg = wandDamage(state);
     var h, k;
     for (h = 0; h < hits; h++) {
-      if (state.mode !== "fight") return;
+      if (state.mode !== "fight" || state.u18.map) return;
       var mods = nodeEffects(state);
       var crit = state.tree.crit > 0 && rngNext(state) < mods.critRate;
       var alive = 0;
@@ -1506,6 +1517,7 @@
   function tickFeatures(state, dt, ev) {
     var f = state.features;
     f.elapsedMs += dt;
+    state.u17.gemWait=Math.max(0,state.u17.gemWait-dt);
     f.revealMs = Math.max(0, f.revealMs - dt);
     if (!f.revealMs && f.revealQueue.length) {
       var id = f.revealQueue.shift(); f.revealMs = CONST.revealGapMs;
@@ -1515,15 +1527,17 @@
       f.goldMs = Math.max(0, f.goldMs - dt);
       if (!f.goldMs) f.goldPending = true;
     }
-    if (state.tree.encore) {
-      var wasActive = f.encoreLeft > 0;
-      f.encoreLeft = Math.max(0, f.encoreLeft - dt);
-      f.encoreMs = Math.max(0, f.encoreMs - dt);
-      if (!f.encoreMs) {
-        f.encoreMs = CONST.encoreEveryMs;
-        f.encoreLeft = nodeEffects(state).encoreSpan;
-        emit(ev, { type: "encore", duration: f.encoreLeft });
-      } else if (wasActive && !f.encoreLeft) emit(ev, { type: "encoreEnd" });
+    var wasActive=f.encoreLeft>0;
+    f.encoreLeft=Math.max(0,f.encoreLeft-dt);
+    if(wasActive && !f.encoreLeft)emit(ev,{type:"encoreEnd"});
+    if(!wasActive){
+      var charge=Math.min(state.u17.feverPending,dt*100/150000);
+      state.u17.feverPending-=charge;state.u17.feverGauge=Math.min(100,state.u17.feverGauge+charge);
+      if(state.u17.feverGauge>=100){
+        state.u17.feverGauge=0;state.u17.feverPending=0;
+        f.encoreLeft=nodeEffects(state).encoreSpan;
+        emit(ev,{type:"encore",duration:f.encoreLeft});
+      }
     }
     checkAchievements(state, ev);
   }
@@ -1577,7 +1591,7 @@
           var dmg = wandDamage(state) * branchBonus(state, "pet") * (1 + .15 * state.tree.fanPower) * (a.role === "fan" ? 0.35 : 0.8 * (c.golden ? 1.5 : 1));
           emit(ev, { type: "worker", workerId: a.id, cell: a.cell, audId: a.audId, phase: "work", dmg: dmg });
           usedHelper(state,a.role); damageCell(state, a.cell, dmg, ev, a.role);
-          if (state.mode !== "fight") return;
+          if (state.mode !== "fight" || state.u18.map) return;
         } else {
           a.phase = "idle"; a.cell = -1;
           emit(ev, { type: "worker", workerId: a.id, cell: -1, audId: state.audId, phase: "idle" });
@@ -1622,7 +1636,7 @@
   function tickMagic(state, dt, ev) {
     var m=state.features.magic,t=state.tree; m.clock+=dt;
     var live=function(){return state.board.map(function(c,i){return c.hp>0&&!c.sealed?i:-1;}).filter(function(i){return i>=0;});};
-    var strike=function(id,i,ratio){if(state.mode!=='fight')return;emit(ev,{type:'magicHit',helper:id,cell:i});damageCell(state,i,wandDamage(state)*ratio,ev,'magic');};
+    var strike=function(id,i,ratio){if(state.mode!=='fight')return;emit(ev,{type:'magicHit',helper:id,cell:i,ball:id==='sponge'?m.balls.indexOf(b):-1});damageCell(state,i,wandDamage(state)*ratio,ev,'magic');};
     if(t.sponge && !m.paused.sponge) {
       usedHelper(state,"sponge");
       var count=Math.min(3,1+t.spongeCount);
@@ -1714,11 +1728,11 @@
   }
 
   function substep(state, dt, taps, ev, manualHolding) {
-    if(state.u15.scene || state.u15.tutorial.won)return;
+    if(state.u18.map || state.u15.scene || state.u15.tutorial.won)return;
     if (state.mode === "ending") return;
     if (state.mode === "dealer") return;
     if (state.mode === "transition") {
-      if (state.idle.waiting && !state.idle.autoAdvance) return;
+      if (state.idle.waiting) return;
       state.idle.waiting=false;
       state.transMs = Math.max(0, state.transMs - dt);
       tickSpawn(state, dt);
@@ -1739,7 +1753,7 @@
       }
       return;
     }
-    if (state.mode !== "fight") return;
+    if (state.mode !== "fight" || state.u18.map) return;
     if (state.features.climax.left > 0) {
       state.features.climax.left = Math.max(0,state.features.climax.left-dt);
       if (!state.features.climax.left || taps.length) skipCurtainCall(state);
@@ -1747,6 +1761,7 @@
       return;
     }
     state.fightMs += dt;
+    if(state.u18.challenge&&state.u18.challenge.kind==='trueFan'){var rule=trueFanRule(state.u18.challenge.slug);if(rule.type==='timeLimit'&&state.fightMs>rule.value*1000||rule.type==='noDamage'&&state.tookMental){finishTravel(state,ev,false);return;}}
     tickSkills(state,dt);
     if(!state.u15.tutorial.active)tickVisitor(state,dt,ev);
     tickAutoLearn(state,dt,ev);
@@ -1754,14 +1769,14 @@
     tickFeatures(state, dt, ev);
     tickSpawn(state, dt, ev);
     landFlights(state, dt, ev);
-    if (state.mode !== "fight") return;
+    if (state.mode !== "fight" || state.u18.map) return;
     tickPatterns(state, dt, ev);
     tickAutos(state, dt, ev);
-    if (state.mode !== "fight") return;
+    if (state.mode !== "fight" || state.u18.map) return;
     tickMagic(state, dt, ev);
-    if (state.mode !== "fight") return;
+    if (state.mode !== "fight" || state.u18.map) return;
     tickBoxHelper(state, dt, ev);
-    if (state.mode !== "fight") return;
+    if (state.mode !== "fight" || state.u18.map) return;
     if (state.combo > 0) {
       state.comboMs -= dt;
       if (state.comboMs <= 0) {
@@ -1777,10 +1792,11 @@
     }else applyTaps(state, dt, taps, ev);
     if (!gloveActive && !taps.length && !manualHolding) tickPractice(state,dt,ev);
     else state.idle.autoAcc=0;
-    if (state.mode !== "fight" || state.resolved) return;
+    if (state.mode !== "fight" || state.u18.map || state.resolved) return;
     if (state.audHp <= 0) onWin(state, ev);
-    if (state.mode !== "fight" || state.resolved) return;
+    if (state.mode !== "fight" || state.u18.map || state.resolved) return;
     tickHeckle(state, dt, ev);
+    if(state.u18.challenge&&state.u18.challenge.kind==='trueFan'&&trueFanRule(state.u18.challenge.slug).type==='noDamage'&&state.tookMental)finishTravel(state,ev,false);
   }
 
   function step(state, dtMs, input) {
@@ -1964,11 +1980,13 @@
     }
     state.dimension = d + 1;
     state.u15.gloves=0;state.u15.gloveLeft=0;state.u15.drops={};state.u15.positions=CONST.slotOrder.slice();state.u15.scene=null;state.u15.queue=[];
+    state.u18.anchor=null;state.u18.challenge=null;state.u18.map=false;state.u18.fans=[];state.u18.sets=[];
     state.u14.satisfied=[];state.u14.sets=[];state.u14.collection=false;state.u14.visitor=emptyU14().visitor;state.u14.visitor.wait=90000+Math.floor(rngNext(state)*60001);
     state.seenEnding = false;
     state.homecomingCleared = false; state.visited = []; state.helpersUsed = [];
     state.coins = 0;
     state.gems = 0;
+    state.u17=emptyU17();
     state.keys = 0;
     state.vMax = 1;
     state.legacySlots = 0;
@@ -1999,7 +2017,7 @@
       u15: emptyU15(),
       u14: emptyU14(),
       features: emptyFeatures(),
-      idle: emptyIdle(), skills: emptySkills(),
+      idle: emptyIdle(), skills: emptySkills(), u17: emptyU17(), u18: emptyU18(),
       seed: seed,
       rngState: seed >>> 0,
       dimension: 1,
@@ -2100,7 +2118,7 @@
       risk: d.risk,
       banned: banned,
       grid: d.grid.slice(0, 9),
-      spun: !!d.spun
+      spun: !!d.spun, games: d.games || {cups:null,monte:null}
     };
   }
 
@@ -2135,10 +2153,10 @@
     var stars = {};
     for (i = 0; i < STAR_KEYS.length; i++) stars[STAR_KEYS[i]] = state.stars[STAR_KEYS[i]] | 0;
     var obj = {
-      v: 12,
+      v: 14,
       u15: state.u15,
       u14: state.u14,
-      idle: state.idle, skills: state.skills,
+      idle: state.idle, skills: state.skills, u17: state.u17, u18: state.u18,
       onboarding: state.onboarding, learning: state.learning,
       guidance: { seen: state.guidance.seen },
       venueSlug: VENUES[state.venue-1].slug, maxVenueSlug:VENUES[state.vMax-1].slug,
@@ -2238,7 +2256,7 @@
       if (typeof str !== "string" || str.length > 2000000) return null;
       var o = JSON.parse(str);
       if (!o || typeof o !== "object" || Array.isArray(o)) return null;
-      if (o.v !== 1 && o.v !== 2 && o.v !== 3 && o.v !== 4 && o.v !== 5 && o.v !== 6 && o.v !== 7 && o.v !== 8 && o.v !== 9 && o.v !== 10 && o.v !== 11 && o.v !== 12) return null;
+      if (o.v !== 1 && o.v !== 2 && o.v !== 3 && o.v !== 4 && o.v !== 5 && o.v !== 6 && o.v !== 7 && o.v !== 8 && o.v !== 9 && o.v !== 10 && o.v !== 11 && o.v !== 12 && o.v !== 13 && o.v !== 14) return null;
       if (o.v === 7 && o.venueSlug === "lecturenote") {
         // Preserve the old index contract, then migrate by stable audience ID.
         var previousOrder = ["a-lecturenote-hecate", "a-lecturenote-jung", "h-lecturenote-kim"];
@@ -2503,7 +2521,8 @@
           if (o.dealer.grid[i] === "" ? !!o.dealer.spun : !SYMBOLS.some(function (s) { return s.id === o.dealer.grid[i]; })) return null;
           grid.push(o.dealer.grid[i]);
         }
-        return { phase: o.dealer.phase, cards: cards, risk: risk, banned: banned, grid: grid, spun: !!o.dealer.spun };
+        if(o.v>=13 && !validDealerGames(o.dealer.games))return null;
+        return { phase: o.dealer.phase, cards: cards, risk: risk, banned: banned, grid: grid, spun: !!o.dealer.spun, games:o.v>=13 ? JSON.parse(JSON.stringify(o.dealer.games)) : {cups:null,monte:null} };
       })();
       if (state.mode !== "dealer" || !state.dealer) {
         state.dealer = null;
@@ -2626,7 +2645,9 @@
         if (!idle || num(idle.wallMs,0,1e16)==null || num(idle.autoAcc,0,100)==null || integer(idle.cursor,0,1e12)==null || typeof idle.autoAdvance!=='boolean' || typeof idle.waiting!=='boolean' || !Array.isArray(idle.milestones) || idle.milestones.some(function(id){return !NODE_BY_ID[id]||!NODE_BY_ID[id].statMilestone;}) || idle.milestones.length>10000) return null;
         if (idle.reward!==null) { var r=idle.reward; if(!r||num(r.awayMs,60000,43200000)==null||num(r.coins,0,1e15)==null||integer(r.levels,0,1225)==null||typeof r.doubled!=='boolean'||(r.totalAwayMs!==undefined&&num(r.totalAwayMs,r.awayMs,1e16)==null))return null; }
         if (!skills || num(skills.showtimeLeft,0,20000)==null || typeof skills.cheerGuard!=='boolean' || !skills.cooldowns || DATA.skills.some(function(k){return num(skills.cooldowns[k.id],0,k.cooldown)==null;})) return null;
-        state.idle=JSON.parse(JSON.stringify(idle)); state.skills=JSON.parse(JSON.stringify(skills));
+        state.idle=JSON.parse(JSON.stringify(idle)); state.idle.autoAdvance=false;
+        if(state.mode==='transition' && idle.autoAdvance && state.j===1)state.idle.waiting=true;
+        state.skills=JSON.parse(JSON.stringify(skills));
       }
       if(o.v>=11){
         var u=o.u14,v=u&&u.visitor,d=u&&u.daily;
@@ -2649,6 +2670,10 @@
         DATA.venues.forEach(function(v){if(state.trophies[v.slug]&&state.u14.satisfied.indexOf(v.headliner.id)<0)state.u14.satisfied.push(v.headliner.id);});
         checkSets(state,null);
       }
+      if(o.v>=13){if(!validU17(o.u17))return null;state.u17=JSON.parse(JSON.stringify(o.u17));}
+      else state.features.encoreLeft=0;
+      if(o.v>=14){if(!validU18(o.u18,state))return null;state.u18=JSON.parse(JSON.stringify(o.u18));}
+      else {checkTrueFanReveal(state,null);unlockCosmetics(state);}
       if (audHp > audHpMax * 1.05 + 1) return null;
       recompute(state, true);
       if (state.mental > state.mentalMax * 1.05 + 1) state.mental = state.mentalMax;
@@ -2674,19 +2699,20 @@
     if(!t||typeof t.done!=='boolean'||typeof t.active!=='boolean'||typeof t.won!=='boolean'||t.active&&t.done)return false;
     if(t.active){
       if(typeof t.baseline!=='string'||t.baseline.length>=200000||['intro','fight','defeat','overview'].indexOf(t.phase)<0)return false;
-      var maxLine=t.phase==='intro'?DATA.storyV15.tutorial.intro.length-1:t.phase==='defeat'?DATA.storyV15.tutorial.defeat.length-1:0;
+      var maxLine=t.phase==='intro'?DATA.storyV15.tutorial.intro.length-1:t.phase==='defeat'?DATA.storyV15.tutorial.defeat.length-1:t.phase==='overview'?2:0;
       if(integer(t.line,0,maxLine)==null||(['defeat','overview'].indexOf(t.phase)>=0&&!t.won))return false;
-      try{var main=JSON.parse(t.baseline);if(main.v!==12||!main.u15||!main.u15.tutorial||main.u15.tutorial.active)return false;}catch(error){return false;}
+      try{var main=JSON.parse(t.baseline);if((main.v!==12&&main.v!==13&&main.v!==14)||!main.u15||!main.u15.tutorial||main.u15.tutorial.active)return false;}catch(error){return false;}
     }
     return true;
   }
   function queueScene(state,slug,kind){
+    if(state.u18.anchor)return;
     var u=state.u15,key=state.dimension+':'+slug+':'+kind;
     if(!DATA.storyV15.venues[slug]||u.seen.indexOf(key)>=0||u.queue.some(function(x){return x.dimension===state.dimension&&x.slug===slug&&x.kind===kind;})||u.scene&&u.scene.slug===slug&&u.scene.kind===kind&&u.scene.dimension===state.dimension)return;
     u.queue.push({dimension:state.dimension,slug:slug,kind:kind});
   }
   function startScene(state,replay){
-    if(state.u15.scene||state.u15.tutorial.active)return false;
+    if(state.u18.anchor||state.u15.scene||state.u15.tutorial.active)return false;
     var next=replay||state.u15.queue.shift();if(!next)return false;
     var lines=DATA.storyV15.venues[next.slug]&&DATA.storyV15.venues[next.slug][next.kind];if(!lines)return false;
     state.u15.scene={dimension:next.dimension,slug:next.slug,kind:next.kind,line:0};return true;
@@ -2720,7 +2746,175 @@
     state.u15.gloves--;state.u15.gloveLeft=60000;state.holding=false;state.tapAcc=0;return true;
   }
 
+
+  // U17 outcomes are dealt once, using the existing combat RNG.
+  function emptyU17(){return {gloveBuys:{},potionUsed:false,feverGauge:0,feverPending:0,gemWait:0};}
+  function validU17(u){return !!(u&&typeof u.potionUsed==='boolean'&&num(u.feverGauge,0,100)!=null&&num(u.feverPending,0,100)!=null&&num(u.gemWait,0,90000)!=null&&u.gloveBuys&&typeof u.gloveBuys==='object'&&!Array.isArray(u.gloveBuys)&&Object.keys(u.gloveBuys).every(function(k){return venueNumber(k)&&integer(u.gloveBuys[k],0,3)!=null;}));}
+  function validDealerGames(g){
+    if(!g||typeof g!=='object')return false;
+    var c=g.cups,m=g.monte;
+    if(c){
+      if(['shuffle','pick','result'].indexOf(c.phase)<0||integer(c.ball,0,2)==null||integer(c.initial,0,2)==null||num(c.income,0,1e16)==null||num(c.duration,2000,3000)==null||typeof c.keyRoll!=='boolean'||!Array.isArray(c.swaps)||c.swaps.length<4||c.swaps.length>12||c.swaps.some(function(p){return !Array.isArray(p)||p.length!==2||integer(p[0],0,2)==null||integer(p[1],0,2)==null||p[0]===p[1];}))return false;
+      if(c.phase==='result'&&(integer(c.choice,0,2)==null||typeof c.hit!=='boolean'||num(c.coins,0,1e18)==null||integer(c.keys,0,1)==null))return false;
+    }
+    if(m){
+      if(['playing','lost','banked'].indexOf(m.phase)<0||integer(m.round,0,3)==null||num(m.income,0,1e16)==null||!Array.isArray(m.cards)||m.cards.length!==4||m.cards.some(function(n,i){return integer(n,1,13)==null||i>0&&n===m.cards[i-1];})||num(m.coins,0,1e18)==null||integer(m.keys,0,1)==null)return false;
+      if(m.phase==='playing'&&m.round>=3)return false;
+    }
+    return true;
+  }
+  function dealerGameStart(state,id){
+    var d=state.dealer,cost=id==='cups'?2:id==='monte'?3:0;
+    if(state.mode!=='dealer'||!d||!cost)return false;
+    if(!d.games)d.games={cups:null,monte:null};
+    if(d.games[id]||state.gems<cost)return false;
+    state.gems-=cost;dailyProgress(state,'dealer',1);
+    var income=Math.max(0,state.u14.visitor.incomeRate);
+    if(id==='cups'){
+      var initial=Math.floor(rngNext(state)*3),ball=initial,swaps=[],count=4+Math.min(4,state.venue);
+      for(var i=0;i<count;i++){var a=Math.floor(rngNext(state)*3),b=(a+1+Math.floor(rngNext(state)*2))%3;swaps.push([a,b]);if(ball===a)ball=b;else if(ball===b)ball=a;}
+      d.games.cups={phase:'shuffle',initial:initial,ball:ball,swaps:swaps,duration:Math.max(2000,3000-state.venue*70),income:income,keyRoll:rngNext(state)<.25};
+    }else{
+      var cards=[1+Math.floor(rngNext(state)*13)];
+      for(var j=1;j<4;j++){var next=1+Math.floor(rngNext(state)*12);if(next>=cards[j-1])next++;cards.push(next);}
+      d.games.monte={phase:'playing',cards:cards,round:0,income:income,coins:0,keys:0};
+    }
+    return true;
+  }
+  function dealerCupsReady(state){var c=state.dealer&&state.dealer.games&&state.dealer.games.cups;if(state.mode!=='dealer'||!c||c.phase!=='shuffle')return false;c.phase='pick';return true;}
+  function gemGameCoins(state,amount){earnCoins(state,amount);state.u14.visitor.incomeCoins=Math.max(0,state.u14.visitor.incomeCoins-amount);}
+  function dealerCupsPick(state,index){
+    var c=state.dealer&&state.dealer.games&&state.dealer.games.cups;
+    if(state.mode!=='dealer'||!c||c.phase!=='pick'||integer(index,0,2)==null)return false;
+    c.choice=index;c.hit=index===c.ball;c.phase='result';c.coins=Math.round(c.income*(c.hit?90:10));c.keys=c.hit&&state.venue>=3&&c.keyRoll?1:0;
+    gemGameCoins(state,c.coins);state.keys+=c.keys;return true;
+  }
+  function dealerMonteGuess(state,higher){
+    var m=state.dealer&&state.dealer.games&&state.dealer.games.monte;
+    if(state.mode!=='dealer'||!m||m.phase!=='playing'||typeof higher!=='boolean')return false;
+    if((m.cards[m.round+1]>m.cards[m.round])!==higher){m.phase='lost';m.coins=0;m.keys=0;return true;}
+    m.round++;m.coins=Math.round(m.income*[0,60,150,200][m.round]);m.keys=m.round===3?1:0;
+    if(m.round===3)dealerMonteBank(state);return true;
+  }
+  function dealerMonteBank(state){
+    var m=state.dealer&&state.dealer.games&&state.dealer.games.monte;
+    if(state.mode!=='dealer'||!m||m.phase!=='playing'||m.round<1)return false;
+    m.phase='banked';gemGameCoins(state,m.coins);state.keys+=m.keys;return true;
+  }
+  function gemShopInfo(state,id,skill){
+    var cost=id==='glove'?4:id==='refill'?2:id==='potion'?3:0,reason='';
+    if(!cost)reason='없는 상품이에요';
+    else if(state.u15.tutorial.active)reason='첫 연습 뒤에 살 수 있어요';
+    else if(id==='glove'&&(state.u17.gloveBuys[VENUES[state.venue-1].slug]||0)>=3)reason='이 무대에서 3개 샀어요';
+    else if(id==='refill'&&(!skillUnlocked(state,skill)||!(state.skills.cooldowns[skill]>0)))reason='기다리는 스킬만 충전해요';
+    else if(id==='potion'&&(state.mode!=='fight'||state.resolved||state.features.climax.left>0))reason='관객과 공연 중에 써요';
+    else if(id==='potion'&&state.u17.potionUsed)reason='이번 공연에서 이미 썼어요';
+    else if(id==='potion'&&state.mental>=state.mentalMax)reason='멘탈이 이미 가득해요';
+    else if(state.gems<cost)reason='보석 '+cost+'개가 필요해요';
+    return {cost:cost,reason:reason,available:!reason};
+  }
+  function gemShopBuy(state,id,skill){
+    var info=gemShopInfo(state,id,skill);if(!info.available)return false;state.gems-=info.cost;
+    if(id==='glove'){var slug=VENUES[state.venue-1].slug;state.u17.gloveBuys[slug]=(state.u17.gloveBuys[slug]||0)+1;state.u15.gloves++;}
+    if(id==='refill')state.skills.cooldowns[skill]=0;
+    if(id==='potion'){state.mental=Math.min(state.mentalMax,state.mental+state.mentalMax*.3);state.u17.potionUsed=true;}
+    return true;
+  }
+
+
+  function emptyU18(){return {revealed:false,fans:[],paid:[],sets:[],owned:{kali:[],cases:[]},equipped:{kali:'',cases:''},map:false,anchor:null,challenge:null};}
+  function fullyFan(state,v,a){return a.id===v.headliner.id?!!state.trophies[v.slug]:!!(state.bestiary[a.id]&&state.bestiary[a.id].removed);}
+  function checkTrueFanReveal(state,ev){
+    if(state.u18.revealed)return false;
+    if(!VENUES.some(function(v){return v.audiences.concat([v.headliner]).every(function(a){return fullyFan(state,v,a);});}))return false;
+    state.u18.revealed=true;emit(ev,{type:'trueFanReveal'});return true;
+  }
+  function trueFanRule(slug){var n=venueNumber(slug);return n?DATA.trueFanRules[(n-1)%DATA.trueFanRules.length]:null;}
+  function trueFanReward(slug){var n=venueNumber(slug);return n?4+Math.floor((n-1)/4):0;}
+  function trueFanProgress(state,slug){
+    var v=VENUES[venueNumber(slug)-1];if(!v)return {current:0,total:0,complete:false};
+    var ids=v.audiences.concat([v.headliner]).map(function(a){return a.id;});
+    return {current:ids.filter(function(id){return state.u18.fans.indexOf(id)>=0;}).length,total:ids.length,complete:state.u18.sets.indexOf(slug)>=0};
+  }
+  function travelAllowed(state){return !state.u15.tutorial.active&&!state.u15.scene&&state.mode==='fight'&&!state.resolved&&!state.features.climax.left&&!state.telegraphed&&!state.features.climax.mirrored.length&&state.review.target<0;}
+  function openMap(state){
+    if(state.u18.map)return true;if(!travelAllowed(state))return false;
+    if(!state.u18.anchor)state.u18.anchor=serialize(state);
+    else if(state.u18.challenge){restoreTimeline(state);state.u18.challenge=null;}
+    state.u18.map=true;state.holding=false;state.tapAcc=0;return true;
+  }
+  var TRAVEL_FIELDS=['venue','crowd','j','audId','audHp','audHpMax','atk','interval','mental','shield','combo','comboMs','maxCombo','finisher','finisherFired','fightMs','tookMental','phase2','pattern','slow','miss','pHeal','sealCell','sealMs','sealCd','patternHealMs','heckleMs','telegraphed','mode','transMs','after','resolved','review','dealer','dealerQueued','winsSinceDealer','buff','flights','doveMs','rabbitMs','flashBreaks'];
+  function restoreTimeline(state){
+    var original=deserialize(state.u18.anchor);if(!original)return false;
+    TRAVEL_FIELDS.forEach(function(k){state[k]=original[k];});
+    state.u15.scene=original.u15.scene;state.u15.queue=original.u15.queue;
+    state.features.climax=original.features.climax;state.features.workers=original.features.workers;
+    state.skills=original.skills;state.u17.potionUsed=original.u17.potionUsed;
+    state.idle.waiting=original.idle.waiting;state.holding=false;state.tapAcc=0;
+    state.board.forEach(function(b){b.sealed=false;});if(state.sealCell>=0&&state.board[state.sealCell])state.board[state.sealCell].sealed=true;
+    recompute(state,false);state.mental=Math.min(state.mental,state.mentalMax);return true;
+  }
+  function returnToStage(state){
+    if(!state.u18.anchor)return false;
+    if(!state.u18.map&&!travelAllowed(state))return false;
+    if(!restoreTimeline(state))return false;
+    state.u18.anchor=null;state.u18.map=false;state.u18.challenge=null;return true;
+  }
+  function travelTo(state,slug,id,kind){
+    var v=VENUES[venueNumber(slug)-1];kind=kind||'normal';
+    if(!v||state.visited.indexOf(slug)<0||['normal','trueFan'].indexOf(kind)<0)return false;
+    var list=v.audiences.concat([v.headliner]),j=list.findIndex(function(a){return a.id===id;})+1;if(!j)return false;
+    if(kind==='trueFan'&&(!state.u18.revealed||!fullyFan(state,v,list[j-1])))return false;
+    if(!state.u18.map&&!openMap(state))return false;
+    state.u18.map=false;state.u18.challenge={slug:slug,id:id,kind:kind};
+    state.u15.queue=[];state.features.climax.left=0;state.features.climax.paradeDone=true;
+    beginAudience(state,venueNumber(slug),j,null);
+    state.mental=state.mentalMax;state.shield=state.mentalMax*nodeEffects(state).openingShield;
+    state.combo=0;state.comboMs=0;state.finisher=0;state.flights=[];state.dealerQueued=false;
+    return true;
+  }
+  function finishTravel(state,ev,won){
+    var c=state.u18.challenge;if(!c)return false;
+    var success=won&&(c.kind!=='trueFan'||metExtra(state,trueFanRule(c.slug))),reward=0;
+    if(success&&c.kind==='trueFan'){
+      if(state.u18.fans.indexOf(c.id)<0)state.u18.fans.push(c.id);
+      if(state.u18.paid.indexOf(c.id)<0){state.u18.paid.push(c.id);reward=trueFanReward(c.slug);state.gems+=reward;}
+      var p=trueFanProgress(state,c.slug);if(p.current===p.total&&!p.complete)state.u18.sets.push(c.slug);
+    }
+    restoreTimeline(state);state.u18.map=true;state.u18.challenge=null;
+    emit(ev,{type:'travelResult',success:success,kind:c.kind,gems:reward,slug:c.slug});return success;
+  }
+  function unlockCosmetics(state){
+    DATA.cosmetics.kali.forEach(function(x){if(x.milestone&&(state.trophies[x.milestone]||x.milestone==='lecturenote'&&state.homecomingCleared)&&state.u18.owned.kali.indexOf(x.id)<0)state.u18.owned.kali.push(x.id);});
+  }
+  function cosmeticInfo(state,tab,id){
+    var x=DATA.cosmetics[tab]&&DATA.cosmetics[tab].find(function(x){return x.id===id;});if(!x)return null;
+    unlockCosmetics(state);var owned=state.u18.owned[tab].indexOf(id)>=0;
+    return {owned:owned,cost:x.cost,available:owned||(!x.milestone&&state.gems>=x.cost),hint:owned?'사용할 수 있어요':x.hint||'보석 '+x.cost+'개로 열기'};
+  }
+  function buyCosmetic(state,tab,id){var info=cosmeticInfo(state,tab,id);if(!info||info.owned||!info.available)return false;state.gems-=info.cost;state.u18.owned[tab].push(id);return true;}
+  function equipCosmetic(state,tab,id){
+    if(!DATA.cosmetics[tab])return false;
+    if(id){var info=cosmeticInfo(state,tab,id);if(!info||!info.owned)return false;}
+    state.u18.equipped[tab]=id;return true;
+  }
+  function validU18(u,state){
+    if(!u||typeof u.revealed!=='boolean'||typeof u.map!=='boolean'||!u.owned||!u.equipped)return false;
+    for(var key of ['fans','paid','sets'])if(!Array.isArray(u[key])||new Set(u[key]).size!==u[key].length||u[key].some(function(id){return key==='sets'?!venueNumber(id):COMBO_AUD_IDS.indexOf(id)<0;}))return false;
+    if(!u.revealed&&(u.fans.length||u.paid.length||u.sets.length))return false;
+    for(var tab of ['kali','cases'])if(!Array.isArray(u.owned[tab])||new Set(u.owned[tab]).size!==u.owned[tab].length||u.owned[tab].some(function(id){return !DATA.cosmetics[tab].some(function(x){return x.id===id;});})||typeof u.equipped[tab]!=='string'||u.equipped[tab]&&u.owned[tab].indexOf(u.equipped[tab])<0)return false;
+    if(u.sets.some(function(slug){var v=VENUES[venueNumber(slug)-1];return !v.audiences.concat([v.headliner]).every(function(a){return u.fans.indexOf(a.id)>=0;});}))return false;
+    if(u.anchor!==null){
+      if(typeof u.anchor!=='string'||u.anchor.length>500000)return false;
+      var snap=JSON.parse(u.anchor);if(!snap.u18||snap.u18.anchor!==null||snap.u18.map||snap.u18.challenge||snap.dimension!==state.dimension||!deserialize(u.anchor))return false;
+    }else if(u.map||u.challenge)return false;
+    if(u.challenge){var c=u.challenge,v=VENUES[venueNumber(c.slug)-1];if(u.map||!v||state.visited.indexOf(c.slug)<0||!v.audiences.concat([v.headliner]).some(function(a){return a.id===c.id;})||c.id!==state.audId||['normal','trueFan'].indexOf(c.kind)<0||c.kind==='trueFan'&&!u.revealed)return false;}
+    return true;
+  }
+
   globalThis.Core = {
+    openMap:openMap,travelTo:travelTo,returnToStage:returnToStage,travelAllowed:travelAllowed,trueFanRule:trueFanRule,trueFanReward:trueFanReward,trueFanProgress:trueFanProgress,cosmeticInfo:cosmeticInfo,buyCosmetic:buyCosmetic,equipCosmetic:equipCosmetic,
+    dealerGameStart:dealerGameStart,dealerCupsReady:dealerCupsReady,dealerCupsPick:dealerCupsPick,dealerMonteGuess:dealerMonteGuess,dealerMonteBank:dealerMonteBank,gemShopBuy:gemShopBuy,gemShopInfo:gemShopInfo,
     startTutorial:startTutorial,finishTutorial:finishTutorial,moveCase:moveCase,useGlove:useGlove,queueScene:queueScene,startScene:startScene,advanceScene:advanceScene,
     CONST: CONST,
     setDailyDate:setDailyDate, dailySelection:dailySelection, claimMission:claimMission, dateOrdinal:dateOrdinal, venueSetProgress:venueSetProgress, catchVisitor:catchVisitor, visitorBlocked:visitorBlocked,

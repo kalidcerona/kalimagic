@@ -254,11 +254,6 @@ button{touch-action:manipulation}
 .phone .menu{right:6px;top:2px;height:44px;gap:4px}
 .phone .menu button{width:66px;padding:4px 2px}
 .phone #moreButton,.phone #statsButton{display:block}
-.phone #phoneMore{display:flex;position:absolute;top:49px;right:6px;width:300px;max-height:calc(100% - 55px);overflow:auto;flex-wrap:wrap;gap:6px;padding:10px;background:#141321;border:2px solid #ffe65c;z-index:33;touch-action:pan-y}
-.phone #phoneMore>button{flex:1 0 42%}
-.phone #phoneMore #helperControls,.phone #phoneMore #debug{position:static;width:100%;height:auto;flex-wrap:wrap;justify-content:flex-start}
-.phone #phoneMore .feature-hud,.phone #phoneMore .magic-controls{flex-wrap:wrap;gap:5px}
-.phone #phoneMore button{height:auto;width:auto;min-height:44px;min-width:44px;font-size:11px}
 .phone #audienceCard{left:6px;top:50px;width:var(--audience-width);height:calc(100% - 82px);border-width:2px;overflow:hidden}
 .phone #boardCard{left:auto;right:6px;top:50px;width:var(--board-size);height:var(--board-size);border:0;background:#181724}
 .phone #board{left:0;top:0;width:100%;height:100%;padding:calc(100% * 8 / 608);gap:calc(var(--board-size) * 8 / 608);grid-template-columns:repeat(5,minmax(0,1fr));grid-template-rows:repeat(5,minmax(0,1fr))}
@@ -432,8 +427,20 @@ button{touch-action:manipulation;min-height:44px}
 #bookButton:after{content:attr(data-affordable);position:absolute;right:-4px;top:-4px;min-width:18px;padding:2px;background:#ffe65c;color:#161825;border:1px solid #161825;font:400 9px/1.2 Galmuri9,monospace}
 #bookButton[data-affordable="0"]:after{display:none}
 #moreButton{display:block}
+/* U18j: one menu grid; relocated controls cannot retain stage coordinates. */
 #phoneMore[hidden]{display:none}
-#stage #phoneMore{position:absolute;right:6px;top:49px;z-index:33;background:#141321;border:2px solid #ffe65c;padding:8px}
+#stage #phoneMore{position:absolute;inset:49px 6px auto;z-index:40;width:auto;max-height:calc(100% - 55px);box-sizing:border-box;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;padding:10px}
+#stage #phoneMore:not([hidden]){display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-flow:row;grid-auto-rows:44px;gap:8px;align-items:stretch}
+#stage #phoneMore button,#stage #phoneMore #statsButton{position:static;inset:auto;display:block;box-sizing:border-box;width:100%;min-width:0;max-width:100%;height:44px;min-height:44px;margin:0;padding:8px 5px;font-size:12px;line-height:24px;letter-spacing:0;white-space:nowrap;transform:none;border-width:2px;visibility:visible}
+#stage #phoneMore :is(#helperControls,#featureHud,#magicControls,#debug){display:contents}
+#stage #phoneMore #encoreStatus{display:none}
+#stage #phoneMore .music-volume{grid-column:1 / -1;order:80;display:flex;align-items:center;gap:12px;min-width:0;height:44px;white-space:nowrap;font-size:12px}
+#stage #phoneMore .music-volume input{flex:1;min-width:0;width:auto;max-width:none;height:44px;margin:0}
+#stage #phoneMore :is(#coffeeButton,#openChatButton){grid-column:span 2;order:100}
+#stage #phoneMore #missionsButton{display:grid;padding-right:22px}
+#stage #phoneMore #missionsButton .menu-label{grid-area:1 / 1;align-self:center;justify-self:center}
+#stage #phoneMore #missionsButton:after{position:static;grid-area:1 / 1;align-self:start;justify-self:end;transform:translate(18px,-5px);box-sizing:border-box;width:14px;height:14px;min-width:14px;min-height:14px;margin:0;padding:0;border-radius:50%;font-size:9px;line-height:14px}
+@media(max-width:600px){#stage #phoneMore:not([hidden]){grid-template-columns:repeat(3,minmax(0,1fr))}}
 .tree-learning{display:flex;gap:4px;flex:none}
 .tree-learning button{font-size:11px;padding:3px 6px;min-width:44px}
 button[aria-pressed="true"]{background:#435735;color:#ffe65c}
@@ -466,7 +473,6 @@ button[aria-pressed="true"]{background:#435735;color:#ffe65c}
 .phone #boardCard{top:62px}
 #treeBuyAll:after{content:attr(data-affordable);margin-left:4px;padding:2px;background:#ffe65c;color:#161825;font:400 9px/1.2 Galmuri9,monospace}
 
-#stage #phoneMore:not([hidden]){display:flex;flex-wrap:wrap;gap:6px}
 
 .phone #goalStrip{top:32px}
 body:not(.phone) #goalStrip{border:0;background:linear-gradient(#161825 18px,transparent 18px);align-items:start;padding-top:1px;line-height:16px}
@@ -478,8 +484,7 @@ body:not(.phone) #goalStrip:after{content:"";position:absolute;inset:0 0 auto;he
 .active-skill:before{content:"";position:absolute;inset:-2px;border-radius:8px;background:conic-gradient(#777b99 var(--cooldown),#ffe65c 0);z-index:-1}
 .active-skill.ready{box-shadow:0 0 10px #ffe65c88;border-color:#ffe65c}
 .skill-art{position:relative;width:26px;height:26px;font-size:22px}.skill-art .asset-sprite{width:100%;height:100%;object-fit:contain}
-#autoIndicator{position:absolute;right:8px;bottom:4px;color:#ffe65c;font-size:11px;z-index:8;pointer-events:none}
-#autoAdvance{position:absolute;left:330px;bottom:3px;min-height:44px;font-size:11px;z-index:12}
+#nextVenue{position:absolute;left:330px;bottom:3px;min-height:44px;font-size:11px;z-index:12}
 #perSecond,#coinSecond{position:absolute;left:40px;right:30px;top:610px;color:#ffe9ac;font-size:11px;z-index:6;text-align:center;pointer-events:none}
 #coinSecond{top:626px}
 #offlineCard{position:absolute;left:400px;top:250px;width:800px;padding:30px;background:#171827f5;border:3px solid #ffe65c;z-index:40;text-align:center}
@@ -491,7 +496,7 @@ body:not(.phone) #goalStrip:after{content:"";position:absolute;inset:0 0 auto;he
 .phone #activeSkills{left:-50px;top:42px;gap:4px}
 .phone .active-skill{width:44px;height:52px;min-height:52px;border-width:1px;padding:1px;font-size:9px;line-height:11px}
 .phone .skill-art{width:20px;height:20px;font-size:18px}.phone .active-skill small{font-size:9px}
-.phone #autoAdvance{left:calc(var(--audience-width) - 150px);bottom:0;width:150px;height:44px;font-size:9px;padding:1px 3px;background:#171827;border-width:1px}
+.phone #nextVenue{left:calc(var(--audience-width) - 150px);bottom:0;width:150px;height:44px;font-size:9px;padding:1px 3px;background:#171827;border-width:1px}
 .phone #perSecond{left:5px;right:54px;top:auto;bottom:56px;text-align:left;font-size:9px;line-height:12px;max-height:24px;overflow:hidden}
 .phone #coinSecond{left:5px;right:54px;top:auto;bottom:43px;text-align:left;font-size:9px}
 .phone #offlineCard{left:8%;top:14%;width:84%;padding:12px;font-size:11px}
@@ -504,7 +509,7 @@ body:not(.phone) #goalStrip:after{content:"";position:absolute;inset:0 0 auto;he
 .phone #perSecond,.phone #coinSecond{right:5px}
 
 .phone #activeSkills{top:8px}
-.phone #autoAdvance{left:calc(100% - var(--board-size) - 56px);top:238px;bottom:auto;width:44px;height:44px;line-height:11px}
+.phone #nextVenue{left:calc(100% - var(--board-size) - 56px);top:238px;bottom:auto;width:44px;height:44px;line-height:11px}
 .phone #toasts{width:var(--audience-width)}
 .phone .finisher{bottom:32px;height:8px}
 .phone .finisher-label{bottom:32px;font-size:9px;line-height:8px}
@@ -517,7 +522,6 @@ body:not(.phone) #goalStrip:after{content:"";position:absolute;inset:0 0 auto;he
 .phone #board .cell .box-number{height:9px;bottom:1px;font-size:9px}
 .phone #board .cell .box-number .bitmap,.phone #board .cell .percent-symbol{font-size:9px;line-height:9px}
 
-.phone #autoIndicator{top:-15px;bottom:auto;right:0;line-height:12px}
 
 /* U14 visitors, collection ribbons and today's performance. */
 #eventVisitor{position:absolute;top:52%;z-index:18;width:64px;height:64px;min-width:44px;min-height:44px;padding:0;border:2px solid #ffe65c;border-radius:50%;background:#17182ade;font-size:30px;touch-action:manipulation;box-shadow:0 0 12px #ffe65c88}
@@ -576,10 +580,7 @@ body:not(.phone) #goalStrip:after{content:"";position:absolute;inset:0 0 auto;he
 .phone #patternLabel,.phone #phaseIndicator{left:138px;right:4px;top:30px;width:auto;font-size:10px;max-height:32px;z-index:5}.phone #patternLabel:empty{display:none}
 .phone .heckle,.phone .telegraph .heckle{left:44%;right:6px;top:30px;width:auto;max-width:none;font-size:10px;z-index:6}
 .phone #activeSkills{left:-50px;top:0;gap:4px;display:flex;flex-direction:column}.phone .active-skill{width:44px;height:48px;min-height:48px;font-size:9px;line-height:10px;padding:1px}.phone .skill-art{height:18px;width:18px}.phone .active-skill small{font-size:9px;line-height:10px}
-.phone #autoAdvance{left:calc(100% - var(--board-size) - 56px);top:auto;bottom:6px;width:44px;height:44px;font-size:9px}
-.phone #autoIndicator{display:none}
-.phone #stage #phoneMore{position:absolute;left:6px;right:6px;top:44px;max-height:calc(100% - 50px);overflow:auto;padding:12px;z-index:40;background:#101522;touch-action:pan-y}
-.phone #stage #phoneMore:not([hidden]){display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.phone #phoneMore button{position:static;width:auto;height:auto;min-height:44px;font-size:11px;padding:5px}
+.phone #nextVenue{left:calc(100% - var(--board-size) - 56px);top:auto;bottom:6px;width:44px;height:44px;font-size:9px}
 .phone #tutorialCoach{z-index:24;grid-template-columns:40px minmax(0,1fr) 48px;padding:4px;gap:4px;font-size:10px;line-height:12px;max-width:260px}
 .phone #tutorialCoach .coach-helper{grid-column:1;grid-row:1 / 3;width:40px;height:44px}.phone #tutorialCoach strong,.phone #tutorialCoach p{grid-column:2}.phone #tutorialCoach button{grid-column:3;grid-row:1 / 3;min-height:44px;width:48px;min-width:44px;padding:2px}
 .phone #storyDialog{left:4px;right:4px;bottom:4px;padding:5px;gap:5px;font-size:11px;grid-template-columns:40px minmax(0,1fr) 44px 66px;line-height:14px}.phone .story-portrait{width:40px;height:52px}.phone #storyDialog button{font-size:10px;min-height:44px}.phone .story-copy p{margin:3px 0}
@@ -589,8 +590,8 @@ body:not(.phone) #goalStrip:after{content:"";position:absolute;inset:0 0 auto;he
 .phone #stage:has(#tutorialCoach:not([hidden])) #statsButton{visibility:hidden}
 @media(max-width:700px){.phone #phoneWallet .hud{gap:5px}.phone #phoneVenue .venue-name{font-size:10px}.phone #goalStrip .goal-next{font-size:9px}.phone #magicianMini.performance-ready{width:90px;height:100px}.phone #storyDialog{grid-template-columns:30px minmax(0,1fr) 44px 64px}.phone .story-portrait{width:30px}}
 /* Menu and stats are dedicated modal surfaces; covered content is not visible. */
-.phone #stage:has(#phoneMore:not([hidden])) #audienceCard,.phone #stage:has(#phoneMore:not([hidden])) #boardCard,.phone #stage:has(#phoneMore:not([hidden])) #goalStrip,.phone #stage:has(#phoneMore:not([hidden])) #autoAdvance,.phone #stage:has(#phoneMore:not([hidden])) #tutorialCoach,.phone #stage:has(#phoneMore:not([hidden])) #toasts{visibility:hidden}
-.phone #stage:has(#panel:not([hidden])) #audienceCard,.phone #stage:has(#panel:not([hidden])) #boardCard,.phone #stage:has(#panel:not([hidden])) #phoneTop,.phone #stage:has(#panel:not([hidden])) #autoAdvance,.phone #stage:has(#panel:not([hidden])) #tutorialCoach,.phone #stage:has(#panel:not([hidden])) #toasts{visibility:hidden}
+.phone #stage:has(#phoneMore:not([hidden])) #audienceCard,.phone #stage:has(#phoneMore:not([hidden])) #boardCard,.phone #stage:has(#phoneMore:not([hidden])) #goalStrip,.phone #stage:has(#phoneMore:not([hidden])) #nextVenue,.phone #stage:has(#phoneMore:not([hidden])) #tutorialCoach,.phone #stage:has(#phoneMore:not([hidden])) #toasts{visibility:hidden}
+.phone #stage:has(#panel:not([hidden])) #audienceCard,.phone #stage:has(#panel:not([hidden])) #boardCard,.phone #stage:has(#panel:not([hidden])) #phoneTop,.phone #stage:has(#panel:not([hidden])) #nextVenue,.phone #stage:has(#panel:not([hidden])) #tutorialCoach,.phone #stage:has(#panel:not([hidden])) #toasts{visibility:hidden}
 .phone #audienceCard:has(.stats.phone-expanded)>:not(.stats):not(#statsButton):not(.room){visibility:hidden}
 .phone #stage:has(.stats.phone-expanded) #tutorialCoach{visibility:hidden}
 .phone #stage:has(#tutorialCoach:not([hidden])) #magicianMini{width:90px;height:90px}
@@ -616,7 +617,6 @@ body:not(.phone) #goalStrip:after{content:"";position:absolute;inset:0 0 auto;he
 .phone #stage:has(#toasts .toast) #audienceLine,.phone #stage:has(#banner:not([hidden])) #audienceLine,.phone #stage:has(#banner:not([hidden])) #toasts{visibility:hidden}
 .phone .easy-stat{border:1px solid #929bb7;padding:8px;margin:6px 0}.phone #panel .easy-stat h2{font-size:14px}.phone .easy-stat strong{font-size:18px}
 .phone #goalStrip .goal-node{display:none}.phone #goalStrip .goal-target{display:block;min-width:0}.phone #goalStrip .goal-cost{display:block;white-space:normal;overflow-wrap:anywhere}
-.phone #phoneMore #statsButton{visibility:visible!important}
 #item-auto-glove.glove-active{opacity:1;border-color:#8ee9d0;background:#17392c}.item-count{display:inline-block;border-radius:6px;padding:0 3px;min-width:14px;background:#273749;color:#fff}
 .phone #tutorialCoach[data-compact="true"]{grid-template-columns:24px minmax(0,1fr);font-size:9px;line-height:11px}
 .phone #tutorialCoach[data-compact="true"] .coach-helper{grid-column:1;grid-row:1;width:24px;height:24px}
@@ -643,7 +643,7 @@ body:not(.phone) #goalStrip:after{content:"";position:absolute;inset:0 0 auto;he
 #stage #panel button:not(.constellation-node):not(.headliner-dialogue),#stage #phoneMore button,.menu button{white-space:nowrap;line-height:24px;min-height:44px;padding-top:8px;padding-bottom:8px}
 
 .constellation-node.collection .constellation-name{white-space:nowrap;font-size:10px;line-height:14px;max-height:none;overflow:visible}
-#stage #storyDialog button,#stage #tutorialCoach button,#stage #autoAdvanceButton,#stage #closePanel{white-space:nowrap;line-height:24px;padding-top:8px;padding-bottom:8px}
+#stage #storyDialog button,#stage #tutorialCoach button,#stage #nextVenueButton,#stage #closePanel{white-space:nowrap;line-height:24px;padding-top:8px;padding-bottom:8px}
 
 /* U16b: share the top-bar baseline and keep every phone lane contained. */
 .phone #phoneTop #goalStrip{position:static;flex:none;width:120px;height:44px;display:flex;gap:4px;white-space:nowrap;overflow:hidden}
@@ -654,47 +654,248 @@ body:not(.phone) #goalStrip:after{content:"";position:absolute;inset:0 0 auto;he
 .phone #activeSkills{left:-50px;top:0;display:flex;flex-direction:column;gap:4px}
 .phone #audience,.phone #audience.headliner,.phone.phone-tight #audience,.phone.phone-tight #audience.headliner{height:calc(100% - 72px)}
 .phone #audienceCard:has(#storyDialog:not([hidden])) #audience{bottom:64px;height:calc(100% - 94px)}
-.phone #storyDialog{height:auto;min-height:56px;grid-template-columns:30px minmax(0,1fr) 44px 66px;padding:4px;gap:4px}
+.phone #storyDialog{height:56px;grid-template-columns:30px minmax(0,1fr) 44px 66px;padding:4px;gap:4px}
 .phone #storyDialog .story-portrait{width:30px;height:44px}
-#storyDialog .story-copy{min-width:0}
+.phone #storyDialog .story-copy{min-width:0;overflow:hidden}
 .phone #storyDialog .story-copy strong{display:block;white-space:nowrap;font-size:10px;line-height:14px}
-.phone #storyDialog .story-copy p{margin:0;white-space:normal;overflow-wrap:anywhere;font-size:11px;line-height:13px}
+.phone #storyDialog .story-copy p{margin:0;white-space:nowrap;overflow-x:auto;line-height:18px;touch-action:pan-x}
 .phone #stage #storyDialog button{height:44px;min-height:44px;max-height:44px;padding:8px 2px;border-width:2px;line-height:24px}
-.phone #board .cell .lv{height:12px;line-height:12px;font-size:8px;letter-spacing:-.6px;white-space:nowrap;overflow:hidden;text-overflow:clip}
+.phone #board .cell .lv{height:12px;line-height:12px;font-size:9px;letter-spacing:-.6px;white-space:nowrap;overflow:hidden;text-overflow:clip}
 .phone #wand{overflow:hidden}
 .phone #wand .wand-icon{left:auto;right:4px;top:14px;font-size:16px;line-height:18px;transform:none;pointer-events:none}
 .phone #doubtTitle{font-size:9px;letter-spacing:-.3px;flex:none}
 .bestiary-entry h3{white-space:nowrap;font-size:18px;letter-spacing:-.5px}
 .phone .bestiary-entry h3{font-size:11px;letter-spacing:-.3px}
+/* U17: lightweight gem games, impact responses, and a screen-wide fever. */
+.dealer-gem-menu,.gem-shop-item,.gem-game{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:12px;border:2px solid #bc8cff;border-radius:12px;margin:8px 0}
+.dealer-gem-menu button,.gem-game button,.gem-shop-item button{min-width:44px;min-height:44px;touch-action:manipulation}
+.dealer-gem-menu small,.gem-shop-item h2,.gem-shop-item p,.gem-shop-item small,.gem-game h2,.gem-game p{flex-basis:100%;margin:0}
+.cups-table{position:relative;flex-basis:100%;height:115px;max-width:440px;margin:auto;width:100%}
+.game-cup{position:absolute;left:calc(6% + var(--slot)*31%);top:12px;width:25%;height:85px;font-size:42px;transition:left .18s ease;overflow:visible}
+.cup-ball{position:absolute;bottom:-16px;left:40%;font-size:22px}.game-result{color:#ffe65c;font-weight:bold}
+.monte-card{font-size:42px;padding:10px 30px;background:#fff;color:#322048;border-radius:10px;border:4px solid #ca85ec}
+.music-volume{display:flex;align-items:center;gap:8px;font-size:12px}.music-volume input{width:90px;min-height:44px}
+#feverGauge{position:fixed;left:30%;right:30%;bottom:3px;height:5px;background:#382243;border:1px solid #d5a94e;z-index:30;pointer-events:none;border-radius:4px;overflow:hidden}
+#feverGauge span{display:block;height:100%;background:#eaa9ff;width:0}#feverGauge.active span{background:#ffe359}
+#feverOverlay{position:fixed;inset:0;background:#ffca3020;z-index:20;pointer-events:none;overflow:hidden}
+#feverOverlay[hidden]{display:none}#feverOverlay strong{position:absolute;top:8%;left:50%;transform:translateX(-50%);font-size:clamp(18px,4vw,38px);color:#fff3a6;text-shadow:2px 2px #9b5c15}
+.fever-petal{position:absolute;left:var(--x);top:-10%;color:#ffe66c;font-size:20px;animation:fever-fall 3s var(--delay) linear infinite}
+@keyframes fever-fall{to{transform:translate(var(--drift),110vh) rotate(270deg)}}
+.fever-paused .fever-petal{animation-play-state:paused}
+.projectile-impact{position:absolute;width:32px;height:32px;font-size:26px;pointer-events:none;z-index:15;background-size:contain;background-repeat:no-repeat;animation:card-impact .45s forwards}
+.sponge-impact{animation:sponge-impact .48s ease-out forwards}
+@keyframes sponge-impact{0%{transform:translate(-50%,-50%) scale(1.5,.55);opacity:1}25%{transform:translate(-70px,-75px) scale(.9,1.1)}50%{transform:translate(-95px,-10px) scale(1.2,.7)}70%{transform:translate(-115px,-35px) scale(.8)}85%{transform:translate(-130px,-5px) scale(.7)}100%{transform:translate(-140px,-14px) scale(.5);opacity:0}}
+@keyframes card-impact{0%{transform:translate(-50%,-50%) rotate(-25deg);opacity:1}45%{transform:translate(-50%,-50%) rotateY(180deg)}100%{transform:translate(-50%,-50%) scale(.4);opacity:0}}
+.dove-impact{animation:card-impact .5s forwards}
+@media(prefers-reduced-motion:reduce){.game-cup{transition:none}.fever-petal{display:none}.projectile-impact{animation:none;opacity:.65}}
+.menu{flex-wrap:wrap;max-width:calc(100% - 400px);justify-content:flex-end}
+.phone #activeSkills{gap:3px}.phone .gem-shop-quick{height:44px;min-height:44px;font-size:18px}
 
-/* U16c: fit phone menu actions and preserve the bottom status row. */
-#stage #phoneMore button img,#stage #panel button img,.menu button img{position:static;inset:auto;width:1.1em;height:1.1em;object-fit:contain;vertical-align:middle;transform:none}
-#stage #phoneMore button #storyIcon,.menu button #storyIcon{width:1.1em;height:1.1em}
-.phone #stage #phoneMore:not([hidden]){grid-template-columns:repeat(3,minmax(0,1fr))}
-.phone #stage #phoneMore button{position:static;width:100%;min-width:0;font-size:11px;white-space:nowrap;padding-left:5px;padding-right:5px}
-.phone #phoneMore #helperControls,.phone #phoneMore #debug{grid-column:1 / -1}
-.phone.phone-tight .mental,.phone.phone-tight .shield,.phone.phone-tight .combo{top:auto;bottom:4px;height:30px}
+/* U17b polish: release hotfixes and one warm, square pixel UI system. */
+:root{--bg:#17141F;--panel:#25202D;--raised:#2E2738;--ink:#F3E7D0;--ink-2:#B9ACBA;--gold:#E8BF68;--brass:#A68A58;--line:#655567;--line-dim:#39313F;--ok:#8ECBA9;--danger:#B94E50;--danger-hi:#DC7970;--info:#8FD3FF;--white:var(--ink);--yellow:var(--gold);--green:var(--ok)}
+html,body,#stage{background:var(--bg);color:var(--ink)}
+#stage *,#stage *:before,#stage *:after{border-radius:0}
+#stage button{background:#302735;border-color:var(--line);color:var(--ink);box-shadow:0 2px 0 #100D16;transition:background-color 80ms linear,border-color 80ms linear,color 80ms linear;text-shadow:none}
+#stage button:hover:enabled{border-color:var(--brass);color:var(--ink)}
+#stage button[aria-pressed="true"]{background:#24321F;border-color:var(--ok);color:var(--ink)}
+#stage button:disabled{color:#8D8292;border-color:var(--line-dim);opacity:1}
+#stage button:active{box-shadow:inset 0 2px 0 #100D16}
+#stage button:focus-visible{outline:2px solid var(--gold);outline-offset:-2px}
+#stage :is(.tree-buy,.intro-next,#offlineDouble,#tutorialCoach button,#storyDialog button:first-of-type),#stage #buyAllButton:enabled,#stage #treeBuyAll:not([data-affordable="0"]){background:#403225;border-color:var(--gold);color:var(--gold);font-weight:700}
+#stage :is(.tree-buy,.intro-next,#offlineDouble,#tutorialCoach button,#storyDialog button:first-of-type):disabled{background:#302735;border-color:var(--line-dim);color:#8D8292}
+#stage :is(#panel,#phoneMore,#storyDialog,#tutorialCoach,.constellation-detail,#offlineCard){background:var(--panel);border:2px solid var(--brass);box-shadow:0 2px 0 #100D16;color:var(--ink);text-shadow:none}
+#stage #audienceCard{border:2px solid var(--brass);box-shadow:0 2px 0 #100D16}
+#stage :is(.stats,.mental,.shield,.combo,.bestiary-venue,.bestiary-entry,.easy-stat,.daily-mission,.dealer-gem-menu,.gem-shop-item,.gem-game){background:var(--raised);border:1px solid var(--line);box-shadow:0 2px 0 #100D16;text-shadow:none}
+#stage :is(#panel,#phoneMore,#phoneTop,#storyDialog,#tutorialCoach,.stats) *{text-shadow:none}
+#stage:has(#panel:not([hidden])) #banner{visibility:hidden}
+#stage :is(.venue-name,.spotlight,#audienceLine,#patternLabel,#phaseIndicator,.heckle){text-shadow:1px 1px #100D16}
+#stage :is(.doubt-label,.xp-number,.lv,.box-number){text-shadow:none}
+#stage :is(.box-number,.stat-value) .bitmap{filter:none}
+#stage :is(.guide-highlight,.tutorial-target){outline:none;border-color:var(--gold)!important;box-shadow:inset 0 0 0 2px var(--gold);animation:none}
+#stage :is(.toast,#banner){background:var(--panel);border-color:var(--brass);box-shadow:0 2px 0 #100D16;color:var(--ink)}
+#stage .panel-tabs button[aria-pressed="true"]{border-color:var(--ok);background:#24321F;color:var(--ink)}
+#stage .constellation-node.selected{outline:2px solid var(--brass);outline-offset:2px}
 
-/* U16f: allow the learning badge to cross the button corner without clipping. */
-.phone #phoneTop{overflow:visible}
+/* Hotfix: text-button icons must never resize constellation art. */
+#stage #phoneMore button img,#stage #panel button:not(.constellation-node):not(.headliner-dialogue) img,.menu button img{position:static;inset:auto;width:14px;height:14px;object-fit:contain;vertical-align:-2px;transform:none;margin-right:4px}
+#stage #phoneMore button #storyIcon,.menu button #storyIcon{width:14px;height:14px;vertical-align:-2px;margin-right:4px}
+#stage #panel .constellation-icon-host > .asset-sprite,.phone #stage #panel .constellation-icon-host > .asset-sprite{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;margin:0;transform:none}
+#stage #missionsButton{position:relative}
+#stage #missionsButton:after{position:absolute;right:4px;top:4px;margin:0}
 
-/* U16d: expose phone learning and keep case labels inside their cells. */
-.phone #phoneTop #bookButton{position:relative;flex:none;width:72px;min-width:72px;height:44px;min-height:44px;font-size:11px;line-height:24px;white-space:nowrap;margin:0;padding:3px}
-.phone #phoneTop #bookButton:after{right:-6px;top:-1px;width:16px;height:16px;min-width:0;padding:0;border-radius:50%;line-height:14px;text-align:center}
-.phone #phoneTop #moreButton{flex:none}
-.phone #phoneTop #goalStrip{width:72px;min-width:0;flex-shrink:1}
+/* Top bar and HUD retain the U17 44px baseline and safe-area coordinates. */
+.phone #phoneTop{background:#120F1A;border-bottom:1px solid #2A2640;gap:6px}
+.phone #phoneVenue .venue-name{font-size:13px;font-weight:700;color:var(--ink);letter-spacing:0;text-shadow:none}
+.phone #phoneVenue .stage-number{color:var(--brass)}
+.phone #phoneTop #bookButton,.phone #phoneTop #moreButton{position:relative;flex:none;width:72px;min-width:72px;height:44px;min-height:44px;font-size:12px;line-height:24px;white-space:nowrap;margin:0;padding:8px 3px;border-width:2px;background:#302735;border-color:var(--line);color:var(--ink)}
+.phone #phoneTop #bookButton:after{right:1px;top:1px;background:var(--gold);color:#120F1A}
+.phone #phoneTop #goalStrip{width:72px;min-width:0;flex-shrink:1;color:var(--ink-2);background:transparent}
 .phone #phoneTop #goalStrip .goal-title{display:none}
-@media(max-width:740px){.phone #phoneTop #goalStrip{display:none}}
-#board .cell .lv,.phone #board .cell .lv{position:absolute;left:2px;right:auto;top:2px;width:auto;height:13px;padding:1px 3px;font:400 9px/11px Galmuri9,monospace;letter-spacing:0;text-align:left;white-space:nowrap;background:#101522cc;text-shadow:none;z-index:5;pointer-events:none}
-#board .cell .lv:empty{display:none}
+@media(max-width:740px){.phone #phoneTop #goalStrip{display:none}.phone #phoneWallet .hud{gap:5px}.phone #phoneTop{gap:4px}}
+.phone.phone-tight .mental,.phone.phone-tight .shield,.phone.phone-tight .combo,.phone .mental,.phone .shield,.phone .combo{top:auto;bottom:4px;height:30px;border:1px solid var(--line);background:var(--raised);align-items:center}
+.phone .mental{left:6px;width:calc((100% - 20px) * .4)}
+.phone .shield{left:calc(10px + (100% - 20px) * .4);width:calc((100% - 20px) * .22)}
+.phone .combo{left:calc(14px + (100% - 20px) * .62);right:6px;color:var(--gold)}
+.phone .shield .bitmap{color:var(--info)}
 
-/* U16e: give narrow-phone dialogue two readable lines above its touch actions. */
+/* Board decoration changes only; cell positions and hit regions remain native. */
+#stage #board{background:#1A1626;box-shadow:inset 0 0 0 1px #2A2640}
+#stage #board .cell .box{border-color:#B5A08B;box-shadow:0 2px 0 #100D16}
+#stage #board .cell.locked .box{border:1px dotted var(--line-dim);background:transparent;box-shadow:none;opacity:1}
+#stage #board .cell.next-slot .box{border:1px dashed var(--line);background:transparent;box-shadow:none;opacity:1}
+#stage #board .box-fill{background:var(--gold);border-top-color:var(--brass)}
+#stage #board .cell .lv,.phone #stage #board .cell .lv{left:2px;right:auto;top:2px;width:auto;height:13px;padding:1px 3px;font:400 9px/11px Galmuri9,monospace;letter-spacing:0;text-align:left;white-space:nowrap;background:#100D16cc;text-shadow:none;color:var(--ink);z-index:5;pointer-events:none}
+#stage #board .cell .lv:empty{display:none}
+#stage #board .box-number{inset:auto;left:50%;top:50%;transform:translate(-50%,-50%);width:max-content;height:16px;padding:1px 3px;background:#100D16cc;color:var(--ink);letter-spacing:0}
+.phone #stage #board .percent-symbol{font:400 9px/12px Galmuri9,monospace}
+#stage .doubt{background:#4A1D20;border:2px solid var(--brass)}
+#stage .doubt-fill{background:var(--danger);border-top-color:var(--danger-hi)}
+.phone #stage .doubt-label,.phone #stage #doubtNumber{font-size:11px;letter-spacing:0;line-height:16px}
+.phone #stage #doubtTitle{font-size:11px;letter-spacing:0;min-width:0;flex:1}
+
+/* Opaque panels, compact readable typography and tree sheets. */
+.phone #stage #panelBody{font-size:12px;line-height:16px}
+.phone #stage #panel h1{font-size:18px;font-weight:700;color:var(--gold)}
+.phone #stage #panel :is(h2,h3){font-size:14px;font-weight:700}
+.phone #stage #panel :is(p,li,button){font-size:12px}
+.phone #stage #panel :is(small,.tree-wallet,.tree-cost,.tree-learning,.tree-note){font-size:11px;color:var(--ink-2)}
+.phone #stage #panel button:not(.constellation-node):not(.headliner-dialogue){min-height:44px;line-height:24px;padding-top:8px;padding-bottom:8px;border-width:2px}
+.phone #stage #panel header{min-height:44px;flex-wrap:wrap;gap:4px;overflow:visible}
+.phone #stage #panel[data-screen="book"] .tree-wallet{min-width:0;max-width:none;flex:1;font-size:11px;white-space:nowrap}
+.phone #stage #panel[data-screen="book"] .constellation-controls{margin-left:auto}
+#stage .constellation-map{background:radial-gradient(ellipse at center,#2A2040,#0E0B18);border:1px solid var(--line)}
+#stage .constellation-lines line{stroke:#4A4062}
+#stage .constellation-lines line.owned{stroke:var(--ok)}
+#stage #panel .constellation-node{width:56px;height:56px;min-height:0;padding:0;border:1px solid var(--line);background:var(--raised);box-shadow:0 2px 0 #100D16}
+#stage #panel .constellation-node.owned{border-color:var(--ok);background:#1F3328}
+#stage #panel .constellation-node.unknown{width:16px;height:16px}
+#stage .constellation-name,#stage .constellation-node.collection .constellation-name{top:60px;width:138px;font-size:12px;line-height:16px;letter-spacing:0;text-shadow:none}
+#stage .constellation-level,#stage .constellation-node.collection .constellation-level{top:78px;font-size:10px;line-height:12px;color:var(--ink-2)}
+.phone #stage #panel[data-screen="book"] .constellation-detail{background:var(--panel);border:2px solid var(--brass);box-shadow:0 2px 0 #100D16;font-size:12px;line-height:16px}
+.phone #stage #panel[data-screen="book"] .constellation-detail h2{font-size:14px;line-height:18px}
+.phone #stage #panel[data-screen="book"] .constellation-detail p{margin:4px 0;font-size:12px;line-height:16px}
+.phone #stage #panel[data-screen="book"] .constellation-detail :is(.tree-buy,.tree-detail-dismiss){font-size:12px;line-height:24px;min-height:44px;height:44px;padding:8px 2px;border-width:2px}
+.phone #stage #panel[data-screen="stats"] #panelBody{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:start}
+.phone #stage #panel .easy-stat{margin:0;padding:12px;display:flex;flex-direction:column;gap:8px}
+.phone #stage #panel .easy-stat h2,.phone #stage #panel .easy-stat p{margin:0}
+.phone #stage #panel .easy-stat strong{font-size:22px;line-height:26px;color:var(--gold);order:-1}
+.phone #stage #panel .easy-stat p{font-size:11px;line-height:16px;color:var(--ink-2)}
+#stage .outfit-collection{gap:12px}
+#stage .outfit-preview{width:64px;height:64px;flex:none}
+.phone #stage .bestiary-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+#stage .entry-portrait{display:flex;align-items:center;gap:12px;min-height:64px}
+#stage .entry-portrait .entry-emoji{width:64px;height:64px;flex:none}
+#stage .entry-portrait .fan-stamp{position:static;flex:none;width:88px;padding:4px 2px;margin:0;background:#1F3328;color:var(--ok);border:1px solid var(--ok);font-size:10px;line-height:14px;transform:rotate(-4deg)}
+.phone #stage .bestiary-entry h3{font-size:12px;letter-spacing:0}
+#stage .bestiary-entry.completed{border-color:var(--ok)}
+
+/* Dialogue and skill feedback preserve existing target sizes. */
+.phone #stage #storyDialog .story-copy strong,#stage #tutorialCoach strong{font-size:11px;font-weight:700;line-height:14px;color:var(--gold)}
+.phone #stage #storyDialog .story-copy p,.phone #stage #tutorialCoach p{font-size:12px;line-height:16px}
+.phone #stage #storyDialog button,.phone #stage #tutorialCoach button{font-size:12px;line-height:24px;height:44px;min-height:44px;max-height:44px;padding:8px 2px;border-width:2px}
+.phone #stage #storyDialog{height:56px}
+.phone #stage #tutorialCoach{font-size:12px;line-height:16px}
+#stage .active-skill{background:#302735;border:1px solid var(--line);box-shadow:0 2px 0 #100D16}
+#stage .active-skill:before{background:none;box-shadow:none}
+#stage .active-skill.ready{border-color:var(--gold);box-shadow:0 2px 0 #100D16}
+#stage .active-skill.in-use,#stage #item-auto-glove.glove-active{border-color:var(--ok);background:#24321F}
+.phone #stage #activeSkills{gap:4px}
+.phone #stage .active-skill{font-size:11px;line-height:12px;height:48px;min-height:48px;padding:1px}
+.phone #stage .active-skill small{font:400 9px/10px Galmuri9,monospace;color:var(--ink-2)}
+@media(prefers-reduced-motion:reduce){#stage button{transition:none}}
+.phone #stage #panel .constellation-level,.phone #stage #panel .constellation-node.collection .constellation-level{font-size:10px;color:var(--ink-2)}
+.phone #stage :is(#audienceLine,#patternLabel,#phaseIndicator,.heckle,.stat-meaning){font-size:11px;line-height:14px;color:var(--ink-2)}
+.phone #stage #panel[data-screen="book"] header{height:auto;overflow:visible;background:var(--panel)}
+#stage #phoneMore button:active,#stage #phoneTop button:active,#stage #panel button:active{box-shadow:inset 0 2px 0 #100D16}
+#stage #treeBuyAll[data-affordable="0"],#stage #panel:has(.constellation-detail:not([hidden])) #treeBuyAll{background:#302735;border-color:var(--line);color:var(--ink);font-weight:400}
+.phone #stage .active-skill > span:not(.skill-art){white-space:nowrap;letter-spacing:-2px}
+.phone #stage .active-skill small{letter-spacing:0}
+
+/* U18 ports U16e/f release layout fixes with U17b specificity. */
+#stage #board .cell .lv,.phone #stage #board .cell .lv{position:absolute}
+.phone #phoneTop{overflow:visible}
+.phone #phoneTop #bookButton:after{right:-6px;top:-1px;width:16px;height:16px;min-width:0;padding:0;border-radius:50%;line-height:14px;text-align:center}
+.phone #stage #storyDialog{height:auto;min-height:56px}
+.phone #stage #storyDialog .story-copy{min-width:0;overflow:visible}
+.phone #stage #storyDialog .story-copy p{white-space:normal;overflow-wrap:anywhere;font-size:11px;line-height:13px;overflow-x:visible}
+.story-kali-strip{background-repeat:no-repeat}
 @media(max-width:740px){
  .phone #storyDialog .story-portrait{grid-column:1;grid-row:1 / 3;justify-self:center}
  .phone #storyDialog .story-copy{grid-column:2 / -1;grid-row:1}
  .phone #storyDialog button{grid-row:2}
  .phone #storyDialog button:first-of-type{grid-column:3}
  .phone #storyDialog button:last-of-type{grid-column:4}
+ .phone #audienceCard:has(#storyDialog:not([hidden])) #audience{bottom:90px;height:calc(100% - 120px)}
 }
-/* U16g: the case box starts 20px below the cell top; pin the level badge inside the box corner. */
-#board .cell .lv,.phone #board .cell .lv{top:22px;left:4px}
+.truefan-slot{margin-top:8px;padding:8px;border:1px solid var(--line);background:var(--panel)}
+.truefan-slot.earned,.truefan-ribbon{border:2px solid var(--gold);color:var(--gold)}
+.truefan-slot p{overflow-wrap:anywhere}
+.stage-map,.cosmetic-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.map-venue,.cosmetic-card{min-width:0;padding:12px;background:var(--raised);border:1px solid var(--line)}
+.map-audience{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:8px 0;padding:6px;border-top:1px solid var(--line)}
+.map-audience strong,.map-audience small{flex-basis:100%;overflow-wrap:anywhere}
+.cosmetic-icon{display:block;width:96px;height:96px;font-size:64px;margin:auto;position:relative}
+.cosmetic-icon img{width:100%;height:100%;object-fit:contain;image-rendering:pixelated}
+.cosmetic-icon.art-loaded{font-size:0}
+.cosmetic-card.locked .cosmetic-icon{filter:brightness(0);opacity:.6}
+#stage #board .case-customized .chest{outline:2px solid var(--info);outline-offset:-3px}
+#stage #board .case-customized[data-tier="box-1"] .chest{outline-color:var(--ok)}
+#stage #board .case-customized[data-tier="box-2"] .chest{outline-color:#bc8cff}
+#stage #board .case-customized[data-tier="box-3"] .chest{outline-color:var(--gold)}
+#stage #board .case-customized[data-tier="box-4"] .chest,#stage #board .case-customized[data-tier="box-golden"] .chest{outline-color:#ff9270}
+.phone .cosmetic-grid,.phone .stage-map{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.phone .cosmetic-card,.phone .map-venue{padding:8px}
+.phone .cosmetic-icon{width:64px;height:64px;font-size:44px}
+.phone .cosmetic-card h3{font-size:12px}
+.phone .truefan-slot{padding:6px;font-size:11px}
+.phone .truefan-slot button,.phone .map-audience button,.phone .cosmetic-card button{font-size:11px;min-height:44px;white-space:nowrap}
+
+.story-portrait{display:block;position:relative;flex:none;overflow:hidden}
+.story-portrait .asset-sprite{width:100%;height:100%;object-fit:contain}
+.story-kali-strip{background-size:300% 100%;background-position:left center;background-repeat:no-repeat;image-rendering:pixelated}
+.chest .sprite-fallback{display:block;text-align:center;font-size:32px}
+.chest.asset-ready .sprite-fallback{visibility:hidden}
+
+/* U18h: phone controls and case labels stay within their visible targets. */
+.phone #phoneTop #equipOpen{position:relative;flex:none;width:116px;min-width:116px;height:44px;min-height:44px;font-size:12px;line-height:24px;white-space:nowrap;margin:0;padding:8px 3px;border-width:2px;background:#302735;border-color:var(--line);color:var(--ink)}
+@media(max-width:740px){.phone #phoneTop :is(#bookButton,#equipOpen,#moreButton){width:44px;min-width:44px;font-size:18px}}
+#stage .magic-layer{z-index:24}
+#stage .paper-drop{z-index:25;width:44px;height:44px;min-width:44px;min-height:44px;padding:0;touch-action:manipulation}
+.phone #stage #tutorialCoach:not([data-compact="true"]){grid-template-columns:24px minmax(0,1fr) 64px}
+.phone #stage #tutorialCoach button{width:64px;min-width:0;max-width:100%;white-space:nowrap;letter-spacing:0;font-size:11px}
+#stage #board .box-number{top:auto;bottom:2px;transform:translateX(-50%);z-index:5}
+.phone #stage #activeSkills{width:44px;height:auto;min-height:0;top:0;padding:0;border:0;background:transparent}
+.phone #stage #gemShopQuick{width:44px;height:44px;min-height:44px;font-size:18px;line-height:24px;padding:8px 0}
+
+.phone #stage #nextVenue{white-space:nowrap;padding:1px 0;line-height:24px}
+
+.phone #stage #activeSkills:not(:has(.active-skill:not([hidden]):not(#gemShopQuick))){height:44px}
+
+/* U18i: explicit HUD names and timer-driven incoming heckles. */
+#openChatButton{white-space:nowrap}
+#openChatButton img{width:1.2em;height:1.2em;object-fit:contain;vertical-align:middle}
+#stage .mental-label,#stage .hearts{display:none}
+#stage #mentalNumber{margin:0;white-space:nowrap}
+#stage .mental{display:flex;justify-content:center;align-items:center;white-space:nowrap}
+#stage .shield{white-space:nowrap;gap:3px}
+#stage .shield-label{position:static;display:inline;width:auto;font-size:11px}
+#stage #shieldNumber{font:inherit;display:inline}
+.heckle-meter{position:absolute;left:12px;top:46px;width:668px;height:20px;border:1px solid var(--danger);background:#321B24;z-index:5;overflow:hidden}
+.heckle-fill{height:100%;width:0;background:#9F453C}
+.heckle-label{position:absolute;inset:0;display:flex;align-items:center;justify-content:space-between;padding:0 6px;gap:4px;white-space:nowrap;font-size:11px;line-height:16px;color:var(--ink);text-shadow:1px 1px #100D16}
+.heckle-meter.imminent{animation:heckle-warning .2s steps(2,end) infinite}
+@keyframes heckle-warning{50%{background:#E6A66A;border-color:#FFE5B5;filter:brightness(1.5)}}
+#stage .mental-hit{position:absolute;bottom:100%;left:0;right:0;z-index:8;white-space:nowrap;padding:3px 0;font-size:12px;line-height:16px;color:#FFD2D2;background:#401E28;border:1px solid var(--danger);pointer-events:none}
+.phone #stage .heckle-meter{left:6px;right:6px;top:29px;width:auto;height:18px}
+.phone #stage .heckle-label{font-size:10px;line-height:16px}
+.phone #stage #mental:before{content:none}
+.phone #stage #mentalNumber{font-size:clamp(6px,calc(var(--audience-width) * .027),11px);line-height:14px}
+.phone #stage .shield,.phone #stage .shield-label{font-size:clamp(6px,calc(var(--audience-width) * .027),11px);line-height:14px}
+.phone #stage .shield-label{margin:0}
+.phone #stage #statsButton:not(.expanded){top:52px}
+.phone #stage #audienceLine,.phone #stage #patternLabel,.phone #stage #phaseIndicator,.phone #stage .heckle{top:52px}
+@media(prefers-reduced-motion:reduce){.heckle-meter.imminent{animation:none;border-color:#FFE5B5;background:#9F453C}}
+
+#stage .shield-label{font-size:inherit;flex:none}
+#stage #shieldNumber{flex:none}
+#stage .shield>span[aria-hidden]{flex:none}

@@ -484,7 +484,7 @@
         { id: "chameleon", name: "카멜레온", emoji: "🦎", flavor: "색이 바뀌면 시선도 따라간다." },
         { id: "kali-deck", name: "칼리 덱", emoji: "✨", flavor: "마지막 장까지 반짝인다." }
       ] },
-      { id: "silk", name: "멘탈 보호막", effect: "shield", share: 0.19, ladder: [
+      { id: "silk", name: "자신감", effect: "shield", share: 0.19, ladder: [
         { id: "silk-handkerchief", name: "실크 손수건", emoji: "🧣", flavor: "살랑 한 번, 숨도 한 번." },
         { id: "linking-rings", name: "링", emoji: "⭕", flavor: "고리가 이어지면 마음도 편안." },
         { id: "slydini-silks", name: "슬라이디니 실크", emoji: "🪄", flavor: "천천히 흔들수록 차분해진다." },
@@ -516,7 +516,7 @@
         { id: "playing-card", name: "트럼프 카드", emoji: "🃏", flavor: "한 장 뽑으면 눈빛도 바뀐다." },
         { id: "jumbo-card", name: "점보 카드", emoji: "🎴", flavor: "커진 건 카드뿐일까?" }
       ] },
-      { id: "silk", name: "멘탈 보호막", effect: "shield", share: 0.2, rarityMap: [0, 0, 1, 1, 1], ladder: [
+      { id: "silk", name: "자신감", effect: "shield", share: 0.2, rarityMap: [0, 0, 1, 1, 1], ladder: [
         { id: "silk-handkerchief", name: "실크 손수건", emoji: "🧣", flavor: "살랑 한 번, 숨도 한 번." },
         { id: "linking-rings", name: "링", emoji: "⭕", flavor: "고리가 이어지면 마음도 편안." }
       ] },
@@ -571,16 +571,16 @@
     {"id": "goldCoins", "name": "금빛 사례", "desc": "황금 케이스 추가 동전 +20L%", "max": 3, "cost": {"c": 1500, "g": 2.2}, "currency": "coins", "prereqs": ["goldPity"], "x": 5, "y": 0, "reveal": "N", "branch": "box", "icon": "node-box-1.png", "emoji": "🪙", "pending": false},
     {"id": "prepared", "name": "미리 푼 매듭", "desc": "재생성 케이스가 파괴 진행률 5L%로 등장", "max": 2, "cost": {"c": 800, "g": 3.0}, "currency": "coins", "prereqs": ["spawn"], "x": 2, "y": -1, "reveal": "N3", "branch": "box", "icon": "node-box-2.png", "emoji": "🪢", "pending": false},
     {"id": "boxXP", "name": "케이스 연구", "desc": "케이스 XP +10L%, 강의 XP에는 미적용", "max": 3, "cost": {"c": 900, "g": 2.0}, "currency": "coins", "prereqs": ["prepared"], "x": 3, "y": -1, "reveal": "N", "branch": "box", "icon": "node-box-1.png", "emoji": "📚", "pending": false},
-    {"id": "boxShield", "name": "실크 포장", "desc": "파괴마다 멘탈 보호막 +0.1LU, cap 적용", "max": 2, "cost": {"c": 1800, "g": 2.5}, "currency": "coins", "prereqs": ["boxXP"], "x": 4, "y": -1, "reveal": "N4", "branch": "box", "icon": "node-box-2.png", "emoji": "🧣", "pending": false},
+    {"id": "boxShield", "name": "실크 포장", "desc": "파괴마다 자신감 +0.1LU, cap 적용", "max": 2, "cost": {"c": 1800, "g": 2.5}, "currency": "coins", "prereqs": ["boxXP"], "x": 4, "y": -1, "reveal": "N4", "branch": "box", "icon": "node-box-2.png", "emoji": "🧣", "pending": false},
     {"id": "boxHeal", "name": "숨 고르기", "desc": "파괴마다 멘탈 +0.05LU, 최대치 적용", "max": 2, "cost": {"c": 2400, "g": 2.5}, "currency": "coins", "prereqs": ["boxShield"], "x": 5, "y": -1, "reveal": "N5", "branch": "box", "icon": "node-box-1.png", "emoji": "💧", "pending": false},
     {"id": "mental", "name": "무대 배짱", "desc": "최대 멘탈 ×1.18^L", "max": 10, "cost": {"c": 30, "g": 2.2}, "currency": "coins", "prereqs": ["root"], "x": 0, "y": -1, "reveal": "N", "branch": "heart", "icon": "node-heart-1.png", "emoji": "💛", "pending": false},
     {"id": "attack", "name": "감탄 유도", "desc": "V ×1.05^L", "max": 10, "cost": {"c": 45, "g": 2.2}, "currency": "coins", "prereqs": ["mental"], "x": 0, "y": -2, "reveal": "N", "branch": "heart", "icon": "node-heart-2.png", "emoji": "👏", "pending": false},
-    {"id": "shieldCap", "name": "넉넉한 실크", "desc": "멘탈 보호막 cap 비율 0.48+0.03L", "max": 4, "cost": {"c": 250, "g": 2.2}, "currency": "coins", "prereqs": ["mental"], "x": -1, "y": -2, "reveal": "N", "branch": "heart", "icon": "node-heart-1.png", "emoji": "🧣", "pending": false},
-    {"id": "shieldValue", "name": "부드러운 실크", "desc": "실크 아이템 멘탈 보호막 +5L%", "max": 4, "cost": {"c": 400, "g": 2.2}, "currency": "coins", "prereqs": ["shieldCap"], "x": -1, "y": -3, "reveal": "N", "branch": "heart", "icon": "node-heart-2.png", "emoji": "🧣", "pending": false},
+    {"id": "shieldCap", "name": "넉넉한 실크", "desc": "자신감 cap 비율 0.48+0.03L", "max": 4, "cost": {"c": 250, "g": 2.2}, "currency": "coins", "prereqs": ["mental"], "x": -1, "y": -2, "reveal": "N", "branch": "heart", "icon": "node-heart-1.png", "emoji": "🧣", "pending": false},
+    {"id": "shieldValue", "name": "부드러운 실크", "desc": "실크 아이템 자신감 +5L%", "max": 4, "cost": {"c": 400, "g": 2.2}, "currency": "coins", "prereqs": ["shieldCap"], "x": -1, "y": -3, "reveal": "N", "branch": "heart", "icon": "node-heart-2.png", "emoji": "🧣", "pending": false},
     {"id": "healValue", "name": "시원한 한 모금", "desc": "회복 아이템 회복량 +5L%", "max": 4, "cost": {"c": 300, "g": 2.2}, "currency": "coins", "prereqs": ["attack"], "x": 1, "y": -2, "reveal": "N", "branch": "heart", "icon": "node-heart-1.png", "emoji": "💧", "pending": false},
     {"id": "winHeal", "name": "박수로 회복", "desc": "승리 회복 비율 0.20+0.02L", "max": 3, "cost": {"c": 650, "g": 2.2}, "currency": "coins", "prereqs": ["healValue"], "x": 1, "y": -3, "reveal": "N", "branch": "heart", "icon": "node-heart-2.png", "emoji": "👏", "pending": false},
     {"id": "levelHeal", "name": "연습의 보람", "desc": "레벨업 회복 비율 0.16+0.02L", "max": 3, "cost": {"c": 550, "g": 2.2}, "currency": "coins", "prereqs": ["attack"], "x": 0, "y": -3, "reveal": "N", "branch": "heart", "icon": "node-heart-1.png", "emoji": "💛", "pending": false},
-    {"id": "openingShield", "name": "준비된 무대", "desc": "새 run 시작 시 최대 멘탈의 5L% 멘탈 보호막", "max": 3, "cost": {"c": 1000, "g": 2.2}, "currency": "coins", "prereqs": ["levelHeal"], "x": 0, "y": -4, "reveal": "N3", "branch": "heart", "icon": "node-heart-2.png", "emoji": "🛡️", "pending": false},
+    {"id": "openingShield", "name": "준비된 무대", "desc": "새 run 시작 시 최대 멘탈의 5L% 자신감", "max": 3, "cost": {"c": 1000, "g": 2.2}, "currency": "coins", "prereqs": ["levelHeal"], "x": 0, "y": -4, "reveal": "N3", "branch": "heart", "icon": "node-heart-2.png", "emoji": "🛡️", "pending": false},
     {"id": "calm", "name": "흔들리지 않기", "desc": "야유 피해 ×(1-0.02L)", "max": 3, "cost": {"c": 2000, "g": 2.2}, "currency": "coins", "prereqs": ["openingShield"], "x": 0, "y": -5, "reveal": "N5", "branch": "heart", "icon": "node-heart-1.png", "emoji": "💛", "pending": false},
     {"id": "coinLuck", "name": "모자 속 동전", "desc": "동전 추첨 가중치 +6L. 정규화 전 가중치이며 확률은 전체 가중치로 계산합니다.", "max": 10, "cost": {"c": 70, "g": 2.2}, "currency": "coins", "prereqs": ["root"], "x": 1, "y": 1, "reveal": "N", "branch": "luck", "icon": "node-luck-1.png", "emoji": "🪙", "pending": false},
     {"id": "forceRemove", "name": "포스", "desc": "나쁜 슬롯 문양 제거, 보석 비용 max(1,3-L)", "max": 2, "cost": [1, 1], "currency": "keys", "prereqs": ["coinLuck"], "x": 2, "y": 1, "reveal": "N5", "branch": "luck", "icon": "node-luck-2.png", "emoji": "🪄", "pending": false},
@@ -588,7 +588,7 @@
     {"id": "dealerCoin", "name": "딜러의 선물", "desc": "딜러 카드의 동전 보상 +10L%", "max": 3, "cost": {"c": 650, "g": 2.2}, "currency": "coins", "prereqs": ["forceRemove"], "x": 3, "y": 1, "reveal": "N5", "branch": "luck", "icon": "node-luck-2.png", "emoji": "🎁", "pending": false},
     {"id": "jackpot", "name": "행운의 박수", "desc": "슬롯 당첨 동전 +15L%, 당첨 확률 유지", "max": 3, "cost": {"c": 1400, "g": 2.2}, "currency": "coins", "prereqs": ["dealerCoin"], "x": 4, "y": 1, "reveal": "N5", "branch": "luck", "icon": "node-luck-1.png", "emoji": "🍀", "pending": false},
     {"id": "gemFind", "name": "반짝이는 모자", "desc": "희귀 이상 드롭의 보석 확률 +1L%p", "max": 3, "cost": {"c": 900, "g": 2.2}, "currency": "coins", "prereqs": ["tip"], "x": 3, "y": 2, "reveal": "N3", "branch": "luck", "icon": "node-luck-2.png", "emoji": "💎", "pending": false},
-    {"id": "equip", "name": "소품 진열대", "desc": "3×3 장착판, 처음 3칸 해금", "max": 1, "cost": [700], "currency": "coins", "prereqs": ["gemFind"], "x": 4, "y": 2, "reveal": "N3", "branch": "luck", "icon": "node-luck-1.png", "emoji": "🎩", "pending": false},
+    {"id": "equip", "name": "마술용품", "desc": "3×3 장착판, 처음 3칸 해금", "max": 1, "cost": [700], "currency": "coins", "prereqs": ["gemFind"], "x": 4, "y": 2, "reveal": "N3", "branch": "luck", "icon": "node-luck-1.png", "emoji": "🎩", "pending": false},
     {"id": "slotPlus", "name": "진열대 확장", "desc": "장착칸 +1, 총 9칸까지", "max": 6, "cost": [600, 1200, 2400, 4800, 9600, 19200], "currency": "coins", "prereqs": ["equip"], "x": 5, "y": 2, "reveal": "N", "branch": "luck", "icon": "node-luck-2.png", "emoji": "🎩", "pending": false},
     {"id": "lessonBias", "name": "연습 노트", "desc": "케이스 XP +10%/레벨, 최대 +20%", "max": 2, "cost": {"c": 3000, "g": 3.0}, "currency": "coins", "prereqs": ["equip"], "x": 4, "y": 3, "reveal": "N5", "branch": "luck", "icon": "node-luck-1.png", "emoji": "📖", "pending": false},
     {"id": "dove", "name": "비둘기 조수", "desc": "3000ms마다 관객에게 4V 피해", "max": 1, "cost": [2], "currency": "keys", "prereqs": ["root"], "x": -1, "y": 1, "reveal": "N", "branch": "pet", "icon": "node-pet-1.png", "emoji": "🕊️", "pending": false},
@@ -610,7 +610,7 @@
     {"id": "encoreSpan", "name": "긴 앵콜", "desc": "앵콜 지속 +3L초", "max": 2, "cost": {"c": 3500, "g": 2.5}, "currency": "coins", "prereqs": ["encore"], "x": 1, "y": 4, "reveal": "N", "branch": "finale", "icon": "node-finale-2.png", "emoji": "⏱️", "pending": false},
     {"id": "challenge", "name": "도전 수첩", "desc": "추가 도전 3개와 각각 V +0.5% 보상 활성화", "max": 1, "cost": [2500], "currency": "coins", "prereqs": ["encore"], "x": 0, "y": 5, "reveal": "N5", "branch": "finale", "icon": "node-finale-1.png", "emoji": "🏅", "pending": false},
     {"id": "starTrick", "name": "별빛 트릭", "desc": "연출 ×1.3^L, 지팡이 피해 ×1.14^L", "max": 30, "cost": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], "currency": "starlight", "prereqs": ["root"], "x": -2, "y": -6, "reveal": "E", "branch": "star", "icon": "node-star-1.png", "emoji": "✦", "pending": false, "starKey": "trick"},
-    {"id": "starGuard", "name": "별빛 실크", "desc": "최대 멘탈·멘탈 보호막·회복 ×1.18^L", "max": 30, "cost": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "currency": "starlight", "prereqs": ["root"], "x": 0, "y": -6, "reveal": "E", "branch": "star", "icon": "node-star-2.png", "emoji": "✦", "pending": false, "starKey": "guard"},
+    {"id": "starGuard", "name": "별빛 실크", "desc": "최대 멘탈·자신감·회복 ×1.18^L", "max": 30, "cost": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "currency": "starlight", "prereqs": ["root"], "x": 0, "y": -6, "reveal": "E", "branch": "star", "icon": "node-star-2.png", "emoji": "✦", "pending": false, "starKey": "guard"},
     {"id": "starTempo", "name": "별빛 손끝", "desc": "초당 타격 ×1.06^L, 재생성 시간 ×0.92^L", "max": 30, "cost": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "currency": "starlight", "prereqs": ["root"], "x": 2, "y": -6, "reveal": "E", "branch": "star", "icon": "node-star-3.png", "emoji": "✦", "pending": false, "starKey": "tempo"},
     {"id": "starBounty", "name": "별빛 모자", "desc": "동전 배율 ×1.12^L", "max": 30, "cost": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "currency": "starlight", "prereqs": ["root"], "x": 4, "y": -6, "reveal": "E", "branch": "star", "icon": "node-star-4.png", "emoji": "✦", "pending": false, "starKey": "bounty"}
   ],
@@ -806,7 +806,7 @@
       stage: "무대",
       doubt: "의심",
       mental: "멘탈",
-      shield: "멘탈 보호막",
+      shield: "자신감",
       combo: "콤보",
       finale: "피날레",
       level: "레벨",
@@ -816,7 +816,7 @@
       keys: "열쇠",
       wandArea: "지팡이 범위",
       attack: "야유",
-      heckleIn: "관객의 의심",
+      heckleIn: "관객의 야유",
       starlight: "별빛"
     }
   }
@@ -874,7 +874,7 @@
 GAME_DATA.venues.forEach(v=>{const factors={party:2.08,school:2.08,cafe:2.08,theater:3.25,festival:3.25,audition:3.25,broadcast:2.1,vegas:3.575,broadway:3.575,moon:3.575,sun:3.575,galaxy:3.025,multiverse:2.65};if(factors[v.slug])v.hpFactor=factors[v.slug];});
 
 GAME_DATA.tree.filter(n=>n.u4b).forEach(n=>{
- const base={sponge:'보드에서 튕기며 접촉마다 마술 실력의 25%, 같은 칸은 400ms 간격',cardthrow:'1500ms마다 카드 1장, 마술 실력의 40%',tipbox:'6000ms마다 무대별 동전 획득',flashpaper:'개봉 시 3% 확률, 최대 2개. 누르면 모든 케이스에 마술 실력의 150%',crystal:'8000ms마다 최대 멘탈의 3% 멘탈 보호막, 상한 적용',water:'9000ms마다 최대 멘탈의 3% 회복',spotlight:'4000ms마다 보유 1행에 마술 실력의 60%'};
+ const base={sponge:'보드에서 튕기며 접촉마다 마술 실력의 25%, 같은 칸은 400ms 간격',cardthrow:'1500ms마다 카드 1장, 마술 실력의 40%',tipbox:'6000ms마다 무대별 동전 획득',flashpaper:'개봉 시 3% 확률, 최대 2개. 누르면 모든 케이스에 마술 실력의 150%',crystal:'8000ms마다 최대 멘탈의 3% 자신감, 상한 적용',water:'9000ms마다 최대 멘탈의 3% 회복',spotlight:'4000ms마다 보유 1행에 마술 실력의 60%'};
  if(base[n.id])n.desc=base[n.id];
  else if(n.id.endsWith('Count'))n.desc='도우미 수 +1, 최대 '+({spongeCount:3,cardthrowCount:4,spotlightCount:2})[n.id];
  else if(n.id.endsWith('Speed'))n.desc=n.id==='spongeSpeed'?'이동 속도 +12%씩':'주기 -10%씩';
@@ -2081,7 +2081,7 @@ GAME_DATA.onboarding = {
     {
       "id": "heckle",
       "title": "야유 조심",
-      "body": "야유에 멘탈이 깎이면 보호막을 올려요."
+      "body": "야유에 멘탈이 깎이면 자신감을 올려요."
     },
     {
       "id": "learn",
@@ -2162,23 +2162,23 @@ GAME_DATA.storyV15 = {
   "tutorial": {
     "bio": "모든 마술을 의심하는 첫 관객. 팔짱이 단단하다.",
     "intro": [
-  {
-    "speaker": "칼리",
-    "text": "거실에서 시작한 마술, 우주 너머 어디까지 갈 수 있을까요?"
-  },
-  {
-    "speaker": "김도겸",
-    "text": "꿈은 크네. 난 마술을 안 믿는데."
-  },
-  {
-    "speaker": "칼리",
-    "text": "그럼 여기서부터 믿게 만들어 드릴게요."
-  },
-  {
-    "speaker": "김도겸",
-    "text": "내 의심을 줄이면 박수 쳐 주지."
-  }
-],
+      {
+        "speaker": "김도겸",
+        "text": "마술이라고? 나는 아무것도 안 믿어."
+      },
+      {
+        "speaker": "칼리",
+        "text": "그럼 믿게 만들어 드릴게요."
+      },
+      {
+        "speaker": "김도겸",
+        "text": "의심 게이지가 바닥나면 인정하지."
+      },
+      {
+        "speaker": "칼리",
+        "text": "좋아요. 연습 상대로 딱이네요."
+      }
+    ],
     "coaching": [
       {
         "speaker": "김도겸",
@@ -2255,7 +2255,15 @@ GAME_DATA.storyV15 = {
         },
         {
           "speaker": "칼리",
-          "text": "좋아요. 오늘 거실이 첫 무대예요."
+          "text": "중학생 때 추석 개그쇼를 보고 배운 마술이에요."
+        },
+        {
+          "speaker": "아빠",
+          "text": "그때 TV 앞에서 혼자 따라 하던 게 이거냐?"
+        },
+        {
+          "speaker": "칼리",
+          "text": "맞아요. 그 마술로 거실이 첫 무대예요."
         }
       ],
       "beforeHeadliner": [
@@ -2343,7 +2351,11 @@ GAME_DATA.storyV15 = {
         },
         {
           "speaker": "응원봉 반장",
-          "text": "반 전체가 응원봉 들고 왔어!"
+          "text": "네 마술 보고 우리 반이 다 좋아했잖아!"
+        },
+        {
+          "speaker": "칼리",
+          "text": "서점에서 산 마술 책, 닳도록 연습했거든."
         },
         {
           "speaker": "체육부 선배",
@@ -2431,21 +2443,33 @@ GAME_DATA.storyV15 = {
         },
         {
           "speaker": "창원의 마술 매니아",
-          "text": "창원, 인천, 거제, 천안, 수원도 다 왔어요."
+          "text": "창원 '빨간 모자'예요. 오늘도 모자 쓰고 왔죠!"
+        },
+        {
+          "speaker": "인천의 마술 매니아",
+          "text": "인천 '비타민'이에요. 기운 충전하러 왔어요!"
+        },
+        {
+          "speaker": "수원의 마술 매니아",
+          "text": "수원 '까만 팔찌'예요. 손목은 잘 보세요!"
+        },
+        {
+          "speaker": "구미에서 온 착한 천사",
+          "text": "구미에서 올라온 '착한 천사'예요. 반가워요!"
         },
         {
           "speaker": "칼리",
-          "text": "다들 마술 얘기만 해서 신기해요."
+          "text": "별명이 다 재밌어요. 마술 얘기만 해서 신기해요."
         }
       ],
       "beforeHeadliner": [
         {
           "speaker": "서울의 마술 매니아",
-          "text": "첫 모임 때가 생각나네. 반갑다."
+          "text": "나는 서울 '마술 3일'. 별명이 좀 특이하지?"
         },
         {
           "speaker": "칼리",
-          "text": "여기 오니 마술이 더 좋아졌어요."
+          "text": "별명 부자 모임이네요. 여기 오니 마술이 더 좋아졌어요."
         },
         {
           "speaker": "서울의 마술 매니아",
@@ -2459,7 +2483,11 @@ GAME_DATA.storyV15 = {
         },
         {
           "speaker": "인천의 마술 매니아",
-          "text": "무대 올라가면 우리가 맨 앞줄이야."
+          "text": "무대 올라가면 '비타민'들이 맨 앞줄이야."
+        },
+        {
+          "speaker": "창원의 마술 매니아",
+          "text": "'빨간 모자' 흔들면서 응원할게요!"
         }
       ]
     },
@@ -2476,6 +2504,18 @@ GAME_DATA.storyV15 = {
         {
           "speaker": "대본 작가",
           "text": "좋은 장면이면 대본에 넣을게요."
+        },
+        {
+          "speaker": "헤클러",
+          "text": "그 카드 내가 섞어 볼까? 한번 찾아 봐요."
+        },
+        {
+          "speaker": "칼리",
+          "text": "지하철에서 낯선 사람이 그랬어요. 정말 놀랐죠."
+        },
+        {
+          "speaker": "칼리",
+          "text": "그날 배웠어요. 방해에도 웃으며 이어 가기!"
         },
         {
           "speaker": "칼리",
@@ -2500,6 +2540,10 @@ GAME_DATA.storyV15 = {
         {
           "speaker": "까칠한 평론가",
           "text": "별 네 개 반. 이 이상은 나도 못 준다."
+        },
+        {
+          "speaker": "헤클러",
+          "text": "아까는 장난이었어요. 진짜 멋졌어요!"
         },
         {
           "speaker": "커튼콜 팬",
@@ -2607,7 +2651,7 @@ GAME_DATA.storyV15 = {
         },
         {
           "speaker": "방송 작가",
-          "text": "방송 순서대로만 하세요. 아마도요."
+          "text": "큐시트대로만 하세요. 아마도요."
         },
         {
           "speaker": "칼리",
@@ -2801,7 +2845,7 @@ GAME_DATA.storyV15 = {
       "beforeHeadliner": [
         {
           "speaker": "태양의 불꽃왕",
-          "text": "동전은 태양 불꽃에 녹인다."
+          "text": "동전은 코로나에 녹인다."
         },
         {
           "speaker": "칼리",
@@ -2838,8 +2882,16 @@ GAME_DATA.storyV15 = {
           "text": "별이 객석처럼 깔려 있어."
         },
         {
+          "speaker": "밍기리",
+          "text": "칼리, 칼리라는 이름은 어디서 왔어?"
+        },
+        {
+          "speaker": "칼리",
+          "text": "어릴 때 게임 친구가 가문에 불러 지어 줬어요."
+        },
+        {
           "speaker": "별자리 선생님",
-          "text": "별이 지기 전에 보여 줘요."
+          "text": "별처럼 멋진 선물이네요. 별이 지기 전에 보여 줘요."
         }
       ],
       "beforeHeadliner": [
@@ -2874,40 +2926,40 @@ GAME_DATA.storyV15 = {
     "multiverse": {
       "opening": [
         {
-          "speaker": "연습실 못 간 나",
-          "text": "문 앞에서 멈춘 나야. 들어갈 수 없었어."
+          "speaker": "다른 세계의 나",
+          "text": "나는 한 번도 안 멈추고 계속 한 너야!"
         },
         {
-          "speaker": "지팡이 없는 나",
-          "text": "난 마술 대신 리모컨을 쥐었어."
+          "speaker": "무대에 선 나",
+          "text": "우린 다 마술을 놓지 않은 칼리들이야."
         },
         {
           "speaker": "밍기리",
           "text": "저 거울 속 의심쟁이, 딱 내 취향이네!"
         },
         {
-          "speaker": "객석의 나",
-          "text": "그래도 지금 네게 박수를 보낼게."
+          "speaker": "박수 보내는 나",
+          "text": "어느 세계에서든 네게 박수를 보낼게."
         }
       ],
       "beforeHeadliner": [
         {
           "speaker": "가장 의심 많은 나",
-          "text": "난 시작도 안 한 너다."
+          "text": "난 의심이 많아도 끝까지 해 온 너다."
         },
         {
           "speaker": "칼리",
-          "text": "그래도 여기까지 온 나를 믿어."
+          "text": "나도 알아. 멈추지 않은 나를 믿어."
         },
         {
           "speaker": "가장 의심 많은 나",
-          "text": "그럼 보여 줘. 한 번 더 믿어 볼게."
+          "text": "좋아. 그럼 한 번 더 보여 줘."
         }
       ],
       "afterClear": [
         {
           "speaker": "가장 의심 많은 나",
-          "text": "의심은 이제 쉬어도 되겠다."
+          "text": "멈추지 않길 잘했다. 의심은 쉬어도 되겠다."
         },
         {
           "speaker": "용기 낸 나",
@@ -2945,6 +2997,22 @@ GAME_DATA.storyV15 = {
         },
         {
           "speaker": "김정명",
+          "text": "밤 알바로 처음 왔을 때가 어제 같은데."
+        },
+        {
+          "speaker": "김정명",
+          "text": "낮 알바, 직원, 이젠 매니저까지 했지."
+        },
+        {
+          "speaker": "칼리",
+          "text": "사장님이 믿고 맡겨 주신 덕분이에요."
+        },
+        {
+          "speaker": "김정명",
+          "text": "네가 일을 너무 잘한 탓이야. 좀 얄밉다."
+        },
+        {
+          "speaker": "김정명",
           "text": "그래. 이번엔 함께 만들어 보자."
         }
       ],
@@ -2956,6 +3024,30 @@ GAME_DATA.storyV15 = {
         {
           "speaker": "칼리",
           "text": "다녀왔습니다. 여기가 제 무대예요."
+        },
+        {
+          "speaker": "칼리",
+          "text": "한국에서 마술 즐기는 사람, 100명에 1명도 안 돼요."
+        },
+        {
+          "speaker": "칼리",
+          "text": "공연도 하고 인터넷에서도 알려서 2명으로 늘릴래요."
+        },
+        {
+          "speaker": "칼리",
+          "text": "마술 친구, 동생들이랑 좋은 시간도 보내고요."
+        },
+        {
+          "speaker": "칼리",
+          "text": "나중엔 서재 앞 큰 테이블에서 초보자들에게요."
+        },
+        {
+          "speaker": "칼리",
+          "text": "마술도 보여 주고 열정과 꿈도 전해 줄게요."
+        },
+        {
+          "speaker": "김정명",
+          "text": "좋다. 그 자리, 내가 미리 맡아 두마."
         },
         {
           "speaker": "정희수",
@@ -2985,44 +3077,44 @@ GAME_DATA.storyV15 = {
     "h4": "샷을 느리게 내리는 여유로운 카페 바리스타.",
     "a-meetup-busan": "첫차로 달려온 부산의 마술 매니아.",
     "a-meetup-daegu": "카드 이야기를 세 시간 하는 대구 매니아.",
-    "a-meetup-changwon": "항상 연습 영상을 들고 오는 창원 매니아.",
-    "a-meetup-incheon": "공연 때마다 맨 앞줄에 앉는 인천 매니아.",
+    "a-meetup-changwon": "창원 모임의 '빨간 모자'. 연습 영상을 들고 오는 매니아.",
+    "a-meetup-incheon": "인천 모임의 '비타민'. 맨 앞줄에 앉는 활력 담당.",
     "a-meetup-geoje": "바다 이야기와 마술을 섞는 거제 매니아.",
     "a-meetup-cheonan": "모임 간식을 챙겨 오는 천안 매니아.",
-    "a-meetup-suwon": "새 기술을 제일 먼저 외우는 수원 매니아.",
-    "h-meetup-seoul": "모임의 맏형 같은 서울의 매니아 대표.",
-    "a13": "손바닥이 이미 빨간 열성팬.",
+    "a-meetup-suwon": "수원 모임의 '까만 팔찌'. 새 기술을 제일 먼저 외운다.",
+    "h-meetup-seoul": "서울 모임의 '마술 3일'. 맏형 같은 대표.",
+    "a13": "손바닥이 이미 빨간 앞줄 열성팬.",
     "a14": "막간마다 프로그램을 넘기는 꼼꼼한 관객.",
-    "a15": "귓속말이 박자보다 빠른 헤클러.",
+    "a15": "귓속말이 박자보다 빠른 뒷자리 관객.",
     "a54": "좋은 장면을 대본에 옮기는 작가.",
     "a55": "커튼콜만 기다리는 열정 팬.",
     "h5": "말투는 까칠해도 속은 따뜻한 평론가.",
     "a16": "깃발을 피날레에 흔드는 응원단.",
-    "a17": "양념 묻은 손으로 박수 치는 술친구.",
-    "a18": "칼리를 선배라 부르는 후배.",
+    "a17": "양념 묻은 손으로 박수 치는 치킨 동기.",
+    "a18": "칼리를 선배라 부르는 무대 밑 후배.",
     "a59": "앵콜 전에 손부터 흔드는 밴드 관객.",
     "a60": "야광봉으로 무대를 물들이는 팬.",
     "h6": "동전 장난을 좋아하는 능청스러운 사회자.",
-    "a19": "점수를 실시간으로 올리는 점수판 도우미.",
+    "a19": "점수를 실시간으로 올리는 점수판 보조.",
     "a20": "줌인 타이밍을 아끼는 카메라 감독.",
     "a21": "칼리의 피날레만 노려보는 라이벌.",
-    "a64": "카메라보다 무대를 보는 초대 작가.",
+    "a64": "카메라보다 무대를 보는 작가석 손님.",
     "a65": "리허설부터 눈을 못 떼는 관객.",
-    "a66": "신호에 맞춰 환호하는 방청객.",
+    "a66": "신호에 맞춰 환호하는 현장 방청객.",
     "h7": "의심을 채우는 냉정한 메인 심사위원.",
     "a112": "생방송 시간을 초 단위로 외치는 PD.",
-    "a113": "방송 순서에 늘 밑줄을 긋는 작가.",
-    "a114": "마이크를 든 채 숨죽이는 음향 감독.",
+    "a113": "큐시트에 늘 밑줄을 긋는 작가.",
+    "a114": "마이크를 든 채 숨죽이는 붐 마이크 기사.",
     "a115": "신호에 맞춰 박수 치는 방청 응원단.",
     "a116": "실시간 반응 숫자를 외치는 담당자.",
     "a117": "가장 반짝이는 순간을 찾는 조명 감독.",
     "h-broadcast": "천천히를 좋아하는 부드러운 국민 MC.",
     "a22": "칩을 쌓다 손을 멈추는 큰손 손님.",
-    "a23": "깃털 너머로 무대를 보는 화려한 관객.",
+    "a23": "깃털 너머로 무대를 보는 쇼걸 관객.",
     "a24": "팔짱이 단단하지만 마음은 약한 경비.",
     "a70": "칩을 내려놓고 눈이 커지는 호텔 손님.",
     "a71": "쇼 시간만 기다린 열혈 팬.",
-    "a72": "사진 찍다 박수 치는 사진 관광객.",
+    "a72": "사진 찍다 박수 치는 카지노 관광객.",
     "h8": "눈을 읽는 베테랑, 카드판의 전설 딜러.",
     "a25": "하이노트에 피날레를 거는 뮤지컬 팬.",
     "a26": "브로슈어를 접다 멈추는 관광객.",
@@ -3033,23 +3125,23 @@ GAME_DATA.storyV15 = {
     "a79": "무대 의상 솔기까지 보는 의상가.",
     "h9": "템포를 쥐고 노는 브로드웨이의 스타.",
     "a28": "헬멧 안에서 박수를 아끼는 우주비행사.",
-    "a29": "피날레에 무전을 여는 무전 담당.",
-    "a30": "바퀴 자국 위에 서는 탐사차 기사.",
-    "a83": "헬멧 너머로 관찰하는 달 과학자.",
+    "a29": "피날레에 무전을 여는 달기지 관제사.",
+    "a30": "바퀴 자국 위에 서는 월면차 운전병.",
+    "a83": "헬멧 너머로 관찰하는 월면 과학자.",
     "a84": "별빛을 모아 병에 담는 수집가.",
     "a85": "무중력에도 공구를 놓치는 정비사.",
     "a86": "사진 찍기에 바쁜 우주 관광객.",
     "h10": "달 먼지로 케이스를 잠그는 달 기지 대장.",
-    "a31": "불꽃 파도를 타는 불꽃 서퍼.",
-    "a32": "흑점 투어를 안내하는 태양 가이드.",
-    "a33": "피날레에 셔터를 누르는 불꽃 사진가.",
+    "a31": "불꽃 파도를 타는 플레어 서퍼.",
+    "a32": "흑점 투어를 안내하는 코로나 가이드.",
+    "a33": "피날레에 셔터를 누르는 홍염 사진가.",
     "a90": "빛의 색을 분석하는 빛 연구원.",
     "a91": "선글라스를 쓰고 구경하는 여행객.",
     "a92": "태양 표면을 매일 보는 관측자.",
-    "a93": "태양 위의 파도를 타는 파도 서퍼.",
+    "a93": "불꽃 파도를 타는 또 다른 서퍼.",
     "a94": "태양 빛을 사진에 담는 우주 사진가.",
-    "h11": "동전을 태양 불꽃에 녹이는 호탕한 불꽃왕.",
-    "a34": "번역기가 박수를 모르는 외계인 손님.",
+    "h11": "동전을 코로나에 녹이는 호탕한 불꽃왕.",
+    "a34": "번역기가 박수를 모르는 관광 외계인.",
     "a35": "기체를 기울여 구경하는 UFO 파일럿.",
     "a36": "별이 지기 전에 보자는 해설가.",
     "a98": "박자에 맞춰 건반을 누르는 우주 음악가.",
@@ -3058,20 +3150,20 @@ GAME_DATA.storyV15 = {
     "a101": "혜성을 타고 다니는 빠른 라이더.",
     "a102": "별자리마다 소원을 비는 여행자.",
     "h12": "별빛으로 의심을 채우는 위엄 있는 황제.",
-    "a37": "마술 대신 리모컨을 쥔 또 다른 칼리.",
-    "a38": "연습실 문 앞에서 멈춘 또 다른 칼리.",
-    "a39": "첫 카드를 가방에 도로 넣은 칼리.",
+    "a37": "지팡이가 없어도 맨손으로 계속한 칼리.",
+    "a38": "연습실에 못 가는 날도 집에서 연습한 칼리.",
+    "a39": "첫 카드를 접고 접어 손에 익힌 칼리.",
     "a106": "한 걸음 내디딘 용기 있는 칼리.",
     "a107": "객석에서 박수 치는 칼리.",
     "a108": "다른 차원에서 온 칼리.",
     "a109": "이제 막 연습을 시작한 칼리.",
     "a110": "이미 무대에 선 칼리.",
     "a111": "박수를 보내 주는 따뜻한 칼리.",
-    "h13": "시작도 안 한 채 의심만 쌓은 칼리.",
+    "h13": "의심은 많아도 끝까지 해 온 칼리.",
     "a-lecturenote-hecate": "꼼꼼히 점검하는 부장. 말투가 정중한 남자.",
     "a-lecturenote-serona": "서프라이즈를 숨겨 두는 히든 직원 여자.",
     "a-lecturenote-jung": "포장과 정리를 맡은 부지런한 직원.",
-    "h-lecturenote-kim": "렉쳐노트를 지키는 푸근한 사장님."
+    "h-lecturenote-kim": "렉쳐노트의 푸근한 사장님. 칼리를 밤 알바에서 매니저로 키웠다."
   }
 };
 
@@ -3104,16 +3196,16 @@ GAME_DATA.easyNodes = {
   "goldCoins": "황금 케이스에서 동전을 더 얻어요\n동전 20%씩 추가",
   "prepared": "새 케이스를 조금 열린 채 받아요\n열린 양 5%씩 추가",
   "boxXP": "케이스가 더 빨리 자라요\n케이스 경험치 10%씩 추가",
-  "boxShield": "개봉할 때 야유를 막을 힘을 얻어요\n보호막 0.1씩 · 멘탈의 힘 적용",
+  "boxShield": "개봉할 때 야유를 막을 힘을 얻어요\n자신감 0.1씩 · 멘탈의 힘 적용",
   "boxHeal": "개봉할 때 마음이 회복돼요\n회복 0.05씩 · 멘탈의 힘 적용",
   "mental": "야유를 더 오래 버텨요\n최대 멘탈 1.18배씩",
   "attack": "관객의 의심이 더 빨리 줄어요\n연출 1.05배씩",
   "shieldCap": "야유를 막을 힘을 더 모아요\n최대 멘탈의 3%씩 추가",
-  "shieldValue": "실크가 야유를 더 많이 막아요\n보호막 5%씩 추가",
+  "shieldValue": "실크가 야유를 더 많이 막아요\n자신감 5%씩 추가",
   "healValue": "회복 아이템으로 더 힘을 얻어요\n회복 5%씩 추가",
   "winHeal": "이긴 뒤 마음이 더 회복돼요\n회복 2%씩 추가",
   "levelHeal": "레벨이 오를 때 더 회복돼요\n회복 2%씩 추가",
-  "openingShield": "새 공연을 든든하게 시작해요\n최대 멘탈의 5%씩 보호막",
+  "openingShield": "새 공연을 든든하게 시작해요\n최대 멘탈의 5%씩 자신감",
   "calm": "야유를 들어도 덜 힘들어요\n야유 힘 2%씩 줄기",
   "coinLuck": "케이스에서 동전이 더 잘 나와요\n동전 뽑기 표 6장씩 추가",
   "forceRemove": "딜러의 나쁜 그림을 지워요\n쓰는 보석 1개씩 줄기 · 최소 1개",
@@ -3143,7 +3235,7 @@ GAME_DATA.easyNodes = {
   "encoreSpan": "앵콜의 힘이 더 오래 가요\n지속 시간 3초씩 추가",
   "challenge": "도전하며 관객을 더 잘 놀라게 해요\n도전 3개 · 성공마다 연출 0.5% 추가",
   "starTrick": "케이스와 관객을 더 빨리 이겨요\n실력 1.14배 · 연출 1.3배씩",
-  "starGuard": "야유를 버티고 더 잘 회복해요\n멘탈 · 보호막 · 회복 1.18배씩",
+  "starGuard": "야유를 버티고 더 잘 회복해요\n멘탈 · 자신감 · 회복 1.18배씩",
   "starTempo": "더 자주 두드리고 빨리 채워져요\n두드리기 1.06배 · 준비 시간 8% 줄기",
   "starBounty": "동전을 더 많이 얻어요\n동전 1.12배씩",
   "caseMax": "케이스가 더 높은 레벨로 자라요\n최대 레벨 1씩 추가 · 최대 50",
@@ -3157,7 +3249,7 @@ GAME_DATA.easyNodes = {
   "tipbox": "팁 박스가 동전을 모아줘요\n6초마다 동전 받기",
   "flashpaper": "종이를 누르면 모든 칸을 두드려요\n개봉 때 3% · 실력의 150%",
   "flashpaperChance": "불꽃 종이를 더 자주 얻어요\n기회 1%씩 추가 · 최대 7%",
-  "crystal": "수정구가 야유를 막아줘요\n8초마다 멘탈의 3% 보호막",
+  "crystal": "수정구가 야유를 막아줘요\n8초마다 멘탈의 3% 자신감",
   "water": "물 한 잔으로 마음이 회복돼요\n9초마다 멘탈의 3% 회복",
   "spotlight": "조명이 케이스 한 줄을 두드려요\n4초마다 실력의 60%",
   "fanPower": "팬과 조수가 더 세게 두드려요\n힘 15%씩 추가",
@@ -3193,8 +3285,8 @@ GAME_DATA.easyNodes.flashpaperPower="불꽃 종이가 더 세게 두드려요\n�
   else n.desc=D.easyNodes[n.id];
   if(!n.desc)throw new Error('Missing easy description: '+n.id);
  });
- const copy={damage:'관객의 의심이 줄어요',shield:'야유를 막을 힘을 얻어요',heal:'마음이 회복돼요',coins:'비법을 배울 동전을 얻어요',xpBurst:'레벨이 더 빨리 올라요',finisher:'피날레를 더 빨리 준비해요',boxFill:'케이스가 더 빨리 열려요'};
- D.items.types.forEach(t=>t.ladder.forEach(p=>{const effect=p.effect||t.effect;const values={damage:'기본 힘 8 × 연출 · 좋은 소품은 최대 25배',shield:'기본 보호막 2.7 × 멘탈 · 최대 25배',heal:'기본 회복 1.8 × 멘탈 · 최대 25배',coins:'기본 동전 4개 · 좋은 소품은 최대 25배',xpBurst:'다음 레벨 경험치의 50%',finisher:'피날레 5칸 채우기',boxFill:'모든 케이스를 30% 더 열기'};p.desc=copy[effect]+'\n'+values[effect];}));
+ const copy={damage:'관객의 의심이 줄어요',shield:'자신감이 있으면 야유를 먼저 막아 줘요',heal:'마음이 회복돼요',coins:'비법을 배울 동전을 얻어요',xpBurst:'레벨이 더 빨리 올라요',finisher:'피날레를 더 빨리 준비해요',boxFill:'케이스가 더 빨리 열려요'};
+ D.items.types.forEach(t=>t.ladder.forEach(p=>{const effect=p.effect||t.effect;const values={damage:'기본 힘 8 × 연출 · 좋은 소품은 최대 25배',shield:'기본 자신감 2.7 × 멘탈 · 최대 25배',heal:'기본 회복 1.8 × 멘탈 · 최대 25배',coins:'기본 동전 4개 · 좋은 소품은 최대 25배',xpBurst:'다음 레벨 경험치의 50%',finisher:'피날레 5칸 채우기',boxFill:'모든 케이스를 30% 더 열기'};p.desc=copy[effect]+'\n'+values[effect];}));
  D.missions.forEach(m=>{m.desc='오늘의 목표를 이루면 보석을 받아요\n'+m.name+' · 보석 '+m.gems+'개';});
  D.easyExtras={events:'움직이는 친구를 누르면 선물을 받아요\n8초 안에 누르기 · 힘, 동전, 열쇠 중 하나',set:'무대의 모두를 감탄시키면 힘이 늘어요\n실력 3% 추가 · 컬렉션 모두 모으면 연출 1.1배',milestone:'레벨이 쌓이면 힘이 크게 늘어요\n10 · 25레벨마다 2배 · 케이스는 50도 2배'};
 })(GAME_DATA);
@@ -3211,3 +3303,40 @@ GAME_DATA.missions.find(m=>m.id==='skills').name='스킬 5번 쓰기';GAME_DATA.
 (function(D){const scale={family:2,party:1.3,school:5,cafe:4,meetup:4.4,theater:4,festival:15,audition:24,broadcast:65,vegas:5,moon:1.6,sun:1.1,galaxy:1.25,multiverse:1.08,lecturenote:8};D.venues.forEach(v=>{if(scale[v.slug])v.hpFactor=(v.hpFactor||1)*scale[v.slug];});D.venues.find(v=>v.slug==='lecturenote').bossHpFactor/=8;})(GAME_DATA);
 
 GAME_DATA.statNames={power:'마술 실력',damage:'연출',mental:'멘탈'};
+
+// U17 gem uses and child-friendly descriptions.
+GAME_DATA.gemShop=[{id:'glove',name:'연습 장갑 ×1',desc:'1분 동안 모든 케이스를 두드려요',cost:4},{id:'refill',name:'스킬 바로 충전',desc:'기다리는 스킬을 바로 쓸 수 있어요',cost:2},{id:'potion',name:'멘탈 회복 물약',desc:'마음을 30% 회복해요',cost:3}];
+GAME_DATA.tree.filter(n=>['encore','encorePower','encoreSpan'].includes(n.id)).forEach(n=>{n.desc=n.id==='encoreSpan'?'피버 타임이 더 오래 이어져요\n레벨마다 3초 추가':n.id==='encorePower'?'피버 타임에 마술이 더 강해져요\n레벨마다 힘 5% 추가':'피버 타임에 마술이 더 강해져요\n피버 실력 20% 추가';});
+// U17 pacing: preserve rewards and fever strength; tune audience durability.
+(function(D){const scale={party:1.6,school:1.6,cafe:2,meetup:1.8,theater:4,festival:2.5,audition:3.35,broadcast:1.16,moon:1.8,galaxy:1.12,multiverse:1.07};D.venues.forEach(v=>{if(scale[v.slug])v.hpFactor*=scale[v.slug];});})(GAME_DATA);
+
+GAME_DATA.venues.find(v=>v.slug==='lecturenote').bossHpFactor*=1.07;
+
+// U18 optional challenges and persistent cosmetics do not change timeline balance.
+GAME_DATA.trueFanRules=[
+ {type:'noDamage',value:0,label:'하트 하나도 잃지 않고 이기기'},
+ {type:'timeLimit',value:90,label:'90초 안에 이기기'},
+ {type:'combo',value:25,label:'25콤보를 만든 뒤 이기기'}
+];
+GAME_DATA.cosmetics={
+ kali:[
+  {id:'wave',name:'푸른 파도',cost:8,emoji:'🌊'},
+  {id:'flame',name:'불꽃 고리',cost:12,emoji:'🔥'},
+  {id:'hanbok',name:'한복 마술사',cost:0,milestone:'meetup',hint:'전국 마술 매니아 무대 완료',emoji:'🎎'},
+  {id:'denim',name:'거리 마술사',cost:10,emoji:'👖'},
+  {id:'camera',name:'사진가',cost:14,emoji:'📷'},
+  {id:'guitar',name:'음악가',cost:16,emoji:'🎸'},
+  {id:'reader',name:'서재의 강연자',cost:0,milestone:'lecturenote',hint:'렉쳐노트 귀환 완료',emoji:'📚'},
+  {id:'redtee',name:'무규칙',cost:20,emoji:'👕'}
+ ],
+ cases:[
+  {id:'wave',name:'푸른 파도',cost:6,emoji:'🌊'},
+  {id:'flame',name:'불꽃',cost:8,emoji:'🔥'},
+  {id:'hwatu',name:'화투',cost:9,emoji:'🎴'},
+  {id:'sakura',name:'벚꽃',cost:10,emoji:'🌸'},
+  {id:'denim',name:'데님',cost:8,emoji:'👖'},
+  {id:'wood',name:'나무',cost:12,emoji:'🪵'},
+  {id:'brush',name:'붓',cost:14,emoji:'🖌️'},
+  {id:'study',name:'서재',cost:15,emoji:'📚'}
+ ]
+};
