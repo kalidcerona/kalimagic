@@ -32,14 +32,22 @@ for (const directory of ['assets', 'fonts']) {
 }
 for (const file of ['install-prompt.js', 'install-prompt.css']) files.set(file, await readRegular(ADDITIONS, file));
 for (const size of [192, 512]) files.set(`icon-${size}.png`, await readRegular(ADDITIONS, `icon-${size}.png`));
+for (const file of ['apple-touch-icon.png', 'favicon-32.png', 'og-image.png']) files.set(file, await readRegular(ADDITIONS, file));
 files.set('manifest.webmanifest', Buffer.from(JSON.stringify({
-  name: '칼리 마술 성장기 (베타)', short_name: '칼리마술',
+  name: '칼리의 마술 성장기', short_name: '칼리마술',
   id: '/tools/magicshow/', start_url: '/tools/magicshow/', scope: '/tools/magicshow/',
   display: 'fullscreen', orientation: 'landscape', theme_color: '#151020', background_color: '#151020',
   icons: [192, 512].map(size => ({ src: `icon-${size}.png`, sizes: `${size}x${size}`, type: 'image/png', purpose: 'any' }))
 }, null, 2) + '\n'));
 let html = files.get('index.html').toString();
-html = replaceOnce(html, '</head>', '<link rel="stylesheet" href="install-prompt.css"><script defer src="install-prompt.js"></script><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="theme-color" content="#151020"></head>');
+const DESCRIPTION = '가족 거실에서 우주까지, 마술로 관객을 감탄시키는 방치형 게임';
+const PREVIEW_META = [
+  ['name', 'description', DESCRIPTION], ['property', 'og:type', 'website'], ['property', 'og:site_name', '칼리의 마술 성장기'],
+  ['property', 'og:title', '칼리의 마술 성장기'], ['property', 'og:description', DESCRIPTION],
+  ['property', 'og:url', 'https://kalimagic.netlify.app/tools/magicshow/'], ['property', 'og:image', 'https://kalimagic.netlify.app/tools/magicshow/og-image.png'],
+  ['property', 'og:image:width', '1200'], ['property', 'og:image:height', '630'], ['name', 'twitter:card', 'summary_large_image']
+].map(([key, name, content]) => `<meta ${key}="${name}" content="${content}">`).join('');
+html = replaceOnce(html, '</head>', `<link rel="stylesheet" href="install-prompt.css"><script defer src="install-prompt.js"></script><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png"><link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="theme-color" content="#151020">${PREVIEW_META}</head>`);
 html = replaceOnce(html, '<body>', '<body data-magic-customize="off">');
 html = replaceOnce(html, '</body>', `<script>if ('serviceWorker' in navigator) { window.addEventListener('load', function () { navigator.serviceWorker.register('./sw.js').catch(function () {}); }); }</script></body>`);
 files.set('index.html', Buffer.from(html));

@@ -37,6 +37,8 @@
     const note = (f, d, t = 0, type = 'sine', v = .4, end = f) => tone(f, d, t, type, v * quiet, end);
     const melody = (notes, step, type = 'triangle') => notes.forEach((f, i) => note(f, step * 1.7, i * step, type, .35));
     switch (name) {
+      case 'event': melody([784,1047,1568,2093], .06); break;
+      case 'skill': melody([523,784,1047,1568], .10); break;
       case 'tap':
         if (context.currentTime - lastTap < .06) return;
         lastTap = context.currentTime; note(1500, .035, 0, 'square', .17, 700); break;

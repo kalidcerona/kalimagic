@@ -1,14 +1,13 @@
 @font-face{font-family:MagicshowInstall;src:url('./fonts/Galmuri11.woff2') format('woff2');font-display:swap}
-#magicshow-install-overlay[hidden],#magicshow-install-launcher[hidden],#magicshow-install-overlay [hidden]{display:none!important}
-#magicshow-install-launcher,#magicshow-install-overlay{font-family:MagicshowInstall,sans-serif;font-size:14px;color:#fff}
-#magicshow-install-launcher{position:fixed;top:max(8px,env(safe-area-inset-top));left:max(8px,env(safe-area-inset-left));z-index:2147483000;min-width:44px;min-height:44px;border:1px solid #b49cd7;border-radius:10px;background:#30223f;cursor:pointer;padding:8px}
+#magicshow-install-overlay[hidden],#magicshow-install-overlay [hidden]{display:none!important}
+#magicshow-install-overlay{font-family:MagicshowInstall,sans-serif;font-size:14px;color:#fff}
 #magicshow-install-overlay{position:fixed;inset:0;z-index:2147483001;background:#100b20cc;display:flex;align-items:center;justify-content:center;padding:12px;box-sizing:border-box}
 #magicshow-install-overlay *{box-sizing:border-box}
 .magicshow-install-card{position:relative;width:min(520px,100%);max-height:calc(100dvh - 24px);overflow:auto;background:#241a34;border:2px solid #bb9ce9;border-radius:16px;padding:20px;box-shadow:0 8px 40px #0008;line-height:1.65;text-align:left}
 .magicshow-install-card h2{font-size:20px;margin:0 44px 12px 0;line-height:1.5;color:#f4deff}
 .magicshow-install-card p{margin:12px 0}
 #magicshow-install-overlay button{font:inherit;min-height:44px;min-width:44px;border:1px solid #b49cd7;border-radius:10px;background:#46305f;color:#fff;padding:8px 14px;cursor:pointer;touch-action:manipulation}
-#magicshow-install-overlay button:focus-visible,#magicshow-install-launcher:focus-visible{outline:3px solid #ffe49f;outline-offset:2px}
+#magicshow-install-overlay button:focus-visible{outline:3px solid #ffe49f;outline-offset:2px}
 #magicshow-install-overlay button:disabled{opacity:.6}
 .magicshow-install-close{position:absolute;top:8px;right:8px;font-size:24px!important;padding:4px!important}
 .magicshow-install-actions{display:flex;gap:8px;flex-wrap:wrap}

@@ -166,11 +166,13 @@
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   }
 
-  function pickW(state, weights) {
+  function pickW(state, weights, sample) {
     var sum = 0;
     var i;
     for (i = 0; i < weights.length; i++) sum += weights[i];
-    var r = rngNext(state) * sum;
+    var roll = rngNext(state);
+    if(sample)sample.value=roll;
+    var r = roll * sum;
     for (i = 0; i < weights.length; i++) {
       r -= weights[i];
       if (r < 0) return i;
@@ -181,6 +183,159 @@
   function emit(ev, e) {
     if (ev && ev.length < 4000) ev.push(e);
   }
+
+  // U13: explicit time inputs keep offline accounting pure and reproducible.
+  function emptyU14() { return {outfit:1,satisfied:[],sets:[],collection:false,visitor:{wait:120000,left:0,kind:'rabbit',serial:0,buff:0,incomeMs:0,incomeCoins:0,incomeRate:0},daily:{date:'',records:{},latest:'',streak:0},haptics:true}; }
+  function dateOrdinal(date) {
+    if(typeof date!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(date))return null;
+    var y=+date.slice(0,4),m=+date.slice(5,7),d=+date.slice(8,10),leap=y%4===0&&(y%100!==0||y%400===0);
+    var days=[31,leap?29:28,31,30,31,30,31,31,30,31,30,31];
+    if(y<1||m<1||m>12||d<1||d>days[m-1])return null;
+    var n=y-1;return 365*n+Math.floor(n/4)-Math.floor(n/100)+Math.floor(n/400)+days.slice(0,m-1).reduce(function(a,b){return a+b;},0)+d;
+  }
+  function dailySelection(date) {
+    var h=2166136261;for(var i=0;i<date.length;i++)h=Math.imul(h^date.charCodeAt(i),16777619)>>>0;
+    var pool=DATA.missions.slice(),out=[];
+    for(i=0;i<3;i++){h=(Math.imul(h,1664525)+1013904223)>>>0;out.push(pool.splice(h%pool.length,1)[0].id);}return out;
+  }
+  function setDailyDate(state,date) {
+    if(dateOrdinal(date)===null)return false;
+    var daily=state.u14.daily;
+    if(!daily.records[date]){if(Object.keys(daily.records).length>=10000)return false;daily.records[date]={progress:{},claimed:[],bonus:false,streakReward:0};}
+    daily.date=date;return true;
+  }
+  function dailyProgress(state,id,value,max) {
+    var daily=state.u14.daily,r=daily.records[daily.date];if(!r)return;
+    r.progress[id]=Math.min(1e12,max?Math.max(r.progress[id]||0,value):(r.progress[id]||0)+value);
+    claimMission(state,id);
+  }
+  function claimMission(state,id) {
+    var d=state.u14.daily,r=d.records[d.date],m=DATA.missions.find(function(m){return m.id===id;});
+    if(!r||!m||dailySelection(d.date).indexOf(id)<0||r.claimed.indexOf(id)>=0||(r.progress[id]||0)<m.target)return false;
+    r.claimed.push(id);state.gems+=m.gems;
+    if(r.claimed.length===1 && (!d.latest || dateOrdinal(d.date)>dateOrdinal(d.latest))) {
+      d.streak=d.latest && dateOrdinal(d.date)-dateOrdinal(d.latest)===1?d.streak+1:1;d.latest=d.date;
+      r.streakReward=DATA.streakGems[(d.streak-1)%7];state.gems+=r.streakReward;
+    }
+    if(r.claimed.length===3&&!r.bonus){r.bonus=true;state.keys++;}
+    return true;
+  }
+  function venueSetProgress(state,slug) {
+    var v=DATA.venues.find(function(v){return v.slug===slug;});if(!v)return {current:0,total:0,complete:false};
+    var ids=v.audiences.concat([v.headliner]).map(function(a){return a.id;});
+    return {current:ids.filter(function(id){return state.u14.satisfied.indexOf(id)>=0;}).length,total:ids.length,complete:state.u14.sets.indexOf(slug)>=0};
+  }
+  function checkSets(state,ev) {
+    DATA.venues.forEach(function(v){var p=venueSetProgress(state,v.slug);if(p.current===p.total&&!p.complete){state.u14.sets.push(v.slug);emit(ev,{type:'setBonus',slug:v.slug});}});
+    var all=DATA.tree.filter(function(n){return n.productMultiplier;}).every(function(n){return state.tree[n.id]>0;});
+    if(all&&!state.u14.collection){state.u14.collection=true;emit(ev,{type:'setBonus',slug:'collection'});}
+  }
+  function visitorBlocked(state) {
+    return state.mode!=='fight'||state.resolved||state.features.climax.left>0||state.telegraphed||state.heckleMs<=CONST.telegraphMs||state.review.target>=0;
+  }
+  function tickVisitor(state,dt,ev) {
+    var v=state.u14.visitor;v.buff=Math.max(0,v.buff-dt);v.wait=Math.max(0,v.wait-dt);
+    v.incomeMs+=dt;if(v.incomeMs>=3000){v.incomeRate=v.incomeCoins/(v.incomeMs/1000);v.incomeMs=0;v.incomeCoins=0;}
+    if(v.left>0){v.left=Math.max(0,v.left-dt);if(!v.left)emit(ev,{type:'visitorMiss'});return;}
+    if(!v.wait&&!visitorBlocked(state)){v.kind=rngNext(state)<.5?'rabbit':'fan';v.left=8000;v.serial++;v.wait=90000+Math.floor(rngNext(state)*60001);emit(ev,{type:'visitor',kind:v.kind,serial:v.serial});}
+  }
+  function catchVisitor(state,options) {
+    var ev=options&&options.quiet?null:[],v=state.u14.visitor;
+    if(!v.left||visitorBlocked(state))return ev||[];
+    v.left=0;var reward=pickW(state,[50,40,10]),amount=0;
+    if(reward===0)v.buff=30000;
+    if(reward===1){amount=Math.floor(v.incomeRate*60);earnCoins(state,amount);v.incomeCoins=Math.max(0,v.incomeCoins-amount);}
+    if(reward===2){amount=1;state.keys++;}
+    dailyProgress(state,'events',1);emit(ev,{type:'visitorCatch',reward:['power','coins','key'][reward],amount:amount});return ev||[];
+  }
+  function emptyIdle() { return {wallMs:0,autoAdvance:true,waiting:false,autoAcc:0,cursor:0,reward:null,milestones:[]}; }
+  function emptySkills() { return {showtimeLeft:0,cheerGuard:false,cooldowns:{showtime:0,cardrain:0,cheer:0}}; }
+  function milestoneMultiplier(level, marks) { return Math.pow(2,(marks||[10,25]).filter(function(n){return level>=n;}).length); }
+  function statMultiplier(state,id) { return NODE_BY_ID[id] && NODE_BY_ID[id].statMilestone ? milestoneMultiplier(nodeLevel(state,NODE_BY_ID[id])||0) : 1; }
+  function nextMilestone(level, marks, cap) { if(cap==null)cap=Infinity;return (marks||[10,25]).find(function(n){return n>level && n<=cap;}) || null; }
+  function formatNumber(value) {
+    var n=Number(value); if(!isFinite(n))return '0';
+    var abs=Math.abs(n), units=[[1e12,'조'],[1e8,'억'],[1e4,'만']];
+    if(abs>99999) for(var u of units) if(abs>=u[0])return String(+(n/u[0]).toFixed(1))+u[1];
+    return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g,',');
+  }
+  function practiceUnlocked(state) { return !!state.trophies.family || state.knownAudiences.indexOf(DATA.venues[venueNumber('family')-1].headliner.id)>=0; }
+  function practiceRate(state) { return practiceUnlocked(state) ? wandRate(state)*(.4+.1*state.tree.autoPractice) : 0; }
+  function tickPractice(state,dt,ev) {
+    state.idle.autoAcc+=practiceRate(state)*dt/1000;
+    while(state.idle.autoAcc>=1 && state.mode==='fight') {
+      state.idle.autoAcc--;
+      var i=state.idle.cursor++%state.board.length, p=cellPosition(state,i), a=wandArea(state);
+      var col=Math.max(0,Math.min(5-a.cols,p.col-Math.floor((a.cols-1)/2))),row=Math.max(0,Math.min(5-a.rows,p.row-Math.floor((a.rows-1)/2)));
+      emit(ev,{type:'autoPractice',cell:i});
+      for(var j=0;j<state.board.length;j++) {var q=cellPosition(state,j);if(q.col>=col&&q.col<col+a.cols&&q.row>=row&&q.row<row+a.rows)damageCell(state,j,wandDamage(state),ev,'magic');}
+    }
+  }
+  function skillUnlocked(state,id) { var k=DATA.skills.find(function(k){return k.id===id;});return !!(k && (state.trophies[k.clear] || state.knownAudiences.indexOf(DATA.venues[venueNumber(k.clear)-1].headliner.id)>=0)); }
+  function skillCooldown(state,id) { var k=DATA.skills.find(function(k){return k.id===id;});return k ? k.cooldown*(1-.1*(state.tree[id+'Cooldown']||0)) : 0; }
+  function useSkill(state,id,options) {
+    var ev=options&&options.quiet ? null : [];
+    if(state.mode!=='fight'||state.resolved||state.features.climax.left>0||state.skills.cooldowns[id]>0||!skillUnlocked(state,id))return ev||[];
+    state.skills.cooldowns[id]=skillCooldown(state,id);
+    emit(ev,{type:'skill',id:id}); dailyProgress(state,'skills',1);
+    if(id==='showtime')state.skills.showtimeLeft=20000;
+    if(id==='cheer'){state.skills.cheerGuard=true;state.mental=Math.min(state.mentalMax,state.mental+state.mentalMax*.1);}
+    if(id==='cardrain'){
+      state._skillBatch=true;
+      try {for(var i=0;i<state.board.length;i++)damageCell(state,i,wandDamage(state)*3,ev,'active');}
+      finally {state._skillBatch=false;}
+      if(state.audHp<=0 && !state.resolved)onWin(state,ev);
+    }
+    return ev||[];
+  }
+  function tickSkills(state,dt) { state.skills.showtimeLeft=Math.max(0,state.skills.showtimeLeft-dt); DATA.skills.forEach(function(k){state.skills.cooldowns[k.id]=Math.max(0,state.skills.cooldowns[k.id]-dt);}); }
+  function idleRates(saved) {
+    var state=Object.assign({},saved,{_area:Object.assign({},saved._area||{}),skills:emptySkills(),features:JSON.parse(JSON.stringify(saved.features))});
+    state.features.encoreLeft=0;
+    state.u14=Object.assign({},saved.u14,{visitor:Object.assign({},saved.u14.visitor,{buff:0})});
+    recompute(state,true);
+    var t=state.tree,w=state.features.workers,m=state.features.magic, speed=helperSpeed(state);
+    var area=wandArea(state), coverage=0;
+    state.board.forEach(function(c,i){var p=cellPosition(state,i),col=Math.max(0,Math.min(5-area.cols,p.col-Math.floor((area.cols-1)/2))),row=Math.max(0,Math.min(5-area.rows,p.row-Math.floor((area.rows-1)/2)));state.board.forEach(function(c,j){var q=cellPosition(state,j);if(q.col>=col&&q.col<col+area.cols&&q.row>=row&&q.row<row+area.rows)coverage++;});});
+    var dps=practiceRate(state)*coverage/Math.max(1,state.board.length);
+    dps+=(!w.fanPaused?fanCount(state)*.35*speed/(nodeEffects(state).helperEvery/1000):0)*(1+.15*t.fanPower)*branchBonus(state,'pet');
+    dps+=(t.assistant&&!w.assistantPaused?.8*speed/1.2:0)*(1+.15*t.fanPower)*branchBonus(state,'pet');
+    if(t.sponge&&!m.paused.sponge)for(var b=0;b<Math.min(3,1+t.spongeCount);b++)dps+=Math.hypot(310+b*40,230+b*50)/120*(state.board.length/25)*.25*(1+.15*t.spongePower)*(1+.12*t.spongeSpeed)*speed;
+    if(t.cardthrow&&!m.paused.cardthrow)dps+=Math.min(4,1+t.cardthrowCount)*.4*(1+.15*t.cardthrowPower)*speed/(1.5*(1-.1*t.cardthrowSpeed));
+    if(t.spotlight&&!m.paused.spotlight){var rows=new Set(state.board.map(function(c,i){return cellPosition(state,i).row;})).size;dps+=Math.min(rows,2,1+t.spotlightCount)*state.board.length/Math.max(1,rows)*.6*(1+.15*t.spotlightPower)*speed/(4*(1-.1*t.spotlightSpeed));}
+    var perCell=dps*wandDamage(state)/Math.max(1,state.board.length), xp=[], coins=0;
+    var rarityMean=CONST.rarityW.reduce(function(n,w,i){return n+w*CONST.rarityMult[i];},0)/CONST.rarityW.reduce(function(a,b){return a+b;},0);
+    var weights=DATA.items.types.map(function(k){var weight=k.share*100;if(k.id==='coin')weight+=t.coinLuck*statMultiplier(state,'coinLuck')*CONST.coinLuckAdd;if(t.equip)weight*=Math.pow(1+CONST.equipWeightPerItem,state.features.equipped.filter(function(id){return itemType(id)===k;}).length);return weight;});
+    var totalShare=weights.reduce(function(a,b){return a+b;},0), coinShare=DATA.items.types.reduce(function(n,k,i){return n+(k.effect==='coins'?weights[i]:0);},0)/totalShare;
+    state.board.forEach(function(c){
+      var hp=state._boxHp*Math.pow(1.12,(c.lv||1)-1);
+      var opens=perCell>0?1/(hp/perCell+state._tau/1000):0;
+      xp.push(c.lv<caseCap(state)?opens*(1+.15*t.caseXp):0);
+      coins+=opens*(Math.max(1,Math.round(CONST.coinPerBox*state._coinMul))+caseItems(c.lv||1)*coinShare*CONST.itemCoins*rarityMean*state._coinMul*Math.pow(1.1,(c.lv||1)-1)*milestoneMultiplier(c.lv||1,[10,25,50])*branchBonus(state,'box'));
+    });
+    if(t.tipbox&&!m.paused.tipbox)coins+=(2+legacyRank(state.venue))*(1+.25*t.tipboxPower)*speed/(6*(1-.1*t.tipboxSpeed));
+    if(t.rabbit&&!state.features.helperPaused)coins+=nodeEffects(state).rabbitCoins/(nodeEffects(state).rabbitEvery/1000);
+    // A tiny rehearsal stipend is available before the first helper.
+    if(!dps)coins=.01;
+    return {coins:coins,xp:xp};
+  }
+  function offlineGain(state,now) {
+    var zero={awayMs:0,coins:0,xp:state.board.map(function(){return 0;})};
+    if(!Number.isFinite(now)||!state.idle.wallMs||now-state.idle.wallMs<60000)return zero;
+    var ms=Math.min(now-state.idle.wallMs,(8+state.tree.nightShow)*3600000), eff=.5+.1*state.tree.manager, rates=idleRates(state);
+    return {awayMs:ms,coins:Math.floor(rates.coins*ms/1000*eff),xp:rates.xp.map(function(x,i){var c=state.board[i],remaining=0;for(var lv=c.lv;lv<caseCap(state);lv++)remaining+=caseNeed(lv);remaining=Math.max(0,remaining-(c.xp||0));return Math.min(remaining,x*ms/1000*eff);})};
+  }
+  function collectOffline(state,now) {
+    var gain=offlineGain(state,now);
+    if(!Number.isFinite(now)||now<state.idle.wallMs)return gain;
+    state.idle.wallMs=now;
+    if(!gain.awayMs)return gain;
+    earnCoins(state,gain.coins);state.u14.visitor.incomeCoins=Math.max(0,state.u14.visitor.incomeCoins-gain.coins);dailyProgress(state,'offline',1);var levels=0;
+    state.board.forEach(function(c,i){if(c.lv>=caseCap(state))return;c.xp+=gain.xp[i];while(c.lv<caseCap(state)&&c.xp>=caseNeed(c.lv)){c.xp-=caseNeed(c.lv);c.lv++;levels++;}if(c.lv>=caseCap(state))c.xp=0;});
+    state.idle.reward={awayMs:gain.awayMs,coins:gain.coins,levels:levels,doubled:false};
+    return gain;
+  }
+  function doubleOffline(state) { var r=state.idle.reward;if(!r||r.doubled)return false;earnCoins(state,r.coins);state.u14.visitor.incomeCoins=Math.max(0,state.u14.visitor.incomeCoins-r.coins);r.doubled=true;return true; }
 
   function emptyStars() {
     return { trick: 0, guard: 0, tempo: 0, bounty: 0 };
@@ -260,7 +415,7 @@
     return null;
   }
   function wandDamage(state) {
-    return (state._wand || CONST.wandBase) * (hasReward(state, 2) ? 1.2 : 1) * (state.tree.encore && state.features.encoreLeft > 0 ? 1 + nodeEffects(state).encorePower : 1);
+    return (state.u14.visitor.buff>0?2:1) * (1+.03*state.u14.sets.length) * (state.skills.showtimeLeft > 0 ? 3 : 1) * (state._wand || CONST.wandBase) * (hasReward(state, 2) ? 1.2 : 1) * (state.tree.encore && state.features.encoreLeft > 0 ? 1 + nodeEffects(state).encorePower : 1);
   }
 
   // Shared formula modifiers.
@@ -336,35 +491,35 @@
     tau *= Math.pow(C.starTempoTau, state.stars.tempo);
     if (state.slow) tau *= C.slowSpawn;
     if (tau < 40) tau = 40;
-    state._tau = tau;
+    state._tau = Math.max(40,tau / statMultiplier(state,"spawn") / statMultiplier(state,"starTempo"));
     var rate = Math.min(C.tapCap, C.tapBase + C.tapPerSpeed * state.tree.speed);
     rate *= Math.pow(C.starTempoRate, state.stars.tempo);
     if (state.slow) rate *= C.slowTap;
     if (rate < 0.2) rate = 0.2;
-    state._rate = rate;
+    state._rate = rate * statMultiplier(state,"speed") * statMultiplier(state,"starTempo");
     var wand = C.wandBase * Math.pow(C.wandGrowth, state.tree.power);
-    wand *= Math.pow(C.starWand, state.stars.trick);
-    state._wand = wand * branchBonus(state, "hand");
+    wand *= Math.pow(C.starWand, state.stars.trick) * statMultiplier(state,"starTrick");
+    state._wand = wand * statMultiplier(state,"power") * branchBonus(state, "hand");
     var V = Math.pow(C.Vbase, balanceRank(state.vMax) - 1) * Math.pow(C.Vattack, state.tree.attack) * (1 + C.Vlevel * state.level);
-    V *= Math.pow(C.starTrick, state.stars.trick);
+    V *= Math.pow(C.starTrick, state.stars.trick) * statMultiplier(state,"starTrick");
     V *= 1 + state.removedCount * C.bestiaryDmg;
     V *= 1 + (state.buff || 0) / 100;
     V *= 1 + state.features.achievements.length * C.achievementVPer;
     V *= productMultiplier(state);
-    state._V = V * branchBonus(state, "collection") * branchBonus(state, "star");
-    var U = Math.pow(C.Ubase, balanceRank(state.vMax) - 1) * Math.pow(C.starGuard, state.stars.guard);
+    state._V = V * statMultiplier(state,"attack") * branchBonus(state, "collection") * branchBonus(state, "star");
+    var U = Math.pow(C.Ubase, balanceRank(state.vMax) - 1) * Math.pow(C.starGuard, state.stars.guard) * statMultiplier(state,"starGuard");
     U *= 1 + state.removedCount * C.bestiaryU;
     state._U = U;
     var mm = C.mentalBase * U * Math.pow(C.mentalGrowth, state.tree.mental);
     var prev = state.mentalMax || 0;
-    mm *= branchBonus(state, "heart");
+    mm *= statMultiplier(state,"mental") * branchBonus(state, "heart");
     state.mentalMax = mm;
     if (!sync && prev > 0 && mm > prev) {
       state.mental = Math.min(mm, (state.mental || 0) + (mm - prev));
     }
     var cap = mm * nodeEffects(state).shieldRatio;
     if (state.shield > cap) state.shield = cap;
-    state._coinMul = Math.pow(C.starCoin, state.stars.bounty) * branchBonus(state, "luck");
+    state._coinMul = Math.pow(C.starCoin, state.stars.bounty) * statMultiplier(state,"starBounty") * branchBonus(state, "luck");
   }
 
   function wandRate(state) {
@@ -389,7 +544,7 @@
     var cap = boardCapacity(state);
     var o = state._layout;
     if (!o) o = state._layout = {};
-    if (o.capacity !== cap) o.slotIds = CONST.slotOrder.slice(0, cap);
+    o.slotIds = (state.u15 ? state.u15.positions : CONST.slotOrder).slice(0, cap);
     o.cols = CONST.boardCols;
     o.rows = CONST.boardRows;
     o.capacity = cap;
@@ -398,7 +553,7 @@
 
   function cellPosition(state, i) {
     if (!Number.isInteger(i) || i < 0 || i >= CONST.boardMax) return null;
-    var slot = CONST.slotOrder[i];
+    var slot = state.u15 ? state.u15.positions[i] : CONST.slotOrder[i];
     return { col: slot % CONST.boardCols, row: Math.floor(slot / CONST.boardCols) };
   }
 
@@ -483,8 +638,8 @@
   function caseNeed(lv) { return Math.ceil(3 * Math.pow(1.35, lv - 1)); }
   function caseTier(cell) { return cell.golden ? 'box-golden' : 'box-' + Math.min(4, Math.floor(((cell.lv || 1) - 1) / 3)); }
   function caseItems(lv) { return 1 + Math.floor((lv - 1) / 3); }
-  function branchBonus(state, branch) { return 1 + .02 * ((state.tree['infinite-' + branch] || 0) + (state.tree['hidden-' + branch] || 0)); }
-  function earnCoins(state, amount) { state.coins += amount; state.features.progress.coinsEarned += amount; }
+  function branchBonus(state, branch) { var id='infinite-'+branch; return (1 + .02 * ((state.tree[id] || 0) + (state.tree['hidden-' + branch] || 0))) * statMultiplier(state,id); }
+  function earnCoins(state, amount) { state.u14.visitor.incomeCoins+=amount; state.coins += amount; state.features.progress.coinsEarned += amount; }
   function fillBox(state, cell) {
     cell.lv = cell.lv || Math.min(caseCap(state), 1 + (state.tree.caseStart || 0) + (hasReward(state, 4) ? 1 : 0));
     cell.xp = cell.xp || 0;
@@ -550,6 +705,10 @@
       state.features.climax.left = 30000;
       emit(ev, { type: 'curtainCall', cell: 0 });
     }
+    if(!state.u15.tutorial.active){
+      if(j===1)queueScene(state,VENUES[v-1].slug,'opening');
+      if(j===headlinerJ(v))queueScene(state,VENUES[v-1].slug,'beforeHeadliner');
+    }
     emit(ev, { type: "audience", venue: v, j: j, audId: state.audId, crowd: state.crowd });
   }
 
@@ -586,7 +745,8 @@
   }
 
   function onWin(state, ev) {
-    if (state.resolved) return;
+    if (state.resolved || state._skillBatch) return;
+    if(state.u15.tutorial.active){state.resolved=true;state.u15.tutorial.won=true;emit(ev,{type:'tutorialWin'});return;}
     state.resolved = true;
     unseal(state);
     var venue = state.venue;
@@ -595,7 +755,10 @@
     var coins = Math.round(CONST.winCoinBase * Math.pow(CONST.winCoinGrowth, balanceRank(venue) - 1) * (state._coinMul || 1) * nodeEffects(state).tip);
     if (coins < 1) coins = 1;
     earnCoins(state, coins);
-    state.wins++;
+    state.wins++; dailyProgress(state,'wins',1);
+    if(state.u14.satisfied.indexOf(audId)<0)state.u14.satisfied.push(audId);
+    if(j===headlinerJ(venue)){dailyProgress(state,'clear',1);var tier=VENUES[venue-1].slug==='moon'?3:VENUES[venue-1].slug==='audition'?2:1;if(tier>state.u14.outfit){state.u14.outfit=tier;emit(ev,{type:'outfit',tier:tier});}}
+    checkSets(state,ev);recompute(state,false);
     if (state.knownAudiences.indexOf(audId) < 0) state.knownAudiences.push(audId);
     if (profile(state) === "mirror") {
       state.seenEnding = true;
@@ -615,6 +778,7 @@
       if (audId === "h-broadcast") state.bestiary[audId].wins++;
       if (!state.trophies[VENUES[venue-1].slug]) {
         state.trophies[VENUES[venue-1].slug] = 1;
+        queueScene(state,VENUES[venue-1].slug,"afterClear");
         trophy = true;
         var reward = DATA.stageRewards.find(function (r) { return r.venueSlug === VENUES[venue-1].slug; });
         if (reward && !hasReward(state, reward.id)) { state.features.rewards.push(reward.id); emit(ev, {type:'stageReward',reward:reward.id,cell:0}); }
@@ -655,6 +819,7 @@
       state.after = state.homecomingCleared ? "stay" : "ending";
       return;
     }
+    state.idle.waiting = next.v > venue && !state.idle.autoAdvance;
     beginAudience(state, next.v, next.j, ev);
     state.mental = Math.min(state.mentalMax, state.mental + state.mentalMax * nodeEffects(state).winHeal);
     state.mode = "transition";
@@ -762,6 +927,7 @@
     if (index < 0 || index >= d.cards.length) return false;
     var c = d.cards[index];
     if (!c || c.open) return false;
+    dailyProgress(state,'dealer',1);
     c.open = true;
     if (c.dud) {
       var i;
@@ -805,6 +971,7 @@
   function dealerForce(state, symbolId) {
     var d = state.dealer;
     if (!d || d.phase !== "slot" || d.spun) return false;
+    dailyProgress(state,'dealer',1);
     if (state.tree.forceRemove < 1 || state.gems < forceCost(state)) return false;
     var sym = null;
     var i;
@@ -819,6 +986,7 @@
   function dealerSlotSpin(state) {
     var d = state.dealer;
     if (!d || d.phase !== "slot" || d.spun) return false;
+    dailyProgress(state,'dealer',1);
     var pool = [];
     var i;
     for (i = 0; i < SYMBOLS.length && i < CONST.loopCap; i++) {
@@ -937,19 +1105,21 @@
     if (state.pattern === "twoPhase" && !state.phase2) {
       var threshold = state.audHpMax * CONST.phase2At;
       if (state.audHp - dmg <= threshold) {
+        var phaseApplied=Math.max(0,state.audHp-threshold);
         state.phase2 = true;
         state.audHp = state.audHpMax * CONST.phase2Hp;
         state.slow = true;
         state.pHeal = true;
         recompute(state, false);
-        emit(ev, { type: "audHit", dmg: dmg });
+        emit(ev, { type: "audHit", dmg: dmg, applied:phaseApplied });
         emit(ev, { type: "phase2" });
         return;
       }
     }
+    var applied=Math.min(state.audHp,dmg);
     state.audHp -= dmg;
     if (state.audHp < 0) state.audHp = 0;
-    emit(ev, { type: "audHit", dmg: dmg });
+    emit(ev, { type: "audHit", dmg: dmg, applied:applied });
   }
 
   function fireFinisher(state, ev) {
@@ -971,6 +1141,7 @@
     if (cell.lv < caseCap(state)) cell.xp += 1 + .15 * (state.tree.caseXp || 0);
     while (cell.lv < caseCap(state) && cell.xp >= caseNeed(cell.lv)) {
       cell.xp -= caseNeed(cell.lv); cell.lv++;
+      if ([10,25,50].indexOf(cell.lv)>=0) emit(ev,{type:'milestone',cell:i,level:cell.lv});
       emit(ev, {type:'caseLevelUp',cell:i,level:cell.lv,tierChanged:oldTier !== caseTier(cell)});
     }
     if (cell.lv >= caseCap(state)) cell.xp = 0;
@@ -980,10 +1151,10 @@
       emit(ev, { type: "worker", workerId: a.id, cell: -1, audId: a.audId, phase: "idle" });
     });
     cell.golden = false; cell.goldenBroken = golden;
-    f.boxes++;
+    f.boxes++;dailyProgress(state,'boxes',1);
     if (source === "magic" || source === "helper" || source === "fan" || source === "assistant") f.helperBreaks++;
     if (golden) {
-      f.progress.goldenOpened++; f.goldCell = -1; f.goldMs = nodeEffects(state).goldEvery;
+      dailyProgress(state,'golden',1);f.progress.goldenOpened++; f.goldCell = -1; f.goldMs = nodeEffects(state).goldEvery;
       var bonus = Math.round(CONST.goldCoinBase * Math.pow(1.32, balanceRank(state.vMax) - 1) * nodeEffects(state).goldCoins);
       earnCoins(state, bonus); stamp(state, "golden", ev);
       emit(ev, { type: "goldenBreak", cell: i, coins: bonus });
@@ -994,7 +1165,7 @@
     cell.sealed = false;
     state.combo++;
     if (state.combo > state.maxCombo) state.maxCombo = state.combo;
-    f.progress.comboMax = Math.max(f.progress.comboMax, state.combo);
+    f.progress.comboMax = Math.max(f.progress.comboMax, state.combo);dailyProgress(state,'combo',state.combo,true);
     state.comboMs = nodeEffects(state).comboMs;
     emit(ev, { type: "combo", n: state.combo });
     if (state.tree.comboGift) {
@@ -1016,7 +1187,7 @@
     earnCoins(state, Math.max(1, Math.round(CONST.coinPerBox * coinMul)));
     for (var tw = 0; tw < DATA.items.types.length; tw++) {
       TYPE_W[tw] = DATA.items.types[tw].share * 100;
-      if (DATA.items.types[tw].id === "coin") TYPE_W[tw] += state.tree.coinLuck * CONST.coinLuckAdd;
+      if (DATA.items.types[tw].id === "coin") TYPE_W[tw] += state.tree.coinLuck * statMultiplier(state,"coinLuck") * CONST.coinLuckAdd;
     }
     if (state.tree.equip) {
       for (var ei = 0; ei < DATA.items.types.length; ei++) {
@@ -1027,11 +1198,19 @@
     }
     for (var drop = 0; drop < caseItems(itemLv); drop++) {
     var type = DATA.items.types[pickW(state, TYPE_W)];
-    var ri = pickW(state, CONST.rarityW);
+    var dropSample={value:0};
+    var ri = pickW(state, CONST.rarityW,dropSample);
     var minRarity = Math.max(golden ? 1 : 0, type.minRarity || 0);
     if (ri < minRarity) {
       // Equivalent to rerolling until eligible, without an unbounded rejection loop.
       ri = minRarity + pickW(state, CONST.rarityW.slice(minRarity));
+    }
+    if(drop===0 && !state.u15.tutorial.active){
+      var slug=VENUES[state.venue-1].slug, ledger=state.u15.drops[slug]||(state.u15.drops[slug]={boxes:0,count:0});
+      ledger.boxes++;
+      if(ledger.count<(slug==='family'?1:3) && ((slug==='family'&&ledger.count===0&&ledger.boxes>=30) || dropSample.value<.004)){
+        ledger.count++;state.u15.gloves++;emit(ev,{type:'gloveDrop',cell:i});
+      }
     }
     var product = type.ladder[type.rarityMap[ri]];
     if (f.collected.indexOf(product.id) < 0) f.collected.push(product.id);
@@ -1046,7 +1225,7 @@
     else if (effect === "xpBurst") amount = 0.5 * (CONST.xpBase + CONST.xpPerLevel * state.level);
     else if (effect === "finisher") amount = 5;
     else if (effect === "boxFill") amount = 0.3;
-    amount *= Math.pow(1.10, itemLv - 1) * branchBonus(state, "box");
+    amount *= milestoneMultiplier(itemLv,[10,25,50]) * Math.pow(1.10, itemLv - 1) * branchBonus(state, "box");
     var gem = 0;
     if (ri >= 1 && rngNext(state) < CONST.gemChance[ri] + nodeEffects(state).gemFind) {
       state.gems++;
@@ -1096,7 +1275,7 @@
 
   function damageCell(state, i, dmg, ev, source, chain) {
     var c = state.board[i];
-    if (!c || c.hp <= 0 || c.sealed) return;
+    if (!c || c.hp <= 0 || (c.sealed && source!=='active')) return;
     if (state.features.climax.mirrored.indexOf(i) >= 0 && (!source || source === 'manual')) return;
     var role = source === 'magic' ? 'magic' : source === "fan" || source === "assistant" || source === "chain" ? source : "manual";
     state.features.damage[role] += Math.min(c.hp, dmg);
@@ -1260,6 +1439,7 @@
   }
 
   function tickHeckle(state, dt, ev) {
+    if(state.u15.tutorial.active)state.mental=Math.max(state.mental,10);
     state.heckleMs -= dt;
     if (!state.telegraphed && state.heckleMs <= CONST.telegraphMs) {
       state.telegraphed = true;
@@ -1271,6 +1451,7 @@
       if (intervalMs < 400) intervalMs = 400;
       state.heckleMs += intervalMs;
       state.telegraphed = state.heckleMs <= CONST.telegraphMs;
+      if (state.skills.cheerGuard) { state.skills.cheerGuard=false; emit(ev,{type:'heckleCancelled'}); continue; }
       if (state.review.cancel) { state.review.cancel=false; emit(ev,{type:"heckleCancelled"}); continue; }
       var dmg = state.atk * nodeEffects(state).calm;
       var shieldDmg = 0;
@@ -1350,7 +1531,7 @@
   function productMultiplier(state) {
     var value = 1;
     DATA.tree.forEach(function (n) { if (n.productMultiplier && state.tree[n.id]) value *= n.productMultiplier; });
-    return value;
+    return value*(state.u14.collection?1.1:1);
   }
   function fanCount(state) {
     if (!state.tree.boxHelper) return 0;
@@ -1532,10 +1713,13 @@
     else {c.mirrored=[];var milestone=Math.floor(state.combo/10);if(milestone>c.milestone){c.confidence=Math.min(100,c.confidence+(milestone-c.milestone)*10);c.milestone=milestone;emit(ev,{type:'confidence',cell:0,value:c.confidence});}}
   }
 
-  function substep(state, dt, taps, ev) {
+  function substep(state, dt, taps, ev, manualHolding) {
+    if(state.u15.scene || state.u15.tutorial.won)return;
     if (state.mode === "ending") return;
     if (state.mode === "dealer") return;
     if (state.mode === "transition") {
+      if (state.idle.waiting && !state.idle.autoAdvance) return;
+      state.idle.waiting=false;
       state.transMs = Math.max(0, state.transMs - dt);
       tickSpawn(state, dt);
       landFlights(state, dt, ev);
@@ -1563,6 +1747,8 @@
       return;
     }
     state.fightMs += dt;
+    tickSkills(state,dt);
+    if(!state.u15.tutorial.active)tickVisitor(state,dt,ev);
     tickAutoLearn(state,dt,ev);
     tickBoss(state,dt,ev);
     tickFeatures(state, dt, ev);
@@ -1583,7 +1769,14 @@
         state.comboMs = 0;
       }
     }
-    applyTaps(state, dt, taps, ev);
+    var gloveActive=state.u15.gloveLeft>0;
+    if(gloveActive){
+      // One shared manual accumulator prevents extra real fingers from adding hits.
+      applyTaps(state,dt,state.board.map(function(c,i){return i;}),ev);
+      state.u15.gloveLeft=Math.max(0,state.u15.gloveLeft-dt);
+    }else applyTaps(state, dt, taps, ev);
+    if (!gloveActive && !taps.length && !manualHolding) tickPractice(state,dt,ev);
+    else state.idle.autoAcc=0;
     if (state.mode !== "fight" || state.resolved) return;
     if (state.audHp <= 0) onWin(state, ev);
     if (state.mode !== "fight" || state.resolved) return;
@@ -1603,7 +1796,8 @@
     var guard = 0;
     while (dtMs > 0 && guard < CONST.maxSubsteps) {
       var dt = dtMs > CONST.substepMs ? CONST.substepMs : dtMs;
-      substep(state, dt, taps, ev);
+      if(state.mode==="fight" && state.u15.gloveLeft>0)dt=Math.min(dt,state.u15.gloveLeft);
+      substep(state, dt, taps, ev, !!(input && input.holding));
       dtMs -= dt;
       guard++;
       if (state.mode === "ending" || state.mode === "dealer") break;
@@ -1622,7 +1816,7 @@
     var label = {venue:'공연장 도착',casesAtLv:'LV '+gate.lv+' 케이스 수',comboMax:'최고 콤보',dealerFlips:'카드 뒤집기 성공',coinsEarned:'차원 누적 동전',goldenOpened:'황금 케이스 개봉'}[gate.type];
     var target = gate.type === 'venue' ? 1 : gate.target;
     if (gate.type === 'venue') return {current:current,target:target,met:!!current,text:VENUES[venueNumber(gate.slug)-1].name+' 도착 필요'};
-    return {current:current,target:target,met:current>=target,text:'조건: '+label+' ('+Math.floor(current)+'/'+gate.target+')'};
+    return {current:current,target:target,met:current>=target,text:'조건: '+label+' ('+formatNumber(current)+'/'+formatNumber(gate.target)+')'};
   }
   function nodeInfo(state, id) {
     var node = NODE_BY_ID[id];
@@ -1630,6 +1824,7 @@
     var level = nodeLevel(state, node), cost = null;
     if (level < node.max) cost = Array.isArray(node.cost) ? node.cost[level] : Math.ceil(node.cost.c * Math.pow(node.cost.g, level));
     var revealed = id === "root" || (node.reveal === "E" ? state.endings.length > 0 : level > 0 || node.prereqs.some(function (pre) { return nodeLevel(state, NODE_BY_ID[pre]) > 0; }));
+    if (node.u13 && (id==='autoPractice' || /Cooldown$/.test(id))) revealed = level>0 || (id==='autoPractice' ? practiceUnlocked(state) : skillUnlocked(state,id.replace('Cooldown','')));
     if (node.hidden || node.infinite) revealed = level > 0 || branchMaxed(state,node);
     var progress = gateProgress(state,node.gates ? node.gates[level] : node.gate);
     var reason = "";
@@ -1660,9 +1855,11 @@
     state[info.currency] -= info.cost;
     if (node.starKey) state.stars[node.starKey]++;
     else state.tree[id]++;
+    dailyProgress(state,'learn',1);checkSets(state,null);
     if (id === "dove") state.doveMs = nodeEffects(state).doveEvery;
     if (id === "rabbit") state.rabbitMs = nodeEffects(state).rabbitEvery;
     if (id === "flash") state.flashBreaks = 0;
+    if (node.statMilestone && [10,25].indexOf(nodeLevel(state,node))>=0) state.idle.milestones.push(id);
     recompute(state, false);
     if (id === "board") { ensureBoard(state); reveal(state, "slot"); }
     if (id === "area") reveal(state, "area");
@@ -1686,8 +1883,7 @@
       var i = nodeInfo(state,n.id);
       return i.revealed && i.purchasable && Number.isFinite(i.cost) && i.cost > 0;
     }).sort(function (a,b) {
-      var pin = state.guidance && state.guidance.pin;
-      return (a.id === pin ? -1 : b.id === pin ? 1 : 0) || nodeInfo(state,a.id).cost-nodeInfo(state,b.id).cost || a.id.localeCompare(b.id);
+      return nodeInfo(state,a.id).cost-nodeInfo(state,b.id).cost || a.id.localeCompare(b.id);
     });
   }
   function buyAll(state, options) {
@@ -1767,6 +1963,8 @@
       if (!has && state.endings.length < CONST.loopCap) state.endings.push(d);
     }
     state.dimension = d + 1;
+    state.u15.gloves=0;state.u15.gloveLeft=0;state.u15.drops={};state.u15.positions=CONST.slotOrder.slice();state.u15.scene=null;state.u15.queue=[];
+    state.u14.satisfied=[];state.u14.sets=[];state.u14.collection=false;state.u14.visitor=emptyU14().visitor;state.u14.visitor.wait=90000+Math.floor(rngNext(state)*60001);
     state.seenEnding = false;
     state.homecomingCleared = false; state.visited = []; state.helpersUsed = [];
     state.coins = 0;
@@ -1781,6 +1979,7 @@
     state.features = emptyFeatures(); state.features.reveals = reveals;
     if (guideDone) state.features.guide = "done";
     state.tree = emptyTree();
+    state.skills=emptySkills(); state.idle.reward=null; state.idle.waiting=false; state.idle.autoAcc=0; state.idle.cursor=0; state.idle.milestones=[];
     state.bestiary = emptyBestiary();
     state.trophies = {};
     state.invited = {};
@@ -1797,7 +1996,10 @@
   function fresh(seed) {
     seed = seed >>> 0;
     var state = {
+      u15: emptyU15(),
+      u14: emptyU14(),
       features: emptyFeatures(),
+      idle: emptyIdle(), skills: emptySkills(),
       seed: seed,
       rngState: seed >>> 0,
       dimension: 1,
@@ -1805,7 +2007,7 @@
       stars: emptyStars(),
       endings: [],
       seenEnding: false,
-      guidance: { pin: null, seen: [] },
+      guidance: { seen: [] },
       onboarding: { intro: false, panel: 0, step: 0, facts: [] },
       learning: { on: false, infinite: false, ms: 0 },
       homecomingCleared: false, visited: [], knownAudiences: [], helpersUsed: [], review: emptyReview(),
@@ -1874,6 +2076,7 @@
   function newGame(seed) {
     if (typeof seed !== "number" || !isFinite(seed)) seed = 1;
     var state = fresh(seed >>> 0);
+    state.u14.visitor.wait=90000+Math.floor(rngNext(state)*60001);
     recompute(state, true);
     state.mental = state.mentalMax;
     fillBox(state, state.board[0]);
@@ -1932,9 +2135,12 @@
     var stars = {};
     for (i = 0; i < STAR_KEYS.length; i++) stars[STAR_KEYS[i]] = state.stars[STAR_KEYS[i]] | 0;
     var obj = {
-      v: 9,
+      v: 12,
+      u15: state.u15,
+      u14: state.u14,
+      idle: state.idle, skills: state.skills,
       onboarding: state.onboarding, learning: state.learning,
-      guidance: state.guidance,
+      guidance: { seen: state.guidance.seen },
       venueSlug: VENUES[state.venue-1].slug, maxVenueSlug:VENUES[state.vMax-1].slug,
       homecomingCleared:state.homecomingCleared, visited:state.visited.slice(), knownAudiences:state.knownAudiences.slice(), helpersUsed:state.helpersUsed.slice(), review:JSON.parse(JSON.stringify(state.review)),
       features: featureSnap(state.features),
@@ -2032,7 +2238,7 @@
       if (typeof str !== "string" || str.length > 2000000) return null;
       var o = JSON.parse(str);
       if (!o || typeof o !== "object" || Array.isArray(o)) return null;
-      if (o.v !== 1 && o.v !== 2 && o.v !== 3 && o.v !== 4 && o.v !== 5 && o.v !== 6 && o.v !== 7 && o.v !== 8 && o.v !== 9) return null;
+      if (o.v !== 1 && o.v !== 2 && o.v !== 3 && o.v !== 4 && o.v !== 5 && o.v !== 6 && o.v !== 7 && o.v !== 8 && o.v !== 9 && o.v !== 10 && o.v !== 11 && o.v !== 12) return null;
       if (o.v === 7 && o.venueSlug === "lecturenote") {
         // Preserve the old index contract, then migrate by stable audience ID.
         var previousOrder = ["a-lecturenote-hecate", "a-lecturenote-jung", "h-lecturenote-kim"];
@@ -2094,11 +2300,15 @@
       if (!o.tree || !o.stars || !o.bestiary || !o.board || !o.flights || !o.trophies || !o.invited || !o.endings) return null;
       if (!Array.isArray(o.board) || !Array.isArray(o.flights) || (o.v < 7 && (!Array.isArray(o.trophies) || !Array.isArray(o.invited))) || !Array.isArray(o.endings)) return null;
       var state = fresh(seed);
+      if(o.v>=12){
+        if(!validU15(o.u15))return null;
+        state.u15=JSON.parse(JSON.stringify(o.u15));
+      }else state.u15.tutorial.done=true;
       if (o.v >= 8) {
         var g = o.guidance;
-        if (!g || (g.pin !== null && (typeof g.pin !== "string" || !NODE_BY_ID[g.pin])) || !Array.isArray(g.seen) || g.seen.length > 4 ||
+        if (!g || !Array.isArray(g.seen) || g.seen.length > 4 ||
             g.seen.some(function (id) { return ["range", "helper", "chain", "case"].indexOf(id) < 0; }) || new Set(g.seen).size !== g.seen.length) return null;
-        state.guidance = { pin: g.pin, seen: g.seen.slice() };
+        state.guidance = { seen: g.seen.slice() };
       }
       if (o.v >= 9) {
         var intro = o.onboarding, learning = o.learning;
@@ -2130,6 +2340,7 @@
         var key = TREE_KEYS[i];
         var max = key === "board" && o.v === 1 ? 7 : key === "area" && o.v < 5 ? 3 : NODE_BY_ID[key].max;
         var rawLevel = o.tree[key];
+        if (o.v < 10 && NODE_BY_ID[key].u13 && rawLevel == null) rawLevel = 0;
         if (o.v < 9 && NODE_BY_ID[key].u12 && rawLevel == null) rawLevel = 0;
         if (o.v < 6 && NODE_BY_ID[key].u4a && rawLevel == null) rawLevel = 0;
         if (NODE_BY_ID[key].u4b && rawLevel == null && !(o.features && o.features.magic)) rawLevel = 0;
@@ -2410,6 +2621,34 @@
         if (!r || integer(r.act,1,3)==null || integer(r.cycle,0,1e9)==null || integer(r.target,-1,state.board.length-1)==null || num(r.elapsed,0,18000)==null || num(r.bonusMs,0,4000)==null || integer(r.pairs,0,3)==null || integer(r.lastCell,-1,state.board.length-1)==null || typeof r.lastSource!=='string' || typeof r.cancel!=='boolean' || typeof r.finaleReady!=='boolean' || typeof r.finaleUsed!=='boolean' || num(r.actMs,0,1e12)==null) return null;
         state.review=JSON.parse(JSON.stringify(r)); state.visited=o.visited.slice(); state.knownAudiences=o.knownAudiences.slice(); state.helpersUsed=o.helpersUsed.slice(); state.homecomingCleared=o.homecomingCleared;
       }
+      if (o.v >= 10) {
+        var idle=o.idle, skills=o.skills;
+        if (!idle || num(idle.wallMs,0,1e16)==null || num(idle.autoAcc,0,100)==null || integer(idle.cursor,0,1e12)==null || typeof idle.autoAdvance!=='boolean' || typeof idle.waiting!=='boolean' || !Array.isArray(idle.milestones) || idle.milestones.some(function(id){return !NODE_BY_ID[id]||!NODE_BY_ID[id].statMilestone;}) || idle.milestones.length>10000) return null;
+        if (idle.reward!==null) { var r=idle.reward; if(!r||num(r.awayMs,60000,43200000)==null||num(r.coins,0,1e15)==null||integer(r.levels,0,1225)==null||typeof r.doubled!=='boolean'||(r.totalAwayMs!==undefined&&num(r.totalAwayMs,r.awayMs,1e16)==null))return null; }
+        if (!skills || num(skills.showtimeLeft,0,20000)==null || typeof skills.cheerGuard!=='boolean' || !skills.cooldowns || DATA.skills.some(function(k){return num(skills.cooldowns[k.id],0,k.cooldown)==null;})) return null;
+        state.idle=JSON.parse(JSON.stringify(idle)); state.skills=JSON.parse(JSON.stringify(skills));
+      }
+      if(o.v>=11){
+        var u=o.u14,v=u&&u.visitor,d=u&&u.daily;
+        if(!u||integer(u.outfit,1,3)==null||typeof u.haptics!=='boolean'||typeof u.collection!=='boolean'||!Array.isArray(u.satisfied)||!Array.isArray(u.sets)||new Set(u.satisfied).size!==u.satisfied.length||new Set(u.sets).size!==u.sets.length||u.satisfied.some(function(id){return COMBO_AUD_IDS.indexOf(id)<0;})||u.sets.some(function(slug){return !venueNumber(slug);}))return null;
+        if(!v||num(v.wait,0,150000)==null||num(v.left,0,8000)==null||num(v.buff,0,30000)==null||integer(v.serial,0,1e12)==null||num(v.incomeMs,0,3000)==null||num(v.incomeCoins,0,1e16)==null||num(v.incomeRate,0,1e16)==null||['rabbit','fan'].indexOf(v.kind)<0)return null;
+        if(!d||typeof d.date!=='string'||typeof d.latest!=='string'||(d.date&&dateOrdinal(d.date)===null)||(d.latest&&dateOrdinal(d.latest)===null)||integer(d.streak,0,1e12)==null||!d.records||Array.isArray(d.records)||typeof d.records!=='object'||Object.keys(d.records).length>10000)return null;
+        for(var date of Object.keys(d.records)){
+          var r=d.records[date],selection=dailySelection(date);
+          if(dateOrdinal(date)===null||!r||!r.progress||typeof r.progress!=='object'||Array.isArray(r.progress)||!Array.isArray(r.claimed)||new Set(r.claimed).size!==r.claimed.length||r.claimed.some(function(id){return selection.indexOf(id)<0;})||typeof r.bonus!=='boolean'||integer(r.streakReward,0,10)==null)return null;
+          if(Object.keys(r.progress).some(function(id){return !DATA.missions.some(function(m){return m.id===id;})||num(r.progress[id],0,1e12)==null;}))return null;
+          if(r.claimed.some(function(id){return (r.progress[id]||0)<DATA.missions.find(function(m){return m.id===id;}).target;})||r.bonus!==(r.claimed.length===3)||(r.streakReward>0&&!r.claimed.length))return null;
+        }
+        if((d.date&&!d.records[d.date])||(d.latest&&!d.records[d.latest])||(!d.latest&&d.streak)||(d.latest&&(!d.streak||!d.records[d.latest].claimed.length)))return null;
+        if(u.collection&&!DATA.tree.filter(function(n){return n.productMultiplier;}).every(function(n){return state.tree[n.id]>0;}))return null;
+        state.u14=JSON.parse(JSON.stringify(u));
+        if(state.u14.sets.some(function(slug){var p=venueSetProgress(state,slug);return p.current!==p.total;}))return null;
+      }else{
+        state.u14.outfit=(state.trophies.moon||state.endings.length||state.knownAudiences.indexOf(DATA.venues[venueNumber('moon')-1].headliner.id)>=0)?3:(state.trophies.audition||state.knownAudiences.indexOf(DATA.venues[venueNumber('audition')-1].headliner.id)>=0)?2:1;
+        state.u14.satisfied=Object.keys(state.bestiary).filter(function(id){return state.bestiary[id].wins>0;});
+        DATA.venues.forEach(function(v){if(state.trophies[v.slug]&&state.u14.satisfied.indexOf(v.headliner.id)<0)state.u14.satisfied.push(v.headliner.id);});
+        checkSets(state,null);
+      }
       if (audHp > audHpMax * 1.05 + 1) return null;
       recompute(state, true);
       if (state.mental > state.mentalMax * 1.05 + 1) state.mental = state.mentalMax;
@@ -2420,8 +2659,74 @@
     } finally { VENUES = savedVenues; }
   }
 
+
+  function emptyU15(){return {positions:CONST.slotOrder.slice(),gloves:0,gloveLeft:0,drops:{},seen:[],queue:[],scene:null,bios:[],tutorial:{done:false,active:false,won:false,baseline:null}};}
+  function validU15(u){
+    if(!u||!Array.isArray(u.positions)||u.positions.length!==CONST.boardMax||new Set(u.positions).size!==CONST.boardMax||u.positions.some(function(n){return integer(n,0,CONST.boardMax-1)==null;}))return false;
+    if(integer(u.gloves,0,100000)==null||num(u.gloveLeft,0,60000)==null||!u.drops||Array.isArray(u.drops))return false;
+    if(Object.keys(u.drops).some(function(k){var d=u.drops[k];return !venueNumber(k)||!d||integer(d.boxes,0,1e9)==null||integer(d.count,0,3)==null;}))return false;
+    function sceneOK(x){return x&&integer(x.dimension,1,999)!=null&&venueNumber(x.slug)&&['opening','beforeHeadliner','afterClear'].indexOf(x.kind)>=0;}
+    if(!Array.isArray(u.seen)||u.seen.length>50000||new Set(u.seen).size!==u.seen.length||u.seen.some(function(k){if(typeof k!=='string')return true;var p=k.split(':');return p.length!==3||!sceneOK({dimension:Number(p[0]),slug:p[1],kind:p[2]});}))return false;
+    if(!Array.isArray(u.queue)||u.queue.length>48||u.queue.some(function(x){return !sceneOK(x);}))return false;
+    if(u.scene&&(!sceneOK(u.scene)||integer(u.scene.line,0,DATA.storyV15.venues[u.scene.slug][u.scene.kind].length-1)==null))return false;
+    if(!Array.isArray(u.bios)||u.bios.length>50000||u.bios.some(function(k){return typeof k!=='string'||k.length>80;}))return false;
+    var t=u.tutorial;
+    if(!t||typeof t.done!=='boolean'||typeof t.active!=='boolean'||typeof t.won!=='boolean'||t.active&&t.done)return false;
+    if(t.active){
+      if(typeof t.baseline!=='string'||t.baseline.length>=200000||['intro','fight','defeat','overview'].indexOf(t.phase)<0)return false;
+      var maxLine=t.phase==='intro'?DATA.storyV15.tutorial.intro.length-1:t.phase==='defeat'?DATA.storyV15.tutorial.defeat.length-1:0;
+      if(integer(t.line,0,maxLine)==null||(['defeat','overview'].indexOf(t.phase)>=0&&!t.won))return false;
+      try{var main=JSON.parse(t.baseline);if(main.v!==12||!main.u15||!main.u15.tutorial||main.u15.tutorial.active)return false;}catch(error){return false;}
+    }
+    return true;
+  }
+  function queueScene(state,slug,kind){
+    var u=state.u15,key=state.dimension+':'+slug+':'+kind;
+    if(!DATA.storyV15.venues[slug]||u.seen.indexOf(key)>=0||u.queue.some(function(x){return x.dimension===state.dimension&&x.slug===slug&&x.kind===kind;})||u.scene&&u.scene.slug===slug&&u.scene.kind===kind&&u.scene.dimension===state.dimension)return;
+    u.queue.push({dimension:state.dimension,slug:slug,kind:kind});
+  }
+  function startScene(state,replay){
+    if(state.u15.scene||state.u15.tutorial.active)return false;
+    var next=replay||state.u15.queue.shift();if(!next)return false;
+    var lines=DATA.storyV15.venues[next.slug]&&DATA.storyV15.venues[next.slug][next.kind];if(!lines)return false;
+    state.u15.scene={dimension:next.dimension,slug:next.slug,kind:next.kind,line:0};return true;
+  }
+  function advanceScene(state,skip){
+    var s=state.u15.scene;if(!s)return false;
+    var lines=DATA.storyV15.venues[s.slug][s.kind];
+    if(!skip&&s.line+1<lines.length){s.line++;return true;}
+    var key=s.dimension+':'+s.slug+':'+s.kind;if(state.u15.seen.indexOf(key)<0)state.u15.seen.push(key);
+    state.u15.scene=null;return true;
+  }
+  function startTutorial(state){
+    var t=state.u15.tutorial;if(t.done||t.active)return false;
+    var baseline=serialize(state);t.active=true;t.baseline=baseline;t.phase="intro";t.line=0;
+    state.u15.queue=[];state.u15.scene=null;state.audHp=state.audHpMax=480;state.atk=1;state.interval=6;state.heckleMs=6000;
+    state.onboarding={intro:true,panel:0,step:0,facts:[]};return true;
+  }
+  function finishTutorial(state){
+    var t=state.u15.tutorial;if(!t.active)return false;
+    var main=deserialize(t.baseline);if(!main)return false;
+    Object.keys(state).forEach(function(k){delete state[k];});Object.assign(state,main);
+    state.u15.tutorial={done:true,active:false,won:false,baseline:null};
+    state.onboarding={intro:true,panel:0,step:8,facts:[]};return true;
+  }
+  function moveCase(state,from,to){
+    if(state.u15.scene||state.mode!=='fight'||!Number.isInteger(from)||from<0||from>=state.board.length||!Number.isInteger(to)||to<0||to>=CONST.boardMax)return false;
+    var slots=state.u15.positions,other=slots.indexOf(to),old=slots[from];slots[from]=to;slots[other]=old;delete state._layout;return true;
+  }
+  function useGlove(state){
+    if(state.mode!=='fight'||state.resolved||state.u15.scene||state.features.climax.left>0||state.u15.gloveLeft>0||state.u15.gloves<1)return false;
+    state.u15.gloves--;state.u15.gloveLeft=60000;state.holding=false;state.tapAcc=0;return true;
+  }
+
   globalThis.Core = {
+    startTutorial:startTutorial,finishTutorial:finishTutorial,moveCase:moveCase,useGlove:useGlove,queueScene:queueScene,startScene:startScene,advanceScene:advanceScene,
     CONST: CONST,
+    setDailyDate:setDailyDate, dailySelection:dailySelection, claimMission:claimMission, dateOrdinal:dateOrdinal, venueSetProgress:venueSetProgress, catchVisitor:catchVisitor, visitorBlocked:visitorBlocked,
+    offlineGain:offlineGain, collectOffline:collectOffline, doubleOffline:doubleOffline, idleRates:idleRates,
+    practiceRate:practiceRate, practiceUnlocked:practiceUnlocked, useSkill:useSkill, skillUnlocked:skillUnlocked, skillCooldown:skillCooldown,
+    milestoneMultiplier:milestoneMultiplier, statMultiplier:statMultiplier, nextMilestone:nextMilestone, formatNumber:formatNumber,
     hasReward: hasReward, helperSpeed: helperSpeed, tapPaper: tapPaper, skipCurtainCall: skipCurtainCall,
     venueNumber:venueNumber, reached:reached, bossProfile:profile, recap:recap, stayHome:stayHome, continueStory:continueStory,
     fanCount: fanCount, productMultiplier: productMultiplier,

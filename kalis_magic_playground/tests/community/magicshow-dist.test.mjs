@@ -23,7 +23,7 @@ async function filesUnder(route) {
 
 test('Magicshow snapshot contains only allowed runtime files and exact deployment precache', async () => {
   const files = await filesUnder(shared);
-  const base = ['index.html', 'style.css', 'data.js', 'core.js', 'audio.js', 'ui.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'sw.js', 'install-prompt.js', 'install-prompt.css'];
+  const base = ['index.html', 'style.css', 'data.js', 'core.js', 'audio.js', 'ui.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png', 'favicon-32.png', 'og-image.png', 'sw.js', 'install-prompt.js', 'install-prompt.css'];
   assert.deepEqual(files.filter(file => !file.startsWith('assets/') && !file.startsWith('fonts/')), base.sort());
   assert.ok(files.some(file => file.startsWith('assets/')));
   for (const font of ['fonts/Galmuri11.woff2', 'fonts/Galmuri11-Bold.woff2', 'fonts/Galmuri9.woff2', 'fonts/OFL.md']) assert.ok(files.includes(font), font);
@@ -44,7 +44,7 @@ test('Magicshow snapshot contains only allowed runtime files and exact deploymen
 
 test('Magicshow manifest and HTML preserve the landscape fullscreen beta identity without a login check', async () => {
   const manifest = JSON.parse(await read(`${shared}/manifest.webmanifest`));
-  assert.equal(manifest.name, '칼리 마술 성장기 (베타)');
+  assert.equal(manifest.name, '칼리의 마술 성장기');
   assert.equal(manifest.short_name, '칼리마술');
   for (const field of ['id', 'start_url', 'scope']) assert.equal(manifest[field], '/tools/magicshow/');
   assert.equal(manifest.display, 'fullscreen');
@@ -57,8 +57,15 @@ test('Magicshow manifest and HTML preserve the landscape fullscreen beta identit
     assert.equal(png.readUInt32BE(16), size);
     assert.equal(png.readUInt32BE(20), size);
   }
+  for (const [file, width, height] of [['apple-touch-icon.png', 180, 180], ['favicon-32.png', 32, 32], ['og-image.png', 1200, 630]]) {
+    const png = await read(`${shared}/${file}`);
+    assert.equal(png.readUInt32BE(16), width, file);
+    assert.equal(png.readUInt32BE(20), height, file);
+  }
   const html = (await read(`${shared}/index.html`)).toString();
-  for (const value of ['rel="manifest"', 'rel="apple-touch-icon"', 'apple-mobile-web-app-capable', 'theme-color', "register('./sw.js')", 'data-magic-customize="off"', 'src="install-prompt.js"', 'href="install-prompt.css"']) assert.ok(html.includes(value), value);
+  const description = '가족 거실에서 우주까지, 마술로 관객을 감탄시키는 방치형 게임';
+  for (const value of ['<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">', '<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">', `<meta name="description" content="${description}">`, '<meta property="og:type" content="website">', '<meta property="og:site_name" content="칼리의 마술 성장기">', '<meta property="og:title" content="칼리의 마술 성장기">', `<meta property="og:description" content="${description}">`, '<meta property="og:url" content="https://kalimagic.netlify.app/tools/magicshow/">', '<meta property="og:image" content="https://kalimagic.netlify.app/tools/magicshow/og-image.png">', '<meta property="og:image:width" content="1200">', '<meta property="og:image:height" content="630">', '<meta name="twitter:card" content="summary_large_image">']) assert.ok(html.includes(value), value);
+  for (const value of ['rel="manifest"', 'apple-mobile-web-app-capable', 'theme-color', "register('./sw.js')", 'data-magic-customize="off"', 'src="install-prompt.js"', 'href="install-prompt.css"']) assert.ok(html.includes(value), value);
   assert.doesNotMatch(html, /friend-apps-check|\/tools\/_check|accessGuard/);
   assert.equal(transformDistributionDocument(html, { target: 'magicshow', tool: 'magicshow' }), html);
 });
@@ -147,7 +154,8 @@ async function installRuntime({ ua = 'Android Chrome/140', platform = 'Linux', t
     });
     return nodes.get(key);
   };
-  const document = { activeElement: node('game-intro'), createElement: tag => node(tag), body: { appendChild() {} } };
+  const created = [];
+  const document = { activeElement: node('game-intro'), events: new Map(), addEventListener(name, callback, capture) { this.events.set(name, { callback, capture }); }, createElement: tag => (created.push(tag), node(tag)), body: { appendChild() {} } };
   const location = { href: 'https://example.test/tools/magicshow/?friend=1' };
   let copied = '';
   const navigator = { userAgent: ua, platform, maxTouchPoints: touch, standalone, clipboard: { async writeText(value) { copied = value; } } };
@@ -160,7 +168,13 @@ async function installRuntime({ ua = 'Android Chrome/140', platform = 'Linux', t
     window, navigator, document, location, localStorage, URL, Date: { now: () => now }
   });
   const click = key => node(key).events.get('click')();
-  return { events, queries, node, saved, click, location, copied: () => copied, document, now };
+  const tapInstallButton = () => {
+    const result = { prevented: 0, stopped: 0 };
+    const target = { closest: selector => selector === '#installButton' ? target : null };
+    document.events.get('click').callback({ target, preventDefault() { result.prevented++; }, stopImmediatePropagation() { result.stopped++; } });
+    return result;
+  };
+  return { created, tapInstallButton, events, queries, node, saved, click, location, copied: () => copied, document, now };
 }
 
 test('Magicshow first-open offer waits three days and manual entry restores it without touching intro', async () => {
@@ -172,7 +186,11 @@ test('Magicshow first-open offer waits three days and manual entry restores it w
   assert.equal(app.document.activeElement, app.node('game-intro'));
   const early = await installRuntime({ saved: app.saved, now: app.now + 3 * 86400000 - 1 });
   assert.equal(early.node('div').hidden, true);
-  early.click('button');
+  const tap = early.tapInstallButton();
+  assert.deepEqual(tap, { prevented: 1, stopped: 1 });
+  assert.equal(early.document.events.get('click').capture, true);
+  assert.deepEqual(early.created, ['div'], 'no launcher element is created');
+  assert.deepEqual(early.created, ['div'], 'no launcher element is created');
   assert.equal(early.node('div').hidden, false);
   const due = await installRuntime({ saved: app.saved, now: app.now + 3 * 86400000 });
   assert.equal(due.node('div').hidden, false);
@@ -182,11 +200,12 @@ test('Magicshow first-open offer waits three days and manual entry restores it w
   assert.equal(privateMode.node('div').hidden, true);
 });
 
-test('Magicshow installed modes and installation signal suppress the popup and launcher', async () => {
+test('Magicshow installed modes and installation signal suppress the popup and leave the game install button alone', async () => {
   for (const options of [{ display: 'fullscreen' }, { display: 'standalone' }, { standalone: true }]) {
     const app = await installRuntime(options);
     assert.equal(app.node('div').hidden, true);
-    assert.equal(app.node('button').hidden, true);
+    assert.deepEqual(app.tapInstallButton(), { prevented: 0, stopped: 0 });
+    assert.equal(app.node('div').hidden, true);
     let prompts = 0;
     app.events.get('beforeinstallprompt')({ preventDefault() { prompts++; } });
     assert.equal(prompts, 0);
@@ -194,7 +213,7 @@ test('Magicshow installed modes and installation signal suppress the popup and l
   const app = await installRuntime();
   app.events.get('appinstalled')();
   assert.equal(app.node('div').hidden, true);
-  assert.equal(app.node('button').hidden, true);
+  assert.deepEqual(app.tapInstallButton(), { prevented: 0, stopped: 0 });
   const changed = await installRuntime();
   changed.queries[0].matches = true;
   changed.queries[0].change();
@@ -253,8 +272,6 @@ test('Magicshow in-app browsers explain external opening and copy the current li
       else assert.equal(app.location.href, 'https://example.test/tools/magicshow/?friend=1');
     }
   }
-  const app = await installRuntime({ ua: 'Desktop Firefox' });
-  assert.equal(app.node('button').hidden, true);
   const css = (await read('scripts/magicshow-dist/install-prompt.css')).toString();
   assert.match(css, /Galmuri11\.woff2/);
   assert.match(css, /min-height:44px;min-width:44px/);

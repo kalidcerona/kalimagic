@@ -63,9 +63,9 @@
         defeatLine: "손 안 바꿨네. 박수다."
       },
       audiences: [
-        { id: "a1", name: "리모컨 아빠", emoji: "👨", flavor: "채널권은 아직 내 손이다.", extra: { type: "none", value: 0 } },
-        { id: "a2", name: "간식 동생", emoji: "🧒", flavor: "팝콘보다 마술이 궁금하다.", extra: { type: "none", value: 0 } },
-        { id: "a3", name: "앞치마 엄마", emoji: "👩", flavor: "설거지는 잠깐 멈춘다.", extra: { type: "none", value: 0 } }
+        { id: "a1", name: "아빠", emoji: "👨", flavor: "채널권은 아직 내 손이다.", extra: { type: "none", value: 0 } },
+        { id: "a2", name: "동생", emoji: "🧒", flavor: "팝콘보다 마술이 궁금하다.", extra: { type: "none", value: 0 } },
+        { id: "a3", name: "엄마", emoji: "👩", flavor: "설거지는 잠깐 멈춘다.", extra: { type: "none", value: 0 } }
       ]
     },
     {
@@ -93,7 +93,7 @@
       },
       audiences: [
         { id: "a4", name: "풍선 친구", emoji: "🎈", flavor: "풍선이 박수보다 먼저 터진다.", extra: { type: "finisher", value: 1 } },
-        { id: "a5", name: "플레이리스트 친구", emoji: "🎧", flavor: "다음 곡 고르기를 멈춘다.", extra: { type: "noDamage", value: 0 } },
+        { id: "a5", name: "음악 친구", emoji: "🎧", flavor: "다음 곡 고르기를 멈춘다.", extra: { type: "noDamage", value: 0 } },
         { id: "a6", name: "케이크 친구", emoji: "🎂", flavor: "초가 꺼지기 전에 본다.", extra: { type: "timeLimit", value: 40 } }
       ]
     },
@@ -123,7 +123,7 @@
       audiences: [
         { id: "a7", name: "앞자리 짝꿍", emoji: "✏️", flavor: "연필로 박자까지 친다.", extra: { type: "combo", value: 8 } },
         { id: "a8", name: "응원봉 반장", emoji: "📣", flavor: "응원봉은 피날레에 켠다.", extra: { type: "finisher", value: 1 } },
-        { id: "a9", name: "채점표 선배", emoji: "🧑‍🎓", flavor: "점수는 연필 끝에 있다.", extra: { type: "noDamage", value: 0 } },
+        { id: "a9", name: "깐깐한 선배의 채점", emoji: "🧑‍🎓", flavor: "점수는 연필 끝에 있다.", extra: { type: "noDamage", value: 0 } },
         { id: "a46", name: "체육부 선배", emoji: "🏀", flavor: "쉬는 시간도 잊고 바라본다.", extra: { type: "timeLimit", value: 65 } }
       ]
     },
@@ -151,7 +151,7 @@
         defeatLine: "이 라떼, 공짜로 간다."
       },
       audiences: [
-        { id: "a10", name: "노트북 단골", emoji: "💻", flavor: "배터리가 의심보다 적다.", extra: { type: "timeLimit", value: 50 } },
+        { id: "a10", name: "노트북 손님", emoji: "💻", flavor: "배터리가 의심보다 적다.", extra: { type: "timeLimit", value: 50 } },
         { id: "a11", name: "디저트 손님", emoji: "🍰", flavor: "포크를 든 채 기다린다.", extra: { type: "combo", value: 10 } },
         { id: "a12", name: "창가 손님", emoji: "🪟", flavor: "김 서린 창에 하트를 그린다.", extra: { type: "finisher", value: 1 } },
         { id: "a50", name: "바리스타 친구", emoji: "👨‍🍳", flavor: "커피 향 사이로 감탄이 샌다.", extra: { type: "combo", value: 14 } }
@@ -181,9 +181,9 @@
         defeatLine: "잠금은 풀렸다. 박수."
       },
       audiences: [
-        { id: "a13", name: "앞줄 열성팬", emoji: "👏", flavor: "손바닥이 이미 빨갛다.", extra: { type: "noDamage", value: 0 } },
-        { id: "a14", name: "프로그램 관객", emoji: "📖", flavor: "막간에 페이지를 넘긴다.", extra: { type: "timeLimit", value: 60 } },
-        { id: "a15", name: "뒷자리 속삭임", emoji: "🤫", flavor: "귓속말이 박자보다 빠르다.", extra: { type: "combo", value: 12 } },
+        { id: "a13", name: "열성팬", emoji: "👏", flavor: "손바닥이 이미 빨갛다.", extra: { type: "noDamage", value: 0 } },
+        { id: "a14", name: "일반 관객", emoji: "📖", flavor: "막간에 페이지를 넘긴다.", extra: { type: "timeLimit", value: 60 } },
+        { id: "a15", name: "헤클러", emoji: "🤫", flavor: "귓속말이 박자보다 빠르다.", extra: { type: "combo", value: 12 } },
         { id: "a54", name: "대본 작가", emoji: "✍️", flavor: "대사 대신 우와를 삼킨다.", extra: { type: "finisher", value: 1 } },
         { id: "a55", name: "커튼콜 팬", emoji: "👏", flavor: "대사 대신 우와를 삼킨다.", extra: { type: "noDamage", value: 0 } }
       ]
@@ -213,8 +213,8 @@
       },
       audiences: [
         { id: "a16", name: "깃발 응원단", emoji: "🚩", flavor: "깃발은 피날레에 흔든다.", extra: { type: "finisher", value: 1 } },
-        { id: "a17", name: "치킨 동기", emoji: "🍗", flavor: "양념 묻은 손으로 박수!", extra: { type: "combo", value: 12 } },
-        { id: "a18", name: "무대 밑 후배", emoji: "🎤", flavor: "우와, 아껴 뒀다.", extra: { type: "noDamage", value: 0 } },
+        { id: "a17", name: "술친구", emoji: "🍗", flavor: "양념 묻은 손으로 박수!", extra: { type: "combo", value: 12 } },
+        { id: "a18", name: "후배", emoji: "🎤", flavor: "우와, 아껴 뒀다.", extra: { type: "noDamage", value: 0 } },
         { id: "a59", name: "밴드 관객", emoji: "🎸", flavor: "앵콜 전에 손부터 흔든다.", extra: { type: "noDamage", value: 0 } },
         { id: "a60", name: "야광봉 팬", emoji: "✨", flavor: "앵콜 전에 손부터 흔든다.", extra: { type: "timeLimit", value: 80 } }
       ]
@@ -243,12 +243,12 @@
         defeatLine: "올패스. 다음 라운드다."
       },
       audiences: [
-        { id: "a19", name: "점수판 보조", emoji: "📋", flavor: "점수가 실시간으로 오른다.", extra: { type: "timeLimit", value: 70 } },
+        { id: "a19", name: "점수판 도우미", emoji: "📋", flavor: "점수가 실시간으로 오른다.", extra: { type: "timeLimit", value: 70 } },
         { id: "a20", name: "카메라 감독", emoji: "🎥", flavor: "줌인은 아직 허락 안 했다.", extra: { type: "noDamage", value: 0 } },
-        { id: "a21", name: "대기실 라이벌", emoji: "😏", flavor: "네 피날레만 노려본다.", extra: { type: "finisher", value: 1 } },
-        { id: "a64", name: "작가석 손님", emoji: "📝", flavor: "카메라보다 무대를 본다.", extra: { type: "timeLimit", value: 85 } },
+        { id: "a21", name: "라이벌", emoji: "😏", flavor: "네 피날레만 노려본다.", extra: { type: "finisher", value: 1 } },
+        { id: "a64", name: "초대 작가", emoji: "📝", flavor: "카메라보다 무대를 본다.", extra: { type: "timeLimit", value: 85 } },
         { id: "a65", name: "리허설 관객", emoji: "🎤", flavor: "카메라보다 무대를 본다.", extra: { type: "combo", value: 17 } },
-        { id: "a66", name: "현장 방청객", emoji: "📺", flavor: "카메라보다 무대를 본다.", extra: { type: "finisher", value: 1 } }
+        { id: "a66", name: "방청객", emoji: "📺", flavor: "카메라보다 무대를 본다.", extra: { type: "finisher", value: 1 } }
       ]
     },
     {
@@ -259,10 +259,10 @@
       headliner: { id: "h-broadcast", name: "국민 MC", emoji: "🎤", portraitAsset: "headliner-tv.png", flavor: "카메라가 손끝을 따라간다.", pattern: "slow", preLine: "카메라 보고, 천천히 갑시다.", defeatLine: "전국에서 박수가 쏟아진다!" },
       audiences: [
         { id: "a112", name: "생방송 PD", emoji: "📺", portraitAsset: "aud-tv1.png", flavor: "생방송의 순간을 지켜본다.", extra: { type: "timeLimit", value: 85 } },
-        { id: "a113", name: "큐시트 작가", emoji: "📺", portraitAsset: "aud-tv2.png", flavor: "생방송의 순간을 지켜본다.", extra: { type: "combo", value: 18 } },
-        { id: "a114", name: "붐 마이크 기사", emoji: "📺", portraitAsset: "aud-tv3.png", flavor: "생방송의 순간을 지켜본다.", extra: { type: "noDamage", value: 0 } },
+        { id: "a113", name: "방송 작가", emoji: "📺", portraitAsset: "aud-tv2.png", flavor: "생방송의 순간을 지켜본다.", extra: { type: "combo", value: 18 } },
+        { id: "a114", name: "음향 감독", emoji: "📺", portraitAsset: "aud-tv3.png", flavor: "생방송의 순간을 지켜본다.", extra: { type: "noDamage", value: 0 } },
         { id: "a115", name: "방청 응원단", emoji: "📺", portraitAsset: "aud-tv4.png", flavor: "생방송의 순간을 지켜본다.", extra: { type: "finisher", value: 1 } },
-        { id: "a116", name: "시청자 반응 담당", emoji: "📺", portraitAsset: "aud-tv5.png", flavor: "생방송의 순간을 지켜본다.", extra: { type: "timeLimit", value: 90 } },
+        { id: "a116", name: "열성적인 패널", emoji: "📺", portraitAsset: "aud-tv5.png", flavor: "생방송의 순간을 지켜본다.", extra: { type: "timeLimit", value: 90 } },
         { id: "a117", name: "조명 감독", emoji: "📺", portraitAsset: "aud-tv6.png", flavor: "생방송의 순간을 지켜본다.", extra: { type: "combo", value: 20 } }
       ]
     },
@@ -291,12 +291,12 @@
         defeatLine: "칩은 네 쪽으로 민다."
       },
       audiences: [
-        { id: "a22", name: "하이롤러", emoji: "💎", flavor: "칩을 쌓다 손을 멈춘다.", extra: { type: "combo", value: 15 } },
-        { id: "a23", name: "쇼걸 관객", emoji: "💃", flavor: "깃털 사이로 무대를 본다.", extra: { type: "timeLimit", value: 80 } },
-        { id: "a24", name: "카지노 경비", emoji: "💂", flavor: "팔짱이 제복보다 단단하다.", extra: { type: "noDamage", value: 0 } },
-        { id: "a70", name: "호텔 관객", emoji: "🏨", flavor: "칩을 내려놓고 눈을 크게 뜬다.", extra: { type: "combo", value: 18 } },
-        { id: "a71", name: "쇼 타임 팬", emoji: "🌟", flavor: "칩을 내려놓고 눈을 크게 뜬다.", extra: { type: "finisher", value: 1 } },
-        { id: "a72", name: "카지노 관광객", emoji: "🎲", flavor: "칩을 내려놓고 눈을 크게 뜬다.", extra: { type: "noDamage", value: 0 } }
+        { id: "a22", name: "큰손 손님", emoji: "💎", flavor: "칩을 쌓다 손을 멈춘다.", extra: { type: "combo", value: 15 } },
+        { id: "a23", name: "화려한 관객", emoji: "💃", flavor: "깃털 사이로 무대를 본다.", extra: { type: "timeLimit", value: 80 } },
+        { id: "a24", name: "경비 아저씨", emoji: "💂", flavor: "팔짱이 제복보다 단단하다.", extra: { type: "noDamage", value: 0 } },
+        { id: "a70", name: "호텔 손님", emoji: "🏨", flavor: "칩을 내려놓고 눈을 크게 뜬다.", extra: { type: "combo", value: 18 } },
+        { id: "a71", name: "쇼 팬", emoji: "🌟", flavor: "칩을 내려놓고 눈을 크게 뜬다.", extra: { type: "finisher", value: 1 } },
+        { id: "a72", name: "사진 관광객", emoji: "🎲", flavor: "칩을 내려놓고 눈을 크게 뜬다.", extra: { type: "noDamage", value: 0 } }
       ]
     },
     {
@@ -324,13 +324,13 @@
         defeatLine: "커튼콜은 네 자리다."
       },
       audiences: [
-        { id: "a25", name: "1열 뮤지컬 팬", emoji: "🎶", flavor: "하이노트에 피날레를 건다.", extra: { type: "finisher", value: 1 } },
-        { id: "a26", name: "티켓 관광객", emoji: "🎟️", flavor: "브로슈어를 접다 멈춘다.", extra: { type: "combo", value: 15 } },
-        { id: "a27", name: "막간 비평가", emoji: "🧐", flavor: "막간에 평을 이미 적는다.", extra: { type: "timeLimit", value: 80 } },
+        { id: "a25", name: "뮤지컬 팬", emoji: "🎶", flavor: "하이노트에 피날레를 건다.", extra: { type: "finisher", value: 1 } },
+        { id: "a26", name: "뉴욕 관광객", emoji: "🎟️", flavor: "브로슈어를 접다 멈춘다.", extra: { type: "combo", value: 15 } },
+        { id: "a27", name: "깐깐 비평가", emoji: "🧐", flavor: "막간에 평을 이미 적는다.", extra: { type: "timeLimit", value: 80 } },
         { id: "a76", name: "티켓 수집가", emoji: "🎟️", flavor: "커튼콜을 먼저 외친다.", extra: { type: "finisher", value: 1 } },
         { id: "a77", name: "발레 관객", emoji: "🩰", flavor: "커튼콜을 먼저 외친다.", extra: { type: "noDamage", value: 0 } },
         { id: "a78", name: "오케스트라 팬", emoji: "🎼", flavor: "커튼콜을 먼저 외친다.", extra: { type: "timeLimit", value: 95 } },
-        { id: "a79", name: "무대 의상가", emoji: "👗", flavor: "커튼콜을 먼저 외친다.", extra: { type: "combo", value: 19 } }
+        { id: "a79", name: "의상 디자이너", emoji: "👗", flavor: "커튼콜을 먼저 외친다.", extra: { type: "combo", value: 19 } }
       ]
     },
     {
@@ -359,11 +359,11 @@
       },
       audiences: [
         { id: "a28", name: "우주비행사", emoji: "🧑‍🚀", flavor: "헬멧 안에 박수를 아낀다.", extra: { type: "noDamage", value: 0 } },
-        { id: "a29", name: "달기지 관제사", emoji: "🛰️", flavor: "피날레에 무전을 연다.", extra: { type: "finisher", value: 1 } },
-        { id: "a30", name: "월면차 운전병", emoji: "🚙", flavor: "바퀴 자국 위에 선다.", extra: { type: "combo", value: 18 } },
-        { id: "a83", name: "월면 과학자", emoji: "🔭", flavor: "헬멧 너머로 박수를 보낸다.", extra: { type: "noDamage", value: 0 } },
+        { id: "a29", name: "무전 담당", emoji: "🛰️", flavor: "피날레에 무전을 연다.", extra: { type: "finisher", value: 1 } },
+        { id: "a30", name: "탐사차 기사", emoji: "🚙", flavor: "바퀴 자국 위에 선다.", extra: { type: "combo", value: 18 } },
+        { id: "a83", name: "달 과학자", emoji: "🔭", flavor: "헬멧 너머로 박수를 보낸다.", extra: { type: "noDamage", value: 0 } },
         { id: "a84", name: "별빛 수집가", emoji: "🌟", flavor: "헬멧 너머로 박수를 보낸다.", extra: { type: "timeLimit", value: 100 } },
-        { id: "a85", name: "달 기지 정비사", emoji: "🧑‍🚀", flavor: "헬멧 너머로 박수를 보낸다.", extra: { type: "combo", value: 20 } },
+        { id: "a85", name: "기지 정비사", emoji: "🧑‍🚀", flavor: "헬멧 너머로 박수를 보낸다.", extra: { type: "combo", value: 20 } },
         { id: "a86", name: "우주 관광객", emoji: "🚀", flavor: "헬멧 너머로 박수를 보낸다.", extra: { type: "finisher", value: 1 } }
       ]
     },
@@ -386,19 +386,19 @@
         id: "h11",
         name: "태양의 불꽃왕",
         emoji: "☀️",
-        flavor: "왕관이 플레어처럼 튄다.",
+        flavor: "왕관이 불꽃처럼 튄다.",
         pattern: "stealCoins",
-        preLine: "동전은 코로나에 녹인다.",
+        preLine: "동전은 태양 불꽃에 녹인다.",
         defeatLine: "녹은 동전, 빛으로 돌려준다."
       },
       audiences: [
-        { id: "a31", name: "플레어 서퍼", emoji: "🔥", flavor: "불꽃보다 빨리 끝나길 빈다.", extra: { type: "timeLimit", value: 90 } },
-        { id: "a32", name: "코로나 가이드", emoji: "🌞", flavor: "흑점 투어를 잠시 멈춘다.", extra: { type: "combo", value: 18 } },
-        { id: "a33", name: "홍염 사진가", emoji: "📷", flavor: "피날레에 셔터를 누른다.", extra: { type: "finisher", value: 1 } },
+        { id: "a31", name: "불꽃 서퍼", emoji: "🔥", flavor: "불꽃보다 빨리 끝나길 빈다.", extra: { type: "timeLimit", value: 90 } },
+        { id: "a32", name: "태양 가이드", emoji: "🌞", flavor: "흑점 투어를 잠시 멈춘다.", extra: { type: "combo", value: 18 } },
+        { id: "a33", name: "불꽃 사진가", emoji: "📷", flavor: "피날레에 셔터를 누른다.", extra: { type: "finisher", value: 1 } },
         { id: "a90", name: "빛 연구원", emoji: "🧪", flavor: "선글라스 너머 눈이 동그래진다.", extra: { type: "timeLimit", value: 105 } },
-        { id: "a91", name: "코로나 여행객", emoji: "🕶️", flavor: "선글라스 너머 눈이 동그래진다.", extra: { type: "combo", value: 21 } },
+        { id: "a91", name: "태양 여행객", emoji: "🕶️", flavor: "선글라스 너머 눈이 동그래진다.", extra: { type: "combo", value: 21 } },
         { id: "a92", name: "태양 관측자", emoji: "🔭", flavor: "선글라스 너머 눈이 동그래진다.", extra: { type: "finisher", value: 1 } },
-        { id: "a93", name: "플레어 서퍼", emoji: "🏄", flavor: "선글라스 너머 눈이 동그래진다.", extra: { type: "noDamage", value: 0 } },
+        { id: "a93", name: "파도 서퍼", emoji: "🏄", flavor: "선글라스 너머 눈이 동그래진다.", extra: { type: "noDamage", value: 0 } },
         { id: "a94", name: "우주 사진가", emoji: "📷", flavor: "선글라스 너머 눈이 동그래진다.", extra: { type: "timeLimit", value: 105 } }
       ]
     },
@@ -427,14 +427,14 @@
         defeatLine: "항로를 네 무대로 튼다."
       },
       audiences: [
-        { id: "a34", name: "관광 외계인", emoji: "👽", flavor: "번역기가 박수를 모른다.", extra: { type: "combo", value: 20 } },
+        { id: "a34", name: "외계인 손님", emoji: "👽", flavor: "번역기가 박수를 모른다.", extra: { type: "combo", value: 20 } },
         { id: "a35", name: "UFO 파일럿", emoji: "🛸", flavor: "기체를 기울여 구경한다.", extra: { type: "noDamage", value: 0 } },
-        { id: "a36", name: "별자리 해설가", emoji: "✨", flavor: "별이 지기 전에 보여 줘.", extra: { type: "timeLimit", value: 100 } },
+        { id: "a36", name: "별자리 선생님", emoji: "✨", flavor: "별이 지기 전에 보여 줘.", extra: { type: "timeLimit", value: 100 } },
         { id: "a98", name: "우주 음악가", emoji: "🎹", flavor: "항로를 멈추고 박자를 탄다.", extra: { type: "combo", value: 22 } },
         { id: "a99", name: "은하 사진가", emoji: "📸", flavor: "항로를 멈추고 박자를 탄다.", extra: { type: "finisher", value: 1 } },
-        { id: "a100", name: "성운 안내원", emoji: "🌌", flavor: "항로를 멈추고 박자를 탄다.", extra: { type: "noDamage", value: 0 } },
-        { id: "a101", name: "혜성 라이더", emoji: "☄️", flavor: "항로를 멈추고 박자를 탄다.", extra: { type: "timeLimit", value: 110 } },
-        { id: "a102", name: "별자리 여행자", emoji: "✨", flavor: "항로를 멈추고 박자를 탄다.", extra: { type: "combo", value: 22 } }
+        { id: "a100", name: "은하수 안내원", emoji: "🌌", flavor: "항로를 멈추고 박자를 탄다.", extra: { type: "noDamage", value: 0 } },
+        { id: "a101", name: "혜성 레이서", emoji: "☄️", flavor: "항로를 멈추고 박자를 탄다.", extra: { type: "timeLimit", value: 110 } },
+        { id: "a102", name: "소원 여행자", emoji: "✨", flavor: "항로를 멈추고 박자를 탄다.", extra: { type: "combo", value: 22 } }
       ]
     },
     {
@@ -467,8 +467,8 @@
         { id: "a38", name: "연습실 못 간 나", emoji: "🚪", flavor: "연습실 문 앞에서 멈췄다.", extra: { type: "timeLimit", value: 120 } },
         { id: "a39", name: "첫 카드를 접은 나", emoji: "🃏", flavor: "카드를 가방에 도로 넣었다.", extra: { type: "combo", value: 20 } },
         { id: "a106", name: "용기 낸 나", emoji: "💫", flavor: "거울 너머의 내가 웃는다.", extra: { type: "finisher", value: 1 } },
-        { id: "a107", name: "박수치는 나", emoji: "👏", flavor: "거울 너머의 내가 웃는다.", extra: { type: "noDamage", value: 0 } },
-        { id: "a108", name: "다른 차원의 나", emoji: "🪞", flavor: "거울 너머의 내가 웃는다.", extra: { type: "timeLimit", value: 115 } },
+        { id: "a107", name: "객석의 나", emoji: "👏", flavor: "거울 너머의 내가 웃는다.", extra: { type: "noDamage", value: 0 } },
+        { id: "a108", name: "다른 세계의 나", emoji: "🪞", flavor: "거울 너머의 내가 웃는다.", extra: { type: "timeLimit", value: 115 } },
         { id: "a109", name: "연습을 시작한 나", emoji: "🪄", flavor: "거울 너머의 내가 웃는다.", extra: { type: "combo", value: 23 } },
         { id: "a110", name: "무대에 선 나", emoji: "🎩", flavor: "거울 너머의 내가 웃는다.", extra: { type: "finisher", value: 1 } },
         { id: "a111", name: "박수 보내는 나", emoji: "💫", flavor: "거울 너머의 내가 웃는다.", extra: { type: "noDamage", value: 0 } }
@@ -723,7 +723,7 @@
       hue: 320,
       ending: {
         title: "네온도 박수에 졌다",
-        body: "카지노 칩이 박자처럼 쌓였다. 쇼걸이 깃털을 한쪽으로 젖힌다. 이 차원의 불빛은 앵콜을 기억한다."
+        body: "카지노 칩이 박자처럼 쌓였다. 화려한 관객이 깃털을 한쪽으로 젖힌다. 이 차원의 불빛은 앵콜을 기억한다."
       }
     },
     {
@@ -816,7 +816,7 @@
       keys: "열쇠",
       wandArea: "지팡이 범위",
       attack: "야유",
-      heckleIn: "다음 야유",
+      heckleIn: "관객의 의심",
       starlight: "별빛"
     }
   }
@@ -896,7 +896,7 @@ GAME_DATA.tree.filter(n=>n.u4b).forEach(n=>{
     "winLine": "어머나, 신통하구나!"
   },
   "a1": {
-    "name": "리모컨 아빠",
+    "name": "아빠",
     "heckles": [
       "아빠 때는 더 했어.",
       "채널 돌리지 마라.",
@@ -906,7 +906,7 @@ GAME_DATA.tree.filter(n=>n.u4b).forEach(n=>{
     "winLine": "우리 아들 천재네!"
   },
   "a2": {
-    "name": "간식 동생",
+    "name": "동생",
     "heckles": [
       "형, 나도 할 수 있어!",
       "간식 더 없어?",
@@ -916,7 +916,7 @@ GAME_DATA.tree.filter(n=>n.u4b).forEach(n=>{
     "winLine": "헐, 형 대박이다!"
   },
   "a3": {
-    "name": "앞치마 엄마",
+    "name": "엄마",
     "heckles": [
       "밥 먹고 해라.",
       "설거지 남았는데.",
@@ -946,7 +946,7 @@ GAME_DATA.tree.filter(n=>n.u4b).forEach(n=>{
     "winLine": "풍선보다 더 터졌다!"
   },
   "a5": {
-    "name": "플레이리스트 친구",
+    "name": "음악 친구",
     "heckles": [
       "이 노래가 더 신나.",
       "박자 놓쳤어.",
@@ -996,7 +996,7 @@ GAME_DATA.tree.filter(n=>n.u4b).forEach(n=>{
     "winLine": "응원봉 켠다, 최고!"
   },
   "a9": {
-    "name": "채점표 선배",
+    "name": "깐깐한 선배의 채점",
     "heckles": [
       "점수 깎는다.",
       "선배가 본다.",
@@ -1026,7 +1026,7 @@ GAME_DATA.tree.filter(n=>n.u4b).forEach(n=>{
     "winLine": "한 잔 쏠게요!"
   },
   "a10": {
-    "name": "노트북 단골",
+    "name": "노트북 손님",
     "heckles": [
       "배터리 없는데.",
       "와이파이 끊겼다.",
@@ -1076,7 +1076,7 @@ GAME_DATA.tree.filter(n=>n.u4b).forEach(n=>{
     "winLine": "별 다섯, 인정!"
   },
   "a13": {
-    "name": "앞줄 열성팬",
+    "name": "열성팬",
     "heckles": [
       "박수 준비 완료!",
       "더 크게 해 봐요!",
@@ -1086,7 +1086,7 @@ GAME_DATA.tree.filter(n=>n.u4b).forEach(n=>{
     "winLine": "역시 최고예요!"
   },
   "a14": {
-    "name": "프로그램 관객",
+    "name": "일반 관객",
     "heckles": [
       "프로그램에 없는데?",
       "다음 장 넘겨요.",
@@ -1096,7 +1096,7 @@ GAME_DATA.tree.filter(n=>n.u4b).forEach(n=>{
     "winLine": "프로그램 밖이다!"
   },
   "a15": {
-    "name": "뒷자리 속삭임",
+    "name": "헤클러",
     "heckles": [
       "쉿, 속닥속닥.",
       "저거 눈속임이래.",
@@ -1146,7 +1146,7 @@ GAME_DATA.tree.filter(n=>n.u4b).forEach(n=>{
     "winLine": "깃발 흔든다, 와!"
   },
   "a17": {
-    "name": "치킨 동기",
+    "name": "술친구",
     "heckles": [
       "치킨 식는다, 야.",
       "양념이 더 낫네.",
@@ -1156,7 +1156,7 @@ GAME_DATA.tree.filter(n=>n.u4b).forEach(n=>{
     "winLine": "치킨보다 맛있다!"
   },
   "a18": {
-    "name": "무대 밑 후배",
+    "name": "후배",
     "heckles": [
       "선배, 괜찮아요?",
       "살짝 아쉬운데.",
@@ -1196,7 +1196,7 @@ GAME_DATA.tree.filter(n=>n.u4b).forEach(n=>{
     "winLine": "합격 패들 올립니다!"
   },
   "a19": {
-    "name": "점수판 보조",
+    "name": "점수판 도우미",
     "heckles": [
       "점수 안 올라요.",
       "아직 일 점이에요.",
@@ -1216,7 +1216,7 @@ GAME_DATA.tree.filter(n=>n.u4b).forEach(n=>{
     "winLine": "줌인 들어갑니다!"
   },
   "a21": {
-    "name": "대기실 라이벌",
+    "name": "라이벌",
     "heckles": [
       "내가 더 잘해.",
       "피날레는 내 거야.",
@@ -1226,7 +1226,7 @@ GAME_DATA.tree.filter(n=>n.u4b).forEach(n=>{
     "winLine": "크, 인정한다!"
   },
   "a64": {
-    "name": "작가석 손님",
+    "name": "초대 작가",
     "heckles": [
       "대본에 없던데요.",
       "작가가 쓸 법해.",
@@ -1246,7 +1246,7 @@ GAME_DATA.tree.filter(n=>n.u4b).forEach(n=>{
     "winLine": "리허설과 천지차!"
   },
   "a66": {
-    "name": "현장 방청객",
+    "name": "방청객",
     "heckles": [
       "박수 칠 타이밍?",
       "아직 못 쳐요.",
@@ -1276,17 +1276,17 @@ GAME_DATA.tree.filter(n=>n.u4b).forEach(n=>{
     "winLine": "방송이 살았네요!"
   },
   "a113": {
-    "name": "큐시트 작가",
+    "name": "방송 작가",
     "heckles": [
-      "큐시트에 없는데?",
+      "방송 순서에 없는데?",
       "순서가 꼬였어요.",
       "수정본 보세요.",
       "대본이 안 맞아요."
     ],
-    "winLine": "큐시트 다시 쓴다!"
+    "winLine": "방송 순서 다시 쓴다!"
   },
   "a114": {
-    "name": "붐 마이크 기사",
+    "name": "음향 감독",
     "heckles": [
       "마이크에 걸려요.",
       "붐대 내려갑니다.",
@@ -1306,7 +1306,7 @@ GAME_DATA.tree.filter(n=>n.u4b).forEach(n=>{
     "winLine": "와아, 함성 갑니다!"
   },
   "a116": {
-    "name": "시청자 반응 담당",
+    "name": "열성적인 패널",
     "heckles": [
       "반응이 시큰둥해요.",
       "댓글 차갑네요.",
@@ -1336,7 +1336,7 @@ GAME_DATA.tree.filter(n=>n.u4b).forEach(n=>{
     "winLine": "인정하지, 올인이다!"
   },
   "a22": {
-    "name": "하이롤러",
+    "name": "큰손 손님",
     "heckles": [
       "칩을 걸어 볼까.",
       "올인할 값어치?",
@@ -1346,7 +1346,7 @@ GAME_DATA.tree.filter(n=>n.u4b).forEach(n=>{
     "winLine": "전 재산 걸겠소!"
   },
   "a23": {
-    "name": "쇼걸 관객",
+    "name": "화려한 관객",
     "heckles": [
       "깃털보다 가볍네요.",
       "화려함이 부족해.",
@@ -1356,7 +1356,7 @@ GAME_DATA.tree.filter(n=>n.u4b).forEach(n=>{
     "winLine": "눈이 반짝반짝해요!"
   },
   "a24": {
-    "name": "카지노 경비",
+    "name": "경비 아저씨",
     "heckles": [
       "수상한 손놀림이다.",
       "소매 좀 봅시다.",
@@ -1366,7 +1366,7 @@ GAME_DATA.tree.filter(n=>n.u4b).forEach(n=>{
     "winLine": "이건 반칙 아닙니다!"
   },
   "a70": {
-    "name": "호텔 관객",
+    "name": "호텔 손님",
     "heckles": [
       "룸서비스가 낫겠네.",
       "호텔 쇼보다 밋밋해.",
@@ -1376,7 +1376,7 @@ GAME_DATA.tree.filter(n=>n.u4b).forEach(n=>{
     "winLine": "객실에서 자랑해야지!"
   },
   "a71": {
-    "name": "쇼 타임 팬",
+    "name": "쇼 팬",
     "heckles": [
       "쇼 시간 끝났나?",
       "다음 쇼가 낫겠다.",
@@ -1386,7 +1386,7 @@ GAME_DATA.tree.filter(n=>n.u4b).forEach(n=>{
     "winLine": "쇼 타임, 최고다!"
   },
   "a72": {
-    "name": "카지노 관광객",
+    "name": "사진 관광객",
     "heckles": [
       "기념품이 더 낫네.",
       "사진은 찍어 줄게.",
@@ -1406,7 +1406,7 @@ GAME_DATA.tree.filter(n=>n.u4b).forEach(n=>{
     "winLine": "브라보, 앙코르다!"
   },
   "a25": {
-    "name": "1열 뮤지컬 팬",
+    "name": "뮤지컬 팬",
     "heckles": [
       "하이노트가 없네.",
       "노래 한 곡 낫겠다.",
@@ -1416,7 +1416,7 @@ GAME_DATA.tree.filter(n=>n.u4b).forEach(n=>{
     "winLine": "브라보! 기립이다!"
   },
   "a26": {
-    "name": "티켓 관광객",
+    "name": "뉴욕 관광객",
     "heckles": [
       "브로슈어엔 없던데?",
       "표값 아깝지 않나.",
@@ -1426,7 +1426,7 @@ GAME_DATA.tree.filter(n=>n.u4b).forEach(n=>{
     "winLine": "여행 선물 받았다!"
   },
   "a27": {
-    "name": "막간 비평가",
+    "name": "깐깐 비평가",
     "heckles": [
       "막간에 이미 썼다.",
       "평이 박하겠는데.",
@@ -1466,7 +1466,7 @@ GAME_DATA.tree.filter(n=>n.u4b).forEach(n=>{
     "winLine": "교향곡 같은 마술!"
   },
   "a79": {
-    "name": "무대 의상가",
+    "name": "의상 디자이너",
     "heckles": [
       "의상이 평범하군.",
       "소품이 아쉽다.",
@@ -1496,7 +1496,7 @@ GAME_DATA.tree.filter(n=>n.u4b).forEach(n=>{
     "winLine": "교신 불가, 감탄!"
   },
   "a29": {
-    "name": "달기지 관제사",
+    "name": "무전 담당",
     "heckles": [
       "관제실 응답 없음.",
       "신호 지연 중이다.",
@@ -1506,7 +1506,7 @@ GAME_DATA.tree.filter(n=>n.u4b).forEach(n=>{
     "winLine": "관제센터에 보고한다!"
   },
   "a30": {
-    "name": "월면차 운전병",
+    "name": "탐사차 기사",
     "heckles": [
       "이 길에선 못 해.",
       "바퀴 자국만 남아.",
@@ -1516,7 +1516,7 @@ GAME_DATA.tree.filter(n=>n.u4b).forEach(n=>{
     "winLine": "월면차에 태우고 싶다!"
   },
   "a83": {
-    "name": "월면 과학자",
+    "name": "달 과학자",
     "heckles": [
       "실험 결과가 없네.",
       "데이터가 부족해.",
@@ -1536,7 +1536,7 @@ GAME_DATA.tree.filter(n=>n.u4b).forEach(n=>{
     "winLine": "별 하나 더 얻었다!"
   },
   "a85": {
-    "name": "달 기지 정비사",
+    "name": "기지 정비사",
     "heckles": [
       "나사 풀렸을걸.",
       "점검이 필요하군.",
@@ -1566,32 +1566,32 @@ GAME_DATA.tree.filter(n=>n.u4b).forEach(n=>{
     "winLine": "활활 불타올랐다!"
   },
   "a31": {
-    "name": "플레어 서퍼",
+    "name": "불꽃 서퍼",
     "heckles": [
       "파도가 더 큰데?",
       "서핑 중 뭘 봐.",
       "불꽃보다 느리네.",
       "빨리 끝내 줘."
     ],
-    "winLine": "플레어보다 짜릿!"
+    "winLine": "불꽃보다 짜릿!"
   },
   "a32": {
-    "name": "코로나 가이드",
+    "name": "태양 가이드",
     "heckles": [
       "투어는 계속돼.",
       "흑점이 더 신기해.",
-      "코로나가 더 뜨겁다.",
+      "태양 불꽃가 더 뜨겁다.",
       "가이드가 한 수 위."
     ],
     "winLine": "가이드북에 싣겠다!"
   },
   "a33": {
-    "name": "홍염 사진가",
+    "name": "불꽃 사진가",
     "heckles": [
       "셔터가 안 눌려.",
       "찍을 게 없네.",
       "초점이 안 맞아.",
-      "홍염이 더 멋져."
+      "불꽃이 더 멋져."
     ],
     "winLine": "찰칵, 인생 사진!"
   },
@@ -1606,10 +1606,10 @@ GAME_DATA.tree.filter(n=>n.u4b).forEach(n=>{
     "winLine": "새 연구 주제다!"
   },
   "a91": {
-    "name": "코로나 여행객",
+    "name": "태양 여행객",
     "heckles": [
       "여기까지 왔는데.",
-      "코로나 투어 갈까.",
+      "태양 불꽃 투어 갈까.",
       "뜨겁지가 않네.",
       "기대가 컸나."
     ],
@@ -1626,7 +1626,7 @@ GAME_DATA.tree.filter(n=>n.u4b).forEach(n=>{
     "winLine": "관측 기록 갱신!"
   },
   "a93": {
-    "name": "플레어 서퍼",
+    "name": "파도 서퍼",
     "heckles": [
       "서핑할 시간인데.",
       "파도 놓쳤잖아.",
@@ -1656,7 +1656,7 @@ GAME_DATA.tree.filter(n=>n.u4b).forEach(n=>{
     "winLine": "별 하나 하사한다!"
   },
   "a34": {
-    "name": "관광 외계인",
+    "name": "외계인 손님",
     "heckles": [
       "이게 뭐라는 건가.",
       "지구인 신기해?",
@@ -1676,7 +1676,7 @@ GAME_DATA.tree.filter(n=>n.u4b).forEach(n=>{
     "winLine": "기체가 춤춘다!"
   },
   "a36": {
-    "name": "별자리 해설가",
+    "name": "별자리 선생님",
     "heckles": [
       "별이 지기 전에!",
       "별자리엔 없는데.",
@@ -1706,7 +1706,7 @@ GAME_DATA.tree.filter(n=>n.u4b).forEach(n=>{
     "winLine": "앨범에 실을게요!"
   },
   "a100": {
-    "name": "성운 안내원",
+    "name": "은하수 안내원",
     "heckles": [
       "성운 쪽으로 오세요.",
       "길 잃으셨죠?",
@@ -1716,7 +1716,7 @@ GAME_DATA.tree.filter(n=>n.u4b).forEach(n=>{
     "winLine": "성운이 반짝였어요!"
   },
   "a101": {
-    "name": "혜성 라이더",
+    "name": "혜성 레이서",
     "heckles": [
       "혜성이 더 빨라요.",
       "꼬리도 안 보이네.",
@@ -1726,7 +1726,7 @@ GAME_DATA.tree.filter(n=>n.u4b).forEach(n=>{
     "winLine": "혜성처럼 빠르네!"
   },
   "a102": {
-    "name": "별자리 여행자",
+    "name": "소원 여행자",
     "heckles": [
       "별자리가 안 맞네.",
       "여행 계획 틀어져.",
@@ -1786,7 +1786,7 @@ GAME_DATA.tree.filter(n=>n.u4b).forEach(n=>{
     "winLine": "그래, 바로 이거야!"
   },
   "a107": {
-    "name": "박수치는 나",
+    "name": "객석의 나",
     "heckles": [
       "일단 지켜볼게.",
       "박수는 아직이야.",
@@ -1796,7 +1796,7 @@ GAME_DATA.tree.filter(n=>n.u4b).forEach(n=>{
     "winLine": "박수 쳐 줄게!"
   },
   "a108": {
-    "name": "다른 차원의 나",
+    "name": "다른 세계의 나",
     "heckles": [
       "다른 차원도 비슷해.",
       "여기선 어려운데.",
@@ -1916,13 +1916,15 @@ GAME_DATA.tree.filter(n=>n.u4b).forEach(n=>{
     "a-meetup-geoje": {
       "name": "거제의 마술 매니아",
       "flavor": "먼 길을 달려왔다.",
+      "encounterLine": "거제 야호! 한번 속여 보시겠어요?",
       "heckles": [
+        "거제 야호! 한번 속여 보시겠어요?",
         "어디서 배우셨어요?",
         "초보는 뭐부터 해요?",
         "입문 책 추천해 주세요.",
         "저 멀리서 왔어요."
       ],
-      "winLine": "저도 꼭 배울래요!"
+      "winLine": "거제 야호! 오늘 최고였어요!"
     },
     "a-meetup-cheonan": {
       "name": "천안의 마술 매니아",
@@ -2039,27 +2041,27 @@ GAME_DATA.tree.filter(n=>n.u4b).forEach(n=>{
 // U12 copy is bundled verbatim; no runtime fetch.
 GAME_DATA.onboarding = {
   "intro": [
-    {
-      "line": "칼리가 거실에서 카드를 펼쳤어요.",
-      "art": "living"
-    },
-    {
-      "line": "아빠는 리모컨만 꼭 쥐고 있네요.",
-      "art": "living"
-    },
-    {
-      "line": "카드 케이스를 열어 마술을 키워요.",
-      "art": "cards"
-    },
-    {
-      "line": "다음 무대는 TV, 우주, 그리고 그 너머!",
-      "art": "cosmos"
-    },
-    {
-      "line": "자, 렉쳐노트까지 박수 받으러 가요!",
-      "art": "shop"
-    }
-  ],
+  {
+    "line": "칼리가 거실에서 마술을 시작했어요.",
+    "art": "living"
+  },
+  {
+    "line": "작은 카드 한 장에 아빠가 웃었어요.",
+    "art": "living"
+  },
+  {
+    "line": "칼리는 더 큰 무대를 꿈꿔요.",
+    "art": "cards"
+  },
+  {
+    "line": "마술은 우주 너머 어디까지 갈 수 있을까요?",
+    "art": "cosmos"
+  },
+  {
+    "line": "케이스를 열고 함께 떠나 봐요!",
+    "art": "cosmos"
+  }
+],
   "tutorial": [
     {
       "id": "hold",
@@ -2115,3 +2117,1097 @@ GAME_DATA.tree.find(n=>n.id==='attack').cost=Array.from({length:10},(_,i)=>i<8?M
 GAME_DATA.tree.find(n=>n.id==='power').cost.g=2.0;
 
 GAME_DATA.tree.filter(n=>n.productMultiplier).forEach(n=>{n.cost=n.cost.map(c=>Math.ceil(c*0.6));});
+
+// U13 idle progression, stat milestones and fight-time skills.
+GAME_DATA.skills = [
+  {id:'showtime',name:'쇼타임',clear:'party',duration:20000,cooldown:90000,icon:'skill-showtime.png',emoji:'🎩'},
+  {id:'cardrain',name:'카드 비',clear:'cafe',duration:0,cooldown:60000,icon:'skill-cardrain.png',emoji:'🃏'},
+  {id:'cheer',name:'관객 호응',clear:'theater',duration:0,cooldown:75000,icon:'skill-cheer.png',emoji:'👏'}
+];
+(function(D){
+  const add=(id,name,max,c,x,y,desc,pre='boxHelper')=>D.tree.push({id,name,max,cost:{c,g:2},x,y,desc,prereqs:[pre],branch:'pet',currency:'coins',reveal:'N',icon:'node-assistant.png',emoji:'🌙',pending:false,u13:true});
+  add('nightShow','야간 공연',4,800,-8,3,'자리 비운 보상 상한 +1시간씩 · 기본 8시간');
+  add('manager','매니저 계약',3,1500,-7,4,'자리 비운 보상 효율 +10%p씩 · 기본 50%');
+  add('autoPractice','자동 연습 속도',4,500,-7,5,'손을 뗐을 때 수동 타격 속도의 +10%씩 · 기본 40%', 'root');
+  D.skills.forEach((s,i)=>add(s.id+'Cooldown',s.name+' 준비',3,1200*(i+1),-7,6+i,'재사용 시간 -10%씩', 'root'));
+  D.tree.find(n=>n.id==='caseMax').max=45;
+  D.tree.find(n=>n.id==='caseMax').cost=Array.from({length:45},(_,i)=>i<10?Math.ceil(240*1.5**i):Math.ceil(1e9*1.15**(i-10)));
+  D.tree.find(n=>n.id==='caseMax').desc='케이스 최대 LV +1 · 기본 5, 최대 50';
+  D.tree.forEach(n=>{if(['power','attack','mental','spawn','speed','coinLuck'].includes(n.id)||n.infinite||n.starKey)n.statMilestone=true;});
+})(GAME_DATA);
+
+// U13 pace tuning keeps active skill and milestone effects intact.
+(function(D){const scale={school:1.3,cafe:1.2,meetup:1.5,theater:1.1,festival:1.1,audition:4.15,broadcast:5,vegas:9,broadway:13,moon:19,sun:120,galaxy:500,multiverse:740,lecturenote:200};D.venues.forEach(v=>{if(scale[v.slug])v.hpFactor*=scale[v.slug];});D.venues.find(v=>v.slug==='lecturenote').bossHpFactor*=2.95;})(GAME_DATA);
+
+/* U14 daily selection uses a date hash, independent of combat randomness. */
+GAME_DATA.missions = [
+ {id:'boxes',name:'케이스 200개 열기',target:200,gems:3},
+ {id:'combo',name:'콤보 50 달성',target:50,gems:3},
+ {id:'dealer',name:'토끼 딜러 1회',target:1,gems:2},
+ {id:'learn',name:'비법 5개 배우기',target:5,gems:2},
+ {id:'events',name:'이벤트 관객 2명 잡기',target:2,gems:4},
+ {id:'skills',name:'액티브 스킬 5회',target:5,gems:3},
+ {id:'wins',name:'관객 3명 감탄',target:3,gems:2},
+ {id:'golden',name:'황금 케이스 1개 열기',target:1,gems:3},
+ {id:'offline',name:'자리 비운 동안 보상 받기',target:1,gems:2},
+ {id:'clear',name:'무대 클리어 1회',target:1,gems:4}
+];
+GAME_DATA.streakGems = [2,3,4,5,6,7,10];
+
+// U14 pace tuning includes visitors and dimension sets; daily rewards stay outside simulations.
+(function(D){const scale={meetup:1.16,audition:3.8,broadcast:3,vegas:5,broadway:8,moon:24,sun:13,galaxy:2.4,multiverse:2.05,lecturenote:2};D.venues.forEach(v=>{if(scale[v.slug])v.hpFactor*=scale[v.slug];});})(GAME_DATA);
+
+/* U15 story content is bundled from the supplied, read-only source. */
+GAME_DATA.storyV15 = {
+  "tutorial": {
+    "bio": "모든 마술을 의심하는 첫 관객. 팔짱이 단단하다.",
+    "intro": [
+  {
+    "speaker": "칼리",
+    "text": "거실에서 시작한 마술, 우주 너머 어디까지 갈 수 있을까요?"
+  },
+  {
+    "speaker": "김도겸",
+    "text": "꿈은 크네. 난 마술을 안 믿는데."
+  },
+  {
+    "speaker": "칼리",
+    "text": "그럼 여기서부터 믿게 만들어 드릴게요."
+  },
+  {
+    "speaker": "김도겸",
+    "text": "내 의심을 줄이면 박수 쳐 주지."
+  }
+],
+    "coaching": [
+      {
+        "speaker": "김도겸",
+        "text": "손 빠른 척만 하는 거 아냐?"
+      },
+      {
+        "speaker": "김도겸",
+        "text": "그 정도론 내 의심이 안 줄어."
+      },
+      {
+        "speaker": "김도겸",
+        "text": "어, 게이지가 좀 깎이는데?"
+      },
+      {
+        "speaker": "김도겸",
+        "text": "야유 한 번 더 간다. 멘탈 괜찮아?"
+      }
+    ],
+    "defeat": [
+      {
+        "speaker": "김도겸",
+        "text": "으윽, 의심이 바닥났다. 믿는다, 믿어."
+      },
+      {
+        "speaker": "칼리",
+        "text": "이제 거실로 가 볼까요?"
+      },
+      {
+        "speaker": "김도겸",
+        "text": "좋아. 나도 첫 관객으로 박수 칠게."
+      }
+    ],
+    "winLine": "좋아, 인정! 이제 진짜 무대로 가 봐!"
+  },
+  "helper": {
+    "bio": "칼리 곁을 맴도는 장난꾸러기 꼬마 마술 도깨비.",
+    "coaching": [
+      {
+        "speaker": "밍기리",
+        "text": "칼리, 오른쪽 케이스를 꾹 누르고 있어!"
+      },
+      {
+        "speaker": "밍기리",
+        "text": "열리면 아이템이 튀어나와. 줍기만 해!"
+      },
+      {
+        "speaker": "밍기리",
+        "text": "아이템이 능력치를 올려. 의심이 줄지?"
+      },
+      {
+        "speaker": "밍기리",
+        "text": "의심 게이지를 깎아야 해. 멘탈 먼저 닳지 마!"
+      },
+      {
+        "speaker": "밍기리",
+        "text": "아래 스킬 바도 눌러 봐. 숨은 한 수야!"
+      }
+    ]
+  },
+  "venues": {
+    "family": {
+      "opening": [
+        {
+          "speaker": "아빠",
+          "text": "채널권은 내 손에 있다. 마술은 짧게."
+        },
+        {
+          "speaker": "동생",
+          "text": "형, 팝콘 먹으면서 봐도 돼?"
+        },
+        {
+          "speaker": "엄마",
+          "text": "설거지 끝내고 왔다. 시작해 봐, 칼리."
+        },
+        {
+          "speaker": "칼리",
+          "text": "좋아요. 오늘 거실이 첫 무대예요."
+        }
+      ],
+      "beforeHeadliner": [
+        {
+          "speaker": "까다로운 할머니",
+          "text": "칼리야, 손 안 바꾼 거지? 안경 썼다."
+        },
+        {
+          "speaker": "칼리",
+          "text": "할머니 앞에선 손이 더 떨려요."
+        },
+        {
+          "speaker": "까다로운 할머니",
+          "text": "떨어도 좋아. 대신 똑바로 해 봐라."
+        }
+      ],
+      "afterClear": [
+        {
+          "speaker": "까다로운 할머니",
+          "text": "손 안 바꿨네. 친구들한테도 보여 줘라."
+        },
+        {
+          "speaker": "아빠",
+          "text": "리모컨 내려놓은 건 비밀이다."
+        }
+      ]
+    },
+    "party": {
+      "opening": [
+        {
+          "speaker": "풍선 친구",
+          "text": "할머니 소문 들었어! 우리 파티에서 해 줘!"
+        },
+        {
+          "speaker": "음악 친구",
+          "text": "노래 끌게. 대신 분위기 살려야 해."
+        },
+        {
+          "speaker": "칼리",
+          "text": "거실이랑은 또 다르네. 긴장된다."
+        },
+        {
+          "speaker": "케이크 친구",
+          "text": "초 꺼지기 전에 보여 줘!"
+        }
+      ],
+      "beforeHeadliner": [
+        {
+          "speaker": "파티 주최자",
+          "text": "오늘 주인공은 나였는데 말이야."
+        },
+        {
+          "speaker": "칼리",
+          "text": "그럼 주인공도 놀라게 해 드릴게요."
+        },
+        {
+          "speaker": "파티 주최자",
+          "text": "좋아. 놀라면 내가 박수 쳐 줄게."
+        }
+      ],
+      "afterClear": [
+        {
+          "speaker": "파티 주최자",
+          "text": "졌다. 학교 장기자랑에 나가 봐."
+        },
+        {
+          "speaker": "동생",
+          "text": "형, 거기도 따라가도 돼?"
+        },
+        {
+          "speaker": "밍기리",
+          "text": "난 가방에 숨어서 다 봤어. 잘했어!"
+        }
+      ]
+    },
+    "school": {
+      "opening": [
+        {
+          "speaker": "앞자리 짝꿍",
+          "text": "장기자랑 신청서 냈어. 네 이름으로!"
+        },
+        {
+          "speaker": "칼리",
+          "text": "뭐? 내 허락은 안 받았잖아."
+        },
+        {
+          "speaker": "응원봉 반장",
+          "text": "반 전체가 응원봉 들고 왔어!"
+        },
+        {
+          "speaker": "체육부 선배",
+          "text": "쉬는 시간 끝나기 전에 끝내라."
+        }
+      ],
+      "beforeHeadliner": [
+        {
+          "speaker": "심사 담임",
+          "text": "시간 되면 바로 끊을게. 알았지?"
+        },
+        {
+          "speaker": "칼리",
+          "text": "종 치기 전에 놀라게 해 드릴게요."
+        },
+        {
+          "speaker": "심사 담임",
+          "text": "칭찬은 안 해. 점수는 줄지도."
+        }
+      ],
+      "afterClear": [
+        {
+          "speaker": "심사 담임",
+          "text": "종 치기 전에 끝냈네. 합격이다."
+        },
+        {
+          "speaker": "깐깐한 선배의 채점",
+          "text": "카페에서 공연할 사람 찾는대."
+        }
+      ]
+    },
+    "cafe": {
+      "opening": [
+        {
+          "speaker": "바리스타 친구",
+          "text": "저녁 공연 자리 비워 놨어. 커피는 서비스."
+        },
+        {
+          "speaker": "노트북 손님",
+          "text": "조용히 볼게요. 배터리도 아끼고요."
+        },
+        {
+          "speaker": "밍기리",
+          "text": "커피 향 좋다. 난 우유 거품이 좋아!"
+        },
+        {
+          "speaker": "칼리",
+          "text": "카페 무대는 가까워서 더 떨려."
+        }
+      ],
+      "beforeHeadliner": [
+        {
+          "speaker": "라떼 바리스타",
+          "text": "샷은 내가 느리게 내릴게."
+        },
+        {
+          "speaker": "칼리",
+          "text": "느릴수록 제 손은 바빠지는데요."
+        },
+        {
+          "speaker": "라떼 바리스타",
+          "text": "하하. 한 잔 식기 전에 끝내 봐."
+        }
+      ],
+      "afterClear": [
+        {
+          "speaker": "라떼 바리스타",
+          "text": "벽에 붙은 전단 봤어? 마술 모임이래."
+        },
+        {
+          "speaker": "창가 손님",
+          "text": "전국에서 모인다던데, 가 봐요!"
+        }
+      ]
+    },
+    "meetup": {
+      "opening": [
+        {
+          "speaker": "부산의 마술 매니아",
+          "text": "왔네! 부산에서 첫차 타고 왔어."
+        },
+        {
+          "speaker": "대구의 마술 매니아",
+          "text": "대구도 왔다. 카드 얘기만 세 시간 해도 돼."
+        },
+        {
+          "speaker": "창원의 마술 매니아",
+          "text": "창원, 인천, 거제, 천안, 수원도 다 왔어요."
+        },
+        {
+          "speaker": "칼리",
+          "text": "다들 마술 얘기만 해서 신기해요."
+        }
+      ],
+      "beforeHeadliner": [
+        {
+          "speaker": "서울의 마술 매니아",
+          "text": "첫 모임 때가 생각나네. 반갑다."
+        },
+        {
+          "speaker": "칼리",
+          "text": "여기 오니 마술이 더 좋아졌어요."
+        },
+        {
+          "speaker": "서울의 마술 매니아",
+          "text": "그럼 마지막 한 수는 즐겁게 보여 줘."
+        }
+      ],
+      "afterClear": [
+        {
+          "speaker": "서울의 마술 매니아",
+          "text": "소극장에서 공연 한번 해 볼래?"
+        },
+        {
+          "speaker": "인천의 마술 매니아",
+          "text": "무대 올라가면 우리가 맨 앞줄이야."
+        }
+      ]
+    },
+    "theater": {
+      "opening": [
+        {
+          "speaker": "열성팬",
+          "text": "저 앞줄 맡았어요. 박수 준비 완료!"
+        },
+        {
+          "speaker": "일반 관객",
+          "text": "막간에 프로그램 좀 볼게요."
+        },
+        {
+          "speaker": "대본 작가",
+          "text": "좋은 장면이면 대본에 넣을게요."
+        },
+        {
+          "speaker": "칼리",
+          "text": "조명이 진짜 무대 같네요."
+        }
+      ],
+      "beforeHeadliner": [
+        {
+          "speaker": "까칠한 평론가",
+          "text": "그 케이스, 내가 잠시 잠근다."
+        },
+        {
+          "speaker": "칼리",
+          "text": "잠그시면 제가 다른 열쇠를 찾겠죠."
+        },
+        {
+          "speaker": "까칠한 평론가",
+          "text": "흠. 말은 잘하네. 손도 그런가 볼까."
+        }
+      ],
+      "afterClear": [
+        {
+          "speaker": "까칠한 평론가",
+          "text": "별 네 개 반. 이 이상은 나도 못 준다."
+        },
+        {
+          "speaker": "커튼콜 팬",
+          "text": "대학 축제에서 불러서 갈 수밖에 없죠!"
+        },
+        {
+          "speaker": "밍기리",
+          "text": "평론가도 웃었어! 내가 봤다니까!"
+        }
+      ]
+    },
+    "festival": {
+      "opening": [
+        {
+          "speaker": "깃발 응원단",
+          "text": "과 깃발 들고 왔어요! 흔들게요!"
+        },
+        {
+          "speaker": "술친구",
+          "text": "치킨 먹으면서 본다. 박수는 손등으로."
+        },
+        {
+          "speaker": "후배",
+          "text": "선배, 저 맨 앞에서 소리 지를게요!"
+        },
+        {
+          "speaker": "칼리",
+          "text": "축제는 시끄러워서 더 신나."
+        }
+      ],
+      "beforeHeadliner": [
+        {
+          "speaker": "축제 사회자",
+          "text": "동전은 내가 잠깐 빌릴게."
+        },
+        {
+          "speaker": "칼리",
+          "text": "사회자님, 갚을 때 이자 붙어요."
+        },
+        {
+          "speaker": "축제 사회자",
+          "text": "하하! 그럼 큰 박수로 갚아 줄게."
+        }
+      ],
+      "afterClear": [
+        {
+          "speaker": "축제 사회자",
+          "text": "방금 영상, 누가 TV 오디션에 보냈대."
+        },
+        {
+          "speaker": "야광봉 팬",
+          "text": "우리 선배가 TV에 나간다!"
+        }
+      ]
+    },
+    "audition": {
+      "opening": [
+        {
+          "speaker": "점수판 도우미",
+          "text": "점수판 켰어요. 긴장하지 마세요."
+        },
+        {
+          "speaker": "라이벌",
+          "text": "네 피날레, 내가 더 크게 할 거야."
+        },
+        {
+          "speaker": "밍기리",
+          "text": "카메라 앞이야. 칼리, 웃어, 웃어!"
+        },
+        {
+          "speaker": "카메라 감독",
+          "text": "줌인은 아직이에요. 기다려요."
+        }
+      ],
+      "beforeHeadliner": [
+        {
+          "speaker": "메인 심사위원",
+          "text": "의심은 내가 다시 채운다."
+        },
+        {
+          "speaker": "칼리",
+          "text": "의심이 차면 저는 더 열심히 하죠."
+        },
+        {
+          "speaker": "메인 심사위원",
+          "text": "그 눈빛 좋아. 마지막 화면 기대할게."
+        }
+      ],
+      "afterClear": [
+        {
+          "speaker": "메인 심사위원",
+          "text": "합격이다. 다음은 생방송이야."
+        },
+        {
+          "speaker": "라이벌",
+          "text": "다음엔 내가 먼저 합격할 거야."
+        }
+      ]
+    },
+    "broadcast": {
+      "opening": [
+        {
+          "speaker": "생방송 PD",
+          "text": "생방송 30초 전입니다. 숨 쉬세요."
+        },
+        {
+          "speaker": "방송 작가",
+          "text": "방송 순서대로만 하세요. 아마도요."
+        },
+        {
+          "speaker": "칼리",
+          "text": "카메라가 이렇게 많은 줄 몰랐어요."
+        },
+        {
+          "speaker": "조명 감독",
+          "text": "제일 반짝이는 순간에 불 켤게요."
+        }
+      ],
+      "beforeHeadliner": [
+        {
+          "speaker": "국민 MC",
+          "text": "카메라 보고, 천천히 갑시다."
+        },
+        {
+          "speaker": "칼리",
+          "text": "천천히요. 아빠도 이거 보고 계시겠죠?"
+        },
+        {
+          "speaker": "국민 MC",
+          "text": "그럼요. 리모컨도 못 만지실걸요."
+        }
+      ],
+      "afterClear": [
+        {
+          "speaker": "국민 MC",
+          "text": "방송 나가자마자 초대장이 왔어요."
+        },
+        {
+          "speaker": "열성적인 패널",
+          "text": "라스베가스에서 온 초대장이에요!"
+        }
+      ]
+    },
+    "vegas": {
+      "opening": [
+        {
+          "speaker": "큰손 손님",
+          "text": "칩을 걸게. 네 마술에 올인이야."
+        },
+        {
+          "speaker": "화려한 관객",
+          "text": "깃털 사이로 잘 보이게 앉았어요."
+        },
+        {
+          "speaker": "경비 아저씨",
+          "text": "소매 속은 안 볼게요. 약속해요."
+        },
+        {
+          "speaker": "칼리",
+          "text": "화려하다. 아빠한테 사진 보내야지."
+        }
+      ],
+      "beforeHeadliner": [
+        {
+          "speaker": "전설의 딜러",
+          "text": "눈이 따라오면 이미 진 거야."
+        },
+        {
+          "speaker": "칼리",
+          "text": "그럼 저는 눈을 피해서 하겠습니다."
+        },
+        {
+          "speaker": "전설의 딜러",
+          "text": "오, 말이 통하네. 카드를 섞어 봐."
+        }
+      ],
+      "afterClear": [
+        {
+          "speaker": "전설의 딜러",
+          "text": "판돈 대신 초대장 하나 주지."
+        },
+        {
+          "speaker": "호텔 손님",
+          "text": "브로드웨이가 널 찾고 있어요."
+        },
+        {
+          "speaker": "밍기리",
+          "text": "칩은 내가 지킬게. 한 개만 먹고."
+        }
+      ]
+    },
+    "broadway": {
+      "opening": [
+        {
+          "speaker": "뮤지컬 팬",
+          "text": "하이노트 뒤에 피날레예요. 기억해요."
+        },
+        {
+          "speaker": "뉴욕 관광객",
+          "text": "여기까지 온 보람이 있어야 해요."
+        },
+        {
+          "speaker": "깐깐 비평가",
+          "text": "이미 한 줄 썼어요. 고칠 수도 있어요."
+        },
+        {
+          "speaker": "칼리",
+          "text": "조명이 뜨거워. 근데 기분 좋아."
+        }
+      ],
+      "beforeHeadliner": [
+        {
+          "speaker": "브로드웨이 스타",
+          "text": "이 템포, 내가 늦춘다."
+        },
+        {
+          "speaker": "칼리",
+          "text": "느려지면 박수가 더 길어지겠네요."
+        },
+        {
+          "speaker": "브로드웨이 스타",
+          "text": "좋은 대답이야. 무대로 올라와."
+        }
+      ],
+      "afterClear": [
+        {
+          "speaker": "브로드웨이 스타",
+          "text": "이제 지구가 좁다. 달에서 연락 왔어."
+        },
+        {
+          "speaker": "오케스트라 팬",
+          "text": "달에서도 박수 소리가 들릴까요?"
+        }
+      ]
+    },
+    "moon": {
+      "opening": [
+        {
+          "speaker": "우주비행사",
+          "text": "헬멧 안에서 박수 치는 중입니다."
+        },
+        {
+          "speaker": "무전 담당",
+          "text": "교신 양호. 피날레 때 무전 열게요."
+        },
+        {
+          "speaker": "밍기리",
+          "text": "여기 먼지 폭신해! 나 발자국 남길래!"
+        },
+        {
+          "speaker": "탐사차 기사",
+          "text": "바퀴 자국 위가 객석입니다."
+        }
+      ],
+      "beforeHeadliner": [
+        {
+          "speaker": "달 기지 대장",
+          "text": "그 케이스, 달 먼지로 봉인."
+        },
+        {
+          "speaker": "칼리",
+          "text": "먼지 털면 다시 열리겠죠?"
+        },
+        {
+          "speaker": "달 기지 대장",
+          "text": "허허. 털 수 있으면 털어 봐."
+        }
+      ],
+      "afterClear": [
+        {
+          "speaker": "달 기지 대장",
+          "text": "달 먼지 털었네. 태양이 보고 싶대."
+        },
+        {
+          "speaker": "우주 관광객",
+          "text": "선글라스부터 챙기세요."
+        }
+      ]
+    },
+    "sun": {
+      "opening": [
+        {
+          "speaker": "불꽃 서퍼",
+          "text": "불꽃 파도가 오기 전에 시작해요!"
+        },
+        {
+          "speaker": "태양 가이드",
+          "text": "흑점 투어는 잠시 멈췄어요."
+        },
+        {
+          "speaker": "칼리",
+          "text": "뜨겁지만 박수는 더 뜨겁네요."
+        },
+        {
+          "speaker": "불꽃 사진가",
+          "text": "피날레 때 셔터 누를게요."
+        }
+      ],
+      "beforeHeadliner": [
+        {
+          "speaker": "태양의 불꽃왕",
+          "text": "동전은 태양 불꽃에 녹인다."
+        },
+        {
+          "speaker": "칼리",
+          "text": "녹는 건 동전뿐이면 좋겠네요."
+        },
+        {
+          "speaker": "태양의 불꽃왕",
+          "text": "크하하! 배짱은 활활 타는군."
+        }
+      ],
+      "afterClear": [
+        {
+          "speaker": "태양의 불꽃왕",
+          "text": "좋다. 은하에서도 널 기다린다."
+        },
+        {
+          "speaker": "태양 관측자",
+          "text": "선글라스 벗고 보니 더 밝네요."
+        }
+      ]
+    },
+    "galaxy": {
+      "opening": [
+        {
+          "speaker": "외계인 손님",
+          "text": "번역기가 박수를 모르네. 흉내만 낼게."
+        },
+        {
+          "speaker": "UFO 파일럿",
+          "text": "기체 기울여서 구경하겠습니다."
+        },
+        {
+          "speaker": "칼리",
+          "text": "별이 객석처럼 깔려 있어."
+        },
+        {
+          "speaker": "별자리 선생님",
+          "text": "별이 지기 전에 보여 줘요."
+        }
+      ],
+      "beforeHeadliner": [
+        {
+          "speaker": "은하 황제",
+          "text": "의심은 별빛으로 다시 찬다."
+        },
+        {
+          "speaker": "칼리",
+          "text": "의심이 차는 건 이제 익숙해요."
+        },
+        {
+          "speaker": "은하 황제",
+          "text": "그럼 마지막 시험이다. 거울을 봐라."
+        }
+      ],
+      "afterClear": [
+        {
+          "speaker": "은하 황제",
+          "text": "문이 열렸다. 거울 너머를 마주해라."
+        },
+        {
+          "speaker": "혜성 레이서",
+          "text": "혜성 타고 가요. 길이 좀 빨라요."
+        },
+        {
+          "speaker": "밍기리",
+          "text": "무서워도 난 소매 속에 있을게."
+        }
+      ]
+    },
+    "multiverse": {
+      "opening": [
+        {
+          "speaker": "연습실 못 간 나",
+          "text": "문 앞에서 멈춘 나야. 들어갈 수 없었어."
+        },
+        {
+          "speaker": "지팡이 없는 나",
+          "text": "난 마술 대신 리모컨을 쥐었어."
+        },
+        {
+          "speaker": "밍기리",
+          "text": "저 거울 속 의심쟁이, 딱 내 취향이네!"
+        },
+        {
+          "speaker": "객석의 나",
+          "text": "그래도 지금 네게 박수를 보낼게."
+        }
+      ],
+      "beforeHeadliner": [
+        {
+          "speaker": "가장 의심 많은 나",
+          "text": "난 시작도 안 한 너다."
+        },
+        {
+          "speaker": "칼리",
+          "text": "그래도 여기까지 온 나를 믿어."
+        },
+        {
+          "speaker": "가장 의심 많은 나",
+          "text": "그럼 보여 줘. 한 번 더 믿어 볼게."
+        }
+      ],
+      "afterClear": [
+        {
+          "speaker": "가장 의심 많은 나",
+          "text": "의심은 이제 쉬어도 되겠다."
+        },
+        {
+          "speaker": "용기 낸 나",
+          "text": "돌아가자. 불이 켜진 곳으로."
+        }
+      ]
+    },
+    "lecturenote": {
+      "opening": [
+        {
+          "speaker": "헤카테",
+          "text": "부장 점검입니다. 동선부터 확인해요."
+        },
+        {
+          "speaker": "세로나",
+          "text": "저 히든 직원이에요. 숨은 선물 있어요."
+        },
+        {
+          "speaker": "정희수",
+          "text": "포장은 제가 맡을게요. 테이프 어디 갔지?"
+        },
+        {
+          "speaker": "칼리",
+          "text": "다들 그대로네요. 집에 온 것 같아요."
+        }
+      ],
+      "beforeHeadliner": [
+        {
+          "speaker": "김정명",
+          "text": "우주까지 다녀왔다며? 보자."
+        },
+        {
+          "speaker": "칼리",
+          "text": "사장님, 멀리 돌아 이제 왔습니다."
+        },
+        {
+          "speaker": "김정명",
+          "text": "그래. 이번엔 함께 만들어 보자."
+        }
+      ],
+      "afterClear": [
+        {
+          "speaker": "김정명",
+          "text": "잘 돌아왔다, 칼리."
+        },
+        {
+          "speaker": "칼리",
+          "text": "다녀왔습니다. 여기가 제 무대예요."
+        },
+        {
+          "speaker": "정희수",
+          "text": "박수 소리가 택배급이에요!"
+        }
+      ]
+    }
+  },
+  "bios": {
+    "a1": "채널권을 쥔 가장. 마술엔 짧게 반응하는 아빠.",
+    "a2": "팝콘이 우선인 장난꾸러기 동생.",
+    "a3": "설거지 틈틈이 보러 오는 다정한 엄마.",
+    "h1": "안경 너머로 손을 쫓는 까다로운 심사관 할머니.",
+    "a4": "풍선부터 터뜨리는 파티의 분위기 메이커.",
+    "a5": "파티의 음악 담당. 다음 곡이 늘 고민이다.",
+    "a6": "초가 꺼지기 전에 구경하는 케이크 담당.",
+    "h2": "주인공 자리를 지키려는 파티 주최자.",
+    "a7": "연필로 박자를 두드리는 앞자리 짝꿍.",
+    "a8": "응원봉을 피날레에 켜는 반장.",
+    "a9": "점수에 진심인 채점표 든 선배.",
+    "a46": "쉬는 시간도 잊고 보는 체육부 선배.",
+    "h3": "시간에 엄격한 장기자랑 심사 담임.",
+    "a10": "배터리보다 의심이 많은 카페 단골.",
+    "a11": "포크를 든 채 기다리는 디저트 손님.",
+    "a12": "김 서린 창에 하트 그리는 창가 손님.",
+    "a50": "칼리를 카페로 부른 바리스타 친구.",
+    "h4": "샷을 느리게 내리는 여유로운 카페 바리스타.",
+    "a-meetup-busan": "첫차로 달려온 부산의 마술 매니아.",
+    "a-meetup-daegu": "카드 이야기를 세 시간 하는 대구 매니아.",
+    "a-meetup-changwon": "항상 연습 영상을 들고 오는 창원 매니아.",
+    "a-meetup-incheon": "공연 때마다 맨 앞줄에 앉는 인천 매니아.",
+    "a-meetup-geoje": "바다 이야기와 마술을 섞는 거제 매니아.",
+    "a-meetup-cheonan": "모임 간식을 챙겨 오는 천안 매니아.",
+    "a-meetup-suwon": "새 기술을 제일 먼저 외우는 수원 매니아.",
+    "h-meetup-seoul": "모임의 맏형 같은 서울의 매니아 대표.",
+    "a13": "손바닥이 이미 빨간 열성팬.",
+    "a14": "막간마다 프로그램을 넘기는 꼼꼼한 관객.",
+    "a15": "귓속말이 박자보다 빠른 헤클러.",
+    "a54": "좋은 장면을 대본에 옮기는 작가.",
+    "a55": "커튼콜만 기다리는 열정 팬.",
+    "h5": "말투는 까칠해도 속은 따뜻한 평론가.",
+    "a16": "깃발을 피날레에 흔드는 응원단.",
+    "a17": "양념 묻은 손으로 박수 치는 술친구.",
+    "a18": "칼리를 선배라 부르는 후배.",
+    "a59": "앵콜 전에 손부터 흔드는 밴드 관객.",
+    "a60": "야광봉으로 무대를 물들이는 팬.",
+    "h6": "동전 장난을 좋아하는 능청스러운 사회자.",
+    "a19": "점수를 실시간으로 올리는 점수판 도우미.",
+    "a20": "줌인 타이밍을 아끼는 카메라 감독.",
+    "a21": "칼리의 피날레만 노려보는 라이벌.",
+    "a64": "카메라보다 무대를 보는 초대 작가.",
+    "a65": "리허설부터 눈을 못 떼는 관객.",
+    "a66": "신호에 맞춰 환호하는 방청객.",
+    "h7": "의심을 채우는 냉정한 메인 심사위원.",
+    "a112": "생방송 시간을 초 단위로 외치는 PD.",
+    "a113": "방송 순서에 늘 밑줄을 긋는 작가.",
+    "a114": "마이크를 든 채 숨죽이는 음향 감독.",
+    "a115": "신호에 맞춰 박수 치는 방청 응원단.",
+    "a116": "실시간 반응 숫자를 외치는 담당자.",
+    "a117": "가장 반짝이는 순간을 찾는 조명 감독.",
+    "h-broadcast": "천천히를 좋아하는 부드러운 국민 MC.",
+    "a22": "칩을 쌓다 손을 멈추는 큰손 손님.",
+    "a23": "깃털 너머로 무대를 보는 화려한 관객.",
+    "a24": "팔짱이 단단하지만 마음은 약한 경비.",
+    "a70": "칩을 내려놓고 눈이 커지는 호텔 손님.",
+    "a71": "쇼 시간만 기다린 열혈 팬.",
+    "a72": "사진 찍다 박수 치는 사진 관광객.",
+    "h8": "눈을 읽는 베테랑, 카드판의 전설 딜러.",
+    "a25": "하이노트에 피날레를 거는 뮤지컬 팬.",
+    "a26": "브로슈어를 접다 멈추는 관광객.",
+    "a27": "막간에 평을 미리 쓰는 비평가.",
+    "a76": "티켓을 모으다 커튼콜을 외치는 수집가.",
+    "a77": "발끝으로 박자를 타는 발레 관객.",
+    "a78": "박수도 악보대로 치는 오케스트라 팬.",
+    "a79": "무대 의상 솔기까지 보는 의상가.",
+    "h9": "템포를 쥐고 노는 브로드웨이의 스타.",
+    "a28": "헬멧 안에서 박수를 아끼는 우주비행사.",
+    "a29": "피날레에 무전을 여는 무전 담당.",
+    "a30": "바퀴 자국 위에 서는 탐사차 기사.",
+    "a83": "헬멧 너머로 관찰하는 달 과학자.",
+    "a84": "별빛을 모아 병에 담는 수집가.",
+    "a85": "무중력에도 공구를 놓치는 정비사.",
+    "a86": "사진 찍기에 바쁜 우주 관광객.",
+    "h10": "달 먼지로 케이스를 잠그는 달 기지 대장.",
+    "a31": "불꽃 파도를 타는 불꽃 서퍼.",
+    "a32": "흑점 투어를 안내하는 태양 가이드.",
+    "a33": "피날레에 셔터를 누르는 불꽃 사진가.",
+    "a90": "빛의 색을 분석하는 빛 연구원.",
+    "a91": "선글라스를 쓰고 구경하는 여행객.",
+    "a92": "태양 표면을 매일 보는 관측자.",
+    "a93": "태양 위의 파도를 타는 파도 서퍼.",
+    "a94": "태양 빛을 사진에 담는 우주 사진가.",
+    "h11": "동전을 태양 불꽃에 녹이는 호탕한 불꽃왕.",
+    "a34": "번역기가 박수를 모르는 외계인 손님.",
+    "a35": "기체를 기울여 구경하는 UFO 파일럿.",
+    "a36": "별이 지기 전에 보자는 해설가.",
+    "a98": "박자에 맞춰 건반을 누르는 우주 음악가.",
+    "a99": "은하를 한 장에 담는 사진가.",
+    "a100": "성운 길을 안내하는 느긋한 안내원.",
+    "a101": "혜성을 타고 다니는 빠른 라이더.",
+    "a102": "별자리마다 소원을 비는 여행자.",
+    "h12": "별빛으로 의심을 채우는 위엄 있는 황제.",
+    "a37": "마술 대신 리모컨을 쥔 또 다른 칼리.",
+    "a38": "연습실 문 앞에서 멈춘 또 다른 칼리.",
+    "a39": "첫 카드를 가방에 도로 넣은 칼리.",
+    "a106": "한 걸음 내디딘 용기 있는 칼리.",
+    "a107": "객석에서 박수 치는 칼리.",
+    "a108": "다른 차원에서 온 칼리.",
+    "a109": "이제 막 연습을 시작한 칼리.",
+    "a110": "이미 무대에 선 칼리.",
+    "a111": "박수를 보내 주는 따뜻한 칼리.",
+    "h13": "시작도 안 한 채 의심만 쌓은 칼리.",
+    "a-lecturenote-hecate": "꼼꼼히 점검하는 부장. 말투가 정중한 남자.",
+    "a-lecturenote-serona": "서프라이즈를 숨겨 두는 히든 직원 여자.",
+    "a-lecturenote-jung": "포장과 정리를 맡은 부지런한 직원.",
+    "h-lecturenote-kim": "렉쳐노트를 지키는 푸근한 사장님."
+  }
+};
+
+GAME_DATA.glove = {id:'auto-glove',name:'연습 장갑',icon:'item-auto-glove.png',emoji:'🧤',duration:60000,desc:'손을 떼도 모든 케이스가 열려요\n60초 동안 자동으로 꾹 누르기'};
+GAME_DATA.statMeanings = {power:'케이스를 열어 아이템을 얻는 힘',damage:'관객의 의심을 줄이는 힘',mental:'야유를 버티는 힘'};
+(function(D){
+ D.venues.forEach(v=>v.audiences.concat([v.headliner]).forEach(a=>{a.bio=D.storyV15.bios[a.id]||a.flavor;}));
+ D.skills[0].hint='20초 3배';D.skills[0].desc='케이스를 더 빨리 열어요\n20초 동안 실력 3배 · 다시 쓰려면 90초';
+ D.skills[1].hint='한번 3배';D.skills[1].desc='모든 케이스를 한 번에 두드려요\n실력 3배로 한 번 · 다시 쓰려면 60초';
+ D.skills[2].hint='야유 막기';D.skills[2].desc='야유를 막고 마음을 회복해요\n야유 1회 막기 · 멘탈 10% · 다시 쓰려면 75초';
+})(GAME_DATA);
+
+/* Easy result-first copy; formulas remain in Core. */
+GAME_DATA.easyNodes = {
+  "root": "첫 마술을 시작할 수 있어요\n처음부터 배운 비법",
+  "assistant": "조수가 케이스를 함께 열어요\n1.2초마다 실력의 80%",
+  "power": "케이스를 더 빨리 열어요\n실력 1.1배씩",
+  "speed": "케이스를 더 자주 두드려요\n1초에 0.12회씩 추가",
+  "area": "여러 케이스를 함께 두드려요\n최대 5칸 × 5칸",
+  "crit": "가끔 케이스를 세게 두드려요\n8% 확률로 힘 1.5배",
+  "critRate": "세게 두드릴 기회가 늘어요\n기회 2%씩 추가 · 최대 14%",
+  "critPower": "세게 두드릴 때 더 빨리 열어요\n힘 0.1배씩 추가 · 최대 1.8배",
+  "comboHold": "개봉을 조금 쉬어도 이어져요\n기다리는 시간 0.25초씩 추가",
+  "sweepFocus": "한 케이스에 힘을 모아요\n한 칸만 두드리면 힘 5%씩 추가",
+  "precision": "숨은 관객도 더 잘 놀라요\n빗나갈 기회 2%씩 줄기",
+  "board": "케이스를 하나 더 놓아요\n자리 1칸 추가",
+  "spawn": "빈 케이스가 더 빨리 채워져요\n준비 시간 1.08로 나누기",
+  "golden": "동전이 많은 케이스가 나와요\n첫 30초 · 다음부터 180초",
+  "goldPity": "황금 케이스를 더 자주 만나요\n기다리는 시간 20초씩 줄기",
+  "goldCoins": "황금 케이스에서 동전을 더 얻어요\n동전 20%씩 추가",
+  "prepared": "새 케이스를 조금 열린 채 받아요\n열린 양 5%씩 추가",
+  "boxXP": "케이스가 더 빨리 자라요\n케이스 경험치 10%씩 추가",
+  "boxShield": "개봉할 때 야유를 막을 힘을 얻어요\n보호막 0.1씩 · 멘탈의 힘 적용",
+  "boxHeal": "개봉할 때 마음이 회복돼요\n회복 0.05씩 · 멘탈의 힘 적용",
+  "mental": "야유를 더 오래 버텨요\n최대 멘탈 1.18배씩",
+  "attack": "관객의 의심이 더 빨리 줄어요\n연출 1.05배씩",
+  "shieldCap": "야유를 막을 힘을 더 모아요\n최대 멘탈의 3%씩 추가",
+  "shieldValue": "실크가 야유를 더 많이 막아요\n보호막 5%씩 추가",
+  "healValue": "회복 아이템으로 더 힘을 얻어요\n회복 5%씩 추가",
+  "winHeal": "이긴 뒤 마음이 더 회복돼요\n회복 2%씩 추가",
+  "levelHeal": "레벨이 오를 때 더 회복돼요\n회복 2%씩 추가",
+  "openingShield": "새 공연을 든든하게 시작해요\n최대 멘탈의 5%씩 보호막",
+  "calm": "야유를 들어도 덜 힘들어요\n야유 힘 2%씩 줄기",
+  "coinLuck": "케이스에서 동전이 더 잘 나와요\n동전 뽑기 표 6장씩 추가",
+  "forceRemove": "딜러의 나쁜 그림을 지워요\n쓰는 보석 1개씩 줄기 · 최소 1개",
+  "tip": "관객을 이기면 동전을 더 얻어요\n승리 동전 5%씩 추가",
+  "dealerCoin": "딜러 카드에서 동전을 더 얻어요\n동전 10%씩 추가",
+  "jackpot": "슬롯 당첨 때 동전을 더 얻어요\n당첨 동전 15%씩 추가",
+  "gemFind": "좋은 소품에서 보석도 얻어요\n보석 나올 기회 1%씩 추가",
+  "equip": "좋아하는 소품이 더 잘 나와요\n소품 자리 3칸 열기",
+  "slotPlus": "좋아하는 소품을 더 놓아요\n소품 자리 1칸 추가 · 최대 9칸",
+  "lessonBias": "케이스가 더 빨리 자라요\n경험치 10%씩 추가 · 최대 20%",
+  "dove": "비둘기가 관객을 놀라게 해요\n3초마다 연출의 4배",
+  "rabbit": "토끼가 동전을 가져다줘요\n5초마다 동전 받기",
+  "flash": "개봉을 모아 관객을 놀라게 해요\n25개 열면 연출의 8배",
+  "doveTempo": "비둘기가 더 자주 날아요\n기다리는 시간 0.25초씩 줄기",
+  "dovePower": "비둘기가 더 크게 놀라게 해요\n힘 10%씩 추가",
+  "rabbitTempo": "토끼가 동전을 더 자주 가져와요\n기다리는 시간 0.4초씩 줄기",
+  "rabbitPurse": "토끼가 동전을 더 가져와요\n동전 1개씩 추가",
+  "boxHelper": "팬이 케이스를 함께 열어요\n2초마다 실력의 35%",
+  "helperTempo": "팬이 케이스를 더 자주 두드려요\n기다리는 시간 0.2초씩 줄기",
+  "startFinale": "첫 피날레를 더 빨리 보여줘요\n공연 시작 때 피날레 충전",
+  "finalePower": "피날레로 더 크게 놀라게 해요\n연출의 22배 · 힘 8%씩 추가",
+  "finaleNeed": "피날레를 더 빨리 준비해요\n필요한 개봉 1개씩 줄기 · 최소 18개",
+  "comboGift": "개봉을 이어 동전과 힘을 얻어요\n10 · 25 · 50 · 100개마다 선물",
+  "comboValue": "개봉을 이어 동전을 더 얻어요\n이어 열기 선물 동전 20%씩 추가",
+  "encore": "가끔 손끝에 더 힘이 생겨요\n300초마다 15초 · 실력 20% 추가",
+  "encorePower": "앵콜 때 케이스를 더 빨리 열어요\n실력 5%씩 추가",
+  "encoreSpan": "앵콜의 힘이 더 오래 가요\n지속 시간 3초씩 추가",
+  "challenge": "도전하며 관객을 더 잘 놀라게 해요\n도전 3개 · 성공마다 연출 0.5% 추가",
+  "starTrick": "케이스와 관객을 더 빨리 이겨요\n실력 1.14배 · 연출 1.3배씩",
+  "starGuard": "야유를 버티고 더 잘 회복해요\n멘탈 · 보호막 · 회복 1.18배씩",
+  "starTempo": "더 자주 두드리고 빨리 채워져요\n두드리기 1.06배 · 준비 시간 8% 줄기",
+  "starBounty": "동전을 더 많이 얻어요\n동전 1.12배씩",
+  "caseMax": "케이스가 더 높은 레벨로 자라요\n최대 레벨 1씩 추가 · 최대 50",
+  "caseStart": "새 케이스도 잘 자란 채 받아요\n시작 레벨 1씩 추가",
+  "caseXp": "케이스가 더 빨리 자라요\n경험치 15%씩 추가",
+  "chain4": "열 때 옆 케이스도 두드려요\n옆 4방향 · 실력의 30%",
+  "chain8": "대각선 케이스도 함께 두드려요\n주변 8방향",
+  "chainPower": "옆 케이스를 더 세게 두드려요\n실력의 10%씩 추가",
+  "sponge": "공이 튀며 케이스를 열어요\n닿으면 실력의 25%",
+  "cardthrow": "카드가 날아가 케이스를 열어요\n1.5초마다 실력의 40%",
+  "tipbox": "팁 박스가 동전을 모아줘요\n6초마다 동전 받기",
+  "flashpaper": "종이를 누르면 모든 칸을 두드려요\n개봉 때 3% · 실력의 150%",
+  "flashpaperChance": "불꽃 종이를 더 자주 얻어요\n기회 1%씩 추가 · 최대 7%",
+  "crystal": "수정구가 야유를 막아줘요\n8초마다 멘탈의 3% 보호막",
+  "water": "물 한 잔으로 마음이 회복돼요\n9초마다 멘탈의 3% 회복",
+  "spotlight": "조명이 케이스 한 줄을 두드려요\n4초마다 실력의 60%",
+  "fanPower": "팬과 조수가 더 세게 두드려요\n힘 15%씩 추가",
+  "autoLearn": "동전으로 비법을 알아서 배워요\n켜 두면 3초마다 배우기",
+  "nightShow": "자리를 비워도 보상을 더 모아요\n보상 시간 1시간씩 추가 · 기본 8시간",
+  "manager": "자리를 비운 동안 동전을 더 모아요\n보상 10%씩 추가 · 기본 50%",
+  "autoPractice": "손을 떼도 케이스가 빨리 열려요\n손으로 누를 때의 10%씩 추가 · 기본 40%",
+  "spongeSpeed": "도우미가 더 빨리 도와줘요\n이동 12%씩 추가",
+  "spongePower": "도우미가 더 힘껏 도와줘요\n힘 15%씩 추가",
+  "cardthrowSpeed": "도우미가 더 빨리 도와줘요\n기다리는 시간 10%씩 줄기",
+  "cardthrowPower": "도우미가 더 힘껏 도와줘요\n힘 15%씩 추가",
+  "tipboxSpeed": "도우미가 더 빨리 도와줘요\n기다리는 시간 10%씩 줄기",
+  "tipboxPower": "도우미가 더 힘껏 도와줘요\n힘 25%씩 추가",
+  "crystalSpeed": "도우미가 더 빨리 도와줘요\n기다리는 시간 10%씩 줄기",
+  "crystalPower": "도우미가 더 힘껏 도와줘요\n힘 20%씩 추가",
+  "waterSpeed": "도우미가 더 빨리 도와줘요\n기다리는 시간 10%씩 줄기",
+  "waterPower": "도우미가 더 힘껏 도와줘요\n힘 20%씩 추가",
+  "spotlightSpeed": "도우미가 더 빨리 도와줘요\n기다리는 시간 10%씩 줄기",
+  "spotlightPower": "도우미가 더 힘껏 도와줘요\n힘 15%씩 추가",
+  "spongeCount": "도우미가 한 명 더 도와줘요\n1명씩 추가 · 최대 3명",
+  "cardthrowCount": "도우미가 한 명 더 도와줘요\n1명씩 추가 · 최대 4명",
+  "spotlightCount": "도우미가 한 명 더 도와줘요\n1명씩 추가 · 최대 2명",
+  "showtimeCooldown": "스킬을 더 빨리 다시 써요\n기다리는 시간 10%씩 줄기",
+  "cardrainCooldown": "스킬을 더 빨리 다시 써요\n기다리는 시간 10%씩 줄기",
+  "cheerCooldown": "스킬을 더 빨리 다시 써요\n기다리는 시간 10%씩 줄기"
+};
+
+GAME_DATA.easyNodes.flashpaperPower="불꽃 종이가 더 세게 두드려요\n힘 20%씩 추가";
+(function(D){
+ D.tree.forEach(n=>{
+  if(n.productMultiplier)n.desc='관객을 더 크게 놀라게 해요\n연출 '+n.productMultiplier+'배';
+  else if(n.infinite||n.id.startsWith('hidden-')){const results={hand:'케이스를 더 빨리 열어요',box:'케이스 아이템의 힘이 커져요',heart:'야유를 더 오래 버텨요',luck:'동전을 더 많이 얻어요',pet:'도우미가 더 힘껏 도와줘요',finale:'피날레가 더 크게 놀라게 해요',collection:'관객을 더 크게 놀라게 해요',star:'별빛의 힘이 더 세져요'};n.desc=results[n.id.split('-').slice(1).join('-')]+'\n힘 2%씩 추가';}
+  else n.desc=D.easyNodes[n.id];
+  if(!n.desc)throw new Error('Missing easy description: '+n.id);
+ });
+ const copy={damage:'관객의 의심이 줄어요',shield:'야유를 막을 힘을 얻어요',heal:'마음이 회복돼요',coins:'비법을 배울 동전을 얻어요',xpBurst:'레벨이 더 빨리 올라요',finisher:'피날레를 더 빨리 준비해요',boxFill:'케이스가 더 빨리 열려요'};
+ D.items.types.forEach(t=>t.ladder.forEach(p=>{const effect=p.effect||t.effect;const values={damage:'기본 힘 8 × 연출 · 좋은 소품은 최대 25배',shield:'기본 보호막 2.7 × 멘탈 · 최대 25배',heal:'기본 회복 1.8 × 멘탈 · 최대 25배',coins:'기본 동전 4개 · 좋은 소품은 최대 25배',xpBurst:'다음 레벨 경험치의 50%',finisher:'피날레 5칸 채우기',boxFill:'모든 케이스를 30% 더 열기'};p.desc=copy[effect]+'\n'+values[effect];}));
+ D.missions.forEach(m=>{m.desc='오늘의 목표를 이루면 보석을 받아요\n'+m.name+' · 보석 '+m.gems+'개';});
+ D.easyExtras={events:'움직이는 친구를 누르면 선물을 받아요\n8초 안에 누르기 · 힘, 동전, 열쇠 중 하나',set:'무대의 모두를 감탄시키면 힘이 늘어요\n실력 3% 추가 · 컬렉션 모두 모으면 연출 1.1배',milestone:'레벨이 쌓이면 힘이 크게 늘어요\n10 · 25레벨마다 2배 · 케이스는 50도 2배'};
+})(GAME_DATA);
+
+GAME_DATA.stageRewards.forEach((r,i)=>{r.desc=[
+ '개봉을 잠깐 쉬어도 이어져요\n이어 열기 기다리는 시간 0.5초 추가',
+ '케이스를 더 빨리 열어요\n실력 1.2배',
+ '도우미가 더 빨리 도와줘요\n도우미 속도 10% 추가',
+ '새 케이스도 잘 자란 채 받아요\n시작 레벨 1 추가',
+ '옆 케이스도 더 세게 두드려요\n옆 칸에 주는 힘 15% 추가',
+ '피날레가 더 크게 놀라게 해요\n피날레의 힘 30% 추가'][i];r.effect=r.desc;});
+GAME_DATA.missions.find(m=>m.id==='skills').name='스킬 5번 쓰기';GAME_DATA.missions.find(m=>m.id==='skills').desc='오늘의 목표를 이루면 보석을 받아요\n스킬 5번 쓰기 · 보석 3개';
+// U15 pacing compensates for full-board practice without slowing the item itself.
+(function(D){const scale={family:2,party:1.3,school:5,cafe:4,meetup:4.4,theater:4,festival:15,audition:24,broadcast:65,vegas:5,moon:1.6,sun:1.1,galaxy:1.25,multiverse:1.08,lecturenote:8};D.venues.forEach(v=>{if(scale[v.slug])v.hpFactor=(v.hpFactor||1)*scale[v.slug];});D.venues.find(v=>v.slug==='lecturenote').bossHpFactor/=8;})(GAME_DATA);
+
+GAME_DATA.statNames={power:'마술 실력',damage:'연출',mental:'멘탈'};

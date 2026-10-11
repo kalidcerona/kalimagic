@@ -12,11 +12,6 @@
   let installEvent = null, revision = 0, installedSignal = false, previousFocus = null;
   const installed = () => installedSignal || navigator.standalone === true || media.some(item => item.matches);
   const canInstall = () => inApp || safari || (android && /Chrome|SamsungBrowser/i.test(ua)) || !!installEvent;
-  const launcher = document.createElement('button');
-  launcher.id = 'magicshow-install-launcher';
-  launcher.type = 'button';
-  launcher.textContent = '앱 설치';
-  launcher.hidden = true;
   const overlay = document.createElement('div');
   overlay.id = 'magicshow-install-overlay';
   overlay.hidden = true;
@@ -28,7 +23,6 @@
     <p data-status aria-live="polite"></p>
     <div class="magicshow-install-actions"><button type="button" data-install>설치</button><button type="button" data-copy hidden>링크 복사</button><button type="button" data-later>나중에</button></div>
   </section><div data-arrow class="magicshow-install-arrow" hidden aria-hidden="true"></div>`;
-  document.body.appendChild(launcher);
   document.body.appendChild(overlay);
   const find = selector => overlay.querySelector(selector);
   const action = find('[data-install]'), guide = find('[data-guide]'), status = find('[data-status]');
@@ -64,7 +58,6 @@
     }
   }
   function refresh() {
-    launcher.hidden = installed() || !canInstall();
     if (installed()) { overlay.hidden = true; arrow.hidden = true; }
     else describe();
   }
@@ -83,7 +76,12 @@
     arrow.hidden = true;
     previousFocus?.focus();
   }
-  launcher.addEventListener('click', () => open());
+  document.addEventListener('click', event => {
+    if (installed() || !event.target?.closest?.('#installButton')) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    open();
+  }, true);
   find('[data-close]').addEventListener('click', close);
   find('[data-later]').addEventListener('click', close);
   overlay.addEventListener('keydown', event => {
