@@ -60,6 +60,8 @@ const hash = createHash('sha256').update(worker);
 for (const [name, bytes] of [...files].sort(([a], [b]) => a.localeCompare(b, 'en'))) hash.update(name).update('\0').update(bytes);
 worker = replaceOnce(worker, '__VERSION__', hash.digest('hex').slice(0, 16));
 files.set('sw.js', Buffer.from(worker));
+// Escape page for stuck phones: added after the SHELL list is built so the worker never precaches it.
+files.set('update.html', await readRegular(ADDITIONS, 'update.html'));
 // Validate paths before deleting anything; source and generated icons stay read-only.
 const parent = await realpath(path.dirname(SNAPSHOT));
 if (!parent.startsWith((await realpath(ROOT)) + path.sep)) throw new Error('Snapshot parent escapes project');

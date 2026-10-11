@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>업데이트 중</title>
+<style>
+@font-face{font-family:Galmuri11;src:url("fonts/Galmuri11.woff2") format("woff2");font-display:swap}
+html,body{margin:0;height:100%;background:#17141F;color:#F4ECD8}
+body{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;text-align:center;font-family:Galmuri11,system-ui,-apple-system,sans-serif}
+h1{margin:0;font-size:20px;font-weight:400;line-height:1.5;word-break:keep-all}
+p{margin:0;font-size:14px;opacity:.75;word-break:keep-all}
+button{display:none;font:inherit;font-size:16px;padding:10px 24px;border:2px solid #F4ECD8;background:transparent;color:#F4ECD8;cursor:pointer}
+</style>
+</head>
+<body>
+<h1>새 버전으로 바꾸는 중이에요</h1>
+<p id="status">준비하는 중...</p>
+<button id="retry" type="button">다시 시도</button>
+<script>
+(function () {
+  var statusEl = document.getElementById('status'), retry = document.getElementById('retry');
+  var SCOPE = '/tools/magicshow/', PREFIX = 'magicshow-dist-', gone = false, timer = null;
+  function go() {
+    if (gone) return; gone = true;
+    clearTimeout(timer);
+    location.replace('/tools/magicshow/?fresh=' + Date.now());
+  }
+  function run() {
+    retry.style.display = 'none';
+    statusEl.textContent = '옛 버전을 지우는 중...';
+    clearTimeout(timer);
+    timer = setTimeout(go, 6000);
+    var sw = ('serviceWorker' in navigator && navigator.serviceWorker.getRegistrations)
+      ? navigator.serviceWorker.getRegistrations().then(function (regs) {
+          return Promise.all(regs.filter(function (r) { return r.scope.indexOf(SCOPE) !== -1; })
+            .map(function (r) { return r.unregister(); }));
+        })
+      : Promise.resolve();
+    var cs = ('caches' in window)
+      ? caches.keys().then(function (keys) {
+          return Promise.all(keys.filter(function (k) { return k.indexOf(PREFIX) === 0; })
+            .map(function (k) { return caches.delete(k); }));
+        })
+      : Promise.resolve();
+    Promise.all([sw, cs]).then(function () {
+      statusEl.textContent = '완료! 게임으로 돌아갈게요';
+      go();
+    }).catch(function () {
+      clearTimeout(timer);
+      statusEl.textContent = '문제가 생겼어요. 저장 데이터는 그대로예요.';
+      retry.style.display = 'inline-block';
+      timer = setTimeout(go, 6000);
+    });
+  }
+  retry.addEventListener('click', function () { run(); });
+  run();
+})();
+</script>
+</body>
+</html>

@@ -23,7 +23,7 @@ async function filesUnder(route) {
 
 test('Magicshow snapshot contains only allowed runtime files and exact deployment precache', async () => {
   const files = await filesUnder(shared);
-  const base = ['index.html', 'style.css', 'data.js', 'core.js', 'audio.js', 'ui.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png', 'favicon-32.png', 'og-image.png', 'sw.js', 'install-prompt.js', 'install-prompt.css'];
+  const base = ['index.html', 'style.css', 'data.js', 'core.js', 'audio.js', 'ui.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png', 'favicon-32.png', 'og-image.png', 'sw.js', 'install-prompt.js', 'install-prompt.css', 'update.html'];
   assert.deepEqual(files.filter(file => !file.startsWith('assets/') && !file.startsWith('fonts/')), base.sort());
   assert.ok(files.some(file => file.startsWith('assets/')));
   for (const font of ['fonts/Galmuri11.woff2', 'fonts/Galmuri11-Bold.woff2', 'fonts/Galmuri9.woff2', 'fonts/OFL.md']) assert.ok(files.includes(font), font);
@@ -35,8 +35,8 @@ test('Magicshow snapshot contains only allowed runtime files and exact deploymen
   assert.deepEqual(DISTRIBUTION_APPS.find(app => app.tool === 'magicshow'), { source: shared, target: 'magicshow', tool: 'magicshow' });
   const sw = (await read(`${shared}/sw.js`)).toString();
   const precache = JSON.parse(sw.match(/const SHELL = (\[[\s\S]*?\]);/)[1]);
-  assert.deepEqual(precache.map(file => file.replace(/^\.\//, '')).sort(), files);
-  assert.equal(new Set(precache).size, files.length);
+  assert.deepEqual(precache.map(file => file.replace(/^\.\//, '')).sort(), files.filter(file => file !== 'update.html'));
+  assert.equal(new Set(precache).size, files.length - 1);
   assert.match(sw, /CACHE_PREFIX = 'magicshow-dist-'/);
   assert.match(sw, /CACHE_NAME = CACHE_PREFIX \+ '[a-f0-9]{16}-coherent-1-distribution'/);
   assert.ok(!precache.some(file => file.includes('/tools/_check')));
@@ -361,4 +361,22 @@ test('Magicshow page checks for updates when visible again at most once per ten 
   assert.equal(page.count().updates, 1, 'throttled');
   page.tick(60 * 1000); visible();
   assert.equal(page.count().updates, 2);
+});
+
+test('Magicshow update.html escape page is public, never precached, and only clears the app shell caches', async () => {
+  const html = (await read(`${shared}/update.html`)).toString();
+  const sw = (await read(`${shared}/sw.js`)).toString();
+  assert.ok((await filesUnder(shared)).includes('update.html'));
+  assert.equal(shouldCopyMagicshow('update.html'), true);
+  assert.deepEqual(classifyPath('/tools/magicshow/update.html'), { mode: 'public' });
+  assert.ok(!sw.match(/const SHELL = (\[[\s\S]*?\]);/)[1].includes('update.html'));
+  assert.ok(!(await read('scripts/magicshow-dist/sw-template.js')).toString().includes('update.html'));
+  assert.doesNotMatch(html, /localStorage|sessionStorage|indexedDB/);
+  assert.doesNotMatch(html, /https?:\/\//);
+  assert.match(html, /getRegistrations\(\)/);
+  assert.match(html, /\.unregister\(\)/);
+  assert.match(html, /PREFIX = 'magicshow-dist-'/);
+  assert.match(html, /k\.indexOf\(PREFIX\) === 0/);
+  assert.match(html, /location\.replace\('\/tools\/magicshow\/\?fresh=' \+ Date\.now\(\)\)/);
+  assert.match(html, /다시 시도/);
 });
