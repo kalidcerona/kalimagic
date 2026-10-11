@@ -313,6 +313,19 @@ test('Magicshow service worker skips waiting on every install after the whole sh
   assert.equal(failing.calls.skipWaiting, 0, 'incomplete shell must not take over');
 });
 
+test('Magicshow service worker install precaches only critical files, not assets images', async () => {
+  const template = (await read('scripts/magicshow-dist/sw-template.js')).toString();
+  const shell = ['./index.html', './style.css', './ui.js', './core.js', './manifest.webmanifest', './icon-192.png', './apple-touch-icon.png', './fonts/Galmuri11.woff2', './fonts/OFL.md', './assets/box-0.png', './assets/ui/ui-panel.png', './sw.js'];
+  const source = template.replace(/const SHELL = \[[\s\S]*?\];/, `const SHELL = ${JSON.stringify(shell)};`);
+  let requested = [], skipped = 0; const listeners = new Map();
+  const self = { registration: { scope: 'https://example.test/tools/magicshow/' }, skipWaiting() { skipped++; return Promise.resolve(); }, clients: { claim: () => Promise.resolve() }, addEventListener: (name, callback) => listeners.set(name, callback) };
+  const caches = { open: async () => ({ addAll: async requests => { requested = requests.map(r => new URL(r.url).pathname.replace('/tools/magicshow/', '')); } }), keys: async () => [], delete: async () => true };
+  vm.runInNewContext(source, { self, caches, URL, Request, Promise, Response, fetch: async () => new Response('') });
+  await waitFor(listeners, 'install');
+  assert.equal(JSON.stringify(requested.sort()), JSON.stringify(['apple-touch-icon.png', 'core.js', 'fonts/Galmuri11.woff2', 'icon-192.png', 'index.html', 'manifest.webmanifest', 'style.css', 'sw.js', 'ui.js']));
+  assert.equal(skipped, 1);
+});
+
 async function runRegistration({ controller }) {
   const source = (await readFile(new URL('scripts/sync-magicshow-snapshot.mjs', root), 'utf8')).match(/const REGISTER_SW = `([\s\S]*?)`;/)[1];
   const listen = () => { const map = new Map(); return { map, addEventListener: (name, callback) => map.set(name, callback) }; };

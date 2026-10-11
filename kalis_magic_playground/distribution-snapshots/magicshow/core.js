@@ -46,7 +46,7 @@
     intervalPerV: 0.05,
     intervalMin: 2.2,
     telegraphMs: 600,
-    winTransitionMs: 800,
+    winTransitionMs: 2500,
     winHeal: 0.2,
     comboResetMs: 2000,
     finisherNeed: 20,
@@ -133,6 +133,7 @@
   function venueNumber(slug) { return VENUE_INDEX.get(VENUES).get(slug) || 0; }
   function reached(state, slug) { var n = venueNumber(slug); return n > 0 && state.vMax >= n; }
   function legacyRank(v) { return Math.max(1, DATA.legacyVenueSlugs.indexOf(VENUES[v-1].slug) + 1); }
+  function emptyU19(){return {cleared:false,phase:1,telegraph:0,window:0,target:0,hitMs:0,damage:0,power:1,lastDps:0,lastPower:1,routines:[],pending:[],cooldown:0};}
   function profile(state) { var a = getAud(state.venue,state.j); return a && a.bossProfile || ''; }
   function emptyReview() { return {act:1,cycle:0,target:-1,elapsed:0,cancel:false,bonusMs:0,pairs:0,lastSource:'',lastCell:-1,finaleReady:false,finaleUsed:false,actMs:0}; }
   function balanceRank(v) { return VENUES[v - 1].balanceRank; }
@@ -231,7 +232,7 @@
     if(all&&!state.u14.collection){state.u14.collection=true;emit(ev,{type:'setBonus',slug:'collection'});}
   }
   function visitorBlocked(state) {
-    return state.mode!=='fight'||state.resolved||state.features.climax.left>0||state.telegraphed||state.heckleMs<=CONST.telegraphMs||state.review.target>=0;
+    return (profile(state)==='future'&&state.u19.telegraph>0)||state.mode!=='fight'||state.resolved||state.features.climax.left>0||state.telegraphed||state.heckleMs<=CONST.telegraphMs||state.review.target>=0;
   }
   function tickVisitor(state,dt,ev) {
     var v=state.u14.visitor;v.buff=Math.max(0,v.buff-dt);v.wait=Math.max(0,v.wait-dt);
@@ -275,9 +276,9 @@
   function skillCooldown(state,id) { var k=DATA.skills.find(function(k){return k.id===id;});return k ? k.cooldown*(1-.1*(state.tree[id+'Cooldown']||0)) : 0; }
   function useSkill(state,id,options) {
     var ev=options&&options.quiet ? null : [];
-    if(state.mode!=='fight'||state.resolved||state.features.climax.left>0||state.skills.cooldowns[id]>0||!skillUnlocked(state,id))return ev||[];
+    if(state.u15.scene||profile(state)==='future'&&state.u19.telegraph>0||state.mode!=='fight'||state.resolved||state.features.climax.left>0||state.skills.cooldowns[id]>0||!skillUnlocked(state,id))return ev||[];
     state.skills.cooldowns[id]=skillCooldown(state,id);
-    emit(ev,{type:'skill',id:id}); dailyProgress(state,'skills',1);
+    routineSkill(state,id,ev);emit(ev,{type:'skill',id:id}); dailyProgress(state,'skills',1);
     if(id==='showtime')state.skills.showtimeLeft=20000;
     if(id==='cheer'){state.skills.cheerGuard=true;state.mental=Math.min(state.mentalMax,state.mental+state.mentalMax*.1);}
     if(id==='cardrain'){
@@ -323,19 +324,19 @@
     var zero={awayMs:0,coins:0,xp:state.board.map(function(){return 0;})};
     if(!Number.isFinite(now)||!state.idle.wallMs||now-state.idle.wallMs<60000)return zero;
     var ms=Math.min(now-state.idle.wallMs,(8+state.tree.nightShow)*3600000), eff=.5+.1*state.tree.manager, rates=idleRates(state);
-    return {awayMs:ms,coins:Math.floor(rates.coins*ms/1000*eff),xp:rates.xp.map(function(x,i){var c=state.board[i],remaining=0;for(var lv=c.lv;lv<caseCap(state);lv++)remaining+=caseNeed(lv);remaining=Math.max(0,remaining-(c.xp||0));return Math.min(remaining,x*ms/1000*eff*growthMultiplier(state));})};
+    return {awayMs:ms,coins:Math.floor(rates.coins*ms/1000*eff),xp:rates.xp.map(function(x,i){var c=state.board[i],remaining=0;for(var lv=c.lv;lv<caseCap(state);lv++)remaining+=caseNeed(lv);remaining=Math.max(0,remaining-(c.xp||0));return Math.min(remaining,x*ms/1000*eff);})};
   }
   function collectOffline(state,now) {
     var gain=offlineGain(state,now);
     if(!Number.isFinite(now)||now<state.idle.wallMs)return gain;
     state.idle.wallMs=now;
     if(!gain.awayMs)return gain;
-    var baseCoins=gain.coins;gain.coins=earnCoins(state,baseCoins);state.u14.visitor.incomeCoins=Math.max(0,state.u14.visitor.incomeCoins-baseCoins);dailyProgress(state,'offline',1);var levels=0;
+    earnCoins(state,gain.coins);state.u14.visitor.incomeCoins=Math.max(0,state.u14.visitor.incomeCoins-gain.coins);dailyProgress(state,'offline',1);var levels=0;
     state.board.forEach(function(c,i){if(c.lv>=caseCap(state))return;c.xp+=gain.xp[i];while(c.lv<caseCap(state)&&c.xp>=caseNeed(c.lv)){c.xp-=caseNeed(c.lv);c.lv++;levels++;}if(c.lv>=caseCap(state))c.xp=0;});
     state.idle.reward={awayMs:gain.awayMs,coins:gain.coins,levels:levels,doubled:false};
     return gain;
   }
-  function doubleOffline(state) { var r=state.idle.reward;if(!r||r.doubled)return false;earnCoins(state,r.coins,true);state.u14.visitor.incomeCoins=Math.max(0,state.u14.visitor.incomeCoins-r.coins);r.doubled=true;return true; }
+  function doubleOffline(state) { var r=state.idle.reward;if(!r||r.doubled)return false;earnCoins(state,r.coins);state.u14.visitor.incomeCoins=Math.max(0,state.u14.visitor.incomeCoins-r.coins);r.doubled=true;return true; }
 
   function emptyStars() {
     return { trick: 0, guard: 0, tempo: 0, bounty: 0 };
@@ -483,6 +484,7 @@
   }
 
   function recompute(state, sync) {
+    state._preparedLevel=DATA.tree.reduce(function(n,node){return n+(state.tree[node.id]||0);},0);
     var C = CONST;
     var b = Math.floor((balanceRank(state.vMax) - 1) / C.boxLevelDiv);
     if (b < 0) b = 0;
@@ -561,6 +563,38 @@
     return VENUES[v - 1].audiences.length + 1;
   }
 
+  function preparation(state) { return state._preparedLevel || 0; }
+  function gateAudience(state) {
+    if(state.venue===1 || state.u15.tutorial.active || state.u18.anchor || ["homecoming","future"].indexOf(profile(state))>=0)return false;
+    var v=state.venue;
+    return state.j===headlinerJ(v) || v>=3 && state.j===Math.ceil(VENUES[v-1].audiences.length/2);
+  }
+  function gatePressure(state) {
+    if(!gateAudience(state))return 0;
+    var g=state.u19b.gates[state.audId];
+    return g&&!g.cleared&&!g.studied?Math.max(0,1-(preparation(state)-g.prepared)/30):0;
+  }
+  function failureLessons(state) {
+    var ids=['mental','attack','power','speed','calm','shieldCap','boxHeal'];
+    var lessons=ids.map(function(id){return NODE_BY_ID[id];}).filter(function(n){return n&&nodeInfo(state,n.id).purchasable;});
+    var id=state.u19b.failedId,g=state.u19b.gates[id];
+    if(g&&!g.cleared&&!g.studied&&state.coins>=failureLessonCost(state,id))lessons.unshift({id:'gate:'+id,name:'야유 받아넘기기'});
+    return lessons.slice(0,2);
+  }
+  function failureLessonCost(state,id) {var v=VENUES.find(function(v){return v.audiences.concat([v.headliner]).some(function(a){return a.id===id;});});return v?v.id*25:Infinity;}
+  function failureLessonInfo(state,id) {return id.indexOf('gate:')===0?{currency:'coins',cost:failureLessonCost(state,id.slice(5))}:{currency:nodeInfo(state,id).currency,cost:nodeCost(state,id)};}
+  function learnFailureLesson(state,id) {
+    if(id.indexOf('gate:')!==0)return buyNode(state,id);
+    var aud=id.slice(5),g=state.u19b.gates[aud],cost=failureLessonCost(state,aud);
+    if(!g||g.studied||g.cleared||state.u19b.failedId!==aud||state.coins<cost)return false;
+    state.coins-=cost;g.studied=true;return true;
+  }
+  function dealerCredit(state) {return state.u19b.dealerVisits<Math.max(1,Math.floor((state.vMax-1)*2.2));}
+  function failureDealerAvailable(state) {return !!state.u19b.dealerOffer&&state.gems>=2&&state.mode==='fight'&&!state.resolved&&!state.idle.next;}
+  function openFailureDealer(state) {
+    if(!failureDealerAvailable(state)||state.mode==='dealer')return false;
+    state.u19b.dealerOffer=false;setupDealer(state);state.mode='dealer';return true;
+  }
   function audStats(v, j) {
     var C = CONST;
     var n = headlinerJ(v) - 1;
@@ -639,19 +673,7 @@
   function caseTier(cell) { return cell.golden ? 'box-golden' : 'box-' + Math.min(4, Math.floor(((cell.lv || 1) - 1) / 3)); }
   function caseItems(lv) { return 1 + Math.floor((lv - 1) / 3); }
   function branchBonus(state, branch) { var id='infinite-'+branch; return (1 + .02 * ((state.tree[id] || 0) + (state.tree['hidden-' + branch] || 0))) * statMultiplier(state,id); }
-  function growthMultiplier(state) { return state.growth5x === true ? 5 : 1; }
-  function grantGrowthGift(state, code) {
-    if (code !== 'KALI5X' || state.growth5x === true) return false;
-    state.growth5x = true;
-    return true;
-  }
-  function earnCoins(state, amount, alreadyScaled) {
-    // Keep the income estimator in base units so income-based prizes scale once.
-    state.u14.visitor.incomeCoins += amount;
-    amount *= alreadyScaled ? 1 : growthMultiplier(state);
-    state.coins += amount; state.features.progress.coinsEarned += amount;
-    return amount;
-  }
+  function earnCoins(state, amount) { state.u14.visitor.incomeCoins+=amount; state.coins += amount; state.features.progress.coinsEarned += amount; }
   function fillBox(state, cell) {
     cell.lv = cell.lv || Math.min(caseCap(state), 1 + (state.tree.caseStart || 0) + (hasReward(state, 4) ? 1 : 0));
     cell.xp = cell.xp || 0;
@@ -679,6 +701,7 @@
     if (v > state.vMax) { state.vMax = v; ensureBoard(state); reveal(state, "slot"); }
     state.audId = aud ? aud.id : "";
     var st = audStats(v, j);
+    state.u19.damage=0;state.u19.power=state._V||1;
     state.audHpMax = st.hp;
     state.audHp = st.hp;
     state.atk = st.atk;
@@ -713,6 +736,12 @@
     state.features.climax.mirrored = []; state.features.climax.mirrorMs = 15000;
     state.features.climax.confidence = 0; state.features.climax.milestone = 0;
     state.review = emptyReview();
+    if(profile(state)==='future'){
+      var u=state.u19;u.phase=1;u.telegraph=3000;u.window=0;u.hitMs=0;u.target=strongestCase(state);
+      var dps=u.lastDps>0?u.lastDps*(state._V||1)/u.lastPower:futurePower(state);
+      state.audHp=state.audHpMax=Math.max(1,Math.round(dps*118));state.atk=state.mentalMax*.025;state.interval=8;state.heckleMs=8000;
+      emit(ev,{type:'futurePhase',phase:1});
+    }
     if (profile(state) === "homecoming") emit(ev,{type:"homecomingAct",act:1,line:aud.act1Line});
     if (isFinalBoss(state) && !state.u18.anchor && !state.features.climax.paradeDone) {
       state.features.climax.left = 30000;
@@ -722,6 +751,8 @@
       if(j===1)queueScene(state,VENUES[v-1].slug,'opening');
       if(j===headlinerJ(v))queueScene(state,VENUES[v-1].slug,'beforeHeadliner');
     }
+    if(gateAudience(state)&&!state.u19b.gates[state.audId])state.u19b.gates[state.audId]={prepared:preparation(state),cleared:false,studied:false};
+    if(gatePressure(state)>0)state.audHp=state.audHpMax=Math.max(state.audHpMax,Math.round(futurePower(state)*(VENUES[v-1].slug==='theater'?75:45)));
     emit(ev, { type: "audience", venue: v, j: j, audId: state.audId, crowd: state.crowd });
   }
 
@@ -769,6 +800,7 @@
     var coins = Math.round(CONST.winCoinBase * Math.pow(CONST.winCoinGrowth, balanceRank(venue) - 1) * (state._coinMul || 1) * nodeEffects(state).tip);
     if (coins < 1) coins = 1;
     earnCoins(state, coins);
+    if(state.fightMs>0){state.u19.lastDps=state.u19.damage/(state.fightMs/1000);state.u19.lastPower=state._V||1;}
     state.wins++; dailyProgress(state,'wins',1);
     if(state.u14.satisfied.indexOf(audId)<0)state.u14.satisfied.push(audId);
     if(j===headlinerJ(venue)){dailyProgress(state,'clear',1);var tier=VENUES[venue-1].slug==='moon'?3:VENUES[venue-1].slug==='audition'?2:1;if(tier>state.u14.outfit){state.u14.outfit=tier;emit(ev,{type:'outfit',tier:tier});}}
@@ -817,16 +849,18 @@
     }
     if (state.venue >= venueNumber(DATA.dealer.cardVenue)) {
       state.winsSinceDealer++;
-      if (state.winsSinceDealer >= CONST.dealerEvery) {
+      if (state.winsSinceDealer >= CONST.dealerEvery && dealerCredit(state)) {
         state.winsSinceDealer = 0;
         state.dealerQueued = true;
         emit(ev, { type: "dealerQueued" });
       }
     }
     state.buff = 0;
+    if(state.u19b.gates[state.audId])state.u19b.gates[state.audId].cleared=true;
     emit(ev, { type: "win", venue: venue, crowd: state.crowd, j: j, coins: coins, removed: removed, trophy: trophy, keys: keys });
     checkTrueFanReveal(state,ev);unlockCosmetics(state);
     if(state.u18.anchor){finishTravel(state,ev,true);return;}
+    if(profile(state)==='future'&&!state.u18.anchor){state.u19.cleared=true;state.mode='transition';state.transMs=CONST.winTransitionMs;state.after='ending';unlockCosmetics(state);emit(ev,{type:'futureWin'});return;}
     var next = advanceFrom(state);
     if (isFinalBoss(state)) {
       state.mental = Math.min(state.mentalMax, state.mental + state.mentalMax * nodeEffects(state).winHeal);
@@ -835,9 +869,8 @@
       state.after = state.homecomingCleared ? "stay" : "ending";
       return;
     }
-    state.idle.autoAdvance = false;
-    state.idle.waiting = next.v > venue;
-    beginAudience(state, next.v, next.j, ev);
+    state.idle.next = {v:next.v,j:next.j};
+    state.idle.waiting = false;
     state.mental = Math.min(state.mentalMax, state.mental + state.mentalMax * nodeEffects(state).winHeal);
     state.mode = "transition";
     state.transMs = CONST.winTransitionMs;
@@ -877,6 +910,7 @@
   }
 
   function setupDealer(state) {
+    state.u19b.dealerVisits++;
     var n = CONST.cardMin + Math.floor(rngNext(state) * (CONST.cardMax - CONST.cardMin + 1));
     if (n < 3) n = 3;
     if (n > 5) n = 5;
@@ -1051,7 +1085,9 @@
   }
 
   function restartRun(state) {
+    var retryFuture=state.homecomingCleared&&profile(state)==='future'&&!state.u19.cleared;
     if(state.u18.anchor){finishTravel(state,null,false);return state;}
+    state.idle.waiting=false;delete state.idle.next;
     cancelWorkers(state);
     unseal(state);
     state.doveMs = nodeEffects(state).doveEvery;
@@ -1087,7 +1123,7 @@
     state.shield = state.mentalMax * nodeEffects(state).openingShield;
     clearBoard(state);
     if (state.tree.startFinale > 0) state.finisher = nodeEffects(state).finaleNeed;
-    var pos = state.homecomingCleared ? {v:venueNumber('lecturenote'),j:1} : firstOpen(state);
+    var pos = retryFuture ? {v:venueNumber('future'),j:1} : state.homecomingCleared ? {v:venueNumber('lecturenote'),j:1} : firstOpen(state);
     beginAudience(state, pos.v, pos.j, null);
     state.mode = "fight";
     return state;
@@ -1104,9 +1140,13 @@
     if (state.audHpMax > 0) pct = Math.round(100 * state.audHp / state.audHpMax);
     if (pct < 0) pct = 0;
     if (pct > 100) pct = 100;
-    emit(ev, { type: "fail", reasonPct: pct, cause: "mental" });
+    var failedVenue=state.venue,failedId=state.audId,offer=state.venue>=2&&dealerCredit(state)&&(state.winsSinceDealer>0||state.dealerQueued),regularWins=state.winsSinceDealer,queued=state.dealerQueued;
+    emit(ev, { type: "fail", reasonPct: pct, cause: "mental", venue:failedVenue,audId:failedId });
     state.fails++;
     restartRun(state);
+    state.u19b.failedId=failedId;
+    state.winsSinceDealer=regularWins;state.dealerQueued=queued;
+    if(offer)state.u19b.dealerOffer=true;
   }
 
   function checkLevel(state, ev) {
@@ -1122,6 +1162,9 @@
 
   function dealAud(state, dmg, ev) {
     if (dmg < 0) dmg = 0;
+    if(profile(state)==='future'){var u=state.u19;if(u.telegraph>0)return;if(u.phase===1&&state.skills.showtimeLeft>0)dmg*=.45;if(u.phase===3&&u.window>0&&state._futureSource!==u.target)return;}
+    if(profile(state)==='future'&&state.u19.phase<3)dmg=Math.min(dmg,Math.max(0,state.audHp-state.audHpMax*(state.u19.phase===1?.65:.3)));
+    state.u19.damage+=Math.min(state.audHp,dmg);
     if (isFinalBoss(state) && state.review.bonusMs > 0) dmg *= 1.2;
     if (state.pattern === "twoPhase" && !state.phase2) {
       var threshold = state.audHpMax * CONST.phase2At;
@@ -1159,7 +1202,7 @@
     reviewOpen(state,i,source,ev);
     var itemLv = cell.lv || 1, oldTier = caseTier(cell);
     cell.lv = itemLv; cell.xp = cell.xp || 0;
-    if (cell.lv < caseCap(state)) cell.xp += (1 + .15 * (state.tree.caseXp || 0)) * growthMultiplier(state);
+    if (cell.lv < caseCap(state)) cell.xp += 1 + .15 * (state.tree.caseXp || 0);
     while (cell.lv < caseCap(state) && cell.xp >= caseNeed(cell.lv)) {
       cell.xp -= caseNeed(cell.lv); cell.lv++;
       if ([10,25,50].indexOf(cell.lv)>=0) emit(ev,{type:'milestone',cell:i,level:cell.lv});
@@ -1201,7 +1244,7 @@
       }
     }
     checkAchievements(state, ev);
-    state.xp += CONST.xpPerBox * nodeEffects(state).boxXP * growthMultiplier(state);
+    state.xp += CONST.xpPerBox * nodeEffects(state).boxXP;
     state.shield = Math.min(state.mentalMax * nodeEffects(state).shieldRatio, state.shield + nodeEffects(state).boxShield);
     state.mental = Math.min(state.mentalMax, state.mental + nodeEffects(state).boxHeal);
     checkLevel(state, ev);
@@ -1298,6 +1341,7 @@
 
   function damageCell(state, i, dmg, ev, source, chain) {
     var c = state.board[i];
+    if(profile(state)==='future'){var u=state.u19;if(u.telegraph>0)return;if(u.phase===3&&u.window>0&&i!==u.target)return;if(u.phase===2&&(!source||source==='manual'||source==='active')){if(i===u.target)u.hitMs=0;}}
     if (!c || c.hp <= 0 || (c.sealed && source!=='active')) return;
     if (state.features.climax.mirrored.indexOf(i) >= 0 && (!source || source === 'manual')) return;
     var role = source === 'magic' ? 'magic' : source === "fan" || source === "assistant" || source === "chain" ? source : "manual";
@@ -1385,7 +1429,7 @@
         if (state.mode === "fight" && !state.resolved && f.audId === state.audId) {
           var dmg = f.amount;
           if (nodeEffects(state).miss > 0 && rngNext(state) < nodeEffects(state).miss) dmg = 0;
-          if (dmg > 0) dealAud(state, dmg, ev);
+          if (dmg > 0){state._futureSource=f.cell;dealAud(state,dmg,ev);state._futureSource=null;}
           else emit(ev, { type: "audHit", dmg: 0 });
           if (state.audHp <= 0 && !state.resolved) onWin(state, ev);
         }
@@ -1399,7 +1443,7 @@
       } else if (f.kind === "coin") {
         earnCoins(state, Math.max(0, Math.round(f.amount)));
       } else if (f.effect === "xpBurst") {
-        state.xp += f.amount * growthMultiplier(state);
+        state.xp += f.amount;
         checkLevel(state, ev);
       } else if (f.effect === "finisher") {
         state.finisher += 5;
@@ -1461,8 +1505,11 @@
     }
   }
 
+  function heckleStrength(state){var pressure=gatePressure(state),base=state.atk*nodeEffects(state).calm;if(!pressure)return base;return Math.max(Math.min(base,state.mentalMax*.1),state.mentalMax*(.08+2*Math.max(0,Math.min(1,(state.fightMs-20000)/20000)))*pressure);}
   function tickHeckle(state, dt, ev) {
     if(state.u15.tutorial.active)state.mental=Math.max(state.mental,10);
+    var pressure=gatePressure(state);
+    if(pressure)state.audHp=Math.min(state.audHpMax,state.audHp+state.audHpMax*.012*pressure*dt/1000);
     state.heckleMs -= dt;
     if (!state.telegraphed && state.heckleMs <= CONST.telegraphMs) {
       state.telegraphed = true;
@@ -1476,7 +1523,7 @@
       state.telegraphed = state.heckleMs <= CONST.telegraphMs;
       if (state.skills.cheerGuard) { state.skills.cheerGuard=false; emit(ev,{type:'heckleCancelled'}); continue; }
       if (state.review.cancel) { state.review.cancel=false; emit(ev,{type:"heckleCancelled"}); continue; }
-      var dmg = state.atk * nodeEffects(state).calm;
+      var dmg = heckleStrength(state);
       var shieldDmg = 0;
       if (state.shield > 0) {
         shieldDmg = state.shield >= dmg ? dmg : state.shield;
@@ -1732,6 +1779,7 @@
     }
   }
   function tickBoss(state,dt,ev) {
+    tickFuture(state,dt,ev);
     tickReview(state,dt,ev);
     if(profile(state) !== "mirror")return;
     var c=state.features.climax;
@@ -1745,11 +1793,15 @@
     if (state.mode === "dealer") return;
     if (state.mode === "transition") {
       if (state.idle.waiting) return;
-      state.idle.waiting=false;
       state.transMs = Math.max(0, state.transMs - dt);
       tickSpawn(state, dt);
       landFlights(state, dt, ev);
       if (state.transMs <= 0) {
+        if(state.idle.next){
+          var next=state.idle.next,stage=next.v>state.venue,after=state.after;delete state.idle.next;
+          beginAudience(state,next.v,next.j,ev);
+          if(stage){state.mode="transition";state.after=after;state.transMs=0;state.idle.waiting=true;emit(ev,{type:"stageReady"});return;}
+        }
         if (state.after === "ending") enterEnding(state, ev);
         else if (state.after === "continue") restartRun(state);
         else if (state.after === "stay") stayHome(state);
@@ -1772,7 +1824,9 @@
       if (!state.features.climax.left) state.features.climax.paradeDone = true;
       return;
     }
+    if(profile(state)==='future'&&state.u19.telegraph>0){tickFuture(state,dt,ev);return;}
     state.fightMs += dt;
+    state.u19.cooldown=Math.max(0,state.u19.cooldown-dt);
     if(state.u18.challenge&&state.u18.challenge.kind==='trueFan'){var rule=trueFanRule(state.u18.challenge.slug);if(rule.type==='timeLimit'&&state.fightMs>rule.value*1000||rule.type==='noDamage'&&state.tookMental){finishTravel(state,ev,false);return;}}
     tickSkills(state,dt);
     if(!state.u15.tutorial.active)tickVisitor(state,dt,ev);
@@ -1796,7 +1850,7 @@
         state.comboMs = 0;
       }
     }
-    var gloveActive=state.u15.gloveLeft>0;
+    var gloveActive=state.u15.gloveLeft>0||state.tree.deckMaster&&state.u15.deckOn;
     if(gloveActive){
       // One shared manual accumulator prevents extra real fingers from adding hits.
       applyTaps(state,dt,state.board.map(function(c,i){return i;}),ev);
@@ -1825,10 +1879,11 @@
     while (dtMs > 0 && guard < CONST.maxSubsteps) {
       var dt = dtMs > CONST.substepMs ? CONST.substepMs : dtMs;
       if(state.mode==="fight" && state.u15.gloveLeft>0)dt=Math.min(dt,state.u15.gloveLeft);
+      var failuresBefore=state.fails;
       substep(state, dt, taps, ev, !!(input && input.holding));
       dtMs -= dt;
       guard++;
-      if (state.mode === "ending" || state.mode === "dealer") break;
+      if (state.mode === "ending" || state.mode === "dealer" || state.fails!==failuresBefore) break;
     }
     return out;
   }
@@ -1883,7 +1938,7 @@
     state[info.currency] -= info.cost;
     if (node.starKey) state.stars[node.starKey]++;
     else state.tree[id]++;
-    dailyProgress(state,'learn',1);checkSets(state,null);
+    routineLearn(state,node);dailyProgress(state,'learn',1);checkSets(state,null);
     if (id === "dove") state.doveMs = nodeEffects(state).doveEvery;
     if (id === "rabbit") state.rabbitMs = nodeEffects(state).rabbitEvery;
     if (id === "flash") state.flashBreaks = 0;
@@ -1991,14 +2046,14 @@
       if (!has && state.endings.length < CONST.loopCap) state.endings.push(d);
     }
     state.dimension = d + 1;
-    state.u15.gloves=0;state.u15.gloveLeft=0;state.u15.drops={};state.u15.positions=CONST.slotOrder.slice();state.u15.scene=null;state.u15.queue=[];
-    state.u18.anchor=null;state.u18.challenge=null;state.u18.map=false;state.u18.fans=[];state.u18.sets=[];
+    state.u15.gloves=0;state.u15.gloveLeft=0;state.u15.deckOn=false;state.u15.drops={};state.u15.positions=CONST.slotOrder.slice();state.u15.scene=null;state.u15.queue=[];
+    state.u19=emptyU19();state.u18.anchor=null;state.u18.challenge=null;state.u18.map=false;state.u18.fans=[];state.u18.sets=[];
     state.u14.satisfied=[];state.u14.sets=[];state.u14.collection=false;state.u14.visitor=emptyU14().visitor;state.u14.visitor.wait=90000+Math.floor(rngNext(state)*60001);
     state.seenEnding = false;
     state.homecomingCleared = false; state.visited = []; state.helpersUsed = [];
     state.coins = 0;
     state.gems = 0;
-    state.u17=emptyU17();
+    state.u17=emptyU17();state.u19b={gates:{},dealerOffer:false,failedId:'',dealerVisits:0};
     state.keys = 0;
     state.vMax = 1;
     state.legacySlots = 0;
@@ -2029,7 +2084,7 @@
       u15: emptyU15(),
       u14: emptyU14(),
       features: emptyFeatures(),
-      idle: emptyIdle(), skills: emptySkills(), u17: emptyU17(), u18: emptyU18(),
+      idle: emptyIdle(), skills: emptySkills(), u17: emptyU17(), u18: emptyU18(), u19: emptyU19(), u19b: {gates:{},dealerOffer:false,failedId:'',dealerVisits:0},
       seed: seed,
       rngState: seed >>> 0,
       dimension: 1,
@@ -2166,10 +2221,9 @@
     for (i = 0; i < STAR_KEYS.length; i++) stars[STAR_KEYS[i]] = state.stars[STAR_KEYS[i]] | 0;
     var obj = {
       v: 14,
-      growth5x: state.growth5x === true,
       u15: state.u15,
       u14: state.u14,
-      idle: state.idle, skills: state.skills, u17: state.u17, u18: state.u18,
+      idle: state.idle, skills: state.skills, u17: state.u17, u18: state.u18, u19: state.u19, u19b: state.u19b,
       onboarding: state.onboarding, learning: state.learning,
       guidance: { seen: state.guidance.seen },
       venueSlug: VENUES[state.venue-1].slug, maxVenueSlug:VENUES[state.vMax-1].slug,
@@ -2250,27 +2304,31 @@
   }
 
   function createSaveStore(storage, now) {
-    var key='magicShowBuster.v3', prefix=key+'.backup.', blocked=false;
+    var key='magicShowBuster.v3', prefix=key+'.backup.', autoKey=prefix+'auto', blocked=false, noAuto=false;
     now=now || Date.now;
     function keys() {
       var result=[];
       for(var i=0;i<storage.length;i++) { var k=storage.key(i); if(k && k.indexOf(prefix)===0 && /^\d+$/.test(k.slice(prefix.length)))result.push(k); }
       return result.sort(function(a,b){return Number(b.slice(prefix.length))-Number(a.slice(prefix.length));});
     }
-    function backup(raw) {
-      if(raw===null)return;
-      var latest=keys()[0];
-      var stamp=Math.max(now(),latest?Number(latest.slice(prefix.length))+1:0);
+    function backup(raw, protect) {
+      if(raw===null)return false;
+      var all=keys();
+      // Never store the same raw string twice.
+      if(all.some(function(k){return storage.getItem(k)===raw;}))return false;
+      var stamp=Math.max(now(),all[0]?Number(all[0].slice(prefix.length))+1:0);
       while(storage.getItem(prefix+stamp)!==null)stamp++;
       storage.setItem(prefix+stamp,raw);
-      keys().slice(3).forEach(function(k){storage.removeItem(k);});
+      keys().slice(3).forEach(function(k){if(k!==protect)storage.removeItem(k);});
+      return true;
     }
     function load() {
       var raw=storage.getItem(key), newer=raw!==null && isNewerSave(raw);
       blocked=blocked || newer;
-      var state=raw===null?null:deserialize(raw), backedUp=false;
-      if(raw!==null && !state) { backup(raw); backedUp=true; }
-      return {state:state,newer:newer,backedUp:backedUp};
+      var state=raw===null?null:deserialize(raw), backedUp=false, giftEnded=false;
+      if(raw!==null && !state && !newer) { backup(raw); backedUp=true; noAuto=true; }
+      if(state) { try { giftEnded=JSON.parse(raw).growth5x===true; } catch (error) { giftEnded=false; } }
+      return {state:state,newer:newer,backedUp:backedUp,giftEnded:giftEnded};
     }
     function write(raw) {
       if(blocked)return {saved:false,newer:true};
@@ -2279,39 +2337,47 @@
       var backedUp=false;
       if(old!==null && !deserialize(old)) {
         // An unsuccessful backup throws before any replacement can happen.
-        var existing=keys().some(function(k){return storage.getItem(k)===old;});
-        if(!existing)backup(old);
-        backedUp=!existing;
+        backedUp=backup(old);
+        noAuto=true;
       }
       storage.setItem(key,raw);
       return {saved:true,backedUp:backedUp};
     }
+    function progress(s) { return s?[s.dimension|0,s.vMax|0]:null; }
     function rollingBackup() {
-      if(blocked)return false;
+      if(blocked || noAuto)return false;
       var raw=storage.getItem(key);
-      if(raw===null || isNewerSave(raw) || !deserialize(raw))return false;
-      storage.setItem(prefix+'auto',raw);
+      if(raw===null || isNewerSave(raw))return false;
+      var cur=deserialize(raw);
+      if(!cur)return false;
+      var oldRaw=storage.getItem(autoKey), old=oldRaw===null?null:deserialize(oldRaw);
+      if(old) {
+        var a=progress(cur), b=progress(old);
+        if(a[0]<b[0] || (a[0]===b[0] && a[1]<b[1]))return false;
+      }
+      storage.setItem(autoKey,raw);
       return true;
     }
     function list() {
-      var all=keys(), auto=storage.getItem(prefix+'auto');
-      if(auto!==null)all.unshift(prefix+'auto');
+      var all=keys(), auto=storage.getItem(autoKey);
+      if(auto!==null)all.unshift(autoKey);
       return all.map(function(k){
         var raw=storage.getItem(k), state=deserialize(raw);
-        return {key:k,date:k===prefix+'auto'?(state && state.idle.wallMs || null):Number(k.slice(prefix.length)),stage:state?state.vMax:null,coins:state?state.coins:null,restorable:!!state};
+        return {key:k,date:k===autoKey?(state && state.idle.wallMs || null):Number(k.slice(prefix.length)),stage:state?state.vMax:null,dimension:state?state.dimension:null,coins:state?state.coins:null,restorable:!!state};
       });
     }
     function restore(k, confirmed) {
-      if(confirmed!==true || (k!==prefix+'auto' && keys().indexOf(k)<0))return false;
+      if(confirmed!==true || (k!==autoKey && keys().indexOf(k)<0))return false;
       var raw=storage.getItem(k);
       if(raw===null || !deserialize(raw))return false;
       // Preserve the displaced save, including a forward save, before explicit restore.
-      backup(storage.getItem(key));
+      backup(storage.getItem(key),k);
       storage.setItem(key,raw);
       blocked=isNewerSave(raw);
       return true;
     }
-    return {load:load,write:write,backup:backup,rollingBackup:rollingBackup,list:list,restore:restore};
+    function suppressAuto() { noAuto=true; }
+    return {load:load,write:write,backup:backup,rollingBackup:rollingBackup,list:list,restore:restore,suppressAuto:suppressAuto};
   }
 
   function savedTimer(x, hi) {
@@ -2403,14 +2469,22 @@
       if (!o.tree || !o.stars || !o.bestiary || !o.board || !o.flights || !o.trophies || !o.invited || !o.endings) return null;
       if (!Array.isArray(o.board) || !Array.isArray(o.flights) || (o.v < 7 && (!Array.isArray(o.trophies) || !Array.isArray(o.invited))) || !Array.isArray(o.endings)) return null;
       var state = fresh(seed);
+      if(o.u19b){
+        var b=o.u19b;
+        if(!b.gates||typeof b.gates!=='object'||Array.isArray(b.gates)||typeof b.dealerOffer!=='boolean'||integer(b.dealerVisits,0,1000000)==null||typeof b.failedId!=='string'||b.failedId!==''&&COMBO_AUD_IDS.indexOf(b.failedId)<0)return null;
+        var gateIds=Object.keys(b.gates);
+        if(gateIds.length>COMBO_AUD_IDS.length||gateIds.some(function(id){var g=b.gates[id];return COMBO_AUD_IDS.indexOf(id)<0||!g||integer(g.prepared,0,1000000)==null||typeof g.cleared!=='boolean'||typeof g.studied!=='boolean';}))return null;
+        state.u19b=JSON.parse(JSON.stringify(b));
+      }
+      if(o.u19){if(!validU19(o.u19))return null;state.u19=JSON.parse(JSON.stringify(o.u19));}
       if(o.v>=12){
         if(!validU15(o.u15))return null;
-        state.u15=JSON.parse(JSON.stringify(o.u15));
+        state.u15=JSON.parse(JSON.stringify(o.u15));if(state.u15.deckOn===undefined)state.u15.deckOn=false;
       }else state.u15.tutorial.done=true;
       if (o.v >= 8) {
         var g = o.guidance;
-        if (!g || !Array.isArray(g.seen) || g.seen.length > 4 ||
-            g.seen.some(function (id) { return ["range", "helper", "chain", "case"].indexOf(id) < 0; }) || new Set(g.seen).size !== g.seen.length) return null;
+        if (!g || !Array.isArray(g.seen) || g.seen.length > 5 ||
+            g.seen.some(function (id) { return ["range", "helper", "chain", "case", "equipButton"].indexOf(id) < 0; }) || new Set(g.seen).size !== g.seen.length) return null;
         state.guidance = { seen: g.seen.slice() };
       }
       if (o.v >= 9) {
@@ -2436,7 +2510,6 @@
         if (sv == null) return null;
         state.stars[STAR_KEYS[i]] = sv;
       }
-      state.growth5x = o.growth5x === true;
       state.coins = coins;
       state.gems = gems;
       state.keys = keys;
@@ -2444,6 +2517,7 @@
         var key = TREE_KEYS[i];
         var max = key === "board" && o.v === 1 ? 7 : key === "area" && o.v < 5 ? 3 : NODE_BY_ID[key].max;
         var rawLevel = o.tree[key];
+        if(key==='deckMaster'&&rawLevel==null)rawLevel=0;
         if (o.v < 10 && NODE_BY_ID[key].u13 && rawLevel == null) rawLevel = 0;
         if (o.v < 9 && NODE_BY_ID[key].u12 && rawLevel == null) rawLevel = 0;
         if (o.v < 6 && NODE_BY_ID[key].u4a && rawLevel == null) rawLevel = 0;
@@ -2732,7 +2806,7 @@
         if (idle.reward!==null) { var r=idle.reward; if(!r||num(r.awayMs,60000,43200000)==null||num(r.coins,0,1e15)==null||integer(r.levels,0,1225)==null||typeof r.doubled!=='boolean'||(r.totalAwayMs!==undefined&&num(r.totalAwayMs,r.awayMs,1e16)==null))return null; }
         if (!skills || num(skills.showtimeLeft,0,20000)==null || typeof skills.cheerGuard!=='boolean' || !skills.cooldowns || DATA.skills.some(function(k){return num(skills.cooldowns[k.id],0,k.cooldown)==null;})) return null;
         state.idle=JSON.parse(JSON.stringify(idle)); state.idle.autoAdvance=false;
-        if(state.mode==='transition' && idle.autoAdvance && state.j===1)state.idle.waiting=true;
+        if(idle.next&&(integer(idle.next.v,1,VENUES.length)==null||integer(idle.next.j,1,headlinerJ(idle.next.v))==null))return null;
         state.skills=JSON.parse(JSON.stringify(skills));
       }
       if(o.v>=11){
@@ -2771,10 +2845,11 @@
   }
 
 
-  function emptyU15(){return {positions:CONST.slotOrder.slice(),gloves:0,gloveLeft:0,drops:{},seen:[],queue:[],scene:null,bios:[],tutorial:{done:false,active:false,won:false,baseline:null}};}
+  function emptyU15(){return {positions:CONST.slotOrder.slice(),gloves:0,gloveLeft:0,deckOn:false,drops:{},seen:[],queue:[],scene:null,bios:[],tutorial:{done:false,active:false,won:false,baseline:null}};}
   function validU15(u){
     if(!u||!Array.isArray(u.positions)||u.positions.length!==CONST.boardMax||new Set(u.positions).size!==CONST.boardMax||u.positions.some(function(n){return integer(n,0,CONST.boardMax-1)==null;}))return false;
-    if(integer(u.gloves,0,100000)==null||num(u.gloveLeft,0,60000)==null||!u.drops||Array.isArray(u.drops))return false;
+    if(integer(u.gloves,0,100000)==null||num(u.gloveLeft,0,120000)==null||!u.drops||Array.isArray(u.drops))return false;
+    if(u.deckOn!==undefined&&typeof u.deckOn!=='boolean')return false;
     if(Object.keys(u.drops).some(function(k){var d=u.drops[k];return !venueNumber(k)||!d||integer(d.boxes,0,1e9)==null||integer(d.count,0,3)==null;}))return false;
     function sceneOK(x){return x&&integer(x.dimension,1,999)!=null&&venueNumber(x.slug)&&['opening','beforeHeadliner','afterClear'].indexOf(x.kind)>=0;}
     if(!Array.isArray(u.seen)||u.seen.length>50000||new Set(u.seen).size!==u.seen.length||u.seen.some(function(k){if(typeof k!=='string')return true;var p=k.split(':');return p.length!==3||!sceneOK({dimension:Number(p[0]),slug:p[1],kind:p[2]});}))return false;
@@ -2810,6 +2885,12 @@
     var key=s.dimension+':'+s.slug+':'+s.kind;if(state.u15.seen.indexOf(key)<0)state.u15.seen.push(key);
     state.u15.scene=null;return true;
   }
+  function autoStage(state){return state.dimension>=2&&(state.u15.gloveLeft>0||!!state.tree.deckMaster&&!!state.u15.deckOn);}
+  function startStage(state){
+    if(!state.idle.waiting||state.u15.scene||state.u15.queue.length)return false;
+    state.idle.waiting=false;state.mode=state.dealerQueued?"dealer":"fight";
+    if(state.mode==="dealer")setupDealer(state);state.heckleMs=state.interval*1000;state.telegraphed=false;return true;
+  }
   function startTutorial(state){
     var t=state.u15.tutorial;if(t.done||t.active)return false;
     var baseline=serialize(state);t.active=true;t.baseline=baseline;t.phase="intro";t.line=0;
@@ -2819,7 +2900,6 @@
   function finishTutorial(state){
     var t=state.u15.tutorial;if(!t.active)return false;
     var main=deserialize(t.baseline);if(!main)return false;
-    main.growth5x = state.growth5x === true || main.growth5x === true;
     Object.keys(state).forEach(function(k){delete state[k];});Object.assign(state,main);
     state.u15.tutorial={done:true,active:false,won:false,baseline:null};
     state.onboarding={intro:true,panel:0,step:8,facts:[]};return true;
@@ -2828,9 +2908,10 @@
     if(state.u15.scene||state.mode!=='fight'||!Number.isInteger(from)||from<0||from>=state.board.length||!Number.isInteger(to)||to<0||to>=CONST.boardMax)return false;
     var slots=state.u15.positions,other=slots.indexOf(to),old=slots[from];slots[from]=to;slots[other]=old;delete state._layout;return true;
   }
+  function toggleDeck(state){if(!state.tree.deckMaster)return false;state.u15.deckOn=!state.u15.deckOn;return true;}
   function useGlove(state){
     if(state.mode!=='fight'||state.resolved||state.u15.scene||state.features.climax.left>0||state.u15.gloveLeft>0||state.u15.gloves<1)return false;
-    state.u15.gloves--;state.u15.gloveLeft=60000;state.holding=false;state.tapAcc=0;return true;
+    state.u15.gloves--;state.u15.gloveLeft=120000;state.holding=false;state.tapAcc=0;return true;
   }
 
 
@@ -2923,7 +3004,7 @@
     var ids=v.audiences.concat([v.headliner]).map(function(a){return a.id;});
     return {current:ids.filter(function(id){return state.u18.fans.indexOf(id)>=0;}).length,total:ids.length,complete:state.u18.sets.indexOf(slug)>=0};
   }
-  function travelAllowed(state){return !state.u15.tutorial.active&&!state.u15.scene&&state.mode==='fight'&&!state.resolved&&!state.features.climax.left&&!state.telegraphed&&!state.features.climax.mirrored.length&&state.review.target<0;}
+  function travelAllowed(state){return profile(state)!=='future'&& !state.u15.tutorial.active&&!state.u15.scene&&state.mode==='fight'&&!state.resolved&&!state.features.climax.left&&!state.telegraphed&&!state.features.climax.mirrored.length&&state.review.target<0;}
   function openMap(state){
     if(state.u18.map)return true;if(!travelAllowed(state))return false;
     if(!state.u18.anchor)state.u18.anchor=serialize(state);
@@ -2999,7 +3080,28 @@
     return true;
   }
 
-  globalThis.Core = {
+  function strongestCase(state){var best=0;state.board.forEach(function(c,i){if(c.lv>state.board[best].lv)best=i;});return best;}
+  function futurePower(state){
+    var rarity=CONST.rarityW.reduce(function(sum,w,i){return sum+w*CONST.rarityMult[i];},0)/CONST.rarityW.reduce(function(a,b){return a+b;},0);
+    var t=state.tree,mods=nodeEffects(state),rate=wandRate(state),area=wandArea(state),coverage=Math.min(state.board.length,area.cols*area.rows)/Math.max(1,state.board.length);
+    var hitRate=rate*coverage+(t.boxHelper?fanCount(state)*.35/(mods.helperEvery/1000):0)/Math.max(1,state.board.length)+(t.assistant?.8/1.2:0)/Math.max(1,state.board.length);
+    var damage=state.board.reduce(function(sum,c){var lv=c.lv||1,hp=state._boxHp*Math.pow(1.12,lv-1),opens=1/(hp/Math.max(1,wandDamage(state)*hitRate)+state._tau/1000);return sum+opens*(CONST.itemDamage*(state._V||1)*rarity*.56*caseItems(lv)*Math.pow(1.1,lv-1)*milestoneMultiplier(lv,[10,25,50])*branchBonus(state,'box')+CONST.finisherDmg*(state._V||1)*mods.finalePower/mods.finaleNeed);},0);
+    return Math.max(1,damage);
+  }
+  function beginFuture(state,prepare){if(!state.homecomingCleared||state.u19.cleared||state.u15.tutorial.active||state.u18.anchor)return false;state.u15.queue=[];state.u15.scene=null;state.dealer=null;state.dealerQueued=false;beginAudience(state,venueNumber('future'),1,null);state.mental=state.mentalMax;if(prepare){state.idle.waiting=true;state.mode='transition';state.transMs=0;state.after='fight';}return true;}
+  function tickFuture(state,dt,ev){
+    if(profile(state)!=='future')return;var u=state.u19;
+    if(u.telegraph>0){u.telegraph=Math.max(0,u.telegraph-dt);return;}
+    var epsilon=state.audHpMax*1e-12;
+    var phase=state.audHp<=state.audHpMax*.3+epsilon?3:state.audHp<=state.audHpMax*.65+epsilon?2:1;
+    if(phase>u.phase){u.phase=phase;u.telegraph=3000;u.target=strongestCase(state);u.hitMs=0;if(phase===3)u.window=20000;emit(ev,{type:'futurePhase',phase:phase});return;}
+    if(u.phase===2){u.hitMs+=dt;if(u.hitMs>2500){state.combo=0;state.comboMs=0;}}
+    if(u.phase===3)u.window=Math.max(0,u.window-dt);
+  }
+  function routineLearn(state,node){var level=nodeLevel(state,node);if([1,5,10].indexOf(level)<0)return;DATA.routines.forEach(function(r){if(r.nodes.indexOf(node.id)<0&&r.branch!==node.branch)return;if(state.u19.routines.indexOf(r.id)<0)state.u19.routines.push(r.id);if(state.u19.pending.indexOf(r.id)<0)state.u19.pending.push(r.id);});}
+  function routineSkill(state,id,ev){if(state.u19.cooldown>0)return;var r=DATA.routines.find(function(r){return r.skill===id&&state.u19.routines.indexOf(r.id)>=0;});if(r){state.u19.cooldown=20000;emit(ev,{type:'routine',id:r.id});}}
+  function validU19(u){return u&&typeof u.cleared==='boolean'&&integer(u.phase,1,3)!=null&&['telegraph','window','hitMs','damage','power','lastDps','lastPower','cooldown','target'].every(function(k){return num(u[k],0,1e100)!=null;})&&integer(u.target,0,24)!=null&&u.telegraph<=3000&&u.window<=20000&&['routines','pending'].every(function(k){return Array.isArray(u[k])&&u[k].length<=8&&new Set(u[k]).size===u[k].length&&u[k].every(function(id){return DATA.routines.some(function(r){return r.id===id;});});});}
+  globalThis.Core = {beginFuture:beginFuture,strongestCase:strongestCase,
     openMap:openMap,travelTo:travelTo,returnToStage:returnToStage,travelAllowed:travelAllowed,trueFanRule:trueFanRule,trueFanReward:trueFanReward,trueFanProgress:trueFanProgress,cosmeticInfo:cosmeticInfo,buyCosmetic:buyCosmetic,equipCosmetic:equipCosmetic,
     dealerGameStart:dealerGameStart,dealerCupsReady:dealerCupsReady,dealerCupsPick:dealerCupsPick,dealerMonteGuess:dealerMonteGuess,dealerMonteBank:dealerMonteBank,gemShopBuy:gemShopBuy,gemShopInfo:gemShopInfo,
     startTutorial:startTutorial,finishTutorial:finishTutorial,moveCase:moveCase,useGlove:useGlove,queueScene:queueScene,startScene:startScene,advanceScene:advanceScene,
@@ -3031,9 +3133,9 @@
     dealerSlotSpin: dealerSlotSpin,
     dealerForce: dealerForce,
     forceCost: forceCost,
-    dealerClose: dealerClose,
+    createSaveStore: createSaveStore, isNewerSave: isNewerSave,
+    toggleDeck:toggleDeck, heckleStrength:heckleStrength, autoStage:autoStage,startStage:startStage, dealerClose: dealerClose, failureLessons:failureLessons, failureLessonInfo:failureLessonInfo, learnFailureLesson:learnFailureLesson, gatePressure:gatePressure, failureDealerAvailable:failureDealerAvailable, openFailureDealer:openFailureDealer,
     rebirth: rebirth,
-    createSaveStore: createSaveStore, isNewerSave: isNewerSave, grantGrowthGift: grantGrowthGift, growthMultiplier: growthMultiplier,
     serialize: serialize,
     deserialize: deserialize,
     starCost: starCost,

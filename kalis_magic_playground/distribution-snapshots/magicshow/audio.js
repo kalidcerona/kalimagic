@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   const KEY = 'magicShowBuster.v3.sound';
-  let gestured = false;
+  let gestured = false, needsGesture = true;
   let context, master, muted = false, lastTap = -Infinity;
   const MUSIC_KEY='magicShowBuster.v3.music';
   let musicOn=true,musicVolume=.35,musicBus,musicTimer=null,musicStep=0,musicNext=0,musicScene={group:'cozy',tense:false,fever:false},musicSignature='',noiseBuffer;
@@ -12,14 +12,17 @@
   try { muted = localStorage.getItem(KEY) === 'off'; } catch (error) { /* Storage is optional. */ }
   function unlock() {
     gestured = true;
+    if(context&&context.state==='running'&&!needsGesture){startMusic();return;}
+    needsGesture=false;
     try {
       const Audio = globalThis.AudioContext || globalThis.webkitAudioContext;
       if (!Audio) return;
       if (!context) {
-        context = new Audio(); master = context.createGain();
+        context = new Audio();
+        context.onstatechange=()=>{if(context.state!=='running'){needsGesture=true;stopMusic();}else startMusic();}; master = context.createGain();
         master.gain.value = muted ? 0 : .16; master.connect(context.destination);
       }
-      if (context.state !== 'running') context.resume().then(() => {if(context.state==='running')startMusic();}).catch(() => {});
+      if ((context.state === 'suspended' || context.state === 'interrupted')) context.resume().then(startMusic).catch(() => {});
       if(musicOn && !document.hidden && !musicTimer) startMusic();
     } catch (error) { /* Unsupported audio must never interrupt the game. */ }
   }
@@ -81,7 +84,7 @@
     if(['cafe','meetup','theater','festival'].includes(slug))return 'bright';
     if(['audition','broadcast','vegas','broadway'].includes(slug))return 'showy';
     if(['moon','sun','galaxy'].includes(slug))return 'spacey';
-    return slug==='lecturenote'?'homecoming':'mysterious';
+    return ['lecturenote','future'].includes(slug)?'homecoming':'mysterious';
   }
   function scoreStep(step,scene){
     const scales={cozy:[0,2,4,7,9],bright:[0,2,4,5,7,9,11],showy:[0,4,5,7,9,11],spacey:[0,2,5,7,10],mysterious:[0,1,3,6,7,10],homecoming:[0,2,4,7,9]};
@@ -137,14 +140,11 @@
   }
   function toggleMusic(){musicOn=!musicOn;saveMusic();if(musicOn){unlock();startMusic();}else stopMusic();return musicOn;}
   function setMusicVolume(value){if(!Number.isFinite(Number(value)))return;musicVolume=Math.max(0,Math.min(1,Number(value)));saveMusic();if(musicBus)musicBus.gain.setTargetAtTime(musicVolume*.22,context.currentTime,.02);}
-  document.addEventListener('pointerdown', unlock, { capture: true, passive: true });
-  document.addEventListener('pointerup', unlock, { capture: true, passive: true });
-  document.addEventListener('touchend', unlock, { capture: true, passive: true });
-  document.addEventListener('click', unlock, { capture: true, passive: true });
-  document.addEventListener('keydown', unlock, { capture: true, passive: true });
-  document.addEventListener('visibilitychange', () => {
+  for(const event of ['pointerdown','pointerup','touchend','click','keydown'])document.addEventListener(event,unlock,{capture:true,passive:true});
+  document.addEventListener('visibilitychange',()=>{
+    needsGesture=true;
     if(document.hidden){stopMusic();if(context&&context.suspend)context.suspend().catch(()=>{});}
-    else if(gestured){unlock();if(context&&context.state==='running')startMusic();}
   });
+  globalThis.addEventListener?.('pageshow',()=>{needsGesture=true;stopMusic();});
   globalThis.Sfx = { play, unlock, toggle, isMuted: () => muted, toggleMusic,setMusicVolume,setMusicScene,musicGroup,scoreStep,musicEnabled:()=>musicOn,musicVolume:()=>musicVolume,musicStatus:()=>({scheduled:musicTimer!==null,voices:musicVoices.size,step:musicStep}) };
 })();

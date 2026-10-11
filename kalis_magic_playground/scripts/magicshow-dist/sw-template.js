@@ -12,12 +12,15 @@ const SHELL = [
   "./icon-512.png"
 ];
 const SHELL_NAMES = new Set(SHELL.map((file) => file.replace(/^\.\//, '')));
+// Install precaches only what the app cannot run without (pages, scripts, styles, manifest, icons, fonts).
+// Images under assets/ stay in SHELL for routing and are cached on first use, so one failed image cannot block an update.
+const CRITICAL = SHELL.filter((file) => !/^\.\/assets\//.test(file) && (/\.(?:html|m?js|css|webmanifest|woff2?|ttf|otf)$/.test(file) || /^\.\/(?:[^/]*icon[^/]*|favicon[^/]*)\.(?:svg|png)$/.test(file)));
 const GUARDED = new URL(self.registration.scope).pathname.startsWith('/tools/');
 
 self.addEventListener('install', (event) => {
-  // Reject installation unless the whole critical shell is stored.
+  // Reject installation unless the whole critical shell is stored (images are cached lazily).
   // Once the new shell is fully stored, take over immediately; the page reloads once on controllerchange.
-  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(SHELL.map((file) => new Request(new URL(file, self.registration.scope).href, { cache: 'reload', redirect: 'error' })))).then(() => self.skipWaiting()));
+  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(CRITICAL.map((file) => new Request(new URL(file, self.registration.scope).href, { cache: 'reload', redirect: 'error' })))).then(() => self.skipWaiting()));
 });
 self.addEventListener('activate', (event) => {
   // Only this game's distribution owns the cache prefix.

@@ -24,12 +24,15 @@ function replaceOnce(source, anchor, addition) {
 for (const file of ['index.html', 'style.css', 'data.js', 'core.js', 'audio.js', 'ui.js']) {
   files.set(file, await readRegular(SOURCE, file));
 }
-for (const directory of ['assets', 'fonts']) {
+async function collect(directory) {
+  // Recursive, sorted; the allowlist decides per directory and per file (assets/ui is the only nested folder).
   for (const entry of (await readdir(path.join(SOURCE, directory), { withFileTypes: true })).sort((a, b) => a.name.localeCompare(b.name, 'en'))) {
     const file = `${directory}/${entry.name}`;
     if (entry.isFile() && shouldCopyMagicshow(file)) files.set(file, await readRegular(SOURCE, file));
+    else if (entry.isDirectory() && shouldCopyMagicshow(file)) await collect(file);
   }
 }
+for (const directory of ['assets', 'fonts']) await collect(directory);
 for (const file of ['install-prompt.js', 'install-prompt.css']) files.set(file, await readRegular(ADDITIONS, file));
 for (const size of [192, 512]) files.set(`icon-${size}.png`, await readRegular(ADDITIONS, `icon-${size}.png`));
 for (const file of ['apple-touch-icon.png', 'favicon-32.png', 'og-image.png']) files.set(file, await readRegular(ADDITIONS, file));
