@@ -1563,6 +1563,7 @@
       return;
     }
     state.fightMs += dt;
+    tickAutoLearn(state,dt,ev);
     tickBoss(state,dt,ev);
     tickFeatures(state, dt, ev);
     tickSpawn(state, dt, ev);
@@ -1677,6 +1678,69 @@
   }
   function buyMany(state, id) { var n=0; while(n<10000 && buyNode(state,id)) n++; return n; }
 
+  // U12 bulk purchases always re-evaluate visibility, gates and wallets.
+  function affordableNodes(state, options) {
+    options = options || {};
+    return DATA.tree.filter(function (n) {
+      if (n.currency !== "coins" || n.starKey || n.pending || (n.infinite && !options.infinite)) return false;
+      var i = nodeInfo(state,n.id);
+      return i.revealed && i.purchasable && Number.isFinite(i.cost) && i.cost > 0;
+    }).sort(function (a,b) {
+      var pin = state.guidance && state.guidance.pin;
+      return (a.id === pin ? -1 : b.id === pin ? 1 : 0) || nodeInfo(state,a.id).cost-nodeInfo(state,b.id).cost || a.id.localeCompare(b.id);
+    });
+  }
+  function buyAll(state, options) {
+    var count = 0, ids = [], choice;
+    while (count < 10000 && (choice = affordableNodes(state,options)[0])) {
+      if (!buyNode(state,choice.id)) break;
+      count++; ids.push(choice.id);
+    }
+    return {count:count,ids:ids};
+  }
+  function buyAmount(state,id,amount) {
+    var count = 0, limit = amount === "max" ? 10000 : amount === 10 ? 10 : 1;
+    while (count < limit && buyNode(state,id)) count++;
+    return count;
+  }
+  function tickAutoLearn(state,dt,ev) {
+    if (!state.learning.on || !state.tree.autoLearn) return;
+    state.learning.ms += dt;
+    if (state.learning.ms >= 3000) {
+      state.learning.ms %= 3000;
+      var result = buyAll(state,{infinite:state.learning.infinite});
+      if (result.count) emit(ev,{type:"learnAll",count:result.count});
+    }
+  }
+  // Pure per-pointer clocks. Moving and adding another finger never reset a clock.
+  function holdPointers(list,action) {
+    var next = list.map(function (p) { return Object.assign({},p); });
+    var i = next.findIndex(function (p) { return p.id === action.id; });
+    if (action.type === "clear") return [];
+    if (action.type === "up") return next.filter(function (p) { return p.id !== action.id; });
+    if (action.type === "down" && i < 0 && next.length < 3) next.push({id:action.id,x:action.x,y:action.y,left:0});
+    if (action.type === "move" && i >= 0) { next[i].x=action.x; next[i].y=action.y; }
+    return next;
+  }
+  function advanceHolds(list,dt,rate) {
+    var pulses = [], period = 1000 / Math.max(0.01,rate);
+    var holds = list.slice(0,3).map(function (p) {
+      var q = Object.assign({},p); q.left -= Math.max(0,dt);
+      while (q.left <= 0) { pulses.push({id:q.id,x:q.x,y:q.y}); q.left += period; }
+      return q;
+    });
+    return {holds:holds,pulses:pulses};
+  }
+  var TUTORIAL_ACTIONS = ["hold","badge","doubt","heckle","learn","buyAll","goal","win"];
+  function tutorialAction(state,action) {
+    var t = state.onboarding;
+    if (TUTORIAL_ACTIONS.indexOf(action)<0 || t.step>=8) return false;
+    if (t.facts.indexOf(action)<0) t.facts.push(action);
+    var before=t.step;
+    while (t.step<8 && t.facts.indexOf(TUTORIAL_ACTIONS[t.step])>=0) t.step++;
+    return before!==t.step;
+  }
+
   function starCost(state, id) {
     if (STAR_KEYS.indexOf(id) < 0) return null;
     var lv = state.stars[id] | 0;
@@ -1742,6 +1806,8 @@
       endings: [],
       seenEnding: false,
       guidance: { pin: null, seen: [] },
+      onboarding: { intro: false, panel: 0, step: 0, facts: [] },
+      learning: { on: false, infinite: false, ms: 0 },
       homecomingCleared: false, visited: [], knownAudiences: [], helpersUsed: [], review: emptyReview(),
       coins: 0,
       gems: 0,
@@ -1866,7 +1932,8 @@
     var stars = {};
     for (i = 0; i < STAR_KEYS.length; i++) stars[STAR_KEYS[i]] = state.stars[STAR_KEYS[i]] | 0;
     var obj = {
-      v: 8,
+      v: 9,
+      onboarding: state.onboarding, learning: state.learning,
       guidance: state.guidance,
       venueSlug: VENUES[state.venue-1].slug, maxVenueSlug:VENUES[state.vMax-1].slug,
       homecomingCleared:state.homecomingCleared, visited:state.visited.slice(), knownAudiences:state.knownAudiences.slice(), helpersUsed:state.helpersUsed.slice(), review:JSON.parse(JSON.stringify(state.review)),
@@ -1965,7 +2032,7 @@
       if (typeof str !== "string" || str.length > 2000000) return null;
       var o = JSON.parse(str);
       if (!o || typeof o !== "object" || Array.isArray(o)) return null;
-      if (o.v !== 1 && o.v !== 2 && o.v !== 3 && o.v !== 4 && o.v !== 5 && o.v !== 6 && o.v !== 7 && o.v !== 8) return null;
+      if (o.v !== 1 && o.v !== 2 && o.v !== 3 && o.v !== 4 && o.v !== 5 && o.v !== 6 && o.v !== 7 && o.v !== 8 && o.v !== 9) return null;
       if (o.v === 7 && o.venueSlug === "lecturenote") {
         // Preserve the old index contract, then migrate by stable audience ID.
         var previousOrder = ["a-lecturenote-hecate", "a-lecturenote-jung", "h-lecturenote-kim"];
@@ -2033,6 +2100,13 @@
             g.seen.some(function (id) { return ["range", "helper", "chain", "case"].indexOf(id) < 0; }) || new Set(g.seen).size !== g.seen.length) return null;
         state.guidance = { pin: g.pin, seen: g.seen.slice() };
       }
+      if (o.v >= 9) {
+        var intro = o.onboarding, learning = o.learning;
+        if (!intro || typeof intro.intro !== "boolean" || integer(intro.panel,0,4)==null || integer(intro.step,0,8)==null || !Array.isArray(intro.facts) || intro.facts.length>8 || new Set(intro.facts).size!==intro.facts.length || intro.facts.some(function (id) { return TUTORIAL_ACTIONS.indexOf(id)<0; })) return null;
+        if (!learning || typeof learning.on!=="boolean" || typeof learning.infinite!=="boolean" || num(learning.ms,0,3000)==null) return null;
+        state.onboarding = {intro:intro.intro,panel:intro.panel,step:intro.step,facts:intro.facts.slice()};
+        state.learning = {on:learning.on,infinite:learning.infinite,ms:learning.ms};
+      } else state.onboarding = {intro:true,panel:0,step:8,facts:[]};
       state.rngState = rngState >>> 0;
       state.dimension = dimension;
       state.starlight = starlight;
@@ -2056,6 +2130,7 @@
         var key = TREE_KEYS[i];
         var max = key === "board" && o.v === 1 ? 7 : key === "area" && o.v < 5 ? 3 : NODE_BY_ID[key].max;
         var rawLevel = o.tree[key];
+        if (o.v < 9 && NODE_BY_ID[key].u12 && rawLevel == null) rawLevel = 0;
         if (o.v < 6 && NODE_BY_ID[key].u4a && rawLevel == null) rawLevel = 0;
         if (NODE_BY_ID[key].u4b && rawLevel == null && !(o.features && o.features.magic)) rawLevel = 0;
         if (o.v < 5 && (key === "assistant" || key.indexOf("p-") === 0) && rawLevel == null) rawLevel = 0;
@@ -2359,6 +2434,8 @@
     cellPosition: cellPosition,
     caseCap: caseCap, caseNeed: caseNeed, caseTier: caseTier, caseItems: caseItems, gateProgress: gateProgress, buyMany: buyMany,
     buyNode: buyNode,
+    buyAll: buyAll, affordableNodes: affordableNodes, buyAmount: buyAmount,
+    holdPointers: holdPointers, advanceHolds: advanceHolds, tutorialAction: tutorialAction,
     nodeInfo: nodeInfo,
     nodeEffects: nodeEffects,
     nodeCost: nodeCost,

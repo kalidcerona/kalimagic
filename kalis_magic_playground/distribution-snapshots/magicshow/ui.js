@@ -59,7 +59,7 @@ globalThis.PhoneLayout = (() => {
     const left = safe.left || 0, right = safe.right || 0, top = safe.top || 0, bottom = safe.bottom || 0;
     const w = width - left - right, h = height - top - bottom;
     const phone = Math.min(width, height) <= 500 || (coarse && Math.min(width / 1600, height / 900) < .6);
-    const board = Math.max(0, Math.min(h - 82, w - 240));
+    const board = Math.max(0, Math.min(h - 94, w - 240));
     return { phone, width: w, height: h, board, audience: w - board - 18 };
   }
   function transform(rect, size = 608) {
@@ -167,6 +167,8 @@ globalThis.Guidance = (() => {
   let dialogueTimer, dealerBusy = false, dealerMessage = '', dealerLost = false, dealerResult = '';
   let dealerPicked = new Set();
   let saveWarning = false, failure = null, lastMode = '', tapRemaining = 0, shakeUntil = 0;
+  let boardHolds = [];
+  let buyMode = 1;
   const pointer = { id: null, held: false, x: -1, y: -1, inside: false };
   const particles = [], flights = [], numbers = [], cells = [];
   let badges = [], wonMoment = null;
@@ -210,7 +212,7 @@ globalThis.Guidance = (() => {
   const rounded = v => Math.max(0, Math.round(v));
   const randomLine = list => list[Math.floor(Math.random() * list.length)];
   const portrait = () => innerHeight > innerWidth;
-  const paused = () => document.hidden || !!menu || portrait() || !!stageRewardHost || (phone && !$('phoneMore').hidden);
+  const paused = () => !state.onboarding.intro || document.hidden || !!menu || portrait() || !!stageRewardHost || (phone && !$('phoneMore').hidden);
   function fit() {
     const vv = window.visualViewport;
     const width = vv ? vv.width : innerWidth, height = vv ? vv.height : innerHeight;
@@ -459,6 +461,11 @@ globalThis.Guidance = (() => {
       }
     }
     for (const e of list) {
+      if (typeof tutorialSignal === 'function') {
+        const signal={boxBreak:'badge',audHit:'doubt',heckle:'heckle',win:'win'}[e.type];
+        if (signal) tutorialSignal(signal);
+        if (e.type==='learnAll') { tutorialSignal('learn'); tutorialSignal('buyAll'); toast(`비법 ${e.count}개 배움`); sound('coin'); const p=target('coins'); burst(p.x,p.y,'#ffe65c'); save(); }
+      }
       if (e.type === 'stageReward') {
         sound('milestone'); showStageReward(e.reward);
       }
@@ -768,16 +775,16 @@ globalThis.Guidance = (() => {
     $('dealerButton').title = $('dealerButton').disabled ? '관객을 감탄시키면 토끼 딜러가 찾아와요' : '대기 중인 토끼 딜러 만나기';
     updateWand(); modeHooks();
   }
-  function wandRect() {
+  function wandRect(point = pointer) {
     const a = C.wandArea(state), k = C.CONST;
     const pitch = k.cellSize + k.cellGap;
     const width = a.cols * pitch - k.cellGap, height = a.rows * pitch - k.cellGap;
-    return { x: Math.max(0, Math.min(k.boardSize - width, pointer.x - width / 2)),
-      y: Math.max(0, Math.min(k.boardSize - height, pointer.y - height / 2)), width, height };
+    return { x: Math.max(0, Math.min(k.boardSize - width, point.x - width / 2)),
+      y: Math.max(0, Math.min(k.boardSize - height, point.y - height / 2)), width, height };
   }
-  function coveredCells() {
-    if (!pointer.inside) return [];
-    const r = wandRect(), l = C.boardLayout(state), k = C.CONST;
+  function coveredCells(point = pointer) {
+    if (point.x < 0 || point.y < 0 || point.x > C.CONST.boardSize || point.y > C.CONST.boardSize || point.inside === false) return [];
+    const r = wandRect(point), l = C.boardLayout(state), k = C.CONST;
     const pitch = k.cellSize + k.cellGap, found = [];
     for (let i = 0; i < l.capacity; i++) {
       const p = C.cellPosition(state, i);
@@ -800,59 +807,56 @@ globalThis.Guidance = (() => {
     pointer.inside = p.x >= 0 && p.x <= C.CONST.boardSize && p.y >= 0 && p.y <= C.CONST.boardSize;
     updateWand();
   }
-  function pulse() {
-    // Core grants the first hit on a new nonempty input. Explicit release between
-    // scheduled pulses avoids its empty-target reset accelerating a held drag.
+  function pulse(point = pointer) {
     events(C.step(state, .001, { taps: [] }));
     if (paused() || state.mode !== 'fight') return;
-    const taps = coveredCells();
+    const taps = coveredCells(point);
     if (taps.length) { sound('tap'); events(C.step(state, .001, { taps })); }
   }
+  function syncPointer() {
+    const p = boardHolds[0]; pointer.held = !!p; pointer.id = p ? p.id : null;
+    if (p) { pointer.x=p.x; pointer.y=p.y; pointer.inside=p.x>=0&&p.y>=0&&p.x<=608&&p.y<=608; }
+    updateWand();
+  }
   function release() {
-    const id = pointer.id, wasHeld = pointer.held;
-    pointer.held = false; pointer.id = null; tapRemaining = 0;
-    if (id !== null && $('board').hasPointerCapture(id)) $('board').releasePointerCapture(id);
-    // Reset Core's own hold accumulator through its API, never on pointermove.
-    if (wasHeld && !document.hidden && !menu && !portrait()) events(C.step(state, .001, { taps: [] }));
+    const old = boardHolds; boardHolds = []; syncPointer();
+    for (const p of old) if ($('board').hasPointerCapture(p.id)) $('board').releasePointerCapture(p.id);
+    if (old.length && !document.hidden && !menu && !portrait()) events(C.step(state,.001,{taps:[]}));
   }
   $('board').addEventListener('pointerdown', e => {
-    if (paused() || state.mode !== 'fight' || (e.pointerType === 'mouse' && e.button !== 0) || pointer.id !== null) return;
-    e.preventDefault(); locate(e);
-    if (!pointer.inside) return;
-    if (state.board.length < C.CONST.boardMax) {
-      const p = C.cellPosition(state, state.board.length), k = C.CONST, pitch = k.cellSize + k.cellGap;
-      const x = k.boardInset + p.col * pitch, y = k.boardInset + p.row * pitch;
-      if (pointer.x >= x && pointer.x <= x + k.cellSize && pointer.y >= y && pointer.y <= y + k.cellSize) return;
-    }
-    pointer.id = e.pointerId; pointer.held = true;
-    $('board').setPointerCapture(e.pointerId);
-    // A physical press hits now. Subsequent pulses use only elapsed simulation
-    // time and Core.wandRate, even when the pointer crosses a gap or leaves.
-    pulse(); tapRemaining = 1000 / C.wandRate(state); render();
+    if (paused() || state.mode !== 'fight' || (e.pointerType === 'mouse' && e.button !== 0) || boardHolds.length >= 3) return;
+    e.preventDefault(); const p = boardTransform().toBoard(e.clientX,e.clientY);
+    if (p.x<0||p.y<0||p.x>608||p.y>608) return;
+    boardHolds = C.holdPointers(boardHolds,{type:'down',id:e.pointerId,...p});
+    $('board').setPointerCapture(e.pointerId); syncPointer();
+    const initial = C.advanceHolds(boardHolds,0,C.wandRate(state)); boardHolds=initial.holds;
+    for (const point of initial.pulses) pulse(point);
+    tutorialSignal('hold'); render();
     window.dispatchEvent(new CustomEvent('magicshow:gesture'));
   });
   $('board').addEventListener('pointermove', e => {
-    if (pointer.id !== null && e.pointerId !== pointer.id) return;
-    if (e.pointerType === 'mouse' || pointer.held) locate(e);
+    if (boardHolds.some(p=>p.id===e.pointerId)) {
+      const p=boardTransform().toBoard(e.clientX,e.clientY);
+      boardHolds=C.holdPointers(boardHolds,{type:'move',id:e.pointerId,...p}); syncPointer();
+    } else if (e.pointerType==='mouse' && !boardHolds.length) locate(e);
   });
   $('board').addEventListener('pointerleave', () => {
-    if (!pointer.held) { pointer.inside = false; updateWand(); }
+    if (!pointer.held) { pointer.inside=false; updateWand(); }
   });
-  for (const name of ['pointerup','pointercancel','lostpointercapture']) $('board').addEventListener(name, e => {
-    if (pointer.id !== e.pointerId) return;
-    release();
-    if (e.pointerType !== 'mouse') { pointer.inside = false; updateWand(); }
+  for (const name of ['pointerup','pointercancel','lostpointercapture']) $('board').addEventListener(name,e=> {
+    boardHolds=C.holdPointers(boardHolds,{type:'up',id:e.pointerId}); syncPointer();
+    if (!boardHolds.length && e.pointerType!=='mouse') { pointer.inside=false; updateWand(); }
   });
   window.addEventListener('blur', release);
   document.addEventListener('contextmenu', e => e.preventDefault());
   document.addEventListener('dragstart', e => e.preventDefault());
 
   function openPanel(kind, title) {
-    release(); menu = kind; previous = 0;
+    menu = kind; previous = 0;
     focusBeforePanel = document.activeElement;
     $('panel').dataset.screen = kind;
     $('panel').classList.remove('climax-dialogue');
-    $('panel').querySelector('header').querySelectorAll('.tree-wallet,.constellation-controls').forEach(el=>el.remove());
+    $('panel').querySelector('header').querySelectorAll('.tree-wallet,.constellation-controls,.tree-learning').forEach(el=>el.remove());
     $('closePanel').textContent = '닫기';
     $('panelTitle').textContent = title;
     $('panelBody').replaceChildren(); $('panelBody').scrollTop = 0; $('panel').hidden = false;
@@ -890,6 +894,78 @@ globalThis.Guidance = (() => {
     const related = action(`${advice.node.name} 비법 보기`, () => focusNode(advice.node.id));
     result.append(icon, title, reason, element('p',advice.line,'fail-cause'), related, button); $('panelBody').append(result); button.focus();
   }
+  function tutorialSignal(id) {
+    if (C.tutorialAction(state,id)) { save(); renderCoach(); }
+  }
+  function updateLearningBadge() {
+    if (updateLearningBadge.at && clock-updateLearningBadge.at<250) return;
+    updateLearningBadge.at=clock;
+    const count=C.affordableNodes(state,{infinite:state.learning.infinite}).length;
+    $('bookButton').dataset.affordable=String(count);
+    $('bookButton').setAttribute('aria-label',`비법서 · 지금 배울 수 있는 비법 ${count}개`);
+    $('buyAllButton').disabled=!count;
+  }
+  function buyAllUI() {
+    if (!state.onboarding.intro || ['fail','dealer','headliner','ending','rebirth','bossPhase'].includes(menu)) return;
+    tutorialSignal('buyAll');
+    const result=C.buyAll(state,{infinite:state.learning.infinite});
+    if (result.count) {
+      tutorialSignal('learn'); sound('coin'); toast(`비법 ${result.count}개 배움`);
+      const p=target('coins'); burst(p.x,p.y,'#ffe65c');
+      animate($('bookButton'),[{filter:'brightness(1)'},{filter:'brightness(2)'},{filter:'brightness(1)'}],350);
+      save(); if (menu==='book') tree(); render();
+    } else toast('지금 배울 수 있는 비법이 없어요');
+    updateLearningBadge.at=0; updateLearningBadge();
+  }
+  function startIntro(replay = true) {
+    if (replay) { state.onboarding={intro:false,panel:0,step:0,facts:[]}; closePanel(); }
+    release(); $('phoneMore').hidden=true; $('moreButton').setAttribute('aria-expanded','false');
+    const host=$('introStory'); host.hidden=false; host.replaceChildren();
+    const panel=D.onboarding.intro[state.onboarding.panel];
+    const art={living:'venue-01-family.png',cards:'venue-01-family.png',cosmos:'venue-13-multiverse.png',shop:'venue-16-lecturenote.png'}[panel.art];
+    const backdrop=element('img','','intro-backdrop'); backdrop.src=`assets/${art}`; backdrop.alt='';
+    const kali=element('div','','intro-kali'); kali.dataset.frame=String(state.onboarding.panel===4?2:state.onboarding.panel===2?1:0);
+    const dad=element('img','','intro-dad'); dad.src='assets/aud-a1.png'; dad.alt=''; dad.hidden=panel.art!=='living';
+    const advance=()=> {
+      if (state.onboarding.panel<D.onboarding.intro.length-1) { state.onboarding.panel++; save(); startIntro(false); }
+      else finish();
+    };
+    const finish=()=> { state.onboarding.intro=true; host.hidden=true; previous=0; save(); renderCoach(); };
+    const next=action(`${state.onboarding.panel+1} / ${D.onboarding.intro.length} · ${state.onboarding.panel===4?D.onboarding.start:'눌러서 다음'}`,advance);
+    next.classList.add('intro-next');
+    const line=element('p',panel.line,'intro-line');
+    const skip=action(D.onboarding.skip,finish); skip.classList.add('intro-skip');
+    host.append(backdrop,kali,dad,line,next,skip);
+    host.onclick=e=>{ if (!e.target.closest('button')) advance(); };
+    save();
+  }
+  function renderCoach() {
+    const host=$('tutorialCoach'), t=state.onboarding;
+    const ids=['#board .cell:not(.locked)','#board .cell:not(.locked)','#doubtFill','#mental','#bookButton','#buyAllButton','#goalStrip','#doubtFill'];
+    const targets=menu==='book' ? ['','','','','.tree-buy','#treeBuyAll','',''] : ids;
+    const eligible=t.intro && t.step<8 && !document.hidden && !portrait() && (!menu || menu==='book');
+    const node=eligible && targets[t.step] ? document.querySelector(targets[t.step]) : null;
+    host.hidden=!node;
+    if (renderCoach.target!==node) {
+      renderCoach.target?.classList.remove('tutorial-target');
+      node?.classList.add('tutorial-target'); renderCoach.target=node;
+    }
+    if (host.hidden) return;
+    const key=String(t.step);
+    if (host.dataset.step!==key) {
+      host.dataset.step=key; host.replaceChildren();
+      const copy=D.onboarding.tutorial[t.step];
+      host.append(element('strong',`${t.step+1} / 8 · ${copy.title}`),element('p',copy.body));
+      const skip=action('안내 닫기',()=>{t.step=8; save(); renderCoach();}); host.append(skip);
+    }
+    // The coach occupies the audience side, never a case that needs pressing.
+    const audience=$('audienceCard'), r=audience.getBoundingClientRect(), stage=$('stage').getBoundingClientRect();
+    const width=phone?Math.min(250,r.width-16):340;
+    host.style.width=`${width}px`;
+    host.style.left=menu==='book'?'8px':`${(r.left-stage.left)/scale+8}px`;
+    host.style.bottom=menu==='book'?'8px':phone?'32px':'54px';
+  }
+
   const treeView = { x: 0, y: 0, zoom: 1, selected: 'root', sheet: false, centerPending: false, lastTap: null, revealed: new Set(), ready: false };
   function treePreview(node) {
     const lv = C.nodeInfo(state, node.id).level;
@@ -962,6 +1038,14 @@ globalThis.Guidance = (() => {
   function tree(focusMap = false) {
     if (menu !== 'book') openPanel('book', D.ui.bookTitle);
     const body = $('panelBody'); body.replaceChildren();
+    const learning = element('div','','tree-learning');
+    const all = action('모두 배우기',buyAllUI); all.id='treeBuyAll'; all.dataset.affordable=String(C.affordableNodes(state,{infinite:state.learning.infinite}).length);
+    const auto = action(state.learning.on ? '자동 켜짐' : '자동 배우기',()=> { state.learning.on=!state.learning.on; state.learning.ms=0; save(); tree(); },!state.tree.autoLearn);
+    auto.setAttribute('aria-pressed',String(state.learning.on)); auto.title='학교 장기자랑 도착 후 자동 배우기 비법으로 해금';
+    const infinite = action(state.learning.infinite ? '무한 포함' : '무한 제외',()=> { state.learning.infinite=!state.learning.infinite; save(); tree(); });
+    infinite.setAttribute('aria-pressed',String(state.learning.infinite)); learning.append(all,auto,infinite);
+    const header = $('panel').querySelector('header');
+    header.querySelectorAll('.tree-learning').forEach(el=>el.remove()); header.insertBefore(learning,$('closePanel'));
     const wallet = element('div', `🪙 동전 ${rounded(state.coins)} · 🔑 열쇠 ${state.keys} · ✦ 별빛 ${state.starlight}`, 'tree-wallet');
     const layout = element('div', '', 'constellation-layout');
     const map = element('div', '', 'constellation-map'); map.tabIndex = 0;
@@ -1021,9 +1105,9 @@ globalThis.Guidance = (() => {
       if (info.gate) detail.append(element('p', info.gate.text, 'tree-gate'));
       let heldTimer = null, longBought = false;
       const purchase = many => {
-        const count = many ? C.buyMany(state, selected.id) : (C.buyNode(state, selected.id) ? 1 : 0);
+        const count = C.buyAmount(state, selected.id, many ? 'max' : buyMode);
         if (!count) return;
-        sound('coin'); toast(`×${count} 구매 · ${selected.name}`); save(); tree(); render();
+        tutorialSignal('learn'); sound('coin'); toast(`×${count} 구매 · ${selected.name}`); save(); tree(); render();
       };
       const buy = action(window.matchMedia('(pointer: coarse)').matches ? '배우기 · 꾹 눌러 최대 구매' : '배우기 · Shift 또는 꾹 눌러 최대 구매', e => {
         clearTimeout(heldTimer); if (!longBought) purchase(e.shiftKey); longBought = false;
@@ -1035,7 +1119,11 @@ globalThis.Guidance = (() => {
         state.guidance.pin = state.guidance.pin === selected.id ? null : selected.id;
         save(); tree(); render();
       }); pin.classList.add('tree-pin');
-      detail.append(pin,buy);
+      const amounts = element('div','','buy-amounts');
+      for (const [value,label] of [[1,'×1'],[10,'×10'],['max','최대']]) {
+        const toggle=action(label,()=>{buyMode=value; tree();}); toggle.setAttribute('aria-pressed',String(buyMode===value)); amounts.append(toggle);
+      }
+      detail.append(amounts,pin,buy);
     }
     if (typeof phone !== 'undefined' && phone) {
       detail.hidden = !treeView.sheet;
@@ -1576,13 +1664,21 @@ globalThis.Guidance = (() => {
       window.dispatchEvent(new CustomEvent('magicshow:mode', { detail: { mode: state.mode, state } }));
     }
     if (menu || document.hidden) return;
-    if(state.features.guide==='place' && state.features.collected.length){bestiaryTab='equip';bestiary();return;}
+    if(state.features.guide==='place' && state.features.collected.length && !modeHooks.equipHinted) {
+      modeHooks.equipHinted=true; toast('도감에서 소품을 골라 장착할 수 있어요');
+    }
     if(state.features.climax.left>0)return;
     if (state.mode === 'dealer') dealer();
     else if (pendingIntro && state.mode === 'fight') headlinerIntro(pendingIntro);
     else if (state.mode === 'ending') showEnding();
   }
-  $('bookButton').addEventListener('click', () => { if (!['fail','dealer','headliner','ending','rebirth','bossPhase'].includes(menu)) tree(); });
+  $('buyAllButton').addEventListener('click',buyAllUI);
+  $('replayTutorial').addEventListener('click',()=>startIntro(true));
+  $('bookButton').addEventListener('click', () => {
+    if (['fail','dealer','headliner','ending','rebirth','bossPhase'].includes(menu)) return;
+    if (state.onboarding.step===4) { const next=Guidance.target(state,D,C); if (next) { focusNode(next.id); return; } }
+    tree();
+  });
   $('bestiaryButton').addEventListener('click', bestiary);
   $('dealerButton').addEventListener('click', dealer);
   $('rebirthButton').addEventListener('click', () => {
@@ -1599,6 +1695,12 @@ globalThis.Guidance = (() => {
   });
   $('closePanel').addEventListener('click', closePanel);
   document.addEventListener('keydown', e => {
+    if (!e.repeat && !e.ctrlKey && !e.metaKey && !e.altKey && !/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) {
+      const key=e.key.toLowerCase();
+      if (key==='b') { e.preventDefault(); $('bookButton').click(); }
+      if (key==='a') { e.preventDefault(); buyAllUI(); }
+      if (key==='d') { e.preventDefault(); $('bestiaryButton').click(); }
+    }
     if (e.key === 'Escape' && menu && menu !== 'fail') closePanel();
     if (e.key === 'Tab' && menu) {
       const buttons = Array.from($('panel').querySelectorAll('button:not(:disabled)')).filter(el => !el.hidden);
@@ -1688,8 +1790,8 @@ globalThis.Guidance = (() => {
       if (phone) { /* Compact badge reserves its width for the value. */ }
       else if (b.image.complete && b.image.naturalWidth) ctx.drawImage(b.image, -w / 2 + 3, y - 12, 24, 24);
       else { ctx.font = '18px sans-serif'; ctx.fillText(b.emoji || b.icon, -w / 2 + 15, y); }
-      ctx.font = `bold ${phone ? 13 : 17}px sans-serif`; ctx.fillText(b.text, phone ? 0 : 12, y, phone ? w - 4 : w - 32);
-      if (b.nameLabel) { ctx.font = '12px sans-serif'; ctx.fillText(b.nameLabel, 0, phone ? 9 : 14, w - 6); }
+      ctx.font = '700 11px Galmuri11'; ctx.fillText(b.text, phone ? 0 : 12, y, phone ? w - 4 : w - 32);
+      if (b.nameLabel) { ctx.font = '400 11px Galmuri11'; ctx.fillText(b.nameLabel, 0, phone ? 9 : 14, w - 6); }
       ctx.restore();
     }
     for (let i = flights.length - 1; i >= 0; i--) {
@@ -1706,7 +1808,7 @@ globalThis.Guidance = (() => {
       ctx.font = '42px "Apple Color Emoji","Segoe UI Emoji",sans-serif'; if (f.image && f.image.complete && f.image.naturalWidth) ctx.drawImage(f.image, a.x - 24, a.y - 24, 48, 48);
       else ctx.fillText(f.emoji, a.x, a.y);
       if (f.label) {
-        ctx.font = 'bold 16px sans-serif'; ctx.lineWidth = 5; ctx.strokeStyle = '#000';
+        ctx.font = '700 11px Galmuri11'; ctx.lineWidth = 5; ctx.strokeStyle = '#000';
         ctx.strokeText(f.label, a.x, a.y + 34); ctx.fillText(f.label, a.x, a.y + 34);
       }
     }
@@ -1714,7 +1816,7 @@ globalThis.Guidance = (() => {
       const n = numbers[i], t = (clock - n.start) / n.life;
       if (t >= 1) { numbers.splice(i, 1); continue; }
       ctx.globalAlpha = t < .6 ? 1 : (1 - t) / .4;
-      ctx.font = `bold ${n.size || 32}px "Courier New",monospace`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.font = `700 ${Math.max(11,Math.round((n.size || 33)/11)*11)}px Galmuri11`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.strokeStyle = '#111'; ctx.lineWidth = 6; ctx.fillStyle = n.color;
       const y = n.y - (reduced || n.fixed ? 0 : t * 52);
       const width = ctx.measureText(n.text).width + 6;
@@ -1731,20 +1833,18 @@ globalThis.Guidance = (() => {
       let remaining = dt * (debug ? 10 : 1);
       // Stop at a failure event, even at debug speed: Core already restarted.
       while (remaining > 0 && !paused()) {
-        const slice = Math.min(50, remaining, pointer.held && tapRemaining > 0 ? tapRemaining : 50);
+        const slice = Math.min(50, remaining, ...boardHolds.map(p=>Math.max(.001,p.left)));
         // No targets during the intervals between UI pulses. Combat still advances
         // with the measured dt; the 0.001 ms press lets Core emit its instant hit.
         events(C.step(state, slice, { taps: [] }));
         remaining -= slice;
-        if (pointer.held) {
-          tapRemaining -= slice;
-          if (tapRemaining <= .000001 && !paused()) {
-            pulse(); tapRemaining = 1000 / C.wandRate(state);
-          }
+        if (boardHolds.length && !paused()) {
+          const next=C.advanceHolds(boardHolds,slice,C.wandRate(state)); boardHolds=next.holds;
+          for (const point of next.pulses) pulse(point);
         }
       }
     }
-    render(); nextToasts(dt); drawEffects(); requestAnimationFrame(loop);
+    render(); renderCoach(); updateLearningBadge(); nextToasts(dt); drawEffects(); requestAnimationFrame(loop);
   }
   motion.addEventListener('change', e => {
     reduced = e.matches; particles.length = 0; flights.length = 0; numbers.length = 0;
@@ -1757,7 +1857,7 @@ globalThis.Guidance = (() => {
   window.visualViewport?.addEventListener('resize', fit);
   window.visualViewport?.addEventListener('scroll', fit);
   $('moreButton').addEventListener('click', () => {
-    release(); $('phoneMore').hidden = !$('phoneMore').hidden;
+    $('phoneMore').hidden = !$('phoneMore').hidden;
     $('moreButton').setAttribute('aria-expanded', String(!$('phoneMore').hidden));
   });
   $('phoneMore').addEventListener('click', e => { if (e.target.closest('button')) { $('phoneMore').hidden = true; $('moreButton').setAttribute('aria-expanded', 'false'); } });
@@ -1770,7 +1870,7 @@ globalThis.Guidance = (() => {
   setInterval(save, 5000);
   // Stable screen/audio integration hooks for U4 and U5.
   window.MagicShowUI = {
-    getState: () => state, events, save, toast, banner, openPanel, closePanel, render,
+    getState: () => state, getHolds: () => boardHolds, startIntro, buyAll: buyAllUI, events, save, toast, banner, openPanel, closePanel, render,
     openBook: tree, focusNode, openBestiary: bestiary,
     openDealer: dealer, openEnding: () => { if (state.seenEnding) { revealEnding = false; showEnding(); } },
     openRebirth: () => { if (state.seenEnding) showRebirth(); }, isPaused: paused
@@ -1780,12 +1880,13 @@ globalThis.Guidance = (() => {
   const stripReady = () => { if (performanceStrip.naturalWidth === 768 && performanceStrip.naturalHeight === 256) $('magicianMini').classList.add('performance-ready'); };
   if (performanceStrip.complete) stripReady(); else performanceStrip.addEventListener('load',stripReady,{once:true});
   $('magicianMini').dataset.frame = '0';
-  $('goalStrip').addEventListener('click', () => { const id = $('goalStrip').dataset.nodeId; if (id) focusNode(id); });
+  $('goalStrip').addEventListener('click', () => { tutorialSignal('goal'); const id = $('goalStrip').dataset.nodeId; if (id) focusNode(id); });
   $('gameLogo').textContent = D.title;
   $('gameLogo').setAttribute('aria-label', D.title);
   revealEnding = state.mode === 'ending' && state.endings.length === 1;
   updateSoundButton();
   fit(); render();
+  if (!state.onboarding.intro) startIntro(false);
   if (corrupt) toast('저장 파일을 읽을 수 없어 새 공연을 시작해요');
   if (inaccessible) toast('저장을 사용할 수 없어요. 공연은 계속돼요');
   requestAnimationFrame(loop);

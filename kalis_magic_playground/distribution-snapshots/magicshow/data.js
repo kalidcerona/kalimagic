@@ -2035,3 +2035,83 @@ GAME_DATA.tree.filter(n=>n.u4b).forEach(n=>{
   D.ui.patterns.friendlyReview='별표 케이스 · 놓쳐도 괜찮아요'; D.ui.patterns.homecoming='함께 만드는 세 막';
   D.ui.rebirthStay = '가게에 남기'; D.ui.rebirthOther = '다음 차원의 공연';
 })(GAME_DATA);
+
+// U12 copy is bundled verbatim; no runtime fetch.
+GAME_DATA.onboarding = {
+  "intro": [
+    {
+      "line": "칼리가 거실에서 카드를 펼쳤어요.",
+      "art": "living"
+    },
+    {
+      "line": "아빠는 리모컨만 꼭 쥐고 있네요.",
+      "art": "living"
+    },
+    {
+      "line": "카드 케이스를 열어 마술을 키워요.",
+      "art": "cards"
+    },
+    {
+      "line": "다음 무대는 TV, 우주, 그리고 그 너머!",
+      "art": "cosmos"
+    },
+    {
+      "line": "자, 렉쳐노트까지 박수 받으러 가요!",
+      "art": "shop"
+    }
+  ],
+  "tutorial": [
+    {
+      "id": "hold",
+      "title": "케이스 열기",
+      "body": "오른쪽 카드 케이스를 꾹 누르고 있어요."
+    },
+    {
+      "id": "badge",
+      "title": "마술 아이템",
+      "body": "나온 아이템이 능력치를 올려 줘요."
+    },
+    {
+      "id": "doubt",
+      "title": "의심 게이지",
+      "body": "능력치가 오르면 의심 게이지가 줄어요."
+    },
+    {
+      "id": "heckle",
+      "title": "야유 조심",
+      "body": "야유에 멘탈이 깎이면 보호막을 올려요."
+    },
+    {
+      "id": "learn",
+      "title": "비법 배우기",
+      "body": "비법서에서 동전으로 비법을 배워요."
+    },
+    {
+      "id": "buyAll",
+      "title": "모두 배우기",
+      "body": "버튼 한 번에 살 수 있는 비법을 다 배워요."
+    },
+    {
+      "id": "goal",
+      "title": "다음 목표",
+      "body": "위쪽 띠를 보고 할 일을 따라가요."
+    },
+    {
+      "id": "win",
+      "title": "무대 클리어",
+      "body": "마지막 관객을 감탄시키면 다음 무대로 가요."
+    }
+  ],
+  "skip": "건너뛰기",
+  "replay": "튜토리얼 다시 보기",
+  "start": "마술 시작하기"
+};
+GAME_DATA.tree.push({id:"autoLearn",name:"자동 배우기",desc:"켜 두면 공연 중 3초마다 살 수 있는 비법을 모두 배워요.",branch:"luck",prereqs:["coinLuck"],x:5,y:6,max:1,cost:[100],currency:"coins",reveal:"N",icon:"node-assistant.png",emoji:"📖",venueSlug:"school",pending:false,u12:true});
+
+// U12 bulk-learning economy: optional helper upgrades remain a late investment.
+GAME_DATA.tree.filter(n=>n.u4b && n.max>1 || n.id==='chainPower').forEach(n=>{n.cost={c:n.cost.c*3,g:14};});
+
+GAME_DATA.tree.find(n=>n.id==='attack').cost=Array.from({length:10},(_,i)=>i<8?Math.ceil(45*1.65**i):i===8?100000:200000);
+GAME_DATA.tree.find(n=>n.id==='power').cost.g=2.0;
+
+GAME_DATA.tree.filter(n=>n.productMultiplier).forEach(n=>{n.cost=n.cost.map(c=>Math.ceil(c*0.6));});

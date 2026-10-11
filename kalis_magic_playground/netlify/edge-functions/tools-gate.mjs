@@ -7,6 +7,9 @@ import { FRIEND_APP_TOOLS } from '../functions/_lib/friend-app-access.mjs';
 import { legacyWorkerSpecByPath } from '../../scripts/legacy-shared-contract.mjs';
 import { legacySharedWorkerResponse } from '../../scripts/legacy-sw-bridge.mjs';
 
+// Temporary link-only beta; set false to restore the retained friend grant gate.
+export const MAGICSHOW_PUBLIC_BETA = true;
+
 const COOKIE_MAX_AGE = 7_776_000;
 const RENEWAL_WINDOW_SECONDS = 3_888_000;
 const DEFAULT_TOOL = 'calc';
@@ -68,6 +71,9 @@ function analyzePath(rawPathname) {
   }
 
   if (pathname === '/tools/magicshow' || pathname.startsWith('/tools/magicshow/')) {
+    // Do not let duplicate separators bypass the beta path validation.
+    if (/\/{2,}/.test(lowerPath)) return { mode: 'block', pathname };
+    if (MAGICSHOW_PUBLIC_BETA) return { mode: 'public', pathname };
     const publicFiles = ['manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
     if (publicFiles.some((file) => pathname === `/tools/magicshow/${file}`)) {
       return { mode: 'public', pathname };

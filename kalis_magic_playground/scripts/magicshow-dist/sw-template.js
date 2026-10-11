@@ -77,9 +77,7 @@ self.addEventListener('fetch', (event) => {
     const page = name === '' || name === 'index.html' || name.endsWith('.html');
     const executable = page || /\.(?:js|mjs|css)$/.test(name);
     const cached = await cache.match(new URL(name === '' ? 'index.html' : name, self.registration.scope).href, { ignoreSearch: true });
-    // Friend distribution navigation serves this release's cached index.html, the same as a personal app.
-    // That is safe: the cached HTML still runs the injected /tools/_check entitlement script before revealing anything,
-    // and the edge gate still protects every network fetch.
+    // Public beta navigation stays coherent with this release's cached runtime.
     if (page && GUARDED && cached) return cached;
     if (executable) {
       if (cached) return cached;

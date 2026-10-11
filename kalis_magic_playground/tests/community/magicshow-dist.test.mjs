@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile, readdir } from 'node:fs/promises';
 import vm from 'node:vm';
 import { DISTRIBUTION_APPS, shouldCopyMagicshow, transformDistributionDocument, verifyAppDisplayPolicy } from '../../scripts/build-public.mjs';
-import gate, { classifyPath } from '../../netlify/edge-functions/tools-gate.mjs';
+import gate, { classifyPath, MAGICSHOW_PUBLIC_BETA } from '../../netlify/edge-functions/tools-gate.mjs';
 import { FRIEND_APP_TOOLS } from '../../netlify/functions/_lib/friend-app-access.mjs';
 import { gateCookieName, signGateCookie, verifyGateCookie } from '../../netlify/functions/_lib/tool-gate.mjs';
 import { allowOnCheckError, selectGate } from '../../netlify/functions/tool-check.mjs';
@@ -23,14 +23,15 @@ async function filesUnder(route) {
 
 test('Magicshow snapshot contains only allowed runtime files and exact deployment precache', async () => {
   const files = await filesUnder(shared);
-  const base = ['index.html', 'style.css', 'data.js', 'core.js', 'audio.js', 'ui.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'sw.js'];
-  assert.deepEqual(files.filter(file => !file.startsWith('assets/')), base.sort());
+  const base = ['index.html', 'style.css', 'data.js', 'core.js', 'audio.js', 'ui.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'sw.js', 'install-prompt.js', 'install-prompt.css'];
+  assert.deepEqual(files.filter(file => !file.startsWith('assets/') && !file.startsWith('fonts/')), base.sort());
   assert.ok(files.some(file => file.startsWith('assets/')));
+  for (const font of ['fonts/Galmuri11.woff2', 'fonts/Galmuri11-Bold.woff2', 'fonts/Galmuri9.woff2', 'fonts/OFL.md']) assert.ok(files.includes(font), font);
   for (const file of files) {
     assert.equal(shouldCopyMagicshow(file), true, file);
-    assert.deepEqual(classifyPath(`/tools/magicshow/${file}`), ['manifest.webmanifest', 'icon-192.png', 'icon-512.png'].includes(file) ? { mode: 'public' } : { mode: 'gated', tool: 'magicshow' }, file);
+    assert.deepEqual(classifyPath(`/tools/magicshow/${file}`), { mode: 'public' }, file);
   }
-  for (const file of ['.env', '.gen/icon.png', 'README.md', 'PLAN.md', 'test-core.mjs', 'sim.mjs', 'tools/x.js', 'assets/.private.png', 'assets/logo.bak.png', 'assets/nested/private.png']) assert.equal(shouldCopyMagicshow(file), false, file);
+  for (const file of ['.env', '.gen/icon.png', 'README.md', 'PLAN.md', 'test-core.mjs', 'sim.mjs', 'tools/x.js', 'assets/.private.png', 'assets/logo.bak.png', 'assets/nested/private.png', 'fonts/private.js', 'fonts/.private.woff2', 'fonts/nested/private.woff2']) assert.equal(shouldCopyMagicshow(file), false, file);
   assert.deepEqual(DISTRIBUTION_APPS.find(app => app.tool === 'magicshow'), { source: shared, target: 'magicshow', tool: 'magicshow' });
   const sw = (await read(`${shared}/sw.js`)).toString();
   const precache = JSON.parse(sw.match(/const SHELL = (\[[\s\S]*?\]);/)[1]);
@@ -41,7 +42,7 @@ test('Magicshow snapshot contains only allowed runtime files and exact deploymen
   assert.ok(!precache.some(file => file.includes('/tools/_check')));
 });
 
-test('Magicshow manifest and HTML preserve the landscape fullscreen beta identity and shared gate', async () => {
+test('Magicshow manifest and HTML preserve the landscape fullscreen beta identity without a login check', async () => {
   const manifest = JSON.parse(await read(`${shared}/manifest.webmanifest`));
   assert.equal(manifest.name, '칼리 마술 성장기 (베타)');
   assert.equal(manifest.short_name, '칼리마술');
@@ -57,16 +58,22 @@ test('Magicshow manifest and HTML preserve the landscape fullscreen beta identit
     assert.equal(png.readUInt32BE(20), size);
   }
   const html = (await read(`${shared}/index.html`)).toString();
-  for (const value of ['rel="manifest"', 'rel="apple-touch-icon"', 'apple-mobile-web-app-capable', 'theme-color', "register('./sw.js')", 'data-magic-customize="off"', 'id="friend-apps-check"', "fetch('/tools/_check?tool=magicshow'"]) assert.ok(html.includes(value), value);
+  for (const value of ['rel="manifest"', 'rel="apple-touch-icon"', 'apple-mobile-web-app-capable', 'theme-color', "register('./sw.js')", 'data-magic-customize="off"', 'src="install-prompt.js"', 'href="install-prompt.css"']) assert.ok(html.includes(value), value);
+  assert.doesNotMatch(html, /friend-apps-check|\/tools\/_check|accessGuard/);
   assert.equal(transformDistributionDocument(html, { target: 'magicshow', tool: 'magicshow' }), html);
 });
 
-test('Magicshow entry variants gate runtime and expose only exact installation metadata', () => {
-  for (const path of ['/tools/magicshow', '/tools/magicshow/', '/tools/MAGICSHOW/', '/TOOLS/MAGICSHOW/', '/tools//magicshow//index.html', '/tools/magicshow/index', '/tools/magicshow/index.html', '/tools/magicshow/ui.js', '/tools/magicshow/sw.js', '/tools/magicshow/icon.svg', '/tools/magicshow/nested/icon-192.png', '/tools/magicshow/index/manifest.webmanifest']) {
-    assert.deepEqual(classifyPath(path), { mode: 'gated', tool: 'magicshow' }, path);
+test('Magicshow entry variants are public while traversal and duplicate slashes are rejected', () => {
+  for (const path of ['/tools/magicshow', '/tools/magicshow/', '/tools/MAGICSHOW/', '/TOOLS/MAGICSHOW/', '/tools/magicshow/index', '/tools/magicshow/index.html', '/tools/magicshow/ui.js', '/tools/magicshow/sw.js', '/tools/magicshow/icon.svg', '/tools/magicshow/nested/icon-192.png', '/tools/magicshow/index/manifest.webmanifest']) {
+    assert.deepEqual(classifyPath(path), { mode: 'public' }, path);
   }
-  for (const path of ['/tools/magicshow/../index', '/tools/magicshow/%2e%2e/index', '/tools/magicshow/%2e/index', '/tools/magicshow/./index']) assert.deepEqual(classifyPath(path), { mode: 'block' });
+  for (const path of ['/tools/magicshow/../index', '/tools/magicshow/%2e%2e/index', '/tools/magicshow/%2e/index', '/tools/magicshow/./index', '/tools//magicshow//index.html', '/tools/magicshow//ui.js', '/tools/magicshow/%2fui.js']) assert.deepEqual(classifyPath(path), { mode: 'block' });
   for (const file of ['manifest.webmanifest', 'icon-192.png', 'icon-512.png']) assert.deepEqual(classifyPath(`/tools/magicshow/${file}`), { mode: 'public' });
+  assert.equal(MAGICSHOW_PUBLIC_BETA, true);
+  for (const tool of ['choice', 'pimax', 'calc', 'aletheia', 'usotsuki', 'tobira', 'spinner', 'unlock', 'stopwatch-uni']) {
+    for (const suffix of ['', '/', '/index', '/index.html', '/app.js']) assert.deepEqual(classifyPath(`/tools/${tool}${suffix}`), { mode: 'gated', tool }, tool + suffix);
+  }
+  assert.deepEqual(classifyPath('/tools/magicshow-other/'), { mode: 'gated', tool: 'calc' });
   assert.equal(allowOnCheckError('magicshow'), false);
   assert.equal(selectGate([{ valid: true, tool: 'all' }], 'magicshow').valid, false);
   assert.equal(gateCookieName('magicshow'), 'kali_magicshow_gate');
@@ -75,39 +82,27 @@ test('Magicshow entry variants gate runtime and expose only exact installation m
   assert.ok(FRIEND_APP_TOOLS.has('magicshow'));
 });
 
-test('Magicshow edge gate checks live grants and rejects missing, wrong, revoked and unavailable access', async () => {
+test('Magicshow edge serves no-cookie runtime without checking grants; other tools still reject it', async () => {
   const previousFetch = globalThis.fetch;
-  const previousNetlify = globalThis.Netlify;
-  const secret = 'magicshow-test-secret';
-  globalThis.Netlify = { env: { get: () => secret } };
   let calls = 0;
+  globalThis.fetch = async () => { throw new Error('Public beta must not call the grant endpoint'); };
   const context = { next: async () => { calls++; return new Response('runtime'); } };
   try {
-    const token = await signGateCookie('friend@example.com', 'magicshow', secret);
-    assert.equal((await verifyGateCookie(token, secret)).tool, 'magicshow');
-    const wrong = await signGateCookie('friend@example.com', 'all', secret);
-    const request = (path, cookie = '') => new Request(`https://example.com${path}`, { headers: { cookie } });
-    for (const path of ['/tools/magicshow', '/tools/MAGICSHOW/', '/tools/magicshow/index']) {
-      const denied = await gate(request(path), context);
-      assert.equal(denied.status, 302);
-      assert.ok(new URL(denied.headers.get('location')).searchParams.get('to').startsWith('/tools/magicshow/'));
-      assert.equal((await gate(request(path, `kali_magicshow_gate=${wrong}`), context)).status, 302);
+    const token = await signGateCookie('friend@example.com', 'magicshow', 'test-secret');
+    assert.equal((await verifyGateCookie(token, 'test-secret')).tool, 'magicshow');
+    for (const route of ['/tools/magicshow', '/tools/MAGICSHOW/', '/TOOLS/MAGICSHOW/index', '/tools/magicshow/ui.js']) {
+      const response = await gate(new Request(`https://example.com${route}`), context);
+      assert.equal(response.status, 200);
+      assert.equal(await response.text(), 'runtime');
     }
-    for (const behavior of ['revoked', 'error', 'approved']) {
-      globalThis.fetch = async (url, options) => {
-        assert.equal(new URL(url).searchParams.get('tool'), 'magicshow');
-        assert.equal(options.cache, 'no-store');
-        if (behavior === 'error') throw new Error('offline');
-        return new Response(JSON.stringify({ ok: behavior === 'approved' }));
-      };
-      assert.equal((await gate(request('/tools/magicshow/ui.js', `kali_magicshow_gate=${token}`), context)).status, behavior === 'approved' ? 200 : 302);
+    assert.equal(calls, 4);
+    for (const tool of ['choice', 'pimax', 'calc', 'aletheia', 'usotsuki', 'unlock']) {
+      let response = await gate(new Request(`https://example.com/tools/${tool}/`), context);
+      if (response.status === 301) response = await gate(new Request(new URL(response.headers.get('location'), 'https://example.com')), context);
+      assert.equal(response.status, 302, tool);
     }
-    assert.equal(calls, 1);
-  } finally {
-    globalThis.fetch = previousFetch;
-    if (previousNetlify === undefined) delete globalThis.Netlify;
-    else globalThis.Netlify = previousNetlify;
-  }
+    assert.equal(calls, 4);
+  } finally { globalThis.fetch = previousFetch; }
 });
 
 test('Magicshow login, hosting, migration and admin grant are registered', async () => {
@@ -138,4 +133,130 @@ test('Magicshow built files equal the pinned snapshot and all local references e
   const html = (await read('dist/tools/magicshow/index.html')).toString();
   for (const [, file] of html.matchAll(/(?:src|href)="([^"#]+)"/g)) await read(`dist/tools/magicshow/${file}`);
   await verifyAppDisplayPolicy(new URL('../../dist/', import.meta.url).pathname, ['tools/magicshow']);
+});
+
+async function installRuntime({ ua = 'Android Chrome/140', platform = 'Linux', touch = 0, display = '', saved = new Map(), now = 1000000000, storageError = false, standalone = false } = {}) {
+  const events = new Map(), queries = [], nodes = new Map();
+  const node = key => {
+    if (!nodes.has(key)) nodes.set(key, {
+      hidden: false, disabled: false, textContent: '', innerHTML: '', className: '', events: new Map(),
+      addEventListener(name, callback) { this.events.set(name, callback); },
+      focus() { document.activeElement = this; },
+      querySelector: node,
+      querySelectorAll() { return ['[data-close]', '[data-install]', '[data-copy]', '[data-later]'].map(node); }
+    });
+    return nodes.get(key);
+  };
+  const document = { activeElement: node('game-intro'), createElement: tag => node(tag), body: { appendChild() {} } };
+  const location = { href: 'https://example.test/tools/magicshow/?friend=1' };
+  let copied = '';
+  const navigator = { userAgent: ua, platform, maxTouchPoints: touch, standalone, clipboard: { async writeText(value) { copied = value; } } };
+  const window = { addEventListener: (name, callback) => events.set(name, callback), matchMedia(query) {
+    const media = { matches: query === `(display-mode: ${display})`, addEventListener(name, callback) { this.change = callback; } };
+    queries.push(media); return media;
+  } };
+  const localStorage = { getItem(key) { if (storageError) throw Error('denied'); return saved.get(key) ?? null; }, setItem(key, value) { if (storageError) throw Error('denied'); saved.set(key, value); } };
+  vm.runInNewContext((await read('scripts/magicshow-dist/install-prompt.js')).toString(), {
+    window, navigator, document, location, localStorage, URL, Date: { now: () => now }
+  });
+  const click = key => node(key).events.get('click')();
+  return { events, queries, node, saved, click, location, copied: () => copied, document, now };
+}
+
+test('Magicshow first-open offer waits three days and manual entry restores it without touching intro', async () => {
+  const app = await installRuntime();
+  assert.equal(app.node('div').hidden, false);
+  assert.equal(app.node('button').hidden, false);
+  app.click('[data-later]');
+  assert.equal(app.node('div').hidden, true);
+  assert.equal(app.document.activeElement, app.node('game-intro'));
+  const early = await installRuntime({ saved: app.saved, now: app.now + 3 * 86400000 - 1 });
+  assert.equal(early.node('div').hidden, true);
+  early.click('button');
+  assert.equal(early.node('div').hidden, false);
+  const due = await installRuntime({ saved: app.saved, now: app.now + 3 * 86400000 });
+  assert.equal(due.node('div').hidden, false);
+  const privateMode = await installRuntime({ storageError: true });
+  assert.equal(privateMode.node('div').hidden, false);
+  privateMode.click('[data-close]');
+  assert.equal(privateMode.node('div').hidden, true);
+});
+
+test('Magicshow installed modes and installation signal suppress the popup and launcher', async () => {
+  for (const options of [{ display: 'fullscreen' }, { display: 'standalone' }, { standalone: true }]) {
+    const app = await installRuntime(options);
+    assert.equal(app.node('div').hidden, true);
+    assert.equal(app.node('button').hidden, true);
+    let prompts = 0;
+    app.events.get('beforeinstallprompt')({ preventDefault() { prompts++; } });
+    assert.equal(prompts, 0);
+  }
+  const app = await installRuntime();
+  app.events.get('appinstalled')();
+  assert.equal(app.node('div').hidden, true);
+  assert.equal(app.node('button').hidden, true);
+  const changed = await installRuntime();
+  changed.queries[0].matches = true;
+  changed.queries[0].change();
+  assert.equal(changed.node('div').hidden, true);
+});
+
+test('Magicshow Chrome and Samsung prompts run only on tap, are consumed once and handle late outcomes', async () => {
+  for (const ua of ['Android Chrome/140', 'Android SamsungBrowser/28 Chrome/140']) {
+    for (const outcome of ['accepted', 'dismissed', 'error']) {
+      const app = await installRuntime({ ua });
+      let prompts = 0, prevented = 0;
+      app.events.get('beforeinstallprompt')({ preventDefault() { prevented++; }, prompt() { prompts++; if (outcome === 'error') throw Error('unavailable'); }, userChoice: Promise.resolve({ outcome }) });
+      assert.equal(prevented, 1);
+      assert.equal(prompts, 0);
+      const tapped = app.click('[data-install]');
+      assert.equal(prompts, 1, 'prompt runs synchronously inside the user tap');
+      await tapped;
+      await app.click('[data-install]');
+      assert.equal(prompts, 1);
+      assert.equal(app.node('[data-install]').disabled, false);
+    }
+  }
+  const app = await installRuntime();
+  let resolve;
+  app.events.get('beforeinstallprompt')({ preventDefault() {}, prompt() {}, userChoice: new Promise(done => { resolve = done; }) });
+  const pending = app.click('[data-install]');
+  app.events.get('appinstalled')();
+  resolve({ outcome: 'accepted' });
+  await pending;
+  assert.equal(app.node('div').hidden, true);
+  assert.equal(app.node('[data-status]').textContent, '');
+});
+
+test('Magicshow Safari uses visual steps and places the share arrow for iPhone and iPad', async () => {
+  for (const [options, position] of [[{ ua: 'iPhone Safari/604' }, 'is-iphone'], [{ ua: 'iPad Safari/604' }, 'is-ipad'], [{ ua: 'Macintosh Safari/604', platform: 'MacIntel', touch: 5 }, 'is-ipad']]) {
+    const app = await installRuntime(options);
+    assert.match(app.node('[data-guide]').innerHTML, /□↑[\s\S]*홈 화면에 추가[\s\S]*추가/);
+    assert.match(app.node('[data-arrow]').className, new RegExp(position));
+    assert.equal(app.node('[data-arrow]').hidden, false);
+    app.click('[data-close]');
+    assert.equal(app.node('[data-arrow]').hidden, true);
+  }
+});
+
+test('Magicshow in-app browsers explain external opening and copy the current link', async () => {
+  for (const name of ['KAKAOTALK', 'Instagram', 'FBAN', 'FBAV', 'NAVER', 'Line/14']) {
+    for (const os of ['iPhone Safari/604', 'Android Chrome/140']) {
+      const app = await installRuntime({ ua: `${os} ${name}` });
+      assert.equal(app.node('[data-install]').textContent, '브라우저로 열기');
+      assert.equal(app.node('[data-copy]').hidden, false);
+      assert.match(app.node('[data-guide]').textContent, os.startsWith('iPhone') ? /Safari/ : /다른 브라우저로 열기/);
+      await app.click('[data-copy]');
+      assert.equal(app.copied(), 'https://example.test/tools/magicshow/?friend=1');
+      await app.click('[data-install]');
+      if (name === 'KAKAOTALK' && os.startsWith('Android')) assert.match(app.location.href, /^intent:\/\/example\.test\/tools\/magicshow\/\?friend=1#Intent;scheme=https;package=com\.android\.chrome;/);
+      else assert.equal(app.location.href, 'https://example.test/tools/magicshow/?friend=1');
+    }
+  }
+  const app = await installRuntime({ ua: 'Desktop Firefox' });
+  assert.equal(app.node('button').hidden, true);
+  const css = (await read('scripts/magicshow-dist/install-prompt.css')).toString();
+  assert.match(css, /Galmuri11\.woff2/);
+  assert.match(css, /min-height:44px;min-width:44px/);
+  assert.match(css, /max-height:calc\(100dvh/);
 });

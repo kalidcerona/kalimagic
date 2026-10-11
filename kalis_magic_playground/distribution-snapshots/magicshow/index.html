@@ -1,62 +1,10 @@
 <!doctype html>
-<html lang="ko"><head>
-  <script id="friend-apps-check">
-    if (location.protocol === 'https:' && location.pathname.startsWith('/tools/')) {
-      document.documentElement.style.visibility = 'hidden';
-      const loginUrl = '/tools/login/?to=' + encodeURIComponent(location.pathname + location.search);
-      const segments = location.pathname.split('/');
-      const scope = '/tools/' + segments[2] + '/';
-      const storageKey = 'friend-apps-ok:magicshow:' + scope;
-      const dayMs = 24 * 60 * 60 * 1000;
-      const graceMs = 90 * dayMs;
-      const reveal = () => { document.documentElement.style.visibility = ''; };
-      const redirect = () => { location.replace(loginUrl); };
-      const freshStamp = (raw) => {
-        if (raw == null || raw === '') return false;
-        const stamp = Number(raw);
-        if (!Number.isFinite(stamp)) return false;
-        const now = Date.now();
-        return (now - stamp) <= graceMs && (stamp - now) <= dayMs;
-      };
-      const allowOffline = () => {
-        let raw;
-        try { raw = localStorage.getItem(storageKey); }
-        catch (error) { redirect(); return; }
-        if (freshStamp(raw)) reveal();
-        else redirect();
-      };
-      const revoke = () => {
-        try { localStorage.removeItem(storageKey); }
-        catch (error) {}
-        redirect();
-      };
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 6000);
-      fetch('/tools/_check?tool=magicshow', { credentials: 'same-origin', cache: 'no-store', signal: controller.signal })
-        .then((response) => {
-          if (response.type === 'opaque' || response.status === 0 || response.status >= 500) { clearTimeout(timeoutId); allowOffline(); return; }
-          if (response.status === 401 || response.status === 403) { clearTimeout(timeoutId); revoke(); return; }
-          return response.json().then((result) => {
-            clearTimeout(timeoutId);
-            if (response.ok && result && result.ok === true) {
-              try { localStorage.setItem(storageKey, String(Date.now())); }
-              catch (error) {}
-              reveal();
-              return;
-            }
-            if (result && result.ok === false && response.status >= 200 && response.status < 500) { revoke(); return; }
-            allowOffline();
-          }, () => { clearTimeout(timeoutId); allowOffline(); });
-        })
-        .catch(() => { clearTimeout(timeoutId); allowOffline(); });
-    }
-  </script>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="color-scheme" content="dark"><title>칼리 마술 성장기</title><link rel="stylesheet" href="style.css"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="theme-color" content="#151020"></head><body data-magic-customize="off">
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="color-scheme" content="dark"><title>칼리 마술 성장기</title><link rel="preload" href="fonts/Galmuri11.woff2" as="font" type="font/woff2" crossorigin><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="install-prompt.css"><script defer src="install-prompt.js"></script><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="theme-color" content="#151020"></head><body data-magic-customize="off">
 <main id="viewport" aria-label="칼리 마술 성장기">
 <div id="safeArea" aria-hidden="true"></div>
 <div id="frame"><div id="stage">
 <div id="phoneTop"><div id="phoneVenue"></div><div id="phoneWallet"></div></div>
-<div id="phoneMore" hidden></div>
+<div id="phoneMore" hidden><button id="replayTutorial">튜토리얼 다시 보기</button></div>
 <div id="gameLogo" aria-label="칼리 마술 성장기">칼리 마술 성장기</div>
 <section class="card" id="audienceCard" aria-label="관객 카드">
 <div class="room" id="room" data-venue="family" aria-hidden="true"><div class="wall-top"></div><div class="wall"></div><div class="window"></div><div class="curtain"></div><div class="picture" id="picture">🖼️</div><div class="shelf"><div class="books"></div></div><div class="wall-trim"></div><div class="floor"></div><div class="rug"></div><div class="sofa"></div><div class="plant" id="plant">🪴</div></div>
@@ -87,11 +35,12 @@
 <div class="board-footer"><span id="rangeShape" aria-hidden="true">▦</span><strong id="areaLabel">지팡이 범위 1 × 1</strong><span>케이스가 열리면 트릭 발동</span></div>
 </section>
 <canvas id="effects" width="1600" height="900" aria-hidden="true"></canvas>
-<nav class="menu" aria-label="게임 메뉴"><button id="bookButton">비법서</button><button id="bestiaryButton">도감</button><button id="dealerButton">토끼 딜러</button><button id="rebirthButton" hidden>다음 차원의 공연</button><button id="soundButton">소리</button><button id="retreatButton">퇴장</button><button id="moreButton" aria-expanded="false">☰ 더보기</button></nav>
+<nav class="menu" aria-label="게임 메뉴"><button id="bookButton">비법서</button><button id="buyAllButton">모두 배우기</button><button id="bestiaryButton">도감</button><button id="dealerButton">토끼 딜러</button><button id="rebirthButton" hidden>다음 차원의 공연</button><button id="soundButton">소리</button><button id="retreatButton">퇴장</button><button id="moreButton" aria-expanded="false">☰ 더보기</button></nav>
 <div class="caption"><span id="hint">카드 케이스를 꾹 누르면 마술이 시작돼요</span><span class="dimension-footer"><span id="dimensionLabel"></span><span id="starlightLabel"></span></span></div>
 <nav id="helperControls" aria-label="도우미 조작"></nav>
 <div id="banner" role="status" hidden></div><div id="toasts" role="status" aria-live="polite"></div>
 <section id="panel" role="dialog" aria-modal="true" aria-labelledby="panelTitle" hidden><header><h1 id="panelTitle"></h1><button id="closePanel">닫기</button></header><div id="panelBody"></div></section>
+<section id="introStory" aria-label="칼리의 첫 공연" hidden></section><aside id="tutorialCoach" role="status" hidden></aside>
 <div id="debug" hidden><span>시험 모드 ×10</span><button id="debugCoins">+동전 1000</button><button id="debugWin">관객 즉시 감탄</button><button id="debugNext">다음 무대로</button></div>
 </div></div>
 </main>

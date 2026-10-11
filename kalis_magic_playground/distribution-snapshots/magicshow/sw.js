@@ -1,6 +1,6 @@
 // Cache only the explicit app shell. API, authentication and user data stay on the network.
 const CACHE_PREFIX = 'magicshow-dist-';
-const CACHE_NAME = CACHE_PREFIX + 'f21d351a5ff83f02-coherent-1-distribution';
+const CACHE_NAME = CACHE_PREFIX + 'ce141240a312e45a-coherent-1-distribution';
 const SHELL = [
   "./assets/aud-a1-happy.png",
   "./assets/aud-a1.png",
@@ -357,9 +357,15 @@ const SHELL = [
   "./audio.js",
   "./core.js",
   "./data.js",
+  "./fonts/Galmuri11-Bold.woff2",
+  "./fonts/Galmuri11.woff2",
+  "./fonts/Galmuri9.woff2",
+  "./fonts/OFL.md",
   "./icon-192.png",
   "./icon-512.png",
   "./index.html",
+  "./install-prompt.css",
+  "./install-prompt.js",
   "./manifest.webmanifest",
   "./style.css",
   "./sw.js",
@@ -431,9 +437,7 @@ self.addEventListener('fetch', (event) => {
     const page = name === '' || name === 'index.html' || name.endsWith('.html');
     const executable = page || /\.(?:js|mjs|css)$/.test(name);
     const cached = await cache.match(new URL(name === '' ? 'index.html' : name, self.registration.scope).href, { ignoreSearch: true });
-    // Friend distribution navigation serves this release's cached index.html, the same as a personal app.
-    // That is safe: the cached HTML still runs the injected /tools/_check entitlement script before revealing anything,
-    // and the edge gate still protects every network fetch.
+    // Public beta navigation stays coherent with this release's cached runtime.
     if (page && GUARDED && cached) return cached;
     if (executable) {
       if (cached) return cached;

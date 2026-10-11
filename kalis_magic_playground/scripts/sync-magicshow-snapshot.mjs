@@ -2,10 +2,13 @@ import { createHash } from 'node:crypto';
 import { lstat, mkdir, readFile, readdir, realpath, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { accessGuard, shouldCopyMagicshow } from './build-public.mjs';
+import { shouldCopyMagicshow } from './build-public.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const SOURCE = '/Users/sumpie/Desktop/AI/AiGo/magic-show-game/v3';
+// CLI path (or --source PATH) takes precedence over the environment override.
+const args = process.argv.slice(2);
+if (args.length > 2 || (args.length === 2 && args[0] !== '--source') || (args[0] === '--source' && !args[1])) throw new Error('Usage: sync-magicshow-snapshot.mjs [--source] [PATH]');
+const SOURCE = path.resolve((args[0] === '--source' ? args[1] : args[0]) || process.env.MAGICSHOW_SOURCE || '/Users/sumpie/Desktop/AI/AiGo/magic-show-game/v3');
 const SNAPSHOT = path.join(ROOT, 'distribution-snapshots/magicshow');
 const ADDITIONS = path.join(ROOT, 'scripts/magicshow-dist');
 const files = new Map();
@@ -21,10 +24,13 @@ function replaceOnce(source, anchor, addition) {
 for (const file of ['index.html', 'style.css', 'data.js', 'core.js', 'audio.js', 'ui.js']) {
   files.set(file, await readRegular(SOURCE, file));
 }
-for (const entry of (await readdir(path.join(SOURCE, 'assets'), { withFileTypes: true })).sort((a, b) => a.name.localeCompare(b.name, 'en'))) {
-  const file = `assets/${entry.name}`;
-  if (entry.isFile() && shouldCopyMagicshow(file)) files.set(file, await readRegular(SOURCE, file));
+for (const directory of ['assets', 'fonts']) {
+  for (const entry of (await readdir(path.join(SOURCE, directory), { withFileTypes: true })).sort((a, b) => a.name.localeCompare(b.name, 'en'))) {
+    const file = `${directory}/${entry.name}`;
+    if (entry.isFile() && shouldCopyMagicshow(file)) files.set(file, await readRegular(SOURCE, file));
+  }
 }
+for (const file of ['install-prompt.js', 'install-prompt.css']) files.set(file, await readRegular(ADDITIONS, file));
 for (const size of [192, 512]) files.set(`icon-${size}.png`, await readRegular(ADDITIONS, `icon-${size}.png`));
 files.set('manifest.webmanifest', Buffer.from(JSON.stringify({
   name: '칼리 마술 성장기 (베타)', short_name: '칼리마술',
@@ -33,8 +39,7 @@ files.set('manifest.webmanifest', Buffer.from(JSON.stringify({
   icons: [192, 512].map(size => ({ src: `icon-${size}.png`, sizes: `${size}x${size}`, type: 'image/png', purpose: 'any' }))
 }, null, 2) + '\n'));
 let html = files.get('index.html').toString();
-html = replaceOnce(html, '<head>', `<head>\n${accessGuard('magicshow', 'magicshow')}\n`);
-html = replaceOnce(html, '</head>', '<link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="theme-color" content="#151020"></head>');
+html = replaceOnce(html, '</head>', '<link rel="stylesheet" href="install-prompt.css"><script defer src="install-prompt.js"></script><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="theme-color" content="#151020"></head>');
 html = replaceOnce(html, '<body>', '<body data-magic-customize="off">');
 html = replaceOnce(html, '</body>', `<script>if ('serviceWorker' in navigator) { window.addEventListener('load', function () { navigator.serviceWorker.register('./sw.js').catch(function () {}); }); }</script></body>`);
 files.set('index.html', Buffer.from(html));
@@ -57,6 +62,7 @@ await mkdir(path.join(SNAPSHOT, 'assets'), { recursive: true });
 let bytes = 0;
 for (const [file, content] of files) {
   if (!shouldCopyMagicshow(file)) throw new Error(`Disallowed snapshot file: ${file}`);
+  await mkdir(path.dirname(path.join(SNAPSHOT, file)), { recursive: true });
   await writeFile(path.join(SNAPSHOT, file), content);
   bytes += content.length;
 }

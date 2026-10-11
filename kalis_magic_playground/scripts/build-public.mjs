@@ -356,8 +356,8 @@ export function injectLegacyMigration(html, target) {
 }
 
 export function transformDistributionDocument(html, app) {
-  // The sync script already applies the shared gate to this pinned game snapshot.
-  if (app.target === 'magicshow' && html.includes('id="friend-apps-check"')) return html;
+  // Magicshow is a public beta; the sync script owns its document additions.
+  if (app.target === 'magicshow') return html;
   const isolate = app.target === 'kairos' || app.target === 'kairos-classic';
   let next = isolate ? isolateKairosStorageKeys(html, app.target) : html;
   next = next
@@ -425,9 +425,9 @@ export function injectLegacyShellModules(source) {
 }
 export function shouldCopyMagicshow(relativePath) {
   const file = relativePath.split(path.sep).join('/');
-  return file === '' || file === 'assets' ||
-    ['index.html', 'style.css', 'data.js', 'core.js', 'audio.js', 'ui.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'sw.js'].includes(file) ||
-    /^assets\/[A-Za-z0-9_-]+\.png$/.test(file);
+  return file === '' || file === 'assets' || file === 'fonts' || file === 'fonts/OFL.md' ||
+    ['install-prompt.js', 'install-prompt.css', 'index.html', 'style.css', 'data.js', 'core.js', 'audio.js', 'ui.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'sw.js'].includes(file) ||
+    /^assets\/[A-Za-z0-9_-]+\.png$/.test(file) || /^fonts\/[A-Za-z0-9_-]+\.woff2$/.test(file);
 }
 
 export const DISTRIBUTION_APPS = [
