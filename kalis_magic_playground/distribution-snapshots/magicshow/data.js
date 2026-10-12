@@ -628,8 +628,9 @@
     cardPrizes: [
       { id: "coins-s", name: "동전 한 줌", emoji: "🪙", kind: "coins", value: 20 },
       { id: "coins-m", name: "모자 속 잔돈", emoji: "🎩", kind: "coins", value: 60 },
-      { id: "gems-1", name: "보석 한 알", emoji: "💎", kind: "gems", value: 1 },
-      { id: "gems-3", name: "보석 세 알", emoji: "💎", kind: "gems", value: 3 },
+      // v4 U37: kind values are the base; the dealer pays them times CONST.dealerRewardMult (2.5): gems 1 -> 3, 3 -> 8, heal 20 -> 50 percent, buff 15 -> 37.
+      { id: "gems-1", name: "보석 세 알", emoji: "💎", kind: "gems", value: 1 },
+      { id: "gems-3", name: "보석 여덟 알", emoji: "💎", kind: "gems", value: 3 },
       { id: "heal", name: "물 한 잔", emoji: "🥤", kind: "heal", value: 20 },
       { id: "buff", name: "박수 부적", emoji: "✨", kind: "buff", value: 15 }
     ],
@@ -843,8 +844,7 @@
     const visible=D.tree.filter(n=>n.branch===b);
     const last=visible[visible.length-1];
     if(i<5) add('hidden-'+b,'숨은 '+({hand:'손끝',box:'케이스',heart:'배짱',luck:'행운',pet:'조수'})[b],b,last.id,ends[b][0],ends[b][1],1,12000,'node-infinite',{hidden:true,emoji:'✨',branchMax:[last.id],desc:'이 가지의 주 능력 +2%',statBranch:b});
-    const members=D.tree.filter(n=>n.branch===b);
-    add('infinite-'+b,'끝없는 비법 ∞',b,members[members.length-1].id,ends[b][2],ends[b][3],Number.MAX_SAFE_INTEGER,20000,'node-infinite',{infinite:true,branchMax:members.map(n=>n.id),statBranch:b,desc:'레벨마다 이 가지의 주 능력 +2%, 비용 ×1.5'});
+    // v4 U38: the endless "infinite-<branch>" nodes were removed; saves refund their levels on load (core.js infiniteRefund).
   });
 })(GAME_DATA);
 
@@ -868,7 +868,6 @@
   D.tree.push({id:'fanPower',name:'팬과 어시스턴트 파워',desc:'작업 피해 +15%씩',branch:'pet',prereqs:['boxHelper'],x:-5,y:4,max:5,cost:{c:1200,g:1.5},currency:'coins',reveal:'N',icon:'node-fan.png',emoji:'👏',pending:false,u4b:true});
   const stars=D.tree.filter(n=>n.starKey);
   stars.forEach((n,i)=>{n.x=-2+i;n.y=-7;});
-  const infinity=D.tree.find(n=>n.id==='infinite-star'); infinity.x=2;infinity.y=-7;
   D.stageRewards = ['콤보 유지 +500 ms','마술 실력 ×1.2','모든 도우미 속도 +10%','새 케이스 시작 LV +1','연쇄 피해 +15%','피날레 피해 +30%'].map((effect,i)=>({id:i+1,venue:(i+1)*2,effect,quote:['박수 사이에도 마술은 이어져요.','손끝을 믿어 주세요.','함께하면 더 빠르죠.','새 케이스도 경험을 기억해요.','놀라움은 옆자리로 번져요.','마지막까지 당신의 확신을 보여 주세요.'][i]}));
 })(GAME_DATA);
 
@@ -2135,7 +2134,7 @@ GAME_DATA.skills = [
   D.tree.find(n=>n.id==='caseMax').max=45;
   D.tree.find(n=>n.id==='caseMax').cost=Array.from({length:45},(_,i)=>i<10?Math.ceil(240*1.5**i):Math.ceil(1e9*1.15**(i-10)));
   D.tree.find(n=>n.id==='caseMax').desc='케이스 최대 LV +1 · 기본 5, 최대 50';
-  D.tree.forEach(n=>{if(['power','attack','mental','spawn','speed','coinLuck'].includes(n.id)||n.infinite||n.starKey)n.statMilestone=true;});
+  D.tree.forEach(n=>{if(['power','attack','mental','spawn','speed','coinLuck'].includes(n.id)||n.starKey)n.statMilestone=true;});
 })(GAME_DATA);
 
 // U13 pace tuning keeps active skill and milestone effects intact.
@@ -3292,7 +3291,7 @@ GAME_DATA.easyNodes.flashpaperPower="불꽃 종이가 더 세게 두드려요\n�
 (function(D){
  D.tree.forEach(n=>{
   if(n.productMultiplier)n.desc='관객을 더 크게 놀라게 해요\n연출 '+n.productMultiplier+'배';
-  else if(n.infinite||n.id.startsWith('hidden-')){const results={hand:'케이스를 더 빨리 열어요',box:'케이스 아이템의 힘이 커져요',heart:'야유를 더 오래 버텨요',luck:'동전을 더 많이 얻어요',pet:'도우미가 더 힘껏 도와줘요',finale:'피날레가 더 크게 놀라게 해요',collection:'관객을 더 크게 놀라게 해요',star:'별빛의 힘이 더 세져요'};n.desc=results[n.id.split('-').slice(1).join('-')]+'\n힘 2%씩 추가';}
+  else if(n.id.startsWith('hidden-')){const results={hand:'케이스를 더 빨리 열어요',box:'케이스 아이템의 힘이 커져요',heart:'야유를 더 오래 버텨요',luck:'동전을 더 많이 얻어요',pet:'도우미가 더 힘껏 도와줘요',finale:'피날레가 더 크게 놀라게 해요',collection:'관객을 더 크게 놀라게 해요',star:'별빛의 힘이 더 세져요'};n.desc=results[n.id.split('-').slice(1).join('-')]+'\n힘 2%씩 추가';}
   else n.desc=D.easyNodes[n.id];
   if(!n.desc)throw new Error('Missing easy description: '+n.id);
  });
@@ -3394,3 +3393,12 @@ GAME_DATA.lineFaces={"roles":{"a1":{"role":"family","name":"아빠","venue":"fam
 
 // U25: pace tuning with fair, readable gate fights.
 (function(D){const scale={family:1.04,meetup:2.3,galaxy:.95,multiverse:.98};D.venues.forEach(v=>{if(scale[v.slug])v.hpFactor*=scale[v.slug];});D.venues.find(v=>v.slug==='lecturenote').bossHpFactor*=1.15;})(GAME_DATA);
+
+// v4 U38: a finite tail for 무대 배짱 (mental). The ten old levels keep their price; levels 11 to 15 each add x1.18 mental (x2.29 in all) and cost more
+// coins than any wallet holds before the final boss (the richest wallet seen before it is under 1e8 in the simulator), so only a player who has
+// learned every 비법 owns them. The final boss's last heckle (core.js CONST.finalHeckle) sits between the mental of a build without the tail and with it.
+(function(D){
+ const n=D.tree.find(n=>n.id==='mental');
+ n.max=15;
+ n.cost=Array.from({length:15},(_,i)=>i<10?Math.ceil(30*Math.pow(2.2,i)):5e8*Math.pow(2,i-10));
+})(GAME_DATA);

@@ -90,6 +90,11 @@
     cardMax: 5,
     dealerDuds: 1,
     dealerCoinGrowth: 1.35,
+    // v4 U37: the dealer now visits only after a failed stage, so what it pays is multiplied. Income based games (cups, monte) are capped
+    // at dealerCapSeconds of the player's coin income per payout so one visit cannot skip a stage.
+    dealerRewardMult: 2.5,
+    dealerCreditPerStage: 1,
+    dealerCapSeconds: 600,
     forceGemCost: 3,
     forceMax: 2,
     doveEvery: 3000,
@@ -106,6 +111,13 @@
     stealPct: 0.04,
     patternHealPct: 0.0025,
     patternHealEvery: 9000,
+    // v4 U38: a show ends as a failure when doubt has not gone below its lowest point for this long (a stall, e.g. gate pressure out-healing the player).
+    stallMs: 75000,
+    // v4 U38: the final boss's last heckle. When its doubt falls to 30 percent (act 3) the next heckle is this one: a fixed, announced size that the
+    // mental and 자신감 of a build without the tail of 무대 배짱 (levels 11 to 15) cannot soak up (281k + 169k at the final boss, so 450k), the full build can
+    // (644k mental alone), and 야유 막기 cancels outright. finalHeckleWarnMs is the pause that announces it.
+    finalHeckle: 560000,
+    finalHeckleWarnMs: 4000,
     missChance: 0.22,
     phase2At: 0.75,
     phase2Hp: 0.12,
@@ -137,7 +149,8 @@
   function legacyRank(v) { return Math.max(1, DATA.legacyVenueSlugs.indexOf(VENUES[v-1].slug) + 1); }
   function emptyU19(){return {cleared:false,phase:1,telegraph:0,window:0,target:0,hitMs:0,damage:0,power:1,lastDps:0,lastPower:1,routines:[],pending:[],cooldown:0};}
   function profile(state) { var a = getAud(state.venue,state.j); return a && a.bossProfile || ''; }
-  function emptyReview() { return {act:1,cycle:0,target:-1,elapsed:0,cancel:false,bonusMs:0,pairs:0,lastSource:'',lastCell:-1,finaleReady:false,finaleUsed:false,actMs:0}; }
+  // lastHeckle (v4 U38): 0 = not yet, 1 = the final boss's last heckle is the next one, 2 = it has come (or was cancelled).
+  function emptyReview() { return {act:1,cycle:0,target:-1,elapsed:0,cancel:false,bonusMs:0,pairs:0,lastSource:'',lastCell:-1,finaleReady:false,finaleUsed:false,actMs:0,lastHeckle:0}; }
   function balanceRank(v) { return VENUES[v - 1].balanceRank; }
   var PRIZE_LIST = DATA.dealer.cardPrizes;
   var SYMBOLS = DATA.dealer.slotSymbols;
@@ -592,7 +605,8 @@
     if(!g||g.studied||g.cleared||state.u19b.failedId!==aud||state.coins<cost)return false;
     state.coins-=cost;g.studied=true;return true;
   }
-  function dealerCredit(state) {return state.u19b.dealerVisits<Math.max(1,Math.floor((state.vMax-1)*2.2));}
+  // v4 U37: one visit credit per stage reached (was 2.2) now that every visit pays dealerRewardMult times more.
+  function dealerCredit(state) {return state.u19b.dealerVisits<Math.max(1,Math.floor((state.vMax-1)*CONST.dealerCreditPerStage));}
   function failureDealerAvailable(state) {return !!state.u19b.dealerOffer&&state.gems>=2&&state.mode==='fight'&&!state.resolved&&!state.idle.next;}
   function openFailureDealer(state) {
     if(!failureDealerAvailable(state)||state.mode==='dealer')return false;
@@ -675,7 +689,8 @@
   function caseNeed(lv) { return Math.ceil(3 * Math.pow(1.35, lv - 1)); }
   function caseTier(cell) { return cell.golden ? 'box-golden' : 'box-' + Math.min(4, Math.floor(((cell.lv || 1) - 1) / 3)); }
   function caseItems(lv) { return 1 + Math.floor((lv - 1) / 3); }
-  function branchBonus(state, branch) { var id='infinite-'+branch; return (1 + .02 * ((state.tree[id] || 0) + (state.tree['hidden-' + branch] || 0))) * statMultiplier(state,id); }
+  // v4 U38: the endless nodes are gone; only the one-level hidden node of a branch still adds its 2 percent.
+  function branchBonus(state, branch) { return 1 + .02 * (state.tree['hidden-' + branch] || 0); }
   function earnCoins(state, amount) { state.u14.visitor.incomeCoins+=amount; state.coins += amount; state.features.progress.coinsEarned += amount; }
   function fillBox(state, cell) {
     cell.lv = cell.lv || Math.min(caseCap(state), 1 + (state.tree.caseStart || 0) + (hasReward(state, 4) ? 1 : 0));
@@ -757,6 +772,7 @@
     }
     if(gateAudience(state)&&!state.u19b.gates[state.audId])state.u19b.gates[state.audId]={prepared:preparation(state),cleared:false,studied:false};
     if(gatePressure(state)>0)state.audHp=state.audHpMax=Math.max(state.audHpMax,Math.round(futurePower(state)*(VENUES[v-1].slug==='theater'?75:45)));
+    state.stallMin = state.audHp; state.stallMs = 0;
     emit(ev, { type: "audience", venue: v, j: j, audId: state.audId, crowd: state.crowd });
   }
 
@@ -851,14 +867,10 @@
         }
       }
     }
-    if (state.venue >= venueNumber(DATA.dealer.cardVenue)) {
-      state.winsSinceDealer++;
-      if (state.winsSinceDealer >= CONST.dealerEvery && dealerCredit(state)) {
-        state.winsSinceDealer = 0;
-        state.dealerQueued = true;
-        emit(ev, { type: "dealerQueued" });
-      }
-    }
+    // v4 U37: the rabbit dealer visits only after a failed stage. A win never queues a visit and ends any unused offer from an earlier failure.
+    if (state.venue >= venueNumber(DATA.dealer.cardVenue)) state.winsSinceDealer++;
+    state.dealerQueued = false;
+    state.u19b.dealerOffer = false;
     state.buff = 0;
     if(state.u19b.gates[state.audId])state.u19b.gates[state.audId].cleared=true;
     emit(ev, { type: "win", venue: venue, crowd: state.crowd, j: j, coins: coins, removed: removed, trophy: trophy, keys: keys });
@@ -878,7 +890,7 @@
     state.mental = Math.min(state.mentalMax, state.mental + state.mentalMax * nodeEffects(state).winHeal);
     state.mode = "transition";
     state.transMs = CONST.winTransitionMs;
-    state.after = state.features.climax.left > 0 ? "fight" : state.dealerQueued ? "dealer" : "fight";
+    state.after = "fight";
   }
 
   function enterEnding(state, ev) {
@@ -915,6 +927,7 @@
 
   function setupDealer(state) {
     state.u19b.dealerVisits++;
+    state.winsSinceDealer = 0;
     var n = CONST.cardMin + Math.floor(rngNext(state) * (CONST.cardMax - CONST.cardMin + 1));
     if (n < 3) n = 3;
     if (n > 5) n = 5;
@@ -964,13 +977,13 @@
   function applyPrize(state, prize) {
     if (!prize) return;
     if (prize.kind === "coins") {
-      earnCoins(state, Math.round(prize.value * Math.pow(CONST.dealerCoinGrowth, balanceRank(state.vMax) - 1) * nodeEffects(state).dealerCoin));
+      earnCoins(state, Math.round(prize.value * CONST.dealerRewardMult * Math.pow(CONST.dealerCoinGrowth, balanceRank(state.vMax) - 1) * nodeEffects(state).dealerCoin));
     } else if (prize.kind === "gems") {
-      state.gems += prize.value;
+      state.gems += Math.round(prize.value * CONST.dealerRewardMult);
     } else if (prize.kind === "heal") {
-      state.mental = Math.min(state.mentalMax, state.mental + state.mentalMax * (prize.value / 100));
+      state.mental = Math.min(state.mentalMax, state.mental + state.mentalMax * (Math.min(100, prize.value * CONST.dealerRewardMult) / 100));
     } else if (prize.kind === "buff") {
-      state.buff = (state.buff || 0) + prize.value;
+      state.buff = (state.buff || 0) + Math.min(50, prize.value * CONST.dealerRewardMult);
       if (state.buff > 100) state.buff = 100;
       recompute(state, false);
     }
@@ -1070,8 +1083,8 @@
       }
     }
     if (pays > 0) {
-      earnCoins(state, Math.round(pays * CONST.slotCoin * Math.pow(CONST.dealerCoinGrowth, balanceRank(state.vMax) - 1) * nodeEffects(state).jackpot));
-      if (pays >= 2) state.gems += CONST.slotGem;
+      earnCoins(state, Math.round(pays * CONST.slotCoin * CONST.dealerRewardMult * Math.pow(CONST.dealerCoinGrowth, balanceRank(state.vMax) - 1) * nodeEffects(state).jackpot));
+      if (pays >= 2) state.gems += Math.round(CONST.slotGem * CONST.dealerRewardMult);
     }
     return true;
   }
@@ -1137,20 +1150,19 @@
     return restartRun(state);
   }
 
-  function failRun(state, ev) {
+  function failRun(state, ev, forcedCause) {
     if(state.u18.anchor){finishTravel(state,ev,false);return;}
     var pct = 0;
     if (state.audHpMax > 0) pct = Math.round(100 * state.audHp / state.audHpMax);
     if (pct < 0) pct = 0;
     if (pct > 100) pct = 100;
-    var failedVenue=state.venue,failedId=state.audId,offer=state.venue>=2&&dealerCredit(state)&&(state.winsSinceDealer>0||state.dealerQueued),regularWins=state.winsSinceDealer,queued=state.dealerQueued;
+    var failedVenue=state.venue,failedId=state.audId,offer=state.venue>=venueNumber(DATA.dealer.cardVenue)&&dealerCredit(state)&&state.winsSinceDealer>0;
     // U32 cause: gate pressure first, then how much of the doubt bar this run actually removed.
-    var failCause = gatePressure(state) > 0 ? "gate" : (state.audHpMax > 0 && state.u19.damage / state.audHpMax < 0.4 ? "damage" : "mental");
+    var failCause = forcedCause ? forcedCause : gatePressure(state) > 0 ? "gate" : (state.audHpMax > 0 && state.u19.damage / state.audHpMax < 0.4 ? "damage" : "mental");
     emit(ev, { type: "fail", reasonPct: pct, cause: failCause, venue:failedVenue,audId:failedId });
     state.fails++;
     restartRun(state);
     state.u19b.failedId=failedId;
-    state.winsSinceDealer=regularWins;state.dealerQueued=queued;
     if(offer)state.u19b.dealerOffer=true;
   }
 
@@ -1510,7 +1522,25 @@
     }
   }
 
-  function heckleStrength(state){var pressure=gatePressure(state),base=state.atk*nodeEffects(state).calm;if(!pressure)return base;return Math.max(Math.min(base,state.mentalMax*.1),state.mentalMax*(.08+2*Math.max(0,Math.min(1,(state.fightMs-20000)/20000)))*pressure);}
+  function lastHeckleArmed(state){return state.review.lastHeckle===1&&isFinalBoss(state);}
+  function heckleStrength(state){if(lastHeckleArmed(state))return CONST.finalHeckle;var pressure=gatePressure(state),base=state.atk*nodeEffects(state).calm;if(!pressure)return base;return Math.max(Math.min(base,state.mentalMax*.1),state.mentalMax*(.08+2*Math.max(0,Math.min(1,(state.fightMs-20000)/20000)))*pressure);}
+  // v4 U38: threat numbers the player can compare with their own. Everything is per second so 야유, 회복 and 내 공격 share one unit.
+  // hit = one heckle, every = seconds between heckles, perSecond = hit / every, regen = doubt the audience wins back per second
+  // (gate pressure and the heal pattern), block = how much of one heckle the 자신감 shield soaks up right now.
+  function threatInfo(state) {
+    var hit = heckleStrength(state), every = Math.max(400, (state.interval || 4) * 1000) / 1000, pressure = gatePressure(state);
+    var regen = (pressure ? state.audHpMax * .012 * pressure : 0) + (state.pHeal || state.pattern === "heal" ? state.audHpMax * CONST.patternHealPct / (CONST.patternHealEvery / 1000) : 0);
+    return { last: lastHeckleArmed(state), hit: hit, every: every, perSecond: hit / every, regen: regen, block: Math.min(Math.max(0, state.shield || 0), hit), shield: Math.max(0, state.shield || 0) };
+  }
+  // 내 공격/초: doubt removed per second, a smoothed measure of what really landed (it follows the current hold rate and skills).
+  // Transient (never saved). It is seeded with the fight average after 4 seconds and then follows an 8 second smoothing.
+  function trackAttackRate(state, dt) {
+    var d = state.u19.damage, last = typeof state._dmgLast === "number" && d >= state._dmgLast ? state._dmgLast : d;
+    state._dmgLast = d;
+    if (typeof state._atkRate !== "number") { if (state.fightMs >= 4000) state._atkRate = d / (state.fightMs / 1000); return; }
+    state._atkRate += ((d - last) / (dt / 1000) - state._atkRate) * (dt / (8000 + dt));
+  }
+  function attackRate(state) { return typeof state._atkRate === "number" ? Math.max(0, state._atkRate) : null; }
   function tickHeckle(state, dt, ev) {
     if(state.u15.tutorial.active)state.mental=Math.max(state.mental,10);
     var pressure=gatePressure(state);
@@ -1526,9 +1556,11 @@
       if (intervalMs < 400) intervalMs = 400;
       state.heckleMs += intervalMs;
       state.telegraphed = state.heckleMs <= CONST.telegraphMs;
-      if (state.skills.cheerGuard) { state.skills.cheerGuard=false; emit(ev,{type:'heckleCancelled'}); continue; }
-      if (state.review.cancel) { state.review.cancel=false; emit(ev,{type:"heckleCancelled"}); continue; }
+      var big = lastHeckleArmed(state);
+      if (state.skills.cheerGuard) { state.skills.cheerGuard=false; if (big) state.review.lastHeckle=2; emit(ev,{type:'heckleCancelled'}); continue; }
+      if (state.review.cancel) { state.review.cancel=false; if (big) state.review.lastHeckle=2; emit(ev,{type:"heckleCancelled"}); continue; }
       var dmg = heckleStrength(state);
+      if (big) state.review.lastHeckle = 2;
       var shieldDmg = 0;
       if (state.shield > 0) {
         shieldDmg = state.shield >= dmg ? dmg : state.shield;
@@ -1548,10 +1580,20 @@
       emit(ev, { type: "heckle", dmg: dmg, shieldDmg: shieldDmg });
       if (state.mental <= 0) {
         state.mental = 0;
-        failRun(state, ev);
+        failRun(state, ev, big ? "lastHeckle" : undefined);
         return;
       }
     }
+  }
+
+  // v4 U38 stall guard: a new lowest doubt restarts the clock; CONST.stallMs without one ends the show as a failure ("stall").
+  // The two fields are not saved: a loaded fight starts its clock again from the loaded doubt.
+  function tickStall(state, dt, ev) {
+    if (state.u15.tutorial.active || state.u18.anchor) return;
+    var eps = Math.max(1e-9, state.audHpMax * 1e-9);
+    if (typeof state.stallMin !== "number" || state.audHp < state.stallMin - eps) { state.stallMin = state.audHp; state.stallMs = 0; return; }
+    state.stallMs = (state.stallMs || 0) + dt;
+    if (state.stallMs >= CONST.stallMs) { state.stallMs = 0; failRun(state, ev, "stall"); }
   }
 
   function tickAutos(state, dt, ev) {
@@ -1781,6 +1823,7 @@
       while(r.act<act) {
         r.act++; r.actMs=0; r.target=-1; r.elapsed=0;
         emit(ev,{type:'homecomingAct',act:r.act,line:getAud(state.venue,state.j)['act'+r.act+'Line']});
+        if(r.act===3&&!r.lastHeckle){r.lastHeckle=1;state.heckleMs=CONST.finalHeckleWarnMs;state.telegraphed=false;emit(ev,{type:'lastHeckle',hit:CONST.finalHeckle});}
       }
       if(r.act===3) { if(r.actMs>=2000&&!r.finaleUsed)r.finaleReady=true; return; }
       if(r.act===2)return;
@@ -1837,10 +1880,9 @@
         else if (state.after === "continue") restartRun(state);
         else if (state.after === "stay") stayHome(state);
         else if (state.after === "legacyEnding") { state.mode='ending'; state.seenEnding=true; if(state.endings.indexOf(state.dimension)<0)state.endings.push(state.dimension); }
-        else if (state.after === "dealer") {
-          state.mode = "dealer";
-          setupDealer(state);
-        } else {
+        else {
+          // An old save may still carry after "dealer" or a queued visit; since v4 U37 only a failure opens the dealer.
+          state.dealerQueued = false;
           state.mode = "fight";
           state.heckleMs = state.interval * 1000;
           state.telegraphed = false;
@@ -1895,6 +1937,9 @@
     if (state.audHp <= 0) onWin(state, ev);
     if (state.mode !== "fight" || state.u18.map || state.resolved) return;
     tickHeckle(state, dt, ev);
+    if (state.mode !== "fight" || state.u18.map || state.resolved) return;
+    tickStall(state, dt, ev);
+    trackAttackRate(state, dt);
     if(state.u18.challenge&&state.u18.challenge.kind==='trueFan'&&trueFanRule(state.u18.challenge.slug).type==='noDamage'&&state.tookMental)finishTravel(state,ev,false);
   }
 
@@ -1925,6 +1970,12 @@
     return node.starKey ? state.stars[node.starKey] : state.tree[node.id];
   }
 
+  // v4 U38: every finite coin/key node is at its last level (star nodes are a separate track, pending nodes cannot be learned yet).
+  function allLearned(state) {
+    return DATA.tree.every(function (n) {
+      return n.starKey || n.pending || nodeLevel(state, n) >= n.max || (n.id === "board" && boardCapacity(state) >= CONST.boardMax);
+    });
+  }
   function branchMaxed(state, node) { return (node.branchMax || []).every(function(id) { return nodeLevel(state,NODE_BY_ID[id]) >= NODE_BY_ID[id].max || (id === "board" && boardCapacity(state) >= CONST.boardMax); }); }
   function gateProgress(state, gate) {
     if (!gate) return null;
@@ -1941,7 +1992,7 @@
     if (level < node.max) cost = Array.isArray(node.cost) ? node.cost[level] : Math.ceil(node.cost.c * Math.pow(node.cost.g, level));
     var revealed = id === "root" || (node.reveal === "E" ? state.endings.length > 0 : level > 0 || node.prereqs.some(function (pre) { return nodeLevel(state, NODE_BY_ID[pre]) > 0; }));
     if (node.u13 && (id==='autoPractice' || /Cooldown$/.test(id))) revealed = level>0 || (id==='autoPractice' ? practiceUnlocked(state) : skillUnlocked(state,id.replace('Cooldown','')));
-    if (node.hidden || node.infinite) revealed = level > 0 || branchMaxed(state,node);
+    if (node.hidden) revealed = level > 0 || branchMaxed(state,node);
     var progress = gateProgress(state,node.gates ? node.gates[level] : node.gate);
     var reason = "";
     if (level >= node.max) reason = "최대 레벨";
@@ -1955,7 +2006,7 @@
     else if (id === "area" && boardCapacity(state) < CONST.areaNeeds[level]) reason = "케이스 자리 " + CONST.areaNeeds[level] + "칸 필요";
     else if (id === "board" && boardCapacity(state) >= CONST.boardMax) reason = "케이스 자리 25칸 완성";
     else if (state[node.currency] < cost) reason = ({ coins: "동전", keys: "열쇠", starlight: "별빛" })[node.currency] + " 부족";
-    return { level: level, max: node.infinite ? "∞" : node.max, gate:progress, currency: node.currency, cost: cost, revealed: revealed, purchasable: !reason, blockedReason: reason };
+    return { level: level, max: node.max, gate:progress, currency: node.currency, cost: cost, revealed: revealed, purchasable: !reason, blockedReason: reason };
   }
 
   // Numeric price contract, null for unavailable upgrades. Wallet is checked by buyNode.
@@ -1992,19 +2043,18 @@
   function buyMany(state, id) { var n=0; while(n<10000 && buyNode(state,id)) n++; return n; }
 
   // U12 bulk purchases always re-evaluate visibility, gates and wallets.
-  function affordableNodes(state, options) {
-    options = options || {};
+  function affordableNodes(state) {
     return DATA.tree.filter(function (n) {
-      if (n.currency !== "coins" || n.starKey || n.pending || (n.infinite && !options.infinite)) return false;
+      if (n.currency !== "coins" || n.starKey || n.pending) return false;
       var i = nodeInfo(state,n.id);
       return i.revealed && i.purchasable && Number.isFinite(i.cost) && i.cost > 0;
     }).sort(function (a,b) {
       return nodeInfo(state,a.id).cost-nodeInfo(state,b.id).cost || a.id.localeCompare(b.id);
     });
   }
-  function buyAll(state, options) {
+  function buyAll(state) {
     var count = 0, ids = [], choice;
-    while (count < 10000 && (choice = affordableNodes(state,options)[0])) {
+    while (count < 10000 && (choice = affordableNodes(state)[0])) {
       if (!buyNode(state,choice.id)) break;
       count++; ids.push(choice.id);
     }
@@ -2020,7 +2070,7 @@
     state.learning.ms += dt;
     if (state.learning.ms >= 3000) {
       state.learning.ms %= 3000;
-      var result = buyAll(state,{infinite:state.learning.infinite});
+      var result = buyAll(state);
       if (result.count) emit(ev,{type:"learnAll",count:result.count});
     }
   }
@@ -2128,7 +2178,7 @@
       seenEnding: false,
       guidance: { seen: [] },
       onboarding: { intro: false, panel: 0, step: 0, facts: [] },
-      learning: { on: false, infinite: false, ms: 0 },
+      learning: { on: false, ms: 0 },
       homecomingCleared: false, visited: [], knownAudiences: [], helpersUsed: [], review: emptyReview(),
       coins: 0,
       gems: 0,
@@ -2254,7 +2304,7 @@
     var stars = {};
     for (i = 0; i < STAR_KEYS.length; i++) stars[STAR_KEYS[i]] = state.stars[STAR_KEYS[i]] | 0;
     var obj = {
-      v: 15,
+      v: 16,
       u15: state.u15,
       u14: state.u14,
       idle: state.idle, skills: state.skills, u17: state.u17, u18: state.u18, u19: state.u19, u19b: state.u19b,
@@ -2333,48 +2383,79 @@
   }
 
   function isNewerSave(raw) {
-    try { var o=JSON.parse(raw); return !!o && typeof o.v==='number' && isFinite(o.v) && o.v>15; }
+    try { var o=JSON.parse(raw); return !!o && typeof o.v==='number' && isFinite(o.v) && o.v>16; }
     catch (error) { return false; }
   }
 
   function createSaveStore(storage, now) {
-    var key='magicShowBuster.v3', prefix=key+'.backup.', autoKey=prefix+'auto', blocked=false, noAuto=false;
+    var key='magicShowBuster.v3', prefix=key+'.backup.', autoKey=prefix+'auto', keepPrefix=key+'.keep.', KEEP_MAX=8, blocked=false, noAuto=false, lastRaw=null;
     now=now || Date.now;
-    function keys() {
+    function stamped(pre) {
       var result=[];
-      for(var i=0;i<storage.length;i++) { var k=storage.key(i); if(k && k.indexOf(prefix)===0 && /^\d+$/.test(k.slice(prefix.length)))result.push(k); }
-      return result.sort(function(a,b){return Number(b.slice(prefix.length))-Number(a.slice(prefix.length));});
+      for(var i=0;i<storage.length;i++) { var k=storage.key(i); if(k && k.indexOf(pre)===0 && /^\d+$/.test(k.slice(pre.length)))result.push(k); }
+      return result.sort(function(a,b){return Number(b.slice(pre.length))-Number(a.slice(pre.length));});
     }
-    function backup(raw, protect) {
+    function keys() { return stamped(prefix); }
+    // Protected copies (unreadable, repaired or about to be overwritten by a less progressed save) are never touched by the 3-backup rotation.
+    function keepKeys() { return stamped(keepPrefix); }
+    function readable(raw) { return raw===null?{state:null,repairs:[]}:deserializeRepair(raw); }
+    function backup(raw, protect, keep) {
       if(raw===null)return false;
-      var all=keys();
+      var all=keys(), kept=keepKeys();
       // Never store the same raw string twice.
-      if(all.some(function(k){return storage.getItem(k)===raw;}))return false;
-      var stamp=Math.max(now(),all[0]?Number(all[0].slice(prefix.length))+1:0);
-      while(storage.getItem(prefix+stamp)!==null)stamp++;
-      storage.setItem(prefix+stamp,raw);
-      keys().slice(3).forEach(function(k){if(k!==protect)storage.removeItem(k);});
+      if(all.concat(kept).some(function(k){return storage.getItem(k)===raw;}))return false;
+      var pre=keep?keepPrefix:prefix, mine=keep?kept:all;
+      var stamp=Math.max(now(),mine[0]?Number(mine[0].slice(pre.length))+1:0);
+      while(storage.getItem(pre+stamp)!==null)stamp++;
+      storage.setItem(pre+stamp,raw);
+      if(keep)keepKeys().slice(KEEP_MAX).forEach(function(k){storage.removeItem(k);});
+      else keys().slice(3).forEach(function(k){if(k!==protect)storage.removeItem(k);});
       return true;
+    }
+    function rank(item) { return [item.dimension|0,item.stage|0,typeof item.coins==='number'&&isFinite(item.coins)?item.coins:0,item.date|0]; }
+    function better(a,b) { for(var i=0;i<a.length;i++) { if(a[i]!==b[i])return a[i]>b[i]; } return false; }
+    // Same ranking as the ?restore=1 page: dimension, stage, coins, then date.
+    function bestBackup() {
+      return list().filter(function(item){return item.restorable;}).reduce(function(top,item){return !top||better(rank(item),rank(top))?item:top;},null);
     }
     function load() {
       var raw=storage.getItem(key), newer=raw!==null && isNewerSave(raw);
       blocked=blocked || newer;
-      var state=raw===null?null:deserialize(raw), backedUp=false, giftEnded=false;
-      if(raw!==null && !state && !newer) { backup(raw); backedUp=true; noAuto=true; }
-      if(state) { try { giftEnded=JSON.parse(raw).growth5x===true; } catch (error) { giftEnded=false; } }
-      return {state:state,newer:newer,backedUp:backedUp,giftEnded:giftEnded};
+      var result=readable(raw), state=result?result.state:null, repairs=result?result.repairs:[], backedUp=false, recovered=false, giftEnded=false;
+      if(raw!==null && !state && !newer) {
+        // Unreadable main save: keep the raw protected, then load the most progressed restorable backup instead of a new game.
+        backup(raw,null,true); backedUp=true;
+        var best=bestBackup();
+        if(best) {
+          var bestRaw=storage.getItem(best.key), got=readable(bestRaw);
+          if(got && got.state) { state=got.state; repairs=got.repairs; storage.setItem(key,bestRaw); raw=bestRaw; recovered=true; }
+        }
+        if(!recovered)noAuto=true;
+      } else if(state && repairs.length) backup(raw,null,true);
+      if(state) { lastRaw=raw; try { giftEnded=JSON.parse(raw).growth5x===true; } catch (error) { giftEnded=false; } }
+      return {state:state,newer:newer,backedUp:backedUp,recovered:recovered,repairs:repairs,giftEnded:giftEnded};
     }
     function write(raw) {
       if(blocked)return {saved:false,newer:true};
       var old=storage.getItem(key);
       if(old!==null && isNewerSave(old)) { blocked=true;return {saved:false,newer:true}; }
       var backedUp=false;
-      if(old!==null && !deserialize(old)) {
-        // An unsuccessful backup throws before any replacement can happen.
-        backedUp=backup(old);
-        noAuto=true;
+      // Our own previous write needs no re-check; anything else (another tab, an older page) is checked before it can be replaced.
+      if(old!==null && old!==lastRaw) {
+        var was=readable(old);
+        if(!was || !was.state) {
+          // An unsuccessful backup throws before any replacement can happen.
+          backedUp=backup(old,null,true);
+          noAuto=true;
+        } else {
+          var nowState=null;
+          try { nowState=JSON.parse(raw); } catch (error) { nowState=null; }
+          var a=progress(was.state), b=nowState?[nowState.dimension|0,nowState.vMax|0]:[0,0];
+          if(a[0]>b[0] || (a[0]===b[0] && a[1]>b[1]))backedUp=backup(old,null,true);
+        }
       }
       storage.setItem(key,raw);
+      lastRaw=raw;
       return {saved:true,backedUp:backedUp};
     }
     function progress(s) { return s?[s.dimension|0,s.vMax|0]:null; }
@@ -2382,9 +2463,9 @@
       if(blocked || noAuto)return false;
       var raw=storage.getItem(key);
       if(raw===null || isNewerSave(raw))return false;
-      var cur=deserialize(raw);
+      var cur=readable(raw).state;
       if(!cur)return false;
-      var oldRaw=storage.getItem(autoKey), old=oldRaw===null?null:deserialize(oldRaw);
+      var oldRaw=storage.getItem(autoKey), old=oldRaw===null?null:readable(oldRaw).state;
       if(old) {
         var a=progress(cur), b=progress(old);
         if(a[0]<b[0] || (a[0]===b[0] && a[1]<b[1]))return false;
@@ -2393,19 +2474,20 @@
       return true;
     }
     function list() {
-      var all=keys(), auto=storage.getItem(autoKey);
+      var all=keys().concat(keepKeys()), auto=storage.getItem(autoKey);
       if(auto!==null)all.unshift(autoKey);
       return all.map(function(k){
-        var raw=storage.getItem(k), state=deserialize(raw);
-        return {key:k,date:k===autoKey?(state && state.idle.wallMs || null):Number(k.slice(prefix.length)),stage:state?state.vMax:null,dimension:state?state.dimension:null,coins:state?state.coins:null,restorable:!!state};
+        var raw=storage.getItem(k), state=readable(raw).state;
+        var pre=k.indexOf(keepPrefix)===0?keepPrefix:prefix;
+        return {key:k,date:k===autoKey?(state && state.idle.wallMs || null):Number(k.slice(pre.length)),stage:state?state.vMax:null,dimension:state?state.dimension:null,coins:state?state.coins:null,restorable:!!state,protectedCopy:pre===keepPrefix};
       });
     }
     function restore(k, confirmed) {
-      if(confirmed!==true || (k!==autoKey && keys().indexOf(k)<0))return false;
+      if(confirmed!==true || (k!==autoKey && keys().indexOf(k)<0 && keepKeys().indexOf(k)<0))return false;
       var raw=storage.getItem(k);
-      if(raw===null || !deserialize(raw))return false;
+      if(raw===null || !readable(raw).state)return false;
       // Preserve the displaced save, including a forward save, before explicit restore.
-      backup(storage.getItem(key),k);
+      backup(storage.getItem(key),k,true);
       storage.setItem(key,raw);
       blocked=isNewerSave(raw);
       return true;
@@ -2416,6 +2498,19 @@
 
   function savedTimer(x, hi) {
     return typeof x === "number" && isFinite(x) ? Math.min(hi, Math.max(0, x)) : 0;
+  }
+
+  // v4 U38: the removed "끝없는 비법" nodes cost ceil(20000 * 1.5^level) coins for level 0, 1, 2 ...; the refund is exactly what was paid.
+  var INFINITE_BRANCHES = ['hand', 'box', 'heart', 'luck', 'pet', 'finale', 'collection', 'star'];
+  function infiniteRefund(tree) {
+    var sum = 0;
+    if (!tree || typeof tree !== 'object') return 0;
+    INFINITE_BRANCHES.forEach(function (b) {
+      var level = integer(tree['infinite-' + b], 1, 1e9);
+      if (level == null) return;
+      for (var l = 0; l < level && l < 120 && sum < 1e12; l++) sum += Math.ceil(20000 * Math.pow(1.5, l));
+    });
+    return Math.min(sum, 1e12);
   }
 
   function loadTimer(x, hi) {
@@ -2440,8 +2535,8 @@
       var o = JSON.parse(str);
       if (!o || typeof o !== "object" || Array.isArray(o)) return null;
       // Forward saves may share our known schema. Never persist this projection.
-      if (isNewerSave(str)) o.v = 14;
-      if (o.v !== 1 && o.v !== 2 && o.v !== 3 && o.v !== 4 && o.v !== 5 && o.v !== 6 && o.v !== 7 && o.v !== 8 && o.v !== 9 && o.v !== 10 && o.v !== 11 && o.v !== 12 && o.v !== 13 && o.v !== 14 && o.v !== 15) return null;
+      if (isNewerSave(str)) o.v = 16;
+      if (o.v !== 16 && o.v !== 1 &&o.v !== 2 && o.v !== 3 && o.v !== 4 && o.v !== 5 && o.v !== 6 && o.v !== 7 && o.v !== 8 && o.v !== 9 && o.v !== 10 && o.v !== 11 && o.v !== 12 && o.v !== 13 && o.v !== 14 && o.v !== 15) return null;
       if (o.v === 7 && o.venueSlug === "lecturenote") {
         // Preserve the old index contract, then migrate by stable audience ID.
         var previousOrder = ["a-lecturenote-hecate", "a-lecturenote-jung", "h-lecturenote-kim"];
@@ -2524,9 +2619,9 @@
       if (o.v >= 9) {
         var intro = o.onboarding, learning = o.learning;
         if (!intro || typeof intro.intro !== "boolean" || integer(intro.panel,0,4)==null || integer(intro.step,0,8)==null || !Array.isArray(intro.facts) || intro.facts.length>8 || new Set(intro.facts).size!==intro.facts.length || intro.facts.some(function (id) { return TUTORIAL_ACTIONS.indexOf(id)<0; })) return null;
-        if (!learning || typeof learning.on!=="boolean" || typeof learning.infinite!=="boolean" || num(learning.ms,0,3000)==null) return null;
+        if (!learning || typeof learning.on!=="boolean" || num(learning.ms,0,3000)==null) return null;
         state.onboarding = {intro:intro.intro,panel:intro.panel,step:intro.step,facts:intro.facts.slice()};
-        state.learning = {on:learning.on,infinite:learning.infinite,ms:learning.ms};
+        state.learning = {on:learning.on,ms:learning.ms};
       } else state.onboarding = {intro:true,panel:0,step:8,facts:[]};
       state.rngState = rngState >>> 0;
       state.dimension = dimension;
@@ -2562,6 +2657,11 @@
         var tv = integer(rawLevel, key === "root" ? 1 : 0, max);
         if (tv == null) return null;
         state.tree[key] = tv;
+      }
+      // v4 U38: refund the removed endless nodes. Applied only to saves older than version 16, so a re-saved game is never refunded twice.
+      if (o.v < 16) {
+        var refund = Math.min(infiniteRefund(o.tree), 1e12 - state.coins);
+        if (refund > 0) { state.coins += refund; state._refundCoins = refund; }
       }
       state.vMax = vMax;
       var cap;
@@ -2832,8 +2932,8 @@
         if (typeof o.homecomingCleared !== 'boolean' || !Array.isArray(o.visited) || !Array.isArray(o.knownAudiences) || !Array.isArray(o.helpersUsed)) return null;
         if (new Set(o.visited).size !== o.visited.length || o.visited.some(function(slug){return !venueNumber(slug);}) || o.knownAudiences.some(function(id){return COMBO_AUD_IDS.indexOf(id)<0;}) || o.helpersUsed.some(function(id){return ['fan','assistant','dove','rabbit','flash','sponge','cardthrow','tipbox','flashpaper','crystal','water','spotlight'].indexOf(id)<0;})) return null;
         var r=o.review;
-        if (!r || integer(r.act,1,3)==null || integer(r.cycle,0,1e9)==null || integer(r.target,-1,state.board.length-1)==null || num(r.elapsed,0,18000)==null || num(r.bonusMs,0,4000)==null || integer(r.pairs,0,3)==null || integer(r.lastCell,-1,state.board.length-1)==null || typeof r.lastSource!=='string' || typeof r.cancel!=='boolean' || typeof r.finaleReady!=='boolean' || typeof r.finaleUsed!=='boolean' || num(r.actMs,0,1e12)==null) return null;
-        state.review=JSON.parse(JSON.stringify(r)); state.visited=o.visited.slice(); state.knownAudiences=o.knownAudiences.slice(); state.helpersUsed=o.helpersUsed.slice(); state.homecomingCleared=o.homecomingCleared;
+        if (!r || integer(r.act,1,3)==null || integer(r.cycle,0,1e9)==null || integer(r.target,-1,state.board.length-1)==null || num(r.elapsed,0,18000)==null || num(r.bonusMs,0,4000)==null || integer(r.pairs,0,3)==null || integer(r.lastCell,-1,state.board.length-1)==null || typeof r.lastSource!=='string' || typeof r.cancel!=='boolean' || typeof r.finaleReady!=='boolean' || typeof r.finaleUsed!=='boolean' || num(r.actMs,0,1e12)==null || (r.lastHeckle!==undefined && integer(r.lastHeckle,0,2)==null)) return null;
+        state.review=JSON.parse(JSON.stringify(r)); if (state.review.lastHeckle===undefined) state.review.lastHeckle=0; state.visited=o.visited.slice(); state.knownAudiences=o.knownAudiences.slice(); state.helpersUsed=o.helpersUsed.slice(); state.homecomingCleared=o.homecomingCleared;
       }
       if (o.v >= 10) {
         var idle=o.idle, skills=o.skills;
@@ -2880,6 +2980,191 @@
   }
 
 
+  // ---- v4 U37 faces. Pure functions of the current state (plus the previous answer for hysteresis); the UI re-evaluates them every frame, so no face
+  // can latch: each one leaves as soon as its condition does. Short event faces live in the UI and expire by clock.
+  // Kali is flustered when 자신감 is gone after taking a hit or 멘탈 is under 35 percent, and calm again once 멘탈 is back to 50 percent and
+  // 자신감 is up (or no hit has landed in this fight). A fresh fight starts calm: 자신감 is 0 at every start, so 0 alone would never smile.
+  function kaliMood(state, prev) {
+    var ratio = state.mentalMax > 0 ? state.mental / state.mentalMax : 1;
+    var shaken = !(state.shield > 0) && !!state.tookMental;
+    if (prev === 'flustered') return ratio >= 0.5 && !shaken ? 'normal' : 'flustered';
+    return shaken || ratio < 0.35 ? 'flustered' : 'normal';
+  }
+  // Audience face from the doubt bar: serious while doubt is high, plain in the middle, happy as doubt runs low and on a win. heckle (the
+  // mood of the line being telegraphed) and surprised (a short flash after a critical or the finisher) are passed in by the caller while they last.
+  function audienceMood(state, prev, opts) {
+    opts = opts || {};
+    if (state.resolved || state.mode === 'transition' && state.audHp <= 0) return 'happy';
+    if (opts.heckle) return opts.heckle;
+    if (opts.surprised) return 'surprised';
+    var a = getAud(state.venue, state.j), ratio = state.audHpMax > 0 ? state.audHp / state.audHpMax : 1;
+    if (a && (a.role === 'supporter' || a.role === 'helper')) return 'happy';
+    if (prev === 'happy') return ratio < 0.38 ? 'happy' : 'doubt';
+    if (prev === 'serious') return ratio > 0.55 ? 'serious' : 'doubt';
+    return ratio < 0.3 ? 'happy' : ratio > 0.65 ? 'serious' : 'doubt';
+  }
+
+  // ---- v4 U37 save safety: repair instead of reject. The strict validators above stay the definition of a valid save; this layer only
+  // reshapes a parsed save so they accept it, and records every change. It never touches a save the strict path already accepts.
+  var SAVE_SCALARS = [
+    ['seed','int',0,4294967295],['rngState','int',0,4294967295],['dimension','int',1,999],['starlight','num',0,100000],
+    ['coins','num',0,1e12],['gems','int',0,1e9],['keys','int',0,1e6],['audHp','num',0,1e12],['audHpMax','num',1,1e12],
+    ['atk','num',0,1e9],['interval','num',0.2,60],['mental','num',0,1e12],['mentalMax','num',0,1e12],['shield','num',0,1e12],
+    ['level','int',0,100000],['xp','num',0,1e12],['combo','int',0,1e7],['maxCombo','int',0,1e7],['finisher','num',0,1000],['miss','num',0,1],
+    ['sealCell','int',-1,31],['winsSinceDealer','int',0,1e6],['wins','int',0,1e7],['fails','int',0,1e7],['buff','num',0,1000],
+    ['comboMs','num',0,1e7],['fightMs','num',0,1e12],['sealMs','num',0,1e7],['sealCd','num',0,1e7],['patternHealMs','num',0,1e7],
+    ['heckleMs','num',0,1e7],['transMs','num',0,1e7],['tapAcc','num',0,100],
+    ['u15.gloves','int',0,100000],['u15.gloveLeft','num',0,120000],
+    ['u17.feverGauge','num',0,100],['u17.feverPending','num',0,100],['u17.gemWait','num',0,90000],
+    ['u19b.dealerVisits','int',0,1000000],['idle.autoAcc','num',0,100],['idle.cursor','int',0,1e12],['idle.wallMs','num',0,1e16],
+    ['skills.showtimeLeft','num',0,20000],
+    ['features.boxes','int',0,1e9],['features.helperBreaks','int',0,1e9],
+    ['features.progress.comboMax','num',0,1e15],['features.progress.dealerFlips','num',0,1e15],['features.progress.coinsEarned','num',0,1e15],['features.progress.goldenOpened','num',0,1e15],
+    ['features.damage.manual','num',0,1e15],['features.damage.fan','num',0,1e15],['features.damage.assistant','num',0,1e15],['features.damage.chain','num',0,1e15],['features.damage.magic','num',0,1e15]
+  ];
+  function pathGet(o, path) { var p = path.split('.'), x = o; for (var i = 0; i < p.length; i++) { if (!x || typeof x !== 'object') return undefined; x = x[p[i]]; } return x; }
+  function pathSet(o, path, v) {
+    var p = path.split('.'), x = o;
+    for (var i = 0; i < p.length - 1; i++) { if (!x[p[i]] || typeof x[p[i]] !== 'object') return false; x = x[p[i]]; }
+    if (v === undefined) delete x[p[p.length - 1]]; else x[p[p.length - 1]] = v;
+    return true;
+  }
+  function clampValue(v, kind, lo, hi) {
+    if (typeof v !== 'number' || v !== v) return lo;
+    v = Math.min(hi, Math.max(lo, v));
+    return kind === 'int' ? Math.floor(v) : v;
+  }
+  function clampSave(o, rep) {
+    function fix(holder, key, kind, lo, hi, label) {
+      if (!holder || typeof holder !== 'object' || !(key in holder)) return;
+      var nv = clampValue(holder[key], kind, lo, hi);
+      if (nv !== holder[key]) { holder[key] = nv; rep.push(label); }
+    }
+    SAVE_SCALARS.forEach(function (s) {
+      var p = s[0].split('.'), key = p.pop(), holder = p.length ? pathGet(o, p.join('.')) : o;
+      if (!p.length && holder && !(key in holder)) { holder[key] = s[2]; rep.push(s[0]); return; }
+      fix(holder, key, s[1], s[2], s[3], s[0]);
+    });
+    fix(o, 'doveMs', 'num', 0, 1e7, 'doveMs'); fix(o, 'rabbitMs', 'num', 0, 1e7, 'rabbitMs'); fix(o, 'flashBreaks', 'int', 0, CONST.flashEvery - 1, 'flashBreaks');
+    if (o.v >= 2) { if (typeof o.legacySlots === 'undefined') { o.legacySlots = 0; rep.push('legacySlots'); } else fix(o, 'legacySlots', 'int', 0, CONST.boardMax - 1, 'legacySlots'); }
+    // Keyed ledgers: drop unknown venue keys, clamp every count.
+    function ledger(holder, label, fields) {
+      if (!holder || typeof holder !== 'object' || Array.isArray(holder)) return;
+      Object.keys(holder).forEach(function (k) {
+        if (!venueNumber(k)) { delete holder[k]; rep.push(label + ' key ' + k); return; }
+        if (fields) { if (!holder[k] || typeof holder[k] !== 'object') { holder[k] = { boxes: 0, count: 0 }; rep.push(label + ' ' + k); return; } fields.forEach(function (f) { fix(holder[k], f[0], 'int', f[1], f[2], label + '.' + f[0]); }); }
+        else fix(holder, k, 'int', 0, 100000, label);
+      });
+    }
+    if (o.u15) ledger(o.u15.drops, 'drops', [['boxes', 0, 1e9], ['count', 0, 100000]]);
+    if (o.u17) ledger(o.u17.gloveBuys, 'gloveBuys', null);
+    if (o.bestiary && typeof o.bestiary === 'object') Object.keys(o.bestiary).forEach(function (id) { fix(o.bestiary[id], 'wins', 'int', 0, 100000, 'bestiary wins'); });
+    if (o.stars && typeof o.stars === 'object') Object.keys(o.stars).forEach(function (id) { fix(o.stars, id, 'int', 0, 30, 'stars'); });
+    if (o.v >= 7 && o.tree && typeof o.tree === 'object') TREE_KEYS.forEach(function (id) {
+      var n = NODE_BY_ID[id];
+      if (n && id in o.tree && o.tree[id] != null) fix(o.tree, id, 'int', id === 'root' ? 1 : 0, n.max, 'tree');
+    });
+    if (o.features && o.features.comboPaid && typeof o.features.comboPaid === 'object') Object.keys(o.features.comboPaid).forEach(function (id) {
+      if (COMBO_AUD_IDS.indexOf(id) < 0) { delete o.features.comboPaid[id]; rep.push('comboPaid key'); } else fix(o.features.comboPaid, id, 'int', 0, 15, 'comboPaid');
+    });
+    if (Array.isArray(o.endings)) { var ne = o.endings.slice(0, CONST.loopCap).map(function (e) { return clampValue(e, 'int', 1, 999); }); if (JSON.stringify(ne) !== JSON.stringify(o.endings)) { o.endings = ne; rep.push('endings'); } }
+    if (typeof o.mode !== 'string' || ['fight', 'transition', 'dealer', 'ending'].indexOf(o.mode) < 0) { o.mode = 'fight'; rep.push('mode'); }
+    if (['fight', 'dealer', 'ending', 'continue', 'stay', 'legacyEnding'].indexOf(o.after) < 0) { o.after = 'fight'; rep.push('after'); }
+    if (o.v >= 7) {
+      // Venue identity is derived: the stage numbers are clamped, everything that must agree with them is recomputed.
+      fix(o, 'vMax', 'int', 1, VENUES.length, 'vMax'); fix(o, 'venue', 'int', 1, VENUES.length, 'venue');
+      if (o.venue > o.vMax) { o.venue = o.vMax; rep.push('venue'); }
+      fix(o, 'j', 'int', 1, headlinerJ(o.venue), 'j');
+      var aud = getAud(o.venue, o.j), pat = o.j === headlinerJ(o.venue) ? (aud.pattern || 'none') : 'none';
+      [['audId', aud.id], ['pattern', pat], ['crowd', VENUES[o.venue - 1].crowd], ['venueSlug', VENUES[o.venue - 1].slug], ['maxVenueSlug', VENUES[o.vMax - 1].slug]].forEach(function (p) {
+        if (o[p[0]] !== p[1]) { o[p[0]] = p[1]; rep.push(p[0]); }
+      });
+      if (Array.isArray(o.board) && o.tree && typeof o.tree === 'object') {
+        var cap = Math.min(CONST.boardMax, 1 + (o.tree.board | 0) + DATA.slotRewardSlugs.filter(function (slug) { return venueNumber(slug) <= o.vMax; }).length + (o.legacySlots | 0));
+        var capLv = 5 + (o.tree.caseMax | 0);
+        var blank = function () { return { lv: 1, xp: 0, hp: 0, hpMax: 0, spawn: 0, sealed: false, golden: false, goldenBroken: false }; };
+        var before = JSON.stringify(o.board);
+        var nb = o.board.slice(0, cap).map(function (c) {
+          if (!c || typeof c !== 'object') return blank();
+          c.hpMax = clampValue(c.hpMax, 'num', 0, 1e9); c.hp = clampValue(c.hp, 'num', 0, c.hpMax); c.spawn = clampValue(c.spawn, 'num', 0, 1e7);
+          c.lv = clampValue(c.lv, 'int', 1, capLv); if (c.lv === 0) c.lv = 1;
+          c.xp = clampValue(c.xp, 'num', 0, Math.ceil(3 * Math.pow(1.35, c.lv - 1)) - 1); if (c.lv === capLv) c.xp = 0;
+          c.sealed = c.sealed === true; c.golden = c.golden === true; c.goldenBroken = c.goldenBroken === true;
+          return c;
+        });
+        while (nb.length < cap) nb.push(blank());
+        var gold = nb.map(function (c, i) { return c.golden ? i : -1; }).filter(function (i) { return i >= 0; });
+        var f = o.features;
+        if (f && typeof f === 'object' && (gold.length > 1 || (gold.length ? gold[0] !== f.goldCell || f.goldPending === true || nb[gold[0]].hp <= 0 : f.goldCell !== -1))) {
+          nb.forEach(function (c) { c.golden = false; }); f.goldCell = -1; f.goldPending = false; rep.push('golden case');
+        }
+        if (JSON.stringify(nb) !== before) { o.board = nb; if (rep.indexOf('board') < 0) rep.push('board'); }
+      }
+    }
+  }
+
+  // Ordered finest-first so the smallest broken piece is the one reset to its default.
+  var SAVE_UNITS = ['u15.drops', 'u15.seen', 'u15.queue', 'u15.scene', 'u15.bios', 'u15.positions', 'u15.tutorial', 'u15.deckOn', 'u15',
+    'u17.gloveBuys', 'u17', 'u19b.gates', 'u19b.failedId', 'u19b.dealerOffer', 'u19b', 'u19',
+    'u18.anchor', 'u18.challenge', 'u18.owned', 'u18.equipped', 'u18.sets', 'u18.fans', 'u18.paid', 'u18',
+    'idle.reward', 'idle.milestones', 'idle.next', 'idle', 'skills.cooldowns', 'skills',
+    'u14.daily', 'u14.visitor', 'u14.sets', 'u14.satisfied', 'u14',
+    'guidance', 'onboarding', 'learning', 'review', 'visited', 'knownAudiences', 'helpersUsed', 'trophies', 'invited',
+    'features.magic', 'features.climax', 'features.rewards', 'features.guide', 'features.workers', 'features.comboPaid', 'features.equipped', 'features.collected',
+    'features.achievements', 'features.reveals', 'features.revealQueue', 'features.legacyProductCollection', 'features.progress', 'features.damage', 'features',
+    'flights', 'dealer'];
+
+  // Returns {state, repairs}. state is null only when the save cannot be reshaped at all (not JSON, not an object, unknown version).
+  function deserializeRepair(str) {
+    var result = deserializeRepairBase(str);
+    // v4 U38: the refund of the removed endless nodes is part of the U37 repair list as 'refund:<coins>'.
+    if (result.state && result.state._refundCoins > 0) result.repairs.push('refund:' + result.state._refundCoins);
+    return result;
+  }
+  function deserializeRepairBase(str) {
+    var strict = deserialize(str);
+    if (strict) return { state: strict, repairs: [] };
+    var o;
+    try {
+      if (typeof str !== 'string' || str.length > 2000000) return { state: null, repairs: [] };
+      o = JSON.parse(str);
+    } catch (error) { return { state: null, repairs: [] }; }
+    if (!o || typeof o !== 'object' || Array.isArray(o) || typeof o.v !== 'number' || o.v < 1 || o.v !== Math.floor(o.v)) return { state: null, repairs: [] };
+    if (o.v > 16) o.v = 16;
+    var rep = [];
+    var attempt = function (obj) { return deserialize(JSON.stringify(obj)); };
+    try {
+      clampSave(o, rep);
+      var s = attempt(o);
+      if (s) return { state: s, repairs: rep };
+      var def = JSON.parse(serialize(newGame(clampValue(o.seed, 'int', 0, 4294967295))));
+      def.u15.tutorial = { done: true, active: false, won: false, baseline: null };
+      def.onboarding = { intro: true, panel: 0, step: 8, facts: [] };
+      def.u18.anchor = null;
+      var applied = [], found = null;
+      for (var i = 0; i < SAVE_UNITS.length && !found; i++) {
+        var path = SAVE_UNITS[i], was = JSON.parse(JSON.stringify(pathGet(o, path) === undefined ? null : pathGet(o, path)));
+        var had = pathGet(o, path) !== undefined;
+        var dv = path === 'idle.next' ? undefined : pathGet(def, path);
+        if (had === false && dv === undefined) continue;
+        if (!pathSet(o, path, dv === undefined ? undefined : JSON.parse(JSON.stringify(dv)))) continue;
+        applied.push({ path: path, was: had ? was : undefined, def: dv });
+        found = attempt(o);
+      }
+      if (!found) return { state: null, repairs: rep };
+      // Give back every default that was not needed (coarse first), keeping only what is required for the save to load.
+      for (var k = applied.length - 1; k >= 0; k--) {
+        var a = applied[k], cur = pathGet(o, a.path), snapshot = cur === undefined ? undefined : JSON.parse(JSON.stringify(cur));
+        if (!pathSet(o, a.path, a.was === undefined ? undefined : JSON.parse(JSON.stringify(a.was)))) continue;
+        if (attempt(o)) { applied.splice(k, 1); continue; }
+        pathSet(o, a.path, snapshot);
+      }
+      applied.forEach(function (a) { rep.push('reset ' + a.path); });
+      found = attempt(o);
+      return found ? { state: found, repairs: rep } : { state: null, repairs: rep };
+    } catch (error) { return { state: null, repairs: rep }; }
+  }
+
   function emptyU15(){return {positions:CONST.slotOrder.slice(),gloves:0,gloveLeft:0,deckOn:false,drops:{},seen:[],queue:[],scene:null,bios:[],tutorial:{done:false,active:false,won:false,baseline:null}};}
   function validU15(u){
     if(!u||!Array.isArray(u.positions)||u.positions.length!==CONST.boardMax||new Set(u.positions).size!==CONST.boardMax||u.positions.some(function(n){return integer(n,0,CONST.boardMax-1)==null;}))return false;
@@ -2897,7 +3182,7 @@
       if(typeof t.baseline!=='string'||t.baseline.length>=200000||['intro','fight','defeat','overview'].indexOf(t.phase)<0)return false;
       var maxLine=t.phase==='intro'?DATA.storyV15.tutorial.intro.length-1:t.phase==='defeat'?DATA.storyV15.tutorial.defeat.length-1:t.phase==='overview'?2:0;
       if(integer(t.line,0,maxLine)==null||(['defeat','overview'].indexOf(t.phase)>=0&&!t.won))return false;
-      try{var main=JSON.parse(t.baseline);if((main.v!==12&&main.v!==13&&main.v!==14)||!main.u15||!main.u15.tutorial||main.u15.tutorial.active)return false;}catch(error){return false;}
+      try{var main=JSON.parse(t.baseline);if((main.v!==12&&main.v!==13&&main.v!==14&&main.v!==15&&main.v!==16)||!main.u15||!main.u15.tutorial||main.u15.tutorial.active)return false;}catch(error){return false;}
     }
     return true;
   }
@@ -2923,8 +3208,7 @@
   function autoStage(state){return state.dimension>=2&&(state.u15.gloveLeft>0||!!state.tree.deckMaster&&!!state.u15.deckOn);}
   function startStage(state){
     if(!state.idle.waiting||state.u15.scene||state.u15.queue.length)return false;
-    state.idle.waiting=false;state.mode=state.dealerQueued?"dealer":"fight";
-    if(state.mode==="dealer")setupDealer(state);state.heckleMs=state.interval*1000;state.telegraphed=false;return true;
+    state.idle.waiting=false;state.mode="fight";state.dealerQueued=false;state.heckleMs=state.interval*1000;state.telegraphed=false;return true;
   }
   function startTutorial(state){
     var t=state.u15.tutorial;if(t.done||t.active)return false;
@@ -2976,7 +3260,7 @@
     if(id==='cups'){
       var initial=Math.floor(rngNext(state)*3),ball=initial,swaps=[],count=4+Math.min(4,state.venue);
       for(var i=0;i<count;i++){var a=Math.floor(rngNext(state)*3),b=(a+1+Math.floor(rngNext(state)*2))%3;swaps.push([a,b]);if(ball===a)ball=b;else if(ball===b)ball=a;}
-      d.games.cups={phase:'shuffle',initial:initial,ball:ball,swaps:swaps,duration:Math.max(2000,3000-state.venue*70),income:income,keyRoll:rngNext(state)<.25};
+      d.games.cups={phase:'shuffle',initial:initial,ball:ball,swaps:swaps,duration:Math.max(2000,3000-state.venue*70),income:income,keyRoll:rngNext(state)<Math.min(.9,.25*CONST.dealerRewardMult)};
     }else{
       var cards=[1+Math.floor(rngNext(state)*13)];
       for(var j=1;j<4;j++){var next=1+Math.floor(rngNext(state)*12);if(next>=cards[j-1])next++;cards.push(next);}
@@ -2984,12 +3268,14 @@
     }
     return true;
   }
+  // Seconds of income times the dealer multiplier, never more than dealerCapSeconds of income (and never less than the unmultiplied pay).
+  function dealerPayout(income,seconds){return Math.round(Math.max(income*seconds,Math.min(income*seconds*CONST.dealerRewardMult,income*CONST.dealerCapSeconds)));}
   function dealerCupsReady(state){var c=state.dealer&&state.dealer.games&&state.dealer.games.cups;if(state.mode!=='dealer'||!c||c.phase!=='shuffle')return false;c.phase='pick';return true;}
   function gemGameCoins(state,amount){earnCoins(state,amount);state.u14.visitor.incomeCoins=Math.max(0,state.u14.visitor.incomeCoins-amount);}
   function dealerCupsPick(state,index){
     var c=state.dealer&&state.dealer.games&&state.dealer.games.cups;
     if(state.mode!=='dealer'||!c||c.phase!=='pick'||integer(index,0,2)==null)return false;
-    c.choice=index;c.hit=index===c.ball;c.phase='result';c.coins=Math.round(c.income*(c.hit?90:10));c.keys=c.hit&&state.venue>=3&&c.keyRoll?1:0;
+    c.choice=index;c.hit=index===c.ball;c.phase='result';c.coins=dealerPayout(c.income,c.hit?90:10);c.keys=c.hit&&state.venue>=3&&c.keyRoll?1:0;
     gemGameCoins(state,c.coins);state.keys+=c.keys;return true;
   }
   // U30: Monte is a queen-tracking game. The per-round outcome keeps the old high/low odds
@@ -3029,7 +3315,7 @@
     if(state.mode!=='dealer'||!m||m.phase!=='playing'||integer(slot,0,2)==null)return false;
     var plan=monteRound(m,m.round),hit=slot===plan.queen;m.last={round:m.round,slot:slot,hit:hit};
     if(!hit){m.phase='lost';m.coins=0;m.keys=0;return true;}
-    m.round++;m.coins=Math.round(m.income*[0,60,150,200][m.round]);m.keys=m.round===3?1:0;
+    m.round++;m.coins=dealerPayout(m.income,[0,60,150,200][m.round]);m.keys=m.round===3?1:0;
     if(m.round===3)dealerMonteBank(state);return true;
   }
   function dealerMonteBank(state){
@@ -3191,7 +3477,7 @@
     buyNode: buyNode,
     buyAll: buyAll, affordableNodes: affordableNodes, buyAmount: buyAmount,
     holdPointers: holdPointers, advanceHolds: advanceHolds, tutorialAction: tutorialAction,
-    nodeInfo: nodeInfo,
+    nodeInfo: nodeInfo, allLearned: allLearned,
     nodeEffects: nodeEffects,
     nodeCost: nodeCost,
     retreat: retreat,
@@ -3201,10 +3487,15 @@
     dealerForce: dealerForce,
     forceCost: forceCost,
     createSaveStore: createSaveStore, isNewerSave: isNewerSave,
-    toggleDeck:toggleDeck, heckleStrength:heckleStrength, autoStage:autoStage,startStage:startStage, dealerClose: dealerClose, failureLessons:failureLessons, failureLessonInfo:failureLessonInfo, learnFailureLesson:learnFailureLesson, gatePressure:gatePressure, failureDealerAvailable:failureDealerAvailable, openFailureDealer:openFailureDealer,
+    toggleDeck:toggleDeck, heckleStrength:heckleStrength, threatInfo:threatInfo, attackRate:attackRate, autoStage:autoStage,startStage:startStage, dealerClose: dealerClose, failureLessons:failureLessons, failureLessonInfo:failureLessonInfo, learnFailureLesson:learnFailureLesson, gatePressure:gatePressure, failureDealerAvailable:failureDealerAvailable, openFailureDealer:openFailureDealer,
     rebirth: rebirth,
     serialize: serialize,
     deserialize: deserialize,
+    deserializeRepair: deserializeRepair,
+    kaliMood: kaliMood, audienceMood: audienceMood,
+    // Source text of every strict save validator; test-saves.mjs hashes it against SAVE_VERSION (a changed range needs a new version).
+    saveValidatorSource: function () { return [deserialize, infiniteRefund, validU15, validU17, validU18, validU19, validDealerGames].map(function (f) { return f.toString(); }).join('\n'); },
+    SAVE_VERSION: 16,
     starCost: starCost,
     buyStar: buyStar
   };

@@ -1,6 +1,6 @@
 // Cache only the explicit app shell. API, authentication and user data stay on the network.
 const CACHE_PREFIX = 'magicshow-dist-';
-const CACHE_NAME = CACHE_PREFIX + '2a87e49d37d38a66-coherent-1-distribution';
+const CACHE_NAME = CACHE_PREFIX + '57134fc9a959e6dd-coherent-1-distribution';
 const SHELL = [
   "./apple-touch-icon.png",
   "./assets/aud-a1-happy.webp",
@@ -428,6 +428,8 @@ const SHELL = [
   "./assets/skill-cardrain.webp",
   "./assets/skill-cheer.webp",
   "./assets/skill-showtime.webp",
+  "./assets/title-cafe-1280.webp",
+  "./assets/title-cafe.webp",
   "./assets/ui/cb-ball.webp",
   "./assets/ui/cb-lemon.webp",
   "./assets/ui/cb-mat.webp",

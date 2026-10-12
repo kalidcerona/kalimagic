@@ -127,21 +127,27 @@ globalThis.Guidance = (() => {
     const node = target(state,D,C), info = node && C.nodeInfo(state,node.id);
     const remaining = info && info.cost !== null ? Math.max(0, Math.ceil(info.cost - state[info.currency])) : 0;
     const costText = !node ? '' : info.cost === null ? '완성' : info.purchasable ? '배울 수 있어요!' : remaining ? `${{coins:'동전',gems:'보석',keys:'열쇠',starlight:'별빛'}[info.currency]} ${C.formatNumber(remaining)} 더` : info.blockedReason;
-    const nodeText = node ? node.name : '비법 완성';
+    // v4 U38: with nothing left to learn the strip says so (friendly, no node to point at); otherwise it keeps pointing at the notebook.
+    const done = !node && C.allLearned(state);
+    const nodeText = node ? node.name : done ? '모든 비법을 익혔어요' : '비법 노트를 열어 보세요';
     const learn = node ? `${nodeText} · ${costText}` : nodeText;
-    return { node, progress, nodeText, costText, caseText: `개봉 ${progress}%`, targetText: learn, text: `다음 목표 · 개봉 ${progress}% · ${learn}` };
+    return { node, done, progress, nodeText, costText, caseText: `개봉 ${progress}%`, targetText: learn, text: `다음 목표 · 개봉 ${progress}% · ${learn}` };
   }
   // U31b: the cause line is a soft guess plus a soft suggestion. cause = how this run really ended:
   // 'mental' (mental ran out with little doubt left) or 'damage' (mental ran out while much doubt was left).
   function failure(state,D,C,cause='mental') {
     if (cause === 'gate') return { line: '이 관객은 준비가 조금 더 필요해 보여요. 비법을 몇 개 더 익혀 보면 어떨까요?', node: null, hint: "'야유 받아넘기기'가 도움이 될지도 몰라요" };
-    const damage = cause === 'damage';
+    // v4 U38 'lastHeckle': the final boss's announced last heckle was bigger than 멘탈 and 자신감 together; the line names both ways out and picks none.
+    if (cause === 'lastHeckle') return { line: '마지막 야유가 한 번에 너무 컸나 봐요. 멘탈이나 스킬을 다시 살펴볼까요?', node: null, hint: '' };
+    // v4 U38 'stall': doubt did not reach a new low for a long time, so the soft suggestion is about taking doubt down faster.
+    const stall = cause === 'stall';
+    const damage = cause === 'damage' || stall;
     const ids = damage ? ['attack','power','speed'] : ['mental','shieldCap','openingShield','calm','boxHeal','winHeal'];
     const node = ids.map(id => D.tree.find(n=>n.id===id)).find(n => n && C.nodeInfo(state,n.id).revealed && C.nodeInfo(state,n.id).cost !== null) || null;
     const code = node ? node.name.charCodeAt(node.name.length - 1) : 0;
     const particle = code >= 0xAC00 && code <= 0xD7A3 && (code - 0xAC00) % 28 === 0 ? '를' : '을';
-    const guess = damage ? '의심을 깎을 힘이 조금 모자랐나 봐요.' : '야유를 버틸 멘탈이 부족했나 봐요.';
-    const line = node ? `${guess} 한번 ${node.name}${particle} 높여 보면 어떨까요?` : guess;
+    const guess = stall ? '관객의 의심이 다시 차오르는 게 더 빨랐나 봐요.' : damage ? '의심을 깎을 힘이 조금 모자랐나 봐요.' : '야유를 버틸 멘탈이 부족했나 봐요.';
+    const line = stall ? `${guess} 비법을 몇 개 더 익혀 보면 어떨까요?` : node ? `${guess} 한번 ${node.name}${particle} 높여 보면 어떨까요?` : guess;
     return { line, node, hint: node ? `'${node.name}' 비법이 도움이 될지도 몰라요` : '' };
   }
   function firstEffects(state,list) {
@@ -242,6 +248,13 @@ globalThis.Presentation = (() => {
     if (d && d.set && d.get) Object.defineProperty(HTMLImageElement.prototype, 'src', { ...d, set(value) { d.set.call(this, assetUrl(value)); } });
   })();
   const sound = (name, options) => window.Sfx && window.Sfx.play(name, options);
+  // U36: layout reads (getBoundingClientRect, clientWidth) are cached for one frame. A late-game fight emits dozens of hit events per
+  // frame and each one used to read the stage, board and audience rects right after DOM writes, forcing a style recalculation and layout
+  // every time (about 1400 recalculations per second, 80 percent of the main thread). The loop clears the cache at the start of each frame.
+  const geo = new Map();
+  let wandOffset = null, geoAge = 0; // v4 U40: see updateWand; geoAge counts frames since the last geometry read (loop)
+  const rectOf = el => { let r = geo.get(el); if (!r) { r = el.getBoundingClientRect(); geo.set(el, r); } return r; };
+  const boardWidth = () => { let w = geo.get('board-cw'); if (w === undefined) { w = $('board').clientWidth; geo.set('board-cw', w); } return w; };
   let bestiaryTab = 'audiences', endingStep = 0, revealEnding = false;
   const assetCache = new Map();
   function assetImage(path) {
@@ -387,16 +400,32 @@ globalThis.Presentation = (() => {
   const caps = { particles: coarse ? 120 : 240, icons: 24, numbers: 4 };
   const canvas = $('effects'), ctx = canvas.getContext('2d');
   const animations = new WeakMap();
+  // U39: the pattern label breaks only at " · ": every part is its own inline-block, so a part moves whole to the next line (and wraps inside only if it is wider than the label).
+  // Writers keep assigning textContent; an unchanged text is ignored, so the label also stops rebuilding every frame.
+  (() => {
+    const el = $('patternLabel'); let raw = '';
+    Object.defineProperty(el, 'textContent', { configurable: true, get() { return raw; }, set(value) {
+      value = String(value); if (value === raw) return; raw = value;
+      const nodes = [];
+      value.split(' · ').forEach((part, i) => { if (i) nodes.push(document.createTextNode(' · ')); const s = document.createElement('span'); s.className = 'pat-part'; s.textContent = part; nodes.push(s); });
+      el.replaceChildren(...(value ? nodes : []));
+    } });
+  })();
   const patterns = ['111101101101111','010110010010111','111001111100111','111001111001111','101101111001001','111100111001111','111100111101111','111001001001001','111101111101111','111101111001111'];
   let corrupt = false, inaccessible = false, newerSave = false, restoring = false, giftEnded = false;
-  let saveStore = null, loaded0 = false;
+  let saveStore = null, loaded0 = false, repairedSave = false, recoveredSave = false, refundedCoins = 0;
   let state = C.newGame(Date.now() >>> 0);
   const launchQuery = new URLSearchParams(location.search);
   try {
     saveStore = C.createSaveStore(localStorage);
     const loaded = saveStore.load();
     if (loaded.state) { state = loaded.state; loaded0 = true; }
-    corrupt = loaded.backedUp;
+    corrupt = loaded.backedUp && !loaded.recovered;
+    recoveredSave = !!loaded.recovered;
+    // v4 U38: 'refund:<coins>' in the repair list is the paid-back endless nodes; it has its own toast, not the generic repair one.
+    const repairList = loaded.repairs || [];
+    refundedCoins = repairList.map(r => /^refund:(\d+)$/.exec(r)).filter(Boolean).reduce((n, m) => n + Number(m[1]), 0);
+    repairedSave = repairList.some(r => !/^refund:/.test(r));
     newerSave = loaded.newer;
     giftEnded = loaded.giftEnded;
   } catch (error) { inaccessible = true; }
@@ -452,34 +481,59 @@ globalThis.Presentation = (() => {
     } catch (error) { $('panelBody').append(element('p','백업을 읽을 수 없어요.')); }
   }
 
-  function num(el, value) {
-    const text = typeof value === 'number' ? C.formatNumber(value) : String(value);
-    if (el.dataset.rendered === text) return;
-    el.dataset.rendered = text;
-    el.setAttribute('aria-label', text);
-    el.replaceChildren();
-    for (const ch of text) {
-      const glyph = document.createElement('span');
-      glyph.setAttribute('aria-hidden', 'true');
+  // U36: pixel digits are rebuilt per glyph from cached templates, and fast-changing values (combo, case percent, doubt, coins) are
+  // written at most 10 times per second (the newest value is always shown; flushNums runs every frame).
+  const glyphTemplates = new Map(), numPending = new Map(), NUM_MS = 100;
+  function glyphFor(ch) {
+    let template = glyphTemplates.get(ch);
+    if (!template) {
+      template = document.createElement('span');
+      template.setAttribute('aria-hidden', 'true');
       if (/\d/.test(ch)) {
-        glyph.className = 'digit';
+        template.className = 'digit';
         for (const bit of patterns[Number(ch)]) {
           const pixel = document.createElement('i');
           if (bit === '0') pixel.className = 'off';
-          glyph.append(pixel);
+          template.append(pixel);
         }
-      } else { glyph.className = 'digit-separator'; glyph.textContent = ch; }
-      el.append(glyph);
+      } else { template.className = 'digit-separator'; template.textContent = ch; }
+      glyphTemplates.set(ch, template);
     }
+    return template.cloneNode(true);
+  }
+  function writeNum(el, text) {
+    el.dataset.rendered = text;
+    el.setAttribute('aria-label', text);
+    const next = Array.from(text), previous = el.__glyphs;
+    if (previous && previous.length === next.length && el.children.length === next.length) {
+      for (let i = 0; i < next.length; i++) if (previous[i] !== next[i]) el.replaceChild(glyphFor(next[i]), el.children[i]);
+    } else {
+      el.replaceChildren(...next.map(glyphFor));
+    }
+    el.__glyphs = next; el.__numAt = performance.now();
+  }
+  function num(el, value, soft) {
+    const text = typeof value === 'number' ? C.formatNumber(value) : String(value);
+    if (el.dataset.rendered === text) { numPending.delete(el); return; }
+    if (soft && el.__numAt !== undefined && performance.now() - el.__numAt < NUM_MS) { numPending.set(el, text); return; }
+    numPending.delete(el);
+    writeNum(el, text);
+  }
+  function flushNums() {
+    if (!numPending.size) return;
+    const now = performance.now();
+    for (const [el, text] of numPending) if (now - el.__numAt >= NUM_MS) { numPending.delete(el); if (el.dataset.rendered !== text) writeNum(el, text); }
   }
   const rounded = v => C.formatNumber(Math.max(0, Math.round(v)));
   const randomLine = list => list[Math.floor(Math.random() * list.length)];
-  const portrait = () => innerHeight > innerWidth;
+  // U36: innerWidth/innerHeight flush layout, and portrait() runs inside paused(), which a frame calls dozens of times after DOM writes.
+  const portrait = () => { let v = geo.get('portrait'); if (v === undefined) { v = innerHeight > innerWidth; geo.set('portrait', v); } return v; };
   const presentation=new Presentation.Queue();
   const paused = () => wonMoment?.pending || state.u18.map || !!state.u15.scene || (state.u15.tutorial.active && (state.u15.tutorial.phase!=='fight' || state.u15.tutorial.won)) || !state.onboarding.intro || document.hidden || !!menu || portrait() || !!stageRewardHost || !$('offlineCard').hidden || (phone && !$('phoneMore').hidden);
   function fit() {
     const vv = window.visualViewport;
     const width = vv ? vv.width : innerWidth, height = vv ? vv.height : innerHeight;
+    geo.clear(); wandOffset = null; geoAge = 0;
     const probe = getComputedStyle($('safeArea'));
     const safe = Object.fromEntries(['left','right','top','bottom'].map(side => [side, parseFloat(probe.getPropertyValue(`padding-${side}`)) || 0]));
     const layout = PhoneLayout.measure(width, height, safe, coarse);
@@ -534,9 +588,9 @@ globalThis.Presentation = (() => {
     }
     $('phoneMore').hidden = true; $('moreButton').setAttribute('aria-expanded', 'false');
   }
-  function boardTransform() { return PhoneLayout.transform($('board').getBoundingClientRect(), C.CONST.boardSize); }
+  function boardTransform() { return PhoneLayout.transform(rectOf($('board')), C.CONST.boardSize); }
   function boardPoint(x, y) {
-    const p = boardTransform().toScreen(x, y), r = $('stage').getBoundingClientRect();
+    const p = boardTransform().toScreen(x, y), r = rectOf($('stage'));
     return { x: (p.x - r.left) / scale, y: (p.y - r.top) / scale };
   }
   const toastQueue = [], visibleToasts = [];
@@ -585,7 +639,7 @@ globalThis.Presentation = (() => {
     return state.mode === 'transition' && wonMoment && (wonMoment.pending||presentation.active?.winner||clock < wonMoment.until) ? wonMoment.context : c;
   }
   function dismissBanner() {
-    clearTimeout(bannerTimer); $('banner').hidden = true; bannerActive = null;
+    clearTimeout(bannerTimer); $('banner').hidden = true; $('banner').classList?.remove?.('win-banner'); bannerActive = null;
   }
   function banner(text,sub='',big=false,permanent=false,context=bannerContext()){
     presentation.push({merge:'banner:'+text,minimum:2000,priority:big?10:0,start:item=>{
@@ -669,13 +723,13 @@ globalThis.Presentation = (() => {
   }
   // Only a real (not blocked) colleague hit shows particles and a damage number.
   function colleagueHitFx(e) {
-    const r = $('audience').getBoundingClientRect(), stage = $('stage').getBoundingClientRect();
+    const r = rectOf($('audience')), stage = rectOf($('stage'));
     hitParticles((r.left + r.width / 2 - stage.left) / scale, (r.top + r.height * .65 - stage.top) / scale, colleagueShapes[(e.index + state.wins) % colleagueShapes.length], '#8be9d0', 0);
     if (e.applied > 0) float(`+${C.formatNumber(e.applied)}`, (r.left + r.width / 2 - stage.left) / scale + (e.index - 2.5) * 16, (r.top + r.height * .5 - stage.top) / scale, '#8be9d0', 12, 0, 0);
   }
   function hitFeedback(e,source='card',maxDoubt=state.audHpMax) {
     const tier=hitTier(e.dmg,maxDoubt),model=hitTiers[tier];
-    const r=$('audience').getBoundingClientRect(),stage=$('stage').getBoundingClientRect();
+    const r=rectOf($('audience')),stage=rectOf($('stage'));
     const x=(r.left+r.width/2-stage.left)/scale,y=(r.top+r.height*.65-stage.top)/scale;
     float(e.dmg ? C.formatNumber(e.dmg) : '빗나감',x,y,model.color,model.size,tier,e.dmg);
     if(e.dmg>0) {
@@ -704,7 +758,7 @@ globalThis.Presentation = (() => {
     animations.set(el, el.animate(frames, { duration:ms, easing: 'cubic-bezier(.2,.8,.2,1)' }));
   }
   function float(text, x, y, color = '#f4e5bf', size = 14, tier = 0, amount = 0) {
-    if (phone && (x === 426 || x === 676)) { const r=$('audience').getBoundingClientRect(),stage=$('stage').getBoundingClientRect();x=(r.left+r.width/2-stage.left)/scale;y=(r.top+r.height*.65-stage.top)/scale; }
+    if (phone && (x === 426 || x === 676)) { const r=rectOf($('audience')),stage=rectOf($('stage'));x=(r.left+r.width/2-stage.left)/scale;y=(r.top+r.height*.65-stage.top)/scale; }
     if(numbers.length>=caps.numbers){
       let n=null;if(amount>0)for(let i=numbers.length-1;i>=0;i--)if(numbers[i].amount>0){n=numbers[i];break;}
       if(n){n.amount+=amount;n.text=`+${C.formatNumber(n.amount)}`;n.critical=false;if(tier>(n.tier||0))Object.assign(n,{tier,size:Math.min(22,size),color,x,y});return n;}
@@ -720,7 +774,7 @@ globalThis.Presentation = (() => {
     animate(el,[{boxShadow:'0 0 0 3px #E8BF68'},{boxShadow:'none'}],150);
     // Currency arrivals pulse their value without drawing over the reserved HUD.
     if (effect === 'coins') return;
-    const r = el?.getBoundingClientRect(), stage = $('stage').getBoundingClientRect();
+    const r = el && rectOf(el), stage = rectOf($('stage'));
     if (!r) return;
     const x = (r.left - stage.left) / scale + (collapsed ? r.width + 22 : -26), y = (r.top + r.height / 2 - stage.top) / scale;
     if(numbers.length<caps.numbers)numbers.push({text:model.text.slice(model.text.indexOf('+')),x,y,color:'#a8e8ff',size:11,start:clock,life:500,fixed:true});
@@ -737,7 +791,7 @@ globalThis.Presentation = (() => {
     if (phone) {
       const id = effect === 'gems' ? 'gems' : U5.effectBadge({ effect }).stat;
       const el = ['stat-power','stat-damage','stat-guard','stat-heal'].includes(id) && !$('statsButton').classList.contains('expanded') ? $('statsButton') : $(id);
-      const r = el.getBoundingClientRect(), stage = $('stage').getBoundingClientRect();
+      const r = rectOf(el), stage = rectOf($('stage'));
       return { x: r.left + r.width / 2 - stage.left, y: r.top + r.height / 2 - stage.top };
     }
     if (effect === 'gems') return { x: 958, y: 90 };
@@ -758,8 +812,50 @@ globalThis.Presentation = (() => {
     if (reduced || flights.length >= caps.icons) return;
     flights.push({ x, y, tx: dest.x, ty: dest.y, emoji, label, color, image, start: clock + delay, life: 240 });
   }
-  function coinStream(x, y, count) {
-    for (let i = 0; i < Math.min(count, 8); i++) fly(x + i * 5, y, target('coins'), '🪙', '', '#ffe35b', i * 28);
+  function coinStream(x, y, count, delay = 0) {
+    for (let i = 0; i < Math.min(count, 8); i++) fly(x + i * 5, y, target('coins'), '🪙', '', '#ffe35b', delay + i * 28);
+  }
+  // v4 U39: the clear moment. It fills the existing 2500 ms win item (nothing is lengthened): flash, stamp, applause, coins to the counter,
+  // two bows and a slide out, all on transform and opacity through Web Animations. Reduced motion keeps opacity only and no particles.
+  function audiencePoint(fx, fy) {
+    const r = rectOf($('audience')), s = rectOf($('stage'));
+    return { x: (r.left + r.width * fx - s.left) / scale, y: (r.top + r.height * fy - s.top) / scale, w: r.width / scale };
+  }
+  function clearMoment(headliner, coins) {
+    const MS = 2500, card = $('audienceCard'), aud = $('audience');
+    const stamp = element('div', headliner ? '기립박수!' : '감탄!', 'win-stamp'); stamp.id = 'winStamp'; stamp.setAttribute('aria-hidden', 'true');
+    const flash = element('div', '', 'win-flash'); flash.setAttribute('aria-hidden', 'true');
+    card.append(flash, stamp);
+    const anims = [];
+    const run = (el, frames, opts) => { const a = el.animate(frames, { fill: 'both', easing: 'linear', ...opts }); anims.push(a); return a; };
+    const at = ms => ms / MS;
+    const fade = [{ opacity: 0, offset: 0 }, { opacity: 1, offset: at(120) }, { opacity: 1, offset: at(1800) }, { opacity: 0, offset: at(2100) }, { opacity: 0, offset: 1 }];
+    if (reduced) {
+      run(stamp, fade, { duration: MS });
+    } else {
+      run(flash, [{ opacity: 0, offset: 0 }, { opacity: .55, offset: .2 }, { opacity: 0, offset: 1 }], { duration: 120 });
+      const rot = 'rotate(-8deg)';
+      run(stamp, [{ opacity: 1, transform: rot + ' scale(2)', offset: 0, easing: 'cubic-bezier(.2,.8,.2,1)' }, { opacity: 1, transform: rot + ' scale(1)', offset: at(220) },
+        { opacity: 1, transform: rot + ' scale(1)', offset: at(1800) }, { opacity: 0, transform: rot + ' scale(1)', offset: at(2100) }, { opacity: 0, transform: rot + ' scale(1)', offset: 1 }], { duration: MS });
+      const pose = (s, r, y, o, extra) => ({ transform: `scale(${s}) rotate(${r}deg) translateY(${y}px)`, offset: at(o), ...extra });
+      const bow = (a, b) => [pose(1, 0, 0, a), pose(1, 4, 6, (a + b) / 2), pose(1, 0, 0, b)];
+      const out = run(aud, [pose(1.12, 0, 0, 0, { easing: 'ease-out' }), pose(1, 0, 0, 300), ...bow(900, 1150), ...bow(1250, 1500),
+        pose(1, 0, 0, 2150, { opacity: 1 }), { transform: 'scale(1) rotate(0deg) translateY(12px)', opacity: 0, offset: 1 }], { duration: MS });
+      animations.set(aud, out); audience.winExit = out;
+      setTimeout(() => { if (audience.winExit === out) { out.cancel(); audience.winExit = null; } }, MS + 700);
+      // Applause: confetti and hearts fall over the audience for 1.2 s (twice as many for a headliner), inside the particle cap.
+      const top = audiencePoint(.5, 0), n = headliner ? 24 : 12, colors = ['#ffe65c', '#ff8fb3', '#8fe3ff', '#b6ff9a'];
+      for (let i = 0; i < n && particles.length < caps.particles; i++) {
+        const spread = (i / Math.max(1, n - 1) - .5) * Math.max(80, top.w * 1.1);
+        particles.push({ x: top.x + spread, y: top.y - 8, dx: (i % 2 ? 14 : -14), dy: 70 + (i % 4) * 18, start: clock + (i % 6) * 190, life: 1200 - (i % 6) * 60, color: colors[i % 4], size: 5 + i % 3,
+          shape: i % 4 === 3 ? 'cheer' : undefined, sheetLead: i % 4 === 3 });
+      }
+    }
+    // Coins leave the audience centre 150 ms in; the coin counter pulses as they land.
+    // From the face top edge, so the coins do not cross the banner below.
+    const mid = audiencePoint(.5, .14); clearMoment.origin = mid; coinStream(mid.x, mid.y, coins, 150);
+    const pulse = setTimeout(() => { const el = $('coins')?.closest('.currency') || $('coins'); if (!reduced && el) el.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.18)' }, { transform: 'scale(1)' }], { duration: 220 }); }, 150 + 240 + Math.min(coins, 8) * 28);
+    return { stop() { clearTimeout(pulse); anims.forEach(a => { if (a !== audience.winExit) a.cancel(); }); stamp.remove(); flash.remove(); } };
   }
   function cellCenter(i) {
     const p = C.cellPosition(state, i), k = C.CONST;
@@ -808,7 +904,7 @@ globalThis.Presentation = (() => {
       if(e.type==='colleague')colleagueTrick(e);
       if(e.type==='itemLand')hitSource=particleSource(e);
       if(e.type==='dove')hitSource='dove';
-      if(e.type==='skill') {hitSource=e.id;const r=$('audience').getBoundingClientRect(),stage=$('stage').getBoundingClientRect();const p={x:(r.left+r.width/2-stage.left)/scale,y:(r.top+r.height*.65-stage.top)/scale};hitParticles(p.x,p.y,e.id,'#eac568',2);if(e.id==='showtime')sceneLight(.04);}
+      if(e.type==='skill') {hitSource=e.id;const r=rectOf($('audience')),stage=rectOf($('stage'));const p={x:(r.left+r.width/2-stage.left)/scale,y:(r.top+r.height*.65-stage.top)/scale};hitParticles(p.x,p.y,e.id,'#eac568',2);if(e.id==='showtime')sceneLight(.04);}
       if (typeof tutorialSignal === 'function') {
         const signal={boxBreak:'badge',audHit:'doubt',heckle:'heckle',win:'win'}[e.type];
         if (signal) tutorialSignal(signal);
@@ -844,7 +940,8 @@ globalThis.Presentation = (() => {
       if (sounds[e.type] && !(e.type === 'audHit' && e.blocked)) sound(sounds[e.type], { combo: e.n, auto: !pointer.held && ['boxBreak','combo','audHit'].includes(e.type) });
       if (e.type === 'heckle' && e.dmg > e.shieldDmg) sound('mental');
       if (e.type === 'itemLand' && e.effect === 'coins') sound('coin');
-      if (e.type === 'finisher') kaliPose(1,400);
+      if (e.type === 'finisher') { kaliPose(1,400); audSurprisedUntil = clock + 600; }
+      if (e.type === 'crit') audSurprisedUntil = clock + 500;
       if (e.type === 'boxHit') squash(e.cell);
       if (e.type === 'boxBreak') {
         if (e.source === 'manual') kaliPose(1,400);
@@ -899,9 +996,10 @@ globalThis.Presentation = (() => {
         const v = D.venues[state.venue - 1], a = v.audiences[state.j - 1] || v.headliner;
         const line = U5.selectHeckle(a, venueHeckles(state.venue), lastHeckles.get(a.id));
         lastHeckles.set(a.id, line); $('heckle').textContent = line;
-        moodSprite($('audience'),audienceAsset(v,a),D.lineFaces.moods['fight:'+a.id+':heckles:'+a.heckles.indexOf(line)]||D.lineFaces.faceMap.roleDefaults[a.role]||'doubt');
+        audHeckleMood = D.lineFaces.moods['fight:'+a.id+':heckles:'+a.heckles.indexOf(line)]||D.lineFaces.faceMap.roleDefaults[a.role]||'doubt';
+        moodSprite($('audience'),audienceAsset(v,a),audHeckleMood);
       } else if (e.type === 'heckle') {
-        if(e.dmg>=state.mentalMax*.2||e.critical){$('magicianMini').classList.add('reacting');sprite($('magicianMini'),'assets/kali-react-surprised.png');kaliUntil=clock+800;animate($('stage'),[{marginLeft:'0px'},{marginLeft:'2px'},{marginLeft:'0px'}],180);animate($('mental'),[{boxShadow:'0 0 0 3px #E8BF68'},{boxShadow:'none'}],150);}
+        if(e.dmg>=state.mentalMax*.2||e.critical){$('magicianMini').classList.add('reacting');$('magicianMini').dataset.face='event';sprite($('magicianMini'),'assets/kali-react-surprised.png');kaliUntil=clock+800;animate($('stage'),[{marginLeft:'0px'},{marginLeft:'2px'},{marginLeft:'0px'}],180);animate($('mental'),[{boxShadow:'0 0 0 3px #E8BF68'},{boxShadow:'none'}],150);}
         if (e.dmg > e.shieldDmg) float(`−${C.formatNumber(e.dmg - e.shieldDmg)} 멘탈`, 426, 714, '#ff8d8d');
         if (state.pattern === 'stealCoins') {
           for (let i = 0; i < 5; i++) fly(1230, 90, { x: 426 + i * 25, y: 320 }, '🪙', '', '#ffbd73', i * 25);
@@ -921,9 +1019,12 @@ globalThis.Presentation = (() => {
         if (e.tierChanged) { burst(p.x, p.y, '#fff18a'); squash(e.cell); }
       } else if (e.type === 'chain') {
         const a = cellCenter(e.from), b = cellCenter(e.to);
-        const line = element('div', '', 'case-lightning');
-        Object.assign(line.style, {left: `${a.x}px`, top: `${a.y}px`, width: `${Math.hypot(b.x-a.x,b.y-a.y)}px`, transform: `rotate(${Math.atan2(b.y-a.y,b.x-a.x)}rad)`});
-        $('stage').append(line); setTimeout(() => line.remove(), 180);
+        // U36: at most 6 lightning lines at once (late game chains fire hundreds per second).
+        if (document.querySelectorAll('.case-lightning').length < 6) {
+          const line = element('div', '', 'case-lightning');
+          Object.assign(line.style, {left: `${a.x}px`, top: `${a.y}px`, width: `${Math.hypot(b.x-a.x,b.y-a.y)}px`, transform: `rotate(${Math.atan2(b.y-a.y,b.x-a.x)}rad)`});
+          $('stage').append(line); setTimeout(() => line.remove(), 180);
+        }
       } else if (e.type === 'levelUp') {
         toast(`레벨 ${e.level}! 멘탈 회복`);
       } else if (e.type === 'win') {
@@ -934,18 +1035,19 @@ globalThis.Presentation = (() => {
         audience.restored=true;wonMoment = { v, a, context, pending:true,until:Infinity };
         presentation.push({winner:true,minimum:2500,priority:100,start:item=>{wonMoment.pending=false;wonMoment.until=clock+2500;state.transMs=2500;
           moodSprite($('audience'),audienceAsset(v,a),D.lineFaces.moods['fight:'+a.id+':winLine']||'happy');$('audienceLine').textContent=a.winLine;$('audienceLine').hidden=false;kaliPose(2,2500);
-          animate($('audience'),[{transform:'translateY(0)'},{transform:'translateY(-2px)'},{transform:'translateY(0)'}],240);sceneLight(.06);
-          bannerActive={...context};$('banner').replaceChildren(document.createTextNode(winLine()));$('banner').append(element('small',e.j===v.audiences.length+1?v.headliner.defeatLine:'동전 +'+C.formatNumber(e.coins)));$('banner').hidden=false;
-          item.end=()=>{dismissBanner();wonMoment=null;};
+          sceneLight(.06);
+          const head=e.j===v.audiences.length+1,progress=`관객 ${e.j}/${v.audiences.length+1}`;
+          bannerActive={...context};$('banner').replaceChildren(document.createTextNode(winLine()));$('banner').append(element('small',progress+' · '+(head?v.headliner.defeatLine:'동전 +'+C.formatNumber(e.coins))));$('banner').classList.add('win-banner');$('banner').hidden=false;
+          const moment=clearMoment(head,e.coins);
+          item.end=()=>{moment.stop();dismissBanner();wonMoment=null;};
         }});
-        coinStream(426, 412, e.coins);
         if (e.trophy) {toast(`🏆 ${v.trophy} 획득!`, 'trophy');presentation.push({minimum:0,hold:true,priority:60,start:item=>{if(!openCurtainCall(v.slug))item.hold=false;else item.end=()=>{};}});}
         if (e.keys) toast('🔑 관객 도감 완성! 열쇠 1개');
         save();
       } else if (e.type === 'venueUnlocked') {
         if (e.name) banner(`${e.name} 도착!`, D.venues[e.venue - 1].intro, true); save();
       } else if (e.type === 'fail') {
-        failure = e.reasonPct; failureCause = e.cause === 'damage' || e.cause === 'gate' ? e.cause : 'mental'; lastAudience = ''; release();
+        failure = e.reasonPct; failureCause = e.cause === 'damage' || e.cause === 'gate' || e.cause === 'stall' || e.cause === 'lastHeckle' ? e.cause : 'mental'; lastAudience = ''; release();
         showBoo(e); save();
       } else if (e.type === 'phase2') {
         phaseTransition();
@@ -966,6 +1068,9 @@ globalThis.Presentation = (() => {
   }
   function squash(i) {
     if (!cells[i]) return;
+    // U36: a late-game case is hit 20 times a second; restarting the 140 ms squash more often than every 110 ms only adds animation work.
+    if (cells[i].squashAt !== undefined && clock - cells[i].squashAt < 110) return;
+    cells[i].squashAt = clock;
     animate(cells[i].box, [{ transform: 'scale(.94)' }, { transform: 'scale(1)' }], 140);
   }
   function slotCondition() {
@@ -1011,7 +1116,7 @@ globalThis.Presentation = (() => {
       $('audience').replaceChildren(element('span', a.emoji, 'sprite-fallback'));
       sprite($('audience'), state.u15.tutorial.active ? (state.u15.tutorial.won?'assets/aud-tutorial-dogyeom-happy.png':'assets/aud-tutorial-dogyeom.png') : (audienceAsset(v,a))); $('audience').setAttribute('aria-label', a.name);
       if(!state.u15.tutorial.active)moodSprite($('audience'),audienceAsset(v,a),['supporter','helper'].includes(a.role)?'happy':D.lineFaces.faceMap.roleDefaults[a.role]||'doubt');
-      animate($('audience'),[{opacity:0,transform:'translateX(12px)'},{opacity:1,transform:'translateX(0)'}],280);
+      animate($('audience'),[{opacity:0,transform:'translateY(16px)'},{opacity:1,transform:'translateY(0)'}],350);
       $('audience').classList.toggle('headliner', a === v.headliner);
       $('audienceLine').textContent = a.encounterLine || a.bio || a.flavor;
       bioPending=a.encounterLine?key:state.u15.bios.includes(key)?'':key;bioUntil=0;
@@ -1036,10 +1141,33 @@ globalThis.Presentation = (() => {
       $('dimensionLabel').textContent = `차원 ${state.dimension} · ${dimension ? dimension.name : '새로운 앵콜'}`;
       $('stage').style.setProperty('--dimension-hue', `${dimension ? dimension.hue : (state.dimension * 47) % 360}deg`);
     }
+    if (audience.winExit) { audience.winExit.cancel(); audience.winExit = null; } // the slide-out held the old audience hidden; the entrance above (if any) already runs
   }
-  let kaliUntil = 0;
+  let kaliUntil = 0, kaliMoodState = 'normal', audMoodState = 'doubt', audSurprisedUntil = 0, audHeckleMood = '';
+  // v4 U37 faces. Kali and the audience faces are re-evaluated from the state every frame (C.kaliMood, C.audienceMood), so nothing latches.
+  // Event faces (big hit, finisher, bow) run until kaliUntil / audSurprisedUntil and then the state face returns by itself.
+  function kaliFaceTick() {
+    const host = $('magicianMini');
+    if (menu === 'boo' || clock < kaliUntil) return;
+    kaliMoodState = state.u15.tutorial.active ? 'normal' : C.kaliMood(state, kaliMoodState);
+    if (host.dataset.face === kaliMoodState && host.dataset.frame === '0') return;
+    host.dataset.frame = '0'; host.dataset.face = kaliMoodState;
+    if (kaliMoodState === 'flustered') { host.classList.add('reacting'); sprite(host, 'assets/kali-react-surprised.png'); }
+    else {
+      host.classList.remove('reacting');
+      if (!host.classList.contains('performance-ready')) sprite(host, 'assets/magician-idle.png');
+    }
+  }
+  function audienceFaceTick() {
+    if (menu === 'boo' || wonMoment || state.u15.tutorial.active || (state.pattern === 'futureMirror' && state.u19.phase === 3)) return;
+    const v = D.venues[state.venue - 1], a = v && (v.audiences[state.j - 1] || v.headliner), host = $('audience');
+    if (!a || !host.dataset.asset) return;
+    audMoodState = C.audienceMood(state, audMoodState, { heckle: state.telegraphed && state.mode === 'fight' ? audHeckleMood : '', surprised: clock < audSurprisedUntil });
+    if (host.dataset.mood !== audMoodState) moodSprite(host, audienceAsset(v, a), audMoodState);
+  }
   function kaliPose(frame,ms) {
     kaliUntil = clock + ms;
+    $('magicianMini').classList.remove('reacting'); $('magicianMini').dataset.face = 'event';
     $('magicianMini').dataset.frame = String(frame);
     if (!$('magicianMini').classList.contains('performance-ready')) sprite($('magicianMini'),`assets/magician-${frame === 2 ? 'bow' : 'perform'}.png`);
     if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches)
@@ -1062,10 +1190,8 @@ globalThis.Presentation = (() => {
     strip.setAttribute('aria-label',goal.text); strip.title = goal.text;
     $('goalStrip').dataset.nodeId = goal.node?.id || '';
     strip.dataset.hasNode = goal.node ? '1' : '';
-    if (menu!=='boo' && clock >= kaliUntil && ($('magicianMini').dataset.frame !== '0'||$('magicianMini').classList.contains('reacting'))) {
-      $('magicianMini').dataset.frame = '0';$('magicianMini').classList.remove('reacting');
-      if (!$('magicianMini').classList.contains('performance-ready')) sprite($('magicianMini'),'assets/magician-idle.png');
-    }
+    strip.dataset.done = goal.done ? '1' : '';
+    kaliFaceTick(); audienceFaceTick();
   }
   function focusNode(id) {
     const node = D.tree.find(n=>n.id===id); if (!node) return;
@@ -1090,7 +1216,7 @@ globalThis.Presentation = (() => {
     D.skills.forEach(k=>{
       const el=$('skill-'+k.id), left=state.skills.cooldowns[k.id], ready=left<=0;
       el.hidden=!C.skillUnlocked(state,k.id);el.disabled=!ready||paused()||state.mode!=='fight';
-      el.classList.toggle('ready',ready);el.classList.toggle('in-use',k.id==='showtime'&&state.skills.showtimeLeft>0);el.style.setProperty('--cooldown',`${left/C.skillCooldown(state,k.id)*360}deg`);
+      el.classList.toggle('ready',ready);el.classList.toggle('in-use',k.id==='showtime'&&state.skills.showtimeLeft>0);el.style.setProperty('--cooldown',`${Math.round(left/C.skillCooldown(state,k.id)*360)}deg`);
       el.querySelector('small').textContent=ready ? (k.id==='showtime' && state.skills.showtimeLeft>0 ? `${Math.ceil(state.skills.showtimeLeft/1000)}초` : k.hint) : `${Math.ceil(left/1000)}초`;
     });
     const seconds=rateSamples.reduce((n,e)=>n+e.dt,0)/1000;
@@ -1209,6 +1335,36 @@ globalThis.Presentation = (() => {
     if(u.pending.length&&$('routineCutin').hidden&&showRoutine(u.pending[0]))u.pending.shift();
     document.querySelectorAll('#board .cell').forEach((el,i)=>el.classList.toggle('future-target',future&&u.phase>=2&&i===u.target&&(u.phase===2||u.window>0)));
   }
+  // U36: state flags that style.css used to read through :has() selectors on #stage, #audienceCard and #activeSkills (see the U36 note in style.css).
+  function syncFlags() {
+    const stage = $('stage'), card = $('audienceCard'), skills = $('activeSkills'), coach = $('tutorialCoach');
+    const story = !$('storyDialog').hidden, coachShown = !coach.hidden, statsx = !!card.querySelector('.stats.phone-expanded'), routine = !$('routineCutin').hidden;
+    stage.classList.toggle('f-story', story);
+    stage.classList.toggle('f-coach', coachShown);
+    stage.classList.toggle('f-coachc', coachShown && coach.dataset.compact === 'true');
+    stage.classList.toggle('f-more', !$('phoneMore').hidden);
+    stage.classList.toggle('f-panel', !$('panel').hidden);
+    stage.classList.toggle('f-statsx', statsx);
+    stage.classList.toggle('f-toast', !!$('toasts').querySelector('.toast'));
+    stage.classList.toggle('f-banner', !$('banner').hidden);
+    card.classList.toggle('f-story', story);
+    card.classList.toggle('f-statsx', statsx);
+    card.classList.toggle('f-routine', routine);
+    // U39: the bubble wins over the pattern label. Measure only when the text, the label or the viewport changed (not every frame).
+    const lineEl = $('audienceLine'), patEl = $('patternLabel'), both = phone && !lineEl.hidden && !!patEl.textContent;
+    const tailKey = lineEl.hidden ? '' : lineEl.textContent + '|' + innerWidth + 'x' + innerHeight; // the tail sits at the bubble's upper third, so read its height once per text
+    if (tailKey !== syncFlags.tailKey) { syncFlags.tailKey = tailKey; if (tailKey) card.style.setProperty('--line-h', lineEl.offsetHeight + 'px'); }
+    const lineKey = both ? lineEl.textContent.length + '|' + patEl.textContent + '|' + innerWidth + 'x' + innerHeight : '';
+    if (lineKey !== syncFlags.lineKey) {
+      syncFlags.lineKey = lineKey; card.classList.remove('f-line-over');
+      if (both) { const a = lineEl.getBoundingClientRect(), b = patEl.getBoundingClientRect(); if (a.bottom > b.top && a.top < b.bottom && a.right > b.left && a.left < b.right) card.classList.add('f-line-over'); }
+    }
+    if (skills) {
+      let other = false;
+      for (const child of skills.children) if (child.classList.contains('active-skill') && !child.classList.contains('gem-shop-quick') && !child.hidden) { other = true; break; }
+      skills.classList.toggle('f-solo', !other && !!skills.querySelector(':scope > .gem-shop-quick'));
+    }
+  }
   function render() {
     $('stage').classList.toggle('decorations-paused',paused());
     $('equipButton').hidden=!C.equipSlots(state); $('equipButton').classList.toggle('is-new',!!C.equipSlots(state)&&!state.guidance.seen.includes('equipButton'));
@@ -1226,6 +1382,8 @@ globalThis.Presentation = (() => {
       $('phaseIndicator').textContent=['','1막 · 준비한 한 수','2막 · 함께 만든 공연','3막 · 마지막 인사'][state.review.act];
       $('audienceLine').textContent=D.venues.find(v=>v.slug==='lecturenote').headliner['act'+state.review.act+'Line'];
       $('patternLabel').textContent=['','별표 케이스를 열면 다음 질문을 쉬어요','직접 개봉과 도우미를 연결해요 · 도우미 없이 두 칸도 좋아요','개봉을 이어 마지막 피날레를 완성해요'][state.review.act];
+      // v4 U38: the announced last heckle: its size is printed so the player can compare it with 멘탈 + 자신감 (and 야유 막기 can cancel it).
+      if(C.threatInfo(state).last)$('patternLabel').textContent=`마지막 야유 · 한 번에 ${C.formatNumber(C.CONST.finalHeckle)}`;
     }
     if(C.bossProfile(state)==='future'&&!wonMoment){const u=state.u19;$('phaseIndicator').hidden=false;$('phaseIndicator').textContent=['','1막 · 거울 쇼타임','2막 · 완벽한 루틴','3막 · 마지막 한 장'][u.phase];$('patternLabel').textContent=u.telegraph>0?['','쇼타임을 쓰면 내 방어도 올라가. 끝난 뒤 노려 봐.','빛나는 케이스를 2초마다 눌러 콤보를 이어 줘.','이게 진짜 미래의 나야. 20초 동안 빛나는 칸만!'][u.phase]:u.phase===1?'쇼타임 중 거울 방어 상승':u.phase===2?'빛나는 칸을 계속 눌러요':u.window>0?`빛나는 최강 케이스만 · ${Math.ceil(u.window/1000)}초`:'마지막 한 장을 이어 가요';}
     if(state.u18.challenge){const c=state.u18.challenge;$('patternLabel').textContent=c.kind==='trueFan'?'찐팬 도전 · '+C.trueFanRule(c.slug).label:'다시 만난 관객';}
@@ -1234,9 +1392,17 @@ globalThis.Presentation = (() => {
     $('rebirthButton').textContent=phone ? (state.homecomingCleared ? '✨ 환생' : '✨ 이어서') : (state.homecomingCleared?'다음 차원의 공연':'이어지는 공연');
     if (state.pattern === 'heal' && state.mode === 'fight') $('audienceCard').classList.toggle('healing', state.patternHealMs > C.CONST.patternHealEvery - 600);
     else $('audienceCard').classList.remove('healing');
-    num($('doubtNumber'), `${rounded(state.audHp)}/${rounded(state.audHpMax)}`);
-    $('doubtFill').style.width = `${state.audHp / state.audHpMax * 100}%`;
-    {const t='세기 '+rounded(C.heckleStrength(state));if($('attackNumber').textContent!==t)$('attackNumber').textContent=t;}
+    num($('doubtNumber'), `${rounded(state.audHp)}/${rounded(state.audHpMax)}`, true);
+    $('doubtFill').style.width = `${Math.round(state.audHp / state.audHpMax * 500) / 5}%`;
+    {
+      // v4 U38: heckle strength per second, doubt regrowth per second (only when there is any) and the player's own matching numbers.
+      const th=C.threatInfo(state),heckleText=th.last?`마지막 한 번 ${rounded(th.hit)}`:`${rounded(th.perSecond)}/초`,regenText=th.regen>0?`회복 ${rounded(th.regen)}/초`:'';
+      if($('attackNumber').textContent!==heckleText)$('attackNumber').textContent=heckleText;
+      if($('doubtRegen').textContent!==regenText)$('doubtRegen').textContent=regenText;
+      const mine=C.attackRate(state),mineText=mine==null?'재는 중':`${rounded(mine)}/초`;
+      if($('stat-rate').textContent!==mineText)$('stat-rate').textContent=mineText;
+      if($('stat-heckle').textContent!==heckleText)$('stat-heckle').textContent=heckleText;
+    }
     $('countdown').textContent = `${Math.max(0, state.heckleMs / 1000).toFixed(1)}초`;
     $('audienceCard').classList.toggle('telegraph', state.mode === 'fight' && state.heckleMs <= C.CONST.telegraphMs);
     const meter=$('heckleMeter'),progress=Math.max(0,Math.min(100,(1-state.heckleMs/Math.max(400,state.interval*1000))*100));
@@ -1246,8 +1412,8 @@ globalThis.Presentation = (() => {
     num($('stat-damage'), rounded(C.CONST.itemDamage * state._V));
     num($('stat-guard'), rounded(C.CONST.itemShield * state._U));
     num($('stat-heal'), rounded(C.CONST.itemHeal * state._U));
-    num($('bestCombo'), state.maxCombo);
-    num($('comboNumber'), state.combo);
+    num($('bestCombo'), state.maxCombo, true);
+    num($('comboNumber'), state.combo, true);
     const finalePercent = `${Math.min(100, state.finisher / C.nodeEffects(state).finaleNeed * 100)}%`;
     $('finisherFill').style.height = phone ? '100%' : finalePercent;
     $('finisherFill').style.width = phone ? finalePercent : '';
@@ -1256,9 +1422,9 @@ globalThis.Presentation = (() => {
     num($('shieldNumber'), rounded(state.shield));
     num($('levelNumber'), state.level);
     const xpNeed = C.CONST.xpBase + C.CONST.xpPerLevel * state.level;
-    num($('xpNumber'), `${rounded(state.xp)}/${C.formatNumber(xpNeed)}`);
+    num($('xpNumber'), `${rounded(state.xp)}/${C.formatNumber(xpNeed)}`, true);
     $('xpFill').style.width = `${Math.min(100, state.xp / xpNeed * 100)}%`;
-    for (const id of ['coins','gems','keys']) num($(id), rounded(state[id]));
+    for (const id of ['coins','gems','keys']) num($(id), rounded(state[id]), true);
     for (let i = 0; i < cells.length; i++) {
       const cell = state.board[i], dom = cells[i];
       const pos=C.cellPosition(state,i);dom.el.style.gridColumn=pos.col+1;dom.el.style.gridRow=pos.row+1;
@@ -1280,9 +1446,11 @@ globalThis.Presentation = (() => {
       dom.el.classList.toggle('case-customized',!!skin);dom.el.dataset.tier=C.caseTier(cell);
       let fallback=chest.querySelector('.sprite-fallback');if(!fallback){fallback=element('span','','sprite-fallback');chest.append(fallback);}fallback.textContent=skin?D.cosmetics.cases.find(x=>x.id===skin).emoji:'📦';
       if (chest.dataset.asset !== path) sprite(chest, path);
-      num(dom.num, pct); dom.fill.style.height = `${pct}%`; dom.fill.style.setProperty('--fill', pct / 100);
+      num(dom.num, pct, true);
+      // U36: the fill bar follows the percentage at most every 100 ms (the number above is throttled the same way).
+      if (dom.fillPct !== pct && (dom.fillAt === undefined || performance.now() - dom.fillAt >= NUM_MS || pct === 0)) { dom.fillPct = pct; dom.fillAt = performance.now(); dom.fill.style.height = `${pct}%`; dom.fill.style.setProperty('--fill', pct / 100); }
       dom.el.classList.toggle('empty', cell.hp <= 0);
-      dom.timer.textContent = `${(cell.spawn / 1000).toFixed(1)}`;
+      if (cell.hp <= 0) dom.timer.textContent = `${(cell.spawn / 1000).toFixed(1)}`;
       dom.el.classList.toggle('sealed', cell.sealed);
       dom.el.classList.toggle('mirrored', state.features.climax.mirrored.includes(i));
       dom.el.classList.toggle('review-warning',state.review.target===i&&state.review.elapsed<2000);
@@ -1292,35 +1460,41 @@ globalThis.Presentation = (() => {
     $('areaLabel').textContent = `지팡이 범위 ${a.cols} × ${a.rows}`;
     if ($('rangeShape')) { $('rangeShape').textContent = '▦'; $('rangeShape').setAttribute('aria-label', `${a.cols}열 ${a.rows}행`); }
     $('hint').textContent = menu ? '공연 일시정지' : `${state.wins ? '케이스' : '카드 케이스'}를 꾹 누르세요 · 초당 ${C.wandRate(state).toFixed(1)}회`;
-    $('dealerButton').disabled = !(state.dealerQueued || state.mode === 'dealer' || state.dealer);
-    $('dealerButton').title = $('dealerButton').disabled ? '관객을 감탄시키면 토끼 딜러가 찾아와요' : '대기 중인 토끼 딜러 만나기';
-    updateWand(); modeHooks();
+    $('dealerButton').disabled = !(C.failureDealerAvailable(state) || state.mode === 'dealer' || state.dealer);
+    $('dealerButton').title = $('dealerButton').disabled ? '공연에 실패하면 토끼 딜러가 찾아와요' : '기다리는 토끼 딜러 만나기';
+    updateWand(); modeHooks(); syncFlags();
   }
   function wandRect(point = pointer) {
     const a = C.wandArea(state), k = C.CONST;
     const pitch = k.cellSize + k.cellGap;
     const width = a.cols * pitch - k.cellGap, height = a.rows * pitch - k.cellGap;
-    return { x: Math.max(0, Math.min(k.boardSize - width, point.x - width / 2)),
-      y: Math.max(0, Math.min(k.boardSize - height, point.y - height / 2)), width, height };
+    // U36: the wand box snaps to the case grid. It used to follow the finger freely, so the drawn box could cover most of a case whose
+    // center lay a few pixels outside it (a 2x1 wand then drew over two cases and hit one). The drawn box, the hit set and the idle
+    // path in core (tickPractice) now all use the same whole-cell block.
+    const col = Math.max(0, Math.min(5 - a.cols, Math.round((point.x - k.boardInset - width / 2) / pitch)));
+    const row = Math.max(0, Math.min(5 - a.rows, Math.round((point.y - k.boardInset - height / 2) / pitch)));
+    return { x: k.boardInset + col * pitch, y: k.boardInset + row * pitch, width, height, col, row, cols: a.cols, rows: a.rows };
   }
   function coveredCells(point = pointer) {
     if (point.x < 0 || point.y < 0 || point.x > C.CONST.boardSize || point.y > C.CONST.boardSize || point.inside === false) return [];
-    const r = wandRect(point), l = C.boardLayout(state), k = C.CONST;
-    const pitch = k.cellSize + k.cellGap, found = [];
+    const r = wandRect(point), l = C.boardLayout(state), found = [];
     for (let i = 0; i < l.capacity; i++) {
       const p = C.cellPosition(state, i);
-      const x = k.boardInset + p.col * pitch + k.cellSize / 2;
-      const y = k.boardInset + p.row * pitch + k.cellSize / 2;
-      if (x >= r.x && x <= r.x + r.width && y >= r.y && y <= r.y + r.height) found.push(i);
+      if (p.col >= r.col && p.col < r.col + r.cols && p.row >= r.row && p.row < r.row + r.rows) found.push(i);
     }
     return found;
   }
   function updateWand() {
     $('wand').classList.toggle('visible', pointer.inside && !menu && !portrait());
     if (!pointer.inside) return;
-    const r = wandRect(), ratio = $('board').clientWidth / C.CONST.boardSize;
+    const r = wandRect(), ratio = boardWidth() / C.CONST.boardSize;
     $('wand').style.width = `${r.width * ratio}px`; $('wand').style.height = `${r.height * ratio}px`;
-    $('wand').style.transform = `translate(${r.x * ratio}px,${r.y * ratio}px)`;
+    // U36: since the skill column moved into #boardCard (U30c) the board sits 60 px right of and 27 px below the wand's own origin on phones,
+    // so the drawn box was shifted by about half a case against the cells it hit. The board's offset inside the card is added here.
+    // v4 U40: the offset only changes with the layout, so it is kept until fit() clears it (it used to be re-read every frame, forcing a layout after the frame's DOM writes).
+    let off = wandOffset;
+    if (!off) { off = { x: $('board').offsetLeft + $('board').clientLeft - $('wand').offsetLeft, y: $('board').offsetTop + $('board').clientTop - $('wand').offsetTop }; wandOffset = off; }
+    $('wand').style.transform = `translate(${off.x + r.x * ratio}px,${off.y + r.y * ratio}px)`;
     if(phone){
       const target=coveredCells().find(i=>i<state.board.length),icon=$('wandIcon');
       icon.hidden=target===undefined || (typeof caseGestures!=='undefined' && [...caseGestures.values()].some(g=>g.drag));
@@ -1441,8 +1615,8 @@ globalThis.Presentation = (() => {
     if(a)sprite($('audience'),audienceAsset(v,a));
     $('audienceCard').classList.add('boo-scene');
     $('heckle').textContent='우우! '+(a?.lines?.heckles?.[0]||a?.heckles?.[0]||'다음에는 더 잘해 봐!');
-    $('heckle').classList.add('visible');$('magicianMini').classList.add('disappointed','reacting');sprite($('magicianMini'),'assets/kali-react-sad.png');
-    clearTimeout(booTimer);booTimer=setTimeout(()=>{$('audienceCard').classList.remove('boo-scene');$('heckle').classList.remove('visible');$('magicianMini').classList.remove('disappointed','reacting');sprite($('magicianMini'),'assets/magician-idle.png');menu='';showFailure();},1500);
+    $('heckle').classList.add('visible');$('magicianMini').classList.add('disappointed','reacting');$('magicianMini').dataset.face='boo';sprite($('magicianMini'),'assets/kali-react-sad.png');
+    clearTimeout(booTimer);booTimer=setTimeout(()=>{$('audienceCard').classList.remove('boo-scene');$('heckle').classList.remove('visible');$('magicianMini').classList.remove('disappointed','reacting');$('magicianMini').dataset.face='';kaliMoodState='normal';audMoodState='doubt';sprite($('magicianMini'),'assets/magician-idle.png');menu='';showFailure();},1500);
   }
   function practiceGoLabel() {
     const name = D.venues[state.venue - 1]?.name || '', code = name ? name.charCodeAt(name.length - 1) : 0;
@@ -1482,7 +1656,7 @@ globalThis.Presentation = (() => {
   function updateLearningBadge() {
     if (updateLearningBadge.at && clock-updateLearningBadge.at<250) return;
     updateLearningBadge.at=clock;
-    const count=C.affordableNodes(state,{infinite:state.learning.infinite}).length;
+    const count=C.affordableNodes(state).length;
     $('bookButton').dataset.affordable=String(count);
     $('bookButton').setAttribute('aria-label',`비법서 · 지금 배울 수 있는 비법 ${count}개`);
     $('buyAllButton').disabled=!count;
@@ -1490,7 +1664,7 @@ globalThis.Presentation = (() => {
   function buyAllUI() {
     if (!state.onboarding.intro || ['boo','fail','dealer','headliner','ending','rebirth','bossPhase','curtain'].includes(menu)) return;
     tutorialSignal('buyAll');
-    const result=C.buyAll(state,{infinite:state.learning.infinite});
+    const result=C.buyAll(state);
     if (result.count) {
       tutorialSignal('learn'); sound('coin'); toast(`비법 ${result.count}개 배움`);
       const p=target('coins'); burst(p.x,p.y,'#ffe65c');
@@ -1600,8 +1774,8 @@ globalThis.Presentation = (() => {
     if (node.id === 'chain8') return change('연쇄 방향', lv ? 8 : 4, 8);
     if (node.id === 'chainPower') return change('연쇄 지팡이 피해', .3 + .1 * lv, .3 + .1 * next, percent);
     if (node.statBranch) {
-      const total = (state.tree['hidden-' + node.statBranch] || 0) + (state.tree['infinite-' + node.statBranch] || 0);
-      return change('가지 능력 힘', (1+.02*total)*C.statMultiplier(state,'infinite-'+node.statBranch), (1+.02*(total+next-lv))*C.statMultiplier(altered,'infinite-'+node.statBranch));
+      const total = state.tree['hidden-' + node.statBranch] || 0;
+      return change('가지 능력 힘', 1+.02*total, 1+.02*(total+next-lv));
     }
     if (node.productMultiplier) return change('연출', state._V, state._V * node.productMultiplier ** (next - lv));
     if (node.id === 'boxHelper') return change('팬 수', C.fanCount(state), C.fanCount(altered));
@@ -1637,11 +1811,10 @@ globalThis.Presentation = (() => {
     if (practice) $('panel').dataset.practice = '1'; else delete $('panel').dataset.practice;
     const body = $('panelBody'); body.replaceChildren();
     const learning = element('div','','tree-learning');
-    const all = action('모두 배우기',buyAllUI); all.id='treeBuyAll'; all.dataset.affordable=String(C.affordableNodes(state,{infinite:state.learning.infinite}).length);
+    const all = action('모두 배우기',buyAllUI); all.id='treeBuyAll'; all.dataset.affordable=String(C.affordableNodes(state).length);
     const auto = action(state.learning.on ? '자동 켜짐' : '자동 배우기',()=> { state.learning.on=!state.learning.on; state.learning.ms=0; save(); tree(); },!state.tree.autoLearn);
     auto.setAttribute('aria-pressed',String(state.learning.on)); auto.title='학교 장기자랑 도착 후 자동 배우기 비법으로 해금';
-    const infinite = action(state.learning.infinite ? '무한 포함' : '무한 제외',()=> { state.learning.infinite=!state.learning.infinite; save(); tree(); });
-    infinite.setAttribute('aria-pressed',String(state.learning.infinite)); learning.append(all,auto,infinite);
+    learning.append(all,auto);
     const header = $('panel').querySelector('header');
     header.querySelectorAll('.tree-learning,.practice-go').forEach(el=>el.remove()); header.insertBefore(learning,$('closePanel'));
     if (practice) { const go = action(practiceGoLabel(), restartAfterFailure); go.classList.add('practice-go','u26-primary'); header.insertBefore(go,$('closePanel')); }
@@ -1656,7 +1829,7 @@ globalThis.Presentation = (() => {
     const world = element('div', '', 'constellation-world');
     const detail = element('aside', '', 'constellation-detail'); detail.setAttribute('aria-live', 'polite');
     const infos = new Map(D.tree.map(n => [n.id, C.nodeInfo(state, n.id)]));
-    const shown = new Set(D.tree.filter(n => infos.get(n.id).revealed || (!(n.hidden || n.infinite) && (n.reveal === 'E' || n.prereqs.some(id => infos.get(id).revealed)))).map(n => n.id));
+    const shown = new Set(D.tree.filter(n => infos.get(n.id).revealed || (!n.hidden && (n.reveal === 'E' || n.prereqs.some(id => infos.get(id).revealed)))).map(n => n.id));
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); svg.classList.add('constellation-lines');
     for (const node of D.tree) {
       if (!shown.has(node.id)) continue;
@@ -1786,11 +1959,11 @@ globalThis.Presentation = (() => {
       const header = $('panel').querySelector('header');
       header.querySelectorAll('.tree-wallet,.constellation-controls,.tree-more').forEach(el=>el.remove());
       header.insertBefore(wallet,$('closePanel'));
-      // U32: rarely used buttons (무한 제외, zoom, center) sit behind one ⋯ button so the header stays calm.
+      // U32: rarely used buttons (auto learn, zoom, center) sit behind one ⋯ button so the header stays calm.
       const more = element('div','','tree-more'), pop = element('div','','tree-more-pop');
       const toggle = action('⋯', () => { const open = more.classList.toggle('open'); toggle.setAttribute('aria-expanded', String(open)); });
       toggle.classList.add('tree-more-toggle'); toggle.setAttribute('aria-label','더 보기'); toggle.setAttribute('aria-expanded','false');
-      pop.append(auto, infinite, controls); more.append(toggle, pop);
+      pop.append(auto, controls); more.append(toggle, pop);
       header.insertBefore(more,$('closePanel'));
       $('closePanel').textContent = '뒤로';
     }
@@ -1898,9 +2071,13 @@ globalThis.Presentation = (() => {
     $('stage').append(host); helperActors[id] = host; return host;
   }
   const impactPool = [];
+  let impactLive = 0;
   function impactSprite(p,emoji,kind,asset){
+    // U36: at most 8 impact sprites on screen (helpers fire many per second late in the game).
+    if (impactLive >= 8) return;
+    impactLive++;
     const n=impactPool.pop()||element('span','','');n.className='projectile-impact '+kind;n.hidden=false;n.textContent=emoji;delete n.dataset.asset;n.setAttribute('aria-hidden','true');
-    n.style.left=`${p.x}px`;n.style.top=`${p.y}px`;if(asset)sprite(n,asset);$('stage').append(n);setTimeout(()=>{n.remove();if(impactPool.length<8)impactPool.push(n);},600);
+    n.style.left=`${p.x}px`;n.style.top=`${p.y}px`;if(asset)sprite(n,asset);$('stage').append(n);setTimeout(()=>{impactLive--;n.remove();if(impactPool.length<8)impactPool.push(n);},600);
   }
   function spongeImpact(e,p){
     const b=state.features.magic.balls[e.ball];if(!b)return;
@@ -1921,12 +2098,14 @@ globalThis.Presentation = (() => {
     if(!layer){layer=element('div','','magic-layer');layer.id='magicLayer';$('stage').append(layer);}
     layer.hidden=paused();
     const actors=renderMagic.actors || (renderMagic.actors={balls:[],papers:[],controls:{}});
-    actors.balls.forEach(n=>n.hidden=true);actors.papers.forEach(n=>n.hidden=true);
-    state.features.magic.balls.forEach((b,i)=>{const ball=actors.balls[i] || (actors.balls[i]=element('img','','sponge-projectile'));ball.hidden=((renderMagic.bounces||{})[i]||0)>clock;ball.src='assets/proj-sponge.png';ball.alt='스펀지볼';const point=typeof phone !== 'undefined' && phone ? boardPoint(b.x,b.y) : {x:870+b.x,y:160+b.y};ball.style.left=`${point.x-16}px`;ball.style.top=`${point.y-16}px`;if(!ball.dataset.mounted){layer.append(ball);ball.dataset.mounted="1";}});
+    // U36: hidden flags are written once per frame (they used to be set true for every actor and then false again, two attribute writes each).
+    for(let i=state.features.magic.balls.length;i<actors.balls.length;i++)actors.balls[i].hidden=true;
+    for(let i=state.features.magic.papers.length;i<actors.papers.length;i++)actors.papers[i].hidden=true;
+    state.features.magic.balls.forEach((b,i)=>{const ball=actors.balls[i] || (actors.balls[i]=element('img','','sponge-projectile'));ball.hidden=((renderMagic.bounces||{})[i]||0)>clock;if(!ball.__art){ball.src='assets/proj-sponge.png';ball.alt='스펀지볼';ball.__art=true;}const point=typeof phone !== 'undefined' && phone ? boardPoint(b.x,b.y) : {x:870+b.x,y:160+b.y};ball.style.left=`${point.x-16}px`;ball.style.top=`${point.y-16}px`;if(!ball.dataset.mounted){layer.append(ball);ball.dataset.mounted="1";}});
     state.features.magic.papers.forEach((p,i)=>{const at=cellCenter(p.cell);let button=actors.papers[i];if(!button){button=action('플래시 페이퍼',()=>{events(C.tapPaper(state,Number(button.dataset.cell)));save();render();});button.addEventListener('pointerdown',e=>e.stopPropagation());button.addEventListener('pointerup',e=>e.stopPropagation());actors.papers[i]=button;}button.hidden=false;button.dataset.cell=p.cell;button.className='paper-drop';button.style.left=`${at.x-25}px`;button.style.top=`${at.y-25}px`;if(button.dataset.asset!=='assets/drop-flashpaper.png')sprite(button,'assets/drop-flashpaper.png');if(!button.dataset.mounted){layer.append(button);button.dataset.mounted="1";}});
     let controls=$('magicControls');
     if(!controls){controls=element('div','','magic-controls');controls.id='magicControls';($('helperControls') || $('stage')).append(controls);}
-    Object.values(actors.controls).forEach(n=>n.hidden=true);
+    for(const id in actors.controls)if(!state.tree[id])actors.controls[id].hidden=true;
     for(const id of ['sponge','cardthrow','tipbox','flashpaper','crystal','water','spotlight'])if(state.tree[id]){
       const n=D.tree.find(n=>n.id===id);let button=actors.controls[id];if(!button){button=action('',()=>{C.toggleHelper(state,id);save();render();});actors.controls[id]=button;controls.append(button);}button.hidden=false;
       const icons={sponge:'🔴',cardthrow:'🃏',tipbox:'🪙',flashpaper:'🔥',crystal:'🔮',water:'🥤',spotlight:'🔦'};
@@ -1973,7 +2152,9 @@ globalThis.Presentation = (() => {
       if (Number(host.dataset.busyUntil || 0) <= clock && host.dataset.asset !== `assets/helper-${id}-idle.png`) sprite(host, `assets/helper-${id}-idle.png`);
       host.classList.toggle('paused', paused);
     }
-    for (const host of Object.values(workerActors)) host.hidden = true;
+    // U36: hide only the actors that are no longer in the list (they used to be hidden and shown again every frame).
+    const liveActors = new Set(state.features.workers.actors.map(a => a.id));
+    for (const id in workerActors) if (!liveActors.has(id)) workerActors[id].hidden = true;
     for (const actor of state.features.workers.actors) {
       const host = workerActor(actor.id, actor.role);
       host.hidden = false;
@@ -2069,7 +2250,7 @@ globalThis.Presentation = (() => {
   }
   function dealer() {
     if (['boo','fail','ending','rebirth','bossPhase'].includes(menu) || dealerBusy) return;
-    if (state.dealerQueued && state.mode === 'transition') events(C.step(state, Math.max(1, state.transMs + 1), { taps: [] }));
+    if (state.mode !== 'dealer' && C.failureDealerAvailable(state) && C.openFailureDealer(state)) save();
     if (state.mode !== 'dealer' || !state.dealer) return;
     if (menu !== 'dealer') {
       dealerGameView=null; dealerMessage = ''; dealerLost = state.dealer.phase === 'card-done'; dealerResult = '';
@@ -3339,6 +3520,7 @@ globalThis.Presentation = (() => {
     for (let i = particles.length - 1; i >= 0; i--) {
       const p = particles[i], t = (clock - p.start) / p.life;
       if (t >= 1) { particles.splice(i, 1); continue; }
+      if (t < 0) continue;
       const x = p.x + p.dx * t, y = p.y + p.dy * t + 28 * t * t;
       ctx.globalAlpha = 1 - t; ctx.fillStyle = p.color;
       const sheets={card:'card-shards',cardrain:'card-shards',coin:'coin-spark',ring:'ring-flash',silk:'ribbon',sponge:'puff',dove:'feathers',cheer:'heart-pop',showtime:'shockwave',critical:'critical'};
@@ -3364,7 +3546,7 @@ globalThis.Presentation = (() => {
         badges.splice(i, 1); continue;
       }
       ctx.save(); ctx.translate(Math.round(b.x), Math.round(b.y) + (phone ? 6 : 0));
-      const w = phone ? U5.badgeWidth(104 * $('board').clientWidth / 608) : b.width, h = phone ? Math.min(b.nameLabel ? 30 : 20, 112 * $('board').clientWidth / 608 - 18) : (b.nameLabel ? 54 : 34);
+      const w = phone ? U5.badgeWidth(104 * boardWidth() / 608) : b.width, h = phone ? Math.min(b.nameLabel ? 30 : 20, 112 * boardWidth() / 608 - 18) : (b.nameLabel ? 54 : 34);
       ctx.fillStyle = '#10121af5'; ctx.strokeStyle = D.items.rarities.find(r => r.id === b.rarity)?.color || '#ffe65c';
       ctx.lineWidth = 2; ctx.fillRect(-w / 2, -h / 2, w, h); ctx.strokeRect(-w / 2 + 1, -h / 2 + 1, w - 2, h - 2);
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#fff';
@@ -3485,6 +3667,7 @@ globalThis.Presentation = (() => {
   const meanings=D.statMeanings;
   document.querySelectorAll('.stat').forEach((el,i)=>{if(i<3)el.append(element('small',meanings[['power','damage','mental'][i]],'stat-meaning'));});
 
+  const MAX_FRAME_MS = 250;
   let lastRun = 0;
   function loop(now) {
     // U29: nothing runs while hidden; when paused with no effects on screen, 30 fps is enough.
@@ -3493,9 +3676,16 @@ globalThis.Presentation = (() => {
     const quiet = !particles.length && !flights.length && !numbers.length && !badges.length && (paused() || !boardHolds.length);
     if (now - lastRun < (quiet ? 30 : 14)) { requestAnimationFrame(loop); return; }
     lastRun = now;
-    const dt = previous ? Math.max(0, Math.min(50, now - previous)) : 0;
+    // v4 U40: the three card rects are re-read every 8th frame (and after fit()), not every frame: they only move on resize, so the per-frame read at the top
+    // forced a style recalculation (CSS animations dirty the style before every frame) for nothing. A stale rect is at most 8 frames old.
+    if (geoAge++ % 8 === 0) { geo.clear(); rectOf($('stage')); rectOf($('board')); rectOf($('audience')); boardWidth(); }
+    portrait();
+    // U36: game time follows real time. The old 50 ms cap made the whole game run in slow motion below 20 fps (about 45 percent speed at the 9 fps
+    // a phone reached late in the game: timers, attacks, fans, glove). A frame now advances up to 250 ms; Core steps it in 50 ms substeps.
+    const dt = previous ? Math.max(0, Math.min(MAX_FRAME_MS, now - previous)) : 0;
     previous = now;
     if (!document.hidden) clock += dt;
+    drawEffects(); // v4 U40: drawn before this frame's combat step and DOM writes (see the note at the end of loop); effects born in the step start drawing next frame
     if (!paused()) {
       let remaining = dt * (debug ? 10 : 1);
       // Stop at a failure event, even at debug speed: Core already restarted.
@@ -3511,7 +3701,8 @@ globalThis.Presentation = (() => {
         }
       }
     }
-    renderU17(); render(); renderCoach(); updateLearningBadge(); nextToasts(dt); drawEffects(); if (prefetchWinSeen && performance.now() >= prefetchLoadAt + 10000) prefetchNextVenue(state.venue); requestAnimationFrame(loop);
+    // v4 U40: the canvas draw (drawEffects, above) goes before the DOM writes: setting ctx.font after them forced a style recalculation about 540 times in 10 s, 1.6 ms each at 4x CPU.
+    flushNums(); renderU17(); render(); renderCoach(); updateLearningBadge(); nextToasts(dt); if (prefetchWinSeen && performance.now() >= prefetchLoadAt + 10000) prefetchNextVenue(state.venue); requestAnimationFrame(loop);
   }
   motion.addEventListener('change', e => {
     reduced = e.matches; particles.length = 0; flights.length = 0; numbers.length = 0;
@@ -3538,8 +3729,17 @@ globalThis.Presentation = (() => {
   $('statsButton').addEventListener('click', () => {
     if(phone){
       openPanel('stats','능력치');
-      const values={power:C.wandDamage(state),damage:C.CONST.itemDamage*state._V,mental:state.mentalMax};
-      for(const id of ['power','damage','mental']){const row=element('section','','easy-stat');row.append(element('h2',D.statNames[id]),element('p',D.statMeanings[id]),element('strong',C.formatNumber(values[id])));$('panelBody').append(row);}
+      // v4 U38: the fight numbers come first and use the same units as the threat numbers on the audience card (per second, C.formatNumber).
+      const F=C.formatNumber,th=C.threatInfo(state),mine=C.attackRate(state);
+      const rows=[
+        ['내 공격','관객의 의심을 1초에 이만큼 줄여요',mine==null?'재는 중':`${F(mine)}/초`],
+        ['야유',th.last?'지금은 마지막 야유 한 번이 와요 (멘탈과 자신감을 합친 만큼 버텨요)':`관객의 야유가 1초에 이만큼이에요 (한 번 ${F(th.hit)}, ${+th.every.toFixed(1)}초마다)`,th.last?`마지막 한 번 ${F(th.hit)}`:`${F(th.perSecond)}/초`]
+      ];
+      if(th.regen>0)rows.push(['의심 회복','관객의 의심이 1초에 이만큼 다시 차올라요',`${F(th.regen)}/초`]);
+      rows.push(['멘탈',`야유를 버티는 힘 (가득 차면 ${F(state.mentalMax)})`,F(state.mental)]);
+      rows.push(['자신감',`야유를 먼저 막아 줘요 (야유 한 번 ${F(th.hit)} 중 막는 양 ${F(th.block)})`,F(th.shield)]);
+      rows.push([D.statNames.power,D.statMeanings.power,F(C.wandDamage(state))],[D.statNames.damage,D.statMeanings.damage,F(C.CONST.itemDamage*state._V)]);
+      for(const [name,meaning,value] of rows){const row=element('section','','easy-stat');row.append(element('h2',name),element('p',meaning),element('strong',value));$('panelBody').append(row);}
       return;
     }
     const expanded = $('statsButton').classList.toggle('expanded');
@@ -3554,7 +3754,7 @@ globalThis.Presentation = (() => {
   }, 300000);
   // Stable screen/audio integration hooks for U4 and U5.
   window.MagicShowUI = {
-    motionMetrics:()=>({particles:particles.length,flights:flights.length,numbers:numbers.length,badges:badges.length}), hitTier, openCurtainCall, openRestore, getState: () => state, startScene:C.startScene, storyList, renderU15, getHolds: () => boardHolds, startIntro, buyAll: buyAllUI, events, save, toast, banner, openPanel, closePanel, render, showFailure, showBoo, clearDecorations, opaqueSprites,
+    motionMetrics:()=>({particles:particles.length,flights:flights.length,numbers:numbers.length,badges:badges.length,coinOrigin:clearMoment.origin||null,flightOrigins:flights.map(f=>[f.x,f.y])}), hitTier, openCurtainCall, openRestore, getState: () => state, startScene:C.startScene, storyList, renderU15, getHolds: () => boardHolds, startIntro, buyAll: buyAllUI, events, save, toast, banner, openPanel, closePanel, render, showFailure, showBoo, clearDecorations, opaqueSprites,
     openBook: tree, focusNode, openBestiary: bestiary, openMissions:drawMissions, renderCoach,
     openDealer: dealer, openGemShop:gemShop, openMap:openStageMap, openCustomize:customize, drawDealer, openEnding: () => { if (state.seenEnding) { revealEnding = false; showEnding(); } },
     openRebirth: () => { if (state.seenEnding) showRebirth(); }, isPaused: paused
@@ -3597,6 +3797,9 @@ globalThis.Presentation = (() => {
   if(state.u18.map)openStageMap();
   if (!state.onboarding.intro) startIntro(false);
   if (corrupt) toast('저장을 불러오지 못해 백업해 두었어요');
+  if (recoveredSave) toast('저장이 손상돼 최근 백업에서 되찾았어요');
+  if (repairedSave) toast('저장을 조금 고쳐서 불러왔어요');
+  if (refundedCoins > 0) toast(`끝없는 비법이 정리돼서 동전 ${C.formatNumber(refundedCoins)}을 돌려받았어요`);
   if (newerSave) showSaveNotice();
   if (giftEnded && launchSaved) toast('선물 기간이 끝나서 성장 속도가 원래대로 돌아왔어요');
   if (launchQuery.get('restored') === '1') {
@@ -3613,5 +3816,21 @@ globalThis.Presentation = (() => {
     if (restoreNoBetter && saveStore && !inaccessible) $('panelBody').prepend(element('p','지금 저장이 가장 많이 진행된 저장이에요'));
   }
   if (inaccessible) toast('저장을 사용할 수 없어요. 공연은 계속돼요');
+  // U36 TEMPORARY title screen (owner art). It is plain markup in index.html (first paint). It fades out (250 ms, none under Reduce Motion) once the
+  // game is ready and at least 1.2 s have passed since the page started, or at once on a tap. It never touches the game state, saves or the
+  // install prompt. Browser automation (navigator.webdriver) skips it unless the URL has ?title=1, so tests and capture tools see the game directly.
+  (function titleScreen() {
+    const title = document.getElementById('titleScreen');
+    if (!title) return;
+    if (navigator.webdriver && launchQuery.get('title') !== '1') { title.remove(); return; }
+    let leaving = false;
+    const hide = () => {
+      if (leaving) return; leaving = true;
+      if (reduced) { title.remove(); return; }
+      title.classList.add('leaving'); setTimeout(() => title.remove(), 300);
+    };
+    title.addEventListener('pointerdown', hide);
+    setTimeout(hide, Math.max(0, 1200 - performance.now()));
+  })();
   requestAnimationFrame(loop);
 })();

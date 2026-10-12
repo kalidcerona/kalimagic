@@ -583,18 +583,21 @@ body:not(.phone) #goalStrip:after{content:"";position:absolute;inset:0 0 auto;he
 .phone #tutorialCoach{z-index:24;grid-template-columns:40px minmax(0,1fr) 48px;padding:4px;gap:4px;font-size:10px;line-height:12px;max-width:260px}
 .phone #tutorialCoach .coach-helper{grid-column:1;grid-row:1 / 3;width:40px;height:44px}.phone #tutorialCoach strong,.phone #tutorialCoach p{grid-column:2}.phone #tutorialCoach button{grid-column:3;grid-row:1 / 3;min-height:44px;width:48px;min-width:44px;padding:2px}
 .phone #storyDialog{left:4px;right:4px;bottom:4px;padding:5px;gap:5px;font-size:11px;grid-template-columns:40px minmax(0,1fr) 44px 66px;line-height:14px}.phone .story-portrait{width:40px;height:52px}.phone #storyDialog button{font-size:10px;min-height:44px}.phone .story-copy p{margin:3px 0}
-.phone #audienceCard:has(#storyDialog:not([hidden])) .mental,.phone #audienceCard:has(#storyDialog:not([hidden])) .shield,.phone #audienceCard:has(#storyDialog:not([hidden])) .combo,.phone #audienceCard:has(#storyDialog:not([hidden])) #audienceLine{visibility:hidden}
-.phone #audienceCard:has(#storyDialog:not([hidden])) #statsButton{visibility:hidden}
-.phone #toasts{left:6px;bottom:6px;top:auto;width:var(--audience-width);pointer-events:none;z-index:10}.phone #stage:has(#storyDialog:not([hidden])) #toasts{visibility:hidden}
-.phone #stage:has(#tutorialCoach:not([hidden])) #statsButton{visibility:hidden}
+/* U36: the old :has() selectors on #stage, #audienceCard and #activeSkills re-evaluated the whole stage subtree on every DOM insertion or
+   hidden change (about 70 percent of the late-game style cost). ui.js syncFlags() now sets the classes f-story, f-coach, f-coachc, f-more,
+   f-panel, f-statsx, f-toast, f-banner, f-routine, f-solo on those anchors; each selector below keeps the specificity of the :has() form. */
+.phone #audienceCard#audienceCard.f-story .mental,.phone #audienceCard#audienceCard.f-story .shield,.phone #audienceCard#audienceCard.f-story .combo,.phone #audienceCard#audienceCard.f-story #audienceLine{visibility:hidden}
+.phone #audienceCard#audienceCard.f-story #statsButton{visibility:hidden}
+.phone #toasts{left:6px;bottom:6px;top:auto;width:var(--audience-width);pointer-events:none;z-index:10}.phone #stage#stage.f-story #toasts{visibility:hidden}
+.phone #stage#stage.f-coach #statsButton{visibility:hidden}
 @media(max-width:700px){.phone #phoneWallet .hud{gap:5px}.phone #phoneVenue .venue-name{font-size:10px}.phone #magicianMini.performance-ready{width:90px;height:100px}.phone #storyDialog{grid-template-columns:30px minmax(0,1fr) 44px 64px}.phone .story-portrait{width:30px}}
 /* Menu and stats are dedicated modal surfaces; covered content is not visible. */
-.phone #stage:has(#phoneMore:not([hidden])) #audienceCard,.phone #stage:has(#phoneMore:not([hidden])) #boardCard,.phone #stage:has(#phoneMore:not([hidden])) #goalStrip,.phone #stage:has(#phoneMore:not([hidden])) #tutorialCoach,.phone #stage:has(#phoneMore:not([hidden])) #toasts{visibility:hidden}
-.phone #stage:has(#panel:not([hidden])) #audienceCard,.phone #stage:has(#panel:not([hidden])) #boardCard,.phone #stage:has(#panel:not([hidden])) #phoneTop,.phone #stage:has(#panel:not([hidden])) #tutorialCoach,.phone #stage:has(#panel:not([hidden])) #toasts{visibility:hidden}
-.phone #audienceCard:has(.stats.phone-expanded)>:not(.stats):not(#statsButton):not(.room){visibility:hidden}
-.phone #stage:has(.stats.phone-expanded) #tutorialCoach{visibility:hidden}
-.phone #stage:has(#tutorialCoach:not([hidden])) #magicianMini{width:90px;height:90px}
-@media(max-width:700px){.phone #tutorialCoach{grid-template-columns:24px minmax(0,1fr) 44px;gap:2px;padding:3px;font-size:9px;line-height:11px}.phone #tutorialCoach .coach-helper{width:24px;height:36px}.phone #tutorialCoach button{width:44px;font-size:9px}.phone #stage:has(#tutorialCoach:not([hidden])) #magicianMini{width:75px;height:75px}}
+.phone #stage#stage.f-more #audienceCard,.phone #stage#stage.f-more #boardCard,.phone #stage#stage.f-more #goalStrip,.phone #stage#stage.f-more #tutorialCoach,.phone #stage#stage.f-more #toasts{visibility:hidden}
+.phone #stage#stage.f-panel #audienceCard,.phone #stage#stage.f-panel #boardCard,.phone #stage#stage.f-panel #phoneTop,.phone #stage#stage.f-panel #tutorialCoach,.phone #stage#stage.f-panel #toasts{visibility:hidden}
+.phone #audienceCard.f-statsx.f-statsx>:not(.stats):not(#statsButton):not(.room){visibility:hidden}
+.phone #stage.f-statsx.f-statsx #tutorialCoach{visibility:hidden}
+.phone #stage#stage.f-coach #magicianMini{width:90px;height:90px}
+@media(max-width:700px){.phone #tutorialCoach{grid-template-columns:24px minmax(0,1fr) 44px;gap:2px;padding:3px;font-size:9px;line-height:11px}.phone #tutorialCoach .coach-helper{width:24px;height:36px}.phone #tutorialCoach button{width:44px;font-size:9px}.phone #stage#stage.f-coach #magicianMini{width:75px;height:75px}}
 /* Existing portraits include transparent padding; zoom the image, not its lane. */
 .phone #audience{overflow:hidden}.phone #audience>.asset-sprite{transform:scale(1.4);transform-origin:50% 80%}
 .phone #magicianMini{scale:-1 1;transform:none}
@@ -604,16 +607,16 @@ body:not(.phone) #goalStrip:after{content:"";position:absolute;inset:0 0 auto;he
 .phone #tutorialCoach strong{grid-column:2;grid-row:1;align-self:center}
 .phone #tutorialCoach p{grid-column:1 / 4;grid-row:2;line-height:12px}
 .phone #tutorialCoach button{grid-column:3;grid-row:1;width:44px;min-width:44px;min-height:44px;font-size:9px}
-.phone #stage:has(#tutorialCoach:not([hidden])) #magicianMini{width:80px;height:80px}
-#audienceCard:has(#storyDialog:not([hidden])) .xp-row,#audienceCard:has(#storyDialog:not([hidden])) .combo{visibility:hidden}
-#stage:has(#storyDialog:not([hidden])) #banner{visibility:hidden}
+.phone #stage#stage.f-coach #magicianMini{width:80px;height:80px}
+#audienceCard#audienceCard.f-story .xp-row,#audienceCard#audienceCard.f-story .combo{visibility:hidden}
+#stage#stage.f-story #banner{visibility:hidden}
 .easy-description{white-space:pre-line}.bestiary-guides{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.bestiary-guide{display:grid;grid-template-columns:64px minmax(0,1fr);gap:8px;padding:8px;background:#141a28}.bestiary-guide .entry-emoji{grid-row:1 / 3;width:64px;height:72px}.bestiary-guide h3,.bestiary-guide p{margin:2px}.phone .bestiary-guide{font-size:11px}
 .phone #patternLabel{left:6px;right:auto;top:50px;width:calc(40% - 12px);max-height:32px;line-height:12px}
 .phone #phaseIndicator{left:6px;right:auto;top:30px;width:calc(40% - 12px);max-height:16px;line-height:14px}
 .phone #stage #toasts{left:calc(6px + var(--audience-width) * .44);top:118px;bottom:auto;width:calc(var(--audience-width) * .52 - 6px);height:36px;max-height:36px;z-index:16}
 .phone #stage .toast{height:auto;max-height:36px;min-height:24px;line-height:14px;padding:3px;font-size:10px}
 .phone #stage #banner,.phone #stage #banner.big{left:calc(6px + var(--audience-width) * .44);top:118px;width:calc(var(--audience-width) * .52 - 6px);max-height:100px;padding:6px;font-size:10px;z-index:20}
-.phone #stage:has(#toasts .toast) #audienceLine,.phone #stage:has(#banner:not([hidden])) #audienceLine,.phone #stage:has(#banner:not([hidden])) #toasts{visibility:hidden}
+.phone #stage#stage.f-banner #toasts{visibility:hidden}
 .phone .easy-stat{border:1px solid #929bb7;padding:8px;margin:6px 0}.phone #panel .easy-stat h2{font-size:14px}.phone .easy-stat strong{font-size:18px}
 .phone #goalStrip .goal-node{display:none}.phone #goalStrip .goal-target{display:block;min-width:0}.phone #goalStrip .goal-cost{display:block;white-space:normal;overflow-wrap:anywhere}
 .phone #phoneMore #statsButton{visibility:visible!important}
@@ -623,8 +626,8 @@ body:not(.phone) #goalStrip:after{content:"";position:absolute;inset:0 0 auto;he
 .phone #tutorialCoach[data-compact="true"] strong{grid-column:2;grid-row:1}
 .phone #tutorialCoach[data-compact="true"] p{grid-column:1 / 3;grid-row:2;line-height:11px}
 .phone #tutorialCoach[data-compact="true"] button{grid-column:1 / 3;grid-row:3;justify-self:end}
-.phone #stage:has(#tutorialCoach[data-compact="true"]:not([hidden])) #magicianMini{width:60px;height:60px}
-.phone.phone-tight #stage:has(#tutorialCoach:not([hidden])) #magicianMini{width:65px;height:65px}
+.phone #stage#stage.f-coachc.f-coachc #magicianMini{width:60px;height:60px}
+.phone.phone-tight #stage#stage.f-coach #magicianMini{width:65px;height:65px}
 .coach-helper,.story-portrait{object-fit:cover;object-position:50% 70%}
 
 /* U16: single-line actions and a portrait-contained completion badge. */
@@ -653,7 +656,7 @@ body:not(.phone) #goalStrip:after{content:"";position:absolute;inset:0 0 auto;he
 .phone #boardCard{top:44px}
 .phone #activeSkills{left:-50px;top:0;display:flex;flex-direction:column;gap:4px}
 .phone #audience,.phone #audience.headliner,.phone.phone-tight #audience,.phone.phone-tight #audience.headliner{height:calc(100% - 72px)}
-.phone #audienceCard:has(#storyDialog:not([hidden])) #audience{bottom:64px;height:calc(100% - 94px)}
+.phone #audienceCard#audienceCard.f-story #audience{bottom:64px;height:calc(100% - 94px)}
 .phone #storyDialog{height:56px;grid-template-columns:30px minmax(0,1fr) 44px 66px;padding:4px;gap:4px}
 .phone #storyDialog .story-portrait{width:30px;height:44px}
 .phone #storyDialog .story-copy{min-width:0;overflow:hidden}
@@ -709,7 +712,7 @@ html,body,#stage{background:var(--bg);color:var(--ink)}
 #stage #audienceCard{border:2px solid var(--brass);box-shadow:0 2px 0 #100D16}
 #stage :is(.stats,.mental,.shield,.combo,.bestiary-venue,.bestiary-entry,.easy-stat,.daily-mission,.dealer-gem-menu,.gem-shop-item,.gem-game){background:var(--raised);border:1px solid var(--line);box-shadow:0 2px 0 #100D16;text-shadow:none}
 #stage :is(#panel,#phoneMore,#phoneTop,#storyDialog,#tutorialCoach,.stats) *{text-shadow:none}
-#stage:has(#panel:not([hidden])) #banner{visibility:hidden}
+#stage#stage.f-panel #banner{visibility:hidden}
 #stage :is(.venue-name,.spotlight,#audienceLine,#patternLabel,#phaseIndicator,.heckle){text-shadow:1px 1px #100D16}
 #stage :is(.doubt-label,.xp-number,.lv,.box-number){text-shadow:none}
 #stage :is(.box-number,.stat-value) .bitmap{filter:none}
@@ -831,7 +834,7 @@ html,body,#stage{background:var(--bg);color:var(--ink)}
  .phone #storyDialog button{grid-row:2}
  .phone #storyDialog button:first-of-type{grid-column:3}
  .phone #storyDialog button:last-of-type{grid-column:4}
- .phone #audienceCard:has(#storyDialog:not([hidden])) #audience{bottom:90px;height:calc(100% - 120px)}
+ .phone #audienceCard#audienceCard.f-story #audience{bottom:90px;height:calc(100% - 120px)}
 }
 .truefan-slot{margin-top:8px;padding:8px;border:1px solid var(--line);background:var(--panel)}
 .truefan-slot.earned,.truefan-ribbon{border:2px solid var(--gold);color:var(--gold)}
@@ -876,7 +879,7 @@ html,body,#stage{background:var(--bg);color:var(--ink)}
 .routine-collection span{display:inline-flex;align-items:center;gap:4px}.routine-icon{width:32px;height:32px}
 #futureTelegraph{position:absolute;left:46px;top:290px;width:470px;padding:18px;background:#342334f5;border:2px solid #ffe17a;white-space:pre-line;line-height:1.6;z-index:10;pointer-events:none}
 .phone #routineCutin{--routine-frame:44px;left:22%;top:auto;bottom:48px;width:calc(18% - 6px);height:76px;font-size:9px;line-height:12px}
-.phone #audienceCard:has(#routineCutin:not([hidden])) #magicianMini{width:calc(22% - 12px);height:76px}
+.phone #audienceCard#audienceCard.f-routine #magicianMini{width:calc(22% - 12px);height:76px}
 .phone #futureTelegraph{left:6px;top:86px;width:calc(40% - 12px);padding:4px;font-size:10px;line-height:13px}
 @media(prefers-reduced-motion:reduce){#routineCutin.playing,#routineCutin.playing .routine-strip{animation:none}.routine-strip{background-position:calc(var(--routine-frame)*-1) 0}}
 .routine-strip:after{content:'✨';display:block;text-align:right;opacity:0;animation:none}
@@ -895,7 +898,7 @@ html,body,#stage{background:var(--bg);color:var(--ink)}
 #equipButton.is-new:after{content:'NEW';position:absolute;right:0;top:-3px;font-size:8px;line-height:10px;padding:1px 2px;background:var(--gold);color:#120F1A}
 #coffeeButton{grid-column:1 / -1;white-space:nowrap}
 .phone #stage #activeSkills{height:auto;min-height:0;max-height:none;align-items:center;padding:0;background:transparent;border:0;box-shadow:none}
-.phone #stage #activeSkills:has(>.gem-shop-quick):not(:has(>.active-skill:not(.gem-shop-quick):not([hidden]))){width:44px;height:44px}
+.phone #stage #activeSkills.f-solo.f-solo.f-solo.f-solo{width:44px;height:44px}
 .phone #stage #gemShopQuick{width:44px;height:44px;min-height:44px;padding:0;line-height:40px}
 #stage #board .cell .lv,.phone #stage #board .cell .lv{top:2px;left:2px}
 #stage #board .box-number,.phone #stage #board .box-number{top:auto;bottom:2px;left:50%;transform:translateX(-50%);z-index:5}
@@ -927,7 +930,7 @@ html,body,#stage{background:var(--bg);color:var(--ink)}
 .boo-scene #heckle{visibility:visible;left:5%;top:24px;font-size:12px;line-height:18px}
 #stage #audience.normalized-figure{height:300px}
 .phone #stage #audience.normalized-figure{height:calc(100% - 72px)}
-.phone #stage #audienceCard:has(#storyDialog:not([hidden])) #audience.normalized-figure{height:calc(100% - 94px)}
+.phone #stage #audienceCard#audienceCard.f-story #audience.normalized-figure{height:calc(100% - 94px)}
 .phone #stage :is(.constellation-detail h2,.panel-tabs button,.story-copy strong){white-space:nowrap}
 .phone #stage .constellation-detail h2{font-size:13px}
 
@@ -1063,7 +1066,7 @@ body.tablet{--kit-scale:4}
 .phone #stage #heckleMeter .heckle-label{display:none}
 .phone #stage #stageStats{bottom:22px;height:28px}
 .phone #stage #audience.normalized-figure{bottom:52px;height:calc(100% - 104px)}
-.phone #stage #audienceCard:has(#storyDialog:not([hidden])) #audience.normalized-figure{bottom:64px;height:calc(100% - 112px)}
+.phone #stage #audienceCard#audienceCard.f-story #audience.normalized-figure{bottom:64px;height:calc(100% - 112px)}
 .phone #stage #phoneMore button{border-width:8px;line-height:24px;padding:2px;font-size:11px}
 .phone #stage #phoneTop :is(#bookButton,#equipButton,#moreButton){border-width:8px;padding:2px;line-height:24px}
 .phone #stage #storyDialog{border-width:9px;padding:3px;color:#17141F}
@@ -1220,7 +1223,7 @@ body.tablet{background:#17141F;background-image:linear-gradient(90deg,#25202D 0 
 .phone:not(.tablet) #stage #board{top:calc((100% - var(--board-size) - 48px) / 2);right:calc((100% - var(--board-size)) / 2)}
 /* U30c: skills (and the 💎 shortcut) go back to a narrow vertical column between the stage and the case board. */
 .phone:not(.tablet) #stage #activeSkills{top:calc((100% - var(--board-size) - 48px) / 2);left:calc((100% - var(--board-size)) / 2 - 54px);right:auto;flex-direction:column;justify-content:flex-start;align-items:center;gap:4px}
-.phone:not(.tablet) #stage #activeSkills:has(>.gem-shop-quick):not(:has(>.active-skill:not(.gem-shop-quick):not([hidden]))){width:44px;height:44px}
+.phone:not(.tablet) #stage #activeSkills.f-solo.f-solo.f-solo.f-solo{width:44px;height:44px}
 .phone:not(.tablet) #stage #activeSkills .active-skill{width:50px;height:auto;min-height:48px;padding:2px 1px;overflow:visible}
 .phone:not(.tablet) #stage #activeSkills .gem-shop-quick{width:50px}
 .phone:not(.tablet) #stage #activeSkills .active-skill>span:not(.skill-art),.phone:not(.tablet) #stage #activeSkills .active-skill small{letter-spacing:0;white-space:nowrap;font-size:9px;line-height:11px}
@@ -1354,8 +1357,14 @@ body.tablet{background:#17141F;background-image:linear-gradient(90deg,#25202D 0 
 @media(max-width:740px){.phone #stage #phoneTop #goalStrip{display:flex;flex-basis:112px}.phone #stage #phoneTop #phoneWallet{padding:0 2px}}
 /* The heckle bar says what it is. */
 .phone #stage #heckleMeter{top:30px;height:16px}
-.phone #stage #heckleMeter .heckle-label{display:flex;justify-content:flex-start;font-size:9px;line-height:10px;padding:0 4px}
-.phone #stage #heckleMeter #attackNumber{display:none}
+.phone #stage #heckleMeter .heckle-label{display:flex;justify-content:space-between;font-size:9px;line-height:10px;padding:0 4px}
+/* v4 U38: the heckle bar shows how hard the heckling is per second ("야유 120/초"); the doubt bar shows regrowth ("회복 120만/초") when there is any. */
+.phone #stage #heckleMeter #attackNumber{display:inline;flex:none;font-weight:700;color:#FFD9A8}
+#stage #doubtRegen{flex:none;margin:0 6px 0 auto;font-size:10px;line-height:16px;color:#FFD27A;font-weight:700}
+#stage #doubtRegen:empty{display:none}
+#stage .stat-text{font-family:Galmuri11,sans-serif;font-size:12px;line-height:16px;color:#F2E6C8;white-space:nowrap}
+body:not(.phone) .stats{gap:8px;padding-top:8px;padding-bottom:8px}
+.tablet #stage #doubtRegen{font-size:13px;line-height:22px}
 .phone #stage #heckleMeter .heckle-label span{background:none;color:#F2E6C8}
 /* Empty case cells: the outer ring is only a faint dot, the centre 3x3 stays readable. */
 #stage #board .cell.locked:not(.next-slot){border-image:none;border-color:transparent;background:transparent}
@@ -1466,3 +1475,46 @@ repeating-linear-gradient(90deg,rgba(255,255,255,.04) 0 2px,transparent 2px 4px)
 
 /* Hotfix: dark text on the gold primary button art (story "다음" was gold on gold). Keep this rule LAST. */
 #stage#stage#stage .u26-primary:not(:disabled){color:#17141F}
+
+/* U36 TEMPORARY title screen (art from the owner, assets/title-cafe.webp, title text and signature are part of the art). Landscape: cover,
+   shifted down a little so the title (upper left) and the signature (lower right) both stay inside the crop at 2.1:1 phones; portrait: contain. */
+#titleScreen{position:fixed;inset:0;z-index:2147483000;background:#151020;display:flex;align-items:center;justify-content:center;transition:opacity 250ms ease-out;touch-action:manipulation}
+#titleScreen img{display:block;width:100%;height:100%;object-fit:cover;object-position:50% 55%;image-rendering:auto;pointer-events:none}
+/* Narrower than 1.7:1 (portrait, tablets at 1180x820 and 1280x800) cover would cut the title and the signature at the sides, so the whole art is shown (contain). */
+@media(max-aspect-ratio:17/10){#titleScreen img{object-fit:contain;object-position:50% 50%}}
+#titleScreen.leaving{opacity:0;pointer-events:none}
+@media(prefers-reduced-motion:reduce){#titleScreen{transition:none}}
+/* v4 U38: when every 비법 is learned the top goal says so instead of pointing at a node. */
+.phone #stage #phoneTop #goalStrip[data-done="1"] .goal-case{display:none}
+.phone #stage #phoneTop #goalStrip[data-done="1"] .goal-target{display:flex}
+.phone #stage #phoneTop #goalStrip[data-done="1"] .goal-target:before{content:none}
+.phone #stage #phoneTop #goalStrip[data-done="1"] .goal-cost{display:none}
+.phone #stage #phoneTop #goalStrip[data-done="1"] .goal-node{white-space:normal;overflow:visible;font-size:10px;line-height:12px}
+/* v4 U39: dialog lane (a speech bubble in the left column above Kali), its own one-row toast lane above the stats bar, phase chip and pattern
+   label below the doubt and heckle bars, and the clear moment (stamp and flash). Presentation only. */
+.phone #stage #audienceCard #audienceLine{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:4;overflow:hidden;left:6px;right:auto;top:auto;bottom:168px;width:calc(var(--audience-width) * .42 - 6px);height:auto;max-height:none;padding:4px 6px;border:2px solid #A68A58;background:#E3D2BA;color:#17141F;text-shadow:none;font-size:11px;line-height:14px;box-shadow:0 2px 0 #100D16;z-index:8}
+.phone #stage #toasts{left:146px;top:auto;bottom:60px;width:calc(var(--audience-width) - 152px);height:24px;max-height:24px;overflow:hidden;z-index:16}
+.phone #stage #toasts .toast{height:24px;max-height:24px;min-height:0;line-height:18px;padding:2px 4px;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.phone #stage #audienceCard #phaseIndicator{top:50px;max-height:20px}
+.phone #stage #audienceCard #patternLabel{top:72px;max-height:44px}
+.phone #stage #audienceCard.f-line-over #patternLabel{left:42%;right:6%;width:auto}
+@media(max-width:700px){.phone #stage #audienceCard #audienceLine{bottom:148px}.phone #stage #toasts{left:116px;width:calc(var(--audience-width) - 122px)}}
+.tablet #stage #audienceCard #audienceLine{bottom:264px;font-size:14px;line-height:19px}
+.tablet #stage #toasts{left:122px;bottom:92px;width:calc(var(--audience-width) - 128px)}
+.tablet #stage #audienceCard #phaseIndicator{top:64px;max-height:24px}
+.tablet #stage #audienceCard #patternLabel{top:92px}
+.win-flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:7}
+.win-stamp{position:absolute;right:8px;top:60px;font:700 24px/30px Galmuri11,sans-serif;white-space:nowrap;color:#ffe65c;text-shadow:2px 0 #17141F,-2px 0 #17141F,0 2px #17141F,0 -2px #17141F,2px 2px #17141F,-2px -2px #17141F,2px -2px #17141F,-2px 2px #17141F;pointer-events:none;z-index:21}
+.tablet .win-stamp{font-size:44px;line-height:54px;top:200px;right:16px}
+/* v4 U39 addendum: bubble tail (own element: the clamp's overflow:hidden would clip a pseudo-element), pattern label parts, win banner lane, toast row. */
+.phone #stage #audienceCard #audienceLine{text-align:left;word-break:keep-all}
+.phone #stage #audienceCard #audienceTail{display:none;position:absolute;width:0;height:0;border:7px solid transparent;border-left:8px solid #A68A58;border-right:0;left:calc(var(--audience-width) * .42 - 2px);bottom:calc(168px + var(--line-h, 20px) * .66 - 7px);z-index:9;pointer-events:none}
+.phone #stage #audienceCard #audienceTail:after{content:'';position:absolute;left:-10px;top:-5px;width:0;height:0;border:5px solid transparent;border-left:6px solid #E3D2BA;border-right:0}
+.phone #stage #audienceCard #audienceLine:not([hidden])+#audienceTail{display:block}
+.phone #audienceCard#audienceCard.f-story #audienceTail{visibility:hidden}
+@media(max-width:700px){.phone #stage #audienceCard #audienceTail{bottom:calc(148px + var(--line-h, 20px) * .66 - 7px)}}
+.tablet #stage #audienceCard #audienceTail{bottom:calc(264px + var(--line-h, 20px) * .66 - 7px)}
+.pat-part{display:inline-block;max-width:100%;vertical-align:top}
+.phone #stage #banner.win-banner,.phone #stage #banner.big.win-banner{top:auto;bottom:88px}
+.tablet #stage #banner.win-banner,.tablet #stage #banner.big.win-banner{bottom:120px}
+.phone #stage #toasts .toast{box-sizing:border-box;line-height:22px;padding:0 4px}
