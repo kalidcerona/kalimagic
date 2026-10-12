@@ -2885,7 +2885,7 @@
     if(!u||!Array.isArray(u.positions)||u.positions.length!==CONST.boardMax||new Set(u.positions).size!==CONST.boardMax||u.positions.some(function(n){return integer(n,0,CONST.boardMax-1)==null;}))return false;
     if(integer(u.gloves,0,100000)==null||num(u.gloveLeft,0,120000)==null||!u.drops||Array.isArray(u.drops))return false;
     if(u.deckOn!==undefined&&typeof u.deckOn!=='boolean')return false;
-    if(Object.keys(u.drops).some(function(k){var d=u.drops[k];return !venueNumber(k)||!d||integer(d.boxes,0,1e9)==null||integer(d.count,0,3)==null;}))return false;
+    if(Object.keys(u.drops).some(function(k){var d=u.drops[k];return !venueNumber(k)||!d||integer(d.boxes,0,1e9)==null||integer(d.count,0,100000)==null;}))return false;
     function sceneOK(x){return x&&integer(x.dimension,1,999)!=null&&venueNumber(x.slug)&&['opening','beforeHeadliner','afterClear'].indexOf(x.kind)>=0;}
     if(!Array.isArray(u.seen)||u.seen.length>50000||new Set(u.seen).size!==u.seen.length||u.seen.some(function(k){if(typeof k!=='string')return true;var p=k.split(':');return p.length!==3||!sceneOK({dimension:Number(p[0]),slug:p[1],kind:p[2]});}))return false;
     if(!Array.isArray(u.queue)||u.queue.length>48||u.queue.some(function(x){return !sceneOK(x);}))return false;

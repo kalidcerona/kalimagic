@@ -389,17 +389,33 @@ globalThis.Presentation = (() => {
   const animations = new WeakMap();
   const patterns = ['111101101101111','010110010010111','111001111100111','111001111001111','101101111001001','111100111001111','111100111101111','111001001001001','111101111101111','111101111001111'];
   let corrupt = false, inaccessible = false, newerSave = false, restoring = false, giftEnded = false;
-  let saveStore = null;
+  let saveStore = null, loaded0 = false;
   let state = C.newGame(Date.now() >>> 0);
   const launchQuery = new URLSearchParams(location.search);
   try {
     saveStore = C.createSaveStore(localStorage);
     const loaded = saveStore.load();
-    if (loaded.state) state = loaded.state;
+    if (loaded.state) { state = loaded.state; loaded0 = true; }
     corrupt = loaded.backedUp;
     newerSave = loaded.newer;
     giftEnded = loaded.giftEnded;
   } catch (error) { inaccessible = true; }
+  // ?restore=1: one-tap automatic restore of the most progressed backup, before anything can save over it.
+  let restoreNoBetter = false;
+  if (launchQuery.get('restore') === '1' && saveStore && !inaccessible) {
+    try {
+      const rank = (s) => [s.dimension|0, s.stage|0, typeof s.coins === 'number' && isFinite(s.coins) ? s.coins : 0, s.date|0];
+      const better = (a, b) => { for (let i = 0; i < a.length; i++) { if (a[i] !== b[i]) return a[i] > b[i]; } return false; };
+      const best = saveStore.list().filter(item => item.restorable).reduce((top, item) => (!top || better(rank(item), rank(top)) ? item : top), null);
+      // A missing or unreadable current save counts as lowest; the date only orders backups against each other.
+      const cur = (corrupt || !loaded0) ? [-1,-1,-1] : [state.dimension|0, state.vMax|0, Number(state.coins) || 0];
+      if (best && !newerSave && better(rank(best).slice(0,3), cur) && saveStore.restore(best.key, true)) {
+        restoring = true;
+        const url = new URL(location.href); url.searchParams.delete('restore'); url.searchParams.set('restored','1');
+        location.replace(url.href);
+      } else restoreNoBetter = !!best && !newerSave;
+    } catch (error) { restoreNoBetter = false; }
+  }
 
   function showSaveNotice() {
     if ($('saveVersionNotice')) return;
@@ -3583,7 +3599,19 @@ globalThis.Presentation = (() => {
   if (corrupt) toast('저장을 불러오지 못해 백업해 두었어요');
   if (newerSave) showSaveNotice();
   if (giftEnded && launchSaved) toast('선물 기간이 끝나서 성장 속도가 원래대로 돌아왔어요');
-  if (launchQuery.get('restore') === '1') openRestore();
+  if (launchQuery.get('restored') === '1') {
+    const v = D.venues[(state.vMax|0)-1];
+    // Not toast(): the toast queue waits behind the offline-gain card, and this must be seen right away.
+    const note = element('div',`이전 저장을 되찾았어요 · ${v && v.name ? v.name : `무대 ${state.vMax}`} · 동전 ${C.formatNumber(state.coins)}`,'save-version-notice');
+    note.id = 'restoredNotice'; note.setAttribute('role','status'); document.body.append(note);
+    setTimeout(() => note.remove(), 8000);
+    try { const url = new URL(location.href); url.searchParams.delete('restored'); history.replaceState(null,'',url.href); } catch (error) { /* URL cleanup is cosmetic. */ }
+  }
+  if (restoring) { /* A restore is reloading the page; leave the list closed. */ }
+  else if (launchQuery.get('restore') === '1') {
+    openRestore();
+    if (restoreNoBetter && saveStore && !inaccessible) $('panelBody').prepend(element('p','지금 저장이 가장 많이 진행된 저장이에요'));
+  }
   if (inaccessible) toast('저장을 사용할 수 없어요. 공연은 계속돼요');
   requestAnimationFrame(loop);
 })();
