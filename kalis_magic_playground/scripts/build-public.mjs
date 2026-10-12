@@ -427,7 +427,7 @@ export function shouldCopyMagicshow(relativePath) {
   const file = relativePath.split(path.sep).join('/');
   return file === '' || file === 'assets' || file === 'assets/ui' || file === 'fonts' || file === 'fonts/OFL.md' ||
     ['install-prompt.js', 'install-prompt.css', 'index.html', 'style.css', 'data.js', 'core.js', 'audio.js', 'ui.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png', 'favicon-32.png', 'og-image.png', 'sw.js', 'update.html'].includes(file) ||
-    /^assets\/(?:ui\/)?[A-Za-z0-9_-]+\.png$/.test(file) || /^fonts\/[A-Za-z0-9_-]+\.woff2$/.test(file);
+    /^assets\/(?:ui\/)?[A-Za-z0-9_-]+\.(?:png|webp)$/.test(file) || /^fonts\/[A-Za-z0-9_-]+\.woff2$/.test(file);
 }
 
 export const DISTRIBUTION_APPS = [

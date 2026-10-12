@@ -385,7 +385,7 @@ button{touch-action:manipulation}
 /* v4 U11: persistent clocks, performance strip and a full-height touch tree. */
 #goalStrip{position:absolute;left:30px;right:30px;top:61px;height:18px;min-height:0;padding:0 5px;line-height:16px;border:1px solid #b59b61;background:#161825;color:#ffe9ac;font-size:11px;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;z-index:7}
 #magicianMini{left:36px;top:520px;width:170px;height:170px;z-index:4;pointer-events:none}
-#magicianMini.performance-ready{background-image:url('assets/kali-performance.png');background-size:300% 100%;background-position:0% 0%;image-rendering:pixelated;font-size:0}
+#magicianMini.performance-ready{background-image:url('assets/kali-performance.webp');background-size:300% 100%;background-position:0% 0%;image-rendering:pixelated;font-size:0}
 #magicianMini.performance-ready>.asset-sprite{display:none}
 #magicianMini.performance-ready[data-frame="1"]{background-position:50% 0%}
 #magicianMini.performance-ready[data-frame="2"]{background-position:100% 0%}
@@ -448,7 +448,7 @@ button[aria-pressed="true"]{background:#435735;color:#ffe65c}
 #introStory{position:absolute;inset:0;z-index:70;overflow:hidden;background:#141321}
 #introStory[hidden],#tutorialCoach[hidden]{display:none}
 .intro-backdrop{position:absolute;width:100%;height:100%;object-fit:cover;image-rendering:pixelated;opacity:.5}
-.intro-kali{position:absolute;left:42%;bottom:24%;width:256px;height:256px;background:url('assets/kali-performance.png') 0 0/300% 100%;image-rendering:pixelated}
+.intro-kali{position:absolute;left:42%;bottom:24%;width:256px;height:256px;background:url('assets/kali-performance.webp') 0 0/300% 100%;image-rendering:pixelated}
 .intro-kali[data-frame="1"]{background-position:50% 0}.intro-kali[data-frame="2"]{background-position:100% 0}
 .intro-dad{position:absolute;left:20%;bottom:24%;width:256px;image-rendering:pixelated}
 .intro-line{position:absolute;bottom:90px;left:10%;width:80%;margin:0;background:#141321e8;padding:20px;font-size:22px;text-align:center}
@@ -1019,31 +1019,31 @@ html,body,#stage{background:var(--bg);color:var(--ink)}
 /* v4 U26: pixel kit, source insets in art pixels, integer screen scale. */
 :root{--kit-scale:3;--ink:#F2E6C8;--gold:#E8BF68}
 body.tablet{--kit-scale:4}
-#stage :is(button,.chip){image-rendering:pixelated;border-style:solid;border-width:8px;border-image:url('assets/ui/ui-button.png') 8 fill / 8px / 0 stretch;background-color:#25202D;border-radius:0;color:#F2E6C8;box-sizing:border-box;min-height:44px}
-#stage :is(button,.chip):active{border-image-source:url('assets/ui/ui-button-pressed.png')}
-#stage :is(button,.chip):disabled{border-image-source:url('assets/ui/ui-button-disabled.png');color:#A68A58}
-#stage :is(.stage-start,.tree-buy,.failure-retry){border-image-source:url('assets/ui/ui-button-primary.png');color:#17141F}
-#stage :is(#panel,#phoneMore,#offlineCard,.constellation-detail){image-rendering:pixelated;border:solid 24px transparent;border-image:url('assets/ui/ui-panel.png') 24 fill / 24px / 0 stretch;background-color:#17141F;border-radius:0}
-#stage :is(.bestiary-entry,.gem-shop-item,.cosmetic-card,.map-venue,#stageStats,#phoneWallet){image-rendering:pixelated;border:solid 12px transparent;border-image:url('assets/ui/ui-panel-inner.png') 12 fill / 12px / 0 stretch;background-color:#25202D;border-radius:0}
-#stage :is(#storyDialog,.curtain-bubble){image-rendering:pixelated;border:solid 12px transparent;border-image:url('assets/ui/ui-dialog.png') 12 fill / 12px / 0 stretch;background-color:#E3D2BA;color:#17141F}
+#stage :is(button,.chip){image-rendering:pixelated;border-style:solid;border-width:8px;border-image:url('assets/ui/ui-button.webp') 8 fill / 8px / 0 stretch;background-color:#25202D;border-radius:0;color:#F2E6C8;box-sizing:border-box;min-height:44px}
+#stage :is(button,.chip):active{border-image-source:url('assets/ui/ui-button-pressed.webp')}
+#stage :is(button,.chip):disabled{border-image-source:url('assets/ui/ui-button-disabled.webp');color:#A68A58}
+#stage :is(.stage-start,.tree-buy,.failure-retry){border-image-source:url('assets/ui/ui-button-primary.webp');color:#17141F}
+#stage :is(#panel,#phoneMore,#offlineCard,.constellation-detail){image-rendering:pixelated;border:solid 24px transparent;border-image:url('assets/ui/ui-panel.webp') 24 fill / 24px / 0 stretch;background-color:#17141F;border-radius:0}
+#stage :is(.bestiary-entry,.gem-shop-item,.cosmetic-card,.map-venue,#stageStats,#phoneWallet){image-rendering:pixelated;border:solid 12px transparent;border-image:url('assets/ui/ui-panel-inner.webp') 12 fill / 12px / 0 stretch;background-color:#25202D;border-radius:0}
+#stage :is(#storyDialog,.curtain-bubble){image-rendering:pixelated;border:solid 12px transparent;border-image:url('assets/ui/ui-dialog.webp') 12 fill / 12px / 0 stretch;background-color:#E3D2BA;color:#17141F}
 #stage #storyDialog :is(p,strong){color:#17141F}
 #stage #audienceCard{border:0;border-radius:0;background:transparent;box-shadow:none;isolation:isolate}
 #stage #audienceCard:before,.curtain-memory:before{content:'';position:absolute;inset:0;pointer-events:none;z-index:2;box-shadow:inset 0 0 0 8px rgba(23,20,31,.35),inset 0 0 0 20px rgba(23,20,31,.15)}
 #stage .audience-shadow{background:rgba(232,191,104,.10);box-shadow:0 0 0 16px rgba(232,191,104,.05);border-radius:0;filter:none;transform:none;left:20%;width:60%;height:45%;bottom:60px}
-#stage #phoneTop{background:#221A23 url('assets/ui/ui-top-bar.png') repeat-x bottom;background-size:192px 66px;border:0}
+#stage #phoneTop{background:#221A23 url('assets/ui/ui-top-bar.webp') repeat-x bottom;background-size:192px 66px;border:0}
 #stage #phoneWallet{padding:0 4px;border-width:6px;min-width:0}
 #stage #phoneWallet .hud{background:none;border:0;box-shadow:none}
 #stage #phoneWallet .currency{background:none;border:0;box-shadow:none;padding:0;white-space:nowrap}
-#stage .doubt{box-sizing:border-box;height:24px;border:3px solid #A68A58;border-image:url('assets/ui/ui-bar-frame-main.png') 3 fill / 3px / 0 stretch;background:#17141F;border-radius:0;overflow:hidden}
-#stage .doubt-fill{background:#B5444C url('assets/ui/ui-bar-fill-doubt.png') repeat-x;background-size:48px 30px;box-shadow:none}
+#stage .doubt{box-sizing:border-box;height:24px;border:3px solid #A68A58;border-image:url('assets/ui/ui-bar-frame-main.webp') 3 fill / 3px / 0 stretch;background:#17141F;border-radius:0;overflow:hidden}
+#stage .doubt-fill{background:#B5444C url('assets/ui/ui-bar-fill-doubt.webp') repeat-x;background-size:48px 30px;box-shadow:none}
 #stage .doubt-label{inset:0;white-space:nowrap;text-shadow:1px 0 #17141F,-1px 0 #17141F,0 1px #17141F,0 -1px #17141F;color:#F2E6C8;padding:0 4px;line-height:18px}
-#stage #heckleMeter{top:40px;height:16px;border:3px solid #A68A58;border-image:url('assets/ui/ui-bar-frame.png') 3 fill / 3px / 0 stretch;background:#17141F;box-sizing:border-box;border-radius:0}
-#stage #heckleFill{background:#A68A58 url('assets/ui/ui-bar-fill-heckle.png') repeat-x;background-size:48px 30px}
+#stage #heckleMeter{top:40px;height:16px;border:3px solid #A68A58;border-image:url('assets/ui/ui-bar-frame.webp') 3 fill / 3px / 0 stretch;background:#17141F;box-sizing:border-box;border-radius:0}
+#stage #heckleFill{background:#A68A58 url('assets/ui/ui-bar-fill-heckle.webp') repeat-x;background-size:48px 30px}
 #stage #heckleMeter .heckle-label{font-size:8px;line-height:10px}
 #stage #boardCard,#stage #board{background:#17141F;border:0;border-radius:0;box-shadow:none}
-#stage #board .cell{border-radius:0;image-rendering:pixelated;background:transparent;border:3px solid transparent;border-image:url('assets/ui/ui-board-cell.png') 3 fill / 3px / 0 stretch}
+#stage #board .cell{border-radius:0;image-rendering:pixelated;background:transparent;border:3px solid transparent;border-image:url('assets/ui/ui-board-cell.webp') 3 fill / 3px / 0 stretch}
 #stage #board .cell:not(.locked) .box{opacity:1}
-#stage #board .cell.next-slot{border-image-source:none;background:#25202D url('assets/ui/ui-board-cell-next.png') center/100% 100% no-repeat}
+#stage #board .cell.next-slot{border-image-source:none;background:#25202D url('assets/ui/ui-board-cell-next.webp') center/100% 100% no-repeat}
 #stage #board .cell.next-slot .box{border:0;background:none;opacity:1;transform:none}
 #stage #stageStats{position:absolute;left:6px;right:6px;bottom:22px;height:28px;padding:0;display:flex;align-items:center;justify-content:space-around;border-width:6px;z-index:5;gap:4px}
 #stage #stageStats :is(.mental,.shield,.combo){position:static;inset:auto;display:flex;align-items:center;gap:3px;width:auto;height:auto;min-width:0;background:none;border:0;box-shadow:none;margin:0;padding:0;white-space:nowrap;color:#F2E6C8;font-size:11px}
@@ -1105,7 +1105,7 @@ body.tablet{--kit-scale:4}
 .tablet .curtain-actor{width:110px;height:210px}
 .tablet .curtain-actor.headliner{width:132px;height:240px}
 @media(prefers-reduced-motion:reduce){#stage .cell.next-slot{animation:none!important}}
-#stage .routine-table{position:relative;max-width:520px;width:100%;height:180px;margin:0 auto;background: url('assets/ui/dealer-table.png') center bottom / 100% 100% no-repeat;overflow:visible}
+#stage .routine-table{position:relative;max-width:520px;width:100%;height:180px;margin:0 auto;background: url('assets/ui/dealer-table.webp') center bottom / 100% 100% no-repeat;overflow:visible}
 #stage .routine-mat{position:absolute;left:6%;top:16%;width:88%;height:70%;image-rendering:pixelated}
 #stage .game-cup,#stage .routine-card{position:absolute;left:calc(8% + var(--slot) * 28%);top:24px;width:28%;height:112px;min-height:44px;border:0;background:none;box-shadow:none;padding:0;transition:none;image-rendering:pixelated}
 #stage .cup-prop{position:absolute;inset:0;width:100%;height:96px;object-fit:contain;image-rendering:pixelated;z-index:2}
@@ -1114,9 +1114,9 @@ body.tablet{--kit-scale:4}
 #stage .routine-wand{position:absolute;width:192px;height:48px;left:8%;top:-16px;object-fit:contain;z-index:3;image-rendering:pixelated}
 #stage .routine-hand{position:absolute;width:100px;height:75px;left:calc(50% - 50px);top:-32px;image-rendering:pixelated;z-index:4;pointer-events:none}
 #stage .routine-card img{width:64px;height:88px;object-fit:contain;image-rendering:pixelated}
-#stage .cup-lifting{background:url('assets/ui/fx-cup-lift.png') no-repeat 0 0 / 384px 96px;object-position:-999px;animation:u26-cup-lift 480ms steps(4) 1}
-#stage .ball-popping{animation:u26-ball-pop 320ms steps(4) 1;background:url('assets/ui/fx-ball-pop.png') no-repeat 0 0 / 128px 32px}
-#stage .card-flipping{background:url('assets/ui/fx-card-flip.png') no-repeat center / 384px 88px;animation:u26-card-flip 240ms steps(6) 1}
+#stage .cup-lifting{background:url('assets/ui/fx-cup-lift.webp') no-repeat 0 0 / 384px 96px;object-position:-999px;animation:u26-cup-lift 480ms steps(4) 1}
+#stage .ball-popping{animation:u26-ball-pop 320ms steps(4) 1;background:url('assets/ui/fx-ball-pop.webp') no-repeat 0 0 / 128px 32px}
+#stage .card-flipping{background:url('assets/ui/fx-card-flip.webp') no-repeat center / 384px 88px;animation:u26-card-flip 240ms steps(6) 1}
 #stage .card-flipping img{visibility:hidden}
 #stage .money-win{box-shadow:0 0 0 3px #E8BF68;animation:u26-prize 150ms ease-out 1}
 #stage .gem-game{position:relative;padding:4px;text-align:center}
@@ -1139,9 +1139,9 @@ body.tablet{--kit-scale:4}
 #stage .room.asset-ready:after{background:none}
 #stage #audienceCard :is(.audience,.asset-sprite){filter:none}
 #stage #banner:not([hidden]){animation:none}
-#stage :is(.stage-start,.tree-buy,.failure-retry){border-image-source:url('assets/ui/ui-button.png');color:#F2E6C8}
-#stage .u26-primary{border-image-source:url('assets/ui/ui-button-primary.png');color:#17141F}
-#stage .u26-primary:active{border-image-source:url('assets/ui/ui-button-pressed.png')}
+#stage :is(.stage-start,.tree-buy,.failure-retry){border-image-source:url('assets/ui/ui-button.webp');color:#F2E6C8}
+#stage .u26-primary{border-image-source:url('assets/ui/ui-button-primary.webp');color:#17141F}
+#stage .u26-primary:active{border-image-source:url('assets/ui/ui-button-pressed.webp')}
 #stage :is(#panel,#phoneMore,#offlineCard,.constellation-detail){border-color:#A68A58}
 #stage :is(.bestiary-entry,.gem-shop-item,.cosmetic-card,.map-venue,#stageStats,#phoneWallet){border-color:#6B5A3A}
 #stage :is(#storyDialog,.curtain-bubble){border-color:#A68A58}
@@ -1154,7 +1154,7 @@ body.tablet{--kit-scale:4}
 .phone #stage #board{left:auto;padding:calc(var(--board-size) * 8 / 608)}
 #stage .cell.next-slot[data-motion-loop='true']{animation-name:u26-next-slot}
 @keyframes u26-next-slot{0%,100%{opacity:1}50%{opacity:.6}}
-#stage .curtain-confetti{position:absolute;width:32px;height:32px;z-index:4;pointer-events:none;image-rendering:pixelated;background:url('assets/ui/fx-ribbon.png') no-repeat 0 0 / 128px 32px;animation:u26-confetti 400ms steps(4) 1}
+#stage .curtain-confetti{position:absolute;width:32px;height:32px;z-index:4;pointer-events:none;image-rendering:pixelated;background:url('assets/ui/fx-ribbon.webp') no-repeat 0 0 / 128px 32px;animation:u26-confetti 400ms steps(4) 1}
 @keyframes u26-confetti{to{background-position:-128px 0;transform:translateY(48px)}}
 .missing-ui-panel #stage :is(#panel,#phoneMore,#offlineCard,.constellation-detail){border-image:none;border:2px solid #A68A58;background:#25202D}
 .missing-ui-panel-inner #stage :is(.bestiary-entry,.gem-shop-item,.cosmetic-card,.map-venue,#stageStats,#phoneWallet){border-image:none;border:1px solid #6B5A3A;background:#25202D}
@@ -1164,12 +1164,12 @@ body.tablet{--kit-scale:4}
 .missing-ui-board-cell #stage #board .cell{border-image:none;border:1px solid #3C3541;background:#19131D}
 .missing-ui-board-cell-next #stage #board .cell.next-slot{border:1px dashed #A68A58;background:#25202D}
 .missing-ui-bar-frame-main #stage .doubt,.missing-ui-bar-frame #stage #heckleMeter{border-image:none;border:1px solid #A68A58}
-#stage .u26-primary:disabled{border-image-source:url('assets/ui/ui-button-disabled.png');color:#A68A58}
+#stage .u26-primary:disabled{border-image-source:url('assets/ui/ui-button-disabled.webp');color:#A68A58}
 #stage .curtain-confetti{animation:u26-confetti-frames 400ms steps(4) 1,u26-confetti-drift 400ms ease-out 1}
 @keyframes u26-confetti-frames{to{background-position:-128px 0}}
 @keyframes u26-confetti-drift{to{transform:translateY(48px);opacity:0}}
 #stage .routine-card.card-flipping{background:none;animation:none}
-#stage .routine-card.card-flipping:after{content:'';position:absolute;left:calc(50% - 32px);top:0;width:64px;height:88px;background:url('assets/ui/fx-card-flip.png') no-repeat 0 0 / 384px 88px;animation:u26-card-flip 240ms steps(6) 1}
+#stage .routine-card.card-flipping:after{content:'';position:absolute;left:calc(50% - 32px);top:0;width:64px;height:88px;background:url('assets/ui/fx-card-flip.webp') no-repeat 0 0 / 384px 88px;animation:u26-card-flip 240ms steps(6) 1}
 .tablet #stage .routine-card.card-flipping:after{left:calc(50% - 48px);width:96px;height:132px;background-size:576px 132px;animation-name:u26-card-flip-tablet}
 @keyframes u26-card-flip-tablet{to{background-position:-576px 0}}
 @media(prefers-reduced-motion:reduce){#stage .routine-card.card-flipping:after{display:none}}
@@ -1191,7 +1191,7 @@ body.tablet{--kit-scale:4}
 body.tablet{background:#17141F;background-image:linear-gradient(90deg,#25202D 0 4px,transparent 4px 20px,#3C3541 20px 24px,transparent 24px 40px);background-size:40px 100%}
 #stage .routine-highlight{box-shadow:0 0 0 3px #E8BF68}
 #stage .final-load{animation:u26-prize 150ms ease-out 1}
-#stage .final-load-fx{position:absolute;left:calc(50% - 16px);bottom:40px;width:32px;height:32px;z-index:3;image-rendering:pixelated;background:url('assets/ui/fx-coin-spark.png') no-repeat 0 0 / 128px 32px;animation:u26-confetti-frames 400ms steps(4) 1}
+#stage .final-load-fx{position:absolute;left:calc(50% - 16px);bottom:40px;width:32px;height:32px;z-index:3;image-rendering:pixelated;background:url('assets/ui/fx-coin-spark.webp') no-repeat 0 0 / 128px 32px;animation:u26-confetti-frames 400ms steps(4) 1}
 @media(prefers-reduced-motion:reduce){#stage .final-load-fx{display:none}}
 
 /* U27-0: save recovery notice. */
@@ -1212,7 +1212,7 @@ body.tablet{background:#17141F;background-image:linear-gradient(90deg,#25202D 0 
 #stage .gem-game .routine-hand{top:-52px}
 #stage .gem-game .routine-card img{width:96px;height:132px;display:block}
 #stage .gem-game .routine-card .card-num{position:absolute;left:22px;right:22px;top:50%;transform:translateY(-50%);text-align:center;font-size:24px;line-height:30px;font-weight:bold;color:#322048;background:#F2E6C8;border:2px solid #A68A58}
-#stage .gem-game .monte-card{display:inline-block;font-size:20px;line-height:26px;padding:4px 16px;margin:8px 0;color:#F2E6C8;background-color:#25202D;border:solid 12px transparent;border-image:url('assets/ui/ui-panel-inner.png') 12 fill / 12px / 0 stretch;border-radius:0;image-rendering:pixelated}
+#stage .gem-game .monte-card{display:inline-block;font-size:20px;line-height:26px;padding:4px 16px;margin:8px 0;color:#F2E6C8;background-color:#25202D;border:solid 12px transparent;border-image:url('assets/ui/ui-panel-inner.webp') 12 fill / 12px / 0 stretch;border-radius:0;image-rendering:pixelated}
 #stage .gem-game .game-result{display:inline-block;padding:4px 12px;margin:6px 0;background-color:#25202D;border:2px solid #A68A58}
 /* Phone board: centered in its column, rail below, no orphan gap. */
 @media(min-height:361px){
@@ -1360,7 +1360,7 @@ body.tablet{background:#17141F;background-image:linear-gradient(90deg,#25202D 0 
 /* Empty case cells: the outer ring is only a faint dot, the centre 3x3 stays readable. */
 #stage #board .cell.locked:not(.next-slot){border-image:none;border-color:transparent;background:transparent}
 #stage #board .cell.locked:not(.next-slot):before{content:'';position:absolute;left:50%;top:50%;width:4px;height:4px;margin:-2px 0 0 -2px;background:#4a4058;opacity:.6}
-#stage #board .cell.locked[data-center="1"]:not(.next-slot){border-image:url('assets/ui/ui-board-cell.png') 3 fill / 3px / 0 stretch;opacity:.7}
+#stage #board .cell.locked[data-center="1"]:not(.next-slot){border-image:url('assets/ui/ui-board-cell.webp') 3 fill / 3px / 0 stretch;opacity:.7}
 #stage #board .cell.locked[data-center="1"]:not(.next-slot):before{display:none}
 .tablet #stage #board .cell.locked[data-center="1"]:not(.next-slot){border-image-width:4px}
 /* Badges stay on corners, never on labels. */
@@ -1443,6 +1443,26 @@ repeating-linear-gradient(90deg,rgba(255,255,255,.04) 0 2px,transparent 2px 4px)
 .tablet #stage #panel[data-screen="fail"] .fail-face,.tablet #stage #panel[data-screen="fail"] .fail-kali{width:150px;height:150px}
 #stage #panel[data-screen="fail"] .fail-face.normalized-figure{overflow:hidden}
 #stage #panel[data-screen="fail"] .fail-kali>.asset-sprite{object-position:50% 100%}
+
+/* U34: menu in two groups (놀기 / 설정), bestiary helper title */
+.menu-group{display:none}
+:is(.phone,.tablet) #stage #phoneMore:not([hidden]){grid-auto-rows:auto}
+:is(.phone,.tablet) #stage #phoneMore .menu-group{display:block;grid-column:1 / -1;margin:0;padding:0 2px 2px;font-size:12px;line-height:16px;color:#E8BF68;border-bottom:1px solid #6B5A3A;letter-spacing:0}
+.tablet #stage #phoneMore .menu-group{font-size:16px;line-height:22px}
+:is(.phone,.tablet) #stage #phoneMore #menuGroupPlay{order:-2}
+:is(.phone,.tablet) #stage #phoneMore #menuGroupSettings{order:59;margin-top:4px}
+:is(.phone,.tablet) #stage #phoneMore :is(#soundButton,#musicButton,#hapticsButton,#installButton,#replayTutorial){order:60}
+/* U35: the last settings row (진동) scrolls fully into view: bottom spacer inside the scroll area. */
+:is(.phone,.tablet) #stage #phoneMore:not([hidden])::after{content:'';grid-column:1 / -1;order:200;height:16px}
+@media(max-height:440px){#stage #panel[data-screen="dealer"] #panelBody{padding-bottom:30px;-webkit-mask-image:linear-gradient(#000 calc(100% - 26px),transparent);mask-image:linear-gradient(#000 calc(100% - 26px),transparent)}}
+.tablet #stage #panel[data-screen="dealer"] :is(.dealer-host,.dealer-rules,.dealer-note,.dealer-gem-menu small,.force-controls small,.slot-result){font-size:18px;line-height:26px}
+.tablet #stage #panel[data-screen="dealer"] .dealer-wallet{font-size:24px;line-height:32px}
+.tablet #stage #panel[data-screen="dealer"] .force-controls strong{font-size:18px;line-height:26px}
+.tablet #stage #phoneWallet .bitmap{--pixel:4px}
+#stage #panel[data-screen="fail"] .fail-actions{display:flex;flex-wrap:nowrap;justify-content:center;align-items:stretch;gap:10px;margin-top:6px}
+#stage #panel[data-screen="fail"] .fail-actions button{flex:0 1 auto;min-width:0;white-space:nowrap}
+.bestiary-guides-title{margin:16px 0 8px;font-size:18px;color:#E8BF68}
+.phone .bestiary-guides-title{font-size:13px;margin:10px 0 6px}
 
 /* Hotfix: dark text on the gold primary button art (story "다음" was gold on gold). Keep this rule LAST. */
 #stage#stage#stage .u26-primary:not(:disabled){color:#17141F}

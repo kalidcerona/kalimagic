@@ -26,12 +26,13 @@ test('Magicshow snapshot contains only allowed runtime files and exact deploymen
   const base = ['index.html', 'style.css', 'data.js', 'core.js', 'audio.js', 'ui.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png', 'favicon-32.png', 'og-image.png', 'sw.js', 'install-prompt.js', 'install-prompt.css', 'update.html'];
   assert.deepEqual(files.filter(file => !file.startsWith('assets/') && !file.startsWith('fonts/')), base.sort());
   assert.ok(files.some(file => file.startsWith('assets/')));
+  for (const file of ['assets/aud-a1.webp', 'assets/ui/ui-button.webp']) assert.equal(shouldCopyMagicshow(file), true, file);
   for (const font of ['fonts/Galmuri11.woff2', 'fonts/Galmuri11-Bold.woff2', 'fonts/Galmuri9.woff2', 'fonts/OFL.md']) assert.ok(files.includes(font), font);
   for (const file of files) {
     assert.equal(shouldCopyMagicshow(file), true, file);
     assert.deepEqual(classifyPath(`/tools/magicshow/${file}`), { mode: 'public' }, file);
   }
-  for (const file of ['.env', '.gen/icon.png', 'README.md', 'PLAN.md', 'test-core.mjs', 'sim.mjs', 'tools/x.js', 'assets/.private.png', 'assets/logo.bak.png', 'assets/nested/private.png', 'fonts/private.js', 'fonts/.private.woff2', 'fonts/nested/private.woff2']) assert.equal(shouldCopyMagicshow(file), false, file);
+  for (const file of ['.env', '.gen/icon.png', 'README.md', 'PLAN.md', 'test-core.mjs', 'sim.mjs', 'tools/x.js', 'assets/.private.png', 'assets/logo.bak.png', 'assets/nested/private.png', 'assets/nested/private.webp', 'assets/.private.webp', 'assets/logo.bak.webp.txt', 'fonts/private.js', 'fonts/.private.woff2', 'fonts/nested/private.woff2']) assert.equal(shouldCopyMagicshow(file), false, file);
   assert.deepEqual(DISTRIBUTION_APPS.find(app => app.tool === 'magicshow'), { source: shared, target: 'magicshow', tool: 'magicshow' });
   const sw = (await read(`${shared}/sw.js`)).toString();
   const precache = JSON.parse(sw.match(/const SHELL = (\[[\s\S]*?\]);/)[1]);

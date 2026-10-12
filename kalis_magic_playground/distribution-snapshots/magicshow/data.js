@@ -2139,7 +2139,7 @@ GAME_DATA.skills = [
 })(GAME_DATA);
 
 // U13 pace tuning keeps active skill and milestone effects intact.
-(function(D){const scale={school:1.3,cafe:1.2,meetup:1.5,theater:1.1,festival:1.1,audition:4.15,broadcast:5,vegas:9,broadway:13,moon:19,sun:120,galaxy:500,multiverse:740,lecturenote:120};D.venues.forEach(v=>{if(scale[v.slug])v.hpFactor*=scale[v.slug];});D.venues.find(v=>v.slug==='lecturenote').bossHpFactor*=4.9;})(GAME_DATA);
+(function(D){const scale={school:1.3,cafe:1.2,meetup:1.5,theater:1.1,festival:1.1,audition:4.15,broadcast:5,vegas:9,broadway:13,moon:19,sun:120,galaxy:500,multiverse:840,lecturenote:120};D.venues.forEach(v=>{if(scale[v.slug])v.hpFactor*=scale[v.slug];});D.venues.find(v=>v.slug==='lecturenote').bossHpFactor*=4.9;})(GAME_DATA);
 
 /* U14 daily selection uses a date hash, independent of combat randomness. */
 GAME_DATA.missions = [
@@ -3316,7 +3316,7 @@ GAME_DATA.missions.find(m=>m.id==='skills').name='스킬 5번 쓰기';GAME_DATA.
 GAME_DATA.statNames={power:'마술 실력',damage:'연출',mental:'멘탈'};
 
 // U17 gem uses and child-friendly descriptions.
-GAME_DATA.gemShop=[{id:'glove',name:'칼리 덱 (자동 연습) ×1',desc:'120초 동안 모든 케이스를 두드려요',cost:4},{id:'refill',name:'스킬 바로 충전',desc:'기다리는 스킬을 바로 쓸 수 있어요',cost:2},{id:'potion',name:'멘탈 회복 물약',desc:'마음을 30% 회복해요',cost:3}];
+GAME_DATA.gemShop=[{id:'glove',name:'칼리 덱 (자동 연습)',desc:'120초 동안 모든 케이스를 두드려요',cost:2},{id:'refill',name:'스킬 바로 충전',desc:'기다리는 스킬을 바로 쓸 수 있어요',cost:2},{id:'potion',name:'멘탈 회복 물약',desc:'마음을 30% 회복해요',cost:3}];
 GAME_DATA.tree.filter(n=>['encore','encorePower','encoreSpan'].includes(n.id)).forEach(n=>{n.desc=n.id==='encoreSpan'?'피버 타임이 더 오래 이어져요\n레벨마다 3초 추가':n.id==='encorePower'?'피버 타임에 관객을 더 신나게 해요\n레벨마다 힘 5% 추가':'피버 타임에 마술이 더 강해져요\n피버 실력 20% 추가';});
 // U17 pacing: preserve rewards and fever strength; tune audience durability.
 (function(D){const scale={party:1.6,school:1.6,cafe:2,meetup:1.8,theater:4,festival:2.5,audition:3.35,broadcast:1.16,moon:1.8,galaxy:1.12,multiverse:1.07};D.venues.forEach(v=>{if(scale[v.slug])v.hpFactor*=scale[v.slug];});})(GAME_DATA);

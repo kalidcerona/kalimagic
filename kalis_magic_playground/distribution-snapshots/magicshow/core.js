@@ -1278,7 +1278,7 @@
     if(drop===0 && !state.u15.tutorial.active){
       var slug=VENUES[state.venue-1].slug, ledger=state.u15.drops[slug]||(state.u15.drops[slug]={boxes:0,count:0});
       ledger.boxes++;
-      if(ledger.count<(slug==='family'?1:3) && ((slug==='family'&&ledger.count===0&&ledger.boxes>=30) || dropSample.value<.004)){
+      if(slug==='family'?(ledger.count===0&&(ledger.boxes>=30||dropSample.value<.004)):dropSample.value<.004){
         ledger.count++;state.u15.gloves++;emit(ev,{type:'gloveDrop',cell:i});
       }
     }
@@ -2952,7 +2952,7 @@
 
   // U17 outcomes are dealt once, using the existing combat RNG.
   function emptyU17(){return {gloveBuys:{},potionUsed:false,feverGauge:0,feverPending:0,gemWait:0};}
-  function validU17(u){return !!(u&&typeof u.potionUsed==='boolean'&&num(u.feverGauge,0,100)!=null&&num(u.feverPending,0,100)!=null&&num(u.gemWait,0,90000)!=null&&u.gloveBuys&&typeof u.gloveBuys==='object'&&!Array.isArray(u.gloveBuys)&&Object.keys(u.gloveBuys).every(function(k){return venueNumber(k)&&integer(u.gloveBuys[k],0,3)!=null;}));}
+  function validU17(u){return !!(u&&typeof u.potionUsed==='boolean'&&num(u.feverGauge,0,100)!=null&&num(u.feverPending,0,100)!=null&&num(u.gemWait,0,90000)!=null&&u.gloveBuys&&typeof u.gloveBuys==='object'&&!Array.isArray(u.gloveBuys)&&Object.keys(u.gloveBuys).every(function(k){return venueNumber(k)&&integer(u.gloveBuys[k],0,100000)!=null;}));}
   function validDealerGames(g){
     if(!g||typeof g!=='object')return false;
     var c=g.cups,m=g.monte;
@@ -3038,10 +3038,9 @@
     m.phase='banked';gemGameCoins(state,m.coins);state.keys+=m.keys;return true;
   }
   function gemShopInfo(state,id,skill){
-    var cost=id==='glove'?4:id==='refill'?2:id==='potion'?3:0,reason='';
+    var cost=id==='glove'?2:id==='refill'?2:id==='potion'?3:0,reason='';
     if(!cost)reason='없는 상품이에요';
     else if(state.u15.tutorial.active)reason='첫 연습 뒤에 살 수 있어요';
-    else if(id==='glove'&&(state.u17.gloveBuys[VENUES[state.venue-1].slug]||0)>=3)reason='이 무대에서 3개 샀어요';
     else if(id==='refill'&&(!skillUnlocked(state,skill)||!(state.skills.cooldowns[skill]>0)))reason='기다리는 스킬만 충전해요';
     else if(id==='potion'&&(state.mode!=='fight'||state.resolved||state.features.climax.left>0))reason='관객과 공연 중에 써요';
     else if(id==='potion'&&state.u17.potionUsed)reason='이번 공연에서 이미 썼어요';

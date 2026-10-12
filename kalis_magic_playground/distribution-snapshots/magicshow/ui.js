@@ -196,6 +196,26 @@ globalThis.Presentation = (() => {
       set.call(this, v);
     });
     define(HTMLElement.prototype, 'hidden', set => function (v) { if (this.hidden !== !!v) set.call(this, v); });
+    // U35: the same guard for the other per-frame writers. classList.add/remove of a token that is already in (or absent from)
+    // the list still re-writes the class attribute, which restyles the whole subtree (#audienceCard every frame at idle).
+    if (typeof DOMTokenList !== 'undefined') {
+      const add = DOMTokenList.prototype.add, remove = DOMTokenList.prototype.remove;
+      DOMTokenList.prototype.add = function (...tokens) { if (tokens.every(t => this.contains(t))) return; return add.apply(this, tokens); };
+      DOMTokenList.prototype.remove = function (...tokens) { if (!tokens.some(t => this.contains(t))) return; return remove.apply(this, tokens); };
+    }
+    define(Element.prototype, 'className', (set, get) => function (v) { if (typeof this.className === 'string' && this.className === String(v)) return; set.call(this, v); });
+    define(HTMLElement.prototype, 'title', set => function (v) { if (this.title !== String(v)) set.call(this, v); });
+    define(HTMLElement.prototype, 'tabIndex', set => function (v) { if (this.tabIndex !== Number(v)) set.call(this, v); });
+    {
+      // dataset.x = same value re-writes the data-x attribute (cells, goal strip, etc. every frame): one cached proxy per element.
+      const d = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'dataset'), proxies = new WeakMap();
+      if (d && d.get && typeof Proxy === 'function') Object.defineProperty(HTMLElement.prototype, 'dataset', { ...d, get() {
+        let proxy = proxies.get(this);
+        if (!proxy) { proxy = new Proxy(d.get.call(this), { set(target, key, value) { if (typeof key !== 'string' || target[key] !== String(value)) target[key] = value; return true; } }); proxies.set(this, proxy); }
+        return proxy;
+      } });
+    }
+    if (typeof HTMLButtonElement !== 'undefined') define(HTMLButtonElement.prototype, 'disabled', set => function (v) { if (this.disabled !== !!v) set.call(this, v); });
     const setAttribute = Element.prototype.setAttribute;
     Element.prototype.setAttribute = function (name, value) {
       if (!/^(src|srcset|href|xlink:href)$/i.test(name) && this.getAttribute(name) === String(value)) return;
@@ -207,6 +227,19 @@ globalThis.Presentation = (() => {
       return setProperty.call(this, name, value, priority);
     };
     Element.prototype.__u29 = true;
+  })();
+  // U35: shipped art is WebP (tools/webp-assets.py). Code and data keep the .png names; this one mapping swaps the
+  // extension where a URL reaches the browser: img.src below and CSS url() written from JS (style.css names .webp directly).
+  // PNG_KEEP lists art that stayed PNG because no WebP passed the quality floor (none at the moment).
+  const PNG_KEEP = new Set([]);
+  const assetUrl = value => {
+    const text = String(value), match = /^(assets\/(?:ui\/)?[A-Za-z0-9_-]+)\.png$/.exec(text);
+    return match && !PNG_KEEP.has(match[1]) ? `${match[1]}.webp` : text;
+  };
+  (function installWebpMapping() {
+    if (typeof HTMLImageElement === 'undefined') return;
+    const d = Object.getOwnPropertyDescriptor(HTMLImageElement.prototype, 'src');
+    if (d && d.set && d.get) Object.defineProperty(HTMLImageElement.prototype, 'src', { ...d, set(value) { d.set.call(this, assetUrl(value)); } });
   })();
   const sound = (name, options) => window.Sfx && window.Sfx.play(name, options);
   let bestiaryTab = 'audiences', endingStep = 0, revealEnding = false;
@@ -1109,7 +1142,7 @@ globalThis.Presentation = (() => {
     if(outfitPath===path)return;outfitPath=path;const generation=++outfitGeneration,host=$('magicianMini');
     host.dataset.outfit=String(state.u14.outfit);host.classList.remove('performance-ready');
     const image=assetImage(path);
-    const ready=()=>{if(generation!==outfitGeneration)return;if(image.naturalWidth===768 && image.naturalHeight===256){host.style.backgroundImage=`url('${path}')`;host.classList.add('performance-ready');}else{host.style.backgroundImage='none';sprite(host,'assets/magician-idle.png');}};
+    const ready=()=>{if(generation!==outfitGeneration)return;if(image.naturalWidth===768 && image.naturalHeight===256){host.style.backgroundImage=`url('${assetUrl(path)}')`;host.classList.add('performance-ready');}else{host.style.backgroundImage='none';sprite(host,'assets/magician-idle.png');}};
     if(image.complete)ready();else {image.addEventListener('load',ready,{once:true});image.addEventListener('error',ready,{once:true});}
   }
   function renderU14() {
@@ -1149,12 +1182,12 @@ globalThis.Presentation = (() => {
   function paintRoutine(id){
     const r=D.routines.find(r=>r.id===id);if(!r)return false;
     const panel=$('routineCutin');panel.replaceChildren();const art=element('div','✨','routine-strip');
-    const path=`assets/routine-${id}.png`;art.style.backgroundImage=`url('${path}')`;const image=assetImage(path);if(image.complete&&!image.naturalWidth)art.style.backgroundImage='none';
+    const path=`assets/routine-${id}.png`;art.style.backgroundImage=`url('${assetUrl(path)}')`;const image=assetImage(path);if(image.complete&&!image.naturalWidth)art.style.backgroundImage='none';
     panel.append(art,element('small',r.name));panel.hidden=false;panel.classList.remove('playing');void panel.offsetWidth;panel.classList.add('playing');routineUntil=clock+1600;return true;
   }
   function renderU19(){
     const future=C.bossProfile(state)==='future',u=state.u19;
-    const warning=$('futureTelegraph');warning.hidden=!future||u.telegraph<=0;warning.textContent=['','','완벽한 루틴\n빛나는 칸을 계속 눌러 줘.','이게 진짜 미래의 나야.\n20초 동안 빛나는 칸만!'][u.phase];if(u.phase===1)warning.textContent='네 쇼타임을 따라 할게.\n끝난 뒤에 나를 노려 봐.';
+    const warning=$('futureTelegraph');warning.hidden=!future||u.telegraph<=0;warning.textContent=u.phase===1?'네 쇼타임을 따라 할게.\n끝난 뒤에 나를 노려 봐.':['','','완벽한 루틴\n빛나는 칸을 계속 눌러 줘.','이게 진짜 미래의 나야.\n20초 동안 빛나는 칸만!'][u.phase];
     $('magicianMini').classList.toggle('future-suit',state.u18.equipped.kali==='future');
     if(menu||state.u15.scene)$('routineCutin').hidden=true;
     if(u.pending.length&&$('routineCutin').hidden&&showRoutine(u.pending[0]))u.pending.shift();
@@ -1423,7 +1456,9 @@ globalThis.Presentation = (() => {
     result.append(scene, title, reason, element('p',advice.line,'fail-cause'));
     if(advice.hint)result.append(element('p',advice.hint,'fail-hint'));
     if(C.failureDealerAvailable(state))result.append(action('딜러와 한 판 하고 다시 도전',()=>{if(C.openFailureDealer(state)){save();menu='';dealer();}}));
-    result.append(button); $('panelBody').append(result); button.focus();
+    const stageGo = action(practiceGoLabel(), restartAfterFailure); stageGo.classList.add('fail-stage');
+    const row = element('div', '', 'fail-actions'); row.append(button, stageGo);
+    result.append(row); $('panelBody').append(result); button.focus();
   }
   function tutorialSignal(id) {
     if (C.tutorialAction(state,id)) { save(); renderCoach(); }
@@ -1959,12 +1994,11 @@ globalThis.Presentation = (() => {
     if (bestiaryTab === 'endings') { drawArchive(); return; }
     if (bestiaryTab === 'equip') { equipPanel(); return; }
     if (bestiaryTab === 'achievements') { achievementPanel(); return; }
-    const outfit=element('div','','outfit-collection');outfit.append(element('strong',`칼리 의상 · ${state.u18.equipped.kali?D.cosmetics.kali.find(x=>x.id===state.u18.equipped.kali).name:['','거실 티셔츠','무대 정장','우주 망토'][state.u14.outfit]}`));const strip=element('div','','outfit-preview'+(state.u18.equipped.kali==='future'?' future-suit':''));strip.style.backgroundImage=`url('${kaliArtPath()}')`;strip.textContent='🎩';const image=assetImage(kaliArtPath());const ready=()=>{if(image.naturalWidth===768&&image.naturalHeight===256)strip.classList.add('art-loaded');else strip.style.backgroundImage='none';};if(image.complete)ready();else {image.addEventListener('load',ready,{once:true});image.addEventListener('error',ready,{once:true});}outfit.append(strip);$('panelBody').append(outfit);
+    const outfit=element('div','','outfit-collection');outfit.append(element('strong',`칼리 의상 · ${state.u18.equipped.kali?D.cosmetics.kali.find(x=>x.id===state.u18.equipped.kali).name:['','거실 티셔츠','무대 정장','우주 망토'][state.u14.outfit]}`));const strip=element('div','','outfit-preview'+(state.u18.equipped.kali==='future'?' future-suit':''));strip.style.backgroundImage=`url('${assetUrl(kaliArtPath())}')`;strip.textContent='🎩';const image=assetImage(kaliArtPath());const ready=()=>{if(image.naturalWidth===768&&image.naturalHeight===256)strip.classList.add('art-loaded');else strip.style.backgroundImage='none';};if(image.complete)ready();else {image.addEventListener('load',ready,{once:true});image.addEventListener('error',ready,{once:true});}outfit.append(strip);$('panelBody').append(outfit);
     const routines=element('div','','routine-collection');routines.append(element('strong','나의 마술'));for(const r of D.routines.filter(r=>state.u19.routines.includes(r.id))){const item=element('span',r.name);item.prepend(artFallback(`assets/icon-routine-${r.id}.png`,'✨','routine-icon'));routines.append(item);}$('panelBody').append(routines);if(state.u19.cleared||state.u18.owned.kali.includes('future'))$('panelBody').append(element('p','🏅 미래의 나 · 다음 한 장을 건네받았다.'));
     const products=D.tree.filter(n=>n.productMultiplier),owned=products.filter(n=>state.tree[n.id]>0).length,collection=element('p',`칼리 컬렉션 ${owned}/${products.length}${state.u14.collection?' · 연출 +10%':''}`);if(state.u14.collection)collection.prepend(artFallback('assets/icon-set-bonus.png','🎀','set-ribbon u14-art'));$('panelBody').append(collection,element('p',D.easyExtras.set,'easy-description'));
     const guides=element('section','','bestiary-guides');
     for(const [name,key,path] of [['김도겸','tutorial','aud-tutorial-dogyeom-happy.png'],['밍기리','helper','aud-tutorial-mingiri-happy.png']]){const card=element('article','','bestiary-guide');const art=element('span','','entry-emoji');art.append(element('span',key==='helper'?'👹':'🙎','sprite-fallback'));sprite(art,'assets/'+path);card.append(art,element('h3',name),element('p',D.storyV15[key].bio));guides.append(card);}
-    $('panelBody').append(guides);
     const badges=element('div','','reward-badges');
     for(const r of D.stageRewards){const badge=element('figure','','reward-badge');const art=element('img');art.src=`assets/reward-${r.id}.png`;art.alt=r.effect;badge.classList.toggle('earned',state.features.rewards.includes(r.id));badge.append(art,element('figcaption',`${D.venues.find(v=>v.slug===r.venueSlug).name} · ${r.effect}`));badges.append(badge);} $('panelBody').append(badges);
     const list = element('div', '', 'bestiary-list');
@@ -2015,7 +2049,7 @@ globalThis.Presentation = (() => {
       }
       list.append(section);
     }
-    $('panelBody').append(list);
+    $('panelBody').append(list,element('h2','도우미 친구들','bestiary-guides-title'),guides);
   }
   function dealer() {
     if (['boo','fail','ending','rebirth','bossPhase'].includes(menu) || dealerBusy) return;
@@ -2708,7 +2742,7 @@ globalThis.Presentation = (() => {
     const finish=()=>{clearTimeout(curtainTimer);curtainScene?.remove();curtainScene=null;menu='';$('panel').hidden=true;presentation.finish();previous=0;dialogKey='';if(review){bestiaryTab='memories';bestiary();}else render();};
     openPanel('curtain',data.title);clearDecorations();
     const scene=element('section','','curtain-memory');curtainScene=scene;
-    scene.style.backgroundImage=`url(${venueAsset(v)})`;scene.append(element('h2',data.title));
+    scene.style.backgroundImage=`url(${assetUrl(venueAsset(v))})`;
     const cast=element('div','','curtain-cast'),all=[...v.audiences];
     all.splice(Math.floor(all.length/2),0,v.headliner);
     for(const a of all){const actor=element('span','',a===v.headliner?'curtain-actor headliner':'curtain-actor');actor.dataset.audience=a.id;happySprite(actor,audienceAsset(v,a));cast.append(actor);}
@@ -2725,7 +2759,7 @@ globalThis.Presentation = (() => {
       if(C.autoStage(state)&&state.dimension>=2)curtainTimer=setTimeout(advance,1600);
     }
     if(!review){uiSave.memories[slug]={slug,title:data.title,dimension:state.dimension};savePresentation();}
-    if(!reduced){for(let i=0;i<8;i++){const fx=element('span','','curtain-confetti');fx.style.left=(12+i*10)+'%';fx.style.top=(55+i%3*12)+'px';fx.style.animationDelay=(i%3*40)+'ms';scene.append(fx);setTimeout(()=>fx.remove(),600);}}
+    if(!reduced){for(let i=0;i<8;i++){const fx=element('span','','curtain-confetti');fx.style.left=(8+i*11)+'%';fx.style.top=(4+i%3*10)+'px';fx.style.animationDelay=(i%3*40)+'ms';scene.append(fx);setTimeout(()=>fx.remove(),600);}}
     advance();return true;
   }
   function gameArt(name,cls=''){
@@ -2999,7 +3033,6 @@ globalThis.Presentation = (() => {
     openPanel('gemShop','보석 상점');$('panelBody').append(element('p',`💎 보석 ${state.gems}개`,'dealer-wallet'));
     for(const item of D.gemShop){
       const card=element('section','','gem-shop-item');card.append(element('h2',item.name),element('p',item.desc));
-      if(item.id==='glove')card.append(element('small',`이 무대 ${state.u17.gloveBuys[D.venues[state.venue-1].slug]||0}/3개`));
       const add=skill=>{const info=C.gemShopInfo(state,item.id,skill),label=skill?D.skills.find(k=>k.id===skill).name+' 충전':'사기';
         card.append(action(`${label} · 💎 ${info.cost}`,()=>{if(C.gemShopBuy(state,item.id,skill)){save();sound('skill');gemShop();render();}},!info.available));if(info.reason)card.append(element('small',info.reason));};
       if(item.id==='refill')D.skills.forEach(k=>add(k.id));else add();$('panelBody').append(card);
@@ -3110,7 +3143,7 @@ globalThis.Presentation = (() => {
     const scene=element('div','','ending-scene homecoming-scene');
     let primary;
     const picture=element('div','','homecoming-picture');
-    picture.style.backgroundImage=`url("${venueAsset(venue)}")`;
+    picture.style.backgroundImage=`url("${assetUrl(venueAsset(venue))}")`;
     const fallback=element('div','','homecoming-portraits');
     for(const a of [...venue.audiences,venue.headliner]) {const face=element('span',a.name,'homecoming-face');sprite(face,audienceAsset(venue,a));fallback.append(face);}
     picture.append(fallback); sprite(picture,state.u19.cleared?'assets/ending-future-table.png':'assets/ending-lecturenote.png'); scene.append(picture);
@@ -3440,7 +3473,9 @@ globalThis.Presentation = (() => {
   function loop(now) {
     // U29: nothing runs while hidden; when paused with no effects on screen, 30 fps is enough.
     if (document.hidden) { previous = 0; requestAnimationFrame(loop); return; }
-    if (paused() && !particles.length && !flights.length && !numbers.length && !badges.length && now - lastRun < 30) { requestAnimationFrame(loop); return; }
+    // U35: 60 fps cap (120 Hz phones ran the whole render twice as often); a quiet stage (paused, or nothing drawn and no held press) idles at 30 fps.
+    const quiet = !particles.length && !flights.length && !numbers.length && !badges.length && (paused() || !boardHolds.length);
+    if (now - lastRun < (quiet ? 30 : 14)) { requestAnimationFrame(loop); return; }
     lastRun = now;
     const dt = previous ? Math.max(0, Math.min(50, now - previous)) : 0;
     previous = now;
@@ -3530,7 +3565,7 @@ globalThis.Presentation = (() => {
       presentationLayoutPending=false;cacheEffectZones();
       for(const context of [$('panelBody'),$('storyDialog'),$('phoneMore')]){
         const current=context.querySelector('.u26-primary');
-        const preferred=context.querySelector('.stage-start:not([disabled]),.practice-enter:not([disabled]),.tree-buy:not([disabled])')||[...context.querySelectorAll('button:not([disabled])')].find(el=>!el.hidden&&!el.closest('.panel-tabs')&&!el.classList.contains('game-cup')&&!el.classList.contains('routine-card')&&!el.classList.contains('dealer-back')&&!el.closest('.cups-table'));
+        const preferred=context.querySelector('.stage-start:not([disabled]),.practice-enter:not([disabled]),.tree-buy:not([disabled])')||(context.id==='phoneMore'?null:[...context.querySelectorAll('button:not([disabled])')].find(el=>!el.hidden&&!el.closest('.panel-tabs')&&!el.classList.contains('game-cup')&&!el.classList.contains('routine-card')&&!el.classList.contains('dealer-back')&&!el.closest('.cups-table')));
         if(current!==preferred){current?.classList.remove('u26-primary');preferred?.classList.add('u26-primary');}
       }
     });
