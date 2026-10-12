@@ -1134,7 +1134,7 @@ body.tablet{--kit-scale:4}
 @keyframes u26-ball-pop{to{background-position:-128px 0}}
 @keyframes u26-card-flip{to{background-position:-384px 0}}
 @keyframes u26-prize{from{transform:translateY(4px)}to{transform:translateY(0)}}
-@media(max-height:360px) and (min-width:780px){.phone #stage #activeSkills{top:0;left:0;right:auto;flex-direction:column}.phone #stage #boardCard{height:var(--board-size)}}
+@media(max-height:360px){.phone #stage #activeSkills{top:0;left:calc(100% - var(--board-size) - 54px);right:auto;flex-direction:column}.phone #stage #boardCard{height:var(--board-size)}}
 #stage #audienceCard .audience-shadow{display:block;z-index:1;pointer-events:none}
 #stage .room.asset-ready:after{background:none}
 #stage #audienceCard :is(.audience,.asset-sprite){filter:none}
@@ -1150,7 +1150,7 @@ body.tablet{--kit-scale:4}
 #stage #audience{cursor:pointer}
 .tablet #stage #audienceLine{bottom:80px;font-size:16px;line-height:22px}
 @media(prefers-reduced-motion:reduce){#stage :is(.cup-lifting,.ball-popping,.card-flipping,.money-win){animation:none}#stage .card-flipping img{visibility:visible}}
-@media(max-width:779px){.phone-compact #stage #activeSkills{left:calc(-1 * var(--audience-width) - 12px);right:auto;top:calc(var(--layout-height) - 94px);flex-direction:row;justify-content:flex-start}.phone-compact #stage #stageStats{bottom:56px}.phone-compact #stage #audience.normalized-figure{bottom:90px;height:calc(100% - 142px)}}
+@media(max-width:779px){.phone-compact #stage #stageStats{bottom:56px}.phone-compact #stage #audience.normalized-figure{bottom:90px;height:calc(100% - 142px)}}
 .phone #stage #board{left:auto;padding:calc(var(--board-size) * 8 / 608)}
 #stage .cell.next-slot[data-motion-loop='true']{animation-name:u26-next-slot}
 @keyframes u26-next-slot{0%,100%{opacity:1}50%{opacity:.6}}
@@ -1229,7 +1229,7 @@ body.tablet{background:#17141F;background-image:linear-gradient(90deg,#25202D 0 
 .tablet #stage #activeSkills{top:calc((100% - var(--board-size) - 76px) / 2);left:calc((100% - var(--board-size)) / 2 - 56px);right:auto;flex-direction:column;align-items:center;gap:6px}
 .tablet #stage #activeSkills .active-skill,.tablet #stage #activeSkills .gem-shop-quick{width:52px;min-width:0}
 .tablet #stage #activeSkills .active-skill>span:not(.skill-art),.tablet #stage #activeSkills .active-skill small{letter-spacing:0;white-space:nowrap;font-size:10px;line-height:12px}
-@media(max-height:360px) and (min-width:780px){
+@media(max-height:360px){
 .phone #stage #activeSkills .active-skill,.phone #stage #activeSkills .gem-shop-quick{width:50px}
 .phone #stage #activeSkills .active-skill{height:auto;min-height:48px;padding:2px 1px;overflow:visible}
 .phone #stage #activeSkills .active-skill>span:not(.skill-art),.phone #stage #activeSkills .active-skill small{letter-spacing:0;white-space:nowrap;font-size:9px;line-height:11px}
