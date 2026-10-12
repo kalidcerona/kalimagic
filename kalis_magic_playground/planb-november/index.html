@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<title>PLAN B 11월 세미나</title>
+<title>No Plan Season. 3 · PLAN B 11월 세미나</title>
 <meta property="og:type" content="website">
-<meta property="og:title" content="PLAN B 11월 세미나">
+<meta property="og:title" content="No Plan Season. 3 · PLAN B 11월 세미나">
 <meta property="og:description" content="첫 일요일엔 사람을 모으고, 다음 일요일엔 사라지게 한다. Vol.1 버스킹 11월 15일, Vol.2 슬리빙 11월 22일.">
 <meta property="og:url" content="https://kalimagic.netlify.app/planb-november/">
 <meta property="og:image" content="https://kalimagic.netlify.app/planb-busking/img/cover.jpg">
@@ -30,6 +30,24 @@
   .sponsor-logo img { width:100%; height:auto; }
   .sponsor-strip { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:10px 16px; padding:18px 0 28px; border-top:1px solid var(--chip); color:var(--muted); font-size:13px; }
   .sponsor-strip p { margin:0; }
+  .sponsor-block { display:flex; flex-direction:column; align-items:center; gap:10px; margin-top:22px; padding-top:18px; border-top:1px solid var(--chip); }
+  .sponsor-label { margin:0; color:var(--accent-text); font-size:12px; font-weight:700; }
+  .sponsor-block .sponsor-logo { width:220px; padding:12px; }
+  .sponsor-note { margin:0; color:var(--muted); font-size:14px; }
+  @media (max-width:640px) { .sponsor-block .sponsor-logo { width:180px; } }
+  .hero-sponsor { display:flex; align-items:center; justify-content:center; gap:10px; margin:0 0 28px; font-size:15px; font-weight:700; color:var(--body); }
+  .hero-sponsor .sponsor-logo { width:110px; padding:6px; flex:none; }
+  .hero-sponsor span { white-space:nowrap; }
+  .sponsor-strip { gap:12px 20px; padding:28px 0 40px; }
+  .sponsor-strip .sponsor-logo { width:180px; padding:10px; }
+  .sponsor-strip p { font-size:15px; font-weight:700; color:var(--ink); }
+  @media (max-width:640px) { .hero-sponsor .sponsor-logo { width:96px; } .sponsor-strip .sponsor-logo { width:150px; } }
+  .hero-logo { display:block; width:120px; height:auto; margin:0 auto 20px; border-radius:14px; }
+  .sponsor-card { max-width:560px; margin:0 auto; display:flex; flex-direction:column; align-items:center; gap:14px; background:#fbf3e4; border:1px solid rgba(232,160,32,0.35); }
+  .sponsor-card .sponsor-logo { width:260px; padding:14px; }
+  .sponsor-card .sponsor-name { margin:0; font-size:22px; font-weight:700; color:var(--ink); }
+  .sponsor-card .sponsor-line { margin:0; font-size:15px; color:var(--muted); }
+  @media (max-width:640px) { .hero-logo { width:96px; } .sponsor-card .sponsor-logo { width:200px; } }
   .sponsor-tag { display:inline-block; background:#fde3d4; color:#a8430f; border-radius:6px; padding:1px 7px; font-size:12px; font-weight:700; margin-left:4px; vertical-align:middle; }
   a { transition:background .15s, color .15s; }
   ::selection { background:#f2d49a; color:var(--ink); }
@@ -62,9 +80,22 @@
   .session .label { margin:10px 0 0; font-size:12px; font-weight:800; letter-spacing:0.08em; color:var(--accent-text); }
   .session .who, .session .learn { margin:0; font-size:14.5px; line-height:1.55; color:var(--muted); }
   .session .btn { margin-top:auto; }
+  .inline-link { color:var(--accent-text); font-weight:700; text-decoration:underline; text-underline-offset:3px; }
+  .inline-link:hover { color:var(--ink); }
+  .inline-link:focus-visible { outline:2px solid var(--accent); outline-offset:2px; border-radius:3px; }
+  .session { position:relative; cursor:pointer; transition:transform .15s, box-shadow .15s; }
+  .session:hover, .session:focus-within { transform:translateY(-3px); box-shadow:0 22px 50px rgba(47,41,35,0.16); }
+  .session .btn::after { content:""; position:absolute; inset:0; border-radius:18px; }
+  .session .btn:focus-visible { outline:3px solid var(--ink); outline-offset:3px; }
+  .price-table thead th a, .tier-card dt a { color:inherit; text-decoration:underline dotted; text-underline-offset:3px; }
+  .price-table thead th a:hover, .tier-card dt a:hover { text-decoration:underline solid; color:var(--accent-text); }
+  .price-table thead th a:focus-visible, .tier-card dt a:focus-visible { outline:2px solid var(--accent); outline-offset:2px; border-radius:4px; }
 
   .venue-grid .card { text-align:left; }
   .venue-grid p { margin:0 0 8px; font-size:15px; color:var(--muted); }
+  .venue-grid.single { grid-template-columns:1fr; max-width:660px; margin:0 auto; }
+  .venue-grid .sponsor-label { margin:0; color:var(--accent-text); font-size:12px; font-weight:700; }
+  .venue-grid .sponsor-note { margin:0; color:var(--muted); font-size:14px; }
   .venue-grid .serif { font-size:20px; font-weight:700; color:var(--ink); }
 
   .price-board { max-width:100%; min-width:0; }
@@ -203,11 +234,12 @@
 <main>
 
   <section class="hero">
+    <img class="hero-logo" src="../planb-busking/img/planb-logo.png" alt="PLAN B" width="160" height="147">
     <div class="badge-row"><span class="dot"></span><span class="pill">PLAN B 11월 세미나</span></div>
-    <h1>PLAN B 11월 세미나 <span class="todo-tag">시리즈 이름 확정 전</span></h1>
+    <h1>No Plan Season. 3</h1>
     <p class="lead">첫 일요일엔 사람을 모으고, 다음 일요일엔 사라지게 한다.</p>
-    <p class="host-line"><span class="host-mark"><img src="../planb-busking/img/planb-logo.png" alt="" width="160" height="147"></span>PLAN B가 여는 세미나</p>
-    <p class="hero-meta">📅 11/15(일) 버스킹 · 스넥 연습실<br>📅 11/22(일) 슬리빙 · 양재역 강의실</p>
+    <p class="hero-sponsor"><span class="sponsor-logo"><img src="../planb-busking/img/snack-logo.jpg" alt="스넥 연습실 로고" width="1158" height="573" loading="eager"></span><span>후원 스넥 연습실</span></p>
+    <p class="hero-meta">📅 11/15(일) 버스킹 · 스넥 연습실<br>📅 11/22(일) 슬리빙 · 스넥 연습실</p>
     <p class="hero-price">슈퍼 얼리버드 <span class="price-pair">버스킹 <b>4만원</b></span> · <span class="price-pair">슬리빙 <b>3만원</b></span> · <span class="price-pair">통합권 <b>5만원</b></span> <span class="until">10/27(화)까지</span></p>
     <a href="#ticket" class="btn">통합권으로 신청하기 →</a>
     <p class="deadline deadline-slim" data-deadline><span class="deadline-text">10월 17일(토) 판매 시작 · 슈퍼 얼리버드는 11일 동안만</span></p>
@@ -227,7 +259,7 @@
         <p class="label">강사</p>
         <p class="who">메인 MC 쇼갱<br>강의 매지션 훅·선휘재·쇼갱</p>
         <p class="label">배우는 것</p>
-        <p class="learn todo">1. 사람 모으기 · 2. 루틴 구성<br>3. 마무리</p>
+        <p class="learn">버스킹 시연과 세 강사의 세션, 뒤풀이</p>
         <a class="btn" href="../planb-busking/">자세히 보기 →</a>
       </article>
       <article class="card session">
@@ -235,11 +267,11 @@
         <p class="pill">Vol.2 슬리빙</p>
         <h3>슬리빙</h3>
         <p class="when">2026년 11월 22일(일)</p>
-        <p class="where">양재역 강의실 · 양재</p>
+        <p class="where">스넥 연습실 · 홍대 <span class="sponsor-tag">후원</span></p>
         <p class="label">강사</p>
         <p class="who">조시훈 마술사</p>
         <p class="label">배우는 것</p>
-        <p class="learn todo">1. 슬리빙 기본 · 2. 각도와 자연스러움<br>3. 실전 루틴</p>
+        <p class="learn">슬리빙 기본부터 해부학적 슬리빙까지</p>
         <a class="btn" href="../planb-sleeving/">자세히 보기 →</a>
       </article>
     </div>
@@ -248,8 +280,19 @@
   <section>
     <p class="eyebrow">Series</p>
     <h2>이렇게 이어져요</h2>
-    <p class="lead">Vol.1에서는 길에서 사람을 모으고 붙잡는 법을, Vol.2에서는 손에 있던 것을 감쪽같이 사라지게 하는 기술을 다뤄요.</p>
+    <p class="lead"><a class="inline-link" href="../planb-busking/">Vol.1</a>에서는 길에서 사람을 모으고 붙잡는 법을, <a class="inline-link" href="../planb-sleeving/">Vol.2</a>에서는 손에 있던 것을 감쪽같이 사라지게 하는 기술을 다뤄요.</p>
     <p class="lead">각각 들어도 되고, 둘 다 들으면 통합권 가격으로 두 번 만나요.</p>
+  </section>
+
+  <!-- ============ SPONSOR ============ -->
+  <section>
+    <p class="eyebrow">Sponsor</p>
+    <h2>후원</h2>
+    <div class="card sponsor-card">
+      <div class="sponsor-logo"><img src="../planb-busking/img/snack-logo.jpg" alt="스넥 연습실 로고" width="1158" height="573" loading="eager"></div>
+      <p class="serif sponsor-name">스넥 연습실</p>
+      <p class="sponsor-line">스넥 연습실이 이번 세미나를 후원해 주셨어요.</p>
+    </div>
   </section>
 
   <section id="ticket">
@@ -263,8 +306,8 @@
             <thead>
               <tr>
                 <th scope="col"><span class="sr-only">구분</span></th>
-                <th scope="col">버스킹 단독</th>
-                <th scope="col">슬리빙 단독</th>
+                <th scope="col"><a href="../planb-busking/">버스킹 단독</a></th>
+                <th scope="col"><a href="../planb-sleeving/">슬리빙 단독</a></th>
                 <th scope="col" class="combo-col">통합권<span class="rec">추천</span></th>
                 <th scope="col">통합권으로 아끼는 금액</th>
               </tr>
@@ -297,8 +340,8 @@
           <h3 class="serif"><span class="tier-name">슈퍼 얼리버드</span></h3>
           <p class="period">10/17(토)-10/27(화)</p>
           <dl>
-            <div><dt>버스킹 단독</dt><dd><span class="price-stack"><span class="price-now">4만원</span><span class="price-meta"><s class="was">6만원</s><span class="off">33%</span></span></span></dd></div>
-            <div><dt>슬리빙 단독</dt><dd><span class="price-stack"><span class="price-now">3만원</span><span class="price-meta"><s class="was">5만원</s><span class="off">40%</span></span></span></dd></div>
+            <div><dt><a href="../planb-busking/">버스킹 단독</a></dt><dd><span class="price-stack"><span class="price-now">4만원</span><span class="price-meta"><s class="was">6만원</s><span class="off">33%</span></span></span></dd></div>
+            <div><dt><a href="../planb-sleeving/">슬리빙 단독</a></dt><dd><span class="price-stack"><span class="price-now">3만원</span><span class="price-meta"><s class="was">5만원</s><span class="off">40%</span></span></span></dd></div>
             <div class="is-combo"><dt>통합권<span class="rec">추천</span></dt><dd><span class="price-stack"><span class="price-meta"><s class="was">7만원</s></span><span class="combo-line"><span class="combo-price combo-best price-now">5만원</span><span class="low">최저가</span></span></span></dd></div>
             <div><dt>통합권으로 아끼는 금액</dt><dd class="save"><span class="save-pill">2만원 절약</span></dd></div>
           </dl>
@@ -307,8 +350,8 @@
           <h3 class="serif"><span class="tier-name">얼리버드</span></h3>
           <p class="period">10/28(수)-11/8(일)</p>
           <dl>
-            <div><dt>버스킹 단독</dt><dd><span class="price-stack"><span class="price-now">5만원</span><span class="price-meta"><s class="was">6만원</s><span class="off">16%</span></span></span></dd></div>
-            <div><dt>슬리빙 단독</dt><dd><span class="price-stack"><span class="price-now">4만원</span><span class="price-meta"><s class="was">5만원</s><span class="off">20%</span></span></span></dd></div>
+            <div><dt><a href="../planb-busking/">버스킹 단독</a></dt><dd><span class="price-stack"><span class="price-now">5만원</span><span class="price-meta"><s class="was">6만원</s><span class="off">16%</span></span></span></dd></div>
+            <div><dt><a href="../planb-sleeving/">슬리빙 단독</a></dt><dd><span class="price-stack"><span class="price-now">4만원</span><span class="price-meta"><s class="was">5만원</s><span class="off">20%</span></span></span></dd></div>
             <div class="is-combo"><dt>통합권<span class="rec">추천</span></dt><dd><span class="price-stack"><span class="price-meta"><s class="was">9만원</s></span><span class="combo-price price-now">8만원</span></span></dd></div>
             <div><dt>통합권으로 아끼는 금액</dt><dd class="save"><span class="save-pill">1만원 절약</span></dd></div>
           </dl>
@@ -317,8 +360,8 @@
           <h3 class="serif"><span class="tier-name">정상가</span></h3>
           <p class="period">11/9(월)부터</p>
           <dl>
-            <div data-seminar="busking"><dt>버스킹 단독</dt><dd><span class="price-now">6만원</span></dd></div>
-            <div data-seminar="sleeving"><dt>슬리빙 단독</dt><dd><span class="price-now">5만원</span></dd></div>
+            <div data-seminar="busking"><dt><a href="../planb-busking/">버스킹 단독</a></dt><dd><span class="price-now">6만원</span></dd></div>
+            <div data-seminar="sleeving"><dt><a href="../planb-sleeving/">슬리빙 단독</a></dt><dd><span class="price-now">5만원</span></dd></div>
             <div class="is-combo is-ended"><dt>통합권<span class="rec">추천</span></dt><dd class="ended">판매 종료</dd></div>
             <div><dt>통합권으로 아끼는 금액</dt><dd class="save-empty">-</dd></div>
           </dl>
@@ -348,22 +391,21 @@
   <section>
     <p class="eyebrow">Location</p>
     <h2>오시는 길</h2>
-    <div class="venue-grid">
+    <div class="venue-grid single">
       <div class="card">
         <p class="serif">스넥 연습실</p>
         <p>서울 마포구 연남로 4-1 지하 1층</p>
         <p>홍대입구역 3번 출구 도보 5분</p>
         <p>주차 공간이 없어요. 대중교통을 이용해 주세요.</p>
         <p style="margin:10px 0 0;"><a href="https://map.naver.com/p/entry/place/1983667731" target="_blank" rel="noopener noreferrer" style="color:var(--accent); font-weight:700;">지도에서 보기 →</a></p>
-      </div>
-      <div class="card">
-        <p class="serif">양재역 36인 대형 강의실</p>
-        <p>서울 서초구 서초동 1364-41 지상 2층</p>
-        <p>양재역 1번 출구 도보 2분</p>
-        <p>주차 1대만 가능 (예약 시 차량 번호 전체를 알려 주세요)</p>
-        <p style="margin:10px 0 0;"><a href="https://www.spacecloud.kr/space/78077" target="_blank" rel="noopener noreferrer" style="color:var(--accent); font-weight:700;">지도에서 보기 →</a></p>
+        <div class="sponsor-block">
+          <p class="sponsor-label">후원</p>
+          <div class="sponsor-logo"><img src="../planb-busking/img/snack-logo.jpg" alt="스넥 연습실 로고" width="1158" height="573" loading="eager"></div>
+          <p class="sponsor-note">스넥 연습실이 이번 세미나를 후원해 주셨어요.</p>
+        </div>
       </div>
     </div>
+    <p style="font-size:15px; color:var(--muted); text-align:center; margin:14px 0 0;">버스킹·슬리빙 두 회차 모두 같은 곳에서 열려요.</p>
   </section>
 
   <section class="refund">
