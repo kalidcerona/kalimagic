@@ -61,8 +61,12 @@ globalThis.PhoneLayout = (() => {
     const tablet = coarse && Math.min(width,height) > 500 && Math.max(width,height) <= 1400;
     const phone = tablet || Math.min(width, height) <= 500 || (coarse && Math.min(width / 1600, height / 900) < .6);
     const content = tablet ? Math.min(w,1280) : w;
-    const board = (tablet ? 72 : 48) * 608 / 112;
-    return { phone, tablet, width: content, height: h, board, audience: content * .56 - 12 };
+    // U32: tablet cells are 72-96px (whole numbers) so the board fits the 44% column on narrower tablets.
+    const cell = tablet ? Math.max(72, Math.min(96, Math.floor((content * .44 - 24) * 112 / 608))) : 48;
+    const board = cell * 608 / 112;
+    // U30c: the skill column needs about 66px between the audience card and the board, so narrow phones (667 wide)
+    // give the audience card a little less than 56% of the width.
+    return { phone, tablet, width: content, height: h, board, audience: Math.min(content * .56, content - board - (tablet ? 84 : 66)) - 12 };
   }
   function transform(rect, size = 608) {
     return {
@@ -127,10 +131,18 @@ globalThis.Guidance = (() => {
     const learn = node ? `${nodeText} · ${costText}` : nodeText;
     return { node, progress, nodeText, costText, caseText: `개봉 ${progress}%`, targetText: learn, text: `다음 목표 · 개봉 ${progress}% · ${learn}` };
   }
-  function failure(state,D,C) {
-    const ids = ['mental','openingShield','calm','attack','power'];
-    const node = ids.map(id => D.tree.find(n=>n.id===id)).find(n => n && C.nodeInfo(state,n.id).revealed && C.nodeInfo(state,n.id).cost !== null) || target(state,D,C) || D.tree[0];
-    return { line: '야유를 버틸 멘탈이 부족했어요', node };
+  // U31b: the cause line is a soft guess plus a soft suggestion. cause = how this run really ended:
+  // 'mental' (mental ran out with little doubt left) or 'damage' (mental ran out while much doubt was left).
+  function failure(state,D,C,cause='mental') {
+    if (cause === 'gate') return { line: '이 관객은 준비가 조금 더 필요해 보여요. 비법을 몇 개 더 익혀 보면 어떨까요?', node: null, hint: "'야유 받아넘기기'가 도움이 될지도 몰라요" };
+    const damage = cause === 'damage';
+    const ids = damage ? ['attack','power','speed'] : ['mental','shieldCap','openingShield','calm','boxHeal','winHeal'];
+    const node = ids.map(id => D.tree.find(n=>n.id===id)).find(n => n && C.nodeInfo(state,n.id).revealed && C.nodeInfo(state,n.id).cost !== null) || null;
+    const code = node ? node.name.charCodeAt(node.name.length - 1) : 0;
+    const particle = code >= 0xAC00 && code <= 0xD7A3 && (code - 0xAC00) % 28 === 0 ? '를' : '을';
+    const guess = damage ? '의심을 깎을 힘이 조금 모자랐나 봐요.' : '야유를 버틸 멘탈이 부족했나 봐요.';
+    const line = node ? `${guess} 한번 ${node.name}${particle} 높여 보면 어떨까요?` : guess;
+    return { line, node, hint: node ? `'${node.name}' 비법이 도움이 될지도 몰라요` : '' };
   }
   function firstEffects(state,list) {
     const hits = list.filter(e => (e.type === 'boxHit' || e.type === 'boxBreak') && e.source === 'manual');
@@ -169,14 +181,65 @@ globalThis.Presentation = (() => {
 (function () {
   'use strict';
   const D = window.GAME_DATA, C = window.Core;
+  // U29: write-only-on-change guard. render() runs every frame and re-assigns the same text, attributes,
+  // hidden flags and custom properties hundreds of times per second; skipping identical writes leaves the
+  // resulting DOM unchanged but stops needless style invalidation. Each guard compares first and then delegates.
+  (function installWriteGuards() {
+    if (typeof Element === 'undefined' || Element.prototype.__u29) return;
+    const define = (proto, name, make) => { const d = Object.getOwnPropertyDescriptor(proto, name); if (d && d.set) Object.defineProperty(proto, name, { ...d, set: make(d.set, d.get) }); };
+    if (typeof Node === 'undefined' || typeof HTMLElement === 'undefined' || typeof CSSStyleDeclaration === 'undefined') return;
+    define(Node.prototype, 'textContent', (set, get) => function (v) {
+      if (this.nodeType === 1) {
+        const text = v == null ? '' : String(v), first = this.firstChild;
+        if (text === '' ? !first : first && first === this.lastChild && first.nodeType === 3 && first.data === text) return;
+      }
+      set.call(this, v);
+    });
+    define(HTMLElement.prototype, 'hidden', set => function (v) { if (this.hidden !== !!v) set.call(this, v); });
+    const setAttribute = Element.prototype.setAttribute;
+    Element.prototype.setAttribute = function (name, value) {
+      if (!/^(src|srcset|href|xlink:href)$/i.test(name) && this.getAttribute(name) === String(value)) return;
+      return setAttribute.call(this, name, value);
+    };
+    const setProperty = CSSStyleDeclaration.prototype.setProperty;
+    CSSStyleDeclaration.prototype.setProperty = function (name, value, priority) {
+      if (!priority && value != null && this.getPropertyValue(name) === String(value) && !this.getPropertyPriority(name)) return;
+      return setProperty.call(this, name, value, priority);
+    };
+    Element.prototype.__u29 = true;
+  })();
   const sound = (name, options) => window.Sfx && window.Sfx.play(name, options);
   let bestiaryTab = 'audiences', endingStep = 0, revealEnding = false;
   const assetCache = new Map();
   function assetImage(path) {
     if (!assetCache.has(path)) {
-      const img = new Image(); img.src = path; assetCache.set(path, img);
+      const img = new Image(); img.addEventListener('error', () => { if (assetCache.get(path) === img) assetCache.delete(path); }, { once: true }); img.src = path; assetCache.set(path, img);
     }
     return assetCache.get(path);
+  }
+  // U29: low-priority idle prefetch of the next venue's images (background, crowd, headliner, audiences + happy faces).
+  const prefetchQueue = [], prefetchDone = new Set(); let prefetchActive = 0, prefetchedFor = '';
+  function pumpPrefetch() {
+    while (prefetchActive < 4 && prefetchQueue.length) {
+      const path = prefetchQueue.shift();
+      if (assetCache.has(path)) continue;
+      const img = new Image(); img.fetchPriority = 'low'; img.decoding = 'async'; prefetchActive++;
+      const done = () => { prefetchActive--; pumpPrefetch(); };
+      img.addEventListener('load', done, { once: true }); img.addEventListener('error', () => { assetCache.delete(path); prefetchDone.delete(path); done(); }, { once: true });
+      assetCache.set(path, img); img.src = path;
+    }
+  }
+  let prefetchWinSeen = false; const prefetchLoadAt = performance.now();
+  function prefetchNextVenue(venueNumber) {
+    const next = D.venues[venueNumber]; if (!next || prefetchedFor === next.slug) return;
+    prefetchedFor = next.slug;
+    const paths = [`assets/${next.venueAsset}`, next.crowdAsset && `assets/${next.crowdAsset}`];
+    for (const a of [next.headliner, ...next.audiences]) {
+      const base = audienceAsset(next, a); paths.push(base, base.replace(/\.png$/, '-happy.png'));
+    }
+    for (const path of paths) if (path && !prefetchDone.has(path)) { prefetchDone.add(path); prefetchQueue.push(path); }
+    const start = () => pumpPrefetch();
+    if (typeof requestIdleCallback === 'function') requestIdleCallback(start, { timeout: 4000 }); else setTimeout(start, 1500);
   }
   // Crop transparent margins once per URL; face crops share the same alpha scan.
   const opaqueSprites = new Map();
@@ -205,12 +268,27 @@ globalThis.Presentation = (() => {
     if(/mingiri|past-kali|kali-past|aud-a108(?:-|\.)/.test(path))return 'small';
     return /headliner-|future-kali/.test(path)?'large':'regular';
   }
+  // U32: on tablets the audience sprite is drawn at a whole-number multiple of its pixel size (no uneven pixel columns).
+  function snapAudience(image) {
+    const host = $('audience'), img = image || host.querySelector(':scope > .asset-sprite');
+    if (!img) return;
+    if (!document.body.classList.contains('tablet')) { img.style.height = ''; delete img.dataset.snap; return; }
+    const apply = () => {
+      const nat = img.naturalHeight, factor = host.dataset.figureSize === 'large' ? .95 : host.dataset.figureSize === 'small' ? .72 : .84;
+      if (!nat || !host.clientHeight) return;
+      let k = Math.max(1, Math.round(host.clientHeight * factor / nat));
+      if (k > 1 && nat * k > host.clientHeight * 1.06) k--;
+      img.style.height = `${nat * k}px`; img.dataset.snap = String(k);
+    };
+    if (img.complete && img.naturalHeight) apply(); else img.addEventListener('load', apply, { once: true });
+  }
   function sprite(host, path) {
     host.querySelectorAll(':scope > .asset-sprite').forEach(img => img.remove());
     host.classList.remove('asset-ready'); host.dataset.asset = path;
     const source = assetImage(path);
     const show = () => {
       if (host.dataset.asset !== path || !source.naturalWidth) return;
+      host.querySelectorAll(':scope > .asset-sprite').forEach(img => img.remove());
       const image = source.cloneNode(); image.className = 'asset-sprite'; image.alt = '';
       if (/assets\/(?:aud-|headliner-)/.test(path)||host.classList.contains('story-portrait')&&/^assets\/kali-/.test(path)) {
         host.classList.add('normalized-figure');host.dataset.figureSize=figureSize(path);
@@ -219,6 +297,7 @@ globalThis.Presentation = (() => {
       }
       if(/^assets\/(?:box-|case-)/.test(path)){try{image.src=opaqueSprite(source,path);}catch(error){ /* Keep fallback geometry if alpha access fails. */ }}
       host.append(image); host.classList.add('asset-ready');
+      if (host.id === 'audience') snapAudience(image);
     };
     if (source.complete) show(); else source.addEventListener('load', show, { once: true });
   }
@@ -263,11 +342,13 @@ globalThis.Presentation = (() => {
   let menu = '', focusBeforePanel = null, lastAudience = '', lastLayout = '';
   let dialogueTimer, dealerBusy = false, dealerMessage = '', dealerLost = false, dealerResult = '';
   let dealerPicked = new Set();
-  let booTimer=null, failureAudience=null;
+  let booTimer=null, failureAudience=null, failureVenue=null;
+  let failureCause = 'mental', practiceRec = null;
   let saveWarning = false, failure = null, lastMode = '', tapRemaining = 0;
   let boardHolds = [];
   const pointer = { id: null, held: false, x: -1, y: -1, inside: false };
   const particles = [], flights = [], numbers = [], cells = [];
+  let heartEls = null;
   let badges = [], wonMoment = null;
   const lastHeckles = new Map(), happyCache = new Map();
   const caps = { particles: coarse ? 120 : 240, icons: 24, numbers: 4 };
@@ -377,7 +458,7 @@ globalThis.Presentation = (() => {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     caps.particles = phone ? 48 : (coarse ? 120 : 240); caps.icons = phone ? 8 : 24;
     particles.length = 0; flights.length = 0; numbers.length = 0; badges.length = 0;
-    phoneChrome(); release(); previous = 0;
+    phoneChrome(); release(); previous = 0; snapAudience();
     if (menu === 'book') tree();
   }
   const chromeHomes = new Map();
@@ -514,6 +595,35 @@ globalThis.Presentation = (() => {
     const count=Math.max(0,Math.min(8-nearby,Math.ceil((3+tier)*(state.features.encoreLeft>0?1.5:1))));
     for(let i=0;i<count && particles.length<caps.particles;i++)particles.push({x,y,dx:(i-(count-1)/2)*6,dy:-12-i%3*4,start:clock,life:280,color,size:3+i%2,shape:source,sheetLead:i===0});
   }
+  // U31 colleague magicians: placeholder sprite, name tags and a trick every few seconds.
+  const colleagueTricks = ['🃏', '🪄', '🎩', '🕊️', '✨', '🪙'], colleagueShapes = ['card', 'ring', 'silk', 'dove', 'cheer', 'coin'], colleagueTimers = [];
+  function renderColleagues() {
+    const host = $('colleagues'), n = state.u15.tutorial.active ? 0 : C.colleagueCount(state);
+    if (host.dataset.n !== String(n)) {
+      host.dataset.n = String(n); host.style.setProperty('--n', String(n)); host.replaceChildren();
+      for (let i = 0; i < n; i++) {
+        const one = element('div', '', 'colleague'); one.style.setProperty('--i', String(i)); one.dataset.index = String(i);
+        const idle = assetImage('assets/colleague-idle.png').cloneNode(), perform = assetImage('assets/colleague-perform.png').cloneNode();
+        idle.className = 'colleague-idle'; perform.className = 'colleague-perform'; idle.alt = perform.alt = '';
+        one.append(idle, perform, element('span', '', 'colleague-trick'), element('span', D.colleagueNames[i % D.colleagueNames.length], 'colleague-name'));
+        host.append(one);
+      }
+    }
+    host.hidden = !n;
+    const status = $('colleagueStatus'), names = Array.from({ length: n }, (_, i) => D.colleagueNames[i % D.colleagueNames.length]);
+    if (status) status.textContent = n ? `동료 마술사 ${n}명: ${names.join(', ')}` : '';
+  }
+  function colleagueTrick(e) {
+    const one = $('colleagues').children[e.index]; if (!one) return;
+    one.classList.add('performing'); one.querySelector('.colleague-trick').textContent = colleagueTricks[(e.index + state.fails + state.wins) % colleagueTricks.length];
+    clearTimeout(colleagueTimers[e.index]); colleagueTimers[e.index] = setTimeout(() => one.classList.remove('performing'), 700);
+  }
+  // Only a real (not blocked) colleague hit shows particles and a damage number.
+  function colleagueHitFx(e) {
+    const r = $('audience').getBoundingClientRect(), stage = $('stage').getBoundingClientRect();
+    hitParticles((r.left + r.width / 2 - stage.left) / scale, (r.top + r.height * .65 - stage.top) / scale, colleagueShapes[(e.index + state.wins) % colleagueShapes.length], '#8be9d0', 0);
+    if (e.applied > 0) float(`+${C.formatNumber(e.applied)}`, (r.left + r.width / 2 - stage.left) / scale + (e.index - 2.5) * 16, (r.top + r.height * .5 - stage.top) / scale, '#8be9d0', 12, 0, 0);
+  }
   function hitFeedback(e,source='card',maxDoubt=state.audHpMax) {
     const tier=hitTier(e.dmg,maxDoubt),model=hitTiers[tier];
     const r=$('audience').getBoundingClientRect(),stage=$('stage').getBoundingClientRect();
@@ -646,6 +756,7 @@ globalThis.Presentation = (() => {
     const hitMaxDoubt=state.audHpMax;
     let hitSource=list.find(e=>e.type==='skill')?.id || (list.some(e=>e.type==='dove')?'dove':'card');
     for (const e of list) {
+      if(e.type==='colleague')colleagueTrick(e);
       if(e.type==='itemLand')hitSource=particleSource(e);
       if(e.type==='dove')hitSource='dove';
       if(e.type==='skill') {hitSource=e.id;const r=$('audience').getBoundingClientRect(),stage=$('stage').getBoundingClientRect();const p={x:(r.left+r.width/2-stage.left)/scale,y:(r.top+r.height*.65-stage.top)/scale};hitParticles(p.x,p.y,e.id,'#eac568',2);if(e.id==='showtime')sceneLight(.04);}
@@ -681,7 +792,7 @@ globalThis.Presentation = (() => {
       if(e.type === 'bossMirror')toast('의심의 거울 · 연쇄와 도우미가 열어 줘요');
       window.dispatchEvent(new CustomEvent('magicshow:event', { detail: e }));
       const sounds = { crit: 'crit', golden: 'golden', goldenBreak: 'golden', comboMilestone: 'milestone', encore: 'encore', boxBreak: 'box', combo: 'combo', audHit: 'hit', finisher: 'finisher', heckleTelegraph: 'heckle', fail: 'failure', win: 'coin' };
-      if (sounds[e.type]) sound(sounds[e.type], { combo: e.n, auto: !pointer.held && ['boxBreak','combo','audHit'].includes(e.type) });
+      if (sounds[e.type] && !(e.type === 'audHit' && e.blocked)) sound(sounds[e.type], { combo: e.n, auto: !pointer.held && ['boxBreak','combo','audHit'].includes(e.type) });
       if (e.type === 'heckle' && e.dmg > e.shieldDmg) sound('mental');
       if (e.type === 'itemLand' && e.effect === 'coins') sound('coin');
       if (e.type === 'finisher') kaliPose(1,400);
@@ -729,7 +840,8 @@ globalThis.Presentation = (() => {
       } else if (e.type === 'combo') {
         animate($('combo'), [{ transform: 'scale(1.3)' }, { transform: 'scale(1)' }], 140);
       } else if (e.type === 'audHit') {
-        hitFeedback(e,hitSource,e.presentationMaxDoubt||hitMaxDoubt);
+        if(e.source==='colleague'){if(!e.blocked)colleagueHitFx(e);}
+        else hitFeedback(e,hitSource,e.presentationMaxDoubt||hitMaxDoubt);
       } else if (e.type === 'itemLand') {
         statFloat(e.effect, e.value);if(e.effect!=='damage'){const p=target(e.effect);hitParticles(p.x,p.y,hitSource,'#eac568');}
       } else if (e.type === 'finisher') {
@@ -766,6 +878,7 @@ globalThis.Presentation = (() => {
       } else if (e.type === 'levelUp') {
         toast(`레벨 ${e.level}! 멘탈 회복`);
       } else if (e.type === 'win') {
+        prefetchWinSeen = true;
         const v = D.venues[e.venue - 1], a = v.audiences[e.j - 1] || v.headliner;
         const context = { ...U5.encounter(D.venues, state), venueSlug: v.slug, audId: a.id,
           encounterId: `${state.dimension}:${state.wins}:${state.fails}:${a.id}` };
@@ -783,7 +896,7 @@ globalThis.Presentation = (() => {
       } else if (e.type === 'venueUnlocked') {
         if (e.name) banner(`${e.name} 도착!`, D.venues[e.venue - 1].intro, true); save();
       } else if (e.type === 'fail') {
-        failure = e.reasonPct; lastAudience = ''; release();
+        failure = e.reasonPct; failureCause = e.cause === 'damage' || e.cause === 'gate' ? e.cause : 'mental'; lastAudience = ''; release();
         showBoo(e); save();
       } else if (e.type === 'phase2') {
         phaseTransition();
@@ -899,6 +1012,7 @@ globalThis.Presentation = (() => {
     }
     strip.setAttribute('aria-label',goal.text); strip.title = goal.text;
     $('goalStrip').dataset.nodeId = goal.node?.id || '';
+    strip.dataset.hasNode = goal.node ? '1' : '';
     if (menu!=='boo' && clock >= kaliUntil && ($('magicianMini').dataset.frame !== '0'||$('magicianMini').classList.contains('reacting'))) {
       $('magicianMini').dataset.frame = '0';$('magicianMini').classList.remove('reacting');
       if (!$('magicianMini').classList.contains('performance-ready')) sprite($('magicianMini'),'assets/magician-idle.png');
@@ -1008,11 +1122,11 @@ globalThis.Presentation = (() => {
       host.style.left=`${6+(1-v.left/8000)*76}%`;host.setAttribute('aria-label',v.kind==='rabbit'?'황금 토끼 잡기':'사인 요청 팬 잡기');
     }
     const d=state.u14.daily,r=d.records[d.date]||{claimed:[],progress:{}},selected=C.dailySelection(d.date),remaining=selected.filter(id=>!r.claimed.includes(id)).length;
-    $('missionsButton').textContent='오늘의 공연';$('missionsButton').dataset.badge=remaining?String(remaining):'✓';$('missionsButton').setAttribute('aria-label',`오늘의 공연 · ${remaining}개 남음`);
+    if(missionsShown!==remaining){missionsShown=remaining;$('missionsButton').textContent='오늘의 공연';$('missionsButton').dataset.badge=remaining?String(remaining):'✓';$('missionsButton').setAttribute('aria-label',`오늘의 공연 · ${remaining}개 남음`);}
     $('hapticsButton').textContent=state.u14.haptics?'진동 켜짐':'진동 꺼짐';$('hapticsButton').setAttribute('aria-pressed',String(state.u14.haptics));
     if(menu==='missions' && dailyPanelSignature!==JSON.stringify(r))drawMissions();
   }
-  let dailyPanelSignature='';
+  let dailyPanelSignature='',missionsShown=-1;
   function artFallback(path,emoji,className='') {
     const host=element('span',emoji,className),img=element('img');img.src=path;img.alt='';img.onload=()=>host.classList.add('art-loaded');img.onerror=()=>host.classList.remove('art-loaded');host.append(img);return host;
   }
@@ -1050,7 +1164,7 @@ globalThis.Presentation = (() => {
     $('stage').classList.toggle('decorations-paused',paused());
     $('equipButton').hidden=!C.equipSlots(state); $('equipButton').classList.toggle('is-new',!!C.equipSlots(state)&&!state.guidance.seen.includes('equipButton'));
     renderU19();renderU14(); renderIdle(); renderU15();
-    buildBoard(); if(menu!=='boo')audience(); nextBanner(); renderFeatures(); renderMagic(); renderGuidance();
+    buildBoard(); if(menu!=='boo')audience(); nextBanner(); renderFeatures(); renderMagic(); renderGuidance(); renderColleagues();
     const home=C.bossProfile(state)==='homecoming';
     const boss = C.bossProfile(state)==='mirror';
     $('audienceCard').classList.toggle('final-boss', boss);
@@ -1089,7 +1203,7 @@ globalThis.Presentation = (() => {
     $('finisherFill').style.height = phone ? '100%' : finalePercent;
     $('finisherFill').style.width = phone ? finalePercent : '';
     $('mentalNumber').textContent = `멘탈 ❤ ${rounded(state.mental)} / ${rounded(state.mentalMax)}`;
-    $('hearts').querySelectorAll('.heart').forEach((el, i) => el.classList.toggle('empty', i >= Math.ceil(state.mental / state.mentalMax * 5)));
+    (heartEls||(heartEls=[...$('hearts').querySelectorAll('.heart')])).forEach((el, i) => el.classList.toggle('empty', i >= Math.ceil(state.mental / state.mentalMax * 5)));
     num($('shieldNumber'), rounded(state.shield));
     num($('levelNumber'), state.level);
     const xpNeed = C.CONST.xpBase + C.CONST.xpPerLevel * state.level;
@@ -1099,6 +1213,7 @@ globalThis.Presentation = (() => {
     for (let i = 0; i < cells.length; i++) {
       const cell = state.board[i], dom = cells[i];
       const pos=C.cellPosition(state,i);dom.el.style.gridColumn=pos.col+1;dom.el.style.gridRow=pos.row+1;
+      dom.el.dataset.center=pos.row>=1&&pos.row<=3&&pos.col>=1&&pos.col<=3?'1':'';
       const locked = !cell, next = i === state.board.length;
       dom.el.classList.toggle('locked', locked);
       dom.el.classList.toggle('next-slot', next);
@@ -1238,9 +1353,9 @@ globalThis.Presentation = (() => {
     if(menu==='curtain'&&kind!=='curtain'){clearTimeout(curtainTimer);curtainScene?.remove();curtainScene=null;presentation.finish();}
     menu = kind; previous = 0; clearDecorations();
     focusBeforePanel = document.activeElement;
-    $('panel').dataset.screen = kind;
+    $('panel').dataset.screen = kind; delete $('panel').dataset.practice;
     $('panel').classList.remove('climax-dialogue');
-    $('panel').querySelector('header').querySelectorAll('.tree-wallet,.constellation-controls,.tree-learning').forEach(el=>el.remove());
+    $('panel').querySelector('header').querySelectorAll('.tree-wallet,.constellation-controls,.tree-learning,.practice-go,.tree-more').forEach(el=>el.remove());
     $('closePanel').textContent = '닫기';
     $('panelTitle').textContent = title;
     $('panelBody').replaceChildren(); $('panelBody').scrollTop = 0; $('panel').hidden = false;
@@ -1272,7 +1387,7 @@ globalThis.Presentation = (() => {
     if($('magicLayer'))$('magicLayer').hidden=true;
   }
   function showBoo(e) {
-    failureAudience=e.audId;menu='boo';previous=0;release();clearDecorations();
+    failureAudience=e.audId;failureVenue=e.venue;menu='boo';previous=0;release();clearDecorations();
     const v=D.venues[e.venue-1],a=v.audiences.concat([v.headliner]).find(a=>a.id===e.audId);
     if(a)sprite($('audience'),audienceAsset(v,a));
     $('audienceCard').classList.add('boo-scene');
@@ -1280,28 +1395,35 @@ globalThis.Presentation = (() => {
     $('heckle').classList.add('visible');$('magicianMini').classList.add('disappointed','reacting');sprite($('magicianMini'),'assets/kali-react-sad.png');
     clearTimeout(booTimer);booTimer=setTimeout(()=>{$('audienceCard').classList.remove('boo-scene');$('heckle').classList.remove('visible');$('magicianMini').classList.remove('disappointed','reacting');sprite($('magicianMini'),'assets/magician-idle.png');menu='';showFailure();},1500);
   }
+  function practiceGoLabel() {
+    const name = D.venues[state.venue - 1]?.name || '', code = name ? name.charCodeAt(name.length - 1) : 0;
+    if (code < 0xAC00 || code > 0xD7A3) return D.ui.practiceFallback;
+    const final = (code - 0xAC00) % 28;
+    return `${name}${final === 0 || final === 8 ? '로' : '으로'} 가기`;
+  }
+  function restartAfterFailure() {
+    C.restartRun(state);state.u15.queue=[];state.u15.scene=null;state.idle.waiting=false;delete state.idle.next; failure = null; menu = ''; $('panel').hidden = true;
+    previous = 0; flights.length = 0; particles.length = 0; numbers.length = 0; badges.length = 0; events.recentBadges?.clear(); wonMoment = null;
+    save(); render(); $('bookButton').focus();
+  }
   function showFailure() {
     openPanel('fail', '공연 종료');
     const result = document.createElement('div'); result.className = 'result';
-    const icon = document.createElement('span'); icon.className = 'result-icon'; icon.textContent = '🎩';
     const title = document.createElement('h2'); title.textContent = randomLine(D.pools.fail);
     const reason = document.createElement('p'); reason.textContent = D.pools.failReason.replace('{pct}', String(failure));
-    const button = document.createElement('button'); button.textContent = '다시 도전';
-    button.addEventListener('click', () => {
-      C.restartRun(state);state.u15.queue=[];state.u15.scene=null;state.idle.waiting=false;delete state.idle.next; failure = null; menu = ''; $('panel').hidden = true;
-      previous = 0; flights.length = 0; particles.length = 0; numbers.length = 0; badges.length = 0; events.recentBadges?.clear(); wonMoment = null;
-      save(); render(); $('bookButton').focus();
-    });
-    const advice = Guidance.failure(state,D,C);
-    const related = action(`${advice.node.name} 비법 보기`, () => focusNode(advice.node.id));
-    result.append(icon, title, reason, element('p',advice.line,'fail-cause'));
-    for(const node of C.failureLessons(state)) {
-      const row=element('div','','failure-lesson');
-      row.append(element('span',node.name),element('small',`${rounded(C.failureLessonInfo(state,node.id).cost)} ${C.failureLessonInfo(state,node.id).currency==='coins'?'동전':'보석'}`),action('배우기',()=>{if(C.learnFailureLesson(state,node.id)){save();showFailure();render();}}));result.append(row);
-    }
+    const button = action(D.ui.restart, () => { tree(); });
+    button.classList.add('practice-enter');
+    const advice = Guidance.failure(state,D,C,failureCause);
+    practiceRec = advice.node ? advice.node.id : null;
+    // U32: the audience that heckled and Kali's sad face replace the lone hat icon when art exists.
+    const scene = element('div', '', 'fail-scene');
+    const fv = D.venues[(failureVenue || state.venue) - 1], fa = fv && fv.audiences.concat([fv.headliner]).find(x => x && x.id === failureAudience);
+    if (fa) { const face = element('span', '', 'fail-face'); sprite(face, audienceAsset(fv, fa)); scene.append(face); }
+    const sad = element('span', '', 'fail-kali'); sprite(sad, 'assets/kali-react-sad.png'); scene.append(sad);
+    result.append(scene, title, reason, element('p',advice.line,'fail-cause'));
+    if(advice.hint)result.append(element('p',advice.hint,'fail-hint'));
     if(C.failureDealerAvailable(state))result.append(action('딜러와 한 판 하고 다시 도전',()=>{if(C.openFailureDealer(state)){save();menu='';dealer();}}));
-    if(!C.failureLessons(state).length)result.append(element('p','동전을 모아 다시 도전'));
-    result.append(related, button); $('panelBody').append(result); button.focus();
+    result.append(button); $('panelBody').append(result); button.focus();
   }
   function tutorialSignal(id) {
     if (C.tutorialAction(state,id)) { save(); renderCoach(); }
@@ -1400,7 +1522,7 @@ globalThis.Presentation = (() => {
     if (node.starKey) altered.stars[node.starKey] = next; else altered.tree[node.id] = next;
     const before = C.nodeEffects(state), after = C.nodeEffects(altered);
     const specs = {
-      crit: ['번뜩임 확률', 'critRate', percent], critRate: ['번뜩임 확률', 'critRate', percent], critPower: ['번뜩임 힘', 'critPower'],
+      crit: ['타이밍 확률', 'critRate', percent], critRate: ['타이밍 확률', 'critRate', percent], critPower: ['반전 힘', 'critPower'],
       comboHold: ['콤보 유예 ms', 'comboMs'], sweepFocus: ['단일 케이스 피해 힘', 'sweep'], precision: ['투명 패턴 빗나감', 'miss', percent],
       goldPity: ['황금 간격 ms', 'goldEvery'], goldCoins: ['황금 동전 힘', 'goldCoins'], prepared: ['등장 파괴 진행률', 'prepared', percent],
       boxXP: ['케이스 XP 힘', 'boxXP'], boxShield: ['파괴 자신감', 'boxShield'], boxHeal: ['파괴 회복', 'boxHeal'],
@@ -1459,7 +1581,9 @@ globalThis.Presentation = (() => {
     return unlocks[node.id] || '비법을 배우면 효과가 더해져요';
   }
   function tree(focusMap = false) {
-    if (menu !== 'book') openPanel('book', D.ui.bookTitle);
+    const practice = typeof failure !== 'undefined' && failure !== null;
+    if (menu !== 'book') openPanel('book', practice ? D.ui.practiceTitle : D.ui.bookTitle);
+    if (practice) $('panel').dataset.practice = '1'; else delete $('panel').dataset.practice;
     const body = $('panelBody'); body.replaceChildren();
     const learning = element('div','','tree-learning');
     const all = action('모두 배우기',buyAllUI); all.id='treeBuyAll'; all.dataset.affordable=String(C.affordableNodes(state,{infinite:state.learning.infinite}).length);
@@ -1468,10 +1592,12 @@ globalThis.Presentation = (() => {
     const infinite = action(state.learning.infinite ? '무한 포함' : '무한 제외',()=> { state.learning.infinite=!state.learning.infinite; save(); tree(); });
     infinite.setAttribute('aria-pressed',String(state.learning.infinite)); learning.append(all,auto,infinite);
     const header = $('panel').querySelector('header');
-    header.querySelectorAll('.tree-learning').forEach(el=>el.remove()); header.insertBefore(learning,$('closePanel'));
+    header.querySelectorAll('.tree-learning,.practice-go').forEach(el=>el.remove()); header.insertBefore(learning,$('closePanel'));
+    if (practice) { const go = action(practiceGoLabel(), restartAfterFailure); go.classList.add('practice-go','u26-primary'); header.insertBefore(go,$('closePanel')); }
     const wallet = element('div', '', 'tree-wallet');
     [['🪙 ','동전 ',rounded(state.coins)],['🔑 ','열쇠 ',state.keys],['✦ ','별빛 ',state.starlight]].forEach(([icon,name,value],i)=>{
-      wallet.append(element('span',(i?' · ':'')+icon),element('span',name,'wallet-name'),element('span',String(value)));
+      if(i)wallet.append(element('span','·','wallet-sep'));
+      wallet.append(element('span',icon),element('span',name,'wallet-name'),element('span',String(value)));
     });
     const layout = element('div', '', 'constellation-layout');
     const map = element('div', '', 'constellation-map'); map.tabIndex = 0;
@@ -1514,6 +1640,7 @@ globalThis.Presentation = (() => {
       const iconHost = element('span', '', 'constellation-icon-host'); iconHost.append(icon);
       sprite(iconHost, `assets/${unknown ? 'node-unknown.png' : node.icon}`);
       button.append(iconHost);
+      if (practice && !unknown && node.id === practiceRec && infos.get(node.id).cost !== null) button.append(element('span', '추천', 'rec-tag'));
       if (!unknown) button.append(element('span', node.name, 'constellation-name'), element('small', `${C.formatNumber(info.level)} / ${typeof info.max==='number' ? C.formatNumber(info.max) : info.max}`, 'constellation-level'));
       button.addEventListener('click', () => { if (!suppressClick) select(node.id); }); world.append(button);
     }
@@ -1593,10 +1720,27 @@ globalThis.Presentation = (() => {
       else { treeView.x += e.key === 'ArrowLeft' ? 70 : e.key === 'ArrowRight' ? -70 : 0; treeView.y += e.key === 'ArrowUp' ? 70 : e.key === 'ArrowDown' ? -70 : 0; transform(); }
     });
     map.append(world); layout.append(map, detail); body.append(wallet, controls, layout, element('p', '드래그·방향키로 이동 · 휠·두 손가락으로 확대 · 열쇠는 관객 도감 완성으로 얻어요.', 'tree-note'));
+    // U32: the gate lesson (야유 받아넘기기) lives in the practice note only; no auto focus, no primary styling.
+    if (practice) {
+      const gate = C.failureLessons(state).find(n => n.id.indexOf('gate:') === 0);
+      if (gate) {
+        const gid = gate.id.slice(5), cost = C.failureLessonInfo(state, gate.id).cost;
+        let who = ''; for (const v of D.venues) for (const a of v.audiences.concat([v.headliner])) if (a && a.id === gid) who = a.name;
+        const row = element('div', '', 'practice-gate');
+        row.append(element('span', `'${who}' 야유 받아넘기기 · 동전 ${rounded(cost)}`), action('배우기', () => { if (C.learnFailureLesson(state, gate.id)) { save(); tree(); } }));
+        body.prepend(row);
+      }
+    }
     if (typeof phone !== 'undefined' && phone) {
       const header = $('panel').querySelector('header');
-      header.querySelectorAll('.tree-wallet,.constellation-controls').forEach(el=>el.remove());
-      header.insertBefore(wallet,$('closePanel')); header.insertBefore(controls,$('closePanel'));
+      header.querySelectorAll('.tree-wallet,.constellation-controls,.tree-more').forEach(el=>el.remove());
+      header.insertBefore(wallet,$('closePanel'));
+      // U32: rarely used buttons (무한 제외, zoom, center) sit behind one ⋯ button so the header stays calm.
+      const more = element('div','','tree-more'), pop = element('div','','tree-more-pop');
+      const toggle = action('⋯', () => { const open = more.classList.toggle('open'); toggle.setAttribute('aria-expanded', String(open)); });
+      toggle.classList.add('tree-more-toggle'); toggle.setAttribute('aria-label','더 보기'); toggle.setAttribute('aria-expanded','false');
+      pop.append(auto, infinite, controls); more.append(toggle, pop);
+      header.insertBefore(more,$('closePanel'));
       $('closePanel').textContent = '뒤로';
     }
     if (treeView.centerPending) {
@@ -1702,9 +1846,10 @@ globalThis.Presentation = (() => {
     const host = element('span', '', `helper-actor helper-${id}`); host.append(element('span', id === 'dove' ? '🕊️' : '🐇', 'sprite-fallback'));
     $('stage').append(host); helperActors[id] = host; return host;
   }
+  const impactPool = [];
   function impactSprite(p,emoji,kind,asset){
-    const n=element('span',emoji,'projectile-impact '+kind);n.setAttribute('aria-hidden','true');
-    n.style.left=`${p.x}px`;n.style.top=`${p.y}px`;if(asset)sprite(n,asset);$('stage').append(n);setTimeout(()=>n.remove(),600);
+    const n=impactPool.pop()||element('span','','');n.className='projectile-impact '+kind;n.hidden=false;n.textContent=emoji;delete n.dataset.asset;n.setAttribute('aria-hidden','true');
+    n.style.left=`${p.x}px`;n.style.top=`${p.y}px`;if(asset)sprite(n,asset);$('stage').append(n);setTimeout(()=>{n.remove();if(impactPool.length<8)impactPool.push(n);},600);
   }
   function spongeImpact(e,p){
     const b=state.features.magic.balls[e.ball];if(!b)return;
@@ -2590,43 +2735,145 @@ globalThis.Presentation = (() => {
     const table=element('div','',kind+'-table routine-table');
     table.append(gameArt('cb-mat','routine-mat'));
     if(kind==='cups')table.append(gameArt('cb-wand','routine-wand'));
-    else table.append(gameArt('monte-hand','routine-hand'));
+    else table.append(gameArt('monte-hand-cover','routine-hand'));
     return table;
   }
   const waitRoutine=ms=>new Promise(resolve=>setTimeout(resolve,reduced?0:ms));
-  async function swapRoutine(nodes,a,b,table,duration){
+  // Every move uses the same arc and timing on every outcome (no arc tell). Reduced motion: both cards are
+  // highlighted for about 300 ms, then they move instantly, so the move can still be followed.
+  const holdMs=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+  async function swapRoutine(nodes,a,b,table,duration,onMid){
     const moving=nodes.filter(el=>Number(el.dataset.slot)===a||Number(el.dataset.slot)===b);
     const pitch=table.clientWidth*.25;
     const running=[];
     for(const el of moving){const slot=Number(el.dataset.slot),next=slot===a?b:a,dx=(next-slot)*pitch;
-      if(reduced){el.classList.add('routine-highlight');setTimeout(()=>el.classList.remove('routine-highlight'),150);}
+      if(reduced)el.classList.add('routine-highlight');
       else{const animation=el.animate([{transform:'translate(0,0)'},{transform:`translate(${dx/2}px,${slot===a?-24:16}px)`,offset:.5},{transform:`translate(${dx}px,0)`}],{duration,easing:'cubic-bezier(.2,.8,.2,1)',fill:'forwards'});running.push(animation);}
-      el.dataset.nextSlot=next;
+      el.dataset.nextSlot=next;el.style.zIndex=slot===a?'3':'';
     }
-    await waitRoutine(duration);
+    if(onMid)setTimeout(onMid,reduced?150:duration*.5);
+    if(reduced){await holdMs(300);moving.forEach(el=>el.classList.remove('routine-highlight'));}
+    else await waitRoutine(duration);
     if(!table.isConnected){running.forEach(a=>a.cancel());return false;}
-    moving.forEach(el=>{el.dataset.slot=el.dataset.nextSlot;el.style.setProperty('--slot',el.dataset.slot);el.style.boxShadow='';});
+    moving.forEach(el=>{el.dataset.slot=el.dataset.nextSlot;el.style.setProperty('--slot',el.dataset.slot);el.style.boxShadow='';el.style.zIndex='';});
     running.forEach(a=>a.cancel());return true;
   }
   async function revealCups(c,table,choice){
     if(dealerBusy||c.phase!=='pick')return;dealerBusy=true;sound('flip');
-    const cups=[...table.querySelectorAll('.game-cup')];cups.forEach(el=>el.disabled=true);
+    const cups=[...table.querySelectorAll('.game-cup')];cups.forEach(el=>el.disabled=true);dealerBack(true);
+    // Pick first (saved), then animate, so a reload cannot be used to pick again.
+    C.dealerCupsPick(state,choice);save();
     for(const cup of cups){if(!table.isConnected){dealerBusy=false;return;}const slot=Number(cup.dataset.slot),art=cup.querySelector('.cup-prop');
       if(!reduced)animate(art,[{transform:'translateY(0)'},{transform:'translateY(-32px)'}],260);
       art.style.transform='translateY(-32px)';
       if(slot===c.ball){cup.querySelector('.cup-ball').hidden=false;sound('coin');}
       await waitRoutine(280);if(!table.isConnected){dealerBusy=false;return;}
     }
-    C.dealerCupsPick(state,choice);save();dealerBusy=false;sound(c.hit?'coin':'flip');drawDealer();
+    dealerBusy=false;sound(c.hit?'coin':'flip');drawDealer();
   }
-  async function revealMonte(m,table,higher){
-    if(dealerBusy)return;dealerBusy=true;
-    const card=table.querySelectorAll('.routine-card')[higher?2:0];card.classList.add('card-flipping');sound('flip');
-    const next=m.cards[m.round+1];
-    await waitRoutine(240);if(!table.isConnected){dealerBusy=false;return;}
-    card.classList.remove('card-flipping');card.querySelector('img').src='assets/ui/monte-black.png';card.append(element('span',String(next),'card-num'));
-    C.dealerMonteGuess(state,higher);
-    if(m.phase==='banked'){card.classList.add('money-win');sound('coin');}await waitRoutine(650);save();dealerBusy=false;drawDealer();
+  let monteGo=-1;
+  const monteFace=(card,name)=>{const img=card.querySelector('img');img.src='assets/ui/'+name+'.png';};
+  async function monteFlip(cards,name,flipNames){
+    sound('flip');
+    if(!reduced)cards.forEach(c=>c.classList.add('card-flipping'));
+    await waitRoutine(240);
+    cards.forEach((c,i)=>{c.classList.remove('card-flipping');monteFace(c,flipNames?flipNames[i]:name);});
+    if(reduced){cards.forEach(c=>{c.classList.add('routine-highlight');setTimeout(()=>c.classList.remove('routine-highlight'),150);});}
+  }
+  const dealerBack=disabled=>{const b=document.querySelector('#panelBody .dealer-back');if(b)b.disabled=disabled;};
+  // The bend-in class only plays the intro; it is dropped afterwards so a bend that stayed (win) and one that was
+  // moved (loss) end with identical classes.
+  const addBend=(card,animated)=>{
+    if(!card||card.querySelector('.bent-corner'))return;
+    const mark=element('span','',animated&&!reduced?'bent-corner bend-in':'bent-corner');
+    if(animated&&!reduced){const drop=()=>mark.classList.remove('bend-in');mark.addEventListener('animationend',drop,{once:true});setTimeout(drop,500);}
+    card.append(mark);
+  };
+  // The bend moves only while the dealer hand covers the cards (identical hand motion on winning rounds).
+  function moveBend(cards,to,a,b){
+    const pre=to===a?b:to===b?a:to,el=cards.find(c=>Number(c.dataset.slot)===pre);
+    if(!el)return;
+    // Always recreate, win or loss, so the DOM work is identical on every outcome.
+    cards.forEach(c=>c.querySelector('.bent-corner')?.remove());addBend(el,false);
+  }
+  // U30c cover move: a cloth with a plain hand (no red card) is laid over exactly the three cards, inside the
+  // table, and the cards are faded to opacity 0 BEFORE the cover swap starts. The swap, the bend transfer
+  // and the fade back all happen while nothing can be seen. Same timeline on every outcome.
+  const COVER_MS=240;
+  function layCover(table,cards){
+    const t=table.getBoundingClientRect(),rs=cards.map(c=>c.getBoundingClientRect()),k=scale||1;
+    const left=(Math.min(...rs.map(r=>r.left))-t.left)/k-6,top=(Math.min(...rs.map(r=>r.top))-t.top)/k-6;
+    const width=(Math.max(...rs.map(r=>r.right))-Math.min(...rs.map(r=>r.left)))/k+12,height=(Math.max(...rs.map(r=>r.bottom))-Math.min(...rs.map(r=>r.top)))/k+12;
+    const cover=element('div','','monte-cover');
+    cover.style.cssText=`left:${left}px;top:${top}px;width:${width}px;height:${height}px`;
+    cover.append(gameArt('monte-hand-cover','monte-cover-hand'));
+    table.append(cover);return cover;
+  }
+  async function coverSwap(table,cards,swap,bendTo){
+    const cover=layCover(table,cards);let fades=[];
+    if(reduced){
+      cover.style.opacity='1';cards.forEach(c=>{c.style.opacity='0';});await holdMs(300);
+    }else{
+      fades=[cover.animate([{opacity:0},{opacity:1}],{duration:COVER_MS,fill:'forwards'}),...cards.map(c=>c.animate([{opacity:1},{opacity:0}],{duration:COVER_MS,fill:'forwards'}))];
+      await Promise.all(fades.map(f=>f.finished.catch(()=>{})));
+      // Inline state keeps the cover shown and the cards hidden even if a Reduce Motion toggle cancels the animations.
+      cover.style.opacity='1';cards.forEach(c=>{c.style.opacity='0';});
+    }
+    if(!table.isConnected){cover.remove();return false;}
+    bendTo();                       // the bend moves only after the fade-out finished
+    const ok=await swap();          // the swap runs while the cards are invisible
+    if(!ok){cover.remove();return false;}
+    if(reduced){cards.forEach(c=>{c.style.opacity='';});cover.remove();return true;}   // restore only after the swap committed
+    const back=[cover.animate([{opacity:1},{opacity:0}],{duration:COVER_MS,fill:'forwards'}),...cards.map(c=>c.animate([{opacity:0},{opacity:1}],{duration:COVER_MS}))];
+    fades.forEach(f=>f.cancel());
+    await Promise.all(back.map(f=>f.finished.catch(()=>{})));
+    cards.forEach(c=>{c.style.opacity='';});
+    cover.remove();return true;
+  }
+  async function animateMonte(m,table,status){
+    dealerBusy=true;$('closePanel').disabled=true;dealerBack(true);
+    const plan=C.monteRound(m,m.round),cards=[...table.querySelectorAll('.routine-card')];
+    const alive=()=>table.isConnected&&menu==='dealer'&&dealerGameView==='monte'&&state.dealer?.games.monte===m;
+    const stop=()=>{dealerBusy=false;};
+    cards.forEach(c=>c.disabled=true);
+    await waitRoutine(900);if(!alive()){stop();return;}
+    if(plan.bend){
+      addBend(cards.find(c=>Number(c.dataset.slot)===plan.bend.start),true);status.textContent='앗, 카드가 좀 휘었네';sound('flip');
+      await (reduced?holdMs(700):waitRoutine(1100));if(!alive()){stop();return;}
+      status.textContent='여왕을 잘 봐요!';
+    }
+    await monteFlip(cards,'monte-back');if(!alive()){stop();return;}
+    await waitRoutine(160);
+    for(let i=0;i<plan.swaps.length;i++){
+      if(!alive()){stop();return;}
+      const ms=C.monteMoveMs(state.venue,m.round,i),[a,b]=plan.swaps[i],cover=!!plan.bend&&plan.bend.cover===i;
+      const swap=()=>swapRoutine(cards,a,b,table,ms,null);
+      if(!await(cover?coverSwap(table,cards,swap,()=>moveBend(cards,plan.bend.to,a,b)):swap())){stop();return;}
+      for(const f of plan.fakes.filter(f=>f.at===i)){
+        const el=cards.find(c=>Number(c.dataset.slot)===f.slot);
+        if(el){if(reduced){el.classList.add('routine-highlight');await holdMs(300);el.classList.remove('routine-highlight');}else{el.animate([{transform:'translateY(0)'},{transform:'translateY(-34px)',offset:.5},{transform:'translateY(0)'}],{duration:ms,easing:'cubic-bezier(.2,.8,.2,1)'});await waitRoutine(ms);}}
+        if(!alive()){stop();return;}
+      }
+    }
+    if(!alive()){stop();return;}
+    status.textContent='여왕은 어디 있을까?';
+    cards.forEach(c=>c.disabled=false);dealerBusy=false;$('closePanel').disabled=false;dealerBack(false);
+  }
+  async function revealMonte(m,table,status,choice){
+    if(dealerBusy)return;dealerBusy=true;$('closePanel').disabled=true;dealerBack(true);
+    // The pick is applied and saved first, so a reload during the reveal cannot be used to pick again.
+    const round=m.round,plan=C.monteRound(m,round),cards=[...table.querySelectorAll('.routine-card')];
+    C.dealerMontePick(state,choice);save();
+    cards.forEach(c=>c.disabled=true);
+    const chosen=cards.find(c=>Number(c.dataset.slot)===choice),others=cards.filter(c=>c!==chosen);
+    const face=c=>Number(c.dataset.slot)===plan.queen?'monte-queen':'monte-black';
+    await monteFlip([chosen],'',[face(chosen)]);if(!table.isConnected){dealerBusy=false;return;}
+    if(choice===plan.queen){chosen.classList.add('money-win','gold-shine');sound('coin');}
+    await waitRoutine(420);
+    for(const c of others){if(!table.isConnected){dealerBusy=false;return;}await monteFlip([c],'',[face(c)]);await waitRoutine(180);}
+    if(!table.isConnected){dealerBusy=false;return;}
+    if(choice!==plan.queen)status.textContent=plan.bend?.line||plan.trick?.line||'여왕은 여기 있었어요!';
+    await waitRoutine(plan.bend&&choice!==plan.queen?1500:500);dealerBusy=false;drawDealer();
   }
   function drawDealerGames(d){
     const games=d.games||(d.games={cups:null,monte:null});
@@ -2637,37 +2884,51 @@ globalThis.Presentation = (() => {
       for(let i=0;i<3;i++){
         const cup=action('',()=>revealCups(c,table,Number(cup.dataset.slot)),c.phase!=='pick');
         cup.className='game-cup';cup.dataset.slot=i;cup.style.setProperty('--slot',i);cup.setAttribute('aria-label',`컵 ${i+1}`);
-        const ball=gameArt(c.phase==='result'&&c.keys?'cb-lemon':'cb-ball','cup-ball');ball.hidden=!((i===c.initial&&c.phase==='shuffle')||(i===c.ball&&c.phase==='result'));const art=gameArt(c.phase==='result'?'fx-cup-lift-04':'fx-cup-lift-01','cup-prop');cup.append(ball,art);if(c.phase==='result'&&c.keys&&i===c.ball){ball.classList.add('final-load');if(!reduced)cup.append(element('span','','final-load-fx'));}table.append(cup);
+        const ball=gameArt(c.phase==='result'&&c.keys?(state.venue%2?'cb-lemon':'cb-orange'):'cb-ball','cup-ball');ball.hidden=!((i===c.initial&&c.phase==='shuffle')||(i===c.ball&&c.phase==='result'));const art=gameArt(c.phase==='result'?'fx-cup-lift-04':'fx-cup-lift-01','cup-prop');cup.append(ball,art);if(c.phase==='result'&&c.keys&&i===c.ball){ball.classList.add('final-load');if(!reduced)cup.append(element('span','','final-load-fx'));}table.append(cup);
       }
       area.append(table,element('span','','flex-break'));
       if(c.phase==='result')area.append(element('p',`동전 +${rounded(c.coins)}${c.keys?' · 열쇠 +1':''}`,'game-result'));
-      area.append(action('딜러 메뉴',()=>{if(dealerBusy)return;dealerGameView=null;drawDealer();},dealerBusy));$('panelBody').append(area);
+      const back=action('딜러 메뉴',()=>{if(dealerBusy)return;dealerGameView=null;drawDealer();},dealerBusy||c.phase==='shuffle');back.className='dealer-back';area.append(back);$('panelBody').append(area);
       if(c.phase==='shuffle')animateCups(c,table);
       return true;
     }
     if(dealerGameView==='monte'&&games.monte){
-      const m=games.monte,area=element('section','','gem-game monte-game');area.append(element('h2','몬테'),element('p',m.phase==='playing'?`다음 카드는 더 높을까? · ${m.round+1}번째` : m.phase==='lost'?'아쉬워요. 모은 선물을 놓쳤어요':'선물을 받았어요!'));
+      const m=games.monte,area=element('section','','gem-game monte-game');
+      const settled=m.phase!=='playing'||(m.round>0&&monteGo!==m.round&&(!m.last||m.last.round===m.round-1));
+      const lastRound=m.phase==='playing'?m.round-1:(m.last?m.last.round:(m.phase==='lost'?m.round:m.round-1));
+      const plan=C.monteRound(m,settled?Math.max(0,lastRound):m.round);
+      const status=element('p',settled?(m.phase==='lost'?(!m.last?'지난 판은 끝났어요':plan.bend?.line||(plan.trick?plan.trick.line:'여왕은 여기 있었어요!')):m.phase==='banked'?'선물을 받았어요!':'찾았어요! 계속할까요?'):'여왕을 잘 봐요!','monte-line');status.setAttribute('role','status');
+      area.append(element('h2','몬테'),status);
       const table=gameTable('monte');
-      const faceNum=[null,m.cards[m.round],null];
-      if(m.phase==='lost')faceNum[2]=m.cards[m.round+1];
-      if(m.phase==='banked'&&m.round>0)faceNum[0]=m.cards[m.round-1];
-      for(let i=0;i<3;i++){const card=element('div','','routine-card');card.dataset.slot=i;card.style.setProperty('--slot',i);card.append(gameArt(faceNum[i]===null?'monte-back':'monte-black'));if(faceNum[i]!==null)card.append(element('span',String(faceNum[i]),'card-num'));table.append(card);}
-      area.append(table,element('span','','flex-break'),element('p',`🃏 ${m.cards[m.phase==='lost'?m.round+1:m.round]}`,'monte-card'));if(m.phase==='banked')table.classList.add('money-win');
-      area.append(element('p',`지금 선물: 동전 ${rounded(m.coins)}${m.keys?' · 열쇠 1개':''}`));
-      if(m.phase==='playing'){
-        const row=element('div','','dealer-controls');
-        for(const [label,higher] of [['더 높다',true],['더 낮다',false]])row.append(action(label,()=>revealMonte(m,table,higher)));
-        const bank=action('그만하고 받기',()=>{if(dealerBusy)return;C.dealerMonteBank(state);save();sound('coin');drawDealer();},m.round<1);bank.dataset.bank='true';row.append(bank);area.append(row);
-        area.append(element('small','1번 60초 동전 · 2번 150초 · 3번 열쇠 + 200초'));
+      for(let i=0;i<3;i++){
+        const showFace=!!m.last;
+        const isQueen=i===(settled?plan.queen:plan.start);
+        const card=action('',()=>revealMonte(m,table,status,Number(card.dataset.slot)),settled);
+        card.className='routine-card';card.dataset.slot=i;card.style.setProperty('--slot',i);card.setAttribute('aria-label',`카드 ${i+1}`);
+        card.append(gameArt(settled&&!showFace?'monte-back':isQueen?'monte-queen':'monte-black','card-art'));
+        if(settled&&m.last&&m.last.slot===i&&m.last.round===lastRound&&m.last.hit)card.classList.add('money-win','gold-shine');
+        if(settled&&plan.bend&&showFace&&plan.bend.end===i)addBend(card,false);
+        table.append(card);
       }
-      area.append(action('딜러 메뉴',()=>{if(dealerBusy)return;dealerGameView=null;drawDealer();},dealerBusy));$('panelBody').append(area);return true;
+      area.append(table,element('span','','flex-break'));
+      area.append(element('p',`지금 선물: 동전 ${rounded(m.coins)}${m.keys?' · 열쇠 1개':''}`));
+      if(m.phase==='playing'&&settled){
+        const row=element('div','','dealer-controls');
+        row.append(action('다음 판',()=>{if(dealerBusy)return;monteGo=m.round;drawDealer();}));
+        const bank=action('그만하고 받기',()=>{if(dealerBusy)return;C.dealerMonteBank(state);save();sound('coin');drawDealer();},m.round<1);bank.dataset.bank='true';row.append(bank);area.append(row);
+      }
+      if(m.phase==='playing')area.append(element('small','1번 60초 동전 · 2번 150초 · 3번 열쇠 + 200초'));
+      const back=action('딜러 메뉴',()=>{if(dealerBusy)return;dealerGameView=null;drawDealer();},dealerBusy||!settled);back.className='dealer-back';
+      area.append(back);$('panelBody').append(area);
+      if(!settled)animateMonte(m,table,status);
+      return true;
     }
     dealerGameView=null;
     const row=element('div','','dealer-gem-menu');
     for(const [id,label,cost] of [['cups','컵앤볼',2],['monte','몬테',3]]){
       const played=games[id],reason=!played&&state.gems<cost?`보석 ${cost}개가 필요해요`:'';
       row.append(action(`${label} · 💎 ${cost}${played?(['result','lost','banked'].includes(played.phase)?' · 결과 보기':' · 이어 하기'):''}`,()=>{if(played||C.dealerGameStart(state,id)){dealerGameView=id;save();drawDealer();}},!!reason));
-      row.append(element('small',id==='cups'?'공을 찾으면 동전, 가끔 열쇠도 받아요':'맞힐수록 선물이 늘어요. 틀리면 놓쳐요'));
+      row.append(element('small',id==='cups'?'공을 찾으면 동전, 가끔 열쇠도 받아요':'여왕 카드를 찾을수록 선물이 늘어요. 틀리면 놓쳐요'));
       if(reason)row.append(element('small',reason));
     }
     $('panelBody').append(row);return false;
@@ -2675,10 +2936,16 @@ globalThis.Presentation = (() => {
   async function animateCups(c,table){
     dealerBusy=true;$('closePanel').disabled=true;
     const nodes=[...table.querySelectorAll('.game-cup')];
-    const first=nodes[c.initial].querySelector('.cup-prop');
     sound('flip');animate(table.querySelector('.routine-wand'),[{transform:'rotate(0)'},{transform:'rotate(-12deg)'},{transform:'rotate(0)'}],280);
-    if(!reduced){first.classList.add('cup-lifting');nodes[c.initial].querySelector('.cup-ball').classList.add('ball-popping');}
-    await waitRoutine(600);first.classList.remove('cup-lifting');nodes.forEach(cup=>cup.querySelector('.cup-ball').hidden=true);
+    await waitRoutine(320);
+    for(let i=0;i<3;i++){
+      if(!table.isConnected){dealerBusy=false;return;}
+      const prop=nodes[i].querySelector('.cup-prop'),ball=nodes[i].querySelector('.cup-ball');
+      if(i===c.initial){ball.hidden=false;if(!reduced)ball.classList.add('ball-popping');}
+      if(!reduced)prop.classList.add('cup-lifting');else{nodes[i].classList.add('routine-highlight');}
+      await waitRoutine(i===c.initial?900:520);
+      prop.classList.remove('cup-lifting');ball.classList.remove('ball-popping');ball.hidden=true;nodes[i].classList.remove('routine-highlight');
+    }
     const duration=Math.max(260,Math.min(420,c.duration/c.swaps.length));
     for(const [a,b] of c.swaps){if(menu!=='dealer'||dealerGameView!=='cups'||state.dealer?.games.cups!==c||!await swapRoutine(nodes,a,b,table,duration)){dealerBusy=false;return;}}
     if(table.isConnected){C.dealerCupsReady(state);save();dealerBusy=false;drawDealer();}
@@ -2738,10 +3005,22 @@ globalThis.Presentation = (() => {
       if(item.id==='refill')D.skills.forEach(k=>add(k.id));else add();$('panelBody').append(card);
     }
   }
+  // U30c: "피버 타임!" shows inside the stage, centered just below the doubt and heckle bars, then fades.
+  // Reduced motion: no animation, it just stays for the same time and disappears.
+  let feverBannerTimer=0;
+  function showFeverBanner(){
+    const banner=$('feverBanner'),heckle=$('heckleMeter');if(!banner)return;
+    clearTimeout(feverBannerTimer);for(const a of banner.getAnimations?.()||[]){a.oncancel=null;a.onfinish=null;a.cancel();}
+    banner.style.top=`${heckle.offsetTop+heckle.offsetHeight+6}px`;banner.hidden=false;
+    const hide=()=>{banner.hidden=true;};
+    if(reduced)feverBannerTimer=setTimeout(hide,1800);
+    else{const a=banner.animate([{opacity:0},{opacity:1,offset:.12},{opacity:1,offset:.7},{opacity:0}],{duration:1800});a.onfinish=hide;a.oncancel=hide;}
+  }
   function renderU17(){
     const active=state.features.encoreLeft>0,gauge=$('feverGauge'),overlay=$('feverOverlay');
     gauge.setAttribute('aria-valuenow',String(Math.floor(state.u17.feverGauge)));gauge.querySelector('span').style.width=`${active?100:state.u17.feverGauge}%`;
-    gauge.hidden=!active&&state.u17.feverGauge<=0;gauge.classList.toggle('active',active);overlay.hidden=!active;overlay.classList.toggle('fever-paused',paused()||state.mode!=='fight');
+    gauge.hidden=!active&&state.u17.feverGauge<=0;gauge.classList.toggle('active',active);overlay.hidden=!active;
+    if(active&&!renderU17.was)showFeverBanner();renderU17.was=active;overlay.classList.toggle('fever-paused',paused()||state.mode!=='fight');
     if(window.Sfx)window.Sfx.setMusicScene(D.venues[state.venue-1].slug,state.j>D.venues[state.venue-1].audiences.length,active);
   }
   function spinDealer() {
@@ -2927,7 +3206,8 @@ globalThis.Presentation = (() => {
   $('retreatButton').addEventListener('click', () => {
     if (['boo','fail','ending','rebirth','bossPhase'].includes(menu) || dealerBusy) return;
     if (menu) closePanel();
-    release(); C.retreat(state); lastAudience = ''; save(); render(); toast('연습실에서 다시 시작해요');
+    const traveling = !!state.u18.anchor;
+    release(); C.retreat(state); lastAudience = ''; save(); render(); toast(traveling ? '도전을 마치고 지도로 돌아가요' : `${D.venues[state.venue - 1].name} 처음부터 다시 시작해요`);
   });
   $('closePanel').addEventListener('click', closePanel);
   document.addEventListener('pointerdown',e=>{if(menu&&!['boo','fail','boo','ending','rebirth','bossPhase','headliner','dealer'].includes(menu)&&!$('panel').contains(e.target)&&!e.target.closest('#phoneTop,.menu'))closePanel();});
@@ -2995,7 +3275,11 @@ globalThis.Presentation = (() => {
       U5.noDrawZones.splice(0, U5.noDrawZones.length, ...zones);
     }
   }
+  let effectsDrawn = true;
   function drawEffects() {
+    const busy = particles.length || flights.length || numbers.length || badges.length;
+    if (!busy && !effectsDrawn) return;
+    effectsDrawn = !!busy;
     ctx.clearRect(0, 0, layoutWidth, layoutHeight);
     ctx.save();
     // Intersect individual exclusions so overlapping reserved regions stay clear.
@@ -3152,7 +3436,12 @@ globalThis.Presentation = (() => {
   const meanings=D.statMeanings;
   document.querySelectorAll('.stat').forEach((el,i)=>{if(i<3)el.append(element('small',meanings[['power','damage','mental'][i]],'stat-meaning'));});
 
+  let lastRun = 0;
   function loop(now) {
+    // U29: nothing runs while hidden; when paused with no effects on screen, 30 fps is enough.
+    if (document.hidden) { previous = 0; requestAnimationFrame(loop); return; }
+    if (paused() && !particles.length && !flights.length && !numbers.length && !badges.length && now - lastRun < 30) { requestAnimationFrame(loop); return; }
+    lastRun = now;
     const dt = previous ? Math.max(0, Math.min(50, now - previous)) : 0;
     previous = now;
     if (!document.hidden) clock += dt;
@@ -3171,7 +3460,7 @@ globalThis.Presentation = (() => {
         }
       }
     }
-    renderU17(); render(); renderCoach(); updateLearningBadge(); nextToasts(dt); drawEffects(); requestAnimationFrame(loop);
+    renderU17(); render(); renderCoach(); updateLearningBadge(); nextToasts(dt); drawEffects(); if (prefetchWinSeen && performance.now() >= prefetchLoadAt + 10000) prefetchNextVenue(state.venue); requestAnimationFrame(loop);
   }
   motion.addEventListener('change', e => {
     reduced = e.matches; particles.length = 0; flights.length = 0; numbers.length = 0;
@@ -3241,7 +3530,7 @@ globalThis.Presentation = (() => {
       presentationLayoutPending=false;cacheEffectZones();
       for(const context of [$('panelBody'),$('storyDialog'),$('phoneMore')]){
         const current=context.querySelector('.u26-primary');
-        const preferred=context.querySelector('.stage-start:not([disabled]),.tree-buy:not([disabled])')||[...context.querySelectorAll('button:not([disabled])')].find(el=>!el.hidden&&!el.closest('.panel-tabs')&&!el.classList.contains('game-cup')&&!el.closest('.cups-table'));
+        const preferred=context.querySelector('.stage-start:not([disabled]),.practice-enter:not([disabled]),.tree-buy:not([disabled])')||[...context.querySelectorAll('button:not([disabled])')].find(el=>!el.hidden&&!el.closest('.panel-tabs')&&!el.classList.contains('game-cup')&&!el.classList.contains('routine-card')&&!el.classList.contains('dealer-back')&&!el.closest('.cups-table'));
         if(current!==preferred){current?.classList.remove('u26-primary');preferred?.classList.add('u26-primary');}
       }
     });

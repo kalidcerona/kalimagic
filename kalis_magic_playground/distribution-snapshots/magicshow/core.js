@@ -26,7 +26,7 @@
     tapCap: 4.6,
     Vbase: 1.3,
     Vattack: 1.05,
-    Vlevel: 0.005,
+    Vlevel: 0.00133,
     Ubase: 1.42,
     mentalBase: 40,
     mentalGrowth: 1.18,
@@ -51,6 +51,8 @@
     comboResetMs: 2000,
     finisherNeed: 20,
     finisherDmg: 22,
+    colleagueEvery: 5000,
+    colleagueDmg: 2,
     coinPerBox: 1,
     winCoinBase: 10,
     winCoinGrowth: 1.32,
@@ -450,6 +452,7 @@
       rabbitEvery: (CONST.rabbitEvery - 400 * t.rabbitTempo) / helperSpeed(state),
       rabbitCoins: 3 + legacyRank(state.venue) + t.rabbitPurse,
       helperEvery: 2000 - 200 * t.helperTempo,
+      colleagueEvery: (CONST.colleagueEvery - 500 * t.colleagueTempo) / helperSpeed(state),
       finalePower: 1 + 0.08 * t.finalePower,
       finaleNeed: Math.max(18, CONST.finisherNeed - t.finaleNeed),
       comboValue: 1 + 0.2 * t.comboValue,
@@ -690,6 +693,7 @@
   }
 
   function beginAudience(state, v, j, ev) {
+    state._colMs = null;
     unseal(state);
     cancelWorkers(state);
     var aud = getAud(v, j);
@@ -1093,7 +1097,6 @@
     state.doveMs = nodeEffects(state).doveEvery;
     state.rabbitMs = nodeEffects(state).rabbitEvery;
     state.flashBreaks = 0;
-    state.level = 0;
     state.xp = 0;
     state.shield = 0;
     state.combo = 0;
@@ -1141,7 +1144,9 @@
     if (pct < 0) pct = 0;
     if (pct > 100) pct = 100;
     var failedVenue=state.venue,failedId=state.audId,offer=state.venue>=2&&dealerCredit(state)&&(state.winsSinceDealer>0||state.dealerQueued),regularWins=state.winsSinceDealer,queued=state.dealerQueued;
-    emit(ev, { type: "fail", reasonPct: pct, cause: "mental", venue:failedVenue,audId:failedId });
+    // U32 cause: gate pressure first, then how much of the doubt bar this run actually removed.
+    var failCause = gatePressure(state) > 0 ? "gate" : (state.audHpMax > 0 && state.u19.damage / state.audHpMax < 0.4 ? "damage" : "mental");
+    emit(ev, { type: "fail", reasonPct: pct, cause: failCause, venue:failedVenue,audId:failedId });
     state.fails++;
     restartRun(state);
     state.u19b.failedId=failedId;
@@ -1160,7 +1165,7 @@
     }
   }
 
-  function dealAud(state, dmg, ev) {
+  function dealAud(state, dmg, ev, source) {
     if (dmg < 0) dmg = 0;
     if(profile(state)==='future'){var u=state.u19;if(u.telegraph>0)return;if(u.phase===1&&state.skills.showtimeLeft>0)dmg*=.45;if(u.phase===3&&u.window>0&&state._futureSource!==u.target)return;}
     if(profile(state)==='future'&&state.u19.phase<3)dmg=Math.min(dmg,Math.max(0,state.audHp-state.audHpMax*(state.u19.phase===1?.65:.3)));
@@ -1175,7 +1180,7 @@
         state.slow = true;
         state.pHeal = true;
         recompute(state, false);
-        emit(ev, { type: "audHit", dmg: dmg, applied:phaseApplied });
+        emit(ev, { type: "audHit", dmg: dmg, applied:phaseApplied, source: source });
         emit(ev, { type: "phase2" });
         return;
       }
@@ -1183,7 +1188,7 @@
     var applied=Math.min(state.audHp,dmg);
     state.audHp -= dmg;
     if (state.audHp < 0) state.audHp = 0;
-    emit(ev, { type: "audHit", dmg: dmg, applied:applied });
+    emit(ev, { type: "audHit", dmg: dmg, applied:applied, source: source });
   }
 
   function fireFinisher(state, ev) {
@@ -1675,6 +1680,32 @@
     }
   }
 
+  function colleagueCount(state) { return state.tree.colleague ? 1 + state.tree.colleagueMore : 0; }
+  function colleagueDamage(state) { return CONST.colleagueDmg * (state._V || 1) * (1 + .2 * state.tree.colleaguePower) * branchBonus(state, "pet"); }
+  function tickColleagues(state, dt, ev) {
+    var n = colleagueCount(state);
+    if (!n || state.u15.tutorial.active) return;
+    var timers = state._colMs || (state._colMs = []), every = nodeEffects(state).colleagueEvery;
+    timers.length = n;
+    for (var i = 0; i < n; i++) {
+      if (timers[i] == null) timers[i] = every * (.5 + .5 * i / n);
+      timers[i] -= dt;
+      if (timers[i] > 0) continue;
+      timers[i] += every;
+      var dmg = colleagueDamage(state);
+      emit(ev, { type: "colleague", index: i, name: DATA.colleagueNames[i % DATA.colleagueNames.length], dmg: dmg });
+      // U31b: the colleague's hit is always its own audHit (source 'colleague'); blocked when the doubt did not change.
+      var hpBefore = state.audHp, from = ev ? ev.length : 0;
+      dealAud(state, dmg, ev, "colleague");
+      if (ev) {
+        var mine = null;
+        for (var k = from; k < ev.length; k++) if (ev[k].type === "audHit" && ev[k].source === "colleague") { mine = ev[k]; mine.index = i; }
+        if (!mine) emit(ev, { type: "audHit", dmg: 0, applied: 0, blocked: true, source: "colleague", index: i });
+        else if (state.audHp === hpBefore) mine.blocked = true;
+      }
+      if (state.audHp <= 0 && state.mode === "fight" && !state.resolved) { onWin(state, ev); return; }
+    }
+  }
   function hasReward(state, id) { return state.features.rewards.indexOf(id) >= 0; }
   function helperSpeed(state) { return hasReward(state,3) ? 1.1 : 1; }
   function isFinalBoss(state) { return profile(state) === "homecoming"; }
@@ -1842,6 +1873,8 @@
     tickMagic(state, dt, ev);
     if (state.mode !== "fight" || state.u18.map) return;
     tickBoxHelper(state, dt, ev);
+    if (state.mode !== "fight" || state.u18.map) return;
+    tickColleagues(state, dt, ev);
     if (state.mode !== "fight" || state.u18.map) return;
     if (state.combo > 0) {
       state.comboMs -= dt;
@@ -2050,6 +2083,7 @@
     state.u19=emptyU19();state.u18.anchor=null;state.u18.challenge=null;state.u18.map=false;state.u18.fans=[];state.u18.sets=[];
     state.u14.satisfied=[];state.u14.sets=[];state.u14.collection=false;state.u14.visitor=emptyU14().visitor;state.u14.visitor.wait=90000+Math.floor(rngNext(state)*60001);
     state.seenEnding = false;
+    state.level = 0;
     state.homecomingCleared = false; state.visited = []; state.helpersUsed = [];
     state.coins = 0;
     state.gems = 0;
@@ -2518,6 +2552,7 @@
         var max = key === "board" && o.v === 1 ? 7 : key === "area" && o.v < 5 ? 3 : NODE_BY_ID[key].max;
         var rawLevel = o.tree[key];
         if(key==='deckMaster'&&rawLevel==null)rawLevel=0;
+        if (NODE_BY_ID[key].u31 && rawLevel == null) rawLevel = 0;
         if (o.v < 10 && NODE_BY_ID[key].u13 && rawLevel == null) rawLevel = 0;
         if (o.v < 9 && NODE_BY_ID[key].u12 && rawLevel == null) rawLevel = 0;
         if (o.v < 6 && NODE_BY_ID[key].u4a && rawLevel == null) rawLevel = 0;
@@ -2957,10 +2992,43 @@
     c.choice=index;c.hit=index===c.ball;c.phase='result';c.coins=Math.round(c.income*(c.hit?90:10));c.keys=c.hit&&state.venue>=3&&c.keyRoll?1:0;
     gemGameCoins(state,c.coins);state.keys+=c.keys;return true;
   }
-  function dealerMonteGuess(state,higher){
+  // U30: Monte is a queen-tracking game. The per-round outcome keeps the old high/low odds
+  // (the recommended guess: higher when the card is 7 or less), derived from the stored cards
+  // with a local hash, so no state RNG is consumed and saves stay compatible.
+  function monteHash(m,round){
+    var h=2166136261>>>0,i,k=m.cards.concat([round,97]);
+    for(i=0;i<k.length;i++){h^=k[i]+1;h=Math.imul(h,16777619)>>>0;}
+    return function(){h=(h+0x6D2B79F5)>>>0;var t=Math.imul(h^h>>>15,1|h);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};
+  }
+  function monteWin(m,round){return (m.cards[round+1]>m.cards[round])===(m.cards[round]<=7);}
+  function monteRound(m,round){
+    var r=monteHash(m,round),win=monteWin(m,round),start=Math.floor(r()*3),n=4+round,swaps=[],vq=start,i,a,b,queen,vis=[start];
+    for(i=0;i<n;i++){
+      a=(i===n-1&&!win)?vq:Math.floor(r()*3);b=(a+1+Math.floor(r()*2))%3;
+      // U30c: the last swap's order is randomized on every outcome (drawn on wins too), so a loss does not always lift the queen's slot first.
+      if(i===n-1){var flipLast=r()<.5,tmp;if(!win&&flipLast){tmp=a;a=b;b=tmp;}}
+      swaps.push([a,b]);queen=vq;if(vq===a)vq=b;else if(vq===b)vq=a;vis.push(vq);
+    }
+    var trick=win?null:{index:n-1,kind:r()<.5?'throw':'under',line:null};
+    if(trick)trick.line=trick.kind==='throw'?'던지는 척하고 아래 카드를 놨지!':'위 카드랑 아래 카드를 슬쩍 바꿨지!';
+    var fakes=[];for(i=0;i<Math.min(2,round);i++)fakes.push({at:1+i*2,slot:Math.floor(r()*3)});
+    // U30b bent-corner ploy (round 2 on): the queen's corner is bent in plain view, then a hand-cover move
+    // (same hand motion and move timing on every outcome) hides the bend's transfer. On a win the bend stays
+    // on the queen; on a loss it ends on the black card that is neither the followed card nor the queen.
+    var bend=null;
+    if(round>0){
+      var cover=Math.floor(r()*(n-1)),q=win?vq:queen,third=3-vq-q,end=win?q:third,to=vis[cover+1],s=third,k;
+      if(!win){for(k=n-1;k>cover;k--){a=swaps[k][0];b=swaps[k][1];s=s===a?b:s===b?a:s;}to=s;}
+      bend={start:start,cover:cover,to:to,end:end,line:win?null:'휜 카드를 따라왔지? 그게 함정이야!'};
+    }
+    return {win:win,start:start,swaps:swaps,fakes:fakes,tracked:vq,queen:win?vq:queen,trick:trick,bend:bend};
+  }
+  function monteMoveMs(venue,round,i){return Math.max(260,Math.min(420,Math.round(420-(venue||1)*8-round*30-(i%3)*6)));}
+  function dealerMontePick(state,slot){
     var m=state.dealer&&state.dealer.games&&state.dealer.games.monte;
-    if(state.mode!=='dealer'||!m||m.phase!=='playing'||typeof higher!=='boolean')return false;
-    if((m.cards[m.round+1]>m.cards[m.round])!==higher){m.phase='lost';m.coins=0;m.keys=0;return true;}
+    if(state.mode!=='dealer'||!m||m.phase!=='playing'||integer(slot,0,2)==null)return false;
+    var plan=monteRound(m,m.round),hit=slot===plan.queen;m.last={round:m.round,slot:slot,hit:hit};
+    if(!hit){m.phase='lost';m.coins=0;m.keys=0;return true;}
     m.round++;m.coins=Math.round(m.income*[0,60,150,200][m.round]);m.keys=m.round===3?1:0;
     if(m.round===3)dealerMonteBank(state);return true;
   }
@@ -3103,7 +3171,7 @@
   function validU19(u){return u&&typeof u.cleared==='boolean'&&integer(u.phase,1,3)!=null&&['telegraph','window','hitMs','damage','power','lastDps','lastPower','cooldown','target'].every(function(k){return num(u[k],0,1e100)!=null;})&&integer(u.target,0,24)!=null&&u.telegraph<=3000&&u.window<=20000&&['routines','pending'].every(function(k){return Array.isArray(u[k])&&u[k].length<=8&&new Set(u[k]).size===u[k].length&&u[k].every(function(id){return DATA.routines.some(function(r){return r.id===id;});});});}
   globalThis.Core = {beginFuture:beginFuture,strongestCase:strongestCase,
     openMap:openMap,travelTo:travelTo,returnToStage:returnToStage,travelAllowed:travelAllowed,trueFanRule:trueFanRule,trueFanReward:trueFanReward,trueFanProgress:trueFanProgress,cosmeticInfo:cosmeticInfo,buyCosmetic:buyCosmetic,equipCosmetic:equipCosmetic,
-    dealerGameStart:dealerGameStart,dealerCupsReady:dealerCupsReady,dealerCupsPick:dealerCupsPick,dealerMonteGuess:dealerMonteGuess,dealerMonteBank:dealerMonteBank,gemShopBuy:gemShopBuy,gemShopInfo:gemShopInfo,
+    dealerGameStart:dealerGameStart,dealerCupsReady:dealerCupsReady,dealerCupsPick:dealerCupsPick,dealerMontePick:dealerMontePick,monteRound:monteRound,monteMoveMs:monteMoveMs,dealerMonteBank:dealerMonteBank,gemShopBuy:gemShopBuy,gemShopInfo:gemShopInfo,
     startTutorial:startTutorial,finishTutorial:finishTutorial,moveCase:moveCase,useGlove:useGlove,queueScene:queueScene,startScene:startScene,advanceScene:advanceScene,
     CONST: CONST,
     setDailyDate:setDailyDate, dailySelection:dailySelection, claimMission:claimMission, dateOrdinal:dateOrdinal, venueSetProgress:venueSetProgress, catchVisitor:catchVisitor, visitorBlocked:visitorBlocked,
@@ -3112,7 +3180,7 @@
     milestoneMultiplier:milestoneMultiplier, statMultiplier:statMultiplier, nextMilestone:nextMilestone, formatNumber:formatNumber,
     hasReward: hasReward, helperSpeed: helperSpeed, tapPaper: tapPaper, skipCurtainCall: skipCurtainCall,
     venueNumber:venueNumber, reached:reached, bossProfile:profile, recap:recap, stayHome:stayHome, continueStory:continueStory,
-    fanCount: fanCount, productMultiplier: productMultiplier,
+    fanCount: fanCount, colleagueCount: colleagueCount, colleagueDamage: colleagueDamage, productMultiplier: productMultiplier,
     newGame: newGame,
     step: step,
     equipItem: equipItem, unequipItem: unequipItem, equipSlots: equipSlots, toggleHelper: toggleHelper, nextComboGoal: nextComboGoal, wandDamage: wandDamage,

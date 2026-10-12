@@ -555,17 +555,17 @@
     {"id": "p-target", "name": "타겟", "desc": "연출 ×1.25", "max": 1, "cost": [5000], "currency": "coins", "prereqs": ["p-trace2"], "x": 9, "y": 4, "reveal": "N12", "branch": "collection", "icon": "item-target.png", "emoji": "✨", "pending": false, "productMultiplier": 1.25},
     {"id": "p-epiphany", "name": "에피파니 Vol.1 리마스터", "desc": "연출 ×1.12", "max": 1, "cost": [6000], "currency": "coins", "prereqs": ["p-target"], "x": 10, "y": 4, "reveal": "N13", "branch": "collection", "icon": "item-epiphany.png", "emoji": "✨", "pending": false, "productMultiplier": 1.12},
     {"id": "assistant", "name": "마술 어시스턴트", "desc": "1200ms마다 타격 ×0.80, 황금 케이스에는 ×1.20", "max": 1, "cost": [1], "currency": "keys", "prereqs": ["boxHelper"], "x": -3, "y": 3, "reveal": "N6", "branch": "pet", "icon": "node-assistant.png", "emoji": "🎩", "pending": false},
-    {"id": "power", "name": "힘 있는 손끝", "desc": "지팡이 피해 ×1.1^L", "max": 10, "cost": {"c": 120, "g": 2.2}, "currency": "coins", "prereqs": ["root"], "x": -1, "y": 0, "reveal": "N", "branch": "hand", "icon": "node-hand-1.png", "emoji": "✋", "pending": false},
-    {"id": "speed", "name": "빠른 손끝", "desc": "초당 타격 +0.12L, 기본 최대 4.6회 유지", "max": 10, "cost": {"c": 60, "g": 2.2}, "currency": "coins", "prereqs": ["power"], "x": -2, "y": 0, "reveal": "N", "branch": "hand", "icon": "node-hand-2.png", "emoji": "⚡", "pending": false},
+    {"id": "power", "name": "손기술", "desc": "지팡이 피해 ×1.1^L", "max": 10, "cost": {"c": 120, "g": 2.2}, "currency": "coins", "prereqs": ["root"], "x": -1, "y": 0, "reveal": "N", "branch": "hand", "icon": "node-hand-1.png", "emoji": "✋", "pending": false},
+    {"id": "speed", "name": "빠른 손놀림", "desc": "초당 타격 +0.12L, 기본 최대 4.6회 유지", "max": 10, "cost": {"c": 60, "g": 2.2}, "currency": "coins", "prereqs": ["power"], "x": -2, "y": 0, "reveal": "N", "branch": "hand", "icon": "node-hand-2.png", "emoji": "⚡", "pending": false},
     {"id": "area", "name": "넓은 지팡이", "desc": "지팡이 범위를 2×1부터 5×5까지 확장해요", "max": 8, "cost": [90, 8000, 16000, 18000, 6000, 15000, 35000, 90000], "currency": "coins", "prereqs": ["power", "board"], "x": -3, "y": 0, "reveal": "N", "branch": "hand", "icon": "node-hand-1.png", "emoji": "🪄", "pending": false},
-    {"id": "crit", "name": "번뜩임", "desc": "수동 지팡이 타격 8% 확률로 피해 ×1.5", "max": 1, "cost": [180], "currency": "coins", "prereqs": ["speed"], "x": -2, "y": -1, "reveal": "N", "branch": "hand", "icon": "node-hand-2.png", "emoji": "✨", "pending": false},
-    {"id": "critRate", "name": "예리한 손끝", "desc": "치명타 확률 +2L%p, 최종 최대 14%", "max": 3, "cost": {"c": 450, "g": 2.2}, "currency": "coins", "prereqs": ["crit"], "x": -3, "y": -1, "reveal": "N", "branch": "hand", "icon": "node-hand-1.png", "emoji": "🎯", "pending": false},
-    {"id": "critPower", "name": "눈부신 트릭", "desc": "치명타 배율 +0.1L, 최종 최대 1.8", "max": 3, "cost": {"c": 700, "g": 2.2}, "currency": "coins", "prereqs": ["critRate"], "x": -4, "y": -1, "reveal": "N", "branch": "hand", "icon": "node-hand-2.png", "emoji": "✨", "pending": false},
-    {"id": "comboHold", "name": "이어지는 손끝", "desc": "콤보 유예 +250L ms, 최대 3000ms", "max": 4, "cost": {"c": 220, "g": 2.0}, "currency": "coins", "prereqs": ["area"], "x": -4, "y": 0, "reveal": "N", "branch": "hand", "icon": "node-hand-1.png", "emoji": "👏", "pending": false},
+    {"id": "crit", "name": "타이밍", "desc": "수동 지팡이 타격 8% 확률로 피해 ×1.5", "max": 1, "cost": [180], "currency": "coins", "prereqs": ["speed"], "x": -2, "y": -1, "reveal": "N", "branch": "hand", "icon": "node-hand-2.png", "emoji": "✨", "pending": false},
+    {"id": "critRate", "name": "타이밍 감각", "desc": "치명타 확률 +2L%p, 최종 최대 14%", "max": 3, "cost": {"c": 450, "g": 2.2}, "currency": "coins", "prereqs": ["crit"], "x": -3, "y": -1, "reveal": "N", "branch": "hand", "icon": "node-hand-1.png", "emoji": "🎯", "pending": false},
+    {"id": "critPower", "name": "반전", "desc": "치명타 배율 +0.1L, 최종 최대 1.8", "max": 3, "cost": {"c": 700, "g": 2.2}, "currency": "coins", "prereqs": ["critRate"], "x": -4, "y": -1, "reveal": "N", "branch": "hand", "icon": "node-hand-2.png", "emoji": "✨", "pending": false},
+    {"id": "comboHold", "name": "루틴 연결", "desc": "콤보 유예 +250L ms, 최대 3000ms", "max": 4, "cost": {"c": 220, "g": 2.0}, "currency": "coins", "prereqs": ["area"], "x": -4, "y": 0, "reveal": "N", "branch": "hand", "icon": "node-hand-1.png", "emoji": "👏", "pending": false},
     {"id": "sweepFocus", "name": "한곳 집중", "desc": "타격 대상의 살아 있는 케이스가 정확히 1개면 피해 +5L%", "max": 3, "cost": {"c": 600, "g": 2.0}, "currency": "coins", "prereqs": ["comboHold"], "x": -5, "y": 0, "reveal": "N", "branch": "hand", "icon": "node-hand-2.png", "emoji": "🎯", "pending": false},
-    {"id": "precision", "name": "정확한 손끝", "desc": "투명 패턴의 빗나갈 확률에서 2L%p 차감, 최소 0", "max": 3, "cost": {"c": 1800, "g": 2.0}, "currency": "coins", "prereqs": ["critPower"], "x": -5, "y": -1, "reveal": "N9", "branch": "hand", "icon": "node-hand-1.png", "emoji": "🎯", "pending": false},
+    {"id": "precision", "name": "미스디렉션", "desc": "투명 패턴의 빗나갈 확률에서 2L%p 차감, 최소 0", "max": 3, "cost": {"c": 1800, "g": 2.0}, "currency": "coins", "prereqs": ["critPower"], "x": -5, "y": -1, "reveal": "N9", "branch": "hand", "icon": "node-hand-1.png", "emoji": "🎯", "pending": false},
     {"id": "board", "name": "케이스 자리", "desc": "구매마다 보유 칸 +1", "max": 12, "cost": [40, 120, 300, 700, 1600, 3500, 7500, 15000, 30000, 55000, 90000, 140000], "currency": "coins", "prereqs": ["root"], "x": 1, "y": 0, "reveal": "N", "branch": "box", "icon": "node-box-1.png", "emoji": "📦", "pending": false},
-    {"id": "spawn", "name": "빠른 준비", "desc": "재생성 시간 ÷1.08^L", "max": 10, "cost": {"c": 35, "g": 2.2}, "currency": "coins", "prereqs": ["board"], "x": 2, "y": 0, "reveal": "N", "branch": "box", "icon": "node-box-2.png", "emoji": "⏱️", "pending": false},
+    {"id": "spawn", "name": "소품 세팅", "desc": "재생성 시간 ÷1.08^L", "max": 10, "cost": {"c": 35, "g": 2.2}, "currency": "coins", "prereqs": ["board"], "x": 2, "y": 0, "reveal": "N", "branch": "box", "icon": "node-box-2.png", "emoji": "⏱️", "pending": false},
     {"id": "golden", "name": "황금 초대", "desc": "황금 케이스 해금, 첫 30초·이후 180초 규칙", "max": 1, "cost": [320], "currency": "coins", "prereqs": ["spawn"], "x": 3, "y": 0, "reveal": "N2", "branch": "box", "icon": "node-box-1.png", "emoji": "🎁", "pending": false},
     {"id": "goldPity", "name": "황금 약속", "desc": "황금 케이스 간격 -20L초, 최소 120초", "max": 3, "cost": {"c": 1000, "g": 2.2}, "currency": "coins", "prereqs": ["golden"], "x": 4, "y": 0, "reveal": "N", "branch": "box", "icon": "node-box-2.png", "emoji": "⏳", "pending": false},
     {"id": "goldCoins", "name": "금빛 사례", "desc": "황금 케이스 추가 동전 +20L%", "max": 3, "cost": {"c": 1500, "g": 2.2}, "currency": "coins", "prereqs": ["goldPity"], "x": 5, "y": 0, "reveal": "N", "branch": "box", "icon": "node-box-1.png", "emoji": "🪙", "pending": false},
@@ -574,14 +574,14 @@
     {"id": "boxShield", "name": "실크 포장", "desc": "파괴마다 자신감 +0.1LU, cap 적용", "max": 2, "cost": {"c": 1800, "g": 2.5}, "currency": "coins", "prereqs": ["boxXP"], "x": 4, "y": -1, "reveal": "N4", "branch": "box", "icon": "node-box-2.png", "emoji": "🧣", "pending": false},
     {"id": "boxHeal", "name": "숨 고르기", "desc": "파괴마다 멘탈 +0.05LU, 최대치 적용", "max": 2, "cost": {"c": 2400, "g": 2.5}, "currency": "coins", "prereqs": ["boxShield"], "x": 5, "y": -1, "reveal": "N5", "branch": "box", "icon": "node-box-1.png", "emoji": "💧", "pending": false},
     {"id": "mental", "name": "무대 배짱", "desc": "최대 멘탈 ×1.18^L", "max": 10, "cost": {"c": 30, "g": 2.2}, "currency": "coins", "prereqs": ["root"], "x": 0, "y": -1, "reveal": "N", "branch": "heart", "icon": "node-heart-1.png", "emoji": "💛", "pending": false},
-    {"id": "attack", "name": "감탄 유도", "desc": "V ×1.05^L", "max": 10, "cost": {"c": 45, "g": 2.2}, "currency": "coins", "prereqs": ["mental"], "x": 0, "y": -2, "reveal": "N", "branch": "heart", "icon": "node-heart-2.png", "emoji": "👏", "pending": false},
+    {"id": "attack", "name": "연출력", "desc": "V ×1.05^L", "max": 10, "cost": {"c": 45, "g": 2.2}, "currency": "coins", "prereqs": ["mental"], "x": 0, "y": -2, "reveal": "N", "branch": "heart", "icon": "node-heart-2.png", "emoji": "👏", "pending": false},
     {"id": "shieldCap", "name": "넉넉한 실크", "desc": "자신감 cap 비율 0.48+0.03L", "max": 4, "cost": {"c": 250, "g": 2.2}, "currency": "coins", "prereqs": ["mental"], "x": -1, "y": -2, "reveal": "N", "branch": "heart", "icon": "node-heart-1.png", "emoji": "🧣", "pending": false},
     {"id": "shieldValue", "name": "부드러운 실크", "desc": "실크 아이템 자신감 +5L%", "max": 4, "cost": {"c": 400, "g": 2.2}, "currency": "coins", "prereqs": ["shieldCap"], "x": -1, "y": -3, "reveal": "N", "branch": "heart", "icon": "node-heart-2.png", "emoji": "🧣", "pending": false},
     {"id": "healValue", "name": "시원한 한 모금", "desc": "회복 아이템 회복량 +5L%", "max": 4, "cost": {"c": 300, "g": 2.2}, "currency": "coins", "prereqs": ["attack"], "x": 1, "y": -2, "reveal": "N", "branch": "heart", "icon": "node-heart-1.png", "emoji": "💧", "pending": false},
-    {"id": "winHeal", "name": "박수로 회복", "desc": "승리 회복 비율 0.20+0.02L", "max": 3, "cost": {"c": 650, "g": 2.2}, "currency": "coins", "prereqs": ["healValue"], "x": 1, "y": -3, "reveal": "N", "branch": "heart", "icon": "node-heart-2.png", "emoji": "👏", "pending": false},
+    {"id": "winHeal", "name": "마무리 포즈", "desc": "승리 회복 비율 0.20+0.02L", "max": 3, "cost": {"c": 650, "g": 2.2}, "currency": "coins", "prereqs": ["healValue"], "x": 1, "y": -3, "reveal": "N", "branch": "heart", "icon": "node-heart-2.png", "emoji": "👏", "pending": false},
     {"id": "levelHeal", "name": "연습의 보람", "desc": "레벨업 회복 비율 0.16+0.02L", "max": 3, "cost": {"c": 550, "g": 2.2}, "currency": "coins", "prereqs": ["attack"], "x": 0, "y": -3, "reveal": "N", "branch": "heart", "icon": "node-heart-1.png", "emoji": "💛", "pending": false},
-    {"id": "openingShield", "name": "준비된 무대", "desc": "새 run 시작 시 최대 멘탈의 5L% 자신감", "max": 3, "cost": {"c": 1000, "g": 2.2}, "currency": "coins", "prereqs": ["levelHeal"], "x": 0, "y": -4, "reveal": "N3", "branch": "heart", "icon": "node-heart-2.png", "emoji": "🛡️", "pending": false},
-    {"id": "calm", "name": "흔들리지 않기", "desc": "야유 피해 ×(1-0.02L)", "max": 3, "cost": {"c": 2000, "g": 2.2}, "currency": "coins", "prereqs": ["openingShield"], "x": 0, "y": -5, "reveal": "N5", "branch": "heart", "icon": "node-heart-1.png", "emoji": "💛", "pending": false},
+    {"id": "openingShield", "name": "대본 준비", "desc": "새 run 시작 시 최대 멘탈의 5L% 자신감", "max": 3, "cost": {"c": 1000, "g": 2.2}, "currency": "coins", "prereqs": ["levelHeal"], "x": 0, "y": -4, "reveal": "N3", "branch": "heart", "icon": "node-heart-2.png", "emoji": "🛡️", "pending": false},
+    {"id": "calm", "name": "포커페이스", "desc": "야유 피해 ×(1-0.02L)", "max": 3, "cost": {"c": 2000, "g": 2.2}, "currency": "coins", "prereqs": ["openingShield"], "x": 0, "y": -5, "reveal": "N5", "branch": "heart", "icon": "node-heart-1.png", "emoji": "💛", "pending": false},
     {"id": "coinLuck", "name": "모자 속 동전", "desc": "동전 추첨 가중치 +6L. 정규화 전 가중치이며 확률은 전체 가중치로 계산합니다.", "max": 10, "cost": {"c": 70, "g": 2.2}, "currency": "coins", "prereqs": ["root"], "x": 1, "y": 1, "reveal": "N", "branch": "luck", "icon": "node-luck-1.png", "emoji": "🪙", "pending": false},
     {"id": "forceRemove", "name": "포스", "desc": "나쁜 슬롯 문양 제거, 보석 비용 max(1,3-L)", "max": 2, "cost": [1, 1], "currency": "keys", "prereqs": ["coinLuck"], "x": 2, "y": 1, "reveal": "N5", "branch": "luck", "icon": "node-luck-2.png", "emoji": "🪄", "pending": false},
     {"id": "tip", "name": "감사의 팁", "desc": "관객 승리 동전 +5L%", "max": 4, "cost": {"c": 180, "g": 2.2}, "currency": "coins", "prereqs": ["coinLuck"], "x": 2, "y": 2, "reveal": "N", "branch": "luck", "icon": "node-luck-1.png", "emoji": "🪙", "pending": false},
@@ -601,12 +601,12 @@
     {"id": "boxHelper", "name": "팬의 도움", "desc": "팬이 2000ms마다 마술 실력의 35%로 케이스를 두드려요", "max": 1, "cost": [2], "currency": "keys", "prereqs": ["board"], "x": -4, "y": 3, "reveal": "N3", "branch": "pet", "icon": "node-fan.png", "emoji": "👏", "pending": false},
     {"id": "helperTempo", "name": "팬의 손놀림", "desc": "팬 작업 주기 2000-200L ms", "max": 3, "cost": {"c": 2000, "g": 2.2}, "currency": "coins", "prereqs": ["boxHelper"], "x": -5, "y": 3, "reveal": "N", "branch": "pet", "icon": "node-fan.png", "emoji": "👏", "pending": false},
     {"id": "startFinale", "name": "개막 피날레", "desc": "새 run 시작 시 피날레 게이지 충전", "max": 1, "cost": [1], "currency": "keys", "prereqs": ["root"], "x": 0, "y": 1, "reveal": "N", "branch": "finale", "icon": "node-finale-1.png", "emoji": "🌟", "pending": false},
-    {"id": "finalePower", "name": "큰 피날레", "desc": "피날레 피해 22V×(1+0.08L)", "max": 4, "cost": {"c": 500, "g": 2.2}, "currency": "coins", "prereqs": ["startFinale"], "x": 0, "y": 2, "reveal": "N", "branch": "finale", "icon": "node-finale-2.png", "emoji": "🎆", "pending": false},
+    {"id": "finalePower", "name": "표현력", "desc": "피날레 피해 22V×(1+0.08L)", "max": 4, "cost": {"c": 500, "g": 2.2}, "currency": "coins", "prereqs": ["startFinale"], "x": 0, "y": 2, "reveal": "N", "branch": "finale", "icon": "node-finale-2.png", "emoji": "🎆", "pending": false},
     {"id": "finaleNeed", "name": "짧은 예고", "desc": "필요 게이지 20-L, 최소 18", "max": 2, "cost": {"c": 2500, "g": 3.0}, "currency": "coins", "prereqs": ["finalePower"], "x": 0, "y": 3, "reveal": "N4", "branch": "finale", "icon": "node-finale-1.png", "emoji": "⏳", "pending": false},
     {"id": "comboGift", "name": "이어지는 박수", "desc": "콤보 10/25/50/100 보상 활성화", "max": 1, "cost": [900], "currency": "coins", "prereqs": ["finalePower"], "x": 1, "y": 3, "reveal": "N", "branch": "finale", "icon": "node-finale-2.png", "emoji": "👏", "pending": false},
     {"id": "comboValue", "name": "커지는 박수", "desc": "콤보 milestone의 동전 보상 +20L%", "max": 3, "cost": {"c": 1200, "g": 2.2}, "currency": "coins", "prereqs": ["comboGift"], "x": 2, "y": 3, "reveal": "N", "branch": "finale", "icon": "node-finale-1.png", "emoji": "👏", "pending": false},
     {"id": "encore", "name": "앵콜", "desc": "전투 시간 300초마다 15초간 지팡이 피해 +20%", "max": 1, "cost": [1800], "currency": "coins", "prereqs": ["finaleNeed"], "x": 0, "y": 4, "reveal": "N4", "branch": "finale", "icon": "node-finale-2.png", "emoji": "🎤", "pending": false},
-    {"id": "encorePower", "name": "뜨거운 앵콜", "desc": "앵콜 피해 보너스 +5L%p", "max": 2, "cost": {"c": 4000, "g": 2.5}, "currency": "coins", "prereqs": ["encore"], "x": -1, "y": 4, "reveal": "N", "branch": "finale", "icon": "node-finale-1.png", "emoji": "🎤", "pending": false},
+    {"id": "encorePower", "name": "쇼맨십", "desc": "앵콜 피해 보너스 +5L%p", "max": 2, "cost": {"c": 4000, "g": 2.5}, "currency": "coins", "prereqs": ["encore"], "x": -1, "y": 4, "reveal": "N", "branch": "finale", "icon": "node-finale-1.png", "emoji": "🎤", "pending": false},
     {"id": "encoreSpan", "name": "긴 앵콜", "desc": "앵콜 지속 +3L초", "max": 2, "cost": {"c": 3500, "g": 2.5}, "currency": "coins", "prereqs": ["encore"], "x": 1, "y": 4, "reveal": "N", "branch": "finale", "icon": "node-finale-2.png", "emoji": "⏱️", "pending": false},
     {"id": "challenge", "name": "도전 수첩", "desc": "추가 도전 3개와 각각 V +0.5% 보상 활성화", "max": 1, "cost": [2500], "currency": "coins", "prereqs": ["encore"], "x": 0, "y": 5, "reveal": "N5", "branch": "finale", "icon": "node-finale-1.png", "emoji": "🏅", "pending": false},
     {"id": "starTrick", "name": "별빛 트릭", "desc": "연출 ×1.3^L, 지팡이 피해 ×1.14^L", "max": 30, "cost": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], "currency": "starlight", "prereqs": ["root"], "x": -2, "y": -6, "reveal": "E", "branch": "star", "icon": "node-star-1.png", "emoji": "✦", "pending": false, "starKey": "trick"},
@@ -777,7 +777,9 @@
     bestiaryTitle: "관객 도감",
     dealerTitle: "토끼 딜러",
     rotate: "가로로 돌려 주세요",
-    restart: "연습실로",
+    restart: "비법 노트로",
+    practiceTitle: "연습실 비법 노트",
+    practiceFallback: "스테이지로 가기",
     retreat: "퇴장",
     rebirthOther: "다른 차원으로 환생하기",
     rebirthStay: "이 차원에서 계속하기",
@@ -2137,7 +2139,7 @@ GAME_DATA.skills = [
 })(GAME_DATA);
 
 // U13 pace tuning keeps active skill and milestone effects intact.
-(function(D){const scale={school:1.3,cafe:1.2,meetup:1.5,theater:1.1,festival:1.1,audition:4.15,broadcast:5,vegas:9,broadway:13,moon:19,sun:120,galaxy:500,multiverse:740,lecturenote:200};D.venues.forEach(v=>{if(scale[v.slug])v.hpFactor*=scale[v.slug];});D.venues.find(v=>v.slug==='lecturenote').bossHpFactor*=2.95;})(GAME_DATA);
+(function(D){const scale={school:1.3,cafe:1.2,meetup:1.5,theater:1.1,festival:1.1,audition:4.15,broadcast:5,vegas:9,broadway:13,moon:19,sun:120,galaxy:500,multiverse:740,lecturenote:120};D.venues.forEach(v=>{if(scale[v.slug])v.hpFactor*=scale[v.slug];});D.venues.find(v=>v.slug==='lecturenote').bossHpFactor*=4.9;})(GAME_DATA);
 
 /* U14 daily selection uses a date hash, independent of combat randomness. */
 GAME_DATA.missions = [
@@ -3180,17 +3182,17 @@ GAME_DATA.statMeanings = {power:'케이스를 열어 아이템을 얻는 힘',da
 GAME_DATA.easyNodes = {
   "root": "첫 마술을 시작할 수 있어요\n처음부터 배운 비법",
   "assistant": "조수가 케이스를 함께 열어요\n1.2초마다 실력의 80%",
-  "power": "케이스를 더 빨리 열어요\n실력 1.1배씩",
+  "power": "손기술이 좋아져 케이스를 더 빨리 열어요\n실력 1.1배씩",
   "speed": "케이스를 더 자주 두드려요\n1초에 0.12회씩 추가",
   "area": "여러 케이스를 함께 두드려요\n최대 5칸 × 5칸",
-  "crit": "가끔 케이스를 세게 두드려요\n8% 확률로 힘 1.5배",
+  "crit": "딱 맞는 순간에 케이스를 세게 두드려요\n8% 확률로 힘 1.5배",
   "critRate": "세게 두드릴 기회가 늘어요\n기회 2%씩 추가 · 최대 14%",
-  "critPower": "세게 두드릴 때 더 빨리 열어요\n힘 0.1배씩 추가 · 최대 1.8배",
+  "critPower": "세게 두드릴 때 더 크게 놀라게 해요\n힘 0.1배씩 추가 · 최대 1.8배",
   "comboHold": "개봉을 조금 쉬어도 이어져요\n기다리는 시간 0.25초씩 추가",
   "sweepFocus": "한 케이스에 힘을 모아요\n한 칸만 두드리면 힘 5%씩 추가",
-  "precision": "숨은 관객도 더 잘 놀라요\n빗나갈 기회 2%씩 줄기",
+  "precision": "관객의 눈을 돌려 숨은 관객도 놀라게 해요\n빗나갈 기회 2%씩 줄기",
   "board": "케이스를 하나 더 놓아요\n자리 1칸 추가",
-  "spawn": "빈 케이스가 더 빨리 채워져요\n준비 시간 1.08로 나누기",
+  "spawn": "빈 자리에 새 케이스를 더 빨리 세팅해요\n준비 시간 1.08로 나누기",
   "golden": "동전이 많은 케이스가 나와요\n첫 30초 · 다음부터 180초",
   "goldPity": "황금 케이스를 더 자주 만나요\n기다리는 시간 20초씩 줄기",
   "goldCoins": "황금 케이스에서 동전을 더 얻어요\n동전 20%씩 추가",
@@ -3199,14 +3201,14 @@ GAME_DATA.easyNodes = {
   "boxShield": "개봉할 때 야유를 막을 힘을 얻어요\n자신감 0.1씩 · 멘탈의 힘 적용",
   "boxHeal": "개봉할 때 마음이 회복돼요\n회복 0.05씩 · 멘탈의 힘 적용",
   "mental": "야유를 더 오래 버텨요\n최대 멘탈 1.18배씩",
-  "attack": "관객의 의심이 더 빨리 줄어요\n연출 1.05배씩",
+  "attack": "마술을 멋지게 보여 의심이 더 빨리 줄어요\n연출 1.05배씩",
   "shieldCap": "야유를 막을 힘을 더 모아요\n최대 멘탈의 3%씩 추가",
   "shieldValue": "실크가 야유를 더 많이 막아요\n자신감 5%씩 추가",
   "healValue": "회복 아이템으로 더 힘을 얻어요\n회복 5%씩 추가",
-  "winHeal": "이긴 뒤 마음이 더 회복돼요\n회복 2%씩 추가",
+  "winHeal": "멋진 포즈로 끝내면 마음이 더 회복돼요\n회복 2%씩 추가",
   "levelHeal": "레벨이 오를 때 더 회복돼요\n회복 2%씩 추가",
-  "openingShield": "새 공연을 든든하게 시작해요\n최대 멘탈의 5%씩 자신감",
-  "calm": "야유를 들어도 덜 힘들어요\n야유 힘 2%씩 줄기",
+  "openingShield": "대본을 미리 외워 새 공연을 든든하게 시작해요\n최대 멘탈의 5%씩 자신감",
+  "calm": "야유를 들어도 표정이 흔들리지 않아요\n야유 힘 2%씩 줄기",
   "coinLuck": "케이스에서 동전이 더 잘 나와요\n동전 뽑기 표 6장씩 추가",
   "forceRemove": "딜러의 나쁜 그림을 지워요\n쓰는 보석 1개씩 줄기 · 최소 1개",
   "tip": "관객을 이기면 동전을 더 얻어요\n승리 동전 5%씩 추가",
@@ -3226,12 +3228,12 @@ GAME_DATA.easyNodes = {
   "boxHelper": "팬이 케이스를 함께 열어요\n2초마다 실력의 35%",
   "helperTempo": "팬이 케이스를 더 자주 두드려요\n기다리는 시간 0.2초씩 줄기",
   "startFinale": "첫 피날레를 더 빨리 보여줘요\n공연 시작 때 피날레 충전",
-  "finalePower": "피날레로 더 크게 놀라게 해요\n연출의 22배 · 힘 8%씩 추가",
+  "finalePower": "표정과 몸짓을 살려 피날레가 더 커져요\n연출의 22배 · 힘 8%씩 추가",
   "finaleNeed": "피날레를 더 빨리 준비해요\n필요한 개봉 1개씩 줄기 · 최소 18개",
   "comboGift": "개봉을 이어 동전과 힘을 얻어요\n10 · 25 · 50 · 100개마다 선물",
   "comboValue": "개봉을 이어 동전을 더 얻어요\n이어 열기 선물 동전 20%씩 추가",
   "encore": "가끔 손끝에 더 힘이 생겨요\n300초마다 15초 · 실력 20% 추가",
-  "encorePower": "앵콜 때 케이스를 더 빨리 열어요\n실력 5%씩 추가",
+  "encorePower": "피버 타임에 관객을 더 신나게 해요\n실력 5%씩 추가",
   "encoreSpan": "앵콜의 힘이 더 오래 가요\n지속 시간 3초씩 추가",
   "challenge": "도전하며 관객을 더 잘 놀라게 해요\n도전 3개 · 성공마다 연출 0.5% 추가",
   "starTrick": "케이스와 관객을 더 빨리 이겨요\n실력 1.14배 · 연출 1.3배씩",
@@ -3277,6 +3279,15 @@ GAME_DATA.easyNodes = {
   "cheerCooldown": "스킬을 더 빨리 다시 써요\n기다리는 시간 10%씩 줄기"
 };
 
+// U31 colleague magicians (Plan.B): a small pet-branch group that performs tricks with Kali and cuts the audience's doubt.
+GAME_DATA.colleagueNames=['Waker','Level1','선휘재','전도현','박준현','조시훈'];
+(function(D){
+ const mk=(id,name,max,cost,currency,pre,x,y,desc,easy)=>{D.tree.push({id,name,max,cost,currency,prereqs:[pre],x,y,desc,branch:'pet',reveal:'N',icon:'node-assistant.png',emoji:'🎭',pending:false,u31:true});D.easyNodes[id]=easy;};
+ mk('colleague','동료 마술사 합류',1,[2],'keys','boxHelper',-4,4,'동료 마술사 1명이 무대에 올라 몇 초마다 마술 피해','동료 마술사가 무대에 올라와요\n몇 초마다 함께 마술을 보여줘요');
+ mk('colleagueMore','동료 한 명 더',5,{c:2500,g:3.2},'coins','colleague',-3,5,'동료 마술사 +1명, 최대 6명','동료가 한 명 더 올라와요\n최대 6명까지');
+ mk('colleaguePower','동료의 합',5,{c:3000,g:3.4},'coins','colleague',-4,5,'동료 마술 피해 +20%씩','동료의 마술이 더 커져요\n힘 20%씩 추가');
+ mk('colleagueTempo','동료의 템포',4,{c:3500,g:3.6},'coins','colleague',-5,5,'동료 마술 주기 5000-500L ms','동료가 마술을 더 자주 보여줘요\n기다리는 시간 0.5초씩 줄기');
+})(GAME_DATA);
 GAME_DATA.easyNodes.flashpaperPower="불꽃 종이가 더 세게 두드려요\n힘 20%씩 추가";
 (function(D){
  D.tree.forEach(n=>{
@@ -3306,7 +3317,7 @@ GAME_DATA.statNames={power:'마술 실력',damage:'연출',mental:'멘탈'};
 
 // U17 gem uses and child-friendly descriptions.
 GAME_DATA.gemShop=[{id:'glove',name:'칼리 덱 (자동 연습) ×1',desc:'120초 동안 모든 케이스를 두드려요',cost:4},{id:'refill',name:'스킬 바로 충전',desc:'기다리는 스킬을 바로 쓸 수 있어요',cost:2},{id:'potion',name:'멘탈 회복 물약',desc:'마음을 30% 회복해요',cost:3}];
-GAME_DATA.tree.filter(n=>['encore','encorePower','encoreSpan'].includes(n.id)).forEach(n=>{n.desc=n.id==='encoreSpan'?'피버 타임이 더 오래 이어져요\n레벨마다 3초 추가':n.id==='encorePower'?'피버 타임에 마술이 더 강해져요\n레벨마다 힘 5% 추가':'피버 타임에 마술이 더 강해져요\n피버 실력 20% 추가';});
+GAME_DATA.tree.filter(n=>['encore','encorePower','encoreSpan'].includes(n.id)).forEach(n=>{n.desc=n.id==='encoreSpan'?'피버 타임이 더 오래 이어져요\n레벨마다 3초 추가':n.id==='encorePower'?'피버 타임에 관객을 더 신나게 해요\n레벨마다 힘 5% 추가':'피버 타임에 마술이 더 강해져요\n피버 실력 20% 추가';});
 // U17 pacing: preserve rewards and fever strength; tune audience durability.
 (function(D){const scale={party:1.6,school:1.6,cafe:2,meetup:1.8,theater:4,festival:2.5,audition:3.35,broadcast:1.16,moon:1.8,galaxy:1.12,multiverse:1.07};D.venues.forEach(v=>{if(scale[v.slug])v.hpFactor*=scale[v.slug];});})(GAME_DATA);
 
