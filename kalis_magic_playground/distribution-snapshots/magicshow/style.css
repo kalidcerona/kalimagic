@@ -1268,3 +1268,5 @@ body.tablet{background:#17141F;background-image:linear-gradient(90deg,#25202D 0 
 #stage .gem-game>.routine-table{grid-column:1;grid-row:span 5;flex:none}
 #stage .gem-game>.flex-break{display:none}
 }
+/* Hotfix: dark text on the gold primary button art (story "다음" was gold on gold). */
+#stage#stage#stage .u26-primary:not(:disabled){color:#17141F}
