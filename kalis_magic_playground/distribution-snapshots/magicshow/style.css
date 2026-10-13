@@ -365,7 +365,6 @@ button{touch-action:manipulation}
 .phone .constellation-detail{display:grid;grid-template-columns:minmax(0,1fr) 140px;gap:8px;padding:5px 8px;overflow:hidden}
 
 .phone .constellation-detail button{position:static;float:none;width:100%;margin:0;align-self:center}
-.phone #dealerButton:before{content:'🐇 '}
 .phone #soundButton:before{content:'♫ '}
 .phone #retreatButton:before{content:'↩ '}
 .phone #board .cell .box{top:15px;height:calc(100% - 17px)}
@@ -547,7 +546,6 @@ body:not(.phone) #goalStrip:after{content:"";position:absolute;inset:0 0 auto;he
 .story-portrait{width:54px;height:64px;object-fit:contain;image-rendering:pixelated}.story-copy p{margin:4px 0;white-space:pre-line;word-break:keep-all}#storyDialog button{min-width:44px;min-height:44px;font-size:13px;padding:4px}
 #easyTooltip{position:absolute;z-index:60;width:230px;padding:10px;background:#101522;border:2px solid #ffe65c;white-space:pre-line;font-size:12px;pointer-events:none}
 .coach-helper{float:left;width:48px;height:48px;object-fit:contain;image-rendering:pixelated}.stat-meaning{font-size:11px;line-height:1.4}.constellation-detail p{white-space:pre-line}
-.case-dragging{outline:3px solid #ffe65c;filter:brightness(1.08)}#board .cell.drop-target{outline:3px solid #8ee9d0;outline-offset:-3px;background:#244e48}
 #storyIcon{display:inline-block;width:22px;height:22px;vertical-align:middle}
 .phone #phoneTop{left:6px;right:6px;top:0;width:auto;height:44px;padding:0;display:flex;align-items:center;gap:8px;background:#101522;z-index:15}
 .phone #phoneVenue{flex:1;min-width:0}.phone #phoneVenue .venue-heading{position:static;display:flex;align-items:center;gap:6px;width:auto;height:44px;margin:0;padding:0}
@@ -784,7 +782,7 @@ html,body,#stage{background:var(--bg);color:var(--ink)}
 .phone #stage #panel[data-screen="book"] .constellation-detail h2{font-size:14px;line-height:18px}
 .phone #stage #panel[data-screen="book"] .constellation-detail p{margin:4px 0;font-size:12px;line-height:16px}
 .phone #stage #panel[data-screen="book"] .constellation-detail :is(.tree-buy,.tree-detail-dismiss){font-size:12px;line-height:24px;min-height:44px;height:44px;padding:8px 2px;border-width:2px}
-.phone #stage #panel[data-screen="stats"] #panelBody{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:start}
+.phone #stage #panel[data-screen="stats"] #panelBody{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:stretch;grid-auto-rows:auto}
 .phone #stage #panel .easy-stat{margin:0;padding:12px;display:flex;flex-direction:column;gap:8px}
 .phone #stage #panel .easy-stat h2,.phone #stage #panel .easy-stat p{margin:0}
 .phone #stage #panel .easy-stat strong{font-size:22px;line-height:26px;color:var(--gold);order:-1}
@@ -1462,7 +1460,7 @@ repeating-linear-gradient(90deg,rgba(255,255,255,.04) 0 2px,transparent 2px 4px)
 .tablet #stage #phoneMore .menu-group{font-size:16px;line-height:22px}
 :is(.phone,.tablet) #stage #phoneMore #menuGroupPlay{order:-2}
 :is(.phone,.tablet) #stage #phoneMore #menuGroupSettings{order:59;margin-top:4px}
-:is(.phone,.tablet) #stage #phoneMore :is(#soundButton,#musicButton,#hapticsButton,#installButton,#replayTutorial){order:60}
+:is(.phone,.tablet) #stage #phoneMore :is(#soundButton,#musicButton,#hapticsButton,#textSpeedButton,#installButton,#replayTutorial){order:60}
 /* U35: the last settings row (진동) scrolls fully into view: bottom spacer inside the scroll area. */
 :is(.phone,.tablet) #stage #phoneMore:not([hidden])::after{content:'';grid-column:1 / -1;order:200;height:16px}
 @media(max-height:440px){#stage #panel[data-screen="dealer"] #panelBody{padding-bottom:30px;-webkit-mask-image:linear-gradient(#000 calc(100% - 26px),transparent);mask-image:linear-gradient(#000 calc(100% - 26px),transparent)}}
@@ -1560,7 +1558,7 @@ repeating-linear-gradient(90deg,rgba(255,255,255,.04) 0 2px,transparent 2px 4px)
 .tablet #stage #panel[data-screen="book"] .constellation-detail>.tree-cost{font-size:16px;line-height:22px}
 
 /* Manual save slots: panel-local scrolling and the existing pixel frame/buttons. */
-#stage #phoneMore #saveSlotsButton{order:60;min-height:44px}
+#stage #phoneMore #saveSlotsButton{order:-3;grid-column:1 / -1;min-height:44px}
 #stage #panel[data-screen="saveslots"]{inset:12px;width:calc(100% - 24px);height:calc(100% - 24px);min-height:0;max-height:none;transform:none;padding:12px;display:flex;flex-direction:column}
 #stage #panel[data-screen="saveslots"] header{flex:none;min-height:44px;height:auto;margin:0 0 8px;gap:8px}
 #stage #panel[data-screen="saveslots"] #panelTitle{font-size:22px;line-height:28px}
@@ -1577,3 +1575,151 @@ repeating-linear-gradient(90deg,rgba(255,255,255,.04) 0 2px,transparent 2px 4px)
 .phone #stage #panel[data-screen="saveslots"] .save-slots-actions button,.phone #stage #panel[data-screen="saveslots"] #closePanel{min-height:44px}
 #stage #phoneMore #saveSlotsButton{min-height:60px}
 .phone #stage #phoneMore #saveSlotsButton{min-height:44px}
+/* v4 U46 A6: one 19-colour UI palette (picked from the colours this game already uses most; illustrations untouched). UI frames, text and buttons use only these. */
+:root{--p-void:#100D16;--p-bg:#17141F;--p-panel:#25202D;--p-raised:#302735;--p-line-dim:#39313F;--p-line:#655567;--p-brass:#A68A58;--p-gold:#E8BF68;--p-gold-hi:#FFE65C;--p-cream:#F2E6C8;--p-sand:#E3D2BA;--p-ink-2:#B9ACBA;--p-ok:#8ECBA9;--p-info:#8FD3FF;--p-danger:#B94E50;--p-danger-hi:#DC7970;--p-pink:#FF8C9C;--p-violet:#BC8CFF;--p-black:#000000;
+--bg:var(--p-bg);--panel:var(--p-panel);--raised:var(--p-raised);--ink:var(--p-cream);--ink-2:var(--p-ink-2);--gold:var(--p-gold);--brass:var(--p-brass);--line:var(--p-line);--line-dim:var(--p-line-dim);--ok:var(--p-ok);--danger:var(--p-danger);--danger-hi:var(--p-danger-hi);--info:var(--p-info);--white:var(--p-cream);--yellow:var(--p-gold);--green:var(--p-ok);--panel-border:var(--p-brass)}
+/* v4 U46 A1 + A3: case cells without box frames (presentation only). The whole cell stays the touch target; the case sprite is about 72 percent of it
+   with even gaps, a soft ellipse shadow under it, LV above, one thin progress bar under it, a slow 2 px idle bob per cell (stops while opening or under
+   reduced motion). Locked cells show nothing; the next slot to unlock shows a small lock. The wand box (#wand) keeps its frame. Board background darker. */
+#viewport #stage #board{background:var(--p-void);box-shadow:none}
+#viewport #stage #boardCard{background:var(--p-void)}
+#viewport #stage #board .cell,#viewport #stage #board .cell.next-slot,#viewport #stage #board .cell.locked,#viewport #stage #board .cell.locked[data-center="1"],#viewport #stage #board .cell.locked:not(.next-slot){border:0;border-image:none;background:transparent;box-shadow:none;opacity:1;outline:0;animation:none}
+#viewport #stage #board .cell:before,#viewport #stage #board .cell.locked:not(.next-slot):before{display:none}
+#viewport #stage #board .cell .box,#viewport #stage #board .cell.locked .box,#viewport #stage #board .cell.next-slot .box{position:absolute;inset:0;left:0;top:0;width:100%;height:100%;border:0;background:transparent;box-shadow:none;overflow:visible;opacity:1;transform:none}
+#viewport #stage #board .cell .chest,#viewport #stage #board .cell .chest.asset-ready{inset:auto;left:14%;top:14%;width:72%;height:72%;outline-offset:0;z-index:2}
+#viewport #stage #board .cell:not(.locked):not(.empty) .box:after{content:"";position:absolute;left:22%;width:56%;top:80%;height:7%;border-radius:50%;background:#000;opacity:.45;z-index:1;pointer-events:none}
+#viewport #stage #board .cell .lv{left:0;right:0;top:0;width:auto;height:14%;padding:0;background:transparent;text-align:center;font:400 9px/1 Galmuri9,monospace;display:flex;align-items:center;justify-content:center;color:var(--p-cream);text-shadow:1px 0 #000,-1px 0 #000,0 1px #000,0 -1px #000;z-index:5}
+#viewport #stage #board .cell .lv:empty,#viewport #stage #board .cell.empty .lv,#viewport #stage #board .cell.empty .spawn-timer{display:none}
+#viewport #stage #board .cell .box-number{display:none}
+#viewport #stage #board .cell .box-fill{left:22%;width:56%;top:90%;bottom:auto;height:3px!important;border:0;background:var(--p-gold);box-shadow:0 0 0 1px #000;z-index:3}
+#viewport #stage #board .cell:not(.case-opening) .box-fill{visibility:hidden}
+#viewport #stage #board .cell.locked .box-fill,#viewport #stage #board .cell.empty .box-fill{display:none}
+#viewport #stage #board .cell.next-slot .box:after{content:"";position:absolute;left:calc(50% - 8px);top:calc(50% - 8px);width:16px;height:16px;background:url('assets/ui/ic-lock.webp') center/16px 16px no-repeat;image-rendering:pixelated;opacity:.85;border-radius:0}
+body:not(.phone) #viewport #stage #board .cell .lv{font:400 11px/1 Galmuri11,monospace}
+body:not(.phone) #viewport #stage #board .cell .box-fill{height:4px!important}
+body:not(.phone) #viewport #stage #board .cell.next-slot .box:after{left:calc(50% - 16px);top:calc(50% - 16px);width:32px;height:32px;background-size:32px 32px}
+@keyframes u46-bob{0%,100%{transform:translateY(0)}25%,75%{transform:translateY(-1px)}50%{transform:translateY(-2px)}}
+#viewport #stage #board .cell:not(.locked):not(.empty):not(.case-opening) .chest{animation:u46-bob 2.8s step-end infinite;animation-delay:var(--bob,0s)}
+@media(hover:hover){#viewport #stage #board .cell:not(.locked):hover .chest{filter:brightness(1.12)}}
+@media(prefers-reduced-motion:reduce){#viewport #stage #board .cell .chest{animation:none!important}}
+/* v4 U46 A8: dialog portrait shows the face. The head crop was shifted half its width off the frame (translateX(-50%)), so only the hair showed. */
+#viewport #stage #storyDialog .story-portrait.asset-ready{font-size:0}
+#viewport #stage #storyDialog .story-portrait>.asset-sprite{position:absolute;left:50%;width:auto;max-width:none;transform:translateX(-50%);object-fit:fill;image-rendering:pixelated}
+/* v4 U46 A4: three text sizes per layout class (small, normal, large) on the HUD, the stats bar and panel, the book and the panels; every number in Galmuri11.
+   Phone sizes keep or shrink what was there (10 / 11 / 16; 12 and 13 px text became 11), so nothing wraps more. Desktop 1600x900 stage: 11 / 22 / 33. */
+:root{--fs-s:11px;--fs-m:22px;--fs-l:33px}
+body.phone{--fs-s:10px;--fs-m:11px;--fs-l:16px}
+#viewport #stage :is(.bitmap,.stat-text,#mentalNumber,.tree-wallet span,.constellation-level,.tree-level,.digit-separator){font-family:Galmuri11,monospace}
+.phone #viewport #stage :is(#stageNumber,.goal-cost,.shield-label,.constellation-level,.fan-stamp){font-size:var(--fs-s)}
+.phone #viewport #stage :is(#venueName,.goal-node,#phoneTop>button,#statsButton,.stat-label,.stat-text,.stat-meaning,.hud .currency>span:not(.currency-label)),
+.phone #viewport #stage #panel :is(#closePanel,#treeBuyAll,.tree-wallet span,.tree-level,.tree-effect,.tree-cost,.tree-buy,.tree-detail-dismiss,.tree-more-toggle,.entry-flavor,.set-progress,.truefan-progress,.trophy,.easy-description,figcaption),
+.phone #viewport #stage #panel #panelBody :is(p,strong,small,button){font-size:var(--fs-m)}
+.phone #viewport #stage #panel :is(#panelTitle,#panelBody h2,#panelBody h3){font-size:var(--fs-l)}
+body:not(.phone) #viewport #stage :is(.currency-label,.goal-title,.goal-case,.goal-node,.goal-cost,.stat-label,.stat-meaning,.stat-text,.shield-label,#comboGoal,.constellation-name,.constellation-level,.fan-stamp,.tree-cost,#treeBuyAll),
+body:not(.phone) #viewport #stage #panel figcaption{font-size:var(--fs-s)}
+body:not(.phone) #viewport #stage #panel :is(#closePanel,.tree-wallet span,.tree-level,.tree-effect,.tree-buy),body:not(.phone) #viewport #stage #panel #panelBody :is(p,strong,small,button,h2,h3),body:not(.phone) #viewport #stage #mentalNumber{font-size:var(--fs-m)}
+body:not(.phone) #viewport #stage :is(#panelTitle,.hud .currency>span:not(.currency-label)){font-size:var(--fs-l)}
+body:not(.phone) #viewport #stage #panel #panelBody :is(.constellation-name,.constellation-level,.fan-stamp,.tree-cost,figcaption){font-size:var(--fs-s)}
+.phone #viewport #stage #panel #panelBody :is(.constellation-level,.fan-stamp){font-size:var(--fs-s)}
+.phone #viewport #stage #panel #panelBody :is(.constellation-name,.routine-collection span,.meetup-memory){font-size:var(--fs-m)}
+/* v4 U46 A7: desktop 1600x900 like the phone. Top: only 비법서 and 메뉴 (the rest is in the menu sheet, ui.js DESKTOP_MENU); the stats panel is
+   collapsed behind a 능력치 button and opens beside the audience (right column of the card, never over the face); U39 lanes: the dialog bubble sits
+   above Kali in the left column, the toast row at the bottom right of the audience card above the stats bar. */
+body:not(.phone) #viewport #stage nav.menu{flex-wrap:nowrap;max-width:none;left:auto;right:76px;top:4px;gap:8px}
+body:not(.phone) #viewport #stage #moreButton{display:block}
+body:not(.phone) #viewport #stage #phoneMore{right:76px;top:64px;width:760px;max-height:780px;overflow:auto;z-index:40;box-sizing:border-box}
+body:not(.phone) #viewport #stage #phoneMore:not([hidden]){display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-auto-rows:auto;gap:8px;padding:12px}
+body:not(.phone) #viewport #stage #phoneMore .menu-group{display:block;grid-column:1 / -1;margin:0;padding:0 2px 2px;font-size:var(--fs-m);line-height:28px;color:var(--p-gold);border-bottom:2px solid var(--p-line)}
+body:not(.phone) #viewport #stage #phoneMore #menuGroupPlay{order:-2}
+body:not(.phone) #viewport #stage #phoneMore #menuGroupSettings{order:59;margin-top:4px}
+body:not(.phone) #viewport #stage #phoneMore :is(#soundButton,#musicButton,#hapticsButton,#textSpeedButton,#installButton,#replayTutorial){order:60}
+body:not(.phone) #viewport #stage #phoneMore .music-volume{order:61;grid-column:span 2;display:flex;align-items:center;gap:12px;font-size:var(--fs-m)}
+body:not(.phone) #viewport #stage #phoneMore :is(#coffeeButton,#openChatButton){order:100;grid-column:span 3;flex-basis:auto}
+body:not(.phone) #viewport #stage #phoneMore button{position:relative;inset:auto;width:100%;min-width:0;min-height:56px;font-size:var(--fs-m);line-height:28px;white-space:nowrap;padding:8px 6px;margin:0}
+body:not(.phone) #viewport #stage #statsButton{display:block;position:absolute;right:12px;top:194px;left:auto;width:148px;height:48px;min-height:48px;padding:4px;font-size:var(--fs-m);line-height:28px;z-index:5}
+body:not(.phone) #viewport #stage .stats:not(.phone-expanded){display:none}
+body:not(.phone) #viewport #stage .stats.phone-expanded{top:250px;max-height:490px;overflow:auto}
+body:not(.phone) #viewport #stage #audienceCard #audienceLine{left:48px;right:auto;width:380px;top:auto;bottom:286px;max-height:96px;font-size:var(--fs-m);line-height:28px;padding:3px 6px;box-sizing:border-box;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;text-align:left}
+body:not(.phone) #viewport #stage #toasts{left:376px;right:auto;width:388px;top:756px;bottom:auto;max-height:28px}
+/* v4 U46 A5: pixel icons (16x16 art, img27) at integer scales only: 1x (16 px) on phones and in small desktop text, 2x (32 px) in normal desktop text. */
+.px-icon{display:inline-block;width:16px;height:16px;vertical-align:-3px;image-rendering:pixelated;object-fit:contain;flex:none;pointer-events:none}
+body:not(.phone) #viewport #stage .px-icon{width:32px;height:32px;vertical-align:-8px}
+body:not(.phone) #viewport #stage :is(#helperControls,.feature-hud,.magic-controls,.colleague,#toasts,.tree-wallet,.goal-strip,#starlightLabel,.stat-text,#comboGoal,.projectile-impact) .px-icon{width:16px;height:16px;vertical-align:-3px}
+#viewport #stage .stat-value small .px-icon,#viewport #stage #shield .px-icon{vertical-align:middle}
+.normalized-figure[data-emote]:not([data-emote=""]):after{content:"";width:16px;height:16px;background:center/16px 16px no-repeat;image-rendering:pixelated;font-size:0}
+body:not(.phone) .normalized-figure[data-emote]:not([data-emote=""]):after{width:32px;height:32px;background-size:32px 32px}
+.normalized-figure[data-mood="happy"]:after{background-image:url('assets/ui/ic-mood-happy.webp')}
+.normalized-figure[data-mood="serious"]:after{background-image:url('assets/ui/ic-mood-think.webp')}
+.normalized-figure[data-mood="surprised"]:after{background-image:url('assets/ui/ic-mood-alert.webp')}
+.normalized-figure[data-mood="sad"]:after{background-image:url('assets/ui/ic-mood-sweat.webp')}
+.normalized-figure[data-mood="smug"]:after{background-image:url('assets/ui/ic-mood-smug.webp')}
+.routine-strip:after{content:"";width:16px;height:16px;margin-left:auto;background:url('assets/ui/ic-routine.webp') center/16px 16px no-repeat;image-rendering:pixelated}
+#audienceCard.healing .audience:after{content:"";background:url('assets/ui/ic-sparkle.webp') 30% 30%/32px 32px no-repeat,url('assets/ui/ic-sparkle.webp') 70% 40%/32px 32px no-repeat;image-rendering:pixelated;font-size:0}
+/* v4 U46 C3: stage dressing overlays (img27), over the venue art and under the audience, at whole-number scales (--dk: 1 on small phones, 2 otherwise). */
+#stageDressing{position:absolute;inset:46px 0 98px;z-index:1;pointer-events:none;overflow:hidden;--dk:2}
+.phone #stageDressing{inset:0;--dk:1}
+@media(min-width:800px) and (min-height:390px){.phone #stageDressing{--dk:2}}
+#stageDressing img{position:absolute;image-rendering:pixelated;display:block}
+#stageDressing .dress-lights{left:50%;top:0;width:calc(176px * var(--dk));height:calc(24px * var(--dk));transform:translateX(-50%)}
+.phone #stageDressing .dress-lights{top:44px}
+#stageDressing .dress-trim{left:0;top:0;width:calc(24px * var(--dk));height:calc(144px * var(--dk))}
+.phone #stageDressing .dress-trim{top:44px}
+#stageDressing .dress-trim.right{left:auto;right:0;transform:scaleX(-1)}
+#stageDressing .dress-shelf{right:calc(4px * var(--dk));bottom:0;width:calc(64px * var(--dk));height:calc(40px * var(--dk))}
+.phone #stageDressing .dress-shelf{bottom:34px}
+@keyframes u46-dress-in{0%{opacity:0}100%{opacity:1}}
+#stageDressing.dress-new img{animation:u46-dress-in .6s var(--motion-in) both}
+#stageDressing .dress-note{position:absolute;left:50%;top:calc(30px * var(--dk));transform:translateX(-50%);padding:2px 8px;background:var(--p-void);border:2px solid var(--p-gold);color:var(--p-gold-hi);font:400 var(--fs-m)/1.3 Galmuri11,monospace;white-space:nowrap;animation:u46-dress-note 2.2s linear both}
+.phone #stageDressing .dress-note{top:72px}
+@keyframes u46-dress-note{0%{opacity:0}10%,80%{opacity:1}100%{opacity:0}}
+@media(prefers-reduced-motion:reduce){#stageDressing .dress-note{animation:none}}
+@media(prefers-reduced-motion:reduce){#stageDressing.dress-new img{animation:none}}
+/* v4 U47 1: the heckle stat prints one heckle ("한 번에 120") and the interval as a small second line. */
+#viewport #stage .stat-sub{font:400 var(--fs-s)/1.2 Galmuri11,monospace;color:var(--p-gold-hi,#E8D7A8);white-space:nowrap}
+#viewport #stage .stat-sub:empty{display:none}/* v4 U47 3: the 비법 notebook has no top button (it opens from the fail panel only); the goal strip is plain text and never takes a tap. */
+#viewport #stage #bookButton{display:none!important}
+#viewport #stage #goalStrip{pointer-events:none;cursor:default}
+/* v4 U47 14: the cut-in strip shows one frame at a time (it used to leak the second frame when the panel is wider than a frame, as on 891x412). */
+#routineCutin .routine-strip{width:var(--routine-frame);margin-left:auto;margin-right:auto}
+/* v4 U47 13: every 능력치 cell is the same size. Phone and tablet panel: one 3-column grid whose rows are all as tall as the tallest cell (ui.js measures the cells and sets grid-auto-rows in px),
+   text starts at the top of every cell, long numbers and texts wrap inside the cell. Desktop list: one column, every row the same height (the heckle interval is a second
+   line inside its own cell, so no cell grows), label left and value right, long values wrap or clip inside the cell. */
+.phone #stage #panel[data-screen="stats"] .easy-stat{min-width:0;box-sizing:border-box;justify-content:flex-start;overflow:hidden;overflow-wrap:anywhere}
+.phone #stage #panel[data-screen="stats"] .easy-stat h2{font-size:var(--fs-m)}
+body:not(.phone) #viewport #stage .stats.phone-expanded{display:grid;grid-template-columns:minmax(0,1fr);grid-auto-rows:1fr;gap:8px;padding:8px;text-align:left}
+body:not(.phone) #viewport #stage .stats.phone-expanded .stat{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"l s" "v v";align-items:center;align-content:center;column-gap:8px;row-gap:2px;box-sizing:border-box;min-width:0;padding:4px 8px;overflow:hidden;text-align:left}
+body:not(.phone) #viewport #stage .stats.phone-expanded .stat-label{grid-area:l;text-align:left;white-space:nowrap}
+body:not(.phone) #viewport #stage .stats.phone-expanded .stat-meaning{display:none}
+body:not(.phone) #viewport #stage .stats.phone-expanded .stat-value{grid-area:v;justify-content:flex-end;min-width:0;max-width:100%;gap:4px}
+body:not(.phone) #viewport #stage .stats.phone-expanded .stat-sub{grid-area:s;text-align:right}
+body:not(.phone) #viewport #stage .stats.phone-expanded .stat-text{white-space:normal;overflow-wrap:anywhere;text-align:right;max-width:100%}
+body:not(.phone) #viewport #stage .stats.phone-expanded .stat-value .bitmap{--pixel:3px}
+/* v4 U47 9: 피버 confetti. A layer between the audience card and the board card in DOM order (z-index 0): over the audience scene, under the opaque board
+   card and under the HUD (z 15), so it never sits over the case tap targets; no pointer events; transform-only motion; gone with Reduce Motion. */
+#stage #feverConfetti{position:absolute;left:0;top:0;width:100%;height:100%;z-index:0;pointer-events:none;overflow:hidden;container-type:size}
+#stage #feverConfetti .confetti-piece{position:absolute;left:var(--x);top:0;width:6px;height:6px;opacity:.9;will-change:transform;animation:u47-confetti var(--t) var(--d) linear infinite}
+body:not(.phone) #stage #feverConfetti .confetti-piece{width:9px;height:9px}
+.phone #stage #feverConfetti .confetti-piece.extra{display:none}
+#stage #feverConfetti .c0{background:var(--p-gold)}#stage #feverConfetti .c1{background:var(--p-pink)}#stage #feverConfetti .c2{background:var(--p-info)}#stage #feverConfetti .c3{background:var(--p-ok)}#stage #feverConfetti .c4{background:var(--p-violet)}
+#stage #feverConfetti.fever-paused .confetti-piece{animation-play-state:paused}
+@keyframes u47-confetti{0%{transform:translate3d(0,-8cqh,0) rotate(0)}25%{transform:translate3d(var(--sway),22cqh,0) rotate(90deg)}50%{transform:translate3d(calc(var(--sway) * -1),52cqh,0) rotate(200deg)}75%{transform:translate3d(var(--sway),80cqh,0) rotate(290deg)}100%{transform:translate3d(0,108cqh,0) rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){#stage #feverConfetti{display:none}}
+/* v4 U47 8: the scene-change card (curtain colours, centred place name); fades in and out unless Reduce Motion is on. */
+#stage #sceneCard{position:absolute;inset:0;z-index:55;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:var(--p-void);color:var(--p-gold);animation:u47-card 1.5s linear both}
+#stage #sceneCard:before,#stage #sceneCard:after{content:"";position:absolute;top:0;bottom:0;width:14%;background:repeating-linear-gradient(90deg,var(--p-danger) 0 6px,#7d3036 6px 12px)}
+#stage #sceneCard:before{left:0}#stage #sceneCard:after{right:0}
+#stage #sceneCard span{position:relative;font:400 var(--fs-l)/1.3 Galmuri11,monospace}
+#stage #sceneCard small{position:relative;font:400 var(--fs-s)/1.3 Galmuri11,monospace;color:var(--p-ink-2)}
+@keyframes u47-card{0%{opacity:0}20%,80%{opacity:1}100%{opacity:0}}
+@media(prefers-reduced-motion:reduce){#stage #sceneCard{animation:none}}
+/* v4 U47 6: the leave question ("저장하고 나갈까요?") is a centred card over a dimmed stage, above the panels (z 35) and toasts (z 30). */
+#stage #leaveConfirm{position:absolute;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;background:#000000b8}
+#stage #leaveConfirm .leave-box{box-sizing:border-box;width:min(560px,92%);max-height:92%;overflow:auto;padding:14px;background:var(--panel);border:3px solid var(--panel-border);display:grid;gap:10px;text-align:center}
+#stage #leaveConfirm h2{margin:0;font:400 var(--fs-l)/1.3 Galmuri11,monospace;color:var(--p-gold)}
+#stage #leaveConfirm p{margin:0;font:400 var(--fs-m)/1.4 Galmuri11,monospace;color:var(--p-cream)}
+#stage #leaveConfirm .leave-actions{display:grid;gap:8px;grid-template-columns:repeat(3,minmax(0,1fr))}
+#stage #leaveConfirm button{min-width:0;min-height:44px;font:400 var(--fs-m)/1.2 Galmuri11,monospace;padding:6px 4px;white-space:normal}
+body:not(.phone) #stage #leaveConfirm .leave-box{width:min(900px,92%);padding:28px;gap:18px}
+body:not(.phone) #stage #leaveConfirm button{min-height:64px}
+/* v4 U47 4: the not-yet-typed rest of a dialog line keeps its place (so the lines do not reflow) but is invisible. */
+#viewport #stage #storyDialog .type-rest{color:transparent;-webkit-text-fill-color:transparent;text-shadow:none}

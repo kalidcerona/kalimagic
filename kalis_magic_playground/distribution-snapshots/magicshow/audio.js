@@ -4,6 +4,7 @@
   const KEY = 'magicShowBuster.v3.sound';
   let gestured = false, needsGesture = true;
   let context, master, muted = false, lastTap = -Infinity;
+  const SAME_GAP = .07, lastPlayed = new Map(), FEVER_BPM = 132; // v4 U47 9: 피버 plays the same score faster (112 BPM normally)
   const MUSIC_KEY='magicShowBuster.v3.music';
   let musicOn=true,musicVolume=.35,musicBus,musicTimer=null,musicStep=0,musicNext=0,musicScene={group:'cozy',tense:false,fever:false},musicSignature='',noiseBuffer;
   const musicVoices=new Set();
@@ -41,6 +42,8 @@
   }
   function play(name, options = {}) {
     if (!context || muted) return;
+    // v4 U46 A9: the same sound never starts twice within SAME_GAP seconds (a 25-case chain would otherwise stack 25 copies into one blur).
+    if (name !== 'tap') { const now = context.currentTime; if (now - (lastPlayed.get(name) ?? -Infinity) < SAME_GAP) return; lastPlayed.set(name, now); }
     const quiet = options.auto ? .23 : 1;
     const note = (f, d, t = 0, type = 'sine', v = .4, end = f) => tone(f, d, t, type, v * quiet, end);
     const melody = (notes, step, type = 'triangle') => notes.forEach((f, i) => note(f, step * 1.7, i * step, type, .35));
@@ -95,7 +98,13 @@
     if(beat%2===0)out.push({midi:root+(beat===4?7:0),type:'triangle',duration:.42,volume:.08});
     if(beat%4===2)out.push({midi:0,type:'noise',duration:.045,volume:scene.tense?.025:.012});
     if(scene.tense&&beat%2)out.push({midi:root+7,type:'square',duration:.09,volume:.025});
-    if(scene.fever)out.push({midi:melody+12,type:'triangle',duration:.12,volume:.05});
+    if(scene.fever){
+      // v4 U47 9: fever variation: a brighter lead (the octave above on a sawtooth), an off-beat sparkle, a driving bass and a kick/clap pulse on every beat.
+      out.push({midi:melody+12,type:'sawtooth',duration:.12,volume:.04});
+      if(beat%2)out.push({midi:melody+19,type:'square',duration:.07,volume:.03});
+      if(beat%4===0)out.push({midi:root-12,type:'triangle',duration:.3,volume:.12});
+      if(beat%2===0)out.push({midi:0,type:'noise',duration:.06,volume:.04});
+    }
     return out;
   }
   function saveMusic(){try{localStorage.setItem(MUSIC_KEY,JSON.stringify({on:musicOn,volume:musicVolume}));}catch(error){ /* Optional storage. */ }}
@@ -115,7 +124,7 @@
     musicTimer=null;
     if(!context||context.state!=='running'||!musicOn||document.hidden)return;
     if(musicNext<context.currentTime)musicNext=context.currentTime+.04;
-    while(musicNext<context.currentTime+.35){for(const note of scoreStep(musicStep++,musicScene))musicNote(note,musicNext,musicBus);musicNext+=60/112/2;}
+    while(musicNext<context.currentTime+.35){for(const note of scoreStep(musicStep++,musicScene))musicNote(note,musicNext,musicBus);musicNext+=60/(musicScene.fever?FEVER_BPM:112)/2;}
     musicTimer=setTimeout(scheduleMusic,100);
   }
   function stopMusic(){
@@ -130,11 +139,15 @@
   }
   function setMusicScene(slug,tense,fever){
     const next={slug:slug,group:musicGroup(slug),tense:!!tense,fever:!!fever},signature=JSON.stringify(next);
-    if(signature===musicSignature)return;musicSignature=signature;musicScene=next;
+    if(signature===musicSignature)return;musicSignature=signature;
+    // v4 U47 9: when only the fever flag flips (in or out) the score keeps its place, so the music speeds up and brightens without jumping back to bar one.
+    const feverOnly=musicScene.slug===next.slug&&musicScene.tense===next.tense&&musicScene.fever!==next.fever;
+    musicScene=next;
     if(musicBus&&context&&musicOn){
-      const old=musicBus;old.gain.setTargetAtTime(0,context.currentTime,.16);
-      musicBus=context.createGain();musicBus.gain.value=0;musicBus.connect(context.destination);musicBus.gain.setTargetAtTime(musicVolume*.22,context.currentTime,.16);
-      setTimeout(()=>old.disconnect(),900);musicStep=0;musicNext=context.currentTime+.04;
+      const old=musicBus;old.gain.setTargetAtTime(0,context.currentTime,feverOnly?.3:.16);
+      musicBus=context.createGain();musicBus.gain.value=0;musicBus.connect(context.destination);musicBus.gain.setTargetAtTime(musicVolume*.22,context.currentTime,feverOnly?.3:.16);
+      setTimeout(()=>old.disconnect(),feverOnly?1600:900);
+      if(!feverOnly){musicStep=0;musicNext=context.currentTime+.04;}else musicNext=Math.max(musicNext,context.currentTime+.04);
     }
     startMusic();
   }

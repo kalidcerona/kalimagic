@@ -492,7 +492,7 @@
         { id: "tin-case", name: "틴 케이스", emoji: "🧰", flavor: "작은 케이스에 여유 한 칸." }
       ] },
       { id: "water", name: "멘탈 회복", effect: "heal", share: 0.14, ladder: [
-        { id: "water-glass", name: "물 한 잔", emoji: "🥤", flavor: "한 모금 쉬고 다시 무대 앞으로." },
+        { id: "water-glass", name: "치킨 한 조각", emoji: "🍗", flavor: "닭다리 한 입이면 멘탈이 쑥! 칼리의 최애 간식이에요." },
         { id: "sponge-balls", name: "스펀지 볼", emoji: "🔴", flavor: "쥐었다 펴면 기분도 말랑." },
         { id: "cups-and-balls", name: "컵과 공", emoji: "🏆", flavor: "컵을 열면 웃음이 쏙." },
         { id: "trace", name: "트레이스", emoji: "📘", flavor: "페이지를 넘기며 잠깐 숨 고르기." },
@@ -521,7 +521,7 @@
         { id: "linking-rings", name: "링", emoji: "⭕", flavor: "고리가 이어지면 마음도 편안." }
       ] },
       { id: "water", name: "멘탈 회복", effect: "heal", share: 0.15, rarityMap: [0, 1, 1, 2, 2], ladder: [
-        { id: "water-glass", name: "물 한 잔", emoji: "🥤", flavor: "한 모금 쉬고 다시 무대 앞으로." },
+        { id: "water-glass", name: "치킨 한 조각", emoji: "🍗", flavor: "닭다리 한 입이면 멘탈이 쑥! 칼리의 최애 간식이에요." },
         { id: "sponge-balls", name: "스펀지 볼", emoji: "🔴", flavor: "쥐었다 펴면 기분도 말랑." },
         { id: "cups-and-balls", name: "컵과 공", emoji: "🏆", flavor: "컵을 열면 웃음이 쏙." }
       ] },
@@ -581,14 +581,14 @@
     {"id": "attack", "name": "연출력", "desc": "V ×1.05^L", "max": 10, "cost": {"c": 45, "g": 2.2}, "currency": "coins", "prereqs": ["mental"], "x": 0, "y": -2, "reveal": "N", "branch": "heart", "icon": "node-heart-2.png", "emoji": "👏", "pending": false},
     {"id": "shieldCap", "name": "넉넉한 실크", "desc": "자신감 cap 비율 0.48+0.03L", "max": 4, "cost": {"c": 250, "g": 2.2}, "currency": "coins", "prereqs": ["mental"], "x": -1, "y": -2, "reveal": "N", "branch": "heart", "icon": "node-heart-1.png", "emoji": "🧣", "pending": false},
     {"id": "shieldValue", "name": "부드러운 실크", "desc": "실크 아이템 자신감 +5L%", "max": 4, "cost": {"c": 400, "g": 2.2}, "currency": "coins", "prereqs": ["shieldCap"], "x": -1, "y": -3, "reveal": "N", "branch": "heart", "icon": "node-heart-2.png", "emoji": "🧣", "pending": false},
-    {"id": "healValue", "name": "시원한 한 모금", "desc": "회복 아이템 회복량 +5L%", "max": 4, "cost": {"c": 300, "g": 2.2}, "currency": "coins", "prereqs": ["attack"], "x": 1, "y": -2, "reveal": "N", "branch": "heart", "icon": "node-heart-1.png", "emoji": "💧", "pending": false},
-    {"id": "winHeal", "name": "마무리 포즈", "desc": "승리 회복 비율 0.20+0.02L", "max": 3, "cost": {"c": 650, "g": 2.2}, "currency": "coins", "prereqs": ["healValue"], "x": 1, "y": -3, "reveal": "N", "branch": "heart", "icon": "node-heart-2.png", "emoji": "👏", "pending": false},
+    {"id": "healValue", "name": "든든한 한 입", "desc": "회복 아이템 회복량 +5L%", "max": 4, "cost": {"c": 300, "g": 2.2}, "currency": "coins", "prereqs": ["attack"], "x": 1, "y": -2, "reveal": "N", "branch": "heart", "icon": "node-heart-1.png", "emoji": "🍗", "pending": false},
+    {"id": "winHeal", "name": "마무리 포즈", "desc": "관객이 만족했을 때 회복 비율 0.20+0.02L", "max": 3, "cost": {"c": 650, "g": 2.2}, "currency": "coins", "prereqs": ["healValue"], "x": 1, "y": -3, "reveal": "N", "branch": "heart", "icon": "node-heart-2.png", "emoji": "👏", "pending": false},
     {"id": "levelHeal", "name": "연습의 보람", "desc": "레벨업 회복 비율 0.16+0.02L", "max": 3, "cost": {"c": 550, "g": 2.2}, "currency": "coins", "prereqs": ["attack"], "x": 0, "y": -3, "reveal": "N", "branch": "heart", "icon": "node-heart-1.png", "emoji": "💛", "pending": false},
     {"id": "openingShield", "name": "대본 준비", "desc": "새 run 시작 시 최대 멘탈의 5L% 자신감", "max": 3, "cost": {"c": 1000, "g": 2.2}, "currency": "coins", "prereqs": ["levelHeal"], "x": 0, "y": -4, "reveal": "N3", "branch": "heart", "icon": "node-heart-2.png", "emoji": "🛡️", "pending": false},
     {"id": "calm", "name": "포커페이스", "desc": "야유 피해 ×(1-0.02L)", "max": 3, "cost": {"c": 2000, "g": 2.2}, "currency": "coins", "prereqs": ["openingShield"], "x": 0, "y": -5, "reveal": "N5", "branch": "heart", "icon": "node-heart-1.png", "emoji": "💛", "pending": false},
     {"id": "coinLuck", "name": "모자 속 동전", "desc": "동전 추첨 가중치 +6L. 정규화 전 가중치이며 확률은 전체 가중치로 계산합니다.", "max": 10, "cost": {"c": 70, "g": 2.2}, "currency": "coins", "prereqs": ["root"], "x": 1, "y": 1, "reveal": "N", "branch": "luck", "icon": "node-luck-1.png", "emoji": "🪙", "pending": false},
     {"id": "forceRemove", "name": "포스", "desc": "나쁜 슬롯 문양 제거, 보석 비용 max(1,3-L)", "max": 2, "cost": [1, 1], "currency": "keys", "prereqs": ["coinLuck"], "x": 2, "y": 1, "reveal": "N5", "branch": "luck", "icon": "node-luck-2.png", "emoji": "🪄", "pending": false},
-    {"id": "tip", "name": "감사의 팁", "desc": "관객 승리 동전 +5L%", "max": 4, "cost": {"c": 180, "g": 2.2}, "currency": "coins", "prereqs": ["coinLuck"], "x": 2, "y": 2, "reveal": "N", "branch": "luck", "icon": "node-luck-1.png", "emoji": "🪙", "pending": false},
+    {"id": "tip", "name": "감사의 팁", "desc": "관객 만족 동전 +5L%", "max": 4, "cost": {"c": 180, "g": 2.2}, "currency": "coins", "prereqs": ["coinLuck"], "x": 2, "y": 2, "reveal": "N", "branch": "luck", "icon": "node-luck-1.png", "emoji": "🪙", "pending": false},
     {"id": "dealerCoin", "name": "딜러의 선물", "desc": "딜러 카드의 동전 보상 +10L%", "max": 3, "cost": {"c": 650, "g": 2.2}, "currency": "coins", "prereqs": ["forceRemove"], "x": 3, "y": 1, "reveal": "N5", "branch": "luck", "icon": "node-luck-2.png", "emoji": "🎁", "pending": false},
     {"id": "jackpot", "name": "행운의 박수", "desc": "슬롯 당첨 동전 +15L%, 당첨 확률 유지", "max": 3, "cost": {"c": 1400, "g": 2.2}, "currency": "coins", "prereqs": ["dealerCoin"], "x": 4, "y": 1, "reveal": "N5", "branch": "luck", "icon": "node-luck-1.png", "emoji": "🍀", "pending": false},
     {"id": "gemFind", "name": "반짝이는 모자", "desc": "희귀 이상 드롭의 보석 확률 +1L%p", "max": 3, "cost": {"c": 900, "g": 2.2}, "currency": "coins", "prereqs": ["tip"], "x": 3, "y": 2, "reveal": "N3", "branch": "luck", "icon": "node-luck-2.png", "emoji": "💎", "pending": false},
@@ -635,7 +635,7 @@
       // v4 U37: kind values are the base; the dealer pays them times CONST.dealerRewardMult (2.5): gems 1 -> 3, 3 -> 8, heal 20 -> 50 percent, buff 15 -> 37.
       { id: "gems-1", name: "보석 세 알", emoji: "💎", kind: "gems", value: 1 },
       { id: "gems-3", name: "보석 여덟 알", emoji: "💎", kind: "gems", value: 3 },
-      { id: "heal", name: "물 한 잔", emoji: "🥤", kind: "heal", value: 20 },
+      { id: "heal", name: "치킨 한 조각", emoji: "🍗", kind: "heal", value: 20 },
       { id: "buff", name: "박수 부적", emoji: "✨", kind: "buff", value: 15 }
     ],
     slotRules: "같은 문양 세 칸이면 보상이 나온다.",
@@ -727,7 +727,7 @@
       name: "네온 불빛",
       hue: 320,
       ending: {
-        title: "네온도 박수에 졌다",
+        title: "네온도 박수에 물들었다",
         body: "카지노 칩이 박자처럼 쌓였다. 화려한 관객이 깃털을 한쪽으로 젖힌다. 이 차원의 불빛은 앵콜을 기억한다."
       }
     },
@@ -861,11 +861,11 @@
     ['tipbox','팁 박스',4,[['Speed','속도',3],['Power','금액',4]]],
     ['flashpaper','플래시 페이퍼',5,[['Chance','확률',4],['Power','파워',4]]],
     ['crystal','수정구',6,[['Speed','속도',3],['Power','파워',4]]],
-    ['water','물 한 잔',6,[['Speed','속도',3],['Power','파워',4]]],
+    ['water','치킨 한 조각',6,[['Speed','속도',3],['Power','파워',4]]],
     ['spotlight','스포트라이트',7,[['Count','행 수',1],['Speed','속도',3],['Power','파워',5]]]
   ];
   defs.forEach(([id,name,venue,up],i) => {
-    const make=(key,label,max,pre,x,c,desc)=>D.tree.push({id:key,name:label,desc,branch:'pet',prereqs:[pre],x,y:8+i,max,cost:{c,g:1.5},currency:'coins',reveal:'N',icon:'node-'+id+'.png',emoji:'✨',pending:false,u4b:true,gate:{type:'venue',target:venue}});
+    const make=(key,label,max,pre,x,c,desc)=>D.tree.push({id:key,name:label,desc,branch:'pet',prereqs:[pre],x,y:8+i,max,cost:{c,g:1.5},currency:'coins',reveal:'N',icon:'node-'+(id==='water'?'chicken':id)+'.png',emoji:'✨',pending:false,u4b:true,gate:{type:'venue',target:venue}});
     make(id,name,1,'root',0,180*venue,name+' 자동 도우미');
     up.forEach(([suffix,label,max],j)=>make(id+suffix,name+' '+label,max,id,j+1,250*venue,label+' 강화'));
   });
@@ -1334,7 +1334,7 @@ GAME_DATA.tree.filter(n=>n.u4b).forEach(n=>{
     "name": "전설의 딜러",
     "heckles": [
       "카드는 내 손이 낫지.",
-      "이 판은 내가 이겨.",
+      "이 판은 내 손이 더 신기해.",
       "패를 읽었다.",
       "허세 아니고?"
     ],
@@ -1748,7 +1748,7 @@ GAME_DATA.tree.filter(n=>n.u4b).forEach(n=>{
       "솔직히 불안하지?",
       "거울 앞에서 떨지."
     ],
-    "winLine": "내가 졌다, 훌륭해!"
+    "winLine": "내가 감탄했다, 훌륭해!"
   },
   "a37": {
     "name": "지팡이 없는 나",
@@ -2095,8 +2095,8 @@ GAME_DATA.onboarding = {
     },
     {
       "id": "buyAll",
-      "title": "모두 배우기",
-      "body": "버튼 한 번에 살 수 있는 비법을 다 배워요."
+      "title": "비법 고르기",
+      "body": "공연이 끝나면 비법 노트에서 배울 비법을 직접 골라요."
     },
     {
       "id": "goal",
@@ -2168,7 +2168,7 @@ GAME_DATA.storyV15 = {
     "bio": "모든 마술을 의심하는 첫 관객. 팔짱이 단단하다.",
     "intro": [
       {
-        "speaker": "김도겸",
+        "speaker": "NDD",
         "text": "마술이라고? 나는 아무것도 안 믿어."
       },
       {
@@ -2176,7 +2176,7 @@ GAME_DATA.storyV15 = {
         "text": "그럼 믿게 만들어 드릴게요."
       },
       {
-        "speaker": "김도겸",
+        "speaker": "NDD",
         "text": "의심 게이지가 바닥나면 인정하지."
       },
       {
@@ -2186,25 +2186,25 @@ GAME_DATA.storyV15 = {
     ],
     "coaching": [
       {
-        "speaker": "김도겸",
+        "speaker": "NDD",
         "text": "손 빠른 척만 하는 거 아냐?"
       },
       {
-        "speaker": "김도겸",
+        "speaker": "NDD",
         "text": "그 정도론 내 의심이 안 줄어."
       },
       {
-        "speaker": "김도겸",
+        "speaker": "NDD",
         "text": "어, 게이지가 좀 깎이는데?"
       },
       {
-        "speaker": "김도겸",
+        "speaker": "NDD",
         "text": "야유 한 번 더 간다. 멘탈 괜찮아?"
       }
     ],
     "defeat": [
       {
-        "speaker": "김도겸",
+        "speaker": "NDD",
         "text": "으윽, 의심이 바닥났다. 믿는다, 믿어."
       },
       {
@@ -2212,7 +2212,7 @@ GAME_DATA.storyV15 = {
         "text": "이제 거실로 가 볼까요?"
       },
       {
-        "speaker": "김도겸",
+        "speaker": "NDD",
         "text": "좋아. 나도 첫 관객으로 박수 칠게."
       }
     ],
@@ -2332,7 +2332,7 @@ GAME_DATA.storyV15 = {
       "afterClear": [
         {
           "speaker": "파티 주최자",
-          "text": "졌다. 학교 장기자랑에 나가 봐."
+          "text": "감탄했다. 학교 장기자랑에 나가 봐."
         },
         {
           "speaker": "동생",
@@ -3214,7 +3214,7 @@ GAME_DATA.easyNodes = {
   "calm": "야유를 들어도 표정이 흔들리지 않아요\n야유 힘 2%씩 줄기",
   "coinLuck": "케이스에서 동전이 더 잘 나와요\n동전 뽑기 표 6장씩 추가",
   "forceRemove": "딜러의 나쁜 그림을 지워요\n쓰는 보석 1개씩 줄기 · 최소 1개",
-  "tip": "관객을 이기면 동전을 더 얻어요\n승리 동전 5%씩 추가",
+  "tip": "관객이 만족하면 동전을 더 얻어요\n만족 동전 5%씩 추가",
   "dealerCoin": "딜러 카드에서 동전을 더 얻어요\n동전 10%씩 추가",
   "jackpot": "슬롯 당첨 때 동전을 더 얻어요\n당첨 동전 15%씩 추가",
   "gemFind": "좋은 소품에서 보석도 얻어요\n보석 나올 기회 1%씩 추가",
@@ -3239,7 +3239,7 @@ GAME_DATA.easyNodes = {
   "encorePower": "피버 타임에 관객을 더 신나게 해요\n실력 5%씩 추가",
   "encoreSpan": "앵콜의 힘이 더 오래 가요\n지속 시간 3초씩 추가",
   "challenge": "도전하며 관객을 더 잘 놀라게 해요\n도전 3개 · 성공마다 연출 0.5% 추가",
-  "starTrick": "케이스와 관객을 더 빨리 이겨요\n실력 1.14배 · 연출 1.3배씩",
+  "starTrick": "케이스를 더 빨리 열고 관객을 더 빨리 감탄시켜요\n실력 1.14배 · 연출 1.3배씩",
   "starGuard": "야유를 버티고 더 잘 회복해요\n멘탈 · 자신감 · 회복 1.18배씩",
   "starTempo": "더 자주 두드리고 빨리 채워져요\n두드리기 1.06배 · 준비 시간 8% 줄기",
   "starBounty": "동전을 더 많이 얻어요\n동전 1.12배씩",
@@ -3255,7 +3255,7 @@ GAME_DATA.easyNodes = {
   "flashpaper": "종이를 누르면 모든 칸을 두드려요\n개봉 때 3% · 실력의 150%",
   "flashpaperChance": "플래시 페이퍼를 더 자주 얻어요\n기회 1%씩 추가 · 최대 7%",
   "crystal": "수정구가 야유를 막아줘요\n8초마다 멘탈의 3% 자신감",
-  "water": "물 한 잔으로 마음이 회복돼요\n9초마다 멘탈의 3% 회복",
+  "water": "치킨 한 조각으로 기운이 나요\n9초마다 멘탈의 3% 회복 · 칼리의 최애 간식",
   "spotlight": "조명이 케이스 한 줄을 두드려요\n4초마다 실력의 60%",
   "fanPower": "팬과 조수가 더 세게 두드려요\n힘 15%씩 추가",
   "autoLearn": "동전으로 비법을 알아서 배워요\n켜 두면 3초마다 배우기",
@@ -3270,8 +3270,8 @@ GAME_DATA.easyNodes = {
   "tipboxPower": "팁 박스에 동전이 더 모여요\n동전 25%씩 추가",
   "crystalSpeed": "수정구가 더 자주 막아줘요\n기다리는 시간 10%씩 줄기",
   "crystalPower": "수정구가 더 많이 막아줘요\n자신감 20%씩 추가",
-  "waterSpeed": "물을 더 자주 마셔요\n기다리는 시간 10%씩 줄기",
-  "waterPower": "물 한 잔이 더 많이 회복해요\n회복 20%씩 추가",
+  "waterSpeed": "치킨을 더 자주 먹어요\n기다리는 시간 10%씩 줄기",
+  "waterPower": "치킨 한 조각이 더 많이 회복해요\n회복 20%씩 추가",
   "spotlightSpeed": "조명이 더 자주 비춰요\n기다리는 시간 10%씩 줄기",
   "spotlightPower": "조명이 더 세게 두드려요\n힘 15%씩 추가",
   "spongeCount": "스펀지볼이 하나 더 튀어요\n1개씩 추가 · 최대 3개",
@@ -3331,9 +3331,9 @@ GAME_DATA.venues.find(v=>v.slug==='lecturenote').bossHpFactor*=1.07;
 
 // U18 optional challenges and persistent cosmetics do not change timeline balance.
 GAME_DATA.trueFanRules=[
- {type:'noDamage',value:0,label:'하트 하나도 잃지 않고 이기기'},
- {type:'timeLimit',value:90,label:'90초 안에 이기기'},
- {type:'combo',value:25,label:'25콤보를 만든 뒤 이기기'}
+ {type:'noDamage',value:0,label:'하트 하나도 잃지 않고 관객 감탄시키기'},
+ {type:'timeLimit',value:90,label:'90초 안에 관객 감탄시키기'},
+ {type:'combo',value:25,label:'25콤보를 만든 뒤 관객 감탄시키기'}
 ];
 GAME_DATA.cosmetics={
  kali:[

@@ -251,7 +251,8 @@
   function tickVisitor(state,dt,ev) {
     var v=state.u14.visitor;v.buff=Math.max(0,v.buff-dt);v.wait=Math.max(0,v.wait-dt);
     v.incomeMs+=dt;if(v.incomeMs>=3000){v.incomeRate=v.incomeCoins/(v.incomeMs/1000);v.incomeMs=0;v.incomeCoins=0;}
-    if(v.left>0){v.left=Math.max(0,v.left-dt);if(!v.left)emit(ev,{type:'visitorMiss'});return;}
+    // v4 U47 5: the pickup's 8 seconds only run while it can be tapped. While it is hidden (heckle telegraph, stage change, curtain call) the time stands still, so a character line never eats it.
+    if(v.left>0){if(visitorBlocked(state))return;v.left=Math.max(0,v.left-dt);if(!v.left)emit(ev,{type:'visitorMiss'});return;}
     if(!v.wait&&!visitorBlocked(state)){v.kind=rngNext(state)<.5?'rabbit':'fan';v.left=8000;v.serial++;v.wait=90000+Math.floor(rngNext(state)*60001);emit(ev,{type:'visitor',kind:v.kind,serial:v.serial});}
   }
   function catchVisitor(state,options) {
@@ -435,8 +436,11 @@
     return null;
   }
   function wandDamage(state) {
-    return (state.u14.visitor.buff>0?2:1) * (1+.03*state.u14.sets.length+.05*state.u18.sets.length) * (state.skills.showtimeLeft > 0 ? 3 : 1) * (state._wand || CONST.wandBase) * (hasReward(state, 2) ? 1.2 : 1) * (state.features.encoreLeft > 0 ? 2 * (state.tree.encore ? 1 + nodeEffects(state).encorePower : 1) : 1);
+    return (state.u14.visitor.buff>0?2:1) * (1+.03*state.u14.sets.length+.05*state.u18.sets.length) * (state.skills.showtimeLeft > 0 ? 3 : 1) * (state._wand || CONST.wandBase) * (hasReward(state, 2) ? 1.2 : 1) * (state.features.encoreLeft > 0 ? 2 * (state.tree.encore ? 1 + nodeEffects(state).encorePower : 1) : 1) * (1 + challengeBonus(state));
   }
+  // v4 U46 C1: every audience whose 찐팬 challenge was cleared for the first time (u18.paid, kept through rebirth) adds 1 percent to 마술 실력, at most 20 percent.
+  var CHALLENGE_STEP = .01, CHALLENGE_CAP = .2;
+  function challengeBonus(state) { var n = state.u18 && state.u18.paid ? state.u18.paid.length : 0; return Math.min(CHALLENGE_CAP, CHALLENGE_STEP * n); }
 
   // Shared formula modifiers.
   function nodeEffects(state) {
@@ -2074,6 +2078,7 @@
     // v4 U44: a 칼리 product is discovered by reaching its venue (no chain of earlier products is needed); its prereqs only draw the book lines.
     // v4 U45: every 칼리 컬렉션 node (branch collection: the nine wall products, 칼리 덱 and 틴 케이스) follows that rule.
     if (node.branch === "collection") revealed = level > 0 || reached(state, node.venueSlug);
+    if (id === "autoLearn") revealed = false; // v4 U47 10: retired node (kept in the data and in saves, never offered)
     var progress = gateProgress(state,node.gates ? node.gates[level] : node.gate);
     var reason = "";
     if (level >= node.max) reason = "최대 레벨";
@@ -2147,7 +2152,8 @@
     return count;
   }
   function tickAutoLearn(state,dt,ev) {
-    if (!state.learning.on || !state.tree.autoLearn) return;
+    // v4 U47 10: auto-learn is off for everyone (the player picks 비법 after a failure). A saved learning.on = true still loads (same field, same validator) and is treated as off.
+    if (true) return;
     state.learning.ms += dt;
     if (state.learning.ms >= 3000) {
       state.learning.ms %= 3000;
@@ -3345,7 +3351,7 @@
   function startTutorial(state){
     var t=state.u15.tutorial;if(t.done||t.active)return false;
     var baseline=serialize(state);t.active=true;t.baseline=baseline;t.phase="intro";t.line=0;
-    state.u15.queue=[];state.u15.scene=null;state.audHp=state.audHpMax=480;state.atk=1;state.interval=6;state.heckleMs=6000;
+    state.u15.queue=[];state.u15.scene=null;state.audHp=state.audHpMax=320;state.atk=1;/* v4 U47 7: was 480; the NDD tutorial fight now takes about 50 s (sim median) instead of 70 */state.interval=6;state.heckleMs=6000;
     state.onboarding={intro:true,panel:0,step:0,facts:[]};return true;
   }
   function finishTutorial(state){
@@ -3355,6 +3361,7 @@
     state.u15.tutorial={done:true,active:false,won:false,baseline:null};
     state.onboarding={intro:true,panel:0,step:8,facts:[]};return true;
   }
+  // v4 U46 B: unused by the game since the drag-to-move UI was removed (ui.js no longer calls it); kept for test-u15 and old tools. Saved positions still load and place cases.
   function moveCase(state,from,to){
     if(state.u15.scene||state.mode!=='fight'||!Number.isInteger(from)||from<0||from>=state.board.length||!Number.isInteger(to)||to<0||to>=CONST.boardMax)return false;
     var slots=state.u15.positions,other=slots.indexOf(to),old=slots[from];slots[from]=to;slots[other]=old;delete state._layout;return true;
@@ -3477,10 +3484,12 @@
 
 
   function emptyU18(){return {revealed:false,fans:[],paid:[],sets:[],owned:{kali:[],cases:[]},equipped:{kali:'',cases:''},map:false,anchor:null,challenge:null};}
-  function fullyFan(state,v,a){return a.id===v.headliner.id?!!state.trophies[v.slug]:!!(state.bestiary[a.id]&&state.bestiary[a.id].removed);}
+  // v4 U46 C1: the challenge is offered once the audience was beaten (headliner: the venue trophy; others: one win), and the challenges are revealed
+  // with the first venue trophy (it used to need one whole venue of full fans).
+  function beatenOnce(state,v,a){return a.id===v.headliner.id?!!state.trophies[v.slug]:!!(state.bestiary[a.id]&&state.bestiary[a.id].wins>=1);}
   function checkTrueFanReveal(state,ev){
     if(state.u18.revealed)return false;
-    if(!VENUES.some(function(v){return v.audiences.concat([v.headliner]).every(function(a){return fullyFan(state,v,a);});}))return false;
+    if(!VENUES.some(function(v){return !!state.trophies[v.slug];}))return false;
     state.u18.revealed=true;emit(ev,{type:'trueFanReveal'});return true;
   }
   function trueFanRule(slug){var n=venueNumber(slug);return n?DATA.trueFanRules[(n-1)%DATA.trueFanRules.length]:null;}
@@ -3518,7 +3527,7 @@
     var v=VENUES[venueNumber(slug)-1];kind=kind||'normal';
     if(!v||state.visited.indexOf(slug)<0||['normal','trueFan'].indexOf(kind)<0)return false;
     var list=v.audiences.concat([v.headliner]),j=list.findIndex(function(a){return a.id===id;})+1;if(!j)return false;
-    if(kind==='trueFan'&&(!state.u18.revealed||!fullyFan(state,v,list[j-1])))return false;
+    if(kind==='trueFan'&&(!state.u18.revealed||!beatenOnce(state,v,list[j-1])))return false;
     if(!state.u18.map&&!openMap(state))return false;
     state.u18.map=false;state.u18.challenge={slug:slug,id:id,kind:kind};
     state.u15.queue=[];state.features.climax.left=0;state.features.climax.paradeDone=true;
@@ -3623,7 +3632,7 @@
   }
 
   globalThis.Core = {beginFuture:beginFuture,strongestCase:strongestCase,
-    openMap:openMap,travelTo:travelTo,returnToStage:returnToStage,travelAllowed:travelAllowed,trueFanRule:trueFanRule,trueFanReward:trueFanReward,trueFanProgress:trueFanProgress,cosmeticInfo:cosmeticInfo,buyCosmetic:buyCosmetic,equipCosmetic:equipCosmetic,
+    openMap:openMap,travelTo:travelTo,returnToStage:returnToStage,travelAllowed:travelAllowed,trueFanRule:trueFanRule,trueFanReward:trueFanReward,trueFanProgress:trueFanProgress,challengeBonus:challengeBonus,beatenOnce:beatenOnce,CHALLENGE_CAP:CHALLENGE_CAP,cosmeticInfo:cosmeticInfo,buyCosmetic:buyCosmetic,equipCosmetic:equipCosmetic,
     dealerGameStart:dealerGameStart,dealerCupsReady:dealerCupsReady,dealerCupsPick:dealerCupsPick,dealerMontePick:dealerMontePick,monteRound:monteRound,monteMoveMs:monteMoveMs,dealerMonteBank:dealerMonteBank,gemShopBuy:gemShopBuy,gemShopInfo:gemShopInfo,
     startTutorial:startTutorial,finishTutorial:finishTutorial,moveCase:moveCase,useGlove:useGlove,queueScene:queueScene,startScene:startScene,advanceScene:advanceScene,
     slotSummary: slotSummary, validSlot: validSlot,
