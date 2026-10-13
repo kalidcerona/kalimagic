@@ -63,7 +63,7 @@
     itemDamage: 8,
     itemShield: 2.7,
     itemHeal: 1.8,
-    itemCoins: 4,
+    itemCoins: 8, // v4 U48: was 4. With 비법 learned only after a failure the build grows only from saved coins, so case coins pay twice as much (SPEC "v4 U48").
     rarityW: [70, 22, 6.5, 1.4, 0.1],
     rarityMult: [1, 2, 4, 10, 25],
     rarityIds: ["common", "rare", "hero", "legend", "myth"],
@@ -108,6 +108,9 @@
     patternHealEvery: 9000,
     // v4 U38: a show ends as a failure when doubt has not gone below its lowest point for this long (a stall, e.g. gate pressure out-healing the player).
     stallMs: 75000,
+    // v4 U48 A2: 칼리 덱 한 브릭 (a box of 12 decks): 30 minutes of auto practice for brickGems gems (a single deck is 2 gems for 120 s).
+    // gloveLeftMax is the saved cap of the running auto-practice time (two bricks and a deck); save version 20.
+    brickGems: 20, brickMs: 1800000, gloveLeftMax: 3720000,
     // v4 U41: node levels a gate asks the player to learn after first meeting it (the old fixed number; see gateNeed for the cap).
     gatePrep: 30,
     // v4 U41: failed shows at one gate that remove its pressure completely (each one removes 1/gateFailSteps).
@@ -134,7 +137,7 @@
   };
 
   var LEGACY_KEYS = ["power", "attack", "mental", "spawn", "speed", "board", "area", "coinLuck", "startFinale", "forceRemove", "dove", "rabbit", "flash"];
-  var TREE_KEYS = DATA.tree.filter(function (n) { return !n.starKey; }).map(function (n) { return n.id; });
+  var TREE_KEYS = DATA.tree.filter(function (n) { return !n.starKey && !n.partOf; }).map(function (n) { return n.id; }); // v4 U48 C: parts are not saved
   var NODE_BY_ID = Object.create(null);
   DATA.tree.forEach(function (n) { NODE_BY_ID[n.id] = n; });
   var STAR_KEYS = ["trick", "guard", "tempo", "bounty"];
@@ -267,7 +270,7 @@
   function emptyIdle() { return {wallMs:0,autoAdvance:false,waiting:false,autoAcc:0,cursor:0,reward:null,milestones:[]}; }
   function emptySkills() { return {showtimeLeft:0,cheerGuard:false,cooldowns:{showtime:0,cardrain:0,cheer:0}}; }
   function milestoneMultiplier(level, marks) { return Math.pow(2,(marks||[10,25]).filter(function(n){return level>=n;}).length); }
-  function statMultiplier(state,id) { return NODE_BY_ID[id] && NODE_BY_ID[id].statMilestone ? milestoneMultiplier(nodeLevel(state,NODE_BY_ID[id])||0) : 1; }
+  function statMultiplier(state,id) { return NODE_BY_ID[id] && NODE_BY_ID[id].statMilestone ? milestoneMultiplier(storedLevel(state,NODE_BY_ID[id])) : 1; } // v4 U48 C: the stored total, also for split nodes
   function nextMilestone(level, marks, cap) { if(cap==null)cap=Infinity;return (marks||[10,25]).find(function(n){return n>level && n<=cap;}) || null; }
   function formatNumber(value) {
     var n=Number(value); if(!isFinite(n))return '0';
@@ -620,7 +623,7 @@
   }
   function failureLessons(state) {
     var ids=['mental','attack','power','speed','calm','shieldCap','boxHeal'];
-    var lessons=ids.map(function(id){return NODE_BY_ID[id];}).filter(function(n){return n&&nodeInfo(state,n.id).purchasable;});
+    var lessons=ids.map(function(id){return NODE_BY_ID[activePart(state,id)];}).filter(function(n){return n&&nodeInfo(state,n.id).purchasable;});
     var id=state.u19b.failedId,g=state.u19b.gates[id];
     if(!lessons.length){
       // v4 U41: nothing in the usual seven can be bought now, so offer the best node of the whole book that can be (still the player's choice).
@@ -650,7 +653,7 @@
       if(n.starKey||n.pending||n.id==='root')return;
       var info=nodeInfo(state,n.id);
       if(!info.purchasable||!info.revealed)return;
-      var rank=BOOK_LESSON_ORDER.indexOf(n.id);if(rank<0)rank=BOOK_LESSON_ORDER.length;
+      var rank=BOOK_LESSON_ORDER.indexOf(baseNode(n).id);if(rank<0)rank=BOOK_LESSON_ORDER.length;
       if(rank<bestRank||rank===bestRank&&info.cost<bestCost){best=n;bestRank=rank;bestCost=info.cost;}
     });
     return best;
@@ -771,10 +774,18 @@
 
   function caseCap(state) { return 5 + (state.tree.caseMax || 0); }
   function caseNeed(lv) { return Math.ceil(3 * Math.pow(1.35, lv - 1)); }
-  function caseTier(cell) { return cell.golden ? 'box-golden' : 'box-' + Math.min(4, Math.floor(((cell.lv || 1) - 1) / 3)); }
+  // v4 U48 M2 (owner: "카드케이스에 레벨 보이는 거 지우고 케이스 색으로 레벨을 가늠하게 해줘."): the board shows no LV text; the case art tells the level
+  // band over the whole range (LV 1 to 5 + caseMax 45 = 50): red 1-4, blue 5-9, black 10-17, silver 18-29, purple galaxy 30-50 (golden stays golden).
+  // casePips is the place inside the band (1 to 4 small dots). Presentation only: nothing in the fight reads either.
+  var CASE_BANDS = [1, 5, 10, 18, 30, 51];
+  function caseBand(lv) { for (var b = 0; b < 5; b++) if (lv < CASE_BANDS[b + 1]) return b; return 4; }
+  function caseTier(cell) { return cell.golden ? 'box-golden' : 'box-' + caseBand(cell.lv || 1); }
+  function casePips(cell) { var lv = cell.lv || 1, b = caseBand(lv), lo = CASE_BANDS[b], span = CASE_BANDS[b + 1] - lo; return 1 + Math.min(3, Math.floor((lv - lo) * 4 / span)); }
   function caseItems(lv) { return 1 + Math.floor((lv - 1) / 3); }
   // v4 U38: the endless nodes are gone; only the one-level hidden node of a branch still adds its 2 percent.
-  function branchBonus(state, branch) { return 1 + .02 * (state.tree['hidden-' + branch] || 0); }
+  // v4 U48 N4: each learned routine 비법 (routine-<id>) adds 3 percent to its routine's branch.
+  var ROUTINE_NODES = DATA.tree.filter(function (n) { return n.routine; });
+  function branchBonus(state, branch) { var r = 0; for (var i = 0; i < ROUTINE_NODES.length; i++) if (ROUTINE_NODES[i].routineBranch === branch && state.tree[ROUTINE_NODES[i].id]) r++; return 1 + .02 * (state.tree['hidden-' + branch] || 0) + .03 * r; }
   // v4 U45: 틴 케이스 (node.caseItemMult) multiplies what every opened case's items do (damage, shield, heal, coins, xp); 1 without it.
   function caseItemBonus(state) { var m = 1; DATA.tree.forEach(function (n) { if (n.caseItemMult && state.tree[n.id]) m *= n.caseItemMult; }); return m; }
   function earnCoins(state, amount) { state.u14.visitor.incomeCoins+=amount; state.coins += amount; state.features.progress.coinsEarned += amount; }
@@ -1368,12 +1379,14 @@
     if(drop===0 && !state.u15.tutorial.active){
       var slug=VENUES[state.venue-1].slug, ledger=state.u15.drops[slug]||(state.u15.drops[slug]={boxes:0,count:0});
       ledger.boxes++;
-      if(slug==='family'?(ledger.count===0&&(ledger.boxes>=30||dropSample.value<.004)):dropSample.value<.004){
+      // v4 U48 A: the 칼리 덱 drops only once its node is learned (the node unlocks the consumable); the ledger still counts every box.
+      if(hasDeck(state)&&(slug==='family'?(ledger.count===0&&(ledger.boxes>=30||dropSample.value<.004)):dropSample.value<.004)){
         ledger.count++;state.u15.gloves++;emit(ev,{type:'gloveDrop',cell:i});
       }
     }
     var product = type.ladder[type.rarityMap[ri]];
     if (f.collected.indexOf(product.id) < 0) f.collected.push(product.id);
+    if (ri >= 2) routineItem(state, product.id, ev); // v4 U48 N4: a learned routine's item (rare or better, about 8 in 100) shows its trick now and then, 20 s apart
     var mult = CONST.rarityMult[ri];
     var kind = type.id;
     var effect = product.effect || type.effect;
@@ -2007,7 +2020,7 @@
         state.comboMs = 0;
       }
     }
-    var gloveActive=state.u15.gloveLeft>0||hasDeck(state)&&state.u15.deckOn;
+    var gloveActive=state.u15.gloveLeft>0;
     if(gloveActive){
       // One shared manual accumulator prevents extra real fingers from adding hits.
       applyTaps(state,dt,state.board.map(function(c,i){return i;}),ev);
@@ -2048,17 +2061,28 @@
     return out;
   }
 
+  // v4 U48 C: a node with more than 10 levels (or a max outside 1, 3, 5, 10) is shown in the book as several nodes (data.js "v4 U48 C"):
+  // the original node is part I (n.levels = the old total, n.max = the part size) and each later part has partOf (the original id) and
+  // partOffset. The save keeps ONE number under the original key (state.tree[id] or state.stars[key]) = the total level, exactly as before,
+  // so every effect formula and every old save is unchanged; a part's own level is the slice of that total that falls into its range.
+  function baseNode(node) { return node.partOf ? NODE_BY_ID[node.partOf] : node; }
+  function storedLevel(state, node) { var b = baseNode(node); return (b.starKey ? state.stars[b.starKey] : state.tree[b.id]) || 0; }
+  function treeMax(id) { var n = NODE_BY_ID[id]; return n.levels || n.max; }
   function nodeLevel(state, node) {
-    return node.starKey ? state.stars[node.starKey] : state.tree[node.id];
+    if (!node.partOf && !node.levels) return node.starKey ? state.stars[node.starKey] : state.tree[node.id];
+    return Math.max(0, Math.min(node.max, storedLevel(state, node) - (node.partOffset || 0)));
   }
+  // The part of a split node the player learns next (the original id for an unsplit node; the last part when all are full).
+  function activePart(state, id) { var b = NODE_BY_ID[id]; if (!b || !b.parts) return id; for (var i = 0; i < b.parts.length; i++) if (nodeLevel(state, NODE_BY_ID[b.parts[i]]) < NODE_BY_ID[b.parts[i]].max) return b.parts[i]; return b.parts[b.parts.length - 1]; }
+  function fullyLearned(state, id) { return storedLevel(state, NODE_BY_ID[id]) >= treeMax(id) || (id === "board" && boardCapacity(state) >= CONST.boardMax); }
 
   // v4 U38: every finite coin/key node is at its last level (star nodes are a separate track, pending nodes cannot be learned yet).
   function allLearned(state) {
     return DATA.tree.every(function (n) {
-      return n.starKey || n.pending || nodeLevel(state, n) >= n.max || (n.id === "board" && boardCapacity(state) >= CONST.boardMax);
+      return n.starKey || n.pending || nodeLevel(state, n) >= n.max || (baseNode(n).id === "board" && boardCapacity(state) >= CONST.boardMax);
     });
   }
-  function branchMaxed(state, node) { return (node.branchMax || []).every(function(id) { return nodeLevel(state,NODE_BY_ID[id]) >= NODE_BY_ID[id].max || (id === "board" && boardCapacity(state) >= CONST.boardMax); }); }
+  function branchMaxed(state, node) { return (node.branchMax || []).every(function(id) { return fullyLearned(state, id); }); }
   function gateProgress(state, gate) {
     if (!gate) return null;
     var current = gate.type === 'venue' ? (reached(state,gate.slug) ? 1 : 0) : gate.type === 'casesAtLv' ? state.board.filter(function(c){return (c.lv||1)>=gate.lv;}).length : state.features.progress[gate.type] || 0;
@@ -2070,29 +2094,34 @@
   function nodeInfo(state, id) {
     var node = NODE_BY_ID[id];
     if (!node || !state || !state.tree) return { level: 0, max: 0, currency: "coins", cost: null, revealed: false, purchasable: false, blockedReason: "알 수 없는 비법" };
-    var level = nodeLevel(state, node), cost = null;
-    if (level < node.max) cost = Array.isArray(node.cost) ? node.cost[level] : Math.ceil(node.cost.c * Math.pow(node.cost.g, level));
+    // v4 U48 C: for a split node, cost, gates and the area/board rules read the stored total level (the same index as before the split).
+    var base = baseNode(node), bid = base.id, split = !!(node.partOf || node.levels);
+    var level = nodeLevel(state, node), total = split ? storedLevel(state, node) : level, cost = null;
+    if (level < node.max) cost = Array.isArray(node.cost) ? node.cost[total] : Math.ceil(node.cost.c * Math.pow(node.cost.g, total));
     var revealed = id === "root" || (node.reveal === "E" ? state.endings.length > 0 : level > 0 || node.prereqs.some(function (pre) { return nodeLevel(state, NODE_BY_ID[pre]) > 0; }));
-    if (node.u13 && (id==='autoPractice' || /Cooldown$/.test(id))) revealed = level>0 || (id==='autoPractice' ? practiceUnlocked(state) : skillUnlocked(state,id.replace('Cooldown','')));
+    if (node.u13 && (bid==='autoPractice' || /Cooldown$/.test(bid))) revealed = level>0 || (bid==='autoPractice' ? practiceUnlocked(state) : skillUnlocked(state,bid.replace('Cooldown','')));
     if (node.hidden) revealed = level > 0 || branchMaxed(state,node);
     // v4 U44: a 칼리 product is discovered by reaching its venue (no chain of earlier products is needed); its prereqs only draw the book lines.
     // v4 U45: every 칼리 컬렉션 node (branch collection: the nine wall products, 칼리 덱 and 틴 케이스) follows that rule.
     if (node.branch === "collection") revealed = level > 0 || reached(state, node.venueSlug);
     if (id === "autoLearn") revealed = false; // v4 U47 10: retired node (kept in the data and in saves, never offered)
-    var progress = gateProgress(state,node.gates ? node.gates[level] : node.gate);
+    // v4 U48 C: a later part shows up once the part before it is full.
+    if (node.partOf) revealed = level > 0 || (total >= node.partOffset && (node.reveal !== "E" || state.endings.length > 0));
+    var progress = gateProgress(state,node.gates ? node.gates[total] : node.gate);
     var reason = "";
     if (level >= node.max) reason = "최대 레벨";
     else if (node.reveal === "E" && !state.endings.length) reason = "첫 멀티버스 공연 완료";
     else if (!revealed) reason = "아직 발견하지 못한 비법";
     else if (progress && !progress.met) reason = progress.text;
     else if (node.pending) reason = "준비 중";
+    else if (node.partOf && total < node.partOffset) reason = "선행 비법 필요: " + NODE_BY_ID[node.prereqs[0]].name;
     else if (node.branch !== "collection" && !node.prereqs.every(function (pre) { return nodeLevel(state, NODE_BY_ID[pre]) > 0; })) reason = "선행 비법 필요: " + node.prereqs.filter(function (pre) { return nodeLevel(state, NODE_BY_ID[pre]) < 1; }).map(function (pre) { return NODE_BY_ID[pre].name; }).join(", ");
     else if (node.venueSlug && !reached(state,node.venueSlug)) reason = VENUES[venueNumber(node.venueSlug)-1].name + " 도착 필요";
-    else if (id === "area" && !reached(state,CONST.areaVenueNeeds[level])) reason = VENUES[venueNumber(CONST.areaVenueNeeds[level])-1].name + " 도착 필요";
-    else if (id === "area" && boardCapacity(state) < CONST.areaNeeds[level]) reason = "케이스 자리 " + CONST.areaNeeds[level] + "칸 필요";
-    else if (id === "board" && boardCapacity(state) >= CONST.boardMax) reason = "케이스 자리 25칸 완성";
+    else if (bid === "area" && !reached(state,CONST.areaVenueNeeds[total])) reason = VENUES[venueNumber(CONST.areaVenueNeeds[total])-1].name + " 도착 필요";
+    else if (bid === "area" && boardCapacity(state) < CONST.areaNeeds[total]) reason = "케이스 자리 " + CONST.areaNeeds[total] + "칸 필요";
+    else if (bid === "board" && boardCapacity(state) >= CONST.boardMax) reason = "케이스 자리 25칸 완성";
     else if (state[node.currency] < cost) reason = ({ coins: "동전", keys: "열쇠", starlight: "별빛" })[node.currency] + " 부족";
-    return { level: level, max: node.max, gate:progress, currency: node.currency, cost: cost, revealed: revealed, purchasable: !reason, blockedReason: reason };
+    return { level: level, max: node.max, total: total, totalMax: treeMax(bid), gate:progress, currency: node.currency, cost: cost, revealed: revealed, purchasable: !reason, blockedReason: reason };
   }
 
   // Numeric price contract, null for unavailable upgrades. Wallet is checked by buyNode.
@@ -2103,8 +2132,10 @@
   }
 
   function buyNode(state, id) {
-    var info = nodeInfo(state, id), node = NODE_BY_ID[id];
+    var info = nodeInfo(state, id), part = NODE_BY_ID[id];
     if (!info.purchasable) return false;
+    // v4 U48 C: learning a part of a split node raises the one stored total under the original id; the rest below sees that id.
+    var node = baseNode(part); id = node.id;
     state[info.currency] -= info.cost;
     if (node.starKey) state.stars[node.starKey]++;
     else state.tree[id]++;
@@ -2112,7 +2143,7 @@
     if (id === "dove") state.doveMs = nodeEffects(state).doveEvery;
     if (id === "rabbit") state.rabbitMs = nodeEffects(state).rabbitEvery;
     if (id === "flash") state.flashBreaks = 0;
-    if (node.statMilestone && [10,25].indexOf(nodeLevel(state,node))>=0) state.idle.milestones.push(id);
+    if (node.statMilestone && [10,25].indexOf(storedLevel(state,node))>=0) state.idle.milestones.push(id);
     recompute(state, false);
     if (id === "board") { ensureBoard(state); reveal(state, "slot"); }
     if (id === "area") reveal(state, "area");
@@ -2199,8 +2230,8 @@
   }
 
   function buyStar(state, id) {
-    var node = DATA.tree.find(function (n) { return n.starKey === id; });
-    return node ? buyNode(state, node.id) : false;
+    var node = DATA.tree.find(function (n) { return n.starKey === id && !n.partOf; });
+    return node ? buyNode(state, activePart(state, node.id)) : false;
   }
 
   function rebirth(state) {
@@ -2393,7 +2424,7 @@
     var stars = {};
     for (i = 0; i < STAR_KEYS.length; i++) stars[STAR_KEYS[i]] = state.stars[STAR_KEYS[i]] | 0;
     var obj = {
-      v: 19,
+      v: 20,
       u15: state.u15,
       u14: state.u14,
       idle: state.idle, skills: state.skills, u17: state.u17, u18: state.u18, u19: state.u19, u19b: state.u19b,
@@ -2472,7 +2503,7 @@
   }
 
   function isNewerSave(raw) {
-    try { var o=JSON.parse(raw); return !!o && typeof o.v==='number' && isFinite(o.v) && o.v>19; }
+    try { var o=JSON.parse(raw); return !!o && typeof o.v==='number' && isFinite(o.v) && o.v>20; }
     catch (error) { return false; }
   }
 
@@ -2644,8 +2675,8 @@
       var o = JSON.parse(str);
       if (!o || typeof o !== "object" || Array.isArray(o)) return null;
       // Forward saves may share our known schema. Never persist this projection.
-      if (isNewerSave(str)) o.v = 19;
-      if (o.v !== 19 && o.v !== 18 && o.v !== 17 && o.v !== 16 && o.v !== 1&&o.v !== 2 && o.v !== 3 && o.v !== 4 && o.v !== 5 && o.v !== 6 && o.v !== 7 && o.v !== 8 && o.v !== 9 && o.v !== 10 && o.v !== 11 && o.v !== 12 && o.v !== 13 && o.v !== 14 && o.v !== 15) return null;
+      if (isNewerSave(str)) o.v = 20;
+      if (o.v !== 20 && o.v !== 19 && o.v !== 18 && o.v !== 17 && o.v !== 16 && o.v !== 1&&o.v !== 2 && o.v !== 3 && o.v !== 4 && o.v !== 5 && o.v !== 6 && o.v !== 7 && o.v !== 8 && o.v !== 9 && o.v !== 10 && o.v !== 11 && o.v !== 12 && o.v !== 13 && o.v !== 14 && o.v !== 15) return null;
       if (o.v === 7 && o.venueSlug === "lecturenote") {
         // Preserve the old index contract, then migrate by stable audience ID.
         var previousOrder = ["a-lecturenote-hecate", "a-lecturenote-jung", "h-lecturenote-kim"];
@@ -2755,9 +2786,10 @@
       state.keys = keys;
       for (i = 0; i < TREE_KEYS.length; i++) {
         var key = TREE_KEYS[i];
-        var max = key === "board" && o.v === 1 ? 7 : key === "area" && o.v < 5 ? 3 : NODE_BY_ID[key].max;
+        var max = key === "board" && o.v === 1 ? 7 : key === "area" && o.v < 5 ? 3 : treeMax(key); // v4 U48 C: the stored total of a split node
         var rawLevel = o.tree[key];
         if (NODE_BY_ID[key].u31 && rawLevel == null) rawLevel = 0;
+        if (o.v < 20 && NODE_BY_ID[key].routine && rawLevel == null) rawLevel = 0; // v4 U48 N4: routine 비법 are new in version 20
         if (o.v < 10 && NODE_BY_ID[key].u13 && rawLevel == null) rawLevel = 0;
         if (o.v < 9 && NODE_BY_ID[key].u12 && rawLevel == null) rawLevel = 0;
         if (o.v < 6 && NODE_BY_ID[key].u4a && rawLevel == null) rawLevel = 0;
@@ -2780,6 +2812,11 @@
         var keysBack = Math.max(0, Math.min(30, 1e6 - state.keys));
         state.keys += keysBack; state._refundKeys = 30;
       }
+      // v4 U48 A: the 칼리 덱 node no longer gives a permanent on/off skill. A save below version 20 that owns it keeps the node (which now
+      // unlocks the deck consumable) and gets 3 decks once; version 20 saves never pass here again.
+      if (o.v < 20 && state.tree["p-kali-deck"] === 1) { state.u15.gloves = Math.min(100000, state.u15.gloves + 3); state._deckGift = 3; }
+      // v4 U48 N4: a routine the old save had already unlocked (u19.routines) becomes its learned routine 비법 (no refund, nothing to pay).
+      if (o.v < 20 && state.u19 && Array.isArray(state.u19.routines)) state.u19.routines.forEach(function (rid) { if (NODE_BY_ID['routine-' + rid]) state.tree['routine-' + rid] = 1; });
       state.vMax = vMax;
       var cap;
       if (o.v === 1) {
@@ -3146,7 +3183,7 @@
     ['sealCell','int',-1,31],['winsSinceDealer','int',0,1e6],['wins','int',0,1e7],['fails','int',0,1e7],['buff','num',0,1000],
     ['comboMs','num',0,1e7],['fightMs','num',0,1e12],['sealMs','num',0,1e7],['sealCd','num',0,1e7],['patternHealMs','num',0,1e7],
     ['heckleMs','num',0,1e7],['transMs','num',0,1e7],['tapAcc','num',0,100],
-    ['u15.gloves','int',0,100000],['u15.gloveLeft','num',0,120000],
+    ['u15.gloves','int',0,100000],['u15.gloveLeft','num',0,CONST.gloveLeftMax],
     ['u17.feverGauge','num',0,100],['u17.feverPending','num',0,100],['u17.gemWait','num',0,90000],
     ['u19b.dealerVisits','int',0,1000000],['idle.autoAcc','num',0,100],['idle.cursor','int',0,1e12],['idle.wallMs','num',0,1e16],
     ['skills.showtimeLeft','num',0,20000],
@@ -3194,7 +3231,7 @@
     if (o.stars && typeof o.stars === 'object') Object.keys(o.stars).forEach(function (id) { fix(o.stars, id, 'int', 0, 30, 'stars'); });
     if (o.v >= 7 && o.tree && typeof o.tree === 'object') TREE_KEYS.forEach(function (id) {
       var n = NODE_BY_ID[id];
-      if (n && id in o.tree && o.tree[id] != null) fix(o.tree, id, 'int', id === 'root' ? 1 : 0, n.max, 'tree');
+      if (n && id in o.tree && o.tree[id] != null) fix(o.tree, id, 'int', id === 'root' ? 1 : 0, treeMax(id), 'tree');
     });
     if (o.features && o.features.comboPaid && typeof o.features.comboPaid === 'object') Object.keys(o.features.comboPaid).forEach(function (id) {
       if (COMBO_AUD_IDS.indexOf(id) < 0) { delete o.features.comboPaid[id]; rep.push('comboPaid key'); } else fix(o.features.comboPaid, id, 'int', 0, 15, 'comboPaid');
@@ -3266,7 +3303,7 @@
       o = JSON.parse(str);
     } catch (error) { return { state: null, repairs: [] }; }
     if (!o || typeof o !== 'object' || Array.isArray(o) || typeof o.v !== 'number' || o.v < 1 || o.v !== Math.floor(o.v)) return { state: null, repairs: [] };
-    if (o.v > 19) o.v = 19;
+    if (o.v > 20) o.v = 20;
     var rep = [];
     var attempt = function (obj) { return deserialize(JSON.stringify(obj)); };
     try {
@@ -3304,7 +3341,7 @@
   function emptyU15(){return {positions:CONST.slotOrder.slice(),gloves:0,gloveLeft:0,deckOn:false,drops:{},seen:[],queue:[],scene:null,bios:[],tutorial:{done:false,active:false,won:false,baseline:null}};}
   function validU15(u){
     if(!u||!Array.isArray(u.positions)||u.positions.length!==CONST.boardMax||new Set(u.positions).size!==CONST.boardMax||u.positions.some(function(n){return integer(n,0,CONST.boardMax-1)==null;}))return false;
-    if(integer(u.gloves,0,100000)==null||num(u.gloveLeft,0,120000)==null||!u.drops||Array.isArray(u.drops))return false;
+    if(integer(u.gloves,0,100000)==null||num(u.gloveLeft,0,CONST.gloveLeftMax)==null||!u.drops||Array.isArray(u.drops))return false;
     if(u.deckOn!==undefined&&typeof u.deckOn!=='boolean')return false;
     if(Object.keys(u.drops).some(function(k){var d=u.drops[k];return !venueNumber(k)||!d||integer(d.boxes,0,1e9)==null||integer(d.count,0,100000)==null;}))return false;
     function sceneOK(x){return x&&integer(x.dimension,1,999)!=null&&venueNumber(x.slug)&&['opening','beforeHeadliner','afterClear'].indexOf(x.kind)>=0;}
@@ -3318,7 +3355,7 @@
       if(typeof t.baseline!=='string'||t.baseline.length>=200000||['intro','fight','defeat','overview'].indexOf(t.phase)<0)return false;
       var maxLine=t.phase==='intro'?DATA.storyV15.tutorial.intro.length-1:t.phase==='defeat'?DATA.storyV15.tutorial.defeat.length-1:t.phase==='overview'?2:0;
       if(integer(t.line,0,maxLine)==null||(['defeat','overview'].indexOf(t.phase)>=0&&!t.won))return false;
-      try{var main=JSON.parse(t.baseline);if((main.v!==12&&main.v!==13&&main.v!==14&&main.v!==15&&main.v!==16&&main.v!==17&&main.v!==18&&main.v!==19)||!main.u15||!main.u15.tutorial||main.u15.tutorial.active)return false;}catch(error){return false;}
+      try{var main=JSON.parse(t.baseline);if((main.v!==12&&main.v!==13&&main.v!==14&&main.v!==15&&main.v!==16&&main.v!==17&&main.v!==18&&main.v!==19&&main.v!==20)||!main.u15||!main.u15.tutorial||main.u15.tutorial.active)return false;}catch(error){return false;}
     }
     return true;
   }
@@ -3341,9 +3378,11 @@
     var key=s.dimension+':'+s.slug+':'+s.kind;if(state.u15.seen.indexOf(key)<0)state.u15.seen.push(key);
     state.u15.scene=null;return true;
   }
-  // v4 U44: the 칼리 덱 skill is the product node p-kali-deck (it replaced the late key node deckMaster).
+  // v4 U44: the product node p-kali-deck (it replaced the late key node deckMaster). v4 U48 A: learning it no longer gives a permanent on/off
+  // skill; it unlocks the 칼리 덱 consumable (120 s auto practice, u15.gloves / u15.gloveLeft): sold in the gem shop and dropped by cases.
+  // u15.deckOn stays in saves (validator unchanged) but nothing reads it any more.
   function hasDeck(state){return (state.tree['p-kali-deck']||0)>0;}
-  function autoStage(state){return state.dimension>=2&&(state.u15.gloveLeft>0||hasDeck(state)&&!!state.u15.deckOn);}
+  function autoStage(state){return state.dimension>=2&&state.u15.gloveLeft>0;}
   function startStage(state){
     if(!state.idle.waiting||state.u15.scene||state.u15.queue.length)return false;
     state.idle.waiting=false;state.mode="fight";state.dealerQueued=false;state.heckleMs=state.interval*1000;state.telegraphed=false;return true;
@@ -3366,7 +3405,7 @@
     if(state.u15.scene||state.mode!=='fight'||!Number.isInteger(from)||from<0||from>=state.board.length||!Number.isInteger(to)||to<0||to>=CONST.boardMax)return false;
     var slots=state.u15.positions,other=slots.indexOf(to),old=slots[from];slots[from]=to;slots[other]=old;delete state._layout;return true;
   }
-  function toggleDeck(state){if(!hasDeck(state))return false;state.u15.deckOn=!state.u15.deckOn;return true;}
+  function toggleDeck(state){return false;} // v4 U48 A: the on/off 칼리 덱 skill is gone (kept as a no-op for old callers)
   function useGlove(state){
     if(state.mode!=='fight'||state.resolved||state.u15.scene||state.features.climax.left>0||state.u15.gloveLeft>0||state.u15.gloves<1)return false;
     state.u15.gloves--;state.u15.gloveLeft=120000;state.holding=false;state.tapAcc=0;return true;
@@ -3427,7 +3466,8 @@
   }
   function monteWin(m,round){return (m.cards[round+1]>m.cards[round])===(m.cards[round]<=7);}
   function monteRound(m,round){
-    var r=monteHash(m,round),win=monteWin(m,round),start=Math.floor(r()*3),n=4+round,swaps=[],vq=start,i,a,b,queen,vis=[start];
+    // v4 U48 D2: the first round is always fair (no trick; the queen is where the player saw it go).
+    var r=monteHash(m,round),win=round===0?true:monteWin(m,round),start=Math.floor(r()*3),n=4+round,swaps=[],vq=start,i,a,b,queen,vis=[start];
     for(i=0;i<n;i++){
       a=(i===n-1&&!win)?vq:Math.floor(r()*3);b=(a+1+Math.floor(r()*2))%3;
       // U30c: the last swap's order is randomized on every outcome (drawn on wins too), so a loss does not always lift the queen's slot first.
@@ -3440,11 +3480,14 @@
     // U30b bent-corner ploy (round 2 on): the queen's corner is bent in plain view, then a hand-cover move
     // (same hand motion and move timing on every outcome) hides the bend's transfer. On a win the bend stays
     // on the queen; on a loss it ends on the black card that is neither the followed card nor the queen.
+    // v4 U48 D2 (owner): when the ploy is shown the bent card is a red herring: the queen always comes out of one of the OTHER cards. On a win
+    // the queen is the card the player followed and the bend ends on one of the two others; on a loss the bend ends on the card that is
+    // neither the followed card nor the queen (as before). The bend's path after the cover move is traced back from where it ends.
     var bend=null;
     if(round>0){
-      var cover=Math.floor(r()*(n-1)),q=win?vq:queen,third=3-vq-q,end=win?q:third,to=vis[cover+1],s=third,k;
-      if(!win){for(k=n-1;k>cover;k--){a=swaps[k][0];b=swaps[k][1];s=s===a?b:s===b?a:s;}to=s;}
-      bend={start:start,cover:cover,to:to,end:end,line:win?null:'휜 카드를 따라왔지? 그게 함정이야!'};
+      var cover=Math.floor(r()*(n-1)),q=win?vq:queen,others=[0,1,2].filter(function(x){return x!==q;}),pickOther=r()<.5?others[0]:others[1],end=win?pickOther:3-vq-q,s=end,k;
+      for(k=n-1;k>cover;k--){a=swaps[k][0];b=swaps[k][1];s=s===a?b:s===b?a:s;}
+      bend={start:start,cover:cover,to:s,end:end,line:'휜 카드를 따라왔지? 그게 함정이야!'};
     }
     return {win:win,start:start,swaps:swaps,fakes:fakes,tracked:vq,queen:win?vq:queen,trick:trick,bend:bend};
   }
@@ -3463,10 +3506,11 @@
     m.phase='banked';gemGameCoins(state,m.coins);state.keys+=m.keys;return true;
   }
   function gemShopInfo(state,id,skill){
-    var cost=id==='glove'?2:id==='refill'?2:id==='potion'?3:0,reason='';
+    var cost=id==='glove'?2:id==='brick'?CONST.brickGems:id==='refill'?2:id==='potion'?3:0,reason='';
     if(!cost)reason='없는 상품이에요';
     else if(state.u15.tutorial.active)reason='첫 연습 뒤에 살 수 있어요';
-    else if(id==='glove'&&hasDeck(state))reason='칼리 덱 스킬이 있어요';
+    else if((id==='glove'||id==='brick')&&!hasDeck(state))reason='칼리 덱 비법을 배우면 살 수 있어요'; // v4 U48 A/A2
+    else if(id==='brick'&&state.u15.gloveLeft+CONST.brickMs>CONST.gloveLeftMax)reason='자동 연습 시간이 이미 넉넉해요';
     else if(id==='refill'&&(!skillUnlocked(state,skill)||!(state.skills.cooldowns[skill]>0)))reason='기다리는 스킬만 충전해요';
     else if(id==='potion'&&(state.mode!=='fight'||state.resolved||state.features.climax.left>0))reason='관객과 공연 중에 써요';
     else if(id==='potion'&&state.u17.potionUsed)reason='이번 공연에서 이미 썼어요';
@@ -3477,6 +3521,8 @@
   function gemShopBuy(state,id,skill){
     var info=gemShopInfo(state,id,skill);if(!info.available)return false;state.gems-=info.cost;
     if(id==='glove'){var slug=VENUES[state.venue-1].slug;state.u17.gloveBuys[slug]=(state.u17.gloveBuys[slug]||0)+1;state.u15.gloves++;}
+    // v4 U48 A2: 칼리 덱 한 브릭 starts 30 minutes of auto practice at once (game time; it adds on top of a running deck).
+    if(id==='brick'){state.u15.gloveLeft+=CONST.brickMs;state.holding=false;state.tapAcc=0;}
     if(id==='refill')state.skills.cooldowns[skill]=0;
     if(id==='potion'){state.mental=Math.min(state.mentalMax,state.mental+state.mentalMax*.3);state.u17.potionUsed=true;}
     return true;
@@ -3597,7 +3643,10 @@
     if(u.phase===2){u.hitMs+=dt;if(u.hitMs>2500){state.combo=0;state.comboMs=0;}}
     if(u.phase===3)u.window=Math.max(0,u.window-dt);
   }
-  function routineLearn(state,node){var level=nodeLevel(state,node);if([1,5,10].indexOf(level)<0)return;DATA.routines.forEach(function(r){if(r.nodes.indexOf(node.id)<0&&r.branch!==node.branch)return;if(state.u19.routines.indexOf(r.id)<0)state.u19.routines.push(r.id);if(state.u19.pending.indexOf(r.id)<0)state.u19.pending.push(r.id);});}
+  // v4 U48 N4: a routine is unlocked (u19.routines) and its cut-in queued only by learning its own routine 비법; the old "a related node reaches
+  // LV 1, 5 or 10" trigger is gone. Later cut-ins come from the routine's skill (routineSkill) or one of its case items (routineItem), 20 s apart.
+  function routineLearn(state,node){var id=node.routine;if(!id)return;if(state.u19.routines.indexOf(id)<0)state.u19.routines.push(id);if(state.u19.pending.indexOf(id)<0)state.u19.pending.push(id);}
+  function routineItem(state,item,ev){if(state.u19.cooldown>0||!ev)return;var r=DATA.routines.find(function(r){return r.items.indexOf(item)>=0&&state.u19.routines.indexOf(r.id)>=0;});if(r){state.u19.cooldown=20000;emit(ev,{type:'routine',id:r.id});}}
   function routineSkill(state,id,ev){if(state.u19.cooldown>0)return;var r=DATA.routines.find(function(r){return r.skill===id&&state.u19.routines.indexOf(r.id)>=0;});if(r){state.u19.cooldown=20000;emit(ev,{type:'routine',id:r.id});}}
   function validU19(u){return u&&typeof u.cleared==='boolean'&&integer(u.phase,1,3)!=null&&['telegraph','window','hitMs','damage','power','lastDps','lastPower','cooldown','target'].every(function(k){return num(u[k],0,1e100)!=null;})&&integer(u.target,0,24)!=null&&u.telegraph<=3000&&u.window<=20000&&['routines','pending'].every(function(k){return Array.isArray(u[k])&&u[k].length<=8&&new Set(u[k]).size===u[k].length&&u[k].every(function(id){return DATA.routines.some(function(r){return r.id===id;});});});}
   // v4 U42: lookups the UI and the sim used to re-implement. They take the venue object (DATA.venues entry), not the venue number.
@@ -3653,7 +3702,7 @@
     wandArea: wandArea,
     boardLayout: boardLayout,
     cellPosition: cellPosition,
-    caseCap: caseCap, caseNeed: caseNeed, caseTier: caseTier, caseItems: caseItems, gateProgress: gateProgress, buyMany: buyMany,
+    caseCap: caseCap, caseNeed: caseNeed, caseTier: caseTier, casePips: casePips, caseItems: caseItems, gateProgress: gateProgress, buyMany: buyMany,
     buyNode: buyNode,
     buyAll: buyAll, affordableNodes: affordableNodes, buyAmount: buyAmount,
     holdPointers: holdPointers, advanceHolds: advanceHolds, tutorialAction: tutorialAction,
@@ -3667,7 +3716,7 @@
     dealerForce: dealerForce,
     forceCost: forceCost,
     createSaveStore: createSaveStore, isNewerSave: isNewerSave, applySaveEpoch: applySaveEpoch,
-    toggleDeck:toggleDeck, hasDeck:hasDeck, failureProduct:failureProduct, heckleStrength:heckleStrength, threatInfo:threatInfo, attackRate:attackRate, autoStage:autoStage,startStage:startStage, dealerClose: dealerClose, failureLessons:failureLessons, failureHint:failureHint, reachableLevelsLeft:reachableLevelsLeft, gateNeed:gateNeed, failureLessonInfo:failureLessonInfo, learnFailureLesson:learnFailureLesson, gatePressure:gatePressure, failureDealerAvailable:failureDealerAvailable, openFailureDealer:openFailureDealer,
+    toggleDeck:toggleDeck, hasDeck:hasDeck, activePart:activePart, treeMax:treeMax, storedLevel:storedLevel, fullyLearned:fullyLearned, failureProduct:failureProduct, heckleStrength:heckleStrength, threatInfo:threatInfo, attackRate:attackRate, autoStage:autoStage,startStage:startStage, dealerClose: dealerClose, failureLessons:failureLessons, failureHint:failureHint, reachableLevelsLeft:reachableLevelsLeft, gateNeed:gateNeed, failureLessonInfo:failureLessonInfo, learnFailureLesson:learnFailureLesson, gatePressure:gatePressure, failureDealerAvailable:failureDealerAvailable, openFailureDealer:openFailureDealer,
     rebirth: rebirth,
     serialize: serialize,
     deserialize: deserialize,
@@ -3675,7 +3724,7 @@
     kaliMood: kaliMood, audienceMood: audienceMood,
     // Source text of every strict save validator; test-saves.mjs hashes it against SAVE_VERSION (a changed range needs a new version).
     saveValidatorSource: function () { return [deserialize, infiniteRefund, validU15, validU17, validU18, validU19, validDealerGames].map(function (f) { return f.toString(); }).join('\n'); },
-    SAVE_VERSION: 19,
+    SAVE_VERSION: 20,
     starCost: starCost,
     buyStar: buyStar
   };

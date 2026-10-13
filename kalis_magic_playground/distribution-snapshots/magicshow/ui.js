@@ -140,31 +140,25 @@ globalThis.Guidance = (() => {
   }
   // U31b: the cause line is a soft guess plus a soft suggestion. cause = how this run really ended:
   // 'mental' (mental ran out with little doubt left) or 'damage' (mental ran out while much doubt was left).
+  // v4 U48 B (owner: no explicit "learn this" on failure): the panel only says what went wrong, in neutral words. It never names a 비법,
+  // never suggests one and has no learn button of its own (the venue's 칼리 product row in showFailure stays, by the owner's correction);
+  // the player picks in the notebook ("비법 노트로"). node is always null, so the notebook shows no 추천 tag either.
   function failure(state,D,C,cause='mental') {
-    if (cause === 'gate') return { line: '이 관객은 준비가 조금 더 필요해 보여요. 비법을 몇 개 더 익혀 보면 어떨까요?', node: null, hint: C.failureHint(state, 'gate') || "'야유 받아넘기기'가 도움이 될지도 몰라요" };
-    // v4 U38 'lastHeckle': the final boss's announced last heckle was bigger than 멘탈 and 자신감 together; the line names both ways out and picks none.
+    if (cause === 'gate') return { line: '이 관객은 준비가 조금 더 필요해 보여요.', node: null, hint: '' };
+    // v4 U38 'lastHeckle': the final boss's announced last heckle was bigger than 멘탈 and 자신감 together (the hint is about the 야유 막기 skill, not a 비법).
     if (cause === 'lastHeckle') return { line: '마지막 야유가 한 번에 너무 컸나 봐요. 멘탈이나 스킬을 다시 살펴볼까요?', node: null, hint: C.failureHint(state, 'lastHeckle') };
-    // v4 U38 'stall': doubt did not reach a new low for a long time, so the soft suggestion is about taking doubt down faster.
-    const stall = cause === 'stall';
-    const damage = cause === 'damage' || stall;
-    const ids = damage ? ['attack','power','speed'] : ['mental','shieldCap','openingShield','calm','boxHeal','winHeal'];
-    const first = ids.map(id => D.tree.find(n=>n.id===id)).find(n => n && C.nodeInfo(state,n.id).revealed && C.nodeInfo(state,n.id).cost !== null) || null;
-    // v4 U41: a suggestion the wallet cannot pay is replaced by the best node of the whole book that can be bought now (Core.failureLessons);
-    // with nothing to buy at all the hint is Core.failureHint (nearest block, case levels), not a recommendation the player cannot act on.
-    const payable = first && C.nodeInfo(state,first.id).purchasable ? first : (C.failureLessons(state).find(n => n.id.indexOf('gate:') !== 0 && !n.productMultiplier) || null);
-    const node = payable || first;
-    const code = node ? node.name.charCodeAt(node.name.length - 1) : 0;
-    const particle = code >= 0xAC00 && code <= 0xD7A3 && (code - 0xAC00) % 28 === 0 ? '를' : '을';
-    const guess = stall ? '관객의 의심이 다시 차오르는 게 더 빨랐나 봐요.' : damage ? '의심을 깎을 힘이 조금 모자랐나 봐요.' : '야유를 버틸 멘탈이 부족했나 봐요.';
-    const line = stall ? `${guess} 비법을 몇 개 더 익혀 보면 어떨까요?` : node ? `${guess} 한번 ${node.name}${particle} 높여 보면 어떨까요?` : guess;
-    return { line, node, hint: payable ? `'${payable.name}' 비법이 도움이 될지도 몰라요` : (C.failureHint(state, cause) || (node ? `'${node.name}' 비법이 도움이 될지도 몰라요` : '')) };
+    const stall = cause === 'stall', damage = cause === 'damage' || stall;
+    const line = stall ? '관객의 의심이 다시 차오르는 게 더 빨랐나 봐요.' : damage ? '의심을 깎을 힘이 조금 모자랐나 봐요.' : '야유를 버틸 멘탈이 부족했나 봐요.';
+    return { line, node: null, hint: '' };
   }
   function firstEffects(state,list) {
-    const hits = list.filter(e => (e.type === 'boxHit' || e.type === 'boxBreak') && e.source === 'manual');
+    const D = globalThis.GAME_DATA || globalThis.D; // v4 U48 D3: the node names below come from the data
+    const hits =list.filter(e => (e.type === 'boxHit' || e.type === 'boxBreak') && e.source === 'manual');
     return [
-      ['range', state.tree.area > 0 && new Set(hits.map(e=>e.cell)).size > 1, '범위 비법 덕분에 여러 케이스를 함께 두드렸어요!'],
-      ['helper', list.some(e=>e.type==='worker' && e.phase==='work' || ['dove','rabbit','magicHit','magicCoins'].includes(e.type)), '도우미 비법 덕분에 칼리와 함께 마술을 하고 있어요!'],
-      ['chain', list.some(e=>e.type==='chain'), '연쇄 비법 덕분에 옆 케이스까지 타격이 이어졌어요!'],
+      // v4 U48 D3: a named 비법 is always the real node's display name ("범위 비법" and "연쇄 비법" were not node names).
+      ['range', state.tree.area > 0 && new Set(hits.map(e=>e.cell)).size > 1, `'${D.tree.find(n=>n.id==='area').name}' 비법 덕분에 여러 케이스를 함께 두드렸어요!`],
+      ['helper', list.some(e=>e.type==='worker' && e.phase==='work' || ['dove','rabbit','magicHit','magicCoins'].includes(e.type)), '도우미 덕분에 칼리와 함께 마술을 하고 있어요!'],
+      ['chain', list.some(e=>e.type==='chain'), `'${D.tree.find(n=>n.id===(state.tree.chain8?'chain8':'chain4')).name}' 비법 덕분에 옆 케이스까지 타격이 이어졌어요!`],
       ['case', list.some(e=>e.type==='caseLevelUp'), '개봉으로 케이스가 성장했어요! 다음 소품이 더 강해져요.']
     ].filter(([id,worked]) => worked && !state.guidance.seen.includes(id));
   }
@@ -411,6 +405,10 @@ globalThis.Presentation = (() => {
   let phone = false, layoutWidth = 1600, layoutHeight = 900;
   let reduced = motion.matches, scale = 1, clock = 0, previous = 0;
   let menu = '', focusBeforePanel = null, lastAudience = '', lastLayout = '';
+  // v4 U48 M: true while a panel opened from the menu sheet is showing; its 닫기/뒤로 then returns to the menu.
+  let moreReturn = false;
+  let gloveRun = 0; // v4 U48 A2: the longest auto-practice time left seen in this run (a brick is 30 minutes), for the button's ring
+  function showMore() { $('phoneMore').hidden = false; $('moreButton').setAttribute('aria-expanded', 'true'); release(); clearDecorations(); }
   let dialogueTimer, dealerBusy = false, dealerMessage = '', dealerLost = false, dealerResult = '';
   let dealerPicked = new Set();
   let booTimer=null, failureAudience=null, failureVenue=null;
@@ -525,7 +523,23 @@ globalThis.Presentation = (() => {
       store.backup(slot.data, null, false);
       const target = store.list().find(item => item.restorable && storage.getItem(item.key) === slot.data);
       // The existing restore code alone writes the live key; reload uses its normal load/autosave path.
-      return !!target && store.restore(target.key, true);
+      const ok = !!target && store.restore(target.key, true);
+      if (ok) settleDeckGift(storage, slot);
+      return ok;
+    }
+    // v4 U48b: a slot saved before version 20 would grant the 칼리 덱 gift again on every load. The restore above still loads the original
+    // data (so the gift is given this once); the slot itself is rewritten as version 20 without the gift, so restoring it later gives nothing.
+    function settleDeckGift(storage, slot) {
+      try {
+        const s = C.deserialize(slot.data);
+        if (!s || !(s._deckGift > 0)) return;
+        s.u15.gloves = Math.max(0, s.u15.gloves - s._deckGift);
+        const data = C.serialize(s);
+        for (let n = 1; n <= 3; n++) {
+          const cur = read(storage, n).slot;
+          if (cur && cur.data === slot.data && cur.savedAt === slot.savedAt) storage.setItem(key(n), JSON.stringify({v: 1, savedAt: cur.savedAt, summary: cur.summary, data}));
+        }
+      } catch (error) { /* the slot stays as it was */ }
     }
     function date(ms) {
       const d = new Date(ms), h = d.getHours();
@@ -709,7 +723,8 @@ globalThis.Presentation = (() => {
     if (menu === 'book') tree();
   }
   const chromeHomes = new Map();
-  const DESKTOP_MENU = ['equipButton','bestiaryButton','missionsButton','mapButton','gemShopButton','customizeButton','rebirthButton','soundButton','musicButton','musicVolume','hapticsButton','textSpeedButton','retreatButton','coffeeButton','openChatButton'];
+  // v4 U48 N3: 도감 stays in the top bar (nav .menu) next to 메뉴 on desktop too.
+  const DESKTOP_MENU = ['equipButton','missionsButton','mapButton','gemShopButton','customizeButton','rebirthButton','soundButton','musicButton','musicVolume','hapticsButton','textSpeedButton','retreatButton','coffeeButton','openChatButton'];
   function moveChrome(el, host) {
     if (!chromeHomes.has(el)) chromeHomes.set(el, { parent: el.parentNode, next: el.nextSibling });
     host.append(el);
@@ -721,9 +736,10 @@ globalThis.Presentation = (() => {
       moveChrome($('goalStrip'),$('phoneTop'));
       moveChrome($('bookButton'),$('phoneTop'));
       moveChrome($('equipButton'),$('phoneTop'));
+      moveChrome($('bestiaryButton'),$('phoneTop')); // v4 U48 N3: 도감 sits in the top bar next to 메뉴, not in the menu
       moveChrome($('moreButton'),$('phoneTop')); $('moreButton').textContent='☰ 메뉴';
-      for (const id of ['bestiaryButton','storyButton','installButton','statsButton','rebirthButton','missionsButton','gemShopButton','mapButton','customizeButton','soundButton','musicButton','musicVolume','hapticsButton','textSpeedButton','retreatButton','helperControls','debug','coffeeButton','openChatButton']) moveChrome(id==='musicVolume'?$(id).parentElement:$(id), $('phoneMore'));
-      pxText($('bookButton'), innerWidth<=740?'📖':'📖 비법'); pxText($('equipButton'), innerWidth<=740?'🎩':'🎩 마술용품'); $('moreButton').textContent=innerWidth<=740?'☰':'☰ 메뉴'; $('moreButton').setAttribute('aria-label','메뉴'); pxText($('bestiaryButton'), '📚 도감');
+      for (const id of ['storyButton','installButton','statsButton','rebirthButton','missionsButton','gemShopButton','mapButton','customizeButton','soundButton','musicButton','musicVolume','hapticsButton','textSpeedButton','retreatButton','helperControls','debug','coffeeButton','openChatButton']) moveChrome(id==='musicVolume'?$(id).parentElement:$(id), $('phoneMore'));
+      pxText($('bookButton'), innerWidth<=740?'📖':'📖 비법'); pxText($('equipButton'), innerWidth<=740?'🎩':'🎩 마술용품'); $('moreButton').textContent=innerWidth<=740?'☰':'☰ 메뉴'; $('moreButton').setAttribute('aria-label','메뉴'); pxText($('bestiaryButton'), innerWidth<=740?'📚':'📚 도감'); $('bestiaryButton').setAttribute('aria-label','도감');
       updateSoundButton();const on=window.Sfx?.musicEnabled();$('musicButton').textContent=on?'음악 ON':'음악 OFF';
       $('closePanel').textContent = '← 뒤로';
     } else {
@@ -733,7 +749,8 @@ globalThis.Presentation = (() => {
       // v4 U46 A7: desktop keeps only 비법서 and 메뉴 at the top, like the phone; everything else lives in the menu sheet.
       for (const id of DESKTOP_MENU) moveChrome(id==='musicVolume'?$(id).parentElement:$(id), $('phoneMore'));
     }
-    $('phoneMore').hidden = true; $('moreButton').setAttribute('aria-expanded', 'false');
+    // v4 U48 M: fit() runs on every viewport resize or scroll (a phone's address bar, the keyboard); the open menu stays open unless the layout kind changed.
+    if (phoneChrome.kind !== phone) { phoneChrome.kind = phone; $('phoneMore').hidden = true; $('moreButton').setAttribute('aria-expanded', 'false'); }
   }
   function boardTransform() { return PhoneLayout.transform(rectOf($('board')), C.CONST.boardSize); }
   function boardPoint(x, y) {
@@ -1426,7 +1443,8 @@ globalThis.Presentation = (() => {
     easyTooltip(button,k.desc);
     sprite(button.querySelector('.skill-art'),'assets/'+k.icon);button.addEventListener('click',()=>activateSkill(k.id));$('activeSkills').append(button);
   });
-  const glove=action('',()=>{if(!paused()&&(C.hasDeck(state)?C.toggleDeck(state):C.useGlove(state))){tutorialSignal('learn');save();render();}});glove.id='item-auto-glove';glove.className='active-skill';
+  // v4 U48 A: one press uses one 칼리 덱 (120 s auto practice); the button shows how many are owned, then the time left (brick time included).
+  const glove=action('',()=>{if(!paused()&&C.useGlove(state)){tutorialSignal('learn');save();render();}});glove.id='item-auto-glove';glove.className='active-skill';
   glove.innerHTML='<span class="skill-art">🃏</span><span>칼리 덱</span><small></small>';
   sprite(glove.querySelector('.skill-art'),'assets/'+D.glove.icon);easyTooltip(glove,D.glove.desc);$('activeSkills').append(glove);
   easyTooltip($('eventVisitor'),D.easyExtras.events);
@@ -1551,6 +1569,7 @@ globalThis.Presentation = (() => {
       host.classList.remove('dress-new'); void host.offsetWidth; host.classList.add('dress-new'); }
   }
   function render() {
+    if (moreReturn && $('panel').hidden && $('phoneMore').hidden) moreReturn = false; // v4 U48 M: the show was reached another way (stage travel, a scene)
     $('stage').classList.toggle('decorations-paused',paused());
     $('equipButton').hidden=!C.equipSlots(state); $('equipButton').classList.toggle('is-new',!!C.equipSlots(state)&&!state.guidance.seen.includes('equipButton'));
     renderU19();renderU14(); renderIdle(); renderU15();
@@ -1622,9 +1641,12 @@ globalThis.Presentation = (() => {
       dom.el.tabIndex = next ? 0 : -1;
       dom.el.setAttribute('role', next ? 'button' : 'img');
       dom.el.setAttribute('aria-label', next ? slotCondition() : locked ? '잠긴 자리' : `카드 케이스 ${i + 1}`);
-      if (locked) { dom.lv.textContent = ''; continue; }
+      if (locked) { dom.lv.textContent = ''; delete dom.lv.dataset.pips; continue; }
       const pct = cell.hpMax ? Math.min(100, Math.max(0, Math.round((1 - cell.hp / cell.hpMax) * 100))) : 0;
-      dom.lv.textContent = `LV${cell.lv || 1}`;
+      // v4 U48 M2: no LV text on the board; the case colour is the level band and 1 to 4 small dots the place inside it (the level stays in the aria-label).
+      if (dom.lv.textContent) dom.lv.textContent = '';
+      const pips = String(C.casePips(cell)); if (dom.lv.dataset.pips !== pips) dom.lv.dataset.pips = pips;
+      dom.el.setAttribute('aria-label', `카드 케이스 ${i + 1} · 레벨 ${cell.lv || 1}`);
       const chest = dom.el.querySelector('.chest');
       dom.el.classList.toggle('golden', !!cell.golden);
       dom.el.classList.toggle('golden-broken', !!cell.goldenBroken && cell.hp <= 0);
@@ -1773,6 +1795,7 @@ globalThis.Presentation = (() => {
     if (['book','dealer'].includes(menu) && failure !== null) { showFailure(); return; }
     menu = ''; $('panel').hidden = true; previous = 0;
     if (focusBeforePanel && focusBeforePanel.isConnected) focusBeforePanel.focus();
+    if (moreReturn) { moreReturn = false; showMore(); } // v4 U48 M: a panel opened from the menu goes back to the menu, not to the show
     render();
   }
   function clearDecorations() {
@@ -1977,7 +2000,10 @@ globalThis.Presentation = (() => {
       detail.append(element('h2', selected.name), element('span', `레벨 ${C.formatNumber(info.level)} / ${typeof info.max==='number' ? C.formatNumber(info.max) : info.max}`, 'tree-level'));
       if (selected.branch === 'collection') detail.append(element('small', '칼리 컬렉션', 'tree-tag'));
       detail.append(element('p', selected.desc, 'tree-effect'));
-      if(selected.statMilestone){const next=C.nextMilestone(info.level,[10,25],selected.max);detail.append(element('p',next ? `다음 2배: 레벨 ${next} · ${next-info.level}레벨 남음` : `지금 힘 ${C.statMultiplier(state,selected.id)}배`,'tree-next'),element('p', D.easyExtras.milestone, 'tree-preview'));}
+      // v4 U48 N5: a routine 비법 shows its trick (frame 2 of the routine strip) at a readable size, so the player knows which trick it is.
+      if (selected.routine) { const art = element('div', '', 'tree-routine-art'); art.style.backgroundImage = `url('${assetUrl(`assets/routine-${selected.routine}.png`)}')`; art.setAttribute('role', 'img'); art.setAttribute('aria-label', selected.name); detail.append(art); }
+      // v4 U48 C: milestones count the total level of a split node (part II of 무대 배짱 continues at 11).
+      if(selected.statMilestone){const next=C.nextMilestone(info.total,[10,25],info.totalMax);const label=selected.partOf||selected.levels?'전체 레벨':'레벨';detail.append(element('p',next ? `다음 2배: ${label} ${next} · ${next-info.total}레벨 남음` : `지금 힘 ${C.statMultiplier(state,selected.partOf||selected.id)}배`,'tree-next'),element('p', D.easyExtras.milestone, 'tree-preview'));}
       if (selected.desc.includes('L')) detail.append(element('small', 'L은 이 비법의 레벨입니다.', 'tree-note-l'));
       const currency = { coins: '🪙 동전', keys: '🔑 열쇠', starlight: '✦ 별빛' }[info.currency];
       detail.append(element('strong', maxed ? '완성했어요' : `${currency} ${C.formatNumber(info.cost)}`, 'tree-cost'));
@@ -2316,7 +2342,7 @@ globalThis.Presentation = (() => {
     if (bestiaryTab === 'equip') { equipPanel(); return; }
     if (bestiaryTab === 'achievements') { achievementPanel(); return; }
     const outfit=element('div','','outfit-collection');outfit.append(element('strong',`칼리 의상 · ${state.u18.equipped.kali?D.cosmetics.kali.find(x=>x.id===state.u18.equipped.kali).name:['','거실 티셔츠','무대 정장','우주 망토'][state.u14.outfit]}`));const strip=element('div','','outfit-preview'+(state.u18.equipped.kali==='future'?' future-suit':''));strip.style.backgroundImage=`url('${assetUrl(kaliArtPath())}')`;strip.textContent='🎩';const image=assetImage(kaliArtPath());const ready=()=>{if(image.naturalWidth===768&&image.naturalHeight===256)strip.classList.add('art-loaded');else strip.style.backgroundImage='none';};if(image.complete)ready();else {image.addEventListener('load',ready,{once:true});image.addEventListener('error',ready,{once:true});}outfit.append(strip);$('panelBody').append(outfit);
-    const routines=element('div','','routine-collection');routines.append(element('strong','나의 마술'));for(const r of D.routines.filter(r=>state.u19.routines.includes(r.id))){const item=element('span',r.name);item.prepend(artFallback(`assets/icon-routine-${r.id}.png`,'✨','routine-icon'));routines.append(item);}$('panelBody').append(routines);if(state.u19.cleared||state.u18.owned.kali.includes('future'))$('panelBody').append(element('p','🏅 미래의 나 · 다음 한 장을 건네받았다.'));
+    const routines=element('div','','routine-collection');routines.append(element('strong','나의 마술'));for(const r of D.routines.filter(r=>state.u19.routines.includes(r.id))){const item=element('span','','routine-item');item.title=r.name;item.setAttribute('role','img');item.setAttribute('aria-label',r.name);item.append(artFallback(`assets/icon-routine-${r.id}.png`,'✨','routine-icon'));routines.append(item);} /* v4 U48 N6: images only, the name is in the title and aria-label */$('panelBody').append(routines);if(state.u19.cleared||state.u18.owned.kali.includes('future'))$('panelBody').append(element('p','🏅 미래의 나 · 다음 한 장을 건네받았다.'));
     const products=D.tree.filter(n=>n.branch==='collection'),owned=products.filter(n=>state.tree[n.id]>0).length,collection=element('p',`칼리 컬렉션 ${owned}/${products.length}${state.u14.collection?' · 연출 +10%':''}`);if(state.u14.collection)collection.prepend(artFallback('assets/icon-set-bonus.png','🎀','set-ribbon u14-art'));$('panelBody').append(collection,element('p',D.easyExtras.set,'easy-description'));
     const guides=element('section','','bestiary-guides');
     for(const [name,key,path] of [['NDD','tutorial','aud-tutorial-dogyeom-happy.png'],['밍기리','helper','aud-tutorial-mingiri-happy.png']]){const card=element('article','','bestiary-guide');const art=element('span','','entry-emoji');art.append(element('span',key==='helper'?'👹':'🙎','sprite-fallback'));sprite(art,'assets/'+path);card.append(art,element('h3',name),element('p',D.storyV15[key].bio));guides.append(card);}
@@ -2414,8 +2440,7 @@ globalThis.Presentation = (() => {
           animate($('panelBody').querySelectorAll('.dealer-card')[index], [{ transform: 'rotateY(90deg) scale(.9)' }, { transform: 'rotateY(0deg) scale(1)' }], 350);
           setTimeout(() => {
             dealerBusy = false;
-            if (card.dud && menu === 'dealer') closePanel();
-            else if (menu === 'dealer') drawDealer();
+            if (menu === 'dealer') drawDealer(); // v4 U48b: a dud no longer closes the panel; the player leaves with 그만하기/닫기
           }, reduced ? 450 : 650);
         }, dealerBusy || card.open || d.phase !== 'card');
         button.className = `dealer-card${card.open ? ' revealed' : ''}`;
@@ -3127,6 +3152,17 @@ globalThis.Presentation = (() => {
     dealerBusy=false;sound(c.hit?'coin':'flip');drawDealer();
   }
   let monteGo=-1;
+  // v4 U48 D1: a chosen mini game waits for its own 시작하기 button; nothing moves on opening or on choosing (UI only, the game state is unchanged).
+  const gameStarted=new WeakSet();
+  const startButton=(game)=>{const b=action('시작하기',()=>{if(dealerBusy)return;gameStarted.add(game);drawDealer();});b.classList.add('game-start','u26-primary');return b;};
+  // The monte table before 시작하기: three face-down cards (no face is drawn, so nothing can leak the queen), the start button and the way back.
+  function monteWaiting(m,area){
+    area.append(element('h2','몬테'),element('p','준비됐어요. 시작하기를 누르면 여왕 카드를 보여줄게요.','monte-line'));
+    const table=gameTable('monte');
+    for(let i=0;i<3;i++){const card=action('',()=>{},true);card.className='routine-card';card.dataset.slot=i;card.style.setProperty('--slot',i);card.setAttribute('aria-label',`카드 ${i+1}`);card.append(gameArt('monte-back','card-art'));table.append(card);}
+    const back=action('딜러 메뉴',()=>{if(dealerBusy)return;dealerGameView='';drawDealer();},dealerBusy);back.className='dealer-back';
+    area.append(table,element('span','','flex-break'),startButton(m),back);$('panelBody').append(area);return true;
+  }
   const monteFace=(card,name)=>{const img=card.querySelector('img');img.src='assets/ui/'+name+'.png';};
   async function monteFlip(cards,name,flipNames){
     sound('flip');
@@ -3227,32 +3263,36 @@ globalThis.Presentation = (() => {
     await waitRoutine(420);
     for(const c of others){if(!table.isConnected){dealerBusy=false;return;}await monteFlip([c],'',[face(c)]);await waitRoutine(180);}
     if(!table.isConnected){dealerBusy=false;return;}
-    if(choice!==plan.queen)status.textContent=plan.bend?.line||plan.trick?.line||'여왕은 여기 있었어요!';
+    // v4 U48 D2: the bend line only when the player picked the bent card (the bend is now a red herring on winning rounds too).
+    if(choice!==plan.queen)status.textContent=(plan.bend&&choice===plan.bend.end?plan.bend.line:'')||plan.trick?.line||'여왕은 여기 있었어요!';
     await waitRoutine(plan.bend&&choice!==plan.queen?1500:500);dealerBusy=false;drawDealer();
   }
   function drawDealerGames(d){
     const games=d.games||(d.games={cups:null,monte:null});
     if(dealerGameView==='cups'&&games.cups){
-      const c=games.cups,area=element('section','','gem-game cups-game');
-      area.append(element('h2','컵앤볼'),element('p',c.phase==='shuffle'?'공을 보여줄게요. 컵을 잘 봐요!':c.phase==='pick'?'공이 어디 있을까?':c.hit?'찾았다!':'아깝다! 공은 다른 컵에 있었어요.'));
+      const c=games.cups,area=element('section','','gem-game cups-game'),waiting=c.phase==='shuffle'&&!gameStarted.has(c);
+      area.append(element('h2','컵앤볼'),element('p',waiting?'준비됐어요. 시작하기를 누르면 공을 보여줄게요.':c.phase==='shuffle'?'공을 보여줄게요. 컵을 잘 봐요!':c.phase==='pick'?'공이 어디 있을까?':c.hit?'찾았다!':'아깝다! 공은 다른 컵에 있었어요.'));
       const table=gameTable('cups');
       for(let i=0;i<3;i++){
         const cup=action('',()=>revealCups(c,table,Number(cup.dataset.slot)),c.phase!=='pick');
         cup.className='game-cup';cup.dataset.slot=i;cup.style.setProperty('--slot',i);cup.setAttribute('aria-label',`컵 ${i+1}`);
-        const ball=gameArt(c.phase==='result'&&c.keys?(state.venue%2?'cb-lemon':'cb-orange'):'cb-ball','cup-ball');ball.hidden=!((i===c.initial&&c.phase==='shuffle')||(i===c.ball&&c.phase==='result'));const art=gameArt(c.phase==='result'?'fx-cup-lift-04':'fx-cup-lift-01','cup-prop');cup.append(ball,art);if(c.phase==='result'&&c.keys&&i===c.ball){ball.classList.add('final-load');if(!reduced)cup.append(element('span','','final-load-fx'));}table.append(cup);
+        const ball=gameArt(c.phase==='result'&&c.keys?(state.venue%2?'cb-lemon':'cb-orange'):'cb-ball','cup-ball');ball.hidden=waiting||!((i===c.initial&&c.phase==='shuffle')||(i===c.ball&&c.phase==='result'));const art=gameArt(c.phase==='result'?'fx-cup-lift-04':'fx-cup-lift-01','cup-prop');cup.append(ball,art);if(c.phase==='result'&&c.keys&&i===c.ball){ball.classList.add('final-load');if(!reduced)cup.append(element('span','','final-load-fx'));}table.append(cup);
       }
       area.append(table,element('span','','flex-break'));
       if(c.phase==='result')area.append(element('p',`동전 +${rounded(c.coins)}${c.keys?' · 열쇠 +1':''}`,'game-result'));
-      const back=action('딜러 메뉴',()=>{if(dealerBusy)return;dealerGameView=null;drawDealer();},dealerBusy||c.phase==='shuffle');back.className='dealer-back';area.append(back);$('panelBody').append(area);
-      if(c.phase==='shuffle')animateCups(c,table);
+      if(waiting)area.append(startButton(c));
+      const back=action('딜러 메뉴',()=>{if(dealerBusy)return;dealerGameView=null;drawDealer();},dealerBusy||c.phase==='shuffle'&&!waiting);back.className='dealer-back';area.append(back);$('panelBody').append(area);
+      if(c.phase==='shuffle'&&!waiting)animateCups(c,table);
       return true;
     }
     if(dealerGameView==='monte'&&games.monte){
       const m=games.monte,area=element('section','','gem-game monte-game');
       const settled=m.phase!=='playing'||(m.round>0&&monteGo!==m.round&&(!m.last||m.last.round===m.round-1));
+      const waiting=!settled&&m.round===0&&!m.last&&!gameStarted.has(m); // v4 U48 D1: the first round waits for 시작하기 (later rounds wait for 다음 판)
+      if(waiting)return monteWaiting(m,area);
       const lastRound=m.phase==='playing'?m.round-1:(m.last?m.last.round:(m.phase==='lost'?m.round:m.round-1));
       const plan=C.monteRound(m,settled?Math.max(0,lastRound):m.round);
-      const status=element('p',settled?(m.phase==='lost'?(!m.last?'지난 판은 끝났어요':plan.bend?.line||(plan.trick?plan.trick.line:'여왕은 여기 있었어요!')):m.phase==='banked'?'선물을 받았어요!':'찾았어요! 계속할까요?'):'여왕을 잘 봐요!','monte-line');status.setAttribute('role','status');
+      const status=element('p',settled?(m.phase==='lost'?(!m.last?'지난 판은 끝났어요':(plan.bend&&m.last.slot===plan.bend.end?plan.bend.line:'')||(plan.trick?plan.trick.line:'여왕은 여기 있었어요!')):m.phase==='banked'?'선물을 받았어요!':'찾았어요! 계속할까요?'):'여왕을 잘 봐요!','monte-line');status.setAttribute('role','status');
       area.append(element('h2','몬테'),status);
       const table=gameTable('monte');
       const faces=Presentation.monteFaces(plan,settled);
@@ -3353,7 +3393,7 @@ globalThis.Presentation = (() => {
     if(['boo','fail','ending','rebirth','bossPhase','headliner'].includes(menu))return;
     openPanel('gemShop','보석 상점');$('panelBody').append(element('p',`💎 보석 ${state.gems}개`,'dealer-wallet'));
     for(const item of D.gemShop){
-      if(item.id==='glove'&&C.hasDeck(state))continue; // v4 U44: the 칼리 덱 skill replaces the 120 s glove
+      if((item.id==='glove'||item.id==='brick')&&!C.hasDeck(state))continue; // v4 U48 A/A2: sold only once the 칼리 덱 node is learned
       const card=element('section','','gem-shop-item');card.append(element('h2',item.name),element('p',item.desc));
       const add=skill=>{const info=C.gemShopInfo(state,item.id,skill),label=skill?D.skills.find(k=>k.id===skill).name+' 충전':'사기';
         card.append(action(`${label} · 💎 ${info.cost}`,()=>{if(C.gemShopBuy(state,item.id,skill)){save();sound('skill');gemShop();render();}},!info.available));if(info.reason)card.append(element('small',info.reason));};
@@ -3529,7 +3569,7 @@ globalThis.Presentation = (() => {
     else if (pendingIntro && state.mode === 'fight') headlinerIntro(pendingIntro);
     else if (state.mode === 'ending'&&!state.u15.scene&&!state.u15.queue.length&&!presentation.busy) showEnding();
   }
-  $('replayTutorial').addEventListener('click',()=>{closePanel();C.replayTutorial(state);startIntro(false);});
+  $('replayTutorial').addEventListener('click',()=>{moreReturn=false;closePanel();C.replayTutorial(state);startIntro(false);});
   // v4 U47 3: no top 비법 button any more (bookButton stays hidden); the notebook opens from the fail panel ("비법 노트로") only.
   $('equipButton').addEventListener('click',()=>{if(!C.equipSlots(state))return;if(!state.guidance.seen.includes('equipButton'))state.guidance.seen.push('equipButton');bestiaryTab='equip';bestiary();save();});
   $('openChatButton').addEventListener('click',()=>{save();window.open('https://open.kakao.com/o/gUJkfxzi','_blank','noopener');});
@@ -3556,12 +3596,12 @@ globalThis.Presentation = (() => {
   });
   $('retreatButton').addEventListener('click', () => {
     if (['boo','fail','ending','rebirth','bossPhase'].includes(menu) || dealerBusy) return;
-    if (menu) closePanel();
+    moreReturn = false; if (menu) closePanel();
     const traveling = !!state.u18.anchor;
     release(); C.retreat(state); lastAudience = ''; save(); render(); toast(traveling ? '도전을 마치고 지도로 돌아가요' : `${D.venues[state.venue - 1].name} 처음부터 다시 시작해요`);
   });
   $('closePanel').addEventListener('click', closePanel);
-  document.addEventListener('pointerdown',e=>{if(menu&&!['boo','fail','boo','ending','rebirth','bossPhase','headliner','dealer'].includes(menu)&&!$('panel').contains(e.target)&&!e.target.closest('#phoneTop,.menu'))closePanel();});
+  // v4 U48 M: a tap outside a panel no longer closes it; panels close only with their own 닫기/뒤로 (and Escape or the phone Back flow).
   document.addEventListener('keydown', e => {
     if (!e.repeat && !e.ctrlKey && !e.metaKey && !e.altKey && !/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) {
       const key=e.key.toLowerCase();
@@ -3773,7 +3813,7 @@ globalThis.Presentation = (() => {
   }
   function renderU15(){
     const u=state.u15,t=u.tutorial,glove=$('item-auto-glove');
-    if(glove){const deck=C.hasDeck(state);glove.classList.toggle('glove-active',u.gloveLeft>0||deck&&u.deckOn);glove.querySelector('small').className='item-count';glove.hidden=!deck&&u.gloves===0&&u.gloveLeft===0;glove.disabled=paused()||state.mode!=='fight'||!deck&&u.gloveLeft>0;glove.setAttribute('aria-pressed',deck?String(!!u.deckOn):'false');glove.querySelector('small').textContent=deck?(u.deckOn?'자동 ON':'자동 OFF'):u.gloveLeft>0?Math.ceil(u.gloveLeft/1000)+'초':u.gloves+'개';glove.style.setProperty('--cooldown',u.gloveLeft/120000*360+'deg');}
+    if(glove){const deck=C.hasDeck(state),left=u.gloveLeft,sec=Math.ceil(left/1000);glove.classList.toggle('glove-active',left>0);glove.querySelector('small').className='item-count';glove.hidden=!deck&&u.gloves===0&&left===0;glove.disabled=paused()||state.mode!=='fight'||left>0||u.gloves<1;glove.setAttribute('aria-pressed','false');glove.querySelector('small').textContent=left>0?(sec>=60?`${Math.floor(sec/60)}:${String(sec%60).padStart(2,'0')}`:sec+'초'):u.gloves+'개';glove.setAttribute('aria-label',left>0?`칼리 덱 자동 연습 중 · 남은 시간 ${sec}초 · ${u.gloves}개 보유`:`칼리 덱 쓰기 · ${u.gloves}개 보유`);if(left>gloveRun)gloveRun=left;if(!left)gloveRun=0;glove.style.setProperty('--cooldown',Math.min(1,left/Math.max(120000,gloveRun))*360+'deg');}
     if(t.active){
       if(t.won&&t.phase!=='overview')t.phase='defeat';
       if(t.phase==='fight'){
@@ -3806,7 +3846,7 @@ globalThis.Presentation = (() => {
     const seen=state.u15.seen;
     if(!seen.length)$('panelBody').append(element('p','한 번 본 이야기가 여기에 모여요.'));
     for(const key of seen){const [dimension,slug,kind]=key.split(':'),v=C.venueBySlug(slug);const labels={opening:'첫 인사',beforeHeadliner:'마지막 관객',afterClear:'공연 뒤'};
-      $('panelBody').append(action(`차원 ${dimension} · ${v.name} · ${labels[kind]}`,()=>{closePanel();C.startScene(state,{dimension:Number(dimension),slug,kind});save();render();}));}
+      $('panelBody').append(action(`차원 ${dimension} · ${v.name} · ${labels[kind]}`,()=>{moreReturn=false;closePanel();C.startScene(state,{dimension:Number(dimension),slug,kind});save();render();}));}
   }
   $('storyButton').addEventListener('click',storyList);sprite($('storyIcon'),'assets/icon-story.png');
   window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installPrompt=e;});
@@ -3872,7 +3912,14 @@ globalThis.Presentation = (() => {
     if(!$('phoneMore').hidden){release();clearDecorations();}
     $('moreButton').setAttribute('aria-expanded', String(!$('phoneMore').hidden));
   });
-  $('phoneMore').addEventListener('click', e => { if (e.target.closest('button')) { $('phoneMore').hidden = true; $('moreButton').setAttribute('aria-expanded', 'false'); } });
+  // v4 U48 M: settings and other in-place entries (소리, 음악, 진동, 글자 속도, 앱 설치, links) keep the menu open and update in place. The menu gives
+  // way only when the entry opened a panel (closing that panel comes back here) or left for the show (퇴장, 처음 안내).
+  $('phoneMore').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    const left = ['retreatButton', 'replayTutorial'].includes(b.id);
+    if (menu && !left) moreReturn = true;
+    if (menu || left || !$('introStory').hidden) { $('phoneMore').hidden = true; $('moreButton').setAttribute('aria-expanded', 'false'); }
+  });
   $('statsButton').addEventListener('click', () => {
     if(phone){
       openPanel('stats','능력치');
@@ -3956,7 +4003,8 @@ globalThis.Presentation = (() => {
   if (recoveredSave) toast('저장이 손상돼 최근 백업에서 되찾았어요');
   if (repairedSave) toast('저장을 조금 고쳐서 불러왔어요');
   if (refundedCoins > 0) toast(`끝없는 비법이 정리돼서 동전 ${C.formatNumber(refundedCoins)}을 돌려받았어요`);
-  if (refundedKeys > 0) toast(`칼리 덱이 스킬로 합쳐져서 열쇠 ${C.formatNumber(refundedKeys)}개를 돌려받았어요`);
+  if (refundedKeys > 0) toast(`칼리 덱이 비법으로 합쳐져서 열쇠 ${C.formatNumber(refundedKeys)}개를 돌려받았어요`);
+  if (state._deckGift > 0) toast(`칼리 덱이 이제 쓰는 아이템이 됐어요. 칼리 덱 ${state._deckGift}개를 드려요`); // v4 U48 A
   if (newerSave) showSaveNotice();
   if (giftEnded && launchSaved) toast('선물 기간이 끝나서 성장 속도가 원래대로 돌아왔어요');
   if (launchQuery.get('restored') === '1') {

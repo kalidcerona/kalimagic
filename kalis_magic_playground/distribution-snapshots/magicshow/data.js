@@ -3295,7 +3295,7 @@ GAME_DATA.easyNodes.flashpaperPower="플래시 페이퍼가 더 세게 두드려
 (function(D){
  D.tree.forEach(n=>{
   // v4 U45: 칼리 덱 is the skill only, 틴 케이스 strengthens the cases, the first wall product is the beginner lecture.
-  if(n.id==='p-kali-deck')n.desc='칼리 덱 스킬이 생겨요\n자동 연습을 켜고 꺼요';
+  if(n.id==='p-kali-deck')n.desc='보석 상점에서 칼리 덱을 살 수 있고\n공연 중 케이스에서도 나와요'; // v4 U48 A: the node unlocks the consumable
   else if(n.caseItemMult)n.desc='케이스가 크게 강해져요\n케이스 아이템 효과 ×'+n.caseItemMult;
   else if(n.productMultiplier)n.desc=(n.id==='p-classic-collection-remastered'?'입문자 강의 1편, 기본기를 다져요\n':n.id==='p-classic-collection-remastered-2'?'입문자 강의 2편, 기본기를 넓혀요\n':'이 무대를 넘을 힘이 생겨요\n')+'공격 ×'+n.productMultiplier;
   else if(n.id.startsWith('hidden-')){const results={hand:'케이스를 더 빨리 열어요',box:'케이스 아이템의 힘이 커져요',heart:'야유를 더 오래 버텨요',luck:'동전을 더 많이 얻어요',pet:'도우미가 더 힘껏 도와줘요',finale:'피날레가 더 크게 놀라게 해요',collection:'관객을 더 크게 놀라게 해요',star:'별빛의 힘이 더 세져요'};n.desc=results[n.id.split('-').slice(1).join('-')]+'\n힘 2%씩 추가';}
@@ -3303,7 +3303,7 @@ GAME_DATA.easyNodes.flashpaperPower="플래시 페이퍼가 더 세게 두드려
   if(!n.desc)throw new Error('Missing easy description: '+n.id);
  });
  const copy={damage:'관객의 의심이 줄어요',shield:'야유를 막을 힘을 얻어요',heal:'마음이 회복돼요',coins:'비법을 배울 동전을 얻어요',xpBurst:'레벨이 더 빨리 올라요',finisher:'피날레를 더 빨리 준비해요',boxFill:'케이스가 더 빨리 열려요'};
- D.items.types.forEach(t=>t.ladder.forEach(p=>{const effect=p.effect||t.effect;const values={damage:'기본 힘 8 × 연출 · 좋은 소품은 최대 25배',shield:'기본 자신감 2.7 × 멘탈 · 최대 25배',heal:'기본 회복 1.8 × 멘탈 · 최대 25배',coins:'기본 동전 4개 · 좋은 소품은 최대 25배',xpBurst:'다음 레벨 경험치의 50%',finisher:'피날레 5칸 채우기',boxFill:'모든 케이스를 30% 더 열기'};p.desc=copy[effect]+'\n'+values[effect];}));
+ D.items.types.forEach(t=>t.ladder.forEach(p=>{const effect=p.effect||t.effect;const values={damage:'기본 힘 8 × 연출 · 좋은 소품은 최대 25배',shield:'기본 자신감 2.7 × 멘탈 · 최대 25배',heal:'기본 회복 1.8 × 멘탈 · 최대 25배',coins:'기본 동전 8개 · 좋은 소품은 최대 25배',xpBurst:'다음 레벨 경험치의 50%',finisher:'피날레 5칸 채우기',boxFill:'모든 케이스를 30% 더 열기'};p.desc=copy[effect]+'\n'+values[effect];}));
  D.missions.forEach(m=>{m.desc='오늘의 목표를 이루면 보석을 받아요\n'+m.name+' · 보석 '+m.gems+'개';});
  D.easyExtras={events:'움직이는 친구를 누르면 선물을 받아요\n8초 안에 누르기 · 힘, 동전, 열쇠 중 하나',set:'무대의 모두를 감탄시키면 힘이 늘어요\n실력 3% 추가 · 컬렉션 모두 모으면 연출 1.1배',milestone:'레벨이 쌓이면 힘이 크게 늘어요\n10 · 25레벨마다 2배 · 케이스는 50도 2배'};
 })(GAME_DATA);
@@ -3393,9 +3393,11 @@ GAME_DATA.lineFaces={"roles":{"a1":{"role":"family","name":"아빠","venue":"fam
   const role=D.lineFaces.roles[a.id];if(role)a.role=role.role;
   const lines=D.lineFaces.lines[a.id];if(lines){a.heckles=lines.heckles.slice();a.winLine=lines.winLine;if(a.encounterLine&& !a.heckles.includes(a.encounterLine))a.heckles.push(a.encounterLine);}
  }));
- D.glove={id:'auto-glove',name:'칼리 덱 (자동 연습)',icon:'item-kali-deck.png',emoji:'🃏',duration:120000,desc:'모든 케이스를 자동으로 꾹 눌러요\n손을 떼도 연습해요. 칼리 덱 스킬은 켜고 꺼요'};
+ D.glove={id:'auto-glove',name:'칼리 덱 (자동 연습)',icon:'item-kali-deck.png',emoji:'🃏',duration:120000,desc:'누르면 120초 동안 모든 케이스를 자동으로 꾹 눌러요\n손을 떼도 연습해요. 가진 개수가 보여요'};
  const shop=D.gemShop.find(x=>x.id==='glove');shop.name='칼리 덱 (자동 연습)';shop.desc='120초 동안 모든 케이스를 자동으로 꾹 눌러요';
- // v4 U44: the key node deckMaster is gone; learning p-kali-deck (a product, reached at venue 2) gives the 칼리 덱 skill.
+ // v4 U44: the key node deckMaster is gone. v4 U48 A: learning p-kali-deck (a product, reached at venue 2) unlocks the 칼리 덱 consumable
+ // (sold here, dropped by cases). A2: the brick (a box of 12 decks) starts 30 minutes of auto practice at once.
+ D.gemShop.splice(1,0,{id:'brick',name:'칼리 덱 한 브릭',desc:'덱 12개 한 묶음\n사면 바로 30분 자동 연습',cost:20});
 })(GAME_DATA);
 
 // U25: pace tuning with fair, readable gate fights.
@@ -3419,9 +3421,60 @@ GAME_DATA.lineFaces={"roles":{"a1":{"role":"family","name":"아빠","venue":"fam
  D.venues.forEach(v=>{if(scale[v.slug])v.hpFactor*=scale[v.slug];});
 })(GAME_DATA);
 
+// v4 U48 C (owner: "익힐 수 있는 비법을 늘려줘. 레벨은 3,5,10 이런 숫자가 좋은거 같아."): no node in the book has more than 10 levels and every
+// max is 1, 3, 5 or 10. A node whose max is anything else is shown as several nodes: the original node keeps its id, name and place as
+// part I (n.max = the part size, n.levels = the old total, n.parts = the ids of all parts) and each later part (id "<id>-2", "-3", ...) gets
+// its own name ("<name> II", ...), a short desc, a place next to the part before it and that part as its prerequisite. The save keeps the
+// total level under the original key, so the effects, the costs (cost[total]) and the gates are the old ones (core.js "v4 U48 C").
+(function(D){
+ const plan={2:[1,1],4:[3,1],6:[5,1],8:[5,3],12:[10,1,1],15:[10,5],30:[10,10,10],45:[10,10,10,10,5]};
+ const roman=['','I','II','III','IV','V'];
+ const used=new Set(D.tree.map(n=>n.x+','+n.y));
+ // The free grid point next to `from` (within 2 so the book draws the line), preferring the direction away from the book's centre.
+ const place=(from,reach=2.1)=>{
+  const out=Math.atan2(from.y,from.x||0.001);let best=null,bestKey=null;
+  for(let dy=-3;dy<=3;dy++)for(let dx=-3;dx<=3;dx++){
+   if(!dx&&!dy)continue;const x=from.x+dx,y=from.y+dy,d=Math.hypot(dx,dy);if(d>reach||used.has(x+','+y))continue;
+   const turn=Math.abs(Math.atan2(Math.sin(Math.atan2(dy,dx)-out),Math.cos(Math.atan2(dy,dx)-out)));
+   const key=[Math.round(d),turn];if(!bestKey||key[0]<bestKey[0]||key[0]===bestKey[0]&&key[1]<bestKey[1]){best={x,y};bestKey=key;}
+  }
+  return best;
+ };
+ // v4 U48 N4 (owner: "비법에서 내가 하는 마술(링, 로프, 썸타이 등)을 찍어야지 그 마술을 보여주는 걸로 해줘."): one 비법 per routine, max 1, next to the
+ // routine's first related node (its prerequisite), costing 3 times that node's first level. Learning it shows the trick (cut-in) and adds
+ // 3 percent to the routine's branch (core.js branchBonus); the cut-in plays only for learned routines.
+ const list=[];
+ for(const n of D.tree){
+  list.push(n);const p=plan[n.max];if(!p)continue;
+  n.levels=n.max;n.max=p[0];n.parts=[n.id];let prev=n,off=p[0];
+  for(let k=1;k<p.length;k++){
+   const at=place(prev);if(!at)throw new Error('v4 U48 C: no free book place next to '+prev.id);
+   used.add(at.x+','+at.y);
+   const part=Object.assign({},n,{id:n.id+'-'+(k+1),name:n.name+' '+roman[k+1],max:p[k],partOf:n.id,partOffset:off,prereqs:[prev.id],x:at.x,y:at.y,
+    desc:(n.desc?n.desc.split('\n')[0]+'\n':'')+`'${n.name}' 다음 단계 · 전체 ${off+1}-${off+p[k]}단계`});
+   delete part.levels;delete part.parts;if(n.short)part.short=n.short+' '+roman[k+1];
+   n.parts.push(part.id);list.push(part);prev=part;off+=p[k];
+  }
+ }
+ D.tree.splice(0,D.tree.length,...list);
+ // What the routine's branch bonus raises (core.js branchBonus), in the words the game already uses (no node names, D3).
+ const BR={hand:'지팡이 힘',collection:'마술 실력',luck:'얻는 동전',pet:'도우미 힘',finale:'피날레 힘',heart:'멘탈'};
+ for(const r of D.routines){
+  const rel=D.tree.find(n=>n.id===r.nodes[0]),at=place(rel)||place(rel,3.2);if(!at)throw new Error('v4 U48 N4: no free book place next to '+rel.id);used.add(at.x+','+at.y);
+  const c0=Array.isArray(rel.cost)?rel.cost[0]:Math.ceil(rel.cost.c);
+  D.tree.push({id:'routine-'+r.id,name:r.name+' 마술',desc:`${r.name} 루틴을 무대에서 보여 줘요\n${BR[r.branch]} +3%`,max:1,cost:[3*c0],currency:'coins',prereqs:[rel.id],x:at.x,y:at.y,reveal:'N',
+   branch:rel.branch,routine:r.id,routineBranch:r.branch,icon:`icon-routine-${r.id}.png`,emoji:'🎩',pending:false});
+ }
+})(GAME_DATA);
+
 // v4 U45: the owner's product order adds 클래식 2편 (x6 at venue 3) and moves 칼리 덱 / 틴 케이스 off the attack chain, so the later venues get stronger
 // players; their doubt is scaled back so every TARGET of sim.mjs holds (measured with seeds 1001, see SPEC "v4 U45").
+// v4 U48 (owner: about 3 hours, with 비법 learned only after a failure): the second factor of each product is the U48 change, chosen with
+// 20-seed sim scouting (SPEC "v4 U48"). The early venues are paced by the case-coin income (core.js itemCoins 4 to 8); these factors take
+// the long no-failure fights out of TV 오디션, TV 방송 and the late venues (달, 태양, 은하, 멀티버스) and bring 가족 거실 into 8-12 minutes.
+// The final boss gets x1.12 so its battle stays 90-120 seconds against the stronger arrival build.
 (function(D){
- const scale={audition:0.72,broadcast:0.7,vegas:0.95,moon:0.95,sun:0.94,multiverse:0.93,lecturenote:0.93};
+ const scale={family:0.78,meetup:0.85,audition:0.72*0.55,broadcast:0.7*0.6,vegas:0.95,moon:0.95*0.68,sun:0.94*0.68,galaxy:0.75,multiverse:0.93*0.66,lecturenote:0.93};
  D.venues.forEach(v=>{if(scale[v.slug])v.hpFactor*=scale[v.slug];});
+ D.venues.find(v=>v.slug==='lecturenote').bossHpFactor*=1.12;
 })(GAME_DATA);
