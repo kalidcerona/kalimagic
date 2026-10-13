@@ -55,14 +55,19 @@ globalThis.U5 = (() => {
 })();
 /* U10: one board transform for CSS geometry, input and effects. */
 globalThis.PhoneLayout = (() => {
-  function measure(width, height, safe = {}, coarse = false) {
+  function measure(width, height, safe = {}, coarse = false, grow = false) {
     const left = safe.left || 0, right = safe.right || 0, top = safe.top || 0, bottom = safe.bottom || 0;
     const w = width - left - right, h = height - top - bottom;
-    const tablet = coarse && Math.min(width,height) > 500 && Math.max(width,height) <= 1400;
+    // U43: the live game (grow) keeps the phone layout below 1000 px wide: a 72 px tablet board (395 px) overflows the 44 percent column
+    // on near-square folds and 890x626 screens (measured at 841x617 and 823x707).
+    const tablet = coarse && Math.min(width,height) > 500 && Math.max(width,height) <= 1400 && (!grow || Math.max(width,height) >= 1000);
     const phone = tablet || Math.min(width, height) <= 500 || (coarse && Math.min(width / 1600, height / 900) < .6);
     const content = tablet ? Math.min(w,1280) : w;
     // U32: tablet cells are 72-96px (whole numbers) so the board fits the 44% column on narrower tablets.
-    const cell = tablet ? Math.max(72, Math.min(96, Math.floor((content * .44 - 24) * 112 / 608))) : 48;
+    let cell = tablet ? Math.max(72, Math.min(96, Math.floor((content * .44 - 24) * 112 / 608))) : 48;
+    // U43: the live game (grow=true) lets a phone board take the free height (top bar 44 + 14 margin) while the audience keeps
+    // at least half of the width; whole-pixel cells, never below 48. Unit tests call measure() without grow and keep 48.
+    if (grow && phone && !tablet) cell = Math.max(content < 600 || h < 319 ? 44 : 48, Math.floor(Math.min(h - 58, content * (h >= 500 ? .58 : .5) - 66) * 112 / 608));
     const board = cell * 608 / 112;
     // U30c: the skill column needs about 66px between the audience card and the board, so narrow phones (667 wide)
     // give the audience card a little less than 56% of the width.
@@ -136,19 +141,23 @@ globalThis.Guidance = (() => {
   // U31b: the cause line is a soft guess plus a soft suggestion. cause = how this run really ended:
   // 'mental' (mental ran out with little doubt left) or 'damage' (mental ran out while much doubt was left).
   function failure(state,D,C,cause='mental') {
-    if (cause === 'gate') return { line: '이 관객은 준비가 조금 더 필요해 보여요. 비법을 몇 개 더 익혀 보면 어떨까요?', node: null, hint: "'야유 받아넘기기'가 도움이 될지도 몰라요" };
+    if (cause === 'gate') return { line: '이 관객은 준비가 조금 더 필요해 보여요. 비법을 몇 개 더 익혀 보면 어떨까요?', node: null, hint: C.failureHint(state, 'gate') || "'야유 받아넘기기'가 도움이 될지도 몰라요" };
     // v4 U38 'lastHeckle': the final boss's announced last heckle was bigger than 멘탈 and 자신감 together; the line names both ways out and picks none.
-    if (cause === 'lastHeckle') return { line: '마지막 야유가 한 번에 너무 컸나 봐요. 멘탈이나 스킬을 다시 살펴볼까요?', node: null, hint: '' };
+    if (cause === 'lastHeckle') return { line: '마지막 야유가 한 번에 너무 컸나 봐요. 멘탈이나 스킬을 다시 살펴볼까요?', node: null, hint: C.failureHint(state, 'lastHeckle') };
     // v4 U38 'stall': doubt did not reach a new low for a long time, so the soft suggestion is about taking doubt down faster.
     const stall = cause === 'stall';
     const damage = cause === 'damage' || stall;
     const ids = damage ? ['attack','power','speed'] : ['mental','shieldCap','openingShield','calm','boxHeal','winHeal'];
-    const node = ids.map(id => D.tree.find(n=>n.id===id)).find(n => n && C.nodeInfo(state,n.id).revealed && C.nodeInfo(state,n.id).cost !== null) || null;
+    const first = ids.map(id => D.tree.find(n=>n.id===id)).find(n => n && C.nodeInfo(state,n.id).revealed && C.nodeInfo(state,n.id).cost !== null) || null;
+    // v4 U41: a suggestion the wallet cannot pay is replaced by the best node of the whole book that can be bought now (Core.failureLessons);
+    // with nothing to buy at all the hint is Core.failureHint (nearest block, case levels), not a recommendation the player cannot act on.
+    const payable = first && C.nodeInfo(state,first.id).purchasable ? first : (C.failureLessons(state).find(n => n.id.indexOf('gate:') !== 0 && !n.productMultiplier) || null);
+    const node = payable || first;
     const code = node ? node.name.charCodeAt(node.name.length - 1) : 0;
     const particle = code >= 0xAC00 && code <= 0xD7A3 && (code - 0xAC00) % 28 === 0 ? '를' : '을';
     const guess = stall ? '관객의 의심이 다시 차오르는 게 더 빨랐나 봐요.' : damage ? '의심을 깎을 힘이 조금 모자랐나 봐요.' : '야유를 버틸 멘탈이 부족했나 봐요.';
     const line = stall ? `${guess} 비법을 몇 개 더 익혀 보면 어떨까요?` : node ? `${guess} 한번 ${node.name}${particle} 높여 보면 어떨까요?` : guess;
-    return { line, node, hint: node ? `'${node.name}' 비법이 도움이 될지도 몰라요` : '' };
+    return { line, node, hint: payable ? `'${payable.name}' 비법이 도움이 될지도 몰라요` : (C.failureHint(state, cause) || (node ? `'${node.name}' 비법이 도움이 될지도 몰라요` : '')) };
   }
   function firstEffects(state,list) {
     const hits = list.filter(e => (e.type === 'boxHit' || e.type === 'boxBreak') && e.source === 'manual');
@@ -181,7 +190,18 @@ globalThis.Presentation = (() => {
     get busy(){return !!this.active||this.items.length>0||this.gap>0;}
     clear(){this.active?.end?.();this.active=null;this.items=[];this.gap=0;}
   }
-  return {Queue};
+  // v4 U45: monte faces by slot. Before the shuffle the queen is at plan.start and the two black cards are J (lower slot)
+  // and K. Each face then rides its card through every swap (a face belongs to the card, never to where the queen ends);
+  // on a losing round the trick exchanges the queen with the card in the slot she was really kept in (plan.queen).
+  // Face-down cards all show monte-back, so the J/K split is only ever seen face up, after the pick.
+  const monteFaces=(plan,settled)=>{
+    let k=0;const f=[0,1,2].map(i=>i===plan.start?'monte-queen':k++?'monte-king':'monte-jack');
+    if(!settled)return f;
+    for(const [a,b] of plan.swaps)[f[a],f[b]]=[f[b],f[a]];
+    const q=f.indexOf('monte-queen');if(q!==plan.queen)[f[q],f[plan.queen]]=[f[plan.queen],f[q]];
+    return f;
+  };
+  return {Queue,monteFaces};
 })();
 /* DOM presentation only. All combat, progression and purchases use Core. */
 (function () {
@@ -390,7 +410,7 @@ globalThis.Presentation = (() => {
   let dealerPicked = new Set();
   let booTimer=null, failureAudience=null, failureVenue=null;
   let failureCause = 'mental', practiceRec = null;
-  let saveWarning = false, failure = null, lastMode = '', tapRemaining = 0;
+  let saveWarning = false, failure = null, lastMode = '';
   let boardHolds = [];
   const pointer = { id: null, held: false, x: -1, y: -1, inside: false };
   const particles = [], flights = [], numbers = [], cells = [];
@@ -413,10 +433,13 @@ globalThis.Presentation = (() => {
   })();
   const patterns = ['111101101101111','010110010010111','111001111100111','111001111001111','101101111001001','111100111001111','111100111101111','111001001001001','111101111101111','111101111001111'];
   let corrupt = false, inaccessible = false, newerSave = false, restoring = false, giftEnded = false;
-  let saveStore = null, loaded0 = false, repairedSave = false, recoveredSave = false, refundedCoins = 0;
+  let saveStore = null, loaded0 = false, repairedSave = false, recoveredSave = false, refundedCoins = 0, refundedKeys = 0;
   let state = C.newGame(Date.now() >>> 0);
   const launchQuery = new URLSearchParams(location.search);
+  let seasonReset = false;
   try {
+    // v4 U45: one-time test-season reset before anything reads the save (see Core.applySaveEpoch and CONST.saveEpoch).
+    try { seasonReset = C.applySaveEpoch(localStorage).reset; } catch (error) { /* storage blocked: the store below reports it */ }
     saveStore = C.createSaveStore(localStorage);
     const loaded = saveStore.load();
     if (loaded.state) { state = loaded.state; loaded0 = true; }
@@ -425,7 +448,8 @@ globalThis.Presentation = (() => {
     // v4 U38: 'refund:<coins>' in the repair list is the paid-back endless nodes; it has its own toast, not the generic repair one.
     const repairList = loaded.repairs || [];
     refundedCoins = repairList.map(r => /^refund:(\d+)$/.exec(r)).filter(Boolean).reduce((n, m) => n + Number(m[1]), 0);
-    repairedSave = repairList.some(r => !/^refund:/.test(r));
+    refundedKeys = repairList.map(r => /^refundKeys:(\d+)$/.exec(r)).filter(Boolean).reduce((n, m) => n + Number(m[1]), 0);
+    repairedSave = repairList.some(r => !/^refund(Keys)?:/.test(r));
     newerSave = loaded.newer;
     giftEnded = loaded.giftEnded;
   } catch (error) { inaccessible = true; }
@@ -454,6 +478,112 @@ globalThis.Presentation = (() => {
     const link = document.createElement('a'); link.href = 'update.html'; link.textContent = '새 버전 열기'; link.className = 'save-update-button';
     host.append(link); document.body.append(host);
   }
+  // Manual save slots: this block owns slot storage, confirmations and the menu hook.
+  const SaveSlots = (() => {
+    const key = n => {
+      if (!Number.isInteger(n) || n < 1 || n > 3) throw new Error('Invalid save slot');
+      return `magicShowBuster.slot.${n}`;
+    };
+    function read(storage, n) {
+      const raw = storage.getItem(key(n));
+      if (raw === null) return {empty: true, slot: null};
+      try { const slot = JSON.parse(raw); return {empty: false, slot: C.validSlot(slot) ? slot : null}; }
+      catch (error) { return {empty: false, slot: null}; }
+    }
+    function write(storage, n, current, now = Date.now()) {
+      const slot = {v: 1, savedAt: now, summary: C.slotSummary(current), data: C.serialize(current)};
+      if (!C.validSlot(slot)) throw new Error('Unreadable save snapshot');
+      storage.setItem(key(n), JSON.stringify(slot));
+      return slot;
+    }
+    function confirmation() {
+      let pending = null;
+      return {tap(token, required) {
+        if (!required || pending === token) { pending = null; return true; }
+        pending = token; return false;
+      }, reset() { pending = null; }};
+    }
+    function restore(storage, store, slot) {
+      if (!C.validSlot(slot) || !C.deserialize(slot.data)) return false;
+      const main = storage.getItem('magicShowBuster.v3');
+      if (main !== null) {
+        if (C.isNewerSave(main)) return false;
+        store.backup(main, null, true);
+        // U37 deduplicates against rolling backups too. Ensure that duplicate is protected.
+        if (!store.list().some(item => item.protectedCopy && storage.getItem(item.key) === main)) {
+          const prefix = 'magicShowBuster.v3.keep.';
+          let stamp = Math.max(Date.now(), ...store.list().filter(item => item.protectedCopy).map(item => item.date + 1));
+          while (storage.getItem(prefix + stamp) !== null) stamp++;
+          storage.setItem(prefix + stamp, main);
+        }
+      }
+      store.backup(slot.data, null, false);
+      const target = store.list().find(item => item.restorable && storage.getItem(item.key) === slot.data);
+      // The existing restore code alone writes the live key; reload uses its normal load/autosave path.
+      return !!target && store.restore(target.key, true);
+    }
+    function date(ms) {
+      const d = new Date(ms), h = d.getHours();
+      return `${d.getMonth() + 1}월 ${d.getDate()}일 ${h < 12 ? '오전' : '오후'} ${h % 12 || 12}:${String(d.getMinutes()).padStart(2, '0')}`;
+    }
+    return {read, write, confirmation, restore, date};
+  })();
+  function openSaveSlots() {
+    release(); $('phoneMore').hidden = true; $('moreButton').setAttribute('aria-expanded', 'false');
+    openPanel('saveslots', '저장 칸');
+    const confirm = SaveSlots.confirmation(), buttons = [];
+    const status = element('p', '', 'save-slots-status'); status.setAttribute('role', 'status');
+    const resetLabels = () => buttons.forEach(button => { button.textContent = button.dataset.label; });
+    const body = $('panelBody');
+    body.append(element('p', '불러오기 전 진행은 백업에 남아요.', 'save-slots-note'));
+    try {
+      for (let n = 1; n <= 3; n++) {
+        const item = SaveSlots.read(localStorage, n), slot = item.slot;
+        const row = element('section', '', 'save-slots-row');
+        row.append(element('h2', `저장 칸 ${n}`));
+        if (slot) {
+          row.append(element('p', `${slot.summary.venueName} · 레벨 ${slot.summary.level} · 동전 ${slot.summary.coins}`),
+            element('p', `${SaveSlots.date(slot.savedAt)} · 플레이 ${slot.summary.playMinutes}분`, 'save-slots-time'));
+        } else row.append(element('p', item.empty ? '비어 있음' : '읽을 수 없는 저장'));
+        const controls = element('div', '', 'save-slots-actions');
+        const saveButton = action('여기에 저장', () => {
+          resetLabels();
+          try {
+            const currentRaw = localStorage.getItem(`magicShowBuster.slot.${n}`);
+            if (!confirm.tap(`save:${n}:${currentRaw}`, currentRaw !== null)) {
+              saveButton.textContent = '덮어쓸까요? 한 번 더 누르기'; return;
+            }
+            SaveSlots.write(localStorage, n, state); openSaveSlots(); toast('저장 칸에 남겼어요');
+          }
+          catch (error) { status.textContent = '저장할 수 없어요. 다시 눌러 주세요'; }
+        }, inaccessible || newerSave || restoring);
+        const loadButton = action('불러오기', () => {
+          resetLabels();
+          if (!confirm.tap(`load:${n}`, true)) {
+            loadButton.textContent = '지금 진행이 이 저장으로 바뀌어요. 한 번 더 누르기'; return;
+          }
+          try {
+            const latest = SaveSlots.read(localStorage, n).slot;
+            if (!latest || latest.data !== slot.data || latest.savedAt !== slot.savedAt) {
+              openSaveSlots(); toast('저장 칸이 바뀌었어요. 다시 골라 주세요'); return;
+            }
+            if (!SaveSlots.restore(localStorage, saveStore, latest)) { status.textContent = '불러올 수 없어요'; return; }
+            restoring = true;
+            const url = new URL(location.href); url.searchParams.delete('restore'); url.searchParams.set('restored', '1');
+            location.replace(url.href);
+          } catch (error) { status.textContent = '불러오기를 마치지 못했어요. 백업을 확인해 주세요'; }
+        }, !slot || inaccessible || newerSave || restoring || !saveStore);
+        for (const button of [saveButton, loadButton]) { button.dataset.label = button.textContent; buttons.push(button); }
+        controls.append(saveButton, loadButton); row.append(controls); body.append(row);
+      }
+    } catch (error) { status.textContent = '저장 칸을 읽을 수 없어요'; }
+    body.append(status);
+  }
+  const saveSlotsButton = action('저장 칸', openSaveSlots);
+  saveSlotsButton.id = 'saveSlotsButton';
+  $('menuGroupSettings').insertAdjacentElement('afterend', saveSlotsButton);
+  // Keep the existing more-menu host on desktop and through phone/desktop resize.
+
   function openRestore() {
     openPanel('restore', '저장 백업 복원');
     try {
@@ -536,12 +666,16 @@ globalThis.Presentation = (() => {
     geo.clear(); wandOffset = null; geoAge = 0;
     const probe = getComputedStyle($('safeArea'));
     const safe = Object.fromEntries(['left','right','top','bottom'].map(side => [side, parseFloat(probe.getPropertyValue(`padding-${side}`)) || 0]));
-    const layout = PhoneLayout.measure(width, height, safe, coarse);
+    const layout = PhoneLayout.measure(width, height, safe, coarse, true);
     phone = layout.phone;
     document.body.classList.toggle('phone', phone);
     document.body.classList.toggle('tablet',!!layout.tablet);
     document.body.classList.toggle('phone-tight', phone && layout.height <= 340);
     document.body.classList.toggle('phone-compact',phone&&!layout.tablet&&layout.height<352);
+    document.body.classList.toggle('phone-narrow',phone&&!layout.tablet&&layout.audience<260);
+    document.body.classList.toggle('phone-low',phone&&!layout.tablet&&layout.height<320);
+    document.body.classList.toggle('phone-xshort',phone&&!layout.tablet&&layout.height<300);
+    document.body.classList.toggle('phone-short',phone&&!layout.tablet&&layout.height<400);
     document.body.classList.toggle('portrait', portrait());
     scale = phone ? 1 : Math.min(innerWidth / 1600, innerHeight / 900);
     layoutWidth = phone ? layout.width : 1600; layoutHeight = phone ? layout.height : 900;
@@ -619,7 +753,7 @@ globalThis.Presentation = (() => {
         sealMs: Math.max(0, state.sealMs),
         transMs: Math.max(0, state.transMs)
       });
-      if (!document.hidden) state.idle.wallMs = Math.max(state.idle.wallMs,Date.now());
+      if (!document.hidden) C.markAway(state,Date.now());
       snapshot.idle=state.idle;
       const result = saveStore.write(C.serialize(snapshot));
       if (result.newer) { newerSave = true; showSaveNotice(); }
@@ -633,7 +767,7 @@ globalThis.Presentation = (() => {
   }
   let bannerTimer, stageRewardTimer, stageRewardHost = null;
   const bannerQueue = [], unlockBannerQueue = [];
-  let bannerActive = null, bigBannerAt = state.features.elapsedMs - 8000, bannerDimension = state.dimension;
+  let bannerActive = null;
   function bannerContext() {
     const c = U5.encounter(D.venues, state);
     return state.mode === 'transition' && wonMoment && (wonMoment.pending||presentation.active?.winner||clock < wonMoment.until) ? wonMoment.context : c;
@@ -912,14 +1046,14 @@ globalThis.Presentation = (() => {
       }
       if(e.type==='caseLevelUp')haptic(15);
       if(e.type==='skill'||e.type==='visitorCatch')haptic(40);
-      if(e.type==='homecomingAct'||e.type==='phase2'||(e.type==='win'&&e.j===D.venues[e.venue-1].audiences.length+1))haptic([30,40,30]);
+      if(e.type==='homecomingAct'||e.type==='phase2'||(e.type==='win'&&C.isHeadliner(D.venues[e.venue-1],e.j)))haptic([30,40,30]);
       if(e.type==='outfit'){renderOutfit();banner('새 무대 의상!',['','거실 티셔츠','무대 정장','우주 망토'][e.tier]);sound('milestone');const p=target('mental');burst(p.x,p.y,'#ffe65c');$('magicianMini').classList.add('outfit-sparkle');setTimeout(()=>$('magicianMini').classList.remove('outfit-sparkle'),650);save();}
       if(e.type==='trueFanReveal'){banner('숨은 도전 발견! 열렬한 찐팬','도감에서 새로운 도전을 확인해 보세요',false,true);sound('milestone');save();}
       if(e.type==='travelResult'){save();toast(e.success?`도전 성공!${e.gems?' 보석 +'+e.gems:''}`:'도전 종료 · 다시 도전할 수 있어요');openStageMap();}
       if(e.type==='routine')showRoutine(e.id);
       if(e.type==='futurePhase'){sound('finisher');$('routineCutin').hidden=true;if(e.phase===3)animate($('audience'),[{opacity:0},{opacity:1}],650);}
       if(e.type==='futureWin'){banner('미래의 나','다음 한 장은 네 몫이야');sound('ending');}
-      if(e.type==='setBonus'){banner(e.slug==='collection'?'칼리 컬렉션 세트 완성!':'관객 세트 완성!',e.slug==='collection'?'연출 +10%':`${D.venues.find(v=>v.slug===e.slug).name} · 마술 실력 +3%`);sound('milestone');save();}
+      if(e.type==='setBonus'){banner(e.slug==='collection'?'칼리 컬렉션 세트 완성!':'관객 세트 완성!',e.slug==='collection'?'연출 +10%':`${C.venueBySlug(e.slug).name} · 마술 실력 +3%`);sound('milestone');save();}
       if(e.type==='visitorCatch'){const r=$('eventVisitor').getBoundingClientRect(),stage=$('stage').getBoundingClientRect(),p={x:(r.left+r.width/2-stage.left)/scale,y:(r.top+r.height/2-stage.top)/scale};burst(p.x,p.y,'#ffe65c');toast(e.reward==='power'?'30초 마술 실력 ×2':e.reward==='coins'?`동전 +${C.formatNumber(e.amount)}`:'열쇠 +1');sound('event');save();}
       if (e.type === 'stageReward') {
         sound('milestone'); showStageReward(e.reward);
@@ -993,7 +1127,7 @@ globalThis.Presentation = (() => {
       } else if (e.type === 'finisher') {
         sceneLight(.08);
       } else if (e.type === 'heckleTelegraph') {
-        const v = D.venues[state.venue - 1], a = v.audiences[state.j - 1] || v.headliner;
+        const v = D.venues[state.venue - 1], a = C.audienceAt(v, state.j);
         const line = U5.selectHeckle(a, venueHeckles(state.venue), lastHeckles.get(a.id));
         lastHeckles.set(a.id, line); $('heckle').textContent = line;
         audHeckleMood = D.lineFaces.moods['fight:'+a.id+':heckles:'+a.heckles.indexOf(line)]||D.lineFaces.faceMap.roleDefaults[a.role]||'doubt';
@@ -1029,14 +1163,14 @@ globalThis.Presentation = (() => {
         toast(`레벨 ${e.level}! 멘탈 회복`);
       } else if (e.type === 'win') {
         prefetchWinSeen = true;
-        const v = D.venues[e.venue - 1], a = v.audiences[e.j - 1] || v.headliner;
+        const v = D.venues[e.venue - 1], a = C.audienceAt(v, e.j);
         const context = { ...U5.encounter(D.venues, state), venueSlug: v.slug, audId: a.id,
           encounterId: `${state.dimension}:${state.wins}:${state.fails}:${a.id}` };
         audience.restored=true;wonMoment = { v, a, context, pending:true,until:Infinity };
-        presentation.push({winner:true,minimum:2500,priority:100,start:item=>{wonMoment.pending=false;wonMoment.until=clock+2500;state.transMs=2500;
+        presentation.push({winner:true,minimum:2500,priority:100,start:item=>{wonMoment.pending=false;wonMoment.until=clock+2500;C.holdWinTransition(state,2500);
           moodSprite($('audience'),audienceAsset(v,a),D.lineFaces.moods['fight:'+a.id+':winLine']||'happy');$('audienceLine').textContent=a.winLine;$('audienceLine').hidden=false;kaliPose(2,2500);
           sceneLight(.06);
-          const head=e.j===v.audiences.length+1,progress=`관객 ${e.j}/${v.audiences.length+1}`;
+          const head=C.isHeadliner(v,e.j),progress=`관객 ${e.j}/${v.audiences.length+1}`;
           bannerActive={...context};$('banner').replaceChildren(document.createTextNode(winLine()));$('banner').append(element('small',progress+' · '+(head?v.headliner.defeatLine:'동전 +'+C.formatNumber(e.coins))));$('banner').classList.add('win-banner');$('banner').hidden=false;
           const moment=clearMoment(head,e.coins);
           item.end=()=>{moment.stop();dismissBanner();wonMoment=null;};
@@ -1098,7 +1232,7 @@ globalThis.Presentation = (() => {
     }
   }
   function audience() {
-    if(state.mode==='transition'&&state.resolved&&state.idle.next&&!audience.restored){const v=D.venues[state.venue-1],a=v.audiences[state.j-1]||v.headliner;audience.restored=true;wonMoment={v,a,context:U5.encounter(D.venues,state),until:clock+state.transMs};moodSprite($('audience'),audienceAsset(v,a),D.lineFaces.moods['fight:'+a.id+':winLine']||'happy');$('audienceLine').textContent=a.winLine;$('audienceLine').hidden=false;}
+    if(state.mode==='transition'&&state.resolved&&state.idle.next&&!audience.restored){const v=D.venues[state.venue-1],a=C.audienceAt(v,state.j);audience.restored=true;wonMoment={v,a,context:U5.encounter(D.venues,state),until:clock+state.transMs};moodSprite($('audience'),audienceAsset(v,a),D.lineFaces.moods['fight:'+a.id+':winLine']||'happy');$('audienceLine').textContent=a.winLine;$('audienceLine').hidden=false;}
     if (wonMoment && (wonMoment.pending||presentation.active?.winner||clock < wonMoment.until)) return;
     wonMoment = null;
     const v = D.venues[state.venue - 1];
@@ -1160,7 +1294,7 @@ globalThis.Presentation = (() => {
   }
   function audienceFaceTick() {
     if (menu === 'boo' || wonMoment || state.u15.tutorial.active || (state.pattern === 'futureMirror' && state.u19.phase === 3)) return;
-    const v = D.venues[state.venue - 1], a = v && (v.audiences[state.j - 1] || v.headliner), host = $('audience');
+    const v = D.venues[state.venue - 1], a = v && C.audienceAt(v, state.j), host = $('audience');
     if (!a || !host.dataset.asset) return;
     audMoodState = C.audienceMood(state, audMoodState, { heckle: state.telegraphed && state.mode === 'fight' ? audHeckleMood : '', surprised: clock < audSurprisedUntil });
     if (host.dataset.mood !== audMoodState) moodSprite(host, audienceAsset(v, a), audMoodState);
@@ -1240,7 +1374,7 @@ globalThis.Presentation = (() => {
   function receiveOffline(now) {
     syncDaily();
     const away=now-state.idle.wallMs, gain=C.collectOffline(state,now);
-    if(gain.awayMs)state.idle.reward.totalAwayMs=away;
+    if(gain.awayMs)C.setAwayTotal(state,away);
     return gain;
   }
   function showOffline() {
@@ -1259,7 +1393,7 @@ globalThis.Presentation = (() => {
     easyTooltip(button,k.desc);
     sprite(button.querySelector('.skill-art'),'assets/'+k.icon);button.addEventListener('click',()=>activateSkill(k.id));$('activeSkills').append(button);
   });
-  const glove=action('',()=>{if(!paused()&&(state.tree.deckMaster?C.toggleDeck(state):C.useGlove(state))){tutorialSignal('learn');save();render();}});glove.id='item-auto-glove';glove.className='active-skill';
+  const glove=action('',()=>{if(!paused()&&(C.hasDeck(state)?C.toggleDeck(state):C.useGlove(state))){tutorialSignal('learn');save();render();}});glove.id='item-auto-glove';glove.className='active-skill';
   glove.innerHTML='<span class="skill-art">🃏</span><span>칼리 덱</span><small></small>';
   sprite(glove.querySelector('.skill-art'),'assets/'+D.glove.icon);easyTooltip(glove,D.glove.desc);$('activeSkills').append(glove);
   easyTooltip($('eventVisitor'),D.easyExtras.events);
@@ -1380,7 +1514,7 @@ globalThis.Presentation = (() => {
     $('starlightLabel').textContent = `✦ 별빛 ${state.starlight}`;
     if(home&&!wonMoment) {
       $('phaseIndicator').textContent=['','1막 · 준비한 한 수','2막 · 함께 만든 공연','3막 · 마지막 인사'][state.review.act];
-      $('audienceLine').textContent=D.venues.find(v=>v.slug==='lecturenote').headliner['act'+state.review.act+'Line'];
+      $('audienceLine').textContent=C.venueBySlug('lecturenote').headliner['act'+state.review.act+'Line'];
       $('patternLabel').textContent=['','별표 케이스를 열면 다음 질문을 쉬어요','직접 개봉과 도우미를 연결해요 · 도우미 없이 두 칸도 좋아요','개봉을 이어 마지막 피날레를 완성해요'][state.review.act];
       // v4 U38: the announced last heckle: its size is printed so the player can compare it with 멘탈 + 자신감 (and 야유 막기 can cancel it).
       if(C.threatInfo(state).last)$('patternLabel').textContent=`마지막 야유 · 한 번에 ${C.formatNumber(C.CONST.finalHeckle)}`;
@@ -1421,7 +1555,7 @@ globalThis.Presentation = (() => {
     (heartEls||(heartEls=[...$('hearts').querySelectorAll('.heart')])).forEach((el, i) => el.classList.toggle('empty', i >= Math.ceil(state.mental / state.mentalMax * 5)));
     num($('shieldNumber'), rounded(state.shield));
     num($('levelNumber'), state.level);
-    const xpNeed = C.CONST.xpBase + C.CONST.xpPerLevel * state.level;
+    const xpNeed = C.xpNeed(state);
     num($('xpNumber'), `${rounded(state.xp)}/${C.formatNumber(xpNeed)}`, true);
     $('xpFill').style.width = `${Math.min(100, state.xp / xpNeed * 100)}%`;
     for (const id of ['coins','gems','keys']) num($(id), rounded(state[id]), true);
@@ -1611,7 +1745,7 @@ globalThis.Presentation = (() => {
   }
   function showBoo(e) {
     failureAudience=e.audId;failureVenue=e.venue;menu='boo';previous=0;release();clearDecorations();
-    const v=D.venues[e.venue-1],a=v.audiences.concat([v.headliner]).find(a=>a.id===e.audId);
+    const v=D.venues[e.venue-1],a=C.roster(v).find(a=>a.id===e.audId);
     if(a)sprite($('audience'),audienceAsset(v,a));
     $('audienceCard').classList.add('boo-scene');
     $('heckle').textContent='우우! '+(a?.lines?.heckles?.[0]||a?.heckles?.[0]||'다음에는 더 잘해 봐!');
@@ -1629,6 +1763,8 @@ globalThis.Presentation = (() => {
     previous = 0; flights.length = 0; particles.length = 0; numbers.length = 0; badges.length = 0; events.recentBadges?.clear(); wonMoment = null;
     save(); render(); $('bookButton').focus();
   }
+  // v4 U44: the player taps the product row of the fail panel; this is the only place that buys from it.
+  function learnFailureProduct(id) { if (C.buyNode(state, id)) { save(); sound('skill'); showFailure(); } }
   function showFailure() {
     openPanel('fail', '공연 종료');
     const result = document.createElement('div'); result.className = 'result';
@@ -1640,11 +1776,18 @@ globalThis.Presentation = (() => {
     practiceRec = advice.node ? advice.node.id : null;
     // U32: the audience that heckled and Kali's sad face replace the lone hat icon when art exists.
     const scene = element('div', '', 'fail-scene');
-    const fv = D.venues[(failureVenue || state.venue) - 1], fa = fv && fv.audiences.concat([fv.headliner]).find(x => x && x.id === failureAudience);
+    const fv = D.venues[(failureVenue || state.venue) - 1], fa = fv && C.roster(fv).find(x => x && x.id === failureAudience);
     if (fa) { const face = element('span', '', 'fail-face'); sprite(face, audienceAsset(fv, fa)); scene.append(face); }
     const sad = element('span', '', 'fail-kali'); sprite(sad, 'assets/kali-react-sad.png'); scene.append(sad);
     result.append(scene, title, reason, element('p',advice.line,'fail-cause'));
     if(advice.hint)result.append(element('p',advice.hint,'fail-hint'));
+    // v4 U44: the 칼리 product of this venue is one option among the others (a quiet row, the player decides).
+    const product=C.failureProduct(state);
+    if(product){
+      const pinfo=C.nodeInfo(state,product.id),prow=element('div','','practice-gate fail-product');
+      prow.append(element('span',`${product.name} · 공격 ×${product.productMultiplier} · 동전 ${rounded(pinfo.cost)}`),action(pinfo.purchasable?'배우기':`동전 ${rounded(Math.ceil(pinfo.cost-state.coins))} 더`,()=>learnFailureProduct(product.id),!pinfo.purchasable));
+      result.append(prow);
+    }
     if(C.failureDealerAvailable(state))result.append(action('딜러와 한 판 하고 다시 도전',()=>{if(C.openFailureDealer(state)){save();menu='';dealer();}}));
     const stageGo = action(practiceGoLabel(), restartAfterFailure); stageGo.classList.add('fail-stage');
     const row = element('div', '', 'fail-actions'); row.append(button, stageGo);
@@ -1674,7 +1817,7 @@ globalThis.Presentation = (() => {
     updateLearningBadge.at=0; updateLearningBadge();
   }
   function startIntro(replay = true) {
-    if(!replay && !state.u15.tutorial.done){C.startTutorial(state);state.u15.tutorial.phase=state.u15.tutorial.phase||'intro';state.u15.tutorial.line=state.u15.tutorial.line||0;$('introStory').hidden=true;renderU15();save();return;}
+    if(!replay && !state.u15.tutorial.done){C.resumeTutorial(state);$('introStory').hidden=true;renderU15();save();return;}
 
     if (replay) { state.onboarding={intro:false,panel:0,step:0,facts:[]}; closePanel(); }
     release(); $('phoneMore').hidden=true; $('moreButton').setAttribute('aria-expanded','false');
@@ -1737,74 +1880,6 @@ globalThis.Presentation = (() => {
   }
 
   const treeView = { x: 0, y: 0, zoom: 1, selected: 'root', sheet: false, centerPending: false, lastTap: null, revealed: new Set(), ready: false };
-  function treePreview(node) {
-    const lv = C.nodeInfo(state, node.id).level;
-    const next = Math.min(node.max, lv + 1), k = C.CONST;
-    const percent = v => `${+(v * 100).toFixed(2)}%`;
-    const number = v => Math.abs(v)>99999 ? C.formatNumber(v) : String(+v.toFixed(2));
-    const change = (label, before, after, fmt = number) => `${label} ${fmt(before)} → ${fmt(after)}`;
-    const altered = { ...state, tree: { ...state.tree }, stars: { ...state.stars } };
-    if (node.starKey) altered.stars[node.starKey] = next; else altered.tree[node.id] = next;
-    const before = C.nodeEffects(state), after = C.nodeEffects(altered);
-    const specs = {
-      crit: ['타이밍 확률', 'critRate', percent], critRate: ['타이밍 확률', 'critRate', percent], critPower: ['반전 힘', 'critPower'],
-      comboHold: ['콤보 유예 ms', 'comboMs'], sweepFocus: ['단일 케이스 피해 힘', 'sweep'], precision: ['투명 패턴 빗나감', 'miss', percent],
-      goldPity: ['황금 간격 ms', 'goldEvery'], goldCoins: ['황금 동전 힘', 'goldCoins'], prepared: ['등장 파괴 진행률', 'prepared', percent],
-      boxXP: ['케이스 XP 힘', 'boxXP'], boxShield: ['파괴 자신감', 'boxShield'], boxHeal: ['파괴 회복', 'boxHeal'],
-      shieldCap: ['자신감 최대 비율', 'shieldRatio', percent], shieldValue: ['실크 힘', 'shieldValue'], healValue: ['회복 힘', 'healValue'],
-      winHeal: ['승리 회복', 'winHeal', percent], levelHeal: ['레벨업 회복', 'levelHeal', percent], openingShield: ['시작 자신감 비율', 'openingShield', percent],
-      calm: ['야유 피해 힘', 'calm'], tip: ['승리 동전 힘', 'tip'], dealerCoin: ['딜러 카드 동전 힘', 'dealerCoin'], jackpot: ['슬롯 동전 힘', 'jackpot'],
-      gemFind: ['보석 확률 추가', 'gemFind', percent], lessonBias: ['케이스 XP 힘', 'boxXP'], doveTempo: ['비둘기 주기 ms', 'doveEvery'],
-      dovePower: ['비둘기 피해 힘', 'dovePower'], rabbitTempo: ['토끼 주기 ms', 'rabbitEvery'], rabbitPurse: ['토끼 동전', 'rabbitCoins'],
-      helperTempo: ['팬 작업 주기 ms', 'helperEvery'], finalePower: ['피날레 피해 힘', 'finalePower'], finaleNeed: ['피날레 필요 게이지', 'finaleNeed'],
-      comboValue: ['콤보 동전 힘', 'comboValue'], encorePower: ['앵콜 피해 보너스', 'encorePower', percent], encoreSpan: ['앵콜 지속 ms', 'encoreSpan']
-    };
-    if (specs[node.id]) {
-      const [label, key, fmt] = specs[node.id];
-      // Preview the invisible pattern even when the current audience has no miss chance.
-      if (node.id === 'precision') return change('투명 패턴 빗나감', Math.max(0, k.missChance - .02 * lv), Math.max(0, k.missChance - .02 * next), percent);
-      return change(label, before[key], after[key], fmt);
-    }
-    const scales = { power: ['마술 실력', state._wand, k.wandGrowth], attack: ['연출', state._V, k.Vattack], mental: ['최대 멘탈', state.mentalMax, k.mentalGrowth], spawn: ['재생성 ms', state._tau, 1 / k.spawnGrowth] };
-    if (scales[node.id]) { const [label, value, mul] = scales[node.id]; return change(label, value, node.id === 'spawn' ? Math.max(40, value * mul ** (next - lv) * C.statMultiplier(state,node.id)/C.statMultiplier(altered,node.id)) : value * mul ** (next - lv) * C.statMultiplier(altered,node.id)/C.statMultiplier(state,node.id)); }
-    if (node.id === 'caseMax') return change('케이스 최대 LV', 5 + lv, 5 + next);
-    if (node.id === 'caseStart') return change('새 케이스 시작 LV', Math.min(C.caseCap(state), 1 + lv), Math.min(C.caseCap(state), 1 + next));
-    if (node.id === 'caseXp') return change('케이스 XP 힘', 1 + .15 * lv, 1 + .15 * next);
-    if (node.id === 'chain4') return change('연쇄 지팡이 피해', lv ? .3 + .1 * state.tree.chainPower : 0, .3 + .1 * state.tree.chainPower, percent);
-    if (node.id === 'chain8') return change('연쇄 방향', lv ? 8 : 4, 8);
-    if (node.id === 'chainPower') return change('연쇄 지팡이 피해', .3 + .1 * lv, .3 + .1 * next, percent);
-    if (node.statBranch) {
-      const total = state.tree['hidden-' + node.statBranch] || 0;
-      return change('가지 능력 힘', 1+.02*total, 1+.02*(total+next-lv));
-    }
-    if (node.productMultiplier) return change('연출', state._V, state._V * node.productMultiplier ** (next - lv));
-    if (node.id === 'boxHelper') return change('팬 수', C.fanCount(state), C.fanCount(altered));
-    if (node.id === 'assistant') return change('케이스 타격', lv ? .8 * C.wandDamage(state) : 0, .8 * C.wandDamage(state)) + ' · 황금 ×1.5';
-    if (node.id === 'speed') return change('초당 타격', C.wandRate(state), Math.min(k.tapCap, k.tapBase + k.tapPerSpeed * next) * k.starTempoRate ** state.stars.tempo * (state.slow ? k.slowTap : 1) * C.statMultiplier(altered,'speed') * C.statMultiplier(state,'starTempo'));
-    if (node.id === 'board') return change('케이스 자리', C.boardLayout(state).capacity, Math.min(25, C.boardLayout(state).capacity + next - lv));
-    if (node.id === 'area') return change('범위', k.areas[lv], k.areas[next], a => a.join('×'));
-    if (node.id === 'coinLuck') {
-      const shares = D.items.types.map(t => t.share * 100);
-      const weight = shares[D.items.types.findIndex(t => t.id === 'coin')];
-      const total = shares.reduce((a, b) => a + b, 0);
-      return change('동전 추첨 확률', (weight + 6 * lv * C.statMultiplier(state,node.id)) / (total + 6 * lv * C.statMultiplier(state,node.id)), (weight + 6 * next * C.statMultiplier(altered,node.id)) / (total + 6 * next * C.statMultiplier(altered,node.id)), percent);
-    }
-    if (node.id === 'forceRemove') return change('포스 보석 비용', Math.max(1, 3 - lv), Math.max(1, 3 - next));
-    if (node.id === 'startFinale') return change('시작 게이지', lv ? before.finaleNeed : 0, next ? after.finaleNeed : 0);
-    if (node.id === 'dove') return change('비둘기 피해', lv ? 4 * state._V * before.dovePower : 0, 4 * state._V * after.dovePower);
-    if (node.id === 'rabbit') return change('토끼 지급 동전', lv ? before.rabbitCoins : 0, after.rabbitCoins);
-    if (node.id === 'flash') return change('25개 파괴 피해', lv ? 8 * state._V : 0, 8 * state._V);
-    if (node.starKey) {
-      const delta = next - lv, jump=C.statMultiplier(altered,node.id)/C.statMultiplier(state,node.id);
-      if (node.starKey === 'trick') return change('연출', state._V, state._V * k.starTrick ** delta * jump) + ' · ' + change('타격', state._wand, state._wand * k.starWand ** delta * jump);
-      if (node.starKey === 'guard') return change('최대 멘탈', state.mentalMax, state.mentalMax * k.starGuard ** delta * jump);
-      if (node.starKey === 'tempo') return change('초당 타격', C.wandRate(state), C.wandRate(state) * k.starTempoRate ** delta * jump) + ' · ' + change('재생성 ms', state._tau, Math.max(40, state._tau * k.starTempoTau ** delta / jump));
-      return change('동전 힘', state._coinMul, state._coinMul * k.starCoin ** delta * jump);
-    }
-    if (node.id === 'root') return '모든 비법의 시작. 이미 배웠다.';
-    const unlocks = { golden: '첫 황금 케이스 30초 · 파괴 후 180초', equip: '처음 3칸 · 소품마다 해당 종류 드롭 가중치 ×1.02', slotPlus: `장착칸 ${C.equipSlots(state)} → ${Math.min(9, C.equipSlots(state) + 1)}`, boxHelper: '팬마다 2초 주기 · 마술 실력의 35%', comboGift: '콤보 10/25/50/100 · 피날레 +1/+1/+2/+2', encore: '전투 300초마다 15초간 지팡이 +20%', challenge: '추가 도전 3개 · 각각 연출 +0.5%' };
-    return unlocks[node.id] || '비법을 배우면 효과가 더해져요';
-  }
   function tree(focusMap = false) {
     const practice = typeof failure !== 'undefined' && failure !== null;
     if (menu !== 'book') openPanel('book', practice ? D.ui.practiceTitle : D.ui.bookTitle);
@@ -1812,7 +1887,7 @@ globalThis.Presentation = (() => {
     const body = $('panelBody'); body.replaceChildren();
     const learning = element('div','','tree-learning');
     const all = action('모두 배우기',buyAllUI); all.id='treeBuyAll'; all.dataset.affordable=String(C.affordableNodes(state).length);
-    const auto = action(state.learning.on ? '자동 켜짐' : '자동 배우기',()=> { state.learning.on=!state.learning.on; state.learning.ms=0; save(); tree(); },!state.tree.autoLearn);
+    const auto = action(state.learning.on ? '자동 켜짐' : '자동 배우기',()=> { C.toggleAutoLearn(state); save(); tree(); },!state.tree.autoLearn);
     auto.setAttribute('aria-pressed',String(state.learning.on)); auto.title='학교 장기자랑 도착 후 자동 배우기 비법으로 해금';
     learning.append(all,auto);
     const header = $('panel').querySelector('header');
@@ -1865,7 +1940,7 @@ globalThis.Presentation = (() => {
       sprite(iconHost, `assets/${unknown ? 'node-unknown.png' : node.icon}`);
       button.append(iconHost);
       if (practice && !unknown && node.id === practiceRec && infos.get(node.id).cost !== null) button.append(element('span', '추천', 'rec-tag'));
-      if (!unknown) button.append(element('span', node.name, 'constellation-name'), element('small', `${C.formatNumber(info.level)} / ${typeof info.max==='number' ? C.formatNumber(info.max) : info.max}`, 'constellation-level'));
+      if (!unknown) button.append(element('span', node.short || node.name /* v4 U45: long product names use a map label */, 'constellation-name'), element('small', `${C.formatNumber(info.level)} / ${typeof info.max==='number' ? C.formatNumber(info.max) : info.max}`, 'constellation-level'));
       button.addEventListener('click', () => { if (!suppressClick) select(node.id); }); world.append(button);
     }
     treeView.revealed = new Set(D.tree.filter(n => infos.get(n.id).revealed).map(n => n.id)); treeView.ready = true;
@@ -1873,13 +1948,17 @@ globalThis.Presentation = (() => {
     if (!info.revealed) {
       detail.append(element('h2', '미확인 비법'), element('p', selected.reveal === 'E' ? '첫 멀티버스 공연 완료' : '이웃 비법을 배워 발견하세요.'));
     } else {
-      if (selected.branch === 'collection') detail.append(element('small', '칼리 컬렉션'));
-      detail.append(element('h2', selected.name), element('p', `레벨 ${C.formatNumber(info.level)} / ${typeof info.max==='number' ? C.formatNumber(info.max) : info.max}`), element('p', selected.desc), element('p', D.easyExtras.milestone, 'tree-preview'));
-      if(selected.statMilestone){const next=C.nextMilestone(info.level,[10,25],selected.max);detail.append(element('p',next ? `다음 2배: 레벨 ${next} · ${next-info.level}레벨 남음` : `지금 힘 ${C.statMultiplier(state,selected.id)}배`));}
-      if (selected.desc.includes('L')) detail.append(element('small', 'L은 이 비법의 레벨입니다.'));
-      if (selected.venueSlug) detail.append(element('p', `${D.venues.find(v=>v.slug===selected.venueSlug).name} 도착 필요`));
+      // v4 U45: one reading order. Name with the level chip, the effect (first line) and its step (second line), the next milestone,
+      // then the price and, only when something blocks it, the reason. The arrival line is part of the reason now (it was shown twice).
+      const maxed = info.cost === null;
+      detail.append(element('h2', selected.name), element('span', `레벨 ${C.formatNumber(info.level)} / ${typeof info.max==='number' ? C.formatNumber(info.max) : info.max}`, 'tree-level'));
+      if (selected.branch === 'collection') detail.append(element('small', '칼리 컬렉션', 'tree-tag'));
+      detail.append(element('p', selected.desc, 'tree-effect'));
+      if(selected.statMilestone){const next=C.nextMilestone(info.level,[10,25],selected.max);detail.append(element('p',next ? `다음 2배: 레벨 ${next} · ${next-info.level}레벨 남음` : `지금 힘 ${C.statMultiplier(state,selected.id)}배`,'tree-next'),element('p', D.easyExtras.milestone, 'tree-preview'));}
+      if (selected.desc.includes('L')) detail.append(element('small', 'L은 이 비법의 레벨입니다.', 'tree-note-l'));
       const currency = { coins: '🪙 동전', keys: '🔑 열쇠', starlight: '✦ 별빛' }[info.currency];
-      detail.append(element('strong', info.cost === null ? '완성' : `${currency} ${C.formatNumber(info.cost)}`, 'tree-cost'), element('p', info.blockedReason || '구매 가능', 'tree-reason'));
+      detail.append(element('strong', maxed ? '완성했어요' : `${currency} ${C.formatNumber(info.cost)}`, 'tree-cost'));
+      if (!maxed && info.blockedReason) detail.append(element('p', info.blockedReason, 'tree-reason'));
       if (info.gate) detail.append(element('p', info.gate.text, 'tree-gate'));
       const buy = action('배우기', () => {
         if (!C.buyNode(state, selected.id)) return;
@@ -1949,7 +2028,7 @@ globalThis.Presentation = (() => {
       const gate = C.failureLessons(state).find(n => n.id.indexOf('gate:') === 0);
       if (gate) {
         const gid = gate.id.slice(5), cost = C.failureLessonInfo(state, gate.id).cost;
-        let who = ''; for (const v of D.venues) for (const a of v.audiences.concat([v.headliner])) if (a && a.id === gid) who = a.name;
+        let who = ''; for (const v of D.venues) for (const a of C.roster(v)) if (a && a.id === gid) who = a.name;
         const row = element('div', '', 'practice-gate');
         row.append(element('span', `'${who}' 야유 받아넘기기 · 동전 ${rounded(cost)}`), action('배우기', () => { if (C.learnFailureLesson(state, gate.id)) { save(); tree(); } }));
         body.prepend(row);
@@ -2193,11 +2272,11 @@ globalThis.Presentation = (() => {
     if (bestiaryTab === 'achievements') { achievementPanel(); return; }
     const outfit=element('div','','outfit-collection');outfit.append(element('strong',`칼리 의상 · ${state.u18.equipped.kali?D.cosmetics.kali.find(x=>x.id===state.u18.equipped.kali).name:['','거실 티셔츠','무대 정장','우주 망토'][state.u14.outfit]}`));const strip=element('div','','outfit-preview'+(state.u18.equipped.kali==='future'?' future-suit':''));strip.style.backgroundImage=`url('${assetUrl(kaliArtPath())}')`;strip.textContent='🎩';const image=assetImage(kaliArtPath());const ready=()=>{if(image.naturalWidth===768&&image.naturalHeight===256)strip.classList.add('art-loaded');else strip.style.backgroundImage='none';};if(image.complete)ready();else {image.addEventListener('load',ready,{once:true});image.addEventListener('error',ready,{once:true});}outfit.append(strip);$('panelBody').append(outfit);
     const routines=element('div','','routine-collection');routines.append(element('strong','나의 마술'));for(const r of D.routines.filter(r=>state.u19.routines.includes(r.id))){const item=element('span',r.name);item.prepend(artFallback(`assets/icon-routine-${r.id}.png`,'✨','routine-icon'));routines.append(item);}$('panelBody').append(routines);if(state.u19.cleared||state.u18.owned.kali.includes('future'))$('panelBody').append(element('p','🏅 미래의 나 · 다음 한 장을 건네받았다.'));
-    const products=D.tree.filter(n=>n.productMultiplier),owned=products.filter(n=>state.tree[n.id]>0).length,collection=element('p',`칼리 컬렉션 ${owned}/${products.length}${state.u14.collection?' · 연출 +10%':''}`);if(state.u14.collection)collection.prepend(artFallback('assets/icon-set-bonus.png','🎀','set-ribbon u14-art'));$('panelBody').append(collection,element('p',D.easyExtras.set,'easy-description'));
+    const products=D.tree.filter(n=>n.branch==='collection'),owned=products.filter(n=>state.tree[n.id]>0).length,collection=element('p',`칼리 컬렉션 ${owned}/${products.length}${state.u14.collection?' · 연출 +10%':''}`);if(state.u14.collection)collection.prepend(artFallback('assets/icon-set-bonus.png','🎀','set-ribbon u14-art'));$('panelBody').append(collection,element('p',D.easyExtras.set,'easy-description'));
     const guides=element('section','','bestiary-guides');
     for(const [name,key,path] of [['김도겸','tutorial','aud-tutorial-dogyeom-happy.png'],['밍기리','helper','aud-tutorial-mingiri-happy.png']]){const card=element('article','','bestiary-guide');const art=element('span','','entry-emoji');art.append(element('span',key==='helper'?'👹':'🙎','sprite-fallback'));sprite(art,'assets/'+path);card.append(art,element('h3',name),element('p',D.storyV15[key].bio));guides.append(card);}
     const badges=element('div','','reward-badges');
-    for(const r of D.stageRewards){const badge=element('figure','','reward-badge');const art=element('img');art.src=`assets/reward-${r.id}.png`;art.alt=r.effect;badge.classList.toggle('earned',state.features.rewards.includes(r.id));badge.append(art,element('figcaption',`${D.venues.find(v=>v.slug===r.venueSlug).name} · ${r.effect}`));badges.append(badge);} $('panelBody').append(badges);
+    for(const r of D.stageRewards){const badge=element('figure','','reward-badge');const art=element('img');art.src=`assets/reward-${r.id}.png`;art.alt=r.effect;badge.classList.toggle('earned',state.features.rewards.includes(r.id));badge.append(art,element('figcaption',`${C.venueBySlug(r.venueSlug).name} · ${r.effect}`));badges.append(badge);} $('panelBody').append(badges);
     const list = element('div', '', 'bestiary-list');
     for (const venue of D.venues.filter(v=>v.slug!=='future'||state.visited.includes('future'))) {
       const reached = state.visited.includes(venue.slug);
@@ -2259,7 +2338,7 @@ globalThis.Presentation = (() => {
     }
     drawDealer();
   }
-  let dealerGameView=null,cupsAnimation=null;
+  let dealerGameView=null;
   function drawDealer() {
     const d = state.dealer;
     if (!d || menu !== 'dealer') return;
@@ -3097,7 +3176,7 @@ globalThis.Presentation = (() => {
     C.dealerMontePick(state,choice);save();
     cards.forEach(c=>c.disabled=true);
     const chosen=cards.find(c=>Number(c.dataset.slot)===choice),others=cards.filter(c=>c!==chosen);
-    const face=c=>Number(c.dataset.slot)===plan.queen?'monte-queen':'monte-black';
+    const faces=Presentation.monteFaces(plan,true),face=c=>faces[Number(c.dataset.slot)];
     await monteFlip([chosen],'',[face(chosen)]);if(!table.isConnected){dealerBusy=false;return;}
     if(choice===plan.queen){chosen.classList.add('money-win','gold-shine');sound('coin');}
     await waitRoutine(420);
@@ -3131,12 +3210,12 @@ globalThis.Presentation = (() => {
       const status=element('p',settled?(m.phase==='lost'?(!m.last?'지난 판은 끝났어요':plan.bend?.line||(plan.trick?plan.trick.line:'여왕은 여기 있었어요!')):m.phase==='banked'?'선물을 받았어요!':'찾았어요! 계속할까요?'):'여왕을 잘 봐요!','monte-line');status.setAttribute('role','status');
       area.append(element('h2','몬테'),status);
       const table=gameTable('monte');
+      const faces=Presentation.monteFaces(plan,settled);
       for(let i=0;i<3;i++){
         const showFace=!!m.last;
-        const isQueen=i===(settled?plan.queen:plan.start);
         const card=action('',()=>revealMonte(m,table,status,Number(card.dataset.slot)),settled);
         card.className='routine-card';card.dataset.slot=i;card.style.setProperty('--slot',i);card.setAttribute('aria-label',`카드 ${i+1}`);
-        card.append(gameArt(settled&&!showFace?'monte-back':isQueen?'monte-queen':'monte-black','card-art'));
+        card.append(gameArt(settled&&!showFace?'monte-back':faces[i],'card-art'));
         if(settled&&m.last&&m.last.slot===i&&m.last.round===lastRound&&m.last.hit)card.classList.add('money-win','gold-shine');
         if(settled&&plan.bend&&showFace&&plan.bend.end===i)addBend(card,false);
         table.append(card);
@@ -3229,6 +3308,7 @@ globalThis.Presentation = (() => {
     if(['boo','fail','ending','rebirth','bossPhase','headliner'].includes(menu))return;
     openPanel('gemShop','보석 상점');$('panelBody').append(element('p',`💎 보석 ${state.gems}개`,'dealer-wallet'));
     for(const item of D.gemShop){
+      if(item.id==='glove'&&C.hasDeck(state))continue; // v4 U44: the 칼리 덱 skill replaces the 120 s glove
       const card=element('section','','gem-shop-item');card.append(element('h2',item.name),element('p',item.desc));
       const add=skill=>{const info=C.gemShopInfo(state,item.id,skill),label=skill?D.skills.find(k=>k.id===skill).name+' 충전':'사기';
         card.append(action(`${label} · 💎 ${info.cost}`,()=>{if(C.gemShopBuy(state,item.id,skill)){save();sound('skill');gemShop();render();}},!info.available));if(info.reason)card.append(element('small',info.reason));};
@@ -3336,7 +3416,7 @@ globalThis.Presentation = (() => {
   }
   function drawEnding() {
     clearTimeout(dialogueTimer); $('panelBody').replaceChildren();
-    const venue=D.venues.find(v=>v.slug=== (state.u19.cleared?'future':'lecturenote')), lines=state.u19.cleared?D.futureEnding:venue.headliner.endingLines;
+    const venue=C.venueBySlug(state.u19.cleared?'future':'lecturenote'), lines=state.u19.cleared?D.futureEnding:venue.headliner.endingLines;
     const scene=element('div','','ending-scene homecoming-scene');
     let primary;
     const picture=element('div','','homecoming-picture');
@@ -3367,7 +3447,7 @@ globalThis.Presentation = (() => {
     if (!state.u19.cleared) { showEnding(); return; }
     openPanel('rebirth', '다음 차원의 공연');
     const scene = element('div', '', 'rebirth-scene');
-    const gain = C.CONST.starGainBase + state.dimension;
+    const gain = C.starGain(state.dimension);
     scene.append(element('h2', `차원 ${state.dimension}에서 차원 ${state.dimension + 1}로`), element('p', `✦ 별빛 +${gain} · 환생 후 별빛 ${state.starlight + gain}`, 'rebirth-gain'));
     const columns = element('div', '', 'rebirth-lists');
     for (const [title, lines] of [
@@ -3404,7 +3484,7 @@ globalThis.Presentation = (() => {
     else if (state.mode === 'ending'&&!state.u15.scene&&!state.u15.queue.length&&!presentation.busy) showEnding();
   }
   $('buyAllButton').addEventListener('click',buyAllUI);
-  $('replayTutorial').addEventListener('click',()=>{closePanel();state.u15.tutorial.done=false;startIntro(false);});
+  $('replayTutorial').addEventListener('click',()=>{closePanel();C.replayTutorial(state);startIntro(false);});
   $('bookButton').addEventListener('click', () => {
     if (['boo','fail','dealer','headliner','ending','rebirth','bossPhase','curtain'].includes(menu)) return;
     if (state.onboarding.step===4) { const next=Guidance.target(state,D,C); if (next) { focusNode(next.id); return; } }
@@ -3427,7 +3507,7 @@ globalThis.Presentation = (() => {
   $('musicVolume').addEventListener('input',()=>window.Sfx&&window.Sfx.setMusicVolume(Number($('musicVolume').value)));
   if(window.Sfx){$('musicVolume').value=window.Sfx.musicVolume();const on=window.Sfx.musicEnabled();$('musicButton').textContent=phone?(on?'음악 ON':'음악 OFF'):on?'배경음악 켜짐':'배경음악 꺼짐';$('musicButton').setAttribute('aria-pressed',String(on));}
   $('missionsButton').addEventListener('click',()=>{if(!['boo','fail','dealer','headliner','ending','rebirth','bossPhase'].includes(menu))drawMissions();});
-  $('hapticsButton').addEventListener('click',()=>{state.u14.haptics=!state.u14.haptics;save();renderU14();});
+  $('hapticsButton').addEventListener('click',()=>{C.toggleHaptics(state);save();renderU14();});
   $('eventVisitor').addEventListener('click',()=>{if(paused())return;const list=C.catchVisitor(state);events(list);render();});
   $('soundButton').addEventListener('click', () => {
     if (window.Sfx) window.Sfx.toggle();
@@ -3609,7 +3689,7 @@ globalThis.Presentation = (() => {
     if(name==='밍기리')return 'assets/aud-tutorial-mingiri-happy.png';
     if(name==='김도겸')return 'assets/aud-tutorial-dogyeom'+(state.u15.tutorial.won?'-happy':'')+'.png';
     if(name==='칼리')return kaliArtPath();
-    for(const v of D.venues){const a=v.audiences.concat([v.headliner]).find(a=>a.name===name);if(a)return audienceAsset(v,a);}
+    for(const v of D.venues){const a=C.roster(v).find(a=>a.name===name);if(a)return audienceAsset(v,a);}
     return '';
   }
   function u25DialogMoodKey(key,index){const parts=key.split(':');return parts[0]==='story'?'story:'+parts.slice(2).join(':')+':'+index:parts[0]==='tutorial'?'story:tutorial:'+parts[1]+':'+index:key+':'+index;}
@@ -3618,7 +3698,7 @@ globalThis.Presentation = (() => {
     if(dialogKey===key+':'+index)return;dialogKey=key+':'+index;host.replaceChildren();
     const line=lines[Math.min(index,lines.length-1)],art=element('span',line.speaker==='칼리'?'🎩':'👤','story-portrait');
     if(line.speaker==='칼리'){const mood=D.lineFaces.moods[u25DialogMoodKey(key,index)]||'serious';art.classList.toggle('future-suit',state.u18.equipped.kali==='future');if(['sad','surprised'].includes(mood))sprite(art,'assets/kali-react-'+mood+'.png');else moodSprite(art,kaliArtPath(),mood);}
-    else{const a=D.venues.flatMap(v=>v.audiences.concat([v.headliner])).find(a=>a.name===line.speaker);const moodKey=u25DialogMoodKey(key,index);moodSprite(art,speakerPortrait(line.speaker),D.lineFaces.moods[moodKey]||D.lineFaces.faceMap.roleDefaults[a?.role]||'serious');}
+    else{const a=D.venues.flatMap(v=>C.roster(v)).find(a=>a.name===line.speaker);const moodKey=u25DialogMoodKey(key,index);moodSprite(art,speakerPortrait(line.speaker),D.lineFaces.moods[moodKey]||D.lineFaces.faceMap.roleDefaults[a?.role]||'serious');}
     const copy=element('div','','story-copy');copy.append(element('strong',line.speaker),element('p',line.text));
     const start=(state.idle.waiting||state.u15?.scene?.kind==='opening')&&index===lines.length-1&&!state.u15.queue.length;
     const next=action(start?'무대 시작':'다음',()=>{advance();if(start)C.startStage(state);save();}),dismiss=action('건너뛰기',skip);dismiss.hidden=start;host.classList.toggle('stage-launch',start);host.append(art,copy,next,dismiss);
@@ -3627,7 +3707,7 @@ globalThis.Presentation = (() => {
   }
   function renderU15(){
     const u=state.u15,t=u.tutorial,glove=$('item-auto-glove');
-    if(glove){glove.classList.toggle('glove-active',u.gloveLeft>0||state.tree.deckMaster&&u.deckOn);glove.querySelector('small').className='item-count';glove.hidden=!state.tree.deckMaster&&u.gloves===0&&u.gloveLeft===0;glove.disabled=paused()||state.mode!=='fight'||!state.tree.deckMaster&&u.gloveLeft>0;glove.querySelector('small').textContent=state.tree.deckMaster?(u.deckOn?'ON':'OFF'):u.gloveLeft>0?Math.ceil(u.gloveLeft/1000)+'초':u.gloves+'개';glove.style.setProperty('--cooldown',u.gloveLeft/120000*360+'deg');}
+    if(glove){const deck=C.hasDeck(state);glove.classList.toggle('glove-active',u.gloveLeft>0||deck&&u.deckOn);glove.querySelector('small').className='item-count';glove.hidden=!deck&&u.gloves===0&&u.gloveLeft===0;glove.disabled=paused()||state.mode!=='fight'||!deck&&u.gloveLeft>0;glove.setAttribute('aria-pressed',deck?String(!!u.deckOn):'false');glove.querySelector('small').textContent=deck?(u.deckOn?'자동 ON':'자동 OFF'):u.gloveLeft>0?Math.ceil(u.gloveLeft/1000)+'초':u.gloves+'개';glove.style.setProperty('--cooldown',u.gloveLeft/120000*360+'deg');}
     if(t.active){
       if(t.won&&t.phase!=='overview')t.phase='defeat';
       if(t.phase==='fight'){
@@ -3658,7 +3738,7 @@ globalThis.Presentation = (() => {
     openPanel('stories','이야기');
     const seen=state.u15.seen;
     if(!seen.length)$('panelBody').append(element('p','한 번 본 이야기가 여기에 모여요.'));
-    for(const key of seen){const [dimension,slug,kind]=key.split(':'),v=D.venues.find(v=>v.slug===slug);const labels={opening:'첫 인사',beforeHeadliner:'마지막 관객',afterClear:'공연 뒤'};
+    for(const key of seen){const [dimension,slug,kind]=key.split(':'),v=C.venueBySlug(slug);const labels={opening:'첫 인사',beforeHeadliner:'마지막 관객',afterClear:'공연 뒤'};
       $('panelBody').append(action(`차원 ${dimension} · ${v.name} · ${labels[kind]}`,()=>{closePanel();C.startScene(state,{dimension:Number(dimension),slug,kind});save();render();}));}
   }
   $('storyButton').addEventListener('click',storyList);sprite($('storyIcon'),'assets/icon-story.png');
@@ -3711,7 +3791,7 @@ globalThis.Presentation = (() => {
   document.addEventListener('visibilitychange', () => {
     release(); previous=0;
     $('feverOverlay').classList.toggle('fever-paused',document.hidden||paused()||state.mode!=='fight');
-    if(document.hidden){state.idle.wallMs=Math.max(state.idle.wallMs,Date.now());save();}
+    if(document.hidden){C.markAway(state,Date.now());save();}
     else {receiveOffline(Date.now());save();showOffline();}
   });
   window.addEventListener('pagehide', save);
@@ -3796,10 +3876,12 @@ globalThis.Presentation = (() => {
   fit(); render(); showOffline();
   if(state.u18.map)openStageMap();
   if (!state.onboarding.intro) startIntro(false);
+  if (seasonReset) toast('새 테스트가 시작됐어요. 처음부터 다시 즐겨 주세요!');
   if (corrupt) toast('저장을 불러오지 못해 백업해 두었어요');
   if (recoveredSave) toast('저장이 손상돼 최근 백업에서 되찾았어요');
   if (repairedSave) toast('저장을 조금 고쳐서 불러왔어요');
   if (refundedCoins > 0) toast(`끝없는 비법이 정리돼서 동전 ${C.formatNumber(refundedCoins)}을 돌려받았어요`);
+  if (refundedKeys > 0) toast(`칼리 덱이 스킬로 합쳐져서 열쇠 ${C.formatNumber(refundedKeys)}개를 돌려받았어요`);
   if (newerSave) showSaveNotice();
   if (giftEnded && launchSaved) toast('선물 기간이 끝나서 성장 속도가 원래대로 돌아왔어요');
   if (launchQuery.get('restored') === '1') {

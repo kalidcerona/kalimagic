@@ -6,14 +6,13 @@
   if (!DATA || !DATA.venues) throw new Error("GAME_DATA missing");
 
   var CONST = {
-    critChance: 0.08, critMultiplier: 1.5,
     revealGapMs: 8000,
-    goldFirstMs: 30000, goldIntervalMs: 180000, goldHpMultiplier: 1.5, goldCoinBase: 20,
+    goldFirstMs: 30000, goldHpMultiplier: 1.5, goldCoinBase: 20,
     comboThresholds: [10, 25, 50, 100], comboGaugeRewards: [1, 1, 2, 2], comboCoinRewards: [2, 4, 8, 16],
-    helperEveryMs: 2000, helperWandRatio: 0.35,
+    helperEveryMs: 2000,
     equipBaseSlots: 3, equipMaxSlots: 9, equipTypeLimit: 3, equipWeightPerItem: 0.02,
     achievementVPer: 0.005,
-    encoreEveryMs: 300000, encoreDurationMs: 15000, encoreWandBonus: 0.20,
+    encoreEveryMs: 300000,
     spawnBase: 0.35,
     spawnGrowth: 1.08,
     boxHpBase: 100,
@@ -47,6 +46,9 @@
     intervalMin: 2.2,
     telegraphMs: 600,
     winTransitionMs: 2500,
+    // v4 U45: test-season number. applySaveEpoch wipes progress ONCE per device when this is higher than the stored magicShowBuster.epoch.
+    // Keep it at 1: later releases then keep every player's progress. Raise it only when the owner asks for another fresh start.
+    saveEpoch: 1,
     winHeal: 0.2,
     comboResetMs: 2000,
     finisherNeed: 20,
@@ -67,9 +69,6 @@
     rarityIds: ["common", "rare", "hero", "legend", "myth"],
     gemChance: [0, 0.02, 0.05, 0.12, 0.3],
     nodeBase: { power: 120, attack: 45, mental: 30, spawn: 35, speed: 60 },
-    nodeGrowth: 2.2,
-    nodeMax: 10,
-    coinLuckBase: 70,
     coinLuckAdd: 6,
     boardCosts: [40, 120, 300, 700, 1600, 3500, 7500, 15000, 30000, 55000, 90000, 140000],
     legacyCaps: [1, 2, 4, 6, 9, 12, 16, 25],
@@ -81,14 +80,11 @@
     areaNeeds: [2, 5, 5, 6, 9, 12, 16, 25],
     areaVenueNeeds: DATA.areaVenueSlugs,
     areas: [[1, 1], [2, 1], [3, 1], [2, 2], [3, 2], [3, 3], [4, 3], [4, 4], [5, 5]],
-    keyCost: { startFinale: 1, forceRemove: 1, dove: 2, rabbit: 2, flash: 2 },
     bestiaryWins: 3,
     bestiaryDmg: 0.03,
     bestiaryU: 0.1,
-    dealerEvery: 3,
     cardMin: 3,
     cardMax: 5,
-    dealerDuds: 1,
     dealerCoinGrowth: 1.35,
     // v4 U37: the dealer now visits only after a failed stage, so what it pays is multiplied. Income based games (cups, monte) are capped
     // at dealerCapSeconds of the player's coin income per payout so one visit cannot skip a stage.
@@ -96,7 +92,6 @@
     dealerCreditPerStage: 1,
     dealerCapSeconds: 600,
     forceGemCost: 3,
-    forceMax: 2,
     doveEvery: 3000,
     doveDamage: 4,
     rabbitEvery: 5000,
@@ -113,6 +108,10 @@
     patternHealEvery: 9000,
     // v4 U38: a show ends as a failure when doubt has not gone below its lowest point for this long (a stall, e.g. gate pressure out-healing the player).
     stallMs: 75000,
+    // v4 U41: node levels a gate asks the player to learn after first meeting it (the old fixed number; see gateNeed for the cap).
+    gatePrep: 30,
+    // v4 U41: failed shows at one gate that remove its pressure completely (each one removes 1/gateFailSteps).
+    gateFailSteps: 3,
     // v4 U38: the final boss's last heckle. When its doubt falls to 30 percent (act 3) the next heckle is this one: a fixed, announced size that the
     // mental and 자신감 of a build without the tail of 무대 배짱 (levels 11 to 15) cannot soak up (281k + 169k at the final boss, so 450k), the full build can
     // (644k mental alone), and 야유 막기 cancels outright. finalHeckleWarnMs is the pause that announces it.
@@ -243,7 +242,7 @@
   }
   function checkSets(state,ev) {
     DATA.venues.forEach(function(v){var p=venueSetProgress(state,v.slug);if(p.current===p.total&&!p.complete){state.u14.sets.push(v.slug);emit(ev,{type:'setBonus',slug:v.slug});}});
-    var all=DATA.tree.filter(function(n){return n.productMultiplier;}).every(function(n){return state.tree[n.id]>0;});
+    var all=DATA.tree.filter(function(n){return n.branch==='collection';}).every(function(n){return state.tree[n.id]>0;});  // v4 U45: all 11 칼리 컬렉션 nodes
     if(all&&!state.u14.collection){state.u14.collection=true;emit(ev,{type:'setBonus',slug:'collection'});}
   }
   function visitorBlocked(state) {
@@ -305,6 +304,11 @@
     return ev||[];
   }
   function tickSkills(state,dt) { state.skills.showtimeLeft=Math.max(0,state.skills.showtimeLeft-dt); DATA.skills.forEach(function(k){state.skills.cooldowns[k.id]=Math.max(0,state.skills.cooldowns[k.id]-dt);}); }
+  // v4 U42: shared formulas. The expression order matches the old inline copies exactly (float results must stay byte-identical).
+  function caseHp(base, lv) { return base * Math.pow(1.12, lv - 1); }
+  function xpNeed(state) { return CONST.xpBase + CONST.xpPerLevel * state.level; }
+  function starGain(d) { return CONST.starGainBase + d; }
+  function dealerCoinGrowthPow(state) { return Math.pow(CONST.dealerCoinGrowth, balanceRank(state.vMax) - 1); }
   function idleRates(saved) {
     var state=Object.assign({},saved,{_area:Object.assign({},saved._area||{}),skills:emptySkills(),features:JSON.parse(JSON.stringify(saved.features))});
     state.features.encoreLeft=0;
@@ -324,10 +328,10 @@
     var weights=DATA.items.types.map(function(k){var weight=k.share*100;if(k.id==='coin')weight+=t.coinLuck*statMultiplier(state,'coinLuck')*CONST.coinLuckAdd;if(t.equip)weight*=Math.pow(1+CONST.equipWeightPerItem,state.features.equipped.filter(function(id){return itemType(id)===k;}).length);return weight;});
     var totalShare=weights.reduce(function(a,b){return a+b;},0), coinShare=DATA.items.types.reduce(function(n,k,i){return n+(k.effect==='coins'?weights[i]:0);},0)/totalShare;
     state.board.forEach(function(c){
-      var hp=state._boxHp*Math.pow(1.12,(c.lv||1)-1);
+      var hp=caseHp(state._boxHp,c.lv||1);
       var opens=perCell>0?1/(hp/perCell+state._tau/1000):0;
       xp.push(c.lv<caseCap(state)?opens*(1+.15*t.caseXp):0);
-      coins+=opens*(Math.max(1,Math.round(CONST.coinPerBox*state._coinMul))+caseItems(c.lv||1)*coinShare*CONST.itemCoins*rarityMean*state._coinMul*Math.pow(1.1,(c.lv||1)-1)*milestoneMultiplier(c.lv||1,[10,25,50])*branchBonus(state,'box'));
+      coins+=opens*(Math.max(1,Math.round(CONST.coinPerBox*state._coinMul))+caseItems(c.lv||1)*coinShare*CONST.itemCoins*rarityMean*state._coinMul*Math.pow(1.1,(c.lv||1)-1)*milestoneMultiplier(c.lv||1,[10,25,50])*branchBonus(state,'box')*caseItemBonus(state));
     });
     if(t.tipbox&&!m.paused.tipbox)coins+=(2+legacyRank(state.venue))*(1+.25*t.tipboxPower)*speed/(6*(1-.1*t.tipboxSpeed));
     if(t.rabbit&&!state.features.helperPaused)coins+=nodeEffects(state).rabbitCoins/(nodeEffects(state).rabbitEvery/1000);
@@ -482,13 +486,6 @@
     return b;
   }
 
-  function zeros(n) {
-    var a = [];
-    var i;
-    for (i = 0; i < n; i++) a.push(0);
-    return a;
-  }
-
   function countRemoved(state) {
     var n = 0;
     var i;
@@ -585,17 +582,100 @@
     var v=state.venue;
     return state.j===headlinerJ(v) || v>=3 && state.j===Math.ceil(VENUES[v-1].audiences.length/2);
   }
+  // v4 U41: the node levels still to learn at this position: every coin node that nothing but the wallet blocks (revealed, prerequisites,
+  // venue and area needs, progress gates), bought one level at a time on a copy with an unlimited purse until nothing changes. Key and starlight nodes
+  // are not counted: they cannot be bought with the coins a retrying player earns.
+  function copyPlain(x) {
+    if (x === null || typeof x !== 'object') return x;
+    if (Array.isArray(x)) return x.map(copyPlain);
+    var o = {};
+    Object.keys(x).forEach(function (k) { o[k] = copyPlain(x[k]); });
+    return o;
+  }
+  function reachableLevelsLeft(state) {
+    var c = copyPlain(state), total = 0, changed = true, guard = 0;
+    c.coins = 1e30;
+    while (changed && guard++ < 500) {
+      changed = false;
+      DATA.tree.forEach(function (n) {
+        if (n.starKey || n.pending || n.currency !== 'coins') return;
+        while (nodeInfo(c, n.id).purchasable && buyNode(c, n.id)) { total++; changed = true; }
+      });
+    }
+    return total;
+  }
+  // The preparation a gate asks for is 30 node levels, or all the levels that can still be learned when there are fewer than 30 (at least 1),
+  // so a player who has learned everything reachable can always remove the pressure.
+  function gateNeed(state) { return Math.max(1, Math.min(CONST.gatePrep, reachableLevelsLeft(state))); }
   function gatePressure(state) {
     if(!gateAudience(state))return 0;
     var g=state.u19b.gates[state.audId];
-    return g&&!g.cleared&&!g.studied?Math.max(0,1-(preparation(state)-g.prepared)/30):0;
+    // v4 U41: each failed show at this gate also lowers the pressure by a third (g.fails, at most 3), so a player who has nothing left to buy
+    // with the coins on hand still gets through after three tries.
+    return g&&!g.cleared&&!g.studied?Math.max(0,1-(preparation(state)-g.prepared)/(g.need||CONST.gatePrep)-(g.fails||0)/CONST.gateFailSteps):0;
   }
   function failureLessons(state) {
     var ids=['mental','attack','power','speed','calm','shieldCap','boxHeal'];
     var lessons=ids.map(function(id){return NODE_BY_ID[id];}).filter(function(n){return n&&nodeInfo(state,n.id).purchasable;});
     var id=state.u19b.failedId,g=state.u19b.gates[id];
+    if(!lessons.length){
+      // v4 U41: nothing in the usual seven can be bought now, so offer the best node of the whole book that can be (still the player's choice).
+      var rest=bookLesson(state);
+      if(rest)lessons.push(rest);
+    }
+    // v4 U44: the 칼리 product of this venue is one more option while it is unbought, discovered and payable (still only a suggestion).
+    var prod=failureProduct(state);
+    if(prod&&nodeInfo(state,prod.id).purchasable)lessons.unshift(prod);
     if(g&&!g.cleared&&!g.studied&&state.coins>=failureLessonCost(state,id))lessons.unshift({id:'gate:'+id,name:'야유 받아넘기기'});
-    return lessons.slice(0,2);
+    return lessons.slice(0,3);
+  }
+  // v4 U44: the product that belongs to the venue the player stands in, while it is discovered and not yet bought (payable or not).
+  function failureProduct(state){
+    var fid=state.u19b.failedId,fv=fid&&VENUES.find(function(v){return v.audiences.concat([v.headliner]).some(function(a){return a.id===fid;});})||VENUES[state.venue-1];
+    var slug=fv&&fv.slug,n=DATA.tree.find(function(p){return p.wall&&p.venueSlug===slug;});
+    if(!n)return null;
+    var info=nodeInfo(state,n.id);
+    return info.revealed&&info.level<1?n:null;
+  }
+  // v4 U41: the order a node of the whole book is offered in after a failure: what makes a fight easier first (stage nerves, damage, helpers),
+  // then the coin and collection nodes, then anything else, cheapest first. Only nodes the wallet can pay for now are candidates.
+  var BOOK_LESSON_ORDER = ['shieldValue','healValue','winHeal','levelHeal','openingShield','critPower','critRate','comboHold','sweepFocus','precision','area','caseXp','caseStart','chainPower','chain4','chain8','caseMax','fanPower','helperTempo','colleaguePower','colleagueMore','colleagueTempo','spongePower','cardthrowPower','flashpaperPower','crystalPower','waterPower','spotlightPower','dovePower','doveTempo','rabbitTempo','finalePower','encorePower','comboValue','boxShield','boxXP','prepared','spawn','coinLuck','tip','jackpot','goldCoins'];
+  function bookLesson(state) {
+    var best=null,bestRank=1e9,bestCost=Infinity;
+    DATA.tree.forEach(function(n){
+      if(n.starKey||n.pending||n.id==='root')return;
+      var info=nodeInfo(state,n.id);
+      if(!info.purchasable||!info.revealed)return;
+      var rank=BOOK_LESSON_ORDER.indexOf(n.id);if(rank<0)rank=BOOK_LESSON_ORDER.length;
+      if(rank<bestRank||rank===bestRank&&info.cost<bestCost){best=n;bestRank=rank;bestCost=info.cost;}
+    });
+    return best;
+  }
+  // v4 U41: one friendly line when the fail panel has nothing to buy (or the gate lesson cannot be paid): the nearest block and the real way to grow.
+  // cause is the way the run ended ('mental', 'damage', 'gate', 'stall', 'lastHeckle'). Returns '' when there is nothing true to say.
+  function failureHint(state, cause) {
+    if(cause==='lastHeckle')return '야유 막기 스킬을 마지막 야유 알림이 뜬 뒤에 눌러 보세요. 한 번 막아 줘요';
+    if(cause==='gate'){
+      var gid=state.u19b.failedId,gr=state.u19b.gates[gid];
+      if(gr&&!gr.cleared&&!gr.studied&&state.coins<failureLessonCost(state,gid))return '동전 '+formatNumber(Math.ceil(failureLessonCost(state,gid)-state.coins))+' 더 모으면 야유 받아넘기기를 배울 수 있어요';
+      return '';
+    }
+    if(failureLessons(state).some(function(n){return n.id.indexOf('gate:')!==0;}))return '';
+    // The nearest wallet block: the fight nodes of the usual seven first, then everything else, the smallest shortfall first.
+    var fight=['mental','attack','power','speed','calm','shieldCap','boxHeal'],near=null,nearKey=null;
+    DATA.tree.forEach(function(n){
+      if(n.starKey||n.pending||n.currency!=='coins')return;
+      var info=nodeInfo(state,n.id);
+      if(!info.revealed||info.cost==null||!/ 부족$/.test(info.blockedReason||''))return;
+      var key=[fight.indexOf(n.id)>=0?0:1,info.cost-state.coins];
+      if(!nearKey||key[0]<nearKey[0]||key[0]===nearKey[0]&&key[1]<nearKey[1]){near=n;nearKey=key;}
+    });
+    if(near)return '동전 '+formatNumber(Math.ceil(nearKey[1]))+' 더 모으면 '+near.name+' 비법을 올릴 수 있어요';
+    // Cases gain levels by being opened, so retrying is real growth while any case is below the cap.
+    if(state.board.some(function(c){return (c.lv||1)<caseCap(state);}))return '케이스 레벨을 올리면 더 세져요. 다시 열어 볼까요?';
+    var stuck=null;
+    fight.forEach(function(id){if(stuck)return;var info=nodeInfo(state,id);if(info.revealed&&info.level<info.max&&info.blockedReason)stuck={name:NODE_BY_ID[id].name,reason:info.blockedReason};});
+    return stuck?stuck.name+' 비법은 '+stuck.reason+' 뒤에 올릴 수 있어요':'';
   }
   function failureLessonCost(state,id) {var v=VENUES.find(function(v){return v.audiences.concat([v.headliner]).some(function(a){return a.id===id;});});return v?v.id*25:Infinity;}
   function failureLessonInfo(state,id) {return id.indexOf('gate:')===0?{currency:'coins',cost:failureLessonCost(state,id.slice(5))}:{currency:nodeInfo(state,id).currency,cost:nodeCost(state,id)};}
@@ -691,11 +771,13 @@
   function caseItems(lv) { return 1 + Math.floor((lv - 1) / 3); }
   // v4 U38: the endless nodes are gone; only the one-level hidden node of a branch still adds its 2 percent.
   function branchBonus(state, branch) { return 1 + .02 * (state.tree['hidden-' + branch] || 0); }
+  // v4 U45: 틴 케이스 (node.caseItemMult) multiplies what every opened case's items do (damage, shield, heal, coins, xp); 1 without it.
+  function caseItemBonus(state) { var m = 1; DATA.tree.forEach(function (n) { if (n.caseItemMult && state.tree[n.id]) m *= n.caseItemMult; }); return m; }
   function earnCoins(state, amount) { state.u14.visitor.incomeCoins+=amount; state.coins += amount; state.features.progress.coinsEarned += amount; }
   function fillBox(state, cell) {
     cell.lv = cell.lv || Math.min(caseCap(state), 1 + (state.tree.caseStart || 0) + (hasReward(state, 4) ? 1 : 0));
     cell.xp = cell.xp || 0;
-    var hp = (state._boxHp || CONST.boxHpBase) * Math.pow(1.12, cell.lv - 1);
+    var hp = caseHp(state._boxHp || CONST.boxHpBase, cell.lv);
     cell.hp = hp * (1 - nodeEffects(state).prepared);
     cell.hpMax = hp;
     cell.sealed = false;
@@ -770,8 +852,8 @@
       if(j===1)queueScene(state,VENUES[v-1].slug,'opening');
       if(j===headlinerJ(v))queueScene(state,VENUES[v-1].slug,'beforeHeadliner');
     }
-    if(gateAudience(state)&&!state.u19b.gates[state.audId])state.u19b.gates[state.audId]={prepared:preparation(state),cleared:false,studied:false};
-    if(gatePressure(state)>0)state.audHp=state.audHpMax=Math.max(state.audHpMax,Math.round(futurePower(state)*(VENUES[v-1].slug==='theater'?75:45)));
+    if(gateAudience(state)&&!state.u19b.gates[state.audId])state.u19b.gates[state.audId]={prepared:preparation(state),need:gateNeed(state),cleared:false,studied:false};
+    if(gatePressure(state)>0)state.audHp=state.audHpMax=Math.max(state.audHpMax,Math.round(wallPower(state)*(VENUES[v-1].slug==='theater'?75:45)));
     state.stallMin = state.audHp; state.stallMs = 0;
     emit(ev, { type: "audience", venue: v, j: j, audId: state.audId, crowd: state.crowd });
   }
@@ -915,16 +997,6 @@
   }
   function recap(state) { return {wins:state.wins, helpers:state.helpersUsed.length, venues:state.visited.length}; }
 
-  function endingText(d) {
-    if (d >= 1 && d <= DATA.dimensions.length) return DATA.dimensions[d - 1].ending;
-    var g = DATA.genericEnding;
-    var s = String(d);
-    return {
-      title: g.title.split("{d}").join(s),
-      body: g.body.split("{d}").join(s)
-    };
-  }
-
   function setupDealer(state) {
     state.u19b.dealerVisits++;
     state.winsSinceDealer = 0;
@@ -977,7 +1049,7 @@
   function applyPrize(state, prize) {
     if (!prize) return;
     if (prize.kind === "coins") {
-      earnCoins(state, Math.round(prize.value * CONST.dealerRewardMult * Math.pow(CONST.dealerCoinGrowth, balanceRank(state.vMax) - 1) * nodeEffects(state).dealerCoin));
+      earnCoins(state, Math.round(prize.value * CONST.dealerRewardMult * dealerCoinGrowthPow(state) * nodeEffects(state).dealerCoin));
     } else if (prize.kind === "gems") {
       state.gems += Math.round(prize.value * CONST.dealerRewardMult);
     } else if (prize.kind === "heal") {
@@ -1083,7 +1155,7 @@
       }
     }
     if (pays > 0) {
-      earnCoins(state, Math.round(pays * CONST.slotCoin * CONST.dealerRewardMult * Math.pow(CONST.dealerCoinGrowth, balanceRank(state.vMax) - 1) * nodeEffects(state).jackpot));
+      earnCoins(state, Math.round(pays * CONST.slotCoin * CONST.dealerRewardMult * dealerCoinGrowthPow(state) * nodeEffects(state).jackpot));
       if (pays >= 2) state.gems += Math.round(CONST.slotGem * CONST.dealerRewardMult);
     }
     return true;
@@ -1159,6 +1231,8 @@
     var failedVenue=state.venue,failedId=state.audId,offer=state.venue>=venueNumber(DATA.dealer.cardVenue)&&dealerCredit(state)&&state.winsSinceDealer>0;
     // U32 cause: gate pressure first, then how much of the doubt bar this run actually removed.
     var failCause = forcedCause ? forcedCause : gatePressure(state) > 0 ? "gate" : (state.audHpMax > 0 && state.u19.damage / state.audHpMax < 0.4 ? "damage" : "mental");
+    var failedGate = state.u19b.gates[failedId];
+    if (failedGate && gatePressure(state) > 0) failedGate.fails = Math.min(CONST.gateFailSteps, (failedGate.fails || 0) + 1);
     emit(ev, { type: "fail", reasonPct: pct, cause: failCause, venue:failedVenue,audId:failedId });
     state.fails++;
     restartRun(state);
@@ -1168,8 +1242,8 @@
 
   function checkLevel(state, ev) {
     var guard = 0;
-    while (state.xp >= CONST.xpBase + CONST.xpPerLevel * state.level && guard++ < 24) {
-      state.xp -= CONST.xpBase + CONST.xpPerLevel * state.level;
+    while (state.xp >= xpNeed(state) && guard++ < 24) {
+      state.xp -= xpNeed(state);
       state.level++;
       recompute(state, false);
       state.mental = Math.min(state.mentalMax, state.mental + state.mentalMax * nodeEffects(state).levelHeal);
@@ -1304,10 +1378,11 @@
     else if (effect === "shield") amount = CONST.itemShield * state._U * mult * nodeEffects(state).shieldValue;
     else if (effect === "heal") amount = CONST.itemHeal * state._U * mult * nodeEffects(state).healValue;
     else if (effect === "coins") amount = CONST.itemCoins * mult * coinMul;
-    else if (effect === "xpBurst") amount = 0.5 * (CONST.xpBase + CONST.xpPerLevel * state.level);
+    else if (effect === "xpBurst") amount = 0.5 * xpNeed(state);
     else if (effect === "finisher") amount = 5;
     else if (effect === "boxFill") amount = 0.3;
-    amount *= milestoneMultiplier(itemLv,[10,25,50]) * Math.pow(1.10, itemLv - 1) * branchBonus(state, "box");
+    var itemBonus = milestoneMultiplier(itemLv,[10,25,50]) * Math.pow(1.10, itemLv - 1) * branchBonus(state, "box") * caseItemBonus(state);
+    amount *= itemBonus;
     var gem = 0;
     if (ri >= 1 && rngNext(state) < CONST.gemChance[ri] + nodeEffects(state).gemFind && state.u17.gemWait<=0) {
       state.u17.gemWait=90000;
@@ -1316,7 +1391,7 @@
     }
     emit(ev, { type: "boxBreak", openId: f.boxes, source: source || "manual", cell: i, item: kind, itemId: product.id, name: product.name, emoji: product.emoji, effect: effect, rarity: CONST.rarityIds[ri], value: amount, gem: gem });
     if (state.flights.length < CONST.flightCap) {
-      state.flights.push({
+      var flight = {
         ms: CONST.itemFlightMs,
         kind: kind,
         itemId: product.id, name: product.name, emoji: product.emoji, effect: effect,
@@ -1324,7 +1399,10 @@
         rarity: CONST.rarityIds[ri],
         cell: i,
         audId: state.audId
-      });
+      };
+      // v4 U44: an xp item keeps its case-level and branch bonus for the landing, when the amount is recomputed from the current need.
+      if (effect === "xpBurst") flight.xpFactor = itemBonus;
+      state.flights.push(flight);
     }
     }
     if (state.tree.flashpaper && !f.magic.paused.flashpaper && f.magic.papers.length < 2 && rngNext(state) < .03 + .01 * state.tree.flashpaperChance) {
@@ -1440,7 +1518,7 @@
     for (i = 0; i < list.length && i < CONST.flightCap; i++) {
       var f = list[i];
       if (f.ms > 0) continue;
-      if (f.effect === "xpBurst") f.amount = 0.5 * (CONST.xpBase + CONST.xpPerLevel * state.level);
+      if (f.effect === "xpBurst") f.amount = 0.5 * xpNeed(state) * (f.xpFactor || 1); // v4 U44: the current level's need, keeping the case-level and branch bonus
       emit(ev, { type: "itemLand", cell: f.cell, item: f.kind, itemId: f.itemId, name: f.name, emoji: f.emoji, effect: f.effect, rarity: f.rarity, value: f.amount });
       if (f.kind === "card") {
         if (state.mode === "fight" && !state.resolved && f.audId === state.audId) {
@@ -1925,7 +2003,7 @@
         state.comboMs = 0;
       }
     }
-    var gloveActive=state.u15.gloveLeft>0||state.tree.deckMaster&&state.u15.deckOn;
+    var gloveActive=state.u15.gloveLeft>0||hasDeck(state)&&state.u15.deckOn;
     if(gloveActive){
       // One shared manual accumulator prevents extra real fingers from adding hits.
       applyTaps(state,dt,state.board.map(function(c,i){return i;}),ev);
@@ -1993,6 +2071,9 @@
     var revealed = id === "root" || (node.reveal === "E" ? state.endings.length > 0 : level > 0 || node.prereqs.some(function (pre) { return nodeLevel(state, NODE_BY_ID[pre]) > 0; }));
     if (node.u13 && (id==='autoPractice' || /Cooldown$/.test(id))) revealed = level>0 || (id==='autoPractice' ? practiceUnlocked(state) : skillUnlocked(state,id.replace('Cooldown','')));
     if (node.hidden) revealed = level > 0 || branchMaxed(state,node);
+    // v4 U44: a 칼리 product is discovered by reaching its venue (no chain of earlier products is needed); its prereqs only draw the book lines.
+    // v4 U45: every 칼리 컬렉션 node (branch collection: the nine wall products, 칼리 덱 and 틴 케이스) follows that rule.
+    if (node.branch === "collection") revealed = level > 0 || reached(state, node.venueSlug);
     var progress = gateProgress(state,node.gates ? node.gates[level] : node.gate);
     var reason = "";
     if (level >= node.max) reason = "최대 레벨";
@@ -2000,7 +2081,7 @@
     else if (!revealed) reason = "아직 발견하지 못한 비법";
     else if (progress && !progress.met) reason = progress.text;
     else if (node.pending) reason = "준비 중";
-    else if (!node.prereqs.every(function (pre) { return nodeLevel(state, NODE_BY_ID[pre]) > 0; })) reason = "선행 비법 필요: " + node.prereqs.filter(function (pre) { return nodeLevel(state, NODE_BY_ID[pre]) < 1; }).map(function (pre) { return NODE_BY_ID[pre].name; }).join(", ");
+    else if (node.branch !== "collection" && !node.prereqs.every(function (pre) { return nodeLevel(state, NODE_BY_ID[pre]) > 0; })) reason = "선행 비법 필요: " + node.prereqs.filter(function (pre) { return nodeLevel(state, NODE_BY_ID[pre]) < 1; }).map(function (pre) { return NODE_BY_ID[pre].name; }).join(", ");
     else if (node.venueSlug && !reached(state,node.venueSlug)) reason = VENUES[venueNumber(node.venueSlug)-1].name + " 도착 필요";
     else if (id === "area" && !reached(state,CONST.areaVenueNeeds[level])) reason = VENUES[venueNumber(CONST.areaVenueNeeds[level])-1].name + " 도착 필요";
     else if (id === "area" && boardCapacity(state) < CONST.areaNeeds[level]) reason = "케이스 자리 " + CONST.areaNeeds[level] + "칸 필요";
@@ -2119,7 +2200,7 @@
   function rebirth(state) {
     var d = state.dimension | 0;
     if (d < 1) d = 1;
-    var gain = CONST.starGainBase + d;
+    var gain = starGain(d);
     if (gain < 1) gain = 1;
     state.starlight += gain;
     var i;
@@ -2297,14 +2378,16 @@
     var flights = [];
     for (i = 0; i < state.flights.length && i < CONST.flightCap; i++) {
       var f = state.flights[i];
-      flights.push({ ms: savedTimer(f.ms, 1e7), kind: f.kind, amount: f.amount, rarity: f.rarity, cell: f.cell, audId: f.audId, itemId: f.itemId, name: f.name, emoji: f.emoji, effect: f.effect, legacy: !!f.legacy });
+      var sf = { ms: savedTimer(f.ms, 1e7), kind: f.kind, amount: f.amount, rarity: f.rarity, cell: f.cell, audId: f.audId, itemId: f.itemId, name: f.name, emoji: f.emoji, effect: f.effect, legacy: !!f.legacy };
+      if (f.xpFactor > 1) sf.xpFactor = f.xpFactor;
+      flights.push(sf);
     }
     var tree = {};
     for (i = 0; i < TREE_KEYS.length; i++) tree[TREE_KEYS[i]] = state.tree[TREE_KEYS[i]];
     var stars = {};
     for (i = 0; i < STAR_KEYS.length; i++) stars[STAR_KEYS[i]] = state.stars[STAR_KEYS[i]] | 0;
     var obj = {
-      v: 16,
+      v: 19,
       u15: state.u15,
       u14: state.u14,
       idle: state.idle, skills: state.skills, u17: state.u17, u18: state.u18, u19: state.u19, u19b: state.u19b,
@@ -2383,10 +2466,30 @@
   }
 
   function isNewerSave(raw) {
-    try { var o=JSON.parse(raw); return !!o && typeof o.v==='number' && isFinite(o.v) && o.v>16; }
+    try { var o=JSON.parse(raw); return !!o && typeof o.v==='number' && isFinite(o.v) && o.v>19; }
     catch (error) { return false; }
   }
 
+  // v4 U45: one-time test-season reset (owner, update of 2026-10-13 21:30), run on boot before the save store reads anything.
+  // When magicShowBuster.epoch is missing or below CONST.saveEpoch: the main save and every store backup the game could restore
+  // (magicShowBuster.v3, .backup.*, .keep.*) are copied into magicShowBuster.preReset.<epoch> (never read by the game; manual recovery
+  // only) and removed, then the epoch is written. Settings (.presentation, .sound, .music) and save slots (magicShowBuster.slot.*) stay.
+  // A device with no save only gets the epoch key. With the epoch at CONST.saveEpoch nothing happens, so progress is kept from then on.
+  function applySaveEpoch(storage) {
+    var main='magicShowBuster.v3', epochKey='magicShowBuster.epoch', seen=Number(storage.getItem(epochKey))||0, drop=[], copy={}, i, k;
+    if (seen >= CONST.saveEpoch) return {reset:false};
+    for (i = 0; i < storage.length; i++) { k = storage.key(i); if (k === main || (k && (k.indexOf(main + '.backup.') === 0 || k.indexOf(main + '.keep.') === 0))) drop.push(k); }
+    if (drop.length) {
+      drop.forEach(function (key) { copy[key] = storage.getItem(key); });
+      var target = 'magicShowBuster.preReset.' + CONST.saveEpoch, copied = false;
+      try { storage.setItem(target, JSON.stringify({epoch:CONST.saveEpoch, keys:copy})); copied = true; } catch (error) { /* full: keep at least the main save below */ }
+      drop.forEach(function (key) { if (key !== main) storage.removeItem(key); });
+      if (!copied && copy[main] != null) { try { var only = {}; only[main] = copy[main]; storage.setItem(target, JSON.stringify({epoch:CONST.saveEpoch, keys:only})); } catch (error) { /* nothing more can be kept */ } }
+      storage.removeItem(main);
+    }
+    storage.setItem(epochKey, String(CONST.saveEpoch));
+    return {reset:drop.length > 0};
+  }
   function createSaveStore(storage, now) {
     var key='magicShowBuster.v3', prefix=key+'.backup.', autoKey=prefix+'auto', keepPrefix=key+'.keep.', KEEP_MAX=8, blocked=false, noAuto=false, lastRaw=null;
     now=now || Date.now;
@@ -2535,8 +2638,8 @@
       var o = JSON.parse(str);
       if (!o || typeof o !== "object" || Array.isArray(o)) return null;
       // Forward saves may share our known schema. Never persist this projection.
-      if (isNewerSave(str)) o.v = 16;
-      if (o.v !== 16 && o.v !== 1 &&o.v !== 2 && o.v !== 3 && o.v !== 4 && o.v !== 5 && o.v !== 6 && o.v !== 7 && o.v !== 8 && o.v !== 9 && o.v !== 10 && o.v !== 11 && o.v !== 12 && o.v !== 13 && o.v !== 14 && o.v !== 15) return null;
+      if (isNewerSave(str)) o.v = 19;
+      if (o.v !== 19 && o.v !== 18 && o.v !== 17 && o.v !== 16 && o.v !== 1&&o.v !== 2 && o.v !== 3 && o.v !== 4 && o.v !== 5 && o.v !== 6 && o.v !== 7 && o.v !== 8 && o.v !== 9 && o.v !== 10 && o.v !== 11 && o.v !== 12 && o.v !== 13 && o.v !== 14 && o.v !== 15) return null;
       if (o.v === 7 && o.venueSlug === "lecturenote") {
         // Preserve the old index contract, then migrate by stable audience ID.
         var previousOrder = ["a-lecturenote-hecate", "a-lecturenote-jung", "h-lecturenote-kim"];
@@ -2551,14 +2654,16 @@
       var rngState = integer(o.rngState, 0, 4294967295);
       var dimension = integer(o.dimension, 1, 999);
       var starlight = num(o.starlight, 0, 100000);
-      var coins = num(o.coins, 0, 1e12);
+      var coins = num(o.coins, 0, 1e18);  // v4 U45: 1e18 (was 1e12): a maxed late build with 12 hours away reaches about 3e12 legitimately
       var gems = integer(o.gems, 0, 1e9);
       var keys = integer(o.keys, 0, 1e6);
       var vMax = integer(o.vMax, 1, VENUES.length);
       var venue = integer(o.venue, 1, VENUES.length);
       var j = venue == null ? null : integer(o.j, 1, headlinerJ(venue));
-      var audHp = num(o.audHp, 0, 1e12);
-      var audHpMax = num(o.audHpMax, 1, 1e12);
+      // v4 U44: 1e16 (was 1e12): the venue doubt scales with the attack of the 칼리 products, the last venues reach several 1e12.
+      // v4 U45: 1e24 (was 1e16): a gate sized to a maxed build reaches about 7e18 at the lecturenote.
+      var audHp = num(o.audHp, 0, 1e24);
+      var audHpMax = num(o.audHpMax, 1, 1e24);
       var atk = num(o.atk, 0, 1e9);
       var interval = num(o.interval, 0.2, 60);
       var mental = num(o.mental, 0, 1e12);
@@ -2602,7 +2707,7 @@
         var b=o.u19b;
         if(!b.gates||typeof b.gates!=='object'||Array.isArray(b.gates)||typeof b.dealerOffer!=='boolean'||integer(b.dealerVisits,0,1000000)==null||typeof b.failedId!=='string'||b.failedId!==''&&COMBO_AUD_IDS.indexOf(b.failedId)<0)return null;
         var gateIds=Object.keys(b.gates);
-        if(gateIds.length>COMBO_AUD_IDS.length||gateIds.some(function(id){var g=b.gates[id];return COMBO_AUD_IDS.indexOf(id)<0||!g||integer(g.prepared,0,1000000)==null||typeof g.cleared!=='boolean'||typeof g.studied!=='boolean';}))return null;
+        if(gateIds.length>COMBO_AUD_IDS.length||gateIds.some(function(id){var g=b.gates[id];return COMBO_AUD_IDS.indexOf(id)<0||!g||integer(g.prepared,0,1000000)==null||g.need!==undefined&&integer(g.need,1,30)==null||g.fails!==undefined&&integer(g.fails,0,3)==null||typeof g.cleared!=='boolean'||typeof g.studied!=='boolean';}))return null;
         state.u19b=JSON.parse(JSON.stringify(b));
       }
       if(o.u19){if(!validU19(o.u19))return null;state.u19=JSON.parse(JSON.stringify(o.u19));}
@@ -2646,7 +2751,6 @@
         var key = TREE_KEYS[i];
         var max = key === "board" && o.v === 1 ? 7 : key === "area" && o.v < 5 ? 3 : NODE_BY_ID[key].max;
         var rawLevel = o.tree[key];
-        if(key==='deckMaster'&&rawLevel==null)rawLevel=0;
         if (NODE_BY_ID[key].u31 && rawLevel == null) rawLevel = 0;
         if (o.v < 10 && NODE_BY_ID[key].u13 && rawLevel == null) rawLevel = 0;
         if (o.v < 9 && NODE_BY_ID[key].u12 && rawLevel == null) rawLevel = 0;
@@ -2660,8 +2764,15 @@
       }
       // v4 U38: refund the removed endless nodes. Applied only to saves older than version 16, so a re-saved game is never refunded twice.
       if (o.v < 16) {
-        var refund = Math.min(infiniteRefund(o.tree), 1e12 - state.coins);
+        var refund = Math.min(infiniteRefund(o.tree), 1e18 - state.coins);
         if (refund > 0) { state.coins += refund; state._refundCoins = refund; }
+      }
+      // v4 U44: the key node deckMaster is folded into the 칼리 덱 skill (p-kali-deck). An older save that owned it gets the skill (deckOn is kept)
+      // and its 30 keys back; saves from version 18 on never carry the node, so nobody is paid twice.
+      if (o.v < 18 && o.tree && o.tree.deckMaster === 1) {
+        state.tree["p-kali-deck"] = 1;
+        var keysBack = Math.max(0, Math.min(30, 1e6 - state.keys));
+        state.keys += keysBack; state._refundKeys = 30;
       }
       state.vMax = vMax;
       var cap;
@@ -2696,7 +2807,7 @@
       for (i = 0; i < o.flights.length; i++) {
         var f = o.flights[i];
         var ms = loadTimer(f.ms, 1e7);
-        var amount = num(f.amount, 0, 1e12);
+        var amount = num(f.amount, 0, 1e24);
         var cell = integer(f.cell, 0, 31);
         if (ms == null || amount == null || cell == null) return null;
         if (typeof f.kind !== "string" || typeof f.rarity !== "string" || typeof f.audId !== "string") return null;
@@ -2710,7 +2821,11 @@
         if (!fp || (ft.id !== "lecture" && fp !== ft.ladder[mapped])) return null;
         f.legacy = o.v < 5 || !!f.legacy;
         f.itemId = fp.id; f.name = fp.name; f.emoji = fp.emoji; f.effect = fp.effect || ft.effect;
-        state.flights.push({ ms: ms, kind: f.kind, amount: amount, rarity: f.rarity, cell: cell, audId: f.audId, itemId: f.itemId, name: f.name, emoji: f.emoji, effect: f.effect, legacy: !!f.legacy });
+        var lf = { ms: ms, kind: f.kind, amount: amount, rarity: f.rarity, cell: cell, audId: f.audId, itemId: f.itemId, name: f.name, emoji: f.emoji, effect: f.effect, legacy: !!f.legacy };
+        var xf = f.xpFactor === undefined ? null : num(f.xpFactor, 1, 1e6);
+        if (f.xpFactor !== undefined && xf == null) return null;  // v4 U45: an explicit invalid factor is rejected (repair drops it and records it)
+        if (xf > 1) lf.xpFactor = xf;
+        state.flights.push(lf);
       }
       for (i = 0; i < AUD_IDS.length; i++) {
         var id = AUD_IDS[i];
@@ -2833,7 +2948,7 @@
         var f = o.features, defaults = emptyFeatures();
         if(o.v >= 6) {
           if(!f || !f.progress) return null;
-          for(var pk of Object.keys(defaults.progress)) { var pv=num(f.progress[pk],0,1e15); if(pv==null)return null; defaults.progress[pk]=pv; }
+          for(var pk of Object.keys(defaults.progress)) { var pv=num(f.progress[pk],0,1e24); if(pv==null)return null; defaults.progress[pk]=pv; }
         }
         if (!f || typeof f !== "object" || Array.isArray(f)) return null;
         for (var timer of ["elapsedMs", "goldMs", "helperMs", "encoreMs", "encoreLeft", "revealMs"]) {
@@ -2875,7 +2990,7 @@
           }
           for (var role of ["manual", "fan", "assistant", "chain"]) {
             if (role === "chain" && o.v < 6) continue;
-            if (!f.damage || num(f.damage[role], 0, 1e15) == null) return null;
+            if (!f.damage || num(f.damage[role], 0, 1e27) == null) return null;
             defaults.damage[role] = f.damage[role];
           }
         }
@@ -2886,7 +3001,7 @@
           for(var ball of m.balls)if(!ball || ['x','y'].some(function(k){return num(ball[k],0,608)==null;}) || ['vx','vy'].some(function(k){return num(ball[k],-1000,1000)==null;}) || !ball.last || Object.keys(ball.last).some(function(k){return integer(Number(k),0,state.board.length-1)==null||num(ball.last[k],0,m.clock)==null;}))return null;
           if(m.papers.some(function(p){return !p||integer(p.cell,0,state.board.length-1)==null;}) || typeof cx.paradeDone!=='boolean' || num(cx.left,0,30000)==null || num(cx.mirrorMs,0,15000)==null || num(cx.confidence,0,100)==null || integer(cx.milestone,0,1e6)==null || !Array.isArray(cx.mirrored) || cx.mirrored.length>2 || cx.mirrored.some(function(i){return integer(i,0,state.board.length-1)==null;}))return null;
           defaults.magic=JSON.parse(JSON.stringify(m));defaults.climax=JSON.parse(JSON.stringify(cx));defaults.rewards=f.rewards.slice();defaults.guide=f.guide;
-          if(num(f.damage.magic,0,1e15)==null)return null;defaults.damage.magic=f.damage.magic;
+          if(num(f.damage.magic,0,1e27)==null)return null;defaults.damage.magic=f.damage.magic;
         } else if(state.tree.equip) defaults.guide='done';
         state.features = defaults;
       } else {
@@ -2938,7 +3053,7 @@
       if (o.v >= 10) {
         var idle=o.idle, skills=o.skills;
         if (!idle || num(idle.wallMs,0,1e16)==null || num(idle.autoAcc,0,100)==null || integer(idle.cursor,0,1e12)==null || typeof idle.autoAdvance!=='boolean' || typeof idle.waiting!=='boolean' || !Array.isArray(idle.milestones) || idle.milestones.some(function(id){return !NODE_BY_ID[id]||!NODE_BY_ID[id].statMilestone;}) || idle.milestones.length>10000) return null;
-        if (idle.reward!==null) { var r=idle.reward; if(!r||num(r.awayMs,60000,43200000)==null||num(r.coins,0,1e15)==null||integer(r.levels,0,1225)==null||typeof r.doubled!=='boolean'||(r.totalAwayMs!==undefined&&num(r.totalAwayMs,r.awayMs,1e16)==null))return null; }
+        if (idle.reward!==null) { var r=idle.reward; if(!r||num(r.awayMs,60000,43200000)==null||num(r.coins,0,1e18)==null||integer(r.levels,0,1225)==null||typeof r.doubled!=='boolean'||(r.totalAwayMs!==undefined&&num(r.totalAwayMs,r.awayMs,1e16)==null))return null; }
         if (!skills || num(skills.showtimeLeft,0,20000)==null || typeof skills.cheerGuard!=='boolean' || !skills.cooldowns || DATA.skills.some(function(k){return num(skills.cooldowns[k.id],0,k.cooldown)==null;})) return null;
         state.idle=JSON.parse(JSON.stringify(idle)); state.idle.autoAdvance=false;
         if(idle.next&&(integer(idle.next.v,1,VENUES.length)==null||integer(idle.next.j,1,headlinerJ(idle.next.v))==null))return null;
@@ -2947,7 +3062,7 @@
       if(o.v>=11){
         var u=o.u14,v=u&&u.visitor,d=u&&u.daily;
         if(!u||integer(u.outfit,1,3)==null||typeof u.haptics!=='boolean'||typeof u.collection!=='boolean'||!Array.isArray(u.satisfied)||!Array.isArray(u.sets)||new Set(u.satisfied).size!==u.satisfied.length||new Set(u.sets).size!==u.sets.length||u.satisfied.some(function(id){return COMBO_AUD_IDS.indexOf(id)<0;})||u.sets.some(function(slug){return !venueNumber(slug);}))return null;
-        if(!v||num(v.wait,0,150000)==null||num(v.left,0,8000)==null||num(v.buff,0,30000)==null||integer(v.serial,0,1e12)==null||num(v.incomeMs,0,3000)==null||num(v.incomeCoins,0,1e16)==null||num(v.incomeRate,0,1e16)==null||['rabbit','fan'].indexOf(v.kind)<0)return null;
+        if(!v||num(v.wait,0,150000)==null||num(v.left,0,8000)==null||num(v.buff,0,30000)==null||integer(v.serial,0,1e12)==null||num(v.incomeMs,0,3000)==null||num(v.incomeCoins,0,1e24)==null||num(v.incomeRate,0,1e18)==null||['rabbit','fan'].indexOf(v.kind)<0)return null;
         if(!d||typeof d.date!=='string'||typeof d.latest!=='string'||(d.date&&dateOrdinal(d.date)===null)||(d.latest&&dateOrdinal(d.latest)===null)||integer(d.streak,0,1e12)==null||!d.records||Array.isArray(d.records)||typeof d.records!=='object'||Object.keys(d.records).length>10000)return null;
         for(var date of Object.keys(d.records)){
           var r=d.records[date],selection=dailySelection(date);
@@ -2956,6 +3071,9 @@
           if(r.claimed.some(function(id){return (r.progress[id]||0)<DATA.missions.find(function(m){return m.id===id;}).target;})||r.bonus!==(r.claimed.length===3)||(r.streakReward>0&&!r.claimed.length))return null;
         }
         if((d.date&&!d.records[d.date])||(d.latest&&!d.records[d.latest])||(!d.latest&&d.streak)||(d.latest&&(!d.streak||!d.records[d.latest].claimed.length)))return null;
+        // v4 U45 (save version 19): 클래식 콜렉션 리마스터 2편 is a new product. A save below 19 that completed the old collection owns 1편 only,
+        // so its collection bonus waits until 2편 is learned (checkSets sets it again).
+        if(o.v<19&&u.collection&&!state.tree['p-classic-collection-remastered-2'])u=Object.assign({},u,{collection:false});
         if(u.collection&&!DATA.tree.filter(function(n){return n.productMultiplier;}).every(function(n){return state.tree[n.id]>0;}))return null;
         state.u14=JSON.parse(JSON.stringify(u));
         if(state.u14.sets.some(function(slug){var p=venueSetProgress(state,slug);return p.current!==p.total;}))return null;
@@ -2973,6 +3091,14 @@
       recompute(state, true);
       if (state.mental > state.mentalMax * 1.05 + 1) state.mental = state.mentalMax;
       if (state.shield > state.mentalMax) state.shield = state.mentalMax * nodeEffects(state).shieldRatio;
+      // v4 U41: a gate saved before version 17 has no 'need'. It gets the levels still reachable now plus what was learned since it was first met,
+      // never more than the old 30, so nobody is asked for more than before. A failure here keeps the old rule (30).
+      var oldGates = Object.keys(state.u19b.gates).filter(function (id) { return !state.u19b.gates[id].need; });
+      if (oldGates.length) {
+        var left = CONST.gatePrep;
+        try { left = reachableLevelsLeft(state); } catch (err2) { left = CONST.gatePrep; }
+        oldGates.forEach(function (id) { var g = state.u19b.gates[id]; g.need = Math.max(1, Math.min(CONST.gatePrep, left + Math.max(0, preparation(state) - g.prepared))); });
+      }
       return state;
     } catch (err) {
       return null;
@@ -3008,7 +3134,7 @@
   // reshapes a parsed save so they accept it, and records every change. It never touches a save the strict path already accepts.
   var SAVE_SCALARS = [
     ['seed','int',0,4294967295],['rngState','int',0,4294967295],['dimension','int',1,999],['starlight','num',0,100000],
-    ['coins','num',0,1e12],['gems','int',0,1e9],['keys','int',0,1e6],['audHp','num',0,1e12],['audHpMax','num',1,1e12],
+    ['coins','num',0,1e18],['gems','int',0,1e9],['keys','int',0,1e6],['audHp','num',0,1e24],['audHpMax','num',1,1e24],
     ['atk','num',0,1e9],['interval','num',0.2,60],['mental','num',0,1e12],['mentalMax','num',0,1e12],['shield','num',0,1e12],
     ['level','int',0,100000],['xp','num',0,1e12],['combo','int',0,1e7],['maxCombo','int',0,1e7],['finisher','num',0,1000],['miss','num',0,1],
     ['sealCell','int',-1,31],['winsSinceDealer','int',0,1e6],['wins','int',0,1e7],['fails','int',0,1e7],['buff','num',0,1000],
@@ -3019,8 +3145,8 @@
     ['u19b.dealerVisits','int',0,1000000],['idle.autoAcc','num',0,100],['idle.cursor','int',0,1e12],['idle.wallMs','num',0,1e16],
     ['skills.showtimeLeft','num',0,20000],
     ['features.boxes','int',0,1e9],['features.helperBreaks','int',0,1e9],
-    ['features.progress.comboMax','num',0,1e15],['features.progress.dealerFlips','num',0,1e15],['features.progress.coinsEarned','num',0,1e15],['features.progress.goldenOpened','num',0,1e15],
-    ['features.damage.manual','num',0,1e15],['features.damage.fan','num',0,1e15],['features.damage.assistant','num',0,1e15],['features.damage.chain','num',0,1e15],['features.damage.magic','num',0,1e15]
+    ['features.progress.comboMax','num',0,1e24],['features.progress.dealerFlips','num',0,1e24],['features.progress.coinsEarned','num',0,1e24],['features.progress.goldenOpened','num',0,1e24],
+    ['features.damage.manual','num',0,1e27],['features.damage.fan','num',0,1e27],['features.damage.assistant','num',0,1e27],['features.damage.chain','num',0,1e27],['features.damage.magic','num',0,1e27]
   ];
   function pathGet(o, path) { var p = path.split('.'), x = o; for (var i = 0; i < p.length; i++) { if (!x || typeof x !== 'object') return undefined; x = x[p[i]]; } return x; }
   function pathSet(o, path, v) {
@@ -3067,6 +3193,8 @@
     if (o.features && o.features.comboPaid && typeof o.features.comboPaid === 'object') Object.keys(o.features.comboPaid).forEach(function (id) {
       if (COMBO_AUD_IDS.indexOf(id) < 0) { delete o.features.comboPaid[id]; rep.push('comboPaid key'); } else fix(o.features.comboPaid, id, 'int', 0, 15, 'comboPaid');
     });
+    // v4 U45: a flight with an invalid xpFactor (the strict loader rejects it) loads with the factor dropped (landing factor 1), recorded once per flight.
+    if (Array.isArray(o.flights)) o.flights.forEach(function (f) { if (f && typeof f === 'object' && 'xpFactor' in f && (typeof f.xpFactor !== 'number' || !isFinite(f.xpFactor) || f.xpFactor < 1 || f.xpFactor > 1e6)) { delete f.xpFactor; rep.push('flight xpFactor'); } });
     if (Array.isArray(o.endings)) { var ne = o.endings.slice(0, CONST.loopCap).map(function (e) { return clampValue(e, 'int', 1, 999); }); if (JSON.stringify(ne) !== JSON.stringify(o.endings)) { o.endings = ne; rep.push('endings'); } }
     if (typeof o.mode !== 'string' || ['fight', 'transition', 'dealer', 'ending'].indexOf(o.mode) < 0) { o.mode = 'fight'; rep.push('mode'); }
     if (['fight', 'dealer', 'ending', 'continue', 'stay', 'legacyEnding'].indexOf(o.after) < 0) { o.after = 'fight'; rep.push('after'); }
@@ -3119,6 +3247,8 @@
     var result = deserializeRepairBase(str);
     // v4 U38: the refund of the removed endless nodes is part of the U37 repair list as 'refund:<coins>'.
     if (result.state && result.state._refundCoins > 0) result.repairs.push('refund:' + result.state._refundCoins);
+    // v4 U44: the 30 keys paid for the folded-in key node deckMaster.
+    if (result.state && result.state._refundKeys > 0) result.repairs.push('refundKeys:' + result.state._refundKeys);
     return result;
   }
   function deserializeRepairBase(str) {
@@ -3130,7 +3260,7 @@
       o = JSON.parse(str);
     } catch (error) { return { state: null, repairs: [] }; }
     if (!o || typeof o !== 'object' || Array.isArray(o) || typeof o.v !== 'number' || o.v < 1 || o.v !== Math.floor(o.v)) return { state: null, repairs: [] };
-    if (o.v > 16) o.v = 16;
+    if (o.v > 19) o.v = 19;
     var rep = [];
     var attempt = function (obj) { return deserialize(JSON.stringify(obj)); };
     try {
@@ -3182,7 +3312,7 @@
       if(typeof t.baseline!=='string'||t.baseline.length>=200000||['intro','fight','defeat','overview'].indexOf(t.phase)<0)return false;
       var maxLine=t.phase==='intro'?DATA.storyV15.tutorial.intro.length-1:t.phase==='defeat'?DATA.storyV15.tutorial.defeat.length-1:t.phase==='overview'?2:0;
       if(integer(t.line,0,maxLine)==null||(['defeat','overview'].indexOf(t.phase)>=0&&!t.won))return false;
-      try{var main=JSON.parse(t.baseline);if((main.v!==12&&main.v!==13&&main.v!==14&&main.v!==15&&main.v!==16)||!main.u15||!main.u15.tutorial||main.u15.tutorial.active)return false;}catch(error){return false;}
+      try{var main=JSON.parse(t.baseline);if((main.v!==12&&main.v!==13&&main.v!==14&&main.v!==15&&main.v!==16&&main.v!==17&&main.v!==18&&main.v!==19)||!main.u15||!main.u15.tutorial||main.u15.tutorial.active)return false;}catch(error){return false;}
     }
     return true;
   }
@@ -3205,7 +3335,9 @@
     var key=s.dimension+':'+s.slug+':'+s.kind;if(state.u15.seen.indexOf(key)<0)state.u15.seen.push(key);
     state.u15.scene=null;return true;
   }
-  function autoStage(state){return state.dimension>=2&&(state.u15.gloveLeft>0||!!state.tree.deckMaster&&!!state.u15.deckOn);}
+  // v4 U44: the 칼리 덱 skill is the product node p-kali-deck (it replaced the late key node deckMaster).
+  function hasDeck(state){return (state.tree['p-kali-deck']||0)>0;}
+  function autoStage(state){return state.dimension>=2&&(state.u15.gloveLeft>0||hasDeck(state)&&!!state.u15.deckOn);}
   function startStage(state){
     if(!state.idle.waiting||state.u15.scene||state.u15.queue.length)return false;
     state.idle.waiting=false;state.mode="fight";state.dealerQueued=false;state.heckleMs=state.interval*1000;state.telegraphed=false;return true;
@@ -3227,7 +3359,7 @@
     if(state.u15.scene||state.mode!=='fight'||!Number.isInteger(from)||from<0||from>=state.board.length||!Number.isInteger(to)||to<0||to>=CONST.boardMax)return false;
     var slots=state.u15.positions,other=slots.indexOf(to),old=slots[from];slots[from]=to;slots[other]=old;delete state._layout;return true;
   }
-  function toggleDeck(state){if(!state.tree.deckMaster)return false;state.u15.deckOn=!state.u15.deckOn;return true;}
+  function toggleDeck(state){if(!hasDeck(state))return false;state.u15.deckOn=!state.u15.deckOn;return true;}
   function useGlove(state){
     if(state.mode!=='fight'||state.resolved||state.u15.scene||state.features.climax.left>0||state.u15.gloveLeft>0||state.u15.gloves<1)return false;
     state.u15.gloves--;state.u15.gloveLeft=120000;state.holding=false;state.tapAcc=0;return true;
@@ -3241,11 +3373,11 @@
     if(!g||typeof g!=='object')return false;
     var c=g.cups,m=g.monte;
     if(c){
-      if(['shuffle','pick','result'].indexOf(c.phase)<0||integer(c.ball,0,2)==null||integer(c.initial,0,2)==null||num(c.income,0,1e16)==null||num(c.duration,2000,3000)==null||typeof c.keyRoll!=='boolean'||!Array.isArray(c.swaps)||c.swaps.length<4||c.swaps.length>12||c.swaps.some(function(p){return !Array.isArray(p)||p.length!==2||integer(p[0],0,2)==null||integer(p[1],0,2)==null||p[0]===p[1];}))return false;
+      if(['shuffle','pick','result'].indexOf(c.phase)<0||integer(c.ball,0,2)==null||integer(c.initial,0,2)==null||num(c.income,0,1e18)==null||num(c.duration,2000,3000)==null||typeof c.keyRoll!=='boolean'||!Array.isArray(c.swaps)||c.swaps.length<4||c.swaps.length>12||c.swaps.some(function(p){return !Array.isArray(p)||p.length!==2||integer(p[0],0,2)==null||integer(p[1],0,2)==null||p[0]===p[1];}))return false;
       if(c.phase==='result'&&(integer(c.choice,0,2)==null||typeof c.hit!=='boolean'||num(c.coins,0,1e18)==null||integer(c.keys,0,1)==null))return false;
     }
     if(m){
-      if(['playing','lost','banked'].indexOf(m.phase)<0||integer(m.round,0,3)==null||num(m.income,0,1e16)==null||!Array.isArray(m.cards)||m.cards.length!==4||m.cards.some(function(n,i){return integer(n,1,13)==null||i>0&&n===m.cards[i-1];})||num(m.coins,0,1e18)==null||integer(m.keys,0,1)==null)return false;
+      if(['playing','lost','banked'].indexOf(m.phase)<0||integer(m.round,0,3)==null||num(m.income,0,1e18)==null||!Array.isArray(m.cards)||m.cards.length!==4||m.cards.some(function(n,i){return integer(n,1,13)==null||i>0&&n===m.cards[i-1];})||num(m.coins,0,1e18)==null||integer(m.keys,0,1)==null)return false;
       if(m.phase==='playing'&&m.round>=3)return false;
     }
     return true;
@@ -3327,6 +3459,7 @@
     var cost=id==='glove'?2:id==='refill'?2:id==='potion'?3:0,reason='';
     if(!cost)reason='없는 상품이에요';
     else if(state.u15.tutorial.active)reason='첫 연습 뒤에 살 수 있어요';
+    else if(id==='glove'&&hasDeck(state))reason='칼리 덱 스킬이 있어요';
     else if(id==='refill'&&(!skillUnlocked(state,skill)||!(state.skills.cooldowns[skill]>0)))reason='기다리는 스킬만 충전해요';
     else if(id==='potion'&&(state.mode!=='fight'||state.resolved||state.features.climax.left>0))reason='관객과 공연 중에 써요';
     else if(id==='potion'&&state.u17.potionUsed)reason='이번 공연에서 이미 썼어요';
@@ -3434,11 +3567,15 @@
   }
 
   function strongestCase(state){var best=0;state.board.forEach(function(c,i){if(c.lv>state.board[best].lv)best=i;});return best;}
+  // v4 U44: a gate is sized to the build WITHOUT the product that belongs to that wall (node.wall = the audience id), so that product's attack
+  // bonus is real strength on that wall instead of making the audience bigger. Other products and everything else count as usual.
+  function wallProductMult(state){var m=1;DATA.tree.forEach(function(n){if(n.productMultiplier&&n.wall===state.audId&&state.tree[n.id])m*=n.productMultiplier;});return m;}
+  function wallPower(state){var m=wallProductMult(state),keep=state._V;if(m>1&&keep)state._V=keep/m;var p=futurePower(state);state._V=keep;return p;}
   function futurePower(state){
     var rarity=CONST.rarityW.reduce(function(sum,w,i){return sum+w*CONST.rarityMult[i];},0)/CONST.rarityW.reduce(function(a,b){return a+b;},0);
     var t=state.tree,mods=nodeEffects(state),rate=wandRate(state),area=wandArea(state),coverage=Math.min(state.board.length,area.cols*area.rows)/Math.max(1,state.board.length);
     var hitRate=rate*coverage+(t.boxHelper?fanCount(state)*.35/(mods.helperEvery/1000):0)/Math.max(1,state.board.length)+(t.assistant?.8/1.2:0)/Math.max(1,state.board.length);
-    var damage=state.board.reduce(function(sum,c){var lv=c.lv||1,hp=state._boxHp*Math.pow(1.12,lv-1),opens=1/(hp/Math.max(1,wandDamage(state)*hitRate)+state._tau/1000);return sum+opens*(CONST.itemDamage*(state._V||1)*rarity*.56*caseItems(lv)*Math.pow(1.1,lv-1)*milestoneMultiplier(lv,[10,25,50])*branchBonus(state,'box')+CONST.finisherDmg*(state._V||1)*mods.finalePower/mods.finaleNeed);},0);
+    var damage=state.board.reduce(function(sum,c){var lv=c.lv||1,hp=caseHp(state._boxHp,lv),opens=1/(hp/Math.max(1,wandDamage(state)*hitRate)+state._tau/1000);return sum+opens*(CONST.itemDamage*(state._V||1)*rarity*.56*caseItems(lv)*Math.pow(1.1,lv-1)*milestoneMultiplier(lv,[10,25,50])*branchBonus(state,'box')*caseItemBonus(state)+CONST.finisherDmg*(state._V||1)*mods.finalePower/mods.finaleNeed);},0);
     return Math.max(1,damage);
   }
   function beginFuture(state,prepare){if(!state.homecomingCleared||state.u19.cleared||state.u15.tutorial.active||state.u18.anchor)return false;state.u15.queue=[];state.u15.scene=null;state.dealer=null;state.dealerQueued=false;beginAudience(state,venueNumber('future'),1,null);state.mental=state.mentalMax;if(prepare){state.idle.waiting=true;state.mode='transition';state.transMs=0;state.after='fight';}return true;}
@@ -3454,11 +3591,45 @@
   function routineLearn(state,node){var level=nodeLevel(state,node);if([1,5,10].indexOf(level)<0)return;DATA.routines.forEach(function(r){if(r.nodes.indexOf(node.id)<0&&r.branch!==node.branch)return;if(state.u19.routines.indexOf(r.id)<0)state.u19.routines.push(r.id);if(state.u19.pending.indexOf(r.id)<0)state.u19.pending.push(r.id);});}
   function routineSkill(state,id,ev){if(state.u19.cooldown>0)return;var r=DATA.routines.find(function(r){return r.skill===id&&state.u19.routines.indexOf(r.id)>=0;});if(r){state.u19.cooldown=20000;emit(ev,{type:'routine',id:r.id});}}
   function validU19(u){return u&&typeof u.cleared==='boolean'&&integer(u.phase,1,3)!=null&&['telegraph','window','hitMs','damage','power','lastDps','lastPower','cooldown','target'].every(function(k){return num(u[k],0,1e100)!=null;})&&integer(u.target,0,24)!=null&&u.telegraph<=3000&&u.window<=20000&&['routines','pending'].every(function(k){return Array.isArray(u[k])&&u[k].length<=8&&new Set(u[k]).size===u[k].length&&u[k].every(function(id){return DATA.routines.some(function(r){return r.id===id;});});});}
+  // v4 U42: lookups the UI and the sim used to re-implement. They take the venue object (DATA.venues entry), not the venue number.
+  function audienceAt(venue, j) { return venue.audiences[j - 1] || venue.headliner; }
+  function roster(venue) { return venue.audiences.concat([venue.headliner]); }
+  function isHeadliner(venue, j) { return j === venue.audiences.length + 1; }
+  function venueBySlug(slug) { return DATA.venues.find(function (v) { return v.slug === slug; }); }
+  // v4 U42: named state actions for what the UI used to assign directly. Same assignments as before; Core is now the only writer.
+  function holdWinTransition(s, ms) { s.transMs = ms; }
+  function resumeTutorial(s) { startTutorial(s); s.u15.tutorial.phase = s.u15.tutorial.phase || 'intro'; s.u15.tutorial.line = s.u15.tutorial.line || 0; }
+  function replayTutorial(s) { s.u15.tutorial.done = false; }
+  function toggleAutoLearn(s) { s.learning.on = !s.learning.on; s.learning.ms = 0; }
+  function toggleHaptics(s) { s.u14.haptics = !s.u14.haptics; }
+  function markAway(s, wallMs) { s.idle.wallMs = Math.max(s.idle.wallMs, wallMs); }
+  function setAwayTotal(s, awayMs) { s.idle.reward.totalAwayMs = awayMs; }
+  // Manual save slots: metadata only; the main save store and validators stay independent.
+  function slotSummary(state) {
+    var venue = DATA.venues[state.venue - 1];
+    return {venueName: venue.name, venueNo: state.venue, level: state.level,
+      coins: formatNumber(state.coins), playMinutes: Math.floor(state.features.elapsedMs / 60000)};
+  }
+  function validSlot(obj) {
+    try {
+      if (!obj || obj.v !== 1 || !Number.isSafeInteger(obj.savedAt) || obj.savedAt < 0 || obj.savedAt > 8640000000000000 || typeof obj.data !== 'string') return false;
+      var s = obj.summary;
+      if (!s || typeof s.venueName !== 'string' || !s.venueName.trim() || s.venueName.length > 200 ||
+          !Number.isInteger(s.venueNo) || s.venueNo < 1 || s.venueNo > DATA.venues.length ||
+          !Number.isSafeInteger(s.level) || s.level < 0 || typeof s.coins !== 'string' || !s.coins.trim() || s.coins.length > 100 ||
+          !Number.isSafeInteger(s.playMinutes) || s.playMinutes < 0) return false;
+      return !!deserialize(obj.data);
+    } catch (error) { return false; }
+  }
+
   globalThis.Core = {beginFuture:beginFuture,strongestCase:strongestCase,
     openMap:openMap,travelTo:travelTo,returnToStage:returnToStage,travelAllowed:travelAllowed,trueFanRule:trueFanRule,trueFanReward:trueFanReward,trueFanProgress:trueFanProgress,cosmeticInfo:cosmeticInfo,buyCosmetic:buyCosmetic,equipCosmetic:equipCosmetic,
     dealerGameStart:dealerGameStart,dealerCupsReady:dealerCupsReady,dealerCupsPick:dealerCupsPick,dealerMontePick:dealerMontePick,monteRound:monteRound,monteMoveMs:monteMoveMs,dealerMonteBank:dealerMonteBank,gemShopBuy:gemShopBuy,gemShopInfo:gemShopInfo,
     startTutorial:startTutorial,finishTutorial:finishTutorial,moveCase:moveCase,useGlove:useGlove,queueScene:queueScene,startScene:startScene,advanceScene:advanceScene,
+    slotSummary: slotSummary, validSlot: validSlot,
     CONST: CONST,
+    xpNeed:xpNeed, starGain:starGain, audienceAt:audienceAt, roster:roster, isHeadliner:isHeadliner, venueBySlug:venueBySlug,
+    holdWinTransition:holdWinTransition, resumeTutorial:resumeTutorial, replayTutorial:replayTutorial, toggleAutoLearn:toggleAutoLearn, toggleHaptics:toggleHaptics, markAway:markAway, setAwayTotal:setAwayTotal,
     setDailyDate:setDailyDate, dailySelection:dailySelection, claimMission:claimMission, dateOrdinal:dateOrdinal, venueSetProgress:venueSetProgress, catchVisitor:catchVisitor, visitorBlocked:visitorBlocked,
     offlineGain:offlineGain, collectOffline:collectOffline, doubleOffline:doubleOffline, idleRates:idleRates,
     practiceRate:practiceRate, practiceUnlocked:practiceUnlocked, useSkill:useSkill, skillUnlocked:skillUnlocked, skillCooldown:skillCooldown,
@@ -3486,8 +3657,8 @@
     dealerSlotSpin: dealerSlotSpin,
     dealerForce: dealerForce,
     forceCost: forceCost,
-    createSaveStore: createSaveStore, isNewerSave: isNewerSave,
-    toggleDeck:toggleDeck, heckleStrength:heckleStrength, threatInfo:threatInfo, attackRate:attackRate, autoStage:autoStage,startStage:startStage, dealerClose: dealerClose, failureLessons:failureLessons, failureLessonInfo:failureLessonInfo, learnFailureLesson:learnFailureLesson, gatePressure:gatePressure, failureDealerAvailable:failureDealerAvailable, openFailureDealer:openFailureDealer,
+    createSaveStore: createSaveStore, isNewerSave: isNewerSave, applySaveEpoch: applySaveEpoch,
+    toggleDeck:toggleDeck, hasDeck:hasDeck, failureProduct:failureProduct, heckleStrength:heckleStrength, threatInfo:threatInfo, attackRate:attackRate, autoStage:autoStage,startStage:startStage, dealerClose: dealerClose, failureLessons:failureLessons, failureHint:failureHint, reachableLevelsLeft:reachableLevelsLeft, gateNeed:gateNeed, failureLessonInfo:failureLessonInfo, learnFailureLesson:learnFailureLesson, gatePressure:gatePressure, failureDealerAvailable:failureDealerAvailable, openFailureDealer:openFailureDealer,
     rebirth: rebirth,
     serialize: serialize,
     deserialize: deserialize,
@@ -3495,7 +3666,7 @@
     kaliMood: kaliMood, audienceMood: audienceMood,
     // Source text of every strict save validator; test-saves.mjs hashes it against SAVE_VERSION (a changed range needs a new version).
     saveValidatorSource: function () { return [deserialize, infiniteRefund, validU15, validU17, validU18, validU19, validDealerGames].map(function (f) { return f.toString(); }).join('\n'); },
-    SAVE_VERSION: 16,
+    SAVE_VERSION: 19,
     starCost: starCost,
     buyStar: buyStar
   };

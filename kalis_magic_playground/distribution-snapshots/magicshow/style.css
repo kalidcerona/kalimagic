@@ -1220,9 +1220,9 @@ body.tablet{background:#17141F;background-image:linear-gradient(90deg,#25202D 0 
 /* Phone board: centered in its column, rail below, no orphan gap. */
 @media(min-height:361px){
 .phone:not(.tablet) #stage #boardCard{top:44px;height:calc(var(--layout-height) - 50px)}
-.phone:not(.tablet) #stage #board{top:calc((100% - var(--board-size) - 48px) / 2);right:calc((100% - var(--board-size)) / 2)}
+.phone:not(.tablet) #stage #board{top:calc((100% - var(--board-size) - 8px) / 2);right:0}
 /* U30c: skills (and the 💎 shortcut) go back to a narrow vertical column between the stage and the case board. */
-.phone:not(.tablet) #stage #activeSkills{top:calc((100% - var(--board-size) - 48px) / 2);left:calc((100% - var(--board-size)) / 2 - 54px);right:auto;flex-direction:column;justify-content:flex-start;align-items:center;gap:4px}
+.phone:not(.tablet) #stage #activeSkills{top:max(0px,min(calc((100% - var(--board-size) - 8px) / 2),calc(100% - 316px)));left:calc(100% - var(--board-size) - 54px);right:auto;flex-direction:column;justify-content:flex-start;align-items:center;gap:4px}
 .phone:not(.tablet) #stage #activeSkills.f-solo.f-solo.f-solo.f-solo{width:44px;height:44px}
 .phone:not(.tablet) #stage #activeSkills .active-skill{width:50px;height:auto;min-height:48px;padding:2px 1px;overflow:visible}
 .phone:not(.tablet) #stage #activeSkills .gem-shop-quick{width:50px}
@@ -1433,6 +1433,8 @@ repeating-linear-gradient(90deg,rgba(255,255,255,.04) 0 2px,transparent 2px 4px)
 #stage #panel .tree-wallet .wallet-sep{opacity:.5}
 #stage #panel .constellation-node.selected .constellation-name{color:#FFE9AC;font-weight:700}
 /* Short screens (891x340, 780x360): the skill column must end above the bottom edge. */
+/* U43: below 400 px of usable height (also with a bottom inset on 375 px phones) the 5-item skill column uses the compact 50/44 px buttons. */
+.phone-short:not(.tablet) #stage #activeSkills{gap:3px}.phone-short:not(.tablet) #stage #activeSkills :is(.active-skill,.gem-shop-quick){border-width:4px;border-image-width:4px;padding:0}.phone-short:not(.tablet) #stage #activeSkills .gem-shop-quick{line-height:1;font-size:16px}.phone-short:not(.tablet) #stage #activeSkills .active-skill{height:50px;min-height:44px;box-sizing:border-box}.phone-short:not(.tablet) #stage #activeSkills .gem-shop-quick{height:44px;min-height:44px}
 @media(max-height:360px){.phone:not(.tablet) #stage #activeSkills{top:0;gap:3px}.phone:not(.tablet) #stage #activeSkills .active-skill{height:50px;min-height:44px;box-sizing:border-box}.phone:not(.tablet) #stage #activeSkills .gem-shop-quick{height:44px;min-height:44px}}
 /* Practice note: quiet gate lesson row (not a primary button). */
 #stage #panel .practice-gate{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 4px;padding:2px 8px;font-size:11px;line-height:14px;color:#A89C82;background:#1b1621;border:1px solid #4a4058}
@@ -1470,6 +1472,10 @@ repeating-linear-gradient(90deg,rgba(255,255,255,.04) 0 2px,transparent 2px 4px)
 .tablet #stage #phoneWallet .bitmap{--pixel:4px}
 #stage #panel[data-screen="fail"] .fail-actions{display:flex;flex-wrap:nowrap;justify-content:center;align-items:stretch;gap:10px;margin-top:6px}
 #stage #panel[data-screen="fail"] .fail-actions button{flex:0 1 auto;min-width:0;white-space:nowrap}
+/* v4 U44: the venue's 칼리 product row on the fail panel (one quiet line). On short phones the two faces shrink so the row costs little scrolling. */
+#stage #panel[data-screen="fail"] .fail-product{margin:0 0 2px;padding:0 6px;justify-content:center}
+.tablet #stage #panel[data-screen="fail"] .fail-product{font-size:15px;line-height:20px;padding:4px 14px}
+@media(max-height:430px){.phone:not(.tablet) #stage #panel[data-screen="fail"] .fail-scene{height:52px;margin:0}.phone:not(.tablet) #stage #panel[data-screen="fail"] .fail-face,.phone:not(.tablet) #stage #panel[data-screen="fail"] .fail-kali{width:52px;height:52px}}
 .bestiary-guides-title{margin:16px 0 8px;font-size:18px;color:#E8BF68}
 .phone .bestiary-guides-title{font-size:13px;margin:10px 0 6px}
 
@@ -1492,7 +1498,7 @@ repeating-linear-gradient(90deg,rgba(255,255,255,.04) 0 2px,transparent 2px 4px)
 .phone #stage #phoneTop #goalStrip[data-done="1"] .goal-node{white-space:normal;overflow:visible;font-size:10px;line-height:12px}
 /* v4 U39: dialog lane (a speech bubble in the left column above Kali), its own one-row toast lane above the stats bar, phase chip and pattern
    label below the doubt and heckle bars, and the clear moment (stamp and flash). Presentation only. */
-.phone #stage #audienceCard #audienceLine{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:4;overflow:hidden;left:6px;right:auto;top:auto;bottom:168px;width:calc(var(--audience-width) * .42 - 6px);height:auto;max-height:none;padding:4px 6px;border:2px solid #A68A58;background:#E3D2BA;color:#17141F;text-shadow:none;font-size:11px;line-height:14px;box-shadow:0 2px 0 #100D16;z-index:8}
+.phone #stage #audienceCard #audienceLine{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:4;overflow:hidden;left:6px;right:auto;top:auto;bottom:168px;width:calc(var(--audience-width) * .42 - 6px);height:auto;max-height:none;padding:4px 6px 0;border:2px solid #A68A58;background:#E3D2BA;color:#17141F;text-shadow:none;font-size:11px;line-height:14px;box-shadow:0 2px 0 #100D16;z-index:8}
 .phone #stage #toasts{left:146px;top:auto;bottom:60px;width:calc(var(--audience-width) - 152px);height:24px;max-height:24px;overflow:hidden;z-index:16}
 .phone #stage #toasts .toast{height:24px;max-height:24px;min-height:0;line-height:18px;padding:2px 4px;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .phone #stage #audienceCard #phaseIndicator{top:50px;max-height:20px}
@@ -1518,3 +1524,56 @@ repeating-linear-gradient(90deg,rgba(255,255,255,.04) 0 2px,transparent 2px 4px)
 .phone #stage #banner.win-banner,.phone #stage #banner.big.win-banner{top:auto;bottom:88px}
 .tablet #stage #banner.win-banner,.tablet #stage #banner.big.win-banner{bottom:120px}
 .phone #stage #toasts .toast{box-sizing:border-box;line-height:22px;padding:0 4px}
+/* U43: audience card narrower than 260 px (iPhone Duo outer with Dynamic Island insets): smaller stage stats and a one-line phase chip. */
+.phone-narrow #stage #stageStats :is(.mental,.shield,.combo){font-size:8px;gap:1px}.phone-narrow #stage #stageStats .combo .bitmap{--pixel:2px}.phone-narrow #stage #stageStats .combo>span:last-child,.phone-narrow #stage #stageStats .shield-label{font-size:8px}.phone-narrow #stage #stageStats .shield-label{display:none}.phone-narrow #stage #stageStats{gap:3px;justify-content:space-between;padding:0 2px}
+.phone-narrow #stage #audienceLine{font-size:10px;line-height:13px}
+.phone:not(.tablet) #stage #activeSkills .active-skill{padding-top:0;padding-bottom:0}
+/* Compact and tight heights: when the dialog bubble and the pattern label would collide, the label drops to the right column above the toast lane (below the face) instead of sitting over the head. */
+.phone-compact #stage #audienceCard.f-line-over #patternLabel{top:auto;bottom:118px}
+.phone-tight #stage #audienceCard #audienceLine{-webkit-line-clamp:3;font-size:10px;line-height:12px}
+.phone-low #stage #audienceCard #audienceLine{-webkit-line-clamp:2;padding:1px 6px 0}
+.phone-low #stage #audienceCard #phaseIndicator{top:46px;max-height:20px;line-height:14px;width:auto;max-width:calc(100% - 12px);white-space:nowrap}
+.phone-xshort #stage #audienceCard #audienceLine{-webkit-line-clamp:1}
+.phone-xshort #stage #audienceCard #phaseIndicator{display:none}
+.phone-xshort #stage #audienceCard #patternLabel{left:42%;right:6%;width:auto;top:auto;bottom:118px}
+/* Below 300 px of height (Fold cover in a browser) the skill column fits with 44/40 px buttons. */
+.phone-xshort:not(.tablet) #stage #activeSkills{gap:2px}.phone-xshort:not(.tablet) #stage #activeSkills .active-skill{height:44px;min-height:44px}.phone-xshort:not(.tablet) #stage #activeSkills .active-skill .skill-art{width:14px;height:14px;font-size:12px}.phone-xshort:not(.tablet) #stage #activeSkills .active-skill>span:not(.skill-art),.phone-xshort:not(.tablet) #stage #activeSkills .active-skill small{line-height:10px}.phone-xshort:not(.tablet) #stage #activeSkills .gem-shop-quick{height:40px;min-height:40px}
+/* Compact height under 780 px wide: the stats bar sits 56 px up, so the toast lane and the win banner move above it. */
+@media(max-width:779px){.phone-compact #stage #toasts{bottom:90px}.phone-compact #stage #banner.win-banner,.phone-compact #stage #banner.big.win-banner{bottom:122px}}
+.phone-narrow #stage #audienceCard #phaseIndicator{width:auto;max-width:calc(100% - 12px);white-space:nowrap}
+/* v4 U45: 비법 노트 node detail. Name with a level chip, the effect (first line brighter, its step under it), the next milestone, then price and
+   only a real block reason; the two buttons keep their right column. The sheet grows with its text (up to 62 percent) instead of a fixed 160 px. */
+.phone #stage #panel[data-screen="book"] .constellation-detail:not([hidden]){display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:8px;row-gap:2px;align-content:start;height:auto;min-height:156px;max-height:62%;overflow:auto;line-height:16px}
+.phone #stage #panel[data-screen="book"] .constellation-detail>:not(button){grid-column:1/-1;margin:0}
+.phone #stage #panel[data-screen="book"] .constellation-detail>h2{grid-column:1;align-self:center;padding:0;font-size:14px;line-height:18px;color:var(--gold);white-space:normal;word-break:keep-all}
+.phone #stage #panel[data-screen="book"] .constellation-detail>.tree-level{grid-column:2;justify-self:end;align-self:center;padding:0 6px;border:2px solid var(--line);background:#100D16;color:var(--ink-2);font-size:11px;line-height:16px;white-space:nowrap}
+.phone #stage #panel[data-screen="book"] .constellation-detail>.tree-tag{color:var(--brass);font-size:11px;line-height:14px}
+.phone #stage #panel[data-screen="book"] .constellation-detail>.tree-effect{margin-top:4px;color:var(--ink-2);font-size:12px;line-height:17px}
+.phone #stage #panel[data-screen="book"] .constellation-detail>.tree-effect::first-line{color:var(--ink)}
+.phone #stage #panel[data-screen="book"] .constellation-detail>.tree-next{color:var(--ok);font-size:11px;line-height:15px}
+.phone #stage #panel[data-screen="book"] .constellation-detail>.tree-preview{display:none}
+.phone #stage #panel[data-screen="book"] .constellation-detail>.tree-cost{margin-top:6px;color:var(--gold);font-size:13px;line-height:18px}
+.phone #stage #panel[data-screen="book"] .constellation-detail>:is(.tree-reason,.tree-gate){color:#FFCD9C;font-size:11px;line-height:15px}
+.tablet #stage #panel[data-screen="book"] .constellation-detail>h2{font-size:18px;line-height:24px}
+.tablet #stage #panel[data-screen="book"] .constellation-detail>.tree-effect{font-size:15px;line-height:21px}
+.tablet #stage #panel[data-screen="book"] .constellation-detail>:is(.tree-next,.tree-reason,.tree-gate,.tree-level,.tree-tag){font-size:13px;line-height:18px}
+.tablet #stage #panel[data-screen="book"] .constellation-detail>.tree-cost{font-size:16px;line-height:22px}
+
+/* Manual save slots: panel-local scrolling and the existing pixel frame/buttons. */
+#stage #phoneMore #saveSlotsButton{order:60;min-height:44px}
+#stage #panel[data-screen="saveslots"]{inset:12px;width:calc(100% - 24px);height:calc(100% - 24px);min-height:0;max-height:none;transform:none;padding:12px;display:flex;flex-direction:column}
+#stage #panel[data-screen="saveslots"] header{flex:none;min-height:44px;height:auto;margin:0 0 8px;gap:8px}
+#stage #panel[data-screen="saveslots"] #panelTitle{font-size:22px;line-height:28px}
+#stage #panel[data-screen="saveslots"] #closePanel{min-height:44px}
+#stage #panel[data-screen="saveslots"] #panelBody{min-height:0;overflow:auto;padding:0 8px 12px 0;display:block;touch-action:pan-y}
+#stage #panel[data-screen="saveslots"] .save-slots-row{border:2px solid var(--line,#6B5A3A);background:#17141F;padding:10px;margin:0 0 8px}
+#stage #panel[data-screen="saveslots"] .save-slots-row h2{font-size:18px;line-height:24px;margin:0 0 4px;color:var(--gold,#E8BF68)}
+#stage #panel[data-screen="saveslots"] p{font-size:14px;line-height:20px;margin:4px 0;overflow-wrap:anywhere}
+#stage #panel[data-screen="saveslots"] .save-slots-time,#stage #panel[data-screen="saveslots"] .save-slots-note{color:var(--ink-2,#C4B9DC)}
+#stage #panel[data-screen="saveslots"] .save-slots-actions{display:flex;gap:8px;align-items:stretch;margin-top:8px}
+#stage #panel[data-screen="saveslots"] .save-slots-actions button{flex:1;min-width:0;min-height:44px;height:auto;font-size:14px;line-height:20px;padding:8px;white-space:normal;overflow-wrap:anywhere}
+#stage #panel[data-screen="saveslots"] .save-slots-status{color:var(--gold,#E8BF68)}
+#stage #panel[data-screen="saveslots"] .save-slots-actions button,#stage #panel[data-screen="saveslots"] #closePanel{min-height:60px}
+.phone #stage #panel[data-screen="saveslots"] .save-slots-actions button,.phone #stage #panel[data-screen="saveslots"] #closePanel{min-height:44px}
+#stage #phoneMore #saveSlotsButton{min-height:60px}
+.phone #stage #phoneMore #saveSlotsButton{min-height:44px}

@@ -543,17 +543,21 @@
   },
   tree: [
     {"id": "root", "name": "첫 주문", "desc": "모든 비법의 시작. 이미 배웠다.", "max": 1, "cost": [0], "currency": "coins", "prereqs": [], "x": 0, "y": 0, "reveal": "N", "branch": "root", "icon": "node-root.png", "emoji": "🪄", "pending": false},
-    {"id": "p-nao-card-tricks", "name": "Nao Card Tricks", "desc": "연출 ×1.25", "max": 1, "cost": [500], "currency": "coins", "prereqs": ["equip"], "x": 6, "y": 3, "reveal": "N3", "branch": "collection", "icon": "item-nao-card-tricks.png", "emoji": "✨", "pending": false, "productMultiplier": 1.25},
-    {"id": "p-chameleon", "name": "카멜레온", "desc": "연출 ×1.25", "max": 1, "cost": [700], "currency": "coins", "prereqs": ["p-nao-card-tricks"], "x": 7, "y": 3, "reveal": "N4", "branch": "collection", "icon": "item-chameleon.png", "emoji": "✨", "pending": false, "productMultiplier": 1.25},
-    {"id": "p-kali-deck", "name": "칼리 덱", "desc": "연출 ×1.12", "max": 1, "cost": [900], "currency": "coins", "prereqs": ["p-chameleon"], "x": 8, "y": 3, "reveal": "N5", "branch": "collection", "icon": "item-kali-deck.png", "emoji": "✨", "pending": false, "productMultiplier": 1.12},
-    {"id": "p-slydini-silks", "name": "슬라이디니 실크", "desc": "연출 ×1.12", "max": 1, "cost": [1200], "currency": "coins", "prereqs": ["p-kali-deck"], "x": 9, "y": 3, "reveal": "N6", "branch": "collection", "icon": "item-slydini-silks.png", "emoji": "✨", "pending": false, "productMultiplier": 1.12},
-    {"id": "p-two-si-do", "name": "두 에스 아이 두", "desc": "연출 ×1.12", "max": 1, "cost": [1500], "currency": "coins", "prereqs": ["p-slydini-silks"], "x": 10, "y": 3, "reveal": "N7", "branch": "collection", "icon": "item-two-si-do.png", "emoji": "✨", "pending": false, "productMultiplier": 1.12},
-    {"id": "p-tin-case", "name": "틴 케이스", "desc": "연출 ×1.12", "max": 1, "cost": [1800], "currency": "coins", "prereqs": ["p-two-si-do"], "x": 11, "y": 3, "reveal": "N8", "branch": "collection", "icon": "item-tin-case.png", "emoji": "✨", "pending": false, "productMultiplier": 1.12},
-    {"id": "p-trace", "name": "트레이스", "desc": "연출 ×1.25", "max": 1, "cost": [2400], "currency": "coins", "prereqs": ["p-nao-card-tricks"], "x": 6, "y": 4, "reveal": "N9", "branch": "collection", "icon": "item-trace.png", "emoji": "✨", "pending": false, "productMultiplier": 1.25},
-    {"id": "p-classic-collection-remastered", "name": "클래식 콜렉션 리마스터", "desc": "연출 ×1.12", "max": 1, "cost": [3000], "currency": "coins", "prereqs": ["p-trace"], "x": 7, "y": 4, "reveal": "N10", "branch": "collection", "icon": "item-classic-collection-remastered.png", "emoji": "✨", "pending": false, "productMultiplier": 1.12},
-    {"id": "p-trace2", "name": "트레이스2", "desc": "연출 ×1.25", "max": 1, "cost": [4000], "currency": "coins", "prereqs": ["p-classic-collection-remastered"], "x": 8, "y": 4, "reveal": "N11", "branch": "collection", "icon": "item-trace2.png", "emoji": "✨", "pending": false, "productMultiplier": 1.25},
-    {"id": "p-target", "name": "타겟", "desc": "연출 ×1.25", "max": 1, "cost": [5000], "currency": "coins", "prereqs": ["p-trace2"], "x": 9, "y": 4, "reveal": "N12", "branch": "collection", "icon": "item-target.png", "emoji": "✨", "pending": false, "productMultiplier": 1.25},
-    {"id": "p-epiphany", "name": "에피파니 Vol.1 리마스터", "desc": "연출 ×1.12", "max": 1, "cost": [6000], "currency": "coins", "prereqs": ["p-target"], "x": 10, "y": 4, "reveal": "N13", "branch": "collection", "icon": "item-epiphany.png", "emoji": "✨", "pending": false, "productMultiplier": 1.12},
+    // v4 U45: owner order. 클래식 콜렉션 리마스터 1편 and 2편 (the beginner lectures) break the first two walls, 트레이스2 the last; ten wall products
+    // in venue order (wall = audience id, productMultiplier = attack factor). 칼리 덱 is the venue 2 skill only; 틴 케이스 (an accessory) multiplies
+    // case item effects. The id p-classic-collection-remastered stays 1편 so old saves keep it; 2편 is new (u31 flag: an older save without it loads as 0).
+    {"id": "p-classic-collection-remastered", "name": "클래식 콜렉션 리마스터 1편", "short": "클래식 1편", "desc": "", "max": 1, "cost": [1500], "currency": "coins", "prereqs": ["p-kali-deck"], "x": 7, "y": 3, "reveal": "N", "venueSlug": "party", "branch": "collection", "icon": "item-classic-collection-remastered.png", "emoji": "✨", "pending": false, "productMultiplier": 6, "wall": "h2"},
+    {"id": "p-kali-deck", "name": "칼리 덱", "desc": "", "max": 1, "cost": [1500], "currency": "coins", "prereqs": ["equip"], "x": 6, "y": 3, "reveal": "N", "venueSlug": "party", "branch": "collection", "icon": "item-kali-deck.png", "emoji": "✨", "pending": false},
+    {"id": "p-classic-collection-remastered-2", "name": "클래식 콜렉션 리마스터 2편", "short": "클래식 2편", "desc": "", "max": 1, "cost": [2500], "currency": "coins", "prereqs": ["p-classic-collection-remastered"], "x": 8, "y": 3, "reveal": "N", "venueSlug": "school", "branch": "collection", "icon": "item-classic-collection-remastered-2.png", "emoji": "✨", "pending": false, "productMultiplier": 6, "wall": "a8", "u31": true},
+    {"id": "p-trace", "name": "트레이스", "desc": "", "max": 1, "cost": [4500], "currency": "coins", "prereqs": ["p-classic-collection-remastered-2"], "x": 9, "y": 3, "reveal": "N", "venueSlug": "cafe", "branch": "collection", "icon": "item-trace.png", "emoji": "✨", "pending": false, "productMultiplier": 2.5, "wall": "a11"},
+    {"id": "p-target", "name": "타겟", "desc": "", "max": 1, "cost": [30000], "currency": "coins", "prereqs": ["p-trace"], "x": 10, "y": 3, "reveal": "N", "venueSlug": "theater", "branch": "collection", "icon": "item-target.png", "emoji": "✨", "pending": false, "productMultiplier": 1.5, "wall": "h5"},
+    {"id": "p-nao-card-tricks", "name": "Nao Card Tricks", "desc": "", "max": 1, "cost": [1000000], "currency": "coins", "prereqs": ["p-target"], "x": 11, "y": 3, "reveal": "N", "venueSlug": "audition", "branch": "collection", "icon": "item-nao-card-tricks.png", "emoji": "✨", "pending": false, "productMultiplier": 2, "wall": "a21"},
+    {"id": "p-chameleon", "name": "카멜레온", "desc": "", "max": 1, "cost": [3000000], "currency": "coins", "prereqs": ["p-kali-deck"], "x": 6, "y": 4, "reveal": "N", "venueSlug": "broadcast", "branch": "collection", "icon": "item-chameleon.png", "emoji": "✨", "pending": false, "productMultiplier": 1.5, "wall": "a114"},
+    {"id": "p-tin-case", "name": "틴 케이스", "desc": "", "max": 1, "cost": [3500000], "currency": "coins", "prereqs": ["p-chameleon"], "x": 7, "y": 4, "reveal": "N", "venueSlug": "vegas", "branch": "collection", "icon": "item-tin-case.png", "emoji": "✨", "pending": false, "caseItemMult": 2},
+    {"id": "p-epiphany", "name": "에피파니 Vol.1 리마스터", "short": "에피파니 Vol.1", "desc": "", "max": 1, "cost": [5000000], "currency": "coins", "prereqs": ["p-tin-case"], "x": 8, "y": 4, "reveal": "N", "venueSlug": "moon", "branch": "collection", "icon": "item-epiphany.png", "emoji": "✨", "pending": false, "productMultiplier": 1.5, "wall": "a83"},
+    {"id": "p-two-si-do", "name": "두 에스 아이 두", "desc": "", "max": 1, "cost": [5500000], "currency": "coins", "prereqs": ["p-epiphany"], "x": 9, "y": 4, "reveal": "N", "venueSlug": "sun", "branch": "collection", "icon": "item-two-si-do.png", "emoji": "✨", "pending": false, "productMultiplier": 1.5, "wall": "a90"},
+    {"id": "p-slydini-silks", "name": "슬라이디니 실크", "desc": "", "max": 1, "cost": [8000000], "currency": "coins", "prereqs": ["p-two-si-do"], "x": 10, "y": 4, "reveal": "N", "venueSlug": "galaxy", "branch": "collection", "icon": "item-slydini-silks.png", "emoji": "✨", "pending": false, "productMultiplier": 1.5, "wall": "a98"},
+    {"id": "p-trace2", "name": "트레이스2", "desc": "", "max": 1, "cost": [6000000], "currency": "coins", "prereqs": ["p-slydini-silks"], "x": 11, "y": 4, "reveal": "N", "venueSlug": "multiverse", "branch": "collection", "icon": "item-trace2.png", "emoji": "✨", "pending": false, "productMultiplier": 1.5, "wall": "a107"},
     {"id": "assistant", "name": "마술 어시스턴트", "desc": "1200ms마다 타격 ×0.80, 황금 케이스에는 ×1.20", "max": 1, "cost": [1], "currency": "keys", "prereqs": ["boxHelper"], "x": -3, "y": 3, "reveal": "N6", "branch": "pet", "icon": "node-assistant.png", "emoji": "🎩", "pending": false},
     {"id": "power", "name": "손기술", "desc": "지팡이 피해 ×1.1^L", "max": 10, "cost": {"c": 120, "g": 2.2}, "currency": "coins", "prereqs": ["root"], "x": -1, "y": 0, "reveal": "N", "branch": "hand", "icon": "node-hand-1.png", "emoji": "✋", "pending": false},
     {"id": "speed", "name": "빠른 손놀림", "desc": "초당 타격 +0.12L, 기본 최대 4.6회 유지", "max": 10, "cost": {"c": 60, "g": 2.2}, "currency": "coins", "prereqs": ["power"], "x": -2, "y": 0, "reveal": "N", "branch": "hand", "icon": "node-hand-2.png", "emoji": "⚡", "pending": false},
@@ -2117,7 +2121,7 @@ GAME_DATA.tree.filter(n=>n.u4b && n.max>1 || n.id==='chainPower').forEach(n=>{n.
 GAME_DATA.tree.find(n=>n.id==='attack').cost=Array.from({length:10},(_,i)=>i<8?Math.ceil(45*1.65**i):i===8?100000:200000);
 GAME_DATA.tree.find(n=>n.id==='power').cost.g=2.0;
 
-GAME_DATA.tree.filter(n=>n.productMultiplier).forEach(n=>{n.cost=n.cost.map(c=>Math.ceil(c*0.6));});
+// v4 U44: the product prices in the tree rows are final (they were scaled by 0.6 here before).
 
 // U13 idle progression, stat milestones and fight-time skills.
 GAME_DATA.skills = [
@@ -3191,7 +3195,7 @@ GAME_DATA.easyNodes = {
   "sweepFocus": "한 케이스에 힘을 모아요\n한 칸만 두드리면 힘 5%씩 추가",
   "precision": "관객의 눈을 돌려 숨은 관객도 놀라게 해요\n빗나갈 기회 2%씩 줄기",
   "board": "케이스를 하나 더 놓아요\n자리 1칸 추가",
-  "spawn": "빈 자리에 새 케이스를 더 빨리 세팅해요\n준비 시간 1.08로 나누기",
+  "spawn": "빈 자리에 새 케이스를 더 빨리 세팅해요\n준비 시간 7%씩 줄기",
   "golden": "동전이 많은 케이스가 나와요\n첫 30초 · 다음부터 180초",
   "goldPity": "황금 케이스를 더 자주 만나요\n기다리는 시간 20초씩 줄기",
   "goldCoins": "황금 케이스에서 동전을 더 얻어요\n동전 20%씩 추가",
@@ -3249,7 +3253,7 @@ GAME_DATA.easyNodes = {
   "cardthrow": "카드가 날아가 케이스를 열어요\n1.5초마다 실력의 40%",
   "tipbox": "팁 박스가 동전을 모아줘요\n6초마다 동전 받기",
   "flashpaper": "종이를 누르면 모든 칸을 두드려요\n개봉 때 3% · 실력의 150%",
-  "flashpaperChance": "불꽃 종이를 더 자주 얻어요\n기회 1%씩 추가 · 최대 7%",
+  "flashpaperChance": "플래시 페이퍼를 더 자주 얻어요\n기회 1%씩 추가 · 최대 7%",
   "crystal": "수정구가 야유를 막아줘요\n8초마다 멘탈의 3% 자신감",
   "water": "물 한 잔으로 마음이 회복돼요\n9초마다 멘탈의 3% 회복",
   "spotlight": "조명이 케이스 한 줄을 두드려요\n4초마다 실력의 60%",
@@ -3258,21 +3262,21 @@ GAME_DATA.easyNodes = {
   "nightShow": "자리를 비워도 보상을 더 모아요\n보상 시간 1시간씩 추가 · 기본 8시간",
   "manager": "자리를 비운 동안 동전을 더 모아요\n보상 10%씩 추가 · 기본 50%",
   "autoPractice": "손을 떼도 케이스가 빨리 열려요\n손으로 누를 때의 10%씩 추가 · 기본 40%",
-  "spongeSpeed": "도우미가 더 빨리 도와줘요\n이동 12%씩 추가",
-  "spongePower": "도우미가 더 힘껏 도와줘요\n힘 15%씩 추가",
-  "cardthrowSpeed": "도우미가 더 빨리 도와줘요\n기다리는 시간 10%씩 줄기",
-  "cardthrowPower": "도우미가 더 힘껏 도와줘요\n힘 15%씩 추가",
-  "tipboxSpeed": "도우미가 더 빨리 도와줘요\n기다리는 시간 10%씩 줄기",
-  "tipboxPower": "도우미가 더 힘껏 도와줘요\n힘 25%씩 추가",
-  "crystalSpeed": "도우미가 더 빨리 도와줘요\n기다리는 시간 10%씩 줄기",
-  "crystalPower": "도우미가 더 힘껏 도와줘요\n힘 20%씩 추가",
-  "waterSpeed": "도우미가 더 빨리 도와줘요\n기다리는 시간 10%씩 줄기",
-  "waterPower": "도우미가 더 힘껏 도와줘요\n힘 20%씩 추가",
-  "spotlightSpeed": "도우미가 더 빨리 도와줘요\n기다리는 시간 10%씩 줄기",
-  "spotlightPower": "도우미가 더 힘껏 도와줘요\n힘 15%씩 추가",
-  "spongeCount": "도우미가 한 명 더 도와줘요\n1명씩 추가 · 최대 3명",
-  "cardthrowCount": "도우미가 한 명 더 도와줘요\n1명씩 추가 · 최대 4명",
-  "spotlightCount": "도우미가 한 명 더 도와줘요\n1명씩 추가 · 최대 2명",
+  "spongeSpeed": "스펀지볼이 더 빨리 튀어요\n이동 12%씩 추가",
+  "spongePower": "스펀지볼이 더 세게 두드려요\n힘 15%씩 추가",
+  "cardthrowSpeed": "카드를 더 자주 던져요\n기다리는 시간 10%씩 줄기",
+  "cardthrowPower": "카드가 더 세게 두드려요\n힘 15%씩 추가",
+  "tipboxSpeed": "팁 박스가 더 자주 모아줘요\n기다리는 시간 10%씩 줄기",
+  "tipboxPower": "팁 박스에 동전이 더 모여요\n동전 25%씩 추가",
+  "crystalSpeed": "수정구가 더 자주 막아줘요\n기다리는 시간 10%씩 줄기",
+  "crystalPower": "수정구가 더 많이 막아줘요\n자신감 20%씩 추가",
+  "waterSpeed": "물을 더 자주 마셔요\n기다리는 시간 10%씩 줄기",
+  "waterPower": "물 한 잔이 더 많이 회복해요\n회복 20%씩 추가",
+  "spotlightSpeed": "조명이 더 자주 비춰요\n기다리는 시간 10%씩 줄기",
+  "spotlightPower": "조명이 더 세게 두드려요\n힘 15%씩 추가",
+  "spongeCount": "스펀지볼이 하나 더 튀어요\n1개씩 추가 · 최대 3개",
+  "cardthrowCount": "카드가 한 장 더 날아가요\n1장씩 추가 · 최대 4장",
+  "spotlightCount": "조명이 한 줄 더 비춰요\n1줄씩 추가 · 최대 2줄",
   "showtimeCooldown": "스킬을 더 빨리 다시 써요\n기다리는 시간 10%씩 줄기",
   "cardrainCooldown": "스킬을 더 빨리 다시 써요\n기다리는 시간 10%씩 줄기",
   "cheerCooldown": "스킬을 더 빨리 다시 써요\n기다리는 시간 10%씩 줄기"
@@ -3287,10 +3291,13 @@ GAME_DATA.colleagueNames=['Waker','Level1','선휘재','전도현','박준현','
  mk('colleaguePower','동료의 합',5,{c:3000,g:3.4},'coins','colleague',-4,5,'동료 마술 피해 +20%씩','동료의 마술이 더 커져요\n힘 20%씩 추가');
  mk('colleagueTempo','동료의 템포',4,{c:3500,g:3.6},'coins','colleague',-5,5,'동료 마술 주기 5000-500L ms','동료가 마술을 더 자주 보여줘요\n기다리는 시간 0.5초씩 줄기');
 })(GAME_DATA);
-GAME_DATA.easyNodes.flashpaperPower="불꽃 종이가 더 세게 두드려요\n힘 20%씩 추가";
+GAME_DATA.easyNodes.flashpaperPower="플래시 페이퍼가 더 세게 두드려요\n힘 20%씩 추가";
 (function(D){
  D.tree.forEach(n=>{
-  if(n.productMultiplier)n.desc='관객을 더 크게 놀라게 해요\n연출 '+n.productMultiplier+'배';
+  // v4 U45: 칼리 덱 is the skill only, 틴 케이스 strengthens the cases, the first wall product is the beginner lecture.
+  if(n.id==='p-kali-deck')n.desc='칼리 덱 스킬이 생겨요\n자동 연습을 켜고 꺼요';
+  else if(n.caseItemMult)n.desc='케이스가 크게 강해져요\n케이스 아이템 효과 ×'+n.caseItemMult;
+  else if(n.productMultiplier)n.desc=(n.id==='p-classic-collection-remastered'?'입문자 강의 1편, 기본기를 다져요\n':n.id==='p-classic-collection-remastered-2'?'입문자 강의 2편, 기본기를 넓혀요\n':'이 무대를 넘을 힘이 생겨요\n')+'공격 ×'+n.productMultiplier;
   else if(n.id.startsWith('hidden-')){const results={hand:'케이스를 더 빨리 열어요',box:'케이스 아이템의 힘이 커져요',heart:'야유를 더 오래 버텨요',luck:'동전을 더 많이 얻어요',pet:'도우미가 더 힘껏 도와줘요',finale:'피날레가 더 크게 놀라게 해요',collection:'관객을 더 크게 놀라게 해요',star:'별빛의 힘이 더 세져요'};n.desc=results[n.id.split('-').slice(1).join('-')]+'\n힘 2%씩 추가';}
   else n.desc=D.easyNodes[n.id];
   if(!n.desc)throw new Error('Missing easy description: '+n.id);
@@ -3386,9 +3393,9 @@ GAME_DATA.lineFaces={"roles":{"a1":{"role":"family","name":"아빠","venue":"fam
   const role=D.lineFaces.roles[a.id];if(role)a.role=role.role;
   const lines=D.lineFaces.lines[a.id];if(lines){a.heckles=lines.heckles.slice();a.winLine=lines.winLine;if(a.encounterLine&& !a.heckles.includes(a.encounterLine))a.heckles.push(a.encounterLine);}
  }));
- D.glove={id:'auto-glove',name:'칼리 덱 (자동 연습)',icon:'item-kali-deck.png',emoji:'🃏',duration:120000,desc:'모든 케이스를 자동으로 꾹 눌러요\n120초 동안 손을 떼도 연습해요'};
+ D.glove={id:'auto-glove',name:'칼리 덱 (자동 연습)',icon:'item-kali-deck.png',emoji:'🃏',duration:120000,desc:'모든 케이스를 자동으로 꾹 눌러요\n손을 떼도 연습해요. 칼리 덱 스킬은 켜고 꺼요'};
  const shop=D.gemShop.find(x=>x.id==='glove');shop.name='칼리 덱 (자동 연습)';shop.desc='120초 동안 모든 케이스를 자동으로 꾹 눌러요';
- D.tree.push({id:'deckMaster',name:'칼리 덱 마스터',desc:'자동 연습을 켜고 끌 수 있어요\n열쇠 30개 · 켜면 시간 제한 없이 연습해요',max:1,cost:[30],currency:'keys',prereqs:['p-epiphany'],x:18,y:3,reveal:'N14',branch:'collection',icon:'item-kali-deck.png',emoji:'🃏',pending:false});
+ // v4 U44: the key node deckMaster is gone; learning p-kali-deck (a product, reached at venue 2) gives the 칼리 덱 skill.
 })(GAME_DATA);
 
 // U25: pace tuning with fair, readable gate fights.
@@ -3401,4 +3408,20 @@ GAME_DATA.lineFaces={"roles":{"a1":{"role":"family","name":"아빠","venue":"fam
  const n=D.tree.find(n=>n.id==='mental');
  n.max=15;
  n.cost=Array.from({length:15},(_,i)=>i<10?Math.ceil(30*Math.pow(2.2,i)):5e8*Math.pow(2,i-10));
+})(GAME_DATA);
+
+// v4 U44: the 11 칼리 products are permanent attack factors (data rows above), so every venue after a product's wall carries that product's strength.
+// Each venue's doubt (hpFactor) is scaled by the attack the player has when arriving there, so the timeline keeps its old pace; scales measured
+// with sim.mjs --walls (seeds 1001 x60) against the per-venue stay of the old six-factor game (the walls themselves got shorter, so the later
+// venues carry a little more than the plain product ratio). Final-boss and future profiles keep their own scaling in core.js.
+(function(D){
+ const scale={party:1.4,school:3.0,cafe:17,meetup:57,theater:110,festival:104,audition:141,broadcast:302,vegas:281,broadway:249,moon:325,sun:405,galaxy:385,multiverse:710,lecturenote:792};
+ D.venues.forEach(v=>{if(scale[v.slug])v.hpFactor*=scale[v.slug];});
+})(GAME_DATA);
+
+// v4 U45: the owner's product order adds 클래식 2편 (x6 at venue 3) and moves 칼리 덱 / 틴 케이스 off the attack chain, so the later venues get stronger
+// players; their doubt is scaled back so every TARGET of sim.mjs holds (measured with seeds 1001, see SPEC "v4 U45").
+(function(D){
+ const scale={audition:0.72,broadcast:0.7,vegas:0.95,moon:0.95,sun:0.94,multiverse:0.93,lecturenote:0.93};
+ D.venues.forEach(v=>{if(scale[v.slug])v.hpFactor*=scale[v.slug];});
 })(GAME_DATA);
