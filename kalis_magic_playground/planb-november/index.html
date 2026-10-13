@@ -2,622 +2,443 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <title>No Plan Season. 3 · PLAN B 11월 세미나</title>
 <meta property="og:type" content="website">
 <meta property="og:title" content="No Plan Season. 3 · PLAN B 11월 세미나">
-<meta property="og:description" content="첫 일요일엔 사람을 모으고, 다음 일요일엔 사라지게 한다. Vol.1 버스킹 11월 15일, Vol.2 슬리빙 11월 22일.">
+<meta property="og:description" content="한 장으로 두 번의 일요일. 11/15 버스킹 · 11/22 슬리빙 · 스넥 연습실.">
 <meta property="og:url" content="https://kalimagic.netlify.app/planb-november/">
 <meta property="og:image" content="https://kalimagic.netlify.app/planb-busking/img/cover.jpg">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap" rel="stylesheet">
-<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Nanum+Myeongjo:wght@800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <style>
-  /* Same palette and type as the August gathering page and the two seminar pages. */
+  /* 한 장의 티켓: 어두운 바탕 위 종이 티켓 하나가 주인공. 버스킹=앰버, 슬리빙=청록 조각으로 두 회차를 구분. */
   :root {
-    --bg:#faf8f5; --ink:#2f2923; --body:#4a4036; --muted:#776b5f; --soft:#9a8c7b; --accent:#e8a020; --accent-text:#a9651f; --card:#ffffff; --chip:#f3ede4; --shadow:0 18px 45px rgba(47,41,35,0.10);
-    --space:16px; --section-pad:48px; --card-pad:28px 24px;
+    --bg:#121212; --surface:#1c1917; --surface-2:#141a1b; --line:#2c2622; --line-2:#3a332d;
+    --paper:#f1ebe0; --paper-ink:#1a1714; --paper-muted:#776b5f;
+    --ink:#f1ebe0; --muted:#cfc3b4; --soft:#b9ab99; --faint:#8f8478;
+    --amber:#f5b041; --amber-hi:#ffd27a; --teal:#6cc9be; --alert:#ff9c7a; --sale:#d9381e; --save:#6fd3a8;
+    --display:'Black Han Sans','Pretendard',sans-serif;
+    --serif:'Nanum Myeongjo',serif;
+    --sans:'Pretendard','Apple SD Gothic Neo','Noto Sans KR',sans-serif;
+    color-scheme: dark;
   }
-  html, body { margin:0; padding:0; max-width:100%; }
   *, *::before, *::after { box-sizing:border-box; }
-  body { background:var(--bg); color:var(--ink); font-family:'Pretendard','Apple SD Gothic Neo','Noto Sans KR',sans-serif; font-size:16px; word-break:keep-all; overflow-wrap:break-word; -webkit-font-smoothing:antialiased; line-height:1.6; overflow-x:hidden; }
+  html, body { margin:0; padding:0; max-width:100%; }
+  body { background:var(--bg); color:var(--ink); font-family:var(--sans); font-size:16px; line-height:1.6; word-break:keep-all; overflow-wrap:break-word; overflow-x:hidden; -webkit-font-smoothing:antialiased; }
   img { display:block; max-width:100%; height:auto; }
-  .sponsor-logo { width:120px; max-width:100%; padding:8px; background:#000; border-radius:10px; }
-  .sponsor-logo img { width:100%; height:auto; }
-  .sponsor-strip { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:10px 16px; padding:18px 0 28px; border-top:1px solid var(--chip); color:var(--muted); font-size:13px; }
-  .sponsor-strip p { margin:0; }
-  .sponsor-block { display:flex; flex-direction:column; align-items:center; gap:10px; margin-top:22px; padding-top:18px; border-top:1px solid var(--chip); }
-  .sponsor-label { margin:0; color:var(--accent-text); font-size:12px; font-weight:700; }
-  .sponsor-block .sponsor-logo { width:220px; padding:12px; }
-  .sponsor-note { margin:0; color:var(--muted); font-size:14px; }
-  @media (max-width:640px) { .sponsor-block .sponsor-logo { width:180px; } }
-  .hero-sponsor { display:flex; align-items:center; justify-content:center; gap:10px; margin:0 0 28px; font-size:15px; font-weight:700; color:var(--body); }
-  .hero-sponsor .sponsor-logo { width:110px; padding:6px; flex:none; }
-  .hero-sponsor span { white-space:nowrap; }
-  .sponsor-strip { gap:12px 20px; padding:28px 0 40px; }
-  .sponsor-strip .sponsor-logo { width:180px; padding:10px; }
-  .sponsor-strip p { font-size:15px; font-weight:700; color:var(--ink); }
-  @media (max-width:640px) { .hero-sponsor .sponsor-logo { width:96px; } .sponsor-strip .sponsor-logo { width:150px; } }
-  .hero-logo { display:block; width:120px; height:auto; margin:0 auto 20px; border-radius:14px; }
-  .sponsor-card { max-width:560px; margin:0 auto; display:flex; flex-direction:column; align-items:center; gap:14px; background:#fbf3e4; border:1px solid rgba(232,160,32,0.35); }
-  .sponsor-card .sponsor-logo { width:260px; padding:14px; }
-  .sponsor-card .sponsor-name { margin:0; font-size:22px; font-weight:700; color:var(--ink); }
-  .sponsor-card .sponsor-line { margin:0; font-size:15px; color:var(--muted); }
-  @media (max-width:640px) { .hero-logo { width:96px; } .sponsor-card .sponsor-logo { width:200px; } }
-  .sponsor-tag { display:inline-block; background:#fde3d4; color:#a8430f; border-radius:6px; padding:1px 7px; font-size:12px; font-weight:700; margin-left:4px; vertical-align:middle; }
-  a { transition:background .15s, color .15s; }
-  ::selection { background:#f2d49a; color:var(--ink); }
-  main { max-width:920px; margin:0 auto; padding:0 22px; text-align:center; }
-  section { padding:var(--section-pad) 0; }
-  .eyebrow { font-size:12.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.18em; color:var(--accent-text); margin:0 0 14px; }
-  h1, h2, h3, .serif { font-family:'Gowun Batang',serif; }
-  h1 { font-size:clamp(26px,5vw,44px); font-weight:700; line-height:1.2; letter-spacing:-0.02em; margin:0 0 24px; max-width:100%; }
-  h2 { font-size:clamp(28px,4.4vw,44px); font-weight:700; line-height:1.25; letter-spacing:-0.01em; margin:0 0 24px; max-width:100%; }
-  .lead { font-size:clamp(16px,2vw,18px); line-height:1.8; color:var(--body); max-width:640px; margin:0 auto 16px; text-wrap:pretty; }
-  .card { background:var(--card); border-radius:18px; padding:var(--card-pad); box-shadow:var(--shadow); min-width:0; }
-  .btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; max-width:100%; min-width:0; white-space:normal; background:var(--accent); color:var(--ink); font-size:16px; font-weight:700; padding:15px 28px; border-radius:14px; text-decoration:none; text-align:center; box-shadow:0 14px 32px rgba(232,160,32,0.28); }
-  .btn:hover { background:#7c3aed; color:#fff; }
-  .draft-bar { position:sticky; top:0; z-index:10; background:var(--ink); color:#f4efe9; font-size:13px; line-height:1.55; padding:10px 16px; text-align:center; overflow-wrap:break-word; }
-  .draft-bar b { color:var(--accent); }
-  .todo { outline:2px dashed var(--accent); outline-offset:3px; border-radius:6px; }
-  .todo-tag { display:inline-block; background:#fde3d4; color:#a8430f; border-radius:6px; padding:1px 7px; font-size:12px; font-weight:700; margin-left:4px; vertical-align:middle; }
-  .badge-row { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:10px; max-width:100%; margin-bottom:32px; }
-  .dot { width:11px; height:11px; border-radius:50%; background:var(--accent); flex:none; }
-  .pill { display:inline-block; max-width:100%; border:1px solid rgba(232,160,32,0.4); background:rgba(255,255,255,0.65); border-radius:999px; padding:8px 16px; font-size:13.5px; font-weight:600; line-height:1.45; color:var(--muted); }
-  .host-line { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:12px; margin:0 0 28px; font-size:15px; font-weight:700; color:var(--body); }
-  .host-mark { display:inline-flex; align-items:center; justify-content:center; flex:none; background:#2f2923; border-radius:10px; padding:4px 8px; line-height:0; }
-  .host-mark img { height:40px; width:auto; max-width:80px; object-fit:contain; }
+  a { color:var(--amber); }
+  a:hover { color:#fff; }
+  a:focus-visible, .btn:focus-visible, summary:focus-visible { outline:2px solid var(--amber); outline-offset:3px; border-radius:6px; }
+  h1, h2, h3 { text-wrap:balance; }
+  p, li, dd { text-wrap:pretty; }
+  .disp { font-family:var(--display); font-weight:400; }
+  .wrap { max-width:1080px; margin:0 auto; padding-inline:28px; }
 
-  .session-grid, .venue-grid { display:grid; grid-template-columns:1fr 1fr; gap:var(--space); align-items:stretch; }
-  .session { display:flex; flex-direction:column; align-items:center; gap:6px; height:100%; text-align:center; }
-  .session-photo { width:100%; aspect-ratio:3/2; object-fit:cover; object-position:center; border-radius:12px; background:var(--chip); margin:0 0 8px; }
-  .session h3 { margin:0; font-size:clamp(22px,3vw,28px); }
-  .session .when, .session .where { margin:0; font-size:14.5px; font-weight:700; color:var(--body); }
-  .session .label { margin:10px 0 0; font-size:12px; font-weight:800; letter-spacing:0.08em; color:var(--accent-text); }
-  .session .who, .session .learn { margin:0; font-size:14.5px; line-height:1.55; color:var(--muted); }
-  .session .btn { margin-top:auto; }
-  .inline-link { color:var(--accent-text); font-weight:700; text-decoration:underline; text-underline-offset:3px; }
-  .inline-link:hover { color:var(--ink); }
-  .inline-link:focus-visible { outline:2px solid var(--accent); outline-offset:2px; border-radius:3px; }
-  .session { position:relative; cursor:pointer; transition:transform .15s, box-shadow .15s; }
-  .session:hover, .session:focus-within { transform:translateY(-3px); box-shadow:0 22px 50px rgba(47,41,35,0.16); }
-  .session .btn::after { content:""; position:absolute; inset:0; border-radius:18px; }
-  .session .btn:focus-visible { outline:3px solid var(--ink); outline-offset:3px; }
-  .price-table thead th a, .tier-card dt a { color:inherit; text-decoration:underline dotted; text-underline-offset:3px; }
-  .price-table thead th a:hover, .tier-card dt a:hover { text-decoration:underline solid; color:var(--accent-text); }
-  .price-table thead th a:focus-visible, .tier-card dt a:focus-visible { outline:2px solid var(--accent); outline-offset:2px; border-radius:4px; }
+  .draft-bar { position:sticky; top:env(safe-area-inset-top, 0px); z-index:30; background:var(--paper); color:var(--paper-ink); font-size:13px; font-weight:700; line-height:1.5; padding:8px 16px; text-align:center; }
+  .todo { color:var(--alert); font-size:12.5px; font-weight:700; }
 
-  .venue-grid .card { text-align:left; }
-  .venue-grid p { margin:0 0 8px; font-size:15px; color:var(--muted); }
-  .venue-grid.single { grid-template-columns:1fr; max-width:660px; margin:0 auto; }
-  .venue-grid .sponsor-label { margin:0; color:var(--accent-text); font-size:12px; font-weight:700; }
-  .venue-grid .sponsor-note { margin:0; color:var(--muted); font-size:14px; }
-  .venue-grid .serif { font-size:20px; font-weight:700; color:var(--ink); }
+  /* 히어로 */
+  .brand { display:flex; align-items:center; gap:10px; margin-bottom:18px; font-size:13px; font-weight:900; letter-spacing:.22em; color:var(--soft); }
+  .brand img { width:36px; height:33px; border-radius:6px; }
+  .hero h1 { margin:0 0 12px; font-size:clamp(34px, 6vw, 68px); line-height:1.08; }
+  .hero .lead { margin:0 0 40px; font-size:17px; color:var(--muted); }
 
-  .price-board { max-width:100%; min-width:0; }
-  .price-table-wrap { max-width:100%; min-width:0; }
-  .price-table-clip { overflow:hidden; border-radius:18px; background:var(--card); box-shadow:var(--shadow); }
-  .price-table { width:100%; border-collapse:collapse; table-layout:fixed; }
-  .price-table th, .price-table td { padding:12px 6px; text-align:center; vertical-align:middle; border-bottom:1px solid rgba(47,41,35,0.08); font-size:13px; line-height:1.35; overflow-wrap:break-word; }
-  .price-table thead th { background:var(--chip); font-weight:800; color:var(--ink); }
-  .price-table tbody th { font-weight:800; color:var(--ink); background:#fff; }
-  .price-table td { font-weight:900; color:var(--accent-text); background:#fff; }
-  .price-table tr:last-child th, .price-table tr:last-child td { border-bottom:0; }
-  .price-table thead th.combo-col { background:#e8a020; color:#2f2923; }
-  .price-table tbody td.combo-col { background:rgba(232,160,32,0.12); color:#2f2923; }
-  .price-table td.combo-col.ended { background:#fff; color:var(--muted); font-weight:700; }
-  .combo-price { font-size:1.15em; font-weight:900; color:#2f2923; line-height:1.2; }
-  .low { display:inline-block; margin-left:4px; padding:1px 6px; border-radius:999px; background:#7c3aed; color:#fff; font-family:'Pretendard','Apple SD Gothic Neo','Noto Sans KR',sans-serif; font-size:11px; font-weight:800; line-height:1.45; letter-spacing:0; vertical-align:middle; white-space:nowrap; }
-  .save-pill { display:inline-block; max-width:100%; padding:2px 7px; border-radius:999px; background:rgba(16,185,129,0.12); color:#0f8a63; font-size:12px; font-weight:800; line-height:1.45; }
-  .price-table td.save { font-weight:700; color:var(--muted); background:#fff; }
-  .price-table td.save-empty, .tier-card dd.save-empty { color:var(--muted); font-weight:600; }
-  .tier-name { display:inline-flex; align-items:center; justify-content:center; gap:6px; }
-  .tier-name::before { content:""; width:8px; height:8px; border-radius:50%; background:#9a8c7b; flex:none; }
-  .tier-super .tier-name::before { background:#7c3aed; }
-  .tier-early .tier-name::before { background:#e8a020; }
-  .tier-full .tier-name::before { background:#9a8c7b; }
-  .period { display:block; margin-top:2px; font-size:11.5px; font-weight:600; color:var(--soft); }
-  .rec { display:block; width:fit-content; margin:4px auto 0; background:#2f2923; color:#fff; border-radius:999px; padding:1px 7px; font-size:11px; font-weight:800; line-height:1.5; }
-  .price-cards { display:none; }
-  .price-caption { font-size:15px; color:var(--body); margin:16px auto 8px; max-width:560px; }
-  .upgrade-line { font-size:15px; font-weight:700; color:var(--ink); margin:0 auto; max-width:560px; line-height:1.65; }
-  .tier-card { text-align:left; }
-  .tier-card h3 { margin:0; font-size:20px; }
-  .tier-card .tier-name { justify-content:flex-start; }
-  .tier-card .period { margin:4px 0 12px; }
-  .tier-card dl { margin:0; display:grid; gap:8px; }
-  .tier-card dl > div { display:flex; justify-content:space-between; align-items:center; gap:10px; background:var(--chip); border-radius:10px; padding:10px 12px; min-width:0; }
-  .tier-card dt { font-size:14px; font-weight:700; min-width:0; }
-  .tier-card dd { margin:0; font-size:15px; font-weight:900; color:var(--accent-text); flex:none; text-align:right; }
-  .price-table td.ended, .tier-card dd.ended { color:var(--muted); font-weight:700; }
-  .tier-card .is-combo { background:rgba(232,160,32,0.12); }
-  .tier-card .is-combo.is-ended { background:var(--chip); }
-  .tier-card .is-combo dd { display:inline-flex; align-items:center; justify-content:flex-end; flex-wrap:wrap; gap:4px; color:#2f2923; }
-  .tier-card .is-combo dd.ended { color:var(--muted); font-weight:700; }
-  .tier-card .low { margin-left:0; }
-  .tier-card dd.save { color:var(--muted); font-weight:700; }
-  .tier-card .rec { display:inline-block; width:auto; margin:0 0 0 4px; vertical-align:middle; }
-  .faq-list { display:grid; gap:16px; max-width:660px; margin:0 auto; }
-  .refund .row { display:flex; justify-content:space-between; background:var(--card); border:1px solid rgba(26,21,18,0.1); border-radius:10px; padding:12px 18px; font-size:14px; font-weight:600; color:var(--body); }
-  .refund .row b { color:var(--ink); }
-  .refund .row.last { background:#fdf2f1; border-color:rgba(211,47,47,0.35); color:#8a4a44; }
-  .refund .row.last b { color:#d32f2f; }
-  .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+  .ticket { display:grid; grid-template-columns:minmax(0,1.6fr) minmax(0,1fr); background:var(--paper); color:var(--paper-ink); border-radius:18px; overflow:hidden; box-shadow:0 40px 80px rgba(0,0,0,.5); }
+  .ticket-main { padding:36px; display:flex; flex-direction:column; justify-content:space-between; gap:28px; min-width:0; }
+  .ticket-top { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
+  .ticket-kind { margin:0; font-size:12px; font-weight:900; letter-spacing:.24em; color:var(--paper-muted); }
+  .ticket-name { margin:6px 0 0; font-size:34px; line-height:1.1; }
+  .stamp { flex:none; border:2px solid var(--sale); color:var(--sale); border-radius:6px; padding:2px 10px; font-size:13px; font-weight:900; transform:rotate(-4deg); }
+  .stamp:empty { display:none; }
+  .ticket-was { margin:0; font-size:14px; font-weight:700; color:var(--paper-muted); }
+  .ticket-price { margin:0; font-size:clamp(56px, 9vw, 96px); line-height:1; }
+  .ticket-price.is-small { font-size:clamp(34px, 5vw, 52px); }
+  .ticket-actions { display:flex; flex-wrap:wrap; align-items:center; gap:12px 20px; }
+  .ticket-actions .deadline { margin:0; font-size:13.5px; font-weight:700; color:#a8430f; }
+  .stubs { display:grid; grid-template-rows:1fr 1fr; border-left:2px dashed #b9ab99; }
+  .stub { display:flex; flex-direction:column; justify-content:center; padding:24px 28px; text-decoration:none; }
+  .stub:hover { filter:brightness(1.06); }
+  .stub-busking { background:var(--amber); color:var(--paper-ink); }
+  .stub-sleeving { background:var(--teal); color:#0c1514; }
+  .stub small { font-size:12px; font-weight:900; letter-spacing:.2em; }
+  .stub strong { font-size:36px; line-height:1.1; font-weight:400; }
+  .stub-sleeving strong { font-family:var(--serif); font-weight:800; }
+  .stub span { font-size:13px; font-weight:700; }
 
-  /* Urgency accent is #d9381e. Sentence text stays ink so it clears AA on the tint. */
-  .hero-price { margin:0 0 26px; font-size:16px; font-weight:700; line-height:1.5; color:#2f2923; }
-  .hero-price .price-pair { white-space:nowrap; }
-  .hero-price b { color:#d9381e; font-size:20px; font-weight:900; line-height:1; }
-  .hero-price .until { white-space:nowrap; display:inline-block; margin-left:6px; font-size:12.5px; font-weight:700; color:#5c5148; }
-  .host-line:has(+ .hero-price) { margin-bottom:10px; }
-  .deadline { margin:0 auto 14px; max-width:640px; padding:12px 16px 12px 18px; border-radius:14px; background:rgba(217,56,30,0.08); border:1px solid rgba(217,56,30,0.28); box-shadow:inset 4px 0 0 #d9381e; color:#2f2923; font-size:15px; font-weight:800; line-height:1.5; }
-  .deadline-slim { margin:14px auto 0; padding:8px 12px 8px 14px; font-size:13.5px; font-weight:700; }
-  .deadline[hidden] { display:none; }
-  .price-stack { display:inline-flex; flex-direction:column; align-items:center; gap:2px; vertical-align:middle; max-width:100%; }
-  .tier-card .price-stack { align-items:flex-end; }
-  .price-now { font-weight:900; }
-  .price-meta { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:4px; line-height:1.2; }
-  .tier-card .price-meta { justify-content:flex-end; }
-  .was { color:#5c5148; font-size:11px; font-weight:700; text-decoration:line-through; }
-  .off { display:inline-block; padding:0 5px; border-radius:999px; background:#d9381e; color:#fff; font-size:11px; font-weight:800; line-height:1.55; letter-spacing:0; white-space:nowrap; }
-  .combo-line { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:4px; }
-  .tier-card .combo-line { justify-content:flex-end; }
-  .combo-price.combo-best { font-size:22px; line-height:1.05; color:#d9381e; }
-  .tier-card .combo-price.combo-best { font-size:28px; }
-  .combo-line .low { margin-left:0; }
-  .sale-chip { display:block; width:fit-content; margin:4px auto 0; padding:1px 6px; border-radius:999px; font-family:'Pretendard','Apple SD Gothic Neo','Noto Sans KR',sans-serif; font-size:11px; font-weight:800; line-height:1.45; letter-spacing:0; white-space:nowrap; }
-  .tier-card .sale-chip { margin:6px 0 0; }
-  .sale-now { background:#d9381e; color:#fff; }
-  .sale-soon { background:rgba(232,160,32,0.28); color:#2f2923; }
-  .sale-done { background:#efe8df; color:#5c5148; }
-  .price-table tr.is-active th { box-shadow:inset 3px 0 0 #d9381e; }
-  .tier-card.is-active { box-shadow:0 0 0 2px #d9381e, var(--shadow); }
-  .price-table tr.is-past .price-now,
-  .tier-card.is-past .price-now { color:#5c5148; text-decoration:line-through; }
-  .is-past .off { background:#5c5148; }
+  .btn { display:inline-flex; align-items:center; justify-content:center; min-height:54px; padding:0 32px; border-radius:999px; background:var(--paper-ink); color:var(--paper); font-weight:900; font-size:16px; text-decoration:none; }
+  .btn:hover { background:#000; color:#fff; }
+  .btn-amber { background:var(--amber); color:#121212; }
+  .btn-amber:hover { background:var(--amber-hi); color:#121212; }
+  .btn[aria-disabled="true"] { background:var(--line-2); color:var(--soft); cursor:default; }
 
-  @media (max-width:900px) {
-    main { padding:0 28px; }
-    :root { --section-pad:32px; }
-    .price-table th, .price-table td { font-size:12.5px; padding:10px 4px; }
-  }
-  @media (max-width:640px) {
-    main { padding:0 16px; }
-    :root { --section-pad:32px; --card-pad:22px 18px; }
-    .session-grid, .venue-grid { grid-template-columns:1fr; }
-    .chip, .pill { font-size:15px; }
-    .price-table-wrap { display:none; }
-    .price-cards { display:grid; gap:12px; }
-    .tier-card { border-top:4px solid #9a8c7b; }
-    .tier-card.tier-super { border-top-color:#7c3aed; }
-    .tier-card.tier-early { border-top-color:#e8a020; }
-    .tier-card.tier-full { border-top-color:#9a8c7b; }
-    .btn { padding:14px 18px; width:100%; }
-    .refund .row { flex-wrap:wrap; justify-content:center; gap:6px 12px; font-size:15px; text-align:center; }
-    .host-line { font-size:15px; }
-  }
+  /* 섹션 */
+  .sec { padding-top:104px; }
+  .eyebrow { margin:0 0 8px; font-size:13px; font-weight:900; letter-spacing:.22em; color:var(--soft); }
+  .sec-title { margin:0 0 28px; font-size:clamp(32px, 4.6vw, 48px); line-height:1.15; }
 
-  .other-tiers summary { cursor:pointer; font-weight:700; padding:12px; }
-  .other-tiers .tier-card { margin-top:12px; }
+  /* 비교 막대 */
+  .bars { display:grid; gap:14px; max-width:760px; }
+  .bar-label { margin:0 0 6px; font-size:14px; color:var(--muted); }
+  .bar-row { display:flex; align-items:center; gap:12px; }
+  .bar { height:18px; border-radius:4px; }
+  .bar-row b { flex:none; width:64px; font-variant-numeric:tabular-nums; }
+  .bars-note { margin:18px 0 0; font-size:13.5px; color:var(--soft); }
+
+  /* 회차 카드 */
+  .two { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:16px; }
+  .session { display:block; text-decoration:none; color:var(--ink); border-radius:14px; overflow:hidden; min-width:0; }
+  .session img { width:100%; aspect-ratio:16 / 9; object-fit:cover; }
+  .session .body { padding:24px; }
+  .session .when { margin:0; font-size:12.5px; font-weight:900; }
+  .session h3 { margin:6px 0 6px; font-size:32px; font-weight:400; }
+  .session p { margin:0; font-size:14.5px; color:var(--muted); }
+  .session .more { display:inline-block; margin-top:12px; font-weight:900; }
+  .session-busking { background:var(--surface); }
+  .session-busking .when, .session-busking .more { color:var(--amber); }
+  .session-busking h3 { font-family:var(--display); }
+  .session-sleeving { background:var(--surface-2); }
+  .session-sleeving img { filter:grayscale(1) brightness(.8); }
+  .session-sleeving .when, .session-sleeving .more { color:var(--teal); }
+  .session-sleeving h3 { font-family:var(--serif); font-weight:800; }
+
+  /* 가격표 */
+  .table-box { overflow-x:auto; }
+  .price-table { width:100%; border-collapse:collapse; min-width:520px; }
+  .price-table th, .price-table td { padding:16px 10px; border-bottom:1px solid var(--line); text-align:left; font-size:15px; }
+  .price-table thead th { font-size:13px; color:var(--soft); }
+  .price-table thead .c-b { color:var(--amber); }
+  .price-table thead .c-s { color:var(--teal); }
+  .price-table .period { display:block; font-size:12.5px; font-weight:500; color:var(--soft); }
+  .price-table s { color:var(--faint); font-size:12.5px; }
+  .price-table .combo { font-size:20px; }
+  .price-table tr.is-active th { box-shadow:inset 3px 0 0 var(--amber); }
+  .price-table tr.is-past { opacity:.5; }
+  .tier-chip { display:inline-block; margin-left:6px; font-size:11px; font-weight:900; border-radius:999px; padding:0 7px; vertical-align:middle; }
+  .tier-chip:empty { display:none; }
+  .tier-chip.is-now { background:var(--sale); color:#fff; }
+  .tier-chip.is-soon { background:rgba(245,176,65,.22); color:var(--amber); }
+  .tier-chip.is-done { background:var(--line-2); color:var(--soft); }
+  .save { font-size:12px; color:var(--save); }
+  .price-notes { margin:18px 0 0; padding:0; list-style:none; display:grid; gap:4px; font-size:13.5px; color:var(--soft); }
+
+  /* FAQ */
+  .faq { gap:0 40px; }
+  .faq details { border-top:1px solid var(--line); padding:18px 0; min-width:0; }
+  .faq summary { cursor:pointer; list-style:none; font-weight:900; display:flex; justify-content:space-between; gap:12px; }
+  .faq summary::-webkit-details-marker { display:none; }
+  .faq summary::after { content:"+"; color:var(--amber); flex:none; }
+  .faq details[open] summary::after { content:"−"; }
+  .faq p { margin:8px 0 0; font-size:14.5px; color:var(--muted); }
+
+  /* 안내 */
+  .info-card { background:var(--surface); border-radius:12px; padding:26px; min-width:0; }
+  .info-card h2 { margin:0 0 10px; font-size:18px; font-weight:900; }
+  .info-card p { margin:0; font-size:14.5px; color:var(--muted); }
+  .info-card .more { display:inline-block; margin-top:10px; font-weight:900; }
+
+  .sponsor-band { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:20px; border:1px solid var(--line-2); border-radius:14px; padding:28px 32px; }
+  .sponsor-band .label { margin:0 0 4px; font-size:12.5px; font-weight:900; letter-spacing:.22em; color:var(--soft); }
+  .sponsor-band h2 { margin:0; font-size:28px; }
+  .sponsor-band p { margin:6px 0 0; font-size:14.5px; color:var(--muted); }
+  .sponsor-band .logo { background:#000; border-radius:10px; padding:16px 20px; }
+  .sponsor-band .logo img { width:220px; }
+
+  .final { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:20px; border-top:1px solid var(--line); padding-top:28px; }
+  .final p { margin:0; font-size:14px; color:var(--soft); }
+
+  footer.wrap { display:flex; flex-wrap:wrap; gap:16px 32px; align-items:center; justify-content:center; padding-block:28px 48px; font-size:13px; color:var(--soft); }
+  footer span { display:inline-flex; align-items:center; gap:10px; }
+  footer .f-planb { width:40px; height:37px; border-radius:6px; }
+  footer .f-snack { width:120px; border-radius:4px; }
+
   .sticky-ticket { display:none; }
-  .sticky-ticket[hidden] { display:none; }
-  .btn[aria-disabled="true"] { background:var(--chip); color:var(--muted); box-shadow:none; cursor:default; }
+  .sticky-ticket[hidden] { display:none !important; }
+
   @media (max-width:760px) {
-    body { padding-bottom:calc(90px + env(safe-area-inset-bottom, 0px)); }
-    .sticky-ticket { position:fixed; bottom:0; left:0; right:0; z-index:20; display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px 16px calc(12px + env(safe-area-inset-bottom, 0px)); background:var(--bg); border-top:1px solid var(--soft); box-shadow:var(--shadow); }
+    .wrap { padding-inline:16px; }
+    .ticket { grid-template-columns:minmax(0,1fr); }
+    .ticket-main { padding:26px 22px; }
+    .stubs { border-left:0; border-top:2px dashed #b9ab99; grid-template-rows:none; grid-template-columns:repeat(2, minmax(0,1fr)); }
+    .stub { padding:18px; }
+    .stub strong { font-size:28px; }
+    .two { grid-template-columns:minmax(0,1fr); }
+    .btn { width:100%; }
+    .sponsor-band { padding:22px; }
+    .sponsor-band .logo, .sponsor-band .logo img { width:100%; }
+    body { padding-bottom:calc(84px + env(safe-area-inset-bottom, 0px)); }
+    .sticky-ticket { position:fixed; left:0; right:0; bottom:0; z-index:20; display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px 16px calc(12px + env(safe-area-inset-bottom, 0px)); background:var(--surface); border-top:1px solid var(--line-2); }
     .sticky-ticket-text { font-size:13px; font-weight:800; }
-    .sticky-ticket .btn { width:auto; flex:none; padding:10px 16px; font-size:14px; }
-  }
-  @media (max-width:640px) {
-    main > .hero { padding-top:18px; }
-    .hero .badge-row { margin-bottom:12px; }
-    .hero h1 { font-size:28px; margin-bottom:14px; }
-    .hero .lead { font-size:15px; line-height:1.6; margin-bottom:14px; }
-    .hero .hero-meta { gap:4px; font-size:14px; }
-    .hero .hero-price { margin-bottom:14px; font-size:14px; }
-    .hero .hero-price b { font-size:18px; }
-    .hero .cover { max-height:180px; }
-    .series-band { margin-top:12px; padding:12px; }
-    .series-tagline { margin-bottom:8px; font-size:15px; }
-    .series-steps { gap:4px; margin-bottom:6px; }
-    .series-steps a, .series-steps [aria-current] { padding:6px 10px; }
-    .series-steps li + li::before { margin-bottom:4px; }
+    .sticky-ticket .btn { width:auto; min-height:44px; padding:0 18px; font-size:14px; background:var(--amber); color:#121212; }
   }
 </style>
 </head>
 <body data-planb-page="november">
-<div class="draft-bar"><b>작성 중인 틀</b> · 점선은 아직 채울 곳입니다(시간·가격·주소·문구). 완성 후 이 줄은 지웁니다.</div>
-<main>
+<div class="draft-bar">작성 중 · <span style="color:#a8430f">[ ]</span> 표시는 아직 채울 곳이에요. 완성 후 이 줄은 지웁니다.</div>
 
-  <section class="hero">
-    <img class="hero-logo" src="../planb-busking/img/planb-logo.png" alt="PLAN B" width="160" height="147">
-    <div class="badge-row"><span class="dot"></span><span class="pill">PLAN B 11월 세미나</span></div>
-    <h1>No Plan Season. 3</h1>
-    <p class="lead">첫 일요일엔 사람을 모으고, 다음 일요일엔 사라지게 한다.</p>
-    <p class="hero-sponsor"><span class="sponsor-logo"><img src="../planb-busking/img/snack-logo.jpg" alt="스넥 연습실 로고" width="1158" height="573" loading="eager"></span><span>후원 스넥 연습실</span></p>
-    <p class="hero-meta">📅 11/15(일) 버스킹 · 스넥 연습실<br>📅 11/22(일) 슬리빙 · 스넥 연습실</p>
-    <p class="hero-price">슈퍼 얼리버드 <span class="price-pair">버스킹 <b>4만원</b></span> · <span class="price-pair">슬리빙 <b>3만원</b></span> · <span class="price-pair">통합권 <b>5만원</b></span> <span class="until">10/27(화)까지</span></p>
-    <a href="#ticket" class="btn">통합권으로 신청하기 →</a>
-    <p class="deadline deadline-slim" data-deadline><span class="deadline-text">10월 17일(토) 판매 시작 · 슈퍼 얼리버드는 11일 동안만</span></p>
-    <p style="font-size:12.5px; color:var(--soft); margin:16px 0 0;"><span class="todo-tag">신청 폼 링크 미정</span></p>
-  </section>
+<!-- ============ HERO: TICKET ============ -->
+<header class="wrap hero" style="padding-top:64px">
+  <div class="brand"><img src="../planb-busking/img/planb-logo.png" alt="PLAN B" width="160" height="147">PLAN B 11월 세미나</div>
+  <h1 class="disp">한 장으로<br>두 번의 일요일</h1>
+  <p class="lead">첫 일요일엔 사람을 모으고,<br>다음 일요일엔 사라지게 한다.</p>
 
-  <section>
-    <p class="eyebrow">Sessions</p>
-    <h2>두 번의 일요일</h2>
-    <div class="session-grid">
-      <article class="card session">
-        <img class="session-photo wide" src="../planb-busking/img/cover.jpg" alt="거리 공연 테이블을 둘러싼 관객들" width="1400" height="785" style="object-position: right center">
-        <p class="pill">Vol.1 버스킹</p>
+  <div class="ticket">
+    <div class="ticket-main">
+      <div class="ticket-top">
+        <div>
+          <p class="ticket-kind">ADMIT ONE · 통합권</p>
+          <p class="ticket-name disp">NO PLAN SEASON. 3</p>
+        </div>
+        <span class="stamp" data-ticket-stamp>50% OFF</span>
+      </div>
+      <div>
+        <p class="ticket-was" data-ticket-was>정가 <s>12만원</s> · 슈퍼 얼리버드</p>
+        <p class="ticket-price disp" data-ticket-price>6만원</p>
+      </div>
+      <div class="ticket-actions">
+        <a href="#ticket" class="btn" data-cta data-hero-cta>통합권 신청하기</a>
+        <p class="deadline" data-deadline><span data-deadline-main>10/17(토) 판매 시작 · 11/8까지</span></p>
+      </div>
+    </div>
+    <div class="stubs">
+      <a class="stub stub-busking" href="../planb-busking/"><small>VOL.1 · 11.15 SUN</small><strong class="disp">버스킹</strong><span>자세히 →</span></a>
+      <a class="stub stub-sleeving" href="../planb-sleeving/"><small>VOL.2 · 11.22 SUN</small><strong>슬리빙</strong><span>자세히 →</span></a>
+    </div>
+  </div>
+</header>
+
+<!-- ============ WHY COMBO ============ -->
+<section class="wrap sec">
+  <p class="eyebrow">WHY 통합권</p>
+  <h2 class="disp sec-title">따로 사면 8만원,<br>같이 사면 6만원</h2>
+  <div class="bars">
+    <div><p class="bar-label">정가 합계 (7만원 + 5만원)</p><div class="bar-row"><div class="bar" style="width:100%; background:var(--line-2)"></div><b style="color:var(--faint)">12만원</b></div></div>
+    <div><p class="bar-label">슈퍼 얼리버드 단독 2장 (5만원 + 3만원)</p><div class="bar-row"><div class="bar" style="width:66.6%; background:linear-gradient(90deg, var(--amber) 62.5%, var(--teal) 62.5%)"></div><b>8만원</b></div></div>
+    <div><p class="bar-label">슈퍼 얼리버드 통합권</p><div class="bar-row"><div class="bar" style="width:50%; background:var(--paper)"></div><b style="color:var(--amber)">6만원</b></div></div>
+  </div>
+  <p class="bars-note">얼리버드(10/28-11/8)에는 단독 2장 10만원, 통합권 9만원 · 11/9부터 통합권 판매 종료</p>
+</section>
+
+<!-- ============ SESSIONS ============ -->
+<section class="wrap sec">
+  <p class="eyebrow">SESSIONS</p>
+  <h2 class="disp sec-title">모으고,<br>사라지게 하기</h2>
+  <div class="two">
+    <a class="session session-busking" href="../planb-busking/">
+      <img src="../planb-busking/img/busking-sunhwijae.jpg" alt="밤거리 버스킹 현장" width="1600" height="901" loading="lazy" decoding="async">
+      <div class="body">
+        <p class="when">VOL.1 · 11.15(일) 15:00-18:30</p>
         <h3>버스킹</h3>
-        <p class="when">2026년 11월 15일(일)</p>
-        <p class="where">스넥 연습실 · 홍대 <span class="sponsor-tag">후원</span></p>
-        <p class="label">강사</p>
-        <p class="who">메인 MC 쇼갱<br>강의 매지션 훅·선휘재·쇼갱</p>
-        <p class="label">배우는 것</p>
-        <p class="learn">버스킹 시연과 세 강사의 세션, 뒤풀이</p>
-        <a class="btn" href="../planb-busking/">자세히 보기 →</a>
-      </article>
-      <article class="card session">
-        <img class="session-photo whole" src="../planb-sleeving/img/cover.jpg" alt="벤치에 앉은 관객에게 카드를 보여 주는 근접 카드 마술 장면" width="1400" height="1033">
-        <p class="pill">Vol.2 슬리빙</p>
+        <p>매지션 훅 · 선휘재 · 쇼갱<br>멈춰 서고, 웃고, 팁을 놓고 가는 법</p>
+        <span class="more">자세히 보기 →</span>
+      </div>
+    </a>
+    <a class="session session-sleeving" href="../planb-sleeving/">
+      <img src="../planb-sleeving/img/cover.jpg" alt="근접 카드 마술 장면" width="1400" height="1033" loading="lazy" decoding="async">
+      <div class="body">
+        <p class="when">VOL.2 · 11.22(일) 14:00-17:00 <span class="todo">임시</span></p>
         <h3>슬리빙</h3>
-        <p class="when">2026년 11월 22일(일)</p>
-        <p class="where">스넥 연습실 · 홍대 <span class="sponsor-tag">후원</span></p>
-        <p class="label">강사</p>
-        <p class="who">조시훈 마술사</p>
-        <p class="label">배우는 것</p>
-        <p class="learn">슬리빙 기본부터 해부학적 슬리빙까지</p>
-        <a class="btn" href="../planb-sleeving/">자세히 보기 →</a>
-      </article>
-    </div>
-  </section>
-
-  <section>
-    <p class="eyebrow">Series</p>
-    <h2>이렇게 이어져요</h2>
-    <p class="lead"><a class="inline-link" href="../planb-busking/">Vol.1</a>에서는 길에서 사람을 모으고 붙잡는 법을, <a class="inline-link" href="../planb-sleeving/">Vol.2</a>에서는 손에 있던 것을 감쪽같이 사라지게 하는 기술을 다뤄요.</p>
-    <p class="lead">각각 들어도 되고, 둘 다 들으면 통합권 가격으로 두 번 만나요.</p>
-  </section>
-
-  <!-- ============ SPONSOR ============ -->
-  <section>
-    <p class="eyebrow">Sponsor</p>
-    <h2>후원</h2>
-    <div class="card sponsor-card">
-      <div class="sponsor-logo"><img src="../planb-busking/img/snack-logo.jpg" alt="스넥 연습실 로고" width="1158" height="573" loading="eager"></div>
-      <p class="serif sponsor-name">스넥 연습실</p>
-      <p class="sponsor-line">스넥 연습실이 이번 세미나를 후원해 주셨어요.</p>
-    </div>
-  </section>
-
-  <section id="ticket">
-    <p class="eyebrow">Ticket</p>
-    <h2>참가비</h2>
-    <div class="price-board">
-      <p class="deadline" data-deadline><span class="deadline-text">10월 17일(토) 판매 시작 · 슈퍼 얼리버드는 11일 동안만</span></p>
-      <div class="price-table-wrap">
-        <div class="price-table-clip">
-          <table class="price-table">
-            <thead>
-              <tr>
-                <th scope="col"><span class="sr-only">구분</span></th>
-                <th scope="col"><a href="../planb-busking/">버스킹 단독</a></th>
-                <th scope="col"><a href="../planb-sleeving/">슬리빙 단독</a></th>
-                <th scope="col" class="combo-col">통합권<span class="rec">추천</span></th>
-                <th scope="col">통합권으로 아끼는 금액</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr data-tier="super">
-                <th scope="row" class="tier-super"><span class="tier-name">슈퍼 얼리버드</span><span class="period">10/17(토)-10/27(화)</span></th>
-                <td><span class="price-stack"><span class="price-now">4만원</span><span class="price-meta"><s class="was">6만원</s><span class="off">33%</span></span></span></td>
-                <td><span class="price-stack"><span class="price-now">3만원</span><span class="price-meta"><s class="was">5만원</s><span class="off">40%</span></span></span></td>
-                <td class="combo-col"><span class="price-stack"><span class="price-meta"><s class="was">7만원</s></span><span class="combo-line"><span class="combo-price combo-best price-now">5만원</span><span class="low">최저가</span></span></span></td>
-                <td class="save"><span class="save-pill">2만원 절약</span></td>
-              </tr>
-              <tr data-tier="early">
-                <th scope="row" class="tier-early"><span class="tier-name">얼리버드</span><span class="period">10/28(수)-11/8(일)</span></th>
-                <td><span class="price-stack"><span class="price-now">5만원</span><span class="price-meta"><s class="was">6만원</s><span class="off">16%</span></span></span></td>
-                <td><span class="price-stack"><span class="price-now">4만원</span><span class="price-meta"><s class="was">5만원</s><span class="off">20%</span></span></span></td>
-                <td class="combo-col"><span class="price-stack"><span class="price-meta"><s class="was">9만원</s></span><span class="combo-price price-now">8만원</span></span></td>
-                <td class="save"><span class="save-pill">1만원 절약</span></td>
-              </tr>
-              <tr data-tier="full">
-                <th scope="row" class="tier-full"><span class="tier-name">정상가</span><span class="period">11/9(월)부터</span></th>
-                <td data-seminar="busking"><span class="price-now">6만원</span></td><td data-seminar="sleeving"><span class="price-now">5만원</span></td><td class="combo-col ended">판매 종료</td><td class="save save-empty">-</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+        <p>조시훈 · 해외 마술사 9명이 허락한 기법<br>마스터클래스 레벨까지</p>
+        <span class="more">자세히 보기 →</span>
       </div>
-      <div class="price-cards">
-        <article class="card tier-card tier-super" data-tier="super">
-          <h3 class="serif"><span class="tier-name">슈퍼 얼리버드</span></h3>
-          <p class="period">10/17(토)-10/27(화)</p>
-          <dl>
-            <div><dt><a href="../planb-busking/">버스킹 단독</a></dt><dd><span class="price-stack"><span class="price-now">4만원</span><span class="price-meta"><s class="was">6만원</s><span class="off">33%</span></span></span></dd></div>
-            <div><dt><a href="../planb-sleeving/">슬리빙 단독</a></dt><dd><span class="price-stack"><span class="price-now">3만원</span><span class="price-meta"><s class="was">5만원</s><span class="off">40%</span></span></span></dd></div>
-            <div class="is-combo"><dt>통합권<span class="rec">추천</span></dt><dd><span class="price-stack"><span class="price-meta"><s class="was">7만원</s></span><span class="combo-line"><span class="combo-price combo-best price-now">5만원</span><span class="low">최저가</span></span></span></dd></div>
-            <div><dt>통합권으로 아끼는 금액</dt><dd class="save"><span class="save-pill">2만원 절약</span></dd></div>
-          </dl>
-        </article>
-        <article class="card tier-card tier-early" data-tier="early">
-          <h3 class="serif"><span class="tier-name">얼리버드</span></h3>
-          <p class="period">10/28(수)-11/8(일)</p>
-          <dl>
-            <div><dt><a href="../planb-busking/">버스킹 단독</a></dt><dd><span class="price-stack"><span class="price-now">5만원</span><span class="price-meta"><s class="was">6만원</s><span class="off">16%</span></span></span></dd></div>
-            <div><dt><a href="../planb-sleeving/">슬리빙 단독</a></dt><dd><span class="price-stack"><span class="price-now">4만원</span><span class="price-meta"><s class="was">5만원</s><span class="off">20%</span></span></span></dd></div>
-            <div class="is-combo"><dt>통합권<span class="rec">추천</span></dt><dd><span class="price-stack"><span class="price-meta"><s class="was">9만원</s></span><span class="combo-price price-now">8만원</span></span></dd></div>
-            <div><dt>통합권으로 아끼는 금액</dt><dd class="save"><span class="save-pill">1만원 절약</span></dd></div>
-          </dl>
-        </article>
-        <article class="card tier-card tier-full" data-tier="full">
-          <h3 class="serif"><span class="tier-name">정상가</span></h3>
-          <p class="period">11/9(월)부터</p>
-          <dl>
-            <div data-seminar="busking"><dt><a href="../planb-busking/">버스킹 단독</a></dt><dd><span class="price-now">6만원</span></dd></div>
-            <div data-seminar="sleeving"><dt><a href="../planb-sleeving/">슬리빙 단독</a></dt><dd><span class="price-now">5만원</span></dd></div>
-            <div class="is-combo is-ended"><dt>통합권<span class="rec">추천</span></dt><dd class="ended">판매 종료</dd></div>
-            <div><dt>통합권으로 아끼는 금액</dt><dd class="save-empty">-</dd></div>
-          </dl>
-        </article>
-      </div>
-    </div>
-    <p class="price-caption">얼리버드 할인과 통합권 추가 할인은 따로 계산해요.</p>
-    <p class="price-caption">아끼는 금액은 같은 기간 단독권 두 장 가격과 비교한 금액이에요.</p>
-    <p class="price-caption">통합권은 11월 8일(일)까지만 판매해요.</p>
-    <p class="price-caption">버스킹에 참가한 분이 슬리빙을 따로 신청하면 1만원 할인해 드려요.</p>
-    <p class="upgrade-line">단독권을 먼저 샀어도 11월 8일까지는 차액만 내면 통합권으로 바꿀 수 있어요. 차액은 바꾸는 시점의 통합권 가격에서 이미 낸 금액을 뺀 만큼이에요.</p>
-  </section>
+    </a>
+  </div>
+</section>
 
-  <section>
-    <p class="eyebrow">FAQ</p>
-    <h2>자주 묻는 질문</h2>
-    <div class="faq-list">
-      <div class="card" style="text-align:center;"><p class="serif" style="font-size:20px; font-weight:700; margin:0 0 10px;">한 회차만 신청해도 되나요?</p><p style="font-size:15.5px; color:var(--muted); margin:0;">네. 버스킹과 슬리빙은 각각 신청할 수 있어요.</p></div>
-      <div class="card" style="text-align:center;"><p class="serif" style="font-size:20px; font-weight:700; margin:0 0 10px;">슬리빙도 같이 들으면 좋은 점이 있나요?</p><p style="font-size:15.5px; color:var(--muted); margin:0;">버스킹만 신청해도 돼요. 슬리빙도 같이 신청하면, 두 회차를 통합권 가격으로 들을 수 있어요.</p></div>
-      <div class="card" style="text-align:center;"><p class="serif" style="font-size:20px; font-weight:700; margin:0 0 10px;">버스킹을 안 들어도 괜찮나요?</p><p style="font-size:15.5px; color:var(--muted); margin:0;">네. 슬리빙만 신청해도 돼요. 버스킹도 같이 신청하면, 두 회차를 통합권 가격으로 들을 수 있어요.</p></div>
-      <div class="card" style="text-align:center;"><p class="serif" style="font-size:20px; font-weight:700; margin:0 0 10px;">버스킹을 듣고 나서 슬리빙을 신청해도 할인되나요?</p><p style="font-size:15.5px; color:var(--muted); margin:0;">네. 버스킹에 참가한 분이 슬리빙을 따로 신청하면 1만원 할인해 드려요.</p></div>
-      <div class="card" style="text-align:center;"><p class="serif" style="font-size:20px; font-weight:700; margin:0 0 10px;">단독권을 샀는데 통합권으로 바꿀 수 있나요?</p><p style="font-size:15.5px; color:var(--muted); margin:0;">단독권을 먼저 샀어도 11월 8일까지는 차액만 내면 통합권으로 바꿀 수 있어요. 차액은 바꾸는 시점의 통합권 가격에서 이미 낸 금액을 뺀 만큼이에요.<br>예: 슈퍼 얼리버드에 버스킹 단독권(4만원)을 사고 얼리버드 기간에 바꾸면 8만원에서 4만원을 뺀 4만원을 내요.</p></div>
-      <div class="card" style="text-align:center;"><p class="serif" style="font-size:20px; font-weight:700; margin:0 0 10px;">한 회차를 못 가게 되면요?</p><p style="font-size:15.5px; color:var(--muted); margin:0;">회차별 환불·양도 기준은 곧 안내할게요. <span class="todo-tag">통합권 부분 환불 기준 확정 전</span></p></div>
-    </div>
-  </section>
+<!-- ============ TICKET ============ -->
+<section id="ticket" class="wrap sec">
+  <p class="eyebrow">TICKET</p>
+  <h2 class="disp sec-title">기간별 참가비</h2>
+  <div class="table-box">
+    <table class="price-table">
+      <thead><tr><th scope="col">기간</th><th scope="col" class="c-b">버스킹</th><th scope="col" class="c-s">슬리빙</th><th scope="col">통합권</th></tr></thead>
+      <tbody>
+        <tr data-tier="super" class="is-active"><th scope="row">슈퍼 얼리버드<span class="tier-chip"></span><span class="period">10/17(토)-10/27(화)</span></th><td><s>7만원</s> 5만원</td><td><s>5만원</s> 3만원</td><td><b class="combo">6만원</b> <span class="save">2만원 절약</span></td></tr>
+        <tr data-tier="early"><th scope="row">얼리버드<span class="tier-chip"></span><span class="period">10/28(수)-11/8(일)</span></th><td><s>7만원</s> 6만원</td><td><s>5만원</s> 4만원</td><td><b class="combo">9만원</b> <span class="save">1만원 절약</span></td></tr>
+        <tr data-tier="full"><th scope="row">정상가<span class="tier-chip"></span><span class="period">11/9(월)부터</span></th><td>7만원</td><td>5만원</td><td style="color:var(--faint)">판매 종료</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <ul class="price-notes">
+    <li>절약 금액은 같은 기간 단독권 두 장 가격과 비교한 금액이에요.</li>
+    <li>통합권은 11월 8일(일)까지만 판매해요.</li>
+    <li>단독권을 샀어도 11월 8일까지 차액만 내면 통합권으로 바꿀 수 있어요.</li>
+    <li>버스킹 참가자가 슬리빙을 따로 신청하면 1만원 할인해 드려요.</li>
+  </ul>
+  <div style="margin-top:28px; display:flex; flex-wrap:wrap; align-items:center; gap:10px 16px"><a href="#ticket" class="btn btn-amber" data-cta>통합권 신청하기</a><span class="todo">[신청 폼 링크 미정]</span></div>
+</section>
 
-  <section>
-    <p class="eyebrow">Location</p>
-    <h2>오시는 길</h2>
-    <div class="venue-grid single">
-      <div class="card">
-        <p class="serif">스넥 연습실</p>
-        <p>서울 마포구 연남로 4-1 지하 1층</p>
-        <p>홍대입구역 3번 출구 도보 5분</p>
-        <p>주차 공간이 없어요. 대중교통을 이용해 주세요.</p>
-        <p style="margin:10px 0 0;"><a href="https://map.naver.com/p/entry/place/1983667731" target="_blank" rel="noopener noreferrer" style="color:var(--accent); font-weight:700;">지도에서 보기 →</a></p>
-        <div class="sponsor-block">
-          <p class="sponsor-label">후원</p>
-          <div class="sponsor-logo"><img src="../planb-busking/img/snack-logo.jpg" alt="스넥 연습실 로고" width="1158" height="573" loading="eager"></div>
-          <p class="sponsor-note">스넥 연습실이 이번 세미나를 후원해 주셨어요.</p>
-        </div>
-      </div>
+<!-- ============ SPONSOR ============ -->
+<section class="wrap sec">
+  <div class="sponsor-band">
+    <div>
+      <p class="label">SPONSOR</p>
+      <h2 class="disp">스넥 연습실이 함께해요</h2>
+      <p>스넥 연습실이 이번 세미나를 후원해 주셨어요.<br>두 회차 모두 스넥 연습실에서 열려요.</p>
     </div>
-    <p style="font-size:15px; color:var(--muted); text-align:center; margin:14px 0 0;">버스킹·슬리빙 두 회차 모두 같은 곳에서 열려요.</p>
-  </section>
+    <div class="logo"><img src="../planb-busking/img/snack-logo.jpg" alt="스넥 연습실 로고" width="1158" height="573" loading="lazy" decoding="async"></div>
+  </div>
+</section>
 
-  <section class="refund">
-    <p class="eyebrow">Refund</p>
-    <h2>환불 규정</h2>
-    <div style="display:grid; gap:6px; max-width:480px; margin:0 auto;">
-      <div class="row"><span>세미나 7일 전까지</span><b>100% 환불</b></div>
-      <div class="row"><span>세미나 3일 전까지</span><b>70% 환불</b></div>
-      <div class="row"><span>세미나 1일 전까지</span><b>50% 환불</b></div>
-      <div class="row last"><span>세미나 당일</span><b>환불 불가</b></div>
+<!-- ============ FAQ ============ -->
+<section class="wrap sec">
+  <p class="eyebrow">FAQ</p>
+  <h2 class="disp sec-title" style="margin-bottom:20px">자주 묻는 질문</h2>
+  <div class="two faq">
+    <details><summary>한 회차만 신청해도 되나요?</summary><p>네. 버스킹과 슬리빙은 각각 신청할 수 있어요.</p></details>
+    <details><summary>둘 다 들으면 뭐가 좋나요?</summary><p>통합권으로 사면 단독권 두 장보다 저렴해요.<br>슈퍼 얼리버드 기준 2만원 절약이에요.</p></details>
+    <details><summary>버스킹을 듣고 슬리빙을 신청해도 할인되나요?</summary><p>네. 버스킹 참가자가 슬리빙을 따로 신청하면<br>1만원 할인해 드려요.</p></details>
+    <details><summary>단독권을 통합권으로 바꿀 수 있나요?</summary><p>11월 8일까지는 차액만 내면 돼요.<br>예: 슈퍼 얼리버드 버스킹 단독권(5만원)을 얼리버드 기간에 바꾸면<br>9만원에서 5만원을 뺀 4만원을 내요.</p></details>
+    <details><summary>한 회차를 못 가게 되면요?</summary><p>회차별 환불·양도 기준은 곧 안내할게요. <span class="todo">[통합권 부분 환불 기준 확정 전]</span></p></details>
+    <details><summary>촬영이나 녹음을 해도 되나요?</summary><p>두 회차 모두 촬영, 녹화, 녹음은 금지예요.</p></details>
+  </div>
+</section>
+
+<!-- ============ INFO ============ -->
+<section class="wrap sec">
+  <div class="two">
+    <div class="info-card">
+      <h2>오시는 길</h2>
+      <p>스넥 연습실 · 서울 마포구 연남로 4-1 지하 1층<br>홍대입구역 3번 출구 도보 5분 · 주차 불가</p>
+      <a class="more" href="https://map.naver.com/p/entry/place/1983667731" target="_blank" rel="noopener noreferrer">지도 보기 →</a>
     </div>
-    <p style="font-size:15px; color:var(--muted); margin:18px 0 0;">환불 문의는 카카오톡 <b style="color:var(--accent);">KaliDCerona</b>로 연락 주세요.</p>
-  </section>
+    <div class="info-card">
+      <h2>환불 규정</h2>
+      <p>7일 전 100% · 3일 전 70% · 1일 전 50%<br><b style="color:var(--alert)">당일 환불 불가</b></p>
+      <p style="margin-top:10px; font-size:14px; color:var(--soft)">문의 카카오톡 <b style="color:var(--amber)">KaliDCerona</b></p>
+    </div>
+  </div>
+</section>
 
-  <footer class="sponsor-strip" aria-label="후원">
-    <div class="sponsor-logo"><img src="../planb-busking/img/snack-logo.jpg" alt="스넥 연습실 로고" width="1158" height="573" loading="eager"></div>
-    <p>후원 스넥 연습실</p>
-  </footer>
-</main>
-<div class="sticky-ticket" hidden><span class="sticky-ticket-text"></span><a class="btn" href="#ticket">신청하기</a></div>
+<section class="wrap sec" style="padding-top:88px">
+  <div class="final">
+    <p>두 회차 모두 스넥 연습실 · 자리가 다 차면 일찍 마감돼요</p>
+    <a href="#ticket" class="btn btn-amber" data-cta data-final-cta>통합권 6만원으로 신청하기</a>
+  </div>
+</section>
+
+<footer class="wrap" aria-label="주최와 후원">
+  <span>주최 <img class="f-planb" src="../planb-busking/img/planb-logo.png" alt="PLAN B" width="160" height="147" loading="lazy"></span>
+  <span>후원 <img class="f-snack" src="../planb-busking/img/snack-logo.jpg" alt="스넥 연습실" width="1158" height="573" loading="lazy"></span>
+</footer>
+
+<div class="sticky-ticket" hidden><span class="sticky-ticket-text"></span><a class="btn" href="#ticket" data-cta>신청하기</a></div>
+
 <script>
 (function () {
-  // KST calendar for the 2026 ticket window. A bad date leaves the static fallback.
-  // Pass a Date, YYYY-MM-DD, or YYYYMMDD to planbDeadlineState, or set PLANB_NOW. Default is the real KST date.
+  // 2026 티켓 일정 (KST). 계산이 실패하면 HTML에 적힌 기본 문구가 그대로 남아요.
+  // 테스트: window.PLANB_NOW = "2026-10-30" 처럼 지정하면 그 날짜 기준으로 보여 줘요.
   var root = typeof globalThis !== "undefined" ? globalThis : window;
-  var PAGE = typeof document !== "undefined" && document.body
-    ? document.body.getAttribute("data-planb-page") : root.PLANB_PAGE || "busking";
-  var EVENT_END = PAGE === "busking" ? 20261115 : 20261122;
-  var OPEN = 20261017;
-  var SUPER_END = 20261027;
-  var EARLY_END = 20261108;
-  var FALLBACK = "10월 17일(토) 판매 시작 · 슈퍼 얼리버드는 11일 동안만";
+  var OPEN = 20261017, SUPER_END = 20261027, EARLY_END = 20261108, BUSKING_DAY = 20261115, SLEEVING_DAY = 20261122;
 
-  function ymdFromClock(clock) {
-    var fmt = new Intl.DateTimeFormat("en-US", {
-      timeZone: "Asia/Seoul",
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit"
-    });
-    var parts = fmt.formatToParts(clock);
-    var y = 0;
-    var m = 0;
-    var d = 0;
-    var i;
-    for (i = 0; i < parts.length; i++) {
-      if (parts[i].type === "year") y = parseInt(parts[i].value, 10);
-      if (parts[i].type === "month") m = parseInt(parts[i].value, 10);
-      if (parts[i].type === "day") d = parseInt(parts[i].value, 10);
-    }
-    if (!y || !m || !d) throw new Error("kst");
-    return y * 10000 + m * 100 + d;
-  }
-
-  function resolveToday(now) {
-    if (now == null && typeof globalThis !== "undefined" && globalThis.PLANB_NOW != null) {
-      now = globalThis.PLANB_NOW;
-    }
-    if (now == null) return ymdFromClock(new Date());
+  function kstToday(now) {
+    if (now == null && root.PLANB_NOW != null) now = root.PLANB_NOW;
     if (typeof now === "number") return now;
     if (typeof now === "string") {
-      var digits = now.replace(/-/g, "");
-      if (!/^\d{8}$/.test(digits)) throw new Error("now");
-      return parseInt(digits, 10);
+      var d = now.replace(/-/g, "");
+      if (!/^\d{8}$/.test(d)) throw new Error("now");
+      return parseInt(d, 10);
     }
-    if (Object.prototype.toString.call(now) === "[object Date]") return ymdFromClock(now);
-    throw new Error("now");
+    var parts = new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Seoul", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(now || new Date());
+    var y = 0, m = 0, day = 0;
+    parts.forEach(function (p) {
+      if (p.type === "year") y = +p.value;
+      if (p.type === "month") m = +p.value;
+      if (p.type === "day") day = +p.value;
+    });
+    if (!y || !m || !day) throw new Error("kst");
+    return y * 10000 + m * 100 + day;
   }
+  function utc(ymd) { return Date.UTC(Math.floor(ymd / 10000), Math.floor(ymd % 10000 / 100) - 1, ymd % 100); }
+  function dday(end, today) { return "D-" + Math.round((utc(end) - utc(today)) / 86400000); }
 
-  function utcDay(ymd) {
-    var y = Math.floor(ymd / 10000);
-    var m = Math.floor((ymd % 10000) / 100);
-    var d = ymd % 100;
-    return Date.UTC(y, m - 1, d);
-  }
-
-  function countdown(endYmd, today) {
-    var n = Math.round((utcDay(endYmd) - utcDay(today)) / 86400000);
-    if (n === 0) return "오늘 마감";
-    if (n > 0) return "D-" + n;
-    throw new Error("countdown");
-  }
-
-  function chipFor(phase, tier) {
-    if (phase === "done") return "마감";
-    if (phase === "before") return tier === "super" ? "오픈 예정" : "";
-    if (tier === phase) return "판매 중";
-    if (tier === "super" || (phase === "full" && tier === "early")) return "마감";
-    return "";
-  }
   function planbDeadlineState(now) {
-    var today = resolveToday(now);
-    if (today < 20200101 || today > 21001231) throw new Error("range");
-    var phase = "before", text = FALLBACK;
-    if (today > EVENT_END) {
-      phase = "done"; text = "이번 세미나는 끝났어요";
-    } else if (today < OPEN) {
-      phase = "before";
-    } else if (today <= SUPER_END) {
-      phase = "super";
-      text = today === SUPER_END ? "슈퍼 얼리버드 오늘 마감 · 10/27(화) 23:59"
-        : "슈퍼 얼리버드 마감까지 " + countdown(SUPER_END, today) + " · 10/27(화) 23:59";
-    } else if (today <= EARLY_END) {
-      phase = "early";
-      text = today === EARLY_END ? "얼리버드·통합권 오늘 마감 · 11/8(일) 23:59"
-        : "얼리버드·통합권 마감까지 " + countdown(EARLY_END, today) + " · 11/8(일) 23:59";
-    } else { phase = "full"; text = ""; }
-    var early = phase === "early", full = phase === "full", done = phase === "done";
-    var busking = full || done ? "6만원" : early ? "5만원" : "4만원";
-    var sleeving = full || done ? "5만원" : early ? "4만원" : "3만원";
-    function pricePair(label, price) {
-      return '<span class="price-pair">' + label + ' <b>' + price + '</b></span>';
+    var t = kstToday(now);
+    var s = { today: t, phase: "before",
+      was: "정가 <s>12만원</s> · 슈퍼 얼리버드", price: "6만원", stamp: "50% OFF", small: false,
+      deadline: "10/17(토) 판매 시작 · 11/8까지", sticky: "통합권 6만원 · 10/27까지", finalCta: "통합권 6만원으로 신청하기",
+      chips: { super: "오픈 예정", early: "", full: "" }, active: "super" };
+    if (t > SLEEVING_DAY) {
+      s.phase = "done"; s.was = "NO PLAN SEASON. 3"; s.price = "모두 끝났어요"; s.stamp = ""; s.small = true;
+      s.deadline = "다음 시즌에서 만나요"; s.sticky = "이번 세미나는 끝났어요";
+      s.chips = { super: "마감", early: "마감", full: "마감" }; s.active = "";
+    } else if (t > BUSKING_DAY) {
+      s.phase = "sleeving-only"; s.was = "버스킹은 끝났어요 · 슬리빙 정상가"; s.price = "5만원"; s.stamp = ""; s.small = true;
+      s.deadline = "11/22(일) 슬리빙"; s.sticky = "슬리빙 5만원 · 11/22(일)"; s.finalCta = "슬리빙 신청하기";
+      s.chips = { super: "마감", early: "마감", full: "판매 중" }; s.active = "full";
+    } else if (t > EARLY_END) {
+      s.phase = "full"; s.was = "통합권 판매 종료 · 단독 정상가"; s.price = "버스킹 7만 · 슬리빙 5만"; s.stamp = ""; s.small = true;
+      s.deadline = "각 회차 페이지에서 신청해 주세요"; s.sticky = "버스킹 7만원 · 슬리빙 5만원"; s.finalCta = "단독권 신청하기";
+      s.chips = { super: "마감", early: "마감", full: "판매 중" }; s.active = "full";
+    } else if (t > SUPER_END) {
+      s.phase = "early"; s.was = "정가 <s>12만원</s> · 얼리버드"; s.price = "9만원"; s.stamp = "25% OFF";
+      s.deadline = t === EARLY_END ? "통합권 오늘 마감" : "통합권 마감까지 " + dday(EARLY_END, t) + " · 11/8(일) 23:59";
+      s.sticky = "통합권 9만원 · 11/8까지"; s.finalCta = "통합권 9만원으로 신청하기";
+      s.chips = { super: "마감", early: "판매 중", full: "" }; s.active = "early";
+    } else if (t >= OPEN) {
+      s.phase = "super";
+      s.deadline = t === SUPER_END ? "슈퍼 얼리버드 오늘 마감" : "슈퍼 얼리버드 마감까지 " + dday(SUPER_END, t) + " · 10/27(화) 23:59";
+      s.chips = { super: "판매 중", early: "", full: "" };
     }
-    var singles = PAGE === "november" ? pricePair("버스킹", busking) + " · " + pricePair("슬리빙", sleeving)
-      : pricePair("단독", PAGE === "busking" ? busking : sleeving);
-    var hero = full ? "정상가 " + singles
-      : (early ? "얼리버드 " : "슈퍼 얼리버드 ") + singles + " · " + pricePair("통합권", early ? "8만원" : "5만원")
-        + ' <span class="until">' + (early ? "11/8(일)까지" : "10/27(화)까지") + "</span>";
-    var sticky = full ? (PAGE === "november" ? "버스킹 6만원 · 슬리빙 5만원" : "단독 " + (PAGE === "busking" ? busking : sleeving))
-      : "통합권 " + (early ? "8만원 · 11/8까지" : "5만원 · 10/27까지");
-    if (PAGE === "november" && today > 20261115 && today <= 20261122) {
-      hero = '버스킹은 끝났어요 · ' + pricePair("슬리빙", "5만원") + ' <span class="until">11/22(일)</span>';
-      sticky = "슬리빙 5만원 · 11/22(일)";
-    }
-    if (done) {
-      hero = PAGE === "busking" && today <= 20261122
-        ? '이번 세미나는 끝났어요 · <a href="../planb-sleeving/"><span class="price-pair">슬리빙 5만원</span> · <span class="until">11/22(일)</span></a>' : "이번 세미나는 끝났어요";
-      sticky = "이번 세미나는 끝났어요";
-    }
-    return {
-      today: today, phase: phase, banner: text, hidden: full,
-      chips: { super: chipFor(phase, "super"), early: chipFor(phase, "early"), full: chipFor(phase, "full") },
-      hero: hero, sticky: sticky,
-      singleChips: {
-        busking: today > 20261115 ? "마감" : today > EARLY_END ? "판매 중" : "",
-        sleeving: today > 20261122 ? "마감" : today > EARLY_END ? "판매 중" : ""
-      }
-    };
+    return s;
   }
-  function setChip(parent, label) {
-    var chip = parent.querySelector(".sale-chip");
-    if (!label) { if (chip) chip.remove(); return; }
-    if (!chip) { chip = document.createElement("span"); parent.appendChild(chip); }
-    chip.className = "sale-chip sale-" + (label === "판매 중" ? "now" : label === "오픈 예정" ? "soon" : "done");
-    chip.textContent = label;
-  }
-  function applyPlanbDeadline(state) {
-    if (typeof document === "undefined" || !document.querySelectorAll) return;
-    document.querySelectorAll("[data-deadline]").forEach(function (banner) {
-      banner.hidden = state.hidden;
-      var slot = banner.querySelector(".deadline-text");
-      if (slot) slot.textContent = state.banner;
-    });
-    document.querySelectorAll(".hero-price").forEach(function (hero) { hero.innerHTML = state.hero; });
+
+  function apply(s) {
+    if (typeof document === "undefined") return;
+    var was = document.querySelector("[data-ticket-was]"), price = document.querySelector("[data-ticket-price]"), stamp = document.querySelector("[data-ticket-stamp]");
+    if (was) was.innerHTML = s.was;
+    if (price) { price.textContent = s.price; price.classList.toggle("is-small", s.small); }
+    if (stamp) stamp.textContent = s.stamp;
+    document.querySelectorAll("[data-deadline] [data-deadline-main]").forEach(function (el) { el.textContent = s.deadline; });
+    var fin = document.querySelector("[data-final-cta]");
+    if (fin) fin.textContent = s.finalCta;
     document.querySelectorAll("[data-tier]").forEach(function (row) {
-      var label = state.chips[row.getAttribute("data-tier")] || "";
-      row.classList.toggle("is-past", label === "마감");
-      row.classList.toggle("is-active", label === "판매 중");
-      var name = row.querySelector(".tier-name");
-      if (name) setChip(name.parentNode, label);
-    });
-    document.querySelectorAll("[data-seminar]").forEach(function (cell) {
-      setChip(cell.tagName === "DIV" ? cell.querySelector("dd") : cell, state.singleChips[cell.getAttribute("data-seminar")]);
-    });
-    var cards = document.querySelector(".price-cards");
-    if (cards) {
-      var others = cards.querySelector(".other-tiers");
-      if (!others) {
-        others = document.createElement("details"); others.className = "other-tiers";
-        var summary = document.createElement("summary"); summary.textContent = "다른 기간 가격 보기";
-        others.appendChild(summary); cards.appendChild(others);
+      var key = row.getAttribute("data-tier"), chip = row.querySelector(".tier-chip"), text = s.chips[key] || "";
+      row.classList.toggle("is-active", key === s.active);
+      row.classList.toggle("is-past", text === "마감");
+      if (chip) {
+        chip.textContent = text;
+        chip.className = "tier-chip" + (text === "판매 중" ? " is-now" : text === "오픈 예정" ? " is-soon" : text === "마감" ? " is-done" : "");
       }
-      var current = state.phase === "before" ? "super" : state.phase === "done" ? "full" : state.phase;
-      cards.querySelectorAll(".tier-card").forEach(function (card) {
-        if (card.getAttribute("data-tier") === current) cards.insertBefore(card, others);
-        else others.appendChild(card);
+    });
+    if (s.phase === "done") {
+      document.querySelectorAll("a[data-cta]").forEach(function (a) {
+        a.textContent = "이번 세미나는 끝났어요"; a.setAttribute("aria-disabled", "true"); a.removeAttribute("href");
+      });
+    } else if (s.phase === "full" || s.phase === "sleeving-only") {
+      document.querySelectorAll("a[data-cta]").forEach(function (a) {
+        if (a.hasAttribute("data-final-cta") || a.hasAttribute("data-hero-cta")) {
+          a.setAttribute("href", s.phase === "sleeving-only" ? "../planb-sleeving/#ticket" : "#ticket");
+          if (a.hasAttribute("data-hero-cta")) a.textContent = s.phase === "sleeving-only" ? "슬리빙 신청하기" : "참가비 보기";
+        }
       });
     }
-    document.querySelectorAll('a.btn[href="#ticket"], a.btn[data-ended-cta]').forEach(function (button) {
-      if (!button.hasAttribute("data-original-label")) button.setAttribute("data-original-label", button.textContent);
-      if (state.phase === "done") {
-        button.textContent = "이번 세미나는 끝났어요"; button.setAttribute("aria-disabled", "true");
-        button.setAttribute("data-ended-cta", ""); button.removeAttribute("href");
-      } else {
-        button.textContent = button.getAttribute("data-original-label"); button.removeAttribute("aria-disabled"); button.setAttribute("href", "#ticket");
-      }
-    });
-    var sticky = document.querySelector(".sticky-ticket"), ticket = document.querySelector("#ticket");
-    var heroButton = document.querySelector('.hero a.btn');
+    var sticky = document.querySelector(".sticky-ticket"), ticket = document.getElementById("ticket"), heroCta = document.querySelector("[data-hero-cta]");
     if (sticky) {
-      sticky.querySelector(".sticky-ticket-text").textContent = state.sticky;
+      sticky.querySelector(".sticky-ticket-text").textContent = s.sticky;
       sticky.hidden = true;
-      if (root.planbTicketObserver) root.planbTicketObserver.disconnect();
-      if (heroButton && ticket && typeof IntersectionObserver !== "undefined" && state.phase !== "done") {
-        var heroAbove = false, ticketVisible = true;
-        root.planbTicketObserver = new IntersectionObserver(function (entries) {
-          entries.forEach(function (entry) {
-            if (entry.target === heroButton) {
-              heroAbove = !entry.isIntersecting && entry.boundingClientRect.bottom <= (entry.rootBounds ? entry.rootBounds.top : 0);
-            }
-            if (entry.target === ticket) ticketVisible = entry.isIntersecting;
+      if (s.phase !== "done" && heroCta && ticket && typeof IntersectionObserver !== "undefined") {
+        var heroAbove = false, ticketVisible = false;
+        var io = new IntersectionObserver(function (entries) {
+          entries.forEach(function (e) {
+            if (e.target === heroCta) heroAbove = !e.isIntersecting && e.boundingClientRect.bottom <= 0;
+            if (e.target === ticket) ticketVisible = e.isIntersecting;
           });
           sticky.hidden = !heroAbove || ticketVisible;
         });
-        root.planbTicketObserver.observe(heroButton);
-        root.planbTicketObserver.observe(ticket);
+        io.observe(heroCta);
+        io.observe(ticket);
       }
     }
   }
+
   root.planbDeadlineState = planbDeadlineState;
-  root.applyPlanbDeadline = applyPlanbDeadline;
-  try { applyPlanbDeadline(planbDeadlineState()); } catch (err) {}
+  root.applyPlanbDeadline = apply;
+  try { apply(planbDeadlineState()); } catch (err) {}
 })();
 </script>
 </body>
