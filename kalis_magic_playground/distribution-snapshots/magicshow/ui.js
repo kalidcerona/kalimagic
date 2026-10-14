@@ -424,6 +424,7 @@ globalThis.Presentation = (() => {
   let moreReturn = false;
   let gloveRun = 0; // v4 U48 A2: the longest auto-practice time left seen in this run (a brick is 30 minutes), for the button's ring
   function showMore() { $('phoneMore').hidden = false; $('moreButton').setAttribute('aria-expanded', 'true'); release(); clearDecorations(); }
+  function hideMore() { $('phoneMore').hidden = true; $('moreButton').setAttribute('aria-expanded', 'false'); moreReturn = false; }
   let dialogueTimer, dealerBusy = false, dealerMessage = '', dealerLost = false, dealerResult = '';
   let dealerPicked = new Set();
   let booTimer=null, failureAudience=null, failureVenue=null;
@@ -727,6 +728,7 @@ globalThis.Presentation = (() => {
     stage.style.width = `${layoutWidth}px`; stage.style.height = `${layoutHeight}px`;
     stage.style.transform = `scale(${scale})`;
     stage.style.setProperty('--layout-height',`${layoutHeight}px`);
+    stage.style.setProperty('--stage-w',`${layoutWidth}px`); // v4 U50: the stage width for the one-scene layout (style.css U50 block)
     stage.style.setProperty('--board-size', `${layout.board}px`);
     stage.style.setProperty('--audience-width', `${layout.audience}px`);
     const dpr = phone ? Math.min(2, window.devicePixelRatio || 1) : 1;
@@ -738,6 +740,8 @@ globalThis.Presentation = (() => {
     phoneChrome(); release(); previous = 0; snapAudience();
     if (menu === 'book') tree();
   }
+  // v4 U50: the doubt and 야유 bars stand upright (style.css U50); their text plates become siblings so the turned bars hold only the fill.
+  for (const [sel, cls] of [['.doubt > .doubt-label', 'doubt-plate'], ['#heckleMeter > .heckle-label', 'heckle-plate']]) { const el = document.querySelector(sel); if (el) { el.classList.add(cls); $('audienceCard').append(el); } }
   const chromeHomes = new Map();
   // v4 U48 N3: 도감 stays in the top bar (nav .menu) next to 메뉴 on desktop too.
   const DESKTOP_MENU = ['equipButton','missionsButton','mapButton','gemShopButton','customizeButton','rebirthButton','soundButton','musicButton','musicVolume','hapticsButton','textSpeedButton','retreatButton','coffeeButton','openChatButton'];
@@ -751,11 +755,12 @@ globalThis.Presentation = (() => {
       moveChrome(document.querySelector('.hud'), $('phoneWallet'));
       moveChrome($('goalStrip'),$('phoneTop'));
       moveChrome($('bookButton'),$('phoneTop'));
-      moveChrome($('equipButton'),$('phoneTop'));
+      moveChrome($('storyDialog'),$('stage')); // v4 U50b: out of the isolated audience card, so the widened dialog is drawn (and tapped) above the skill column
+      moveChrome($('equipButton'),$('phoneMore')); // v4 U50: the top bar keeps only 도감 and 메뉴 (owner 2026-10-14); 마술용품 lives in the menu
       moveChrome($('bestiaryButton'),$('phoneTop')); // v4 U48 N3: 도감 sits in the top bar next to 메뉴, not in the menu
       moveChrome($('moreButton'),$('phoneTop')); $('moreButton').textContent='☰ 메뉴';
       for (const id of ['storyButton','installButton','statsButton','rebirthButton','missionsButton','gemShopButton','mapButton','customizeButton','soundButton','musicButton','musicVolume','hapticsButton','textSpeedButton','retreatButton','helperControls','debug','coffeeButton','openChatButton']) moveChrome(id==='musicVolume'?$(id).parentElement:$(id), $('phoneMore'));
-      pxText($('bookButton'), innerWidth<=740?'📖':'📖 비법'); pxText($('equipButton'), innerWidth<=740?'🎩':'🎩 마술용품'); $('moreButton').textContent=innerWidth<=740?'☰':'☰ 메뉴'; $('moreButton').setAttribute('aria-label','메뉴'); pxText($('bestiaryButton'), innerWidth<=740?'📚':'📚 도감'); $('bestiaryButton').setAttribute('aria-label','도감');
+      pxText($('bookButton'), innerWidth<=740?'📖':'📖 비법'); pxText($('equipButton'), '🎩 마술용품'); /* v4 U50b: a full label, it lives in the menu now */ $('moreButton').textContent=innerWidth<=740?'☰':'☰ 메뉴'; $('moreButton').setAttribute('aria-label','메뉴'); pxText($('bestiaryButton'), innerWidth<=740?'📚':'📚 도감'); $('bestiaryButton').setAttribute('aria-label','도감');
       updateSoundButton();const on=window.Sfx?.musicEnabled();$('musicButton').textContent=on?'음악 ON':'음악 OFF';
       $('closePanel').textContent = '← 뒤로';
     } else {
@@ -1308,6 +1313,7 @@ globalThis.Presentation = (() => {
       lastAudience = key; pendingIntro = null;
       $('room').dataset.venue = v.slug;
       sprite($('room'), venueAsset(v));
+      $('viewport').style.setProperty('--venue-art', `url(${JSON.stringify(assetUrl(venueAsset(v)))})`); // v4 U50: the scene also fills the safe-area and letterbox bands (U50b: quoted with JSON.stringify, so a quote or backslash in a path cannot break the CSS)
       $('room').style.setProperty('--venue-bg1', v.palette.bg1);
       $('room').style.setProperty('--venue-bg2', v.palette.bg2);
       $('room').style.setProperty('--venue-accent', v.palette.accent);
@@ -1344,7 +1350,7 @@ globalThis.Presentation = (() => {
     }
     if (audience.winExit) { audience.winExit.cancel(); audience.winExit = null; } // the slide-out held the old audience hidden; the entrance above (if any) already runs
   }
-  let kaliUntil = 0, kaliMoodState = 'normal', audMoodState = 'doubt', audSurprisedUntil = 0, audHeckleMood = '';
+  let kaliUntil = 0, kaliMoodState = 'normal', audMoodState = 'doubt', audSurprisedUntil = 0, audHeckleMood = '', audTestMood = ''; // v4 U50d: audTestMood only set by MagicShowUI.audienceMood (tests)
   // v4 U37 faces. Kali and the audience faces are re-evaluated from the state every frame (C.kaliMood, C.audienceMood), so nothing latches.
   // Event faces (big hit, finisher, bow) run until kaliUntil / audSurprisedUntil and then the state face returns by itself.
   function kaliFaceTick() {
@@ -1360,7 +1366,7 @@ globalThis.Presentation = (() => {
     }
   }
   function audienceFaceTick() {
-    if (menu === 'boo' || wonMoment || state.u15.tutorial.active || (state.pattern === 'futureMirror' && state.u19.phase === 3)) return;
+    if (audTestMood || menu === 'boo' || wonMoment || state.u15.tutorial.active || (state.pattern === 'futureMirror' && state.u19.phase === 3)) return; // v4 U50d: audTestMood = a face held by the test hook
     const v = D.venues[state.venue - 1], a = v && C.audienceAt(v, state.j), host = $('audience');
     if (!a || !host.dataset.asset) return;
     audMoodState = C.audienceMood(state, audMoodState, { heckle: state.telegraphed && state.mode === 'fight' ? audHeckleMood : '', surprised: clock < audSurprisedUntil });
@@ -1797,13 +1803,16 @@ globalThis.Presentation = (() => {
   document.addEventListener('dragstart', e => e.preventDefault());
 
   function openPanel(kind, title) {
-    if(menu==='curtain'&&kind!=='curtain'){clearTimeout(curtainTimer);curtainScene?.remove();curtainScene=null;presentation.finish();}
+    if(menu==='curtain'&&kind!=='curtain'){curtainFinish=null;clearTimeout(curtainTimer);curtainScene?.remove();curtainScene=null;presentation.finish();}
+    // v4 U51 1: one top layer. A panel opened while the menu sheet is open (from inside the menu or from the top bar 도감) replaces the menu: the menu
+    // closes here and the panel's 닫기/뒤로 brings the menu back (the U48 M pattern), so the menu never stays drawn over (or under) a panel.
+    if (!$('phoneMore').hidden) { $('phoneMore').hidden = true; $('moreButton').setAttribute('aria-expanded', 'false'); moreReturn = true; }
     menu = kind; previous = 0; clearDecorations();
     focusBeforePanel = document.activeElement;
     $('panel').dataset.screen = kind; delete $('panel').dataset.practice; $('panelBody').style.gridAutoRows = ''; // v4 U47 13: the stats grid sets its own row height
     $('panel').classList.remove('climax-dialogue');
     $('panel').querySelector('header').querySelectorAll('.tree-wallet,.constellation-controls,.tree-learning,.practice-go,.tree-more').forEach(el=>el.remove());
-    $('closePanel').textContent = '닫기';
+    $('closePanel').textContent = '닫기'; $('closePanel').removeAttribute('aria-label'); // v4 U51 2: the curtain call relabels it 건너뛰기
     $('panelTitle').textContent = title;
     $('panelBody').replaceChildren(); $('panelBody').scrollTop = 0; $('panel').hidden = false;
     $('closePanel').hidden = kind === 'fail'; $('closePanel').disabled = false;
@@ -1813,6 +1822,7 @@ globalThis.Presentation = (() => {
     $('closePanel').focus(); updateWand(); nextToasts();
   }
   function closePanel() {
+    if(menu==='curtain'&&curtainFinish){curtainFinish();return;} // v4 U51 2: the header 건너뛰기 of the curtain call ends it like the old in-scene 건너뛰기
     if(menu==='curtain'){clearTimeout(curtainTimer);curtainScene?.remove();curtainScene=null;presentation.finish();}
     if (['boo','fail','ending','rebirth','bossPhase'].includes(menu) || (menu === 'dealer' && dealerBusy)) return;
     clearTimeout(dialogueTimer); leavePending = false; // v4 U47 6: closing the save-slot panel without saving cancels the leave question
@@ -1910,12 +1920,14 @@ globalThis.Presentation = (() => {
       else finish();
     };
     const finish=()=> { state.onboarding.intro=true; host.hidden=true; previous=0; save(); renderCoach(); };
-    const next=action(`${state.onboarding.panel+1} / ${D.onboarding.intro.length} · ${state.onboarding.panel===4?D.onboarding.start:'눌러서 다음'}`,advance);
+    // v4 U51b 6: every page, the last one too, has the same 다음 (the last 다음 starts the game as 마술 시작하기 did); one step per press (shared gate)
+    const step=()=>{if(lineStep())advance();};
+    const next=action(`${state.onboarding.panel+1} / ${D.onboarding.intro.length} · 다음`,step);
     next.classList.add('intro-next');
     const line=element('p',panel.line,'intro-line');
     const skip=action(D.onboarding.skip,finish); skip.classList.add('intro-skip');
-    host.append(backdrop,kali,dad,line,next,skip);
-    host.onclick=e=>{ if (!e.target.closest('button')) advance(); };
+    host.append(backdrop,kali,dad,line,skip,next); // v4 U51 2: DOM (Tab) order = visual order (건너뛰기 top right, then 다음 bottom right)
+    host.onclick=e=>{ if (!e.target.closest('button')) step(); };
     save();
   }
   function renderCoach() {
@@ -2101,17 +2113,8 @@ globalThis.Presentation = (() => {
       else { treeView.x += e.key === 'ArrowLeft' ? 70 : e.key === 'ArrowRight' ? -70 : 0; treeView.y += e.key === 'ArrowUp' ? 70 : e.key === 'ArrowDown' ? -70 : 0; transform(); }
     });
     map.append(world); layout.append(map, detail); body.append(wallet, controls, layout, element('p', '드래그·방향키로 이동 · 휠·두 손가락으로 확대 · 열쇠는 관객 도감 완성으로 얻어요.', 'tree-note'));
-    // U32: the gate lesson (야유 받아넘기기) lives in the practice note only; no auto focus, no primary styling.
-    if (practice) {
-      const gate = C.failureLessons(state).find(n => n.id.indexOf('gate:') === 0);
-      if (gate) {
-        const gid = gate.id.slice(5), cost = C.failureLessonInfo(state, gate.id).cost;
-        let who = ''; for (const v of D.venues) for (const a of C.roster(v)) if (a && a.id === gid) who = a.name;
-        const row = element('div', '', 'practice-gate');
-        row.append(element('span', `'${who}' 야유 받아넘기기 · 동전 ${rounded(cost)}`), action('배우기', () => { if (C.learnFailureLesson(state, gate.id)) { save(); tree(); } }));
-        body.prepend(row);
-      }
-    }
+    // v4 U51 4 (owner: "야유 받아넘기기 배우기 라는게 계속 뜨는데 이거 없애줘"): the practice note no longer offers the gate lesson. Core keeps the
+    // mechanic untouched (a save that already studied a gate keeps it; a gate also loses a third of its pressure per failed show, v4 U41).
     if (typeof phone !== 'undefined' && phone) {
       const header = $('panel').querySelector('header');
       header.querySelectorAll('.tree-wallet,.constellation-controls,.tree-more').forEach(el=>el.remove());
@@ -2523,7 +2526,7 @@ globalThis.Presentation = (() => {
     $('closePanel').disabled = dealerBusy;
   }
   // Curtain-call presentation holds the existing story queue without mutating it.
-  let cheerData=null,curtainScene=null,curtainTimer=null;
+  let cheerData=null,curtainScene=null,curtainTimer=null,curtainFinish=null;
   cheerData={
  "family": {
   "title": "거실이 들썩",
@@ -3114,16 +3117,19 @@ globalThis.Presentation = (() => {
   function openCurtainCall(slug,review=false){
     const v=D.venues.find(v=>v.slug===slug),data=cheerData?.[slug];
     if(!v||!data)return false;
-    const finish=()=>{clearTimeout(curtainTimer);curtainScene?.remove();curtainScene=null;menu='';$('panel').hidden=true;presentation.finish();previous=0;dialogKey='';if(review){bestiaryTab='memories';bestiary();}else render();};
+    const finish=()=>{curtainFinish=null;clearTimeout(curtainTimer);curtainScene?.remove();curtainScene=null;menu='';$('panel').hidden=true;presentation.finish();previous=0;dialogKey='';if(review){bestiaryTab='memories';bestiary();}else render();};
     openPanel('curtain',data.title);clearDecorations();
     const scene=element('section','','curtain-memory');curtainScene=scene;
     scene.style.backgroundImage=`url(${assetUrl(venueAsset(v))})`;
     const cast=element('div','','curtain-cast'),all=[...v.audiences];
     all.splice(Math.floor(all.length/2),0,v.headliner);
     for(const a of all){const actor=element('span','',a===v.headliner?'curtain-actor headliner':'curtain-actor');actor.dataset.audience=a.id;happySprite(actor,audienceAsset(v,a));cast.append(actor);}
-    const bubble=action('',advance);bubble.className='curtain-bubble';bubble.setAttribute('aria-label','응원 다음 대사');
-    const closing=element('p','','curtain-closing');scene.append(closing,cast,bubble);
-    const skip=action('건너뛰기',finish);skip.id='curtainSkip';scene.append(skip);$('panelBody').append(scene);$('closePanel').disabled=false;
+    const bubble=action('',()=>{if(lineStep())advance();}); /* v4 U51b 2: one step per press (shared gate) */bubble.className='curtain-bubble';bubble.setAttribute('aria-label','응원 다음 대사');
+    const closing=element('p','','curtain-closing'),lineRow=element('div','','curtain-line');scene.append(closing,cast,lineRow);lineRow.append(bubble); // v4 U51 2: 다음 sits right of the line (see below)
+    // v4 U51 2 (owner: "닫기 버튼을 남겨줘. 그리고 그거 이름을 건너뛰기로"): the header 닫기 and the old in-scene 건너뛰기 both ended the call; only the
+    // header one stays, labelled 건너뛰기 (closePanel runs this finish), and the scene gets a 다음 at the right that shows the next line (the last one closes).
+    curtainFinish=finish;$('closePanel').textContent='건너뛰기';$('closePanel').setAttribute('aria-label','건너뛰기');
+    const nextLine=action('다음',()=>{if(lineStep())advance();});nextLine.id='curtainNext';nextLine.className='curtain-next line-next u26-primary';lineRow.append(nextLine);$('panelBody').append(scene);$('closePanel').disabled=false;
     let index=0;
     function advance(){
       if(!scene.isConnected)return;clearTimeout(curtainTimer);
@@ -3541,7 +3547,10 @@ globalThis.Presentation = (() => {
     picture.append(fallback); sprite(picture,state.u19.cleared?'assets/ending-future-table.png':'assets/ending-lecturenote.png'); scene.append(picture);
     if(endingStep<lines.length) {
       primary=action('장면 건너뛰기',()=>{endingStep=lines.length;drawEnding();});
-      scene.append(element('h2',lines[endingStep]),primary);
+      // v4 U51 2: a 다음 at the right shows the next line at once (the lines still move on by themselves every 4.5 s); after the last line it shows the recap, as before.
+      const lineNext=action('다음',()=>{if(menu!=='ending'||!lineStep())return;endingStep++;drawEnding();});lineNext.classList.add('ending-next','line-next','u26-primary');primary.classList.add('line-skip');
+      const row=element('div','','ending-actions ending-line-actions');row.append(primary,lineNext);primary=lineNext; // 다음 takes the focus (Enter = next line)
+      scene.append(element('h2',lines[endingStep]),row);
       // Four 4.5-second beats: 18 seconds, pausing while the page is hidden.
       const next=()=>{if(menu!=='ending')return;if(document.hidden){dialogueTimer=setTimeout(next,500);return;}endingStep++;drawEnding();};
       dialogueTimer=setTimeout(next,4500);
@@ -3566,7 +3575,7 @@ globalThis.Presentation = (() => {
     scene.append(element('h2', `차원 ${state.dimension}에서 차원 ${state.dimension + 1}로`), element('p', `✦ 별빛 +${gain} · 환생 후 별빛 ${state.starlight + gain}`, 'rebirth-gain'));
     const columns = element('div', '', 'rebirth-lists');
     for (const [title, lines] of [
-      ['처음부터 시작해요', ['동전, 보석, 열쇠', '마술 비법서의 모든 일반 강화와 해금', '무대 진행과 초대장, 트로피', '관객 도감의 감탄 횟수, 추가 조건, 팬 기록', '공연 성공과 공연 종료 횟수, 딜러 진행과 임시 버프', '보드와 케이스, 날아가는 아이템', '레벨, 경험치, 루틴 최고 기록, 피날레, 자신감', '멘탈은 새 차원의 최대치로 회복하고 가족 거실에서 시작']],
+      ['처음부터 시작해요', ['동전, 보석, 열쇠', '마술 비법서의 모든 일반 강화와 해금', '무대 진행과 초대장, 트로피', '관객 도감의 감탄 횟수, 추가 조건, 팬 기록', '공연 성공과 공연 종료 횟수, 딜러 진행과 임시 버프', '보드와 케이스, 날아가는 아이템', '레벨, 경험치, 최고 액트 기록, 피날레, 자신감', '멘탈은 새 차원의 최대치로 회복하고 가족 거실에서 시작']],
       ['다음 차원에도 남아요', ['차원 번호는 1 증가', '보유 별빛과 이번에 얻는 별빛', '별빛 강화의 모든 레벨', '이미 본 모든 엔딩 기록과 감탄한 관객의 기억', '소리 설정과 저장 기능']]
     ]) {
       const section = element('section'); section.append(element('h3', title));
@@ -3610,7 +3619,8 @@ globalThis.Presentation = (() => {
   $('mapButton').addEventListener('click',()=>openStageMap());
   $('customizeButton').addEventListener('click',customize);
   $('gemShopButton').addEventListener('click',gemShop);
-  const shopQuick=action('💎',gemShop);shopQuick.id='gemShopQuick';shopQuick.className='active-skill gem-shop-quick';shopQuick.setAttribute('aria-label','보석 상점');$('activeSkills').append(shopQuick);
+  // v4 U50b: no shop from the skill column while a character dialog is open (Codex Sol U50 FAIL 1). U50c: this comment used to swallow the rest of the line.
+  const shopQuick=action('💎',()=>{if(lineOpen())return;gemShop();});shopQuick.id='gemShopQuick';shopQuick.className='active-skill gem-shop-quick';shopQuick.setAttribute('aria-label','보석 상점');$('activeSkills').append(shopQuick);
   // v4 U47 9: 피버 confetti: 36 small pieces (24 on phones, under caps.particles 48), compositor-only transforms, no pointer events, drawn behind the HUD, never with Reduce Motion.
   for(let i=0;i<36;i++){const piece=element('span','',`confetti-piece c${i%5}${i>=24?' extra':''}`);piece.style.setProperty('--x',`${(i*29+7)%97+1}%`);piece.style.setProperty('--d',`-${((i*7)%13)*.7}s`);piece.style.setProperty('--t',`${7+(i*5)%5}s`);piece.style.setProperty('--sway',`${12+(i*11)%20}px`);$('feverConfetti').append(piece);}
   for(let i=0;i<8;i++){const petal=pxIcons(element('span',i%3?'✦':'🌸','fever-petal'));petal.style.setProperty('--x',`${(i*37)%100}%`);petal.style.setProperty('--delay',`${i*.08}s`);petal.style.setProperty('--drift',`${i%2?80:-80}px`);$('feverPetals').append(petal);}
@@ -3632,13 +3642,15 @@ globalThis.Presentation = (() => {
   $('closePanel').addEventListener('click', closePanel);
   // v4 U48 M: a tap outside a panel no longer closes it; panels close only with their own 닫기/뒤로 (and Escape or the phone Back flow).
   document.addEventListener('keydown', e => {
-    if (!e.repeat && !e.ctrlKey && !e.metaKey && !e.altKey && !/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) {
+    if (!e.repeat && !e.ctrlKey && !e.metaKey && !e.altKey && !/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) && $('leaveConfirm').hidden) { // v4 U51b 3: no shortcut under the leave question
       const key=e.key.toLowerCase();
       if(['1','2','3'].includes(key) && !paused()) { e.preventDefault(); activateSkill(D.skills[Number(key)-1].id); }
       if (key==='b' && menu==='fail') { e.preventDefault(); document.querySelector('#panelBody .practice-enter')?.click(); } // v4 U47 3: the notebook opens only from the fail panel
       if (key==='d') { e.preventDefault(); $('bestiaryButton').click(); }
     }
+    if (e.key === 'Escape' && !$('leaveConfirm').hidden) { e.preventDefault(); $('leaveStay').click(); return; } // v4 U51b 3: the leave question is the top layer; Escape = 계속하기, nothing under it closes
     if (e.key === 'Escape' && menu && menu !== 'fail') closePanel();
+    else if (e.key === 'Escape' && !menu && !$('phoneMore').hidden) hideMore(); // v4 U51 1: Escape closes the top layer, the menu too
     if (e.key === 'Tab' && menu) {
       const buttons = Array.from($('panel').querySelectorAll('button:not(:disabled)')).filter(el => !el.hidden);
       const first = buttons[0], last = buttons[buttons.length - 1];
@@ -3811,6 +3823,11 @@ globalThis.Presentation = (() => {
   let dialogTyping=null;
   function typePause(ch,step){return /[.?!]/.test(ch)?step*5:ch===','?step*2:0;}
   function finishTypingNow(){if(!dialogTyping)return false;dialogTyping.finish();return true;}
+  // v4 U51b 2: one press = one step. Every line window's 다음 (and the tap on its box) goes through this shared gate: a second advance within
+  // LINE_STEP_MS (a double tap, a held key's repeated clicks, or the next line's new button hit by the same burst) is ignored. A tap that only
+  // completes a typing line is not an advance and does not use the gate (U47 4: tap completes, the next tap goes on).
+  const LINE_STEP_MS=250;let lineStepAt=-1e9;
+  function lineStep(){const now=performance.now();if(now-lineStepAt<LINE_STEP_MS)return false;lineStepAt=now;return true;}
   function typeLine(p,text){
     if(dialogTyping){clearTimeout(dialogTyping.timer);dialogTyping=null;}
     const step=TYPE_STEP[textSpeed()];
@@ -3829,10 +3846,10 @@ globalThis.Presentation = (() => {
     else{const a=D.venues.flatMap(v=>C.roster(v)).find(a=>a.name===line.speaker);const moodKey=u25DialogMoodKey(key,index);moodSprite(art,speakerPortrait(line.speaker),D.lineFaces.moods[moodKey]||D.lineFaces.faceMap.roleDefaults[a?.role]||'serious');}
     { const after=lines[index+1]; if(after){ const p=after.speaker==='칼리'?kaliArtPath():speakerPortrait(after.speaker); if(p)assetImage(p); } } // v4 U49 3: warm the next speaker's portrait
     const copy=element('div','','story-copy'),lineText=element('p','');copy.append(element('strong',line.speaker),lineText);typeLine(lineText,line.text); // v4 U47 4: typed per character; a tap completes the line, the next tap goes on
-    const start=(state.idle.waiting||state.u15?.scene?.kind==='opening')&&index===lines.length-1&&!state.u15.queue.length;
-    const next=action(start?'무대 시작':'다음',()=>{if(finishTypingNow())return;advance();if(start)C.startStage(state);save();}),dismiss=action('건너뛰기',skip);dismiss.hidden=start;host.classList.toggle('stage-launch',start);host.append(art,copy,next,dismiss);
-    next.classList.toggle('stage-start',start);
-    host.onclick=e=>{if(e.target.closest('button'))return;if(finishTypingNow())return;if(!start)advance();};
+    // v4 U51 2/3: every line has the same two buttons, 건너뛰기 and 다음 (the last line's 다음 closes the lines the same way; there is no 무대 시작
+    // button any more, the stage starts by itself about 1 s after the lines are over, see autoStartStage).
+    const next=action('다음',()=>{if(finishTypingNow())return;if(!lineStep())return;advance();save();}),dismiss=action('건너뛰기',skip);next.className='line-next u26-primary';dismiss.className='line-skip';host.append(art,copy,dismiss,next); // v4 U50b: DOM (and Tab) order = visual order, 건너뛰기 then 다음 (다음 is the rightmost button, right thumb)
+    host.onclick=e=>{if(e.target.closest('button'))return;if(finishTypingNow())return;if(!lineStep())return;advance();};
   }
   // v4 U47 8: after the tutorial the story moves from NDD's room to the family living room; a curtain card names the place for 1.5 s (a tap skips it)
   // before the family lines start, so those lines do not read as part of the NDD scene. The show waits behind the card (paused()).
@@ -3860,16 +3877,36 @@ globalThis.Presentation = (() => {
     }
     if(!renderU15.sceneRequested&&!presentation.busy&&!state.u18.anchor&&t.done&&(state.mode!=='transition'||state.idle.waiting)&&!u.scene&&u.queue.length&&!menu&&!document.hidden&&state.features.climax.left<=0){renderU15.sceneRequested=true;presentation.push({minimum:0,hold:true,priority:50,start:item=>{renderU15.sceneRequested=false;if(!C.startScene(state))item.hold=false;}});}
     if(u.scene){if(!presentation.active&& !presentation.items.length)presentation.push({minimum:0,hold:true,priority:50});if(bioPending)bioUntil=0;const scene=u.scene,lines=D.storyV15.venues[scene.slug][scene.kind];renderDialog(lines,scene.line,'story:'+scene.dimension+':'+scene.slug+':'+scene.kind,()=>{C.advanceScene(state,false);if(!u.scene)presentation.finish();save();},()=>{C.advanceScene(state,true);presentation.finish();save();});}
-    else if(state.idle.waiting&&!presentation.busy&&!u.queue.length){renderDialog([{speaker:D.venues[state.venue-1].name,text:'새 관객에게 마술을 보여 주세요.'}],0,'stage:'+state.dimension+':'+state.venue,()=>C.startStage(state),()=>C.startStage(state));}
+    else if(state.idle.waiting&&!presentation.busy&&!u.queue.length){$('storyDialog').hidden=true;dialogKey='';autoStartStage();}
     else{if(!(state.idle.waiting&&u.queue.length)){$('storyDialog').hidden=true;dialogKey='';}if(bioPending&&state.mode==='fight'&&!state.telegraphed&&state.review.target<0){if(!u.bios.includes(bioPending))u.bios.push(bioPending);bioPending='';bioUntil=0;}}
-    if(C.autoStage(state)&&(u.scene||state.idle.waiting)&&!menu&&!document.hidden&&!portrait()){
+    // v4 U51b 1: the 칼리 덱 auto path only moves the story lines on (every 2.5 s, and not under the menu, the leave question or the offline card); the
+    // stage itself is started only by autoStartStage (all its guards and the 1 s pause), never directly from here.
+    if(C.autoStage(state)&&(u.scene||state.idle.waiting)&&!menu&&!document.hidden&&!portrait()&&$('phoneMore').hidden&&$('leaveConfirm').hidden&&$('offlineCard').hidden){
       $('autoIndicator').hidden=false;if($('autoIndicator').textContent!=='칼리 덱 자동 진행 중: 다음 무대로 이동해요')$('autoIndicator').textContent='칼리 덱 자동 진행 중: 다음 무대로 이동해요';
       const key=u.scene?u.scene.slug+':'+u.scene.kind+':'+u.scene.line:'stage:'+state.venue;
       if(renderU15.autoKey!==key){renderU15.autoKey=key;renderU15.autoAt=clock;}
       if(dialogTyping)renderU15.autoAt=clock;
-      if(clock-renderU15.autoAt>=2500){if(u.scene){C.advanceScene(state,false);if(!u.scene){presentation.finish();if(state.idle.waiting&&!u.queue.length)C.startStage(state);}save();}else if(C.startStage(state))save();else renderU15.autoAt=clock;}
+      if(clock-renderU15.autoAt>=2500&&u.scene){C.advanceScene(state,false);if(!u.scene)presentation.finish();save();}
     }else{renderU15.autoKey='';if($('autoIndicator').textContent!=='자동')$('autoIndicator').textContent='자동';}
     $('audienceLine').hidden=!wonMoment&&(clock>bioUntil||!!u.scene||state.telegraphed||state.review.target>=0);
+    if(state.idle.waiting&&(u.scene||u.queue.length||presentation.busy))autoStartStage(); // v4 U51c: also every frame the stage-wait branch above is not reached (lines, queue, a toast or banner): those hold it, so the pause restarts after them
+  }
+  // v4 U51 3 (owner: "스테이지 시작 안 눌러도 자동으로 다음 스테이지로"): at a new stage (Core idle.waiting, reached after a clear) the show starts by
+  // itself once every line, banner and layer is gone, after a short pause (AUTO_START_MS of wall time with nothing open) so the marquee's new venue
+  // name can be read. It calls the same C.startStage the old 무대 시작 button called, so the started stage is the same. Anything open (a panel, the
+  // menu, the save-slot view, the stage map, the leave question, a dialog, the scene card, the intro, the offline card, a banner, the win moment,
+  // the tutorial, a hidden page or portrait) holds it, and the pause starts again after it closes. renderU15 calls this every frame while waiting;
+  // a gap between calls (any frame where it was not reached) also restarts the pause.
+  const AUTO_START_MS=1000;
+  function autoStartStage(){
+    const now=performance.now(),last=autoStartStage.last||0;autoStartStage.last=now;
+    const held=!state.idle.waiting||state.mode!=='transition'||!!state.u15.scene||state.u15.queue.length>0||state.u15.tutorial.active||presentation.busy||!!menu||!!state.u18.map||!!wonMoment||state.features.climax.left>0||document.hidden||portrait()
+      ||!$('phoneMore').hidden||!$('panel').hidden||!$('leaveConfirm').hidden||!$('sceneCard').hidden||!$('introStory').hidden||!$('offlineCard').hidden||!$('banner').hidden||!state.onboarding.intro;
+    // v4 U51c: a slow frame is not a restart (at 5 fps calls come 200 ms apart and the old 150 ms rule restarted the pause forever); only a gap
+    // over 1.5 s (the waiting stage was not rendered, e.g. a hidden page) restarts it. Every frame while waiting reaches this call (see renderU15).
+    if(held||now-last>1500||!autoStartStage.since){autoStartStage.since=held?0:now;return false;}
+    if(now-autoStartStage.since<AUTO_START_MS)return false;
+    autoStartStage.since=0;if(!C.startStage(state))return false;save();return true;
   }
   function storyList(){
     openPanel('stories','이야기');
@@ -3938,6 +3975,10 @@ globalThis.Presentation = (() => {
   window.visualViewport?.addEventListener('scroll', fit);
   $('moreButton').addEventListener('click', () => {
     if(menu==='boo')return;
+    // v4 U51 1: 메뉴 while a panel is open (desktop, where the top bar stays tappable) goes to the menu as the one layer: the panel closes first,
+    // a panel that cannot be closed here (fail, ending, a busy dealer) keeps the menu shut.
+    // v4 U51b 4: closing one panel can reopen another (a 도감 추억 replay goes back to 도감): keep closing while each close changes the panel (at most 3)
+    if(menu){for(let i=0;i<3&&menu;i++){const was=menu;moreReturn=false;closePanel();if(menu===was)break;}if(menu)return;showMore();return;}
     $('phoneMore').hidden = !$('phoneMore').hidden;
     if(!$('phoneMore').hidden){release();clearDecorations();}
     $('moreButton').setAttribute('aria-expanded', String(!$('phoneMore').hidden));
@@ -3985,8 +4026,11 @@ globalThis.Presentation = (() => {
     motionMetrics:()=>({particles:particles.length,flights:flights.length,numbers:numbers.length,badges:badges.length,coinOrigin:clearMoment.origin||null,flightOrigins:flights.map(f=>[f.x,f.y])}), hitTier, openCurtainCall, openRestore, getState: () => state, startScene:C.startScene, storyList, renderU15, getHolds: () => boardHolds, startIntro, events, save, toast, banner, openPanel, closePanel, render, showFailure, showBoo, clearDecorations, opaqueSprites,
     openBook: tree, focusNode, openBestiary: bestiary, openMissions:drawMissions, renderCoach,
     openDealer: dealer, openGemShop:gemShop, openMap:openStageMap, openCustomize:customize, drawDealer, openEnding: () => { if (state.seenEnding) { revealEnding = false; showEnding(); } },
-    openRebirth: () => { if (state.seenEnding) showRebirth(); }, isPaused: paused, renderDialog, speakerPortrait, portraitFocus
+    openRebirth: () => { if (state.seenEnding) showRebirth(); }, isPaused: paused, renderDialog, speakerPortrait, portraitFocus,
   };
+  // v4 U50d test hook: show the current audience with a mood face through the normal path (sprite, opaque crop, tablet snap). v4 U51b 5: only under
+  // automation (navigator.webdriver, true in the Playwright tests and the flag beforeunload already uses), so a player's console cannot freeze the faces.
+  if (navigator.webdriver) window.MagicShowUI.audienceMood = mood => { audTestMood = mood || ''; if (!mood) return ''; const v = D.venues[state.venue - 1], a = v.audiences[state.j - 1] || v.headliner; moodSprite($('audience'), audienceAsset(v, a), mood); return audienceAsset(v, a); };
   sprite($('magicianMini'), 'assets/magician-mini.png');
   renderOutfit();
   $('magicianMini').dataset.frame = '0';$('magicianMini').classList.remove('reacting');
@@ -4009,7 +4053,7 @@ globalThis.Presentation = (() => {
       presentationLayoutPending=false;cacheEffectZones();
       for(const context of [$('panelBody'),$('storyDialog'),$('phoneMore')]){
         const current=context.querySelector('.u26-primary');
-        const preferred=context.querySelector('.stage-start:not([disabled]),.practice-enter:not([disabled]),.tree-buy:not([disabled])')||(context.id==='phoneMore'?null:[...context.querySelectorAll('button:not([disabled])')].find(el=>!el.hidden&&!el.closest('.panel-tabs')&&!el.classList.contains('game-cup')&&!el.classList.contains('routine-card')&&!el.classList.contains('dealer-back')&&!el.closest('.cups-table')));
+        const preferred=context.querySelector('.stage-start:not([disabled]),.line-next:not([disabled]),.practice-enter:not([disabled]),.tree-buy:not([disabled])')|| /* v4 U51 2: a line window's 다음 is its primary button */(context.id==='phoneMore'?null:[...context.querySelectorAll('button:not([disabled])')].find(el=>!el.hidden&&!el.closest('.panel-tabs')&&!el.classList.contains('game-cup')&&!el.classList.contains('routine-card')&&!el.classList.contains('dealer-back')&&!el.closest('.cups-table')));
         if(current!==preferred){current?.classList.remove('u26-primary');preferred?.classList.add('u26-primary');}
       }
     });

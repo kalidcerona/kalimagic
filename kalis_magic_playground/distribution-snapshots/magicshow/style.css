@@ -1589,7 +1589,11 @@ repeating-linear-gradient(90deg,rgba(255,255,255,.04) 0 2px,transparent 2px 4px)
 #viewport #stage #board .cell:not(.case-opening) .box-fill{visibility:hidden}
 #viewport #stage #board .cell.locked .box-fill,#viewport #stage #board .cell.empty .box-fill{display:none}
 /* v4 U49 2: no lock on the board. The next slot to open is a dimmed empty cell (a faint dashed square where a case would stand); its tap and aria-label still tell the condition. */
-#viewport #stage #board .cell.next-slot .box:after{content:"";position:absolute;left:22%;top:22%;width:56%;height:56%;background:#ffffff08;border:1px dashed var(--p-line-dim,#4a4058);box-sizing:border-box;opacity:.7;border-radius:2px}
+/* v4 U51 7 (owner: "다음 케이스가 들어올 자리에 빈 칸으로 보이는 거 같아"): nothing is drawn on the next slot any more (no square, border, fill or
+   pulse); the cell keeps its place, its tap (the condition toast) and its aria-label. */
+#viewport #stage #board .cell.next-slot .box:after,#viewport #stage #board .cell.next-slot .box:before,#viewport #stage #board .cell.next-slot:before,#viewport #stage #board .cell.next-slot:after{content:none;display:none}
+#viewport #stage #board .cell.next-slot,#viewport #stage #board .cell.next-slot .box{border:0;border-image:none;background:transparent;box-shadow:none;outline:0}
+#viewport #stage #board .cell.next-slot>*{visibility:hidden}
 body:not(.phone) #viewport #stage #board .cell .lv{font:400 11px/1 Galmuri11,monospace}
 body:not(.phone) #viewport #stage #board .cell .box-fill{height:4px!important}
 @keyframes u46-bob{0%,100%{transform:translateY(0)}25%,75%{transform:translateY(-1px)}50%{transform:translateY(-2px)}}
@@ -1743,3 +1747,174 @@ body:not(.phone) #stage #leaveConfirm button{min-height:64px}
    emote are hidden. Only a real failure (.asset-failed) leaves the emoji visible, because .asset-pending is removed then. */
 /* v4 U49b 3: the glyph is its own span (.sprite-glyph, ui.js wrapGlyph), hidden by visibility below; no reliance on color:transparent for colour emoji (iPhone Safari). */
 .asset-pending:not(.asset-ready):not(.art-loaded):not(.visitor-art)>:not(.asset-sprite),.asset-pending:not(.asset-ready)[data-emote]:after{visibility:hidden!important}
+/* ===== v4 U50: layout proposal 3 "한 장면 무대 + 세로 박수 미터" (owner chose it 2026-10-14), re-based on U49/U49b =====
+   One continuous scene: the venue art runs behind the whole screen (also behind the board, the top bar, the safe-area and letterbox bands);
+   the case board keeps today's size and place on the right with only gold corner ornaments (no panel frame). Reading order left to right
+   (owner: "한국사람들은 습관적으로 왼쪽부터 오른쪽으로 보는 경우가 많아"): the audience side first (the doubt as a tall vertical applause meter at the far left
+   with its name plate on top, the 야유 bar beside it, the audience), then Kali at the front right of the stage with his own spotlight plate
+   (액트, 멘탈, 자신감) under him, then the skill column and the board (right thumb: "오른손을 주로 사용해야"). The venue name is a marquee sign in
+   the top bar over the stage. The result banner flashes on the marquee; toasts have their own lane at the bottom left of the stage. */
+/* the scene fills every band around the game frame (safe area on notch phones, letterbox on 16:10 desktops) */
+#viewport:before{content:"";position:absolute;inset:0;background:#1a1420 var(--venue-art,none) 50% 60%/cover no-repeat;filter:brightness(.45) saturate(.85);image-rendering:pixelated;pointer-events:none;z-index:0}
+#viewport #frame{z-index:1}
+/* the marquee sign: bulbs along the edge, the place name in the middle, the stage count small inside the sign */
+#viewport #stage .venue-heading{box-sizing:border-box;display:flex;align-items:center;justify-content:center;gap:10px;background:#5a1a22;border:0;border-radius:6px;
+  box-shadow:0 0 0 3px #2a0c10,0 0 0 5px #e9b44c,0 4px 0 5px #2a0c10;
+  background-image:radial-gradient(circle,#fff3c4 0 2px,#e9b44c 2px 3px,transparent 3.5px),radial-gradient(circle,#fff3c4 0 2px,#e9b44c 2px 3px,transparent 3.5px);
+  background-size:14px 8px,14px 8px;background-repeat:repeat-x;background-position:4px 0,4px 100%}
+#viewport #stage .venue-heading #venueName{color:#ffe9ac;text-shadow:0 2px 0 #2a0c10;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+#viewport #stage .venue-heading #stageNumber{color:#f0c9a0;opacity:.9;flex:none}
+
+/* ---- phones and tablets ---- */
+.phone #viewport #stage{--T:44px;--CW:var(--audience-width)}
+.tablet #viewport #stage{--T:56px}
+.phone #viewport #stage #phoneTop{background:none;border:0;box-shadow:none}
+.phone #viewport #stage #phoneTop:before,.phone #viewport #stage #phoneTop:after{content:none}
+.phone #viewport #stage #phoneVenue{order:0;flex:none;width:calc(var(--CW) - 4px);display:flex}
+.phone #viewport #stage #phoneTop .venue-heading{width:100%;height:30px;margin-top:6px;padding:0 10px}
+.phone #viewport #stage #phoneWallet{order:1;flex:1 1 auto;min-width:0;justify-content:center}
+.phone #viewport #stage #phoneTop > button{order:2}
+.phone #viewport #stage #audienceCard{--CH:calc(var(--layout-height) - var(--T) - 6px);--PH:92px;--K:min(120px, calc(var(--CW) * .3), calc(var(--CH) * .3), calc(var(--CH) - var(--PH) - 156px));--PW:max(var(--K), 124px);
+  top:var(--T)!important;height:var(--CH)!important;bottom:auto!important;border:0!important;background:none!important;box-shadow:none!important;overflow:visible!important}
+.tablet #viewport #stage #audienceCard{--K:min(180px, calc(var(--CW) * .32), calc(var(--CH) * .3))}
+.phone-low #viewport #stage #audienceCard{--PH:46px}
+.phone #viewport #stage #audienceCard:before{content:none!important}
+.phone #viewport #stage #audienceCard #room,.phone #viewport #stage #audienceCard #stageDressing{left:-6px!important;top:calc(-1 * var(--T))!important;width:var(--stage-w)!important;height:var(--layout-height)!important;right:auto!important;bottom:auto!important}
+.phone #viewport #stage #audienceCard #room > .asset-sprite{object-fit:cover;object-position:50% 60%;width:100%;height:100%}
+.phone #viewport #stage #stageDressing .dress-lights{left:6px!important;width:var(--CW)!important;top:calc(var(--T) - 2px)!important;transform:none!important;translate:none!important}
+.phone #viewport #stage #stageDressing .dress-shelf{display:none}
+/* the board stands on the stage: translucent dark glass, gold corner ornaments only */
+.phone #viewport #stage #boardCard{background:none!important;border:0!important;box-shadow:none!important;overflow:visible!important}
+.phone #viewport #stage #boardCard #board{background:#120f1a8c!important;border:0!important;box-shadow:none!important;z-index:1}
+#viewport #stage #boardCard:after{content:"";position:absolute;pointer-events:none;z-index:2;--g:#e9b44c;--a:18px;--b:3px;
+  background:linear-gradient(var(--g),var(--g)) 0 0/var(--a) var(--b),linear-gradient(var(--g),var(--g)) 0 0/var(--b) var(--a),linear-gradient(var(--g),var(--g)) 100% 0/var(--a) var(--b),linear-gradient(var(--g),var(--g)) 100% 0/var(--b) var(--a),
+  linear-gradient(var(--g),var(--g)) 0 100%/var(--a) var(--b),linear-gradient(var(--g),var(--g)) 0 100%/var(--b) var(--a),linear-gradient(var(--g),var(--g)) 100% 100%/var(--a) var(--b),linear-gradient(var(--g),var(--g)) 100% 100%/var(--b) var(--a);background-repeat:no-repeat}
+.phone #viewport #stage #boardCard:after{left:calc(100% - var(--board-size) - 4px);top:-3px;width:calc(var(--board-size) + 8px);height:calc(var(--board-size) + 8px)}
+/* far left: the doubt as a vertical applause meter (name plate on top) and the 야유 bar beside it; the bars are turned upright, the plates are siblings (ui.js U50) */
+.phone #viewport #stage #audienceCard .doubt{left:8px!important;right:auto!important;top:calc(30px + var(--CH) - 96px)!important;width:calc(var(--CH) - 96px)!important;height:20px!important;transform-origin:0 0;transform:rotate(-90deg);overflow:hidden!important}
+.phone #viewport #stage #audienceCard .doubt-fill{-webkit-mask:repeating-linear-gradient(90deg,#000 0 10px,#0006 10px 12px);mask:repeating-linear-gradient(90deg,#000 0 10px,#0006 10px 12px)}
+.phone #viewport #stage #audienceCard .doubt-plate{position:absolute!important;inset:auto!important;left:8px!important;top:4px!important;width:max-content!important;max-width:calc(var(--CW) * .58 - 16px);overflow:hidden;height:22px;padding:0 6px!important;background:#120f1add;border:1px solid #a68a58;justify-content:flex-start!important;box-sizing:border-box;z-index:6}
+.phone #viewport #stage #audienceCard #heckleMeter{left:32px!important;right:auto!important;top:calc(30px + var(--CH) - 96px)!important;width:calc(var(--CH) - 96px)!important;height:12px!important;transform-origin:0 0;transform:rotate(-90deg);overflow:hidden!important}
+.phone #viewport #stage #audienceCard .heckle-plate{position:absolute!important;inset:auto!important;left:56px!important;top:28px!important;width:max-content!important;max-width:calc(var(--CW) * .58 - 60px);overflow:hidden;height:18px;padding:0 6px!important;background:#120f1add;gap:8px;box-sizing:border-box;z-index:6}
+.phone #viewport #stage #audienceCard #patternLabel{left:56px!important;right:auto!important;top:50px!important;bottom:auto!important;max-width:calc(var(--CW) * .58 - 60px)!important;max-height:34px!important}
+.phone #viewport #stage #audienceCard #phaseIndicator{left:56px!important;right:auto!important;top:86px!important;bottom:auto!important;width:auto!important;max-width:calc(var(--CW) * .58 - 60px)!important;max-height:20px!important;white-space:nowrap}
+/* the audience: centre left, the line bubble top right */
+/* v4 U50b (owner: the audience must not overlap the bubble, the 체력바 plate or the 의심 gauge): the audience box lives between the upright bars (left), the bubble band (top, 84 px)
+   and Kali's column with his plate (right, --PW wide), so the figure never touches the bubble, the plate, the bars or their tags */
+.phone #viewport #stage #audienceCard{--AW:calc(var(--CW) - 50px - var(--PW) - 8px)}
+.phone-low #viewport #stage #audienceCard{--AW:calc(var(--CW) * .38 - 58px)}
+.phone #viewport #stage #audienceCard #audience{left:50px!important;right:auto!important;width:var(--AW)!important;top:auto!important;bottom:4px!important;height:min(calc(100% - 136px), calc(var(--AW) * 1.15))!important;max-height:none!important}
+/* v4 U50d (Codex Sol U50c FAIL 1): no full-width audience on tall stages any more (it ran over Kali's plate and, with the tablet whole-pixel snap,
+   up into the toast lane, e.g. a110 at 1024x768). Tall stages keep the same column as phones; the box height leaves 6 percent for the snap
+   (ui.js snapAudience lets the image reach 1.06 x its box), so the drawn figure stays below the 136 px band. */
+.tablet #viewport #stage #audienceCard #audience{height:min(calc((100% - 136px) / 1.06), calc(var(--AW) * 1.15 / 1.06))!important}
+/* a wide picture (the TV crew, about 1.17 wide per 1 tall) is never wider than the audience box: it shrinks inside it (object-fit:contain keeps its shape) */
+#viewport #stage #audienceCard #audience.normalized-figure>.asset-sprite{max-width:100%}
+.phone #viewport #stage #audienceCard .audience-shadow{display:none}
+.phone #viewport #stage #audienceCard #audienceLine{left:auto!important;right:4px!important;top:4px!important;bottom:auto!important;width:calc(var(--CW) * .42)!important;max-width:none!important}
+/* the bubble's tail now hangs from its lower edge and points down at the audience below it */
+.phone #viewport #stage #audienceCard #audienceTail{left:calc(100% - 4px - var(--CW) * .42 + 24px)!important;right:auto!important;bottom:auto!important;top:calc(4px + var(--line-h, 20px))!important;border:7px solid transparent!important;border-top:8px solid #A68A58!important;border-bottom:0!important}
+.phone #viewport #stage #audienceCard #audienceTail:after{left:-5px!important;top:-10px!important;border:5px solid transparent!important;border-top:6px solid #E3D2BA!important;border-bottom:0!important}
+/* v4 U50c (Codex Sol U50b FAIL 2, rule: no bubble text is cut off): the bubble is never line-clamped; it grows to the lines it needs (the longest
+   data.js line takes 4 lines in the narrowest bubble) inside the bubble band above the audience box */
+#viewport #stage #audienceCard #audienceLine{-webkit-line-clamp:unset!important;max-height:none!important;height:auto!important;text-overflow:clip}
+/* front right: Kali, his spotlight plate under him; his helpers at the front left */
+.phone #viewport #stage #audienceCard #magicianMini{left:auto!important;right:4px!important;top:auto!important;bottom:calc(var(--PH) + 10px)!important;width:var(--K)!important;height:var(--K)!important;max-height:none!important;z-index:4}
+.phone #viewport #stage #audienceCard #stageStats{left:auto!important;right:4px!important;top:auto!important;bottom:4px!important;width:var(--PW)!important;height:auto!important;display:grid!important;grid-template-columns:minmax(0,1fr);gap:2px;padding:4px;background:#120f1add;border-radius:8px;box-shadow:0 -6px 18px #ffe9ac33;z-index:5;box-sizing:border-box}
+.phone-low #viewport #stage #audienceCard #stageStats{grid-template-columns:repeat(2,minmax(0,1fr));gap:2px 4px;padding:2px 4px;width:calc(var(--CW) * .62)!important}
+.phone-low #viewport #stage #audienceCard #stageStats > #mental{grid-column:1 / -1;grid-row:2}
+.phone #viewport #stage #audienceCard #stageStats > *{justify-content:flex-start;height:20px;white-space:nowrap;overflow:hidden;min-width:0;width:auto!important;max-width:100%;margin:0!important;box-sizing:border-box;font-size:var(--fs-s)}
+.phone #viewport #stage #audienceCard #stageStats > #combo{width:90%!important;transform-origin:0 50%}
+.phone:not(.phone-low) #viewport #stage #audienceCard #stageStats > #mental{height:auto;min-height:20px;flex-wrap:wrap;row-gap:0} /* the narrow plate: the 멘탈 numbers take their own second line */
+.phone:not(.phone-low) #viewport #stage #audienceCard #stageStats > #mental #mentalNumber{flex:1 0 100%;min-width:0;white-space:normal;line-height:16px;max-height:32px;overflow:hidden}
+.phone:not(.phone-low) #viewport #stage #audienceCard #stageStats > #mental{height:32px!important}
+.phone:not(.phone-low) #viewport #stage #audienceCard #stageStats > #mental:before{content:none} /* the plate is the spotlight; the 멘탈 word and heart name the row */
+#viewport #stage #audienceCard#audienceCard.f-story #stageStats{visibility:hidden} /* no empty plate box behind a character dialog (U50c: every size; on desktop the dialog would cover the plate) */
+.phone #viewport #stage #audienceCard #combo:before{content:"";flex:none;width:16px;height:16px;margin-right:4px;background:url('assets/ui/ic-clap.webp') center/16px no-repeat;image-rendering:pixelated}
+.phone #viewport #stage #audienceCard #mental:before{content:"";flex:none;width:16px;height:16px;margin-right:4px;background:url('assets/ui/ic-spotlight.webp') center/16px no-repeat;image-rendering:pixelated}
+.phone #viewport #stage #audienceCard #colleagues{left:50px!important;right:auto!important;width:calc(var(--CW) - 50px - var(--PW) - 12px)!important;bottom:2px!important;top:auto!important;justify-content:flex-start;--h:30px;overflow:hidden}
+.phone-low #viewport #stage #audienceCard #colleagues{display:none}
+/* toast lane: bottom left of the stage, above the helpers, clear of the face, Kali and the marquee */
+/* v4 U50c (Codex Sol U50b FAIL 3): toasts get a reserved lane on the stage, one line (24 px) at 106 px under the stage top, across the stage from the
+   upright bars to the right edge of the stage card. The audience box starts 136 px down and Kali's top is kept at least 146 px down (--K), the bubble
+   ends above 100 px with the longest line (tail included), pattern (50, two lines at most) and phase (84) labels sit above it: the lane covers no currency, 도감, 메뉴, marquee, board,
+   bubble, audience or Kali. (U50b had them over the wallet in the top bar, which hid the currencies.) */
+.phone #viewport #stage #toasts{left:62px!important;right:auto!important;width:calc(var(--CW) - 60px)!important;top:calc(var(--T) + 106px)!important;bottom:auto!important;max-height:24px!important;z-index:16}
+/* the result banner flashes on the marquee (the sign shows the result), then the place name comes back */
+.phone #viewport #stage #banner,.phone #viewport #stage #banner.big{left:6px!important;width:calc(var(--CW) - 4px)!important;top:2px!important;bottom:auto!important;max-height:40px!important;height:auto;padding:2px 8px!important;font-size:11px;line-height:17px;box-sizing:border-box;overflow:hidden!important;z-index:26}
+.phone #viewport #stage #banner small{margin-top:0!important;font-size:10px}
+@media(max-width:740px){.phone #viewport #stage #audienceCard #mental:before{content:none}.phone #viewport #stage #audienceCard #doubtRegen{display:none}
+.phone:not(.tablet) #viewport #stage #audienceCard :is(#patternLabel,#phaseIndicator){max-width:calc(var(--CW) - 64px)!important;width:auto!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}
+
+/* right thumb: in a character dialog the frequent 다음 is the last button (right end, next to the skill column); 건너뛰기 moves before it */
+/* v4 U50b: ui.js puts 건너뛰기 before 다음 in the DOM (Tab order = visual order) and, on phones and tablets, moves the dialog out of the isolated
+   #audienceCard into #stage, so its z-index 28 is above the board card and the skill column it reaches over (Codex Sol U50 FAIL 1) */
+.phone #viewport #stage #storyDialog{grid-template-columns:30px minmax(0,1fr) 66px 44px;left:10px!important;right:calc(var(--board-size) + 10px)!important;bottom:10px!important} /* reaches over the (paused) skill column up to the board */
+.phone #viewport #stage #storyDialog.stage-launch{grid-template-columns:30px minmax(0,1fr) 66px}
+body:not(.phone) #viewport #stage #storyDialog{grid-template-columns:54px minmax(0,1fr) 100px 64px}
+/* v4 U50b: 마술용품 sits in the phone/tablet menu now; its NEW badge is anchored to the button again (the menu buttons are position:static), inside its top right corner (Codex Sol U50 FAIL 2) */
+.phone #viewport #stage #phoneMore #equipButton{position:relative}
+.phone #viewport #stage #phoneMore #equipButton.is-new:after{content:'NEW';right:2px;top:-6px;left:auto;width:auto;height:auto;border-radius:0;padding:1px 3px;font-size:9px;line-height:11px;z-index:3}
+
+/* ---- desktop 1600 x 900 stage ---- */
+body:not(.phone) #viewport #stage #audienceCard{border:0!important;background:none!important;box-shadow:none!important;overflow:visible!important}
+body:not(.phone) #viewport #stage #audienceCard:before{content:none!important}
+body:not(.phone) #viewport #stage #audienceCard #room,body:not(.phone) #viewport #stage #audienceCard #stageDressing{left:-76px!important;top:-48px!important;width:1600px!important;height:900px!important}
+body:not(.phone) #viewport #stage #audienceCard #room > .asset-sprite{object-fit:cover;object-position:50% 60%;width:100%;height:100%}
+body:not(.phone) #viewport #stage #stageDressing .dress-lights{left:200px!important;width:600px!important;top:40px!important;transform:none!important;translate:none!important}
+body:not(.phone) #viewport #stage #stageDressing .dress-shelf{display:none}
+body:not(.phone) #viewport #stage #boardCard{background:none!important;border:0!important;box-shadow:none!important;overflow:visible!important}
+body:not(.phone) #viewport #stage #boardCard #board{background:#120f1a8c!important;border:0!important;box-shadow:none!important;outline:0!important}
+body:not(.phone) #viewport #stage #boardCard:after{left:34px;top:100px;width:624px;height:624px;--a:32px;--b:5px}
+body:not(.phone) #viewport #stage #boardCard .hud{background:#120f1acc!important}
+body:not(.phone) #viewport #stage #gameLogo{top:14px}
+body:not(.phone) #viewport #stage #audienceCard .venue-heading{left:380px!important;top:-40px!important;width:420px!important;height:52px!important}
+body:not(.phone) #viewport #stage #audienceCard #crowdLabel{left:auto!important;right:12px!important;top:64px!important;width:auto!important;height:28px!important;line-height:28px;background:#120f1acc!important;border:0!important;padding:0 10px!important;font-size:var(--fs-m)}
+body:not(.phone) #viewport #stage #audienceCard .doubt{left:8px!important;top:690px!important;width:600px!important;height:28px!important;transform-origin:0 0;transform:rotate(-90deg);overflow:hidden!important}
+body:not(.phone) #viewport #stage #audienceCard .doubt-fill{-webkit-mask:repeating-linear-gradient(90deg,#000 0 18px,#0006 18px 22px);mask:repeating-linear-gradient(90deg,#000 0 18px,#0006 18px 22px)}
+body:not(.phone) #viewport #stage #audienceCard .doubt-plate{position:absolute!important;inset:auto!important;left:8px!important;top:48px!important;width:max-content!important;max-width:560px;overflow:hidden;height:34px;padding:0 10px!important;background:#120f1add;border:2px solid #a68a58;justify-content:flex-start!important;box-sizing:border-box;z-index:6}
+body:not(.phone) #viewport #stage #audienceCard #heckleMeter{left:44px!important;top:690px!important;width:600px!important;height:16px!important;transform-origin:0 0;transform:rotate(-90deg);overflow:hidden!important}
+body:not(.phone) #viewport #stage #audienceCard .heckle-plate{position:absolute!important;inset:auto!important;left:70px!important;top:86px!important;width:max-content!important;height:24px;padding:0 8px!important;background:#120f1add;gap:10px;font-size:var(--fs-s);z-index:6}
+body:not(.phone) #viewport #stage #audienceCard #patternLabel{left:70px!important;right:auto!important;top:120px!important;width:auto!important;bottom:auto!important}
+body:not(.phone) #viewport #stage #audienceCard #phaseIndicator{left:70px!important;right:auto!important;top:176px!important;width:300px!important}
+body:not(.phone) #viewport #stage #audienceCard .finisher{left:70px!important;right:auto!important;top:260px!important}
+body:not(.phone) #viewport #stage #audienceCard .finisher-label{left:62px!important;right:auto!important;top:228px!important}
+body:not(.phone) #viewport #stage #audienceCard #perSecond,body:not(.phone) #viewport #stage #audienceCard #coinSecond{left:150px!important;width:380px!important;text-align:left}
+body:not(.phone) #viewport #stage #audienceCard #perSecond{top:600px!important}
+body:not(.phone) #viewport #stage #audienceCard #coinSecond{top:618px!important}
+body:not(.phone) #viewport #stage #audienceCard #audience{left:120px!important;top:150px!important;width:300px!important;height:440px!important}
+body:not(.phone) #viewport #stage #audienceCard .audience-shadow,body:not(.phone) #viewport #stage #audienceCard #crowd{display:none}
+body:not(.phone) #viewport #stage #audienceCard #audienceLine{left:auto!important;right:24px!important;top:110px!important;width:220px!important;bottom:auto!important}
+body:not(.phone) #viewport #stage #audienceCard #magicianMini{left:auto!important;right:24px!important;top:370px!important;width:230px!important;height:230px!important}
+body:not(.phone) #viewport #stage #audienceCard #stageStats{left:auto!important;right:24px!important;top:610px!important;bottom:auto!important;width:360px!important;height:auto!important;display:grid!important;grid-template-columns:minmax(0,1fr);gap:6px;padding:10px 14px;background:#120f1add;border-radius:12px;box-shadow:0 -10px 30px #ffe9ac33;z-index:5}
+body:not(.phone) #viewport #stage #audienceCard #stageStats > *{justify-content:flex-start;height:30px;white-space:nowrap;overflow:hidden;min-width:0;font-size:var(--fs-s)}
+body:not(.phone) #viewport #stage #audienceCard #stageStats .mental:before{content:"";flex:none;width:28px;height:28px;margin-right:6px;background:url('assets/ui/ic-spotlight.webp') center/28px no-repeat;image-rendering:pixelated}
+body:not(.phone) #viewport #stage #audienceCard #combo:before{content:"";width:28px;height:28px;margin-right:6px;background:url('assets/ui/ic-clap.webp') center/28px no-repeat;image-rendering:pixelated}
+body:not(.phone) #viewport #stage #audienceCard #comboGoal{display:none}
+body:not(.phone) #viewport #stage #audienceCard .xp-row{left:120px!important;right:auto!important;top:690px!important;width:190px!important}
+body:not(.phone) #viewport #stage #audienceCard #colleagues{left:120px!important;width:380px!important;top:724px!important;bottom:auto!important;justify-content:flex-start;gap:6px;--h:48px}
+body:not(.phone) #viewport #stage #audienceCard #statsButton{left:auto!important;right:24px!important;top:752px!important;width:150px!important}
+body:not(.phone) #viewport #stage #audienceCard .stats.phone-expanded{left:12px!important;right:auto!important;top:auto!important;bottom:20px!important;width:736px!important;height:auto!important;max-height:none;grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:84px;gap:8px;padding:8px;overflow:hidden;z-index:9}
+body:not(.phone) #viewport #stage #audienceCard .stats.phone-expanded .stat{grid-template-columns:minmax(0,1fr) auto;align-content:space-between;height:84px;padding:6px 10px}
+body:not(.phone) #viewport #stage #audienceCard .stats.phone-expanded .stat-value .bitmap{--pixel:2px}
+body:not(.phone) #viewport #stage #helperControls{left:840px!important;top:794px!important;width:668px!important;height:44px;justify-content:flex-end;gap:8px}
+body:not(.phone) #viewport #stage .board-footer{display:none}
+body:not(.phone) #viewport #stage #helperControls :is(.magic-controls,.feature-hud) button:not(#equipOpen){width:40px;height:40px;padding:0}
+body:not(.phone) #viewport #stage #toasts{left:896px!important;width:400px!important;top:14px!important;max-height:36px!important} /* v4 U50c: desktop lane = the free top bar between the marquee and 도감 (the currencies are in the board card below it) */
+body:not(.phone) #viewport #stage #banner{left:456px!important;width:420px!important;top:6px!important;bottom:auto!important;max-height:56px;overflow:hidden;padding:4px 12px!important;font-size:var(--fs-m);z-index:26}
+/* v4 U51 2: the curtain call's 다음 sits at the right under the line (right thumb); the ending's 다음 is the rightmost of its row. */
+#stage .curtain-line{position:relative;z-index:4;display:flex;align-items:stretch;gap:6px}
+#stage .curtain-line .curtain-bubble{flex:1;min-width:0;width:auto}
+#stage #curtainNext{position:relative;z-index:4;flex:none;margin:0 0 0 auto;min-width:88px}
+/* v4 U51 5: Kali's size cap on phones (--K in the U50b audience-card rule) is CH - PH - 156px (was 146): his box sits 10 px above the plate, so the old
+   cap kept his top only 136 px down (6 px under the toast lane) and his idle/act motion (up to 9 px) touched the lane at 844 x 390 with 47 px insets, the
+   intermittent test-u50 group 4 "toast covers kali". His top is now at least 146 px down, as the U50c note says. */
+/* 다음 is the primary (gold) button of every line window (ui.js gives it u26-primary); 건너뛰기 is a plain button (it was the gold one in the dialog) */
+#stage #storyDialog button.line-skip{background:#25202D;color:#F2E6C8;font-weight:400}
+/* the pressed 도감 tab (관객 도감) was a blank dark box: the button frame image's fill covered its gold background; it uses the primary frame now */
+#stage #panel .panel-tabs button[aria-pressed="true"]{border-image-source:url('assets/ui/ui-button-primary.webp')}
+/* the old-save intro pictures: 다음 at the bottom right (right thumb), 건너뛰기 stays top right */
+#stage #introStory .intro-next{left:auto;right:12px}
+/* short phones (882 x 288): the curtain call fits the panel without clipping its line row */
+@media (max-height:340px){.phone #stage .curtain-memory{min-height:0;padding:4px 8px}.phone #stage .curtain-cast{min-height:0;padding:4px 12px}.phone #stage .curtain-actor{height:88px;width:56px}.phone #stage .curtain-actor.headliner{height:100px;width:66px}.phone #stage .curtain-memory h2,.phone #stage .curtain-closing{margin:2px}}
+#stage .ending-line-actions{justify-content:flex-end;width:100%;margin-top:8px}

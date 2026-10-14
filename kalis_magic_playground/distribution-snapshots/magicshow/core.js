@@ -346,7 +346,7 @@
   function offlineGain(state,now) {
     var zero={awayMs:0,coins:0,xp:state.board.map(function(){return 0;})};
     if(!Number.isFinite(now)||!state.idle.wallMs||now-state.idle.wallMs<60000)return zero;
-    var ms=Math.min(now-state.idle.wallMs,(8+state.tree.nightShow)*3600000), eff=.5+.1*state.tree.manager, rates=idleRates(state);
+    var ms=Math.min(now-state.idle.wallMs,(8+state.tree.nightShow)*3600000), eff=.7+.1*state.tree.manager /* v4 U51 6: base 70% (was 50%), 매니저 계약 max 3 = 100% */, rates=idleRates(state);
     return {awayMs:ms,coins:Math.floor(rates.coins*ms/1000*eff),xp:rates.xp.map(function(x,i){var c=state.board[i],remaining=0;for(var lv=c.lv;lv<caseCap(state);lv++)remaining+=caseNeed(lv);remaining=Math.max(0,remaining-(c.xp||0));return Math.min(remaining,x*ms/1000*eff);})};
   }
   function collectOffline(state,now) {

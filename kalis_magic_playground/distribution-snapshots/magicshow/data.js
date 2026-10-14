@@ -2132,7 +2132,7 @@ GAME_DATA.skills = [
 (function(D){
   const add=(id,name,max,c,x,y,desc,pre='boxHelper')=>D.tree.push({id,name,max,cost:{c,g:2},x,y,desc,prereqs:[pre],branch:'pet',currency:'coins',reveal:'N',icon:'node-assistant.png',emoji:'🌙',pending:false,u13:true});
   add('nightShow','야간 공연',4,800,-8,3,'자리 비운 보상 상한 +1시간씩 · 기본 8시간');
-  add('manager','매니저 계약',3,1500,-7,4,'자리 비운 보상 효율 +10%p씩 · 기본 50%');
+  add('manager','매니저 계약',3,1500,-7,4,'자리 비운 보상 효율 +10%p씩 · 기본 70%');
   add('autoPractice','자동 연습 속도',4,500,-7,5,'손을 뗐을 때 수동 타격 속도의 +10%씩 · 기본 40%', 'root');
   D.skills.forEach((s,i)=>add(s.id+'Cooldown',s.name+' 준비',3,1200*(i+1),-7,6+i,'재사용 시간 -10%씩', 'root'));
   D.tree.find(n=>n.id==='caseMax').max=45;
@@ -3260,7 +3260,7 @@ GAME_DATA.easyNodes = {
   "fanPower": "팬과 조수가 더 세게 두드려요\n힘 15%씩 추가",
   "autoLearn": "동전으로 비법을 알아서 배워요\n켜 두면 3초마다 배우기",
   "nightShow": "자리를 비워도 보상을 더 모아요\n보상 시간 1시간씩 추가 · 기본 8시간",
-  "manager": "자리를 비운 동안 동전을 더 모아요\n보상 10%씩 추가 · 기본 50%",
+  "manager": "자리를 비운 동안 동전을 더 모아요\n보상 10%씩 추가 · 기본 70%",
   "autoPractice": "손을 떼도 케이스가 빨리 열려요\n손으로 누를 때의 10%씩 추가 · 기본 40%",
   "spongeSpeed": "스펀지볼이 더 빨리 튀어요\n이동 12%씩 추가",
   "spongePower": "스펀지볼이 더 세게 두드려요\n힘 15%씩 추가",
