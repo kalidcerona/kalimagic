@@ -565,7 +565,7 @@
     {"id": "crit", "name": "타이밍", "desc": "수동 지팡이 타격 8% 확률로 피해 ×1.5", "max": 1, "cost": [180], "currency": "coins", "prereqs": ["speed"], "x": -2, "y": -1, "reveal": "N", "branch": "hand", "icon": "node-hand-2.png", "emoji": "✨", "pending": false},
     {"id": "critRate", "name": "타이밍 감각", "desc": "치명타 확률 +2L%p, 최종 최대 14%", "max": 3, "cost": {"c": 450, "g": 2.2}, "currency": "coins", "prereqs": ["crit"], "x": -3, "y": -1, "reveal": "N", "branch": "hand", "icon": "node-hand-1.png", "emoji": "🎯", "pending": false},
     {"id": "critPower", "name": "반전", "desc": "치명타 배율 +0.1L, 최종 최대 1.8", "max": 3, "cost": {"c": 700, "g": 2.2}, "currency": "coins", "prereqs": ["critRate"], "x": -4, "y": -1, "reveal": "N", "branch": "hand", "icon": "node-hand-2.png", "emoji": "✨", "pending": false},
-    {"id": "comboHold", "name": "루틴 연결", "desc": "콤보 유예 +250L ms, 최대 3000ms", "max": 4, "cost": {"c": 220, "g": 2.0}, "currency": "coins", "prereqs": ["area"], "x": -4, "y": 0, "reveal": "N", "branch": "hand", "icon": "node-hand-1.png", "emoji": "👏", "pending": false},
+    {"id": "comboHold", "name": "루틴 연결", "desc": "액트 유예 +250L ms, 최대 3000ms", "max": 4, "cost": {"c": 220, "g": 2.0}, "currency": "coins", "prereqs": ["area"], "x": -4, "y": 0, "reveal": "N", "branch": "hand", "icon": "node-hand-1.png", "emoji": "👏", "pending": false},
     {"id": "sweepFocus", "name": "한곳 집중", "desc": "타격 대상의 살아 있는 케이스가 정확히 1개면 피해 +5L%", "max": 3, "cost": {"c": 600, "g": 2.0}, "currency": "coins", "prereqs": ["comboHold"], "x": -5, "y": 0, "reveal": "N", "branch": "hand", "icon": "node-hand-2.png", "emoji": "🎯", "pending": false},
     {"id": "precision", "name": "미스디렉션", "desc": "투명 패턴의 빗나갈 확률에서 2L%p 차감, 최소 0", "max": 3, "cost": {"c": 1800, "g": 2.0}, "currency": "coins", "prereqs": ["critPower"], "x": -5, "y": -1, "reveal": "N9", "branch": "hand", "icon": "node-hand-1.png", "emoji": "🎯", "pending": false},
     {"id": "board", "name": "케이스 자리", "desc": "구매마다 보유 칸 +1", "max": 12, "cost": [40, 120, 300, 700, 1600, 3500, 7500, 15000, 30000, 55000, 90000, 140000], "currency": "coins", "prereqs": ["root"], "x": 1, "y": 0, "reveal": "N", "branch": "box", "icon": "node-box-1.png", "emoji": "📦", "pending": false},
@@ -607,8 +607,8 @@
     {"id": "startFinale", "name": "개막 피날레", "desc": "새 run 시작 시 피날레 게이지 충전", "max": 1, "cost": [1], "currency": "keys", "prereqs": ["root"], "x": 0, "y": 1, "reveal": "N", "branch": "finale", "icon": "node-finale-1.png", "emoji": "🌟", "pending": false},
     {"id": "finalePower", "name": "표현력", "desc": "피날레 피해 22V×(1+0.08L)", "max": 4, "cost": {"c": 500, "g": 2.2}, "currency": "coins", "prereqs": ["startFinale"], "x": 0, "y": 2, "reveal": "N", "branch": "finale", "icon": "node-finale-2.png", "emoji": "🎆", "pending": false},
     {"id": "finaleNeed", "name": "짧은 예고", "desc": "필요 게이지 20-L, 최소 18", "max": 2, "cost": {"c": 2500, "g": 3.0}, "currency": "coins", "prereqs": ["finalePower"], "x": 0, "y": 3, "reveal": "N4", "branch": "finale", "icon": "node-finale-1.png", "emoji": "⏳", "pending": false},
-    {"id": "comboGift", "name": "이어지는 박수", "desc": "콤보 10/25/50/100 보상 활성화", "max": 1, "cost": [900], "currency": "coins", "prereqs": ["finalePower"], "x": 1, "y": 3, "reveal": "N", "branch": "finale", "icon": "node-finale-2.png", "emoji": "👏", "pending": false},
-    {"id": "comboValue", "name": "커지는 박수", "desc": "콤보 milestone의 동전 보상 +20L%", "max": 3, "cost": {"c": 1200, "g": 2.2}, "currency": "coins", "prereqs": ["comboGift"], "x": 2, "y": 3, "reveal": "N", "branch": "finale", "icon": "node-finale-1.png", "emoji": "👏", "pending": false},
+    {"id": "comboGift", "name": "이어지는 박수", "desc": "액트 10/25/50/100 보상 활성화", "max": 1, "cost": [900], "currency": "coins", "prereqs": ["finalePower"], "x": 1, "y": 3, "reveal": "N", "branch": "finale", "icon": "node-finale-2.png", "emoji": "👏", "pending": false},
+    {"id": "comboValue", "name": "커지는 박수", "desc": "액트 milestone의 동전 보상 +20L%", "max": 3, "cost": {"c": 1200, "g": 2.2}, "currency": "coins", "prereqs": ["comboGift"], "x": 2, "y": 3, "reveal": "N", "branch": "finale", "icon": "node-finale-1.png", "emoji": "👏", "pending": false},
     {"id": "encore", "name": "앵콜", "desc": "전투 시간 300초마다 15초간 지팡이 피해 +20%", "max": 1, "cost": [1800], "currency": "coins", "prereqs": ["finaleNeed"], "x": 0, "y": 4, "reveal": "N4", "branch": "finale", "icon": "node-finale-2.png", "emoji": "🎤", "pending": false},
     {"id": "encorePower", "name": "쇼맨십", "desc": "앵콜 피해 보너스 +5L%p", "max": 2, "cost": {"c": 4000, "g": 2.5}, "currency": "coins", "prereqs": ["encore"], "x": -1, "y": 4, "reveal": "N", "branch": "finale", "icon": "node-finale-1.png", "emoji": "🎤", "pending": false},
     {"id": "encoreSpan", "name": "긴 앵콜", "desc": "앵콜 지속 +3L초", "max": 2, "cost": {"c": 3500, "g": 2.5}, "currency": "coins", "prereqs": ["encore"], "x": 1, "y": 4, "reveal": "N", "branch": "finale", "icon": "node-finale-2.png", "emoji": "⏱️", "pending": false},
@@ -798,7 +798,7 @@
       finisher: "피날레로 감탄",
       noDamage: "멘탈 손상 없이",
       timeLimit: "{value}초 안에",
-      combo: "콤보 {value} 이상"
+      combo: "액트 {value} 이상"
     },
     patterns: {
       none: "패턴 없음",
@@ -814,7 +814,7 @@
       doubt: "의심",
       mental: "멘탈",
       shield: "자신감",
-      combo: "콤보",
+      combo: "액트",
       finale: "피날레",
       level: "레벨",
       xp: "경험치",
@@ -872,7 +872,7 @@
   D.tree.push({id:'fanPower',name:'팬과 어시스턴트 파워',desc:'작업 피해 +15%씩',branch:'pet',prereqs:['boxHelper'],x:-5,y:4,max:5,cost:{c:1200,g:1.5},currency:'coins',reveal:'N',icon:'node-fan.png',emoji:'👏',pending:false,u4b:true});
   const stars=D.tree.filter(n=>n.starKey);
   stars.forEach((n,i)=>{n.x=-2+i;n.y=-7;});
-  D.stageRewards = ['콤보 유지 +500 ms','마술 실력 ×1.2','모든 도우미 속도 +10%','새 케이스 시작 LV +1','연쇄 피해 +15%','피날레 피해 +30%'].map((effect,i)=>({id:i+1,venue:(i+1)*2,effect,quote:['박수 사이에도 마술은 이어져요.','손끝을 믿어 주세요.','함께하면 더 빠르죠.','새 케이스도 경험을 기억해요.','놀라움은 옆자리로 번져요.','마지막까지 당신의 확신을 보여 주세요.'][i]}));
+  D.stageRewards = ['액트 유지 +500 ms','마술 실력 ×1.2','모든 도우미 속도 +10%','새 케이스 시작 LV +1','연쇄 피해 +15%','피날레 피해 +30%'].map((effect,i)=>({id:i+1,venue:(i+1)*2,effect,quote:['박수 사이에도 마술은 이어져요.','손끝을 믿어 주세요.','함께하면 더 빠르죠.','새 케이스도 경험을 기억해요.','놀라움은 옆자리로 번져요.','마지막까지 당신의 확신을 보여 주세요.'][i]}));
 })(GAME_DATA);
 
 // U4b pace compensation for stage abilities and the expanded helper ensemble.
@@ -2147,7 +2147,7 @@ GAME_DATA.skills = [
 /* U14 daily selection uses a date hash, independent of combat randomness. */
 GAME_DATA.missions = [
  {id:'boxes',name:'케이스 200개 열기',target:200,gems:3},
- {id:'combo',name:'콤보 50 달성',target:50,gems:3},
+ {id:'combo',name:'액트 50 달성',target:50,gems:3},
  {id:'dealer',name:'토끼 딜러 1회',target:1,gems:2},
  {id:'learn',name:'비법 5개 배우기',target:5,gems:2},
  {id:'events',name:'이벤트 관객 2명 잡기',target:2,gems:4},
@@ -3297,7 +3297,7 @@ GAME_DATA.easyNodes.flashpaperPower="플래시 페이퍼가 더 세게 두드려
   // v4 U45: 칼리 덱 is the skill only, 틴 케이스 strengthens the cases, the first wall product is the beginner lecture.
   if(n.id==='p-kali-deck')n.desc='보석 상점에서 칼리 덱을 살 수 있고\n공연 중 케이스에서도 나와요'; // v4 U48 A: the node unlocks the consumable
   else if(n.caseItemMult)n.desc='케이스가 크게 강해져요\n케이스 아이템 효과 ×'+n.caseItemMult;
-  else if(n.productMultiplier)n.desc=(n.id==='p-classic-collection-remastered'?'입문자 강의 1편, 기본기를 다져요\n':n.id==='p-classic-collection-remastered-2'?'입문자 강의 2편, 기본기를 넓혀요\n':'이 무대를 넘을 힘이 생겨요\n')+'공격 ×'+n.productMultiplier;
+  else if(n.productMultiplier)n.desc=(n.id==='p-classic-collection-remastered'?'입문자 강의 1편, 기본기를 다져요\n':n.id==='p-classic-collection-remastered-2'?'입문자 강의 2편, 기본기를 넓혀요\n':'이 무대를 넘을 힘이 생겨요\n')+'연출 ×'+n.productMultiplier;
   else if(n.id.startsWith('hidden-')){const results={hand:'케이스를 더 빨리 열어요',box:'케이스 아이템의 힘이 커져요',heart:'야유를 더 오래 버텨요',luck:'동전을 더 많이 얻어요',pet:'도우미가 더 힘껏 도와줘요',finale:'피날레가 더 크게 놀라게 해요',collection:'관객을 더 크게 놀라게 해요',star:'별빛의 힘이 더 세져요'};n.desc=results[n.id.split('-').slice(1).join('-')]+'\n힘 2%씩 추가';}
   else n.desc=D.easyNodes[n.id];
   if(!n.desc)throw new Error('Missing easy description: '+n.id);
@@ -3333,7 +3333,7 @@ GAME_DATA.venues.find(v=>v.slug==='lecturenote').bossHpFactor*=1.07;
 GAME_DATA.trueFanRules=[
  {type:'noDamage',value:0,label:'하트 하나도 잃지 않고 관객 감탄시키기'},
  {type:'timeLimit',value:90,label:'90초 안에 관객 감탄시키기'},
- {type:'combo',value:25,label:'25콤보를 만든 뒤 관객 감탄시키기'}
+ {type:'combo',value:25,label:'25액트를 만든 뒤 관객 감탄시키기'}
 ];
 GAME_DATA.cosmetics={
  kali:[

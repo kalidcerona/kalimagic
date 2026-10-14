@@ -863,26 +863,20 @@ html,body,#stage{background:var(--bg);color:var(--ink)}
 .chest .sprite-fallback{display:block;text-align:center;font-size:32px}
 .chest.asset-ready .sprite-fallback{visibility:hidden}
 
-/* U19: cut-ins share Kali's corner and leave the audience and controls clear. */
-#routineCutin{--routine-frame:100px;position:absolute;left:218px;top:520px;width:104px;height:124px;z-index:8;pointer-events:none;background:#342334e8;border:2px solid #e4ba65;border-radius:8px;text-align:center;color:#ffe4a0;overflow:hidden}
-#routineCutin[hidden],#futureTelegraph[hidden]{display:none}
-.routine-strip{height:var(--routine-frame);background-size:calc(var(--routine-frame)*2) var(--routine-frame);background-position:0 0;background-repeat:no-repeat;image-rendering:pixelated}
-#routineCutin.playing{animation:routine-slide 1.6s ease both}
-#routineCutin.playing .routine-strip{animation:routine-frame 1.6s steps(1) both}
-@keyframes routine-slide{0%{transform:translateX(-4px);opacity:0;animation-timing-function:cubic-bezier(.2,.8,.2,1)}20%,80%{transform:translateX(0);opacity:1;animation-timing-function:cubic-bezier(.4,0,1,1)}100%{transform:translateX(4px);opacity:0}}
-@keyframes routine-frame{0%{background-position:0 0}45%,100%{background-position:calc(var(--routine-frame)*-1) 0}}
+/* v4 U49 1: a routine cut-in plays in Kali's own spot. #magicianMini keeps its box (same size and place on every layout); only its background swaps from the
+   kali-performance strip (3 frames) to the routine strip (2 frames, same 256 frame format). A reaction face (.reacting, .disappointed) wins over it.
+   #routineCutin is only the invisible "cut-in playing" marker now. */
+#routineCutin,#routineCutin:not([hidden]){display:none!important}
+#futureTelegraph[hidden]{display:none}
+#stage #magicianMini.performance-ready.routine-art:not(.reacting):not(.disappointed){background-image:var(--routine-art)!important;background-size:200% 100%!important;background-position:0% 0%;animation:kali-routine-frame 1.6s steps(1) both}
+@keyframes kali-routine-frame{0%{background-position:0% 0%}45%,100%{background-position:100% 0%}}
+@media(prefers-reduced-motion:reduce){#stage #magicianMini.performance-ready.routine-art:not(.reacting):not(.disappointed){animation:none;background-position:100% 0%}}
 .future-target{outline:3px solid #ffe17a!important;box-shadow:0 0 12px #ffe17a!important}
 .future-suit{filter:sepia(.5) saturate(1.8) hue-rotate(235deg);border-bottom:3px solid #e4ba65}
 .routine-collection{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:12px 0}
 .routine-collection span{display:inline-flex;align-items:center;gap:4px}.routine-icon{width:32px;height:32px}
 #futureTelegraph{position:absolute;left:46px;top:290px;width:470px;padding:18px;background:#342334f5;border:2px solid #ffe17a;white-space:pre-line;line-height:1.6;z-index:10;pointer-events:none}
-.phone #routineCutin{--routine-frame:44px;left:22%;top:auto;bottom:48px;width:calc(18% - 6px);height:76px;font-size:9px;line-height:12px}
-.phone #audienceCard#audienceCard.f-routine #magicianMini{width:calc(22% - 12px);height:76px}
 .phone #futureTelegraph{left:6px;top:86px;width:calc(40% - 12px);padding:4px;font-size:10px;line-height:13px}
-@media(prefers-reduced-motion:reduce){#routineCutin.playing,#routineCutin.playing .routine-strip{animation:none}.routine-strip{background-position:calc(var(--routine-frame)*-1) 0}}
-.routine-strip:after{content:'✨';display:block;text-align:right;opacity:0;animation:none}
-@keyframes routine-spark{0%{opacity:0}45%,85%{opacity:1}100%{opacity:0}}
-@media(prefers-reduced-motion:reduce){.routine-strip:after{animation:none;opacity:1}}
 
 /* U19b: opaque figure geometry, compact controls and persistent arrangement panels. */
 #stage .normalized-figure{position:relative;overflow:hidden}
@@ -1594,10 +1588,10 @@ repeating-linear-gradient(90deg,rgba(255,255,255,.04) 0 2px,transparent 2px 4px)
 #viewport #stage #board .cell .box-fill{left:22%;width:56%;top:90%;bottom:auto;height:3px!important;border:0;background:var(--p-gold);box-shadow:0 0 0 1px #000;z-index:3}
 #viewport #stage #board .cell:not(.case-opening) .box-fill{visibility:hidden}
 #viewport #stage #board .cell.locked .box-fill,#viewport #stage #board .cell.empty .box-fill{display:none}
-#viewport #stage #board .cell.next-slot .box:after{content:"";position:absolute;left:calc(50% - 8px);top:calc(50% - 8px);width:16px;height:16px;background:url('assets/ui/ic-lock.webp') center/16px 16px no-repeat;image-rendering:pixelated;opacity:.85;border-radius:0}
+/* v4 U49 2: no lock on the board. The next slot to open is a dimmed empty cell (a faint dashed square where a case would stand); its tap and aria-label still tell the condition. */
+#viewport #stage #board .cell.next-slot .box:after{content:"";position:absolute;left:22%;top:22%;width:56%;height:56%;background:#ffffff08;border:1px dashed var(--p-line-dim,#4a4058);box-sizing:border-box;opacity:.7;border-radius:2px}
 body:not(.phone) #viewport #stage #board .cell .lv{font:400 11px/1 Galmuri11,monospace}
 body:not(.phone) #viewport #stage #board .cell .box-fill{height:4px!important}
-body:not(.phone) #viewport #stage #board .cell.next-slot .box:after{left:calc(50% - 16px);top:calc(50% - 16px);width:32px;height:32px;background-size:32px 32px}
 @keyframes u46-bob{0%,100%{transform:translateY(0)}25%,75%{transform:translateY(-1px)}50%{transform:translateY(-2px)}}
 #viewport #stage #board .cell:not(.locked):not(.empty):not(.case-opening) .chest{animation:u46-bob 2.8s step-end infinite;animation-delay:var(--bob,0s)}
 @media(hover:hover){#viewport #stage #board .cell:not(.locked):hover .chest{filter:brightness(1.12)}}
@@ -1653,7 +1647,6 @@ body:not(.phone) .normalized-figure[data-emote]:not([data-emote=""]):after{width
 .normalized-figure[data-mood="surprised"]:after{background-image:url('assets/ui/ic-mood-alert.webp')}
 .normalized-figure[data-mood="sad"]:after{background-image:url('assets/ui/ic-mood-sweat.webp')}
 .normalized-figure[data-mood="smug"]:after{background-image:url('assets/ui/ic-mood-smug.webp')}
-.routine-strip:after{content:"";width:16px;height:16px;margin-left:auto;background:url('assets/ui/ic-routine.webp') center/16px 16px no-repeat;image-rendering:pixelated}
 #audienceCard.healing .audience:after{content:"";background:url('assets/ui/ic-sparkle.webp') 30% 30%/32px 32px no-repeat,url('assets/ui/ic-sparkle.webp') 70% 40%/32px 32px no-repeat;image-rendering:pixelated;font-size:0}
 /* v4 U46 C3: stage dressing overlays (img27), over the venue art and under the audience, at whole-number scales (--dk: 1 on small phones, 2 otherwise). */
 #stageDressing{position:absolute;inset:46px 0 98px;z-index:1;pointer-events:none;overflow:hidden;--dk:2}
@@ -1679,8 +1672,6 @@ body:not(.phone) .normalized-figure[data-emote]:not([data-emote=""]):after{width
 #viewport #stage .stat-sub:empty{display:none}/* v4 U47 3: the 비법 notebook has no top button (it opens from the fail panel only); the goal strip is plain text and never takes a tap. */
 #viewport #stage #bookButton{display:none!important}
 #viewport #stage #goalStrip{pointer-events:none;cursor:default}
-/* v4 U47 14: the cut-in strip shows one frame at a time (it used to leak the second frame when the panel is wider than a frame, as on 891x412). */
-#routineCutin .routine-strip{width:var(--routine-frame);margin-left:auto;margin-right:auto}
 /* v4 U47 13: every 능력치 cell is the same size. Phone and tablet panel: one 3-column grid whose rows are all as tall as the tallest cell (ui.js measures the cells and sets grid-auto-rows in px),
    text starts at the top of every cell, long numbers and texts wrap inside the cell. Desktop list: one column, every row the same height (the heckle interval is a second
    line inside its own cell, so no cell grows), label left and value right, long values wrap or clip inside the cell. */
@@ -1738,3 +1729,17 @@ body:not(.phone) #stage #leaveConfirm button{min-height:64px}
 #viewport #stage #board .cell.locked .lv,#viewport #stage #board .cell .lv:not([data-pips]){display:none}
 #viewport #stage #board .cell:not(.empty):not(.locked) .lv[data-pips]:empty{display:block}
 #viewport #stage .tree-routine-art{width:128px;height:128px;margin:6px auto;background-size:200% 100%;background-position:100% 0;background-repeat:no-repeat;image-rendering:pixelated;border:2px solid var(--line)}
+/* v4 U49 6 (owner: "능력치가 4,4로 보이는 거 깔끔하다"): the stats part of layout proposal A only. Phones and tablets: 능력치 = 4 x 2 equal tiles, all visible
+   without scrolling (ui.js still sets every row to the tallest tile); a long meaning line is clamped to 3 lines (2 on short phones). Desktop is unchanged. */
+.phone #viewport #stage #panel[data-screen="stats"] #panelBody{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;align-content:start}
+.phone #viewport #stage #panel[data-screen="stats"] .easy-stat{padding:8px 10px;gap:4px}
+.phone #viewport #stage #panel[data-screen="stats"] .easy-stat p{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden;overflow-wrap:normal}
+.phone-short #viewport #stage #panel[data-screen="stats"] .easy-stat p{-webkit-line-clamp:2}
+.phone:not(.tablet) #viewport #stage #panel[data-screen="stats"] #panelBody .easy-stat strong{font-size:var(--fs-l);line-height:20px}
+.tablet #viewport #stage #panel[data-screen="stats"] #panelBody .easy-stat strong{font-size:22px;line-height:28px}
+.tablet #viewport #stage #panel[data-screen="stats"] #panelBody .easy-stat h2{font-size:var(--fs-l)}
+.tablet #viewport #stage #panel[data-screen="stats"] #panelBody .easy-stat p{font-size:14px;line-height:20px}
+/* v4 U49 3: while a picture loads (.asset-pending, set by ui.js) its emoji fallback is not drawn: the text is transparent and the fallback children and the mood
+   emote are hidden. Only a real failure (.asset-failed) leaves the emoji visible, because .asset-pending is removed then. */
+/* v4 U49b 3: the glyph is its own span (.sprite-glyph, ui.js wrapGlyph), hidden by visibility below; no reliance on color:transparent for colour emoji (iPhone Safari). */
+.asset-pending:not(.asset-ready):not(.art-loaded):not(.visitor-art)>:not(.asset-sprite),.asset-pending:not(.asset-ready)[data-emote]:after{visibility:hidden!important}

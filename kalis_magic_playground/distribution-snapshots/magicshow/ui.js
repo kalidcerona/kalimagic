@@ -346,12 +346,25 @@ globalThis.Presentation = (() => {
     };
     if (img.complete && img.naturalHeight) apply(); else img.addEventListener('load', apply, { once: true });
   }
+  // v4 U49 3: while an image is still loading the host is .asset-pending and shows nothing (style.css hides its emoji text and fallback children);
+  // the emoji only shows once the image really failed (.asset-failed: error event, or complete with naturalWidth 0).
+  // v4 U49b 2: every picture request on a host gets a new generation (host._artGen); a load or error callback of an older request (an earlier
+  // audience with the same face, an earlier mood) is ignored, so it can neither show its picture nor end the new picture's pending state.
+  // v4 U49b 3: the emoji glyph written straight into a host is wrapped in its own span (.sprite-glyph), so hiding it never depends on the text colour.
+  const nextArt = host => (host._artGen = (host._artGen || 0) + 1);
+  function wrapGlyph(host) { for (const n of [...host.childNodes]) if (n.nodeType === 3 && n.nodeValue.trim()) { const s = document.createElement('span'); s.className = 'sprite-glyph'; n.replaceWith(s); s.append(n); } }
+  function pendingArt(host, source) { wrapGlyph(host); host.classList.remove('asset-failed'); host.classList.toggle('asset-pending', !(source.complete && source.naturalWidth)); }
+  function failedArt(host) { host.classList.remove('asset-pending'); host.classList.add('asset-failed'); }
   function sprite(host, path) {
     host.querySelectorAll(':scope > .asset-sprite').forEach(img => img.remove());
     host.classList.remove('asset-ready'); host.dataset.asset = path;
-    const source = assetImage(path);
+    const source = assetImage(path), gen = nextArt(host);
+    pendingArt(host, source);
+    const fail = () => { if (host._artGen === gen && host.dataset.asset === path && !source.naturalWidth) failedArt(host); };
     const show = () => {
-      if (host.dataset.asset !== path || !source.naturalWidth) return;
+      if (host._artGen !== gen || host.dataset.asset !== path) return;
+      if (!source.naturalWidth) { fail(); return; }
+      host.classList.remove('asset-pending');
       host.querySelectorAll(':scope > .asset-sprite').forEach(img => img.remove());
       const image = source.cloneNode(); image.className = 'asset-sprite'; image.alt = '';
       if (/assets\/(?:aud-|headliner-)/.test(path)||host.classList.contains('story-portrait')&&/^assets\/kali-/.test(path)) {
@@ -364,7 +377,7 @@ globalThis.Presentation = (() => {
       host.append(image); host.classList.add('asset-ready');
       if (host.id === 'audience') snapAudience(image);
     };
-    if (source.complete) show(); else source.addEventListener('load', show, { once: true });
+    if (source.complete) show(); else { source.addEventListener('load', show, { once: true }); source.addEventListener('error', fail, { once: true }); }
   }
   const venueAsset = v => `assets/${v.venueAsset}`;
   const audienceAsset = (v, a) => a.portraitAsset ? `assets/${a.portraitAsset}` : a === v.headliner ? `assets/headliner-${a.id}.png` : `assets/aud-${a.id}.png`;
@@ -374,8 +387,10 @@ globalThis.Presentation = (() => {
     const paths=['happy','serious','surprised','sad'].includes(mood)?[path.replace(/\.png$/,'-'+mood+'.png')]:[path];
     if(mood==='surprised')paths.push(path.replace(/\.png$/,'-happy.png'));paths.push(path);
     host.dataset.mood=mood;host.dataset.emote=emotes[mood]||'';
-    const attempt=i=>{if(host.dataset.mood!==mood)return;const source=assetImage(paths[i]);
-      const ready=()=>{if(host.dataset.mood!==mood)return;if(source.naturalWidth){sprite(host,paths[i]);host.dataset.emote=i===0&&mood!=='smug'?'':emotes[mood]||'';}else if(i+1<paths.length)attempt(i+1);};
+    if(!host.classList.contains('asset-ready')){wrapGlyph(host);host.classList.remove('asset-failed');host.classList.add('asset-pending');} // v4 U49 3: nothing (not the emoji) while the first face loads
+    const gen=nextArt(host); // v4 U49b 2: a newer request (another audience with the same mood, or any sprite call) makes this chain stale
+    const attempt=i=>{if(host._artGen!==gen||host.dataset.mood!==mood)return;const source=assetImage(paths[i]);
+      const ready=()=>{if(host._artGen!==gen||host.dataset.mood!==mood)return;if(source.naturalWidth){sprite(host,paths[i]);host.dataset.emote=i===0&&mood!=='smug'?'':emotes[mood]||'';}else if(i+1<paths.length)attempt(i+1);else if(!host.classList.contains('asset-ready'))failedArt(host);};
       if(source.complete)ready();else{source.addEventListener('load',ready,{once:true});source.addEventListener('error',ready,{once:true});}
     };attempt(0);
   }
@@ -682,6 +697,7 @@ globalThis.Presentation = (() => {
   const portrait = () => { let v = geo.get('portrait'); if (v === undefined) { v = innerHeight > innerWidth; geo.set('portrait', v); } return v; };
   const presentation=new Presentation.Queue();
   // v4 U47 5: true when the only reason for the pause is a character dialog (story scene): the on-screen pickup is still tappable then.
+  const lineOpen = () => !!state.u15.scene || !$('storyDialog').hidden; // v4 U49b 1: a character dialog is on screen (the pickup is never collected then)
   const dialogOnlyPause = () => !!state.u15.scene && !menu && !state.u18.map && !wonMoment?.pending && !document.hidden && !portrait() && $('offlineCard').hidden && !stageRewardHost && !(phone && !$('phoneMore').hidden);
   const paused = () => wonMoment?.pending || state.u18.map || !!state.u15.scene || (state.u15.tutorial.active && (state.u15.tutorial.phase!=='fight' || state.u15.tutorial.won)) || !state.onboarding.intro || document.hidden || !!menu || portrait() || !!stageRewardHost || !$('offlineCard').hidden || (phone && !$('phoneMore').hidden) || !$('leaveConfirm').hidden || !$('sceneCard').hidden;
   function fit() {
@@ -1100,7 +1116,7 @@ globalThis.Presentation = (() => {
       if(e.type==='trueFanReveal'){banner('숨은 도전 발견! 열렬한 찐팬','도감에서 새로운 도전을 확인해 보세요',false,true);sound('milestone');save();}
       if(e.type==='travelResult'){save();toast(e.success?`도전 성공!${e.gems?' 보석 +'+e.gems+(state.u18.paid.length*1<=C.CHALLENGE_CAP*100?' · 마술 실력 +1%':''):''}`:'도전 종료 · 다시 도전할 수 있어요');openStageMap();}
       if(e.type==='routine')showRoutine(e.id);
-      if(e.type==='futurePhase'){sound('finisher');$('routineCutin').hidden=true;if(e.phase===3)animate($('audience'),[{opacity:0},{opacity:1}],650);}
+      if(e.type==='futurePhase'){sound('finisher');endRoutine();if(e.phase===3)animate($('audience'),[{opacity:0},{opacity:1}],650);}
       if(e.type==='futureWin'){banner('미래의 나','다음 한 장은 네 몫이야');sound('ending');}
       if(e.type==='setBonus'){banner(e.slug==='collection'?'칼리 컬렉션 세트 완성!':'관객 세트 완성!',e.slug==='collection'?'연출 +10%':`${C.venueBySlug(e.slug).name} · 마술 실력 +3%`);sound('milestone');save();}
       if(e.type==='visitorCatch'){const r=$('eventVisitor').getBoundingClientRect(),stage=$('stage').getBoundingClientRect(),p={x:(r.left+r.width/2-stage.left)/scale,y:(r.top+r.height/2-stage.top)/scale};burst(p.x,p.y,'#ffe65c');toast(e.reward==='power'?'30초 마술 실력 ×2':e.reward==='coins'?`동전 +${C.formatNumber(e.amount)}`:'열쇠 +1');sound('event');save();}
@@ -1141,7 +1157,7 @@ globalThis.Presentation = (() => {
         const labels = { slot: ['새 케이스 자리!', '옆자리에서도 마술을 시작해요'], area: ['지팡이가 넓어졌어요!', '여러 케이스를 한 번에 두드려요'], dove: ['마술 비둘기 등장!', '관객에게 날아가 감탄을 더해요'], rabbit: ['마술 토끼 등장!', '주머니에서 동전을 꺼내줘요'], boxHelper: ['팬들이 일을 도와요!', '케이스를 돌아가며 두드려요'], assistant: ['마술 어시스턴트 등장!', '황금 케이스 작업도 맡겨요'], equip: ['마술용품 해금!', '소품 3개 놓기 · 같은 종류가 더 잘 나와요'] };
         banner(...(labels[e.id] || ['숨은 비법 발견!', D.tree.find(n => 'hidden:' + n.id === e.id)?.name || '새 비법을 확인하세요']), true, true); save();
       } else if (e.type === 'comboMilestone') {
-        toast(`콤보 ${e.threshold}! 피날레 +${e.gauge} · 동전 +${rounded(e.coins)}`);
+        toast(`액트 ${e.threshold}! 피날레 +${e.gauge} · 동전 +${rounded(e.coins)}`);
       } else if (e.type === 'golden') {
         const p = cellCenter(e.cell); burst(p.x, p.y, '#ffe65c'); toast('황금 케이스! 희귀 이상 소품과 추가 동전');
       } else if (e.type === 'goldenBreak') {
@@ -1300,6 +1316,7 @@ globalThis.Presentation = (() => {
       $('audience').replaceChildren(element('span', a.emoji, 'sprite-fallback'));
       sprite($('audience'), state.u15.tutorial.active ? (state.u15.tutorial.won?'assets/aud-tutorial-dogyeom-happy.png':'assets/aud-tutorial-dogyeom.png') : (audienceAsset(v,a))); $('audience').setAttribute('aria-label', a.name);
       if(!state.u15.tutorial.active)moodSprite($('audience'),audienceAsset(v,a),['supporter','helper'].includes(a.role)?'happy':D.lineFaces.faceMap.roleDefaults[a.role]||'doubt');
+      { const nextA = C.audienceAt(v, state.j + 1); if (nextA && nextA !== a) { const p = audienceAsset(v, nextA), mood = D.lineFaces.faceMap.roleDefaults[nextA.role]; for (const q of [p, p.replace(/\.png$/, '-happy.png'), mood && p.replace(/\.png$/, '-' + mood + '.png')]) if (q) assetImage(q); } } // v4 U49 3: warm the next audience's pictures
       animate($('audience'),[{opacity:0,transform:'translateY(16px)'},{opacity:1,transform:'translateY(0)'}],350);
       $('audience').classList.toggle('headliner', a === v.headliner);
       $('audienceLine').textContent = a.encounterLine || a.bio || a.flavor;
@@ -1350,6 +1367,7 @@ globalThis.Presentation = (() => {
     if (host.dataset.mood !== audMoodState) moodSprite(host, audienceAsset(v, a), audMoodState);
   }
   function kaliPose(frame,ms) {
+    if ($('magicianMini').classList.contains('routine-art')) return; // v4 U49 1: the routine art holds Kali's spot (no card-fan frame, no hop) until the cut-in ends
     kaliUntil = clock + ms;
     $('magicianMini').classList.remove('reacting'); $('magicianMini').dataset.face = 'event';
     $('magicianMini').dataset.frame = String(frame);
@@ -1468,17 +1486,23 @@ globalThis.Presentation = (() => {
     const path=kaliArtPath();
     if(outfitPath===path)return;outfitPath=path;const generation=++outfitGeneration,host=$('magicianMini');
     host.dataset.outfit=String(state.u14.outfit);host.classList.remove('performance-ready');
-    const image=assetImage(path);
-    const ready=()=>{if(generation!==outfitGeneration)return;if(image.naturalWidth===768 && image.naturalHeight===256){host.style.backgroundImage=`url('${assetUrl(path)}')`;host.classList.add('performance-ready');}else{host.style.backgroundImage='none';sprite(host,'assets/magician-idle.png');}};
-    if(image.complete)ready();else {image.addEventListener('load',ready,{once:true});image.addEventListener('error',ready,{once:true});}
+    const image=assetImage(path),art=nextArt(host);wrapGlyph(host);
+    const ready=()=>{if(generation!==outfitGeneration)return;if(host._artGen===art)host.classList.remove('asset-pending');if(image.naturalWidth===768 && image.naturalHeight===256){host.style.backgroundImage=`url('${assetUrl(path)}')`;host.classList.add('performance-ready');}else{host.style.backgroundImage='none';sprite(host,'assets/magician-idle.png');}};
+    if(image.complete)ready();else {host.classList.add('asset-pending');image.addEventListener('load',ready,{once:true});image.addEventListener('error',ready,{once:true});}
   }
   function renderU14() {
     syncDaily();renderOutfit();
     if(state.u14.collection&&!collectionShown){banner('칼리 컬렉션 세트 완성!','연출 +10%');sound('milestone');}collectionShown=state.u14.collection;
     const v=state.u14.visitor,host=$('eventVisitor');
-    host.hidden=v.left<=0||C.visitorBlocked(state)||!!menu||document.hidden;
+    // v4 U49 4: a character line (venue intro / stage line in the transition, a heckle line, the win line, the boo line) no longer hides the pickup. Core already
+    // stops its 8 s while it is blocked (visitorBlocked) and while the game is paused for a dialog, so it simply stays where it is; a tap made while it is blocked
+    // is kept and caught the moment the line is over. It is still hidden behind panels, the map, the curtain call, the review and the ending.
+    const blocked=C.visitorBlocked(state);
+    host.hidden=v.left<=0||document.hidden||(!!menu&&menu!=='boo')||!!state.u18.map||state.mode==='ending'||state.features.climax.left>0||state.review.target>=0;
+    if(visitorTap&&(v.left<=0||v.serial+1!==visitorTap))visitorTap=0; // visitorTap = serial + 1 of the tapped pickup (0 = none)
+    if(visitorTap&&!blocked&&!paused()&&!lineOpen()){visitorTap=0;events(C.catchVisitor(state));}
     if(!host.hidden){
-      if(host.dataset.kind!==v.kind){host.dataset.kind=v.kind;host.replaceChildren();host.append(document.createTextNode(v.kind==='rabbit'?'🐇':'✍️'));const img=element('img');img.src=`assets/event-${v.kind==='rabbit'?'golden-rabbit':'fan-sign'}.png`;img.alt='';img.onload=()=>host.classList.add('visitor-art');img.onerror=()=>host.classList.remove('visitor-art');host.classList.remove('visitor-art');host.append(img);}
+      if(host.dataset.kind!==v.kind){host.dataset.kind=v.kind;host.replaceChildren();host.append(element('span',v.kind==='rabbit'?'🐇':'✍️','sprite-glyph'));const img=element('img'),gen=nextArt(host);img.src=`assets/event-${v.kind==='rabbit'?'golden-rabbit':'fan-sign'}.png`;img.alt='';img.onload=()=>{if(host._artGen!==gen)return;host.classList.remove('asset-pending');host.classList.add('visitor-art');};img.onerror=()=>{if(host._artGen!==gen)return;host.classList.remove('visitor-art');failedArt(host);};host.classList.remove('visitor-art','asset-failed');host.classList.add('asset-pending');host.append(img);}
       host.style.left=`${6+(1-v.left/8000)*76}%`;host.setAttribute('aria-label',v.kind==='rabbit'?'황금 토끼 잡기':'사인 요청 팬 잡기');
     }
     const d=state.u14.daily,r=d.records[d.date]||{claimed:[],progress:{}},selected=C.dailySelection(d.date),remaining=selected.filter(id=>!r.claimed.includes(id)).length;
@@ -1486,9 +1510,9 @@ globalThis.Presentation = (() => {
     $('hapticsButton').textContent=state.u14.haptics?'진동 켜짐':'진동 꺼짐';$('hapticsButton').setAttribute('aria-pressed',String(state.u14.haptics));
     if(menu==='missions' && dailyPanelSignature!==JSON.stringify(r))drawMissions();
   }
-  let dailyPanelSignature='',missionsShown=-1;
+  let dailyPanelSignature='',missionsShown=-1,visitorTap=0;
   function artFallback(path,emoji,className='') {
-    const host=element('span',emoji,className),img=element('img');img.src=path;img.alt='';img.onload=()=>host.classList.add('art-loaded');img.onerror=()=>host.classList.remove('art-loaded');host.append(img);return host;
+    const host=element('span',emoji,className),img=element('img'),gen=nextArt(host);wrapGlyph(host);host.classList.add('asset-pending');img.src=path;img.alt='';img.onload=()=>{if(host._artGen!==gen)return;host.classList.remove('asset-pending');host.classList.add('art-loaded');};img.onerror=()=>{if(host._artGen!==gen)return;host.classList.remove('art-loaded');failedArt(host);};host.append(img);return host;
   }
   function drawMissions() {
     syncDaily();const d=state.u14.daily,r=d.records[d.date]||{claimed:[],progress:{},bonus:false,streakReward:0},streak=d.latest&&C.dateOrdinal(d.date)-C.dateOrdinal(d.latest)>1?0:d.streak;openPanel('missions','오늘의 공연');dailyPanelSignature=JSON.stringify(r);
@@ -1504,26 +1528,32 @@ globalThis.Presentation = (() => {
   function showRoutine(id){
     if(menu||state.u15.scene||state.u15.queue.length||state.u15.tutorial.active||state.telegraphed||state.heckleMs<=C.CONST.telegraphMs||state.features.climax.left>0||C.bossProfile(state)==='future'&&state.u19.telegraph>0)return false;
     if(presentation.items.some(x=>x.routine===id)||presentation.active?.routine===id)return true;
-    presentation.push({routine:id,minimum:1600,priority:5,start:item=>{paintRoutine(id);item.end=()=>{$('routineCutin').hidden=true;};}});return true;
+    presentation.push({routine:id,minimum:1600,priority:5,start:item=>{paintRoutine(id);item.end=endRoutine;}});return true;
   }
+  // v4 U49 1: the routine art plays in Kali's own spot (#magicianMini) instead of a square panel. The strip (512x256, two 256 frames in the same
+  // frame format as kali-performance) replaces the card-fan pose for the 1.6 s cut-in; a reaction face (.reacting / .disappointed) wins over it.
+  // #routineCutin stays in the page only as the invisible "a cut-in is playing" marker the triggers and tools read.
   function paintRoutine(id){
     const r=D.routines.find(r=>r.id===id);if(!r)return false;
-    const panel=$('routineCutin');panel.replaceChildren();const art=pxIcons(element('div','✨','routine-strip'));
-    const path=`assets/routine-${id}.png`;art.style.backgroundImage=`url('${assetUrl(path)}')`;const image=assetImage(path);if(image.complete&&!image.naturalWidth)art.style.backgroundImage='none';
-    panel.append(art,element('small',r.name));panel.hidden=false;panel.classList.remove('playing');void panel.offsetWidth;panel.classList.add('playing');routineUntil=clock+1600;return true;
+    const path=`assets/routine-${id}.png`,image=assetImage(path),host=$('magicianMini'),marker=$('routineCutin');
+    const play=()=>{if(marker.hidden||marker.dataset.routine!==id||!image.naturalWidth)return;host.style.setProperty('--routine-art',`url('${assetUrl(path)}')`);host.classList.remove('routine-art');void host.offsetWidth;host.classList.add('routine-art');};
+    marker.dataset.routine=id;marker.hidden=false;routineUntil=clock+1600;
+    if(image.complete)play();else image.addEventListener('load',play,{once:true});
+    return true;
   }
+  function endRoutine(){const marker=$('routineCutin');marker.hidden=true;delete marker.dataset.routine;$('magicianMini').classList.remove('routine-art');}
   function renderU19(){
     const future=C.bossProfile(state)==='future',u=state.u19;
     const warning=$('futureTelegraph');warning.hidden=!future||u.telegraph<=0;warning.textContent=u.phase===1?'네 쇼타임을 따라 할게.\n끝난 뒤에 나를 노려 봐.':['','','완벽한 루틴\n빛나는 칸을 계속 눌러 줘.','이게 진짜 미래의 나야.\n20초 동안 빛나는 칸만!'][u.phase];
     $('magicianMini').classList.toggle('future-suit',state.u18.equipped.kali==='future');
-    if(menu||state.u15.scene)$('routineCutin').hidden=true;
+    if((menu||state.u15.scene)&&!$('routineCutin').hidden)endRoutine();
     if(u.pending.length&&$('routineCutin').hidden&&showRoutine(u.pending[0]))u.pending.shift();
     document.querySelectorAll('#board .cell').forEach((el,i)=>el.classList.toggle('future-target',future&&u.phase>=2&&i===u.target&&(u.phase===2||u.window>0)));
   }
   // U36: state flags that style.css used to read through :has() selectors on #stage, #audienceCard and #activeSkills (see the U36 note in style.css).
   function syncFlags() {
     const stage = $('stage'), card = $('audienceCard'), skills = $('activeSkills'), coach = $('tutorialCoach');
-    const story = !$('storyDialog').hidden, coachShown = !coach.hidden, statsx = !!card.querySelector('.stats.phone-expanded'), routine = !$('routineCutin').hidden;
+    const story = !$('storyDialog').hidden, coachShown = !coach.hidden, statsx = !!card.querySelector('.stats.phone-expanded');
     stage.classList.toggle('f-story', story);
     stage.classList.toggle('f-coach', coachShown);
     stage.classList.toggle('f-coachc', coachShown && coach.dataset.compact === 'true');
@@ -1534,7 +1564,6 @@ globalThis.Presentation = (() => {
     stage.classList.toggle('f-banner', !$('banner').hidden);
     card.classList.toggle('f-story', story);
     card.classList.toggle('f-statsx', statsx);
-    card.classList.toggle('f-routine', routine);
     // U39: the bubble wins over the pattern label. Measure only when the text, the label or the viewport changed (not every frame).
     const lineEl = $('audienceLine'), patEl = $('patternLabel'), both = phone && !lineEl.hidden && !!patEl.textContent;
     const tailKey = lineEl.hidden ? '' : lineEl.textContent + '|' + innerWidth + 'x' + innerHeight; // the tail sits at the bubble's upper third, so read its height once per text
@@ -1580,7 +1609,7 @@ globalThis.Presentation = (() => {
     $('audienceCard').classList.toggle('boss-mirror', boss && state.phase2);
     $('phaseIndicator').hidden = !boss && !home;
     $('phaseIndicator').textContent = state.phase2 ? `최종 공연 · 마지막 질문 · 확신 ${state.features.climax.confidence}%` : '최종 공연 · 의심의 거울';
-    if (boss) $('patternLabel').textContent = state.phase2 ? '콤보 10마다 확신 +10% · 피날레 최대 ×2' : '15초마다 거울 케이스 2개 · 도우미와 연쇄로 열어요';
+    if (boss) $('patternLabel').textContent = state.phase2 ? '액트 10마다 확신 +10% · 피날레 최대 ×2' : '15초마다 거울 케이스 2개 · 도우미와 연쇄로 열어요';
     pxText($('starlightLabel'), `✦ 별빛 ${state.starlight}`);
     if(home&&!wonMoment) {
       $('phaseIndicator').textContent=['','1막 · 준비한 한 수','2막 · 함께 만든 공연','3막 · 마지막 인사'][state.review.act];
@@ -1589,7 +1618,7 @@ globalThis.Presentation = (() => {
       // v4 U38: the announced last heckle: its size is printed so the player can compare it with 멘탈 + 자신감 (and 야유 막기 can cancel it).
       if(C.threatInfo(state).last)$('patternLabel').textContent=`마지막 야유 · 한 번에 ${C.formatNumber(C.CONST.finalHeckle)}`;
     }
-    if(C.bossProfile(state)==='future'&&!wonMoment){const u=state.u19;$('phaseIndicator').hidden=false;$('phaseIndicator').textContent=['','1막 · 거울 쇼타임','2막 · 완벽한 루틴','3막 · 마지막 한 장'][u.phase];$('patternLabel').textContent=u.telegraph>0?['','쇼타임을 쓰면 내 방어도 올라가. 끝난 뒤 노려 봐.','빛나는 케이스를 2초마다 눌러 콤보를 이어 줘.','이게 진짜 미래의 나야. 20초 동안 빛나는 칸만!'][u.phase]:u.phase===1?'쇼타임 중 거울 방어 상승':u.phase===2?'빛나는 칸을 계속 눌러요':u.window>0?`빛나는 최강 케이스만 · ${Math.ceil(u.window/1000)}초`:'마지막 한 장을 이어 가요';}
+    if(C.bossProfile(state)==='future'&&!wonMoment){const u=state.u19;$('phaseIndicator').hidden=false;$('phaseIndicator').textContent=['','1막 · 거울 쇼타임','2막 · 완벽한 루틴','3막 · 마지막 한 장'][u.phase];$('patternLabel').textContent=u.telegraph>0?['','쇼타임을 쓰면 내 방어도 올라가. 끝난 뒤 노려 봐.','빛나는 케이스를 2초마다 눌러 액트를 이어 줘.','이게 진짜 미래의 나야. 20초 동안 빛나는 칸만!'][u.phase]:u.phase===1?'쇼타임 중 거울 방어 상승':u.phase===2?'빛나는 칸을 계속 눌러요':u.window>0?`빛나는 최강 케이스만 · ${Math.ceil(u.window/1000)}초`:'마지막 한 장을 이어 가요';}
     if(state.u18.challenge){const c=state.u18.challenge;$('patternLabel').textContent=c.kind==='trueFan'?'찐팬 도전 · '+C.trueFanRule(c.slug).label:'다시 만난 관객';}
     $('mapButton').disabled=!state.u18.map&&!C.travelAllowed(state);
     $('rebirthButton').hidden = !state.seenEnding || state.homecomingCleared&&!state.u19.cleared;
@@ -1847,7 +1876,7 @@ globalThis.Presentation = (() => {
     const product=C.failureProduct(state);
     if(product){
       const pinfo=C.nodeInfo(state,product.id),prow=element('div','','practice-gate fail-product');
-      prow.append(element('span',`${product.name} · 공격 ×${product.productMultiplier} · 동전 ${rounded(pinfo.cost)}`),action(pinfo.purchasable?'배우기':`동전 ${rounded(Math.ceil(pinfo.cost-state.coins))} 더`,()=>learnFailureProduct(product.id),!pinfo.purchasable));
+      prow.append(element('span',`${product.name} · 연출 ×${product.productMultiplier} · 동전 ${rounded(pinfo.cost)}`),action(pinfo.purchasable?'배우기':`동전 ${rounded(Math.ceil(pinfo.cost-state.coins))} 더`,()=>learnFailureProduct(product.id),!pinfo.purchasable));
       result.append(prow);
     }
     if(C.failureDealerAvailable(state))result.append(action('딜러와 한 판 하고 다시 도전',()=>{if(C.openFailureDealer(state)){save();menu='';dealer();}}));
@@ -2163,7 +2192,7 @@ globalThis.Presentation = (() => {
       box.querySelector('small').textContent = '마지막 관객은 나 자신이다 · 누르면 공연 시작';
     } else dialogueTimer = setTimeout(() => { if (menu === 'headliner') closePanel(); }, 1200);
   }
-  const achievementLabels = { boxes: '케이스 100개 열기', combo: '콤보 25', slots: '케이스 자리 9칸', golden: '첫 황금 케이스 열기', helper: '팬과 어시스턴트로 케이스 25개 열기', noDamage: '멘탈 손상 없이 관객이 만족', finale: '피날레 공연에서 박수 받기', timed: '제한 시간 안에 관객이 만족' };
+  const achievementLabels = { boxes: '케이스 100개 열기', combo: '액트 25', slots: '케이스 자리 9칸', golden: '첫 황금 케이스 열기', helper: '팬과 어시스턴트로 케이스 25개 열기', noDamage: '멘탈 손상 없이 관객이 만족', finale: '피날레 공연에서 박수 받기', timed: '제한 시간 안에 관객이 만족' };
   function achievementPanel() {
     const list = element('div', '', 'achievement-list');
     list.append(element('p', `업적 연출 +${(state.features.achievements.length * .5).toFixed(1)}% · 차원 환생에서 초기화`));
@@ -2285,7 +2314,7 @@ globalThis.Presentation = (() => {
       ($('helperControls') || $('stage')).append(hud);
     }
     const goal = C.nextComboGoal(state);
-    $('comboGoal').textContent = goal ? `다음 ${goal.threshold} · 피날레 +${goal.gauge} · 동전 +${rounded(goal.coins)}` : state.tree.comboGift ? '이번 관객 콤보 보상 완료' : '';
+    $('comboGoal').textContent = goal ? `다음 ${goal.threshold} · 피날레 +${goal.gauge} · 동전 +${rounded(goal.coins)}` : state.tree.comboGift ? '이번 관객 액트 보상 완료' : '';
     const active = state.features.encoreLeft > 0;
     $('stage').classList.toggle('encore-active', !!active);
     const seconds = Math.ceil((active ? state.features.encoreLeft : state.features.encoreMs) / 1000);
@@ -2341,7 +2370,7 @@ globalThis.Presentation = (() => {
     if (bestiaryTab === 'endings') { drawArchive(); return; }
     if (bestiaryTab === 'equip') { equipPanel(); return; }
     if (bestiaryTab === 'achievements') { achievementPanel(); return; }
-    const outfit=element('div','','outfit-collection');outfit.append(element('strong',`칼리 의상 · ${state.u18.equipped.kali?D.cosmetics.kali.find(x=>x.id===state.u18.equipped.kali).name:['','거실 티셔츠','무대 정장','우주 망토'][state.u14.outfit]}`));const strip=element('div','','outfit-preview'+(state.u18.equipped.kali==='future'?' future-suit':''));strip.style.backgroundImage=`url('${assetUrl(kaliArtPath())}')`;strip.textContent='🎩';const image=assetImage(kaliArtPath());const ready=()=>{if(image.naturalWidth===768&&image.naturalHeight===256)strip.classList.add('art-loaded');else strip.style.backgroundImage='none';};if(image.complete)ready();else {image.addEventListener('load',ready,{once:true});image.addEventListener('error',ready,{once:true});}outfit.append(strip);$('panelBody').append(outfit);
+    const outfit=element('div','','outfit-collection');outfit.append(element('strong',`칼리 의상 · ${state.u18.equipped.kali?D.cosmetics.kali.find(x=>x.id===state.u18.equipped.kali).name:['','거실 티셔츠','무대 정장','우주 망토'][state.u14.outfit]}`));const strip=element('div','','outfit-preview'+(state.u18.equipped.kali==='future'?' future-suit':''));strip.style.backgroundImage=`url('${assetUrl(kaliArtPath())}')`;strip.append(element('span','🎩','sprite-glyph'));const image=assetImage(kaliArtPath()),art=nextArt(strip);const ready=()=>{if(strip._artGen!==art)return;strip.classList.remove('asset-pending');if(image.naturalWidth===768&&image.naturalHeight===256)strip.classList.add('art-loaded');else{strip.style.backgroundImage='none';strip.classList.add('asset-failed');}};if(image.complete)ready();else {strip.classList.add('asset-pending');image.addEventListener('load',ready,{once:true});image.addEventListener('error',ready,{once:true});}outfit.append(strip);$('panelBody').append(outfit);
     const routines=element('div','','routine-collection');routines.append(element('strong','나의 마술'));for(const r of D.routines.filter(r=>state.u19.routines.includes(r.id))){const item=element('span','','routine-item');item.title=r.name;item.setAttribute('role','img');item.setAttribute('aria-label',r.name);item.append(artFallback(`assets/icon-routine-${r.id}.png`,'✨','routine-icon'));routines.append(item);} /* v4 U48 N6: images only, the name is in the title and aria-label */$('panelBody').append(routines);if(state.u19.cleared||state.u18.owned.kali.includes('future'))$('panelBody').append(element('p','🏅 미래의 나 · 다음 한 장을 건네받았다.'));
     const products=D.tree.filter(n=>n.branch==='collection'),owned=products.filter(n=>state.tree[n.id]>0).length,collection=element('p',`칼리 컬렉션 ${owned}/${products.length}${state.u14.collection?' · 연출 +10%':''}`);if(state.u14.collection)collection.prepend(artFallback('assets/icon-set-bonus.png','🎀','set-ribbon u14-art'));$('panelBody').append(collection,element('p',D.easyExtras.set,'easy-description'));
     const guides=element('section','','bestiary-guides');
@@ -3589,7 +3618,7 @@ globalThis.Presentation = (() => {
   $('musicVolume').addEventListener('input',()=>window.Sfx&&window.Sfx.setMusicVolume(Number($('musicVolume').value)));
   if(window.Sfx){$('musicVolume').value=window.Sfx.musicVolume();const on=window.Sfx.musicEnabled();$('musicButton').textContent=phone?(on?'음악 ON':'음악 OFF'):on?'배경음악 켜짐':'배경음악 꺼짐';$('musicButton').setAttribute('aria-pressed',String(on));}
   $('missionsButton').addEventListener('click',()=>{if(!['boo','fail','dealer','headliner','ending','rebirth','bossPhase'].includes(menu))drawMissions();});
-  $('hapticsButton').addEventListener('click',()=>{C.toggleHaptics(state);save();renderU14();});  $('eventVisitor').addEventListener('click',()=>{if(paused()&&!dialogOnlyPause())return;const list=C.catchVisitor(state);events(list);render();});
+  $('hapticsButton').addEventListener('click',()=>{C.toggleHaptics(state);save();renderU14();});  $('eventVisitor').addEventListener('click',()=>{if(paused()&&!dialogOnlyPause()&&menu!=='boo')return;if(C.visitorBlocked(state)||paused()||lineOpen()){if(state.u14.visitor.left>0)visitorTap=state.u14.visitor.serial+1;return;}const list=C.catchVisitor(state);events(list);render();}); // v4 U49 4 / U49b 1: a tap during any line (story dialog, heckle, win, boo) is kept; renderU14 catches it after the line
   $('soundButton').addEventListener('click', () => {
     if (window.Sfx) window.Sfx.toggle();
     updateSoundButton();
@@ -3798,6 +3827,7 @@ globalThis.Presentation = (() => {
     const line=lines[Math.min(index,lines.length-1)],art=element('span',line.speaker==='칼리'?'🎩':'👤','story-portrait');
     if(line.speaker==='칼리'){const mood=D.lineFaces.moods[u25DialogMoodKey(key,index)]||'serious';art.classList.toggle('future-suit',state.u18.equipped.kali==='future');if(['sad','surprised'].includes(mood))sprite(art,'assets/kali-react-'+mood+'.png');else moodSprite(art,kaliArtPath(),mood);}
     else{const a=D.venues.flatMap(v=>C.roster(v)).find(a=>a.name===line.speaker);const moodKey=u25DialogMoodKey(key,index);moodSprite(art,speakerPortrait(line.speaker),D.lineFaces.moods[moodKey]||D.lineFaces.faceMap.roleDefaults[a?.role]||'serious');}
+    { const after=lines[index+1]; if(after){ const p=after.speaker==='칼리'?kaliArtPath():speakerPortrait(after.speaker); if(p)assetImage(p); } } // v4 U49 3: warm the next speaker's portrait
     const copy=element('div','','story-copy'),lineText=element('p','');copy.append(element('strong',line.speaker),lineText);typeLine(lineText,line.text); // v4 U47 4: typed per character; a tap completes the line, the next tap goes on
     const start=(state.idle.waiting||state.u15?.scene?.kind==='opening')&&index===lines.length-1&&!state.u15.queue.length;
     const next=action(start?'무대 시작':'다음',()=>{if(finishTypingNow())return;advance();if(start)C.startStage(state);save();}),dismiss=action('건너뛰기',skip);dismiss.hidden=start;host.classList.toggle('stage-launch',start);host.append(art,copy,next,dismiss);
@@ -3926,7 +3956,7 @@ globalThis.Presentation = (() => {
       // v4 U38: the fight numbers come first and use the same units as the threat numbers on the audience card (per second, C.formatNumber).
       const F=C.formatNumber,th=C.threatInfo(state),mine=C.attackRate(state);
       const rows=[
-        ['내 공격','관객의 의심을 1초에 이만큼 줄여요',mine==null?'재는 중':`${F(mine)}/초`],
+        ['초당 연출','관객의 의심을 1초에 이만큼 줄여요',mine==null?'재는 중':`${F(mine)}/초`],
         ['야유',th.last?'지금은 마지막 야유 한 번이 와요 (멘탈과 자신감을 합친 만큼 버텨요)':`야유 게이지가 가득 차면 이만큼 받아요 (${+th.every.toFixed(1)}초마다 한 번)`,th.last?`마지막 한 번 ${F(th.hit)}`:`한 번에 ${F(th.hit)}`]
       ];
       if(th.regen>0)rows.push(['의심 회복','관객의 의심이 1초에 이만큼 다시 차올라요',`${F(th.regen)}/초`]);

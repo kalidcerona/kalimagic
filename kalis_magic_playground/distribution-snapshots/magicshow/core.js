@@ -2086,7 +2086,7 @@
   function gateProgress(state, gate) {
     if (!gate) return null;
     var current = gate.type === 'venue' ? (reached(state,gate.slug) ? 1 : 0) : gate.type === 'casesAtLv' ? state.board.filter(function(c){return (c.lv||1)>=gate.lv;}).length : state.features.progress[gate.type] || 0;
-    var label = {venue:'공연장 도착',casesAtLv:'LV '+gate.lv+' 케이스 수',comboMax:'최고 콤보',dealerFlips:'카드 뒤집기 성공',coinsEarned:'차원 누적 동전',goldenOpened:'황금 케이스 개봉'}[gate.type];
+    var label = {venue:'공연장 도착',casesAtLv:'LV '+gate.lv+' 케이스 수',comboMax:'최고 액트',dealerFlips:'카드 뒤집기 성공',coinsEarned:'차원 누적 동전',goldenOpened:'황금 케이스 개봉'}[gate.type];
     var target = gate.type === 'venue' ? 1 : gate.target;
     if (gate.type === 'venue') return {current:current,target:target,met:!!current,text:VENUES[venueNumber(gate.slug)-1].name+' 도착 필요'};
     return {current:current,target:target,met:current>=target,text:'조건: '+label+' ('+formatNumber(current)+'/'+formatNumber(gate.target)+')'};
