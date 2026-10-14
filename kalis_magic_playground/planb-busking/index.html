@@ -38,8 +38,6 @@
   .wrap { max-width:1120px; margin:0 auto; padding-inline:28px; }
   .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
 
-  /* 작성 중 표시 */
-  .draft-bar { position:sticky; top:env(safe-area-inset-top, 0px); z-index:30; background:var(--amber); color:#131110; font-size:13px; font-weight:700; line-height:1.5; padding:8px 16px; text-align:center; }
   .todo { color:var(--alert); font-size:12.5px; font-weight:700; }
 
   /* 시리즈 바 */
@@ -209,7 +207,6 @@
 </style>
 </head>
 <body data-planb-page="busking">
-<div class="draft-bar">작성 중 · <span class="todo" style="color:#7a1d0c">[ ]</span> 표시는 아직 채울 곳이에요. 완성 후 이 줄은 지웁니다.</div>
 
 <nav class="series" aria-label="11월 세미나 시리즈">
   <div class="wrap">
@@ -245,7 +242,7 @@
     <div><p class="strip-k">DATE</p><p class="strip-v">11.15 일요일</p></div>
     <div><p class="strip-k">TIME</p><p class="strip-v">15:00-18:30</p></div>
     <div><p class="strip-k">PLACE</p><p class="strip-v">스넥 연습실<small>홍대입구역 도보 5분</small></p></div>
-    <div><p class="strip-k" data-strip-label>SUPER EARLY</p><p class="strip-v is-price" data-strip-price><s class="was-top">정가 7만원</s><span class="now-line">5만원 <span class="off">28%</span></span><small>통합권 <s>8만원</s> 6만원</small><small>10/27(화)까지</small></p></div>
+    <div><p class="strip-k" data-strip-label>SUPER EARLY</p><p class="strip-v is-price" data-strip-price><s class="was-top">정가 9만원</s><span class="now-line">7만원 <span class="off">22%</span></span><small>통합권 <s>10만원</s> 8만원</small><small>10/27(화)까지</small></p></div>
   </div>
   <div class="cta-row">
     <p class="deadline" data-deadline><span data-deadline-main>10월 17일(토) 판매 시작</span><small data-deadline-sub>슈퍼 얼리버드는 11일 동안만</small></p>
@@ -388,22 +385,22 @@
       <div class="tier-head"><p class="tier-name">슈퍼 얼리버드</p><span class="tier-chip"></span></div>
       <p class="tier-period">10/17(토)-10/27(화)</p>
       <p class="tier-label">버스킹 단독</p>
-      <p class="tier-was">정가 <s>7만원</s></p>
-      <p class="tier-price"><span class="now">5만원</span><span class="off">28% 할인</span></p>
+      <p class="tier-was">정가 <s>9만원</s></p>
+      <p class="tier-price"><span class="now">7만원</span><span class="off">22% 할인</span></p>
       <div class="tier-rows">
         <div><span><a href="../planb-sleeving/">슬리빙 단독</a></span><b>3만원</b></div>
-        <div><span>통합권 <span class="save">2만원 절약</span></span><span><s>8만원</s> <b>6만원</b></span></div>
+        <div><span>통합권 <span class="save">2만원 절약</span></span><span><s>10만원</s> <b>8만원</b></span></div>
       </div>
     </article>
     <article class="tier" data-tier="early">
       <div class="tier-head"><p class="tier-name">얼리버드</p><span class="tier-chip"></span></div>
       <p class="tier-period">10/28(수)-11/8(일)</p>
       <p class="tier-label">버스킹 단독</p>
-      <p class="tier-was">정가 <s>7만원</s></p>
-      <p class="tier-price"><span class="now">6만원</span><span class="off">14% 할인</span></p>
+      <p class="tier-was">정가 <s>9만원</s></p>
+      <p class="tier-price"><span class="now">8만원</span><span class="off">11% 할인</span></p>
       <div class="tier-rows">
         <div><span><a href="../planb-sleeving/">슬리빙 단독</a></span><b>4만원</b></div>
-        <div><span>통합권 <span class="save">1만원 절약</span></span><span><s>10만원</s> <b>9만원</b></span></div>
+        <div><span>통합권 <span class="save">1만원 절약</span></span><span><s>12만원</s> <b>11만원</b></span></div>
       </div>
     </article>
     <article class="tier" data-tier="full">
@@ -411,7 +408,7 @@
       <p class="tier-period">11/9(월)부터</p>
       <p class="tier-label">버스킹 단독</p>
       <p class="tier-was">정가</p>
-      <p class="tier-price"><span class="now">7만원</span></p>
+      <p class="tier-price"><span class="now">9만원</span></p>
       <div class="tier-rows">
         <div><span><a href="../planb-sleeving/">슬리빙 단독</a></span><b>5만원</b></div>
         <div><span>통합권</span><b class="ended">판매 종료</b></div>
@@ -437,7 +434,7 @@
     <details><summary>강사에게 직접 질문할 수 있나요?</summary><p>네. 세 강사가 한자리에서<br>인터뷰 형식으로 답하는 Q&amp;A 시간이 있어요.</p></details>
     <details><summary>뒤풀이는 꼭 가야 하나요?</summary><p>선택이에요. 5,000원을 내면 참여할 수 있고,<br>장소만 제공해요.</p></details>
     <details><summary>한 회차만 신청해도 되나요?</summary><p>네. 버스킹과 슬리빙은 각각 신청할 수 있어요.<br>둘 다 들으면 통합권이 더 저렴해요.</p></details>
-    <details><summary>단독권을 통합권으로 바꿀 수 있나요?</summary><p>11월 8일까지는 차액만 내면 돼요.<br>예: 슈퍼 얼리버드 단독권(5만원)을 얼리버드 기간에 바꾸면<br>9만원에서 5만원을 뺀 4만원을 내요.</p></details>
+    <details><summary>단독권을 통합권으로 바꿀 수 있나요?</summary><p>11월 8일까지는 차액만 내면 돼요.<br>예: 슈퍼 얼리버드 단독권(7만원)을 얼리버드 기간에 바꾸면<br>11만원에서 7만원을 뺀 4만원을 내요.</p></details>
     <details><summary>한 회차를 못 가게 되면요?</summary><p>회차별 환불·양도 기준은 곧 안내할게요. <span class="todo">[통합권 부분 환불 기준 확정 전]</span></p></details>
   </div>
 </section>
@@ -483,11 +480,11 @@
   var root = typeof globalThis !== "undefined" ? globalThis : window;
   var OPEN = 20261017, SUPER_END = 20261027, EARLY_END = 20261108, EVENT_DAY = 20261115;
   var PRICE = {
-    super: { busking: "5만원", off: "28%", combo: "6만원", comboWas: "8만원", until: "10/27(화)까지", short: "10/27까지" },
-    early: { busking: "6만원", off: "14%", combo: "9만원", comboWas: "10만원", until: "11/8(일)까지", short: "11/8까지" },
-    full:  { busking: "7만원" }
+    super: { busking: "7만원", off: "22%", combo: "8만원", comboWas: "10만원", until: "10/27(화)까지", short: "10/27까지" },
+    early: { busking: "8만원", off: "11%", combo: "11만원", comboWas: "12만원", until: "11/8(일)까지", short: "11/8까지" },
+    full:  { busking: "9만원" }
   };
-  var FULL = "7만원";
+  var FULL = "9만원";
 
   function kstToday(now) {
     if (now == null && root.PLANB_NOW != null) now = root.PLANB_NOW;
