@@ -725,6 +725,64 @@ function learnHtml() {
   </section>`;
 }
 
+let deferredPrompt = null;
+function standaloneDisplay() {
+  let mode = false;
+  try {
+    if (typeof window.matchMedia === "function") mode = window.matchMedia("(display-mode: standalone)").matches || window.matchMedia("(display-mode: window-controls-overlay)").matches;
+  } catch {}
+  return mode || navigator.standalone === true;
+}
+function promptReady(event) {
+  return !!event && event.isTrusted !== false && typeof event.prompt === "function" && !!event.userChoice && typeof event.userChoice.then === "function";
+}
+function installLines() {
+  const ua = String(navigator.userAgent || ""), touch = Number(navigator.maxTouchPoints) || 0;
+  const ios = /iPad|iPhone|iPod/.test(ua) || (String(navigator.platform || "") === "MacIntel" && touch > 1);
+  if (ios) {
+    if (/CriOS|FxiOS|EdgiOS/.test(ua)) return ["지금 브라우저에서는 설치 창이 안 열릴 수 있어요.", "Safari로 이 주소를 연 뒤 공유, 홈 화면에 추가를 눌러 주세요."];
+    return ["Safari 아래의 공유 버튼을 누르고", "홈 화면에 추가를 눌러 주세요.", "‘웹 앱으로 열기’가 보이면 켜 주세요."];
+  }
+  if (/Android/i.test(ua)) return ["앱 설치 버튼이 없으면 Chrome 메뉴에서", "‘앱 설치’를 눌러 주세요.", "‘홈 화면에 추가’는 바로가기일 수 있어요."];
+  return ["설치 창이 없으면 브라우저 메뉴에서", "‘앱 설치’를 확인해 주세요."];
+}
+function installPanel() {
+  if (standaloneDisplay()) return "";
+  return `<section class="panel install-card" data-install-card>
+        <h3>홈 화면에 설치</h3>
+        ${chunks(["홈 화면에 설치하면 공연 중에도 바로 열 수 있어요.", "Pi Max를 앱처럼 설치해 보세요."])}
+        ${chunks(installLines())}
+        ${promptReady(deferredPrompt) ? `<button type="button" data-action="install" class="primary">앱 설치</button>` : ""}
+      </section>
+      `;
+}
+function rerenderInstall() {
+  if (state.tab === "settings") render();
+}
+async function runInstall() {
+  const event = deferredPrompt;
+  if (!promptReady(event) || standaloneDisplay()) return;
+  deferredPrompt = null;
+  rerenderInstall();
+  try {
+    await event.prompt();
+    await event.userChoice;
+  } catch {}
+  rerenderInstall();
+}
+if (typeof window !== "undefined") {
+  window.addEventListener("beforeinstallprompt", (event) => {
+    if (!promptReady(event) || standaloneDisplay()) return;
+    if (typeof event.preventDefault === "function") event.preventDefault();
+    deferredPrompt = event;
+    rerenderInstall();
+  });
+  window.addEventListener("appinstalled", () => {
+    deferredPrompt = null;
+    rerenderInstall();
+  });
+}
+
 function settingsHtml() {
   const counts = [5, 10, 15, 20].map((count) => (
     `<button type="button" data-action="count" data-count="${count}" class="${state.settings.count === count ? "selected" : ""}">${count}</button>`
@@ -746,7 +804,7 @@ function settingsHtml() {
         </div>
         ${chunks(["켜면 암기표 문장 옆의 한글 발음만 보여 줍니다. 글자마다의 이름은 보이지 않고, 연습 화면에는 발음을 표시하지 않습니다."])}
       </section>
-      <section class="panel">
+      ${installPanel()}      <section class="panel">
         <h3>기록 지우기</h3>
         ${chunks(["연습 기록만 지웁니다.", "지금 문제는 남습니다."])}
         ${state.confirmReset
@@ -853,6 +911,7 @@ function onClick(event) {
     return;
   }
   if (action === "weak-review") return startWeakReview();
+  if (action === "install") return runInstall();
   if (action === "count") return setCount(Number(button.dataset.count));
   if (action === "phonetic") return setPhonetic(button.dataset.on === "true");
   if (action === "checker-order") {
