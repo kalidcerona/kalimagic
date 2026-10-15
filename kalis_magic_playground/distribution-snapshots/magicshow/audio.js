@@ -11,21 +11,82 @@
   try {const saved=JSON.parse(localStorage.getItem(MUSIC_KEY));if(saved&&typeof saved.on==='boolean')musicOn=saved.on;if(saved&&Number.isFinite(saved.volume))musicVolume=Math.max(0,Math.min(1,saved.volume));} catch(error) { /* Optional preference. */ }
   const voices = new Set();
   try { muted = localStorage.getItem(KEY) === 'off'; } catch (error) { /* Storage is optional. */ }
+  // U55: keep activation work synchronous; promises only observe the result.
+  let recoverySince = null, clockProbe = null, lastAudioError = '';
+  const RECOVERY_MS = 1500;
+  function playbackSession() {
+    try { if (globalThis.navigator?.audioSession) globalThis.navigator.audioSession.type = 'playback'; }
+    catch (error) { lastAudioError = 'audioSession: ' + error.message; }
+  }
+  function discardContext() {
+    const old = context;
+    if (old) old.onstatechange = null;
+    stopMusic();
+    for (const source of voices) { try { source.stop(); source.disconnect(); } catch (error) { /* Already ended. */ } }
+    voices.clear();
+    if (master) master.disconnect();
+    context = master = noiseBuffer = undefined;
+    lastTap = -Infinity; lastPlayed.clear();
+    recoverySince = clockProbe = null;
+    try { if (old && old.state !== 'closed') Promise.resolve(old.close()).catch(() => {}); }
+    catch (error) { /* A broken context must not prevent replacement. */ }
+  }
   function unlock() {
     gestured = true;
-    if(context&&context.state==='running'&&!needsGesture){startMusic();return;}
-    needsGesture=false;
+    if (document.hidden) { needsGesture = true; return; }
+    const now = Date.now();
+    const frozen = context?.state === 'running' && clockProbe &&
+      context.currentTime === clockProbe.time && now - clockProbe.at >= RECOVERY_MS;
+    if (context && (context.state === 'closed' || frozen ||
+      (context.state !== 'running' && recoverySince !== null && now - recoverySince >= RECOVERY_MS))) discardContext();
+    if (context?.state === 'running' && !needsGesture) {
+      if (!clockProbe || context.currentTime !== clockProbe.time) clockProbe = { time: context.currentTime, at: now };
+      startMusic(); return Promise.resolve();
+    }
+    needsGesture = true;
+    playbackSession();
     try {
       const Audio = globalThis.AudioContext || globalThis.webkitAudioContext;
       if (!Audio) return;
       if (!context) {
-        context = new Audio();
-        context.onstatechange=()=>{if(context.state!=='running'){needsGesture=true;stopMusic();}else startMusic();}; master = context.createGain();
+        context = new Audio(); // Let the output device choose its sample rate.
+        const created = context;
+        context.onstatechange = () => {
+          if (context !== created) return;
+          needsGesture = created.state !== 'running';
+          if (needsGesture) { clockProbe = null; stopMusic(); }
+          else { recoverySince = null; startMusic(); }
+        };
+        master = context.createGain();
         master.gain.value = muted ? 0 : .16; master.connect(context.destination);
       }
-      if ((context.state === 'suspended' || context.state === 'interrupted')) context.resume().then(startMusic).catch(() => {});
-      if(musicOn && !document.hidden && !musicTimer) startMusic();
-    } catch (error) { /* Unsupported audio must never interrupt the game. */ }
+      const active = context;
+      if (recoverySince === null) recoverySince = now;
+      let resumed;
+      try { if (active.state !== 'running') resumed = active.resume(); }
+      catch (error) { lastAudioError = 'resume: ' + error.message; }
+      // Start in the gesture, not in resume().then(): older iOS needs a buffer source.
+      try {
+        const source = active.createBufferSource();
+        source.buffer = active.createBuffer(1, 1, active.sampleRate);
+        source.connect(master);
+        source.onended = () => source.disconnect();
+        source.start(0);
+      } catch (error) { lastAudioError = 'unlock buffer: ' + error.message; }
+      const ready = () => {
+        if (context !== active) return;
+        needsGesture = active.state !== 'running';
+        if (!needsGesture) {
+          recoverySince = null; clockProbe = { time: active.currentTime, at: Date.now() };
+          startMusic();
+        }
+      };
+      ready();
+      return Promise.resolve(resumed).then(ready, error => {
+        if (context !== active) return;
+        needsGesture = true; lastAudioError = 'resume: ' + error.message;
+      });
+    } catch (error) { needsGesture = true; lastAudioError = 'unlock: ' + error.message; }
   }
   function tone(freq, duration, delay = 0, type = 'sine', volume = .4, end = freq) {
     if (!context || context.state !== 'running' || muted || document.hidden || voices.size >= 16) return;
@@ -155,9 +216,61 @@
   function setMusicVolume(value){if(!Number.isFinite(Number(value)))return;musicVolume=Math.max(0,Math.min(1,Number(value)));saveMusic();if(musicBus)musicBus.gain.setTargetAtTime(musicVolume*.22,context.currentTime,.02);}
   for(const event of ['pointerdown','pointerup','touchend','click','keydown'])document.addEventListener(event,unlock,{capture:true,passive:true});
   document.addEventListener('visibilitychange',()=>{
-    needsGesture=true;
+    needsGesture=true; recoverySince=clockProbe=null;
     if(document.hidden){stopMusic();if(context&&context.suspend)context.suspend().catch(()=>{});}
   });
-  globalThis.addEventListener?.('pageshow',()=>{needsGesture=true;stopMusic();});
+  globalThis.addEventListener?.('pageshow',()=>{needsGesture=true;recoverySince=clockProbe=null;stopMusic();});
+  // U55: opt-in diagnostics, no UI or media element in normal play.
+  function mountAudioTest() {
+    if (!globalThis.location?.search || typeof globalThis.URLSearchParams !== 'function') return;
+    try { if (new globalThis.URLSearchParams(globalThis.location.search).get('audiotest') !== '1') return; }
+    catch (error) { return; }
+    const panel = document.createElement('section');
+    panel.id = 'audioTestPanel'; panel.setAttribute('aria-label', '오디오 진단');
+    panel.style.cssText = 'position:fixed;right:8px;top:8px;z-index:2147483647;max-width:calc(100vw - 16px);max-height:60vh;overflow:auto;padding:10px;background:#111;color:#fff;border:1px solid #aaa;border-radius:8px;font:12px/1.5 monospace;pointer-events:auto';
+    const status = document.createElement('pre'); status.style.cssText = 'margin:0 0 6px;white-space:pre-wrap';
+    let result = '버튼을 눌러 소리를 비교하세요.';
+    const update = () => {
+      let session = '미지원';
+      try { session = globalThis.navigator?.audioSession?.type || session; } catch (error) { /* Optional API. */ }
+      status.textContent = '오디오 진단\nstate: ' + (context?.state || '미생성') +
+        '\nsampleRate: ' + (context?.sampleRate || '-') + '\naudioSession: ' + session +
+        '\nmuted: ' + muted + ' / music: ' + musicOn + ' / volume: ' + musicVolume +
+        '\nneedsGesture: ' + needsGesture + '\n' + result + (lastAudioError ? '\n최근 오류: ' + lastAudioError : '');
+    };
+    const beep = document.createElement('button'); beep.textContent = '삐 소리';
+    beep.addEventListener('click', () => {
+      const active = unlock();
+      const failed = error => { result = '삐 소리 실패: ' + (error?.message || lastAudioError || '오디오가 실행되지 않았습니다. 버튼을 다시 눌러 주세요.'); update(); };
+      const sound = () => {
+        if (context?.state !== 'running' || document.hidden) { failed(); return; }
+        try { tone(880, .25, 0, 'sine', .6); result = muted ? '게임 음소거가 켜져 있습니다.' : '게임 master로 삐 소리 요청'; update(); }
+        catch (error) { failed(error); }
+      };
+      if (context?.state === 'running') sound(); else Promise.resolve(active).then(sound, failed);
+    });
+    const basic = document.createElement('button'); basic.textContent = '기본 소리';
+    basic.style.marginLeft = '8px';
+    // PCM mono 16-bit, 8 kHz, 250 ms. No assets or Web Audio dependency.
+    const rate = 8000, count = 2000, wav = new Uint8Array(44 + count * 2), view = new DataView(wav.buffer);
+    const ascii = (at, text) => { for (let i = 0; i < text.length; i++) wav[at + i] = text.charCodeAt(i); };
+    ascii(0, 'RIFF'); view.setUint32(4, wav.length - 8, true); ascii(8, 'WAVE'); ascii(12, 'fmt ');
+    view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, 1, true);
+    view.setUint32(24, rate, true); view.setUint32(28, rate * 2, true); view.setUint16(32, 2, true); view.setUint16(34, 16, true);
+    ascii(36, 'data'); view.setUint32(40, count * 2, true);
+    for (let i = 0; i < count; i++) view.setInt16(44 + i * 2, Math.round(Math.sin(2 * Math.PI * 880 * i / rate) * 6000 * Math.min(1, i / 80, (count - 1 - i) / 80)), true);
+    const media = document.createElement('audio');
+    media.src = 'data:audio/wav;base64,' + btoa(String.fromCharCode(...wav)); media.preload = 'auto';
+    basic.addEventListener('click', () => {
+      try {
+        media.currentTime = 0;
+        Promise.resolve(media.play()).then(() => { result = 'HTML audio 재생 요청 성공, 실제 소리를 확인하세요.'; update(); }, error => { result = 'HTML audio 실패: ' + error.message; update(); });
+      } catch (error) { result = 'HTML audio 실패: ' + error.message; update(); }
+    });
+    panel.append(status, beep, basic, media); document.body.append(panel); update();
+    setInterval(update, 500);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mountAudioTest, { once: true });
+  else mountAudioTest();
   globalThis.Sfx = { play, unlock, toggle, isMuted: () => muted, toggleMusic,setMusicVolume,setMusicScene,musicGroup,scoreStep,musicEnabled:()=>musicOn,musicVolume:()=>musicVolume,musicStatus:()=>({scheduled:musicTimer!==null,voices:musicVoices.size,step:musicStep}) };
 })();

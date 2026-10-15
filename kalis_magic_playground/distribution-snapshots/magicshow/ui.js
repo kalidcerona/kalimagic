@@ -1044,7 +1044,8 @@ globalThis.Presentation = (() => {
       run(stamp, fade, { duration: MS });
     } else {
       run(flash, [{ opacity: 0, offset: 0 }, { opacity: .55, offset: .2 }, { opacity: 0, offset: 1 }], { duration: 120 });
-      const rot = 'rotate(-8deg)';
+      // U54d: pop down/left from the reserved bubble edge on tablets and narrow stages.
+      const rot = document.body.classList.contains('tablet') || document.body.classList.contains('phone-narrow') ? '' : 'rotate(-8deg)';
       run(stamp, [{ opacity: 1, transform: rot + ' scale(2)', offset: 0, easing: 'cubic-bezier(.2,.8,.2,1)' }, { opacity: 1, transform: rot + ' scale(1)', offset: at(220) },
         { opacity: 1, transform: rot + ' scale(1)', offset: at(1800) }, { opacity: 0, transform: rot + ' scale(1)', offset: at(2100) }, { opacity: 0, transform: rot + ' scale(1)', offset: 1 }], { duration: MS });
       const pose = (s, r, y, o, extra) => ({ transform: `scale(${s}) rotate(${r}deg) translateY(${y}px)`, offset: at(o), ...extra });
@@ -1608,19 +1609,26 @@ globalThis.Presentation = (() => {
   function invalidateStageAudience() {
     fitStageAudience.revision = (fitStageAudience.revision || 0) + 1;
   }
-  // U54c: no style or geometry reads until every cheap input has been compared.
+  // U54d: compare the cheap class/resize signature before refreshing cached geometry.
   function fitStageAudience() {
     const card = $('audienceCard'), host = $('audience'), img = host.querySelector(':scope > img.asset-sprite'), line = $('audienceLine');
     const tablet = document.body.classList.contains('tablet'), pat = $('patternLabel'), phase = $('phaseIndicator'), stage = $('stage');
     const nw = img && img.naturalWidth, nh = img && img.naturalHeight;
+    // U54d: read inherited band sizes and card geometry only on resize/load or class changes.
+    const metricsKey = [document.body.className, stage.className, card.className, stage.style.width, stage.style.height, fitStageAudience.revision];
+    if (!fitStageAudience.metricsKey || metricsKey.some((value, i) => value !== fitStageAudience.metricsKey[i])) {
+      const cs = getComputedStyle(card);
+      fitStageAudience.metrics = [card.clientWidth, card.clientHeight, parseFloat(cs.getPropertyValue('--SB')) || 52, parseFloat(cs.getPropertyValue('--TB')) || 0];
+      fitStageAudience.metricsKey = metricsKey;
+    }
+    const [cw, ch, sb, tb] = fitStageAudience.metrics;
     const key = [phone, tablet, document.defaultView?.innerWidth, document.defaultView?.innerHeight,
-      document.body.className, stage.style.width, stage.style.height, fitStageAudience.revision,
-      line.textContent, line.hidden, pat.textContent, phase.textContent, img && img.src, nw, nh, host.dataset.figureSize];
+      document.body.className, stage.className, card.className, stage.style.width, stage.style.height, fitStageAudience.revision,
+      cw, ch, sb, tb, line.textContent, line.hidden, pat.textContent, phase.textContent, img && img.src, nw, nh, host.dataset.figureSize];
     if (fitStageAudience.key && key.every((value, i) => value === fitStageAudience.key[i])) return;
     fitStageAudience.inputKey = fitStageAudience.key = key;
     if (!phone) return;
-    const cs = getComputedStyle(card), ch = card.clientHeight, cw = card.clientWidth;
-    const sb = parseFloat(cs.getPropertyValue('--SB')) || 52, lh = line.hidden ? 0 : line.offsetHeight;
+    const lh = line.hidden ? 0 : line.offsetHeight;
     if (!tablet) {
       const width = Math.max(1, cw * .5 - 8), available = Math.max(1, ch - sb - Math.max(50, lh + 26));
       const height = Math.min(available, nw && nh ? width * nh / nw : available);
@@ -1634,17 +1642,19 @@ globalThis.Presentation = (() => {
       $('stage').style.setProperty('--toast-top', toastTop + 'px');
       card.style.setProperty('--left-floor', Math.max(142, toastTop + 34) + 'px');
     } else if (img && nw && nh) {
-      // Keep U32's integer scale when it fits, but reserve the complete bubble and toast band first.
-      const tb = parseFloat(cs.getPropertyValue('--TB')) || 0;
-      const floor = Math.max(tb + 142, pat.offsetTop + pat.offsetHeight + phase.offsetHeight + 38, lh + 26);
-      const available = Math.max(1, ch - sb - floor), width = Math.max(1, cw * .58 - 4);
-      card.style.setProperty('--aud-fit-h', Math.min(available / 1.06, width * 1.7 / 1.06) + 'px');
-      card.style.setProperty('--aud-max-h', available + 'px');
+      // Reserve the full-width toast lane even while empty, then the whole bubble and its tail.
+      const toast = $('toasts'), cr = card.getBoundingClientRect(), tr = toast.getBoundingClientRect();
+      const bubbleTop = Math.max(4, tb + 142, pat.offsetTop + pat.offsetHeight + 4,
+        phase.hidden ? 0 : phase.offsetTop + phase.offsetHeight + 4, tr.top - cr.top + 24 + 4);
+      const available = Math.max(1, ch - sb - bubbleTop - lh - 18);
+      card.style.setProperty('--aud-fit-h', available + 'px');
       snapAudience(img);
-      const r = img.getBoundingClientRect(), cr = card.getBoundingClientRect();
-      const visibleHeight = Math.min(r.height, r.width * nh / nw);
-      const py = getComputedStyle(img).objectPosition.split(' ')[1] || '50%';
-      const top = r.top - cr.top + (r.height - visibleHeight) * (py.endsWith('%') ? parseFloat(py) / 100 : .5);
+      // Layout dimensions exclude the clear moment's animated scale on the host.
+      const visibleHeight = Math.min(available, img.offsetHeight, img.offsetWidth * nh / nw);
+      // The host must match the contained art too: the sweep's face is 20-45% of this box.
+      // A smaller snapped image in a tall host otherwise puts that face above the real head.
+      card.style.setProperty('--aud-fit-h', visibleHeight + 'px');
+      const top = ch - sb - visibleHeight;
       card.style.setProperty('--bubble-top', Math.max(4, top - lh - 18) + 'px');
     }
   }

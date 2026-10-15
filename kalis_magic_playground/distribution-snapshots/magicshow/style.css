@@ -2075,10 +2075,16 @@ html body.phone.phone-narrow #viewport#viewport #stage #audienceCard #stageStats
 
 /* v4 U54c: tablets reserve the entire bubble/toast band before snapping the portrait. */
 html body.tablet #viewport#viewport #stage #audienceCard #audience{height:var(--aud-fit-h, 1px)!important}
-html body.tablet #viewport#viewport #stage #audienceCard #audience > .asset-sprite{max-height:var(--aud-max-h, 100%)!important}
+html body.tablet #viewport#viewport #stage #audienceCard #audience > .asset-sprite{max-height:100%!important}
 /* Only the existing narrow-stage class needs a compact band: act/confidence, output, then mental. */
 html body.phone.phone-narrow #viewport#viewport #stage #audienceCard #stageStats{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(3,16px);height:48px!important;align-content:center;row-gap:0!important}
 html body.phone.phone-narrow #viewport#viewport #stage #audienceCard #stageStats > *{height:16px!important;line-height:14px!important}
 html body.phone.phone-narrow #viewport#viewport #stage #audienceCard #stageStats > #mental{grid-column:1 / -1;grid-row:3;height:16px!important}
 html body.phone.phone-narrow #viewport#viewport #stage #audienceCard #stageStats > #stageRate{grid-column:1 / -1;grid-row:2;flex-direction:row;gap:3px!important;height:16px!important}
 html body.phone.phone-narrow #viewport#viewport #stage #audienceCard #stageStats #mentalNumber{font-size:9px;line-height:14px;margin:0}
+/* v4 U54d: keep the complete clear-stamp pop below the bubble and inside the portrait lane.
+   Its top-right origin and unrotated scale animation keep this edge fixed even at scale(2). */
+html body.tablet #viewport#viewport #stage #audienceCard #winStamp,
+html body.phone.phone-narrow #viewport#viewport #stage #audienceCard #winStamp{top:calc(var(--bubble-top, 4px) + var(--line-h, 20px) + 18px);right:8px;transform-origin:100% 0;line-height:1.25;font-size:max(1px,min(44px,calc((var(--CW) - 84px) / 10),calc((var(--aud-fit-h, 120px) - 20px) / 2.5)))}
+/* The 678 px / 62 px inset class was short by 2 px with late-game bitmap digits. */
+html body.phone.phone-narrow #viewport#viewport #stage #audienceCard #combo:before{margin-right:0}
