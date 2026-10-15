@@ -1386,7 +1386,7 @@
     }
     var product = type.ladder[type.rarityMap[ri]];
     if (f.collected.indexOf(product.id) < 0) f.collected.push(product.id);
-    if (ri >= 2) routineItem(state, product.id, ev); // v4 U48 N4: a learned routine's item (rare or better, about 8 in 100) shows its trick now and then, 20 s apart
+    routineItem(state, product.id, ev); // v4 U48 N4: a learned routine's item shows its trick now and then, 20 s apart. v4 U53: any rarity (the rare-only rule made the coins and rope tricks impossible and the others about 1 in 60 to 1 in 80 drops)
     var mult = CONST.rarityMult[ri];
     var kind = type.id;
     var effect = product.effect || type.effect;
@@ -3646,7 +3646,10 @@
   // v4 U48 N4: a routine is unlocked (u19.routines) and its cut-in queued only by learning its own routine 비법; the old "a related node reaches
   // LV 1, 5 or 10" trigger is gone. Later cut-ins come from the routine's skill (routineSkill) or one of its case items (routineItem), 20 s apart.
   function routineLearn(state,node){var id=node.routine;if(!id)return;if(state.u19.routines.indexOf(id)<0)state.u19.routines.push(id);if(state.u19.pending.indexOf(id)<0)state.u19.pending.push(id);}
-  function routineItem(state,item,ev){if(state.u19.cooldown>0||!ev)return;var r=DATA.routines.find(function(r){return r.items.indexOf(item)>=0&&state.u19.routines.indexOf(r.id)>=0;});if(r){state.u19.cooldown=20000;emit(ev,{type:'routine',id:r.id});}}
+  // v4 U53: when several learned routines share the item (silk-handkerchief, linking-rings, cups-and-balls), they take turns (a counter outside the
+  // save, presentation only: no state but the existing cooldown changes), so thumbtie, silk and bottles are not always shadowed by the first one.
+  var routineTurn=0;
+  function routineItem(state,item,ev){if(state.u19.cooldown>0||!ev)return;var list=DATA.routines.filter(function(r){return r.items.indexOf(item)>=0&&state.u19.routines.indexOf(r.id)>=0;});if(!list.length)return;var r=list[routineTurn++%list.length];state.u19.cooldown=20000;emit(ev,{type:'routine',id:r.id});}
   function routineSkill(state,id,ev){if(state.u19.cooldown>0)return;var r=DATA.routines.find(function(r){return r.skill===id&&state.u19.routines.indexOf(r.id)>=0;});if(r){state.u19.cooldown=20000;emit(ev,{type:'routine',id:r.id});}}
   function validU19(u){return u&&typeof u.cleared==='boolean'&&integer(u.phase,1,3)!=null&&['telegraph','window','hitMs','damage','power','lastDps','lastPower','cooldown','target'].every(function(k){return num(u[k],0,1e100)!=null;})&&integer(u.target,0,24)!=null&&u.telegraph<=3000&&u.window<=20000&&['routines','pending'].every(function(k){return Array.isArray(u[k])&&u[k].length<=8&&new Set(u[k]).size===u[k].length&&u[k].every(function(id){return DATA.routines.some(function(r){return r.id===id;});});});}
   // v4 U42: lookups the UI and the sim used to re-implement. They take the venue object (DATA.venues entry), not the venue number.

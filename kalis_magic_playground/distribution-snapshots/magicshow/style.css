@@ -1918,3 +1918,167 @@ body:not(.phone) #viewport #stage #banner{left:456px!important;width:420px!impor
 /* short phones (882 x 288): the curtain call fits the panel without clipping its line row */
 @media (max-height:340px){.phone #stage .curtain-memory{min-height:0;padding:4px 8px}.phone #stage .curtain-cast{min-height:0;padding:4px 12px}.phone #stage .curtain-actor{height:88px;width:56px}.phone #stage .curtain-actor.headliner{height:100px;width:66px}.phone #stage .curtain-memory h2,.phone #stage .curtain-closing{margin:2px}}
 #stage .ending-line-actions{justify-content:flex-end;width:100%;margin-top:8px}
+/* v4 U53 2: the audience name on the doubt plate is never cut with an ellipsis (it read "미인 심사..." at 891 x 412). The name keeps its full width;
+   ui.js fitDoubtPlate drops the regen text when the line is full (plate-noregen) and, on narrow phones, sets the name on two lines in the 9 px pixel
+   font inside the same 22 px plate (plate-2l), so nothing under the plate moves. */
+#viewport #stage #audienceCard .doubt-plate #doubtTitle{flex:none;min-width:auto;overflow:visible;text-overflow:clip;white-space:nowrap}
+#viewport #stage #audienceCard .doubt-plate.plate-noregen #doubtRegen{display:none}
+#viewport #stage #audienceCard .doubt-plate.plate-2l #doubtTitle{flex:1 1 auto;min-width:0;white-space:normal;font:400 9px/10px Galmuri9,Galmuri11,monospace;letter-spacing:0}
+#viewport #stage #audienceCard .doubt-plate.plate-2l{align-items:center}
+/* ===== v4 U54: the owner's mix of layout5 proposals 1 and 3 (owner: "시안 1과 3을 더하면 좋겠다 ... 위에 저렇게 버튼이나 재화를 볼 수 있는게 좋아 ...
+   주인공의 자신감이나 멘탈은 ... 시안 1처럼 밑에 ... 대사창 위치 ... 미감 좋게"). Phones in landscape first.
+   1. One thin full-width top row (proposal 3 without the stats): the venue name as plain text, the currencies, 도감, 메뉴.
+   2. Kali's stats (액트, 멘탈, 자신감) in a band along the bottom of the stage (proposal 1, release 7 place).
+   3. Release 7 places (Kali bottom left, audience middle to right, companions between), the vertical doubt gauge and 야유 bar, a framed left
+      stage with the venue art only inside it, and a right board half painted in the venue palette (proposal 1's soft spotlight).
+   4. The audience bubble sits above the audience with its tail at the audience's centre; a character dialog sits at the top of the stage,
+      clear of the speakers standing on the stage floor. The name tag keeps the U53 fit (fitDoubtPlate). */
+/* -- the stage card: only the stage, framed, the venue art stays inside it -- */
+html body.phone #viewport#viewport #stage #audienceCard{--CH:calc(var(--layout-height) - var(--ST) - 6px);top:var(--ST)!important;height:var(--CH)!important;bottom:auto!important;overflow:hidden!important;border-radius:8px;
+  box-shadow:0 0 0 2px #2a2333,0 0 0 3px color-mix(in srgb,var(--venue-accent,#e9b44c) 55%,#000)!important;
+  --K:min(120px, calc(var(--CW) * .3), calc(var(--CW) * .42 - 54px), calc(var(--CH) - var(--TB) - 142px - var(--SB)));
+  --AW:calc(var(--CW) * .58 - 4px)}
+html body.phone #viewport#viewport #stage #audienceCard #room,html body.phone #viewport#viewport #stage #audienceCard #stageDressing{left:0!important;top:0!important;width:100%!important;height:100%!important}
+html body.phone #viewport#viewport #stage #stageDressing .dress-lights{left:50px!important;width:calc(100% - 54px)!important;top:var(--TB)!important}
+/* -- left column: the vertical doubt gauge and the 야유 bar (release 8), the name plate as fitted by U53 -- */
+html body.phone #viewport#viewport #stage #audienceCard .doubt,html body.phone #viewport#viewport #stage #audienceCard #heckleMeter{top:calc(var(--CH) - var(--SB) - 4px)!important;width:calc(var(--CH) - var(--TB) - 64px - var(--SB) - 4px)!important}
+html body.phone #viewport#viewport #stage #audienceCard #patternLabel{top:calc(var(--TB) + 50px)!important;left:56px!important;max-width:calc(var(--CW) * .58 - 62px)!important;max-height:34px!important}
+html body.phone.phone-narrow #viewport#viewport #stage #audienceCard #phaseIndicator{white-space:normal!important;max-height:none!important;font-size:10px!important;line-height:12px!important}
+html body.phone.phone-narrow #viewport#viewport #stage #toasts{top:calc(var(--ST) + var(--TB) + 130px)!important}
+html body.phone.phone-narrow #viewport#viewport #stage #audienceCard{--K:min(120px, calc(var(--CW) * .3), calc(var(--CW) * .42 - 54px), calc(var(--CH) - var(--TB) - 158px - var(--SB)))}
+html body.phone.phone-narrow #viewport#viewport #stage #audienceCard #audience{height:min(calc(var(--CH) - var(--TB) - 158px - var(--SB)), calc(var(--AW) * 1.15))!important} /* the narrowest stage (678 x 416 with 62 px insets): the boss act label may take two lines */
+html body.phone #viewport#viewport #stage #audienceCard #patternLabel{white-space:normal!important;text-overflow:clip!important;width:auto!important} /* wraps (two lines at most) instead of the old narrow-phone single line */
+html body.phone #viewport#viewport #stage #audienceCard #phaseIndicator{top:calc(var(--TB) + 86px)!important;left:56px!important;width:auto!important;max-width:calc(var(--CW) * .58 - 62px)!important;max-height:20px!important;white-space:nowrap}
+/* -- the audience in the middle to right (release 7 place), Kali at the bottom left, companions between them (release 7 place) -- */
+html body.phone #viewport#viewport #stage #audienceCard #audience{left:calc(var(--CW) * .42)!important;right:auto!important;width:var(--AW)!important;top:auto!important;bottom:var(--SB)!important;height:min(calc(var(--CH) - var(--TB) - 142px - var(--SB)), calc(var(--AW) * 1.15))!important}
+html body.tablet #viewport#viewport #stage #audienceCard #audience{height:min(calc((var(--CH) - var(--TB) - 142px - var(--SB)) / 1.06), calc(var(--AW) * 1.7 / 1.06))!important} /* tablets: a taller box (a wide picture still shrinks to the box width) */
+html body.phone #viewport#viewport #stage #audienceCard #magicianMini{left:50px!important;right:auto!important;top:auto!important;bottom:var(--SB)!important;width:var(--K)!important;height:var(--K)!important;scale:-1 1!important}
+html body.phone #viewport#viewport #stage #audienceCard #colleagues{left:calc(54px + var(--K))!important;right:4px!important;width:auto!important;bottom:var(--SB)!important;top:auto!important;justify-content:flex-start;--h:34px}
+html body.phone-low #viewport#viewport #stage #audienceCard #colleagues{display:flex!important;--h:26px}
+/* -- toast lane: one line across the stage under the labels, above the audience and Kali (both start at least 142 px under the stage top) -- */
+html body.phone #viewport#viewport #stage #toasts{left:62px!important;width:calc(var(--CW) - 60px)!important;top:calc(var(--ST) + var(--TB) + 108px)!important;bottom:auto!important}
+/* -- the board half: its own background, from the skill column to the right edge -- */
+html body.phone #viewport#viewport #stage #boardCard{overflow:visible!important}
+html body.phone #viewport#viewport #stage #boardCard:before{content:"";position:absolute;z-index:0;pointer-events:none;border-radius:8px;
+  left:calc(var(--CW) + 6px - var(--stage-w) * .56);right:0;top:0;bottom:0;background:var(--board-bg);box-shadow:var(--board-frame,0 0 0 2px #2a2333)}
+html body.phone #viewport#viewport #stage #boardCard #board{background:#120f1a66!important}
+html body.phone #viewport#viewport #stage #boardCard:after{display:none}
+/* -- phones and tablets: the stage and the board half start 2 px under the one top row -- */
+html body.phone #viewport#viewport #stage{--ST:46px;--TB:0px;--SB:52px}
+html body.tablet #viewport#viewport #stage{--ST:58px;--SB:46px}
+html body.tablet #viewport#viewport #stage #audienceCard{--K:min(180px, calc(var(--CW) * .32), calc(var(--CW) * .42 - 54px), calc(var(--CH) - var(--TB) - 142px - var(--SB)))}
+@media(max-width:740px){html body.phone:not(.tablet) #viewport#viewport #stage{--SB:52px}}
+/* the top row: venue name (plain), currencies, 도감, 메뉴 */
+html body.phone #viewport#viewport #stage #phoneTop{background:linear-gradient(#332b3f,#2a2333)!important;border-radius:0 0 8px 8px;box-shadow:inset 0 -2px 0 color-mix(in srgb,var(--venue-accent,#e9b44c) 45%,#000)!important;gap:8px!important;padding:0 6px!important}
+html body.phone #viewport#viewport #stage #phoneVenue{order:0!important;flex:1 1 auto!important;width:auto!important;min-width:0}
+html body.phone #viewport#viewport #stage #phoneTop .venue-heading{background:none!important;box-shadow:none!important;border:0!important;height:40px!important;padding:0 4px!important;margin:0!important;flex-direction:column;align-items:flex-start!important;justify-content:center!important;gap:0!important;width:auto!important}
+html body.phone #viewport#viewport #stage #phoneTop .venue-heading #stageNumber{font-size:9px;line-height:12px;color:color-mix(in srgb,var(--venue-accent,#e9b44c) 70%,#fff)}
+html body.phone #viewport#viewport #stage #phoneTop .venue-heading #venueName{font-size:12px;line-height:16px;color:#f4efe9;overflow:visible!important;text-overflow:clip!important}
+html body.tablet #viewport#viewport #stage #phoneTop .venue-heading{height:52px!important}
+html body.tablet #viewport#viewport #stage #phoneTop .venue-heading #stageNumber{font-size:12px;line-height:16px}
+html body.tablet #viewport#viewport #stage #phoneTop .venue-heading #venueName{font-size:18px;line-height:24px}
+html body.phone #viewport#viewport #stage #phoneWallet{order:1!important;flex:none!important;width:auto!important}
+html body.phone #viewport#viewport #stage #phoneTop > button{order:2!important}
+/* the board half under the row: board centred in it */
+html body.phone #viewport#viewport #stage #boardCard{top:var(--ST)!important;height:calc(var(--layout-height) - var(--ST) - 6px)!important}
+html body.phone #viewport#viewport #stage #boardCard #board{top:calc((var(--layout-height) - var(--ST) - 6px - var(--board-size)) / 2)!important;left:auto!important;right:0!important}
+html body.phone #viewport#viewport #stage #activeSkills{top:2px!important}
+/* Kali's stats: one band along the bottom of the stage (two lines on narrow phones) */
+html body.phone #viewport#viewport #stage #audienceCard #stageStats{left:50px!important;right:4px!important;width:auto!important;top:auto!important;bottom:4px!important;height:28px!important;display:flex!important;justify-content:space-between!important;gap:6px!important;padding:0 8px!important;align-items:center!important;background:#120f1acc!important;border-radius:6px!important;box-shadow:none!important}
+html body.phone #viewport#viewport #stage #audienceCard #stageStats > *{height:24px!important;width:auto!important;justify-content:center!important;white-space:nowrap!important;flex:none!important}
+html body.phone #viewport#viewport #stage #audienceCard #stageStats > #mental{flex-wrap:nowrap!important}
+html body.phone #viewport#viewport #stage #audienceCard #stageStats > #mental #mentalNumber{flex:none!important;white-space:nowrap!important;max-height:none!important}
+/* phones: two lines (액트 and 자신감 on top, 멘탈 under them) so the big late-game numbers never overflow the band */
+html body.phone:not(.tablet) #viewport#viewport #stage #audienceCard #stageStats{height:46px!important;flex-wrap:wrap!important;row-gap:0!important;align-content:center}
+html body.phone:not(.tablet) #viewport#viewport #stage #audienceCard #stageStats > #mental{order:3;flex:1 0 100%!important;justify-content:center!important;height:20px!important}
+html body.phone:not(.tablet) #viewport#viewport #stage #audienceCard #stageStats > :not(#mental){height:22px!important}
+html body.tablet #viewport#viewport #stage #audienceCard #stageStats{height:38px!important}
+/* tablets (found with the new iPad sizes in tools/devices.json, also in release 8): the skill buttons' labels did not fit their 48 px inner height
+   (scrollHeight 53) and the 💎 glyph's 40 px line in 28 px; a smaller label step and the glyph line to the box */
+html body.tablet #viewport#viewport #stage #activeSkills > .active-skill:not(.gem-shop-quick) .skill-art{height:22px!important}
+html body.tablet #viewport#viewport #stage #activeSkills > .gem-shop-quick{height:52px!important;min-height:52px!important;line-height:34px!important}
+html body.tablet #viewport#viewport #stage #audienceCard #stageStats > *{height:34px!important;font-size:16px!important}
+/* the audience bubble: above the audience (right of the name tag), its tail at the audience's centre pointing down at the head */
+html body.phone #viewport#viewport #stage #audienceCard #audienceLine{top:4px!important;right:4px!important;left:auto!important;width:calc(var(--CW) * .42 - 6px)!important;max-width:none!important}
+html body.phone #viewport#viewport #stage #audienceCard #audienceTail{left:calc(var(--CW) * .42 + var(--AW) / 2 - 7px)!important;right:auto!important;bottom:auto!important;top:calc(4px + var(--line-h, 20px))!important}
+/* a character dialog: at the top of the stage (the speakers stand on the stage floor below it), up to the board; 다음 stays the rightmost */
+html body.phone #viewport#viewport #stage #storyDialog{top:calc(var(--ST) + 4px)!important;bottom:auto!important}
+/* the board half: the venue palette as a soft spotlight; the gaps around the panels are a muted venue colour, not black */
+html body #viewport#viewport #stage{--board-bg:radial-gradient(ellipse 70% 60% at 50% 45%,color-mix(in srgb,var(--venue-bg2,#5c3a28) 70%,#000),color-mix(in srgb,var(--venue-bg1,#2a1a12) 85%,#000) 70%);
+  --board-frame:0 0 0 2px #2a2333,0 0 0 3px color-mix(in srgb,var(--venue-accent,#e9b44c) 45%,#000);background:color-mix(in srgb,var(--venue-bg2,#5c3a28) 40%,#2e2838)!important}
+
+/* ---- U54 desktop 1600 x 900: the same arrangement in stage pixels ---- */
+html body:not(.phone) #viewport#viewport #stage{--TB:0px;--SB:64px}
+html body:not(.phone) #viewport#viewport #stage #audienceCard{left:24px!important;top:64px!important;width:740px!important;height:812px!important;overflow:visible!important;border-radius:10px;box-shadow:0 0 0 3px #2a2333,0 0 0 5px color-mix(in srgb,var(--venue-accent,#e9b44c) 55%,#000)!important}
+html body:not(.phone) #viewport#viewport #stage #audienceCard #room,html body:not(.phone) #viewport#viewport #stage #audienceCard #stageDressing{left:0!important;top:0!important;width:100%!important;height:100%!important;border-radius:10px;overflow:hidden}
+html body:not(.phone) #viewport#viewport #stage #stageDressing .dress-lights{left:120px!important;width:600px!important;top:var(--TB)!important}
+html body:not(.phone) #viewport#viewport #stage #audienceCard .doubt{top:calc(780px - var(--SB))!important;width:calc(780px - 150px - var(--TB) - var(--SB))!important}
+html body:not(.phone) #viewport#viewport #stage #audienceCard #heckleMeter{top:calc(780px - var(--SB))!important;width:calc(780px - 150px - var(--TB) - var(--SB))!important}
+html body:not(.phone) #viewport#viewport #stage #audienceCard .doubt-plate{top:10px!important}
+html body:not(.phone) #viewport#viewport #stage #audienceCard .heckle-plate{top:50px!important}
+html body:not(.phone) #viewport#viewport #stage #audienceCard #patternLabel{top:calc(var(--TB) + 84px)!important;left:70px!important}
+html body:not(.phone) #viewport#viewport #stage #audienceCard #phaseIndicator{top:calc(var(--TB) + 140px)!important;left:70px!important}
+html body:not(.phone) #viewport#viewport #stage #audienceCard #crowdLabel{top:calc(var(--TB) + 10px)!important;right:20px!important;left:auto!important}
+html body:not(.phone) #viewport#viewport #stage #audienceCard #audienceLine{top:50px!important;right:20px!important;left:auto!important;width:300px!important}
+html body:not(.phone) #viewport#viewport #stage #audienceCard #audience{left:330px!important;width:390px!important;top:calc(var(--TB) + 240px)!important;height:calc(812px - var(--TB) - 240px - var(--SB) - 70px)!important}
+html body:not(.phone) #viewport#viewport #stage #audienceCard #magicianMini{left:90px!important;right:auto!important;top:auto!important;bottom:calc(var(--SB) + 20px)!important;width:220px!important;height:220px!important}
+html body:not(.phone) #viewport#viewport #stage #audienceCard #colleagues{left:320px!important;width:400px!important;top:auto!important;bottom:calc(var(--SB) + 12px)!important}
+html body:not(.phone) #viewport#viewport #stage #audienceCard .xp-row{left:90px!important;right:auto!important;top:auto!important;bottom:calc(var(--SB) + 246px)!important;width:220px!important}
+html body:not(.phone) #viewport#viewport #stage #audienceCard #perSecond,html body:not(.phone) #viewport#viewport #stage #audienceCard #coinSecond{left:330px!important;width:390px!important}
+html body:not(.phone) #viewport#viewport #stage #audienceCard #perSecond{top:calc(var(--TB) + 200px)!important}
+html body:not(.phone) #viewport#viewport #stage #audienceCard #coinSecond{top:calc(var(--TB) + 218px)!important}
+html body:not(.phone) #viewport#viewport #stage #toasts{left:96px!important;width:640px!important;top:calc(64px + var(--TB) + 170px)!important}
+html body:not(.phone) #viewport#viewport #stage #boardCard{left:784px!important;top:64px!important;width:792px!important;height:812px!important;border-radius:10px;background:var(--board-bg)!important;box-shadow:var(--board-frame,0 0 0 3px #2a2333)!important;overflow:visible!important}
+html body:not(.phone) #viewport#viewport #stage #boardCard #board{left:96px!important;top:96px!important;background:#120f1a66!important}
+html body:not(.phone) #viewport#viewport #stage #boardCard:after{display:none}
+html body:not(.phone) #viewport#viewport #stage #boardCard .hud{left:96px!important;top:20px!important;width:608px!important}
+html body:not(.phone) #viewport#viewport #stage #activeSkills{left:20px!important;top:110px!important;right:auto!important} /* in the board half, left of the board (it lives in #boardCard) */
+html body:not(.phone) #viewport#viewport #stage #helperControls{left:880px!important;top:800px!important;width:608px!important}
+html body:not(.phone) #viewport#viewport #stage .caption{top:878px!important}
+html body:not(.phone) #viewport#viewport #stage #audienceCard .stats.phone-expanded{left:20px!important;bottom:20px!important}
+html body:not(.phone) #viewport#viewport #stage #audienceCard .venue-heading{left:760px!important;top:-58px!important;width:auto!important;height:48px!important;background:none!important;box-shadow:none!important;border:0!important;flex-direction:column;align-items:flex-start!important;justify-content:center;gap:0!important;padding:0!important}
+html body:not(.phone) #viewport#viewport #stage #audienceCard .venue-heading #venueName{font-size:26px;line-height:30px;color:#f4efe9}
+html body:not(.phone) #viewport#viewport #stage #audienceCard .venue-heading #stageNumber{font-size:16px;line-height:18px}
+html body:not(.phone) #viewport#viewport #stage #audienceCard #stageStats{left:70px!important;right:20px!important;width:auto!important;top:auto!important;bottom:12px!important;height:44px!important;display:flex!important;justify-content:space-around;align-items:center;padding:0 16px!important;background:#120f1acc!important;border-radius:8px!important;box-shadow:none!important}
+html body:not(.phone) #viewport#viewport #stage #audienceCard #stageStats > *{height:36px!important;font-size:var(--fs-s)!important;width:auto!important;flex:none!important;overflow:visible!important}
+html body:not(.phone) #viewport#viewport #stage #audienceCard #stageStats .bitmap{--pixel:2px}
+html body:not(.phone) #viewport#viewport #stage #audienceCard #statsButton{left:auto!important;right:20px!important;top:auto!important;bottom:68px!important}
+html body:not(.phone) #viewport#viewport #stage #audienceCard #storyDialog{top:96px!important;bottom:auto!important;left:12px!important;right:12px!important}
+/* v4 U54b: reserve the left column for labels, toasts and Kali; use the whole free right column for the audience.
+   fitStageAudience measures the complete bubble and cropped art. A wide face fits by width as well as height. */
+html body.phone:not(.tablet) #viewport#viewport #stage #audienceCard{--AW:calc(var(--CW) * .5 - 8px);--K:max(1px, min(120px, calc(var(--CW) * .3), calc(var(--CW) * .5 - 54px), calc(var(--CH) - var(--SB) - var(--left-floor, 142px))))}
+html body.phone:not(.tablet) #viewport#viewport #stage #audienceCard #audience{left:calc(var(--CW) * .5 + 4px)!important;width:var(--AW)!important;height:var(--aud-fit-h, 1px)!important}
+html body.phone:not(.tablet) #viewport#viewport #stage #audienceCard #audience > .asset-sprite{height:100%!important;max-width:100%!important}
+html body.phone:not(.tablet) #viewport#viewport #stage #audienceCard #patternLabel,
+html body.phone:not(.tablet) #viewport#viewport #stage #audienceCard #phaseIndicator{max-width:calc(var(--CW) * .5 - 62px)!important;max-height:none!important;white-space:normal!important;overflow:visible!important}
+html body.phone:not(.tablet) #viewport#viewport #stage #audienceCard #phaseIndicator{top:var(--phase-top, 86px)!important}
+html body.phone:not(.tablet) #viewport#viewport #stage #toasts{width:calc(var(--CW) * .5 - 66px)!important;top:calc(var(--ST) + var(--toast-top, 108px))!important}
+html body.phone #viewport#viewport #stage #audienceCard #audienceLine{top:var(--bubble-top, 4px)!important}
+html body.phone #viewport#viewport #stage #audienceCard #audienceTail{top:calc(var(--bubble-top, 4px) + var(--line-h, 20px))!important}
+html body.phone:not(.tablet) #viewport#viewport #stage #audienceCard #audienceTail{left:calc(var(--CW) * .75 - 7px)!important}
+/* DOM order is also reading order: act, confidence, output on row one, mental on row two. */
+html body.phone:not(.tablet) #viewport#viewport #stage #audienceCard #stageStats{display:grid!important;grid-template-columns:auto auto minmax(0,1fr);column-gap:4px!important;padding:0 4px!important}
+html body.phone:not(.tablet) #viewport#viewport #stage #audienceCard #stageStats > *{font-size:10px!important;min-width:0!important;overflow:visible!important;gap:2px!important}
+html body.phone:not(.tablet) #viewport#viewport #stage #audienceCard #stageStats > #mental{order:0;grid-column:1 / -1}
+html body.phone:not(.tablet) #viewport#viewport #stage #audienceCard #stageStats .bitmap{--pixel:2px}
+html body.phone:not(.tablet) #viewport#viewport #stage #audienceCard #stageStats > #combo{width:auto!important}
+html body.phone #viewport#viewport #stage #audienceCard #stageStats .shield-label{display:inline!important;font-size:10px!important}
+html body.phone:not(.tablet) #viewport#viewport #stage #audienceCard #stageStats #combo > span:last-child{font-size:10px!important}
+html body.phone:not(.tablet) #viewport#viewport #stage #audienceCard #stageStats #shield > [aria-hidden]{display:none}
+html body.phone #viewport#viewport #stage #audienceCard #stageStats .stage-rate,
+html body:not(.phone) #viewport#viewport #stage #audienceCard #stageStats .stage-rate{display:flex;align-items:center;gap:3px;color:#F2E6C8;white-space:nowrap}
+html body.phone #viewport#viewport #stage #audienceCard #stageStats #stageRateNumber{font:400 10px/14px Galmuri11,monospace}
+html body.phone:not(.tablet) #viewport#viewport #stage #audienceCard #stageStats #stageRate{flex-direction:column;gap:0!important;line-height:10px}
+html body.phone:not(.tablet) #viewport#viewport #stage #audienceCard #stageStats #stageRateNumber{line-height:12px}
+html body.tablet #viewport#viewport #stage #audienceCard #stageStats #stageRateNumber{font-size:14px}
+html body.phone.phone-narrow #viewport#viewport #stage #audienceCard #stageStats :is(.shield-label,#combo > span:last-child,#stageRate,#stageRateNumber){font-size:9px!important}
+
+/* v4 U54c: tablets reserve the entire bubble/toast band before snapping the portrait. */
+html body.tablet #viewport#viewport #stage #audienceCard #audience{height:var(--aud-fit-h, 1px)!important}
+html body.tablet #viewport#viewport #stage #audienceCard #audience > .asset-sprite{max-height:var(--aud-max-h, 100%)!important}
+/* Only the existing narrow-stage class needs a compact band: act/confidence, output, then mental. */
+html body.phone.phone-narrow #viewport#viewport #stage #audienceCard #stageStats{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(3,16px);height:48px!important;align-content:center;row-gap:0!important}
+html body.phone.phone-narrow #viewport#viewport #stage #audienceCard #stageStats > *{height:16px!important;line-height:14px!important}
+html body.phone.phone-narrow #viewport#viewport #stage #audienceCard #stageStats > #mental{grid-column:1 / -1;grid-row:3;height:16px!important}
+html body.phone.phone-narrow #viewport#viewport #stage #audienceCard #stageStats > #stageRate{grid-column:1 / -1;grid-row:2;flex-direction:row;gap:3px!important;height:16px!important}
+html body.phone.phone-narrow #viewport#viewport #stage #audienceCard #stageStats #mentalNumber{font-size:9px;line-height:14px;margin:0}

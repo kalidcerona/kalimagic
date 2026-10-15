@@ -375,7 +375,11 @@ globalThis.Presentation = (() => {
       if(/^assets\/(?:box-|case-)/.test(path)){try{image.src=opaqueSprite(source,path);}catch(error){ /* Keep fallback geometry if alpha access fails. */ }}
       if (host.classList.contains('story-portrait')) { const f = portraitFocus(path); image.style.height = f.h; image.style.top = f.t; } // v4 U46 A8: the dialog frame shows the head at its focus point
       host.append(image); host.classList.add('asset-ready');
-      if (host.id === 'audience') snapAudience(image);
+      if (host.id === 'audience') {
+        const refit = () => { if (host._artGen === gen) { invalidateStageAudience(); syncFlags(); } };
+        snapAudience(image);
+        if (image.complete && image.naturalWidth) refit(); else image.addEventListener('load', refit, { once: true });
+      }
     };
     if (source.complete) show(); else { source.addEventListener('load', show, { once: true }); source.addEventListener('error', fail, { once: true }); }
   }
@@ -737,6 +741,7 @@ globalThis.Presentation = (() => {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     caps.particles = phone ? 48 : (coarse ? 120 : 240); caps.icons = phone ? 8 : 24;
     particles.length = 0; flights.length = 0; numbers.length = 0; badges.length = 0;
+    invalidateStageAudience();
     phoneChrome(); release(); previous = 0; snapAudience();
     if (menu === 'book') tree();
   }
@@ -1317,13 +1322,14 @@ globalThis.Presentation = (() => {
       $('room').style.setProperty('--venue-bg1', v.palette.bg1);
       $('room').style.setProperty('--venue-bg2', v.palette.bg2);
       $('room').style.setProperty('--venue-accent', v.palette.accent);
+      for (const [k, c] of [['--venue-bg1', v.palette.bg1], ['--venue-bg2', v.palette.bg2], ['--venue-accent', v.palette.accent]]) $('stage').style.setProperty(k, c); // v4 U54: the board half and the panel frames use the venue palette
       $('venueName').textContent = v.name;
       $('doubtTitle').textContent = `${a.name}의 ${['supporter','helper'].includes(a.role)?'기대':'의심'}`;
       $('audience').replaceChildren(element('span', a.emoji, 'sprite-fallback'));
       sprite($('audience'), state.u15.tutorial.active ? (state.u15.tutorial.won?'assets/aud-tutorial-dogyeom-happy.png':'assets/aud-tutorial-dogyeom.png') : (audienceAsset(v,a))); $('audience').setAttribute('aria-label', a.name);
       if(!state.u15.tutorial.active)moodSprite($('audience'),audienceAsset(v,a),['supporter','helper'].includes(a.role)?'happy':D.lineFaces.faceMap.roleDefaults[a.role]||'doubt');
       { const nextA = C.audienceAt(v, state.j + 1); if (nextA && nextA !== a) { const p = audienceAsset(v, nextA), mood = D.lineFaces.faceMap.roleDefaults[nextA.role]; for (const q of [p, p.replace(/\.png$/, '-happy.png'), mood && p.replace(/\.png$/, '-' + mood + '.png')]) if (q) assetImage(q); } } // v4 U49 3: warm the next audience's pictures
-      animate($('audience'),[{opacity:0,transform:'translateY(16px)'},{opacity:1,transform:'translateY(0)'}],350);
+      animate($('audience'),[{opacity:0},{opacity:1}],350); // U54b: fade in place; every frame stays inside the fitted stage space.
       $('audience').classList.toggle('headliner', a === v.headliner);
       $('audienceLine').textContent = a.encounterLine || a.bio || a.flavor;
       bioPending=a.encounterLine?key:state.u15.bios.includes(key)?'':key;bioUntil=0;
@@ -1557,6 +1563,19 @@ globalThis.Presentation = (() => {
     document.querySelectorAll('#board .cell').forEach((el,i)=>el.classList.toggle('future-target',future&&u.phase>=2&&i===u.target&&(u.phase===2||u.window>0)));
   }
   // U36: state flags that style.css used to read through :has() selectors on #stage, #audienceCard and #activeSkills (see the U36 note in style.css).
+  // v4 U53 2 (owner: "관객의 이름이 제대로 나오지 않아"): the audience name on the doubt plate is never cut. The plate is measured only when its texts'
+  // lengths or the viewport change: if title, regen and number do not fit on one line, the regen ("회복 N/초", also in 능력치) is left out; if the
+  // title and the number still do not fit (narrow phones), the title takes two lines in the 9 px pixel font inside the same 22 px plate.
+  function fitDoubtPlate(key){
+    if(fitDoubtPlate.key===key)return;fitDoubtPlate.key=key;
+    const plate=document.querySelector('.doubt-plate');if(!plate)return;
+    plate.classList.remove('plate-noregen','plate-2l');fitDoubtPlate.short=false;num($('doubtNumber'),`${rounded(state.audHp)}/${rounded(state.audHpMax)}`,true);
+    const title=$('doubtTitle'),over=()=>plate.scrollWidth>plate.clientWidth||title.scrollWidth>title.clientWidth||plate.scrollHeight>plate.clientHeight+1;
+    if(over())plate.classList.add('plate-noregen');
+    if(over())plate.classList.add('plate-2l');
+    // the narrowest plates (678 x 416 with 62 px insets: 120 px): the number shows the current doubt only (the full meter beside it shows the share)
+    if(over()){fitDoubtPlate.short=true;num($('doubtNumber'),rounded(state.audHp),true);}
+  }
   function syncFlags() {
     const stage = $('stage'), card = $('audienceCard'), skills = $('activeSkills'), coach = $('tutorialCoach');
     const story = !$('storyDialog').hidden, coachShown = !coach.hidden, statsx = !!card.querySelector('.stats.phone-expanded');
@@ -1570,11 +1589,12 @@ globalThis.Presentation = (() => {
     stage.classList.toggle('f-banner', !$('banner').hidden);
     card.classList.toggle('f-story', story);
     card.classList.toggle('f-statsx', statsx);
-    // U39: the bubble wins over the pattern label. Measure only when the text, the label or the viewport changed (not every frame).
+    // U54c: share the cheap input key with the tail and overlap checks, including late font/image loads.
+    fitStageAudience();
     const lineEl = $('audienceLine'), patEl = $('patternLabel'), both = phone && !lineEl.hidden && !!patEl.textContent;
-    const tailKey = lineEl.hidden ? '' : lineEl.textContent + '|' + innerWidth + 'x' + innerHeight; // the tail sits at the bubble's upper third, so read its height once per text
-    if (tailKey !== syncFlags.tailKey) { syncFlags.tailKey = tailKey; if (tailKey) card.style.setProperty('--line-h', lineEl.offsetHeight + 'px'); }
-    const lineKey = both ? lineEl.textContent.length + '|' + patEl.textContent + '|' + innerWidth + 'x' + innerHeight : '';
+    const tailKey = fitStageAudience.inputKey;
+    if (tailKey !== syncFlags.tailKey) { syncFlags.tailKey = tailKey; if (!lineEl.hidden) card.style.setProperty('--line-h', lineEl.offsetHeight + 'px'); }
+    const lineKey = tailKey;
     if (lineKey !== syncFlags.lineKey) {
       syncFlags.lineKey = lineKey; card.classList.remove('f-line-over');
       if (both) { const a = lineEl.getBoundingClientRect(), b = patEl.getBoundingClientRect(); if (a.bottom > b.top && a.top < b.bottom && a.right > b.left && a.left < b.right) card.classList.add('f-line-over'); }
@@ -1583,6 +1603,49 @@ globalThis.Presentation = (() => {
       let other = false;
       for (const child of skills.children) if (child.classList.contains('active-skill') && !child.classList.contains('gem-shop-quick') && !child.hidden) { other = true; break; }
       skills.classList.toggle('f-solo', !other && !!skills.querySelector(':scope > .gem-shop-quick'));
+    }
+  }
+  function invalidateStageAudience() {
+    fitStageAudience.revision = (fitStageAudience.revision || 0) + 1;
+  }
+  // U54c: no style or geometry reads until every cheap input has been compared.
+  function fitStageAudience() {
+    const card = $('audienceCard'), host = $('audience'), img = host.querySelector(':scope > img.asset-sprite'), line = $('audienceLine');
+    const tablet = document.body.classList.contains('tablet'), pat = $('patternLabel'), phase = $('phaseIndicator'), stage = $('stage');
+    const nw = img && img.naturalWidth, nh = img && img.naturalHeight;
+    const key = [phone, tablet, document.defaultView?.innerWidth, document.defaultView?.innerHeight,
+      document.body.className, stage.style.width, stage.style.height, fitStageAudience.revision,
+      line.textContent, line.hidden, pat.textContent, phase.textContent, img && img.src, nw, nh, host.dataset.figureSize];
+    if (fitStageAudience.key && key.every((value, i) => value === fitStageAudience.key[i])) return;
+    fitStageAudience.inputKey = fitStageAudience.key = key;
+    if (!phone) return;
+    const cs = getComputedStyle(card), ch = card.clientHeight, cw = card.clientWidth;
+    const sb = parseFloat(cs.getPropertyValue('--SB')) || 52, lh = line.hidden ? 0 : line.offsetHeight;
+    if (!tablet) {
+      const width = Math.max(1, cw * .5 - 8), available = Math.max(1, ch - sb - Math.max(50, lh + 26));
+      const height = Math.min(available, nw && nh ? width * nh / nw : available);
+      card.style.setProperty('--aud-fit-h', height + 'px');
+      // The eight-pixel tail ends ten pixels above the visible top, including short/wide portraits.
+      card.style.setProperty('--bubble-top', Math.max(4, ch - sb - height - lh - 18) + 'px');
+      const pat = $('patternLabel'), phase = $('phaseIndicator');
+      const phaseTop = Math.max(86, pat.offsetTop + pat.offsetHeight + 2);
+      card.style.setProperty('--phase-top', phaseTop + 'px');
+      const toastTop = Math.max(108, phaseTop + phase.offsetHeight + 2);
+      $('stage').style.setProperty('--toast-top', toastTop + 'px');
+      card.style.setProperty('--left-floor', Math.max(142, toastTop + 34) + 'px');
+    } else if (img && nw && nh) {
+      // Keep U32's integer scale when it fits, but reserve the complete bubble and toast band first.
+      const tb = parseFloat(cs.getPropertyValue('--TB')) || 0;
+      const floor = Math.max(tb + 142, pat.offsetTop + pat.offsetHeight + phase.offsetHeight + 38, lh + 26);
+      const available = Math.max(1, ch - sb - floor), width = Math.max(1, cw * .58 - 4);
+      card.style.setProperty('--aud-fit-h', Math.min(available / 1.06, width * 1.7 / 1.06) + 'px');
+      card.style.setProperty('--aud-max-h', available + 'px');
+      snapAudience(img);
+      const r = img.getBoundingClientRect(), cr = card.getBoundingClientRect();
+      const visibleHeight = Math.min(r.height, r.width * nh / nw);
+      const py = getComputedStyle(img).objectPosition.split(' ')[1] || '50%';
+      const top = r.top - cr.top + (r.height - visibleHeight) * (py.endsWith('%') ? parseFloat(py) / 100 : .5);
+      card.style.setProperty('--bubble-top', Math.max(4, top - lh - 18) + 'px');
     }
   }
   // v4 U46 C3: the stage grows with the player. Three dressing tiers (lights, curtain trims, a prop shelf; img27 overlays) on the audience card:
@@ -1631,15 +1694,17 @@ globalThis.Presentation = (() => {
     pxText($('rebirthButton'),phone ? (state.homecomingCleared ? '✨ 환생' : '✨ 이어서') : (state.homecomingCleared?'다음 차원의 공연':'이어지는 공연'));
     if (state.pattern === 'heal' && state.mode === 'fight') $('audienceCard').classList.toggle('healing', state.patternHealMs > C.CONST.patternHealEvery - 600);
     else $('audienceCard').classList.remove('healing');
-    num($('doubtNumber'), `${rounded(state.audHp)}/${rounded(state.audHpMax)}`, true);
+    num($('doubtNumber'), fitDoubtPlate.short ? rounded(state.audHp) : `${rounded(state.audHp)}/${rounded(state.audHpMax)}`, true); // v4 U53 2: only the current doubt on the narrowest plates
     $('doubtFill').style.width = `${Math.round(state.audHp / state.audHpMax * 500) / 5}%`;
     {
       // v4 U38: heckle strength per second, doubt regrowth per second (only when there is any) and the player's own matching numbers.
       const th=C.threatInfo(state),heckleText=th.last?`마지막 한 번 ${rounded(th.hit)}`:`한 번에 ${rounded(th.hit)}`,everyText=th.last?'':`${+th.every.toFixed(1)}초마다`,regenText=th.regen>0?`회복 ${rounded(th.regen)}/초`:'';
       if($('attackNumber').textContent!==heckleText)$('attackNumber').textContent=heckleText;
       if($('doubtRegen').textContent!==regenText)$('doubtRegen').textContent=regenText;
+      fitDoubtPlate(`${$('doubtTitle').textContent}|${regenText.length}|${(rounded(state.audHp)+'/'+rounded(state.audHpMax)).length}|${innerWidth}x${innerHeight}|${phone}`);
       const mine=C.attackRate(state),mineText=mine==null?'재는 중':`${rounded(mine)}/초`;
       if($('stat-rate').textContent!==mineText)$('stat-rate').textContent=mineText;
+      if($('stageRateNumber').textContent!==mineText)$('stageRateNumber').textContent=mineText;
       if($('stat-heckle').textContent!==heckleText)$('stat-heckle').textContent=heckleText;
       if($('stat-heckle-every')&&$('stat-heckle-every').textContent!==everyText)$('stat-heckle-every').textContent=everyText; // v4 U47 1: the interval is the small second line
       const challengeText=`+${Math.round(C.challengeBonus(state)*100)}%`;if($('stat-challenge')&&$('stat-challenge').textContent!==challengeText)$('stat-challenge').textContent=challengeText; // v4 U46 C1
@@ -4152,6 +4217,10 @@ globalThis.Presentation = (() => {
   // v4 U47 4: the 글자 속도 menu entry cycles 보통, 느리게, 빠르게 (빠르게 = the whole line at once); stored in the presentation settings.
   function updateTextSpeedButton(){const s=textSpeed(),b=$('textSpeedButton');b.textContent='글자 속도: '+TEXT_SPEED_LABEL[s];b.title=s==='fast'?'한 번에 보이기':'한 글자씩 나와요';b.setAttribute('aria-label','글자 속도 '+TEXT_SPEED_LABEL[s]+(s==='fast'?' (한 번에 보이기)':''));}
   $('textSpeedButton').addEventListener('click',()=>{uiSave.textSpeed=TEXT_SPEEDS[(TEXT_SPEEDS.indexOf(textSpeed())+1)%TEXT_SPEEDS.length];savePresentation();updateTextSpeedButton();});
+  // A late font or a line changed between renders must settle before the next paint.
+  document.fonts?.ready?.then(() => { invalidateStageAudience(); syncFlags(); });
+  const audienceTextObserver = new MutationObserver(() => syncFlags());
+  for (const id of ['audienceLine', 'patternLabel', 'phaseIndicator']) audienceTextObserver.observe($(id), { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['hidden'] });
   updateTextSpeedButton();
   requestAnimationFrame(loop);
 })();
