@@ -7,7 +7,7 @@
 <title>No Plan Season. 3 · 슬리빙 마스터클래스</title>
 <meta property="og:type" content="website">
 <meta property="og:title" content="No Plan Season. 3 · 슬리빙">
-<meta property="og:description" content="소매 안에서 일어나는 일. 해외 마술사 9명이 허락한 기법까지. 2026년 11월 22일(일) · 스넥 연습실.">
+<meta property="og:description" content="소매 안에서 일어나는 일. 해외 마술사들이 허락한 기법까지. 2026년 11월 22일(일) · 스넥 연습실.">
 <meta property="og:url" content="https://kalimagic.netlify.app/planb-sleeving/">
 <meta property="og:image" content="https://kalimagic.netlify.app/planb-sleeving/img/cover.jpg">
 <meta name="twitter:card" content="summary_large_image">
@@ -79,23 +79,31 @@
   /* 퍼미션 */
   .quote { margin:28px 0 8px; font-family:var(--serif); font-size:clamp(22px, 3vw, 32px); font-weight:700; line-height:1.4; }
   .quote-note { margin:0 0 28px; max-width:600px; font-size:15px; color:var(--muted); }
-  .reg { display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:0 32px; list-style:none; margin:0; padding:0; }
-  .reg li { display:flex; gap:16px; align-items:baseline; padding:16px 0; border-top:1px solid var(--line); min-width:0; }
-  .reg .no { font-family:var(--serif); font-weight:700; color:var(--teal); }
-  .reg .name { color:var(--soft); }
+  .reg { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:0 40px; list-style:none; margin:0; padding:0; }
+  .reg li { display:flex; gap:14px; align-items:flex-start; padding:18px 0; border-top:1px solid var(--line); min-width:0; }
+  .reg .no { font-family:var(--serif); font-weight:700; color:var(--teal); font-size:22px; line-height:1.2; flex:none; }
+  .reg .entry { display:grid; gap:4px; min-width:0; }
+  .reg .name { color:var(--ink); font-weight:700; }
+  .reg .desc { color:var(--muted); font-size:13.5px; line-height:1.55; }
+  .reg li.is-open { grid-column:1 / -1; border:1px dashed var(--line-2); padding:18px 16px; }
+  .reg li.is-open .no, .reg li.is-open .name { color:var(--faint); }
+  .reg li.is-open .desc { color:var(--soft); }
 
-  /* 챕터 */
-  .chapters { display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); }
-  .chapters article { padding:28px 24px 28px 0; min-width:0; }
-  .chapters article + article { border-left:1px solid var(--line); padding-left:24px; }
+  /* 커리큘럼 */
+  .chapters { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:0 40px; }
+  .chapters article { padding:28px 0; min-width:0; border-top:1px solid var(--line); }
   .chapters .num { margin:0 0 10px; font-family:var(--serif); font-size:40px; color:var(--teal); }
-  .chapters h3 { margin:0 0 8px; font-family:var(--serif); font-size:24px; }
-  .chapters h3 small { font-family:var(--sans); font-size:12px; font-weight:700; color:var(--soft); vertical-align:middle; }
+  .chapters h3 { margin:0 0 8px; font-family:var(--serif); font-size:24px; line-height:1.35; }
   .chapters p { margin:0; font-size:14.5px; color:var(--muted); }
+  .chapters p + p { margin-top:8px; }
+  .chapters .chap-gap { margin-top:16px; }
+  .chapters .bits { display:grid; gap:14px; }
+  .chapters .bit-k { margin:0 0 4px; font-size:13px; font-weight:700; color:var(--ink); }
+  .mosaic { display:inline-block; width:4em; height:1em; margin-right:.15em; vertical-align:-.08em; border-radius:2px; background:repeating-conic-gradient(#8d8680 0% 25%, #2a2724 0% 50%); background-size:7px 7px; filter:blur(1.2px); }
 
   /* 강사 */
   .teacher { display:flex; flex-wrap:wrap; gap:32px; align-items:center; border-top:1px solid var(--rule); border-bottom:1px solid var(--line); padding:32px 0; }
-  .teacher .photo { width:140px; height:175px; border:1px dashed var(--line-2); display:flex; align-items:center; justify-content:center; color:var(--soft); font-size:13px; flex:none; }
+  .teacher .photo { width:140px; height:175px; object-fit:cover; object-position:center top; flex:none; border-radius:2px; }
   .teacher .body { min-width:0; flex:1 1 280px; }
   .teacher .label { margin:0 0 6px; font-size:12.5px; letter-spacing:.24em; color:var(--soft); }
   .teacher h2 { margin:0 0 10px; font-size:44px; }
@@ -112,6 +120,12 @@
   /* 사진 */
   .photos { display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:10px; }
   .photos img { width:100%; aspect-ratio:4 / 3; object-fit:cover; filter:grayscale(1) brightness(.85); border-radius:2px; }
+  .scenes { display:grid; grid-template-columns:minmax(0,5fr) minmax(0,7fr); grid-template-rows:1fr 1fr; gap:10px; margin-top:24px; aspect-ratio:12 / 7; }
+  .scenes img { width:100%; height:100%; object-fit:cover; filter:grayscale(1) brightness(.85); border-radius:2px; min-width:0; }
+  .scenes .scene-1 { grid-column:1; grid-row:1 / span 2; }
+  .scenes .scene-2 { grid-column:2; grid-row:1; }
+  .scenes .scene-3 { grid-column:2; grid-row:2; }
+  .scene-cap { margin:10px 0 0; font-size:12.5px; letter-spacing:.18em; color:var(--soft); }
 
   /* 후원 */
   .sponsor { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.1fr); gap:40px; align-items:center; border:1px solid var(--line-2); padding:40px; }
@@ -186,7 +200,6 @@
     .hero { padding-top:48px; gap:32px; }
     .hero-photo { aspect-ratio:4 / 3; }
     .chapters { grid-template-columns:minmax(0,1fr); }
-    .chapters article + article { border-left:0; border-top:1px solid var(--line); padding-left:0; }
     .photos { grid-template-columns:repeat(2, minmax(0,1fr)); }
     .sponsor { padding:24px; gap:24px; }
     .btn { width:100%; }
@@ -194,6 +207,13 @@
     .sticky-ticket { position:fixed; left:0; right:0; bottom:0; z-index:20; display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px 16px calc(12px + env(safe-area-inset-bottom, 0px)); background:var(--surface); border-top:1px solid var(--line-2); }
     .sticky-ticket-text { font-size:13px; font-weight:800; }
     .sticky-ticket .btn { width:auto; min-height:44px; padding:0 18px; font-size:14px; }
+  }
+  @media (max-width:719px) {
+    .scenes { grid-template-columns:minmax(0,1fr); grid-template-rows:none; aspect-ratio:auto; }
+    .scenes img { height:auto; grid-column:auto; grid-row:auto; }
+    .scenes .scene-1, .scenes .scene-2, .scenes .scene-3 { grid-column:auto; grid-row:auto; }
+    .scenes .scene-1 { aspect-ratio:4 / 5; }
+    .scenes .scene-2, .scenes .scene-3 { aspect-ratio:auto; }
   }
 </style>
 </head>
@@ -213,12 +233,12 @@
       <p class="kicker">NO PLAN SEASON. 3 · VOL.2</p>
       <h1 class="serif">슬리빙</h1>
       <p class="sub">소매 안에서 일어나는 일</p>
-      <p class="lead">기본에서 시작해<br>해외 마술사 9명이 허락한 기법까지.<br>현장 흐름에 따라 마스터클래스로 깊게 들어가요.</p>
+      <p class="lead">기본에서 시작해<br>해외 마술사들이 허락한 기법까지.<br>현장 흐름에 따라 마스터클래스로 깊게 들어가요.</p>
       <dl class="meta">
         <dt>DATE</dt><dd>2026년 11월 22일(일)</dd>
         <dt>TIME</dt><dd>오후 2시-5시 <span class="tag">임시</span></dd>
         <dt>PLACE</dt><dd>스넥 연습실 · 홍대입구역 도보 5분</dd>
-        <dt data-strip-label>FEE</dt><dd data-strip-price><s class="was">정가 5만원</s>슈퍼 얼리버드 3만원</dd>
+        <dt data-strip-label>FEE</dt><dd data-strip-price><s class="was">정가 6만원</s>슈퍼 얼리버드 3.5만원 <span class="off">42%</span></dd>
       </dl>
       <div class="hero-cta">
         <a href="#ticket" class="btn" data-cta data-hero-cta>자리 신청하기</a>
@@ -232,40 +252,76 @@
 
 <!-- ============ PERMISSIONS ============ -->
 <section class="wrap sec">
-  <div class="head"><h2 class="serif">아홉 명의 허락</h2><p>PERMISSIONS 01-09</p></div>
+  <div class="head"><h2 class="serif">거장들의 허락</h2><p>PERMISSIONS</p></div>
   <blockquote class="quote">“당신 같은 마스터라면<br>허락할 수 있다.”</blockquote>
-  <p class="quote-note">해외 마술사 9명이 조시훈의 실력을 직접 보고<br>자신의 기법을 가르쳐도 된다고 허락했어요.</p>
+  <p class="quote-note">해외 마술사들이 조시훈의 실력을 직접 보고<br>자신의 기법을 가르쳐도 된다고 허락했어요.</p>
   <ol class="reg">
-    <li><span class="no">01</span><span class="name">[해외 마술사 이름]</span></li>
-    <li><span class="no">02</span><span class="name">[해외 마술사 이름]</span></li>
-    <li><span class="no">03</span><span class="name">[해외 마술사 이름]</span></li>
-    <li><span class="no">04</span><span class="name">[해외 마술사 이름]</span></li>
-    <li><span class="no">05</span><span class="name">[해외 마술사 이름]</span></li>
-    <li><span class="no">06</span><span class="name">[해외 마술사 이름]</span></li>
-    <li><span class="no">07</span><span class="name">[해외 마술사 이름]</span></li>
-    <li><span class="no">08</span><span class="name">[해외 마술사 이름]</span></li>
-    <li><span class="no">09</span><span class="name">[해외 마술사 이름]</span></li>
+    <li><span class="no">01</span><span class="entry"><span class="name">David Williamson 🇺🇸</span><span class="desc">"마술사들의 마술사"라 불리는 살아있는 전설. 매직캐슬 올해의 마술사, 명저 『Williamson's Wonders』 저자</span></span></li>
+    <li><span class="no">02</span><span class="entry"><span class="name">Rick Merrill 🇺🇸</span><span class="desc">2006 FISM 클로즈업 그랑프리 세계 챔피언. 펜과 동전 하나로 세계를 제패한 미국인 역대 4번째 그랑프리</span></span></li>
+    <li><span class="no">03</span><span class="entry"><span class="name">Rune Klan 🇩🇰</span><span class="desc">덴마크의 국민 마술사. Vanishing Inc. 창립자 Joshua Jay가 가장 사랑하는 마술사이자, Rick Merrill 그랑프리 액트의 영감이 된 인물</span></span></li>
+    <li><span class="no">04</span><span class="entry"><span class="name">Johan Ståhl 🇸🇪</span><span class="desc">FISM 2회 메달리스트, 2021 스웨덴 갓 탤런트 우승자. 소매를 걷고도 슬리빙을 해내는 혁신가</span></span></li>
+    <li class="is-open"><span class="no">05</span><span class="entry"><span class="name">Who's next?</span><span class="desc">다음 퍼미션을 기다리고 있어요.</span></span></li>
   </ol>
 </section>
 
 <!-- ============ CURRICULUM ============ -->
 <section class="wrap sec">
-  <div class="head"><h2 class="serif">세 개의 챕터</h2><p>CURRICULUM</p></div>
+  <div class="head"><h2 class="serif">여섯 개의 이야기</h2><p>CURRICULUM</p></div>
   <div class="chapters">
-    <article><p class="num">I</p><h3>슬리빙 기본</h3><p>슬리빙의 전반적인 방법을<br>차근차근 짚어요.</p></article>
-    <article><p class="num">II</p><h3>해부학적 슬리빙</h3><p>허락받은 기법으로<br>몸의 구조에 맞춰 정교하게.</p></article>
-    <article><p class="num">III</p><h3>마스터클래스 <small>현장에 따라</small></h3><p>참가자 흐름에 맞춰<br>더 깊은 단계까지 들어가요.</p></article>
+    <article>
+      <p class="num">01</p>
+      <h3>About 슬리빙</h3>
+      <div class="bits">
+        <div class="bit"><p class="bit-k">왜 슬리빙인가.</p><p>다른 베니셔와 비교하여 슬리빙의 장점과 단점을 비교해볼 예정입니다.</p></div>
+        <div class="bit"><p class="bit-k">어떻게 하는가.</p><p>기본 슬리빙부터 천천히 쉽게 차근차근 알려드립니다.</p></div>
+        <div class="bit">
+          <p class="bit-k">무엇을 더 배울 수 있나.</p>
+          <p>슬리빙은 1초 안에 기술이 끝납니다.</p>
+          <p>추가적으로 그 1초를 어떻게 설계하는지.</p>
+          <p>슬리빙 비포 에프터 미스디렉션 오프비트에 대해 설명합니다.</p>
+        </div>
+      </div>
+    </article>
+    <article>
+      <p class="num">02</p>
+      <h3>소매에 대해</h3>
+      <p>슬리빙은 소매가 필요합니다. 어떤 옷이 적합하고 부적합한지 이야기해보고 작은 팁들도 공유할 예정입니다.</p>
+    </article>
+    <article>
+      <p class="num">03</p>
+      <h3><span class="mosaic" role="img" aria-label="비공개 인물"></span>의 슬리빙.</h3>
+      <p>동전마술을 하다보면 동전을 사라지게 하는 방식으로 슬리빙을 많이 사용했고, 시초가 누구인지 찾기 힘들정도로 정보량이 방대합니다.</p>
+      <p>하지만, 동전이 아닌 것들을 슬리빙에 녹여낸 사람이 누구인지는 찾아내었습니다.</p>
+      <p class="chap-gap">마술에서의 슬리빙 역사에 대한 이야기와 함께 당시 슬리빙에 대한 시대상을 함께 이야기해보려고 합니다.</p>
+    </article>
+    <article>
+      <p class="num">04</p>
+      <h3>사용하지 않는 이유가 뭘까?</h3>
+      <p>모두가 슬리빙은 정말 유용한 기술이라고 말합니다. 그런데 정작 슬리빙을 사용하는 사람은 소수입니다.</p>
+      <p>저의 경험을 토대로 그것에 대한 답을 드릴 예정입니다.</p>
+    </article>
+    <article>
+      <p class="num">05</p>
+      <h3>루틴들</h3>
+      <p>슬리빙과 같이 쓰기 좋은 기술들, 슬리빙 루틴들에 대해 설명합니다. 퍼미션 받은 마술의 대가들의 루틴들에 저의 터치가 들어갔습니다.</p>
+      <p>릭메럴 룬클란 데이비드윌리암슨 등</p>
+    </article>
+    <article>
+      <p class="num">06</p>
+      <h3>Qna</h3>
+      <p>미리 받은 질문들, 현장에서 받은 질문들을 받아보고 답변을 드리는 시간을 가질 예정입니다. 슬리빙뿐이 아니라 다른 궁금한 것들도 얼마든지 질문해주시면 성심성의껏 답변해드리겠습니다.</p>
+    </article>
   </div>
 </section>
 
 <!-- ============ INSTRUCTOR ============ -->
 <section class="wrap sec">
   <div class="teacher">
-    <div class="photo">[강사 사진]</div>
+    <img class="photo" src="img/profile-joshihoon.jpg" alt="조시훈 프로필 사진" width="900" height="1146" loading="lazy" decoding="async">
     <div class="body">
       <p class="label">INSTRUCTOR</p>
       <h2 class="serif">조시훈</h2>
-      <span class="badge">해외 마술사 9명 퍼미션</span>
+      <span class="badge">해외 마술사 퍼미션</span>
       <dl class="career">
         <dt>2026.05</dt><dd>성수 RSG 페스티벌</dd>
         <dt>거리</dt><dd>버스킹 공연 다수</dd>
@@ -289,7 +345,13 @@
 <!-- ============ PHOTOS ============ -->
 <section class="wrap sec">
   <div class="head"><h2 class="serif">가까이서 보는 마술</h2><p>PHOTOS</p></div>
-  <div class="photos" style="margin-top:24px">
+  <div class="scenes">
+    <img class="scene-1" src="img/scene-1.jpg" alt="낮 거리에서 관객이 둘러싼 슬리빙 공연 현장" width="1200" height="1600" loading="lazy" decoding="async">
+    <img class="scene-2" src="img/scene-2.jpg" alt="광장에서 관객 앞에 앉아 마술을 보여 주는 장면" width="1080" height="678" loading="lazy" decoding="async">
+    <img class="scene-3" src="img/scene-3.jpg" alt="밤거리에서 관객이 모여든 공연 현장" width="1080" height="600" loading="lazy" decoding="async">
+  </div>
+  <p class="scene-cap">현장 분위기</p>
+  <div class="photos" style="margin-top:28px">
     <img src="img/photo-1.jpg" alt="거리에서 펼친 카드를 보여 주는 마술 장면" width="1000" height="749" loading="lazy" decoding="async">
     <img src="img/photo-2.jpg" alt="거리에서 마술을 보여 주는 장면" width="1000" height="742" loading="lazy" decoding="async">
     <img src="img/photo-3.jpg" alt="길에서 카드를 가까이 보여 주는 근접 카드 마술 장면" width="1000" height="751" loading="lazy" decoding="async">
@@ -317,28 +379,28 @@
     <article class="tier is-active" data-tier="super">
       <div class="tier-head"><p class="tier-name">슈퍼 얼리버드</p><span class="tier-chip"></span></div>
       <p class="tier-period">10/17(토)-10/27(화)</p>
-      <p class="tier-was">정가 <s>5만원</s></p>
-      <p class="tier-price"><span class="now">3만원</span><span class="off">40% 할인</span></p>
+      <p class="tier-was">정가 <s>6만원</s></p>
+      <p class="tier-price"><span class="now">3.5만원</span><span class="off">42% 할인</span></p>
       <div class="tier-rows">
         <div><span><a href="../planb-busking/">버스킹 단독</a></span><b>7만원</b></div>
-        <div><span>통합권 <span class="save">2만원 절약</span></span><span><s>10만원</s> <b>8만원</b></span></div>
+        <div><span>통합권 <span class="save">2만원 절약</span></span><span><s>10.5만원</s> <b>8.5만원</b></span></div>
       </div>
     </article>
     <article class="tier" data-tier="early">
       <div class="tier-head"><p class="tier-name">얼리버드</p><span class="tier-chip"></span></div>
       <p class="tier-period">10/28(수)-11/8(일)</p>
-      <p class="tier-was">정가 <s>5만원</s></p>
-      <p class="tier-price"><span class="now">4만원</span><span class="off">20% 할인</span></p>
+      <p class="tier-was">정가 <s>6만원</s></p>
+      <p class="tier-price"><span class="now">5만원</span><span class="off">17% 할인</span></p>
       <div class="tier-rows">
         <div><span><a href="../planb-busking/">버스킹 단독</a></span><b>8만원</b></div>
-        <div><span>통합권 <span class="save">1만원 절약</span></span><span><s>12만원</s> <b>11만원</b></span></div>
+        <div><span>통합권 <span class="save">1만원 절약</span></span><span><s>13만원</s> <b>12만원</b></span></div>
       </div>
     </article>
     <article class="tier" data-tier="full">
       <div class="tier-head"><p class="tier-name">정상가</p><span class="tier-chip"></span></div>
       <p class="tier-period">11/9(월)부터</p>
       <p class="tier-was">정가</p>
-      <p class="tier-price"><span class="now">5만원</span></p>
+      <p class="tier-price"><span class="now">6만원</span></p>
       <div class="tier-rows">
         <div><span><a href="../planb-busking/">버스킹 단독</a></span><b>9만원</b></div>
         <div><span>통합권</span><b class="ended">판매 종료</b></div>
@@ -357,12 +419,12 @@
 <section class="wrap sec">
   <div class="head"><h2 class="serif">자주 묻는 질문</h2><p>FAQ</p></div>
   <div class="faq">
-    <details><summary>처음인데 따라갈 수 있나요?</summary><p>네. 첫 챕터에서 슬리빙 기본부터<br>차근차근 짚고 시작해요.</p></details>
-    <details><summary>긴소매 옷을 입고 가야 하나요?</summary><p><span class="todo">[답변 미정]</span></p></details>
+    <details><summary>처음인데 따라갈 수 있나요?</summary><p>네. 첫 시간에 기본 슬리빙부터<br>차근차근 짚고 시작해요.</p></details>
+    <details><summary>긴소매 옷을 입고 가야 하나요?</summary><p>긴소매 옷을 입고 오시거나<br>챙겨 오시면 좋아요.</p></details>
     <details><summary>준비물이 있나요?</summary><p><span class="todo">[답변 미정]</span></p></details>
     <details><summary>버스킹을 안 들어도 괜찮나요?</summary><p>네. 슬리빙만 신청해도 돼요.<br>둘 다 들으면 통합권이 더 저렴해요.</p></details>
     <details><summary>버스킹을 듣고 신청하면 할인되나요?</summary><p>네. 버스킹 참가자가 슬리빙을 따로 신청하면<br>1만원 할인해 드려요.</p></details>
-    <details><summary>단독권을 통합권으로 바꿀 수 있나요?</summary><p>11월 8일까지는 차액만 내면 돼요.<br>예: 슈퍼 얼리버드 슬리빙 단독권(3만원)을 얼리버드 기간에 바꾸면<br>11만원에서 3만원을 뺀 8만원을 내요.</p></details>
+    <details><summary>단독권을 통합권으로 바꿀 수 있나요?</summary><p>11월 8일까지는 차액만 내면 돼요.<br>예: 슈퍼 얼리버드 슬리빙 단독권(3.5만원)을 얼리버드 기간에 바꾸면<br>12만원에서 3.5만원을 뺀 8.5만원을 내요.</p></details>
     <details><summary>촬영이나 녹음을 해도 되나요?</summary><p>촬영, 녹화, 녹음은 모두 금지예요.</p></details>
     <details><summary>한 회차를 못 가게 되면요?</summary><p>회차별 환불·양도 기준은 곧 안내할게요. <span class="todo">[통합권 부분 환불 기준 확정 전]</span></p></details>
   </div>
@@ -412,10 +474,10 @@
   // 테스트: window.PLANB_NOW = "2026-10-30" 처럼 지정하면 그 날짜 기준으로 보여 줘요.
   var root = typeof globalThis !== "undefined" ? globalThis : window;
   var OPEN = 20261017, SUPER_END = 20261027, EARLY_END = 20261108, EVENT_DAY = 20261122;
-  var FULL = "5만원";
+  var FULL = "6만원";
   var PRICE = {
-    super: { now: "3만원", label: "슈퍼 얼리버드", short: "10/27까지" },
-    early: { now: "4만원", label: "얼리버드", short: "11/8까지" }
+    super: { now: "3.5만원", off: "42%", label: "슈퍼 얼리버드", short: "10/27까지" },
+    early: { now: "5만원", off: "17%", label: "얼리버드", short: "11/8까지" }
   };
 
   function kstToday(now) {
@@ -473,7 +535,7 @@
     });
     var price = document.querySelector("[data-strip-price]");
     if (price) {
-      if (s.tier) price.innerHTML = '<s class="was">정가 ' + FULL + '</s>' + s.tier.label + ' ' + s.tier.now;
+      if (s.tier) price.innerHTML = '<s class="was">정가 ' + FULL + '</s>' + s.tier.label + ' ' + s.tier.now + ' <span class="off">' + s.tier.off + '</span>';
       else if (s.endText) price.textContent = s.endText;
       else price.textContent = "정상가 " + FULL;
     }

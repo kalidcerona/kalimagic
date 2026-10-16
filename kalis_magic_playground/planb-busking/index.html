@@ -31,7 +31,7 @@
   img { display:block; max-width:100%; height:auto; }
   a { color:var(--amber); }
   a:hover { color:#fff; }
-  a:focus-visible, .btn:focus-visible, summary:focus-visible, .reel:focus-visible { outline:2px solid var(--amber); outline-offset:3px; border-radius:6px; }
+  a:focus-visible, .btn:focus-visible, summary:focus-visible { outline:2px solid var(--amber); outline-offset:3px; border-radius:6px; }
   h1, h2, h3 { text-wrap:balance; }
   p, li, dd { text-wrap:pretty; }
   .disp { font-family:var(--display); font-weight:400; }
@@ -107,9 +107,11 @@
   .career dd { margin:0; color:var(--body); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .career .more { color:var(--soft); }
 
-  /* 현장 릴 */
-  .reel { display:flex; gap:12px; overflow-x:auto; padding-bottom:12px; scroll-snap-type:x mandatory; }
-  .reel img { flex:none; width:min(520px, 80%); aspect-ratio:3 / 2; object-fit:cover; border-radius:6px; scroll-snap-align:start; }
+  /* 현장 사진 */
+  .gallery { display:grid; grid-template-columns:repeat(6, minmax(0,1fr)); gap:12px; }
+  .gallery img { width:100%; aspect-ratio:3 / 2; object-fit:cover; border-radius:6px; min-width:0; grid-column:span 2; }
+  .gallery img:first-child { grid-column:1 / -1; aspect-ratio:16 / 9; }
+  .gallery img:nth-child(2), .gallery img:nth-child(3) { grid-column:span 3; }
 
   /* 진행 */
   .prog { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:0 40px; list-style:none; margin:0; padding:0; }
@@ -203,7 +205,11 @@
     .sticky-ticket-text { font-size:13px; font-weight:800; color:var(--ink); }
     .sticky-ticket .btn { width:auto; min-height:44px; padding:0 18px; font-size:14px; }
   }
-  @media (prefers-reduced-motion:reduce) { .reel { scroll-behavior:auto; } }
+  @media (max-width:719px) {
+    .gallery { grid-template-columns:repeat(2, minmax(0,1fr)); }
+    .gallery img, .gallery img:nth-child(2), .gallery img:nth-child(3) { grid-column:span 1; }
+    .gallery img:first-child, .gallery img:last-child { grid-column:1 / -1; }
+  }
 </style>
 </head>
 <body data-planb-page="busking">
@@ -242,7 +248,7 @@
     <div><p class="strip-k">DATE</p><p class="strip-v">11.15 일요일</p></div>
     <div><p class="strip-k">TIME</p><p class="strip-v">15:00-18:30</p></div>
     <div><p class="strip-k">PLACE</p><p class="strip-v">스넥 연습실<small>홍대입구역 도보 5분</small></p></div>
-    <div><p class="strip-k" data-strip-label>SUPER EARLY</p><p class="strip-v is-price" data-strip-price><s class="was-top">정가 9만원</s><span class="now-line">7만원 <span class="off">22%</span></span><small>통합권 <s>10만원</s> 8만원</small><small>10/27(화)까지</small></p></div>
+    <div><p class="strip-k" data-strip-label>SUPER EARLY</p><p class="strip-v is-price" data-strip-price><s class="was-top">정가 9만원</s><span class="now-line">7만원 <span class="off">22%</span></span><small>통합권 <s>10.5만원</s> 8.5만원</small><small>10/27(화)까지</small></p></div>
   </div>
   <div class="cta-row">
     <p class="deadline" data-deadline><span data-deadline-main>10월 17일(토) 판매 시작</span><small data-deadline-sub>슈퍼 얼리버드는 11일 동안만</small></p>
@@ -335,7 +341,7 @@
   <div class="wrap">
     <p class="eyebrow">ON THE STREET</p>
     <h2 class="disp sec-title">이렇게 사람을 모아요</h2>
-    <div class="reel" role="region" aria-label="버스킹 현장 사진, 옆으로 넘겨 보기" tabindex="0">
+    <div class="gallery">
       <img src="img/busking-sunhwijae-2.jpg" alt="선휘재가 덕수궁 앞에서 버스킹하는 모습" width="1600" height="901" loading="lazy" decoding="async">
       <img src="img/busking-hook-1.jpg" alt="매지션 훅이 밤거리에서 버스킹하는 모습" width="1008" height="756" loading="lazy" decoding="async">
       <img src="img/busking-showgang-2.jpg" alt="쇼갱이 광장에서 버스킹하는 모습" width="1600" height="901" loading="lazy" decoding="async">
@@ -388,8 +394,8 @@
       <p class="tier-was">정가 <s>9만원</s></p>
       <p class="tier-price"><span class="now">7만원</span><span class="off">22% 할인</span></p>
       <div class="tier-rows">
-        <div><span><a href="../planb-sleeving/">슬리빙 단독</a></span><b>3만원</b></div>
-        <div><span>통합권 <span class="save">2만원 절약</span></span><span><s>10만원</s> <b>8만원</b></span></div>
+        <div><span><a href="../planb-sleeving/">슬리빙 단독</a></span><b>3.5만원</b></div>
+        <div><span>통합권 <span class="save">2만원 절약</span></span><span><s>10.5만원</s> <b>8.5만원</b></span></div>
       </div>
     </article>
     <article class="tier" data-tier="early">
@@ -399,8 +405,8 @@
       <p class="tier-was">정가 <s>9만원</s></p>
       <p class="tier-price"><span class="now">8만원</span><span class="off">11% 할인</span></p>
       <div class="tier-rows">
-        <div><span><a href="../planb-sleeving/">슬리빙 단독</a></span><b>4만원</b></div>
-        <div><span>통합권 <span class="save">1만원 절약</span></span><span><s>12만원</s> <b>11만원</b></span></div>
+        <div><span><a href="../planb-sleeving/">슬리빙 단독</a></span><b>5만원</b></div>
+        <div><span>통합권 <span class="save">1만원 절약</span></span><span><s>13만원</s> <b>12만원</b></span></div>
       </div>
     </article>
     <article class="tier" data-tier="full">
@@ -410,7 +416,7 @@
       <p class="tier-was">정가</p>
       <p class="tier-price"><span class="now">9만원</span></p>
       <div class="tier-rows">
-        <div><span><a href="../planb-sleeving/">슬리빙 단독</a></span><b>5만원</b></div>
+        <div><span><a href="../planb-sleeving/">슬리빙 단독</a></span><b>6만원</b></div>
         <div><span>통합권</span><b class="ended">판매 종료</b></div>
       </div>
     </article>
@@ -434,7 +440,7 @@
     <details><summary>강사에게 직접 질문할 수 있나요?</summary><p>네. 세 강사가 한자리에서<br>인터뷰 형식으로 답하는 Q&amp;A 시간이 있어요.</p></details>
     <details><summary>뒤풀이는 꼭 가야 하나요?</summary><p>선택이에요. 5,000원을 내면 참여할 수 있고,<br>장소만 제공해요.</p></details>
     <details><summary>한 회차만 신청해도 되나요?</summary><p>네. 버스킹과 슬리빙은 각각 신청할 수 있어요.<br>둘 다 들으면 통합권이 더 저렴해요.</p></details>
-    <details><summary>단독권을 통합권으로 바꿀 수 있나요?</summary><p>11월 8일까지는 차액만 내면 돼요.<br>예: 슈퍼 얼리버드 단독권(7만원)을 얼리버드 기간에 바꾸면<br>11만원에서 7만원을 뺀 4만원을 내요.</p></details>
+    <details><summary>단독권을 통합권으로 바꿀 수 있나요?</summary><p>11월 8일까지는 차액만 내면 돼요.<br>예: 슈퍼 얼리버드 단독권(7만원)을 얼리버드 기간에 바꾸면<br>12만원에서 7만원을 뺀 5만원을 내요.</p></details>
     <details><summary>한 회차를 못 가게 되면요?</summary><p>회차별 환불·양도 기준은 곧 안내할게요. <span class="todo">[통합권 부분 환불 기준 확정 전]</span></p></details>
   </div>
 </section>
@@ -480,8 +486,8 @@
   var root = typeof globalThis !== "undefined" ? globalThis : window;
   var OPEN = 20261017, SUPER_END = 20261027, EARLY_END = 20261108, EVENT_DAY = 20261115;
   var PRICE = {
-    super: { busking: "7만원", off: "22%", combo: "8만원", comboWas: "10만원", until: "10/27(화)까지", short: "10/27까지" },
-    early: { busking: "8만원", off: "11%", combo: "11만원", comboWas: "12만원", until: "11/8(일)까지", short: "11/8까지" },
+    super: { busking: "7만원", off: "22%", combo: "8.5만원", comboWas: "10.5만원", until: "10/27(화)까지", short: "10/27까지" },
+    early: { busking: "8만원", off: "11%", combo: "12만원", comboWas: "13만원", until: "11/8(일)까지", short: "11/8까지" },
     full:  { busking: "9만원" }
   };
   var FULL = "9만원";
