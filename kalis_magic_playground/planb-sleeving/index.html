@@ -108,8 +108,7 @@
   .teacher .photo { width:140px; height:175px; object-fit:cover; object-position:center top; flex:none; border-radius:2px; }
   .teacher .body { min-width:0; flex:1 1 280px; }
   .teacher .label { margin:0 0 6px; font-size:12.5px; letter-spacing:.24em; color:var(--soft); }
-  .teacher h2 { margin:0 0 10px; font-size:44px; }
-  .badge { display:inline-block; border:1px solid var(--teal); color:var(--teal); border-radius:4px; padding:3px 8px; font-size:12.5px; font-weight:700; margin-bottom:12px; }
+  .teacher h2 { margin:0 0 16px; font-size:44px; }
   .career { display:grid; grid-template-columns:64px minmax(0,1fr); gap:4px 10px; margin:0; font-size:14px; }
   .career dt { color:var(--teal); font-weight:700; white-space:nowrap; font-variant-numeric:tabular-nums; }
   .career dd { margin:0; color:var(--body); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -118,6 +117,7 @@
   /* 대상 */
   .for { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:0 40px; list-style:none; margin:0; padding:0; }
   .for li { padding:16px 0; border-top:1px solid var(--line); font-weight:700; min-width:0; }
+  .for .desc { display:block; margin-top:6px; font-weight:500; font-size:13.5px; line-height:1.55; color:var(--muted); }
 
   /* 사진 */
   .scenes { display:grid; grid-template-columns:minmax(0,5fr) minmax(0,7fr); grid-template-rows:1fr 1fr; gap:10px; margin-top:24px; aspect-ratio:12 / 7; }
@@ -196,7 +196,7 @@
 
   @media (max-width:760px) {
     .wrap { padding-inline:20px; }
-    .hero, .reg, .tiers, .for, .faq, .info, .sponsor { grid-template-columns:minmax(0,1fr); }
+    .hero, .reg, .tiers, .faq, .info, .sponsor { grid-template-columns:minmax(0,1fr); }
     .hero { padding-top:48px; gap:32px; }
     .hero-photo { aspect-ratio:4 / 3; }
     .chapters { grid-template-columns:minmax(0,1fr); }
@@ -208,6 +208,7 @@
     .sticky-ticket .btn { width:auto; min-height:44px; padding:0 18px; font-size:14px; }
   }
   @media (max-width:719px) {
+    .for { grid-template-columns:minmax(0,1fr); }
     .scenes { grid-template-columns:minmax(0,1fr); grid-template-rows:none; aspect-ratio:auto; }
     .scenes img { height:auto; grid-column:auto; grid-row:auto; }
     .scenes .scene-1, .scenes .scene-2, .scenes .scene-3 { grid-column:auto; grid-row:auto; }
@@ -289,9 +290,8 @@
     <article>
       <p class="num">03</p>
       <h3><span class="mosaic" role="img" aria-label="비공개 인물"></span>의 슬리빙.</h3>
-      <p>동전마술을 하다보면 동전을 사라지게 하는 방식으로 슬리빙을 많이 사용했고, 시초가 누구인지 찾기 힘들정도로 정보량이 방대합니다.</p>
-      <p>하지만, 동전이 아닌 것들을 슬리빙에 녹여낸 사람이 누구인지는 찾아내었습니다.</p>
-      <p class="chap-gap">마술에서의 슬리빙 역사에 대한 이야기와 함께 당시 슬리빙에 대한 시대상을 함께 이야기해보려고 합니다.</p>
+      <p>동전마술에서 슬리빙은 워낙 널리 쓰여 온 탓에, 누가 처음 시작했는지 찾기 어려울 만큼 자료가 방대합니다. 그 가운데 슬리빙을 연출에 직접 쓰기 시작한 인물에 대한 자료를 찾아냈고, 그 주인공이 바로 <span class="mosaic" role="img" aria-label="비공개 인물"></span>입니다.</p>
+      <p>그가 슬리빙을 연출에 어떻게 녹여냈는지, 그리고 당시 마술계가 슬리빙을 어떻게 바라봤는지 그 시대의 분위기와 함께 이야기합니다.</p>
     </article>
     <article>
       <p class="num">04</p>
@@ -303,7 +303,6 @@
       <p class="num">05</p>
       <h3>루틴들</h3>
       <p>슬리빙과 같이 쓰기 좋은 기술들, 슬리빙 루틴들에 대해 설명합니다. 퍼미션 받은 마술의 대가들의 루틴들에 저의 터치가 들어갔습니다.</p>
-      <p>릭메럴 룬클란 데이비드윌리암슨 등</p>
     </article>
     <article>
       <p class="num">06</p>
@@ -320,10 +319,10 @@
     <div class="body">
       <p class="label">INSTRUCTOR</p>
       <h2 class="serif">조시훈</h2>
-      <span class="badge">해외 마술사 퍼미션</span>
       <dl class="career">
         <dt>2026.05</dt><dd>성수 RSG 페스티벌</dd>
         <dt>거리</dt><dd>버스킹 공연 다수</dd>
+        <dt>특강</dt><dd>성균관대학교</dd>
         <dt></dt><dd class="more">외 공연·행사 다수</dd>
       </dl>
     </div>
@@ -334,10 +333,10 @@
 <section class="wrap sec">
   <div class="head"><h2 class="serif">이런 분께</h2><p>FOR YOU</p></div>
   <ul class="for">
-    <li>손기술을<br>늘리고 싶은 분</li>
-    <li>사라지는 마술을<br>좋아하는 분</li>
-    <li>클로즈업 마술을<br>하는 분</li>
-    <li>기본기를<br>다지고 싶은 분</li>
+    <li>슬리빙을 기초부터<br>배우고 싶은 분<span class="desc">기본 슬리빙부터 천천히, 차근차근 알려드립니다.</span></li>
+    <li>1초의 설계를<br>배우고 싶은 분<span class="desc">사라지는 순간을 더 깨끗하게 만드는 법을 함께 봅니다.</span></li>
+    <li>동전 너머의 슬리빙을<br>배우고 싶은 분<span class="desc">펜, 반지 등 다양한 물건으로 넓혀갑니다.</span></li>
+    <li>슬리빙을 알지만<br>실전에서 못 쓰고 있는 분<span class="desc">알고도 손이 안 가는 이유, 그 답을 드립니다.</span></li>
   </ul>
 </section>
 
