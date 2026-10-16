@@ -6,6 +6,8 @@ import {
   canonicalAnswerText,
   buildSession,
   clearWeak,
+  weakKeys,
+  migrateWeak,
   defaultSettings,
   defaultStats,
   freshQuestion,
@@ -30,12 +32,20 @@ const KEYS = {
 const MODE_LABEL = {
   map: "대응",
   phrase: "문장 대응",
-  row: "줄 회상",
-  odd: "홀수 쪽",
+  row: "페이지 1",
+  odd: "페이지 2",
   next: "다음 10",
   birthday: "생일",
-  lie: "거짓말",
   review: "다시 풀기",
+};
+
+const MODE_DESCRIPTION = {
+  row: "암기표의 문장과 숫자열을 줄별로 떠올립니다.",
+  odd: "쪽 번호를 보고 그 쪽에서 시작하는 숫자 세 개를 떠올립니다. 1쪽은 원주율의 첫 세 자리입니다.",
+  next: "보이는 다섯 자리 다음부터 숫자 열 개를 떠올립니다.",
+  phrase: "문장을 보고 전체 숫자열을 떠올립니다.",
+  map: "글자와 숫자의 짝을 떠올립니다.",
+  birthday: "생일로 쪽, 줄, 시작 자리를 찾습니다.",
 };
 
 const state = {
@@ -204,23 +214,21 @@ function reviewSession(questions) {
   };
 }
 
-function startSession(mode, { lieLength = 5, force = false, keepTab = false } = {}) {
-  const nextLie = lieLength === 7 ? 7 : 5;
+function startSession(mode, { force = false, keepTab = false } = {}) {
+  if (!MODES.includes(mode)) mode = MODES[0];
   const active = state.session;
   if (!force && active && !active.finished && active.mode === mode && active.mode !== "review") {
-    if (mode !== "lie" || active.lieLength === nextLie) {
-      if (!keepTab) state.tab = "practice";
-      focusAnswer = state.tab === "practice";
-      render();
-      return;
-    }
+    if (!keepTab) state.tab = "practice";
+    focusAnswer = state.tab === "practice";
+    render();
+    return;
   }
   postSession(active);
   const session = buildSession({
     mode,
     count: state.settings.count,
     seed: freshSeed(),
-    lieLength: nextLie,
+    phraseDisplay: state.settings.phraseDisplay,
   });
   state.session = session;
   runningSince = Date.now();
@@ -301,14 +309,14 @@ function useReveal() {
 }
 
 function isWeakMarked(question) {
-  return state.stats.weak.some((item) => item.key === question.key);
+  return state.stats.weak.some((item) => weakKeys(question).includes(item.key));
 }
 
 function toggleWeak() {
   const question = current();
   if (!question) return;
   if (isWeakMarked(question)) {
-    state.stats.weak = state.stats.weak.filter((item) => item.key !== question.key);
+    state.stats.weak = state.stats.weak.filter((item) => !weakKeys(question).includes(item.key));
     state.notice = "약점 표시를 해제했습니다.";
   } else {
     recordWeak(state.stats, question);
@@ -345,7 +353,7 @@ function setCount(count) {
   state.settings.count = count;
   saveSettings();
   if (isPristine(state.session)) {
-    startSession(state.session.mode, { lieLength: state.session.lieLength, force: true, keepTab: true });
+    startSession(state.session.mode, { force: true, keepTab: true });
     state.notice = "문제 수를 바꿨습니다. 아직 풀기 전이라 이 회차에 바로 적용했습니다.";
     notice().textContent = state.notice;
     return;
@@ -405,10 +413,10 @@ function runPageCheck() {
   } else if (page === 1) {
     state.checker.pageResult = "1쪽은 314입니다. 52자리 순환으로 계산하지 않습니다.";
   } else if (!Number.isInteger(page) || page < 3 || page > 49 || page % 2 === 0) {
-    state.checker.pageResult = "1쪽 또는 3–49쪽의 홀수 쪽을 입력해 주세요.";
+    state.checker.pageResult = "1쪽 또는 3-49쪽 중 홀수 번호를 입력해 주세요.";
   } else {
     const locus = pageLocus(page);
-    if (!locus.ok) state.checker.pageResult = "3–49쪽의 홀수 쪽을 확인합니다. 1쪽은 원주율 예외입니다.";
+    if (!locus.ok) state.checker.pageResult = "3-49쪽 중 홀수 번호를 확인합니다. 1쪽은 원주율 예외입니다.";
     else {
       const even = page % 2 === 0 ? " 짝수 쪽은 연습 문제에 넣지 않습니다." : "";
       state.checker.pageResult = `${page}쪽 · 암기 줄 ${locus.row} · ${locus.column}번째 · ${locus.letters} · ${locus.digits}.${even}`;
@@ -432,7 +440,7 @@ function runDateCheck() {
     state.checker.dateResult = "없는 날짜입니다. 2월 29일만 예외로 받을 수 있고, 연도는 묻지 않습니다.";
   } else {
     const orderLabel = address.order === "MMDD" ? "월일" : "일월";
-    state.checker.dateResult = `${orderLabel} ${address.dateStr} · ${address.page}쪽 · 주소 줄 ${address.line} · ${address.column}번째. 주소 줄은 암기 줄 0–4가 아닙니다.`;
+    state.checker.dateResult = `${orderLabel} ${address.dateStr} · ${address.page}쪽 · 줄 ${address.line} · 시작 ${address.column}번째. 생일의 줄 번호와 암기표의 줄 번호는 다릅니다.`;
   }
   render();
 }
@@ -483,12 +491,6 @@ function practiceHtml() {
   const width = Math.round((done / session.questions.length) * 100);
   const live = session.finished ? session.accumulatedMs : (session.accumulatedMs || 0) + Math.max(0, Date.now() - runningSince);
   const question = current();
-  const lieSwitch = session.mode === "lie"
-    ? `<div class="subswitch" role="group" aria-label="거짓말 길이">
-      <button type="button" data-action="lie-length" data-length="5" class="${session.lieLength === 5 ? "selected" : ""}">5자리</button>
-      <button type="button" data-action="lie-length" data-length="7" class="${session.lieLength === 7 ? "selected" : ""}">7자리</button>
-    </div>`
-    : "";
   let body;
   if (!question) {
     body = `${summaryHtml(summary)}
@@ -497,7 +499,11 @@ function practiceHtml() {
     const showAnswer = question.graded || question.usedReveal;
     const markedWeak = isWeakMarked(question);
     const bigClass = ["big", question.public.bigClass || ""].filter(Boolean).join(" ");
-    const answerText = showAnswer ? esc(canonicalAnswerText(question).replaceAll("|", " / ")) : "?";
+    const answerText = showAnswer
+      ? (question.answer.type === "phrase"
+        ? `<span>${esc(question.answer.phrase)}</span><span>${esc(canonicalAnswerText(question))}</span>`
+        : esc(canonicalAnswerText(question).replaceAll("|", " / ")))
+      : "?";
     const mapPictures = showAnswer && question.answer.type === "map"
       ? `<span class="map-answer-pictures">${inkGlyph(question.answer.letter, question.answer.kind === "digit" ? "letter-digit" : "digit-letter")}${inkGlyph(question.answer.letter, question.answer.kind === "digit" ? "letter" : "digit")}</span>`
       : "";
@@ -508,21 +514,29 @@ function practiceHtml() {
       <p class="${esc(bigClass)}">${esc(question.public.big)}</p>
       <p class="caption">${esc(question.public.note.replaceAll("입력합니다", "떠올립니다").replaceAll("다시 쓰지 않습니다", "포함하지 않습니다"))}</p>
     </article>
-    <div class="quiz-actions">
-      <button type="button" class="blind-answer${mapPictures ? " map-answer" : ""}" data-action="tap"${answerName}>${answerContent}</button>
+    <div class="quiz-actions answer-${esc(question.answer.type)}">
+      <button type="button" class="blind-answer${question.answer.type === "phrase" ? " phrase-answer" : ""}${mapPictures ? " map-answer" : ""}" data-action="tap"${answerName}>${answerContent}</button>
       <p class="quiz-status">${showAnswer ? "한 번 더 탭하면 다음" : ""}</p>
       <button type="button" data-action="weak-toggle" aria-pressed="${markedWeak ? "true" : "false"}" class="weak-toggle">약점</button>
       <button type="button" data-action="new-session">새 회차</button>
     </div>`;
   }
-  return `<section class="workspace">
-    <div class="spread"><h2>연습</h2><span class="pill">${esc(formatDuration(live))}</span></div>
-    <div class="mode-switch" role="group" aria-label="연습 종류">${modeButtons()}</div>
-    ${lieSwitch}
-    ${poolSwitch()}
-    <div class="spread"><span>${session.finished ? "회차 끝" : `문제 ${session.index + 1} / ${session.questions.length}`}</span></div>
-    <div class="bar" aria-hidden="true"><span style="width:${width}%"></span></div>
-    ${body}
+  const phraseControls = session.mode === "phrase"
+    ? `<div class="subswitch" role="group" aria-label="문장 표시">${[["full", "전체 문장"], ["half", "반만"]].map(([value, label]) => `<button type="button" data-action="phrase-display" data-value="${value}" class="${(state.settings.phraseDisplay || "full") === value ? "selected" : ""}" aria-pressed="${(state.settings.phraseDisplay || "full") === value}">${label}</button>`).join("")}</div>`
+    : "";
+  return `<section class="workspace practice-workspace">
+    <div class="practice-controls">
+      <div class="sr-only"><h2>연습</h2><span>${esc(formatDuration(live))}</span></div>
+      <div class="mode-switch" role="group" aria-label="연습 종류">${modeButtons()}</div>
+      ${phraseControls}
+      <p class="mode-description">${esc(MODE_DESCRIPTION[session.mode] || "표시한 약점을 다시 떠올립니다.")}</p>
+      <div class="practice-progress">
+        <span>${session.finished ? "회차 끝" : `문제 ${session.index + 1} / ${session.questions.length}`}</span>
+        ${poolSwitch()}
+      </div>
+      <div class="bar" aria-hidden="true"><span style="width:${width}%"></span></div>
+    </div>
+    <div class="practice-stage">${body}</div>
   </section>`;
 }
 
@@ -655,6 +669,8 @@ function shapeChart() {
 function learnHtml() {
   const notes = referenceNotes();
   const phonetic = state.settings.phonetic;
+  const birthdayMMDD = birthdayAddress(3, 14, "MMDD");
+  const birthdayDDMM = birthdayAddress(3, 14, "DDMM");
   const lines = LINES.map((line) => `<article class="line-card">
       <p class="phrase"><span class="spell">${esc(line.phrase)}</span>${phonetic ? `<span class="spoken">${esc(line.spoken)}</span>` : ""}</p>
       <p class="digits-line">${esc(lineDigits(line.row))}</p>
@@ -671,33 +687,40 @@ function learnHtml() {
     <div class="line-list">${lines}</div>
     ${shapeChart()}
     <section class="panel formula">
-      <h3>홀수 쪽</h3>
+      <h3>페이지 1</h3>
+      ${chunks([MODE_DESCRIPTION.row])}
+    </section>
+    <section class="panel formula">
+      <h3>페이지 2</h3>
+      ${chunks([MODE_DESCRIPTION.odd])}
       ${chunks([
-        "10의 자리는 암기표의 줄 0~4, 1의 자리는 1부터 세는 글자 위치입니다.",
+        "10의 자리는 암기표의 줄 0-4, 1의 자리는 1부터 세는 글자 위치입니다.",
         "찾은 글자와 다음 두 글자를 읽습니다. 줄이 넘어가도 순환을 따라갑니다.",
         notes.piWarning,
         notes.after49,
       ])}
     </section>
     <section class="panel formula">
-      <h3>생일 주소</h3>
+      <h3>생일 페이지 찾는 법</h3>
       ${chunks([
-        "쪽 = 일 + 50. 주소 줄 = 월 × 2.",
-        "월일 MMDD의 시작 = 월 + 3. 일월 DDMM의 시작 = 월 + 1.",
-        "번호는 1부터입니다. 2월 29일은 허용하고, 그 밖에는 없는 날짜를 받지 않습니다.",
-        "주소 줄은 암기 줄 번호가 아닙니다.",
+        "쪽 = 일 + 50",
+        "줄 = 월 × 2",
+        "MMDD(월일) 시작 = 월 + 3",
+        "DDMM(일월) 시작 = 월 + 1",
+        `예: 3월 14일 → 쪽 ${birthdayMMDD.page}, 줄 ${birthdayMMDD.line}, MMDD 시작 ${birthdayMMDD.column}, DDMM 시작 ${birthdayDDMM.column}`,
+        "2월 29일 허용 · 번호는 1부터",
+        "생일의 줄 번호와 암기표의 줄 번호는 다릅니다.",
       ])}
     </section>
     <section class="panel formula">
-      <h3>이어서 말하기 · 거짓말</h3>
+      <h3>다음 10</h3>
       ${chunks([
-        "다섯 자리 바로 다음부터 열 자리만 말합니다. 앞의 다섯은 정답에 다시 넣지 않습니다.",
+        MODE_DESCRIPTION.next,
         "52번째 다음은 첫 자리로 돌아갑니다. 이것은 원주율 전체가 아닙니다.",
-        "거짓말은 순환 구간과 정확히 한 자리만 다릅니다. 가능한 위치와 원래 숫자를 모두 정답으로 봅니다.",
       ])}
     </section>
     <section class="panel address-checker">
-      <h3>주소 확인</h3>
+      <h3>쪽과 생일 확인</h3>
       <div class="checker-grid">
         <section class="checker-block">
           <label class="checker-label" for="page-check">쪽 번호</label>
@@ -708,7 +731,7 @@ function learnHtml() {
           <div class="checker-result" role="status" aria-live="polite">${state.checker.pageResult ? esc(state.checker.pageResult).split(" · ").map(part => `<span>${part}</span>`).join("") : '<span class="subtle">쪽 번호를 넣어<br>암기 위치를 확인하세요.</span>'}</div>
         </section>
         <section class="checker-block">
-          <p class="checker-label">날짜 주소</p>
+          <p class="checker-label">생일 페이지</p>
           <div class="subswitch" role="group" aria-label="날짜 순서">
             <button type="button" data-action="checker-order" data-order="MMDD" class="${state.checker.order === "MMDD" ? "selected" : ""}">월일</button>
             <button type="button" data-action="checker-order" data-order="DDMM" class="${state.checker.order === "DDMM" ? "selected" : ""}">일월</button>
@@ -718,7 +741,7 @@ function learnHtml() {
             <label for="day-check">일<input id="day-check" inputmode="numeric" autocomplete="off" value="${esc(state.checker.day)}" placeholder="일"></label>
             <button type="submit" class="primary">날짜 계산</button>
           </form>
-          <div class="checker-result checker-date-result" role="status" aria-live="polite">${state.checker.dateResult ? esc(state.checker.dateResult).replace("번째. 주소", "번째 · 주소").split(" · ").map(part => `<span>${part}</span>`).join("") : '<span class="subtle">월과 일을 넣어<br>날짜 주소를 확인하세요.</span>'}</div>
+          <div class="checker-result checker-date-result" role="status" aria-live="polite">${state.checker.dateResult ? esc(state.checker.dateResult).replace("번째. 생일", "번째 · 생일").split(" · ").map(part => `<span>${part}</span>`).join("") : '<span class="subtle">월과 일을 넣어<br>생일 페이지를 확인하세요.</span>'}</div>
         </section>
       </div>
     </section>
@@ -731,14 +754,15 @@ function standaloneDisplay() {
   try {
     if (typeof window.matchMedia === "function") mode = window.matchMedia("(display-mode: standalone)").matches || window.matchMedia("(display-mode: window-controls-overlay)").matches;
   } catch {}
-  return mode || navigator.standalone === true;
+  return mode || (typeof navigator !== "undefined" && navigator.standalone === true);
 }
 function promptReady(event) {
   return !!event && event.isTrusted !== false && typeof event.prompt === "function" && !!event.userChoice && typeof event.userChoice.then === "function";
 }
 function installLines() {
-  const ua = String(navigator.userAgent || ""), touch = Number(navigator.maxTouchPoints) || 0;
-  const ios = /iPad|iPhone|iPod/.test(ua) || (String(navigator.platform || "") === "MacIntel" && touch > 1);
+  const nav = typeof navigator === "undefined" ? {} : navigator;
+  const ua = String(nav.userAgent || ""), touch = Number(nav.maxTouchPoints) || 0;
+  const ios = /iPad|iPhone|iPod/.test(ua) || (String(nav.platform || "") === "MacIntel" && touch > 1);
   if (ios) {
     if (/CriOS|FxiOS|EdgiOS/.test(ua)) return ["지금 브라우저에서는 설치 창이 안 열릴 수 있어요.", "Safari로 이 주소를 연 뒤 공유, 홈 화면에 추가를 눌러 주세요."];
     return ["Safari 아래의 공유 버튼을 누르고", "홈 화면에 추가를 눌러 주세요.", "‘웹 앱으로 열기’가 보이면 켜 주세요."];
@@ -746,22 +770,59 @@ function installLines() {
   if (/Android/i.test(ua)) return ["앱 설치 버튼이 없으면 Chrome 메뉴에서", "‘앱 설치’를 눌러 주세요.", "‘홈 화면에 추가’는 바로가기일 수 있어요."];
   return ["설치 창이 없으면 브라우저 메뉴에서", "‘앱 설치’를 확인해 주세요."];
 }
+let installed = false;
+let installHelp = false;
+let showInstallSheet = false;
+let focusInstallSheet = false;
+let installLayerOpen = false;
+let installReturnFocus = null;
+let pageRevealWatch = null;
+let pullingSheetFocus = false;
+const installInertNodes = new Set();
 function installPanel() {
-  if (standaloneDisplay()) return "";
+  if (installed || standaloneDisplay()) return "";
   return `<section class="panel install-card" data-install-card>
         <h3>홈 화면에 설치</h3>
-        ${chunks(["홈 화면에 설치하면 공연 중에도 바로 열 수 있어요.", "Pi Max를 앱처럼 설치해 보세요."])}
-        ${chunks(installLines())}
-        ${promptReady(deferredPrompt) ? `<button type="button" data-action="install" class="primary">앱 설치</button>` : ""}
+        ${chunks(["홈 화면에 설치하면 공연 중에도 바로 열 수 있어요."])}
+        ${chunks(installLines())}${installHelp ? chunks(["브라우저 메뉴를 열어 위 순서대로 설치해 주세요."]) : ""}
+        <div class="install-actions">
+          <button type="button" data-action="install" class="primary"${promptReady(deferredPrompt) ? "" : ` aria-expanded="${installHelp}"`}>${promptReady(deferredPrompt) ? "앱 설치" : (installHelp ? "설치 방법 접기" : "설치 방법 보기")}</button>
+        </div>
       </section>
       `;
 }
+function installSheetOpen() {
+  return showInstallSheet && !installed && !standaloneDisplay();
+}
+function installSheetHtml() {
+  if (!installSheetOpen()) return "";
+  const ready = promptReady(deferredPrompt);
+  const steps = ready ? "" : `<div id="install-sheet-steps">${chunks(installLines())}</div>`;
+  const primary = ready ? `<button type="button" class="primary" data-action="install">앱 설치</button>` : "";
+  return `<div class="install-sheet" data-install-sheet>
+      <div class="install-sheet-panel" role="dialog" aria-modal="true" aria-labelledby="install-sheet-title"${ready ? "" : ` aria-describedby="install-sheet-steps"`}>
+        <h2 id="install-sheet-title">홈 화면에 설치</h2>
+        ${chunks(["홈 화면에 설치하면 공연 중에도 바로 열 수 있어요."])}
+        ${steps}
+        <div class="install-actions">
+          ${primary}
+          <button type="button" class="${ready ? "" : "primary"}" data-action="install-later">나중에</button>
+        </div>
+      </div>
+    </div>`;
+}
+function closeInstallSheet() {
+  showInstallSheet = false;
+  focusInstallSheet = false;
+  render();
+}
 function rerenderInstall() {
-  if (state.tab === "settings") render();
+  render();
 }
 async function runInstall() {
   const event = deferredPrompt;
-  if (!promptReady(event) || standaloneDisplay()) return;
+  if (standaloneDisplay()) return;
+  if (!promptReady(event)) { installHelp = !installHelp; rerenderInstall(); return; }
   deferredPrompt = null;
   rerenderInstall();
   try {
@@ -775,12 +836,17 @@ if (typeof window !== "undefined") {
     if (!promptReady(event) || standaloneDisplay()) return;
     if (typeof event.preventDefault === "function") event.preventDefault();
     deferredPrompt = event;
+    if (installSheetOpen()) focusInstallSheet = true;
     rerenderInstall();
   });
   window.addEventListener("appinstalled", () => {
+    installed = true;
+    showInstallSheet = false;
+    focusInstallSheet = false;
     deferredPrompt = null;
     rerenderInstall();
   });
+  window.addEventListener("keydown", onKeyDown);
 }
 
 function settingsHtml() {
@@ -804,7 +870,8 @@ function settingsHtml() {
         </div>
         ${chunks(["켜면 암기표 문장 옆의 한글 발음만 보여 줍니다. 글자마다의 이름은 보이지 않고, 연습 화면에는 발음을 표시하지 않습니다."])}
       </section>
-      ${installPanel()}      <section class="panel">
+      ${installPanel()}
+      <section class="panel">
         <h3>기록 지우기</h3>
         ${chunks(["연습 기록만 지웁니다.", "지금 문제는 남습니다."])}
         ${state.confirmReset
@@ -820,12 +887,249 @@ function render() {
   const scrollY = typeof window !== "undefined" && typeof window.scrollY === "number" ? window.scrollY : null;
   renderNav();
   const root = main();
-  if (state.tab === "learn") root.innerHTML = learnHtml();
-  else if (state.tab === "settings") root.innerHTML = settingsHtml();
-  else root.innerHTML = practiceHtml();
+  const page = state.tab === "learn" ? learnHtml() : state.tab === "settings" ? settingsHtml() : practiceHtml();
+  root.innerHTML = page + installSheetHtml();
   notice().textContent = state.notice || "";
   focusAnswer = false;
+  syncInstallLayer();
   if (scrollY != null && typeof window.scrollTo === "function" && window.scrollY !== scrollY) window.scrollTo(0, scrollY);
+}
+
+// The distribution access guard sets documentElement.style.visibility = "hidden"
+// until /tools/_check reveals the page. A focus call made while hidden does not stick.
+function pageConcealed() {
+  if (typeof document === "undefined") return false;
+  let root = null;
+  try { root = document.documentElement; } catch { return false; }
+  if (!root || !root.style) return false;
+  let visibility = "";
+  try { visibility = root.style.visibility; } catch { return false; }
+  return String(visibility || "").toLowerCase() === "hidden";
+}
+
+function installSheetElement() {
+  const root = main();
+  if (!root || typeof root.querySelector !== "function") return null;
+  return root.querySelector("[data-install-sheet]");
+}
+
+function clearInstallInert() {
+  for (const el of installInertNodes) {
+    try {
+      el.inert = false;
+      if (typeof el.removeAttribute === "function") el.removeAttribute("data-install-inert");
+    } catch { /* detached nodes can ignore cleanup */ }
+  }
+  installInertNodes.clear();
+  if (typeof document === "undefined" || typeof document.querySelectorAll !== "function") return;
+  let extras = [];
+  try { extras = Array.from(document.querySelectorAll("[data-install-inert]")); } catch { extras = []; }
+  for (const el of extras) {
+    try {
+      el.inert = false;
+      if (typeof el.removeAttribute === "function") el.removeAttribute("data-install-inert");
+    } catch { /* detached nodes can ignore cleanup */ }
+  }
+}
+
+function markInstallInert(el) {
+  if (!el) return;
+  installInertNodes.add(el);
+  try { el.inert = true; } catch { /* inert is best-effort where the property is unsupported */ }
+  if (typeof el.setAttribute === "function") el.setAttribute("data-install-inert", "");
+}
+
+// The sheet lives inside #app, so the app root itself cannot be inert.
+function markBackgroundInert(sheet) {
+  let node = sheet;
+  const body = typeof document !== "undefined" ? document.body : null;
+  while (node && node.parentElement) {
+    const parent = node.parentElement;
+    const children = parent.children;
+    if (children && typeof children.length === "number") {
+      for (let i = 0; i < children.length; i += 1) {
+        const child = children[i];
+        if (child !== node) markInstallInert(child);
+      }
+    }
+    if (!body || parent === body) break;
+    node = parent;
+  }
+}
+
+function rememberInstallReturn(sheet) {
+  if (installLayerOpen) return;
+  const active = typeof document !== "undefined" ? document.activeElement : null;
+  if (!active || active === document.body || active === document.documentElement) {
+    installReturnFocus = null;
+    return;
+  }
+  if (sheet && typeof sheet.contains === "function" && sheet.contains(active)) {
+    installReturnFocus = null;
+    return;
+  }
+  installReturnFocus = active;
+}
+
+function restoreInstallFocus() {
+  const saved = installReturnFocus;
+  installReturnFocus = null;
+  let target = saved && saved.isConnected !== false ? saved : null;
+  if ((!target || typeof target.focus !== "function") && typeof document !== "undefined" && typeof document.querySelector === "function") {
+    target = document.querySelector("#nav button[aria-current='page']") || document.querySelector("#app button");
+  }
+  if (target && typeof target.focus === "function") {
+    try { target.focus(); } catch { /* restoring focus is optional */ }
+  }
+}
+
+function disarmPageReveal() {
+  if (!pageRevealWatch) return;
+  const stop = pageRevealWatch;
+  pageRevealWatch = null;
+  try { stop(); } catch { /* the watcher may already have disconnected */ }
+}
+
+function armPageReveal() {
+  if (pageRevealWatch || typeof document === "undefined") return;
+  const root = document.documentElement;
+  if (!root) return;
+  let observer = null;
+  let timer = null;
+  const stop = () => {
+    if (observer) {
+      try { observer.disconnect(); } catch { /* already disconnected */ }
+      observer = null;
+    }
+    if (timer != null && typeof clearInterval === "function") {
+      clearInterval(timer);
+      timer = null;
+    }
+    if (pageRevealWatch === stop) pageRevealWatch = null;
+  };
+  const retry = () => {
+    if (!installSheetOpen()) {
+      stop();
+      return;
+    }
+    if (pageConcealed()) return;
+    stop();
+    moveFocusToInstallSheet();
+  };
+  pageRevealWatch = stop;
+  let watching = false;
+  try {
+    if (typeof MutationObserver === "function") {
+      observer = new MutationObserver(retry);
+      observer.observe(root, { attributes: true, attributeFilter: ["style"] });
+      watching = true;
+    }
+  } catch {
+    observer = null;
+    watching = false;
+  }
+  if (!watching && typeof setInterval === "function") timer = setInterval(retry, 50);
+}
+
+function syncInstallLayer() {
+  const sheet = installSheetOpen() ? installSheetElement() : null;
+  if (!sheet) {
+    clearInstallInert();
+    disarmPageReveal();
+    if (installLayerOpen && !pageConcealed()) restoreInstallFocus();
+    else installReturnFocus = null;
+    installLayerOpen = false;
+    return;
+  }
+  rememberInstallReturn(sheet);
+  clearInstallInert();
+  markBackgroundInert(sheet);
+  installLayerOpen = true;
+  moveFocusToInstallSheet();
+}
+
+function sheetFocusable(sheet) {
+  if (!sheet || typeof sheet.querySelectorAll !== "function") return [];
+  let nodes = [];
+  try {
+    nodes = Array.from(sheet.querySelectorAll("button, a[href], input, select, textarea, [tabindex]"));
+  } catch {
+    return [];
+  }
+  return nodes.filter((el) => {
+    if (!el || el.disabled) return false;
+    if (typeof el.getAttribute === "function" && el.getAttribute("tabindex") === "-1") return false;
+    if (typeof el.getAttribute === "function" && el.getAttribute("type") === "hidden") return false;
+    return true;
+  });
+}
+
+function trapInstallTab(event) {
+  const sheet = installSheetElement();
+  if (!sheet) return;
+  const focusable = sheetFocusable(sheet);
+  if (!focusable.length) {
+    if (typeof event.preventDefault === "function") event.preventDefault();
+    return;
+  }
+  const first = focusable[0];
+  const last = focusable[focusable.length - 1];
+  const active = typeof document !== "undefined" ? document.activeElement : null;
+  const inside = !!(active && typeof sheet.contains === "function" && sheet.contains(active));
+  const backward = !!event.shiftKey;
+  if (!inside || (backward && active === first) || (!backward && active === last)) {
+    if (typeof event.preventDefault === "function") event.preventDefault();
+    const target = backward ? last : first;
+    if (typeof target.focus === "function") {
+      try { target.focus(); } catch { /* keep the key from leaving the sheet */ }
+    }
+  }
+}
+
+function moveFocusToInstallSheet() {
+  if (!installSheetOpen()) return;
+  if (pageConcealed()) {
+    armPageReveal();
+    return;
+  }
+  disarmPageReveal();
+  const sheet = installSheetElement();
+  if (!sheet || typeof sheet.querySelector !== "function") return;
+  const active = typeof document !== "undefined" ? document.activeElement : null;
+  if (!focusInstallSheet && active && typeof sheet.contains === "function" && sheet.contains(active)) return;
+  focusInstallSheet = false;
+  const button = sheet.querySelector("[data-action='install']") || sheet.querySelector("button");
+  if (button && typeof button.focus === "function") {
+    pullingSheetFocus = true;
+    try { button.focus(); } catch { /* focus is optional when the view is not visible */ }
+    finally { pullingSheetFocus = false; }
+  }
+}
+
+function onFocusIn(event) {
+  if (pullingSheetFocus || !installSheetOpen() || pageConcealed()) return;
+  const sheet = installSheetElement();
+  if (!sheet || typeof sheet.querySelector !== "function") return;
+  const target = event && event.target;
+  if (target && typeof sheet.contains === "function" && sheet.contains(target)) return;
+  const button = sheet.querySelector("[data-action='install']") || sheet.querySelector("button");
+  if (!button || button === target || typeof button.focus !== "function") return;
+  pullingSheetFocus = true;
+  try { button.focus(); } catch { /* the tab trap is the primary guard */ }
+  finally { pullingSheetFocus = false; }
+}
+
+function onKeyDown(event) {
+  if (!event || !installSheetOpen()) return;
+  if (event.key !== "Escape" && event.key !== "Tab") return;
+  if (event.installKeyHandled) return;
+  event.installKeyHandled = true;
+  if (event.key === "Escape") {
+    if (typeof event.preventDefault === "function") event.preventDefault();
+    closeInstallSheet();
+    return;
+  }
+  trapInstallTab(event);
 }
 
 function readChecker() {
@@ -884,15 +1188,33 @@ function onClick(event) {
       saveSettings();
     }
     state.notice = "";
-    startSession(button.dataset.mode, { lieLength: state.session?.lieLength || 5 });
-    return;
-  }
-  if (action === "lie-length") {
-    startSession("lie", { lieLength: Number(button.dataset.length) });
+    startSession(button.dataset.mode);
     return;
   }
   if (action === "map-pool") {
     setMapPool(button.dataset.pool === "weak" ? "weak" : "all");
+    return;
+  }
+  if (action === "install-later") {
+    closeInstallSheet();
+    return;
+  }
+  if (action === "phrase-display") {
+    state.settings.phraseDisplay = button.dataset.value === "half" ? "half" : "full";
+    saveSettings();
+    // Apply the preference only to upcoming questions, including after a reload.
+    for (const question of state.session.questions.slice(state.session.index + 1)) {
+      if (question.mode !== "phrase") continue;
+      if (state.settings.phraseDisplay === "half") {
+        if (question.word === undefined) question.word = Math.floor(Math.random() * 2);
+        question.public.big = LINES[question.answer.row].phrase.split(" ")[question.word];
+      } else {
+        delete question.word;
+        question.public.big = LINES[question.answer.row].phrase;
+      }
+    }
+    saveSession();
+    render();
     return;
   }
   if (action === "practice-style") return;
@@ -906,8 +1228,8 @@ function onClick(event) {
       startWeakReview();
       return;
     }
-    const mode = state.session?.mode === "review" ? "map" : (state.session?.mode || "map");
-    startSession(mode, { lieLength: state.session?.lieLength || 5, force: true });
+    const mode = state.session?.mode === "review" || !MODES.includes(state.session?.mode) ? MODES[0] : state.session.mode;
+    startSession(mode, { force: true });
     return;
   }
   if (action === "weak-review") return startWeakReview();
@@ -940,6 +1262,7 @@ function boot() {
   const sessionRead = readSlot(storageGet(KEYS.session), null, (value) => Boolean(value) && validateSession(value));
   state.settings = settingsRead.value;
   state.stats = statsRead.value;
+  if (!statsRead.corrupt) { migrateWeak(state.stats); saveStats(); }
   if (settingsRead.corrupt) blockedSlots.add(KEYS.settings);
   if (statsRead.corrupt) blockedSlots.add(KEYS.stats);
   if (sessionRead.corrupt) blockedSlots.add(KEYS.session);
@@ -947,13 +1270,16 @@ function boot() {
     state.settings.practiceStyle = "tap";
     saveSettings();
   }
+  if (!settingsRead.corrupt && Object.prototype.hasOwnProperty.call(state.settings, "installDismissed")) {
+    delete state.settings.installDismissed;
+    saveSettings();
+  }
   if (settingsRead.corrupt) notes.push("설정을 읽지 못해 기본값으로 시작합니다.");
   if (statsRead.corrupt) notes.push("저장된 기록을 보존하고 임시 기록으로 연습합니다.");
   if (sessionRead.corrupt) notes.push("저장된 문제를 보존하고 새 문제로 연습합니다. 이번 진행은 저장하지 않습니다.");
   if (!state.storageOk) notes.push("이 브라우저에서는 저장이 막혀 있습니다. 새로고침하면 현재 문제가 사라집니다.");
   if (sessionRead.corrupt || sessionRead.empty || !sessionRead.value || sessionRead.value.finished) {
-    const previousMode = sessionRead.value && MODES.includes(sessionRead.value.mode) ? sessionRead.value.mode : "map";
-    const previousLie = sessionRead.value?.lieLength === 7 ? 7 : 5;
+    const previousMode = sessionRead.value && MODES.includes(sessionRead.value.mode) ? sessionRead.value.mode : MODES[0];
     const weakQuestions = !statsRead.corrupt && state.settings.mapPool === "weak" ? weakReviewQuestions() : [];
     state.session = weakQuestions.length
       ? reviewSession(weakQuestions)
@@ -961,7 +1287,7 @@ function boot() {
         mode: previousMode,
         count: state.settings.count,
         seed: freshSeed(),
-        lieLength: previousLie,
+        phraseDisplay: state.settings.phraseDisplay,
       });
     runningSince = Date.now();
     saveSession();
@@ -973,7 +1299,11 @@ function boot() {
   state.tab = "practice";
   state.notice = notes.join(" ");
   focusAnswer = false;
+  showInstallSheet = !standaloneDisplay();
+  focusInstallSheet = showInstallSheet;
   document.body.addEventListener("click", onClick);
+  document.body.addEventListener("keydown", onKeyDown);
+  document.body.addEventListener("focusin", onFocusIn);
   document.body.addEventListener("submit", onSubmit);
   document.body.addEventListener("input", onInput);
   render();

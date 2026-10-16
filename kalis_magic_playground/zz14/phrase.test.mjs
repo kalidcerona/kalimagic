@@ -149,7 +149,7 @@ test("phrase tap hides digits until the first tap, then the second tap advances"
   env.render();
 
   const hidden = env.app.innerHTML;
-  assert.equal((hidden.match(/data-action="mode"/g) || []).length, 7);
+  assert.equal((hidden.match(/data-action="mode"/g) || []).length, core.MODES.length);
   assert.match(hidden, /data-mode="phrase"[^>]*class="selected"/);
   assert.match(hidden, /class="big phrase-prompt">OBESE GOATS</);
   assert.equal(hidden.includes("0835360475"), false);
@@ -164,14 +164,14 @@ test("phrase tap hides digits until the first tap, then the second tap advances"
   click(env, "tap");
   assert.equal(env.current().usedReveal, true);
   assert.equal(env.state.session.index, 0);
-  assert.match(env.app.innerHTML, /data-action="tap"[^>]*>0835360475<\/button>/);
+  assert.match(env.app.innerHTML, /data-action="tap"[^>]*><span>OBESE GOATS<\/span><span>0835360475<\/span><\/button>/);
   assert.match(env.app.innerHTML, /class="big phrase-prompt">OBESE GOATS</);
   assert.equal(env.app.innerHTML.includes('aria-label="0835360475"'), false);
   assert.equal(env.app.innerHTML.includes("오비스 고츠"), false);
   assert.match(env.app.innerHTML, /data-action="weak-toggle"/);
   assert.match(env.app.innerHTML, /data-action="new-session"/);
   assert.match(env.app.innerHTML, /class="quiz-status"/);
-  assert.match(env.app.innerHTML, /class="quiz-actions"/);
+  assert.match(env.app.innerHTML, /class="quiz-actions(?: [^"]*)?"/);
 
   click(env, "tap");
   assert.equal(env.state.session.index, 1);
@@ -227,7 +227,8 @@ test("learn chart keeps spoken phrases, drops letter names and the page-21 warni
   const index = readFileSync(new URL("./index.html", import.meta.url), "utf8");
   const sw = readFileSync(new URL("./sw.js", import.meta.url), "utf8");
   assert.match(index, /data-tab="learn">암기표</);
-  assert.match(sw, /pimax-practice-v20261005-7/);
+  assert.match(sw, /CACHE_PREFIX = 'pimax-practice-'/);
+  assert.match(sw, /CACHE_NAME = CACHE_PREFIX \+ 'v20261016-sheet-1-modes-1-coherent-1-v2'/);
 
   const env = load();
   env.state.tab = "learn";
@@ -236,7 +237,7 @@ test("learn chart keeps spoken phrases, drops letter names and the page-21 warni
   assert.match(html, /<h2>암기표<\/h2>/);
   assert.equal(html.includes("<h2>암기</h2>"), false);
   assert.equal(html.includes("시연 메모의 21쪽 386"), false);
-  assert.match(html, /10의 자리는 암기표의 줄 0~4, 1의 자리는 1부터 세는 글자 위치입니다\./);
+  assert.match(html, /10의 자리는 암기표의 줄 0-4, 1의 자리는 1부터 세는 글자 위치입니다\./);
   assert.equal(html.includes('class="names"'), false);
   assert.equal(html.includes("아이"), false);
   assert.equal(html.includes("에스"), false);

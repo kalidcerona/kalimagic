@@ -1,0 +1,1047 @@
+[
+  {
+    "version": 1,
+    "id": "s16",
+    "mode": "map",
+    "count": 5,
+    "seed": 42,
+    "lieLength": 5,
+    "index": 2,
+    "finished": false,
+    "statsPosted": false,
+    "accumulatedMs": 12345,
+    "questions": [
+      {
+        "hintUsed": false,
+        "usedReveal": false,
+        "showHint": false,
+        "graded": "direct",
+        "draft": "saved direct",
+        "mode": "map",
+        "key": "map:letter:E",
+        "public": {
+          "kicker": "글자 → 숫자",
+          "big": "E",
+          "bigClass": "glyph-letter",
+          "note": "대응 숫자 하나를 입력합니다.",
+          "placeholder": "숫자",
+          "phonetic": "이"
+        },
+        "hint": "대응 숫자는 앞쪽 다섯 숫자 안에 있습니다.",
+        "answer": {
+          "type": "map",
+          "kind": "letter",
+          "prompt": "E",
+          "digit": "3",
+          "letter": "E"
+        }
+      },
+      {
+        "hintUsed": true,
+        "usedReveal": false,
+        "showHint": true,
+        "graded": "wrong",
+        "draft": "saved wrong",
+        "mode": "map",
+        "key": "map:digit:0",
+        "public": {
+          "kicker": "숫자 → 글자",
+          "big": "0",
+          "bigClass": "glyph-digit",
+          "note": "대응 글자 하나를 입력합니다.",
+          "placeholder": "글자",
+          "phonetic": ""
+        },
+        "hint": "대응 글자는 앞쪽 다섯 글자 안에 있습니다.",
+        "answer": {
+          "type": "map",
+          "kind": "digit",
+          "prompt": "0",
+          "digit": "0",
+          "letter": "O"
+        }
+      },
+      {
+        "hintUsed": false,
+        "usedReveal": true,
+        "showHint": false,
+        "graded": null,
+        "draft": "줄 회상",
+        "mode": "map",
+        "key": "map:letter:P",
+        "public": {
+          "kicker": "글자 → 숫자",
+          "big": "P",
+          "bigClass": "glyph-letter",
+          "note": "대응 숫자 하나를 입력합니다.",
+          "placeholder": "숫자",
+          "phonetic": "피"
+        },
+        "hint": "대응 숫자는 뒤쪽 다섯 숫자 안에 있습니다.",
+        "answer": {
+          "type": "map",
+          "kind": "letter",
+          "prompt": "P",
+          "digit": "9",
+          "letter": "P"
+        }
+      },
+      {
+        "hintUsed": false,
+        "usedReveal": false,
+        "showHint": false,
+        "graded": null,
+        "draft": "",
+        "mode": "map",
+        "key": "map:digit:4",
+        "public": {
+          "kicker": "숫자 → 글자",
+          "big": "4",
+          "bigClass": "glyph-digit",
+          "note": "대응 글자 하나를 입력합니다.",
+          "placeholder": "글자",
+          "phonetic": ""
+        },
+        "hint": "대응 글자는 앞쪽 다섯 글자 안에 있습니다.",
+        "answer": {
+          "type": "map",
+          "kind": "digit",
+          "prompt": "4",
+          "digit": "4",
+          "letter": "A"
+        }
+      },
+      {
+        "hintUsed": false,
+        "usedReveal": false,
+        "showHint": false,
+        "graded": null,
+        "draft": "",
+        "mode": "map",
+        "key": "map:digit:6",
+        "public": {
+          "kicker": "숫자 → 글자",
+          "big": "6",
+          "bigClass": "glyph-digit",
+          "note": "대응 글자 하나를 입력합니다.",
+          "placeholder": "글자",
+          "phonetic": ""
+        },
+        "hint": "대응 글자는 뒤쪽 다섯 글자 안에 있습니다.",
+        "answer": {
+          "type": "map",
+          "kind": "digit",
+          "prompt": "6",
+          "digit": "6",
+          "letter": "G"
+        }
+      }
+    ]
+  },
+  {
+    "version": 1,
+    "id": "s16",
+    "mode": "phrase",
+    "count": 5,
+    "seed": 42,
+    "lieLength": 5,
+    "index": 2,
+    "finished": false,
+    "statsPosted": false,
+    "accumulatedMs": 12345,
+    "questions": [
+      {
+        "hintUsed": false,
+        "usedReveal": false,
+        "showHint": false,
+        "graded": "direct",
+        "draft": "saved direct",
+        "mode": "phrase",
+        "key": "phrase:0",
+        "public": {
+          "kicker": "문장 대응",
+          "big": "OBESE GOATS",
+          "bigClass": "phrase-prompt",
+          "note": "영어 문장 전체의 숫자열입니다. 앞의 0도 포함합니다.",
+          "placeholder": "",
+          "phonetic": ""
+        },
+        "hint": "",
+        "answer": {
+          "type": "phrase",
+          "row": 0,
+          "phrase": "OBESE GOATS",
+          "letters": "OBESEGOATS",
+          "digits": "0835360475"
+        }
+      },
+      {
+        "hintUsed": true,
+        "usedReveal": false,
+        "showHint": true,
+        "graded": "wrong",
+        "draft": "saved wrong",
+        "mode": "phrase",
+        "key": "phrase:4",
+        "public": {
+          "kicker": "문장 대응",
+          "big": "AGING PIANIST",
+          "bigClass": "phrase-prompt",
+          "note": "영어 문장 전체의 숫자열입니다. 앞의 0도 포함합니다.",
+          "placeholder": "",
+          "phonetic": ""
+        },
+        "hint": "",
+        "answer": {
+          "type": "phrase",
+          "row": 4,
+          "phrase": "AGING PIANIST",
+          "letters": "AGINGPIANIST",
+          "digits": "461269142157"
+        }
+      },
+      {
+        "hintUsed": false,
+        "usedReveal": true,
+        "showHint": false,
+        "graded": null,
+        "draft": "줄 회상",
+        "mode": "phrase",
+        "key": "phrase:2",
+        "public": {
+          "kicker": "문장 대응",
+          "big": "NOISE AGAIN",
+          "bigClass": "phrase-prompt",
+          "note": "영어 문장 전체의 숫자열입니다. 앞의 0도 포함합니다.",
+          "placeholder": "",
+          "phonetic": ""
+        },
+        "hint": "",
+        "answer": {
+          "type": "phrase",
+          "row": 2,
+          "phrase": "NOISE AGAIN",
+          "letters": "NOISEAGAIN",
+          "digits": "2015346412"
+        }
+      },
+      {
+        "hintUsed": false,
+        "usedReveal": false,
+        "showHint": false,
+        "graded": null,
+        "draft": "",
+        "mode": "phrase",
+        "key": "phrase:1",
+        "public": {
+          "kicker": "문장 대응",
+          "big": "INEPT BEING",
+          "bigClass": "phrase-prompt",
+          "note": "영어 문장 전체의 숫자열입니다. 앞의 0도 포함합니다.",
+          "placeholder": "",
+          "phonetic": ""
+        },
+        "hint": "",
+        "answer": {
+          "type": "phrase",
+          "row": 1,
+          "phrase": "INEPT BEING",
+          "letters": "INEPTBEING",
+          "digits": "1239783126"
+        }
+      },
+      {
+        "hintUsed": false,
+        "usedReveal": false,
+        "showHint": false,
+        "graded": null,
+        "draft": "",
+        "mode": "phrase",
+        "key": "phrase:3",
+        "public": {
+          "kicker": "문장 대응",
+          "big": "EATEN ONION",
+          "bigClass": "phrase-prompt",
+          "note": "영어 문장 전체의 숫자열입니다. 앞의 0도 포함합니다.",
+          "placeholder": "",
+          "phonetic": ""
+        },
+        "hint": "",
+        "answer": {
+          "type": "phrase",
+          "row": 3,
+          "phrase": "EATEN ONION",
+          "letters": "EATENONION",
+          "digits": "3473202102"
+        }
+      }
+    ]
+  },
+  {
+    "version": 1,
+    "id": "s16",
+    "mode": "row",
+    "count": 5,
+    "seed": 42,
+    "lieLength": 5,
+    "index": 2,
+    "finished": false,
+    "statsPosted": false,
+    "accumulatedMs": 12345,
+    "questions": [
+      {
+        "hintUsed": false,
+        "usedReveal": false,
+        "showHint": false,
+        "graded": "direct",
+        "draft": "saved direct",
+        "mode": "row",
+        "key": "row:next-english:3",
+        "public": {
+          "kicker": "다섯 줄",
+          "big": "줄 3 다음",
+          "bigClass": "locus-title",
+          "note": "다음 암기 줄의 영어 철자입니다. 마지막 다음은 첫 줄입니다.",
+          "placeholder": "영어 철자",
+          "phonetic": ""
+        },
+        "hint": "첫 글자는 A입니다.",
+        "answer": {
+          "type": "row",
+          "kind": "next-english",
+          "row": 4,
+          "from": 3,
+          "letters": "AGINGPIANIST",
+          "digits": "461269142157",
+          "phrase": "AGING PIANIST"
+        }
+      },
+      {
+        "hintUsed": true,
+        "usedReveal": false,
+        "showHint": true,
+        "graded": "wrong",
+        "draft": "saved wrong",
+        "mode": "row",
+        "key": "row:english:0",
+        "public": {
+          "kicker": "다섯 줄",
+          "big": "줄 0",
+          "bigClass": "locus-title",
+          "note": "영어 철자를 입력합니다.",
+          "placeholder": "영어 철자",
+          "phonetic": ""
+        },
+        "hint": "첫 글자는 O입니다.",
+        "answer": {
+          "type": "row",
+          "kind": "english",
+          "row": 0,
+          "from": null,
+          "letters": "OBESEGOATS",
+          "digits": "0835360475",
+          "phrase": "OBESE GOATS"
+        }
+      },
+      {
+        "hintUsed": false,
+        "usedReveal": true,
+        "showHint": false,
+        "graded": null,
+        "draft": "줄 회상",
+        "mode": "row",
+        "key": "row:sequence:0",
+        "public": {
+          "kicker": "다섯 줄",
+          "big": "다섯 줄",
+          "bigClass": "locus-title",
+          "note": "영어 암기어를 첫 줄부터 순서대로 입력합니다.",
+          "placeholder": "영어 철자",
+          "phonetic": ""
+        },
+        "hint": "첫 줄의 첫 글자는 O입니다. 다섯 줄을 빈칸 없이 이어 써도 됩니다.",
+        "answer": {
+          "type": "row",
+          "kind": "sequence",
+          "row": 0,
+          "from": null,
+          "letters": "OBESEGOATSINEPTBEINGNOISEAGAINEATENONIONAGINGPIANIST",
+          "digits": "0835360475123978312620153464123473202102461269142157",
+          "phrase": "OBESE GOATS INEPT BEING NOISE AGAIN EATEN ONION AGING PIANIST"
+        }
+      },
+      {
+        "hintUsed": false,
+        "usedReveal": false,
+        "showHint": false,
+        "graded": null,
+        "draft": "",
+        "mode": "row",
+        "key": "row:english:4",
+        "public": {
+          "kicker": "다섯 줄",
+          "big": "줄 4",
+          "bigClass": "locus-title",
+          "note": "영어 철자를 입력합니다.",
+          "placeholder": "영어 철자",
+          "phonetic": ""
+        },
+        "hint": "첫 글자는 A입니다.",
+        "answer": {
+          "type": "row",
+          "kind": "english",
+          "row": 4,
+          "from": null,
+          "letters": "AGINGPIANIST",
+          "digits": "461269142157",
+          "phrase": "AGING PIANIST"
+        }
+      },
+      {
+        "hintUsed": false,
+        "usedReveal": false,
+        "showHint": false,
+        "graded": null,
+        "draft": "",
+        "mode": "row",
+        "key": "row:digits:1",
+        "public": {
+          "kicker": "다섯 줄",
+          "big": "줄 1",
+          "bigClass": "locus-title",
+          "note": "숫자열을 입력합니다. 앞의 0도 포함합니다.",
+          "placeholder": "숫자열",
+          "phonetic": ""
+        },
+        "hint": "앞 두 숫자는 12입니다. 앞의 0도 씁니다.",
+        "answer": {
+          "type": "row",
+          "kind": "digits",
+          "row": 1,
+          "from": null,
+          "letters": "INEPTBEING",
+          "digits": "1239783126",
+          "phrase": "INEPT BEING"
+        }
+      }
+    ]
+  },
+  {
+    "version": 1,
+    "id": "s16",
+    "mode": "odd",
+    "count": 5,
+    "seed": 42,
+    "lieLength": 5,
+    "index": 2,
+    "finished": false,
+    "statsPosted": false,
+    "accumulatedMs": 12345,
+    "questions": [
+      {
+        "hintUsed": false,
+        "usedReveal": false,
+        "showHint": false,
+        "graded": "direct",
+        "draft": "saved direct",
+        "mode": "odd",
+        "key": "odd:29",
+        "public": {
+          "kicker": "홀수 쪽",
+          "big": "29쪽",
+          "bigClass": "locus-title",
+          "note": "첫 세 숫자 또는 대응 글자 세 개를 입력합니다.",
+          "placeholder": "세 숫자 또는 세 글자",
+          "phonetic": ""
+        },
+        "hint": "29쪽은 암기 줄 2, 9번째 글자에서 세 글자입니다.",
+        "answer": {
+          "type": "odd",
+          "special": "",
+          "page": 29,
+          "row": 2,
+          "column": 9,
+          "letters": "INE",
+          "digits": "123"
+        }
+      },
+      {
+        "hintUsed": true,
+        "usedReveal": false,
+        "showHint": true,
+        "graded": "wrong",
+        "draft": "saved wrong",
+        "mode": "odd",
+        "key": "odd:37",
+        "public": {
+          "kicker": "홀수 쪽",
+          "big": "37쪽",
+          "bigClass": "locus-title",
+          "note": "첫 세 숫자 또는 대응 글자 세 개를 입력합니다.",
+          "placeholder": "세 숫자 또는 세 글자",
+          "phonetic": ""
+        },
+        "hint": "37쪽은 암기 줄 3, 7번째 글자에서 세 글자입니다.",
+        "answer": {
+          "type": "odd",
+          "special": "",
+          "page": 37,
+          "row": 3,
+          "column": 7,
+          "letters": "NIO",
+          "digits": "210"
+        }
+      },
+      {
+        "hintUsed": false,
+        "usedReveal": true,
+        "showHint": false,
+        "graded": null,
+        "draft": "줄 회상",
+        "mode": "odd",
+        "key": "odd:5",
+        "public": {
+          "kicker": "홀수 쪽",
+          "big": "5쪽",
+          "bigClass": "locus-title",
+          "note": "첫 세 숫자 또는 대응 글자 세 개를 입력합니다.",
+          "placeholder": "세 숫자 또는 세 글자",
+          "phonetic": ""
+        },
+        "hint": "5쪽은 암기 줄 0, 5번째 글자에서 세 글자입니다.",
+        "answer": {
+          "type": "odd",
+          "special": "",
+          "page": 5,
+          "row": 0,
+          "column": 5,
+          "letters": "EGO",
+          "digits": "360"
+        }
+      },
+      {
+        "hintUsed": false,
+        "usedReveal": false,
+        "showHint": false,
+        "graded": null,
+        "draft": "",
+        "mode": "odd",
+        "key": "odd:pi",
+        "public": {
+          "kicker": "1쪽 예외",
+          "big": "1쪽",
+          "bigClass": "locus-title",
+          "note": "첫 세 숫자. 52자리 순환이 아닙니다.",
+          "placeholder": "세 숫자",
+          "phonetic": ""
+        },
+        "hint": "52자리 순환 공식을 쓰지 않습니다. 실제 원주율의 시작 세 자리입니다.",
+        "answer": {
+          "type": "odd",
+          "special": "pi",
+          "digits": "314",
+          "letters": ""
+        }
+      },
+      {
+        "hintUsed": false,
+        "usedReveal": false,
+        "showHint": false,
+        "graded": null,
+        "draft": "",
+        "mode": "odd",
+        "key": "odd:33",
+        "public": {
+          "kicker": "홀수 쪽",
+          "big": "33쪽",
+          "bigClass": "locus-title",
+          "note": "첫 세 숫자 또는 대응 글자 세 개를 입력합니다.",
+          "placeholder": "세 숫자 또는 세 글자",
+          "phonetic": ""
+        },
+        "hint": "33쪽은 암기 줄 3, 3번째 글자에서 세 글자입니다.",
+        "answer": {
+          "type": "odd",
+          "special": "",
+          "page": 33,
+          "row": 3,
+          "column": 3,
+          "letters": "TEN",
+          "digits": "732"
+        }
+      }
+    ]
+  },
+  {
+    "version": 1,
+    "id": "s16",
+    "mode": "next",
+    "count": 5,
+    "seed": 42,
+    "lieLength": 5,
+    "index": 2,
+    "finished": false,
+    "statsPosted": false,
+    "accumulatedMs": 12345,
+    "questions": [
+      {
+        "hintUsed": false,
+        "usedReveal": false,
+        "showHint": false,
+        "graded": "direct",
+        "draft": "saved direct",
+        "mode": "next",
+        "key": "next:41",
+        "public": {
+          "kicker": "다음 열 자리",
+          "big": "61269",
+          "bigClass": "glyph-digit long",
+          "note": "이 다섯 자리 바로 다음 열 자리입니다. 다섯 자리는 다시 쓰지 않습니다.",
+          "placeholder": "열 숫자",
+          "phonetic": ""
+        },
+        "hint": "다음 두 자리는 14입니다. 앞의 0도 씁니다.",
+        "answer": {
+          "type": "next",
+          "start": 41,
+          "given": "61269",
+          "nexts": [
+            "1421570835"
+          ]
+        }
+      },
+      {
+        "hintUsed": true,
+        "usedReveal": false,
+        "showHint": true,
+        "graded": "wrong",
+        "draft": "saved wrong",
+        "mode": "next",
+        "key": "next:47",
+        "public": {
+          "kicker": "다음 열 자리",
+          "big": "42157",
+          "bigClass": "glyph-digit long",
+          "note": "이 다섯 자리 바로 다음 열 자리입니다. 다섯 자리는 다시 쓰지 않습니다.",
+          "placeholder": "열 숫자",
+          "phonetic": ""
+        },
+        "hint": "다음 두 자리는 08입니다. 앞의 0도 씁니다.",
+        "answer": {
+          "type": "next",
+          "start": 47,
+          "given": "42157",
+          "nexts": [
+            "0835360475"
+          ]
+        }
+      },
+      {
+        "hintUsed": false,
+        "usedReveal": true,
+        "showHint": false,
+        "graded": null,
+        "draft": "줄 회상",
+        "mode": "next",
+        "key": "next:14",
+        "public": {
+          "kicker": "다음 열 자리",
+          "big": "78312",
+          "bigClass": "glyph-digit long",
+          "note": "이 다섯 자리 바로 다음 열 자리입니다. 다섯 자리는 다시 쓰지 않습니다.",
+          "placeholder": "열 숫자",
+          "phonetic": ""
+        },
+        "hint": "다음 두 자리는 62입니다. 앞의 0도 씁니다.",
+        "answer": {
+          "type": "next",
+          "start": 14,
+          "given": "78312",
+          "nexts": [
+            "6201534641"
+          ]
+        }
+      },
+      {
+        "hintUsed": false,
+        "usedReveal": false,
+        "showHint": false,
+        "graded": null,
+        "draft": "",
+        "mode": "next",
+        "key": "next:25",
+        "public": {
+          "kicker": "다음 열 자리",
+          "big": "46412",
+          "bigClass": "glyph-digit long",
+          "note": "이 다섯 자리 바로 다음 열 자리입니다. 다섯 자리는 다시 쓰지 않습니다.",
+          "placeholder": "열 숫자",
+          "phonetic": ""
+        },
+        "hint": "다음 두 자리는 34입니다. 앞의 0도 씁니다.",
+        "answer": {
+          "type": "next",
+          "start": 25,
+          "given": "46412",
+          "nexts": [
+            "3473202102"
+          ]
+        }
+      },
+      {
+        "hintUsed": false,
+        "usedReveal": false,
+        "showHint": false,
+        "graded": null,
+        "draft": "",
+        "mode": "next",
+        "key": "next:51",
+        "public": {
+          "kicker": "다음 열 자리",
+          "big": "70835",
+          "bigClass": "glyph-digit long",
+          "note": "이 다섯 자리 바로 다음 열 자리입니다. 다섯 자리는 다시 쓰지 않습니다.",
+          "placeholder": "열 숫자",
+          "phonetic": ""
+        },
+        "hint": "다음 두 자리는 36입니다. 앞의 0도 씁니다.",
+        "answer": {
+          "type": "next",
+          "start": 51,
+          "given": "70835",
+          "nexts": [
+            "3604751239"
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "version": 1,
+    "id": "s16",
+    "mode": "birthday",
+    "count": 5,
+    "seed": 42,
+    "lieLength": 5,
+    "index": 2,
+    "finished": false,
+    "statsPosted": false,
+    "accumulatedMs": 12345,
+    "questions": [
+      {
+        "hintUsed": false,
+        "usedReveal": false,
+        "showHint": false,
+        "graded": "direct",
+        "draft": "saved direct",
+        "mode": "birthday",
+        "key": "birthday:DDMM:0405",
+        "public": {
+          "kicker": "생일 · 일월 DDMM",
+          "big": "04 05",
+          "bigClass": "glyph-digit long",
+          "note": "순서는 일, 월입니다. 쪽, 주소 줄, 시작 자리를 입력합니다.",
+          "placeholder": "쪽 줄 자리",
+          "phonetic": ""
+        },
+        "hint": "쪽은 일+50, 주소 줄은 월×2, 시작은 월+1입니다.",
+        "answer": {
+          "type": "birthday",
+          "ok": true,
+          "month": 5,
+          "day": 4,
+          "order": "DDMM",
+          "dateStr": "0405",
+          "page": 54,
+          "line": 10,
+          "column": 6
+        }
+      },
+      {
+        "hintUsed": true,
+        "usedReveal": false,
+        "showHint": true,
+        "graded": "wrong",
+        "draft": "saved wrong",
+        "mode": "birthday",
+        "key": "birthday:MMDD:1117",
+        "public": {
+          "kicker": "생일 · 월일 MMDD",
+          "big": "11 17",
+          "bigClass": "glyph-digit long",
+          "note": "순서는 월, 일입니다. 쪽, 주소 줄, 시작 자리를 입력합니다.",
+          "placeholder": "쪽 줄 자리",
+          "phonetic": ""
+        },
+        "hint": "쪽은 일+50, 주소 줄은 월×2, 시작은 월+3입니다.",
+        "answer": {
+          "type": "birthday",
+          "ok": true,
+          "month": 11,
+          "day": 17,
+          "order": "MMDD",
+          "dateStr": "1117",
+          "page": 67,
+          "line": 22,
+          "column": 14
+        }
+      },
+      {
+        "hintUsed": false,
+        "usedReveal": true,
+        "showHint": false,
+        "graded": null,
+        "draft": "줄 회상",
+        "mode": "birthday",
+        "key": "birthday:MMDD:0920",
+        "public": {
+          "kicker": "생일 · 월일 MMDD",
+          "big": "09 20",
+          "bigClass": "glyph-digit long",
+          "note": "순서는 월, 일입니다. 쪽, 주소 줄, 시작 자리를 입력합니다.",
+          "placeholder": "쪽 줄 자리",
+          "phonetic": ""
+        },
+        "hint": "쪽은 일+50, 주소 줄은 월×2, 시작은 월+3입니다.",
+        "answer": {
+          "type": "birthday",
+          "ok": true,
+          "month": 9,
+          "day": 20,
+          "order": "MMDD",
+          "dateStr": "0920",
+          "page": 70,
+          "line": 18,
+          "column": 12
+        }
+      },
+      {
+        "hintUsed": false,
+        "usedReveal": false,
+        "showHint": false,
+        "graded": null,
+        "draft": "",
+        "mode": "birthday",
+        "key": "birthday:DDMM:1005",
+        "public": {
+          "kicker": "생일 · 일월 DDMM",
+          "big": "10 05",
+          "bigClass": "glyph-digit long",
+          "note": "순서는 일, 월입니다. 쪽, 주소 줄, 시작 자리를 입력합니다.",
+          "placeholder": "쪽 줄 자리",
+          "phonetic": ""
+        },
+        "hint": "쪽은 일+50, 주소 줄은 월×2, 시작은 월+1입니다.",
+        "answer": {
+          "type": "birthday",
+          "ok": true,
+          "month": 5,
+          "day": 10,
+          "order": "DDMM",
+          "dateStr": "1005",
+          "page": 60,
+          "line": 10,
+          "column": 6
+        }
+      },
+      {
+        "hintUsed": false,
+        "usedReveal": false,
+        "showHint": false,
+        "graded": null,
+        "draft": "",
+        "mode": "birthday",
+        "key": "birthday:MMDD:0131",
+        "public": {
+          "kicker": "생일 · 월일 MMDD",
+          "big": "01 31",
+          "bigClass": "glyph-digit long",
+          "note": "순서는 월, 일입니다. 쪽, 주소 줄, 시작 자리를 입력합니다.",
+          "placeholder": "쪽 줄 자리",
+          "phonetic": ""
+        },
+        "hint": "쪽은 일+50, 주소 줄은 월×2, 시작은 월+3입니다.",
+        "answer": {
+          "type": "birthday",
+          "ok": true,
+          "month": 1,
+          "day": 31,
+          "order": "MMDD",
+          "dateStr": "0131",
+          "page": 81,
+          "line": 2,
+          "column": 4
+        }
+      }
+    ]
+  },
+  {
+    "version": 1,
+    "id": "s16",
+    "mode": "lie",
+    "count": 5,
+    "seed": 42,
+    "lieLength": 5,
+    "index": 2,
+    "finished": false,
+    "statsPosted": false,
+    "accumulatedMs": 12345,
+    "questions": [
+      {
+        "hintUsed": false,
+        "usedReveal": false,
+        "showHint": false,
+        "graded": "direct",
+        "draft": "saved direct",
+        "mode": "lie",
+        "key": "lie:47820",
+        "public": {
+          "kicker": "거짓말 · 5자리",
+          "big": "47820",
+          "bigClass": "glyph-digit long",
+          "note": "한 자리만 바뀌었습니다. 위치와 원래 숫자를 입력합니다.",
+          "placeholder": "위치 원래숫자",
+          "phonetic": ""
+        },
+        "hint": "실제 구간과 정확히 한 자리만 다릅니다. 위치는 1부터이고, 맞는 후보면 모두 정답입니다.",
+        "answer": {
+          "type": "lie",
+          "heard": "47820",
+          "candidates": [
+            {
+              "start": 31,
+              "position": 3,
+              "original": "3",
+              "heardDigit": "8",
+              "actual": "47320"
+            }
+          ]
+        }
+      },
+      {
+        "hintUsed": true,
+        "usedReveal": false,
+        "showHint": true,
+        "graded": "wrong",
+        "draft": "saved wrong",
+        "mode": "lie",
+        "key": "lie:50210",
+        "public": {
+          "kicker": "거짓말 · 5자리",
+          "big": "50210",
+          "bigClass": "glyph-digit long",
+          "note": "한 자리만 바뀌었습니다. 위치와 원래 숫자를 입력합니다.",
+          "placeholder": "위치 원래숫자",
+          "phonetic": ""
+        },
+        "hint": "실제 구간과 정확히 한 자리만 다릅니다. 위치는 1부터이고, 맞는 후보면 모두 정답입니다.",
+        "answer": {
+          "type": "lie",
+          "heard": "50210",
+          "candidates": [
+            {
+              "start": 34,
+              "position": 1,
+              "original": "2",
+              "heardDigit": "5",
+              "actual": "20210"
+            }
+          ]
+        }
+      },
+      {
+        "hintUsed": false,
+        "usedReveal": true,
+        "showHint": false,
+        "graded": null,
+        "draft": "줄 회상",
+        "mode": "lie",
+        "key": "lie:78382",
+        "public": {
+          "kicker": "거짓말 · 5자리",
+          "big": "78382",
+          "bigClass": "glyph-digit long",
+          "note": "한 자리만 바뀌었습니다. 위치와 원래 숫자를 입력합니다.",
+          "placeholder": "위치 원래숫자",
+          "phonetic": ""
+        },
+        "hint": "실제 구간과 정확히 한 자리만 다릅니다. 위치는 1부터이고, 맞는 후보면 모두 정답입니다.",
+        "answer": {
+          "type": "lie",
+          "heard": "78382",
+          "candidates": [
+            {
+              "start": 14,
+              "position": 4,
+              "original": "1",
+              "heardDigit": "8",
+              "actual": "78312"
+            }
+          ]
+        }
+      },
+      {
+        "hintUsed": false,
+        "usedReveal": false,
+        "showHint": false,
+        "graded": null,
+        "draft": "",
+        "mode": "lie",
+        "key": "lie:38641",
+        "public": {
+          "kicker": "거짓말 · 5자리",
+          "big": "38641",
+          "bigClass": "glyph-digit long",
+          "note": "한 자리만 바뀌었습니다. 위치와 원래 숫자를 입력합니다.",
+          "placeholder": "위치 원래숫자",
+          "phonetic": ""
+        },
+        "hint": "실제 구간과 정확히 한 자리만 다릅니다. 위치는 1부터이고, 맞는 후보면 모두 정답입니다.",
+        "answer": {
+          "type": "lie",
+          "heard": "38641",
+          "candidates": [
+            {
+              "start": 24,
+              "position": 2,
+              "original": "4",
+              "heardDigit": "8",
+              "actual": "34641"
+            }
+          ]
+        }
+      },
+      {
+        "hintUsed": false,
+        "usedReveal": false,
+        "showHint": false,
+        "graded": null,
+        "draft": "",
+        "mode": "lie",
+        "key": "lie:01461",
+        "public": {
+          "kicker": "거짓말 · 5자리",
+          "big": "01461",
+          "bigClass": "glyph-digit long",
+          "note": "한 자리만 바뀌었습니다. 위치와 원래 숫자를 입력합니다.",
+          "placeholder": "위치 원래숫자",
+          "phonetic": ""
+        },
+        "hint": "실제 구간과 정확히 한 자리만 다릅니다. 위치는 1부터이고, 맞는 후보면 모두 정답입니다.",
+        "answer": {
+          "type": "lie",
+          "heard": "01461",
+          "candidates": [
+            {
+              "start": 38,
+              "position": 2,
+              "original": "2",
+              "heardDigit": "1",
+              "actual": "02461"
+            }
+          ]
+        }
+      }
+    ]
+  }
+]

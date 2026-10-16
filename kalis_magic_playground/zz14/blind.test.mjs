@@ -2,14 +2,14 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
-import * as core from '/Users/sumpie/Desktop/AI/Projects/magic-pimax/core.mjs';
+import * as core from './core.mjs';
 
 function load(initial={}) {
   const values=new Map(Object.entries(initial)),writes=[];
   const app={innerHTML:'',setAttribute(){},removeAttribute(){}}, notice={textContent:''};
   const document={body:{dataset:{},addEventListener(){}},querySelector:selector=>selector==='#app'?app:selector==='#notice'?notice:null,querySelectorAll:()=>[]};
   const context=vm.createContext({__core:core,document,localStorage:{getItem:key=>values.get(key)??null,setItem:(key,value)=>{writes.push([key,value]);values.set(key,value);}},Date,Math,JSON,HTMLFormElement:class{},HTMLInputElement:class{}});
-  const source=readFileSync('/Users/sumpie/Desktop/AI/Projects/magic-pimax/app.mjs','utf8').replace(/^import\s+\{([\s\S]*?)\}\s+from "\.\/core\.mjs";/,'const {$1}=globalThis.__core;');
+  const source=readFileSync(new URL('./app.mjs', import.meta.url),'utf8').replace(/^import\s+\{([\s\S]*?)\}\s+from "\.\/core\.mjs";/,'const {$1}=globalThis.__core;');
   vm.runInContext(source+'\nglobalThis.review={state,current,checkCurrent,useHint,useReveal,goNext,startSession,startWeakReview,postSession,saveSession,render,onClick,toggleWeak};',context);
   return {...context.review,app,notice,values,writes};
 }
@@ -17,7 +17,7 @@ function load(initial={}) {
 function click(env, action, extra) {
  env.onClick({target:{closest:()=>({disabled:false,dataset:{action, ...extra}})}});
 }
-test('all six modes use repeat-tap reveal and advance without direct credit',()=>{
+test('all modes use repeat-tap reveal and advance without direct credit',()=>{
  for (const mode of core.MODES) {
   const env=load(); env.startSession(mode,{force:true});
   assert(!env.app.innerHTML.includes('입력 연습'),mode);
@@ -37,15 +37,15 @@ test('all six modes use repeat-tap reveal and advance without direct credit',()=
 test('weak marking toggles before reveal and survives reload for every question type',()=>{
  for (const mode of core.MODES) {
  const env=load();env.startSession(mode,{force:true});
- if (mode === 'lie' || mode === 'birthday' || mode === 'odd') click(env,'tap');
+ if (mode === 'birthday' || mode === 'odd') click(env,'tap');
  click(env,'weak-toggle');env.saveSession();
  const restored=load(Object.fromEntries(env.values));
- assert.equal(restored.state.stats.weak.length,1,mode);
+ assert.equal(restored.state.stats.weak.length,mode === 'map' ? 2 : 1,mode);
  assert.match(restored.app.innerHTML, /data-action="weak-toggle"[^>]*aria-pressed="true"[^>]*>약점</, mode);
  assert.equal(restored.app.innerHTML.includes('약점 표시됨'), false, mode);
  restored.startWeakReview();
  assert.equal(restored.state.session.mode,'review',mode);
- assert.equal(restored.current().key,env.current().key,mode);
+ assert(core.weakKeys(env.current()).includes(restored.current().key),mode);
  }
 });
 test('revealing without a weak mark never creates a weak record or direct grade',()=>{
@@ -97,9 +97,11 @@ test('single weak selector keeps the current quiz stable and persists repeated t
  assert.equal(env.app.innerHTML.includes('약한 것만'), false);
  assert.equal(env.app.innerHTML.includes('data-action="weak-review"'), false);
  assert.match(env.app.innerHTML, /data-action="weak-toggle"[^>]*aria-pressed="false"[^>]*>약점</);
- for (const label of ['대응', '줄 회상', '홀수 쪽', '다음 10', '생일', '거짓말']) {
-  assert.equal(env.app.innerHTML.includes(label), true, label);
+ for (const label of ['대응', '문장 대응', '페이지 1', '페이지 2', '다음 10', '생일']) {
+  assert.equal(env.app.innerHTML.includes(`>${label}<`), true, label);
  }
+ assert.equal(env.app.innerHTML.includes('거짓말'), false);
+ assert.equal(env.app.innerHTML.includes('이어서 문장'), false);
 
  click(env, 'map-pool', { pool: 'weak' });
  assert.equal(env.state.session, session);
@@ -171,6 +173,6 @@ test('single weak selector keeps the current quiz stable and persists repeated t
  again.state.tab = 'learn';
  again.render();
  assert.equal(again.app.innerHTML.includes('data-action="mode"'), false);
- assert.match(again.app.innerHTML, /홀수 쪽/);
- assert.match(again.app.innerHTML, /생일 주소/);
+ assert.match(again.app.innerHTML, /페이지 2/);
+ assert.match(again.app.innerHTML, /생일 페이지 찾는 법/);
 });

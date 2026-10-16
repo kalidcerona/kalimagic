@@ -19,15 +19,11 @@ import {
   givenWindow,
   gradeFixedDigits,
   gradeLetters,
-  gradeLie,
   hamming,
   isDirectOutcome,
   isValidMonthDay,
   lettersToDigits,
-  lieCandidates,
-  lieQuestion,
   lineDigits,
-  mutateWindow,
   pageLocus,
   readSlot,
   referenceNotes,
@@ -56,20 +52,6 @@ function independentLocus(page) {
   let letters = "";
   for (let i = 0; i < 3; i += 1) letters += STACK_LETTERS[(index + i) % 52];
   return { row, column, index, letters, digits: independentDigits(letters) };
-}
-
-function independentCandidates(heard, stack = STACK_DIGITS) {
-  const found = [];
-  for (let start = 0; start < stack.length; start += 1) {
-    let actual = "";
-    for (let i = 0; i < heard.length; i += 1) actual += stack[(start + i) % stack.length];
-    const diffs = [];
-    for (let i = 0; i < heard.length; i += 1) if (actual[i] !== heard[i]) diffs.push(i);
-    if (diffs.length === 1) {
-      found.push({ start, position: diffs[0] + 1, original: actual[diffs[0]], actual });
-    }
-  }
-  return found;
 }
 
 function independentBirthday(month, day, order) {
@@ -239,109 +221,14 @@ test("continuation is the next 10 digits and can wrap", () => {
   assert.equal(scoreAnswer(question, question.answer.given, {}).correct, false);
 });
 
-test("83136 accepts every Hamming-1 candidate, not only one origin", () => {
-  const heard = "83136";
-  const core = lieCandidates(heard);
-  const indie = independentCandidates(heard);
-  assert.deepEqual(
-    core.map((item) => `${item.position}:${item.original}:${item.actual}`).sort(),
-    indie.map((item) => `${item.position}:${item.original}:${item.actual}`).sort(),
-  );
-  assert.ok(core.some((item) => item.position === 3 && item.original === "5" && item.actual === "83536"));
-  assert.ok(core.some((item) => item.position === 4 && item.original === "2" && item.actual === "83126"));
-  assert.ok(core.length >= 2);
-  for (const candidate of core) assert.equal(hamming(candidate.actual, heard), 1);
-
-  const question = lieQuestion(heard);
-  assert.equal(scoreAnswer(question, "3 5", {}).outcome, "direct");
-  assert.equal(scoreAnswer(question, "4 2", {}).direct, true);
-  assert.equal(scoreAnswer(question, "위치 3, 원래 5", {}).ok, false);
-  assert.equal(scoreAnswer(question, "3 1", {}).correct, false);
-  assert.equal(scoreAnswer(question, "1 8", {}).correct, false);
-  assert.equal(gradeLie(heard, 3, "5"), true);
-  assert.equal(gradeLie(heard, 4, "2"), true);
-  assert.equal(gradeLie(heard, 2, "5"), false);
-  const hinted = scoreAnswer(question, "4 2", { hintUsed: true, revealed: false });
-  assert.equal(hinted.correct, true);
-  assert.equal(hinted.direct, false);
-  assert.equal(hinted.outcome, "assisted");
-  const revealed = scoreAnswer(question, "3 5", { hintUsed: false, revealed: true });
-  assert.equal(revealed.direct, false);
-  assert.equal(revealed.outcome, "revealed");
-  assert.equal(isDirectOutcome(revealed.outcome), false);
-  assert.equal(scoreAnswer(question, "3 05", {}).ok, false);
-});
-
-test("every 7-digit single substitution in this cycle has one candidate", { timeout: 30000 }, () => {
-  let mutations = 0;
-  const ambiguous = [];
-  for (let start = 0; start < 52; start += 1) {
-    let actual = "";
-    for (let i = 0; i < 7; i += 1) actual += STACK_DIGITS[(start + i) % 52];
-    for (let index = 0; index < 7; index += 1) {
-      for (let digit = 0; digit <= 9; digit += 1) {
-        if (String(digit) === actual[index]) continue;
-        const heard = actual.slice(0, index) + String(digit) + actual.slice(index + 1);
-        mutations += 1;
-        const core = lieCandidates(heard);
-        const indie = independentCandidates(heard);
-        assert.equal(core.length, 1, heard);
-        assert.equal(indie.length, 1, heard);
-        assert.equal(core[0].position, index + 1);
-        assert.equal(core[0].original, actual[index]);
-        assert.equal(core[0].start, start);
-        assert.equal(gradeLie(heard, index + 1, actual[index]), true);
-        assert.equal(gradeLie(heard, index + 1, heard[index]), false);
-        if (core.length !== 1) ambiguous.push(heard);
-      }
-    }
-  }
-  assert.equal(mutations, 3276);
-  assert.equal(ambiguous.length, 0);
-});
-
-test("5-digit substitutions always have a candidate and include real ambiguity", { timeout: 30000 }, () => {
-  let mutations = 0;
-  let ambiguous = 0;
-  const seen = new Set();
-  for (let start = 0; start < 52; start += 1) {
-    const actual = circularSlice(STACK_DIGITS, start, 5);
-    for (let index = 0; index < 5; index += 1) {
-      for (let digit = 0; digit <= 9; digit += 1) {
-        if (String(digit) === actual[index]) continue;
-        const heard = mutateWindow(actual, index, digit);
-        mutations += 1;
-        const core = lieCandidates(heard);
-        const indie = independentCandidates(heard);
-        assert.ok(core.length >= 1);
-        assert.equal(core.length, indie.length);
-        assert.ok(core.every((item, itemIndex) => item.position === indie[itemIndex].position));
-        assert.equal(gradeLie(heard, index + 1, actual[index]), true);
-        if (core.length > 1 && !seen.has(heard)) {
-          seen.add(heard);
-          ambiguous += 1;
-        }
-      }
-    }
-  }
-  assert.equal(mutations, 2340);
-  assert.ok(ambiguous >= 1);
-  assert.ok(seen.has("83136"));
-  const leading = mutateWindow("08353", 0, "9");
-  assert.equal(leading, "98353");
-  assert.equal(gradeLie(leading, 1, "0"), true);
-  assert.notEqual(gradeLie(leading, 1, ""), true);
-});
-
 test("prompts hide answers until reveal, and page-21 demo stays in reference", () => {
   const samples = [
     ...buildQuestions("map", 20, 7),
+    ...buildQuestions("phrase", 5, 2),
     ...buildQuestions("row", 8, 11),
     ...buildQuestions("odd", 6, 3),
     ...buildQuestions("next", 6, 9),
     ...buildQuestions("birthday", 8, 5),
-    lieQuestion("83136"),
-    ...buildQuestions("lie", 4, 13, { lieLength: 7 }),
   ];
   for (const question of samples) {
     const hidden = visiblePrompt(question, { showHint: false, showAnswer: false, phonetic: true });
