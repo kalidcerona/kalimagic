@@ -417,13 +417,13 @@
       <p class="tier-price"><span class="now">9만원</span></p>
       <div class="tier-rows">
         <div><span><a href="../planb-sleeving/">슬리빙 단독</a></span><b>6만원</b></div>
-        <div><span>통합권</span><b class="ended">판매 종료</b></div>
+        <div data-combo><span>통합권 <span class="save">1만원 절약</span></span><span><s>15만원</s> <b>14만원</b></span></div>
       </div>
     </article>
   </div>
   <ul class="price-notes">
-    <li>통합권은 11월 8일(일)까지만 판매해요.</li>
-    <li>단독권을 샀어도 11월 8일까지 차액만 내면 통합권으로 바꿀 수 있어요.</li>
+    <li>통합권은 11월 15일(일)까지 판매해요.</li>
+    <li>단독권을 샀어도 11월 15일까지 차액만 내면 통합권으로 바꿀 수 있어요.</li>
     <li>버스킹 참가자가 슬리빙을 따로 신청하면 1만원 할인해 드려요.</li>
   </ul>
   <div class="ticket-cta"><a href="#ticket" class="btn" data-cta>자리 신청하기</a><span class="todo">[신청 폼 링크 미정]</span></div>
@@ -440,7 +440,7 @@
     <details><summary>강사에게 직접 질문할 수 있나요?</summary><p>네. 세 강사가 한자리에서<br>인터뷰 형식으로 답하는 Q&amp;A 시간이 있어요.</p></details>
     <details><summary>뒤풀이는 꼭 가야 하나요?</summary><p>선택이에요. 5,000원을 내면 참여할 수 있고,<br>장소만 제공해요.</p></details>
     <details><summary>한 회차만 신청해도 되나요?</summary><p>네. 버스킹과 슬리빙은 각각 신청할 수 있어요.<br>둘 다 들으면 통합권이 더 저렴해요.</p></details>
-    <details><summary>단독권을 통합권으로 바꿀 수 있나요?</summary><p>11월 8일까지는 차액만 내면 돼요.<br>예: 슈퍼 얼리버드 단독권(7만원)을 얼리버드 기간에 바꾸면<br>12만원에서 7만원을 뺀 5만원을 내요.</p></details>
+    <details><summary>단독권을 통합권으로 바꿀 수 있나요?</summary><p>11월 15일까지는 차액만 내면 돼요.<br>예: 슈퍼 얼리버드 단독권(7만원)을 얼리버드 기간에 바꾸면<br>12만원에서 7만원을 뺀 5만원을 내요.</p></details>
     <details><summary>한 회차를 못 가게 되면요?</summary><p>회차별 환불·양도 기준은 곧 안내할게요. <span class="todo">[통합권 부분 환불 기준 확정 전]</span></p></details>
   </div>
 </section>
@@ -529,10 +529,11 @@
     } else if (t > EARLY_END) {
       s.phase = "full"; s.hideDeadline = true;
       s.label = "TICKET"; s.tier = null; s.endText = "";
+      s.combo = "14만원"; s.comboWas = "15만원"; s.comboUntil = "11/15(일)까지";
       s.sticky = "버스킹 " + FULL; s.chips = { super: "마감", early: "마감", full: "판매 중" }; s.active = "full";
     } else if (t > SUPER_END) {
       s.phase = "early";
-      s.main = t === EARLY_END ? "얼리버드·통합권 오늘 마감" : "얼리버드·통합권 마감까지 " + dday(EARLY_END, t); s.sub = "11/8(일) 23:59";
+      s.main = t === EARLY_END ? "얼리버드 오늘 마감" : "얼리버드 마감까지 " + dday(EARLY_END, t); s.sub = "11/8(일) 23:59";
       s.label = "EARLY BIRD"; s.tier = PRICE.early;
       s.sticky = "정가 " + FULL + " → " + PRICE.early.busking + " · " + PRICE.early.short; s.chips = { super: "마감", early: "판매 중", full: "" }; s.active = "early";
     } else if (t >= OPEN) {
@@ -560,8 +561,8 @@
           + '<small>통합권 <s>' + t.comboWas + '</s> ' + t.combo + '</small><small>' + t.until + '</small>';
       } else if (s.endText) {
         price.textContent = s.endText;
-      } else {
-        price.innerHTML = '<span class="now-line">버스킹 ' + FULL + '</span><small>통합권 판매 종료</small>';
+      } else if (s.combo) {
+        price.innerHTML = '<span class="now-line">버스킹 ' + FULL + '</span><small>통합권 <s>' + s.comboWas + '</s> ' + s.combo + '</small><small>' + s.comboUntil + '</small>';
       }
     }
     document.querySelectorAll("[data-tier]").forEach(function (card) {
@@ -573,6 +574,8 @@
         chip.className = "tier-chip" + (text === "판매 중" ? " is-now" : text === "오픈 예정" ? " is-soon" : text === "마감" ? " is-done" : "");
       }
     });
+    var comboRow = document.querySelector('[data-tier="full"] [data-combo]');
+    if (comboRow && s.phase === "done") comboRow.innerHTML = '<span>통합권</span><b class="ended">판매 종료</b>';
     document.querySelectorAll("a[data-cta]").forEach(function (a) {
       if (s.phase === "done") {
         a.textContent = "이번 세미나는 끝났어요"; a.setAttribute("aria-disabled", "true"); a.removeAttribute("href");
