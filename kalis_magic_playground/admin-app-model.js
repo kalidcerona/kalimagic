@@ -17,7 +17,8 @@
     Object.freeze({ id: 'arosaegida', name: '아로새기다', path: '/tools/arosaegida/', legacy: false }),
     Object.freeze({ id: 'pimax', name: 'Pi Max 연습실', path: '/tools/pimax/', legacy: false }),
     Object.freeze({ id: 'choice', name: '너의 선택은?', path: '/tools/choice/', legacy: false }),
-    Object.freeze({ id: 'magicshow', name: '칼리 마술 성장기 (베타)', path: '/tools/magicshow/', legacy: false })
+    Object.freeze({ id: 'magicshow', name: '칼리 마술 성장기 (베타)', path: '/tools/magicshow/', legacy: false }),
+    Object.freeze({ id: 'gwayubulgeup', name: '과유불급', path: '/tools/gwayubulgeup/', legacy: false })
   ]);
   var TOOL_LABELS = Object.freeze({
     calc: '히츠젠(HITSUZEN)',
@@ -32,6 +33,7 @@
     pimax: 'Pi Max 연습실',
     choice: '너의 선택은?',
     magicshow: '칼리 마술 성장기 (베타)',
+    gwayubulgeup: '과유불급',
     all: '히츠젠(HITSUZEN) + 카이로스(KAIROS)'
   });
   var LEGACY_TOOLS = Object.freeze(['calc', 'stopwatch']);

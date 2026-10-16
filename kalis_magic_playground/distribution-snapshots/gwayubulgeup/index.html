@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <meta name="theme-color" content="#000000">
+  <meta name="color-scheme" content="dark">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="스톱워치">
+  <link rel="apple-touch-icon" href="./icon-192.png">
+  <title>스톱워치</title>
+  <script>
+    try {
+      if (localStorage.getItem('gwayubulgeup_trick') === '1') document.documentElement.setAttribute('data-gwayu-trick', 'on');
+    } catch (error) {}
+  </script>
+  <style>
+    :root { color-scheme: dark; font-family: -apple-system, "SF Pro Display", system-ui, Roboto, sans-serif; background: #000; }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; touch-action: manipulation; }
+    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; overscroll-behavior: none; background: #000; color: #fff; }
+    [hidden] { display: none !important; }
+    button { appearance: none; -webkit-appearance: none; border: 0; padding: 0; outline: none; color: inherit; font: inherit; }
+    #portrait-app { position: relative; width: 100%; height: 100vh; height: 100dvh; overflow: hidden; background: #000; touch-action: none; }
+    #p-top-band { position: absolute; inset: 0 0 auto; height: 22%; touch-action: none; }
+    #p-time-display { position: absolute; top: 28%; left: max(5%, env(safe-area-inset-left)); right: max(5%, env(safe-area-inset-right)); transform: translateY(-50%); display: flex; align-items: center; justify-content: center; font-size: min(17.5vw, 9.5dvh, 7.5rem); font-weight: 200; font-variant-numeric: tabular-nums; letter-spacing: -0.04em; line-height: 1; white-space: nowrap; touch-action: none; }
+    #p-numeric-display { display: flex; align-items: baseline; }
+    .p-digits { display: inline-flex; }
+    [data-p-digit], [data-p-minute] { display: inline-block; flex: 0 0 0.56em; width: 0.56em; border-radius: 0.12em; text-align: center; touch-action: none; }
+    #p-colon { display: inline-flex; align-self: center; flex-direction: column; justify-content: space-between; align-items: center; width: 0.22em; height: 0.40em; margin: 0 0.025em; transform: translateY(0.025em); }
+    .colon-dot { width: 0.1em; height: 0.1em; border-radius: 50%; background: #FFFFFF; }
+    #p-decimal { width: 0.20em; text-align: center; }
+    #p-buttons { position: absolute; top: 48%; transform: translateY(-50%); left: max(6vw, env(safe-area-inset-left)); right: max(6vw, env(safe-area-inset-right)); display: flex; align-items: center; justify-content: space-between; }
+    .round { width: clamp(56px, min(18vw, 9dvh), 80px); height: clamp(56px, min(18vw, 9dvh), 80px); border-radius: 50%; font-size: 17px; font-weight: 400; }
+    #p-lap { background: #2C2C2E; color: #FFFFFF; }
+    #p-lap:disabled { color: rgb(142, 142, 147); }
+    #p-control { background: #0A2E14; color: #30D158; }
+    #p-control.running { background: #3A0A0A; color: #FF453A; }
+    #p-pages { display: flex; gap: 6px; }
+    #p-pages i { width: 6px; height: 6px; border-radius: 50%; background: #48484A; }
+    #p-pages i:first-child { background: #FFFFFF; }
+    #p-lap-area { position: absolute; top: calc(48% + clamp(28px, min(8.5vw, 4.5dvh), 39px) + 16px); bottom: calc(max(64px, 9dvh) + env(safe-area-inset-bottom)); left: max(6vw, env(safe-area-inset-left)); right: max(6vw, env(safe-area-inset-right)); border-top: 1px solid #2C2C2E; overflow: hidden; touch-action: none; }
+    #p-lap-rows, .lap-row, .lap-row * { pointer-events: none; }
+    .lap-row { display: flex; justify-content: space-between; align-items: center; height: 44px; border-bottom: 0.5px solid #3A3A3C; font-size: 17px; font-variant-numeric: tabular-nums; }
+    #p-tabs { position: absolute; left: 0; bottom: env(safe-area-inset-bottom); width: 100%; height: max(64px, 9dvh); border-top: 0.5px solid #2C2C2E; background: #000; display: flex; align-items: center; padding: 4px max(3vw, env(safe-area-inset-left)) 4px max(3vw, env(safe-area-inset-right)); }
+    .tab { flex: 1; min-width: 0; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; background: transparent; color: #8E8E93; font-size: 10px; white-space: nowrap; }
+    .tab svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+    .tab.active { color: rgb(255, 159, 10); }
+    .tab-world .core { fill: #1C1C1E; stroke: none; }
+    html[data-gwayu-trick="on"] .tab-world .core { fill: currentColor; }
+    #settings { position: fixed; inset: 0; z-index: 30; overflow: auto; background: #000; padding: calc(env(safe-area-inset-top) + 1rem) max(1rem, env(safe-area-inset-right)) calc(env(safe-area-inset-bottom) + 1rem) max(1rem, env(safe-area-inset-left)); touch-action: pan-y; }
+    #settings-card { width: min(100%, 32rem); margin: 0 auto; padding-bottom: 1rem; }
+    #settings-brand { display: block; width: min(100%, 300px); height: auto; max-height: 110px; object-fit: contain; margin: 0 auto 1rem; }
+    #settings-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
+    #settings h1 { margin: 0; font-size: 1.5rem; }
+    #settings button { min-height: 2.75rem; padding: 0 1rem; border-radius: 0.7rem; background: #2c2c2e; }
+    #settings-close { color: #ff9f0a; }
+    #trick-note { margin: 0 0 1rem; color: #d1d1d6; line-height: 1.5; }
+    #install-nudge { position: fixed; left: 3vw; right: 3vw; bottom: calc(1.5dvh + env(safe-area-inset-bottom)); z-index: 20; display: flex; align-items: center; gap: 2.5vw; padding: 1.2dvh 3.5vw; background: #1c1c1e; border-radius: 0.875rem; font-size: clamp(0.875rem, 3.5vw, 1rem); box-shadow: 0 0.25rem 1rem rgba(0,0,0,0.5); }
+    #install-nudge span { flex: 1; }
+    #install-nudge button { border-radius: 0.625rem; padding: 0.55em 0.9em; background: #ff9f0a; color: #000; }
+    #install-nudge button[data-act="close"] { background: transparent; color: #8e8e93; }
+    #settings-entry-tutorial { position: fixed; inset: 0; z-index: 45; display: grid; place-items: center; padding: 24px; pointer-events: auto; }
+    #settings-entry-tutorial[hidden] { display: none !important; }
+    #settings-entry-tutorial .tutorial-card { width: min(100%, 320px); padding: 22px; border: 1px solid #ffffff52; border-radius: 20px; background: #1b1b20f2; color: #fff; text-align: center; box-shadow: 0 16px 48px #0009; font: 500 16px/1.55 system-ui, sans-serif; max-height: calc(100vh - 32px); max-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 32px); overflow-y: auto; }
+    #settings-entry-tutorial .tutorial-fingers { position: relative; height: 110px; width: 100px; margin: 0 auto 12px; }
+    #settings-entry-tutorial .tutorial-fingers span { position: absolute; top: 8px; width: 29px; height: 45px; border: 3px solid #fff; border-radius: 18px; background: #ffffff35; animation: tutorial-swipe 1.7s ease-in-out infinite; }
+    #settings-entry-tutorial .tutorial-fingers span:first-child { left: 15px; }
+    #settings-entry-tutorial .tutorial-fingers span:last-child { right: 15px; }
+    #settings-entry-tutorial .tutorial-fingers::after { content: '↓'; position: absolute; bottom: 0; left: 0; right: 0; color: #fff; font-size: 28px; }
+    #settings-entry-tutorial p { margin: 0 0 16px; }
+    #settings-entry-tutorial button { min-width: 120px; min-height: 44px; border: 0; border-radius: 12px; background: #fff; color: #111; font: 600 16px system-ui, sans-serif; pointer-events: auto; touch-action: manipulation; }
+    @keyframes tutorial-swipe { 0%, 16% { transform: translateY(0); opacity: .55; } 70%, 85% { transform: translateY(45px); opacity: 1; } 100% { transform: translateY(0); opacity: .55; } }
+    @media (prefers-reduced-motion: reduce) { #settings-entry-tutorial .tutorial-fingers span { animation: none; transform: translateY(25px); } }
+  </style>
+  <link rel="stylesheet" href="./settings-ui.css">
+  <script src="./settings-ui.js" defer></script>
+</head>
+<body data-magic-app="gwayubulgeup">
+  <main id="portrait-app" aria-label="세로 스톱워치">
+    <div id="p-top-band" aria-hidden="true"></div>
+    <div id="p-time-display" aria-label="스톱워치 시간">
+      <span id="p-numeric-display"><span id="p-minutes" class="p-digits"><span data-p-minute="0">0</span><span data-p-minute="1">0</span></span><span id="p-colon" class="colon" aria-hidden="true"><span class="colon-dot"></span><span class="colon-dot"></span></span><span id="p-seconds" class="p-digits"><span data-p-digit="0">0</span><span data-p-digit="1">0</span></span><span id="p-decimal">.</span><span id="p-centiseconds" class="p-digits"><span data-p-digit="2">0</span><span data-p-digit="3">0</span></span></span>
+    </div>
+    <div id="p-buttons"><button id="p-lap" class="round" type="button" disabled>랩</button><span id="p-pages" aria-hidden="true"><i></i><i></i></span><button id="p-control" class="round" type="button">시작</button></div>
+    <div id="p-lap-area"><div id="p-lap-rows"></div></div>
+    <nav id="p-tabs" aria-label="시계">
+      <button id="p-world" class="tab tab-world" type="button"><svg viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="14" r="11"/><ellipse cx="14" cy="14" rx="5" ry="11"/><path d="M3 14h22M5 8h18M5 20h18M14 3v22"/><circle class="core" cx="14" cy="14" r="3"/></svg><span data-display-label="world-clock">세계 시계</span></button>
+      <button class="tab" type="button"><svg viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="15" r="9"/><path d="M14 9v6l4 2M5 4L2 8M23 4l3 4M8 23l-2 3M20 23l2 3M9 3L5 6M19 3l4 3"/></svg><span>알람</span></button>
+      <button class="tab active" type="button" aria-current="page"><svg viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="16" r="9"/><path d="M11 2h6M14 2v5M21 6l2 2M14 10v6l-3 3"/></svg><span>스톱워치</span></button>
+      <button class="tab" type="button"><svg viewBox="0 0 28 28" aria-hidden="true"><path d="M14 5a10 10 0 1 1-8 4M14 2v5M3 5v6h6M14 9v7l4 2"/></svg><span>타이머</span></button>
+    </nav>
+  </main>
+  <section id="settings" aria-label="숨김 설정" hidden>
+    <div id="settings-card" data-settings-root>
+      <img id="settings-brand" src="./brand-logo.png" alt="Plan B">
+      <header id="settings-header"><h1>설정</h1><button id="settings-close" type="button">닫기</button></header>
+      <p id="trick-note">세계 시계를 누르면 트릭이 켜지고, 가운데가 채워집니다. 16초 전에 멈추면 초와 밀리세컨의 합이 15가 됩니다.</p>
+    </div>
+  </section>
+  <div id="settings-entry-tutorial" role="dialog" aria-label="설정 여는 방법" hidden>
+    <div class="tutorial-card"><div class="tutorial-fingers" aria-hidden="true"><span></span><span></span></div><p>설정을 열려면 두 손가락으로 화면을 아래로 쓸어내리세요.</p><button id="settings-entry-tutorial-dismiss" type="button">알겠어요</button></div>
+  </div>
+  <script type="module">
+    import { MAX_DISPLAY_MS, TRICK_STORAGE_KEY, stopwatchDigits, trickStopMs } from './logic.js';
+    const TUTORIAL_KEY = 'gwayubulgeup-settings-entry-tutorial-v1';
+    const $ = (id) => document.getElementById(id);
+    const pControl = $('p-control');
+    const pLap = $('p-lap');
+    const pLapRows = $('p-lap-rows');
+    const pWorld = $('p-world');
+    const settings = $('settings');
+    const tutorial = $('settings-entry-tutorial');
+    const digitNodes = [...document.querySelectorAll('[data-p-minute], [data-p-digit]')];
+    let state = 'idle';
+    let trickOn = false;
+    let startedAt = 0;
+    let elapsedBase = 0;
+    let frameId = 0;
+    let lapCount = 0;
+    let lastLapElapsed = 0;
+    let wakeLock = null;
+    let wakeLockPending = false;
+
+    function paint(ms) {
+      const digits = stopwatchDigits(ms);
+      digitNodes.forEach((node, index) => { node.textContent = digits[index]; });
+    }
+    function clockText(ms) {
+      const digits = stopwatchDigits(ms);
+      return digits.slice(0, 2) + ':' + digits.slice(2, 4) + '.' + digits.slice(4, 6);
+    }
+    function elapsedNow() {
+      if (state !== 'running') return elapsedBase;
+      return Math.min(MAX_DISPLAY_MS, Math.max(0, elapsedBase + performance.now() - startedAt));
+    }
+    function renderChrome() {
+      pControl.textContent = state === 'running' ? '중단' : '시작';
+      pControl.classList.toggle('running', state === 'running');
+      pLap.textContent = state === 'stopped' && elapsedBase > 0 ? '재설정' : '랩';
+      pLap.disabled = state !== 'running' && elapsedBase === 0;
+    }
+    function setTrick(on) {
+      trickOn = !!on;
+      if (trickOn) document.documentElement.setAttribute('data-gwayu-trick', 'on');
+      else document.documentElement.removeAttribute('data-gwayu-trick');
+      try { localStorage.setItem(TRICK_STORAGE_KEY, trickOn ? '1' : '0'); } catch (error) {}
+    }
+    function tick() {
+      if (state !== 'running') return;
+      const elapsed = elapsedNow();
+      if (elapsed >= MAX_DISPLAY_MS) { stopTimer(); return; }
+      paint(elapsed);
+      frameId = requestAnimationFrame(tick);
+    }
+    function startTimer() {
+      if (elapsedBase >= MAX_DISPLAY_MS) return;
+      startedAt = performance.now();
+      state = 'running';
+      paint(elapsedBase);
+      renderChrome();
+      tick();
+    }
+    function stopTimer() {
+      elapsedBase = trickStopMs(elapsedNow(), trickOn, lastLapElapsed);
+      cancelAnimationFrame(frameId);
+      frameId = 0;
+      state = 'stopped';
+      paint(elapsedBase);
+      renderChrome();
+    }
+    function resetTimer() {
+      cancelAnimationFrame(frameId);
+      frameId = 0;
+      state = 'idle';
+      elapsedBase = 0;
+      lapCount = 0;
+      lastLapElapsed = 0;
+      pLapRows.replaceChildren();
+      paint(0);
+      renderChrome();
+    }
+    function addLap() {
+      const elapsed = elapsedNow();
+      const split = elapsed - lastLapElapsed;
+      lastLapElapsed = elapsed;
+      const row = document.createElement('div');
+      const label = document.createElement('span');
+      const value = document.createElement('span');
+      row.className = 'lap-row';
+      label.textContent = '랩 ' + (++lapCount);
+      value.textContent = clockText(split);
+      row.append(label, value);
+      pLapRows.prepend(row);
+    }
+    function openSettings() {
+      if (state === 'running' || !settings.hidden) return;
+      tutorial.hidden = true;
+      settings.hidden = false;
+      settings.scrollTop = 0;
+    }
+    function closeSettings() { settings.hidden = true; }
+    function showTutorial() {
+      if (!tutorial.hidden) return;
+      try { if (localStorage.getItem(TUTORIAL_KEY) === '1') return; } catch (error) {}
+      tutorial.hidden = false;
+    }
+    async function acquireWakeLock() {
+      if (wakeLock || wakeLockPending || document.visibilityState !== 'visible' || !navigator.wakeLock) return;
+      wakeLockPending = true;
+      try {
+        const lock = await navigator.wakeLock.request('screen');
+        wakeLock = lock;
+        lock.addEventListener('release', () => { if (wakeLock === lock) wakeLock = null; if (document.visibilityState === 'visible') acquireWakeLock(); });
+      } catch (error) {}
+      finally { wakeLockPending = false; }
+    }
+    function installSettingsSwipe(open, enabled) {
+      const pointers = new Map();
+      let pair = null, blocked = false, suppressUntil = 0;
+      const options = { capture: true, passive: false };
+      window.addEventListener('pointerdown', (event) => {
+        if (event.pointerType !== 'touch') return;
+        pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+        if (pointers.size > 2) { blocked = true; pair = null; }
+        if (pointers.size !== 2 || blocked || !enabled() || event.target.closest('input,textarea,button[data-date-action],#settings,#install-nudge')) return;
+        pair = [...pointers].map(([id, point]) => ({ id, ...point, dx: 0, dy: 0 }));
+      }, options);
+      window.addEventListener('pointermove', (event) => {
+        if (!pair || blocked) return;
+        const point = pair.find((item) => item.id === event.pointerId);
+        if (!point) return;
+        point.dx = event.clientX - point.x;
+        point.dy = event.clientY - point.y;
+        if (!pair.every((item) => item.dy >= 96 && item.dy > Math.abs(item.dx) * 1.5)) return;
+        blocked = true;
+        pair = null;
+        suppressUntil = Date.now() + 700;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        if (enabled()) open();
+      }, options);
+      const release = (event) => {
+        pointers.delete(event.pointerId);
+        pair = null;
+        if (!pointers.size) blocked = false;
+      };
+      window.addEventListener('pointerup', release, options);
+      window.addEventListener('pointercancel', release, options);
+      window.addEventListener('blur', () => { pointers.clear(); pair = null; blocked = false; });
+      window.addEventListener('click', (event) => {
+        if (Date.now() < suppressUntil) { event.preventDefault(); event.stopImmediatePropagation(); }
+      }, options);
+    }
+    tutorial.addEventListener('pointerdown', (event) => {
+      if (event.target.closest('#settings-entry-tutorial-dismiss')) return;
+      event.preventDefault();
+      event.stopPropagation();
+    });
+    $('settings-entry-tutorial-dismiss').addEventListener('click', () => {
+      try { localStorage.setItem(TUTORIAL_KEY, '1'); } catch (error) {}
+      tutorial.hidden = true;
+    });
+    try { trickOn = localStorage.getItem(TRICK_STORAGE_KEY) === '1'; } catch (error) { trickOn = false; }
+    setTrick(trickOn);
+    installSettingsSwipe(openSettings, () => tutorial.hidden && state !== 'running' && settings.hidden);
+    pControl.addEventListener('click', () => { if (state === 'running') stopTimer(); else startTimer(); });
+    pLap.addEventListener('click', () => { if (state === 'running') addLap(); else resetTimer(); });
+    pWorld.addEventListener('click', (event) => { event.preventDefault(); setTrick(!trickOn); });
+    $('settings-close').addEventListener('click', closeSettings);
+    document.addEventListener('contextmenu', (event) => event.preventDefault());
+    document.addEventListener('pointerdown', () => { if (!wakeLock) acquireWakeLock(); });
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) acquireWakeLock(); });
+    paint(0);
+    renderChrome();
+    showTutorial();
+    acquireWakeLock();
+  </script>
+  <script>
+    (() => {
+      try {
+        const KEY = 'gwayubulgeup_install_nudge_done';
+        if (localStorage.getItem(KEY)) return;
+        const standalone = typeof window.matchMedia === 'function' &&
+          window.matchMedia('(display-mode: standalone)').matches;
+        if (standalone || navigator.standalone) return;
+
+        let deferred = null;
+        let bar = null;
+        let closed = false;
+        let installRevision = 0;
+        const pending = '설치 요청을 받았습니다. 앱 아이콘을 확인하세요. 없으면 Chrome 메뉴(⋮)에서 다시 시도하세요.';
+        const done = () => {
+          closed = true;
+          installRevision += 1;
+          try { localStorage.setItem(KEY, '1'); } catch (error) {}
+          if (bar) bar.remove();
+          bar = null;
+          deferred = null;
+        };
+        const showOffer = () => {
+          if (bar || closed) return;
+          bar = document.createElement('div');
+          bar.id = 'install-nudge';
+          bar.innerHTML = '<span>홈 화면에 앱으로 설치할 수 있어요</span>' +
+            '<button type="button" data-act="install">설치</button>' +
+            '<button type="button" data-act="close" aria-label="닫기">✕</button>';
+          bar.addEventListener('pointerdown', (event) => event.stopPropagation());
+          bar.addEventListener('click', async (event) => {
+            event.stopPropagation();
+            const button = event.target.closest('button[data-act]');
+            const act = button ? button.dataset.act : null;
+            if (act === 'install' && deferred) {
+              const revision = installRevision;
+              const promptEvent = deferred;
+              deferred = null;
+              try {
+                await promptEvent.prompt();
+                const choice = await promptEvent.userChoice;
+                if (revision !== installRevision || !bar) return;
+                bar.querySelector('span').textContent = choice?.outcome === 'accepted'
+                  ? '설치 요청을 보냈습니다. 앱 아이콘을 확인하세요. 없으면 Chrome 메뉴(⋮)에서 다시 시도하세요.'
+                  : 'Chrome 메뉴(⋮)에서 앱 설치를 선택하세요.';
+              } catch (error) {
+                if (revision !== installRevision || !bar) return;
+                bar.querySelector('span').textContent = '설치 창을 열지 못했습니다. Chrome 메뉴(⋮)에서 앱 설치를 선택하세요.';
+              }
+            } else if (act === 'install') {
+              if (bar) bar.querySelector('span').textContent = 'Chrome 메뉴(⋮)에서 앱 설치를 선택하세요.';
+            } else if (act === 'close') {
+              done();
+            }
+          });
+          document.body.appendChild(bar);
+        };
+        window.addEventListener('appinstalled', () => {
+          installRevision += 1;
+          deferred = null;
+          showOffer();
+          if (bar) bar.querySelector('span').textContent = pending;
+        });
+        window.addEventListener('beforeinstallprompt', (event) => {
+          if (closed) return;
+          event.preventDefault();
+          installRevision += 1;
+          deferred = event;
+          showOffer();
+          if (bar) bar.querySelector('span').textContent = '홈 화면에 앱으로 설치할 수 있어요';
+        });
+      } catch (error) {}
+    })();
+  </script>
+  <script>
+    if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+  </script>
+</body>
+</html>

@@ -8,6 +8,7 @@ const root = fileURLToPath(new URL('../../', import.meta.url));
 const personal = [1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13]
   .map(number => ({ route: `zz${number}`, source: `zz${number}/sw.js` }));
 const shared = [
+  ['gwayubulgeup', 'gwayubulgeup'],
   ['magicshow', 'magicshow'], ['choice', 'choice'], ['calculator', 'hitsuzen'], ['unlock', 'release'], ['aletheia', 'aletheia'],
   ['usotsuki', 'usotsuki'], ['tobira', 'tobira'], ['spinner', 'tyche'],
   ['kairos', 'kairos'], ['kairos', 'kairos-classic'], ['qr', 'arosaegida']
@@ -72,10 +73,10 @@ function worker(app, network, { emptyCache = false, failCacheWrite = false } = {
   return { scope, dispatch, lifecycle, calls, puts, deletes, opened, added, claims: () => claims, skips: () => skips };
 }
 
-test('the freshness matrix covers 22 public source workers and 23 deployed scopes', () => {
-  assert.equal(routes.length, 23);
-  assert.equal(new Set(routes.map(app => app.source)).size, 22);
-  assert.equal(new Set(routes.map(app => app.route)).size, 23);
+test('the freshness matrix covers 23 public source workers and 24 deployed scopes', () => {
+  assert.equal(routes.length, 24);
+  assert.equal(new Set(routes.map(app => app.source)).size, 23);
+  assert.equal(new Set(routes.map(app => app.route)).size, 24);
   assert.ok(routes.every(app => app.route !== 'zz9'));
 });
 

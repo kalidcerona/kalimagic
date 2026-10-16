@@ -131,7 +131,7 @@ test('Magicshow login, hosting, migration and admin grant are registered', async
   assert.match((await read('netlify.toml')).toString(), /for = "\/tools\/magicshow\/manifest\.webmanifest"\s*\[headers.values\]\s*Content-Type = "application\/manifest\+json"/);
   const sql = (await read('supabase/migrations/20261011_friend_apps_magicshow.sql')).toString();
   assert.match(sql, /begin;[\s\S]*drop constraint if exists friend_app_access_tool_check;[\s\S]*add constraint friend_app_access_tool_check[\s\S]*commit;/);
-  assert.deepEqual([...sql.matchAll(/'([^']+)'/g)].map(match => match[1]), [...FRIEND_APP_TOOLS]);
+  assert.deepEqual([...sql.matchAll(/'([^']+)'/g)].map(match => match[1]), [...FRIEND_APP_TOOLS].filter(tool => tool !== 'gwayubulgeup'));
   assert.doesNotMatch(sql, /row level security|create policy|drop policy/i);
 });
 

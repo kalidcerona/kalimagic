@@ -14,7 +14,7 @@ const COOKIE_MAX_AGE = 7_776_000;
 const RENEWAL_WINDOW_SECONDS = 3_888_000;
 const DEFAULT_TOOL = 'calc';
 const PRODUCT_SLUGS = { calc: 'hitsuzen', unlock: 'release', 'stopwatch-uni': 'kairos', stopwatch: 'kairos-classic', spinner: 'tyche', arosaegida: 'arosaegida' };
-const STRICT_DISTRIBUTION_TOOLS = new Set(['aletheia', 'usotsuki', 'tobira', 'spinner', 'arosaegida', 'pimax', 'choice', 'magicshow']);
+const STRICT_DISTRIBUTION_TOOLS = new Set(['aletheia', 'usotsuki', 'tobira', 'spinner', 'arosaegida', 'pimax', 'choice', 'magicshow', 'gwayubulgeup']);
 
 function analyzePath(rawPathname) {
   if (typeof rawPathname !== 'string') {
@@ -115,6 +115,9 @@ function analyzePath(rawPathname) {
   if (pathname === '/tools/spinner' || pathname.startsWith('/tools/spinner/')) {
     return { mode: 'gated', tool: 'spinner', pathname };
   }
+  if (pathname === '/tools/gwayubulgeup' || pathname.startsWith('/tools/gwayubulgeup/')) {
+    return { mode: 'gated', tool: 'gwayubulgeup', pathname };
+  }
 
   for (const [tool, slug] of Object.entries(PRODUCT_SLUGS)) {
     if (pathname === `/tools/${slug}` || pathname.startsWith(`/tools/${slug}/`)) {
@@ -173,6 +176,7 @@ function safeReturnPath(pathname, search, fallback) {
     pathname.startsWith('/tools/pimax/') ||
     pathname.startsWith('/tools/choice/') ||
     pathname.startsWith('/tools/magicshow/') ||
+    pathname.startsWith('/tools/gwayubulgeup/') ||
     pathname.startsWith('/tools/tobira/') ||
     pathname.startsWith('/tools/spinner/') ||
     Object.values(PRODUCT_SLUGS).some((slug) => pathname.startsWith(`/tools/${slug}/`))

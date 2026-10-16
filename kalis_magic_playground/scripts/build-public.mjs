@@ -431,6 +431,7 @@ export function shouldCopyMagicshow(relativePath) {
 }
 
 export const DISTRIBUTION_APPS = [
+  { source: 'distribution-snapshots/gwayubulgeup', target: 'gwayubulgeup', tool: 'gwayubulgeup' },
   { source: 'distribution-snapshots/magicshow', target: 'magicshow', tool: 'magicshow' },
   { source: 'distribution-snapshots/choice', target: 'choice', tool: 'choice' },
   { source: 'distribution-snapshots/pimax', target: 'pimax', tool: 'pimax' },

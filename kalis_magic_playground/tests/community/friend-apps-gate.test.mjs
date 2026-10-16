@@ -369,7 +369,7 @@ test('AROSAegida migration retains all seven friend tools and the existing RLS p
   const values = [...sql.matchAll(/'([^']+)'/g)].map(match => match[1]);
   assert.equal(values.length, 7);
   // This historical migration predates the Pi Max, Choice and Magicshow deployments.
-  assert.deepEqual(values, [...FRIEND_APP_TOOLS].filter(tool => !['pimax', 'choice', 'magicshow'].includes(tool)));
+  assert.deepEqual(values, [...FRIEND_APP_TOOLS].filter(tool => !['pimax', 'choice', 'magicshow', 'gwayubulgeup'].includes(tool)));
   assert.match(sql, /drop constraint if exists friend_app_access_tool_check/);
   assert.match(sql, /add constraint friend_app_access_tool_check/);
   assert.doesNotMatch(sql, /row level security|create policy|drop policy/i);

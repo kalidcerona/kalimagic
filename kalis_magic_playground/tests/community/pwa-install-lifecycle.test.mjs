@@ -14,6 +14,7 @@ const PROMPTS = [
   ['zz8/install-ui.js', 'control'],
   ['zz1/index.html', 'nudge'], ['zz3/index.html', 'nudge'],
   ['distribution-snapshots/kairos/index.html', 'nudge'],
+  ['distribution-snapshots/gwayubulgeup/index.html', 'nudge'],
   ['distribution-snapshots/calculator/index.html', 'nudge'],
 ];
 

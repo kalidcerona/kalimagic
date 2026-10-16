@@ -1,4 +1,4 @@
-export const FRIEND_APP_TOOLS = new Set(['unlock', 'stopwatch-uni', 'aletheia', 'usotsuki', 'tobira', 'spinner', 'arosaegida', 'pimax', 'choice', 'magicshow']);
+export const FRIEND_APP_TOOLS = new Set(['unlock', 'stopwatch-uni', 'aletheia', 'usotsuki', 'tobira', 'spinner', 'arosaegida', 'pimax', 'choice', 'magicshow', 'gwayubulgeup']);
 
 export function friendAccessDecision(row) {
   if (!row) return 'create';
