@@ -515,3 +515,20 @@
 #settings #settings-card .planb-credit { margin-top: 4px !important; }
 #settings #settings-card .planb-openchat { display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: 100%; min-height: 48px; margin: 12px 0; padding: 10px 16px; border: 1px solid #e8631f; border-radius: 12px; background: #e8631f; color: #1a1512 !important; font: inherit; font-weight: 700; line-height: 1.3; text-align: center; text-decoration: none; white-space: normal; word-break: keep-all; overflow-wrap: anywhere; touch-action: manipulation; cursor: pointer; }
 #settings #settings-card .planb-openchat:focus-visible { outline: 2px solid #f3c2a4; outline-offset: 2px; }
+
+/* Settings content is centred. The header stays a left/right navigation bar. Disclosure icons stay on the right edge. */
+#settings #settings-card { text-align: center; }
+#settings #settings-card :is(#trick-note, .planb-block, .magic-settings-group, .magic-overview, .magic-overview :is(h2, p), .magic-install, .magic-install-status, .magic-install-status :is(p, li, ol), .magic-settings-footer, .magic-contact-heading, .magic-contact-note, .magic-contact-help, .magic-contact-help :is(p, summary), .magic-contact-id) { text-align: center !important; }
+#settings #settings-card #settings-header { justify-content: space-between !important; text-align: left; }
+#settings #settings-card details > summary,
+#settings #settings-card .body-groups summary,
+#settings #settings-card .magic-contact-help > summary { position: relative; justify-content: center !important; text-align: center !important; padding-inline: 28px !important; }
+#settings #settings-card .body-groups summary::after,
+#settings #settings-card .magic-contact-help > summary::after,
+#settings #settings-card details > summary::after { position: absolute; right: 0; top: 50%; margin-left: 0 !important; transform: translateY(-50%); }
+#settings #settings-card :is(.magic-contact-actions, .magic-appearance-actions, .actions, .row-actions, .preset-actions, .install-actions, .settings-actions, .setting-actions, .formbuttons) { justify-content: center; }
+#settings #settings-card .magic-settings-footer :is(.magic-contact-link, .magic-contact-copy) { flex-grow: 0; }
+#settings #settings-card :is(.planb-openchat, .magic-install-button, .magic-customize-open) { width: 100%; }
+#settings #settings-card .magic-install-status ol { margin-inline: auto; padding-left: 0; list-style: none; counter-reset: magic-install-step; text-align: center !important; }
+#settings #settings-card .magic-install-status li { counter-increment: magic-install-step; text-align: center !important; }
+#settings #settings-card .magic-install-status li > span:first-child::before { content: counter(magic-install-step) ". "; }

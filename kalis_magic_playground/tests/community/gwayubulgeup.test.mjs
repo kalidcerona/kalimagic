@@ -192,6 +192,45 @@ test('deliberate lines stay separate blocks and wrap inside a line only as a fal
   assert.doesNotMatch(openChat[1], /nowrap/);
 });
 
+test('settings content is centre-aligned and the header stays a navigation bar', () => {
+  const css = read('distribution-snapshots/gwayubulgeup/settings-ui.css');
+  const html = read('distribution-snapshots/gwayubulgeup/index.html');
+  const sw = read('distribution-snapshots/gwayubulgeup/sw.js');
+  const centred = css.match(/#settings #settings-card :is\(#trick-note, \.planb-block, \.magic-settings-group, \.magic-overview, \.magic-overview :is\(h2, p\), \.magic-install, \.magic-install-status, \.magic-install-status :is\(p, li, ol\), \.magic-settings-footer, \.magic-contact-heading, \.magic-contact-note, \.magic-contact-help, \.magic-contact-help :is\(p, summary\), \.magic-contact-id\) \{([^}]+)\}/);
+  assert.ok(centred, 'settings text centring rule');
+  assert.match(centred[1], /text-align:\s*center !important/);
+  assert.match(css, /#settings #settings-card \{[^}]*text-align:\s*center/);
+  assert.match(html, /#trick-note \{[^}]*text-align:\s*center/);
+  const header = css.match(/#settings #settings-card #settings-header \{([^}]*text-align:\s*left[^}]*)\}/);
+  assert.ok(header, 'settings header stays left/right');
+  assert.match(header[1], /justify-content:\s*space-between !important/);
+  assert.match(html, /<header id="settings-header"><h1>설정<\/h1><button id="settings-close" type="button">닫기<\/button><\/header>/);
+  const summary = css.match(/#settings #settings-card details > summary,\s*#settings #settings-card \.body-groups summary,\s*#settings #settings-card \.magic-contact-help > summary \{([^}]+)\}/);
+  assert.ok(summary, 'disclosure label centring rule');
+  assert.match(summary[1], /justify-content:\s*center !important/);
+  assert.match(summary[1], /text-align:\s*center !important/);
+  const icon = css.match(/#settings #settings-card \.body-groups summary::after,\s*#settings #settings-card \.magic-contact-help > summary::after,\s*#settings #settings-card details > summary::after \{([^}]+)\}/);
+  assert.ok(icon, 'disclosure icon stays on the right edge');
+  assert.match(icon[1], /position:\s*absolute/);
+  assert.match(icon[1], /right:\s*0/);
+  assert.match(icon[1], /margin-left:\s*0 !important/);
+  const rows = css.match(/#settings #settings-card :is\(\.magic-contact-actions, \.magic-appearance-actions, \.actions, \.row-actions, \.preset-actions, \.install-actions, \.settings-actions, \.setting-actions, \.formbuttons\) \{([^}]+)\}/);
+  assert.ok(rows, 'button row centring rule');
+  assert.match(rows[1], /justify-content:\s*center/);
+  assert.match(css, /#settings #settings-card \.magic-settings-footer :is\(\.magic-contact-link, \.magic-contact-copy\) \{[^}]*flex-grow:\s*0/);
+  const full = css.match(/#settings #settings-card :is\(\.planb-openchat, \.magic-install-button, \.magic-customize-open\) \{([^}]+)\}/);
+  assert.ok(full, 'full-width settings buttons');
+  assert.match(full[1], /width:\s*100%/);
+  const steps = css.match(/#settings #settings-card \.magic-install-status ol \{([^}]+)\}/);
+  assert.ok(steps);
+  assert.match(steps[1], /padding-left:\s*0/);
+  assert.match(steps[1], /text-align:\s*center !important/);
+  assert.match(steps[1], /list-style:\s*none/);
+  assert.match(css, /#settings #settings-card \.magic-install-status li > span:first-child::before \{[^}]*content:\s*counter\(magic-install-step\) "\. "/);
+  assert.match(html, /#settings-entry-tutorial \.tutorial-card \{[^}]*text-align:\s*center/);
+  assert.match(sw, /v20261016-portrait-1-manual-install-1-coherent-1-planb-1-center-1/);
+});
+
 test('installed PWA open chat uses only the anchor navigation', () => {
   const html = read('distribution-snapshots/gwayubulgeup/index.html');
   const anchor = html.match(/<a id="planb-openchat"[^>]*>/);
