@@ -96,7 +96,7 @@
 /* KAIROS settings B. Later #settings #settings-card rules need !important to beat the shared shell above. Performance and quick settings stay outside this prefix. */
 #settings #settings-card { width:min(100%, 560px) !important; max-width:560px !important; margin-inline:auto !important; height:auto !important; max-height:none !important; overflow:visible !important; display:flex !important; flex-direction:column !important; align-items:stretch !important; gap:0 !important; padding-bottom:0 !important; background:transparent !important; background-image:none !important; border:0 !important; border-radius:0 !important; box-shadow:none !important; color:#f4efe9 !important; word-break:keep-all; overflow-wrap:break-word; }
 #settings #settings-card > * { min-width:0; max-width:100%; }
-#settings #settings-card #settings-brand { display:none !important; }
+#settings #settings-card #settings-brand { display:block !important; align-self:center !important; flex:0 0 auto !important; width:120px !important; max-width:min(120px, 100%) !important; height:auto !important; max-height:none !important; margin:0 auto 12px !important; object-fit:contain; }
 #settings #settings-card > .magic-overview { order:4; }
 #settings #settings-card > .magic-customize-link { order:5; }
 #settings #settings-card > .magic-settings-footer { order:6; }
@@ -488,7 +488,7 @@
 }
 
 .magic-settings-footer .magic-contact-note > span,
-.magic-settings-footer .magic-contact-help > p > span { display: block; }
+.magic-settings-footer .magic-contact-help > p > span { display: block; white-space: nowrap; }
 
 /* Keep fallback instructions quieter than the primary contact action. */
 .magic-settings-footer details.magic-contact-help { background: transparent !important; border: 0 !important; border-top: 1px solid #ab9f9233 !important; border-radius: 0 !important; padding: 8px 0 0 !important; box-shadow: none !important; }
@@ -504,3 +504,14 @@
 .magic-install .magic-install-status p { margin: 0; color: inherit; }
 .magic-install .magic-install-status ol { margin: 8px 0 0; padding-left: 22px; }
 .magic-install .magic-install-status li { margin: 4px 0; color: inherit; }
+.magic-install .magic-install-status :is(p, li) > span { display: block; white-space: nowrap; }
+
+/* Plan B introduction sits under the settings header. Each span is one phrase; wrap inside a phrase only when the line does not fit. */
+#settings #settings-card .planb-block { margin: 0 0 18px; text-align: center; word-break: keep-all; line-break: strict; overflow-wrap: normal; }
+#settings #settings-card .planb-copy { margin: 0 !important; color: #d9cdc2 !important; font-size: 16px !important; line-height: 1.55 !important; }
+#settings #settings-card .planb-copy > span,
+#settings #settings-card #trick-note > span,
+#settings #settings-card > .magic-overview > p > span { display: block; white-space: normal; word-break: keep-all; overflow-wrap: anywhere; }
+#settings #settings-card .planb-credit { margin-top: 4px !important; }
+#settings #settings-card .planb-openchat { display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: 100%; min-height: 48px; margin: 12px 0; padding: 10px 16px; border: 1px solid #e8631f; border-radius: 12px; background: #e8631f; color: #1a1512 !important; font: inherit; font-weight: 700; line-height: 1.3; text-align: center; text-decoration: none; white-space: normal; word-break: keep-all; overflow-wrap: anywhere; touch-action: manipulation; cursor: pointer; }
+#settings #settings-card .planb-openchat:focus-visible { outline: 2px solid #f3c2a4; outline-offset: 2px; }

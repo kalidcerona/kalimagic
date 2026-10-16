@@ -95,8 +95,29 @@ test('portrait app paints real and forced time through the same digits', () => {
   assert.match(html, /gwayubulgeup_trick/);
   assert.match(html, /alt="Plan B"/);
   assert.match(html, /src="\.\/brand-logo\.png"/);
-  assert.match(html, /세계 시계를 누르면 트릭이 켜지고, 가운데가 채워집니다\. 16초 전에 멈추면 초와 밀리세컨의 합이 15가 됩니다\./);
-  assert.match(html, /두 손가락으로 화면을 아래로 쓸어내리세요/);
+  assert.match(html, /<img id="settings-brand" src="\.\/brand-logo\.png" alt="Plan B" width="160" height="147">/);
+  assert.ok(html.indexOf('id="settings-header"') < html.indexOf('id="settings-brand"'), 'settings header comes before the Plan B logo');
+  assert.doesNotMatch(html, /id="settings-brand"[^>]*hidden/);
+  assert.doesNotMatch(html, /id="settings-brand"[^>]*onerror/);
+  const css = read('distribution-snapshots/gwayubulgeup/settings-ui.css');
+  assert.match(css, /#settings #settings-card #settings-brand \{[^}]*display:\s*block !important/);
+  assert.match(css, /#settings #settings-card #settings-brand \{[^}]*width:\s*120px !important/);
+  assert.doesNotMatch(css, /#settings-brand \{[^}]*display:\s*none/);
+  assert.match(css, /word-break:\s*keep-all/);
+  assert.match(html, /<span>세계 시계를 누르면 트릭이 켜지고<\/span><span>아이콘 가운데가 채워집니다\.<\/span><span>16초 전에 멈추면<\/span><span>초와 밀리세컨의 합이 15가 됩니다\.<\/span>/);
+  assert.match(html, /<span>설정을 열려면<\/span><span>두 손가락으로<\/span><span>화면을 아래로 쓸어내리세요\.<\/span>/);
+  assert.match(html, /<span>Plan B 마술 커뮤니티<\/span>\s*<span>마술을 좋아하는 사람들이 모여<\/span>\s*<span>함께 연습하고 나누는 모임입니다\.<\/span>/);
+  assert.match(html, /href="https:\/\/open\.kakao\.com\/o\/gUJkfxzi"/);
+  assert.match(html, /id="planb-openchat"[^>]*target="_blank"/);
+  assert.match(html, /id="planb-openchat"[^>]*rel="noopener noreferrer"/);
+  assert.doesNotMatch(html, /\$\('planb-openchat'\)\.addEventListener\('click'/);
+  assert.doesNotMatch(html, /window\.open\(\$\('planb-openchat'\)/);
+  assert.match(html, />Plan B 오픈채팅 참여하기</);
+  assert.match(html, /<span>이 마술은 Plan B의 김훈 님과 칼리 님이<\/span>\s*<span>여러분을 위해 준비했습니다\.<\/span>/);
+  const settingsUi = read('distribution-snapshots/gwayubulgeup/settings-ui.js');
+  assert.match(settingsUi, /<span>수정할 점이나 버그,|수정할 점이나 버그,/);
+  assert.match(settingsUi, /새로운 아이디어가 있다면/);
+  assert.match(settingsUi, /카카오톡으로 알려주세요\./);
   assert.doesNotMatch(html, /[—~]/);
   assert.doesNotMatch(html, /requestFullscreen|webkitRequestFullscreen/);
   const sw = read('distribution-snapshots/gwayubulgeup/sw.js');
@@ -140,4 +161,47 @@ test('gwayubulgeup is a separate gated friend app', () => {
   assert.match(sql, /begin;[\s\S]*drop constraint if exists friend_app_access_tool_check;[\s\S]*add constraint friend_app_access_tool_check[\s\S]*commit;/);
   assert.deepEqual([...sql.matchAll(/'([^']+)'/g)].map((match) => match[1]), [...FRIEND_APP_TOOLS]);
   assert.match(read('netlify.toml'), /for = "\/tools\/gwayubulgeup\/manifest\.webmanifest"\s*\[headers.values\]\s*Content-Type = "application\/manifest\+json"/);
+});
+
+test('deliberate lines stay separate blocks and wrap inside a line only as a fallback', () => {
+  const css = read('distribution-snapshots/gwayubulgeup/settings-ui.css');
+  const html = read('distribution-snapshots/gwayubulgeup/index.html');
+  const rule = css.match(/#settings #settings-card \.planb-copy > span,\s*#settings #settings-card #trick-note > span,\s*#settings #settings-card > \.magic-overview > p > span \{([^}]+)\}/);
+  assert.ok(rule, 'deliberate line rule');
+  assert.match(rule[1], /display:\s*block/);
+  assert.match(rule[1], /white-space:\s*normal/);
+  assert.match(rule[1], /word-break:\s*keep-all/);
+  assert.match(rule[1], /overflow-wrap:\s*anywhere/);
+  assert.doesNotMatch(rule[1], /nowrap/);
+  for (const block of [
+    html.match(/#trick-note > span \{([^}]+)\}/)?.[1],
+    html.match(/#settings-entry-tutorial p > span \{([^}]+)\}/)?.[1]
+  ]) {
+    assert.ok(block);
+    assert.match(block, /display:\s*block/);
+    assert.match(block, /white-space:\s*normal/);
+    assert.match(block, /word-break:\s*keep-all/);
+    assert.match(block, /overflow-wrap:\s*anywhere/);
+    assert.doesNotMatch(block, /nowrap/);
+  }
+  const openChat = css.match(/#settings #settings-card \.planb-openchat \{([^}]+)\}/);
+  assert.ok(openChat);
+  assert.match(openChat[1], /white-space:\s*normal/);
+  assert.match(openChat[1], /word-break:\s*keep-all/);
+  assert.match(openChat[1], /overflow-wrap:\s*anywhere/);
+  assert.doesNotMatch(openChat[1], /nowrap/);
+});
+
+test('installed PWA open chat uses only the anchor navigation', () => {
+  const html = read('distribution-snapshots/gwayubulgeup/index.html');
+  const anchor = html.match(/<a id="planb-openchat"[^>]*>/);
+  assert.ok(anchor);
+  assert.match(anchor[0], /href="https:\/\/open\.kakao\.com\/o\/gUJkfxzi"/);
+  assert.match(anchor[0], /target="_blank"/);
+  assert.match(anchor[0], /rel="noopener noreferrer"/);
+  assert.equal(html.includes("addEventListener('click'"), true);
+  assert.doesNotMatch(html, /planb-openchat'\)\.addEventListener/);
+  assert.doesNotMatch(html, /window\.open\(/);
+  const clickAt = html.indexOf("$('planb-openchat')");
+  assert.equal(clickAt, -1);
 });

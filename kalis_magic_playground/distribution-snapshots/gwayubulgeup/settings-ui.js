@@ -68,9 +68,9 @@
     if (standalone) return { kind: 'standalone', title: '이미 설치된 앱으로 실행 중이에요.', steps: [] };
     if (/iPhone|iPad|iPod/i.test(ua) || (nav.platform === 'MacIntel' && nav.maxTouchPoints > 1)) return { kind: 'ios', title: '아이폰과 아이패드는 직접 추가해요.', steps: ['화면의 공유 버튼(□↑)을 누르세요.', "'홈 화면에 추가'를 고르세요.", "오른쪽 위 '추가'를 누르세요."] };
     if (/SamsungBrowser/i.test(ua)) return { kind: 'samsung', title: '삼성 인터넷은 메뉴에서 추가해요.', steps: ['메뉴(≡)를 누르세요.', "'현재 페이지 추가'를 누르세요.", "'홈 화면'을 고르세요."] };
-    if (/Android/i.test(ua) && /Chrome\//i.test(ua) && !/EdgA|OPR|Firefox|Vivaldi|DuckDuckGo/i.test(ua)) return { kind: 'android-chrome', title: '크롬이 예전에 설치한 앱을 기억하고 있을 수 있어요.', steps: ['홈 화면의 기존 앱 아이콘을 길게 눌러 삭제(설치 삭제)하세요.', '크롬에서 이 페이지를 다시 여세요.', "크롬 메뉴 ⋮ 에서 '홈 화면에 추가'를 누르세요.", "'설치'를 누르세요."] };
-    if (/Android/i.test(ua)) return { kind: 'android', title: '브라우저 메뉴에서 추가해요.', steps: ['브라우저 메뉴를 여세요.', "'홈 화면에 추가' 또는 '앱 설치'를 고르세요."] };
-    return { kind: 'other', title: '브라우저에서 직접 설치해요.', steps: ['주소창 오른쪽의 설치 아이콘을 누르세요.', "없으면 브라우저 메뉴에서 '앱 설치' 또는 '홈 화면에 추가'를 고르세요."] };
+    if (/Android/i.test(ua) && /Chrome\//i.test(ua) && !/EdgA|OPR|Firefox|Vivaldi|DuckDuckGo/i.test(ua)) return { kind: 'android-chrome', title: '크롬이 예전에 설치한 앱을\n기억하고 있을 수 있어요.', steps: ['홈 화면의 기존 앱 아이콘을\n길게 눌러 삭제(설치 삭제)하세요.', '크롬에서 이 페이지를 다시 여세요.', "크롬 메뉴 ⋮ 에서\n'홈 화면에 추가'를 누르세요.", "'설치'를 누르세요."] };
+    if (/Android/i.test(ua)) return { kind: 'android', title: '브라우저 메뉴에서 추가해요.', steps: ['브라우저 메뉴를 여세요.', "'홈 화면에 추가' 또는\n'앱 설치'를 고르세요."] };
+    return { kind: 'other', title: '브라우저에서 직접 설치해요.', steps: ['주소창 오른쪽의\n설치 아이콘을 누르세요.', "없으면 브라우저 메뉴에서\n'앱 설치' 또는\n'홈 화면에 추가'를 고르세요."] };
   }
   var api = { customizationAllowed: customizationAllowed, installGuide: installGuide, profiles: profiles, sanitize: sanitize, storageKey: storageKey, load: load, read: read, write: write, reset: reset, clipOffset: clipOffset, screenDelta: screenDelta, translateFor: translateFor, controlVisible: controlVisible };
   root.MagicSettingsUI = api;
@@ -117,9 +117,14 @@
     }
     function group(title, className) { var el = node('details', null, 'magic-settings-group ' + className); el.appendChild(node('summary', title)); return el; }
     var overview = group('개요', 'magic-overview');
+    function lined(tag, className, lines) {
+      var el = node(tag, null, className);
+      lines.forEach(function (text) { String(text).split('\n').forEach(function (line) { el.appendChild(node('span', line)); }); });
+      return el;
+    }
     overview.appendChild(node('h2', profile.name));
-    profile.story.forEach(function (text) { overview.appendChild(node('p', text)); });
-    overview.appendChild(node('p', customizeEnabled ? '같이 쓰거나 선물하려고 만들었어요. 화면은 조금씩 바꿀 수 있어요.' : '같이 쓰거나 선물하려고 만들었어요. 편하게 즐겨 주세요.'));
+    profile.story.forEach(function (text) { overview.appendChild(lined('p', null, [text])); });
+    overview.appendChild(lined('p', null, customizeEnabled ? ['같이 쓰거나 선물하려고 만들었어요.', '화면은 조금씩 바꿀 수 있어요.'] : ['같이 쓰거나 선물하려고 만들었어요.', '편하게 즐겨 주세요.']));
     function contactHref(nav) {
   var code = 'eshVqDvk7WKk0zDKtiC9UTa.T6Q-', ua = nav.userAgent || '';
   if (/Android/i.test(ua)) return 'intent://viewer?#Intent;scheme=kakaotalkqrcode%3A%2F%2F' + code + ';action=android.intent.action.SEND;category=android.intent.category.BROWSABLE;package=com.kakao.talk;end;';
@@ -200,10 +205,10 @@
       try { var order = root.getComputedStyle(overview).order; if (order && order !== '0') box.style.order = order; } catch (_) {}
       function show(title, steps) {
         status.textContent = '';
-        status.appendChild(node('p', title));
+        status.appendChild(lined('p', null, [title]));
         if (steps && steps.length) {
           var list = node('ol');
-          steps.forEach(function (step) { list.appendChild(node('li', step)); });
+          steps.forEach(function (step) { list.appendChild(lined('li', null, [step])); });
           status.appendChild(list);
         }
         status.hidden = false;
@@ -218,8 +223,8 @@
         button.disabled = true;
         Promise.resolve(event.userChoice || result).then(function (choice) {
           button.disabled = false;
-          if (choice && choice.outcome === 'accepted') show('설치를 시작했어요. 홈 화면에서 앱 아이콘을 확인해 주세요.');
-          else show('설치를 취소했어요. 다시 누르면 직접 설치하는 방법을 알려드려요.');
+          if (choice && choice.outcome === 'accepted') show('설치를 시작했어요.\n홈 화면에서 앱 아이콘을\n확인해 주세요.');
+          else show('설치를 취소했어요.\n다시 누르면 직접 설치하는\n방법을 알려드려요.');
         }, function () { button.disabled = false; showGuide(); });
       });
       return box;

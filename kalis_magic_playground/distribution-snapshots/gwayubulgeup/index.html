@@ -51,12 +51,13 @@
     html[data-gwayu-trick="on"] .tab-world .core { fill: currentColor; }
     #settings { position: fixed; inset: 0; z-index: 30; overflow: auto; background: #000; padding: calc(env(safe-area-inset-top) + 1rem) max(1rem, env(safe-area-inset-right)) calc(env(safe-area-inset-bottom) + 1rem) max(1rem, env(safe-area-inset-left)); touch-action: pan-y; }
     #settings-card { width: min(100%, 32rem); margin: 0 auto; padding-bottom: 1rem; }
-    #settings-brand { display: block; width: min(100%, 300px); height: auto; max-height: 110px; object-fit: contain; margin: 0 auto 1rem; }
+    #settings-brand { display: block; width: 120px; max-width: 120px; height: auto; object-fit: contain; margin: 0 auto 12px; }
     #settings-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
     #settings h1 { margin: 0; font-size: 1.5rem; }
     #settings button { min-height: 2.75rem; padding: 0 1rem; border-radius: 0.7rem; background: #2c2c2e; }
     #settings-close { color: #ff9f0a; }
-    #trick-note { margin: 0 0 1rem; color: #d1d1d6; line-height: 1.5; }
+    #trick-note { margin: 0 0 1rem; color: #d1d1d6; line-height: 1.55; word-break: keep-all; line-break: strict; overflow-wrap: normal; }
+    #trick-note > span { display: block; white-space: normal; word-break: keep-all; overflow-wrap: anywhere; }
     #install-nudge { position: fixed; left: 3vw; right: 3vw; bottom: calc(1.5dvh + env(safe-area-inset-bottom)); z-index: 20; display: flex; align-items: center; gap: 2.5vw; padding: 1.2dvh 3.5vw; background: #1c1c1e; border-radius: 0.875rem; font-size: clamp(0.875rem, 3.5vw, 1rem); box-shadow: 0 0.25rem 1rem rgba(0,0,0,0.5); }
     #install-nudge span { flex: 1; }
     #install-nudge button { border-radius: 0.625rem; padding: 0.55em 0.9em; background: #ff9f0a; color: #000; }
@@ -69,7 +70,8 @@
     #settings-entry-tutorial .tutorial-fingers span:first-child { left: 15px; }
     #settings-entry-tutorial .tutorial-fingers span:last-child { right: 15px; }
     #settings-entry-tutorial .tutorial-fingers::after { content: '↓'; position: absolute; bottom: 0; left: 0; right: 0; color: #fff; font-size: 28px; }
-    #settings-entry-tutorial p { margin: 0 0 16px; }
+    #settings-entry-tutorial p { margin: 0 0 16px; word-break: keep-all; line-break: strict; overflow-wrap: normal; }
+    #settings-entry-tutorial p > span { display: block; white-space: normal; word-break: keep-all; overflow-wrap: anywhere; }
     #settings-entry-tutorial button { min-width: 120px; min-height: 44px; border: 0; border-radius: 12px; background: #fff; color: #111; font: 600 16px system-ui, sans-serif; pointer-events: auto; touch-action: manipulation; }
     @keyframes tutorial-swipe { 0%, 16% { transform: translateY(0); opacity: .55; } 70%, 85% { transform: translateY(45px); opacity: 1; } 100% { transform: translateY(0); opacity: .55; } }
     @media (prefers-reduced-motion: reduce) { #settings-entry-tutorial .tutorial-fingers span { animation: none; transform: translateY(25px); } }
@@ -94,13 +96,25 @@
   </main>
   <section id="settings" aria-label="숨김 설정" hidden>
     <div id="settings-card" data-settings-root>
-      <img id="settings-brand" src="./brand-logo.png" alt="Plan B">
       <header id="settings-header"><h1>설정</h1><button id="settings-close" type="button">닫기</button></header>
-      <p id="trick-note">세계 시계를 누르면 트릭이 켜지고, 가운데가 채워집니다. 16초 전에 멈추면 초와 밀리세컨의 합이 15가 됩니다.</p>
+      <img id="settings-brand" src="./brand-logo.png" alt="Plan B" width="160" height="147">
+      <div class="planb-block">
+        <p class="planb-copy">
+          <span>Plan B 마술 커뮤니티</span>
+          <span>마술을 좋아하는 사람들이 모여</span>
+          <span>함께 연습하고 나누는 모임입니다.</span>
+        </p>
+        <a id="planb-openchat" class="planb-openchat" href="https://open.kakao.com/o/gUJkfxzi" target="_blank" rel="noopener noreferrer">Plan B 오픈채팅 참여하기</a>
+        <p class="planb-copy planb-credit">
+          <span>이 마술은 Plan B의 김훈 님과 칼리 님이</span>
+          <span>여러분을 위해 준비했습니다.</span>
+        </p>
+      </div>
+      <p id="trick-note"><span>세계 시계를 누르면 트릭이 켜지고</span><span>아이콘 가운데가 채워집니다.</span><span>16초 전에 멈추면</span><span>초와 밀리세컨의 합이 15가 됩니다.</span></p>
     </div>
   </section>
   <div id="settings-entry-tutorial" role="dialog" aria-label="설정 여는 방법" hidden>
-    <div class="tutorial-card"><div class="tutorial-fingers" aria-hidden="true"><span></span><span></span></div><p>설정을 열려면 두 손가락으로 화면을 아래로 쓸어내리세요.</p><button id="settings-entry-tutorial-dismiss" type="button">알겠어요</button></div>
+    <div class="tutorial-card"><div class="tutorial-fingers" aria-hidden="true"><span></span><span></span></div><p><span>설정을 열려면</span><span>두 손가락으로</span><span>화면을 아래로 쓸어내리세요.</span></p><button id="settings-entry-tutorial-dismiss" type="button">알겠어요</button></div>
   </div>
   <script type="module">
     import { MAX_DISPLAY_MS, TRICK_STORAGE_KEY, stopwatchDigits, trickStopMs } from './logic.js';
