@@ -248,7 +248,7 @@
     <div><p class="strip-k">DATE</p><p class="strip-v">11.15 일요일</p></div>
     <div><p class="strip-k">TIME</p><p class="strip-v">15:00-18:30</p></div>
     <div><p class="strip-k">PLACE</p><p class="strip-v">스넥 연습실<small>홍대입구역 도보 5분</small></p></div>
-    <div><p class="strip-k" data-strip-label>SUPER EARLY</p><p class="strip-v is-price" data-strip-price><s class="was-top">정가 9만원</s><span class="now-line">7만원 <span class="off">22%</span></span><small>통합권 <s>10.5만원</s> 8.5만원</small><small>10/27(화)까지</small></p></div>
+    <div><p class="strip-k" data-strip-label>SUPER EARLY</p><p class="strip-v is-price" data-strip-price><s class="was-top">정가 9만원</s><span class="now-line">7만원 <span class="off">22%</span></span><small>10/27(화)까지</small></p></div>
   </div>
   <div class="cta-row">
     <p class="deadline" data-deadline><span data-deadline-main>10월 17일(토) 판매 시작</span><small data-deadline-sub>슈퍼 얼리버드는 11일 동안만</small></p>
@@ -558,11 +558,11 @@
       var t = s.tier;
       if (t) {
         price.innerHTML = '<s class="was-top">정가 ' + FULL + '</s><span class="now-line">' + t.busking + ' <span class="off">' + t.off + '</span></span>'
-          + '<small>통합권 <s>' + t.comboWas + '</s> ' + t.combo + '</small><small>' + t.until + '</small>';
+          + '<small>' + t.until + '</small>';
       } else if (s.endText) {
         price.textContent = s.endText;
       } else if (s.combo) {
-        price.innerHTML = '<span class="now-line">버스킹 ' + FULL + '</span><small>통합권 <s>' + s.comboWas + '</s> ' + s.combo + '</small><small>' + s.comboUntil + '</small>';
+        price.innerHTML = '<span class="now-line">' + FULL + '</span>';
       }
     }
     document.querySelectorAll("[data-tier]").forEach(function (card) {
