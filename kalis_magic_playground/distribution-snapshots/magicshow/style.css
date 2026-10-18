@@ -160,7 +160,7 @@
 .helper-actor{position:absolute;width:58px;height:58px;display:grid;place-items:center;font-size:44px;pointer-events:none;z-index:24}
 .helper-dove{left:791px;top:261px}.helper-rabbit{left:791px;top:651px}.helper-actor .asset-sprite{width:100%;height:100%;object-fit:contain;position:absolute;inset:0}.helper-actor.asset-ready .sprite-fallback{visibility:hidden}.helper-actor.paused{opacity:.4}
 .equip-grid{display:grid;grid-template-columns:repeat(3,200px);gap:14px;margin:20px 0}.equip-grid button{position:relative;min-height:110px;font-size:22px;padding-top:65px}.equip-grid .asset-sprite{position:absolute;left:70px;top:5px;width:60px;height:60px;object-fit:contain}
-.equip-collection{display:flex;flex-wrap:wrap;gap:10px}.equip-collection button{font-size:22px}.achievement-list{display:grid;gap:12px}.achievement-stamp{display:flex;align-items:center;gap:20px;opacity:.5}.achievement-stamp.earned{opacity:1;color:#ffe65c}.achievement-stamp small{font-size:22px}.medal{position:relative;width:48px;height:48px;display:grid;place-items:center}.medal .asset-sprite{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}.medal.asset-ready .sprite-fallback{visibility:hidden}
+.equip-collection{display:flex;flex-wrap:wrap;gap:10px}.equip-collection button{font-size:22px}.achievement-list{display:grid;gap:12px}.achievement-head{margin:0;color:#ffe65c}.achievement-group{display:grid;gap:8px}.achievement-group h2{margin:4px 0 0;font-size:22px;color:#ffe9ac}.achievement-stamp{display:flex;align-items:flex-start;gap:20px;color:#f4f4ec}.achievement-stamp.earned{color:#ffe65c}.achievement-copy{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}.achievement-copy strong{font-size:22px;line-height:1.3}.achievement-stamp small{font-size:22px;line-height:1.35;color:#c9c3b0}.achievement-stamp.earned .achievement-state{color:#ffe65c}.achievement-state{flex:none;white-space:nowrap}.medal{position:relative;width:48px;height:48px;flex:none;display:grid;place-items:center}.medal.pending{filter:grayscale(1) brightness(.62)}.medal .asset-sprite{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}.medal.asset-ready .sprite-fallback{visibility:hidden}.medal-check{position:absolute;right:-4px;bottom:-4px;z-index:2;line-height:1;color:#ffe65c}
 
 .cell.golden-broken .chest{background:#b88922;border-color:#ffe65c;transform:rotate(-8deg);opacity:.65}
 
@@ -371,7 +371,7 @@ button{touch-action:manipulation}
 .phone .reward-badges{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-bottom:10px}
 .phone .reward-badge img{width:44px;height:44px}.phone .reward-badge figcaption{font-size:11px}
 .phone .bestiary-silhouettes{flex-wrap:wrap;gap:8px}.phone .bestiary-silhouettes span{font-size:33px}
-.phone .achievement-stamp{gap:8px}
+.phone .achievement-list{gap:8px}.phone .achievement-head,.phone .achievement-group h2,.phone .achievement-copy strong{font-size:13px;line-height:1.3}.phone .achievement-stamp{gap:8px;align-items:flex-start}.phone .achievement-stamp small{font-size:11px;line-height:1.35}.phone .medal{width:32px;height:32px}.phone .medal-check .px-icon{width:14px;height:14px}
 /* visualViewport may shrink without changing CSS media-query height. */
 .phone.phone-tight .attack{top:38px;height:32px}
 .phone.phone-tight .mental{top:74px;height:38px}
@@ -873,8 +873,12 @@ html,body,#stage{background:var(--bg);color:var(--ink)}
 @media(prefers-reduced-motion:reduce){#stage #magicianMini.performance-ready.routine-art:not(.reacting):not(.disappointed){animation:none;background-position:100% 0%}}
 .future-target{outline:3px solid #ffe17a!important;box-shadow:0 0 12px #ffe17a!important}
 .future-suit{filter:sepia(.5) saturate(1.8) hue-rotate(235deg);border-bottom:3px solid #e4ba65}
-.routine-collection{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:12px 0}
-.routine-collection span{display:inline-flex;align-items:center;gap:4px}.routine-icon{width:32px;height:32px}
+.routine-collection{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin:12px 0;align-items:start}
+body.phone:not(.portrait-layout) .routine-collection{grid-template-columns:repeat(5,minmax(0,1fr))}
+.routine-collection>strong{grid-column:1 / -1}
+.routine-collection .routine-item{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0}
+body #viewport #stage #panel #panelBody .routine-collection .routine-name{display:block;width:100%;height:2.6em;margin:0;overflow:hidden;text-align:center;line-height:1.3;font-size:12px}
+.routine-icon{width:100%;aspect-ratio:1;height:auto}
 #futureTelegraph{position:absolute;left:46px;top:290px;width:470px;padding:18px;background:#342334f5;border:2px solid #ffe17a;white-space:pre-line;line-height:1.6;z-index:10;pointer-events:none}
 .phone #futureTelegraph{left:6px;top:86px;width:calc(40% - 12px);padding:4px;font-size:10px;line-height:13px}
 
@@ -882,7 +886,7 @@ html,body,#stage{background:var(--bg);color:var(--ink)}
 #stage .normalized-figure{position:relative;overflow:hidden}
 #stage .normalized-figure>.asset-sprite,.phone #stage .normalized-figure>.asset-sprite{position:absolute;inset:auto;left:50%;bottom:0;width:auto;height:84%;max-width:none;object-fit:contain;transform:translateX(-50%);transform-origin:50% 100%}
 #stage .normalized-figure[data-figure-size="large"]>.asset-sprite{height:95%}
-#stage .normalized-figure[data-figure-size="small"]>.asset-sprite{height:72%}
+#stage .normalized-figure[data-figure-size="small"]>.asset-sprite{height:calc(72% * var(--story-scale, 1));max-height:100%}
 #stage #audience.normalized-figure{position:absolute;overflow:visible}
 #stage .story-portrait.normalized-figure>.asset-sprite,#stage .dialogue-emoji.normalized-figure>.asset-sprite{width:100%;height:100%;object-fit:cover;object-position:50% 0;transform:translateX(-50%)}
 .map-portrait{display:block;flex:none;width:48px;height:60px}
@@ -1454,7 +1458,7 @@ repeating-linear-gradient(90deg,rgba(255,255,255,.04) 0 2px,transparent 2px 4px)
 .tablet #stage #phoneMore .menu-group{font-size:16px;line-height:22px}
 :is(.phone,.tablet) #stage #phoneMore #menuGroupPlay{order:-2}
 :is(.phone,.tablet) #stage #phoneMore #menuGroupSettings{order:59;margin-top:4px}
-:is(.phone,.tablet) #stage #phoneMore :is(#soundButton,#musicButton,#hapticsButton,#textSpeedButton,#installButton,#replayTutorial){order:60}
+:is(.phone,.tablet) #stage #phoneMore :is(#soundButton,#musicButton,#hapticsButton,#textSpeedButton,#replayTutorial){order:60}
 /* U35: the last settings row (진동) scrolls fully into view: bottom spacer inside the scroll area. */
 :is(.phone,.tablet) #stage #phoneMore:not([hidden])::after{content:'';grid-column:1 / -1;order:200;height:16px}
 @media(max-height:440px){#stage #panel[data-screen="dealer"] #panelBody{padding-bottom:30px;-webkit-mask-image:linear-gradient(#000 calc(100% - 26px),transparent);mask-image:linear-gradient(#000 calc(100% - 26px),transparent)}}
@@ -1630,7 +1634,7 @@ body:not(.phone) #viewport #stage #phoneMore:not([hidden]){display:grid;grid-tem
 body:not(.phone) #viewport #stage #phoneMore .menu-group{display:block;grid-column:1 / -1;margin:0;padding:0 2px 2px;font-size:var(--fs-m);line-height:28px;color:var(--p-gold);border-bottom:2px solid var(--p-line)}
 body:not(.phone) #viewport #stage #phoneMore #menuGroupPlay{order:-2}
 body:not(.phone) #viewport #stage #phoneMore #menuGroupSettings{order:59;margin-top:4px}
-body:not(.phone) #viewport #stage #phoneMore :is(#soundButton,#musicButton,#hapticsButton,#textSpeedButton,#installButton,#replayTutorial){order:60}
+body:not(.phone) #viewport #stage #phoneMore :is(#soundButton,#musicButton,#hapticsButton,#textSpeedButton,#replayTutorial){order:60}
 body:not(.phone) #viewport #stage #phoneMore .music-volume{order:61;grid-column:span 2;display:flex;align-items:center;gap:12px;font-size:var(--fs-m)}
 body:not(.phone) #viewport #stage #phoneMore :is(#coffeeButton,#openChatButton){order:100;grid-column:span 3;flex-basis:auto}
 body:not(.phone) #viewport #stage #phoneMore button{position:relative;inset:auto;width:100%;min-width:0;min-height:56px;font-size:var(--fs-m);line-height:28px;white-space:nowrap;padding:8px 6px;margin:0}
@@ -1673,8 +1677,7 @@ body:not(.phone) .normalized-figure[data-emote]:not([data-emote=""]):after{width
 @media(prefers-reduced-motion:reduce){#stageDressing.dress-new img{animation:none}}
 /* v4 U47 1: the heckle stat prints one heckle ("한 번에 120") and the interval as a small second line. */
 #viewport #stage .stat-sub{font:400 var(--fs-s)/1.2 Galmuri11,monospace;color:var(--p-gold-hi,#E8D7A8);white-space:nowrap}
-#viewport #stage .stat-sub:empty{display:none}/* v4 U47 3: the 비법 notebook has no top button (it opens from the fail panel only); the goal strip is plain text and never takes a tap. */
-#viewport #stage #bookButton{display:none!important}
+#viewport #stage .stat-sub:empty{display:none}/* The goal strip is plain text and never takes a tap. */
 #viewport #stage #goalStrip{pointer-events:none;cursor:default}
 /* v4 U47 13: every 능력치 cell is the same size. Phone and tablet panel: one 3-column grid whose rows are all as tall as the tallest cell (ui.js measures the cells and sets grid-auto-rows in px),
    text starts at the top of every cell, long numbers and texts wrap inside the cell. Desktop list: one column, every row the same height (the heckle interval is a second
@@ -1721,12 +1724,14 @@ body:not(.phone) #stage #leaveConfirm button{min-height:64px}
 /* v4 U48 N1: no goal strip ("다음 비법 ...") on any layout. N2: no 퇴장 entry in the menu (leaving: 무대 지도 and the phone Back flow). */
 #viewport #stage #goalStrip,#viewport #goalStrip,#viewport #stage #retreatButton,#viewport #retreatButton{display:none!important}
 /* v4 U48 N3: 도감 in the top bar, next to 메뉴, with the 메뉴 button's look (phone, tablet; desktop keeps it in the top nav). */
-.phone #stage #phoneTop #bestiaryButton{position:relative;display:block;flex:none;width:72px;min-width:72px;height:40px;min-height:40px;font-size:12px;line-height:24px;white-space:nowrap;margin:0;padding:2px;border-width:8px;background:#302735;border-color:var(--line);color:var(--ink)}
-.tablet #stage #phoneTop #bestiaryButton{height:48px;min-height:48px;width:auto;min-width:88px;font-size:16px}
-@media(max-width:740px){.phone #stage #phoneTop #bestiaryButton{width:44px;min-width:44px;font-size:18px;padding:2px}}
+.phone #stage #phoneTop :is(#bookButton,#bestiaryButton){position:relative;display:block;flex:none;width:72px;min-width:72px;height:40px;min-height:40px;font-size:12px;line-height:24px;white-space:nowrap;margin:0;padding:2px;border-width:8px;background:#302735;border-color:var(--line);color:var(--ink)}
+.tablet #stage #phoneTop :is(#bookButton,#bestiaryButton){height:48px;min-height:48px;width:auto;min-width:88px;font-size:16px}
+@media(max-width:740px){.phone #stage #phoneTop :is(#bookButton,#bestiaryButton){width:44px;min-width:44px;font-size:18px;padding:2px}}
 /* v4 U48 N6: 나의 마술 shows the trick pictures only (no text over them). N5: a routine 비법's detail shows frame 2 of its strip. */
-#viewport #stage .routine-collection .routine-item{display:inline-block;line-height:0}
-#viewport #stage .routine-collection .routine-icon{width:48px;height:48px;image-rendering:pixelated}
+#viewport #stage .routine-collection .routine-item{line-height:normal}
+#viewport #stage .routine-collection .routine-icon{image-rendering:pixelated}
+#viewport #stage .routine-collection .routine-icon.routine-frame{display:block;width:100%;aspect-ratio:1;height:auto;box-sizing:border-box;background-repeat:no-repeat;background-size:200% 100%;background-position:100% 0;image-rendering:pixelated}
+#viewport #stage .routine-collection .routine-item.routine-locked .routine-icon{filter:brightness(0);opacity:.55}
 /* v4 U48 M2: no LV text over the cases; 1 to 4 small gold dots (drawn, not text) give the place inside the colour band. */
 #viewport #stage #board .cell .lv{font-size:0;color:transparent;text-shadow:none;left:50%;right:auto;transform:translateX(-50%);height:6px;min-height:0;top:3px;padding:0;background:radial-gradient(circle,#ffe9ac 0 2px,#120F1A 2px 3px,transparent 3px) 0 0/8px 6px repeat-x;pointer-events:none}
 #viewport #stage #board .cell .lv[data-pips="1"]{width:8px}#viewport #stage #board .cell .lv[data-pips="2"]{width:16px}#viewport #stage #board .cell .lv[data-pips="3"]{width:24px}#viewport #stage #board .cell .lv[data-pips="4"]{width:32px}
@@ -1968,7 +1973,7 @@ html body.phone #viewport#viewport #stage{--ST:46px;--TB:0px;--SB:52px}
 html body.tablet #viewport#viewport #stage{--ST:58px;--SB:46px}
 html body.tablet #viewport#viewport #stage #audienceCard{--K:min(180px, calc(var(--CW) * .32), calc(var(--CW) * .42 - 54px), calc(var(--CH) - var(--TB) - 142px - var(--SB)))}
 @media(max-width:740px){html body.phone:not(.tablet) #viewport#viewport #stage{--SB:52px}}
-/* the top row: venue name (plain), currencies, 도감, 메뉴 */
+/* the top row: venue name (plain), currencies, 비법, 도감, 메뉴 */
 html body.phone #viewport#viewport #stage #phoneTop{background:linear-gradient(#332b3f,#2a2333)!important;border-radius:0 0 8px 8px;box-shadow:inset 0 -2px 0 color-mix(in srgb,var(--venue-accent,#e9b44c) 45%,#000)!important;gap:8px!important;padding:0 6px!important}
 html body.phone #viewport#viewport #stage #phoneVenue{order:0!important;flex:1 1 auto!important;width:auto!important;min-width:0}
 html body.phone #viewport#viewport #stage #phoneTop .venue-heading{background:none!important;box-shadow:none!important;border:0!important;height:40px!important;padding:0 4px!important;margin:0!important;flex-direction:column;align-items:flex-start!important;justify-content:center!important;gap:0!important;width:auto!important}
@@ -1979,6 +1984,10 @@ html body.tablet #viewport#viewport #stage #phoneTop .venue-heading #stageNumber
 html body.tablet #viewport#viewport #stage #phoneTop .venue-heading #venueName{font-size:18px;line-height:24px}
 html body.phone #viewport#viewport #stage #phoneWallet{order:1!important;flex:none!important;width:auto!important}
 html body.phone #viewport#viewport #stage #phoneTop > button{order:2!important}
+/* Keep the notebook label readable and its badge inside the top-row cell. */
+html body.phone #viewport#viewport #stage #phoneTop #bookButton:after{right:0;top:0;width:auto;height:auto;min-width:14px;padding:1px 2px;border-radius:3px;font-size:8px;line-height:10px}
+html body.phone #viewport#viewport #stage #phoneTop #bookButton.is-new:after{content:'NEW';display:block}
+@media(max-width:740px){html body.phone #viewport#viewport #stage #phoneTop #bookButton{font-size:12px!important}}
 /* the board half under the row: board centred in it */
 html body.phone #viewport#viewport #stage #boardCard{top:var(--ST)!important;height:calc(var(--layout-height) - var(--ST) - 6px)!important}
 html body.phone #viewport#viewport #stage #boardCard #board{top:calc((var(--layout-height) - var(--ST) - 6px - var(--board-size)) / 2)!important;left:auto!important;right:0!important}
@@ -1997,6 +2006,8 @@ html body.tablet #viewport#viewport #stage #audienceCard #stageStats{height:38px
    (scrollHeight 53) and the 💎 glyph's 40 px line in 28 px; a smaller label step and the glyph line to the box */
 html body.tablet #viewport#viewport #stage #activeSkills > .active-skill:not(.gem-shop-quick) .skill-art{height:22px!important}
 html body.tablet #viewport#viewport #stage #activeSkills > .gem-shop-quick{height:52px!important;min-height:52px!important;line-height:34px!important}
+/* tablets: the 실크 상점 icon one step smaller, so icon and label fit the 36 px inner height */
+html body.tablet #viewport#viewport #stage #activeSkills > .gem-shop-quick .cur-icon{width:24px;height:24px}
 html body.tablet #viewport#viewport #stage #audienceCard #stageStats > *{height:34px!important;font-size:16px!important}
 /* the audience bubble: above the audience (right of the name tag), its tail at the audience's centre pointing down at the head */
 html body.phone #viewport#viewport #stage #audienceCard #audienceLine{top:4px!important;right:4px!important;left:auto!important;width:calc(var(--CW) * .42 - 6px)!important;max-width:none!important}
@@ -2027,7 +2038,8 @@ html body:not(.phone) #viewport#viewport #stage #audienceCard .xp-row{left:90px!
 html body:not(.phone) #viewport#viewport #stage #audienceCard #perSecond,html body:not(.phone) #viewport#viewport #stage #audienceCard #coinSecond{left:330px!important;width:390px!important}
 html body:not(.phone) #viewport#viewport #stage #audienceCard #perSecond{top:calc(var(--TB) + 200px)!important}
 html body:not(.phone) #viewport#viewport #stage #audienceCard #coinSecond{top:calc(var(--TB) + 218px)!important}
-html body:not(.phone) #viewport#viewport #stage #toasts{left:96px!important;width:640px!important;top:calc(64px + var(--TB) + 170px)!important}
+/* Desktop notices use the measured gap between the logo and the venue title. */
+html body:not(.phone) #viewport#viewport #stage #toasts{left:440px!important;width:320px!important;top:14px!important}
 html body:not(.phone) #viewport#viewport #stage #boardCard{left:784px!important;top:64px!important;width:792px!important;height:812px!important;border-radius:10px;background:var(--board-bg)!important;box-shadow:var(--board-frame,0 0 0 3px #2a2333)!important;overflow:visible!important}
 html body:not(.phone) #viewport#viewport #stage #boardCard #board{left:96px!important;top:96px!important;background:#120f1a66!important}
 html body:not(.phone) #viewport#viewport #stage #boardCard:after{display:none}
@@ -2058,6 +2070,8 @@ html body.phone #viewport#viewport #stage #audienceCard #audienceTail{top:calc(v
 html body.phone:not(.tablet) #viewport#viewport #stage #audienceCard #audienceTail{left:calc(var(--CW) * .75 - 7px)!important}
 /* DOM order is also reading order: act, confidence, output on row one, mental on row two. */
 html body.phone:not(.tablet) #viewport#viewport #stage #audienceCard #stageStats{display:grid!important;grid-template-columns:auto auto minmax(0,1fr);column-gap:4px!important;padding:0 4px!important}
+/* short landscape (under 320 px): the act pulse scales 액트 by about 5%, so a wider gap keeps it off 자신감 */
+html body.phone.phone-low:not(.tablet) #viewport#viewport #stage #audienceCard #stageStats{column-gap:6px!important}
 html body.phone:not(.tablet) #viewport#viewport #stage #audienceCard #stageStats > *{font-size:10px!important;min-width:0!important;overflow:visible!important;gap:2px!important}
 html body.phone:not(.tablet) #viewport#viewport #stage #audienceCard #stageStats > #mental{order:0;grid-column:1 / -1}
 html body.phone:not(.tablet) #viewport#viewport #stage #audienceCard #stageStats .bitmap{--pixel:2px}
@@ -2088,3 +2102,233 @@ html body.tablet #viewport#viewport #stage #audienceCard #winStamp,
 html body.phone.phone-narrow #viewport#viewport #stage #audienceCard #winStamp{top:calc(var(--bubble-top, 4px) + var(--line-h, 20px) + 18px);right:8px;transform-origin:100% 0;line-height:1.25;font-size:max(1px,min(44px,calc((var(--CW) - 84px) / 10),calc((var(--aud-fit-h, 120px) - 20px) / 2.5)))}
 /* The 678 px / 62 px inset class was short by 2 px with late-game bitmap digits. */
 html body.phone.phone-narrow #viewport#viewport #stage #audienceCard #combo:before{margin-right:0}
+
+/* Shared additions approved in arch/css-plan.md, section 3. */
+.cur-icon{display:inline-block;width:20px;height:20px;vertical-align:-4px;image-rendering:pixelated;object-fit:contain;flex:none;pointer-events:none}
+#gemShopQuick{display:grid;place-items:center;gap:0;line-height:1}
+#gemShopQuick .cur-icon{width:18px;height:18px}
+#gemShopQuick > span{font-size:11px;line-height:13px}
+
+:is(#storyDialog .story-copy p,#audienceLine,#easyTooltip,.toast,#tutorialCoach p,#offlineSummary,#leaveConfirm p,.headliner-dialogue,.curtain-bubble,.ending-scene p,.rebirth-scene li,.homecoming-recap,#panelBody :is(p,li,.easy-description,.tree-effect,.tree-note,.tree-reason,.entry-flavor,.dealer-rules,.dealer-note)){
+  font-family:"Apple SD Gothic Neo","Noto Sans KR","Noto Sans CJK KR","Malgun Gothic",system-ui,sans-serif;
+}
+
+#stage #panel[data-screen="dealer"] .dealer-host{display:flex;align-items:center;justify-content:flex-start;gap:16px;font-size:16px;line-height:22px;text-align:left}
+#stage #panel[data-screen="dealer"] .dealer-host .dealer-emoji{width:128px;height:156px;flex:none;font-size:72px}
+
+#stage #panel[data-screen="dealer"] .dealer-serona{width:100%;height:100%;object-fit:contain;image-rendering:pixelated;display:block}
+
+#stage #panel[data-screen="dealer"] .dealer-speech{flex:1;margin:0;padding:12px 14px;background:#25202D;color:#F2E6C8;border:2px solid #A68A58;border-radius:16px}
+#stage #panel[data-screen="dealer"] .dealer-pick{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:stretch;gap:12px;width:100%;margin:8px 0}
+#stage #panel[data-screen="dealer"] .dealer-game-card{display:flex;flex-direction:column;align-items:center;gap:6px;box-sizing:border-box;width:100%;height:100%;min-width:0;padding:12px;text-align:center;background:#25202D;border:2px solid #A68A58}
+#stage #panel[data-screen="dealer"] .dealer-game-art{position:relative;flex:none;width:84px;height:84px;display:grid;place-items:center}
+#stage #panel[data-screen="dealer"] .dealer-game-emoji{font-size:40px;line-height:1}
+#stage #panel[data-screen="dealer"] .dealer-game-img{position:absolute;inset:0;width:84px;height:84px;object-fit:contain;image-rendering:pixelated}
+#stage #panel[data-screen="dealer"] .dealer-game-card h2{box-sizing:border-box;width:100%;height:26px;margin:0;overflow:hidden;font-size:20px;line-height:26px}
+#stage #panel[data-screen="dealer"] .dealer-cost{box-sizing:border-box;width:100%;height:22px;margin:0;overflow:hidden;color:#E8BF68;font-size:16px;line-height:22px}
+#stage #panel[data-screen="dealer"] .dealer-reward{box-sizing:border-box;width:100%;height:54px;margin:0;overflow:hidden;color:#F2E6C8;font-size:13px;line-height:18px}
+#stage #panel[data-screen="dealer"] .dealer-need{box-sizing:border-box;width:100%;height:18px;margin:0;overflow:hidden;font-size:12px;line-height:18px}
+#stage #panel[data-screen="dealer"] .dealer-game-card .game-start{width:100%;min-height:48px;margin-top:auto}
+#stage #panel[data-screen="dealer"] .dealer-leave{display:block;margin:8px auto 0;min-height:44px}
+
+#heckleBang{position:absolute;z-index:9;display:none;width:22px;height:22px;margin:-22px 0 0 -11px;place-items:center;font:700 16px/1 Galmuri11,monospace;color:#ffe08a;background:#3a1820;border:2px solid #ffb15a;pointer-events:none}
+#audienceCard.telegraph #heckleBang{display:grid}
+
+#mentalEdge{position:absolute;inset:0;z-index:7;pointer-events:none;box-shadow:inset 0 0 22px 3px rgba(255,72,82,.55);opacity:0;display:none}
+#audienceCard.mental-low #mentalEdge{display:block;animation:mental-edge 800ms ease-out infinite}
+@keyframes mental-edge{0%{opacity:0}25%{opacity:1}100%{opacity:0}}
+.meter-bar{display:none}
+
+.meter-fill,.meter-ghost{position:absolute;left:0;top:0;bottom:0;width:var(--meter,0%)}
+#mental .meter-fill{background:#DC7970}
+#shield .meter-fill{background:#8FD3FF}
+.meter-ghost{width:var(--ghost,0%);opacity:0}
+#mental .meter-ghost{background:#f6d2cc}
+#shield .meter-ghost{background:#fff}
+#mental.meter-hit .meter-ghost{animation:meter-ghost-m 450ms linear forwards}
+#shield.meter-hit .meter-ghost{animation:meter-ghost-s 400ms linear forwards}
+@keyframes meter-ghost-m{0%{opacity:.95}100%{opacity:0}}
+@keyframes meter-ghost-s{0%{opacity:1}100%{opacity:0}}
+@keyframes bar-shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+#stage #mental.bar-shake{animation:bar-shake 120ms linear}
+@keyframes kali-flinch{0%{transform:translateX(0)}40%{transform:translateX(-6px)}100%{transform:translateX(0)}}
+#stage #magicianMini.flinch{animation:kali-flinch 180ms linear}
+.bar-chip{position:absolute;z-index:12;pointer-events:none;font:700 13px/16px Galmuri11,monospace;white-space:nowrap}
+.bar-chip.block{color:#083038;background:#8FD3FF;padding:0 4px;transform:translateY(-110%)}
+.bar-chip.hurt{color:#ff6d78;font-size:16px;text-shadow:1px 1px 0 #100D16,-1px 0 #100D16,0 -1px #100D16;transform:translate(2px,-50%)}
+#finaleFx{position:absolute;inset:0;z-index:10;pointer-events:none;overflow:hidden}
+#finaleFx .finale-dark{position:absolute;inset:0;background:#100D16;opacity:0}
+#finaleFx .finale-spot{position:absolute;left:4%;bottom:0;width:46%;height:92%;opacity:0;transform:scaleY(0);transform-origin:50% 0;background:linear-gradient(to bottom,rgba(255,214,150,0),rgba(255,186,80,.62));clip-path:polygon(42% 0,58% 0,100% 100%,0 100%)}
+#finaleFx .finale-cut{position:absolute;left:0;right:0;top:36%;height:30%;display:flex;align-items:center;gap:8px;padding-left:8px;overflow:hidden;background:linear-gradient(90deg,rgba(24,16,10,0),rgba(28,18,12,.94) 10%,rgba(48,32,18,.96) 50%,rgba(28,18,12,.94) 90%,rgba(24,16,10,0));border-top:3px solid #E8BF68;border-bottom:3px solid #E8BF68;transform:translateX(-110%)}
+#finaleFx .finale-kali{flex:none;width:84px;height:84px;background:url('assets/kali-performance.webp') 0 0/300% 100% no-repeat;image-rendering:pixelated;transform:translateX(-140%)}
+#finaleFx .finale-word{font:700 36px/1 Galmuri11,monospace;color:#F6E7C4;text-shadow:3px 3px 0 #1a1008;white-space:nowrap}
+#finaleFx .finale-flash{position:absolute;inset:0;background:#fff;opacity:0;animation:none}
+#finaleFx .finale-num{position:absolute;z-index:2;transform:translate(-50%,-50%);font:700 36px/1 Galmuri11,monospace;color:#E8BF68;text-shadow:2px 2px 0 #100D16,-2px 0 #100D16,0 -2px #100D16;opacity:0;pointer-events:none}
+#finaleFx .finale-num.on{animation:finale-num 700ms ease-out}
+#finaleFx.finale-short .finale-num{font-size:28px}
+#finaleFx.finale-short .finale-num.on{animation:finale-num 400ms ease-out}
+@keyframes finale-num{0%{opacity:0;transform:translate(-50%,-30%)}18%{opacity:1;transform:translate(-50%,-50%)}72%{opacity:1}100%{opacity:0;transform:translate(-50%,-68%)}}
+#finaleFx .finale-cut{visibility:hidden}
+#finaleFx.finale-full .finale-dark{animation:finale-dark 1200ms linear}
+#finaleFx.finale-full .finale-spot{animation:finale-spot 1200ms linear}
+#finaleFx.finale-full .finale-cut{visibility:visible;animation:finale-cut 1200ms linear forwards}
+#finaleFx.finale-full .finale-kali{animation:finale-kali 1200ms linear}
+@keyframes finale-dark{0%{opacity:0}12.5%{opacity:.45}78%{opacity:.45}100%{opacity:0}}
+@keyframes finale-spot{0%,12.5%{opacity:0;transform:scaleY(0)}37.5%{opacity:1;transform:scaleY(1)}82%{opacity:1;transform:scaleY(1)}100%{opacity:0;transform:scaleY(1)}}
+@keyframes finale-cut{0%,33%{transform:translateX(-110%)}48%{transform:translateX(0)}75%{transform:translateX(0)}88%{transform:translateX(110%)}100%{transform:translateX(110%)}}
+@keyframes finale-kali{0%,33%{transform:translateX(-160%)}58%{transform:translateX(0)}75%{transform:translateX(0)}100%{transform:translateX(30%)}}
+#finaleFx.finale-short .finale-dark,#finaleFx.finale-short .finale-spot,#finaleFx.finale-short .finale-cut,#finaleFx.finale-short .finale-flash{animation:none;opacity:0;visibility:hidden}
+#stage #magicianMini.finale-glint{animation:finale-glint 400ms linear}
+@keyframes finale-glint{0%,100%{filter:none}35%{filter:drop-shadow(0 0 8px #E8BF68) brightness(1.2)}}
+#finaleFx.finale-reduced .finale-spot,#finaleFx.finale-reduced .finale-cut,#finaleFx.finale-reduced .finale-flash{display:none}
+#finaleFx.finale-reduced .finale-dark{animation:finale-dark-r 400ms linear}
+@keyframes finale-dark-r{0%{opacity:0}20%{opacity:.45}65%{opacity:.45}100%{opacity:0}}
+
+@media(prefers-reduced-motion:reduce){
+  #audienceCard.mental-low #mentalEdge{animation:none;opacity:.7}
+  #mental.meter-hit .meter-ghost,#shield.meter-hit .meter-ghost,#stage #mental.bar-shake,#stage #magicianMini.flinch{animation:none}
+  #finaleFx .finale-num.on{animation:none;opacity:1}
+  #stage #magicianMini.finale-glint{animation:none}
+}
+
+#stage .equip-collected-item{min-width:0;flex:1 1 180px}
+#stage .equip-collected-item button{max-width:100%}
+#stage .equip-effect{display:block;margin-top:4px;font-size:11px;line-height:1.5;overflow-wrap:anywhere}
+#stage .audience-benefit{font-size:11px;line-height:1.5;overflow-wrap:anywhere}
+
+#stage .constellation-node.tutorial-target,#stage .tree-buy.tutorial-target{outline:2px solid #ffe14a;outline-offset:2px}
+
+#viewport #stage #board .cell.empty[data-respawn="case"] .chest{display:block;visibility:visible}
+#viewport #stage #board .cell[data-respawn="wood"] .chest,
+#viewport #stage #board .cell[data-respawn="paper"] .chest{visibility:hidden}
+#viewport #stage #board .respawn-stage{
+  position:absolute;z-index:4;pointer-events:none;background:none;border:0;box-shadow:none;
+}
+#viewport #stage #board .respawn-stage>.asset-sprite{
+  object-fit:contain;image-rendering:pixelated;background:transparent;
+}
+/* Placeholder only after the webp fails. A loaded image is the sprite alone, same box as .chest. */
+#viewport #stage #board .respawn-stage.asset-failed.respawn-wood{
+  background-color:#6b3a1e;
+  background-image:repeating-linear-gradient(180deg,transparent 0 7px,#3d2412 7px 9px);
+  background-size:auto;
+  background-position:center;
+  background-repeat:repeat;
+}
+#viewport #stage #board .respawn-stage.asset-failed.respawn-paper{
+  background-color:#f4ead4;
+  background-image:linear-gradient(#c8b89a,#c8b89a),linear-gradient(#c8b89a,#c8b89a);
+  background-size:70% 1px,1px 70%;
+  background-position:center,center;
+  background-repeat:no-repeat;
+}
+#viewport #stage #board .respawn-stage.asset-failed>.asset-sprite{display:none}
+#viewport #stage #board .respawn-puff{
+  position:absolute;left:18%;top:18%;width:64%;height:64%;border-radius:50%;z-index:6;pointer-events:none;opacity:0;
+  background:radial-gradient(circle,rgba(236,236,228,.9),rgba(170,170,160,.25) 62%,transparent 72%);
+}
+#viewport #stage #board .respawn-puff.on{animation:respawn-puff 180ms ease-out}
+@keyframes respawn-puff{0%{opacity:.95;transform:scale(.35)}100%{opacity:0;transform:scale(1.2)}}
+#viewport #stage #board .cell.empty:not(.locked) .spawn-timer{
+  display:block;left:0;right:0;top:auto;bottom:0;width:auto;height:auto;border:0;border-radius:0;
+  font-size:8px;line-height:9px;text-align:center;color:#F2E6C8;background:transparent;z-index:6;pointer-events:none;
+}
+
+#practicePrompt{position:absolute;inset:0;z-index:64;display:flex;align-items:center;justify-content:center;background:#00000088}
+#practicePrompt .practice-box{box-sizing:border-box;width:min(320px,88%);padding:14px;background:#25202D;border:2px solid #A68A58;color:#F2E6C8}
+#practicePrompt p{margin:0 0 12px;white-space:pre-line;font-size:15px;line-height:1.45}
+#practicePrompt .practice-actions{display:flex;gap:8px}
+#practicePrompt .practice-actions button{flex:1;min-height:44px}
+#practiceVeil{position:absolute;inset:0;z-index:58;background:rgba(0,0,0,.65);display:flex;align-items:flex-start;justify-content:center;padding-top:18px}
+#practiceVeil span{padding:4px 10px;background:#25202D;color:#F2E6C8;border:1px solid #A68A58;font-size:14px;line-height:20px;pointer-events:none}
+@media(prefers-reduced-motion:reduce){#viewport #stage #board .respawn-puff.on{animation:none;opacity:.35}}
+
+.progress-flow{padding:2px 0 16px}
+.flow-lead{margin:0 0 8px;color:var(--ink-2)}
+.flow-spine,.flow-branch-spine{list-style:none;margin:0;padding:0}
+.flow-stop{position:relative;min-height:48px;padding:0 0 2px 26px}
+.flow-spine>.flow-stop:before{content:'';position:absolute;left:8px;top:0;bottom:0;width:2px;background:#655567}
+.flow-spine>.flow-stop:first-child:before{top:18px}
+.flow-mark{position:absolute;left:2px;top:16px;width:14px;height:14px;box-sizing:border-box;border:2px solid #655567;border-radius:50%;background:#17141F;z-index:1}
+.flow-stop.is-cleared .flow-mark{background:var(--gold);border-color:var(--gold)}
+.flow-stop.is-current .flow-mark{background:var(--brass);border-color:#F2E6C8;animation:flow-pulse 1.4s ease-out infinite}
+.flow-stop.is-future .flow-mark,.flow-stop.is-hidden .flow-mark{background:transparent;opacity:.7}
+.flow-node{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:4px;width:100%;min-height:44px;margin:2px 0 4px;padding:6px 8px;box-sizing:border-box;border:1px solid #39313F;background:#25202D;color:var(--ink);text-align:left}
+.flow-stop.is-cleared .flow-node{border-color:var(--gold)}
+.flow-stop.is-current .flow-node{border-color:var(--brass)}
+.flow-stop.is-future .flow-node,.flow-stop.is-hidden .flow-node{opacity:.5}
+#stage button.flow-node,#stage button.flow-node:disabled{
+  border-image:none;border-style:solid;border-width:1px;border-radius:0;box-shadow:none;
+  font:700 13px/16px Galmuri11,sans-serif;white-space:normal;min-height:44px;
+}
+#stage button.flow-node{border-color:var(--gold);background:#25202D;color:var(--ink)}
+#stage button.flow-node:disabled{border-color:var(--gold);opacity:.55}
+.flow-name{font:700 13px/16px Galmuri11,sans-serif;white-space:normal}
+.flow-stop.is-cleared .flow-name{color:var(--gold)}
+.flow-stop.is-current .flow-name{color:#F2E6C8}
+.flow-stop.is-future .flow-name,.flow-stop.is-hidden .flow-name{color:var(--ink-2)}
+.flow-dots{display:flex;flex-wrap:wrap;gap:4px;max-width:100%}
+.flow-dot{display:block;width:8px;height:8px;box-sizing:border-box;border:1.5px solid #655567;border-radius:50%;background:transparent}
+.flow-dot.is-filled{background:var(--gold);border-color:var(--gold)}
+.flow-stop.is-current .flow-dot.is-filled{background:var(--brass);border-color:var(--brass)}
+.flow-dot.is-ring{background:transparent;border:2px solid var(--brass);box-shadow:0 0 0 1px var(--brass)}
+.flow-fork{position:relative;margin:0}
+.flow-fork-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;position:relative}
+.flow-fork-grid:before{content:'';position:absolute;left:8px;top:0;width:calc(50% + 4px);height:2px;background:#655567}
+.flow-branch{position:relative;min-width:0}
+.flow-branch:before{content:'';position:absolute;left:8px;top:0;bottom:16px;width:2px;background:#655567}
+.flow-choice{margin:8px 0 4px 26px;color:var(--ink-2);font-size:11px;line-height:14px}
+.flow-branch-if .flow-choice{color:#d7c4ff}
+@keyframes flow-pulse{0%{box-shadow:0 0 0 0 rgba(166,138,88,.9)}70%{box-shadow:0 0 0 7px rgba(166,138,88,0)}100%{box-shadow:0 0 0 0 rgba(166,138,88,0)}}
+@media(prefers-reduced-motion:reduce){.flow-stop.is-current .flow-mark{animation:none;box-shadow:0 0 0 3px var(--brass)}}
+
+#viewport #stage #storyDialog{z-index:45;pointer-events:auto}
+#viewport #stage #storyDialog .story-portrait.asset-failed>.sprite-glyph{display:block;visibility:visible;font-size:28px;line-height:44px;text-align:center}
+#viewport #stage #storyDialog .story-portrait.asset-failed>.asset-sprite{display:none}
+
+/* Static motion-contract reference: @keyframes portrait-kali-pop { filter: brightness(1.55); } (portrait.css) */
+/* Respawn art uses the same shared footprint as the backup chest. */
+#viewport #stage #board .respawn-stage {
+  inset: auto;
+  left: 14%;
+  top: 14%;
+  width: 72%;
+  height: 72%;
+}
+
+/* Batch A: shared shop accessibility and screen care. */
+#stage #panel .gem-shop-item { min-width:0; max-width:100%; box-sizing:border-box; }
+#stage #panel .gem-shop-item button { white-space:normal; overflow-wrap:anywhere; max-width:100%; flex:1 1 120px; }
+#practiceVeil { background:rgba(0,0,0,.94); align-items:center; padding:0; }
+#practiceVeil span { text-align:center; color:#918b80; background:transparent; border:0; will-change:transform; }
+#stage .magic-invitation { display:inline-block; padding:12px; margin:6px; color:#ffe3a0; border:1px solid currentColor; }
+html body.tablet #viewport#viewport #stage #audienceCard #stageStats > #mental #mentalNumber { white-space:normal !important; overflow:visible; max-height:none; height:auto; overflow-wrap:anywhere; font-size:11px; line-height:16px; }
+
+/* Keep the finale track visible on phones in either orientation. */
+html body.phone #viewport #stage #audienceCard .finisher { display:block; }
+
+/* Isolated gate A: landscape dialogue can grow without moving any other stage geometry. */
+html body.tablet:not(.portrait-layout) #viewport#viewport #stage #storyDialog{height:auto;max-height:calc(var(--CH) - 16px);overflow-y:auto}
+/* Keep the two-line fallback inside the existing 22px plate, including spaces in long names. */
+html body:not(.portrait-layout) #viewport #stage #audienceCard .doubt-plate.plate-2l #doubtTitle{word-break:break-all;overflow-wrap:anywhere;line-height:9px}
+
+/* Batch B: arrangement feedback is shared by both orientations. */
+#stage #board.arranging .cell { cursor:move; }
+#stage #board.arranging .cell.arrange-selected { outline:3px solid #ffe08a; outline-offset:-3px; }
+#caseArrangeButton[aria-pressed="true"], #caseArrangeMenuButton[aria-pressed="true"] { box-shadow:inset 0 0 0 3px #ffe08a; }
+
+/* Batch D shared encounters and replay, identical in both orientations. */
+.batch-d-scene { display: flex; flex-direction: column; align-items: center; gap: 16px; width: 100%; padding: 18px; box-sizing: border-box; text-align: center; }
+.batch-d-scene p { max-width: 42em; line-height: 1.65; margin: 0; overflow-wrap: anywhere; }
+.batch-d-scene button { max-width: 100%; white-space: normal; }
+.batch-d-note { width: 100%; padding: 12px; box-sizing: border-box; color: #ffe9a8; }
+.batch-d-cards { position: relative; width: min(100%, 390px); height: 160px; overflow: hidden; }
+.batch-d-card { position: absolute; top: 25px; left: calc(var(--mixed) * 15%); width: 17%; border-radius: 8px; border: 3px solid; background: #fff8e7; box-sizing: border-box; animation: batch-d-separate 1.4s ease-in-out 3 forwards; }
+.batch-d-card img { display: block; width: 100%; height: 88px; object-fit: contain; }
+.batch-d-card span { position: absolute; top: 3px; left: 4px; font-size: 22px; font-weight: bold; }
+.batch-d-card.is-red { color: #b82031; border-color: #b82031; }
+.batch-d-card.is-black { color: #17202c; border-color: #17202c; }
+.batch-d-lock::after, .batch-d-hide::after { content: attr(data-interference); position: absolute; inset: 12% 3%; display: flex; align-items: center; justify-content: center; border-radius: 8px; background: #221b34e8; color: #fff4c4; font: bold 13px sans-serif; text-align: center; z-index: 4; pointer-events: none; }
+.batch-d-hide .chest { visibility: hidden; }
+@keyframes batch-d-separate { 0%, 15% { left: calc(var(--mixed) * 15%); transform: translateY(0); } 45% { transform: translateY(-12px); } 70%, 100% { left: calc(var(--sorted) * 15%); transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) { .batch-d-card { animation: none; left: calc(var(--sorted) * 15%); } }

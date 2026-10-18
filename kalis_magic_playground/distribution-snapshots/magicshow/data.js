@@ -15,7 +15,7 @@
  * headliner.pattern: none | slow | sealBox | stealCoins | heal | invisible | twoPhase | friendlyReview | homecoming.
  *   none: no pattern (venues 1..3). slow: time slow. sealBox: seal one box.
  *   stealCoins: steal coins. heal: restore doubt. invisible: missable beats.
- *   twoPhase: two phases. Only multiverse, name "가장 의심 많은 나".
+ *   twoPhase: two phases. Only multiverse, name "의심 많은 나".
  *   phase2Line is the second-phase entrance, only on twoPhase.
  * invitation is attached to its venue slug; no numeric progression gates.
  * items.types[]: {id, name, emoji, effect: damage|shield|heal|coins}.
@@ -47,25 +47,25 @@
       crowdAsset: "crowd-01.png",
       slug: "family",
       crowd: 3,
-      crowdEmoji: "👨👩🧒",
+      crowdEmoji: "👩👧👦",
       name: "가족 거실",
-      intro: "가족들이 리모컨을 내려놓았다!",
+      intro: "가족이 소파에 앉았다!",
       palette: { bg1: "#3e2b24", bg2: "#9f7954", accent: "#ffe65c" },
-      successLine: "거실이 박수로 들썩인다!",
+      successLine: "거실에서 첫 박수가 난다!",
       trophy: "거실 스타",
       headliner: {
         id: "h1",
-        name: "까다로운 할머니",
+        name: "할머니",
         emoji: "👵",
-        flavor: "안경 너머로 손을 쫓는다.",
+        flavor: "안경을 올리고 손끝을 본다.",
         pattern: "none",
-        preLine: "그거, 손 안 바꾼 거지?",
-        defeatLine: "손 안 바꿨네. 박수다."
+        preLine: "손 바꿨으면 내가 안다.",
+        defeatLine: "안 바꿨네. 박수다."
       },
       audiences: [
-        { id: "a1", name: "아빠", emoji: "👨", flavor: "채널권은 아직 내 손이다.", extra: { type: "none", value: 0 } },
-        { id: "a2", name: "동생", emoji: "🧒", flavor: "팝콘보다 마술이 궁금하다.", extra: { type: "none", value: 0 } },
-        { id: "a3", name: "엄마", emoji: "👩", flavor: "설거지는 잠깐 멈춘다.", extra: { type: "none", value: 0 } }
+        { id: "a1", name: "여동생", emoji: "👧", portraitAsset: "aud-f-sister.png", flavor: "거실에서 마술을 본 동생.", extra: { type: "none", value: 0 } },
+        { id: "a2", name: "남동생", emoji: "👦", portraitAsset: "aud-f-brother.png", flavor: "앞자리를 맡는 남동생.", extra: { type: "none", value: 0 } },
+        { id: "a3", name: "엄마", emoji: "👩", portraitAsset: "aud-f-mom.png", flavor: "둘을 앉히고 박수 치는 엄마.", extra: { type: "none", value: 0 } }
       ]
     },
     {
@@ -78,23 +78,23 @@
       crowd: 6,
       crowdEmoji: "🎈🎧🎂🕺",
       name: "친구 파티",
-      intro: "친구들이 폰을 잠시 내려놨다!",
+      intro: "생일 파티에 불려 왔다!",
       palette: { bg1: "#3a1840", bg2: "#7a2d6b", accent: "#ff7ad9" },
       successLine: "파티 분위기가 터진다!",
       trophy: "파티의 주인공",
       headliner: {
         id: "h2",
-        name: "파티 주최자",
+        name: "생일 하준이",
         emoji: "🥳",
-        flavor: "왕관을 쓰고 팔짱을 낀다.",
+        flavor: "한 번 더를 청한 친구.",
         pattern: "none",
-        preLine: "오늘 주인공은 나였는데.",
-        defeatLine: "됐어, 마이크는 네 거야."
+        preLine: "카드는 아무거나 고를게.",
+        defeatLine: "내가 고른 그 이름이잖아."
       },
       audiences: [
-        { id: "a4", name: "풍선 친구", emoji: "🎈", flavor: "풍선이 박수보다 먼저 터진다.", extra: { type: "finisher", value: 1 } },
-        { id: "a5", name: "음악 친구", emoji: "🎧", flavor: "다음 곡 고르기를 멈춘다.", extra: { type: "noDamage", value: 0 } },
-        { id: "a6", name: "케이크 친구", emoji: "🎂", flavor: "초가 꺼지기 전에 본다.", extra: { type: "timeLimit", value: 40 } }
+        { id: "a4", name: "풍선 담당 지호", emoji: "🎈", flavor: "풍선 장식을 맡은 친구.", extra: { type: "finisher", value: 1 } },
+        { id: "a5", name: "운동 친구 서윤", emoji: "🎧", flavor: "운동하며 만나 파티에 부른 친구.", extra: { type: "noDamage", value: 0 } },
+        { id: "a6", name: "케이크 민재", emoji: "🎂", flavor: "초를 끄기 전에 손을 본다.", extra: { type: "timeLimit", value: 40 } }
       ]
     },
     {
@@ -106,25 +106,25 @@
       slug: "school",
       crowd: 12,
       crowdEmoji: "✏️📣🧑‍🎓🎒",
-      name: "학교 장기자랑",
-      intro: "쉬는 시간 종이 울렸다!",
+      name: "학교 축제",
+      intro: "교실 소문이 축제에 닿았다!",
       palette: { bg1: "#1c3a28", bg2: "#2f6b45", accent: "#ffe14a" },
-      successLine: "급식 줄에서도 박수!",
-      trophy: "장기자랑 우승",
+      successLine: "운동장에서 박수가 난다!",
+      trophy: "축제 무대의 박수",
       headliner: {
         id: "h3",
-        name: "심사 담임",
+        name: "박 선생님",
         emoji: "👩‍🏫",
-        flavor: "호루라기를 손에 쥐고 있다.",
+        flavor: "교실 소문을 듣고 무대를 연다.",
         pattern: "none",
-        preLine: "시간 되면 바로 끊을게.",
-        defeatLine: "자, 이건 만점이다."
+        preLine: "교실에서 보던 그거지?",
+        defeatLine: "축제에 세우길 잘했다."
       },
       audiences: [
-        { id: "a7", name: "앞자리 짝꿍", emoji: "✏️", flavor: "연필로 박자까지 친다.", extra: { type: "combo", value: 8 } },
-        { id: "a8", name: "응원봉 반장", emoji: "📣", flavor: "응원봉은 피날레에 켠다.", extra: { type: "finisher", value: 1 } },
-        { id: "a9", name: "깐깐한 선배의 채점", emoji: "🧑‍🎓", flavor: "점수는 연필 끝에 있다.", extra: { type: "noDamage", value: 0 } },
-        { id: "a46", name: "체육부 선배", emoji: "🏀", flavor: "쉬는 시간도 잊고 바라본다.", extra: { type: "timeLimit", value: 65 } }
+        { id: "a7", name: "짝꿍 수빈", emoji: "✏️", flavor: "교실에서 먼저 본 짝꿍.", extra: { type: "combo", value: 8 } },
+        { id: "a8", name: "반장 도윤", emoji: "📣", flavor: "축제 끝에 응원봉을 켠다.", extra: { type: "finisher", value: 1 } },
+        { id: "a9", name: "깐깐 선배 정아", emoji: "🧑‍🎓", flavor: "축제 순서를 메모하는 선배.", extra: { type: "noDamage", value: 0 } },
+        { id: "a46", name: "체육부 승민", emoji: "🏀", flavor: "운동장 앞줄을 맡는 선배.", extra: { type: "timeLimit", value: 65 } }
       ]
     },
     {
@@ -137,24 +137,24 @@
       crowd: 20,
       crowdEmoji: "☕💻🍰🪟",
       name: "동네 카페",
-      intro: "커피 향 사이로 시선이 모인다!",
+      intro: "모르는 손님 앞에 선다!",
       palette: { bg1: "#2a1a12", bg2: "#5c3a28", accent: "#e8a06a" },
-      successLine: "컵 소리가 딱 멎었다!",
+      successLine: "손님이 정말 신기해한다!",
       trophy: "카페 단골 스타",
       headliner: {
         id: "h4",
-        name: "라떼 바리스타",
+        name: "카페 단골 현우",
         emoji: "☕",
-        flavor: "스팀으로 박자를 늦춘다.",
+        flavor: "TV와 다르다고 말한 손님.",
         pattern: "slow",
-        preLine: "샷은 내가 느리게 내릴게.",
-        defeatLine: "이 라떼, 공짜로 간다."
+        preLine: "TV로 봤을 때는 다 짜고 치는 줄 알았는데 실제로 보니까 너무 신기하네요",
+        defeatLine: "TV로 봤을 때는 다 짜고 치는 줄 알았는데 실제로 보니까 너무 신기하네요"
       },
       audiences: [
-        { id: "a10", name: "노트북 손님", emoji: "💻", flavor: "배터리가 의심보다 적다.", extra: { type: "timeLimit", value: 50 } },
-        { id: "a11", name: "디저트 손님", emoji: "🍰", flavor: "포크를 든 채 기다린다.", extra: { type: "combo", value: 10 } },
-        { id: "a12", name: "창가 손님", emoji: "🪟", flavor: "김 서린 창에 하트를 그린다.", extra: { type: "finisher", value: 1 } },
-        { id: "a50", name: "바리스타 친구", emoji: "👨‍🍳", flavor: "커피 향 사이로 감탄이 샌다.", extra: { type: "combo", value: 14 } }
+        { id: "a10", name: "노트북 지안", emoji: "💻", flavor: "노트북을 덮고 보는 손님.", extra: { type: "timeLimit", value: 50 } },
+        { id: "a11", name: "디저트 은서", emoji: "🍰", flavor: "디저트를 두고 보는 손님.", extra: { type: "combo", value: 10 } },
+        { id: "a12", name: "창가 지민", emoji: "🪟", flavor: "창가에서 손을 보는 손님.", extra: { type: "finisher", value: 1 } },
+        { id: "a50", name: "바리스타 소영", emoji: "👨‍🍳", flavor: "커피를 내리는 바리스타.", extra: { type: "combo", value: 14 } }
       ]
     },
     {
@@ -167,25 +167,25 @@
       crowd: 30,
       crowdEmoji: "👏📖🤫🎟️",
       name: "소극장",
-      intro: "막이 오르고 조명이 켜진다!",
+      intro: "소극장에 막이 오른다!",
       palette: { bg1: "#2a0c14", bg2: "#6b1d32", accent: "#ffd36a" },
-      successLine: "커튼콜이 안 끝난다!",
+      successLine: "다시 일어나 박수를 받는다!",
       trophy: "소극장 헤드라이너",
       headliner: {
         id: "h5",
-        name: "까칠한 평론가",
+        name: "강 마술사님",
         emoji: "🎭",
-        flavor: "만년필로 별점을 준비한다.",
+        flavor: "객석에서 손을 든 강 마술사님.",
         pattern: "sealBox",
-        preLine: "그 케이스, 내가 잠시 잠근다.",
-        defeatLine: "잠금은 풀렸다. 박수."
+        preLine: "저요, 저요, 저요.",
+        defeatLine: "좋아. 나는 객석에 있을게."
       },
       audiences: [
-        { id: "a13", name: "열성팬", emoji: "👏", flavor: "손바닥이 이미 빨갛다.", extra: { type: "noDamage", value: 0 } },
-        { id: "a14", name: "일반 관객", emoji: "📖", flavor: "막간에 페이지를 넘긴다.", extra: { type: "timeLimit", value: 60 } },
-        { id: "a15", name: "헤클러", emoji: "🤫", flavor: "귓속말이 박자보다 빠르다.", extra: { type: "combo", value: 12 } },
-        { id: "a54", name: "대본 작가", emoji: "✍️", flavor: "대사 대신 우와를 삼킨다.", extra: { type: "finisher", value: 1 } },
-        { id: "a55", name: "커튼콜 팬", emoji: "👏", flavor: "대사 대신 우와를 삼킨다.", extra: { type: "noDamage", value: 0 } }
+        { id: "a13", name: "열성팬 보람", emoji: "👏", flavor: "앞줄에서 박수를 준비한다.", extra: { type: "noDamage", value: 0 } },
+        { id: "a14", name: "앞줄 영숙 씨", emoji: "📖", flavor: "칼리가 부담 끝에 고른 관객.", extra: { type: "timeLimit", value: 60 } },
+        { id: "a15", name: "지하철 하린", emoji: "🤫", flavor: "카드를 걷어 맞혀 보라 한 관객.", extra: { type: "combo", value: 12 } },
+        { id: "a54", name: "대본 작가 서연", emoji: "✍️", flavor: "좋은 장면을 받아 적는 관객.", extra: { type: "finisher", value: 1 } },
+        { id: "a55", name: "커튼콜 팬 유나", emoji: "👏", flavor: "커튼콜을 기다리는 관객.", extra: { type: "noDamage", value: 0 } }
       ]
     },
     {
@@ -198,25 +198,25 @@
       crowd: 40,
       crowdEmoji: "🚩🍗🎤🎉",
       name: "대학 축제",
-      intro: "축제 무대 앞이 꽉 찼다!",
+      intro: "멀리서 보다 달려왔어요!",
       palette: { bg1: "#1a1040", bg2: "#3d2a8a", accent: "#7dffb3" },
-      successLine: "앵콜이 축제장을 채운다!",
+      successLine: "축제가 더 밝아졌어요!",
       trophy: "축제의 전설",
       headliner: {
         id: "h6",
-        name: "축제 사회자",
+        name: "달려온 승우",
         emoji: "🎙️",
-        flavor: "마이크를 동전처럼 돌린다.",
+        flavor: "멀리서 보고 뛰어온 관객.",
         pattern: "stealCoins",
-        preLine: "동전은 내가 잠깐 빌릴게.",
-        defeatLine: "빌린 동전, 이자로 박수!"
+        preLine: "저희도 마술 보여주세요",
+        defeatLine: "축제가 더 밝아졌어요!"
       },
       audiences: [
-        { id: "a16", name: "깃발 응원단", emoji: "🚩", flavor: "깃발은 피날레에 흔든다.", extra: { type: "finisher", value: 1 } },
-        { id: "a17", name: "술친구", emoji: "🍗", flavor: "양념 묻은 손으로 박수!", extra: { type: "combo", value: 12 } },
-        { id: "a18", name: "후배", emoji: "🎤", flavor: "우와, 아껴 뒀다.", extra: { type: "noDamage", value: 0 } },
-        { id: "a59", name: "밴드 관객", emoji: "🎸", flavor: "앵콜 전에 손부터 흔든다.", extra: { type: "noDamage", value: 0 } },
-        { id: "a60", name: "야광봉 팬", emoji: "✨", flavor: "앵콜 전에 손부터 흔든다.", extra: { type: "timeLimit", value: 80 } }
+        { id: "a16", name: "칼리 열혈팬 1223호", emoji: "🚩", flavor: "친근하고 무뚝뚝한 카드 팬.", extra: { type: "finisher", value: 1 } },
+        { id: "a17", name: "치킨 동혁", emoji: "🍗", flavor: "치킨 상자를 옆에 두고 본다.", extra: { type: "combo", value: 12 } },
+        { id: "a18", name: "후배 지우", emoji: "🎤", flavor: "무대 밑에서 선배를 부른다.", extra: { type: "noDamage", value: 0 } },
+        { id: "a59", name: "밴드 팬 서진", emoji: "🎸", flavor: "기타를 내려놓고 손끝을 본다.", extra: { type: "noDamage", value: 0 } },
+        { id: "a60", name: "야광봉 팬 하은", emoji: "✨", flavor: "야광봉을 무대 쪽으로 기울인다.", extra: { type: "timeLimit", value: 80 } }
       ]
     },
     {
@@ -229,41 +229,41 @@
       crowd: 60,
       crowdEmoji: "📋🎥😏🎙️",
       name: "TV 오디션",
-      intro: "심사위원의 펜이 움직인다!",
+      intro: "다음 참가자입니다, 칼리!",
       palette: { bg1: "#101828", bg2: "#1e3a5f", accent: "#7ec8ff" },
-      successLine: "심사석 엄지가 올라간다!",
-      trophy: "올패스 마술사",
+      successLine: "3등입니다. 축하해요.",
+      trophy: "오디션 3등",
       headliner: {
         id: "h7",
-        name: "메인 심사위원",
+        name: "심사위원 윤 씨",
         emoji: "📺",
-        flavor: "패들 뒤에 미소를 숨긴다.",
+        flavor: "점수는 정직하게 매긴다.",
         pattern: "heal",
-        preLine: "의심은 내가 다시 채운다.",
-        defeatLine: "올패스. 다음 라운드다."
+        preLine: "상황은 웃겨도, 무대는 볼게요.",
+        defeatLine: "3등입니다. 축하해요."
       },
       audiences: [
-        { id: "a19", name: "점수판 도우미", emoji: "📋", flavor: "점수가 실시간으로 오른다.", extra: { type: "timeLimit", value: 70 } },
-        { id: "a20", name: "카메라 감독", emoji: "🎥", flavor: "줌인은 아직 허락 안 했다.", extra: { type: "noDamage", value: 0 } },
-        { id: "a21", name: "라이벌", emoji: "😏", flavor: "네 피날레만 노려본다.", extra: { type: "finisher", value: 1 } },
-        { id: "a64", name: "초대 작가", emoji: "📝", flavor: "카메라보다 무대를 본다.", extra: { type: "timeLimit", value: 85 } },
-        { id: "a65", name: "리허설 관객", emoji: "🎤", flavor: "카메라보다 무대를 본다.", extra: { type: "combo", value: 17 } },
-        { id: "a66", name: "방청객", emoji: "📺", flavor: "카메라보다 무대를 본다.", extra: { type: "finisher", value: 1 } }
+        { id: "a19", name: "진행자 태훈", emoji: "📋", flavor: "구경 온 칼리를 즉석 호명한다.", extra: { type: "timeLimit", value: 70 } },
+        { id: "a20", name: "카메라 석진", emoji: "🎥", flavor: "즉석 호명 뒤에 줌을 연다.", extra: { type: "noDamage", value: 0 } },
+        { id: "a21", name: "라이벌 유찬", emoji: "😏", flavor: "대기석에서 피날레를 본다.", extra: { type: "finisher", value: 1 } },
+        { id: "a64", name: "초대 작가 다인", emoji: "📝", flavor: "대본 대신 무대를 적는다.", extra: { type: "timeLimit", value: 85 } },
+        { id: "a65", name: "본방 사수 민규", emoji: "🎤", flavor: "리허설 없이 본방을 본다.", extra: { type: "combo", value: 17 } },
+        { id: "a66", name: "방청객 소희", emoji: "📺", flavor: "신호 전에 웃음부터 샌다.", extra: { type: "finisher", value: 1 } }
       ]
     },
     {
       id: 8, balanceRank: 7.5, hpFactor: 1.2, slug: "broadcast", name: "TV 방송", crowd: 75, crowdEmoji: "📺👏",
       venueAsset: "venue-tv-broadcast.png", crowdAsset: "crowd-tv.png",
-      intro: "생방송 시작! 손끝에 시선이 모인다", successLine: "전국에서 박수가 쏟아진다!", trophy: "생방송 스타",
+      intro: "오늘은 유튜브 방송이에요.", successLine: "노련미, 예술 그 자체네요.", trophy: "생방송 스타",
       palette: { bg1: "#14283f", bg2: "#436887", accent: "#70e8ff" },
-      headliner: { id: "h-broadcast", name: "국민 MC", emoji: "🎤", portraitAsset: "headliner-tv.png", flavor: "카메라가 손끝을 따라간다.", pattern: "slow", preLine: "카메라 보고, 천천히 갑시다.", defeatLine: "전국에서 박수가 쏟아진다!" },
+      headliner: { id: "h-broadcast", name: "오 패널님", emoji: "🎤", portraitAsset: "headliner-tv.png", flavor: "노련미를 말해 준 패널.", pattern: "slow", preLine: "말이 너무 빠르다, 그 말 기억나요?", defeatLine: "노련미, 예술 그 자체네요." },
       audiences: [
-        { id: "a112", name: "생방송 PD", emoji: "📺", portraitAsset: "aud-tv1.png", flavor: "생방송의 순간을 지켜본다.", extra: { type: "timeLimit", value: 85 } },
-        { id: "a113", name: "방송 작가", emoji: "📺", portraitAsset: "aud-tv2.png", flavor: "생방송의 순간을 지켜본다.", extra: { type: "combo", value: 18 } },
-        { id: "a114", name: "음향 감독", emoji: "📺", portraitAsset: "aud-tv3.png", flavor: "생방송의 순간을 지켜본다.", extra: { type: "noDamage", value: 0 } },
-        { id: "a115", name: "방청 응원단", emoji: "📺", portraitAsset: "aud-tv4.png", flavor: "생방송의 순간을 지켜본다.", extra: { type: "finisher", value: 1 } },
-        { id: "a116", name: "열성적인 패널", emoji: "📺", portraitAsset: "aud-tv5.png", flavor: "생방송의 순간을 지켜본다.", extra: { type: "timeLimit", value: 90 } },
-        { id: "a117", name: "조명 감독", emoji: "📺", portraitAsset: "aud-tv6.png", flavor: "생방송의 순간을 지켜본다.", extra: { type: "combo", value: 20 } }
+        { id: "a112", name: "방송 PD 승기", emoji: "📺", portraitAsset: "aud-tv1.png", flavor: "유튜브 방송을 여는 진행.", extra: { type: "timeLimit", value: 85 } },
+        { id: "a113", name: "방송 작가 가은", emoji: "📺", portraitAsset: "aud-tv2.png", flavor: "빠른 템포를 큐에 받아 적는다.", extra: { type: "combo", value: 18 } },
+        { id: "a114", name: "음향 감독 도현", emoji: "📺", portraitAsset: "aud-tv3.png", flavor: "빠른 말도 마이크에 담는다.", extra: { type: "noDamage", value: 0 } },
+        { id: "a115", name: "응원단장 나리", emoji: "📺", portraitAsset: "aud-tv4.png", flavor: "빠른 박자에 박수를 얹는다.", extra: { type: "finisher", value: 1 } },
+        { id: "a116", name: "열정 패널 규리", emoji: "📺", portraitAsset: "aud-tv5.png", flavor: "옆자리에서 말속도를 즐긴다.", extra: { type: "timeLimit", value: 90 } },
+        { id: "a117", name: "조명 감독 태산", emoji: "📺", portraitAsset: "aud-tv6.png", flavor: "빠른 손끝에 빛을 맞춘다.", extra: { type: "combo", value: 20 } }
       ]
     },
     {
@@ -276,27 +276,27 @@
       crowd: 90,
       crowdEmoji: "💎💃💂🎰",
       name: "라스베가스",
-      intro: "네온 불빛이 무대를 비춘다!",
+      intro: "이 무대, 꿈같네요.",
       palette: { bg1: "#241536", bg2: "#5d2344", accent: "#ffc667" },
-      successLine: "네온보다 환한 박수다!",
+      successLine: "제 방식으로 갈게요.",
       trophy: "베가스의 별",
       invitation: { keys: 1, name: "라스베가스 초대장" },
       headliner: {
         id: "h8",
-        name: "전설의 딜러",
+        name: "데이비드 카퍼필",
         emoji: "🎰",
-        flavor: "카드가 손끝에서 사라진다.",
+        flavor: "큰 무대의 마술사.",
         pattern: "invisible",
-        preLine: "눈이 따라오면 이미 진 거야.",
-        defeatLine: "칩은 네 쪽으로 민다."
+        preLine: "상상은 관객이 완성하지.",
+        defeatLine: "네 표정이 보이는구나."
       },
       audiences: [
-        { id: "a22", name: "큰손 손님", emoji: "💎", flavor: "칩을 쌓다 손을 멈춘다.", extra: { type: "combo", value: 15 } },
-        { id: "a23", name: "화려한 관객", emoji: "💃", flavor: "깃털 사이로 무대를 본다.", extra: { type: "timeLimit", value: 80 } },
-        { id: "a24", name: "경비 아저씨", emoji: "💂", flavor: "팔짱이 제복보다 단단하다.", extra: { type: "noDamage", value: 0 } },
-        { id: "a70", name: "호텔 손님", emoji: "🏨", flavor: "칩을 내려놓고 눈을 크게 뜬다.", extra: { type: "combo", value: 18 } },
-        { id: "a71", name: "쇼 팬", emoji: "🌟", flavor: "칩을 내려놓고 눈을 크게 뜬다.", extra: { type: "finisher", value: 1 } },
-        { id: "a72", name: "사진 관광객", emoji: "🎲", flavor: "칩을 내려놓고 눈을 크게 뜬다.", extra: { type: "noDamage", value: 0 } }
+        { id: "a22", name: "펜 앤 텔로", emoji: "💎", flavor: "반전과 우주인 마술의 콤비.", extra: { type: "combo", value: 15 } },
+        { id: "a23", name: "데릴", emoji: "💃", flavor: "카드의 롤모델.", extra: { type: "timeLimit", value: 80 } },
+        { id: "a24", name: "경비 대니 씨", emoji: "💂", flavor: "팔짱을 풀고 무대를 본다.", extra: { type: "noDamage", value: 0 } },
+        { id: "a70", name: "투숙객 에밀리", emoji: "🏨", flavor: "칩을 접고 의자를 당긴다.", extra: { type: "combo", value: 18 } },
+        { id: "a71", name: "쇼 팬 소피아", emoji: "🌟", flavor: "프로그램 북을 덮고 본다.", extra: { type: "finisher", value: 1 } },
+        { id: "a72", name: "관광객 마크", emoji: "🎲", flavor: "카메라를 내리고 손을 본다.", extra: { type: "noDamage", value: 0 } }
       ]
     },
     {
@@ -309,28 +309,28 @@
       crowd: 120,
       crowdEmoji: "🎶🎟️🧐🎭",
       name: "브로드웨이",
-      intro: "브로드웨이 무대에 선다!",
+      intro: "선생님 공연, 정말 신기했어요.",
       palette: { bg1: "#1c1018", bg2: "#4a2030", accent: "#f0c36a" },
-      successLine: "막이 내려도 박수다!",
+      successLine: "속말도 마술의 일부예요.",
       trophy: "브로드웨이 주연",
       invitation: { keys: 2, name: "브로드웨이 초대장" },
       headliner: {
         id: "h9",
-        name: "브로드웨이 스타",
+        name: "객석 리사",
         emoji: "🌟",
-        flavor: "조명을 혼자 끌어안는다.",
+        flavor: "신기해서 분이 샌 객석 리사.",
         pattern: "slow",
-        preLine: "이 템포, 내가 늦춘다.",
-        defeatLine: "커튼콜은 네 자리다."
+        preLine: "아, 너무 신기해서 분이 나!",
+        defeatLine: "그 마음이 여기까지 와요."
       },
       audiences: [
-        { id: "a25", name: "뮤지컬 팬", emoji: "🎶", flavor: "하이노트에 피날레를 건다.", extra: { type: "finisher", value: 1 } },
-        { id: "a26", name: "뉴욕 관광객", emoji: "🎟️", flavor: "브로슈어를 접다 멈춘다.", extra: { type: "combo", value: 15 } },
-        { id: "a27", name: "깐깐 비평가", emoji: "🧐", flavor: "막간에 평을 이미 적는다.", extra: { type: "timeLimit", value: 80 } },
-        { id: "a76", name: "티켓 수집가", emoji: "🎟️", flavor: "커튼콜을 먼저 외친다.", extra: { type: "finisher", value: 1 } },
-        { id: "a77", name: "발레 관객", emoji: "🩰", flavor: "커튼콜을 먼저 외친다.", extra: { type: "noDamage", value: 0 } },
-        { id: "a78", name: "오케스트라 팬", emoji: "🎼", flavor: "커튼콜을 먼저 외친다.", extra: { type: "timeLimit", value: 95 } },
-        { id: "a79", name: "의상 디자이너", emoji: "👗", flavor: "커튼콜을 먼저 외친다.", extra: { type: "combo", value: 19 } }
+        { id: "a25", name: "뮤지컬 팬 제인", emoji: "🎶", flavor: "노래 다음 숨을 마술에 맡긴다.", extra: { type: "finisher", value: 1 } },
+        { id: "a26", name: "뉴욕 관광객 톰", emoji: "🎟️", flavor: "안내문을 접다 손이 멈춘다.", extra: { type: "combo", value: 15 } },
+        { id: "a27", name: "평론가 한 씨", emoji: "🧐", flavor: "별점을 지우고 다시 적는다.", extra: { type: "timeLimit", value: 80 } },
+        { id: "a76", name: "티켓 수집가 벤", emoji: "🎟️", flavor: "티켓을 주머니에 도로 넣는다.", extra: { type: "finisher", value: 1 } },
+        { id: "a77", name: "발레 클로이", emoji: "🩰", flavor: "발끝 대신 손끝을 따라간다.", extra: { type: "noDamage", value: 0 } },
+        { id: "a78", name: "오케스트라 헨리", emoji: "🎼", flavor: "박수를 곡의 마지막 박에 맞춘다.", extra: { type: "timeLimit", value: 95 } },
+        { id: "a79", name: "디자이너 미아", emoji: "👗", flavor: "소매선만 보고 웃는다.", extra: { type: "combo", value: 19 } }
       ]
     },
     {
@@ -343,28 +343,28 @@
       crowd: 150,
       crowdEmoji: "🧑‍🚀🛰️🚙🌕",
       name: "달",
-      intro: "달 먼지 위에 무대가 펼쳐진다!",
+      intro: "돌계단에서 시작한 공연이에요.",
       palette: { bg1: "#101a33", bg2: "#636b7c", accent: "#d6e4f0" },
-      successLine: "무중력 박수가 쏟아진다!",
+      successLine: "즉흥 대처, 오늘 가져가요.",
       trophy: "달의 마술사",
       invitation: { keys: 2, name: "달 초대장" },
       headliner: {
         id: "h10",
-        name: "달 기지 대장",
+        name: "목욕탕 아저씨",
         emoji: "🌕",
-        flavor: "부츠로 먼지 박자를 낸다.",
+        flavor: "도박에 안 당하는 법을 물은 손님.",
         pattern: "sealBox",
-        preLine: "그 케이스, 달 먼지로 봉인.",
-        defeatLine: "봉인 해제. 무중력 박수."
+        preLine: "도박에 안 당하는 법은요?",
+        defeatLine: "도박은 안 할게요."
       },
       audiences: [
-        { id: "a28", name: "우주비행사", emoji: "🧑‍🚀", flavor: "헬멧 안에 박수를 아낀다.", extra: { type: "noDamage", value: 0 } },
-        { id: "a29", name: "무전 담당", emoji: "🛰️", flavor: "피날레에 무전을 연다.", extra: { type: "finisher", value: 1 } },
-        { id: "a30", name: "탐사차 기사", emoji: "🚙", flavor: "바퀴 자국 위에 선다.", extra: { type: "combo", value: 18 } },
-        { id: "a83", name: "달 과학자", emoji: "🔭", flavor: "헬멧 너머로 박수를 보낸다.", extra: { type: "noDamage", value: 0 } },
-        { id: "a84", name: "별빛 수집가", emoji: "🌟", flavor: "헬멧 너머로 박수를 보낸다.", extra: { type: "timeLimit", value: 100 } },
-        { id: "a85", name: "기지 정비사", emoji: "🧑‍🚀", flavor: "헬멧 너머로 박수를 보낸다.", extra: { type: "combo", value: 20 } },
-        { id: "a86", name: "우주 관광객", emoji: "🚀", flavor: "헬멧 너머로 박수를 보낸다.", extra: { type: "finisher", value: 1 } }
+        { id: "a28", name: "돌계단 수호", emoji: "🧑‍🚀", flavor: "해운대 돌계단에 모인 관객.", extra: { type: "noDamage", value: 0 } },
+        { id: "a29", name: "무전 담당 보라", emoji: "🛰️", flavor: "돌계단 인원을 세고 있다.", extra: { type: "finisher", value: 1 } },
+        { id: "a30", name: "탐사차 기사님", emoji: "🚙", flavor: "계단 아래 자리를 지킨다.", extra: { type: "combo", value: 18 } },
+        { id: "a83", name: "윤 박사님", emoji: "🔭", flavor: "헬멧 대신 노트를 펼친다.", extra: { type: "noDamage", value: 0 } },
+        { id: "a84", name: "수집가 로이", emoji: "🌟", flavor: "병 대신 박수를 모은다.", extra: { type: "timeLimit", value: 100 } },
+        { id: "a85", name: "정비 담당 대철", emoji: "🧑‍🚀", flavor: "공구 대신 통로를 비운다.", extra: { type: "combo", value: 20 } },
+        { id: "a86", name: "관광객 하나", emoji: "🚀", flavor: "야경 사진을 멈추고 본다.", extra: { type: "finisher", value: 1 } }
       ]
     },
     {
@@ -377,29 +377,29 @@
       crowd: 200,
       crowdEmoji: "🔥🌞📷☀️",
       name: "태양",
-      intro: "불꽃 관객들이 모여든다!",
+      intro: "태양이 눈부시네요.",
       palette: { bg1: "#3a1408", bg2: "#8a2e10", accent: "#ffb020" },
-      successLine: "태양이 박수로 탄다!",
-      trophy: "태양의 스포트라이트",
+      successLine: "그늘로 가요.",
+      trophy: "그늘의 박수",
       invitation: { keys: 3, name: "태양 초대장" },
       headliner: {
         id: "h11",
-        name: "태양의 불꽃왕",
+        name: "햇살 해나",
         emoji: "☀️",
-        flavor: "왕관이 불꽃처럼 튄다.",
+        flavor: "강한 빛과 바람이 먼저 인사한다.",
         pattern: "stealCoins",
-        preLine: "동전은 태양 불꽃에 녹인다.",
-        defeatLine: "녹은 동전, 빛으로 돌려준다."
+        preLine: "눈 감으면 바람이 먼저야.",
+        defeatLine: "그늘에서 숨 돌리죠."
       },
       audiences: [
-        { id: "a31", name: "불꽃 서퍼", emoji: "🔥", flavor: "불꽃보다 빨리 끝나길 빈다.", extra: { type: "timeLimit", value: 90 } },
-        { id: "a32", name: "태양 가이드", emoji: "🌞", flavor: "흑점 투어를 잠시 멈춘다.", extra: { type: "combo", value: 18 } },
-        { id: "a33", name: "불꽃 사진가", emoji: "📷", flavor: "피날레에 셔터를 누른다.", extra: { type: "finisher", value: 1 } },
-        { id: "a90", name: "빛 연구원", emoji: "🧪", flavor: "선글라스 너머 눈이 동그래진다.", extra: { type: "timeLimit", value: 105 } },
-        { id: "a91", name: "태양 여행객", emoji: "🕶️", flavor: "선글라스 너머 눈이 동그래진다.", extra: { type: "combo", value: 21 } },
-        { id: "a92", name: "태양 관측자", emoji: "🔭", flavor: "선글라스 너머 눈이 동그래진다.", extra: { type: "finisher", value: 1 } },
-        { id: "a93", name: "파도 서퍼", emoji: "🏄", flavor: "선글라스 너머 눈이 동그래진다.", extra: { type: "noDamage", value: 0 } },
-        { id: "a94", name: "우주 사진가", emoji: "📷", flavor: "선글라스 너머 눈이 동그래진다.", extra: { type: "timeLimit", value: 105 } }
+        { id: "a31", name: "서퍼 한울", emoji: "🔥", flavor: "빛 파도에 모자를 붙잡는다.", extra: { type: "timeLimit", value: 90 } },
+        { id: "a32", name: "태양 가이드 솔", emoji: "🌞", flavor: "그늘 자리를 손으로 가리킨다.", extra: { type: "combo", value: 18 } },
+        { id: "a33", name: "사진가 도하", emoji: "📷", flavor: "역광이라 셔터를 망설인다.", extra: { type: "finisher", value: 1 } },
+        { id: "a90", name: "연구원 시우", emoji: "🧪", flavor: "선글라스 너머로 숫자를 적는다.", extra: { type: "timeLimit", value: 105 } },
+        { id: "a91", name: "여행객 해리", emoji: "🕶️", flavor: "선글라스를 올렸다 내린다.", extra: { type: "combo", value: 21 } },
+        { id: "a92", name: "관측자 이든", emoji: "🔭", flavor: "망원경을 접고 맨눈으로 본다.", extra: { type: "finisher", value: 1 } },
+        { id: "a93", name: "파도 서퍼 하람", emoji: "🏄", flavor: "바람 결을 손바닥으로 잰다.", extra: { type: "noDamage", value: 0 } },
+        { id: "a94", name: "사진작가 모아", emoji: "📷", flavor: "렌즈 캡이 바람에 들썩인다.", extra: { type: "timeLimit", value: 105 } }
       ]
     },
     {
@@ -412,29 +412,29 @@
       crowd: 260,
       crowdEmoji: "👽🛸✨🌠",
       name: "은하",
-      intro: "은하 곳곳에서 관객이 왔다!",
+      intro: "하나, 둘, 셋. 검정, 빨강.",
       palette: { bg1: "#0c0820", bg2: "#24145a", accent: "#c9a6ff" },
-      successLine: "별들이 앵콜을 외친다!",
+      successLine: "몸짓만으로 충분했죠.",
       trophy: "은하계 슈퍼스타",
       invitation: { keys: 3, name: "은하 초대장" },
       headliner: {
         id: "h12",
-        name: "은하 황제",
+        name: "타코야키 가온",
         emoji: "👽",
-        flavor: "별자리를 왕홀처럼 든다.",
+        flavor: "일본 노점 줄의 손님.",
         pattern: "heal",
-        preLine: "의심은 별빛으로 다시 찬다.",
-        defeatLine: "항로를 네 무대로 튼다."
+        preLine: "하나! 빨강!",
+        defeatLine: "하나, 둘, 셋!"
       },
       audiences: [
-        { id: "a34", name: "외계인 손님", emoji: "👽", flavor: "번역기가 박수를 모른다.", extra: { type: "combo", value: 20 } },
-        { id: "a35", name: "UFO 파일럿", emoji: "🛸", flavor: "기체를 기울여 구경한다.", extra: { type: "noDamage", value: 0 } },
-        { id: "a36", name: "별자리 선생님", emoji: "✨", flavor: "별이 지기 전에 보여 줘.", extra: { type: "timeLimit", value: 100 } },
-        { id: "a98", name: "우주 음악가", emoji: "🎹", flavor: "항로를 멈추고 박자를 탄다.", extra: { type: "combo", value: 22 } },
-        { id: "a99", name: "은하 사진가", emoji: "📸", flavor: "항로를 멈추고 박자를 탄다.", extra: { type: "finisher", value: 1 } },
-        { id: "a100", name: "은하수 안내원", emoji: "🌌", flavor: "항로를 멈추고 박자를 탄다.", extra: { type: "noDamage", value: 0 } },
-        { id: "a101", name: "혜성 레이서", emoji: "☄️", flavor: "항로를 멈추고 박자를 탄다.", extra: { type: "timeLimit", value: 110 } },
-        { id: "a102", name: "소원 여행자", emoji: "✨", flavor: "항로를 멈추고 박자를 탄다.", extra: { type: "combo", value: 22 } }
+        { id: "a34", name: "샵 손님 하늘", emoji: "👽", flavor: "중국 마술샵의 손님.", extra: { type: "combo", value: 20 } },
+        { id: "a35", name: "파일럿 우진", emoji: "🛸", flavor: "기체를 기울여 손짓을 본다.", extra: { type: "noDamage", value: 0 } },
+        { id: "a36", name: "별자리 선생님", emoji: "✨", flavor: "별 대신 손가락 수를 센다.", extra: { type: "timeLimit", value: 100 } },
+        { id: "a98", name: "음악가 세영", emoji: "🎹", flavor: "건반 대신 구호에 박자를 맞춘다.", extra: { type: "combo", value: 22 } },
+        { id: "a99", name: "사진가 지후", emoji: "📸", flavor: "셔터를 숫자 구호에 맞춘다.", extra: { type: "finisher", value: 1 } },
+        { id: "a100", name: "안내원 다솜", emoji: "🌌", flavor: "줄의 방향을 손짓으로 안내한다.", extra: { type: "noDamage", value: 0 } },
+        { id: "a101", name: "레이서 건우", emoji: "☄️", flavor: "빠른 구호에 속도를 줄인다.", extra: { type: "timeLimit", value: 110 } },
+        { id: "a102", name: "여행자 수아", emoji: "✨", flavor: "소원 대신 색깔을 고른다.", extra: { type: "combo", value: 22 } }
       ]
     },
     {
@@ -447,31 +447,31 @@
       crowd: 330,
       crowdEmoji: "🪞🚪🃏🌌",
       name: "멀티버스",
-      intro: "모든 차원의 내가 지켜본다!",
+      intro: "다른 칼리들이 한자리에 모였다!",
       palette: { bg1: "#080610", bg2: "#1a1030", accent: "#9af0ff" },
-      successLine: "차원마다 박수가 울린다!",
+      successLine: "모습은 달라도 박수다!",
       trophy: "멀티버스의 왕관",
       invitation: { keys: 4, name: "멀티버스 초대장" },
       headliner: {
         id: "h13",
-        name: "가장 의심 많은 나",
+        name: "의심 많은 나",
         emoji: "🪞",
-        flavor: "거울 속에서 팔짱을 낀다.",
+        flavor: "의심해도 자리는 지킨다.",
         pattern: "twoPhase",
-        preLine: "난 시작도 안 한 너다.",
-        phase2Line: "이제 거울이 같이 친다.",
-        defeatLine: "그래서, 기립박수다."
+        preLine: "난 의심이 많아도 끝까지 해 온 너다.",
+        phase2Line: "그만두고 싶었던 적은 없어.",
+        defeatLine: "모습은 달라도 좋다."
       },
       audiences: [
-        { id: "a37", name: "지팡이 없는 나", emoji: "🪞", flavor: "마술 대신 리모컨을 쥐었다.", extra: { type: "finisher", value: 1 } },
-        { id: "a38", name: "연습실 못 간 나", emoji: "🚪", flavor: "연습실 문 앞에서 멈췄다.", extra: { type: "timeLimit", value: 120 } },
-        { id: "a39", name: "첫 카드를 접은 나", emoji: "🃏", flavor: "카드를 가방에 도로 넣었다.", extra: { type: "combo", value: 20 } },
-        { id: "a106", name: "용기 낸 나", emoji: "💫", flavor: "거울 너머의 내가 웃는다.", extra: { type: "finisher", value: 1 } },
-        { id: "a107", name: "객석의 나", emoji: "👏", flavor: "거울 너머의 내가 웃는다.", extra: { type: "noDamage", value: 0 } },
-        { id: "a108", name: "다른 세계의 나", emoji: "🪞", flavor: "거울 너머의 내가 웃는다.", extra: { type: "timeLimit", value: 115 } },
-        { id: "a109", name: "연습을 시작한 나", emoji: "🪄", flavor: "거울 너머의 내가 웃는다.", extra: { type: "combo", value: 23 } },
-        { id: "a110", name: "무대에 선 나", emoji: "🎩", flavor: "거울 너머의 내가 웃는다.", extra: { type: "finisher", value: 1 } },
-        { id: "a111", name: "박수 보내는 나", emoji: "💫", flavor: "거울 너머의 내가 웃는다.", extra: { type: "noDamage", value: 0 } }
+        { id: "a37", name: "농장 게임만 하는 칼리", emoji: "🪞", flavor: "농장 게임만 하는 다른 칼리.", extra: { type: "finisher", value: 1 } },
+        { id: "a38", name: "연습실 앞의 나", emoji: "🚪", flavor: "문 앞에서 카드를 만지작거린다.", extra: { type: "timeLimit", value: 120 } },
+        { id: "a39", name: "카드 접은 나", emoji: "🃏", flavor: "접어 둔 카드를 다시 꺼낸다.", extra: { type: "combo", value: 20 } },
+        { id: "a106", name: "용기 낸 나", emoji: "💫", flavor: "한 걸음을 먼저 내디딘 나.", extra: { type: "finisher", value: 1 } },
+        { id: "a107", name: "객석의 나", emoji: "👏", flavor: "객석에서 박수를 아끼던 나.", extra: { type: "noDamage", value: 0 } },
+        { id: "a108", name: "잠시 쉰 나", emoji: "🪞", flavor: "거울 너머의 내가 웃는다.", extra: { type: "timeLimit", value: 115 } },
+        { id: "a109", name: "막 시작한 나", emoji: "🪄", flavor: "카드를 막 펼친 날의 나.", extra: { type: "combo", value: 23 } },
+        { id: "a110", name: "계속한 칼리", emoji: "🎩", flavor: "마술을 계속 건넨 칼리.", extra: { type: "finisher", value: 1 } },
+        { id: "a111", name: "박수 보내는 나", emoji: "💫", flavor: "의심이 끝난 뒤에 박수친다.", extra: { type: "noDamage", value: 0 } }
       ]
     }
   ],
@@ -587,11 +587,11 @@
     {"id": "openingShield", "name": "대본 준비", "desc": "새 run 시작 시 최대 멘탈의 5L% 자신감", "max": 3, "cost": {"c": 1000, "g": 2.2}, "currency": "coins", "prereqs": ["levelHeal"], "x": 0, "y": -4, "reveal": "N3", "branch": "heart", "icon": "node-heart-2.png", "emoji": "🛡️", "pending": false},
     {"id": "calm", "name": "포커페이스", "desc": "야유 피해 ×(1-0.02L)", "max": 3, "cost": {"c": 2000, "g": 2.2}, "currency": "coins", "prereqs": ["openingShield"], "x": 0, "y": -5, "reveal": "N5", "branch": "heart", "icon": "node-heart-1.png", "emoji": "💛", "pending": false},
     {"id": "coinLuck", "name": "모자 속 동전", "desc": "동전 추첨 가중치 +6L. 정규화 전 가중치이며 확률은 전체 가중치로 계산합니다.", "max": 10, "cost": {"c": 70, "g": 2.2}, "currency": "coins", "prereqs": ["root"], "x": 1, "y": 1, "reveal": "N", "branch": "luck", "icon": "node-luck-1.png", "emoji": "🪙", "pending": false},
-    {"id": "forceRemove", "name": "포스", "desc": "나쁜 슬롯 문양 제거, 보석 비용 max(1,3-L)", "max": 2, "cost": [1, 1], "currency": "keys", "prereqs": ["coinLuck"], "x": 2, "y": 1, "reveal": "N5", "branch": "luck", "icon": "node-luck-2.png", "emoji": "🪄", "pending": false},
+    {"id": "forceRemove", "name": "포스", "desc": "카드 몬테 첫 판, 여왕을 0.6초씩 더 보여주고 첫 섞기가 조금 느려져요", "max": 2, "cost": [1, 1], "currency": "keys", "prereqs": ["coinLuck"], "x": 2, "y": 1, "reveal": "N5", "branch": "luck", "icon": "node-luck-2.png", "emoji": "🪄", "pending": false},
     {"id": "tip", "name": "감사의 팁", "desc": "관객 만족 동전 +5L%", "max": 4, "cost": {"c": 180, "g": 2.2}, "currency": "coins", "prereqs": ["coinLuck"], "x": 2, "y": 2, "reveal": "N", "branch": "luck", "icon": "node-luck-1.png", "emoji": "🪙", "pending": false},
-    {"id": "dealerCoin", "name": "딜러의 선물", "desc": "딜러 카드의 동전 보상 +10L%", "max": 3, "cost": {"c": 650, "g": 2.2}, "currency": "coins", "prereqs": ["forceRemove"], "x": 3, "y": 1, "reveal": "N5", "branch": "luck", "icon": "node-luck-2.png", "emoji": "🎁", "pending": false},
-    {"id": "jackpot", "name": "행운의 박수", "desc": "슬롯 당첨 동전 +15L%, 당첨 확률 유지", "max": 3, "cost": {"c": 1400, "g": 2.2}, "currency": "coins", "prereqs": ["dealerCoin"], "x": 4, "y": 1, "reveal": "N5", "branch": "luck", "icon": "node-luck-1.png", "emoji": "🍀", "pending": false},
-    {"id": "gemFind", "name": "반짝이는 모자", "desc": "희귀 이상 드롭의 보석 확률 +1L%p", "max": 3, "cost": {"c": 900, "g": 2.2}, "currency": "coins", "prereqs": ["tip"], "x": 3, "y": 2, "reveal": "N3", "branch": "luck", "icon": "node-luck-2.png", "emoji": "💎", "pending": false},
+    {"id": "dealerCoin", "name": "매니저의 선물", "desc": "컵앤볼과 카드 몬테의 동전 보상 +10%/레벨", "max": 3, "cost": {"c": 650, "g": 2.2}, "currency": "coins", "prereqs": ["forceRemove"], "x": 3, "y": 1, "reveal": "N5", "branch": "luck", "icon": "node-luck-2.png", "emoji": "🎁", "pending": false},
+    {"id": "jackpot", "name": "행운의 박수", "desc": "카드 몬테에서 연속으로 맞출 때마다 동전 +15%/레벨", "max": 3, "cost": {"c": 1400, "g": 2.2}, "currency": "coins", "prereqs": ["dealerCoin"], "x": 4, "y": 1, "reveal": "N5", "branch": "luck", "icon": "node-luck-1.png", "emoji": "🍀", "pending": false},
+    {"id": "gemFind", "name": "반짝이는 모자", "desc": "희귀 이상 드롭의 실크 확률 +1L%p", "max": 3, "cost": {"c": 900, "g": 2.2}, "currency": "coins", "prereqs": ["tip"], "x": 3, "y": 2, "reveal": "N3", "branch": "luck", "icon": "node-luck-2.png", "emoji": "💎", "pending": false},
     {"id": "equip", "name": "마술용품", "desc": "3×3 장착판, 처음 3칸 해금", "max": 1, "cost": [700], "currency": "coins", "prereqs": ["gemFind"], "x": 4, "y": 2, "reveal": "N3", "branch": "luck", "icon": "node-luck-1.png", "emoji": "🎩", "pending": false},
     {"id": "slotPlus", "name": "마술용품 자리", "desc": "장착칸 +1, 총 9칸까지", "max": 6, "cost": [600, 1200, 2400, 4800, 9600, 19200], "currency": "coins", "prereqs": ["equip"], "x": 5, "y": 2, "reveal": "N", "branch": "luck", "icon": "node-luck-2.png", "emoji": "🎩", "pending": false},
     {"id": "lessonBias", "name": "연습 노트", "desc": "케이스 XP +10%/레벨, 최대 +20%", "max": 2, "cost": {"c": 3000, "g": 3.0}, "currency": "coins", "prereqs": ["equip"], "x": 4, "y": 3, "reveal": "N5", "branch": "luck", "icon": "node-luck-1.png", "emoji": "📖", "pending": false},
@@ -604,41 +604,39 @@
     {"id": "rabbitPurse", "name": "토끼 주머니", "desc": "토끼 지급량 +L 동전", "max": 3, "cost": {"c": 1000, "g": 2.2}, "currency": "coins", "prereqs": ["rabbitTempo"], "x": -5, "y": 2, "reveal": "N", "branch": "pet", "icon": "node-pet-2.png", "emoji": "🐇", "pending": false},
     {"id": "boxHelper", "name": "팬의 도움", "desc": "팬이 2000ms마다 마술 실력의 35%로 케이스를 두드려요", "max": 1, "cost": [2], "currency": "keys", "prereqs": ["board"], "x": -4, "y": 3, "reveal": "N3", "branch": "pet", "icon": "node-fan.png", "emoji": "👏", "pending": false},
     {"id": "helperTempo", "name": "팬의 손놀림", "desc": "팬 작업 주기 2000-200L ms", "max": 3, "cost": {"c": 2000, "g": 2.2}, "currency": "coins", "prereqs": ["boxHelper"], "x": -5, "y": 3, "reveal": "N", "branch": "pet", "icon": "node-fan.png", "emoji": "👏", "pending": false},
-    {"id": "startFinale", "name": "개막 피날레", "desc": "새 run 시작 시 피날레 게이지 충전", "max": 1, "cost": [1], "currency": "keys", "prereqs": ["root"], "x": 0, "y": 1, "reveal": "N", "branch": "finale", "icon": "node-finale-1.png", "emoji": "🌟", "pending": false},
-    {"id": "finalePower", "name": "표현력", "desc": "피날레 피해 22V×(1+0.08L)", "max": 4, "cost": {"c": 500, "g": 2.2}, "currency": "coins", "prereqs": ["startFinale"], "x": 0, "y": 2, "reveal": "N", "branch": "finale", "icon": "node-finale-2.png", "emoji": "🎆", "pending": false},
-    {"id": "finaleNeed", "name": "짧은 예고", "desc": "필요 게이지 20-L, 최소 18", "max": 2, "cost": {"c": 2500, "g": 3.0}, "currency": "coins", "prereqs": ["finalePower"], "x": 0, "y": 3, "reveal": "N4", "branch": "finale", "icon": "node-finale-1.png", "emoji": "⏳", "pending": false},
+    {"id": "startFinale", "name": "개막 피날레", "desc": "케이스 1개를 열 때마다 피날레가 1칸 차고, 기본 20칸(비법으로 줄어듦)이 차면 큰 한 방이 나가요. 기본 피해는 표시된 연출의 2.75배, 마지막 보스 3막 준비 후 첫 피날레는 2배\n타겟은 5칸 충전, 액트 보상도 충전해요\n피날레 힘 비법·무대 보상·피날레 계열 강화로 더 강해져요.\n공연 시작 때 피날레 게이지 충전", "max": 1, "cost": [1], "currency": "keys", "prereqs": ["root"], "x": 0, "y": 1, "reveal": "N", "branch": "finale", "icon": "node-finale-1.png", "emoji": "🌟", "pending": false},
+    {"id": "finalePower", "name": "표현력", "desc": "케이스 1개를 열 때마다 피날레가 1칸 차고, 기본 20칸(비법으로 줄어듦)이 차면 큰 한 방이 나가요. 기본 피해는 표시된 연출의 2.75배, 마지막 보스 3막 준비 후 첫 피날레는 2배\n타겟은 5칸 충전, 액트 보상도 충전해요\n피날레 힘 비법·무대 보상·피날레 계열 강화로 더 강해져요.\n피날레 피해 22V×(1+0.08L)", "max": 4, "cost": {"c": 500, "g": 2.2}, "currency": "coins", "prereqs": ["startFinale"], "x": 0, "y": 2, "reveal": "N", "branch": "finale", "icon": "node-finale-2.png", "emoji": "🎆", "pending": false},
+    {"id": "finaleNeed", "name": "짧은 예고", "desc": "케이스 1개를 열 때마다 피날레가 1칸 차고, 기본 20칸(비법으로 줄어듦)이 차면 큰 한 방이 나가요. 기본 피해는 표시된 연출의 2.75배, 마지막 보스 3막 준비 후 첫 피날레는 2배\n타겟은 5칸 충전, 액트 보상도 충전해요\n피날레 힘 비법·무대 보상·피날레 계열 강화로 더 강해져요.\n필요 게이지 20-L, 최소 18", "max": 2, "cost": {"c": 2500, "g": 3.0}, "currency": "coins", "prereqs": ["finalePower"], "x": 0, "y": 3, "reveal": "N4", "branch": "finale", "icon": "node-finale-1.png", "emoji": "⏳", "pending": false},
     {"id": "comboGift", "name": "이어지는 박수", "desc": "액트 10/25/50/100 보상 활성화", "max": 1, "cost": [900], "currency": "coins", "prereqs": ["finalePower"], "x": 1, "y": 3, "reveal": "N", "branch": "finale", "icon": "node-finale-2.png", "emoji": "👏", "pending": false},
     {"id": "comboValue", "name": "커지는 박수", "desc": "액트 milestone의 동전 보상 +20L%", "max": 3, "cost": {"c": 1200, "g": 2.2}, "currency": "coins", "prereqs": ["comboGift"], "x": 2, "y": 3, "reveal": "N", "branch": "finale", "icon": "node-finale-1.png", "emoji": "👏", "pending": false},
     {"id": "encore", "name": "앵콜", "desc": "전투 시간 300초마다 15초간 지팡이 피해 +20%", "max": 1, "cost": [1800], "currency": "coins", "prereqs": ["finaleNeed"], "x": 0, "y": 4, "reveal": "N4", "branch": "finale", "icon": "node-finale-2.png", "emoji": "🎤", "pending": false},
     {"id": "encorePower", "name": "쇼맨십", "desc": "앵콜 피해 보너스 +5L%p", "max": 2, "cost": {"c": 4000, "g": 2.5}, "currency": "coins", "prereqs": ["encore"], "x": -1, "y": 4, "reveal": "N", "branch": "finale", "icon": "node-finale-1.png", "emoji": "🎤", "pending": false},
     {"id": "encoreSpan", "name": "긴 앵콜", "desc": "앵콜 지속 +3L초", "max": 2, "cost": {"c": 3500, "g": 2.5}, "currency": "coins", "prereqs": ["encore"], "x": 1, "y": 4, "reveal": "N", "branch": "finale", "icon": "node-finale-2.png", "emoji": "⏱️", "pending": false},
     {"id": "challenge", "name": "도전 수첩", "desc": "추가 도전 3개와 각각 V +0.5% 보상 활성화", "max": 1, "cost": [2500], "currency": "coins", "prereqs": ["encore"], "x": 0, "y": 5, "reveal": "N5", "branch": "finale", "icon": "node-finale-1.png", "emoji": "🏅", "pending": false},
-    {"id": "starTrick", "name": "별빛 트릭", "desc": "연출 ×1.3^L, 지팡이 피해 ×1.14^L", "max": 30, "cost": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], "currency": "starlight", "prereqs": ["root"], "x": -2, "y": -6, "reveal": "E", "branch": "star", "icon": "node-star-1.png", "emoji": "✦", "pending": false, "starKey": "trick"},
-    {"id": "starGuard", "name": "별빛 실크", "desc": "최대 멘탈·자신감·회복 ×1.18^L", "max": 30, "cost": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "currency": "starlight", "prereqs": ["root"], "x": 0, "y": -6, "reveal": "E", "branch": "star", "icon": "node-star-2.png", "emoji": "✦", "pending": false, "starKey": "guard"},
-    {"id": "starTempo", "name": "별빛 손끝", "desc": "초당 타격 ×1.06^L, 재생성 시간 ×0.92^L", "max": 30, "cost": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "currency": "starlight", "prereqs": ["root"], "x": 2, "y": -6, "reveal": "E", "branch": "star", "icon": "node-star-3.png", "emoji": "✦", "pending": false, "starKey": "tempo"},
-    {"id": "starBounty", "name": "별빛 모자", "desc": "동전 배율 ×1.12^L", "max": 30, "cost": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "currency": "starlight", "prereqs": ["root"], "x": 4, "y": -6, "reveal": "E", "branch": "star", "icon": "node-star-4.png", "emoji": "✦", "pending": false, "starKey": "bounty"}
+    {"id": "starTrick", "name": "비둘기 트릭", "desc": "연출 ×1.3^L, 지팡이 피해 ×1.14^L", "max": 30, "cost": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], "currency": "starlight", "prereqs": ["root"], "x": -2, "y": -6, "reveal": "E", "branch": "star", "icon": "node-star-1.png", "emoji": "🕊️", "pending": false, "starKey": "trick"},
+    {"id": "starGuard", "name": "비둘기 망토", "desc": "최대 멘탈·자신감·회복 ×1.18^L", "max": 30, "cost": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "currency": "starlight", "prereqs": ["root"], "x": 0, "y": -6, "reveal": "E", "branch": "star", "icon": "node-star-2.png", "emoji": "🕊️", "pending": false, "starKey": "guard"},
+    {"id": "starTempo", "name": "비둘기 손놀림", "desc": "초당 타격 ×1.06^L, 재생성 시간 ×0.92^L", "max": 30, "cost": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "currency": "starlight", "prereqs": ["root"], "x": 2, "y": -6, "reveal": "E", "branch": "star", "icon": "node-star-3.png", "emoji": "🕊️", "pending": false, "starKey": "tempo"},
+    {"id": "starBounty", "name": "비둘기 모자", "desc": "동전 배율 ×1.12^L", "max": 30, "cost": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "currency": "starlight", "prereqs": ["root"], "x": 4, "y": -6, "reveal": "E", "branch": "star", "icon": "node-star-4.png", "emoji": "🕊️", "pending": false, "starKey": "bounty"}
   ],
   dealer: {
-    name: "모자 속 토끼 딜러",
+    name: "수상한 샵 매니저",
     cardVenue: 2,
     slotVenue: 5,
     introLines: [
-      "모자 속에서 튀어나왔다.",
-      "카드 한 장, 아니면 슬롯.",
-      "규칙은 먼저 읽어 줘."
+      "모자를 깊게 눌러쓴 샵 매니저가 웃는다. 컵앤볼이냐, 카드 몬테냐. 골라 봐."
     ],
-    cardRules: "한 장씩 고른다. 꽝이면 남은 카드는 사라진다.",
+    cardRules: "컵앤볼이나 카드 몬테 중 하나를 고른다.",
     dudLine: "꽝! 남은 카드가 사라졌다.",
     cardPrizes: [
       { id: "coins-s", name: "동전 한 줌", emoji: "🪙", kind: "coins", value: 20 },
       { id: "coins-m", name: "모자 속 잔돈", emoji: "🎩", kind: "coins", value: 60 },
       // v4 U37: kind values are the base; the dealer pays them times CONST.dealerRewardMult (2.5): gems 1 -> 3, 3 -> 8, heal 20 -> 50 percent, buff 15 -> 37.
-      { id: "gems-1", name: "보석 세 알", emoji: "💎", kind: "gems", value: 1 },
-      { id: "gems-3", name: "보석 여덟 알", emoji: "💎", kind: "gems", value: 3 },
+      { id: "gems-1", name: "실크 세 장", emoji: "💎", kind: "gems", value: 1 },
+      { id: "gems-3", name: "실크 여덟 장", emoji: "💎", kind: "gems", value: 3 },
       { id: "heal", name: "치킨 한 조각", emoji: "🍗", kind: "heal", value: 20 },
       { id: "buff", name: "박수 부적", emoji: "✨", kind: "buff", value: 15 }
     ],
-    slotRules: "같은 문양 세 칸이면 보상이 나온다.",
+    slotRules: "",
     slotSymbols: [
       { id: "star", name: "별", emoji: "⭐", good: true },
       { id: "hat", name: "모자", emoji: "🎩", good: true },
@@ -651,64 +649,64 @@
       { id: "cough", name: "기침", emoji: "😷", good: false },
       { id: "miss", name: "빗나감", emoji: "💨", good: false }
     ],
-    forceLine: "보석을 쓰면 나쁜 문양을 지운다."
+    forceLine: ""
   },
   pools: {
     win: [
       "공연 성공!",
-      "관객 대만족!",
+      "관객이 웃어요!",
       "기립박수!",
-      "앵콜이 터졌다!",
-      "오늘의 주인공!",
-      "무대 장악 완료!",
+      "한 번 더요!",
+      "오늘의 손끝!",
+      "무대가 환해요!",
       "박수가 쏟아진다!",
-      "마술 완벽 성공!",
+      "마술이 통했어요!",
       "환호가 가득하다!",
       "객석이 들썩인다!",
-      "전석 매료 완료!",
-      "커튼콜 시작!",
+      "눈이 안 떨어져요!",
+      "여운이 남았어요!",
       "우와, 또 속았다!",
       "객석이 다 일어났다!",
       "객석이 파도친다!",
-      "멀리 앉은 관객도 환호!",
-      "박수가 무대 끝까지 번진다!",
-      "관객석 전체가 앵콜!"
+      "뒷자리도 웃어요!",
+      "박수가 통로까지 번져요!",
+      "관객이 함께 웃어요!"
     ],
     fail: [
-      "연습 부족...",
-      "카드가 손에서 미끄러졌다",
-      "관객이 하품을 한다",
-      "토끼가 먼저 퇴근했다",
-      "박수 타이밍이 어긋났다",
-      "모자 속이 너무 조용하다",
-      "조명이 더 주목받았다",
-      "비둘기가 관객석에 착륙!",
-      "마지막 주문이 안 난다",
-      "케이스보다 표정이 굳었다",
-      "앵콜 대신 기침 한 번",
-      "커튼이 먼저 내려왔다",
-      "지팡이가 먼저 절했다",
-      "박수 자리가 비었다"
+      "한 박자만 다시 가죠",
+      "카드가 먼저 인사했어요",
+      "관객이 다음 장면을 기다려요",
+      "토끼가 모자 속으로 돌아갔어요",
+      "박수는 한 박자 뒤에 있죠",
+      "모자가 잠깐 수줍어해요",
+      "조명이 한 박자 먼저 왔어요",
+      "비둘기가 날개를 접어 줬어요",
+      "주문이 목에서 맴돌아요",
+      "손보다 표정이 먼저 굳었어요",
+      "다음 호흡에 기회가 있어요",
+      "막이 박수를 기다리고 있어요",
+      "지팡이가 한 번 더 부탁해요",
+      "빈자리도 눈을 떼지 않아요"
     ],
     heckles: [
-      "그거 다 아는 거야!",
-      "더 대단한 건 없어?",
-      "무중력이라 그런 거지?",
-      "하품이 먼저 나왔다",
-      "휴대폰부터 켠다",
-      "팔짱이 더 바쁘다",
-      "시계를 두 번 본다",
-      "야유 한 스푼!",
-      "박수 대신 기침",
-      "슬쩍 일어나 본다",
-      "속삭임이 더 크다",
-      "리모컨이 그립다",
-      "뒷자리도 아직 조용한데?",
-      "저 끝자리까지 들렸을까?",
-      "객석이 넓으니 야유도 메아리!",
-      "맨 뒤에서 하품이 번진다",
-      "박수 소리가 아직 작아!",
-      "옆 사람 눈치만 보는 중!"
+      "손만 더 보고 싶어요",
+      "한 번만 더 천천히요",
+      "아직 눈이 따라가요",
+      "숨 고르고 다시요",
+      "팔짱은 풀고 볼게요",
+      "시계보다 손이 궁금해요",
+      "작은 소리로 놀랐어요",
+      "박수 전에 한 번 더요",
+      "뒷자리도 목이 길어져요",
+      "멀리서도 손이 보여요",
+      "의심이 웃음으로 바뀌는 중",
+      "옆 사람 눈이 반짝여요",
+      "통로 쪽도 보고 있어요",
+      "끝자리까지 웃음이 가요",
+      "넓은 객석도 조용히 기대 중",
+      "맨 뒤도 눈을 떼지 않아요",
+      "박수는 장면 끝에 모을게요",
+      "옆 사람이 먼저 웃어요"
     ],
     failReason: "의심이 {pct}% 남았어요"
   },
@@ -746,7 +744,7 @@
       hue: 265,
       ending: {
         title: "별들이 자리를 양보한다",
-        body: "달 먼지가 박수 모양으로 남았다. 은하 안내원이 통로를 비킨다. 별빛 세 개가 모자 속에 떨어졌다."
+        body: "달 먼지가 박수 모양으로 남았다. 은하 안내원이 통로를 비킨다. 비둘기 세 마리가 모자 속에 떨어졌다."
       }
     },
     {
@@ -780,7 +778,7 @@
     },
     bookTitle: "마술 비법서",
     bestiaryTitle: "관객 도감",
-    dealerTitle: "토끼 딜러",
+    dealerTitle: "수상한 샵 매니저",
     rotate: "가로로 돌려 주세요",
     restart: "비법 노트로",
     practiceTitle: "연습실 비법 노트",
@@ -791,8 +789,8 @@
     soundOn: "소리 켜짐",
     soundOff: "소리 꺼짐",
     bestiaryBase: "3번 감탄",
-    keyGrant: "열쇠 1개",
-    invitationNeed: "열쇠 {keys}개",
+    keyGrant: "책 1개",
+    invitationNeed: "책 {keys}개",
     extras: {
       none: "3번 감탄",
       finisher: "피날레로 감탄",
@@ -819,12 +817,12 @@
       level: "레벨",
       xp: "경험치",
       coins: "동전",
-      gems: "보석",
-      keys: "열쇠",
+      gems: "실크",
+      keys: "책",
       wandArea: "지팡이 범위",
       attack: "야유",
       heckleIn: "관객의 의심",
-      starlight: "별빛"
+      starlight: "비둘기"
     }
   }
 };
@@ -888,963 +886,8 @@ GAME_DATA.tree.filter(n=>n.u4b).forEach(n=>{
 });
 
 // U5 character dialogue is bundled, with no runtime JSON request.
-(function (D) {
-  const lines = {
-  "h1": {
-    "name": "까다로운 할머니",
-    "heckles": [
-      "그 손 다 보인단다.",
-      "옛날 마술은 달랐어.",
-      "안경 닦고 볼게.",
-      "에그, 눈이 침침해."
-    ],
-    "winLine": "어머나, 신통하구나!"
-  },
-  "a1": {
-    "name": "아빠",
-    "heckles": [
-      "아빠 때는 더 했어.",
-      "채널 돌리지 마라.",
-      "리모컨 어디 갔냐.",
-      "아들, 그게 다냐?"
-    ],
-    "winLine": "우리 아들 천재네!"
-  },
-  "a2": {
-    "name": "동생",
-    "heckles": [
-      "형, 나도 할 수 있어!",
-      "간식 더 없어?",
-      "뻔한 거 아냐?",
-      "형, 이거 쉬워 보여."
-    ],
-    "winLine": "헐, 형 대박이다!"
-  },
-  "a3": {
-    "name": "엄마",
-    "heckles": [
-      "밥 먹고 해라.",
-      "설거지 남았는데.",
-      "엄마 바쁘다니까.",
-      "또 장난이니?"
-    ],
-    "winLine": "어머, 우리 아들!"
-  },
-  "h2": {
-    "name": "파티 주최자",
-    "heckles": [
-      "파티는 내가 제일 알지.",
-      "더 신나는 건?",
-      "분위기 띄워 봐.",
-      "이게 최선이야?"
-    ],
-    "winLine": "오늘 파티 주인공!"
-  },
-  "a4": {
-    "name": "풍선 친구",
-    "heckles": [
-      "빵 터질 줄 알았지?",
-      "풍선이 더 놀랍다.",
-      "터뜨리는 건 나야.",
-      "에이, 시시해."
-    ],
-    "winLine": "풍선보다 더 터졌다!"
-  },
-  "a5": {
-    "name": "음악 친구",
-    "heckles": [
-      "이 노래가 더 신나.",
-      "박자 놓쳤어.",
-      "다음 곡 틀까?",
-      "음악이 더 낫다."
-    ],
-    "winLine": "이건 신곡급이다!"
-  },
-  "a6": {
-    "name": "케이크 친구",
-    "heckles": [
-      "초 꺼진다, 빨리!",
-      "케이크가 더 달아.",
-      "그게 끝이야?",
-      "크림만 못한데."
-    ],
-    "winLine": "케이크보다 달콤해!"
-  },
-  "h3": {
-    "name": "심사 담임",
-    "heckles": [
-      "호루라기 분다?",
-      "규정 위반 아니니?",
-      "차렷, 제대로 해.",
-      "감점이다."
-    ],
-    "winLine": "합격이다, 만점!"
-  },
-  "a7": {
-    "name": "앞자리 짝꿍",
-    "heckles": [
-      "야, 박자 틀렸어.",
-      "연필 부러졌다.",
-      "나도 하겠다.",
-      "짝꿍, 긴장했지?"
-    ],
-    "winLine": "짝꿍, 너 진짜 대박!"
-  },
-  "a8": {
-    "name": "응원봉 반장",
-    "heckles": [
-      "응원은 아직이야.",
-      "아직 응원봉 안 켜!",
-      "반장이 지켜본다.",
-      "더 보여 줘 봐."
-    ],
-    "winLine": "응원봉 켠다, 최고!"
-  },
-  "a9": {
-    "name": "깐깐한 선배의 채점",
-    "heckles": [
-      "점수 깎는다.",
-      "선배가 본다.",
-      "난이도가 낮네.",
-      "채점 시작한다."
-    ],
-    "winLine": "만점 줘야겠네!"
-  },
-  "a46": {
-    "name": "체육부 선배",
-    "heckles": [
-      "공 던지는 게 낫다.",
-      "체력은 약해 보여.",
-      "한 판 뛸래?",
-      "운동장이 더 좋다."
-    ],
-    "winLine": "야, 너 대단하다!"
-  },
-  "h4": {
-    "name": "라떼 바리스타",
-    "heckles": [
-      "커피 식겠다.",
-      "라떼아트가 낫네.",
-      "거품만 가득이다.",
-      "주문이나 하세요."
-    ],
-    "winLine": "한 잔 쏠게요!"
-  },
-  "a10": {
-    "name": "노트북 손님",
-    "heckles": [
-      "배터리 없는데.",
-      "와이파이 끊겼다.",
-      "마감 중인데요.",
-      "일이나 하자."
-    ],
-    "winLine": "일을 잊었네요!"
-  },
-  "a11": {
-    "name": "디저트 손님",
-    "heckles": [
-      "케이크 녹겠어요.",
-      "포크 내려놔?",
-      "달콤하진 않네요.",
-      "빨리 끝내요."
-    ],
-    "winLine": "디저트보다 달콤!"
-  },
-  "a12": {
-    "name": "창가 손님",
-    "heckles": [
-      "창밖 비 오네요.",
-      "김이 서렸네요.",
-      "하트나 그릴래.",
-      "흔한 거 아녜요?"
-    ],
-    "winLine": "창가에서 소름!"
-  },
-  "a50": {
-    "name": "바리스타 친구",
-    "heckles": [
-      "야, 나도 그 정도는.",
-      "커피 식는다.",
-      "친구라 봐준다.",
-      "진짜 괜찮겠어?"
-    ],
-    "winLine": "친구야, 미쳤다!"
-  },
-  "h5": {
-    "name": "까칠한 평론가",
-    "heckles": [
-      "별점 깎는다.",
-      "구성이 진부해.",
-      "평론은 냉정하다.",
-      "다음 대사는?"
-    ],
-    "winLine": "별 다섯, 인정!"
-  },
-  "a13": {
-    "name": "열성팬",
-    "heckles": [
-      "박수 준비 완료!",
-      "더 크게 해 봐요!",
-      "팬이라 걱정돼요.",
-      "실수하면 어쩌죠?"
-    ],
-    "winLine": "역시 최고예요!"
-  },
-  "a14": {
-    "name": "일반 관객",
-    "heckles": [
-      "프로그램에 없는데?",
-      "다음 장 넘겨요.",
-      "순서 틀렸어요.",
-      "페이지가 남았네."
-    ],
-    "winLine": "프로그램 밖이다!"
-  },
-  "a15": {
-    "name": "헤클러",
-    "heckles": [
-      "쉿, 속닥속닥.",
-      "저거 눈속임이래.",
-      "들켰대, 쉿.",
-      "옆에서 알려 줄까?"
-    ],
-    "winLine": "헉, 소곤댈 틈 없다!"
-  },
-  "a54": {
-    "name": "대본 작가",
-    "heckles": [
-      "대본이 더 낫네.",
-      "대사가 약해요.",
-      "결말이 뻔하죠.",
-      "복선이 없잖아요."
-    ],
-    "winLine": "이 반전은 못 썼다!"
-  },
-  "a55": {
-    "name": "커튼콜 팬",
-    "heckles": [
-      "커튼콜은 아직!",
-      "앙코르는 이르죠.",
-      "박수는 아껴요.",
-      "팬은 냉정해요."
-    ],
-    "winLine": "앙코르, 앙코르!"
-  },
-  "h6": {
-    "name": "축제 사회자",
-    "heckles": [
-      "마이크 넘긴다.",
-      "분위기 식었다.",
-      "환호가 없네요?",
-      "본방은 한 번뿐이죠."
-    ],
-    "winLine": "축제 최고 무대다!"
-  },
-  "a16": {
-    "name": "깃발 응원단",
-    "heckles": [
-      "깃발 아직 접어 둬!",
-      "응원단은 냉정해.",
-      "더 크게 외쳐!",
-      "힘이 안 나네."
-    ],
-    "winLine": "깃발 흔든다, 와!"
-  },
-  "a17": {
-    "name": "술친구",
-    "heckles": [
-      "치킨 식는다, 야.",
-      "양념이 더 낫네.",
-      "동기라서 본다.",
-      "그게 다냐?"
-    ],
-    "winLine": "치킨보다 맛있다!"
-  },
-  "a18": {
-    "name": "후배",
-    "heckles": [
-      "선배, 괜찮아요?",
-      "살짝 아쉬운데.",
-      "후배도 긴장돼요.",
-      "믿어도 되죠?"
-    ],
-    "winLine": "선배 짱이에요!"
-  },
-  "a59": {
-    "name": "밴드 관객",
-    "heckles": [
-      "기타 소리가 낫다.",
-      "박자 놓쳤어요.",
-      "밴드 부를까요?",
-      "앵콜은 멀었네."
-    ],
-    "winLine": "앵콜 외칩니다!"
-  },
-  "a60": {
-    "name": "야광봉 팬",
-    "heckles": [
-      "야광봉 안 켜져.",
-      "불빛이 아깝다.",
-      "조명이 더 밝다.",
-      "야광봉 접는다."
-    ],
-    "winLine": "야광봉 번쩍!"
-  },
-  "h7": {
-    "name": "메인 심사위원",
-    "heckles": [
-      "패들은 아직 내려요.",
-      "오디션은 냉정해요.",
-      "감동이 부족해요.",
-      "한 번 더요."
-    ],
-    "winLine": "합격 패들 올립니다!"
-  },
-  "a19": {
-    "name": "점수판 도우미",
-    "heckles": [
-      "점수 안 올라요.",
-      "아직 일 점이에요.",
-      "실시간 감점!",
-      "올라가려나요."
-    ],
-    "winLine": "점수판 폭발했어요!"
-  },
-  "a20": {
-    "name": "카메라 감독",
-    "heckles": [
-      "줌인 보류.",
-      "각이 안 나와요.",
-      "카메라 돌려요.",
-      "컷, 다시 가요."
-    ],
-    "winLine": "줌인 들어갑니다!"
-  },
-  "a21": {
-    "name": "라이벌",
-    "heckles": [
-      "내가 더 잘해.",
-      "피날레는 내 거야.",
-      "긴장 좀 하지?",
-      "어디 한번 봐."
-    ],
-    "winLine": "크, 인정한다!"
-  },
-  "a64": {
-    "name": "초대 작가",
-    "heckles": [
-      "대본에 없던데요.",
-      "작가가 쓸 법해.",
-      "반전이 약해요.",
-      "섭외는 누가?"
-    ],
-    "winLine": "이건 대본 밖이네!"
-  },
-  "a65": {
-    "name": "리허설 관객",
-    "heckles": [
-      "리허설 때 달랐죠?",
-      "본방은 다르죠.",
-      "큐 사인 놓쳤네.",
-      "본방은 한 번뿐이죠."
-    ],
-    "winLine": "리허설과 천지차!"
-  },
-  "a66": {
-    "name": "방청객",
-    "heckles": [
-      "박수 칠 타이밍?",
-      "아직 못 쳐요.",
-      "방청도 냉정해요.",
-      "녹화 중이잖아요."
-    ],
-    "winLine": "박수가 절로 나와요!"
-  },
-  "h-broadcast": {
-    "name": "국민 MC",
-    "heckles": [
-      "생방송이라 봐줘.",
-      "국민이 보고 있다.",
-      "실수는 못 해요.",
-      "시청률 어쩌려고?"
-    ],
-    "winLine": "국민이 박수 칩니다!"
-  },
-  "a112": {
-    "name": "생방송 PD",
-    "heckles": [
-      "큐 사인 갑니다.",
-      "방송 사고 나요.",
-      "시간이 없어요.",
-      "컷 들어갈까요?"
-    ],
-    "winLine": "방송이 살았네요!"
-  },
-  "a113": {
-    "name": "방송 작가",
-    "heckles": [
-      "방송 순서에 없는데?",
-      "순서가 꼬였어요.",
-      "수정본 보세요.",
-      "대본이 안 맞아요."
-    ],
-    "winLine": "방송 순서 다시 쓴다!"
-  },
-  "a114": {
-    "name": "음향 감독",
-    "heckles": [
-      "마이크에 걸려요.",
-      "붐대 내려갑니다.",
-      "소리가 안 잡혀.",
-      "조심하세요, 붐!"
-    ],
-    "winLine": "소리 하나 안 샜다!"
-  },
-  "a115": {
-    "name": "방청 응원단",
-    "heckles": [
-      "박수 칠까 말까?",
-      "표정이 굳었는데?",
-      "응원 소리 낮출게.",
-      "환호 신호 기다려."
-    ],
-    "winLine": "와아, 함성 갑니다!"
-  },
-  "a116": {
-    "name": "열성적인 패널",
-    "heckles": [
-      "반응이 시큰둥해요.",
-      "댓글 차갑네요.",
-      "실검엔 안 뜨죠.",
-      "좋아요 안 올라요."
-    ],
-    "winLine": "실시간 반응 폭발!"
-  },
-  "a117": {
-    "name": "조명 감독",
-    "heckles": [
-      "조명 놓쳤어요.",
-      "그림자가 먼저네.",
-      "빛이 아깝네요.",
-      "각도가 어색해요."
-    ],
-    "winLine": "조명이 춤추네요!"
-  },
-  "h8": {
-    "name": "전설의 딜러",
-    "heckles": [
-      "카드는 내 손이 낫지.",
-      "이 판은 내 손이 더 신기해.",
-      "패를 읽었다.",
-      "허세 아니고?"
-    ],
-    "winLine": "인정하지, 올인이다!"
-  },
-  "a22": {
-    "name": "큰손 손님",
-    "heckles": [
-      "칩을 걸어 볼까.",
-      "올인할 값어치?",
-      "배팅이 아깝네.",
-      "판돈이 아깝다."
-    ],
-    "winLine": "전 재산 걸겠소!"
-  },
-  "a23": {
-    "name": "화려한 관객",
-    "heckles": [
-      "깃털보다 가볍네요.",
-      "화려함이 부족해.",
-      "조명이 더 빛나.",
-      "볼거리가 약해요."
-    ],
-    "winLine": "눈이 반짝반짝해요!"
-  },
-  "a24": {
-    "name": "경비 아저씨",
-    "heckles": [
-      "수상한 손놀림이다.",
-      "소매 좀 봅시다.",
-      "신분증 보여 줘.",
-      "카메라가 보고 있다."
-    ],
-    "winLine": "이건 반칙 아닙니다!"
-  },
-  "a70": {
-    "name": "호텔 손님",
-    "heckles": [
-      "룸서비스가 낫겠네.",
-      "호텔 쇼보다 밋밋해.",
-      "체크아웃할까.",
-      "로비가 더 화려해."
-    ],
-    "winLine": "객실에서 자랑해야지!"
-  },
-  "a71": {
-    "name": "쇼 팬",
-    "heckles": [
-      "쇼 시간 끝났나?",
-      "다음 쇼가 낫겠다.",
-      "팬이라 봐줄게.",
-      "박수는 아직!"
-    ],
-    "winLine": "쇼 타임, 최고다!"
-  },
-  "a72": {
-    "name": "사진 관광객",
-    "heckles": [
-      "기념품이 더 낫네.",
-      "사진은 찍어 줄게.",
-      "이거 유명한 거지?",
-      "여행 첫날부터 졸려."
-    ],
-    "winLine": "여행 중 제일 좋다!"
-  },
-  "h9": {
-    "name": "브로드웨이 스타",
-    "heckles": [
-      "스포트라이트는 내 거.",
-      "조연은 비켜 있어.",
-      "박수는 내가 먼저.",
-      "무대는 하나뿐이야."
-    ],
-    "winLine": "브라보, 앙코르다!"
-  },
-  "a25": {
-    "name": "뮤지컬 팬",
-    "heckles": [
-      "하이노트가 없네.",
-      "노래 한 곡 낫겠다.",
-      "뮤지컬이 더 짜릿.",
-      "합창이 그립다."
-    ],
-    "winLine": "브라보! 기립이다!"
-  },
-  "a26": {
-    "name": "뉴욕 관광객",
-    "heckles": [
-      "브로슈어엔 없던데?",
-      "표값 아깝지 않나.",
-      "관광객도 눈은 높아.",
-      "사진부터 찍을까."
-    ],
-    "winLine": "여행 선물 받았다!"
-  },
-  "a27": {
-    "name": "깐깐 비평가",
-    "heckles": [
-      "막간에 이미 썼다.",
-      "평이 박하겠는데.",
-      "리뷰는 냉정하다.",
-      "전개가 늘어지네."
-    ],
-    "winLine": "리뷰를 고쳐 쓴다!"
-  },
-  "a76": {
-    "name": "티켓 수집가",
-    "heckles": [
-      "수집품 중 별로네.",
-      "티켓 값 못 하네.",
-      "콜렉션엔 없는 거.",
-      "아직 모으긴 일러."
-    ],
-    "winLine": "소장하고 싶다!"
-  },
-  "a77": {
-    "name": "발레 관객",
-    "heckles": [
-      "발레만큼 우아해?",
-      "발끝이 아쉽네.",
-      "동작이 투박하다.",
-      "음악이 더 곱다."
-    ],
-    "winLine": "우아하다, 감동이다!"
-  },
-  "a78": {
-    "name": "오케스트라 팬",
-    "heckles": [
-      "박자가 어긋나요.",
-      "지휘자가 필요해.",
-      "현악이 더 낫지.",
-      "화음이 없어요."
-    ],
-    "winLine": "교향곡 같은 마술!"
-  },
-  "a79": {
-    "name": "의상 디자이너",
-    "heckles": [
-      "의상이 평범하군.",
-      "소품이 아쉽다.",
-      "실밥이 튀겠다.",
-      "반짝임이 부족해."
-    ],
-    "winLine": "의상도 반하겠다!"
-  },
-  "h10": {
-    "name": "달 기지 대장",
-    "heckles": [
-      "우주에선 어림없다.",
-      "중력 없이 되겠어?",
-      "달 먼지만 날려.",
-      "기지 규정 위반!"
-    ],
-    "winLine": "기지 최고 대원이다!"
-  },
-  "a28": {
-    "name": "우주비행사",
-    "heckles": [
-      "산소 아깝다.",
-      "헬멧 속 하품이야.",
-      "우주선 안이 낫다.",
-      "이 정도로 놀라?"
-    ],
-    "winLine": "교신 불가, 감탄!"
-  },
-  "a29": {
-    "name": "무전 담당",
-    "heckles": [
-      "관제실 응답 없음.",
-      "신호 지연 중이다.",
-      "교신 상태 불량.",
-      "수신 감도 낮음."
-    ],
-    "winLine": "관제센터에 보고한다!"
-  },
-  "a30": {
-    "name": "탐사차 기사",
-    "heckles": [
-      "이 길에선 못 해.",
-      "바퀴 자국만 남아.",
-      "운전이 더 짜릿.",
-      "기름값이 더 든다."
-    ],
-    "winLine": "월면차에 태우고 싶다!"
-  },
-  "a83": {
-    "name": "달 과학자",
-    "heckles": [
-      "실험 결과가 없네.",
-      "데이터가 부족해.",
-      "재현이 되겠나.",
-      "가설이 약해요."
-    ],
-    "winLine": "논문 쓰고 싶다!"
-  },
-  "a84": {
-    "name": "별빛 수집가",
-    "heckles": [
-      "별빛이 더 곱지.",
-      "별 하나만 못하네.",
-      "이 빛은 약해.",
-      "수집품엔 안 넣어."
-    ],
-    "winLine": "별 하나 더 얻었다!"
-  },
-  "a85": {
-    "name": "기지 정비사",
-    "heckles": [
-      "나사 풀렸을걸.",
-      "점검이 필요하군.",
-      "고장 날 것 같아.",
-      "부품 어딨어?"
-    ],
-    "winLine": "완벽 정비 상태!"
-  },
-  "a86": {
-    "name": "우주 관광객",
-    "heckles": [
-      "지구가 더 예뻐.",
-      "우주 여행 값은 하나?",
-      "사진부터 찍자.",
-      "멀미가 먼저 난다."
-    ],
-    "winLine": "우주 여행 최고다!"
-  },
-  "h11": {
-    "name": "태양의 불꽃왕",
-    "heckles": [
-      "내 불꽃보다 뜨겁냐?",
-      "타오르게 해 봐.",
-      "재만 남을 걸.",
-      "열기가 부족하다."
-    ],
-    "winLine": "활활 불타올랐다!"
-  },
-  "a31": {
-    "name": "불꽃 서퍼",
-    "heckles": [
-      "파도가 더 큰데?",
-      "서핑 중 뭘 봐.",
-      "불꽃보다 느리네.",
-      "빨리 끝내 줘."
-    ],
-    "winLine": "불꽃보다 짜릿!"
-  },
-  "a32": {
-    "name": "태양 가이드",
-    "heckles": [
-      "투어는 계속돼.",
-      "흑점이 더 신기해.",
-      "태양 불꽃가 더 뜨겁다.",
-      "가이드가 한 수 위."
-    ],
-    "winLine": "가이드북에 싣겠다!"
-  },
-  "a33": {
-    "name": "불꽃 사진가",
-    "heckles": [
-      "셔터가 안 눌려.",
-      "찍을 게 없네.",
-      "초점이 안 맞아.",
-      "불꽃이 더 멋져."
-    ],
-    "winLine": "찰칵, 인생 사진!"
-  },
-  "a90": {
-    "name": "빛 연구원",
-    "heckles": [
-      "빛이 약한데.",
-      "렌즈가 필요한가.",
-      "관측값이 낮네.",
-      "빛 스펙트럼 달라."
-    ],
-    "winLine": "새 연구 주제다!"
-  },
-  "a91": {
-    "name": "태양 여행객",
-    "heckles": [
-      "여기까지 왔는데.",
-      "태양 불꽃 투어 갈까.",
-      "뜨겁지가 않네.",
-      "기대가 컸나."
-    ],
-    "winLine": "여행 최고 순간!"
-  },
-  "a92": {
-    "name": "태양 관측자",
-    "heckles": [
-      "관측 기록에 없네.",
-      "오차 범위일걸.",
-      "망원경이 더 정확.",
-      "변광성이냐."
-    ],
-    "winLine": "관측 기록 갱신!"
-  },
-  "a93": {
-    "name": "파도 서퍼",
-    "heckles": [
-      "서핑할 시간인데.",
-      "파도 놓쳤잖아.",
-      "파고가 낮아졌다.",
-      "보드 접을까."
-    ],
-    "winLine": "파도 탈 맛 난다!"
-  },
-  "a94": {
-    "name": "우주 사진가",
-    "heckles": [
-      "사진에 안 담겨.",
-      "빛이 너무 약해.",
-      "셔터 아깝다.",
-      "노출이 부족해."
-    ],
-    "winLine": "찍어도 모자라!"
-  },
-  "h12": {
-    "name": "은하 황제",
-    "heckles": [
-      "은하에서 통할까.",
-      "내 별자리 앞에서.",
-      "황제 앞에 무릎!",
-      "별 몇 개 줄까."
-    ],
-    "winLine": "별 하나 하사한다!"
-  },
-  "a34": {
-    "name": "외계인 손님",
-    "heckles": [
-      "이게 뭐라는 건가.",
-      "지구인 신기해?",
-      "번역이 안 된다.",
-      "박수가 뭐지?"
-    ],
-    "winLine": "지구인, 놀랍구나!"
-  },
-  "a35": {
-    "name": "UFO 파일럿",
-    "heckles": [
-      "기체 흔들린다.",
-      "기름값이 더 든다.",
-      "궤도 이탈할까.",
-      "구경 끝났나?"
-    ],
-    "winLine": "기체가 춤춘다!"
-  },
-  "a36": {
-    "name": "별자리 선생님",
-    "heckles": [
-      "별이 지기 전에!",
-      "별자리엔 없는데.",
-      "해설 시작한다.",
-      "별 이야기가 낫다."
-    ],
-    "winLine": "새 별자리 탄생!"
-  },
-  "a98": {
-    "name": "우주 음악가",
-    "heckles": [
-      "음정이 틀려요.",
-      "박자 아쉬워요.",
-      "악보가 없네요.",
-      "화음이 필요해요."
-    ],
-    "winLine": "곡이 떠오르네요!"
-  },
-  "a99": {
-    "name": "은하 사진가",
-    "heckles": [
-      "은하 사진엔 없네.",
-      "노출이 부족하군.",
-      "구도가 어색하다.",
-      "셔터가 놀겠다."
-    ],
-    "winLine": "앨범에 실을게요!"
-  },
-  "a100": {
-    "name": "은하수 안내원",
-    "heckles": [
-      "성운 쪽으로 오세요.",
-      "길 잃으셨죠?",
-      "안내판 읽어요.",
-      "성운 속은 어둡죠."
-    ],
-    "winLine": "성운이 반짝였어요!"
-  },
-  "a101": {
-    "name": "혜성 레이서",
-    "heckles": [
-      "혜성이 더 빨라요.",
-      "꼬리도 안 보이네.",
-      "속도가 느린데요.",
-      "따라올 수 있어?"
-    ],
-    "winLine": "혜성처럼 빠르네!"
-  },
-  "a102": {
-    "name": "소원 여행자",
-    "heckles": [
-      "별자리가 안 맞네.",
-      "여행 계획 틀어져.",
-      "별빛이 약한걸.",
-      "나침반이 헛돈다."
-    ],
-    "winLine": "별 여행 최고예요!"
-  },
-  "h13": {
-    "name": "가장 의심 많은 나",
-    "heckles": [
-      "넌 안 될 거야.",
-      "늘 하던 실수잖아.",
-      "솔직히 불안하지?",
-      "거울 앞에서 떨지."
-    ],
-    "winLine": "내가 감탄했다, 훌륭해!"
-  },
-  "a37": {
-    "name": "지팡이 없는 나",
-    "heckles": [
-      "리모컨이 편해.",
-      "마술은 접자.",
-      "소파가 더 좋아.",
-      "뭘 또 하려고."
-    ],
-    "winLine": "리모컨 내려놓는다!"
-  },
-  "a38": {
-    "name": "연습실 못 간 나",
-    "heckles": [
-      "연습실 문 닫혔어.",
-      "오늘은 쉴까.",
-      "내일부터 하자.",
-      "어차피 안 될걸."
-    ],
-    "winLine": "문 열어 볼래!"
-  },
-  "a39": {
-    "name": "첫 카드를 접은 나",
-    "heckles": [
-      "카드 다시 넣자.",
-      "접은 건 접은 거.",
-      "남들 눈이 무서워.",
-      "내가 뭘 한다고."
-    ],
-    "winLine": "다시 꺼내 볼게!"
-  },
-  "a106": {
-    "name": "용기 낸 나",
-    "heckles": [
-      "나도 해냈는걸.",
-      "끝까지 가 봐.",
-      "떨려도 올라가.",
-      "무서워도 한다."
-    ],
-    "winLine": "그래, 바로 이거야!"
-  },
-  "a107": {
-    "name": "객석의 나",
-    "heckles": [
-      "일단 지켜볼게.",
-      "박수는 아직이야.",
-      "실수해도 괜찮아.",
-      "끝까지 해 봐."
-    ],
-    "winLine": "박수 쳐 줄게!"
-  },
-  "a108": {
-    "name": "다른 세계의 나",
-    "heckles": [
-      "다른 차원도 비슷해.",
-      "여기선 어려운데.",
-      "차원이 안 맞네.",
-      "나는 못 했거든."
-    ],
-    "winLine": "여기선 성공이네!"
-  },
-  "a109": {
-    "name": "연습을 시작한 나",
-    "heckles": [
-      "이제 막 시작했어.",
-      "연습이 더 필요해.",
-      "아직 서툴러 보여.",
-      "나도 처음엔 그랬지."
-    ],
-    "winLine": "계속 연습할게!"
-  },
-  "a110": {
-    "name": "무대에 선 나",
-    "heckles": [
-      "무대는 쉽지 않아.",
-      "조명이 뜨겁지?",
-      "떨림은 숨겨.",
-      "나도 떨었어."
-    ],
-    "winLine": "무대가 부럽네!"
-  },
-  "a111": {
-    "name": "박수 보내는 나",
-    "heckles": [
-      "박수 칠 준비 끝.",
-      "응원은 하지만.",
-      "보여 주기만 해.",
-      "끝까지 믿어."
-    ],
-    "winLine": "박수 보낸다, 나야!"
-  }
-};
-  D.venues.forEach(v => [...v.audiences, v.headliner].forEach(a => {
-    a.heckles = lines[a.id].heckles; a.winLine = lines[a.id].winLine;
-  }));
-})(GAME_DATA);
+// Fight dialogue is applied from storyV15 below.
+
 
 // U7: stable economy identities; array position is presentation order only.
 (function (D) {
@@ -1863,132 +906,132 @@ GAME_DATA.tree.filter(n=>n.u4b).forEach(n=>{
   const content = {
   "venues": {
     "meetup": {
-      "intro": "주말 강의실에 마니아가 모였다!",
-      "successLine": "강의실이 박수로 들썩인다!",
+      "intro": "형들이 강의실에 모였다!",
+      "successLine": "형들이 박수를 보낸다!",
       "trophy": "전국 순회 마술사"
     },
     "lecturenote": {
-      "intro": "렉쳐노트 문이 활짝 열렸다!",
-      "successLine": "렉쳐노트에 박수가 가득하다!",
+      "intro": "야간 알바였던 가게로 돌아왔다!",
+      "successLine": "서재 테이블로 갈 시간이다!",
       "trophy": "렉쳐노트 식구"
     }
   },
   "chars": {
     "a-meetup-busan": {
-      "name": "부산의 마술 매니아",
-      "flavor": "커스텀 덱을 자랑한다.",
+      "name": "에지",
+      "flavor": "부산의 마술 매니아. 형.",
       "heckles": [
-        "이 덱 한정판이에요!",
-        "내 덱 좀 봐 봐요!",
-        "카드 질감이 달라요.",
-        "이거 직접 디자인했죠."
+        "부산 에지야. 편하게 해.",
+        "강의는 같이 하는 거야.",
+        "심리 마술, 네 말로 해.",
+        "칼리야, 긴장 풀어."
       ],
-      "winLine": "덱까지 홀렸어요!"
+      "winLine": "심리랑 교육, 네 말로 해도 돼."
     },
     "a-meetup-daegu": {
-      "name": "대구의 마술 매니아",
-      "flavor": "한 손 플러리시가 화려하다.",
+      "name": "재현 형",
+      "flavor": "강의실 뒷줄에서 손을 쫓는다.",
       "heckles": [
-        "셔플은 봤어요.",
-        "이제 마술 보여줘요.",
-        "한 손 컷은 저도 해요.",
-        "플러리시만 있나요?"
+        "셔플 다음이 궁금해요.",
+        "카드 이야기는 오늘은 짧게요.",
+        "손 놓는 순간만 볼게요.",
+        "강의실 불빛이 딱 좋아요."
       ],
-      "winLine": "플러리시보다 마술이네!"
+      "winLine": "이야기보다 손이 먼저네요."
     },
     "a-meetup-changwon": {
-      "name": "창원의 마술 매니아",
-      "flavor": "루틴 노트를 펼친다.",
+      "name": "빨간 모자",
+      "flavor": "창원의 마술 매니아. 형.",
       "heckles": [
-        "잠깐, 메모할게요.",
-        "그 대사 다시 한번요.",
-        "각도는 어디서 잡죠?",
-        "구성이 궁금하네요."
+        "창원 빨간 모자야.",
+        "반갑다, 칼리야.",
+        "모자 쓰고 손 본다.",
+        "손 놓치지 않는다, 칼리야."
       ],
-      "winLine": "이 루틴 적어 둘게요!"
+      "winLine": "칼리야, 그래서 3만 원을 낸 거구나."
     },
     "a-meetup-incheon": {
-      "name": "인천의 마술 매니아",
-      "flavor": "촬영 허락부터 구한다.",
+      "name": "비타민",
+      "flavor": "인천의 마술 매니아. 형.",
       "heckles": [
-        "찍어도 될까요?",
-        "녹화 켰어요, 괜찮죠?",
-        "한 번 더 찍을게요.",
-        "느리게 봐도 돼요?"
+        "인천 비타민이다.",
+        "잘 부탁해, 칼리야.",
+        "정갈하게 한 번에 가자.",
+        "소재는 다양하게 가자."
       ],
-      "winLine": "찍길 잘했어요, 진짜!"
+      "winLine": "날아가는 비둘기도 스냅 한 번에 돌아오게 하는 마술사 비타민입니다"
     },
     "a-meetup-geoje": {
-      "name": "거제의 마술 매니아",
-      "flavor": "먼 길을 달려왔다.",
-      "encounterLine": "거제 야호! 한번 속여 보시겠어요?",
+      "name": "책가방 민호",
+      "flavor": "먼 길 가방을 무릎에 둔다.",
+      "encounterLine": "멀리서 왔는데, 손 좀 볼게요.",
       "heckles": [
-        "거제 야호! 한번 속여 보시겠어요?",
-        "어디서 배우셨어요?",
-        "초보는 뭐부터 해요?",
-        "입문 책 추천해 주세요.",
-        "저 멀리서 왔어요."
+        "바닷바람 말고 손을 보러 왔어요.",
+        "초보는 눈부터죠?",
+        "입문 순서는 나중에 물을게요.",
+        "자리만 있으면 충분해요.",
+        "멀리서 왔는데, 손 좀 볼게요."
       ],
-      "winLine": "거제 야호! 오늘 최고였어요!"
+      "winLine": "먼 길, 아깝지 않아요."
     },
     "a-meetup-cheonan": {
-      "name": "천안의 마술 매니아",
-      "flavor": "기차 시간이 빠듯하다.",
+      "name": "진수 씨",
+      "flavor": "간식 봉지를 강의실에 둔다.",
       "heckles": [
-        "기차 시간 다 됐는데.",
-        "딱 하나만 더요!",
-        "열차 놓쳐도 볼래요.",
-        "마지막으로 한 번만!"
+        "간식은 공연 뒤에 열어요.",
+        "기차는 다음 걸로 바꿀게요.",
+        "하나만 더, 진짜 마지막요.",
+        "봉지는 접어 두고 볼게요."
       ],
-      "winLine": "기차는 다음 거 타죠!"
+      "winLine": "간식보다 손이 남네요."
     },
     "a-meetup-suwon": {
-      "name": "수원의 마술 매니아",
-      "flavor": "자원해서 관객이 된다.",
+      "name": "착한 천사",
+      "flavor": "경북 구미의 마술 매니아. 형.",
       "heckles": [
-        "제가 카드 골라 볼게요.",
-        "이 카드 맞죠?",
-        "섞는 건 제가 할게요.",
-        "진짜 자유 선택이죠?"
+        "경북 구미에서 왔다.",
+        "칼리야, 손 좀 보자.",
+        "가르침은 천천히 하자.",
+        "끝나고 꼼장어집이다."
       ],
-      "winLine": "시험 통과, 인정합니다!"
+      "winLine": "끝나고 꼼장어집 가자, 칼리야."
     },
     "h-meetup-seoul": {
-      "name": "서울의 마술 매니아",
-      "flavor": "첫 모임을 기억하는 선배.",
+      "name": "마술삼일",
+      "flavor": "서울의 마술 매니아. 형.",
       "heckles": [
-        "첫 모임 기억나지?",
-        "그때보다 손이 빠르네.",
-        "비밀은 아직 안 알려줘.",
-        "한 번 더 보여줘 봐."
+        "서울에서 왔다, 칼리야.",
+        "앉아. 편하게 해.",
+        "관객이 해낸 듯 가자.",
+        "마지막은 즐겁게 봐."
       ],
-      "winLine": "정말 많이 늘었네!",
-      "preLine": "첫 모임 때가 생각나네.",
-      "defeatLine": "많이 늘었네. 자랑스럽다."
+      "winLine": "칼리야, 소극장도 한 번 서 봐.",
+      "preLine": "서울에서 왔다. 칼리야, 앉아.",
+      "defeatLine": "칼리야, 소극장도 한 번 서 봐."
     },
     "a-lecturenote-hecate": {
       "name": "헤카테",
-      "flavor": "부장 마술사, 꼼꼼 점검.",
+      "flavor": "포장 줄과 재고를 같이 본다.",
       "heckles": [
-            "동선은 확인했나요?",
-            "손놀림이 궁금하네요.",
-            "큐 시트는 챙겼죠?",
-            "부장 눈은 못 속입니다."
+            "재고 칸은 제가 볼게요.",
+            "포장 줄, 공연 뒤에 이을게요.",
+            "손 위치만 확인했어요.",
+            "문의 응대는 끝나고 할게요."
       ],
-      "winLine": "점검 통과입니다, 칼리!",
+      "winLine": "점검보다 손이 먼저네요.",
       "title": "부장",
       "gender": "male"
 },
     "a-lecturenote-serona": {
       "name": "세로나",
-      "flavor": "히든 직원, 서프라이즈 담당.",
+      "flavor": "모자를 벗으면 세로나. 숨겨진 조력자.",
       "heckles": [
-            "저 히든 직원이에요.",
-            "뭔가 숨겨 뒀답니다.",
-            "눈치채셨나요?",
-            "반전은 제 몫이죠."
+            "마지막 컵앤볼이에요.",
+            "모자를 벗을게요.",
+            "세로나예요. 샵 매니저도 저고요.",
+            "숨겨진 조력자로 있었어요."
       ],
-      "winLine": "히든 직원도 반했어요!",
+      "winLine": "카드 몬테의 손도 제 거였어요.",
       "title": "히든 직원",
       "gender": "female"
 },
@@ -1996,34 +1039,34 @@ GAME_DATA.tree.filter(n=>n.u4b).forEach(n=>{
       "name": "정희수",
       "flavor": "직원, 포장은 맡겨 주세요.",
       "heckles": [
-            "주문 상자 포장 중!",
-            "선반 정리 끝났어요.",
-            "택배 왔어요, 칼리!",
-            "테이프 어디 갔지?"
+            "판매 전에 마술 한 번, 반응 좋았음.",
+            "카운터는 우리가 볼게.",
+            "포장은 제가 볼게요.",
+            "선반은 정리해 둘게요."
       ],
-      "winLine": "박수 소리가 택배급!",
+      "winLine": "카운터는 우리가 볼게.",
       "title": "직원"
 },
     "h-lecturenote-kim": {
       "name": "김정명",
-      "flavor": "렉쳐노트를 세운 베테랑.",
+      "flavor": "렉쳐노트 사장님. 칼리를 얻기 위해 계획했다.",
       "heckles": [
-        "멀리 다녀왔구나.",
-        "그 한 수, 기대하마.",
-        "무대는 여전하지?",
-        "손은 안 녹슬었나?"
+        "매니저가 된 뒤에 말했지.",
+        "사실 널 얻기 위해 다 계획했던 거다",
+        "고개 돌렸더니 카드가 있더라.",
+        "첫날은 야간 알바였지."
       ],
-      "winLine": "잘 돌아왔다, 칼리!",
-      "preLine": "우주까지 다녀왔다며? 보자.",
-      "defeatLine": "잘했다. 정말 잘 돌아왔다.",
-      "act1Line": "준비한 한 수, 어디 보자.",
-      "act2Line": "이번엔 함께 만들어 보자.",
-      "act3Line": "마지막 인사, 잘 받으마.",
+      "winLine": "고개 돌렸더니 카드가 있더라.",
+      "preLine": "사실 널 얻기 위해 다 계획했던 거다",
+      "defeatLine": "고개 돌렸더니 카드가 있더라.",
+      "act1Line": "매니저가 된 뒤에 말했지.",
+      "act2Line": "사실 널 얻기 위해 다 계획했던 거다",
+      "act3Line": "고개 돌렸더니 카드가 있더라.",
       "endingLines": [
-        "우주 끝까지 다녀왔다.",
-        "돌아오니 불이 켜져 있었다.",
-        "렉쳐노트는 늘 그 자리였다.",
-        "멀리 다녀와도, 같이 마술할 곳이 있다."
+        "카드 몬테의 손도 제 거였어요.",
+        "이 편안함, 가져갈게요.",
+        "서재 테이블로 가요.",
+        "카운터는 우리가 볼게."
       ]
     }
   }
@@ -2051,7 +1094,7 @@ GAME_DATA.onboarding = {
     "art": "living"
   },
   {
-    "line": "작은 카드 한 장에 아빠가 웃었어요.",
+    "line": "작은 카드 한 장에 엄마가 웃었어요.",
     "art": "living"
   },
   {
@@ -2148,7 +1191,7 @@ GAME_DATA.skills = [
 GAME_DATA.missions = [
  {id:'boxes',name:'케이스 200개 열기',target:200,gems:3},
  {id:'combo',name:'액트 50 달성',target:50,gems:3},
- {id:'dealer',name:'토끼 딜러 1회',target:1,gems:2},
+ {id:'dealer',name:'수상한 샵 매니저 1회',target:1,gems:2},
  {id:'learn',name:'비법 5개 배우기',target:5,gems:2},
  {id:'events',name:'이벤트 관객 2명 잡기',target:2,gems:4},
  {id:'skills',name:'액티브 스킬 5회',target:5,gems:3},
@@ -2163,83 +1206,360 @@ GAME_DATA.streakGems = [2,3,4,5,6,7,10];
 (function(D){const scale={meetup:1.16,audition:3.8,broadcast:3,vegas:5,broadway:8,moon:24,sun:13,galaxy:2.4,multiverse:2.05,lecturenote:2};D.venues.forEach(v=>{if(scale[v.slug])v.hpFactor*=scale[v.slug];});})(GAME_DATA);
 
 /* U15 story content is bundled from the supplied, read-only source. */
+// Batch D owner review table. Edit reveal, ending and IF dialogue here.
+// Sources: fourth script (2026-10-17), ACT 3/4 IF draft, twist design (2026-10-18).
+GAME_DATA.storyReview = {
+ lecturenote: {
+      "opening": [
+        {
+          "speaker": "칼리",
+          "text": "첫날은 야간 알바였어요.",
+          "mood": "serious"
+        },
+        {
+          "speaker": "칼리",
+          "text": "카운터에서 마술도 보여 드렸죠.",
+          "mood": "serious"
+        },
+        {
+          "id": "a-lecturenote-jung",
+          "speaker": "정희수",
+          "text": "판매 전에 마술 한 번, 반응 좋았음.",
+          "mood": "happy"
+        },
+        {
+          "id": "h-lecturenote-kim",
+          "speaker": "김정명",
+          "text": "매니저가 된 뒤에 말했지.",
+          "mood": "serious"
+        },
+        {
+          "id": "h-lecturenote-kim",
+          "speaker": "김정명",
+          "text": "사실 널 얻기 위해 다 계획했던 거다",
+          "mood": "serious"
+        },
+        {
+          "speaker": "칼리",
+          "text": "그 말, 아직도 기억나요.",
+          "mood": "serious"
+        }
+      ],
+      "beforeHeadliner": [
+        {
+          "speaker": "수상한 샵 매니저",
+          "text": "마지막 컵앤볼이에요.",
+          "mood": "serious"
+        },
+        {
+          "speaker": "칼리",
+          "text": "그 손, 이제 알겠네요.",
+          "mood": "serious"
+        },
+        {
+          "speaker": "수상한 샵 매니저",
+          "text": "모자를 벗을게요.",
+          "mood": "serious"
+        },
+        {
+          "id": "a-lecturenote-serona",
+          "speaker": "세로나",
+          "text": "세로나예요. 샵 매니저도 저고요.",
+          "mood": "serious"
+        },
+        {
+          "id": "a-lecturenote-serona",
+          "speaker": "세로나",
+          "text": "숨겨진 조력자로 있었어요.",
+          "mood": "serious"
+        },
+        {
+          "speaker": "칼리",
+          "text": "저도 마술 샵 매니저가 됐네요.",
+          "mood": "serious"
+        },
+        {
+          "id": "h-lecturenote-kim",
+          "speaker": "김정명",
+          "text": "고개 돌렸더니 카드가 있더라.",
+          "mood": "serious"
+        },
+        {
+          "speaker": "칼리",
+          "text": "그 찰나였죠. ㅋㅋ",
+          "mood": "serious"
+        }
+      ],
+      "afterClear": [
+        {
+          "id": "a-lecturenote-serona",
+          "speaker": "세로나",
+          "text": "카드 몬테의 손도 제 거였어요.",
+          "mood": "serious"
+        },
+        {
+          "speaker": "칼리",
+          "text": "이 편안함, 가져갈게요.",
+          "mood": "serious"
+        },
+        {
+          "id": "a-lecturenote-serona",
+          "speaker": "세로나",
+          "text": "서재 테이블로 가요.",
+          "mood": "serious"
+        },
+        {
+          "id": "a-lecturenote-jung",
+          "speaker": "정희수",
+          "text": "카운터는 우리가 볼게.",
+          "mood": "serious"
+        },
+        {
+          "speaker": "칼리",
+          "text": "비법 「편안함」을 배웠어요.",
+          "mood": "happy",
+          "secretSkill": "편안함"
+        }
+      ]
+    },
+ future: {
+      "opening": [
+        {
+          "speaker": "칼리",
+          "text": "어서 와요. 편히 앉으세요.",
+          "mood": "serious"
+        },
+        {
+          "speaker": "초보 관객",
+          "text": "처음이라 손이 떨려요.",
+          "mood": "sad"
+        },
+        {
+          "speaker": "칼리",
+          "text": "케이스 뒤를 봐 주세요.",
+          "mood": "serious"
+        },
+        {
+          "speaker": "초보 관객",
+          "text": "제 카드가 여기 있어요!",
+          "mood": "surprised"
+        }
+      ],
+      "beforeHeadliner": [
+        {
+          "speaker": "칼리",
+          "text": "이번엔 전화가 올 거예요.",
+          "mood": "serious"
+        },
+        {
+          "speaker": "초보 관객",
+          "text": "고른 카드 이름으로요?",
+          "mood": "serious"
+        },
+        {
+          "speaker": "칼리",
+          "text": "네. 같이 기다리면 돼요.",
+          "mood": "serious"
+        },
+        {
+          "speaker": "세로나",
+          "text": "이제 칼리의 말을 들을 때예요.",
+          "mood": "serious"
+        },
+        {
+          "speaker": "초보 관객",
+          "text": "마술이 이렇게 다정하네요.",
+          "mood": "serious"
+        }
+      ],
+      "afterClear": [
+        {
+          "speaker": "칼리",
+          "text": "마술은 당신을 더 매력적으로 보여주는 취미입니다. 많은 사람에게 신선한 경험을 줄 수 있는 장르인 만큼, 그들이 문화적으로 즐길 수 있도록 도와주셨으면 좋겠습니다.",
+          "mood": "happy"
+        },
+        {
+          "speaker": "칼리",
+          "text": "마술 톡방에서 또 만나요.",
+          "mood": "serious"
+        },
+        {
+          "speaker": "칼리",
+          "text": "소개 페이지도 열어 두었어요.",
+          "mood": "serious"
+        },
+        {
+          "speaker": "세로나",
+          "text": "버튼 두 개, 지금 켜졌어요.",
+          "mood": "serious"
+        },
+        {
+          "speaker": "칼리",
+          "text": "비법 「나눔」을 배웠어요.",
+          "mood": "happy",
+          "secretSkill": "나눔"
+        }
+      ]
+    },
+ ending: ['마술은 당신을 더 매력적으로 보여주는 취미입니다. 많은 사람에게 신선한 경험을 줄 수 있는 장르인 만큼, 그들이 문화적으로 즐길 수 있도록 도와주셨으면 좋겠습니다.','마술 톡방에서 또 만나요.','소개 페이지도 열어 두었어요.','마술이 이렇게 다정하네요.','이제 칼리의 말을 들을 때예요.'],
+ ifRoute: {wired:true,youngKaliDuel:{
+  cast:[{speaker:'어린 칼리',text:'마술을 막 시작하던 칼리.'},{speaker:'완벽한 칼리',text:'대결 끝에 나타나는 롤모델.'}],
+  opening:[{speaker:'어린 칼리',text:'지나가려면 나를 봐.'},{speaker:'칼리',text:'좋아요. 그때의 저죠.'},{speaker:'어린 칼리',text:'첫 웃음, 기억나?'},{speaker:'칼리',text:'젓가락 그림에 웃어 줬죠.'}],
+  beforeHeadliner:[{speaker:'어린 칼리',text:'그 웃음이 나를 만들었어.'},{speaker:'칼리',text:'그래서 여기까지 왔네요.'},{speaker:'어린 칼리',text:'한 판만 제대로 하자.'},{speaker:'칼리',text:'이길게요. 나를 깎진 않아요.'},{speaker:'세로나',text:'끝나면 거울이 열려요.'}],
+  afterClear:[{speaker:'어린 칼리',text:'응. 미래의 나가 보여.'},{speaker:'완벽한 칼리',text:'잘 왔어. 거울 속으로.'},{speaker:'칼리',text:'따라갈게요. 천천히요.'},{speaker:'세로나',text:'히든 무대가 열렸어요.'}]
+ },mirrorStage:{
+  cast:[{speaker:'완벽한 칼리',text:'빨간 니트, 흰 면바지, 흰 가방.'}],
+  opening:[{speaker:'완벽한 칼리',text:'누구든 먼저 말을 걸게.'},{speaker:'어린 칼리',text:'직장인도, 아이도?'},{speaker:'완벽한 칼리',text:'벽만 없으면 돼.'},{speaker:'칼리',text:'빨간 니트에 흰 가방이네요.'},{speaker:'완벽한 칼리',text:'흰 면바지도 내 옷이야.'}],
+  beforeHeadliner:[{speaker:'어린 칼리',text:'모두에게 사랑받아야 해?'},{speaker:'완벽한 칼리',text:'아니. 한 사람씩이야.'},{speaker:'칼리',text:'직장인도 아이도, 같은 눈으로요.'},{speaker:'완벽한 칼리',text:'그 말이 벽을 내리네.'},{speaker:'세로나',text:'이기고 끝나는 무대가 아니에요.'},{speaker:'어린 칼리',text:'이 옷, 나도 입고 싶다.'}],
+  afterClear:[{speaker:'완벽한 칼리',text:'벽이 없으니 충분해.'},{speaker:'칼리',text:'흰 가방의 여유, 배웠어요.'},{speaker:'어린 칼리',text:'미래의 나라서 다행이야.'},{speaker:'세로나',text:'숨은 결말은 여기예요.'}]
+ }},
+ twist: {
+  intro:[{speaker:'칼리',text:'성장과 발견이 이어지는 이야기 전투예요. 실패해도 강화와 동전은 유지돼요.'}],
+  hidden:[{speaker:'마술삼일',text:'아직 마지막 마술이 남았다.'}],
+  failures:[
+   [{speaker:'칼리',text:'보스에게 아직 보지 못한 마술이 있어요.'}],
+   [{speaker:'칼리',text:'힘은 충분해졌어요. 마지막 마술을 이해해야 해요.'}],
+   [{speaker:'칼리',text:'세 번째 단서가 모였어요.'}]
+  ],
+  gift:[{speaker:'정명이 형',text:'미래의 네가 쓴 책이야'},{speaker:'칼리',text:'트레이스. 흔들리지 않는 마음을 배웠어요.'}],
+  counter:[{speaker:'칼리',text:'난 이제 트레이스를 봤기 때문에 이 정도로 내 멘탈을 무너트릴 수 없어!'}],
+  oilWater:[{speaker:'칼리',text:'빨강과 검정, 섞어도 다시 나뉘어요.'},{speaker:'마술삼일',text:'다시 섞었는데도 나뉘다니! 정말 만족스러운 공연이야.'}],
+  complete:[{speaker:'칼리',text:'마지막 마술까지 함께 즐겼어요.'}]
+ }
+};
+
 GAME_DATA.storyV15 = {
   "tutorial": {
-    "bio": "모든 마술을 의심하는 첫 관객. 팔짱이 단단하다.",
+    "bio": "뿔테 안경의 튜토리얼 관문. 좋아하는 마술은 엠비셔스 라이저.",
     "intro": [
       {
         "speaker": "NDD",
-        "text": "마술이라고? 나는 아무것도 안 믿어."
-      },
-      {
-        "speaker": "칼리",
-        "text": "그럼 믿게 만들어 드릴게요."
+        "text": "이거 나도 하겠는데용"
       },
       {
         "speaker": "NDD",
-        "text": "의심 게이지가 바닥나면 인정하지."
-      },
-      {
-        "speaker": "칼리",
-        "text": "좋아요. 연습 상대로 딱이네요."
+        "text": "손만 빠르면 되지 않용?"
       }
     ],
     "coaching": [
       {
-        "speaker": "NDD",
-        "text": "손 빠른 척만 하는 거 아냐?"
+        "speaker": "칼리",
+        "text": "눈은 손보다 빠르거든요."
       },
       {
         "speaker": "NDD",
-        "text": "그 정도론 내 의심이 안 줄어."
+        "text": "손만 빠르면 되지 않용?"
+      },
+      {
+        "speaker": "칼리",
+        "text": "눈은 손보다 빠르거든요."
       },
       {
         "speaker": "NDD",
-        "text": "어, 게이지가 좀 깎이는데?"
-      },
-      {
-        "speaker": "NDD",
-        "text": "야유 한 번 더 간다. 멘탈 괜찮아?"
+        "text": "손만 빠르면 되지 않용?"
       }
     ],
     "defeat": [
       {
         "speaker": "NDD",
-        "text": "으윽, 의심이 바닥났다. 믿는다, 믿어."
-      },
-      {
-        "speaker": "칼리",
-        "text": "이제 거실로 가 볼까요?"
+        "text": "아니 이거 진짜에용"
       },
       {
         "speaker": "NDD",
-        "text": "좋아. 나도 첫 관객으로 박수 칠게."
+        "text": "안경에 김이 서네용."
+      },
+      {
+        "speaker": "칼리",
+        "text": "첫 관객이라 더 떨렸어요."
+      },
+      {
+        "speaker": "세로나",
+        "text": "저는 옆에서 지켜볼게요."
+      },
+      {
+        "speaker": "세로나",
+        "text": "비법 「눈 맞추기」를 배웠어요.",
+        "mood": "happy",
+        "secretSkill": "눈 맞추기"
       }
     ],
-    "winLine": "좋아, 인정! 이제 진짜 무대로 가 봐!"
+    "winLine": "아니 이거 진짜에용",
+    "schoolChain": {
+      "girlIntro": [
+        {
+          "speaker": "세로나",
+          "text": "첫 마술은 쉬운 걸로 가요."
+        },
+        {
+          "speaker": "세로나",
+          "text": "젓가락에 그림 하나면 충분해요."
+        },
+        {
+          "speaker": "칼리",
+          "text": "바퀴벌레가 늘었다 줄어요."
+        },
+        {
+          "speaker": "같은 반 여학생",
+          "text": "어, 마리 수가 변했어요!"
+        }
+      ],
+      "girlDuring": [
+        {
+          "speaker": "세로나",
+          "text": "눈은 맞추고, 손은 기억하게 두세요."
+        }
+      ],
+      "girlClear": [
+        {
+          "speaker": "칼리",
+          "text": "제 눈도 봐 주세요."
+        }
+      ],
+      "teacherIntro": [
+        {
+          "speaker": "수학 선생님",
+          "text": "줄어드니까 더 재미있네요."
+        }
+      ],
+      "teacherDuring": [
+        {
+          "speaker": "수학 선생님",
+          "text": "줄어드니까 더 재미있네요."
+        }
+      ],
+      "upgrade": [
+        {
+          "speaker": "세로나",
+          "text": "비법은 여기서 한 번만 올려요."
+        },
+        {
+          "speaker": "세로나",
+          "text": "눈 맞추기, 한 단계면 돼요."
+        },
+        {
+          "speaker": "칼리",
+          "text": "눈 맞추기, 업그레이드하죠."
+        }
+      ]
+    }
   },
   "helper": {
-    "bio": "칼리 곁을 맴도는 장난꾸러기 꼬마 마술 도깨비.",
+    "bio": "지하철 실패 뒤 커진 흑화 도깨비. 소극장 중간 보스 클리어 뒤 꼬마 도우미가 된다. 좋아하는 마술은 앰비셔스 카드.",
     "coaching": [
       {
-        "speaker": "밍기리",
-        "text": "칼리, 오른쪽 케이스를 꾹 누르고 있어!"
+        "speaker": "세로나",
+        "text": "눈은 맞추고, 손은 기억하게 두세요.",
+        "mood": "serious"
       },
       {
-        "speaker": "밍기리",
-        "text": "열리면 아이템이 튀어나와. 줍기만 해!"
+        "speaker": "세로나",
+        "text": "비법은 여기서 한 번만 올려요.",
+        "mood": "serious"
       },
       {
-        "speaker": "밍기리",
-        "text": "아이템이 능력치를 올려. 의심이 줄지?"
-      },
-      {
-        "speaker": "밍기리",
-        "text": "의심 게이지를 깎아야 해. 멘탈 먼저 닳지 마!"
-      },
-      {
-        "speaker": "밍기리",
-        "text": "아래 스킬 바도 눌러 봐. 숨은 한 수야!"
+        "speaker": "세로나",
+        "text": "눈 맞추기, 한 단계면 돼요.",
+        "mood": "serious"
       }
     ]
   },
@@ -2247,928 +1567,3414 @@ GAME_DATA.storyV15 = {
     "family": {
       "opening": [
         {
-          "speaker": "아빠",
-          "text": "채널권은 내 손에 있다. 마술은 짧게."
+          "id": "a1",
+          "speaker": "여동생",
+          "text": "오빠, 나한테 먼저 보여 줘.",
+          "mood": "serious"
         },
         {
-          "speaker": "동생",
-          "text": "형, 팝콘 먹으면서 봐도 돼?"
+          "id": "a2",
+          "speaker": "남동생",
+          "text": "나도 볼래. 앞자리!",
+          "mood": "serious"
         },
         {
+          "id": "a3",
           "speaker": "엄마",
-          "text": "설거지 끝내고 왔다. 시작해 봐, 칼리."
+          "text": "둘 다 앉았으니 시작해 보렴.",
+          "mood": "serious"
         },
         {
           "speaker": "칼리",
-          "text": "중학생 때 추석 개그쇼를 보고 배운 마술이에요."
+          "text": "가족 앞이라 더 떨리네요.",
+          "mood": "sad"
         },
         {
-          "speaker": "아빠",
-          "text": "그때 TV 앞에서 혼자 따라 하던 게 이거냐?"
-        },
-        {
-          "speaker": "칼리",
-          "text": "맞아요. 그 마술로 거실이 첫 무대예요."
+          "id": "a-lecturenote-serona",
+          "speaker": "세로나",
+          "text": "가까운 눈일수록 천천히요.",
+          "mood": "serious"
         }
       ],
       "beforeHeadliner": [
         {
-          "speaker": "까다로운 할머니",
-          "text": "칼리야, 손 안 바꾼 거지? 안경 썼다."
+          "id": "a1",
+          "speaker": "여동생",
+          "text": "오빠, 나랑 눈 맞춰 봐.",
+          "mood": "serious"
         },
         {
           "speaker": "칼리",
-          "text": "할머니 앞에선 손이 더 떨려요."
+          "text": "좋아요. 제 눈을 봐 주세요.",
+          "mood": "happy"
         },
         {
-          "speaker": "까다로운 할머니",
-          "text": "떨어도 좋아. 대신 똑바로 해 봐라."
+          "id": "a1",
+          "speaker": "여동생",
+          "text": "신기해! 한 번 더!",
+          "mood": "surprised"
+        },
+        {
+          "id": "a3",
+          "speaker": "엄마",
+          "text": "집에서도 박수가 나오네.",
+          "mood": "happy"
+        },
+        {
+          "id": "a2",
+          "speaker": "남동생",
+          "text": "다음엔 내 친구도 보여 줘!",
+          "mood": "serious"
+        },
+        {
+          "id": "a-lecturenote-serona",
+          "speaker": "세로나",
+          "text": "그 박수가 첫 박수예요.",
+          "mood": "happy"
         }
       ],
       "afterClear": [
         {
-          "speaker": "까다로운 할머니",
-          "text": "손 안 바꿨네. 친구들한테도 보여 줘라."
+          "id": "a1",
+          "speaker": "여동생",
+          "text": "오빠 최고. 또 해 줘.",
+          "mood": "happy"
         },
         {
-          "speaker": "아빠",
-          "text": "리모컨 내려놓은 건 비밀이다."
+          "speaker": "칼리",
+          "text": "마음 가는 것부터 하죠.",
+          "mood": "serious"
+        },
+        {
+          "id": "a-lecturenote-serona",
+          "speaker": "세로나",
+          "text": "다음은 파티 무대예요.",
+          "mood": "serious"
+        },
+        {
+          "speaker": "칼리",
+          "text": "비법 「첫 박수」을 배웠어요.",
+          "mood": "happy",
+          "secretSkill": "첫 박수"
         }
       ]
     },
     "party": {
       "opening": [
         {
-          "speaker": "풍선 친구",
-          "text": "할머니 소문 들었어! 우리 파티에서 해 줘!"
+          "id": "a5",
+          "speaker": "운동 친구 서윤",
+          "text": "내 친구 생일이야. 마술 부탁해.",
+          "mood": "serious"
         },
         {
-          "speaker": "음악 친구",
-          "text": "노래 끌게. 대신 분위기 살려야 해."
+          "id": "a4",
+          "speaker": "풍선 담당 지호",
+          "text": "풍선 다 불어 놨어!",
+          "mood": "serious"
         },
         {
           "speaker": "칼리",
-          "text": "거실이랑은 또 다르네. 긴장된다."
+          "text": "좋아요. 신나게 가 볼게요.",
+          "mood": "happy"
         },
         {
-          "speaker": "케이크 친구",
-          "text": "초 꺼지기 전에 보여 줘!"
+          "id": "h2",
+          "speaker": "생일 하준이",
+          "text": "우와, 분위기가 확 사네.",
+          "mood": "serious"
+        },
+        {
+          "id": "a-lecturenote-serona",
+          "speaker": "세로나",
+          "text": "앙코르는 즐기면서 받아요.",
+          "mood": "serious"
+        },
+        {
+          "speaker": "파티 손님",
+          "text": "한 번만 더 보여 줘!",
+          "mood": "serious"
         }
       ],
       "beforeHeadliner": [
         {
-          "speaker": "파티 주최자",
-          "text": "오늘 주인공은 나였는데 말이야."
+          "speaker": "칼리",
+          "text": "앙코르는 전화 마술이에요.",
+          "mood": "serious"
+        },
+        {
+          "id": "h2",
+          "speaker": "생일 하준이",
+          "text": "카드는 아무거나 고를게.",
+          "mood": "serious"
         },
         {
           "speaker": "칼리",
-          "text": "그럼 주인공도 놀라게 해 드릴게요."
+          "text": "고르셨으면 잠시만요.",
+          "mood": "serious"
         },
         {
-          "speaker": "파티 주최자",
-          "text": "좋아. 놀라면 내가 박수 쳐 줄게."
+          "speaker": "파티 손님",
+          "text": "전화 왔다! 발신자가 2 하트야!",
+          "mood": "surprised"
+        },
+        {
+          "id": "h2",
+          "speaker": "생일 하준이",
+          "text": "내가 고른 그 이름이잖아.",
+          "mood": "serious"
+        },
+        {
+          "id": "a-lecturenote-serona",
+          "speaker": "세로나",
+          "text": "이름이 그대로 도착했네요.",
+          "mood": "serious"
         }
       ],
       "afterClear": [
         {
-          "speaker": "파티 주최자",
-          "text": "감탄했다. 학교 장기자랑에 나가 봐."
+          "id": "a4",
+          "speaker": "풍선 담당 지호",
+          "text": "풍선은 안 터졌는데 우리가 터졌다!",
+          "mood": "happy"
         },
         {
-          "speaker": "동생",
-          "text": "형, 거기도 따라가도 돼?"
+          "id": "a5",
+          "speaker": "운동 친구 서윤",
+          "text": "오늘 분위기, 네가 가져갔어.",
+          "mood": "serious"
         },
         {
-          "speaker": "밍기리",
-          "text": "난 가방에 숨어서 다 봤어. 잘했어!"
+          "speaker": "칼리",
+          "text": "앙코르까지 됐네요. ㅋㅋ",
+          "mood": "serious"
+        },
+        {
+          "id": "a-lecturenote-serona",
+          "speaker": "세로나",
+          "text": "이번엔 모르는 분 앞이에요.",
+          "mood": "serious"
+        },
+        {
+          "speaker": "칼리",
+          "text": "비법 「앙코르 받기」을 배웠어요.",
+          "mood": "happy",
+          "secretSkill": "앙코르 받기"
         }
       ]
     },
     "school": {
       "opening": [
         {
-          "speaker": "앞자리 짝꿍",
-          "text": "장기자랑 신청서 냈어. 네 이름으로!"
+          "speaker": "짝꿍 수빈",
+          "text": "교실 마술, 소문이 다 났어.",
+          "mood": "serious"
         },
         {
           "speaker": "칼리",
-          "text": "뭐? 내 허락은 안 받았잖아."
+          "text": "젓가락 그림이었는데요. ㅋㅋ",
+          "mood": "serious"
         },
         {
-          "speaker": "응원봉 반장",
-          "text": "네 마술 보고 우리 반이 다 좋아했잖아!"
+          "speaker": "반장 도윤",
+          "text": "학교가 축제 무대를 맡겼대.",
+          "mood": "serious"
         },
         {
           "speaker": "칼리",
-          "text": "서점에서 산 마술 책, 닳도록 연습했거든."
+          "text": "좋아요. 짧게 가 볼게요.",
+          "mood": "happy"
         },
         {
-          "speaker": "체육부 선배",
-          "text": "쉬는 시간 끝나기 전에 끝내라."
+          "speaker": "체육부 승민",
+          "text": "운동장 앞줄은 내가 맡는다.",
+          "mood": "serious"
         }
       ],
       "beforeHeadliner": [
         {
-          "speaker": "심사 담임",
-          "text": "시간 되면 바로 끊을게. 알았지?"
+          "speaker": "박 선생님",
+          "text": "교실에서 보던 그거지?",
+          "mood": "serious"
         },
         {
           "speaker": "칼리",
-          "text": "종 치기 전에 놀라게 해 드릴게요."
+          "text": "네. 이번엔 축제 무대예요.",
+          "mood": "serious"
         },
         {
-          "speaker": "심사 담임",
-          "text": "칭찬은 안 해. 점수는 줄지도."
+          "speaker": "박 선생님",
+          "text": "소문대로면 박수가 크겠다.",
+          "mood": "happy"
         }
       ],
       "afterClear": [
         {
-          "speaker": "심사 담임",
-          "text": "종 치기 전에 끝냈네. 합격이다."
+          "speaker": "박 선생님",
+          "text": "축제에 세우길 잘했네요.",
+          "mood": "serious"
         },
         {
-          "speaker": "깐깐한 선배의 채점",
-          "text": "카페에서 공연할 사람 찾는대."
+          "speaker": "깐깐 선배 정아",
+          "text": "다음은 동네 카페라고 적자.",
+          "mood": "serious"
+        },
+        {
+          "speaker": "칼리",
+          "text": "모르는 분 앞도 해 보죠.",
+          "mood": "serious"
+        },
+        {
+          "speaker": "칼리",
+          "text": "비법 「눈 맞추기」을 배웠어요.",
+          "mood": "happy",
+          "secretSkill": "눈 맞추기"
         }
       ]
     },
     "cafe": {
       "opening": [
         {
-          "speaker": "바리스타 친구",
-          "text": "저녁 공연 자리 비워 놨어. 커피는 서비스."
+          "speaker": "칼리",
+          "text": "마술 볼래요? 카드 한 장이요.",
+          "mood": "serious"
         },
         {
-          "speaker": "노트북 손님",
-          "text": "조용히 볼게요. 배터리도 아끼고요."
+          "id": "a-lecturenote-serona",
+          "speaker": "세로나",
+          "text": "모르는 분께 먼저 보여요.",
+          "mood": "serious"
         },
         {
-          "speaker": "밍기리",
-          "text": "커피 향 좋다. 난 우유 거품이 좋아!"
+          "id": "a-lecturenote-serona",
+          "speaker": "세로나",
+          "text": "그게 시작이에요.",
+          "mood": "serious"
+        },
+        {
+          "id": "h4",
+          "speaker": "카페 단골 현우",
+          "text": "TV로 봤을 때는 다 짜고 치는 줄 알았는데 실제로 보니까 너무 신기하네요",
+          "mood": "surprised"
         },
         {
           "speaker": "칼리",
-          "text": "카페 무대는 가까워서 더 떨려."
+          "text": "실제가 더 재밌죠. ㅋㅋ",
+          "mood": "happy"
+        },
+        {
+          "speaker": "카드1412",
+          "text": "나도 봐도 되겠당?",
+          "mood": "serious"
+        },
+        {
+          "speaker": "카드1412",
+          "text": "솔바람 마을에서 왔유.",
+          "mood": "serious"
         }
       ],
       "beforeHeadliner": [
         {
-          "speaker": "라떼 바리스타",
-          "text": "샷은 내가 느리게 내릴게."
+          "speaker": "카드1412",
+          "text": "보여 줘유. 나도 좀 한당.",
+          "mood": "serious"
+        },
+        {
+          "id": "a-lecturenote-serona",
+          "speaker": "세로나",
+          "text": "숨은 실력은 아직 몰라요.",
+          "mood": "serious"
         },
         {
           "speaker": "칼리",
-          "text": "느릴수록 제 손은 바빠지는데요."
+          "text": "마음 편히 골라 주세요.",
+          "mood": "serious"
         },
         {
-          "speaker": "라떼 바리스타",
-          "text": "하하. 한 잔 식기 전에 끝내 봐."
+          "speaker": "카드1412",
+          "text": "이거 심상치 않넹.",
+          "mood": "serious"
+        },
+        {
+          "speaker": "칼리",
+          "text": "손만 빠른 게 아니에요.",
+          "mood": "serious"
+        },
+        {
+          "speaker": "카드1412",
+          "text": "존경스럽당. 형 동생 하자유.",
+          "mood": "serious"
+        },
+        {
+          "id": "a-lecturenote-serona",
+          "speaker": "세로나",
+          "text": "이제 모자를 벗을 때가 됐네요.",
+          "mood": "serious"
         }
       ],
       "afterClear": [
         {
-          "speaker": "라떼 바리스타",
-          "text": "벽에 붙은 전단 봤어? 마술 모임이래."
+          "speaker": "카드1412",
+          "text": "그래 너는 마술을 심심함을 해소하기 위한",
+          "mood": "serious"
         },
         {
-          "speaker": "창가 손님",
-          "text": "전국에서 모인다던데, 가 봐요!"
+          "speaker": "카드1412",
+          "text": "마술이 아니라 진심을 전하며",
+          "mood": "serious"
+        },
+        {
+          "speaker": "카드1412",
+          "text": "재미를 찾는 마술사이니 내가 도와줄게!!",
+          "mood": "serious"
+        },
+        {
+          "speaker": "칼리",
+          "text": "비법 「먼저 다가가기」을 배웠어요.",
+          "mood": "happy",
+          "secretSkill": "먼저 다가가기"
         }
       ]
     },
     "meetup": {
       "opening": [
         {
-          "speaker": "부산의 마술 매니아",
-          "text": "왔네! 부산에서 첫차 타고 왔어."
+          "id": "h-meetup-seoul",
+          "speaker": "마술삼일",
+          "text": "서울에서 왔다. 칼리야, 앉아.",
+          "mood": "serious"
         },
         {
-          "speaker": "대구의 마술 매니아",
-          "text": "대구도 왔다. 카드 얘기만 세 시간 해도 돼."
+          "id": "a-meetup-changwon",
+          "speaker": "빨간 모자",
+          "text": "창원 빨간 모자야. 반갑다.",
+          "mood": "happy"
         },
         {
-          "speaker": "창원의 마술 매니아",
-          "text": "창원 '빨간 모자'예요. 오늘도 모자 쓰고 왔죠!"
+          "id": "a-meetup-suwon",
+          "speaker": "착한 천사",
+          "text": "경북 구미 착한 천사야.",
+          "mood": "serious"
         },
         {
-          "speaker": "인천의 마술 매니아",
-          "text": "인천 '비타민'이에요. 기운 충전하러 왔어요!"
+          "id": "a-meetup-incheon",
+          "speaker": "비타민",
+          "text": "인천 비타민이다. 잘 부탁해.",
+          "mood": "serious"
         },
         {
-          "speaker": "수원의 마술 매니아",
-          "text": "수원 '까만 팔찌'예요. 손목은 잘 보세요!"
-        },
-        {
-          "speaker": "구미에서 온 착한 천사",
-          "text": "구미에서 올라온 '착한 천사'예요. 반가워요!"
+          "id": "a-meetup-busan",
+          "speaker": "에지",
+          "text": "부산 에지야. 편하게 해.",
+          "mood": "serious"
         },
         {
           "speaker": "칼리",
-          "text": "별명이 다 재밌어요. 마술 얘기만 해서 신기해요."
+          "text": "형들이라니, 마음이 놓여요.",
+          "mood": "serious"
         }
       ],
       "beforeHeadliner": [
         {
-          "speaker": "서울의 마술 매니아",
-          "text": "나는 서울 '마술 3일'. 별명이 좀 특이하지?"
+          "speaker": "칼리",
+          "text": "이름 모를 분이 어둡다고 하셨죠.",
+          "mood": "serious"
         },
         {
           "speaker": "칼리",
-          "text": "별명 부자 모임이네요. 여기 오니 마술이 더 좋아졌어요."
+          "text": "2 다이아가 7 다이아로 바뀌었어요.",
+          "mood": "serious"
         },
         {
-          "speaker": "서울의 마술 매니아",
-          "text": "그럼 마지막 한 수는 즐겁게 보여 줘."
+          "id": "a-meetup-changwon",
+          "speaker": "빨간 모자",
+          "text": "칼리야, 그래서 3만 원을 낸 거구나.",
+          "mood": "serious"
+        },
+        {
+          "id": "h-meetup-seoul",
+          "speaker": "마술삼일",
+          "text": "나 마술 3일밖에 안 했어, 네가 다 한 거잖아",
+          "mood": "serious"
+        },
+        {
+          "speaker": "칼리",
+          "text": "관객이 해낸 것처럼요.",
+          "mood": "serious"
+        },
+        {
+          "speaker": "카드1412",
+          "text": "능청은 이렇게 쓰는 거당.",
+          "mood": "serious"
+        },
+        {
+          "id": "a-meetup-busan",
+          "speaker": "에지",
+          "text": "강의는 같이 하는 거야, 칼리야.",
+          "mood": "serious"
+        },
+        {
+          "id": "a-meetup-incheon",
+          "speaker": "비타민",
+          "text": "날아가는 비둘기도 스냅 한 번에 돌아오게 하는 마술사 비타민입니다",
+          "mood": "serious"
         }
       ],
       "afterClear": [
         {
-          "speaker": "서울의 마술 매니아",
-          "text": "소극장에서 공연 한번 해 볼래?"
+          "id": "h-meetup-seoul",
+          "speaker": "마술삼일",
+          "text": "칼리야, 소극장도 한 번 서 봐.",
+          "mood": "serious"
         },
         {
-          "speaker": "인천의 마술 매니아",
-          "text": "무대 올라가면 '비타민'들이 맨 앞줄이야."
+          "id": "a-meetup-suwon",
+          "speaker": "착한 천사",
+          "text": "끝나고 꼼장어집 가자, 칼리야.",
+          "mood": "serious"
         },
         {
-          "speaker": "창원의 마술 매니아",
-          "text": "'빨간 모자' 흔들면서 응원할게요!"
+          "id": "a-meetup-busan",
+          "speaker": "에지",
+          "text": "심리랑 교육, 네 말로 해도 돼.",
+          "mood": "serious"
+        },
+        {
+          "speaker": "칼리",
+          "text": "형들 손, 아주 훌륭하구먼요.",
+          "mood": "happy"
+        },
+        {
+          "speaker": "칼리",
+          "text": "비법 「관객이 해낸 듯한 연출」을 배웠어요.",
+          "mood": "happy",
+          "secretSkill": "관객이 해낸 듯한 연출"
         }
       ]
     },
     "theater": {
       "opening": [
         {
-          "speaker": "열성팬",
-          "text": "저 앞줄 맡았어요. 박수 준비 완료!"
+          "speaker": "칼리",
+          "text": "오늘 유명하신 분이 세 분이에요.",
+          "mood": "serious"
         },
         {
-          "speaker": "일반 관객",
-          "text": "막간에 프로그램 좀 볼게요."
+          "speaker": "카드1412",
+          "text": "부담되면 숨부터 쉬자유.",
+          "mood": "serious"
         },
         {
-          "speaker": "대본 작가",
-          "text": "좋은 장면이면 대본에 넣을게요."
-        },
-        {
-          "speaker": "헤클러",
-          "text": "그 카드 내가 섞어 볼까? 한번 찾아 봐요."
+          "id": "a13",
+          "speaker": "열성팬 보람",
+          "text": "앞줄, 박수 준비됐어요!",
+          "mood": "happy"
         },
         {
           "speaker": "칼리",
-          "text": "지하철에서 낯선 사람이 그랬어요. 정말 놀랐죠."
+          "text": "관객 한 분을 모시겠습니다.",
+          "mood": "serious"
         },
         {
-          "speaker": "칼리",
-          "text": "그날 배웠어요. 방해에도 웃으며 이어 가기!"
-        },
-        {
-          "speaker": "칼리",
-          "text": "조명이 진짜 무대 같네요."
+          "id": "h5",
+          "speaker": "강 마술사님",
+          "text": "저요, 저요, 저요.",
+          "mood": "serious"
         }
       ],
       "beforeHeadliner": [
         {
-          "speaker": "까칠한 평론가",
-          "text": "그 케이스, 내가 잠시 잠근다."
+          "speaker": "칼리",
+          "text": "저분 앞은 부담되네요...",
+          "mood": "serious"
+        },
+        {
+          "speaker": "카드1412",
+          "text": "그럼 앞줄로 가유.",
+          "mood": "serious"
         },
         {
           "speaker": "칼리",
-          "text": "잠그시면 제가 다른 열쇠를 찾겠죠."
+          "text": "당신이 제 관객이 되었으면 좋겠어요.",
+          "mood": "happy"
         },
         {
-          "speaker": "까칠한 평론가",
-          "text": "흠. 말은 잘하네. 손도 그런가 볼까."
+          "id": "a14",
+          "speaker": "앞줄 영숙 씨",
+          "text": "제가요? 좋아요.",
+          "mood": "happy"
+        },
+        {
+          "speaker": "카드1412",
+          "text": "고르면 반은 성공이당.",
+          "mood": "serious"
+        },
+        {
+          "id": "h5",
+          "speaker": "강 마술사님",
+          "text": "좋아. 나는 객석에 있을게.",
+          "mood": "happy"
+        },
+        {
+          "id": "a14",
+          "speaker": "앞줄 영숙 씨",
+          "text": "골라 줘서 고마워요.",
+          "mood": "happy"
+        },
+        {
+          "speaker": "칼리",
+          "text": "관객은 제가 모시는 거죠.",
+          "mood": "serious"
+        },
+        {
+          "speaker": "카드1412",
+          "text": "멘탈 보호막은 남겨 둘게유.",
+          "mood": "serious"
+        },
+        {
+          "speaker": "칼리",
+          "text": "영어가 서툴러 망설였는데요.",
+          "mood": "sad"
+        },
+        {
+          "id": "a15",
+          "speaker": "지하철 하린",
+          "text": "한국어 돼요. 보여 주세요.",
+          "mood": "serious"
+        },
+        {
+          "speaker": "칼리",
+          "text": "그럼 카드를 골라 주세요.",
+          "mood": "serious"
+        },
+        {
+          "id": "a15",
+          "speaker": "지하철 하린",
+          "text": "재밌네요. 한 번 더요.",
+          "mood": "happy"
+        },
+        {
+          "speaker": "카드1412",
+          "text": "두 번째는 변수가 있당.",
+          "mood": "serious"
+        },
+        {
+          "id": "a15",
+          "speaker": "지하철 하린",
+          "text": "카드는 내가 가져갈게요.",
+          "mood": "serious"
+        },
+        {
+          "id": "a15",
+          "speaker": "지하철 하린",
+          "text": "이게 뭔지 맞혀 봐요.",
+          "mood": "serious"
+        },
+        {
+          "speaker": "칼리",
+          "text": "어... 이번엔 모르겠어요.",
+          "mood": "serious"
+        },
+        {
+          "id": "a15",
+          "speaker": "지하철 하린",
+          "text": "더 연습하라",
+          "mood": "serious"
+        },
+        {
+          "speaker": "검은괭이",
+          "text": "칼리야, 밥부터 먹자. 내가 산다.",
+          "mood": "serious"
+        },
+        {
+          "speaker": "밍기리",
+          "text": "인간... 실패... 크다!",
+          "mood": "serious"
+        },
+        {
+          "speaker": "칼리",
+          "text": "밍기리님이 커졌어요...!",
+          "mood": "surprised"
+        },
+        {
+          "speaker": "카드1412",
+          "text": "포커페이스만 유지해유.",
+          "mood": "serious"
         }
       ],
       "afterClear": [
         {
-          "speaker": "까칠한 평론가",
-          "text": "별 네 개 반. 이 이상은 나도 못 준다."
+          "speaker": "밍기리",
+          "text": "인간...마술....재밌다",
+          "mood": "happy"
         },
         {
-          "speaker": "헤클러",
-          "text": "아까는 장난이었어요. 진짜 멋졌어요!"
-        },
-        {
-          "speaker": "커튼콜 팬",
-          "text": "대학 축제에서 불러서 갈 수밖에 없죠!"
+          "speaker": "칼리",
+          "text": "다시 일어설게요. 같이요.",
+          "mood": "serious"
         },
         {
           "speaker": "밍기리",
-          "text": "평론가도 웃었어! 내가 봤다니까!"
+          "text": "아칸... 그 카드... 좋다.",
+          "mood": "happy"
+        },
+        {
+          "speaker": "검은괭이",
+          "text": "밥 먹고 다시 서자, 칼리야.",
+          "mood": "serious"
+        },
+        {
+          "speaker": "칼리",
+          "text": "비법 「관객 고르기」을 배웠어요.",
+          "mood": "happy",
+          "secretSkill": "관객 고르기"
+        },
+        {
+          "speaker": "칼리",
+          "text": "비법 「다시 일어서기」를 배웠어요.",
+          "mood": "serious",
+          "secretSkill": "다시 일어서기"
         }
       ]
     },
     "festival": {
       "opening": [
         {
-          "speaker": "깃발 응원단",
-          "text": "과 깃발 들고 왔어요! 흔들게요!"
+          "id": "h6",
+          "speaker": "달려온 승우",
+          "text": "저희도 마술 보여주세요",
+          "mood": "serious"
         },
         {
-          "speaker": "술친구",
-          "text": "치킨 먹으면서 본다. 박수는 손등으로."
+          "id": "h6",
+          "speaker": "달려온 승우",
+          "text": "멀리서 보다 달려왔어요!",
+          "mood": "serious"
         },
         {
-          "speaker": "후배",
-          "text": "선배, 저 맨 앞에서 소리 지를게요!"
+          "id": "a16",
+          "speaker": "칼리 열혈팬 1223호",
+          "text": "우와! 현실 CG인가..?",
+          "mood": "surprised"
+        },
+        {
+          "id": "a16",
+          "speaker": "칼리 열혈팬 1223호",
+          "text": "이정도면 마술이 아니고",
+          "mood": "serious"
+        },
+        {
+          "id": "a16",
+          "speaker": "칼리 열혈팬 1223호",
+          "text": "마법 아니냐구요!!..",
+          "mood": "serious"
         },
         {
           "speaker": "칼리",
-          "text": "축제는 시끄러워서 더 신나."
+          "text": "가까이서 보면 더 신기하당.",
+          "mood": "surprised"
         }
       ],
       "beforeHeadliner": [
         {
-          "speaker": "축제 사회자",
-          "text": "동전은 내가 잠깐 빌릴게."
+          "id": "a16",
+          "speaker": "칼리 열혈팬 1223호",
+          "text": "눈으로 쫓을 수가 없어요!..",
+          "mood": "serious"
+        },
+        {
+          "speaker": "밍기리",
+          "text": "사람... 많다. 밝다.",
+          "mood": "serious"
         },
         {
           "speaker": "칼리",
-          "text": "사회자님, 갚을 때 이자 붙어요."
+          "text": "그 에너지, 받을게요.",
+          "mood": "serious"
         },
         {
-          "speaker": "축제 사회자",
-          "text": "하하! 그럼 큰 박수로 갚아 줄게."
+          "id": "h6",
+          "speaker": "달려온 승우",
+          "text": "저희 쪽도 봐 주세요!",
+          "mood": "serious"
+        },
+        {
+          "speaker": "밍기리",
+          "text": "한 명... 씩. 눈... 맞춘다.",
+          "mood": "serious"
+        },
+        {
+          "speaker": "칼리",
+          "text": "소란해도 한 분씩이죠.",
+          "mood": "serious"
+        },
+        {
+          "speaker": "아는 동생",
+          "text": "같은 음식은 일주일 못 먹어요.",
+          "mood": "serious"
+        },
+        {
+          "speaker": "칼리",
+          "text": "저는 가능하다고 했어요.",
+          "mood": "serious"
+        },
+        {
+          "speaker": "칼리",
+          "text": "그래서 내기를 했고요.",
+          "mood": "serious"
+        },
+        {
+          "speaker": "칼리",
+          "text": "일주일 내내 그 동생과 치킨이었죠.",
+          "mood": "serious"
+        },
+        {
+          "id": "h6",
+          "speaker": "달려온 승우",
+          "text": "일주일 내내 치킨이요?!",
+          "mood": "serious"
+        },
+        {
+          "speaker": "칼리",
+          "text": "목욕탕에서도 카드를 꺼냈죠.",
+          "mood": "serious"
+        },
+        {
+          "id": "h10",
+          "speaker": "목욕탕 아저씨",
+          "text": "도박에 안 당하는 법은요?",
+          "mood": "serious"
+        },
+        {
+          "speaker": "칼리",
+          "text": "마술은 보여 드릴게요.",
+          "mood": "serious"
+        },
+        {
+          "speaker": "칼리",
+          "text": "도박은 하지 마세요",
+          "mood": "serious"
         }
       ],
       "afterClear": [
         {
-          "speaker": "축제 사회자",
-          "text": "방금 영상, 누가 TV 오디션에 보냈대."
+          "id": "h6",
+          "speaker": "달려온 승우",
+          "text": "축제가 더 밝아졌어요!",
+          "mood": "serious"
         },
         {
-          "speaker": "야광봉 팬",
-          "text": "우리 선배가 TV에 나간다!"
+          "id": "a16",
+          "speaker": "칼리 열혈팬 1223호",
+          "text": "숨 차요. 그래도 최고예요.",
+          "mood": "happy"
+        },
+        {
+          "speaker": "밍기리",
+          "text": "밝은 인간... 좋다.",
+          "mood": "happy"
+        },
+        {
+          "id": "h10",
+          "speaker": "목욕탕 아저씨",
+          "text": "도박은 안 할게요.",
+          "mood": "serious"
+        },
+        {
+          "speaker": "칼리",
+          "text": "비법 「관객 에너지 받기」을 배웠어요.",
+          "mood": "happy",
+          "secretSkill": "관객 에너지 받기"
         }
       ]
     },
     "audition": {
       "opening": [
         {
-          "speaker": "점수판 도우미",
-          "text": "점수판 켰어요. 긴장하지 마세요."
+          "id": "a19",
+          "speaker": "진행자 태훈",
+          "text": "다음 참가자입니다, 칼리!",
+          "mood": "serious"
         },
         {
-          "speaker": "라이벌",
-          "text": "네 피날레, 내가 더 크게 할 거야."
+          "speaker": "칼리",
+          "text": "저 구경하러 온 건데요?",
+          "mood": "serious"
         },
         {
-          "speaker": "밍기리",
-          "text": "카메라 앞이야. 칼리, 웃어, 웃어!"
+          "id": "h7",
+          "speaker": "심사위원 윤 씨",
+          "text": "상황은 웃겨도, 무대는 볼게요.",
+          "mood": "happy"
         },
         {
-          "speaker": "카메라 감독",
-          "text": "줌인은 아직이에요. 기다려요."
+          "id": "a16",
+          "speaker": "칼리 열혈팬 1223호",
+          "text": "칼리님, 응원해요!",
+          "mood": "serious"
+        },
+        {
+          "speaker": "카드1412",
+          "text": "즉흥도 실력이당.",
+          "mood": "serious"
         }
       ],
       "beforeHeadliner": [
         {
-          "speaker": "메인 심사위원",
-          "text": "의심은 내가 다시 채운다."
+          "speaker": "카드1412",
+          "text": "첫 장면만 기억하면 돼유.",
+          "mood": "serious"
         },
         {
           "speaker": "칼리",
-          "text": "의심이 차면 저는 더 열심히 하죠."
+          "text": "관객이랑 같이 웃어 볼게요.",
+          "mood": "happy"
         },
         {
-          "speaker": "메인 심사위원",
-          "text": "그 눈빛 좋아. 마지막 화면 기대할게."
+          "id": "a19",
+          "speaker": "진행자 태훈",
+          "text": "다들 즉석인 거 알아요.",
+          "mood": "serious"
+        },
+        {
+          "id": "a16",
+          "speaker": "칼리 열혈팬 1223호",
+          "text": "평소 템포로 가 주세요!",
+          "mood": "serious"
+        },
+        {
+          "id": "h7",
+          "speaker": "심사위원 윤 씨",
+          "text": "마지막 장면만 남았습니다.",
+          "mood": "serious"
+        },
+        {
+          "speaker": "칼리",
+          "text": "준비는 없어도 마음은 있죠.",
+          "mood": "serious"
         }
       ],
       "afterClear": [
         {
-          "speaker": "메인 심사위원",
-          "text": "합격이다. 다음은 생방송이야."
+          "id": "h7",
+          "speaker": "심사위원 윤 씨",
+          "text": "3등입니다. 축하해요.",
+          "mood": "happy"
         },
         {
-          "speaker": "라이벌",
-          "text": "다음엔 내가 먼저 합격할 거야."
+          "id": "a16",
+          "speaker": "칼리 열혈팬 1223호",
+          "text": "우와.. 이정도면 어느 마술대회에 나가도 상을 싹쓸이 쓸어올 것만 같은데요? 최곱니다!!",
+          "mood": "serious"
+        },
+        {
+          "speaker": "칼리",
+          "text": "갑자기라서 더 남네요.",
+          "mood": "serious"
+        },
+        {
+          "speaker": "카드1412",
+          "text": "유리멘탈만 아니면 돼유.",
+          "mood": "serious"
+        },
+        {
+          "speaker": "칼리",
+          "text": "비법 「즉흥 무대」을 배웠어요.",
+          "mood": "happy",
+          "secretSkill": "즉흥 무대"
         }
       ]
     },
     "broadcast": {
       "opening": [
         {
-          "speaker": "생방송 PD",
-          "text": "생방송 30초 전입니다. 숨 쉬세요."
-        },
-        {
-          "speaker": "방송 작가",
-          "text": "큐시트대로만 하세요. 아마도요."
+          "id": "a112",
+          "speaker": "방송 PD 승기",
+          "text": "오늘은 유튜브 방송이에요.",
+          "mood": "serious"
         },
         {
           "speaker": "칼리",
-          "text": "카메라가 이렇게 많은 줄 몰랐어요."
+          "text": "템포는 빠르게 갈게요.",
+          "mood": "serious"
         },
         {
-          "speaker": "조명 감독",
-          "text": "제일 반짝이는 순간에 불 켤게요."
+          "speaker": "밍기리",
+          "text": "카메라... 많다. 눈... 깜빡.",
+          "mood": "serious"
+        },
+        {
+          "id": "a112",
+          "speaker": "방송 PD 승기",
+          "text": "준비되면 고개만 끄덕여요.",
+          "mood": "serious"
         }
       ],
       "beforeHeadliner": [
         {
-          "speaker": "국민 MC",
-          "text": "카메라 보고, 천천히 갑시다."
+          "id": "h-broadcast",
+          "speaker": "오 패널님",
+          "text": "말이 너무 빠르다, 그 말 기억나요?",
+          "mood": "serious"
         },
         {
           "speaker": "칼리",
-          "text": "천천히요. 아빠도 이거 보고 계시겠죠?"
+          "text": "네. 그래도 제 템포예요.",
+          "mood": "serious"
         },
         {
-          "speaker": "국민 MC",
-          "text": "그럼요. 리모컨도 못 만지실걸요."
+          "id": "h-broadcast",
+          "speaker": "오 패널님",
+          "text": "역시 가르치는 사람은 뭔가 다르다",
+          "mood": "serious"
+        },
+        {
+          "speaker": "밍기리",
+          "text": "가르침... 마술... 같다.",
+          "mood": "serious"
+        },
+        {
+          "speaker": "칼리",
+          "text": "배운 걸 나누듯 보여 드릴게요.",
+          "mood": "serious"
+        },
+        {
+          "speaker": "응원단장 나리",
+          "text": "저도 따라가며 보고 있어요.",
+          "mood": "serious"
         }
       ],
       "afterClear": [
         {
-          "speaker": "국민 MC",
-          "text": "방송 나가자마자 초대장이 왔어요."
+          "id": "h-broadcast",
+          "speaker": "오 패널님",
+          "text": "노련미, 예술 그 자체네요.",
+          "mood": "serious"
         },
         {
-          "speaker": "열성적인 패널",
-          "text": "라스베가스에서 온 초대장이에요!"
+          "speaker": "칼리",
+          "text": "그 말, 오래 갈 것 같아요.",
+          "mood": "serious"
+        },
+        {
+          "speaker": "밍기리",
+          "text": "인간... 칭찬... 좋다.",
+          "mood": "happy"
+        },
+        {
+          "speaker": "칼리",
+          "text": "비법 「노련미」을 배웠어요.",
+          "mood": "happy",
+          "secretSkill": "노련미"
         }
       ]
     },
     "vegas": {
       "opening": [
         {
-          "speaker": "큰손 손님",
-          "text": "칩을 걸게. 네 마술에 올인이야."
-        },
-        {
-          "speaker": "화려한 관객",
-          "text": "깃털 사이로 잘 보이게 앉았어요."
-        },
-        {
-          "speaker": "경비 아저씨",
-          "text": "소매 속은 안 볼게요. 약속해요."
-        },
-        {
           "speaker": "칼리",
-          "text": "화려하다. 아빠한테 사진 보내야지."
+          "text": "이 무대, 꿈같네요. ㄷㄷ",
+          "mood": "serious"
+        },
+        {
+          "id": "h8",
+          "speaker": "데이비드 카퍼필",
+          "text": "상상은 관객이 완성하지.",
+          "mood": "serious"
+        },
+        {
+          "id": "a22",
+          "speaker": "펜 앤 텔로",
+          "text": "알려 주는 척, 그리고 반전.",
+          "mood": "serious"
+        },
+        {
+          "id": "a23",
+          "speaker": "데릴",
+          "text": "앰비셔스는 다시 올라오는 법이지.",
+          "mood": "serious"
         }
       ],
       "beforeHeadliner": [
         {
-          "speaker": "전설의 딜러",
-          "text": "눈이 따라오면 이미 진 거야."
+          "id": "a23",
+          "speaker": "데릴",
+          "text": "카드 리벨레이션도 떠올려 봐.",
+          "mood": "serious"
         },
         {
           "speaker": "칼리",
-          "text": "그럼 저는 눈을 피해서 하겠습니다."
+          "text": "유쾌하게 하고 싶었어요.",
+          "mood": "serious"
         },
         {
-          "speaker": "전설의 딜러",
-          "text": "오, 말이 통하네. 카드를 섞어 봐."
+          "speaker": "카드1412",
+          "text": "네 색으로 하면 된당.",
+          "mood": "serious"
+        },
+        {
+          "id": "a22",
+          "speaker": "펜 앤 텔로",
+          "text": "우주인도 웃게 만들어 봐.",
+          "mood": "happy"
+        },
+        {
+          "id": "h8",
+          "speaker": "데이비드 카퍼필",
+          "text": "웃음이 쉴 틈도 남겨 둬.",
+          "mood": "happy"
+        },
+        {
+          "speaker": "칼리",
+          "text": "동경은 빌리고, 손은 제 거예요.",
+          "mood": "serious"
         }
       ],
       "afterClear": [
         {
-          "speaker": "전설의 딜러",
-          "text": "판돈 대신 초대장 하나 주지."
+          "id": "h8",
+          "speaker": "데이비드 카퍼필",
+          "text": "네 표정이 보이는구나.",
+          "mood": "serious"
         },
         {
-          "speaker": "호텔 손님",
-          "text": "브로드웨이가 널 찾고 있어요."
+          "id": "a22",
+          "speaker": "펜 앤 텔로",
+          "text": "반전도 네 리듬이야.",
+          "mood": "serious"
         },
         {
-          "speaker": "밍기리",
-          "text": "칩은 내가 지킬게. 한 개만 먹고."
+          "id": "a23",
+          "speaker": "데릴",
+          "text": "유쾌하면 충분해.",
+          "mood": "happy"
+        },
+        {
+          "speaker": "칼리",
+          "text": "제 방식으로 갈게요.",
+          "mood": "serious"
+        },
+        {
+          "speaker": "칼리",
+          "text": "비법 「유쾌한 연출」을 배웠어요.",
+          "mood": "happy",
+          "secretSkill": "유쾌한 연출"
         }
       ]
     },
     "broadway": {
       "opening": [
         {
-          "speaker": "뮤지컬 팬",
-          "text": "하이노트 뒤에 피날레예요. 기억해요."
+          "speaker": "칼리",
+          "text": "선생님 공연, 정말 신기했어요.",
+          "mood": "surprised"
         },
         {
-          "speaker": "뉴욕 관광객",
-          "text": "여기까지 온 보람이 있어야 해요."
+          "id": "h9",
+          "speaker": "객석 리사",
+          "text": "아, 너무 신기해서 분이 나!",
+          "mood": "surprised"
         },
         {
-          "speaker": "깐깐 비평가",
-          "text": "이미 한 줄 썼어요. 고칠 수도 있어요."
+          "id": "a-lecturenote-serona",
+          "speaker": "세로나",
+          "text": "그 마음, 나쁜 게 아니에요.",
+          "mood": "serious"
         },
         {
           "speaker": "칼리",
-          "text": "조명이 뜨거워. 근데 기분 좋아."
+          "text": "보길 잘했어요. 정말요.",
+          "mood": "serious"
         }
       ],
       "beforeHeadliner": [
         {
-          "speaker": "브로드웨이 스타",
-          "text": "이 템포, 내가 늦춘다."
+          "speaker": "칼리",
+          "text": "큰 감정이 객석에 가득해요.",
+          "mood": "serious"
+        },
+        {
+          "id": "a-lecturenote-serona",
+          "speaker": "세로나",
+          "text": "놀라움 다음이 진짜예요.",
+          "mood": "serious"
         },
         {
           "speaker": "칼리",
-          "text": "느려지면 박수가 더 길어지겠네요."
+          "text": "속말로 그 여운을 이어 볼게요.",
+          "mood": "serious"
         },
         {
-          "speaker": "브로드웨이 스타",
-          "text": "좋은 대답이야. 무대로 올라와."
+          "id": "h9",
+          "speaker": "객석 리사",
+          "text": "욕 대신 박수가 나오네요.",
+          "mood": "happy"
+        },
+        {
+          "id": "a-lecturenote-serona",
+          "speaker": "세로나",
+          "text": "마지막까지 관객을 봐요.",
+          "mood": "serious"
         }
       ],
       "afterClear": [
         {
-          "speaker": "브로드웨이 스타",
-          "text": "이제 지구가 좁다. 달에서 연락 왔어."
+          "speaker": "칼리",
+          "text": "이너 모놀로그를 배웠어요.",
+          "mood": "serious"
         },
         {
-          "speaker": "오케스트라 팬",
-          "text": "달에서도 박수 소리가 들릴까요?"
+          "id": "h9",
+          "speaker": "객석 리사",
+          "text": "그 마음이 여기까지 와요.",
+          "mood": "serious"
+        },
+        {
+          "id": "a-lecturenote-serona",
+          "speaker": "세로나",
+          "text": "속말도 마술의 일부예요.",
+          "mood": "serious"
+        },
+        {
+          "speaker": "칼리",
+          "text": "비법 「이너 모놀로그」을 배웠어요.",
+          "mood": "happy",
+          "secretSkill": "이너 모놀로그"
         }
       ]
     },
     "moon": {
       "opening": [
         {
-          "speaker": "우주비행사",
-          "text": "헬멧 안에서 박수 치는 중입니다."
+          "speaker": "칼리",
+          "text": "돌계단에서 시작한 공연이에요.",
+          "mood": "serious"
         },
         {
-          "speaker": "무전 담당",
-          "text": "교신 양호. 피날레 때 무전 열게요."
+          "id": "a28",
+          "speaker": "돌계단 수호",
+          "text": "사람이 이렇게 모이다니.",
+          "mood": "serious"
         },
         {
           "speaker": "밍기리",
-          "text": "여기 먼지 폭신해! 나 발자국 남길래!"
-        },
-        {
-          "speaker": "탐사차 기사",
-          "text": "바퀴 자국 위가 객석입니다."
+          "text": "인간... 많다. 좋다.",
+          "mood": "happy"
         }
       ],
       "beforeHeadliner": [
         {
-          "speaker": "달 기지 대장",
-          "text": "그 케이스, 달 먼지로 봉인."
+          "speaker": "동료 마술사",
+          "text": "이 카드, 내 건 줄 알았네.",
+          "mood": "serious"
         },
         {
           "speaker": "칼리",
-          "text": "먼지 털면 다시 열리겠죠?"
+          "text": "괜찮아요. 다른 걸로 이어요.",
+          "mood": "serious"
         },
         {
-          "speaker": "달 기지 대장",
-          "text": "허허. 털 수 있으면 털어 봐."
+          "id": "a28",
+          "speaker": "돌계단 수호",
+          "text": "제 와이파이 이름이 바뀌었어요!",
+          "mood": "serious"
+        },
+        {
+          "speaker": "밍기리",
+          "text": "소품... 없어도. 마술... 있다.",
+          "mood": "serious"
+        },
+        {
+          "speaker": "칼리",
+          "text": "즉흥도 준비가 되네요. ㅋㅋ",
+          "mood": "serious"
         }
       ],
       "afterClear": [
         {
-          "speaker": "달 기지 대장",
-          "text": "달 먼지 털었네. 태양이 보고 싶대."
+          "id": "a28",
+          "speaker": "돌계단 수호",
+          "text": "끝까지 재밌었어요.",
+          "mood": "happy"
         },
         {
-          "speaker": "우주 관광객",
-          "text": "선글라스부터 챙기세요."
+          "speaker": "칼리",
+          "text": "즉흥 대처, 오늘 가져가요.",
+          "mood": "serious"
+        },
+        {
+          "speaker": "밍기리",
+          "text": "인간... 끝까지... 간다.",
+          "mood": "serious"
+        },
+        {
+          "speaker": "칼리",
+          "text": "비법 「즉흥 대처」을 배웠어요.",
+          "mood": "happy",
+          "secretSkill": "즉흥 대처"
         }
       ]
     },
     "sun": {
       "opening": [
         {
-          "speaker": "불꽃 서퍼",
-          "text": "불꽃 파도가 오기 전에 시작해요!"
+          "speaker": "칼리",
+          "text": "태양이 눈부시네요. 그늘로 가요.",
+          "mood": "serious"
         },
         {
-          "speaker": "태양 가이드",
-          "text": "흑점 투어는 잠시 멈췄어요."
+          "speaker": "밍기리",
+          "text": "빛... 강하다. 눈... 찡그린다.",
+          "mood": "serious"
         },
         {
           "speaker": "칼리",
-          "text": "뜨겁지만 박수는 더 뜨겁네요."
+          "text": "일본 줄과 중국 샵이에요.",
+          "mood": "serious"
         },
         {
-          "speaker": "불꽃 사진가",
-          "text": "피날레 때 셔터 누를게요."
+          "speaker": "칼리",
+          "text": "하나, 둘, 셋. 검정, 빨강.",
+          "mood": "serious"
+        },
+        {
+          "id": "h12",
+          "speaker": "타코야키 가온",
+          "text": "하나! 빨강!",
+          "mood": "serious"
+        },
+        {
+          "id": "a34",
+          "speaker": "샵 손님 하늘",
+          "text": "둘, 셋, 검정!",
+          "mood": "serious"
         }
       ],
       "beforeHeadliner": [
         {
-          "speaker": "태양의 불꽃왕",
-          "text": "동전은 코로나에 녹인다."
+          "speaker": "칼리",
+          "text": "줄 서서 몸짓으로 보여 드릴게요.",
+          "mood": "serious"
+        },
+        {
+          "speaker": "밍기리",
+          "text": "말... 달라도. 웃음... 같다.",
+          "mood": "happy"
+        },
+        {
+          "id": "h12",
+          "speaker": "타코야키 가온",
+          "text": "하나! 둘! 빨강!",
+          "mood": "serious"
         },
         {
           "speaker": "칼리",
-          "text": "녹는 건 동전뿐이면 좋겠네요."
+          "text": "아는 말이 적어도 통해요.",
+          "mood": "serious"
         },
         {
-          "speaker": "태양의 불꽃왕",
-          "text": "크하하! 배짱은 활활 타는군."
+          "id": "a34",
+          "speaker": "샵 손님 하늘",
+          "text": "빨강! 검정! 아!",
+          "mood": "serious"
+        },
+        {
+          "speaker": "밍기리",
+          "text": "손... 보면. 안다.",
+          "mood": "serious"
         }
       ],
       "afterClear": [
         {
-          "speaker": "태양의 불꽃왕",
-          "text": "좋다. 은하에서도 널 기다린다."
+          "id": "h12",
+          "speaker": "타코야키 가온",
+          "text": "하나, 둘, 셋!",
+          "mood": "serious"
         },
         {
-          "speaker": "태양 관측자",
-          "text": "선글라스 벗고 보니 더 밝네요."
+          "id": "a34",
+          "speaker": "샵 손님 하늘",
+          "text": "셋! 빨강!",
+          "mood": "serious"
+        },
+        {
+          "speaker": "칼리",
+          "text": "몸짓만으로 충분했죠.",
+          "mood": "happy"
+        },
+        {
+          "speaker": "밍기리",
+          "text": "인간... 마술... 통한다.",
+          "mood": "serious"
+        },
+        {
+          "speaker": "칼리",
+          "text": "비법 「몸짓으로 말하기」을 배웠어요.",
+          "mood": "happy",
+          "secretSkill": "몸짓으로 말하기"
         }
       ]
     },
     "galaxy": {
       "opening": [
         {
-          "speaker": "외계인 손님",
-          "text": "번역기가 박수를 모르네. 흉내만 낼게."
-        },
-        {
-          "speaker": "UFO 파일럿",
-          "text": "기체 기울여서 구경하겠습니다."
-        },
-        {
           "speaker": "칼리",
-          "text": "별이 객석처럼 깔려 있어."
+          "text": "태양이 눈부시네요. 그늘로 가요.",
+          "mood": "serious"
         },
         {
           "speaker": "밍기리",
-          "text": "칼리, 칼리라는 이름은 어디서 왔어?"
+          "text": "빛... 강하다. 눈... 찡그린다.",
+          "mood": "serious"
         },
         {
           "speaker": "칼리",
-          "text": "어릴 때 게임 친구가 가문에 불러 지어 줬어요."
+          "text": "일본 줄과 중국 샵이에요.",
+          "mood": "serious"
         },
         {
-          "speaker": "별자리 선생님",
-          "text": "별처럼 멋진 선물이네요. 별이 지기 전에 보여 줘요."
+          "speaker": "칼리",
+          "text": "하나, 둘, 셋. 검정, 빨강.",
+          "mood": "serious"
+        },
+        {
+          "id": "h12",
+          "speaker": "타코야키 가온",
+          "text": "하나! 빨강!",
+          "mood": "serious"
+        },
+        {
+          "id": "a34",
+          "speaker": "샵 손님 하늘",
+          "text": "둘, 셋, 검정!",
+          "mood": "serious"
         }
       ],
       "beforeHeadliner": [
         {
-          "speaker": "은하 황제",
-          "text": "의심은 별빛으로 다시 찬다."
+          "speaker": "칼리",
+          "text": "줄 서서 몸짓으로 보여 드릴게요.",
+          "mood": "serious"
+        },
+        {
+          "speaker": "밍기리",
+          "text": "말... 달라도. 웃음... 같다.",
+          "mood": "happy"
+        },
+        {
+          "id": "h12",
+          "speaker": "타코야키 가온",
+          "text": "하나! 둘! 빨강!",
+          "mood": "serious"
         },
         {
           "speaker": "칼리",
-          "text": "의심이 차는 건 이제 익숙해요."
+          "text": "아는 말이 적어도 통해요.",
+          "mood": "serious"
         },
         {
-          "speaker": "은하 황제",
-          "text": "그럼 마지막 시험이다. 거울을 봐라."
+          "id": "a34",
+          "speaker": "샵 손님 하늘",
+          "text": "빨강! 검정! 아!",
+          "mood": "serious"
+        },
+        {
+          "speaker": "밍기리",
+          "text": "손... 보면. 안다.",
+          "mood": "serious"
         }
       ],
       "afterClear": [
         {
-          "speaker": "은하 황제",
-          "text": "문이 열렸다. 거울 너머를 마주해라."
+          "id": "h12",
+          "speaker": "타코야키 가온",
+          "text": "하나, 둘, 셋!",
+          "mood": "serious"
         },
         {
-          "speaker": "혜성 레이서",
-          "text": "혜성 타고 가요. 길이 좀 빨라요."
+          "id": "a34",
+          "speaker": "샵 손님 하늘",
+          "text": "셋! 빨강!",
+          "mood": "serious"
+        },
+        {
+          "speaker": "칼리",
+          "text": "몸짓만으로 충분했죠.",
+          "mood": "happy"
         },
         {
           "speaker": "밍기리",
-          "text": "무서워도 난 소매 속에 있을게."
+          "text": "인간... 마술... 통한다.",
+          "mood": "serious"
+        },
+        {
+          "speaker": "칼리",
+          "text": "비법 「몸짓으로 말하기」을 배웠어요.",
+          "mood": "happy",
+          "secretSkill": "몸짓으로 말하기"
         }
       ]
     },
     "multiverse": {
       "opening": [
         {
-          "speaker": "다른 세계의 나",
-          "text": "나는 한 번도 안 멈추고 계속 한 너야!"
+          "id": "a37",
+          "speaker": "농장 게임만 하는 칼리",
+          "text": "나는 농장 게임만 하는 칼리야.",
+          "mood": "serious"
         },
         {
-          "speaker": "무대에 선 나",
-          "text": "우린 다 마술을 놓지 않은 칼리들이야."
+          "id": "a110",
+          "speaker": "계속한 칼리",
+          "text": "나는 마술을 계속 건넸어.",
+          "mood": "serious"
+        },
+        {
+          "speaker": "칼리",
+          "text": "군대에선 잠시 쉬었죠.",
+          "mood": "serious"
         },
         {
           "speaker": "밍기리",
-          "text": "저 거울 속 의심쟁이, 딱 내 취향이네!"
+          "text": "쉰 거... 포기... 아니야?",
+          "mood": "serious"
         },
         {
-          "speaker": "박수 보내는 나",
-          "text": "어느 세계에서든 네게 박수를 보낼게."
+          "speaker": "칼리",
+          "text": "쉬고 싶던 건 아니에요.",
+          "mood": "serious"
         }
       ],
       "beforeHeadliner": [
         {
-          "speaker": "가장 의심 많은 나",
-          "text": "난 의심이 많아도 끝까지 해 온 너다."
+          "id": "a110",
+          "speaker": "계속한 칼리",
+          "text": "그만두고 싶었던 적은 없어.",
+          "mood": "serious"
+        },
+        {
+          "id": "a37",
+          "speaker": "농장 게임만 하는 칼리",
+          "text": "다른 취미도 나야.",
+          "mood": "serious"
         },
         {
           "speaker": "칼리",
-          "text": "나도 알아. 멈추지 않은 나를 믿어."
+          "text": "게임도 저고, 마술도 저예요.",
+          "mood": "serious"
         },
         {
-          "speaker": "가장 의심 많은 나",
-          "text": "좋아. 그럼 한 번 더 보여 줘."
+          "speaker": "밍기리",
+          "text": "여러 칼리... 다... 좋다.",
+          "mood": "happy"
+        },
+        {
+          "id": "a110",
+          "speaker": "계속한 칼리",
+          "text": "다시 건네고 싶은 마음.",
+          "mood": "serious"
+        },
+        {
+          "speaker": "칼리",
+          "text": "그 마음은 하나네요.",
+          "mood": "serious"
         }
       ],
       "afterClear": [
         {
-          "speaker": "가장 의심 많은 나",
-          "text": "멈추지 않길 잘했다. 의심은 쉬어도 되겠다."
+          "speaker": "칼리",
+          "text": "모습은 달라도 좋아요.",
+          "mood": "happy"
         },
         {
-          "speaker": "용기 낸 나",
-          "text": "돌아가자. 불이 켜진 곳으로."
-        }
-      ]
-    },
-    "lecturenote": {
-      "opening": [
+          "id": "a37",
+          "speaker": "농장 게임만 하는 칼리",
+          "text": "농장도 남겨 둬.",
+          "mood": "serious"
+        },
         {
-          "speaker": "헤카테",
-          "text": "부장 점검입니다. 동선부터 확인해요."
+          "id": "a110",
+          "speaker": "계속한 칼리",
+          "text": "이제 렉쳐노트로 가.",
+          "mood": "serious"
+        },
+        {
+          "speaker": "칼리",
+          "text": "비법 「계속 건네는 마음」을 배웠어요.",
+          "mood": "happy",
+          "secretSkill": "계속 건네는 마음"
+        }
+      ],
+      "choice": [
+        {
+          "speaker": "칼리",
+          "text": "내가 될 수 있는 모습만 볼까?",
+          "mood": "serious"
+        },
+        {
+          "speaker": "칼리",
+          "text": "아직 어린 나도 만나 볼까?",
+          "mood": "serious"
         },
         {
           "speaker": "세로나",
-          "text": "저 히든 직원이에요. 숨은 선물 있어요."
+          "text": "첫 선택은 렉쳐노트로 가는 길이에요.",
+          "mood": "serious"
         },
         {
-          "speaker": "정희수",
-          "text": "포장은 제가 맡을게요. 테이프 어디 갔지?"
+          "speaker": "세로나",
+          "text": "둘째는 어린 칼리를 만나는 길이에요.",
+          "mood": "serious"
         },
         {
-          "speaker": "칼리",
-          "text": "다들 그대로네요. 집에 온 것 같아요."
-        }
-      ],
-      "beforeHeadliner": [
-        {
-          "speaker": "김정명",
-          "text": "우주까지 다녀왔다며? 보자."
+          "speaker": "세로나",
+          "text": "환생하면 처음부터 다시예요.",
+          "mood": "serious"
         },
         {
-          "speaker": "칼리",
-          "text": "사장님, 멀리 돌아 이제 왔습니다."
+          "speaker": "세로나",
+          "text": "연출은 더 선명해져요.",
+          "mood": "serious"
         },
         {
-          "speaker": "김정명",
-          "text": "밤 알바로 처음 왔을 때가 어제 같은데."
+          "speaker": "세로나",
+          "text": "흐름도가 갈림길을 기억해요.",
+          "mood": "serious"
         },
         {
-          "speaker": "김정명",
-          "text": "낮 알바, 직원, 이젠 매니저까지 했지."
-        },
-        {
-          "speaker": "칼리",
-          "text": "사장님이 믿고 맡겨 주신 덕분이에요."
-        },
-        {
-          "speaker": "김정명",
-          "text": "네가 일을 너무 잘한 탓이야. 좀 얄밉다."
-        },
-        {
-          "speaker": "김정명",
-          "text": "그래. 이번엔 함께 만들어 보자."
-        }
-      ],
-      "afterClear": [
-        {
-          "speaker": "김정명",
-          "text": "잘 돌아왔다, 칼리."
-        },
-        {
-          "speaker": "칼리",
-          "text": "다녀왔습니다. 여기가 제 무대예요."
-        },
-        {
-          "speaker": "칼리",
-          "text": "한국에서 마술 즐기는 사람, 100명에 1명도 안 돼요."
-        },
-        {
-          "speaker": "칼리",
-          "text": "공연도 하고 인터넷에서도 알려서 2명으로 늘릴래요."
-        },
-        {
-          "speaker": "칼리",
-          "text": "마술 친구, 동생들이랑 좋은 시간도 보내고요."
-        },
-        {
-          "speaker": "칼리",
-          "text": "나중엔 서재 앞 큰 테이블에서 초보자들에게요."
-        },
-        {
-          "speaker": "칼리",
-          "text": "마술도 보여 주고 열정과 꿈도 전해 줄게요."
-        },
-        {
-          "speaker": "김정명",
-          "text": "좋다. 그 자리, 내가 미리 맡아 두마."
-        },
-        {
-          "speaker": "정희수",
-          "text": "박수 소리가 택배급이에요!"
+          "speaker": "카드1412",
+          "text": "다음 생엔 다른 쪽도 갈 수 있당.",
+          "mood": "serious"
         }
       ]
-    }
+    },
+    "lecturenote": GAME_DATA.storyReview.lecturenote,
+    "future": GAME_DATA.storyReview.future
   },
   "bios": {
-    "a1": "채널권을 쥔 가장. 마술엔 짧게 반응하는 아빠.",
-    "a2": "팝콘이 우선인 장난꾸러기 동생.",
-    "a3": "설거지 틈틈이 보러 오는 다정한 엄마.",
-    "h1": "안경 너머로 손을 쫓는 까다로운 심사관 할머니.",
-    "a4": "풍선부터 터뜨리는 파티의 분위기 메이커.",
-    "a5": "파티의 음악 담당. 다음 곡이 늘 고민이다.",
-    "a6": "초가 꺼지기 전에 구경하는 케이크 담당.",
-    "h2": "주인공 자리를 지키려는 파티 주최자.",
-    "a7": "연필로 박자를 두드리는 앞자리 짝꿍.",
-    "a8": "응원봉을 피날레에 켜는 반장.",
-    "a9": "점수에 진심인 채점표 든 선배.",
-    "a46": "쉬는 시간도 잊고 보는 체육부 선배.",
-    "h3": "시간에 엄격한 장기자랑 심사 담임.",
-    "a10": "배터리보다 의심이 많은 카페 단골.",
-    "a11": "포크를 든 채 기다리는 디저트 손님.",
-    "a12": "김 서린 창에 하트 그리는 창가 손님.",
-    "a50": "칼리를 카페로 부른 바리스타 친구.",
-    "h4": "샷을 느리게 내리는 여유로운 카페 바리스타.",
-    "a-meetup-busan": "첫차로 달려온 부산의 마술 매니아.",
-    "a-meetup-daegu": "카드 이야기를 세 시간 하는 대구 매니아.",
-    "a-meetup-changwon": "창원 모임의 '빨간 모자'. 연습 영상을 들고 오는 매니아.",
-    "a-meetup-incheon": "인천 모임의 '비타민'. 맨 앞줄에 앉는 활력 담당.",
-    "a-meetup-geoje": "바다 이야기와 마술을 섞는 거제 매니아.",
-    "a-meetup-cheonan": "모임 간식을 챙겨 오는 천안 매니아.",
-    "a-meetup-suwon": "수원 모임의 '까만 팔찌'. 새 기술을 제일 먼저 외운다.",
-    "h-meetup-seoul": "서울 모임의 '마술 3일'. 맏형 같은 대표.",
-    "a13": "손바닥이 이미 빨간 앞줄 열성팬.",
-    "a14": "막간마다 프로그램을 넘기는 꼼꼼한 관객.",
-    "a15": "귓속말이 박자보다 빠른 뒷자리 관객.",
-    "a54": "좋은 장면을 대본에 옮기는 작가.",
-    "a55": "커튼콜만 기다리는 열정 팬.",
-    "h5": "말투는 까칠해도 속은 따뜻한 평론가.",
-    "a16": "깃발을 피날레에 흔드는 응원단.",
-    "a17": "양념 묻은 손으로 박수 치는 치킨 동기.",
-    "a18": "칼리를 선배라 부르는 무대 밑 후배.",
-    "a59": "앵콜 전에 손부터 흔드는 밴드 관객.",
-    "a60": "야광봉으로 무대를 물들이는 팬.",
-    "h6": "동전 장난을 좋아하는 능청스러운 사회자.",
-    "a19": "점수를 실시간으로 올리는 점수판 보조.",
-    "a20": "줌인 타이밍을 아끼는 카메라 감독.",
-    "a21": "칼리의 피날레만 노려보는 라이벌.",
-    "a64": "카메라보다 무대를 보는 작가석 손님.",
-    "a65": "리허설부터 눈을 못 떼는 관객.",
-    "a66": "신호에 맞춰 환호하는 현장 방청객.",
-    "h7": "의심을 채우는 냉정한 메인 심사위원.",
-    "a112": "생방송 시간을 초 단위로 외치는 PD.",
-    "a113": "큐시트에 늘 밑줄을 긋는 작가.",
-    "a114": "마이크를 든 채 숨죽이는 붐 마이크 기사.",
-    "a115": "신호에 맞춰 박수 치는 방청 응원단.",
-    "a116": "실시간 반응 숫자를 외치는 담당자.",
-    "a117": "가장 반짝이는 순간을 찾는 조명 감독.",
-    "h-broadcast": "천천히를 좋아하는 부드러운 국민 MC.",
-    "a22": "칩을 쌓다 손을 멈추는 큰손 손님.",
-    "a23": "깃털 너머로 무대를 보는 쇼걸 관객.",
-    "a24": "팔짱이 단단하지만 마음은 약한 경비.",
-    "a70": "칩을 내려놓고 눈이 커지는 호텔 손님.",
-    "a71": "쇼 시간만 기다린 열혈 팬.",
-    "a72": "사진 찍다 박수 치는 카지노 관광객.",
-    "h8": "눈을 읽는 베테랑, 카드판의 전설 딜러.",
-    "a25": "하이노트에 피날레를 거는 뮤지컬 팬.",
-    "a26": "브로슈어를 접다 멈추는 관광객.",
-    "a27": "막간에 평을 미리 쓰는 비평가.",
-    "a76": "티켓을 모으다 커튼콜을 외치는 수집가.",
-    "a77": "발끝으로 박자를 타는 발레 관객.",
-    "a78": "박수도 악보대로 치는 오케스트라 팬.",
-    "a79": "무대 의상 솔기까지 보는 의상가.",
-    "h9": "템포를 쥐고 노는 브로드웨이의 스타.",
-    "a28": "헬멧 안에서 박수를 아끼는 우주비행사.",
-    "a29": "피날레에 무전을 여는 달기지 관제사.",
-    "a30": "바퀴 자국 위에 서는 월면차 운전병.",
-    "a83": "헬멧 너머로 관찰하는 월면 과학자.",
-    "a84": "별빛을 모아 병에 담는 수집가.",
-    "a85": "무중력에도 공구를 놓치는 정비사.",
-    "a86": "사진 찍기에 바쁜 우주 관광객.",
-    "h10": "달 먼지로 케이스를 잠그는 달 기지 대장.",
-    "a31": "불꽃 파도를 타는 플레어 서퍼.",
-    "a32": "흑점 투어를 안내하는 코로나 가이드.",
-    "a33": "피날레에 셔터를 누르는 홍염 사진가.",
-    "a90": "빛의 색을 분석하는 빛 연구원.",
-    "a91": "선글라스를 쓰고 구경하는 여행객.",
-    "a92": "태양 표면을 매일 보는 관측자.",
-    "a93": "불꽃 파도를 타는 또 다른 서퍼.",
-    "a94": "태양 빛을 사진에 담는 우주 사진가.",
-    "h11": "동전을 코로나에 녹이는 호탕한 불꽃왕.",
-    "a34": "번역기가 박수를 모르는 관광 외계인.",
-    "a35": "기체를 기울여 구경하는 UFO 파일럿.",
-    "a36": "별이 지기 전에 보자는 해설가.",
-    "a98": "박자에 맞춰 건반을 누르는 우주 음악가.",
-    "a99": "은하를 한 장에 담는 사진가.",
-    "a100": "성운 길을 안내하는 느긋한 안내원.",
-    "a101": "혜성을 타고 다니는 빠른 라이더.",
-    "a102": "별자리마다 소원을 비는 여행자.",
-    "h12": "별빛으로 의심을 채우는 위엄 있는 황제.",
-    "a37": "지팡이가 없어도 맨손으로 계속한 칼리.",
-    "a38": "연습실에 못 가는 날도 집에서 연습한 칼리.",
-    "a39": "첫 카드를 접고 접어 손에 익힌 칼리.",
-    "a106": "한 걸음 내디딘 용기 있는 칼리.",
-    "a107": "객석에서 박수 치는 칼리.",
-    "a108": "다른 차원에서 온 칼리.",
-    "a109": "이제 막 연습을 시작한 칼리.",
-    "a110": "이미 무대에 선 칼리.",
-    "a111": "박수를 보내 주는 따뜻한 칼리.",
-    "h13": "의심은 많아도 끝까지 해 온 칼리.",
-    "a-lecturenote-hecate": "꼼꼼히 점검하는 부장. 말투가 정중한 남자.",
-    "a-lecturenote-serona": "서프라이즈를 숨겨 두는 히든 직원 여자.",
-    "a-lecturenote-jung": "포장과 정리를 맡은 부지런한 직원.",
-    "h-lecturenote-kim": "렉쳐노트의 푸근한 사장님. 칼리를 밤 알바에서 매니저로 키웠다."
+    "a1": "거실에서 마술을 본 동생.",
+    "a2": "앞자리를 맡는 남동생.",
+    "a3": "둘을 앉히고 박수 치는 엄마.",
+    "h1": "거실 소파에서 돋보기를 올리고 손끝을 본다.",
+    "a4": "풍선 장식을 맡은 친구.",
+    "a5": "운동하며 만나 파티에 부른 친구.",
+    "a6": "케이크 초를 미루고 보는 친구.",
+    "h2": "한 번 더를 청한 생일 하준이.",
+    "a7": "젓가락 그림을 맨 앞에서 본 짝꿍.",
+    "a8": "반 친구 응원봉을 맡은 반장.",
+    "a9": "점수 대신 순서를 적는 선배.",
+    "a46": "공 대신 손끝을 보는 체육부 승민.",
+    "h3": "젓가락 소문 뒤 축제를 맡긴 담임.",
+    "a10": "노트북을 덮고 보는 손님.",
+    "a11": "디저트를 두고 보는 손님.",
+    "a12": "창가에서 손을 보는 손님.",
+    "a50": "커피를 내리는 바리스타.",
+    "h4": "TV와 다르다고 말한 손님.",
+    "a-meetup-busan": "부산의 마술 매니아. 형.",
+    "a-meetup-daegu": "보라 후드에 카드를 든 매니아.",
+    "a-meetup-changwon": "창원의 마술 매니아. 형.",
+    "a-meetup-incheon": "인천의 마술 매니아. 형.",
+    "a-meetup-geoje": "책가방에 초록 카드를 든 매니아.",
+    "a-meetup-cheonan": "베이지 코트에 카드 두 장을 든 매니아.",
+    "a-meetup-suwon": "경북 구미의 마술 매니아. 형.",
+    "h-meetup-seoul": "서울의 마술 매니아. 형.",
+    "a13": "앞줄에서 박수를 준비하는 관객.",
+    "a14": "칼리가 부담 끝에 고른 관객.",
+    "a15": "카드를 걷어 맞혀 보라 한 관객.",
+    "a54": "좋은 장면을 받아 적는 관객.",
+    "a55": "커튼콜을 기다리는 관객.",
+    "h5": "객석에서 손을 든 강 마술사님.",
+    "a16": "친근하고 무뚝뚝한 카드 팬.",
+    "a17": "치킨 상자를 옆에 둔 친구.",
+    "a18": "축제 앞줄에서 선배를 부르는 후배 지우.",
+    "a59": "다음 곡 전에 마술을 보는 밴드.",
+    "a60": "달려온 승우 사이에서 불을 켜는 팬.",
+    "h6": "멀리서 보고 뛰어온 관객.",
+    "a19": "구경 온 칼리를 즉석 호명한 진행.",
+    "a20": "구경 온 칼리를 화면에 담는 감독.",
+    "a21": "같은 오디션을 기다리는 라이벌 유찬.",
+    "a64": "즉석 무대를 받아 적는 작가.",
+    "a65": "즉석 본방만 보게 된 관객.",
+    "a66": "즉석 무대에 먼저 웃는 방청객 소희.",
+    "h7": "점수는 정직하게 매기는 심사위원.",
+    "a112": "유튜브 방송을 여는 진행.",
+    "a113": "빠른 말을 메모하는 방송 작가 가은.",
+    "a114": "말속도를 놓치지 않는 음향.",
+    "a115": "유튜브 앞에 앉은 응원단.",
+    "a116": "빠른 설명을 좋아하는 옆자리.",
+    "a117": "말보다 손 위치에 빛을 둔다.",
+    "h-broadcast": "노련미를 말해 준 오 패널님.",
+    "a22": "반전과 우주인 마술의 콤비.",
+    "a23": "카드의 롤모델.",
+    "a24": "입구를 지키다 발걸음을 멈춘 경비.",
+    "a70": "로비 쇼를 보러 앉은 투숙객 에밀리.",
+    "a71": "동경 무대 앞줄의 쇼 팬 소피아.",
+    "a72": "셔터보다 표정을 보는 관광객.",
+    "h8": "큰 무대의 마술사.",
+    "a25": "하이노트 뒤에 앉은 뮤지컬 팬 제인.",
+    "a26": "표보다 무대를 보게 된 관광객.",
+    "a27": "막간에 평을 고치는 비평가.",
+    "a76": "티켓보다 여운을 모으는 수집가.",
+    "a77": "동작의 여운을 보는 발레 클로이.",
+    "a78": "여운을 박자로 받는 팬.",
+    "a79": "옷보다 손의 여백을 보는 디자이너.",
+    "h9": "신기해서 분이 샌 객석 리사.",
+    "a28": "해운대 돌계단에 모인 관객.",
+    "a29": "돌계단 인파를 세는 담당.",
+    "a30": "돌계단 아래를 지키는 운전 담당.",
+    "a83": "돌계단 인파를 노트에 적는 사람.",
+    "a84": "밤바다 불빛보다 손을 모으는 사람.",
+    "a85": "돌계단 통로를 비우는 스태프.",
+    "a86": "야경보다 손을 보는 구경꾼.",
+    "h10": "도박에 안 당하는 법을 물은 손님.",
+    "a31": "강한 햇살 아래서 모자를 잡는 사람.",
+    "a32": "눈 시린 쪽에 그늘을 안내한다.",
+    "a33": "눈부신 역광을 찍는 사진가.",
+    "a90": "빛 세기를 중얼거리는 연구원.",
+    "a91": "바람을 맞으며 자리를 찾는 여행객.",
+    "a92": "필터 없이 빛을 보는 관측자.",
+    "a93": "빛바람의 결을 타는 서퍼.",
+    "a94": "캡을 붙잡고 역광을 찍는 사람.",
+    "h11": "눈을 찡그리게 하는 빛과 바람.",
+    "a34": "중국 마술샵의 손님.",
+    "a35": "말 없이 손만 쫓는 파일럿.",
+    "a36": "하나 둘 셋을 읽는 선생님.",
+    "a98": "숫자 구호에 박자를 얹는 음악가.",
+    "a99": "빨강과 검정을 한 장에 담는다.",
+    "a100": "말 대신 손 방향으로 줄을 안내한다.",
+    "a101": "하나 둘 셋에 속도를 맞추는 레이서.",
+    "a102": "빨강과 검정 중 소원을 고른다.",
+    "h12": "일본 노점 줄의 손님.",
+    "a37": "농장 게임만 하는 다른 칼리.",
+    "a38": "문 앞에서도 카드를 만지는 나.",
+    "a39": "접어 둔 카드를 다시 꺼낸 나.",
+    "a106": "먼저 한 걸음을 내디딘 나.",
+    "a107": "객석에 앉아 박수를 준비하는 나.",
+    "a108": "군대에서 잠시 쉬던 칼리. 쉬고 싶던 건 아니었다.",
+    "a109": "이제 막 카드를 펼친 나.",
+    "a110": "마술을 계속 건넨 칼리.",
+    "a111": "의심 뒤에 박수를 보내는 나.",
+    "h13": "의심이 많아도 자리를 지키는 나.",
+    "a-lecturenote-hecate": "부장. 재고와 손 위치를 짧게 확인한다.",
+    "a-lecturenote-serona": "모자를 벗으면 세로나. 샵 매니저이자 숨겨진 조력자.",
+    "a-lecturenote-jung": "카운터와 포장을 맡은 직원.",
+    "h-lecturenote-kim": "렉쳐노트 사장님. 칼리를 얻기 위해 계획했다.",
+    "h-future-kali": "테이블에 처음 앉은 사람 앞에서 마술을 건넨다."
+  },
+  "secretSkills": {
+    "tutorial": "눈 맞추기",
+    "family": "첫 박수",
+    "party": "앙코르 받기",
+    "school": "눈 맞추기",
+    "cafe": "먼저 다가가기",
+    "meetup": "관객이 해낸 듯한 연출",
+    "theater": "관객 고르기",
+    "festival": "관객 에너지 받기",
+    "audition": "즉흥 무대",
+    "broadcast": "노련미",
+    "vegas": "유쾌한 연출",
+    "broadway": "이너 모놀로그",
+    "moon": "즉흥 대처",
+    "galaxy": "몸짓으로 말하기",
+    "multiverse": "계속 건네는 마음",
+    "lecturenote": "편안함",
+    "future": "나눔",
+    "youngKaliDuel": "자기 수용",
+    "mirrorStage": "자기 수용",
+    "subway": "다시 일어서기"
+  },
+  "dealerActs": [
+    [
+      {
+        "speaker": "수상한 샵 매니저",
+        "text": "어서 와요. 컵앤볼이에요.",
+        "mood": "serious"
+      },
+      {
+        "speaker": "수상한 샵 매니저",
+        "text": "공은 마지막 컵에 있어요.",
+        "mood": "serious"
+      },
+      {
+        "speaker": "칼리",
+        "text": "목소리가 참 차분하네요.",
+        "mood": "serious"
+      },
+      {
+        "speaker": "수상한 샵 매니저",
+        "text": "카드 몬테도 한 판 가요.",
+        "mood": "serious"
+      },
+      {
+        "speaker": "수상한 샵 매니저",
+        "text": "정답은 늘 손이 알아요.",
+        "mood": "serious"
+      },
+      {
+        "speaker": "카드1412",
+        "text": "이 손버릇, 어디서 본 것 같당.",
+        "mood": "serious"
+      }
+    ],
+    [
+      {
+        "speaker": "수상한 샵 매니저",
+        "text": "컵앤볼, 그리고 카드 몬테예요.",
+        "mood": "serious"
+      },
+      {
+        "speaker": "수상한 샵 매니저",
+        "text": "눈은 맞추고, 손은 기억하게 두세요.",
+        "mood": "serious"
+      },
+      {
+        "speaker": "칼리",
+        "text": "세로나님이 한 말인데요.",
+        "mood": "serious"
+      },
+      {
+        "speaker": "수상한 샵 매니저",
+        "text": "비슷한 말이 많아요.",
+        "mood": "serious"
+      },
+      {
+        "speaker": "밍기리",
+        "text": "목소리... 세로나... 비슷.",
+        "mood": "serious"
+      },
+      {
+        "speaker": "수상한 샵 매니저",
+        "text": "모자는 아직 제 몫이에요.",
+        "mood": "serious"
+      }
+    ],
+    [
+      {
+        "speaker": "수상한 샵 매니저",
+        "text": "컵앤볼은 오늘이 마지막이에요.",
+        "mood": "serious"
+      },
+      {
+        "speaker": "칼리",
+        "text": "호흡이 세로나님과 같아요.",
+        "mood": "serious"
+      },
+      {
+        "speaker": "수상한 샵 매니저",
+        "text": "들키기 직전이네요.",
+        "mood": "serious"
+      },
+      {
+        "speaker": "카드1412",
+        "text": "거의 확실하당. 모자는 아직유.",
+        "mood": "serious"
+      },
+      {
+        "speaker": "수상한 샵 매니저",
+        "text": "카드 몬테 정답은 나중에요.",
+        "mood": "serious"
+      },
+      {
+        "speaker": "수상한 샵 매니저",
+        "text": "렉쳐노트에서 봐요.",
+        "mood": "serious"
+      }
+    ]
+  ],
+  "fights": {
+    "a1": {
+      "heckles": [
+        "오빠, 나한테 먼저 보여 줘.",
+        "오빠, 나랑 눈 맞춰 봐.",
+        "신기해! 한 번 더!",
+        "오빠 최고. 또 해 줘."
+      ],
+      "winLine": "오빠 최고. 또 해 줘."
+    },
+    "a2": {
+      "heckles": [
+        "나도 볼래. 앞자리!",
+        "다음엔 내 친구도 보여 줘!",
+        "나도 볼래. 앞자리!",
+        "다음엔 내 친구도 보여 줘!"
+      ],
+      "winLine": "다음엔 내 친구도 보여 줘!"
+    },
+    "a3": {
+      "heckles": [
+        "둘 다 앉았으니 시작해 보렴.",
+        "집에서도 박수가 나오네.",
+        "둘 다 앉았으니 시작해 보렴.",
+        "집에서도 박수가 나오네."
+      ],
+      "winLine": "집에서도 박수가 나오네."
+    },
+    "h1": {
+      "heckles": [
+        "오빠, 나한테 먼저 보여 줘.",
+        "오빠, 나랑 눈 맞춰 봐.",
+        "신기해! 한 번 더!",
+        "오빠 최고. 또 해 줘."
+      ],
+      "winLine": "오빠 최고. 또 해 줘."
+    },
+    "a4": {
+      "heckles": [
+        "풍선 다 불어 놨어!",
+        "풍선은 안 터졌는데 우리가 터졌다!",
+        "풍선 다 불어 놨어!",
+        "풍선은 안 터졌는데 우리가 터졌다!"
+      ],
+      "winLine": "풍선은 안 터졌는데 우리가 터졌다!"
+    },
+    "a5": {
+      "heckles": [
+        "내 친구 생일이야. 마술 부탁해.",
+        "오늘 분위기, 네가 가져갔어.",
+        "내 친구 생일이야. 마술 부탁해.",
+        "오늘 분위기, 네가 가져갔어."
+      ],
+      "winLine": "오늘 분위기, 네가 가져갔어."
+    },
+    "a6": {
+      "heckles": [
+        "내 친구 생일이야. 마술 부탁해.",
+        "풍선 다 불어 놨어!",
+        "우와, 분위기가 확 사네.",
+        "한 번만 더 보여 줘!"
+      ],
+      "winLine": "오늘 분위기, 네가 가져갔어."
+    },
+    "h2": {
+      "heckles": [
+        "우와, 분위기가 확 사네.",
+        "카드는 아무거나 고를게.",
+        "내가 고른 그 이름이잖아.",
+        "우와, 분위기가 확 사네."
+      ],
+      "winLine": "내가 고른 그 이름이잖아."
+    },
+    "a7": {
+      "heckles": [
+        "교실 마술, 소문이 다 났어.",
+        "교실 마술, 소문이 다 났어.",
+        "교실 마술, 소문이 다 났어.",
+        "교실 마술, 소문이 다 났어."
+      ],
+      "winLine": "교실 마술, 소문이 다 났어."
+    },
+    "a8": {
+      "heckles": [
+        "학교가 축제 무대를 맡겼대.",
+        "학교가 축제 무대를 맡겼대.",
+        "학교가 축제 무대를 맡겼대.",
+        "학교가 축제 무대를 맡겼대."
+      ],
+      "winLine": "학교가 축제 무대를 맡겼대."
+    },
+    "a9": {
+      "heckles": [
+        "다음은 동네 카페라고 적자.",
+        "다음은 동네 카페라고 적자.",
+        "다음은 동네 카페라고 적자.",
+        "다음은 동네 카페라고 적자."
+      ],
+      "winLine": "다음은 동네 카페라고 적자."
+    },
+    "a46": {
+      "heckles": [
+        "운동장 앞줄은 내가 맡는다.",
+        "운동장 앞줄은 내가 맡는다.",
+        "운동장 앞줄은 내가 맡는다.",
+        "운동장 앞줄은 내가 맡는다."
+      ],
+      "winLine": "운동장 앞줄은 내가 맡는다."
+    },
+    "h3": {
+      "heckles": [
+        "교실에서 보던 그거지?",
+        "소문대로면 박수가 크겠다.",
+        "축제에 세우길 잘했네요.",
+        "교실에서 보던 그거지?"
+      ],
+      "winLine": "축제에 세우길 잘했네요."
+    },
+    "a10": {
+      "heckles": [
+        "TV로 봤을 때는 다 짜고 치는 줄 알았는데 실제로 보니까 너무 신기하네요",
+        "TV로 봤을 때는 다 짜고 치는 줄 알았는데 실제로 보니까 너무 신기하네요",
+        "TV로 봤을 때는 다 짜고 치는 줄 알았는데 실제로 보니까 너무 신기하네요",
+        "TV로 봤을 때는 다 짜고 치는 줄 알았는데 실제로 보니까 너무 신기하네요"
+      ],
+      "winLine": "TV로 봤을 때는 다 짜고 치는 줄 알았는데 실제로 보니까 너무 신기하네요"
+    },
+    "a11": {
+      "heckles": [
+        "TV로 봤을 때는 다 짜고 치는 줄 알았는데 실제로 보니까 너무 신기하네요",
+        "TV로 봤을 때는 다 짜고 치는 줄 알았는데 실제로 보니까 너무 신기하네요",
+        "TV로 봤을 때는 다 짜고 치는 줄 알았는데 실제로 보니까 너무 신기하네요",
+        "TV로 봤을 때는 다 짜고 치는 줄 알았는데 실제로 보니까 너무 신기하네요"
+      ],
+      "winLine": "TV로 봤을 때는 다 짜고 치는 줄 알았는데 실제로 보니까 너무 신기하네요"
+    },
+    "a12": {
+      "heckles": [
+        "TV로 봤을 때는 다 짜고 치는 줄 알았는데 실제로 보니까 너무 신기하네요",
+        "TV로 봤을 때는 다 짜고 치는 줄 알았는데 실제로 보니까 너무 신기하네요",
+        "TV로 봤을 때는 다 짜고 치는 줄 알았는데 실제로 보니까 너무 신기하네요",
+        "TV로 봤을 때는 다 짜고 치는 줄 알았는데 실제로 보니까 너무 신기하네요"
+      ],
+      "winLine": "TV로 봤을 때는 다 짜고 치는 줄 알았는데 실제로 보니까 너무 신기하네요"
+    },
+    "a50": {
+      "heckles": [
+        "TV로 봤을 때는 다 짜고 치는 줄 알았는데 실제로 보니까 너무 신기하네요",
+        "TV로 봤을 때는 다 짜고 치는 줄 알았는데 실제로 보니까 너무 신기하네요",
+        "TV로 봤을 때는 다 짜고 치는 줄 알았는데 실제로 보니까 너무 신기하네요",
+        "TV로 봤을 때는 다 짜고 치는 줄 알았는데 실제로 보니까 너무 신기하네요"
+      ],
+      "winLine": "TV로 봤을 때는 다 짜고 치는 줄 알았는데 실제로 보니까 너무 신기하네요"
+    },
+    "h4": {
+      "heckles": [
+        "TV로 봤을 때는 다 짜고 치는 줄 알았는데 실제로 보니까 너무 신기하네요",
+        "TV로 봤을 때는 다 짜고 치는 줄 알았는데 실제로 보니까 너무 신기하네요",
+        "TV로 봤을 때는 다 짜고 치는 줄 알았는데 실제로 보니까 너무 신기하네요",
+        "TV로 봤을 때는 다 짜고 치는 줄 알았는데 실제로 보니까 너무 신기하네요"
+      ],
+      "winLine": "TV로 봤을 때는 다 짜고 치는 줄 알았는데 실제로 보니까 너무 신기하네요"
+    },
+    "a-meetup-busan": {
+      "heckles": [
+        "부산 에지야. 편하게 해.",
+        "강의는 같이 하는 거야, 칼리야.",
+        "심리랑 교육, 네 말로 해도 돼.",
+        "부산 에지야. 편하게 해."
+      ],
+      "winLine": "심리랑 교육, 네 말로 해도 돼."
+    },
+    "a-meetup-daegu": {
+      "heckles": [
+        "서울에서 왔다. 칼리야, 앉아.",
+        "창원 빨간 모자야. 반갑다.",
+        "경북 구미 착한 천사야.",
+        "인천 비타민이다. 잘 부탁해."
+      ],
+      "winLine": "심리랑 교육, 네 말로 해도 돼."
+    },
+    "a-meetup-changwon": {
+      "heckles": [
+        "창원 빨간 모자야. 반갑다.",
+        "칼리야, 그래서 3만 원을 낸 거구나.",
+        "창원 빨간 모자야. 반갑다.",
+        "칼리야, 그래서 3만 원을 낸 거구나."
+      ],
+      "winLine": "칼리야, 그래서 3만 원을 낸 거구나."
+    },
+    "a-meetup-incheon": {
+      "heckles": [
+        "인천 비타민이다. 잘 부탁해.",
+        "날아가는 비둘기도 스냅 한 번에 돌아오게 하는 마술사 비타민입니다",
+        "인천 비타민이다. 잘 부탁해.",
+        "날아가는 비둘기도 스냅 한 번에 돌아오게 하는 마술사 비타민입니다"
+      ],
+      "winLine": "날아가는 비둘기도 스냅 한 번에 돌아오게 하는 마술사 비타민입니다"
+    },
+    "a-meetup-geoje": {
+      "heckles": [
+        "서울에서 왔다. 칼리야, 앉아.",
+        "창원 빨간 모자야. 반갑다.",
+        "경북 구미 착한 천사야.",
+        "인천 비타민이다. 잘 부탁해."
+      ],
+      "winLine": "심리랑 교육, 네 말로 해도 돼."
+    },
+    "a-meetup-cheonan": {
+      "heckles": [
+        "서울에서 왔다. 칼리야, 앉아.",
+        "창원 빨간 모자야. 반갑다.",
+        "경북 구미 착한 천사야.",
+        "인천 비타민이다. 잘 부탁해."
+      ],
+      "winLine": "심리랑 교육, 네 말로 해도 돼."
+    },
+    "a-meetup-suwon": {
+      "heckles": [
+        "경북 구미 착한 천사야.",
+        "끝나고 꼼장어집 가자, 칼리야.",
+        "경북 구미 착한 천사야.",
+        "끝나고 꼼장어집 가자, 칼리야."
+      ],
+      "winLine": "끝나고 꼼장어집 가자, 칼리야."
+    },
+    "h-meetup-seoul": {
+      "heckles": [
+        "서울에서 왔다. 칼리야, 앉아.",
+        "나 마술 3일밖에 안 했어, 네가 다 한 거잖아",
+        "칼리야, 소극장도 한 번 서 봐.",
+        "서울에서 왔다. 칼리야, 앉아."
+      ],
+      "winLine": "칼리야, 소극장도 한 번 서 봐."
+    },
+    "a13": {
+      "heckles": [
+        "앞줄, 박수 준비됐어요!",
+        "앞줄, 박수 준비됐어요!",
+        "앞줄, 박수 준비됐어요!",
+        "앞줄, 박수 준비됐어요!"
+      ],
+      "winLine": "앞줄, 박수 준비됐어요!"
+    },
+    "a14": {
+      "heckles": [
+        "제가요? 좋아요.",
+        "골라 줘서 고마워요.",
+        "제가요? 좋아요.",
+        "골라 줘서 고마워요."
+      ],
+      "winLine": "골라 줘서 고마워요."
+    },
+    "a15": {
+      "heckles": [
+        "한국어 돼요. 보여 주세요.",
+        "재밌네요. 한 번 더요.",
+        "카드는 내가 가져갈게요.",
+        "이게 뭔지 맞혀 봐요."
+      ],
+      "winLine": "더 연습하라"
+    },
+    "a54": {
+      "heckles": [
+        "앞줄, 박수 준비됐어요!",
+        "저요, 저요, 저요.",
+        "제가요? 좋아요.",
+        "좋아. 나는 객석에 있을게."
+      ],
+      "winLine": "밥 먹고 다시 서자, 칼리야."
+    },
+    "a55": {
+      "heckles": [
+        "앞줄, 박수 준비됐어요!",
+        "저요, 저요, 저요.",
+        "제가요? 좋아요.",
+        "좋아. 나는 객석에 있을게."
+      ],
+      "winLine": "밥 먹고 다시 서자, 칼리야."
+    },
+    "h5": {
+      "heckles": [
+        "인간... 실패... 크다!",
+        "인간... 실패... 크다!",
+        "아칸... 그 카드... 좋다.",
+        "인간... 실패... 크다!"
+      ],
+      "winLine": "인간...마술....재밌다"
+    },
+    "a16": {
+      "heckles": [
+        "우와! 현실 CG인가..?",
+        "이정도면 마술이 아니고",
+        "마법 아니냐구요!!..",
+        "눈으로 쫓을 수가 없어요!.."
+      ],
+      "winLine": "우와.. 이정도면 어느 마술대회에 나가도 상을 싹쓸이 쓸어올 것만 같은데요? 최곱니다!!"
+    },
+    "a17": {
+      "heckles": [
+        "저희도 마술 보여주세요",
+        "멀리서 보다 달려왔어요!",
+        "우와! 현실 CG인가..?",
+        "이정도면 마술이 아니고"
+      ],
+      "winLine": "도박은 안 할게요."
+    },
+    "a18": {
+      "heckles": [
+        "저희도 마술 보여주세요",
+        "멀리서 보다 달려왔어요!",
+        "우와! 현실 CG인가..?",
+        "이정도면 마술이 아니고"
+      ],
+      "winLine": "도박은 안 할게요."
+    },
+    "a59": {
+      "heckles": [
+        "저희도 마술 보여주세요",
+        "멀리서 보다 달려왔어요!",
+        "우와! 현실 CG인가..?",
+        "이정도면 마술이 아니고"
+      ],
+      "winLine": "도박은 안 할게요."
+    },
+    "a60": {
+      "heckles": [
+        "저희도 마술 보여주세요",
+        "멀리서 보다 달려왔어요!",
+        "우와! 현실 CG인가..?",
+        "이정도면 마술이 아니고"
+      ],
+      "winLine": "도박은 안 할게요."
+    },
+    "h6": {
+      "heckles": [
+        "저희도 마술 보여주세요",
+        "멀리서 보다 달려왔어요!",
+        "저희 쪽도 봐 주세요!",
+        "일주일 내내 치킨이요?!"
+      ],
+      "winLine": "축제가 더 밝아졌어요!"
+    },
+    "a19": {
+      "heckles": [
+        "다음 참가자입니다, 칼리!",
+        "다들 즉석인 거 알아요.",
+        "다음 참가자입니다, 칼리!",
+        "다들 즉석인 거 알아요."
+      ],
+      "winLine": "다들 즉석인 거 알아요."
+    },
+    "a20": {
+      "heckles": [
+        "다음 참가자입니다, 칼리!",
+        "상황은 웃겨도, 무대는 볼게요.",
+        "칼리님, 응원해요!",
+        "다들 즉석인 거 알아요."
+      ],
+      "winLine": "우와.. 이정도면 어느 마술대회에 나가도 상을 싹쓸이 쓸어올 것만 같은데요? 최곱니다!!"
+    },
+    "a21": {
+      "heckles": [
+        "다음 참가자입니다, 칼리!",
+        "상황은 웃겨도, 무대는 볼게요.",
+        "칼리님, 응원해요!",
+        "다들 즉석인 거 알아요."
+      ],
+      "winLine": "우와.. 이정도면 어느 마술대회에 나가도 상을 싹쓸이 쓸어올 것만 같은데요? 최곱니다!!"
+    },
+    "a64": {
+      "heckles": [
+        "다음 참가자입니다, 칼리!",
+        "상황은 웃겨도, 무대는 볼게요.",
+        "칼리님, 응원해요!",
+        "다들 즉석인 거 알아요."
+      ],
+      "winLine": "우와.. 이정도면 어느 마술대회에 나가도 상을 싹쓸이 쓸어올 것만 같은데요? 최곱니다!!"
+    },
+    "a65": {
+      "heckles": [
+        "다음 참가자입니다, 칼리!",
+        "상황은 웃겨도, 무대는 볼게요.",
+        "칼리님, 응원해요!",
+        "다들 즉석인 거 알아요."
+      ],
+      "winLine": "우와.. 이정도면 어느 마술대회에 나가도 상을 싹쓸이 쓸어올 것만 같은데요? 최곱니다!!"
+    },
+    "a66": {
+      "heckles": [
+        "다음 참가자입니다, 칼리!",
+        "상황은 웃겨도, 무대는 볼게요.",
+        "칼리님, 응원해요!",
+        "다들 즉석인 거 알아요."
+      ],
+      "winLine": "우와.. 이정도면 어느 마술대회에 나가도 상을 싹쓸이 쓸어올 것만 같은데요? 최곱니다!!"
+    },
+    "h7": {
+      "heckles": [
+        "상황은 웃겨도, 무대는 볼게요.",
+        "마지막 장면만 남았습니다.",
+        "3등입니다. 축하해요.",
+        "상황은 웃겨도, 무대는 볼게요."
+      ],
+      "winLine": "3등입니다. 축하해요."
+    },
+    "a112": {
+      "heckles": [
+        "오늘은 유튜브 방송이에요.",
+        "준비되면 고개만 끄덕여요.",
+        "오늘은 유튜브 방송이에요.",
+        "준비되면 고개만 끄덕여요."
+      ],
+      "winLine": "준비되면 고개만 끄덕여요."
+    },
+    "a113": {
+      "heckles": [
+        "오늘은 유튜브 방송이에요.",
+        "준비되면 고개만 끄덕여요.",
+        "말이 너무 빠르다, 그 말 기억나요?",
+        "역시 가르치는 사람은 뭔가 다르다"
+      ],
+      "winLine": "노련미, 예술 그 자체네요."
+    },
+    "a114": {
+      "heckles": [
+        "오늘은 유튜브 방송이에요.",
+        "준비되면 고개만 끄덕여요.",
+        "말이 너무 빠르다, 그 말 기억나요?",
+        "역시 가르치는 사람은 뭔가 다르다"
+      ],
+      "winLine": "노련미, 예술 그 자체네요."
+    },
+    "a115": {
+      "heckles": [
+        "저도 따라가며 보고 있어요.",
+        "저도 따라가며 보고 있어요.",
+        "저도 따라가며 보고 있어요.",
+        "저도 따라가며 보고 있어요."
+      ],
+      "winLine": "저도 따라가며 보고 있어요."
+    },
+    "a116": {
+      "heckles": [
+        "오늘은 유튜브 방송이에요.",
+        "준비되면 고개만 끄덕여요.",
+        "말이 너무 빠르다, 그 말 기억나요?",
+        "역시 가르치는 사람은 뭔가 다르다"
+      ],
+      "winLine": "노련미, 예술 그 자체네요."
+    },
+    "a117": {
+      "heckles": [
+        "오늘은 유튜브 방송이에요.",
+        "준비되면 고개만 끄덕여요.",
+        "말이 너무 빠르다, 그 말 기억나요?",
+        "역시 가르치는 사람은 뭔가 다르다"
+      ],
+      "winLine": "노련미, 예술 그 자체네요."
+    },
+    "h-broadcast": {
+      "heckles": [
+        "말이 너무 빠르다, 그 말 기억나요?",
+        "역시 가르치는 사람은 뭔가 다르다",
+        "노련미, 예술 그 자체네요.",
+        "말이 너무 빠르다, 그 말 기억나요?"
+      ],
+      "winLine": "노련미, 예술 그 자체네요."
+    },
+    "a22": {
+      "heckles": [
+        "알려 주는 척, 그리고 반전.",
+        "우주인도 웃게 만들어 봐.",
+        "반전도 네 리듬이야.",
+        "알려 주는 척, 그리고 반전."
+      ],
+      "winLine": "반전도 네 리듬이야."
+    },
+    "a23": {
+      "heckles": [
+        "앰비셔스는 다시 올라오는 법이지.",
+        "카드 리벨레이션도 떠올려 봐.",
+        "유쾌하면 충분해.",
+        "앰비셔스는 다시 올라오는 법이지."
+      ],
+      "winLine": "유쾌하면 충분해."
+    },
+    "a24": {
+      "heckles": [
+        "상상은 관객이 완성하지.",
+        "알려 주는 척, 그리고 반전.",
+        "앰비셔스는 다시 올라오는 법이지.",
+        "카드 리벨레이션도 떠올려 봐."
+      ],
+      "winLine": "유쾌하면 충분해."
+    },
+    "a70": {
+      "heckles": [
+        "상상은 관객이 완성하지.",
+        "알려 주는 척, 그리고 반전.",
+        "앰비셔스는 다시 올라오는 법이지.",
+        "카드 리벨레이션도 떠올려 봐."
+      ],
+      "winLine": "유쾌하면 충분해."
+    },
+    "a71": {
+      "heckles": [
+        "상상은 관객이 완성하지.",
+        "알려 주는 척, 그리고 반전.",
+        "앰비셔스는 다시 올라오는 법이지.",
+        "카드 리벨레이션도 떠올려 봐."
+      ],
+      "winLine": "유쾌하면 충분해."
+    },
+    "a72": {
+      "heckles": [
+        "상상은 관객이 완성하지.",
+        "알려 주는 척, 그리고 반전.",
+        "앰비셔스는 다시 올라오는 법이지.",
+        "카드 리벨레이션도 떠올려 봐."
+      ],
+      "winLine": "유쾌하면 충분해."
+    },
+    "h8": {
+      "heckles": [
+        "상상은 관객이 완성하지.",
+        "웃음이 쉴 틈도 남겨 둬.",
+        "네 표정이 보이는구나.",
+        "상상은 관객이 완성하지."
+      ],
+      "winLine": "네 표정이 보이는구나."
+    },
+    "a25": {
+      "heckles": [
+        "아, 너무 신기해서 분이 나!",
+        "욕 대신 박수가 나오네요.",
+        "그 마음이 여기까지 와요.",
+        "아, 너무 신기해서 분이 나!"
+      ],
+      "winLine": "그 마음이 여기까지 와요."
+    },
+    "a26": {
+      "heckles": [
+        "아, 너무 신기해서 분이 나!",
+        "욕 대신 박수가 나오네요.",
+        "그 마음이 여기까지 와요.",
+        "아, 너무 신기해서 분이 나!"
+      ],
+      "winLine": "그 마음이 여기까지 와요."
+    },
+    "a27": {
+      "heckles": [
+        "아, 너무 신기해서 분이 나!",
+        "욕 대신 박수가 나오네요.",
+        "그 마음이 여기까지 와요.",
+        "아, 너무 신기해서 분이 나!"
+      ],
+      "winLine": "그 마음이 여기까지 와요."
+    },
+    "a76": {
+      "heckles": [
+        "아, 너무 신기해서 분이 나!",
+        "욕 대신 박수가 나오네요.",
+        "그 마음이 여기까지 와요.",
+        "아, 너무 신기해서 분이 나!"
+      ],
+      "winLine": "그 마음이 여기까지 와요."
+    },
+    "a77": {
+      "heckles": [
+        "아, 너무 신기해서 분이 나!",
+        "욕 대신 박수가 나오네요.",
+        "그 마음이 여기까지 와요.",
+        "아, 너무 신기해서 분이 나!"
+      ],
+      "winLine": "그 마음이 여기까지 와요."
+    },
+    "a78": {
+      "heckles": [
+        "아, 너무 신기해서 분이 나!",
+        "욕 대신 박수가 나오네요.",
+        "그 마음이 여기까지 와요.",
+        "아, 너무 신기해서 분이 나!"
+      ],
+      "winLine": "그 마음이 여기까지 와요."
+    },
+    "a79": {
+      "heckles": [
+        "아, 너무 신기해서 분이 나!",
+        "욕 대신 박수가 나오네요.",
+        "그 마음이 여기까지 와요.",
+        "아, 너무 신기해서 분이 나!"
+      ],
+      "winLine": "그 마음이 여기까지 와요."
+    },
+    "h9": {
+      "heckles": [
+        "아, 너무 신기해서 분이 나!",
+        "욕 대신 박수가 나오네요.",
+        "그 마음이 여기까지 와요.",
+        "아, 너무 신기해서 분이 나!"
+      ],
+      "winLine": "그 마음이 여기까지 와요."
+    },
+    "a28": {
+      "heckles": [
+        "사람이 이렇게 모이다니.",
+        "제 와이파이 이름이 바뀌었어요!",
+        "끝까지 재밌었어요.",
+        "사람이 이렇게 모이다니."
+      ],
+      "winLine": "끝까지 재밌었어요."
+    },
+    "a29": {
+      "heckles": [
+        "사람이 이렇게 모이다니.",
+        "이 카드, 내 건 줄 알았네.",
+        "제 와이파이 이름이 바뀌었어요!",
+        "끝까지 재밌었어요."
+      ],
+      "winLine": "끝까지 재밌었어요."
+    },
+    "a30": {
+      "heckles": [
+        "사람이 이렇게 모이다니.",
+        "이 카드, 내 건 줄 알았네.",
+        "제 와이파이 이름이 바뀌었어요!",
+        "끝까지 재밌었어요."
+      ],
+      "winLine": "끝까지 재밌었어요."
+    },
+    "a83": {
+      "heckles": [
+        "사람이 이렇게 모이다니.",
+        "이 카드, 내 건 줄 알았네.",
+        "제 와이파이 이름이 바뀌었어요!",
+        "끝까지 재밌었어요."
+      ],
+      "winLine": "끝까지 재밌었어요."
+    },
+    "a84": {
+      "heckles": [
+        "사람이 이렇게 모이다니.",
+        "이 카드, 내 건 줄 알았네.",
+        "제 와이파이 이름이 바뀌었어요!",
+        "끝까지 재밌었어요."
+      ],
+      "winLine": "끝까지 재밌었어요."
+    },
+    "a85": {
+      "heckles": [
+        "사람이 이렇게 모이다니.",
+        "이 카드, 내 건 줄 알았네.",
+        "제 와이파이 이름이 바뀌었어요!",
+        "끝까지 재밌었어요."
+      ],
+      "winLine": "끝까지 재밌었어요."
+    },
+    "a86": {
+      "heckles": [
+        "사람이 이렇게 모이다니.",
+        "이 카드, 내 건 줄 알았네.",
+        "제 와이파이 이름이 바뀌었어요!",
+        "끝까지 재밌었어요."
+      ],
+      "winLine": "끝까지 재밌었어요."
+    },
+    "h10": {
+      "heckles": [
+        "사람이 이렇게 모이다니.",
+        "이 카드, 내 건 줄 알았네.",
+        "제 와이파이 이름이 바뀌었어요!",
+        "끝까지 재밌었어요."
+      ],
+      "winLine": "끝까지 재밌었어요."
+    },
+    "a31": {
+      "heckles": [
+        "하나! 빨강!",
+        "둘, 셋, 검정!",
+        "하나! 둘! 빨강!",
+        "빨강! 검정! 아!"
+      ],
+      "winLine": "셋! 빨강!"
+    },
+    "a32": {
+      "heckles": [
+        "하나! 빨강!",
+        "둘, 셋, 검정!",
+        "하나! 둘! 빨강!",
+        "빨강! 검정! 아!"
+      ],
+      "winLine": "셋! 빨강!"
+    },
+    "a33": {
+      "heckles": [
+        "하나! 빨강!",
+        "둘, 셋, 검정!",
+        "하나! 둘! 빨강!",
+        "빨강! 검정! 아!"
+      ],
+      "winLine": "셋! 빨강!"
+    },
+    "a90": {
+      "heckles": [
+        "하나! 빨강!",
+        "둘, 셋, 검정!",
+        "하나! 둘! 빨강!",
+        "빨강! 검정! 아!"
+      ],
+      "winLine": "셋! 빨강!"
+    },
+    "a91": {
+      "heckles": [
+        "하나! 빨강!",
+        "둘, 셋, 검정!",
+        "하나! 둘! 빨강!",
+        "빨강! 검정! 아!"
+      ],
+      "winLine": "셋! 빨강!"
+    },
+    "a92": {
+      "heckles": [
+        "하나! 빨강!",
+        "둘, 셋, 검정!",
+        "하나! 둘! 빨강!",
+        "빨강! 검정! 아!"
+      ],
+      "winLine": "셋! 빨강!"
+    },
+    "a93": {
+      "heckles": [
+        "하나! 빨강!",
+        "둘, 셋, 검정!",
+        "하나! 둘! 빨강!",
+        "빨강! 검정! 아!"
+      ],
+      "winLine": "셋! 빨강!"
+    },
+    "a94": {
+      "heckles": [
+        "하나! 빨강!",
+        "둘, 셋, 검정!",
+        "하나! 둘! 빨강!",
+        "빨강! 검정! 아!"
+      ],
+      "winLine": "셋! 빨강!"
+    },
+    "h11": {
+      "heckles": [
+        "하나! 빨강!",
+        "둘, 셋, 검정!",
+        "하나! 둘! 빨강!",
+        "빨강! 검정! 아!"
+      ],
+      "winLine": "셋! 빨강!"
+    },
+    "a34": {
+      "heckles": [
+        "둘, 셋, 검정!",
+        "빨강! 검정! 아!",
+        "셋! 빨강!",
+        "둘, 셋, 검정!"
+      ],
+      "winLine": "셋! 빨강!"
+    },
+    "a35": {
+      "heckles": [
+        "하나! 빨강!",
+        "둘, 셋, 검정!",
+        "하나! 둘! 빨강!",
+        "빨강! 검정! 아!"
+      ],
+      "winLine": "셋! 빨강!"
+    },
+    "a36": {
+      "heckles": [
+        "하나! 빨강!",
+        "둘, 셋, 검정!",
+        "하나! 둘! 빨강!",
+        "빨강! 검정! 아!"
+      ],
+      "winLine": "셋! 빨강!"
+    },
+    "a98": {
+      "heckles": [
+        "하나! 빨강!",
+        "둘, 셋, 검정!",
+        "하나! 둘! 빨강!",
+        "빨강! 검정! 아!"
+      ],
+      "winLine": "셋! 빨강!"
+    },
+    "a99": {
+      "heckles": [
+        "하나! 빨강!",
+        "둘, 셋, 검정!",
+        "하나! 둘! 빨강!",
+        "빨강! 검정! 아!"
+      ],
+      "winLine": "셋! 빨강!"
+    },
+    "a100": {
+      "heckles": [
+        "하나! 빨강!",
+        "둘, 셋, 검정!",
+        "하나! 둘! 빨강!",
+        "빨강! 검정! 아!"
+      ],
+      "winLine": "셋! 빨강!"
+    },
+    "a101": {
+      "heckles": [
+        "하나! 빨강!",
+        "둘, 셋, 검정!",
+        "하나! 둘! 빨강!",
+        "빨강! 검정! 아!"
+      ],
+      "winLine": "셋! 빨강!"
+    },
+    "a102": {
+      "heckles": [
+        "하나! 빨강!",
+        "둘, 셋, 검정!",
+        "하나! 둘! 빨강!",
+        "빨강! 검정! 아!"
+      ],
+      "winLine": "셋! 빨강!"
+    },
+    "h12": {
+      "heckles": [
+        "하나! 빨강!",
+        "하나! 둘! 빨강!",
+        "하나, 둘, 셋!",
+        "하나! 빨강!"
+      ],
+      "winLine": "하나, 둘, 셋!"
+    },
+    "a37": {
+      "heckles": [
+        "나는 농장 게임만 하는 칼리야.",
+        "다른 취미도 나야.",
+        "농장도 남겨 둬.",
+        "나는 농장 게임만 하는 칼리야."
+      ],
+      "winLine": "농장도 남겨 둬."
+    },
+    "a38": {
+      "heckles": [
+        "나는 농장 게임만 하는 칼리야.",
+        "나는 마술을 계속 건넸어.",
+        "그만두고 싶었던 적은 없어.",
+        "다른 취미도 나야."
+      ],
+      "winLine": "이제 렉쳐노트로 가."
+    },
+    "a39": {
+      "heckles": [
+        "나는 농장 게임만 하는 칼리야.",
+        "나는 마술을 계속 건넸어.",
+        "그만두고 싶었던 적은 없어.",
+        "다른 취미도 나야."
+      ],
+      "winLine": "이제 렉쳐노트로 가."
+    },
+    "a106": {
+      "heckles": [
+        "나는 농장 게임만 하는 칼리야.",
+        "나는 마술을 계속 건넸어.",
+        "그만두고 싶었던 적은 없어.",
+        "다른 취미도 나야."
+      ],
+      "winLine": "이제 렉쳐노트로 가."
+    },
+    "a107": {
+      "heckles": [
+        "나는 농장 게임만 하는 칼리야.",
+        "나는 마술을 계속 건넸어.",
+        "그만두고 싶었던 적은 없어.",
+        "다른 취미도 나야."
+      ],
+      "winLine": "이제 렉쳐노트로 가."
+    },
+    "a108": {
+      "heckles": [
+        "나는 농장 게임만 하는 칼리야.",
+        "나는 마술을 계속 건넸어.",
+        "그만두고 싶었던 적은 없어.",
+        "다른 취미도 나야."
+      ],
+      "winLine": "이제 렉쳐노트로 가."
+    },
+    "a109": {
+      "heckles": [
+        "나는 농장 게임만 하는 칼리야.",
+        "나는 마술을 계속 건넸어.",
+        "그만두고 싶었던 적은 없어.",
+        "다른 취미도 나야."
+      ],
+      "winLine": "이제 렉쳐노트로 가."
+    },
+    "a110": {
+      "heckles": [
+        "나는 마술을 계속 건넸어.",
+        "그만두고 싶었던 적은 없어.",
+        "다시 건네고 싶은 마음.",
+        "이제 렉쳐노트로 가."
+      ],
+      "winLine": "이제 렉쳐노트로 가."
+    },
+    "a111": {
+      "heckles": [
+        "나는 농장 게임만 하는 칼리야.",
+        "나는 마술을 계속 건넸어.",
+        "그만두고 싶었던 적은 없어.",
+        "다른 취미도 나야."
+      ],
+      "winLine": "이제 렉쳐노트로 가."
+    },
+    "h13": {
+      "heckles": [
+        "나는 농장 게임만 하는 칼리야.",
+        "나는 마술을 계속 건넸어.",
+        "그만두고 싶었던 적은 없어.",
+        "다른 취미도 나야."
+      ],
+      "winLine": "이제 렉쳐노트로 가."
+    },
+    "a-lecturenote-hecate": {
+      "heckles": [
+        "판매 전에 마술 한 번, 반응 좋았음.",
+        "매니저가 된 뒤에 말했지.",
+        "사실 널 얻기 위해 다 계획했던 거다",
+        "마지막 컵앤볼이에요."
+      ],
+      "winLine": "카운터는 우리가 볼게."
+    },
+    "a-lecturenote-serona": {
+      "heckles": [
+        "세로나예요. 샵 매니저도 저고요.",
+        "숨겨진 조력자로 있었어요.",
+        "카드 몬테의 손도 제 거였어요.",
+        "서재 테이블로 가요."
+      ],
+      "winLine": "카드 몬테의 손도 제 거였어요."
+    },
+    "a-lecturenote-jung": {
+      "heckles": [
+        "판매 전에 마술 한 번, 반응 좋았음.",
+        "카운터는 우리가 볼게.",
+        "판매 전에 마술 한 번, 반응 좋았음.",
+        "카운터는 우리가 볼게."
+      ],
+      "winLine": "카운터는 우리가 볼게."
+    },
+    "h-lecturenote-kim": {
+      "heckles": [
+        "매니저가 된 뒤에 말했지.",
+        "사실 널 얻기 위해 다 계획했던 거다",
+        "고개 돌렸더니 카드가 있더라.",
+        "매니저가 된 뒤에 말했지."
+      ],
+      "winLine": "고개 돌렸더니 카드가 있더라."
+    },
+    "h-future-kali": {
+      "heckles": [
+        "처음이라 손이 떨려요.",
+        "제 카드가 여기 있어요!",
+        "고른 카드 이름으로요?",
+        "마술이 이렇게 다정하네요."
+      ],
+      "winLine": "마술이 이렇게 다정하네요."
+    }
+  },
+  "cheers": {
+    "family": {
+      "title": "가족 거실의 박수",
+      "lines": [
+        {
+          "id": "a1",
+          "text": "오빠 최고. 또 해 줘."
+        },
+        {
+          "id": "a2",
+          "text": "다음엔 내 친구도 보여 줘!"
+        },
+        {
+          "id": "a3",
+          "text": "집에서도 박수가 나오네."
+        },
+        {
+          "id": "h1",
+          "text": "오빠 최고. 또 해 줘."
+        }
+      ],
+      "closing": {
+        "speaker": "칼리",
+        "text": "비법 「첫 박수」을 배웠어요.",
+        "mood": "happy",
+        "secretSkill": "첫 박수"
+      }
+    },
+    "party": {
+      "title": "친구 파티의 박수",
+      "lines": [
+        {
+          "id": "a4",
+          "text": "풍선은 안 터졌는데 우리가 터졌다!"
+        },
+        {
+          "id": "a5",
+          "text": "오늘 분위기, 네가 가져갔어."
+        },
+        {
+          "id": "a6",
+          "text": "오늘 분위기, 네가 가져갔어."
+        },
+        {
+          "id": "h2",
+          "text": "내가 고른 그 이름이잖아."
+        }
+      ],
+      "closing": {
+        "speaker": "칼리",
+        "text": "비법 「앙코르 받기」을 배웠어요.",
+        "mood": "happy",
+        "secretSkill": "앙코르 받기"
+      }
+    },
+    "school": {
+      "title": "학교 축제의 박수",
+      "lines": [
+        {
+          "id": "a7",
+          "text": "교실 마술, 소문이 다 났어."
+        },
+        {
+          "id": "a8",
+          "text": "학교가 축제 무대를 맡겼대."
+        },
+        {
+          "id": "a9",
+          "text": "다음은 동네 카페라고 적자."
+        },
+        {
+          "id": "a46",
+          "text": "운동장 앞줄은 내가 맡는다."
+        },
+        {
+          "id": "h3",
+          "text": "축제에 세우길 잘했네요."
+        }
+      ],
+      "closing": {
+        "speaker": "칼리",
+        "text": "비법 「눈 맞추기」을 배웠어요.",
+        "mood": "happy",
+        "secretSkill": "눈 맞추기"
+      }
+    },
+    "cafe": {
+      "title": "동네 카페의 박수",
+      "lines": [
+        {
+          "id": "a10",
+          "text": "TV로 봤을 때는 다 짜고 치는 줄 알았는데 실제로 보니까 너무 신기하네요"
+        },
+        {
+          "id": "a11",
+          "text": "TV로 봤을 때는 다 짜고 치는 줄 알았는데 실제로 보니까 너무 신기하네요"
+        },
+        {
+          "id": "a12",
+          "text": "TV로 봤을 때는 다 짜고 치는 줄 알았는데 실제로 보니까 너무 신기하네요"
+        },
+        {
+          "id": "a50",
+          "text": "TV로 봤을 때는 다 짜고 치는 줄 알았는데 실제로 보니까 너무 신기하네요"
+        },
+        {
+          "id": "h4",
+          "text": "TV로 봤을 때는 다 짜고 치는 줄 알았는데 실제로 보니까 너무 신기하네요"
+        }
+      ],
+      "closing": {
+        "speaker": "칼리",
+        "text": "비법 「먼저 다가가기」을 배웠어요.",
+        "mood": "happy",
+        "secretSkill": "먼저 다가가기"
+      }
+    },
+    "meetup": {
+      "title": "전국 마술 매니아의 박수",
+      "lines": [
+        {
+          "id": "a-meetup-busan",
+          "text": "심리랑 교육, 네 말로 해도 돼."
+        },
+        {
+          "id": "a-meetup-daegu",
+          "text": "심리랑 교육, 네 말로 해도 돼."
+        },
+        {
+          "id": "a-meetup-changwon",
+          "text": "칼리야, 그래서 3만 원을 낸 거구나."
+        },
+        {
+          "id": "a-meetup-incheon",
+          "text": "날아가는 비둘기도 스냅 한 번에 돌아오게 하는 마술사 비타민입니다"
+        },
+        {
+          "id": "a-meetup-geoje",
+          "text": "심리랑 교육, 네 말로 해도 돼."
+        },
+        {
+          "id": "a-meetup-cheonan",
+          "text": "심리랑 교육, 네 말로 해도 돼."
+        },
+        {
+          "id": "a-meetup-suwon",
+          "text": "끝나고 꼼장어집 가자, 칼리야."
+        },
+        {
+          "id": "h-meetup-seoul",
+          "text": "칼리야, 소극장도 한 번 서 봐."
+        }
+      ],
+      "closing": {
+        "speaker": "칼리",
+        "text": "비법 「관객이 해낸 듯한 연출」을 배웠어요.",
+        "mood": "happy",
+        "secretSkill": "관객이 해낸 듯한 연출"
+      }
+    },
+    "theater": {
+      "title": "소극장의 박수",
+      "lines": [
+        {
+          "id": "a13",
+          "text": "앞줄, 박수 준비됐어요!"
+        },
+        {
+          "id": "a14",
+          "text": "골라 줘서 고마워요."
+        },
+        {
+          "id": "a15",
+          "text": "더 연습하라"
+        },
+        {
+          "id": "a54",
+          "text": "밥 먹고 다시 서자, 칼리야."
+        },
+        {
+          "id": "a55",
+          "text": "밥 먹고 다시 서자, 칼리야."
+        },
+        {
+          "id": "h5",
+          "text": "인간...마술....재밌다"
+        }
+      ],
+      "closing": {
+        "speaker": "칼리",
+        "text": "비법 「다시 일어서기」를 배웠어요.",
+        "mood": "serious",
+        "secretSkill": "다시 일어서기"
+      }
+    },
+    "festival": {
+      "title": "대학 축제의 박수",
+      "lines": [
+        {
+          "id": "a16",
+          "text": "우와.. 이정도면 어느 마술대회에 나가도 상을 싹쓸이 쓸어올 것만 같은데요? 최곱니다!!"
+        },
+        {
+          "id": "a17",
+          "text": "도박은 안 할게요."
+        },
+        {
+          "id": "a18",
+          "text": "도박은 안 할게요."
+        },
+        {
+          "id": "a59",
+          "text": "도박은 안 할게요."
+        },
+        {
+          "id": "a60",
+          "text": "도박은 안 할게요."
+        },
+        {
+          "id": "h6",
+          "text": "축제가 더 밝아졌어요!"
+        }
+      ],
+      "closing": {
+        "speaker": "칼리",
+        "text": "비법 「관객 에너지 받기」을 배웠어요.",
+        "mood": "happy",
+        "secretSkill": "관객 에너지 받기"
+      }
+    },
+    "audition": {
+      "title": "TV 오디션의 박수",
+      "lines": [
+        {
+          "id": "a19",
+          "text": "다들 즉석인 거 알아요."
+        },
+        {
+          "id": "a20",
+          "text": "우와.. 이정도면 어느 마술대회에 나가도 상을 싹쓸이 쓸어올 것만 같은데요? 최곱니다!!"
+        },
+        {
+          "id": "a21",
+          "text": "우와.. 이정도면 어느 마술대회에 나가도 상을 싹쓸이 쓸어올 것만 같은데요? 최곱니다!!"
+        },
+        {
+          "id": "a64",
+          "text": "우와.. 이정도면 어느 마술대회에 나가도 상을 싹쓸이 쓸어올 것만 같은데요? 최곱니다!!"
+        },
+        {
+          "id": "a65",
+          "text": "우와.. 이정도면 어느 마술대회에 나가도 상을 싹쓸이 쓸어올 것만 같은데요? 최곱니다!!"
+        },
+        {
+          "id": "a66",
+          "text": "우와.. 이정도면 어느 마술대회에 나가도 상을 싹쓸이 쓸어올 것만 같은데요? 최곱니다!!"
+        },
+        {
+          "id": "h7",
+          "text": "3등입니다. 축하해요."
+        }
+      ],
+      "closing": {
+        "speaker": "칼리",
+        "text": "비법 「즉흥 무대」을 배웠어요.",
+        "mood": "happy",
+        "secretSkill": "즉흥 무대"
+      }
+    },
+    "broadcast": {
+      "title": "TV 방송의 박수",
+      "lines": [
+        {
+          "id": "a112",
+          "text": "준비되면 고개만 끄덕여요."
+        },
+        {
+          "id": "a113",
+          "text": "노련미, 예술 그 자체네요."
+        },
+        {
+          "id": "a114",
+          "text": "노련미, 예술 그 자체네요."
+        },
+        {
+          "id": "a115",
+          "text": "저도 따라가며 보고 있어요."
+        },
+        {
+          "id": "a116",
+          "text": "노련미, 예술 그 자체네요."
+        },
+        {
+          "id": "a117",
+          "text": "노련미, 예술 그 자체네요."
+        },
+        {
+          "id": "h-broadcast",
+          "text": "노련미, 예술 그 자체네요."
+        }
+      ],
+      "closing": {
+        "speaker": "칼리",
+        "text": "비법 「노련미」을 배웠어요.",
+        "mood": "happy",
+        "secretSkill": "노련미"
+      }
+    },
+    "vegas": {
+      "title": "라스베가스의 박수",
+      "lines": [
+        {
+          "id": "a22",
+          "text": "반전도 네 리듬이야."
+        },
+        {
+          "id": "a23",
+          "text": "유쾌하면 충분해."
+        },
+        {
+          "id": "a24",
+          "text": "유쾌하면 충분해."
+        },
+        {
+          "id": "a70",
+          "text": "유쾌하면 충분해."
+        },
+        {
+          "id": "a71",
+          "text": "유쾌하면 충분해."
+        },
+        {
+          "id": "a72",
+          "text": "유쾌하면 충분해."
+        },
+        {
+          "id": "h8",
+          "text": "네 표정이 보이는구나."
+        }
+      ],
+      "closing": {
+        "speaker": "칼리",
+        "text": "비법 「유쾌한 연출」을 배웠어요.",
+        "mood": "happy",
+        "secretSkill": "유쾌한 연출"
+      }
+    },
+    "broadway": {
+      "title": "브로드웨이의 박수",
+      "lines": [
+        {
+          "id": "a25",
+          "text": "그 마음이 여기까지 와요."
+        },
+        {
+          "id": "a26",
+          "text": "그 마음이 여기까지 와요."
+        },
+        {
+          "id": "a27",
+          "text": "그 마음이 여기까지 와요."
+        },
+        {
+          "id": "a76",
+          "text": "그 마음이 여기까지 와요."
+        },
+        {
+          "id": "a77",
+          "text": "그 마음이 여기까지 와요."
+        },
+        {
+          "id": "a78",
+          "text": "그 마음이 여기까지 와요."
+        },
+        {
+          "id": "a79",
+          "text": "그 마음이 여기까지 와요."
+        },
+        {
+          "id": "h9",
+          "text": "그 마음이 여기까지 와요."
+        }
+      ],
+      "closing": {
+        "speaker": "칼리",
+        "text": "비법 「이너 모놀로그」을 배웠어요.",
+        "mood": "happy",
+        "secretSkill": "이너 모놀로그"
+      }
+    },
+    "moon": {
+      "title": "달의 박수",
+      "lines": [
+        {
+          "id": "a28",
+          "text": "끝까지 재밌었어요."
+        },
+        {
+          "id": "a29",
+          "text": "끝까지 재밌었어요."
+        },
+        {
+          "id": "a30",
+          "text": "끝까지 재밌었어요."
+        },
+        {
+          "id": "a83",
+          "text": "끝까지 재밌었어요."
+        },
+        {
+          "id": "a84",
+          "text": "끝까지 재밌었어요."
+        },
+        {
+          "id": "a85",
+          "text": "끝까지 재밌었어요."
+        },
+        {
+          "id": "a86",
+          "text": "끝까지 재밌었어요."
+        },
+        {
+          "id": "h10",
+          "text": "끝까지 재밌었어요."
+        }
+      ],
+      "closing": {
+        "speaker": "칼리",
+        "text": "비법 「즉흥 대처」을 배웠어요.",
+        "mood": "happy",
+        "secretSkill": "즉흥 대처"
+      }
+    },
+    "sun": {
+      "title": "태양의 박수",
+      "lines": [
+        {
+          "id": "a31",
+          "text": "셋! 빨강!"
+        },
+        {
+          "id": "a32",
+          "text": "셋! 빨강!"
+        },
+        {
+          "id": "a33",
+          "text": "셋! 빨강!"
+        },
+        {
+          "id": "a90",
+          "text": "셋! 빨강!"
+        },
+        {
+          "id": "a91",
+          "text": "셋! 빨강!"
+        },
+        {
+          "id": "a92",
+          "text": "셋! 빨강!"
+        },
+        {
+          "id": "a93",
+          "text": "셋! 빨강!"
+        },
+        {
+          "id": "a94",
+          "text": "셋! 빨강!"
+        },
+        {
+          "id": "h11",
+          "text": "셋! 빨강!"
+        }
+      ],
+      "closing": {
+        "speaker": "칼리",
+        "text": "비법 「몸짓으로 말하기」을 배웠어요.",
+        "mood": "happy",
+        "secretSkill": "몸짓으로 말하기"
+      }
+    },
+    "galaxy": {
+      "title": "은하의 박수",
+      "lines": [
+        {
+          "id": "a34",
+          "text": "셋! 빨강!"
+        },
+        {
+          "id": "a35",
+          "text": "셋! 빨강!"
+        },
+        {
+          "id": "a36",
+          "text": "셋! 빨강!"
+        },
+        {
+          "id": "a98",
+          "text": "셋! 빨강!"
+        },
+        {
+          "id": "a99",
+          "text": "셋! 빨강!"
+        },
+        {
+          "id": "a100",
+          "text": "셋! 빨강!"
+        },
+        {
+          "id": "a101",
+          "text": "셋! 빨강!"
+        },
+        {
+          "id": "a102",
+          "text": "셋! 빨강!"
+        },
+        {
+          "id": "h12",
+          "text": "하나, 둘, 셋!"
+        }
+      ],
+      "closing": {
+        "speaker": "칼리",
+        "text": "비법 「몸짓으로 말하기」을 배웠어요.",
+        "mood": "happy",
+        "secretSkill": "몸짓으로 말하기"
+      }
+    },
+    "multiverse": {
+      "title": "멀티버스의 박수",
+      "lines": [
+        {
+          "id": "a37",
+          "text": "농장도 남겨 둬."
+        },
+        {
+          "id": "a38",
+          "text": "이제 렉쳐노트로 가."
+        },
+        {
+          "id": "a39",
+          "text": "이제 렉쳐노트로 가."
+        },
+        {
+          "id": "a106",
+          "text": "이제 렉쳐노트로 가."
+        },
+        {
+          "id": "a107",
+          "text": "이제 렉쳐노트로 가."
+        },
+        {
+          "id": "a108",
+          "text": "이제 렉쳐노트로 가."
+        },
+        {
+          "id": "a109",
+          "text": "이제 렉쳐노트로 가."
+        },
+        {
+          "id": "a110",
+          "text": "이제 렉쳐노트로 가."
+        },
+        {
+          "id": "a111",
+          "text": "이제 렉쳐노트로 가."
+        },
+        {
+          "id": "h13",
+          "text": "이제 렉쳐노트로 가."
+        }
+      ],
+      "closing": {
+        "speaker": "칼리",
+        "text": "비법 「계속 건네는 마음」을 배웠어요.",
+        "mood": "happy",
+        "secretSkill": "계속 건네는 마음"
+      }
+    },
+    "lecturenote": {
+      "title": "렉쳐노트의 박수",
+      "lines": [
+        {
+          "id": "a-lecturenote-hecate",
+          "text": "카운터는 우리가 볼게."
+        },
+        {
+          "id": "a-lecturenote-serona",
+          "text": "카드 몬테의 손도 제 거였어요."
+        },
+        {
+          "id": "a-lecturenote-jung",
+          "text": "카운터는 우리가 볼게."
+        },
+        {
+          "id": "h-lecturenote-kim",
+          "text": "고개 돌렸더니 카드가 있더라."
+        }
+      ],
+      "closing": {
+        "speaker": "칼리",
+        "text": "비법 「편안함」을 배웠어요.",
+        "mood": "happy",
+        "secretSkill": "편안함"
+      }
+    },
+    "future": {
+      "title": "서재 앞 큰 테이블의 박수",
+      "lines": [
+        {
+          "id": "h-future-kali",
+          "text": "마술이 이렇게 다정하네요."
+        }
+      ],
+      "closing": {
+        "speaker": "칼리",
+        "text": "비법 「나눔」을 배웠어요.",
+        "mood": "happy",
+        "secretSkill": "나눔"
+      }
+    }
   }
 };
 
@@ -3213,11 +5019,11 @@ GAME_DATA.easyNodes = {
   "openingShield": "대본을 미리 외워 새 공연을 든든하게 시작해요\n최대 멘탈의 5%씩 자신감",
   "calm": "야유를 들어도 표정이 흔들리지 않아요\n야유 힘 2%씩 줄기",
   "coinLuck": "케이스에서 동전이 더 잘 나와요\n동전 뽑기 표 6장씩 추가",
-  "forceRemove": "딜러의 나쁜 그림을 지워요\n쓰는 보석 1개씩 줄기 · 최소 1개",
+  "forceRemove": "카드 몬테 첫 판, 여왕을 더 오래 보여줘요\n0.6초씩 더 보여주고 첫 섞기가 조금 느려져요",
   "tip": "관객이 만족하면 동전을 더 얻어요\n만족 동전 5%씩 추가",
-  "dealerCoin": "딜러 카드에서 동전을 더 얻어요\n동전 10%씩 추가",
-  "jackpot": "슬롯 당첨 때 동전을 더 얻어요\n당첨 동전 15%씩 추가",
-  "gemFind": "좋은 소품에서 보석도 얻어요\n보석 나올 기회 1%씩 추가",
+  "dealerCoin": "컵앤볼과 카드 몬테의 동전이 늘어요\n동전 10%씩 추가",
+  "jackpot": "카드 몬테를 연속으로 맞출수록 동전이 늘어요\n맞출 때마다 15%씩 추가",
+  "gemFind": "좋은 소품에서 실크도 얻어요\n실크 나올 기회 1%씩 추가",
   "equip": "좋아하는 소품이 더 잘 나와요\n소품 자리 3칸 열기",
   "slotPlus": "좋아하는 소품을 더 놓아요\n소품 자리 1칸 추가 · 최대 9칸",
   "lessonBias": "케이스가 더 빨리 자라요\n경험치 10%씩 추가 · 최대 20%",
@@ -3230,9 +5036,9 @@ GAME_DATA.easyNodes = {
   "rabbitPurse": "토끼가 동전을 더 가져와요\n동전 1개씩 추가",
   "boxHelper": "팬이 케이스를 함께 열어요\n2초마다 실력의 35%",
   "helperTempo": "팬이 케이스를 더 자주 두드려요\n기다리는 시간 0.2초씩 줄기",
-  "startFinale": "첫 피날레를 더 빨리 보여줘요\n공연 시작 때 피날레 충전",
-  "finalePower": "표정과 몸짓을 살려 피날레가 더 커져요\n연출의 22배 · 힘 8%씩 추가",
-  "finaleNeed": "피날레를 더 빨리 준비해요\n필요한 개봉 1개씩 줄기 · 최소 18개",
+  "startFinale": "케이스 1개를 열 때마다 피날레가 1칸 차요\n기본 20칸(비법으로 줄어듦)이 차면 큰 한 방이 나가요\n기본 피해는 표시된 연출의 2.75배, 마지막 보스 3막 준비 후 첫 피날레는 2배\n타겟은 5칸 충전, 액트 보상도 충전해요\n피날레 힘 비법·무대 보상·피날레 계열 강화로 더 강해져요\n공연 시작 때 피날레 충전",
+  "finalePower": "케이스 1개를 열 때마다 피날레가 1칸 차요\n기본 20칸(비법으로 줄어듦)이 차면 큰 한 방이 나가요\n기본 피해는 표시된 연출의 2.75배, 마지막 보스 3막 준비 후 첫 피날레는 2배\n타겟은 5칸 충전, 액트 보상도 충전해요\n피날레 힘 비법·무대 보상·피날레 계열 강화로 더 강해져요\n표시된 연출의 2.75배 · 힘 8%씩 추가",
+  "finaleNeed": "케이스 1개를 열 때마다 피날레가 1칸 차요\n기본 20칸(비법으로 줄어듦)이 차면 큰 한 방이 나가요\n기본 피해는 표시된 연출의 2.75배, 마지막 보스 3막 준비 후 첫 피날레는 2배\n타겟은 5칸 충전, 액트 보상도 충전해요\n피날레 힘 비법·무대 보상·피날레 계열 강화로 더 강해져요\n필요한 개봉 1개씩 줄기 · 최소 18개",
   "comboGift": "개봉을 이어 동전과 힘을 얻어요\n10 · 25 · 50 · 100개마다 선물",
   "comboValue": "개봉을 이어 동전을 더 얻어요\n이어 열기 선물 동전 20%씩 추가",
   "encore": "가끔 손끝에 더 힘이 생겨요\n300초마다 15초 · 실력 20% 추가",
@@ -3295,17 +5101,17 @@ GAME_DATA.easyNodes.flashpaperPower="플래시 페이퍼가 더 세게 두드려
 (function(D){
  D.tree.forEach(n=>{
   // v4 U45: 칼리 덱 is the skill only, 틴 케이스 strengthens the cases, the first wall product is the beginner lecture.
-  if(n.id==='p-kali-deck')n.desc='보석 상점에서 칼리 덱을 살 수 있고\n공연 중 케이스에서도 나와요'; // v4 U48 A: the node unlocks the consumable
+  if(n.id==='p-kali-deck')n.desc='실크 상점에서 칼리 덱을 살 수 있고\n공연 중 케이스에서도 나와요'; // v4 U48 A: the node unlocks the consumable
   else if(n.caseItemMult)n.desc='케이스가 크게 강해져요\n케이스 아이템 효과 ×'+n.caseItemMult;
   else if(n.productMultiplier)n.desc=(n.id==='p-classic-collection-remastered'?'입문자 강의 1편, 기본기를 다져요\n':n.id==='p-classic-collection-remastered-2'?'입문자 강의 2편, 기본기를 넓혀요\n':'이 무대를 넘을 힘이 생겨요\n')+'연출 ×'+n.productMultiplier;
-  else if(n.id.startsWith('hidden-')){const results={hand:'케이스를 더 빨리 열어요',box:'케이스 아이템의 힘이 커져요',heart:'야유를 더 오래 버텨요',luck:'동전을 더 많이 얻어요',pet:'도우미가 더 힘껏 도와줘요',finale:'피날레가 더 크게 놀라게 해요',collection:'관객을 더 크게 놀라게 해요',star:'별빛의 힘이 더 세져요'};n.desc=results[n.id.split('-').slice(1).join('-')]+'\n힘 2%씩 추가';}
+  else if(n.id.startsWith('hidden-')){const results={hand:'케이스를 더 빨리 열어요',box:'케이스 아이템의 힘이 커져요',heart:'야유를 더 오래 버텨요',luck:'동전을 더 많이 얻어요',pet:'도우미가 더 힘껏 도와줘요',finale:'케이스 1개를 열 때마다 피날레가 1칸 차고, 기본 20칸(비법으로 줄어듦)이 차면 큰 한 방이 나가요. 기본 피해는 표시된 연출의 2.75배, 마지막 보스 3막 준비 후 첫 피날레는 2배\n타겟은 5칸 충전, 액트 보상도 충전해요\n피날레 힘 비법·무대 보상·피날레 계열 강화로 더 강해져요',collection:'관객을 더 크게 놀라게 해요',star:'비둘기의 힘이 더 세져요'};n.desc=results[n.id.split('-').slice(1).join('-')]+'\n힘 2%씩 추가';}
   else n.desc=D.easyNodes[n.id];
   if(!n.desc)throw new Error('Missing easy description: '+n.id);
  });
  const copy={damage:'관객의 의심이 줄어요',shield:'야유를 막을 힘을 얻어요',heal:'마음이 회복돼요',coins:'비법을 배울 동전을 얻어요',xpBurst:'레벨이 더 빨리 올라요',finisher:'피날레를 더 빨리 준비해요',boxFill:'케이스가 더 빨리 열려요'};
  D.items.types.forEach(t=>t.ladder.forEach(p=>{const effect=p.effect||t.effect;const values={damage:'기본 힘 8 × 연출 · 좋은 소품은 최대 25배',shield:'기본 자신감 2.7 × 멘탈 · 최대 25배',heal:'기본 회복 1.8 × 멘탈 · 최대 25배',coins:'기본 동전 8개 · 좋은 소품은 최대 25배',xpBurst:'다음 레벨 경험치의 50%',finisher:'피날레 5칸 채우기',boxFill:'모든 케이스를 30% 더 열기'};p.desc=copy[effect]+'\n'+values[effect];}));
- D.missions.forEach(m=>{m.desc='오늘의 목표를 이루면 보석을 받아요\n'+m.name+' · 보석 '+m.gems+'개';});
- D.easyExtras={events:'움직이는 친구를 누르면 선물을 받아요\n8초 안에 누르기 · 힘, 동전, 열쇠 중 하나',set:'무대의 모두를 감탄시키면 힘이 늘어요\n실력 3% 추가 · 컬렉션 모두 모으면 연출 1.1배',milestone:'레벨이 쌓이면 힘이 크게 늘어요\n10 · 25레벨마다 2배 · 케이스는 50도 2배'};
+ D.missions.forEach(m=>{m.desc='오늘의 목표를 이루면 실크를 받아요\n'+m.name+' · 실크 '+m.gems+'개';});
+ D.easyExtras={events:'움직이는 친구를 누르면 선물을 받아요\n8초 안에 누르기 · 힘, 동전, 책 중 하나',set:'무대의 모두를 감탄시키면 힘이 늘어요\n실력 3% 추가 · 컬렉션 모두 모으면 연출 1.1배',milestone:'레벨이 쌓이면 힘이 크게 늘어요\n10 · 25레벨마다 2배 · 케이스는 50도 2배'};
 })(GAME_DATA);
 
 GAME_DATA.stageRewards.forEach((r,i)=>{r.desc=[
@@ -3315,7 +5121,7 @@ GAME_DATA.stageRewards.forEach((r,i)=>{r.desc=[
  '새 케이스도 잘 자란 채 받아요\n시작 레벨 1 추가',
  '옆 케이스도 더 세게 두드려요\n옆 칸에 주는 힘 15% 추가',
  '피날레가 더 크게 놀라게 해요\n피날레의 힘 30% 추가'][i];r.effect=r.desc;});
-GAME_DATA.missions.find(m=>m.id==='skills').name='스킬 5번 쓰기';GAME_DATA.missions.find(m=>m.id==='skills').desc='오늘의 목표를 이루면 보석을 받아요\n스킬 5번 쓰기 · 보석 3개';
+GAME_DATA.missions.find(m=>m.id==='skills').name='스킬 5번 쓰기';GAME_DATA.missions.find(m=>m.id==='skills').desc='오늘의 목표를 이루면 실크를 받아요\n스킬 5번 쓰기 · 실크 3개';
 // U15 pacing compensates for full-board practice without slowing the item itself.
 (function(D){const scale={family:2,party:1.3,school:5,cafe:4,meetup:4.4,theater:4,festival:15,audition:24,broadcast:65,vegas:5,moon:1.6,sun:1.1,galaxy:1.25,multiverse:1.08,lecturenote:8};D.venues.forEach(v=>{if(scale[v.slug])v.hpFactor=(v.hpFactor||1)*scale[v.slug];});D.venues.find(v=>v.slug==='lecturenote').bossHpFactor/=8;})(GAME_DATA);
 
@@ -3341,6 +5147,7 @@ GAME_DATA.cosmetics={
   {id:'flame',name:'불꽃 고리',cost:12,emoji:'🔥'},
   {id:'hanbok',name:'한복 마술사',cost:0,milestone:'meetup',hint:'전국 마술 매니아 무대 완료',emoji:'🎎'},
   {id:'denim',name:'거리 마술사',cost:10,emoji:'👖'},
+  {id:'brownknit',name:'갈색 니트',cost:10,emoji:'🧶'},
   {id:'camera',name:'사진가',cost:14,emoji:'📷'},
   {id:'guitar',name:'음악가',cost:16,emoji:'🎸'},
   {id:'reader',name:'서재의 강연자',cost:0,milestone:'lecturenote',hint:'렉쳐노트 귀환 완료',emoji:'📚'},
@@ -3360,16 +5167,19 @@ GAME_DATA.cosmetics={
 
 // U19: the table is revealed only after the homecoming.
 (function(D){
- const future={id:'h-future-kali',name:'미래의 칼리',emoji:'🪞',portraitAsset:'aud-future-kali.png',winLine:'잘했어. 다음 한 장은 네 몫이야.',flavor:'멈추지 않고 빈틈을 채워 온 나.',bio:'빈틈을 채우고 장점을 키운 미래의 나.',heckles:['네 박자를 믿어 봐.','천천히 해도 괜찮아.','다음 한 수를 보여 줘.','멈추지만 않으면 돼.'],pattern:'futureMirror',bossProfile:'future',preLine:'나는 멈추지 않고 빈틈을 채운 너야.',defeatLine:'잘했어. 다음 무대는 내가 되는 거야.'};
- D.venues.push({id:17,slug:'future',balanceRank:13,hpFactor:1,name:'서재 앞 큰 테이블',crowd:1,crowdEmoji:'👏',venueAsset:'venue-17-library-table.png',crowdAsset:'',palette:{bg1:'#342334',bg2:'#72553b',accent:'#ffe4a0'},audiences:[],headliner:future,intro:'테이블에서 누군가 기다리고 있다.',successLine:'미래의 내가 박수를 보낸다.',trophy:'미래의 나'});
+ const future={id:'h-future-kali',name:'미래의 칼리',emoji:'🪞',portraitAsset:'aud-future-kali.png',winLine:'마술이 이렇게 다정하네요.',flavor:'서재 앞 큰 테이블에서 처음 보는 사람에게 건넨다.',bio:'테이블에 처음 앉은 사람 앞에서 마술을 건넨다.',heckles:['처음이라 손이 떨려요.','제 카드가 여기 있어요!','고른 카드 이름으로요?','마술이 이렇게 다정하네요.'],pattern:'futureMirror',bossProfile:'future',preLine:'어서 와요. 편히 앉으세요.',defeatLine:'소개 페이지도 열어 두었어요.'};
+ D.venues.push({id:17,slug:'future',balanceRank:13,hpFactor:1,name:'서재 앞 큰 테이블',crowd:1,crowdEmoji:'👏',venueAsset:'venue-17-library-table.png',crowdAsset:'',palette:{bg1:'#342334',bg2:'#72553b',accent:'#ffe4a0'},audiences:[],headliner:future,intro:'테이블에 처음 앉은 사람이 기다린다.',successLine:'마술이 이렇게 다정하네요.',trophy:'미래의 나'});
  D.ui.patterns.futureMirror='거울 · 내 도구로 나를 넘어서는 공연';
- D.storyV15.venues.future={opening:[{speaker:'김정명',text:'서재 앞 큰 테이블을 봐. 누가 기다리네.'},{speaker:'미래의 칼리',text:'나는 멈추지 않은 너야.'},{speaker:'미래의 칼리',text:'빈틈은 채우고, 잘하는 건 끝까지 키웠지.'}],beforeHeadliner:[{speaker:'미래의 칼리',text:'네가 익힌 도구로, 나를 넘어 봐.'}],afterClear:[{speaker:'미래의 칼리',text:'잘했어. 다음 무대는 내가 되는 거야.'},{speaker:'미래의 칼리',text:'이 카드는 네 몫이야. 다음 사람에게 보여 줘.'}]};
- D.futureEnding=['나이 든 칼리는 큰 테이블에 앉았다.','처음 마술을 보는 사람들이 손을 내밀었다.','친구들이 둘러앉아 함께 웃었다.','마술을 아는 1 %가 2 %가 되는 날까지.','내가 꿈꾸던 미래는, 다음 한 장에서 시작됐다.'];
+ D.futureEnding=D.storyReview.ending;
+ // Lines only. Chat-room and intro buttons are not wired this round. Serona's button line stays here so it is not shown as already on.
+ D.futureInvite={buttonsLater:true,lines:[{speaker:'칼리',text:'마술 톡방에서 또 만나요.'},{speaker:'칼리',text:'소개 페이지도 열어 두었어요.'},{speaker:'세로나',text:'버튼 두 개, 지금 켜졌어요.'}]};
  D.cosmetics.kali.push({id:'future',name:'미래의 나',cost:0,milestone:'future',hint:'큰 테이블의 공연 완료',emoji:'🪞'});
  const past=D.venues.find(v=>v.slug==='multiverse').audiences.find(a=>a.id==='a108');
- Object.assign(past,{name:'과거의 나',portraitAsset:'aud-past-kali.png',bio:'쉬어 가던 나도 다시 카드를 들었다.',flavor:'멈추지 않은 나를 보며 다시 일어난다.'});
- D.storyV15.venues.multiverse.opening.unshift({speaker:'과거의 나',text:'잠깐 쉬던 나도 여기 있어. 다시 시작했지.'},{speaker:'칼리',text:'그때의 내가 있었기에, 멈추지 않을 수 있었다.'});
+ Object.assign(past,{name:'잠시 쉰 나',portraitAsset:'aud-past-kali.png',bio:'군대에서 잠시 쉬던 칼리. 쉬고 싶던 건 아니었다.',flavor:'쉰 것은 포기가 아니다.'});
  D.storyV15.bios[future.id]=future.bio;D.storyV15.bios[past.id]=past.bio;
+ // The reviewed IF dialogue is shared by live scenes and replay.
+ D.ifRouteScript=D.storyReview.ifRoute;
+
  D.routines=[
   {id:'rings',name:'링',nodes:['chain4','chain8','chainPower'],branch:'hand',items:['linking-rings']},
   {id:'rope',name:'로프',nodes:['area','sweepFocus'],branch:'hand',items:['silk-handkerchief']},
@@ -3378,7 +5188,16 @@ GAME_DATA.cosmetics={
   {id:'coins',name:'동전',nodes:['coinLuck','tip'],branch:'luck',items:['coin']},
   {id:'cupsballs',name:'컵앤볼',nodes:['sponge','spongePower'],branch:'pet',items:['sponge-balls','cups-and-balls']},
   {id:'bottles',name:'멀티플레잉 보틀',nodes:['water','waterPower','showtimeCooldown'],branch:'finale',items:['water-glass','cups-and-balls'],skill:'showtime'},
-  {id:'silk',name:'실크',nodes:['shieldCap','mental','cheerCooldown','p-slydini-silks'],branch:'heart',items:['silk-handkerchief','linking-rings'],skill:'cheer'}
+  {id:'silk',name:'실크',nodes:['shieldCap','mental','cheerCooldown','p-slydini-silks'],branch:'heart',items:['silk-handkerchief','linking-rings'],skill:'cheer'},
+  // Round 14: existing item ids and book nodes only (no new products). A shared item still takes turns in core.js routineItem.
+  // eggbag: 실크햇 top-hat (모자에서 물건을 꺼내는 소품), 반짝이는 모자. rubberband: 링 linking-rings (고리), 루틴 연결.
+  // coloringbook: 점보 카드 jumbo-card (큰 종이), 연습 노트. cube: 스펀지 볼 sponge-balls (손에 쥐는 소품), 한곳 집중.
+  // wand: 지팡이 wand, 빠른 손놀림. (모자 속 동전 has no free book cell left.)
+  {id:'eggbag',name:'에그백',nodes:['gemFind'],branch:'luck',items:['top-hat']},
+  {id:'rubberband',name:'고무줄',nodes:['comboHold'],branch:'hand',items:['linking-rings']},
+  {id:'coloringbook',name:'컬러링북',nodes:['lessonBias'],branch:'collection',items:['jumbo-card']},
+  {id:'cube',name:'큐브',nodes:['sweepFocus'],branch:'hand',items:['sponge-balls']},
+  {id:'wand',name:'완드',nodes:['speed'],branch:'hand',items:['wand']}
  ];
 })(GAME_DATA);
 // U19 pacing: extend the late galaxy rehearsal without stretching the mirror venue.
@@ -3387,7 +5206,7 @@ GAME_DATA.venues.find(v=>v.slug==='galaxy').hpFactor*=1.41;
 (function(D){const scale={meetup:.30,audition:.60,broadcast:.52,moon:.70,sun:.60,galaxy:.30,multiverse:.44,lecturenote:.40};D.venues.forEach(v=>{if(scale[v.slug])v.hpFactor*=scale[v.slug];});D.venues.find(v=>v.slug==='lecturenote').bossHpFactor*=3.25;})(GAME_DATA);
 
 // U25: checked-in role and per-line mood data from lines-v19b.
-GAME_DATA.lineFaces={"roles":{"a1":{"role":"family","name":"아빠","venue":"family"},"a2":{"role":"family","name":"동생","venue":"family"},"a3":{"role":"family","name":"엄마","venue":"family"},"h1":{"role":"family","name":"까다로운 할머니","venue":"family"},"a4":{"role":"supporter","name":"풍선 친구","venue":"party"},"a5":{"role":"supporter","name":"음악 친구","venue":"party"},"a6":{"role":"supporter","name":"케이크 친구","venue":"party"},"h2":{"role":"skeptic","name":"파티 주최자","venue":"party"},"a7":{"role":"supporter","name":"앞자리 짝꿍","venue":"school"},"a8":{"role":"supporter","name":"응원봉 반장","venue":"school"},"a9":{"role":"critic","name":"깐깐한 선배의 채점","venue":"school"},"a46":{"role":"skeptic","name":"체육부 선배","venue":"school"},"h3":{"role":"critic","name":"심사 담임","venue":"school"},"a10":{"role":"skeptic","name":"노트북 손님","venue":"cafe"},"a11":{"role":"skeptic","name":"디저트 손님","venue":"cafe"},"a12":{"role":"critic","name":"창가 손님","venue":"cafe"},"a50":{"role":"supporter","name":"바리스타 친구","venue":"cafe"},"h4":{"role":"skeptic","name":"라떼 바리스타","venue":"cafe"},"a-meetup-busan":{"role":"supporter","name":"부산의 마술 매니아","venue":"meetup"},"a-meetup-daegu":{"role":"critic","name":"대구의 마술 매니아","venue":"meetup"},"a-meetup-changwon":{"role":"critic","name":"창원의 마술 매니아","venue":"meetup"},"a-meetup-incheon":{"role":"supporter","name":"인천의 마술 매니아","venue":"meetup"},"a-meetup-geoje":{"role":"supporter","name":"거제의 마술 매니아","venue":"meetup"},"a-meetup-cheonan":{"role":"supporter","name":"천안의 마술 매니아","venue":"meetup"},"a-meetup-suwon":{"role":"critic","name":"수원의 마술 매니아","venue":"meetup"},"h-meetup-seoul":{"role":"supporter","name":"서울의 마술 매니아","venue":"meetup"},"a13":{"role":"supporter","name":"열성팬","venue":"theater"},"a14":{"role":"critic","name":"일반 관객","venue":"theater"},"a15":{"role":"heckler","name":"헤클러","venue":"theater"},"a54":{"role":"critic","name":"대본 작가","venue":"theater"},"a55":{"role":"supporter","name":"커튼콜 팬","venue":"theater"},"h5":{"role":"critic","name":"까칠한 평론가","venue":"theater"},"a16":{"role":"supporter","name":"깃발 응원단","venue":"festival"},"a17":{"role":"family","name":"술친구","venue":"festival"},"a18":{"role":"supporter","name":"후배","venue":"festival"},"a59":{"role":"skeptic","name":"밴드 관객","venue":"festival"},"a60":{"role":"supporter","name":"야광봉 팬","venue":"festival"},"h6":{"role":"skeptic","name":"축제 사회자","venue":"festival"},"a19":{"role":"helper","name":"점수판 도우미","venue":"audition"},"a20":{"role":"helper","name":"카메라 감독","venue":"audition"},"a21":{"role":"skeptic","name":"라이벌","venue":"audition"},"a64":{"role":"critic","name":"초대 작가","venue":"audition"},"a65":{"role":"critic","name":"리허설 관객","venue":"audition"},"a66":{"role":"supporter","name":"방청객","venue":"audition"},"h7":{"role":"critic","name":"메인 심사위원","venue":"audition"},"a112":{"role":"helper","name":"생방송 PD","venue":"broadcast"},"a113":{"role":"helper","name":"방송 작가","venue":"broadcast"},"a114":{"role":"helper","name":"음향 감독","venue":"broadcast"},"a115":{"role":"supporter","name":"방청 응원단","venue":"broadcast"},"a116":{"role":"supporter","name":"열성적인 패널","venue":"broadcast"},"a117":{"role":"helper","name":"조명 감독","venue":"broadcast"},"h-broadcast":{"role":"critic","name":"국민 MC","venue":"broadcast"},"a22":{"role":"skeptic","name":"큰손 손님","venue":"vegas"},"a23":{"role":"skeptic","name":"화려한 관객","venue":"vegas"},"a24":{"role":"critic","name":"경비 아저씨","venue":"vegas"},"a70":{"role":"skeptic","name":"호텔 손님","venue":"vegas"},"a71":{"role":"supporter","name":"쇼 팬","venue":"vegas"},"a72":{"role":"skeptic","name":"사진 관광객","venue":"vegas"},"h8":{"role":"critic","name":"전설의 딜러","venue":"vegas"},"a25":{"role":"supporter","name":"뮤지컬 팬","venue":"broadway"},"a26":{"role":"skeptic","name":"뉴욕 관광객","venue":"broadway"},"a27":{"role":"critic","name":"깐깐 비평가","venue":"broadway"},"a76":{"role":"critic","name":"티켓 수집가","venue":"broadway"},"a77":{"role":"critic","name":"발레 관객","venue":"broadway"},"a78":{"role":"supporter","name":"오케스트라 팬","venue":"broadway"},"a79":{"role":"critic","name":"의상 디자이너","venue":"broadway"},"h9":{"role":"skeptic","name":"브로드웨이 스타","venue":"broadway"},"a28":{"role":"skeptic","name":"우주비행사","venue":"moon"},"a29":{"role":"helper","name":"무전 담당","venue":"moon"},"a30":{"role":"helper","name":"탐사차 기사","venue":"moon"},"a83":{"role":"critic","name":"달 과학자","venue":"moon"},"a84":{"role":"critic","name":"별빛 수집가","venue":"moon"},"a85":{"role":"helper","name":"기지 정비사","venue":"moon"},"a86":{"role":"skeptic","name":"우주 관광객","venue":"moon"},"h10":{"role":"critic","name":"달 기지 대장","venue":"moon"},"a31":{"role":"skeptic","name":"불꽃 서퍼","venue":"sun"},"a32":{"role":"helper","name":"태양 가이드","venue":"sun"},"a33":{"role":"supporter","name":"불꽃 사진가","venue":"sun"},"a90":{"role":"critic","name":"빛 연구원","venue":"sun"},"a91":{"role":"skeptic","name":"태양 여행객","venue":"sun"},"a92":{"role":"critic","name":"태양 관측자","venue":"sun"},"a93":{"role":"skeptic","name":"파도 서퍼","venue":"sun"},"a94":{"role":"skeptic","name":"우주 사진가","venue":"sun"},"h11":{"role":"skeptic","name":"태양의 불꽃왕","venue":"sun"},"a34":{"role":"skeptic","name":"외계인 손님","venue":"galaxy"},"a35":{"role":"skeptic","name":"UFO 파일럿","venue":"galaxy"},"a36":{"role":"helper","name":"별자리 선생님","venue":"galaxy"},"a98":{"role":"critic","name":"우주 음악가","venue":"galaxy"},"a99":{"role":"critic","name":"은하 사진가","venue":"galaxy"},"a100":{"role":"helper","name":"은하수 안내원","venue":"galaxy"},"a101":{"role":"skeptic","name":"혜성 레이서","venue":"galaxy"},"a102":{"role":"supporter","name":"소원 여행자","venue":"galaxy"},"h12":{"role":"skeptic","name":"은하 황제","venue":"galaxy"},"a37":{"role":"skeptic","name":"지팡이 없는 나","venue":"multiverse"},"a38":{"role":"skeptic","name":"연습실 못 간 나","venue":"multiverse"},"a39":{"role":"skeptic","name":"첫 카드를 접은 나","venue":"multiverse"},"a106":{"role":"supporter","name":"용기 낸 나","venue":"multiverse"},"a107":{"role":"supporter","name":"객석의 나","venue":"multiverse"},"a108":{"role":"skeptic","name":"과거의 나","venue":"multiverse"},"a109":{"role":"supporter","name":"연습을 시작한 나","venue":"multiverse"},"a110":{"role":"helper","name":"무대에 선 나","venue":"multiverse"},"a111":{"role":"supporter","name":"박수 보내는 나","venue":"multiverse"},"h13":{"role":"skeptic","name":"가장 의심 많은 나","venue":"multiverse"},"a-lecturenote-hecate":{"role":"helper","name":"헤카테","venue":"lecturenote"},"a-lecturenote-serona":{"role":"helper","name":"세로나","venue":"lecturenote"},"a-lecturenote-jung":{"role":"helper","name":"정희수","venue":"lecturenote"},"h-lecturenote-kim":{"role":"family","name":"김정명","venue":"lecturenote"},"h-future-kali":{"role":"supporter","name":"미래의 칼리","venue":"future"}},"lines":{"a4":{"name":"풍선 친구","role":"supporter","heckles":["풍선 터지기 전에 보여 줘!","칼리, 분위기는 내가 띄울게!","긴장 풀고 손만 보여 줘!","풍선보다 크게 터뜨려 봐!"],"winLine":"풍선보다 더 터졌다!"},"a5":{"name":"음악 친구","role":"supporter","heckles":["박자 맞춰 줄게, 가자!","다음 곡은 칼리 테마송!","호흡 길게, 천천히 해!","음악 끌게. 마술이 주인공!"],"winLine":"이건 신곡급이다!"},"a6":{"name":"케이크 친구","role":"supporter","heckles":["초 꺼지기 전에 힘내!","케이크 아껴 놨어, 파이팅!","손끝만 믿어, 칼리!","크림보다 달콤한 한 방!"],"winLine":"케이크보다 달콤해!"},"a7":{"name":"앞자리 짝꿍","role":"supporter","heckles":["신청서 낸 값 해야지!","연필로 박자 맞춰 줄게!","긴장했지? 숨 크게 쉬어!","짝꿍이 제일 앞에서 본다!"],"winLine":"짝꿍, 너 진짜 대박!"},"a8":{"name":"응원봉 반장","role":"supporter","heckles":["우리 반이 다 응원한다!","응원봉은 피날레에 켠다!","반장이 지켜본다, 힘내!","끝까지 가면 다 켜 줄게!"],"winLine":"응원봉 켠다, 최고!"},"a50":{"name":"바리스타 친구","role":"supporter","heckles":["자리 비워 놨어, 편하게 해!","커피 식기 전에 보여 줘!","친구라서 믿는다, 칼리!","떨리면 커피 한 모금 해!"],"winLine":"친구야, 미쳤다!"},"a-meetup-busan":{"name":"부산의 마술 매니아","role":"supporter","heckles":["이 덱 한정판이에요, 써 봐요!","카드 질감 좋죠? 믿고 가요!","첫차 타고 온 보람 있겠죠?","칼리가 쓰면 더 빛나요!"],"winLine":"덱까지 홀렸어요!"},"a-meetup-incheon":{"name":"인천의 마술 매니아","role":"supporter","heckles":["찍고 있어요, 자신 있게!","느린 화면에도 완벽할 거예요!","맨 앞줄 비타민 충전 중!","한 번 더 찍게 해 줘요!"],"winLine":"찍길 잘했어요, 진짜!"},"a-meetup-geoje":{"name":"거제의 마술 매니아","role":"supporter","heckles":["거제 야호! 힘내요, 칼리!","어디서 배웠는지 궁금해요!","이 마술, 입문 책에 실어요!","멀리서 왔어요. 응원합니다!"],"winLine":"거제 야호! 오늘 최고였어요!"},"a-meetup-cheonan":{"name":"천안의 마술 매니아","role":"supporter","heckles":["기차 시간 잊고 보고 있어요!","딱 하나만 더 보여 줘요!","간식 챙겨 왔어요, 힘내요!","열차 놓쳐도 괜찮아요!"],"winLine":"기차는 다음 거 타죠!"},"h-meetup-seoul":{"name":"서울의 마술 매니아","role":"supporter","heckles":["첫 모임 기억나지? 잘하고 있어.","그때보다 손이 빠르네.","긴장 풀고 즐겁게 보여 줘.","비밀은 지켜 줄게. 해 봐!"],"winLine":"정말 많이 늘었네!"},"a13":{"name":"열성팬","role":"supporter","heckles":["박수 준비 완료! 가요!","실수해도 제가 박수 쳐요!","더 크게 해 봐요, 칼리!","앞줄에서 다 보고 있어요!"],"winLine":"역시 최고예요!"},"a55":{"name":"커튼콜 팬","role":"supporter","heckles":["커튼콜은 제가 책임져요!","앙코르 준비 중이에요!","박수는 아껴 둘게요. 크게요!","끝까지 봐요, 칼리!"],"winLine":"앙코르, 앙코르!"},"a16":{"name":"깃발 응원단","role":"supporter","heckles":["깃발 흔들 준비 끝!","더 크게 외쳐 줄게요!","피날레까지 힘내요!","과 깃발이 응원 중이에요!"],"winLine":"깃발 흔든다, 와!"},"a18":{"name":"후배","role":"supporter","heckles":["선배, 힘내요! 믿어요!","맨 앞에서 소리 지를게요!","긴장되지만 응원해요!","선배라면 할 수 있어요!"],"winLine":"선배 짱이에요!"},"a60":{"name":"야광봉 팬","role":"supporter","heckles":["야광봉 켰어요, 칼리!","무대를 물들여 줄게요!","불빛 따라 힘내요!","우리 선배가 최고예요!"],"winLine":"야광봉 번쩍!"},"a19":{"name":"점수판 도우미","role":"helper","heckles":["들켜요, 패널들 표정 보세요.","카메라 2번이 클로즈업 들어가요!","점수 올라가요, 이 흐름 유지!","긴장 풀고 숨 한 번 쉬세요."],"winLine":"점수판 폭발했어요!"},"a20":{"name":"카메라 감독","role":"helper","heckles":["줌인 곧 들어가요, 손 올려요!","각 좋아요, 조금 오른쪽으로!","카메라 보고 천천히 가요.","컷 사인 전에 마무리해요!"],"winLine":"줌인 들어갑니다!"},"a66":{"name":"방청객","role":"supporter","heckles":["박수 신호 기다리고 있어요!","녹화 중이니 자신 있게요!","환호는 제가 책임져요!","카메라 보고 웃어요!"],"winLine":"박수가 절로 나와요!"},"a112":{"name":"생방송 PD","role":"helper","heckles":["30초 전입니다. 숨 쉬세요.","큐 사인 갑니다, 침착하게!","시간 넉넉해요, 서두르지 마요.","카메라 보고 웃으며 가요!"],"winLine":"방송이 살았네요!"},"a113":{"name":"방송 작가","role":"helper","heckles":["큐시트 순서 확인했어요, 가요!","대사 막히면 제가 받을게요.","순서 꼬여도 이어 가면 돼요.","수정본 외웠죠? 믿어요!"],"winLine":"이 장면은 큐시트 최고예요!"},"a114":{"name":"음향 감독","role":"helper","heckles":["마이크 걸리지 않게 조심!","붐대 내려갑니다, 비켜요!","소리 잘 잡혀요, 계속!","작게 말해도 다 들려요."],"winLine":"소리 하나 안 샜다!"},"a115":{"name":"방청 응원단","role":"supporter","heckles":["박수 신호 받았어요, 가요!","표정 풀고 웃어 줘요!","응원 소리 높일게요!","환호할 준비 끝났어요!"],"winLine":"와아, 함성 갑니다!"},"a116":{"name":"열성적인 패널","role":"supporter","heckles":["반응 올라가고 있어요!","좋아요 숫자가 오르는 중!","실검 도전해 봐요, 칼리!","패널도 박수 칠 준비 끝!"],"winLine":"실시간 반응 폭발!"},"a117":{"name":"조명 감독","role":"helper","heckles":["제일 반짝일 때 불 켤게요!","그림자 피해서 서 주세요!","각도 맞췄어요, 서 보세요!","조명은 칼리 편이에요!"],"winLine":"조명이 춤추네요!"},"a71":{"name":"쇼 팬","role":"supporter","heckles":["쇼 시간만 기다렸어요!","팬이니까 박수부터 칠게요!","다음 장면도 기대돼요!","끝까지 응원해요, 칼리!"],"winLine":"쇼 타임, 최고다!"},"a25":{"name":"뮤지컬 팬","role":"supporter","heckles":["하이노트 뒤에 피날레 가요!","합창 같은 박수 드릴게요!","노래 한 곡보다 짜릿해요!","브라보 준비 완료!"],"winLine":"브라보! 기립이다!"},"a78":{"name":"오케스트라 팬","role":"supporter","heckles":["박자 딱 맞아요, 지휘 같아요!","박수도 악보대로 칠게요!","화음처럼 이어 가요!","현악 못지않게 멋져요!"],"winLine":"교향곡 같은 마술!"},"a29":{"name":"무전 담당","role":"helper","heckles":["신호 잡혔습니다, 계속하세요!","교신 양호, 피날레 준비!","지연 있으니 천천히 가요.","본부에 보고할 준비 끝!"],"winLine":"관제센터에 보고한다!"},"a30":{"name":"탐사차 기사","role":"helper","heckles":["바퀴 자국 밟고 서세요!","월면차 출발 준비 됐습니다!","먼지 날리니 눈 조심!","이 길은 안전해요, 가요!"],"winLine":"월면차에 태우고 싶다!"},"a85":{"name":"기지 정비사","role":"helper","heckles":["나사 조여 놨어요, 안심해요!","점검 끝났어요, 가도 돼요!","공구 놓치지 말고 천천히!","케이스 고장 없어요, 계속!"],"winLine":"완벽 정비 상태!"},"a32":{"name":"태양 가이드","role":"helper","heckles":["흑점 투어 잠시 멈췄어요!","코로나 뜨거우니 조심해요.","따라오세요, 길 알려 줄게요!","열기 오를 때 피날레 가요!"],"winLine":"가이드북에 싣겠다!"},"a33":{"name":"불꽃 사진가","role":"supporter","heckles":["셔터 누를 준비 됐어요!","피날레를 기다리고 있어요!","초점 딱 맞았어요, 계속요!","불꽃보다 멋진 컷 부탁해요!"],"winLine":"찰칵, 인생 사진!"},"a36":{"name":"별자리 선생님","role":"helper","heckles":["별이 지기 전에 보여 줘요!","별자리는 천천히 읽어요.","손끝을 별처럼 이어 봐요!","해설은 제가, 마술은 칼리!"],"winLine":"새 별자리 탄생!"},"a100":{"name":"은하수 안내원","role":"helper","heckles":["성운 쪽으로 오세요, 이쪽!","길은 제가 안내할게요.","어두워도 천천히 걸어요.","안내판 따라가면 돼요!"],"winLine":"성운이 반짝였어요!"},"a102":{"name":"소원 여행자","role":"supporter","heckles":["별자리마다 소원 빌었어요!","칼리가 성공하게 해 달라고요!","나침반이 칼리를 가리켜요!","별빛이 응원하고 있어요!"],"winLine":"별 여행 최고예요!"},"a106":{"name":"용기 낸 나","role":"supporter","heckles":["나도 해냈어. 너도 할 수 있어!","떨려도 올라가, 괜찮아!","한 걸음만 더 내디뎌 봐!","무서워도 넌 해낼 거야!"],"winLine":"그래, 바로 이거야!"},"a107":{"name":"객석의 나","role":"supporter","heckles":["객석에서 다 보고 있어!","실수해도 괜찮아, 끝까지 해!","박수 칠 준비 끝났어!","나는 네 편이야!"],"winLine":"박수 쳐 줄게!"},"a109":{"name":"연습을 시작한 나","role":"supporter","heckles":["이제 막 시작했지만 응원해!","연습한 만큼 보일 거야!","계속 연습하면 돼. 파이팅!","너를 보며 배우고 있어!"],"winLine":"계속 연습할게!"},"a110":{"name":"무대에 선 나","role":"helper","heckles":["조명 뜨거워, 숨부터 쉬어!","떨림은 나도 숨겼어, 괜찮아.","무대는 쉽지 않지만 즐겨!","관객 눈을 보면 편해져."],"winLine":"무대가 부럽네!"},"a111":{"name":"박수 보내는 나","role":"supporter","heckles":["박수 칠 준비 끝, 가자!","끝까지 믿고 있어!","네 손끝을 응원해!","어느 세계에서든 네 편이야!"],"winLine":"박수 보낸다, 나야!"},"a-lecturenote-hecate":{"name":"헤카테","role":"helper","heckles":["동선부터 확인해요, 천천히.","큐 시트는 제가 챙겼습니다.","손놀림 좋습니다, 계속하세요.","부장이 뒤에서 지켜봅니다."],"winLine":"점검 통과입니다, 칼리!"},"a-lecturenote-serona":{"name":"세로나","role":"helper","heckles":["숨은 선물 있어요, 힘내요!","반전은 제가 도울게요.","눈치채지 못하게 가요!","서프라이즈 타이밍 알려 줄게요."],"winLine":"히든 직원도 반했어요!"},"a-lecturenote-jung":{"name":"정희수","role":"helper","heckles":["상자 포장 중이에요, 힘내요!","선반 정리 끝났어요, 가요!","응원 택배 왔어요, 칼리!","테이프 붙여 줄게요, 걱정 마요."],"winLine":"박수 소리가 택배급!"}},"moods":{"story:tutorial:intro:0":"doubt","story:tutorial:intro:1":"happy","story:tutorial:intro:2":"happy","story:tutorial:intro:3":"happy","story:tutorial:coaching:0":"doubt","story:tutorial:coaching:1":"doubt","story:tutorial:coaching:2":"surprised","story:tutorial:coaching:3":"doubt","story:tutorial:defeat:0":"surprised","story:tutorial:defeat:1":"happy","story:tutorial:defeat:2":"happy","story:tutorial:winLine":"happy","story:helper:coaching:0":"serious","story:helper:coaching:1":"serious","story:helper:coaching:2":"serious","story:helper:coaching:3":"serious","story:helper:coaching:4":"happy","story:family:opening:0":"smug","story:family:opening:1":"happy","story:family:opening:2":"happy","story:family:opening:3":"happy","story:family:opening:4":"smug","story:family:opening:5":"happy","story:family:beforeHeadliner:0":"doubt","story:family:beforeHeadliner:1":"serious","story:family:beforeHeadliner:2":"serious","story:family:afterClear:0":"happy","story:family:afterClear:1":"happy","story:party:opening:0":"happy","story:party:opening:1":"happy","story:party:opening:2":"serious","story:party:opening:3":"happy","story:party:beforeHeadliner:0":"smug","story:party:beforeHeadliner:1":"happy","story:party:beforeHeadliner:2":"happy","story:party:afterClear:0":"happy","story:party:afterClear:1":"happy","story:party:afterClear:2":"serious","story:school:opening:0":"happy","story:school:opening:1":"surprised","story:school:opening:2":"happy","story:school:opening:3":"happy","story:school:opening:4":"smug","story:school:beforeHeadliner:0":"doubt","story:school:beforeHeadliner:1":"happy","story:school:beforeHeadliner:2":"happy","story:school:afterClear:0":"happy","story:school:afterClear:1":"happy","story:cafe:opening:0":"happy","story:cafe:opening:1":"doubt","story:cafe:opening:2":"happy","story:cafe:opening:3":"serious","story:cafe:beforeHeadliner:0":"smug","story:cafe:beforeHeadliner:1":"happy","story:cafe:beforeHeadliner:2":"happy","story:cafe:afterClear:0":"happy","story:cafe:afterClear:1":"happy","story:meetup:opening:0":"happy","story:meetup:opening:1":"happy","story:meetup:opening:2":"happy","story:meetup:opening:3":"happy","story:meetup:opening:4":"happy","story:meetup:opening:5":"happy","story:meetup:opening:6":"happy","story:meetup:beforeHeadliner:0":"happy","story:meetup:beforeHeadliner:1":"happy","story:meetup:beforeHeadliner:2":"happy","story:meetup:afterClear:0":"happy","story:meetup:afterClear:1":"happy","story:meetup:afterClear:2":"happy","story:theater:opening:0":"happy","story:theater:opening:1":"doubt","story:theater:opening:2":"happy","story:theater:opening:3":"smug","story:theater:opening:4":"happy","story:theater:opening:5":"serious","story:theater:opening:6":"happy","story:theater:beforeHeadliner:0":"smug","story:theater:beforeHeadliner:1":"happy","story:theater:beforeHeadliner:2":"doubt","story:theater:afterClear:0":"happy","story:theater:afterClear:1":"happy","story:theater:afterClear:2":"happy","story:theater:afterClear:3":"happy","story:festival:opening:0":"happy","story:festival:opening:1":"happy","story:festival:opening:2":"happy","story:festival:opening:3":"happy","story:festival:beforeHeadliner:0":"smug","story:festival:beforeHeadliner:1":"happy","story:festival:beforeHeadliner:2":"happy","story:festival:afterClear:0":"happy","story:festival:afterClear:1":"happy","story:audition:opening:0":"happy","story:audition:opening:1":"smug","story:audition:opening:2":"happy","story:audition:opening:3":"serious","story:audition:beforeHeadliner:0":"smug","story:audition:beforeHeadliner:1":"happy","story:audition:beforeHeadliner:2":"happy","story:audition:afterClear:0":"happy","story:audition:afterClear:1":"smug","story:broadcast:opening:0":"serious","story:broadcast:opening:1":"serious","story:broadcast:opening:2":"surprised","story:broadcast:opening:3":"happy","story:broadcast:beforeHeadliner:0":"happy","story:broadcast:beforeHeadliner:1":"happy","story:broadcast:beforeHeadliner:2":"happy","story:broadcast:afterClear:0":"happy","story:broadcast:afterClear:1":"happy","story:vegas:opening:0":"smug","story:vegas:opening:1":"happy","story:vegas:opening:2":"happy","story:vegas:opening:3":"happy","story:vegas:beforeHeadliner:0":"smug","story:vegas:beforeHeadliner:1":"happy","story:vegas:beforeHeadliner:2":"happy","story:vegas:afterClear:0":"happy","story:vegas:afterClear:1":"happy","story:vegas:afterClear:2":"happy","story:broadway:opening:0":"happy","story:broadway:opening:1":"doubt","story:broadway:opening:2":"doubt","story:broadway:opening:3":"happy","story:broadway:beforeHeadliner:0":"smug","story:broadway:beforeHeadliner:1":"happy","story:broadway:beforeHeadliner:2":"happy","story:broadway:afterClear:0":"happy","story:broadway:afterClear:1":"happy","story:moon:opening:0":"happy","story:moon:opening:1":"happy","story:moon:opening:2":"happy","story:moon:opening:3":"happy","story:moon:beforeHeadliner:0":"smug","story:moon:beforeHeadliner:1":"happy","story:moon:beforeHeadliner:2":"smug","story:moon:afterClear:0":"happy","story:moon:afterClear:1":"happy","story:sun:opening:0":"happy","story:sun:opening:1":"happy","story:sun:opening:2":"happy","story:sun:opening:3":"happy","story:sun:beforeHeadliner:0":"smug","story:sun:beforeHeadliner:1":"happy","story:sun:beforeHeadliner:2":"happy","story:sun:afterClear:0":"happy","story:sun:afterClear:1":"happy","story:galaxy:opening:0":"happy","story:galaxy:opening:1":"happy","story:galaxy:opening:2":"happy","story:galaxy:opening:3":"happy","story:galaxy:opening:4":"happy","story:galaxy:opening:5":"happy","story:galaxy:beforeHeadliner:0":"smug","story:galaxy:beforeHeadliner:1":"happy","story:galaxy:beforeHeadliner:2":"serious","story:galaxy:afterClear:0":"serious","story:galaxy:afterClear:1":"happy","story:galaxy:afterClear:2":"serious","story:multiverse:opening:0":"happy","story:multiverse:opening:1":"happy","story:multiverse:opening:2":"happy","story:multiverse:opening:3":"happy","story:multiverse:beforeHeadliner:0":"serious","story:multiverse:beforeHeadliner:1":"happy","story:multiverse:beforeHeadliner:2":"happy","story:multiverse:afterClear:0":"happy","story:multiverse:afterClear:1":"happy","story:lecturenote:opening:0":"serious","story:lecturenote:opening:1":"happy","story:lecturenote:opening:2":"happy","story:lecturenote:opening:3":"happy","story:lecturenote:beforeHeadliner:0":"happy","story:lecturenote:beforeHeadliner:1":"serious","story:lecturenote:beforeHeadliner:2":"happy","story:lecturenote:beforeHeadliner:3":"happy","story:lecturenote:beforeHeadliner:4":"serious","story:lecturenote:beforeHeadliner:5":"happy","story:lecturenote:beforeHeadliner:6":"happy","story:lecturenote:afterClear:0":"happy","story:lecturenote:afterClear:1":"serious","story:lecturenote:afterClear:2":"serious","story:lecturenote:afterClear:3":"serious","story:lecturenote:afterClear:4":"happy","story:lecturenote:afterClear:5":"serious","story:lecturenote:afterClear:6":"happy","story:lecturenote:afterClear:7":"happy","story:lecturenote:afterClear:8":"happy","branch:c1_subway:c1_subway_past:0":"sad","branch:c1_subway:c1_subway_past:1":"serious","branch:c1_subway:c1_subway_past:2":"happy","branch:c1_subway:c1_subway_past:echo":"happy","branch:c1_subway:c1_subway_forward:0":"happy","branch:c1_subway:c1_subway_forward:1":"happy","branch:c1_subway:c1_subway_forward:2":"happy","branch:c1_subway:c1_subway_forward:echo":"happy","branch:c2_meetup:c2_friends_past:0":"happy","branch:c2_meetup:c2_friends_past:1":"happy","branch:c2_meetup:c2_friends_past:2":"serious","branch:c2_meetup:c2_friends_past:echo":"happy","branch:c2_meetup:c2_next_forward:0":"happy","branch:c2_meetup:c2_next_forward:1":"happy","branch:c2_meetup:c2_next_forward:2":"happy","branch:c2_meetup:c2_next_forward:echo":"happy","branch:c3_multi:c3_wave_past:0":"serious","branch:c3_multi:c3_wave_past:1":"happy","branch:c3_multi:c3_wave_past:2":"happy","branch:c3_multi:c3_wave_past:echo":"happy","branch:c3_multi:c3_walk_forward:0":"serious","branch:c3_multi:c3_walk_forward:1":"happy","branch:c3_multi:c3_walk_forward:2":"serious","branch:c3_multi:c3_walk_forward:echo":"happy","branch:c4_cards:c4_oldcards_past:0":"happy","branch:c4_cards:c4_oldcards_past:1":"happy","branch:c4_cards:c4_oldcards_past:2":"happy","branch:c4_cards:c4_oldcards_past:echo":"happy","branch:c4_cards:c4_newcards_forward:0":"happy","branch:c4_cards:c4_newcards_forward:1":"happy","branch:c4_cards:c4_newcards_forward:2":"happy","branch:c4_cards:c4_newcards_forward:echo":"happy","branch:ifRoute:teaser:0":"serious","branch:ifRoute:teaser:1":"happy","branch:ifRoute:intro:0":"surprised","branch:ifRoute:intro:1":"happy","branch:ifRoute:intro:2":"sad","branch:ifRoute:intro:3":"serious","branch:ifRoute:duel:0":"sad","branch:ifRoute:duel:1":"sad","branch:ifRoute:duel:2":"happy","branch:ifRoute:glitch:0":"surprised","branch:ifRoute:glitch:1":"surprised","branch:ifRoute:evolve:0":"serious","branch:ifRoute:evolve:1":"serious","branch:ifRoute:evolve:2":"serious","branch:ifRoute:evolve:3":"happy","branch:ifRoute:phaseLines:0":"serious","branch:ifRoute:phaseLines:1":"happy","branch:ifRoute:phaseLines:2":"serious","branch:ifRoute:win:0":"happy","branch:ifRoute:win:1":"surprised","branch:ifRoute:win:2":"serious","branch:ifRoute:win:3":"happy","branch:ifRoute:ending:0":"happy","branch:ifRoute:ending:1":"serious","branch:ifRoute:ending:2":"serious","branch:ifRoute:ending:3":"happy","branch:ifRoute:ending:4":"happy","branch:ifRoute:ending:5":"happy","fight:a1:heckles:0":"smug","fight:a1:heckles:1":"happy","fight:a1:heckles:2":"happy","fight:a1:heckles:3":"doubt","fight:a1:winLine":"happy","fight:a2:heckles:0":"happy","fight:a2:heckles:1":"doubt","fight:a2:heckles:2":"doubt","fight:a2:heckles:3":"doubt","fight:a2:winLine":"surprised","fight:a3:heckles:0":"happy","fight:a3:heckles:1":"happy","fight:a3:heckles:2":"happy","fight:a3:heckles:3":"doubt","fight:a3:winLine":"happy","fight:h1:heckles:0":"smug","fight:h1:heckles:1":"smug","fight:h1:heckles:2":"happy","fight:h1:heckles:3":"doubt","fight:h1:winLine":"surprised","fight:a4:heckles:0":"happy","fight:a4:heckles:1":"happy","fight:a4:heckles:2":"serious","fight:a4:heckles:3":"happy","fight:a4:winLine":"happy","fight:a5:heckles:0":"happy","fight:a5:heckles:1":"happy","fight:a5:heckles:2":"serious","fight:a5:heckles:3":"happy","fight:a5:winLine":"happy","fight:a6:heckles:0":"happy","fight:a6:heckles:1":"happy","fight:a6:heckles:2":"serious","fight:a6:heckles:3":"happy","fight:a6:winLine":"happy","fight:h2:heckles:0":"smug","fight:h2:heckles:1":"doubt","fight:h2:heckles:2":"doubt","fight:h2:heckles:3":"doubt","fight:h2:winLine":"happy","fight:a7:heckles:0":"happy","fight:a7:heckles:1":"happy","fight:a7:heckles:2":"serious","fight:a7:heckles:3":"happy","fight:a7:winLine":"happy","fight:a8:heckles:0":"happy","fight:a8:heckles:1":"happy","fight:a8:heckles:2":"serious","fight:a8:heckles:3":"happy","fight:a8:winLine":"happy","fight:a9:heckles:0":"doubt","fight:a9:heckles:1":"doubt","fight:a9:heckles:2":"doubt","fight:a9:heckles:3":"doubt","fight:a9:winLine":"happy","fight:a46:heckles:0":"smug","fight:a46:heckles:1":"doubt","fight:a46:heckles:2":"doubt","fight:a46:heckles:3":"doubt","fight:a46:winLine":"happy","fight:h3:heckles:0":"doubt","fight:h3:heckles:1":"smug","fight:h3:heckles:2":"doubt","fight:h3:heckles:3":"doubt","fight:h3:winLine":"happy","fight:a10:heckles:0":"doubt","fight:a10:heckles:1":"doubt","fight:a10:heckles:2":"doubt","fight:a10:heckles:3":"doubt","fight:a10:winLine":"happy","fight:a11:heckles:0":"doubt","fight:a11:heckles:1":"doubt","fight:a11:heckles:2":"doubt","fight:a11:heckles:3":"doubt","fight:a11:winLine":"happy","fight:a12:heckles:0":"doubt","fight:a12:heckles:1":"doubt","fight:a12:heckles:2":"doubt","fight:a12:heckles:3":"doubt","fight:a12:winLine":"happy","fight:a50:heckles:0":"happy","fight:a50:heckles:1":"happy","fight:a50:heckles:2":"happy","fight:a50:heckles:3":"serious","fight:a50:winLine":"happy","fight:h4:heckles:0":"doubt","fight:h4:heckles:1":"smug","fight:h4:heckles:2":"doubt","fight:h4:heckles:3":"doubt","fight:h4:winLine":"happy","fight:a-meetup-busan:heckles:0":"happy","fight:a-meetup-busan:heckles:1":"happy","fight:a-meetup-busan:heckles:2":"happy","fight:a-meetup-busan:heckles:3":"happy","fight:a-meetup-busan:winLine":"happy","fight:a-meetup-daegu:heckles:0":"doubt","fight:a-meetup-daegu:heckles:1":"doubt","fight:a-meetup-daegu:heckles:2":"doubt","fight:a-meetup-daegu:heckles:3":"doubt","fight:a-meetup-daegu:winLine":"happy","fight:a-meetup-changwon:heckles:0":"doubt","fight:a-meetup-changwon:heckles:1":"doubt","fight:a-meetup-changwon:heckles:2":"doubt","fight:a-meetup-changwon:heckles:3":"doubt","fight:a-meetup-changwon:winLine":"happy","fight:a-meetup-incheon:heckles:0":"happy","fight:a-meetup-incheon:heckles:1":"happy","fight:a-meetup-incheon:heckles:2":"happy","fight:a-meetup-incheon:heckles:3":"happy","fight:a-meetup-incheon:winLine":"happy","fight:a-meetup-geoje:heckles:0":"happy","fight:a-meetup-geoje:heckles:1":"happy","fight:a-meetup-geoje:heckles:2":"happy","fight:a-meetup-geoje:heckles:3":"happy","fight:a-meetup-geoje:winLine":"happy","fight:a-meetup-cheonan:heckles:0":"happy","fight:a-meetup-cheonan:heckles:1":"happy","fight:a-meetup-cheonan:heckles:2":"happy","fight:a-meetup-cheonan:heckles:3":"happy","fight:a-meetup-cheonan:winLine":"happy","fight:a-meetup-suwon:heckles:0":"doubt","fight:a-meetup-suwon:heckles:1":"doubt","fight:a-meetup-suwon:heckles:2":"doubt","fight:a-meetup-suwon:heckles:3":"doubt","fight:a-meetup-suwon:winLine":"happy","fight:h-meetup-seoul:heckles:0":"happy","fight:h-meetup-seoul:heckles:1":"happy","fight:h-meetup-seoul:heckles:2":"serious","fight:h-meetup-seoul:heckles:3":"happy","fight:h-meetup-seoul:winLine":"happy","fight:a13:heckles:0":"happy","fight:a13:heckles:1":"happy","fight:a13:heckles:2":"happy","fight:a13:heckles:3":"happy","fight:a13:winLine":"happy","fight:a14:heckles:0":"doubt","fight:a14:heckles:1":"doubt","fight:a14:heckles:2":"doubt","fight:a14:heckles:3":"doubt","fight:a14:winLine":"happy","fight:a15:heckles:0":"smug","fight:a15:heckles:1":"smug","fight:a15:heckles:2":"smug","fight:a15:heckles:3":"smug","fight:a15:winLine":"surprised","fight:a54:heckles:0":"smug","fight:a54:heckles:1":"doubt","fight:a54:heckles:2":"doubt","fight:a54:heckles:3":"doubt","fight:a54:winLine":"happy","fight:a55:heckles:0":"happy","fight:a55:heckles:1":"happy","fight:a55:heckles:2":"happy","fight:a55:heckles:3":"happy","fight:a55:winLine":"happy","fight:h5:heckles:0":"doubt","fight:h5:heckles:1":"doubt","fight:h5:heckles:2":"doubt","fight:h5:heckles:3":"doubt","fight:h5:winLine":"happy","fight:a16:heckles:0":"happy","fight:a16:heckles:1":"happy","fight:a16:heckles:2":"happy","fight:a16:heckles:3":"happy","fight:a16:winLine":"happy","fight:a17:heckles:0":"happy","fight:a17:heckles:1":"happy","fight:a17:heckles:2":"happy","fight:a17:heckles:3":"doubt","fight:a17:winLine":"happy","fight:a18:heckles:0":"happy","fight:a18:heckles:1":"happy","fight:a18:heckles:2":"happy","fight:a18:heckles:3":"happy","fight:a18:winLine":"happy","fight:a59:heckles:0":"smug","fight:a59:heckles:1":"doubt","fight:a59:heckles:2":"doubt","fight:a59:heckles:3":"doubt","fight:a59:winLine":"happy","fight:a60:heckles:0":"happy","fight:a60:heckles:1":"happy","fight:a60:heckles:2":"happy","fight:a60:heckles:3":"happy","fight:a60:winLine":"happy","fight:h6:heckles:0":"doubt","fight:h6:heckles:1":"doubt","fight:h6:heckles:2":"doubt","fight:h6:heckles:3":"doubt","fight:h6:winLine":"happy","fight:a19:heckles:0":"serious","fight:a19:heckles:1":"surprised","fight:a19:heckles:2":"happy","fight:a19:heckles:3":"serious","fight:a19:winLine":"happy","fight:a20:heckles:0":"serious","fight:a20:heckles:1":"serious","fight:a20:heckles:2":"serious","fight:a20:heckles:3":"serious","fight:a20:winLine":"happy","fight:a21:heckles:0":"smug","fight:a21:heckles:1":"smug","fight:a21:heckles:2":"doubt","fight:a21:heckles:3":"doubt","fight:a21:winLine":"happy","fight:a64:heckles:0":"doubt","fight:a64:heckles:1":"doubt","fight:a64:heckles:2":"doubt","fight:a64:heckles:3":"doubt","fight:a64:winLine":"happy","fight:a65:heckles:0":"doubt","fight:a65:heckles:1":"doubt","fight:a65:heckles:2":"doubt","fight:a65:heckles:3":"doubt","fight:a65:winLine":"happy","fight:a66:heckles:0":"happy","fight:a66:heckles:1":"happy","fight:a66:heckles:2":"happy","fight:a66:heckles:3":"happy","fight:a66:winLine":"happy","fight:h7:heckles:0":"smug","fight:h7:heckles:1":"doubt","fight:h7:heckles:2":"doubt","fight:h7:heckles:3":"doubt","fight:h7:winLine":"happy","fight:a112:heckles:0":"serious","fight:a112:heckles:1":"serious","fight:a112:heckles:2":"serious","fight:a112:heckles:3":"happy","fight:a112:winLine":"happy","fight:a113:heckles:0":"serious","fight:a113:heckles:1":"happy","fight:a113:heckles:2":"serious","fight:a113:heckles:3":"happy","fight:a113:winLine":"happy","fight:a114:heckles:0":"serious","fight:a114:heckles:1":"surprised","fight:a114:heckles:2":"happy","fight:a114:heckles:3":"serious","fight:a114:winLine":"happy","fight:a115:heckles:0":"happy","fight:a115:heckles:1":"happy","fight:a115:heckles:2":"happy","fight:a115:heckles:3":"happy","fight:a115:winLine":"happy","fight:a116:heckles:0":"happy","fight:a116:heckles:1":"happy","fight:a116:heckles:2":"happy","fight:a116:heckles:3":"happy","fight:a116:winLine":"happy","fight:a117:heckles:0":"happy","fight:a117:heckles:1":"serious","fight:a117:heckles:2":"serious","fight:a117:heckles:3":"happy","fight:a117:winLine":"happy","fight:h-broadcast:heckles:0":"doubt","fight:h-broadcast:heckles:1":"doubt","fight:h-broadcast:heckles:2":"doubt","fight:h-broadcast:heckles:3":"doubt","fight:h-broadcast:winLine":"happy","fight:a22:heckles:0":"doubt","fight:a22:heckles:1":"doubt","fight:a22:heckles:2":"doubt","fight:a22:heckles:3":"doubt","fight:a22:winLine":"happy","fight:a23:heckles:0":"doubt","fight:a23:heckles:1":"doubt","fight:a23:heckles:2":"doubt","fight:a23:heckles:3":"doubt","fight:a23:winLine":"happy","fight:a24:heckles:0":"doubt","fight:a24:heckles:1":"doubt","fight:a24:heckles:2":"doubt","fight:a24:heckles:3":"doubt","fight:a24:winLine":"happy","fight:a70:heckles:0":"smug","fight:a70:heckles:1":"doubt","fight:a70:heckles:2":"doubt","fight:a70:heckles:3":"doubt","fight:a70:winLine":"happy","fight:a71:heckles:0":"happy","fight:a71:heckles:1":"happy","fight:a71:heckles:2":"happy","fight:a71:heckles:3":"happy","fight:a71:winLine":"happy","fight:a72:heckles:0":"smug","fight:a72:heckles:1":"doubt","fight:a72:heckles:2":"doubt","fight:a72:heckles:3":"doubt","fight:a72:winLine":"happy","fight:h8:heckles:0":"smug","fight:h8:heckles:1":"smug","fight:h8:heckles:2":"smug","fight:h8:heckles:3":"doubt","fight:h8:winLine":"happy","fight:a25:heckles:0":"happy","fight:a25:heckles:1":"happy","fight:a25:heckles:2":"happy","fight:a25:heckles:3":"happy","fight:a25:winLine":"happy","fight:a26:heckles:0":"doubt","fight:a26:heckles:1":"doubt","fight:a26:heckles:2":"doubt","fight:a26:heckles:3":"doubt","fight:a26:winLine":"happy","fight:a27:heckles:0":"doubt","fight:a27:heckles:1":"doubt","fight:a27:heckles:2":"doubt","fight:a27:heckles:3":"doubt","fight:a27:winLine":"happy","fight:a76:heckles:0":"doubt","fight:a76:heckles:1":"doubt","fight:a76:heckles:2":"doubt","fight:a76:heckles:3":"smug","fight:a76:winLine":"happy","fight:a77:heckles:0":"doubt","fight:a77:heckles:1":"doubt","fight:a77:heckles:2":"doubt","fight:a77:heckles:3":"doubt","fight:a77:winLine":"happy","fight:a78:heckles:0":"happy","fight:a78:heckles:1":"happy","fight:a78:heckles:2":"happy","fight:a78:heckles:3":"happy","fight:a78:winLine":"happy","fight:a79:heckles:0":"doubt","fight:a79:heckles:1":"doubt","fight:a79:heckles:2":"doubt","fight:a79:heckles:3":"doubt","fight:a79:winLine":"happy","fight:h9:heckles:0":"smug","fight:h9:heckles:1":"smug","fight:h9:heckles:2":"smug","fight:h9:heckles:3":"smug","fight:h9:winLine":"happy","fight:a28:heckles:0":"doubt","fight:a28:heckles:1":"doubt","fight:a28:heckles:2":"smug","fight:a28:heckles:3":"doubt","fight:a28:winLine":"happy","fight:a29:heckles:0":"happy","fight:a29:heckles:1":"serious","fight:a29:heckles:2":"serious","fight:a29:heckles:3":"happy","fight:a29:winLine":"happy","fight:a30:heckles:0":"serious","fight:a30:heckles:1":"happy","fight:a30:heckles:2":"serious","fight:a30:heckles:3":"happy","fight:a30:winLine":"happy","fight:a83:heckles:0":"doubt","fight:a83:heckles:1":"doubt","fight:a83:heckles:2":"doubt","fight:a83:heckles:3":"doubt","fight:a83:winLine":"happy","fight:a84:heckles:0":"doubt","fight:a84:heckles:1":"doubt","fight:a84:heckles:2":"doubt","fight:a84:heckles:3":"doubt","fight:a84:winLine":"happy","fight:a85:heckles:0":"happy","fight:a85:heckles:1":"serious","fight:a85:heckles:2":"serious","fight:a85:heckles:3":"happy","fight:a85:winLine":"happy","fight:a86:heckles:0":"doubt","fight:a86:heckles:1":"doubt","fight:a86:heckles:2":"doubt","fight:a86:heckles:3":"smug","fight:a86:winLine":"happy","fight:h10:heckles:0":"doubt","fight:h10:heckles:1":"doubt","fight:h10:heckles:2":"doubt","fight:h10:heckles:3":"smug","fight:h10:winLine":"happy","fight:a31:heckles:0":"doubt","fight:a31:heckles:1":"doubt","fight:a31:heckles:2":"doubt","fight:a31:heckles:3":"doubt","fight:a31:winLine":"happy","fight:a32:heckles:0":"happy","fight:a32:heckles:1":"serious","fight:a32:heckles:2":"happy","fight:a32:heckles:3":"serious","fight:a32:winLine":"happy","fight:a33:heckles:0":"happy","fight:a33:heckles:1":"happy","fight:a33:heckles:2":"happy","fight:a33:heckles:3":"happy","fight:a33:winLine":"happy","fight:a90:heckles:0":"doubt","fight:a90:heckles:1":"doubt","fight:a90:heckles:2":"doubt","fight:a90:heckles:3":"doubt","fight:a90:winLine":"happy","fight:a91:heckles:0":"doubt","fight:a91:heckles:1":"doubt","fight:a91:heckles:2":"doubt","fight:a91:heckles:3":"doubt","fight:a91:winLine":"happy","fight:a92:heckles:0":"doubt","fight:a92:heckles:1":"doubt","fight:a92:heckles:2":"doubt","fight:a92:heckles:3":"doubt","fight:a92:winLine":"happy","fight:a93:heckles:0":"doubt","fight:a93:heckles:1":"doubt","fight:a93:heckles:2":"doubt","fight:a93:heckles:3":"doubt","fight:a93:winLine":"happy","fight:a94:heckles:0":"doubt","fight:a94:heckles:1":"doubt","fight:a94:heckles:2":"doubt","fight:a94:heckles:3":"doubt","fight:a94:winLine":"happy","fight:h11:heckles:0":"doubt","fight:h11:heckles:1":"doubt","fight:h11:heckles:2":"doubt","fight:h11:heckles:3":"doubt","fight:h11:winLine":"happy","fight:a34:heckles:0":"doubt","fight:a34:heckles:1":"doubt","fight:a34:heckles:2":"doubt","fight:a34:heckles:3":"doubt","fight:a34:winLine":"happy","fight:a35:heckles:0":"doubt","fight:a35:heckles:1":"doubt","fight:a35:heckles:2":"doubt","fight:a35:heckles:3":"doubt","fight:a35:winLine":"happy","fight:a36:heckles:0":"happy","fight:a36:heckles:1":"serious","fight:a36:heckles:2":"serious","fight:a36:heckles:3":"happy","fight:a36:winLine":"happy","fight:a98:heckles:0":"doubt","fight:a98:heckles:1":"doubt","fight:a98:heckles:2":"doubt","fight:a98:heckles:3":"doubt","fight:a98:winLine":"happy","fight:a99:heckles:0":"doubt","fight:a99:heckles:1":"doubt","fight:a99:heckles:2":"doubt","fight:a99:heckles:3":"doubt","fight:a99:winLine":"happy","fight:a100:heckles:0":"happy","fight:a100:heckles:1":"serious","fight:a100:heckles:2":"serious","fight:a100:heckles:3":"happy","fight:a100:winLine":"happy","fight:a101:heckles:0":"doubt","fight:a101:heckles:1":"doubt","fight:a101:heckles:2":"doubt","fight:a101:heckles:3":"doubt","fight:a101:winLine":"happy","fight:a102:heckles:0":"happy","fight:a102:heckles:1":"happy","fight:a102:heckles:2":"happy","fight:a102:heckles:3":"happy","fight:a102:winLine":"happy","fight:h12:heckles:0":"doubt","fight:h12:heckles:1":"smug","fight:h12:heckles:2":"smug","fight:h12:heckles:3":"doubt","fight:h12:winLine":"happy","fight:a37:heckles:0":"doubt","fight:a37:heckles:1":"doubt","fight:a37:heckles:2":"doubt","fight:a37:heckles:3":"doubt","fight:a37:winLine":"happy","fight:a38:heckles:0":"doubt","fight:a38:heckles:1":"doubt","fight:a38:heckles:2":"doubt","fight:a38:heckles:3":"doubt","fight:a38:winLine":"happy","fight:a39:heckles:0":"doubt","fight:a39:heckles:1":"doubt","fight:a39:heckles:2":"doubt","fight:a39:heckles:3":"doubt","fight:a39:winLine":"happy","fight:a106:heckles:0":"happy","fight:a106:heckles:1":"serious","fight:a106:heckles:2":"serious","fight:a106:heckles:3":"happy","fight:a106:winLine":"happy","fight:a107:heckles:0":"happy","fight:a107:heckles:1":"serious","fight:a107:heckles:2":"happy","fight:a107:heckles:3":"happy","fight:a107:winLine":"happy","fight:a108:heckles:0":"doubt","fight:a108:heckles:1":"doubt","fight:a108:heckles:2":"doubt","fight:a108:heckles:3":"doubt","fight:a108:winLine":"happy","fight:a109:heckles:0":"happy","fight:a109:heckles:1":"serious","fight:a109:heckles:2":"happy","fight:a109:heckles:3":"happy","fight:a109:winLine":"happy","fight:a110:heckles:0":"serious","fight:a110:heckles:1":"serious","fight:a110:heckles:2":"happy","fight:a110:heckles:3":"serious","fight:a110:winLine":"happy","fight:a111:heckles:0":"happy","fight:a111:heckles:1":"happy","fight:a111:heckles:2":"happy","fight:a111:heckles:3":"happy","fight:a111:winLine":"happy","fight:h13:heckles:0":"doubt","fight:h13:heckles:1":"doubt","fight:h13:heckles:2":"doubt","fight:h13:heckles:3":"doubt","fight:h13:winLine":"happy","fight:a-lecturenote-hecate:heckles:0":"serious","fight:a-lecturenote-hecate:heckles:1":"happy","fight:a-lecturenote-hecate:heckles:2":"happy","fight:a-lecturenote-hecate:heckles:3":"serious","fight:a-lecturenote-hecate:winLine":"happy","fight:a-lecturenote-serona:heckles:0":"happy","fight:a-lecturenote-serona:heckles:1":"happy","fight:a-lecturenote-serona:heckles:2":"serious","fight:a-lecturenote-serona:heckles:3":"serious","fight:a-lecturenote-serona:winLine":"happy","fight:a-lecturenote-jung:heckles:0":"happy","fight:a-lecturenote-jung:heckles:1":"happy","fight:a-lecturenote-jung:heckles:2":"happy","fight:a-lecturenote-jung:heckles:3":"serious","fight:a-lecturenote-jung:winLine":"happy","fight:h-lecturenote-kim:heckles:0":"happy","fight:h-lecturenote-kim:heckles:1":"happy","fight:h-lecturenote-kim:heckles:2":"happy","fight:h-lecturenote-kim:heckles:3":"happy","fight:h-lecturenote-kim:winLine":"happy","fight:h-future-kali:heckles:0":"serious","fight:h-future-kali:heckles:1":"serious","fight:h-future-kali:heckles:2":"happy","fight:h-future-kali:heckles:3":"happy","fight:h-future-kali:winLine":"happy"},"faceMap":{"spriteSuffixes":{"doubt":"aud-<id>.png (base)","happy":"aud-<id>-happy.png","serious":"aud-<id>-serious.png (optional, main cast)","surprised":"aud-<id>-surprised.png (optional, main cast)"},"resolution":{"happy":{"prefer":"-happy","fallback":"base doubt sprite + \"😊\" emote"},"doubt":{"prefer":"base (no suffix)","fallback":"base"},"smug":{"prefer":"base (no suffix)","fallback":"base + \"😏\" emote; if role is supporter/helper never use smug"},"serious":{"prefer":"-serious","fallback":"base doubt sprite + calm \"💭\" emote (do not use -happy)"},"surprised":{"prefer":"-surprised","fallback":"-happy sprite + \"❗\" emote, else base + \"❗\""},"sad":{"prefer":"-sad (not planned)","fallback":"base doubt sprite + \"💧\" emote"}},"roleDefaults":{"skeptic":"doubt","critic":"doubt","heckler":"smug","supporter":"happy","helper":"serious","family":"happy"},"rules":["Pick the sprite per line from moods[key], not per character.","A supporter/helper/family character must never show the doubt/smug base sprite without an emote when the mood is happy or serious: use the -happy sprite for happy; use serious fallback (base + \"💭\") only if no -serious sprite.","Skeptic/critic/heckler characters show the base sprite for doubt/smug and -happy only for happy lines (defeat, praise).","Fight lines without a moods entry fall back to roleDefaults."]}};
+GAME_DATA.lineFaces={"roles":{"a1":{"role":"family","name":"여동생","venue":"family"},"a2":{"role":"family","name":"남동생","venue":"family"},"a3":{"role":"family","name":"엄마","venue":"family"},"h1":{"role":"family","name":"할머니","venue":"family"},"a4":{"role":"supporter","name":"풍선 담당 지호","venue":"party"},"a5":{"role":"supporter","name":"운동 친구 서윤","venue":"party"},"a6":{"role":"supporter","name":"케이크 민재","venue":"party"},"h2":{"role":"skeptic","name":"생일 하준이","venue":"party"},"a7":{"role":"supporter","name":"짝꿍 수빈","venue":"school"},"a8":{"role":"supporter","name":"반장 도윤","venue":"school"},"a9":{"role":"critic","name":"깐깐 선배 정아","venue":"school"},"a46":{"role":"skeptic","name":"체육부 승민","venue":"school"},"h3":{"role":"critic","name":"박 선생님","venue":"school"},"a10":{"role":"skeptic","name":"노트북 지안","venue":"cafe"},"a11":{"role":"skeptic","name":"디저트 은서","venue":"cafe"},"a12":{"role":"critic","name":"창가 지민","venue":"cafe"},"a50":{"role":"supporter","name":"바리스타 소영","venue":"cafe"},"h4":{"role":"skeptic","name":"카페 단골 현우","venue":"cafe"},"a-meetup-busan":{"role":"supporter","name":"에지","venue":"meetup"},"a-meetup-daegu":{"role":"critic","name":"재현 형","venue":"meetup"},"a-meetup-changwon":{"role":"critic","name":"빨간 모자","venue":"meetup"},"a-meetup-incheon":{"role":"supporter","name":"비타민","venue":"meetup"},"a-meetup-geoje":{"role":"supporter","name":"책가방 민호","venue":"meetup"},"a-meetup-cheonan":{"role":"supporter","name":"진수 씨","venue":"meetup"},"a-meetup-suwon":{"role":"critic","name":"착한 천사","venue":"meetup"},"h-meetup-seoul":{"role":"supporter","name":"마술삼일","venue":"meetup"},"a13":{"role":"supporter","name":"열성팬 보람","venue":"theater"},"a14":{"role":"critic","name":"앞줄 영숙 씨","venue":"theater"},"a15":{"role":"skeptic","name":"지하철 하린","venue":"theater"},"a54":{"role":"critic","name":"대본 작가 서연","venue":"theater"},"a55":{"role":"supporter","name":"커튼콜 팬 유나","venue":"theater"},"h5":{"role":"critic","name":"강 마술사님","venue":"theater"},"a16":{"role":"supporter","name":"칼리 열혈팬 1223호","venue":"festival"},"a17":{"role":"family","name":"치킨 동혁","venue":"festival"},"a18":{"role":"supporter","name":"후배 지우","venue":"festival"},"a59":{"role":"skeptic","name":"밴드 팬 서진","venue":"festival"},"a60":{"role":"supporter","name":"야광봉 팬 하은","venue":"festival"},"h6":{"role":"skeptic","name":"달려온 승우","venue":"festival"},"a19":{"role":"helper","name":"진행자 태훈","venue":"audition"},"a20":{"role":"helper","name":"카메라 석진","venue":"audition"},"a21":{"role":"skeptic","name":"라이벌 유찬","venue":"audition"},"a64":{"role":"critic","name":"초대 작가 다인","venue":"audition"},"a65":{"role":"critic","name":"본방 사수 민규","venue":"audition"},"a66":{"role":"supporter","name":"방청객 소희","venue":"audition"},"h7":{"role":"critic","name":"심사위원 윤 씨","venue":"audition"},"a112":{"role":"helper","name":"방송 PD 승기","venue":"broadcast"},"a113":{"role":"helper","name":"방송 작가 가은","venue":"broadcast"},"a114":{"role":"helper","name":"음향 감독 도현","venue":"broadcast"},"a115":{"role":"supporter","name":"응원단장 나리","venue":"broadcast"},"a116":{"role":"supporter","name":"열정 패널 규리","venue":"broadcast"},"a117":{"role":"helper","name":"조명 감독 태산","venue":"broadcast"},"h-broadcast":{"role":"critic","name":"오 패널님","venue":"broadcast"},"a22":{"role":"skeptic","name":"펜 앤 텔로","venue":"vegas"},"a23":{"role":"skeptic","name":"데릴","venue":"vegas"},"a24":{"role":"critic","name":"경비 대니 씨","venue":"vegas"},"a70":{"role":"skeptic","name":"투숙객 에밀리","venue":"vegas"},"a71":{"role":"supporter","name":"쇼 팬 소피아","venue":"vegas"},"a72":{"role":"skeptic","name":"관광객 마크","venue":"vegas"},"h8":{"role":"critic","name":"데이비드 카퍼필","venue":"vegas"},"a25":{"role":"supporter","name":"뮤지컬 팬 제인","venue":"broadway"},"a26":{"role":"skeptic","name":"뉴욕 관광객 톰","venue":"broadway"},"a27":{"role":"critic","name":"평론가 한 씨","venue":"broadway"},"a76":{"role":"critic","name":"티켓 수집가 벤","venue":"broadway"},"a77":{"role":"critic","name":"발레 클로이","venue":"broadway"},"a78":{"role":"supporter","name":"오케스트라 헨리","venue":"broadway"},"a79":{"role":"critic","name":"디자이너 미아","venue":"broadway"},"h9":{"role":"skeptic","name":"객석 리사","venue":"broadway"},"a28":{"role":"skeptic","name":"돌계단 수호","venue":"moon"},"a29":{"role":"helper","name":"무전 담당 보라","venue":"moon"},"a30":{"role":"helper","name":"탐사차 기사님","venue":"moon"},"a83":{"role":"critic","name":"윤 박사님","venue":"moon"},"a84":{"role":"critic","name":"수집가 로이","venue":"moon"},"a85":{"role":"helper","name":"정비 담당 대철","venue":"moon"},"a86":{"role":"skeptic","name":"관광객 하나","venue":"moon"},"h10":{"role":"critic","name":"목욕탕 아저씨","venue":"moon"},"a31":{"role":"skeptic","name":"서퍼 한울","venue":"sun"},"a32":{"role":"helper","name":"태양 가이드 솔","venue":"sun"},"a33":{"role":"supporter","name":"사진가 도하","venue":"sun"},"a90":{"role":"critic","name":"연구원 시우","venue":"sun"},"a91":{"role":"skeptic","name":"여행객 해리","venue":"sun"},"a92":{"role":"critic","name":"관측자 이든","venue":"sun"},"a93":{"role":"skeptic","name":"파도 서퍼 하람","venue":"sun"},"a94":{"role":"skeptic","name":"사진작가 모아","venue":"sun"},"h11":{"role":"skeptic","name":"햇살 해나","venue":"sun"},"a34":{"role":"skeptic","name":"샵 손님 하늘","venue":"galaxy"},"a35":{"role":"skeptic","name":"파일럿 우진","venue":"galaxy"},"a36":{"role":"helper","name":"별자리 선생님","venue":"galaxy"},"a98":{"role":"critic","name":"음악가 세영","venue":"galaxy"},"a99":{"role":"critic","name":"사진가 지후","venue":"galaxy"},"a100":{"role":"helper","name":"안내원 다솜","venue":"galaxy"},"a101":{"role":"skeptic","name":"레이서 건우","venue":"galaxy"},"a102":{"role":"supporter","name":"여행자 수아","venue":"galaxy"},"h12":{"role":"skeptic","name":"타코야키 가온","venue":"galaxy"},"a37":{"role":"skeptic","name":"농장 게임만 하는 칼리","venue":"multiverse"},"a38":{"role":"skeptic","name":"연습실 앞의 나","venue":"multiverse"},"a39":{"role":"skeptic","name":"카드 접은 나","venue":"multiverse"},"a106":{"role":"supporter","name":"용기 낸 나","venue":"multiverse"},"a107":{"role":"supporter","name":"객석의 나","venue":"multiverse"},"a108":{"role":"skeptic","name":"잠시 쉰 나","venue":"multiverse"},"a109":{"role":"supporter","name":"막 시작한 나","venue":"multiverse"},"a110":{"role":"helper","name":"계속한 칼리","venue":"multiverse"},"a111":{"role":"supporter","name":"박수 보내는 나","venue":"multiverse"},"h13":{"role":"skeptic","name":"의심 많은 나","venue":"multiverse"},"a-lecturenote-hecate":{"role":"helper","name":"헤카테","venue":"lecturenote"},"a-lecturenote-serona":{"role":"helper","name":"세로나","venue":"lecturenote"},"a-lecturenote-jung":{"role":"helper","name":"정희수","venue":"lecturenote"},"h-lecturenote-kim":{"role":"family","name":"김정명","venue":"lecturenote"},"h-future-kali":{"role":"supporter","name":"미래의 칼리","venue":"future"}},"lines":{"a4":{"name":"풍선 담당 지호","role":"supporter","heckles":["풍선 다 불어 놨어!","풍선은 아직 안 터져.","한 번 더, 풍선은 두고!","우리가 더 크게 갈게!"],"winLine":"풍선은 안 터졌는데 우리가 터졌다!"},"a5":{"name":"운동 친구 서윤","role":"supporter","heckles":["내 친구 생일이야.","마술 부탁해, 칼리.","오늘 분위기 살려 줘.","운동하다 알게 된 사이야."],"winLine":"오늘 분위기, 네가 가져갔어."},"a6":{"name":"케이크 민재","role":"supporter","heckles":["초는 마술 끝나고 끄자.","2 하트, 케이크에 올릴까.","이름 맞히면 내가 자른다.","크림보다 이 손이 달다."],"winLine":"초보다 먼저 박수다!"},"a7":{"name":"짝꿍 수빈","role":"supporter","heckles":["교실 때보다 더 커 보여.","짝꿍 자리, 여기로 옮길게.","그림 마리 수, 또 변해?","축제라 심장이 먼저 뛴다."],"winLine":"교실 소문, 진짜였어!"},"a8":{"name":"반장 도윤","role":"supporter","heckles":["학교가 우리 반을 불렀대.","응원봉은 마지막에 켤게.","소문 낸 건 나 맞다.","운동장에서도 잘 보여."],"winLine":"응원봉, 지금 켠다!"},"a50":{"name":"바리스타 소영","role":"supporter","heckles":["커피는 식기 전에요.","손님들 시선이 모였어요.","손 잘 보이게 서요.","한 잔은 서비스예요."],"winLine":"오늘 손이 빛났네요."},"a-meetup-busan":{"name":"에지","role":"supporter","heckles":["부산 에지야. 편하게 해.","강의는 같이 하는 거야.","심리 마술, 네 말로 해.","칼리야, 긴장 풀어."],"winLine":"심리랑 교육, 네 말로 해도 돼."},"a-meetup-incheon":{"name":"비타민","role":"supporter","heckles":["인천 비타민이다.","잘 부탁해, 칼리야.","정갈하게 한 번에 가자.","소재는 다양하게 가자."],"winLine":"날아가는 비둘기도 스냅 한 번에 돌아오게 하는 마술사 비타민입니다"},"a-meetup-geoje":{"name":"책가방 민호","role":"supporter","heckles":["바닷바람 말고 손을 보러 왔어요.","초보는 눈부터죠?","입문 순서는 나중에 물을게요.","자리만 있으면 충분해요."],"winLine":"먼 길, 아깝지 않아요."},"a-meetup-cheonan":{"name":"진수 씨","role":"supporter","heckles":["간식은 공연 뒤에 열어요.","기차는 다음 걸로 바꿀게요.","하나만 더, 진짜 마지막요.","봉지는 접어 두고 볼게요."],"winLine":"간식보다 손이 남네요."},"h-meetup-seoul":{"name":"마술삼일","role":"supporter","heckles":["서울에서 왔다, 칼리야.","앉아. 편하게 해.","관객이 해낸 듯 가자.","마지막은 즐겁게 봐."],"winLine":"칼리야, 소극장도 한 번 서 봐."},"a13":{"name":"열성팬 보람","role":"supporter","heckles":["앞줄, 박수 준비됐어요!","실수해도 박수 칠게요!","더 크게 해도 돼요!","앞줄에서 다 보고 있어요!"],"winLine":"앞줄, 박수 준비됐어요!"},"a55":{"name":"커튼콜 팬 유나","role":"supporter","heckles":["커튼콜은 제가 기다려요.","박수는 아껴 두지 않을게요.","끝까지 보고 있어요.","한 번 더도 좋아요."],"winLine":"커튼콜, 부탁해요!"},"a16":{"name":"칼리 열혈팬 1223호","role":"supporter","heckles":["우와! 현실 CG인가..?","이정도면 마술이 아니고","마법 아니냐구요!!..","눈으로 쫓을 수가 없어요!.."],"winLine":"숨 차요. 그래도 최고예요."},"a18":{"name":"후배 지우","role":"supporter","heckles":["선배, 이쪽도 봐 주세요.","멀리서 뛰어온 사람 많아요.","우와, 손이 안 보여요.","소리 지를게요. 살짝만요."],"winLine":"선배, 축제 접었습니다!"},"a60":{"name":"야광봉 팬 하은","role":"supporter","heckles":["불빛은 손 따라 움직일게요.","멀리서도 이 색이 보여요.","야광봉, 박자에 맞출게요.","열혈팬 옆자리를 뺏겼어요."],"winLine":"불빛이 손을 쫓아요!"},"a19":{"name":"진행자 태훈","role":"helper","heckles":["다음 참가자입니다, 칼리!","다들 즉석인 거 알아요.","즉석인 거, 다들 알아요.","다음 참가자, 칼리!"],"winLine":"다음 참가자입니다, 칼리!"},"a20":{"name":"카메라 석진","role":"helper","heckles":["즉석이라 줌은 천천히요.","손만 프레임에 넣을게요.","웃음 나오면 바로 잡아요.","컷 전에 고개만 유지해요."],"winLine":"이 앵글, 남길게요."},"a66":{"name":"방청객 소희","role":"supporter","heckles":["웃어도 되는 장면이죠?","방청석이 먼저 반응해요.","박수는 장면 끝에 모을게요.","즉석인데 다들 편해 보여요."],"winLine":"웃음이 먼저 나갔어요."},"a112":{"name":"방송 PD 승기","role":"helper","heckles":["오늘은 유튜브 방송이에요.","준비되면 고개만 끄덕여요.","유튜브 방송이에요.","고개만 끄덕여 주세요."],"winLine":"오늘은 유튜브 방송이에요."},"a113":{"name":"방송 작가 가은","role":"helper","heckles":["빠른 말이 오히려 맞아요.","이 속도가 맛이에요.","이 템포, 큐에 남길게.","가르치는 말투가 살아요."],"winLine":"빠른 그대로가 좋아요."},"a114":{"name":"음향 감독 도현","role":"helper","heckles":["빨라도 발음은 살아요.","숨 고르는 틈만 주세요.","마이크는 템포를 따라가요.","작게 말해도 다 잡혀요."],"winLine":"속도까지 예쁘게 담겼어요."},"a115":{"name":"응원단장 나리","role":"supporter","heckles":["이 속도, 박수가 따라가요.","웃음 나오면 바로 칠게요.","화면 너머도 듣고 있어요.","노련한 말이 더 신나요."],"winLine":"박수도 그 템포예요!"},"a116":{"name":"열정 패널 규리","role":"supporter","heckles":["느리면 오히려 어색해요.","설명하는 손이 좋아요.","저도 따라 해 보고 싶네요.","이 속도가 칼리네요."],"winLine":"가르치는 맛이 나네요."},"a117":{"name":"조명 감독 태산","role":"helper","heckles":["손이 빠른 쪽에 빛을 둘게요.","그림자만 안 남으면 돼요.","설명하는 얼굴도 밝혀요.","피날레 때 한 칸 올릴게요."],"winLine":"빛이 손을 따라갔어요."},"a71":{"name":"쇼 팬 소피아","role":"supporter","heckles":["유쾌한 쪽이 더 좋아요.","앰비셔스, 다시 올라오나요?","팬이라 숨부터 골랐어요.","네 색이면 충분해요."],"winLine":"이 쇼, 내 기준으로 남아요."},"a25":{"name":"뮤지컬 팬 제인","role":"supporter","heckles":["신기해서 숨이 막혀요.","욕 대신 브라보가 나와요.","속말이 객석까지 와요.","이 여운, 노래랑 같아요."],"winLine":"브라보, 마음까지요."},"a78":{"name":"오케스트라 헨리","role":"supporter","heckles":["속말이 멜로디처럼 들려요.","큰 감정 뒤에 쉼표가 있네요.","박수는 마지막 음에 칠게요.","신기함이 화음이에요."],"winLine":"이 여운, 한 곡 같아요."},"a29":{"name":"무전 담당 보라","role":"helper","heckles":["돌계단 인원, 계속 늘어요.","바닷바람에도 손은 선명해요.","피날레 때 손 한번 드세요.","무전 대신 박수로 받을게요."],"winLine":"이 인원, 보고 끝났어요."},"a30":{"name":"탐사차 기사님","role":"helper","heckles":["계단 아래도 잘 보여요.","카드가 없어도 쇼는 이어지죠.","와이파이 이름, 방금 변했나요?","즉흥인데 길이 안 끊겨요."],"winLine":"이 코스, 다시 달릴게요."},"a85":{"name":"정비 담당 대철","role":"helper","heckles":["통로 비워 뒀어요. 보여요.","카드 없어도 다음 수가 있죠.","즉흥 도구, 제가 치울게요.","바람에도 손은 안 흔들려요."],"winLine":"현장 상태, 아주 좋아요."},"a32":{"name":"태양 가이드 솔","role":"helper","heckles":["그늘은 두 걸음 왼쪽이에요.","바람 등지고 서 주세요.","눈 감았다 떠도 돼요.","빛길만 제가 막을게요."],"winLine":"그늘 안내, 성공이에요."},"a33":{"name":"사진가 도하","role":"supporter","heckles":["역광이라 눈이 먼저 웃어요.","바람 털고 초점 맞출게요.","손만 실루엣으로 남아요.","그늘에서 한 장 더요."],"winLine":"이 역광, 건졌어요."},"a36":{"name":"별자리 선생님","role":"helper","heckles":["하나, 둘, 셋이면 충분해요.","검정과 빨강, 별 이름 같네요.","해설은 손짓 뒤에 할게요.","줄 서 있는 손도 보여요."],"winLine":"새 별은 이 손짓이에요."},"a100":{"name":"안내원 다솜","role":"helper","heckles":["줄은 손 가리키는 쪽이에요.","하나면 앞으로, 둘은 옆이요.","말이 달라도 안내는 통해요.","막히면 몸짓으로 돌려요."],"winLine":"안내가 웃음으로 끝났어요."},"a102":{"name":"여행자 수아","role":"supporter","heckles":["소원은 빨강으로 할게요.","검정도 나쁘지 않네요.","말이 안 통해도 고를 수 있어요.","손짓이면 여행이 열려요."],"winLine":"고른 색이 도착했어요."},"a106":{"name":"용기 낸 나","role":"supporter","heckles":["용기 낸 나도 나야.","한 걸음이 여기까지 왔어.","떨림은 남고, 발은 움직였어.","거울이 먼저 웃네."],"winLine":"그 한 걸음, 맞았어."},"a107":{"name":"객석의 나","role":"supporter","heckles":["객석의 나도 박수 준비야.","리모컨 대신 손을 봤어.","실수해도 나는 앉아 있어.","엔딩에 내가 일어날게."],"winLine":"객석에서 먼저 일어났어."},"a109":{"name":"막 시작한 나","role":"supporter","heckles":["연습 시작한 날의 나야.","카드가 아직 어색해.","그래도 손은 재미있어.","너 보니까 다시 펼쳤어."],"winLine":"오늘 연습, 여기까지야."},"a110":{"name":"계속한 칼리","role":"helper","heckles":["나는 마술을 계속 건넸어.","그만두고 싶었던 적은 없어.","다시 건네고 싶은 마음.","이제 렉쳐노트로 가."],"winLine":"이제 렉쳐노트로 가."},"a111":{"name":"박수 보내는 나","role":"supporter","heckles":["박수는 내가 아껴 둔 거야.","어느 나라든 손은 같아.","의심 끝난 뒤에 칠게.","계속한 나 옆자리야."],"winLine":"박수, 지금 보낸다."},"a-lecturenote-hecate":{"name":"헤카테","role":"helper","heckles":["재고 칸은 제가 볼게요.","포장 줄, 공연 뒤에 이을게요.","손 위치만 확인했어요.","문의 응대는 끝나고 할게요."],"winLine":"점검보다 손이 먼저네요."},"a-lecturenote-serona":{"name":"세로나","role":"helper","heckles":["마지막 컵앤볼이에요.","모자를 벗을게요.","세로나예요. 샵 매니저도 저고요.","숨겨진 조력자로 있었어요."],"winLine":"카드 몬테의 손도 제 거였어요."},"a-lecturenote-jung":{"name":"정희수","role":"helper","heckles":["판매 전에 마술 한 번, 반응 좋았음.","카운터는 우리가 볼게.","포장은 제가 볼게요.","선반은 정리해 둘게요."],"winLine":"카운터는 우리가 볼게."}},"moods":{"story:tutorial:intro:0":"doubt","story:tutorial:intro:1":"happy","story:tutorial:intro:2":"happy","story:tutorial:intro:3":"happy","story:tutorial:coaching:0":"doubt","story:tutorial:coaching:1":"doubt","story:tutorial:coaching:2":"surprised","story:tutorial:coaching:3":"doubt","story:tutorial:defeat:0":"surprised","story:tutorial:defeat:1":"happy","story:tutorial:defeat:2":"happy","story:tutorial:winLine":"happy","story:helper:coaching:0":"serious","story:helper:coaching:1":"serious","story:helper:coaching:2":"serious","story:helper:coaching:3":"serious","story:helper:coaching:4":"happy","story:family:opening:0":"smug","story:family:opening:1":"happy","story:family:opening:2":"happy","story:family:opening:3":"happy","story:family:opening:4":"smug","story:family:opening:5":"happy","story:family:beforeHeadliner:0":"doubt","story:family:beforeHeadliner:1":"serious","story:family:beforeHeadliner:2":"serious","story:family:afterClear:0":"happy","story:family:afterClear:1":"happy","story:party:opening:0":"happy","story:party:opening:1":"happy","story:party:opening:2":"serious","story:party:opening:3":"happy","story:party:beforeHeadliner:0":"smug","story:party:beforeHeadliner:1":"happy","story:party:beforeHeadliner:2":"happy","story:party:afterClear:0":"happy","story:party:afterClear:1":"happy","story:party:afterClear:2":"serious","story:school:opening:0":"happy","story:school:opening:1":"surprised","story:school:opening:2":"happy","story:school:opening:3":"happy","story:school:opening:4":"smug","story:school:beforeHeadliner:0":"doubt","story:school:beforeHeadliner:1":"happy","story:school:beforeHeadliner:2":"happy","story:school:afterClear:0":"happy","story:school:afterClear:1":"happy","story:cafe:opening:0":"happy","story:cafe:opening:1":"doubt","story:cafe:opening:2":"happy","story:cafe:opening:3":"serious","story:cafe:beforeHeadliner:0":"smug","story:cafe:beforeHeadliner:1":"happy","story:cafe:beforeHeadliner:2":"happy","story:cafe:afterClear:0":"happy","story:cafe:afterClear:1":"happy","story:meetup:opening:0":"happy","story:meetup:opening:1":"happy","story:meetup:opening:2":"happy","story:meetup:opening:3":"happy","story:meetup:opening:4":"happy","story:meetup:opening:5":"happy","story:meetup:opening:6":"happy","story:meetup:beforeHeadliner:0":"happy","story:meetup:beforeHeadliner:1":"happy","story:meetup:beforeHeadliner:2":"happy","story:meetup:afterClear:0":"happy","story:meetup:afterClear:1":"happy","story:meetup:afterClear:2":"happy","story:theater:opening:0":"happy","story:theater:opening:1":"doubt","story:theater:opening:2":"happy","story:theater:opening:3":"smug","story:theater:opening:4":"happy","story:theater:opening:5":"serious","story:theater:opening:6":"happy","story:theater:beforeHeadliner:0":"smug","story:theater:beforeHeadliner:1":"happy","story:theater:beforeHeadliner:2":"doubt","story:theater:afterClear:0":"happy","story:theater:afterClear:1":"happy","story:theater:afterClear:2":"happy","story:theater:afterClear:3":"happy","story:festival:opening:0":"happy","story:festival:opening:1":"happy","story:festival:opening:2":"happy","story:festival:opening:3":"happy","story:festival:beforeHeadliner:0":"smug","story:festival:beforeHeadliner:1":"happy","story:festival:beforeHeadliner:2":"happy","story:festival:afterClear:0":"happy","story:festival:afterClear:1":"happy","story:audition:opening:0":"happy","story:audition:opening:1":"smug","story:audition:opening:2":"happy","story:audition:opening:3":"serious","story:audition:beforeHeadliner:0":"smug","story:audition:beforeHeadliner:1":"happy","story:audition:beforeHeadliner:2":"happy","story:audition:afterClear:0":"happy","story:audition:afterClear:1":"smug","story:broadcast:opening:0":"serious","story:broadcast:opening:1":"serious","story:broadcast:opening:2":"surprised","story:broadcast:opening:3":"happy","story:broadcast:beforeHeadliner:0":"happy","story:broadcast:beforeHeadliner:1":"happy","story:broadcast:beforeHeadliner:2":"happy","story:broadcast:afterClear:0":"happy","story:broadcast:afterClear:1":"happy","story:vegas:opening:0":"smug","story:vegas:opening:1":"happy","story:vegas:opening:2":"happy","story:vegas:opening:3":"happy","story:vegas:beforeHeadliner:0":"smug","story:vegas:beforeHeadliner:1":"happy","story:vegas:beforeHeadliner:2":"happy","story:vegas:afterClear:0":"happy","story:vegas:afterClear:1":"happy","story:vegas:afterClear:2":"happy","story:broadway:opening:0":"happy","story:broadway:opening:1":"doubt","story:broadway:opening:2":"doubt","story:broadway:opening:3":"happy","story:broadway:beforeHeadliner:0":"smug","story:broadway:beforeHeadliner:1":"happy","story:broadway:beforeHeadliner:2":"happy","story:broadway:afterClear:0":"happy","story:broadway:afterClear:1":"happy","story:moon:opening:0":"happy","story:moon:opening:1":"happy","story:moon:opening:2":"happy","story:moon:opening:3":"happy","story:moon:beforeHeadliner:0":"smug","story:moon:beforeHeadliner:1":"happy","story:moon:beforeHeadliner:2":"smug","story:moon:afterClear:0":"happy","story:moon:afterClear:1":"happy","story:sun:opening:0":"happy","story:sun:opening:1":"happy","story:sun:opening:2":"happy","story:sun:opening:3":"happy","story:sun:beforeHeadliner:0":"smug","story:sun:beforeHeadliner:1":"happy","story:sun:beforeHeadliner:2":"happy","story:sun:afterClear:0":"happy","story:sun:afterClear:1":"happy","story:galaxy:opening:0":"happy","story:galaxy:opening:1":"happy","story:galaxy:opening:2":"happy","story:galaxy:opening:3":"happy","story:galaxy:opening:4":"happy","story:galaxy:opening:5":"happy","story:galaxy:beforeHeadliner:0":"smug","story:galaxy:beforeHeadliner:1":"happy","story:galaxy:beforeHeadliner:2":"serious","story:galaxy:afterClear:0":"serious","story:galaxy:afterClear:1":"happy","story:galaxy:afterClear:2":"serious","story:multiverse:opening:0":"happy","story:multiverse:opening:1":"happy","story:multiverse:opening:2":"happy","story:multiverse:opening:3":"happy","story:multiverse:beforeHeadliner:0":"serious","story:multiverse:beforeHeadliner:1":"happy","story:multiverse:beforeHeadliner:2":"happy","story:multiverse:afterClear:0":"happy","story:multiverse:afterClear:1":"happy","story:lecturenote:opening:0":"serious","story:lecturenote:opening:1":"happy","story:lecturenote:opening:2":"happy","story:lecturenote:opening:3":"happy","story:lecturenote:beforeHeadliner:0":"happy","story:lecturenote:beforeHeadliner:1":"serious","story:lecturenote:beforeHeadliner:2":"happy","story:lecturenote:beforeHeadliner:3":"happy","story:lecturenote:beforeHeadliner:4":"serious","story:lecturenote:beforeHeadliner:5":"happy","story:lecturenote:beforeHeadliner:6":"happy","story:lecturenote:afterClear:0":"happy","story:lecturenote:afterClear:1":"serious","story:lecturenote:afterClear:2":"serious","story:lecturenote:afterClear:3":"serious","story:lecturenote:afterClear:4":"happy","story:lecturenote:afterClear:5":"serious","story:lecturenote:afterClear:6":"happy","story:lecturenote:afterClear:7":"happy","story:lecturenote:afterClear:8":"happy","branch:c1_subway:c1_subway_past:0":"sad","branch:c1_subway:c1_subway_past:1":"serious","branch:c1_subway:c1_subway_past:2":"happy","branch:c1_subway:c1_subway_past:echo":"happy","branch:c1_subway:c1_subway_forward:0":"happy","branch:c1_subway:c1_subway_forward:1":"happy","branch:c1_subway:c1_subway_forward:2":"happy","branch:c1_subway:c1_subway_forward:echo":"happy","branch:c2_meetup:c2_friends_past:0":"happy","branch:c2_meetup:c2_friends_past:1":"happy","branch:c2_meetup:c2_friends_past:2":"serious","branch:c2_meetup:c2_friends_past:echo":"happy","branch:c2_meetup:c2_next_forward:0":"happy","branch:c2_meetup:c2_next_forward:1":"happy","branch:c2_meetup:c2_next_forward:2":"happy","branch:c2_meetup:c2_next_forward:echo":"happy","branch:c3_multi:c3_wave_past:0":"serious","branch:c3_multi:c3_wave_past:1":"happy","branch:c3_multi:c3_wave_past:2":"happy","branch:c3_multi:c3_wave_past:echo":"happy","branch:c3_multi:c3_walk_forward:0":"serious","branch:c3_multi:c3_walk_forward:1":"happy","branch:c3_multi:c3_walk_forward:2":"serious","branch:c3_multi:c3_walk_forward:echo":"happy","branch:c4_cards:c4_oldcards_past:0":"happy","branch:c4_cards:c4_oldcards_past:1":"happy","branch:c4_cards:c4_oldcards_past:2":"happy","branch:c4_cards:c4_oldcards_past:echo":"happy","branch:c4_cards:c4_newcards_forward:0":"happy","branch:c4_cards:c4_newcards_forward:1":"happy","branch:c4_cards:c4_newcards_forward:2":"happy","branch:c4_cards:c4_newcards_forward:echo":"happy","branch:ifRoute:teaser:0":"serious","branch:ifRoute:teaser:1":"happy","branch:ifRoute:intro:0":"surprised","branch:ifRoute:intro:1":"happy","branch:ifRoute:intro:2":"sad","branch:ifRoute:intro:3":"serious","branch:ifRoute:duel:0":"sad","branch:ifRoute:duel:1":"sad","branch:ifRoute:duel:2":"happy","branch:ifRoute:glitch:0":"surprised","branch:ifRoute:glitch:1":"surprised","branch:ifRoute:evolve:0":"serious","branch:ifRoute:evolve:1":"serious","branch:ifRoute:evolve:2":"serious","branch:ifRoute:evolve:3":"happy","branch:ifRoute:phaseLines:0":"serious","branch:ifRoute:phaseLines:1":"happy","branch:ifRoute:phaseLines:2":"serious","branch:ifRoute:win:0":"happy","branch:ifRoute:win:1":"surprised","branch:ifRoute:win:2":"serious","branch:ifRoute:win:3":"happy","branch:ifRoute:ending:0":"happy","branch:ifRoute:ending:1":"serious","branch:ifRoute:ending:2":"serious","branch:ifRoute:ending:3":"happy","branch:ifRoute:ending:4":"happy","branch:ifRoute:ending:5":"happy","fight:a1:heckles:0":"smug","fight:a1:heckles:1":"happy","fight:a1:heckles:2":"happy","fight:a1:heckles:3":"doubt","fight:a1:winLine":"happy","fight:a2:heckles:0":"happy","fight:a2:heckles:1":"doubt","fight:a2:heckles:2":"doubt","fight:a2:heckles:3":"doubt","fight:a2:winLine":"surprised","fight:a3:heckles:0":"happy","fight:a3:heckles:1":"happy","fight:a3:heckles:2":"happy","fight:a3:heckles:3":"doubt","fight:a3:winLine":"happy","fight:h1:heckles:0":"smug","fight:h1:heckles:1":"smug","fight:h1:heckles:2":"happy","fight:h1:heckles:3":"doubt","fight:h1:winLine":"surprised","fight:a4:heckles:0":"happy","fight:a4:heckles:1":"happy","fight:a4:heckles:2":"serious","fight:a4:heckles:3":"happy","fight:a4:winLine":"happy","fight:a5:heckles:0":"happy","fight:a5:heckles:1":"happy","fight:a5:heckles:2":"serious","fight:a5:heckles:3":"happy","fight:a5:winLine":"happy","fight:a6:heckles:0":"happy","fight:a6:heckles:1":"happy","fight:a6:heckles:2":"serious","fight:a6:heckles:3":"happy","fight:a6:winLine":"happy","fight:h2:heckles:0":"smug","fight:h2:heckles:1":"doubt","fight:h2:heckles:2":"doubt","fight:h2:heckles:3":"doubt","fight:h2:winLine":"happy","fight:a7:heckles:0":"happy","fight:a7:heckles:1":"happy","fight:a7:heckles:2":"serious","fight:a7:heckles:3":"happy","fight:a7:winLine":"happy","fight:a8:heckles:0":"happy","fight:a8:heckles:1":"happy","fight:a8:heckles:2":"serious","fight:a8:heckles:3":"happy","fight:a8:winLine":"happy","fight:a9:heckles:0":"doubt","fight:a9:heckles:1":"doubt","fight:a9:heckles:2":"doubt","fight:a9:heckles:3":"doubt","fight:a9:winLine":"happy","fight:a46:heckles:0":"smug","fight:a46:heckles:1":"doubt","fight:a46:heckles:2":"doubt","fight:a46:heckles:3":"doubt","fight:a46:winLine":"happy","fight:h3:heckles:0":"doubt","fight:h3:heckles:1":"smug","fight:h3:heckles:2":"doubt","fight:h3:heckles:3":"doubt","fight:h3:winLine":"happy","fight:a10:heckles:0":"doubt","fight:a10:heckles:1":"doubt","fight:a10:heckles:2":"doubt","fight:a10:heckles:3":"doubt","fight:a10:winLine":"happy","fight:a11:heckles:0":"doubt","fight:a11:heckles:1":"doubt","fight:a11:heckles:2":"doubt","fight:a11:heckles:3":"doubt","fight:a11:winLine":"happy","fight:a12:heckles:0":"doubt","fight:a12:heckles:1":"doubt","fight:a12:heckles:2":"doubt","fight:a12:heckles:3":"doubt","fight:a12:winLine":"happy","fight:a50:heckles:0":"happy","fight:a50:heckles:1":"happy","fight:a50:heckles:2":"happy","fight:a50:heckles:3":"serious","fight:a50:winLine":"happy","fight:h4:heckles:0":"doubt","fight:h4:heckles:1":"smug","fight:h4:heckles:2":"doubt","fight:h4:heckles:3":"doubt","fight:h4:winLine":"happy","fight:a-meetup-busan:heckles:0":"happy","fight:a-meetup-busan:heckles:1":"happy","fight:a-meetup-busan:heckles:2":"happy","fight:a-meetup-busan:heckles:3":"happy","fight:a-meetup-busan:winLine":"happy","fight:a-meetup-daegu:heckles:0":"doubt","fight:a-meetup-daegu:heckles:1":"doubt","fight:a-meetup-daegu:heckles:2":"doubt","fight:a-meetup-daegu:heckles:3":"doubt","fight:a-meetup-daegu:winLine":"happy","fight:a-meetup-changwon:heckles:0":"doubt","fight:a-meetup-changwon:heckles:1":"doubt","fight:a-meetup-changwon:heckles:2":"doubt","fight:a-meetup-changwon:heckles:3":"doubt","fight:a-meetup-changwon:winLine":"happy","fight:a-meetup-incheon:heckles:0":"happy","fight:a-meetup-incheon:heckles:1":"happy","fight:a-meetup-incheon:heckles:2":"happy","fight:a-meetup-incheon:heckles:3":"happy","fight:a-meetup-incheon:winLine":"happy","fight:a-meetup-geoje:heckles:0":"happy","fight:a-meetup-geoje:heckles:1":"happy","fight:a-meetup-geoje:heckles:2":"happy","fight:a-meetup-geoje:heckles:3":"happy","fight:a-meetup-geoje:winLine":"happy","fight:a-meetup-cheonan:heckles:0":"happy","fight:a-meetup-cheonan:heckles:1":"happy","fight:a-meetup-cheonan:heckles:2":"happy","fight:a-meetup-cheonan:heckles:3":"happy","fight:a-meetup-cheonan:winLine":"happy","fight:a-meetup-suwon:heckles:0":"doubt","fight:a-meetup-suwon:heckles:1":"doubt","fight:a-meetup-suwon:heckles:2":"doubt","fight:a-meetup-suwon:heckles:3":"doubt","fight:a-meetup-suwon:winLine":"happy","fight:h-meetup-seoul:heckles:0":"happy","fight:h-meetup-seoul:heckles:1":"happy","fight:h-meetup-seoul:heckles:2":"serious","fight:h-meetup-seoul:heckles:3":"happy","fight:h-meetup-seoul:winLine":"happy","fight:a13:heckles:0":"happy","fight:a13:heckles:1":"happy","fight:a13:heckles:2":"happy","fight:a13:heckles:3":"happy","fight:a13:winLine":"happy","fight:a14:heckles:0":"doubt","fight:a14:heckles:1":"doubt","fight:a14:heckles:2":"doubt","fight:a14:heckles:3":"doubt","fight:a14:winLine":"happy","fight:a15:heckles:0":"smug","fight:a15:heckles:1":"smug","fight:a15:heckles:2":"smug","fight:a15:heckles:3":"smug","fight:a15:winLine":"surprised","fight:a54:heckles:0":"smug","fight:a54:heckles:1":"doubt","fight:a54:heckles:2":"doubt","fight:a54:heckles:3":"doubt","fight:a54:winLine":"happy","fight:a55:heckles:0":"happy","fight:a55:heckles:1":"happy","fight:a55:heckles:2":"happy","fight:a55:heckles:3":"happy","fight:a55:winLine":"happy","fight:h5:heckles:0":"doubt","fight:h5:heckles:1":"doubt","fight:h5:heckles:2":"doubt","fight:h5:heckles:3":"doubt","fight:h5:winLine":"happy","fight:a16:heckles:0":"happy","fight:a16:heckles:1":"happy","fight:a16:heckles:2":"happy","fight:a16:heckles:3":"happy","fight:a16:winLine":"happy","fight:a17:heckles:0":"happy","fight:a17:heckles:1":"happy","fight:a17:heckles:2":"happy","fight:a17:heckles:3":"doubt","fight:a17:winLine":"happy","fight:a18:heckles:0":"happy","fight:a18:heckles:1":"happy","fight:a18:heckles:2":"happy","fight:a18:heckles:3":"happy","fight:a18:winLine":"happy","fight:a59:heckles:0":"smug","fight:a59:heckles:1":"doubt","fight:a59:heckles:2":"doubt","fight:a59:heckles:3":"doubt","fight:a59:winLine":"happy","fight:a60:heckles:0":"happy","fight:a60:heckles:1":"happy","fight:a60:heckles:2":"happy","fight:a60:heckles:3":"happy","fight:a60:winLine":"happy","fight:h6:heckles:0":"doubt","fight:h6:heckles:1":"doubt","fight:h6:heckles:2":"doubt","fight:h6:heckles:3":"doubt","fight:h6:winLine":"happy","fight:a19:heckles:0":"serious","fight:a19:heckles:1":"surprised","fight:a19:heckles:2":"happy","fight:a19:heckles:3":"serious","fight:a19:winLine":"happy","fight:a20:heckles:0":"serious","fight:a20:heckles:1":"serious","fight:a20:heckles:2":"serious","fight:a20:heckles:3":"serious","fight:a20:winLine":"happy","fight:a21:heckles:0":"smug","fight:a21:heckles:1":"smug","fight:a21:heckles:2":"doubt","fight:a21:heckles:3":"doubt","fight:a21:winLine":"happy","fight:a64:heckles:0":"doubt","fight:a64:heckles:1":"doubt","fight:a64:heckles:2":"doubt","fight:a64:heckles:3":"doubt","fight:a64:winLine":"happy","fight:a65:heckles:0":"doubt","fight:a65:heckles:1":"doubt","fight:a65:heckles:2":"doubt","fight:a65:heckles:3":"doubt","fight:a65:winLine":"happy","fight:a66:heckles:0":"happy","fight:a66:heckles:1":"happy","fight:a66:heckles:2":"happy","fight:a66:heckles:3":"happy","fight:a66:winLine":"happy","fight:h7:heckles:0":"smug","fight:h7:heckles:1":"doubt","fight:h7:heckles:2":"doubt","fight:h7:heckles:3":"doubt","fight:h7:winLine":"happy","fight:a112:heckles:0":"serious","fight:a112:heckles:1":"serious","fight:a112:heckles:2":"serious","fight:a112:heckles:3":"happy","fight:a112:winLine":"happy","fight:a113:heckles:0":"serious","fight:a113:heckles:1":"happy","fight:a113:heckles:2":"serious","fight:a113:heckles:3":"happy","fight:a113:winLine":"happy","fight:a114:heckles:0":"serious","fight:a114:heckles:1":"surprised","fight:a114:heckles:2":"happy","fight:a114:heckles:3":"serious","fight:a114:winLine":"happy","fight:a115:heckles:0":"happy","fight:a115:heckles:1":"happy","fight:a115:heckles:2":"happy","fight:a115:heckles:3":"happy","fight:a115:winLine":"happy","fight:a116:heckles:0":"happy","fight:a116:heckles:1":"happy","fight:a116:heckles:2":"happy","fight:a116:heckles:3":"happy","fight:a116:winLine":"happy","fight:a117:heckles:0":"happy","fight:a117:heckles:1":"serious","fight:a117:heckles:2":"serious","fight:a117:heckles:3":"happy","fight:a117:winLine":"happy","fight:h-broadcast:heckles:0":"doubt","fight:h-broadcast:heckles:1":"doubt","fight:h-broadcast:heckles:2":"doubt","fight:h-broadcast:heckles:3":"doubt","fight:h-broadcast:winLine":"happy","fight:a22:heckles:0":"doubt","fight:a22:heckles:1":"doubt","fight:a22:heckles:2":"doubt","fight:a22:heckles:3":"doubt","fight:a22:winLine":"happy","fight:a23:heckles:0":"doubt","fight:a23:heckles:1":"doubt","fight:a23:heckles:2":"doubt","fight:a23:heckles:3":"doubt","fight:a23:winLine":"happy","fight:a24:heckles:0":"doubt","fight:a24:heckles:1":"doubt","fight:a24:heckles:2":"doubt","fight:a24:heckles:3":"doubt","fight:a24:winLine":"happy","fight:a70:heckles:0":"smug","fight:a70:heckles:1":"doubt","fight:a70:heckles:2":"doubt","fight:a70:heckles:3":"doubt","fight:a70:winLine":"happy","fight:a71:heckles:0":"happy","fight:a71:heckles:1":"happy","fight:a71:heckles:2":"happy","fight:a71:heckles:3":"happy","fight:a71:winLine":"happy","fight:a72:heckles:0":"smug","fight:a72:heckles:1":"doubt","fight:a72:heckles:2":"doubt","fight:a72:heckles:3":"doubt","fight:a72:winLine":"happy","fight:h8:heckles:0":"smug","fight:h8:heckles:1":"smug","fight:h8:heckles:2":"smug","fight:h8:heckles:3":"doubt","fight:h8:winLine":"happy","fight:a25:heckles:0":"happy","fight:a25:heckles:1":"happy","fight:a25:heckles:2":"happy","fight:a25:heckles:3":"happy","fight:a25:winLine":"happy","fight:a26:heckles:0":"doubt","fight:a26:heckles:1":"doubt","fight:a26:heckles:2":"doubt","fight:a26:heckles:3":"doubt","fight:a26:winLine":"happy","fight:a27:heckles:0":"doubt","fight:a27:heckles:1":"doubt","fight:a27:heckles:2":"doubt","fight:a27:heckles:3":"doubt","fight:a27:winLine":"happy","fight:a76:heckles:0":"doubt","fight:a76:heckles:1":"doubt","fight:a76:heckles:2":"doubt","fight:a76:heckles:3":"smug","fight:a76:winLine":"happy","fight:a77:heckles:0":"doubt","fight:a77:heckles:1":"doubt","fight:a77:heckles:2":"doubt","fight:a77:heckles:3":"doubt","fight:a77:winLine":"happy","fight:a78:heckles:0":"happy","fight:a78:heckles:1":"happy","fight:a78:heckles:2":"happy","fight:a78:heckles:3":"happy","fight:a78:winLine":"happy","fight:a79:heckles:0":"doubt","fight:a79:heckles:1":"doubt","fight:a79:heckles:2":"doubt","fight:a79:heckles:3":"doubt","fight:a79:winLine":"happy","fight:h9:heckles:0":"smug","fight:h9:heckles:1":"smug","fight:h9:heckles:2":"smug","fight:h9:heckles:3":"smug","fight:h9:winLine":"happy","fight:a28:heckles:0":"doubt","fight:a28:heckles:1":"doubt","fight:a28:heckles:2":"smug","fight:a28:heckles:3":"doubt","fight:a28:winLine":"happy","fight:a29:heckles:0":"happy","fight:a29:heckles:1":"serious","fight:a29:heckles:2":"serious","fight:a29:heckles:3":"happy","fight:a29:winLine":"happy","fight:a30:heckles:0":"serious","fight:a30:heckles:1":"happy","fight:a30:heckles:2":"serious","fight:a30:heckles:3":"happy","fight:a30:winLine":"happy","fight:a83:heckles:0":"doubt","fight:a83:heckles:1":"doubt","fight:a83:heckles:2":"doubt","fight:a83:heckles:3":"doubt","fight:a83:winLine":"happy","fight:a84:heckles:0":"doubt","fight:a84:heckles:1":"doubt","fight:a84:heckles:2":"doubt","fight:a84:heckles:3":"doubt","fight:a84:winLine":"happy","fight:a85:heckles:0":"happy","fight:a85:heckles:1":"serious","fight:a85:heckles:2":"serious","fight:a85:heckles:3":"happy","fight:a85:winLine":"happy","fight:a86:heckles:0":"doubt","fight:a86:heckles:1":"doubt","fight:a86:heckles:2":"doubt","fight:a86:heckles:3":"smug","fight:a86:winLine":"happy","fight:h10:heckles:0":"doubt","fight:h10:heckles:1":"doubt","fight:h10:heckles:2":"doubt","fight:h10:heckles:3":"smug","fight:h10:winLine":"happy","fight:a31:heckles:0":"doubt","fight:a31:heckles:1":"doubt","fight:a31:heckles:2":"doubt","fight:a31:heckles:3":"doubt","fight:a31:winLine":"happy","fight:a32:heckles:0":"happy","fight:a32:heckles:1":"serious","fight:a32:heckles:2":"happy","fight:a32:heckles:3":"serious","fight:a32:winLine":"happy","fight:a33:heckles:0":"happy","fight:a33:heckles:1":"happy","fight:a33:heckles:2":"happy","fight:a33:heckles:3":"happy","fight:a33:winLine":"happy","fight:a90:heckles:0":"doubt","fight:a90:heckles:1":"doubt","fight:a90:heckles:2":"doubt","fight:a90:heckles:3":"doubt","fight:a90:winLine":"happy","fight:a91:heckles:0":"doubt","fight:a91:heckles:1":"doubt","fight:a91:heckles:2":"doubt","fight:a91:heckles:3":"doubt","fight:a91:winLine":"happy","fight:a92:heckles:0":"doubt","fight:a92:heckles:1":"doubt","fight:a92:heckles:2":"doubt","fight:a92:heckles:3":"doubt","fight:a92:winLine":"happy","fight:a93:heckles:0":"doubt","fight:a93:heckles:1":"doubt","fight:a93:heckles:2":"doubt","fight:a93:heckles:3":"doubt","fight:a93:winLine":"happy","fight:a94:heckles:0":"doubt","fight:a94:heckles:1":"doubt","fight:a94:heckles:2":"doubt","fight:a94:heckles:3":"doubt","fight:a94:winLine":"happy","fight:h11:heckles:0":"doubt","fight:h11:heckles:1":"doubt","fight:h11:heckles:2":"doubt","fight:h11:heckles:3":"doubt","fight:h11:winLine":"happy","fight:a34:heckles:0":"doubt","fight:a34:heckles:1":"doubt","fight:a34:heckles:2":"doubt","fight:a34:heckles:3":"doubt","fight:a34:winLine":"happy","fight:a35:heckles:0":"doubt","fight:a35:heckles:1":"doubt","fight:a35:heckles:2":"doubt","fight:a35:heckles:3":"doubt","fight:a35:winLine":"happy","fight:a36:heckles:0":"happy","fight:a36:heckles:1":"serious","fight:a36:heckles:2":"serious","fight:a36:heckles:3":"happy","fight:a36:winLine":"happy","fight:a98:heckles:0":"doubt","fight:a98:heckles:1":"doubt","fight:a98:heckles:2":"doubt","fight:a98:heckles:3":"doubt","fight:a98:winLine":"happy","fight:a99:heckles:0":"doubt","fight:a99:heckles:1":"doubt","fight:a99:heckles:2":"doubt","fight:a99:heckles:3":"doubt","fight:a99:winLine":"happy","fight:a100:heckles:0":"happy","fight:a100:heckles:1":"serious","fight:a100:heckles:2":"serious","fight:a100:heckles:3":"happy","fight:a100:winLine":"happy","fight:a101:heckles:0":"doubt","fight:a101:heckles:1":"doubt","fight:a101:heckles:2":"doubt","fight:a101:heckles:3":"doubt","fight:a101:winLine":"happy","fight:a102:heckles:0":"happy","fight:a102:heckles:1":"happy","fight:a102:heckles:2":"happy","fight:a102:heckles:3":"happy","fight:a102:winLine":"happy","fight:h12:heckles:0":"doubt","fight:h12:heckles:1":"smug","fight:h12:heckles:2":"smug","fight:h12:heckles:3":"doubt","fight:h12:winLine":"happy","fight:a37:heckles:0":"doubt","fight:a37:heckles:1":"doubt","fight:a37:heckles:2":"doubt","fight:a37:heckles:3":"doubt","fight:a37:winLine":"happy","fight:a38:heckles:0":"doubt","fight:a38:heckles:1":"doubt","fight:a38:heckles:2":"doubt","fight:a38:heckles:3":"doubt","fight:a38:winLine":"happy","fight:a39:heckles:0":"doubt","fight:a39:heckles:1":"doubt","fight:a39:heckles:2":"doubt","fight:a39:heckles:3":"doubt","fight:a39:winLine":"happy","fight:a106:heckles:0":"happy","fight:a106:heckles:1":"serious","fight:a106:heckles:2":"serious","fight:a106:heckles:3":"happy","fight:a106:winLine":"happy","fight:a107:heckles:0":"happy","fight:a107:heckles:1":"serious","fight:a107:heckles:2":"happy","fight:a107:heckles:3":"happy","fight:a107:winLine":"happy","fight:a108:heckles:0":"doubt","fight:a108:heckles:1":"doubt","fight:a108:heckles:2":"doubt","fight:a108:heckles:3":"doubt","fight:a108:winLine":"happy","fight:a109:heckles:0":"happy","fight:a109:heckles:1":"serious","fight:a109:heckles:2":"happy","fight:a109:heckles:3":"happy","fight:a109:winLine":"happy","fight:a110:heckles:0":"serious","fight:a110:heckles:1":"serious","fight:a110:heckles:2":"happy","fight:a110:heckles:3":"serious","fight:a110:winLine":"happy","fight:a111:heckles:0":"happy","fight:a111:heckles:1":"happy","fight:a111:heckles:2":"happy","fight:a111:heckles:3":"happy","fight:a111:winLine":"happy","fight:h13:heckles:0":"doubt","fight:h13:heckles:1":"doubt","fight:h13:heckles:2":"doubt","fight:h13:heckles:3":"doubt","fight:h13:winLine":"happy","fight:a-lecturenote-hecate:heckles:0":"serious","fight:a-lecturenote-hecate:heckles:1":"happy","fight:a-lecturenote-hecate:heckles:2":"happy","fight:a-lecturenote-hecate:heckles:3":"serious","fight:a-lecturenote-hecate:winLine":"happy","fight:a-lecturenote-serona:heckles:0":"happy","fight:a-lecturenote-serona:heckles:1":"happy","fight:a-lecturenote-serona:heckles:2":"serious","fight:a-lecturenote-serona:heckles:3":"serious","fight:a-lecturenote-serona:winLine":"happy","fight:a-lecturenote-jung:heckles:0":"happy","fight:a-lecturenote-jung:heckles:1":"happy","fight:a-lecturenote-jung:heckles:2":"happy","fight:a-lecturenote-jung:heckles:3":"serious","fight:a-lecturenote-jung:winLine":"happy","fight:h-lecturenote-kim:heckles:0":"happy","fight:h-lecturenote-kim:heckles:1":"happy","fight:h-lecturenote-kim:heckles:2":"happy","fight:h-lecturenote-kim:heckles:3":"happy","fight:h-lecturenote-kim:winLine":"happy","fight:h-future-kali:heckles:0":"serious","fight:h-future-kali:heckles:1":"serious","fight:h-future-kali:heckles:2":"happy","fight:h-future-kali:heckles:3":"happy","fight:h-future-kali:winLine":"happy"},"faceMap":{"spriteSuffixes":{"doubt":"aud-<id>.png (base)","happy":"aud-<id>-happy.png","serious":"aud-<id>-serious.png (optional, main cast)","surprised":"aud-<id>-surprised.png (optional, main cast)"},"resolution":{"happy":{"prefer":"-happy","fallback":"base doubt sprite + \"😊\" emote"},"doubt":{"prefer":"base (no suffix)","fallback":"base"},"smug":{"prefer":"base (no suffix)","fallback":"base + \"😏\" emote; if role is supporter/helper never use smug"},"serious":{"prefer":"-serious","fallback":"base doubt sprite + calm \"💭\" emote (do not use -happy)"},"surprised":{"prefer":"-surprised","fallback":"-happy sprite + \"❗\" emote, else base + \"❗\""},"sad":{"prefer":"-sad (not planned)","fallback":"base doubt sprite + \"💧\" emote"}},"roleDefaults":{"skeptic":"doubt","critic":"doubt","heckler":"smug","supporter":"happy","helper":"serious","family":"happy"},"rules":["Pick the sprite per line from moods[key], not per character.","A supporter/helper/family character must never show the doubt/smug base sprite without an emote when the mood is happy or serious: use the -happy sprite for happy; use serious fallback (base + \"💭\") only if no -serious sprite.","Skeptic/critic/heckler characters show the base sprite for doubt/smug and -happy only for happy lines (defeat, praise).","Fight lines without a moods entry fall back to roleDefaults."]}};
 (function(D){
  D.venues.forEach(v=>v.audiences.concat([v.headliner]).forEach(a=>{
   const role=D.lineFaces.roles[a.id];if(role)a.role=role.role;
@@ -3478,3 +5297,118 @@ GAME_DATA.lineFaces={"roles":{"a1":{"role":"family","name":"아빠","venue":"fam
  D.venues.forEach(v=>{if(scale[v.slug])v.hpFactor*=scale[v.slug];});
  D.venues.find(v=>v.slug==='lecturenote').bossHpFactor*=1.12;
 })(GAME_DATA);
+
+// Achievement definitions also supply the save allowlist and UI presentation metadata.
+(function(D){
+  const old = new Set(['boxes','combo','slots','golden','helper','noDamage','finale','timed']);
+  const rows = [
+    ['boxes','상자 속 백 가지','케이스를 누적 100개 연다.','수집'],
+    ['combo','박수 스물다섯','한 관객전에서 최고 액트 25를 달성한다.','손맛'],
+    ['slots','아홉 칸 모자','케이스 자리를 9칸으로 늘린다.','수집'],
+    ['golden','금빛 첫 인사','황금 케이스를 처음 연다.','수집'],
+    ['helper','도우미의 손길','도우미가 케이스를 누적 25개 연다.','손맛'],
+    ['noDamage','흔들림 없는 무대','도전 수첩을 배우고 멘탈 손상 없이 관객을 만족시킨다.','무대'],
+    ['finale','피날레에 박수','도전 수첩을 배우고 피날레를 쓴 관객전에서 승리한다.','손맛'],
+    ['timed','시간도 속였다','도전 수첩을 배우고 제한 시간 조건이 있는 관객을 시간 안에 만족시킨다.','무대'],
+    ['reach-theater','막이 오른다','소극장에 도착한다.','무대','reach',6],
+    ['reach-vegas','사막의 초대장','라스베가스에 도착한다.','무대','reach',10],
+    ['reach-lecturenote','마지막 책장','렉쳐노트에 도착한다.','무대','reach',16],
+    ['set1','첫 관객 앨범','도감 관객 세트를 1개 완성한다.','수집','sets',1],
+    ['set4','네 무대의 얼굴','도감 관객 세트를 4개 완성한다.','수집','sets',4],
+    ['set16','모두의 박수','도감 관객 세트를 16개 완성한다.','수집','sets',16],
+    ['types2','양손의 비밀','마술용품을 2종류 수집한다.','수집','types',2],
+    ['types4','소품 만물상','마술용품을 4종류 모두 수집한다.','수집','types',4],
+    ['cosmetic1','새 옷 새 마술','의상 또는 케이스 꾸미기 1개를 소유한다.','수집','cosmetics',1],
+    ['cosmetic5','마술사의 옷장','의상과 케이스 꾸미기를 합쳐 5개 소유한다.','수집','cosmetics',5],
+    ['tap20','손끝 예열','빈 케이스·봉인을 두드리지 않고 유효 수동 탭을 20회 연속 한다. 관객전 변경 시 초기화된다.','손맛','tapStreakMax',20],
+    ['tap100','백 번의 손짓','빈 케이스·봉인을 두드리지 않고 유효 수동 탭을 100회 연속 한다. 관객전 변경 시 초기화된다.','손맛','tapStreakMax',100],
+    ['combo100','백 번의 박수','최고 액트 100을 달성한다.','손맛','comboMax',100],
+    ['finale10','열 번의 커튼콜','피날레를 누적 10회 발사한다.','손맛','finales',10],
+    ['finale100','끝나지 않는 앵콜','피날레를 누적 100회 발사한다.','손맛','finales',100],
+    ['fever1','무대가 뜨거워','피버에 처음 진입한다.','손맛','fevers',1],
+    ['fever10','열정의 마술사','피버에 누적 10회 진입한다.','손맛','fevers',10],
+    ['crit100','정확한 백 발','결정타를 누적 100회 적중시킨다.','손맛','crits',100],
+    ['cups1','컵 속의 정답','컵 게임에서 1회 정답을 맞힌다.','손맛','cupsWins',1],
+    ['monte1','여왕을 찾아라','카드 몬테에서 1회 정답을 맞힌다.','손맛','monteWins',1],
+    ['bossRetry3','아직 안 끝났어','같은 무대 보스에게 연속 3회 패배한다.','숨은 업적','bossLossStreak',3,true],
+    ['run1000','모자 속 천 개','실패·재시작 없이 한 런에서 케이스를 1000개 연다.','숨은 업적','runBoxes',1000,true],
+    ['mentalClutch','아슬아슬 커튼콜','남은 멘탈이 0 초과 10% 미만인 상태로 관객전에서 승리한다.','숨은 업적','mentalClutches',1,true],
+    ['helper1000','나는 지휘자','도우미가 케이스를 누적 1000개 연다.','숨은 업적','helperBreaks',1000,true],
+    ['golden10','금빛 토끼굴','황금 케이스를 누적 10개 연다.','숨은 업적','goldenOpened',10,true],
+    ['montePerfect','여왕의 단골','카드 몬테 3라운드를 모두 맞히는 게임을 누적 3회 완주한다.','숨은 업적','montePerfects',3,true]
+  ];
+  const names=['거실의 기적','파티의 주인공','학교의 마술사','커피보다 마술','마니아도 깜짝','소극장 대성공','축제를 뒤집다','3등의 박수','전파 탄 마술','사막의 별','브로드웨이 커튼콜','달빛 손수건','그늘을 지나','몸짓의 박수','차원을 넘는 모자','책장을 덮으며'];
+  D.venues.slice(0,16).forEach((v,i)=>rows.push(['clear-'+v.slug,names[i],v.name+' 보스를 처음 만족시킨다.','무대','clear',v.slug]));
+  D.achievements=rows.map(([id,name,desc,group,metric,target,hidden=false])=>({id,name,desc,description:desc,group,hidden,metric,target,legacy:old.has(id)}));
+})(GAME_DATA);
+
+// Shared progress chart. Hidden IF nodes are revealed by saved unlock flags.
+GAME_DATA.progressFork={
+  after:'multiverse',
+  main:['lecturenote','future'],
+  mainChoice:'내가 될 수 있는 모습만 볼까?',
+  ifChoice:'아직 어린 나도 만나 볼까?',
+  ifRoute:[
+    {id:'young-kali',name:'어린 칼리',dots:1},
+    {id:'mirror-stage',name:'거울 속 무대',dots:3}
+  ]
+};
+
+// Batch B: keep existing routine node ids for save compatibility; purchases use silk.
+for (const id of ['eggbag','rubberband','coloringbook','cube','wand']) {
+  const routine = GAME_DATA.routines.find(r => r.id === id);
+  routine.shopCost = 10;
+  const node = GAME_DATA.tree.find(n => n.id === 'routine-' + id);
+  node.shopOnly = true;
+  GAME_DATA.gemShop.push({id:'routine-' + id,name:routine.name,desc:'칼리가 공연하는 루틴에 추가해요',cost:routine.shopCost});
+}
+
+// Batch C: storyV15 is the editable source for stage, fight and curtain dialogue.
+(function(D){
+ const S=D.storyV15;
+ const setMoods=value=>{if(!value||typeof value!=='object')return;if(value.speaker&&value.text&&!value.mood)value.mood=/진짜|변했|김이/.test(value.text)?'surprised':/좋|재미|박수/.test(value.text)?'happy':'serious';for(const child of Object.values(value))setMoods(child);};
+ setMoods(S.tutorial);
+ S.portraits={'강 마술사님':'assets/headliner-h5.png','수상한 샵 매니저':'assets/serona-hooded.png'};
+ S.tutorial.overview=[S.tutorial.schoolChain.girlDuring[0],S.tutorial.schoolChain.upgrade[1],S.tutorial.defeat[3]];
+ D.onboarding.intro=S.tutorial.schoolChain.girlIntro.map(l=>({line:l.text,art:'cards'}));
+ for(const v of D.venues){
+  const p=S.venues[v.slug];
+  v.intro=p.opening[0].text;v.successLine=p.afterClear[0].text;
+  for(const a of [...v.audiences,v.headliner]){
+   const fight=S.fights[a.id];
+   fight.heckles=[...new Set(fight.heckles)];
+   if(fight.heckles.length===1&&!fight.heckles.includes(fight.winLine))fight.heckles.push(fight.winLine);
+   Object.assign(a,fight);
+   a.encounterLine=a.heckles[0];
+   if(a===v.headliner){a.preLine=a.heckles[0];a.defeatLine=a.winLine;}
+   a.heckles.forEach((text,i)=>D.lineFaces.moods['fight:'+a.id+':heckles:'+i]=/더 연습|실패|도박/.test(text)?'serious':/신기|CG|변했/.test(text)?'surprised':'serious');
+   D.lineFaces.moods['fight:'+a.id+':winLine']='happy';
+  }
+ }
+ D.lineFaces.roles.h1.name='여동생';D.lineFaces.roles.h5.name='밍기리';D.lineFaces.roles.h5.role='heckler';
+ S.bios.h1='거실에서 마술을 본 여동생.';S.bios.h5=S.helper.bio;
+ const family=D.venues.find(v=>v.slug==='family');
+ Object.assign(family.headliner,{name:'여동생',portraitAsset:'aud-a1.png',bio:'거실에서 마술을 본 여동생.',flavor:'거실에서 마술을 본 여동생.'});
+ const theater=D.venues.find(v=>v.slug==='theater');
+ Object.assign(theater.headliner,{name:'밍기리',portraitAsset:'aud-mingiri-dark.png',role:'heckler',bio:S.helper.bio,flavor:S.helper.bio,storyScale:1.25});
+ const sun=D.venues.find(v=>v.slug==='sun');sun.mergedInto='galaxy';sun.name='은하';sun.invitation.name='은하 초대장';
+ D.tree.find(n=>n.id==='p-two-si-do').wall=D.tree.find(n=>n.id==='p-slydini-silks').wall;
+ D.storyV15.venues.cafe.afterClear.push({speaker:'카드1412',text:'헤클러 앞에선 숨부터 쉬어유. 멘탈이 더 단단해진당.',mood:'serious'});
+ D.dealer.introLines=S.dealerActs[0].filter(l=>l.speaker===D.dealer.name).map(l=>l.text);
+ D.story.reveal=S.venues.multiverse.afterClear.filter(l=>!l.secretSkill).map(l=>l.text);
+ for(const [key,p] of Object.entries(D.ifRouteScript)){if(!p||typeof p!=='object')continue;const name=S.secretSkills[key];if(name)p.afterClear.push({speaker:'칼리',text:'비법 「'+name+'」을 배웠어요.',mood:'happy',secretSkill:name});}
+})(GAME_DATA);
+
+// Batch D shared tuning. Only these two spectators interfere, one case at a time.
+GAME_DATA.batchD = {
+ interference:{durationMs:2500,intervalMs:12000,characters:{a9:'lock',a12:'hide'}},
+ encore:{durationMs:15000,hpFactor:0.25,rewardFactor:0.5,damageFactor:1.15},
+ rebirth:{permanentBonus:0.1},
+ stages:{
+  young:{name:'어린 칼리와의 대결',character:'어린 칼리',portrait:'assets/aud-past-kali.png',hpFactor:1.1,damageFactor:1.05,script:'youngKaliDuel'},
+  mirror:{name:'거울 속 무대',character:'완벽한 칼리',portrait:'assets/aud-future-kali.png',hpFactor:1.5,damageFactor:1.2,script:'mirrorStage'}
+ },
+ twist:{venue:'meetup',products:['p-classic-collection-remastered','p-classic-collection-remastered-2'],threshold:0.1,hiddenMs:4000,failures:3,damageReduction:0.9,mentalCap:0.1,cutsceneMs:4200}
+};
+// Derive the legacy ending API from the reviewed stage lines.
+GAME_DATA.venues.find(v=>v.slug==='lecturenote').headliner.endingLines=GAME_DATA.storyReview.lecturenote.afterClear.filter(l=>!l.secretSkill).map(l=>l.text);

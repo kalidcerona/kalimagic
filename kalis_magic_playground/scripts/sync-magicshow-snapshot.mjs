@@ -21,7 +21,7 @@ function replaceOnce(source, anchor, addition) {
   if (source.split(anchor).length !== 2) throw new Error(`Missing or ambiguous index anchor: ${anchor}`);
   return source.replace(anchor, addition);
 }
-for (const file of ['index.html', 'style.css', 'data.js', 'core.js', 'audio.js', 'ui.js']) {
+for (const file of ['index.html', 'style.css', 'portrait.css', 'data.js', 'core.js', 'audio.js', 'ui.js']) {
   files.set(file, await readRegular(SOURCE, file));
 }
 async function collect(directory) {

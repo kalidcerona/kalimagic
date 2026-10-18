@@ -23,10 +23,10 @@ async function filesUnder(route) {
 
 test('Magicshow snapshot contains only allowed runtime files and exact deployment precache', async () => {
   const files = await filesUnder(shared);
-  const base = ['index.html', 'style.css', 'data.js', 'core.js', 'audio.js', 'ui.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png', 'favicon-32.png', 'og-image.png', 'sw.js', 'install-prompt.js', 'install-prompt.css', 'update.html'];
+  const base = ['index.html', 'style.css', 'portrait.css', 'data.js', 'core.js', 'audio.js', 'ui.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png', 'favicon-32.png', 'og-image.png', 'sw.js', 'install-prompt.js', 'install-prompt.css', 'update.html'];
   assert.deepEqual(files.filter(file => !file.startsWith('assets/') && !file.startsWith('fonts/')), base.sort());
   assert.ok(files.some(file => file.startsWith('assets/')));
-  for (const file of ['assets/aud-a1.webp', 'assets/ui/ui-button.webp']) assert.equal(shouldCopyMagicshow(file), true, file);
+  for (const file of ['assets/aud-a1.webp', 'assets/ui/ui-button.webp', 'assets/kit/panel.webp']) assert.equal(shouldCopyMagicshow(file), true, file);
   for (const font of ['fonts/Galmuri11.woff2', 'fonts/Galmuri11-Bold.woff2', 'fonts/Galmuri9.woff2', 'fonts/OFL.md']) assert.ok(files.includes(font), font);
   for (const file of files) {
     assert.equal(shouldCopyMagicshow(file), true, file);

@@ -1,3 +1,24 @@
+/* Batch D presentation decisions are pure and shared with fast tests. */
+globalThis.BatchDView = {
+ panel(b) {
+  if (!b) return '';
+  if (['intro','failure','gift','counter','cutscene','complete'].includes(b.twist.scene)) return 'twist:'+b.twist.scene;
+  if (b.encore.phase==='choice') return 'encore';
+  if (b.rebirthOffer && b.encore.phase!=='round') return 'rebirth';
+  return '';
+ },
+ visibleRoute(b, id, currentClear=true) { return !!b && currentClear && (id==='young-kali' ? b.ifRoute : id==='mirror-stage' && b.mirrorUnlocked); },
+ replayKeys(b) {
+  if (!b) return [];
+  const keys=[];
+  if(b.twist.failures || b.twist.complete)keys.push('twist');
+  if(b.twist.complete)keys.push('oilWater');
+  if(b.youngCleared)keys.push('young');
+  if(b.mirrorCleared)keys.push('mirror');
+  return keys;
+ }
+};
+
 /* Pure U5 presentation models shared by runtime and tests. */
 globalThis.U5 = (() => {
   const effects = {
@@ -47,7 +68,7 @@ globalThis.U5 = (() => {
   function selectHeckle(character, fallback, previous, random = Math.random) {
     const pool = character && character.heckles && character.heckles.length ? character.heckles : fallback;
     const choices = pool.filter(line => line !== previous);
-    const list = choices.length ? choices : pool;
+    const list = choices;
     return list[Math.min(list.length - 1, Math.floor(random() * list.length))] || '';
   }
   const happyPortraitPath = path => path.replace(/\.png$/, '-happy.png');
@@ -63,6 +84,29 @@ globalThis.PhoneLayout = (() => {
     const tablet = coarse && Math.min(width,height) > 500 && Math.max(width,height) <= 1400 && (!grow || Math.max(width,height) >= 1000);
     const phone = tablet || Math.min(width, height) <= 500 || (coarse && Math.min(width / 1600, height / 900) < .6);
     const content = tablet ? Math.min(w,1280) : w;
+    // Portrait prototype: a phone held upright (shortest side under 600 CSS px) stacks the battle.
+    // Landscape measure() above this return is unchanged; unit tests call landscape sizes only.
+    if (height > width && Math.min(width, height) < 600) {
+      // Venue panel, 6px gap, audience HP strip (name line plus a 10px doubt fill inside the frame), then the stage.
+      const compact = h < 700;
+      const venue = 44, rowGap = compact ? 4 : 6, hp = compact ? 34 : 52, stats = compact ? 40 : 60;
+      const finale = 0, skills = compact ? 94 : Math.min(140, Math.max(138, h - 518)), bottom = 4;
+      const topBar = venue + rowGap + hp;
+      const below = rowGap + stats + finale + rowGap;
+      const chrome = topBar + below + skills + bottom;
+      const pad = 1, gap = 1, tracks = 5;
+      const wantCell = 80;
+      const wantBoard = wantCell * tracks + pad * 2 + gap * (tracks - 1);
+      const minStage = compact ? Math.min(120, Math.max(80, h - chrome - 252)) : Math.max(200, Math.round(h * 0.28));
+      // Compact frame: 16px border + 4px padding + four 3px gaps + five 44px cells.
+      const minBoard = compact ? 252 : 292;
+      const boardP = Math.max(Math.min(minBoard, content - 8), Math.min(wantBoard, content - (compact ? 8 : 4), h - chrome - minStage));
+      const boardTop = h - bottom - boardP - skills;
+      // Short portrait screens give the stage only the remaining height so gauges cannot overlap controls.
+      const stageH = Math.max(0, boardTop - topBar - below);
+      return { phone: true, tablet: false, width: content, height: h, board: boardP, audience: Math.max(0, content - 12),
+        portrait: { top: topBar, stageH, stats, finale, skills, boardTop, pad, gap, venue, rowGap, hp, compact } };
+    }
     // U32: tablet cells are 72-96px (whole numbers) so the board fits the 44% column on narrower tablets.
     let cell = tablet ? Math.max(72, Math.min(96, Math.floor((content * .44 - 24) * 112 / 608))) : 48;
     // U43: the live game (grow=true) lets a phone board take the free height (top bar 44 + 14 margin) while the audience keeps
@@ -131,7 +175,7 @@ globalThis.Guidance = (() => {
     const progress = next ? Math.max(0, Math.min(99, Math.floor(100 * (1-next.hp/next.hpMax)))) : 0;
     const node = target(state,D,C), info = node && C.nodeInfo(state,node.id);
     const remaining = info && info.cost !== null ? Math.max(0, Math.ceil(info.cost - state[info.currency])) : 0;
-    const costText = !node ? '' : info.cost === null ? '완성' : info.purchasable ? '배울 수 있어요!' : remaining ? `${{coins:'동전',gems:'보석',keys:'열쇠',starlight:'별빛'}[info.currency]} ${C.formatNumber(remaining)} 더` : info.blockedReason;
+    const costText = !node ? '' : info.cost === null ? '완성' : info.purchasable ? '배울 수 있어요!' : remaining ? `${{coins:'동전',gems:'실크',keys:'책',starlight:'비둘기'}[info.currency]} ${C.formatNumber(remaining)} 더` : info.blockedReason;
     // v4 U38: with nothing left to learn the strip says so (friendly, no node to point at); otherwise it keeps pointing at the notebook.
     const done = !node && C.allLearned(state);
     const nodeText = node ? node.name : done ? '모든 비법을 익혔어요' : '동전을 모아 두세요';
@@ -177,7 +221,7 @@ globalThis.Presentation = (() => {
       if(blocked)return;
       if(this.active){this.active.age+=dt;if(this.active.age>=this.active.minimum&&!this.active.hold){this.active.end?.();this.active=null;this.gap=300;}return;}
       if(this.gap>0){this.gap=Math.max(0,this.gap-dt);if(this.gap>0)return;}
-      this.items.sort((a,b)=>(b.priority||0)-(a.priority||0)||a.serial-b.serial);
+      this.items.sort((a,b)=>Number(!!b.stageTransition)-Number(!!a.stageTransition)||(b.priority||0)-(a.priority||0)||a.serial-b.serial);
       if(this.items.length){this.active=this.items.shift();this.active.start?.(this.active);}
     }
     finish(){if(this.active&&this.active.age>=this.active.minimum)this.active.hold=false;}
@@ -338,7 +382,7 @@ globalThis.Presentation = (() => {
     if (!img) return;
     if (!document.body.classList.contains('tablet')) { img.style.height = ''; delete img.dataset.snap; return; }
     const apply = () => {
-      const nat = img.naturalHeight, factor = host.dataset.figureSize === 'large' ? .95 : host.dataset.figureSize === 'small' ? .72 : .84;
+      const nat = img.naturalHeight, factor = host.dataset.figureSize === 'large' ? .95 : host.dataset.figureSize === 'small' ? Math.min(1,.72*Number(host.dataset.storyScale||1)) : .84;
       if (!nat || !host.clientHeight) return;
       let k = Math.max(1, Math.round(host.clientHeight * factor / nat));
       if (k > 1 && nat * k > host.clientHeight * 1.06) k--;
@@ -385,6 +429,17 @@ globalThis.Presentation = (() => {
   }
   const venueAsset = v => `assets/${v.venueAsset}`;
   const audienceAsset = (v, a) => a.portraitAsset ? `assets/${a.portraitAsset}` : a === v.headliner ? `assets/headliner-${a.id}.png` : `assets/aud-${a.id}.png`;
+  // School-chain and NDD fights keep a family audience id (a1). Mood files must stay on the tutorial sprite, not that id's portrait.
+  function tutorialStageBase() {
+    if (!state || !state.u15 || !state.u15.tutorial || state.u15.tutorial.done) return '';
+    if (state.u15.tutorial.active) return 'assets/aud-tutorial-dogyeom.png';
+    const mark = chainMark();
+    if (!mark) return '';
+    if (mark.step.startsWith('teacher') || mark.step.startsWith('upgrade')) return 'assets/aud-s1-teacher.png';
+    if (mark.step.startsWith('girl')) return 'assets/aud-s1-classmate.png';
+    return '';
+  }
+  const stageAudienceAsset = (v, a) => tutorialStageBase() || audienceAsset(v, a);
   function moodSprite(host,path,mood='doubt'){
     if(!path){host.dataset.mood=mood;return;}
     const emotes={happy:'😊',serious:'💭',surprised:'❗',sad:'💧',smug:'😏'};
@@ -426,19 +481,26 @@ globalThis.Presentation = (() => {
   let menu = '', focusBeforePanel = null, lastAudience = '', lastLayout = '';
   // v4 U48 M: true while a panel opened from the menu sheet is showing; its 닫기/뒤로 then returns to the menu.
   let moreReturn = false;
+  let practiceOn = false, practiceHold = null, practiceWake = null;
+  let practiceIdleAt = 0, deckContinuousMs = 0, deckSaverAsked = false;
+  let wakePending = false;
   let gloveRun = 0; // v4 U48 A2: the longest auto-practice time left seen in this run (a brick is 30 minutes), for the button's ring
-  function showMore() { $('phoneMore').hidden = false; $('moreButton').setAttribute('aria-expanded', 'true'); release(); clearDecorations(); }
-  function hideMore() { $('phoneMore').hidden = true; $('moreButton').setAttribute('aria-expanded', 'false'); moreReturn = false; }
+  function showMore() { $('phoneMore').hidden = false; $('moreButton').setAttribute('aria-expanded', 'true'); autoStartStage.since=0; release(); clearDecorations(); }
+  function hideMore() { $('phoneMore').hidden = true; $('moreButton').setAttribute('aria-expanded', 'false'); moreReturn = false; autoStartStage.since=0; }
   let dialogueTimer, dealerBusy = false, dealerMessage = '', dealerLost = false, dealerResult = '';
   let dealerPicked = new Set();
   let booTimer=null, failureAudience=null, failureVenue=null;
   let failureCause = 'mental', practiceRec = null;
   let saveWarning = false, failure = null, lastMode = '';
   let boardHolds = [];
+  let caseArrange = false, arrangeFrom = null, arrangePress = null;
   const pointer = { id: null, held: false, x: -1, y: -1, inside: false };
   const particles = [], flights = [], numbers = [], cells = [];
   let heartEls = null;
   let badges = [], wonMoment = null;
+  // School tutorial before the core NDD fight. The mark lives in u15.bios (tchain:step:line) so a reload can resume.
+  // Fights themselves are rolled back: core still treats a tutorial win as the end of the only tutorial battle.
+  let chainFighting = false, chainBackup = '', chainNodeId = '', chainNodeLevel = -1, chainFocused = false, chainBookChecked = false;
   const lastHeckles = new Map(), happyCache = new Map();
   const caps = { particles: coarse ? 120 : 240, icons: 24, numbers: 4 };
   const canvas = $('effects'), ctx = canvas.getContext('2d');
@@ -699,12 +761,17 @@ globalThis.Presentation = (() => {
   const rounded = v => C.formatNumber(Math.max(0, Math.round(v)));
   const randomLine = list => list[Math.floor(Math.random() * list.length)];
   // U36: innerWidth/innerHeight flush layout, and portrait() runs inside paused(), which a frame calls dozens of times after DOM writes.
-  const portrait = () => { let v = geo.get('portrait'); if (v === undefined) { v = innerHeight > innerWidth; geo.set('portrait', v); } return v; };
+  // Phone portrait (shortest side under 600 CSS px) plays in the portrait layout. portrait() stays the pause/rotate gate for tablets and other tall viewports.
+  // Same source as PhoneLayout.measure(): fit() writes this cache from layout.portrait (visual viewport).
+  const portraitLayout = () => { let v = geo.get('portraitLayout'); if (v === undefined) { v = innerHeight > innerWidth && Math.min(innerWidth, innerHeight) < 600; geo.set('portraitLayout', v); } return v; };
+  const portrait = () => { let v = geo.get('portrait'); if (v === undefined) { v = innerHeight > innerWidth && !portraitLayout(); geo.set('portrait', v); } return v; };
   const presentation=new Presentation.Queue();
-  // v4 U47 5: true when the only reason for the pause is a character dialog (story scene): the on-screen pickup is still tappable then.
+  // A tap during a character dialogue is retained and collected only after the dialogue ends.
   const lineOpen = () => !!state.u15.scene || !$('storyDialog').hidden; // v4 U49b 1: a character dialog is on screen (the pickup is never collected then)
-  const dialogOnlyPause = () => !!state.u15.scene && !menu && !state.u18.map && !wonMoment?.pending && !document.hidden && !portrait() && $('offlineCard').hidden && !stageRewardHost && !(phone && !$('phoneMore').hidden);
-  const paused = () => wonMoment?.pending || state.u18.map || !!state.u15.scene || (state.u15.tutorial.active && (state.u15.tutorial.phase!=='fight' || state.u15.tutorial.won)) || !state.onboarding.intro || document.hidden || !!menu || portrait() || !!stageRewardHost || !$('offlineCard').hidden || (phone && !$('phoneMore').hidden) || !$('leaveConfirm').hidden || !$('sceneCard').hidden;
+  // Menu and panel sheets block every layout, including the portrait dock's full-screen sheets.
+  const blockingSheetOpen = () => !!menu || !$('phoneMore').hidden || $('moreButton').getAttribute('aria-expanded')==='true' || !$('panel').hidden;
+  const dialogOnlyPause = () => lineOpen() && !blockingSheetOpen() && !state.u18.map && !wonMoment?.pending && !document.hidden && !portrait() && $('offlineCard').hidden && !stageRewardHost && $('leaveConfirm').hidden && $('sceneCard').hidden;
+  const paused = () => wonMoment?.pending || state.u18.map || !!state.u15.scene || (state.u15.tutorial.active && (state.u15.tutorial.phase!=='fight' || state.u15.tutorial.won)) || schoolChainPaused() || !state.onboarding.intro || document.hidden || blockingSheetOpen() || portrait() || !!stageRewardHost || !$('offlineCard').hidden || !$('leaveConfirm').hidden || !$('sceneCard').hidden;
   function fit() {
     const vv = window.visualViewport;
     const width = vv ? vv.width : innerWidth, height = vv ? vv.height : innerHeight;
@@ -712,6 +779,7 @@ globalThis.Presentation = (() => {
     const probe = getComputedStyle($('safeArea'));
     const safe = Object.fromEntries(['left','right','top','bottom'].map(side => [side, parseFloat(probe.getPropertyValue(`padding-${side}`)) || 0]));
     const layout = PhoneLayout.measure(width, height, safe, coarse, true);
+    geo.set('portraitLayout', !!layout.portrait);
     phone = layout.phone;
     document.body.classList.toggle('phone', phone);
     document.body.classList.toggle('tablet',!!layout.tablet);
@@ -721,6 +789,8 @@ globalThis.Presentation = (() => {
     document.body.classList.toggle('phone-low',phone&&!layout.tablet&&layout.height<320);
     document.body.classList.toggle('phone-xshort',phone&&!layout.tablet&&layout.height<300);
     document.body.classList.toggle('phone-short',phone&&!layout.tablet&&layout.height<400);
+    document.body.classList.toggle('portrait-layout', !!layout.portrait);
+    document.body.classList.toggle('portrait-compact', !!layout.portrait?.compact);
     document.body.classList.toggle('portrait', portrait());
     scale = phone ? 1 : Math.min(innerWidth / 1600, innerHeight / 900);
     layoutWidth = phone ? layout.width : 1600; layoutHeight = phone ? layout.height : 900;
@@ -735,6 +805,25 @@ globalThis.Presentation = (() => {
     stage.style.setProperty('--stage-w',`${layoutWidth}px`); // v4 U50: the stage width for the one-scene layout (style.css U50 block)
     stage.style.setProperty('--board-size', `${layout.board}px`);
     stage.style.setProperty('--audience-width', `${layout.audience}px`);
+    if (layout.portrait) {
+      const p = layout.portrait;
+      stage.style.setProperty('--p-top', `${p.top}px`);
+      stage.style.setProperty('--p-venue', `${p.venue}px`);
+      stage.style.setProperty('--p-row-gap', `${p.rowGap}px`);
+      stage.style.setProperty('--p-hp', `${p.hp}px`);
+      stage.style.setProperty('--p-stage', `${p.stageH}px`);
+      stage.style.setProperty('--p-stats', `${p.stats}px`);
+      stage.style.setProperty('--p-finale', `${p.finale}px`);
+      stage.style.setProperty('--p-skills', `${p.skills}px`);
+      stage.style.setProperty('--p-board-top', `${p.boardTop}px`);
+      stage.style.setProperty('--p-pad', `${p.pad}px`);
+      stage.style.setProperty('--p-gap', `${p.gap}px`);
+      // One case plus the docked dialogue: the square that fits above the line, still centred.
+      const soloRoom = layout.height - p.boardTop - p.skills - 108;
+      stage.style.setProperty('--p-solo', `${Math.max(96, Math.min(layout.board, layout.width - 16, soloRoom))}px`);
+    } else {
+      for (const name of ['--p-top','--p-venue','--p-row-gap','--p-hp','--p-stage','--p-stats','--p-finale','--p-skills','--p-board-top','--p-pad','--p-gap','--p-solo']) stage.style.removeProperty(name);
+    }
     const dpr = phone ? Math.min(2, window.devicePixelRatio || 1) : 1;
     canvas.width = Math.round(layoutWidth * dpr); canvas.height = Math.round(layoutHeight * dpr);
     canvas.style.width = `${layoutWidth}px`; canvas.style.height = `${layoutHeight}px`;
@@ -749,36 +838,403 @@ globalThis.Presentation = (() => {
   for (const [sel, cls] of [['.doubt > .doubt-label', 'doubt-plate'], ['#heckleMeter > .heckle-label', 'heckle-plate']]) { const el = document.querySelector(sel); if (el) { el.classList.add(cls); $('audienceCard').append(el); } }
   const chromeHomes = new Map();
   // v4 U48 N3: 도감 stays in the top bar (nav .menu) next to 메뉴 on desktop too.
-  const DESKTOP_MENU = ['equipButton','missionsButton','mapButton','gemShopButton','customizeButton','rebirthButton','soundButton','musicButton','musicVolume','hapticsButton','textSpeedButton','retreatButton','coffeeButton','openChatButton'];
+  const DESKTOP_MENU = ['caseArrangeButton','equipButton','missionsButton','mapButton','gemShopButton','customizeButton','rebirthButton','soundButton','musicButton','musicVolume','hapticsButton','textSpeedButton','retreatButton','coffeeButton','openChatButton'];
   function moveChrome(el, host) {
+    if (!el) return;
     if (!chromeHomes.has(el)) chromeHomes.set(el, { parent: el.parentNode, next: el.nextSibling });
     host.append(el);
   }
   function phoneChrome() {
+    const portraitNow = phone && portraitLayout();
+    if (!portraitNow) leavePortraitChrome();
     if (phone) {
       moveChrome(document.querySelector('.venue-heading'), $('phoneVenue'));
       moveChrome(document.querySelector('.hud'), $('phoneWallet'));
       moveChrome($('goalStrip'),$('phoneTop'));
       moveChrome($('bookButton'),$('phoneTop'));
       moveChrome($('storyDialog'),$('stage')); // v4 U50b: out of the isolated audience card, so the widened dialog is drawn (and tapped) above the skill column
-      moveChrome($('equipButton'),$('phoneMore')); // v4 U50: the top bar keeps only 도감 and 메뉴 (owner 2026-10-14); 마술용품 lives in the menu
-      moveChrome($('bestiaryButton'),$('phoneTop')); // v4 U48 N3: 도감 sits in the top bar next to 메뉴, not in the menu
-      moveChrome($('moreButton'),$('phoneTop')); $('moreButton').textContent='☰ 메뉴';
+      moveChrome($('equipButton'),$('phoneMore')); // Equipment lives in the menu; the notebook stays in the top row.
+      // Portrait only: row 1 is the skills, row 2 is 비법, 실크 상점, 연습 모드, 메뉴. 도감 stays on the top bar.
+      if (portraitNow) placePortraitDock();
+      else {
+        showBookButton(true);
+        moveChrome($('bestiaryButton'),$('phoneTop')); // v4 U48 N3: 도감 sits in the top bar next to 메뉴, not in the menu
+        moveChrome($('moreButton'), $('phoneTop')); $('moreButton').textContent='☰ 메뉴';
+      }
       for (const id of ['storyButton','installButton','statsButton','rebirthButton','missionsButton','gemShopButton','mapButton','customizeButton','soundButton','musicButton','musicVolume','hapticsButton','textSpeedButton','retreatButton','helperControls','debug','coffeeButton','openChatButton']) moveChrome(id==='musicVolume'?$(id).parentElement:$(id), $('phoneMore'));
-      pxText($('bookButton'), innerWidth<=740?'📖':'📖 비법'); pxText($('equipButton'), '🎩 마술용품'); /* v4 U50b: a full label, it lives in the menu now */ $('moreButton').textContent=innerWidth<=740?'☰':'☰ 메뉴'; $('moreButton').setAttribute('aria-label','메뉴'); pxText($('bestiaryButton'), innerWidth<=740?'📚':'📚 도감'); $('bestiaryButton').setAttribute('aria-label','도감');
+      if (!portraitNow && $('practiceButton')) moveChrome($('practiceButton'), $('phoneMore')); // 연습 모드 is in the menu outside portrait
+      if (portraitNow) pxText($('equipButton'), '🎩 마술용품');
+      else { pxText($('bookButton'), '비법'); pxText($('equipButton'), '🎩 마술용품'); /* v4 U50b: a full label, it lives in the menu now */ $('moreButton').textContent=innerWidth<=740?'☰':'☰ 메뉴'; pxText($('bestiaryButton'), innerWidth<=740?'📚':'📚 도감'); }
+      $('moreButton').setAttribute('aria-label','메뉴'); $('bestiaryButton').setAttribute('aria-label','도감');
       updateSoundButton();const on=window.Sfx?.musicEnabled();$('musicButton').textContent=on?'음악 ON':'음악 OFF';
       $('closePanel').textContent = '← 뒤로';
     } else {
       for (const [el, home] of [...chromeHomes].reverse()) home.parent.insertBefore(el, home.next?.parentNode === home.parent ? home.next : null);
       updateSoundButton();const on=window.Sfx?.musicEnabled();$('musicButton').textContent=on?'배경음악 켜짐':'배경음악 꺼짐';
-      chromeHomes.clear(); $('moreButton').textContent='☰ 메뉴'; pxText($('equipButton'), '🎩 마술용품'); pxText($('bookButton'), '비법서'); pxText($('bestiaryButton'), '도감'); $('closePanel').textContent = '닫기';
+      chromeHomes.clear(); $('moreButton').textContent='☰ 메뉴'; pxText($('equipButton'), '🎩 마술용품'); showBookButton(true); pxText($('bookButton'), '비법'); pxText($('bestiaryButton'), '도감'); $('closePanel').textContent = '닫기';
       // v4 U46 A7: desktop keeps only 비법서 and 메뉴 at the top, like the phone; everything else lives in the menu sheet.
       for (const id of DESKTOP_MENU) moveChrome(id==='musicVolume'?$(id).parentElement:$(id), $('phoneMore'));
+      if ($('practiceButton')) moveChrome($('practiceButton'), $('phoneMore'));
     }
+    if ($('practiceButton')) $('practiceButton').hidden = false; // 연습 모드 is shared: every layout reaches it
+    if (!portraitNow) moveChrome($('caseArrangeButton'), $('phoneMore'));
+    $('caseArrangeMenuButton').hidden = !portraitNow;
+    placePortraitMeters(portraitNow);
+    portraitCopy();
+    dressPortraitStats(portraitNow);
+    placePortraitDecor(portraitNow);
     // v4 U48 M: fit() runs on every viewport resize or scroll (a phone's address bar, the keyboard); the open menu stays open unless the layout kind changed.
     if (phoneChrome.kind !== phone) { phoneChrome.kind = phone; $('phoneMore').hidden = true; $('moreButton').setAttribute('aria-expanded', 'false'); }
   }
+  // Portrait only: the stage light, Kali's table, the board frame and the menu sheet's close button.
+  function placePortraitDecor(on) {
+    for (const id of ['stageLight', 'kaliTable', 'boardFrame']) if ($(id)) $(id).hidden = !on;
+    if (on) syncKaliTable();
+    let close = $('closeMore');
+    if (on && !close) {
+      close = action('메뉴 닫기', hideMore);
+      close.id = 'closeMore';
+      close.style.order = '-4'; close.style.gridColumn = '1 / -1';
+    }
+    if (on) { close.hidden = false; if (close.parentNode !== $('phoneMore') || close !== $('phoneMore').firstChild) $('phoneMore').prepend(close); }
+    else if (close) close.remove();
+  }
+  // Leaving portrait: undo the dock, the skill row and the kit faces, so the landscape chrome is the backup's.
+  function leavePortraitChrome() {
+    const dock = $('actionDock'), skills = $('activeSkills');
+    if (!dock && !$('skillRow') && !document.querySelector('.kit-btn, .top-dogam')) return;
+    releaseSkillRow();
+    for (const id of ['caseArrangeButton', 'bookButton', 'practiceButton', 'bestiaryButton', 'moreButton', 'gemShopQuick']) clearKitFace($(id));
+    for (const button of skills.querySelectorAll('.active-skill')) button.classList.remove('kit-btn');
+    const dogam = $('bestiaryButton');
+    if (dogam) { dogam.classList.remove('top-dogam'); dogam.querySelectorAll(':scope > img.top-dogam-ico').forEach(n => n.remove()); delete dogam.dataset.pxText; }
+    if ($('gemShopQuick')) skills.prepend($('gemShopQuick')); // first in #activeSkills, as on a fresh landscape load
+    if ($('bookButton')) $('bookButton').style.removeProperty('display');
+    if (dock) {
+      // Put every moved button back to its saved home (or the landscape skill host) before the dock goes.
+      for (const el of [...dock.children]) {
+        const home = chromeHomes.get(el);
+        if (home && home.parent !== dock && home.parent.isConnected) home.parent.insertBefore(el, home.next?.parentNode === home.parent ? home.next : null);
+        else skills.append(el);
+      }
+      dock.remove();
+    }
+  }
+  // Portrait: audience HP (name, 의심 number, purple bar) is its own framed strip under the venue.
+  // 액트 and 연출 are numbers under the venue name. The stats band is 멘탈, 자신감, 피날레, then the audience 야유 gauge.
+  let portraitChromeOn = false;
+  // Portrait moves record each node's landscape parent and next sibling the first time; leaving portrait puts them back in reverse order.
+  const portraitHomes = new Map();
+  function portraitMove(el, host) {
+    if (!el || !host) return;
+    if (!portraitHomes.has(el)) portraitHomes.set(el, { parent: el.parentNode, next: el.nextSibling, known: new Set(el.parentNode ? el.parentNode.children : []) });
+    host.append(el);
+  }
+  function restorePortraitHomes() {
+    for (const [el, home] of [...portraitHomes].reverse()) {
+      if (!home.parent) continue;
+      // A node that was last goes right after its last remaining old sibling, before the siblings created while it was away, as on a fresh load.
+      let next = home.next?.parentNode === home.parent ? home.next : undefined;
+      if (next === undefined) { const old = [...home.parent.children].filter(c => c !== el && home.known.has(c)).pop(); next = old ? old.nextSibling : home.parent.firstChild; }
+      home.parent.insertBefore(el, next);
+    }
+    portraitHomes.clear();
+  }
+  function placePortraitMeters(on) {
+    const doubt = document.querySelector('.doubt-plate');
+    const bar = document.querySelector('.doubt');
+    let host = $('portraitMeters');
+    if (on) {
+      if (!host) { host = element('div', '', 'portrait-meters'); host.id = 'portraitMeters'; }
+      $('stage').append(host);
+      let left = host.querySelector('.meter-left');
+      if (!left) { left = element('div', '', 'meter-left'); host.append(left); }
+      portraitMove(doubt, left);
+      portraitMove(bar, host);
+      placePortraitPlain(true);
+      placePortraitGauges(true);
+      portraitChromeOn = true;
+    } else if (portraitChromeOn) {
+      restorePortraitHomes();
+      if (host) host.remove();
+      placePortraitPlain(false);
+      placePortraitGauges(false);
+      portraitChromeOn = false;
+    }
+  }
+  function placePortraitPlain(on) {
+    const combo = $('combo'), rate = $('stageRate');
+    let line = $('portraitPlain');
+    if (on) {
+      if (!line) {
+        line = element('div', '', 'portrait-plain');
+        line.id = 'portraitPlain';
+        line.setAttribute('aria-label', '액트와 연출');
+      }
+      const heading = document.querySelector('.venue-heading');
+      if (heading && line.parentNode !== heading) heading.append(line);
+      portraitMove(combo, line);
+      portraitMove(rate, line);
+    } else if (line) line.remove();
+  }
+  function placePortraitGauges(on) {
+    const card = $('audienceCard'), stats = $('stageStats');
+    const finisher = document.querySelector('#audienceCard .finisher, .finisher');
+    const label = document.querySelector('.finisher-label');
+    const heckle = $('heckleMeter');
+    const plate = document.querySelector('.heckle-plate');
+    let finale = $('finaleStat');
+    if (on && stats) {
+      if (!finale) {
+        finale = element('div', '', 'kali-gauge');
+        finale.id = 'finaleStat';
+        finale.setAttribute('aria-label', '피날레');
+      }
+      // Attach before moving the fill so ID lookups still find the finale subtree.
+      stats.append(finale);
+      portraitMove(label, finale);
+      let num = $('finaleNumber');
+      if (!num) { num = element('span', '', 'gauge-num'); num.id = 'finaleNumber'; finale.append(num); }
+      else finale.append(num);
+      portraitMove(finisher, finale);
+      if (heckle) {
+        heckle.classList.add('audience-gauge');
+        portraitMove(plate, heckle);
+        portraitMove(heckle, stats);
+      }
+      for (const id of ['mental', 'shield', 'finaleStat', 'heckleMeter']) {
+        const el = $(id);
+        if (el === finale) stats.append(el);
+        else portraitMove(el, stats);
+      }
+    } else if (card && stats) {
+      // restorePortraitHomes() already put the moved nodes back; only the portrait-made pieces go.
+      if (finale && finale.parentNode) finale.remove();
+      if (heckle) heckle.classList.remove('audience-gauge');
+    }
+  }
+  function portraitCopy() {
+    const on = portraitLayout();
+    const title = $('doubtTitle');
+    const kind = title.dataset.kind || '의심';
+    const name = title.dataset.audience || '';
+    const full = name ? `${name}의 ${kind}` : title.textContent;
+    const next = on ? kind : full;
+    if (title.dataset.audience && title.textContent !== next) title.textContent = next;
+    const heckle = document.querySelector('.heckle-plate > span');
+    if (heckle) { const label = on ? '야유' : '관객의 야유'; if (heckle.textContent !== label) heckle.textContent = label; }
+    let nameEl = $('doubtName');
+    const left = $('portraitMeters') && $('portraitMeters').querySelector('.meter-left');
+    if (on && left) {
+      if (!nameEl) { nameEl = element('span', '', 'doubt-name'); nameEl.id = 'doubtName'; }
+      left.prepend(nameEl);
+      if (nameEl.textContent !== name) nameEl.textContent = name;
+      nameEl.hidden = !name;
+    } else if (nameEl) nameEl.remove();
+  }
+  function showBookButton(on) {
+    const book = $('bookButton');
+    if (!book) return;
+    if (on) {
+      book.hidden = false;
+      book.style.setProperty('display', 'inline-flex', 'important');
+      book.removeAttribute('aria-hidden');
+      book.removeAttribute('tabindex');
+      book.textContent = '비법';
+      delete book.dataset.pxText;
+    } else {
+      book.style.removeProperty('display');
+      book.hidden = true;
+      book.setAttribute('aria-hidden', 'true');
+      book.tabIndex = -1;
+    }
+  }
+  function ensureActionDock() {
+    let dock = $('actionDock');
+    if (!dock) {
+      dock = element('div', '', 'action-dock');
+      dock.id = 'actionDock';
+      dock.setAttribute('role', 'group');
+      dock.setAttribute('aria-label', '비법, 실크 상점, 연습 모드, 메뉴');
+      $('activeSkills').append(dock);
+    }
+    dock.hidden = false;
+    return dock;
+  }
+  function ensureSkillRow() {
+    let row = $('skillRow');
+    if (!row) {
+      row = element('div', '', 'skill-row');
+      row.id = 'skillRow';
+      row.setAttribute('role', 'group');
+      row.setAttribute('aria-label', '스킬');
+    }
+    const skills = $('activeSkills');
+    for (const button of [...skills.querySelectorAll(':scope > .active-skill')]) {
+      if (button.id === 'gemShopQuick') continue;
+      row.append(button);
+    }
+    if (row.parentNode !== skills) skills.prepend(row);
+    row.hidden = false;
+    return row;
+  }
+  function releaseSkillRow() {
+    const row = $('skillRow');
+    if (!row) return;
+    const skills = $('activeSkills');
+    const dock = $('actionDock');
+    for (const button of [...row.children]) {
+      if (dock && dock.parentNode === skills) skills.insertBefore(button, dock);
+      else skills.append(button);
+    }
+    row.remove();
+  }
+  function dressTopDogam() {
+    const button = $('bestiaryButton');
+    if (!button) return;
+    clearKitFace(button);
+    button.classList.add('top-dogam');
+    button.setAttribute('aria-label', '도감');
+    let ico = button.querySelector(':scope > img.top-dogam-ico');
+    if (!ico) {
+      button.replaceChildren();
+      ico = document.createElement('img');
+      ico.className = 'top-dogam-ico';
+      ico.alt = '';
+      ico.width = 20;
+      ico.height = 20;
+      ico.draggable = false;
+      button.append(ico);
+    }
+    if (ico.getAttribute('src') !== 'assets/kit/icon-dogam.webp') ico.src = 'assets/kit/icon-dogam.webp';
+    delete button.dataset.pxText;
+  }
+  function placePortraitDock() {
+    const dock = ensureActionDock();
+    ensureSkillRow();
+    showBookButton(true);
+    moveChrome($('bookButton'), dock);
+    if ($('gemShopQuick')) moveChrome($('gemShopQuick'), dock);
+    if ($('practiceButton')) { $('practiceButton').hidden = false; moveChrome($('practiceButton'), dock); }
+    moveChrome($('caseArrangeButton'), dock);
+    moveChrome($('moreButton'), dock);
+    delete $('moreButton').dataset.pxText;
+    $('moreButton').setAttribute('aria-label', '메뉴');
+    $('bookButton').setAttribute('aria-label', '비법');
+    if ($('gemShopQuick')) $('gemShopQuick').setAttribute('aria-label', '실크 상점');
+    if ($('practiceButton')) $('practiceButton').setAttribute('aria-label', '연습 모드');
+    dressTopDogam();
+    moveChrome($('bestiaryButton'), $('phoneTop'));
+    // Row 1 is #skillRow. Row 2 is the dock, in this order.
+    $('activeSkills').append(dock);
+    dressPortraitButtons();
+  }
+  function clearKitFace(button) {
+    if (!button) return;
+    button.classList.remove('kit-btn');
+    for (const node of button.querySelectorAll(':scope > .kit-ico, :scope > .kit-label, :scope > small[data-kit]')) node.remove();
+    // Put back the label text that dressKitButton() took out.
+    if (button.dataset.kitText !== undefined) {
+      if (button.dataset.kitText && ![...button.childNodes].some(n => n.nodeType === 3 && n.textContent.trim())) button.append(button.dataset.kitText);
+      delete button.dataset.kitText;
+    }
+    delete button.dataset.pxText;
+  }
+  function dressKitButton(button, src, label) {
+    if (!button) return;
+    button.classList.add('kit-btn');
+    let ico = button.querySelector(':scope > img.kit-ico');
+    if (!ico) {
+      ico = document.createElement('img');
+      ico.className = 'kit-ico';
+      ico.alt = '';
+      ico.draggable = false;
+      button.prepend(ico);
+    }
+    if (ico.getAttribute('src') !== src) ico.src = src;
+    let lab = button.querySelector(':scope > .kit-label');
+    if (!lab) {
+      lab = document.createElement('span');
+      lab.className = 'kit-label';
+      const small = button.querySelector(':scope > small');
+      if (small) button.insertBefore(lab, small); else button.append(lab);
+    }
+    if (lab.textContent !== label) lab.textContent = label;
+    if (!button.querySelector(':scope > small')) { const small = document.createElement('small'); small.dataset.kit = '1'; button.append(small); }
+    const text = [...button.childNodes].filter(node => node.nodeType === 3 && node.textContent.trim());
+    if (button.dataset.kitText === undefined) button.dataset.kitText = text.map(node => node.textContent).join('');
+    for (const node of text) node.remove();
+  }
+  function dressPortraitButtons() {
+    dressKitButton($('bookButton'), 'assets/kit/icon-bibeop.webp', '비법');
+    dressKitButton($('gemShopQuick'), 'assets/cur-silk.webp', '실크 상점');
+    dressKitButton($('practiceButton'), 'assets/kit/icon-practice.webp', '연습 모드');
+    dressKitButton($('caseArrangeButton'), 'assets/kit/icon-practice.webp', '케이스 정리');
+    dressKitButton($('moreButton'), 'assets/kit/icon-menu.webp', '메뉴');
+    // kit-btn right after active-skill, so a button dressed again after a rotation has a fresh load's class order.
+    for (const button of document.querySelectorAll('#skillRow > .active-skill')) if (!button.classList.contains('kit-btn')) { const [first, ...rest] = button.classList; button.className = [first, 'kit-btn', ...rest].join(' '); }
+  }
+  function setPractice(on) {
+    practiceOn = !!on;
+    practiceHold = practiceOn ? { id: 'practice', x: C.CONST.boardSize / 2, y: C.CONST.boardSize / 2, left: 0 } : null;
+    document.body.classList.toggle('practice-on', practiceOn);
+    const veil = $('practiceVeil');
+    if (veil) veil.hidden = true;
+    practiceIdleAt = performance.now();
+    const button = $('practiceButton');
+    if (button) button.setAttribute('aria-pressed', practiceOn ? 'true' : 'false');
+    if (practiceOn) requestPracticeWake(); else releasePracticeWake();
+  }
+  function requestPracticeWake() {
+    try {
+      if (practiceWake || wakePending || document.hidden || !navigator.wakeLock || typeof navigator.wakeLock.request !== 'function') return;
+      wakePending = true;
+      navigator.wakeLock.request('screen').then(lock => {
+        wakePending = false;
+        lock.addEventListener('release', () => { if (practiceWake === lock) practiceWake = null; });
+        if (!practiceOn) { lock.release().catch(() => {}); return; }
+        practiceWake = lock;
+      }).catch(() => { wakePending = false; practiceWake = null; });
+    } catch (e) { wakePending = false; practiceWake = null; }
+  }
+  function releasePracticeWake() {
+    const lock = practiceWake;
+    practiceWake = null;
+    if (!lock) return;
+    try { const done = lock.release(); if (done && done.catch) done.catch(() => {}); } catch (e) {}
+  }
+  const PRACTICE_COPY = "칼리가 자동으로 연습을 합니다.\n연습을 하면서 돈도 벌어오는 기특한 칼리!\n잠시 다른 일을 하고 오셔도 좋습니다.";
+  function openPracticePrompt() {
+    if (practiceOn) { setPractice(false); return; }
+    const host = $('practicePrompt');
+    if (!host) return;
+    $('practicePromptText').textContent = PRACTICE_COPY;
+    host.hidden = false;
+  }
+  function closePracticePrompt() { const host = $('practicePrompt'); if (host) host.hidden = true; }
   function boardTransform() { return PhoneLayout.transform(rectOf($('board')), C.CONST.boardSize); }
+  // Portrait gaps are tighter than the 608-space grid, so a finger maps to the case cell under it.
+  function portraitBoardPoint(clientX, clientY) {
+    const board = $('board');
+    if (!board || !board.getBoundingClientRect) return null;
+    const br = board.getBoundingClientRect();
+    if (clientX < br.left || clientX > br.right || clientY < br.top || clientY > br.bottom) return null;
+    const k = C.CONST, pitch = k.cellSize + k.cellGap;
+    let best = -1, bestD = Infinity;
+    const nodes = board.children;
+    for (let i = 0; i < nodes.length; i++) {
+      const el = nodes[i];
+      if (!el.classList || !el.classList.contains('cell') || el.classList.contains('locked')) continue;
+      const r = el.getBoundingClientRect();
+      const inside = clientX >= r.left && clientX <= r.right && clientY >= r.top && clientY <= r.bottom;
+      const cx = (r.left + r.right) / 2, cy = (r.top + r.bottom) / 2;
+      const d = inside ? -1 : (clientX - cx) * (clientX - cx) + (clientY - cy) * (clientY - cy);
+      if (d < bestD) { bestD = d; best = i; }
+    }
+    if (best < 0) return null;
+    const pos = C.cellPosition(state, best);
+    return { x: k.boardInset + pos.col * pitch + k.cellSize / 2, y: k.boardInset + pos.row * pitch + k.cellSize / 2 };
+  }
   function boardPoint(x, y) {
     const p = boardTransform().toScreen(x, y), r = rectOf($('stage'));
     return { x: (p.x - r.left) / scale, y: (p.y - r.top) / scale };
@@ -792,7 +1248,11 @@ globalThis.Presentation = (() => {
   }
   function milestonePop(text,p){presentation.push({merge:'milestone:'+text,minimum:1200,start:item=>{const el=pxIcons(element('div',text+(item.extra?' · '+item.extra:''),'toast'));$('toasts').append(el);float('×2!',p.x,p.y,'#ffe65c',22);item.end=()=>el.remove();}});}
   function nextToasts(dt=0){
-    presentation.tick(dt,!!menu||document.hidden||portrait()||!$('offlineCard').hidden||(phone&&!$('phoneMore').hidden)||state.features.climax.left>0);
+    // Ordinary notices wait behind queued dialogue; genuine clear/reward notices still finish first.
+    if(state.u15.queue.length&&!presentation.active){
+      if(!presentation.items.some(item=>item.stageTransition))return;
+    }
+    presentation.tick(dt,blockingSheetOpen()||!!state.u15.scene||!$('leaveConfirm').hidden||document.hidden||portrait()||!$('offlineCard').hidden||state.features.climax.left>0);
   }
   function winLine() {
     // Curtain call names the final pre-boss sequence, never a generic victory.
@@ -804,13 +1264,15 @@ globalThis.Presentation = (() => {
       // Core's expired timers can be slightly negative at real frame boundaries.
       // Its validator expects nonnegative saved timers. Normalize only the save
       // snapshot, leaving the live simulation and every other field untouched.
-      const snapshot = Object.assign({}, state, {
-        comboMs: Math.max(0, state.comboMs),
-        sealMs: Math.max(0, state.sealMs),
-        transMs: Math.max(0, state.transMs)
+      const source = chainFighting && chainBackup ? C.deserialize(chainBackup) : null;
+      const saved = source || state;
+      if (!source && !document.hidden) C.markAway(state,Date.now());
+      const snapshot = Object.assign({}, saved, {
+        comboMs: Math.max(0, saved.comboMs),
+        sealMs: Math.max(0, saved.sealMs),
+        transMs: Math.max(0, saved.transMs)
       });
-      if (!document.hidden) C.markAway(state,Date.now());
-      snapshot.idle=state.idle;
+      snapshot.idle=saved.idle;
       const result = saveStore.write(C.serialize(snapshot));
       if (result.newer) { newerSave = true; showSaveNotice(); }
       if (result.backedUp) toast('저장을 불러오지 못해 백업해 두었어요');
@@ -831,8 +1293,8 @@ globalThis.Presentation = (() => {
   function dismissBanner() {
     clearTimeout(bannerTimer); $('banner').hidden = true; $('banner').classList?.remove?.('win-banner'); bannerActive = null;
   }
-  function banner(text,sub='',big=false,permanent=false,context=bannerContext()){
-    presentation.push({merge:'banner:'+text,minimum:2000,priority:big?10:0,start:item=>{
+  function banner(text,sub='',big=false,permanent=false,context=bannerContext(),stageTransition=false){
+    presentation.push({stageTransition,merge:'banner:'+text,minimum:2000,priority:big?10:0,start:item=>{
       bannerActive={text,sub,big,permanent,...context};$('banner').replaceChildren(document.createTextNode(text));
       if(sub||item.extra)$('banner').append(element('small',[sub,item.extra].filter(Boolean).join(' · ')));
       $('banner').classList.toggle('big',big);$('banner').hidden=false;if(!reduced)animate($('banner'),[{opacity:0,transform:'translateY(4px)'},{opacity:1,transform:'translateY(0)',offset:.2},{opacity:1,offset:.8},{opacity:0,transform:'translateY(-4px)'}],2000);item.end=dismissBanner;
@@ -840,7 +1302,7 @@ globalThis.Presentation = (() => {
   }
   function nextBanner(){ /* All notices share presentation.tick. */ }
   function showStageReward(reward){
-    presentation.push({minimum:2000,priority:20,start:item=>{
+    presentation.push({stageTransition:true,minimum:2000,priority:20,start:item=>{
       const r=D.stageRewards[reward-1],host=element('button','','stage-reward');stageRewardHost=host;host.type='button';
       host.setAttribute('aria-label',r.effect+' · 눌러서 계속');const art=element('img');art.src='assets/reward-'+r.id+'.png';art.alt='';
       host.append(art,element('h2',r.effect),element('p',r.quote));$('stage').append(host);
@@ -885,7 +1347,7 @@ globalThis.Presentation = (() => {
   function hitParticles(x,y,source,color,tier=0) {
     if(reduced)return;
     const nearby=particles.filter(p=>p.start===clock&&Math.abs(p.x-x)<2&&Math.abs(p.y-y)<2).length;
-    const count=Math.max(0,Math.min(8-nearby,Math.ceil((3+tier)*(state.features.encoreLeft>0?1.5:1))));
+    const count=Math.max(0,Math.min(3-nearby,2+tier));
     for(let i=0;i<count && particles.length<caps.particles;i++)particles.push({x,y,dx:(i-(count-1)/2)*6,dy:-12-i%3*4,start:clock,life:280,color,size:3+i%2,shape:source,sheetLead:i===0});
   }
   // U31 colleague magicians: placeholder sprite, name tags and a trick every few seconds.
@@ -990,7 +1452,7 @@ globalThis.Presentation = (() => {
   }
   function burst(x, y, color) {
     if (reduced) return;
-    for (let i = 0; i < 8 && particles.length < caps.particles; i++) {
+    for (let i = 0; i < 3 && particles.length < caps.particles; i++) {
       if(particles.filter(p=>p.start===clock&&Math.abs(p.x-x)<2&&Math.abs(p.y-y)<2).length>=8)break;
       const angle = i * Math.PI * 2 / 8;
       particles.push({ x, y, dx: Math.cos(angle) * (40 + i % 3 * 15), dy: Math.sin(angle) * (42 + i % 4 * 13), start: clock, life: 280, line: i < 4, color, size: 3 + i % 3 });
@@ -1018,9 +1480,23 @@ globalThis.Presentation = (() => {
       const origin = x >= 870 ? (y < 160 ? target('coins') : boardPoint(x - 870, y - 160)) : target('damage');
       x = origin.x; y = origin.y;
     }
-    if (reduced || flights.length >= caps.icons) return;
+    if (reduced || flights.length >= Math.min(caps.icons, 8)) return;
     if (!image && PX_ICONS[String(emoji).replace(/️/g, '')]) image = assetImage(`assets/ui/ic-${PX_ICONS[String(emoji).replace(/️/g, '')]}.webp`); // v4 U46 A5: pixel icon instead of a canvas emoji
-    flights.push({ x, y, tx: dest.x, ty: dest.y, emoji, label, color, image, start: clock + delay, life: 240 });
+    const up = !!(dest && dest.portrait);
+    flights.push({ x, y, tx: dest.x, ty: dest.y, emoji, label, color, image, start: clock + delay, life: 220, arc: up ? 'up' : '', pop: up ? dest.pop : null });
+  }
+  // Portrait case opens rise from the case into the stage. Damage hits the audience; a self buff lands on Kali.
+  function portraitDropTarget(effect) {
+    const stage = rectOf($('stage'));
+    const self = effect === 'shield' || effect === 'heal' || effect === 'power';
+    const el = self ? $('magicianMini') : $('audience');
+    const r = rectOf(el);
+    if (!r || r.width < 2) return Object.assign(target(effect), { portrait: true, pop: $('audience') });
+    return { x: (r.left + r.width / 2 - stage.left) / scale, y: (r.top + r.height * (self ? 0.4 : 0.32) - stage.top) / scale, portrait: true, pop: el };
+  }
+  function landPop(el) {
+    if (!el || reduced) return;
+    el.classList.remove('land-pop'); void el.offsetWidth; el.classList.add('land-pop');
   }
   function coinStream(x, y, count, delay = 0) {
     for (let i = 0; i < Math.min(count, 8); i++) fly(x + i * 5, y, target('coins'), '🪙', '', '#ffe35b', delay + i * 28);
@@ -1079,7 +1555,168 @@ globalThis.Presentation = (() => {
       try { navigator.vibrate(pattern); } catch(error) { /* Optional phone hardware. */ }
     }
   }
+  // Round 8 presentation. Combat numbers stay in core; these only show a hit, a telegraph, or a finale.
+  function mountRound8() {
+    const card = $('audienceCard');
+    if (!$('heckleBang')) {
+      const bang = element('span', '!', 'heckle-bang'); bang.id = 'heckleBang'; bang.setAttribute('aria-hidden', 'true'); card.append(bang);
+    }
+    if (!$('mentalEdge')) {
+      const edge = element('div', '', 'mental-edge'); edge.id = 'mentalEdge'; edge.setAttribute('aria-hidden', 'true'); card.append(edge);
+    }
+    if (!$('finaleFx')) {
+      const fx = element('div', '', 'finale-fx'); fx.id = 'finaleFx'; fx.hidden = true; fx.setAttribute('aria-hidden', 'true');
+      const cut = element('div', '', 'finale-cut');
+      cut.append(element('div', '', 'finale-kali'), element('span', '피날레!', 'finale-word'));
+      fx.append(element('div', '', 'finale-dark'), element('div', '', 'finale-spot'), cut, element('div', '', 'finale-flash'), element('span', '', 'finale-num'));
+      card.append(fx);
+    }
+    for (const id of ['mental', 'shield']) {
+      const host = $(id);
+      if (host && !host.querySelector('.meter-bar')) {
+        const bar = element('span', '', 'meter-bar'); bar.setAttribute('aria-hidden', 'true');
+        bar.append(element('span', '', 'meter-ghost'), element('span', '', 'meter-fill'));
+        host.append(bar);
+      }
+    }
+    dressPortraitStats(phone && portraitLayout());
+  }
+  // Portrait only: pixel icons on the four stats. 액트 and 연출 are counts, not gauges; 멘탈 and 자신감 keep the shared bar above.
+  function dressPortraitStats(on) {
+    const faces = [
+      ['combo', 'assets/ui/ic-star.webp'],
+      ['mental', 'assets/ui/ic-heart.webp'],
+      ['shield', 'assets/ui/ic-shield.webp'],
+      ['stageRate', 'assets/ui/ic-clap.webp']
+    ];
+    for (const [id, src] of faces) {
+      const host = $(id);
+      if (!host) continue;
+      const ico = host.querySelector(':scope > img.stat-ico');
+      if (!on) { if (ico) ico.remove(); continue; }
+      if (!ico) {
+        const img = document.createElement('img');
+        img.className = 'stat-ico';
+        img.alt = '';
+        img.draggable = false;
+        img.setAttribute('aria-hidden', 'true');
+        img.src = src;
+        host.prepend(img);
+      } else if (ico.getAttribute('src') !== src) ico.src = src;
+    }
+  }
+  function popChip(anchor, text, kind, ms) {
+    const card = $('audienceCard'); if (!card || !anchor) return;
+    card.querySelectorAll('.bar-chip.' + kind).forEach(el => el.remove());
+    const chip = element('span', text, 'bar-chip ' + kind); chip.setAttribute('aria-hidden', 'true');
+    const r = anchor.getBoundingClientRect(), c = card.getBoundingClientRect(), sc = scale || 1;
+    const above = kind === 'block';
+    chip.style.left = ((above ? r.left : r.right) - c.left) / sc + 'px';
+    chip.style.top = ((above ? r.top : r.top + r.height * .55) - c.top) / sc + 'px';
+    card.append(chip);
+    setTimeout(() => chip.remove(), ms);
+  }
+  function trailMeter(id, ms) {
+    const el = $(id); if (!el || reduced) return;
+    el.style.setProperty('--ghost', el.style.getPropertyValue('--meter') || '100%');
+    el.classList.remove('meter-hit'); void el.offsetWidth; el.classList.add('meter-hit');
+    clearTimeout(el._ghost); el._ghost = setTimeout(() => el.classList.remove('meter-hit'), ms);
+  }
+  function shakeMental() {
+    const el = $('mental'); if (!el || reduced) return;
+    el.classList.remove('bar-shake'); void el.offsetWidth; el.classList.add('bar-shake');
+    clearTimeout(el._shake); el._shake = setTimeout(() => el.classList.remove('bar-shake'), 120);
+  }
+  function kaliFlinch() {
+    const host = $('magicianMini'); if (!host) return;
+    host.classList.add('reacting', 'flinch'); host.dataset.face = 'event';
+    sprite(host, 'assets/kali-react-sad.png');
+    kaliUntil = clock + 180;
+    clearTimeout(host._flinch); host._flinch = setTimeout(() => host.classList.remove('flinch'), 180);
+  }
+  function placeHeckleBang() {
+    const bang = $('heckleBang'), aud = $('audience'), card = $('audienceCard');
+    if (!bang || !aud || !card) return;
+    const a = aud.getBoundingClientRect(), c = card.getBoundingClientRect(), sc = scale || 1;
+    if (a.width < 2) return;
+    bang.style.left = (a.left + a.width * .5 - c.left) / sc + 'px';
+    bang.style.top = (a.top + a.height * .08 - c.top) / sc + 'px';
+  }
+  let finaleFullAt = -1e9;
+  function stagePoint(el, ax, ay) {
+    const r = el.getBoundingClientRect(), s = $('stage').getBoundingClientRect(), sc = scale || 1;
+    if (r.width < 2 || r.height < 2) return null;
+    return { x: (r.left + r.width * ax - s.left) / sc, y: (r.top + r.height * ay - s.top) / sc };
+  }
+  function spawnFinaleBurst(life) {
+    const from = stagePoint($('magicianMini'), .62, .42) || stagePoint($('audienceCard'), .22, .72);
+    const to = stagePoint($('audience'), .48, .32) || stagePoint($('audienceCard'), .7, .4);
+    if (!from || !to) return;
+    const n = 16 + (Math.floor(performance.now() / 50) % 9);
+    const dx0 = to.x - from.x, dy0 = to.y - from.y, len = Math.hypot(dx0, dy0) || 1, px = -dy0 / len, py = dx0 / len;
+    for (let i = 0; i < n && particles.length < caps.particles; i++) {
+      const spread = (i - (n - 1) / 2) * 9;
+      particles.push({ x: from.x, y: from.y, dx: dx0 * .9 + px * spread, dy: dy0 * .8 + py * spread, start: clock, life: life || 400, color: i % 2 ? '#E8BF68' : '#F4EFE2', size: 8, shape: i % 2 ? 'card' : 'coin', finale: true });
+    }
+  }
+  function showFinaleNumber(dmg) {
+    const fx = $('finaleFx'); if (!fx) return;
+    const n = fx.querySelector('.finale-num'), aud = $('audience');
+    const a = aud.getBoundingClientRect(), c = fx.getBoundingClientRect(), sc = scale || 1;
+    if (a.width > 2) { n.style.left = (a.left + a.width * .5 - c.left) / sc + 'px'; n.style.top = (a.top + a.height * .4 - c.top) / sc + 'px'; }
+    n.textContent = C.formatNumber(dmg);
+    n.classList.remove('on'); void n.offsetWidth; n.classList.add('on');
+  }
+  // Full sequence at most once every 12s. Finales in between are a short glint. Game time is not paused.
+  function playFinale() {
+    mountRound8();
+    const fx = $('finaleFx'), now = performance.now(), full = now - finaleFullAt >= 12000;
+    if (full) finaleFullAt = now;
+    clearTimeout(fx._end); clearTimeout(fx._burst); clearTimeout(fx._flash); clearTimeout(fx._glint);
+    const kali = $('magicianMini');
+    const flash = fx.querySelector('.finale-flash');
+    if (flash) { flash.getAnimations().forEach(a => a.cancel()); flash.style.opacity = '0'; }
+    if (kali) kali.classList.remove('finale-glint');
+    fx.hidden = false;
+    fx.classList.remove('finale-on', 'finale-full', 'finale-short', 'finale-reduced');
+    void fx.offsetWidth;
+    const mode = !full ? 'finale-short' : (reduced ? 'finale-reduced' : 'finale-full');
+    fx.classList.add('finale-on', mode);
+    const endFinale = () => {
+      fx.hidden = true;
+      fx.classList.remove('finale-on', 'finale-full', 'finale-short', 'finale-reduced');
+      if (kali) kali.classList.remove('finale-glint');
+      if (flash) { flash.getAnimations().forEach(a => a.cancel()); flash.style.opacity = '0'; }
+    };
+    if (mode === 'finale-full') {
+      animate($('audienceCard'), [{ transform: 'translateX(0)' }, { transform: 'translateX(-4px)', offset: .2 }, { transform: 'translateX(4px)', offset: .5 }, { transform: 'translateX(-3px)', offset: .75 }, { transform: 'translateX(0)' }], 250);
+      if (flash) {
+        const anim = flash.animate([{ opacity: 0.35 }, { opacity: 0 }], { duration: 60, easing: 'linear', fill: 'forwards' });
+        fx._flash = setTimeout(() => { anim.cancel(); flash.style.opacity = '0'; }, 60);
+      }
+      fx._burst = setTimeout(() => { if (!fx.hidden && fx.classList.contains('finale-full')) spawnFinaleBurst(400); }, 700);
+      fx._end = setTimeout(endFinale, 1200);
+    } else if (mode === 'finale-reduced') {
+      fx._end = setTimeout(endFinale, 400);
+    } else {
+      if (!reduced) {
+        animate($('audienceCard'), [{ transform: 'translateX(0)' }, { transform: 'translateX(-2px)', offset: .35 }, { transform: 'translateX(2px)', offset: .7 }, { transform: 'translateX(0)' }], 200);
+        if (kali) {
+          kali.classList.add('finale-glint');
+          fx._glint = setTimeout(() => kali.classList.remove('finale-glint'), 400);
+        }
+      }
+      fx._end = setTimeout(endFinale, 400);
+    }
+  }
   function events(list) {
+    for(const e of list.filter(e=>e.type==='batchD')){
+      if(e.kind==='interference'||e.kind==='lock'||e.kind==='hide')toast(e.kind==='hide'?'🙈 케이스 내용이 잠시 가려져요':'🔒 케이스 하나가 잠시 잠겨요. 다른 케이스를 열어 주세요');
+      if(e.kind==='encoreEnd')toast(e.success?'앙코르 성공! 추가 동전을 받았어요':'앙코르 종료. 기본 보상은 그대로예요');
+      if(e.kind==='sideWin')showBatchDLines(D.batchD.stages[e.side].name,D.storyReview.ifRoute[D.batchD.stages[e.side].script].afterClear,()=>{if(e.side==='young')startBatchDSide('mirror');});
+      if(e.kind==='sideLoss')toast('다시 준비해도 괜찮아요. 무대 지도에서 재도전해요');
+      save();
+    }
     for (const [id,,message] of Guidance.firstEffects(state,list)) {
       state.guidance.seen.push(id); toast(message);
       sceneLight(.04);
@@ -1125,12 +1762,12 @@ globalThis.Presentation = (() => {
       if(e.type==='homecomingAct'||e.type==='phase2'||(e.type==='win'&&C.isHeadliner(D.venues[e.venue-1],e.j)))haptic([30,40,30]);
       if(e.type==='outfit'){renderOutfit();banner('새 무대 의상!',['','거실 티셔츠','무대 정장','우주 망토'][e.tier]);sound('milestone');const p=target('mental');burst(p.x,p.y,'#ffe65c');$('magicianMini').classList.add('outfit-sparkle');setTimeout(()=>$('magicianMini').classList.remove('outfit-sparkle'),650);save();}
       if(e.type==='trueFanReveal'){banner('숨은 도전 발견! 열렬한 찐팬','도감에서 새로운 도전을 확인해 보세요',false,true);sound('milestone');save();}
-      if(e.type==='travelResult'){save();toast(e.success?`도전 성공!${e.gems?' 보석 +'+e.gems+(state.u18.paid.length*1<=C.CHALLENGE_CAP*100?' · 마술 실력 +1%':''):''}`:'도전 종료 · 다시 도전할 수 있어요');openStageMap();}
+      if(e.type==='travelResult'){save();toast(e.success?`도전 성공!${e.gems?' 실크 +'+e.gems+(state.u18.paid.length*1<=C.CHALLENGE_CAP*100?' · 마술 실력 +1%':''):''}`:'도전 종료 · 다시 도전할 수 있어요');openStageMap();}
       if(e.type==='routine')showRoutine(e.id);
       if(e.type==='futurePhase'){sound('finisher');endRoutine();if(e.phase===3)animate($('audience'),[{opacity:0},{opacity:1}],650);}
       if(e.type==='futureWin'){banner('미래의 나','다음 한 장은 네 몫이야');sound('ending');}
       if(e.type==='setBonus'){banner(e.slug==='collection'?'칼리 컬렉션 세트 완성!':'관객 세트 완성!',e.slug==='collection'?'연출 +10%':`${C.venueBySlug(e.slug).name} · 마술 실력 +3%`);sound('milestone');save();}
-      if(e.type==='visitorCatch'){const r=$('eventVisitor').getBoundingClientRect(),stage=$('stage').getBoundingClientRect(),p={x:(r.left+r.width/2-stage.left)/scale,y:(r.top+r.height/2-stage.top)/scale};burst(p.x,p.y,'#ffe65c');toast(e.reward==='power'?'30초 마술 실력 ×2':e.reward==='coins'?`동전 +${C.formatNumber(e.amount)}`:'열쇠 +1');sound('event');save();}
+      if(e.type==='visitorCatch'){const r=$('eventVisitor').getBoundingClientRect(),stage=$('stage').getBoundingClientRect(),p={x:(r.left+r.width/2-stage.left)/scale,y:(r.top+r.height/2-stage.top)/scale};burst(p.x,p.y,'#ffe65c');toast(e.reward==='power'?'30초 마술 실력 ×2':e.reward==='coins'?`동전 +${C.formatNumber(e.amount)}`:'책 +1');sound('event');save();}
       if (e.type === 'stageReward') {
         sound('milestone'); showStageReward(e.reward);
       }
@@ -1150,7 +1787,7 @@ globalThis.Presentation = (() => {
       if (sounds[e.type] && !(e.type === 'audHit' && e.blocked)) sound(sounds[e.type], { combo: e.n, auto: !pointer.held && ['boxBreak','combo','audHit'].includes(e.type) });
       if (e.type === 'heckle' && e.dmg > e.shieldDmg) sound('mental');
       if (e.type === 'itemLand' && e.effect === 'coins') sound('coin');
-      if (e.type === 'finisher') { kaliPose(1,400); audSurprisedUntil = clock + 600; }
+      if (e.type === 'finisher') { audSurprisedUntil = clock + 600; }
       if (e.type === 'crit') audSurprisedUntil = clock + 500;
       if (e.type === 'boxHit') squash(e.cell);
       if (e.type === 'boxBreak') {
@@ -1163,7 +1800,7 @@ globalThis.Presentation = (() => {
         if (typeof breakMoment === 'function') breakMoment(p.x, p.y, color); // tests run this block in a vm without the effect helpers
 
         coinStream(p.x, p.y, 1);
-        if (e.gem) fly(p.x, p.y, target('gems'), '💎');
+        if (e.gem) fly(p.x, p.y, target('gems'), '🧣');
       } else if (e.type === 'unlockReveal') {
         const labels = { slot: ['새 케이스 자리!', '옆자리에서도 마술을 시작해요'], area: ['지팡이가 넓어졌어요!', '여러 케이스를 한 번에 두드려요'], dove: ['마술 비둘기 등장!', '관객에게 날아가 감탄을 더해요'], rabbit: ['마술 토끼 등장!', '주머니에서 동전을 꺼내줘요'], boxHelper: ['팬들이 일을 도와요!', '케이스를 돌아가며 두드려요'], assistant: ['마술 어시스턴트 등장!', '황금 케이스 작업도 맡겨요'], equip: ['마술용품 해금!', '소품 3개 놓기 · 같은 종류가 더 잘 나와요'] };
         banner(...(labels[e.id] || ['숨은 비법 발견!', D.tree.find(n => 'hidden:' + n.id === e.id)?.name || '새 비법을 확인하세요']), true, true); save();
@@ -1174,14 +1811,16 @@ globalThis.Presentation = (() => {
       } else if (e.type === 'goldenBreak') {
         toast(`금빛 사례 +${C.formatNumber(e.coins)}`);
       } else if (e.type === 'achievement') {
-        toast(`🏅 ${achievementLabels[e.id]} · 연출 +0.5%`);
+        const info = C.achievementInfo(state, e.id);
+        const pct = Math.round(((info && info.bonus) || 0) * 1000) / 10;
+        toast(`🏅 ${info ? info.name : e.id} · 마술 실력 +${pct}%`);
       } else if (e.type === 'encore') {
-        banner('피버 타임!',`${e.duration / 1000}초 · 마술 실력 ×2`);
+        banner('피버 타임!',`${e.duration / 1000}초 · 마술 실력 ×${(2 * (state.tree.encore ? 1 + C.nodeEffects(state).encorePower : 1)).toFixed(1)} · 자동 개봉 속도 +25%`);
       } else if (e.type === 'worker' && e.phase === 'work') {
         squash(e.cell); const host=workerActors[e.workerId];if(host)animate(host.querySelector('.asset-sprite')||host,[{transform:'translateY(0)'},{transform:'translateY(2px)'},{transform:'translateY(0)'}],140);sound('worker', { auto: true });const p=cellCenter(e.cell);float('+'+rounded(e.dmg),p.x-20,p.y,'#89d8c1',11);
       } else if (e.type === 'crit') {
         const p = cellCenter(e.cell);
-        if(numbers.length>=caps.numbers)numbers.shift();float('CRITICAL',p.x,p.y-12,'#eac568',14,2);numbers[numbers.length-1].critical=true;hitParticles(p.x,p.y,'critical','#E8BF68',2);sceneLight(.06);
+        if(numbers.length>=caps.numbers)numbers.shift();float('결정타',p.x,p.y-12,'#eac568',14,2);numbers[numbers.length-1].critical=true;hitParticles(p.x,p.y,'critical','#E8BF68',2);sceneLight(.06);
       } else if (e.type === 'dove') {
         helperMotion('dove', target('damage'));
         sound('whoosh', { auto: true });
@@ -1197,26 +1836,29 @@ globalThis.Presentation = (() => {
       } else if (e.type === 'combo') {
         animate($('combo'), [{ transform: 'scale(1.3)' }, { transform: 'scale(1)' }], 140);
       } else if (e.type === 'audHit') {
-        if(e.source==='colleague'){if(!e.blocked)colleagueHitFx(e);}
+        if (events.finaleHit && e.source !== 'colleague') { events.finaleHit = false; if (typeof showFinaleNumber === 'function') showFinaleNumber(e.dmg); }
+        else if(e.source==='colleague'){if(!e.blocked)colleagueHitFx(e);}
         else hitFeedback(e,hitSource,e.presentationMaxDoubt||hitMaxDoubt);
       } else if (e.type === 'itemLand') {
         statFloat(e.effect, e.value);if(e.effect!=='damage'){const p=target(e.effect);hitParticles(p.x,p.y,hitSource,'#eac568');}
       } else if (e.type === 'finisher') {
-        sceneLight(.08);
+        events.finaleHit = true; events.finaleDmg = e.dmg; if (typeof playFinale === 'function') playFinale();
       } else if (e.type === 'heckleTelegraph') {
         const v = D.venues[state.venue - 1], a = C.audienceAt(v, state.j);
         const line = U5.selectHeckle(a, venueHeckles(state.venue), lastHeckles.get(a.id));
-        lastHeckles.set(a.id, line); $('heckle').textContent = line;
+        if(line)lastHeckles.set(a.id, line); $('heckle').textContent = line;
         audHeckleMood = D.lineFaces.moods['fight:'+a.id+':heckles:'+a.heckles.indexOf(line)]||D.lineFaces.faceMap.roleDefaults[a.role]||'doubt';
-        moodSprite($('audience'),audienceAsset(v,a),audHeckleMood);
+        moodSprite($('audience'),stageAudienceAsset(v,a),audHeckleMood);
       } else if (e.type === 'heckle') {
-        if(e.dmg>=state.mentalMax*.2||e.critical){$('magicianMini').classList.add('reacting');$('magicianMini').dataset.face='event';sprite($('magicianMini'),'assets/kali-react-surprised.png');kaliUntil=clock+800;animate($('stage'),[{marginLeft:'0px'},{marginLeft:'2px'},{marginLeft:'0px'}],180);animate($('mental'),[{boxShadow:'0 0 0 3px #E8BF68'},{boxShadow:'none'}],150);}
-        if (e.dmg > e.shieldDmg) float(`−${C.formatNumber(e.dmg - e.shieldDmg)} 멘탈`, 426, 714, '#ff8d8d');
+        if (e.shieldDmg > 0 && typeof popChip === 'function') { popChip($('shield'), '막음', 'block', 200); trailMeter('shield', 400); }
+        if (e.dmg > e.shieldDmg && typeof popChip === 'function') {
+          popChip($('mental'), '-' + C.formatNumber(e.dmg - e.shieldDmg), 'hurt', 450);
+          trailMeter('mental', 450); shakeMental(); kaliFlinch();
+        }
         if (state.pattern === 'stealCoins') {
           for (let i = 0; i < 5; i++) fly(1230, 90, { x: 426 + i * 25, y: 320 }, '🪙', '', '#ffbd73', i * 25);
           patternPulse('동전을 가져갔어요');
         }
-        if (e.shieldDmg) float(`방어 −${rounded(e.shieldDmg)}`, 676, 714, '#a8e8ff');
         animate($('audienceCard'),[{transform:'translateX(0)'},{transform:'translateX(2px)'},{transform:'translateX(-2px)'},{transform:'translateX(0)'}],120);
       } else if (e.type === 'milestone') {
         const p=cellCenter(e.cell);milestonePop('새 경지 · 케이스 힘 ×2!',p);sound('milestone');
@@ -1239,25 +1881,28 @@ globalThis.Presentation = (() => {
       } else if (e.type === 'levelUp') {
         toast(`레벨 ${e.level}! 멘탈 회복`);
       } else if (e.type === 'win') {
+        if (absorbChainWin()) break;
         prefetchWinSeen = true;
         const v = D.venues[e.venue - 1], a = C.audienceAt(v, e.j);
         const context = { ...U5.encounter(D.venues, state), venueSlug: v.slug, audId: a.id,
           encounterId: `${state.dimension}:${state.wins}:${state.fails}:${a.id}` };
         audience.restored=true;wonMoment = { v, a, context, pending:true,until:Infinity };
-        presentation.push({winner:true,minimum:2500,priority:100,start:item=>{wonMoment.pending=false;wonMoment.until=clock+2500;C.holdWinTransition(state,2500);
-          moodSprite($('audience'),audienceAsset(v,a),D.lineFaces.moods['fight:'+a.id+':winLine']||'happy');$('audienceLine').textContent=a.winLine;$('audienceLine').hidden=false;kaliPose(2,2500);
+        presentation.push({stageTransition:true,winner:true,minimum:2500,priority:100,start:item=>{wonMoment.pending=false;wonMoment.until=clock+2500;C.holdWinTransition(state,2500);
+          if(a.id==='h5'){$('audience').style.scale='1';sprite($('audience'),'assets/aud-tutorial-mingiri-happy.png');}
+          else moodSprite($('audience'),stageAudienceAsset(v,a),D.lineFaces.moods['fight:'+a.id+':winLine']||'happy');$('audienceLine').textContent=a.winLine;$('audienceLine').hidden=false;kaliPose(2,2500);
           sceneLight(.06);
           const head=C.isHeadliner(v,e.j),progress=`관객 ${e.j}/${v.audiences.length+1}`;
           bannerActive={...context};$('banner').replaceChildren(document.createTextNode(winLine()));$('banner').append(element('small',progress+' · '+(head?v.headliner.defeatLine:'동전 +'+C.formatNumber(e.coins))));$('banner').classList.add('win-banner');$('banner').hidden=false;
           const moment=clearMoment(head,e.coins);
           item.end=()=>{moment.stop();dismissBanner();wonMoment=null;};
         }});
-        if (e.trophy) {toast(`🏆 ${v.trophy} 획득!`, 'trophy');presentation.push({minimum:0,hold:true,priority:60,start:item=>{if(!openCurtainCall(v.slug))item.hold=false;else item.end=()=>{};}});}
-        if (e.keys) toast('🔑 관객 도감 완성! 열쇠 1개');
+        if (e.trophy) {toast(`🏆 ${v.trophy} 획득!`, 'trophy');presentation.push({stageTransition:true,minimum:0,hold:true,priority:60,start:item=>{if(!openCurtainCall(v.slug))item.hold=false;else item.end=()=>{};}});}
+        if (e.keys) toast('📕 관객 도감 완성! 책 1개');
         save();
       } else if (e.type === 'venueUnlocked') {
-        if (e.name) banner(`${e.name} 도착!`, D.venues[e.venue - 1].intro, true); save();
+        if (e.name) banner(`${e.name} 도착!`, D.venues[e.venue - 1].intro, true, false, bannerContext(), true); save();
       } else if (e.type === 'fail') {
+        if (absorbChainFail()) break;
         failure = e.reasonPct; failureCause = e.cause === 'damage' || e.cause === 'gate' || e.cause === 'stall' || e.cause === 'lastHeckle' ? e.cause : 'mental'; lastAudience = ''; release();
         showBoo(e); save();
       } else if (e.type === 'phase2') {
@@ -1276,6 +1921,7 @@ globalThis.Presentation = (() => {
         revealEnding = state.endings.length === 1; endingStep = 0; save();
       }
     }
+    if (events.finaleHit) { if (typeof showFinaleNumber === 'function') showFinaleNumber(events.finaleDmg); events.finaleHit = false; }
   }
   function squash(i) {
     if (!cells[i]) return;
@@ -1291,6 +1937,15 @@ globalThis.Presentation = (() => {
     if (state.vMax < D.venues.length) options.push('새 무대에 처음 도착');
     return options.join(' 또는 ');
   }
+  let slotHintTimer;
+  function showSlotCondition() {
+    // Direct input feedback must not wait behind queued rewards or story notices.
+    let hint = $('toasts').querySelector('.slot-condition');
+    if (!hint) { hint = element('div', '', 'toast slot-condition'); hint.setAttribute('role', 'status'); $('toasts').prepend(hint); }
+    hint.textContent = slotCondition();
+    clearTimeout(slotHintTimer);
+    slotHintTimer = setTimeout(() => hint.remove(), 1200);
+  }
   function buildBoard() {
     if (lastLayout === 'fixed') return;
     lastLayout = 'fixed'; cells.length = 0; $('board').replaceChildren();
@@ -1298,23 +1953,34 @@ globalThis.Presentation = (() => {
       const p = C.cellPosition(state, i);
       const el = document.createElement('div'); el.className = 'cell working';
       el.style.gridColumn = p.col + 1; el.style.gridRow = p.row + 1; el.style.setProperty('--bob', `${-((i * 7) % 25) * 0.11}s`); // v4 U46 A1: per-cell idle bob phase
-      el.innerHTML = '<div class="box"><div class="lv"></div><div class="box-fill"></div><div class="chest"></div><div class="box-number"><span class="bitmap"></span><span class="percent-symbol">%</span></div><span class="spawn-timer"></span></div>';
-      el.addEventListener('click', () => { if (i === state.board.length) toast(slotCondition()); });
+      el.innerHTML = '<div class="box"><div class="lv"></div><div class="box-fill"></div><div class="chest"></div><div class="respawn-stage" hidden></div><div class="respawn-puff" aria-hidden="true"></div><div class="box-number"><span class="bitmap"></span><span class="percent-symbol">%</span></div><span class="spawn-timer"></span></div>';
+      el.addEventListener('click', () => { if (i === state.board.length) showSlotCondition(); });
       el.addEventListener('keydown', e => {
-        if (i === state.board.length && ['Enter', ' '].includes(e.key)) { e.preventDefault(); toast(slotCondition()); }
+        if (i === state.board.length && ['Enter', ' '].includes(e.key)) { e.preventDefault(); showSlotCondition(); }
       });
       $('board').append(el);
       cells.push({ el, box: el.querySelector('.box'), fill: el.querySelector('.box-fill'),
-        num: el.querySelector('.bitmap'), lv: el.querySelector('.lv'), timer: el.querySelector('.spawn-timer') });
+        num: el.querySelector('.bitmap'), lv: el.querySelector('.lv'), timer: el.querySelector('.spawn-timer'),
+        respawn: el.querySelector('.respawn-stage'), puff: el.querySelector('.respawn-puff'), respawnStage: '' });
     }
   }
+  // Portrait only: Kali's table art follows the venue.
+  function syncKaliTable() {
+    const table = $('kaliTable'), v = D.venues[state.venue - 1];
+    if (!table || !v || !portraitLayout()) return;
+    const street = v.slug === 'party' || v.slug === 'school' || v.slug === 'cafe' || v.slug === 'festival' || v.slug === 'moon';
+    const kind = v.slug === 'family' ? 'home' : street ? 'street' : 'stage';
+    const src = kind === 'stage' ? 'assets/kit/kali-table.webp' : `assets/kit/kali-table-${kind}.webp`;
+    if (table.dataset.kind !== kind) { table.dataset.kind = kind; table.src = src; }
+  }
   function audience() {
-    if(state.mode==='transition'&&state.resolved&&state.idle.next&&!audience.restored){const v=D.venues[state.venue-1],a=C.audienceAt(v,state.j);audience.restored=true;wonMoment={v,a,context:U5.encounter(D.venues,state),until:clock+state.transMs};moodSprite($('audience'),audienceAsset(v,a),D.lineFaces.moods['fight:'+a.id+':winLine']||'happy');$('audienceLine').textContent=a.winLine;$('audienceLine').hidden=false;}
+    if(state.mode==='transition'&&state.resolved&&state.idle.next&&!audience.restored){const v=D.venues[state.venue-1],a=C.audienceAt(v,state.j);audience.restored=true;wonMoment={v,a,context:U5.encounter(D.venues,state),until:clock+state.transMs};moodSprite($('audience'),stageAudienceAsset(v,a),D.lineFaces.moods['fight:'+a.id+':winLine']||'happy');$('audienceLine').textContent=a.winLine;$('audienceLine').hidden=false;}
     if (wonMoment && (wonMoment.pending||presentation.active?.winner||clock < wonMoment.until)) return;
     wonMoment = null;
     const v = D.venues[state.venue - 1];
-    const a = state.u15.tutorial.active ? {name:'NDD',emoji:'🙎',flavor:D.storyV15.tutorial.bio,bio:D.storyV15.tutorial.bio} : v.audiences[state.j - 1] || v.headliner;
-    const key = `${state.dimension}:${state.u15.tutorial.active?'tutorial':state.audId}${state.pattern==='futureMirror'&&state.u19.phase===3?':true':''}`;
+    const faced = chainFace();
+    const a = faced ? {name:faced.name,emoji:faced.emoji,role:faced.role,flavor:'',bio:''} : state.u15.tutorial.active ? {name:'NDD',emoji:'🙎',flavor:D.storyV15.tutorial.bio,bio:D.storyV15.tutorial.bio} : v.audiences[state.j - 1] || v.headliner;
+    const key = `${state.dimension}:${state.u15.tutorial.active?'tutorial':state.audId}${state.pattern==='futureMirror'&&state.u19.phase===3?':true':''}${faced?':'+faced.name:''}${schoolBackdropOn()?':school':''}`;
     if (key !== lastAudience) {
       lastAudience = key; pendingIntro = null;
       $('room').dataset.venue = v.slug;
@@ -1325,13 +1991,19 @@ globalThis.Presentation = (() => {
       $('room').style.setProperty('--venue-accent', v.palette.accent);
       for (const [k, c] of [['--venue-bg1', v.palette.bg1], ['--venue-bg2', v.palette.bg2], ['--venue-accent', v.palette.accent]]) $('stage').style.setProperty(k, c); // v4 U54: the board half and the panel frames use the venue palette
       $('venueName').textContent = v.name;
-      $('doubtTitle').textContent = `${a.name}의 ${['supporter','helper'].includes(a.role)?'기대':'의심'}`;
+      if (typeof syncKaliTable === 'function') syncKaliTable();
+      $('doubtTitle').dataset.audience = a.name;
+      $('doubtTitle').dataset.kind = ['supporter','helper'].includes(a.role) ? '기대' : '의심';
+      $('doubtTitle').textContent = portraitLayout() ? $('doubtTitle').dataset.kind : `${a.name}의 ${$('doubtTitle').dataset.kind}`;
+      portraitCopy();
       $('audience').replaceChildren(element('span', a.emoji, 'sprite-fallback'));
-      sprite($('audience'), state.u15.tutorial.active ? (state.u15.tutorial.won?'assets/aud-tutorial-dogyeom-happy.png':'assets/aud-tutorial-dogyeom.png') : (audienceAsset(v,a))); $('audience').setAttribute('aria-label', a.name);
-      if(!state.u15.tutorial.active)moodSprite($('audience'),audienceAsset(v,a),['supporter','helper'].includes(a.role)?'happy':D.lineFaces.faceMap.roleDefaults[a.role]||'doubt');
+      sprite($('audience'), faced ? faced.portrait : state.u15.tutorial.active ? (state.u15.tutorial.won?'assets/aud-tutorial-dogyeom-happy.png':'assets/aud-tutorial-dogyeom.png') : (audienceAsset(v,a))); $('audience').setAttribute('aria-label', a.name);
+      if(!state.u15.tutorial.active && !faced)moodSprite($('audience'),stageAudienceAsset(v,a),['supporter','helper'].includes(a.role)?'happy':D.lineFaces.faceMap.roleDefaults[a.role]||'doubt');
       { const nextA = C.audienceAt(v, state.j + 1); if (nextA && nextA !== a) { const p = audienceAsset(v, nextA), mood = D.lineFaces.faceMap.roleDefaults[nextA.role]; for (const q of [p, p.replace(/\.png$/, '-happy.png'), mood && p.replace(/\.png$/, '-' + mood + '.png')]) if (q) assetImage(q); } } // v4 U49 3: warm the next audience's pictures
       animate($('audience'),[{opacity:0},{opacity:1}],350); // U54b: fade in place; every frame stays inside the fitted stage space.
       $('audience').classList.toggle('headliner', a === v.headliner);
+      $('audience').style.setProperty('--story-scale',String(a.storyScale||1));
+      $('audience').dataset.storyScale=String(a.storyScale||1);
       $('audienceLine').textContent = a.encounterLine || a.bio || a.flavor;
       bioPending=a.encounterLine?key:state.u15.bios.includes(key)?'':key;bioUntil=0;
       $('audienceCard').dataset.pattern = state.pattern;
@@ -1354,8 +2026,11 @@ globalThis.Presentation = (() => {
       const dimension = D.dimensions[state.dimension - 1];
       $('dimensionLabel').textContent = `차원 ${state.dimension} · ${dimension ? dimension.name : '새로운 앵콜'}`;
       $('stage').style.setProperty('--dimension-hue', `${dimension ? dimension.hue : (state.dimension * 47) % 360}deg`);
+      if (schoolBackdropOn()) applySchoolRoom(); else $('room').dataset.chainSchool = '';
     }
     if (audience.winExit) { audience.winExit.cancel(); audience.winExit = null; } // the slide-out held the old audience hidden; the entrance above (if any) already runs
+    const during = chainDuringLine();
+    if (during) { $('audienceLine').textContent = during; $('audienceLine').hidden = portraitLayout(); }
   }
   let kaliUntil = 0, kaliMoodState = 'normal', audMoodState = 'doubt', audSurprisedUntil = 0, audHeckleMood = '', audTestMood = ''; // v4 U50d: audTestMood only set by MagicShowUI.audienceMood (tests)
   // v4 U37 faces. Kali and the audience faces are re-evaluated from the state every frame (C.kaliMood, C.audienceMood), so nothing latches.
@@ -1373,11 +2048,17 @@ globalThis.Presentation = (() => {
     }
   }
   function audienceFaceTick() {
-    if (audTestMood || menu === 'boo' || wonMoment || state.u15.tutorial.active || (state.pattern === 'futureMirror' && state.u19.phase === 3)) return; // v4 U50d: audTestMood = a face held by the test hook
+    if (audTestMood || menu === 'boo' || wonMoment || (state.pattern === 'futureMirror' && state.u19.phase === 3)) return; // v4 U50d: audTestMood = a face held by the test hook
+    const tutorialBase = tutorialStageBase();
+    const mark = tutorialBase && !state.u15.tutorial.active ? chainMark() : null;
+    const tutorialFight = !!tutorialBase && ((state.u15.tutorial.active && state.u15.tutorial.phase === 'fight' && !state.u15.tutorial.won) || (!!mark && mark.step.endsWith('-fight')));
+    if (!tutorialFight && (state.u15.tutorial.active || chainFace())) return; // lines and clear beats keep the portrait audience() already set
     const v = D.venues[state.venue - 1], a = v && C.audienceAt(v, state.j), host = $('audience');
     if (!a || !host.dataset.asset) return;
     audMoodState = C.audienceMood(state, audMoodState, { heckle: state.telegraphed && state.mode === 'fight' ? audHeckleMood : '', surprised: clock < audSurprisedUntil });
-    if (host.dataset.mood !== audMoodState) moodSprite(host, audienceAsset(v, a), audMoodState);
+    const art = tutorialBase || audienceAsset(v, a);
+    const wrong = !!tutorialBase && !String(host.dataset.asset).startsWith(tutorialBase.replace(/\.png$/, ''));
+    if (host.dataset.mood !== audMoodState || wrong) moodSprite(host, art, audMoodState);
   }
   function kaliPose(frame,ms) {
     if ($('magicianMini').classList.contains('routine-art')) return; // v4 U49 1: the routine art holds Kali's spot (no card-fan frame, no hop) until the cut-in ends
@@ -1443,6 +2124,7 @@ globalThis.Presentation = (() => {
     $('coinSecond').textContent=`초당 동전 +${C.formatNumber(coins)}`;
   }
   function stepCombat(dt,input) {
+    if (typeof caseArrange !== 'undefined' && caseArrange) return [];
     const coins=state.features.progress.coinsEarned,health=state.mental+state.shield,aud=state.audId;
     const fight=state.mode==='fight' && state.features.climax.left<=0;
     const maxDoubt=state.audHpMax;
@@ -1451,7 +2133,7 @@ globalThis.Presentation = (() => {
     if(fight)sampleRates(dt,list,state.features.progress.coinsEarned-coins,health-state.mental-state.shield,aud);
     events(list);return list;
   }
-  function activateSkill(id) { if(paused())return;const coins=state.features.progress.coinsEarned,health=state.mental+state.shield,aud=state.audId;const maxDoubt=state.audHpMax;const list=C.useSkill(state,id);list.filter(e=>e.type==='audHit').forEach(e=>e.presentationMaxDoubt=maxDoubt);if(list.length){sampleRates(0,list,state.features.progress.coinsEarned-coins,health-state.mental-state.shield,aud);events(list);sound('skill');kaliPose(2,500);save();render();} }
+  function activateSkill(id) { if(caseArrange || paused())return;const coins=state.features.progress.coinsEarned,health=state.mental+state.shield,aud=state.audId;const maxDoubt=state.audHpMax;const list=C.useSkill(state,id);list.filter(e=>e.type==='audHit').forEach(e=>e.presentationMaxDoubt=maxDoubt);if(list.length){sampleRates(0,list,state.features.progress.coinsEarned-coins,health-state.mental-state.shield,aud);events(list);sound('skill');kaliPose(2,500);save();render();} }
   function receiveOffline(now) {
     syncDaily();
     const away=now-state.idle.wallMs, gain=C.collectOffline(state,now);
@@ -1530,12 +2212,12 @@ globalThis.Presentation = (() => {
   function drawMissions() {
     syncDaily();const d=state.u14.daily,r=d.records[d.date]||{claimed:[],progress:{},bonus:false,streakReward:0},streak=d.latest&&C.dateOrdinal(d.date)-C.dateOrdinal(d.latest)>1?0:d.streak;openPanel('missions','오늘의 공연');dailyPanelSignature=JSON.stringify(r);
     const intro=element('div','','mission-heading');intro.append(artFallback('assets/icon-mission.png','🎯','u14-art'),element('p',`${d.date} · 연속 공연 ${streak}일`));$('panelBody').append(intro);
-    const cycle=element('div','','streak-cycle');D.streakGems.forEach((g,i)=>{const day=element('span',`${i+1}일 · 💎 ${g}`);day.classList.toggle('current',streak>0&&(streak-1)%7===i);cycle.append(day);});$('panelBody').append(cycle);
+    const cycle=element('div','','streak-cycle');D.streakGems.forEach((g,i)=>{const day=element('span',`${i+1}일 · 🧣 ${g}`);day.classList.toggle('current',streak>0&&(streak-1)%7===i);cycle.append(day);});$('panelBody').append(cycle);
     for(const id of C.dailySelection(d.date)){
       const m=D.missions.find(m=>m.id===id),done=r.claimed.includes(id),progress=Math.min(m.target,r.progress[id]||0),card=element('article','','daily-mission');
-      card.classList.toggle('completed',done);card.append(element('strong',m.name),element('p',`${C.formatNumber(progress)} / ${m.target} · 💎 ${m.gems}${done?' · 보상 받음':''}`));const meter=element('progress');meter.max=m.target;meter.value=progress;meter.setAttribute('aria-label',m.name);card.append(meter);$('panelBody').append(card);
+      card.classList.toggle('completed',done);card.append(element('strong',m.name),element('p',`${C.formatNumber(progress)} / ${m.target} · 🧣 ${m.gems}${done?' · 보상 받음':''}`));const meter=element('progress');meter.max=m.target;meter.value=progress;meter.setAttribute('aria-label',m.name);card.append(meter);$('panelBody').append(card);
     }
-    $('panelBody').append(element('p',r.bonus?'세 공연 완료 · 보너스 열쇠 +1 받음':'세 공연을 모두 마치면 열쇠 +1'),element('p',r.streakReward?`오늘 연속 공연 보석 +${r.streakReward} 받음`:'오늘 첫 미션을 마치면 연속 공연 보석을 받아요'));
+    $('panelBody').append(element('p',r.bonus?'세 공연 완료 · 보너스 책 +1 받음':'세 공연을 모두 마치면 책 +1'),element('p',r.streakReward?`오늘 연속 공연 실크 +${r.streakReward} 받음`:'오늘 첫 미션을 마치면 연속 공연 실크를 받아요'));
   }
   let routineUntil=0;
   function showRoutine(id){
@@ -1568,6 +2250,12 @@ globalThis.Presentation = (() => {
   // lengths or the viewport change: if title, regen and number do not fit on one line, the regen ("회복 N/초", also in 능력치) is left out; if the
   // title and the number still do not fit (narrow phones), the title takes two lines in the 9 px pixel font inside the same 22 px plate.
   function fitDoubtPlate(key){
+    if(portraitLayout()){
+      const plate=document.querySelector('.doubt-plate');if(!plate)return;
+      fitDoubtPlate.key=key;fitDoubtPlate.short=false;
+      plate.classList.remove('plate-noregen','plate-2l');
+      num($('doubtNumber'),`${rounded(state.audHp)}/${rounded(state.audHpMax)}`,true);return;
+    }
     if(fitDoubtPlate.key===key)return;fitDoubtPlate.key=key;
     const plate=document.querySelector('.doubt-plate');if(!plate)return;
     plate.classList.remove('plate-noregen','plate-2l');fitDoubtPlate.short=false;num($('doubtNumber'),`${rounded(state.audHp)}/${rounded(state.audHpMax)}`,true);
@@ -1676,12 +2364,44 @@ globalThis.Presentation = (() => {
     if (reached) { host.querySelector('.dress-note')?.remove(); const note = element('div', '무대가 화려해졌어요!', 'dress-note'); host.append(note); setTimeout(() => note.remove(), 2200);
       host.classList.remove('dress-new'); void host.offsetWidth; host.classList.add('dress-new'); }
   }
+  function respawnStageOf(cell) {
+    const tau = Math.max(1, state._tau || 350);
+    const frac = Math.max(0, Math.min(1, cell.spawn / tau));
+    if (frac > 2 / 3) return 'wood';
+    if (frac > 1 / 3) return 'paper';
+    return 'case';
+  }
+  const RESPAWN_ART = { wood: 'assets/respawn-1-wood.webp', paper: 'assets/respawn-2-paper.webp' };
+  function paintRespawn(dom, cell, stageName) {
+    if (!dom.respawn) return;
+    // The case sprite itself is the last third. Wood and paper are a single image in the same box;
+    // the cream/wood CSS block is only the asset-failed fallback (sprite() sets that class).
+    if (cell.hp > 0 || !stageName || stageName === 'case') {
+      dom.respawn.hidden = true;
+      dom.respawnStage = '';
+      if (dom.el.dataset.respawn) delete dom.el.dataset.respawn;
+      return;
+    }
+    if (dom.respawnStage && dom.respawnStage !== stageName && dom.puff && !reduced) {
+      dom.puff.classList.remove('on');
+      void dom.puff.offsetWidth;
+      dom.puff.classList.add('on');
+    }
+    dom.respawnStage = stageName;
+    dom.el.dataset.respawn = stageName;
+    dom.respawn.hidden = false;
+    dom.respawn.classList.remove('respawn-wood', 'respawn-paper', 'respawn-case');
+    dom.respawn.classList.add('respawn-' + stageName);
+    const path = RESPAWN_ART[stageName];
+    if (path && dom.respawn.dataset.asset !== path) sprite(dom.respawn, path);
+  }
   function render() {
     if (moreReturn && $('panel').hidden && $('phoneMore').hidden) moreReturn = false; // v4 U48 M: the show was reached another way (stage travel, a scene)
     $('stage').classList.toggle('decorations-paused',paused());
     $('equipButton').hidden=!C.equipSlots(state); $('equipButton').classList.toggle('is-new',!!C.equipSlots(state)&&!state.guidance.seen.includes('equipButton'));
     renderU19();renderU14(); renderIdle(); renderU15();
     buildBoard(); if(menu!=='boo')audience(); nextBanner(); renderFeatures(); renderMagic(); renderGuidance(); renderColleagues(); stageDressing();
+    if (practiceOn && (menu || state.mode !== 'fight' || state.u18.map)) setPractice(false);
     const home=C.bossProfile(state)==='homecoming';
     const boss = C.bossProfile(state)==='mirror';
     $('audienceCard').classList.toggle('final-boss', boss);
@@ -1689,7 +2409,15 @@ globalThis.Presentation = (() => {
     $('phaseIndicator').hidden = !boss && !home;
     $('phaseIndicator').textContent = state.phase2 ? `최종 공연 · 마지막 질문 · 확신 ${state.features.climax.confidence}%` : '최종 공연 · 의심의 거울';
     if (boss) $('patternLabel').textContent = state.phase2 ? '액트 10마다 확신 +10% · 피날레 최대 ×2' : '15초마다 거울 케이스 2개 · 도우미와 연쇄로 열어요';
-    pxText($('starlightLabel'), `✦ 별빛 ${state.starlight}`);
+    {
+      const el = $('starlightLabel'), text = `비둘기 ${state.starlight}`;
+      if (el && el.dataset.pxText !== text) {
+        el.dataset.pxText = text; el.replaceChildren();
+        const img = document.createElement('img');
+        img.className = 'cur-icon'; img.src = 'assets/cur-dove.webp'; img.alt = ''; img.width = 18; img.height = 18;
+        el.append(img, document.createTextNode(' ' + text));
+      }
+    }
     if(home&&!wonMoment) {
       $('phaseIndicator').textContent=['','1막 · 준비한 한 수','2막 · 함께 만든 공연','3막 · 마지막 인사'][state.review.act];
       $('audienceLine').textContent=C.venueBySlug('lecturenote').headliner['act'+state.review.act+'Line'];
@@ -1709,7 +2437,8 @@ globalThis.Presentation = (() => {
     {
       // v4 U38: heckle strength per second, doubt regrowth per second (only when there is any) and the player's own matching numbers.
       const th=C.threatInfo(state),heckleText=th.last?`마지막 한 번 ${rounded(th.hit)}`:`한 번에 ${rounded(th.hit)}`,everyText=th.last?'':`${+th.every.toFixed(1)}초마다`,regenText=th.regen>0?`회복 ${rounded(th.regen)}/초`:'';
-      if($('attackNumber').textContent!==heckleText)$('attackNumber').textContent=heckleText;
+      const attackText=portraitLayout()?(th.last?`마지막 ${rounded(th.hit)}`:rounded(th.hit)):heckleText;
+      if($('attackNumber').textContent!==attackText)$('attackNumber').textContent=attackText;
       if($('doubtRegen').textContent!==regenText)$('doubtRegen').textContent=regenText;
       fitDoubtPlate(`${$('doubtTitle').textContent}|${regenText.length}|${(rounded(state.audHp)+'/'+rounded(state.audHpMax)).length}|${innerWidth}x${innerHeight}|${phone}`);
       const mine=C.attackRate(state),mineText=mine==null?'재는 중':`${rounded(mine)}/초`;
@@ -1720,20 +2449,50 @@ globalThis.Presentation = (() => {
       const challengeText=`+${Math.round(C.challengeBonus(state)*100)}%`;if($('stat-challenge')&&$('stat-challenge').textContent!==challengeText)$('stat-challenge').textContent=challengeText; // v4 U46 C1
     }
     $('countdown').textContent = `${Math.max(0, state.heckleMs / 1000).toFixed(1)}초`;
-    $('audienceCard').classList.toggle('telegraph', state.mode === 'fight' && state.heckleMs <= C.CONST.telegraphMs);
+    {
+      const card = $('audienceCard'), on = state.mode === 'fight' && state.heckleMs <= C.CONST.telegraphMs;
+      if (on !== card.classList.contains('telegraph')) { card.classList.toggle('telegraph', on); if (on) placeHeckleBang(); }
+      card.classList.toggle('mental-low', state.mode === 'fight' && !state.resolved && state.mentalMax > 0 && state.mental / state.mentalMax < .3);
+    }
     const meter=$('heckleMeter'),progress=Math.max(0,Math.min(100,(1-state.heckleMs/Math.max(400,state.interval*1000))*100));
-    $('heckleFill').style.width=progress+'%';meter.setAttribute('aria-valuenow',String(Math.round(progress)));meter.classList.toggle('imminent',state.mode==='fight'&&!state.resolved&&state.heckleMs<=600);
+    const heckleFill=$('heckleFill');
+    if(heckleFill){heckleFill.style.width=progress+'%';heckleFill.style.setProperty('--meter',progress+'%');}
+    if(meter){meter.setAttribute('aria-valuenow',String(Math.round(progress)));meter.classList.toggle('imminent',state.mode==='fight'&&!state.resolved&&state.heckleMs<=600);}
     syncMotionLoops();
     num($('stat-power'), rounded(C.wandDamage(state)));
     num($('stat-damage'), rounded(C.CONST.itemDamage * state._V));
     num($('stat-guard'), rounded(C.CONST.itemShield * state._U));
     num($('stat-heal'), rounded(C.CONST.itemHeal * state._U));
     num($('bestCombo'), state.maxCombo, true);
-    num($('comboNumber'), state.combo, true);
-    const finalePercent = `${Math.min(100, state.finisher / C.nodeEffects(state).finaleNeed * 100)}%`;
-    $('finisherFill').style.height = phone ? '100%' : finalePercent;
-    $('finisherFill').style.width = phone ? finalePercent : '';
-    pxText($('mentalNumber'), `멘탈 ❤ ${rounded(state.mental)} / ${rounded(state.mentalMax)}`);
+    num($('comboNumber'), portraitLayout() ? rounded(state.combo) : state.combo, true);
+    const finaleNeed = Math.max(1, C.nodeEffects(state).finaleNeed);
+    const finalePercent = `${Math.min(100, state.finisher / finaleNeed * 100)}%`;
+    const finisherFill = $('finisherFill');
+    if (finisherFill) {
+      const band = phone && portraitLayout();
+      finisherFill.style.height = phone ? '100%' : finalePercent;
+      finisherFill.style.width = phone ? finalePercent : '';
+      // Portrait: keep the fill inside the 8px track. An absolute fill with right:0 escapes a static parent and covers the band.
+      finisherFill.style.right = band ? 'auto' : '';
+      finisherFill.style.bottom = band ? 'auto' : '';
+      finisherFill.style.top = band ? '0' : '';
+    }
+    if (portraitLayout() && $('finaleNumber')) {
+      const finaleText = `${rounded(state.finisher)}/${finaleNeed}`;
+      if ($('finaleNumber').textContent !== finaleText) $('finaleNumber').textContent = finaleText;
+    }
+    if (portraitLayout() && $('finaleStat')) $('finaleStat').style.setProperty('--meter', finalePercent);
+    // Portrait shows the four stats in one band, so the number is only the value (the label is the word 멘탈).
+    pxText($('mentalNumber'), portraitLayout() ? rounded(state.mental) : `멘탈 ❤ ${rounded(state.mental)} / ${rounded(state.mentalMax)}`);
+    {
+      const mentalMax = Math.max(1, state.mentalMax || 1);
+      $('mental').style.setProperty('--meter', `${Math.max(0, Math.min(100, state.mental / mentalMax * 100))}%`);
+      $('shield').style.setProperty('--meter', `${Math.max(0, Math.min(100, state.shield / mentalMax * 100))}%`);
+      const actCap = Math.max(state.maxCombo || 0, state.combo || 0, 1);
+      $('combo').style.setProperty('--meter', `${state.combo > 0 ? Math.max(8, Math.min(100, state.combo / actCap * 100)) : 0}%`);
+      const atk = C.attackRate(state);
+      $('stageRate').style.setProperty('--meter', `${atk > 0 ? Math.max(12, Math.min(100, Math.log10(atk + 1) / 6 * 100)) : 0}%`);
+    }
     (heartEls||(heartEls=[...$('hearts').querySelectorAll('.heart')])).forEach((el, i) => el.classList.toggle('empty', i >= Math.ceil(state.mental / state.mentalMax * 5)));
     num($('shieldNumber'), rounded(state.shield));
     num($('levelNumber'), state.level);
@@ -1741,17 +2500,31 @@ globalThis.Presentation = (() => {
     num($('xpNumber'), `${rounded(state.xp)}/${C.formatNumber(xpNeed)}`, true);
     $('xpFill').style.width = `${Math.min(100, state.xp / xpNeed * 100)}%`;
     for (const id of ['coins','gems','keys']) num($(id), rounded(state[id]), true);
+    // One tutorial case: shrink the board into the space above the docked dialogue so that case sits in the middle of the visible board.
+    {
+      const mark = chainMark();
+      const fightLine = (!!mark && !state.u15.tutorial.done && !state.u15.tutorial.active && mark.step.endsWith('-fight'))
+        || (state.u15.tutorial.active && state.u15.tutorial.phase === 'fight' && !state.u15.tutorial.won);
+      const solo = portraitLayout() && state.board.length === 1 && (!$('storyDialog').hidden || fightLine);
+      if (document.body.classList.contains('portrait-solo') !== solo) { document.body.classList.toggle('portrait-solo', solo); wandOffset = null; }
+    }
     for (let i = 0; i < cells.length; i++) {
       const cell = state.board[i], dom = cells[i];
+      dom.el.classList.toggle('arrange-selected', caseArrange && arrangeFrom === i);
       const pos=C.cellPosition(state,i);dom.el.style.gridColumn=pos.col+1;dom.el.style.gridRow=pos.row+1;
       dom.el.dataset.center=pos.row>=1&&pos.row<=3&&pos.col>=1&&pos.col<=3?'1':'';
+      const interference=state.batchD.interference;
+      const blocked=interference.left>0&&interference.cell===i;
+      dom.el.classList.toggle('batch-d-lock',blocked&&interference.kind==='lock');
+      dom.el.classList.toggle('batch-d-hide',blocked&&interference.kind==='hide');
+      dom.el.dataset.interference=blocked?(interference.kind==='lock'?'🔒 잠시 잠김':'🙈 내용 가림'):'';
       const locked = !cell, next = i === state.board.length;
       dom.el.classList.toggle('locked', locked);
       dom.el.classList.toggle('next-slot', next);
       dom.el.tabIndex = next ? 0 : -1;
       dom.el.setAttribute('role', next ? 'button' : 'img');
       dom.el.setAttribute('aria-label', next ? slotCondition() : locked ? '잠긴 자리' : `카드 케이스 ${i + 1}`);
-      if (locked) { dom.lv.textContent = ''; delete dom.lv.dataset.pips; continue; }
+      if (locked) { dom.lv.textContent = ''; delete dom.lv.dataset.pips; if (dom.respawn) dom.respawn.hidden = true; delete dom.el.dataset.respawn; continue; }
       const pct = cell.hpMax ? Math.min(100, Math.max(0, Math.round((1 - cell.hp / cell.hpMax) * 100))) : 0;
       // v4 U48 M2: no LV text on the board; the case colour is the level band and 1 to 4 small dots the place inside it (the level stays in the aria-label).
       if (dom.lv.textContent) dom.lv.textContent = '';
@@ -1761,7 +2534,10 @@ globalThis.Presentation = (() => {
       dom.el.classList.toggle('golden', !!cell.golden);
       dom.el.classList.toggle('golden-broken', !!cell.goldenBroken && cell.hp <= 0);
       const skin=state.u18.equipped.cases;
-      const path = skin ? `assets/case-${skin}${cell.hp<=0?'-broken':''}.png` : cell.goldenBroken && cell.hp <= 0 ? 'assets/box-golden-broken.png' : `assets/${C.caseTier(cell)}.png`;
+      const forming = cell.hp <= 0;
+      const stageName = forming ? respawnStageOf(cell) : '';
+      const intact = forming && stageName === 'case';
+      const path = skin ? `assets/case-${skin}${forming && !intact ? '-broken' : ''}.png` : cell.goldenBroken && forming && !intact ? 'assets/box-golden-broken.png' : `assets/${C.caseTier(cell)}.png`;
       dom.el.classList.toggle('case-customized',!!skin);dom.el.dataset.tier=C.caseTier(cell);
       let fallback=chest.querySelector('.sprite-fallback');if(!fallback){fallback=element('span','','sprite-fallback');chest.append(fallback);}fallback.textContent=skin?D.cosmetics.cases.find(x=>x.id===skin).emoji:'📦';
       if (chest.dataset.asset !== path) sprite(chest, path);
@@ -1770,6 +2546,7 @@ globalThis.Presentation = (() => {
       if (dom.fillPct !== pct && (dom.fillAt === undefined || performance.now() - dom.fillAt >= NUM_MS || pct === 0)) { dom.fillPct = pct; dom.fillAt = performance.now(); dom.fill.style.height = `${pct}%`; dom.fill.style.setProperty('--fill', pct / 100); }
       dom.el.classList.toggle('empty', cell.hp <= 0);
       if (dom.opening !== (pct > 0)) { dom.opening = pct > 0; dom.el.classList.toggle('case-opening', dom.opening); } // v4 U46 A1: the idle bob stops while a case is being opened
+      paintRespawn(dom, cell, stageName);
       if (cell.hp <= 0) dom.timer.textContent = `${(cell.spawn / 1000).toFixed(1)}`;
       dom.el.classList.toggle('sealed', cell.sealed);
       dom.el.classList.toggle('mirrored', state.features.climax.mirrored.includes(i));
@@ -1779,8 +2556,8 @@ globalThis.Presentation = (() => {
     const a = C.wandArea(state);
     $('areaLabel').textContent = `지팡이 범위 ${a.cols} × ${a.rows}`;
     if ($('rangeShape')) { $('rangeShape').textContent = '▦'; $('rangeShape').setAttribute('aria-label', `${a.cols}열 ${a.rows}행`); }
-    $('hint').textContent = menu ? '공연 일시정지' : `${state.wins ? '케이스' : '카드 케이스'}를 꾹 누르세요 · 초당 ${C.wandRate(state).toFixed(1)}회`;
-    updateWand(); modeHooks(); syncFlags();
+    $('hint').textContent = caseArrange ? '케이스 정리 · 드래그하거나 두 칸을 눌러 바꾸세요' : menu ? '공연 일시정지' : `${state.wins ? '케이스' : '카드 케이스'}를 꾹 누르세요 · 초당 ${C.wandRate(state).toFixed(1)}회`;
+    updateWand(); modeHooks(); syncFlags(); renderBatchD();
   }
   function wandRect(point = pointer) {
     const a = C.wandArea(state), k = C.CONST;
@@ -1805,14 +2582,36 @@ globalThis.Presentation = (() => {
   function updateWand() {
     $('wand').classList.toggle('visible', pointer.inside && !menu && !portrait());
     if (!pointer.inside) return;
-    const r = wandRect(), ratio = boardWidth() / C.CONST.boardSize;
+    const r = wandRect();
+    let ratio = boardWidth() / C.CONST.boardSize;
+    // Portrait: #board used to be centred with translateX(-50%). offsetLeft ignores that transform, so the green
+    // square was drawn half a board to the right of the finger. Place the wand from the visual rect instead
+    // (the same rect boardTransform uses for hits) and do not use a CSS translate on the board.
+    if (portraitLayout()) {
+      let base = wandOffset;
+      if (!base || base.portrait !== true) {
+        const board = $('board').getBoundingClientRect(), card = $('boardCard').getBoundingClientRect();
+        base = wandOffset = {
+          portrait: true,
+          x: (board.left - card.left) / scale, y: (board.top - card.top) / scale,
+          ratioX: board.width / scale / C.CONST.boardSize, ratioY: board.height / scale / C.CONST.boardSize
+        };
+      }
+      ratio = base.ratioX;
+      const wand = $('wand');
+      wand.style.left = `${base.x + r.x * base.ratioX}px`; wand.style.top = `${base.y + r.y * base.ratioY}px`;
+      wand.style.width = `${r.width * base.ratioX}px`; wand.style.height = `${r.height * base.ratioY}px`;
+      wand.style.transform = 'none';
+    } else {
+    if ($('wand').style.left) { $('wand').style.left = ''; $('wand').style.top = ''; }
     $('wand').style.width = `${r.width * ratio}px`; $('wand').style.height = `${r.height * ratio}px`;
     // U36: since the skill column moved into #boardCard (U30c) the board sits 60 px right of and 27 px below the wand's own origin on phones,
     // so the drawn box was shifted by about half a case against the cells it hit. The board's offset inside the card is added here.
     // v4 U40: the offset only changes with the layout, so it is kept until fit() clears it (it used to be re-read every frame, forcing a layout after the frame's DOM writes).
     let off = wandOffset;
-    if (!off) { off = { x: $('board').offsetLeft + $('board').clientLeft - $('wand').offsetLeft, y: $('board').offsetTop + $('board').clientTop - $('wand').offsetTop }; wandOffset = off; }
+    if (!off || off.portrait) { off = { x: $('board').offsetLeft + $('board').clientLeft - $('wand').offsetLeft, y: $('board').offsetTop + $('board').clientTop - $('wand').offsetTop }; wandOffset = off; }
     $('wand').style.transform = `translate(${off.x + r.x * ratio}px,${off.y + r.y * ratio}px)`;
+    }
     if(phone){
       const target=coveredCells().find(i=>i<state.board.length),icon=$('wandIcon');
       icon.hidden=target===undefined;
@@ -1827,16 +2626,57 @@ globalThis.Presentation = (() => {
   }
   function locate(e) {
     const p = boardTransform().toBoard(e.clientX, e.clientY);
+    if (typeof portraitLayout === 'function' && portraitLayout()) { const hit = portraitBoardPoint(e.clientX, e.clientY); if (hit) { p.x = hit.x; p.y = hit.y; } }
     pointer.x = p.x; pointer.y = p.y;
     pointer.inside = p.x >= 0 && p.x <= C.CONST.boardSize && p.y >= 0 && p.y <= C.CONST.boardSize;
     updateWand();
   }
-  function pulse(point = pointer) {
+  // New presses share one rolling budget; hold pulses keep their per-pointer cadence.
+  const tapMarks = new Map();
+  const holdMarks = tapMarks;
+  const pressMarks = [];
+  function countTap(id, kind = 'hold') {
+    const now = performance.now();
+    let marks = pressMarks;
+    if (kind === 'hold') {
+      marks = holdMarks.get(id);
+      if (!marks) { marks = []; holdMarks.set(id, marks); }
+    }
+    let i = 0;
+    while (i < marks.length && now - marks[i] >= 1000) i++;
+    if (i) marks.splice(0, i);
+    if (marks.length >= 12) return false;
+    marks.push(now);
+    return true;
+  }
+  function pressCells(taps, kind) {
+    const scale = kind === 'tap' ? .92 : .96;
+    const ms = kind === 'tap' ? 40 : 80;
+    for (const i of taps) {
+      const el = cells[i] && cells[i].box;
+      if (!el) continue;
+      animate(el, [{ transform: `scale(${scale})` }, { transform: `scale(${scale})`, offset: .45 }, { transform: 'scale(1)' }], ms);
+    }
+  }
+  function pulseFreePractice() {
+    // TODO core auto practice
+    if ((typeof caseArrange !== 'undefined' && caseArrange) || paused() || state.mode !== 'fight' || (state.u15 && state.u15.gloveLeft > 0)) return;
+    const taps = [];
+    for (let i = 0; i < state.board.length; i++) taps.push(i);
+    if (!taps.length || !countTap('practice', 'hold')) return;
+    stepCombat(.001,{taps:[],holding:true});
     if (paused() || state.mode !== 'fight') return;
+    sound('tap'); stepCombat(.001,{taps,holding:true,pulse:'hold'});
+    pressCells(taps, 'hold');
+  }
+  function pulse(point = pointer, kind = 'hold') {
+    if ((typeof caseArrange !== 'undefined' && caseArrange) || paused() || state.mode !== 'fight') return;
     stepCombat(.001,{taps:[],holding:true});
     if (paused() || state.mode !== 'fight') return;
     const taps = coveredCells(point);
-    if (taps.length) { sound('tap'); stepCombat(.001,{taps,holding:true}); }
+    if (!taps.length || !countTap(point.id, kind)) return;
+    sound('tap'); stepCombat(.001,{taps,holding:true,pulse:kind});
+    pressCells(taps, kind);
   }
   function syncPointer() {
     const p = boardHolds[0]; pointer.held = !!p; pointer.id = p ? p.id : null;
@@ -1844,25 +2684,59 @@ globalThis.Presentation = (() => {
     updateWand();
   }
   function release() {
-    const old = boardHolds; boardHolds = []; syncPointer();
+    const arranging = arrangePress; arrangePress = null;
+    if (arranging && $('board').hasPointerCapture(arranging.id)) $('board').releasePointerCapture(arranging.id);
+    const old = boardHolds; boardHolds = []; holdMarks.clear(); syncPointer();
     for (const p of old) if ($('board').hasPointerCapture(p.id)) $('board').releasePointerCapture(p.id);
-    if (old.length && !document.hidden && !menu && !portrait()) events(C.step(state,.001,{taps:[]}));
+    if (!caseArrange && old.length && !document.hidden && !menu && !portrait()) events(C.step(state,.001,{taps:[]}));
   }
-  // v4 U46 B: the 300 ms hold-then-drag case move is gone; holding a case only opens it. Saved u15.positions (custom layouts of old saves) still place the cases.
+  // Arrangement uses the existing saved permutation, never the combat hold path.
+  function arrangeSlot(e) {
+    const hit = document.elementFromPoint(e.clientX, e.clientY)?.closest('#board .cell');
+    const index = cells.findIndex(c => c.el === hit);
+    return index < 0 ? null : state.u15.positions[index];
+  }
+  function arrangeSelect(slot) {
+    if (slot === null) return;
+    const index = state.u15.positions.indexOf(slot);
+    if (arrangeFrom === null) {
+      if (index < state.board.length) arrangeFrom = index;
+    } else {
+      if (C.moveCase(state, arrangeFrom, slot)) { save(); geo.clear(); }
+      arrangeFrom = null;
+    }
+    render();
+  }
+  $('board').addEventListener('click', e => { if (caseArrange) { e.preventDefault(); e.stopImmediatePropagation(); } }, true);
+  for (const id of ['caseArrangeButton','caseArrangeMenuButton']) $(id).addEventListener('click', () => {
+    release(); arrangeFrom = null; arrangePress = null; caseArrange = !caseArrange;
+    for (const id of ['caseArrangeButton','caseArrangeMenuButton']) $(id).setAttribute('aria-pressed', String(caseArrange));
+    $('board').classList.toggle('arranging', caseArrange);
+    hideMore(); render();
+  });
   $('board').addEventListener('pointerdown', e => {
     if (paused() || state.mode !== 'fight' || (e.pointerType === 'mouse' && e.button !== 0) || boardHolds.length >= 3) return;
+    if (caseArrange) {
+      e.preventDefault(); arrangePress = {id:e.pointerId, slot:arrangeSlot(e)};
+      $('board').setPointerCapture(e.pointerId); return;
+    }
+    // Let the next locked slot receive its click without board pointer capture.
+    if (e.target.closest('.cell.next-slot')) return;
     e.preventDefault(); const p = boardTransform().toBoard(e.clientX,e.clientY);
+    if (typeof portraitLayout === 'function' && portraitLayout()) { const hit = portraitBoardPoint(e.clientX, e.clientY); if (hit) { p.x = hit.x; p.y = hit.y; } }
     if (p.x<0||p.y<0||p.x>608||p.y>608) return;
     boardHolds = C.holdPointers(boardHolds,{type:'down',id:e.pointerId,...p});
     $('board').setPointerCapture(e.pointerId); syncPointer();
     const initial = C.advanceHolds(boardHolds,0,C.wandRate(state)); boardHolds=initial.holds;
-    for (const point of initial.pulses) pulse(point);
+    for (const point of initial.pulses) pulse(point, 'tap');
     tutorialSignal('hold'); render();
     window.dispatchEvent(new CustomEvent('magicshow:gesture'));
   });
   $('board').addEventListener('pointermove', e => {
+    if (caseArrange) return;
     if (boardHolds.some(p=>p.id===e.pointerId)) {
       const p=boardTransform().toBoard(e.clientX,e.clientY);
+      if (typeof portraitLayout === 'function' && portraitLayout()) { const hit = portraitBoardPoint(e.clientX, e.clientY); if (hit) { p.x = hit.x; p.y = hit.y; } }
       boardHolds=C.holdPointers(boardHolds,{type:'move',id:e.pointerId,...p}); syncPointer();
     } else if (e.pointerType==='mouse' && !boardHolds.length) locate(e);
   });
@@ -1870,7 +2744,17 @@ globalThis.Presentation = (() => {
     if (!pointer.held) { pointer.inside=false; updateWand(); }
   });
   for (const name of ['pointerup','pointercancel','lostpointercapture']) $('board').addEventListener(name,e=> {
-    boardHolds=C.holdPointers(boardHolds,{type:'up',id:e.pointerId}); syncPointer();
+    if (caseArrange && arrangePress?.id === e.pointerId) {
+      const press = arrangePress; arrangePress = null;
+      if (name === 'pointerup' && !paused() && state.mode === 'fight') {
+        const slot = arrangeSlot(e);
+        if (slot !== null && slot !== press.slot) {
+          const from = state.u15.positions.indexOf(press.slot);
+          if (from >= 0 && from < state.board.length) { arrangeFrom = from; arrangeSelect(slot); }
+        } else if (slot !== null) arrangeSelect(slot);
+      }
+    }
+    boardHolds=C.holdPointers(boardHolds,{type:'up',id:e.pointerId}); holdMarks.delete(e.pointerId); syncPointer();
     if (!boardHolds.length && e.pointerType!=='mouse') { pointer.inside=false; updateWand(); }
   });
   window.addEventListener('blur', release);
@@ -1897,6 +2781,8 @@ globalThis.Presentation = (() => {
     $('closePanel').focus(); updateWand(); nextToasts();
   }
   function closePanel() {
+    if(menu==='batchD'){resolveBatchDPanel();return;}
+    if(menu==='batchDReplay'){finishBatchDReplay();return;}
     if(menu==='curtain'&&curtainFinish){curtainFinish();return;} // v4 U51 2: the header 건너뛰기 of the curtain call ends it like the old in-scene 건너뛰기
     if(menu==='curtain'){clearTimeout(curtainTimer);curtainScene?.remove();curtainScene=null;presentation.finish();}
     if (['boo','fail','ending','rebirth','bossPhase'].includes(menu) || (menu === 'dealer' && dealerBusy)) return;
@@ -1922,7 +2808,7 @@ globalThis.Presentation = (() => {
   function showBoo(e) {
     failureAudience=e.audId;failureVenue=e.venue;menu='boo';previous=0;release();clearDecorations();
     const v=D.venues[e.venue-1],a=C.roster(v).find(a=>a.id===e.audId);
-    if(a)sprite($('audience'),audienceAsset(v,a));
+    if(a)sprite($('audience'),tutorialStageBase()||audienceAsset(v,a));
     $('audienceCard').classList.add('boo-scene');
     $('heckle').textContent='우우! '+(a?.lines?.heckles?.[0]||a?.heckles?.[0]||'다음에는 더 잘해 봐!');
     $('heckle').classList.add('visible');$('magicianMini').classList.add('disappointed','reacting');$('magicianMini').dataset.face='boo';sprite($('magicianMini'),'assets/kali-react-sad.png');
@@ -1964,7 +2850,7 @@ globalThis.Presentation = (() => {
       prow.append(element('span',`${product.name} · 연출 ×${product.productMultiplier} · 동전 ${rounded(pinfo.cost)}`),action(pinfo.purchasable?'배우기':`동전 ${rounded(Math.ceil(pinfo.cost-state.coins))} 더`,()=>learnFailureProduct(product.id),!pinfo.purchasable));
       result.append(prow);
     }
-    if(C.failureDealerAvailable(state))result.append(action('딜러와 한 판 하고 다시 도전',()=>{if(C.openFailureDealer(state)){save();menu='';dealer();}}));
+    if(C.failureDealerAvailable(state))result.append(action('샵 매니저와 한 판 하고 다시 도전',()=>{if(C.openFailureDealer(state)){save();menu='';dealer();}}));
     const stageGo = action(practiceGoLabel(), restartAfterFailure); stageGo.classList.add('fail-stage');
     const row = element('div', '', 'fail-actions'); row.append(button, stageGo);
     result.append(row); $('panelBody').append(result); button.focus();
@@ -1976,11 +2862,18 @@ globalThis.Presentation = (() => {
     if (updateLearningBadge.at && clock-updateLearningBadge.at<250) return;
     updateLearningBadge.at=clock;
     const count=C.affordableNodes(state).length;
+    const unseen = D.tree.some(n => n.id !== 'autoLearn' && C.nodeInfo(state, n.id).revealed && !treeView.revealed.has(n.id));
+    $('bookButton').classList.toggle('is-new', unseen);
     $('bookButton').dataset.affordable=String(count);
-    $('bookButton').setAttribute('aria-label',`비법서 · 지금 배울 수 있는 비법 ${count}개`);
+    $('bookButton').setAttribute('aria-label',`비법 · 지금 배울 수 있는 비법 ${count}개${unseen ? ' · 새 비법 있음' : ''}`);
   }
   function startIntro(replay = true) {
-    if(!replay && !state.u15.tutorial.done){C.resumeTutorial(state);$('introStory').hidden=true;renderU15();save();return;}
+    if(!replay && !state.u15.tutorial.done){
+      $('introStory').hidden=true;
+      if(state.u15.tutorial.active){C.resumeTutorial(state);renderU15();save();return;}
+      if(!chainMark()){setChain('girl-intro',0);state.onboarding.step=0;state.onboarding.facts=[];}
+      state.onboarding.intro=true;render();save();return;
+    }
 
     if (replay) { state.onboarding={intro:false,panel:0,step:0,facts:[]}; closePanel(); }
     release(); $('phoneMore').hidden=true; $('moreButton').setAttribute('aria-expanded','false');
@@ -2005,32 +2898,68 @@ globalThis.Presentation = (() => {
     host.onclick=e=>{ if (!e.target.closest('button')) step(); };
     save();
   }
+  function spokenTutorialLine(chain, upgrade, mark) {
+    const pack = D.storyV15.tutorial.schoolChain;
+    if (chain && mark && mark.step.endsWith('-fight')) return mark.step.startsWith('teacher') ? pack.teacherDuring[0] : pack.girlDuring[0];
+    if (upgrade) return menu === 'book' ? (pack.upgrade[1] || pack.upgrade[0]) : pack.upgrade[0];
+    const tut = state.u15.tutorial;
+    if (tut.active && tut.phase === 'fight' && !tut.won) {
+      const coaching = D.storyV15.tutorial.coaching;
+      return coaching[Math.min(coaching.length - 1, Math.floor(state.fightMs / 18000))] || coaching[0];
+    }
+    return null;
+  }
   function renderCoach() {
     const host=$('tutorialCoach'), t=state.onboarding;
+    const mark=chainMark();
+    const chain=mark&&!state.u15.tutorial.active&&!state.u15.tutorial.done;
+    if(chain&&!mark.step.endsWith('-fight')&&mark.step!=='upgrade-play'){host.hidden=true;host.dataset.step='';host.dataset.dock='';setTutorialTargets([]);return;}
+    const upgrade=chain&&mark.step==='upgrade-play';
+    const upgradeNode=upgrade?document.querySelector(`.constellation-node[data-node-id="${chainNodeId}"]`):null;
+    const upgradeBuy=upgrade&&menu==='book'?document.querySelector('#panel .tree-buy'):null;
+    const upgradeTarget=upgrade?(menu==='book'?(upgradeBuy||upgradeNode):$('bookButton')):null;
     // v4 U47 3: steps 4 to 7 pointed at the top 비법 button, the learn-all button and the goal strip (all gone or not tappable); only the four fight steps and the tutorial glove step are coached now.
     const ids=['#board .cell:not(.locked)','#board .cell:not(.locked)','#doubtFill','#mental','','','',''];
     if(state.u15.tutorial.active)ids[4]='#item-auto-glove';
     const targets=menu==='book' ? ['','','','','.tree-buy','','',''] : ids;
     const eligible=!state.u15.scene && (!state.u15.tutorial.active || state.u15.tutorial.phase==='fight' && !state.u15.tutorial.won) && t.intro && t.step<(state.u15.tutorial.active?5:4) && !document.hidden && !portrait() && (!menu || menu==='book');
-    const node=eligible && targets[t.step] ? document.querySelector(targets[t.step]) : null;
+    const needSkip=(chain&&mark.step.endsWith('-fight'))||(state.u15.tutorial.active&&state.u15.tutorial.phase==='fight'&&!state.u15.tutorial.won);
+    const node=upgradeTarget||(eligible && targets[t.step] ? document.querySelector(targets[t.step]) : null)||(needSkip?document.querySelector('#board .cell:not(.locked)'):null);
     host.hidden=!node;
-    if (renderCoach.target!==node) {
-      renderCoach.target?.classList.remove('tutorial-target');
-      node?.classList.add('tutorial-target'); renderCoach.target=node;
-    }
-    if (host.hidden) return;
-    const key=String(t.step);
+    if (upgrade && menu === 'book') setTutorialTargets([upgradeNode, upgradeBuy].filter(Boolean));
+    else setTutorialTargets(node?[node]:[]);
+    if (host.hidden) { host.dataset.dock = ''; return; }
+    const pack=D.storyV15.tutorial.schoolChain;
+    const spoken=spokenTutorialLine(chain, upgrade, mark);
+    const key=spoken?`${spoken.speaker}:${spoken.text}:${menu||''}`:(upgrade?(menu==='book'?'upgrade-book':'upgrade-dock'):(chain&&mark.step.endsWith('-fight')?'chain-fight':String(t.step)));
     if (host.dataset.step!==key) {
       host.dataset.step=key; host.replaceChildren();
-      const copy=D.onboarding.tutorial[t.step];
-      const helper=element('img','','coach-helper');helper.src='assets/aud-tutorial-mingiri-happy.png';helper.alt='밍기리';helper.onerror=()=>{helper.hidden=true;};
-      host.append(helper,element('strong',state.u15.tutorial.active?`밍기리 · ${t.step+1} / 5`:`${t.step+1} / 8 · ${copy.title}`),element('p',state.u15.tutorial.active?D.storyV15.helper.coaching[t.step].text:copy.body));
-      const skip=action(state.u15.tutorial.active?'건너뛰기':'안내 닫기',()=>{if(state.u15.tutorial.active){C.finishTutorial(state);lastAudience='';}else t.step=8; save(); renderCoach();}); host.append(skip);
+      const copy=D.onboarding.tutorial[t.step]||D.onboarding.tutorial[0];
+      const speaker=spoken?spoken.speaker:'세로나';
+      const face=speaker==='세로나'?'assets/serona.png':(speakerPortrait(speaker)||'assets/serona.png');
+      const helper=element('img','','coach-helper');helper.src=face;helper.alt=speaker;helper.onerror=()=>{helper.hidden=true;};
+      let coachText=copy.body, coachTitle=`${(t.step||0)+1} / 8 · ${copy.title}`;
+      if(spoken){coachText=spoken.text;coachTitle=spoken.speaker;}
+      else if(upgrade){coachText=menu==='book'?pack.upgrade[1].text:pack.upgrade[0].text;coachTitle=menu==='book'?(pack.upgrade[1].speaker||'세로나'):(pack.upgrade[0].speaker||'세로나');}
+      else if(chain&&mark.step.endsWith('-fight')){const line=mark.step.startsWith('teacher')?pack.teacherDuring[0]:pack.girlDuring[0];coachText=(line&&line.text)||copy.body;coachTitle=(line&&line.speaker)||'세로나';}
+      else if(state.u15.tutorial.active){const line=D.storyV15.tutorial.coaching[Math.min(D.storyV15.tutorial.coaching.length-1,Math.floor(state.fightMs/18000))]||D.storyV15.tutorial.coaching[0];coachText=line.text;coachTitle=line.speaker;}
+      host.append(helper,element('strong',coachTitle),element('p',coachText));
+      const abortTutorial=state.u15.tutorial.active||!!chainMark();
+      const skip=action(abortTutorial?'건너뛰기':'안내 닫기',()=>{if(abortTutorial)endSchoolTutorial();else t.step=8; save(); renderCoach();}); host.append(skip);
     }
     const audience=$('audienceCard'),r=audience.getBoundingClientRect(),stage=$('stage').getBoundingClientRect();
     host.dataset.compact=String(phone&&r.width<330);
     host.style.width=`${phone?Math.min(250,r.width*.42-16):340}px`;
+    const portraitFight=portraitLayout()&&(upgrade||(chain&&mark.step.endsWith('-fight'))||(state.u15.tutorial.active&&state.u15.tutorial.phase==='fight'&&!state.u15.tutorial.won));
+    if(portraitLayout()&&menu==='book'&&upgrade){
+      host.dataset.dock='';host.style.right='auto';host.style.left='8px';host.style.top='64px';host.style.bottom='auto';host.style.width=`${Math.min(240,Math.max(160,layoutWidth-96))}px`;return;
+    }
+    if(portraitFight&&menu!=='book'){
+      host.dataset.dock='bottom';host.style.left='0px';host.style.right='0px';host.style.top='auto';host.style.bottom='0px';host.style.width=`${layoutWidth}px`;return;
+    }
+    host.dataset.dock='';host.style.right='';
     if(menu==='book'){host.style.left='8px';host.style.top='auto';host.style.bottom='8px';return;}
+    if(upgrade){host.style.left='8px';host.style.top='auto';host.style.bottom='64px';return;}
     const protectedRects=[node,$('magicianMini'),$('audience'),$('mental'),$('statsButton'),document.querySelector('.doubt'),document.querySelector('.shield'),document.querySelector('.combo'),$('audienceLine')].filter(el=>el&&!el.hidden&&getComputedStyle(el).visibility!=='hidden').map(el=>el.getBoundingClientRect());
     const w=host.getBoundingClientRect().width,h=host.getBoundingClientRect().height;
     const candidates=[{x:r.left+8,y:r.top+32,edge:'top'},{x:r.left+8,y:r.top+8,edge:'top'},{x:r.right-w-8,y:r.top+8,edge:'top'},{x:r.right-w-8,y:r.bottom-h-8,edge:'bottom'},{x:r.left+8,y:r.bottom-h-8,edge:'bottom'}];
@@ -2051,12 +2980,13 @@ globalThis.Presentation = (() => {
     if (menu !== 'book') openPanel('book', practice ? D.ui.practiceTitle : D.ui.bookTitle);
     if (practice) $('panel').dataset.practice = '1'; else delete $('panel').dataset.practice;
     const body = $('panelBody'); body.replaceChildren();
+    if(state.batchD.twist.trace)body.append(element('p','📖 트레이스 · 흔들리지 않는 마음: 숨겨진 마술 피해 90% 감소, 멘탈은 최소 1 남아요.','batch-d-note'));
     // v4 U47 10: no learn-all and no auto-learn button (the player picks 비법 one by one after a failure).
     const header = $('panel').querySelector('header');
     header.querySelectorAll('.tree-learning,.practice-go').forEach(el=>el.remove());
     if (practice) { const go = action(practiceGoLabel(), restartAfterFailure); go.classList.add('practice-go','u26-primary'); header.insertBefore(go,$('closePanel')); }
     const wallet = element('div', '', 'tree-wallet');
-    [['🪙 ','동전 ',rounded(state.coins)],['🔑 ','열쇠 ',state.keys],['✦ ','별빛 ',state.starlight]].forEach(([icon,name,value],i)=>{
+    [['🪙 ','동전 ',rounded(state.coins)],['📕 ','책 ',state.keys],['🕊️ ','비둘기 ',state.starlight]].forEach(([icon,name,value],i)=>{
       if(i)wallet.append(element('span','·','wallet-sep'));
       wallet.append(element('span',icon),element('span',name,'wallet-name'),element('span',String(value)));
     });
@@ -2121,7 +3051,7 @@ globalThis.Presentation = (() => {
       // v4 U48 C: milestones count the total level of a split node (part II of 무대 배짱 continues at 11).
       if(selected.statMilestone){const next=C.nextMilestone(info.total,[10,25],info.totalMax);const label=selected.partOf||selected.levels?'전체 레벨':'레벨';detail.append(element('p',next ? `다음 2배: ${label} ${next} · ${next-info.total}레벨 남음` : `지금 힘 ${C.statMultiplier(state,selected.partOf||selected.id)}배`,'tree-next'),element('p', D.easyExtras.milestone, 'tree-preview'));}
       if (selected.desc.includes('L')) detail.append(element('small', 'L은 이 비법의 레벨입니다.', 'tree-note-l'));
-      const currency = { coins: '🪙 동전', keys: '🔑 열쇠', starlight: '✦ 별빛' }[info.currency];
+      const currency = { coins: '🪙 동전', keys: '📕 책', starlight: '🕊️ 비둘기' }[info.currency];
       detail.append(element('strong', maxed ? '완성했어요' : `${currency} ${C.formatNumber(info.cost)}`, 'tree-cost'));
       if (!maxed && info.blockedReason) detail.append(element('p', info.blockedReason, 'tree-reason'));
       if (info.gate) detail.append(element('p', info.gate.text, 'tree-gate'));
@@ -2187,7 +3117,7 @@ globalThis.Presentation = (() => {
       else if (e.key === 'Home') { treeView.x = 0; treeView.y = 0; transform(); }
       else { treeView.x += e.key === 'ArrowLeft' ? 70 : e.key === 'ArrowRight' ? -70 : 0; treeView.y += e.key === 'ArrowUp' ? 70 : e.key === 'ArrowDown' ? -70 : 0; transform(); }
     });
-    map.append(world); layout.append(map, detail); body.append(wallet, controls, layout, element('p', '드래그·방향키로 이동 · 휠·두 손가락으로 확대 · 열쇠는 관객 도감 완성으로 얻어요.', 'tree-note'));
+    map.append(world); layout.append(map, detail); body.append(wallet, controls, layout, element('p', '드래그·방향키로 이동 · 휠·두 손가락으로 확대 · 책은 관객 도감 완성으로 얻어요.', 'tree-note'));
     // v4 U51 4 (owner: "야유 받아넘기기 배우기 라는게 계속 뜨는데 이거 없애줘"): the practice note no longer offers the gate lesson. Core keeps the
     // mechanic untouched (a save that already studied a gate keeps it; a gate also loses a third of its pressure per failed show, v4 U41).
     if (typeof phone !== 'undefined' && phone) {
@@ -2229,6 +3159,34 @@ globalThis.Presentation = (() => {
   // v4 U46 A5: emoji and non-pixel symbols that show as UI icons are drawn as 16x16 pixel icons (assets/ui/ic-*.webp, img27) at integer scales.
   // 💎, 🔑 and the rabbit dealer entry keep their glyphs (owner: they become prop currencies later).
   // v4 U47 12: the heal item 'water-glass' keeps its code id; its picture is item-chicken (see the two item art paths above)
+  // Alpha > 16 bounds of the second frame in assets/routine-*.webp (512 x 256).
+  // Drawing a local image is allowed even when file:// forbids canvas reads/exports.
+  const routineIconBounds = {
+    bottles:[28,50,228,254], cards:[27,50,229,254], coins:[45,50,211,254],
+    coloringbook:[28,24,200,240], cube:[24,36,220,240], cupsballs:[29,50,226,254],
+    eggbag:[0,48,248,224], rings:[52,50,204,254], rope:[34,50,222,254],
+    rubberband:[24,28,228,232], silk:[29,50,226,254], thumbtie:[50,50,205,254],
+    wand:[16,36,216,232]
+  };
+  function alignRoutineIcon(icon, id) {
+    const image = assetImage(`assets/routine-${id}.png`);
+    const apply = () => {
+      const bounds = routineIconBounds[id];
+      if (!bounds || !image.naturalWidth) return;
+      const [left,top,right,bottom] = bounds, width = right-left, height = bottom-top;
+      const scale = Math.min(112/width,112/height);
+      const canvas = document.createElement('canvas'); canvas.width=128; canvas.height=128;
+      canvas.style.cssText='display:block;width:100%;height:100%;image-rendering:pixelated';
+      canvas.setAttribute('aria-hidden','true');
+      const context = canvas.getContext('2d');
+      context.imageSmoothingEnabled=false;
+      context.drawImage(image,256+left,top,width,height,(128-width*scale)/2,120-height*scale,width*scale,height*scale);
+      icon.style.backgroundImage='none';
+      icon.replaceChildren(canvas);
+    };
+    if (image.complete && image.naturalWidth) apply();
+    else image.addEventListener('load',apply,{once:true});
+  }
   const PX_ICONS = { '🪙': 'coin', '🪄': 'wand', '🃏': 'card', '🛡': 'shield', '🥤': 'cup', '⚔': 'attack', '📣': 'megaphone', '⚡': 'bolt', '🎩': 'tophat', '☕': 'coffee', '📖': 'book', '📚': 'stats',
     '🔒': 'lock', '✓': 'check', '🏆': 'trophy', '🏅': 'medal', '❤': 'heart', '🕊': 'dove', '🐇': 'rabbit', '👏': 'clap', '🔴': 'sponge', '🔥': 'fire', '🔦': 'spotlight', '🔮': 'crystal', '✨': 'sparkle', '✦': 'star', '🌸': 'petal', '🪞': 'mirror', '🐰': 'rabbit' };
   const PX_RE = new RegExp(`(${Object.keys(PX_ICONS).join('|')})\\uFE0F?`, 'u');
@@ -2270,17 +3228,35 @@ globalThis.Presentation = (() => {
       box.querySelector('small').textContent = '마지막 관객은 나 자신이다 · 누르면 공연 시작';
     } else dialogueTimer = setTimeout(() => { if (menu === 'headliner') closePanel(); }, 1200);
   }
-  const achievementLabels = { boxes: '케이스 100개 열기', combo: '액트 25', slots: '케이스 자리 9칸', golden: '첫 황금 케이스 열기', helper: '팬과 어시스턴트로 케이스 25개 열기', noDamage: '멘탈 손상 없이 관객이 만족', finale: '피날레 공연에서 박수 받기', timed: '제한 시간 안에 관객이 만족' };
+  // Live catalog. Names, hidden "???" text and the bonus come from C.achievementInfo / C.achievementBonus.
+  const achievementLabels = D.achievements;
   function achievementPanel() {
+    const defs = achievementLabels || [];
+    const earnedN = defs.filter(a => state.features.achievements.includes(a.id)).length;
+    const pct = Math.round(C.achievementBonus(state) * 1000) / 10;
     const list = element('div', '', 'achievement-list');
-    list.append(element('p', `업적 연출 +${(state.features.achievements.length * .5).toFixed(1)}% · 차원 환생에서 초기화`));
-    Object.entries(achievementLabels).forEach(([id, label], i) => {
-      const earned = state.features.achievements.includes(id), locked = i >= 5 && !state.tree.challenge;
-      const row = element('div', '', `achievement-stamp${earned ? ' earned' : ''}`);
-      const medal = element('span', '', 'medal sprite-host'); medal.append(element('span', earned ? '🏅' : '○', 'sprite-fallback'));
-      sprite(medal, `assets/medal-${i < 3 ? 'bronze' : i < 5 ? 'silver' : 'gold'}.png`);
-      row.append(medal, element('span', locked ? '도전 수첩을 배우면 공개돼요' : label), element('small', earned ? '달성 · +0.5%' : '도전 중')); list.append(row);
-    });
+    list.append(element('p', `달성 ${earnedN} / 전체 ${defs.length} · 마술 실력 +${pct}% · 차원 환생에서 초기화`, 'achievement-head'));
+    const order = ['무대', '수집', '손맛', '숨은 업적'];
+    const groups = order.concat([...new Set(defs.map(a => a.group))].filter(g => !order.includes(g)));
+    for (const group of groups) {
+      const items = defs.filter(a => a.group === group);
+      if (!items.length) continue;
+      const section = element('section', '', 'achievement-group');
+      section.append(element('h2', group));
+      for (const a of items) {
+        const info = C.achievementInfo(state, a.id);
+        const row = element('div', '', `achievement-stamp${info.earned ? ' earned' : ''}${info.hidden && !info.earned ? ' secret' : ''}`);
+        const medal = element('span', '', `medal sprite-host${info.earned ? ' earned' : ' pending'}`);
+        medal.append(element('span', info.earned ? '🏅' : '○', 'sprite-fallback'));
+        if (info.earned) medal.append(element('span', '✓', 'medal-check'));
+        sprite(medal, `assets/medal-${info.earned ? 'gold' : 'silver'}.png`);
+        const copy = element('span', '', 'achievement-copy');
+        copy.append(element('strong', info.name), element('small', info.desc));
+        row.append(medal, copy, element('small', info.earned ? '달성' : '도전 중', 'achievement-state'));
+        section.append(row);
+      }
+      list.append(section);
+    }
     $('panelBody').append(list);
   }
   function equipPanel() {
@@ -2290,7 +3266,8 @@ globalThis.Presentation = (() => {
     body.append(element('p', slots ? `소품 ${state.features.equipped.length} / ${slots} · 같은 종류가 더 잘 나와요 · 종류마다 최대 3개` : '비법서에서 마술용품를 배우세요.'));
     for (let i = 0; i < 9; i++) {
       const id = state.features.equipped[i], product = D.items.types.flatMap(t => t.ladder).find(p => p.id === id);
-      const button = action(product ? `${product.emoji} ${product.name} · 해제` : i < slots ? '빈 자리' : '🔒 잠긴 자리', () => { C.unequipItem(state, id); save(); bestiary(); }, !product);
+      const button = action(product ? `${product.emoji} ${product.name} · 해제` : i < slots ? '' : '🔒 잠긴 자리', () => { C.unequipItem(state, id); save(); bestiary(); }, !product);
+      if (!product && i < slots) button.setAttribute('aria-label', '빈 자리');
       if (guiding && i===0) button.classList.add('guide-highlight');
       if (product) sprite(button, `assets/item-${id==='water-glass'?'chicken':id}.png`); if(product)easyTooltip(button,product.desc);grid.append(button);
     }
@@ -2308,7 +3285,9 @@ globalThis.Presentation = (() => {
         } else toast('빈 자리와 종류별 3개 제한을 확인하세요.');
       }, !slots || state.features.equipped.includes(id));easyTooltip(prop,product.desc);
       if(guiding && id===state.features.collected[0]) prop.classList.add('guide-highlight');
-      collection.append(prop);
+      const entry = element('div', '', 'equip-collected-item');
+      entry.append(prop, element('small', `${product.desc.split('\n')[0]} · 장착 시 같은 종류 등장 가중치 +${C.CONST.equipWeightPerItem * 100}%`, 'equip-effect'));
+      collection.append(entry);
     }
     body.append(collection);
   }
@@ -2358,7 +3337,7 @@ globalThis.Presentation = (() => {
     // U36: hidden flags are written once per frame (they used to be set true for every actor and then false again, two attribute writes each).
     for(let i=state.features.magic.balls.length;i<actors.balls.length;i++)actors.balls[i].hidden=true;
     for(let i=state.features.magic.papers.length;i<actors.papers.length;i++)actors.papers[i].hidden=true;
-    state.features.magic.balls.forEach((b,i)=>{const ball=actors.balls[i] || (actors.balls[i]=element('img','','sponge-projectile'));ball.hidden=((renderMagic.bounces||{})[i]||0)>clock;if(!ball.__art){ball.src='assets/proj-sponge.png';ball.alt='스펀지볼';ball.__art=true;}const point=typeof phone !== 'undefined' && phone ? boardPoint(b.x,b.y) : {x:870+b.x,y:160+b.y};ball.style.left=`${point.x-16}px`;ball.style.top=`${point.y-16}px`;if(!ball.dataset.mounted){layer.append(ball);ball.dataset.mounted="1";}});
+    state.features.magic.balls.forEach((b,i)=>{const ball=actors.balls[i] || (actors.balls[i]=element('img','','sponge-projectile'));ball.hidden=!portraitLayout()&&((renderMagic.bounces||{})[i]||0)>clock;if(!ball.__art){ball.src='assets/proj-sponge.png';ball.alt='스펀지볼';ball.__art=true;}const point=typeof phone !== 'undefined' && phone ? boardPoint(b.x,b.y) : {x:870+b.x,y:160+b.y};const half=portraitLayout()?14:16;ball.style.left=`${point.x-half}px`;ball.style.top=`${point.y-half}px`;if(!ball.dataset.mounted){layer.append(ball);ball.dataset.mounted="1";}});
     state.features.magic.papers.forEach((p,i)=>{const at=cellCenter(p.cell);let button=actors.papers[i];if(!button){button=action('플래시 페이퍼',()=>{events(C.tapPaper(state,Number(button.dataset.cell)));save();render();});button.addEventListener('pointerdown',e=>e.stopPropagation());button.addEventListener('pointerup',e=>e.stopPropagation());actors.papers[i]=button;}button.hidden=false;button.dataset.cell=p.cell;button.className='paper-drop';button.style.left=`${at.x-25}px`;button.style.top=`${at.y-25}px`;if(button.dataset.asset!=='assets/drop-flashpaper.png')sprite(button,'assets/drop-flashpaper.png');if(!button.dataset.mounted){layer.append(button);button.dataset.mounted="1";}});
     let controls=$('magicControls');
     if(!controls){controls=element('div','','magic-controls');controls.id='magicControls';($('helperControls') || $('stage')).append(controls);}
@@ -2367,13 +3346,13 @@ globalThis.Presentation = (() => {
       const n=D.tree.find(n=>n.id===id);let button=actors.controls[id];if(!button){button=action('',()=>{C.toggleHelper(state,id);save();render();});actors.controls[id]=button;controls.append(button);}button.hidden=false;
       const icons={sponge:'🔴',cardthrow:'🃏',tipbox:'🪙',flashpaper:'🔥',crystal:'🔮',water:'🍗',spotlight:'🔦'};
       const label=`${n.name} ${state.features.magic.paused[id]?'다시 시작':'일시정지'}`;
-      pxText(button,`${icons[id]} ${state.features.magic.paused[id]?'▶':'Ⅱ'}`);
+      pxText(button,`${icons[id]} ${state.features.magic.paused[id]?'시작':'멈춤'}`);
       button.title=label;button.setAttribute('aria-label',label);button.setAttribute('aria-pressed',String(!!state.features.magic.paused[id]));
     }
     let parade=$('curtainCall');
     if(state.features.climax.left>0){
       if(!parade){parade=action('',()=>{C.skipCurtainCall(state);pendingIntro=null;save();render();});parade.id='curtainCall';parade.className='curtain-call';$('stage').append(parade);}
-      const paradeVenues=D.venues.filter(v=>!['homecoming','future'].includes(v.headliner.bossProfile));
+      const paradeVenues=D.venues.filter(v=>!v.mergedInto&&!['homecoming','future'].includes(v.headliner.bossProfile));
       const index=Math.min(paradeVenues.length-1,Math.floor((30000-state.features.climax.left)/(30000/paradeVenues.length)));
       const v=paradeVenues[index],h=v.headliner;
       if(parade.dataset.headliner!==h.id){parade.dataset.headliner=h.id;parade.replaceChildren();const art=element('img');art.src=audienceAsset(v,h);art.alt=h.name;
@@ -2401,7 +3380,7 @@ globalThis.Presentation = (() => {
       const owned = state.tree[id === 'fan' ? 'boxHelper' : id];
       const paused = id === 'fan' || id === 'assistant' ? state.features.workers[id + 'Paused'] : state.features[id === 'dove' ? 'dovePaused' : 'helperPaused'];
       const button = $(`${id}Pause`), names = { dove: '비둘기', rabbit: '토끼', fan: '팬', assistant: '어시스턴트' };
-      button.hidden = !owned; pxText(button, `${({ dove: '🕊️', rabbit: '🐇', fan: '👏', assistant: '🎩' })[id]} ${paused ? '▶' : 'Ⅱ'}`);
+      button.hidden = !owned; pxText(button, `${({ dove: '🕊️', rabbit: '🐇', fan: '👏', assistant: '🎩' })[id]} ${paused ? '시작' : '멈춤'}`);
       button.title = `${names[id]} ${paused ? '다시 시작' : '일시정지'}`;
       button.setAttribute('aria-label', button.title); button.setAttribute('aria-pressed', String(!!paused));
       if (id === 'fan' || id === 'assistant') continue;
@@ -2440,23 +3419,28 @@ globalThis.Presentation = (() => {
     }
 
   }
+  function audienceBenefit(venue, a) {
+    if (a !== venue.headliner) return `공략하면: 도감 완성 시 책 1개 · 연출 +${C.CONST.bestiaryDmg * 100}% · 멘탈 배율 +${C.CONST.bestiaryU * 100}%`;
+    const reward = D.stageRewards.find(r => r.venueSlug === venue.slug);
+    return `공략하면: 🏆 ${venue.trophy}${reward ? ' · ' + reward.effect.replace(/\n/g, ' · ') : ''}`;
+  }
   function bestiary() {
     if (['boo','fail','dealer','headliner','ending','rebirth','bossPhase','curtain'].includes(menu)) return;
-    openPanel('bestiary', D.ui.bestiaryTitle);
+    openPanel('bestiary', bestiaryTab === 'equip' ? '마술용품' : D.ui.bestiaryTitle);
     panelTabs([['audiences','관객 도감'],['endings','엔딩 도감'],['achievements','업적'],['memories','추억'],['equip','마술용품']], bestiaryTab, tab => { bestiaryTab = tab; bestiary(); });
     if(bestiaryTab==='memories'){for(const v of D.venues.filter(v=>uiSave.memories[v.slug]))$('panelBody').append(action(uiSave.memories[v.slug].title,()=>openCurtainCall(v.slug,true)));return;}
     if (bestiaryTab === 'endings') { drawArchive(); return; }
     if (bestiaryTab === 'equip') { equipPanel(); return; }
     if (bestiaryTab === 'achievements') { achievementPanel(); return; }
     const outfit=element('div','','outfit-collection');outfit.append(element('strong',`칼리 의상 · ${state.u18.equipped.kali?D.cosmetics.kali.find(x=>x.id===state.u18.equipped.kali).name:['','거실 티셔츠','무대 정장','우주 망토'][state.u14.outfit]}`));const strip=element('div','','outfit-preview'+(state.u18.equipped.kali==='future'?' future-suit':''));strip.style.backgroundImage=`url('${assetUrl(kaliArtPath())}')`;strip.append(element('span','🎩','sprite-glyph'));const image=assetImage(kaliArtPath()),art=nextArt(strip);const ready=()=>{if(strip._artGen!==art)return;strip.classList.remove('asset-pending');if(image.naturalWidth===768&&image.naturalHeight===256)strip.classList.add('art-loaded');else{strip.style.backgroundImage='none';strip.classList.add('asset-failed');}};if(image.complete)ready();else {strip.classList.add('asset-pending');image.addEventListener('load',ready,{once:true});image.addEventListener('error',ready,{once:true});}outfit.append(strip);$('panelBody').append(outfit);
-    const routines=element('div','','routine-collection');routines.append(element('strong','나의 마술'));for(const r of D.routines.filter(r=>state.u19.routines.includes(r.id))){const item=element('span','','routine-item');item.title=r.name;item.setAttribute('role','img');item.setAttribute('aria-label',r.name);item.append(artFallback(`assets/icon-routine-${r.id}.png`,'✨','routine-icon'));routines.append(item);} /* v4 U48 N6: images only, the name is in the title and aria-label */$('panelBody').append(routines);if(state.u19.cleared||state.u18.owned.kali.includes('future'))$('panelBody').append(element('p','🏅 미래의 나 · 다음 한 장을 건네받았다.'));
+    const routines=element('div','','routine-collection');routines.append(element('strong','나의 마술'));const learned=new Set(state.u19.routines);for(const r of D.routines){const known=learned.has(r.id);const item=element('span','',known?'routine-item':'routine-item routine-locked');item.title=known?r.name:'???';item.setAttribute('role','img');item.setAttribute('aria-label',known?r.name:'???');const icon=element('span','','routine-icon routine-frame');icon.style.backgroundImage=`url('${assetUrl(`assets/routine-${r.id}.png`)}')`;alignRoutineIcon(icon,r.id);item.append(icon,element('small',known?r.name:'???','routine-name'));routines.append(item);}$('panelBody').append(routines);if(state.u19.cleared||state.u18.owned.kali.includes('future'))$('panelBody').append(element('p','🏅 미래의 나 · 다음 한 장을 건네받았다.'));
     const products=D.tree.filter(n=>n.branch==='collection'),owned=products.filter(n=>state.tree[n.id]>0).length,collection=element('p',`칼리 컬렉션 ${owned}/${products.length}${state.u14.collection?' · 연출 +10%':''}`);if(state.u14.collection)collection.prepend(artFallback('assets/icon-set-bonus.png','🎀','set-ribbon u14-art'));$('panelBody').append(collection,element('p',D.easyExtras.set,'easy-description'));
     const guides=element('section','','bestiary-guides');
-    for(const [name,key,path] of [['NDD','tutorial','aud-tutorial-dogyeom-happy.png'],['밍기리','helper','aud-tutorial-mingiri-happy.png']]){const card=element('article','','bestiary-guide');const art=element('span','','entry-emoji');art.append(element('span',key==='helper'?'👹':'🙎','sprite-fallback'));sprite(art,'assets/'+path);card.append(art,element('h3',name),element('p',D.storyV15[key].bio));guides.append(card);}
+    for(const [name,key,path] of [['NDD','tutorial','aud-tutorial-dogyeom-happy.png'],['밍기리','helper','aud-tutorial-mingiri-happy.png']]){if(key==='helper'&&!state.trophies.theater)continue;const card=element('article','','bestiary-guide');const art=element('span','','entry-emoji');art.append(element('span',key==='helper'?'👹':'🙎','sprite-fallback'));sprite(art,'assets/'+path);card.append(art,element('h3',name),element('p',D.storyV15[key].bio));guides.append(card);}
     const badges=element('div','','reward-badges');
     for(const r of D.stageRewards){const badge=element('figure','','reward-badge');const art=element('img');art.src=`assets/reward-${r.id}.png`;art.alt=r.effect;badge.classList.toggle('earned',state.features.rewards.includes(r.id));badge.append(art,element('figcaption',`${C.venueBySlug(r.venueSlug).name} · ${r.effect}`));badges.append(badge);} $('panelBody').append(badges);
     const list = element('div', '', 'bestiary-list');
-    for (const venue of D.venues.filter(v=>v.slug!=='future'||state.visited.includes('future'))) {
+    for (const venue of D.venues.filter(v=>!v.mergedInto&&(v.slug!=='future'||state.visited.includes('future')))) {
       const reached = state.visited.includes(venue.slug);
       const section = element('section', '', 'bestiary-venue');
       const set=C.venueSetProgress(state,venue.slug),setLine=element('p',`관객 세트 ${set.current}/${set.total}${set.complete?' · 마술 실력 +3%':''}`,'set-progress');if(set.complete)setLine.prepend(artFallback('assets/icon-set-bonus.png','🎀','set-ribbon u14-art'));
@@ -2492,9 +3476,10 @@ globalThis.Presentation = (() => {
           } else {
             const need = a.extra && a.extra.type !== 'none';
             const condition = need ? D.ui.extras[a.extra.type].replace('{value}', String(a.extra.value)) : '추가 조건 없음';
-            card.append(element('strong', `감탄 ${Math.min(3, rec.wins)} / 3`), element('p', condition), element('small', need ? (rec.extra ? '✓ 추가 조건 달성' : '추가 조건 미달성') : '✓ 관객이 3번 감탄하면 완성'), element('small', `보상: 🔑 열쇠 1개 · ${rec.removed ? '획득' : '완성하면 획득'}`));
+            card.append(element('strong', `감탄 ${Math.min(3, rec.wins)} / 3`), element('p', condition), element('small', need ? (rec.extra ? '✓ 추가 조건 달성' : '추가 조건 미달성') : '✓ 관객이 3번 감탄하면 완성'), element('small', `보상: 📕 책 1개 · ${rec.removed ? '획득' : '완성하면 획득'}`));
             if (rec.removed) portrait.append(element('span', '완전히 팬이 됨', 'fan-stamp'));
           }
+          card.append(element('p', audienceBenefit(venue, a), 'audience-benefit'));
           if(head&&trophy)portrait.append(element('span','완전히 팬이 됨','fan-stamp'));
           if(state.u18.revealed){const done=state.u18.fans.includes(a.id),slot=element('div','',done?'truefan-slot earned':'truefan-slot');slot.append(element('strong',done?'🏅 열렬한 찐팬':'🔒 찐팬'),element('p',C.trueFanRule(venue.slug).label),element('small',state.u18.paid.includes(a.id)?'마술 실력 +1% 받음':'첫 성공 마술 실력 +1%','truefan-bonus'));slot.append(action('찐팬 도전',()=>startMapFight(venue.slug,a.id,'trueFan'),!C.beatenOnce(state,venue,a)||(!state.u18.map&&!C.travelAllowed(state))));card.append(slot);}
           grid.append(card);
@@ -2522,673 +3507,22 @@ globalThis.Presentation = (() => {
     if (!d || menu !== 'dealer') return;
     $('panelBody').replaceChildren();
     const host = element('div', '', 'dealer-host');
-    const rabbit = element('span', '', 'dealer-emoji'); rabbit.append(element('span', '🐇', 'sprite-fallback'));
-    sprite(rabbit, 'assets/dealer.png');
-    host.append(rabbit, element('div', D.dealer.introLines.join(' ')));
-    const wallet = element('p', `🪙 ${rounded(state.coins)}   💎 ${state.gems}`, 'dealer-wallet');
+    const figure = element('span', '', 'dealer-emoji');
+    const portrait = element('img', '', 'dealer-serona'); portrait.src = 'assets/serona-hooded.png'; portrait.alt = D.dealer.name;
+    figure.append(portrait);
+    const bubble = element('div', D.storyV15.dealerActs[state.venue>=10?2:state.venue>=5?1:0].map(l=>l.speaker+' · '+l.text).join(' '), 'dealer-speech');
+    host.append(figure, bubble);
+    const wallet = element('p', `🪙 ${rounded(state.coins)} · 실크 ${state.gems} · 책 ${state.keys}`, 'dealer-wallet');
     const status = element('p', dealerMessage, 'dealer-message'); status.setAttribute('role', 'status');
-    $('panelBody').append(host, wallet);
-    if(drawDealerGames(d)){$('closePanel').disabled=dealerBusy;return;}
-    if (d.phase !== 'slot') {
-      $('panelBody').append(element('p', D.dealer.cardRules, 'dealer-rules'), element('p', `얻은 보상은 지켜져요. 남은 카드 ${d.cards.filter(card => !card.open).length}장 · 꽝 확률 ${Math.round(d.risk * 100)}%`, 'dealer-note'));
-      const row = element('div', '', 'dealer-cards');
-      d.cards.forEach((card, index) => {
-        const prize = D.dealer.cardPrizes.find(p => p.id === card.prize) || { emoji: '❔', name: '알 수 없는 보상' };
-        const button = action('', () => {
-          if (dealerBusy || !C.dealerCardPick(state, index)) return;
-          dealerBusy = true; sound('flip');
-          if (card.dud) { dealerLost = true; dealerMessage = D.dealer.dudLine; }
-          else {
-            dealerPicked.add(index);
-            dealerMessage = `${prize.emoji} ${prize.name} 획득!`; sound('coin');
-            burst(800, 420, '#ffe65c'); toast(dealerMessage);
-          }
-          save(); drawDealer();
-          animate($('panelBody').querySelectorAll('.dealer-card')[index], [{ transform: 'rotateY(90deg) scale(.9)' }, { transform: 'rotateY(0deg) scale(1)' }], 350);
-          setTimeout(() => {
-            dealerBusy = false;
-            if (menu === 'dealer') drawDealer(); // v4 U48b: a dud no longer closes the panel; the player leaves with 그만하기/닫기
-          }, reduced ? 450 : 650);
-        }, dealerBusy || card.open || d.phase !== 'card');
-        button.className = `dealer-card${card.open ? ' revealed' : ''}`;
-        if (dealerLost && !card.dud && !dealerPicked.has(index)) button.append(element('span', '💨'), element('small', '사라진 카드'));
-        else if (card.open) button.append(element('span', card.dud ? '💥' : prize.emoji), element('strong', card.dud ? '꽝' : prize.name));
-        else button.append(element('span', '🂠'), element('small', `${index + 1}번 카드`));
-        row.append(button);
-      });
-      $('panelBody').append(row, status);
-      const controls = element('div', '', 'dealer-controls');
-      if (C.reached(state,D.dealer.slotVenue) && !dealerLost) controls.append(action('슬롯으로 넘어가기', () => { C.dealerClose(state); save(); drawDealer(); }, dealerBusy));
-      controls.append(action('그만하기', closePanel, dealerBusy));
-      $('panelBody').append(controls);
-    } else {
-      $('panelBody').append(element('p', D.dealer.slotRules, 'dealer-rules'), element('p', '가로, 세로, 대각선 8줄 중 좋은 문양이 맞으면 동전 보상! 2줄부터 보석도 받아요.', 'dealer-note'));
-      const grid = element('div', '', 'slot-grid');
-      const wins = d.spun ? payLines.filter(line => line.every(i => d.grid[i] === d.grid[line[0]]) && D.dealer.slotSymbols.some(s => s.id === d.grid[line[0]] && s.good)) : [];
-      for (let i = 0; i < 9; i++) {
-        const symbol = D.dealer.slotSymbols.find(s => s.id === d.grid[i]);
-        const cell = element('div', symbol ? symbol.emoji : '❔', `slot-cell${wins.some(line => line.includes(i)) ? ' paying' : ''}`);
-        cell.setAttribute('aria-label', symbol ? symbol.name : '회전 대기'); grid.append(cell);
-      }
-      const slotArea = element('div', '', 'slot-area');
-      const force = element('div', '', 'force-controls');
-      const forceCost = C.forceCost(state), forceLocked = state.tree.forceRemove < 1;
-      force.append(element('strong', D.dealer.forceLine), element('small', `${forceLocked ? '🔒 비법서에서 포스를 해금하세요 · ' : ''}문양 하나당 💎 ${forceCost} · 보석 ${state.gems}개`));
-      for (const symbol of D.dealer.slotSymbols.filter(s => !s.good)) {
-        force.append(action(`${symbol.emoji} ${symbol.name} ${d.banned[symbol.id] ? '제거됨' : forceLocked ? '🔒 잠김' : `포스 💎 ${forceCost}`}`, () => {
-          if (C.dealerForce(state, symbol.id)) { dealerMessage = `${symbol.name} 문양을 지웠어요`; save(); drawDealer(); }
-        }, dealerBusy || d.spun || !!d.banned[symbol.id] || forceLocked || state.gems < forceCost));
-      }
-      if (wins.length && !dealerBusy) {
-        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-        svg.setAttribute('viewBox', '0 0 360 318'); svg.classList.add('pay-lines'); svg.setAttribute('aria-hidden', 'true');
-        for (const line of wins) {
-          const path = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
-          path.setAttribute('points', line.map(i => `${70 + i % 3 * 116},${63 + Math.floor(i / 3) * 102}`).join(' '));
-          svg.append(path);
-        }
-        grid.append(svg);
-      }
-      slotArea.append(grid, force); $('panelBody').append(slotArea, status);
-      if (d.spun && !dealerBusy) {
-        const names = ['윗줄','가운데 줄','아랫줄','왼쪽 세로','가운데 세로','오른쪽 세로','오른쪽 아래 대각선','왼쪽 아래 대각선'];
-        $('panelBody').append(element('p', dealerResult || `${wins.length}줄 당첨`, 'slot-result'), element('small', wins.map(line => names[payLines.indexOf(line)]).join(' · ')));
-      }
-      const controls = element('div', '', 'dealer-controls');
-      controls.append(action(dealerBusy ? '회전 중' : d.spun ? '회전 완료' : '슬롯 돌리기', () => spinDealer(), dealerBusy || d.spun), action('그만하기', closePanel, dealerBusy));
-      $('panelBody').append(controls);
-    }
+    $('panelBody').append(host, wallet, status);
+    // Card pick and the slot machine are out of play. A save from the middle of either still loads (phase stays valid) and lands on this menu.
+    drawDealerGames(d);
     $('closePanel').disabled = dealerBusy;
   }
   // Curtain-call presentation holds the existing story queue without mutating it.
   let cheerData=null,curtainScene=null,curtainTimer=null,curtainFinish=null;
-  cheerData={
- "family": {
-  "title": "거실이 들썩",
-  "lines": [
-   {
-    "id": "a1",
-    "text": "우리 아들 손이 빠르구나. 용돈도 벌어 오겠어."
-   },
-   {
-    "id": "a2",
-    "text": "형, 좀 하는데? 상금 받으면 나 큰 간식 사 줘."
-   },
-   {
-    "id": "a3",
-    "text": "마술 보느라 밥이 식었다. 오늘은 네가 데워 줘."
-   },
-   {
-    "id": "h1",
-    "text": "안경 쓰고도 못 잡았다. 이 안경 바꿔야겠구나."
-   }
-  ],
-  "closing": {
-   "speaker": "칼리",
-   "text": "할머니 안경까지 신기해하셨다! 파티에서도 한 판!"
-  }
- },
- "party": {
-  "title": "케이크보다 마술",
-  "lines": [
-   {
-    "id": "a4",
-    "text": "풍선은 안 터졌는데 애들이 터졌어. 웃느라!"
-   },
-   {
-    "id": "a5",
-    "text": "노래 껐는데 박자가 생겼어. 전부 박수 소리야."
-   },
-   {
-    "id": "a6",
-    "text": "초보다 네 마술이 먼저 끝났어. 소원도 빨리 빌어!"
-   },
-   {
-    "id": "h2",
-    "text": "주인공 자리는 뺏겼어도 케이크 첫 조각은 내 거다."
-   }
-  ],
-  "closing": {
-   "speaker": "칼리",
-   "text": "케이크는 먹고 갈게. 학교 무대도 기다려라!"
-  }
- },
- "school": {
-  "title": "우리 반 대박 사건",
-  "lines": [
-   {
-    "id": "a7",
-    "text": "신청서 몰래 낸 값 할게. 매점에서 골라!"
-   },
-   {
-    "id": "a8",
-    "text": "응원봉 다 켰다! 건전지 값은 우리 반이 낸다!"
-   },
-   {
-    "id": "a9",
-    "text": "종 치기 전에 끝냈지? 감점할 틈도 안 주더라."
-   },
-   {
-    "id": "a46",
-    "text": "끝까지 서 있더라. 체육 시간에도 그 체력 써라."
-   },
-   {
-    "id": "h3",
-    "text": "칭찬은 안 한다. 생활기록부는 좀 길어지겠구나."
-   }
-  ],
-  "closing": {
-   "speaker": "칼리",
-   "text": "매점 털고 카페로 간다. 신청서는 내가 낼게!"
-  }
- },
- "cafe": {
-  "title": "커피 식는 줄도",
-  "lines": [
-   {
-    "id": "a10",
-    "text": "노트북 닫았어요. 오늘 마감은 칼리 탓입니다."
-   },
-   {
-    "id": "a11",
-    "text": "케이크를 못 먹었어요. 입이 안 다물어져서요."
-   },
-   {
-    "id": "a12",
-    "text": "창가 자리 아깝다 했는데, 오늘은 손만 봤어요."
-   },
-   {
-    "id": "a50",
-    "text": "커피 한 잔 더 줄게. 오늘 손이 제일 바빴잖아."
-   },
-   {
-    "id": "h4",
-    "text": "커피보다 마술이 빨리 끝났어. 다음 잔은 천천히."
-   }
-  ],
-  "closing": {
-   "speaker": "칼리",
-   "text": "커피값은 마술로 냈다! 전단 속 모임도 가 봐야지."
-  }
- },
- "meetup": {
-  "title": "별명 부자 모임",
-  "lines": [
-   {
-    "id": "a-meetup-busan",
-    "text": "첫차 값 뽑았어요. 카드도 가져가요, 공연용으로!"
-   },
-   {
-    "id": "a-meetup-daegu",
-    "text": "카드 얘기 세 시간 하려 했는데, 박수부터 쳤다."
-   },
-   {
-    "id": "a-meetup-changwon",
-    "text": "빨간 모자 챙도 올렸어요. 손 하나도 안 놓치게요!"
-   },
-   {
-    "id": "a-meetup-incheon",
-    "text": "비타민 충전 완료! 영상 찍어 뒀으니 또 볼래요."
-   },
-   {
-    "id": "a-meetup-geoje",
-    "text": "거제 야호! 돌아가면 마술 봤다고 자랑할 거예요!"
-   },
-   {
-    "id": "a-meetup-cheonan",
-    "text": "구미 착한 천사님도 박수 쳐요! 호두과자는 칼리 몫이에요."
-   },
-   {
-    "id": "a-meetup-suwon",
-    "text": "까만 팔찌가 인정! 제가 섞은 카드까지 맞혔어요."
-   },
-   {
-    "id": "h-meetup-seoul",
-    "text": "난 마술 3일만 해서 잘 몰라. 네 카드, 내 주머니에 있네?"
-   }
-  ],
-  "closing": {
-   "speaker": "칼리",
-   "text": "3일 차가 저 정도라고요? 소극장 가서 연습할게요!"
-  }
- },
- "theater": {
-  "title": "커튼 다시 열어요",
-  "lines": [
-   {
-    "id": "a13",
-    "text": "앞줄 값 뽑았어요! 박수는 따로 더 냈고요!"
-   },
-   {
-    "id": "a14",
-    "text": "프로그램은 집에서 읽을게요. 손 보느라 바빴어요."
-   },
-   {
-    "id": "a15",
-    "text": "카드 섞겠다고 까불었죠? 오늘은 박수만 칠게요."
-   },
-   {
-    "id": "a54",
-    "text": "대본에 반전 하나 추가요. 제 예상도 빗나갔어요."
-   },
-   {
-    "id": "a55",
-    "text": "목 풀었으니 앙코르 해 주세요. 아직 목이 멀쩡해요!"
-   },
-   {
-    "id": "h5",
-    "text": "별 네 개 반이다. 반 개는 날 속인 벌점이다."
-   }
-  ],
-  "closing": {
-   "speaker": "칼리",
-   "text": "별 반 개는 축제에서 찾자. 앙코르는 덤이에요!"
-  }
- },
- "festival": {
-  "title": "박수가 밴드급",
-  "lines": [
-   {
-    "id": "a16",
-    "text": "과 깃발 너무 흔들었어요. 내일 팔 운동은 쉽니다!"
-   },
-   {
-    "id": "a17",
-    "text": "치킨 식었다. 마술 보느라 한 입도 못 먹었다."
-   },
-   {
-    "id": "a18",
-    "text": "목 쉬었어요, 선배. TV 나가시면 목값으로 밥요!"
-   },
-   {
-    "id": "a59",
-    "text": "기타 보러 왔는데 카드에 소리 질렀어요."
-   },
-   {
-    "id": "a60",
-    "text": "야광봉 다 닳았어요. 박수는 충전 안 해도 되죠?"
-   },
-   {
-    "id": "h6",
-    "text": "빌린 동전값, 박수로 갚았다. 이자까지 들었지?"
-   }
-  ],
-  "closing": {
-   "speaker": "칼리",
-   "text": "동전 이자가 박수라니! 이 기세로 TV 오디션!"
-  }
- },
- "audition": {
-  "title": "점수판도 놀랐다",
-  "lines": [
-   {
-    "id": "a19",
-    "text": "점수판 올리느라 바빴어요. 손보다 숫자가 빨라요!"
-   },
-   {
-    "id": "a20",
-    "text": "손 가까이 찍어도 못 잡았어요. 카메라 탓은 아닙니다."
-   },
-   {
-    "id": "a21",
-    "text": "합격했지? 다음엔 내가 더 놀라게 해 준다. 도망가지 마라."
-   },
-   {
-    "id": "a64",
-    "text": "반전은 못 맞혔어요. 제 대본보다 한 수 위네요."
-   },
-   {
-    "id": "a65",
-    "text": "연습 때랑 다르더군요. 오늘 표정이 훨씬 편했어요."
-   },
-   {
-    "id": "a66",
-    "text": "박수 신호 기다렸는데, 손이 먼저 출발했어요!"
-   },
-   {
-    "id": "h7",
-    "text": "의심 다 썼다. 생방송 전엔 좀 채워 와야겠군."
-   }
-  ],
-  "closing": {
-   "speaker": "칼리",
-   "text": "합격! 생방송에서도 카메라보다 손이 빨라야지."
-  }
- },
- "broadcast": {
-  "title": "생방송 무사 착륙",
-  "lines": [
-   {
-    "id": "a112",
-    "text": "시간 딱 맞췄어요. 시계까지 마술로 맞춘 건가요?"
-   },
-   {
-    "id": "a113",
-    "text": "그 농담 빌려도 돼요? 다음 대본에 웃음이 모자라요."
-   },
-   {
-    "id": "a114",
-    "text": "박수 소리가 너무 커요. 마이크가 더 바빴습니다."
-   },
-   {
-    "id": "a115",
-    "text": "신호 전에 박수 쳤어요. 손이 말을 안 들어요!"
-   },
-   {
-    "id": "a116",
-    "text": "댓글도 저도 난리예요. 패널 자리에서 일어났어요!"
-   },
-   {
-    "id": "a117",
-    "text": "조명 끌 틈이 없었어요. 계속 빛나시니까요!"
-   },
-   {
-    "id": "h-broadcast",
-    "text": "아버님 전화 바쁘시겠어요. 아들 자랑하시느라요."
-   }
-  ],
-  "closing": {
-   "speaker": "칼리",
-   "text": "아빠, 저 봤죠? 사진은 라스베가스에서 보낼게요!"
-  }
- },
- "vegas": {
-  "title": "박수에 전부 건다",
-  "lines": [
-   {
-    "id": "a22",
-    "text": "칩 걸길 잘했다. 오늘 본전은 웃음으로 뽑았어."
-   },
-   {
-    "id": "a23",
-    "text": "깃털 부채가 멈췄어. 내 손도 마술에 걸렸나 봐."
-   },
-   {
-    "id": "a24",
-    "text": "소매 안 보기로 했죠. 약속 지키기 힘들었어요."
-   },
-   {
-    "id": "a70",
-    "text": "방에서 내려오길 잘했어요. 침대는 마술 안 하니까요."
-   },
-   {
-    "id": "a71",
-    "text": "사인해 주세요. 친구한테 직접 봤다고 자랑할래요!"
-   },
-   {
-    "id": "a72",
-    "text": "찍은 사진마다 손이 흐려요. 카메라보다 빠르셨군요."
-   },
-   {
-    "id": "h8",
-    "text": "내 눈이 반했다. 뉴욕 초대장은 네 손에 걸지."
-   }
-  ],
-  "closing": {
-   "speaker": "칼리",
-   "text": "아빠한테 사진 전송 끝! 뉴욕에선 손도 찍힐까?"
-  }
- },
- "broadway": {
-  "title": "일어선 객석",
-  "lines": [
-   {
-    "id": "a25",
-    "text": "노래도 안 했는데 일어났어요. 카드가 고음도 내요?"
-   },
-   {
-    "id": "a26",
-    "text": "표 값 안 아까워요. 오늘은 기념품 안 사도 돼요."
-   },
-   {
-    "id": "a27",
-    "text": "아까 쓴 한 줄 그대로 갑니다. 칭찬도 고치기 귀찮아요."
-   },
-   {
-    "id": "a76",
-    "text": "표에 사인해 주세요. 오늘 건 따로 모아 둘래요."
-   },
-   {
-    "id": "a77",
-    "text": "손목이 춤추더군요. 발레는 손으로도 되나 봐요."
-   },
-   {
-    "id": "a78",
-    "text": "박수 박자가 딱 맞아요. 객석도 연습한 줄 알겠어요."
-   },
-   {
-    "id": "a79",
-    "text": "소매가 안 걸렸어요. 옷 만든 사람도 안심합니다."
-   },
-   {
-    "id": "h9",
-    "text": "박수를 길게 만들었군. 내 노래보다 길면 곤란한데."
-   }
-  ],
-  "closing": {
-   "speaker": "칼리",
-   "text": "노래 한 곡 없이 이 박수! 다음 객석은 달이다!"
-  }
- },
- "moon": {
-  "title": "달에서도 짝짝",
-  "lines": [
-   {
-    "id": "a28",
-    "text": "놀라서 고개 들다가 헬멧에 부딪쳤습니다. 또 봅니다."
-   },
-   {
-    "id": "a29",
-    "text": "본부에 보고했어요. 카드 실종, 박수 발생입니다."
-   },
-   {
-    "id": "a30",
-    "text": "로켓까지 태워 드려요. 먼지는 발판에서 털어 주세요."
-   },
-   {
-    "id": "a83",
-    "text": "달에서도 손이 안 흔들렸어요. 연구할 게 늘었어요."
-   },
-   {
-    "id": "a84",
-    "text": "별빛 병은 닫아 뒀어요. 마술 보다가 놓칠까 봐요."
-   },
-   {
-    "id": "a85",
-    "text": "케이스 튼튼하죠? 제가 조인 나사는 안 사라집니다."
-   },
-   {
-    "id": "a86",
-    "text": "달 사진보다 마술 사진이 많아요. 여행 목적 바꿔요."
-   },
-   {
-    "id": "h10",
-    "text": "달 먼지까지 털었군. 청소부로 붙잡고 싶구나."
-   }
-  ],
-  "closing": {
-   "speaker": "칼리",
-   "text": "달 청소는 끝! 태양 갈 땐 선글라스부터 챙기자."
-  }
- },
- "sun": {
-  "title": "불꽃보다 뜨겁다",
-  "lines": [
-   {
-    "id": "a31",
-    "text": "불꽃 파도 와도 버티더라. 내 보드에도 한번 서 봐."
-   },
-   {
-    "id": "a32",
-    "text": "흑점 투어는 잠깐 멈췄어요. 흑점은 내일도 있으니까요!"
-   },
-   {
-    "id": "a33",
-    "text": "불꽃보다 손을 더 찍었어요. 오늘 주인공은 바뀌었어요."
-   },
-   {
-    "id": "a90",
-    "text": "빛은 연구했는데 카드는 놓쳤어요. 숙제가 늘었어요."
-   },
-   {
-    "id": "a91",
-    "text": "아이스크림 다 녹았어요. 그래도 눈은 못 뗐어요."
-   },
-   {
-    "id": "a92",
-    "text": "망원경으로도 못 잡았다. 오늘 기록은 물음표다."
-   },
-   {
-    "id": "a93",
-    "text": "중심 잘 잡더라. 마술 끝나면 파도도 탈 수 있겠다."
-   },
-   {
-    "id": "a94",
-    "text": "사진이 흔들렸어요. 놀란 제 손 탓이에요."
-   },
-   {
-    "id": "h11",
-    "text": "동전은 돌려주마. 녹이기엔 네 표정이 너무 밝다."
-   }
-  ],
-  "closing": {
-   "speaker": "칼리",
-   "text": "동전도 챙겼다! 은하에선 아이스크림부터 먹자."
-  }
- },
- "galaxy": {
-  "title": "은하도 손뼉 쳐",
-  "lines": [
-   {
-    "id": "a34",
-    "text": "번역기는 아직 고민 중이다. 박수는 바로 통했지!"
-   },
-   {
-    "id": "a35",
-    "text": "구경하느라 연료 썼어요. 오늘은 박수로 날고 싶어요."
-   },
-   {
-    "id": "a36",
-    "text": "게임 친구가 준 이름이죠? 칼리 별자리로 돌려드려요."
-   },
-   {
-    "id": "a98",
-    "text": "박수가 곡이 됐어요. 제목은 칼리, 따라 부르기 쉽죠."
-   },
-   {
-    "id": "a99",
-    "text": "손끝에 별빛이 찍혔어요. 별 사진 대회에 낼까 봐요."
-   },
-   {
-    "id": "a100",
-    "text": "다음 길은 어두워요. 랜턴 따라오세요, 카드는 챙기고요."
-   },
-   {
-    "id": "a101",
-    "text": "손이 내 혜성보다 빠르다. 카드로 경주할 생각은 없지?"
-   },
-   {
-    "id": "a102",
-    "text": "소원 이뤄졌어요! 칼리 마술 한 번 더 보기였거든요."
-   },
-   {
-    "id": "h12",
-    "text": "박수 치다 왕관이 기울었다. 이건 마술로 바로잡겠지?"
-   }
-  ],
-  "closing": {
-   "speaker": "칼리",
-   "text": "왕관은 손으로 고쳐요! 저는 거울 너머로 갑니다."
-  }
- },
- "multiverse": {
-  "title": "객석이 전부 나",
-  "lines": [
-   {
-    "id": "a37",
-    "text": "지팡이 없이도 되잖아. 두 손은 공짜니까."
-   },
-   {
-    "id": "a38",
-    "text": "연습실 못 간 날엔 집에서 했지. 방도 쓸 만했어."
-   },
-   {
-    "id": "a39",
-    "text": "접힌 카드로도 해냈지. 카드만 보면 종이접기 선수야."
-   },
-   {
-    "id": "a106",
-    "text": "친구들 앞에 서길 잘했지? 아직도 그 웃음이 들려."
-   },
-   {
-    "id": "a107",
-    "text": "TV 따라 하던 중학생이 저기 있다! 박수는 내가 친다."
-   },
-   {
-    "id": "a108",
-    "text": "추석 개그쇼로 배웠지? 웃긴 마술이 오래 남더라."
-   },
-   {
-    "id": "a109",
-    "text": "서점에서 산 마술 책, 오늘도 펼칠 곳이 있겠다."
-   },
-   {
-    "id": "a110",
-    "text": "조명은 뜨거웠지? 다음엔 손수건도 소품으로 챙겨."
-   },
-   {
-    "id": "a111",
-    "text": "친구들이 좋아하던 그 마술, 나도 또 보고 싶었어."
-   },
-   {
-    "id": "h13",
-    "text": "의심은 잠깐 쉰다. 박수까지 의심하긴 손이 바빠."
-   }
-  ],
-  "closing": {
-   "speaker": "칼리",
-   "text": "나한테 박수 받으니 두 배로 좋다! 렉쳐노트로!"
-  }
- },
- "lecturenote": {
-  "title": "돌아온 매니저",
-  "lines": [
-   {
-    "id": "a-lecturenote-hecate",
-    "text": "점검 통과입니다. 부장 눈까지 속이셨군요."
-   },
-   {
-    "id": "a-lecturenote-serona",
-    "text": "선물 숨겨 뒀어요. 오늘 반전 하나는 제 몫이에요."
-   },
-   {
-    "id": "a-lecturenote-jung",
-    "text": "우주 다녀오셨죠? 카드 포장은 지구 방식으로 할게요."
-   },
-   {
-    "id": "h-lecturenote-kim",
-    "text": "밤 알바가 매니저 되더니, 이제 우주 손님도 데려오냐."
-   }
-  ],
-  "closing": {
-   "speaker": "칼리",
-   "text": "사장님, 서재 앞 큰 테이블도 꽉 채워 볼게요!"
-  }
- },
- "future": {
-  "title": "다음 한 장은 너",
-  "lines": [
-   {
-    "id": "h-future-kali",
-    "text": "큰 테이블 또 찼어. 초보들 눈이 카드보다 동그래."
-   }
-  ],
-  "closing": {
-   "speaker": "칼리",
-   "text": "100명 중 2명이 마술 보는 날까지, 한 장 더!"
-  }
- }
-};
+  cheerData=D.storyV15.cheers;
+
   function openCurtainCall(slug,review=false){
     const v=D.venues.find(v=>v.slug===slug),data=cheerData?.[slug];
     if(!v||!data)return false;
@@ -3267,10 +3601,10 @@ globalThis.Presentation = (() => {
   const startButton=(game)=>{const b=action('시작하기',()=>{if(dealerBusy)return;gameStarted.add(game);drawDealer();});b.classList.add('game-start','u26-primary');return b;};
   // The monte table before 시작하기: three face-down cards (no face is drawn, so nothing can leak the queen), the start button and the way back.
   function monteWaiting(m,area){
-    area.append(element('h2','몬테'),element('p','준비됐어요. 시작하기를 누르면 여왕 카드를 보여줄게요.','monte-line'));
+    area.append(element('h2','카드 몬테'),element('p','준비됐어요. 시작하기를 누르면 여왕 카드를 보여줄게요.','monte-line'));
     const table=gameTable('monte');
     for(let i=0;i<3;i++){const card=action('',()=>{},true);card.className='routine-card';card.dataset.slot=i;card.style.setProperty('--slot',i);card.setAttribute('aria-label',`카드 ${i+1}`);card.append(gameArt('monte-back','card-art'));table.append(card);}
-    const back=action('딜러 메뉴',()=>{if(dealerBusy)return;dealerGameView='';drawDealer();},dealerBusy);back.className='dealer-back';
+    const back=action('샵 매니저 메뉴',()=>{if(dealerBusy)return;dealerGameView='';drawDealer();},dealerBusy);back.className='dealer-back';
     area.append(table,element('span','','flex-break'),startButton(m),back);$('panelBody').append(area);return true;
   }
   const monteFace=(card,name)=>{const img=card.querySelector('img');img.src='assets/ui/'+name+'.png';};
@@ -3337,7 +3671,9 @@ globalThis.Presentation = (() => {
     const alive=()=>table.isConnected&&menu==='dealer'&&dealerGameView==='monte'&&state.dealer?.games.monte===m;
     const stop=()=>{dealerBusy=false;};
     cards.forEach(c=>c.disabled=true);
-    await waitRoutine(900);if(!alive()){stop();return;}
+    // First round: the queen stays face-up long enough to see. 포스 adds 0.6s per level. Later rounds keep the old 900ms.
+    const showMs=m.round===0?1800+600*(state.tree.forceRemove||0):900;
+    await waitRoutine(showMs);if(!alive()){stop();return;}
     if(plan.bend){
       addBend(cards.find(c=>Number(c.dataset.slot)===plan.bend.start),true);status.textContent='앗, 카드가 좀 휘었네';sound('flip');
       await (reduced?holdMs(700):waitRoutine(1100));if(!alive()){stop();return;}
@@ -3347,7 +3683,7 @@ globalThis.Presentation = (() => {
     await waitRoutine(160);
     for(let i=0;i<plan.swaps.length;i++){
       if(!alive()){stop();return;}
-      const ms=C.monteMoveMs(state.venue,m.round,i),[a,b]=plan.swaps[i],cover=!!plan.bend&&plan.bend.cover===i;
+      const ms=C.monteMoveMs(state.venue,m.round,i,state.tree.forceRemove||0),[a,b]=plan.swaps[i],cover=!!plan.bend&&plan.bend.cover===i;
       const swap=()=>swapRoutine(cards,a,b,table,ms,null);
       if(!await(cover?coverSwap(table,cards,swap,()=>moveBend(cards,plan.bend.to,a,b)):swap())){stop();return;}
       for(const f of plan.fakes.filter(f=>f.at===i)){
@@ -3378,8 +3714,10 @@ globalThis.Presentation = (() => {
     await waitRoutine(plan.bend&&choice!==plan.queen?1500:500);dealerBusy=false;drawDealer();
   }
   function drawDealerGames(d){
-    const games=d.games||(d.games={cups:null,monte:null});
-    if(dealerGameView==='cups'&&games.cups){
+    const games=d.games&&typeof d.games==='object'&&!Array.isArray(d.games)?d.games:(d.games={cups:null,monte:null});
+    const cupsKnown=g=>!!(g&&(g.phase==='shuffle'||g.phase==='pick'||g.phase==='result'));
+    const monteKnown=g=>!!(g&&(g.phase==='playing'||g.phase==='lost'||g.phase==='banked'));
+    if(dealerGameView==='cups'&&cupsKnown(games.cups)){
       const c=games.cups,area=element('section','','gem-game cups-game'),waiting=c.phase==='shuffle'&&!gameStarted.has(c);
       area.append(element('h2','컵앤볼'),element('p',waiting?'준비됐어요. 시작하기를 누르면 공을 보여줄게요.':c.phase==='shuffle'?'공을 보여줄게요. 컵을 잘 봐요!':c.phase==='pick'?'공이 어디 있을까?':c.hit?'찾았다!':'아깝다! 공은 다른 컵에 있었어요.'));
       const table=gameTable('cups');
@@ -3389,13 +3727,13 @@ globalThis.Presentation = (() => {
         const ball=gameArt(c.phase==='result'&&c.keys?(state.venue%2?'cb-lemon':'cb-orange'):'cb-ball','cup-ball');ball.hidden=waiting||!((i===c.initial&&c.phase==='shuffle')||(i===c.ball&&c.phase==='result'));const art=gameArt(c.phase==='result'?'fx-cup-lift-04':'fx-cup-lift-01','cup-prop');cup.append(ball,art);if(c.phase==='result'&&c.keys&&i===c.ball){ball.classList.add('final-load');if(!reduced)cup.append(element('span','','final-load-fx'));}table.append(cup);
       }
       area.append(table,element('span','','flex-break'));
-      if(c.phase==='result')area.append(element('p',`동전 +${rounded(c.coins)}${c.keys?' · 열쇠 +1':''}`,'game-result'));
+      if(c.phase==='result')area.append(element('p',`동전 +${rounded(c.coins)}${c.gems?` · 실크 +${c.gems}`:''}${c.keys?' · 책 +1':''}`,'game-result'));
       if(waiting)area.append(startButton(c));
-      const back=action('딜러 메뉴',()=>{if(dealerBusy)return;dealerGameView=null;drawDealer();},dealerBusy||c.phase==='shuffle'&&!waiting);back.className='dealer-back';area.append(back);$('panelBody').append(area);
-      if(c.phase==='shuffle'&&!waiting)animateCups(c,table);
+      const back=action('샵 매니저 메뉴',()=>{if(dealerBusy)return;dealerGameView=null;drawDealer();},dealerBusy||c.phase==='shuffle'&&!waiting);back.className='dealer-back';area.append(back);$('panelBody').append(area);
+      if(c.phase==='shuffle'&&!waiting&&Array.isArray(c.swaps))animateCups(c,table);
       return true;
     }
-    if(dealerGameView==='monte'&&games.monte){
+    if(dealerGameView==='monte'&&monteKnown(games.monte)){
       const m=games.monte,area=element('section','','gem-game monte-game');
       const settled=m.phase!=='playing'||(m.round>0&&monteGo!==m.round&&(!m.last||m.last.round===m.round-1));
       const waiting=!settled&&m.round===0&&!m.last&&!gameStarted.has(m); // v4 U48 D1: the first round waits for 시작하기 (later rounds wait for 다음 판)
@@ -3403,7 +3741,7 @@ globalThis.Presentation = (() => {
       const lastRound=m.phase==='playing'?m.round-1:(m.last?m.last.round:(m.phase==='lost'?m.round:m.round-1));
       const plan=C.monteRound(m,settled?Math.max(0,lastRound):m.round);
       const status=element('p',settled?(m.phase==='lost'?(!m.last?'지난 판은 끝났어요':(plan.bend&&m.last.slot===plan.bend.end?plan.bend.line:'')||(plan.trick?plan.trick.line:'여왕은 여기 있었어요!')):m.phase==='banked'?'선물을 받았어요!':'찾았어요! 계속할까요?'):'여왕을 잘 봐요!','monte-line');status.setAttribute('role','status');
-      area.append(element('h2','몬테'),status);
+      area.append(element('h2','카드 몬테'),status);
       const table=gameTable('monte');
       const faces=Presentation.monteFaces(plan,settled);
       for(let i=0;i<3;i++){
@@ -3416,27 +3754,39 @@ globalThis.Presentation = (() => {
         table.append(card);
       }
       area.append(table,element('span','','flex-break'));
-      area.append(element('p',`지금 선물: 동전 ${rounded(m.coins)}${m.keys?' · 열쇠 1개':''}`));
+      area.append(element('p',`지금 선물: 동전 ${rounded(m.coins)}${m.gems?` · 실크 ${m.gems}`:''}${m.keys?' · 책 1':''}`));
       if(m.phase==='playing'&&settled){
         const row=element('div','','dealer-controls');
         row.append(action('다음 판',()=>{if(dealerBusy)return;monteGo=m.round;drawDealer();}));
         const bank=action('그만하고 받기',()=>{if(dealerBusy)return;C.dealerMonteBank(state);save();sound('coin');drawDealer();},m.round<1);bank.dataset.bank='true';row.append(bank);area.append(row);
       }
-      if(m.phase==='playing')area.append(element('small','1번 60초 동전 · 2번 150초 · 3번 열쇠 + 200초'));
-      const back=action('딜러 메뉴',()=>{if(dealerBusy)return;dealerGameView=null;drawDealer();},dealerBusy||!settled);back.className='dealer-back';
+      if(m.phase==='playing')area.append(element('small','1번 90초 동전·실크 · 2번 225초 · 3번 책·실크 + 300초'));
+      const back=action('샵 매니저 메뉴',()=>{if(dealerBusy)return;dealerGameView=null;drawDealer();},dealerBusy||!settled);back.className='dealer-back';
       area.append(back);$('panelBody').append(area);
       if(!settled)animateMonte(m,table,status);
       return true;
     }
     dealerGameView=null;
-    const row=element('div','','dealer-gem-menu');
-    for(const [id,label,cost] of [['cups','컵앤볼',2],['monte','몬테',3]]){
-      const played=games[id],reason=!played&&state.gems<cost?`보석 ${cost}개가 필요해요`:'';
-      row.append(action(`${label} · 💎 ${cost}${played?(['result','lost','banked'].includes(played.phase)?' · 결과 보기':' · 이어 하기'):''}`,()=>{if(played||C.dealerGameStart(state,id)){dealerGameView=id;save();drawDealer();}},!!reason));
-      row.append(element('small',id==='cups'?'공을 찾으면 동전, 가끔 열쇠도 받아요':'여왕 카드를 찾을수록 선물이 늘어요. 틀리면 놓쳐요'));
-      if(reason)row.append(element('small',reason));
+    const row=element('div','','dealer-pick');
+    for(const [id,label,cost,emoji,art,reward] of [
+      ['cups','컵앤볼',2,'🔴','cb-ball','맞히면 동전·실크, 가끔 책'],
+      ['monte','카드 몬테',3,'🂡','monte-queen','연속으로 맞출수록 동전·실크, 세 번이면 책']
+    ]){
+      const played=games[id],need=!played&&state.gems<cost;
+      const card=element('article','','dealer-game-card');
+      const pic=element('div','','dealer-game-art');
+      pic.append(element('span',emoji,'dealer-game-emoji'),gameArt(art,'dealer-game-img'));
+      const start=action(played?(['result','lost','banked'].includes(played.phase)?'결과 보기':'이어 하기'):'시작',()=>{
+        if(dealerBusy)return;
+        if(played||C.dealerGameStart(state,id)){dealerGameView=id;save();drawDealer();}
+      },dealerBusy||need);
+      start.className='game-start u26-primary';
+      const note=element('small',need?`실크 ${cost}장이 필요해요`:'','dealer-need');if(!need)note.setAttribute('aria-hidden','true');
+      card.append(pic,element('h2',label),element('p',`실크 ${cost}`,'dealer-cost'),element('p',reward,'dealer-reward'),note,start);
+      row.append(card);
     }
-    $('panelBody').append(row);return false;
+    const quit=action('그만하기',closePanel,dealerBusy);quit.className='dealer-leave';
+    $('panelBody').append(row,quit);return true;
   }
   async function animateCups(c,table){
     dealerBusy=true;$('closePanel').disabled=true;
@@ -3463,30 +3813,94 @@ globalThis.Presentation = (() => {
   }
   function openStageMap(selected=''){
     if(menu==='boo')return;
+    if(schoolChainPaused()||(chainMark()&&!state.u15.tutorial.done)){toast('튜토리얼을 먼저 끝내 주세요');return;}
     if(!state.u18.map&&!C.openMap(state)){toast('이 장면이 끝나면 이동할 수 있어요');return;}
     openPanel('map','무대 지도');$('phoneMore').hidden=true;
-    $('panelBody').append(element('p','도착했던 무대는 무료로 다시 갈 수 있어요'),action('지금 무대로 돌아가기',()=>{if(C.returnToStage(state)){menu='';$('panel').hidden=true;previous=0;lastAudience='';save();render();}}));
-    const list=element('div','','stage-map');
-    for(const v of D.venues.filter(v=>state.visited.includes(v.slug))){
-      const section=element('section','','map-venue');section.dataset.venue=v.slug;section.append(element('h2',v.name));
-      if(state.u18.revealed){const p=C.trueFanProgress(state,v.slug);section.append(element('p',`찐팬 ${p.current}/${p.total}${p.complete?' · 🎀 실력 +5%':''}`,'truefan-progress'));}
-      for(const a of [...v.audiences,v.headliner]){
-        const row=element('div','','map-audience');
-        const art=element('span','','map-portrait');sprite(art,audienceAsset(v,a));row.append(art);
-        row.append(element('strong',a.name),action('일반 공연',()=>startMapFight(v.slug,a.id,'normal')));
-        if(state.u18.revealed)row.append(action(state.u18.fans.includes(a.id)?'찐팬 다시 도전':'찐팬 도전',()=>startMapFight(v.slug,a.id,'trueFan'),!C.beatenOnce(state,v,a)),element('small',C.trueFanRule(v.slug).label+(state.u18.paid.includes(a.id)?' · 보너스 받음':' · 첫 성공 마술 실력 +1%')));
-        section.append(row);
+    $('panelBody').append(element('p','도착했던 무대는 무료로 다시 갈 수 있어요','flow-lead'),action('지금 무대로 돌아가기',()=>{if(C.returnToStage(state)){menu='';$('panel').hidden=true;previous=0;lastAudience='';save();render();}}));
+    const fork=D.progressFork||{after:'multiverse',main:['lecturenote','future'],mainChoice:'내가 될 수 있는 모습만 볼까?',ifChoice:'아직 어린 나도 만나 볼까?',ifRoute:[]};
+    const mainSlugs=new Set(fork.main||[]);
+    const spine=D.venues.filter(v=>!v.mergedInto&&!mainSlugs.has(v.slug));
+    const here=D.venues[state.venue-1];
+    let reached=-1;
+    spine.forEach((v,i)=>{if(state.visited.includes(v.slug)||here&&here.slug===v.slug)reached=i;});
+    const castOf=v=>[...(v.audiences||[]),v.headliner].filter(Boolean);
+    const ifReached=id=>BatchDView.visibleRoute(state.batchD,id,!!state.trophies.multiverse);
+    const face=(v,i,kind)=>{
+      const current=!!(here&&here.slug===v.slug);
+      if(kind==='if')return ifReached(v.slug)?'cleared':'hidden';
+      if(kind==='main'){
+        const seen=state.visited.includes(v.slug)||(v.slug==='lecturenote'&&(!!state.homecomingCleared||state.knownAudiences.includes(v.headliner.id)))||(v.slug==='future'&&!!state.u19.cleared);
+        if(!seen&&!current)return 'hidden';
+        if(current)return 'current';
+        return state.visited.includes(v.slug)?'cleared':'future';
       }
-      list.append(section);
-    }
-    $('panelBody').append(list);if(selected)list.querySelector(`[data-venue="${selected}"]`)?.scrollIntoView({block:'start'});save();
+      if(current)return 'current';
+      if(state.visited.includes(v.slug))return 'cleared';
+      return i<=reached+1?'future':'hidden';
+    };
+    const dots=(v,status)=>{
+      const row=element('span','','flow-dots');row.setAttribute('aria-hidden','true');
+      castOf(v).forEach((a,n)=>{
+        const dot=element('i','','flow-dot');
+        let kind='hollow';
+        if(status==='cleared')kind='filled';
+        else if(status==='current'){
+          if(n===state.j-1)kind='ring';
+          else if(n<state.j-1||(a.id===v.headliner.id?!!state.trophies[v.slug]:!!(state.bestiary[a.id]&&state.bestiary[a.id].wins>=1)))kind='filled';
+        }
+        dot.classList.add('is-'+kind);row.append(dot);
+      });
+      return row;
+    };
+    const stop=(v,status)=>{
+      const li=element('li','',`flow-stop is-${status}`);li.dataset.venue=v.slug;
+      const mark=element('span','','flow-mark');mark.setAttribute('aria-hidden','true');
+      const name=status==='hidden'?'???':v.name;
+      let node;
+      if(status==='cleared'){
+        const first=castOf(v)[0];
+        node=action('',()=>['young-kali','mirror-stage'].includes(v.slug)?startBatchDSide(v.slug==='young-kali'?'young':'mirror'):startMapFight(v.slug,first.id,'normal'),!state.u18.map&&!C.travelAllowed(state));
+        node.className='flow-node';node.setAttribute('aria-label',v.name+'로 이동');
+      }else node=element('div','','flow-node');
+      node.append(element('span',name,'flow-name'),dots(v,status));
+      li.append(mark,node);return li;
+    };
+    const ifVenue=(node)=>{
+      const n=Math.max(1,node.dots|0),audiences=[];
+      for(let i=0;i<n-1;i++)audiences.push({id:node.id+'-'+i});
+      return {slug:node.id,name:node.name,audiences,headliner:{id:node.id+'-h'}};
+    };
+    const list=element('ol','','flow-spine');
+    spine.forEach((v,i)=>{
+      list.append(stop(v,face(v,i,'spine')));
+      if(v.slug!==fork.after)return;
+      const split=element('li','','flow-fork');
+      const grid=element('div','','flow-fork-grid');
+      for(const [branch,choice,venues] of [
+        ['main',fork.mainChoice,(fork.main||[]).map(slug=>D.venues.find(v=>v.slug===slug)).filter(Boolean)],
+        ['if',fork.ifChoice,(fork.ifRoute||[]).filter(node=>BatchDView.visibleRoute(state.batchD,node.id,!!state.trophies.multiverse)).map(ifVenue)]
+      ]){
+        if(branch==='if'&&!venues.length)continue;
+        const col=element('div','','flow-branch flow-branch-'+branch);
+        col.append(element('p',choice,'flow-choice'));
+        const ol=element('ol','','flow-branch-spine');
+        venues.forEach(venue=>ol.append(stop(venue,face(venue,-1,branch))));
+        col.append(ol);grid.append(col);
+      }
+      split.append(grid);list.append(split);
+    });
+    const chart=element('div','','progress-flow');chart.append(list);
+    $('panelBody').append(chart);
+    const focus=selected||here&&here.slug;
+    if(focus)chart.querySelector(`[data-venue="${focus}"]`)?.scrollIntoView({block:'center'});
+    save();
   }
   let customizeTab='kali';
   function customize(){
     if(['boo','fail','ending','rebirth','bossPhase','headliner','dealer'].includes(menu)||state.u15.scene)return;
     openPanel('customize','꾸미기');$('phoneMore').hidden=true;
     panelTabs([['kali','칼리 의상'],['cases','카드 케이스']],customizeTab,tab=>{customizeTab=tab;customize();});
-    $('panelBody').append(element('p',`💎 보석 ${state.gems}개 · 꾸미기는 환생해도 남아요`),action('기본 모습',()=>{C.equipCosmetic(state,customizeTab,'');save();render();customize();}));
+    $('panelBody').append(element('p',`실크 ${state.gems}개 · 꾸미기는 환생해도 남아요`),action('기본 모습',()=>{C.equipCosmetic(state,customizeTab,'');save();render();customize();}));
     if(customizeTab==='kali'){
       const tiers=element('div','','story-outfits');for(let tier=1;tier<=3;tier++){const owned=tier<=state.u14.outfit;tiers.append(element('p',`${owned?'✓':'🔒'} ${['','거실 티셔츠','무대 정장','우주 망토'][tier]} · ${['','처음부터','TV 오디션 완료','달 무대 완료'][tier]}`));}$('panelBody').append(tiers);
     }
@@ -3494,19 +3908,25 @@ globalThis.Presentation = (() => {
     for(const x of D.cosmetics[customizeTab].filter(x=>x.id!=='future'||state.u19.cleared||state.u18.owned.kali.includes('future'))){
       const info=C.cosmeticInfo(state,customizeTab,x.id),equipped=state.u18.equipped[customizeTab]===x.id,card=element('article','',`cosmetic-card${info.owned?'':' locked'}`);
       const icon=artFallback(`assets/icon-${customizeTab==='kali'?'kali-skin':'case'}-${x.id}.png`,x.emoji,'cosmetic-icon');card.append(icon,element('h3',x.name),element('p',info.hint));
-      card.append(action(equipped?'사용 중':info.owned?'입히기':x.milestone?'아직 잠김':`열기 · 💎 ${x.cost}`,()=>{if(!info.owned)C.buyCosmetic(state,customizeTab,x.id);C.equipCosmetic(state,customizeTab,x.id);save();render();customize();},equipped||!info.available));grid.append(card);
+      card.append(action(equipped?'사용 중':info.owned?'입히기':x.milestone?'아직 잠김':`열기 · 🧣 ${x.cost}`,()=>{if(!info.owned)C.buyCosmetic(state,customizeTab,x.id);C.equipCosmetic(state,customizeTab,x.id);save();render();customize();},equipped||!info.available));grid.append(card);
     }
     $('panelBody').append(grid);save();
   }
 
   function gemShop(){
     if(['boo','fail','ending','rebirth','bossPhase','headliner'].includes(menu))return;
-    openPanel('gemShop','보석 상점');$('panelBody').append(element('p',`💎 보석 ${state.gems}개`,'dealer-wallet'));
+    openPanel('gemShop','실크 상점');$('panelBody').append(element('p',`실크 ${state.gems}개`,'dealer-wallet'));
+    const knit = C.cosmeticInfo(state,'kali','brownknit');
+    const outfit = element('section','','gem-shop-item');
+    outfit.append(element('h2','갈색 니트'), action(knit.owned?'갈색 니트 입기':`사기 · 실크 ${knit.cost}`,()=>{
+      if (knit.owned || C.buyCosmetic(state,'kali','brownknit')) { C.equipCosmetic(state,'kali','brownknit'); save(); render(); gemShop(); }
+    },!knit.available));
+    $('panelBody').append(outfit);
     for(const item of D.gemShop){
       if((item.id==='glove'||item.id==='brick')&&!C.hasDeck(state))continue; // v4 U48 A/A2: sold only once the 칼리 덱 node is learned
       const card=element('section','','gem-shop-item');card.append(element('h2',item.name),element('p',item.desc));
       const add=skill=>{const info=C.gemShopInfo(state,item.id,skill),label=skill?D.skills.find(k=>k.id===skill).name+' 충전':'사기';
-        card.append(action(`${label} · 💎 ${info.cost}`,()=>{if(C.gemShopBuy(state,item.id,skill)){save();sound('skill');gemShop();render();}},!info.available));if(info.reason)card.append(element('small',info.reason));};
+        card.append(action(`${label} · 실크 ${info.cost}`,()=>{if(C.gemShopBuy(state,item.id,skill)){save();sound('skill');gemShop();render();}},!info.available));if(info.reason)card.append(element('small',info.reason));};
       if(item.id==='refill')D.skills.forEach(k=>add(k.id));else add();$('panelBody').append(card);
     }
   }
@@ -3543,7 +3963,7 @@ globalThis.Presentation = (() => {
     }, 75);
     setTimeout(() => {
       clearInterval(timer); dealerBusy = false;
-      dealerResult = state.coins > coins ? `동전 +${rounded(state.coins - coins)}${state.gems > gems ? ` · 보석 +${state.gems - gems}` : ''}` : '아쉽지만 맞는 줄이 없어요';
+      dealerResult = state.coins > coins ? `동전 +${rounded(state.coins - coins)}${state.gems > gems ? ` · 실크 +${state.gems - gems}` : ''}` : '아쉽지만 맞는 줄이 없어요';
       if (state.coins > coins) sound('coin');
       if (menu === 'dealer') { drawDealer(); burst(700, 430, '#ffe65c'); }
     }, reduced ? 200 : 1050);
@@ -3595,7 +4015,7 @@ globalThis.Presentation = (() => {
   }
   function clearEndingEffects() {
     particles.length=0; flights.length=0; numbers.length=0; badges.length=0; events.recentBadges?.clear(); wonMoment=null;
-    presentation.clear();renderU15.sceneRequested=false;toastQueue.length=0; visibleToasts.forEach(t=>t.el.remove()); visibleToasts.length=0; lastToastKind='';
+    presentation.clear();toastQueue.length=0; visibleToasts.forEach(t=>t.el.remove()); visibleToasts.length=0; lastToastKind='';
     clearTimeout(bannerTimer); bannerQueue.length=0; unlockBannerQueue.length=0; bannerActive=null; $('banner').hidden=true;
     document.querySelectorAll('.case-lightning').forEach(el=>el.remove());
   }
@@ -3635,8 +4055,15 @@ globalThis.Presentation = (() => {
       const buttons=element('div','','ending-actions');
       primary=state.u19.cleared?action('가게에 남기',continueDimension):action('서재 앞 테이블로',()=>{C.beginFuture(state,true);menu='';$('panel').hidden=true;previous=0;lastAudience='';endingStep=0;save();render();});
       buttons.append(primary);if(state.u19.cleared)buttons.append(action('다음 차원의 공연',showRebirth)); scene.append(buttons);
+      if (state.u19.cleared) appendMagicInvitation(scene);
     }
     $('panelBody').append(scene); primary.focus();
+  }
+  function appendMagicInvitation(host) {
+    host.append(element('p', '칼리: 마술이 재미있었으면 마술 톡방에 한번 들어가 봐'));
+    for (const [label, href] of [['마술 톡방','https://open.kakao.com/o/gQns7wzi'],['마술 소개','https://kalimagic.netlify.app/video.html']]) {
+      const link = element('a', label, 'magic-invitation'); link.href = href; link.target = '_blank'; link.rel = 'noopener'; host.append(link);
+    }
   }
   function continueDimension() {
     clearTimeout(dialogueTimer); C.stayHome(state); menu=''; $('panel').hidden=true; previous=0;
@@ -3647,11 +4074,11 @@ globalThis.Presentation = (() => {
     openPanel('rebirth', '다음 차원의 공연');
     const scene = element('div', '', 'rebirth-scene');
     const gain = C.starGain(state.dimension);
-    scene.append(element('h2', `차원 ${state.dimension}에서 차원 ${state.dimension + 1}로`), element('p', `✦ 별빛 +${gain} · 환생 후 별빛 ${state.starlight + gain}`, 'rebirth-gain'));
+    scene.append(element('h2', `차원 ${state.dimension}에서 차원 ${state.dimension + 1}로`), element('p', `🕊️ 비둘기 +${gain} · 환생 후 비둘기 ${state.starlight + gain}`, 'rebirth-gain'));
     const columns = element('div', '', 'rebirth-lists');
     for (const [title, lines] of [
-      ['처음부터 시작해요', ['동전, 보석, 열쇠', '마술 비법서의 모든 일반 강화와 해금', '무대 진행과 초대장, 트로피', '관객 도감의 감탄 횟수, 추가 조건, 팬 기록', '공연 성공과 공연 종료 횟수, 딜러 진행과 임시 버프', '보드와 케이스, 날아가는 아이템', '레벨, 경험치, 최고 액트 기록, 피날레, 자신감', '멘탈은 새 차원의 최대치로 회복하고 가족 거실에서 시작']],
-      ['다음 차원에도 남아요', ['차원 번호는 1 증가', '보유 별빛과 이번에 얻는 별빛', '별빛 강화의 모든 레벨', '이미 본 모든 엔딩 기록과 감탄한 관객의 기억', '소리 설정과 저장 기능']]
+      ['처음부터 시작해요', ['동전, 실크, 책', '마술 비법서의 모든 일반 강화와 해금', '무대 진행과 초대장, 트로피', '관객 도감의 감탄 횟수, 추가 조건, 팬 기록', '공연 성공과 공연 종료 횟수, 샵 매니저 진행과 임시 버프', '보드와 케이스, 날아가는 아이템', '레벨, 경험치, 최고 액트 기록, 피날레, 자신감', '멘탈은 새 차원의 최대치로 회복하고 가족 거실에서 시작']],
+      ['다음 차원에도 남아요', ['차원 번호는 1 증가', '보유 비둘기와 이번에 얻는 비둘기', '비둘기 강화의 모든 레벨', '이미 본 모든 엔딩 기록과 감탄한 관객의 기억', '소리 설정과 저장 기능']]
     ]) {
       const section = element('section'); section.append(element('h3', title));
       const list = element('ul'); lines.forEach(line => list.append(element('li', line))); section.append(list); columns.append(section);
@@ -3662,8 +4089,8 @@ globalThis.Presentation = (() => {
       C.rebirth(state); sound('rebirth');
       menu = ''; $('panel').hidden = true; previous = 0; lastAudience = ''; lastLayout = ''; pendingIntro = null;
       revealEnding = false; particles.length = 0; flights.length = 0; numbers.length = 0; badges.length = 0; events.recentBadges?.clear(); wonMoment = null;
-      presentation.clear();renderU15.sceneRequested=false;clearTimeout(bannerTimer); bannerQueue.length = 0; unlockBannerQueue.length = 0; bannerActive = null; $('banner').hidden = true;
-      save(); render(); toast(`차원 ${state.dimension} · 별빛 ${gain}개를 얻었어요`); $('bookButton').focus();
+      presentation.clear();clearTimeout(bannerTimer); bannerQueue.length = 0; unlockBannerQueue.length = 0; bannerActive = null; $('banner').hidden = true;
+      save(); render(); toast(`차원 ${state.dimension} · 비둘기 ${gain}개를 얻었어요`); $('bookButton').focus();
     });
     controls.append(go, action('엔딩으로 돌아가기', () => { revealEnding = false; endingStep = D.futureEnding.length; openPanel('ending', '미래의 나 · 다음 한 장'); drawEnding(); }));
     scene.append(columns, controls); $('panelBody').append(scene); go.focus();
@@ -3683,10 +4110,16 @@ globalThis.Presentation = (() => {
     else if (state.mode === 'ending'&&!state.u15.scene&&!state.u15.queue.length&&!presentation.busy) showEnding();
   }
   $('replayTutorial').addEventListener('click',()=>{moreReturn=false;closePanel();C.replayTutorial(state);startIntro(false);});
-  // v4 U47 3: no top 비법 button any more (bookButton stays hidden); the notebook opens from the fail panel ("비법 노트로") only.
+  // The notebook is reachable from the dock, landscape navigation and failure panel.
   $('equipButton').addEventListener('click',()=>{if(!C.equipSlots(state))return;if(!state.guidance.seen.includes('equipButton'))state.guidance.seen.push('equipButton');bestiaryTab='equip';bestiary();save();});
   $('openChatButton').addEventListener('click',()=>{save();window.open('https://open.kakao.com/o/gUJkfxzi','_blank','noopener');});
   $('coffeeButton').addEventListener('click',()=>{save();window.open('https://qr.kakaopay.com/Ej8rDsX4f','_blank','noopener');});
+  $('bookButton').addEventListener('click', () => {
+    if (['boo','fail','ending','rebirth','bossPhase'].includes(menu) || dealerBusy) return;
+    const mark=chainMark();
+    if(mark&&!state.u15.tutorial.done&&!state.u15.tutorial.active&&mark.step!=='upgrade-play'){toast('지금은 공연에 집중해 봐요');return;}
+    tree();
+  });
   $('bestiaryButton').addEventListener('click', bestiary);
   $('rebirthButton').addEventListener('click', () => {
     if (!['boo','fail','dealer','headliner','ending','rebirth','bossPhase'].includes(menu) && state.seenEnding) showRebirth();
@@ -3695,7 +4128,36 @@ globalThis.Presentation = (() => {
   $('customizeButton').addEventListener('click',customize);
   $('gemShopButton').addEventListener('click',gemShop);
   // v4 U50b: no shop from the skill column while a character dialog is open (Codex Sol U50 FAIL 1). U50c: this comment used to swallow the rest of the line.
-  const shopQuick=action('💎',()=>{if(lineOpen())return;gemShop();});shopQuick.id='gemShopQuick';shopQuick.className='active-skill gem-shop-quick';shopQuick.setAttribute('aria-label','보석 상점');$('activeSkills').append(shopQuick);
+  const shopQuick=action('',()=>{if(lineOpen())return;gemShop();});shopQuick.id='gemShopQuick';shopQuick.className='active-skill gem-shop-quick';shopQuick.setAttribute('aria-label','실크 상점');
+  shopQuick.append(Object.assign(document.createElement('img'),{className:'cur-icon skill-art',src:'assets/cur-silk.webp',alt:'',width:18,height:18}),element('span','실크 상점'));
+  $('activeSkills').append(shopQuick);
+  const practiceBtn = action('연습 모드', () => openPracticePrompt());
+  practiceBtn.id = 'practiceButton';
+  practiceBtn.type = 'button';
+  practiceBtn.setAttribute('aria-pressed', 'false');
+  practiceBtn.setAttribute('aria-label', '연습 모드');
+  practiceBtn.hidden = true;
+  $('activeSkills').append(practiceBtn);
+  $('practicePromptText').textContent = PRACTICE_COPY;
+  $('practiceStart').addEventListener('click', () => { closePracticePrompt(); hideMore(); setPractice(true); });
+  $('practiceDismiss').addEventListener('click', closePracticePrompt);
+  $('practiceVeil').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); dismissSaver(); });
+  document.addEventListener('pointerdown', () => { practiceIdleAt = performance.now(); }, true);
+  document.addEventListener('keydown', dismissSaver);
+  function dismissSaver() { $('practiceVeil').hidden = true; practiceIdleAt = performance.now(); }
+  function tickScreenCare(dt, now) {
+    if (state.u15.gloveLeft > 0) { if (!paused()) deckContinuousMs += dt; } else deckContinuousMs = 0;
+    if (!deckSaverAsked && deckContinuousMs >= 300000 && !menu) {
+      deckSaverAsked = true;
+      openPanel('screenCare', '화면 보호 모드로 바꿀까요?');
+      $('panelBody').append(action('화면 보호 모드', () => { closePanel(); $('practiceVeil').hidden = false; }), action('계속하기', closePanel));
+    }
+    if (practiceOn && !paused() && now - practiceIdleAt >= 20000) $('practiceVeil').hidden = false;
+    if (!$('practiceVeil').hidden) {
+      if (menu || (!practiceOn && state.u15.gloveLeft <= 0)) dismissSaver();
+      else $('practiceVeil').firstElementChild.style.transform = `translate(${Math.sin(now / 19000) * 24}px, ${Math.cos(now / 23000) * 18}px)`;
+    }
+  }
   // v4 U47 9: 피버 confetti: 36 small pieces (24 on phones, under caps.particles 48), compositor-only transforms, no pointer events, drawn behind the HUD, never with Reduce Motion.
   for(let i=0;i<36;i++){const piece=element('span','',`confetti-piece c${i%5}${i>=24?' extra':''}`);piece.style.setProperty('--x',`${(i*29+7)%97+1}%`);piece.style.setProperty('--d',`-${((i*7)%13)*.7}s`);piece.style.setProperty('--t',`${7+(i*5)%5}s`);piece.style.setProperty('--sway',`${12+(i*11)%20}px`);$('feverConfetti').append(piece);}
   for(let i=0;i<8;i++){const petal=pxIcons(element('span',i%3?'✦':'🌸','fever-petal'));petal.style.setProperty('--x',`${(i*37)%100}%`);petal.style.setProperty('--delay',`${i*.08}s`);petal.style.setProperty('--drift',`${i%2?80:-80}px`);$('feverPetals').append(petal);}
@@ -3797,10 +4259,14 @@ globalThis.Presentation = (() => {
       const p = particles[i], t = (clock - p.start) / p.life;
       if (t >= 1) { particles.splice(i, 1); continue; }
       if (t < 0) continue;
-      const x = p.x + p.dx * t, y = p.y + p.dy * t + 28 * t * t;
+      const x = p.x + p.dx * t, y = p.y + p.dy * t + (p.finale ? 10 : 28) * t * t;
       ctx.globalAlpha = 1 - t; ctx.fillStyle = p.color;
+      if (p.finale) {
+        ctx.save(); ctx.font = '16px "Apple Color Emoji","Segoe UI Emoji",sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(p.shape === 'card' ? '🃏' : '🪙', Math.round(x), Math.round(y)); ctx.restore(); continue;
+      }
       const sheets={card:'card-shards',cardrain:'card-shards',coin:'coin-spark',ring:'ring-flash',silk:'ribbon',sponge:'puff',dove:'feathers',cheer:'heart-pop',showtime:'shockwave',critical:'critical'};
-      const sheet=p.shape&&assetImage('assets/ui/fx-'+sheets[p.shape]+'.png');
+      const sheet=p.shape && p.shape !== 'critical' && assetImage('assets/ui/fx-'+sheets[p.shape]+'.png');
       if(sheet?.complete&&sheet.naturalWidth){if(!p.sheetLead)continue;ctx.imageSmoothingEnabled=false;ctx.drawImage(sheet,Math.min(3,Math.floor(t*4))*32,0,32,32,Math.round(x)-16,Math.round(y)-16,32,32);
       } else if(p.shape==='showtime'){
         ctx.beginPath();ctx.moveTo(x,y-12);ctx.lineTo(x-8,y+8);ctx.lineTo(x+8,y+8);ctx.closePath();ctx.globalAlpha*=.3;ctx.fill();
@@ -3817,41 +4283,44 @@ globalThis.Presentation = (() => {
     ctx.globalAlpha = 1;
     ctx.imageSmoothingEnabled = false;
     for (let i = badges.length - 1; i >= 0; i--) {
-      const b = badges[i], age = clock - b.start;
-      if (age >= 350) {
-        fly(b.x, b.y, target(b.effect), b.emoji || b.icon, '', D.items.rarities.find(r => r.id === b.rarity)?.color, 0, b.image);
-        badges.splice(i, 1); continue;
-      }
-      ctx.save(); ctx.translate(Math.round(b.x), Math.round(b.y) + (phone ? 6 : 0));
-      const w = phone ? U5.badgeWidth(104 * boardWidth() / 608) : b.width, h = phone ? Math.min(b.nameLabel ? 30 : 20, 112 * boardWidth() / 608 - 18) : (b.nameLabel ? 54 : 34);
-      ctx.fillStyle = '#10121af5'; ctx.strokeStyle = D.items.rarities.find(r => r.id === b.rarity)?.color || '#ffe65c';
-      ctx.lineWidth = 2; ctx.fillRect(-w / 2, -h / 2, w, h); ctx.strokeRect(-w / 2 + 1, -h / 2 + 1, w - 2, h - 2);
-      ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#fff';
-      const y = b.nameLabel ? (phone ? -5 : -9) : 0;
-      if (phone) { /* Compact badge reserves its width for the value. */ }
-      else if (b.image.complete && b.image.naturalWidth) ctx.drawImage(b.image, -w / 2 + 3, y - 12, 24, 24);
-      else { ctx.font = '18px sans-serif'; ctx.fillText(b.emoji || b.icon, -w / 2 + 15, y); }
-      ctx.font = '700 11px Galmuri11'; ctx.fillText(b.text, phone ? 0 : 12, y, phone ? w - 4 : w - 32);
-      if (b.nameLabel) { ctx.font = '400 11px Galmuri11'; ctx.fillText(b.nameLabel, 0, phone ? 9 : 14, w - 6); }
-      ctx.restore();
+      const b = badges[i];
+      // The case is the origin. Common drops are icon-only in every layout.
+      const named = ['rare', 'hero', 'legend', 'myth'].includes(b.rarity);
+      const color = D.items.rarities.find(r => r.id === b.rarity)?.color || '#ffe35b';
+      fly(b.x, b.y, portraitLayout() ? portraitDropTarget(b.effect) : target(b.effect), b.emoji || b.icon, named ? String(b.name || '').slice(0, 12) : '', color, 0, b.image);
+      badges.splice(i, 1);
     }
-    for (let i = flights.length - 1; i >= 0; i--) {
-      const f = flights[i], t = (clock - f.start) / f.life;
-      if (t >= 1) { flights.splice(i, 1); continue; }
-      if (t < 0) continue;
-      const arc = p => ({ x: f.x + (f.tx - f.x) * p, y: f.y + (f.ty - f.y) * p - 112 * Math.sin(Math.PI * p) });
+    const paintFlight = f => {
+      const t = (clock - f.start) / f.life;
+      const arc = f.arc === 'up'
+        ? p => {
+          const dx = f.tx - f.x, dy = f.ty - f.y, len = Math.hypot(dx, dy) || 1, s = Math.sin(Math.PI * p);
+          return { x: f.x + dx * p + (-dy / len) * 12 * s, y: f.y + dy * p - 24 * s };
+        }
+        : p => ({ x: f.x + (f.tx - f.x) * p, y: f.y + (f.ty - f.y) * p - 24 * Math.sin(Math.PI * p) });
       ctx.fillStyle = f.color;
-      for (let p = Math.max(0, t - .12); p < t; p += .06) {
+      for (let p = Math.max(0, t - .04); p < t; p += .06) {
         const a = arc(p); ctx.fillRect(Math.round(a.x) - 1, Math.round(a.y) - 1, 2, 2);
       }
       const a = arc(t); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.imageSmoothingEnabled = false;
-      ctx.font = '42px "Apple Color Emoji","Segoe UI Emoji",sans-serif'; if (f.image && f.image.complete && f.image.naturalWidth) ctx.drawImage(f.image, a.x - 24, a.y - 24, 48, 48);
+      const pop = f.arc === 'up' && t > 0.86 ? 1 + 0.28 * Math.sin((1 - t) / 0.14 * Math.PI) : 1;
+      const size = 48 * pop;
+      ctx.font = '42px "Apple Color Emoji","Segoe UI Emoji",sans-serif'; if (f.image && f.image.complete && f.image.naturalWidth) ctx.drawImage(f.image, a.x - size / 2, a.y - size / 2, size, size);
       else ctx.fillText(f.emoji, a.x, a.y);
       if (f.label) {
         ctx.font = '700 11px Galmuri11'; ctx.lineWidth = 5; ctx.strokeStyle = '#000';
         ctx.strokeText(f.label, a.x, a.y + 34); ctx.fillText(f.label, a.x, a.y + 34);
       }
+    };
+    const rising = [];
+    for (let i = flights.length - 1; i >= 0; i--) {
+      const f = flights[i], t = (clock - f.start) / f.life;
+      if (t >= 1) { if (f.pop) landPop(f.pop); flights.splice(i, 1); continue; }
+      if (t < 0) continue;
+      // Portrait throws cross the stats band. Draw them after the HUD clip so the icon stays visible the whole way up.
+      if (f.arc === 'up' && portraitLayout()) { rising.push(f); continue; }
+      paintFlight(f);
     }
     for (let i = numbers.length - 1; i >= 0; i--) {
       const n = numbers[i], t = (clock - n.start) / n.life;
@@ -3862,13 +4331,14 @@ globalThis.Presentation = (() => {
       const progress=n.tier===4?(t<.24?t*.4:.096+(t-.24)*(.904/.76)):t;
       const y = Math.round(n.y - (reduced || n.fixed ? 0 : progress*(14+(n.tier||0))));
       const nx=Math.round(n.x+(!reduced&&n.tier===1?Math.sin(t*Math.PI)*8:0));
-      const width=Math.max(ctx.measureText(n.text).width+6,n.critical?76:0), radius=!reduced&&n.tier>=3?8+t*16:0;
+      const width=Math.max(ctx.measureText(n.text).width+6,n.critical?ctx.measureText(n.text).width+14:0), radius=!reduced&&n.tier>=3?8+t*16:0;
       if(!U5.clearOfZones({x:nx-Math.max(width/2,radius),y:y-Math.max(n.size/2+3,radius),w:Math.max(width,radius*2),h:Math.max(n.size+6,radius*2)}))continue;
       if(radius){ctx.strokeStyle=n.color;ctx.lineWidth=1;ctx.beginPath();ctx.arc(nx,y,radius,0,Math.PI*2);ctx.stroke();}
-      if(n.critical){ctx.fillStyle='#261b2b';ctx.fillRect(nx-38,y-10,76,20);ctx.strokeStyle='#eac568';ctx.lineWidth=1;ctx.strokeRect(nx-38,y-10,76,20);ctx.fillStyle=n.color;}
+      if(n.critical){const bw=Math.max(44,Math.ceil(width));ctx.fillStyle='#261b2b';ctx.fillRect(nx-bw/2,y-10,bw,20);ctx.strokeStyle='#eac568';ctx.lineWidth=1;ctx.strokeRect(nx-bw/2,y-10,bw,20);ctx.fillStyle=n.color;}
       ctx.save();ctx.translate(nx,y);if(!reduced&&n.tier===2){const punch=1+.12*Math.max(0,1-t*4);ctx.scale(punch,punch);}ctx.strokeStyle=n.tier===4?'#c99e4d':'#17121d';ctx.lineWidth=n.tier===4?3:2;ctx.strokeText(n.text,0,0);ctx.fillText(n.text,0,0);ctx.restore();
     }
     ctx.globalAlpha = 1; ctx.restore();
+    if (rising.length) { ctx.save(); ctx.globalAlpha = 1; ctx.imageSmoothingEnabled = false; for (const f of rising) paintFlight(f); ctx.restore(); }
   }
 
   let bioUntil=0,bioPending='',dialogKey='',installPrompt=null;
@@ -3883,7 +4353,11 @@ globalThis.Presentation = (() => {
     button.addEventListener('click',e=>{if(long){e.stopImmediatePropagation();long=false;}},true);
   }
   function speakerPortrait(name){
-    if(name==='밍기리')return 'assets/aud-tutorial-mingiri-happy.png';
+    if(D.storyV15.portraits[name])return D.storyV15.portraits[name];
+    if(name==='같은 반 여학생')return 'assets/aud-s1-classmate.png';
+    if(name==='수학 선생님')return 'assets/aud-s1-teacher.png';
+    if(name==='밍기리')return state.trophies.theater?'assets/aud-tutorial-mingiri-happy.png':'assets/aud-mingiri-dark.png';
+    if(name==='수상한 샵 매니저')return 'assets/serona-hooded.png';
     if(name==='NDD')return 'assets/aud-tutorial-dogyeom'+(state.u15.tutorial.won?'-happy':'')+'.png';
     if(name==='칼리')return kaliArtPath();
     for(const v of D.venues){const a=C.roster(v).find(a=>a.name===name);if(a)return audienceAsset(v,a);}
@@ -3895,7 +4369,7 @@ globalThis.Presentation = (() => {
   // v4 U47 4: typewriter dialog. The speed is a presentation setting (uiSave.textSpeed, never the main save); reduced motion defaults to 빠르게 (the whole line at once).
   const TEXT_SPEEDS=['normal','slow','fast'],TEXT_SPEED_LABEL={fast:'빠르게',normal:'보통',slow:'느리게'},TYPE_STEP={normal:35,slow:70};
   function textSpeed(){return TEXT_SPEEDS.includes(uiSave.textSpeed)?uiSave.textSpeed:(reduced?'fast':'normal');}
-  let dialogTyping=null;
+  let dialogTyping=null,firstTypeLine=true;
   function typePause(ch,step){return /[.?!]/.test(ch)?step*5:ch===','?step*2:0;}
   function finishTypingNow(){if(!dialogTyping)return false;dialogTyping.finish();return true;}
   // v4 U51b 2: one press = one step. Every line window's 다음 (and the tap on its box) goes through this shared gate: a second advance within
@@ -3906,20 +4380,27 @@ globalThis.Presentation = (() => {
   function typeLine(p,text){
     if(dialogTyping){clearTimeout(dialogTyping.timer);dialogTyping=null;}
     const step=TYPE_STEP[textSpeed()];
-    if(!step||!text){p.textContent=text;return;}
+    if(!step||!text){p.textContent=text;p.dataset.typing='false';return;}
     const done=document.createElement('span'),rest=document.createElement('span');done.className='type-done';rest.className='type-rest';rest.textContent=text;p.replaceChildren(done,rest);
-    const me={i:0,timer:0,finish(){clearTimeout(me.timer);done.textContent=text;rest.textContent='';if(dialogTyping===me)dialogTyping=null;renderU15.autoAt=clock;}};
+    const me={i:0,timer:0,finish(){clearTimeout(me.timer);me.i=text.length;done.textContent=text;rest.textContent='';p.dataset.typing='false';if(dialogTyping===me)dialogTyping=null;renderU15.autoAt=clock;}};
+    p.dataset.typing='true';
     dialogTyping=me;
     const tick=()=>{me.i++;done.textContent=text.slice(0,me.i);rest.textContent=text.slice(me.i);if(me.i>=text.length){me.finish();return;}const ch=text[me.i-1];me.timer=setTimeout(tick,ch===' '?0:step+typePause(ch,step));};
-    me.timer=setTimeout(tick,step);
+    // Start the opening line after assets/fonts settle, so loading cannot consume its reveal.
+    const opening=firstTypeLine;firstTypeLine=false;
+    if(opening){
+      const loaded=document.readyState==='complete'?Promise.resolve():new Promise(resolve=>window.addEventListener('load',resolve,{once:true}));
+      Promise.all([loaded,document.fonts.ready]).then(()=>{if(dialogTyping===me)me.timer=setTimeout(tick,250);});
+    }else me.timer=setTimeout(tick,step);
   }
   function renderDialog(lines,index,key,advance,skip){
     const host=$('storyDialog');host.hidden=false;clearDecorations();
     if(dialogKey===key+':'+index)return;dialogKey=key+':'+index;host.replaceChildren();
     const line=lines[Math.min(index,lines.length-1)],art=element('span',line.speaker==='칼리'?'🎩':'👤','story-portrait');
-    if(line.speaker==='칼리'){const mood=D.lineFaces.moods[u25DialogMoodKey(key,index)]||'serious';art.classList.toggle('future-suit',state.u18.equipped.kali==='future');if(['sad','surprised'].includes(mood))sprite(art,'assets/kali-react-'+mood+'.png');else moodSprite(art,kaliArtPath(),mood);}
-    else{const a=D.venues.flatMap(v=>C.roster(v)).find(a=>a.name===line.speaker);const moodKey=u25DialogMoodKey(key,index);moodSprite(art,speakerPortrait(line.speaker),D.lineFaces.moods[moodKey]||D.lineFaces.faceMap.roleDefaults[a?.role]||'serious');}
-    { const after=lines[index+1]; if(after){ const p=after.speaker==='칼리'?kaliArtPath():speakerPortrait(after.speaker); if(p)assetImage(p); } } // v4 U49 3: warm the next speaker's portrait
+    if(line.speaker==='칼리'){const mood=line.mood||D.lineFaces.moods[u25DialogMoodKey(key,index)]||'serious';art.classList.toggle('future-suit',state.u18.equipped.kali==='future');if(['sad','surprised'].includes(mood))sprite(art,'assets/kali-react-'+mood+'.png');else moodSprite(art,kaliArtPath(),mood);}
+    else if(key.startsWith('tutorial:')&&line.speaker==='세로나')moodSprite(art,'assets/serona.png',line.mood||'serious'); // tutorial helper, not the lecturenote 세로나 sprite and not 밍기리
+    else{const a=D.venues.flatMap(v=>C.roster(v)).find(a=>a.name===line.speaker);const moodKey=u25DialogMoodKey(key,index);moodSprite(art,speakerPortrait(line.speaker),line.mood||D.lineFaces.moods[moodKey]||D.lineFaces.faceMap.roleDefaults[a?.role]||'serious');}
+    { const after=lines[index+1]; if(after){ const p=after.speaker==='칼리'?kaliArtPath():(key.startsWith('tutorial:')&&after.speaker==='세로나'?'assets/serona.png':speakerPortrait(after.speaker)); if(p)assetImage(p); } } // v4 U49 3: warm the next speaker's portrait
     const copy=element('div','','story-copy'),lineText=element('p','');copy.append(element('strong',line.speaker),lineText);typeLine(lineText,line.text); // v4 U47 4: typed per character; a tap completes the line, the next tap goes on
     // v4 U51 2/3: every line has the same two buttons, 건너뛰기 and 다음 (the last line's 다음 closes the lines the same way; there is no 무대 시작
     // button any more, the stage starts by itself about 1 s after the lines are over, see autoStartStage).
@@ -3930,69 +4411,416 @@ globalThis.Presentation = (() => {
   // before the family lines start, so those lines do not read as part of the NDD scene. The show waits behind the card (paused()).
   function sceneChangeCard(name){
     const card=$('sceneCard');$('sceneCardName').textContent=name;card.hidden=false;
-    const item=presentation.push({minimum:1500,hold:false,priority:90,end:()=>{card.hidden=true;}});
+    const item=presentation.push({stageTransition:true,minimum:1500,hold:false,priority:90,end:()=>{card.hidden=true;}});
     card.onclick=()=>{item.minimum=0;};
+  }
+  function chainMark() {
+    const bios = state.u15 && state.u15.bios;
+    if (!Array.isArray(bios)) return null;
+    const hit = bios.find(k => typeof k === 'string' && k.startsWith('tchain:'));
+    if (!hit) return null;
+    const parts = hit.split(':');
+    return { step: parts[1] || '', line: Number(parts[2]) || 0 };
+  }
+  function setChain(step, line) {
+    if (!state.u15.bios) state.u15.bios = [];
+    state.u15.bios = state.u15.bios.filter(k => typeof k !== 'string' || !k.startsWith('tchain:'));
+    if (step) state.u15.bios.push(`tchain:${step}:${line || 0}`);
+  }
+  function schoolChainPaused() {
+    if (!state || !state.u15 || state.u15.tutorial.done || state.u15.tutorial.active) return false;
+    const mark = chainMark();
+    return !!mark && !mark.step.endsWith('-fight');
+  }
+  function schoolBackdropOn() {
+    if (!state || !state.u15 || state.u15.tutorial.done) return false;
+    return state.u15.tutorial.active || !!chainMark();
+  }
+  function chainFace() {
+    const mark = chainMark();
+    if (!mark || state.u15.tutorial.active || state.u15.tutorial.done) return null;
+    const teacher = mark.step.startsWith('teacher') || mark.step.startsWith('upgrade');
+    const happy = mark.step.endsWith('-clear') || mark.step.startsWith('upgrade');
+    if (teacher) return { name: '수학 선생님', emoji: '👩‍🏫', role: 'critic', portrait: `assets/aud-s1-teacher${happy ? '-happy' : ''}.png` };
+    if (mark.step.startsWith('girl')) return { name: '같은 반 여학생', emoji: '👧', role: 'supporter', portrait: `assets/aud-s1-classmate${happy ? '-happy' : ''}.png` };
+    return null;
+  }
+  function chainDuringLine() {
+    const mark = chainMark();
+    if (!mark || state.u15.tutorial.active || !mark.step.endsWith('-fight')) return '';
+    const pack = D.storyV15.tutorial.schoolChain;
+    const line = mark.step.startsWith('teacher') ? pack.teacherDuring[0] : pack.girlDuring[0];
+    return line ? line.text : '';
+  }
+  function applySchoolRoom() {
+    const school = D.venues.find(v => v.slug === 'school');
+    if (!school) return;
+    $('room').dataset.chainSchool = '1';
+    $('room').dataset.venue = 'school';
+    sprite($('room'), venueAsset(school));
+    $('viewport').style.setProperty('--venue-art', `url(${JSON.stringify(assetUrl(venueAsset(school)))})`);
+    for (const [k, c] of [['--venue-bg1', school.palette.bg1], ['--venue-bg2', school.palette.bg2], ['--venue-accent', school.palette.accent]]) {
+      $('room').style.setProperty(k, c); $('stage').style.setProperty(k, c);
+    }
+    $('venueName').textContent = '학교';
+  }
+  function setTutorialTargets(nodes) {
+    const next = nodes.filter(Boolean);
+    const prev = renderCoach.targets || (renderCoach.target ? [renderCoach.target] : []);
+    prev.forEach(el => { if (!next.includes(el)) el.classList.remove('tutorial-target'); });
+    next.forEach(el => el.classList.add('tutorial-target'));
+    renderCoach.targets = next;
+    renderCoach.target = next[0] || null;
+  }
+  function replaceState(next) {
+    if (!next) return false;
+    for (const k of Object.keys(state)) delete state[k];
+    Object.assign(state, next);
+    return true;
+  }
+  function chainLines(step) {
+    const pack = D.storyV15.tutorial.schoolChain;
+    return { 'girl-intro': pack.girlIntro, 'girl-clear': pack.girlClear, 'teacher-intro': pack.teacherIntro, 'upgrade-lines': pack.upgrade }[step] || null;
+  }
+  const CHAIN_AFTER = { 'girl-intro': 'girl-fight', 'girl-clear': 'teacher-intro', 'teacher-intro': 'teacher-fight', 'upgrade-lines': 'upgrade-play', 'girl-fight': 'girl-clear', 'teacher-fight': 'upgrade-lines' };
+  // TODO core tutorial: core keeps one NDD fight (startTutorial / tutorial.won). The classmate and the teacher are normal fights rolled back in the UI.
+  function ensureChainFight(step) {
+    if (chainFighting) return;
+    chainBackup = C.serialize(state);
+    chainFighting = true;
+    const hp = step.startsWith('teacher') ? 180 : 120;
+    state.audHp = state.audHpMax = hp;
+    state.atk = 1; state.interval = 8; state.heckleMs = 8000; state.telegraphed = false;
+    state.fightMs = 0; state.resolved = false; state.mode = 'fight';
+    state.mental = Math.max(state.mental, 10);
+    state.u15.queue = []; state.u15.scene = null;
+    lastAudience = '';
+  }
+  function absorbChainWin() {
+    const mark = chainMark();
+    if (!mark || !mark.step.endsWith('-fight') || state.u15.tutorial.active) return false;
+    const next = CHAIN_AFTER[mark.step] || 'girl-intro';
+    if (chainBackup) replaceState(C.deserialize(chainBackup));
+    chainFighting = false; chainBackup = '';
+    state.onboarding.intro = true;
+    setChain(next, 0);
+    lastAudience = ''; dialogKey = '';
+    save();
+    return true;
+  }
+  function absorbChainFail() {
+    const mark = chainMark();
+    if (!mark || !mark.step.endsWith('-fight') || state.u15.tutorial.active) return false;
+    const step = mark.step;
+    if (chainBackup) replaceState(C.deserialize(chainBackup));
+    chainFighting = false; chainBackup = '';
+    state.onboarding.intro = true;
+    setChain(step, 0);
+    lastAudience = '';
+    toast('다시 한 번 보여 주세요');
+    save();
+    return true;
+  }
+  function endSchoolTutorial() {
+    if (chainFighting && chainBackup) replaceState(C.deserialize(chainBackup));
+    chainFighting = false; chainBackup = ''; chainNodeId = ''; chainNodeLevel = -1; chainFocused = false; chainBookChecked = false;
+    if (state.u15.tutorial.active) C.finishTutorial(state);
+    state.u15.tutorial = { done: true, active: false, won: false, baseline: null };
+    state.u15.bios = (state.u15.bios || []).filter(k => typeof k !== 'string' || !k.startsWith('tchain:'));
+    state.onboarding.intro = true;
+    state.onboarding.step = 8;
+    if (!Array.isArray(state.onboarding.facts)) state.onboarding.facts = [];
+    if (menu) { menu = ''; $('panel').hidden = true; }
+    $('storyDialog').hidden = true; $('introStory').hidden = true; dialogKey = ''; lastAudience = '';
+    if ($('room')) $('room').dataset.chainSchool = '';
+    setTutorialTargets([]);
+    const coach = $('tutorialCoach');
+    if (coach) { coach.hidden = true; coach.dataset.step = ''; }
+    sceneChangeCard(D.venues[0].name);
+    save(); render();
+  }
+  function beginNdd() {
+    chainFighting = false; chainBackup = ''; chainNodeId = ''; chainNodeLevel = -1; chainFocused = false; chainBookChecked = false;
+    if (menu) { menu = ''; $('panel').hidden = true; }
+    setChain('', 0);
+    dialogKey = ''; lastAudience = '';
+    C.startTutorial(state);
+    save();
+  }
+  function ensureUpgradeNode() {
+    if (chainNodeId) {
+      const held = D.tree.find(n => n.id === chainNodeId) || null;
+      if (held) {
+        const info = C.nodeInfo(state, held.id);
+        if (info.cost > 0 && state.coins < info.cost) state.coins = info.cost;
+      }
+      return held;
+    }
+    const afford = id => {
+      const info = C.nodeInfo(state, id);
+      if (!(info.cost > 0)) return false;
+      if (state.coins < info.cost) state.coins = info.cost;
+      return !!C.nodeInfo(state, id).purchasable;
+    };
+    // Use the stable node id: display names change. Only coin lessons can use the tutorial's coin grant.
+    const named = D.tree.find(n => n.id === 'power');
+    let node = named && afford(named.id) ? named : null;
+    if (!node) {
+      let list = C.affordableNodes(state);
+      if (!list.length) {
+        const cheap = D.tree.filter(n => {
+          const info = C.nodeInfo(state, n.id);
+          return info.currency === 'coins' && info.cost > 0 && info.revealed && typeof info.blockedReason === 'string' && info.blockedReason.endsWith('부족');
+        }).sort((a, b) => C.nodeInfo(state, a.id).cost - C.nodeInfo(state, b.id).cost);
+        if (cheap[0]) afford(cheap[0].id);
+        list = C.affordableNodes(state);
+      }
+      node = list[0] || null;
+    }
+    if (!node) return null;
+    chainNodeId = node.id;
+    chainNodeLevel = state.tree[node.id] || 0;
+    return node;
+  }
+  function bookButtonVisible() {
+    const book = $('bookButton');
+    if (!book || book.hidden) return false;
+    const style = getComputedStyle(book);
+    return style.display !== 'none' && style.visibility !== 'hidden' && book.getClientRects().length > 0;
+  }
+  function renderSchoolChain() {
+    if (state.u15.tutorial.done || state.u15.tutorial.active) return false;
+    const mark = chainMark();
+    if (!mark) return false;
+    if (mark.step.endsWith('-fight')) {
+      $('storyDialog').hidden = true; dialogKey = '';
+      ensureChainFight(mark.step);
+      return true;
+    }
+    if (mark.step === 'upgrade-play') {
+      const node = ensureUpgradeNode();
+      $('storyDialog').hidden = true; dialogKey = '';
+      if (!node) { beginNdd(); return false; }
+      if ((state.tree[node.id] || 0) > chainNodeLevel) { beginNdd(); return false; }
+      if (menu === 'book' && !chainFocused) { chainFocused = true; focusNode(node.id); }
+      else if (menu !== 'book' && !chainBookChecked) {
+        chainBookChecked = true;
+        if (!bookButtonVisible()) { tree(); chainFocused = true; focusNode(node.id); }
+      }
+      return true;
+    }
+    const lines = chainLines(mark.step);
+    if (!lines || !lines.length) { setChain(CHAIN_AFTER[mark.step] || 'girl-intro', 0); return true; }
+    const advance = () => {
+      if (mark.line + 1 < lines.length) setChain(mark.step, mark.line + 1);
+      else setChain(CHAIN_AFTER[mark.step] || 'girl-intro', 0);
+    };
+    renderDialog(lines, mark.line, 'tutorial:' + mark.step, advance, endSchoolTutorial);
+    return true;
   }
   function renderU15(){
     const u=state.u15,t=u.tutorial,glove=$('item-auto-glove');
     if(glove){const deck=C.hasDeck(state),left=u.gloveLeft,sec=Math.ceil(left/1000);glove.classList.toggle('glove-active',left>0);glove.querySelector('small').className='item-count';glove.hidden=!deck&&u.gloves===0&&left===0;glove.disabled=paused()||state.mode!=='fight'||left>0||u.gloves<1;glove.setAttribute('aria-pressed','false');glove.querySelector('small').textContent=left>0?(sec>=60?`${Math.floor(sec/60)}:${String(sec%60).padStart(2,'0')}`:sec+'초'):u.gloves+'개';glove.setAttribute('aria-label',left>0?`칼리 덱 자동 연습 중 · 남은 시간 ${sec}초 · ${u.gloves}개 보유`:`칼리 덱 쓰기 · ${u.gloves}개 보유`);if(left>gloveRun)gloveRun=left;if(!left)gloveRun=0;glove.style.setProperty('--cooldown',Math.min(1,left/Math.max(120000,gloveRun))*360+'deg');}
+    if(renderSchoolChain())return;
     if(t.active){
       if(t.won&&t.phase!=='overview')t.phase='defeat';
       if(t.phase==='fight'){
         $('storyDialog').hidden=true;dialogKey='';
         if(state.fightMs>40000&&state.onboarding.step>=4&&u.gloves===0&&u.gloveLeft===0)u.gloves=1;
-        const line=D.storyV15.tutorial.coaching[Math.min(3,Math.floor(state.fightMs/18000))];$('audienceLine').textContent=line.text;
+        const coaching=D.storyV15.tutorial.coaching;
+        const line=coaching[Math.min(coaching.length-1,Math.floor(state.fightMs/18000))];$('audienceLine').textContent=line.text;$('audienceLine').hidden=portraitLayout();
         return;
       }
       if(t.won&&$('audience').dataset.asset!=='assets/aud-tutorial-dogyeom-happy.png')sprite($('audience'),'assets/aud-tutorial-dogyeom-happy.png');
-      const overview=['관객의 의심을 줄여 감탄시키자!','케이스를 열어 더 큰 무대로 가자!','비법으로 강해지고 도감에서 친구를 만나!'].map(text=>({speaker:'밍기리',text}));
+      const overview=D.storyV15.tutorial.overview;
       const lines=t.phase==='overview'?overview:D.storyV15.tutorial[t.phase==='defeat'?'defeat':'intro'];
-      const finish=()=>{C.finishTutorial(state);lastAudience='';dialogKey='';sceneChangeCard(D.venues[0].name);save();render();};
-      renderDialog(lines,t.line||0,'tutorial:'+t.phase,()=>{if((t.line||0)+1<lines.length)t.line=(t.line||0)+1;else if(t.phase==='intro'){t.phase='fight';t.line=0;}else if(t.phase==='defeat'){t.phase='overview';t.line=0;}else finish();save();},finish);return;
+      const finish=()=>{endSchoolTutorial();};
+      renderDialog(lines,t.line||0,'tutorial:'+t.phase,()=>{if((t.line||0)+1<lines.length)t.line=(t.line||0)+1;else if(t.phase==='intro'){t.phase='fight';t.line=0;}else finish();save();},finish);return;
     }
-    if(!renderU15.sceneRequested&&!presentation.busy&&!state.u18.anchor&&t.done&&(state.mode!=='transition'||state.idle.waiting)&&!u.scene&&u.queue.length&&!menu&&!document.hidden&&state.features.climax.left<=0){renderU15.sceneRequested=true;presentation.push({minimum:0,hold:true,priority:50,start:item=>{renderU15.sceneRequested=false;if(!C.startScene(state))item.hold=false;}});}
-    if(u.scene){if(!presentation.active&& !presentation.items.length)presentation.push({minimum:0,hold:true,priority:50});if(bioPending)bioUntil=0;const scene=u.scene,lines=D.storyV15.venues[scene.slug][scene.kind];renderDialog(lines,scene.line,'story:'+scene.dimension+':'+scene.slug+':'+scene.kind,()=>{C.advanceScene(state,false);if(!u.scene)presentation.finish();save();},()=>{C.advanceScene(state,true);presentation.finish();save();});}
-    else if(state.idle.waiting&&!presentation.busy&&!u.queue.length){$('storyDialog').hidden=true;dialogKey='';autoStartStage();}
-    else{if(!(state.idle.waiting&&u.queue.length)){$('storyDialog').hidden=true;dialogKey='';}if(bioPending&&state.mode==='fight'&&!state.telegraphed&&state.review.target<0){if(!u.bios.includes(bioPending))u.bios.push(bioPending);bioPending='';bioUntil=0;}}
+    // Story state owns the dialogue lifetime. Notifications may wait behind it, but cannot strand it in a held queue item.
+    // Finish clear notices before opening the last story lines; a queued reward/banner must not appear
+    // in the readable start pause afterwards. Ordinary queued toasts do not hold the stage.
+    const transitionNotice=!!presentation.active?.stageTransition||presentation.items.some(item=>item.stageTransition);
+    const storyBlocked=blockingSheetOpen()||transitionNotice||document.hidden||portrait()||!$('leaveConfirm').hidden||!$('offlineCard').hidden||!$('sceneCard').hidden||!$('banner').hidden||!!stageRewardHost;
+    if(!storyBlocked&&!state.u18.anchor&&t.done&&(state.mode!=='transition'||state.idle.waiting||state.batchD.encore.phase==='choice'||state.batchD.rebirthOffer)&&!u.scene&&u.queue.length&&state.features.climax.left<=0)C.startScene(state);
+    if(u.scene){if(bioPending)bioUntil=0;const scene=u.scene,lines=D.storyV15.venues[scene.slug][scene.kind];renderDialog(lines,scene.line,'story:'+scene.dimension+':'+scene.slug+':'+scene.kind,()=>{C.advanceScene(state,false);save();},()=>{C.advanceScene(state,true);save();});}
+    else{$('storyDialog').hidden=true;dialogKey='';if(bioPending&&state.mode==='fight'&&!state.telegraphed&&state.review.target<0){if(!u.bios.includes(bioPending))u.bios.push(bioPending);bioPending='';bioUntil=0;}}
     // v4 U51b 1: the 칼리 덱 auto path only moves the story lines on (every 2.5 s, and not under the menu, the leave question or the offline card); the
     // stage itself is started only by autoStartStage (all its guards and the 1 s pause), never directly from here.
-    if(C.autoStage(state)&&(u.scene||state.idle.waiting)&&!menu&&!document.hidden&&!portrait()&&$('phoneMore').hidden&&$('leaveConfirm').hidden&&$('offlineCard').hidden){
+    if(C.autoStage(state)&&(u.scene||state.idle.waiting)&&!blockingSheetOpen()&&!document.hidden&&!portrait()&&$('leaveConfirm').hidden&&$('sceneCard').hidden&&$('introStory').hidden&&$('offlineCard').hidden&&!stageRewardHost&&$('banner').hidden){
       $('autoIndicator').hidden=false;if($('autoIndicator').textContent!=='칼리 덱 자동 진행 중: 다음 무대로 이동해요')$('autoIndicator').textContent='칼리 덱 자동 진행 중: 다음 무대로 이동해요';
       const key=u.scene?u.scene.slug+':'+u.scene.kind+':'+u.scene.line:'stage:'+state.venue;
       if(renderU15.autoKey!==key){renderU15.autoKey=key;renderU15.autoAt=clock;}
       if(dialogTyping)renderU15.autoAt=clock;
-      if(clock-renderU15.autoAt>=2500&&u.scene){C.advanceScene(state,false);if(!u.scene)presentation.finish();save();}
+      if(clock-renderU15.autoAt>=2500&&u.scene){C.advanceScene(state,false);save();}
     }else{renderU15.autoKey='';if($('autoIndicator').textContent!=='자동')$('autoIndicator').textContent='자동';}
     $('audienceLine').hidden=!wonMoment&&(clock>bioUntil||!!u.scene||state.telegraphed||state.review.target>=0);
-    if(state.idle.waiting&&(u.scene||u.queue.length||presentation.busy))autoStartStage(); // v4 U51c: also every frame the stage-wait branch above is not reached (lines, queue, a toast or banner): those hold it, so the pause restarts after them
+    autoStartStage(); // Check every rendered frame, including blocked frames, so closing a layer starts a fresh pause.
   }
   // v4 U51 3 (owner: "스테이지 시작 안 눌러도 자동으로 다음 스테이지로"): at a new stage (Core idle.waiting, reached after a clear) the show starts by
   // itself once every line, banner and layer is gone, after a short pause (AUTO_START_MS of wall time with nothing open) so the marquee's new venue
   // name can be read. It calls the same C.startStage the old 무대 시작 button called, so the started stage is the same. Anything open (a panel, the
-  // menu, the save-slot view, the stage map, the leave question, a dialog, the scene card, the intro, the offline card, a banner, the win moment,
-  // the tutorial, a hidden page or portrait) holds it, and the pause starts again after it closes. renderU15 calls this every frame while waiting;
+  // menu, the save-slot view, the stage map, the leave question, a dialog, the scene card, the intro, the offline card, a visible banner, the win moment,
+  // the tutorial, a hidden page or portrait) holds it, and the pause starts again after it closes. Queued notifications do not count as open layers. renderU15 calls this every frame;
   // a gap between calls (any frame where it was not reached) also restarts the pause.
   const AUTO_START_MS=1000;
   function autoStartStage(){
     const now=performance.now(),last=autoStartStage.last||0;autoStartStage.last=now;
-    const held=!state.idle.waiting||state.mode!=='transition'||!!state.u15.scene||state.u15.queue.length>0||state.u15.tutorial.active||presentation.busy||!!menu||!!state.u18.map||!!wonMoment||state.features.climax.left>0||document.hidden||portrait()
-      ||!$('phoneMore').hidden||!$('panel').hidden||!$('leaveConfirm').hidden||!$('sceneCard').hidden||!$('introStory').hidden||!$('offlineCard').hidden||!$('banner').hidden||!state.onboarding.intro;
+    const held=!state.idle.waiting||state.mode!=='transition'||!!state.u15.scene||state.u15.queue.length>0||state.u15.tutorial.active||schoolChainPaused()||blockingSheetOpen()||!!state.u18.map||!!wonMoment||state.features.climax.left>0||document.hidden||portrait()
+      ||!$('storyDialog').hidden||!!stageRewardHost||!$('leaveConfirm').hidden||!$('sceneCard').hidden||!$('introStory').hidden||!$('offlineCard').hidden||!$('banner').hidden||!state.onboarding.intro;
     // v4 U51c: a slow frame is not a restart (at 5 fps calls come 200 ms apart and the old 150 ms rule restarted the pause forever); only a gap
     // over 1.5 s (the waiting stage was not rendered, e.g. a hidden page) restarts it. Every frame while waiting reaches this call (see renderU15).
     if(held||now-last>1500||!autoStartStage.since){autoStartStage.since=held?0:now;return false;}
     if(now-autoStartStage.since<AUTO_START_MS)return false;
     autoStartStage.since=0;if(!C.startStage(state))return false;save();return true;
   }
+  let batchDPanelKey='',batchDReplayFinish=null,batchDCutsceneTimer=null;
+  function batchDLeavePanel(){
+    clearTimeout(batchDCutsceneTimer);batchDCutsceneTimer=null;
+    batchDPanelKey='';menu='';$('panel').hidden=true;previous=0;lastAudience='';moreReturn=false;
+  }
+  function runBatchDAction(kind){
+    if(!C.batchDAction(state,kind))return false;
+    batchDLeavePanel();save();render();return true;
+  }
+  function resolveBatchDPanel(){
+    const key=batchDPanelKey;
+    if(key==='encore')runBatchDAction('leave');
+    else if(key==='rebirth')runBatchDAction('continue');
+    else if(key==='twist:counter')runBatchDAction('counter');
+    else if(key==='twist:cutscene')runBatchDAction('counter-finish');
+    else runBatchDAction('twist-next');
+  }
+  function finishBatchDReplay(){
+    const finish=batchDReplayFinish;batchDReplayFinish=null;
+    batchDLeavePanel();if(finish)finish();else storyList();
+  }
+  function showBatchDLines(title,lines,finish){
+    let index=0;
+    const draw=()=>{
+      openPanel('batchDReplay',title);$('closePanel').textContent='건너뛰기';
+      batchDReplayFinish=finish||(()=>storyList());
+      const line=lines[index];
+      const scene=element('div','','batch-d-scene');
+      scene.append(element('strong',line.speaker),element('p',line.text));
+      scene.append(action(index+1<lines.length?'다음':'이야기 마치기',()=>{if(++index<lines.length)draw();else finishBatchDReplay();}));
+      $('panelBody').append(scene);
+    };
+    if(lines.length)draw();else if(finish)finish();
+  }
+  function startBatchDSide(side){
+    if(state.u18.map)C.returnToStage(state);
+    batchDLeavePanel();
+    const def=D.batchD.stages[side],script=D.storyReview.ifRoute[def.script];
+    if(!C.batchDAction(state,side)){toast('갈림길의 공연을 먼저 마쳐 주세요');return;}
+    save();showBatchDLines(def.name,[...script.opening,...script.beforeHeadliner],()=>{previous=0;render();});
+  }
+  function replayBatchD(key){
+    const t=D.storyReview.twist;
+    if(key==='oilWater'){
+      openPanel('batchDReplay','오일 앤 워터');batchDReplayFinish=()=>storyList();
+      $('closePanel').textContent='건너뛰기';drawOilWater(finishBatchDReplay);return;
+    }
+    const lines=key==='twist'?[...t.intro,...t.hidden,...t.failures.flat(),...t.gift,...t.counter,...t.complete]:Object.values(D.storyReview.ifRoute[D.batchD.stages[key].script]).filter(Array.isArray).flat();
+    showBatchDLines(key==='twist'?'반전 무대':D.batchD.stages[key].name,lines);
+  }
+  function drawOilWater(finish){
+    let finished=false;const done=()=>{if(finished)return;finished=true;clearTimeout(batchDCutsceneTimer);finish();};
+    const scene=element('div','','batch-d-scene');
+    scene.append(element('p','오일 앤 워터 · 섞어도 다시 나뉘는 빨강과 검정'));
+    const table=element('div','','batch-d-cards');table.setAttribute('aria-label','빨간 카드 세 장과 검은 카드 세 장이 세 번 섞였다가 나뉩니다');
+    for(let i=0;i<6;i++){
+      const card=element('div','','batch-d-card '+(i%2?'is-black':'is-red'));
+      card.style.setProperty('--mixed',i);card.style.setProperty('--sorted',i%2?3+(i-1)/2:i/2);
+      const img=document.createElement('img');img.src=assetUrl('assets/ui/'+(i%2?'monte-jack':'monte-queen')+'.png');img.alt=i%2?'검은 카드':'빨간 카드';
+      card.append(img,element('span',i%2?'♠':'♥'));table.append(card);
+    }
+    scene.append(table,element('p',D.storyReview.twist.oilWater[0].text),action('장면 건너뛰기',done));$('panelBody').append(scene);
+    clearTimeout(batchDCutsceneTimer);
+    batchDCutsceneTimer=setTimeout(()=>{
+      if(!scene.isConnected)return;
+      scene.replaceChildren(element('h2','관객 대만족!'),element('p',D.storyReview.twist.oilWater[1].text),action('공연 마치기',done));sound('milestone');
+    },reduced?150:D.batchD.twist.cutsceneMs);
+  }
+  function renderBatchD(){
+    const b=state.batchD,t=b.twist,side=D.batchD.stages[b.side];
+    if(side){
+      $('venueName').textContent=side.name;$('doubtTitle').dataset.audience=side.character;
+      $('doubtTitle').textContent=portraitLayout()?'의심':side.character+'의 의심';$('audience').setAttribute('aria-label',side.character);
+      if($('audience').dataset.asset!==side.portrait)sprite($('audience'),side.portrait);
+      const lines=D.storyReview.ifRoute[side.script].beforeHeadliner;
+      $('audienceLine').textContent=lines[Math.floor(state.fightMs/7000)%lines.length].text;
+      $('patternLabel').textContent='IF 공연 · 한 사람씩 마음을 건네요';
+    }
+    if(t.scene==='hidden'){
+      $('hint').textContent='🃏 아직 마지막 마술이 남았다 · '+Math.ceil(t.left/1000)+'초';
+      $('audienceLine').textContent=D.storyReview.twist.hidden[0].text;
+    }else if(b.interference.left>0)$('hint').textContent=(b.interference.kind==='lock'?'🔒 잠깐 잠긴 케이스':'🙈 잠깐 가린 케이스')+' · '+Math.ceil(b.interference.left/1000)+'초';
+    else if(b.encore.phase==='round')$('hint').textContent='앙코르 · '+Math.ceil(b.encore.left/1000)+'초 · 추가 보상 도전';
+    const key=BatchDView.panel(b);
+    if(!key||menu||state.u15.scene||state.u15.queue.length||presentation.busy||wonMoment||!$('offlineCard').hidden||!$('sceneCard').hidden||!$('leaveConfirm').hidden||!state.onboarding.intro)return;
+    batchDPanelKey=key;openPanel('batchD',key==='encore'?'한 번 더 보여 줄까요?':key==='rebirth'?'멀티버스의 갈림길':'반전 무대');
+    $('closePanel').textContent=key==='encore'?'인사하고 내려가기':key==='rebirth'?'본편 이어가기':'장면 건너뛰기';
+    const body=$('panelBody'),scene=element('div','','batch-d-scene');body.append(scene);
+    if(key==='encore'){
+      scene.append(element('p','한 번만 더 도전해요. 성공하면 동전 보너스, 실패하면 멘탈이 조금 줄어요. 기본 보상은 유지돼요.'),action('앙코르',()=>runBatchDAction('encore')),action('인사하고 내려가기',()=>runBatchDAction('leave')));
+    }else if(key==='rebirth'){
+      scene.append(element('p',D.progressFork.mainChoice),action('렉쳐노트로 이어가기',()=>runBatchDAction('continue')),element('p',D.progressFork.ifChoice));
+      if(b.ifRoute)scene.append(element('p','두 번째 공연의 갈림길이에요. 어린 칼리를 만나면 거울 속 무대가 열려요.'),action('어린 칼리 만나기',()=>{C.batchDAction(state,'continue');startBatchDSide('young');}));
+      else scene.append(element('p','환생하면 처음부터 시작해요. 마술 실력 '+Math.round(D.batchD.rebirth.permanentBonus*100)+'%가 영구히 더해져요. 다시 멀티버스를 마치면 IF 무대를 고를 수 있어요.'),action('환생하고 IF 루트 열기',()=>runBatchDAction('rebirth')));
+    }else if(key==='twist:cutscene')drawOilWater(()=>runBatchDAction('counter-finish'));
+    else{
+      const kind=key.split(':')[1],copy=D.storyReview.twist;
+      const lines=kind==='failure'?copy.failures[Math.max(0,t.failures-1)]:copy[kind];
+      for(const line of lines||[])scene.append(element('strong',line.speaker),element('p',line.text));
+      if(kind==='failure')scene.append(element('p','놀라움으로 멘탈 붕괴 · '+t.failures+'/3 · 강화와 동전은 그대로예요'));
+      if(kind==='gift')scene.append(element('p','비법 트레이스 무료 습득 · 멘탈 회복'));
+      scene.append(action(kind==='counter'?'반격 피날레':kind==='failure'?'보스부터 재도전':'다음',()=>runBatchDAction(kind==='counter'?'counter':'twist-next')));
+    }
+    body.querySelector('button')?.focus();
+  }
   function storyList(){
     openPanel('stories','이야기');
     const seen=state.u15.seen;
+    const replayNames={twist:'반전 무대 · 세 번의 단서',oilWater:'반격 피날레 · 오일 앤 워터',young:'어린 칼리와의 대결',mirror:'거울 속 무대'};
+    for(const key of BatchDView.replayKeys(state.batchD))$('panelBody').append(action(replayNames[key],()=>replayBatchD(key)));
     if(!seen.length)$('panelBody').append(element('p','한 번 본 이야기가 여기에 모여요.'));
     for(const key of seen){const [dimension,slug,kind]=key.split(':'),v=C.venueBySlug(slug);const labels={opening:'첫 인사',beforeHeadliner:'마지막 관객',afterClear:'공연 뒤'};
       $('panelBody').append(action(`차원 ${dimension} · ${v.name} · ${labels[kind]}`,()=>{moreReturn=false;closePanel();C.startScene(state,{dimension:Number(dimension),slug,kind});save();render();}));}
   }
   $('storyButton').addEventListener('click',storyList);sprite($('storyIcon'),'assets/icon-story.png');
   window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installPrompt=e;});
-  $('installButton').addEventListener('click',()=>{if(installPrompt){installPrompt.prompt();installPrompt=null;}else{openPanel('install','앱 설치');$('panelBody').append(element('p','브라우저 메뉴에서 홈 화면에 추가를 누르세요.'));}});
+  function installGuide() {
+    installGuideShown = true;
+    openPanel('install', '홈 화면에 추가');
+    const ua = navigator.userAgent;
+    const inApp = /KAKAOTALK|Instagram|FBAN|FBAV|Line\/|NAVER|; wv\)/i.test(ua);
+    const ios = /iPhone|iPad|iPod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const copy = inApp ? '다른 브라우저로 열기: 메뉴에서 외부 브라우저를 선택해 Chrome 또는 Safari로 열어 주세요.' : ios ? 'Safari에서 공유 버튼을 누르고 홈 화면에 추가를 선택한 뒤 추가를 누르세요.' : 'Chrome 메뉴에서 앱 설치 또는 홈 화면에 추가를 선택하세요.';
+    $('panelBody').append(element('p', copy));
+    if (installPrompt && !inApp && !ios) $('panelBody').append(action('설치', async () => { const prompt = installPrompt; installPrompt = null; try { await prompt.prompt(); } catch (e) {} }));
+  }
+  $('endingReplayButton').addEventListener('click', () => { if (state.u19.cleared) { endingStep = D.futureEnding.length; showEnding(); } });
+  $('installButton').addEventListener('click', installGuide);
+  let installGuideShown = !!state.trophies[D.venues[0].slug];
+  function tickInstallGuide() {
+    $('endingReplayButton').hidden = !state.u19.cleared;
+    if (!installGuideShown && state.trophies[D.venues[0].slug] && !paused() && state.mode === 'fight' && !state.u15.scene) { installGuideShown = true; installGuide(); }
+  }
+  // Session-only counters: no storage and no network.
+  const portraitStats = { enter: 0, rotate: 0, leave: 0 };
+  window.magicShowPortraitStats = portraitStats;
+  let statsPortrait = false;
+  function countPortrait(rotated = false) {
+    const next = portraitLayout();
+    if (next !== statsPortrait) portraitStats[next ? 'enter' : 'leave']++;
+    if (rotated) portraitStats.rotate++;
+    statsPortrait = next;
+  }
+  window.addEventListener('resize', () => countPortrait());
+  window.addEventListener('orientationchange', () => countPortrait(true));
+  window.addEventListener('pagehide', () => { if (statsPortrait) { portraitStats.leave++; statsPortrait = false; } });
+  countPortrait();
   const meanings=D.statMeanings;
   document.querySelectorAll('.stat').forEach((el,i)=>{if(i<3)el.append(element('small',meanings[['power','damage','mental'][i]],'stat-meaning'));});
 
@@ -4009,24 +4837,33 @@ globalThis.Presentation = (() => {
     // forced a style recalculation (CSS animations dirty the style before every frame) for nothing. A stale rect is at most 8 frames old.
     if (geoAge++ % 8 === 0) { geo.clear(); rectOf($('stage')); rectOf($('board')); rectOf($('audience')); boardWidth(); }
     portrait();
+    countPortrait();
     // U36: game time follows real time. The old 50 ms cap made the whole game run in slow motion below 20 fps (about 45 percent speed at the 9 fps
     // a phone reached late in the game: timers, attacks, fans, glove). A frame now advances up to 250 ms; Core steps it in 50 ms substeps.
     const dt = previous ? Math.max(0, Math.min(MAX_FRAME_MS, now - previous)) : 0;
     previous = now;
+    tickScreenCare(dt, now);
+    tickInstallGuide();
     if (!document.hidden) clock += dt * presentationRate(now); // v4 U46 A2: presentation clock only; the combat step below still gets the full dt
     drawEffects(); // v4 U40: drawn before this frame's combat step and DOM writes (see the note at the end of loop); effects born in the step start drawing next frame
     if (!paused()) {
       let remaining = dt * (debug ? 10 : 1);
       // Stop at a failure event, even at debug speed: Core already restarted.
       while (remaining > 0 && !paused()) {
-        const slice = Math.min(50, remaining, ...boardHolds.map(p=>Math.max(.001,p.left)));
+        const freePractice = practiceOn && !boardHolds.length && state.mode === 'fight' && !(state.u15 && state.u15.gloveLeft > 0);
+        const clocks = boardHolds.length ? boardHolds : (freePractice && practiceHold ? [practiceHold] : []);
+        const slice = Math.min(50, remaining, ...clocks.map(p=>Math.max(.001,p.left)));
         // No targets during the intervals between UI pulses. Combat still advances
         // with the measured dt; the 0.001 ms press lets Core emit its instant hit.
-        stepCombat(slice,{taps:[],holding:boardHolds.length>0});
+        stepCombat(slice,{taps:[],holding:boardHolds.length>0 || freePractice});
         remaining -= slice;
         if (boardHolds.length && !paused()) {
           const next=C.advanceHolds(boardHolds,slice,C.wandRate(state)); boardHolds=next.holds;
-          for (const point of next.pulses) pulse(point);
+          for (const point of next.pulses) pulse(point, 'hold');
+        } else if (freePractice && practiceHold && !paused()) {
+          // TODO core auto practice
+          const next=C.advanceHolds([practiceHold],slice,C.wandRate(state)); practiceHold=next.holds[0];
+          for (const point of next.pulses) pulseFreePractice(point);
         }
       }
     }
@@ -4039,6 +4876,7 @@ globalThis.Presentation = (() => {
   });
   document.addEventListener('visibilitychange', () => {
     release(); previous=0;
+    if (practiceOn && !document.hidden) requestPracticeWake();
     $('feverOverlay').classList.toggle('fever-paused',document.hidden||paused()||state.mode!=='fight');
     if(document.hidden){C.markAway(state,Date.now());save();}
     else {receiveOffline(Date.now());save();showOffline();}
@@ -4054,9 +4892,7 @@ globalThis.Presentation = (() => {
     // a panel that cannot be closed here (fail, ending, a busy dealer) keeps the menu shut.
     // v4 U51b 4: closing one panel can reopen another (a 도감 추억 replay goes back to 도감): keep closing while each close changes the panel (at most 3)
     if(menu){for(let i=0;i<3&&menu;i++){const was=menu;moreReturn=false;closePanel();if(menu===was)break;}if(menu)return;showMore();return;}
-    $('phoneMore').hidden = !$('phoneMore').hidden;
-    if(!$('phoneMore').hidden){release();clearDecorations();}
-    $('moreButton').setAttribute('aria-expanded', String(!$('phoneMore').hidden));
+    if($('phoneMore').hidden)showMore();else hideMore();
   });
   // v4 U48 M: settings and other in-place entries (소리, 음악, 진동, 글자 속도, 앱 설치, links) keep the menu open and update in place. The menu gives
   // way only when the entry opened a panel (closing that panel comes back here) or left for the show (퇴장, 처음 안내).
@@ -4105,7 +4941,7 @@ globalThis.Presentation = (() => {
   };
   // v4 U50d test hook: show the current audience with a mood face through the normal path (sprite, opaque crop, tablet snap). v4 U51b 5: only under
   // automation (navigator.webdriver, true in the Playwright tests and the flag beforeunload already uses), so a player's console cannot freeze the faces.
-  if (navigator.webdriver) window.MagicShowUI.audienceMood = mood => { audTestMood = mood || ''; if (!mood) return ''; const v = D.venues[state.venue - 1], a = v.audiences[state.j - 1] || v.headliner; moodSprite($('audience'), audienceAsset(v, a), mood); return audienceAsset(v, a); };
+  if (navigator.webdriver) window.MagicShowUI.audienceMood = mood => { audTestMood = mood || ''; if (!mood) return ''; const v = D.venues[state.venue - 1], a = v.audiences[state.j - 1] || v.headliner; const art = stageAudienceAsset(v, a); moodSprite($('audience'), art, mood); return art; };
   sprite($('magicianMini'), 'assets/magician-mini.png');
   renderOutfit();
   $('magicianMini').dataset.frame = '0';$('magicianMini').classList.remove('reacting');
@@ -4133,9 +4969,11 @@ globalThis.Presentation = (() => {
       }
     });
   };
-  const presentationObserver=new MutationObserver(records=>{if(records.some(r=>r.type==='childList'?[...r.addedNodes,...r.removedNodes].some(n=>n.nodeType===1):r.oldValue!==r.target.getAttribute(r.attributeName)))refreshPresentation();});
+  const presentationObserver=new MutationObserver(records=>{
+    if(records.some(r=>r.attributeName==='hidden'&&r.oldValue!==r.target.getAttribute('hidden')))autoStartStage.since=0;
+    if(records.some(r=>r.type==='childList'?[...r.addedNodes,...r.removedNodes].some(n=>n.nodeType===1):r.oldValue!==r.target.getAttribute(r.attributeName)))refreshPresentation();});
   for(const id of ['panelBody','storyDialog','phoneMore'])presentationObserver.observe($(id),{childList:true,subtree:true,attributes:true,attributeFilter:['disabled'],attributeOldValue:true});
-  for(const id of ['panel','storyDialog','phoneMore','banner'])presentationObserver.observe($(id),{attributes:true,attributeFilter:['hidden'],attributeOldValue:true});
+  for(const id of ['panel','storyDialog','phoneMore','banner','leaveConfirm','sceneCard','introStory','offlineCard'])presentationObserver.observe($(id),{attributes:true,attributeFilter:['hidden'],attributeOldValue:true});
   window.addEventListener('resize',refreshPresentation);motion.addEventListener('change',refreshPresentation);
   refreshPresentation();
   $('audience').addEventListener('click',()=>{bioUntil=clock+5000;renderU15();});
@@ -4152,7 +4990,7 @@ globalThis.Presentation = (() => {
   if (recoveredSave) toast('저장이 손상돼 최근 백업에서 되찾았어요');
   if (repairedSave) toast('저장을 조금 고쳐서 불러왔어요');
   if (refundedCoins > 0) toast(`끝없는 비법이 정리돼서 동전 ${C.formatNumber(refundedCoins)}을 돌려받았어요`);
-  if (refundedKeys > 0) toast(`칼리 덱이 비법으로 합쳐져서 열쇠 ${C.formatNumber(refundedKeys)}개를 돌려받았어요`);
+  if (refundedKeys > 0) toast(`칼리 덱이 비법으로 합쳐져서 책 ${C.formatNumber(refundedKeys)}개를 돌려받았어요`);
   if (state._deckGift > 0) toast(`칼리 덱이 이제 쓰는 아이템이 됐어요. 칼리 덱 ${state._deckGift}개를 드려요`); // v4 U48 A
   if (newerSave) showSaveNotice();
   if (giftEnded && launchSaved) toast('선물 기간이 끝나서 성장 속도가 원래대로 돌아왔어요');
@@ -4232,5 +5070,6 @@ globalThis.Presentation = (() => {
   const audienceTextObserver = new MutationObserver(() => syncFlags());
   for (const id of ['audienceLine', 'patternLabel', 'phaseIndicator']) audienceTextObserver.observe($(id), { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['hidden'] });
   updateTextSpeedButton();
+  mountRound8();
   requestAnimationFrame(loop);
 })();

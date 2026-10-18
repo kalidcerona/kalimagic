@@ -4,6 +4,7 @@ const CACHE_NAME = CACHE_PREFIX + '__VERSION__-coherent-1-distribution';
 const SHELL = [
   "./index.html",
   "./style.css",
+  "./portrait.css",
   "./app.mjs",
   "./core.mjs",
   "./manifest.webmanifest",
