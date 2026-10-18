@@ -16,6 +16,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Nanum+Myeongjo:wght@700;800&family=Gothic+A1:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/planb/planb-shared.css">
 <style>
   /* A×C: A의 헤드(이탤릭 영문 제목 + 금색) + C의 본문(가운데 정렬 섹션, ACT, ENCORE). 포인트 색은 금색 하나. */
   :root {
@@ -27,14 +28,9 @@
     --sans:'Gothic A1','Apple SD Gothic Neo','Noto Sans KR',sans-serif;
     color-scheme: dark;
   }
-  *, *::before, *::after { box-sizing:border-box; }
-  html, body { margin:0; padding:0; max-width:100%; }
   body { background:var(--bg); color:var(--ink); font-family:var(--sans); font-size:16px; line-height:1.7; word-break:keep-all; overflow-wrap:break-word; overflow-x:hidden; -webkit-font-smoothing:antialiased; }
-  img { display:block; max-width:100%; height:auto; }
   a { color:var(--brass); }
-  a:hover { color:#fff; }
   a:focus-visible, .btn:focus-visible, summary:focus-visible { outline:2px solid var(--brass); outline-offset:3px; }
-  p, li, dd { text-wrap:pretty; }
   h1, h2, h3, summary,
   .eyebrow, .quote, .note, .for-k, .scene-cap, .lead, .sub, .en,
   .encore-title, .tier-name, .deadline, .msg, .k, .final p { text-wrap:balance; }
@@ -142,7 +138,6 @@
   .tier.is-past { opacity:.5; }
   .tier-name { margin:0; font-weight:800; display:flex; justify-content:center; align-items:center; flex-wrap:wrap; gap:6px; }
   .tier-chip { font-size:12px; font-weight:800; border-radius:999px; padding:1px 8px; }
-  .tier-chip:empty { display:none; }
   .tier-chip.is-now { background:var(--brass); color:var(--bg); }
   .tier-chip.is-soon { background:rgba(207,169,96,.18); color:var(--brass); }
   .tier-chip.is-done { background:var(--line-2); color:var(--muted); }
@@ -182,9 +177,7 @@
   .faq details { border-top:1px solid var(--line); padding:20px 0; min-width:0; }
   .faq details:last-child { border-bottom:1px solid var(--line); }
   .faq summary { cursor:pointer; list-style:none; font-weight:800; display:flex; justify-content:space-between; gap:12px; }
-  .faq summary::-webkit-details-marker { display:none; }
   .faq summary::after { content:"+"; color:var(--brass); flex:none; }
-  .faq details[open] summary::after { content:"−"; }
   .faq p { margin:10px 0 0; font-size:14.5px; color:var(--body); }
 
   /* 안내 */
@@ -205,11 +198,8 @@
   footer.wrap { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:20px 40px; padding-block:48px 64px; font-size:13px; color:var(--muted); }
   footer .logos { display:flex; flex-wrap:wrap; align-items:center; gap:16px 32px; }
   footer .logos span { display:inline-flex; align-items:center; gap:10px; }
-  footer .f-planb { width:40px; height:37px; border-radius:6px; }
   footer .f-snack { width:96px; height:48px; object-fit:cover; border-radius:4px; }
 
-  .sticky-ticket { display:none; }
-  .sticky-ticket[hidden] { display:none !important; }
 
   @media (max-width:1119px) {
     .reg { grid-template-columns:repeat(2, minmax(0,1fr)); }
@@ -251,7 +241,7 @@
 
 <nav class="series" aria-label="11월 세미나 시리즈">
   <div class="wrap">
-    <span class="series-left"><img src="img/planb-logo.png" alt="PLAN B" width="160" height="147">PLAN B MASTERCLASS SERIES</span>
+    <span class="series-left"><img src="img/planb-logo.png" alt="PLAN B" width="160" height="147" loading="eager">PLAN B MASTERCLASS SERIES</span>
     <span class="series-right"><a href="../planb-busking/">VOL.1 버스킹</a><span class="now" aria-current="page">VOL.2 슬리빙</span><a class="hub" href="../planb-november/">한눈에 보기</a></span>
   </div>
 </nav>
@@ -271,7 +261,7 @@
       </div>
     </div>
     <figure class="hero-photo">
-      <img src="img/hero-joshihoon.jpg" alt="거리에서 학생들에게 카드 마술을 보여 주는 조시훈" width="1321" height="866" fetchpriority="high">
+      <img src="img/hero-joshihoon.jpg" alt="거리에서 학생들에게 카드 마술을 보여 주는 조시훈" width="1321" height="866" fetchpriority="high" loading="eager" srcset="img/hero-joshihoon-landing-1000w.webp 1000w, img/hero-joshihoon.jpg 1321w" sizes="(max-width: 760px) calc((100vw - 40px) * 1.14405312), (max-width: 960px) calc((100vw - 64px) * 1.14405312), calc((min((100vw - 120px) / 2, 520px)) * 1.90675520)">
       <figcaption>INSTRUCTOR · 조시훈</figcaption>
     </figure>
   </div>
@@ -366,9 +356,9 @@
 <!-- ============ PHOTOS ============ -->
 <section class="wrap sec photos" aria-label="현장 사진">
   <div class="scene-grid">
-    <img class="scene-1" src="img/scene-1.jpg" alt="낮 거리에서 관객이 둘러싼 공연 현장" width="1200" height="1600" loading="lazy" decoding="async">
-    <img class="scene-2" src="img/scene-2-crop.jpg" alt="광장에서 조시훈의 마술에 환호하는 관객들" width="1080" height="395" loading="lazy" decoding="async">
-    <img class="scene-3" src="img/scene-3.jpg" alt="밤거리에서 관객이 모여든 공연 현장" width="1080" height="600" loading="lazy" decoding="async">
+    <img class="scene-1" src="img/scene-1.jpg" alt="낮 거리에서 관객이 둘러싼 공연 현장" width="1200" height="1600" decoding="async" loading="eager" srcset="img/scene-1-landing-800w.webp 800w, img/scene-1.jpg 1200w" sizes="(max-width: 720px) calc(100vw - 40px), (max-width: 760px) calc((100vw - 50px) * 2 / 3), calc((min(100vw, 1160px) - 74px) * 2 / 3)">
+    <img class="scene-2" src="img/scene-2-crop.jpg" alt="광장에서 조시훈의 마술에 환호하는 관객들" width="1080" height="395" decoding="async" loading="eager">
+    <img class="scene-3" src="img/scene-3.jpg" alt="밤거리에서 관객이 모여든 공연 현장" width="1080" height="600" decoding="async" loading="eager" srcset="img/scene-3-landing-800w.webp 800w, img/scene-3.jpg 1080w" sizes="(max-width: 720px) calc(((100vw - 48px) / 2) * 1.80000000), (max-width: 760px) max(calc((100vw - 50px) / 3), calc(((100vw - 40px) * 9 / 16 - 10px) / 2 * 1.80000000)), max(calc((min(100vw, 1160px) - 74px) / 3), calc(((min(100vw, 1160px) - 64px) * 9 / 16 - 10px) / 2 * 1.80000000))">
   </div>
   <p class="scene-cap">ON THE STREET · 관객 앞에서 다듬은 기술</p>
 </section>
@@ -376,7 +366,7 @@
 <!-- ============ INSTRUCTOR ============ -->
 <section class="wrap sec">
   <div class="teacher">
-    <img class="photo" src="img/profile-joshihoon.jpg" alt="조시훈 프로필 사진" width="900" height="1146" loading="lazy" decoding="async">
+    <img class="photo" src="img/profile-joshihoon.jpg" alt="조시훈 프로필 사진" width="900" height="1146" decoding="async" loading="eager" srcset="img/profile-joshihoon-landing-800w.webp 800w, img/profile-joshihoon.jpg 900w" sizes="(max-width: 760px) min(100vw - 40px, 420px), min((100vw - 136px) / 2, 440px)">
     <div>
       <p class="eyebrow">LECTURED BY</p>
       <h2>조시훈</h2>
@@ -464,12 +454,12 @@
   <div class="presenters">
     <div class="presenter">
       <p class="role">주최 · HOST</p>
-      <img class="logo-planb" src="img/planb-logo.png" alt="PLAN B 매직 커뮤니티 로고" width="160" height="147" loading="lazy">
+      <img class="logo-planb" src="img/planb-logo.png" alt="PLAN B 매직 커뮤니티 로고" width="160" height="147" loading="eager">
       <div><p class="nm">PLAN B</p><p class="ds">마술 커뮤니티 · 마스터클래스 시리즈 주최</p></div>
     </div>
     <div class="presenter">
       <p class="role">후원 · SPONSOR</p>
-      <img class="logo-snack" src="../planb-busking/img/snack-logo.jpg" alt="스넥 연습실 로고" width="1158" height="573" loading="lazy">
+      <img class="logo-snack" src="../planb-busking/img/snack-logo.jpg" alt="스넥 연습실 로고" width="1158" height="573" loading="eager">
       <div><p class="nm">스넥 연습실</p><p class="ds">세미나 장소 후원<br>서울 마포구 연남로 4-1 지하 1층</p></div>
     </div>
   </div>
@@ -527,8 +517,8 @@
 
 <footer class="wrap" aria-label="주최와 후원">
   <div class="logos">
-    <span>주최 <img class="f-planb" src="img/planb-logo.png" alt="PLAN B" width="160" height="147" loading="lazy"></span>
-    <span>후원 <img class="f-snack" src="../planb-busking/img/snack-logo.jpg" alt="스넥 연습실" width="1158" height="573" loading="lazy"></span>
+    <span>주최 <img class="f-planb" src="img/planb-logo.png" alt="PLAN B" width="160" height="147" loading="eager"></span>
+    <span>후원 <img class="f-snack" src="../planb-busking/img/snack-logo.jpg" alt="스넥 연습실" width="1158" height="573" loading="eager"></span>
   </div>
   <span>© PLAN B Magic Community</span>
 </footer>

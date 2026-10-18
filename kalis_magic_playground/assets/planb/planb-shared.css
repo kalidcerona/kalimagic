@@ -1,0 +1,11 @@
+  *, *::before, *::after { box-sizing:border-box; }
+  html, body { margin:0; padding:0; max-width:100%; }
+  img { display:block; max-width:100%; height:auto; }
+  a:hover { color:#fff; }
+  p, li, dd { text-wrap:pretty; }
+  .tier-chip:empty { display:none; }
+  .faq summary::-webkit-details-marker { display:none; }
+  .faq details[open] summary::after { content:"−"; }
+  footer .f-planb { width:40px; height:37px; border-radius:6px; }
+  .sticky-ticket { display:none; }
+  .sticky-ticket[hidden] { display:none !important; }

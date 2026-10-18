@@ -61,7 +61,7 @@
         <div style="max-width:1140px;margin:0 auto;padding:0 26px;">
             <div style="display:grid;grid-template-columns:0.82fr 1.18fr;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,0.08);">
                 <div style="position:relative;">
-                    <img class="js-profile-lightbox" src="assets/profile/kali-cards.jpg" alt="칼리" tabindex="0" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 22%;cursor:zoom-in;">
+                    <img class="js-profile-lightbox" src="assets/profile/kali-cards.jpg" alt="칼리" tabindex="0" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 22%;cursor:zoom-in;" srcset="assets/profile/kali-cards-landing-800w.webp 800w, assets/profile/kali-cards.jpg 1034w" sizes="840px">
                 </div>
                 <div style="background:#1a1512;padding:56px 50px;display:flex;flex-direction:column;justify-content:center;">
                     <p style="color:var(--point-gold);font-weight:700;font-size:0.78rem;letter-spacing:0.16em;margin:0 0 14px;">ABOUT KALI</p>
@@ -224,7 +224,7 @@
 <div class="kx-mobile">
 <div class="kx-shell">
   <div style="position:relative;">
-    <img class="about-profile-pip js-profile-lightbox" src="assets/profile/kali-cards.jpg" alt="칼리" tabindex="0" style="width:100%; height:340px; object-fit:cover; object-position:center 22%; display:block; filter:brightness(0.85); cursor:zoom-in;">
+    <img class="about-profile-pip js-profile-lightbox" src="assets/profile/kali-cards.jpg" alt="칼리" tabindex="0" style="width:100%; height:340px; object-fit:cover; object-position:center 22%; display:block; filter:brightness(0.85); cursor:zoom-in;" srcset="assets/profile/kali-cards-landing-800w.webp 800w, assets/profile/kali-cards.jpg 1034w" sizes="max(min(100vw, 430px), 255px)">
     <div style="position:absolute; inset:0; background:linear-gradient(180deg, rgba(26,15,10,0.15) 35%, rgba(26,15,10,0.95)); pointer-events:none;"></div>
     <div style="position:absolute; left:0; right:0; bottom:0; padding:0 24px 24px; text-align:center;">
       <p class="kx-eye" style="margin-bottom:8px;"><span></span>소개</p>
@@ -328,7 +328,7 @@
 </div>
 </div><!-- /.kx-mobile -->
 
-    <div class="about-profile-lightbox" id="about-profile-lightbox" aria-hidden="true">
+    <div class="about-profile-lightbox" id="about-profile-lightbox" role="dialog" aria-modal="true" aria-label="칼리 프로필 크게 보기" tabindex="-1" aria-hidden="true">
         <img src="assets/profile/kali-cards.jpg" alt="칼리 프로필 크게 보기">
     </div>
     <script>
@@ -337,16 +337,24 @@
             var lightbox = document.getElementById('about-profile-lightbox');
             if (!triggers.length || !lightbox) return;
 
-            function openLightbox() {
+            var opener = null;
+            var previousOverflow = "";
+
+            function openLightbox(event) {
+                opener = event.currentTarget;
+                previousOverflow = document.body.style.overflow;
                 lightbox.classList.add('is-open');
                 lightbox.setAttribute('aria-hidden', 'false');
                 document.body.style.overflow = 'hidden';
+                lightbox.focus({ preventScroll: true });
             }
 
             function closeLightbox() {
+                if (!lightbox.classList.contains('is-open')) return;
                 lightbox.classList.remove('is-open');
                 lightbox.setAttribute('aria-hidden', 'true');
-                document.body.style.overflow = '';
+                document.body.style.overflow = previousOverflow;
+                if (opener) opener.focus({ preventScroll: true });
             }
 
             triggers.forEach(function (trigger) {
@@ -354,7 +362,7 @@
                 trigger.addEventListener('keydown', function (event) {
                     if (event.key === 'Enter' || event.key === ' ') {
                         event.preventDefault();
-                        openLightbox();
+                        openLightbox(event);
                     }
                 });
             });
@@ -364,7 +372,9 @@
             });
 
             document.addEventListener('keydown', function (event) {
-                if (event.key === 'Escape') closeLightbox();
+                if (!lightbox.classList.contains('is-open')) return;
+                if (event.key === 'Escape') { event.preventDefault(); closeLightbox(); }
+                if (event.key === 'Tab') { event.preventDefault(); lightbox.focus({ preventScroll: true }); }
             });
         })();
     </script>

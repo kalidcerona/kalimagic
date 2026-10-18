@@ -15,6 +15,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="stylesheet" href="../assets/planb/planb-shared.css">
 <style>
   /* 밤거리 무드: 어두운 바닥 + 가로등 앰버 한 색. 히어로는 사진 풀블리드, 나머지는 1120px 안에서 정리. */
   :root {
@@ -25,15 +26,10 @@
     --sans:'Pretendard','Apple SD Gothic Neo','Noto Sans KR',sans-serif;
     color-scheme: dark;
   }
-  *, *::before, *::after { box-sizing:border-box; }
-  html, body { margin:0; padding:0; max-width:100%; }
   body { background:var(--bg); color:var(--ink); font-family:var(--sans); font-size:16px; line-height:1.6; word-break:keep-all; overflow-wrap:break-word; overflow-x:hidden; -webkit-font-smoothing:antialiased; }
-  img { display:block; max-width:100%; height:auto; }
   a { color:var(--amber); }
-  a:hover { color:#fff; }
   a:focus-visible, .btn:focus-visible, summary:focus-visible { outline:2px solid var(--amber); outline-offset:3px; border-radius:6px; }
   h1, h2, h3 { text-wrap:balance; }
-  p, li, dd { text-wrap:pretty; }
   .disp { font-family:var(--display); font-weight:400; }
   .wrap { max-width:1120px; margin:0 auto; padding-inline:28px; }
   .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
@@ -140,7 +136,6 @@
   .tier-name { margin:0; font-weight:900; }
   .tier-period { margin:0 0 18px; font-size:13px; color:var(--soft); }
   .tier-chip { font-size:11.5px; font-weight:900; border-radius:999px; padding:1px 8px; white-space:nowrap; }
-  .tier-chip:empty { display:none; }
   .tier-chip.is-now { background:var(--sale); color:#fff; }
   .tier-chip.is-soon { background:rgba(245,176,65,.22); color:var(--amber); }
   .tier-chip.is-done { background:var(--line-2); color:var(--soft); }
@@ -163,9 +158,7 @@
   .faq { gap:0 40px; }
   .faq details { border-top:1px solid var(--line); padding:18px 0; min-width:0; }
   .faq summary { cursor:pointer; list-style:none; font-weight:900; display:flex; justify-content:space-between; gap:12px; }
-  .faq summary::-webkit-details-marker { display:none; }
   .faq summary::after { content:"+"; color:var(--amber); flex:none; }
-  .faq details[open] summary::after { content:"−"; }
   .faq p { margin:8px 0 0; font-size:14.5px; color:var(--muted); }
 
   /* 안내 */
@@ -184,12 +177,9 @@
 
   footer.wrap { display:flex; flex-wrap:wrap; gap:16px 32px; align-items:center; justify-content:center; padding-block:28px 48px; font-size:13px; color:var(--soft); }
   footer span { display:inline-flex; align-items:center; gap:10px; }
-  footer .f-planb { width:40px; height:37px; border-radius:6px; }
   footer .f-snack { width:120px; border-radius:4px; }
 
   /* 모바일 하단 신청 바 */
-  .sticky-ticket { display:none; }
-  .sticky-ticket[hidden] { display:none !important; }
 
   @media (max-width:760px) {
     .wrap { padding-inline:20px; }
@@ -217,7 +207,7 @@
 <nav class="series" aria-label="11월 세미나 시리즈">
   <div class="wrap">
     <div class="series-left">
-      <img src="img/planb-logo.png" alt="PLAN B" width="160" height="147">
+      <img src="img/planb-logo.png" alt="PLAN B" width="160" height="147" loading="eager">
       <span class="series-label">11월 세미나</span>
       <span class="series-now" aria-current="page">Vol.1 버스킹</span>
       <span class="series-sep" aria-hidden="true">/</span>
@@ -229,7 +219,7 @@
 
 <!-- ============ HERO ============ -->
 <header class="hero">
-  <img class="hero-bg" src="img/busking-sunhwijae.jpg" alt="번화가 밤거리에서 관객에 둘러싸인 버스킹" width="1600" height="901" fetchpriority="high">
+  <img class="hero-bg" src="img/busking-sunhwijae.jpg" alt="번화가 밤거리에서 관객에 둘러싸인 버스킹" width="1600" height="901" fetchpriority="high" loading="eager" srcset="img/busking-sunhwijae-landing-800w.webp 800w, img/busking-sunhwijae.jpg 1600w" sizes="max(100vw, 1172.031077px)">
   <div class="hero-scrim" aria-hidden="true"></div>
   <div class="wrap">
     <p class="kicker">NO PLAN SEASON. 3 — BUSKING</p>
@@ -237,7 +227,7 @@
     <p class="hero-lead">처음 길에 서는 사람부터<br>나만의 무기가 필요한 사람까지.<br>길 위에서 버텨 온 세 강사가 노하우를 풀어놔요.</p>
     <div class="hero-sponsor">
       <span>SPONSORED BY</span>
-      <img src="img/snack-logo.jpg" alt="스넥 연습실" width="1158" height="573">
+      <img src="img/snack-logo.jpg" alt="스넥 연습실" width="1158" height="573" loading="eager">
     </div>
   </div>
 </header>
@@ -274,7 +264,7 @@
   <h2 class="disp sec-title">세 명의 버스커,<br>세 개의 세션</h2>
   <div class="three">
     <article class="t-card">
-      <img src="img/profile-hook.jpg" alt="매지션 훅" width="480" height="480" loading="lazy" decoding="async">
+      <img src="img/profile-hook.jpg" alt="매지션 훅" width="480" height="480" decoding="async" loading="eager">
       <div class="t-body">
         <div>
           <p class="t-session">SESSION 1 · 입문</p>
@@ -294,7 +284,7 @@
       </div>
     </article>
     <article class="t-card">
-      <img src="img/profile-sunhwijae.jpg" alt="선휘재" width="480" height="480" loading="lazy" decoding="async">
+      <img src="img/profile-sunhwijae.jpg" alt="선휘재" width="480" height="480" decoding="async" loading="eager">
       <div class="t-body">
         <div>
           <p class="t-session">SESSION 2 · 트렌드</p>
@@ -314,7 +304,7 @@
       </div>
     </article>
     <article class="t-card">
-      <img src="img/profile-showgang.jpg" alt="쇼갱" width="480" height="480" loading="lazy" decoding="async">
+      <img src="img/profile-showgang.jpg" alt="쇼갱" width="480" height="480" decoding="async" loading="eager">
       <div class="t-body">
         <div>
           <p class="t-session">SESSION 3 · 심화 · 메인 MC</p>
@@ -342,12 +332,12 @@
     <p class="eyebrow">ON THE STREET</p>
     <h2 class="disp sec-title">이렇게 사람을 모아요</h2>
     <div class="gallery">
-      <img src="img/busking-sunhwijae-2.jpg" alt="선휘재가 덕수궁 앞에서 버스킹하는 모습" width="1600" height="901" loading="lazy" decoding="async">
-      <img src="img/busking-hook-1.jpg" alt="매지션 훅이 밤거리에서 버스킹하는 모습" width="1008" height="756" loading="lazy" decoding="async">
-      <img src="img/busking-showgang-2.jpg" alt="쇼갱이 광장에서 버스킹하는 모습" width="1600" height="901" loading="lazy" decoding="async">
-      <img src="img/busking-hook-2.jpg" alt="매지션 훅이 공원에서 버스킹하는 모습" width="1280" height="720" loading="lazy" decoding="async">
-      <img src="img/busking-showgang-1.jpg" alt="쇼갱이 공원에서 버스킹하는 모습" width="1600" height="887" loading="lazy" decoding="async">
-      <img src="img/busking-showgang-3.jpg" alt="쇼갱이 연출한 거리 공연 모습" width="1600" height="1066" loading="lazy" decoding="async">
+      <img src="img/busking-sunhwijae-2.jpg" alt="선휘재가 덕수궁 앞에서 버스킹하는 모습" width="1600" height="901" decoding="async" loading="eager" srcset="img/busking-sunhwijae-2-landing-800w.webp 800w, img/busking-sunhwijae-2.jpg 1600w" sizes="(max-width: 719px) calc(100vw - 40px), (max-width: 760px) min(100vw - 40px, 1064px), min(100vw - 56px, 1064px)">
+      <img src="img/busking-hook-1.jpg" alt="매지션 훅이 밤거리에서 버스킹하는 모습" width="1008" height="756" decoding="async" loading="eager" srcset="img/busking-hook-1-landing-800w.webp 800w, img/busking-hook-1.jpg 1008w" sizes="(max-width: 719px) calc((100vw - 52px) / 2), (max-width: 760px) min((100vw - 52px) / 2, 526px), min((100vw - 68px) / 2, 526px)">
+      <img src="img/busking-showgang-2.jpg" alt="쇼갱이 광장에서 버스킹하는 모습" width="1600" height="901" decoding="async" loading="eager" srcset="img/busking-showgang-2-landing-800w.webp 800w, img/busking-showgang-2.jpg 1600w" sizes="(max-width: 719px) calc(((100vw - 52px) / 2) * 1.18386977), (max-width: 760px) calc((min((100vw - 52px) / 2, 526px)) * 1.18386977), calc((min((100vw - 68px) / 2, 526px)) * 1.18386977)">
+      <img src="img/busking-hook-2.jpg" alt="매지션 훅이 공원에서 버스킹하는 모습" width="1280" height="720" decoding="async" loading="eager" srcset="img/busking-hook-2-landing-800w.webp 800w, img/busking-hook-2.jpg 1280w" sizes="(max-width: 719px) calc(((100vw - 52px) / 2) * 1.18518519), (max-width: 760px) calc((min((100vw - 64px) / 3, 346.666667px)) * 1.18518519), calc((min((100vw - 80px) / 3, 346.666667px)) * 1.18518519)">
+      <img src="img/busking-showgang-1.jpg" alt="쇼갱이 공원에서 버스킹하는 모습" width="1600" height="887" decoding="async" loading="eager" srcset="img/busking-showgang-1-landing-800w.webp 800w, img/busking-showgang-1.jpg 1600w" sizes="(max-width: 719px) calc(((100vw - 52px) / 2) * 1.20255543), (max-width: 760px) calc((min((100vw - 64px) / 3, 346.666667px)) * 1.20255543), calc((min((100vw - 80px) / 3, 346.666667px)) * 1.20255543)">
+      <img src="img/busking-showgang-3.jpg" alt="쇼갱이 연출한 거리 공연 모습" width="1600" height="1066" decoding="async" loading="eager" srcset="img/busking-showgang-3-landing-800w.webp 800w, img/busking-showgang-3.jpg 1600w" sizes="(max-width: 719px) calc((100vw - 40px) * 1.00062539), (max-width: 760px) calc((min((100vw - 64px) / 3, 346.666667px)) * 1.00062539), calc((min((100vw - 80px) / 3, 346.666667px)) * 1.00062539)">
     </div>
   </div>
 </section>
@@ -370,7 +360,7 @@
 <!-- ============ SPONSOR ============ -->
 <section class="wrap sec">
   <div class="sponsor">
-    <div class="sponsor-logo"><img src="img/snack-logo.jpg" alt="스넥 연습실 로고" width="1158" height="573" loading="lazy" decoding="async"></div>
+    <div class="sponsor-logo"><img src="img/snack-logo.jpg" alt="스넥 연습실 로고" width="1158" height="573" decoding="async" loading="eager"></div>
     <div>
       <p class="eyebrow">SPONSOR</p>
       <h2 class="disp">스넥 연습실이<br>함께해요</h2>
@@ -473,8 +463,8 @@
 </section>
 
 <footer class="wrap" aria-label="주최와 후원">
-  <span>주최 <img class="f-planb" src="img/planb-logo.png" alt="PLAN B" width="160" height="147" loading="lazy"></span>
-  <span>후원 <img class="f-snack" src="img/snack-logo.jpg" alt="스넥 연습실" width="1158" height="573" loading="lazy"></span>
+  <span>주최 <img class="f-planb" src="img/planb-logo.png" alt="PLAN B" width="160" height="147" loading="eager"></span>
+  <span>후원 <img class="f-snack" src="img/snack-logo.jpg" alt="스넥 연습실" width="1158" height="573" loading="eager"></span>
 </footer>
 
 <div class="sticky-ticket" hidden><span class="sticky-ticket-text"></span><a class="btn" href="https://smore.im/form/52BkxmIm19" target="_blank" rel="noopener" data-cta>신청하기</a></div>

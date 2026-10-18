@@ -15,6 +15,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Nanum+Myeongjo:wght@800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="stylesheet" href="../assets/planb/planb-shared.css">
 <style>
   /* 한 장의 티켓: 어두운 바탕 위 종이 티켓 하나가 주인공. 버스킹=앰버, 슬리빙=청록 조각으로 두 회차를 구분. */
   :root {
@@ -27,15 +28,10 @@
     --sans:'Pretendard','Apple SD Gothic Neo','Noto Sans KR',sans-serif;
     color-scheme: dark;
   }
-  *, *::before, *::after { box-sizing:border-box; }
-  html, body { margin:0; padding:0; max-width:100%; }
   body { background:var(--bg); color:var(--ink); font-family:var(--sans); font-size:16px; line-height:1.6; word-break:keep-all; overflow-wrap:break-word; overflow-x:hidden; -webkit-font-smoothing:antialiased; }
-  img { display:block; max-width:100%; height:auto; }
   a { color:var(--amber); }
-  a:hover { color:#fff; }
   a:focus-visible, .btn:focus-visible, summary:focus-visible { outline:2px solid var(--amber); outline-offset:3px; border-radius:6px; }
   h1, h2, h3 { text-wrap:balance; }
-  p, li, dd { text-wrap:pretty; }
   .disp { font-family:var(--display); font-weight:400; }
   .wrap { max-width:1080px; margin:0 auto; padding-inline:28px; }
 
@@ -117,7 +113,6 @@
   .price-table tr.is-active th { box-shadow:inset 3px 0 0 var(--amber); }
   .price-table tr.is-past { opacity:.5; }
   .tier-chip { display:inline-block; margin-left:6px; font-size:11px; font-weight:900; border-radius:999px; padding:0 7px; vertical-align:middle; }
-  .tier-chip:empty { display:none; }
   .tier-chip.is-now { background:var(--sale); color:#fff; }
   .tier-chip.is-soon { background:rgba(245,176,65,.22); color:var(--amber); }
   .tier-chip.is-done { background:var(--line-2); color:var(--soft); }
@@ -128,9 +123,7 @@
   .faq { gap:0 40px; }
   .faq details { border-top:1px solid var(--line); padding:18px 0; min-width:0; }
   .faq summary { cursor:pointer; list-style:none; font-weight:900; display:flex; justify-content:space-between; gap:12px; }
-  .faq summary::-webkit-details-marker { display:none; }
   .faq summary::after { content:"+"; color:var(--amber); flex:none; }
-  .faq details[open] summary::after { content:"−"; }
   .faq p { margin:8px 0 0; font-size:14.5px; color:var(--muted); }
 
   /* 안내 */
@@ -151,11 +144,8 @@
 
   footer.wrap { display:flex; flex-wrap:wrap; gap:16px 32px; align-items:center; justify-content:center; padding-block:28px 48px; font-size:13px; color:var(--soft); }
   footer span { display:inline-flex; align-items:center; gap:10px; }
-  footer .f-planb { width:40px; height:37px; border-radius:6px; }
   footer .f-snack { width:120px; border-radius:4px; }
 
-  .sticky-ticket { display:none; }
-  .sticky-ticket[hidden] { display:none !important; }
 
   @media (max-width:760px) {
     .wrap { padding-inline:16px; }
@@ -192,7 +182,7 @@
 
 <!-- ============ HERO: TICKET ============ -->
 <header class="wrap hero" style="padding-top:64px">
-  <div class="brand"><img src="../planb-busking/img/planb-logo.png" alt="PLAN B" width="160" height="147">PLAN B 11월 세미나</div>
+  <div class="brand"><img src="../planb-busking/img/planb-logo.png" alt="PLAN B" width="160" height="147" loading="eager">PLAN B 11월 세미나</div>
   <h1 class="disp">한 장으로<br>두 번의 일요일</h1>
   <p class="lead">첫 일요일엔 사람을 모으고,<br>다음 일요일엔 사라지게 한다.</p>
 
@@ -239,7 +229,7 @@
   <h2 class="disp sec-title">모으고,<br>사라지게 하기</h2>
   <div class="two">
     <a class="session session-busking" href="../planb-busking/">
-      <img src="../planb-busking/img/busking-sunhwijae.jpg" alt="밤거리 버스킹 현장" width="1600" height="901" loading="lazy" decoding="async">
+      <img src="../planb-busking/img/busking-sunhwijae.jpg" alt="밤거리 버스킹 현장" width="1600" height="901" decoding="async" loading="eager" srcset="../planb-busking/img/busking-sunhwijae-landing-800w.webp 800w, ../planb-busking/img/busking-sunhwijae.jpg 1600w" sizes="(max-width: 760px) calc(100vw - 32px), min((100vw - 72px) / 2, 504px)">
       <div class="body">
         <p class="when">VOL.1 · 11.15(일) 15:00-18:30</p>
         <h3>버스킹</h3>
@@ -248,7 +238,7 @@
       </div>
     </a>
     <a class="session session-sleeving" href="../planb-sleeving/">
-      <img src="../planb-sleeving/img/hero-joshihoon.jpg" alt="거리에서 학생들에게 카드 마술을 보여 주는 조시훈" width="1321" height="866" loading="lazy" decoding="async">
+      <img src="../planb-sleeving/img/hero-joshihoon.jpg" alt="거리에서 학생들에게 카드 마술을 보여 주는 조시훈" width="1321" height="866" decoding="async" loading="eager" srcset="../planb-sleeving/img/hero-joshihoon-landing-1000w.webp 1000w, ../planb-sleeving/img/hero-joshihoon.jpg 1321w" sizes="(max-width: 760px) calc(100vw - 32px), min((100vw - 72px) / 2, 504px)">
       <div class="body">
         <p class="when">VOL.2 · 11.22(일) 14:00-18:00</p>
         <h3>슬리빙</h3>
@@ -290,7 +280,7 @@
       <h2 class="disp">스넥 연습실이 함께해요</h2>
       <p>스넥 연습실이 이번 세미나를 후원해 주셨어요.<br>두 회차 모두 스넥 연습실에서 열려요.</p>
     </div>
-    <div class="logo"><img src="../planb-busking/img/snack-logo.jpg" alt="스넥 연습실 로고" width="1158" height="573" loading="lazy" decoding="async"></div>
+    <div class="logo"><img src="../planb-busking/img/snack-logo.jpg" alt="스넥 연습실 로고" width="1158" height="573" decoding="async" loading="eager"></div>
   </div>
 </section>
 
@@ -332,8 +322,8 @@
 </section>
 
 <footer class="wrap" aria-label="주최와 후원">
-  <span>주최 <img class="f-planb" src="../planb-busking/img/planb-logo.png" alt="PLAN B" width="160" height="147" loading="lazy"></span>
-  <span>후원 <img class="f-snack" src="../planb-busking/img/snack-logo.jpg" alt="스넥 연습실" width="1158" height="573" loading="lazy"></span>
+  <span>주최 <img class="f-planb" src="../planb-busking/img/planb-logo.png" alt="PLAN B" width="160" height="147" loading="eager"></span>
+  <span>후원 <img class="f-snack" src="../planb-busking/img/snack-logo.jpg" alt="스넥 연습실" width="1158" height="573" loading="eager"></span>
 </footer>
 
 <div class="sticky-ticket" hidden><span class="sticky-ticket-text"></span><a class="btn" href="https://smore.im/form/52BkxmIm19" target="_blank" rel="noopener" data-cta>신청하기</a></div>
