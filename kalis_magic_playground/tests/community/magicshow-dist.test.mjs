@@ -43,13 +43,13 @@ test('Magicshow snapshot contains only allowed runtime files and exact deploymen
   assert.ok(!precache.some(file => file.includes('/tools/_check')));
 });
 
-test('Magicshow manifest and HTML preserve the landscape fullscreen beta identity without a login check', async () => {
+test('Magicshow manifest and HTML preserve the fullscreen beta identity (any orientation: the game has a portrait layout) without a login check', async () => {
   const manifest = JSON.parse(await read(`${shared}/manifest.webmanifest`));
   assert.equal(manifest.name, '칼리의 마술 성장기');
   assert.equal(manifest.short_name, '칼리마술');
   for (const field of ['id', 'start_url', 'scope']) assert.equal(manifest[field], '/tools/magicshow/');
   assert.equal(manifest.display, 'fullscreen');
-  assert.equal(manifest.orientation, 'landscape');
+  assert.equal(manifest.orientation, 'any');
   assert.equal(manifest.theme_color, '#151020');
   assert.equal(manifest.background_color, '#151020');
   for (const size of [192, 512]) {

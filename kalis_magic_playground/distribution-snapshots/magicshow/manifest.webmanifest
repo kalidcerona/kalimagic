@@ -5,7 +5,7 @@
   "start_url": "/tools/magicshow/",
   "scope": "/tools/magicshow/",
   "display": "fullscreen",
-  "orientation": "landscape",
+  "orientation": "any",
   "theme_color": "#151020",
   "background_color": "#151020",
   "icons": [

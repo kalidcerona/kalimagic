@@ -39,7 +39,7 @@ for (const file of ['apple-touch-icon.png', 'favicon-32.png', 'og-image.png']) f
 files.set('manifest.webmanifest', Buffer.from(JSON.stringify({
   name: '칼리의 마술 성장기', short_name: '칼리마술',
   id: '/tools/magicshow/', start_url: '/tools/magicshow/', scope: '/tools/magicshow/',
-  display: 'fullscreen', orientation: 'landscape', theme_color: '#151020', background_color: '#151020',
+  display: 'fullscreen', orientation: 'any', theme_color: '#151020', background_color: '#151020',
   icons: [192, 512].map(size => ({ src: `icon-${size}.png`, sizes: `${size}x${size}`, type: 'image/png', purpose: 'any' }))
 }, null, 2) + '\n'));
 let html = files.get('index.html').toString();
