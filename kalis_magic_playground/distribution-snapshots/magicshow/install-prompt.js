@@ -18,7 +18,7 @@
   overlay.innerHTML = `<section role="dialog" aria-modal="true" aria-labelledby="magicshow-install-title" class="magicshow-install-card">
     <button type="button" data-close aria-label="닫기" class="magicshow-install-close">×</button>
     <h2 id="magicshow-install-title">홈 화면에 설치하기</h2>
-    <p>홈 화면에 추가하면 앱처럼 가로 전체 화면으로 즐길 수 있어요.</p>
+    <p>홈 화면에 추가하면 앱처럼 전체 화면으로 즐길 수 있어요. 세로와 가로 모두 돼요.</p>
     <div data-guide></div>
     <p data-status aria-live="polite"></p>
     <div class="magicshow-install-actions"><button type="button" data-install>설치</button><button type="button" data-copy hidden>링크 복사</button><button type="button" data-later>나중에</button></div>

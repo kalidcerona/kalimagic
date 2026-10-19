@@ -49,7 +49,7 @@
     intervalPerV: 0,
     intervalMin: 1.5,
     telegraphMs: 600,
-    mentalVisibleEvery: 3, mentalVisibleHit: 0.075, mentalVisibleAbsorb: 0.8,
+    mentalVisibleEvery: 2, mentalVisibleHit: 0.075, mentalVisibleAbsorb: 0.8,
     mentalVisibleMs: 500, mentalVisibleRegen: 0.005,
     winTransitionMs: 2500,
     // v4 U45: test-season number. applySaveEpoch wipes progress ONCE per device when this is higher than the stored magicShowBuster.epoch.
@@ -95,7 +95,6 @@
     // v4 U37: the dealer now visits only after a failed stage, so what it pays is multiplied. Income based games (cups, monte) are capped
     // at dealerCapSeconds of the player's coin income per payout so one visit cannot skip a stage.
     dealerRewardMult: 2.5,
-    dealerCreditPerStage: 1,
     dealerCapSeconds: 600,
     forceGemCost: 3,
     doveEvery: 3000,
@@ -418,8 +417,9 @@
     var f = state.features;
     if (f.achievements.indexOf(id) >= 0) return;
     f.achievements.push(id);
+    addGain(state, 'gems', DATA.silkRewards.achievement, 1e9);
     recompute(state, false);
-    emit(ev, { type: "achievement", id: id });
+    emit(ev, { type: "achievement", id: id, gems: DATA.silkRewards.achievement });
   }
 
   function achievementBonus(state) {
@@ -736,8 +736,6 @@
     if(!g||g.studied||g.cleared||state.u19b.failedId!==aud||state.coins<cost)return false;
     state.coins-=cost;g.studied=true;return true;
   }
-  // v4 U37: one visit credit per stage reached (was 2.2) now that every visit pays dealerRewardMult times more.
-  function dealerCredit(state) {return state.u19b.dealerVisits<Math.max(1,Math.floor((state.vMax-1)*CONST.dealerCreditPerStage));}
   function failureDealerAvailable(state) {return !!state.u19b.dealerOffer&&state.gems>=2&&state.mode==='fight'&&!state.resolved&&!state.idle.next;}
   function openFailureDealer(state) {
     if(!failureDealerAvailable(state)||state.mode==='dealer')return false;
@@ -1022,8 +1020,9 @@
         });
         queueScene(state,VENUES[venue-1].slug,"afterClear");
         trophy = true;
+        addGain(state, 'gems', DATA.silkRewards.firstClear, 1e9);
         var reward = DATA.stageRewards.find(function (r) { return r.venueSlug === VENUES[venue-1].slug; });
-        if (reward && !hasReward(state, reward.id)) { state.features.rewards.push(reward.id); emit(ev, {type:'stageReward',reward:reward.id,cell:0}); }
+        if (reward && !hasReward(state, reward.id)) { state.features.rewards.push(reward.id); emit(ev, {type:'stageReward',reward:reward.id,cell:0,gems:DATA.silkRewards.firstClear}); }
       }
     } else {
       var rec = state.bestiary[audId];
@@ -1049,7 +1048,7 @@
     state.u19b.dealerOffer = false;
     state.buff = 0;
     if(state.u19b.gates[state.audId])state.u19b.gates[state.audId].cleared=true;
-    emit(ev, { type: "win", venue: venue, crowd: state.crowd, j: j, coins: coins, removed: removed, trophy: trophy, keys: keys });
+    emit(ev, { type: "win", venue: venue, crowd: state.crowd, j: j, coins: coins, removed: removed, trophy: trophy, keys: keys, gems: trophy ? DATA.silkRewards.firstClear : 0 });
     checkTrueFanReveal(state,ev);unlockCosmetics(state);checkAchievements(state,ev);
     if(state.u18.anchor){finishTravel(state,ev,true);return;}
     if(j===headlinerJ(venue)){state.batchD.encore={phase:'choice',reward:coins*DATA.batchD.encore.rewardFactor,left:0};batchEvent(ev,'encoreChoice');}
@@ -1336,7 +1335,7 @@
     if (state.audHpMax > 0) pct = Math.round(100 * state.audHp / state.audHpMax);
     if (pct < 0) pct = 0;
     if (pct > 100) pct = 100;
-    var failedVenue=state.venue,failedId=state.audId,offer=state.venue>=venueNumber(DATA.dealer.cardVenue)&&dealerCredit(state)&&state.winsSinceDealer>0;
+    var failedVenue=state.venue,failedId=state.audId,offer=state.venue>=venueNumber(DATA.dealer.cardVenue)&&state.winsSinceDealer>0;
     // U32 cause: gate pressure first, then how much of the doubt bar this run actually removed.
     var failCause = forcedCause ? forcedCause : gatePressure(state) > 0 ? "gate" : (state.audHpMax > 0 && state.u19.damage / state.audHpMax < 0.4 ? "damage" : "mental");
     var failedGate = state.u19b.gates[failedId];
@@ -1502,8 +1501,8 @@
     var gem = 0;
     if (ri >= 1 && rngNext(state) < CONST.gemChance[ri] + nodeEffects(state).gemFind && state.u17.gemWait<=0) {
       state.u17.gemWait=90000;
-      addGain(state, 'gems', 1, 1e9);
-      gem = 1;
+      addGain(state, 'gems', DATA.silkRewards.caseDrop, 1e9);
+      gem = DATA.silkRewards.caseDrop;
     }
     emit(ev, { type: "boxBreak", openId: f.boxes, source: source || "manual", cell: i, item: kind, itemId: product.id, name: product.name, emoji: product.emoji, effect: effect, rarity: CONST.rarityIds[ri], value: amount, gem: gem });
     if (state.flights.length < CONST.flightCap) {
@@ -2466,7 +2465,8 @@
     recompute(state, true);
     state.mental = state.mentalMax;
     restartRun(state);
-    checkAchievements(state,null);
+    reconcileAchievements(state);
+    state.gems = 0; // Rebirth starts with an empty wallet, including retained cosmetic milestones.
     return state;
   }
 
@@ -3752,6 +3752,8 @@
     // Same dealerFlips field as cups (save key unchanged). One count per correct monte pick.
     addGain(state.features.progress, 'dealerFlips', 1, 1e24);addGain(state.features.progress, 'monteWins', 1, 1e24);
     m.round++;
+    // Immediate rewards do not enter the saved banked pot and are never paid again on reload.
+    addGain(state, 'gems', DATA.silkRewards.monteCorrect, 1e9);
     if(m.round===3)addGain(state.features.progress, 'montePerfects', 1, 1e24);
     checkAchievements(state,null);
     // 행운의 박수: each correct pick in a row adds +15% per level (round 1, 2, 3).
@@ -3980,7 +3982,11 @@
     Object.keys(f.magic.paused).forEach(function(id){f.magic.paused[id]=false;});
     return state;
   }
-  function loadState(raw){var state=resumeHelpers(deserialize(raw));if(state)checkAchievements(state,null);return state;}
+  // Reconcile existing milestones without paying historical achievements again.
+  function reconcileAchievements(state){
+    var gems=state.gems;checkAchievements(state,null);state.gems=gems;
+  }
+  function loadState(raw){var state=resumeHelpers(deserialize(raw));if(state)reconcileAchievements(state);return state;}
 
   globalThis.Core = {
     achievementInfo:achievementInfo,achievementBonus:achievementBonus,beginFuture:beginFuture,strongestCase:strongestCase,

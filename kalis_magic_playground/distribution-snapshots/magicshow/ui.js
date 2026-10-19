@@ -67,8 +67,10 @@ globalThis.U5 = (() => {
   const clearOfZones = r => !noDrawZones.some(z => r.x < z.x + z.w && r.x + r.w > z.x && r.y < z.y + z.h && r.y + r.h > z.y);
   function selectHeckle(character, fallback, previous, random = Math.random) {
     const pool = character && character.heckles && character.heckles.length ? character.heckles : fallback;
-    const choices = pool.filter(line => line !== previous);
-    const list = choices;
+    let valid = (pool || []).filter(line => typeof line === 'string' && line.trim());
+    if(!valid.length)valid=(fallback||[]).filter(line=>typeof line==='string'&&line.trim());
+    const choices = valid.filter(line => line !== previous);
+    const list = choices.length ? choices : valid;
     return list[Math.min(list.length - 1, Math.floor(random() * list.length))] || '';
   }
   const happyPortraitPath = path => path.replace(/\.png$/, '-happy.png');
@@ -1546,11 +1548,11 @@ globalThis.Presentation = (() => {
     }});
   }
   function nextBanner(){ /* All notices share presentation.tick. */ }
-  function showStageReward(reward){
+  function showStageReward(reward,gems=0){
     presentation.push({stageTransition:true,minimum:2000,priority:20,start:item=>{
       const r=D.stageRewards[reward-1],host=element('button','','stage-reward');stageRewardHost=host;host.type='button';
       host.setAttribute('aria-label',r.effect+' · 눌러서 계속');const art=element('img');art.src='assets/reward-'+r.id+'.png';art.alt='';
-      host.append(art,element('h2',r.effect),element('p',r.quote));$('stage').append(host);
+      host.append(art,element('h2',r.effect),element('p',r.quote));if(gems)host.append(element('p',`실크 +${gems}`));$('stage').append(host);
       item.end=()=>{host.remove();stageRewardHost=null;previous=0;};host.addEventListener('click',()=>presentation.finish());release();
     }});
   }
@@ -2027,7 +2029,7 @@ globalThis.Presentation = (() => {
       if(e.type==='setBonus'){banner(e.slug==='collection'?'칼리 컬렉션 세트 완성!':'관객 세트 완성!',e.slug==='collection'?'연출 +10%':`${C.venueBySlug(e.slug).name} · 마술 실력 +3%`);sound('milestone');save();}
       if(e.type==='visitorCatch'){const r=$('eventVisitor').getBoundingClientRect(),stage=$('stage').getBoundingClientRect(),p={x:(r.left+r.width/2-stage.left)/scale,y:(r.top+r.height/2-stage.top)/scale};burst(p.x,p.y,'#ffe65c');toast(e.reward==='power'?'30초 마술 실력 ×2':e.reward==='coins'?`동전 +${C.formatNumber(e.amount)}`:'책 +1');sound('event');save();}
       if (e.type === 'stageReward') {
-        sound('milestone'); showStageReward(e.reward);
+        sound('milestone'); showStageReward(e.reward,e.gems);
       }
       if (e.type === 'magicHit') {
         const p=cellCenter(e.cell); squash(e.cell);
@@ -2071,7 +2073,7 @@ globalThis.Presentation = (() => {
       } else if (e.type === 'achievement') {
         const info = C.achievementInfo(state, e.id);
         const pct = Math.round(((info && info.bonus) || 0) * 1000) / 10;
-        toast(`🏅 ${info ? info.name : e.id} · 마술 실력 +${pct}%`);
+        toast(`🏅 ${info ? info.name : e.id} · 마술 실력 +${pct}%${e.gems?` · 실크 +${e.gems}`:''}`);
       } else if (e.type === 'encore') {
         banner('피버 타임!',`${e.duration / 1000}초 · 마술 실력 ×${(2 * (state.tree.encore ? 1 + C.nodeEffects(state).encorePower : 1)).toFixed(1)} · 자동 개봉 속도 +25%`);
       } else if (e.type === 'worker' && e.phase === 'work') {
@@ -2104,8 +2106,8 @@ globalThis.Presentation = (() => {
       } else if (e.type === 'heckleTelegraph') {
         const v = D.venues[state.venue - 1], a = C.audienceAt(v, state.j);
         const line = U5.selectHeckle(a, venueHeckles(state.venue), lastHeckles.get(a.id));
-        if(line)lastHeckles.set(a.id, line); $('heckle').textContent = line;
-        audHeckleMood = D.lineFaces.moods['fight:'+a.id+':heckles:'+a.heckles.indexOf(line)]||D.lineFaces.faceMap.roleDefaults[a.role]||'doubt';
+        if(line){lastHeckles.set(a.id,line);queueAudienceLine(line,'heckle:'+state.fightMs,false,false,true);} $('heckle').textContent = line;
+        audHeckleMood = D.lineFaces.moods['fight:'+a.id+':heckles:'+(a.heckles||[]).indexOf(line)]||D.lineFaces.faceMap.roleDefaults[a.role]||'doubt';
         moodSprite($('audience'),stageAudienceAsset(v,a),audHeckleMood);
       } else if (e.type === 'heckle') {
         if (e.shieldDmg > 0 && typeof popChip === 'function') { popChip($('shield'), '막음', 'block', 200); trailMeter('shield', 400); }
@@ -2149,7 +2151,7 @@ globalThis.Presentation = (() => {
           stageAudienceFace($('audience'),stageAudienceAsset(v,a),6);$('audienceLine').textContent=a.winLine;$('audienceLine').hidden=false;kaliPose(2,2500);
           sceneLight(.06);
           const head=C.isHeadliner(v,e.j),progress=`관객 ${e.j}/${v.audiences.length+1}`;
-          bannerActive={...context};$('banner').replaceChildren(document.createTextNode(winLine()));$('banner').append(element('small',progress+' · '+(head?v.headliner.defeatLine:'동전 +'+C.formatNumber(e.coins))));$('banner').classList.add('win-banner');$('banner').hidden=false;
+          bannerActive={...context};$('banner').replaceChildren(document.createTextNode(winLine()));$('banner').append(element('small',progress+' · '+(head?v.headliner.defeatLine:'동전 +'+C.formatNumber(e.coins))+(e.gems?' · 실크 +'+e.gems:'')));$('banner').classList.add('win-banner');$('banner').hidden=false;
           const moment=clearMoment(head,e.coins);
           item.end=()=>{moment.stop();dismissBanner();wonMoment=null;};
         }});
@@ -2170,7 +2172,7 @@ globalThis.Presentation = (() => {
         const next=action('공연 이어가기', () => { menu=''; $('panel').hidden=true; previous=0; save(); });
         $('panelBody').append(next); next.focus();
       } else if (e.type === 'homecomingAct') {
-        $('audienceLine').textContent=e.line; patternPulse(e.line);
+        queueAudienceLine(e.line,'homecoming:'+e.act); patternPulse(e.line);
       } else if (['reviewApplause','jointApplause','heckleCancelled','curtainFinale'].includes(e.type)) {
         const message={reviewApplause:'좋은 한 수였어요',jointApplause:'함께 만든 박수',heckleCancelled:'질문 대신 박수',curtainFinale:'마지막 인사'}[e.type];
         patternPulse(message); toast(`👏 ${message}`); sound('milestone');
@@ -2240,9 +2242,9 @@ globalThis.Presentation = (() => {
     const side = D.batchD.stages[state.batchD.side];
     const faced = chainFace();
     const a = faced ? {name:faced.name,emoji:faced.emoji,role:faced.role,flavor:'',bio:''} : state.u15.tutorial.active ? {name:'NDD',emoji:'🙎',flavor:D.storyV15.tutorial.bio,bio:D.storyV15.tutorial.bio} : v.audiences[state.j - 1] || v.headliner;
-    const key = `${state.dimension}:${state.batchD.side ? state.batchD.side + ':' : ''}${state.u15.tutorial.active?'tutorial':state.audId}${state.pattern==='futureMirror'&&state.u19.phase===3?':true':''}${faced?':'+faced.name:''}${schoolBackdropOn()?':school':''}`;
+    const key = `${state.dimension}:${state.wins}:${state.fails}:${state.batchD.side ? state.batchD.side + ':' : ''}${state.u15.tutorial.active?'tutorial':state.audId}${state.pattern==='futureMirror'&&state.u19.phase===3?':true':''}${faced?':'+faced.name:''}${schoolBackdropOn()?':school':''}`;
     if (key !== lastAudience) {
-      lastAudience = key; pendingIntro = null;
+      lastAudience = key; pendingIntro = null; resetAudienceLines();
       $('room').dataset.venue = v.slug;
       sprite($('room'), venueAsset(v));
       $('viewport').style.setProperty('--venue-art', `url(${JSON.stringify(assetUrl(venueAsset(v)))})`); // v4 U50: the scene also fills the safe-area and letterbox bands (U50b: quoted with JSON.stringify, so a quote or backslash in a path cannot break the CSS)
@@ -2267,7 +2269,7 @@ globalThis.Presentation = (() => {
       $('audience').classList.toggle('headliner', a === v.headliner);
       $('audience').style.setProperty('--story-scale',String(a.storyScale||1));
       $('audience').dataset.storyScale=String(a.storyScale||1);
-      queueAudienceLine(a.encounterLine || a.bio || a.flavor,key,!a.encounterLine && state.u15.bios.includes(key),true);
+      queueAudienceLine(a.encounterLine || a.heckles?.[0] || a.preLine || a.bio || a.flavor || a.winLine,key,false,true);
       $('audienceCard').dataset.pattern = state.pattern;
       $('patternLabel').textContent = state.pattern === 'invisible' ? '보이지 않는 의심' : state.pattern === 'none' ? '' : D.ui.patterns[state.pattern];
       if (a === v.headliner && !D.storyV15.venues[v.slug]) pendingIntro = a;
@@ -2578,8 +2580,13 @@ globalThis.Presentation = (() => {
     fitStageAudience.inputKey=fitStageAudience.key=key;
     const cs=getComputedStyle(card),cw=card.clientWidth,ch=card.clientHeight;
     const vertical=portraitLayout(),sb=parseFloat(cs.getPropertyValue('--SB'))||0;
-    const bubble=vertical?42:phone?90:150,foot=phone?(vertical?Math.round(ch*.19):Math.max(sb+8,ch*.2)):sb+20;
-    const width=phone?cw*.5-12:Math.min(390,cw*.5-20),available=Math.max(1,ch-foot-bubble);
+    const lineHeight=line.hidden?(phone?72:124):(line.offsetHeight||20);
+    let bubble=vertical?42:phone?(cw<340?112:100):50+lineHeight+12,toastFloor=4;
+    const foot=phone?(vertical?Math.round(ch*.19):Math.max(sb+8,ch*.2)):sb+20;
+    const desk=!vertical?document.querySelector('#mockupDressing .mockup-desk'):null;
+    const deskTop=desk?desk.getBoundingClientRect().top-card.getBoundingClientRect().top:ch;
+    const width=phone?cw*.5-12:Math.min(390,cw*.5-20);
+    // Reserve bubble space above the desk-adjusted head, even with a hidden bubble.
     if(phone && !vertical){
       const pat=$('patternLabel'),phase=$('phaseIndicator');
       const tight=document.body.classList.contains('compact-notice');
@@ -2602,22 +2609,24 @@ globalThis.Presentation = (() => {
       budget.style.cssText='position:absolute;visibility:hidden;pointer-events:none';
       budget.setAttribute('aria-hidden','true');$('toasts').append(budget);
       const toastHeight=Math.max(34,budget.offsetHeight);budget.remove();
+      // Phone notices occupy the left column; tablet notices cross the bubble column.
+      toastFloor=tight||!document.body.classList.contains('tablet')?4:toastTop+toastHeight+6;
+      if(toastFloor>4)bubble=Math.max(bubble,toastFloor+lineHeight+18);
       const actorBottom=parseFloat(getComputedStyle($('magicianMini')).bottom)||sb;
       const floor=tight?Math.max(104,pat.offsetTop+pat.offsetHeight+18,phase.offsetTop+phase.offsetHeight+18):Math.max(142,toastTop+toastHeight+18);
       card.style.setProperty('--left-floor',(floor+Math.max(0,actorBottom-sb))+'px');
     }
+    const available=Math.max(1,Math.min(ch-foot-bubble,desk?(deskTop-bubble-8)/.9:ch));
     const [,baseH,envelopeW,envelopeH]=metrics,kali=$('magicianMini');
     const kaliSize=Math.min(kali.clientWidth,kali.clientHeight);
     const storyScale=Math.min(1.3,Number(host.dataset.storyScale)||1);
-    const zoom=Math.max(.001,Math.min(kaliSize*.92*storyScale/baseH,width/envelopeW,available/envelopeH));
+    const zoom=Math.max(.001,Math.min(kaliSize*(vertical?.92:.85)*storyScale/baseH,width/envelopeW,available/envelopeH));
     const height=envelopeH*zoom,artWidth=envelopeW*zoom;
     card.style.setProperty('--aud-fit-h',height+'px');card.style.setProperty('--aud-fit-w',artWidth+'px');
     // Keep the upper body above the shared desk, including tall scenes with small sprites.
-    const desk=phone&&!vertical?document.querySelector('#mockupDressing .mockup-desk'):null;
-    const audienceFoot=desk?Math.max(foot,ch-(desk.getBoundingClientRect().top-card.getBoundingClientRect().top)-height*.3+8):foot;
+    const audienceFoot=desk?Math.max(foot,ch-deskTop-height*.1+8):foot;
     card.style.setProperty('--aud-foot',audienceFoot+'px');
-    const lineHeight=line.hidden?72:(line.offsetHeight||20);
-    card.style.setProperty('--bubble-top',Math.max(4,ch-audienceFoot-height-lineHeight-18)+'px');
+    card.style.setProperty('--bubble-top',Math.max(toastFloor,ch-audienceFoot-height-lineHeight-18)+'px');
 
   }
   // v4 U46 C3: the stage grows with the player. Three dressing tiers (lights, curtain trims, a prop shelf; img27 overlays) on the audience card:
@@ -2697,7 +2706,7 @@ globalThis.Presentation = (() => {
     }
     if(home&&!wonMoment) {
       $('phaseIndicator').textContent=['','1막 · 준비한 한 수','2막 · 함께 만든 공연','3막 · 마지막 인사'][state.review.act];
-      $('audienceLine').textContent=C.venueBySlug('lecturenote').headliner['act'+state.review.act+'Line'];
+      queueAudienceLine(C.venueBySlug('lecturenote').headliner['act'+state.review.act+'Line'],'homecoming:'+state.review.act);
       $('patternLabel').textContent=['','별표 케이스를 열면 다음 질문을 쉬어요','직접 개봉과 도우미를 연결해요 · 도우미 없이 두 칸도 좋아요','개봉을 이어 마지막 피날레를 완성해요'][state.review.act];
       // v4 U38: the announced last heckle: its size is printed so the player can compare it with 멘탈 + 자신감 (and 야유 막기 can cancel it).
       if(C.threatInfo(state).last)$('patternLabel').textContent=`마지막 야유 · 한 번에 ${C.formatNumber(C.CONST.finalHeckle)}`;
@@ -2840,7 +2849,7 @@ globalThis.Presentation = (() => {
     $('areaLabel').textContent = `지팡이 범위 ${a.cols} × ${a.rows}`;
     if ($('rangeShape')) { $('rangeShape').textContent = '▦'; $('rangeShape').setAttribute('aria-label', `${a.cols}열 ${a.rows}행`); }
     $('hint').textContent = caseArrange ? '케이스 정리 · 드래그하거나 두 칸을 눌러 바꾸세요' : menu ? '공연 일시정지' : `${state.wins ? '케이스' : '카드 케이스'}를 탭하면 더 강하게 · 꾹 누르면 초당 ${C.wandRate(state).toFixed(1)}회`;
-    updateWand(); modeHooks(); syncFlags(); renderBatchD();
+    updateWand(); modeHooks(); renderBatchD(); updateAudienceLine(); syncFlags();
   }
   function wandRect(point = pointer) {
     const a = C.wandArea(state), k = C.CONST;
@@ -3300,7 +3309,20 @@ globalThis.Presentation = (() => {
     map.setAttribute('aria-label', '별자리 지도. 방향키로 이동하고 더하기와 빼기로 확대합니다.');
     const world = element('div', '', 'constellation-world');
     const detail = element('aside', '', 'constellation-detail'); detail.setAttribute('aria-live', 'polite');
+    const minTreeZoom=Math.max(.8,44/(56*(scale||1)));
+    treeView.zoom=Math.max(minTreeZoom,treeView.zoom);
     const infos = new Map(D.tree.map(n => [n.id, C.nodeInfo(state, n.id)]));
+    const nodeStatus=(node,info)=>{
+      const maxed=info.revealed&&info.cost===null;
+      const shortage=!!info.revealed&&/ 부족$/.test(info.blockedReason||'');
+      const missing=Math.max(0,(info.cost||0)-(state[info.currency]||0));
+      const currency={coins:'동전',keys:'책',starlight:'비둘기'}[info.currency];
+      const pre=node.prereqs.find(id=>!(infos.get(id)?.level>0));
+      const requirement=node.reveal==='E'&&!state.endings.length?'첫 멀티버스 완료':pre&&node.branch!=='collection'?(D.tree.find(n=>n.id===pre).short||D.tree.find(n=>n.id===pre).name)+' 배우기':info.blockedReason==='아직 발견하지 못한 비법'?(node.venueSlug?C.venueBySlug(node.venueSlug).name+' 도착':'이웃 비법 배우기'):info.blockedReason;
+      const kind=maxed?'maxed':info.purchasable?'learnable':shortage?'unaffordable':'locked';
+      const text=maxed?'MAX':kind==='locked'?requirement:`${currency} ${C.formatNumber(info.cost)}`;
+      return {kind,text,missing,currency};
+    };
     const shown = new Set(D.tree.filter(n => !n.shopOnly && n.id !== 'autoLearn' /* v4 U47 10: retired node, never drawn */ && (infos.get(n.id).revealed ||(!n.hidden && (n.reveal === 'E' || n.prereqs.some(id => infos.get(id).revealed))))).map(n => n.id));
     const centerUnlocked = () => {
       const nodes = D.tree.filter(n => shown.has(n.id) && infos.get(n.id).revealed && (!infos.get(n.id).gate || infos.get(n.id).gate.met));
@@ -3333,17 +3355,24 @@ globalThis.Presentation = (() => {
       const info = infos.get(node.id);
       if (info.revealed && treeView.ready && !treeView.revealed.has(node.id)) newly.add(node.id);
       if (!shown.has(node.id)) continue;
-      const unknown = !info.revealed;
+      const unknown = !info.revealed,status=nodeStatus(node,info);
       const button = element('button', '', `constellation-node${node.branch === 'collection' ? ' collection' : ''}${unknown ? ' unknown' : ''}${info.level ? ' owned' : ''}${treeView.selected === node.id ? ' selected' : ''}${newly.has(node.id) ? ' newly-revealed' : ''}`);
-      button.dataset.nodeId = node.id;
+      button.dataset.nodeId = node.id;button.dataset.state=status.kind;button.classList.add(status.kind);
+      button.setAttribute('aria-pressed',String(treeView.selected===node.id));button.title=status.text;
       button.style.left = `${node.x * 140}px`; button.style.top = `${node.y * 140}px`;
       button.setAttribute('aria-label', unknown ? (node.reveal === 'E' ? '첫 멀티버스 공연 완료' : '미확인 비법') : `${node.name} 레벨 ${C.formatNumber(info.level)} / ${typeof info.max==='number' ? C.formatNumber(info.max) : info.max}`);
+      button.setAttribute('aria-label',button.getAttribute('aria-label')+' · '+status.text+(status.kind==='unaffordable'?' · '+C.formatNumber(status.missing)+' 부족':''));
       const icon = element('span', unknown ? '❔' : node.emoji, 'constellation-icon sprite-fallback');
       const iconHost = element('span', '', 'constellation-icon-host'); iconHost.append(icon);
       sprite(iconHost, `assets/${unknown ? 'node-unknown.png' : node.icon}`);
       button.append(iconHost);
       if (practice && !unknown && node.id === practiceRec && infos.get(node.id).cost !== null) button.append(element('span', '추천', 'rec-tag'));
       if (!unknown) button.append(element('span', node.short || node.name /* v4 U45: long product names use a map label */, 'constellation-name'), element('small', `${C.formatNumber(info.level)} / ${typeof info.max==='number' ? C.formatNumber(info.max) : info.max}`, 'constellation-level'));
+      const badge=status.kind==='maxed'?'MAX':status.kind==='locked'?'🔒':status.kind==='learnable'?'↑':info.level?'✓':'';
+      if(badge)button.append(element('span',badge,'node-state-badge'));
+      if(info.level&&status.kind!=='maxed')button.append(element('span','✓','node-learned'));
+      button.append(element('span',status.text,'node-status'));
+      if(status.kind==='unaffordable')button.append(element('small',status.currency+' '+C.formatNumber(status.missing)+' 부족','node-missing'));
       button.addEventListener('click', () => { if (!suppressClick) select(node.id); }); world.append(button);
     }
     treeView.revealed = new Set(D.tree.filter(n => infos.get(n.id).revealed).map(n => n.id)); treeView.ready = true;
@@ -3364,7 +3393,10 @@ globalThis.Presentation = (() => {
       if(selected.statMilestone){const next=C.nextMilestone(info.total,[10,25],info.totalMax);const label=selected.partOf||selected.levels?'전체 레벨':'레벨';detail.append(element('p',next ? `다음 2배: ${label} ${next} · ${next-info.total}레벨 남음` : `지금 힘 ${C.statMultiplier(state,selected.partOf||selected.id)}배`,'tree-next'),element('p', D.easyExtras.milestone, 'tree-preview'));}
       if (selected.desc.includes('L')) detail.append(element('small', 'L은 이 비법의 레벨입니다.', 'tree-note-l'));
       const currency = { coins: '🪙 동전', keys: '📕 책', starlight: '🕊️ 비둘기' }[info.currency];
-      detail.append(element('strong', maxed ? '완성했어요' : `${currency} ${C.formatNumber(info.cost)}`, 'tree-cost'));
+      const status=nodeStatus(selected,info);
+      detail.dataset.state=status.kind;
+      detail.append(element('strong', maxed ? '✓ MAX · 완성했어요' : `${currency} ${C.formatNumber(info.cost)}`, 'tree-cost'));
+      if(status.kind==='unaffordable')detail.append(element('p',`${status.currency} ${C.formatNumber(status.missing)} 부족`,'tree-missing'));
       if (!maxed && info.blockedReason) detail.append(element('p', info.blockedReason, 'tree-reason'));
       if (info.gate) detail.append(element('p', info.gate.text, 'tree-gate'));
       const buy = action('배우기', () => {
@@ -3382,13 +3414,13 @@ globalThis.Presentation = (() => {
     }
     const transform = () => { world.style.transform = `translate(${map.clientWidth / 2 + treeView.x}px,${map.clientHeight / 2 + treeView.y}px) scale(${treeView.zoom})`; };
     const zoom = (factor, point = { x: map.clientWidth / 2, y: map.clientHeight / 2 }) => {
-      const z = Math.max(.35, Math.min(1.8, treeView.zoom * factor)), ratio = z / treeView.zoom;
+      const z = Math.max(minTreeZoom, Math.min(Math.max(1.8,minTreeZoom), treeView.zoom * factor)), ratio = z / treeView.zoom;
       treeView.x = point.x - map.clientWidth / 2 - (point.x - map.clientWidth / 2 - treeView.x) * ratio;
       treeView.y = point.y - map.clientHeight / 2 - (point.y - map.clientHeight / 2 - treeView.y) * ratio;
       treeView.zoom = z; transform();
     };
     const controls = element('div', '', 'constellation-controls');
-    controls.append(action('− 축소', () => zoom(1 / 1.2)), action('+ 확대', () => zoom(1.2)), action('중앙으로', () => { treeView.zoom = 1; centerUnlocked(); transform(); }));
+    controls.append(action('− 축소', () => zoom(1 / 1.2)), action('+ 확대', () => zoom(1.2)), action('중앙으로', () => { treeView.zoom = Math.max(1,minTreeZoom); centerUnlocked(); transform(); }));
     const local = e => { const r = map.getBoundingClientRect(); return { x: (e.clientX - r.left) * map.clientWidth / r.width, y: (e.clientY - r.top) * map.clientHeight / r.height }; };
     const pointers = new Map(); let drag = null;
     map.addEventListener('pointerdown', e => {
@@ -3454,7 +3486,7 @@ globalThis.Presentation = (() => {
       const nodes = D.tree.filter(n => shown.has(n.id) && infos.get(n.id).revealed && (!infos.get(n.id).gate || infos.get(n.id).gate.met));
       const span = axis => (Math.max(...nodes.map(n=>n[axis])) - Math.min(...nodes.map(n=>n[axis]))) * 140;
       treeView.zoom = Math.min(1, (map.clientWidth - 20) / (span('x') + 140), (map.clientHeight - 20) / (span('y') + 140));
-      treeView.zoom = Math.max(.35, treeView.zoom);
+      treeView.zoom = Math.max(minTreeZoom, treeView.zoom);
       centerUnlocked(); treeView.y -= 30 * treeView.zoom + Math.max(0, (map.clientHeight - (span('y') + 140) * treeView.zoom) / 2 - 20);
     }
     transform();
@@ -3572,7 +3604,7 @@ globalThis.Presentation = (() => {
         if (info.earned) medal.append(element('span', '✓', 'medal-check'));
         sprite(medal, `assets/medal-${info.earned ? 'gold' : 'silver'}.png`);
         const copy = element('span', '', 'achievement-copy');
-        copy.append(element('strong', info.name), element('small', info.desc));
+        copy.append(element('strong', info.name), element('small', info.desc+(info.hidden&&!info.earned?'':` · 달성 시 실크 +${D.silkRewards.achievement}`)));
         row.append(medal, copy, element('small', info.earned ? '달성' : '도전 중', 'achievement-state'));
         section.append(row);
       }
@@ -4061,6 +4093,7 @@ globalThis.Presentation = (() => {
         row.append(action('다음 판',()=>{if(dealerBusy)return;monteGo=m.round;drawDealer();}));
         const bank=action('그만하고 받기',()=>{if(dealerBusy)return;C.dealerMonteBank(state);save();sound('coin');drawDealer();},m.round<1);bank.dataset.bank='true';row.append(bank);area.append(row);
       }
+      area.append(element('small',`정답마다 실크 +${D.silkRewards.monteCorrect} 즉시 지급 · 탈락해도 받은 실크는 남아요`));
       if(m.phase==='playing')area.append(element('small','1번 90초 동전·실크 · 2번 225초 · 3번 책·실크 + 300초'));
       const back=action('샵 매니저 메뉴',()=>{if(dealerBusy)return;dealerGameView=null;drawDealer();},dealerBusy||!settled);back.className='dealer-back';
       area.append(back);$('panelBody').append(area);
@@ -4071,7 +4104,7 @@ globalThis.Presentation = (() => {
     const row=element('div','','dealer-pick');
     for(const [id,label,cost,emoji,art,reward] of [
       ['cups','컵앤볼',2,'🔴','cb-ball','맞히면 동전·실크, 가끔 책'],
-      ['monte','카드 몬테',3,'🂡','monte-queen','연속으로 맞출수록 동전·실크, 세 번이면 책']
+      ['monte','카드 몬테',3,'🂡','monte-queen',`정답마다 실크 +${D.silkRewards.monteCorrect}, 세 번이면 책`]
     ]){
       const played=games[id],need=!played&&state.gems<cost;
       const card=element('article','','dealer-game-card');
@@ -4398,7 +4431,7 @@ globalThis.Presentation = (() => {
     sceneLight(.06);
     animate($('audience'), [{ transform: 'scaleX(1)' }, { transform: 'scaleX(0)', offset: .45 }, { transform: 'scaleX(-1)' }], 650);
     const line = U5.phase2Line(D.venues, state.audId, state.venue);
-    $('audienceLine').textContent = line;
+    queueAudienceLine(line,'phase:mirror');
     openPanel('bossPhase', '마지막 의심 · 2단계');
     const scene = element('div', '', 'climax-scene');
     scene.append(element('span', '🪞', 'result-icon'), element('h2', line), element('p', '거울 속 내가 지팡이를 들었다. 손놀림은 느려지고, 의심은 다시 차오른다.'));
@@ -4739,24 +4772,49 @@ globalThis.Presentation = (() => {
     if (rising.length) { ctx.save(); ctx.globalAlpha = 1; ctx.imageSmoothingEnabled = false; for (const f of rising) paintFlight(f); ctx.restore(); }
   }
 
-  let bioUntil=0,bioPending='',bioLineKey='',bioRecord=false,dialogKey='',installPrompt=null;
-
-  function queueAudienceLine(text,key,seen=false,record=false) {
-    if (bioLineKey === key && $('audienceLine').textContent === (text || '')) return;
-    bioLineKey = key; $('audienceLine').textContent = text || '';
-    bioPending = text && !seen ? key : ''; bioUntil = 0; bioRecord = record;
-    $('audienceLine').hidden = true;
+  let bioCurrent=null,bioQueue=[],bioLineKey='',bioLastText='',bioLastTick=0,bioVisible=false,dialogKey='',installPrompt=null;
+  const bioRequests=new Map();
+  function resetAudienceLines() {
+    bioCurrent=null;bioQueue=[];bioRequests.clear();bioLineKey='';bioLastText='';bioVisible=false;bioLastTick=clock;
+  }
+  function queueAudienceLine(text,key,seen=false,record=false,interrupt=false) {
+    if(typeof text!=='string'||!text.trim())return;
+    // Polling producers enqueue once per change. Previously seen bios still speak on a new encounter.
+    const channel=/^(school|coaching|if|twist|homecoming|phase|heckle):/.exec(key)?.[1]||'encounter';
+    const request=key+':'+text;
+    if(bioRequests.get(channel)===request)return;
+    bioRequests.set(channel,request);
+    const entry={text,key,record,left:Math.max(5000,Math.min(12000,text.length*80))};
+    if(interrupt){if(bioCurrent)bioQueue.unshift(bioCurrent);bioCurrent=null;bioVisible=false;bioQueue.unshift(entry);}
+    else bioQueue.push(entry);
   }
   function updateAudienceLine() {
-    const blocked = !!state.u15.scene || state.u15.queue.length > 0 || !$('storyDialog').hidden || state.telegraphed || state.review.target >= 0 || blockingSheetOpen();
-    if (bioPending && state.mode === 'fight' && !blocked) {
-      if (bioRecord && !state.u15.bios.includes(bioPending)) state.u15.bios.push(bioPending);
-      bioPending = ''; bioUntil = clock + 5000;
+    const line=$('audienceLine'),now=clock,elapsed=Math.max(0,now-bioLastTick);bioLastTick=now;
+    const winner=wonMoment&&!wonMoment.pending;
+    const blocked=!!state.u15.scene||!$('storyDialog').hidden||blockingSheetOpen()
+      ||document.hidden||portrait()||state.u18.map||!$('offlineCard').hidden||!$('sceneCard').hidden||!$('leaveConfirm').hidden||!!stageRewardHost;
+    if(winner){
+      line.textContent=wonMoment.a.winLine||wonMoment.v.successLine||wonMoment.a.encounterLine||'';
+      line.hidden=!line.textContent||blockingSheetOpen()||!$('storyDialog').hidden;
+      bioVisible=false;return;
     }
-    $('audienceLine').hidden = !wonMoment && (blocked || clock >= bioUntil || !$('audienceLine').textContent);
+    // Only time actually visible in combat consumes the reading budget. Queued stories and toasts do not suppress speech.
+    if(bioCurrent&&bioVisible&&!blocked&&state.mode==='fight')bioCurrent.left-=elapsed;
+    // Keep the last line on stage until another line is ready, instead of a five-second blank.
+    if(bioCurrent&&bioCurrent.left<=0&&bioQueue.length)bioCurrent=null;
+    if(!bioCurrent&&bioQueue.length&&state.mode==='fight'&&!blocked){
+      bioCurrent=bioQueue.shift();bioLineKey=bioCurrent.key;bioLastText=bioCurrent.text;
+      const recordKey=bioCurrent.key.replace(/^(\d+):\d+:\d+:/,'$1:');
+      if(bioCurrent.record&&!state.u15.bios.includes(recordKey))state.u15.bios.push(recordKey);
+    }
+    bioVisible=!!bioCurrent&&!blocked&&state.mode==='fight';
+    if(bioCurrent&&line.textContent!==bioCurrent.text)line.textContent=bioCurrent.text;
+    line.hidden=!bioVisible;
   }
   function replayAudienceLine() {
-    bioPending = bioLineKey || 'audience-click'; updateAudienceLine();
+    if(bioCurrent)bioCurrent.left=Math.max(5000,bioCurrent.text.length*80);
+    else if(bioLastText)bioQueue.unshift({text:bioLastText,key:bioLineKey,record:false,left:Math.max(5000,bioLastText.length*80)});
+    updateAudienceLine();
   }
   function speakerPortrait(name){
     if(D.storyV15.portraits[name])return D.storyV15.portraits[name];
@@ -5171,7 +5229,7 @@ globalThis.Presentation = (() => {
       stageAudienceFace($('audience'),side.portrait,audienceDoubtStage());
       const lines=D.storyReview.ifRoute[side.script].beforeHeadliner;
       const index=Math.floor(state.fightMs/7000)%lines.length;
-      queueAudienceLine(lines[index].text,'if:'+b.side+':'+index);updateAudienceLine();
+      queueAudienceLine(lines[index].text,'if:'+b.side+':'+Math.floor(state.fightMs/7000));updateAudienceLine();
       $('patternLabel').textContent='IF 공연 · 한 사람씩 마음을 건네요';
     }
     if(t.scene==='hidden'){

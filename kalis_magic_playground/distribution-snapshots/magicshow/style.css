@@ -1652,7 +1652,7 @@ body:not(.phone) #viewport #stage :is(#helperControls,.feature-hud,.magic-contro
 body:not(.phone) .normalized-figure[data-emote]:not([data-emote=""]):after{width:32px;height:32px;background-size:32px 32px}
 .normalized-figure[data-mood="happy"]:after{background-image:url('assets/ui/ic-mood-happy.webp')}
 .normalized-figure[data-mood="serious"]:after{background-image:url('assets/ui/ic-mood-think.webp')}
-.normalized-figure[data-mood="surprised"]:after{background-image:url('assets/ui/ic-mood-alert.webp')}
+.normalized-figure[data-mood="surprised"]:after{content:none}
 .normalized-figure[data-mood="sad"]:after{background-image:url('assets/ui/ic-mood-sweat.webp')}
 .normalized-figure[data-mood="smug"]:after{background-image:url('assets/ui/ic-mood-smug.webp')}
 #audienceCard.healing .audience:after{content:"";background:url('assets/ui/ic-sparkle.webp') 30% 30%/32px 32px no-repeat,url('assets/ui/ic-sparkle.webp') 70% 40%/32px 32px no-repeat;image-rendering:pixelated;font-size:0}
@@ -2132,7 +2132,9 @@ html body.phone.phone-narrow #viewport#viewport #stage #audienceCard #combo:befo
 #stage #panel[data-screen="dealer"] .dealer-leave{display:block;margin:8px auto 0;min-height:44px}
 
 #heckleBang{position:absolute;z-index:9;display:none;width:22px;height:22px;margin:-22px 0 0 -11px;place-items:center;font:700 16px/1 Galmuri11,monospace;color:#ffe08a;background:#3a1820;border:2px solid #ffb15a;pointer-events:none}
-#audienceCard.telegraph #heckleBang{display:grid}
+#audienceCard.telegraph #heckleBang{display:none}
+/* Spoken warnings use the fitted audience bubble; the boo scene keeps its own line. */
+#audienceCard.telegraph #heckle{visibility:hidden}
 
 #mentalEdge{position:absolute;inset:0;z-index:7;pointer-events:none;box-shadow:inset 0 0 22px 3px rgba(255,72,82,.55);opacity:0;display:none}
 #audienceCard.mental-low #mentalEdge{display:block;animation:mental-edge 800ms ease-out infinite}
@@ -2657,7 +2659,7 @@ html body #viewport#viewport #stage#stage#stage#stage #boardCard::after,
 html body #viewport#viewport #stage#stage#stage#stage #stageStats > div::before { content:none; display:none; background:none; border:0; box-shadow:none; }
 html body #viewport#viewport #stage#stage#stage#stage #stageStats > div::after { box-shadow:none; }
 html body #viewport#viewport #stage#stage#stage#stage #stageStats > #combo .meter-bar { margin:0; }
-html body:not(.phone) #viewport#viewport #stage#stage#stage#stage #audienceCard #audience { left:auto !important; right:6% !important; top:auto !important; bottom:20% !important; width:40% !important; height:28% !important; }
+html body:not(.phone) #viewport#viewport #stage#stage#stage#stage #audienceCard #audience { left:auto !important; right:6% !important; top:auto !important; bottom:var(--aud-foot,20%) !important; width:var(--aud-fit-w,1px) !important; height:var(--aud-fit-h,1px) !important; }
 html body:not(.phone) #viewport#viewport #stage#stage#stage#stage #audienceCard #audience > .asset-sprite { width:100% !important; height:100% !important; max-height:100%; object-fit:contain; }
 html body:not(.phone) #viewport#viewport #stage#stage#stage#stage #boardCard .hud { border:0; border-image:url('assets/kit/header-panel.webp') 24 fill / 12px / 0 stretch; padding:12px; background:none; box-shadow:none; }
 html body:not(.phone) #viewport#viewport #stage#stage#stage#stage .venue-heading { border:0; border-image:url('assets/kit/header-panel.webp') 24 fill / 12px / 0 stretch; padding:8px 14px; background:none; box-shadow:none; }
@@ -2884,3 +2886,33 @@ html body.phone:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stag
 html body.phone:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="stats"] .easy-stat h2 { font:14px/16px Galmuri11,sans-serif; }
 html body.phone:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="stats"] .easy-stat p { font:10px/12px system-ui,sans-serif; }
 }
+
+/* R0: scale complete actor frames around the existing landscape table centres. */
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #audienceCard { --actor-size:min(calc(var(--CW,740px) * .60),calc((var(--layout-height,900px) - var(--ST,88px) - 6px) * .54)); }
+html body.phone:not(.tablet):not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #audienceCard { --actor-size:min(calc(var(--CW,740px) * .60),calc((var(--layout-height,900px) - var(--ST,88px) - 6px) * .54),calc(var(--CH) - var(--SB) - var(--left-floor,142px))); }
+html body:not(.phone):not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #audienceCard { --actor-size:438px; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #audienceCard #magicianMini { left:calc(30% - var(--actor-size) / 2) !important; width:var(--actor-size) !important; height:var(--actor-size) !important; max-height:none; transform:none; scale:-1 1 !important; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #audienceCard #audience { left:calc(74% - var(--aud-fit-w,1px) / 2) !important; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #mockupDressing :is(.mockup-table-top,.mockup-skirt) { left:12.5%; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #mockupDressing .mockup-desk { right:5%; width:42%; }
+
+/* Leave a horizontal gap beside the enlarged tablet actor, including long dialogue. */
+html body.phone.tablet:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #audienceCard #audienceLine { left:max(58%,calc(30% + var(--actor-size) / 2 + 8px)) !important; right:4px !important; width:auto !important; }
+
+/* Immediate tree state, using the shipped v2 tiles in both orientations. */
+html body #viewport#viewport #stage#stage#stage#stage #panel .constellation-node { width:56px; height:56px; min-width:56px; min-height:56px; opacity:1; }
+html body #viewport#viewport #stage#stage#stage#stage #panel .constellation-node.learnable { border-image-source:url('assets/kit/tile-selected.webp'); filter:drop-shadow(0 0 3px #efc873); }
+html body #viewport#viewport #stage#stage#stage#stage #panel .constellation-node.locked { border-image-source:url('assets/kit/tile-locked.webp'); }
+html body #viewport#viewport #stage#stage#stage#stage #panel .constellation-node.locked::after { content:none; }
+html body #viewport#viewport #stage#stage#stage#stage #panel .constellation-node.selected { outline:3px solid #fff0ba; outline-offset:3px; }
+html body #viewport#viewport #stage#stage#stage#stage .node-state-badge,
+html body #viewport#viewport #stage#stage#stage#stage .node-learned { position:absolute; right:-7px; top:-9px; z-index:3; min-width:22px; padding:1px 3px; background:#28212d; color:#ffe3a3; border:1px solid #dfba75; font:bold 13px/18px system-ui,sans-serif; text-shadow:none; }
+html body #viewport#viewport #stage#stage#stage#stage .node-learned { right:auto; left:-7px; color:#b7f1c8; }
+html body #viewport#viewport #stage#stage#stage#stage .node-status,
+html body #viewport#viewport #stage#stage#stage#stage .node-missing { position:absolute; top:96px; left:50%; transform:translateX(-50%); width:132px; padding:1px 3px; box-sizing:border-box; color:#ffe3a3; background:#211a28; font:700 14px/18px system-ui,sans-serif; text-shadow:none; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; pointer-events:none; }
+html body #viewport#viewport #stage#stage#stage#stage .node-missing { top:116px; color:#ffb0a9; font:12px/16px system-ui,sans-serif; }
+html body #viewport#viewport #stage#stage#stage#stage .unaffordable .node-status,
+html body #viewport#viewport #stage#stage#stage#stage .constellation-detail[data-state="unaffordable"] .tree-cost,
+html body #viewport#viewport #stage#stage#stage#stage .tree-missing { color:#ff9d98; }
+html body #viewport#viewport #stage#stage#stage#stage .locked .node-status { color:#e0cbb5; font-size:12px; }
+html body #viewport#viewport #stage#stage#stage#stage .maxed .node-status { color:#b7f1c8; }

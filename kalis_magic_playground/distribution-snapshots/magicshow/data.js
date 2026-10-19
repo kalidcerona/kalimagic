@@ -1,5 +1,5 @@
 // Release rule (common.md): bump only GAME_BUILD here for each release; keep save versions separate.
-const GAME_BUILD = '12 (10-19)';
+const GAME_BUILD = '13 (10-20)';
 /* GAME_DATA keys (content and tree metadata; effect formulas live in core):
  * title: string.
  * venues[16]: {id: display order, slug: stable identity, balanceRank, name, intro, palette:{bg1,bg2,accent},
@@ -5417,7 +5417,7 @@ GAME_DATA.venues.find(v=>v.slug==='lecturenote').headliner.endingLines=GAME_DATA
 
 // Combat balance: constant-only venue pacing pass, best measured values after two tuning attempts; no further tuning.
 (function(D){
- const scale={family:1.342,party:1.7,school:1.3,cafe:1.7,meetup:.345,theater:.85,festival:2.25,audition:.36,broadcast:.85,vegas:1,broadway:1,moon:1.30,galaxy:1.53,multiverse:1.08};
+ const scale={family:1.342,party:1.7,school:1.3,cafe:1.7,meetup:.85,theater:1.05,festival:4,audition:.65,broadcast:.88,vegas:1.03,broadway:1,moon:1.30,galaxy:1.53,multiverse:1.11};
  D.venues.forEach(v=>{if(scale[v.slug])v.hpFactor*=scale[v.slug];});
  D.venues.find(v=>v.slug==='lecturenote').bossHpFactor*=.8;
 })(GAME_DATA);
@@ -5464,3 +5464,6 @@ GAME_DATA.outfitEffects={
 GAME_DATA.gearEffectLabels={hold:'꾹 누르기 속도',crit:'대박 탭 확률',tap:'탭 힘',coins:'동전 획득',open:'케이스 여는 속도',reward:'관객 감탄 보상',recovery:'멘탈 회복',cooldown:'비법 쿨타임',confidence:'자신감 획득',mental:'최대 멘탈',performance:'연출(초당)',finale:'피날레 충전',price:'비법 가격'};
 // Retain all legacy tree keys; shop-only nodes are never drawn or sold in the tree.
 for(const item of GAME_DATA.gemShop){const node=GAME_DATA.tree.find(n=>n.id===item.id);if(node)node.shopOnly=true;}
+
+// Real silk sources, independent of the retired dealer card-flip prizes.
+GAME_DATA.silkRewards={caseDrop:2,monteCorrect:3,firstClear:5,achievement:2};
