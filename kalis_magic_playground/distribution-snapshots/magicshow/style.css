@@ -930,7 +930,7 @@ body #viewport #stage #panel #panelBody .routine-collection .routine-name{displa
 .phone #stage :is(.constellation-detail h2,.panel-tabs button,.story-copy strong){white-space:nowrap}
 .phone #stage .constellation-detail h2{font-size:13px}
 
-#magicianMini.disappointed{background-image:none!important}
+#magicianMini.disappointed{background-image:none}
 #magicianMini.disappointed>.asset-sprite{display:block!important}
 #stage.decorations-paused #effects{visibility:hidden}
 
@@ -1780,7 +1780,7 @@ body:not(.phone) #stage #leaveConfirm button{min-height:64px}
 .phone #viewport #stage #phoneWallet{order:1;flex:1 1 auto;min-width:0;justify-content:center}
 .phone #viewport #stage #phoneTop > button{order:2}
 .phone #viewport #stage #audienceCard{--CH:calc(var(--layout-height) - var(--T) - 6px);--PH:92px;--K:min(120px, calc(var(--CW) * .3), calc(var(--CH) * .3), calc(var(--CH) - var(--PH) - 156px));--PW:max(var(--K), 124px);
-  top:var(--T)!important;height:var(--CH)!important;bottom:auto!important;border:0!important;background:none!important;box-shadow:none!important;overflow:visible!important}
+  top:var(--T)!important;height:var(--CH)!important;bottom:auto!important;border:0!important;background:none;box-shadow:none;overflow:visible!important}
 .tablet #viewport #stage #audienceCard{--K:min(180px, calc(var(--CW) * .32), calc(var(--CH) * .3))}
 .phone-low #viewport #stage #audienceCard{--PH:46px}
 .phone #viewport #stage #audienceCard:before{content:none!important}
@@ -1789,8 +1789,8 @@ body:not(.phone) #stage #leaveConfirm button{min-height:64px}
 .phone #viewport #stage #stageDressing .dress-lights{left:6px!important;width:var(--CW)!important;top:calc(var(--T) - 2px)!important;transform:none!important;translate:none!important}
 .phone #viewport #stage #stageDressing .dress-shelf{display:none}
 /* the board stands on the stage: translucent dark glass, gold corner ornaments only */
-.phone #viewport #stage #boardCard{background:none!important;border:0!important;box-shadow:none!important;overflow:visible!important}
-.phone #viewport #stage #boardCard #board{background:#120f1a8c!important;border:0!important;box-shadow:none!important;z-index:1}
+.phone #viewport #stage #boardCard{background:none;border:0!important;box-shadow:none;overflow:visible!important}
+.phone #viewport #stage #boardCard #board{background:#120f1a8c;border:0;box-shadow:none;z-index:1}
 #viewport #stage #boardCard:after{content:"";position:absolute;pointer-events:none;z-index:2;--g:#e9b44c;--a:18px;--b:3px;
   background:linear-gradient(var(--g),var(--g)) 0 0/var(--a) var(--b),linear-gradient(var(--g),var(--g)) 0 0/var(--b) var(--a),linear-gradient(var(--g),var(--g)) 100% 0/var(--a) var(--b),linear-gradient(var(--g),var(--g)) 100% 0/var(--b) var(--a),
   linear-gradient(var(--g),var(--g)) 0 100%/var(--a) var(--b),linear-gradient(var(--g),var(--g)) 0 100%/var(--b) var(--a),linear-gradient(var(--g),var(--g)) 100% 100%/var(--a) var(--b),linear-gradient(var(--g),var(--g)) 100% 100%/var(--b) var(--a);background-repeat:no-repeat}
@@ -1862,19 +1862,19 @@ body:not(.phone) #viewport #stage #storyDialog{grid-template-columns:54px minmax
 .phone #viewport #stage #phoneMore #equipButton.is-new:after{content:'NEW';right:2px;top:-6px;left:auto;width:auto;height:auto;border-radius:0;padding:1px 3px;font-size:9px;line-height:11px;z-index:3}
 
 /* ---- desktop 1600 x 900 stage ---- */
-body:not(.phone) #viewport #stage #audienceCard{border:0!important;background:none!important;box-shadow:none!important;overflow:visible!important}
+body:not(.phone) #viewport #stage #audienceCard{border:0!important;background:none;box-shadow:none;overflow:visible!important}
 body:not(.phone) #viewport #stage #audienceCard:before{content:none!important}
 body:not(.phone) #viewport #stage #audienceCard #room,body:not(.phone) #viewport #stage #audienceCard #stageDressing{left:-76px!important;top:-48px!important;width:1600px!important;height:900px!important}
 body:not(.phone) #viewport #stage #audienceCard #room > .asset-sprite{object-fit:cover;object-position:50% 60%;width:100%;height:100%}
 body:not(.phone) #viewport #stage #stageDressing .dress-lights{left:200px!important;width:600px!important;top:40px!important;transform:none!important;translate:none!important}
 body:not(.phone) #viewport #stage #stageDressing .dress-shelf{display:none}
-body:not(.phone) #viewport #stage #boardCard{background:none!important;border:0!important;box-shadow:none!important;overflow:visible!important}
-body:not(.phone) #viewport #stage #boardCard #board{background:#120f1a8c!important;border:0!important;box-shadow:none!important;outline:0!important}
+body:not(.phone) #viewport #stage #boardCard{background:none;border:0!important;box-shadow:none;overflow:visible!important}
+body:not(.phone) #viewport #stage #boardCard #board{background:#120f1a8c;border:0;box-shadow:none;outline:0!important}
 body:not(.phone) #viewport #stage #boardCard:after{left:34px;top:100px;width:624px;height:624px;--a:32px;--b:5px}
-body:not(.phone) #viewport #stage #boardCard .hud{background:#120f1acc!important}
+body:not(.phone) #viewport #stage #boardCard .hud{background:#120f1acc}
 body:not(.phone) #viewport #stage #gameLogo{top:14px}
 body:not(.phone) #viewport #stage #audienceCard .venue-heading{left:380px!important;top:-40px!important;width:420px!important;height:52px!important}
-body:not(.phone) #viewport #stage #audienceCard #crowdLabel{left:auto!important;right:12px!important;top:64px!important;width:auto!important;height:28px!important;line-height:28px;background:#120f1acc!important;border:0!important;padding:0 10px!important;font-size:var(--fs-m)}
+body:not(.phone) #viewport #stage #audienceCard #crowdLabel{left:auto!important;right:12px!important;top:64px!important;width:auto!important;height:28px!important;line-height:28px;background:#120f1acc;border:0!important;padding:0 10px!important;font-size:var(--fs-m)}
 body:not(.phone) #viewport #stage #audienceCard .doubt{left:8px!important;top:690px!important;width:600px!important;height:28px!important;transform-origin:0 0;transform:rotate(-90deg);overflow:hidden!important}
 body:not(.phone) #viewport #stage #audienceCard .doubt-fill{-webkit-mask:repeating-linear-gradient(90deg,#000 0 18px,#0006 18px 22px);mask:repeating-linear-gradient(90deg,#000 0 18px,#0006 18px 22px)}
 body:not(.phone) #viewport #stage #audienceCard .doubt-plate{position:absolute!important;inset:auto!important;left:8px!important;top:48px!important;width:max-content!important;max-width:560px;overflow:hidden;height:34px;padding:0 10px!important;background:#120f1add;border:2px solid #a68a58;justify-content:flex-start!important;box-sizing:border-box;z-index:6}
@@ -1884,9 +1884,9 @@ body:not(.phone) #viewport #stage #audienceCard #patternLabel{left:70px!importan
 body:not(.phone) #viewport #stage #audienceCard #phaseIndicator{left:70px!important;right:auto!important;top:176px!important;width:300px!important}
 body:not(.phone) #viewport #stage #audienceCard .finisher{left:70px!important;right:auto!important;top:260px!important}
 body:not(.phone) #viewport #stage #audienceCard .finisher-label{left:62px!important;right:auto!important;top:228px!important}
-body:not(.phone) #viewport #stage #audienceCard #perSecond,body:not(.phone) #viewport #stage #audienceCard #coinSecond{left:150px!important;width:380px!important;text-align:left}
-body:not(.phone) #viewport #stage #audienceCard #perSecond{top:600px!important}
-body:not(.phone) #viewport #stage #audienceCard #coinSecond{top:618px!important}
+body:not(.phone) #viewport #stage #audienceCard #perSecond,body:not(.phone) #viewport #stage #audienceCard #coinSecond{left:150px;width:380px;text-align:left}
+body:not(.phone) #viewport #stage #audienceCard #perSecond{top:600px}
+body:not(.phone) #viewport #stage #audienceCard #coinSecond{top:618px}
 body:not(.phone) #viewport #stage #audienceCard #audience{left:120px!important;top:150px!important;width:300px!important;height:440px!important}
 body:not(.phone) #viewport #stage #audienceCard .audience-shadow,body:not(.phone) #viewport #stage #audienceCard #crowd{display:none}
 body:not(.phone) #viewport #stage #audienceCard #audienceLine{left:auto!important;right:24px!important;top:110px!important;width:220px!important;bottom:auto!important}
@@ -1896,7 +1896,7 @@ body:not(.phone) #viewport #stage #audienceCard #stageStats > *{justify-content:
 body:not(.phone) #viewport #stage #audienceCard #stageStats .mental:before{content:"";flex:none;width:28px;height:28px;margin-right:6px;background:url('assets/ui/ic-spotlight.webp') center/28px no-repeat;image-rendering:pixelated}
 body:not(.phone) #viewport #stage #audienceCard #combo:before{content:"";width:28px;height:28px;margin-right:6px;background:url('assets/ui/ic-clap.webp') center/28px no-repeat;image-rendering:pixelated}
 body:not(.phone) #viewport #stage #audienceCard #comboGoal{display:none}
-body:not(.phone) #viewport #stage #audienceCard .xp-row{left:120px!important;right:auto!important;top:690px!important;width:190px!important}
+body:not(.phone) #viewport #stage #audienceCard .xp-row{left:120px;right:auto;top:690px;width:190px}
 body:not(.phone) #viewport #stage #audienceCard #colleagues{left:120px!important;width:380px!important;top:724px!important;bottom:auto!important;justify-content:flex-start;gap:6px;--h:48px}
 body:not(.phone) #viewport #stage #audienceCard #statsButton{left:auto!important;right:24px!important;top:752px!important;width:150px!important}
 body:not(.phone) #viewport #stage #audienceCard .stats.phone-expanded{left:12px!important;right:auto!important;top:auto!important;bottom:20px!important;width:736px!important;height:auto!important;max-height:none;grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:84px;gap:8px;padding:8px;overflow:hidden;z-index:9}
@@ -1940,7 +1940,7 @@ body:not(.phone) #viewport #stage #banner{left:456px!important;width:420px!impor
       clear of the speakers standing on the stage floor. The name tag keeps the U53 fit (fitDoubtPlate). */
 /* -- the stage card: only the stage, framed, the venue art stays inside it -- */
 html body.phone #viewport#viewport #stage #audienceCard{--CH:calc(var(--layout-height) - var(--ST) - 6px);top:var(--ST)!important;height:var(--CH)!important;bottom:auto!important;overflow:hidden!important;border-radius:8px;
-  box-shadow:0 0 0 2px #2a2333,0 0 0 3px color-mix(in srgb,var(--venue-accent,#e9b44c) 55%,#000)!important;
+  box-shadow:0 0 0 2px #2a2333,0 0 0 3px color-mix(in srgb,var(--venue-accent,#e9b44c) 55%,#000);
   --K:min(120px, calc(var(--CW) * .3), calc(var(--CW) * .42 - 54px), calc(var(--CH) - var(--TB) - 142px - var(--SB)));
   --AW:calc(var(--CW) * .58 - 4px)}
 html body.phone #viewport#viewport #stage #audienceCard #room,html body.phone #viewport#viewport #stage #audienceCard #stageDressing{left:0!important;top:0!important;width:100%!important;height:100%!important}
@@ -1966,7 +1966,7 @@ html body.phone #viewport#viewport #stage #toasts{left:62px!important;width:calc
 html body.phone #viewport#viewport #stage #boardCard{overflow:visible!important}
 html body.phone #viewport#viewport #stage #boardCard:before{content:"";position:absolute;z-index:0;pointer-events:none;border-radius:8px;
   left:calc(var(--CW) + 6px - var(--stage-w) * .56);right:0;top:0;bottom:0;background:var(--board-bg);box-shadow:var(--board-frame,0 0 0 2px #2a2333)}
-html body.phone #viewport#viewport #stage #boardCard #board{background:#120f1a66!important}
+html body.phone #viewport#viewport #stage #boardCard #board{background:#120f1a66}
 html body.phone #viewport#viewport #stage #boardCard:after{display:none}
 /* -- phones and tablets: the stage and the board half start 2 px under the one top row -- */
 html body.phone #viewport#viewport #stage{--ST:46px;--TB:0px;--SB:52px}
@@ -1974,9 +1974,9 @@ html body.tablet #viewport#viewport #stage{--ST:58px;--SB:46px}
 html body.tablet #viewport#viewport #stage #audienceCard{--K:min(180px, calc(var(--CW) * .32), calc(var(--CW) * .42 - 54px), calc(var(--CH) - var(--TB) - 142px - var(--SB)))}
 @media(max-width:740px){html body.phone:not(.tablet) #viewport#viewport #stage{--SB:52px}}
 /* the top row: venue name (plain), currencies, 비법, 도감, 메뉴 */
-html body.phone #viewport#viewport #stage #phoneTop{background:linear-gradient(#332b3f,#2a2333)!important;border-radius:0 0 8px 8px;box-shadow:inset 0 -2px 0 color-mix(in srgb,var(--venue-accent,#e9b44c) 45%,#000)!important;gap:8px!important;padding:0 6px!important}
+html body.phone #viewport#viewport #stage #phoneTop{background:linear-gradient(#332b3f,#2a2333);border-radius:0 0 8px 8px;box-shadow:inset 0 -2px 0 color-mix(in srgb,var(--venue-accent,#e9b44c) 45%,#000);gap:8px!important;padding:0 6px!important}
 html body.phone #viewport#viewport #stage #phoneVenue{order:0!important;flex:1 1 auto!important;width:auto!important;min-width:0}
-html body.phone #viewport#viewport #stage #phoneTop .venue-heading{background:none!important;box-shadow:none!important;border:0!important;height:40px!important;padding:0 4px!important;margin:0!important;flex-direction:column;align-items:flex-start!important;justify-content:center!important;gap:0!important;width:auto!important}
+html body.phone #viewport#viewport #stage #phoneTop .venue-heading{background:none;box-shadow:none;border:0!important;height:40px!important;padding:0 4px!important;margin:0!important;flex-direction:column;align-items:flex-start!important;justify-content:center!important;gap:0!important;width:auto!important}
 html body.phone #viewport#viewport #stage #phoneTop .venue-heading #stageNumber{font-size:9px;line-height:12px;color:color-mix(in srgb,var(--venue-accent,#e9b44c) 70%,#fff)}
 html body.phone #viewport#viewport #stage #phoneTop .venue-heading #venueName{font-size:12px;line-height:16px;color:#f4efe9;overflow:visible!important;text-overflow:clip!important}
 html body.tablet #viewport#viewport #stage #phoneTop .venue-heading{height:52px!important}
@@ -1993,7 +1993,7 @@ html body.phone #viewport#viewport #stage #boardCard{top:var(--ST)!important;hei
 html body.phone #viewport#viewport #stage #boardCard #board{top:calc((var(--layout-height) - var(--ST) - 6px - var(--board-size)) / 2)!important;left:auto!important;right:0!important}
 html body.phone #viewport#viewport #stage #activeSkills{top:2px!important}
 /* Kali's stats: one band along the bottom of the stage (two lines on narrow phones) */
-html body.phone #viewport#viewport #stage #audienceCard #stageStats{left:50px!important;right:4px!important;width:auto!important;top:auto!important;bottom:4px!important;height:28px!important;display:flex!important;justify-content:space-between!important;gap:6px!important;padding:0 8px!important;align-items:center!important;background:#120f1acc!important;border-radius:6px!important;box-shadow:none!important}
+html body.phone #viewport#viewport #stage #audienceCard #stageStats{left:50px!important;right:4px!important;width:auto!important;top:auto!important;bottom:4px!important;height:28px!important;display:flex!important;justify-content:space-between!important;gap:6px!important;padding:0 8px!important;align-items:center!important;background:#120f1acc;border-radius:6px!important;box-shadow:none}
 html body.phone #viewport#viewport #stage #audienceCard #stageStats > *{height:24px!important;width:auto!important;justify-content:center!important;white-space:nowrap!important;flex:none!important}
 html body.phone #viewport#viewport #stage #audienceCard #stageStats > #mental{flex-wrap:nowrap!important}
 html body.phone #viewport#viewport #stage #audienceCard #stageStats > #mental #mentalNumber{flex:none!important;white-space:nowrap!important;max-height:none!important}
@@ -2016,11 +2016,11 @@ html body.phone #viewport#viewport #stage #audienceCard #audienceTail{left:calc(
 html body.phone #viewport#viewport #stage #storyDialog{top:calc(var(--ST) + 4px)!important;bottom:auto!important}
 /* the board half: the venue palette as a soft spotlight; the gaps around the panels are a muted venue colour, not black */
 html body #viewport#viewport #stage{--board-bg:radial-gradient(ellipse 70% 60% at 50% 45%,color-mix(in srgb,var(--venue-bg2,#5c3a28) 70%,#000),color-mix(in srgb,var(--venue-bg1,#2a1a12) 85%,#000) 70%);
-  --board-frame:0 0 0 2px #2a2333,0 0 0 3px color-mix(in srgb,var(--venue-accent,#e9b44c) 45%,#000);background:color-mix(in srgb,var(--venue-bg2,#5c3a28) 40%,#2e2838)!important}
+  --board-frame:0 0 0 2px #2a2333,0 0 0 3px color-mix(in srgb,var(--venue-accent,#e9b44c) 45%,#000);background:color-mix(in srgb,var(--venue-bg2,#5c3a28) 40%,#2e2838)}
 
 /* ---- U54 desktop 1600 x 900: the same arrangement in stage pixels ---- */
 html body:not(.phone) #viewport#viewport #stage{--TB:0px;--SB:64px}
-html body:not(.phone) #viewport#viewport #stage #audienceCard{left:24px!important;top:64px!important;width:740px!important;height:812px!important;overflow:visible!important;border-radius:10px;box-shadow:0 0 0 3px #2a2333,0 0 0 5px color-mix(in srgb,var(--venue-accent,#e9b44c) 55%,#000)!important}
+html body:not(.phone) #viewport#viewport #stage #audienceCard{left:24px!important;top:64px!important;width:740px!important;height:812px!important;overflow:visible!important;border-radius:10px;box-shadow:0 0 0 3px #2a2333,0 0 0 5px color-mix(in srgb,var(--venue-accent,#e9b44c) 55%,#000)}
 html body:not(.phone) #viewport#viewport #stage #audienceCard #room,html body:not(.phone) #viewport#viewport #stage #audienceCard #stageDressing{left:0!important;top:0!important;width:100%!important;height:100%!important;border-radius:10px;overflow:hidden}
 html body:not(.phone) #viewport#viewport #stage #stageDressing .dress-lights{left:120px!important;width:600px!important;top:var(--TB)!important}
 html body:not(.phone) #viewport#viewport #stage #audienceCard .doubt{top:calc(780px - var(--SB))!important;width:calc(780px - 150px - var(--TB) - var(--SB))!important}
@@ -2034,24 +2034,24 @@ html body:not(.phone) #viewport#viewport #stage #audienceCard #audienceLine{top:
 html body:not(.phone) #viewport#viewport #stage #audienceCard #audience{left:330px!important;width:390px!important;top:calc(var(--TB) + 240px)!important;height:calc(812px - var(--TB) - 240px - var(--SB) - 70px)!important}
 html body:not(.phone) #viewport#viewport #stage #audienceCard #magicianMini{left:90px!important;right:auto!important;top:auto!important;bottom:calc(var(--SB) + 20px)!important;width:220px!important;height:220px!important}
 html body:not(.phone) #viewport#viewport #stage #audienceCard #colleagues{left:320px!important;width:400px!important;top:auto!important;bottom:calc(var(--SB) + 12px)!important}
-html body:not(.phone) #viewport#viewport #stage #audienceCard .xp-row{left:90px!important;right:auto!important;top:auto!important;bottom:calc(var(--SB) + 246px)!important;width:220px!important}
-html body:not(.phone) #viewport#viewport #stage #audienceCard #perSecond,html body:not(.phone) #viewport#viewport #stage #audienceCard #coinSecond{left:330px!important;width:390px!important}
-html body:not(.phone) #viewport#viewport #stage #audienceCard #perSecond{top:calc(var(--TB) + 200px)!important}
-html body:not(.phone) #viewport#viewport #stage #audienceCard #coinSecond{top:calc(var(--TB) + 218px)!important}
+html body:not(.phone) #viewport#viewport #stage #audienceCard .xp-row{left:90px;right:auto;top:auto;bottom:calc(var(--SB) + 246px);width:220px}
+html body:not(.phone) #viewport#viewport #stage #audienceCard #perSecond,html body:not(.phone) #viewport#viewport #stage #audienceCard #coinSecond{left:330px;width:390px}
+html body:not(.phone) #viewport#viewport #stage #audienceCard #perSecond{top:calc(var(--TB) + 200px)}
+html body:not(.phone) #viewport#viewport #stage #audienceCard #coinSecond{top:calc(var(--TB) + 218px)}
 /* Desktop notices use the measured gap between the logo and the venue title. */
 html body:not(.phone) #viewport#viewport #stage #toasts{left:440px!important;width:320px!important;top:14px!important}
-html body:not(.phone) #viewport#viewport #stage #boardCard{left:784px!important;top:64px!important;width:792px!important;height:812px!important;border-radius:10px;background:var(--board-bg)!important;box-shadow:var(--board-frame,0 0 0 3px #2a2333)!important;overflow:visible!important}
-html body:not(.phone) #viewport#viewport #stage #boardCard #board{left:96px!important;top:96px!important;background:#120f1a66!important}
+html body:not(.phone) #viewport#viewport #stage #boardCard{left:784px!important;top:64px!important;width:792px!important;height:812px!important;border-radius:10px;background:var(--board-bg);box-shadow:var(--board-frame,0 0 0 3px #2a2333);overflow:visible!important}
+html body:not(.phone) #viewport#viewport #stage #boardCard #board{left:96px!important;top:96px!important;background:#120f1a66}
 html body:not(.phone) #viewport#viewport #stage #boardCard:after{display:none}
 html body:not(.phone) #viewport#viewport #stage #boardCard .hud{left:96px!important;top:20px!important;width:608px!important}
 html body:not(.phone) #viewport#viewport #stage #activeSkills{left:20px!important;top:110px!important;right:auto!important} /* in the board half, left of the board (it lives in #boardCard) */
 html body:not(.phone) #viewport#viewport #stage #helperControls{left:880px!important;top:800px!important;width:608px!important}
-html body:not(.phone) #viewport#viewport #stage .caption{top:878px!important}
+html body:not(.phone) #viewport#viewport #stage .caption{top:878px}
 html body:not(.phone) #viewport#viewport #stage #audienceCard .stats.phone-expanded{left:20px!important;bottom:20px!important}
-html body:not(.phone) #viewport#viewport #stage #audienceCard .venue-heading{left:760px!important;top:-58px!important;width:auto!important;height:48px!important;background:none!important;box-shadow:none!important;border:0!important;flex-direction:column;align-items:flex-start!important;justify-content:center;gap:0!important;padding:0!important}
+html body:not(.phone) #viewport#viewport #stage #audienceCard .venue-heading{left:760px!important;top:-58px!important;width:auto!important;height:48px!important;background:none;box-shadow:none;border:0!important;flex-direction:column;align-items:flex-start!important;justify-content:center;gap:0!important;padding:0!important}
 html body:not(.phone) #viewport#viewport #stage #audienceCard .venue-heading #venueName{font-size:26px;line-height:30px;color:#f4efe9}
 html body:not(.phone) #viewport#viewport #stage #audienceCard .venue-heading #stageNumber{font-size:16px;line-height:18px}
-html body:not(.phone) #viewport#viewport #stage #audienceCard #stageStats{left:70px!important;right:20px!important;width:auto!important;top:auto!important;bottom:12px!important;height:44px!important;display:flex!important;justify-content:space-around;align-items:center;padding:0 16px!important;background:#120f1acc!important;border-radius:8px!important;box-shadow:none!important}
+html body:not(.phone) #viewport#viewport #stage #audienceCard #stageStats{left:70px!important;right:20px!important;width:auto!important;top:auto!important;bottom:12px!important;height:44px!important;display:flex!important;justify-content:space-around;align-items:center;padding:0 16px!important;background:#120f1acc;border-radius:8px!important;box-shadow:none}
 html body:not(.phone) #viewport#viewport #stage #audienceCard #stageStats > *{height:36px!important;font-size:var(--fs-s)!important;width:auto!important;flex:none!important;overflow:visible!important}
 html body:not(.phone) #viewport#viewport #stage #audienceCard #stageStats .bitmap{--pixel:2px}
 html body:not(.phone) #viewport#viewport #stage #audienceCard #statsButton{left:auto!important;right:20px!important;top:auto!important;bottom:68px!important}
@@ -2160,7 +2160,7 @@ html body.phone.phone-narrow #viewport#viewport #stage #audienceCard #combo:befo
 #finaleFx .finale-dark{position:absolute;inset:0;background:#100D16;opacity:0}
 #finaleFx .finale-spot{position:absolute;left:4%;bottom:0;width:46%;height:92%;opacity:0;transform:scaleY(0);transform-origin:50% 0;background:linear-gradient(to bottom,rgba(255,214,150,0),rgba(255,186,80,.62));clip-path:polygon(42% 0,58% 0,100% 100%,0 100%)}
 #finaleFx .finale-cut{position:absolute;left:0;right:0;top:36%;height:30%;display:flex;align-items:center;gap:8px;padding-left:8px;overflow:hidden;background:linear-gradient(90deg,rgba(24,16,10,0),rgba(28,18,12,.94) 10%,rgba(48,32,18,.96) 50%,rgba(28,18,12,.94) 90%,rgba(24,16,10,0));border-top:3px solid #E8BF68;border-bottom:3px solid #E8BF68;transform:translateX(-110%)}
-#finaleFx .finale-kali{flex:none;width:84px;height:84px;background:url('assets/kali-performance.webp') 0 0/300% 100% no-repeat;image-rendering:pixelated;transform:translateX(-140%)}
+#finaleFx .finale-kali{flex:none;background-position:0 0;background-size:300% 100%;background-repeat:no-repeat;image-rendering:pixelated;transform:translateX(-140%)}
 #finaleFx .finale-word{font:700 36px/1 Galmuri11,monospace;color:#F6E7C4;text-shadow:3px 3px 0 #1a1008;white-space:nowrap}
 #finaleFx .finale-flash{position:absolute;inset:0;background:#fff;opacity:0;animation:none}
 #finaleFx .finale-num{position:absolute;z-index:2;transform:translate(-50%,-50%);font:700 36px/1 Galmuri11,monospace;color:#E8BF68;text-shadow:2px 2px 0 #100D16,-2px 0 #100D16,0 -2px #100D16;opacity:0;pointer-events:none}
@@ -2332,3 +2332,555 @@ html body:not(.portrait-layout) #viewport #stage #audienceCard .doubt-plate.plat
 .batch-d-hide .chest { visibility: hidden; }
 @keyframes batch-d-separate { 0%, 15% { left: calc(var(--mixed) * 15%); transform: translateY(0); } 45% { transform: translateY(-12px); } 70%, 100% { left: calc(var(--sorted) * 15%); transform: translateY(0); } }
 @media (prefers-reduced-motion: reduce) { .batch-d-card { animation: none; left: calc(var(--sorted) * 15%); } }
+
+/* Combat balance: share the existing mental gauge in both orientations. */
+#viewport#viewport #stage #audienceCard #stageStats > #mental{flex-wrap:wrap!important;align-content:center;row-gap:1px!important}
+#viewport#viewport #stage #audienceCard #stageStats > #mental > .meter-bar{display:block;position:relative;flex:1 0 100%;width:100%;min-width:32px;height:6px;min-height:6px;overflow:hidden;background:#100d16;pointer-events:none}
+html body.phone #viewport#viewport #stage #audienceCard #stageStats > #mental{flex-wrap:nowrap!important}
+html body.phone #viewport#viewport #stage #audienceCard #stageStats > #mental > .meter-bar{flex:1 1 64px;width:64px;max-width:120px}
+
+/* Tap range detail uses the same per-level table as combat. */
+.area-range-preview{display:grid;gap:6px;margin:8px 0}
+.area-range-grid{display:grid;grid-template-columns:repeat(5,14px);gap:3px;width:max-content}
+.area-range-grid span{width:14px;height:14px;background:#292433;border:1px solid #796e81;box-sizing:border-box}
+.area-range-grid .range-current{background:#f7cf67;border-color:#f7cf67}
+.area-range-grid .range-added{background:#59d6c6;border-color:#c6fff5}
+.area-range-preview small{display:block;font-size:11px;line-height:1.4}
+/* Owner 10-18: shared mockup A skin. Geometry stays in the existing layout rules. */
+html body #viewport#viewport #stage button:where(.active-skill,.kit-btn,.shared-kit,.menu button,#phoneTop > button,#phoneMore button,#panel button:not(.game-cup):not(.routine-card):not(.dealer-card):not(.constellation-node):not(.curtain-bubble):not(.flow-node),#storyDialog button,#introStory button,#tutorialCoach button,#practicePrompt button,#offlineCard button,#leaveConfirm button) {
+  border-image-source: url('assets/kit/btn-dark.webp');
+  border-image-slice: 16 fill;
+  background-color: #171827;
+  background-image: none;
+  border-radius: 0;
+  min-width: 44px;
+  min-height: 44px;
+  color: #F2E6C8;
+  box-shadow: none;
+  text-shadow: none;
+  image-rendering: pixelated;
+}
+html body #viewport#viewport #stage button:where(.active-skill,.kit-btn,.shared-kit,.menu button,#phoneTop > button,#phoneMore button,#panel button:not(.game-cup):not(.routine-card):not(.dealer-card):not(.constellation-node):not(.curtain-bubble):not(.flow-node),#storyDialog button,#introStory button,#tutorialCoach button,#practicePrompt button,#offlineCard button,#leaveConfirm button):active:enabled {
+  border-image-source: url('assets/kit/btn-dark-pressed.webp');
+}
+html body #viewport#viewport #stage :is(#gemShopQuick,#gemShopButton) {
+  border-image-source: url('assets/kit/btn-gold.webp');
+  background-color: #E8BF68;
+  color: #24180c;
+}
+html body #viewport#viewport #stage :is(#gemShopQuick,#gemShopButton):active:enabled {
+  border-image-source: url('assets/kit/btn-gold-pressed.webp');
+}
+html body #viewport#viewport #stage button:where(.active-skill,.kit-btn,.shared-kit,.menu button,#phoneTop > button,#phoneMore button,#panel button:not(.game-cup):not(.routine-card):not(.dealer-card):not(.constellation-node):not(.curtain-bubble):not(.flow-node),#storyDialog button,#introStory button,#tutorialCoach button,#practicePrompt button,#offlineCard button,#leaveConfirm button):disabled {
+  opacity: 1;
+  color: #C9C0AD;
+  filter: saturate(.5);
+}
+html body #viewport#viewport #stage .active-skill small { color: #8FD3FF; }
+html body #viewport#viewport #stage .active-skill:disabled small { color: #C9C0AD; }
+html body #viewport#viewport #stage button.shared-kit { position: relative; color: transparent; }
+html body #viewport#viewport #stage button.shared-kit > :not(.shared-kit-face) { visibility: hidden; }
+.shared-kit-face { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0; color:#F2E6C8; pointer-events:none; }
+.shared-kit-face img { display:block; width:16px; height:16px; object-fit:contain; }
+.shared-kit-face > span { font-size:10px; line-height:12px; white-space:nowrap; }
+#gemShopButton .shared-kit-face { color:#24180c; }
+.game-build { font:11px/1.4 sans-serif; color:#C9C0AD; }
+#phoneMore .menu-build { display:block; flex:1 0 100%; grid-column:1 / -1; order:100; text-align:right; }
+#titleScreen .title-build { position:absolute; right:16px; bottom:max(16px,env(safe-area-inset-bottom)); padding:4px 8px; background:#100D16; color:#F2E6C8; pointer-events:none; }
+
+/* Shop cosmetics use one compact tile as the complete purchase/equip hit target. */
+#stage #panel .gem-shop-item h3 { flex-basis:100%; margin:0; font-size:inherit; }
+#stage #panel .shop-cosmetic-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(96px,1fr)); gap:8px; margin:8px 0 16px; }
+html body #viewport#viewport #stage #panel .shop-cosmetic-tile { display:flex; flex-direction:column; align-items:center; justify-content:flex-start; gap:3px; width:100%; min-width:44px; min-height:44px; padding:6px; font-size:12px; line-height:16px; white-space:normal; }
+#stage #panel .shop-cosmetic-tile .cosmetic-icon { position:relative; flex:none; display:grid; place-items:center; width:48px; height:56px; font-size:24px; }
+#stage #panel .shop-cosmetic-tile .cosmetic-icon img { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; }
+#stage #panel .shop-cosmetic-name { width:100%; text-align:center; overflow-wrap:anywhere; }
+#stage #panel .shop-cosmetic-tile small { font-size:10px; line-height:13px; color:#E8BF68; }
+#stage #panel .shop-cosmetic-tile .shop-cosmetic-lock { color:#C9C0AD; }
+html body #viewport#viewport #stage #panel .shop-cosmetic-tile[aria-pressed="true"] { border-image-source:url('assets/kit/btn-gold.webp'); color:#24180c; background-color:#E8BF68; }
+#stage #panel .shop-cosmetic-tile[aria-pressed="true"] small { color:#24180c; }
+
+/* Stable audience envelopes share one scale and foot line across expressions and bubble visibility. */
+html body #viewport#viewport #stage#stage #audienceCard #audience {
+  width:var(--aud-fit-w,1px) !important;
+  height:var(--aud-fit-h,1px) !important;
+  top:auto !important;
+  bottom:var(--aud-foot,52px) !important;
+  overflow:visible;
+  transform-origin:50% 100%;
+}
+html body #viewport#viewport #stage #audienceCard #audience > .asset-sprite {
+  position:absolute; left:0; top:0; bottom:auto; right:auto;
+  width:100% !important; height:100% !important;
+  max-width:100% !important; max-height:100% !important;
+  object-fit:contain; object-position:center bottom;
+  transform:none !important;
+}
+html body.phone #viewport#viewport #stage #audienceCard #audienceLine {
+  max-height:72px; overflow-y:auto; box-sizing:border-box;
+}
+
+/* Equipped pad covers the board floor while the original felt remains the loading fallback. */
+#stage #board { background-image:var(--equipped-pad,url('assets/kit/board-felt.webp')); background-size:100% 100%; background-repeat:no-repeat; }
+#stage #panel .gear-effect, #stage #panel .gear-difference { overflow-wrap:anywhere; white-space:normal; }
+#stage #panel .wardrobe-equipped { color:#E8BF68; }
+/* Lane 1e shared painted skin: geometry is kept by the existing landscape rules. */
+#stage button, #stage #phoneMore, #stage #panel, #stage #storyDialog, #stage .practice-box {
+  border-color:transparent; border-image:url('assets/kit/button-normal.webp') 20 fill / 6px / 0 stretch;
+  background:transparent; box-shadow:none; text-shadow:none;
+}
+#stage #panel, #stage #storyDialog, #stage #phoneMore { border-image:url('assets/kit/dialogue-frame.webp') 16 fill / 8px / 0 stretch; }
+#stage #storyDialog button { border-image:url('assets/kit/dialogue-next-normal.webp') 14 fill / 6px / 0 stretch; }
+#stage #gemShopQuick, #stage #gemShopButton { border-image:url('assets/kit/shop-normal.webp') 20 fill / 7px / 0 stretch; }
+#stage button:active:enabled { border-image-source:url('assets/kit/button-pressed.webp'); }
+#stage #gemShopQuick:active:enabled, #stage #gemShopButton:active:enabled { border-image-source:url('assets/kit/shop-pressed.webp'); }
+#stage #board { border-image:url('assets/kit/board-frame.webp') 44 / 12px / 0 stretch; box-shadow:none; }
+#stage .doubt { border-image:url('assets/kit/doubt-frame.webp') 8 / 4px / 0 stretch; background-image:url('assets/kit/doubt-empty.webp'); box-shadow:none; }
+#stage .doubt-fill { background:url('assets/kit/doubt-fill.webp') repeat; box-shadow:none; }
+#stage #mockupDressing { position:absolute; inset:0; pointer-events:none; display:none; }
+#stage #mockupDressing img { position:absolute; object-fit:fill; image-rendering:pixelated; pointer-events:none; }
+#stage .mockup-spot { top:0; left:0; z-index:1; }
+#stage .mockup-curtain { top:0; z-index:2; }
+#stage .mockup-curtain.left { left:0; }
+#stage .mockup-curtain.right { right:0; }
+#stage .mockup-desk { z-index:5; }
+#stage .mockup-crowd { bottom:0; left:0; width:100%; z-index:6; }
+#stage .currency.dove { display:none; }
+
+/* Shared out57 materials override the earlier phone/desktop paint without changing boxes. */
+html body #viewport#viewport #stage#stage,
+html body #viewport#viewport #stage#stage #phoneTop,
+html body #viewport#viewport #stage#stage #audienceCard,
+html body #viewport#viewport #stage#stage #boardCard,
+html body #viewport#viewport #stage#stage #stageStats,
+html body #viewport#viewport #stage#stage #panel,
+html body #viewport#viewport #stage#stage #phoneMore,
+html body #viewport#viewport #stage#stage #storyDialog {
+  background:transparent; box-shadow:none; border-radius:0;
+}
+html body #viewport#viewport #stage#stage { background-color:#100d16; }
+html body #viewport#viewport #stage#stage #phoneTop { border-image:url('assets/kit/header-panel.webp') 24 fill / 8px / 0 stretch; }
+html body #viewport#viewport #stage#stage #audienceCard,
+html body #viewport#viewport #stage#stage #stageStats { border-image:url('assets/kit/stats-frame.webp') 8 fill / 4px / 0 stretch; }
+html body #viewport#viewport #stage#stage #boardCard #board {
+  background:var(--equipped-pad,url('assets/kit/felt-tile.webp')) center / 100% 100% no-repeat;
+  border-image:url('assets/kit/board-frame.webp') 44 / 10px / 0 stretch;
+}
+#viewport #stage #board .cell .chest { filter:none; }
+#stage .shared-kit-face { border-image:none; background:none; box-shadow:none; }
+html body #viewport#viewport #stage#stage #panel button,
+html body #viewport#viewport #stage#stage #phoneMore button { border-image:url('assets/kit/button-normal.webp') 20 fill / 6px / 0 stretch; }
+
+#viewport #stage #board .cell .chest, #viewport #stage #board .cell .chest.asset-ready { left:2%; top:2%; width:96%; height:96%; }
+#viewport #stage #board .cell .chest > .asset-sprite { width:100%; height:100%; object-fit:contain; }
+#viewport #stage #board .cell:not(.locked):not(.empty) .box:after { display:none; }
+#stage .finisher { border-image:url('assets/kit/gauge-frame.webp') 4 fill / 3px / 0 stretch; background:none; box-shadow:none; }
+#stage .finisher-fill { background:url('assets/kit/gauge-direction.webp') repeat; box-shadow:none; }
+#stage .finisher:after { background:none; }
+#stage .doubt-plate, #stage .heckle-plate, #stage #audienceLine, #stage #patternLabel { border-image:url('assets/kit/doubt-label.webp') 8 fill / 4px / 0 stretch; background:none; box-shadow:none; }
+
+/* The same stage dressing is painted behind and around the existing landscape actors. */
+#stage #mockupDressing { display:block; }
+#stage #mockupDressing .mockup-spot { left:4%; width:60%; height:100%; }
+#stage #mockupDressing .mockup-curtain { width:8%; height:100%; }
+#stage #mockupDressing .mockup-desk { right:2%; bottom:10%; width:49%; height:20%; }
+#stage #mockupDressing .mockup-table-top { left:8%; bottom:16%; width:35%; height:3%; z-index:5; }
+#stage #mockupDressing .mockup-skirt { left:8%; bottom:6%; width:35%; height:11%; z-index:5; }
+#stage #mockupDressing .mockup-crowd { height:10%; }
+#stage :is(.constellation-detail,.gem-shop-item,.cosmetic-card,.bestiary-entry,.map-venue,.dealer-speech,.dealer-game-card,#offlineCard,#introStory,#sceneCard,#tutorialCoach,#banner,.toast) {
+  border-color:transparent; border-image:url('assets/kit/dialogue-frame.webp') 16 fill / 6px / 0 stretch; background:transparent; box-shadow:none;
+}
+
+#stage #audienceLine { color:#F2E6C8; }
+#stage .currency.dove { display:flex; }
+#stage .currency.coin { display:none; }
+
+#viewport#viewport #stage#stage .xp, #viewport#viewport #stage#stage .heckle-meter { border-image:url('assets/kit/gauge-frame.webp') 4 fill / 3px / 0 stretch; background:none; box-shadow:none; }
+#viewport#viewport #stage#stage #xpFill { background:url('assets/kit/gauge-act.webp') repeat; box-shadow:none; }
+#viewport#viewport #stage#stage #heckleFill, #viewport#viewport #stage#stage #mental .meter-fill { background:url('assets/kit/gauge-mental.webp') repeat; box-shadow:none; }
+
+/* Lane 1f: the painted tabletop starts at 19 percent above the stage floor in every layout. */
+html body #viewport#viewport #stage#stage #audienceCard #magicianMini { bottom:19% !important; }
+
+/* Preserve tier colour on the existing level pips while every tier uses the approved tin. */
+#viewport #stage #board .cell[data-tier="box-1"] { --case-pip:#6fbd87; }
+#viewport #stage #board .cell[data-tier="box-2"] { --case-pip:#bc8cff; }
+#viewport #stage #board .cell[data-tier="box-3"] { --case-pip:#e8bf68; }
+#viewport #stage #board .cell:is([data-tier="box-4"],[data-tier="box-golden"]) { --case-pip:#ff9270; }
+#viewport #stage #board .cell .lv[data-pips] { background-image:radial-gradient(circle,var(--case-pip,#ffe9ac) 0 2px,#120f1a 2px 3px,transparent 3px); }
+/* Lane 1g: out59 drawn UI kit v2, shared by both orientations. */
+html body #viewport#viewport #stage#stage#stage#stage :is(button,#panel,#phoneMore,#storyDialog,#tutorialCoach,#offlineCard,#easyTooltip,.practice-box,.leave-box,.gem-shop-item,.constellation-detail,.bestiary-entry,.achievement-stamp,.cosmetic-card,.easy-stat,.mission-card,.ending-entry,.save-slot,.restore-entry) {
+  box-shadow:none; text-shadow:none; border-radius:0; image-rendering:pixelated;
+}
+html body #viewport#viewport #stage#stage#stage#stage button {
+  border-color:transparent; border-image:url('assets/kit/button-normal.webp') 20 fill / 8px / 0 stretch;
+  background:transparent; color:#f2e6c8; min-width:44px; min-height:44px; filter:none;
+}
+html body #viewport#viewport #stage#stage#stage#stage button:active:enabled { border-image-source:url('assets/kit/button-pressed.webp'); }
+html body #viewport#viewport #stage#stage#stage#stage button:disabled { border-image-source:url('assets/kit/button-disabled.webp'); color:#bcb4a6; opacity:1; filter:none; }
+html body #viewport#viewport #stage#stage#stage#stage :where(#gemShopQuick,#gemShopButton,.u26-primary) { border-image-source:url('assets/kit/shop-normal.webp'); color:#302014; }
+html body #viewport#viewport #stage#stage#stage#stage :where(#gemShopQuick,#gemShopButton,.u26-primary):active:enabled { border-image-source:url('assets/kit/shop-pressed.webp'); }
+html body #viewport#viewport #stage#stage#stage#stage .u26-primary:disabled { border-image-source:url('assets/kit/button-disabled.webp'); color:#bcb4a6; }
+html body #viewport#viewport #stage#stage#stage#stage :is(#panel#panel,#phoneMore#phoneMore,.practice-box.practice-box,.leave-box.leave-box,#offlineCard#offlineCard) {
+  border:0; border-image:url('assets/kit/modal-panel.webp') 40 fill / 20px / 0 stretch; background:transparent; color:#f2e6c8; padding:18px;
+}
+html body #viewport#viewport #stage#stage#stage#stage #panel#panel > header {
+  border:0; border-image:none; background:none; box-shadow:none; padding:0 0 12px; gap:10px; min-height:56px; align-items:center;
+}
+html body #viewport#viewport #stage#stage#stage#stage :is(#panelTitle#panelTitle,.kit-menu-title,#offlineCard h2,.leave-box h2) {
+  border:0; border-image:url('assets/kit/modal-title.webp') 24 fill / 12px / 0 stretch; background:none; color:#f2e6c8;
+  padding:10px 18px; margin:0; min-height:44px; box-sizing:border-box; font-family:system-ui,sans-serif; font-weight:700; line-height:1.3;
+}
+html body #viewport#viewport #stage#stage#stage#stage #panelTitle#panelTitle { flex:1; }
+html body #viewport#viewport #stage#stage#stage#stage #panelBody#panelBody { padding:4px 2px 12px; background:none; border:0; gap:12px; }
+html body #viewport#viewport #stage#stage#stage#stage #closePanel#closePanel.kit-close {
+  flex:0 0 44px; width:44px; height:44px; min-width:44px; padding:0; border:0; border-image:none;
+  background:url('assets/kit/close-normal.webp') center / 44px 44px no-repeat; color:transparent; font-size:0;
+}
+html body #viewport#viewport #stage#stage#stage#stage #closePanel#closePanel.kit-close:active { background-image:url('assets/kit/close-pressed.webp'); }
+html body #viewport#viewport #stage#stage#stage#stage .panel-tabs { display:flex; flex-wrap:wrap; gap:6px; border:0; padding:0 0 10px; background:none; }
+html body #viewport#viewport #stage#stage#stage#stage .panel-tabs button { flex:1 0 72px; min-height:44px; padding:10px 12px; border-image:url('assets/kit/tab-normal.webp') 20 fill / 10px / 0 stretch; }
+html body #viewport#viewport #stage#stage#stage#stage .panel-tabs button[aria-pressed="true"] { border-image-source:url('assets/kit/tab-selected.webp'); color:#302014; }
+html body #viewport#viewport #stage#stage#stage#stage :is(.gem-shop-item,.bestiary-entry,.achievement-stamp,.cosmetic-card,.easy-stat,.mission-card,.ending-entry,.save-slot,.restore-entry,.kit-row) {
+  position:relative; border:0; border-image:url('assets/kit/row-normal.webp') 24 fill / 12px / 0 stretch;
+  padding:14px; background:transparent; color:#f2e6c8;
+}
+html body #viewport#viewport #stage#stage#stage#stage :is(.achievement-stamp.earned,.bestiary-entry.completed,.ending-entry.seen,.kit-row.selected) { border-image-source:url('assets/kit/row-selected.webp'); color:#302014; }
+html body #viewport#viewport #stage#stage#stage#stage :is(.achievement-stamp.secret,.kit-row.locked) { border-image-source:url('assets/kit/row-locked.webp'); }
+html body #viewport#viewport #stage#stage#stage#stage :is(.shop-cosmetic-tile.shop-cosmetic-tile,.constellation-node.constellation-node,.equip-slot,.flow-node,.routine-item,.reward-badge) {
+  position:relative; border:0; border-image:url('assets/kit/tile-normal.webp') 24 fill / 12px / 0 stretch;
+  background:transparent; box-shadow:none; border-radius:0; padding:10px; color:#f2e6c8;
+}
+html body #viewport#viewport #stage#stage#stage#stage :is(.shop-cosmetic-tile.shop-cosmetic-tile[aria-pressed="true"],.constellation-node.selected,.flow-node.current,.equip-slot.selected) { border-image-source:url('assets/kit/tile-selected.webp'); color:#302014; }
+html body #viewport#viewport #stage#stage#stage#stage :is(.shop-cosmetic-tile.shop-cosmetic-tile[aria-pressed="true"] small,.achievement-stamp.earned :is(small,strong,p),.bestiary-entry.completed :is(small,strong,p)) { color:#302014; }
+html body #viewport#viewport #stage#stage#stage#stage :is(.shop-cosmetic-tile.kit-locked,.constellation-node.locked,.constellation-node.unknown,.flow-node.locked,.routine-locked) { border-image-source:url('assets/kit/tile-locked.webp'); }
+html body #viewport#viewport #stage#stage#stage#stage :is(.constellation-detail,.dealer-speech,.dealer-game-card,#tutorialCoach#tutorialCoach,#easyTooltip#easyTooltip) {
+  border:0; border-image:url('assets/kit/tooltip-frame.webp') 24 fill / 12px / 0 stretch; padding:14px; background:transparent;
+}
+html body #viewport#viewport #stage#stage#stage#stage #easyTooltip#easyTooltip::after { content:''; position:absolute; bottom:-8px; left:24px; width:24px; height:12px; background:url('assets/kit/tooltip-tail.webp') center / 100% 100% no-repeat; border:0; }
+html body #viewport#viewport #stage#stage#stage#stage :is(#storyDialog#storyDialog,.curtain-bubble,.batch-d-scene) { border:0; border-image:url('assets/kit/dialogue-frame.webp') 16 fill / 8px / 0 stretch; background:transparent; box-shadow:none; }
+html body #viewport#viewport #stage#stage#stage#stage :is(#storyDialog .story-copy strong,#sceneCardName,.coach-helper + strong) { border:0; border-image:url('assets/kit/name-plate.webp') 14 fill / 7px / 0 stretch; padding:4px 12px; }
+html body #viewport#viewport #stage#stage#stage#stage :is(.line-next,.curtain-next) { border-image:url('assets/kit/dialogue-next-normal.webp') 14 fill / 7px / 0 stretch; color:#302014; }
+html body #viewport#viewport #stage#stage#stage#stage :is(.line-next,.curtain-next):active:enabled { border-image-source:url('assets/kit/dialogue-next-pressed.webp'); }
+html body #viewport#viewport #stage#stage#stage#stage .line-skip { border-image:url('assets/kit/dialogue-skip-normal.webp') 14 fill / 7px / 0 stretch; color:#f2e6c8; }
+html body #viewport#viewport #stage#stage#stage#stage .line-skip:active:enabled { border-image-source:url('assets/kit/dialogue-skip-pressed.webp'); }
+html body #viewport#viewport #stage#stage#stage#stage :is(.toast,#banner#banner,#sceneCard#sceneCard,.batch-d-note,.tree-wallet,.dealer-wallet) { border:0; border-image:url('assets/kit/toast-frame.webp') 24 fill / 12px / 0 stretch; background:transparent; box-shadow:none; padding:10px 16px; }
+html body #viewport#viewport #stage#stage#stage#stage :is(.kit-price,.tree-cost,.tree-level,.shop-cosmetic-tile small.kit-price) { display:inline-flex; align-items:center; justify-content:center; min-height:28px; padding:4px 10px; border:0; border-image:url('assets/kit/price-tag.webp') 16 fill / 8px / 0 stretch; color:#f2e6c8; box-sizing:border-box; }
+html body #viewport#viewport #stage#stage#stage#stage .kit-equipped { position:absolute; right:4px; top:4px; width:24px; height:24px; object-fit:contain; pointer-events:none; }
+html body #viewport#viewport #stage#stage#stage#stage .kit-lock-mark { display:inline-block; width:24px; height:24px; object-fit:contain; vertical-align:middle; }
+html body #viewport#viewport #stage#stage#stage#stage :is(.is-new,.new-unlock)::after { content:''; background:url('assets/kit/badge-new.webp') center / contain no-repeat; width:40px; height:20px; position:absolute; right:0; top:-5px; border:0; box-shadow:none; }
+html body #viewport#viewport #stage#stage#stage#stage :is(.shop-abilities,.shop-routines,.shop-pads,.shop-customization,.wardrobe-pads,.wardrobe-outfits,.achievement-group) > h2 { padding:0 0 16px; margin:12px 0 8px; background:url('assets/kit/section-divider.webp') center bottom / 100% 12px no-repeat; border:0; }
+html body #viewport#viewport #stage#stage#stage#stage :is(#soundButton,#musicButton,#hapticsButton) { padding-right:64px; position:relative; }
+html body #viewport#viewport #stage#stage#stage#stage :is(#soundButton,#musicButton,#hapticsButton)::after { content:''; position:absolute; right:8px; top:50%; transform:translateY(-50%); width:48px; height:28px; background:url('assets/kit/toggle-off.webp') center / contain no-repeat; }
+html body #viewport#viewport #stage#stage#stage#stage :is(#soundButton,#musicButton,#hapticsButton)[aria-pressed="true"]::after { background-image:url('assets/kit/toggle-on.webp'); }
+html body #viewport#viewport #stage#stage#stage#stage input[type="range"] { appearance:none; -webkit-appearance:none; background:none; border:0; box-shadow:none; min-height:44px; cursor:pointer; }
+html body #viewport#viewport #stage#stage#stage#stage input[type="range"]::-webkit-slider-runnable-track { height:10px; border:0; background:url('assets/kit/slider-bar.webp') center / 100% 100% no-repeat; }
+html body #viewport#viewport #stage#stage#stage#stage input[type="range"]::-webkit-slider-thumb { appearance:none; -webkit-appearance:none; width:28px; height:28px; margin-top:-9px; border:0; background:url('assets/kit/slider-knob.webp') center / contain no-repeat; box-shadow:none; }
+html body #viewport#viewport #stage#stage#stage#stage input[type="range"]::-moz-range-track { height:10px; border:0; background:url('assets/kit/slider-bar.webp') center / 100% 100% no-repeat; }
+html body #viewport#viewport #stage#stage#stage#stage input[type="range"]::-moz-range-thumb { width:28px; height:28px; border:0; background:url('assets/kit/slider-knob.webp') center / contain no-repeat; }
+html body #viewport#viewport #stage#stage#stage#stage ::-webkit-scrollbar { width:12px; height:12px; }
+html body #viewport#viewport #stage#stage#stage#stage ::-webkit-scrollbar-track { background:url('assets/kit/scrollbar-track.webp') center / 100% 100% no-repeat; border:0; }
+html body #viewport#viewport #stage#stage#stage#stage ::-webkit-scrollbar-thumb { background:url('assets/kit/scrollbar-thumb.webp') center / 100% 100% no-repeat; border:0; }
+html body #viewport#viewport #stage#stage#stage#stage :is(.constellation-map,.constellation-world,.result,.rebirth-scene,.rebirth-lists section,.batch-d-scene,.ending-scene,.panel-tabs,.music-volume) { background:none; box-shadow:none; border-color:transparent; }
+html body #viewport#viewport #stage#stage#stage#stage .batch-d-scene { padding:18px; }
+html body #viewport#viewport #stage#stage#stage#stage .constellation-node::before { background:none; border:0; box-shadow:none; }
+html body #viewport#viewport #stage#stage#stage#stage .area-range-grid span { border:0; background:url('assets/kit/tile-locked.webp') center / 100% 100% no-repeat; }
+html body #viewport#viewport #stage#stage#stage#stage .area-range-grid .range-current { background-image:url('assets/kit/tile-selected.webp'); }
+html body #viewport#viewport #stage#stage#stage#stage .area-range-grid .range-added { background-image:url('assets/kit/tile-normal.webp'); }
+html body #viewport#viewport #stage#stage#stage#stage :is(.doubt-plate,.heckle-plate,#audienceLine,#patternLabel) { border-image-slice:16 fill; border-image-width:8px; }
+html body #viewport#viewport #stage#stage#stage#stage :is(#stageStats#stageStats,#audienceCard#audienceCard) { border-image-slice:16 fill; border-image-width:8px; }
+html body #viewport#viewport #stage#stage#stage#stage #board .lv[data-pips] { background-image:url('assets/kit/icon-spark.webp'); background-size:7px 7px; background-repeat:repeat-x; }
+html body #viewport#viewport #stage#stage#stage#stage .active-skill::before { background:none; box-shadow:none; }
+html body #viewport#viewport #stage#stage#stage#stage .active-skill:disabled::after { background:url('assets/kit/button-cooldown.webp') center / 100% 100% no-repeat; box-shadow:none; }
+html body #viewport#viewport #stage#stage#stage#stage .kit-menu-title { grid-column:1 / -1; flex-basis:100%; text-align:center; font-size:18px; }
+/* Keep selected artwork, price text and menu controls readable on their painted faces. */
+html body #viewport#viewport #stage#stage#stage#stage #panel .kit-price-silk { border-image:none; min-width:76px; height:32px; padding:4px 8px 4px 28px; background:url('assets/kit/price-tag-silk.webp') center / 100% 100% no-repeat; color:#f2e6c8; }
+html body #viewport#viewport #stage#stage#stage#stage .gem-shop-item button { display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap; padding:8px 12px; }
+html body #viewport#viewport #stage#stage#stage#stage .shop-cosmetic-tile .cosmetic-icon.art-loaded > .sprite-glyph { display:none; }
+html body #viewport#viewport #stage#stage#stage#stage .shop-cosmetic-tile .cosmetic-icon img { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; }
+html body #viewport#viewport #stage#stage#stage#stage .shop-cosmetic-tile[aria-pressed="true"] :is(small,.shop-cosmetic-name) { color:#302014; }
+html body #viewport#viewport #stage#stage#stage#stage #phoneMore .kit-menu-title { order:-100; }
+html body #viewport#viewport #stage#stage#stage#stage #phoneMore .menu-group { border:0; padding-bottom:12px; background:url('assets/kit/section-divider.webp') center bottom / 100% 8px no-repeat; }
+html body #viewport#viewport #stage#stage#stage#stage #phoneMore :is(#soundButton,#musicButton,#hapticsButton) { grid-column:span 2; text-align:left; padding-left:12px; }
+html body #viewport#viewport #stage#stage#stage#stage #phoneMore > button.kit-btn { display:flex; flex-direction:row; align-items:center; justify-content:center; gap:6px; padding:8px; }
+html body #viewport#viewport #stage#stage#stage#stage #phoneMore > button.kit-btn small { display:none; }
+html body #viewport#viewport #stage#stage#stage#stage #phoneMore > button.kit-btn .kit-label { position:static; height:auto; font:12px/18px system-ui,sans-serif; }
+html body #viewport#viewport #stage#stage#stage#stage :is(.save-slots-row,.practice-gate,.streak-cycle span,.trophy,.truefan-slot,.equip-detail,.entry-portrait) { border:0; border-image:url('assets/kit/row-normal.webp') 24 fill / 12px / 0 stretch; background:transparent; box-shadow:none; padding:12px; }
+html body #viewport#viewport #stage#stage#stage#stage .medal-check { font-size:0; width:20px; height:20px; background:url('assets/kit/icon-checkmark.webp') center / contain no-repeat; }
+html body #viewport#viewport #stage#stage#stage#stage :is(button,.kit-row,.shop-cosmetic-tile,.constellation-node)::before { box-shadow:none; }
+/* Drawn replacements for the remaining small surfaces found in the screen sweep. */
+html body #viewport#viewport #stage#stage#stage#stage :is(.daily-mission,#audienceLine) { border:0; border-image:url('assets/kit/row-normal.webp') 24 fill / 12px / 0 stretch; background:transparent; padding:12px; box-shadow:none; }
+html body #viewport#viewport #stage#stage#stage#stage progress { appearance:none; -webkit-appearance:none; border:0; height:12px; border-image:url('assets/kit/gauge-frame.webp') 4 fill / 2px / 0 stretch; background:none; }
+html body #viewport#viewport #stage#stage#stage#stage progress::-webkit-progress-bar { background:url('assets/kit/doubt-empty.webp') center / 12px 8px repeat-x; }
+html body #viewport#viewport #stage#stage#stage#stage progress::-webkit-progress-value { background:url('assets/kit/gauge-act.webp') center / 20px 100% repeat-x; }
+html body #viewport#viewport #stage#stage#stage#stage progress::-moz-progress-bar { background:url('assets/kit/gauge-act.webp') center / 20px 100% repeat-x; }
+html body #viewport#viewport #stage#stage#stage#stage #board .respawn-puff { background:url('assets/ui/fx-puff.webp') center / contain no-repeat; box-shadow:none; }
+html body #viewport#viewport #stage#stage#stage#stage #toasts .toast { height:auto; min-height:36px; max-height:none; box-sizing:border-box; line-height:18px; padding:9px 14px; white-space:normal; overflow-wrap:anywhere; font:12px/18px system-ui,sans-serif; }
+html body #viewport#viewport #stage#stage#stage#stage #toasts { max-height:72px !important; overflow:visible; }
+html body #viewport#viewport #stage#stage#stage#stage #audienceTail { background:none; box-shadow:none; border:0; }
+html body #viewport#viewport #stage#stage#stage#stage #practiceVeil > span { border:0; border-image:url('assets/kit/toast-frame.webp') 24 fill / 12px / 0 stretch; padding:20px; background:none; box-shadow:none; }
+html body #viewport#viewport #stage#stage#stage#stage :is(.constellation-node,.flow-node).locked::after { content:''; width:24px; height:24px; background:url('assets/kit/icon-lock.webp') center / contain no-repeat; border:0; box-shadow:none; }
+/* Landscape retains its two-card layout and gets the same painted stat strip. */
+html body #viewport#viewport #stage#stage#stage#stage :is(#boardCard#boardCard,.constellation-map.constellation-map) { border:0; outline:0; border-radius:0; background:transparent; box-shadow:none; }
+html body #viewport#viewport #stage#stage#stage#stage button.shared-kit { color:transparent; }
+html body #viewport#viewport #stage#stage#stage#stage .shared-kit-face { color:#f2e6c8; }
+html body #viewport#viewport #stage#stage#stage#stage #gemShopButton .shared-kit-face { color:#302014; }
+html body #viewport#viewport #stage#stage#stage#stage .shared-kit-face img { width:24px; height:24px; }
+html body #viewport#viewport #stage#stage#stage#stage :is(#patternLabel,#audienceLine) { border:0; border-image:url('assets/kit/tooltip-frame.webp') 24 fill / 8px / 0 stretch; background:transparent; box-shadow:none; padding:6px 12px; color:#f2e6c8; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #audienceCard #stageStats {
+  position:absolute; left:20px; right:12px; bottom:36px; top:auto; width:auto; height:var(--stats-band-height,44px) !important;
+  display:grid !important; grid-template-columns:repeat(4,minmax(0,1fr)); grid-template-rows:1fr; gap:var(--stats-band-gap,6px) !important;
+  padding:6px 10px; align-items:center; z-index:14; box-sizing:border-box;
+}
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #stageStats > :is(#combo,#mental,#shield,#stageRate) {
+  position:static !important; inset:auto; transform:none; display:grid !important; grid-template-columns:12px auto 1fr; grid-template-rows:14px 14px 6px;
+  grid-column:auto !important; grid-row:auto !important; width:auto; min-width:0; height:var(--stats-cell-height,34px) !important; padding:0; margin:0;
+  align-content:center; align-items:center; gap:0 !important; border:0; background:none; box-shadow:none; font:10px/14px system-ui,sans-serif;
+}
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #stageStats #combo { order:0; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #stageStats #mental { order:1; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #stageStats #shield { order:2; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #stageStats #stageRate { order:3; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #stageStats .stat-ico { display:block; position:static; width:12px; height:12px; grid-column:1; grid-row:1; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #stageStats :is(.mental-label,.shield-label,#combo > span:not(.bitmap):not(.meter-bar),#stageRate > span:not(#stageRateNumber):not(.meter-bar)) { position:static; display:block; grid-column:2; grid-row:1; font:10px/14px system-ui,sans-serif; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #stageStats :is(#mentalNumber,#comboNumber,#shieldNumber,#stageRateNumber) { position:static; display:block; grid-column:3; grid-row:1; width:auto; text-align:right; margin:0; white-space:nowrap; font:10px/14px system-ui,sans-serif; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #stageStats .bitmap::after { font:10px/14px system-ui,sans-serif; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #stageStats :is(#hearts,#shield > span[aria-hidden]) { display:none; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #stageStats .meter-bar { display:block; position:relative; inset:auto; grid-column:1 / -1; grid-row:2; width:100%; height:7px; min-height:7px; max-width:none; padding:2px; box-sizing:border-box; border:0; border-image:url('assets/kit/gauge-frame.webp') 4 fill / 2px / 0 stretch; background:none; overflow:hidden; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #stageStats .meter-fill { position:absolute; top:2px; left:2px; bottom:2px; width:var(--meter,0%); max-width:calc(100% - 4px); background:url('assets/kit/gauge-act.webp') center / 20px 4px repeat-x; box-shadow:none; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #stageStats #mental .meter-fill { background-image:url('assets/kit/gauge-mental.webp'); }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #stageStats #shield .meter-fill { background-image:url('assets/kit/gauge-confidence.webp'); }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #stageStats #stageRate .meter-fill { background-image:url('assets/kit/gauge-direction.webp'); }
+/* Remove the retired CSS backing and duplicate stat glyphs under the drawn pieces. */
+html body #viewport#viewport #stage#stage#stage#stage #boardCard::before,
+html body #viewport#viewport #stage#stage#stage#stage #boardCard::after,
+html body #viewport#viewport #stage#stage#stage#stage #stageStats > div::before { content:none; display:none; background:none; border:0; box-shadow:none; }
+html body #viewport#viewport #stage#stage#stage#stage #stageStats > div::after { box-shadow:none; }
+html body #viewport#viewport #stage#stage#stage#stage #stageStats > #combo .meter-bar { margin:0; }
+html body:not(.phone) #viewport#viewport #stage#stage#stage#stage #audienceCard #audience { left:auto !important; right:6% !important; top:auto !important; bottom:20% !important; width:40% !important; height:28% !important; }
+html body:not(.phone) #viewport#viewport #stage#stage#stage#stage #audienceCard #audience > .asset-sprite { width:100% !important; height:100% !important; max-height:100%; object-fit:contain; }
+html body:not(.phone) #viewport#viewport #stage#stage#stage#stage #boardCard .hud { border:0; border-image:url('assets/kit/header-panel.webp') 24 fill / 12px / 0 stretch; padding:12px; background:none; box-shadow:none; }
+html body:not(.phone) #viewport#viewport #stage#stage#stage#stage .venue-heading { border:0; border-image:url('assets/kit/header-panel.webp') 24 fill / 12px / 0 stretch; padding:8px 14px; background:none; box-shadow:none; }
+html body #viewport#viewport #stage#stage#stage#stage .dealer-cost { display:inline-flex; padding:6px 12px; border:0; border-image:url('assets/kit/price-tag.webp') 16 fill / 8px / 0 stretch; background:none; }
+/* The remaining popovers and mini-game controls share drawn framing. */
+html body #viewport#viewport #stage#stage#stage#stage :is(.gem-game,.tree-more-pop) { border:0; border-image:url('assets/kit/tooltip-frame.webp') 24 fill / 12px / 0 stretch; background:transparent; box-shadow:none; border-radius:0; padding:12px; box-sizing:border-box; }
+html body #viewport#viewport #stage#stage#stage#stage :is(.game-cup,.routine-card) { border:0; border-image:none; background:none; box-shadow:none; }
+html body #viewport#viewport #stage#stage#stage#stage .stage-reward { border:0; border-image:url('assets/kit/modal-panel.webp') 40 fill / 20px / 0 stretch; background:none; }
+html body #viewport#viewport #stage#stage#stage#stage .stage-reward h2 { border:0; border-image:url('assets/kit/modal-title.webp') 24 fill / 12px / 0 stretch; padding:12px 18px; }
+html body #viewport#viewport #stage#stage#stage#stage #heckle { border:0; border-image:url('assets/kit/tooltip-frame.webp') 24 fill / 12px / 0 stretch; background:none; box-shadow:none; padding:10px 14px; color:#f2e6c8; }
+html body #viewport#viewport #stage#stage#stage#stage #heckle::after { border:0; width:24px; height:12px; bottom:-8px; background:url('assets/kit/tooltip-tail.webp') center / contain no-repeat; transform:none; }
+html body #viewport#viewport #stage#stage#stage#stage #heckleBang { border:0; border-image:url('assets/kit/price-tag.webp') 16 fill / 8px / 0 stretch; background:none; box-shadow:none; }
+html body .save-version-notice { border:0; border-image:url('assets/kit/toast-frame.webp') 24 fill / 12px / 0 stretch; background:none; box-shadow:none; border-radius:0; color:#f2e6c8; }
+html body #viewport#viewport #stage#stage#stage#stage .gem-game > .flex-break { display:none; }
+html body #viewport#viewport #stage#stage#stage#stage .routine-card .bent-corner { background:url('assets/kit/tooltip-tail.webp') center / 100% 100% no-repeat; box-shadow:none; }
+html body #viewport#viewport #stage#stage#stage#stage .routine-card.gold-shine img { filter:none; }
+html body #viewport#viewport #stage#stage#stage#stage .routine-card.gold-shine { border-image:url('assets/kit/tile-selected.webp') 24 / 8px / 0 stretch; }
+html body #viewport#viewport #stage#stage#stage#stage #banner#banner { position:absolute; top:92px !important; bottom:auto !important; left:10px !important; right:10px !important; width:auto !important; max-width:none; height:auto; min-height:44px; box-sizing:border-box; padding:12px 18px; white-space:normal; font:700 14px/20px system-ui,sans-serif; color:#f2e6c8; text-align:center; }
+html body #viewport#viewport #stage#stage#stage#stage #banner#banner small { display:block; font:12px/18px system-ui,sans-serif; }
+/* Keep the dealer's side conversation from stretching the landscape game rows. */
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panelBody:has( > .gem-game) { grid-template-columns:88px minmax(0,1fr); grid-template-rows:38px auto auto; grid-auto-rows:min-content; align-content:start; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panelBody:has( > .gem-game) > .dealer-host { grid-column:1; grid-row:1 / span 2; align-self:start; min-height:0; height:auto; max-height:260px; overflow:auto; padding:0; gap:4px; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panelBody:has( > .gem-game) .dealer-emoji { flex:none; width:72px; height:92px; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panelBody:has( > .gem-game) .dealer-speech { max-height:150px; overflow:auto; padding:8px; font:10px/14px system-ui,sans-serif; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panelBody:has( > .gem-game) > .dealer-wallet { grid-column:2; grid-row:1; margin:0; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panelBody:has( > .gem-game) > .dealer-message { grid-column:2; grid-row:3; margin:0; }
+html body #viewport#viewport #stage#stage#stage#stage #panelBody > .dealer-message:empty { display:none; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panelBody > .gem-game { grid-column:2; grid-row:2; margin:0; padding:8px; min-height:0; }
+/* Verification A: shared geometry follows the actual grid and content flow. */
+html body #viewport#viewport #stage#stage#stage#stage #board .cell { translate:var(--grid-shift-x,0px) var(--grid-shift-y,0px); }
+html body #viewport#viewport #stage#stage#stage#stage #board { border-image-width:16px; }
+html body #viewport#viewport #stage#stage#stage#stage #board .cell .box { width:100%; height:100%; }
+html body #viewport#viewport #stage#stage#stage#stage #board .cell .chest > .asset-sprite { width:140%; height:96%; max-height:none; object-fit:contain; }
+html body #viewport#viewport #stage#stage#stage#stage .shop-cosmetic-tile { display:flex; flex-direction:column; height:auto; min-height:150px; gap:8px; align-items:center; justify-content:flex-start; overflow:visible; }
+html body #viewport#viewport #stage#stage#stage#stage .shop-cosmetic-tile :is(small,.gear-effect,.gear-difference,.shop-cosmetic-name) { display:block; position:static; width:100%; height:auto; max-height:none; margin:0; white-space:normal; word-break:keep-all; overflow-wrap:normal; line-height:1.5; }
+html body #viewport#viewport #stage#stage#stage#stage .shop-cosmetic-grid { align-items:stretch; grid-auto-rows:auto; }
+html body #viewport#viewport #stage#stage#stage#stage .constellation-detail .tree-cost { position:static; max-width:100%; width:auto; margin:6px 0; }
+html body #viewport#viewport #stage#stage#stage#stage .constellation-detail .tree-buy { position:static; margin:6px 0; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage :is(#bookButton,#bestiaryButton,#wardrobeButton,#moreButton).shared-kit { min-height:44px; height:44px; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage .shared-kit-face { flex-direction:row; gap:4px; font:12px/16px system-ui,sans-serif; padding:4px; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage :is(#perSecond,#coinSecond) { position:static; display:block; font:12px/18px system-ui,sans-serif; }
+html body #viewport#viewport #stage#stage#stage#stage .constellation-detail .tree-detail-close { position:static; display:block; margin:6px 0; }
+html body #viewport#viewport #stage#stage#stage#stage .constellation-detail .tree-cost { display:flex; flex-wrap:wrap; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #stageStats :is(#combo,#mental,#shield,#stageRate) { font:12px/16px system-ui,sans-serif; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #audienceCard .caption { bottom:10px; min-height:36px; height:auto; line-height:18px; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #audienceCard #levelXp { bottom:88px; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #audienceCard.has-audience-line #patternLabel { top:60px; left:10px; right:auto; max-width:44%; font:12px/16px system-ui,sans-serif; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #board { border-image-width:20px !important; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage .xp-row { top:auto; bottom:104px; left:20px; width:240px; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage .caption { bottom:20px; min-height:40px; height:auto; line-height:20px; font-size:14px; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage :is(#perSecond,#coinSecond) { position:absolute; top:12px; left:20px; width:40%; padding:0; font:12px/18px system-ui,sans-serif; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #coinSecond { top:30px; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #patternLabel > span { white-space:nowrap; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage .caption { top:auto; bottom:4px; }
+html body #viewport#viewport #stage#stage#stage#stage :is(#perSecond,#coinSecond) { display:none; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #stageStats :is(.mental-label,.shield-label,#combo > span:not(.bitmap):not(.meter-bar),#stageRate > span:not(#stageRateNumber):not(.meter-bar),#mentalNumber,#comboNumber,#shieldNumber,#stageRateNumber),
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #stageStats .bitmap::after { font:12px/14px system-ui,sans-serif; }
+/* Decorative tier announcements yield to the current audience's speech. */
+html body #viewport#viewport #stage#stage#stage#stage #audienceCard.has-audience-line .dress-note { visibility:hidden; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage .active-skill > span:not(.skill-art) { width:100%; max-width:none; height:auto; max-height:none; font:11px/14px system-ui,sans-serif; white-space:nowrap; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage .active-skill > small { width:100%; white-space:normal; word-break:keep-all; font:10px/12px system-ui,sans-serif; }
+html body #viewport#viewport #stage#stage#stage#stage .constellation-detail .tree-detail-dismiss { position:static; display:block; width:auto; grid-column:1 / -1; justify-self:end; margin:0 0 8px; }
+html body #viewport#viewport #stage#stage#stage#stage .area-range-preview { display:grid; grid-template-columns:repeat(2,max-content); gap:8px 18px; align-items:start; }
+html body #viewport#viewport #stage#stage#stage#stage .area-range-preview > strong,
+html body #viewport#viewport #stage#stage#stage#stage .area-range-preview > small { grid-column:1 / -1; }
+/* Long values keep a separate row in the shared landscape stats strip. */
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #stageStats :is(#mentalNumber,#comboNumber,#shieldNumber,#stageRateNumber) { grid-column:1 / -1; grid-row:2; text-align:center; min-width:0; line-height:14px; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #stageStats .meter-bar { grid-row:3; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #audienceCard #stageStats { padding:4px 8px; }
+/* The venue palette fills frame gaps and letterbox edges rather than leaving black bands. */
+html body #viewport#viewport { background-color:#30283a; }
+html body #viewport#viewport #stage#stage#stage#stage { background-color:var(--venue-bg2,#30283a); }
+/* Compact notices remain complete within the left lane, above the actor's motion envelope. */
+html body.phone:not(.portrait-layout):not(.tablet) #viewport#viewport #stage#stage#stage#stage #toasts .toast { font:10px/12px system-ui,sans-serif; padding:6px 8px; }
+/* Measured 237px stages need two full-value columns rather than four clipped tiles. */
+html body.phone.phone-narrow:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #audienceCard #stageStats { --stats-band-height:48px; --stats-cell-height:20px; --stats-band-gap:2px; grid-template-columns:repeat(2,minmax(0,1fr)); grid-template-rows:repeat(2,20px); padding:2px 6px !important; }
+html body.phone.phone-narrow:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #stageStats > :is(#combo,#mental,#shield,#stageRate) { grid-template-columns:10px auto minmax(0,1fr); grid-template-rows:14px 6px; font:10px/14px system-ui,sans-serif; }
+html body.phone.phone-narrow:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #stageStats :is(#mentalNumber,#comboNumber,#shieldNumber,#stageRateNumber) { grid-row:1; grid-column:3; text-align:right; font:10px/14px system-ui,sans-serif; }
+html body.phone.phone-narrow:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #stageStats .meter-bar { grid-row:2; height:6px; min-height:6px; }
+html body.phone.phone-narrow:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #stageStats .stat-ico { width:10px; height:10px; }
+html body #viewport#viewport #stage#stage#stage#stage #boardCard #board { border-image-source:url('assets/kit/board-frame.webp'); border-image-slice:44; }
+html body.phone:not(.portrait-layout) #viewport#viewport #stage#stage #audienceCard #audience { left:calc(var(--CW) * .75 - var(--aud-fit-w,1px) / 2) !important; }
+html body #viewport#viewport #stage#stage#stage#stage .area-range-grid .range-added { background-image:url('assets/kit/tile-selected.webp'); filter:hue-rotate(130deg); }
+
+html body:not(.phone) #viewport#viewport #stage#stage#stage#stage .caption { color:#f2e6c8; font-family:system-ui,sans-serif; }
+
+/* A2: map nodes and prerequisite lines share the same absolute coordinate space. */
+html body #viewport#viewport #stage#stage#stage#stage #panel .constellation-node { position:absolute; padding:0; z-index:2; }
+html body #viewport#viewport #stage#stage#stage#stage #panel .constellation-node.unknown { width:44px; height:44px; z-index:1; }
+html body #viewport#viewport #stage#stage#stage#stage .constellation-name { width:128px; min-height:18px; box-sizing:border-box; padding:2px 4px; top:60px; font:12px/16px system-ui,sans-serif; border-image:url('assets/kit/tooltip-frame.webp') 24 fill / 4px / 0 stretch; color:#f2e6c8; }
+html body #viewport#viewport #stage#stage#stage#stage .constellation-level { top:82px; color:#f2e6c8; }
+
+/* A2 P1: landscape dialogue and scene notices occupy separate readable lanes. */
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #storyDialog { height:auto; min-height:64px; max-height:90px; box-sizing:border-box; padding:6px 10px; gap:6px; color:#f2e6c8; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #storyDialog .story-copy p { color:#f2e6c8; font:13px/18px system-ui,sans-serif; white-space:normal; max-height:54px; overflow:auto; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #storyDialog .story-copy strong { color:#ffe9ac; padding:2px 10px; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #phoneMore #gemShopButton { color:transparent; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage :is(#perSecond,#coinSecond) { display:none !important; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #audienceCard #patternLabel { top:84px !important; left:12px !important; max-width:calc(100% - 24px) !important; }
+
+html body #viewport#viewport #stage#stage#stage#stage button.shared-kit { color:transparent; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #phoneMore #gemShopButton .shared-kit-face { color:#f2e6c8; }
+
+/* A2 P2: shared modal, wardrobe and numeric presentation. */
+html body #viewport#viewport #stage#stage#stage#stage #modalBackdrop { display:none; position:absolute; inset:-1000px; background:#120f1af5; z-index:34; pointer-events:none; }
+html body #viewport#viewport #stage#stage#stage#stage.f-panel #modalBackdrop { display:block; }
+html body:not(.phone) #viewport#viewport #stage#stage#stage#stage #panel#panel { left:50%; width:720px; max-width:calc(100% - 40px); transform:translateX(-50%); }
+html body:not(.phone) #viewport#viewport #stage#stage#stage#stage #panelBody { font:16px/1.5 system-ui,sans-serif; }
+html body:not(.phone) #viewport#viewport #stage#stage#stage#stage #panel :is(h1,h2) { font-size:22px; }
+html body:not(.phone) #viewport#viewport #stage#stage#stage#stage .constellation-layout { grid-template-columns:minmax(0,1fr) 240px; gap:12px; }
+html body:not(.phone) #viewport#viewport #stage#stage#stage#stage .constellation-detail { font:14px/1.5 system-ui,sans-serif; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage .hud .bitmap { display:inline-block; width:auto; height:auto; font:18px/24px Galmuri11,sans-serif; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage .hud .bitmap > * { display:none; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage .hud .bitmap::after { content:attr(aria-label); font:18px/24px Galmuri11,sans-serif; }
+html body:not(.phone) #viewport#viewport #stage#stage#stage#stage .hud :is(.currency-label,#mockupDoves) { font:22px/24px Galmuri11,sans-serif; }
+html body:not(.phone) #viewport#viewport #stage#stage#stage#stage { background-color:#211b2a; }
+html body:not(.phone) #viewport#viewport #stage#stage#stage#stage #gameLogo { width:300px; height:44px; padding:8px 14px; font:700 20px/28px system-ui,sans-serif; border-image:url('assets/kit/header-panel.webp') 24 fill / 8px / 0 stretch; }
+html body:not(.phone) #viewport#viewport #stage#stage#stage#stage #gemShopQuick { display:grid; min-width:44px; min-height:56px; border-image-source:url('assets/kit/shop-normal.webp'); background-color:#E8BF68; color:#302014; }
+html body:not(.phone) #viewport#viewport #stage#stage#stage#stage #gemShopQuick:active:enabled { border-image-source:url('assets/kit/shop-pressed.webp'); }
+html body #viewport#viewport #stage#stage#stage#stage .wardrobe-sections { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; align-items:start; max-width:680px; margin:0 auto; }
+html body #viewport#viewport #stage#stage#stage#stage #panel[data-screen="wardrobe"] #panelBody { background:#282330; }
+html body #viewport#viewport #stage#stage#stage#stage #panel[data-screen="wardrobe"] .shop-cosmetic-grid { grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); justify-items:center; }
+html body #viewport#viewport #stage#stage#stage#stage .wardrobe-sections .wardrobe-equipped { min-height:42px; font:12px/18px system-ui,sans-serif; }
+html body #viewport#viewport #stage#stage#stage#stage .shop-cosmetic-tile { padding:12px 10px 28px; box-sizing:border-box; }
+html body #viewport#viewport #stage#stage#stage#stage .shop-cosmetic-tile :is(.gear-effect,.gear-difference) { flex:none; min-height:18px; padding:0; background:none; font:12px/18px system-ui,sans-serif; }
+html body #viewport#viewport #stage#stage#stage#stage .pad-upgrade { display:grid; grid-template-columns:minmax(0,1fr); justify-items:center; gap:8px; margin:12px auto; max-width:680px; text-align:center; }
+html body #viewport#viewport #stage#stage#stage#stage .pad-upgrade > :is(p,small) { margin:0; }
+html body #viewport#viewport #stage#stage#stage#stage .pad-upgrade > button { width:100%; min-height:44px; font:14px/20px system-ui,sans-serif; white-space:normal; }
+html body #viewport#viewport #stage#stage#stage#stage #panel header .shop-balance { flex:none; margin:0; padding:6px 12px; font:14px/24px Galmuri11,sans-serif; }
+@media (max-height:500px) {
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="gemShop"] { padding:10px 14px; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="gemShop"] > header { min-height:44px; height:44px; margin:0; padding:0; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="gemShop"] #panelTitle { min-height:44px; padding:8px 14px; font-size:20px; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="gemShop"] :is(.shop-abilities,.shop-routines) { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="gemShop"] h2 { grid-column:1 / -1; margin:8px 0 0; font-size:16px; padding-bottom:8px; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="gemShop"] .gem-shop-item { padding:10px; display:flex; flex-direction:column; gap:4px; align-items:stretch; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="gemShop"] .gem-shop-item :is(h3,p,small) { margin:0; font:11px/15px system-ui,sans-serif; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="gemShop"] .gem-shop-item h3 { font-weight:700; flex-basis:auto; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="gemShop"] .gem-shop-item button { min-height:44px; height:auto; padding:4px; font-size:11px; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="gemShop"] .gem-shop-item[data-shop-item="refill"] { grid-column:1 / -1; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="gemShop"] .gem-shop-item[data-shop-item="refill"] :is(h3,p) { grid-column:1 / -1; }
+}
+
+html body #viewport#viewport #stage#stage#stage#stage #panel .shop-cosmetic-tile { padding:12px 10px 28px; }
+@media (max-height:500px) {
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="gemShop"] .gem-shop-item { flex-wrap:nowrap; margin:0; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="gemShop"] .gem-shop-item > * { flex:none; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="wardrobe"] .wardrobe-equipped { min-height:18px; margin:4px 0; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="wardrobe"] .shop-cosmetic-tile { min-height:132px; gap:4px; padding:8px 10px 20px; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="wardrobe"] .shop-cosmetic-tile .cosmetic-icon { width:40px; height:40px; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="wardrobe"] :is(h2,.wardrobe-equipped) { margin:4px 0; }
+}
+
+/* A2 P3: drawn section plates, a balanced tab row and consistent settings controls. */
+html body #viewport#viewport #stage#stage#stage#stage :is(.shop-abilities,.shop-routines,.shop-pads,.shop-customization,.wardrobe-pads,.wardrobe-outfits,.achievement-group) > h2 { width:fit-content; min-width:130px; max-width:100%; min-height:36px; padding:6px 14px; margin:12px 0; border-image:url('assets/kit/name-plate.webp') 14 fill / 7px / 0 stretch; background:none; font:700 18px/24px system-ui,sans-serif; }
+html body #viewport#viewport #stage#stage#stage#stage .shop-item-icon { display:inline-block; position:relative; width:24px; height:24px; margin-right:6px; vertical-align:middle; }
+html body #viewport#viewport #stage#stage#stage#stage .shop-item-icon img { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; }
+html body #viewport#viewport #stage#stage#stage#stage .panel-tabs { flex-wrap:nowrap; overflow-x:auto; flex:none; }
+html body #viewport#viewport #stage#stage#stage#stage .panel-tabs button { flex:1 0 auto; padding:8px 12px; }
+html body #viewport#viewport #stage#stage#stage#stage #phoneMore :is(#soundButton,#musicButton,#hapticsButton) { grid-column:span 2; min-height:44px; font:14px/20px system-ui,sans-serif; }
+html body #viewport#viewport #stage#stage#stage#stage #phoneMore #musicButton { order:60; }
+html body #viewport#viewport #stage#stage#stage#stage #phoneMore #soundButton { order:61; }
+html body #viewport#viewport #stage#stage#stage#stage #phoneMore .music-volume { order:62; grid-column:1 / -1; border-image:url('assets/kit/row-normal.webp') 24 fill / 8px / 0 stretch; padding:4px 12px; font:14px/20px system-ui,sans-serif; }
+html body #viewport#viewport #stage#stage#stage#stage #phoneMore #hapticsButton { order:63; }
+html body #viewport#viewport #stage#stage#stage#stage #phoneMore #textSpeedButton { order:64; grid-column:span 2; }
+html body #viewport#viewport #stage#stage#stage#stage #phoneMore #replayTutorial { order:65; }
+html body #viewport#viewport #stage#stage#stage#stage #phoneMore .menu-build { text-align:center; padding:4px 8px; color:#f2e6c8; }
+html body #viewport#viewport #stage#stage#stage#stage #phoneMore button { font:14px/20px system-ui,sans-serif; }
+html body #viewport#viewport #stage#stage#stage#stage #phoneMore .kit-menu-title { font-size:22px; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage .shared-kit-face > span { font:13px/18px system-ui,sans-serif; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #bookButton .shared-kit-face { padding-right:14px; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #bookButton.is-new::after { width:28px; height:14px; top:-4px; right:-4px; }
+html body #viewport#viewport #stage#stage#stage#stage #panel .constellation-detail .tree-cost { min-width:88px; min-height:44px; font:12px/18px system-ui,sans-serif; }
+@media (max-height:500px) {
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="gemShop"] h2 { min-height:28px; margin:4px 0; padding:4px 12px; font-size:16px; line-height:20px; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="gemShop"] .gem-shop-item { padding:6px 8px; gap:3px; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="gemShop"] .gem-shop-item :is(h3,p,small) { font-size:10px; line-height:13px; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="gemShop"] .gem-shop-item button { padding:2px 4px; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="gemShop"] .shop-item-icon { width:18px; height:18px; }
+}
+
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #storyDialog .story-copy { grid-column:2; grid-row:1; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #storyDialog .story-portrait { grid-column:1; grid-row:1; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #storyDialog button:first-of-type { grid-column:3; grid-row:1; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #storyDialog button:last-of-type { grid-column:4; grid-row:1; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #storyDialog.stage-launch .stage-start { grid-column:3 / -1; }
+html body #viewport#viewport #stage#stage#stage#stage .outfit-collection { gap:8px; justify-content:flex-start; font:14px/20px system-ui,sans-serif; }
+html body #viewport#viewport #stage#stage#stage#stage .outfit-preview { order:-1; width:48px; height:48px; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #bookButton:is(.is-new,.new-unlock)::after { width:24px; height:12px; top:-8px; right:-6px; }
+@media (max-width:740px) {
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #phoneTop .shared-kit-face { flex-direction:column; gap:0; padding:2px; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #phoneTop .shared-kit-face img { width:18px; height:18px; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #phoneTop .shared-kit-face > span { font:13px/16px system-ui,sans-serif; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #phoneTop .hud .bitmap::after { font-size:12px; line-height:16px; }
+}
+
+html body:not(.phone) #viewport#viewport #stage#stage#stage#stage .hud .bitmap::after { font:22px/24px Galmuri11,sans-serif; }
+
+/* A3: let long dialogue use its full copy width, then put actions below it on phones. */
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #storyDialog { max-height:none; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #storyDialog .story-copy p { max-height:none; overflow:visible; }
+html body.phone:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #storyDialog .story-copy { grid-column:2 / -1; }
+html body.phone:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #storyDialog button:first-of-type { grid-column:3; grid-row:2; }
+html body.phone:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #storyDialog button:last-of-type { grid-column:4; grid-row:2; }
+html body.phone:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #storyDialog.stage-launch .stage-start { grid-column:3 / -1; }
+/* A toast needs its content height instead of shrinking into the old 36px container. */
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #toasts { height:auto; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #toasts .toast { flex:none; width:100%; }
+
+/* Keep desktop menu targets above 44 screen pixels after the stage is scaled. */
+html body:not(.phone) #viewport#viewport #stage#stage#stage#stage #phoneMore button { min-height:var(--menu-tap-height,45px); }
+
+/* Short landscape scenes use the empty header gap for notices and keep both characters visible. */
+html body.phone.compact-notice:not(.portrait-layout):not(.tablet) #viewport#viewport #stage#stage#stage#stage #toasts { left:var(--compact-toast-left,90px) !important; width:var(--compact-toast-width,180px) !important; top:4px !important; }
+html body.phone.compact-notice:not(.portrait-layout):not(.tablet) #viewport#viewport #stage#stage#stage#stage #toasts#toasts .toast { padding:0 4px; border-style:solid; border-color:transparent; border-width:2px; border-image-width:4px; word-break:break-all; }
+html body.phone.compact-notice:not(.portrait-layout):not(.tablet) #viewport#viewport #stage#stage#stage#stage #audienceCard #patternLabel { top:54px !important; max-width:82px !important; }
+html body.phone.compact-notice:not(.portrait-layout):not(.tablet) #viewport#viewport #stage#stage#stage#stage #audienceCard #phaseIndicator { left:var(--compact-phase-left,110px) !important; max-width:var(--compact-phase-width,82px) !important; }
+
+/* The compact stats sheet keeps complete descriptions instead of ellipsizing them. */
+html body.phone:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="stats"] .easy-stat p { display:block; -webkit-line-clamp:unset; overflow:visible; }
+@media(max-width:700px) {
+html body.phone:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="stats"] .easy-stat { padding:6px; gap:4px; }
+html body.phone:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="stats"] .easy-stat strong { font:18px/22px Galmuri11,sans-serif; }
+html body.phone:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="stats"] .easy-stat h2 { font:14px/16px Galmuri11,sans-serif; }
+html body.phone:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="stats"] .easy-stat p { font:10px/12px system-ui,sans-serif; }
+}

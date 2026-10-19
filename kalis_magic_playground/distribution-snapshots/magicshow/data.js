@@ -1,3 +1,5 @@
+// Release rule (common.md): bump only GAME_BUILD here for each release; keep save versions separate.
+const GAME_BUILD = '12 (10-19)';
 /* GAME_DATA keys (content and tree metadata; effect formulas live in core):
  * title: string.
  * venues[16]: {id: display order, slug: stable identity, balanceRank, name, intro, palette:{bg1,bg2,accent},
@@ -575,7 +577,7 @@
     {"id": "goldCoins", "name": "금빛 사례", "desc": "황금 케이스 추가 동전 +20L%", "max": 3, "cost": {"c": 1500, "g": 2.2}, "currency": "coins", "prereqs": ["goldPity"], "x": 5, "y": 0, "reveal": "N", "branch": "box", "icon": "node-box-1.png", "emoji": "🪙", "pending": false},
     {"id": "prepared", "name": "미리 푼 매듭", "desc": "재생성 케이스가 파괴 진행률 5L%로 등장", "max": 2, "cost": {"c": 800, "g": 3.0}, "currency": "coins", "prereqs": ["spawn"], "x": 2, "y": -1, "reveal": "N3", "branch": "box", "icon": "node-box-2.png", "emoji": "🪢", "pending": false},
     {"id": "boxXP", "name": "케이스 연구", "desc": "케이스 XP +10L%, 강의 XP에는 미적용", "max": 3, "cost": {"c": 900, "g": 2.0}, "currency": "coins", "prereqs": ["prepared"], "x": 3, "y": -1, "reveal": "N", "branch": "box", "icon": "node-box-1.png", "emoji": "📚", "pending": false},
-    {"id": "boxShield", "name": "실크 포장", "desc": "파괴마다 자신감 +0.1LU, cap 적용", "max": 2, "cost": {"c": 1800, "g": 2.5}, "currency": "coins", "prereqs": ["boxXP"], "x": 4, "y": -1, "reveal": "N4", "branch": "box", "icon": "node-box-2.png", "emoji": "🧣", "pending": false},
+    {"id": "boxShield", "name": "실크 포장", "desc": "파괴마다 자신감 +0.02LU, cap 적용", "max": 2, "cost": {"c": 1800, "g": 2.5}, "currency": "coins", "prereqs": ["boxXP"], "x": 4, "y": -1, "reveal": "N4", "branch": "box", "icon": "node-box-2.png", "emoji": "🧣", "pending": false},
     {"id": "boxHeal", "name": "숨 고르기", "desc": "파괴마다 멘탈 +0.05LU, 최대치 적용", "max": 2, "cost": {"c": 2400, "g": 2.5}, "currency": "coins", "prereqs": ["boxShield"], "x": 5, "y": -1, "reveal": "N5", "branch": "box", "icon": "node-box-1.png", "emoji": "💧", "pending": false},
     {"id": "mental", "name": "무대 배짱", "desc": "최대 멘탈 ×1.18^L", "max": 10, "cost": {"c": 30, "g": 2.2}, "currency": "coins", "prereqs": ["root"], "x": 0, "y": -1, "reveal": "N", "branch": "heart", "icon": "node-heart-1.png", "emoji": "💛", "pending": false},
     {"id": "attack", "name": "연출력", "desc": "V ×1.05^L", "max": 10, "cost": {"c": 45, "g": 2.2}, "currency": "coins", "prereqs": ["mental"], "x": 0, "y": -2, "reveal": "N", "branch": "heart", "icon": "node-heart-2.png", "emoji": "👏", "pending": false},
@@ -584,7 +586,7 @@
     {"id": "healValue", "name": "든든한 한 입", "desc": "회복 아이템 회복량 +5L%", "max": 4, "cost": {"c": 300, "g": 2.2}, "currency": "coins", "prereqs": ["attack"], "x": 1, "y": -2, "reveal": "N", "branch": "heart", "icon": "node-heart-1.png", "emoji": "🍗", "pending": false},
     {"id": "winHeal", "name": "마무리 포즈", "desc": "관객이 만족했을 때 회복 비율 0.20+0.02L", "max": 3, "cost": {"c": 650, "g": 2.2}, "currency": "coins", "prereqs": ["healValue"], "x": 1, "y": -3, "reveal": "N", "branch": "heart", "icon": "node-heart-2.png", "emoji": "👏", "pending": false},
     {"id": "levelHeal", "name": "연습의 보람", "desc": "레벨업 회복 비율 0.16+0.02L", "max": 3, "cost": {"c": 550, "g": 2.2}, "currency": "coins", "prereqs": ["attack"], "x": 0, "y": -3, "reveal": "N", "branch": "heart", "icon": "node-heart-1.png", "emoji": "💛", "pending": false},
-    {"id": "openingShield", "name": "대본 준비", "desc": "새 run 시작 시 최대 멘탈의 5L% 자신감", "max": 3, "cost": {"c": 1000, "g": 2.2}, "currency": "coins", "prereqs": ["levelHeal"], "x": 0, "y": -4, "reveal": "N3", "branch": "heart", "icon": "node-heart-2.png", "emoji": "🛡️", "pending": false},
+    {"id": "openingShield", "name": "대본 준비", "desc": "새 run 시작 시 최대 멘탈의 1L% 자신감", "max": 3, "cost": {"c": 1000, "g": 2.2}, "currency": "coins", "prereqs": ["levelHeal"], "x": 0, "y": -4, "reveal": "N3", "branch": "heart", "icon": "node-heart-2.png", "emoji": "🛡️", "pending": false},
     {"id": "calm", "name": "포커페이스", "desc": "야유 피해 ×(1-0.02L)", "max": 3, "cost": {"c": 2000, "g": 2.2}, "currency": "coins", "prereqs": ["openingShield"], "x": 0, "y": -5, "reveal": "N5", "branch": "heart", "icon": "node-heart-1.png", "emoji": "💛", "pending": false},
     {"id": "coinLuck", "name": "모자 속 동전", "desc": "동전 추첨 가중치 +6L. 정규화 전 가중치이며 확률은 전체 가중치로 계산합니다.", "max": 10, "cost": {"c": 70, "g": 2.2}, "currency": "coins", "prereqs": ["root"], "x": 1, "y": 1, "reveal": "N", "branch": "luck", "icon": "node-luck-1.png", "emoji": "🪙", "pending": false},
     {"id": "forceRemove", "name": "포스", "desc": "카드 몬테 첫 판, 여왕을 0.6초씩 더 보여주고 첫 섞기가 조금 느려져요", "max": 2, "cost": [1, 1], "currency": "keys", "prereqs": ["coinLuck"], "x": 2, "y": 1, "reveal": "N5", "branch": "luck", "icon": "node-luck-2.png", "emoji": "🪄", "pending": false},
@@ -613,7 +615,7 @@
     {"id": "encorePower", "name": "쇼맨십", "desc": "앵콜 피해 보너스 +5L%p", "max": 2, "cost": {"c": 4000, "g": 2.5}, "currency": "coins", "prereqs": ["encore"], "x": -1, "y": 4, "reveal": "N", "branch": "finale", "icon": "node-finale-1.png", "emoji": "🎤", "pending": false},
     {"id": "encoreSpan", "name": "긴 앵콜", "desc": "앵콜 지속 +3L초", "max": 2, "cost": {"c": 3500, "g": 2.5}, "currency": "coins", "prereqs": ["encore"], "x": 1, "y": 4, "reveal": "N", "branch": "finale", "icon": "node-finale-2.png", "emoji": "⏱️", "pending": false},
     {"id": "challenge", "name": "도전 수첩", "desc": "추가 도전 3개와 각각 V +0.5% 보상 활성화", "max": 1, "cost": [2500], "currency": "coins", "prereqs": ["encore"], "x": 0, "y": 5, "reveal": "N5", "branch": "finale", "icon": "node-finale-1.png", "emoji": "🏅", "pending": false},
-    {"id": "starTrick", "name": "비둘기 트릭", "desc": "연출 ×1.3^L, 지팡이 피해 ×1.14^L", "max": 30, "cost": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], "currency": "starlight", "prereqs": ["root"], "x": -2, "y": -6, "reveal": "E", "branch": "star", "icon": "node-star-1.png", "emoji": "🕊️", "pending": false, "starKey": "trick"},
+    {"id": "starTrick", "name": "비둘기 트릭", "desc": "연출 ×1.4^L, 지팡이 피해 ×1.14^L", "max": 30, "cost": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], "currency": "starlight", "prereqs": ["root"], "x": -2, "y": -6, "reveal": "E", "branch": "star", "icon": "node-star-1.png", "emoji": "🕊️", "pending": false, "starKey": "trick"},
     {"id": "starGuard", "name": "비둘기 망토", "desc": "최대 멘탈·자신감·회복 ×1.18^L", "max": 30, "cost": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "currency": "starlight", "prereqs": ["root"], "x": 0, "y": -6, "reveal": "E", "branch": "star", "icon": "node-star-2.png", "emoji": "🕊️", "pending": false, "starKey": "guard"},
     {"id": "starTempo", "name": "비둘기 손놀림", "desc": "초당 타격 ×1.06^L, 재생성 시간 ×0.92^L", "max": 30, "cost": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "currency": "starlight", "prereqs": ["root"], "x": 2, "y": -6, "reveal": "E", "branch": "star", "icon": "node-star-3.png", "emoji": "🕊️", "pending": false, "starKey": "tempo"},
     {"id": "starBounty", "name": "비둘기 모자", "desc": "동전 배율 ×1.12^L", "max": 30, "cost": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "currency": "starlight", "prereqs": ["root"], "x": 4, "y": -6, "reveal": "E", "branch": "star", "icon": "node-star-4.png", "emoji": "🕊️", "pending": false, "starKey": "bounty"}
@@ -877,7 +879,7 @@
 GAME_DATA.venues.forEach(v=>{const factors={party:2.08,school:2.08,cafe:2.08,theater:3.25,festival:3.25,audition:3.25,broadcast:2.1,vegas:3.575,broadway:3.575,moon:3.575,sun:3.575,galaxy:3.025,multiverse:2.65};if(factors[v.slug])v.hpFactor=factors[v.slug];});
 
 GAME_DATA.tree.filter(n=>n.u4b).forEach(n=>{
- const base={sponge:'보드에서 튕기며 접촉마다 마술 실력의 25%, 같은 칸은 400ms 간격',cardthrow:'1500ms마다 카드 1장, 마술 실력의 40%',tipbox:'6000ms마다 무대별 동전 획득',flashpaper:'개봉 시 3% 확률, 최대 2개. 누르면 모든 케이스에 마술 실력의 150%',crystal:'8000ms마다 최대 멘탈의 3% 자신감, 상한 적용',water:'9000ms마다 최대 멘탈의 3% 회복',spotlight:'4000ms마다 보유 1행에 마술 실력의 60%'};
+ const base={sponge:'보드에서 튕기며 접촉마다 마술 실력의 25%, 같은 칸은 400ms 간격',cardthrow:'1500ms마다 카드 1장, 마술 실력의 40%',tipbox:'6000ms마다 무대별 동전 획득',flashpaper:'개봉 시 3% 확률, 최대 2개. 누르면 모든 케이스에 마술 실력의 150%',crystal:'8000ms마다 최대 멘탈의 0.6% 자신감, 상한 적용',water:'9000ms마다 최대 멘탈의 3% 회복',spotlight:'4000ms마다 보유 1행에 마술 실력의 60%'};
  if(base[n.id])n.desc=base[n.id];
  else if(n.id.endsWith('Count'))n.desc='도우미 수 +1, 최대 '+({spongeCount:3,cardthrowCount:4,spotlightCount:2})[n.id];
  else if(n.id.endsWith('Speed'))n.desc=n.id==='spongeSpeed'?'이동 속도 +12%씩':'주기 -10%씩';
@@ -4993,7 +4995,7 @@ GAME_DATA.easyNodes = {
   "assistant": "조수가 케이스를 함께 열어요\n1.2초마다 실력의 80%",
   "power": "손기술이 좋아져 케이스를 더 빨리 열어요\n실력 1.1배씩",
   "speed": "케이스를 더 자주 두드려요\n1초에 0.12회씩 추가",
-  "area": "여러 케이스를 함께 두드려요\n최대 5칸 × 5칸",
+  "area": "여러 케이스를 함께 두드려요\n지금 범위와 다음 범위를 확인해요",
   "crit": "딱 맞는 순간에 케이스를 세게 두드려요\n8% 확률로 힘 1.5배",
   "critRate": "세게 두드릴 기회가 늘어요\n기회 2%씩 추가 · 최대 14%",
   "critPower": "세게 두드릴 때 더 크게 놀라게 해요\n힘 0.1배씩 추가 · 최대 1.8배",
@@ -5007,7 +5009,7 @@ GAME_DATA.easyNodes = {
   "goldCoins": "황금 케이스에서 동전을 더 얻어요\n동전 20%씩 추가",
   "prepared": "새 케이스를 조금 열린 채 받아요\n열린 양 5%씩 추가",
   "boxXP": "케이스가 더 빨리 자라요\n케이스 경험치 10%씩 추가",
-  "boxShield": "개봉할 때 야유를 막을 힘을 얻어요\n자신감 0.1씩 · 멘탈의 힘 적용",
+  "boxShield": "개봉할 때 야유를 막을 힘을 얻어요\n자신감 0.02씩 · 멘탈의 힘 적용",
   "boxHeal": "개봉할 때 마음이 회복돼요\n회복 0.05씩 · 멘탈의 힘 적용",
   "mental": "야유를 더 오래 버텨요\n최대 멘탈 1.18배씩",
   "attack": "마술을 멋지게 보여 의심이 더 빨리 줄어요\n연출 1.05배씩",
@@ -5016,7 +5018,7 @@ GAME_DATA.easyNodes = {
   "healValue": "회복 아이템으로 더 힘을 얻어요\n회복 5%씩 추가",
   "winHeal": "멋진 포즈로 끝내면 마음이 더 회복돼요\n회복 2%씩 추가",
   "levelHeal": "레벨이 오를 때 더 회복돼요\n회복 2%씩 추가",
-  "openingShield": "대본을 미리 외워 새 공연을 든든하게 시작해요\n최대 멘탈의 5%씩 자신감",
+  "openingShield": "대본을 미리 외워 새 공연을 든든하게 시작해요\n최대 멘탈의 1%씩 자신감",
   "calm": "야유를 들어도 표정이 흔들리지 않아요\n야유 힘 2%씩 줄기",
   "coinLuck": "케이스에서 동전이 더 잘 나와요\n동전 뽑기 표 6장씩 추가",
   "forceRemove": "카드 몬테 첫 판, 여왕을 더 오래 보여줘요\n0.6초씩 더 보여주고 첫 섞기가 조금 느려져요",
@@ -5045,7 +5047,7 @@ GAME_DATA.easyNodes = {
   "encorePower": "피버 타임에 관객을 더 신나게 해요\n실력 5%씩 추가",
   "encoreSpan": "앵콜의 힘이 더 오래 가요\n지속 시간 3초씩 추가",
   "challenge": "도전하며 관객을 더 잘 놀라게 해요\n도전 3개 · 성공마다 연출 0.5% 추가",
-  "starTrick": "케이스를 더 빨리 열고 관객을 더 빨리 감탄시켜요\n실력 1.14배 · 연출 1.3배씩",
+  "starTrick": "케이스를 더 빨리 열고 관객을 더 빨리 감탄시켜요\n실력 1.14배 · 연출 1.4배씩",
   "starGuard": "야유를 버티고 더 잘 회복해요\n멘탈 · 자신감 · 회복 1.18배씩",
   "starTempo": "더 자주 두드리고 빨리 채워져요\n두드리기 1.06배 · 준비 시간 8% 줄기",
   "starBounty": "동전을 더 많이 얻어요\n동전 1.12배씩",
@@ -5060,7 +5062,7 @@ GAME_DATA.easyNodes = {
   "tipbox": "팁 박스가 동전을 모아줘요\n6초마다 동전 받기",
   "flashpaper": "종이를 누르면 모든 칸을 두드려요\n개봉 때 3% · 실력의 150%",
   "flashpaperChance": "플래시 페이퍼를 더 자주 얻어요\n기회 1%씩 추가 · 최대 7%",
-  "crystal": "수정구가 야유를 막아줘요\n8초마다 멘탈의 3% 자신감",
+  "crystal": "수정구가 야유를 막아줘요\n8초마다 멘탈의 0.6% 자신감",
   "water": "치킨 한 조각으로 기운이 나요\n9초마다 멘탈의 3% 회복 · 칼리의 최애 간식",
   "spotlight": "조명이 케이스 한 줄을 두드려요\n4초마다 실력의 60%",
   "fanPower": "팬과 조수가 더 세게 두드려요\n힘 15%씩 추가",
@@ -5109,7 +5111,7 @@ GAME_DATA.easyNodes.flashpaperPower="플래시 페이퍼가 더 세게 두드려
   if(!n.desc)throw new Error('Missing easy description: '+n.id);
  });
  const copy={damage:'관객의 의심이 줄어요',shield:'야유를 막을 힘을 얻어요',heal:'마음이 회복돼요',coins:'비법을 배울 동전을 얻어요',xpBurst:'레벨이 더 빨리 올라요',finisher:'피날레를 더 빨리 준비해요',boxFill:'케이스가 더 빨리 열려요'};
- D.items.types.forEach(t=>t.ladder.forEach(p=>{const effect=p.effect||t.effect;const values={damage:'기본 힘 8 × 연출 · 좋은 소품은 최대 25배',shield:'기본 자신감 2.7 × 멘탈 · 최대 25배',heal:'기본 회복 1.8 × 멘탈 · 최대 25배',coins:'기본 동전 8개 · 좋은 소품은 최대 25배',xpBurst:'다음 레벨 경험치의 50%',finisher:'피날레 5칸 채우기',boxFill:'모든 케이스를 30% 더 열기'};p.desc=copy[effect]+'\n'+values[effect];}));
+ D.items.types.forEach(t=>t.ladder.forEach(p=>{const effect=p.effect||t.effect;const values={damage:'기본 힘 8 × 연출 · 좋은 소품은 최대 25배',shield:'기본 자신감 0.54 × 멘탈 · 최대 25배',heal:'기본 회복 1.8 × 멘탈 · 최대 25배',coins:'기본 동전 8개 · 좋은 소품은 최대 25배',xpBurst:'다음 레벨 경험치의 50%',finisher:'피날레 5칸 채우기',boxFill:'모든 케이스를 30% 더 열기'};p.desc=copy[effect]+'\n'+values[effect];}));
  D.missions.forEach(m=>{m.desc='오늘의 목표를 이루면 실크를 받아요\n'+m.name+' · 실크 '+m.gems+'개';});
  D.easyExtras={events:'움직이는 친구를 누르면 선물을 받아요\n8초 안에 누르기 · 힘, 동전, 책 중 하나',set:'무대의 모두를 감탄시키면 힘이 늘어요\n실력 3% 추가 · 컬렉션 모두 모으면 연출 1.1배',milestone:'레벨이 쌓이면 힘이 크게 늘어요\n10 · 25레벨마다 2배 · 케이스는 50도 2배'};
 })(GAME_DATA);
@@ -5135,7 +5137,7 @@ GAME_DATA.tree.filter(n=>['encore','encorePower','encoreSpan'].includes(n.id)).f
 
 GAME_DATA.venues.find(v=>v.slug==='lecturenote').bossHpFactor*=1.07;
 
-// U18 optional challenges and persistent cosmetics do not change timeline balance.
+// U18 challenges and case skins persist. Equipped outfits and pads now affect progression (owner 2026-10-18).
 GAME_DATA.trueFanRules=[
  {type:'noDamage',value:0,label:'하트 하나도 잃지 않고 관객 감탄시키기'},
  {type:'timeLimit',value:90,label:'90초 안에 관객 감탄시키기'},
@@ -5144,7 +5146,7 @@ GAME_DATA.trueFanRules=[
 GAME_DATA.cosmetics={
  kali:[
   {id:'wave',name:'푸른 파도',cost:8,emoji:'🌊'},
-  {id:'flame',name:'불꽃 고리',cost:12,emoji:'🔥'},
+  {id:'flame',name:'불꽃 고리',cost:6,emoji:'🔥'},
   {id:'hanbok',name:'한복 마술사',cost:0,milestone:'meetup',hint:'전국 마술 매니아 무대 완료',emoji:'🎎'},
   {id:'denim',name:'거리 마술사',cost:10,emoji:'👖'},
   {id:'brownknit',name:'갈색 니트',cost:10,emoji:'🧶'},
@@ -5405,10 +5407,60 @@ GAME_DATA.batchD = {
  encore:{durationMs:15000,hpFactor:0.25,rewardFactor:0.5,damageFactor:1.15},
  rebirth:{permanentBonus:0.1},
  stages:{
-  young:{name:'어린 칼리와의 대결',character:'어린 칼리',portrait:'assets/aud-past-kali.png',hpFactor:1.1,damageFactor:1.05,script:'youngKaliDuel'},
-  mirror:{name:'거울 속 무대',character:'완벽한 칼리',portrait:'assets/aud-future-kali.png',hpFactor:1.5,damageFactor:1.2,script:'mirrorStage'}
+  young:{name:'어린 칼리와의 대결',character:'어린 칼리',portrait:'assets/aud-young-kali.png',hpFactor:1.1,damageFactor:1.05,script:'youngKaliDuel'},
+  mirror:{name:'거울 속 무대',character:'완벽한 칼리',portrait:'assets/aud-perfect-kali.png',hpFactor:1.5,damageFactor:1.2,script:'mirrorStage'}
  },
  twist:{venue:'meetup',products:['p-classic-collection-remastered','p-classic-collection-remastered-2'],threshold:0.1,hiddenMs:4000,failures:3,damageReduction:0.9,mentalCap:0.1,cutsceneMs:4200}
 };
 // Derive the legacy ending API from the reviewed stage lines.
 GAME_DATA.venues.find(v=>v.slug==='lecturenote').headliner.endingLines=GAME_DATA.storyReview.lecturenote.afterClear.filter(l=>!l.secretSkill).map(l=>l.text);
+
+// Combat balance: constant-only venue pacing pass, best measured values after two tuning attempts; no further tuning.
+(function(D){
+ const scale={family:1.342,party:1.7,school:1.3,cafe:1.7,meetup:.345,theater:.85,festival:2.25,audition:.36,broadcast:.85,vegas:1,broadway:1,moon:1.30,galaxy:1.53,multiverse:1.08};
+ D.venues.forEach(v=>{if(scale[v.slug])v.hpFactor*=scale[v.slug];});
+ D.venues.find(v=>v.slug==='lecturenote').bossHpFactor*=.8;
+})(GAME_DATA);
+
+// 12-90: new dialogue awaits owner review; approved fourth-script lines remain intact.
+GAME_DATA.storyReview.tutorialLesson={
+ reviewStatus:'신규 · 오너 검토 필요',
+ before:[
+  {speaker:'세로나',text:'이번엔 막히는 순간도 연습해요.',mood:'serious',review:'신규'},
+  {speaker:'세로나',text:'잠깐 쉬고, 비법 하나 배워 봐요.',mood:'happy',review:'신규'}
+ ],
+ fail:[
+  {speaker:'칼리',text:'손만 빠르면 되는 건 아니네요.',mood:'serious',review:'신규'},
+  {speaker:'세로나',text:'괜찮아요. 여기까지가 실패 연습이에요.',mood:'happy',review:'신규'},
+  {speaker:'세로나',text:'동전은 그대로예요. 비법 하나 배워요.',mood:'happy',review:'신규'}
+ ],
+ buy:[{speaker:'세로나',text:'빛나는 비법의 배우기를 눌러요.',mood:'happy',review:'신규'}],
+ retry:[{speaker:'세로나',text:'배운 비법으로 다시 보여 줘요.',mood:'happy',review:'신규'}]
+};
+
+// Lane 1d: owner-approved effects. Prices follow the existing 2-20 silk curve.
+// This explicit price table is kept in data for owner review; upgrades use the coin growth curve.
+GAME_DATA.padPrices={lecturenote:2,personal:6,kali:12,upgradeBase:4000,upgradeGrowth:1.6,upgradeMax:100};
+GAME_DATA.padColors={
+ black:{name:'블랙',personal:{crit:.05},kali:{crit:.06}},
+ red:{name:'레드',personal:{tap:.08},kali:{tap:.10}},
+ green:{name:'그린',personal:{coins:.08},kali:{coins:.10}},
+ lightgreen:{name:'연두',kali:{open:.10}},
+ pink:{name:'핑크',kali:{reward:.10}},
+ white:{name:'화이트',kali:{recovery:.10}},
+ gray:{name:'그레이',kali:{crit:.04,tap:.04,coins:.04,open:.04,reward:.04,recovery:.04}}
+};
+GAME_DATA.pads=[
+ {id:'floor',name:'바닥',tier:0,speed:1,cost:0,colors:[''],asset:'floor-wood'},
+ {id:'lecturenote',name:'렉노 배치패드',tier:1,speed:1.2,cost:2,requires:'floor',venue:'meetup',colors:[''],asset:'pad-lecturenote'},
+ {id:'personal',name:'개인 패드',tier:2,speed:1.5,cost:6,requires:'lecturenote',colors:['black','red','green'],asset:'pad-personal'},
+ {id:'kali',name:'칼리 패드',tier:3,speed:1.7,cost:12,requires:'personal',colors:['green','lightgreen','red','pink','black','white','gray'],asset:'pad-kali'}
+];
+// Each colour is a separate silk purchase at its tier price, including gray.
+GAME_DATA.outfitEffects={
+ wave:{cooldown:-.08},flame:{tap:.10},hanbok:{confidence:.10},denim:{hold:.08},
+ brownknit:{mental:.10},camera:{performance:.10},guitar:{finale:.10},reader:{price:-.08},redtee:{coins:.10}
+};
+GAME_DATA.gearEffectLabels={hold:'꾹 누르기 속도',crit:'대박 탭 확률',tap:'탭 힘',coins:'동전 획득',open:'케이스 여는 속도',reward:'관객 감탄 보상',recovery:'멘탈 회복',cooldown:'비법 쿨타임',confidence:'자신감 획득',mental:'최대 멘탈',performance:'연출(초당)',finale:'피날레 충전',price:'비법 가격'};
+// Retain all legacy tree keys; shop-only nodes are never drawn or sold in the tree.
+for(const item of GAME_DATA.gemShop){const node=GAME_DATA.tree.find(n=>n.id===item.id);if(node)node.shopOnly=true;}

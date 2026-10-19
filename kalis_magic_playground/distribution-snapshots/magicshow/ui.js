@@ -87,25 +87,18 @@ globalThis.PhoneLayout = (() => {
     // Portrait prototype: a phone held upright (shortest side under 600 CSS px) stacks the battle.
     // Landscape measure() above this return is unchanged; unit tests call landscape sizes only.
     if (height > width && Math.min(width, height) < 600) {
-      // Venue panel, 6px gap, audience HP strip (name line plus a 10px doubt fill inside the frame), then the stage.
+      // Mockup A: full-width board, one action row, and the remaining height belongs to the stage.
       const compact = h < 700;
-      const venue = 44, rowGap = compact ? 4 : 6, hp = compact ? 34 : 52, stats = compact ? 40 : 60;
-      const finale = 0, skills = compact ? 94 : Math.min(140, Math.max(138, h - 518)), bottom = 4;
+      const venue = compact ? 38 : 54, rowGap = compact ? 2 : 4, hp = compact ? 22 : 36, stats = compact ? 40 : 48;
+      const finale = 0, skills = compact ? 108 : 116, bottom = 4;
       const topBar = venue + rowGap + hp;
       const below = rowGap + stats + finale + rowGap;
-      const chrome = topBar + below + skills + bottom;
-      const pad = 1, gap = 1, tracks = 5;
-      const wantCell = 80;
-      const wantBoard = wantCell * tracks + pad * 2 + gap * (tracks - 1);
-      const minStage = compact ? Math.min(120, Math.max(80, h - chrome - 252)) : Math.max(200, Math.round(h * 0.28));
-      // Compact frame: 16px border + 4px padding + four 3px gaps + five 44px cells.
-      const minBoard = compact ? 252 : 292;
-      const boardP = Math.max(Math.min(minBoard, content - 8), Math.min(wantBoard, content - (compact ? 8 : 4), h - chrome - minStage));
-      const boardTop = h - bottom - boardP - skills;
-      // Short portrait screens give the stage only the remaining height so gauges cannot overlap controls.
+      const pad = 2, gap = 2, boardP = content - 8;
+      const boardH = Math.max(252, Math.min(boardP, Math.round(h * .38)));
+      const boardTop = h - bottom - boardH - skills;
       const stageH = Math.max(0, boardTop - topBar - below);
       return { phone: true, tablet: false, width: content, height: h, board: boardP, audience: Math.max(0, content - 12),
-        portrait: { top: topBar, stageH, stats, finale, skills, boardTop, pad, gap, venue, rowGap, hp, compact } };
+        portrait: { top: topBar, stageH, stats, finale, skills, boardTop, boardH, pad, gap, venue, rowGap, hp, compact } };
     }
     // U32: tablet cells are 72-96px (whole numbers) so the board fits the 44% column on narrower tablets.
     let cell = tablet ? Math.max(72, Math.min(96, Math.floor((content * .44 - 24) * 112 / 608))) : 48;
@@ -368,6 +361,162 @@ globalThis.Presentation = (() => {
     }
     return opaqueSprites.get(path)[face?'face':'full'];
   }
+  // Base alpha size and the union envelope of all installed faces. Never fit an expression independently.
+  const STAGE_AUDIENCE_METRICS = {
+    "assets/case-closed.png":[128,180,128,200],
+    "assets/aud-a1.png":[124,196,124,196],
+    "assets/aud-a10.png":[164,210,164,210],
+    "assets/aud-a100.png":[138,198,140,198],
+    "assets/aud-a101.png":[153,198,162,198],
+    "assets/aud-a102.png":[138,198,141,198],
+    "assets/aud-a106.png":[176,233,176,233],
+    "assets/aud-a107.png":[137,218,139,218],
+    "assets/aud-a108.png":[174,203,181,203],
+    "assets/aud-a109.png":[170,212,181,212],
+    "assets/aud-a11.png":[124,204,138,204],
+    "assets/aud-a110.png":[172,250,176,250],
+    "assets/aud-a111.png":[147,216,149,216],
+    "assets/aud-a12.png":[141,222,141,222],
+    "assets/aud-a13.png":[153,232,153,232],
+    "assets/aud-a14.png":[102,201,106,201],
+    "assets/aud-a15.png":[138,232,139,232],
+    "assets/aud-a16.png":[98,219,106,220],
+    "assets/aud-a17.png":[106,207,107,208],
+    "assets/aud-a18.png":[112,213,112,213],
+    "assets/aud-a19.png":[131,211,132,212],
+    "assets/aud-a2.png":[122,204,127,204],
+    "assets/aud-a20.png":[110,228,116,228],
+    "assets/aud-a21.png":[110,198,110,198],
+    "assets/aud-a22.png":[121,232,121,232],
+    "assets/aud-a23.png":[131,232,132,232],
+    "assets/aud-a24.png":[119,232,120,232],
+    "assets/aud-a25.png":[102,232,102,232],
+    "assets/aud-a26.png":[138,232,138,232],
+    "assets/aud-a27.png":[124,232,124,232],
+    "assets/aud-a28.png":[143,207,144,208],
+    "assets/aud-a29.png":[138,231,139,232],
+    "assets/aud-a3.png":[123,216,123,216],
+    "assets/aud-a30.png":[145,231,145,232],
+    "assets/aud-a31.png":[114,232,114,232],
+    "assets/aud-a32.png":[111,232,112,232],
+    "assets/aud-a33.png":[105,232,105,232],
+    "assets/aud-a34.png":[168,232,168,232],
+    "assets/aud-a35.png":[161,221,163,221],
+    "assets/aud-a36.png":[167,223,168,224],
+    "assets/aud-a37.png":[156,208,172,208],
+    "assets/aud-a38.png":[146,220,146,220],
+    "assets/aud-a39.png":[172,221,188,221],
+    "assets/aud-a4.png":[143,216,144,216],
+    "assets/aud-a46.png":[120,198,129,198],
+    "assets/aud-a5.png":[127,222,151,222],
+    "assets/aud-a50.png":[144,198,177,198],
+    "assets/aud-a54.png":[120,198,156,198],
+    "assets/aud-a55.png":[126,198,141,198],
+    "assets/aud-a59.png":[117,198,159,198],
+    "assets/aud-a6.png":[134,216,136,216],
+    "assets/aud-a60.png":[114,198,129,198],
+    "assets/aud-a64.png":[114,198,147,198],
+    "assets/aud-a65.png":[117,198,135,198],
+    "assets/aud-a66.png":[135,198,144,198],
+    "assets/aud-a7.png":[131,214,132,214],
+    "assets/aud-a70.png":[111,198,138,198],
+    "assets/aud-a71.png":[129,198,150,198],
+    "assets/aud-a72.png":[129,198,168,198],
+    "assets/aud-a76.png":[114,198,159,198],
+    "assets/aud-a77.png":[123,198,153,198],
+    "assets/aud-a78.png":[105,198,147,198],
+    "assets/aud-a79.png":[120,198,165,198],
+    "assets/aud-a8.png":[133,213,133,213],
+    "assets/aud-a83.png":[126,198,162,198],
+    "assets/aud-a84.png":[138,198,180,198],
+    "assets/aud-a85.png":[126,198,180,198],
+    "assets/aud-a86.png":[126,198,171,198],
+    "assets/aud-a9.png":[163,232,164,232],
+    "assets/aud-a90.png":[123,198,141,198],
+    "assets/aud-a91.png":[129,198,162,198],
+    "assets/aud-a92.png":[120,198,135,198],
+    "assets/aud-a93.png":[123,198,150,198],
+    "assets/aud-a94.png":[111,198,138,198],
+    "assets/aud-a98.png":[141,198,146,198],
+    "assets/aud-a99.png":[139,198,140,198],
+    "assets/aud-blackcat.png":[128,190,128,190],
+    "assets/aud-f-brother.png":[118,170,118,170],
+    "assets/aud-f-mom.png":[118,184,118,184],
+    "assets/aud-f-sister.png":[194,182,194,182],
+    "assets/aud-future-kali.png":[175,216,186,216],
+    "assets/aud-lecturenote-hecate.png":[148,198,167,198],
+    "assets/aud-lecturenote-jung.png":[123,198,149,198],
+    "assets/aud-lecturenote-serona.png":[150,198,182,198],
+    "assets/aud-meetup-busan.png":[128,190,128,190],
+    "assets/aud-meetup-changwon.png":[128,190,128,190],
+    "assets/aud-meetup-cheonan.png":[131,198,155,198],
+    "assets/aud-meetup-daegu.png":[132,198,163,198],
+    "assets/aud-meetup-geoje.png":[135,198,142,198],
+    "assets/aud-meetup-incheon.png":[128,190,128,190],
+    "assets/aud-meetup-suwon.png":[128,190,128,190],
+    "assets/aud-mingiri-dark.png":[248,232,248,248],
+    "assets/aud-past-kali.png":[107,171,109,172],
+    "assets/aud-perfect-kali.png":[216,214,216,214],
+    "assets/aud-s1-classmate.png":[134,186,134,186],
+    "assets/aud-s1-teacher.png":[132,194,132,194],
+    "assets/aud-tutorial-dogyeom.png":[131,198,145,198],
+    "assets/aud-tutorial-mingiri.png":[145,171,145,171],
+    "assets/aud-tv1.png":[184,198,190,198],
+    "assets/aud-tv2.png":[126,198,141,198],
+    "assets/aud-tv3.png":[231,198,247,198],
+    "assets/aud-tv4.png":[176,198,234,198],
+    "assets/aud-tv5.png":[188,198,188,198],
+    "assets/aud-tv6.png":[204,198,209,198],
+    "assets/aud-young-kali.png":[214,216,216,216],
+    "assets/headliner-h1.png":[148,210,148,210],
+    "assets/headliner-h10.png":[134,220,143,220],
+    "assets/headliner-h11.png":[149,232,149,232],
+    "assets/headliner-h12.png":[125,232,134,232],
+    "assets/headliner-h13.png":[145,232,154,232],
+    "assets/headliner-h2.png":[160,226,169,226],
+    "assets/headliner-h3.png":[130,202,167,202],
+    "assets/headliner-h4.png":[131,222,135,222],
+    "assets/headliner-h5.png":[163,212,164,212],
+    "assets/headliner-h6.png":[128,214,131,214],
+    "assets/headliner-h7.png":[164,220,175,220],
+    "assets/headliner-h8.png":[158,228,158,228],
+    "assets/headliner-h9.png":[144,230,149,230],
+    "assets/headliner-lecturenote-kim.png":[161,216,177,216],
+    "assets/headliner-meetup-seoul.png":[128,190,128,190],
+    "assets/headliner-tv.png":[134,216,173,216],
+  };
+  function stageSprite(source, path, reference) {
+    const metrics = STAGE_AUDIENCE_METRICS[reference];
+    if (!metrics) return opaqueSprite(source, path);
+    opaqueSprite(source, path);
+    const cached = opaqueSprites.get(path), key = 'stage:' + reference;
+    if (!cached.bounds) return path;
+    if (!cached[key]) {
+      const [,,width,height] = metrics, b = cached.bounds, canvas = document.createElement('canvas');
+      canvas.width = width; canvas.height = height;
+      const ctx = canvas.getContext('2d'); ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(source,b.left,b.top,b.width,b.height,(width-b.width)/2,height-b.height,b.width,b.height);
+      cached[key] = canvas.toDataURL();
+    }
+    return cached[key];
+  }
+  function audienceStagePaths(base, stage) {
+    const stem = base.replace(/\.(?:png|webp)$/, '');
+    return [1,2,3,4,5,6].sort((a,b)=>Math.abs(a-stage)-Math.abs(b-stage)||a-b)
+      .map(n=>stem+(n===1?'':n===6?'-happy':'-s'+n)+'.png');
+  }
+  function stageAudienceFace(host, base, stage) {
+    if (!base) return;
+    host.dataset.reference = base;
+    const mood = 'stage-' + stage;
+    if (host.dataset.mood !== mood || host.dataset.faceBase !== base) {
+      host.dataset.faceBase = base;
+      moodSprite(host, base, mood, audienceStagePaths(base, stage));
+    }
+  }
+  function audienceDoubtStage() {
+    return 1 + Math.min(4, Math.floor(5 * (1 - Math.max(0, Math.min(1, state.audHp / Math.max(1, state.audHpMax)))) + 1e-9));
+  }
   // v4 U46 A8: head framing inside the dialog portrait frame. The image is the whole trimmed sprite, centred, drawn at h (percent of the frame height)
   // and moved by t, so the frame shows the head (hair to chin). Rows list the sprites whose head is a bigger or smaller part of the figure.
   const PORTRAIT_FOCUS = [[/mingiri/, { h: '135%', t: '-4%' }], [/aud-a108|past-kali|kali-past/, { h: '150%', t: '-2%' }], [/headliner-|future-kali/, { h: '190%', t: '-3%' }], [/aud-a4[-.]/, { h: '190%', t: '-38%' }], [/aud-a16[-.]/, { h: '190%', t: '-45%' }]];
@@ -380,6 +529,7 @@ globalThis.Presentation = (() => {
   function snapAudience(image) {
     const host = $('audience'), img = image || host.querySelector(':scope > .asset-sprite');
     if (!img) return;
+    if (host.dataset.reference) { img.style.height = ''; delete img.dataset.snap; return; }
     if (!document.body.classList.contains('tablet')) { img.style.height = ''; delete img.dataset.snap; return; }
     const apply = () => {
       const nat = img.naturalHeight, factor = host.dataset.figureSize === 'large' ? .95 : host.dataset.figureSize === 'small' ? Math.min(1,.72*Number(host.dataset.storyScale||1)) : .84;
@@ -402,6 +552,7 @@ globalThis.Presentation = (() => {
   function sprite(host, path) {
     host.querySelectorAll(':scope > .asset-sprite').forEach(img => img.remove());
     host.classList.remove('asset-ready'); host.dataset.asset = path;
+    if (host.id === 'audience' && !host.dataset.reference) host.dataset.reference = path.replace(/-(?:s[2-6]|happy|serious|surprised|sad)(?=\.(?:png|webp)$)/, '');
     const source = assetImage(path), gen = nextArt(host);
     pendingArt(host, source);
     const fail = () => { if (host._artGen === gen && host.dataset.asset === path && !source.naturalWidth) failedArt(host); };
@@ -413,10 +564,10 @@ globalThis.Presentation = (() => {
       const image = source.cloneNode(); image.className = 'asset-sprite'; image.alt = '';
       if (/assets\/(?:aud-|headliner-)/.test(path)||host.classList.contains('story-portrait')&&/^assets\/kali-/.test(path)) {
         host.classList.add('normalized-figure');host.dataset.figureSize=figureSize(path);
-        try { image.src=opaqueSprite(source,path,host.classList.contains('dialogue-emoji')); } // v4 U46 A8: the dialog portrait frames the head of the full sprite (portraitFocus)
+        try { image.src=host.id === 'audience' ? stageSprite(source,path,host.dataset.reference || path) : opaqueSprite(source,path,host.classList.contains('dialogue-emoji')); } // v4 U46 A8: the dialog portrait frames the head of the full sprite (portraitFocus)
         catch(error) { /* Keep the source if a cross-origin canvas is unavailable. */ }
       }
-      if(/^assets\/(?:box-|case-)/.test(path)){try{image.src=opaqueSprite(source,path);}catch(error){ /* Keep fallback geometry if alpha access fails. */ }}
+      if(/^assets\/(?:box-|case-)/.test(path)){try{image.src=/assets\/case-(?:closed|open)\.png$/.test(path) ? stageSprite(source,path,'assets/case-closed.png') : opaqueSprite(source,path);}catch(error){ /* Keep fallback geometry if alpha access fails. */ }}
       if (host.classList.contains('story-portrait')) { const f = portraitFocus(path); image.style.height = f.h; image.style.top = f.t; } // v4 U46 A8: the dialog frame shows the head at its focus point
       host.append(image); host.classList.add('asset-ready');
       if (host.id === 'audience') {
@@ -440,16 +591,21 @@ globalThis.Presentation = (() => {
     return '';
   }
   const stageAudienceAsset = (v, a) => tutorialStageBase() || audienceAsset(v, a);
-  function moodSprite(host,path,mood='doubt'){
+  // Optional expressions are requested only when the current art shipment contains them.
+  const shippedExpressionArt = new Set(["assets/aud-a1-serious.png", "assets/aud-a1-surprised.png", "assets/aud-a2-serious.png", "assets/aud-a2-surprised.png", "assets/aud-a3-serious.png", "assets/aud-a3-surprised.png", "assets/aud-future-kali-serious.png", "assets/aud-future-kali-surprised.png", "assets/aud-lecturenote-hecate-serious.png", "assets/aud-lecturenote-hecate-surprised.png", "assets/aud-lecturenote-jung-serious.png", "assets/aud-lecturenote-jung-surprised.png", "assets/aud-lecturenote-serona-serious.png", "assets/aud-lecturenote-serona-surprised.png", "assets/aud-past-kali-serious.png", "assets/aud-past-kali-surprised.png", "assets/aud-perfect-kali-serious.png", "assets/aud-perfect-kali-surprised.png", "assets/aud-tutorial-dogyeom-serious.png", "assets/aud-tutorial-dogyeom-surprised.png", "assets/aud-tutorial-mingiri-serious.png", "assets/aud-tutorial-mingiri-surprised.png", "assets/aud-young-kali-serious.png", "assets/aud-young-kali-surprised.png", "assets/headliner-h1-serious.png", "assets/headliner-h1-surprised.png", "assets/headliner-lecturenote-kim-serious.png", "assets/headliner-lecturenote-kim-surprised.png", "assets/kali-react-sad.png", "assets/kali-react-surprised.png"]);
+  function moodSprite(host,path,mood='doubt',preferredPaths=null){
     if(!path){host.dataset.mood=mood;return;}
     const emotes={happy:'😊',serious:'💭',surprised:'❗',sad:'💧',smug:'😏'};
-    const paths=['happy','serious','surprised','sad'].includes(mood)?[path.replace(/\.png$/,'-'+mood+'.png')]:[path];
-    if(mood==='surprised')paths.push(path.replace(/\.png$/,'-happy.png'));paths.push(path);
+    // These optional serious portraits were never shipped; use the base with its mood emote.
+    const baseSerious = mood === 'serious' && ['assets/serona.png','assets/aud-a19.png'].includes(path);
+    const paths=preferredPaths || (baseSerious ? [] : ['happy','serious','surprised','sad'].includes(mood)?[path.replace(/\.png$/,'-'+mood+'.png')]:[path]);
+    if(!preferredPaths){if(mood==='surprised')paths.push(path.replace(/\.png$/,'-happy.png'));paths.push(path);}
+    if(!preferredPaths)for(let i=paths.length-1;i>=0;i--)if(/-(serious|surprised|sad)\.png$/.test(paths[i])&&!shippedExpressionArt.has(paths[i]))paths.splice(i,1);
     host.dataset.mood=mood;host.dataset.emote=emotes[mood]||'';
     if(!host.classList.contains('asset-ready')){wrapGlyph(host);host.classList.remove('asset-failed');host.classList.add('asset-pending');} // v4 U49 3: nothing (not the emoji) while the first face loads
     const gen=nextArt(host); // v4 U49b 2: a newer request (another audience with the same mood, or any sprite call) makes this chain stale
     const attempt=i=>{if(host._artGen!==gen||host.dataset.mood!==mood)return;const source=assetImage(paths[i]);
-      const ready=()=>{if(host._artGen!==gen||host.dataset.mood!==mood)return;if(source.naturalWidth){sprite(host,paths[i]);host.dataset.emote=i===0&&mood!=='smug'?'':emotes[mood]||'';}else if(i+1<paths.length)attempt(i+1);else if(!host.classList.contains('asset-ready'))failedArt(host);};
+      const ready=()=>{if(host._artGen!==gen||host.dataset.mood!==mood)return;if(source.naturalWidth){sprite(host,paths[i]);host.dataset.emote=i===0&&paths[i]!==path&&mood!=='smug'&&!baseSerious?'':emotes[mood]||'';}else if(i+1<paths.length)attempt(i+1);else if(!host.classList.contains('asset-ready'))failedArt(host);};
       if(source.complete)ready();else{source.addEventListener('load',ready,{once:true});source.addEventListener('error',ready,{once:true});}
     };attempt(0);
   }
@@ -473,6 +629,7 @@ globalThis.Presentation = (() => {
   };
   const $ = id => document.getElementById(id);
   const KEY = 'magicShowBuster.v3';
+  document.querySelectorAll('[data-game-build]').forEach(node => { node.textContent = `빌드 ${GAME_BUILD}`; });
   const debug = new URLSearchParams(location.search).get('debug') === '1';
   const motion = matchMedia('(prefers-reduced-motion: reduce)');
   const coarse = matchMedia('(pointer:coarse)').matches;
@@ -501,6 +658,39 @@ globalThis.Presentation = (() => {
   // School tutorial before the core NDD fight. The mark lives in u15.bios (tchain:step:line) so a reload can resume.
   // Fights themselves are rolled back: core still treats a tutorial win as the end of the only tutorial battle.
   let chainFighting = false, chainBackup = '', chainNodeId = '', chainNodeLevel = -1, chainFocused = false, chainBookChecked = false;
+  // One lifetime owner survives button replacement and pointer capture changes.
+  let tooltipOwner=null,tooltipPending=0,tooltipExpiry=0;
+  const tooltipBindings=new WeakMap();
+  function hideEasyTooltip(){
+    clearTimeout(tooltipPending);clearTimeout(tooltipExpiry);
+    tooltipPending=tooltipExpiry=0;tooltipOwner=null;$('easyTooltip').hidden=true;
+  }
+  for(const name of ['pointerdown','pointerup','pointercancel','scroll'])document.addEventListener(name,hideEasyTooltip,true);
+  for(const name of ['resize','orientationchange','blur'])window.addEventListener(name,hideEasyTooltip);
+  document.addEventListener('visibilitychange',hideEasyTooltip);
+  const tooltipObserver=new MutationObserver(records=>{
+    const owner=tooltipOwner;if(!owner)return;
+    if(!owner.isConnected||records.some(r=>r.target===owner||owner.contains(r.target)||[...r.removedNodes].some(n=>n===owner||n.contains?.(owner))))hideEasyTooltip();
+  });
+  tooltipObserver.observe(document.body,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['disabled','hidden','aria-label']});
+  function easyTooltip(button,copy){
+    button.title=copy;button.setAttribute('aria-description',copy);
+    if(tooltipBindings.has(button)){tooltipBindings.get(button).copy=copy;return;}
+    const binding={copy,long:false};tooltipBindings.set(button,binding);
+    const show=(suppressClick=true)=>{
+      if(!button.isConnected){hideEasyTooltip();return;}
+      hideEasyTooltip();tooltipOwner=button;binding.long=suppressClick;
+      const tip=$('easyTooltip');tip.textContent=binding.copy;tip.hidden=false;
+      const r=button.getBoundingClientRect(),stage=$('stage').getBoundingClientRect();
+      tip.style.left=Math.max(4,Math.min(layoutWidth-240,(r.left-stage.left)/scale-240))+'px';tip.style.top=Math.max(48,(r.top-stage.top)/scale)+'px';
+      tooltipExpiry=setTimeout(hideEasyTooltip,3000);
+    };
+    button.addEventListener('pointerdown',()=>{hideEasyTooltip();binding.long=false;tooltipOwner=button;tooltipPending=setTimeout(show,400);});
+    button.addEventListener('pointerenter',e=>{if(e.pointerType==='mouse')show(false);});
+    for(const event of ['pointerup','pointercancel','pointerleave','lostpointercapture'])button.addEventListener(event,hideEasyTooltip);
+    button.addEventListener('click',e=>{if(binding.long){e.stopImmediatePropagation();binding.long=false;}},true);
+  }
+  // End transient tooltips.
   const lastHeckles = new Map(), happyCache = new Map();
   const caps = { particles: coarse ? 120 : 240, icons: 24, numbers: 4 };
   const canvas = $('effects'), ctx = canvas.getContext('2d');
@@ -527,7 +717,7 @@ globalThis.Presentation = (() => {
     try { seasonReset = C.applySaveEpoch(localStorage).reset; } catch (error) { /* storage blocked: the store below reports it */ }
     saveStore = C.createSaveStore(localStorage);
     const loaded = saveStore.load();
-    if (loaded.state) { state = loaded.state; loaded0 = true; }
+    if (loaded.state) { state = loaded.state; C.step(state,0,{taps:[],quiet:true}); loaded0 = true; }
     corrupt = loaded.backedUp && !loaded.recovered;
     recoveredSave = !!loaded.recovered;
     // v4 U38: 'refund:<coins>' in the repair list is the paid-back endless nodes; it has its own toast, not the generic repair one.
@@ -784,6 +974,7 @@ globalThis.Presentation = (() => {
     document.body.classList.toggle('phone', phone);
     document.body.classList.toggle('tablet',!!layout.tablet);
     document.body.classList.toggle('phone-tight', phone && layout.height <= 340);
+    document.body.classList.toggle('compact-notice', phone && !layout.portrait && !layout.tablet && (layout.height <= 340 || layout.audience < 360));
     document.body.classList.toggle('phone-compact',phone&&!layout.tablet&&layout.height<352);
     document.body.classList.toggle('phone-narrow',phone&&!layout.tablet&&layout.audience<260);
     document.body.classList.toggle('phone-low',phone&&!layout.tablet&&layout.height<320);
@@ -801,6 +992,7 @@ globalThis.Presentation = (() => {
     frame.style.top = phone ? `${safe.top + (vv?.offsetTop || 0)}px` : '';
     stage.style.width = `${layoutWidth}px`; stage.style.height = `${layoutHeight}px`;
     stage.style.transform = `scale(${scale})`;
+    stage.style.setProperty('--menu-tap-height', `${45 / scale}px`);
     stage.style.setProperty('--layout-height',`${layoutHeight}px`);
     stage.style.setProperty('--stage-w',`${layoutWidth}px`); // v4 U50: the stage width for the one-scene layout (style.css U50 block)
     stage.style.setProperty('--board-size', `${layout.board}px`);
@@ -808,6 +1000,7 @@ globalThis.Presentation = (() => {
     if (layout.portrait) {
       const p = layout.portrait;
       stage.style.setProperty('--p-top', `${p.top}px`);
+      stage.style.setProperty('--p-board-h', `${p.boardH}px`);
       stage.style.setProperty('--p-venue', `${p.venue}px`);
       stage.style.setProperty('--p-row-gap', `${p.rowGap}px`);
       stage.style.setProperty('--p-hp', `${p.hp}px`);
@@ -822,7 +1015,7 @@ globalThis.Presentation = (() => {
       const soloRoom = layout.height - p.boardTop - p.skills - 108;
       stage.style.setProperty('--p-solo', `${Math.max(96, Math.min(layout.board, layout.width - 16, soloRoom))}px`);
     } else {
-      for (const name of ['--p-top','--p-venue','--p-row-gap','--p-hp','--p-stage','--p-stats','--p-finale','--p-skills','--p-board-top','--p-pad','--p-gap','--p-solo']) stage.style.removeProperty(name);
+      for (const name of ['--p-board-h','--p-top','--p-venue','--p-row-gap','--p-hp','--p-stage','--p-stats','--p-finale','--p-skills','--p-board-top','--p-pad','--p-gap','--p-solo']) stage.style.removeProperty(name);
     }
     const dpr = phone ? Math.min(2, window.devicePixelRatio || 1) : 1;
     canvas.width = Math.round(layoutWidth * dpr); canvas.height = Math.round(layoutHeight * dpr);
@@ -858,7 +1051,7 @@ globalThis.Presentation = (() => {
       if (portraitNow) placePortraitDock();
       else {
         showBookButton(true);
-        moveChrome($('bestiaryButton'),$('phoneTop')); // v4 U48 N3: 도감 sits in the top bar next to 메뉴, not in the menu
+        moveChrome($('bestiaryButton'),$('phoneTop')); moveChrome($('wardrobeButton'),$('phoneTop')); // v4 U48 N3: 도감 sits in the top bar next to 메뉴, not in the menu
         moveChrome($('moreButton'), $('phoneTop')); $('moreButton').textContent='☰ 메뉴';
       }
       for (const id of ['storyButton','installButton','statsButton','rebirthButton','missionsButton','gemShopButton','mapButton','customizeButton','soundButton','musicButton','musicVolume','hapticsButton','textSpeedButton','retreatButton','helperControls','debug','coffeeButton','openChatButton']) moveChrome(id==='musicVolume'?$(id).parentElement:$(id), $('phoneMore'));
@@ -874,14 +1067,16 @@ globalThis.Presentation = (() => {
       chromeHomes.clear(); $('moreButton').textContent='☰ 메뉴'; pxText($('equipButton'), '🎩 마술용품'); showBookButton(true); pxText($('bookButton'), '비법'); pxText($('bestiaryButton'), '도감'); $('closePanel').textContent = '닫기';
       // v4 U46 A7: desktop keeps only 비법서 and 메뉴 at the top, like the phone; everything else lives in the menu sheet.
       for (const id of DESKTOP_MENU) moveChrome(id==='musicVolume'?$(id).parentElement:$(id), $('phoneMore'));
+      moveChrome($('statsButton'), $('phoneMore'));
       if ($('practiceButton')) moveChrome($('practiceButton'), $('phoneMore'));
     }
     if ($('practiceButton')) $('practiceButton').hidden = false; // 연습 모드 is shared: every layout reaches it
     if (!portraitNow) moveChrome($('caseArrangeButton'), $('phoneMore'));
-    $('caseArrangeMenuButton').hidden = !portraitNow;
+    $('caseArrangeMenuButton').hidden = true;
     placePortraitMeters(portraitNow);
     portraitCopy();
-    dressPortraitStats(portraitNow);
+    dressSharedButtons(portraitNow);
+    dressKitStats(true);
     placePortraitDecor(portraitNow);
     // v4 U48 M: fit() runs on every viewport resize or scroll (a phone's address bar, the keyboard); the open menu stays open unless the layout kind changed.
     if (phoneChrome.kind !== phone) { phoneChrome.kind = phone; $('phoneMore').hidden = true; $('moreButton').setAttribute('aria-expanded', 'false'); }
@@ -902,12 +1097,14 @@ globalThis.Presentation = (() => {
   // Leaving portrait: undo the dock, the skill row and the kit faces, so the landscape chrome is the backup's.
   function leavePortraitChrome() {
     const dock = $('actionDock'), skills = $('activeSkills');
+    const gloveHome = chromeHomes.get($('item-auto-glove'));
+    if (gloveHome && $('item-auto-glove')) skills.append($('item-auto-glove'));
     if (!dock && !$('skillRow') && !document.querySelector('.kit-btn, .top-dogam')) return;
     releaseSkillRow();
-    for (const id of ['caseArrangeButton', 'bookButton', 'practiceButton', 'bestiaryButton', 'moreButton', 'gemShopQuick']) clearKitFace($(id));
+    for (const id of ['caseArrangeButton', 'bookButton', 'practiceButton', 'bestiaryButton', 'moreButton', 'gemShopQuick', 'wardrobeButton']) clearKitFace($(id));
     for (const button of skills.querySelectorAll('.active-skill')) button.classList.remove('kit-btn');
     const dogam = $('bestiaryButton');
-    if (dogam) { dogam.classList.remove('top-dogam'); dogam.querySelectorAll(':scope > img.top-dogam-ico').forEach(n => n.remove()); delete dogam.dataset.pxText; }
+    if (dogam) { dogam.classList.remove('top-dogam'); dogam.querySelectorAll(':scope > img.top-dogam-ico, :scope > .top-dogam-label').forEach(n => n.remove()); delete dogam.dataset.pxText; }
     if ($('gemShopQuick')) skills.prepend($('gemShopQuick')); // first in #activeSkills, as on a fresh landscape load
     if ($('bookButton')) $('bookButton').style.removeProperty('display');
     if (dock) {
@@ -973,8 +1170,8 @@ globalThis.Presentation = (() => {
       }
       const heading = document.querySelector('.venue-heading');
       if (heading && line.parentNode !== heading) heading.append(line);
-      portraitMove(combo, line);
-      portraitMove(rate, line);
+      portraitMove(combo, $('stageStats'));
+      portraitMove(rate, $('stageStats'));
     } else if (line) line.remove();
   }
   function placePortraitGauges(on) {
@@ -988,7 +1185,9 @@ globalThis.Presentation = (() => {
       if (!finale) {
         finale = element('div', '', 'kali-gauge');
         finale.id = 'finaleStat';
-        finale.setAttribute('aria-label', '피날레');
+        finale.setAttribute('aria-label', '피날레 자동 발동 충전');
+        finale.classList.add('finale-skill');
+        const icon = element('img', '', 'skill-art'); icon.src = 'assets/kit/icon-finale.webp'; icon.alt = ''; finale.append(icon);
       }
       // Attach before moving the fill so ID lookups still find the finale subtree.
       stats.append(finale);
@@ -1000,13 +1199,14 @@ globalThis.Presentation = (() => {
       if (heckle) {
         heckle.classList.add('audience-gauge');
         portraitMove(plate, heckle);
-        portraitMove(heckle, stats);
+        portraitMove(heckle, $('portraitMeters'));
       }
-      for (const id of ['mental', 'shield', 'finaleStat', 'heckleMeter']) {
+      for (const id of ['mental', 'shield', 'finaleStat']) {
         const el = $(id);
         if (el === finale) stats.append(el);
         else portraitMove(el, stats);
       }
+      portraitMove(finale, $('skillRow'));
     } else if (card && stats) {
       // restorePortraitHomes() already put the moved nodes back; only the portrait-made pieces go.
       if (finale && finale.parentNode) finale.remove();
@@ -1055,7 +1255,7 @@ globalThis.Presentation = (() => {
       dock = element('div', '', 'action-dock');
       dock.id = 'actionDock';
       dock.setAttribute('role', 'group');
-      dock.setAttribute('aria-label', '비법, 실크 상점, 연습 모드, 메뉴');
+      dock.setAttribute('aria-label', '비법, 실크 상점, 연습 모드, 정리, 옷장, 메뉴');
       $('activeSkills').append(dock);
     }
     dock.hidden = false;
@@ -1074,7 +1274,9 @@ globalThis.Presentation = (() => {
       if (button.id === 'gemShopQuick') continue;
       row.append(button);
     }
+    if (!row.originalOrder) row.originalOrder = [...row.children];
     if (row.parentNode !== skills) skills.prepend(row);
+    for (const id of ['skill-cardrain', 'skill-showtime', 'skill-cheer']) if ($(id)?.parentNode === row) row.append($(id));
     row.hidden = false;
     return row;
   }
@@ -1083,7 +1285,7 @@ globalThis.Presentation = (() => {
     if (!row) return;
     const skills = $('activeSkills');
     const dock = $('actionDock');
-    for (const button of [...row.children]) {
+    for (const button of [...row.children].sort((a,b) => row.originalOrder.indexOf(a) - row.originalOrder.indexOf(b))) {
       if (dock && dock.parentNode === skills) skills.insertBefore(button, dock);
       else skills.append(button);
     }
@@ -1104,9 +1306,9 @@ globalThis.Presentation = (() => {
       ico.width = 20;
       ico.height = 20;
       ico.draggable = false;
-      button.append(ico);
+      button.append(ico,element('span','도감','top-dogam-label'));
     }
-    if (ico.getAttribute('src') !== 'assets/kit/icon-dogam.webp') ico.src = 'assets/kit/icon-dogam.webp';
+    if (ico.getAttribute('src') !== 'assets/kit/icon-collection.webp') ico.src = 'assets/kit/icon-collection.webp';
     delete button.dataset.pxText;
   }
   function placePortraitDock() {
@@ -1117,6 +1319,7 @@ globalThis.Presentation = (() => {
     if ($('gemShopQuick')) moveChrome($('gemShopQuick'), dock);
     if ($('practiceButton')) { $('practiceButton').hidden = false; moveChrome($('practiceButton'), dock); }
     moveChrome($('caseArrangeButton'), dock);
+    moveChrome($('wardrobeButton'), dock);
     moveChrome($('moreButton'), dock);
     delete $('moreButton').dataset.pxText;
     $('moreButton').setAttribute('aria-label', '메뉴');
@@ -1124,10 +1327,15 @@ globalThis.Presentation = (() => {
     if ($('gemShopQuick')) $('gemShopQuick').setAttribute('aria-label', '실크 상점');
     if ($('practiceButton')) $('practiceButton').setAttribute('aria-label', '연습 모드');
     dressTopDogam();
-    moveChrome($('bestiaryButton'), $('phoneTop'));
+    moveChrome($('bestiaryButton'), dock);
     // Row 1 is #skillRow. Row 2 is the dock, in this order.
     $('activeSkills').append(dock);
     dressPortraitButtons();
+    const glove = $('item-auto-glove');
+    if (glove) {
+      if (!chromeHomes.has(glove)) chromeHomes.set(glove, { parent: $('activeSkills'), next: null });
+      $('phoneMore').append(glove);
+    }
   }
   function clearKitFace(button) {
     if (!button) return;
@@ -1166,13 +1374,34 @@ globalThis.Presentation = (() => {
     for (const node of text) node.remove();
   }
   function dressPortraitButtons() {
-    dressKitButton($('bookButton'), 'assets/kit/icon-bibeop.webp', '비법');
-    dressKitButton($('gemShopQuick'), 'assets/cur-silk.webp', '실크 상점');
+    dressKitButton($('bookButton'), 'assets/kit/icon-secret.webp', '비법');
+    dressKitButton($('gemShopQuick'), 'assets/kit/icon-silk-shop.webp', '실크 상점');
     dressKitButton($('practiceButton'), 'assets/kit/icon-practice.webp', '연습 모드');
-    dressKitButton($('caseArrangeButton'), 'assets/kit/icon-practice.webp', '케이스 정리');
+    dressKitButton($('caseArrangeButton'), 'assets/kit/icon-sort.webp', '정리');
     dressKitButton($('moreButton'), 'assets/kit/icon-menu.webp', '메뉴');
+    dressKitButton($('bestiaryButton'), 'assets/kit/icon-collection.webp', '도감');
+    dressKitButton($('wardrobeButton'), 'assets/kit/icon-wardrobe.webp', '옷장');
     // kit-btn right after active-skill, so a button dressed again after a rotation has a fresh load's class order.
     for (const button of document.querySelectorAll('#skillRow > .active-skill')) if (!button.classList.contains('kit-btn')) { const [first, ...rest] = button.classList; button.className = [first, 'kit-btn', ...rest].join(' '); }
+  }
+  // Overlay faces preserve each landscape button's original text metrics and hit box.
+  function dressSharedButtons(portraitNow) {
+    const faces=[['bookButton','icon-secret','비법'],['bestiaryButton','icon-collection','도감'],
+      ['moreButton','icon-menu','메뉴'],['practiceButton','icon-practice','연습 모드'],
+      ['caseArrangeButton','icon-sort','케이스 정리'],['caseArrangeMenuButton','icon-sort','케이스 정리'],
+      ['gemShopButton','icon-silk-shop','실크 상점'],['wardrobeButton','icon-wardrobe','옷장']];
+    for(const [id,icon,label] of faces){
+      const button=$(id);if(!button)continue;
+      let face=button.querySelector(':scope > .shared-kit-face');
+      button.classList.toggle('shared-kit',!portraitNow);
+      if(portraitNow){face?.remove();continue;}
+      if(!face){
+        face=element('span','','shared-kit-face');face.setAttribute('aria-hidden','true');
+        const art=element('img');art.src=icon==='wardrobe'?'assets/icon-wardrobe-64.webp':icon?`assets/kit/${icon}.webp`:'assets/cur-silk.webp';art.alt='';art.draggable=false;
+        face.append(art,element('span',label));button.append(face);
+      }
+      button.setAttribute('aria-label',label);
+    }
   }
   function setPractice(on) {
     practiceOn = !!on;
@@ -1212,7 +1441,22 @@ globalThis.Presentation = (() => {
     host.hidden = false;
   }
   function closePracticePrompt() { const host = $('practicePrompt'); if (host) host.hidden = true; }
-  function boardTransform() { return PhoneLayout.transform(rectOf($('board')), C.CONST.boardSize); }
+  function boardTransform() {
+    const board=$('board'),first=board.querySelector('.cell'),k=C.CONST;
+    if(!first)return PhoneLayout.transform(rectOf(board),k.boardSize);
+    const r=first.getBoundingClientRect(),pos=C.cellPosition(state,0),sx=r.width/k.cellSize,sy=r.height/k.cellSize;
+    return PhoneLayout.transform({left:r.left-(k.boardInset+pos.col*(k.cellSize+k.cellGap))*sx,top:r.top-(k.boardInset+pos.row*(k.cellSize+k.cellGap))*sy,width:k.boardSize*sx,height:k.boardSize*sy},k.boardSize);
+  }
+  function centerActiveGrid(){
+    const board=$('board'),active=cells.slice(0,state.board.length);
+    if(!active.length)return;
+    const rects=active.map(d=>({x:d.el.offsetLeft,y:d.el.offsetTop,w:d.el.offsetWidth,h:d.el.offsetHeight}));
+    const left=Math.min(...rects.map(r=>r.x)),right=Math.max(...rects.map(r=>r.x+r.w));
+    const top=Math.min(...rects.map(r=>r.y)),bottom=Math.max(...rects.map(r=>r.y+r.h));
+    const dx=(board.clientWidth-left-right)/2,dy=(board.clientHeight-top-bottom)/2;
+    if (board.style.getPropertyValue('--grid-shift-x') !== dx+'px' || board.style.getPropertyValue('--grid-shift-y') !== dy+'px') wandOffset = null;
+    board.style.setProperty('--grid-shift-x',dx+'px');board.style.setProperty('--grid-shift-y',dy+'px');
+  }
   // Portrait gaps are tighter than the 608-space grid, so a finger maps to the case cell under it.
   function portraitBoardPoint(clientX, clientY) {
     const board = $('board');
@@ -1243,10 +1487,10 @@ globalThis.Presentation = (() => {
   let lastToastKind = '';
   function toast(text,kind='') {
     presentation.push({merge:'toast:'+kind+':'+text,minimum:1200,start:item=>{
-      const el=pxIcons(element('div',text+(item.extra?' · '+item.extra:''),'toast'));$('toasts').append(el);item.end=()=>el.remove();
+      const el=pxIcons(element('div',text+(item.extra?' · '+item.extra:''),'toast'));$('toasts').append(el);const expiry=setTimeout(()=>el.remove(),3500);item.end=()=>{clearTimeout(expiry);el.remove();};
     }});
   }
-  function milestonePop(text,p){presentation.push({merge:'milestone:'+text,minimum:1200,start:item=>{const el=pxIcons(element('div',text+(item.extra?' · '+item.extra:''),'toast'));$('toasts').append(el);float('×2!',p.x,p.y,'#ffe65c',22);item.end=()=>el.remove();}});}
+  function milestonePop(text,p){presentation.push({merge:'milestone:'+text,minimum:1200,start:item=>{const el=pxIcons(element('div',text+(item.extra?' · '+item.extra:''),'toast'));$('toasts').append(el);float('×2!',p.x,p.y,'#ffe65c',22);const expiry=setTimeout(()=>el.remove(),3500);item.end=()=>{clearTimeout(expiry);el.remove();};}});}
   function nextToasts(dt=0){
     // Ordinary notices wait behind queued dialogue; genuine clear/reward notices still finish first.
     if(state.u15.queue.length&&!presentation.active){
@@ -1265,6 +1509,7 @@ globalThis.Presentation = (() => {
       // Its validator expects nonnegative saved timers. Normalize only the save
       // snapshot, leaving the live simulation and every other field untouched.
       const source = chainFighting && chainBackup ? C.deserialize(chainBackup) : null;
+      if(source)source.features.achievements=[...new Set([...source.features.achievements,...state.features.achievements])];
       const saved = source || state;
       if (!source && !document.hidden) C.markAway(state,Date.now());
       const snapshot = Object.assign({}, saved, {
@@ -1297,7 +1542,7 @@ globalThis.Presentation = (() => {
     presentation.push({stageTransition,merge:'banner:'+text,minimum:2000,priority:big?10:0,start:item=>{
       bannerActive={text,sub,big,permanent,...context};$('banner').replaceChildren(document.createTextNode(text));
       if(sub||item.extra)$('banner').append(element('small',[sub,item.extra].filter(Boolean).join(' · ')));
-      $('banner').classList.toggle('big',big);$('banner').hidden=false;if(!reduced)animate($('banner'),[{opacity:0,transform:'translateY(4px)'},{opacity:1,transform:'translateY(0)',offset:.2},{opacity:1,offset:.8},{opacity:0,transform:'translateY(-4px)'}],2000);item.end=dismissBanner;
+      $('banner').classList.toggle('big',big);$('banner').hidden=false;if(!reduced)animate($('banner'),[{opacity:0,transform:'translateY(4px)'},{opacity:1,transform:'translateY(0)',offset:.2},{opacity:1,offset:.8},{opacity:0,transform:'translateY(-4px)'}],2000);const expiry=setTimeout(dismissBanner,4000);item.end=()=>{clearTimeout(expiry);dismissBanner();};
     }});
   }
   function nextBanner(){ /* All notices share presentation.tick. */ }
@@ -1579,19 +1824,23 @@ globalThis.Presentation = (() => {
         host.append(bar);
       }
     }
-    dressPortraitStats(phone && portraitLayout());
+    dressKitStats(true);
   }
-  // Portrait only: pixel icons on the four stats. 액트 and 연출 are counts, not gauges; 멘탈 and 자신감 keep the shared bar above.
-  function dressPortraitStats(on) {
+  // The shared v2 stat band uses the same four icons and gauges in every layout.
+  function dressKitStats(on) {
     const faces = [
-      ['combo', 'assets/ui/ic-star.webp'],
-      ['mental', 'assets/ui/ic-heart.webp'],
-      ['shield', 'assets/ui/ic-shield.webp'],
-      ['stageRate', 'assets/ui/ic-clap.webp']
+      ['combo', 'assets/kit/icon-spark.webp'],
+      ['mental', 'assets/kit/icon-brain.webp'],
+      ['shield', 'assets/kit/icon-sparkle.webp'],
+      ['stageRate', 'assets/kit/icon-clapper.webp']
     ];
     for (const [id, src] of faces) {
       const host = $(id);
       if (!host) continue;
+      if (on && !host.querySelector('.meter-bar')) {
+        const bar = element('span', '', 'meter-bar'); bar.setAttribute('aria-hidden', 'true');
+        bar.append(element('span', '', 'meter-fill')); host.append(bar);
+      }
       const ico = host.querySelector(':scope > img.stat-ico');
       if (!on) { if (ico) ico.remove(); continue; }
       if (!ico) {
@@ -1673,7 +1922,15 @@ globalThis.Presentation = (() => {
     const fx = $('finaleFx'), now = performance.now(), full = now - finaleFullAt >= 12000;
     if (full) finaleFullAt = now;
     clearTimeout(fx._end); clearTimeout(fx._burst); clearTimeout(fx._flash); clearTimeout(fx._glint);
-    const kali = $('magicianMini');
+    const kali = $('magicianMini'), cutin = fx.querySelector('.finale-kali');
+    if (kali && cutin) {
+      const size = Math.min(kali.clientWidth,kali.clientHeight);
+      cutin.style.width = size + 'px'; cutin.style.height = size + 'px';
+      const track = fx.querySelector('.finale-cut');
+      if (track) { track.style.height = (size + 6) + 'px'; track.style.top = '50%'; track.style.marginTop = -(size + 6) / 2 + 'px'; }
+      cutin.style.backgroundImage = `url('${assetUrl(kaliArtPath())}')`;
+      cutin.classList.toggle('future-suit',state.u18.equipped.kali === 'future');
+    }
     const flash = fx.querySelector('.finale-flash');
     if (flash) { flash.getAnimations().forEach(a => a.cancel()); flash.style.opacity = '0'; }
     if (kali) kali.classList.remove('finale-glint');
@@ -1757,6 +2014,7 @@ globalThis.Presentation = (() => {
         const signal={boxBreak:'badge',audHit:'doubt',heckle:'heckle',win:'win'}[e.type];
         if (signal) tutorialSignal(signal);
       }
+      if(e.type==='tutorialLessonFail'){failure=0;failureAudience=null;failureVenue=null;clearDecorations();showFailure();save();}
       if(e.type==='caseLevelUp')haptic(15);
       if(e.type==='skill'||e.type==='visitorCatch')haptic(40);
       if(e.type==='homecomingAct'||e.type==='phase2'||(e.type==='win'&&C.isHeadliner(D.venues[e.venue-1],e.j)))haptic([30,40,30]);
@@ -1888,8 +2146,7 @@ globalThis.Presentation = (() => {
           encounterId: `${state.dimension}:${state.wins}:${state.fails}:${a.id}` };
         audience.restored=true;wonMoment = { v, a, context, pending:true,until:Infinity };
         presentation.push({stageTransition:true,winner:true,minimum:2500,priority:100,start:item=>{wonMoment.pending=false;wonMoment.until=clock+2500;C.holdWinTransition(state,2500);
-          if(a.id==='h5'){$('audience').style.scale='1';sprite($('audience'),'assets/aud-tutorial-mingiri-happy.png');}
-          else moodSprite($('audience'),stageAudienceAsset(v,a),D.lineFaces.moods['fight:'+a.id+':winLine']||'happy');$('audienceLine').textContent=a.winLine;$('audienceLine').hidden=false;kaliPose(2,2500);
+          stageAudienceFace($('audience'),stageAudienceAsset(v,a),6);$('audienceLine').textContent=a.winLine;$('audienceLine').hidden=false;kaliPose(2,2500);
           sceneLight(.06);
           const head=C.isHeadliner(v,e.j),progress=`관객 ${e.j}/${v.audiences.length+1}`;
           bannerActive={...context};$('banner').replaceChildren(document.createTextNode(winLine()));$('banner').append(element('small',progress+' · '+(head?v.headliner.defeatLine:'동전 +'+C.formatNumber(e.coins))));$('banner').classList.add('win-banner');$('banner').hidden=false;
@@ -1970,17 +2227,20 @@ globalThis.Presentation = (() => {
     if (!table || !v || !portraitLayout()) return;
     const street = v.slug === 'party' || v.slug === 'school' || v.slug === 'cafe' || v.slug === 'festival' || v.slug === 'moon';
     const kind = v.slug === 'family' ? 'home' : street ? 'street' : 'stage';
-    const src = kind === 'stage' ? 'assets/kit/kali-table.webp' : `assets/kit/kali-table-${kind}.webp`;
+    const src = 'assets/kit/kali-table-skirt.webp';
     if (table.dataset.kind !== kind) { table.dataset.kind = kind; table.src = src; }
+    const desk = document.querySelector('#mockupDressing .mockup-desk');
+    if (desk) desk.src = `assets/kit/judge-desk${['audition','broadcast'].includes(v.slug) ? '-tv' : ''}.webp`;
   }
   function audience() {
-    if(state.mode==='transition'&&state.resolved&&state.idle.next&&!audience.restored){const v=D.venues[state.venue-1],a=C.audienceAt(v,state.j);audience.restored=true;wonMoment={v,a,context:U5.encounter(D.venues,state),until:clock+state.transMs};moodSprite($('audience'),stageAudienceAsset(v,a),D.lineFaces.moods['fight:'+a.id+':winLine']||'happy');$('audienceLine').textContent=a.winLine;$('audienceLine').hidden=false;}
+    if(state.mode==='transition'&&state.resolved&&state.idle.next&&!audience.restored){const v=D.venues[state.venue-1],a=C.audienceAt(v,state.j);audience.restored=true;wonMoment={v,a,context:U5.encounter(D.venues,state),until:clock+state.transMs};stageAudienceFace($('audience'),stageAudienceAsset(v,a),6);$('audienceLine').textContent=a.winLine;$('audienceLine').hidden=false;}
     if (wonMoment && (wonMoment.pending||presentation.active?.winner||clock < wonMoment.until)) return;
     wonMoment = null;
     const v = D.venues[state.venue - 1];
+    const side = D.batchD.stages[state.batchD.side];
     const faced = chainFace();
     const a = faced ? {name:faced.name,emoji:faced.emoji,role:faced.role,flavor:'',bio:''} : state.u15.tutorial.active ? {name:'NDD',emoji:'🙎',flavor:D.storyV15.tutorial.bio,bio:D.storyV15.tutorial.bio} : v.audiences[state.j - 1] || v.headliner;
-    const key = `${state.dimension}:${state.u15.tutorial.active?'tutorial':state.audId}${state.pattern==='futureMirror'&&state.u19.phase===3?':true':''}${faced?':'+faced.name:''}${schoolBackdropOn()?':school':''}`;
+    const key = `${state.dimension}:${state.batchD.side ? state.batchD.side + ':' : ''}${state.u15.tutorial.active?'tutorial':state.audId}${state.pattern==='futureMirror'&&state.u19.phase===3?':true':''}${faced?':'+faced.name:''}${schoolBackdropOn()?':school':''}`;
     if (key !== lastAudience) {
       lastAudience = key; pendingIntro = null;
       $('room').dataset.venue = v.slug;
@@ -1996,16 +2256,18 @@ globalThis.Presentation = (() => {
       $('doubtTitle').dataset.kind = ['supporter','helper'].includes(a.role) ? '기대' : '의심';
       $('doubtTitle').textContent = portraitLayout() ? $('doubtTitle').dataset.kind : `${a.name}의 ${$('doubtTitle').dataset.kind}`;
       portraitCopy();
+      $('audience').classList.remove('asset-ready','asset-pending','asset-failed');
       $('audience').replaceChildren(element('span', a.emoji, 'sprite-fallback'));
-      sprite($('audience'), faced ? faced.portrait : state.u15.tutorial.active ? (state.u15.tutorial.won?'assets/aud-tutorial-dogyeom-happy.png':'assets/aud-tutorial-dogyeom.png') : (audienceAsset(v,a))); $('audience').setAttribute('aria-label', a.name);
-      if(!state.u15.tutorial.active && !faced)moodSprite($('audience'),stageAudienceAsset(v,a),['supporter','helper'].includes(a.role)?'happy':D.lineFaces.faceMap.roleDefaults[a.role]||'doubt');
-      { const nextA = C.audienceAt(v, state.j + 1); if (nextA && nextA !== a) { const p = audienceAsset(v, nextA), mood = D.lineFaces.faceMap.roleDefaults[nextA.role]; for (const q of [p, p.replace(/\.png$/, '-happy.png'), mood && p.replace(/\.png$/, '-' + mood + '.png')]) if (q) assetImage(q); } } // v4 U49 3: warm the next audience's pictures
+      const base = side ? side.portrait : faced ? faced.portrait : state.u15.tutorial.active ? 'assets/aud-tutorial-dogyeom.png' : audienceAsset(v,a);
+      $('audience').dataset.reference = base; delete $('audience').dataset.faceBase;
+      stageAudienceFace($('audience'),base,state.u15.tutorial.active&&state.u15.tutorial.won?6:audienceDoubtStage());
+      $('audience').setAttribute('aria-label', side ? side.character : a.name);
+      { const nextA = C.audienceAt(v, state.j + 1); if (nextA && nextA !== a) { const p = audienceAsset(v, nextA); for (const q of [p, p.replace(/\.png$/, '-happy.png')]) assetImage(q); } } // v4 U49 3: warm the next audience's pictures
       animate($('audience'),[{opacity:0},{opacity:1}],350); // U54b: fade in place; every frame stays inside the fitted stage space.
       $('audience').classList.toggle('headliner', a === v.headliner);
       $('audience').style.setProperty('--story-scale',String(a.storyScale||1));
       $('audience').dataset.storyScale=String(a.storyScale||1);
-      $('audienceLine').textContent = a.encounterLine || a.bio || a.flavor;
-      bioPending=a.encounterLine?key:state.u15.bios.includes(key)?'':key;bioUntil=0;
+      queueAudienceLine(a.encounterLine || a.bio || a.flavor,key,!a.encounterLine && state.u15.bios.includes(key),true);
       $('audienceCard').dataset.pattern = state.pattern;
       $('patternLabel').textContent = state.pattern === 'invisible' ? '보이지 않는 의심' : state.pattern === 'none' ? '' : D.ui.patterns[state.pattern];
       if (a === v.headliner && !D.storyV15.venues[v.slug]) pendingIntro = a;
@@ -2030,7 +2292,7 @@ globalThis.Presentation = (() => {
     }
     if (audience.winExit) { audience.winExit.cancel(); audience.winExit = null; } // the slide-out held the old audience hidden; the entrance above (if any) already runs
     const during = chainDuringLine();
-    if (during) { $('audienceLine').textContent = during; $('audienceLine').hidden = portraitLayout(); }
+    if (during) queueAudienceLine(during,'school:' + during);
   }
   let kaliUntil = 0, kaliMoodState = 'normal', audMoodState = 'doubt', audSurprisedUntil = 0, audHeckleMood = '', audTestMood = ''; // v4 U50d: audTestMood only set by MagicShowUI.audienceMood (tests)
   // v4 U37 faces. Kali and the audience faces are re-evaluated from the state every frame (C.kaliMood, C.audienceMood), so nothing latches.
@@ -2048,17 +2310,15 @@ globalThis.Presentation = (() => {
     }
   }
   function audienceFaceTick() {
-    if (audTestMood || menu === 'boo' || wonMoment || (state.pattern === 'futureMirror' && state.u19.phase === 3)) return; // v4 U50d: audTestMood = a face held by the test hook
+    if (audTestMood || menu === 'boo' || wonMoment) return; // v4 U50d: audTestMood = a face held by the test hook
     const tutorialBase = tutorialStageBase();
     const mark = tutorialBase && !state.u15.tutorial.active ? chainMark() : null;
     const tutorialFight = !!tutorialBase && ((state.u15.tutorial.active && state.u15.tutorial.phase === 'fight' && !state.u15.tutorial.won) || (!!mark && mark.step.endsWith('-fight')));
     if (!tutorialFight && (state.u15.tutorial.active || chainFace())) return; // lines and clear beats keep the portrait audience() already set
     const v = D.venues[state.venue - 1], a = v && C.audienceAt(v, state.j), host = $('audience');
     if (!a || !host.dataset.asset) return;
-    audMoodState = C.audienceMood(state, audMoodState, { heckle: state.telegraphed && state.mode === 'fight' ? audHeckleMood : '', surprised: clock < audSurprisedUntil });
-    const art = tutorialBase || audienceAsset(v, a);
-    const wrong = !!tutorialBase && !String(host.dataset.asset).startsWith(tutorialBase.replace(/\.png$/, ''));
-    if (host.dataset.mood !== audMoodState || wrong) moodSprite(host, art, audMoodState);
+    const side = D.batchD.stages[state.batchD.side];
+    stageAudienceFace(host,side ? side.portrait : tutorialBase || audienceAsset(v,a),audienceDoubtStage());
   }
   function kaliPose(frame,ms) {
     if ($('magicianMini').classList.contains('routine-art')) return; // v4 U49 1: the routine art holds Kali's spot (no card-fan frame, no hop) until the cut-in ends
@@ -2111,9 +2371,13 @@ globalThis.Presentation = (() => {
     $('autoIndicator').hidden=!unlocked||boardHolds.length>0||state.mode!=='fight'||paused()||state.features.climax.left>0;
     D.skills.forEach(k=>{
       const el=$('skill-'+k.id), left=state.skills.cooldowns[k.id], ready=left<=0;
-      el.hidden=!C.skillUnlocked(state,k.id);el.disabled=!ready||paused()||state.mode!=='fight';
+      const available=C.skillUnlocked(state,k.id);
+      el.hidden=!available&&!portraitLayout();el.disabled=!available||!ready||paused()||state.mode!=='fight';
+      const face=portraitLayout()?{cardrain:['카드 비','icon-card-rain'],showtime:['마술 모자','icon-magic-hat'],cheer:['비둘기','icon-dove-summon']}[k.id]:[k.name,{cardrain:'icon-card-rain',showtime:'icon-showtime',cheer:'icon-cheer'}[k.id]];
+      el.querySelector(':scope > span:not(.skill-art)').textContent=face[0];
+      const art=el.querySelector('.skill-art');if(art.dataset.skillFace!==face[1]){sprite(art,'assets/kit/'+face[1]+'.webp');art.dataset.skillFace=face[1];}
       el.classList.toggle('ready',ready);el.classList.toggle('in-use',k.id==='showtime'&&state.skills.showtimeLeft>0);el.style.setProperty('--cooldown',`${Math.round(left/C.skillCooldown(state,k.id)*360)}deg`);
-      el.querySelector('small').textContent=ready ? (k.id==='showtime' && state.skills.showtimeLeft>0 ? `${Math.ceil(state.skills.showtimeLeft/1000)}초` : k.hint) : `${Math.ceil(left/1000)}초`;
+      el.querySelector('small').textContent=!available && portraitLayout() ? '무대 해금' : ready ? (k.id==='showtime' && state.skills.showtimeLeft>0 ? `${Math.ceil(state.skills.showtimeLeft/1000)}초` : k.hint) : `${Math.ceil(left/1000)}초`;
     });
     const seconds=rateSamples.reduce((n,e)=>n+e.dt,0)/1000;
     const damage=seconds?rateSamples.reduce((n,e)=>n+e.damage,0)/seconds:0, coins=seconds?rateSamples.reduce((n,e)=>n+e.coins,0)/seconds:0;
@@ -2154,7 +2418,7 @@ globalThis.Presentation = (() => {
     const button=document.createElement('button');button.id='skill-'+k.id;button.className='active-skill';button.hidden=true;
     button.innerHTML=`<span class="skill-art">${k.emoji}</span><span>${k.name}</span><small>${k.hint}</small>`;
     easyTooltip(button,k.desc);
-    sprite(button.querySelector('.skill-art'),'assets/'+k.icon);button.addEventListener('click',()=>activateSkill(k.id));$('activeSkills').append(button);
+    sprite(button.querySelector('.skill-art'),'assets/kit/'+({cardrain:'icon-card-rain',showtime:'icon-showtime',cheer:'icon-cheer'}[k.id])+'.webp');button.addEventListener('click',()=>activateSkill(k.id));$('activeSkills').append(button);
   });
   // v4 U48 A: one press uses one 칼리 덱 (120 s auto practice); the button shows how many are owned, then the time left (brick time included).
   const glove=action('',()=>{if(!paused()&&C.useGlove(state)){tutorialSignal('learn');save();render();}});glove.id='item-auto-glove';glove.className='active-skill';
@@ -2172,6 +2436,11 @@ globalThis.Presentation = (() => {
     setTimeout(()=>{if(state.idle.reward===reward)C.doubleOffline(state);offlineDoubling=false;$('offlineCard').classList.remove('performing');$('offlineDouble').disabled=false;$('offlineDouble').textContent='2배 받기';save();showOffline();render();},3000);
   });
 
+  }
+
+  function boardCasePath(cell,skin,forming,intact) {
+    // Keep the approved upright tin in every skin/tier; the overlays carry progression.
+    return cell.hp < cell.hpMax && !intact ? 'assets/case-open.png' : 'assets/case-closed.png';
   }
 
   function localDate(now=new Date()) { return `${String(now.getFullYear()).padStart(4,'0')}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`; }
@@ -2281,7 +2550,8 @@ globalThis.Presentation = (() => {
     // U54c: share the cheap input key with the tail and overlap checks, including late font/image loads.
     fitStageAudience();
     const lineEl = $('audienceLine'), patEl = $('patternLabel'), both = phone && !lineEl.hidden && !!patEl.textContent;
-    const tailKey = fitStageAudience.inputKey;
+    card.classList.toggle('has-audience-line',!lineEl.hidden);
+    const tailKey = JSON.stringify([fitStageAudience.inputKey,lineEl.textContent,lineEl.hidden]);
     if (tailKey !== syncFlags.tailKey) { syncFlags.tailKey = tailKey; if (!lineEl.hidden) card.style.setProperty('--line-h', lineEl.offsetHeight + 'px'); }
     const lineKey = tailKey;
     if (lineKey !== syncFlags.lineKey) {
@@ -2299,52 +2569,56 @@ globalThis.Presentation = (() => {
   }
   // U54d: compare the cheap class/resize signature before refreshing cached geometry.
   function fitStageAudience() {
-    const card = $('audienceCard'), host = $('audience'), img = host.querySelector(':scope > img.asset-sprite'), line = $('audienceLine');
-    const tablet = document.body.classList.contains('tablet'), pat = $('patternLabel'), phase = $('phaseIndicator'), stage = $('stage');
-    const nw = img && img.naturalWidth, nh = img && img.naturalHeight;
-    // U54d: read inherited band sizes and card geometry only on resize/load or class changes.
-    const metricsKey = [document.body.className, stage.className, card.className, stage.style.width, stage.style.height, fitStageAudience.revision];
-    if (!fitStageAudience.metricsKey || metricsKey.some((value, i) => value !== fitStageAudience.metricsKey[i])) {
-      const cs = getComputedStyle(card);
-      fitStageAudience.metrics = [card.clientWidth, card.clientHeight, parseFloat(cs.getPropertyValue('--SB')) || 52, parseFloat(cs.getPropertyValue('--TB')) || 0];
-      fitStageAudience.metricsKey = metricsKey;
+    const card=$('audienceCard'),host=$('audience'),line=$('audienceLine'),stage=$('stage');
+    const ref=host.dataset.reference, metrics=STAGE_AUDIENCE_METRICS[ref];
+    if (!metrics) return;
+    const key=[document.body.className,stage.className,card.className,stage.style.width,stage.style.height,
+      fitStageAudience.revision,ref,host.dataset.storyScale,$('patternLabel').textContent,$('phaseIndicator').textContent,line.textContent,line.hidden];
+    if(fitStageAudience.key && key.every((v,i)=>v===fitStageAudience.key[i]))return;
+    fitStageAudience.inputKey=fitStageAudience.key=key;
+    const cs=getComputedStyle(card),cw=card.clientWidth,ch=card.clientHeight;
+    const vertical=portraitLayout(),sb=parseFloat(cs.getPropertyValue('--SB'))||0;
+    const bubble=vertical?42:phone?90:150,foot=phone?(vertical?Math.round(ch*.19):Math.max(sb+8,ch*.2)):sb+20;
+    const width=phone?cw*.5-12:Math.min(390,cw*.5-20),available=Math.max(1,ch-foot-bubble);
+    if(phone && !vertical){
+      const pat=$('patternLabel'),phase=$('phaseIndicator');
+      const tight=document.body.classList.contains('compact-notice');
+      const narrow=tight&&cw<280;
+      const phaseTop=tight?(narrow?86:54):Math.max(86,pat.offsetTop+pat.offsetHeight+2);
+      card.style.setProperty('--phase-top',phaseTop+'px');
+      const toastTop=tight?0:Math.max(96,phaseTop+phase.offsetHeight+2);
+      stage.style.setProperty('--toast-top',toastTop+'px');
+      if(tight){
+        card.style.setProperty('--compact-phase-left',(narrow?12:110)+'px');
+        card.style.setProperty('--compact-phase-width',(narrow?82:Math.max(44,cw*.5-114))+'px');
+        const origin=stage.getBoundingClientRect(),venue=$('phoneVenue').querySelector('.venue-heading').getBoundingClientRect(),wallet=$('phoneWallet').getBoundingClientRect();
+        const left=Math.max(90,venue.right-origin.left+10);
+        stage.style.setProperty('--compact-toast-left',left+'px');
+        stage.style.setProperty('--compact-toast-width',Math.max(1,wallet.left-origin.left-left-10)+'px');
+      }
+      // Reserve a fixed notice budget at this viewport, even after a live toast disappears.
+      // This keeps routine sprites on the same baseline and at the same size throughout the cut-in.
+      const budget=element('div','액트 50! 피날레 +10 · 동전 +1.2만 · 레벨 12! 멘탈 회복','toast');
+      budget.style.cssText='position:absolute;visibility:hidden;pointer-events:none';
+      budget.setAttribute('aria-hidden','true');$('toasts').append(budget);
+      const toastHeight=Math.max(34,budget.offsetHeight);budget.remove();
+      const actorBottom=parseFloat(getComputedStyle($('magicianMini')).bottom)||sb;
+      const floor=tight?Math.max(104,pat.offsetTop+pat.offsetHeight+18,phase.offsetTop+phase.offsetHeight+18):Math.max(142,toastTop+toastHeight+18);
+      card.style.setProperty('--left-floor',(floor+Math.max(0,actorBottom-sb))+'px');
     }
-    const [cw, ch, sb, tb] = fitStageAudience.metrics;
-    const key = [phone, tablet, document.defaultView?.innerWidth, document.defaultView?.innerHeight,
-      document.body.className, stage.className, card.className, stage.style.width, stage.style.height, fitStageAudience.revision,
-      cw, ch, sb, tb, line.textContent, line.hidden, pat.textContent, phase.textContent, img && img.src, nw, nh, host.dataset.figureSize];
-    if (fitStageAudience.key && key.every((value, i) => value === fitStageAudience.key[i])) return;
-    fitStageAudience.inputKey = fitStageAudience.key = key;
-    if (!phone) return;
-    const lh = line.hidden ? 0 : line.offsetHeight;
-    if (!tablet) {
-      const width = Math.max(1, cw * .5 - 8), available = Math.max(1, ch - sb - Math.max(50, lh + 26));
-      const height = Math.min(available, nw && nh ? width * nh / nw : available);
-      card.style.setProperty('--aud-fit-h', height + 'px');
-      // The eight-pixel tail ends ten pixels above the visible top, including short/wide portraits.
-      card.style.setProperty('--bubble-top', Math.max(4, ch - sb - height - lh - 18) + 'px');
-      const pat = $('patternLabel'), phase = $('phaseIndicator');
-      const phaseTop = Math.max(86, pat.offsetTop + pat.offsetHeight + 2);
-      card.style.setProperty('--phase-top', phaseTop + 'px');
-      const toastTop = Math.max(108, phaseTop + phase.offsetHeight + 2);
-      $('stage').style.setProperty('--toast-top', toastTop + 'px');
-      card.style.setProperty('--left-floor', Math.max(142, toastTop + 34) + 'px');
-    } else if (img && nw && nh) {
-      // Reserve the full-width toast lane even while empty, then the whole bubble and its tail.
-      const toast = $('toasts'), cr = card.getBoundingClientRect(), tr = toast.getBoundingClientRect();
-      const bubbleTop = Math.max(4, tb + 142, pat.offsetTop + pat.offsetHeight + 4,
-        phase.hidden ? 0 : phase.offsetTop + phase.offsetHeight + 4, tr.top - cr.top + 24 + 4);
-      const available = Math.max(1, ch - sb - bubbleTop - lh - 18);
-      card.style.setProperty('--aud-fit-h', available + 'px');
-      snapAudience(img);
-      // Layout dimensions exclude the clear moment's animated scale on the host.
-      const visibleHeight = Math.min(available, img.offsetHeight, img.offsetWidth * nh / nw);
-      // The host must match the contained art too: the sweep's face is 20-45% of this box.
-      // A smaller snapped image in a tall host otherwise puts that face above the real head.
-      card.style.setProperty('--aud-fit-h', visibleHeight + 'px');
-      const top = ch - sb - visibleHeight;
-      card.style.setProperty('--bubble-top', Math.max(4, top - lh - 18) + 'px');
-    }
+    const [,baseH,envelopeW,envelopeH]=metrics,kali=$('magicianMini');
+    const kaliSize=Math.min(kali.clientWidth,kali.clientHeight);
+    const storyScale=Math.min(1.3,Number(host.dataset.storyScale)||1);
+    const zoom=Math.max(.001,Math.min(kaliSize*.92*storyScale/baseH,width/envelopeW,available/envelopeH));
+    const height=envelopeH*zoom,artWidth=envelopeW*zoom;
+    card.style.setProperty('--aud-fit-h',height+'px');card.style.setProperty('--aud-fit-w',artWidth+'px');
+    // Keep the upper body above the shared desk, including tall scenes with small sprites.
+    const desk=phone&&!vertical?document.querySelector('#mockupDressing .mockup-desk'):null;
+    const audienceFoot=desk?Math.max(foot,ch-(desk.getBoundingClientRect().top-card.getBoundingClientRect().top)-height*.3+8):foot;
+    card.style.setProperty('--aud-foot',audienceFoot+'px');
+    const lineHeight=line.hidden?72:(line.offsetHeight||20);
+    card.style.setProperty('--bubble-top',Math.max(4,ch-audienceFoot-height-lineHeight-18)+'px');
+
   }
   // v4 U46 C3: the stage grows with the player. Three dressing tiers (lights, curtain trims, a prop shelf; img27 overlays) on the audience card:
   // tier 1 from venue 3, tier 2 from venue 7, tier 3 from venue 10 (and in every later dimension). Presentation only; the tier is derived, not saved,
@@ -2396,10 +2670,12 @@ globalThis.Presentation = (() => {
     if (path && dom.respawn.dataset.asset !== path) sprite(dom.respawn, path);
   }
   function render() {
+    renderBoardPad();
     if (moreReturn && $('panel').hidden && $('phoneMore').hidden) moreReturn = false; // v4 U48 M: the show was reached another way (stage travel, a scene)
     $('stage').classList.toggle('decorations-paused',paused());
     $('equipButton').hidden=!C.equipSlots(state); $('equipButton').classList.toggle('is-new',!!C.equipSlots(state)&&!state.guidance.seen.includes('equipButton'));
     renderU19();renderU14(); renderIdle(); renderU15();
+    if ($('gemShopQuick')) $('gemShopQuick').disabled = lineOpen();
     buildBoard(); if(menu!=='boo')audience(); nextBanner(); renderFeatures(); renderMagic(); renderGuidance(); renderColleagues(); stageDressing();
     if (practiceOn && (menu || state.mode !== 'fight' || state.u18.map)) setPractice(false);
     const home=C.bossProfile(state)==='homecoming';
@@ -2411,6 +2687,7 @@ globalThis.Presentation = (() => {
     if (boss) $('patternLabel').textContent = state.phase2 ? '액트 10마다 확신 +10% · 피날레 최대 ×2' : '15초마다 거울 케이스 2개 · 도우미와 연쇄로 열어요';
     {
       const el = $('starlightLabel'), text = `비둘기 ${state.starlight}`;
+      $('mockupDoves').textContent = C.formatNumber(state.starlight);
       if (el && el.dataset.pxText !== text) {
         el.dataset.pxText = text; el.replaceChildren();
         const img = document.createElement('img');
@@ -2441,7 +2718,7 @@ globalThis.Presentation = (() => {
       if($('attackNumber').textContent!==attackText)$('attackNumber').textContent=attackText;
       if($('doubtRegen').textContent!==regenText)$('doubtRegen').textContent=regenText;
       fitDoubtPlate(`${$('doubtTitle').textContent}|${regenText.length}|${(rounded(state.audHp)+'/'+rounded(state.audHpMax)).length}|${innerWidth}x${innerHeight}|${phone}`);
-      const mine=C.attackRate(state),mineText=mine==null?'재는 중':`${rounded(mine)}/초`;
+      const mine=C.attackRate(state),mineText=mine==null?'0/초':`${rounded(mine)}/초`;
       if($('stat-rate').textContent!==mineText)$('stat-rate').textContent=mineText;
       if($('stageRateNumber').textContent!==mineText)$('stageRateNumber').textContent=mineText;
       if($('stat-heckle').textContent!==heckleText)$('stat-heckle').textContent=heckleText;
@@ -2482,11 +2759,16 @@ globalThis.Presentation = (() => {
       if ($('finaleNumber').textContent !== finaleText) $('finaleNumber').textContent = finaleText;
     }
     if (portraitLayout() && $('finaleStat')) $('finaleStat').style.setProperty('--meter', finalePercent);
-    // Portrait shows the four stats in one band, so the number is only the value (the label is the word 멘탈).
-    pxText($('mentalNumber'), portraitLayout() ? rounded(state.mental) : `멘탈 ❤ ${rounded(state.mental)} / ${rounded(state.mentalMax)}`);
+    // Every layout has a separate mental label; the meter retains the maximum in its accessible text.
+    pxText($('mentalNumber'), rounded(state.mental));
     {
       const mentalMax = Math.max(1, state.mentalMax || 1);
       $('mental').style.setProperty('--meter', `${Math.max(0, Math.min(100, state.mental / mentalMax * 100))}%`);
+      const mentalBar = $('mental').querySelector('.meter-bar');
+      if (mentalBar) {
+        mentalBar.setAttribute('aria-valuenow', String(Math.round(Math.max(0, Math.min(100, state.mental / mentalMax * 100)))));
+        mentalBar.setAttribute('aria-valuetext', `멘탈 ${rounded(state.mental)} / ${rounded(state.mentalMax)}`);
+      }
       $('shield').style.setProperty('--meter', `${Math.max(0, Math.min(100, state.shield / mentalMax * 100))}%`);
       const actCap = Math.max(state.maxCombo || 0, state.combo || 0, 1);
       $('combo').style.setProperty('--meter', `${state.combo > 0 ? Math.max(8, Math.min(100, state.combo / actCap * 100)) : 0}%`);
@@ -2508,6 +2790,7 @@ globalThis.Presentation = (() => {
       const solo = portraitLayout() && state.board.length === 1 && (!$('storyDialog').hidden || fightLine);
       if (document.body.classList.contains('portrait-solo') !== solo) { document.body.classList.toggle('portrait-solo', solo); wandOffset = null; }
     }
+    centerActiveGrid();
     for (let i = 0; i < cells.length; i++) {
       const cell = state.board[i], dom = cells[i];
       dom.el.classList.toggle('arrange-selected', caseArrange && arrangeFrom === i);
@@ -2537,7 +2820,7 @@ globalThis.Presentation = (() => {
       const forming = cell.hp <= 0;
       const stageName = forming ? respawnStageOf(cell) : '';
       const intact = forming && stageName === 'case';
-      const path = skin ? `assets/case-${skin}${forming && !intact ? '-broken' : ''}.png` : cell.goldenBroken && forming && !intact ? 'assets/box-golden-broken.png' : `assets/${C.caseTier(cell)}.png`;
+      const path = boardCasePath(cell,skin,forming,intact);
       dom.el.classList.toggle('case-customized',!!skin);dom.el.dataset.tier=C.caseTier(cell);
       let fallback=chest.querySelector('.sprite-fallback');if(!fallback){fallback=element('span','','sprite-fallback');chest.append(fallback);}fallback.textContent=skin?D.cosmetics.cases.find(x=>x.id===skin).emoji:'📦';
       if (chest.dataset.asset !== path) sprite(chest, path);
@@ -2556,7 +2839,7 @@ globalThis.Presentation = (() => {
     const a = C.wandArea(state);
     $('areaLabel').textContent = `지팡이 범위 ${a.cols} × ${a.rows}`;
     if ($('rangeShape')) { $('rangeShape').textContent = '▦'; $('rangeShape').setAttribute('aria-label', `${a.cols}열 ${a.rows}행`); }
-    $('hint').textContent = caseArrange ? '케이스 정리 · 드래그하거나 두 칸을 눌러 바꾸세요' : menu ? '공연 일시정지' : `${state.wins ? '케이스' : '카드 케이스'}를 꾹 누르세요 · 초당 ${C.wandRate(state).toFixed(1)}회`;
+    $('hint').textContent = caseArrange ? '케이스 정리 · 드래그하거나 두 칸을 눌러 바꾸세요' : menu ? '공연 일시정지' : `${state.wins ? '케이스' : '카드 케이스'}를 탭하면 더 강하게 · 꾹 누르면 초당 ${C.wandRate(state).toFixed(1)}회`;
     updateWand(); modeHooks(); syncFlags(); renderBatchD();
   }
   function wandRect(point = pointer) {
@@ -2609,7 +2892,7 @@ globalThis.Presentation = (() => {
     // so the drawn box was shifted by about half a case against the cells it hit. The board's offset inside the card is added here.
     // v4 U40: the offset only changes with the layout, so it is kept until fit() clears it (it used to be re-read every frame, forcing a layout after the frame's DOM writes).
     let off = wandOffset;
-    if (!off || off.portrait) { off = { x: $('board').offsetLeft + $('board').clientLeft - $('wand').offsetLeft, y: $('board').offsetTop + $('board').clientTop - $('wand').offsetTop }; wandOffset = off; }
+    if (!off || off.portrait) { const board = $('board'); off = { x: board.offsetLeft + board.clientLeft + (parseFloat(board.style?.getPropertyValue('--grid-shift-x')) || 0) - $('wand').offsetLeft, y: board.offsetTop + board.clientTop + (parseFloat(board.style?.getPropertyValue('--grid-shift-y')) || 0) - $('wand').offsetTop }; wandOffset = off; }
     $('wand').style.transform = `translate(${off.x + r.x * ratio}px,${off.y + r.y * ratio}px)`;
     }
     if(phone){
@@ -2770,7 +3053,7 @@ globalThis.Presentation = (() => {
     focusBeforePanel = document.activeElement;
     $('panel').dataset.screen = kind; delete $('panel').dataset.practice; $('panelBody').style.gridAutoRows = ''; // v4 U47 13: the stats grid sets its own row height
     $('panel').classList.remove('climax-dialogue');
-    $('panel').querySelector('header').querySelectorAll('.tree-wallet,.constellation-controls,.tree-learning,.practice-go,.tree-more').forEach(el=>el.remove());
+    $('panel').querySelector('header').querySelectorAll('.tree-wallet,.constellation-controls,.tree-learning,.practice-go,.tree-more,.shop-balance').forEach(el=>el.remove());
     $('closePanel').textContent = '닫기'; $('closePanel').removeAttribute('aria-label'); // v4 U51 2: the curtain call relabels it 건너뛰기
     $('panelTitle').textContent = title;
     $('panelBody').replaceChildren(); $('panelBody').scrollTop = 0; $('panel').hidden = false;
@@ -2828,6 +3111,12 @@ globalThis.Presentation = (() => {
   // v4 U44: the player taps the product row of the fail panel; this is the only place that buys from it.
   function learnFailureProduct(id) { if (C.buyNode(state, id)) { save(); sound('skill'); showFailure(); } }
   function showFailure() {
+    if(newTutorialLesson()&&state.u15.bios.includes('lesson:failed')&&!state.u15.bios.includes('lesson:bought')){
+      openPanel('fail','실패 연습 완료');
+      for(const line of D.storyReview.tutorialLesson.fail)$('panelBody').append(element('p',line.text));
+      const go=action('비법 하나 배우러 가기',()=>{setChain('upgrade-play',0);const node=ensureUpgradeNode();tree();if(node)focusNode(node.id);chainFocused=true;save();});
+      $('panelBody').append(go);go.focus();return;
+    }
     openPanel('fail', '공연 종료');
     const result = document.createElement('div'); result.className = 'result';
     const title = document.createElement('h2'); title.textContent = randomLine(D.pools.fail);
@@ -2862,7 +3151,7 @@ globalThis.Presentation = (() => {
     if (updateLearningBadge.at && clock-updateLearningBadge.at<250) return;
     updateLearningBadge.at=clock;
     const count=C.affordableNodes(state).length;
-    const unseen = D.tree.some(n => n.id !== 'autoLearn' && C.nodeInfo(state, n.id).revealed && !treeView.revealed.has(n.id));
+    const unseen = D.tree.some(n => !n.shopOnly && n.id !== 'autoLearn' && C.nodeInfo(state, n.id).revealed && !treeView.revealed.has(n.id));
     $('bookButton').classList.toggle('is-new', unseen);
     $('bookButton').dataset.affordable=String(count);
     $('bookButton').setAttribute('aria-label',`비법 · 지금 배울 수 있는 비법 ${count}개${unseen ? ' · 새 비법 있음' : ''}`);
@@ -2901,9 +3190,11 @@ globalThis.Presentation = (() => {
   function spokenTutorialLine(chain, upgrade, mark) {
     const pack = D.storyV15.tutorial.schoolChain;
     if (chain && mark && mark.step.endsWith('-fight')) return mark.step.startsWith('teacher') ? pack.teacherDuring[0] : pack.girlDuring[0];
+    if (upgrade&&newTutorialLesson())return D.storyReview.tutorialLesson.buy[0];
     if (upgrade) return menu === 'book' ? (pack.upgrade[1] || pack.upgrade[0]) : pack.upgrade[0];
     const tut = state.u15.tutorial;
     if (tut.active && tut.phase === 'fight' && !tut.won) {
+      if(newTutorialLesson())return state.u15.bios.includes('lesson:bought')?D.storyReview.tutorialLesson.retry[0]:D.storyReview.tutorialLesson.before[0];
       const coaching = D.storyV15.tutorial.coaching;
       return coaching[Math.min(coaching.length - 1, Math.floor(state.fightMs / 18000))] || coaching[0];
     }
@@ -2974,17 +3265,31 @@ globalThis.Presentation = (() => {
 
   }
 
+  function areaRangePreview(){
+    const lv=state.tree.area||0,table=C.CONST.areas,now=table[lv],next=table[Math.min(lv+1,table.length-1)];
+    const host=element('div','','area-range-preview');
+    const copy=`지금 ${now[0]}×${now[1]}`+(lv<table.length-1?` → 다음 ${next[0]}×${next[1]}`:' · 완성');
+    host.append(element('strong',copy));
+    const makeGrid=(size,label,kind)=>{
+      const grid=element('div','','area-range-grid');grid.setAttribute('role','img');grid.setAttribute('aria-label',label);
+      for(let row=0;row<5;row++)for(let col=0;col<5;col++)grid.append(element('span','',col<size[0]&&row<size[1]?kind:''));
+      return grid;
+    };
+    host.append(makeGrid(now,`지금 ${now[0]}×${now[1]}`,'range-current'),makeGrid(next,`다음 ${next[0]}×${next[1]}`,'range-added'),element('small','노랑: 지금 · 청록: 다음'),element('small','최대 5×5'));
+    return host;
+  }
   const treeView = { x: 0, y: 0, zoom: 1, selected: 'root', sheet: false, centerPending: false, lastTap: null, revealed: new Set(), ready: false };
   function tree(focusMap = false) {
     const practice = typeof failure !== 'undefined' && failure !== null;
-    if (menu !== 'book') openPanel('book', practice ? D.ui.practiceTitle : D.ui.bookTitle);
+    const opening = menu !== 'book';
+    if (opening) openPanel('book', practice ? D.ui.practiceTitle : D.ui.bookTitle);
     if (practice) $('panel').dataset.practice = '1'; else delete $('panel').dataset.practice;
     const body = $('panelBody'); body.replaceChildren();
     if(state.batchD.twist.trace)body.append(element('p','📖 트레이스 · 흔들리지 않는 마음: 숨겨진 마술 피해 90% 감소, 멘탈은 최소 1 남아요.','batch-d-note'));
     // v4 U47 10: no learn-all and no auto-learn button (the player picks 비법 one by one after a failure).
     const header = $('panel').querySelector('header');
     header.querySelectorAll('.tree-learning,.practice-go').forEach(el=>el.remove());
-    if (practice) { const go = action(practiceGoLabel(), restartAfterFailure); go.classList.add('practice-go','u26-primary'); header.insertBefore(go,$('closePanel')); }
+    if (practice && !(newTutorialLesson()&&!state.u15.bios.includes('lesson:bought'))) { const go = action(practiceGoLabel(), restartAfterFailure); go.classList.add('practice-go','u26-primary'); header.insertBefore(go,$('closePanel')); }
     const wallet = element('div', '', 'tree-wallet');
     [['🪙 ','동전 ',rounded(state.coins)],['📕 ','책 ',state.keys],['🕊️ ','비둘기 ',state.starlight]].forEach(([icon,name,value],i)=>{
       if(i)wallet.append(element('span','·','wallet-sep'));
@@ -2996,7 +3301,13 @@ globalThis.Presentation = (() => {
     const world = element('div', '', 'constellation-world');
     const detail = element('aside', '', 'constellation-detail'); detail.setAttribute('aria-live', 'polite');
     const infos = new Map(D.tree.map(n => [n.id, C.nodeInfo(state, n.id)]));
-    const shown = new Set(D.tree.filter(n => n.id !== 'autoLearn' /* v4 U47 10: retired node, never drawn */ && (infos.get(n.id).revealed ||(!n.hidden && (n.reveal === 'E' || n.prereqs.some(id => infos.get(id).revealed))))).map(n => n.id));
+    const shown = new Set(D.tree.filter(n => !n.shopOnly && n.id !== 'autoLearn' /* v4 U47 10: retired node, never drawn */ && (infos.get(n.id).revealed ||(!n.hidden && (n.reveal === 'E' || n.prereqs.some(id => infos.get(id).revealed))))).map(n => n.id));
+    const centerUnlocked = () => {
+      const nodes = D.tree.filter(n => shown.has(n.id) && infos.get(n.id).revealed && (!infos.get(n.id).gate || infos.get(n.id).gate.met));
+      treeView.x = -(Math.min(...nodes.map(n=>n.x)) + Math.max(...nodes.map(n=>n.x))) * 70 * treeView.zoom;
+      treeView.y = -(Math.min(...nodes.map(n=>n.y)) + Math.max(...nodes.map(n=>n.y))) * 70 * treeView.zoom;
+    };
+    if (opening) treeView.sheet = false;
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); svg.classList.add('constellation-lines');
     for (const node of D.tree) {
       if (!shown.has(node.id)) continue;
@@ -3046,6 +3357,7 @@ globalThis.Presentation = (() => {
       detail.append(element('h2', selected.name), element('span', `레벨 ${C.formatNumber(info.level)} / ${typeof info.max==='number' ? C.formatNumber(info.max) : info.max}`, 'tree-level'));
       if (selected.branch === 'collection') detail.append(element('small', '칼리 컬렉션', 'tree-tag'));
       detail.append(element('p', selected.desc, 'tree-effect'));
+      if ((selected.partOf || selected.id) === 'area') detail.append(areaRangePreview());
       // v4 U48 N5: a routine 비법 shows its trick (frame 2 of the routine strip) at a readable size, so the player knows which trick it is.
       if (selected.routine) { const art = element('div', '', 'tree-routine-art'); art.style.backgroundImage = `url('${assetUrl(`assets/routine-${selected.routine}.png`)}')`; art.setAttribute('role', 'img'); art.setAttribute('aria-label', selected.name); detail.append(art); }
       // v4 U48 C: milestones count the total level of a split node (part II of 무대 배짱 continues at 11).
@@ -3057,6 +3369,7 @@ globalThis.Presentation = (() => {
       if (info.gate) detail.append(element('p', info.gate.text, 'tree-gate'));
       const buy = action('배우기', () => {
         if (!C.buyNode(state, selected.id)) return;
+        if(newTutorialLesson()&&chainMark()?.step==='upgrade-play'&&selected.id===chainNodeId&&!state.u15.bios.includes('lesson:bought'))state.u15.bios.push('lesson:bought');
         tutorialSignal('learn'); sound('coin'); toast(`배웠어요 · ${selected.name}`); save(); tree(); render();
       }, !info.purchasable);
       buy.classList.add('tree-buy');
@@ -3075,7 +3388,7 @@ globalThis.Presentation = (() => {
       treeView.zoom = z; transform();
     };
     const controls = element('div', '', 'constellation-controls');
-    controls.append(action('− 축소', () => zoom(1 / 1.2)), action('+ 확대', () => zoom(1.2)), action('중앙으로', () => { treeView.x = 0; treeView.y = 0; treeView.zoom = 1; transform(); }));
+    controls.append(action('− 축소', () => zoom(1 / 1.2)), action('+ 확대', () => zoom(1.2)), action('중앙으로', () => { treeView.zoom = 1; centerUnlocked(); transform(); }));
     const local = e => { const r = map.getBoundingClientRect(); return { x: (e.clientX - r.left) * map.clientWidth / r.width, y: (e.clientY - r.top) * map.clientHeight / r.height }; };
     const pointers = new Map(); let drag = null;
     map.addEventListener('pointerdown', e => {
@@ -3126,8 +3439,8 @@ globalThis.Presentation = (() => {
       header.insertBefore(wallet,$('closePanel'));
       // U32: rarely used buttons (zoom, center; the auto-learn button went away in v4 U47) sit behind one ⋯ button so the header stays calm.
       const more = element('div','','tree-more'), pop = element('div','','tree-more-pop');
-      const toggle = action('···', () => { const open = more.classList.toggle('open'); toggle.setAttribute('aria-expanded', String(open)); });
-      toggle.classList.add('tree-more-toggle'); toggle.setAttribute('aria-label','더 보기'); toggle.setAttribute('aria-expanded','false');
+      const toggle = action('지도', () => { const open = more.classList.toggle('open'); toggle.setAttribute('aria-expanded', String(open)); });
+      toggle.classList.add('tree-more-toggle'); toggle.setAttribute('aria-label','지도 확대와 이동'); toggle.setAttribute('aria-expanded','false');
       pop.append(controls); more.append(toggle, pop);
       header.insertBefore(more,$('closePanel'));
       $('closePanel').textContent = '뒤로';
@@ -3136,6 +3449,13 @@ globalThis.Presentation = (() => {
       // Keep the centered node in the visible map above the phone sheet.
       if (typeof phone !== 'undefined' && phone && treeView.sheet) treeView.y -= (detail.getBoundingClientRect().height + 6) / 2;
       treeView.centerPending = false;
+    }
+    if (opening) {
+      const nodes = D.tree.filter(n => shown.has(n.id) && infos.get(n.id).revealed && (!infos.get(n.id).gate || infos.get(n.id).gate.met));
+      const span = axis => (Math.max(...nodes.map(n=>n[axis])) - Math.min(...nodes.map(n=>n[axis]))) * 140;
+      treeView.zoom = Math.min(1, (map.clientWidth - 20) / (span('x') + 140), (map.clientHeight - 20) / (span('y') + 140));
+      treeView.zoom = Math.max(.35, treeView.zoom);
+      centerUnlocked(); treeView.y -= 30 * treeView.zoom + Math.max(0, (map.clientHeight - (span('y') + 140) * treeView.zoom) / 2 - 20);
     }
     transform();
     if (focusMap) map.focus({ preventScroll: true });
@@ -3164,8 +3484,8 @@ globalThis.Presentation = (() => {
   const routineIconBounds = {
     bottles:[28,50,228,254], cards:[27,50,229,254], coins:[45,50,211,254],
     coloringbook:[28,24,200,240], cube:[24,36,220,240], cupsballs:[29,50,226,254],
-    eggbag:[0,48,248,224], rings:[52,50,204,254], rope:[34,50,222,254],
-    rubberband:[24,28,228,232], silk:[29,50,226,254], thumbtie:[50,50,205,254],
+    eggbag:[8,28,252,244], rings:[52,50,204,254], rope:[34,50,222,254],
+    rubberband:[24,28,228,232], silk:[29,50,226,254], thumbtie:[24,32,244,252],
     wand:[16,36,216,232]
   };
   function alignRoutineIcon(icon, id) {
@@ -3187,10 +3507,11 @@ globalThis.Presentation = (() => {
     if (image.complete && image.naturalWidth) apply();
     else image.addEventListener('load',apply,{once:true});
   }
-  const PX_ICONS = { '🪙': 'coin', '🪄': 'wand', '🃏': 'card', '🛡': 'shield', '🥤': 'cup', '⚔': 'attack', '📣': 'megaphone', '⚡': 'bolt', '🎩': 'tophat', '☕': 'coffee', '📖': 'book', '📚': 'stats',
+  const PX_ICONS = { '🧣': 'silk', '📕': 'magicbook', '🪙': 'coin', '🪄': 'wand', '🃏': 'card', '🛡': 'shield', '🥤': 'cup', '⚔': 'attack', '📣': 'megaphone', '⚡': 'bolt', '🎩': 'tophat', '☕': 'coffee', '📖': 'book', '📚': 'stats',
     '🔒': 'lock', '✓': 'check', '🏆': 'trophy', '🏅': 'medal', '❤': 'heart', '🕊': 'dove', '🐇': 'rabbit', '👏': 'clap', '🔴': 'sponge', '🔥': 'fire', '🔦': 'spotlight', '🔮': 'crystal', '✨': 'sparkle', '✦': 'star', '🌸': 'petal', '🪞': 'mirror', '🐰': 'rabbit' };
+  const PX_KIT_ART = {coin:'currency-coin',silk:'currency-silk',magicbook:'currency-book',book:'currency-book',dove:'currency-dove',lock:'icon-lock',check:'icon-checkmark',megaphone:'icon-boo',sparkle:'icon-sparkle',star:'icon-spark'};
   const PX_RE = new RegExp(`(${Object.keys(PX_ICONS).join('|')})\\uFE0F?`, 'u');
-  function pxIcon(glyph) { const img = document.createElement('img'); img.className = 'px-icon'; img.src = `assets/ui/ic-${PX_ICONS[glyph]}.webp`; img.alt = ''; img.draggable = false; img.dataset.glyph = glyph; return img; }
+  function pxIcon(glyph) { const img = document.createElement('img'); img.className = 'px-icon'; img.src = PX_KIT_ART[PX_ICONS[glyph]] ? `assets/kit/${PX_KIT_ART[PX_ICONS[glyph]]}.webp` : `assets/ui/ic-${PX_ICONS[glyph]}.webp`; img.alt = ''; img.draggable = false; img.dataset.glyph = glyph; return img; }
   // Replaces the known glyphs in the text nodes under root (one pass; text without a glyph is left alone).
   function pxIcons(root) {
     if (!root || !PX_RE.test(root.textContent)) return root;
@@ -3333,22 +3654,12 @@ globalThis.Presentation = (() => {
     let layer=$('magicLayer');
     if(!layer){layer=element('div','','magic-layer');layer.id='magicLayer';$('stage').append(layer);}
     layer.hidden=paused();
-    const actors=renderMagic.actors || (renderMagic.actors={balls:[],papers:[],controls:{}});
+    const actors=renderMagic.actors || (renderMagic.actors={balls:[],papers:[]});
     // U36: hidden flags are written once per frame (they used to be set true for every actor and then false again, two attribute writes each).
     for(let i=state.features.magic.balls.length;i<actors.balls.length;i++)actors.balls[i].hidden=true;
     for(let i=state.features.magic.papers.length;i<actors.papers.length;i++)actors.papers[i].hidden=true;
     state.features.magic.balls.forEach((b,i)=>{const ball=actors.balls[i] || (actors.balls[i]=element('img','','sponge-projectile'));ball.hidden=!portraitLayout()&&((renderMagic.bounces||{})[i]||0)>clock;if(!ball.__art){ball.src='assets/proj-sponge.png';ball.alt='스펀지볼';ball.__art=true;}const point=typeof phone !== 'undefined' && phone ? boardPoint(b.x,b.y) : {x:870+b.x,y:160+b.y};const half=portraitLayout()?14:16;ball.style.left=`${point.x-half}px`;ball.style.top=`${point.y-half}px`;if(!ball.dataset.mounted){layer.append(ball);ball.dataset.mounted="1";}});
     state.features.magic.papers.forEach((p,i)=>{const at=cellCenter(p.cell);let button=actors.papers[i];if(!button){button=action('플래시 페이퍼',()=>{events(C.tapPaper(state,Number(button.dataset.cell)));save();render();});button.addEventListener('pointerdown',e=>e.stopPropagation());button.addEventListener('pointerup',e=>e.stopPropagation());actors.papers[i]=button;}button.hidden=false;button.dataset.cell=p.cell;button.className='paper-drop';button.style.left=`${at.x-25}px`;button.style.top=`${at.y-25}px`;if(button.dataset.asset!=='assets/drop-flashpaper.png')sprite(button,'assets/drop-flashpaper.png');if(!button.dataset.mounted){layer.append(button);button.dataset.mounted="1";}});
-    let controls=$('magicControls');
-    if(!controls){controls=element('div','','magic-controls');controls.id='magicControls';($('helperControls') || $('stage')).append(controls);}
-    for(const id in actors.controls)if(!state.tree[id])actors.controls[id].hidden=true;
-    for(const id of ['sponge','cardthrow','tipbox','flashpaper','crystal','water','spotlight'])if(state.tree[id]){
-      const n=D.tree.find(n=>n.id===id);let button=actors.controls[id];if(!button){button=action('',()=>{C.toggleHelper(state,id);save();render();});actors.controls[id]=button;controls.append(button);}button.hidden=false;
-      const icons={sponge:'🔴',cardthrow:'🃏',tipbox:'🪙',flashpaper:'🔥',crystal:'🔮',water:'🍗',spotlight:'🔦'};
-      const label=`${n.name} ${state.features.magic.paused[id]?'다시 시작':'일시정지'}`;
-      pxText(button,`${icons[id]} ${state.features.magic.paused[id]?'시작':'멈춤'}`);
-      button.title=label;button.setAttribute('aria-label',label);button.setAttribute('aria-pressed',String(!!state.features.magic.paused[id]));
-    }
     let parade=$('curtainCall');
     if(state.features.climax.left>0){
       if(!parade){parade=action('',()=>{C.skipCurtainCall(state);pendingIntro=null;save();render();});parade.id='curtainCall';parade.className='curtain-call';$('stage').append(parade);}
@@ -3365,9 +3676,6 @@ globalThis.Presentation = (() => {
       hud = element('div', '', 'feature-hud'); hud.id = 'featureHud';
       const goal = element('small'); goal.id = 'comboGoal'; $('combo').append(goal);
       const encore = element('span'); encore.id = 'encoreStatus'; hud.append(encore);
-      for (const id of ['dove', 'rabbit', 'fan', 'assistant']) {
-        const button = action('', () => { C.toggleHelper(state, id); save(); render(); }); button.id = `${id}Pause`; hud.append(button);
-      }
       ($('helperControls') || $('stage')).append(hud);
     }
     const goal = C.nextComboGoal(state);
@@ -3376,17 +3684,10 @@ globalThis.Presentation = (() => {
     $('stage').classList.toggle('encore-active', !!active);
     const seconds = Math.ceil((active ? state.features.encoreLeft : state.features.encoreMs) / 1000);
     $('encoreStatus').textContent = active ? `피버 ${Math.ceil(state.features.encoreLeft/1000)}초` : `피버 ${Math.floor(state.u17.feverGauge)}%`;
-    for (const id of ['dove', 'rabbit', 'fan', 'assistant']) {
-      const owned = state.tree[id === 'fan' ? 'boxHelper' : id];
-      const paused = id === 'fan' || id === 'assistant' ? state.features.workers[id + 'Paused'] : state.features[id === 'dove' ? 'dovePaused' : 'helperPaused'];
-      const button = $(`${id}Pause`), names = { dove: '비둘기', rabbit: '토끼', fan: '팬', assistant: '어시스턴트' };
-      button.hidden = !owned; pxText(button, `${({ dove: '🕊️', rabbit: '🐇', fan: '👏', assistant: '🎩' })[id]} ${paused ? '시작' : '멈춤'}`);
-      button.title = `${names[id]} ${paused ? '다시 시작' : '일시정지'}`;
-      button.setAttribute('aria-label', button.title); button.setAttribute('aria-pressed', String(!!paused));
-      if (id === 'fan' || id === 'assistant') continue;
+    for (const id of ['dove', 'rabbit']) {
+      const owned = state.tree[id];
       const host = helperActor(id); host.hidden = !owned;
       if (Number(host.dataset.busyUntil || 0) <= clock && host.dataset.asset !== `assets/helper-${id}-idle.png`) sprite(host, `assets/helper-${id}-idle.png`);
-      host.classList.toggle('paused', paused);
     }
     // U36: hide only the actors that are no longer in the list (they used to be hidden and shown again every frame).
     const liveActors = new Set(state.features.workers.actors.map(a => a.id));
@@ -3436,7 +3737,7 @@ globalThis.Presentation = (() => {
     const routines=element('div','','routine-collection');routines.append(element('strong','나의 마술'));const learned=new Set(state.u19.routines);for(const r of D.routines){const known=learned.has(r.id);const item=element('span','',known?'routine-item':'routine-item routine-locked');item.title=known?r.name:'???';item.setAttribute('role','img');item.setAttribute('aria-label',known?r.name:'???');const icon=element('span','','routine-icon routine-frame');icon.style.backgroundImage=`url('${assetUrl(`assets/routine-${r.id}.png`)}')`;alignRoutineIcon(icon,r.id);item.append(icon,element('small',known?r.name:'???','routine-name'));routines.append(item);}$('panelBody').append(routines);if(state.u19.cleared||state.u18.owned.kali.includes('future'))$('panelBody').append(element('p','🏅 미래의 나 · 다음 한 장을 건네받았다.'));
     const products=D.tree.filter(n=>n.branch==='collection'),owned=products.filter(n=>state.tree[n.id]>0).length,collection=element('p',`칼리 컬렉션 ${owned}/${products.length}${state.u14.collection?' · 연출 +10%':''}`);if(state.u14.collection)collection.prepend(artFallback('assets/icon-set-bonus.png','🎀','set-ribbon u14-art'));$('panelBody').append(collection,element('p',D.easyExtras.set,'easy-description'));
     const guides=element('section','','bestiary-guides');
-    for(const [name,key,path] of [['NDD','tutorial','aud-tutorial-dogyeom-happy.png'],['밍기리','helper','aud-tutorial-mingiri-happy.png']]){if(key==='helper'&&!state.trophies.theater)continue;const card=element('article','','bestiary-guide');const art=element('span','','entry-emoji');art.append(element('span',key==='helper'?'👹':'🙎','sprite-fallback'));sprite(art,'assets/'+path);card.append(art,element('h3',name),element('p',D.storyV15[key].bio));guides.append(card);}
+    for(const [name,key,path] of [['NDD','tutorial','aud-tutorial-dogyeom-happy.png'],['밍기리','helper','aud-mingiri-dark-happy.png']]){if(key==='helper'&&!state.trophies.theater)continue;const card=element('article','','bestiary-guide');const art=element('span','','entry-emoji');art.append(element('span',key==='helper'?'👹':'🙎','sprite-fallback'));sprite(art,'assets/'+path);card.append(art,element('h3',name),element('p',D.storyV15[key].bio));guides.append(card);}
     const badges=element('div','','reward-badges');
     for(const r of D.stageRewards){const badge=element('figure','','reward-badge');const art=element('img');art.src=`assets/reward-${r.id}.png`;art.alt=r.effect;badge.classList.toggle('earned',state.features.rewards.includes(r.id));badge.append(art,element('figcaption',`${C.venueBySlug(r.venueSlug).name} · ${r.effect}`));badges.append(badge);} $('panelBody').append(badges);
     const list = element('div', '', 'bestiary-list');
@@ -3913,22 +4214,118 @@ globalThis.Presentation = (() => {
     $('panelBody').append(grid);save();
   }
 
+  function padArt(key,icon=false){
+    const [id,color]=key.split(':'),pad=D.pads.find(p=>p.id===id),base=pad.asset+(color?'-'+color:'');
+    return `assets/${icon&&id!=='floor'?'icon-':''}${base}-${icon&&id!=='floor'?'64':'512'}.webp`;
+  }
+  function padName(key){const [id,color]=key.split(':'),pad=D.pads.find(p=>p.id===id);return pad.name+(color?' · '+D.padColors[color].name:'');}
+  function effectText(effects){
+    const values=Object.entries(effects).filter(([,value])=>value);
+    return values.length?values.map(([key,value])=>`${D.gearEffectLabels[key]} ${value>0?'+':''}${+(value*100).toFixed(2)}%`).join(' · '):'추가 효과 없음';
+  }
+  function effectDifference(tab,id){
+    const equipped=tab==='pads'?state.u18.pads.equipped:state.u18.equipped.kali;
+    const a=C.gearEffects(state,tab,id),b=C.gearEffects(state,tab,equipped);
+    const keys=[...new Set([...Object.keys(a),...Object.keys(b)])],parts=[];
+    for(const key of keys){const diff=(a[key]||0)-(b[key]||0);if(Math.abs(diff)>1e-9)parts.push(`${D.gearEffectLabels[key]} ${diff>0?'높음':'낮음'}`);}
+    return parts.length?'착용 중 대비 '+parts.join(' · '):'착용 중과 같은 효과';
+  }
+  function renderBoardPad(){
+    const board=$('board'),path=padArt(state.u18.pads.equipped);
+    if(board.dataset.padPath===path)return;
+    board.dataset.padPath=path;board.style.removeProperty('--equipped-pad');
+    const image=assetImage(path),ready=()=>{if(board.dataset.padPath!==path)return;if(image.naturalWidth>0)board.style.setProperty('--equipped-pad',`url('${state.u18.pads.equipped==='personal:green'?'assets/kit/felt-tile.webp':assetUrl(path)}')`);};
+    if(image.complete)ready();else image.addEventListener('load',ready,{once:true});
+  }
+  function padShopSection(){
+    const section=element('section','','shop-pads');section.append(element('h2','마술 패드'));
+    const grid=element('div','','shop-cosmetic-grid');
+    for(const pad of D.pads.filter(p=>p.id!=='floor'))for(const color of pad.colors){
+      const info=C.padInfo(state,pad.id,color),key=info.key,status=info.equipped?'착용 중':info.owned?'착용':`실크 ${info.cost}`;
+      const tile=action('',()=>{if(!info.owned&&!C.buyPad(state,pad.id,color))return;if(C.equipPad(state,key)){save();render();gemShop();}},info.equipped||!info.available);
+      tile.className='shop-cosmetic-tile';tile.dataset.pad=key;tile.setAttribute('aria-pressed',String(info.equipped));
+      tile.setAttribute('aria-label',`${padName(key)} · ${status} · ${effectText(C.gearEffects(state,'pads',key))}`);
+      tile.append(artFallback(padArt(key,true),'▰','cosmetic-icon'),element('span',padName(key),'shop-cosmetic-name'),element('small',status),element('small',effectText(C.gearEffects(state,'pads',key)),'gear-effect'));
+      if(info.reason)tile.append(element('small',info.reason,'shop-cosmetic-lock'));grid.append(tile);
+    }
+    section.append(grid);appendPadUpgrade(section,gemShop);return section;
+  }
+  function appendPadUpgrade(host,refresh){
+    const info=C.padUpgradeInfo(state), block=element('div','','pad-upgrade');host.append(block);host=block;
+    host.append(element('p',`칼리 패드 강화 ${info.level}회 · 꾹 누르기 속도 +${+(info.level*5).toFixed(2)}%p`));
+    const button=action(`강화 +5%p · 동전 ${C.formatNumber(info.cost)}`,()=>{if(C.upgradePad(state)){save();render();refresh();}},!info.available);button.dataset.padUpgrade='true';host.append(button);
+    if(info.reason)host.append(element('small',info.reason));
+  }
+  function wardrobe(){
+    if(['boo','fail','ending','rebirth','bossPhase','headliner'].includes(menu))return;
+    openPanel('wardrobe','옷장');
+    $('panelBody').append(element('p','타일을 누르면 바로 착용해요. 산 색을 눌러 패드 색을 바꿔요.'));
+    const sections = element('div','','wardrobe-sections'); $('panelBody').append(sections);
+    for(const tab of ['pads','kali']){
+      const section=element('section','',tab==='pads'?'wardrobe-pads':'wardrobe-outfits');section.append(element('h2',tab==='pads'?'마술 패드':'옷'));
+      const equipped=tab==='pads'?state.u18.pads.equipped:state.u18.equipped.kali;
+      const name=tab==='pads'?padName(equipped):D.cosmetics.kali.find(x=>x.id===equipped)?.name||'기본 의상';
+      section.append(element('p',`착용 중: ${name} · ${effectText(C.gearEffects(state,tab,equipped))}`,'wardrobe-equipped'));
+      if(tab==='kali')for(const x of D.cosmetics.kali)C.cosmeticInfo(state,tab,x.id);
+      const ids=tab==='pads'?state.u18.pads.owned:['',...state.u18.owned.kali],grid=element('div','','shop-cosmetic-grid');
+      for(const id of ids){
+        const item=tab==='kali'?D.cosmetics.kali.find(x=>x.id===id):null,label=tab==='pads'?padName(id):item?.name||'기본 의상';
+        const tile=action('',()=>{if(tab==='pads'?C.equipPad(state,id):C.equipCosmetic(state,'kali',id)){save();render();wardrobe();}},id===equipped);
+        tile.className='shop-cosmetic-tile';tile.dataset.gear=tab+':'+id;tile.setAttribute('aria-pressed',String(id===equipped));
+        const effect=effectText(C.gearEffects(state,tab,id)),difference=effectDifference(tab,id);
+        tile.setAttribute('aria-label',`${label} · ${effect} · ${difference}`);
+        tile.append(artFallback(tab==='pads'?padArt(id,true):item?`assets/icon-kali-skin-${id}.png`:'assets/magician-mini.png',item?.emoji||'▰','cosmetic-icon'),element('span',label,'shop-cosmetic-name'),element('small',effect,'gear-effect'),element('small',difference,'gear-difference'));
+        grid.append(tile);
+      }
+      section.append(grid); sections.append(section);
+    }
+    appendPadUpgrade($('panelBody'),wardrobe);
+  }
   function gemShop(){
     if(['boo','fail','ending','rebirth','bossPhase','headliner'].includes(menu))return;
-    openPanel('gemShop','실크 상점');$('panelBody').append(element('p',`실크 ${state.gems}개`,'dealer-wallet'));
-    const knit = C.cosmeticInfo(state,'kali','brownknit');
-    const outfit = element('section','','gem-shop-item');
-    outfit.append(element('h2','갈색 니트'), action(knit.owned?'갈색 니트 입기':`사기 · 실크 ${knit.cost}`,()=>{
-      if (knit.owned || C.buyCosmetic(state,'kali','brownknit')) { C.equipCosmetic(state,'kali','brownknit'); save(); render(); gemShop(); }
-    },!knit.available));
-    $('panelBody').append(outfit);
+    openPanel('gemShop','실크 상점');
+    const balance=element('p',`실크 ${state.gems}개`,'dealer-wallet shop-balance');
+    $('panel').querySelector('header').insertBefore(balance,$('closePanel'));
+    // Purchases keep their existing handlers and save keys; sections only change presentation.
+    const abilities = element('section','','shop-abilities'), routines = element('section','','shop-routines');
+    abilities.append(element('h2','스킬'));
+    routines.append(element('h2','마술 루틴'));
     for(const item of D.gemShop){
-      if((item.id==='glove'||item.id==='brick')&&!C.hasDeck(state))continue; // v4 U48 A/A2: sold only once the 칼리 덱 node is learned
-      const card=element('section','','gem-shop-item');card.append(element('h2',item.name),element('p',item.desc));
+      if((item.id==='glove'||item.id==='brick')&&!C.hasDeck(state))continue;
+      const card=element('section','','gem-shop-item');card.dataset.shopItem=item.id;
+      const iconPath=item.id.startsWith('routine-')?`assets/icon-${item.id}.webp`:item.id==='potion'?'assets/node-chicken.webp':item.id==='refill'?'assets/kit/icon-showtime.webp':'assets/kit/icon-card-rain.webp';
+      const heading=element('h3',item.name);heading.prepend(artFallback(iconPath,'✦','shop-item-icon'));
+      card.append(heading,element('p',item.desc));
       const add=skill=>{const info=C.gemShopInfo(state,item.id,skill),label=skill?D.skills.find(k=>k.id===skill).name+' 충전':'사기';
-        card.append(action(`${label} · 실크 ${info.cost}`,()=>{if(C.gemShopBuy(state,item.id,skill)){save();sound('skill');gemShop();render();}},!info.available));if(info.reason)card.append(element('small',info.reason));};
-      if(item.id==='refill')D.skills.forEach(k=>add(k.id));else add();$('panelBody').append(card);
+        const buy=action('',()=>{if(C.gemShopBuy(state,item.id,skill)){save();sound('skill');gemShop();render();}},!info.available);
+        buy.setAttribute('aria-label',`${label} · 실크 ${info.cost}`);buy.append(element('span',label),element('span',String(info.cost),'kit-price kit-price-silk'));card.append(buy);if(info.reason&&item.id!=='refill')card.append(element('small',info.reason));};
+      if(item.id==='refill')D.skills.forEach(k=>add(k.id));else add();
+      (item.id.startsWith('routine-')?routines:abilities).append(card);
     }
+    const pads=padShopSection();
+    const looks=element('section','','shop-customization');looks.append(element('h2','옷'));
+    for(const tab of ['kali','cases']){
+      looks.append(element('h3',tab==='kali'?'칼리 의상':'카드 케이스'));
+      const grid=element('div','','shop-cosmetic-grid');
+      for(const x of D.cosmetics[tab].filter(x=>x.id!=='future'||state.u19.cleared||state.u18.owned.kali.includes('future'))){
+        const info=C.cosmeticInfo(state,tab,x.id),equipped=state.u18.equipped[tab]===x.id;
+        const status=equipped?'착용 중':info.owned?'착용':x.milestone?'잠김':`실크 ${info.cost}`;
+        const tile=action('',()=>{
+          if(!info.owned&&!C.buyCosmetic(state,tab,x.id))return;
+          if(C.equipCosmetic(state,tab,x.id)){save();render();gemShop();}
+        },equipped||!info.available);
+        tile.className='shop-cosmetic-tile';tile.dataset.cosmetic=tab+':'+x.id;
+        tile.setAttribute('aria-label',`${x.name} · ${status}${!info.available?' · '+info.hint:''}`);
+        if(equipped)tile.setAttribute('aria-pressed','true');
+        const icon=artFallback(`assets/icon-${tab==='kali'?'kali-skin':'case'}-${x.id}.png`,x.emoji,'cosmetic-icon');
+        tile.append(icon,element('span',x.name,'shop-cosmetic-name'),element('small',status));
+        if(tab==='kali')tile.append(element('small',effectText(C.gearEffects(state,'kali',x.id)),'gear-effect'));
+        if(x.milestone&&!info.owned)tile.append(element('small',info.hint,'shop-cosmetic-lock'));
+        grid.append(tile);
+      }
+      looks.append(grid);
+    }
+    $('panelBody').append(abilities,routines,pads,looks);
   }
   // U30c: "피버 타임!" shows inside the stage, centered just below the doubt and heckle bars, then fades.
   // Reduced motion: no animation, it just stays for the same time and disappears.
@@ -4126,7 +4523,8 @@ globalThis.Presentation = (() => {
   });
   $('mapButton').addEventListener('click',()=>openStageMap());
   $('customizeButton').addEventListener('click',customize);
-  $('gemShopButton').addEventListener('click',gemShop);
+  $('gemShopButton').addEventListener('click',()=>{if(lineOpen())return;gemShop();});
+  $('wardrobeButton').addEventListener('click',wardrobe);
   // v4 U50b: no shop from the skill column while a character dialog is open (Codex Sol U50 FAIL 1). U50c: this comment used to swallow the rest of the line.
   const shopQuick=action('',()=>{if(lineOpen())return;gemShop();});shopQuick.id='gemShopQuick';shopQuick.className='active-skill gem-shop-quick';shopQuick.setAttribute('aria-label','실크 상점');
   shopQuick.append(Object.assign(document.createElement('img'),{className:'cur-icon skill-art',src:'assets/cur-silk.webp',alt:'',width:18,height:18}),element('span','실크 상점'));
@@ -4341,22 +4739,32 @@ globalThis.Presentation = (() => {
     if (rising.length) { ctx.save(); ctx.globalAlpha = 1; ctx.imageSmoothingEnabled = false; for (const f of rising) paintFlight(f); ctx.restore(); }
   }
 
-  let bioUntil=0,bioPending='',dialogKey='',installPrompt=null;
+  let bioUntil=0,bioPending='',bioLineKey='',bioRecord=false,dialogKey='',installPrompt=null;
 
-  function easyTooltip(button,copy){
-    button.title=copy;button.setAttribute('aria-description',copy);
-    let timer,long=false;
-    const show=(suppressClick=true)=>{long=suppressClick;const tip=$('easyTooltip');tip.textContent=copy;tip.hidden=false;const r=button.getBoundingClientRect(),stage=$('stage').getBoundingClientRect();tip.style.left=Math.max(4,Math.min(layoutWidth-240,(r.left-stage.left)/scale-240))+'px';tip.style.top=Math.max(48,(r.top-stage.top)/scale)+'px';};
-    button.addEventListener('pointerdown',()=>{long=false;timer=setTimeout(show,400);});
-    button.addEventListener('pointerenter',e=>{if(e.pointerType==='mouse')show(false);});
-    for(const event of ['pointerup','pointercancel','pointerleave'])button.addEventListener(event,()=>{clearTimeout(timer);$('easyTooltip').hidden=true;});
-    button.addEventListener('click',e=>{if(long){e.stopImmediatePropagation();long=false;}},true);
+  function queueAudienceLine(text,key,seen=false,record=false) {
+    if (bioLineKey === key && $('audienceLine').textContent === (text || '')) return;
+    bioLineKey = key; $('audienceLine').textContent = text || '';
+    bioPending = text && !seen ? key : ''; bioUntil = 0; bioRecord = record;
+    $('audienceLine').hidden = true;
+  }
+  function updateAudienceLine() {
+    const blocked = !!state.u15.scene || state.u15.queue.length > 0 || !$('storyDialog').hidden || state.telegraphed || state.review.target >= 0 || blockingSheetOpen();
+    if (bioPending && state.mode === 'fight' && !blocked) {
+      if (bioRecord && !state.u15.bios.includes(bioPending)) state.u15.bios.push(bioPending);
+      bioPending = ''; bioUntil = clock + 5000;
+    }
+    $('audienceLine').hidden = !wonMoment && (blocked || clock >= bioUntil || !$('audienceLine').textContent);
+  }
+  function replayAudienceLine() {
+    bioPending = bioLineKey || 'audience-click'; updateAudienceLine();
   }
   function speakerPortrait(name){
     if(D.storyV15.portraits[name])return D.storyV15.portraits[name];
     if(name==='같은 반 여학생')return 'assets/aud-s1-classmate.png';
     if(name==='수학 선생님')return 'assets/aud-s1-teacher.png';
-    if(name==='밍기리')return state.trophies.theater?'assets/aud-tutorial-mingiri-happy.png':'assets/aud-mingiri-dark.png';
+    if(name==='밍기리')return state.trophies.theater?'assets/aud-mingiri-dark-happy.png':'assets/aud-mingiri-dark.png';
+    if(name==='어린 칼리')return 'assets/aud-young-kali.png';
+    if(name==='완벽한 칼리')return 'assets/aud-perfect-kali.png';
     if(name==='수상한 샵 매니저')return 'assets/serona-hooded.png';
     if(name==='NDD')return 'assets/aud-tutorial-dogyeom'+(state.u15.tutorial.won?'-happy':'')+'.png';
     if(name==='칼리')return kaliArtPath();
@@ -4398,6 +4806,7 @@ globalThis.Presentation = (() => {
     if(dialogKey===key+':'+index)return;dialogKey=key+':'+index;host.replaceChildren();
     const line=lines[Math.min(index,lines.length-1)],art=element('span',line.speaker==='칼리'?'🎩':'👤','story-portrait');
     if(line.speaker==='칼리'){const mood=line.mood||D.lineFaces.moods[u25DialogMoodKey(key,index)]||'serious';art.classList.toggle('future-suit',state.u18.equipped.kali==='future');if(['sad','surprised'].includes(mood))sprite(art,'assets/kali-react-'+mood+'.png');else moodSprite(art,kaliArtPath(),mood);}
+    else if(key.includes('lecturenote')&&line.speaker==='세로나')sprite(art,'assets/serona-reveal.png');
     else if(key.startsWith('tutorial:')&&line.speaker==='세로나')moodSprite(art,'assets/serona.png',line.mood||'serious'); // tutorial helper, not the lecturenote 세로나 sprite and not 밍기리
     else{const a=D.venues.flatMap(v=>C.roster(v)).find(a=>a.name===line.speaker);const moodKey=u25DialogMoodKey(key,index);moodSprite(art,speakerPortrait(line.speaker),line.mood||D.lineFaces.moods[moodKey]||D.lineFaces.faceMap.roleDefaults[a?.role]||'serious');}
     { const after=lines[index+1]; if(after){ const p=after.speaker==='칼리'?kaliArtPath():(key.startsWith('tutorial:')&&after.speaker==='세로나'?'assets/serona.png':speakerPortrait(after.speaker)); if(p)assetImage(p); } } // v4 U49 3: warm the next speaker's portrait
@@ -4474,16 +4883,21 @@ globalThis.Presentation = (() => {
   }
   function replaceState(next) {
     if (!next) return false;
+    next.features.achievements=[...new Set([...next.features.achievements,...state.features.achievements])];
+    next=C.deserialize(C.serialize(next));if(!next)return false;
     for (const k of Object.keys(state)) delete state[k];
     Object.assign(state, next);
     return true;
   }
+  function newTutorialLesson(){return !state.u15.tutorial.done&&state.u15.bios.includes('lesson:v1');}
   function chainLines(step) {
     const pack = D.storyV15.tutorial.schoolChain;
+    if(step==='lesson-intro')return [...D.storyV15.tutorial.intro,...D.storyReview.tutorialLesson.before];
     return { 'girl-intro': pack.girlIntro, 'girl-clear': pack.girlClear, 'teacher-intro': pack.teacherIntro, 'upgrade-lines': pack.upgrade }[step] || null;
   }
   const CHAIN_AFTER = { 'girl-intro': 'girl-fight', 'girl-clear': 'teacher-intro', 'teacher-intro': 'teacher-fight', 'upgrade-lines': 'upgrade-play', 'girl-fight': 'girl-clear', 'teacher-fight': 'upgrade-lines' };
-  // TODO core tutorial: core keeps one NDD fight (startTutorial / tutorial.won). The classmate and the teacher are normal fights rolled back in the UI.
+  // The first two fights are rehearsals restored from their baseline.
+  // NDD is the third audience; its first new-player attempt ends in the core lesson event.
   function ensureChainFight(step) {
     if (chainFighting) return;
     chainBackup = C.serialize(state);
@@ -4499,7 +4913,7 @@ globalThis.Presentation = (() => {
   function absorbChainWin() {
     const mark = chainMark();
     if (!mark || !mark.step.endsWith('-fight') || state.u15.tutorial.active) return false;
-    const next = CHAIN_AFTER[mark.step] || 'girl-intro';
+    const next = newTutorialLesson()&&mark.step==='teacher-fight'?'lesson-intro':CHAIN_AFTER[mark.step] || 'girl-intro';
     if (chainBackup) replaceState(C.deserialize(chainBackup));
     chainFighting = false; chainBackup = '';
     state.onboarding.intro = true;
@@ -4544,7 +4958,10 @@ globalThis.Presentation = (() => {
     if (menu) { menu = ''; $('panel').hidden = true; }
     setChain('', 0);
     dialogKey = ''; lastAudience = '';
+    failure=null;
+    if(newTutorialLesson()&&!state.u15.bios.includes('lesson:failed')&&!state.u15.bios.includes('lesson:attempt'))state.u15.bios.push('lesson:attempt');
     C.startTutorial(state);
+    if(newTutorialLesson())state.u15.tutorial.phase='fight';
     save();
   }
   function ensureUpgradeNode() {
@@ -4592,16 +5009,19 @@ globalThis.Presentation = (() => {
     if (state.u15.tutorial.done || state.u15.tutorial.active) return false;
     const mark = chainMark();
     if (!mark) return false;
+    if(mark.step==='lesson-fail'){if(menu!=='fail'&&menu!=='book'){failure=0;showFailure();}return true;}
     if (mark.step.endsWith('-fight')) {
       $('storyDialog').hidden = true; dialogKey = '';
       ensureChainFight(mark.step);
       return true;
     }
     if (mark.step === 'upgrade-play') {
+      if(newTutorialLesson()&&state.u15.bios.includes('lesson:bought')){beginNdd();return false;}
       const node = ensureUpgradeNode();
       $('storyDialog').hidden = true; dialogKey = '';
       if (!node) { beginNdd(); return false; }
       if ((state.tree[node.id] || 0) > chainNodeLevel) { beginNdd(); return false; }
+      if(newTutorialLesson()&&menu!=='book'){tree();chainFocused=false;}
       if (menu === 'book' && !chainFocused) { chainFocused = true; focusNode(node.id); }
       else if (menu !== 'book' && !chainBookChecked) {
         chainBookChecked = true;
@@ -4613,6 +5033,7 @@ globalThis.Presentation = (() => {
     if (!lines || !lines.length) { setChain(CHAIN_AFTER[mark.step] || 'girl-intro', 0); return true; }
     const advance = () => {
       if (mark.line + 1 < lines.length) setChain(mark.step, mark.line + 1);
+      else if(mark.step==='lesson-intro')beginNdd();
       else setChain(CHAIN_AFTER[mark.step] || 'girl-intro', 0);
     };
     renderDialog(lines, mark.line, 'tutorial:' + mark.step, advance, endSchoolTutorial);
@@ -4621,14 +5042,14 @@ globalThis.Presentation = (() => {
   function renderU15(){
     const u=state.u15,t=u.tutorial,glove=$('item-auto-glove');
     if(glove){const deck=C.hasDeck(state),left=u.gloveLeft,sec=Math.ceil(left/1000);glove.classList.toggle('glove-active',left>0);glove.querySelector('small').className='item-count';glove.hidden=!deck&&u.gloves===0&&left===0;glove.disabled=paused()||state.mode!=='fight'||left>0||u.gloves<1;glove.setAttribute('aria-pressed','false');glove.querySelector('small').textContent=left>0?(sec>=60?`${Math.floor(sec/60)}:${String(sec%60).padStart(2,'0')}`:sec+'초'):u.gloves+'개';glove.setAttribute('aria-label',left>0?`칼리 덱 자동 연습 중 · 남은 시간 ${sec}초 · ${u.gloves}개 보유`:`칼리 덱 쓰기 · ${u.gloves}개 보유`);if(left>gloveRun)gloveRun=left;if(!left)gloveRun=0;glove.style.setProperty('--cooldown',Math.min(1,left/Math.max(120000,gloveRun))*360+'deg');}
-    if(renderSchoolChain())return;
+    if(renderSchoolChain()){updateAudienceLine();return;}
     if(t.active){
       if(t.won&&t.phase!=='overview')t.phase='defeat';
       if(t.phase==='fight'){
         $('storyDialog').hidden=true;dialogKey='';
         if(state.fightMs>40000&&state.onboarding.step>=4&&u.gloves===0&&u.gloveLeft===0)u.gloves=1;
         const coaching=D.storyV15.tutorial.coaching;
-        const line=coaching[Math.min(coaching.length-1,Math.floor(state.fightMs/18000))];$('audienceLine').textContent=line.text;$('audienceLine').hidden=portraitLayout();
+        const line=coaching[Math.min(coaching.length-1,Math.floor(state.fightMs/18000))];queueAudienceLine(line.text,'coaching:'+line.text);updateAudienceLine();
         return;
       }
       if(t.won&&$('audience').dataset.asset!=='assets/aud-tutorial-dogyeom-happy.png')sprite($('audience'),'assets/aud-tutorial-dogyeom-happy.png');
@@ -4643,8 +5064,8 @@ globalThis.Presentation = (() => {
     const transitionNotice=!!presentation.active?.stageTransition||presentation.items.some(item=>item.stageTransition);
     const storyBlocked=blockingSheetOpen()||transitionNotice||document.hidden||portrait()||!$('leaveConfirm').hidden||!$('offlineCard').hidden||!$('sceneCard').hidden||!$('banner').hidden||!!stageRewardHost;
     if(!storyBlocked&&!state.u18.anchor&&t.done&&(state.mode!=='transition'||state.idle.waiting||state.batchD.encore.phase==='choice'||state.batchD.rebirthOffer)&&!u.scene&&u.queue.length&&state.features.climax.left<=0)C.startScene(state);
-    if(u.scene){if(bioPending)bioUntil=0;const scene=u.scene,lines=D.storyV15.venues[scene.slug][scene.kind];renderDialog(lines,scene.line,'story:'+scene.dimension+':'+scene.slug+':'+scene.kind,()=>{C.advanceScene(state,false);save();},()=>{C.advanceScene(state,true);save();});}
-    else{$('storyDialog').hidden=true;dialogKey='';if(bioPending&&state.mode==='fight'&&!state.telegraphed&&state.review.target<0){if(!u.bios.includes(bioPending))u.bios.push(bioPending);bioPending='';bioUntil=0;}}
+    if(u.scene){const scene=u.scene,lines=D.storyV15.venues[scene.slug][scene.kind];renderDialog(lines,scene.line,'story:'+scene.dimension+':'+scene.slug+':'+scene.kind,()=>{C.advanceScene(state,false);save();},()=>{C.advanceScene(state,true);save();});}
+    else{$('storyDialog').hidden=true;dialogKey='';}
     // v4 U51b 1: the 칼리 덱 auto path only moves the story lines on (every 2.5 s, and not under the menu, the leave question or the offline card); the
     // stage itself is started only by autoStartStage (all its guards and the 1 s pause), never directly from here.
     if(C.autoStage(state)&&(u.scene||state.idle.waiting)&&!blockingSheetOpen()&&!document.hidden&&!portrait()&&$('leaveConfirm').hidden&&$('sceneCard').hidden&&$('introStory').hidden&&$('offlineCard').hidden&&!stageRewardHost&&$('banner').hidden){
@@ -4654,7 +5075,7 @@ globalThis.Presentation = (() => {
       if(dialogTyping)renderU15.autoAt=clock;
       if(clock-renderU15.autoAt>=2500&&u.scene){C.advanceScene(state,false);save();}
     }else{renderU15.autoKey='';if($('autoIndicator').textContent!=='자동')$('autoIndicator').textContent='자동';}
-    $('audienceLine').hidden=!wonMoment&&(clock>bioUntil||!!u.scene||state.telegraphed||state.review.target>=0);
+    updateAudienceLine();
     autoStartStage(); // Check every rendered frame, including blocked frames, so closing a layer starts a fresh pause.
   }
   // v4 U51 3 (owner: "스테이지 시작 안 눌러도 자동으로 다음 스테이지로"): at a new stage (Core idle.waiting, reached after a clear) the show starts by
@@ -4747,14 +5168,15 @@ globalThis.Presentation = (() => {
     if(side){
       $('venueName').textContent=side.name;$('doubtTitle').dataset.audience=side.character;
       $('doubtTitle').textContent=portraitLayout()?'의심':side.character+'의 의심';$('audience').setAttribute('aria-label',side.character);
-      if($('audience').dataset.asset!==side.portrait)sprite($('audience'),side.portrait);
+      stageAudienceFace($('audience'),side.portrait,audienceDoubtStage());
       const lines=D.storyReview.ifRoute[side.script].beforeHeadliner;
-      $('audienceLine').textContent=lines[Math.floor(state.fightMs/7000)%lines.length].text;
+      const index=Math.floor(state.fightMs/7000)%lines.length;
+      queueAudienceLine(lines[index].text,'if:'+b.side+':'+index);updateAudienceLine();
       $('patternLabel').textContent='IF 공연 · 한 사람씩 마음을 건네요';
     }
     if(t.scene==='hidden'){
       $('hint').textContent='🃏 아직 마지막 마술이 남았다 · '+Math.ceil(t.left/1000)+'초';
-      $('audienceLine').textContent=D.storyReview.twist.hidden[0].text;
+      queueAudienceLine(D.storyReview.twist.hidden[0].text,'twist:hidden');updateAudienceLine();
     }else if(b.interference.left>0)$('hint').textContent=(b.interference.kind==='lock'?'🔒 잠깐 잠긴 케이스':'🙈 잠깐 가린 케이스')+' · '+Math.ceil(b.interference.left/1000)+'초';
     else if(b.encore.phase==='round')$('hint').textContent='앙코르 · '+Math.ceil(b.encore.left/1000)+'초 · 추가 보상 도전';
     const key=BatchDView.panel(b);
@@ -4908,7 +5330,7 @@ globalThis.Presentation = (() => {
       // v4 U38: the fight numbers come first and use the same units as the threat numbers on the audience card (per second, C.formatNumber).
       const F=C.formatNumber,th=C.threatInfo(state),mine=C.attackRate(state);
       const rows=[
-        ['초당 연출','관객의 의심을 1초에 이만큼 줄여요',mine==null?'재는 중':`${F(mine)}/초`],
+        ['초당 연출','관객의 의심을 1초에 이만큼 줄여요',mine==null?'0/초':`${F(mine)}/초`],
         ['야유',th.last?'지금은 마지막 야유 한 번이 와요 (멘탈과 자신감을 합친 만큼 버텨요)':`야유 게이지가 가득 차면 이만큼 받아요 (${+th.every.toFixed(1)}초마다 한 번)`,th.last?`마지막 한 번 ${F(th.hit)}`:`한 번에 ${F(th.hit)}`]
       ];
       if(th.regen>0)rows.push(['의심 회복','관객의 의심이 1초에 이만큼 다시 차올라요',`${F(th.regen)}/초`]);
@@ -4936,7 +5358,7 @@ globalThis.Presentation = (() => {
   window.MagicShowUI = {
     motionMetrics:()=>({particles:particles.length,flights:flights.length,numbers:numbers.length,badges:badges.length,coinOrigin:clearMoment.origin||null,flightOrigins:flights.map(f=>[f.x,f.y])}), hitTier, openCurtainCall, openRestore, getState: () => state, startScene:C.startScene, storyList, renderU15, getHolds: () => boardHolds, startIntro, events, save, toast, banner, openPanel, closePanel, render, showFailure, showBoo, clearDecorations, opaqueSprites,
     openBook: tree, focusNode, openBestiary: bestiary, openMissions:drawMissions, renderCoach,
-    openDealer: dealer, openGemShop:gemShop, openMap:openStageMap, openCustomize:customize, drawDealer, openEnding: () => { if (state.seenEnding) { revealEnding = false; showEnding(); } },
+    openDealer: dealer, openGemShop:gemShop, openWardrobe:wardrobe, openMap:openStageMap, openCustomize:customize, drawDealer, openEnding: () => { if (state.seenEnding) { revealEnding = false; showEnding(); } },
     openRebirth: () => { if (state.seenEnding) showRebirth(); }, isPaused: paused, renderDialog, speakerPortrait, portraitFocus,
   };
   // v4 U50d test hook: show the current audience with a mood face through the normal path (sprite, opaque crop, tablet snap). v4 U51b 5: only under
@@ -4976,8 +5398,8 @@ globalThis.Presentation = (() => {
   for(const id of ['panel','storyDialog','phoneMore','banner','leaveConfirm','sceneCard','introStory','offlineCard'])presentationObserver.observe($(id),{attributes:true,attributeFilter:['hidden'],attributeOldValue:true});
   window.addEventListener('resize',refreshPresentation);motion.addEventListener('change',refreshPresentation);
   refreshPresentation();
-  $('audience').addEventListener('click',()=>{bioUntil=clock+5000;renderU15();});
-  $('audience').setAttribute('tabindex','0');$('audience').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();bioUntil=clock+5000;renderU15();}});
+  $('audience').addEventListener('click',()=>{replayAudienceLine();renderU15();});
+  $('audience').setAttribute('tabindex','0');$('audience').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();replayAudienceLine();renderU15();}});
   // v4 U46 A5: static icons once, and the panel / menu sheets whenever their content is rebuilt (they change rarely; the per-frame HUD uses pxText).
   for (const el of [document.querySelector('.stats'), $('shield'), document.querySelector('.hud'), $('coffeeButton')]) pxIcons(el);
   { const iconize = list => { for (const m of list) for (const n of m.addedNodes) if (n.nodeType === 1 ? !n.classList.contains('px-icon') : n.nodeType === 3) pxIcons(n.nodeType === 1 ? n : n.parentElement); };
@@ -5068,8 +5490,51 @@ globalThis.Presentation = (() => {
   // A late font or a line changed between renders must settle before the next paint.
   document.fonts?.ready?.then(() => { invalidateStageAudience(); syncFlags(); });
   const audienceTextObserver = new MutationObserver(() => syncFlags());
-  for (const id of ['audienceLine', 'patternLabel', 'phaseIndicator']) audienceTextObserver.observe($(id), { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['hidden'] });
+  for (const id of ['audienceLine', 'patternLabel', 'phaseIndicator', 'toasts']) audienceTextObserver.observe($(id), { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['hidden'] });
   updateTextSpeedButton();
   mountRound8();
   requestAnimationFrame(loop);
+})();
+
+// Lane 1g: presentation-only adornments retain the existing handlers and save model.
+(function installKitV2() {
+  const stage = document.getElementById('stage');
+  if (!stage) return;
+  const menu = document.getElementById('phoneMore');
+  const title = document.createElement('h2');
+  title.className = 'kit-menu-title'; title.textContent = '메뉴 · 설정'; menu.prepend(title);
+  const decorate = root => {
+    if (!(root instanceof Element)) return;
+    const close = document.getElementById('closePanel');
+    const closeLabel = close.textContent.trim();
+    const simpleClose = ['닫기', '뒤로', '← 뒤로'].includes(closeLabel);
+    close.classList.toggle('kit-close', simpleClose);
+    if (simpleClose) close.setAttribute('aria-label', closeLabel);
+    for (const tile of root.querySelectorAll('.shop-cosmetic-tile')) {
+      const equipped = tile.getAttribute('aria-pressed') === 'true';
+      tile.classList.toggle('kit-locked', !equipped && !!tile.querySelector('.shop-cosmetic-lock'));
+      if (equipped && !tile.querySelector('.kit-equipped')) {
+        const badge = document.createElement('img'); badge.src = 'assets/kit/badge-equipped.webp';
+        badge.alt = '착용 중'; badge.className = 'kit-equipped'; tile.append(badge);
+      }
+    }
+    for (const price of root.querySelectorAll('.shop-cosmetic-tile small')) {
+      if (/^실크\s*\d/.test(price.textContent.trim())) price.classList.add('kit-price');
+    }
+    for (const lock of root.querySelectorAll('.shop-cosmetic-lock')) {
+      if (lock.querySelector('.kit-lock-mark')) continue;
+      const icon = document.createElement('img'); icon.src = 'assets/kit/icon-lock.webp';
+      icon.alt = ''; icon.className = 'kit-lock-mark'; lock.prepend(icon);
+    }
+  };
+  let pending = false;
+  const observer = new MutationObserver(() => {
+    if (pending) return;
+    pending = true;
+    requestAnimationFrame(() => { pending = false; decorate(stage); });
+  });
+  for (const id of ['panelBody', 'phoneMore', 'closePanel']) {
+    observer.observe(document.getElementById(id), { childList:true, subtree:true, characterData:true });
+  }
+  decorate(stage);
 })();

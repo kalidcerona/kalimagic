@@ -25,8 +25,8 @@
     tapPerSpeed: 0.12,
     tapCap: 4.6,
     // A new press is stronger than holding. The simulation will tune these.
-    tapPower: 1.6,
-    holdPower: 0.7,
+    tapPower: 2.4,
+    holdPower: 0.6,
     Vbase: 1.3,
     Vattack: 1.05,
     Vlevel: 0.00133,
@@ -43,12 +43,14 @@
     audHpMul: 1,
     audAtkBase: [3, 5, 7, 11],
     audAtkGrowth: 1.3,
-    audAtkMul: 1,
-    intervalBase: 4,
-    intervalPerJ: 0.2,
-    intervalPerV: 0.05,
-    intervalMin: 2.2,
+    audAtkMul: 0.45,
+    intervalBase: 1.5,
+    intervalPerJ: 0,
+    intervalPerV: 0,
+    intervalMin: 1.5,
     telegraphMs: 600,
+    mentalVisibleEvery: 3, mentalVisibleHit: 0.075, mentalVisibleAbsorb: 0.8,
+    mentalVisibleMs: 500, mentalVisibleRegen: 0.005,
     winTransitionMs: 2500,
     // v4 U45: test-season number. applySaveEpoch wipes progress ONCE per device when this is higher than the stored magicShowBuster.epoch.
     // Keep it at 1: later releases then keep every player's progress. Raise it only when the owner asks for another fresh start.
@@ -65,7 +67,7 @@
     itemFlightMs: 240,
     flightCap: 1024,
     itemDamage: 8,
-    itemShield: 2.7,
+    itemShield: 0.54,
     itemHeal: 1.8,
     itemCoins: 8, // v4 U48: was 4. With 비법 learned only after a failure the build grows only from saved coins, so case coins pay twice as much (SPEC "v4 U48").
     rarityW: [70, 22, 6.5, 1.4, 0.1],
@@ -129,7 +131,7 @@
     phase2Hp: 0.12,
     bossHpMult: 0.8,
     starGainBase: 3,
-    starTrick: 1.3,
+    starTrick: 1.4,
     starWand: 1.14,
     starGuard: 1.18,
     starTempoRate: 1.06,
@@ -139,6 +141,22 @@
     maxSubsteps: 2000,
     loopCap: 128
   };
+
+  // Fight-local recovery budget is transient, so the save shape stays unchanged.
+  var MENTAL_VISIBILITY = new WeakMap();
+  function tickMentalRecovery(state, dt) {
+    var v = MENTAL_VISIBILITY.get(state);
+    if (!v) return;
+    v.capped = v.left > 0;
+    v.budget = state.mentalMax * CONST.mentalVisibleRegen * gearMultiplier(state,"recovery") * Math.min(dt, v.left) / 1000;
+    v.left = Math.max(0, v.left - dt);
+  }
+  function autoHeal(state, amount) {
+    var v = MENTAL_VISIBILITY.get(state);
+    amount = Math.max(0, Math.min(amount * gearMultiplier(state,"recovery"), state.mentalMax - state.mental));
+    if (v && v.capped) { amount = Math.min(amount, v.budget); v.budget -= amount; }
+    state.mental = Math.min(state.mentalMax, state.mental + amount);
+  }
 
   var LEGACY_KEYS = ["power", "attack", "mental", "spawn", "speed", "board", "area", "coinLuck", "startFinale", "forceRemove", "dove", "rabbit", "flash"];
   var TREE_KEYS = DATA.tree.filter(function (n) { return !n.starKey && !n.partOf; }).map(function (n) { return n.id; }); // v4 U48 C: parts are not saved
@@ -297,20 +315,21 @@
     }
   }
   function skillUnlocked(state,id) { var k=DATA.skills.find(function(k){return k.id===id;});return !!(k && (state.trophies[k.clear] || state.knownAudiences.indexOf(DATA.venues[venueNumber(k.clear)-1].headliner.id)>=0)); }
-  function skillCooldown(state,id) { var k=DATA.skills.find(function(k){return k.id===id;});return k ? k.cooldown*(1-.1*(state.tree[id+'Cooldown']||0)) : 0; }
+  function skillCooldown(state,id) { var k=DATA.skills.find(function(k){return k.id===id;});return k ? k.cooldown*(1-.1*(state.tree[id+'Cooldown']||0))*gearMultiplier(state,"cooldown") : 0; }
   function useSkill(state,id,options) {
     var ev=options&&options.quiet ? null : [];
     if(state.u15.scene||profile(state)==='future'&&state.u19.telegraph>0||state.mode!=='fight'||state.resolved||state.features.climax.left>0||state.skills.cooldowns[id]>0||!skillUnlocked(state,id))return ev||[];
     state.skills.cooldowns[id]=skillCooldown(state,id);
     routineSkill(state,id,ev);emit(ev,{type:'skill',id:id}); dailyProgress(state,'skills',1);
     if(id==='showtime')state.skills.showtimeLeft=20000;
-    if(id==='cheer'){state.skills.cheerGuard=true;state.mental=Math.min(state.mentalMax,state.mental+state.mentalMax*.1);}
+    if(id==='cheer'){state.skills.cheerGuard=true;state.mental=Math.min(state.mentalMax,state.mental+state.mentalMax*.1*gearMultiplier(state,"recovery"));}
     if(id==='cardrain'){
       state._skillBatch=true;
       try {for(var i=0;i<state.board.length;i++)damageCell(state,i,wandDamage(state)*3,ev,'active');}
       finally {state._skillBatch=false;}
       if(state.audHp<=0 && !state.resolved)onWin(state,ev);
     }
+    checkAchievements(state,ev);
     return ev||[];
   }
   function tickSkills(state,dt) { state.skills.showtimeLeft=Math.max(0,state.skills.showtimeLeft-dt); DATA.skills.forEach(function(k){state.skills.cooldowns[k.id]=Math.max(0,state.skills.cooldowns[k.id]-dt);}); }
@@ -333,7 +352,7 @@
     if(t.sponge&&!m.paused.sponge)for(var b=0;b<Math.min(3,1+t.spongeCount);b++)dps+=Math.hypot(310+b*40,230+b*50)/120*(state.board.length/25)*.25*(1+.15*t.spongePower)*(1+.12*t.spongeSpeed)*speed;
     if(t.cardthrow&&!m.paused.cardthrow)dps+=Math.min(4,1+t.cardthrowCount)*.4*(1+.15*t.cardthrowPower)*speed/(1.5*(1-.1*t.cardthrowSpeed));
     if(t.spotlight&&!m.paused.spotlight){var rows=new Set(state.board.map(function(c,i){return cellPosition(state,i).row;})).size;dps+=Math.min(rows,2,1+t.spotlightCount)*state.board.length/Math.max(1,rows)*.6*(1+.15*t.spotlightPower)*speed/(4*(1-.1*t.spotlightSpeed));}
-    var perCell=dps*wandDamage(state)/Math.max(1,state.board.length), xp=[], coins=0;
+    var perCell=dps*wandDamage(state)*gearMultiplier(state,"open")/Math.max(1,state.board.length), xp=[], coins=0;
     var rarityMean=CONST.rarityW.reduce(function(n,w,i){return n+w*CONST.rarityMult[i];},0)/CONST.rarityW.reduce(function(a,b){return a+b;},0);
     var weights=DATA.items.types.map(function(k){var weight=k.share*100;if(k.id==='coin')weight+=t.coinLuck*statMultiplier(state,'coinLuck')*CONST.coinLuckAdd;if(t.equip)weight*=Math.pow(1+CONST.equipWeightPerItem,state.features.equipped.filter(function(id){return itemType(id)===k;}).length);return weight;});
     var totalShare=weights.reduce(function(a,b){return a+b;},0), coinShare=DATA.items.types.reduce(function(n,k,i){return n+(k.effect==='coins'?weights[i]:0);},0)/totalShare;
@@ -363,9 +382,10 @@
     earnCoins(state,gain.coins);state.u14.visitor.incomeCoins=Math.max(0,state.u14.visitor.incomeCoins-gain.coins);dailyProgress(state,'offline',1);var levels=0;
     state.board.forEach(function(c,i){if(c.lv>=caseCap(state))return;c.xp+=gain.xp[i];while(c.lv<caseCap(state)&&c.xp>=caseNeed(c.lv)){c.xp-=caseNeed(c.lv);c.lv++;levels++;}if(c.lv>=caseCap(state))c.xp=0;});
     state.idle.reward={awayMs:gain.awayMs,coins:gain.coins,levels:levels,doubled:false};
+    checkAchievements(state,null);
     return gain;
   }
-  function doubleOffline(state) { var r=state.idle.reward;if(!r||r.doubled)return false;earnCoins(state,r.coins);state.u14.visitor.incomeCoins=Math.max(0,state.u14.visitor.incomeCoins-r.coins);r.doubled=true;return true; }
+  function doubleOffline(state) { var r=state.idle.reward;if(!r||r.doubled)return false;earnCoins(state,r.coins);state.u14.visitor.incomeCoins=Math.max(0,state.u14.visitor.incomeCoins-r.coins);r.doubled=true;checkAchievements(state,null);return true; }
 
   function emptyStars() {
     return { trick: 0, guard: 0, tempo: 0, bounty: 0 };
@@ -413,6 +433,8 @@
   }
   function checkAchievements(state, ev) {
     var f = state.features;
+    if(state.resolved&&state.audHp<=0)checkWinMedals(state,ev);
+    if (f.progress.goldenOpened >= 1) stamp(state, "golden", ev);
     if (f.boxes >= 100) stamp(state, "boxes", ev);
     if (state.maxCombo >= 25) stamp(state, "combo", ev);
     if (boardCapacity(state) >= 9) stamp(state, "slots", ev);
@@ -459,7 +481,7 @@
     return null;
   }
   function wandDamage(state) {
-    return (state.u14.visitor.buff>0?2:1) * (1+.03*state.u14.sets.length+.05*state.u18.sets.length) * (state.skills.showtimeLeft > 0 ? 3 : 1) * (state._wand || CONST.wandBase) * (hasReward(state, 2) ? 1.2 : 1) * (state.features.encoreLeft > 0 ? 2 * (state.tree.encore ? 1 + nodeEffects(state).encorePower : 1) : 1) * (1 + challengeBonus(state));
+    return gearMultiplier(state,"tap") * (state.u14.visitor.buff>0?2:1) * (1+.03*state.u14.sets.length+.05*state.u18.sets.length) * (state.skills.showtimeLeft > 0 ? 3 : 1) * (state._wand || CONST.wandBase) * (hasReward(state, 2) ? 1.2 : 1) * (state.features.encoreLeft > 0 ? 2 * (state.tree.encore ? 1 + nodeEffects(state).encorePower : 1) : 1) * (1 + challengeBonus(state));
   }
   // v4 U46 C1: every audience whose 찐팬 challenge was cleared for the first time (u18.paid, kept through rebirth) adds 1 percent to 마술 실력, at most 20 percent.
   var CHALLENGE_STEP = .01, CHALLENGE_CAP = .2;
@@ -469,7 +491,7 @@
   function nodeEffects(state) {
     var t = state.tree;
     return {
-      critRate: t.crit ? Math.min(0.14, 0.08 + 0.02 * t.critRate) : 0,
+      critRate: Math.min(1, (t.crit ? Math.min(0.14, 0.08 + 0.02 * t.critRate) : 0) + gearBonus(state,"crit")),
       critPower: Math.min(1.8, 1.5 + 0.1 * t.critPower),
       comboMs: Math.min(3000, CONST.comboResetMs + 250 * t.comboHold) + (hasReward(state, 1) ? 500 : 0),
       sweep: 1 + 0.05 * t.sweepFocus,
@@ -478,14 +500,14 @@
       goldCoins: 1 + 0.2 * t.goldCoins,
       prepared: 0.05 * t.prepared,
       boxXP: 1 + 0.1 * t.boxXP + 0.1 * t.lessonBias,
-      boxShield: 0.1 * t.boxShield * (state._U || 1),
+      boxShield: 0.02 * t.boxShield * (state._U || 1),
       boxHeal: 0.05 * t.boxHeal * (state._U || 1),
       shieldRatio: CONST.shieldRatio + 0.03 * t.shieldCap,
       shieldValue: 1 + 0.05 * t.shieldValue,
       healValue: 1 + 0.05 * t.healValue,
       winHeal: CONST.winHeal + 0.02 * t.winHeal,
       levelHeal: CONST.levelHeal + 0.02 * t.levelHeal,
-      openingShield: 0.05 * t.openingShield,
+      openingShield: 0.01 * t.openingShield,
       calm: 1 - 0.02 * t.calm,
       tip: 1 + 0.05 * t.tip,
       dealerCoin: 1 + 0.1 * t.dealerCoin,
@@ -547,7 +569,7 @@
     V *= 1 + state.removedCount * C.bestiaryDmg;
     V *= 1 + (state.buff || 0) / 100;
     V *= 1 + achievementBonus(state);
-    V *= productMultiplier(state);
+    V *= productMultiplier(state) * gearMultiplier(state,"performance");
     V *= 1 + (state.batchD ? state.batchD.permanentBonus : 0);
     state._V = V * statMultiplier(state,"attack") * branchBonus(state, "collection") * branchBonus(state, "star");
     var U = Math.pow(C.Ubase, balanceRank(state.vMax) - 1) * Math.pow(C.starGuard, state.stars.guard) * statMultiplier(state,"starGuard");
@@ -555,20 +577,20 @@
     state._U = U;
     var mm = C.mentalBase * U * Math.pow(C.mentalGrowth, state.tree.mental);
     var prev = state.mentalMax || 0;
-    mm *= statMultiplier(state,"mental") * branchBonus(state, "heart");
+    mm *= statMultiplier(state,"mental") * branchBonus(state, "heart") * gearMultiplier(state,"mental");
     if (state.trophies.cafe) mm *= 1.02; // Card1412's heckler advice.
     state.mentalMax = mm;
     if (!sync && prev > 0 && mm > prev) {
-      state.mental = Math.min(mm, (state.mental || 0) + (mm - prev));
+      autoHeal(state, mm - prev);
     }
     var cap = mm * nodeEffects(state).shieldRatio;
     if (state.shield > cap) state.shield = cap;
-    state._coinMul = Math.pow(C.starCoin, state.stars.bounty) * statMultiplier(state,"starBounty") * branchBonus(state, "luck");
+    state._coinMul = Math.pow(C.starCoin, state.stars.bounty) * statMultiplier(state,"starBounty") * branchBonus(state, "luck") * gearMultiplier(state,"coins");
   }
 
   function wandRate(state) {
     if (state._rate == null) recompute(state, true);
-    return state._rate * (state.features.encoreLeft>0 ? 1.25 : 1);
+    return state._rate * padSpeed(state) * gearMultiplier(state,"hold") * (state.features.encoreLeft>0 ? 1.25 : 1);
   }
 
   function wandArea(state) {
@@ -838,6 +860,7 @@
   }
 
   function beginAudience(state, v, j, ev) {
+    MENTAL_VISIBILITY.delete(state);
     if (VENUES[v-1].mergedInto) { v=venueNumber(VENUES[v-1].mergedInto); j=1; }
     state.features.progress.tapStreak=0;
     state._colMs = null;
@@ -892,7 +915,7 @@
     if(profile(state)==='future'){
       var u=state.u19;u.phase=1;u.telegraph=3000;u.window=0;u.hitMs=0;u.target=strongestCase(state);
       var dps=u.lastDps>0?u.lastDps*(state._V||1)/u.lastPower:futurePower(state);
-      state.audHp=state.audHpMax=Math.max(1,Math.round(dps*118));state.atk=state.mentalMax*.025;state.interval=8;state.heckleMs=8000;
+      state.audHp=state.audHpMax=Math.max(1,Math.round(dps*112));state.atk=state.mentalMax*.0046875;state.interval=1.5;state.heckleMs=1500;
       emit(ev,{type:'futurePhase',phase:1});
     }
     if (profile(state) === "homecoming") emit(ev,{type:"homecomingAct",act:1,line:aud.act1Line});
@@ -944,21 +967,34 @@
     return false;
   }
 
+  function checkWinMedals(state,ev){
+    if(state.tree.challenge){
+      if(!state.tookMental)stamp(state,'noDamage',ev);
+      if(state.finisherFired)stamp(state,'finale',ev);
+      var extra=getAud(state.venue,state.j).extra;
+      if(extra&&extra.type==='timeLimit'&&metExtra(state,extra))stamp(state,'timed',ev);
+    }
+  }
+  function checkVictoryAchievements(state,ev){
+    if(state.mental>0&&state.mental<state.mentalMax*.1)addGain(state.features.progress,'mentalClutches',1,1e24);
+    checkWinMedals(state,ev);checkAchievements(state,ev);
+  }
+
   function onWin(state, ev) {
     if (state.resolved || state._skillBatch) return;
-    if(state.batchD.side){finishSide(state,true,ev);return;}
-    if(state.batchD.encore.phase==='round'){finishEncore(state,true,ev);return;}
+    if(state.batchD.side){checkVictoryAchievements(state,ev);finishSide(state,true,ev);return;}
+    if(state.batchD.encore.phase==='round'){checkVictoryAchievements(state,ev);finishEncore(state,true,ev);return;}
     if(twistEligible(state)){state.audHp=Math.max(1,state.audHpMax*DATA.batchD.twist.threshold);return;}
-    if(state.u15.tutorial.active){state.resolved=true;state.u15.tutorial.won=true;emit(ev,{type:'tutorialWin'});return;}
-    if(state.u18.challenge&&state.u18.challenge.kind==='trueFan'){var rule=trueFanRule(state.u18.challenge.slug);if(rule.type==='combo'&&!metExtra(state,rule)){state.audHp=1;return;}finishTravel(state,ev,true);return;}
-    if(state.mental>0&&state.mental<state.mentalMax*.1)addGain(state.features.progress, 'mentalClutches', 1, 1e24);
+    if(state.u15.tutorial.active){if(tutorialLessonPending(state)){state.audHp=1;return;}checkVictoryAchievements(state,ev);state.resolved=true;state.u15.tutorial.won=true;emit(ev,{type:'tutorialWin'});return;}
+    if(state.u18.challenge&&state.u18.challenge.kind==='trueFan'){var rule=trueFanRule(state.u18.challenge.slug);if(rule.type==='combo'&&!metExtra(state,rule)){state.audHp=1;return;}if(metExtra(state,rule))checkVictoryAchievements(state,ev);finishTravel(state,ev,true);return;}
+    checkVictoryAchievements(state,ev);
     state.features.progress.bossLossVenue=0;state.features.progress.bossLossStreak=0;
     state.resolved = true;
     unseal(state);
     var venue = state.venue;
     var j = state.j;
     var audId = state.audId;
-    var coins = Math.round(CONST.winCoinBase * Math.pow(CONST.winCoinGrowth, balanceRank(venue) - 1) * (state._coinMul || 1) * nodeEffects(state).tip);
+    var coins = Math.round(CONST.winCoinBase * Math.pow(CONST.winCoinGrowth, balanceRank(venue) - 1) * (state._coinMul || 1) * nodeEffects(state).tip * gearMultiplier(state,"reward"));
     if (coins < 1) coins = 1;
     earnCoins(state, coins);
     if(state.fightMs>0){state.u19.lastDps=state.u19.damage/(state.fightMs/1000);state.u19.lastPower=state._V||1;}
@@ -971,12 +1007,6 @@
       state.seenEnding = true;
       if (state.endings.indexOf(state.dimension) < 0) state.endings.push(state.dimension);
       emit(ev,{type:"selfReconciliation",lines:DATA.story.reveal.slice()});
-    }
-    if (state.tree.challenge) {
-      if (!state.tookMental) stamp(state, "noDamage", ev);
-      if (state.finisherFired) stamp(state, "finale", ev);
-      var extraRule = getAud(venue, j).extra;
-      if (extraRule && extraRule.type === "timeLimit" && metExtra(state, extraRule)) stamp(state, "timed", ev);
     }
     var removed = false;
     var keys = 0;
@@ -1027,7 +1057,7 @@
     if(VENUES[venue-1].slug==='multiverse'&&j===headlinerJ(venue)){state.batchD.multiverseCleared=true;state.batchD.rebirthOffer=true;batchEvent(ev,'rebirthOffer');}
     var next = advanceFrom(state);
     if (isFinalBoss(state)) {
-      state.mental = Math.min(state.mentalMax, state.mental + state.mentalMax * nodeEffects(state).winHeal);
+      autoHeal(state, state.mentalMax * nodeEffects(state).winHeal);
       state.mode = "transition";
       state.transMs = CONST.winTransitionMs;
       state.after = state.homecomingCleared ? "stay" : "ending";
@@ -1035,7 +1065,7 @@
     }
     state.idle.next = {v:next.v,j:next.j};
     state.idle.waiting = false;
-    state.mental = Math.min(state.mentalMax, state.mental + state.mentalMax * nodeEffects(state).winHeal);
+    autoHeal(state, state.mentalMax * nodeEffects(state).winHeal);
     state.mode = "transition";
     state.transMs = CONST.winTransitionMs;
     state.after = "fight";
@@ -1119,7 +1149,7 @@
     } else if (prize.kind === "gems") {
       addGain(state, 'gems', Math.round(prize.value * CONST.dealerRewardMult), 1e9);
     } else if (prize.kind === "heal") {
-      state.mental = Math.min(state.mentalMax, state.mental + state.mentalMax * (Math.min(100, prize.value * CONST.dealerRewardMult) / 100));
+      state.mental = Math.min(state.mentalMax, state.mental + state.mentalMax * (Math.min(100, prize.value * CONST.dealerRewardMult) / 100)*gearMultiplier(state,"recovery"));
     } else if (prize.kind === "buff") {
       state.buff = (state.buff || 0) + Math.min(50, prize.value * CONST.dealerRewardMult);
       if (state.buff > 100) state.buff = 100;
@@ -1278,7 +1308,7 @@
     state.transMs = 0;
     recompute(state, true);
     state.mental = state.mentalMax;
-    state.shield = state.mentalMax * nodeEffects(state).openingShield;
+    state.shield = state.mentalMax * nodeEffects(state).openingShield * gearMultiplier(state,"confidence");
     clearBoard(state);
     if (state.tree.startFinale > 0) state.finisher = nodeEffects(state).finaleNeed;
     var pos = retryFuture ? {v:venueNumber('future'),j:1} : state.homecomingCleared ? {v:venueNumber('lecturenote'),j:1} : firstOpen(state);
@@ -1324,7 +1354,7 @@
       state.xp -= xpNeed(state);
       addGain(state, 'level', 1, 100000);
       recompute(state, false);
-      state.mental = Math.min(state.mentalMax, state.mental + state.mentalMax * nodeEffects(state).levelHeal);
+      autoHeal(state, state.mentalMax * nodeEffects(state).levelHeal);
       emit(ev, { type: "levelUp", level: state.level });
     }
   }
@@ -1353,6 +1383,8 @@
     }
     var applied=Math.min(state.audHp,dmg);
     state.audHp -= dmg;
+    // Keep the mandatory twist boundary exact after floating-point subtraction.
+    if(twistEligible(state))state.audHp=Math.max(state.audHp,state.audHpMax*DATA.batchD.twist.threshold);
     if (state.audHp < 0) state.audHp = 0;
     if(twistEligible(state)&&!state.batchD.twist.hiddenUsed&&state.audHp<=state.audHpMax*(DATA.batchD.twist.threshold+1e-12)){state.batchD.twist.hiddenUsed=true;state.batchD.twist.scene='hidden';state.batchD.twist.left=DATA.batchD.twist.hiddenMs;state.flights=[];batchEvent(ev,'hidden');}
     emit(ev, { type: "audHit", dmg: dmg, applied:applied, source: source });
@@ -1412,14 +1444,14 @@
         if (state.combo < CONST.comboThresholds[ci] || (paid & (1 << ci))) continue;
         paid |= 1 << ci; f.comboPaid[state.audId] = paid;
         var gift = CONST.comboCoinRewards[ci] * Math.pow(1.32, balanceRank(state.venue) - 1) * nodeEffects(state).comboValue;
-        earnCoins(state, gift); addGain(state, 'finisher', CONST.comboGaugeRewards[ci], 1000);
+        earnCoins(state, gift); addGain(state, 'finisher', CONST.comboGaugeRewards[ci]*gearMultiplier(state,'finale'), 1000);
         emit(ev, { type: "comboMilestone", threshold: CONST.comboThresholds[ci], coins: gift, gauge: CONST.comboGaugeRewards[ci], audId: state.audId });
       }
     }
     checkAchievements(state, ev);
     addGain(state, 'xp', CONST.xpPerBox * nodeEffects(state).boxXP, 1e12);
-    state.shield = Math.min(state.mentalMax * nodeEffects(state).shieldRatio, state.shield + nodeEffects(state).boxShield);
-    state.mental = Math.min(state.mentalMax, state.mental + nodeEffects(state).boxHeal);
+    state.shield = Math.min(state.mentalMax * nodeEffects(state).shieldRatio, state.shield + nodeEffects(state).boxShield*gearMultiplier(state,"confidence"));
+    autoHeal(state, nodeEffects(state).boxHeal);
     checkLevel(state, ev);
     var coinMul = state._coinMul || 1;
     earnCoins(state, Math.max(1, Math.round(CONST.coinPerBox * coinMul)));
@@ -1513,7 +1545,7 @@
         }
       }
     }
-    addGain(state, 'finisher', 1, 1000);
+    addGain(state, 'finisher', gearMultiplier(state,'finale'), 1000);
     checkAchievements(state,ev);
     if (state.finisher >= nodeEffects(state).finaleNeed) fireFinisher(state, ev);
     if (state.audHp <= 0 && state.mode === "fight" && !state.resolved) onWin(state, ev);
@@ -1521,6 +1553,7 @@
 
   function damageCell(state, i, dmg, ev, source, chain) {
     if(state.batchD.twist.scene)return;
+    dmg *= gearMultiplier(state,"open");
     var c = state.board[i];
     if(state.batchD.interference.left>0&&state.batchD.interference.cell===i&&state.batchD.interference.kind==='lock')return;
     if(profile(state)==='future'){var u=state.u19;if(u.telegraph>0)return;if(u.phase===3&&u.window>0&&i!==u.target)return;if(u.phase===2&&(!source||source==='manual'||source==='active')){if(i===u.target)u.hitMs=0;}}
@@ -1570,7 +1603,7 @@
       if (state.tapAcc < 1) state.tapAcc = 1;
     }
     if (state._rate == null) recompute(state, true);
-    state.tapAcc += state._rate * dt / 1000;
+    state.tapAcc += wandRate(state) * dt / 1000;
     var hits = Math.floor(state.tapAcc);
     if (hits > 8) hits = 8;
     if (hits < 0) hits = 0;
@@ -1581,7 +1614,7 @@
     for (h = 0; h < hits; h++) {
       if (state.mode !== "fight" || state.u18.map) return;
       var mods = nodeEffects(state);
-      var crit = state.tree.crit > 0 && rngNext(state) < mods.critRate;
+      var crit = mods.critRate > 0 && rngNext(state) < mods.critRate;
       var alive = 0;
       for (k = 0; k < list.length; k++) {
         var cell = state.board[list[k]];
@@ -1625,18 +1658,17 @@
         }
       } else if (f.kind === "silk") {
         var cap = state.mentalMax * nodeEffects(state).shieldRatio;
-        state.shield += f.amount;
+        state.shield += f.amount*gearMultiplier(state,"confidence");
         if (state.shield > cap) state.shield = cap;
       } else if (f.kind === "water") {
-        state.mental += f.amount;
-        if (state.mental > state.mentalMax) state.mental = state.mentalMax;
+        autoHeal(state, f.amount);
       } else if (f.kind === "coin") {
         earnCoins(state, Math.max(0, Math.round(f.amount)));
       } else if (f.effect === "xpBurst") {
         addGain(state, 'xp', f.amount, 1e12);
         checkLevel(state, ev);
       } else if (f.effect === "finisher") {
-        addGain(state, 'finisher', 5, 1000);
+        addGain(state, 'finisher', 5*gearMultiplier(state,'finale'), 1000);
         if (state.finisher >= nodeEffects(state).finaleNeed) fireFinisher(state, ev);
       } else if (f.effect === "boxFill") {
         // Progress every owned cell, including sealed and respawning boxes.
@@ -1697,7 +1729,7 @@
   }
 
   function lastHeckleArmed(state){return state.review.lastHeckle===1&&isFinalBoss(state);}
-  function heckleStrength(state){if(lastHeckleArmed(state))return CONST.finalHeckle;var pressure=gatePressure(state),base=state.atk*nodeEffects(state).calm;if(!pressure)return base;return Math.max(Math.min(base,state.mentalMax*.1),state.mentalMax*(.08+2*Math.max(0,Math.min(1,(state.fightMs-20000)/20000)))*pressure);}
+  function heckleStrength(state){if(lastHeckleArmed(state))return CONST.finalHeckle;var pressure=gatePressure(state),base=state.atk*nodeEffects(state).calm;if(!pressure)return base;return Math.max(Math.min(base,state.mentalMax*.05),state.mentalMax*(.04+2*Math.max(0,Math.min(1,(state.fightMs-20000)/20000)))*pressure);}
   // v4 U38: threat numbers the player can compare with their own. Everything is per second so 야유, 회복 and 내 공격 share one unit.
   // hit = one heckle, every = seconds between heckles, perSecond = hit / every, regen = doubt the audience wins back per second
   // (gate pressure and the heal pattern), block = how much of one heckle the 자신감 shield soaks up right now.
@@ -1735,10 +1767,20 @@
       if (state.skills.cheerGuard) { state.skills.cheerGuard=false; if (big) state.review.lastHeckle=2; emit(ev,{type:'heckleCancelled'}); continue; }
       if (state.review.cancel) { state.review.cancel=false; if (big) state.review.lastHeckle=2; emit(ev,{type:"heckleCancelled"}); continue; }
       var dmg = heckleStrength(state);
+      var visible = false;
+      if (!big && !pressure && !state.u15.tutorial.active && state.venue >= venueNumber('school')) {
+        var visibility = MENTAL_VISIBILITY.get(state);
+        if (!visibility) { visibility = { count: 0, left: 0, budget: 0, capped: false }; MENTAL_VISIBILITY.set(state, visibility); }
+        visible = ++visibility.count % CONST.mentalVisibleEvery === 0;
+        if (visible) {
+          dmg = Math.max(dmg, state.mentalMax * CONST.mentalVisibleHit);
+          visibility.left = CONST.mentalVisibleMs; visibility.budget = 0; visibility.capped = true;
+        }
+      }
       if (big) state.review.lastHeckle = 2;
       var shieldDmg = 0;
       if (state.shield > 0) {
-        shieldDmg = state.shield >= dmg ? dmg : state.shield;
+        shieldDmg = Math.min(state.shield, dmg * (visible ? CONST.mentalVisibleAbsorb : 1));
         state.shield -= shieldDmg;
       }
       var mentalDmg = dmg - shieldDmg;
@@ -1761,12 +1803,12 @@
     }
   }
 
-  // v4 U38 stall guard: a new lowest doubt restarts the clock; CONST.stallMs without one ends the show as a failure ("stall").
+  // Require a cumulative two percent of max doubt to restart the 75-second stall clock.
   // The two fields are not saved: a loaded fight starts its clock again from the loaded doubt.
   function tickStall(state, dt, ev) {
     if (state.u15.tutorial.active || state.u18.anchor) return;
-    var eps = Math.max(1e-9, state.audHpMax * 1e-9);
-    if (typeof state.stallMin !== "number" || state.audHp < state.stallMin - eps) { state.stallMin = state.audHp; state.stallMs = 0; return; }
+    var progress = Math.max(1e-9, state.audHpMax * .02);
+    if (typeof state.stallMin !== "number" || state.stallMin - state.audHp >= progress) { state.stallMin = state.audHp; state.stallMs = 0; return; }
     state.stallMs = (state.stallMs || 0) + dt;
     if (state.stallMs >= CONST.stallMs) { state.stallMs = 0; failRun(state, ev, "stall"); }
   }
@@ -1969,8 +2011,8 @@
       var cells=live(),cell=cells.length?cells[m.cursor%cells.length]:0;if(cells.length)addGain(m, 'cursor', 1, 1e12);
       if(id==='cardthrow')for(var n=0;n<Math.min(4,1+t.cardthrowCount)&&cells.length;n++)strike(id,cells[(m.cursor+n)%cells.length],.4*(1+.15*t.cardthrowPower));
       if(id==='tipbox'){var coins=(2+legacyRank(state.venue))*(1+.25*t.tipboxPower);earnCoins(state,coins);emit(ev,{type:'magicCoins',cell:cell,coins:coins});}
-      if(id==='crystal')state.shield=Math.min(state.mentalMax*nodeEffects(state).shieldRatio,state.shield+state.mentalMax*.03*(1+.2*t.crystalPower));
-      if(id==='water')state.mental=Math.min(state.mentalMax,state.mental+state.mentalMax*.03*(1+.2*t.waterPower));
+      if(id==='crystal')state.shield=Math.min(state.mentalMax*nodeEffects(state).shieldRatio,state.shield+state.mentalMax*.006*(1+.2*t.crystalPower)*gearMultiplier(state,"confidence"));
+      if(id==='water')autoHeal(state,state.mentalMax*.03*(1+.2*t.waterPower));
       if(id==='spotlight'){
         var rows=Array.from(new Set(state.board.map(function(c,i){return cellPosition(state,i).row;})));
         var start=m.cursor%rows.length;addGain(m, 'cursor', 1, 1e12);
@@ -2024,7 +2066,7 @@
       var manual=!source||source==='manual', kind=manual?'manual':'auto';
       var automation=state.tree.boxHelper||state.tree.assistant||state.tree.chain4||['sponge','cardthrow','spotlight','flashpaper'].some(function(id){return state.tree[id];});
       if(r.lastSource && ((kind!==r.lastSource) || (!automation&&manual&&r.lastCell!==i))) {
-        r.pairs++; addGain(state, 'finisher', 5, 1000); r.lastSource='';r.lastCell=-1;
+        r.pairs++; addGain(state, 'finisher', 5*gearMultiplier(state,'finale'), 1000); r.lastSource='';r.lastCell=-1;
         emit(ev,{type:'jointApplause',cell:i});
       } else { r.lastSource=kind; r.lastCell=i; }
     }
@@ -2043,6 +2085,7 @@
     if(state.u18.map || state.u15.scene || state.u15.tutorial.won)return;
     if (state.mode === "ending") return;
     if (state.mode === "dealer") return;
+    tickMentalRecovery(state, dt);
     if (state.mode === "transition") {
       if (state.idle.waiting) return;
       state.transMs = Math.max(0, state.transMs - dt);
@@ -2077,6 +2120,13 @@
     }
     if(profile(state)==='future'&&state.u19.telegraph>0){tickFuture(state,dt,ev);return;}
     state.fightMs += dt;
+    // Only the first new-player rehearsal: normal taps finish by 48 seconds regardless of drops.
+    if(taps.length&&!state.u15.tutorial.done&&state.u15.bios.indexOf('lesson:v1')>=0&&state.u15.bios.indexOf('tchain:girl-fight:0')>=0){
+      var practiceCeiling=state.audHpMax*Math.max(0,1-state.fightMs/48000);
+      if(state.audHp>practiceCeiling)dealAud(state,state.audHp-practiceCeiling,ev);
+      if(state.mode!=='fight')return;
+    }
+    if(tutorialLessonPending(state)&&state.fightMs>=8000){failTutorialLesson(state,ev);return;}
     state.u19.cooldown=Math.max(0,state.u19.cooldown-dt);
     if(state.u18.challenge&&state.u18.challenge.kind==='trueFan'){var rule=trueFanRule(state.u18.challenge.slug);if(rule.type==='timeLimit'&&state.fightMs>rule.value*1000||rule.type==='noDamage'&&state.tookMental){finishTravel(state,ev,false);return;}}
     tickSkills(state,dt);
@@ -2136,12 +2186,13 @@
     while (dtMs > 0 && guard < CONST.maxSubsteps) {
       var dt = dtMs > CONST.substepMs ? CONST.substepMs : dtMs;
       if(state.mode==="fight" && state.u15.gloveLeft>0)dt=Math.min(dt,state.u15.gloveLeft);
-      var failuresBefore=state.fails;
+      var failuresBefore=state.fails,lessonBefore=tutorialLessonPending(state);
       substep(state, dt, taps, ev, !!(input && input.holding), input && input.pulse);
       dtMs -= dt;
       guard++;
-      if (state.mode === "ending" || state.mode === "dealer" || state.fails!==failuresBefore) break;
+      if (state.mode === "ending" || state.mode === "dealer" || state.fails!==failuresBefore||lessonBefore&&!state.u15.tutorial.active) break;
     }
+    checkAchievements(state,ev);
     return out;
   }
 
@@ -2163,7 +2214,7 @@
   // v4 U38: every finite coin/key node is at its last level (star nodes are a separate track, pending nodes cannot be learned yet).
   function allLearned(state) {
     return DATA.tree.every(function (n) {
-      return n.starKey || n.pending || nodeLevel(state, n) >= n.max || (baseNode(n).id === "board" && boardCapacity(state) >= CONST.boardMax);
+      return n.starKey || n.shopOnly || n.pending || nodeLevel(state, n) >= n.max || (baseNode(n).id === "board" && boardCapacity(state) >= CONST.boardMax);
     });
   }
   function branchMaxed(state, node) { return (node.branchMax || []).every(function(id) { return fullyLearned(state, id); }); }
@@ -2182,6 +2233,7 @@
     var base = baseNode(node), bid = base.id, split = !!(node.partOf || node.levels);
     var level = nodeLevel(state, node), total = split ? storedLevel(state, node) : level, cost = null;
     if (level < node.max) cost = Array.isArray(node.cost) ? node.cost[total] : Math.ceil(node.cost.c * Math.pow(node.cost.g, total));
+    if(cost!==null)cost=Math.ceil(cost*gearMultiplier(state,"price"));
     var revealed = id === "root" || (node.reveal === "E" ? state.endings.length > 0 : level > 0 || node.prereqs.some(function (pre) { return nodeLevel(state, NODE_BY_ID[pre]) > 0; }));
     if (node.u13 && (bid==='autoPractice' || /Cooldown$/.test(bid))) revealed = level>0 || (bid==='autoPractice' ? practiceUnlocked(state) : skillUnlocked(state,bid.replace('Cooldown','')));
     if (node.hidden) revealed = level > 0 || branchMaxed(state,node);
@@ -2191,6 +2243,7 @@
     if (id === "autoLearn") revealed = false; // v4 U47 10: retired node (kept in the data and in saves, never offered)
     // v4 U48 C: a later part shows up once the part before it is full.
     if (node.partOf) revealed = level > 0 || (total >= node.partOffset && (node.reveal !== "E" || state.endings.length > 0));
+    if(node.shopOnly)revealed=false;
     var progress = gateProgress(state,node.gates ? node.gates[total] : node.gate);
     var reason = "";
     if (node.shopOnly) reason = "실크 상점에서 살 수 있어요";
@@ -2240,6 +2293,7 @@
       reveal(state, "equip");
     }
     DATA.tree.forEach(function(n){ if(n.hidden && branchMaxed(state,n)) reveal(state,'hidden:'+n.id); });
+    checkAchievements(state,null);
     return true;
   }
   function buyMany(state, id) { var n=0; while(n<10000 && buyNode(state,id)) n++; return n; }
@@ -2412,6 +2466,7 @@
     recompute(state, true);
     state.mental = state.mentalMax;
     restartRun(state);
+    checkAchievements(state,null);
     return state;
   }
 
@@ -2499,6 +2554,7 @@
   function newGame(seed) {
     if (typeof seed !== "number" || !isFinite(seed)) seed = 1;
     var state = fresh(seed >>> 0);
+    state.u15.bios.push('lesson:v1');
     state.u14.visitor.wait=90000+Math.floor(rngNext(state)*60001);
     recompute(state, true);
     state.mental = state.mentalMax;
@@ -2560,7 +2616,7 @@
     var stars = {};
     for (i = 0; i < STAR_KEYS.length; i++) stars[STAR_KEYS[i]] = state.stars[STAR_KEYS[i]] | 0;
     var obj = {
-      v: 22,
+      v: 23,
       batchD: state.batchD,
       u15: state.u15,
       u14: state.u14,
@@ -2640,7 +2696,7 @@
   }
 
   function isNewerSave(raw) {
-    try { var o=JSON.parse(raw); return !!o && typeof o.v==='number' && isFinite(o.v) && o.v>22; }
+    try { var o=JSON.parse(raw); return !!o && typeof o.v==='number' && isFinite(o.v) && o.v>23; }
     catch (error) { return false; }
   }
 
@@ -2812,8 +2868,8 @@
       var o = JSON.parse(str);
       if (!o || typeof o !== "object" || Array.isArray(o)) return null;
       // Forward saves may share our known schema. Never persist this projection.
-      if (isNewerSave(str)) o.v = 22;
-      if (o.v !== 22 && o.v !== 21 && o.v !== 20 && o.v !== 19 && o.v !== 18 && o.v !== 17 && o.v !== 16 && o.v !== 1&&o.v !== 2 && o.v !== 3 && o.v !== 4 && o.v !== 5 && o.v !== 6 && o.v !== 7 && o.v !== 8 && o.v !== 9 && o.v !== 10 && o.v !== 11 && o.v !== 12 && o.v !== 13 && o.v !== 14 && o.v !== 15) return null;
+      if (isNewerSave(str)) o.v = 23;
+      if (o.v !== 23 && o.v !== 22 && o.v !== 21 && o.v !== 20 && o.v !== 19 && o.v !== 18 && o.v !== 17 && o.v !== 16 && o.v !== 1&&o.v !== 2 && o.v !== 3 && o.v !== 4 && o.v !== 5 && o.v !== 6 && o.v !== 7 && o.v !== 8 && o.v !== 9 && o.v !== 10 && o.v !== 11 && o.v !== 12 && o.v !== 13 && o.v !== 14 && o.v !== 15) return null;
       if (o.v === 7 && o.venueSlug === "lecturenote") {
         // Preserve the old index contract, then migrate by stable audience ID.
         var previousOrder = ["a-lecturenote-hecate", "a-lecturenote-jung", "h-lecturenote-kim"];
@@ -3273,8 +3329,10 @@
       }
       if(o.v>=13){if(!validU17(o.u17))return null;state.u17=JSON.parse(JSON.stringify(o.u17));}
       else state.features.encoreLeft=0;
-      if(o.v>=14){if(!validU18(o.u18,state))return null;state.u18=JSON.parse(JSON.stringify(o.u18));}
+      if(o.v>=14){if(o.v<23&&o.u18)o.u18.pads=emptyPads();if(!validU18(o.u18,state))return null;state.u18=JSON.parse(JSON.stringify(o.u18));}
       else {checkTrueFanReveal(state,null);unlockCosmetics(state);}
+      // Shop routines used to be purchasable in the tree. Preserve both ownership representations.
+      DATA.routines.forEach(function(r){var id='routine-'+r.id;if(!r.shopCost)return;if(state.tree[id]&&state.u19.routines.indexOf(r.id)<0)state.u19.routines.push(r.id);if(state.u19.routines.indexOf(r.id)>=0)state.tree[id]=Math.max(1,state.tree[id]||0);});
       if (audHp > audHpMax * 1.05 + 1) return null;
       recompute(state, true);
       if (state.mental > state.mentalMax * 1.05 + 1) state.mental = state.mentalMax;
@@ -3437,7 +3495,7 @@
   // Ordered finest-first so the smallest broken piece is the one reset to its default.
   var SAVE_UNITS = ['u15.drops', 'u15.seen', 'u15.queue', 'u15.scene', 'u15.bios', 'u15.positions', 'u15.tutorial', 'u15.deckOn', 'u15',
     'u17.gloveBuys', 'u17', 'u19b.gates', 'u19b.failedId', 'u19b.dealerOffer', 'u19b', 'u19',
-    'u18.anchor', 'u18.challenge', 'u18.owned', 'u18.equipped', 'u18.sets', 'u18.fans', 'u18.paid', 'u18',
+    'u18.pads', 'u18.anchor', 'u18.challenge', 'u18.owned', 'u18.equipped', 'u18.sets', 'u18.fans', 'u18.paid', 'u18',
     'idle.reward', 'idle.milestones', 'idle.next', 'idle', 'skills.cooldowns', 'skills',
     'u14.daily', 'u14.visitor', 'u14.sets', 'u14.satisfied', 'u14',
     'guidance', 'onboarding', 'learning', 'review', 'visited', 'knownAudiences', 'helpersUsed', 'trophies', 'invited',
@@ -3448,6 +3506,7 @@
   // Returns {state, repairs}. state is null only when the save cannot be reshaped at all (not JSON, not an object, unknown version).
   function deserializeRepair(str) {
     var result = deserializeRepairBase(str);
+    resumeHelpers(result.state);
     // v4 U38: the refund of the removed endless nodes is part of the U37 repair list as 'refund:<coins>'.
     if (result.state && result.state._refundCoins > 0) result.repairs.push('refund:' + result.state._refundCoins);
     // v4 U44: the 30 keys paid for the folded-in key node deckMaster.
@@ -3463,7 +3522,7 @@
       o = JSON.parse(str);
     } catch (error) { return { state: null, repairs: [] }; }
     if (!o || typeof o !== 'object' || Array.isArray(o) || typeof o.v !== 'number' || o.v < 1 || o.v !== Math.floor(o.v)) return { state: null, repairs: [] };
-    if (o.v > 22) o.v = 22;
+    if (o.v > 23) o.v = 23;
     var rep = [];
     var attempt = function (obj) { return deserialize(JSON.stringify(obj)); };
     try {
@@ -3556,16 +3615,28 @@
     if(!state.idle.waiting||state.u15.scene||state.u15.queue.length)return false;
     state.idle.waiting=false;state.mode="fight";state.dealerQueued=false;state.heckleMs=state.interval*1000;state.telegraphed=false;return true;
   }
+  // Flags reuse the existing bios string list. Old saves never opt into this lesson.
+  function tutorialLessonPending(state){return state.u15.tutorial.active&&state.u15.bios.indexOf('lesson:attempt')>=0&&state.u15.bios.indexOf('lesson:failed')<0;}
+  function failTutorialLesson(state,ev){
+    if(!tutorialLessonPending(state))return false;
+    if(!finishTutorial(state))return false;
+    state.u15.tutorial.done=false;
+    state.u15.bios=state.u15.bios.filter(function(k){return k.indexOf('tchain:')!==0&&k!=='lesson:attempt';});
+    state.u15.bios.push('lesson:failed','tchain:lesson-fail:0');
+    emit(ev,{type:'tutorialLessonFail'});return true;
+  }
   function startTutorial(state){
     var t=state.u15.tutorial;if(t.done||t.active)return false;
     var baseline=serialize(state);t.active=true;t.baseline=baseline;t.phase="intro";t.line=0;
-    state.u15.queue=[];state.u15.scene=null;state.audHp=state.audHpMax=320;state.atk=1;/* v4 U47 7: was 480; the NDD tutorial fight now takes about 50 s (sim median) instead of 70 */state.interval=6;state.heckleMs=6000;
+    state.u15.queue=[];state.u15.scene=null;state.audHp=state.audHpMax=170;state.atk=0.25;/* Keep the tutorial near 50 seconds after the hold-power reduction. */state.interval=1.5;state.heckleMs=1500;
     state.onboarding={intro:true,panel:0,step:0,facts:[]};return true;
   }
   function finishTutorial(state){
     var t=state.u15.tutorial;if(!t.active)return false;
-    var main=deserialize(t.baseline);if(!main)return false;
+    var earned=state.features.achievements.slice(),main=resumeHelpers(deserialize(t.baseline));if(!main)return false;
     Object.keys(state).forEach(function(k){delete state[k];});Object.assign(state,main);
+    state.features.achievements=Array.from(new Set(state.features.achievements.concat(earned)));
+    recompute(state,false);
     state.u15.tutorial={done:true,active:false,won:false,baseline:null};
     state.onboarding={intro:true,panel:0,step:8,facts:[]};return true;
   }
@@ -3716,12 +3787,36 @@
     // v4 U48 A2: 칼리 덱 한 브릭 starts 30 minutes of auto practice at once (game time; it adds on top of a running deck).
     if(id==='brick'){state.u15.gloveLeft+=CONST.brickMs;state.holding=false;state.tapAcc=0;}
     if(id==='refill')state.skills.cooldowns[skill]=0;
-    if(id==='potion'){state.mental=Math.min(state.mentalMax,state.mental+state.mentalMax*.3);state.u17.potionUsed=true;}
+    if(id==='potion'){state.mental=Math.min(state.mentalMax,state.mental+state.mentalMax*.3*gearMultiplier(state,"recovery"));state.u17.potionUsed=true;}
     return true;
   }
 
 
-  function emptyU18(){return {revealed:false,fans:[],paid:[],sets:[],owned:{kali:[],cases:[]},equipped:{kali:'',cases:''},map:false,anchor:null,challenge:null};}
+  function emptyPads(){return {owned:['floor'],equipped:'floor',upgrades:0};}
+  function padKey(id,color){return id==='floor'||id==='lecturenote'?id:id+':'+color;}
+  function padEntry(key){return DATA.pads.find(function(p){return p.colors.some(function(c){return padKey(p.id,c)===key;});});}
+  function validPads(p){return !!p&&Array.isArray(p.owned)&&p.owned.indexOf('floor')>=0&&new Set(p.owned).size===p.owned.length&&p.owned.every(function(k){return !!padEntry(k);})&&p.owned.indexOf(p.equipped)>=0&&integer(p.upgrades,0,DATA.padPrices.upgradeMax)!=null&&(!p.upgrades||p.owned.some(function(k){return padEntry(k).id==='kali';}));}
+  function padSpeed(state){var p=state.u18&&state.u18.pads;if(!p)return 1;var entry=padEntry(p.equipped);return entry.speed+(entry.id==='kali'?p.upgrades*.05:0);}
+  function gearBonus(state,key){var p=state.u18&&state.u18.pads;if(!p)return 0;var entry=padEntry(p.equipped),color=DATA.padColors[p.equipped.split(':')[1]],bonus=color&&color[entry.id];return bonus&&bonus[key]||0;}
+  function outfitBonus(state,key){var id=state.u18&&state.u18.equipped.kali,e=DATA.outfitEffects[id];return e&&e[key]||0;}
+  function gearMultiplier(state,key){return (1+gearBonus(state,key))*(1+outfitBonus(state,key));}
+  function gearEffects(state,tab,id){
+    if(tab==='kali')return Object.assign({},DATA.outfitEffects[id]||{});
+    var entry=padEntry(id);if(!entry)return {};var color=DATA.padColors[id.split(':')[1]],effect=Object.assign({},color&&color[entry.id]||{});
+    effect.hold=entry.speed-1+(entry.id==='kali'?state.u18.pads.upgrades*.05:0);return effect;
+  }
+  function padInfo(state,id,color){
+    var entry=DATA.pads.find(function(p){return p.id===id;});if(!entry||entry.colors.indexOf(color)<0)return null;
+    var key=padKey(id,color),p=state.u18.pads,owned=p.owned.indexOf(key)>=0,reason='';
+    if(!owned){if(state.u15.tutorial.active)reason='첫 연습 뒤에 살 수 있어요';else if(entry.venue&&!reached(state,entry.venue))reason='전국 마술 매니아 도착 필요';else if(entry.requires&&!p.owned.some(function(k){return padEntry(k).id===entry.requires;}))reason='앞 단계 패드를 먼저 사세요';else if(state.gems<entry.cost)reason='실크 '+entry.cost+'개가 필요해요';}
+    return {key:key,owned:owned,cost:entry.cost,available:!reason,reason:reason,equipped:p.equipped===key};
+  }
+  function buyPad(state,id,color){var info=padInfo(state,id,color);if(!info||info.owned||!info.available)return false;state.gems-=info.cost;state.u18.pads.owned.push(info.key);return true;}
+  function equipPad(state,key){if(state.u18.pads.owned.indexOf(key)<0)return false;state.u18.pads.equipped=key;recompute(state,true);return true;}
+  function padUpgradeInfo(state){var p=state.u18.pads,cost=Math.ceil(DATA.padPrices.upgradeBase*Math.pow(DATA.padPrices.upgradeGrowth,p.upgrades)),reason=p.upgrades>=DATA.padPrices.upgradeMax?'최대 강화':!p.owned.some(function(k){return padEntry(k).id==='kali';})?'칼리 패드 구매 필요':state.coins<cost?'동전 부족':'';return {cost:cost,level:p.upgrades,available:!reason,reason:reason};}
+  function upgradePad(state){var info=padUpgradeInfo(state);if(!info.available)return false;state.coins-=info.cost;state.u18.pads.upgrades++;return true;}
+
+  function emptyU18(){return {revealed:false,fans:[],paid:[],sets:[],owned:{kali:[],cases:[]},equipped:{kali:'',cases:''},pads:emptyPads(),map:false,anchor:null,challenge:null};}
   // v4 U46 C1: the challenge is offered once the audience was beaten (headliner: the venue trophy; others: one win), and the challenges are revealed
   // with the first venue trophy (it used to need one whole venue of full fans).
   function beatenOnce(state,v,a){return a.id===v.headliner.id?!!state.trophies[v.slug]:!!(state.bestiary[a.id]&&state.bestiary[a.id].wins>=1);}
@@ -3746,7 +3841,7 @@
   }
   var TRAVEL_FIELDS=['venue','crowd','j','audId','audHp','audHpMax','atk','interval','mental','shield','combo','comboMs','maxCombo','finisher','finisherFired','fightMs','tookMental','phase2','pattern','slow','miss','pHeal','sealCell','sealMs','sealCd','patternHealMs','heckleMs','telegraphed','mode','transMs','after','resolved','review','dealer','dealerQueued','winsSinceDealer','buff','flights','doveMs','rabbitMs','flashBreaks'];
   function restoreTimeline(state){
-    var original=deserialize(state.u18.anchor);if(!original)return false;
+    var original=resumeHelpers(deserialize(state.u18.anchor));if(!original)return false;
     TRAVEL_FIELDS.forEach(function(k){state[k]=original[k];});
     state.u15.scene=original.u15.scene;state.u15.queue=original.u15.queue;
     state.features.climax=original.features.climax;state.features.workers=original.features.workers;
@@ -3797,10 +3892,10 @@
   function equipCosmetic(state,tab,id){
     if(!DATA.cosmetics[tab])return false;
     if(id){var info=cosmeticInfo(state,tab,id);if(!info||!info.owned)return false;}
-    state.u18.equipped[tab]=id;return true;
+    state.u18.equipped[tab]=id;recompute(state,true);state.mental=Math.min(state.mental,state.mentalMax);return true;
   }
   function validU18(u,state){
-    if(!u||typeof u.revealed!=='boolean'||typeof u.map!=='boolean'||!u.owned||!u.equipped)return false;
+    if(!u||!validPads(u.pads)||typeof u.revealed!=='boolean'||typeof u.map!=='boolean'||!u.owned||!u.equipped)return false;
     for(var key of ['fans','paid','sets'])if(!Array.isArray(u[key])||new Set(u[key]).size!==u[key].length||u[key].some(function(id){return key==='sets'?!venueNumber(id):COMBO_AUD_IDS.indexOf(id)<0;}))return false;
     if(!u.revealed&&(u.fans.length||u.paid.length||u.sets.length))return false;
     for(var tab of ['kali','cases'])if(!Array.isArray(u.owned[tab])||new Set(u.owned[tab]).size!==u.owned[tab].length||u.owned[tab].some(function(id){return !DATA.cosmetics[tab].some(function(x){return x.id===id;});})||typeof u.equipped[tab]!=='string'||u.equipped[tab]&&u.owned[tab].indexOf(u.equipped[tab])<0)return false;
@@ -3822,7 +3917,7 @@
     var rarity=CONST.rarityW.reduce(function(sum,w,i){return sum+w*CONST.rarityMult[i];},0)/CONST.rarityW.reduce(function(a,b){return a+b;},0);
     var t=state.tree,mods=nodeEffects(state),rate=wandRate(state),area=wandArea(state),coverage=Math.min(state.board.length,area.cols*area.rows)/Math.max(1,state.board.length);
     var hitRate=rate*coverage+(t.boxHelper?fanCount(state)*.35/(mods.helperEvery/1000):0)/Math.max(1,state.board.length)+(t.assistant?.8/1.2:0)/Math.max(1,state.board.length);
-    var damage=state.board.reduce(function(sum,c){var lv=c.lv||1,hp=caseHp(state._boxHp,lv),opens=1/(hp/Math.max(1,wandDamage(state)*hitRate)+state._tau/1000);return sum+opens*(CONST.itemDamage*(state._V||1)*rarity*.56*caseItems(lv)*Math.pow(1.1,lv-1)*milestoneMultiplier(lv,[10,25,50])*branchBonus(state,'box')*caseItemBonus(state)+CONST.finisherDmg*(state._V||1)*mods.finalePower/mods.finaleNeed);},0);
+    var damage=state.board.reduce(function(sum,c){var lv=c.lv||1,hp=caseHp(state._boxHp,lv),opens=1/(hp/Math.max(1,wandDamage(state)*gearMultiplier(state,"open")*hitRate)+state._tau/1000);return sum+opens*(CONST.itemDamage*(state._V||1)*rarity*.56*caseItems(lv)*Math.pow(1.1,lv-1)*milestoneMultiplier(lv,[10,25,50])*branchBonus(state,'box')*caseItemBonus(state)+CONST.finisherDmg*(state._V||1)*mods.finalePower/mods.finaleNeed);},0);
     return Math.max(1,damage);
   }
   function beginFuture(state,prepare){if(!state.homecomingCleared||state.u19.cleared||state.u15.tutorial.active||state.u18.anchor)return false;state.u15.queue=[];state.u15.scene=null;state.dealer=null;state.dealerQueued=false;beginAudience(state,venueNumber('future'),1,null);state.mental=state.mentalMax;if(prepare){state.idle.waiting=true;state.mode='transition';state.transMs=0;state.after='fight';}return true;}
@@ -3875,6 +3970,18 @@
     } catch (error) { return false; }
   }
 
+  // Keep save validation independent of post-load reward reconciliation.
+  // Removed helper pause controls: retain legacy save keys, resume after validation.
+  function resumeHelpers(state){
+    if(!state)return state;
+    var f=state.features;
+    f.dovePaused=false;f.helperPaused=false;
+    f.workers.fanPaused=false;f.workers.assistantPaused=false;
+    Object.keys(f.magic.paused).forEach(function(id){f.magic.paused[id]=false;});
+    return state;
+  }
+  function loadState(raw){var state=resumeHelpers(deserialize(raw));if(state)checkAchievements(state,null);return state;}
+
   globalThis.Core = {
     achievementInfo:achievementInfo,achievementBonus:achievementBonus,beginFuture:beginFuture,strongestCase:strongestCase,
     openMap:openMap,travelTo:travelTo,returnToStage:returnToStage,travelAllowed:travelAllowed,trueFanRule:trueFanRule,trueFanReward:trueFanReward,trueFanProgress:trueFanProgress,challengeBonus:challengeBonus,beatenOnce:beatenOnce,CHALLENGE_CAP:CHALLENGE_CAP,cosmeticInfo:cosmeticInfo,buyCosmetic:buyCosmetic,equipCosmetic:equipCosmetic,
@@ -3917,12 +4024,13 @@
     batchDStatus: function(state){return state.batchD;},
     rebirth: rebirth,
     serialize: serialize,
-    deserialize: deserialize,
+    deserialize: loadState,
     deserializeRepair: deserializeRepair,
     kaliMood: kaliMood, audienceMood: audienceMood,
     // Source text of every strict save validator; test-saves.mjs hashes it against SAVE_VERSION (a changed range needs a new version).
-    saveValidatorSource: function () { return [deserialize, infiniteRefund, validU15, validU17, validU18, validU19, validDealerGames, validBatchD].map(function (f) { return f.toString(); }).join('\n'); },
-    SAVE_VERSION: 22,
+    saveValidatorSource: function () { return [validPads, deserialize, infiniteRefund, validU15, validU17, validU18, validU19, validDealerGames, validBatchD].map(function (f) { return f.toString(); }).join('\n'); },
+    padInfo:padInfo,buyPad:buyPad,equipPad:equipPad,padUpgradeInfo:padUpgradeInfo,upgradePad:upgradePad,padSpeed:padSpeed,gearEffects:gearEffects,gearMultiplier:gearMultiplier,
+    SAVE_VERSION: 23,
     starCost: starCost,
     buyStar: buyStar
   };
