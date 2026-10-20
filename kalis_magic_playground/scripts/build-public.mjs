@@ -77,8 +77,12 @@ export const PUBLIC_DIRS = [
   'zz11',
   'zz12',
   'zz13',
-  'zz14'
+  'zz14',
+  'TabataTimer'
 ];
+
+// Publish only the offline shell and worker for this personal app.
+export const TABATA_FILES = ['index.html', 'style.css', 'app.js', 'manifest.webmanifest', 'sw.js', 'brand-logo.png', 'icon.svg', 'icon-192.png', 'icon-512.png'];
 
 export const PRIVATE_PATTERNS = [
   /(?:^|\/)fullscreen\.js$/,
@@ -571,6 +575,10 @@ async function copyIfExists(relativePath) {
     recursive: true,
     filter: (source) => {
       const publicPath = path.relative(ROOT, source).split(path.sep).join('/');
+      if (relativePath === 'TabataTimer') {
+        const file = path.relative(path.join(ROOT, 'TabataTimer'), source);
+        return file === '' || TABATA_FILES.includes(file);
+      }
       if (relativePath === 'zz14') return shouldCopyPimax(path.relative(path.join(ROOT, 'zz14'), source));
       return shouldCopy(path.relative(ROOT, source)) && !isExcludedLegacyTree(publicPath);
     }
@@ -620,7 +628,7 @@ async function verifyMirrors() {
 
 // Enforce the current display policy on the final artifact, including gated copies.
 export async function verifyAppDisplayPolicy(directory = DIST, routes = [
-  ...PUBLIC_DIRS.filter((entry) => /^zz\d+$/.test(entry)),
+  ...PUBLIC_DIRS.filter((entry) => /^zz\d+$/.test(entry) || entry === 'TabataTimer'),
   ...DISTRIBUTION_APPS.map((app) => `tools/${app.target}`)
 ]) {
   for (const route of routes) {

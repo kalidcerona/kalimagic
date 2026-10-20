@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#1a1512">
+  <meta name="color-scheme" content="dark">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="apple-touch-icon" href="./icon-192.png">
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./style.css">
+  <title>Tabata Timer</title>
+  <script src="./app.js" defer></script>
+</head>
+<body>
+<main id="setup">
+  <div class="head">
+    <h1>Tabata Timer</h1>
+    <button type="button" class="btn2" id="openInfo" aria-haspopup="dialog">설정과 안내</button>
+    <div class="total">총 <b class="num" id="total">0:00</b> · <span id="segcount">0</span>구간</div>
+  </div>
+
+  <div class="presets" id="presets" role="group" aria-label="프리셋"></div>
+
+  <div>
+    <div class="strip" id="strip" aria-hidden="true"></div>
+    <div class="legend" id="legend"></div>
+  </div>
+
+  <section class="rows" id="rows" aria-label="시간 설정"></section>
+
+  <details class="opts" id="opts">
+    <summary>소리와 진동</summary>
+    <label class="toggle"><span>신호음<small>구간 시작과 마지막 3초 카운트</small></span><input type="checkbox" id="optBeep" checked></label>
+    <label class="toggle"><span>음성 안내<small>"운동", "휴식"처럼 구간 이름을 말해줘요</small></span><input type="checkbox" id="optVoice" checked></label>
+    <label class="toggle"><span>진동<small>지원하는 휴대폰에서만 울려요</small></span><input type="checkbox" id="optVibe" checked></label>
+    <label class="toggle"><span>마지막 휴식 생략<small>사이클의 마지막 라운드 뒤 휴식을 건너뛰어요</small></span><input type="checkbox" id="optSkipLast" checked></label>
+  </details>
+
+  <details class="opts" id="mine">
+    <summary>내 프리셋 저장</summary>
+    <div class="saverow">
+      <input id="presetName" maxlength="20" placeholder="예: 아침 하체" aria-label="프리셋 이름">
+      <button class="btn2" id="savePreset" type="button">저장</button>
+    </div>
+    <p class="note" id="mineNote">저장한 프리셋은 위쪽 목록에 나와요. 이 브라우저에만 저장돼요.</p>
+  </details>
+
+  <div class="start"><button id="startBtn" type="button">시작</button></div>
+</main>
+
+<section id="run" hidden aria-live="polite">
+  <div class="runtop">
+    <div class="badge">
+      <span class="pill num" id="rRound">라운드 1/8</span>
+      <span class="pill num" id="rCycle">사이클 1/1</span>
+    </div>
+    <span class="num" id="rLeft">남은 시간 4:00</span>
+  </div>
+
+  <div class="center" id="rCenter">
+    <div class="ring">
+      <svg viewBox="0 0 100 100" aria-hidden="true">
+        <circle class="track" cx="50" cy="50" r="45"></circle>
+        <circle class="bar" id="rBar" cx="50" cy="50" r="45" pathLength="1000" stroke-dasharray="1000" stroke-dashoffset="0"></circle>
+      </svg>
+      <div class="in">
+        <div class="phase" id="rPhase">운동</div>
+        <div class="count num" id="rCount">20</div>
+        <div class="sub num" id="rSub"></div>
+      </div>
+    </div>
+    <div class="next" id="rNext"></div>
+  </div>
+
+  <div class="runstrip">
+    <div class="strip" id="rStrip" aria-hidden="true"></div>
+    <div class="head-mark" id="rHead"></div>
+  </div>
+
+  <div>
+    <div class="runctl">
+      <button type="button" id="prevBtn">이전</button>
+      <button type="button" class="main" id="pauseBtn">일시정지</button>
+      <button type="button" id="nextBtn">다음</button>
+    </div>
+    <div class="runbar2"><button type="button" id="stopBtn">종료</button></div>
+  </div>
+</section>
+
+<dialog id="settings" data-settings-root aria-labelledby="infoTitle">
+  <header class="settingsbrand">
+    <img src="./brand-logo.png" alt="마술 도구 로고" width="2172" height="724">
+    <div class="head"><h2 id="infoTitle">설정과 안내</h2><button type="button" class="btn2" id="closeInfo">닫기</button></div>
+  </header>
+  <details class="opts" open><summary>개요</summary>
+    <p>운동과 휴식 시간을 라운드와 사이클로 반복하는 타이머입니다. 준비 시간과 쿨다운을 정하고, 자주 쓰는 구성을 프리셋으로 저장할 수 있습니다.</p>
+    <p>소리와 진동, 음성 안내는 시작 화면에서 설정합니다. 설정과 프리셋은 이 브라우저에 저장됩니다.</p>
+  </details>
+  <details class="opts"><summary>설치와 바로가기</summary>
+    <p>Android Chrome: ⋮ 메뉴에서 앱 설치를 선택해 주세요.</p>
+    <p>iPhone Safari: 공유에서 홈 화면에 추가를 선택해 주세요.</p>
+    <p>설치 후 홈 화면의 아이콘으로 실행해 주세요. 한 번 열어 저장한 뒤에는 오프라인에서도 사용할 수 있습니다.</p>
+  </details>
+<div class="magic-settings-footer"><h2 class="magic-contact-heading">의견 보내기</h2><p class="magic-contact-note"><span>수정할 점이나 버그,</span><span>새로운 아이디어가 있다면</span><span>카카오톡으로 알려주세요.</span></p><div class="magic-contact-actions"><a id="contact-open" class="magic-contact-link" href="https://qr.kakao.com/talk/eshVqDvk7WKk0zDKtiC9UTa.T6Q-">카카오톡 문의</a><button type="button" class="magic-contact-copy" id="contact-copy">ID 복사</button></div><details class="magic-contact-help"><summary>연결이 안 될 때</summary><p><span>카카오톡이 열리지 않으면</span><span>ID를 복사해 주세요.</span><span>카카오톡 친구 추가에서</span><span>ID 검색을 선택한 뒤</span><span>복사한 ID로 찾아 주세요.</span></p><p class="magic-contact-id">ID: KaliDCerona</p></details></div>
+</dialog>
+</body>
+</html>
