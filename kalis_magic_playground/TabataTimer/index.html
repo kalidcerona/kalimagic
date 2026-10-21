@@ -12,44 +12,36 @@
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="./style.css">
   <title>Tabata Timer</title>
+  <script src="./data.js" defer></script>
+  <script src="./install-ui.js" defer></script>
   <script src="./app.js" defer></script>
 </head>
 <body>
 <main id="setup">
-  <div class="head">
-    <h1>Tabata Timer</h1>
-    <button type="button" class="btn2" id="openInfo" aria-haspopup="dialog">설정과 안내</button>
-    <div class="total">총 <b class="num" id="total">0:00</b> · <span id="segcount">0</span>구간</div>
-  </div>
-
-  <div class="presets" id="presets" role="group" aria-label="프리셋"></div>
-
-  <div>
-    <div class="strip" id="strip" aria-hidden="true"></div>
-    <div class="legend" id="legend"></div>
-  </div>
-
-  <section class="rows" id="rows" aria-label="시간 설정"></section>
-
-  <details class="opts" id="opts">
-    <summary>소리와 진동</summary>
-    <label class="toggle"><span>신호음<small>구간 시작과 마지막 3초 카운트</small></span><input type="checkbox" id="optBeep" checked></label>
-    <label class="toggle"><span>음성 안내<small>"운동", "휴식"처럼 구간 이름을 말해줘요</small></span><input type="checkbox" id="optVoice" checked></label>
-    <label class="toggle"><span>진동<small>지원하는 휴대폰에서만 울려요</small></span><input type="checkbox" id="optVibe" checked></label>
-    <label class="toggle"><span>마지막 휴식 생략<small>사이클의 마지막 라운드 뒤 휴식을 건너뛰어요</small></span><input type="checkbox" id="optSkipLast" checked></label>
-  </details>
-
-  <details class="opts" id="mine">
-    <summary>내 프리셋 저장</summary>
-    <div class="saverow">
-      <input id="presetName" maxlength="20" placeholder="예: 아침 하체" aria-label="프리셋 이름">
-      <button class="btn2" id="savePreset" type="button">저장</button>
-    </div>
-    <p class="note" id="mineNote">저장한 프리셋은 위쪽 목록에 나와요. 이 브라우저에만 저장돼요.</p>
-  </details>
-
-  <div class="start"><button id="startBtn" type="button">시작</button></div>
+  <div class="head"><h1>내 타이머</h1><button type="button" class="btn2" id="openInfo" aria-haspopup="dialog">설정과 안내</button></div>
+  <p class="note">타이머를 누르면 바로 시작해요.</p>
+  <div id="timers" class="timer-list"></div>
+  <p id="empty" hidden>아래 + 버튼으로 타이머를 만들어 주세요.</p>
+  <p id="storageNote" class="note" role="status"></p>
+  <button id="newTimer" class="floating-add" type="button" aria-label="새 타이머 만들기" aria-haspopup="dialog">+</button>
 </main>
+<section id="editor" class="edit-screen" hidden aria-labelledby="editorTitle">
+  <header class="screen-header"><button id="cancelEditor" class="circle-btn" type="button" aria-label="편집 취소">✕</button><h1 id="editorTitle">타이머 편집</h1><button id="saveTimer" class="circle-btn primary" type="button" aria-label="타이머 저장">✓</button></header>
+  <label class="name-field">이름<input id="timerName" maxlength="80" autocomplete="off" required></label>
+  <div id="rows" class="edit-rows"></div>
+  <label class="toggle"><span>마지막 휴식 생략<small>각 사이클의 마지막 라운드 뒤 휴식을 건너뛰어요</small></span><input id="optSkipLast" type="checkbox" checked></label>
+  <p id="editorTotal" class="note num"></p>
+</section>
+<section id="picker" class="edit-screen" hidden aria-labelledby="pickerTitle">
+  <header class="screen-header"><button id="cancelPicker" class="circle-btn" type="button" aria-label="값 변경 취소">✕</button><h1 id="pickerTitle">준비</h1><button id="savePicker" class="circle-btn primary" type="button" aria-label="값 저장">✓</button></header>
+  <div id="phaseColors" class="phase-colors" role="group" aria-label="구간 색상"></div>
+  <p class="note picker-help">위아래로 밀거나 숫자를 눌러 주세요. 키보드 방향키로도 바꿀 수 있어요.</p>
+  <div id="wheels" class="wheels"></div>
+  <button id="removePhase" class="remove-phase danger" type="button" hidden></button>
+</section>
+<dialog id="newSheet" class="sheet" aria-labelledby="newTitle"><div class="head"><h2 id="newTitle">새 타이머 · 템플릿</h2><button type="button" id="closeNew" class="btn2">닫기</button></div><div id="templateChoices" class="sheet-actions"></div></dialog>
+<dialog id="timerMenu" class="sheet" aria-labelledby="menuTitle"><div class="head"><h2 id="menuTitle">타이머</h2><button type="button" id="closeMenu" class="btn2">닫기</button></div><div id="menuActions" class="sheet-actions"></div></dialog>
+<dialog id="installSheet" class="sheet" aria-labelledby="installTitle"><h2 id="installTitle">홈 화면에 설치할까요?</h2><p>홈 화면에 설치하면 타이머를 바로 열 수 있어요.</p><p id="installHelp" role="status"></p><div class="sheet-actions"><button id="installApp" type="button" class="btn2 primary">설치</button><button id="installLater" type="button" class="btn2">나중에</button></div></dialog>
 
 <section id="run" hidden aria-live="polite">
   <div class="runtop">
@@ -97,9 +89,15 @@
   </header>
   <details class="opts" open><summary>개요</summary>
     <p>운동과 휴식 시간을 라운드와 사이클로 반복하는 타이머입니다. 준비 시간과 쿨다운을 정하고, 자주 쓰는 구성을 프리셋으로 저장할 수 있습니다.</p>
-    <p>소리와 진동, 음성 안내는 시작 화면에서 설정합니다. 설정과 프리셋은 이 브라우저에 저장됩니다.</p>
+    <p>소리와 진동, 음성 안내는 아래에서 설정합니다. 설정과 프리셋은 이 브라우저에 저장됩니다.</p>
+  </details>
+  <details class="opts"><summary>소리와 진동</summary>
+    <label class="toggle"><span>신호음</span><input type="checkbox" id="optBeep" checked></label>
+    <label class="toggle"><span>음성 안내</span><input type="checkbox" id="optVoice" checked></label>
+    <label class="toggle"><span>진동</span><input type="checkbox" id="optVibe" checked></label>
   </details>
   <details class="opts"><summary>설치와 바로가기</summary>
+    <button id="openInstall" class="btn2" type="button">설치</button>
     <p>Android Chrome: ⋮ 메뉴에서 앱 설치를 선택해 주세요.</p>
     <p>iPhone Safari: 공유에서 홈 화면에 추가를 선택해 주세요.</p>
     <p>설치 후 홈 화면의 아이콘으로 실행해 주세요. 한 번 열어 저장한 뒤에는 오프라인에서도 사용할 수 있습니다.</p>

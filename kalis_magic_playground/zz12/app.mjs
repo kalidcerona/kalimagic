@@ -314,5 +314,37 @@ function renderMemory(){
 }
 stackSelect.onchange=e=>{archiveActiveSession();state.selected=e.target.value;state.session=null;studyIndex=0;flipped=false;train=null;imageDrafts.clear();palaceDraft=null;storyDraft=null;save();render();};document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{tab=b.dataset.tab;if(['quiz','rank'].includes(tab)&&state.session&&!state.session.answered)questionStart=performance.now();if(tab==='memory'&&train?.phase==='quiz'&&!train.answered)questionStart=performance.now();render();});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)questionStart=performance.now();});
+// Keep the screen awake while this personal app is visible, including idle screens.
+function keepVisibleScreenAwake() {
+  if (typeof document === 'undefined' || typeof navigator === 'undefined' || !navigator.wakeLock) return;
+  let lock = null, pending = false;
+  const visible = () => document.visibilityState === 'visible';
+  const release = () => {
+    const current = lock; lock = null;
+    if (current) { try { Promise.resolve(current.release()).catch(() => {}); } catch {} }
+  };
+  async function request() {
+    if (!visible() || lock || pending) return;
+    pending = true;
+    try {
+      const acquired = await navigator.wakeLock.request('screen');
+      if (!visible()) { await acquired.release(); return; }
+      lock = acquired;
+      acquired.addEventListener('release', () => { if (lock === acquired) lock = null; });
+    } catch {} finally { pending = false; }
+  }
+  document.addEventListener('visibilitychange', () => { if (visible()) request(); else release(); });
+  request();
+}
+keepVisibleScreenAwake();
+
 if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
 render();
+const localSettingsHost = typeof location !== 'undefined' && ['localhost', '127.0.0.1', '::1', '[::1]'].includes(location.hostname);
+if (localSettingsHost && new URLSearchParams(location.search).get('local-preview') === '1') {
+  window.addEventListener('magic-local-settings', () => {
+    document.querySelector(".first-run-guide button")?.click();
+    document.querySelector('[data-tab="settings"]')?.click();
+  });
+  document.documentElement.dataset.localSettingsReady = 'true';
+}

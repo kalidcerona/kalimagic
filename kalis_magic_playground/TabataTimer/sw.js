@@ -1,10 +1,15 @@
 // Cache only the explicit app shell. API, authentication and user data stay on the network.
 const CACHE_PREFIX = 'tabata-timer-' + encodeURIComponent(new URL(self.registration.scope).pathname) + '-';
-const CACHE_NAME = CACHE_PREFIX + 'v20261020-1';
+const CACHE_NAME = CACHE_PREFIX + 'v20261021-3';
 const SHELL = [
-  "./index.html",
+  "./", // Canonical navigation avoids Netlify pretty-URL redirects from index.html.
   "./style.css",
   "./app.js",
+  "./data.js",
+  "./install-ui.js",
+  "./icon-maskable-192.png",
+  "./icon-maskable-512.png",
+
   "./brand-logo.png",
   "./manifest.webmanifest",
   "./icon.svg",
@@ -12,6 +17,7 @@ const SHELL = [
   "./icon-512.png"
 ];
 const SHELL_NAMES = new Set(SHELL.map((file) => file.replace(/^\.\//, '')));
+SHELL_NAMES.add('index.html');
 const GUARDED = new URL(self.registration.scope).pathname.startsWith('/tools/');
 
 self.addEventListener('install', (event) => {
@@ -39,7 +45,7 @@ async function refresh(request, cache) {
   if (response.ok && !response.redirected && response.type !== 'opaque') {
     const name = shellName(request.url);
     // Keep one canonical entry per asset even when install/version query strings change.
-    await cache.put(new URL(name || 'index.html', self.registration.scope).href, response.clone());
+    await cache.put(new URL(name === '' || name === 'index.html' ? './' : name, self.registration.scope).href, response.clone());
   }
   return response;
 }
@@ -76,7 +82,7 @@ self.addEventListener('fetch', (event) => {
     if (name === 'manifest.webmanifest') return freshManifest(request, cache);
     const page = name === '' || name === 'index.html' || name.endsWith('.html');
     const executable = page || /\.(?:js|mjs|css)$/.test(name);
-    const cached = await cache.match(new URL(name === '' ? 'index.html' : name, self.registration.scope).href, { ignoreSearch: true });
+    const cached = await cache.match(new URL(name === '' || name === 'index.html' ? './' : name, self.registration.scope).href, { ignoreSearch: true });
     // Friend distribution navigation serves this release's cached index.html, the same as a personal app.
     // That is safe: the cached HTML still runs the injected /tools/_check entitlement script before revealing anything,
     // and the edge gate still protects every network fetch.

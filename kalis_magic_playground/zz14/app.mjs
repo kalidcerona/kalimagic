@@ -1309,4 +1309,28 @@ function boot() {
   render();
 }
 
+// Keep the screen awake while this personal app is visible, including idle screens.
+function keepVisibleScreenAwake() {
+  if (typeof document === 'undefined' || typeof navigator === 'undefined' || !navigator.wakeLock) return;
+  let lock = null, pending = false;
+  const visible = () => document.visibilityState === 'visible';
+  const release = () => {
+    const current = lock; lock = null;
+    if (current) { try { Promise.resolve(current.release()).catch(() => {}); } catch {} }
+  };
+  async function request() {
+    if (!visible() || lock || pending) return;
+    pending = true;
+    try {
+      const acquired = await navigator.wakeLock.request('screen');
+      if (!visible()) { await acquired.release(); return; }
+      lock = acquired;
+      acquired.addEventListener('release', () => { if (lock === acquired) lock = null; });
+    } catch {} finally { pending = false; }
+  }
+  document.addEventListener('visibilitychange', () => { if (visible()) request(); else release(); });
+  request();
+}
+keepVisibleScreenAwake();
+
 if (typeof document !== "undefined") boot();

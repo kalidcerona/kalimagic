@@ -1,175 +1,154 @@
 (() => {
-  const TYPES = {
-    prep:    { label: '준비',        color: 'var(--prep)',    voice: '준비' },
-    work:    { label: '운동',        color: 'var(--work)',    voice: '운동' },
-    rest:    { label: '휴식',        color: 'var(--rest)',    voice: '휴식' },
-    setrest: { label: '사이클 휴식', color: 'var(--setrest)', voice: '사이클 휴식' },
-    cool:    { label: '쿨다운',      color: 'var(--cool)',    voice: '쿨다운' },
-  };
+  const D = window.TabataData;
+  const TYPES = Object.fromEntries(Object.entries({prep:'준비',work:'운동',rest:'휴식',setrest:'사이클 휴식',cool:'쿨다운'}).map(([key,label]) => [key,{label,voice:label,color:`var(--${key})`}]));
   const FIELDS = [
-    { key: 'prep',    type: 'prep',    name: '준비',           hint: '시작 전 자리 잡는 시간', time: true,  step: 5, min: 0,  max: 600 },
-    { key: 'work',    type: 'work',    name: '운동',           hint: '한 라운드의 운동 시간',   time: true,  step: 5, min: 5,  max: 3600 },
-    { key: 'rest',    type: 'rest',    name: '휴식',           hint: '라운드 사이 쉬는 시간',   time: true,  step: 5, min: 0,  max: 3600 },
-    { key: 'rounds',  type: 'work',    name: '라운드',         hint: '운동과 휴식을 몇 번',     time: false, step: 1, min: 1,  max: 99 },
-    { key: 'cycles',  type: 'setrest', name: '사이클',         hint: '라운드 묶음을 몇 번',     time: false, step: 1, min: 1,  max: 20 },
-    { key: 'setrest', type: 'setrest', name: '사이클 사이 휴식', hint: '사이클이 끝날 때마다',   time: true,  step: 15, min: 0, max: 1800 },
-    { key: 'cool',    type: 'cool',    name: '쿨다운',         hint: '마무리 스트레칭',         time: true,  step: 15, min: 0, max: 1800 },
+    {key:'prep',name:'준비',hint:'시작 전 카운트다운',time:true},
+    {key:'work',name:'운동',hint:'한 라운드의 운동 시간',time:true},
+    {key:'rest',name:'휴식',hint:'라운드 사이 쉬는 시간',time:true},
+    {key:'rounds',name:'라운드',hint:'1라운드는 운동 + 휴식',time:false},
+    {key:'cycles',name:'사이클',hint:'전체 라운드 반복 횟수',time:false},
+    {key:'setrest',name:'사이클 사이 휴식',hint:'사이클이 끝날 때마다',time:true},
+    {key:'cool',name:'쿨다운',hint:'마무리 스트레칭',time:true}
   ];
-  const BUILTIN = [
-    { name: '타바타 20/10',  v: { prep: 10, work: 20, rest: 10, rounds: 8,  cycles: 1, setrest: 60, cool: 0 } },
-    { name: '타바타 4세트',  v: { prep: 10, work: 20, rest: 10, rounds: 8,  cycles: 4, setrest: 60, cool: 120 } },
-    { name: 'HIIT 40/20',    v: { prep: 10, work: 40, rest: 20, rounds: 10, cycles: 1, setrest: 60, cool: 60 } },
-    { name: '서킷 45/15',    v: { prep: 15, work: 45, rest: 15, rounds: 6,  cycles: 3, setrest: 90, cool: 120 } },
-    { name: '매분 1분',      v: { prep: 10, work: 60, rest: 0,  rounds: 10, cycles: 1, setrest: 60, cool: 0 } },
-  ];
-
+  const memory = new Map();
+  const storage = {
+    getItem(k) { if(memory.has(k)) return memory.get(k);try { return localStorage.getItem(k); } catch { return null; } },
+    setItem(k,v) { memory.set(k,v);try { localStorage.setItem(k,v);return true; } catch { return false; } }
+  };
   const store = {
-    get(k, d) { try { const s = localStorage.getItem(k); return s ? JSON.parse(s) : d; } catch { return d; } },
-    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch { return false; } },
+    get(k,d) { try { return JSON.parse(storage.getItem(k)) ?? d; } catch { return d; } },
+    set(k,v) { try { return storage.setItem(k,JSON.stringify(v)); } catch { return false; } }
   };
-
-  let cfg = Object.assign({}, BUILTIN[0].v, store.get('tt.cfg', {}));
-  let opts = Object.assign({ beep: true, voice: true, vibe: true, skipLast: true }, store.get('tt.opts', {}));
-  let mine = store.get('tt.mine', []);
-  if (!Array.isArray(mine)) mine = [];
-
-  const $ = (id) => document.getElementById(id);
-  const fmt = (s) => { s = Math.max(0, Math.round(s)); const m = Math.floor(s / 60), r = s % 60; return m + ':' + String(r).padStart(2, '0'); };
-  const parseTime = (t) => {
-    t = String(t).trim();
-    if (/^\d+:\d{1,2}$/.test(t)) { const [m, s] = t.split(':').map(Number); return m * 60 + s; }
-    if (/^\d+$/.test(t)) return Number(t);
-    return NaN;
-  };
-
-  // ---------- segments ----------
-  function build(c) {
-    const segs = [];
-    if (c.prep > 0) segs.push({ type: 'prep', dur: c.prep, round: 0, cycle: 1 });
-    for (let cy = 1; cy <= c.cycles; cy++) {
-      for (let r = 1; r <= c.rounds; r++) {
-        segs.push({ type: 'work', dur: c.work, round: r, cycle: cy });
-        const last = r === c.rounds;
-        if (c.rest > 0 && !(last && opts.skipLast)) segs.push({ type: 'rest', dur: c.rest, round: r, cycle: cy });
+  let timers = D.load(storage), active = D.timer(), cfg = active.v, draft = null, picker = null;
+  let opts = Object.assign({beep:true,voice:true,vibe:true},store.get('tt.opts',{}));
+  const $ = id => document.getElementById(id);
+  const fmt = s => { s=Math.max(0,Math.round(s)); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); };
+  const displayTime = s => s < 60 ? ':'+String(s).padStart(2,'0') : fmt(s);
+  function build(c,skipLast = true) {
+    const segs=[];
+    if(c.prep>0) segs.push({type:'prep',dur:c.prep,round:0,cycle:1});
+    for(let cy=1;cy<=c.cycles;cy++) {
+      for(let r=1;r<=c.rounds;r++) {
+        segs.push({type:'work',dur:c.work,round:r,cycle:cy});
+        if(c.rest>0 && !(r===c.rounds && skipLast)) segs.push({type:'rest',dur:c.rest,round:r,cycle:cy});
       }
-      if (cy < c.cycles && c.setrest > 0) segs.push({ type: 'setrest', dur: c.setrest, round: c.rounds, cycle: cy });
+      if(cy<c.cycles && c.setrest>0) segs.push({type:'setrest',dur:c.setrest,round:c.rounds,cycle:cy});
     }
-    if (c.cool > 0) segs.push({ type: 'cool', dur: c.cool, round: c.rounds, cycle: c.cycles });
-    let t = 0; segs.forEach(s => { s.start = t; t += s.dur; });
-    return segs;
+    if(c.cool>0) segs.push({type:'cool',dur:c.cool,round:c.rounds,cycle:c.cycles});
+    let t=0; segs.forEach(s=>{s.start=t;t+=s.dur;}); return segs;
   }
-  const totalOf = (segs) => segs.reduce((a, s) => a + s.dur, 0);
-
-  function paintStrip(el, segs) {
-    const total = totalOf(segs) || 1;
-    el.replaceChildren(...segs.map(s => {
-      const sp = document.createElement('span');
-      sp.style.flex = String(s.dur / total);
-      sp.style.background = TYPES[s.type].color;
-      return sp;
+  const totalOf = segs => segs.reduce((a,s)=>a+s.dur,0);
+  function applyColors(timer) { for(const [key,color] of Object.entries(timer.colors)) document.documentElement.style.setProperty('--'+key,color); }
+  function paintStrip(el,segs) {
+    el.replaceChildren(...segs.map(s=>{const span=document.createElement('span');span.style.flex=String(s.dur/(totalOf(segs)||1));span.style.background=TYPES[s.type].color;return span;}));
+  }
+  function button(label,action,className='btn2') {
+    const b=document.createElement('button'); b.type='button'; b.className=className;b.textContent=label;b.addEventListener('click',action); return b;
+  }
+  function persist(next) {
+    timers=next;
+    $('storageNote').textContent=store.set('tt.timers.v2',timers)?'':'저장 공간을 사용할 수 없어요. 이 화면을 닫으면 변경 사항이 사라질 수 있어요.';
+    renderHome();
+  }
+  let menuReturn = null;
+  function renderHome() {
+    $('timers').replaceChildren(...timers.map(timer=>{
+      const card=document.createElement('article');card.className='timer-card';card.style.setProperty('--timer-color',timer.colors.work);
+      const launch=button('',()=>{active=D.timer(timer);cfg=active.v;start();},'timer-launch');
+      const duration=document.createElement('span');duration.className='timer-duration num';duration.textContent=fmt(totalOf(build(timer.v,timer.skipLast))).padStart(5,'0');
+      const name=document.createElement('strong');name.textContent=timer.name;launch.append(duration,name);
+      const menu=button('⋯',()=>openMenu(timer,menu),'timer-menu');menu.setAttribute('aria-label',timer.name+' 메뉴'); menu.setAttribute('aria-haspopup','dialog');
+      card.append(launch,menu);return card;
     }));
+    $('empty').hidden=timers.length>0;
   }
-
-  // ---------- setup view ----------
+  function openMenu(timer,origin) {
+    menuReturn=origin; $('menuTitle').textContent=timer.name;
+    const actions=$('menuActions');actions.replaceChildren(
+      button('편집',()=>{$('timerMenu').close();openEditor(timer);}),
+      button('복제',()=>{persist(D.duplicate(timers,timer.id));$('timerMenu').close();}),
+      button('삭제',()=>{
+        $('menuTitle').textContent='이 타이머를 삭제할까요?';
+        actions.replaceChildren(button('취소',()=>$('timerMenu').close()),button('삭제',()=>{persist(D.remove(timers,timer.id));$('timerMenu').close();},'btn2 danger'));
+      },'btn2 danger')
+    );$('timerMenu').showModal();
+  }
+  $('timerMenu').addEventListener('close',()=>{if(menuReturn?.isConnected) menuReturn.focus();else $('newTimer').focus();});
+  $('closeMenu').addEventListener('click',()=>$('timerMenu').close());
+  function openEditor(timer) {
+    draft=D.timer(timer);$('timerName').value=draft.name;$('optSkipLast').checked=draft.skipLast;
+    $('setup').hidden=true;$('editor').hidden=false;renderRows();$('timerName').focus();
+  }
+  function closeEditor() { $('editor').hidden=true;$('setup').hidden=false;draft=null;$('newTimer').focus(); }
+  $('cancelEditor').addEventListener('click',closeEditor);
+  $('saveTimer').addEventListener('click',()=>{
+    if(!$('timerName').value.trim()) {$('timerName').focus();return;}
+    draft.name=$('timerName').value.trim();draft.skipLast=$('optSkipLast').checked;
+    persist(D.save(timers,draft));closeEditor();
+  });
+  $('newTimer').addEventListener('click',()=>{
+    $('templateChoices').replaceChildren(button('새 타이머',()=>{$('newSheet').close();openEditor();}),...D.BUILTIN.map(p=>button(p.name,()=>{$('newSheet').close();openEditor(p);})));
+    $('newSheet').showModal();
+  });
+  $('closeNew').addEventListener('click',()=>$('newSheet').close());
   function renderRows() {
-    const rows = $('rows');
-    rows.replaceChildren();
-    FIELDS.forEach(f => {
-      const row = document.createElement('div');
-      row.className = 'row';
-      row.innerHTML = `
-        <span class="dot" style="background:${TYPES[f.type].color}"></span>
-        <div><div class="name">${f.name}</div><div class="hint">${f.hint}</div></div>
-        <div class="stepper">
-          <button type="button" aria-label="${f.name} 줄이기">−</button>
-          <input class="val" id="v-${f.key}" inputmode="${f.time ? 'text' : 'numeric'}" aria-label="${f.name}" autocomplete="off">
-          <button type="button" aria-label="${f.name} 늘리기">+</button>
-        </div>`;
-      const [minus, plus] = row.querySelectorAll('button');
-      const input = row.querySelector('input');
-      const show = () => { input.value = f.time ? fmt(cfg[f.key]) : String(cfg[f.key]); };
-      const setVal = (v) => { cfg[f.key] = Math.min(f.max, Math.max(f.min, v)); show(); changed(); };
-      holdRepeat(minus, () => setVal(cfg[f.key] - f.step));
-      holdRepeat(plus, () => setVal(cfg[f.key] + f.step));
-      input.addEventListener('focus', () => input.select());
-      input.addEventListener('change', () => {
-        const v = f.time ? parseTime(input.value) : parseInt(input.value, 10);
-        if (Number.isFinite(v)) setVal(v); else show();
-      });
-      input.addEventListener('keydown', e => { if (e.key === 'Enter') input.blur(); });
-      show();
-      rows.append(row);
-    });
-  }
-
-  function holdRepeat(btn, fn) {
-    let t1 = 0, t2 = 0;
-    const stop = () => { clearTimeout(t1); clearInterval(t2); };
-    btn.addEventListener('pointerdown', e => {
-      e.preventDefault(); fn();
-      t1 = setTimeout(() => { t2 = setInterval(fn, 90); }, 420);
-    });
-    ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => btn.addEventListener(ev, stop));
-    btn.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fn(); } });
-  }
-
-  function renderPresets() {
-    const box = $('presets');
-    box.replaceChildren();
-    const all = BUILTIN.map(p => ({ ...p, own: false })).concat(mine.map(p => ({ ...p, own: true })));
-    all.forEach(p => {
-      const b = document.createElement('button');
-      b.type = 'button'; b.className = 'chip'; b.textContent = p.name;
-      b.setAttribute('aria-pressed', String(FIELDS.every(f => p.v[f.key] === cfg[f.key])));
-      b.addEventListener('click', () => { cfg = Object.assign({}, p.v); renderRows(); changed(); });
-      box.append(b);
-    });
-    if (mine.length) {
-      const del = document.createElement('button');
-      del.type = 'button'; del.className = 'chip ghost'; del.textContent = '내 프리셋 지우기';
-      del.addEventListener('click', () => {
-        if (del.dataset.armed) { mine = []; store.set('tt.mine', mine); renderPresets(); return; }
-        del.dataset.armed = '1'; del.textContent = '한 번 더 누르면 지워요';
-        setTimeout(() => { if (del.isConnected) { delete del.dataset.armed; del.textContent = '내 프리셋 지우기'; } }, 2500);
-      });
-      box.append(del);
-    }
-  }
-
-  function renderLegend(segs) {
-    const used = [...new Set(segs.map(s => s.type))];
-    $('legend').replaceChildren(...used.map(t => {
-      const s = document.createElement('span');
-      s.innerHTML = `<i style="background:${TYPES[t].color}"></i>${TYPES[t].label}`;
-      return s;
+    $('rows').replaceChildren(...FIELDS.filter(f=>f.key!=='setrest'||draft.optional.cycles).map(f=>{
+      const optional=f.key==='cycles'||f.key==='cool';
+      const absent=optional&&!draft.optional[f.key];
+      const row=button('',()=>{if(absent){draft=D.optional(draft,f.key,true);renderRows();}else openPicker(f);},'edit-row'+(absent?' optional-row':''));
+      const phase=draft.colors[f.key]||draft.colors[f.key==='rounds'?'work':'setrest'];
+      row.style.setProperty('--row-color',phase);
+      const title=document.createElement('span');title.className='row-label';
+      const name=document.createElement('strong');name.textContent=f.name;
+      const hint=document.createElement('small');hint.textContent=f.hint;title.append(name,hint);
+      const value=document.createElement('span');value.className='row-value num';value.textContent=absent?'+':f.time?displayTime(draft.v[f.key]):draft.v[f.key];
+      const chevron=document.createElement('span');chevron.className='chevron';chevron.textContent=absent?'':'›';
+      row.append(title,value,chevron);return row;
     }));
+    $('editorTotal').textContent='총 '+fmt(totalOf(build(draft.v,$('optSkipLast').checked)));
   }
-
-  function changed() {
-    store.set('tt.cfg', cfg);
-    const segs = build(cfg);
-    $('total').textContent = fmt(totalOf(segs));
-    $('segcount').textContent = segs.length;
-    paintStrip($('strip'), segs);
-    renderLegend(segs);
-    renderPresets();
+  $('optSkipLast').addEventListener('change',renderRows);
+  function openPicker(field) {
+    picker={field,value:D.clamp(field.key,draft.v[field.key]),color:draft.colors[field.key]};
+    $('pickerTitle').textContent=field.name;$('editor').hidden=true;$('picker').hidden=false;
+    const removeKey=['cycles','setrest'].includes(field.key)?'cycles':field.key==='cool'?'cool':null;
+    $('removePhase').hidden=!removeKey;$('removePhase').textContent=(removeKey==='cycles'?'사이클':field.name)+' 삭제';
+    $('phaseColors').hidden=!field.time;
+    $('phaseColors').replaceChildren(...D.COLORS.map((color,i)=>{
+      const dot=button('',()=>{picker.color=color;refreshDots();},'color-dot');dot.style.background=color;dot.dataset.color=color;dot.setAttribute('aria-label',['빨강','주황','호박','초록','파랑','보라'][i]);return dot;
+    }));refreshDots();
+    const wheels=$('wheels');wheels.replaceChildren();
+    if(field.time) {
+      let minutes,seconds;
+      const update=value=>{picker.value=D.clamp(field.key,value);if(picker.value!==value){minutes?.(Math.floor(picker.value/60));seconds?.(picker.value%60);}};
+      minutes=makeWheel('MIN',0,Math.floor(D.clamp(field.key,Number.MAX_SAFE_INTEGER)/60),Math.floor(picker.value/60),v=>update(v*60+picker.value%60));
+      seconds=makeWheel('SEC',0,59,picker.value%60,v=>update(Math.floor(picker.value/60)*60+v));
+    }
+    else makeWheel(field.name,1,field.key==='cycles'?20:99,picker.value,v=>{picker.value=v;});
+    $('cancelPicker').focus();
   }
-
-  [['optBeep', 'beep'], ['optVoice', 'voice'], ['optVibe', 'vibe'], ['optSkipLast', 'skipLast']].forEach(([id, k]) => {
-    const el = $(id); el.checked = !!opts[k];
-    el.addEventListener('change', () => { opts[k] = el.checked; store.set('tt.opts', opts); changed(); });
-  });
-
-  $('savePreset').addEventListener('click', () => {
-    const name = $('presetName').value.trim();
-    if (!name) { $('mineNote').textContent = '프리셋 이름을 적어 주세요.'; $('presetName').focus(); return; }
-    mine = mine.filter(p => p.name !== name).concat([{ name, v: Object.assign({}, cfg) }]).slice(-8);
-    const ok = store.set('tt.mine', mine);
-    $('mineNote').textContent = ok ? `"${name}" 저장했어요. 위쪽 목록에서 고를 수 있어요.` : '이 브라우저에서는 저장할 수 없어요. 지금 화면에서는 그대로 쓸 수 있어요.';
-    $('presetName').value = '';
-    renderPresets();
-  });
-
+  function refreshDots() { for(const dot of $('phaseColors').children) dot.setAttribute('aria-pressed',String(dot.dataset.color===picker.color)); }
+  function makeWheel(label,min,max,initial,onChange) {
+    const wrap=document.createElement('div');wrap.className='wheel-column';
+    const caption=document.createElement('span');caption.textContent=label;caption.className='wheel-caption';
+    const wheel=document.createElement('div');wheel.className='wheel';wheel.tabIndex=0;wheel.setAttribute('role','spinbutton');wheel.setAttribute('aria-label',label);wheel.setAttribute('aria-valuemin',min);wheel.setAttribute('aria-valuemax',max);
+    let selected=initial;
+    const select=value=>{selected=Math.min(max,Math.max(min,value));wheel.setAttribute('aria-valuenow',selected);onChange(selected);for(const option of wheel.children) option.classList.toggle('selected',Number(option.dataset.value)===selected);};
+    const go=value=>{select(value);wheel.scrollTo({top:(selected-min)*64,behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});};
+    for(let value=min;value<=max;value++) {const option=button(String(value).padStart(2,'0'),()=>go(value),'wheel-number');option.tabIndex=-1;option.dataset.value=value;wheel.append(option);}
+    wheel.addEventListener('scroll',()=>select(min+Math.round(wheel.scrollTop/64)),{passive:true});
+    wheel.addEventListener('keydown',e=>{
+      const next={ArrowUp:selected-1,ArrowDown:selected+1,ArrowLeft:selected-1,ArrowRight:selected+1,Home:min,End:max,PageUp:selected-5,PageDown:selected+5}[e.key];
+      if(next!==undefined){e.preventDefault();go(next);}
+    });
+    wrap.append(caption,wheel);$('wheels').append(wrap);select(initial);wheel.scrollTop=(initial-min)*64;
+    return value=>{selected=value;wheel.setAttribute('aria-valuenow',selected);for(const option of wheel.children) option.classList.toggle('selected',Number(option.dataset.value)===selected);if(wheel.scrollTop!==(selected-min)*64)wheel.scrollTop=(selected-min)*64;};
+  }
+  function closePicker() {$('picker').hidden=true;$('editor').hidden=false;picker=null;renderRows();$('rows').querySelector('button')?.focus();}
+  $('cancelPicker').addEventListener('click',closePicker);
+  $('savePicker').addEventListener('click',()=>{draft.v[picker.field.key]=D.clamp(picker.field.key,picker.value);if(picker.color)draft.colors[picker.field.key]=picker.color;closePicker();});
+  $('removePhase').addEventListener('click',()=>{draft=D.optional(draft,['cycles','setrest'].includes(picker.field.key)?'cycles':'cool',false);closePicker();});
+  [['optBeep','beep'],['optVoice','voice'],['optVibe','vibe']].forEach(([id,key])=>{const el=$(id);el.checked=!!opts[key];el.addEventListener('change',()=>{opts[key]=el.checked;store.set('tt.opts',opts);});});
   // ---------- sound ----------
   let ac = null;
   function audio() {
@@ -223,7 +202,7 @@
   }
 
   let wakePending = false;
-  const wantsWake = () => running && !finished && document.visibilityState === 'visible';
+  const wantsWake = () => document.visibilityState === 'visible';
   function releaseWake() {
     const lock = wake;
     wake = null;
@@ -234,7 +213,7 @@
     wakePending = true;
     try {
       const lock = await navigator.wakeLock.request('screen');
-      // A request can resolve after the user pauses, stops or leaves the page.
+      // A request can resolve after the user leaves the page.
       if (!wantsWake()) { await lock.release(); return; }
       wake = lock;
       lock.addEventListener('release', () => { if (wake === lock) wake = null; });
@@ -246,7 +225,8 @@
   });
 
   function start() {
-    segs = build(cfg); total = totalOf(segs);
+    applyColors(active);
+    segs = build(cfg, active.skipLast); total = totalOf(segs);
     if (!total) return;
     unlockAudio();
     offset = 0; startedAt = now(); running = true; finished = false; lastIdx = -1; lastWhole = -1;
@@ -304,7 +284,7 @@
 
   function togglePause() {
     if (finished) return;
-    if (running) { pausedAt = now(); running = false; releaseWake(); $('pauseBtn').textContent = '계속'; $('run').classList.add('paused'); say('일시정지'); }
+    if (running) { pausedAt = now(); running = false; $('pauseBtn').textContent = '계속'; $('run').classList.add('paused'); say('일시정지'); }
     else { startedAt += now() - pausedAt; running = true; $('pauseBtn').textContent = '일시정지'; $('run').classList.remove('paused'); unlockAudio(); keepAwake(); }
   }
 
@@ -324,7 +304,6 @@
     finished = true; running = false;
     cancelAnimationFrame(raf); clearInterval(iv);
     tone(988, 0.18); tone(1319, 0.5, 0.2); vibe([200, 100, 200, 100, 400]); say('완료');
-    releaseWake();
     $('run').style.setProperty('--ph', 'var(--accent)');
     $('rCenter').innerHTML = `<div class="donebox"><h2>완료</h2><p class="num">총 ${fmt(total)} · ${segs.filter(s => s.type === 'work').length}번 운동</p></div>`;
     $('rHead').style.left = '100%';
@@ -341,11 +320,10 @@
     cancelAnimationFrame(raf); clearInterval(iv);
     running = false; finished = false;
     try { speechSynthesis.cancel(); } catch {}
-    releaseWake();
     $('run').hidden = true; $('setup').hidden = false;
+    renderHome();
   }
 
-  $('startBtn').addEventListener('click', start);
   $('pauseBtn').addEventListener('click', () => { if (finished) start(); else togglePause(); });
   $('prevBtn').addEventListener('click', () => jump(-1));
   $('nextBtn').addEventListener('click', () => jump(1));
@@ -377,6 +355,6 @@
   $('contact-copy').addEventListener('click', () => copyContactId($('contact-copy')));
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(() => {});
 
-  renderRows();
-  changed();
+  renderHome();
+  keepAwake();
 })();

@@ -83,9 +83,14 @@ test('Pi Max pinned snapshot excludes development controls and isolates three st
     if (file === 'app.mjs') {
       assert.equal((d.toString().match(/pimax\.distribution\./g) || []).length, 3);
       const normalized = d.toString().replaceAll('pimax.distribution.settings', 'pimax-practice-settings').replaceAll('pimax.distribution.stats', 'pimax-practice-stats').replaceAll('pimax.distribution.session', 'pimax-practice-session');
-      assert.equal(normalized, preparePimaxRuntime(p.toString()));
+      // Personal-only screen wake support does not promote the pinned shared snapshot.
+      const personalRuntime = preparePimaxRuntime(p.toString());
+      const wake = personalRuntime.match(/\/\/ Keep the screen awake while this personal app is visible[\s\S]*?keepVisibleScreenAwake\(\);\n\n/);
+      assert.ok(wake);
+      assert.doesNotMatch(normalized, /keepVisibleScreenAwake/);
+      assert.equal(normalized, personalRuntime.replace(wake[0], ''));
     } else if (file === 'sw.js') {
-      assert.equal(d.toString().replace('v20261016-sheet-1-modes-1-coherent-1-v2-distribution', 'v20261016-sheet-1-modes-1-coherent-1-v2'), p.toString());
+      assert.equal(d.toString().replace('v20261016-sheet-1-modes-1-coherent-1-v2-distribution', 'v20261021-wake-1-v20261016-sheet-1-modes-1-coherent-1-v2'), p.toString());
     } else assert.deepEqual(d, p, file);
   }
 });

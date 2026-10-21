@@ -82,7 +82,7 @@ export const PUBLIC_DIRS = [
 ];
 
 // Publish only the offline shell and worker for this personal app.
-export const TABATA_FILES = ['index.html', 'style.css', 'app.js', 'manifest.webmanifest', 'sw.js', 'brand-logo.png', 'icon.svg', 'icon-192.png', 'icon-512.png'];
+export const TABATA_FILES = ['data.js', 'install-ui.js', 'icon-maskable-192.png', 'icon-maskable-512.png', 'index.html', 'style.css', 'app.js', 'manifest.webmanifest', 'sw.js', 'brand-logo.png', 'icon.svg', 'icon-192.png', 'icon-512.png'];
 
 export const PRIVATE_PATTERNS = [
   /(?:^|\/)fullscreen\.js$/,
