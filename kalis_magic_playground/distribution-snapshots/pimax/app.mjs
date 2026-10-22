@@ -855,6 +855,7 @@ function settingsHtml() {
   )).join("");
   return `<section class="workspace">
     <h2>설정</h2>
+    <header class="settingsbrand"><img src="./brand-logo.png" alt="Pi Max 연습실 로고" width="600" height="200"></header><details class="overview"><summary>개요</summary><p>원주율은 소수점 아래로 끝없이 이어지는 숫자임.</p><p>연습하면 그 흐름 속 위치를 알아보고 다음 숫자를 찾아갈 수 있음.</p><p>무한을 다 갖는 것이 아니라 길을 잃지 않는 감각을 익히는 연습실임.</p><p>끝없이 이어지는 숫자에도, 다음으로 향하는 길은 존재함.</p><p>Pi Max 연습실은 무한한 흐름 속에서 자신의 위치를 찾아가는 도구임.</p></details>
     ${chunks(["회차 길이와 발음 표시만 바꿉니다. 지금 문제는 탭을 옮겨도 유지됩니다."])}
     <div class="settings-groups">
       <section class="panel">
