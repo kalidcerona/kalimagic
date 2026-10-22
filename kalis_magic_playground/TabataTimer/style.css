@@ -345,3 +345,4 @@ summary:focus-visible, a:focus-visible { outline: 2px solid #d99070; outline-off
 .sheet-actions { display: grid; gap: 10px; margin-top: 18px; }
 .sheet-actions button { min-height: 48px; }
 @media (max-width: 360px) { .row-value { font-size: 30px; } .edit-row { gap: 8px; padding: 18px 12px; } .color-dot { width: 32px; height: 32px; } .timer-launch { gap: 10px; padding-left: 12px; } .timer-launch strong { font-size: 20px; } }
+.settingsbrand .identity{margin:0 0 14px}.settingsbrand .catalog-label{margin:0;color:var(--accent);font-size:12px;font-weight:700;letter-spacing:.06em}.settingsbrand .identity-name{margin:2px 0 0;font-size:22px;font-weight:700;line-height:1.25}.settingsbrand .identity-desc{margin:6px 0 0;color:var(--muted,#d9cdc2);font-size:14px;line-height:1.45;word-break:keep-all}#settings .opts p{word-break:keep-all;overflow-wrap:anywhere}
