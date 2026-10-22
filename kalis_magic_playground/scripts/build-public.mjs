@@ -78,11 +78,15 @@ export const PUBLIC_DIRS = [
   'zz12',
   'zz13',
   'zz14',
-  'TabataTimer'
+  'TabataTimer',
+  'KanameCue'
 ];
 
 // Publish only the offline shell and worker for this personal app.
 export const TABATA_FILES = ['data.js', 'install-ui.js', 'icon-maskable-192.png', 'icon-maskable-512.png', 'index.html', 'style.css', 'app.js', 'manifest.webmanifest', 'sw.js', 'brand-logo.png', 'icon.svg', 'icon-192.png', 'icon-512.png'];
+
+// KANAME Cue web app: the same explicit-shell rule as TabataTimer.
+export const KANAME_FILES = ['index.html', 'style.css', 'app.mjs', 'engine.mjs', 'audio.mjs', 'store.mjs', 'install-ui.js', 'manifest.webmanifest', 'sw.js', 'brand-logo.png', 'icon-192.png', 'icon-512.png', 'icon-maskable-192.png', 'icon-maskable-512.png'];
 
 export const PRIVATE_PATTERNS = [
   /(?:^|\/)fullscreen\.js$/,
@@ -579,6 +583,10 @@ async function copyIfExists(relativePath) {
         const file = path.relative(path.join(ROOT, 'TabataTimer'), source);
         return file === '' || TABATA_FILES.includes(file);
       }
+      if (relativePath === 'KanameCue') {
+        const file = path.relative(path.join(ROOT, 'KanameCue'), source);
+        return file === '' || KANAME_FILES.includes(file);
+      }
       if (relativePath === 'zz14') return shouldCopyPimax(path.relative(path.join(ROOT, 'zz14'), source));
       return shouldCopy(path.relative(ROOT, source)) && !isExcludedLegacyTree(publicPath);
     }
@@ -628,7 +636,7 @@ async function verifyMirrors() {
 
 // Enforce the current display policy on the final artifact, including gated copies.
 export async function verifyAppDisplayPolicy(directory = DIST, routes = [
-  ...PUBLIC_DIRS.filter((entry) => /^zz\d+$/.test(entry) || entry === 'TabataTimer'),
+  ...PUBLIC_DIRS.filter((entry) => /^zz\d+$/.test(entry) || entry === 'TabataTimer' || entry === 'KanameCue'),
   ...DISTRIBUTION_APPS.map((app) => `tools/${app.target}`)
 ]) {
   for (const route of routes) {

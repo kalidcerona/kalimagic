@@ -411,3 +411,26 @@
   for = "/tabatatimer/icon-maskable-512.png"
   [headers.values]
     Content-Type = "image/png"
+
+[[headers]]
+  for = "/KanameCue/manifest.webmanifest"
+  [headers.values]
+    Content-Type = "application/manifest+json"
+
+[[headers]]
+  for = "/KanameCue/sw.js"
+  [headers.values]
+    Content-Type = "application/javascript; charset=utf-8"
+    Cache-Control = "no-store, no-cache"
+
+# Netlify normalizes the app page to lowercase; metadata must work at either path.
+[[headers]]
+  for = "/kanamecue/manifest.webmanifest"
+  [headers.values]
+    Content-Type = "application/manifest+json"
+
+[[headers]]
+  for = "/kanamecue/sw.js"
+  [headers.values]
+    Content-Type = "application/javascript; charset=utf-8"
+    Cache-Control = "no-store, no-cache"

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#1a1512">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="공연의 음악과 효과음을 재생하는 무대 큐 플레이어">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="apple-touch-icon" href="./icon-192.png">
+  <link rel="icon" href="./icon-192.png" type="image/png">
+  <link rel="stylesheet" href="./style.css">
+  <title>KANAME Cue</title>
+  <script src="./install-ui.js" defer></script>
+  <script type="module" src="./app.mjs"></script>
+</head>
+<body>
+<main id="home" class="screen">
+  <header class="topbar">
+    <div class="brandline"><img src="./icon-192.png" alt="" width="40" height="40"><div><h1>KANAME Cue</h1><p class="sub">모든 큐가 모이는 무대의 중심.</p></div></div>
+    <button type="button" class="btn2" id="openSettings" aria-haspopup="dialog">설정</button>
+  </header>
+  <div class="actions">
+    <button type="button" class="btn primary" id="newShow">공연 만들기</button>
+    <button type="button" class="btn2" id="importShow">공연 JSON 가져오기</button>
+  </div>
+  <p class="note">JSON에는 오디오 파일이 포함되지 않습니다. 오디오는 공연을 연 뒤 따로 가져오세요. 두 손가락으로 아래로 쓸어내리면 설정이 열려요.</p>
+  <p id="storageNote" class="note warn" role="status"></p>
+  <div id="showList" class="cards"></div>
+  <p id="emptyShows" class="note" hidden>아직 공연이 없어요. 공연 만들기를 눌러 주세요.</p>
+</main>
+
+<main id="editor" class="screen" hidden>
+  <header class="topbar">
+    <button type="button" class="btn2" id="backToList">공연 목록</button>
+    <button type="button" class="btn2" id="editorSettings" aria-haspopup="dialog">설정</button>
+  </header>
+  <h1 id="showName" class="showname"></h1>
+  <div class="actions wrap">
+    <button type="button" class="btn2" id="renameShow">이름 변경</button>
+    <button type="button" class="btn2" id="exportShow">JSON 내보내기</button>
+  </div>
+  <details class="group" id="audioGroup">
+    <summary>오디오 <span id="audioSummary" class="muted"></span></summary>
+    <p class="note">JSON에는 오디오 파일이 포함되지 않습니다. 같은 이름의 파일을 고르면 공연의 오디오 자리에 맞춰 넣어요.</p>
+    <button type="button" class="btn2" id="importAudio">오디오 여러 개 가져오기</button>
+    <ul id="audioList" class="plain"></ul>
+  </details>
+  <button type="button" class="btn primary big" id="startShow">공연 시작</button>
+  <div class="tabs" role="tablist">
+    <button type="button" role="tab" data-tab="main" aria-selected="true">메인</button>
+    <button type="button" role="tab" data-tab="hits" aria-selected="false">히트</button>
+    <button type="button" role="tab" data-tab="inserts" aria-selected="false">삽입</button>
+  </div>
+  <section id="tabBody" class="group open"></section>
+</main>
+
+<main id="run" class="run" hidden>
+  <section class="run-info">
+    <p id="runList" class="muted"></p>
+    <p id="runStandby" class="standby"></p>
+    <p id="runNext" class="muted"></p>
+    <p id="runReady" class="ready" role="status"></p>
+    <div id="runPaused" class="alert" hidden><p class="alert-title">출력 장치가 끊겼어요</p><p id="runPausedNote" class="muted"></p><button type="button" class="btn primary" id="resumeBtn">재개 (GO도 재개)</button></div>
+    <div id="runNotice" class="alert" hidden><p id="runNoticeText"></p><button type="button" class="btn2" id="noticeOk">확인</button></div>
+    <p id="runError" class="error" role="alert" hidden></p>
+  </section>
+  <section class="run-go">
+    <button type="button" id="goBtn" class="go" aria-label="GO, 다음 큐 실행">GO</button>
+    <div class="run-row">
+      <button type="button" class="btn2" id="backBtn">이전 BACK</button>
+      <button type="button" class="hold danger" id="panicBtn"><span>길게 눌러 전체 정지 PANIC</span></button>
+    </div>
+    <p id="holdHint" class="note" aria-live="polite"></p>
+  </section>
+  <section class="run-side">
+    <div id="hitGrid" class="hits"></div>
+    <div id="insertRow" class="actions wrap"></div>
+    <p id="pendingLine" class="note"></p>
+    <div id="activeList" class="active"></div>
+    <p id="timingLine" class="note"></p>
+    <div class="actions wrap">
+      <button type="button" class="btn2" id="lockBtn">화면 잠금</button>
+      <button type="button" class="hold" id="exitBtn"><span>길게 눌러 공연 종료</span></button>
+    </div>
+  </section>
+  <section id="lockPanel" class="lockpanel" hidden>
+    <p>화면 잠김. 리모컨은 계속 사용할 수 있습니다.</p>
+    <button type="button" class="hold" id="unlockBtn"><span>길게 눌러 잠금 해제</span></button>
+  </section>
+</main>
+
+<dialog id="cueDialog" class="sheet" aria-labelledby="cueTitle">
+  <form method="dialog" id="cueForm">
+    <h2 id="cueTitle">큐 편집</h2>
+    <div id="cueFields"></div>
+    <p id="cueProblem" class="error" role="alert"></p>
+    <div class="actions"><button type="button" class="btn primary" id="cueSave">저장</button><button type="button" class="btn2" id="cueCancel">취소</button></div>
+  </form>
+</dialog>
+<dialog id="textDialog" class="sheet" aria-labelledby="textTitle">
+  <h2 id="textTitle"></h2>
+  <label class="field"><span id="textLabel"></span><input id="textInput" maxlength="120" autocomplete="off"></label>
+  <div class="actions"><button type="button" class="btn primary" id="textOk">저장</button><button type="button" class="btn2" id="textCancel">취소</button></div>
+</dialog>
+<dialog id="confirmDialog" class="sheet" aria-labelledby="confirmTitle">
+  <h2 id="confirmTitle"></h2>
+  <p id="confirmText" class="pre"></p>
+  <div class="actions"><button type="button" class="btn danger-fill" id="confirmOk">삭제</button><button type="button" class="btn2" id="confirmCancel">취소</button></div>
+</dialog>
+<dialog id="installSheet" class="sheet" aria-labelledby="installTitle"><h2 id="installTitle">홈 화면에 설치할까요?</h2><p>홈 화면에 설치하면 공연 중에도 바로 열 수 있고, 한 번 연 뒤에는 오프라인에서도 쓸 수 있어요.</p><p id="installHelp" role="status"></p><div class="actions"><button id="installApp" type="button" class="btn primary">설치</button><button id="installLater" type="button" class="btn2">나중에</button></div></dialog>
+
+<dialog id="settings" class="settings" data-settings-root aria-labelledby="settingsTitle">
+  <header class="settingsbrand">
+    <img src="./brand-logo.png" alt="KANAME Cue 로고" width="600" height="200">
+    <div class="head"><h2 id="settingsTitle">설정</h2><button type="button" class="btn2" id="closeSettings">닫기</button></div>
+    <div class="identity"><p class="catalog-label">중심</p><p class="identity-name">KANAME Cue <span class="reading">カナメ</span></p><p class="identity-desc">모든 큐가 모이는 무대의 중심.</p></div>
+  </header>
+  <details class="group" open><summary>개요</summary>
+    <p>要(かなめ)는 여러 부분을 묶는 핵심이라는 뜻임.</p>
+    <p>음악이 시작되는 때와 공연자가 손을 움직이는 때가 한 타이밍에 모임.</p>
+    <p>무대의 보이지 않는 중심축 역할을 하는 큐 플레이어임.</p>
+    <p>공연의 음악과 효과음을 재생하는 무대 큐 플레이어입니다.</p>
+    <p>화면이나 블루투스 리모컨, 풋 스위치로 혼자 진행할 수 있어요.</p>
+    <p>같이 쓰거나 선물하려고 만들었어요. 편하게 즐겨 주세요.</p>
+    <p>무대 위의 수많은 움직임은 하나의 타이밍에서 서로 연결됨.</p>
+    <p>KANAME Cue는 소리와 영상, 그리고 공연자의 순간을 하나로 묶는 중심임.</p>
+  </details>
+  <details class="group" open><summary>공연별 설정</summary>
+    <div id="perShow"></div>
+  </details>
+  <details class="group"><summary>이 기기 설정</summary>
+    <label class="field"><span>페이드 곡선</span><select id="fadeCurve"><option value="linear">직선</option><option value="equal">등전력 (크로스페이드에 자연스러움)</option></select></label>
+    <p class="note">공연 파일과 오디오는 이 브라우저에만 저장됩니다. 공연 JSON은 안드로이드 앱과 같은 형식이에요.</p>
+  </details>
+  <details class="group"><summary>타이밍 기록</summary>
+    <p class="note">GO를 누른 순간부터 소리 시작 명령까지 걸린 시간입니다. 출력 지연은 브라우저가 알려 주는 값이에요.</p>
+    <ol id="timingHistory" class="plain small"></ol>
+  </details>
+  <details class="group"><summary>설치와 바로가기</summary>
+    <button id="openInstall" class="btn2" type="button">설치</button>
+    <p>Android Chrome: ⋮ 메뉴에서 앱 설치를 선택해 주세요.</p>
+    <p>iPhone Safari: 공유에서 홈 화면에 추가를 선택해 주세요.</p>
+    <p>설치 후 홈 화면의 아이콘으로 실행해 주세요. 한 번 열어 저장한 뒤에는 오프라인에서도 사용할 수 있습니다.</p>
+  </details>
+<div class="magic-settings-footer"><h2 class="magic-contact-heading">의견 보내기</h2><p class="magic-contact-note"><span>수정할 점이나 버그,</span><span>새로운 아이디어가 있다면</span><span>카카오톡으로 알려주세요.</span></p><div class="magic-contact-actions"><a id="contact-open" class="magic-contact-link" href="https://qr.kakao.com/talk/eshVqDvk7WKk0zDKtiC9UTa.T6Q-">카카오톡 문의</a><button type="button" class="magic-contact-copy" id="contact-copy">ID 복사</button></div><details class="magic-contact-help"><summary>연결이 안 될 때</summary><p><span>카카오톡이 열리지 않으면</span><span>ID를 복사해 주세요.</span><span>카카오톡 친구 추가에서</span><span>ID 검색을 선택한 뒤</span><span>복사한 ID로 찾아 주세요.</span></p><p class="magic-contact-id">ID: KaliDCerona</p></details></div>
+</dialog>
+<input type="file" id="showFile" accept="application/json,.json" hidden>
+<input type="file" id="audioFiles" accept="audio/*" multiple hidden>
+</body>
+</html>
