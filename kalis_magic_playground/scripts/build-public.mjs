@@ -228,9 +228,9 @@ export const SPINNER_FILES = [
 export const MEMDECK_FILES = [
   'first-run-guide.js',
   'index.html', 'style.css', 'app.mjs', 'core.mjs', 'data.mjs', 'mnemonic.mjs',
-  'manifest.webmanifest', 'sw.js', 'icon.svg', 'icon-192.png', 'icon-512.png'
+  'brand-logo.png', 'manifest.webmanifest', 'sw.js', 'icon.svg', 'icon-192.png', 'icon-512.png'
 ];
-export const PIMAX_FILES = ["index.html", "app.mjs", "core.mjs", "style.css", "sw.js", "manifest.webmanifest", "icon.svg", "icon-192.png", "icon-512.png"];
+export const PIMAX_FILES = ["index.html", "app.mjs", "core.mjs", "style.css", "sw.js", "brand-logo.png", "manifest.webmanifest", "icon.svg", "icon-192.png", "icon-512.png"];
 
 export function shouldCopyPimax(relativePath) {
   return relativePath === '' || PIMAX_FILES.includes(relativePath);
