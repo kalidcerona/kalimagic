@@ -75,7 +75,7 @@ test('Pi Max production boundary preserves runtime and drops appended developmen
   assert.throws(() => preparePimaxRuntime(runtime + runtime), /exactly one boot boundary/);
 });
 
-test('Pi Max pinned snapshot excludes development controls and isolates three storage keys and cache name', async () => {
+test('Pi Max pinned snapshot matches the personal runtime except three storage keys and the distribution cache family', async () => {
   assert.deepEqual((await readdir(new URL(`../../${shared}/`, import.meta.url))).sort(), [...PIMAX_FILES].sort());
   for (const file of PIMAX_FILES) {
     const p = await read(personal, file);
@@ -83,14 +83,12 @@ test('Pi Max pinned snapshot excludes development controls and isolates three st
     if (file === 'app.mjs') {
       assert.equal((d.toString().match(/pimax\.distribution\./g) || []).length, 3);
       const normalized = d.toString().replaceAll('pimax.distribution.settings', 'pimax-practice-settings').replaceAll('pimax.distribution.stats', 'pimax-practice-stats').replaceAll('pimax.distribution.session', 'pimax-practice-session');
-      // Personal-only screen wake support does not promote the pinned shared snapshot.
-      const personalRuntime = preparePimaxRuntime(p.toString());
-      const wake = personalRuntime.match(/\/\/ Keep the screen awake while this personal app is visible[\s\S]*?keepVisibleScreenAwake\(\);\n\n/);
-      assert.ok(wake);
-      assert.doesNotMatch(normalized, /keepVisibleScreenAwake/);
-      assert.equal(normalized, personalRuntime.replace(wake[0], ''));
+      assert.match(normalized, /keepVisibleScreenAwake/);
+      assert.equal(normalized, preparePimaxRuntime(p.toString()));
     } else if (file === 'sw.js') {
-      assert.equal(d.toString().replace('v20261016-sheet-1-modes-1-coherent-1-v2-distribution', 'v20261021-wake-1-v20261016-sheet-1-modes-1-coherent-1-v2'), p.toString());
+      const from = "+ 'v20261021-wake-1-v20261016-sheet-1-modes-1-coherent-1-v2-brand5';";
+      assert.ok(p.toString().includes(from));
+      assert.equal(d.toString(), p.toString().replace(from, from.replace("-brand5';", "-brand5-distribution';")));
     } else assert.deepEqual(d, p, file);
   }
 });
