@@ -181,8 +181,26 @@
     #time-face { position: absolute; z-index: 1; top: 12%; width: 100%; text-shadow: 0 2px 12px #0005; pointer-events: none; }
     #time-date { font-size: clamp(17px, 4.8vw, 21px); font-weight: 500; }
     #time-clock { display: flex; justify-content: center; align-items: center; margin-top: 7px; font-size: clamp(72px, 21vw, 94px); line-height: 1; font-weight: 300; font-variant-numeric: tabular-nums; letter-spacing: -.045em; }
-    #time-lock.galaxy #time-face { top: 16%; }
-    #time-lock.galaxy #time-clock { font-size: clamp(70px, 19vw, 90px); font-weight: 400; }
+    /* One UI 9 lock screen (S25 Ultra reference 2026-10-20): bold translucent clock above the date, lock icon on top, charge text + DND pill + phone/camera shortcuts at the bottom. */
+    #time-lock.galaxy #time-face { top: 19.5%; display: flex; flex-direction: column-reverse; align-items: center; }
+    #time-lock.galaxy #time-clock { margin-top: 0; font-size: clamp(84px, 23.5vw, 112px); font-weight: 700; color: rgba(255, 255, 255, .72); letter-spacing: -.03em; }
+    #time-lock.galaxy #time-date { margin-top: 6px; color: rgba(255, 255, 255, .6); font-size: clamp(16px, 4.5vw, 19px); font-weight: 600; }
+    .oneui-only { display: none; }
+    #time-lock.galaxy .oneui-only { display: block; }
+    #time-lock.galaxy #oneui-bar { display: flex; }
+    #oneui-lock { position: absolute; z-index: 1; top: 5.2%; left: 50%; width: 22px; height: 26px; transform: translateX(-50%); fill: rgba(255, 255, 255, .85); pointer-events: none; }
+    #oneui-charge { position: absolute; z-index: 1; left: 0; right: 0; top: 82.6%; color: rgba(255, 255, 255, .9); font-size: clamp(15px, 4.2vw, 18px); line-height: 1.35; pointer-events: none; }
+    #oneui-charge b { display: block; font-size: 1.1em; font-weight: 500; }
+    #oneui-bar { position: absolute; z-index: 1; left: 7%; right: 7%; bottom: 2.8%; display: flex; align-items: center; justify-content: space-between; pointer-events: none; }
+    #oneui-bar i { display: grid; place-items: center; flex: none; width: 52px; height: 52px; border-radius: 50%; }
+    #oneui-bar i svg { width: 28px; height: 28px; }
+    #oneui-phone { background: rgba(240, 240, 245, .92); }
+    #oneui-camera { background: rgba(255, 255, 255, .18); }
+    #oneui-dnd { display: flex; align-items: center; gap: 12px; width: 58%; height: 58px; padding: 0 14px; border-radius: 999px; background: linear-gradient(90deg, rgba(100, 118, 170, .6), rgba(150, 120, 110, .6)); text-align: left; }
+    #oneui-dnd em { display: grid; place-items: center; flex: none; width: 36px; height: 36px; border-radius: 50%; background: #2f6bff; }
+    #oneui-dnd em::after { content: ''; width: 16px; height: 4px; border-radius: 2px; background: #fff; }
+    #oneui-dnd span { display: block; color: #fff; font-size: 17px; font-weight: 600; line-height: 1.2; }
+    #oneui-dnd small { display: block; color: rgba(255, 255, 255, .7); font-size: 14px; font-weight: 500; }
     .time-colon { display: inline-flex; flex-direction: column; justify-content: center; gap: .26em; width: .16em; height: .8em; margin: 0 .025em; }
     .time-colon::before, .time-colon::after { content: ''; display: block; width: .09em; height: .09em; border-radius: 50%; background: currentColor; }
     @media (prefers-reduced-motion: reduce) { #time-clock span { animation: none !important; } }
@@ -330,6 +348,13 @@
       <img id="time-wallpaper" class="wallpaper" alt="" hidden draggable="false">
       <div id="time-clock-backdrop"></div>
       <div id="time-face"><div id="time-date"></div><time id="time-clock"><span id="time-hour"></span><span class="time-colon" aria-hidden="true"></span><span id="time-minute"></span></time></div>
+      <svg id="oneui-lock" class="oneui-only" viewBox="0 0 22 26" aria-hidden="true"><path d="M6 11V8a5 5 0 0 1 10 0v3h1.5a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2zm2.4 0h5.2V8a2.6 2.6 0 0 0-5.2 0z"/></svg>
+      <div id="oneui-charge" class="oneui-only" aria-hidden="true"><b><svg viewBox="0 0 12 18" width="11" height="16" fill="currentColor" style="vertical-align:-2px;margin-right:4px"><path d="M7.5 0 0 10h4.5L3.5 18 12 7H7.2z"/></svg>83%</b>31분 후 충전이 완료됩니다</div>
+      <div id="oneui-bar" class="oneui-only" aria-hidden="true">
+        <i id="oneui-phone"><svg viewBox="0 0 24 24"><path fill="#2a2f78" d="M6.6 10.8a15 15 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1A17 17 0 0 1 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1z"/></svg></i>
+        <div id="oneui-dnd"><em></em><div><span>방해 금지</span><small>켜짐</small></div></div>
+        <i id="oneui-camera"><svg viewBox="0 0 24 24"><path fill="#fff" d="M9 4 7.6 6H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-2.6L15 4zm3 4.5a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9z"/><circle cx="12" cy="13" r="2.4" fill="#9a8a86"/></svg></i>
+      </div>
     </section>
     <section id="settings-screen" class="screen" aria-label="설정" hidden>
       <div class="settings-inner" data-settings-root>
