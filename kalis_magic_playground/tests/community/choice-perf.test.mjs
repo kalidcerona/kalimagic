@@ -1581,6 +1581,13 @@ function mountPreview({ app, pathname, build }) {
         el.children = [];
         kids.forEach((kid) => { if (kid) el.appendChild(kid); });
       },
+      insertBefore(child, anchor) {
+        el.appendChild(child);
+        el.children = el.children.filter((node) => node !== child);
+        const index = el.children.indexOf(anchor);
+        el.children.splice(index < 0 ? el.children.length : index, 0, child);
+        return child;
+      },
       remove() {
         const parent = el.parentElement;
         if (!parent) return;
@@ -1677,6 +1684,7 @@ function mountPreview({ app, pathname, build }) {
         },
       };
     },
+    createTreeWalker() { return { nextNode() { return null; } }; },
     querySelector(selector) { return previewQueryAll(body, selector)[0] || null; },
     querySelectorAll(selector) { return previewQueryAll(body, selector); },
     addEventListener() {},
@@ -1778,10 +1786,9 @@ test('unlock clock preview survives repeated syncs', () => {
   });
   preview.button('화면 커스텀').dispatchEvent({ type: 'click' });
   preview.flush();
-  const select = previewQueryAll(preview.body, 'select')[0];
-  assert.ok(select, 'element picker');
-  select.value = 'clock';
-  select.dispatchEvent({ type: 'change' });
+  // RELEASE uses the live editor: a screen chip replaces the picker and steppers replace range sliders.
+  assert.equal(preview.ranges().length, 0, 'no range sliders in the RELEASE editor');
+  preview.button('리와인드').dispatchEvent({ type: 'click' });
   preview.flush();
   const surface = () => preview.phone().children.find((node) => node.className === 'magic-preview-surface');
   const read = () => {
@@ -1791,18 +1798,23 @@ test('unlock clock preview survives repeated syncs', () => {
   assert.match(read(), /^\d{2}:\d{2}$/);
   const shown = surface().shadowRoot.querySelector('#time-hour');
   assert.notEqual(shown, hour);
-  const ranges = preview.ranges();
-  assert.ok(ranges.length >= 3);
-  ranges[0].value = '140';
-  ranges[0].dispatchEvent({ type: 'input' });
+  const byLabel = (tag, label) => {
+    const found = [];
+    const visit = (node) => { for (const child of node.children || []) { if (child.tagName === tag && child.getAttribute('aria-label') === label) found.push(child); visit(child); } };
+    visit(preview.body);
+    return found[0];
+  };
+  const size = byLabel('INPUT', '크기 %');
+  assert.ok(size, 'size number field');
+  size.value = '140';
+  size.dispatchEvent({ type: 'change' });
   preview.flush();
+  const steppers = ['위아래 늘리기', '좌우 줄이기', '위아래 줄이기', '좌우 늘리기'].map((label) => byLabel('BUTTON', label));
   for (let step = 0; step < 6; step += 1) {
-    const input = ranges[(step % (ranges.length - 1)) + 1];
-    input.value = String(Number(input.min) + (step % 4));
-    input.dispatchEvent({ type: 'input' });
+    steppers[step % steppers.length].dispatchEvent({ type: 'click' });
     preview.flush();
     assert.match(read(), /^\d{2}:\d{2}$/);
-    assert.equal(surface().shadowRoot.querySelector('#time-hour'), shown, 'slider sync keeps the mounted clock');
+    assert.equal(surface().shadowRoot.querySelector('#time-hour'), shown, 'stepper sync keeps the mounted clock');
   }
   assert.equal(hour.textContent, '');
   assert.equal(minute.textContent, '');

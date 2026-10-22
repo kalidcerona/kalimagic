@@ -3,7 +3,18 @@
   'use strict';
   var profiles = {
     stopwatch: { name: 'KAIROS', container: '#settings-card', targets: '#p-time-display, #l-time-display', labels: [{ selector: '#p-tabs .tab-world > span', name: '세계 시계 이름' }], story: ["오래 남는 결정적 순간에서 KAIROS라는 이름을 가져왔어요.", "우연히 멈춘 듯한 시간이 가장 알맞은 때였으면 했어요."] },
-    unlock: { name: 'RELEASE', container: '#settings-screen .settings-inner', targets: '#time-face', targetSelection: 'clock', labels: [{ selector: '#emergency > span', name: '잠금 화면 안내 이름', dynamic: true, selection: 'pin' }, { selector: '#prompt', name: 'PIN 안내 문구', dynamic: true, selection: 'pin' }, { selector: '#delete', name: '취소 버튼 문구', dynamic: true, selection: 'pin', idleOnly: true }], elements: [{ id: 'pin', name: 'PIN 화면', preview: '#input-screen', hit: '#keypad, #prompt, #emergency' }, { id: 'clock', name: '리와인드 시계', preview: '#time-lock', hit: '#time-face' }], story: ["봉인해제처럼, 잠금이 열리며 안의 이야기도 열리길 바랐어요.", "숫자 하나가 시간과 기억의 문을 여는 열쇠예요."], note: '미리보기에서 PIN 화면이나 리와인드 시계를 누르면 그 요소의 크기와 위치만 나와요. 잠금·해제 배경은 기존 사진 정렬 설정에서 맞춰 주세요.' },
+    unlock: { name: 'RELEASE', container: '#settings-screen .settings-inner', targets: '#time-face', targetSelection: 'clock', labels: [{ selector: '#emergency > span', name: '잠금 화면 안내 이름', dynamic: true, selection: 'pin' }, { selector: '#prompt', name: 'PIN 안내 문구', dynamic: true, selection: 'pin' }, { selector: '#delete', name: '취소 버튼 문구', dynamic: true, selection: 'pin', idleOnly: true }], elements: [{ id: 'pin', name: 'PIN 화면', preview: '#input-screen', hit: '#keypad, #prompt, #emergency' }, { id: 'clock', name: '리와인드 시계', preview: '#time-lock', hit: '#time-face' }], story: ["봉인해제처럼, 잠금이 열리며 안의 이야기도 열리길 바랐어요.", "숫자 하나가 시간과 기억의 문을 여는 열쇠예요."], note: '미리보기에서 PIN 화면이나 리와인드 시계를 누르면 그 요소의 크기와 위치만 나와요. 잠금·해제 배경은 기존 사진 정렬 설정에서 맞춰 주세요.', limits: { target: { scale: [50, 160], offset: [-30, 30], x: [-30, 30] }, part: { scale: [50, 160], offset: [-30, 30], x: [-30, 30] } }, editor: {
+      /* Live editor (opt-in per profile): screen chips, tap/drag in a big preview, steppers, undo, auto-save. Samples only touch the preview copy. */
+      galaxyWhen: '#input-screen.galaxy',
+      target: { id: 'clock', name: '리와인드 시계', screen: 'rewind', textBounds: true },
+      screens: [
+        { id: 'pin', name: 'PIN', preview: '#input-screen', samples: [{ selector: '#dots > .dot:nth-child(-n+2)', addClass: 'filled' }] },
+        { id: 'rewind', name: '리와인드', preview: '#time-lock', samples: [{ selector: '#time-date', text: 'date' }, { selector: '#oneui-charge', show: '#rewind-charging:checked' }] },
+        { id: 'home1', name: '해제 1', preview: '#unlocked-screen', samples: [{ selector: '#home-track', style: 'transform:translate3d(0,0,0);transition:none' }] },
+        { id: 'home2', name: '해제 2', preview: '#unlocked-screen', when: '#home2-field:not([hidden])', samples: [{ selector: '#home-track', style: 'transform:translate3d(-100%,0,0);transition:none' }] }
+      ],
+      empty: '이 화면에는 옮길 요소가 없어요. 사진 위치는 설정의 이미지와 상단바 맞추기에서 맞춰 주세요.'
+    } },
     calculator: { name: 'HITSUZEN', container: '#date-settings', targets: '.display-wrap', targetSelection: 'result', labels: [], elements: [{ id: 'result', name: '계산 결과', preview: '#app', hit: '.display-wrap' }, { id: 'keypad', name: '계산 버튼', preview: '#app', hit: '.keypad' }], story: ["히츠젠은 필연. 자유롭게 계산해도 하나의 결과로 이어져요.", "흘러간 과정이 처음부터 그 결론을 향했던 마술이에요."], note: '미리보기에서 계산 결과나 계산 버튼을 누르면 그 요소의 크기와 위치만 나와요. 계산 내용과 버튼 동작은 그대로예요.' },
     choice: { name: '너의 선택은?', container: '#settings .shell', targets: '#fake-notes-title', labels: [{ selector: '#fake-notes-title', name: '메모 화면 이름', dynamic: true }], story: ["멀리 떨어진 선택과 결과가 보이지 않는 실로 이어져요.", "선택은 자유로웠지만, 인연은 이미 있었어요."] },
     aletheia: { name: 'ALETHEIA', container: '#settings .settings-inner', targets: '', labels: [], story: ["가려져 있던 진실이, 처음부터 거기 있었던 것처럼 드러나요.", "베일을 걷으면 새로 만들지 않고 발견하는 마술이에요."], note: '공연 이미지는 내 사진 세트에서, 지우는 범위와 칸 미리보기는 공연 설정에서 조절해 주세요.' },
@@ -16,23 +27,53 @@
   };
   var parts = {
     stopwatch: [{ selector: '#p-buttons', name: '시작·랩 버튼' }, { selector: '#p-tabs', name: '하단 메뉴' }],
-    unlock: [{ selector: '#keypad', name: 'PIN 버튼', selection: 'pin' }, { selector: '#prompt', name: 'PIN 안내', selection: 'pin' }],
+    unlock: [{ selector: '#keypad', name: 'PIN 버튼', selection: 'pin', screen: 'pin' }, { selector: '#prompt', name: 'PIN 안내', selection: 'pin', screen: 'pin' }, { selector: '#lock', name: '자물쇠', selection: 'pin', screen: 'pin', editorOnly: true }, { selector: '#dots', name: '입력 점', selection: 'pin', screen: 'pin', editorOnly: true }, { selector: '#fingerprint', name: '지문', selection: 'pin', screen: 'pin', editorOnly: true }, { selector: '#input-screen .footer', name: '긴급 상황·취소', selection: 'pin', screen: 'pin', editorOnly: true },
+      { selector: '#time-date', name: '날짜', selection: 'clock', screen: 'rewind', textBounds: true, editorOnly: true }, { selector: '#oneui-lock', name: '자물쇠', selection: 'clock', screen: 'rewind', editorOnly: true }, { selector: '#oneui-charge', name: '충전 표시', selection: 'clock', screen: 'rewind', textBounds: true, editorOnly: true }, { selector: '#oneui-bar', name: '하단 바로가기', selection: 'clock', screen: 'rewind', editorOnly: true }, { selector: '#oneui-dnd', name: '방해 금지', selection: 'clock', screen: 'rewind', editorOnly: true }],
     calculator: [{ selector: '.keypad', name: '계산 버튼', selection: 'keypad' }],
     usotsuki: [{ selector: '.signal-monitor', name: '신호 모니터' }, { selector: '#detector-button', name: '길게 누르기 버튼' }]
   };
   var previews = { stopwatch: '#portrait-app', unlock: '#input-screen', calculator: '#app', choice: '#fake-home', aletheia: '#stage', tobira: '#stage', usotsuki: '#performance-screen', asrai: '#contact-list-screen', 'false-memory': '#performance-screen', alter: '#setup', spinner: '.stage' };
   Object.keys(profiles).forEach(function (app) { profiles[app].parts = parts[app] || []; profiles[app].preview = previews[app]; });
+  /* Value ranges: the classic defaults unless a profile widens them. Saved values inside the old ranges stay valid. */
+  function limitsFor(profile, kind) {
+    var custom = profile && profile.limits && profile.limits[kind];
+    if (custom) return custom;
+    return kind === 'part' ? { scale: [70, 130], offset: [-8, 8], x: [-8, 8] } : { scale: [70, 140], offset: [-12, 12], x: [-12, 12] };
+  }
+  /* Editor math (pure, tested): rounding to a step, drag-to-value mapping, undo history, tap-or-drag. */
+  function clampStep(value, range, step) {
+    var v = Math.round(Number(value) / step) * step;
+    v = Math.round(Math.max(range[0], Math.min(range[1], v)) * 100) / 100;
+    return v === 0 ? 0 : v;
+  }
+  /* A preview drag of delta px, drawn at fit scale, moves the real element by delta / fit px; values are percent of the real viewport. */
+  function dragValue(start, delta, viewport, fit, limits, step) {
+    var f = fit > 0 ? fit : 1;
+    return {
+      x: clampStep((start.x || 0) + delta.x / f / viewport.width * 100, limits.x, step),
+      offset: clampStep((start.offset || 0) + delta.y / f / viewport.height * 100, limits.offset, step)
+    };
+  }
+  /* Repeated changes of the same kind within the window share one undo step (the oldest snapshot is kept). */
+  function historyPush(stack, entry, limit, windowMs) {
+    var top = stack[stack.length - 1];
+    if (top && entry.key && top.key === entry.key && entry.at - top.at <= windowMs) return stack.slice(0, -1).concat([{ snapshot: top.snapshot, key: top.key, at: entry.at }]);
+    var next = stack.concat([entry]);
+    return next.length > limit ? next.slice(next.length - limit) : next;
+  }
+  function classifyPointer(dx, dy, threshold) { return Math.hypot(dx, dy) >= (threshold || 6) ? 'drag' : 'tap'; }
   function sanitize(value, profile) {
     value = value && typeof value === 'object' ? value : {};
     var number = function (v, fallback, min, max) { return typeof v === 'number' && Number.isFinite(v) ? Math.max(min, Math.min(max, v)) : fallback; };
-    var result = { scale: number(value.scale, 100, 70, 140), offset: number(value.offset, 0, -12, 12), x: number(value.x, 0, -12, 12), labels: {}, parts: {} };
+    var t = limitsFor(profile, 'target'), p = limitsFor(profile, 'part');
+    var result = { scale: number(value.scale, 100, t.scale[0], t.scale[1]), offset: number(value.offset, 0, t.offset[0], t.offset[1]), x: number(value.x, 0, t.x[0], t.x[1]), labels: {}, parts: {} };
     (profile.labels || []).forEach(function (label) {
       var text = value.labels && value.labels[label.selector];
       if (typeof text === 'string') result.labels[label.selector] = text.replace(/[\u0000-\u001f\u007f]/g, '').trim().slice(0, 40);
     });
     (profile.parts || []).forEach(function (part) {
       var saved = value.parts && value.parts[part.selector];
-      if (saved && typeof saved === 'object') result.parts[part.selector] = { scale: number(saved.scale, 100, 70, 130), offset: number(saved.offset, 0, -8, 8), x: number(saved.x, 0, -8, 8) };
+      if (saved && typeof saved === 'object') result.parts[part.selector] = { scale: number(saved.scale, 100, p.scale[0], p.scale[1]), offset: number(saved.offset, 0, p.offset[0], p.offset[1]), x: number(saved.x, 0, p.x[0], p.x[1]) };
     });
     return result;
   }
@@ -71,7 +112,7 @@
     if (/Android/i.test(ua)) return { kind: 'android', title: '브라우저 메뉴에서 추가해요.', steps: ['브라우저 메뉴를 여세요.', "'홈 화면에 추가' 또는 '앱 설치'를 고르세요."] };
     return { kind: 'other', title: '브라우저에서 직접 설치해요.', steps: ['주소창 오른쪽의 설치 아이콘을 누르세요.', "없으면 브라우저 메뉴에서 '앱 설치' 또는 '홈 화면에 추가'를 고르세요."] };
   }
-  var api = { customizationAllowed: customizationAllowed, installGuide: installGuide, profiles: profiles, sanitize: sanitize, storageKey: storageKey, load: load, read: read, write: write, reset: reset, clipOffset: clipOffset, screenDelta: screenDelta, translateFor: translateFor, controlVisible: controlVisible };
+  var api = { customizationAllowed: customizationAllowed, installGuide: installGuide, profiles: profiles, sanitize: sanitize, storageKey: storageKey, load: load, read: read, write: write, reset: reset, clipOffset: clipOffset, screenDelta: screenDelta, translateFor: translateFor, controlVisible: controlVisible, limitsFor: limitsFor, clampStep: clampStep, dragValue: dragValue, historyPush: historyPush, classifyPointer: classifyPointer };
   root.MagicSettingsUI = api;
   if (!root.document) return;
   /* Keep the install event in one shared slot as early as possible. Other install scripts may hold the same event; prompt() works once, so every caller must handle a refusal. */
@@ -239,17 +280,19 @@
     var preview = node('div', null, 'magic-customize-preview'), phone = node('div', null, 'magic-preview-phone');
     preview.appendChild(node('p', '실시간 미리보기', 'magic-preview-label')); preview.appendChild(phone); customPage.appendChild(preview);
     var customize = node('div', null, 'magic-customize'); customPage.appendChild(customize); doc.body.appendChild(customPage);
+    var editor = profile.editor || null, editorMode = !!editor, fullsize = false;
+    if (editorMode) customPage.classList.add('magic-editor');
     var previousFocus, previousUrl;
-    function closeCustom() { customPage.hidden = true; discardPreview(); if (app === 'calculator') { container.classList.add('open'); container.setAttribute('aria-hidden', 'false'); } if (app === 'spinner') { var settings = doc.querySelector('#settings'); if (settings) settings.hidden = false; } if (root.location.hash === '#customize' && root.history) root.history.replaceState(null, '', previousUrl || root.location.pathname + root.location.search); previousFocus?.focus?.(); }
-    openCustomize.addEventListener('click', function () { previousFocus = doc.activeElement; syncNativeAppearance(); previousUrl = root.location.pathname + root.location.search + root.location.hash; customPage.hidden = false; if (root.history && root.location.hash !== '#customize') root.history.pushState(null, '', '#customize'); schedule(); back.focus?.(); });
+    function closeCustom() { if (editorMode) editorClose(); customPage.hidden = true; discardPreview(); if (app === 'calculator') { container.classList.add('open'); container.setAttribute('aria-hidden', 'false'); } if (app === 'spinner') { var settings = doc.querySelector('#settings'); if (settings) settings.hidden = false; } if (root.location.hash === '#customize' && root.history) root.history.replaceState(null, '', previousUrl || root.location.pathname + root.location.search); previousFocus?.focus?.(); }
+    openCustomize.addEventListener('click', function () { previousFocus = doc.activeElement; syncNativeAppearance(); previousUrl = root.location.pathname + root.location.search + root.location.hash; customPage.hidden = false; if (editorMode) renderChips(); if (root.history && root.location.hash !== '#customize') root.history.pushState(null, '', '#customize'); schedule(); back.focus?.(); });
     back.addEventListener('click', closeCustom);
     root.addEventListener('popstate', function () { if (root.location.hash !== '#customize' && !customPage.hidden) closeCustom(); });
-    customPage.addEventListener('keydown', function (event) { if (event.key === 'Escape') { closeCustom(); event.stopPropagation(); } });
+    customPage.addEventListener('keydown', function (event) { if (event.key === 'Escape') { if (editorMode && fullsize) setFullsize(false); else closeCustom(); event.stopPropagation(); } });
     ['pointerdown', 'pointermove', 'pointerup', 'touchstart', 'touchmove', 'touchend', 'click'].forEach(function (type) { customPage.addEventListener(type, function (event) { event.stopPropagation(); }); });
     var selectedId = profile.elements && profile.elements[0] ? profile.elements[0].id : '';
     var previewSelector = profile.preview;
     var elementSelect = null;
-    if (profile.elements && profile.elements.length) {
+    if (!editorMode && profile.elements && profile.elements.length) {
       previewSelector = profile.elements[0].preview || profile.preview;
       var previewLabel = node('label', '조정할 요소', 'magic-preview-select'); elementSelect = node('select');
       elementSelect.setAttribute('aria-label', '조정할 요소');
@@ -408,6 +451,7 @@
       surface.style.transform = 'scale(' + fit + ')';
     }
     function placePreviewHits() {
+      if (editorMode) { placeEditorHits(); return; }
       Array.from(phone.children).forEach(function (child) { if (child.className === 'magic-preview-hit') child.remove(); });
       if (!profile.elements || !previewMount) return;
       var host = phone.getBoundingClientRect(), shadow = previewMount.shadow;
@@ -448,6 +492,7 @@
       if (customPage.hidden || !root.getComputedStyle) return;
       var width = root.innerWidth, height = root.innerHeight;
       if (app === 'tobira' && root.MagicTobiraAppearance) { updateTobiraPreview(width, height); return; }
+      if (editorMode) renderChips();
       var source = doc.querySelector(previewSelector);
       if (!source) { discardPreview(); phone.appendChild(node('p', profile.name)); return; }
       if (screenMountStale(source)) buildPreview(source, width, height);
@@ -459,11 +504,12 @@
         }
         syncPreviewCopy();
       }
+      if (editorMode) editorBeforeLayout(width, height);
       previewMount.surface.style.transform = 'scale(1)';
       layoutMountedPreview(width, height);
       placePreviewHits();
     }
-    customize.appendChild(node('p', profile.note || '크기와 위치는 화면의 표시 영역에만 적용돼요. 아래 이름도 원하는 문구로 바꿔 주세요.'));
+    if (!editorMode) customize.appendChild(node('p', profile.note || '크기와 위치는 화면의 표시 영역에만 적용돼요. 아래 이름도 원하는 문구로 바꿔 주세요.'));
     var targets = profile.targets ? Array.from(doc.querySelectorAll(profile.targets)) : [];
     var controls = [];
     function field(title, type, value, min, max, options) {
@@ -478,7 +524,8 @@
       function update() { if (type === 'range') output.textContent = (options.ratio ? Math.round(Number(input.value) * 100) : input.value) + unit; }
       input.addEventListener('input', update); update(); return input;
     }
-    var scale = field('표시 크기', 'range', prefs.scale, 70, 140, { selection: profile.targetSelection, unit: '%' }), offset = field('위아래 위치', 'range', prefs.offset, -12, 12, { selection: profile.targetSelection, unit: 'vh' }), axisX = field('좌우 위치', 'range', prefs.x, -12, 12, { selection: profile.targetSelection, unit: 'vw' });
+    var scale, offset, axisX;
+    if (!editorMode) { scale = field('표시 크기', 'range', prefs.scale, 70, 140, { selection: profile.targetSelection, unit: '%' }); offset = field('위아래 위치', 'range', prefs.offset, -12, 12, { selection: profile.targetSelection, unit: 'vh' }); axisX = field('좌우 위치', 'range', prefs.x, -12, 12, { selection: profile.targetSelection, unit: 'vw' }); }
     var nativeAppearanceFields = [], syncingNativeAppearance = false;
     if (app === 'tobira') {
       [['coinSize', '#coin-size', '물건 크기'], ['startX', '#start-x', '시작 위치 · 좌우'], ['startY', '#start-y', '시작 위치 · 위아래']].forEach(function (item) {
@@ -489,19 +536,22 @@
       });
     }
     function syncNativeAppearance() { if (!nativeAppearanceFields.length || !root.MagicTobiraAppearance) return; var value = root.MagicTobiraAppearance.read(); syncingNativeAppearance = true; nativeAppearanceFields.forEach(function (entry) { entry.input.min = entry.original.min; entry.input.max = entry.original.max; entry.input.step = entry.original.step; entry.input.value = value[entry.name]; entry.input.dispatchEvent(new root.Event('input')); }); syncingNativeAppearance = false; }
-    if (!profile.targets) { [scale, offset, axisX].forEach(function (input) { input.parentElement.hidden = true; }); }
+    if (!profile.targets && !editorMode) { [scale, offset, axisX].forEach(function (input) { input.parentElement.hidden = true; }); }
     var labelFields = profile.labels.map(function (label) {
       var el = doc.querySelector(label.selector); if (!el) return null;
       defaults[label.selector] = el.dataset.magicNativeLabel || el.textContent;
       return { definition: label, element: el, input: field(label.name, 'text', prefs.labels[label.selector] || defaults[label.selector], null, null, { selection: label.selection }) };
     }).filter(Boolean);
     var partFields = (profile.parts || []).map(function (part) {
+      if (part.editorOnly && !editorMode) return null;
       var elements = Array.from(doc.querySelectorAll(part.selector)); if (!elements.length) return null;
+      if (editorMode) return { definition: part, elements: elements };
       var heading = node('h2', part.name, 'magic-customize-subtitle'); if (part.selection) heading.setAttribute('data-selection', part.selection); customize.appendChild(heading);
       var saved = prefs.parts[part.selector] || { scale: 100, offset: 0, x: 0 };
       return { definition: part, elements: elements, scale: field(part.name + ' 크기', 'range', saved.scale, 70, 130, { selection: part.selection, unit: '%' }), offset: field(part.name + ' 위아래 위치', 'range', saved.offset, -8, 8, { selection: part.selection, unit: 'vh' }), x: field(part.name + ' 좌우 위치', 'range', saved.x || 0, -8, 8, { selection: part.selection, unit: 'vw' }) };
     }).filter(Boolean);
     function applySelection() {
+      if (editorMode) return;
       if (!profile.elements || typeof customize.querySelectorAll !== 'function') return;
       Array.from(customize.querySelectorAll('[data-selection]')).forEach(function (el) { el.hidden = !controlVisible(el.getAttribute('data-selection'), selectedId, true); });
       Array.from(phone.querySelectorAll('.magic-preview-hit')).forEach(function (hit) { hit.setAttribute('aria-pressed', hit.getAttribute('data-selection') === selectedId ? 'true' : 'false'); });
@@ -574,14 +624,281 @@
       /* The stopwatch's native hit zones recalculate from the displayed rectangle. */
       doc.dispatchEvent(new root.CustomEvent('magic-appearance-change', { detail: { app: app } }));
     }
+    /* Live editor (profile.editor): screen chips, a large real-renderer preview, tap or drag to adjust, steppers instead of sliders, undo, auto-save. */
+    var POSITION_STEP = 0.5, SCALE_STEP = 1;
+    var editorItems = [], currentScreen = null, editorHits = {}, visibleItems = [], lastSelected = {}, history = [], dirty = false, dragging = false, armTimer = null, editorUi = { rows: [] };
+    function editorItemList() {
+      var items = [];
+      if (editor.target && profile.targets) items.push({ id: editor.target.id, name: editor.target.name, screen: editor.target.screen, selector: profile.targets, kind: 'target', textBounds: !!editor.target.textBounds });
+      (profile.parts || []).forEach(function (part) { if (part.screen) items.push({ id: part.selector, name: part.name, screen: part.screen, selector: part.selector, kind: 'part', textBounds: !!part.textBounds }); });
+      return items;
+    }
+    function itemById(id) { for (var i = 0; i < editorItems.length; i++) if (editorItems[i].id === id) return editorItems[i]; return null; }
+    function selectedItem() { var item = itemById(selectedId); return item && currentScreen && item.screen === currentScreen.id && visibleItems.indexOf(item) !== -1 ? item : null; }
+    function valueOf(item) {
+      if (item.kind === 'target') return { scale: prefs.scale, offset: prefs.offset, x: prefs.x || 0 };
+      var saved = prefs.parts[item.selector];
+      return saved ? { scale: saved.scale, offset: saved.offset, x: saved.x || 0 } : { scale: 100, offset: 0, x: 0 };
+    }
+    function setItemValue(item, patch, commit) {
+      var value = Object.assign({}, valueOf(item), patch), next = JSON.parse(JSON.stringify(prefs));
+      if (item.kind === 'target') { next.scale = value.scale; next.offset = value.offset; next.x = value.x; } else next.parts[item.selector] = value;
+      prefs = sanitize(next, profile); dirty = true;
+      refreshEditorPanel(); schedule();
+      if (commit) persist();
+    }
+    function editorBlockedNotice() { return '저장된 꾸미기를 읽지 못해 원본을 지켰어요. 전체 초기화를 하면 다시 자동 저장돼요.'; }
+    function persist(message) {
+      dirty = false;
+      if (appearanceBlocked()) { status.textContent = editorBlockedNotice(); return; }
+      var saved = write(storage, key, prefs, profile);
+      if (!saved) loadedAppearance = load(storage, key, profile);
+      status.textContent = saved ? (message ? message + ' ' : '') + '이 기기에 자동 저장됨' : appearanceBlocked() ? editorBlockedNotice() : '화면에는 적용했어요. 이 브라우저에서는 저장할 수 없어요.';
+    }
+    function refreshUndo() { if (editorUi.undo) editorUi.undo.disabled = !history.length; }
+    function pushUndo(kind) { history = historyPush(history, { snapshot: JSON.stringify(prefs), key: kind || null, at: Date.now() }, 50, 1200); refreshUndo(); }
+    function undo() {
+      if (!history.length) return;
+      var entry = history[history.length - 1];
+      history = history.slice(0, -1);
+      prefs = sanitize(JSON.parse(entry.snapshot), profile);
+      syncLabelInputs(); applyLabels(); refreshUndo(); refreshEditorPanel(); schedule(); persist('되돌렸어요.');
+    }
+    function syncLabelInputs() { labelFields.forEach(function (item) { item.input.value = prefs.labels[item.definition.selector] || defaults[item.definition.selector]; }); }
+    function availableScreens() { return editor.screens.filter(function (screen) { return !screen.when || !!doc.querySelector(screen.when); }); }
+    function renderChips() {
+      var list = availableScreens(), ids = list.map(function (screen) { return screen.id; }).join(',');
+      if (!currentScreen || list.indexOf(currentScreen) === -1) currentScreen = list[0] || null;
+      if (editorUi.chipIds !== ids) {
+        editorUi.chipIds = ids; editorUi.chips.replaceChildren();
+        list.forEach(function (screen) {
+          var chip = node('button', screen.name); chip.type = 'button'; chip.dataset.screen = screen.id;
+          chip.addEventListener('click', function () { chooseScreen(screen.id); });
+          editorUi.chips.appendChild(chip);
+        });
+      }
+      Array.from(editorUi.chips.children).forEach(function (chip) { chip.setAttribute('aria-pressed', currentScreen && chip.dataset.screen === currentScreen.id ? 'true' : 'false'); });
+      if (currentScreen) previewSelector = currentScreen.preview;
+    }
+    function chooseScreen(id) {
+      availableScreens().forEach(function (screen) { if (screen.id === id) currentScreen = screen; });
+      selectedId = lastSelected[id] || '';
+      renderChips(); refreshEditorPanel(); schedule();
+    }
+    function applySamples() {
+      if (!previewMount || previewMount.kind !== 'screen' || !currentScreen) return;
+      var shadow = previewMount.shadow;
+      (currentScreen.samples || []).forEach(function (sample) {
+        if (sample.show && !doc.querySelector(sample.show)) return;
+        Array.from(shadow.querySelectorAll(sample.selector)).forEach(function (el) {
+          if (sample.addClass) el.classList.add(sample.addClass);
+          if (sample.show) el.hidden = false;
+          if (sample.style && el.getAttribute('style') !== sample.style) el.setAttribute('style', sample.style);
+          if (sample.text && !el.textContent.trim()) el.textContent = sample.text === 'date' ? new Date().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'long' }) : sample.text;
+        });
+      });
+    }
+    /* The frame follows the screen style; fullsize draws the copy at 1:1 over the whole page. */
+    function editorBeforeLayout(width, height) {
+      var galaxy = !!(editor.galaxyWhen && doc.querySelector(editor.galaxyWhen));
+      phone.classList.toggle('is-galaxy', galaxy); phone.classList.toggle('is-ios', !galaxy);
+      if (fullsize) { phone.style.width = width + 'px'; phone.style.height = height + 'px'; }
+      else {
+        var w = width * (width < 380 ? 0.54 : 0.56), h = w * height / width, maxH = height * 0.6;
+        if (h > maxH) { h = maxH; w = h * width / height; }
+        phone.style.width = Math.round(w) + 'px'; phone.style.height = Math.round(h) + 'px';
+      }
+      applySamples();
+    }
+    function currentFit() { return Math.min(phone.clientWidth / root.innerWidth, phone.clientHeight / root.innerHeight) || 1; }
+    /* Text items are hit-tested on their glyphs, not on their full-width block boxes. */
+    function contentRect(el, item) {
+      if (item.textBounds && el.textContent.trim()) {
+        var walker = doc.createTreeWalker(el, 4), box = null, text;
+        while ((text = walker.nextNode())) {
+          if (!text.nodeValue.trim()) continue;
+          var range = doc.createRange(); range.selectNodeContents(text);
+          var r = range.getBoundingClientRect(); if (!r.width || !r.height) continue;
+          box = box ? { left: Math.min(box.left, r.left), top: Math.min(box.top, r.top), right: Math.max(box.right, r.right), bottom: Math.max(box.bottom, r.bottom) } : { left: r.left, top: r.top, right: r.right, bottom: r.bottom };
+        }
+        if (box) return { left: box.left, top: box.top, width: box.right - box.left, height: box.bottom - box.top };
+      }
+      return el.getBoundingClientRect();
+    }
+    function placeEditorHits() {
+      visibleItems = [];
+      if (!previewMount || previewMount.kind !== 'screen' || !currentScreen) { refreshEditorPanel(); return; }
+      var host = phone.getBoundingClientRect(), shadow = previewMount.shadow, seen = {}, layer = 2, pad = 4;
+      editorItems.forEach(function (item) {
+        if (item.screen !== currentScreen.id) return;
+        var el = shadow.querySelector(item.selector); if (!el) return;
+        var rect = contentRect(el, item); if (!rect.width || !rect.height) return;
+        visibleItems.push(item); seen[item.id] = true;
+        var hit = editorHits[item.id] || (editorHits[item.id] = editorHit(item));
+        var top = rect.top - host.top - (phone.clientTop || 0) - pad;
+        hit.style.left = (rect.left - host.left - (phone.clientLeft || 0) - pad) + 'px'; hit.style.top = top + 'px';
+        hit.style.width = (rect.width + pad * 2) + 'px'; hit.style.height = (rect.height + pad * 2) + 'px'; hit.style.zIndex = String(layer++);
+        hit.classList.toggle('tag-below', top < 26);
+        if (hit.parentNode !== phone) phone.appendChild(hit);
+      });
+      Object.keys(editorHits).forEach(function (id) { if (!seen[id] && editorHits[id].parentNode) editorHits[id].remove(); });
+      if (!selectedItem() && !dragging) selectedId = visibleItems[0] ? visibleItems[0].id : '';
+      refreshEditorPanel();
+    }
+    function editorHit(item) {
+      var hit = node('button', null, 'magic-editor-hit'), press = null;
+      hit.type = 'button'; hit.setAttribute('aria-label', item.name + ' 선택'); hit.appendChild(node('span', item.name, 'magic-editor-tag'));
+      hit.addEventListener('pointerdown', function (event) {
+        if (event.button > 0 || press) return;
+        press = { id: event.pointerId, x: event.clientX, y: event.clientY, moved: false, start: valueOf(item) };
+        try { hit.setPointerCapture(event.pointerId); } catch (_) {}
+        event.preventDefault();
+      });
+      hit.addEventListener('pointermove', function (event) {
+        if (!press || press.id !== event.pointerId || fullsize) return;
+        var dx = event.clientX - press.x, dy = event.clientY - press.y;
+        if (!press.moved) {
+          if (classifyPointer(dx, dy, 6) !== 'drag') return;
+          press.moved = true; dragging = true; pushUndo(null); selectItem(item.id, true); customPage.classList.add('is-dragging');
+        }
+        var next = dragValue(press.start, { x: dx, y: dy }, { width: root.innerWidth, height: root.innerHeight }, currentFit(), limitsFor(profile, item.kind), POSITION_STEP), now = valueOf(item);
+        if (next.x !== now.x || next.offset !== now.offset) setItemValue(item, next, false);
+      });
+      function finish(event, cancelled) {
+        if (!press || press.id !== event.pointerId) return;
+        var moved = press.moved;
+        press = null; dragging = false; customPage.classList.remove('is-dragging');
+        try { if (hit.hasPointerCapture && hit.hasPointerCapture(event.pointerId)) hit.releasePointerCapture(event.pointerId); } catch (_) {}
+        if (moved) { persist(); return; }
+        if (cancelled) return;
+        selectItem(item.id); if (fullsize) setFullsize(false);
+      }
+      hit.addEventListener('pointerup', function (event) { finish(event, false); });
+      hit.addEventListener('pointercancel', function (event) { finish(event, true); });
+      hit.addEventListener('click', function (event) { if (event.detail === 0) { selectItem(item.id); if (fullsize) setFullsize(false); } });
+      return hit;
+    }
+    function relatedLabelFields(item) {
+      var live = Array.from(doc.querySelectorAll(item.selector));
+      return labelFields.filter(function (field) { return live.some(function (el) { return el.contains(field.element); }); });
+    }
+    function selectItem(id, quiet) {
+      selectedId = id; if (currentScreen) lastSelected[currentScreen.id] = id;
+      refreshEditorPanel();
+      var item = itemById(id); if (!item || quiet) return;
+      var related = relatedLabelFields(item);
+      labelFields.forEach(function (field) { field.input.parentElement.classList.toggle('is-related', related.indexOf(field) !== -1); });
+      if (related.length && !fullsize && typeof related[0].input.parentElement.scrollIntoView === 'function') related[0].input.parentElement.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+    function fmt(value) { return String(Math.round(value * 10) / 10); }
+    function refreshEditorPanel() {
+      if (!editorUi.panel) return;
+      var item = selectedItem();
+      editorUi.name.textContent = item ? item.name : currentScreen ? currentScreen.name + ' 화면' : '';
+      editorUi.help.textContent = item ? '끌어서 옮기거나 버튼으로 조절해요.' : visibleItems.length ? '미리보기에서 바꿀 부분을 누르세요.' : editor.empty;
+      editorUi.steps.hidden = !item; editorUi.resetOne.disabled = !item;
+      if (item) { var value = valueOf(item); editorUi.rows.forEach(function (row) { if (doc.activeElement !== row.input) row.input.value = fmt(value[row.field]); }); }
+      Object.keys(editorHits).forEach(function (id) { editorHits[id].setAttribute('aria-pressed', item && item.id === id ? 'true' : 'false'); });
+      var ids = visibleItems.map(function (entry) { return entry.id; }).join('|');
+      if (editorUi.selectIds !== ids) { editorUi.selectIds = ids; editorUi.select.replaceChildren(); visibleItems.forEach(function (entry) { var option = node('option', entry.name); option.value = entry.id; editorUi.select.appendChild(option); }); }
+      editorUi.selectWrap.hidden = !visibleItems.length;
+      if (item) editorUi.select.value = item.id;
+      Array.from(customize.querySelectorAll('.magic-appearance-field[data-selection]')).forEach(function (el) { el.hidden = !currentScreen || el.getAttribute('data-selection') !== currentScreen.id; });
+    }
+    function stepRow(field, title, step) {
+      var wrap = node('div', null, 'magic-editor-step'), row = node('div'), minus = node('button', '−'), plus = node('button', '+'), input = node('input');
+      minus.type = plus.type = 'button'; input.type = 'text'; input.inputMode = 'decimal'; input.autocomplete = 'off'; input.setAttribute('aria-label', title);
+      minus.setAttribute('aria-label', title + ' 줄이기'); plus.setAttribute('aria-label', title + ' 늘리기');
+      [minus, plus].forEach(function (button, index) {
+        button.addEventListener('click', function () {
+          var item = selectedItem(); if (!item) return;
+          var current = valueOf(item)[field], next = clampStep(current + (index ? step : -step), limitsFor(profile, item.kind)[field], step), patch = {};
+          if (next === current) return;
+          pushUndo('step:' + item.id + ':' + field); patch[field] = next; setItemValue(item, patch, true);
+        });
+      });
+      function commit() {
+        var item = selectedItem(); if (!item) return;
+        var text = String(input.value).replace(',', '.').trim(), raw = Number(text), patch = {};
+        if (!text || !Number.isFinite(raw)) { input.value = fmt(valueOf(item)[field]); return; }
+        patch[field] = clampStep(raw, limitsFor(profile, item.kind)[field], step);
+        input.value = fmt(patch[field]);
+        if (patch[field] === valueOf(item)[field]) return;
+        pushUndo(null); setItemValue(item, patch, true);
+      }
+      input.addEventListener('change', commit);
+      input.addEventListener('keydown', function (event) { if (event.key === 'Enter') { commit(); input.blur(); } });
+      row.appendChild(minus); row.appendChild(input); row.appendChild(plus); wrap.appendChild(node('span', title)); wrap.appendChild(row);
+      editorUi.rows.push({ field: field, input: input });
+      return wrap;
+    }
+    function setFullsize(on) {
+      fullsize = !!on; customPage.classList.toggle('is-fullsize', fullsize);
+      if (editorUi.back) editorUi.back.hidden = !fullsize;
+      if (fullsize && editorUi.back) editorUi.back.focus?.();
+      schedule();
+    }
+    function disarm() { root.clearTimeout(armTimer); armTimer = null; if (editorUi.resetAll) { editorUi.resetAll.textContent = '전체 초기화'; editorUi.resetAll.classList.remove('is-armed'); } }
+    function resetSelected() {
+      var item = selectedItem(); if (!item) return;
+      pushUndo(null);
+      var next = JSON.parse(JSON.stringify(prefs));
+      if (item.kind === 'target') { next.scale = 100; next.offset = 0; next.x = 0; } else delete next.parts[item.selector];
+      prefs = sanitize(next, profile); refreshEditorPanel(); schedule(); persist(item.name + ' 처음 모습으로.');
+    }
+    /* Two taps, never a browser dialog. */
+    function resetAllTap() {
+      if (!armTimer) { editorUi.resetAll.textContent = '한 번 더 누르면 전체 초기화'; editorUi.resetAll.classList.add('is-armed'); armTimer = root.setTimeout(disarm, 4000); return; }
+      disarm(); pushUndo(null);
+      prefs = sanitize(null, profile); syncLabelInputs(); applyLabels(); dirty = false;
+      var removed = reset(storage, key);
+      if (removed) loadedAppearance = { status: 'missing', raw: null, value: prefs };
+      refreshEditorPanel(); schedule();
+      status.textContent = removed ? '처음 모습으로 돌렸어요. 되돌리기로 취소할 수 있어요.' : '처음 모습으로 돌렸어요. 저장된 설정은 지울 수 없어요.';
+    }
+    function editorClose() { if (dirty) persist(); if (fullsize) setFullsize(false); disarm(); }
+    function buildEditor() {
+      editorItems = editorItemList();
+      var chips = editorUi.chips = node('div', null, 'magic-editor-chips'), stage = node('div', null, 'magic-editor-stage'), panel = editorUi.panel = node('div', null, 'magic-editor-panel');
+      chips.setAttribute('role', 'group'); chips.setAttribute('aria-label', '미리볼 화면');
+      preview.insertBefore(chips, preview.firstChild); preview.appendChild(stage); stage.appendChild(phone); stage.appendChild(panel);
+      editorUi.name = node('p', '', 'magic-editor-name'); editorUi.help = node('p', '', 'magic-editor-help');
+      var steps = editorUi.steps = node('div', null, 'magic-editor-steps');
+      steps.appendChild(stepRow('scale', '크기 %', SCALE_STEP)); steps.appendChild(stepRow('offset', '위아래', POSITION_STEP)); steps.appendChild(stepRow('x', '좌우', POSITION_STEP));
+      var undoButton = editorUi.undo = node('button', '되돌리기', 'magic-editor-undo'), full = node('button', '실제 크기로 확인', 'magic-editor-full');
+      undoButton.type = full.type = 'button'; undoButton.addEventListener('click', undo); full.addEventListener('click', function () { setFullsize(true); });
+      status.className = 'magic-appearance-status magic-editor-status';
+      [editorUi.name, editorUi.help, steps, undoButton, full, status].forEach(function (el) { panel.appendChild(el); });
+      var back = editorUi.back = node('button', '조정으로 돌아가기', 'magic-editor-return'); back.type = 'button'; back.hidden = true;
+      back.addEventListener('click', function () { setFullsize(false); }); customPage.appendChild(back);
+      var tools = node('div', null, 'magic-editor-tools'), selectWrap = editorUi.selectWrap = node('label', '조정할 요소', 'magic-preview-select'), select = editorUi.select = node('select');
+      tools.appendChild(node('p', '미리보기에서 바꿀 부분을 누르면 선택되고, 끌면 옮겨져요. 위아래와 좌우 숫자는 화면 크기에 대한 비율이에요. 아래와 오른쪽이 + 예요.', 'magic-editor-note'));
+      select.setAttribute('aria-label', '조정할 요소'); select.addEventListener('change', function () { selectItem(select.value); });
+      selectWrap.appendChild(select); tools.appendChild(selectWrap); customize.insertBefore(tools, customize.firstChild);
+      var resets = node('div', null, 'magic-appearance-actions magic-editor-resets'), resetOne = editorUi.resetOne = node('button', '선택 요소 초기화'), resetAll = editorUi.resetAll = node('button', '전체 초기화');
+      resetOne.type = resetAll.type = 'button'; resetOne.addEventListener('click', resetSelected); resetAll.addEventListener('click', resetAllTap);
+      resets.appendChild(resetOne); resets.appendChild(resetAll); customize.appendChild(resets);
+      labelFields.forEach(function (item) {
+        var selector = item.definition.selector;
+        item.input.addEventListener('input', function () {
+          pushUndo('label:' + selector);
+          var next = JSON.parse(JSON.stringify(prefs));
+          if (item.input.value !== defaults[selector]) next.labels[selector] = item.input.value; else delete next.labels[selector];
+          prefs = sanitize(next, profile); applyLabels(); schedule(); persist();
+        });
+      });
+      status.textContent = appearanceBlocked() ? editorBlockedNotice() : '바꾸면 이 기기에 자동 저장돼요.';
+      refreshUndo(); renderChips(); refreshEditorPanel();
+    }
     var actions = node('div', null, 'magic-appearance-actions'), save = node('button', '저장'), clear = node('button', '꾸미기 초기화'), status = node('p', '', 'magic-appearance-status');
     save.type = clear.type = 'button'; if (app === 'tobira' && !appearanceBlocked()) clear.hidden = true; status.setAttribute('role', 'status'); status.setAttribute('aria-live', 'polite');
-    actions.appendChild(save); actions.appendChild(clear); customize.appendChild(actions); customize.appendChild(status);
+    if (!editorMode) { actions.appendChild(save); actions.appendChild(clear); customize.appendChild(actions); customize.appendChild(status); }
     if (appearanceBlocked()) status.textContent = recoveryNotice();
     function collect() { var value = { scale: Number(scale.value), offset: Number(offset.value), x: Number(axisX.value), labels: {}, parts: {} }; labelFields.forEach(function (item) { if (item.input.value !== defaults[item.definition.selector]) value.labels[item.definition.selector] = item.input.value; }); partFields.forEach(function (part) { value.parts[part.definition.selector] = { scale: Number(part.scale.value), offset: Number(part.offset.value), x: Number(part.x.value) }; }); prefs = sanitize(value, profile); applyLabels(); schedule(); }
-    controls.forEach(function (input) { input.addEventListener('input', collect); });
+    if (!editorMode) controls.forEach(function (input) { input.addEventListener('input', collect); });
     save.addEventListener('click', function () { collect(); if (appearanceBlocked()) { status.textContent = recoveryNotice(); return; } var saved = write(storage, key, prefs, profile); if (!saved) loadedAppearance = load(storage, key, profile); status.textContent = saved ? '이 기기에 저장했어요.' : appearanceBlocked() ? recoveryNotice() : '화면에는 적용했어요. 이 브라우저에서는 저장할 수 없어요.'; if (saved) closeCustom(); });
     clear.addEventListener('click', function () { prefs = sanitize(null, profile); scale.value = 100; offset.value = 0; axisX.value = 0; partFields.forEach(function (part) { part.scale.value = 100; part.offset.value = 0; part.x.value = 0; }); labelFields.forEach(function (item) { item.input.value = defaults[item.definition.selector]; }); controls.filter(function (input) { return input.type === 'range'; }).forEach(function (input) { input.dispatchEvent(new root.Event('input')); }); var removed = reset(storage, key); if (removed) loadedAppearance = { status: 'missing', raw: null, value: prefs }; applyLabels(); schedule(); status.textContent = removed ? '꾸미기를 처음 모습으로 돌렸어요.' : '처음 모습으로 돌렸어요. 저장된 설정은 지울 수 없어요.'; });
+    if (editorMode) buildEditor();
     container.appendChild(overview);
     container.appendChild(installBlock());
     container.appendChild(contactFooter());
@@ -593,8 +910,10 @@
     if (typeof root.MutationObserver === 'function') {
       /* Watch visibility on known target ancestors, never the whole document subtree. */
       var visibility = new root.MutationObserver(function () { layoutInvalid = true; schedule(); }), observed = new Set();
-      (profile.elements || [{ preview: profile.preview }]).forEach(function (item) { var el = doc.querySelector(item.preview); if (el) { visibility.observe(el, { attributes: true, attributeFilter: ['hidden', 'class'] }); observed.add(el); } });
-      targets.concat(partFields.flatMap(function (part) { return part.elements; })).forEach(function (el) { for (var ancestor = el.parentElement; ancestor && ancestor !== doc.body; ancestor = ancestor.parentElement) { if (!observed.has(ancestor)) { observed.add(ancestor); visibility.observe(ancestor, { attributes: true, attributeFilter: ['hidden', 'class'] }); } } });
+      /* Editor parts can show or hide themselves (charging, DND); a separate observer keeps the ancestor options intact. */
+      var ownVisibility = new root.MutationObserver(function () { layoutInvalid = true; schedule(); });
+      (editorMode ? editor.screens : profile.elements || [{ preview: profile.preview }]).forEach(function (item) { var el = doc.querySelector(item.preview); if (el) { visibility.observe(el, { attributes: true, attributeFilter: ['hidden', 'class'] }); observed.add(el); } });
+      targets.concat(partFields.flatMap(function (part) { return part.elements; })).forEach(function (el) { if (editorMode) ownVisibility.observe(el, { attributes: true, attributeFilter: ['hidden'] }); for (var ancestor = el.parentElement; ancestor && ancestor !== doc.body; ancestor = ancestor.parentElement) { if (!observed.has(ancestor)) { observed.add(ancestor); visibility.observe(ancestor, { attributes: true, attributeFilter: ['hidden', 'class'] }); } } });
       labelFields.forEach(function (item) { if (item.definition.dynamic) new root.MutationObserver(function () { layoutInvalid = true; applyLabels(); schedule(); }).observe(item.element, { attributes: true, attributeFilter: ['data-magic-native-label', 'data-magic-custom-idle'], childList: true, characterData: true, subtree: true }); });
     }
   }

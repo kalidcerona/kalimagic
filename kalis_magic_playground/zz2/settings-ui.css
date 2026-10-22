@@ -504,3 +504,52 @@
 .magic-install .magic-install-status p { margin: 0; color: inherit; }
 .magic-install .magic-install-status ol { margin: 8px 0 0; padding-left: 22px; }
 .magic-install .magic-install-status li { margin: 4px 0; color: inherit; }
+
+/* RELEASE live editor (settings-ui profile.editor). Big preview on top, quick controls beside it, details scroll below. */
+.magic-customize-page.magic-editor { grid-template-columns:minmax(0,1fr) !important; grid-template-rows:auto auto minmax(0,1fr) !important; }
+.magic-editor .magic-customize-header { grid-column:1; }
+.magic-editor .magic-customize-preview { display:block; grid-column:1; grid-row:auto; padding:10px 16px 12px; border-right:0; border-bottom:1px solid #ab9f922b; overflow:visible; }
+.magic-editor .magic-customize { grid-column:1; grid-row:auto; padding-top:4px; }
+.magic-editor .magic-preview-label { display:none; }
+.magic-editor-chips { display:flex; gap:6px; margin:0 0 10px; overflow-x:auto; scrollbar-width:none; touch-action:pan-x; }
+.magic-editor-chips::-webkit-scrollbar { display:none; }
+.magic-customize-page .magic-editor-chips button { flex:none; min-height:36px; padding:4px 14px; border-radius:999px; font-size:14px; line-height:1.4; white-space:nowrap; }
+.magic-customize-page .magic-editor-chips button[aria-pressed="true"] { background:#e8631f; border-color:#e8631f; color:#1a1512; font-weight:700; }
+.magic-editor-stage { display:flex; align-items:flex-start; gap:12px; }
+.magic-editor .magic-preview-phone { flex:none; box-sizing:content-box; height:auto; max-height:none; aspect-ratio:auto; pointer-events:none; }
+.magic-preview-phone.is-galaxy { border:3px solid #0a0a0a; border-radius:20px; box-shadow:0 0 0 1px #4d3b2e, 0 8px 30px #0006; }
+.magic-preview-phone.is-galaxy::after { content:''; position:absolute; z-index:60; top:8px; left:50%; width:8px; height:8px; margin-left:-4px; border-radius:50%; background:#050505; box-shadow:0 0 0 1px #2a2a2a; pointer-events:none; }
+.magic-preview-phone.is-ios { border:6px solid #0a0a0a; border-radius:30px; box-shadow:0 0 0 1px #4d3b2e, 0 8px 30px #0006; }
+.magic-preview-phone.is-ios::after { content:''; position:absolute; z-index:60; top:6px; left:50%; width:30%; height:13px; transform:translateX(-50%); border-radius:999px; background:#050505; pointer-events:none; }
+.magic-customize-page .magic-editor-hit { position:absolute; min-width:0; min-height:0; margin:0; padding:0; border:1px dashed #f4efe959; border-radius:8px; background:transparent; color:transparent; box-shadow:none; pointer-events:auto; touch-action:none; cursor:grab; -webkit-user-select:none; user-select:none; }
+.magic-customize-page .magic-editor-hit[aria-pressed="true"] { border:2px solid #e8631f; box-shadow:0 0 0 1px #1a1512aa, 0 0 14px #e8631f88; }
+.magic-customize-page.is-dragging .magic-editor-hit { cursor:grabbing; }
+.magic-editor-tag { position:absolute; left:50%; bottom:100%; display:none; transform:translate(-50%, -3px); padding:1px 8px; border-radius:999px; background:#e8631f; color:#1a1512; font:700 11px/1.5 system-ui,sans-serif; white-space:nowrap; pointer-events:none; }
+.magic-editor-hit[aria-pressed="true"] .magic-editor-tag { display:block; }
+.magic-editor-hit.tag-below .magic-editor-tag { bottom:auto; top:100%; transform:translate(-50%, 3px); }
+.magic-editor-panel { flex:1 1 auto; min-width:0; display:flex; flex-direction:column; gap:8px; }
+.magic-editor-name { margin:0; color:#f4efe9; font-size:15px; font-weight:700; line-height:1.35; word-break:keep-all; }
+.magic-editor-help { margin:0; color:#ab9f92; font-size:12px; line-height:1.45; word-break:keep-all; }
+.magic-editor-steps { display:grid; gap:8px; }
+.magic-editor-steps[hidden] { display:none; }
+.magic-editor-step { display:grid; gap:3px; }
+.magic-editor-step > span { color:#d9cdc2; font-size:12px; line-height:1.3; }
+.magic-editor-step > div { display:grid; grid-template-columns:34px minmax(0,1fr) 34px; gap:4px; }
+.magic-customize-page .magic-editor-step button { min-height:40px; padding:0; font-size:20px; line-height:1; }
+.magic-customize .magic-editor-step input, .magic-editor-step input { width:100%; min-width:0; min-height:40px; box-sizing:border-box; padding:0 2px; border:1px solid #ab9f924d; border-radius:8px; background:#1a1512; color:#f4efe9; font:600 15px/1 system-ui,sans-serif; text-align:center; font-variant-numeric:tabular-nums; touch-action:manipulation; }
+.magic-customize-page .magic-editor-panel > button { width:100%; min-height:40px; padding:6px 8px; font-size:13px; line-height:1.3; word-break:keep-all; }
+.magic-customize-page .magic-editor-full { background:#e8631f; border-color:#e8631f; color:#1a1512; font-weight:700; }
+.magic-customize-page .magic-editor-undo:disabled { opacity:.45; }
+.magic-editor-status { margin:0; color:#c9b9aa; font-size:12px; line-height:1.4; word-break:keep-all; }
+.magic-editor-tools .magic-editor-note { margin:8px 0; color:#ab9f92; font-size:13px; line-height:1.55; word-break:keep-all; }
+.magic-editor-tools .magic-preview-select[hidden] { display:none; }
+.magic-customize .magic-appearance-field.is-related { border-color:#e8631f; }
+.magic-customize .magic-editor-resets { margin:16px 0 24px; }
+.magic-customize-page .magic-editor-resets button, .magic-customize .magic-editor-resets button:first-child { background:#34261e; color:#f4efe9; border:1px solid #ab9f923d; font-weight:500; }
+.magic-customize-page .magic-editor-resets button:disabled { opacity:.45; }
+.magic-customize-page .magic-editor-resets button.is-armed { background:#7a2e14; border-color:#e8631f; color:#fff; font-weight:700; }
+.magic-editor.is-fullsize .magic-preview-phone { position:fixed; z-index:230; top:0; left:0; border:0; border-radius:0; box-shadow:none; }
+.magic-editor.is-fullsize .magic-preview-phone::after { display:none; }
+.magic-editor.is-fullsize .magic-editor-hit:not([aria-pressed="true"]) { border-color:transparent; }
+.magic-customize-page .magic-editor-return { position:fixed; z-index:240; top:calc(14px + env(safe-area-inset-top)); left:50%; transform:translateX(-50%); padding:10px 22px; border-radius:999px; background:#261d18ee; border:1px solid #e8631f; color:#f4efe9; font-weight:700; box-shadow:0 6px 20px #0008; white-space:nowrap; }
+.magic-customize-page .magic-editor-return[hidden] { display:none; }
