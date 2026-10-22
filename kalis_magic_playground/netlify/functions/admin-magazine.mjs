@@ -1,9 +1,10 @@
 import { requireAdmin } from './_lib/auth.mjs';
+import { LIST_TAG, purgeOnWrite } from './_lib/cache.mjs';
 import { json, readJsonBody } from './_lib/http.mjs';
 import { getSupabaseAdmin } from './_lib/supabase.mjs';
 import { validateMagazinePublishPayload } from './_lib/validators.mjs';
 
-export async function handler(event) {
+async function magazineHandler(event) {
   if (event.httpMethod !== 'POST') return json(405, { error: 'method_not_allowed' });
 
   let viewer;
@@ -43,3 +44,5 @@ export async function handler(event) {
     return json(500, { error: 'db_error' });
   }
 }
+
+export const handler = purgeOnWrite(magazineHandler, () => [LIST_TAG]);

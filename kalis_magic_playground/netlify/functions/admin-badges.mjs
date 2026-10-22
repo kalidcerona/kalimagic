@@ -1,5 +1,6 @@
 import { requireAdmin } from './_lib/auth.mjs';
 import { validateBadgeChange } from './_lib/badges.mjs';
+import { PUBLIC_TAG, purgeOnWrite } from './_lib/cache.mjs';
 import { json, readJsonBody } from './_lib/http.mjs';
 import { getSupabaseAdmin } from './_lib/supabase.mjs';
 import { validateUuid } from './_lib/validators.mjs';
@@ -64,7 +65,7 @@ export async function changeMemberBadge(event, viewer, supabase) {
   });
 }
 
-export async function handler(event) {
+async function badgesHandler(event) {
   if (event.httpMethod !== 'POST') return json(405, { error: 'method_not_allowed' });
 
   let viewer;
@@ -77,3 +78,5 @@ export async function handler(event) {
   const supabase = getSupabaseAdmin();
   return changeMemberBadge(event, viewer, supabase);
 }
+
+export const handler = purgeOnWrite(badgesHandler, () => [PUBLIC_TAG]);

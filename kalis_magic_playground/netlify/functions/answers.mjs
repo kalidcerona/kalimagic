@@ -1,5 +1,6 @@
 import { canAnswerQuestion, canPublishAnswer } from './_lib/access-policy.mjs';
 import { requireViewer } from './_lib/auth.mjs';
+import { bodyField, postTag, purgeOnWrite } from './_lib/cache.mjs';
 import { json, readJsonBody } from './_lib/http.mjs';
 import { awardQuestBadge, awardQuestBadges } from './_lib/quest-badges.mjs';
 import { getSupabaseAdmin } from './_lib/supabase.mjs';
@@ -29,7 +30,7 @@ async function hasExistingAnswer(supabase, questionPostId) {
   return (data || []).length > 0;
 }
 
-export async function handler(event) {
+async function answersHandler(event) {
   if (event.httpMethod !== 'POST') return json(405, { error: 'method_not_allowed' });
 
   let viewer;
@@ -115,3 +116,5 @@ export async function handler(event) {
 
   return json(201, { id: answer.id });
 }
+
+export const handler = purgeOnWrite(answersHandler, (event) => [postTag(bodyField(event, 'questionPostId'))]);

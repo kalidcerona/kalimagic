@@ -1,3 +1,4 @@
+import { EVENTS_TAG, cacheableJson } from './_lib/cache.mjs';
 import { json } from './_lib/http.mjs';
 import { getSupabaseAdmin } from './_lib/supabase.mjs';
 
@@ -13,5 +14,5 @@ export async function handler(event) {
     .order('sort_order', { ascending: true });
 
   if (error) return json(500, { error: 'db_error' });
-  return json(200, { photos: data });
+  return cacheableJson(event, { photos: data }, { tags: [EVENTS_TAG], varyQuery: ['eventCode'] });
 }

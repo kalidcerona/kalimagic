@@ -1,5 +1,6 @@
 import { canReadPostBody } from './_lib/access-policy.mjs';
 import { requireViewer } from './_lib/auth.mjs';
+import { LIST_TAG, bodyField, postTag, purgeOnWrite } from './_lib/cache.mjs';
 import { json, readJsonBody } from './_lib/http.mjs';
 import { getSupabaseAdmin } from './_lib/supabase.mjs';
 import { validatePostIdPayload } from './_lib/validators.mjs';
@@ -30,7 +31,7 @@ async function loadLikeRows(supabase, postId) {
   return data || [];
 }
 
-export async function handler(event) {
+async function likesHandler(event) {
   if (event.httpMethod !== 'POST') return json(405, { error: 'method_not_allowed' });
 
   let viewer;
@@ -93,3 +94,5 @@ export async function handler(event) {
     return json(500, { error: 'db_error' });
   }
 }
+
+export const handler = purgeOnWrite(likesHandler, (event) => [LIST_TAG, postTag(bodyField(event, 'postId'))]);

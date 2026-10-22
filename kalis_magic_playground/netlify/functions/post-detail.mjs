@@ -1,6 +1,7 @@
 import { canReadAnswer, canReadAuthor, canReadPostBody } from './_lib/access-policy.mjs';
 import { requireViewer } from './_lib/auth.mjs';
 import { fetchBadgeMap, resolvePostAuthorBadges } from './_lib/badges.mjs';
+import { cacheableJson, postTag } from './_lib/cache.mjs';
 import { json } from './_lib/http.mjs';
 import { getSupabaseAdmin } from './_lib/supabase.mjs';
 import { validateUuid } from './_lib/validators.mjs';
@@ -182,7 +183,7 @@ export async function handler(event) {
       return json(500, { error: 'db_error' });
     }
     const post = shapePost(row, viewer, { ...state, badgeMap });
-    return json(200, { post, answers: [], comments: [], viewerCanAnswer: canViewerAnswer(viewer) });
+    return cacheableJson(event, { post, answers: [], comments: [], viewerCanAnswer: canViewerAnswer(viewer) }, { tags: [postTag(row.id)], varyQuery: ['id'] });
   }
 
   const { data: answers, error: answersError } = await supabase
@@ -220,10 +221,10 @@ export async function handler(event) {
 
   const post = shapePost(row, viewer, { ...state, badgeMap });
 
-  return json(200, {
+  return cacheableJson(event, {
     post,
     answers: answers.map((answer) => shapeAnswer(question, answer, viewer, badgeMap, helpfulState)).filter(Boolean),
     comments: comments.map((comment) => shapeComment(comment, viewer, badgeMap)),
     viewerCanAnswer: canViewerAnswer(viewer)
-  });
+  }, { tags: [postTag(row.id)], varyQuery: ['id'] });
 }

@@ -1,6 +1,7 @@
 import { canReadPostBody } from './_lib/access-policy.mjs';
 import { requireViewer } from './_lib/auth.mjs';
 import { fetchBadgeMap } from './_lib/badges.mjs';
+import { LIST_TAG, bodyField, cacheableJson, postTag, purgeOnWrite } from './_lib/cache.mjs';
 import { json, readJsonBody } from './_lib/http.mjs';
 import { getSupabaseAdmin } from './_lib/supabase.mjs';
 import { validateCommentPayload } from './_lib/validators.mjs';
@@ -40,11 +41,13 @@ async function readablePost(supabase, postId, viewer) {
   return canReadPostBody({ visibility: post.visibility, authorUserId: post.author_user_id }, viewer) ? post : null;
 }
 
-export async function handler(event) {
+async function commentsHandler(event) {
   if (event.httpMethod === 'GET') return listComments(event);
   if (event.httpMethod === 'POST') return createComment(event);
   return json(405, { error: 'method_not_allowed' });
 }
+
+export const handler = purgeOnWrite(commentsHandler, (event) => [LIST_TAG, postTag(bodyField(event, 'postId'))]);
 
 async function listComments(event) {
   const postId = event.queryStringParameters?.postId;
@@ -73,7 +76,7 @@ async function listComments(event) {
     return json(500, { error: 'db_error' });
   }
 
-  return json(200, { comments: data.map((row) => shapeComment(row, viewer, badgeMap)) });
+  return cacheableJson(event, { comments: data.map((row) => shapeComment(row, viewer, badgeMap)) }, { tags: [postTag(post.id)], varyQuery: ['postId'] });
 }
 
 async function createComment(event) {

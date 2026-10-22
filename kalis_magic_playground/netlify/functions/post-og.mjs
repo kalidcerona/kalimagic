@@ -1,4 +1,5 @@
 import { readFile } from 'node:fs/promises';
+import { cacheHeaders, postTag } from './_lib/cache.mjs';
 import { buildPostMeta, injectPostMeta } from './_lib/post-meta.mjs';
 import { getSupabaseAdmin } from './_lib/supabase.mjs';
 import { validateUuid } from './_lib/validators.mjs';
@@ -51,11 +52,13 @@ export async function handler(event) {
   const id = event.queryStringParameters?.id;
   const validId = validateUuid(id);
   let post = null;
+  let lookupOk = true;
   if (validId) {
     try {
       post = await loadPublicPost(getSupabaseAdmin(), id);
     } catch {
       post = null;
+      lookupOk = false;
     }
   }
 
@@ -76,7 +79,8 @@ export async function handler(event) {
     statusCode: 200,
     headers: {
       'content-type': 'text/html; charset=utf-8',
-      'cache-control': 'no-store'
+      'cache-control': 'no-store',
+      ...(validId && lookupOk ? cacheHeaders(event, { tags: [postTag(id)], varyQuery: ['id'] }) : null)
     },
     body: injectPostMeta(shell, meta.html)
   };

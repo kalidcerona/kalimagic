@@ -1,4 +1,5 @@
 import { requireViewer } from './_lib/auth.mjs';
+import { PUBLIC_TAG, purgeOnWrite } from './_lib/cache.mjs';
 import { json, readJsonBody } from './_lib/http.mjs';
 import { getSupabaseAdmin } from './_lib/supabase.mjs';
 
@@ -93,7 +94,7 @@ async function updateProfile(event, supabase, viewer) {
   });
 }
 
-export async function handler(event) {
+async function profileHandler(event) {
   if (!['GET', 'POST'].includes(event.httpMethod)) {
     return json(405, { error: 'method_not_allowed' });
   }
@@ -113,3 +114,5 @@ export async function handler(event) {
     return json(500, { error: 'db_error' });
   }
 }
+
+export const handler = purgeOnWrite(profileHandler, () => [PUBLIC_TAG]);

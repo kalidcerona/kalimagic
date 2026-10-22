@@ -6,6 +6,7 @@ import {
   resolvePostAuthorBadges,
   validateBadgeSelection
 } from './_lib/badges.mjs';
+import { LIST_TAG, bodyField, cacheableJson, postTag, purgeOnWrite, responseId } from './_lib/cache.mjs';
 import { json, readJsonBody } from './_lib/http.mjs';
 import { awardQuestBadges } from './_lib/quest-badges.mjs';
 import { getSupabaseAdmin } from './_lib/supabase.mjs';
@@ -178,20 +179,25 @@ async function listPosts(event) {
     return json(500, { error: 'db_error' });
   }
 
-  return json(200, {
+  return cacheableJson(event, {
     posts: pageRows.map((row) => shapePostListRow(row, viewer, state)),
     limit: params.limit,
     offset: params.offset,
     hasMore
-  });
+  }, { tags: [LIST_TAG], varyQuery: ['category', 'reviewKind', 'limit', 'offset'] });
 }
 
-export async function handler(event) {
+async function postsHandler(event) {
   if (event.httpMethod === 'POST') return createPost(event);
   if (event.httpMethod === 'DELETE') return deletePost(event);
   if (event.httpMethod !== 'GET') return json(405, { error: 'method_not_allowed' });
   return listPosts(event);
 }
+
+export const handler = purgeOnWrite(postsHandler, (event, response) => [
+  LIST_TAG,
+  postTag(event.httpMethod === 'DELETE' ? bodyField(event, 'postId') : responseId(response))
+]);
 
 export function deleteDecision(post, viewer, visibleAnswerCount) {
   if (!post || post.status !== 'visible') {

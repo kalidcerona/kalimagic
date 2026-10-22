@@ -1,4 +1,5 @@
 import { requireAdmin } from './_lib/auth.mjs';
+import { LIST_TAG, bodyField, postTag, purgeOnWrite } from './_lib/cache.mjs';
 import { json, readJsonBody } from './_lib/http.mjs';
 import { getSupabaseAdmin } from './_lib/supabase.mjs';
 import { validateModerationPayload } from './_lib/validators.mjs';
@@ -16,7 +17,7 @@ export function noticeValueForAction(action) {
   return null;
 }
 
-export async function handler(event) {
+async function moderateHandler(event) {
   if (event.httpMethod !== 'POST') return json(405, { error: 'method_not_allowed' });
 
   let viewer;
@@ -86,3 +87,5 @@ export async function handler(event) {
 
   return json(200, { ok: true, auditLogged: !auditError });
 }
+
+export const handler = purgeOnWrite(moderateHandler, (event) => [LIST_TAG, postTag(bodyField(event, 'postId'))]);

@@ -1,5 +1,6 @@
 import { canReadPostBody } from './_lib/access-policy.mjs';
 import { requireViewer } from './_lib/auth.mjs';
+import { EVENTS_TAG, LIST_TAG, cacheableJson, purgeOnWrite } from './_lib/cache.mjs';
 import { json, readJsonBody } from './_lib/http.mjs';
 import { awardQuestBadges } from './_lib/quest-badges.mjs';
 import { getSupabaseAdmin } from './_lib/supabase.mjs';
@@ -29,11 +30,13 @@ function shapeReview(row) {
   };
 }
 
-export async function handler(event) {
+async function reviewsHandler(event) {
   if (event.httpMethod === 'GET') return listReviews(event);
   if (event.httpMethod === 'POST') return createReview(event);
   return json(405, { error: 'method_not_allowed' });
 }
+
+export const handler = purgeOnWrite(reviewsHandler, () => [EVENTS_TAG, LIST_TAG]);
 
 async function listReviews(event) {
   const eventCode = event.queryStringParameters?.eventCode || '2026-08';
@@ -49,7 +52,7 @@ async function listReviews(event) {
     .order('created_at', { ascending: false })
     .limit(12);
   if (error) return json(500, { error: 'db_error' });
-  return json(200, { reviews: data.filter((row) => canReadPostBody(row, viewer)).map(shapeReview) });
+  return cacheableJson(event, { reviews: data.filter((row) => canReadPostBody(row, viewer)).map(shapeReview) }, { tags: [EVENTS_TAG], varyQuery: ['eventCode'] });
 }
 
 async function createReview(event) {

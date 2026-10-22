@@ -5,6 +5,7 @@ import {
   validateBadgeSelection
 } from './_lib/badges.mjs';
 import { isElevated } from './_lib/access-policy.mjs';
+import { PUBLIC_TAG, purgeOnWrite } from './_lib/cache.mjs';
 import { json, readJsonBody } from './_lib/http.mjs';
 import { getSupabaseAdmin } from './_lib/supabase.mjs';
 import { validateUuid } from './_lib/validators.mjs';
@@ -157,10 +158,12 @@ async function updatePreferredBadge(event, supabase) {
   }
 }
 
-export async function handler(event) {
+async function memberBadgesHandler(event) {
   if (!['GET', 'PATCH'].includes(event.httpMethod)) return json(405, { error: 'method_not_allowed' });
 
   const supabase = getSupabaseAdmin();
   if (event.httpMethod === 'GET') return getMemberBadges(event, supabase);
   return updatePreferredBadge(event, supabase);
 }
+
+export const handler = purgeOnWrite(memberBadgesHandler, () => [PUBLIC_TAG]);
