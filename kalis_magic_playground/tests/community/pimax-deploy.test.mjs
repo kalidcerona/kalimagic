@@ -54,7 +54,7 @@ test('revealed map answers draw the look-alike and plain symbol in both directio
 });
 
 test('Pi Max has explicit runtime allowlists and source mirror checks', () => {
-  assert.equal(PIMAX_FILES.length, 9);
+  assert.equal(PIMAX_FILES.length, 10);
   assert.ok(PUBLIC_DIRS.includes(personal));
   assert.deepEqual(DISTRIBUTION_APPS.find(a => a.target === 'pimax'), { source: shared, target: 'pimax', tool: 'pimax' });
   for (const file of PIMAX_FILES) {
