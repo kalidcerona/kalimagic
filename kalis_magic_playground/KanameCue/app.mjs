@@ -7,12 +7,12 @@ const $ = id => document.getElementById(id);
 const TYPE_LABEL = { AUDIO: '오디오', FADE: '페이드', STOP: '정지', GOTO: '이동' };
 const TRIGGER_LABEL = { MANUAL: '수동', WITH_PREVIOUS: '이전과 함께', AFTER_PREVIOUS: '이전 완료 후' };
 const LOOP_LABEL = { NONE: '없음', COUNT: '횟수', INFINITE: '무한' };
-const LONG_PRESS_KEY_MS = 1200; // Holding the GO key this long is PANIC, as on Android.
+const LONG_PRESS_KEY_MS = 1200; // In 'release' mode holding GO this long is PANIC (and no GO), as on Android.
 const HOLD_MS = 700;
 
 const prefs = (() => {
   const read = () => { try { return JSON.parse(localStorage.getItem('kc.prefs')) || {}; } catch { return {}; } };
-  const value = { fadeCurve: 'linear', ...read() };
+  const value = { fadeCurve: 'linear', goTrigger: 'release', ...read() };
   return { get: key => value[key], set(key, v) { value[key] = v; try { localStorage.setItem('kc.prefs', JSON.stringify(value)); } catch {} } };
 })();
 
@@ -190,10 +190,11 @@ $('audioFiles').addEventListener('change', async () => {
   const files = [...$('audioFiles').files];
   $('audioFiles').value = '';
   if (!files.length || !current) return;
-  const { show, assignments } = E.matchAudioFiles(current, files, id => audioIds.has(id));
+  const { show, assignments } = E.matchAudioFiles(current, files);
   try {
     for (const a of assignments) await store.saveAudio(a.id, a.file, a.file.name);
     await saveShow(show, { report: false });
+    requestPersist();
     const matched = assignments.filter(a => a.matched).length;
     if (matched) info('오디오를 가져왔어요', `공연의 오디오 자리에 ${matched}개를 맞춰 넣었어요.` + (assignments.length - matched ? ` 새 오디오 ${assignments.length - matched}개를 추가했어요.` : ''));
   } catch (error) { info('오디오를 저장하지 못했어요', error?.message || '저장 공간을 확인해 주세요.'); }
@@ -286,7 +287,7 @@ function ensureContext() {
     ctx = new Ctx({ latencyHint: 'interactive' });
     ctx.addEventListener('statechange', () => {
       const decision = E.contextDecision(ctx.state, runtime?.audio.selfSuspended);
-      if (decision === 'LOST') outputLost('context');
+      if (decision === 'LOST') outputLost('lost');
       scheduleRender();
     });
     try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch {}
@@ -297,6 +298,10 @@ function ensureContext() {
   }
   return ctx;
 }
+// Ask the browser not to evict stored audio under storage pressure (iOS, low disk). Asked after an audio import.
+async function requestPersist() {
+  try { if (navigator.storage?.persist && !(await navigator.storage.persisted?.())) await navigator.storage.persist(); } catch {}
+}
 async function snapshotDevices() {
   try { return await navigator.mediaDevices.enumerateDevices(); } catch { return []; }
 }
@@ -304,17 +309,20 @@ if (navigator.mediaDevices?.addEventListener) {
   snapshotDevices().then(list => { lastDevices = list; });
   navigator.mediaDevices.addEventListener('devicechange', async () => {
     const next = await snapshotDevices();
-    const lost = E.outputsLost(lastDevices, next);
+    const change = E.classifyOutputs(lastDevices, next);
     lastDevices = next;
-    if (lost) outputLost('device');
+    // An unreadable change pauses too (conservative), but says "changed" rather than "lost".
+    if (change === 'LOST') outputLost('lost');
+    else if (change === 'UNKNOWN') outputLost('changed');
   });
 }
-function outputLost() {
+function outputLost(kind) {
   if (!runtime) return;
   if (!gate.accept()) return;
   const engine = runtime.engine;
+  runtime.lossKind = kind;
   if (engine.outputLost()) runtime.notice = null;
-  else if (engine.mode !== E.MODE.EDIT) runtime.notice = '출력 장치가 끊겼어요. 연결을 확인하세요.';
+  else if (engine.mode !== E.MODE.EDIT) runtime.notice = kind === 'changed' ? '출력 장치가 바뀌었어요. 소리가 나갈 곳을 확인하세요.' : '출력 장치가 끊겼어요. 연결을 확인하세요.';
   scheduleRender();
 }
 
@@ -335,7 +343,7 @@ async function startShow(show) {
     }
   }, 400));
   const scheduler = { now: () => performance.now(), schedule(delay, action) { const id = setTimeout(action, delay); return { cancel: () => clearTimeout(id) }; } };
-  runtime = { show, audio, engine: null, decode: { done: 0, total: 0, finished: false }, problems: [], bytes: 0, resumed: Boolean(saved), notice: null, lastError: null };
+  runtime = { show, audio, engine: null, lossKind: 'lost', decode: { done: 0, total: 0, finished: false }, problems: [], bytes: 0, resumed: Boolean(saved), notice: null, lastError: null };
   const engine = new E.CueEngine(show, audio, scheduler, saved || undefined,
     snap => { store.savePosition(show.id, snap).catch(() => { if (runtime) runtime.lastError = '위치 저장 실패'; }); },
     event => {
@@ -364,8 +372,9 @@ async function startShow(show) {
 }
 function endShow() {
   if (!runtime) return;
+  keyGate.reset(); pointerGate.reset();
   runtime.engine.setMode(E.MODE.EDIT);
-  runtime.audio.release();
+  runtime.audio.release(); // 20 ms ramp per track, nodes released about 40 ms later
   runtime = null;
   if ('mediaSession' in navigator) navigator.mediaSession.metadata = null;
   renderEditor();
@@ -389,8 +398,9 @@ function perform(action, eventAgeMs = 0) {
   if (action === 'GO') {
     if (!runtime.decode.finished && !engine.paused) { hint('오디오 준비 중이에요. 준비 완료가 뜨면 GO를 눌러 주세요.'); return; }
     ensureContext();
+    const resuming = engine.paused;
     timer.start('GO', eventAgeMs);
-    if (!engine.go()) timer.cancel();
+    if (!engine.go() || resuming) timer.cancel(); // a resume-GO starts no new cue, so nothing to time
     runtime.resumed = false;
   } else if (action === 'BACK') engine.back();
   else if (action === 'PANIC') engine.panic();
@@ -434,7 +444,9 @@ function render() {
     ready.classList.toggle('bad', runtime.bytes > E.DECODED_WARN_BYTES);
   }
   $('runPaused').hidden = !engine.paused;
-  $('runPausedNote').textContent = '재생을 멈춰 두었어요. 연결을 확인하고 재개를 누르세요.' + (engine.droppedOnLoss > 0 ? ` (예약된 큐 ${engine.droppedOnLoss}개는 취소됨)` : '');
+  const changed = runtime.lossKind === 'changed';
+  $('runPausedTitle').textContent = changed ? '출력 장치가 바뀌었어요' : '출력 장치가 끊겼어요';
+  $('runPausedNote').textContent = (changed ? '끊긴 것인지 알 수 없어 안전하게 멈춰 두었어요. 소리가 나갈 곳을 확인하고 재개를 누르세요.' : '재생을 멈춰 두었어요. 연결을 확인하고 재개를 누르세요.') + (engine.droppedOnLoss > 0 ? ` (예약된 큐 ${engine.droppedOnLoss}개는 취소됨)` : '');
   $('runNotice').hidden = !runtime.notice;
   $('runNoticeText').textContent = runtime.notice || '';
   $('runError').hidden = !runtime.lastError;
@@ -461,12 +473,25 @@ function render() {
 }
 setInterval(() => { if (runtime && !document.hidden && runtime.engine.active.size) scheduleRender(); }, 250);
 
-$('startShow').addEventListener('click', () => { if (current) startShow(current); });
+let starting = false;
+$('startShow').addEventListener('click', () => {
+  if (!current || runtime || starting) return; // a double tap must not create a second runtime
+  starting = true;
+  startShow(current).finally(() => { starting = false; });
+});
+// GO timing follows the per-device setting: on release (default, Android parity) or on press (faster).
+const timeouts = { now: () => performance.now(), schedule(delay, action) { const id = setTimeout(action, delay); return { cancel: () => clearTimeout(id) }; } };
+const fireGate = (action, info) => perform(action, info?.age ?? 0);
+const keyGate = new E.PressGate(timeouts, fireGate, LONG_PRESS_KEY_MS);
+const pointerGate = new E.PressGate(timeouts, fireGate, LONG_PRESS_KEY_MS);
 $('goBtn').addEventListener('pointerdown', event => {
   if (!event.isPrimary || event.button > 0) return;
   event.preventDefault();
-  perform('GO', eventAge(event));
+  try { $('goBtn').setPointerCapture(event.pointerId); } catch {}
+  pointerGate.down('pointer', 'GO', prefs.get('goTrigger'), { age: eventAge(event) });
 });
+$('goBtn').addEventListener('pointerup', event => { if (event.isPrimary) pointerGate.up('pointer', { age: eventAge(event) }); });
+$('goBtn').addEventListener('pointercancel', () => pointerGate.reset());
 $('goBtn').addEventListener('contextmenu', event => event.preventDefault());
 $('backBtn').addEventListener('click', () => perform('BACK'));
 $('resumeBtn').addEventListener('click', () => { if (runtime) { ensureContext(); runtime.engine.resume(); render(); } });
@@ -486,14 +511,13 @@ function holdButton(node, label, action) {
   node.addEventListener('pointerleave', cancel);
   node.addEventListener('pointercancel', cancel);
   node.addEventListener('contextmenu', event => event.preventDefault());
-  node.addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') event.stopPropagation(); });
 }
 holdButton($('panicBtn'), '길게 누르면 전체 정지합니다.', () => { perform('PANIC'); navigator.vibrate?.(60); });
 holdButton($('exitBtn'), '길게 누르면 공연을 끝냅니다.', endShow);
 holdButton($('unlockBtn'), '길게 누르면 잠금이 풀립니다.', () => runtime?.engine.setMode(E.MODE.RUN));
 
 // ---------- keys: Bluetooth clickers and footswitches send ordinary key events ----------
-let held = null, longPress = null, learning = null;
+let learning = null;
 document.addEventListener('keydown', event => {
   const code = E.androidKeyCode(event);
   if (learning) {
@@ -509,15 +533,16 @@ document.addEventListener('keydown', event => {
   const action = E.keyAction(runtime.show, code);
   if (!action) return;
   event.preventDefault();
-  if (event.repeat || held !== null) return;
-  held = code;
-  if (action === 'GO') longPress = setTimeout(() => { longPress = null; perform('PANIC'); }, LONG_PRESS_KEY_MS);
-  perform(action, eventAge(event));
+  // A focused button would otherwise also click on keyup in some browsers (Firefox Space).
+  if (document.activeElement instanceof HTMLButtonElement) document.activeElement.blur();
+  if (event.repeat) return;
+  keyGate.down(code, action, prefs.get('goTrigger'), { age: eventAge(event) });
 });
 document.addEventListener('keyup', event => {
-  if (held !== null && E.androidKeyCode(event) === held) { clearTimeout(longPress); longPress = null; held = null; }
+  const code = E.androidKeyCode(event);
+  if (keyGate.held && keyGate.held.key === code) { event.preventDefault(); keyGate.up(code, { age: eventAge(event) }); }
 });
-window.addEventListener('blur', () => { clearTimeout(longPress); longPress = null; held = null; });
+window.addEventListener('blur', () => { keyGate.reset(); pointerGate.reset(); });
 
 // ---------- settings (house gesture: two fingers swipe down in the visible direction) ----------
 let swipe = null;
@@ -553,6 +578,9 @@ function openSettings() {
 }
 function renderSettings() {
   $('fadeCurve').value = prefs.get('fadeCurve');
+  $('goTrigger').value = prefs.get('goTrigger');
+  $('persistNote').textContent = '';
+  navigator.storage?.persisted?.().then(on => { $('persistNote').textContent = '저장 공간 보호: ' + (on ? '켜짐' : '꺼짐'); }).catch(() => {});
   $('timingHistory').replaceChildren(...timer.history.slice().reverse().map(entry => el('li', { text: E.describeTiming(entry) + ' · ' + entry.cue })));
   if (!timer.history.length) $('timingHistory').replaceChildren(el('li', { class: 'note', text: '아직 기록이 없어요.' }));
   const box = $('perShow');
@@ -593,7 +621,7 @@ function keyActions(show) {
     ...show.hits.slice(0, 9).map((_, i) => ['HIT:' + i, `히트 ${i + 1}`]),
     ...show.inserts.filter(s => s.cues.length).map(s => ['INSERT:' + s.id, '삽입 ' + s.name])];
 }
-const DEFAULT_KEYS = { GO: '스페이스, 엔터, PageDown, 오른쪽, 아래 방향키', BACK: 'PageUp, 왼쪽, 위 방향키', PANIC: 'Esc, GO 키 길게' };
+const DEFAULT_KEYS = { GO: '스페이스, 엔터, PageDown, 오른쪽, 아래 방향키', BACK: 'PageUp, 왼쪽, 위 방향키', PANIC: 'Esc, GO 키 길게 (뗄 때 방식)' };
 function keySummary(show) {
   return el('ul', { class: 'plain small' }, ...keyActions(show).map(([action, label]) => {
     const keys = Object.entries(show.keyMap).filter(([, a]) => a === action).map(([k]) => E.keyLabel(Number(k)));
@@ -625,6 +653,7 @@ $('editorSettings').addEventListener('click', () => { settingsShowId = current?.
 $('closeSettings').addEventListener('click', () => $('settings').close());
 $('settings').addEventListener('close', () => { if (learning) learning.cancel(); });
 $('fadeCurve').addEventListener('change', () => prefs.set('fadeCurve', $('fadeCurve').value));
+$('goTrigger').addEventListener('change', () => { keyGate.reset(); pointerGate.reset(); prefs.set('goTrigger', $('goTrigger').value); });
 function copyContactId(node) {
   const text = 'KaliDCerona';
   const finish = ok => { node.textContent = ok ? '복사됨' : 'ID 복사'; if (ok) setTimeout(() => { if (node.textContent === '복사됨') node.textContent = 'ID 복사'; }, 1500); };
@@ -645,7 +674,8 @@ async function keepAwake() {
     wakePending = false;
     if (document.visibilityState !== 'visible') { lock.release().catch(() => {}); return; }
     wakeLock = lock;
-    lock.addEventListener?.('release', () => { if (wakeLock === lock) wakeLock = null; });
+    // The system may drop the lock while the page stays visible (battery saver); ask again then.
+    lock.addEventListener?.('release', () => { if (wakeLock === lock) { wakeLock = null; if (document.visibilityState === 'visible') keepAwake(); } });
   } catch { wakePending = false; }
 }
 document.addEventListener('visibilitychange', () => {
@@ -655,7 +685,8 @@ document.addEventListener('visibilitychange', () => {
 });
 
 // ---------- boot ----------
-window.__kaname = { get ctx() { return ctx; }, get runtime() { return runtime; }, timer, perform };
+// Inspection hook for headless checks only.
+if (new URLSearchParams(location.search).get('debug') === '1') window.__kaname = { get ctx() { return ctx; }, get runtime() { return runtime; }, timer, perform };
 (async () => {
   store = await openStore();
   await refresh();

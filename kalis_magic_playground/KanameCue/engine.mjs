@@ -198,13 +198,14 @@ export function importShowBackup(text) {
   return show;
 }
 
-// Audio files live outside the JSON. Match picked files to the show by id first, then by display name.
-export function matchAudioFiles(show, files, hasAudio = () => false) {
+// Audio files live outside the JSON. Match picked files to the show by id first, then by display name,
+// so picking a corrected file with the same name replaces the stored audio instead of adding a duplicate.
+export function matchAudioFiles(show, files) {
   const audioFiles = show.audioFiles.map(f => ({ ...f }));
   const assignments = [];
   for (const file of files) {
     const byId = audioFiles.find(f => f.id === file.name || f.id === file.name.replace(/\.[^.]+$/, ''));
-    const byName = audioFiles.find(f => f.displayName === file.name && !hasAudio(f.id) && !assignments.some(a => a.id === f.id));
+    const byName = audioFiles.find(f => f.displayName === file.name && !assignments.some(a => a.id === f.id));
     const target = byId || byName;
     if (target) assignments.push({ id: target.id, file, matched: true });
     else {
@@ -248,19 +249,21 @@ export const visibilityDecision = () => 'IGNORE';
 
 const outputSignature = d => (d.deviceId || '') + '|' + (d.groupId || '');
 /**
- * Decide whether a devicechange removed an output. When the browser hides device ids (no permission),
- * the lists are opaque, so any change is treated as a possible loss, like Android's becoming-noisy broadcast.
+ * Classify a devicechange for the outputs: LOST (an output went away), ADDED, SAME, or UNKNOWN when the browser
+ * hides device ids (no permission) so a loss cannot be told from any other change.
  */
-export function outputsLost(before, after) {
+export function classifyOutputs(before, after) {
   const prev = (before || []).filter(d => d.kind === 'audiooutput');
   const next = (after || []).filter(d => d.kind === 'audiooutput');
-  if (next.length < prev.length) return true;
-  if (next.length > prev.length) return false; // an output was added
+  if (next.length < prev.length) return 'LOST';
+  if (next.length > prev.length) return 'ADDED';
   const opaque = list => list.length === 0 || list.every(d => !d.deviceId);
-  if (opaque(prev) || opaque(next)) return true;
+  if (opaque(prev) || opaque(next)) return 'UNKNOWN';
   const kept = new Set(next.map(outputSignature));
-  return prev.some(d => !kept.has(outputSignature(d)));
+  return prev.some(d => !kept.has(outputSignature(d))) ? 'LOST' : 'SAME';
 }
+/** Pause on a real loss and, conservatively, on a change we cannot read (like Android's becoming-noisy broadcast). */
+export const outputsLost = (before, after) => ['LOST', 'UNKNOWN'].includes(classifyOutputs(before, after));
 
 /** Collapses devicechange and statechange, which fire for the same unplug. */
 export class OutputLossGate {
@@ -333,6 +336,34 @@ export function defaultAction(code) {
   return null;
 }
 export const keyAction = (show, code) => code === null ? null : (show.keyMap[String(code)] ?? defaultAction(code));
+
+/**
+ * GO timing for a remote key or the on-screen GO. 'release' (default) matches Android: the action fires when the key
+ * is let go, and holding GO for longMs fires PANIC instead of GO. 'press' fires on key down for lower latency, and
+ * then a held GO never turns into PANIC (Escape or the on-screen long press stop everything instead).
+ * A hold therefore never produces GO followed by PANIC.
+ */
+export class PressGate {
+  constructor(clock, fire, longMs = 1200) { this.clock = clock; this.fire = fire; this.longMs = longMs; this.held = null; }
+  down(key, action, mode, info) {
+    if (this.held) return false;
+    const held = { key, action, mode, longFired: false, timer: null };
+    this.held = held;
+    if (mode === 'press') { this.fire(action, info); return true; }
+    if (action === 'GO') held.timer = this.clock.schedule(this.longMs, () => { held.longFired = true; held.timer = null; this.fire('PANIC', info); });
+    return true;
+  }
+  up(key, info) {
+    const held = this.held;
+    if (!held || held.key !== key) return false;
+    this.held = null;
+    held.timer?.cancel();
+    if (held.mode !== 'press' && !held.longFired) this.fire(held.action, info);
+    return true;
+  }
+  /** Focus loss or a cancelled touch: nothing fires, like Android's onPause. */
+  reset() { this.held?.timer?.cancel(); this.held = null; }
+}
 
 // ---------- cue engine (CueEngine.kt) ----------
 /** All calls, scheduler actions and audio callbacks run on the page's single thread. */
@@ -429,12 +460,13 @@ export class CueEngine {
         this.audio.play(cue, () => { release(); complete(); }, message => { release(); this.error(message); complete(); });
       } else if (cue.type === 'FADE' || cue.type === 'STOP') {
         const targets = cue.target === 'ALL' ? [...this.active.keys()] : [cue.target].filter(id => this.active.has(id));
-        if (targets.length === 0) this.error('재생 중인 대상이 없습니다: ' + cue.target);
+        if (targets.length === 0) this.error('재생 중인 대상이 없습니다: ' + this.describeTarget(cue.target));
         for (const id of targets) {
           const stop = cue.type === 'STOP' || cue.stopAtEnd;
           const duration = Math.max(cue.type === 'STOP' ? Math.max(cue.fadeMs, this.active.get(id)?.fadeOutMs ?? 0) : cue.durationMs, 0);
           const volume = cue.type === 'STOP' ? 0 : Math.min(Math.max(cue.targetVolume, 0), 1);
-          this.audio.fade(id, volume, stop ? stopRampMs(duration) : duration, stop);
+          // One failing fade must not leave the other targets playing.
+          try { this.audio.fade(id, volume, stop ? stopRampMs(duration) : duration, stop); } catch (e) { this.error(e?.message || '페이드 오류'); }
         }
         complete();
       } else if (cue.type === 'GOTO') {
@@ -496,7 +528,9 @@ export class CueEngine {
     for (const handle of this.pending.values()) handle.cancel();
     this.pending.clear();
     this.paused = false;
-    for (const id of [...this.active.keys()]) this.audio.fade(id, 0, stopRampMs(Math.max(this.show.settings.panicFadeMs, 0)), true);
+    for (const id of [...this.active.keys()]) {
+      try { this.audio.fade(id, 0, stopRampMs(Math.max(this.show.settings.panicFadeMs, 0)), true); } catch (e) { this.error(e?.message || '정지 오류'); }
+    }
     // Cancelled insert tails cannot execute their normal return path.
     this.stack = this.stack.filter(p => !(p.listId !== 'main' && p.index >= this.list(p.listId).length));
     while (this.position.listId !== 'main' && this.position.index >= this.list().length && this.stack.length > 0) this.position = this.stack.pop();
@@ -518,6 +552,11 @@ export class CueEngine {
     if (!this.paused) return false;
     this.paused = false; this.audio.resumeAll?.(); this.event({ type: 'Accepted' }); this.changed();
     return true;
+  }
+  describeTarget(id) {
+    if (id === 'ALL') return '전체 재생';
+    const cue = [...this.show.cues, ...this.show.hits, ...this.show.inserts.flatMap(s => s.cues)].find(c => c.id === id);
+    return cue ? `${cue.number} ${cue.name}` : '없는 큐';
   }
   error(message) { this.event({ type: 'Error', message }); this.changed(); }
 }

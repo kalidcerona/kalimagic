@@ -176,3 +176,37 @@ test('Web Audio engine loops by count, uses an equal-power curve when chosen, an
   await engine.resumeAll();
   assert.equal(ctx.state, 'running'); assert.equal(engine.selfSuspended, false);
 });
+
+test('without cancelAndHoldAtTime a throwing curve falls back safely, and retrigger or release ramps 20 ms before stopping', async () => {
+  const ctx = fakeContext();
+  const engine = new WebAudioEngine(ctx, { curve: () => 'equal' });
+  await engine.decodeAll(['f1'], async () => new ArrayBuffer(8));
+  engine.play(makeCue({ id: 'a', audioFileId: 'f1' }), () => {}, () => {});
+  const gain = ctx.log.filter(entry => entry[0] === 'gain').at(-1)[1].gain;
+  delete gain.cancelAndHoldAtTime;
+  gain.cancelAndHoldAtTime = undefined;
+  gain.setValueCurveAtTime = () => { throw new Error('overlap'); };
+  gain.value = 0.7;
+  engine.fade('a', 0, 300, true);
+  assert.deepEqual(gain.events.slice(-3), [['cancel', 0], ['set', 0.7, 10], ['ramp', 0, 10.3]], 'value read, events cleared, held, then a linear ramp');
+  // Even the linear ramp throwing still stops the cue.
+  let finished = 0;
+  engine.play(makeCue({ id: 'b', audioFileId: 'f1' }), () => finished++, () => {});
+  const broken = ctx.log.filter(entry => entry[0] === 'gain').at(-1)[1].gain;
+  broken.cancelAndHoldAtTime = () => { throw new Error('x'); };
+  broken.cancelScheduledValues = () => { throw new Error('x'); };
+  engine.fade('b', 0, 300, true);
+  assert.equal(finished, 1); assert.equal(engine.tracks.has('b'), false);
+  // Retrigger and release: previous instance ramps to 0 over 20 ms, stops after it, no completion callback.
+  let firstDone = 0;
+  engine.play(makeCue({ id: 'c', audioFileId: 'f1' }), () => firstDone++, () => {});
+  const firstGain = ctx.log.filter(entry => entry[0] === 'gain').at(-1)[1].gain;
+  engine.play(makeCue({ id: 'c', audioFileId: 'f1' }), () => {}, () => {});
+  assert.deepEqual(firstGain.events.slice(-2), [['hold', 10], ['ramp', 0, 10.02]]);
+  assert.ok(Math.abs(ctx.log.filter(entry => entry[0] === 'stop').at(-1)[1] - 10.023) < 1e-9);
+  assert.equal(firstDone, 0);
+  const secondGain = ctx.log.filter(entry => entry[0] === 'gain').at(-1)[1].gain;
+  engine.release();
+  assert.deepEqual(secondGain.events.slice(-2), [['hold', 10], ['ramp', 0, 10.02]]);
+  assert.equal(engine.tracks.size, 0);
+});

@@ -63,7 +63,7 @@
     <p id="runStandby" class="standby"></p>
     <p id="runNext" class="muted"></p>
     <p id="runReady" class="ready" role="status"></p>
-    <div id="runPaused" class="alert" hidden><p class="alert-title">출력 장치가 끊겼어요</p><p id="runPausedNote" class="muted"></p><button type="button" class="btn primary" id="resumeBtn">재개 (GO도 재개)</button></div>
+    <div id="runPaused" class="alert" hidden><p class="alert-title" id="runPausedTitle">출력 장치가 끊겼어요</p><p id="runPausedNote" class="muted"></p><button type="button" class="btn primary" id="resumeBtn">재개 (GO도 재개)</button></div>
     <div id="runNotice" class="alert" hidden><p id="runNoticeText"></p><button type="button" class="btn2" id="noticeOk">확인</button></div>
     <p id="runError" class="error" role="alert" hidden></p>
   </section>
@@ -132,8 +132,11 @@
     <div id="perShow"></div>
   </details>
   <details class="group"><summary>이 기기 설정</summary>
+    <label class="field"><span>GO 발동 시점</span><select id="goTrigger"><option value="release">뗄 때 (기본)</option><option value="press">누를 때 (더 빠름)</option></select></label>
+    <p class="note">뗄 때: 안드로이드 앱과 같아요. GO 키를 1.2초 누르고 있으면 GO 없이 전체 정지가 됩니다. 누를 때: 소리가 더 빨리 나고, 길게 눌러도 전체 정지가 되지 않아요. 전체 정지는 Esc나 화면의 길게 누르기로 하세요.</p>
     <label class="field"><span>페이드 곡선</span><select id="fadeCurve"><option value="linear">직선</option><option value="equal">등전력 (크로스페이드에 자연스러움)</option></select></label>
     <p class="note">공연 파일과 오디오는 이 브라우저에만 저장됩니다. 공연 JSON은 안드로이드 앱과 같은 형식이에요.</p>
+    <p class="note" id="persistNote"></p>
   </details>
   <details class="group"><summary>타이밍 기록</summary>
     <p class="note">GO를 누른 순간부터 소리 시작 명령까지 걸린 시간입니다. 출력 지연은 브라우저가 알려 주는 값이에요.</p>

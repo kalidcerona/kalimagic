@@ -309,3 +309,60 @@ test('picked audio files match by audioFileId or file name, and unknown files ar
   assert.equal(updated.audioFiles.length, 3); assert.equal(updated.audioFiles[2].displayName, 'new.wav');
   assert.match(updated.audioFiles[2].id, /^[A-Za-z0-9_-]+$/);
 });
+
+test('GO timing modes: a hold never produces GO followed by PANIC', () => {
+  for (const mode of ['release', 'press']) {
+    const clock = new Clock(), fired = [];
+    const gate = new E.PressGate(clock, action => fired.push(action), 1200);
+    // Quick tap: exactly one GO in both modes.
+    gate.down(93, 'GO', mode); clock.advance(80); gate.up(93);
+    assert.deepEqual(fired, ['GO'], mode + ' tap');
+    // Long hold.
+    fired.length = 0;
+    gate.down(93, 'GO', mode); clock.advance(2000); gate.up(93);
+    assert.deepEqual(fired, mode === 'release' ? ['PANIC'] : ['GO'], mode + ' hold');
+    assert.ok(!(fired.includes('GO') && fired.includes('PANIC')), mode);
+    // A second key while one is held is ignored; focus loss cancels without firing.
+    fired.length = 0;
+    gate.down(93, 'GO', mode); gate.down(92, 'BACK', mode); gate.up(92); gate.reset(); clock.advance(2000); gate.up(93);
+    assert.deepEqual(fired, mode === 'release' ? [] : ['GO'], mode + ' reset');
+  }
+  // In release mode GO waits for the key to come up; other actions too (Android fires on ACTION_UP).
+  const clock = new Clock(), fired = [];
+  const gate = new E.PressGate(clock, action => fired.push(action));
+  gate.down(93, 'GO', 'release'); assert.deepEqual(fired, []); gate.up(93); assert.deepEqual(fired, ['GO']);
+  gate.down(111, 'PANIC', 'release'); clock.advance(3000); gate.up(111); assert.deepEqual(fired, ['GO', 'PANIC']);
+});
+
+test('one throwing fade cannot leave other cues playing during PANIC or STOP ALL', () => {
+  class Throwing extends Audio { fade(id, volume, ms, stop) { if (id === 'a') throw new Error('boom'); super.fade(id, volume, ms, stop); } }
+  for (const via of ['panic', 'stop']) {
+    const clock = new Clock(), audio = new Throwing(), events = [];
+    const s = show({ cues: [a('a'), a('b', 'WITH_PREVIOUS'), a('c', 'WITH_PREVIOUS'), E.makeCue({ type: 'STOP', fadeMs: 0 })] });
+    const engine = new E.CueEngine(s, audio, clock, undefined, () => {}, e => events.push(e));
+    engine.setMode(E.MODE.RUN); engine.go(); clock.advance(400);
+    if (via === 'panic') engine.panic(); else engine.go();
+    assert.deepEqual(audio.fades.map(f => f.id), ['b', 'c'], via);
+    assert.ok(events.some(e => e.type === 'Error' && e.message === 'boom'), via);
+  }
+});
+
+test('output changes: LOST, ADDED, SAME and UNKNOWN are told apart; errors name targets in Korean', () => {
+  const out = id => ({ kind: 'audiooutput', deviceId: id, groupId: 'g' + id });
+  assert.equal(E.classifyOutputs([out('d'), out('bt')], [out('d')]), 'LOST');
+  assert.equal(E.classifyOutputs([out('d')], [out('d'), out('bt')]), 'ADDED');
+  assert.equal(E.classifyOutputs([out('d')], [out('d'), { kind: 'audioinput', deviceId: 'm' }]), 'SAME');
+  assert.equal(E.classifyOutputs([out('')], [out('')]), 'UNKNOWN');
+  assert.equal(E.classifyOutputs([], []), 'UNKNOWN');
+  const r = rig(show({ cues: [E.makeCue({ type: 'STOP', target: 'ALL' })] }));
+  r.go();
+  assert.equal(errors(r)[0].message, '재생 중인 대상이 없습니다: 전체 재생');
+});
+
+test('re-importing a file with the same name replaces its audio instead of adding an orphan', () => {
+  const s = show({ audioFiles: [E.makeAudioFile({ id: 'id-1', displayName: 'opening.mp3' })] });
+  const first = E.matchAudioFiles(s, [{ name: 'opening.mp3' }]);
+  const again = E.matchAudioFiles(first.show, [{ name: 'opening.mp3' }]);
+  assert.equal(again.show.audioFiles.length, 1);
+  assert.deepEqual(again.assignments.map(x => [x.id, x.matched]), [['id-1', true]]);
+});

@@ -1,6 +1,6 @@
 // Web Audio engine for KANAME Cue: one shared AudioContext, fully decoded buffers, per-cue GainNode ramps.
 // GO only creates an AudioBufferSourceNode and calls start(); nothing is fetched or decoded on the GO path.
-import { fadeCurve, decodedBytes } from './engine.mjs';
+import { fadeCurve, decodedBytes, MIN_STOP_RAMP_MS } from './engine.mjs';
 
 const FADE_ZERO_MS = 5; // A FADE of 0 ms still ramps briefly so a jump in level does not click.
 
@@ -47,7 +47,7 @@ export class WebAudioEngine {
   }
 
   play(cue, finished, failed) {
-    this.stopNow(cue.id, false);
+    this.retire(cue.id); // retrigger: the previous instance ramps out over 20 ms instead of a hard cut
     const buffer = this.buffers.get(cue.audioFileId);
     if (!buffer) { failed('파일 없음: ' + cue.name); return; }
     const ctx = this.ctx;
@@ -78,6 +78,8 @@ export class WebAudioEngine {
       if (cue.loop === 'COUNT') { track.end = t0 + segment * plays; source.stop(track.end); }
     }
     this.scheduleEndFade(track, t0 + cue.fadeInMs / 1000);
+    // Completion comes from onended, so an AFTER_PREVIOUS follow-up starts after this event plus the JS timer for its
+    // delay (tens of ms under load), not at a sample-exact ctx time. Accepted for Android parity (review M5).
     source.onended = () => {
       if (this.tracks.get(cue.id) !== track) return;
       this.tracks.delete(cue.id);
@@ -98,11 +100,30 @@ export class WebAudioEngine {
     gain.gain.linearRampToValueAtTime(0, track.end);
   }
 
+  // Freeze the gain at its current value. Without cancelAndHoldAtTime (Firefox, older Safari) clear every event,
+  // including a running value curve, so the next automation call cannot overlap it and throw.
   hold(param, at) {
-    if (typeof param.cancelAndHoldAtTime === 'function') { param.cancelAndHoldAtTime(at); return; }
+    if (typeof param.cancelAndHoldAtTime === 'function') {
+      try { param.cancelAndHoldAtTime(at); return; } catch {}
+    }
     const value = param.value;
-    param.cancelScheduledValues(at);
-    param.setValueAtTime(value, at);
+    param.cancelScheduledValues(0);
+    try { param.setValueAtTime(value, at); } catch { param.value = value; }
+  }
+
+  // Ramp from the current value to target; returns the time the ramp ends.
+  ramp(param, target, seconds, shape) {
+    const now = this.ctx.currentTime;
+    this.hold(param, now);
+    const from = param.value;
+    if (shape === 'equal' && seconds > 0) {
+      try {
+        param.setValueCurveAtTime(fadeCurve(from, target, Math.max(16, Math.ceil(seconds * 200)), 'equal'), now + 0.0005, seconds);
+        return now + 0.0005 + seconds;
+      } catch {}
+    }
+    param.linearRampToValueAtTime(target, now + seconds);
+    return now + seconds;
   }
 
   fade(id, volume, durationMs, stopAtEnd) {
@@ -111,20 +132,15 @@ export class WebAudioEngine {
     const ctx = this.ctx;
     // A suspended context cannot run a ramp; nothing is audible, so stop at once.
     if (stopAtEnd && ctx.state !== 'running') { this.stopNow(id, true); return; }
-    const now = ctx.currentTime;
     const target = Math.min(Math.max(volume, 0), 1);
     const seconds = Math.max(durationMs, stopAtEnd ? 0 : FADE_ZERO_MS) / 1000;
-    const param = track.gain.gain;
-    this.hold(param, now);
-    const from = param.value;
-    const shape = this.curve();
-    let until = now + seconds;
-    if (shape === 'equal' && seconds > 0) {
-      try {
-        param.setValueCurveAtTime(fadeCurve(from, target, Math.max(16, Math.ceil(seconds * 200)), 'equal'), now + 0.0005, seconds);
-        until = now + 0.0005 + seconds;
-      } catch { param.linearRampToValueAtTime(target, until); }
-    } else param.linearRampToValueAtTime(target, until);
+    let until;
+    try { until = this.ramp(track.gain.gain, target, seconds, this.curve()); } catch {
+      // Last resort: a stop must still stop, and a level change still lands.
+      if (stopAtEnd) { this.stopNow(id, true); return; }
+      try { track.gain.gain.value = target; } catch {}
+      until = ctx.currentTime;
+    }
     track.fadeUntil = until;
     if (stopAtEnd) {
       track.stopping = true;
@@ -159,5 +175,17 @@ export class WebAudioEngine {
 
   pauseAll() { this.selfSuspended = true; return this.ctx.suspend?.().catch(() => {}); }
   resumeAll() { this.selfSuspended = false; return this.ctx.resume?.().catch(() => {}); }
-  release() { for (const id of [...this.tracks.keys()]) this.stopNow(id, false); }
+  /** Remove a track with the 20 ms stop ramp; the source stops after the ramp and is released about 40 ms later. */
+  retire(id) {
+    const track = this.tracks.get(id);
+    if (!track) return;
+    if (this.ctx.state !== 'running') { this.stopNow(id, false); return; }
+    this.tracks.delete(id);
+    track.source.onended = null;
+    let until = this.ctx.currentTime;
+    try { until = this.ramp(track.gain.gain, 0, MIN_STOP_RAMP_MS / 1000, 'linear'); } catch { try { track.gain.gain.value = 0; } catch {} }
+    try { track.source.stop(until + 0.003); } catch {}
+    setTimeout(() => { try { track.gain.disconnect(); } catch {} }, 40);
+  }
+  release() { for (const id of [...this.tracks.keys()]) this.retire(id); }
 }
