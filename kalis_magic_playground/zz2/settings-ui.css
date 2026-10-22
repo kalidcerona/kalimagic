@@ -553,3 +553,20 @@
 .magic-editor.is-fullsize .magic-editor-hit:not([aria-pressed="true"]) { border-color:transparent; }
 .magic-customize-page .magic-editor-return { position:fixed; z-index:240; top:calc(14px + env(safe-area-inset-top)); left:50%; transform:translateX(-50%); padding:10px 22px; border-radius:999px; background:#261d18ee; border:1px solid #e8631f; color:#f4efe9; font-weight:700; box-shadow:0 6px 20px #0008; white-space:nowrap; }
 .magic-customize-page .magic-editor-return[hidden] { display:none; }
+/* Layout presets row (Galaxy only) under the screen chips. */
+.magic-editor-presets { display:flex; align-items:center; gap:6px; margin:-2px 0 10px; }
+.magic-editor-presets[hidden] { display:none; }
+.magic-editor-preset-label { flex:none; color:#ab9f92; font-size:12px; line-height:1.25; white-space:nowrap; }
+.magic-editor-preset-label.is-edited { color:#f3c2a4; }
+.magic-customize-page .magic-editor-presets button { flex:1 1 0; min-width:0; min-height:32px; padding:2px 6px; border-radius:8px; font-size:12.5px; line-height:1.2; white-space:nowrap; }
+.magic-customize-page .magic-editor-presets button[aria-pressed="true"] { background:#4a2a18; border-color:#e8631f; color:#f4efe9; font-weight:700; }
+.magic-customize-page .magic-editor-presets button.is-edited { border:1px dashed #e8631f; }
+/* Phones in landscape: ask to rotate instead of drawing a flattened phone. */
+.magic-editor-rotate { display:none; }
+@media (orientation:landscape) and (max-height:540px) {
+  .magic-editor .magic-editor-rotate { position:fixed; inset:0; z-index:250; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding:24px; background:#1a1512; text-align:center; }
+  .magic-editor .magic-customize-preview, .magic-editor .magic-customize, .magic-editor .magic-editor-return { visibility:hidden; }
+  .magic-editor-rotate-title { margin:0; color:#f4efe9; font-size:20px; font-weight:700; word-break:keep-all; }
+  .magic-editor-rotate-help { margin:0; color:#ab9f92; font-size:14px; line-height:1.5; word-break:keep-all; }
+  .magic-customize-page .magic-editor-rotate button { margin-top:6px; padding:8px 20px; }
+}

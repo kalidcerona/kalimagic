@@ -13,7 +13,17 @@
         { id: 'home1', name: '해제 1', preview: '#unlocked-screen', samples: [{ selector: '#home-track', style: 'transform:translate3d(0,0,0);transition:none' }] },
         { id: 'home2', name: '해제 2', preview: '#unlocked-screen', when: '#home2-field:not([hidden])', samples: [{ selector: '#home-track', style: 'transform:translate3d(-100%,0,0);transition:none' }] }
       ],
-      empty: '이 화면에는 옮길 요소가 없어요. 사진 위치는 설정의 이미지와 상단바 맞추기에서 맞춰 주세요.'
+      empty: '이 화면에는 옮길 요소가 없어요. 사진 위치는 설정의 이미지와 상단바 맞추기에서 맞춰 주세요.',
+      /* Galaxy layout presets: each owns only these items (PIN keypad, prompt and dots stay as the user set them). Values were measured on S25 Ultra captures at 412x892 CSS. */
+      presets: {
+        owns: ['target', '#time-date', '#oneui-lock', '#oneui-charge', '#oneui-bar', '#oneui-dnd', '#lock', '#fingerprint', '#input-screen .footer'],
+        styleTargets: '#time-lock',
+        list: [
+          { id: 'oneui9', name: 'One UI 9.0', values: { target: { scale: 105, offset: 1, x: 0 }, '#time-date': { scale: 104, offset: 0, x: 0 }, '#oneui-lock': { scale: 90, offset: 0, x: 0 }, '#oneui-bar': { scale: 100, offset: -1, x: 0 }, '#oneui-dnd': { scale: 115, offset: 0, x: 0 } } },
+          { id: 'oneui85', name: 'One UI 8.5', style: 'oneui85', values: { '#lock': { scale: 85, offset: -1.5, x: 0 }, '#fingerprint': { scale: 115, offset: -5, x: 0 }, '#input-screen .footer': { scale: 100, offset: -6, x: 0 } } },
+          { id: 'default', name: '기본값', values: {} }
+        ]
+      }
     } },
     calculator: { name: 'HITSUZEN', container: '#date-settings', targets: '.display-wrap', targetSelection: 'result', labels: [], elements: [{ id: 'result', name: '계산 결과', preview: '#app', hit: '.display-wrap' }, { id: 'keypad', name: '계산 버튼', preview: '#app', hit: '.keypad' }], story: ["히츠젠은 필연. 자유롭게 계산해도 하나의 결과로 이어져요.", "흘러간 과정이 처음부터 그 결론을 향했던 마술이에요."], note: '미리보기에서 계산 결과나 계산 버튼을 누르면 그 요소의 크기와 위치만 나와요. 계산 내용과 버튼 동작은 그대로예요.' },
     choice: { name: '너의 선택은?', container: '#settings .shell', targets: '#fake-notes-title', labels: [{ selector: '#fake-notes-title', name: '메모 화면 이름', dynamic: true }], story: ["멀리 떨어진 선택과 결과가 보이지 않는 실로 이어져요.", "선택은 자유로웠지만, 인연은 이미 있었어요."] },
@@ -62,6 +72,35 @@
     return next.length > limit ? next.slice(next.length - limit) : next;
   }
   function classifyPointer(dx, dy, threshold) { return Math.hypot(dx, dy) >= (threshold || 6) ? 'drag' : 'tap'; }
+  /* Layout presets (pure, tested): a preset replaces only the items it owns plus the style variant, and is "active" while every owned value still matches. */
+  function presetValue(prefs, key) {
+    if (key === 'target') return { scale: prefs.scale, offset: prefs.offset, x: prefs.x || 0 };
+    var saved = prefs.parts && prefs.parts[key];
+    return saved ? { scale: saved.scale, offset: saved.offset, x: saved.x || 0 } : { scale: 100, offset: 0, x: 0 };
+  }
+  function presetTarget(preset, key) { return Object.assign({ scale: 100, offset: 0, x: 0 }, (preset.values || {})[key]); }
+  function applyPreset(prefs, presets, id) {
+    var preset = presets.list.filter(function (entry) { return entry.id === id; })[0];
+    if (!preset) return prefs;
+    var next = JSON.parse(JSON.stringify(prefs)); next.parts = next.parts || {};
+    presets.owns.forEach(function (key) {
+      var v = presetTarget(preset, key);
+      if (key === 'target') { next.scale = v.scale; next.offset = v.offset; next.x = v.x; }
+      else if (v.scale === 100 && !v.offset && !v.x) delete next.parts[key];
+      else next.parts[key] = { scale: v.scale, offset: v.offset, x: v.x };
+    });
+    if (preset.style) next.style = preset.style; else delete next.style;
+    next.preset = preset.id;
+    return next;
+  }
+  function matchPreset(prefs, presets) {
+    var hit = '';
+    presets.list.forEach(function (preset) {
+      if (hit || (preset.style || '') !== (prefs.style || '')) return;
+      if (presets.owns.every(function (key) { var a = presetValue(prefs, key), b = presetTarget(preset, key); return a.scale === b.scale && a.offset === b.offset && a.x === b.x; })) hit = preset.id;
+    });
+    return hit;
+  }
   function sanitize(value, profile) {
     value = value && typeof value === 'object' ? value : {};
     var number = function (v, fallback, min, max) { return typeof v === 'number' && Number.isFinite(v) ? Math.max(min, Math.min(max, v)) : fallback; };
@@ -75,6 +114,11 @@
       var saved = value.parts && value.parts[part.selector];
       if (saved && typeof saved === 'object') result.parts[part.selector] = { scale: number(saved.scale, 100, p.scale[0], p.scale[1]), offset: number(saved.offset, 0, p.offset[0], p.offset[1]), x: number(saved.x, 0, p.x[0], p.x[1]) };
     });
+    var presets = profile.editor && profile.editor.presets;
+    if (presets) {
+      if (presets.list.some(function (preset) { return preset.id === value.preset; })) result.preset = value.preset;
+      if (presets.list.some(function (preset) { return preset.style && preset.style === value.style; })) result.style = value.style;
+    }
     return result;
   }
   function storageKey(app, location) { var pathname = location.pathname.replace(/^\/tools\/release(?=\/|$)/, '/tools/unlock').replace(/^\/tools\/hitsuzen(?=\/|$)/, '/tools/calc').replace(/^\/tools\/kairos-classic(?=\/|$)/, '/tools/stopwatch').replace(/^\/tools\/kairos(?=\/|$)/, '/tools/stopwatch-uni').replace(/^\/tools\/tyche(?=\/|$)/, '/tools/spinner'); return 'magic-appearance:v1:' + app + ':' + location.origin + pathname; }
@@ -112,7 +156,7 @@
     if (/Android/i.test(ua)) return { kind: 'android', title: '브라우저 메뉴에서 추가해요.', steps: ['브라우저 메뉴를 여세요.', "'홈 화면에 추가' 또는 '앱 설치'를 고르세요."] };
     return { kind: 'other', title: '브라우저에서 직접 설치해요.', steps: ['주소창 오른쪽의 설치 아이콘을 누르세요.', "없으면 브라우저 메뉴에서 '앱 설치' 또는 '홈 화면에 추가'를 고르세요."] };
   }
-  var api = { customizationAllowed: customizationAllowed, installGuide: installGuide, profiles: profiles, sanitize: sanitize, storageKey: storageKey, load: load, read: read, write: write, reset: reset, clipOffset: clipOffset, screenDelta: screenDelta, translateFor: translateFor, controlVisible: controlVisible, limitsFor: limitsFor, clampStep: clampStep, dragValue: dragValue, historyPush: historyPush, classifyPointer: classifyPointer };
+  var api = { customizationAllowed: customizationAllowed, installGuide: installGuide, profiles: profiles, sanitize: sanitize, storageKey: storageKey, load: load, read: read, write: write, reset: reset, clipOffset: clipOffset, screenDelta: screenDelta, translateFor: translateFor, controlVisible: controlVisible, limitsFor: limitsFor, clampStep: clampStep, dragValue: dragValue, historyPush: historyPush, classifyPointer: classifyPointer, applyPreset: applyPreset, matchPreset: matchPreset };
   root.MagicSettingsUI = api;
   if (!root.document) return;
   /* Keep the install event in one shared slot as early as possible. Other install scripts may hold the same event; prompt() works once, so every caller must handle a refusal. */
@@ -569,11 +613,23 @@
         var value = prefs.parts[part.selector] || { scale: 100, offset: 0, x: 0 };
         return part.selector + ':' + value.scale + ':' + value.offset + ':' + (value.x || 0);
       }).join('|');
-      return [prefs.scale, prefs.offset, prefs.x || 0, root.innerWidth, root.innerHeight, parts].join(',');
+      return [prefs.scale, prefs.offset, prefs.x || 0, root.innerWidth, root.innerHeight, parts, prefs.style || ''].join(',');
     }
     function schedule() { if (!pending) { pending = true; root.requestAnimationFrame(function () { pending = false; applyLayout(); updatePreview(); }); } }
     function invalidateLayout() { layoutInvalid = true; schedule(); }
+    /* A preset's style variant is a class on its own screens (for example magic-style-oneui85); the preview copy follows through className sync. */
+    var styleTargets = null;
+    function applyStyleVariant() {
+      var presets = editor && editor.presets;
+      if (!presets || !presets.styleTargets) return;
+      if (!styleTargets) styleTargets = Array.from(doc.querySelectorAll(presets.styleTargets));
+      presets.list.forEach(function (preset) {
+        if (!preset.style) return;
+        styleTargets.forEach(function (el) { var name = 'magic-style-' + preset.style, on = prefs.style === preset.style; if (el.classList.contains(name) !== on) el.classList.toggle(name, on); });
+      });
+    }
     function applyLayout() {
+      applyStyleVariant();
       var stamp = layoutStamp();
       if (!layoutInvalid && stamp === appliedLayout) return;
       var viewport = { width: root.innerWidth, height: root.innerHeight }, jobs = [];
@@ -804,6 +860,27 @@
       editorUi.selectWrap.hidden = !visibleItems.length;
       if (item) editorUi.select.value = item.id;
       Array.from(customize.querySelectorAll('.magic-appearance-field[data-selection]')).forEach(function (el) { el.hidden = !currentScreen || el.getAttribute('data-selection') !== currentScreen.id; });
+      refreshPresets();
+    }
+    /* Presets show while the Galaxy style is chosen; the last applied one reads as edited once any owned value changes. */
+    function refreshPresets() {
+      if (!editorUi.presetRow) return;
+      editorUi.presetRow.hidden = !!editor.galaxyWhen && !doc.querySelector(editor.galaxyWhen);
+      var active = matchPreset(prefs, editor.presets), edited = !active && !!prefs.preset;
+      editorUi.presetLabel.textContent = edited ? '프리셋 수정됨' : '프리셋';
+      editorUi.presetLabel.classList.toggle('is-edited', edited);
+      editorUi.presetButtons.forEach(function (button) {
+        button.setAttribute('aria-pressed', button.dataset.preset === active ? 'true' : 'false');
+        button.classList.toggle('is-edited', edited && button.dataset.preset === prefs.preset);
+      });
+    }
+    function choosePreset(id) {
+      var preset = editor.presets.list.filter(function (entry) { return entry.id === id; })[0];
+      if (!preset || (matchPreset(prefs, editor.presets) === id && prefs.preset === id)) return;
+      pushUndo(null);
+      prefs = sanitize(applyPreset(prefs, editor.presets, id), profile); dirty = true;
+      refreshEditorPanel(); schedule();
+      persist(preset.style || preset.values && Object.keys(preset.values).length ? preset.name + ' 프리셋을 적용했어요.' : '기본값으로 돌렸어요.');
     }
     function stepRow(field, title, step) {
       var wrap = node('div', null, 'magic-editor-step'), row = node('div'), minus = node('button', '−'), plus = node('button', '+'), input = node('input');
@@ -862,6 +939,21 @@
       var chips = editorUi.chips = node('div', null, 'magic-editor-chips'), stage = node('div', null, 'magic-editor-stage'), panel = editorUi.panel = node('div', null, 'magic-editor-panel');
       chips.setAttribute('role', 'group'); chips.setAttribute('aria-label', '미리볼 화면');
       preview.insertBefore(chips, preview.firstChild); preview.appendChild(stage); stage.appendChild(phone); stage.appendChild(panel);
+      if (editor.presets) {
+        var presetRow = editorUi.presetRow = node('div', null, 'magic-editor-presets');
+        presetRow.setAttribute('role', 'group'); presetRow.setAttribute('aria-label', '레이아웃 프리셋');
+        editorUi.presetLabel = node('span', '프리셋', 'magic-editor-preset-label'); presetRow.appendChild(editorUi.presetLabel);
+        editorUi.presetButtons = editor.presets.list.map(function (preset) {
+          var button = node('button', preset.name); button.type = 'button'; button.dataset.preset = preset.id;
+          button.addEventListener('click', function () { choosePreset(preset.id); });
+          presetRow.appendChild(button); return button;
+        });
+        preview.insertBefore(presetRow, stage);
+      }
+      /* Phones in landscape: the preview copy renders with the landscape viewport (vw, vh, media queries), so a portrait frame would lie. Ask to rotate instead of drawing a flattened phone. */
+      var rotate = node('div', null, 'magic-editor-rotate'), rotateBack = node('button', '‹ 설정으로');
+      rotate.appendChild(node('p', '세로로 돌려 주세요', 'magic-editor-rotate-title')); rotate.appendChild(node('p', '화면 커스텀은 세로 화면에서 실제 모습 그대로 보여요.', 'magic-editor-rotate-help'));
+      rotateBack.type = 'button'; rotateBack.addEventListener('click', closeCustom); rotate.appendChild(rotateBack); customPage.appendChild(rotate);
       editorUi.name = node('p', '', 'magic-editor-name'); editorUi.help = node('p', '', 'magic-editor-help');
       var steps = editorUi.steps = node('div', null, 'magic-editor-steps');
       steps.appendChild(stepRow('scale', '크기 %', SCALE_STEP)); steps.appendChild(stepRow('offset', '위아래', POSITION_STEP)); steps.appendChild(stepRow('x', '좌우', POSITION_STEP));

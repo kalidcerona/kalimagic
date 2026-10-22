@@ -108,3 +108,80 @@ test('the editor never uses browser dialogs or range sliders', () => {
   assert.match(block, /이 기기에 자동 저장됨/);
   assert.doesNotMatch(block, /[—~]/);
 });
+
+test('layout presets: applying replaces only owned items, keeps keypad/labels, sets the style variant', () => {
+  const unlock = ui.profiles.unlock;
+  const presets = unlock.editor.presets;
+  const ids = plain(presets.list.map((preset) => preset.id));
+  assert.deepEqual(ids, ['oneui9', 'oneui85', 'default']);
+  const start = ui.sanitize({ scale: 120, offset: 3, x: 0, labels: { '#prompt': '암호' }, parts: { '#keypad': { scale: 90, offset: 2, x: 0 }, '#fingerprint': { scale: 130, offset: 4, x: 1 } } }, unlock);
+  const v85 = plain(ui.sanitize(ui.applyPreset(start, presets, 'oneui85'), unlock));
+  assert.equal(v85.style, 'oneui85');
+  assert.equal(v85.preset, 'oneui85');
+  assert.deepEqual(v85.parts['#keypad'], { scale: 90, offset: 2, x: 0 }, 'keypad is not owned by presets');
+  assert.deepEqual(v85.labels, { '#prompt': '암호' }, 'labels are untouched');
+  assert.deepEqual([v85.scale, v85.offset, v85.x], [100, 0, 0], 'owned target returns to the preset value');
+  assert.deepEqual(v85.parts['#fingerprint'], { scale: 115, offset: -5, x: 0 });
+  assert.equal(ui.matchPreset(v85, presets), 'oneui85');
+  const v9 = plain(ui.sanitize(ui.applyPreset(v85, presets, 'oneui9'), unlock));
+  assert.equal(v9.style, undefined, 'One UI 9.0 is the default look: no style variant');
+  assert.equal(v9.parts['#fingerprint'], undefined, 'items at 100/0/0 are removed, not stored');
+  assert.equal(ui.matchPreset(v9, presets), 'oneui9');
+  const back = plain(ui.sanitize(ui.applyPreset(v9, presets, 'default'), unlock));
+  assert.equal(ui.matchPreset(back, presets), 'default');
+  assert.deepEqual(back.parts, { '#keypad': { scale: 90, offset: 2, x: 0 } });
+  assert.equal(ui.applyPreset(start, presets, 'nope'), start, 'unknown preset is a no-op');
+});
+
+test('layout presets: every preset value is inside the editor limits and on the step grid', () => {
+  const unlock = ui.profiles.unlock;
+  const { owns, list } = unlock.editor.presets;
+  for (const preset of list) {
+    for (const [key, value] of Object.entries(preset.values)) {
+      assert.ok(owns.includes(key), `${preset.id} sets an owned item ${key}`);
+      const limits = ui.limitsFor(unlock, key === 'target' ? 'target' : 'part');
+      for (const field of ['scale', 'offset', 'x']) {
+        const step = field === 'scale' ? 1 : 0.5;
+        assert.equal(ui.clampStep(value[field], limits[field], step), value[field], `${preset.id} ${key}.${field}`);
+      }
+    }
+  }
+});
+
+test('layout presets: any owned edit makes the preset read as edited, undo snapshot restores it', () => {
+  const unlock = ui.profiles.unlock;
+  const presets = unlock.editor.presets;
+  const applied = ui.sanitize(ui.applyPreset(ui.sanitize(null, unlock), presets, 'oneui9'), unlock);
+  let history = ui.historyPush([], { snapshot: JSON.stringify(applied), key: null, at: 0 }, 50, 1200);
+  const edited = ui.sanitize({ ...plain(applied), parts: { ...plain(applied).parts, '#time-date': { scale: 104, offset: 0.5, x: 0 } } }, unlock);
+  assert.equal(ui.matchPreset(edited, presets), '', 'no preset matches after an owned edit');
+  assert.equal(edited.preset, 'oneui9', 'the last applied preset is remembered for the edited label');
+  const keypadOnly = ui.sanitize({ ...plain(applied), parts: { ...plain(applied).parts, '#keypad': { scale: 80, offset: 0, x: 0 } } }, unlock);
+  assert.equal(ui.matchPreset(keypadOnly, presets), 'oneui9', 'non-owned edits keep the preset active');
+  const restored = ui.sanitize(JSON.parse(history[history.length - 1].snapshot), unlock);
+  assert.equal(ui.matchPreset(restored, presets), 'oneui9');
+  history = history.slice(0, -1);
+  assert.equal(history.length, 0);
+});
+
+test('layout presets: saved preset and style survive sanitize; junk values and other profiles drop them', () => {
+  const unlock = ui.profiles.unlock;
+  const kept = plain(ui.sanitize({ preset: 'oneui85', style: 'oneui85' }, unlock));
+  assert.equal(kept.preset, 'oneui85');
+  assert.equal(kept.style, 'oneui85');
+  const junk = plain(ui.sanitize({ preset: 'x', style: '<b>' }, unlock));
+  assert.equal('preset' in junk, false);
+  assert.equal('style' in junk, false);
+  assert.deepEqual(Object.keys(plain(ui.sanitize(null, unlock))).sort(), ['labels', 'offset', 'parts', 'scale', 'x'], 'fresh values gain no new keys');
+  const other = plain(ui.sanitize({ preset: 'oneui85', style: 'oneui85' }, ui.profiles.stopwatch));
+  assert.equal('style' in other, false, 'apps without presets never store a style');
+});
+
+test('One UI 8.5 style variant lives in zz2 CSS only under the preset class', () => {
+  assert.match(html, /#time-lock\.galaxy\.magic-style-oneui85 #time-face \{ top: 16%; flex-direction: column; \}/);
+  assert.match(html, /#time-lock\.galaxy\.magic-style-oneui85 #time-clock \{[^}]*font-weight: 400;/);
+  const css = read('zz2/settings-ui.css');
+  assert.match(css, /@media \(orientation:landscape\) and \(max-height:540px\)/, 'phones in landscape get the rotate hint');
+  const dist = read('distribution-snapshots/unlock/index.html');
+  assert.doesNotMatch(dist, /magic-style-oneui85/, 'friend distribution stays unchanged');
+});
