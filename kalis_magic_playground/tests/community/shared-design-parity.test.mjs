@@ -6,6 +6,15 @@ import { USOTSUKI_FILES, SPINNER_FILES } from '../../scripts/build-public.mjs';
 
 const read = (route, file) => readFile(new URL(`../../${route}/${file}`, import.meta.url));
 
+// Personal USOTSUKI keeps the localhost preview hook. The friend snapshot excludes it.
+const LOCAL_PREVIEW_HOOK = /\nconst localSettingsHost = typeof location !== 'undefined' && \['localhost', '127\.0\.0\.1', '::1', '\[::1\]'\]\.includes\(location\.hostname\);\nif \(localSettingsHost && new URLSearchParams\(location\.search\)\.get\('local-preview'\) === '1'\) \{[\s\S]*?\n\}\n?$/;
+
+function withoutLocalPreviewHook(source) {
+  const stripped = source.replace(LOCAL_PREVIEW_HOOK, '\n');
+  if (stripped === source) throw new Error('local preview hook was not removed');
+  return stripped;
+}
+
 test('shared USOTSUKI and TYCHE retain the approved personal surfaces and artwork', async () => {
   for (const [personal, snapshot, files] of [
     ['zz7', 'usotsuki', USOTSUKI_FILES.filter(f => /\.css$|^(holdem-assets|recorder-assets)\//.test(f))],
@@ -28,8 +37,13 @@ test('shared theme selectors expose the same options as their personal counterpa
 
 test('shared performance code differs only in its explicitly isolated storage keys', async () => {
   for (const [personal, snapshot, file] of [['zz7', 'usotsuki', 'detector.js'], ['zz11', 'spinner', 'app.js']]) {
-    const source = (await read(personal, file)).toString();
+    let source = (await read(personal, file)).toString();
     const shared = (await read(`distribution-snapshots/${snapshot}`, file)).toString();
+    if (personal === 'zz7' && file === 'detector.js') {
+      assert.match(source, /local-preview/);
+      assert.doesNotMatch(shared, /magic-local-settings|local-preview/);
+      source = withoutLocalPreviewHook(source);
+    }
     const normalized = shared.replaceAll('usotsuki.distribution.', 'usotsuki.')
       .replaceAll('friend-spinner-state-', 'zz11-spinner-state-')
       .replaceAll('friend-spinner-guide-', 'zz11-guide-')
@@ -71,16 +85,20 @@ test('Three recorder themes retain exact bytes and cache isolation', async () =>
     const personal = await read('zz7', file);
     let snapshot = (await read('distribution-snapshots/usotsuki', file)).toString();
     if (file === 'index.html') snapshot = snapshot.replace('usotsuki.distribution.detector.theme.v1', 'usotsuki.detector.theme.v1');
+    let personalText = personal.toString();
     if (file === 'detector.js') {
       for (const [constant, key] of [['STATE_KEY','detector.v1'], ['SOUND_KEY','detector.sound.v1'], ['DISPLAY_THEME_KEY','detector.theme.v1']]) {
         snapshot = snapshot.replace(`${constant} = "usotsuki.distribution.${key}"`, `${constant} = "usotsuki.${key}"`);
       }
+      assert.match(personalText, /local-preview/);
+      assert.doesNotMatch(snapshot, /magic-local-settings|local-preview/);
+      personalText = withoutLocalPreviewHook(personalText);
     } else if (file === 'sw.js') {
       assert.ok(snapshot.includes("CACHE_NAME = CACHE_PREFIX + 'v20261009-continuous-paper-20-haptic-dip-manual-install-1-perf-1-coherent-1-compat-1-gesture-1-wake-1-distribution'"));
       snapshot = snapshot.replace('v20261009-continuous-paper-20-haptic-dip-manual-install-1-perf-1-coherent-1-compat-1-gesture-1-wake-1-distribution', 'v20261009-continuous-paper-20-haptic-dip-manual-install-1-perf-1-coherent-1-compat-1-gesture-1-wake-1');
       assert.ok(personal.includes('v20261009-continuous-paper-20-haptic-dip-manual-install-1-perf-1-coherent-1-compat-1-gesture-1-wake-1'));
     }
-    assert.equal(snapshot, personal.toString(), `normalized snapshot ${file}`);
+    assert.equal(snapshot, personalText, `normalized snapshot ${file}`);
     if (file === 'style.css') {
       const protectedPrefix = personal.toString().split('\n').slice(0, 929).join('\n') + '\n';
       assert.equal(createHash('sha256').update(protectedPrefix).digest('hex'), '07ad81bbc85967754c072d262d8ef2337cf2e0077ec2d077b008139108a8e288');

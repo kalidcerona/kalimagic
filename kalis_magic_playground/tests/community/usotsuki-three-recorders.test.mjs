@@ -178,7 +178,11 @@ test('snapshot changes exactly three named constants and excludes the localhost 
   const pattern=new RegExp('(const '+name+' = ")usotsuki\\.distribution\\.');
   assert.match(shared,pattern);shared=shared.replace(pattern,'$1usotsuki.');changes++;
  }
- assert.equal(changes,3);assert.equal(shared,personal);assert.doesNotMatch(personal,/magic-local-settings/);
+ const hook=/\nconst localSettingsHost = typeof location !== 'undefined' && \['localhost', '127\.0\.0\.1', '::1', '\[::1\]'\]\.includes\(location\.hostname\);\nif \(localSettingsHost && new URLSearchParams\(location\.search\)\.get\('local-preview'\) === '1'\) \{[\s\S]*?\n\}\n?$/;
+ assert.equal(changes,3);
+ assert.match(personal,/local-preview/);
+ assert.doesNotMatch(shared,/magic-local-settings|local-preview/);
+ assert.equal(shared,personal.replace(hook,'\n'));
 });
 
 

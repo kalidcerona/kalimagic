@@ -199,7 +199,11 @@ for (const [file, scope] of WORKERS) {
     state.fetches = [];
     const v2 = boot(versioned(source, 'v2'), scope, state, stores);
     await lifecycle(v2, 'install');
-    assert.equal(v2.skips, 0, 'an update must stay waiting while a client is open');
+    // Magicshow saves and reloads on controllerchange, so a stored update takes over immediately.
+    const immediateClaim = file === 'distribution-snapshots/magicshow/sw.js';
+    assert.equal(v2.skips, immediateClaim ? 1 : 0, immediateClaim
+      ? 'magicshow stores the next shell and takes over immediately'
+      : 'an update must stay waiting while a client is open');
     assert.notEqual(v1.cacheName, v2.cacheName);
     assert.equal(v2.bucket().entries.get(htmlUrl), 'v2:index.html');
     assert.equal(v2.bucket().entries.get(jsUrl).startsWith('v2:'), true);

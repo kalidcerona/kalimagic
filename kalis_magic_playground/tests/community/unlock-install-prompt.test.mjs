@@ -39,11 +39,15 @@ test('the first Android visit offers installation and uses Chrome’s native pro
   try {
     Object.assign(globalThis, {
       document: { getElementById: (id) => elements.get(id) },
-      navigator: { userAgent: 'Mozilla/5.0 (Linux; Android 15) Chrome/140.0' },
       location: { pathname: '/zz2/' },
       matchMedia: () => ({ matches: false }),
       localStorage: { getItem: (key) => saved.get(key), setItem: (key, value) => saved.set(key, value) },
       window: { addEventListener: (name, listener) => windowEvents.set(name, listener) }
+    });
+    Object.defineProperty(globalThis, 'navigator', {
+      configurable: true,
+      writable: true,
+      value: { userAgent: 'Mozilla/5.0 (Linux; Android 15) Chrome/140.0' }
     });
     await import('../../zz2/install-prompt.js?runtime-android');
     assert.equal(elements.get('install-offer').hidden, false);

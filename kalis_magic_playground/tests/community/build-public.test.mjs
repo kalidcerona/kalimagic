@@ -192,7 +192,15 @@ test('public build serves integrated stopwatch on both retained entitlement rout
   assert.deepEqual(await readFile(new URL('brand-logo.png', sharedQr)), await readFile(new URL('../../distribution-snapshots/qr/brand-logo.png', import.meta.url)));
   assert.match(await readFile(new URL('sw.js', sharedQr), 'utf8'), /scope\.pathname\.startsWith\('\/tools\/'\)/);
   for (const route of [...PUBLIC_DIRS.filter((route) => /^zz\d+$/.test(route)), ...DISTRIBUTION_APPS.map((app) => 'tools/' + app.target)]) {
-    await assert.rejects(stat(new URL('../../dist/' + route + '/fullscreen.js', import.meta.url)), { code: 'ENOENT' });
+    const fullscreen = new URL('../../dist/' + route + '/fullscreen.js', import.meta.url);
+    // Choice publishes the compatibility stub. It must not request fullscreen. Every other route omits the file.
+    if (route === 'tools/choice') {
+      const stub = await readFile(fullscreen, 'utf8');
+      assert.match(stub, /never request fullscreen/);
+      assert.doesNotMatch(stub, /\b(?:requestFullscreen|webkitRequestFullscreen|webkitRequestFullScreen|mozRequestFullScreen|msRequestFullscreen)\b/);
+      continue;
+    }
+    await assert.rejects(stat(fullscreen), { code: 'ENOENT' });
   }
   const qrManifest = JSON.parse(await readFile(new URL('manifest.webmanifest', qr), 'utf8'));
   assert.equal(qrManifest.display, 'standalone');

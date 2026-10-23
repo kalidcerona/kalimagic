@@ -401,7 +401,8 @@ test('persist writes the store once without parsing it back, and a second perfor
   globalThis.window = globalThis;
   if (typeof globalThis.addEventListener !== 'function') globalThis.addEventListener = () => {};
   globalThis.location = { protocol: 'file:', href: 'file:///zz4/', pathname: '/zz4/', hash: '', search: '' };
-  globalThis.navigator = { userAgent: 'test' };
+  const navigatorDescriptor = Object.getOwnPropertyDescriptor(globalThis, 'navigator');
+  Object.defineProperty(globalThis, 'navigator', { configurable: true, writable: true, value: { userAgent: 'test' } });
   globalThis.history = { state: null, pushState() {}, replaceState() {}, back() {} };
   globalThis.localStorage = storage;
   globalThis.HTMLElement = class HTMLElement {};
@@ -446,7 +447,8 @@ test('persist writes the store once without parsing it back, and a second perfor
     globalThis.document = previous.document;
     globalThis.window = previous.window;
     globalThis.location = previous.location;
-    globalThis.navigator = previous.navigator;
+    if (navigatorDescriptor) Object.defineProperty(globalThis, 'navigator', navigatorDescriptor);
+    else delete globalThis.navigator;
     globalThis.history = previous.history;
     globalThis.localStorage = previous.localStorage;
     globalThis.HTMLElement = previous.HTMLElement;

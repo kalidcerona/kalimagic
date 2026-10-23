@@ -41,7 +41,7 @@ test('actual DOM loop hides failed mask rather than showing stale foreground geo
   el('rank').value='7';el('suit').value='heart';el('brightness').value='100';
   Object.assign(el('camera'),{readyState:2,videoWidth:192,videoHeight:256,play:async()=>{}});
   const stub = dataUrl(`
-    export { mapSourceOntoCorners } from ${JSON.stringify(pathToFileURL(`${source}/vision.js`).href)};
+    export { heldCardPresent, mapSourceOntoCorners } from ${JSON.stringify(pathToFileURL(`${source}/vision.js`).href)};
     export function detectCard(){return globalThis.__heldoutDetection;}
     export function detectCardAgainstBackground(){return globalThis.__heldoutDetection;}
     export function cardOcclusionMask(frame,corners){
