@@ -84,6 +84,7 @@ async function runGuard({
   assert.equal(timers.length, 1);
   assert.equal(timers[0].delay, 6000);
   const hiddenWhilePending = document.documentElement.style.visibility;
+  const replacedWhilePending = [...replaced];
   if (fireTimeout) timers[0].fn();
   if (fireTimeoutAfterHeaders) {
     await settle();
@@ -93,6 +94,7 @@ async function runGuard({
   await settle();
   return {
     hiddenWhilePending,
+    replacedWhilePending,
     visibility: document.documentElement.style.visibility,
     replaced,
     cleared,
@@ -114,9 +116,9 @@ test('success stores a timestamp and reveals the page', async () => {
   assert.deepEqual(result.cleared, [1]);
 });
 
-test('ok:false removes the key and redirects', async () => {
+test('ok:false with a stale stamp removes the key and redirects', async () => {
   const key = 'friend-apps-ok:unlock:/tools/release/';
-  const storage = new Map([[key, String(NOW)]]);
+  const storage = new Map([[key, String(NOW - 91 * DAY)]]);
   const result = await runGuard({
     storage,
     fetchImpl: () => Promise.resolve(entitlement(200, { ok: false })),
@@ -126,10 +128,10 @@ test('ok:false removes the key and redirects', async () => {
   assert.equal(storage.has(key), false);
 });
 
-test('401 and 403 redirect and remove the key', async () => {
+test('401 and 403 with a stale stamp redirect and remove the key', async () => {
   for (const status of [401, 403]) {
     const key = 'friend-apps-ok:unlock:/tools/release/';
-    const storage = new Map([[key, String(NOW)]]);
+    const storage = new Map([[key, String(NOW - 91 * DAY)]]);
     const result = await runGuard({
       storage,
       fetchImpl: () => Promise.resolve(entitlement(status, { ok: true })),
@@ -202,7 +204,7 @@ test('a timeout with a fresh stamp reveals', async () => {
       });
     }),
   });
-  assert.equal(result.hiddenWhilePending, 'hidden');
+  assert.equal(result.hiddenWhilePending, '');
   assert.equal(result.visibility, '');
   assert.deepEqual(result.replaced, []);
   assert.equal(storage.get(key), String(NOW));
@@ -225,11 +227,13 @@ test('a future stamp more than 1 day ahead redirects', async () => {
   assert.deepEqual(skew.replaced, []);
 });
 
-test('localStorage throwing redirects', async () => {
+test('localStorage throwing waits for the check and redirects only when it cannot confirm', async () => {
   const offline = await runGuard({
     storageThrows: true,
     fetchImpl: () => Promise.reject(new TypeError('Failed to fetch')),
   });
+  assert.equal(offline.hiddenWhilePending, 'hidden');
+  assert.deepEqual(offline.replacedWhilePending, []);
   assert.equal(offline.visibility, 'hidden');
   assert.deepEqual(offline.replaced, [offline.loginUrl]);
 
@@ -237,6 +241,8 @@ test('localStorage throwing redirects', async () => {
     storageThrows: true,
     fetchImpl: () => Promise.resolve(entitlement(200, { ok: true })),
   });
+  assert.equal(online.hiddenWhilePending, 'hidden');
+  assert.deepEqual(online.replacedWhilePending, []);
   assert.equal(online.visibility, '');
   assert.deepEqual(online.replaced, []);
 });
@@ -317,4 +323,73 @@ test('a stalled body takes the offline path after the timeout', async () => {
   assert.equal(missing.visibility, 'hidden');
   assert.deepEqual(missing.replaced, [missing.loginUrl]);
   assert.equal(missing.storage.size, 0);
+});
+
+test('a fresh stamp reveals before the check resolves and refreshes on success', async () => {
+  const key = 'friend-apps-ok:unlock:/tools/release/';
+  const storage = new Map([[key, String(NOW - 10 * DAY)]]);
+  let resolveCheck;
+  let revealedBeforeResolve;
+  const document = { documentElement: { style: { visibility: 'visible' } } };
+  const sandbox = {
+    location: { protocol: 'https:', pathname: '/tools/release/', search: '', replace() { assert.fail('no redirect'); } },
+    document,
+    localStorage: {
+      getItem: (k) => (storage.has(k) ? storage.get(k) : null),
+      setItem: (k, v) => storage.set(k, String(v)),
+      removeItem: (k) => storage.delete(k),
+    },
+    AbortController,
+    setTimeout: () => 1,
+    clearTimeout() {},
+    fetch: () => new Promise((resolve) => { resolveCheck = resolve; }),
+    Date: { now: () => NOW },
+  };
+  vm.runInNewContext(guardScript('unlock', 'release'), sandbox);
+  await settle();
+  revealedBeforeResolve = document.documentElement.style.visibility;
+  assert.equal(typeof resolveCheck, 'function', 'check still runs in the background');
+  resolveCheck(entitlement(200, { ok: true }));
+  await settle();
+  assert.equal(revealedBeforeResolve, '');
+  assert.equal(document.documentElement.style.visibility, '');
+  assert.equal(storage.get(key), String(NOW));
+});
+
+test('a fresh stamp plus explicit revocation removes the key without redirecting', async () => {
+  const cases = [
+    [401, { ok: true }],
+    [403, { ok: true }],
+    [200, { ok: false }],
+    [404, { ok: false }],
+  ];
+  for (const [status, body] of cases) {
+    const key = 'friend-apps-ok:unlock:/tools/release/';
+    const storage = new Map([[key, String(NOW)]]);
+    const result = await runGuard({
+      storage,
+      fetchImpl: () => Promise.resolve(entitlement(status, body)),
+    });
+    assert.equal(result.hiddenWhilePending, '', String(status));
+    assert.equal(result.visibility, '', String(status));
+    assert.deepEqual(result.replaced, [], String(status));
+    assert.equal(storage.has(key), false, String(status));
+
+    // The next launch has no stamp and goes to login.
+    const next = await runGuard({
+      storage,
+      fetchImpl: () => Promise.reject(new TypeError('Failed to fetch')),
+    });
+    assert.equal(next.hiddenWhilePending, 'hidden', String(status));
+    assert.deepEqual(next.replaced, [next.loginUrl], String(status));
+  }
+});
+
+test('no stamp plus 401 redirects', async () => {
+  const result = await runGuard({
+    fetchImpl: () => Promise.resolve(entitlement(401, { ok: false })),
+  });
+  assert.equal(result.hiddenWhilePending, 'hidden');
+  assert.equal(result.visibility, 'hidden');
+  assert.deepEqual(result.replaced, [result.loginUrl]);
 });

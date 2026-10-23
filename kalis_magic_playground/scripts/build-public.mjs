@@ -462,7 +462,6 @@ export function accessGuard(tool, target) {
   // target is not part of the storage key. The open pathname keeps kairos and kairos-classic apart.
   return `  <script id="friend-apps-check">
     if (location.protocol === 'https:' && location.pathname.startsWith('/tools/')) {
-      document.documentElement.style.visibility = 'hidden';
       const loginUrl = '/tools/login/?to=' + encodeURIComponent(location.pathname + location.search);
       const segments = location.pathname.split('/');
       const scope = '/tools/' + segments[2] + '/';
@@ -478,7 +477,16 @@ export function accessGuard(tool, target) {
         const now = Date.now();
         return (now - stamp) <= graceMs && (stamp - now) <= dayMs;
       };
+      // A recently verified phone opens at once and the check runs in the background.
+      // A failed read counts as no stamp: stay hidden and let the check decide.
+      let launchStamp = null;
+      try { launchStamp = localStorage.getItem(storageKey); }
+      catch (error) {}
+      const verified = freshStamp(launchStamp);
+      if (verified) reveal();
+      else document.documentElement.style.visibility = 'hidden';
       const allowOffline = () => {
+        if (verified) return;
         let raw;
         try { raw = localStorage.getItem(storageKey); }
         catch (error) { redirect(); return; }
@@ -488,7 +496,9 @@ export function accessGuard(tool, target) {
       const revoke = () => {
         try { localStorage.removeItem(storageKey); }
         catch (error) {}
-        redirect();
+        // Revocation is rare and deliberate. Never bounce a running show to login:
+        // with a fresh stamp the key is dropped now and the next launch goes to login.
+        if (!verified) redirect();
       };
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 6000);
