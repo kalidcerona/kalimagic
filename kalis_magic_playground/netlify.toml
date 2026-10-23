@@ -55,6 +55,16 @@
     Permissions-Policy = "camera=(self), microphone=(), geolocation=()"
 
 [[headers]]
+  for = "/zz15"
+  [headers.values]
+    Permissions-Policy = "camera=(self), microphone=(), geolocation=()"
+
+[[headers]]
+  for = "/zz15/*"
+  [headers.values]
+    Permissions-Policy = "camera=(self), microphone=(), geolocation=()"
+
+[[headers]]
   for = "/tools/hitsuzen/manifest.webmanifest"
   [headers.values]
     Content-Type = "application/manifest+json"
@@ -431,6 +441,17 @@
 
 [[headers]]
   for = "/kanamecue/sw.js"
+  [headers.values]
+    Content-Type = "application/javascript; charset=utf-8"
+    Cache-Control = "no-store, no-cache"
+
+[[headers]]
+  for = "/zz15/manifest.webmanifest"
+  [headers.values]
+    Content-Type = "application/manifest+json"
+
+[[headers]]
+  for = "/zz15/sw.js"
   [headers.values]
     Content-Type = "application/javascript; charset=utf-8"
     Cache-Control = "no-store, no-cache"

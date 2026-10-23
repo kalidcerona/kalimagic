@@ -1,0 +1,63 @@
+{
+  "app": "URAMICHI",
+  "version": 1,
+  "categories": [
+    {
+      "id": "quick",
+      "name": "빠른 주소",
+      "inputKind": "NONE",
+      "entries": [
+        {
+          "id": "quick-1",
+          "label": "저장했던 \"주소\"",
+          "url": "https:\/\/old.com\/?a=1&b=\"x\"",
+          "code": ""
+        }
+      ]
+    },
+    {
+      "id": "fixed",
+      "name": "목록",
+      "inputKind": "NONE",
+      "entries": [
+        {
+          "id": "fixed-1",
+          "label": "예시 1",
+          "url": "https:\/\/www.google.com",
+          "code": ""
+        },
+        {
+          "id": "fixed-2",
+          "label": "예시 2",
+          "url": "https:\/\/www.wikipedia.org",
+          "code": ""
+        }
+      ]
+    },
+    {
+      "id": "card",
+      "name": "카드 \\ 탭\t",
+      "inputKind": "CARD",
+      "entries": [
+        {
+          "id": "c11",
+          "label": "A♣",
+          "url": "https:\/\/c.com\/ac",
+          "code": "11"
+        },
+        {
+          "id": "any",
+          "label": "카드",
+          "url": "https:\/\/g.com\/?q=card+{card}",
+          "code": ""
+        }
+      ]
+    },
+    {
+      "id": "empty",
+      "name": "빈 묶음",
+      "inputKind": "SEQUENCE",
+      "entries": []
+    }
+  ]
+}

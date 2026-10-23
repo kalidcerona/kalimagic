@@ -34,7 +34,7 @@ test('public build explicitly excludes local planning and source folders', () =>
 });
 
 test('personal ALTER, Asrai, and spinner are included while unfinished FALSE MEMORY stays private', () => {
-  assert.deepEqual(PUBLIC_DIRS.filter((entry) => /^zz\d+$/.test(entry)), ['zz1', 'zz2', 'zz3', 'zz4', 'zz5', 'zz6', 'zz7', 'zz8', 'zz10', 'zz11', 'zz12', 'zz13', 'zz14']);
+  assert.deepEqual(PUBLIC_DIRS.filter((entry) => /^zz\d+$/.test(entry)), ['zz1', 'zz2', 'zz3', 'zz4', 'zz5', 'zz6', 'zz7', 'zz8', 'zz10', 'zz11', 'zz12', 'zz13', 'zz14', 'zz15']);
   assert.equal(MIRROR_PAIRS.some(([, mirror]) => mirror.startsWith('zz9/')), false);
   assert.ok(PRIVATE_PATTERNS.some((pattern) => pattern.test('zz8/app.js')));
 });

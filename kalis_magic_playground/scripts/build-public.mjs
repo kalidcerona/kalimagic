@@ -78,6 +78,7 @@ export const PUBLIC_DIRS = [
   'zz12',
   'zz13',
   'zz14',
+  'zz15',
   'TabataTimer',
   'KanameCue'
 ];
@@ -87,6 +88,9 @@ export const TABATA_FILES = ['data.js', 'install-ui.js', 'icon-maskable-192.png'
 
 // KANAME Cue web app: the same explicit-shell rule as TabataTimer.
 export const KANAME_FILES = ['index.html', 'style.css', 'app.mjs', 'engine.mjs', 'audio.mjs', 'store.mjs', 'install-ui.js', 'manifest.webmanifest', 'sw.js', 'brand-logo.png', 'icon-192.png', 'icon-512.png', 'icon-maskable-192.png', 'icon-maskable-512.png'];
+
+// URAMICHI web app (zz15): explicit shell, including the vendored QR decoder and its licence.
+export const URAMICHI_FILES = ['index.html', 'style.css', 'app.mjs', 'core.mjs', 'picker.mjs', 'install-ui.js', 'manifest.webmanifest', 'sw.js', 'brand-logo.png', 'icon-192.png', 'icon-512.png', 'icon-maskable-192.png', 'icon-maskable-512.png', 'vendor/jsQR.js', 'vendor/LICENSE-jsqr.txt'];
 
 export const PRIVATE_PATTERNS = [
   /(?:^|\/)fullscreen\.js$/,
@@ -586,6 +590,10 @@ async function copyIfExists(relativePath) {
       if (relativePath === 'KanameCue') {
         const file = path.relative(path.join(ROOT, 'KanameCue'), source);
         return file === '' || KANAME_FILES.includes(file);
+      }
+      if (relativePath === 'zz15') {
+        const file = path.relative(path.join(ROOT, 'zz15'), source).split(path.sep).join('/');
+        return file === '' || URAMICHI_FILES.includes(file) || URAMICHI_FILES.some((entry) => entry.startsWith(file + '/'));
       }
       if (relativePath === 'zz14') return shouldCopyPimax(path.relative(path.join(ROOT, 'zz14'), source));
       return shouldCopy(path.relative(ROOT, source)) && !isExcludedLegacyTree(publicPath);
