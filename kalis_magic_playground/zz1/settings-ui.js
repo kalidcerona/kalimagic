@@ -144,7 +144,13 @@
   }
   function translateFor(delta, rotated) { return rotated ? delta.y + 'px ' + (-delta.x) + 'px' : delta.x + 'px ' + delta.y + 'px'; }
   function controlVisible(controlSelection, selectedId, selective) { return !selective || controlSelection === selectedId; }
-  function customizationAllowed(pathname, flag) { return flag !== 'off' && !/^\/tools(?:\/|$)/i.test(pathname || '') && !(pathname || '').includes('/distribution-snapshots/'); }
+  function customizationAllowed(pathname, flag) {
+    if (flag === 'off') return false;
+    var path = pathname || '';
+    // Friend RELEASE is the same app as the personal build, including the editor.
+    if (/^\/tools\/(?:unlock|release)(?:\/|$)/i.test(path) || path.includes('/distribution-snapshots/unlock')) return true;
+    return !/^\/tools(?:\/|$)/i.test(path) && !path.includes('/distribution-snapshots/');
+  }
   /* Manual install help: plain Korean steps for the browser that is in use. */
   function installGuide(nav, standalone) {
     nav = nav || {};

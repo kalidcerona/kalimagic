@@ -134,7 +134,8 @@ test('public build serves integrated stopwatch on both retained entitlement rout
   assert.doesNotMatch(personalStopwatch, /id="friend-apps-check"/);
   assert.match(sharedUnlock, /id="friend-apps-check"/);
   assert.match(sharedUnlock, /tools\/_check\?tool=unlock/);
-  for (const html of [sharedUnlock, sharedStopwatch, sharedCalculator, sharedAletheia, sharedUsotsuki]) assert.match(html, /data-magic-customize="off"/);
+  assert.doesNotMatch(sharedUnlock, /data-magic-customize="off"/);
+  for (const html of [sharedStopwatch, sharedCalculator, sharedAletheia, sharedUsotsuki]) assert.match(html, /data-magic-customize="off"/);
   assert.doesNotMatch(personalStopwatch, /data-magic-customize="off"/);
   assert.match(sharedStopwatch, /id="friend-apps-check"/);
   assert.match(sharedStopwatch, /tools\/_check\?tool=stopwatch-uni/);
@@ -343,7 +344,8 @@ test('shared unlock stays on the pinned snapshot until explicit promotion', asyn
     ]);
     if (file === 'index.html') {
       const withoutGuard = distributed.toString('utf8').replace(/\n  <script id="friend-apps-check">[\s\S]*?<\/script>/, '');
-      assert.equal(withoutGuard, snapshot.toString('utf8').replace(/<body\b/, '<body data-magic-customize="off"'));
+      assert.doesNotMatch(distributed.toString('utf8'), /data-magic-customize="off"/);
+      assert.equal(withoutGuard, snapshot.toString('utf8'));
     } else if (file === 'manifest.webmanifest') {
       const expected = { ...JSON.parse(snapshot), id: '/tools/release/', start_url: './', scope: './' };
       assert.deepEqual(JSON.parse(distributed), expected);
@@ -561,9 +563,16 @@ test('final app policy rejects fullscreen and mixed personal/friend customizatio
     await mkdir(shared, { recursive: true });
     await writeFile(path.join(shared, 'manifest.webmanifest'), JSON.stringify({ display: 'standalone' }));
     await writeFile(path.join(shared, 'index.html'), '<body></body>');
-    await assert.rejects(verifyAppDisplayPolicy(fixture, ['tools/release']), /customization policy/);
-    await writeFile(path.join(shared, 'index.html'), '<body data-magic-customize="off"></body>');
     await verifyAppDisplayPolicy(fixture, ['tools/release']);
+    await writeFile(path.join(shared, 'index.html'), '<body data-magic-customize="off"></body>');
+    await assert.rejects(verifyAppDisplayPolicy(fixture, ['tools/release']), /customization policy/);
+    const other = path.join(fixture, 'tools', 'kairos');
+    await mkdir(other, { recursive: true });
+    await writeFile(path.join(other, 'manifest.webmanifest'), JSON.stringify({ display: 'standalone' }));
+    await writeFile(path.join(other, 'index.html'), '<body></body>');
+    await assert.rejects(verifyAppDisplayPolicy(fixture, ['tools/kairos']), /customization policy/);
+    await writeFile(path.join(other, 'index.html'), '<body data-magic-customize="off"></body>');
+    await verifyAppDisplayPolicy(fixture, ['tools/kairos']);
   } finally {
     await rm(fixture, { recursive: true, force: true });
   }
@@ -577,7 +586,7 @@ test('fullscreen exception is limited to RELEASE index files with the rewind fun
       const app = path.join(fixture, route);
       await mkdir(app, { recursive: true });
       await writeFile(path.join(app, 'manifest.webmanifest'), JSON.stringify({ display: 'standalone' }));
-      const body = route.startsWith('tools/') ? '<body data-magic-customize="off"></body>' : '<body></body>';
+      const body = '<body></body>';
       await writeFile(path.join(app, 'index.html'), body + fullscreen);
       if (route === 'zz1') {
         await assert.rejects(verifyAppDisplayPolicy(fixture, [route]), /Fullscreen is disabled/);

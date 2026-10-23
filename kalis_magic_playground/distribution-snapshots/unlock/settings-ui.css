@@ -1,16 +1,16 @@
 /* Shared settings groups retain native app controls and layout. */
 .magic-settings-group { display: block; clear: both; width: 100%; box-sizing: border-box; margin: 16px 0; padding: 0; border: 1px solid #8885; border-radius: 12px; background: #8881; color: inherit; font: inherit; text-align: left; }
 .magic-settings-group > summary { padding: 14px 16px; min-height: 44px; box-sizing: border-box; cursor: pointer; font-weight: 600; touch-action: manipulation; }
-.magic-settings-group > p, .magic-settings-group > h2 { margin: 12px 16px; line-height: 1.65; overflow-wrap: anywhere; }
+.magic-settings-group > p, .magic-settings-group > h2 { margin: 12px 16px; line-height: 1.65; word-break:keep-all; overflow-wrap:normal; }
 .magic-settings-group > h2 { font-size: 1.1rem; }
-.magic-overview > p { white-space:pre-line; font-size:15px; line-height:1.8; word-break:keep-all; overflow-wrap:break-word; }
+.magic-overview > p { white-space:pre-line; font-size:15px; line-height:1.6; word-break:keep-all; overflow-wrap:normal; }
 .magic-appearance-field { display: grid !important; gap: 8px; margin: 16px !important; color: inherit; font: inherit; }
 .magic-appearance-field input { width: 100% !important; max-width: 100%; min-height: 44px; box-sizing: border-box; font: inherit; color: inherit; background: #8882; border: 1px solid #8887; border-radius: 8px; padding: 8px; touch-action: auto; user-select: text; -webkit-user-select: text; }
 .magic-appearance-field input[type="range"] { padding: 0; accent-color: #e5ab50; }
 .magic-appearance-field output { font-size: .85rem; opacity: .8; }
 .magic-appearance-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px; }
 .magic-appearance-actions button { min-height: 44px; padding: 8px 16px; font: inherit; color: inherit; border: 1px solid #8887; border-radius: 8px; background: #8882; touch-action: manipulation; }
-.magic-settings-footer { clear: both; width: 100%; box-sizing: border-box; margin: 28px 0 0; padding: 16px 4px max(20px, env(safe-area-inset-bottom)); font-size: .85rem; line-height: 1.65; opacity: .8; overflow-wrap: anywhere; text-align: left; }
+.magic-settings-footer { clear: both; width: 100%; box-sizing: border-box; margin: 28px 0 0; padding: 16px 4px max(20px, env(safe-area-inset-bottom)); font-size: .85rem; line-height: 1.65; opacity: .8; word-break:keep-all; overflow-wrap:normal; text-align: left; }
 
 #p-tabs .tab-world > span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
@@ -91,7 +91,154 @@
 .magic-object-preview img { display:block; width:100%; height:100%; max-width:none; max-height:none; object-fit:contain; }
 
 [data-settings-root] .cell-map-table { min-width:0; width:100%; table-layout:fixed; }
-[data-settings-root] .cell-map-table :is(th,td) { overflow-wrap:anywhere; padding:8px 4px; }
+[data-settings-root] .cell-map-table :is(th,td) { word-break:keep-all; overflow-wrap:normal; padding:8px 4px; }
+
+/* RELEASE settings B. Scoped to the settings screen so the lock stage is unchanged. */
+#settings-screen { overflow-x:hidden; overflow-y:auto; overscroll-behavior:contain; background:#1a1512 !important; color:#f4efe9 !important; padding:max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(20px, calc(env(safe-area-inset-bottom) + env(keyboard-inset-height, 0px))) max(16px, env(safe-area-inset-left)) !important; touch-action:pan-y; }
+#settings-screen .settings-inner { width:min(100%, 560px) !important; max-width:560px !important; margin-inline:auto !important; background:transparent !important; background-image:none !important; border:0 !important; box-shadow:none !important; color:#f4efe9 !important; word-break:keep-all; overflow-wrap:break-word; }
+#settings-screen .settings-inner > * { min-width:0; max-width:100%; }
+#settings-screen #settings-brand { display:none !important; }
+#settings-screen .settings-inner > .magic-overview { order:4; }
+#settings-screen .settings-inner > .magic-customize-link { order:5; }
+#settings-screen .settings-inner > .magic-settings-footer { order:6; }
+#settings-screen .settings-inner { display:flex; flex-direction:column; }
+#settings-screen #settings-header { display:flex; align-items:center; justify-content:space-between; gap:12px; margin:0 0 16px; }
+#settings-screen .header-lead { min-width:0; display:flex; flex-direction:column; gap:2px; }
+#settings-screen .eyebrow { color:#ab9f92 !important; font-size:12px !important; font-weight:700 !important; letter-spacing:.06em !important; line-height:1.4 !important; }
+#settings-screen #settings-title { margin:0 !important; color:#ab9f92 !important; font-size:13px !important; font-weight:500 !important; line-height:1.4 !important; letter-spacing:0 !important; }
+#settings-screen .identity { display:flex; align-items:center; justify-content:space-between; gap:8px; margin:0 0 16px; padding:24px 20px; border:1px solid #ffffff14; border-radius:12px; background-color:#1f1815; background-image:repeating-linear-gradient(90deg, rgba(136, 85, 73, .2) 0 1px, transparent 1px 12px); }
+#settings-screen .identity-copy { min-width:0; flex:1 1 auto; }
+#settings-screen .catalog-label { display:block; padding-bottom:8px; color:#c88c76 !important; font-size:12px !important; font-weight:700 !important; letter-spacing:.12em !important; line-height:1.4 !important; }
+#settings-screen .identity-name { margin:0 0 8px !important; color:#f4efe9 !important; font-size:30px !important; font-weight:800 !important; line-height:1.2 !important; letter-spacing:-.035em !important; }
+#settings-screen .identity-desc,
+#settings-screen .intro { margin:0 !important; color:#d9cdc2 !important; font-size:13px !important; line-height:1.55 !important; }
+#settings-screen .intro { margin:0 0 16px !important; }
+#settings-screen .sig { display:block; width:120px; height:80px; flex:0 0 120px; max-width:38%; fill:none; stroke:#885549; stroke-width:1.6; stroke-linecap:round; pointer-events:none; }
+#settings-screen .sig .accent { stroke:#c88c76; stroke-width:2; }
+#settings-screen .body-groups { margin-top:2px; padding:0 18px 8px; border:1px solid #ffffff14; border-radius:12px; background:#1f1815; }
+#settings-screen .body-groups :is(details, .group, .usage-guide) { margin:0 !important; padding:0 !important; border:0 !important; border-bottom:1px solid #ffffff14 !important; border-radius:0 !important; background:transparent !important; background-color:transparent !important; box-shadow:none !important; color:#d9cdc2 !important; }
+#settings-screen .body-groups > :last-child { border-bottom:0 !important; }
+#settings-screen .body-groups summary { display:flex !important; align-items:center; justify-content:space-between; gap:12px; min-height:50px !important; margin:0 !important; padding:12px 0 !important; border:0 !important; background:transparent !important; color:#f4efe9 !important; font-size:15px !important; font-weight:650 !important; line-height:1.45 !important; }
+#settings-screen .body-groups summary::marker,
+#settings-screen .body-groups summary::-webkit-details-marker { color:#c88c76; }
+#settings-screen .body-groups details[open] > summary { margin-bottom:8px !important; }
+#settings-screen .body-groups :is(p, .hint, .alignment-help, .image-info, label) { color:#ab9f92 !important; word-break:keep-all; overflow-wrap:normal; }
+#settings-screen .field { min-height:44px; }
+#settings-screen :is(input:not([type=checkbox]):not([type=color]):not([type=file]), select) { min-height:44px !important; }
+#settings-screen input[type=checkbox] { width:22px; height:22px; accent-color:#c88c76; }
+#settings-screen input[type=range] { accent-color:#c88c76; }
+#settings-screen :is(button, summary, .crop-handle) { touch-action:manipulation; }
+#settings-screen #start { width:100% !important; min-height:48px !important; margin-top:18px !important; border-radius:8px !important; }
+#settings-screen #install-action,
+#settings-screen #install-later,
+#settings-screen #hitsuzen-link { min-height:44px !important; }
+#settings-screen .install-offer { background-color:#1f1815 !important; border-color:#ffffff14 !important; }
+#settings-screen .preview,
+#settings-screen .preview img { background-image:none; }
+#settings-screen > .magic-overview,
+#settings-screen .settings-inner > .magic-overview { margin-top:18px !important; padding:4px 18px 8px !important; border:1px solid #ffffff14 !important; border-radius:12px !important; background:#1f1815 !important; background-color:#1f1815 !important; }
+#settings-screen .settings-inner > .magic-overview summary { min-height:50px !important; }
+#settings-screen .settings-inner > .magic-settings-footer { margin-top:8px !important; color:#ab9f92 !important; }
+#settings-screen :is(button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible) { outline:2px solid #c88c76; outline-offset:3px; }
+@media (max-width:480px) {
+  #settings-screen { padding-inline:max(16px, env(safe-area-inset-left)) !important; }
+}
+@media (max-width:390px) {
+  #settings-screen .identity { padding:18px 16px; }
+  #settings-screen .identity-name { font-size:28px !important; }
+}
+@media (max-width:320px) {
+  #settings-screen { padding-inline:max(12px, env(safe-area-inset-left)) !important; }
+  #settings-screen .identity-name { font-size:26px !important; }
+  #settings-screen .sig { width:92px; height:64px; flex-basis:92px; }
+  #settings-screen .body-groups,
+  #settings-screen .settings-inner > .magic-overview { padding-left:12px !important; padding-right:12px !important; }
+}
+@media (max-width:280px) {
+  #settings-screen .identity { padding:14px 12px; gap:6px; }
+  #settings-screen .identity-name { font-size:22px !important; }
+  #settings-screen .catalog-label { font-size:12px !important; }
+  #settings-screen .sig { width:72px; height:52px; flex-basis:72px; }
+}
+@media (min-width:744px) and (max-width:767px),
+       (min-width:768px) and (max-width:819px),
+       (min-width:820px) and (max-width:1279px),
+       (min-width:1280px) {
+  #settings-screen .settings-inner { width:min(100%, 560px) !important; max-width:560px !important; }
+  #settings-screen .identity { padding:24px 20px; }
+}
+@media (max-height:500px) {
+  #settings-screen .identity { padding:14px 16px; }
+  #settings-screen .identity-name { font-size:24px !important; }
+  #settings-screen .sig { width:84px; height:52px; flex-basis:84px; }
+}
+@media (prefers-reduced-motion:no-preference) {
+  #settings-screen .sig .seam-left { animation:release-seam-left .28s ease-out; }
+  #settings-screen .sig .seam-right { animation:release-seam-right .28s ease-out; }
+}
+@keyframes release-seam-left { from { transform:translateX(8px); } to { transform:none; } }
+@keyframes release-seam-right { from { transform:translateX(-8px); } to { transform:none; } }
+
+/* Settings text: Korean labels wrap on spaces. Action rows stack at 280px. */
+[data-settings-root] :is(.actions, .row-actions, .preset-actions, .install-actions, .settings-actions, .setting-actions, .formbuttons, .magic-appearance-actions) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 8px;
+  min-width: 0;
+}
+[data-settings-root] :is(.actions, .row-actions, .preset-actions, .install-actions, .settings-actions, .setting-actions, .formbuttons, .magic-appearance-actions) > :is(button, .import) {
+  flex: 1 1 10rem;
+  min-width: 0;
+  max-width: 100%;
+  height: auto;
+  min-height: 44px;
+  padding: 10px 14px;
+  white-space: normal;
+  word-break: keep-all;
+  line-break: strict;
+  overflow-wrap: normal;
+  line-height: 1.35;
+}
+[data-settings-root] :is(.actions, .row-actions, .preset-actions, .install-actions, .settings-actions, .setting-actions, .formbuttons) > button:is(.primary, .primary-button, .button-primary) {
+  min-height: 48px;
+}
+[data-settings-root] .magic-range-row button {
+  flex: 0 0 44px;
+  width: 44px;
+  min-width: 44px;
+  padding: 0;
+}
+@media (max-width: 280px) {
+  [data-settings-root] :is(.actions, .row-actions, .preset-actions, .install-actions, .settings-actions, .setting-actions, .formbuttons, .magic-appearance-actions) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  [data-settings-root] :is(.actions, .row-actions, .preset-actions, .install-actions, .settings-actions, .setting-actions, .formbuttons, .magic-appearance-actions) > :is(button, .import) {
+    flex-basis: auto;
+    width: 100%;
+  }
+  [data-settings-root] .magic-range-row {
+    flex-direction: row;
+  }
+  [data-settings-root] .magic-range-row button {
+    width: 44px;
+    flex-basis: 44px;
+  }
+}
+
+[data-settings-root] :is(.install, .install-control) > button {
+  min-width: 0;
+  max-width: 100%;
+  height: auto;
+  min-height: 44px;
+  padding: 10px 14px;
+  white-space: normal;
+  word-break: keep-all;
+  line-break: strict;
+  overflow-wrap: normal;
+  line-height: 1.35;
+}
 
 /* 2026-10-04 shared layout/contact refinement */
 /* Shared settings layout patch. Appended after each app's themed settings CSS.
@@ -357,3 +504,69 @@
 .magic-install .magic-install-status p { margin: 0; color: inherit; }
 .magic-install .magic-install-status ol { margin: 8px 0 0; padding-left: 22px; }
 .magic-install .magic-install-status li { margin: 4px 0; color: inherit; }
+
+/* RELEASE live editor (settings-ui profile.editor). Big preview on top, quick controls beside it, details scroll below. */
+.magic-customize-page.magic-editor { grid-template-columns:minmax(0,1fr) !important; grid-template-rows:auto auto minmax(0,1fr) !important; }
+.magic-editor .magic-customize-header { grid-column:1; }
+.magic-editor .magic-customize-preview { display:block; grid-column:1; grid-row:auto; padding:10px 16px 12px; border-right:0; border-bottom:1px solid #ab9f922b; overflow:visible; }
+.magic-editor .magic-customize { grid-column:1; grid-row:auto; padding-top:4px; }
+.magic-editor .magic-preview-label { display:none; }
+.magic-editor-chips { display:flex; gap:6px; margin:0 0 10px; overflow-x:auto; scrollbar-width:none; touch-action:pan-x; }
+.magic-editor-chips::-webkit-scrollbar { display:none; }
+.magic-customize-page .magic-editor-chips button { flex:none; min-height:36px; padding:4px 14px; border-radius:999px; font-size:14px; line-height:1.4; white-space:nowrap; }
+.magic-customize-page .magic-editor-chips button[aria-pressed="true"] { background:#e8631f; border-color:#e8631f; color:#1a1512; font-weight:700; }
+.magic-editor-stage { display:flex; align-items:flex-start; gap:12px; }
+.magic-editor .magic-preview-phone { flex:none; box-sizing:content-box; height:auto; max-height:none; aspect-ratio:auto; pointer-events:none; }
+.magic-preview-phone.is-galaxy { border:3px solid #0a0a0a; border-radius:20px; box-shadow:0 0 0 1px #4d3b2e, 0 8px 30px #0006; }
+.magic-preview-phone.is-galaxy::after { content:''; position:absolute; z-index:60; top:8px; left:50%; width:8px; height:8px; margin-left:-4px; border-radius:50%; background:#050505; box-shadow:0 0 0 1px #2a2a2a; pointer-events:none; }
+.magic-preview-phone.is-ios { border:6px solid #0a0a0a; border-radius:30px; box-shadow:0 0 0 1px #4d3b2e, 0 8px 30px #0006; }
+.magic-preview-phone.is-ios::after { content:''; position:absolute; z-index:60; top:6px; left:50%; width:30%; height:13px; transform:translateX(-50%); border-radius:999px; background:#050505; pointer-events:none; }
+.magic-customize-page .magic-editor-hit { position:absolute; min-width:0; min-height:0; margin:0; padding:0; border:1px dashed #f4efe959; border-radius:8px; background:transparent; color:transparent; box-shadow:none; pointer-events:auto; touch-action:none; cursor:grab; -webkit-user-select:none; user-select:none; }
+.magic-customize-page .magic-editor-hit[aria-pressed="true"] { border:2px solid #e8631f; box-shadow:0 0 0 1px #1a1512aa, 0 0 14px #e8631f88; }
+.magic-customize-page.is-dragging .magic-editor-hit { cursor:grabbing; }
+.magic-editor-tag { position:absolute; left:50%; bottom:100%; display:none; transform:translate(-50%, -3px); padding:1px 8px; border-radius:999px; background:#e8631f; color:#1a1512; font:700 11px/1.5 system-ui,sans-serif; white-space:nowrap; pointer-events:none; }
+.magic-editor-hit[aria-pressed="true"] .magic-editor-tag { display:block; }
+.magic-editor-hit.tag-below .magic-editor-tag { bottom:auto; top:100%; transform:translate(-50%, 3px); }
+.magic-editor-panel { flex:1 1 auto; min-width:0; display:flex; flex-direction:column; gap:8px; }
+.magic-editor-name { margin:0; color:#f4efe9; font-size:15px; font-weight:700; line-height:1.35; word-break:keep-all; }
+.magic-editor-help { margin:0; color:#ab9f92; font-size:12px; line-height:1.45; word-break:keep-all; }
+.magic-editor-steps { display:grid; gap:8px; }
+.magic-editor-steps[hidden] { display:none; }
+.magic-editor-step { display:grid; gap:3px; }
+.magic-editor-step > span { color:#d9cdc2; font-size:12px; line-height:1.3; }
+.magic-editor-step > div { display:grid; grid-template-columns:34px minmax(0,1fr) 34px; gap:4px; }
+.magic-customize-page .magic-editor-step button { min-height:40px; padding:0; font-size:20px; line-height:1; }
+.magic-customize .magic-editor-step input, .magic-editor-step input { width:100%; min-width:0; min-height:40px; box-sizing:border-box; padding:0 2px; border:1px solid #ab9f924d; border-radius:8px; background:#1a1512; color:#f4efe9; font:600 15px/1 system-ui,sans-serif; text-align:center; font-variant-numeric:tabular-nums; touch-action:manipulation; }
+.magic-customize-page .magic-editor-panel > button { width:100%; min-height:40px; padding:6px 8px; font-size:13px; line-height:1.3; word-break:keep-all; }
+.magic-customize-page .magic-editor-full { background:#e8631f; border-color:#e8631f; color:#1a1512; font-weight:700; }
+.magic-customize-page .magic-editor-undo:disabled { opacity:.45; }
+.magic-editor-status { margin:0; color:#c9b9aa; font-size:12px; line-height:1.4; word-break:keep-all; }
+.magic-editor-tools .magic-editor-note { margin:8px 0; color:#ab9f92; font-size:13px; line-height:1.55; word-break:keep-all; }
+.magic-editor-tools .magic-preview-select[hidden] { display:none; }
+.magic-customize .magic-appearance-field.is-related { border-color:#e8631f; }
+.magic-customize .magic-editor-resets { margin:16px 0 24px; }
+.magic-customize-page .magic-editor-resets button, .magic-customize .magic-editor-resets button:first-child { background:#34261e; color:#f4efe9; border:1px solid #ab9f923d; font-weight:500; }
+.magic-customize-page .magic-editor-resets button:disabled { opacity:.45; }
+.magic-customize-page .magic-editor-resets button.is-armed { background:#7a2e14; border-color:#e8631f; color:#fff; font-weight:700; }
+.magic-editor.is-fullsize .magic-preview-phone { position:fixed; z-index:230; top:0; left:0; border:0; border-radius:0; box-shadow:none; }
+.magic-editor.is-fullsize .magic-preview-phone::after { display:none; }
+.magic-editor.is-fullsize .magic-editor-hit:not([aria-pressed="true"]) { border-color:transparent; }
+.magic-customize-page .magic-editor-return { position:fixed; z-index:240; top:calc(14px + env(safe-area-inset-top)); left:50%; transform:translateX(-50%); padding:10px 22px; border-radius:999px; background:#261d18ee; border:1px solid #e8631f; color:#f4efe9; font-weight:700; box-shadow:0 6px 20px #0008; white-space:nowrap; }
+.magic-customize-page .magic-editor-return[hidden] { display:none; }
+/* Layout presets row (Galaxy only) under the screen chips. */
+.magic-editor-presets { display:flex; align-items:center; gap:6px; margin:-2px 0 10px; }
+.magic-editor-presets[hidden] { display:none; }
+.magic-editor-preset-label { flex:none; color:#ab9f92; font-size:12px; line-height:1.25; white-space:nowrap; }
+.magic-editor-preset-label.is-edited { color:#f3c2a4; }
+.magic-customize-page .magic-editor-presets button { flex:1 1 0; min-width:0; min-height:32px; padding:2px 6px; border-radius:8px; font-size:12.5px; line-height:1.2; white-space:nowrap; }
+.magic-customize-page .magic-editor-presets button[aria-pressed="true"] { background:#4a2a18; border-color:#e8631f; color:#f4efe9; font-weight:700; }
+.magic-customize-page .magic-editor-presets button.is-edited { border:1px dashed #e8631f; }
+/* Phones in landscape: ask to rotate instead of drawing a flattened phone. */
+.magic-editor-rotate { display:none; }
+@media (orientation:landscape) and (max-height:540px) {
+  .magic-editor .magic-editor-rotate { position:fixed; inset:0; z-index:250; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding:24px; background:#1a1512; text-align:center; }
+  .magic-editor .magic-customize-preview, .magic-editor .magic-customize, .magic-editor .magic-editor-return { visibility:hidden; }
+  .magic-editor-rotate-title { margin:0; color:#f4efe9; font-size:20px; font-weight:700; word-break:keep-all; }
+  .magic-editor-rotate-help { margin:0; color:#ab9f92; font-size:14px; line-height:1.5; word-break:keep-all; }
+  .magic-customize-page .magic-editor-rotate button { margin-top:6px; padding:8px 20px; }
+}

@@ -91,10 +91,13 @@ test('editor screens and parts point at real RELEASE elements', () => {
   for (const forbidden of ['#time-black', '#rewind-digit-guide', '#input-screen', '#time-lock', '#unlocked-screen']) assert.ok(!parts.some((part) => part.selector === forbidden), forbidden);
 });
 
-test('customization stays off for tools and friend distribution', () => {
+test('RELEASE customization is on for the personal build and the friend build', () => {
   assert.equal(ui.customizationAllowed('/zz2/', undefined), true);
-  assert.equal(ui.customizationAllowed('/tools/release/', undefined), false);
-  assert.equal(ui.customizationAllowed('/distribution-snapshots/unlock/', undefined), false);
+  assert.equal(ui.customizationAllowed('/tools/release/', undefined), true);
+  assert.equal(ui.customizationAllowed('/tools/unlock/', undefined), true);
+  assert.equal(ui.customizationAllowed('/distribution-snapshots/unlock/', undefined), true);
+  assert.equal(ui.customizationAllowed('/tools/release/', 'off'), false);
+  assert.equal(ui.customizationAllowed('/tools/kairos/', undefined), false);
 });
 
 test('the editor never uses browser dialogs or range sliders', () => {
@@ -177,11 +180,12 @@ test('layout presets: saved preset and style survive sanitize; junk values and o
   assert.equal('style' in other, false, 'apps without presets never store a style');
 });
 
-test('One UI 8.5 style variant lives in zz2 CSS only under the preset class', () => {
+test('One UI 8.5 style variant lives under the preset class in personal and friend RELEASE', () => {
   assert.match(html, /#time-lock\.galaxy\.magic-style-oneui85 #time-face \{ top: 16%; flex-direction: column; \}/);
   assert.match(html, /#time-lock\.galaxy\.magic-style-oneui85 #time-clock \{[^}]*font-weight: 400;/);
   const css = read('zz2/settings-ui.css');
   assert.match(css, /@media \(orientation:landscape\) and \(max-height:540px\)/, 'phones in landscape get the rotate hint');
   const dist = read('distribution-snapshots/unlock/index.html');
-  assert.doesNotMatch(dist, /magic-style-oneui85/, 'friend distribution stays unchanged');
+  assert.match(dist, /#time-lock\.galaxy\.magic-style-oneui85 #time-face \{ top: 16%; flex-direction: column; \}/);
+  assert.match(dist, /#time-lock\.galaxy\.magic-style-oneui85 #time-clock \{[^}]*font-weight: 400;/);
 });

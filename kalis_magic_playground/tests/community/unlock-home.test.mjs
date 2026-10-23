@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import * as logic from '../../zz2/logic.js';
 
 test('personal reveal selects configured attempt and formats valid birthday separately', () => {
@@ -36,8 +36,8 @@ test('personal and shared unlock use different persistent storage identities', (
 });
 
 test('personal and shared RELEASE always enable the same rewind entry', () => {
-  assert.equal(logic.normalizeSettings({ performance: 'pin' }, true).performance, 'time-machine');
-  assert.equal(logic.normalizeSettings({ performance: 'pin' }, false).performance, 'time-machine');
+  assert.equal(logic.normalizeSettings({ performance: 'pin' }).performance, 'time-machine');
+  assert.equal(logic.normalizeSettings({ performance: 'time-machine' }).performance, 'time-machine');
 });
 
 test('iPhone PIN prompt stays concise while Galaxy keeps its native wording', () => {
@@ -87,12 +87,20 @@ test('personal home requires both uploaded home screenshots before starting', ()
 });
 
 
-test('RELEASE snapshot reveals home2 immediately and clears gestures safely', () => {
-  const html = readFileSync(new URL('../../distribution-snapshots/unlock/index.html', import.meta.url), 'utf8');
-  const script = html.match(/<script type="module">([\s\S]*?)<\/script>/)[1];
-  const paging = script.slice(script.indexOf("&& swipe.axis === 'x'"), script.indexOf("const index = homePage === 'home2'"));
-    assert.match(paging, /const reveal = homeSwipeTarget\(homePage, dx, dy, \(STORAGE\.personal \|\| originals\.has\('home2'\)\), false, \$\('app'\)\.clientWidth\)\.revealVisible;\s*if \(reveal\) setRevealVisible\(true\);\s*else cancelReveal\(\);/);
-    assert.doesNotMatch(paging, /if \(STORAGE\.personal\) \{/);
+test('personal and friend RELEASE reveal home2 immediately and clear gestures the same way', () => {
+  for (const file of ['zz2/index.html', 'distribution-snapshots/unlock/index.html']) {
+    const html = readFileSync(new URL(`../../${file}`, import.meta.url), 'utf8');
+    const script = html.match(/<script type="module">([\s\S]*?)<\/script>/)[1];
+    assert.match(html, /class="file-picker"/);
+    assert.match(script, /function setFilePickerState\(key, registered\)/);
+    assert.match(script, /registered \? '다시 선택' : '이미지 선택'/);
+    assert.doesNotMatch(html, /id="home2-field"[^>]*\bhidden/);
+    assert.doesNotMatch(html, /id="home2-preview-item"[^>]*\bhidden/);
+    assert.doesNotMatch(html, /id="reveal-attempt-field"[^>]*\bhidden/);
+    assert.match(script, /const imageKeys = \['lock', 'unlock', 'home2'\];/);
+    assert.doesNotMatch(script, /STORAGE\.personal/);
+    const paging = script.slice(script.indexOf("if (swipe.axis === 'x')"), script.indexOf("const index = homePage === 'home2'"));
+    assert.match(paging, /const reveal = homeSwipeTarget\(homePage, dx, dy, true, false, \$\('app'\)\.clientWidth\)\.revealVisible;\s*if \(reveal\) setRevealVisible\(true\);\s*else cancelReveal\(\);/);
     assert.match(script, /if \(releaseTarget\.revealVisible\) setRevealVisible\(true\)/);
     assert.match(script, /keepBriefReveal = releaseTarget\.revealVisible && homePage === 'home2';[\s\S]*returnSwipe\(keepBriefReveal\);/);
     assert.match(script, /revealShownAt = performance\.now\(\);/);
@@ -100,8 +108,36 @@ test('RELEASE snapshot reveals home2 immediately and clears gestures safely', ()
     assert.match(script, /document\.addEventListener\('visibilitychange', \(\) => \{\s*if \(document\.visibilityState === 'hidden'\) \{ tapCandidate = null; returnSwipe\(\); \}\s*\}\);/);
     assert.match(script, /function returnSwipe\(keepBriefReveal = false\)[\s\S]*?\} else cancelReveal\(\);/);
     assert.match(script, /function cancelReveal\(\) \{\s*clearTimeout\(revealHideTimer\);\s*revealHideTimer = null;\s*setRevealVisible\(false\);\s*\}/);
-  assert.match(script, /\$\('reveal-attempt-field'\)\.hidden = false;/);
-  assert.match(script, /\$\('reveal-attempt'\)\.disabled = false;/);
-  const sw = readFileSync(new URL('../../distribution-snapshots/unlock/sw.js', import.meta.url), 'utf8');
-  assert.ok(sw.includes('v20261009-rewind-fullscreen-5'));
+  }
+});
+
+test('friend snapshot matches personal RELEASE except the install id and cache family', () => {
+  const personalDir = new URL('../../zz2/', import.meta.url);
+  const snapDir = new URL('../../distribution-snapshots/unlock/', import.meta.url);
+  const personalFiles = readdirSync(personalDir).filter((file) => file !== 'brand-logo.png').sort();
+  const snapFiles = readdirSync(snapDir).sort();
+  assert.deepEqual(snapFiles, personalFiles);
+  for (const file of snapFiles) {
+    const personal = readFileSync(new URL(file, personalDir));
+    const snap = readFileSync(new URL(file, snapDir));
+    if (file === 'manifest.webmanifest') {
+      const personalManifest = JSON.parse(personal.toString('utf8'));
+      const snapManifest = JSON.parse(snap.toString('utf8'));
+      assert.equal(snapManifest.id, './');
+      delete snapManifest.id;
+      assert.deepEqual(snapManifest, personalManifest);
+    } else if (file === 'sw.js') {
+      const personalText = personal.toString('utf8');
+      const snapText = snap.toString('utf8');
+      assert.match(personalText, /const CACHE_PREFIX = 'unlock-shell-' \+/);
+      assert.match(snapText, /const CACHE_PREFIX = 'friend-unlock-shell-' \+/);
+      assert.match(personalText, /oneui9-6/);
+      assert.equal(
+        snapText.replace("const CACHE_PREFIX = 'friend-unlock-shell-' +", "const CACHE_PREFIX = 'unlock-shell-' +"),
+        personalText,
+      );
+    } else {
+      assert.deepEqual(snap, personal, file);
+    }
+  }
 });

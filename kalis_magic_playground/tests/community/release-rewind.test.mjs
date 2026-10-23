@@ -96,7 +96,7 @@ for (const build of builds) {
 }
 test('RELEASE entry and original settings shape retain distinct storage namespaces',()=>{
   for(const saved of [{},{performance:'pin'},{performance:'time-machine'}])
-    assert.equal(logic.normalizeSettings(saved,false).performance,logic.normalizeSettings(saved,true).performance);
+    assert.equal(logic.normalizeSettings(saved).performance,'time-machine');
   assert.notEqual(logic.storageIdentityForPath('/zz2/').settingsKey,logic.storageIdentityForPath('/tools/release/').settingsKey);
   assert.notEqual(logic.storageIdentityForPath('/zz2/').imageDb,logic.storageIdentityForPath('/tools/release/').imageDb);
   assert.equal(Object.hasOwn(logic.normalizeSettings({clockFormat:'12'}),'clockFormat'),false);

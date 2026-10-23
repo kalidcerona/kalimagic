@@ -185,6 +185,10 @@
     #time-lock.galaxy #time-face { top: 19.5%; display: flex; flex-direction: column-reverse; align-items: center; }
     #time-lock.galaxy #time-clock { margin-top: 0; font-size: clamp(84px, 23.5vw, 112px); font-weight: 700; color: rgba(255, 255, 255, .72); letter-spacing: -.03em; }
     #time-lock.galaxy #time-date { margin-top: 6px; color: rgba(255, 255, 255, .6); font-size: clamp(16px, 4.5vw, 19px); font-weight: 600; }
+    /* One UI 8.5 preset style (editor preset, stored with the customization): the pre-One UI 9 face, date above a regular-weight white clock. */
+    #time-lock.galaxy.magic-style-oneui85 #time-face { top: 16%; flex-direction: column; }
+    #time-lock.galaxy.magic-style-oneui85 #time-clock { margin-top: 7px; font-size: clamp(70px, 19vw, 90px); font-weight: 400; color: inherit; letter-spacing: -.045em; }
+    #time-lock.galaxy.magic-style-oneui85 #time-date { margin-top: 0; color: inherit; font-size: clamp(17px, 4.8vw, 21px); font-weight: 500; }
     .oneui-only { display: none; }
     #oneui-charge[hidden], #oneui-dnd[hidden] { display: none !important; }
     #time-lock.galaxy .oneui-only { display: block; }
@@ -211,7 +215,9 @@
     .eyebrow { color: #aaa4f7; font-size: 11px; font-weight: 700; letter-spacing: 3px; }
     h1 { font-size: 32px; letter-spacing: -1px; margin: 8px 0; }
     .intro { color: #a4a6b1; line-height: 1.65; font-size: 13px; margin: 0 0 28px; }
-    .group { margin: 0 0 20px; border: 1px solid #ffffff12; background: #1b1c22; border-radius: 18px; padding: 20px; }
+    .group { margin: 0 0 20px; border: 1px solid #ffffff12; background: #1b1c22; border-radius: 18px; padding: 12px 16px; }
+    .group > summary { min-height: 28px; line-height: 28px; font-size: 15px; font-weight: 650; cursor: pointer; }
+    .group[open] > summary { margin-bottom: 18px; }
     .install-offer { margin: 0 0 20px; padding: 16px; border: 1px solid #c6c0ff58; border-radius: 14px; background: #252336; }
     .install-offer strong { display: block; font-size: 15px; }
     .install-offer p { margin: 7px 0 0; color: #cbc9d9; font-size: 12px; line-height: 1.55; }
@@ -229,7 +235,6 @@
     input[type="number"] { width: 90px; }
     input[type="color"] { width: 45px; height: 32px; padding: 0; border: 0; background: none; }
     input[type="file"] { width: 100%; color: #b6b8c4; font-size: 12px; }
-    input::file-selector-button { background: #30323c; color: #eee; border: 0; border-radius: 6px; padding: 9px 12px; margin-right: 10px; }
     .file-picker { position: relative; display: inline-flex; align-items: center; max-width: 100%; vertical-align: middle; }
     .file-picker input[type="file"] { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; margin: 0; padding: 0; opacity: 0; cursor: pointer; font-size: 16px; }
     .file-picker-label { display: inline-flex; align-items: center; min-height: 40px; padding: 9px 12px; border-radius: 6px; background: #30323c; color: #eee; font-size: 12px; }
@@ -250,9 +255,7 @@
     .image-info { margin: 0; }
     .alignment-help { margin: -4px 0 12px; color: #c3c5cf; font-size: 12px; line-height: 1.55; }
     .preview-row { display: flex; gap: 12px; }
-    .preview { position: relative; background: #101115; border: 1px solid #ffffff1c; border-radius: 14px; overflow: hidden; width: 50%; aspect-ratio: 9 / 19.5; touch-action: none; cursor: grab; }
-    .personal-home .preview-row .preview { width: 33.333%; }
-    body:not(.personal-home) .preview-row .preview { width: 33.333%; }
+    .preview { position: relative; background: #101115; border: 1px solid #ffffff1c; border-radius: 14px; overflow: hidden; width: 33.333%; aspect-ratio: 9 / 19.5; touch-action: none; cursor: grab; }
     .preview:active { cursor: grabbing; }
     .preview img { object-fit: cover; width: 100%; height: 100%; pointer-events: none; }
     .preview-name { position: absolute; right: 7px; bottom: 7px; z-index: 3; font-size: 10px; background: #000a; border-radius: 4px; padding: 3px 6px; pointer-events: none; }
@@ -295,7 +298,8 @@
       .galaxy #fingerprint { top: 82%; }
     }
     @media (prefers-reduced-motion: reduce) { #unlocked-screen.returning { transition-duration: 180ms; } #input-screen.unlocking-out, #unlocked-screen.unlocking { animation-duration: 150ms; } #reveal-card { transition-duration: 0s; } }
-      #settings-entry-tutorial { position: fixed; inset: 0; z-index: 45; display: grid; place-items: center; padding: 24px; pointer-events: auto; }
+
+    #settings-entry-tutorial { position: fixed; inset: 0; z-index: 45; display: grid; place-items: center; padding: 24px; pointer-events: auto; }
     #settings-entry-tutorial[hidden] { display: none !important; }
     #settings-entry-tutorial .tutorial-card { width: min(100%, 320px); padding: 22px; border: 1px solid #ffffff52; border-radius: 20px; background: #1b1b20f2; color: #fff; text-align: center; box-shadow: 0 16px 48px #0009; font: 500 16px/1.55 system-ui, sans-serif; }
     #settings-entry-tutorial .tutorial-fingers { position: relative; height: 110px; width: 100px; margin: 0 auto 12px; }
@@ -338,14 +342,14 @@
     <section id="peek-screen" class="screen" aria-label="시도 기록" hidden>
       <div class="peek-heading">시도 기록</div>
       <ol id="attempt-list"></ol>
-      <div id="birthday-summary" class="attempt-pin" hidden></div>
+      <div id="birthday-summary" hidden></div>
     </section>
     <section id="unlocked-screen" class="screen" aria-label="해제 화면" hidden>
       <div id="home-track">
         <div id="home-one" class="home-page"><img id="unlock-image" class="wallpaper" alt="" hidden draggable="false"></div>
         <div id="home-two" class="home-page"><img id="home2-image" class="wallpaper" alt="" hidden draggable="false"></div>
       </div>
-      <div id="reveal-card" role="status" aria-live="polite" aria-hidden="true"><div id="reveal-label"></div><div id="reveal-number">—</div><div id="reveal-days" class="reveal-detail" hidden></div><div id="reveal-zodiac" class="reveal-detail" hidden></div><div id="reveal-animal" class="reveal-detail" hidden></div></div>
+      <div id="reveal-card" role="status" aria-live="polite" aria-hidden="true"><div id="reveal-label"></div><div id="reveal-number">-</div><div id="reveal-days" class="reveal-detail" hidden></div><div id="reveal-zodiac" class="reveal-detail" hidden></div><div id="reveal-animal" class="reveal-detail" hidden></div></div>
     </section>
     <section id="time-black" class="screen" aria-label="리와인드 준비" hidden><div id="rewind-digit-guide" hidden aria-hidden="true"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span></span><span>0</span><span></span></div></section>
     <section id="time-lock" class="screen" aria-label="리와인드 잠금 화면" hidden>
@@ -363,8 +367,11 @@
     <section id="settings-screen" class="screen" aria-label="설정" hidden>
       <div class="settings-inner" data-settings-root>
         <img id="settings-brand" src="./brand-logo.jpg" alt="RELEASE" onerror="this.hidden=true">
-        <div class="eyebrow">RELEASE</div>
-        <h1>레리즈 설정</h1>
+        <header id="settings-header"><div class="header-lead"><span class="eyebrow">레리즈 / 설정</span><h1 id="settings-title">설정</h1></div></header>
+        <div class="identity">
+          <div class="identity-copy"><span class="catalog-label">개방</span><p class="identity-name">RELEASE</p><p class="identity-desc">닫혀 있던 안쪽이 짧게 열린다.</p></div>
+          <svg class="sig" viewBox="0 0 120 80" aria-hidden="true" focusable="false"><g class="seam-left"><path d="M8 30h46"/><path d="M8 36h42"/></g><g class="seam-right"><path d="M66 44h46"/><path d="M70 50h42"/></g><path class="accent" d="M56 32v16"/></svg>
+        </div>
         <p class="intro">화면을 준비하고, 연출을 시작하세요.<br>이미지와 설정은 이 기기에만 저장됩니다.</p>
         <section id="install-offer" class="install-offer" aria-label="레리즈 설치 안내" hidden>
           <strong>홈 화면에 레리즈를 설치할까요?</strong>
@@ -373,7 +380,8 @@
           <div class="install-actions"><button id="install-action" type="button">설치 방법</button><button id="install-later" type="button">나중에</button></div>
         </section>
         <form id="settings-form">
-          <details class="group settings-disclosure">
+          <div class="body-groups">
+          <details class="group" data-settings-group>
             <summary id="performance-heading">연출</summary>
             <label id="performance-field" class="field">연출 선택<select id="performance"><option value="pin">PIN 잠금 해제</option><option value="time-machine">리와인드</option></select></label>
             <div id="time-options" hidden>
@@ -390,28 +398,29 @@
             <summary>히츠젠 연동</summary>
             <label class="field check"><input id="birth-days-link" type="checkbox" checked> 히츠젠에 생일 D-day 전달</label>
             <button id="hitsuzen-link" type="button">히츠젠 연동</button>
-            <p class="hint" id="hitsuzen-link-status" role="status">생일을 입력하면 생후 일수가 자동 저장됩니다.<br>연동 버튼으로 같은 브라우저의 히츠젠을 열어 주세요.<br>히츠젠에서 %를 두 번 누르면 받은 일수가 준비됩니다.</p>
+            <p class="hint" id="hitsuzen-link-status" role="status">생일을 입력하면 생후 일수가 저장됩니다. 연동으로 같은 브라우저의 히츠젠을 연 뒤, %를 두 번 누르면 일수가 준비됩니다.</p>
           </details>
-          <details class="group settings-disclosure">
+          <details class="group" data-settings-group>
             <summary>내 폰의 화면</summary>
             <label class="field stack">잠금화면 이미지<span class="file-picker"><input id="lock-file" type="file" accept="image/*"><span class="file-picker-label">이미지 선택</span></span><span id="lock-info" class="image-info">등록된 이미지 없음</span></label>
             <label class="field stack">해제화면 이미지<span class="file-picker"><input id="unlock-file" type="file" accept="image/*"><span class="file-picker-label">이미지 선택</span></span><span id="unlock-info" class="image-info">등록된 이미지 없음</span></label>
             <label id="home2-field" class="field stack">해제화면 2페이지 이미지<span class="file-picker"><input id="home2-file" type="file" accept="image/*"><span class="file-picker-label">이미지 선택</span></span><span id="home2-info" class="image-info">등록된 이미지 없음</span></label>
-            <p class="hint">잠금에는 잠금화면, 해제에는 앱 아이콘이 보이는 홈 화면 스크린샷을 등록하세요. 개인용 레리즈는 홈 1·홈 2 이미지가 모두 있어야 좌우 이동과 중앙 정보 표시를 사용할 수 있습니다. 등록된 이미지 자체에 잠금 시계가 있으면 해제 후에도 보입니다.</p>
+            <p class="hint">잠금에는 잠금화면, 해제에는 앱 아이콘이 보이는 홈 화면 스크린샷을 등록하세요. 홈 2 이미지는 두 번째 홈 화면에 표시됩니다. 등록된 이미지 자체에 잠금 시계가 있으면 해제 후에도 보입니다.</p>
+            <p id="storage-status" role="status">이미지 저장소 확인 중…</p>
           </details>
-          <details class="group settings-disclosure">
+          <details class="group" data-settings-group>
             <summary>입력과 해제</summary>
             <label class="field">키패드 스타일<select id="style"><option value="ios">iOS</option><option value="galaxy">갤럭시</option></select></label>
             <label class="field">기본 자릿수<select id="digits"><option value="6">6자리</option><option value="4">4자리</option></select></label>
             <label class="field">해제 방식<select id="unlock-mode"><option value="timer">타이머</option><option value="attempt">지정 시도</option></select></label>
             <label id="delay-field" class="field">해제 지연 (초)<input id="delay" type="number" min="0" max="300" step="0.1" value="8" required></label>
             <label id="attempt-field" class="field" hidden>해제할 시도<input id="unlock-attempt" type="number" min="1" max="99" step="1" value="3" required></label>
-            <label id="reveal-attempt-field" class="field" hidden>중앙에 공개할 입력 순서<input id="reveal-attempt" type="number" min="1" max="99" step="1" value="2" required></label>
+            <label id="reveal-attempt-field" class="field">중앙에 공개할 입력 순서<input id="reveal-attempt" type="number" min="1" max="99" step="1" value="2" required></label>
             <label class="field check"><input id="vibration" type="checkbox" checked> 성공·실패 진동</label>
             <p class="hint">지정 시도는 타이머와 PIN 중복 여부를 무시하고 선택한 번째 입력에서 해제됩니다. 생년월일을 먼저 받을 때 해제 순서를 고정하기 좋습니다.</p>
             <p class="hint">유효한 6자리 생년월일을 입력하면 태어난 날부터 지난 일수, 서양 별자리, 설날 기준 띠가 표시됩니다.</p>
           </details>
-          <details class="group settings-disclosure">
+          <details class="group" data-settings-group>
             <summary>이미지와 상단바 맞추기</summary>
             <p class="alignment-help">보라색 영역의 아래 손잡이를 끌어 상단바를 자르고, 그 밖의 이미지를 위아래로 끌어 위치를 맞추세요.</p>
             <div class="preview-row">
@@ -425,9 +434,9 @@
             <label class="field">상태바 배경<input id="status-color" type="color" value="#000000"></label>
             <p class="hint">원본의 상단바를 잘라낸 뒤 남은 이미지를 꽉 채웁니다. OS 상태바 영역에는 이미지를 그리지 않습니다. 상태바 글자 변경은 홈 화면 앱을 닫고 다시 열어야 반영될 수 있으며, 기기별 확인이 필요합니다.</p>
           </details>
-          <details class="usage-guide">
+          <details class="usage-guide" data-settings-group="guide">
             <summary>처음 사용하는 분을 위한 화면·숫자 입력 안내</summary>
-            <p>홈 2 이미지가 있으면 홈 1에서 왼쪽으로 밀어 홈 2로 이동합니다. 홈 2에서 왼쪽으로 밀면 설정한 입력 정보가 바로 보이고, 손가락을 떼면 최소 표시 시간(500ms)을 채운 뒤 자동으로 사라집니다. 홈 1·홈 2에서 위로 밀면 입력 기록을 보고, 손가락을 떼면 다시 숨깁니다.</p>
+            <p>홈 1에서 왼쪽으로 밀면 홈 2로 이동합니다. 홈 2에서 왼쪽으로 밀면 설정한 입력 정보가 바로 보이고, 손가락을 떼면 최소 표시 시간(500ms)을 채운 뒤 사라집니다. 위로 밀면 입력 기록을 볼 수 있습니다.</p>
             <p>리와인드의 검은 화면은 화면 전체가 보이지 않는 숫자판입니다. 아래 그림처럼 화면을 가로 3칸, 세로 4칸으로 나눠 누릅니다. 각 칸의 가운데를 누르면 그 숫자로 인식됩니다. 마지막 줄은 가운데 0만 입력되고 양옆은 무시됩니다. 숫자 두 개를 차례로 눌러 분을 입력하세요. 예: 0 다음 3은 03분, 1 다음 5는 15분입니다.</p>
             <div class="hidden-grid-example" role="img" aria-label="검은 화면의 숫자 입력 예시. 빨간 선으로 나뉜 첫 세 줄은 왼쪽부터 1 2 3, 4 5 6, 7 8 9이며 마지막 줄 가운데는 0입니다.">
               <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span data-digit="0">0</span>
@@ -435,7 +444,7 @@
             <p class="grid-caption">빨간 선은 항상 설명용입니다. 숫자는 ‘입장할 때 숫자를 잠깐 표시’를 켰을 때만 잠깐 보이며, 선은 실제 검은 화면에 나타나지 않습니다.</p>
             <p>설정 열기: 잠금 화면에서 두 손가락을 아래로 쓸기<br>홈 화면 4·6자리 안내 전환: 안내 문구 탭<br>기록 초기화 후 다시 잠금: 두 손가락으로 빠르게 두 번 탭</p>
           </details>
-          <p id="storage-status" role="status">이미지 저장소 확인 중…</p>
+          </div>
           <p id="offline-status" role="status">오프라인 준비 중…</p>
           <button id="start" type="submit">저장하고 시작</button>
         </form>
@@ -448,12 +457,14 @@
   </div>
   <script type="module" src="./install-prompt.js"></script>
   <script type="module">
-    import { FINGERPRINT_HOLD_MS, normalizeSettings, storageIdentityForPath, selectedAttemptReveal, latestBirthdateAttempt, homeSwipeTarget, completeHomeSwipe, lockScreenCopy, createState, pushDigit, submitPin, fingerprintHold, attemptFeedback, feedbackVibration, deleteDigit, clearCurrent, toggleDigits, reset, isHomeGestureArea, peekOffset, registerTwoFingerTap, settleTwoFingerTaps, registerLockTap, formatAttemptLabel } from './logic.js';
+    import { FINGERPRINT_HOLD_MS, normalizeSettings, storageIdentityForPath, selectedAttemptReveal, latestBirthdateAttempt, homeSwipeTarget, completeHomeSwipe, lockScreenCopy, createState, pushDigit, submitPin, fingerprintHold, attemptFeedback, feedbackVibration, deleteDigit, clearCurrent, toggleDigits, reset, peekOffset, registerTwoFingerTap, settleTwoFingerTaps, registerLockTap, formatAttemptLabel } from './logic.js';
 
     import { hiddenDigit, appendMinuteDigit, registerEmergencyTap, timeMachineClock, isSettingsSwipe, horizontalPeekOffset, unlockDragTarget } from './time-machine.js';
 
     const $ = (id) => document.getElementById(id);
-    const SETTINGS_TUTORIAL_KEY = "friend-unlock-settings-entry-tutorial-v1";
+    const SETTINGS_TUTORIAL_KEY = /^\/tools\/(?:unlock|release)(?:\/|$)/.test(location.pathname)
+      ? "friend-unlock-settings-entry-tutorial-v1"
+      : "unlock-settings-entry-tutorial-v1";
     function showSettingsEntryTutorial() {
       try { if (localStorage.getItem(SETTINGS_TUTORIAL_KEY) === "1") return; } catch (_) {}
       const tutorial = document.getElementById("settings-entry-tutorial");
@@ -465,21 +476,20 @@
     });
 
     const STORAGE = storageIdentityForPath(location.pathname);
+    $("settings-form").addEventListener("invalid", (event) => {
+      const group = event.target.closest("details");
+      if (group) group.open = true;
+    }, true);
     const SETTINGS_KEY = STORAGE.settingsKey;
     const UNLOCK_ANIMATION_MS = 520;
-    document.body.classList.toggle('personal-home', STORAGE.personal);
     $('performance-heading').textContent = '리와인드';
     $('performance-field').hidden = true;
-    $('home2-field').hidden = false;
-    $('home2-preview-item').hidden = false;
-    $('reveal-attempt-field').hidden = false;
-    $('reveal-attempt').disabled = false;
     let saved = null;
     try { saved = JSON.parse(localStorage.getItem(SETTINGS_KEY)); } catch {}
-    if (!saved && STORAGE.personal) {
+    if (!saved && SETTINGS_KEY !== 'unlock-settings-v1') {
       try { saved = JSON.parse(localStorage.getItem('unlock-settings-v1')); } catch {}
     }
-    let settings = normalizeSettings(saved && typeof saved === 'object' ? saved : {}, STORAGE.personal);
+    let settings = normalizeSettings(saved && typeof saved === 'object' ? saved : {});
     let state = createState(settings.digits);
     let screen = 'settings';
     let feedbackTimer = null;
@@ -525,7 +535,6 @@
       if (pickerLabel) pickerLabel.textContent = registered ? '다시 선택' : '이미지 선택';
     }
     document.addEventListener('pointerdown', () => { if (screen !== 'settings') performanceTouched = true; }, { capture: true });
-    document.addEventListener('keydown', () => { if (screen !== 'settings') performanceTouched = true; }, { capture: true });
 
     function toast(message) {
       clearTimeout(toastTimer);
@@ -589,7 +598,7 @@
         $('hitsuzen-link-status').textContent = '일수를 저장하지 못했습니다. 브라우저의 저장 공간을 확인해 주세요.';
         return;
       }
-      location.assign(STORAGE.personal ? '/zz3/' : '/tools/hitsuzen/');
+      location.assign(/^\/tools\/(?:unlock|release)(?:\/|$)/.test(location.pathname) ? '/tools/hitsuzen/' : '/zz3/');
     });
 
     function renderAttempts() {
@@ -615,7 +624,7 @@
     function renderReveal() {
       const selected = selectedAttemptReveal(state.attempts, settings.revealAttempt, new Date());
       $('reveal-label').textContent = `${settings.revealAttempt}번째 입력 PIN`;
-      $('reveal-number').textContent = selected?.pin ?? '—';
+      $('reveal-number').textContent = selected?.pin ?? '-';
       $('reveal-days').hidden = selected?.days === null || selected?.days === undefined;
       if (selected?.days !== null && selected?.days !== undefined) {
         publishBirthDays(selected.days);
@@ -768,7 +777,7 @@
           settleUnlockMotion($('input-screen'), 0, true);
         }
       }
-      if (next === 'settings') { populateForm(); $('settings-screen').scrollTop = 0; }
+      if (next === 'settings') { $('settings-entry-tutorial').hidden = true; populateForm(); $('settings-screen').scrollTop = 0; }
       if (next === 'time-black') startRewindGuide();
       else stopRewindGuide();
       // Extracted rewind tests run showScreen without this helper in scope.
@@ -940,12 +949,6 @@
       if (fingerprintPress?.pointerId === event.pointerId) releaseFingerprint(event.pointerId, false);
     });
     $('fingerprint').addEventListener('contextmenu', (event) => event.preventDefault());
-    document.addEventListener('keydown', (event) => {
-      if (screen !== 'input' || event.ctrlKey || event.metaKey || event.altKey) return;
-      if (/^[0-9]$/.test(event.key)) { event.preventDefault(); inputDigit(Number(event.key)); }
-      if (event.key === 'Backspace') { event.preventDefault(); removeDigit(); }
-      if (event.key === 'Enter' && settings.style === 'galaxy') { event.preventDefault(); confirmKey.click(); }
-    });
 
     function gestureAction(action) {
       if (!action) return;
@@ -976,7 +979,7 @@
       $('unlocked-screen').classList.add('returning');
       $('unlocked-screen').style.transform = 'translateY(0px)';
       $('peek-screen').classList.remove('side-peek');
-      if (STORAGE.personal || originals.has('home2')) setHomePage(homePage);
+      setHomePage(homePage);
       swipe = null;
       if (keepBriefReveal && revealVisible && revealShownAt !== null) {
         const remaining = Math.max(0, 500 - (performance.now() - revealShownAt));
@@ -1006,7 +1009,6 @@
       } else if (screen === 'unlocked' && event.touches.length === 1) {
         cancelReveal();
         const touch = event.touches[0];
-        if (!STORAGE.personal && isHomeGestureArea(touch.clientX, touch.clientY, window.innerWidth, window.innerHeight)) return;
         swipe = { id: touch.identifier, x: touch.clientX, y: touch.clientY, axis: null };
         $('unlocked-screen').classList.remove('returning');
       }
@@ -1037,13 +1039,13 @@
         event.preventDefault();
         const dx = touch.clientX - swipe.x, dy = touch.clientY - swipe.y;
         if (!swipe.axis && Math.hypot(dx, dy) >= 10) swipe.axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
-        if ((STORAGE.personal || originals.has('home2')) && swipe.axis === 'x') {
-          const reveal = homeSwipeTarget(homePage, dx, dy, (STORAGE.personal || originals.has('home2')), false, $('app').clientWidth).revealVisible;
+        if (swipe.axis === 'x') {
+          const reveal = homeSwipeTarget(homePage, dx, dy, true, false, $('app').clientWidth).revealVisible;
           if (reveal) setRevealVisible(true);
           else cancelReveal();
           const index = homePage === 'home2' ? 1 : 0;
           const width = $('app').clientWidth;
-          const drag = Math.max(index === 0 && (STORAGE.personal || originals.has('home2')) ? -width : 0,
+          const drag = Math.max(index === 0 ? -width : 0,
             Math.min(index === 1 ? width : 0, dx));
           $('home-track').style.transition = 'none';
           $('home-track').style.transform = `translate3d(calc(${-index * 100}% + ${drag}px), 0, 0)`;
@@ -1073,17 +1075,16 @@
       }
       if (swipe) {
         let keepBriefReveal = false;
-        if ((STORAGE.personal || originals.has('home2')) && event.changedTouches.length === 1) {
+        if (event.changedTouches.length === 1) {
           const touch = event.changedTouches[0];
           if (touch.identifier === swipe.id) {
             const dx = touch.clientX - swipe.x;
             const dy = touch.clientY - swipe.y;
-            const hasSecond = STORAGE.personal || originals.has('home2');
             const releaseTarget = homeSwipeTarget(homePage, dx, dy,
-              hasSecond, false, $('app').clientWidth);
+              true, false, $('app').clientWidth);
             if (releaseTarget.revealVisible) setRevealVisible(true);
             const target = completeHomeSwipe(homePage, dx, dy,
-              hasSecond, $('app').clientWidth);
+              true, $('app').clientWidth);
             if (!target.peek) homePage = target.page;
             keepBriefReveal = releaseTarget.revealVisible && homePage === 'home2';
           }
@@ -1121,7 +1122,7 @@
     function formSettings() {
       return normalizeSettings({ birthDaysLink: $('birth-days-link').checked, performance: $('performance').value, timeDelay: $('time-delay').value, timeDuration: settings.timeDuration, style: $('style').value, digits: Number($('digits').value), unlockMode: $('unlock-mode').value,
         unlockAttempt: $('unlock-attempt').value, revealAttempt: $('reveal-attempt').value, vibration: $('vibration').checked, delaySeconds: $('delay').value,
-        cropTop: $('crop').value, imagePosition: $('position').value, statusStyle: $('status-style').value, statusColor: $('status-color').value }, STORAGE.personal);
+        cropTop: $('crop').value, imagePosition: $('position').value, statusStyle: $('status-style').value, statusColor: $('status-color').value });
     }
 
     function updateUnlockControls() {

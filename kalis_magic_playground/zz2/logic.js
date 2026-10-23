@@ -1,4 +1,4 @@
-export function normalizeSettings(value = {}, personal = false) {
+export function normalizeSettings(value = {}) {
   const number = (key, fallback, min, max) => {
     const n = Number(value[key] ?? fallback);
     return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : fallback;

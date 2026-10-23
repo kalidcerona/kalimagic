@@ -372,9 +372,9 @@ export function transformDistributionDocument(html, app) {
   if (app.target === 'magicshow') return html;
   const isolate = app.target === 'kairos' || app.target === 'kairos-classic';
   let next = isolate ? isolateKairosStorageKeys(html, app.target) : html;
-  next = next
-    .replace(/<body\b/, '<body data-magic-customize="off"')
-    .replace('<head>', `<head>\n${accessGuard(app.tool, app.target)}`);
+  // RELEASE friends get the same editor as the personal build. Other friend apps stay fixed.
+  if (app.target !== 'release') next = next.replace(/<body\b/, '<body data-magic-customize="off"');
+  next = next.replace('<head>', `<head>\n${accessGuard(app.tool, app.target)}`);
   return injectLegacyMigration(next, app.target);
 }
 
@@ -656,7 +656,8 @@ export async function verifyAppDisplayPolicy(directory = DIST, routes = [
     }
     const html = await readFile(path.join(appDirectory, 'index.html'), 'utf8');
     const disabled = /<body\b[^>]*\bdata-magic-customize=["']off["']/.test(html);
-    if (disabled !== route.startsWith('tools/')) {
+    const customizeOff = route.startsWith('tools/') && route !== 'tools/release';
+    if (disabled !== customizeOff) {
       throw new Error(`App customization policy: ${route}`);
     }
     for (const entry of await readdir(appDirectory, { withFileTypes: true })) {

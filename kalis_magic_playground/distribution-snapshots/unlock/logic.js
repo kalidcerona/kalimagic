@@ -1,4 +1,4 @@
-export function normalizeSettings(value = {}, personal = false) {
+export function normalizeSettings(value = {}) {
   const number = (key, fallback, min, max) => {
     const n = Number(value[key] ?? fallback);
     return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : fallback;
@@ -23,7 +23,7 @@ export function normalizeSettings(value = {}, personal = false) {
 }
 
 export function storageIdentityForPath(pathname) {
-  const personal = !/^\/tools\/(?:unlock|release)\//.test(String(pathname));
+  const personal = !/^\/tools\/(?:unlock|release)(?:\/|$)/.test(String(pathname));
   return personal
     ? { personal, settingsKey: 'unlock-settings-personal-v2', imageDb: 'unlock-images-personal' }
     : { personal, settingsKey: 'unlock-settings-v1', imageDb: 'unlock-images' };
