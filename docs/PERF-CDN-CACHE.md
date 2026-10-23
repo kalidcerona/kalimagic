@@ -6,7 +6,6 @@ Anonymous GET 200 responses of these functions get these headers (helper: `kalis
 | Endpoint | Netlify-Cache-Tag (besides `pg-public`) | Netlify-Vary query keys |
 |---|---|---|
 | `posts` (list) | `pg-list` | category, reviewKind, limit, offset |
-| `post-detail` | `post:<id>` | id |
 | `comments` (GET) | `post:<id>` | postId |
 | `event-reviews` (GET) | `pg-events` | eventCode |
 | `event-photos` | `pg-events` | eventCode |
@@ -43,7 +42,7 @@ Writes call the Netlify purge API (`POST https://api.netlify.com/api/v1/purge`, 
 | role / badge / nickname change (admin-members, admin-badges, admin-quest-badges, member-badges PATCH, profile POST) | `pg-public` (everything) |
 
 Bounded staleness when a purge is missed or for indirect changes (quest-badge awards, answer-helpful votes, `event-photos` rows edited in the DB): up to 30 s fresh + 300 s stale-while-revalidate. New deploys invalidate the cache automatically.
-Known side effect: `post-detail` increments `view_count` only when the function runs, so anonymous views served from the CDN are not counted.
+`post-detail` is deliberately not cached: it increments `view_count` only when the function runs, so caching it would stop counting anonymous views (default chosen 2026-10-23; the owner can opt in later).
 
 ## Verify after deploy
 ```
