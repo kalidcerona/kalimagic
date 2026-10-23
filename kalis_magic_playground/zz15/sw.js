@@ -1,5 +1,5 @@
 // Cache only the explicit app shell. API, authentication and user data stay on the network.
-const scope=new URL(self.registration.scope),PREFIX='uramichi-web-'+encodeURIComponent(scope.href)+'-',CACHE=PREFIX+'v20261023-web-2';
+const scope=new URL(self.registration.scope),PREFIX='uramichi-web-'+encodeURIComponent(scope.href)+'-',CACHE=PREFIX+'v20261023-web-3';
 const GUARDED=scope.pathname.startsWith('/tools/');
 const SHELL = [
   "./index.html",

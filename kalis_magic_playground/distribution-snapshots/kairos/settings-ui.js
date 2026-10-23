@@ -148,7 +148,7 @@
     if (flag === 'off') return false;
     var path = pathname || '';
     // Friend RELEASE is the same app as the personal build, including the editor.
-    if (/^\/tools\/(?:unlock|release)(?:\/|$)/i.test(path) || path.includes('/distribution-snapshots/unlock')) return true;
+    if (/^\/tools\/release(?:\/|$)/i.test(path) || path.includes('/distribution-snapshots/unlock')) return true;
     return !/^\/tools(?:\/|$)/i.test(path) && !path.includes('/distribution-snapshots/');
   }
   /* Manual install help: plain Korean steps for the browser that is in use. */

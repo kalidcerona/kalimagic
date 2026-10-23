@@ -104,6 +104,7 @@ test('zz15 keeps the brand copy, footer, wake lock, gesture and storage rules wi
   assert.ok(html.indexOf('class="settingsbrand"') < html.indexOf('class="identity"') && html.indexOf('class="identity"') < html.indexOf('<details class="overview">'));
   const zz13 = await readFile(path.join(root, 'zz13', 'index.html'), 'utf8');
   assert.ok(html.includes(zz13.match(/<div class="magic-settings-footer">[\s\S]*?<\/div><\/form>/)[0].replace('</form>', '')));
+  assert.match(app, /const LOCAL_HOSTS = \['localhost', '127\.0\.0\.1', '::1', '\[::1\]'\];\nconst DEBUG = LOCAL_HOSTS\.includes\(location\.hostname\) && params\.get\('debug'\) === '1';/);
   assert.match(app, /navigator\.wakeLock\.request\('screen'\)/);
   assert.match(app, /visibilitychange/);
   assert.match(app, /stopCamera\(\)/);

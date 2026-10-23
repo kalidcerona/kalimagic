@@ -94,7 +94,7 @@ test('editor screens and parts point at real RELEASE elements', () => {
 test('RELEASE customization is on for the personal build and the friend build', () => {
   assert.equal(ui.customizationAllowed('/zz2/', undefined), true);
   assert.equal(ui.customizationAllowed('/tools/release/', undefined), true);
-  assert.equal(ui.customizationAllowed('/tools/unlock/', undefined), true);
+  assert.equal(ui.customizationAllowed('/tools/unlock/', undefined), false);
   assert.equal(ui.customizationAllowed('/distribution-snapshots/unlock/', undefined), true);
   assert.equal(ui.customizationAllowed('/tools/release/', 'off'), false);
   assert.equal(ui.customizationAllowed('/tools/kairos/', undefined), false);
