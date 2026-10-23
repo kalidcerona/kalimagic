@@ -156,3 +156,11 @@ loadStored();
 syncDot();
 persist();render();renderInstall();if(storageNote)notice(storageNote);if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js',{scope:'./'}).catch(()=>{});
 syncPerformanceWakeLock();
+const localSettingsHost = typeof location !== 'undefined' && ['localhost', '127.0.0.1', '::1', '[::1]'].includes(location.hostname);
+if (localSettingsHost && new URLSearchParams(location.search).get('local-preview') === '1') {
+  window.addEventListener('magic-local-settings', () => {
+    document.querySelector(".first-run-guide button")?.click();
+    open();
+  });
+  document.documentElement.dataset.localSettingsReady = 'true';
+}

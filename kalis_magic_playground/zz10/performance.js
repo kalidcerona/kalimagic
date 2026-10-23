@@ -161,6 +161,8 @@ export function trackObservation(tracker, detection, t, width, height) {
 }
 
 const STATIONARY_RADIUS = 2.2;
+const SETTLE_RADIUS = 1;
+const SETTLE_STEPS = 3;
 const SNAP_PX = 15;
 const LONG_GAP_MS = 320;
 const JITTER_TAU_MS = 180;
@@ -223,8 +225,14 @@ export function smoothDisplayedCorners(state, corners, t) {
     ? (delta.x * state.delta.x + delta.y * state.delta.y) / (length * oldLength) : 0;
   const motionSteps = direction > 0.8 ? (state.motionSteps || 1) + 1 : (length > 0.5 ? 1 : 0);
   const moving = motionSteps >= 2 || fromDisplay >= 6;
+  // A card that settled 1-2px off the held display would otherwise stay off for good.
+  // One sample is jitter; a few steady, non-reversing samples are a real offset.
+  const offset = !moving && direction >= 0 && length <= SETTLE_RADIUS * 2 &&
+    fromDisplay > SETTLE_RADIUS && fromDisplay <= STATIONARY_RADIUS;
+  const offsetSteps = offset ? (state.offsetSteps || 0) + 1 : 0;
   let alpha;
   if (moving) alpha = Math.max(0.8, 1 - Math.exp(-dt / 40));
+  else if (offsetSteps >= SETTLE_STEPS) alpha = 0.5;
   else if (direction < 0 || fromDisplay <= STATIONARY_RADIUS) alpha = 0;
   else alpha = Math.min(0.1, 1 - Math.exp(-dt / JITTER_TAU_MS));
   const followed = previous.map((point, index) => ({
@@ -232,7 +240,23 @@ export function smoothDisplayedCorners(state, corners, t) {
     y: point.y + alpha * (corners[index].y - point.y),
   }));
   return {
-    state: { corners: cloneCorners(followed), anchor: cloneCorners(followed), raw: cloneCorners(corners), delta, motionSteps, at: t },
+    state: { corners: cloneCorners(followed), anchor: cloneCorners(followed), raw: cloneCorners(corners), delta, motionSteps, offsetSteps, at: t },
     corners: cloneCorners(followed),
   };
+}
+
+/**
+ * Grow the displayed quad slightly outward about its centre. A card quad fitted a
+ * pixel or two inside the real edge would otherwise leave a grey rim of the real
+ * card around the replacement. Applied to what is drawn only, never to tracking.
+ * Returns null for an unusable quad.
+ */
+export function bleedCorners(corners, fraction = 0.015) {
+  if (!validDisplayQuad(corners)) return null;
+  const middle = centroid(corners);
+  const scale = 1 + 2 * fraction;
+  return corners.map((point) => ({
+    x: middle.x + (point.x - middle.x) * scale,
+    y: middle.y + (point.y - middle.y) * scale,
+  }));
 }

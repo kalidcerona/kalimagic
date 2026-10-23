@@ -2325,3 +2325,11 @@ fillForm();
 // Coin disappearance and the crack stay in sessionStorage, not in this record.
 showPerformance({ persistMode: false, keepGone: false, showGuide: true });
 imagesReady.then(refreshCoinImage, refreshCoinImage);
+const localSettingsHost = typeof location !== 'undefined' && ['localhost', '127.0.0.1', '::1', '[::1]'].includes(location.hostname);
+if (localSettingsHost && new URLSearchParams(location.search).get('local-preview') === '1') {
+  window.addEventListener('magic-local-settings', () => {
+    hideGestureGuide();
+    showSettings();
+  });
+  document.documentElement.dataset.localSettingsReady = 'true';
+}

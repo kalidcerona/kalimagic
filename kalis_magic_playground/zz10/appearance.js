@@ -26,15 +26,23 @@ function isNeutralFallback(color) {
     && color.gain === NEUTRAL.gain;
 }
 
+// Backlit paper reads far darker than its stock, and darker than the wall. Match what
+// the paper looks like now, not a bright-paper ideal; only skin, ink, and black fall out.
+const PAPER_MIN_LUMA = 80;
+const PAPER_FLOOR = 70;
+const MIN_GAIN = 0.45;
+
 function paperLike(r, g, b) {
   const max = Math.max(r, g, b);
   const min = Math.min(r, g, b);
   const luma = 0.299 * r + 0.587 * g + 0.114 * b;
-  if (luma < 168 || luma > 252) return false;
+  if (luma < PAPER_MIN_LUMA || luma > 252) return false;
   if (max - min > 30) return false;
-  // Warm skin can be bright enough to look like dirty paper. Chroma above
-  // already rejects most of it; this catches a moderate red cast.
+  // Skin is redder than green by far more than any paper tint. Two rules, both kept: the
+  // original catches bright warm skin (190,178,168), the second the dim, pinkish cast of a
+  // backlit palm (122,94,107). Cool and neutral paper trips neither.
   if (r > g + 10 && r > b + 18) return false;
+  if (r - g > 14 && r - b > 4) return false;
   return true;
 }
 
@@ -46,12 +54,12 @@ function clampPaper(r, g, b) {
   let blue = avg + clamp(b - avg, -limit, limit);
   const luma = 0.299 * red + 0.587 * green + 0.114 * blue;
   const neutralLuma = 0.299 * NEUTRAL.r + 0.587 * NEUTRAL.g + 0.114 * NEUTRAL.b;
-  const gain = clamp(luma / neutralLuma, 0.72, 1.05);
+  const gain = clamp(luma / neutralLuma, MIN_GAIN, 1.05);
   const scale = (neutralLuma * gain) / Math.max(luma, 1);
   return {
-    r: Math.round(clamp(red * scale, 168, 252)),
-    g: Math.round(clamp(green * scale, 168, 252)),
-    b: Math.round(clamp(blue * scale, 168, 252)),
+    r: Math.round(clamp(red * scale, PAPER_FLOOR, 252)),
+    g: Math.round(clamp(green * scale, PAPER_FLOOR, 252)),
+    b: Math.round(clamp(blue * scale, PAPER_FLOOR, 252)),
     gain: Math.round(gain * 1000) / 1000,
   };
 }
@@ -94,7 +102,8 @@ export function sampleCardPaper(frame, corners, mask) {
     const my = Math.min(mask.height - 1, y0 + Math.floor(((row + 0.5) * (y1 - y0)) / ANALYSIS_ROWS));
     for (let col = 0; col < ANALYSIS_COLS; col += 1) {
       const mx = Math.min(mask.width - 1, x0 + Math.floor(((col + 0.5) * (x1 - x0)) / ANALYSIS_COLS));
-      if (mask.data[(my * mask.width + mx) * 4 + 3] === 0) continue;
+      // A feathered hole edge is part hand; only fully opaque replacement counts as paper.
+      if (mask.data[(my * mask.width + mx) * 4 + 3] < 250) continue;
       const point = applyHomography(homography, mx + 0.5, my + 0.5);
       if (!point) continue;
       const x = Math.round(point.x);
@@ -206,8 +215,16 @@ function minNeighborAlpha(data, width, height, x, y) {
  * mapped point, stays transparent. The minimum nearby raw alpha keeps a live
  * hand edge and never makes a pixel more opaque. The input mask is not written.
  * Returns null when the geometry cannot be mapped; callers hide the overlay.
+ * With `extend`, a texel just outside the raw quad takes the nearest raw edge texel instead of
+ * going transparent, but only up to EXTEND_LIMIT of the card's size beyond the raw edge. The
+ * displayed quad is a little larger than the raw one (outward bleed); a transparent band there
+ * would show the real card's rim. Past the limit it stays transparent, so a lagging display
+ * quad never paints the overlay onto the background or a hand. An edge texel that is already a
+ * hand hole extends as a hole.
  */
-export function remapOcclusionToDisplay(mask, rawCorners, displayCorners) {
+const EXTEND_LIMIT = 0.02;
+
+export function remapOcclusionToDisplay(mask, rawCorners, displayCorners, { extend = false } = {}) {
   if (!mask?.data || !Number.isInteger(mask.width) || !Number.isInteger(mask.height)) return null;
   const width = mask.width;
   const height = mask.height;
@@ -223,7 +240,11 @@ export function remapOcclusionToDisplay(mask, rawCorners, displayCorners) {
       const frame = applyHomography(displayToFrame, x + 0.5, y + 0.5);
       const raw = frame && applyHomography(frameToRaw, frame.x, frame.y);
       const outside = !raw || raw.x < 0 || raw.y < 0 || raw.x > width || raw.y > height;
-      const alpha = outside ? 0 : minNeighborAlpha(mask.data, width, height, raw.x, raw.y);
+      const tooFar = !raw || raw.x < -width * EXTEND_LIMIT || raw.y < -height * EXTEND_LIMIT ||
+        raw.x > width * (1 + EXTEND_LIMIT) || raw.y > height * (1 + EXTEND_LIMIT);
+      const alpha = !raw || (outside && (!extend || tooFar)) ? 0
+        : minNeighborAlpha(mask.data, width, height,
+          Math.min(width - 0.5, Math.max(0, raw.x)), Math.min(height - 0.5, Math.max(0, raw.y)));
       const offset = (y * width + x) * 4;
       data[offset] = 255;
       data[offset + 1] = 255;

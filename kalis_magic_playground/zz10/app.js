@@ -1,6 +1,6 @@
 import { AlterState, createAlterState, updateAlterState } from "./logic.js";
-import { cardOcclusionMask, detectCard, detectCardAgainstBackground, mapSourceOntoCorners } from "./vision.js";
-import { createDisplaySmoother, createObservationTracker, overlayCorners, smoothDisplayedCorners, trackObservation } from "./performance.js";
+import { cardOcclusionMask, detectCard, detectCardAgainstBackground, heldCardPresent, mapSourceOntoCorners } from "./vision.js";
+import { bleedCorners, createDisplaySmoother, createObservationTracker, overlayCorners, smoothDisplayedCorners, trackObservation } from "./performance.js";
 import { coverGeometry, samplePointToView } from "./camera-geometry.js";
 import { claimCalibrationReady, createBackgroundCalibrator, observeCalibration } from "./calibration.js";
 import { createPaperMatch, remapOcclusionToDisplay, resolveOverlayMask, sampleCardPaper, updatePaperMatch } from "./appearance.js";
@@ -43,6 +43,9 @@ let sampleGeometry = null;
 let displaySmooth = createDisplaySmoother();
 let paperMatch = createPaperMatch();
 let occlusionSlot = { quadKey: "", mask: null };
+// While detection is briefly lost the old quad is drawn whole. A hand mask computed
+// on a stale quad would open holes in the wrong place and show the real card.
+const HELD_OPAQUE = Object.freeze({ opaque: true });
 const lifecycleCounts = Object.create(null);
 
 // Only event codes/counts are retained; frames and device details are never logged.
@@ -270,6 +273,11 @@ function showOverlay(displayCorners, mask, geometry) {
     0, 0, 1, 0,
     h[2], h[5], 0, h[8],
   ].join(",")})`;
+  if (mask === HELD_OPAQUE) {
+    clearOverlayMask();
+    overlay.hidden = false;
+    return true;
+  }
   // A missing mask must not fall back to a solid card or a previous quad's bitmap.
   if (!mask || !occlusionContext) {
     overlay.hidden = true;
@@ -341,7 +349,11 @@ function processFrame(t) {
     const pixels = sampleContext.getImageData(0, 0, width, height);
     let candidate;
     if (calibrator.reference) {
-      candidate = detectCardAgainstBackground(pixels, calibrator.reference);
+      // The previous quad, while the card was last seen, lets detection split a backlit
+      // card from the hand it sits on once brightness no longer does.
+      const hint = tracker.corners && tracker.seenAt != null && t - tracker.seenAt <= 1000
+        ? tracker.corners : null;
+      candidate = detectCardAgainstBackground(pixels, calibrator.reference, hint);
       if (!candidate || !isPortrait(candidate.corners)) candidate = detectCard(pixels);
     } else {
       candidate = detectCard(pixels);
@@ -372,21 +384,29 @@ function processFrame(t) {
       displaySmooth = createDisplaySmoother();
     }
     if (machine.state === AlterState.ALTER_VISIBLE && displayCorners) {
-      const maskCorners = detection?.corners || heldCorners;
-      let mask = null;
-      if (maskCorners) {
-        mask = cardOcclusionMask(pixels, maskCorners, calibrator.reference);
-        if (detection?.corners) {
-          const matched = updatePaperMatch(paperMatch, sampleCardPaper(pixels, detection.corners, mask), t);
-          paperMatch = matched.state;
-          applyPaperStyle(matched.color);
-        }
+      // The replacement is drawn a little larger than the fitted quad so a quad a pixel
+      // or two inside the real edge cannot leave the real card's rim showing.
+      const drawCorners = bleedCorners(displayCorners) || displayCorners;
+      if (detection?.corners) {
+        const mask = cardOcclusionMask(pixels, detection.corners, calibrator.reference);
+        const matched = updatePaperMatch(paperMatch, sampleCardPaper(pixels, detection.corners, mask), t);
+        paperMatch = matched.state;
+        applyPaperStyle(matched.color);
+        occlusionSlot = resolveOverlayMask(occlusionSlot, quadKey(detection.corners), mask);
+        const displayMask = occlusionSlot.mask
+          ? remapOcclusionToDisplay(occlusionSlot.mask, detection.corners, drawCorners, { extend: true })
+          : null;
+        showOverlay(drawCorners, displayMask, geometry);
+      } else {
+        occlusionSlot = { quadKey: "", mask: null };
+        // The hold bridges a missed detection, not a card that has left. Draw the old quad
+        // only while something card-like (not just a hand or the empty wall) is still in it.
+        const paper = paperMatch.color;
+        const learned = paper && !(paper.r === 251 && paper.g === 249 && paper.b === 243) ? [paper.r, paper.g, paper.b] : null;
+        if (heldCorners && heldCardPresent(pixels, heldCorners, calibrator.reference, learned)) {
+          showOverlay(drawCorners, HELD_OPAQUE, geometry);
+        } else hideOverlay();
       }
-      occlusionSlot = resolveOverlayMask(occlusionSlot, quadKey(maskCorners), mask);
-      const displayMask = occlusionSlot.mask
-        ? remapOcclusionToDisplay(occlusionSlot.mask, maskCorners, displayCorners)
-        : null;
-      showOverlay(displayCorners, displayMask, geometry);
     } else hideOverlay();
   } catch {
     machine = updateAlterState(machine, { type: "interrupt", t });
@@ -628,4 +648,11 @@ renderCard();
 updateStateNote();
 if ("serviceWorker" in navigator && window.isSecureContext) {
   navigator.serviceWorker.register("./sw.js").catch(() => {});
+}
+const localSettingsHost = typeof location !== 'undefined' && ['localhost', '127.0.0.1', '::1', '[::1]'].includes(location.hostname);
+if (localSettingsHost && new URLSearchParams(location.search).get('local-preview') === '1') {
+  window.addEventListener('magic-local-settings', () => {
+    openSettings();
+  });
+  document.documentElement.dataset.localSettingsReady = 'true';
 }
