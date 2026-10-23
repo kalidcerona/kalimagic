@@ -31,8 +31,11 @@ test('zz15 publishes only its explicit shell in an isolated build', async () => 
     await cp(root, site, { recursive: true, filter: (source) => !['node_modules', 'dist', '.git'].includes(path.relative(root, source).split(path.sep)[0]) });
     await writeFile(path.join(site, 'zz15', 'draft.txt'), 'private fixture');
     await writeFile(path.join(site, 'zz15', 'vendor', 'notes.json'), '{}');
-    const result = spawnSync(process.execPath, ['scripts/build-public.mjs'], { cwd: site, encoding: 'utf8', maxBuffer: 8 * 1024 * 1024 });
+    const result = spawnSync(process.execPath, ['scripts/build-public.mjs'], { cwd: site, encoding: 'utf8', maxBuffer: 8 * 1024 * 1024, env: { ...process.env, CI: 'true' } });
     assert.equal(result.status, 0, result.stderr + result.stdout);
+    const mirrorLog = `${result.stdout}\n${result.stderr}`;
+    assert.equal((mirrorLog.match(/WARNING: mirror check skipped on CI: \d+ sibling sources absent/g) || []).length, 1, mirrorLog);
+    assert.equal(mirrorLog.includes('mirror check skipped:'), false);
     const published = path.join(site, 'dist', 'zz15');
     assert.deepEqual((await listFiles(published)).sort(), [...shell, 'sw.js'].sort());
     for (const file of [...shell, 'sw.js']) assert.deepEqual(await readFile(path.join(published, file)), await readFile(path.join(root, 'zz15', file)), file);
@@ -82,6 +85,7 @@ test('zz15 worker precaches the whole shell, serves it offline and ignores other
   let pending;
   listeners.install({ waitUntil(value) { pending = value; } }); await pending;
   assert.ok(names[0].startsWith('uramichi-web-'));
+  assert.match(names[0], /v20261024-web-4$/);
   assert.deepEqual([...cached.keys()].sort(), shell.map((file) => new URL(file, scope).href).sort());
   for (const file of ['', ...shell.filter((f) => f !== 'manifest.webmanifest')]) {
     listeners.fetch({ request: new Request(new URL(file, scope)), respondWith(value) { pending = value; } });
@@ -115,6 +119,9 @@ test('zz15 keeps the brand copy, footer, wake lock, gesture and storage rules wi
   assert.match(app, /if \(stale\(\)\) return;\n    stopCamera\(\);\n    if \(error/);
   assert.match(app, /addEventListener\?\.\('ended', \(\) => onTrackEnded\(local\)\)/);
   assert.match(app, /now - lastEndedRestart < 2000/);
+  assert.match(app, /setTimeout\(\(\) => \{ if \(token === loopToken && stream\) runDetection\(\); \}, 2000\)/);
+  assert.match(await read('style.css'), /\.recog \{[^}]*width: 6px; height: 6px;/);
+  assert.match(html, /id="recog" class="recog" hidden/);
   assert.match(app, /event\.touches\.length !== 2/);
   assert.match(app, /facingMode: \{ ideal: 'environment' \}/);
   assert.match(app, /BarcodeDetector/);

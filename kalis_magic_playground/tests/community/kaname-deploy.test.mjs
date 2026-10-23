@@ -23,8 +23,11 @@ test('KanameCue publishes only its explicit shell at the exact path in an isolat
     const site = path.join(temp, 'site');
     await cp(root, site, { recursive: true, filter: source => !['node_modules', 'dist', '.git'].includes(path.relative(root, source).split(path.sep)[0]) });
     await writeFile(path.join(site, 'KanameCue', 'draft.txt'), 'private fixture');
-    const result = spawnSync(process.execPath, ['scripts/build-public.mjs'], { cwd: site, encoding: 'utf8', maxBuffer: 8 * 1024 * 1024 });
+    const result = spawnSync(process.execPath, ['scripts/build-public.mjs'], { cwd: site, encoding: 'utf8', maxBuffer: 8 * 1024 * 1024, env: { ...process.env, CI: 'true' } });
     assert.equal(result.status, 0, result.stderr + result.stdout);
+    const mirrorLog = `${result.stdout}\n${result.stderr}`;
+    assert.equal((mirrorLog.match(/WARNING: mirror check skipped on CI: \d+ sibling sources absent/g) || []).length, 1, mirrorLog);
+    assert.equal(mirrorLog.includes('mirror check skipped:'), false);
     const published = path.join(site, 'dist', 'KanameCue');
     assert.deepEqual((await readdir(published)).sort(), [...shell, 'sw.js'].sort());
     for (const file of [...shell, 'sw.js']) assert.deepEqual(await readFile(path.join(published, file)), await readFile(path.join(root, 'KanameCue', file)), file);

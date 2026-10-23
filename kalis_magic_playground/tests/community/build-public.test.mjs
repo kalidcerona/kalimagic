@@ -4,7 +4,7 @@ import { readdir, readFile, stat, mkdtemp, mkdir, writeFile, rm } from 'node:fs/
 import path from 'node:path';
 import os from 'node:os';
 import { fileURLToPath } from 'node:url';
-import { PUBLIC_FILES, PUBLIC_DIRS, PRIVATE_PATTERNS, MIRROR_PAIRS, DISTRIBUTION_APPS, SHARED_UNLOCK_FILES, CHOICE_FILES, NEW_APP_FILES, USOTSUKI_FILES, ASRAI_FILES, ALTER_FILES, SPINNER_FILES, MEMDECK_FILES, QR_FILES, ALETHEIA_COURT_FILES, SETTINGS_UI_FILES, buildPublic, verifyAppDisplayPolicy, injectLegacyMigration, injectLegacyShellModules } from '../../scripts/build-public.mjs';
+import { PUBLIC_FILES, PUBLIC_DIRS, PRIVATE_PATTERNS, MIRROR_PAIRS, DISTRIBUTION_APPS, SHARED_UNLOCK_FILES, CHOICE_FILES, NEW_APP_FILES, USOTSUKI_FILES, ASRAI_FILES, ALTER_FILES, SPINNER_FILES, MEMDECK_FILES, QR_FILES, ALETHEIA_COURT_FILES, SETTINGS_UI_FILES, buildPublic, verifyMirrors, verifyAppDisplayPolicy, injectLegacyMigration, injectLegacyShellModules } from '../../scripts/build-public.mjs';
 
 test('public build allowlist includes visible site pages', () => {
   assert.ok(PUBLIC_FILES.includes('index.html'));
@@ -609,6 +609,54 @@ test('fullscreen exception is limited to RELEASE index files with the rewind fun
     }
   } finally {
     await rm(fixture, { recursive: true, force: true });
+  }
+});
+
+test('mirror check skips only when every sibling source is absent on CI', async () => {
+  const temp = await mkdtemp(path.join(os.tmpdir(), 'mirror-check-'));
+  const root = path.join(temp, 'repo', 'kalis_magic_playground');
+  const pairs = [
+    ['../../magic-a/app.js', 'zz/a.js'],
+    ['../../magic-b/app.mjs', 'zz14/app.mjs']
+  ];
+  const warnings = [];
+  const warn = (line) => warnings.push(line);
+  const boot = 'if (typeof document !== "undefined") boot();\n';
+  const absent = 'WARNING: mirror check skipped on CI: 2 sibling sources absent';
+  try {
+    await verifyMirrors({ root, pairs, env: { CI: 'true' }, warn });
+    await verifyMirrors({ root, pairs, env: { NETLIFY: 'true' }, warn });
+    // Any non-empty CI value counts; NETLIFY must be exactly "true".
+    await verifyMirrors({ root, pairs, env: { CI: 'false' }, warn });
+    assert.deepEqual(warnings, [absent, absent, absent]);
+    warnings.length = 0;
+    await assert.rejects(() => verifyMirrors({ root, pairs, env: {}, warn }), /mirror sources missing: \.\.\/\.\.\/magic-a\/app\.js, \.\.\/\.\.\/magic-b\/app\.mjs/);
+    await assert.rejects(() => verifyMirrors({ root, pairs, env: { NETLIFY: '1' }, warn }), /mirror sources missing: \.\.\/\.\.\/magic-a\/app\.js, \.\.\/\.\.\/magic-b\/app\.mjs/);
+    assert.equal(warnings.length, 0);
+
+    await mkdir(path.join(temp, 'magic-a'), { recursive: true });
+    await writeFile(path.join(temp, 'magic-a', 'app.js'), 'present');
+    await assert.rejects(() => verifyMirrors({ root, pairs, env: { CI: 'true', NETLIFY: 'true' }, warn }), /mirror sources missing: \.\.\/\.\.\/magic-b\/app\.mjs$/);
+    assert.equal(warnings.length, 0);
+
+    const runtime = `const ready = 1;\n${boot}`;
+    await mkdir(path.join(temp, 'magic-b'), { recursive: true });
+    await mkdir(path.join(root, 'zz'), { recursive: true });
+    await mkdir(path.join(root, 'zz14'), { recursive: true });
+    await writeFile(path.join(temp, 'magic-a', 'app.js'), 'same');
+    await writeFile(path.join(root, 'zz', 'a.js'), 'same');
+    await writeFile(path.join(temp, 'magic-b', 'app.mjs'), runtime + 'window.__dev = 1;\n');
+    await writeFile(path.join(root, 'zz14', 'app.mjs'), runtime);
+    await verifyMirrors({ root, pairs, env: {}, warn });
+    assert.equal(warnings.length, 0);
+
+    await writeFile(path.join(root, 'zz', 'a.js'), 'drift');
+    await assert.rejects(() => verifyMirrors({ root, pairs, env: { CI: 'true' }, warn }), /mirror drift: \.\.\/\.\.\/magic-a\/app\.js ↔ zz\/a\.js/);
+    await writeFile(path.join(root, 'zz', 'a.js'), 'same');
+    await writeFile(path.join(root, 'zz14', 'app.mjs'), runtime.replace('const ready = 1;', 'const ready = 2;'));
+    await assert.rejects(() => verifyMirrors({ root, pairs, env: {}, warn }), /mirror drift: \.\.\/\.\.\/magic-b\/app\.mjs ↔ zz14\/app\.mjs/);
+  } finally {
+    await rm(temp, { recursive: true, force: true });
   }
 });
 

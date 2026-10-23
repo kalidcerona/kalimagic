@@ -622,15 +622,26 @@ function shouldCopy(relativePath) {
   return !PRIVATE_PATTERNS.some((pattern) => pattern.test(normalized));
 }
 
-async function verifyMirrors() {
-  for (const [source, mirror] of MIRROR_PAIRS) {
-    if (!(await exists(source))) {
-      console.log(`mirror check skipped: ${source} not found`);
-      continue;
+// Sibling checkouts exist locally and are absent on Netlify. Skip only when every one is missing on CI.
+export async function verifyMirrors({ root = ROOT, pairs = MIRROR_PAIRS, env = process.env, warn = console.warn } = {}) {
+  const missing = [];
+  for (const [source] of pairs) {
+    try {
+      await stat(path.join(root, source));
+    } catch {
+      missing.push(source);
     }
+  }
+  const onCi = env.NETLIFY === 'true' || Boolean(env.CI);
+  if (missing.length === pairs.length && pairs.length > 0 && onCi) {
+    warn(`WARNING: mirror check skipped on CI: ${missing.length} sibling sources absent`);
+    return;
+  }
+  if (missing.length) throw new Error(`mirror sources missing: ${missing.join(', ')}`);
+  for (const [source, mirror] of pairs) {
     const [sourceContents, mirrorContents] = await Promise.all([
-      readFile(path.join(ROOT, source)),
-      readFile(path.join(ROOT, mirror))
+      readFile(path.join(root, source)),
+      readFile(path.join(root, mirror))
     ]);
     // A clean Pi Max commit may coexist with the source's appended development controls.
     const matches = mirror === 'zz14/app.mjs'

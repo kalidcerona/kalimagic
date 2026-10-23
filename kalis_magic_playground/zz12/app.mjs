@@ -330,7 +330,10 @@ function keepVisibleScreenAwake() {
       const acquired = await navigator.wakeLock.request('screen');
       if (!visible()) { await acquired.release(); return; }
       lock = acquired;
-      acquired.addEventListener('release', () => { if (lock === acquired) lock = null; });
+      acquired.addEventListener('release', () => {
+        if (lock === acquired) lock = null;
+        if (visible()) setTimeout(request, 1000);
+      });
     } catch {} finally { pending = false; }
   }
   document.addEventListener('visibilitychange', () => { if (visible()) request(); else release(); });

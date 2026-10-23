@@ -1,6 +1,6 @@
 // Cache only the explicit app shell. API, authentication and user data stay on the network.
 const CACHE_PREFIX = 'magic-memdeck-' + self.registration.scope + '-';
-const CACHE_NAME = CACHE_PREFIX + 'v20261021-wake-1-v20261004-first-guide-1-coherent-1-compat-1-brand5';
+const CACHE_NAME = CACHE_PREFIX + 'v20261024-wake-2-v20261021-wake-1-v20261004-first-guide-1-coherent-1-compat-1-brand5';
 const SHELL = [
   "./first-run-guide.js",
   "./index.html",

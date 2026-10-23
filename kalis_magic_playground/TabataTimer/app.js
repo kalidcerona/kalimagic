@@ -216,7 +216,10 @@
       // A request can resolve after the user leaves the page.
       if (!wantsWake()) { await lock.release(); return; }
       wake = lock;
-      lock.addEventListener('release', () => { if (wake === lock) wake = null; });
+      lock.addEventListener('release', () => {
+        if (wake === lock) wake = null;
+        if (wantsWake()) setTimeout(keepAwake, 1000);
+      });
     } catch {} finally { wakePending = false; }
   }
   document.addEventListener('visibilitychange', () => {

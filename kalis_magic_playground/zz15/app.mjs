@@ -354,6 +354,7 @@ function stopCamera() {
   stream = null; track = null;
   video.srcObject = null;
   hideChip(true);
+  recognizerCue(false);
 }
 
 async function setZoomIndex(i) {
@@ -406,9 +407,18 @@ function boxCorners(b) {
   return [{ x: b.left, y: b.top }, { x: b.right, y: b.top }, { x: b.right, y: b.bottom }, { x: b.left, y: b.bottom }];
 }
 
+function recognizerCue(on) {
+  const cue = $('recog');
+  if (cue) cue.hidden = !on;
+}
 async function runDetection() {
   const token = ++loopToken;
-  try { detector = detector || await makeDetector(); } catch { return; }
+  try { detector = detector || await makeDetector(); } catch {
+    recognizerCue(true);
+    setTimeout(() => { if (token === loopToken && stream) runDetection(); }, 2000);
+    return;
+  }
+  recognizerCue(false);
   let last = 0;
   const tick = async () => {
     if (token !== loopToken) return;
