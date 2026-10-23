@@ -290,28 +290,40 @@ function fakeStream() {
   return c.captureStream(10);
 }
 
+let camGen = 0, introDone = false, lastEndedRestart = 0;
+const cameraWanted = () => document.visibilityState === 'visible' && (introDone || read(KEY.intro) === '1') && $('gate').hidden;
+
 async function startCamera() {
   if (stream || starting || document.visibilityState !== 'visible') return;
   starting = true;
+  const gen = camGen;
+  // A stop (page hidden) during an await makes this start stale: release what it got and bail out quietly.
+  const stale = () => gen !== camGen || document.visibilityState !== 'visible';
+  let local = null;
   try {
-    if (DEBUG && params.get('fake') === '1') stream = fakeStream();
+    if (DEBUG && params.get('fake') === '1') local = fakeStream();
     else {
       if (!navigator.mediaDevices?.getUserMedia) throw Object.assign(new Error('no camera api'), { name: 'NotSupportedError' });
-      stream = await navigator.mediaDevices.getUserMedia({
+      local = await navigator.mediaDevices.getUserMedia({
         audio: false,
         video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1440 }, aspectRatio: { ideal: 4 / 3 } }
       });
     }
-    if (document.visibilityState !== 'visible') { stopCamera(); return; }
-    video.srcObject = stream;
+    if (stale()) { for (const t of local.getTracks()) t.stop(); return; }
+    stream = local;
+    video.srcObject = local;
     await video.play().catch(() => {});
-    track = stream.getVideoTracks()[0] || null;
+    if (stale() || stream !== local) { if (stream === local) stopCamera(); else for (const t of local.getTracks()) t.stop(); return; }
+    track = local.getVideoTracks()[0] || null;
+    track?.addEventListener?.('ended', () => onTrackEnded(local));
     const caps = track?.getCapabilities?.() || {};
     zoomCaps = caps.zoom && caps.zoom.max > caps.zoom.min ? caps.zoom : null;
     if (zoomCaps) { const z = track.getSettings?.().zoom; if (z) { zoomIndex = C.zoomSelectedIndex(z); buildZoom(); } }
     $('gate').hidden = true;
     runDetection();
   } catch (error) {
+    if (local) for (const t of local.getTracks()) t.stop();
+    if (stale()) return;
     stopCamera();
     if (error?.name === 'NotAllowedError' || error?.name === 'SecurityError') {
       showGate('카메라 권한이 필요합니다', '브라우저 주소창 옆의 설정에서 카메라를 허용한 뒤 다시 시도해 주세요.', '다시 시도');
@@ -320,9 +332,21 @@ async function startCamera() {
     }
   } finally {
     starting = false;
+    // Hidden and shown again while this start was pending: the visible handler returned early, so start now.
+    if (gen !== camGen && !stream && cameraWanted()) queueMicrotask(startCamera);
   }
 }
+/** The system ended the camera track (another app took it, device change): restart while visible, at most every 2 s. */
+function onTrackEnded(owner) {
+  if (stream !== owner || document.visibilityState !== 'visible') return;
+  const now = Date.now();
+  if (now - lastEndedRestart < 2000) return;
+  lastEndedRestart = now;
+  stopCamera();
+  startCamera();
+}
 function stopCamera() {
+  camGen++;
   loopToken++;
   if (stream) for (const t of stream.getTracks()) t.stop();
   stream = null; track = null;
@@ -400,6 +424,7 @@ async function runDetection() {
 }
 
 $('gateBtn').addEventListener('click', () => {
+  introDone = true;
   write(KEY.intro, '1');
   $('gate').hidden = true;
   startCamera();
@@ -471,7 +496,7 @@ async function keepAwake() {
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') {
     keepAwake();
-    if (read(KEY.intro) === '1' && $('gate').hidden) startCamera();
+    if (cameraWanted()) startCamera();
   } else {
     stopCamera();
     if (wakeLock) { const lock = wakeLock; wakeLock = null; lock.release().catch(() => {}); }
@@ -493,6 +518,7 @@ if (DEBUG) {
 buildZoom();
 layout();
 keepAwake();
-if (read(KEY.intro) === '1') startCamera();
+introDone = read(KEY.intro) === '1';
+if (introDone) startCamera();
 else showGate('카메라를 켭니다', 'URAMICHI는 코드를 읽으려고 카메라를 씁니다. 다음에 뜨는 창에서 카메라 사용을 허용해 주세요. 영상은 이 기기 밖으로 나가지 않습니다.', '카메라 켜기', true);
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(() => {});

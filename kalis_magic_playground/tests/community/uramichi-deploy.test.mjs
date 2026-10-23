@@ -107,6 +107,13 @@ test('zz15 keeps the brand copy, footer, wake lock, gesture and storage rules wi
   assert.match(app, /navigator\.wakeLock\.request\('screen'\)/);
   assert.match(app, /visibilitychange/);
   assert.match(app, /stopCamera\(\)/);
+  // Camera lifecycle: restart does not depend on storage, stale starts bail quietly, an ended track restarts (throttled).
+  assert.match(app, /const cameraWanted = \(\) => document\.visibilityState === 'visible' && \(introDone \|\| read\(KEY\.intro\) === '1'\)/);
+  assert.match(app, /introDone = true;\n  write\(KEY\.intro, '1'\);/);
+  assert.match(app, /function stopCamera\(\) \{\n  camGen\+\+;/);
+  assert.match(app, /if \(stale\(\)\) return;\n    stopCamera\(\);\n    if \(error/);
+  assert.match(app, /addEventListener\?\.\('ended', \(\) => onTrackEnded\(local\)\)/);
+  assert.match(app, /now - lastEndedRestart < 2000/);
   assert.match(app, /event\.touches\.length !== 2/);
   assert.match(app, /facingMode: \{ ideal: 'environment' \}/);
   assert.match(app, /BarcodeDetector/);
