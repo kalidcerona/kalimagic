@@ -1313,7 +1313,7 @@ function boot() {
 // Keep the screen awake while this personal app is visible, including idle screens.
 function keepVisibleScreenAwake() {
   if (typeof document === 'undefined' || typeof navigator === 'undefined' || !navigator.wakeLock) return;
-  let lock = null, pending = false;
+  let lock = null, pending = false, shortLived = 0;
   const visible = () => document.visibilityState === 'visible';
   const release = () => {
     const current = lock; lock = null;
@@ -1326,13 +1326,18 @@ function keepVisibleScreenAwake() {
       const acquired = await navigator.wakeLock.request('screen');
       if (!visible()) { await acquired.release(); return; }
       lock = acquired;
+      const acquiredAt = Date.now();
       acquired.addEventListener('release', () => {
         if (lock === acquired) lock = null;
-        if (visible()) setTimeout(request, 1000);
+        if (!visible()) return;
+        // Three locks dropped within 10s means the platform will not keep one. A visible return, or one held 10s, tries again.
+        if (Date.now() - acquiredAt >= 10000) shortLived = 0;
+        else if (++shortLived >= 3) return;
+        setTimeout(request, 1000);
       });
     } catch {} finally { pending = false; }
   }
-  document.addEventListener('visibilitychange', () => { if (visible()) request(); else release(); });
+  document.addEventListener('visibilitychange', () => { if (visible()) { shortLived = 0; request(); } else release(); });
   request();
 }
 keepVisibleScreenAwake();

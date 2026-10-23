@@ -85,7 +85,7 @@ test('zz15 worker precaches the whole shell, serves it offline and ignores other
   let pending;
   listeners.install({ waitUntil(value) { pending = value; } }); await pending;
   assert.ok(names[0].startsWith('uramichi-web-'));
-  assert.match(names[0], /v20261024-web-4$/);
+  assert.match(names[0], /v20261024-web-5$/);
   assert.deepEqual([...cached.keys()].sort(), shell.map((file) => new URL(file, scope).href).sort());
   for (const file of ['', ...shell.filter((f) => f !== 'manifest.webmanifest')]) {
     listeners.fetch({ request: new Request(new URL(file, scope)), respondWith(value) { pending = value; } });
@@ -141,4 +141,87 @@ test('zz15 keeps the brand copy, footer, wake lock, gesture and storage rules wi
     assert.doesNotMatch(text, /[—~～〜]/, file);
     for (const u of vendorUrls) assert.ok(!text.includes(u), `${file} must not contain personal preset URLs`);
   }
+});
+
+function loadRecognizer(source) {
+  const start = source.indexOf('function recognizerCue(on)');
+  const end = source.indexOf("$('gateBtn')", start);
+  assert.ok(start >= 0 && end > start);
+  const cue = { hidden: true };
+  const pending = [];
+  const timers = [];
+  const context = vm.createContext({
+    $(id) { return id === 'recog' ? cue : { open: false }; },
+    makeDetector() { return new Promise((resolve, reject) => pending.push({ resolve, reject })); },
+    setTimeout(fn, ms) { timers.push({ fn, ms }); return timers.length; },
+    requestAnimationFrame() { return 1; },
+    performance: { now: () => 0 },
+    video: { readyState: 0, videoWidth: 0 },
+    onDetect() {},
+  });
+  vm.runInContext(`
+    let loopToken = 0, stream = { id: 'first' }, detector = null;
+    ${source.slice(start, end)}
+    globalThis.api = {
+      runDetection, recognizerCue,
+      stop() { loopToken++; stream = null; recognizerCue(false); },
+      replace(next) { stream = next; },
+      get detector() { return detector; },
+    };
+  `, context);
+  return { api: context.api, cue, pending, timers };
+}
+
+const flush = async () => { for (let i = 0; i < 8; i++) await Promise.resolve(); };
+
+test('zz15 leaves the recognizer cue hidden when preparation rejects after the camera stops', async () => {
+  const harness = loadRecognizer(await read('app.mjs'));
+  harness.api.runDetection();
+  await flush();
+  assert.equal(harness.pending.length, 1);
+  assert.equal(harness.cue.hidden, true);
+  harness.api.stop();
+  harness.pending[0].reject(new Error('stopped'));
+  await flush();
+  assert.equal(harness.cue.hidden, true);
+  assert.equal(harness.timers.length, 0);
+  assert.equal(harness.api.detector, null);
+});
+
+test('zz15 ignores an older recognizer preparation that settles after a newer loop', async () => {
+  const harness = loadRecognizer(await read('app.mjs'));
+  harness.api.runDetection();
+  await flush();
+  harness.api.stop();
+  harness.api.replace({ id: 'second' });
+  harness.api.runDetection();
+  await flush();
+  assert.equal(harness.pending.length, 2);
+  harness.pending[1].reject(new Error('newer failed'));
+  await flush();
+  assert.equal(harness.cue.hidden, false);
+  assert.equal(harness.timers.length, 1);
+  harness.pending[0].resolve({ interval: 70, async detect() { return null; } });
+  await flush();
+  assert.equal(harness.cue.hidden, false, 'an older success must not clear the newer error cue');
+  assert.equal(harness.api.detector, null);
+  assert.equal(harness.timers.length, 1);
+
+  const later = loadRecognizer(await read('app.mjs'));
+  later.api.runDetection();
+  await flush();
+  later.api.stop();
+  later.api.replace({ id: 'second' });
+  later.api.runDetection();
+  await flush();
+  const made = { interval: 70, async detect() { return null; } };
+  later.pending[1].resolve(made);
+  await flush();
+  assert.equal(later.cue.hidden, true);
+  assert.equal(later.api.detector, made);
+  later.pending[0].reject(new Error('older failed'));
+  await flush();
+  assert.equal(later.cue.hidden, true, 'an older failure must not show the cue');
+  assert.equal(later.api.detector, made);
+  assert.equal(later.timers.length, 0);
 });

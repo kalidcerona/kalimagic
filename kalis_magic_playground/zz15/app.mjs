@@ -413,11 +413,19 @@ function recognizerCue(on) {
 }
 async function runDetection() {
   const token = ++loopToken;
-  try { detector = detector || await makeDetector(); } catch {
+  const owner = stream;
+  let prepared = detector, failed = false;
+  try {
+    if (!prepared) prepared = await makeDetector();
+  } catch { failed = true; }
+  // This start was stopped, or a newer loop owns the camera. Leave the cue, detector and retry alone.
+  if (token !== loopToken || stream !== owner) return;
+  if (failed) {
     recognizerCue(true);
     setTimeout(() => { if (token === loopToken && stream) runDetection(); }, 2000);
     return;
   }
+  detector = prepared;
   recognizerCue(false);
   let last = 0;
   const tick = async () => {

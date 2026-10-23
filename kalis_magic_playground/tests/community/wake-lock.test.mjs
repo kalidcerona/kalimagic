@@ -190,3 +190,95 @@ test('zz4 performance requests the screen lock once and settings releases it', a
   assert.equal(sandbox.document.body.dataset.view, 'settings');
   assert.equal(sandbox.settingsEl.hidden, false);
 });
+
+function awakeSlice(source) {
+  const start = source.indexOf('function keepVisibleScreenAwake()');
+  const end = source.indexOf('keepVisibleScreenAwake();', start);
+  assert.ok(start >= 0 && end > start);
+  return source.slice(start, end + 'keepVisibleScreenAwake();'.length);
+}
+
+function tabataAwakeSlice(source) {
+  const start = source.indexOf('  let wakePending = false, shortLived = 0;');
+  const end = source.indexOf('  function start()', start);
+  assert.ok(start >= 0 && end > start);
+  return `let wake = null;\n${source.slice(start, end)}\nkeepAwake();\n`;
+}
+
+// Drive the shipped release listener with a fake lock and a manual clock.
+async function driveShortLivedBudget(code) {
+  let now = 0;
+  const timers = [];
+  const requests = [];
+  let visibility = 'visible';
+  const onVisibility = [];
+  const document = {
+    get visibilityState() { return visibility; },
+    addEventListener(type, handler) { if (type === 'visibilitychange') onVisibility.push(handler); },
+  };
+  const navigator = {
+    wakeLock: {
+      request(type) {
+        const entry = { type, onRelease: null };
+        requests.push(entry);
+        return Promise.resolve({
+          release() {
+            entry.onRelease?.();
+            return Promise.resolve();
+          },
+          addEventListener(type, handler) { if (type === 'release') entry.onRelease = handler; },
+        });
+      },
+    },
+  };
+  vm.runInNewContext(code, {
+    document,
+    navigator,
+    setTimeout(fn, delay) { timers.push({ fn, at: now + delay, done: false }); return timers.length; },
+    Date: { now: () => now },
+    tick() {},
+  });
+  const flush = async () => { for (let i = 0; i < 8; i++) await Promise.resolve(); };
+  const elapse = async (ms) => {
+    now += ms;
+    for (const timer of timers.filter((timer) => !timer.done && timer.at <= now)) {
+      timer.done = true;
+      timer.fn();
+      await flush();
+    }
+  };
+  const release = () => requests.at(-1).onRelease();
+  await flush();
+  assert.equal(requests.length, 1);
+  assert.equal(requests[0].type, 'screen');
+  release();
+  await elapse(999);
+  assert.equal(requests.length, 1, 'first retry waits about 1s');
+  await elapse(1);
+  assert.equal(requests.length, 2);
+  release();
+  await elapse(1000);
+  assert.equal(requests.length, 3);
+  release();
+  await elapse(1000);
+  await elapse(60000);
+  assert.equal(requests.length, 3, 'auto-retry stops after three short-lived locks');
+  visibility = 'hidden';
+  for (const handler of onVisibility) handler();
+  visibility = 'visible';
+  for (const handler of onVisibility) handler();
+  await flush();
+  assert.equal(requests.length, 4, 'a return to visible requests again');
+  await elapse(10000);
+  release();
+  await elapse(1000);
+  assert.equal(requests.length, 5, 'a lock held 10s restores the retry budget');
+}
+
+test('visible wake lock stops retrying after three short releases and resumes when shown again', async () => {
+  const shared = awakeSlice(sourceOf('zz14/app.mjs'));
+  assert.equal(awakeSlice(sourceOf('zz12/app.mjs')), shared);
+  assert.equal(awakeSlice(sourceOf('distribution-snapshots/pimax/app.mjs')), shared);
+  await driveShortLivedBudget(shared);
+  await driveShortLivedBudget(tabataAwakeSlice(sourceOf('TabataTimer/app.js')));
+});

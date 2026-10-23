@@ -102,7 +102,7 @@ test('TabataTimer worker precaches the complete shell, serves offline and isolat
       async addAll(requests) { for (const request of requests) cached.set(request.url, new Response(request.url)); },
       async match(url) { return cached.get(url)?.clone(); }
     };
-    const caches = { async open(name) { names.push(name); return cache; }, async keys() { return [names.at(-1), names.at(-1).replace(/v20261024-4-brand5$/, 'old'), 'pimax-practice-old', 'tabata-timer-unrelated-old']; }, async delete(name) { deleted.push(name); } };
+    const caches = { async open(name) { names.push(name); return cache; }, async keys() { return [names.at(-1), names.at(-1).replace(/v20261024-5-brand5$/, 'old'), 'pimax-practice-old', 'tabata-timer-unrelated-old']; }, async delete(name) { deleted.push(name); } };
     const { context, listeners } = worker(scope, caches);
     vm.runInContext(source, context);
     let pending;
@@ -110,11 +110,11 @@ test('TabataTimer worker precaches the complete shell, serves offline and isolat
     await pending;
     const cacheName = names.at(-1);
     assert.equal(cacheName.startsWith('tabata-timer-'), true);
-    assert.match(cacheName, /v20261024-4-brand5$/);
+    assert.match(cacheName, /v20261024-5-brand5$/);
     assert.deepEqual([...cached.keys()].sort(), shell.map(file => new URL(file === 'index.html' ? './' : file, scope).href).sort());
     listeners.activate({ waitUntil(value) { pending = value; } });
     await pending;
-    assert.deepEqual(deleted, [cacheName.replace(/v20261024-4-brand5$/, 'old')]);
+    assert.deepEqual(deleted, [cacheName.replace(/v20261024-5-brand5$/, 'old')]);
     for (const file of ['', ...shell]) {
       listeners.fetch({ request: new Request(new URL(file, scope)), respondWith(value) { pending = value; } });
       const response = await pending;

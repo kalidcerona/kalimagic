@@ -201,7 +201,7 @@
     return 0;
   }
 
-  let wakePending = false;
+  let wakePending = false, shortLived = 0;
   const wantsWake = () => document.visibilityState === 'visible';
   function releaseWake() {
     const lock = wake;
@@ -216,14 +216,19 @@
       // A request can resolve after the user leaves the page.
       if (!wantsWake()) { await lock.release(); return; }
       wake = lock;
+      const acquiredAt = Date.now();
       lock.addEventListener('release', () => {
         if (wake === lock) wake = null;
-        if (wantsWake()) setTimeout(keepAwake, 1000);
+        if (!wantsWake()) return;
+        // Three locks dropped within 10s means the platform will not keep one. A visible return, or one held 10s, tries again.
+        if (Date.now() - acquiredAt >= 10000) shortLived = 0;
+        else if (++shortLived >= 3) return;
+        setTimeout(keepAwake, 1000);
       });
     } catch {} finally { wakePending = false; }
   }
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') { keepAwake(); tick(); }
+    if (document.visibilityState === 'visible') { shortLived = 0; keepAwake(); tick(); }
     else releaseWake();
   });
 

@@ -86,7 +86,7 @@ test('Pi Max pinned snapshot matches the personal runtime except three storage k
       assert.match(normalized, /keepVisibleScreenAwake/);
       assert.equal(normalized, preparePimaxRuntime(p.toString()));
     } else if (file === 'sw.js') {
-      const from = "+ 'v20261024-wake-2-v20261021-wake-1-v20261016-sheet-1-modes-1-coherent-1-v2-brand5';";
+      const from = "+ 'v20261024-wake-3-v20261021-wake-1-v20261016-sheet-1-modes-1-coherent-1-v2-brand5';";
       assert.ok(p.toString().includes(from));
       assert.equal(d.toString(), p.toString().replace(from, from.replace("-brand5';", "-brand5-distribution';")));
     } else assert.deepEqual(d, p, file);
