@@ -87,7 +87,7 @@ export const PUBLIC_DIRS = [
 export const TABATA_FILES = ['data.js', 'install-ui.js', 'icon-maskable-192.png', 'icon-maskable-512.png', 'index.html', 'style.css', 'app.js', 'manifest.webmanifest', 'sw.js', 'brand-logo.png', 'icon.svg', 'icon-192.png', 'icon-512.png'];
 
 // KANAME Cue web app: the same explicit-shell rule as TabataTimer.
-export const KANAME_FILES = ['index.html', 'style.css', 'app.mjs', 'engine.mjs', 'audio.mjs', 'store.mjs', 'install-ui.js', 'manifest.webmanifest', 'sw.js', 'brand-logo.png', 'icon-192.png', 'icon-512.png', 'icon-maskable-192.png', 'icon-maskable-512.png'];
+export const KANAME_FILES = ['index.html', 'style.css', 'app.mjs', 'prefs.mjs', 'clock.mjs', 'ui.mjs', 'show.mjs', 'playback.mjs', 'settings.mjs', 'wake.mjs', 'engine.mjs', 'engine-model.mjs', 'engine-output.mjs', 'engine-timing.mjs', 'engine-keys.mjs', 'engine-cues.mjs', 'audio.mjs', 'store.mjs', 'install-ui.js', 'manifest.webmanifest', 'sw.js', 'brand-logo.png', 'icon-192.png', 'icon-512.png', 'icon-maskable-192.png', 'icon-maskable-512.png'];
 
 // URAMICHI web app (zz15): explicit shell, including the vendored QR decoder and its licence.
 export const URAMICHI_FILES = ['index.html', 'style.css', 'app.mjs', 'core.mjs', 'picker.mjs', 'install-ui.js', 'manifest.webmanifest', 'sw.js', 'brand-logo.png', 'icon-192.png', 'icon-512.png', 'icon-maskable-192.png', 'icon-maskable-512.png', 'vendor/jsQR.js', 'vendor/LICENSE-jsqr.txt'];

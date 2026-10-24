@@ -13,7 +13,7 @@ import { makeCue } from '../../KanameCue/engine.mjs';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const read = file => readFile(path.join(root, 'KanameCue', file), 'utf8');
-const shell = ['index.html', 'style.css', 'app.mjs', 'engine.mjs', 'audio.mjs', 'store.mjs', 'install-ui.js', 'manifest.webmanifest', 'brand-logo.png', 'icon-192.png', 'icon-512.png', 'icon-maskable-192.png', 'icon-maskable-512.png'];
+const shell = ['index.html', 'style.css', 'app.mjs', 'prefs.mjs', 'clock.mjs', 'ui.mjs', 'show.mjs', 'playback.mjs', 'settings.mjs', 'wake.mjs', 'engine.mjs', 'engine-model.mjs', 'engine-output.mjs', 'engine-timing.mjs', 'engine-keys.mjs', 'engine-cues.mjs', 'audio.mjs', 'store.mjs', 'install-ui.js', 'manifest.webmanifest', 'brand-logo.png', 'icon-192.png', 'icon-512.png', 'icon-maskable-192.png', 'icon-maskable-512.png'];
 
 test('KanameCue publishes only its explicit shell at the exact path in an isolated build', async () => {
   assert.ok(PUBLIC_DIRS.includes('KanameCue'));
@@ -33,7 +33,7 @@ test('KanameCue publishes only its explicit shell at the exact path in an isolat
     for (const file of [...shell, 'sw.js']) assert.deepEqual(await readFile(path.join(published, file)), await readFile(path.join(root, 'KanameCue', file)), file);
     const html = await readFile(path.join(published, 'index.html'), 'utf8');
     for (const match of html.matchAll(/(?:src|href)="(\.\/[^"#]+)"/g)) assert.ok((await stat(path.join(published, match[1]))).isFile(), match[1]);
-    for (const file of ['app.mjs', 'audio.mjs', 'store.mjs']) {
+    for (const file of shell.filter(name => name.endsWith('.mjs') || name.endsWith('.js'))) {
       for (const match of (await readFile(path.join(published, file), 'utf8')).matchAll(/from '(\.\/[^']+)'/g)) assert.ok((await stat(path.join(published, match[1]))).isFile(), match[1]);
     }
   } finally {
@@ -89,15 +89,16 @@ test('KanameCue worker precaches the whole shell, serves it offline and ignores 
 });
 
 test('KanameCue keeps brand copy, contact footer, wake lock and the house settings gesture without fullscreen or forbidden punctuation', async () => {
-  const html = await read('index.html'), app = await read('app.mjs');
+  const html = await read('index.html');
+  const wake = await read('wake.mjs'), gesture = await read('settings.mjs'), playback = await read('playback.mjs');
   for (const text of ['중심', '모든 큐가 모이는 무대의 중심.', '要(かなめ)는 여러 부분을 묶는 핵심이라는 뜻임.', '무대 위의 수많은 움직임은 하나의 타이밍에서 서로 연결됨.', 'KANAME Cue는 소리와 영상, 그리고 공연자의 순간을 하나로 묶는 중심임.', 'Android Chrome: ⋮', 'iPhone Safari: 공유']) assert.ok(html.includes(text), text);
   const zz13 = await readFile(path.join(root, 'zz13', 'index.html'), 'utf8');
   assert.ok(html.includes(zz13.match(/<div class="magic-settings-footer">[\s\S]*?<\/div><\/form>/)[0].replace('</form>', '')));
-  assert.match(app, /navigator\.wakeLock\.request\('screen'\)/);
-  assert.match(app, /visibilitychange/);
-  assert.match(app, /touches\.length !== 2/);
-  assert.match(app, /latencyHint: 'interactive'/);
-  for (const file of ['index.html', 'app.mjs', 'engine.mjs', 'audio.mjs', 'store.mjs', 'style.css', 'manifest.webmanifest', 'sw.js', 'install-ui.js']) {
+  assert.match(wake, /navigator\.wakeLock\.request\('screen'\)/);
+  assert.match(wake, /visibilitychange/);
+  assert.match(gesture, /touches\.length !== 2/);
+  assert.match(playback, /latencyHint: 'interactive'/);
+  for (const file of ['index.html', 'app.mjs', 'prefs.mjs', 'clock.mjs', 'ui.mjs', 'show.mjs', 'playback.mjs', 'settings.mjs', 'wake.mjs', 'engine.mjs', 'engine-model.mjs', 'engine-output.mjs', 'engine-timing.mjs', 'engine-keys.mjs', 'engine-cues.mjs', 'audio.mjs', 'store.mjs', 'style.css', 'manifest.webmanifest', 'sw.js', 'install-ui.js']) {
     const text = await read(file);
     assert.doesNotMatch(text, /\b(?:requestFullscreen|webkitRequestFullscreen|webkitRequestFullScreen|mozRequestFullScreen|msRequestFullscreen)\b/, file);
     assert.doesNotMatch(text, /[—~～〜]/, file);

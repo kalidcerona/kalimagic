@@ -1,11 +1,23 @@
 // Cache only the explicit app shell. API, authentication and user data stay on the network.
 const CACHE_PREFIX = 'kaname-cue-' + encodeURIComponent(new URL(self.registration.scope).pathname) + '-';
-const CACHE_NAME = CACHE_PREFIX + 'v20261023-web-2';
+const CACHE_NAME = CACHE_PREFIX + 'v20261023-web-2-modules-1';
 const SHELL = [
   "./", // Canonical navigation avoids Netlify pretty-URL redirects from index.html.
   "./style.css",
   "./app.mjs",
+  "./prefs.mjs",
+  "./clock.mjs",
+  "./ui.mjs",
+  "./show.mjs",
+  "./playback.mjs",
+  "./settings.mjs",
+  "./wake.mjs",
   "./engine.mjs",
+  "./engine-model.mjs",
+  "./engine-output.mjs",
+  "./engine-timing.mjs",
+  "./engine-keys.mjs",
+  "./engine-cues.mjs",
   "./audio.mjs",
   "./store.mjs",
   "./install-ui.js",
