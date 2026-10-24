@@ -4,6 +4,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import vm from 'node:vm';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { usotsukiAppScript } from './usotsuki-app-script.mjs';
 
 // Owner report (Galaxy S25 Ultra): vibration kept going after the finger lifted.
 // Every way a contact can end must leave the vibrator stopped: the last navigator.vibrate call is 0
@@ -13,7 +14,7 @@ const flush = () => new Promise(setImmediate);
 async function fixture(appDir, theme, level, { primer = false, sound = false, scan = '2.5', dropFirstCancel = false } = {}) {
   const { createContinuousTrace } = await import(pathToFileURL(resolve(appDir, 'recorder-trace.js')).href);
   const logic = await import(pathToFileURL(resolve(appDir, 'logic.js')).href);
-  const source = read(appDir, 'detector.js');
+  const source = usotsukiAppScript(appDir);
   const key = name => source.match(new RegExp('const ' + name + ' = "([^"]+)"'))[1];
   let now = 0, serial = 0;
   const frames = new Map(), timers = new Map(), nodes = new Map(), pending = [], vibes = [], gains = [];

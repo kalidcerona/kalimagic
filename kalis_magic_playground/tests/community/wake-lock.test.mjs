@@ -5,6 +5,7 @@ import vm from 'node:vm';
 import { fileURLToPath } from 'node:url';
 import { tobiraAppScript } from './tobira-app-script.mjs';
 import { aletheiaAppScript } from './aletheia-app-script.mjs';
+import { usotsukiAppScript } from './usotsuki-app-script.mjs';
 
 // Apps that hold a screen wake lock during performance and drop it on the settings path.
 const APPS = [
@@ -32,6 +33,7 @@ const APPS = [
   },
   {
     file: 'zz7/detector.js',
+    modules: 'usotsuki',
     settings: /function showSettings\(\) \{[\s\S]*?settingsScreen\.hidden = false[\s\S]*?syncPerformanceWakeLock\(\)/,
     wanted: /return !performanceScreen\.hidden && !settingsVisible\(\)/,
   },
@@ -72,6 +74,7 @@ const APPS = [
   },
   {
     file: 'distribution-snapshots/usotsuki/detector.js',
+    modules: 'usotsuki',
     settings: /function showSettings\(\) \{[\s\S]*?settingsScreen\.hidden = false[\s\S]*?syncPerformanceWakeLock\(\)/,
     wanted: /return !performanceScreen\.hidden && !settingsVisible\(\)/,
   },
@@ -93,7 +96,8 @@ function sourceOf(file) {
 
 for (const app of APPS) {
   test(`${app.file} requests a screen wake lock, releases it on the settings path, and feature-detects`, () => {
-    const source = app.modules === 'aletheia' ? aletheiaAppScript(fileURLToPath(new URL('../../zz5/', import.meta.url)))
+    const source = app.modules === 'usotsuki' ? usotsukiAppScript(fileURLToPath(new URL(`../../${app.file.replace(/detector\.js$/, '')}`, import.meta.url)))
+      : app.modules === 'aletheia' ? aletheiaAppScript(fileURLToPath(new URL('../../zz5/', import.meta.url)))
       : app.modules ? tobiraAppScript(fileURLToPath(new URL('../../zz6/', import.meta.url))) : sourceOf(app.file);
     assert.match(source, /navigator\.wakeLock\.request\(\s*"screen"\s*\)/);
     assert.match(source, /!\(\s*"wakeLock" in navigator\s*\)/);

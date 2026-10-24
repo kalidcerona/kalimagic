@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+// Each `detector.js?<tag>` import boots a fresh USOTSUKI, including its feature modules.
+import './usotsuki-app-script.mjs';
 
 const saved = new Map();
 function replace(name, value) {

@@ -1,5 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+// Each `detector.js?<tag>` import boots a fresh USOTSUKI, including its feature modules.
+import './usotsuki-app-script.mjs';
 
 async function mount(route, sound = true) {
   let now = 0;

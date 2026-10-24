@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readFileSync } from 'node:fs';
+// Each `detector.js?<tag>` import boots a fresh USOTSUKI, including its feature modules.
+import './usotsuki-app-script.mjs';
 
 const STATE = 'usotsuki.detector.v1';
 const THEME = 'usotsuki.detector.theme.v1';

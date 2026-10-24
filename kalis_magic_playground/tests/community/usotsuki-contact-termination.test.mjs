@@ -3,6 +3,8 @@ import test from 'node:test';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
+// Each `detector.js?<tag>` import boots a fresh USOTSUKI, including its feature modules.
+import './usotsuki-app-script.mjs';
 const appDir = resolve(import.meta.dirname, '../../zz7');
 
 const STATE = 'usotsuki.detector.v1';

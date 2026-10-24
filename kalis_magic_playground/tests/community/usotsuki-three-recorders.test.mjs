@@ -5,6 +5,8 @@ import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import vm from 'node:vm';
 import { createRecorderThemeController } from '../../zz7/recorder-theme.js';
+import { fileURLToPath } from 'node:url';
+import { usotsukiAppScript, usotsukiAppSource } from './usotsuki-app-script.mjs';
 
 const read = file => readFileSync(new URL('../../zz7/'+file, import.meta.url), 'utf8');
 function engineFixture({ reduced=false, AudioContext }={}) {
@@ -164,14 +166,14 @@ test('opened AudioContext is closed on suspend and release cannot queue frames',
 });
 
 test('A/D gesture unlock does not open the legacy detector AudioContext',()=>{
- const code=read('detector.js');const body=code.slice(code.indexOf('function unlockFromGesture()'),code.indexOf('function commitTruthAttempt()'));
+ const code=usotsukiAppScript(fileURLToPath(new URL('../../zz7/',import.meta.url)));const body=code.slice(code.indexOf('function unlockFromGesture()'),code.indexOf('function commitTruthAttempt()'));
  let legacy=0,unlocked=0;
  vm.runInNewContext(body+';unlockFromGesture();',{recorderThemes:{active:()=>true,setSoundEnabled(){},unlock(){unlocked++;}},soundEnabled:()=>true,settingsVisible:()=>false,document:{hidden:false},ensureAudio(){legacy++;return null;}});
  assert.equal(unlocked,1);assert.equal(legacy,0);
 });
 
 test('snapshot changes exactly three named constants and excludes the localhost preview hook',()=>{
- const personal=read('detector.js');let shared=readFileSync(new URL('../../distribution-snapshots/usotsuki/detector.js',import.meta.url),'utf8');
+ const personal=usotsukiAppSource(fileURLToPath(new URL('../../zz7/',import.meta.url)));let shared=usotsukiAppSource(fileURLToPath(new URL('../../distribution-snapshots/usotsuki/',import.meta.url)));
  assert.equal((shared.match(/usotsuki\.distribution\./g)||[]).length,3);
  let changes=0;
  for(const name of ['STATE_KEY','SOUND_KEY','DISPLAY_THEME_KEY']){

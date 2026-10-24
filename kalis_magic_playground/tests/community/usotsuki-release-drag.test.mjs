@@ -4,13 +4,14 @@ import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { usotsukiAppScript } from './usotsuki-app-script.mjs';
 
 const read = (appDir, file) => readFileSync(resolve(appDir, file), 'utf8');
 const flush = () => new Promise(setImmediate);
 async function fixture(appDir, theme = 'recorder', layout = false, scan = '0.5') {
   const { createContinuousTrace } = await import(pathToFileURL(resolve(appDir, 'recorder-trace.js')).href);
   const logic = await import(pathToFileURL(resolve(appDir, 'logic.js')).href);
-  const source = read(appDir, 'detector.js');
+  const source = usotsukiAppScript(appDir);
   const key = name => source.match(new RegExp('const ' + name + ' = "([^"]+)"'))[1];
   let now = 0, serial = 0;
   const frames = new Map();
@@ -171,8 +172,8 @@ for(const appDir of appDirs) test(`${appDir}: first-load idle glyph centers befo
 });
 
 for(const appDir of appDirs) test(`${appDir}: irregular damped wood peaks remain inside paper with late lie ratios`,async()=>{
- const source=read(appDir,'detector.js');
- const {buildHeartbeat,heartbeatValue}=vm.runInNewContext(source.slice(source.indexOf('function buildHeartbeat'),source.indexOf('import { createContinuousTrace'))+';({buildHeartbeat,heartbeatValue})');
+ const source=read(appDir,'heartbeat.js');
+ const {buildHeartbeat,heartbeatValue}=vm.runInNewContext(source.slice(source.indexOf('function buildHeartbeat'),source.indexOf('\nexport {'))+';({buildHeartbeat,heartbeatValue})');
  const {createContinuousTrace}=await import(pathToFileURL(resolve(appDir,'recorder-trace.js')).href);
  const duration=3000,seed=42,truth=buildHeartbeat({durationMs:duration,seed}),lie=buildHeartbeat({durationMs:duration,seed,verdict:'LIE'});
  for(let t=0;t<=2250;t+=2)assert.equal(heartbeatValue(truth,t),heartbeatValue(lie,t));

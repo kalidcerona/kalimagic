@@ -1,5 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+// Each `detector.js?<tag>` import boots a fresh USOTSUKI, including its feature modules.
+import './usotsuki-app-script.mjs';
 
 test('personal and friend USOTSUKI commit focused scan input before Start without a change event', async () => {
   for (const route of ['zz7', 'distribution-snapshots/usotsuki']) {
