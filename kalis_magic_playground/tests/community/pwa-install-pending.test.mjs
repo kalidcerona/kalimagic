@@ -5,7 +5,7 @@ import { runInNewContext } from 'node:vm';
 
 const ROOT = new URL('../../', import.meta.url);
 const APPS = [
-  ['zz1/index.html', 'nudge'], ['distribution-snapshots/kairos/index.html', 'nudge'],
+  ['zz1/install-nudge.js', 'nudge'], ['distribution-snapshots/kairos/index.html', 'nudge'],
   ['zz2/install-prompt.js', 'offer'], ['distribution-snapshots/unlock/install-prompt.js', 'offer'],
   ['zz3/index.html', 'nudge'], ['distribution-snapshots/calculator/index.html', 'nudge'],
   ['zz4/install-prompt.js', 'card'], ['zz5/install-prompt.js', 'card'],
@@ -21,7 +21,8 @@ const APPS = [
 async function runtime(file, kind, { saved = new Map(), standalone = false } = {}) {
   let source = await readFile(new URL(file, ROOT), 'utf8');
   if (kind === 'nudge') {
-    source = [...source.matchAll(/<script>\s*([\s\S]*?)<\/script>/g)]
+    // zz1 ships the nudge as its own classic script file instead of an inline <script>.
+    source = (file.endsWith('.js') ? [[null, source]] : [...source.matchAll(/<script>\s*([\s\S]*?)<\/script>/g)])
       .map(match => match[1]).find(script => /install.nudge.done|installNudgeDone/i.test(script));
     assert.ok(source, file);
   } else if (kind === 'spinner') {

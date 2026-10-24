@@ -12,7 +12,9 @@ import {
 } from '../../zz1/logic.js';
 
 const page = readFileSync(new URL('../../zz1/index.html', import.meta.url), 'utf8');
-const style = page.match(/<style>([\s\S]*?)<\/style>/)[1];
+// The page style and the app module moved out of index.html into their own files.
+const style = readFileSync(new URL('../../zz1/style.css', import.meta.url), 'utf8');
+const app = readFileSync(new URL('../../zz1/app.js', import.meta.url), 'utf8');
 const worker = readFileSync(new URL('../../zz1/sw.js', import.meta.url), 'utf8');
 
 function stopDisplay(customText, elapsed = 3450) {
@@ -150,10 +152,10 @@ test('portrait and landscape numeral cells share fixed widths in the page', () =
   assert.match(style, /#p-colon \{[^}]*width:\s*0\.22em/);
   assert.match(style, /#l-colon \{[^}]*width:\s*0\.2em/);
   assert.match(style, /#p-decimal \{[^}]*width:\s*0\.20em/);
-  assert.match(page, /function renderCs\(totalCs\)\{renderNative\(nativeStopwatchRender\(totalCs\)\);\}/);
-  assert.match(page, /presetRenderModel\(text\)/);
-  assert.match(page, /if\(model\.kind==="digits"\)\{renderNative\(model\);return;\}/);
-  assert.doesNotMatch(page, /pMinutes\.textContent|lMinutesPrefix\.textContent/);
+  assert.match(app, /function renderCs\(totalCs\)\{renderNative\(nativeStopwatchRender\(totalCs\)\);\}/);
+  assert.match(app, /presetRenderModel\(text\)/);
+  assert.match(app, /if\(model\.kind==="digits"\)\{renderNative\(model\);return;\}/);
+  assert.doesNotMatch(page + app, /pMinutes\.textContent|lMinutesPrefix\.textContent/);
   assert.match(worker, /v20261004-first-guide-1/);
   assert.doesNotMatch(worker, /v20261003-install-2/);
   assert.match(worker, /async function freshManifest/);

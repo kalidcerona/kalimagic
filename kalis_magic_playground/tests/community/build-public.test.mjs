@@ -291,7 +291,8 @@ test('personal KAIROS edits do not change either shared route', async () => {
           .replace(/<body\b/, '<body data-magic-customize="off"');
         comparable = Buffer.from(distributedBytes.toString('utf8').replace(/\n  <script id="friend-apps-check">[\s\S]*?<\/script>/, ''));
         expected = Buffer.from(injectLegacyMigration(isolate(snapshotHtml), target));
-        personalExpected = personalHtml === null ? null : Buffer.from(injectLegacyMigration(isolate(personalHtml), target));
+        // Personal zz1 loads its app from ./app.js, so its HTML no longer carries the inline startup hook.
+        personalExpected = personalHtml === null ? null : Buffer.from(personalHtml.includes('else initApp();') ? injectLegacyMigration(isolate(personalHtml), target) : isolate(personalHtml));
         const html = distributedBytes.toString('utf8');
         assert.match(html, new RegExp(`tools\\/_check\\?tool=${tool}`));
         assert.match(html, new RegExp(`${prefix}preset_cs`));
@@ -300,6 +301,7 @@ test('personal KAIROS edits do not change either shared route', async () => {
         assert.doesNotMatch(html, /["']stopwatch_/);
         assert.doesNotMatch(html, /["']stopwatch2_/);
         assert.doesNotMatch(html, /["']stopwatch-settings-entry-tutorial-/);
+        assert.doesNotMatch(html, /src="\.\/(app|install-nudge|sw-register)\.js"|href="\.\/style\.css"/);
       } else if (file === 'logic.js') {
         const isolate = (source) => source.replaceAll('stopwatch_', prefix).replaceAll('stopwatch2_', `friend-${target}-legacy_`);
         const logic = distributedBytes.toString('utf8');
