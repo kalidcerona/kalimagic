@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 import { fileURLToPath } from 'node:url';
 import { tobiraAppScript } from './tobira-app-script.mjs';
+import { aletheiaAppScript } from './aletheia-app-script.mjs';
 
 // Apps that hold a screen wake lock during performance and drop it on the settings path.
 const APPS = [
@@ -19,6 +20,7 @@ const APPS = [
   },
   {
     file: 'zz5/app.js',
+    modules: 'aletheia',
     settings: /function stopPerformance\(\) \{[\s\S]*?view = 'settings'[\s\S]*?syncPerformanceWakeLock\(\)/,
     wanted: /return view === 'performance'/,
   },
@@ -91,7 +93,8 @@ function sourceOf(file) {
 
 for (const app of APPS) {
   test(`${app.file} requests a screen wake lock, releases it on the settings path, and feature-detects`, () => {
-    const source = app.modules ? tobiraAppScript(fileURLToPath(new URL('../../zz6/', import.meta.url))) : sourceOf(app.file);
+    const source = app.modules === 'aletheia' ? aletheiaAppScript(fileURLToPath(new URL('../../zz5/', import.meta.url)))
+      : app.modules ? tobiraAppScript(fileURLToPath(new URL('../../zz6/', import.meta.url))) : sourceOf(app.file);
     assert.match(source, /navigator\.wakeLock\.request\(\s*"screen"\s*\)/);
     assert.match(source, /!\(\s*"wakeLock" in navigator\s*\)/);
     assert.match(source, /else releaseWakeLock\(\)/);

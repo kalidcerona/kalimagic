@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { DISTRIBUTION_APPS, PUBLIC_DIRS } from '../../scripts/build-public.mjs';
 import { cardAtIndex as personalCourtCard } from '../../zz5/logic.js';
 import { tobiraAppScript } from './tobira-app-script.mjs';
+import { aletheiaAppScript } from './aletheia-app-script.mjs';
 import { cardAtIndex as sharedCourtCard } from '../../distribution-snapshots/aletheia/logic.js';
 
 const root = fileURLToPath(new URL('../..', import.meta.url));
@@ -21,6 +22,8 @@ const courtApps = [
   ['zz5', personalCourtCard],
   ['distribution-snapshots/aletheia', sharedCourtCard]
 ];
+// Personal ALETHEIA keeps its court-card list in feature modules, so read app.js with its local modules.
+const modularCourtApps = new Set(['zz5']);
 const coinApps = ['zz6', 'distribution-snapshots/tobira'];
 // Personal TOBIRA keeps its image list in a feature module, so read app.js with its local modules.
 const modularCoinApps = new Set(['zz6']);
@@ -106,7 +109,7 @@ async function buildPlan() {
     }
   }
   for (const [source, cardAtIndex] of courtApps) {
-    const sourceText = await readFile(path.join(root, source, 'app.js'), 'utf8');
+    const sourceText = modularCourtApps.has(source) ? aletheiaAppScript(path.join(root, source)) : await readFile(path.join(root, source, 'app.js'), 'utf8');
     const { count, extension, suits } = courtCardPaths(sourceText);
     const paths = [];
     for (let index = 0; index < count; index += 1) {
