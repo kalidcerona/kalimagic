@@ -31,7 +31,7 @@ const APPS = [
     wanted: /return !performanceScreen\.hidden && !settingsVisible\(\)/,
   },
   {
-    file: 'zz8/contacts.js',
+    file: 'zz8/contacts-screen.js',
     settings: /function showScreen\(screen\) \{\s*settingsScreen\.hidden = screen !== "settings";[\s\S]*?syncPerformanceWakeLock\(\)/,
     wanted: /function performanceOpen\(\) \{\s*return settingsScreen\.hidden;\s*\}/,
   },

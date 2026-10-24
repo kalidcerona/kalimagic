@@ -209,9 +209,12 @@ export function shouldCopyChoice(relativePath) {
 }
 export const USOTSUKI_FILES = NEW_APP_FILES.filter((file) => file !== 'app.js').concat('first-run-guide.js', 'detector.js', 'detector-panel-grok.svg', 'holdem-assets/felt-grain.svg', 'holdem-assets/leather-grain.svg', 'holdem-assets/table-rail.svg', 'recorder-assets/recorder-shell-blank.webp', 'recorder-theme.js', 'recorder-engine.js', 'recorder-trace.js', 'recorder-a.html', 'recorder-d.html');
 export const ASRAI_FILES = [
-  'brand-logo.jpg', 'brand-logo.png', 'contacts.js', 'icon-192.png',
+  'brand-logo.jpg', 'brand-logo.png', 'contacts.js', 'contacts-gestures.js',
+  'contacts-list.js', 'contacts-screen.js', 'contacts-settings.js',
+  'contacts-state.js', 'contacts-storage.js', 'icon-192.png',
   'icon-512.png', 'icon.svg', 'index.html', 'install-ui.js',
-  'logic.js', 'manifest.webmanifest', 'style.css', 'sw.js'
+  'logic.js', 'logic-clicks.js', 'logic-library.js', 'logic-limits.js',
+  'logic-search.js', 'logic-zones.js', 'manifest.webmanifest', 'style.css', 'sw.js'
 ];
 export const ALTER_FILES = [
   'app.js', 'appearance.js', 'brand-logo.jpg', 'brand-logo.png', 'calibration.js', 'camera-geometry.js', 'icon-192.png',
