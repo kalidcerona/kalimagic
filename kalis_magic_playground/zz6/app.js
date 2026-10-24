@@ -6,8 +6,8 @@ import {
   imageChoiceInput, coinImageInput, coinImageNote, motionActivation, wallSoundInput,
   wallVolumeInput, wallVolumeValue, wallTestButton, motionInputs, motionEdges,
 } from './dom.js';
-import { gestureGuide, hideGestureGuide } from './gesture-guide.js';
 import { unlockBreakSound, playWallSound } from './audio.js';
+import { gestureGuide, hideGestureGuide } from './gesture-guide.js';
 import {
   state, selected, readObjectKind, applyObjectKind, persistObjectKind, loadState, renderRecovery,
 } from './state-store.js';

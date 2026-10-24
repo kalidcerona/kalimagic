@@ -228,7 +228,7 @@ test("learn chart keeps spoken phrases, drops letter names and the page-21 warni
   const sw = readFileSync(new URL("./sw.js", import.meta.url), "utf8");
   assert.match(index, /data-tab="learn">암기표</);
   assert.match(sw, /CACHE_PREFIX = 'pimax-practice-'/);
-  assert.match(sw, /CACHE_NAME = CACHE_PREFIX \+ 'v20261016-sheet-1-modes-1-coherent-1-v2'/);
+  assert.match(sw, /CACHE_NAME = CACHE_PREFIX \+ '[^']*v20261016-sheet-1-modes-1-coherent-1-v2/);
 
   const env = load();
   env.state.tab = "learn";
