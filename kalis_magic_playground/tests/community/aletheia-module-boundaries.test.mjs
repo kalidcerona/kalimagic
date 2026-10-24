@@ -177,15 +177,29 @@ function stubBrowser() {
   const canvas = byId.get('stage-canvas');
   canvas.rect = { left: 0, top: 0, width: 400, height: 800 };
   const masks = [];
-  const theme = new FakeElement('meta');
-  const installCard = new FakeElement('section');
-  const installButton = new FakeElement('button');
-  const installGuidance = new FakeElement('p');
-  installCard.dataset.installCard = '';
-  installButton.dataset.installButton = '';
-  installButton.hidden = true;
-  installGuidance.dataset.installGuidance = '';
-  installCard.append(installGuidance, installButton);
+  // Elements below exist only if the shipped index.html contains them; a missing one stays null.
+  const theme = /<meta[^>]*name="theme-color"/.test(html) ? new FakeElement('meta') : null;
+  let installCard = null;
+  let installButton = null;
+  let installGuidance = null;
+  const cardHtml = html.match(/<section\b([^>]*\bdata-install-card\b[^>]*)>([\s\S]*?)<\/section>/);
+  if (cardHtml) {
+    installCard = new FakeElement('section');
+    installCard.dataset.installCard = '';
+    const guidanceHtml = cardHtml[2].match(/<p\b[^>]*\bdata-install-guidance\b[^>]*>/);
+    const buttonHtml = cardHtml[2].match(/<button\b[^>]*\bdata-install-button\b[^>]*>/);
+    if (guidanceHtml) {
+      installGuidance = new FakeElement('p');
+      installGuidance.dataset.installGuidance = '';
+      installCard.append(installGuidance);
+    }
+    if (buttonHtml) {
+      installButton = new FakeElement('button');
+      installButton.dataset.installButton = '';
+      installButton.hidden = /\shidden(\s|>|=)/.test(buttonHtml[0]);
+      installCard.append(installButton);
+    }
+  }
 
   document = {
     activeElement: null, visibilityState: 'visible', readyState: 'loading', title: '',
@@ -327,6 +341,7 @@ test('wake lock is released when hidden and requested again when visible', async
 });
 
 test('install prompt guides, offers the native prompt, and reports the outcome', async () => {
+  assert.ok(env.installCard && env.installGuidance && env.installButton, 'index.html defines the install card, guidance and button');
   assert.match(env.installGuidance.textContent, /^Chrome 메뉴\(⋮\)에서/);
   assert.equal(env.installButton.hidden, true);
   let prompted = 0;
@@ -467,6 +482,8 @@ test('preset performance: scratch reveals the image, two-finger up repaints the 
   await emit(env.canvas, 'pointermove', pointer(1, 260, 430));
   await emit(env.canvas, 'pointerup', pointer(1, 260, 430, { type: 'pointerup' }));
   assert.ok(arcs(ctx).length - scratchStart >= 2, 'a stroke erases the veil along its path');
+  assert.deepEqual([...new Set(arcs(ctx).slice(scratchStart).map((op) => op.args[2]))], [(150 * 600) / 400 / 2],
+    'erase radius follows the saved coverage of 150px');
   const maskDraw = stageOps().filter((op) => op.name === 'drawImage').at(-1);
   assert.equal(maskDraw.args[0], env.masks.at(-1), 'the veil mask is drawn over the image');
   assert.equal(typeof lastDraw().args[0].src, 'string');
@@ -483,6 +500,25 @@ test('preset performance: scratch reveals the image, two-finger up repaints the 
   assert.equal(inPerformance(), false);
   assert.equal(settings().hidden, false);
   assert.equal(env.wake.requests.at(-1).released, true);
+
+  // A new coverage setting changes the erase size of the next performance: the 600px mask is shown 400px wide.
+  const coverage = env.el('coverage-size');
+  coverage.value = '80';
+  await emit(coverage, 'input');
+  await emit(coverage, 'change');
+  assert.equal(stored(`${K}coverage.v1`), 80);
+  await emit(env.el('start-button'), 'click');
+  await until(inPerformance, 'second preset performance');
+  const second = maskCtx();
+  assert.notEqual(second, ctx, 'a new veil mask is created');
+  const secondStart = arcs(second).length;
+  await emit(env.canvas, 'pointerdown', pointer(1, 200, 400));
+  await emit(env.canvas, 'pointermove', pointer(1, 260, 430));
+  await emit(env.canvas, 'pointerup', pointer(1, 260, 430, { type: 'pointerup' }));
+  const radii = new Set(arcs(second).slice(secondStart).map((op) => op.args[2]));
+  assert.deepEqual([...radii], [(80 * 600) / 400 / 2], 'erase radius follows the saved coverage of 80px');
+  await swipe(140);
+  assert.equal(inPerformance(), false);
 });
 
 test('preset delete needs a second press and clears storage', async () => {
