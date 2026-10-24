@@ -1,5 +1,6 @@
 import { category, entry, armed, recent } from './core-model.mjs';
 import { isValidWebUrl } from './core-url.mjs';
+import { labelFor } from './core-resolve.mjs';
 
 // ---------- PresetLogic ----------
 
