@@ -4,6 +4,7 @@ import path from 'node:path';
 import test from 'node:test';
 import vm from 'node:vm';
 import { pathToFileURL } from 'node:url';
+import { tobiraAppScript } from './tobira-app-script.mjs';
 
 const appFile = path.resolve(import.meta.dirname, '../../zz6/app.js');
 
@@ -117,9 +118,8 @@ async function boot({ storage = memoryStorage(), permission = 'granted' } = {}) 
     ...await import(pathToFileURL(path.join(path.dirname(appFile), 'sensor-motion.js')).href),
   };
   Object.assign(sandbox, imports);
-  const source = fs.readFileSync(appFile, 'utf8')
-    .replace(/^import \{[\s\S]*?\} from '\.\/logic\.js';\n/, '')
-    .replace(/^import \{[^\n]*\} from '\.\/sensor-motion\.js';\n/, '');
+  const source = tobiraAppScript(path.dirname(appFile));
+  assert.doesNotMatch(source, /^(import|export) /m);
   vm.runInContext(`${source}\n__TOBIRA_TEST_HOOKS__({motionEnabled: () => motionEnabled, phase: () => phase, objectLive: () => objectLive, effects: () => motionEffects});`, vm.createContext(sandbox), { filename: appFile });
   function fire(type, event) {
     for (const item of listeners) if (item.type === type) item.fn(event);

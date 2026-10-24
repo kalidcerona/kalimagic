@@ -4,6 +4,7 @@ import path from 'node:path';
 import test from 'node:test';
 import vm from 'node:vm';
 import { pathToFileURL } from 'node:url';
+import { tobiraAppScript } from './tobira-app-script.mjs';
 
 const root = path.resolve(import.meta.dirname, '../..');
 const apps = [
@@ -17,6 +18,7 @@ const apps = [
     motion: 'tobira.motion-effects.v1',
     images: 'tobira.coinChoices.v1',
     cache: 'v20261004-first-guide-1',
+    modules: true,
   },
   {
     name: 'shared',
@@ -153,7 +155,7 @@ async function boot(app, storage, session = memoryStorage(), audioFactory) {
   };
   Object.assign(sandbox, imports);
   const context = vm.createContext(sandbox);
-  const source = fs.readFileSync(app.file, 'utf8')
+  const source = app.modules ? tobiraAppScript(path.dirname(app.file)) : fs.readFileSync(app.file, 'utf8')
     .replace(/^import \{[\s\S]*?\} from '\.\/logic\.js';\n/, '')
     .replace(/^import \{[^\n]*\} from '\.\/sensor-motion\.js';\n/, '');
   assert.doesNotMatch(source, /^import /m);
@@ -166,7 +168,7 @@ test('guide diagram, cache scope and sound control exist in both Tobira copies',
     const html = fs.readFileSync(app.html, 'utf8');
     const css = fs.readFileSync(app.css, 'utf8');
     const sw = fs.readFileSync(app.sw, 'utf8');
-    const source = fs.readFileSync(app.file, 'utf8');
+    const source = app.modules ? tobiraAppScript(path.dirname(app.file)) : fs.readFileSync(app.file, 'utf8');
     assert.match(html, /id="motion-wall-sound"/);
     assert.match(html, /id="motion-wall-test"/);
     assert.match(html, /class="gesture-story"/);

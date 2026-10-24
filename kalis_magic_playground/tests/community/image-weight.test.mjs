@@ -5,6 +5,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { DISTRIBUTION_APPS, PUBLIC_DIRS } from '../../scripts/build-public.mjs';
 import { cardAtIndex as personalCourtCard } from '../../zz5/logic.js';
+import { tobiraAppScript } from './tobira-app-script.mjs';
 import { cardAtIndex as sharedCourtCard } from '../../distribution-snapshots/aletheia/logic.js';
 
 const root = fileURLToPath(new URL('../..', import.meta.url));
@@ -21,6 +22,8 @@ const courtApps = [
   ['distribution-snapshots/aletheia', sharedCourtCard]
 ];
 const coinApps = ['zz6', 'distribution-snapshots/tobira'];
+// Personal TOBIRA keeps its image list in a feature module, so read app.js with its local modules.
+const modularCoinApps = new Set(['zz6']);
 
 function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -119,7 +122,7 @@ async function buildPlan() {
     }
   }
   for (const source of coinApps) {
-    const sourceText = await readFile(path.join(root, source, 'app.js'), 'utf8');
+    const sourceText = modularCoinApps.has(source) ? tobiraAppScript(path.join(root, source)) : await readFile(path.join(root, source, 'app.js'), 'utf8');
     const paths = coinAndCardPaths(sourceText);
     if (!paths.some((entry) => entry.includes('/coin-')) || !paths.some((entry) => entry.includes('/card-'))) {
       throw new Error(`${source} coin and card image list is ${paths.join(', ')}`);
