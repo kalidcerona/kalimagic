@@ -11,7 +11,7 @@ import { PUBLIC_DIRS, URAMICHI_FILES } from '../../scripts/build-public.mjs';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const read = (file) => readFile(path.join(root, 'zz15', file), 'utf8');
-const shell = ['index.html', 'style.css', 'app.mjs', 'core.mjs', 'picker.mjs', 'install-ui.js', 'manifest.webmanifest', 'brand-logo.png', 'icon-192.png', 'icon-512.png', 'icon-maskable-192.png', 'icon-maskable-512.png', 'vendor/jsQR.js', 'vendor/LICENSE-jsqr.txt'];
+const shell = ['index.html', 'style.css', 'app.mjs', 'dom.mjs', 'presets.mjs', 'detect.mjs', 'chrome.mjs', 'scan.mjs', 'camera.mjs', 'core.mjs', 'core-model.mjs', 'core-url.mjs', 'core-encode.mjs', 'core-scan.mjs', 'core-gate.mjs', 'core-card.mjs', 'core-resolve.mjs', 'core-logic.mjs', 'core-json.mjs', 'picker.mjs', 'install-ui.js', 'manifest.webmanifest', 'brand-logo.png', 'icon-192.png', 'icon-512.png', 'icon-maskable-192.png', 'icon-maskable-512.png', 'vendor/jsQR.js', 'vendor/LICENSE-jsqr.txt'];
 
 async function listFiles(dir, prefix = '') {
   const out = [];
@@ -41,8 +41,8 @@ test('zz15 publishes only its explicit shell in an isolated build', async () => 
     for (const file of [...shell, 'sw.js']) assert.deepEqual(await readFile(path.join(published, file)), await readFile(path.join(root, 'zz15', file)), file);
     const html = await readFile(path.join(published, 'index.html'), 'utf8');
     for (const match of html.matchAll(/(?:src|href)="(\.\/[^"#]+)"/g)) assert.ok((await stat(path.join(published, match[1]))).isFile(), match[1]);
-    for (const file of ['app.mjs', 'picker.mjs']) {
-      for (const match of (await readFile(path.join(published, file), 'utf8')).matchAll(/from '(\.\/[^']+)'/g)) assert.ok((await stat(path.join(published, match[1]))).isFile(), match[1]);
+    for (const file of shell.filter((name) => name.endsWith('.mjs') || name.endsWith('.js'))) {
+      for (const match of (await readFile(path.join(published, file), 'utf8')).matchAll(/from '(\.\/[^']+)'/g)) assert.ok((await stat(path.join(published, match[1]))).isFile(), `${file} ${match[1]}`);
     }
   } finally {
     await rm(temp, { recursive: true, force: true });
@@ -85,7 +85,7 @@ test('zz15 worker precaches the whole shell, serves it offline and ignores other
   let pending;
   listeners.install({ waitUntil(value) { pending = value; } }); await pending;
   assert.ok(names[0].startsWith('uramichi-web-'));
-  assert.match(names[0], /v20261024-web-5$/);
+  assert.match(names[0], /v20261024-web-5-modules-1$/);
   assert.deepEqual([...cached.keys()].sort(), shell.map((file) => new URL(file, scope).href).sort());
   for (const file of ['', ...shell.filter((f) => f !== 'manifest.webmanifest')]) {
     listeners.fetch({ request: new Request(new URL(file, scope)), respondWith(value) { pending = value; } });
@@ -99,7 +99,8 @@ test('zz15 worker precaches the whole shell, serves it offline and ignores other
 });
 
 test('zz15 keeps the brand copy, footer, wake lock, gesture and storage rules without fullscreen, forbidden punctuation or vendor content', async () => {
-  const html = await read('index.html'), app = await read('app.mjs');
+  const html = await read('index.html');
+  const dom = await read('dom.mjs'), presets = await read('presets.mjs'), scan = await read('scan.mjs'), camera = await read('camera.mjs');
   for (const text of ['<p class="catalog-label">샛길</p>', 'class="settingsbrand"', 'class="identity"', '<details class="overview">', '샛길', 'URAMICHI <span class="reading">ウラミチ</span>', '보이는 경로 너머의 다른 목적지.',
     '裏道(うらみち)는 뒷길, 샛길을 뜻하는 말임.', '표지판이나 코드가 가리키는 길 뒤에 또 다른 길이 숨어 있다는 발상임.', '겉으로 보이는 정보와 실제로 도착하는 곳 사이의 틈에서 시작하는 마술임.',
     '하나의 표지판 뒤에는 우리가 알지 못하는 다른 길이 숨어 있을지도 모름.', 'URAMICHI는 보이는 경로 너머에 존재하는 또 하나의 목적지를 찾아가는 도구임.', '같은 창에서 열기', '안드로이드 앱의 기본 브라우저 방식은 웹 앱에서는 쓸 수 없습니다.']) {
@@ -108,27 +109,27 @@ test('zz15 keeps the brand copy, footer, wake lock, gesture and storage rules wi
   assert.ok(html.indexOf('class="settingsbrand"') < html.indexOf('class="identity"') && html.indexOf('class="identity"') < html.indexOf('<details class="overview">'));
   const zz13 = await readFile(path.join(root, 'zz13', 'index.html'), 'utf8');
   assert.ok(html.includes(zz13.match(/<div class="magic-settings-footer">[\s\S]*?<\/div><\/form>/)[0].replace('</form>', '')));
-  assert.match(app, /const LOCAL_HOSTS = \['localhost', '127\.0\.0\.1', '::1', '\[::1\]'\];\nconst DEBUG = LOCAL_HOSTS\.includes\(location\.hostname\) && params\.get\('debug'\) === '1';/);
-  assert.match(app, /navigator\.wakeLock\.request\('screen'\)/);
-  assert.match(app, /visibilitychange/);
-  assert.match(app, /stopCamera\(\)/);
+  assert.match(dom, /const LOCAL_HOSTS = \['localhost', '127\.0\.0\.1', '::1', '\[::1\]'\];\nconst DEBUG = LOCAL_HOSTS\.includes\(location\.hostname\) && params\.get\('debug'\) === '1';/);
+  assert.match(camera, /navigator\.wakeLock\.request\('screen'\)/);
+  assert.match(camera, /visibilitychange/);
+  assert.match(camera, /stopCamera\(\)/);
   // Camera lifecycle: restart does not depend on storage, stale starts bail quietly, an ended track restarts (throttled).
-  assert.match(app, /const cameraWanted = \(\) => document\.visibilityState === 'visible' && \(introDone \|\| read\(KEY\.intro\) === '1'\)/);
-  assert.match(app, /introDone = true;\n  write\(KEY\.intro, '1'\);/);
-  assert.match(app, /function stopCamera\(\) \{\n  camGen\+\+;/);
-  assert.match(app, /if \(stale\(\)\) return;\n    stopCamera\(\);\n    if \(error/);
-  assert.match(app, /addEventListener\?\.\('ended', \(\) => onTrackEnded\(local\)\)/);
-  assert.match(app, /now - lastEndedRestart < 2000/);
-  assert.match(app, /setTimeout\(\(\) => \{ if \(token === loopToken && stream\) runDetection\(\); \}, 2000\)/);
+  assert.match(camera, /const cameraWanted = \(\) => document\.visibilityState === 'visible' && \(introDone \|\| read\(KEY\.intro\) === '1'\)/);
+  assert.match(camera, /introDone = true;\n  write\(KEY\.intro, '1'\);/);
+  assert.match(camera, /function stopCamera\(\) \{\n  camGen\+\+;/);
+  assert.match(camera, /if \(stale\(\)\) return;\n    stopCamera\(\);\n    if \(error/);
+  assert.match(camera, /addEventListener\?\.\('ended', \(\) => onTrackEnded\(local\)\)/);
+  assert.match(camera, /now - lastEndedRestart < 2000/);
+  assert.match(camera, /setTimeout\(\(\) => \{ if \(token === loopToken && stream\) runDetection\(\); \}, 2000\)/);
   assert.match(await read('style.css'), /\.recog \{[^}]*width: 6px; height: 6px;/);
   assert.match(html, /id="recog" class="recog" hidden/);
-  assert.match(app, /event\.touches\.length !== 2/);
-  assert.match(app, /facingMode: \{ ideal: 'environment' \}/);
-  assert.match(app, /BarcodeDetector/);
-  assert.match(app, /a\.target = '_blank'/);
-  assert.match(app, /navigator\.vibrate\?\.\(20\)/);
-  for (const match of app.matchAll(/localStorage\.\w+\(/g)) assert.ok(app.slice(Math.max(0, match.index - 90), match.index).includes('try {'), 'storage access is wrapped');
-  for (const key of app.matchAll(/'(uramichi\.[^']+)'/g)) assert.match(key[1], /^uramichi\.web\./);
+  assert.match(camera, /event\.touches\.length !== 2/);
+  assert.match(camera, /facingMode: \{ ideal: 'environment' \}/);
+  assert.match(camera, /BarcodeDetector/);
+  assert.match(scan, /a\.target = '_blank'/);
+  assert.match(presets, /navigator\.vibrate\?\.\(20\)/);
+  for (const match of presets.matchAll(/localStorage\.\w+\(/g)) assert.ok(presets.slice(Math.max(0, match.index - 90), match.index).includes('try {'), 'storage access is wrapped');
+  for (const key of presets.matchAll(/'(uramichi\.[^']+)'/g)) assert.match(key[1], /^uramichi\.web\./);
   const personal = '/Users/sumpie/Desktop/URAMICHI-개인-프리셋.json';
   let vendorUrls = [];
   try {
@@ -175,7 +176,7 @@ function loadRecognizer(source) {
 const flush = async () => { for (let i = 0; i < 8; i++) await Promise.resolve(); };
 
 test('zz15 leaves the recognizer cue hidden when preparation rejects after the camera stops', async () => {
-  const harness = loadRecognizer(await read('app.mjs'));
+  const harness = loadRecognizer(await read('camera.mjs'));
   harness.api.runDetection();
   await flush();
   assert.equal(harness.pending.length, 1);
@@ -189,7 +190,7 @@ test('zz15 leaves the recognizer cue hidden when preparation rejects after the c
 });
 
 test('zz15 ignores an older recognizer preparation that settles after a newer loop', async () => {
-  const harness = loadRecognizer(await read('app.mjs'));
+  const harness = loadRecognizer(await read('camera.mjs'));
   harness.api.runDetection();
   await flush();
   harness.api.stop();
@@ -207,7 +208,7 @@ test('zz15 ignores an older recognizer preparation that settles after a newer lo
   assert.equal(harness.api.detector, null);
   assert.equal(harness.timers.length, 1);
 
-  const later = loadRecognizer(await read('app.mjs'));
+  const later = loadRecognizer(await read('camera.mjs'));
   later.api.runDetection();
   await flush();
   later.api.stop();

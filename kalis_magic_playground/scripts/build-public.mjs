@@ -90,7 +90,7 @@ export const TABATA_FILES = ['data.js', 'install-ui.js', 'icon-maskable-192.png'
 export const KANAME_FILES = ['index.html', 'style.css', 'app.mjs', 'prefs.mjs', 'clock.mjs', 'ui.mjs', 'show.mjs', 'playback.mjs', 'settings.mjs', 'wake.mjs', 'engine.mjs', 'engine-model.mjs', 'engine-output.mjs', 'engine-timing.mjs', 'engine-keys.mjs', 'engine-cues.mjs', 'audio.mjs', 'store.mjs', 'install-ui.js', 'manifest.webmanifest', 'sw.js', 'brand-logo.png', 'icon-192.png', 'icon-512.png', 'icon-maskable-192.png', 'icon-maskable-512.png'];
 
 // URAMICHI web app (zz15): explicit shell, including the vendored QR decoder and its licence.
-export const URAMICHI_FILES = ['index.html', 'style.css', 'app.mjs', 'core.mjs', 'picker.mjs', 'install-ui.js', 'manifest.webmanifest', 'sw.js', 'brand-logo.png', 'icon-192.png', 'icon-512.png', 'icon-maskable-192.png', 'icon-maskable-512.png', 'vendor/jsQR.js', 'vendor/LICENSE-jsqr.txt'];
+export const URAMICHI_FILES = ['index.html', 'style.css', 'app.mjs', 'dom.mjs', 'presets.mjs', 'detect.mjs', 'chrome.mjs', 'scan.mjs', 'camera.mjs', 'core.mjs', 'core-model.mjs', 'core-url.mjs', 'core-encode.mjs', 'core-scan.mjs', 'core-gate.mjs', 'core-card.mjs', 'core-resolve.mjs', 'core-logic.mjs', 'core-json.mjs', 'picker.mjs', 'install-ui.js', 'manifest.webmanifest', 'sw.js', 'brand-logo.png', 'icon-192.png', 'icon-512.png', 'icon-maskable-192.png', 'icon-maskable-512.png', 'vendor/jsQR.js', 'vendor/LICENSE-jsqr.txt'];
 
 export const PRIVATE_PATTERNS = [
   /(?:^|\/)fullscreen\.js$/,
