@@ -204,6 +204,17 @@ test('fixture: inline module findings use real html line numbers', () => {
   });
 });
 
+test('fixture: inline line numbers hold for CR-only and CRLF html', () => {
+  for (const eol of ['\r', '\r\n', String.fromCharCode(0x2028)]) {
+    withTemp((tmp) => {
+      const html = ['<!doctype html>', '<html>', '<script type="module">', 'void a;', '', 'void b;', '</script>'].join(eol);
+      writeFiles(tmp, { 'index.html': html });
+      const lines = scanAppDir(tmp).undeclared.map((u) => `${u.name}:${u.line}`);
+      assert.deepEqual(lines, ['a:4', 'b:6'], JSON.stringify(eol));
+    });
+  }
+});
+
 // ---------- oracle: 실제 Node의 모듈 링크 결과와 스캐너 판정을 대조 ----------
 
 // main.mjs가 entry.mjs에서 name을 import하는 앱. 링크되면 true, SyntaxError면 false
@@ -282,6 +293,68 @@ const ORACLE_CASES = [
       'a.mjs': 'export const name = 1;',
       'b.mjs': 'export { name } from "./a.mjs";',
       'entry.mjs': 'export * from "./a.mjs";\nexport * from "./b.mjs";'
+    }
+  },
+  {
+    title: 'named default function keeps its local identity',
+    entry: 'default-function',
+    files: {
+      'a.mjs': 'export default function f() {}\nexport { f };',
+      'b.mjs': 'export { default as name } from "./a.mjs";',
+      'c.mjs': 'export { f as name } from "./a.mjs";',
+      'entry.mjs': 'export * from "./b.mjs";\nexport * from "./c.mjs";'
+    }
+  },
+  {
+    title: 'named default class keeps its local identity',
+    entry: 'default-class',
+    files: {
+      'a.mjs': 'export default class C {}\nexport { C };',
+      'b.mjs': 'export { default as name } from "./a.mjs";',
+      'c.mjs': 'export { C as name } from "./a.mjs";',
+      'entry.mjs': 'export * from "./b.mjs";\nexport * from "./c.mjs";'
+    }
+  },
+  {
+    title: 'anonymous defaults from two modules are distinct',
+    entry: 'default-anonymous',
+    files: {
+      'a.mjs': 'export default function () {}',
+      'd.mjs': 'export default function () {}',
+      'b.mjs': 'export { default as name } from "./a.mjs";',
+      'c.mjs': 'export { default as name } from "./d.mjs";',
+      'entry.mjs': 'export * from "./b.mjs";\nexport * from "./c.mjs";'
+    }
+  },
+  {
+    title: 'namespace re-export reached through two paths',
+    entry: 'namespace-diamond',
+    files: {
+      'a.mjs': 'export const x = 1;',
+      'b.mjs': 'export * as name from "./a.mjs";',
+      'c.mjs': 'export * as name from "./a.mjs";',
+      'entry.mjs': 'export * from "./b.mjs";\nexport * from "./c.mjs";'
+    }
+  },
+  {
+    title: 'namespace re-exports of different modules conflict',
+    entry: 'namespace-conflict',
+    files: {
+      'a.mjs': 'export const x = 1;',
+      'd.mjs': 'export const x = 2;',
+      'b.mjs': 'export * as name from "./a.mjs";',
+      'c.mjs': 'export * as name from "./d.mjs";',
+      'entry.mjs': 'export * from "./b.mjs";\nexport * from "./c.mjs";'
+    }
+  },
+  {
+    title: 'imported namespace re-exported through two paths',
+    entry: 'namespace-import-diamond',
+    files: {
+      'a.mjs': 'export const x = 1;',
+      'b.mjs': 'import * as name from "./a.mjs";\nexport { name };',
+      'c.mjs': 'export * as name from "./a.mjs";',
+      'entry.mjs': 'export * from "./b.mjs";\nexport * from "./c.mjs";'
     }
   },
   {

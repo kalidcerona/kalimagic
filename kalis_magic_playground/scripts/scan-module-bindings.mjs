@@ -22,6 +22,9 @@ const BROWSER_GLOBALS = new Set(`window document navigator location localStorage
 // 브라우저 앱에는 없는 Node 전용 이름 (JS 전역에 섞여 보여도 undeclared로 취급)
 const NODE_ONLY = new Set(['require', 'module', 'exports', 'process', 'Buffer', '__dirname', '__filename']);
 
+// acorn이 줄로 세는 줄바꿈: \r\n, \r, \n, U+2028, U+2029
+const LINE_BREAKS = new RegExp(`\\r\\n?|[\\n${String.fromCharCode(0x2028, 0x2029)}]`, 'g');
+
 const PARSE_OPTIONS = { ecmaVersion: 'latest', sourceType: 'module', locations: true };
 
 // ---------- 파일 탐색 ----------
@@ -61,7 +64,7 @@ function collectHtmlScripts(dir) {
         if (isModule && match[2].trim()) {
           // 앞에 빈 줄을 채워 findings의 줄 번호가 html 파일의 실제 줄을 가리키게 함
           const bodyStart = match.index + match[0].length - match[2].length - '</script>'.length;
-          const lineOffset = text.slice(0, bodyStart).split('\n').length - 1;
+          const lineOffset = (text.slice(0, bodyStart).match(LINE_BREAKS) || []).length;
           inlineModules.set(`${html}#inline-${inlineCount++}`, '\n'.repeat(lineOffset) + match[2]);
         }
         continue;
@@ -221,7 +224,10 @@ function createExportResolver(asts) {
           else local.set(exported, name);
         }
       } else if (stmt.type === 'ExportDefaultDeclaration') {
-        local.set('default', '*default*');
+        // 이름 있는 function/class 선언은 그 이름이 로컬 바인딩, 그 외는 *default*
+        const decl = stmt.declaration;
+        const named = (decl.type === 'FunctionDeclaration' || decl.type === 'ClassDeclaration') && decl.id;
+        local.set('default', named ? decl.id.name : '*default*');
       } else if (stmt.type === 'ExportAllDeclaration') {
         if (stmt.exported) indirect.set(stmt.exported.name ?? stmt.exported.value, { source: stmt.source.value, importName: NAMESPACE });
         else stars.push(stmt.source.value);
@@ -243,7 +249,9 @@ function createExportResolver(asts) {
       const { source, importName } = info.indirect.get(name);
       if (!source.startsWith('.')) return `${source}#${String(importName.description ?? importName)}`;
       const target = path.resolve(path.dirname(file), source);
-      if (importName === NAMESPACE) return `${target}#*namespace*`;
+      // 실측: V8은 네임스페이스 re-export를 export한 모듈마다 별개 바인딩으로 취급함
+      // (명세 문구와 달리 같은 대상이라도 b.mjs와 c.mjs가 각각 내놓으면 star 충돌)
+      if (importName === NAMESPACE) return `${file}#*namespace*:${target}`;
       return resolveExport(target, importName, resolveSet);
     }
     if (name === 'default') return null;
