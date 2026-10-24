@@ -22,5 +22,7 @@
   "overrides": {
     "@supabase/storage-js": "2.10.4"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "acorn": "8.19.0"
+  }
 }
