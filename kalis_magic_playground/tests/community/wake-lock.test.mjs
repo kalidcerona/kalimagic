@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { tobiraAppScript } from './tobira-app-script.mjs';
 import { aletheiaAppScript } from './aletheia-app-script.mjs';
 import { usotsukiAppScript } from './usotsuki-app-script.mjs';
+import { choiceAppScript, choiceModuleScript } from './choice-app-script.mjs';
 
 // Apps that hold a screen wake lock during performance and drop it on the settings path.
 const APPS = [
@@ -16,6 +17,7 @@ const APPS = [
   },
   {
     file: 'zz4/app.js',
+    modules: 'choice',
     settings: /function closeFakeHome\(\) \{[\s\S]*?fakeHomeSession = null;[\s\S]*?dataset\.view = 'settings'[\s\S]*?syncPerformanceWakeLock\(\)/,
     wanted: /function performanceWakeWanted\(\) \{\s*return rehearsalSurfaceOpen\(\);\s*\}/,
   },
@@ -97,6 +99,7 @@ function sourceOf(file) {
 for (const app of APPS) {
   test(`${app.file} requests a screen wake lock, releases it on the settings path, and feature-detects`, () => {
     const source = app.modules === 'usotsuki' ? usotsukiAppScript(fileURLToPath(new URL(`../../${app.file.replace(/detector\.js$/, '')}`, import.meta.url)))
+      : app.modules === 'choice' ? choiceAppScript(fileURLToPath(new URL('../../zz4/', import.meta.url)))
       : app.modules === 'aletheia' ? aletheiaAppScript(fileURLToPath(new URL('../../zz5/', import.meta.url)))
       : app.modules ? tobiraAppScript(fileURLToPath(new URL('../../zz6/', import.meta.url))) : sourceOf(app.file);
     assert.match(source, /navigator\.wakeLock\.request\(\s*"screen"\s*\)/);
@@ -128,10 +131,14 @@ function element() {
 }
 
 test('zz4 performance requests the screen lock once and settings releases it', async () => {
-  const app = sourceOf('zz4/app.js');
+  // zz4 runs app.js with local feature modules. The lock code that sat right above openFakeHome
+  // now lives in wake-lock.js, so the same code is read as that module plus openFakeHome and closeFakeHome.
+  const dir = fileURLToPath(new URL('../../zz4/', import.meta.url));
+  const app = choiceAppScript(dir);
   const source = [
     cut(app, 'function rehearsalSurfaceOpen()', 'function leaveRehearsalSurface()'),
-    cut(app, 'let wakeLock = null;', 'function resetForNextSpectator()'),
+    choiceModuleScript(dir, 'wake-lock.js'),
+    cut(app, 'function openFakeHome(', 'function resetForNextSpectator()'),
   ].join('\n');
   const requests = [];
   const releases = [];

@@ -21,13 +21,18 @@ async function filesUnder(route) {
   return files.sort();
 }
 
+// app.js and logic.js load feature modules. The approved key and cache-family differences moved with their
+// lines: storage keys into these modules, the cache-family prefix into precheck.js.
+const STORAGE_KEY_FILES = ['gesture-guide.js', 'input-guide.js', 'previews.js', 'logic-core.js', 'logic-user-icons.js'];
+const CACHE_FAMILY_FILES = ['precheck.js'];
+
 // Normalize only the approved per-file differences; every other runtime byte must match.
 function normalize(file, bytes) {
-  if (!['app.js', 'logic.js', 'sw.js', 'index.html', 'manifest.webmanifest'].includes(file)) return bytes;
+  if (!['app.js', 'logic.js', 'sw.js', 'index.html', 'manifest.webmanifest', ...STORAGE_KEY_FILES, ...CACHE_FAMILY_FILES].includes(file)) return bytes;
   let source = bytes.toString();
-  if (file === 'app.js' || file === 'logic.js') source = source.replaceAll('magic-choice-dist.', 'magic-choice.');
-  if (file === 'app.js' || file === 'sw.js' || file === 'index.html') source = source.replaceAll('choice-dist-shell-', 'choice-shell-');
-  if (file === 'sw.js') source = source.replace('ready-1-nostatus-1-local-preview-1-distribution\';', 'ready-1-nostatus-1-local-preview-1\';');
+  if (file === 'app.js' || file === 'logic.js' || STORAGE_KEY_FILES.includes(file)) source = source.replaceAll('magic-choice-dist.', 'magic-choice.');
+  if (file === 'app.js' || file === 'sw.js' || file === 'index.html' || CACHE_FAMILY_FILES.includes(file)) source = source.replaceAll('choice-dist-shell-', 'choice-shell-');
+  if (file === 'sw.js') source = source.replace('ready-1-nostatus-1-local-preview-1-modules-1-distribution\';', 'ready-1-nostatus-1-local-preview-1-modules-1\';');
   if (file === 'manifest.webmanifest') source = source.replace('"id": "./"', '"id": "./choice"');
   return Buffer.from(source);
 }
@@ -51,7 +56,7 @@ test('Choice snapshot preserves every personal runtime byte except explicit dist
   assert.equal(manifest.name, '너의 선택은?');
   assert.equal(manifest.start_url, './');
   assert.equal(manifest.scope, './');
-  for (const file of ['app.js', 'index.html', 'sw.js']) assert.match((await read(`${shared}/${file}`)).toString(), /choice-dist-shell-/);
+  for (const file of ['precheck.js', 'index.html', 'sw.js']) assert.match((await read(`${shared}/${file}`)).toString(), /choice-dist-shell-/);
   assert.match((await read(`${shared}/sw.js`)).toString(), /CACHE_NAME = CACHE_PREFIX \+ '[^']+-distribution'/);
 });
 

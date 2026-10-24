@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import vm from 'node:vm';
+import { choiceAppScript } from './choice-app-script.mjs';
 
 const root = join(import.meta.dirname, '../..');
 const NOTICE = '이 브라우저는 진동을 지원하지 않아요. 나머지 기능은 그대로 쓸 수 있어요.';
@@ -56,7 +57,8 @@ function vibrationControl() {
 }
 
 function runVibrationCapability(sandbox) {
-  const source = readFileSync(join(root, 'zz4/app.js'), 'utf8');
+  // zz4 runs app.js with local feature modules; read them as one script.
+  const source = choiceAppScript(join(root, 'zz4'));
   const start = source.indexOf('function applyVibrationCapability()');
   assert.ok(start >= 0);
   let depth = 0;

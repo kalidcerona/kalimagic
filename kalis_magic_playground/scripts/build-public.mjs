@@ -210,7 +210,15 @@ export const CHOICE_HOME_FILES = [
   'home-icons/zg.svg'
 ];
 export const CHOICE_FILES = [...NEW_APP_FILES, ...CHOICE_HOME_FILES];
-export const CHOICE_DISTRIBUTION_FILES = [...CHOICE_FILES, 'brand-logo.png', 'fullscreen.js', 'settings-ui.js', 'settings-ui.css'];
+// CHOICE app.js and logic.js load these feature modules (personal zz4 and the friend snapshot).
+export const CHOICE_MODULE_FILES = [
+  'module-start.js', 'gesture-guide.js', 'dom.js', 'editor.js', 'options.js', 'precheck.js', 'views.js',
+  'wizard.js', 'extras.js', 'backup.js', 'user-icons.js', 'wallpaper.js', 'previews.js', 'input-guide.js',
+  'performance.js', 'fake-notes.js', 'wake-lock.js', 'controller.js', 'logic-core.js', 'logic-presets.js',
+  'logic-performance.js', 'logic-extras.js', 'logic-storage.js', 'logic-fake-home.js', 'logic-notes.js',
+  'logic-backup.js', 'logic-user-icons.js', 'logic-wizard.js'
+];
+export const CHOICE_DISTRIBUTION_FILES = [...CHOICE_FILES, ...CHOICE_MODULE_FILES, 'brand-logo.png', 'fullscreen.js', 'settings-ui.js', 'settings-ui.css'];
 
 export function shouldCopyChoice(relativePath) {
   return relativePath === '' || relativePath === 'home-icons' || CHOICE_DISTRIBUTION_FILES.includes(relativePath.split(path.sep).join('/'));
@@ -320,6 +328,34 @@ export const MIRROR_PAIRS = [
   ['../../magic-stopwatch-uni/manifest.webmanifest', 'zz1/manifest.webmanifest'],
   ...SHARED_UNLOCK_FILES.map((file) => [`../../magic-unlock/${file}`, `zz2/${file}`]),
   ...CHOICE_FILES.map((file) => [`../../magic-choice/${file}`, `zz4/${file}`]),
+  ['../../magic-choice/module-start.js', 'zz4/module-start.js'],
+  ['../../magic-choice/gesture-guide.js', 'zz4/gesture-guide.js'],
+  ['../../magic-choice/dom.js', 'zz4/dom.js'],
+  ['../../magic-choice/editor.js', 'zz4/editor.js'],
+  ['../../magic-choice/options.js', 'zz4/options.js'],
+  ['../../magic-choice/precheck.js', 'zz4/precheck.js'],
+  ['../../magic-choice/views.js', 'zz4/views.js'],
+  ['../../magic-choice/wizard.js', 'zz4/wizard.js'],
+  ['../../magic-choice/extras.js', 'zz4/extras.js'],
+  ['../../magic-choice/backup.js', 'zz4/backup.js'],
+  ['../../magic-choice/user-icons.js', 'zz4/user-icons.js'],
+  ['../../magic-choice/wallpaper.js', 'zz4/wallpaper.js'],
+  ['../../magic-choice/previews.js', 'zz4/previews.js'],
+  ['../../magic-choice/input-guide.js', 'zz4/input-guide.js'],
+  ['../../magic-choice/performance.js', 'zz4/performance.js'],
+  ['../../magic-choice/fake-notes.js', 'zz4/fake-notes.js'],
+  ['../../magic-choice/wake-lock.js', 'zz4/wake-lock.js'],
+  ['../../magic-choice/controller.js', 'zz4/controller.js'],
+  ['../../magic-choice/logic-core.js', 'zz4/logic-core.js'],
+  ['../../magic-choice/logic-presets.js', 'zz4/logic-presets.js'],
+  ['../../magic-choice/logic-performance.js', 'zz4/logic-performance.js'],
+  ['../../magic-choice/logic-extras.js', 'zz4/logic-extras.js'],
+  ['../../magic-choice/logic-storage.js', 'zz4/logic-storage.js'],
+  ['../../magic-choice/logic-fake-home.js', 'zz4/logic-fake-home.js'],
+  ['../../magic-choice/logic-notes.js', 'zz4/logic-notes.js'],
+  ['../../magic-choice/logic-backup.js', 'zz4/logic-backup.js'],
+  ['../../magic-choice/logic-user-icons.js', 'zz4/logic-user-icons.js'],
+  ['../../magic-choice/logic-wizard.js', 'zz4/logic-wizard.js'],
   ...NEW_APP_FILES.map((file) => [`../../magic-aletheia/${file}`, `zz5/${file}`]),
   ['../../magic-aletheia/deck-loader.js', 'zz5/deck-loader.js'],
   ['../../magic-aletheia/controller.js', 'zz5/controller.js'],

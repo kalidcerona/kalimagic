@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import fs from 'node:fs';
 import vm from 'node:vm';
+import { fileURLToPath } from 'node:url';
+import { choiceAppScript } from './choice-app-script.mjs';
 
 const settingsSource = fs.readFileSync(new URL('../../zz4/settings-ui.js', import.meta.url), 'utf8');
 
@@ -833,7 +835,8 @@ async function bootChoice(dom, patch = {}, trail = '') {
   const manifest = await import('../../zz4/home-manifest.js');
   const lists = await import('../../zz4/builtin-lists.js');
   const noteBuilds = { n: 0 };
-  let source = fs.readFileSync(new URL('../../zz4/app.js', import.meta.url), 'utf8');
+  // app.js runs as an ES module entry with local feature modules; read them as one script, in evaluation order.
+  let source = choiceAppScript(fileURLToPath(new URL('../../zz4/', import.meta.url)));
   const marker = 'const gestureGuide';
   source = source.slice(source.indexOf(marker));
   source = source.replace(
