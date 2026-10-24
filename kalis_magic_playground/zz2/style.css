@@ -1,0 +1,300 @@
+    :root { color-scheme: dark; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; --status-color: #000; }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { margin: 0; width: 100%; height: 100%; height: 100dvh; overflow: hidden; background: var(--status-color); }
+    body { touch-action: manipulation; -webkit-user-select: none; user-select: none; }
+    button, input, select { font: inherit; }
+    button { color: inherit; cursor: pointer; border: 0; }
+    button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid #91baff; outline-offset: 4px; }
+    [hidden] { display: none !important; }
+    #app { position: absolute; top: env(safe-area-inset-top, 0px); bottom: 0; left: 0; right: 0; overflow: hidden; background: #000; color: #fff; }
+    .screen, .wallpaper, .shade { position: absolute; inset: 0; width: 100%; height: 100%; }
+    .screen { overflow: hidden; }
+    .wallpaper { object-fit: cover; pointer-events: none; }
+    #input-screen {
+      background: radial-gradient(ellipse at 20% 10%, #575d78, transparent 65%), linear-gradient(155deg, #343c50, #10151e);
+      --key-d: clamp(64px, 18.5vw, 76px);
+      --key-hgap: clamp(18px, 5vw, 22px);
+      --key-vgap: clamp(12px, 3.4vw, 15px);
+    }
+    .shade { background: rgba(0, 0, 0, 0.35); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); }
+    .pin-layout { position: relative; height: 100%; max-width: 450px; margin: auto; }
+    #lock { position: absolute; z-index: 1; top: 2.6%; left: 50%; transform: translateX(-50%); width: 44px; height: 44px; display: none; place-items: center; pointer-events: none; }
+    #lock svg { width: 18px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .prompt { position: absolute; z-index: 1; top: 19%; left: 50%; transform: translateX(-50%); width: min(330px, calc(100% - 44px)); min-height: 44px; padding: 0; background: none; font-size: 18px; line-height: 1.3; font-weight: 400; text-align: center; white-space: normal; }
+    #dots { position: absolute; z-index: 1; top: 28%; left: 50%; transform: translateX(-50%); display: flex; justify-content: center; gap: 21px; height: 18px; }
+    .dot { display: block; width: 12px; height: 12px; border: 1.4px solid #ffffffe0; border-radius: 50%; }
+    .dot.filled { background: #fff; }
+    #dots.shake { animation: shake-ios 420ms linear; }
+    @keyframes shake-ios {
+      0%, 100% { transform: translateX(-50%); }
+      14% { transform: translateX(calc(-50% - 12px)); }
+      28% { transform: translateX(calc(-50% + 10px)); }
+      42% { transform: translateX(calc(-50% - 8px)); }
+      56% { transform: translateX(calc(-50% + 6px)); }
+      70% { transform: translateX(calc(-50% - 4px)); }
+      84% { transform: translateX(calc(-50% + 2px)); }
+    }
+    .keypad {
+      position: absolute;
+      z-index: 1;
+      top: 36%;
+      left: 50%;
+      transform: translateX(-50%);
+      display: grid;
+      grid-template-columns: repeat(3, var(--key-d));
+      grid-template-rows: repeat(4, var(--key-d));
+      column-gap: var(--key-hgap);
+      row-gap: var(--key-vgap);
+      width: min(100%, calc(3 * var(--key-d) + 2 * var(--key-hgap)));
+      justify-content: center;
+      justify-items: center;
+      align-items: center;
+    }
+    /*
+     * iOS lock-screen PIN keys. Source: research.md sections "아이폰 PIN 키패드"
+     * and "구현 메모 for zz5" (THPinNumButton / THPinNumPadView).
+     * Reference: 393 x 852 CSS px (iPhone 15 / 15 Pro logical size).
+     * Diameter 75px; horizontal gap 20px; vertical gap 13px;
+     * keypad 265 x 339 (3*75+2*20, 4*75+3*13).
+     * Fill rgba(255,255,255,0.18) + backdrop-filter blur(20px); no border
+     * (iOS 10-18 filled circle, not the iOS 7 1px ring).
+     * Digit 34px / weight 500; letters 10px / weight 600 / tracking 0.1em / uppercase.
+     * :active = opaque white fill + black glyph, ~0.2s fade.
+     * Scales with clamp/min so 375px and 430px widths keep the 75@393 ratio.
+     * Galaxy (One UI 3+): also circular, ~72px, 12 / 8 gaps, weight 500 digit,
+     * letters hidden, press = scale + denser fill (no black invert).
+     */
+    .key {
+      box-sizing: border-box;
+      width: var(--key-d);
+      height: var(--key-d);
+      border: none;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.18);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 1px;
+      padding: 0;
+      flex-shrink: 0;
+      overflow: hidden;
+      transition: background .2s, color .2s, transform .15s;
+    }
+    .key:active { background: rgba(255, 255, 255, 0.92); color: #000; backdrop-filter: none; -webkit-backdrop-filter: none; }
+    .key .number { font-size: calc(var(--key-d) * 36 / 75); line-height: 1; font-weight: 500; }
+    .key .letters {
+      font-size: calc(var(--key-d) * 10 / 75);
+      font-weight: 600;
+      line-height: 1.2;
+      letter-spacing: 0.1em;
+      padding-left: 0.1em;
+      text-transform: uppercase;
+      min-height: 1.2em;
+      opacity: 0.92;
+    }
+    .key[data-digit="1"] .letters { visibility: hidden; }
+    .key[data-digit="0"] .letters { display: none; }
+    .key[data-digit="0"] { grid-column: 2; }
+    .galaxy-only { display: none; }
+    .footer { position: absolute; z-index: 1; top: 88%; left: 50%; transform: translateX(-50%); display: flex; justify-content: space-between; width: min(calc(100% - 56px), calc(3 * var(--key-d) + 2 * var(--key-hgap))); align-items: center; }
+    .footer button { background: none; font-size: 17px; font-weight: 400; min-width: 44px; min-height: 44px; padding: 8px 0; }
+    #input-screen.galaxy { --key-d: clamp(64px, min(19.5vw, 9.5vh), 82px); --key-hgap: clamp(11px, 3.817vw, 16px); --key-vgap: clamp(5px, 1.8vw, 8px); }
+    .galaxy .pin-layout { display: block; padding: 0; }
+    .galaxy #lock { display: grid; top: 5%; pointer-events: auto; cursor: pointer; }
+    .galaxy .prompt { top: 19.5%; margin: 0; font-size: clamp(20px, 5.35vw, 23px); line-height: 1.3; font-weight: 500; }
+    .galaxy #dots { top: 28%; gap: 20px; }
+    .galaxy #dots.shake { animation-name: shake-galaxy; }
+    @keyframes shake-galaxy {
+      0%, 100% { transform: translateX(-50%); }
+      14% { transform: translateX(calc(-50% - 12px)); }
+      28% { transform: translateX(calc(-50% + 10px)); }
+      42% { transform: translateX(calc(-50% - 8px)); }
+      56% { transform: translateX(calc(-50% + 6px)); }
+      70% { transform: translateX(calc(-50% - 4px)); }
+      84% { transform: translateX(calc(-50% + 2px)); }
+    }
+    .galaxy .dot { width: 11px; height: 11px; }
+    .galaxy .keypad { top: 32%; }
+    .galaxy .key { background: rgba(255, 255, 255, 0.16); }
+    .galaxy .key:active { background: rgba(255, 255, 255, 0.42); color: #fff; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); transform: scale(1.07); }
+    .galaxy .key .number { font-size: calc(var(--key-d) * 34 / 72); font-weight: 500; }
+    .galaxy .key .letters { display: none; }
+    .galaxy .key.galaxy-only { display: flex; }
+    .key[data-action="backspace"] { grid-column: 1; grid-row: 4; }
+    .key[data-action="confirm"] { grid-column: 3; grid-row: 4; }
+    .key .action-icon { width: 31px; height: 31px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    #fingerprint { position: absolute; z-index: 2; top: 72%; left: 50%; transform: translate(-50%, -50%); width: 64px; height: 64px; padding: 0; background: none; place-items: center; touch-action: none; }
+    .galaxy #fingerprint { display: grid; top: 80%; }
+    #fingerprint svg { width: 44px; height: 44px; fill: none; stroke: #fff; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    #fingerprint.holding svg { animation: fingerprint-hold 600ms ease-out both; }
+    #fingerprint.pulse svg { animation: fingerprint-pulse 220ms ease-out; }
+    @keyframes fingerprint-hold { from { opacity: .68; transform: scale(.92); } to { opacity: 1; transform: scale(1.08); } }
+    @keyframes fingerprint-pulse { 50% { opacity: .62; transform: scale(.94); } }
+    .galaxy .footer { top: 91%; justify-content: center; }
+    .galaxy #emergency { width: 114px; height: 44px; padding: 3.5px 0; color: #2b1a14; font-size: 15px; font-weight: 500; }
+    .galaxy #emergency span { display: grid; place-items: center; width: 114px; height: 37px; border-radius: 999px; background: #F2A28C; }
+    .galaxy #delete { display: none; }
+    #input-screen, #time-lock { will-change: transform, opacity; }
+    #unlocked-screen { z-index: 2; background: #111; touch-action: none; will-change: transform, opacity; }
+    #home-track { position: absolute; inset: 0; width: 100%; height: 100%; transform: translate3d(0,0,0); transition: transform 420ms cubic-bezier(.2,.8,.2,1); will-change: transform; }
+    .home-page { position: absolute; top: 0; width: 100%; height: 100%; overflow: hidden; }
+    #home-one { left: 0; background: radial-gradient(ellipse at 30% 20%, #576681, transparent 65%), linear-gradient(155deg, #283349, #10151e); }
+    #home-two { left: 100%; background: radial-gradient(ellipse at 70% 30%, #675972, transparent 65%), linear-gradient(155deg, #343448, #10151e); }
+    #reveal-card { position: absolute; z-index: 3; top: 50%; left: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; width: min(88vw, 390px); min-height: 220px; max-width: calc(100% - 24px); padding: 30px 24px; border: 1px solid #ffffff60; border-radius: 26px; background: #32384366; box-shadow: 0 16px 46px #0008; backdrop-filter: blur(20px) saturate(1.1); -webkit-backdrop-filter: blur(20px) saturate(1.1); text-align: center; font-variant-numeric: tabular-nums; pointer-events: none; opacity: 0; visibility: hidden; transform: translate(-50%, -50%) scale(.94); transition: none; }
+    #reveal-card.visible { opacity: 1; visibility: visible; transform: translate(-50%, -50%) scale(1); transition: opacity 180ms ease, transform 180ms cubic-bezier(.2,.8,.2,1); }
+    #reveal-label { color: #f3f4f8e0; font-size: 14px; font-weight: 500; }
+    #reveal-number { margin-top: 18px; font-size: clamp(46px, 12vw, 68px); line-height: 1.08; font-weight: 600; letter-spacing: .025em; overflow-wrap: anywhere; }
+    .reveal-detail { margin-top: 13px; color: #f3f4f8e0; font-size: 15px; }
+    /* Unlock motion is shared by PIN success and interactive rewind-lock drag. */
+    #unlocked-screen.returning { transition: transform 520ms cubic-bezier(.2, 1.35, .35, 1); }
+    #peek-screen { z-index: 1; background: #0b0c10; padding: 28px max(24px, env(safe-area-inset-right, 0px)) max(24px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left, 0px)); display: flex; flex-direction: column; justify-content: flex-end; }
+    #peek-screen.side-peek { text-align: right; }
+    .peek-heading { margin-bottom: 9px; color: #aaaebc; font-size: 12px; }
+    #attempt-list { list-style: none; margin: 0; padding: 0; overflow: auto; max-height: calc(100% - 54px); font-variant-numeric: tabular-nums; }
+    #attempt-list li { border-top: 1px solid #ffffff15; padding: 6px 0; width: max-content; min-width: 100%; white-space: nowrap; }
+    .attempt-pin { letter-spacing: .02em; font-size: clamp(9px, 2.4vw, 11px); line-height: 1.25; font-weight: 600; }
+    #birthday-summary { flex-shrink: 0; margin-top: 8px; padding: 10px 0 2px; border-top: 1px solid #ffffff40; color: #f4f3ee; font-size: clamp(9px, 2.5vw, 11px); font-weight: 600; line-height: 1.4; font-variant-numeric: tabular-nums; }
+    #time-black { z-index: 3; background: #000; touch-action: none; }
+    #rewind-digit-guide { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: repeat(4, minmax(0, 1fr)); color: #fff; font-size: clamp(42px, 13vw, 76px); font-weight: 650; pointer-events: none; opacity: 1; transition: opacity 400ms ease; }
+    #rewind-digit-guide[hidden] { display: none !important; }
+    #rewind-digit-guide.is-fading { opacity: 0; }
+    #rewind-digit-guide span { display: grid; place-items: center; }
+    #time-lock { z-index: 3; background: radial-gradient(ellipse at 20% 10%, #575d78, #10151e); text-align: center; touch-action: none; }
+    #time-clock-backdrop { position: absolute; inset: 9% 0 auto; height: 51%; background: rgba(18, 22, 33, .12); backdrop-filter: blur(44px); -webkit-backdrop-filter: blur(44px); -webkit-mask-image: linear-gradient(transparent, #000 17%, #000 78%, transparent); mask-image: linear-gradient(transparent, #000 17%, #000 78%, transparent); pointer-events: none; }
+    #time-face { position: absolute; z-index: 1; top: 12%; width: 100%; text-shadow: 0 2px 12px #0005; pointer-events: none; }
+    #time-date { font-size: clamp(17px, 4.8vw, 21px); font-weight: 500; }
+    #time-clock { display: flex; justify-content: center; align-items: center; margin-top: 7px; font-size: clamp(72px, 21vw, 94px); line-height: 1; font-weight: 300; font-variant-numeric: tabular-nums; letter-spacing: -.045em; }
+    /* One UI 9 lock screen (S25 Ultra reference 2026-10-20): bold translucent clock above the date, lock icon on top, charge text + DND pill + phone/camera shortcuts at the bottom. */
+    #time-lock.galaxy #time-face { top: 19.5%; display: flex; flex-direction: column-reverse; align-items: center; }
+    #time-lock.galaxy #time-clock { margin-top: 0; font-size: clamp(84px, 23.5vw, 112px); font-weight: 700; color: rgba(255, 255, 255, .72); letter-spacing: -.03em; }
+    #time-lock.galaxy #time-date { margin-top: 6px; color: rgba(255, 255, 255, .6); font-size: clamp(16px, 4.5vw, 19px); font-weight: 600; }
+    /* One UI 8.5 preset style (editor preset, stored with the customization): the pre-One UI 9 face, date above a regular-weight white clock. */
+    #time-lock.galaxy.magic-style-oneui85 #time-face { top: 16%; flex-direction: column; }
+    #time-lock.galaxy.magic-style-oneui85 #time-clock { margin-top: 7px; font-size: clamp(70px, 19vw, 90px); font-weight: 400; color: inherit; letter-spacing: -.045em; }
+    #time-lock.galaxy.magic-style-oneui85 #time-date { margin-top: 0; color: inherit; font-size: clamp(17px, 4.8vw, 21px); font-weight: 500; }
+    .oneui-only { display: none; }
+    #oneui-charge[hidden], #oneui-dnd[hidden] { display: none !important; }
+    #time-lock.galaxy .oneui-only { display: block; }
+    #time-lock.galaxy #oneui-bar { display: flex; }
+    #oneui-lock { position: absolute; z-index: 1; top: 5.2%; left: 50%; width: 22px; height: 26px; transform: translateX(-50%); fill: rgba(255, 255, 255, .85); pointer-events: none; }
+    #oneui-charge { position: absolute; z-index: 1; left: 0; right: 0; top: 82.6%; color: rgba(255, 255, 255, .9); font-size: clamp(15px, 4.2vw, 18px); line-height: 1.35; pointer-events: none; }
+    #oneui-charge b { display: block; font-size: 1.1em; font-weight: 500; }
+    #oneui-bar { position: absolute; z-index: 1; left: 7%; right: 7%; bottom: 2.8%; align-items: center; justify-content: space-between; pointer-events: none; }
+    #oneui-bar i { display: grid; place-items: center; flex: none; width: 52px; height: 52px; border-radius: 50%; }
+    #oneui-bar i svg { width: 28px; height: 28px; }
+    #oneui-phone { background: rgba(240, 240, 245, .92); }
+    #oneui-camera { background: rgba(255, 255, 255, .18); }
+    #oneui-dnd { display: flex; align-items: center; gap: 12px; width: 58%; height: 58px; padding: 0 14px; border-radius: 999px; background: linear-gradient(90deg, rgba(100, 118, 170, .6), rgba(150, 120, 110, .6)); text-align: left; }
+    #oneui-dnd em { display: grid; place-items: center; flex: none; width: 36px; height: 36px; border-radius: 50%; background: #2f6bff; }
+    #oneui-dnd em::after { content: ''; width: 16px; height: 4px; border-radius: 2px; background: #fff; }
+    #oneui-dnd span { display: block; color: #fff; font-size: 17px; font-weight: 600; line-height: 1.2; }
+    #oneui-dnd small { display: block; color: rgba(255, 255, 255, .7); font-size: 14px; font-weight: 500; }
+    .time-colon { display: inline-flex; flex-direction: column; justify-content: center; gap: .26em; width: .16em; height: .8em; margin: 0 .025em; }
+    .time-colon::before, .time-colon::after { content: ''; display: block; width: .09em; height: .09em; border-radius: 50%; background: currentColor; }
+    @media (prefers-reduced-motion: reduce) { #time-clock span { animation: none !important; } }
+    #settings-screen { z-index: 5; overflow-y: auto; background: #101115; padding: 28px 22px max(32px, env(safe-area-inset-bottom)); touch-action: pan-y; }
+    .settings-inner { max-width: 480px; margin: auto; }
+    #settings-brand { display: block; width: min(100%, 300px); height: auto; max-height: 110px; object-fit: contain; margin: 0 auto 18px; }
+    .eyebrow { color: #aaa4f7; font-size: 11px; font-weight: 700; letter-spacing: 3px; }
+    h1 { font-size: 32px; letter-spacing: -1px; margin: 8px 0; }
+    .intro { color: #a4a6b1; line-height: 1.65; font-size: 13px; margin: 0 0 28px; }
+    .group { margin: 0 0 20px; border: 1px solid #ffffff12; background: #1b1c22; border-radius: 18px; padding: 12px 16px; }
+    .group > summary { min-height: 28px; line-height: 28px; font-size: 15px; font-weight: 650; cursor: pointer; }
+    .group[open] > summary { margin-bottom: 18px; }
+    .install-offer { margin: 0 0 20px; padding: 16px; border: 1px solid #c6c0ff58; border-radius: 14px; background: #252336; }
+    .install-offer strong { display: block; font-size: 15px; }
+    .install-offer p { margin: 7px 0 0; color: #cbc9d9; font-size: 12px; line-height: 1.55; }
+    .install-actions { display: flex; gap: 9px; margin-top: 13px; }
+    .install-actions button { min-height: 42px; padding: 0 14px; border-radius: 9px; font-size: 13px; font-weight: 700; }
+    #install-action { background: #c6c0ff; color: #191528; }
+    #install-later { background: #383646; color: #e5e2f2; }
+    .group h2 { font-size: 15px; margin: 0 0 18px; font-weight: 650; }
+    .field { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-top: 17px; font-size: 13px; }
+    .field:first-of-type { margin-top: 0; }
+    .field.stack { align-items: stretch; flex-direction: column; gap: 10px; }
+    .field.check { justify-content: flex-start; }
+    .field[hidden] { display: none; }
+    .field input[type="number"], select { border: 1px solid #ffffff12; background: #292b34; border-radius: 8px; color: #fff; padding: 9px; max-width: 165px; }
+    input[type="number"] { width: 90px; }
+    input[type="color"] { width: 45px; height: 32px; padding: 0; border: 0; background: none; }
+    input[type="file"] { width: 100%; color: #b6b8c4; font-size: 12px; }
+    .file-picker { position: relative; display: inline-flex; align-items: center; max-width: 100%; vertical-align: middle; }
+    .file-picker input[type="file"] { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; margin: 0; padding: 0; opacity: 0; cursor: pointer; font-size: 16px; }
+    .file-picker-label { display: inline-flex; align-items: center; min-height: 40px; padding: 9px 12px; border-radius: 6px; background: #30323c; color: #eee; font-size: 12px; }
+    .file-picker:focus-within .file-picker-label { outline: 2px solid #91baff; outline-offset: 4px; }
+    .file-picker:has(input:disabled) .file-picker-label { opacity: 0.55; }
+    .image-info, .hint { color: #9699a6; font-size: 12px; line-height: 1.65; }
+    .time-guide { margin: 0 0 18px; }
+    .time-guide details { margin-top: 12px; padding: 12px 14px; border-radius: 11px; background: #272932; }
+    .time-guide summary { color: #d9dce8; cursor: pointer; font-weight: 600; }
+    .time-guide details p { margin: 9px 0 0; }
+    .usage-guide { margin: 0 0 20px; padding: 14px 16px; border: 1px solid #ffffff18; border-radius: 13px; background: #1b1c22; color: #c9cad3; }
+    .usage-guide summary { min-height: 28px; display: flex; align-items: center; color: #e5e3f4; font-size: 13px; font-weight: 650; cursor: pointer; }
+    .usage-guide p { margin: 10px 0 0; font-size: 12px; line-height: 1.65; }
+    .hidden-grid-example { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: repeat(4, minmax(0, 1fr)); width: min(100%, 240px); aspect-ratio: 3 / 4; margin: 14px auto 0; overflow: hidden; border: 1.5px solid #ff4545; background-color: #000; background-image: linear-gradient(to right, #ff4545 1.5px, transparent 1.5px), linear-gradient(to bottom, #ff4545 1.5px, transparent 1.5px); background-size: 33.333333% 100%, 100% 25%; color: #ff6969; }
+    .hidden-grid-example span { display: grid; place-items: center; font-size: clamp(17px, 6vw, 25px); font-weight: 650; }
+    .hidden-grid-example span[data-digit="0"] { grid-column: 2; grid-row: 4; }
+    .usage-guide .grid-caption { margin-top: 8px; color: #a5a6b1; text-align: center; }
+    .image-info { margin: 0; }
+    .alignment-help { margin: -4px 0 12px; color: #c3c5cf; font-size: 12px; line-height: 1.55; }
+    .preview-row { display: flex; gap: 12px; }
+    .preview { position: relative; background: #101115; border: 1px solid #ffffff1c; border-radius: 14px; overflow: hidden; width: 33.333%; aspect-ratio: 9 / 19.5; touch-action: none; cursor: grab; }
+    .preview:active { cursor: grabbing; }
+    .preview img { object-fit: cover; width: 100%; height: 100%; pointer-events: none; }
+    .preview-name { position: absolute; right: 7px; bottom: 7px; z-index: 3; font-size: 10px; background: #000a; border-radius: 4px; padding: 3px 6px; pointer-events: none; }
+    .crop-overlay { position: absolute; z-index: 2; top: 0; left: 0; right: 0; height: 0; min-height: 0; overflow: hidden; background: #796cff80; border-bottom: 2px solid #d7d2ff; pointer-events: none; }
+    .crop-label { position: absolute; left: 50%; top: 7px; width: max-content; max-width: calc(100% - 12px); transform: translateX(-50%); color: #fff; background: #30275ed9; border-radius: 4px; padding: 3px 5px; font-size: 8px; line-height: 1.25; text-align: center; }
+    .crop-handle { position: absolute; z-index: 4; left: 50%; top: 0; width: 48px; height: 18px; transform: translate(-50%, -8px); border-radius: 10px; background: #e2deff; box-shadow: 0 1px 5px #0008; cursor: ns-resize; touch-action: none; }
+    .crop-handle::after { content: ''; position: absolute; left: 13px; right: 13px; top: 8px; height: 2px; border-radius: 2px; background: #62599b; }
+    #start { width: 100%; padding: 16px; border-radius: 12px; background: #c6c0ff; color: #191528; font-size: 15px; font-weight: 700; margin-top: 5px; }
+    #storage-status, #offline-status { font-size: 12px; line-height: 1.65; color: #b9b3dd; }
+    #toast { position: absolute; z-index: 10; left: 50%; bottom: max(26px, env(safe-area-inset-bottom)); transform: translateX(-50%); max-width: 90%; border-radius: 12px; padding: 12px 18px; background: #242631; color: #eee; font-size: 13px; text-align: center; pointer-events: none; }
+    @media (max-height: 640px) {
+      #input-screen { --key-d: clamp(56px, 16.285vw, 64px); --key-vgap: 8px; }
+      #input-screen.galaxy { --key-d: clamp(52px, min(18vw, 8.75vh), 60px); --key-vgap: 4px; }
+      .galaxy .prompt { top: 16%; }
+      .galaxy #dots { top: 25%; }
+      .galaxy .keypad { top: 31%; }
+      .galaxy #fingerprint { top: 75%; }
+      .galaxy .footer { top: 88%; }
+      #fingerprint { top: 76%; }
+    }
+    @media (max-height: 500px) and (orientation: landscape) {
+      #input-screen { --key-d: clamp(48px, 12vh, 58px); --key-hgap: clamp(10px, 2vw, 16px); --key-vgap: 3px; }
+      .prompt { top: 8%; font-size: 15px; }
+      #dots { top: 17%; }
+      .keypad, .galaxy .keypad { top: 24%; }
+      #fingerprint { top: 76%; }
+      .footer { top: 84%; }
+      #input-screen.galaxy { --key-d: clamp(48px, 12vh, 58px); }
+    }
+    @media (horizontal-viewport-segments: 2) {
+      #app { right: auto; width: env(viewport-segment-width 0 0); }
+    }
+    @media (vertical-viewport-segments: 2) {
+      #app { bottom: auto; height: calc(env(viewport-segment-height 0 0) - env(safe-area-inset-top, 0px)); }
+    }
+    @media (min-height: 641px) and (max-height: 790px) {
+      .galaxy .prompt { top: 18%; }
+      .galaxy #dots { top: 26%; }
+      .galaxy .keypad { top: 31%; }
+      .galaxy #fingerprint { top: 82%; }
+    }
+    @media (prefers-reduced-motion: reduce) { #unlocked-screen.returning { transition-duration: 180ms; } #input-screen.unlocking-out, #unlocked-screen.unlocking { animation-duration: 150ms; } #reveal-card { transition-duration: 0s; } }
+
+    #settings-entry-tutorial { position: fixed; inset: 0; z-index: 45; display: grid; place-items: center; padding: 24px; pointer-events: auto; }
+    #settings-entry-tutorial[hidden] { display: none !important; }
+    #settings-entry-tutorial .tutorial-card { width: min(100%, 320px); padding: 22px; border: 1px solid #ffffff52; border-radius: 20px; background: #1b1b20f2; color: #fff; text-align: center; box-shadow: 0 16px 48px #0009; font: 500 16px/1.55 system-ui, sans-serif; }
+    #settings-entry-tutorial .tutorial-fingers { position: relative; height: 110px; width: 100px; margin: 0 auto 12px; }
+    #settings-entry-tutorial .tutorial-fingers span { position: absolute; top: 8px; width: 29px; height: 45px; border: 3px solid #fff; border-radius: 18px; background: #ffffff35; animation: tutorial-swipe 1.7s ease-in-out infinite; }
+    #settings-entry-tutorial .tutorial-fingers span:first-child { left: 15px; }
+    #settings-entry-tutorial .tutorial-fingers span:last-child { right: 15px; }
+    #settings-entry-tutorial .tutorial-fingers::after { content: '↓'; position: absolute; bottom: 0; left: 0; right: 0; color: #fff; font-size: 28px; }
+    #settings-entry-tutorial p { margin: 0 0 16px; }
+    #settings-entry-tutorial button { min-width: 120px; min-height: 44px; border: 0; border-radius: 12px; background: #fff; color: #111; font: 600 16px system-ui, sans-serif; pointer-events: auto; touch-action: manipulation; }
+    @keyframes tutorial-swipe { 0%, 16% { transform: translateY(0); opacity: .55; } 70%, 85% { transform: translateY(45px); opacity: 1; } 100% { transform: translateY(0); opacity: .55; } }
+    @media (prefers-reduced-motion: reduce) { #settings-entry-tutorial .tutorial-fingers span { animation: none; transform: translateY(25px); } }

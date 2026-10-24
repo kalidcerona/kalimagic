@@ -181,11 +181,12 @@ test('layout presets: saved preset and style survive sanitize; junk values and o
 });
 
 test('One UI 8.5 style variant lives under the preset class in personal and friend RELEASE', () => {
-  assert.match(html, /#time-lock\.galaxy\.magic-style-oneui85 #time-face \{ top: 16%; flex-direction: column; \}/);
-  assert.match(html, /#time-lock\.galaxy\.magic-style-oneui85 #time-clock \{[^}]*font-weight: 400;/);
+  const personalCss = read('zz2/style.css');
+  assert.match(personalCss, /#time-lock\.galaxy\.magic-style-oneui85 #time-face \{ top: 16%; flex-direction: column; \}/);
+  assert.match(personalCss, /#time-lock\.galaxy\.magic-style-oneui85 #time-clock \{[^}]*font-weight: 400;/);
   const css = read('zz2/settings-ui.css');
   assert.match(css, /@media \(orientation:landscape\) and \(max-height:540px\)/, 'phones in landscape get the rotate hint');
-  const dist = read('distribution-snapshots/unlock/index.html');
+  const dist = read('distribution-snapshots/unlock/style.css');
   assert.match(dist, /#time-lock\.galaxy\.magic-style-oneui85 #time-face \{ top: 16%; flex-direction: column; \}/);
   assert.match(dist, /#time-lock\.galaxy\.magic-style-oneui85 #time-clock \{[^}]*font-weight: 400;/);
 });

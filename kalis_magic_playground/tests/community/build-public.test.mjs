@@ -586,7 +586,7 @@ test('final app policy rejects fullscreen and mixed personal/friend customizatio
   }
 });
 
-test('fullscreen exception is limited to RELEASE index files with the rewind function', async () => {
+test('fullscreen exception is limited to RELEASE index and pin files with the rewind function', async () => {
   const fixture = await mkdtemp(path.join(os.tmpdir(), 'magic-rewind-policy-'));
   const fullscreen = '<script>function enterRewindFullscreen() { document.documentElement.requestFullscreen(); }</script>';
   try {
@@ -603,6 +603,8 @@ test('fullscreen exception is limited to RELEASE index files with the rewind fun
         await writeFile(path.join(app, 'index.html'), body + '<script>document.documentElement.requestFullscreen()</script>');
         await assert.rejects(verifyAppDisplayPolicy(fixture, [route]), /Fullscreen is disabled/);
         await writeFile(path.join(app, 'index.html'), body + fullscreen);
+        await writeFile(path.join(app, 'pin.js'), fullscreen);
+        await verifyAppDisplayPolicy(fixture, [route]);
         await writeFile(path.join(app, 'extra.js'), fullscreen);
         await assert.rejects(verifyAppDisplayPolicy(fixture, [route]), /Fullscreen is disabled/);
       }

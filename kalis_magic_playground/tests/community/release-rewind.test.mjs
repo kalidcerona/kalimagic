@@ -5,7 +5,11 @@ import vm from 'node:vm';
 import * as clock from '../../zz2/time-machine.js';
 import * as logic from '../../zz2/logic.js';
 const builds = ['zz2', 'distribution-snapshots/unlock'];
-const html = build => readFileSync(new URL(`../../${build}/index.html`, import.meta.url), 'utf8');
+const entryFiles = ['session.js', 'pin.js', 'gestures.js', 'images.js', 'rewind.js', 'settings.js', 'app.js'];
+const page = build => readFileSync(new URL(`../../${build}/index.html`, import.meta.url), 'utf8');
+const style = build => readFileSync(new URL(`../../${build}/style.css`, import.meta.url), 'utf8');
+const entry = build => entryFiles.map((file) => readFileSync(new URL(`../../${build}/${file}`, import.meta.url), 'utf8')).join('\n');
+const bundle = build => `${page(build)}\n${style(build)}\n${entry(build)}`;
 const section = (text, start, end) => text.slice(text.indexOf(start), text.indexOf(end,text.indexOf(start)));
 function fixture(build) {
   let now = new Date(2026,9,9,15,59,0,0).getTime(), serial=0;
@@ -33,7 +37,9 @@ function fixture(build) {
     enterRewindStatusCover(){ctx.statusCoverApplied=true;},
     ...clock,unlockTimer:null,UNLOCK_ANIMATION_MS:520,state:{unlocked:false},clearFeedback(){},renderAttempts(){},setHomePage(){},
     showScreen(next){ctx.screen=next;ctx.shown=next;}});
-  const text=html(build);
+  ctx.session = ctx;
+  ctx.clearHomeSwipe = () => { ctx.swipe = null; };
+  const text=entry(build);
   vm.runInContext(section(text,'    function renderTimeMachine()',"    // One geometry read"),ctx);
   return {ctx,node,jobs,events,text,advance(ms){now+=ms;for(const [id,job]of [...jobs])if(job.at<=now){jobs.delete(id);job.fn();}},now:()=>now};
 }
@@ -102,12 +108,12 @@ test('RELEASE entry and original settings shape retain distinct storage namespac
   assert.equal(Object.hasOwn(logic.normalizeSettings({clockFormat:'12'}),'clockFormat'),false);
 });
 test('status-bar covering policy matches in manifest, meta, safe-area CSS and entry JS',async()=>{
-  const personal=html(builds[0]), distribution=html(builds[1]);
+  const personal=bundle(builds[0]), distribution=bundle(builds[1]);
   for(const build of builds) {
     const manifest=JSON.parse(readFileSync(new URL(`../../${build}/manifest.webmanifest`,import.meta.url),'utf8'));
     assert.equal(manifest.display,'standalone');
     assert.equal(manifest.theme_color,'#000000');
-    const text=html(build);
+    const text=bundle(build);
     assert.match(text,/viewport-fit=cover/);
     assert.match(text,/<meta name="apple-mobile-web-app-status-bar-style" content="default">/);
     assert.match(text,/<meta name="theme-color" content="#000000">/);
@@ -147,9 +153,9 @@ test('PIN success uses shared transition with reduced motion and upward lock/hom
 });
 test('entry handlers, minute renderer and unlock compositor remain byte-identical across builds',()=>{
   for(const [start,end]of [['    function renderTimeMachine()',"    $('settings-form').addEventListener('input'"],["    $('emergency').addEventListener","    backspaceKey.addEventListener"]])
-    assert.equal(section(html(builds[0]),start,end),section(html(builds[1]),start,end));
+    assert.equal(section(bundle(builds[0]),start,end),section(bundle(builds[1]),start,end));
   assert.equal(readFileSync(new URL('../../zz2/time-machine.js',import.meta.url),'utf8'),readFileSync(new URL('../../distribution-snapshots/unlock/time-machine.js',import.meta.url),'utf8'));
-  const animation=section(html(builds[0]),'    // One geometry read',"    for (const id of ['time-black', 'time-lock'])");
+  const animation=section(bundle(builds[0]),'    // One geometry read',"    for (const id of ['time-black', 'time-lock'])");
   assert.doesNotMatch(animation,/offsetWidth|offsetHeight|filter:|style\.(top|height|width|left)/);
   assert.equal(clock.unlockDragTarget(0,3,800),false);
   assert.equal(clock.unlockDragTarget(223,.1,800),false);
@@ -164,7 +170,7 @@ test('two-finger settings swipe follows visible screen coordinates in portrait a
     assert.equal(clock.isSettingsSwipe(start,start.map(p=>({...p,y:p.y-110}))),false);
     assert.equal(clock.isSettingsSwipe(start,start.map(p=>({...p,x:p.x+110}))),false);
   }
-  for(const build of builds)assert.match(html(build),/if \(settingsSwipe && event.touches.length === 2 && isSettingsSwipe\(settingsSwipe,/);
+  for(const build of builds)assert.match(bundle(build),/if \(settingsSwipe && event.touches.length === 2 && isSettingsSwipe\(settingsSwipe,/);
 });
 
 function motionFixture(build) {
@@ -237,7 +243,7 @@ for (const build of builds) {
   test(`${build}: rewind fullscreen handles supported, unsupported and already fullscreen devices`, async () => {
     const document = { documentElement: {} };
     const ctx = vm.createContext({ document });
-    vm.runInContext(section(html(build), '    function enterRewindFullscreen()', '    function enterRewindStatusCover()'), ctx);
+    vm.runInContext(section(bundle(build), '    function enterRewindFullscreen()', '    function enterRewindStatusCover()'), ctx);
     assert.doesNotThrow(() => vm.runInContext('enterRewindFullscreen(); exitRewindFullscreen()', ctx));
     for (const [requestKey, elementKey, exitKey] of [
       ['requestFullscreen', 'fullscreenElement', 'exitFullscreen'],
@@ -295,7 +301,7 @@ for (const build of builds) {
 
 for (const build of builds) {
   test(`${build}: no desktop settings button, Shift+Esc handler or PC hint`, () => {
-    const text = html(build);
+    const text = bundle(build);
     assert.doesNotMatch(text, /desktop-settings|bindDesktopSettingsAccess|desktopSettingsAccess|Shift\+Esc|Shift\+Escape|PC에서는|PC 설정/);
     assert.doesNotMatch(text, /event\.key !== 'Escape'|key === 'Escape'/);
   });

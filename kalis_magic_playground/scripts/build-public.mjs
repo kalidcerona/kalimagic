@@ -120,6 +120,14 @@ export const SHARED_UNLOCK_FILES = [
   'icon-maskable-512.png',
   'icon.svg',
   'index.html',
+  'style.css',
+  'app.js',
+  'session.js',
+  'pin.js',
+  'gestures.js',
+  'images.js',
+  'rewind.js',
+  'settings.js',
   'install-prompt.js',
   'logic.js',
   'manifest.webmanifest',
@@ -689,7 +697,7 @@ export async function verifyAppDisplayPolicy(directory = DIST, routes = [
       const content = await readFile(path.join(appDirectory, entry.name), 'utf8');
       if (/\b(?:requestFullscreen|webkitRequestFullscreen|webkitRequestFullScreen|mozRequestFullScreen|msRequestFullscreen)\b/.test(content)) {
         const rewindException = (route === 'zz2' || route === 'tools/release')
-          && entry.name === 'index.html' && content.includes('function enterRewindFullscreen()');
+          && (entry.name === 'index.html' || entry.name === 'pin.js') && content.includes('function enterRewindFullscreen()');
         if (!rewindException) throw new Error(`Fullscreen is disabled: ${route}/${entry.name}`);
       }
     }

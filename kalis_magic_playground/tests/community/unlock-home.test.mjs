@@ -88,9 +88,10 @@ test('personal home requires both uploaded home screenshots before starting', ()
 
 
 test('personal and friend RELEASE reveal home2 immediately and clear gestures the same way', () => {
-  for (const file of ['zz2/index.html', 'distribution-snapshots/unlock/index.html']) {
-    const html = readFileSync(new URL(`../../${file}`, import.meta.url), 'utf8');
-    const script = html.match(/<script type="module">([\s\S]*?)<\/script>/)[1];
+  const modules = ['session.js', 'pin.js', 'gestures.js', 'images.js', 'rewind.js', 'settings.js', 'app.js'];
+  for (const dir of ['zz2', 'distribution-snapshots/unlock']) {
+    const html = readFileSync(new URL(`../../${dir}/index.html`, import.meta.url), 'utf8');
+    const script = modules.map((file) => readFileSync(new URL(`../../${dir}/${file}`, import.meta.url), 'utf8')).join('\n');
     assert.match(html, /class="file-picker"/);
     assert.match(script, /function setFilePickerState\(key, registered\)/);
     assert.match(script, /registered \? '다시 선택' : '이미지 선택'/);

@@ -6,9 +6,9 @@ import vm from 'node:vm';
 // Apps that hold a screen wake lock during performance and drop it on the settings path.
 const APPS = [
   {
-    file: 'zz2/index.html',
+    file: 'zz2/rewind.js',
     settings: /function showScreen\(next, animate = false\) \{[\s\S]*?next === 'settings'[\s\S]*?syncPerformanceWakeLock\(\)/,
-    wanted: /return screen !== "settings"/,
+    wanted: /return session\.screen !== "settings"/,
   },
   {
     file: 'zz4/app.js',
@@ -51,9 +51,9 @@ const APPS = [
     wanted: /return \$\('settings'\)\.open !== true/,
   },
   {
-    file: 'distribution-snapshots/unlock/index.html',
+    file: 'distribution-snapshots/unlock/rewind.js',
     settings: /function showScreen\(next, animate = false\) \{[\s\S]*?next === 'settings'[\s\S]*?syncPerformanceWakeLock\(\)/,
-    wanted: /return screen !== "settings"/,
+    wanted: /return session\.screen !== "settings"/,
   },
   {
     file: 'distribution-snapshots/aletheia/app.js',
