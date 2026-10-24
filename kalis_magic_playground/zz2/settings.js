@@ -1,5 +1,6 @@
 import { $, session } from './session.js';
 import { normalizeSettings, lockScreenCopy, createState } from './logic.js';
+import { resetTwoFingerTaps } from './gestures.js';
 
 const showScreen = (...args) => session.showScreen(...args);
 const refreshCroppedImages = (...args) => session.refreshCroppedImages(...args);
@@ -88,8 +89,7 @@ const REWIND_DND_KEY = 'release.rewindDnd.v1';
         try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(session.settings)); }
         catch { $('storage-status').textContent = '설정을 저장하지 못했습니다. 이번 실행에만 적용됩니다.'; }
         session.state = createState(session.settings.digits);
-        tapSequence = null;
-        clearTimeout(tapTimer);
+        resetTwoFingerTaps();
         session.timeTriggeredAt = null;
         session.timeDigits = [];
         // Explicit Start begins a new gesture sequence, outside the settings swipe.

@@ -18,6 +18,11 @@ let revealShownAt = null;
 let revealHideTimer = null;
 let settingsSwipe = null;
 
+export function resetTwoFingerTaps() {
+  tapSequence = null;
+  clearTimeout(tapTimer);
+}
+
 function clearHomeSwipe() { swipe = null; }
 
     function renderAttempts() {
