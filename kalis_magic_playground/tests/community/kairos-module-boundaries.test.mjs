@@ -1,10 +1,10 @@
 import test, { after, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { copyFileSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { copyFileSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { runInThisContext } from 'node:vm';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { pathToFileURL } from 'node:url';
 
 // Loads KAIROS (zz1) exactly as its index.html does: the classic scripts are evaluated as scripts and the
 // module entry (app.js and its real imports) is loaded with dynamic import() as separate ES modules, so a
@@ -19,7 +19,6 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 // long-press and three-finger mode toggle, ResizeObserver layout, and the appearance editor that
 // settings-ui.js mounts (it needs a full DOM; only its install-event slot and API load here).
 const root = process.env.KAIROS_ROOT ? pathToFileURL(`${process.env.KAIROS_ROOT.replace(/\/?$/, '/')}`) : new URL('../../zz1/', import.meta.url);
-const rootPath = fileURLToPath(root);
 const tempDir = mkdtempSync(join(tmpdir(), 'kairos-boundary-'));
 after(() => { console.error = originalConsoleError; rmSync(tempDir, { recursive: true, force: true }); });
 
@@ -45,12 +44,70 @@ function listenerHost(target) {
 
 let document;
 let window;
+// ----- selector matching (the subset the app uses) -----
+const PIECE = /^(?:([\w-]+|\*)|#([\w-]+)|\.([\w-]+)|\[([\w-]+)(?:([*^$~|]?=)(?:"([^"]*)"|'([^']*)'|([^\]]*)))?\]|:nth-child\((\d+)\))/;
+function parseCompound(source) {
+  const tests = [];
+  let rest = source;
+  while (rest) {
+    const m = rest.match(PIECE);
+    if (!m) throw new Error(`stub: unsupported selector part "${source}"`);
+    if (m[1]) tests.push({ tag: m[1].toLowerCase() });
+    else if (m[2]) tests.push({ id: m[2] });
+    else if (m[3]) tests.push({ cls: m[3] });
+    else if (m[4]) tests.push({ attr: m[4], op: m[5] || '', val: m[6] ?? m[7] ?? m[8] ?? '' });
+    else if (m[9]) tests.push({ nth: Number(m[9]) });
+    rest = rest.slice(m[0].length);
+  }
+  return tests;
+}
+function parseSelector(selector) {
+  return selector.split(',').map((part) => {
+    const chain = [];
+    let comb = ' ';
+    for (const token of part.trim().replace(/\s*>\s*/g, ' > ').split(/\s+/)) {
+      if (token === '>') { comb = '>'; continue; }
+      chain.push({ tests: parseCompound(token), comb });
+      comb = ' ';
+    }
+    return chain;
+  });
+}
+const camel = (name) => name.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+function attrValue(el, name) {
+  if (name.startsWith('data-')) { const v = el.dataset[camel(name.slice(5))]; return v === undefined ? null : String(v); }
+  if (name === 'id') return el.id || null;
+  if (name === 'hidden') return el.hidden ? '' : null;
+  return el.attrs.has(name) ? el.attrs.get(name) : null;
+}
+function matchCompound(el, tests) {
+  return tests.every((t) => {
+    if (t.tag) return t.tag === '*' || el.tag === t.tag;
+    if (t.id) return el.id === t.id;
+    if (t.cls) return el.classes.has(t.cls);
+    if (t.nth) return Boolean(el.parentElement) && el.parentElement.children.indexOf(el) + 1 === t.nth;
+    const v = attrValue(el, t.attr);
+    if (v === null) return false;
+    if (t.op === '') return true;
+    if (t.op === '=') return v === t.val;
+    throw new Error(`stub: unsupported attribute operator ${t.op}`);
+  });
+}
+function matchChain(el, chain, i) {
+  if (!matchCompound(el, chain[i].tests)) return false;
+  if (i === 0) return true;
+  if (chain[i].comb === '>') return Boolean(el.parentElement) && matchChain(el.parentElement, chain, i - 1);
+  for (let p = el.parentElement; p; p = p.parentElement) if (matchChain(p, chain, i - 1)) return true;
+  return false;
+}
+const matchesSelector = (el, selector) => parseSelector(selector).some((chain) => matchChain(el, chain, chain.length - 1));
+
 class FakeElement {
-  constructor(tag = 'div', id = '') {
-    this.tag = tag; this.id = id; this.dataset = {}; this.children = []; this.parentElement = null;
-    this.hidden = false; this.value = ''; this.checked = false; this.disabled = false; this.textContent = '';
-    this.innerHTML = ''; this.rect = null; this.style = {}; this.scrollTop = 0; this.offsetWidth = 0;
-    this.attrs = new Map(); this.classes = new Set(); this.matchKeys = new Set(); this.lists = new Map(); this.cache = new Map();
+  constructor(tag = 'div') {
+    this.tag = tag.toLowerCase(); this.id = ''; this.dataset = {}; this.children = []; this.parentElement = null;
+    this.hidden = false; this.value = ''; this.checked = false; this.disabled = false; this._text = '';
+    this._html = ''; this.rect = null; this.style = {}; this.scrollTop = 0; this.offsetWidth = 0;
+    this.attrs = new Map(); this.classes = new Set();
     listenerHost(this);
     this.classList = {
       add: (...names) => names.forEach((name) => this.classes.add(name)),
@@ -61,31 +118,46 @@ class FakeElement {
   }
   get className() { return [...this.classes].join(' '); }
   set className(value) { this.classes = new Set(String(value).split(/\s+/).filter(Boolean)); }
-  setAttribute(key, value) { this.attrs.set(key, String(value)); }
-  getAttribute(key) { return this.attrs.has(key) ? this.attrs.get(key) : null; }
-  appendChild(node) { node.parentElement = this; this.children.push(node); return node; }
-  append(...nodes) { nodes.forEach((node) => this.appendChild(node)); }
-  prepend(...nodes) { nodes.forEach((node) => { node.parentElement = this; }); this.children.unshift(...nodes); }
-  replaceChildren(...nodes) { this.children = []; this.append(...nodes); }
-  remove() { if (this.parentElement) this.parentElement.children = this.parentElement.children.filter((child) => child !== this); this.parentElement = null; }
-  matches(selector) {
-    return this.matchKeys.has(selector) || (selector.startsWith('#') && this.id === selector.slice(1))
-      || (selector.startsWith('.') && this.classes.has(selector.slice(1))) || selector === this.tag;
+  get textContent() { return this._text; }
+  set textContent(value) { this._text = String(value); this.children.forEach((child) => { child.parentElement = null; }); this.children = []; }
+  get innerHTML() { return this._html; }
+  set innerHTML(value) { this._html = String(value); this.replaceChildren(...parseHtml(this._html).top.children); }
+  setAttribute(key, value) {
+    this.attrs.set(key, String(value));
+    if (key === 'id') this.id = String(value);
+    if (key === 'class') this.className = value;
+    if (key === 'hidden') this.hidden = true;
+    if (key.startsWith('data-')) this.dataset[camel(key.slice(5))] = String(value);
   }
+  getAttribute(key) { return attrValue(this, key); }
+  appendChild(node) { this.append(node); return node; }
+  append(...nodes) {
+    for (const node of nodes) {
+      if (node.parentElement) node.parentElement.children = node.parentElement.children.filter((child) => child !== node);
+      node.parentElement = this; this.children.push(node);
+    }
+  }
+  prepend(...nodes) { nodes.forEach((node) => { node.parentElement = this; }); this.children.unshift(...nodes); }
+  replaceChildren(...nodes) { this.children.forEach((child) => { child.parentElement = null; }); this.children = []; this._text = ''; this.append(...nodes); }
+  remove() { if (this.parentElement) this.parentElement.children = this.parentElement.children.filter((child) => child !== this); this.parentElement = null; }
+  matches(selector) { return matchesSelector(this, selector); }
   closest(selector) {
-    const options = selector.split(',').map((item) => item.trim());
-    for (let node = this; node; node = node.parentElement) if (options.some((option) => node.matches(option))) return node;
+    for (let node = this; node; node = node.parentElement) if (node.matches(selector)) return node;
     return null;
   }
-  querySelectorAll(selector) { return this.lists.get(selector) || []; }
-  querySelector(selector) {
-    const listed = this.lists.get(selector);
-    if (listed) return listed[0] || null;
-    if (!this.cache.has(selector)) {
-      const node = new FakeElement('div'); node.matchKeys.add(selector); node.parentElement = this; this.cache.set(selector, node);
-    }
-    return this.cache.get(selector);
+  querySelectorAll(selector) {
+    const chains = parseSelector(selector);
+    const found = [];
+    const walk = (node) => {
+      for (const child of node.children) {
+        if (chains.some((chain) => matchChain(child, chain, chain.length - 1))) found.push(child);
+        walk(child);
+      }
+    };
+    walk(this);
+    return found;
   }
+  querySelector(selector) { return this.querySelectorAll(selector)[0] || null; }
   focus() { document.activeElement = this; }
   blur() { if (document.activeElement === this) document.activeElement = null; }
   scrollIntoView() {}
@@ -98,9 +170,42 @@ class FakeElement {
   }
 }
 
-const HIDDEN_AT_START = ['landscape-frame', 'settings', 'quick-settings', 'preset-hint', 'p-custom-display', 'p-digit-guide', 'l-minutes-prefix',
-  'l-custom-display', 'l-decimal-separator', 'settings-entry-tutorial', 'selftest', 'preset-editor'];
-const INPUTS = ['preset-name', 'trick2-text', 'sequence-input', 'quick-value', 'preset-force-after', 'p-digit-guide-enabled'];
+// ----- parse the real index.html into the stub DOM; nothing is created on demand -----
+const VOID = new Set(['meta', 'link', 'input', 'br', 'img', 'hr', 'source']);
+const SKIP_CONTENT = new Set(['script', 'style', 'noscript']);
+function parseHtml(source) {
+  const top = new FakeElement('#root');
+  const stack = [top];
+  const token = /<!--[\s\S]*?-->|<!DOCTYPE[^>]*>|<\/([\w-]+)\s*>|<([\w-]+)((?:\s+[^\s=>/]+(?:\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+))?)*)\s*(\/?)>|([^<]+)/gi;
+  const attr = /([^\s=>/]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+)))?/g;
+  let m;
+  while ((m = token.exec(source))) {
+    if (m[1]) {
+      const name = m[1].toLowerCase();
+      for (let i = stack.length - 1; i > 0; i -= 1) if (stack[i].tag === name) { stack.length = i; break; }
+      continue;
+    }
+    if (m[2]) {
+      const el = new FakeElement(m[2]);
+      for (const [, k, a, b, c] of m[3].matchAll(attr)) {
+        const v = a ?? b ?? c ?? '';
+        el.setAttribute(k, v);
+        if (k === 'checked') el.checked = true;
+        if (k === 'disabled') el.disabled = true;
+        if (k === 'value') el.value = v;
+      }
+      stack[stack.length - 1].append(el);
+      if (SKIP_CONTENT.has(el.tag)) {
+        token.lastIndex = source.toLowerCase().indexOf(`</${el.tag}>`, token.lastIndex) + el.tag.length + 3;
+        continue;
+      }
+      if (!VOID.has(el.tag) && !m[4]) stack.push(el);
+      continue;
+    }
+    if (m[5] && stack.length > 1) stack[stack.length - 1]._text += m[5].replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').trim();
+  }
+  return { top };
+}
 
 function stubBrowser(pathname) {
   const store = new Map();
@@ -109,34 +214,21 @@ function stubBrowser(pathname) {
     setItem: (key, value) => { store.set(key, String(value)); },
     removeItem: (key) => { store.delete(key); },
   };
+  const { top } = parseHtml(readFileSync(new URL('index.html', root), 'utf8'));
+  const htmlEl = top.children.find((child) => child.tag === 'html');
+  const body = htmlEl.children.find((child) => child.tag === 'body');
   const ids = new Map();
-  const byId = (id) => {
-    if (!ids.has(id)) ids.set(id, new FakeElement(INPUTS.includes(id) ? 'input' : 'div', id));
-    return ids.get(id);
-  };
-  for (const id of HIDDEN_AT_START) byId(id).hidden = true;
-  const spans = (count, key) => Array.from({ length: count }, (_, index) => { const span = new FakeElement('span'); span.textContent = '0'; span.dataset[key] = String(index); return span; });
-  byId('p-time-display').lists.set('[data-p-digit]', spans(4, 'pDigit'));
-  byId('p-time-display').lists.set('[data-p-group]', ['p-minutes', 'p-seconds', 'p-centiseconds'].map(byId));
-  byId('p-minutes').lists.set('[data-p-minute]', spans(2, 'pMinute'));
-  byId('l-minutes-prefix').lists.set('[data-l-minute]', spans(2, 'lMinute'));
-  byId('l-time-display').lists.set('[data-l-digit]', spans(4, 'lDigit'));
-  byId('p-control').textContent = '시작';
-  byId('p-lap').textContent = '랩';
-  byId('p-lap').disabled = true;
+  for (const el of top.querySelectorAll('[id]')) ids.set(el.id, el);
+  // A missing id is a failure of the test, as it would be a TypeError in the browser: nothing is auto-created.
+  const byId = (id) => { assert.ok(ids.has(id), `index.html defines #${id}`); return ids.get(id); };
   byId('p-lap-area').rect = { left: 0, top: 300, width: 500, height: 200 };
-  byId('p-tabs').append(byId('portrait-app').querySelector('.tab-world'));
-  byId('portrait-app').append(byId('p-time-display'), byId('p-lap-area'), byId('p-control'), byId('p-lap'));
-  byId('settings').append(byId('settings-close'), byId('sequence-slots'));
 
-  const body = new FakeElement('body');
-  body.dataset.magicApp = 'stopwatch';
   document = {
-    activeElement: null, visibilityState: 'visible', hidden: false, readyState: 'complete', title: 'KAIROS',
-    body, head: new FakeElement('head'), documentElement: new FakeElement('html'),
-    getElementById: byId,
-    querySelector: () => null,
-    querySelectorAll: () => [],
+    activeElement: null, visibilityState: 'visible', hidden: false, readyState: 'loading', title: 'KAIROS',
+    body, head: htmlEl.children.find((child) => child.tag === 'head'), documentElement: htmlEl,
+    getElementById: (id) => ids.get(id) || null,
+    querySelector: (selector) => top.querySelector(selector),
+    querySelectorAll: (selector) => top.querySelectorAll(selector),
     createElement: (tag) => new FakeElement(tag),
   };
   listenerHost(document);
@@ -156,6 +248,11 @@ function stubBrowser(pathname) {
     },
     serviceWorker: { register: async (url) => { navigator.registered.push(url); } },
   };
+  // The browser, not the page, releases a screen wake lock when the document becomes hidden. Registered before
+  // any page script, so it runs first on visibilitychange. The tests never release a lock on the app's behalf.
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) for (const lock of wake.requests) if (!lock.released) lock.release();
+  });
 
   const frames = new Map();
   let frameId = 0;
@@ -278,15 +375,19 @@ async function startStop(button, press = (target) => fire(target, 'click')) {
   await press(button);
 }
 
+let entryUrl;
 test('boot: classic scripts and the app.js module graph load as separate modules and reach the ready stage', async () => {
   const immediate = pageScripts.filter((script) => !script.module && !script.defer);
   const deferred = pageScripts.filter((script) => script.module || script.defer);
   assert.ok(deferred.some((script) => script.module), 'index.html has a module entry');
   immediate.forEach(runClassic);
+  // readyState stays 'loading' while the scripts run, so settings-ui.js waits for DOMContentLoaded, which is
+  // never fired here: its appearance editor needs a full DOM and is not part of this test.
   for (const script of deferred) {
-    if (script.module) await import(moduleUrlFor(script));
+    if (script.module) { entryUrl = moduleUrlFor(script); await import(entryUrl); }
     else runClassic(script);
   }
+  document.readyState = 'complete';
   await fire(window, 'load');
   await settle();
 
@@ -308,16 +409,20 @@ test('boot: classic scripts and the app.js module graph load as separate modules
   assert.equal(env.wake.requests[0].released, false);
 });
 
-test('selftest module: runSelfTests runs on its own imports and reports ALL PASS', { skip: existsSync(new URL('selftest.js', root)) ? false : 'this build keeps the self tests inline in index.html' }, async () => {
-  const { runSelfTests } = await import(new URL('selftest.js', root));
+test('selftest entry: opening the app with #selftest hides the shell and the app itself runs the self tests', async () => {
+  const entry = new URL(entryUrl);
+  entry.search = '?selftest'; // a fresh evaluation of the entry module; its imports stay the same modules
   const originalLog = console.log;
   const lines = [];
   console.log = (...args) => { lines.push(args.join(' ')); };
-  let message;
-  try { message = runSelfTests(); } finally { console.log = originalLog; }
-  assert.equal(message, 'ALL PASS');
+  location.hash = '#selftest';
+  try { await import(entry); } finally { console.log = originalLog; location.hash = ''; }
+  assert.equal(node('shell').hidden, true, 'the selftest entry hides the app shell');
+  assert.equal(node('selftest').hidden, false);
   assert.equal(node('selftest-result').textContent, 'ALL PASS');
   assert.deepEqual(lines, ['ALL PASS']);
+  node('shell').hidden = false;
+  node('selftest').hidden = true;
 });
 
 test('guide: the digit-cell guide shows once at boot, then the entry tutorial blocks touches until dismissed', async () => {
@@ -356,9 +461,11 @@ test('install prompt: offer bar, native prompt outcomes, appinstalled, then dism
   const bar = document.body.children.find((child) => child.id === 'install-nudge');
   assert.ok(bar, 'the install bar is appended to the body');
   assert.equal(bar.querySelector('span').textContent, '홈 화면에 앱으로 설치할 수 있어요');
-  assert.equal(bar.innerHTML.includes('data-act="install"'), true);
-
-  const button = (act) => { const item = new FakeElement('button'); item.dataset.act = act; item.matchKeys.add('button[data-act]'); bar.append(item); return item; };
+  const button = (act) => {
+    const item = bar.querySelector(`button[data-act="${act}"]`);
+    assert.ok(item, `the bar offers a ${act} button`);
+    return item;
+  };
   const reached = [];
   document.addEventListener('pointerdown', () => reached.push('pointerdown'));
   await fire(bar, 'pointerdown', touch(9, 5, 5));
@@ -388,13 +495,13 @@ test('install prompt: offer bar, native prompt outcomes, appinstalled, then dism
 
 test('wake lock: released when the page hides, requested again when visible, refusal is tolerated', async () => {
   const first = env.wake.requests[0];
+  assert.equal(first.released, false);
   document.hidden = true;
   document.visibilityState = 'hidden';
-  await fire(document, 'visibilitychange');
-  await first.release();
+  await fire(document, 'visibilitychange'); // the stub browser releases the lock; the test does not
   await settle();
   assert.equal(first.released, true);
-  assert.equal(env.wake.requests.length, 1, 'a hidden page does not request a lock');
+  assert.equal(env.wake.requests.length, 1, 'the app does not ask for a lock while hidden');
 
   document.hidden = false;
   document.visibilityState = 'visible';
@@ -405,7 +512,13 @@ test('wake lock: released when the page hides, requested again when visible, ref
   assert.equal(env.wake.requests[1].released, false);
 
   env.wake.failNext = true;
-  await env.wake.requests[1].release();
+  document.hidden = true;
+  document.visibilityState = 'hidden';
+  await fire(document, 'visibilitychange');
+  assert.equal(env.wake.requests[1].released, true, 'the browser released the second lock');
+  document.hidden = false;
+  document.visibilityState = 'visible';
+  await fire(document, 'visibilitychange');
   await settle();
   assert.equal(env.wake.requests.length, 2, 'the refused request left no lock');
   await fire(node('portrait-app'), 'pointerdown', touch(61, 50, 50));
