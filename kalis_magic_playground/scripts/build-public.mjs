@@ -225,9 +225,11 @@ export const ASRAI_FILES = [
   'logic-search.js', 'logic-zones.js', 'manifest.webmanifest', 'style.css', 'sw.js'
 ];
 export const ALTER_FILES = [
-  'app.js', 'appearance.js', 'brand-logo.jpg', 'brand-logo.png', 'calibration.js', 'camera-geometry.js', 'icon-192.png',
+  'app.js', 'appearance.js', 'brand-logo.jpg', 'brand-logo.png', 'calibration.js', 'camera-geometry.js', 'camera-stream.js', 'icon-192.png',
   'icon-512.png', 'index.html', 'install-ui.js', 'logic.js',
-  'manifest.webmanifest', 'performance.js', 'style.css', 'sw.js', 'vision.js'
+  'manifest.webmanifest', 'performance.js', 'style.css', 'sw.js', 'vision.js',
+  'vision-detect.js', 'vision-geometry.js', 'vision-grip.js', 'vision-homography.js', 'vision-paper.js',
+  'vision-quad.js', 'vision-sampling.js'
 ];
 export const SPINNER_FILES = [
   'hybrid-assets/arrow.svg',
