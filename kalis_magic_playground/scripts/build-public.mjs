@@ -223,7 +223,7 @@ export const CHOICE_DISTRIBUTION_FILES = [...CHOICE_FILES, ...CHOICE_MODULE_FILE
 export function shouldCopyChoice(relativePath) {
   return relativePath === '' || relativePath === 'home-icons' || CHOICE_DISTRIBUTION_FILES.includes(relativePath.split(path.sep).join('/'));
 }
-export const USOTSUKI_FILES = NEW_APP_FILES.filter((file) => file !== 'app.js').concat('first-run-guide.js', 'detector.js', 'detector-panel-grok.svg', 'holdem-assets/felt-grain.svg', 'holdem-assets/leather-grain.svg', 'holdem-assets/table-rail.svg', 'recorder-assets/recorder-shell-blank.webp', 'recorder-theme.js', 'recorder-engine.js', 'recorder-trace.js', 'recorder-a.html', 'recorder-d.html');
+export const USOTSUKI_FILES = NEW_APP_FILES.filter((file) => file !== 'app.js').concat('first-run-guide.js', 'detector.js', 'detector-panel-grok.svg', 'holdem-assets/felt-grain.svg', 'holdem-assets/leather-grain.svg', 'holdem-assets/table-rail.svg', 'recorder-assets/recorder-shell-blank.webp', 'recorder-theme.js', 'recorder-engine.js', 'recorder-trace.js', 'recorder-a.html', 'recorder-d.html', 'controller.js', 'dom.js', 'storage.js', 'heartbeat.js', 'vibration.js', 'wake-lock.js', 'preferences.js', 'stage.js', 'bindings.js');
 export const ASRAI_FILES = [
   'brand-logo.jpg', 'brand-logo.png', 'contacts.js', 'contacts-gestures.js',
   'contacts-list.js', 'contacts-screen.js', 'contacts-settings.js',
@@ -395,15 +395,6 @@ export const MIRROR_PAIRS = [
   ['../../magic-tobira/coin-500won.svg', 'zz6/coin-500won.svg'],
   ...USOTSUKI_FILES.map((file) => [`../../magic-usotsuki/${file}`, `zz7/${file}`]),
   ['../../magic-usotsuki/detector-panel.jpg', 'zz7/detector-panel.jpg'],
-  ['../../magic-usotsuki/controller.js', 'zz7/controller.js'],
-  ['../../magic-usotsuki/dom.js', 'zz7/dom.js'],
-  ['../../magic-usotsuki/storage.js', 'zz7/storage.js'],
-  ['../../magic-usotsuki/heartbeat.js', 'zz7/heartbeat.js'],
-  ['../../magic-usotsuki/vibration.js', 'zz7/vibration.js'],
-  ['../../magic-usotsuki/wake-lock.js', 'zz7/wake-lock.js'],
-  ['../../magic-usotsuki/preferences.js', 'zz7/preferences.js'],
-  ['../../magic-usotsuki/stage.js', 'zz7/stage.js'],
-  ['../../magic-usotsuki/bindings.js', 'zz7/bindings.js'],
   ...ASRAI_FILES.map((file) => [`../../magic-asrai/${file}`, `zz8/${file}`]),
   ...ALTER_FILES.map((file) => [`../../magic-alter/${file}`, `zz10/${file}`]),
   ...SPINNER_FILES.map((file) => [`../../magic-spinner/${file}`, `zz11/${file}`]),

@@ -1,5 +1,5 @@
 import { existsSync, readFileSync } from 'node:fs';
-import { registerHooks } from 'node:module';
+import { register } from 'node:module';
 import path from 'node:path';
 
 // USOTSUKI (personal zz7 and the friend snapshot) runs detector.js as an ES module entry with local
@@ -41,17 +41,4 @@ export function usotsukiAppSource(dir) {
 // Before the split, that query re-evaluated the whole app. Carry the entry's query to its local feature
 // modules so each fixture still gets a fresh app. Shared files (logic.js, recorder-*.js) stay cached,
 // exactly as before.
-registerHooks({
-  resolve(specifier, context, nextResolve) {
-    const result = nextResolve(specifier, context);
-    const parent = context.parentURL ? new URL(context.parentURL) : null;
-    if (!parent || !parent.search || parent.protocol !== 'file:' || !specifier.startsWith('./')) return result;
-    const url = new URL(result.url);
-    if (url.protocol !== 'file:' || url.search || !USOTSUKI_FEATURE_MODULES.has(path.basename(url.pathname))) return result;
-    if (path.dirname(url.pathname) !== path.dirname(parent.pathname)) return result;
-    if (!existsSync(new URL('./detector.js', url))) return result;
-    if (!USOTSUKI_FEATURE_MODULES.has(path.basename(parent.pathname)) && path.basename(parent.pathname) !== 'detector.js') return result;
-    url.search = parent.search;
-    return { ...result, url: url.href };
-  },
-});
+register('./usotsuki-resolve-hooks.mjs', import.meta.url);
