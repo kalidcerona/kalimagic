@@ -44,21 +44,30 @@ function isSkippedFile(rel) {
 }
 
 // html의 <script src>를 module/classic으로 나눠 절대경로로 모음
+// 인라인 <script type="module"> 본문은 가상 경로 "<html>#inline-N"로 모음
+// (path.dirname이 html 폴더가 되므로 상대 import가 html 기준으로 해석됨)
 function collectHtmlScripts(dir) {
   const moduleScripts = new Set();
   const classicScripts = new Set();
+  const inlineModules = new Map();
   for (const html of walk(dir, (name) => name.endsWith('.html'))) {
     const text = fs.readFileSync(html, 'utf8');
-    for (const match of text.matchAll(/<script\b([^>]*)>/gi)) {
+    let inlineCount = 0;
+    for (const match of text.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)) {
       const attrs = match[1];
+      const isModule = /type\s*=\s*["']module["']/.test(attrs);
       const src = (attrs.match(/src\s*=\s*["']([^"']+)["']/) || [])[1];
-      if (!src || /^https?:/.test(src)) continue;
+      if (!src) {
+        if (isModule && match[2].trim()) inlineModules.set(`${html}#inline-${inlineCount++}`, match[2]);
+        continue;
+      }
+      if (/^https?:/.test(src)) continue;
       const file = path.resolve(path.dirname(html), src.split('?')[0].split('#')[0]);
-      if (/type\s*=\s*["']module["']/.test(attrs)) moduleScripts.add(file);
+      if (isModule) moduleScripts.add(file);
       else classicScripts.add(file);
     }
   }
-  return { moduleScripts, classicScripts };
+  return { moduleScripts, classicScripts, inlineModules };
 }
 
 function tryParse(file) {
@@ -122,10 +131,10 @@ function collectPatternNames(pattern, out) {
 
 const isFunctionNode = (node) => /^(Function|ArrowFunction)/.test(node.type);
 
-// var 선언은 함수 경계까지 끌어올림
+// var 선언은 함수(또는 class static block) 경계까지 끌어올림
 function collectHoistedVars(node, out, isRoot = true) {
   if (!node || typeof node.type !== 'string') return;
-  if (!isRoot && isFunctionNode(node)) return;
+  if (!isRoot && (isFunctionNode(node) || node.type === 'StaticBlock')) return;
   if (node.type === 'VariableDeclaration' && node.kind === 'var') {
     node.declarations.forEach((decl) => collectPatternNames(decl.id, out));
   }
@@ -146,7 +155,7 @@ function collectStatementDecls(statements, out) {
     if (stmt.type === 'VariableDeclaration' && stmt.kind !== 'var') {
       stmt.declarations.forEach((decl) => collectPatternNames(decl.id, out));
     } else if (stmt.type === 'FunctionDeclaration' || stmt.type === 'ClassDeclaration') {
-      out.push(stmt.id.name);
+      if (stmt.id) out.push(stmt.id.name); // export default function(){} 은 id가 없음
     } else if (stmt.type === 'ImportDeclaration') {
       stmt.specifiers.forEach((spec) => out.push(spec.local.name));
     } else if ((stmt.type === 'ExportNamedDeclaration' || stmt.type === 'ExportDefaultDeclaration') && stmt.declaration) {
@@ -157,15 +166,22 @@ function collectStatementDecls(statements, out) {
 
 // ---------- export 해석 ----------
 
+// 모듈이 export하는 이름 -> 바인딩 키(원본 위치) Map.
+// `export *`로 서로 다른 바인딩이 같은 이름으로 들어오면 AMBIGUOUS
+// (명시 export가 있으면 그쪽이 우선, 같은 원본을 두 경로로 받는 건 모호하지 않음)
+const AMBIGUOUS = Symbol('ambiguous');
+
 function createExportResolver(asts) {
   const cache = new Map();
   function exportsOf(file, seen = new Set()) {
     if (cache.has(file)) return cache.get(file);
-    if (seen.has(file)) return new Set();
+    if (seen.has(file)) return new Map();
     seen.add(file);
     const ast = asts.get(file) || tryParse(file);
-    const names = new Set();
-    if (!ast) return names;
+    const explicit = new Map();
+    if (!ast) return explicit;
+    const stars = new Map();
+    const dir = path.dirname(file);
     for (const stmt of ast.body) {
       if (stmt.type === 'ExportNamedDeclaration') {
         if (stmt.declaration) {
@@ -175,21 +191,33 @@ function createExportResolver(asts) {
           } else {
             declared.push(stmt.declaration.id.name);
           }
-          declared.forEach((name) => names.add(name));
+          declared.forEach((name) => explicit.set(name, `${file}#${name}`));
         }
-        stmt.specifiers.forEach((spec) => names.add(spec.exported.name || spec.exported.value));
+        for (const spec of stmt.specifiers) {
+          const exported = spec.exported.name ?? spec.exported.value;
+          const local = spec.local.name ?? spec.local.value;
+          const fromTarget = stmt.source && stmt.source.value.startsWith('.')
+            ? exportsOf(path.resolve(dir, stmt.source.value), seen).get(local)
+            : undefined;
+          explicit.set(exported, fromTarget ?? `${file}#${local}`);
+        }
       } else if (stmt.type === 'ExportDefaultDeclaration') {
-        names.add('default');
+        explicit.set('default', `${file}#default`);
       } else if (stmt.type === 'ExportAllDeclaration') {
         if (stmt.exported) {
-          names.add(stmt.exported.name);
+          explicit.set(stmt.exported.name ?? stmt.exported.value, `${file}#ns:${stmt.source.value}`);
         } else {
-          const target = path.resolve(path.dirname(file), stmt.source.value);
-          for (const name of exportsOf(target, seen)) {
-            if (name !== 'default') names.add(name);
+          for (const [name, binding] of exportsOf(path.resolve(dir, stmt.source.value), seen)) {
+            if (name === 'default') continue;
+            const prev = stars.get(name);
+            stars.set(name, prev === undefined || prev === binding ? binding : AMBIGUOUS);
           }
         }
       }
+    }
+    const names = new Map(explicit);
+    for (const [name, binding] of stars) {
+      if (!names.has(name)) names.set(name, binding);
     }
     cache.set(file, names);
     return names;
@@ -214,6 +242,7 @@ function findUnresolvedImports(ast, file, rel, exportsOf) {
       source = stmt.source.value;
       names = stmt.specifiers.map((spec) => spec.local.name);
     }
+    if (stmt.type === 'ExportAllDeclaration') source = stmt.source.value;
     if (!source || !source.startsWith('.')) continue;
 
     const target = path.resolve(path.dirname(file), source);
@@ -225,9 +254,27 @@ function findUnresolvedImports(ast, file, rel, exportsOf) {
     for (const name of names) {
       if (!exported.has(name)) {
         found.push({ file: rel, line: stmt.loc.start.line, name, source, reason: 'not exported' });
+      } else if (exported.get(name) === AMBIGUOUS) {
+        found.push({ file: rel, line: stmt.loc.start.line, name, source, reason: 'ambiguous star export' });
       }
     }
   }
+
+  // 문자열 리터럴 동적 import는 대상 파일 존재만 확인
+  (function visit(node) {
+    if (!node || typeof node.type !== 'string') return;
+    if (node.type === 'ImportExpression' && node.source.type === 'Literal'
+      && typeof node.source.value === 'string' && node.source.value.startsWith('.')
+      && !fs.existsSync(path.resolve(path.dirname(file), node.source.value))) {
+      found.push({ file: rel, line: node.loc.start.line, name: null, source: node.source.value, reason: 'file missing' });
+    }
+    for (const key in node) {
+      if (key === 'loc') continue;
+      const child = node[key];
+      if (Array.isArray(child)) child.forEach(visit);
+      else if (child && typeof child.type === 'string') visit(child);
+    }
+  })(ast);
   return found;
 }
 
@@ -237,6 +284,7 @@ function findUndeclaredIdentifiers(ast, rel) {
   function visit(node, scopes, parent, key) {
     if (!node || typeof node.type !== 'string') return;
     let scope = scopes;
+    let bodyScope = null;
     const addScope = (names) => { scope = [...scope, new Set(names)]; };
 
     if (node.type === 'Program') {
@@ -245,13 +293,21 @@ function findUndeclaredIdentifiers(ast, rel) {
       collectStatementDecls(node.body, names);
       addScope(names);
     } else if (isFunctionNode(node)) {
+      // 파라미터 초기값은 본문 var를 볼 수 없으므로 scope를 둘로 나눔
       const names = [];
       node.params.forEach((param) => collectPatternNames(param, names));
       if (node.id && node.type === 'FunctionExpression') names.push(node.id.name);
-      names.push('arguments');
-      if (node.body.type === 'BlockStatement') collectHoistedVars(node.body, names);
+      if (node.type !== 'ArrowFunctionExpression') names.push('arguments');
       addScope(names);
-    } else if (node.type === 'BlockStatement' || node.type === 'StaticBlock') {
+      const bodyNames = [];
+      if (node.body.type === 'BlockStatement') collectHoistedVars(node.body, bodyNames);
+      bodyScope = [...scope, new Set(bodyNames)];
+    } else if (node.type === 'StaticBlock') {
+      const names = [];
+      collectHoistedVars(node, names);
+      collectStatementDecls(node.body, names);
+      addScope(names);
+    } else if (node.type === 'BlockStatement') {
       const names = [];
       collectStatementDecls(node.body, names);
       addScope(names);
@@ -297,10 +353,11 @@ function findUndeclaredIdentifiers(ast, rel) {
     for (const childKey in node) {
       if (childKey === 'loc') continue;
       const child = node[childKey];
+      const childScope = bodyScope && childKey === 'body' ? bodyScope : scope;
       if (Array.isArray(child)) {
-        child.forEach((item) => item && typeof item.type === 'string' && visit(item, scope, node, childKey));
+        child.forEach((item) => item && typeof item.type === 'string' && visit(item, childScope, node, childKey));
       } else if (child && typeof child.type === 'string') {
-        visit(child, scope, node, childKey);
+        visit(child, childScope, node, childKey);
       }
     }
   }
@@ -315,7 +372,8 @@ function isNonReference(node, parent, key) {
   if (parent.type === 'MemberExpression' && key === 'property' && !parent.computed) return true;
   if ((parent.type === 'Property' || parent.type === 'MethodDefinition' || parent.type === 'PropertyDefinition')
     && key === 'key' && !parent.computed) return true;
-  if (/Label/.test(parent.type) && key === 'label') return true;
+  if (/^(Labeled|Break|Continue)Statement$/.test(parent.type) && key === 'label') return true;
+  if (parent.type === 'ExportAllDeclaration' && key === 'exported') return true;
   if (/^(Import|Export)(Specifier|DefaultSpecifier|NamespaceSpecifier)$/.test(parent.type)) return true;
   return parent.type === 'MetaProperty';
 }
@@ -324,7 +382,7 @@ function isNonReference(node, parent, key) {
 
 export function scanAppDir(dir) {
   const root = path.resolve(dir);
-  const { moduleScripts, classicScripts } = collectHtmlScripts(root);
+  const { moduleScripts, classicScripts, inlineModules } = collectHtmlScripts(root);
   const candidates = walk(root, (name) => /\.m?js$/.test(name))
     .filter((file) => !isSkippedFile(path.relative(root, file)));
 
@@ -332,14 +390,15 @@ export function scanAppDir(dir) {
   const modules = new Set();
   const asts = new Map();
   const parseErrors = [];
-  const queue = [...moduleScripts].filter((file) => fs.existsSync(file));
+  const queue = [...moduleScripts, ...inlineModules.keys()].filter((file) => inlineModules.has(file) || fs.existsSync(file));
   while (queue.length) {
     const file = queue.pop();
-    if (modules.has(file) || !fs.existsSync(file)) continue;
+    const isInline = inlineModules.has(file);
+    if (modules.has(file) || (!isInline && !fs.existsSync(file))) continue;
     modules.add(file);
     let ast;
     try {
-      ast = acorn.parse(fs.readFileSync(file, 'utf8'), PARSE_OPTIONS);
+      ast = acorn.parse(isInline ? inlineModules.get(file) : fs.readFileSync(file, 'utf8'), PARSE_OPTIONS);
     } catch (err) {
       parseErrors.push({ file: path.relative(root, file), message: err.message });
       continue;
@@ -361,7 +420,7 @@ export function scanAppDir(dir) {
   const exportsOf = createExportResolver(asts);
   const undeclared = [];
   const unresolved = [];
-  for (const [file, ast] of [...asts].sort()) {
+  for (const [file, ast] of [...asts].sort(([a], [b]) => (a < b ? -1 : 1))) {
     const rel = path.relative(root, file);
     unresolved.push(...findUnresolvedImports(ast, file, rel, exportsOf));
     undeclared.push(...findUndeclaredIdentifiers(ast, rel));
