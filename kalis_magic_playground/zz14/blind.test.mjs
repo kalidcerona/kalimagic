@@ -3,13 +3,14 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 import * as core from './core.mjs';
+import { pimaxAppScript } from '../tests/community/pimax-app-script.mjs';
 
 function load(initial={}) {
   const values=new Map(Object.entries(initial)),writes=[];
   const app={innerHTML:'',setAttribute(){},removeAttribute(){}}, notice={textContent:''};
   const document={body:{dataset:{},addEventListener(){}},querySelector:selector=>selector==='#app'?app:selector==='#notice'?notice:null,querySelectorAll:()=>[]};
   const context=vm.createContext({__core:core,document,localStorage:{getItem:key=>values.get(key)??null,setItem:(key,value)=>{writes.push([key,value]);values.set(key,value);}},Date,Math,JSON,HTMLFormElement:class{},HTMLInputElement:class{}});
-  const source=readFileSync(new URL('./app.mjs', import.meta.url),'utf8').replace(/^import\s+\{([\s\S]*?)\}\s+from "\.\/core\.mjs";/,'const {$1}=globalThis.__core;');
+  const source=pimaxAppScript(new URL('./', import.meta.url));
   vm.runInContext(source+'\nglobalThis.review={state,current,checkCurrent,useHint,useReveal,goNext,startSession,startWeakReview,postSession,saveSession,render,onClick,toggleWeak};',context);
   return {...context.review,app,notice,values,writes};
 }

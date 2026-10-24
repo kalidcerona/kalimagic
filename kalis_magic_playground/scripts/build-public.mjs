@@ -251,7 +251,7 @@ export const MEMDECK_FILES = [
   'index.html', 'style.css', 'app.mjs', 'core.mjs', 'data.mjs', 'mnemonic.mjs',
   'brand-logo.png', 'manifest.webmanifest', 'sw.js', 'icon.svg', 'icon-192.png', 'icon-512.png'
 ];
-export const PIMAX_FILES = ["index.html", "app.mjs", "core.mjs", "style.css", "sw.js", "brand-logo.png", "manifest.webmanifest", "icon.svg", "icon-192.png", "icon-512.png"];
+export const PIMAX_FILES = ["index.html", "app.mjs", "state.mjs", "session.mjs", "practice.mjs", "glyphs.mjs", "learn.mjs", "settings.mjs", "install.mjs", "events.mjs", "core.mjs", "core-stack.mjs", "core-windows.mjs", "core-grading.mjs", "core-explain.mjs", "core-questions.mjs", "core-storage.mjs", "core-stats.mjs", "style.css", "sw.js", "brand-logo.png", "manifest.webmanifest", "icon.svg", "icon-192.png", "icon-512.png"];
 
 export function shouldCopyPimax(relativePath) {
   return relativePath === '' || PIMAX_FILES.includes(relativePath);

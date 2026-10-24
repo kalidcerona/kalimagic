@@ -8,14 +8,14 @@ import gate, { classifyPath } from '../../netlify/edge-functions/tools-gate.mjs'
 import { gateCookieName, signGateCookie } from '../../netlify/functions/_lib/tool-gate.mjs';
 import { allowOnCheckError, selectGate } from '../../netlify/functions/tool-check.mjs';
 import { accessTableForTool, isValidTool } from '../../netlify/functions/admin-tools.mjs';
+import { pimaxAppScript } from './pimax-app-script.mjs';
 const read = (route, file) => readFile(new URL(`../../${route}/${file}`, import.meta.url));
 const personal = 'zz14';
 const shared = 'distribution-snapshots/pimax';
 
 test('revealed map answers draw the look-alike and plain symbol in both directions', async () => {
   for (const route of [personal, shared]) {
-    const source = (await read(route, 'app.mjs')).toString()
-      .replace(/^import\s+\{([\s\S]*?)\}\s+from "\.\/core\.mjs";/, 'const {$1} = globalThis.__core;');
+    const source = pimaxAppScript(new URL(`../../${route}/`, import.meta.url));
     const context = vm.createContext({ __core: core, Date, Math, JSON });
     vm.runInContext(source + '\nglobalThis.quiz = { state, practiceHtml, onClick };', context);
     const { state, practiceHtml, onClick } = context.quiz;
@@ -54,7 +54,7 @@ test('revealed map answers draw the look-alike and plain symbol in both directio
 });
 
 test('Pi Max has explicit runtime allowlists and source mirror checks', () => {
-  assert.equal(PIMAX_FILES.length, 10);
+  assert.equal(PIMAX_FILES.length, 25);
   assert.ok(PUBLIC_DIRS.includes(personal));
   assert.deepEqual(DISTRIBUTION_APPS.find(a => a.target === 'pimax'), { source: shared, target: 'pimax', tool: 'pimax' });
   for (const file of PIMAX_FILES) {
@@ -80,15 +80,19 @@ test('Pi Max pinned snapshot matches the personal runtime except three storage k
   for (const file of PIMAX_FILES) {
     const p = await read(personal, file);
     const d = await read(shared, file);
-    if (file === 'app.mjs') {
+    if (file === 'state.mjs') {
+      // The three storage keys moved with KEYS from app.mjs into state.mjs.
       assert.equal((d.toString().match(/pimax\.distribution\./g) || []).length, 3);
       const normalized = d.toString().replaceAll('pimax.distribution.settings', 'pimax-practice-settings').replaceAll('pimax.distribution.stats', 'pimax-practice-stats').replaceAll('pimax.distribution.session', 'pimax-practice-session');
-      assert.match(normalized, /keepVisibleScreenAwake/);
-      assert.equal(normalized, preparePimaxRuntime(p.toString()));
+      assert.equal(normalized, p.toString());
+    } else if (file === 'app.mjs') {
+      assert.equal((d.toString().match(/pimax\.distribution\./g) || []).length, 0);
+      assert.match(d.toString(), /keepVisibleScreenAwake/);
+      assert.equal(d.toString(), preparePimaxRuntime(p.toString()));
     } else if (file === 'sw.js') {
-      const from = "+ 'v20261024-wake-3-v20261021-wake-1-v20261016-sheet-1-modes-1-coherent-1-v2-brand5';";
+      const from = "+ 'v20261024-wake-3-v20261021-wake-1-v20261016-sheet-1-modes-1-coherent-1-v2-brand5-modules-1';";
       assert.ok(p.toString().includes(from));
-      assert.equal(d.toString(), p.toString().replace(from, from.replace("-brand5';", "-brand5-distribution';")));
+      assert.equal(d.toString(), p.toString().replace(from, from.replace("-modules-1';", "-modules-1-distribution';")));
     } else assert.deepEqual(d, p, file);
   }
 });
@@ -195,7 +199,7 @@ test('Pi Max built trees contain only runtime files with valid HTML, module, man
     if (route.includes('/tools/')) assert.equal(manifest.id, '/tools/pimax/');
     const refs = [...html.matchAll(/(?:src|href)="([^"#]+)"/g)].map(m => m[1]);
     for (const icon of manifest.icons) refs.push(icon.src);
-    for (const file of ['app.mjs', 'core.mjs']) {
+    for (const file of PIMAX_FILES.filter(f => f.endsWith('.mjs'))) {
       refs.push(...[...(await read(route, file)).toString().matchAll(/(?:from\s*|import\s*)["'](\.\/[^"']+)["']/g)].map(m => m[1]));
     }
     const sw = (await read(route, 'sw.js')).toString();

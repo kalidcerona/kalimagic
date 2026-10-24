@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 import * as core from './core.mjs';
+import { pimaxAppScript, pimaxAppModules } from '../tests/community/pimax-app-script.mjs';
 import { accessGuard, preparePimaxRuntime } from '../scripts/build-public.mjs';
 
 function load(initial = {}, standalone = false) {
@@ -14,7 +15,7 @@ function load(initial = {}, standalone = false) {
     document: { body: { dataset: {}, addEventListener() {} }, querySelector: s => s === '#app' ? app : {}, querySelectorAll: () => [] },
     localStorage: { getItem: k => values.get(k) ?? null, setItem(k, v) { values.set(k, v); } },
   });
-  const source = readFileSync(new URL('./app.mjs', import.meta.url), 'utf8').replace(/^import\s+\{([\s\S]*?)\}\s+from "\.\/core\.mjs";/, 'const {$1} = globalThis.__core;');
+  const source = pimaxAppScript(new URL('./', import.meta.url));
   vm.runInContext(source + '\nglobalThis.api = { state, startSession, render, onClick, current, saveSession };', context);
   return { ...context.api, app, values, events };
 }
@@ -305,7 +306,7 @@ function sheetHarness() {
   });
   // The host fetch above is replaced by one created inside the realm so its Promise settles there.
   vm.runInContext(`globalThis.fetch = (url, options) => new Promise((resolve) => { globalThis.__fetchCalls.push([url, options]); globalThis.__releaseCheck = resolve; });`, context);
-  const source = readFileSync(new URL('./app.mjs', import.meta.url), 'utf8').replace(/^import\s+\{([\s\S]*?)\}\s+from "\.\/core\.mjs";/, 'const {$1} = globalThis.__core;');
+  const source = pimaxAppScript(new URL('./', import.meta.url));
   return { context, source, app, document, events, bodyListeners, focusLog, practiceTab, shell, header, nav, notice, footer, fetchCalls, values, get activeElement() { return activeElement; } };
 }
 
@@ -398,13 +399,19 @@ test('distribution access guard defers sheet focus until the document is reveale
 });
 
 test('both Pi Max runtimes share the install-sheet focus trap', () => {
-  const personal = readFileSync(new URL('./app.mjs', import.meta.url), 'utf8');
-  const shared = readFileSync(new URL('../distribution-snapshots/pimax/app.mjs', import.meta.url), 'utf8');
   const normalize = (source) => source
     .replaceAll('pimax.distribution.settings', 'pimax-practice-settings')
     .replaceAll('pimax.distribution.stats', 'pimax-practice-stats')
     .replaceAll('pimax.distribution.session', 'pimax-practice-session');
-  assert.equal(preparePimaxRuntime(normalize(shared)), preparePimaxRuntime(personal));
+  const modules = pimaxAppModules(new URL('./', import.meta.url));
+  assert.deepEqual(pimaxAppModules(new URL('../distribution-snapshots/pimax/', import.meta.url)), modules);
+  assert.ok(modules.includes('install.mjs'));
+  for (const file of modules) {
+    const personal = readFileSync(new URL(`./${file}`, import.meta.url), 'utf8');
+    const shared = readFileSync(new URL(`../distribution-snapshots/pimax/${file}`, import.meta.url), 'utf8');
+    const runtime = (source) => file === 'app.mjs' ? preparePimaxRuntime(source) : source;
+    assert.equal(runtime(normalize(shared)), runtime(personal), file);
+  }
 });
 
 test('birthday formulas render computed example and variable blocks reserve line space', () => {

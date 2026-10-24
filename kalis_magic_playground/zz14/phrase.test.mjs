@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import vm from "node:vm";
 import * as core from "./core.mjs";
+import { pimaxAppScript } from '../tests/community/pimax-app-script.mjs';
 
 const PHRASES = [
   ["OBESE GOATS", "오비스 고츠", "0835360475", "08353 60475"],
@@ -38,8 +39,7 @@ function load(initial = {}) {
     HTMLFormElement: class {},
     HTMLInputElement: class {},
   });
-  const source = readFileSync(new URL("./app.mjs", import.meta.url), "utf8")
-    .replace(/^import\s+\{([\s\S]*?)\}\s+from "\.\/core\.mjs";/, "const {$1}=globalThis.__core;");
+  const source = pimaxAppScript(new URL('./', import.meta.url));
   vm.runInContext(`${source}\nglobalThis.review={state,current,startSession,startWeakReview,render,onClick,saveSession,postSession};`, context);
   return { ...context.review, app, notice, values, writes };
 }
