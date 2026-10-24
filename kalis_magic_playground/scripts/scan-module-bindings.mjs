@@ -58,7 +58,12 @@ function collectHtmlScripts(dir) {
       const isModule = /type\s*=\s*["']module["']/.test(attrs);
       const src = (attrs.match(/src\s*=\s*["']([^"']+)["']/) || [])[1];
       if (!src) {
-        if (isModule && match[2].trim()) inlineModules.set(`${html}#inline-${inlineCount++}`, match[2]);
+        if (isModule && match[2].trim()) {
+          // 앞에 빈 줄을 채워 findings의 줄 번호가 html 파일의 실제 줄을 가리키게 함
+          const bodyStart = match.index + match[0].length - match[2].length - '</script>'.length;
+          const lineOffset = text.slice(0, bodyStart).split('\n').length - 1;
+          inlineModules.set(`${html}#inline-${inlineCount++}`, '\n'.repeat(lineOffset) + match[2]);
+        }
         continue;
       }
       if (/^https?:/.test(src)) continue;
@@ -166,22 +171,37 @@ function collectStatementDecls(statements, out) {
 
 // ---------- export 해석 ----------
 
-// 모듈이 export하는 이름 -> 바인딩 키(원본 위치) Map.
-// `export *`로 서로 다른 바인딩이 같은 이름으로 들어오면 AMBIGUOUS
-// (명시 export가 있으면 그쪽이 우선, 같은 원본을 두 경로로 받는 건 모호하지 않음)
+// ES 명세의 ResolveExport를 따름: (module, exportName)을 원본 바인딩 키로 해석.
+// - null: export 없음 (순환으로 이미 방문한 경우 포함)
+// - AMBIGUOUS: `export *` 둘 이상이 서로 다른 원본을 같은 이름으로 내놓음
+// resolveSet은 질의 하나마다 새로 만들고, 순환 중간 결과는 캐시하지 않음.
 const AMBIGUOUS = Symbol('ambiguous');
+const NAMESPACE = Symbol('namespace');
 
 function createExportResolver(asts) {
-  const cache = new Map();
-  function exportsOf(file, seen = new Set()) {
-    if (cache.has(file)) return cache.get(file);
-    if (seen.has(file)) return new Map();
-    seen.add(file);
+  const infos = new Map();
+
+  // 모듈의 import/export 항목 (해석 결과가 아니라 구문 정보만 캐시)
+  function infoOf(file) {
+    if (infos.has(file)) return infos.get(file);
     const ast = asts.get(file) || tryParse(file);
-    const explicit = new Map();
-    if (!ast) return explicit;
-    const stars = new Map();
-    const dir = path.dirname(file);
+    if (!ast) {
+      infos.set(file, null);
+      return null;
+    }
+    const imports = new Map();
+    const local = new Map(); // exportName -> 로컬 바인딩 이름
+    const indirect = new Map(); // exportName -> { source, importName }
+    const stars = [];
+    for (const stmt of ast.body) {
+      if (stmt.type !== 'ImportDeclaration') continue;
+      for (const spec of stmt.specifiers) {
+        let importName = 'default';
+        if (spec.type === 'ImportSpecifier') importName = spec.imported.name ?? spec.imported.value;
+        else if (spec.type === 'ImportNamespaceSpecifier') importName = NAMESPACE;
+        imports.set(spec.local.name, { source: stmt.source.value, importName });
+      }
+    }
     for (const stmt of ast.body) {
       if (stmt.type === 'ExportNamedDeclaration') {
         if (stmt.declaration) {
@@ -191,43 +211,59 @@ function createExportResolver(asts) {
           } else {
             declared.push(stmt.declaration.id.name);
           }
-          declared.forEach((name) => explicit.set(name, `${file}#${name}`));
+          declared.forEach((name) => local.set(name, name));
         }
         for (const spec of stmt.specifiers) {
           const exported = spec.exported.name ?? spec.exported.value;
-          const local = spec.local.name ?? spec.local.value;
-          const fromTarget = stmt.source && stmt.source.value.startsWith('.')
-            ? exportsOf(path.resolve(dir, stmt.source.value), seen).get(local)
-            : undefined;
-          explicit.set(exported, fromTarget ?? `${file}#${local}`);
+          const name = spec.local.name ?? spec.local.value;
+          if (stmt.source) indirect.set(exported, { source: stmt.source.value, importName: name });
+          else if (imports.has(name)) indirect.set(exported, imports.get(name)); // import한 걸 다시 export
+          else local.set(exported, name);
         }
       } else if (stmt.type === 'ExportDefaultDeclaration') {
-        explicit.set('default', `${file}#default`);
+        local.set('default', '*default*');
       } else if (stmt.type === 'ExportAllDeclaration') {
-        if (stmt.exported) {
-          explicit.set(stmt.exported.name ?? stmt.exported.value, `${file}#ns:${stmt.source.value}`);
-        } else {
-          for (const [name, binding] of exportsOf(path.resolve(dir, stmt.source.value), seen)) {
-            if (name === 'default') continue;
-            const prev = stars.get(name);
-            stars.set(name, prev === undefined || prev === binding ? binding : AMBIGUOUS);
-          }
-        }
+        if (stmt.exported) indirect.set(stmt.exported.name ?? stmt.exported.value, { source: stmt.source.value, importName: NAMESPACE });
+        else stars.push(stmt.source.value);
       }
     }
-    const names = new Map(explicit);
-    for (const [name, binding] of stars) {
-      if (!names.has(name)) names.set(name, binding);
-    }
-    cache.set(file, names);
-    return names;
+    const info = { local, indirect, stars };
+    infos.set(file, info);
+    return info;
   }
-  return exportsOf;
+
+  function resolveExport(file, name, resolveSet = new Set()) {
+    const key = `${file}#${name}`;
+    if (resolveSet.has(key)) return null;
+    resolveSet.add(key);
+    const info = infoOf(file);
+    if (!info) return null;
+    if (info.local.has(name)) return `${file}#${info.local.get(name)}`;
+    if (info.indirect.has(name)) {
+      const { source, importName } = info.indirect.get(name);
+      if (!source.startsWith('.')) return `${source}#${String(importName.description ?? importName)}`;
+      const target = path.resolve(path.dirname(file), source);
+      if (importName === NAMESPACE) return `${target}#*namespace*`;
+      return resolveExport(target, importName, resolveSet);
+    }
+    if (name === 'default') return null;
+    let starResolution = null;
+    for (const source of info.stars) {
+      if (!source.startsWith('.')) continue;
+      const resolution = resolveExport(path.resolve(path.dirname(file), source), name, resolveSet);
+      if (resolution === AMBIGUOUS) return AMBIGUOUS;
+      if (resolution === null) continue;
+      if (starResolution === null) starResolution = resolution;
+      else if (starResolution !== resolution) return AMBIGUOUS;
+    }
+    return starResolution;
+  }
+  return resolveExport;
 }
 
 // ---------- 검사 ----------
 
-function findUnresolvedImports(ast, file, rel, exportsOf) {
+function findUnresolvedImports(ast, file, rel, resolveExport) {
   const found = [];
   for (const stmt of ast.body) {
     let source = null;
@@ -250,11 +286,11 @@ function findUnresolvedImports(ast, file, rel, exportsOf) {
       found.push({ file: rel, line: stmt.loc.start.line, name: null, source, reason: 'file missing' });
       continue;
     }
-    const exported = exportsOf(target);
     for (const name of names) {
-      if (!exported.has(name)) {
+      const resolution = resolveExport(target, name);
+      if (resolution === null) {
         found.push({ file: rel, line: stmt.loc.start.line, name, source, reason: 'not exported' });
-      } else if (exported.get(name) === AMBIGUOUS) {
+      } else if (resolution === AMBIGUOUS) {
         found.push({ file: rel, line: stmt.loc.start.line, name, source, reason: 'ambiguous star export' });
       }
     }
@@ -417,12 +453,12 @@ export function scanAppDir(dir) {
     }
   }
 
-  const exportsOf = createExportResolver(asts);
+  const resolveExport = createExportResolver(asts);
   const undeclared = [];
   const unresolved = [];
   for (const [file, ast] of [...asts].sort(([a], [b]) => (a < b ? -1 : 1))) {
     const rel = path.relative(root, file);
-    unresolved.push(...findUnresolvedImports(ast, file, rel, exportsOf));
+    unresolved.push(...findUnresolvedImports(ast, file, rel, resolveExport));
     undeclared.push(...findUndeclaredIdentifiers(ast, rel));
   }
   return { undeclared, unresolved, parseErrors };

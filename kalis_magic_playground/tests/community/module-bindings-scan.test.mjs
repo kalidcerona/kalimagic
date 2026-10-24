@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { scanAppDir } from '../../scripts/scan-module-bindings.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -194,19 +194,145 @@ test('fixture: missing export-star and dynamic import targets are unresolved', (
   });
 });
 
-test('fixture: ambiguous star re-exports are unresolved, shared origins are not', () => {
+test('fixture: inline module findings use real html line numbers', () => {
   withTemp((tmp) => {
     writeFiles(tmp, {
-      'index.html': MAIN_HTML,
-      'main.js': 'import { dup } from "./ambiguous.js";\nimport { one } from "./diamond.js";\nvoid dup; void one;',
-      'a.js': 'export const dup = 1; export const one = 1;',
-      'b.js': 'export const dup = 2;',
-      'ambiguous.js': 'export * from "./a.js";\nexport * from "./b.js";',
-      'm1.js': 'export * from "./a.js";',
-      'm2.js': 'export * from "./a.js";',
-      'diamond.js': 'export * from "./m1.js";\nexport * from "./m2.js";'
+      'index.html': '<!doctype html>\n<html>\n<body>\n<script type="module">\nvoid a;\n\nvoid b;\n</script>\n</body>'
     });
-    const { unresolved } = scanAppDir(tmp);
-    assert.deepEqual(unresolved.map((u) => `${u.name}:${u.source}`), ['dup:./ambiguous.js']);
+    const lines = scanAppDir(tmp).undeclared.map((u) => `${u.name}:${u.line}`);
+    assert.deepEqual(lines, ['a:5', 'b:7']);
   });
+});
+
+// ---------- oracle: 실제 Node의 모듈 링크 결과와 스캐너 판정을 대조 ----------
+
+// main.mjs가 entry.mjs에서 name을 import하는 앱. 링크되면 true, SyntaxError면 false
+async function nodeLinks(tmp) {
+  try {
+    await import(pathToFileURL(path.join(tmp, 'main.mjs')).href);
+    return true;
+  } catch (err) {
+    if (err instanceof SyntaxError) return false;
+    throw err;
+  }
+}
+
+const ORACLE_CASES = [
+  {
+    title: 'ambiguous star exports',
+    entry: 'ambiguous',
+    files: {
+      'a.mjs': 'export const name = 1;',
+      'b.mjs': 'export const name = 2;',
+      'entry.mjs': 'export * from "./a.mjs";\nexport * from "./b.mjs";'
+    }
+  },
+  {
+    title: 'diamond star exports share one origin',
+    entry: 'diamond',
+    files: {
+      'a.mjs': 'export const name = 1;',
+      'm1.mjs': 'export * from "./a.mjs";',
+      'm2.mjs': 'export * from "./a.mjs";',
+      'entry.mjs': 'export * from "./m1.mjs";\nexport * from "./m2.mjs";'
+    }
+  },
+  {
+    title: 'cycle: name reachable through the other side of a star cycle',
+    entry: 'cycle-reachable',
+    files: {
+      'a.mjs': 'export const x = 1;\nexport * from "./b.mjs";',
+      'b.mjs': 'export const name = 1;\nexport * from "./a.mjs";',
+      'entry.mjs': 'export * from "./a.mjs";'
+    }
+  },
+  {
+    title: 'cycle: both sides star-export distinct origins',
+    entry: 'cycle-ambiguous',
+    files: {
+      'a.mjs': 'export * from "./b.mjs";\nexport * from "./c.mjs";',
+      'b.mjs': 'export * from "./a.mjs";\nexport * from "./d.mjs";',
+      'c.mjs': 'export const name = 1;',
+      'd.mjs': 'export const name = 2;',
+      'entry.mjs': 'export * from "./a.mjs";'
+    }
+  },
+  {
+    title: 'cycle: name exists nowhere',
+    entry: 'cycle-missing',
+    files: {
+      'a.mjs': 'export * from "./b.mjs";',
+      'b.mjs': 'export * from "./a.mjs";',
+      'entry.mjs': 'export * from "./a.mjs";'
+    }
+  },
+  {
+    title: 'import then export of the same original is not ambiguous',
+    entry: 'import-reexport',
+    files: {
+      'a.mjs': 'export const name = 1;',
+      'b.mjs': 'import { name } from "./a.mjs";\nexport { name };',
+      'entry.mjs': 'export * from "./a.mjs";\nexport * from "./b.mjs";'
+    }
+  },
+  {
+    title: 'export-from of the same original is not ambiguous',
+    entry: 'export-from',
+    files: {
+      'a.mjs': 'export const name = 1;',
+      'b.mjs': 'export { name } from "./a.mjs";',
+      'entry.mjs': 'export * from "./a.mjs";\nexport * from "./b.mjs";'
+    }
+  },
+  {
+    title: 'explicit export wins over conflicting stars',
+    entry: 'explicit-wins',
+    files: {
+      'a.mjs': 'export const name = 1;',
+      'b.mjs': 'export const name = 2;',
+      'entry.mjs': 'export * from "./a.mjs";\nexport * from "./b.mjs";\nexport const name = 3;'
+    }
+  },
+  {
+    title: 're-export of an import that the source does not export',
+    entry: 'bad-reexport',
+    files: {
+      'a.mjs': 'export const other = 1;',
+      'b.mjs': 'import { name } from "./a.mjs";\nexport { name };',
+      'entry.mjs': 'export * from "./b.mjs";'
+    }
+  }
+];
+
+for (const { title, files, entry } of ORACLE_CASES) {
+  test(`oracle: scanner agrees with Node linking (${title})`, async () => {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'module-bindings-'));
+    try {
+      writeFiles(tmp, {
+        ...files,
+        'index.html': '<script type="module" src="./main.mjs"></script>',
+        'main.mjs': 'import { name } from "./entry.mjs";\nvoid name;'
+      });
+      const { unresolved, undeclared, parseErrors } = scanAppDir(tmp);
+      assert.deepEqual(undeclared, [], entry);
+      assert.deepEqual(parseErrors, [], entry);
+      assert.equal(unresolved.length === 0, await nodeLinks(tmp), `${entry}: scanner vs Node`);
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+}
+
+test('oracle: the cases cover both linking outcomes', async () => {
+  const outcomes = new Set();
+  for (const { files } of ORACLE_CASES) {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'module-bindings-'));
+    try {
+      writeFiles(tmp, { ...files, 'main.mjs': 'import { name } from "./entry.mjs";\nvoid name;' });
+      outcomes.add(await nodeLinks(tmp));
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  }
+  assert.deepEqual([...outcomes].sort(), [false, true]);
 });
