@@ -1,4 +1,4 @@
-import test, { afterEach } from 'node:test';
+import test, { after, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { runInThisContext } from 'node:vm';
@@ -6,7 +6,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 // Loads USOTSUKI (zz7/detector.js) and its real imports as separate ES modules: no concatenation, no
 // shared scope. A module that uses an identifier it does not import throws ReferenceError here, as it
-// does in the browser. The classic scripts (first-run-guide.js, fullscreen.js) are evaluated as scripts.
+// does in the browser. The classic scripts (first-run-guide.js) is evaluated as a script.
 // Drives boot, first-run guide, install prompt, wake lock on visibility, the two-finger settings swipe,
 // settings saves, vibration, sound, the detector hold flow and the wood-drum (heartbeat) theme through
 // the listeners the app registers on a stub DOM.
@@ -104,8 +104,6 @@ function stubBrowser() {
   node('#display-theme').value = 'green';
   node('#scan-duration').value = '3';
   node('#vibration-settings');
-  const note = new FakeElement('p');
-  note.hidden = true;
 
   const body = new FakeElement('body');
   body.dataset.magicApp = 'usotsuki';
@@ -113,7 +111,6 @@ function stubBrowser() {
     activeElement: null, visibilityState: 'visible', hidden: false, readyState: 'interactive', title: '거짓말 탐지기',
     body, head: new FakeElement('head'), documentElement: new FakeElement('html'),
     querySelector: node,
-    querySelectorAll: (selector) => (selector === '[data-fullscreen-note]' ? [note] : []),
     getElementById: () => null,
     createElement: (tag) => new FakeElement(tag),
   };
@@ -178,7 +175,7 @@ function stubBrowser() {
   define('localStorage', localStorage);
   define('matchMedia', window.matchMedia);
   define('Element', FakeElement);
-  return { store, localStorage, node, screen, button, note, wake, vibrations, navigator, window, frames, runFrames, AudioContextStub };
+  return { store, localStorage, node, screen, button, wake, vibrations, navigator, window, frames, runFrames, AudioContextStub };
 }
 
 const env = stubBrowser();
@@ -457,10 +454,4 @@ test('wood-drum theme: the heartbeat trace runs while held and the verdict feeds
   assert.equal(env.screen.classList.contains('is-live'), false);
 });
 
-test('fullscreen script keeps the browser UI and shows its note', async () => {
-  runInThisContext(readFileSync(fileURLToPath(new URL('fullscreen.js', root)), 'utf8'), { filename: 'fullscreen.js' });
-  assert.equal(env.window.MagicFullscreen.request(), false);
-  assert.equal(env.note.textContent, '앱은 전체 화면을 사용하지 않습니다. 브라우저와 기기의 상태 표시를 유지합니다.');
-  assert.equal(env.note.hidden, false);
-  console.error = originalConsoleError;
-});
+after(() => { console.error = originalConsoleError; });
