@@ -4,8 +4,8 @@ import { readFile } from 'node:fs/promises';
 
 for (const app of ['zz1', 'zz3', 'tools/calc', 'tools/stopwatch']) {
   test(`${app} opens settings only after both fingers move at least 96px`, async () => {
-    // zz1 keeps its installer verbatim in its own module.
-    const html = await readFile(new URL(app === 'zz1' ? '../../zz1/settings-swipe.js' : `../../${app}/index.html`, import.meta.url), 'utf8');
+    // zz1 and zz3 keep their installer verbatim in their own settings-swipe.js.
+    const html = await readFile(new URL(app === 'zz1' || app === 'zz3' ? `../../${app}/settings-swipe.js` : `../../${app}/index.html`, import.meta.url), 'utf8');
     const start = html.indexOf('function installSettingsSwipe(');
     const end = html.indexOf('// END SETTINGS SWIPE', start);
     assert.ok(start >= 0 && end > start);

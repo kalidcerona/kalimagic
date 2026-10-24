@@ -12,7 +12,7 @@ const PROMPTS = [
   ['distribution-snapshots/tobira/install-prompt.js', 'panel'],
   ['distribution-snapshots/usotsuki/install-prompt.js', 'panel'],
   ['zz8/install-ui.js', 'control'],
-  ['zz1/install-nudge.js', 'nudge'], ['zz3/index.html', 'nudge'],
+  ['zz1/install-nudge.js', 'nudge'], ['zz3/install-nudge.js', 'nudge'],
   ['distribution-snapshots/kairos/index.html', 'nudge'],
   ['distribution-snapshots/gwayubulgeup/index.html', 'nudge'],
   ['distribution-snapshots/calculator/index.html', 'nudge'],
@@ -21,7 +21,7 @@ const PROMPTS = [
 async function runtime(file, kind) {
   let source = await readFile(new URL(file, ROOT), 'utf8');
   if (kind === 'nudge') {
-    // zz1 ships the nudge as its own classic script file instead of an inline <script>.
+    // zz1 and zz3 ship the nudge as its own classic script file instead of an inline <script>.
     source = (file.endsWith('.js') ? [[null, source]] : [...source.matchAll(/<script>\s*([\s\S]*?)<\/script>/g)])
       .map((match) => match[1]).find((script) => /install.nudge.done|installNudgeDone/i.test(script));
     assert.ok(source, file);

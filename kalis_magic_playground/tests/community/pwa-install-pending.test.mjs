@@ -7,7 +7,7 @@ const ROOT = new URL('../../', import.meta.url);
 const APPS = [
   ['zz1/install-nudge.js', 'nudge'], ['distribution-snapshots/kairos/index.html', 'nudge'],
   ['zz2/install-prompt.js', 'offer'], ['distribution-snapshots/unlock/install-prompt.js', 'offer'],
-  ['zz3/index.html', 'nudge'], ['distribution-snapshots/calculator/index.html', 'nudge'],
+  ['zz3/install-nudge.js', 'nudge'], ['distribution-snapshots/calculator/index.html', 'nudge'],
   ['zz4/install-prompt.js', 'card'], ['zz5/install-prompt.js', 'card'],
   ['distribution-snapshots/aletheia/install-prompt.js', 'card'],
   ['zz6/install-prompt.js', 'panel'], ['zz7/install-prompt.js', 'panel'],
@@ -21,7 +21,7 @@ const APPS = [
 async function runtime(file, kind, { saved = new Map(), standalone = false } = {}) {
   let source = await readFile(new URL(file, ROOT), 'utf8');
   if (kind === 'nudge') {
-    // zz1 ships the nudge as its own classic script file instead of an inline <script>.
+    // zz1 and zz3 ship the nudge as its own classic script file instead of an inline <script>.
     source = (file.endsWith('.js') ? [[null, source]] : [...source.matchAll(/<script>\s*([\s\S]*?)<\/script>/g)])
       .map(match => match[1]).find(script => /install.nudge.done|installNudgeDone/i.test(script));
     assert.ok(source, file);

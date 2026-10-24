@@ -1,10 +1,24 @@
 // Cache only the explicit app shell. API, authentication and user data stay on the network.
 const CACHE_PREFIX = 'calculator-v2-shell-' + encodeURIComponent(self.registration.scope) + '-';
-const CACHE_NAME = CACHE_PREFIX + 'v20261004-first-guide-1-manual-install-1-perf-1-coherent-1-compat-1-local-preview-1';
+const CACHE_NAME = CACHE_PREFIX + 'v20261004-first-guide-1-manual-install-1-perf-1-coherent-1-compat-1-local-preview-1-modules-1';
 const SHELL = [
   "./settings-ui.js",
   "./settings-ui.css",
   "./performance-link.js",
+  "./style.css",
+  "./settings-swipe.js",
+  "./selftest.js",
+  "./cards.js",
+  "./decimal.js",
+  "./expression.js",
+  "./tricks.js",
+  "./ui-helpers.js",
+  "./settings-tutorial.js",
+  "./app.js",
+  "./wake-lock.js",
+  "./boot.js",
+  "./install-nudge.css",
+  "./install-nudge.js",
   "./index.html",
   "./manifest.webmanifest",
   "./icon-192.png",
