@@ -32,11 +32,44 @@ process.on('uncaughtException', (error) => errors.push(`uncaughtException: ${err
 const originalConsoleError = console.error;
 console.error = (...args) => { errors.push(`console.error: ${args.join(' ')}`); };
 afterEach(async () => {
-  await settle(5);
+  await settle();
   assert.deepEqual(errors, [], 'no uncaught errors, unhandled rejections or console.error');
 });
 
-const settle = (ms = 0) => new Promise((resolve) => setTimeout(resolve, ms));
+// ----- controlled page clock: Date, performance.now, setTimeout and clearTimeout move only through advance() -----
+// No assertion depends on real elapsed time, so CPU load cannot change what the app sees.
+const RealDate = Date;
+const START = new RealDate(2026, 9, 25, 14, 5, 0).getTime();
+let clockNow = START;
+class FixedDate extends RealDate {
+  constructor(...args) { if (args.length) super(...args); else super(clockNow); }
+  static now() { return clockNow; }
+}
+const pageTimers = new Map();
+let pageTimerId = 0;
+const pageSetTimeout = (fn, ms = 0, ...args) => {
+  pageTimerId += 1;
+  pageTimers.set(pageTimerId, { id: pageTimerId, at: clockNow + Math.max(0, Number(ms) || 0), fn, args });
+  return pageTimerId;
+};
+const pageClearTimeout = (id) => { pageTimers.delete(id); };
+const drain = async () => { for (let i = 0; i < 8; i += 1) await new Promise((resolve) => setImmediate(resolve)); };
+// Runs every timer due within ms of page time, in order, letting promises settle after each one.
+async function advance(ms) {
+  const target = clockNow + ms;
+  for (;;) {
+    const due = [...pageTimers.values()].filter((timer) => timer.at <= target).sort((a, b) => a.at - b.at || a.id - b.id)[0];
+    if (!due) break;
+    pageTimers.delete(due.id);
+    clockNow = Math.max(clockNow, due.at);
+    due.fn(...due.args);
+    await drain();
+  }
+  clockNow = target;
+  await drain();
+}
+// settle() lets pending promises finish; settle(ms) also moves the page clock forward by ms.
+const settle = async (ms = 0) => { await drain(); if (ms > 0) await advance(ms); };
 
 // ----- selector matching (the subset the app uses) -----
 const PIECE = /^(?:([\w-]+|\*)|#([\w-]+)|\.([\w-]+)|\[([\w-]+)(?:(=)(?:"([^"]*)"|'([^']*)'|([^\]]*)))?\])/;
@@ -314,8 +347,8 @@ function stubBrowser() {
     transaction() {
       const tx = {};
       const objectStore = {
-        get(key) { const r = {}; setTimeout(() => { r.result = idbData.get(key); r.onsuccess?.(); }, 0); return r; },
-        put(blob, key) { idbData.set(key, blob); setTimeout(() => tx.oncomplete?.(), 0); },
+        get(key) { const r = {}; setImmediate(() => { r.result = idbData.get(key); r.onsuccess?.(); }); return r; },
+        put(blob, key) { idbData.set(key, blob); setImmediate(() => tx.oncomplete?.()); },
       };
       tx.objectStore = () => objectStore;
       return tx;
@@ -326,7 +359,7 @@ function stubBrowser() {
     open(name) {
       indexedDB.opened.push(name);
       const request = { result: db };
-      setTimeout(() => { request.onupgradeneeded?.(); request.onsuccess?.(); }, 0);
+      setImmediate(() => { request.onupgradeneeded?.(); request.onsuccess?.(); });
       return request;
     },
   };
@@ -339,6 +372,10 @@ function stubBrowser() {
   define('document', document);
   define('window', window);
   define('navigator', navigator);
+  define('Date', FixedDate);
+  define('performance', { now: () => clockNow - START });
+  define('setTimeout', pageSetTimeout);
+  define('clearTimeout', pageClearTimeout);
   define('location', { pathname, assign: (url) => { assigned.push(url); } });
   define('localStorage', localStorage);
   define('matchMedia', (query) => ({ matches: /prefers-reduced-motion/.test(query) }));
@@ -532,7 +569,9 @@ test('two-finger taps: one tap does nothing, two taps clear the record after the
   await twoFingerTap();
   await twoFingerTap();
   assert.equal(live().state.attempts.length, 1, 'the double tap is still pending');
-  await settle(1300);
+  await settle(1190);
+  assert.equal(live().state.attempts.length, 1, 'the double tap is still pending just before its 1200 ms window ends');
+  await settle(20);
   assert.equal(live().state.attempts.length, 0, 'the settled double tap resets the record');
   assert.equal(live().screen, 'input');
   assert.equal(el('input-screen').hidden, false);
@@ -665,7 +704,9 @@ test('galaxy unlock by the confirm key: failure, backspace, success, attempt lis
   assert.equal(el('reveal-label').textContent, '1번째 입력 PIN');
   assert.equal(el('reveal-number').textContent, '1234');
   assert.equal(el('reveal-days').hidden, true, 'a 4 digit PIN has no birthday');
-  await settle(650);
+  await settle(490);
+  assert.equal(el('reveal-card').classes.has('visible'), true, 'the card stays for its 500 ms minimum');
+  await settle(20);
   assert.equal(el('reveal-card').classes.has('visible'), false, 'the card hides after the minimum display time');
   assert.equal(el('reveal-card').getAttribute('aria-hidden'), 'true');
   await swipe(100, 300, 220, 300);
@@ -698,8 +739,9 @@ test('fingerprint hold unlocks on galaxy, an early release only pulses', async (
   assert.equal(live().state.attempts.length, 0);
 
   await dispatch(sensor, 'pointerdown', { pointerId: 4 });
-  await settle(700);
-  await settle(30);
+  await settle(590);
+  assert.equal(live().screen, 'input', 'the hold is not long enough yet');
+  await settle(20);
   assert.equal(live().screen, 'unlocked');
   assert.equal(live().state.unlocked, true);
   await twoFingerTap();
@@ -740,7 +782,7 @@ test('rewind: emergency double tap goes fullscreen, hidden keypad sets minutes, 
   assert.equal(el('time-black').hidden, true);
   assert.equal(el('time-lock').classes.has('galaxy'), true);
   const shown = new Date(el('time-clock').dateTime).getTime();
-  assert.ok(Math.abs(shown - (Date.now() + 180000)) < 5000, 'the lock screen shows the time three minutes ahead');
+  assert.equal(shown, Date.now() + 180000,'the lock screen shows the time three minutes ahead');
   assert.match(el('time-clock').getAttribute('aria-label'), /^\d\d시 \d\d분$/);
   assert.match(el('time-hour').textContent, /^\d\d$/);
   assert.match(el('time-minute').textContent, /^\d\d$/);
