@@ -270,7 +270,7 @@ test('missing storage is a normal default and is not reported as a failed read',
 test('the scoped service worker cache includes this app change', () => {
   const sw = fs.readFileSync(new URL('../../zz13/sw.js', import.meta.url), 'utf8');
   const app = fs.readFileSync(new URL('../../zz13/app.mjs', import.meta.url), 'utf8');
-  assert.match(sw, /CACHE=PREFIX\+'v20261004-first-guide-1-coherent-1-gesture-1-compat-1-wake-1-defer-1-local-preview-1-relaunch-restore-3'/);
+  assert.match(sw, /CACHE=PREFIX\+'v20261004-first-guide-1-coherent-1-gesture-1-compat-1-wake-1-defer-1-local-preview-1-relaunch-restore-4'/);
   assert.match(sw, /\.\/app\.mjs/);
   assert.match(app, /writesHeld/);
   assert.doesNotMatch(app, /distribution-snapshots/);
@@ -469,6 +469,32 @@ test('sessions saved by the d93d016 app (no last, bag or dot) are restored with 
     dom.elements.get('freeze').onclick?.();
     assert.equal(JSON.parse(stored(dom)).last, 'https://example.com/decoy', 'a missing last is filled from the decoy on the next save');
   } finally { dom.restore(); }
+});
+
+test('a mixed-format backup (no last, but a bag holding the current decoy) is never accepted and then lost on the next launch', async () => {
+  const mixed = JSON.stringify({ ...JSON.parse(OLD_FORMAT_DECOY), bag: ['https://example.com/decoy'] });
+  const dom = await boot('mixed-format', { raw: savedSession(LIVE) });
+  let persisted;
+  try {
+    await importBackup(dom, mixed);
+    persisted = stored(dom);
+    assert.doesNotThrow(() => core.restore(persisted), 'what import saved can be restored by the next launch');
+    const saved = JSON.parse(persisted);
+    assert.equal(saved.config.target, 'https://example.com/old', 'the imported configuration is kept');
+    assert.equal(saved.counter, 0, 'the inconsistent session is cleanly reset at import');
+    assert.equal(saved.frozen, false);
+    assert.equal(saved.current, null);
+  } finally { dom.restore(); }
+  const again = await boot('mixed-format-relaunch', { raw: persisted });
+  try {
+    assert.deepEqual(JSON.parse(stored(again)), JSON.parse(persisted));
+  } finally { again.restore(); }
+  const launched = await boot('mixed-format-launch', { raw: mixed });
+  try {
+    const saved = JSON.parse(stored(launched));
+    assert.doesNotThrow(() => core.restore(stored(launched)));
+    assert.equal(saved.counter, 0);
+  } finally { launched.restore(); }
 });
 
 test('relaunch with frozen but no QR resets the session instead of leaving generate and freeze disabled', async () => {
