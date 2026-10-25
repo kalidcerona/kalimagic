@@ -1,0 +1,17 @@
+const $ = (id) => document.getElementById(id);
+const setup = $("setup");
+const stage = $("stage");
+const video = $("camera");
+const overlay = $("card-overlay");
+const settings = $("settings");
+const rank = $("rank");
+const suit = $("suit");
+const brightness = $("brightness");
+const stateNote = $("state-note");
+const runtimeNote = $("runtime-note");
+const gestureGuide = $("gesture-guide");
+const sample = document.createElement("canvas");
+const sampleContext = sample.getContext("2d", { willReadFrequently: true });
+const occlusionCanvas = document.createElement("canvas");
+const occlusionContext = occlusionCanvas.getContext("2d");
+export { $, setup, stage, video, overlay, settings, rank, suit, brightness, stateNote, runtimeNote, gestureGuide, sample, sampleContext, occlusionCanvas, occlusionContext };

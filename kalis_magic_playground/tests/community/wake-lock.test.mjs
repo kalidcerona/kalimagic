@@ -46,6 +46,7 @@ const APPS = [
   },
   {
     file: 'zz10/app.js',
+    sources: ['zz10/wake-lock.js', 'zz10/settings-panel.js'],
     settings: /function openSettings\(\) \{[\s\S]*?settings\.hidden = false;[\s\S]*?syncPerformanceWakeLock\(\)/,
     wanted: /return Boolean\(stream\) && settings\.hidden/,
   },
@@ -103,7 +104,7 @@ for (const app of APPS) {
     const source = app.modules === 'usotsuki' ? usotsukiAppScript(fileURLToPath(new URL(`../../${app.file.replace(/detector\.js$/, '')}`, import.meta.url)))
       : app.modules === 'choice' ? choiceAppScript(fileURLToPath(new URL('../../zz4/', import.meta.url)))
       : app.modules === 'aletheia' ? aletheiaAppScript(fileURLToPath(new URL(`../../${app.file.replace(/app\.js$/, '')}`, import.meta.url)))
-      : app.modules ? tobiraAppScript(fileURLToPath(new URL(`../../${app.file.replace(/app\.js$/, '')}`, import.meta.url))) : sourceOf(app.file);
+      : app.modules ? tobiraAppScript(fileURLToPath(new URL(`../../${app.file.replace(/app\.js$/, '')}`, import.meta.url))) : app.sources ? app.sources.map(sourceOf).join('\n') : sourceOf(app.file);
     assert.match(source, /navigator\.wakeLock\.request\(\s*"screen"\s*\)/);
     assert.match(source, /!\(\s*"wakeLock" in navigator\s*\)/);
     assert.match(source, /else releaseWakeLock\(\)/);

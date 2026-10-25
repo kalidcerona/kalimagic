@@ -53,9 +53,23 @@ test('actual DOM loop hides failed mask rather than showing stale foreground geo
       return {width:12,height:16,data};
     }`);
   try {
-    let code = await readFile(`${source}/app.js`,'utf8');
-    code = code.replace(/from\s+["']\.\/([^"']+)["']/g, (_m,file)=>`from ${JSON.stringify(file==='vision.js'?stub:pathToFileURL(`${source}/${file}`).href)}`);
-    await import(dataUrl(code));await el('start').listeners.get('click')();
+    // app.js and the modules split out of it that import vision.js (the code app.js held before the split) get the
+    // stub; other modules (calibration.js etc.) keep the real vision.js. A module that imports a stubbed module is
+    // rewritten too; the rest keep their real file URL and stay shared.
+    const STUBBED = new Set(['app.js','frame.js','overlay.js']);
+    const loaded = new Map();
+    const load = async file => {
+      if (loaded.has(file)) return loaded.get(file);
+      const text = await readFile(`${source}/${file}`,'utf8');
+      const deps = [...text.matchAll(/from\s+["']\.\/([^"']+)["']/g)].map(m=>m[1]);
+      const urls = new Map();
+      let stubbed = STUBBED.has(file) && deps.includes('vision.js');
+      for (const dep of deps) { if (dep !== 'vision.js') { const url = await load(dep); urls.set(dep,url); if (url.startsWith('data:')) stubbed = true; } }
+      const url = stubbed ? dataUrl(text.replace(/from\s+["']\.\/([^"']+)["']/g, (_m,dep)=>`from ${JSON.stringify(dep==='vision.js'?(STUBBED.has(file)?stub:pathToFileURL(`${source}/vision.js`).href):urls.get(dep))}`)) : pathToFileURL(`${source}/${file}`).href;
+      loaded.set(file,url);
+      return url;
+    };
+    await import(await load('app.js'));await el('start').listeners.get('click')();
     for(let t=100;t<=2100;t+=100)nextFrame(t);
     const corners=[{x:48,y:55},{x:120,y:55},{x:120,y:156},{x:48,y:156}];
     globalThis.__heldoutDetection={corners};nextFrame(2200);nextFrame(2300);

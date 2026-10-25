@@ -1,6 +1,6 @@
 // Cache only the explicit app shell. API, authentication and user data stay on the network.
 const CACHE_PREFIX = 'alter-shell-' + encodeURIComponent(self.registration.scope) + '-';
-const CACHE_NAME = CACHE_PREFIX + 'v20261009-alter-grip-1-manual-install-1-perf-1-coherent-1-gesture-1-compat-1-wake-1-local-preview-1-modules-1-local-preview-module-1';
+const CACHE_NAME = CACHE_PREFIX + 'v20261009-alter-grip-1-manual-install-1-perf-1-coherent-1-gesture-1-compat-1-wake-1-local-preview-1-modules-1-split-1-local-preview-module-1';
 const SHELL = [
   "./settings-ui.js",
   "./settings-ui.css",
@@ -22,6 +22,17 @@ const SHELL = [
   "./camera-geometry.js",
   "./calibration.js",
   "./camera-stream.js",
+  "./dom.js",
+  "./state.js",
+  "./status.js",
+  "./wake-lock.js",
+  "./settings-store.js",
+  "./card-view.js",
+  "./overlay.js",
+  "./tracking-reset.js",
+  "./settings-panel.js",
+  "./frame.js",
+  "./camera.js",
   "./brand-logo.jpg",
   "./icon-192.png",
   "./icon-512.png",
