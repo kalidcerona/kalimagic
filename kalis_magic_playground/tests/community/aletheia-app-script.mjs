@@ -5,6 +5,8 @@ import { inlineLocalPreview, readSiblingFrom } from './local-preview-inline.mjs'
 // Personal ALETHEIA runs as ES modules. Source-reading tests read app.js and its local feature modules
 // as one script, in module evaluation order. logic.js and deck-loader.js stay separate shared files.
 export const ALETHEIA_IMPORT = /^import\s+\{[\s\S]*?\}\s+from '\.\/([\w-]+\.js)';(?: \/\/ local-preview-hook)?\n/gm;
+// Every static dependency form, in source order: named import, bare import, export {..} from, export * from.
+const ALETHEIA_DEPENDENCY = /^(?:import\s+(?:\{[^}]*\}\s+from\s+)?|export\s+(?:\{[^}]*\}|\*)\s+from\s+)'\.\/([\w-]+\.js)';/gm;
 const SHARED = new Set(['local-preview.js', 'logic.js', 'deck-loader.js']);
 
 export function aletheiaAppModules(dir) {
@@ -14,7 +16,7 @@ export function aletheiaAppModules(dir) {
     if (seen.has(file)) return;
     seen.add(file);
     const source = readFileSync(path.join(dir, file), 'utf8');
-    for (const [, from] of source.matchAll(ALETHEIA_IMPORT)) {
+    for (const [, from] of source.matchAll(ALETHEIA_DEPENDENCY)) {
       if (!SHARED.has(from) && existsSync(path.join(dir, from))) visit(from);
     }
     order.push(file);
