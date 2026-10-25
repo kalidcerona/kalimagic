@@ -99,7 +99,8 @@ test('Pi Max modules run as real separate ES modules through boot, install sheet
   await import(new URL('app.mjs', root));
   const settle = (ms = 0) => new Promise((resolve) => setTimeout(resolve, ms));
   const step = async (name, action) => { await action(); await settle(); assert.deepEqual(errors, [], `${name} raised errors`); };
-  const stored = (key) => JSON.parse(env.storage.get(key));
+  // The friend snapshot keeps the same state under pimax.distribution.* instead of pimax-practice-*.
+  const stored = (key) => JSON.parse(env.storage.get(process.env.PIMAX_ROOT ? key.replace('pimax-practice-', 'pimax.distribution.') : key));
   const submit = (id) => { const form = new env.HTMLFormElement(id); for (const fn of env.handlers.submit) fn({ target: form, preventDefault: () => form.preventDefault() }); assert.ok(form.prevented, `${id} default prevented`); };
   const type = (id, value) => { env.inputs[`#${id}`].value = value; for (const fn of env.handlers.input) fn({ target: env.inputs[`#${id}`] }); };
 
