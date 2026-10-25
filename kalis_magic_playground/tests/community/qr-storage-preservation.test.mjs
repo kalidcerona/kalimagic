@@ -270,7 +270,7 @@ test('missing storage is a normal default and is not reported as a failed read',
 test('the scoped service worker cache includes this app change', () => {
   const sw = fs.readFileSync(new URL('../../zz13/sw.js', import.meta.url), 'utf8');
   const app = fs.readFileSync(new URL('../../zz13/app.mjs', import.meta.url), 'utf8');
-  assert.match(sw, /CACHE=PREFIX\+'v20261004-first-guide-1-coherent-1-gesture-1-compat-1-wake-1-defer-1-local-preview-1-relaunch-restore-2'/);
+  assert.match(sw, /CACHE=PREFIX\+'v20261004-first-guide-1-coherent-1-gesture-1-compat-1-wake-1-defer-1-local-preview-1-relaunch-restore-3'/);
   assert.match(sw, /\.\/app\.mjs/);
   assert.match(app, /writesHeld/);
   assert.doesNotMatch(app, /distribution-snapshots/);
@@ -441,6 +441,33 @@ test('a counter past the last forced ordinal is consistent: decoys continue afte
     const saved = JSON.parse(stored(dom));
     assert.equal(saved.counter, 3);
     assert.equal(saved.current.payload, 'https://example.com/decoy');
+  } finally { dom.restore(); }
+});
+
+// Sessions serialised by the app at commit d93d016 (zz13/core.mjs of that commit, run with ordinal 5, target
+// https://example.com/old, one decoy https://example.com/decoy, frozen). That format has no bag, last or dot fields.
+const OLD_FORMAT_DECOY = '{"schema":1,"defaultsRevision":2,"config":{"target":"https://example.com/old","decoys":["https://example.com/decoy"],"ordinal":5},"counter":1,"frozen":true,"current":{"payload":"https://example.com/decoy","version":4,"mask":4,"edits":[]}}';
+const OLD_FORMAT_FORCED = '{"schema":1,"defaultsRevision":2,"config":{"target":"https://example.com/old","decoys":["https://example.com/decoy"],"ordinal":5},"counter":5,"frozen":true,"current":{"payload":"https://example.com/old","version":4,"mask":4,"edits":[]}}';
+
+test('sessions saved by the d93d016 app (no last, bag or dot) are restored with QR, counter and frozen intact, by launch and by import', async () => {
+  for (const [name, raw, payload, counter] of [['decoy', OLD_FORMAT_DECOY, 'https://example.com/decoy', 1], ['forced', OLD_FORMAT_FORCED, 'https://example.com/old', 5]]) {
+    const dom = await boot(`old-format-${name}`, { raw });
+    try {
+      const saved = JSON.parse(stored(dom));
+      assert.equal(saved.counter, counter, name);
+      assert.equal(saved.frozen, true, name);
+      assert.equal(saved.current.payload, payload, name);
+      assert.equal(dom.elements.get('qr').hidden, false, name);
+      await importBackup(dom, raw === OLD_FORMAT_DECOY ? OLD_FORMAT_FORCED : OLD_FORMAT_DECOY);
+      const imported = JSON.parse(stored(dom));
+      assert.equal(imported.frozen, true, `${name} import`);
+      assert.ok(imported.counter >= 1 && imported.current, `${name} import`);
+    } finally { dom.restore(); }
+  }
+  const dom = await boot('old-format-last', { raw: OLD_FORMAT_DECOY });
+  try {
+    dom.elements.get('freeze').onclick?.();
+    assert.equal(JSON.parse(stored(dom)).last, 'https://example.com/decoy', 'a missing last is filled from the decoy on the next save');
   } finally { dom.restore(); }
 });
 
