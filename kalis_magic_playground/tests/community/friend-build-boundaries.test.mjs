@@ -30,8 +30,8 @@ for (const [name, file, variable, snapshot] of FRIEND_BUILDS) {
     assert.ok(existsSync(`${snapshotDir}index.html`), `distribution-snapshots/${snapshot}/index.html exists`);
     const env = Object.fromEntries(Object.entries(process.env).filter(([key]) => !key.endsWith('_ROOT') && !key.startsWith('NODE_TEST')));
     env[variable] = snapshotDir;
-    const run = spawnSync(process.execPath, ['--test', testFile], { env, encoding: 'utf8', timeout: 180000, maxBuffer: 32 * 1024 * 1024 });
+    const run = spawnSync(process.execPath, ['--test', '--test-reporter=tap', testFile], { env, encoding: 'utf8', timeout: 180000, maxBuffer: 32 * 1024 * 1024 });
     assert.equal(run.status, 0, `${file} with ${variable}=${snapshotDir} exited ${run.status ?? run.signal}\n${run.stdout}\n${run.stderr}`);
-    assert.match(run.stdout, /^ℹ pass [1-9]\d*$/m, 'the child really ran tests');
+    assert.match(run.stdout, /^# pass [1-9]\d*$/m, 'the child really ran tests (TAP summary, same on Node 20 and 24)');
   });
 }

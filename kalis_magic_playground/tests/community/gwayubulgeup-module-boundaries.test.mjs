@@ -478,6 +478,26 @@ test('laps: each lap shows its own split and a new lap goes to the top', async (
   assert.equal(trickAttr(), 'on');
 });
 
+test('trick on with laps: a stop that would land before the last lap keeps the real time, an earlier lap still allows the trick', async () => {
+  assert.equal(trickAttr(), 'on');
+  await click('p-control');
+  await runFor(3900);
+  await click('p-lap');
+  await runFor(50);
+  await click('p-control');
+  assert.equal(digits(), '000395', 'the forced 3.12 would precede the 3.90 lap, so the real 3.95 stays');
+  assert.deepEqual(node('p-lap-rows').children.map((row) => row.children.map((cell) => cell.textContent)), [['랩 1', '00:03.90']]);
+  await click('p-lap');
+
+  await click('p-control');
+  await runFor(1000);
+  await click('p-lap');
+  await runFor(2950);
+  await click('p-control');
+  assert.equal(digits(), '000312', 'a lap at 1.00 s is before the forced 3.12, so the trick applies');
+  await click('p-lap');
+});
+
 test('settings swipe: two fingers down open settings (not while running), the click after the swipe is swallowed, close works', async () => {
   const short = await twoFingerSwipe(50);
   assert.equal(node('settings').hidden, true, 'a short swipe does not open settings');
