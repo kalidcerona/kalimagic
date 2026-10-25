@@ -27,20 +27,26 @@ export function commitAvailable(cwd) {
 
 // Writes every file of `folder` (repo-relative, e.g. kalis_magic_playground/zz4) as it was before the split.
 export function materializePreSplit(cwd, folder) {
-  const root = gitRoot(cwd);
-  const prefix = path.relative(root, path.resolve(cwd, folder)).split(path.sep).join('/');
   const dir = mkdtempSync(path.join(tmpdir(), 'choice-presplit-'));
-  writeFileSync(path.join(dir, 'package.json'), '{"type":"module"}\n');
-  const names = execFileSync('git', ['ls-tree', '-r', '--name-only', `${SPLIT_COMMIT}^`, `${prefix}/`], { cwd: root, encoding: 'utf8' })
-    .split('\n').filter(Boolean);
-  for (const name of names) {
-    const rel = name.slice(prefix.length + 1);
-    if (!/\.(js|mjs)$/.test(rel)) continue;
-    const target = path.join(dir, rel);
-    mkdirSync(path.dirname(target), { recursive: true });
-    writeFileSync(target, execFileSync('git', ['show', `${SPLIT_COMMIT}^:${name}`], { cwd: root, maxBuffer: 64 * 1024 * 1024 }));
+  const dispose = () => rmSync(dir, { recursive: true, force: true });
+  try {
+    const root = gitRoot(cwd);
+    const prefix = path.relative(root, path.resolve(cwd, folder)).split(path.sep).join('/');
+    writeFileSync(path.join(dir, 'package.json'), '{"type":"module"}\n');
+    const names = execFileSync('git', ['ls-tree', '-r', '--name-only', `${SPLIT_COMMIT}^`, `${prefix}/`], { cwd: root, encoding: 'utf8' })
+      .split('\n').filter(Boolean);
+    for (const name of names) {
+      const rel = name.slice(prefix.length + 1);
+      if (!/\.(js|mjs)$/.test(rel)) continue;
+      const target = path.join(dir, rel);
+      mkdirSync(path.dirname(target), { recursive: true });
+      writeFileSync(target, execFileSync('git', ['show', `${SPLIT_COMMIT}^:${name}`], { cwd: root, maxBuffer: 64 * 1024 * 1024 }));
+    }
+  } catch (error) {
+    dispose();
+    throw error;
   }
-  return { dir, dispose: () => rmSync(dir, { recursive: true, force: true }) };
+  return { dir, dispose };
 }
 
 function hashOf(fn) {
