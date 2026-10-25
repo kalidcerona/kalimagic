@@ -270,7 +270,7 @@ test('missing storage is a normal default and is not reported as a failed read',
 test('the scoped service worker cache includes this app change', () => {
   const sw = fs.readFileSync(new URL('../../zz13/sw.js', import.meta.url), 'utf8');
   const app = fs.readFileSync(new URL('../../zz13/app.mjs', import.meta.url), 'utf8');
-  assert.match(sw, /CACHE=PREFIX\+'v20261004-first-guide-1-coherent-1-gesture-1-compat-1-wake-1-defer-1-local-preview-1-relaunch-restore-1'/);
+  assert.match(sw, /CACHE=PREFIX\+'v20261004-first-guide-1-coherent-1-gesture-1-compat-1-wake-1-defer-1-local-preview-1-relaunch-restore-2'/);
   assert.match(sw, /\.\/app\.mjs/);
   assert.match(app, /writesHeld/);
   assert.doesNotMatch(app, /distribution-snapshots/);
@@ -334,7 +334,7 @@ test('a thrown getItem keeps original even on explicit form save and import', as
 
 test('relaunch restores the saved session, resume keeps the count, and a settings save resets it', async () => {
   const config = { target: 'https://example.com/start', ordinal: 3, decoys: 'https://example.com/other', dot: 115, extraTargets: [{ ordinal: 2, target: 'https://example.com/second' }] };
-  const raw = savedSession(config, { counter: 9, frozen: true, bag: ['https://example.com/other'], last: null });
+  const raw = savedSession(config, { counter: 9, frozen: false, bag: ['https://example.com/other'], last: null });
   const dom = await boot('startup-reset', { raw });
   try {
     const resetSaved = JSON.parse(stored(dom));
@@ -344,7 +344,7 @@ test('relaunch restores the saved session, resume keeps the count, and a setting
     assert.deepEqual(resetSaved.config.decoys, ['https://example.com/other']);
     assert.deepEqual(resetSaved.config.extraTargets, [{ ordinal: 2, target: 'https://example.com/second' }]);
     assert.equal(resetSaved.counter, 9);
-    assert.equal(resetSaved.frozen, true);
+    assert.equal(resetSaved.frozen, false);
     assert.equal(resetSaved.current, null);
     assert.deepEqual(resetSaved.bag, ['https://example.com/other']);
     assert.equal(resetSaved.last, null);
@@ -354,16 +354,15 @@ test('relaunch restores the saved session, resume keeps the count, and a setting
     assert.equal(String(dom.elements.get('ordinal').value), '3');
     assert.equal(String(dom.elements.get('dot').value), '115');
     assert.equal(dom.elements.get('decoys').value, 'https://example.com/other');
-    assert.equal(dom.elements.get('session').textContent, '현재 생성 횟수: 9 · 고정 중');
+    assert.equal(dom.elements.get('session').textContent, '현재 생성 횟수: 9');
     assert.equal(dom.elements.get('error').textContent, '');
     dom.elements.get('settings').close();
-    assert.equal(dom.elements.get('generate').disabled, true, 'the frozen state survived the relaunch');
     resume(dom);
     assert.equal(JSON.parse(stored(dom)).counter, 9);
-    assert.equal(JSON.parse(stored(dom)).frozen, true);
+    assert.equal(JSON.parse(stored(dom)).frozen, false);
     assert.equal(JSON.parse(stored(dom)).config.target, 'https://example.com/start');
     openSettings(dom);
-    assert.equal(dom.elements.get('session').textContent, '현재 생성 횟수: 9 · 고정 중');
+    assert.equal(dom.elements.get('session').textContent, '현재 생성 횟수: 9');
     dom.elements.get('backup').onclick();
     const backup = JSON.parse(await exportedText(dom));
     assert.equal(backup.counter, 9);
@@ -375,6 +374,107 @@ test('relaunch restores the saved session, resume keeps the count, and a setting
     assert.equal(afterSave.frozen, false);
     assert.equal(afterSave.current, null);
     assert.equal(afterSave.config.target, 'https://example.com/start');
+  } finally { dom.restore(); }
+});
+
+// A session as the app would have saved it: `count` real generations with a fixed random source, then optionally frozen.
+function liveSession(config, count = 1, frozen = true) {
+  const state = { config: core.settings(config), counter: 0, frozen: false, current: null, bag: [], last: null };
+  let seed = 7;
+  const random = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+  for (let i = 0; i < count; i += 1) core.next(state, random);
+  state.frozen = frozen;
+  return core.serialize(state);
+}
+
+function withConfig(raw, patch) {
+  const saved = JSON.parse(raw);
+  saved.config = { ...saved.config, ...patch };
+  return JSON.stringify(saved);
+}
+
+const LIVE = { target: 'https://example.com/old', ordinal: 1, decoys: '', dot: 100 };
+
+test('relaunch restores a consistent frozen session with its QR', async () => {
+  const raw = liveSession(LIVE);
+  const dom = await boot('consistent-live', { raw });
+  try {
+    const saved = JSON.parse(stored(dom));
+    assert.equal(saved.counter, 1);
+    assert.equal(saved.frozen, true);
+    assert.equal(saved.current.payload, 'https://example.com/old');
+  } finally { dom.restore(); }
+});
+
+test('relaunch with a configuration that no longer matches the saved QR resets the session and keeps the configuration', async () => {
+  const raw = withConfig(liveSession(LIVE), { target: 'https://example.com/new' });
+  const dom = await boot('stale-target', { raw });
+  try {
+    const saved = JSON.parse(stored(dom));
+    assert.equal(saved.config.target, 'https://example.com/new');
+    assert.equal(saved.counter, 0);
+    assert.equal(saved.frozen, false);
+    assert.equal(saved.current, null);
+    assert.equal(dom.elements.get('qr').hidden, true);
+  } finally { dom.restore(); }
+});
+
+test('relaunch with a changed dot size or ordinal resets the session', async () => {
+  for (const patch of [{ dot: 120 }, { ordinal: 2 }]) {
+    const dom = await boot(`stale-${Object.keys(patch)[0]}`, { raw: withConfig(liveSession(LIVE), patch) });
+    try {
+      const saved = JSON.parse(stored(dom));
+      assert.equal(saved.counter, 0);
+      assert.equal(saved.current, null);
+    } finally { dom.restore(); }
+  }
+});
+
+test('a counter past the last forced ordinal is consistent: decoys continue after relaunch', async () => {
+  const config = { target: 'https://example.com/old', ordinal: 1, decoys: 'https://example.com/decoy', dot: 100 };
+  const raw = liveSession(config, 3, false);
+  const before = JSON.parse(raw);
+  assert.equal(before.counter, 3);
+  assert.equal(before.current.payload, 'https://example.com/decoy');
+  const dom = await boot('decoys-continue', { raw });
+  try {
+    const saved = JSON.parse(stored(dom));
+    assert.equal(saved.counter, 3);
+    assert.equal(saved.current.payload, 'https://example.com/decoy');
+  } finally { dom.restore(); }
+});
+
+test('relaunch with frozen but no QR resets the session instead of leaving generate and freeze disabled', async () => {
+  const raw = savedSession(LIVE, { counter: 4, frozen: true });
+  const dom = await boot('frozen-without-qr', { raw });
+  try {
+    const saved = JSON.parse(stored(dom));
+    assert.equal(saved.config.target, 'https://example.com/old');
+    assert.equal(saved.counter, 0);
+    assert.equal(saved.frozen, false);
+    assert.equal(dom.elements.get('generate').disabled, false);
+  } finally { dom.restore(); }
+});
+
+test('import keeps a consistent session and resets an inconsistent one while keeping the imported configuration', async () => {
+  const dom = await boot('import-consistency', { raw: savedSession(LIVE) });
+  try {
+    await importBackup(dom, liveSession({ ...LIVE, target: 'https://example.com/imported' }, 2, true));
+    let saved = JSON.parse(stored(dom));
+    assert.equal(saved.counter, 2);
+    assert.equal(saved.frozen, true);
+    assert.equal(saved.current.payload.startsWith('QR-2-'), true);
+    await importBackup(dom, withConfig(liveSession(LIVE), { target: 'https://example.com/other' }));
+    saved = JSON.parse(stored(dom));
+    assert.equal(saved.config.target, 'https://example.com/other');
+    assert.equal(saved.counter, 0);
+    assert.equal(saved.frozen, false);
+    assert.equal(saved.current, null);
+    await importBackup(dom, savedSession(LIVE, { counter: 5, frozen: true }));
+    saved = JSON.parse(stored(dom));
+    assert.equal(saved.config.target, 'https://example.com/old');
+    assert.equal(saved.counter, 0);
+    assert.equal(saved.frozen, false);
   } finally { dom.restore(); }
 });
 
@@ -419,13 +519,13 @@ test('explicit import and settings save recover without pretending defaults are 
   const dom = await boot('recover', { raw: original });
   try {
     assert.equal(stored(dom), original);
-    const imported = savedSession({ target: 'https://example.com/imported', ordinal: 6, decoys: '', dot: 105 }, { counter: 4, frozen: true });
+    const imported = savedSession({ target: 'https://example.com/imported', ordinal: 6, decoys: '', dot: 105 }, { counter: 4, frozen: false });
     await importBackup(dom, imported);
     assert.equal(dom.store.get(PRESERVED), original);
     const restored = JSON.parse(stored(dom));
     assert.equal(restored.config.target, 'https://example.com/imported');
     assert.equal(restored.counter, 4);
-    assert.equal(restored.frozen, true);
+    assert.equal(restored.frozen, false);
     assert.match(dom.elements.get('error').textContent, /백업을 복원했습니다/);
     assert.match(dom.elements.get('notice').textContent, /이전 저장 내용은 바꾸었습니다/);
     assert.equal(await exportedText(dom), original);
@@ -479,12 +579,12 @@ for (const shared of [false, true]) {
   const variant = shared ? 'shared' : 'personal';
   test(`${variant}: valid empty target preserves the complete configuration on fresh launch`, async () => {
     const config = { target: '', ordinal: 3, decoys: ['https://example.com/decoy'], dot: 105, extraTargets: [{ ordinal: 4, target: 'https://example.com/extra' }] };
-    const raw = savedSession(config, { counter: 8, frozen: true, bag: ['https://example.com/decoy'], last: null });
+    const raw = savedSession(config, { counter: 8, frozen: false, bag: ['https://example.com/decoy'], last: null });
     const dom = await boot(`${variant}-empty-target`, { raw, shared });
     try {
       const saved = JSON.parse(stored(dom));
       assert.deepEqual(saved.config, config);
-      assert.equal(saved.counter, 8);assert.equal(saved.frozen, true);
+      assert.equal(saved.counter, 8);assert.equal(saved.frozen, false);
       assert.equal(dom.elements.get('generate').disabled, true);
       openSettings(dom);
       assert.equal(dom.elements.get('target').value, '');
