@@ -366,6 +366,7 @@ document.getElementById('install-app').addEventListener('click', async () => {
   if (installPrompt) {
     const revision = installRevision;
     const prompt = installPrompt; installPrompt = null;
+    if (window.__magicInstallPrompt === prompt) window.__magicInstallPrompt = null; // the settings button shares this one-shot event
     try {
       await prompt.prompt();
       const choice = await prompt.userChoice;

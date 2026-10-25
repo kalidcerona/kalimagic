@@ -856,6 +856,20 @@ test('install and contact (settings-ui.js): manual install button, guides and th
   assert.equal(copy.textContent, '복사됨');
 });
 
+test('install: one beforeinstallprompt event is prompted once even if both install buttons are tapped', async () => {
+  assert.equal(settingsOpen(), true, 'settings stay open from the previous install tests');
+  const calls = { prompted: 0 };
+  // A real browser rejects a second prompt() on the same event with InvalidStateError.
+  const init = { prompt: async () => { calls.prompted += 1; if (calls.prompted > 1) throw new Error('InvalidStateError'); }, userChoice: Promise.resolve({ outcome: 'accepted' }) };
+  const event = await fire(window, 'beforeinstallprompt', init);
+  assert.equal(window.__magicInstallPrompt, event);
+  await fire(node('install-app'), 'click');
+  await fire(document.querySelector('.magic-install-button'), 'click');
+  await settle(5);
+  assert.equal(calls.prompted, 1, 'the shared event is prompted exactly once');
+  assert.equal(window.__magicInstallPrompt, null, 'using the event clears the shared slot');
+});
+
 test('appearance page: personal build lets the wheel size and position be saved; the friend build has no such page', async () => {
   const hasKey = [...env.store.keys()].some((key) => key.startsWith('magic-appearance'));
   if (FRIEND) {
