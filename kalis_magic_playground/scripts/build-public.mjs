@@ -288,6 +288,17 @@ export const MIRROR_PAIRS = [
   ...SETTINGS_UI_FILES.map((file) => [`../../magic-asrai/${file}`, `zz8/${file}`]),
   ...SETTINGS_UI_FILES.map((file) => [`../../magic-alter/${file}`, `zz10/${file}`]),
   ...SETTINGS_UI_FILES.map((file) => [`../../magic-spinner/${file}`, `zz11/${file}`]),
+  // The localhost-only preview hook module of each personal app (friend builds drop it).
+  ['../../magic-stopwatch-uni/local-preview.js', 'zz1/local-preview.js'],
+  ['../../magic-choice/local-preview.js', 'zz4/local-preview.js'],
+  ['../../magic-aletheia/local-preview.js', 'zz5/local-preview.js'],
+  ['../../magic-tobira/local-preview.js', 'zz6/local-preview.js'],
+  ['../../magic-usotsuki/local-preview.js', 'zz7/local-preview.js'],
+  ['../../magic-asrai/local-preview.js', 'zz8/local-preview.js'],
+  ['../../magic-alter/local-preview.js', 'zz10/local-preview.js'],
+  ['../../magic-spinner/local-preview.js', 'zz11/local-preview.js'],
+  ['../../magic-memdeck/local-preview.mjs', 'zz12/local-preview.mjs'],
+  ['../../magic-qr/local-preview.mjs', 'zz13/local-preview.mjs'],
   ['../../magic-calculator-v2/index.html', 'zz3/index.html'],
   ['../../magic-calculator-v2/sw.js', 'zz3/sw.js'],
   ['../../magic-calculator-v2/performance-link.js', 'zz3/performance-link.js'],
@@ -669,19 +680,16 @@ async function buildDistributionApps() {
 }
 
 // Run explicitly after the personal version is approved for shared distribution.
-export async function promoteSharedUnlock() {
-  const source = path.resolve(ROOT, '../../magic-unlock');
-  const snapshot = path.join(ROOT, 'distribution-snapshots', 'unlock');
+// RELEASE is one of the friend builds: the sibling checkout (the zz2 byte mirror) minus owner-only parts plus its friend config.
+// See scripts/friend-builds.mjs for the other apps ("node scripts/friend-builds.mjs generate all --write").
+export async function promoteSharedUnlock({ source = path.resolve(ROOT, '../../magic-unlock'), snapshot = path.join(ROOT, 'distribution-snapshots', 'unlock') } = {}) {
   for (const file of SHARED_UNLOCK_FILES) {
     if (!(await exists(path.relative(ROOT, path.join(source, file))))) {
       throw new Error(`Cannot promote missing unlock file: ${file}`);
     }
   }
-  await rm(snapshot, { recursive: true, force: true });
-  await mkdir(snapshot, { recursive: true });
-  for (const file of SHARED_UNLOCK_FILES) {
-    await cp(path.join(source, file), path.join(snapshot, file));
-  }
+  const { writeFriendBuild } = await import('./friend-builds.mjs');
+  await writeFriendBuild('release', { sourceDir: source, targetDir: snapshot });
 }
 
 async function exists(relativePath) {
