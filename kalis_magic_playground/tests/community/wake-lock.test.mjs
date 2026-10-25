@@ -24,7 +24,7 @@ const APPS = [
   {
     file: 'zz5/app.js',
     modules: 'aletheia',
-    settings: /function stopPerformance\(\) \{[\s\S]*?view = 'settings'[\s\S]*?syncPerformanceWakeLock\(\)/,
+    settings: /function stopPerformance\(\) \{[\s\S]*?(?:view = |setView\()'settings'[\s\S]*?syncPerformanceWakeLock\(\)/,
     wanted: /return view === 'performance'/,
   },
   {
@@ -67,7 +67,7 @@ const APPS = [
   {
     file: 'distribution-snapshots/aletheia/app.js',
     modules: 'aletheia',
-    settings: /function stopPerformance\(\) \{[\s\S]*?view = 'settings'[\s\S]*?syncPerformanceWakeLock\(\)/,
+    settings: /function stopPerformance\(\) \{[\s\S]*?(?:view = |setView\()'settings'[\s\S]*?syncPerformanceWakeLock\(\)/,
     wanted: /return view === 'performance'/,
   },
   {

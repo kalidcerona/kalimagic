@@ -26,5 +26,8 @@ export function aletheiaAppModules(dir) {
 export function aletheiaAppScript(dir) {
   return aletheiaAppModules(dir).map((file) => inlineLocalPreview(readFileSync(path.join(dir, file), 'utf8'), readSiblingFrom(dir))
     .replace(ALETHEIA_IMPORT, '')
+    .replace(/^export\s+\{[^}]*\}\s+from\s+'[^']+';\n/gm, '')
+    .replace(/^import\s+'[^']+';\n/gm, '')
+    .replace(/^export\s+(?=(?:async\s+)?function\b|let\b|const\b)/gm, '')
     .replace(/^export\s+\{[\s\S]*?\};\n/m, '')).join('\n');
 }
