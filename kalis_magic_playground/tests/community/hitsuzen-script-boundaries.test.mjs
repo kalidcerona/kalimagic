@@ -628,7 +628,8 @@ test('desktop: the settings button appears for a mouse device and Shift+Esc open
   const button = node('desktop-settings-entry');
   // The friend snapshot's button follows the media query only (change event); the personal one also rechecks the
   // touch points and the user agent on focus and pageshow, and marks the page with desktop-settings-enabled.
-  const mediaOnly = !readFileSync(new URL('settings-swipe.js', root), 'utf8').includes('desktop-settings-enabled');
+  // The variant comes from the root under test (its path), never from the code being tested.
+  const mediaOnly = /\/distribution-snapshots\/calculator\/?$/.test(process.env.ZZ3_ROOT || '');
   const recheck = (type) => (mediaOnly ? fire(env.media, 'change') : fire(win, type));
   env.navigator.maxTouchPoints = 0;
   env.media.matches = true;

@@ -79,10 +79,11 @@ test('forced stop skips the trick when it would precede the last lap', () => {
 test('portrait app paints real and forced time through the same digits', () => {
   const html = read('distribution-snapshots/gwayubulgeup/index.html');
   const logic = read('distribution-snapshots/gwayubulgeup/logic.js');
-  // The page style and the app module live in their own files; the page is the three together.
+  // The page style and scripts live in their own files; the page is every extracted source together.
   const app = read('distribution-snapshots/gwayubulgeup/app.js');
   const style = read('distribution-snapshots/gwayubulgeup/style.css');
-  const page = html + app + style;
+  const page = [html, app, style, ...['settings-swipe.js', 'wake-lock.js', 'install-nudge.js', 'sw-register.js']
+    .map((file) => read(`distribution-snapshots/gwayubulgeup/${file}`))].join('\n');
   assert.equal(TRICK_STORAGE_KEY, 'gwayubulgeup_trick');
   assert.match(logic, /export function trickStopMs/);
   assert.match(logic, /export function stopwatchDigits/);
