@@ -18,7 +18,8 @@ const APPS = [
   ['zz13/app.mjs', 'qr'], ['distribution-snapshots/qr/app.mjs', 'qr'],
 ];
 
-async function runtime(file, kind, { saved = new Map(), standalone = false } = {}) {
+// settingsUi: whether settings-ui.js (which keeps the event in window.__magicInstallPrompt) loaded next to a spinner app.
+async function runtime(file, kind, { saved = new Map(), standalone = false, settingsUi = true } = {}) {
   let source = await readFile(new URL(file, ROOT), 'utf8');
   if (kind === 'nudge') {
     // zz1 and zz3 ship the nudge as its own classic script file instead of an inline <script>.
@@ -75,7 +76,7 @@ async function runtime(file, kind, { saved = new Map(), standalone = false } = {
   const prompt = (choice, request = async () => {}) => {
     const event = { isTrusted: true, preventDefault() {}, prompt: request, userChoice: choice };
     // The spinner pages also load settings-ui.js, which keeps the same event in this shared slot.
-    if (kind === 'spinner') window.__magicInstallPrompt = event;
+    if (kind === 'spinner' && settingsUi) window.__magicInstallPrompt = event;
     return events.get('beforeinstallprompt')(event);
   };
   function assertPending() {
@@ -87,10 +88,30 @@ async function runtime(file, kind, { saved = new Map(), standalone = false } = {
       assert.match(node('setup-install-help').textContent, /설치 요청.*아이콘.*메뉴/);
     }
   }
-  return { saved, events, box, button, description, node, click, prompt, assertPending };
+  return { window, saved, events, box, button, description, node, click, prompt, assertPending };
 }
 
 for (const [file, kind] of APPS) {
+  if (kind === 'spinner') {
+    test(`${file}: without settings-ui.js the private event is still prompted exactly once`, async () => {
+      const app = await runtime(file, kind, { settingsUi: false });
+      let calls = 0;
+      app.prompt(Promise.resolve({ outcome: 'accepted' }), async () => { calls += 1; });
+      await app.click();
+      assert.equal(calls, 1, 'an absent shared slot must not discard the private event');
+      app.assertPending();
+      await app.click();
+      assert.equal(calls, 1, 'the one-shot event is not prompted again');
+    });
+    test(`${file}: with settings-ui.js already consuming the shared event, Install does not prompt again`, async () => {
+      const app = await runtime(file, kind);
+      let calls = 0;
+      app.prompt(Promise.resolve({ outcome: 'accepted' }), async () => { calls += 1; });
+      app.window.__magicInstallPrompt = null; // what settings-ui.js does when its manual button uses the event
+      await app.click();
+      assert.equal(calls, 0);
+    });
+  }
   for (const outcome of ['dismissed', 'error']) {
     test(`${file}: ${outcome} leaves manual retry available and consumes its event once`, async () => {
       const app = await runtime(file, kind);

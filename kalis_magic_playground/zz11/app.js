@@ -363,7 +363,7 @@ window.addEventListener('beforeinstallprompt', event => { if (standaloneDisplay(
 document.getElementById('install-app').addEventListener('click', async () => {
   const help = document.getElementById('install-help');
   if (standaloneDisplay()) return syncInstallGroup();
-  if (installPrompt && window.__magicInstallPrompt !== installPrompt) installPrompt = null; // the settings button already used this one-shot event
+  if (installPrompt && window.__magicInstallPrompt === null) installPrompt = null; // settings-ui.js sets the shared slot to null once its button used the event; an absent settings-ui leaves it undefined
   if (installPrompt) {
     const revision = installRevision;
     const prompt = installPrompt; installPrompt = null;
