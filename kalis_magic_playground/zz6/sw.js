@@ -1,6 +1,6 @@
 // Cache only the explicit app shell. API, authentication and user data stay on the network.
 const CACHE_PREFIX = 'tobira-shell-' + encodeURIComponent(self.registration.scope) + '-';
-const CACHE_NAME = CACHE_PREFIX + 'v20261004-first-guide-1-manual-install-1-perf-1-coherent-1-img-2-compat-1-wake-1-local-preview-1-modules-1-order-1-local-preview-module-1';
+const CACHE_NAME = CACHE_PREFIX + 'v20261004-first-guide-1-manual-install-1-perf-1-coherent-1-img-2-compat-1-wake-1-local-preview-1-modules-1-order-1-local-preview-module-1-perf-split-1';
 const SHELL = [
   "./settings-ui.js",
   "./settings-ui.css",
@@ -16,6 +16,12 @@ const SHELL = [
   "./presets.js",
   "./coin-paint.js",
   "./performance.js",
+  "./perf-state.js",
+  "./motion-prefs.js",
+  "./crack-session.js",
+  "./sensor-effects.js",
+  "./pointer-gestures.js",
+  "./mode-switch.js",
   "./wake-lock.js",
   "./logic.js",
   "./sensor-motion.js",
