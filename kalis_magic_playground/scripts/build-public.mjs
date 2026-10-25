@@ -681,6 +681,8 @@ async function buildDistributionApps() {
 
 // Run explicitly after the personal version is approved for shared distribution.
 // RELEASE is one of the friend builds: the sibling checkout (the zz2 byte mirror) minus owner-only parts plus its friend config.
+// It ships SHARED_UNLOCK_FILES plus settings-ui.js/.css: 23 files, where the old command copied only the 21 listed ones and dropped the
+// two settings-ui files that index.html references.
 // See scripts/friend-builds.mjs for the other apps ("node scripts/friend-builds.mjs generate all --write").
 export async function promoteSharedUnlock({ source = path.resolve(ROOT, '../../magic-unlock'), snapshot = path.join(ROOT, 'distribution-snapshots', 'unlock') } = {}) {
   for (const file of SHARED_UNLOCK_FILES) {

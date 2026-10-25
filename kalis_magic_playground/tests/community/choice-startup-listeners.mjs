@@ -1,6 +1,6 @@
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -68,8 +68,16 @@ const tick = () => new Promise((resolve) => setImmediate(resolve));
 // directory gets its own boot.
 export async function recordStartupListeners(dir) {
   const log = [];
-  const record = (label) => (type, fn, options) => { // The localhost preview listener now wraps the app's callback inside local-preview.js; its position and options still count.
-    log.push(`${label} | ${type} | ${optionsOf(options)} | ${type === 'magic-local-settings' ? 'local-preview-handler' : hashOf(fn)}`); };
+  // The localhost preview listener lives in local-preview.js and only wraps the callback app.js passes to installLocalPreview().
+  // Its identity is that callback's body (whitespace-insensitive), the same text the pre-split build registered inline, so a changed
+  // or empty callback still fails the comparison. A pre-split build has no local-preview.js and registers the real handler.
+  const previewCallback = existsSync(path.join(dir, 'local-preview.js'))
+    ? /installLocalPreview\(([^\n]*?)\);? *\/\/ local-preview-hook/.exec(readFileSync(path.join(dir, 'app.js'), 'utf8'))?.[1]
+    : undefined;
+  const handlerId = (type, fn) => (type === 'magic-local-settings' && previewCallback !== undefined ? hashOf(previewCallback) : hashOf(fn));
+  const record = (label) => (type, fn, options) => {
+    log.push(`${label} | ${type} | ${optionsOf(options)} | ${handlerId(type, fn)}`);
+  };
   const cache = new Map();
   const make = (label, tag = 'div') => {
     const node = {

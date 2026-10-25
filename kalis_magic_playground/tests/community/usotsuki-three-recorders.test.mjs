@@ -184,8 +184,9 @@ test('snapshot changes exactly three named constants and excludes the localhost 
  assert.equal(changes,3);
  assert.match(personal,/local-preview/);
  assert.doesNotMatch(shared,/magic-local-settings|local-preview/);
- // The pinned snapshot keeps the import that only the hook used; the personal copy marks it with the hook.
- assert.equal(shared.replace('import { openSettings } from "./controller.js";\n',''),stripLocalPreview(personal));
+ // detector.js is the only entry and controller.js boots the app, so that import is not a hook line and stays in the friend build.
+ assert.match(shared,/^import \{ openSettings \} from "\.\/controller\.js";$/m);
+ assert.equal(shared,stripLocalPreview(personal));
 });
 
 

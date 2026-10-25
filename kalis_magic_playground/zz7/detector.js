@@ -1,4 +1,4 @@
-import { openSettings } from "./controller.js"; // local-preview-hook
+import { openSettings } from "./controller.js";
 import { installLocalPreview } from './local-preview.js'; // local-preview-hook
 
 if ("serviceWorker" in navigator) {

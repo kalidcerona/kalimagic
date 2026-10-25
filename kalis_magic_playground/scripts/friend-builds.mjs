@@ -7,7 +7,8 @@
 //
 // Without --write nothing under distribution-snapshots/ is ever touched.
 import { execFileSync } from 'node:child_process';
-import { cp, mkdir, mkdtemp, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
+import { cp, lstat, mkdir, mkdtemp, readFile, readdir, realpath, rm, stat, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -141,23 +142,110 @@ export function transformFile(rel, bytes, cfg, report) {
   return Buffer.from(text);
 }
 
-function insideSnapshots(target) {
-  const relative = path.relative(SNAPSHOTS, path.resolve(target));
+// Resolves symlinks in the part of the path that exists and appends the rest, so a not-yet-created path is judged by where it would really land.
+export async function realpathLoose(target) {
+  let current = path.resolve(target);
+  const rest = [];
+  for (;;) {
+    try {
+      return path.join(await realpath(current), ...rest.reverse());
+    } catch (error) {
+      if (error.code !== 'ENOENT') throw error;
+      const parent = path.dirname(current);
+      if (parent === current) return path.resolve(target);
+      rest.push(path.basename(current));
+      current = parent;
+    }
+  }
+}
+
+const within = (parent, child) => {
+  const relative = path.relative(parent, child);
   return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative));
+};
+
+async function insideSnapshots(target) {
+  return within(await realpathLoose(SNAPSHOTS), await realpathLoose(target));
+}
+
+// The report is a plain text file outside the app: never the snapshots, the personal apps, any other file of this checkout or a magic-* sibling.
+export async function assertSafeReportPath(file) {
+  const real = await realpathLoose(file);
+  const projects = path.resolve(ROOT, '../..');
+  const siblings = (await readdir(projects).catch(() => [])).filter((name) => name.startsWith('magic-'));
+  const forbidden = [await realpathLoose(ROOT), ...await Promise.all(siblings.map((name) => realpathLoose(path.join(projects, name))))];
+  if (forbidden.some((dir) => within(dir, real))) throw new Error(`Refusing to write the report inside the app tree: ${file}`);
+  const existing = await lstat(file).catch(() => null);
+  if (existing && !existing.isFile()) throw new Error(`Refusing to overwrite a non-regular report path: ${file}`);
+}
+
+async function filesEqual(a, b) {
+  const [x, y] = await Promise.all([readFile(a).catch(() => null), readFile(b).catch(() => null)]);
+  return Boolean(x && y && x.equals(y));
+}
+
+const CACHE_LITERAL_SLOT = '@@CACHE@@';
+const withCacheSlot = (text) => {
+  const found = findCacheLiteral(text);
+  return found ? text.replace(found[0], found[0].replace(found[1], CACHE_LITERAL_SLOT)) : text;
+};
+
+// Installed friend phones only refetch when the worker's cache name changes. When anything the worker could precache differs from
+// the baseline (the current snapshot) but the cache name does not, add -f<hash of the generated files>. When nothing else changed the baseline
+// name is kept, so identical output stays byte-identical (and regenerating after a write reproduces the written snapshot).
+export async function ensureFreshCacheName(outDir, baselineDir, files, tail = '') {
+  const swPath = path.join(outDir, 'sw.js');
+  const generated = await readFile(swPath, 'utf8').catch(() => null);
+  const baseline = await readFile(path.join(baselineDir, 'sw.js'), 'utf8').catch(() => null);
+  const found = generated && findCacheLiteral(generated);
+  if (!found || baseline === null) return null;
+  const baseLiteral = findCacheLiteral(baseline)?.[1];
+  let changed = withCacheSlot(generated) !== withCacheSlot(baseline);
+  const hash = createHash('sha256');
+  for (const rel of [...files].sort()) {
+    if (rel === 'sw.js') continue;
+    const bytes = await readFile(path.join(outDir, rel));
+    hash.update(rel).update(bytes);
+    if (!changed && !(await filesEqual(path.join(outDir, rel), path.join(baselineDir, rel)))) changed = true;
+  }
+  const mark = `-f${hash.digest('hex').slice(0, 8)}`;
+  const generatedLiteral = found[1];
+  // Keep a trailing family suffix such as -distribution last.
+  const bumped = tail && generatedLiteral.endsWith(tail) ? `${generatedLiteral.slice(0, -tail.length)}${mark}${tail}` : `${generatedLiteral}${mark}`;
+  if (!changed) {
+    // Nothing a phone could notice changed: keep the baseline name (and so the baseline bytes), including its own suffix.
+    if (baseLiteral && baseLiteral !== generatedLiteral) {
+      await writeFile(swPath, generated.replace(found[0], found[0].replace(generatedLiteral, baseLiteral)));
+      return null;
+    }
+    return null;
+  }
+  if (baseLiteral !== generatedLiteral) return null;
+  await writeFile(swPath, generated.replace(found[0], found[0].replace(generatedLiteral, bumped)));
+  return bumped;
 }
 
 // Writes the friend build of one app into outDir and nothing else. sourceDir is only for RELEASE promotion from its sibling checkout.
-export async function generate(app, outDir, { write = false, sourceDir } = {}) {
+// baselineDir is the build to stay compatible with (default: the current snapshot); it only decides the cache name.
+export async function generate(app, outDir, { write = false, sourceDir, baselineDir } = {}) {
   const cfg = FRIEND_APPS[app];
   if (!cfg) throw new Error(`Unknown friend app: ${app}`);
   if (!outDir) throw new Error('generate needs an output directory');
-  if (insideSnapshots(outDir) && !write) throw new Error(`Refusing to write into distribution-snapshots without --write: ${outDir}`);
+  if (!write && await insideSnapshots(outDir)) throw new Error(`Refusing to write into distribution-snapshots without --write: ${outDir}`);
   const source = sourceDir ? path.resolve(sourceDir) : path.join(ROOT, cfg.source);
-  const report = { app, warnings: [], hookPaths: [], keyHits: (cfg.keys || []).map(() => 0), plainHits: 0, files: [] };
+  const report = { app, warnings: [], hookPaths: [], keyHits: (cfg.keys || []).map(() => 0), plainHits: 0, files: [], cacheBump: null };
+  await mkdir(outDir, { recursive: true });
+  const realOut = await realpath(outDir);
   for (const rel of await walk(source)) {
     if (!isShipped(rel, cfg)) continue;
     const output = transformFile(rel, await readFile(path.join(source, rel)), cfg, report);
     const destination = path.join(outDir, rel);
+    // Judge by where the write really lands, and never write through an existing symlink.
+    const realParent = await realpathLoose(path.dirname(destination));
+    if (!within(realOut, realParent)) throw new Error(`Refusing to write outside the output directory: ${rel}`);
+    if (!write && within(await realpathLoose(SNAPSHOTS), realParent)) throw new Error(`Refusing to write into distribution-snapshots without --write: ${rel}`);
+    const existing = await lstat(destination).catch(() => null);
+    if (existing?.isSymbolicLink()) throw new Error(`Refusing to write through a symlink: ${rel}`);
     await mkdir(path.dirname(destination), { recursive: true });
     await writeFile(destination, output);
     report.files.push(rel);
@@ -165,6 +253,7 @@ export async function generate(app, outDir, { write = false, sourceDir } = {}) {
   (cfg.keys || []).forEach(([from], index) => { if (!report.keyHits[index]) report.warnings.push(`key rewrite never matched: ${from}`); });
   const plainWanted = (cfg.plain || []).length;
   if (report.plainHits !== plainWanted) report.warnings.push(`plain replacements applied ${report.plainHits}/${plainWanted}`);
+  report.cacheBump = await ensureFreshCacheName(outDir, baselineDir || path.join(SNAPSHOTS, cfg.snapshot), report.files, cfg.cacheSuffix);
   for (const rel of report.files) {
     if (!TEXT_EXT.test(rel)) continue;
     const text = await readFile(path.join(outDir, rel), 'utf8');
@@ -180,7 +269,7 @@ export async function writeFriendBuild(app, { sourceDir, targetDir } = {}) {
   const target = targetDir || path.join(SNAPSHOTS, cfg.snapshot);
   const staging = await mkdtemp(path.join(os.tmpdir(), `friend-${app}-`));
   try {
-    const report = await generate(app, staging, { sourceDir });
+    const report = await generate(app, staging, { sourceDir, baselineDir: target });
     if (report.warnings.length) throw new Error(`Refusing to write ${app}: ${report.warnings.join('; ')}`);
     await rm(target, { recursive: true, force: true });
     await mkdir(target, { recursive: true });
@@ -240,6 +329,7 @@ export function formatCompare(results, reports) {
     const rep = reports[r.app];
     out.push(`== ${r.app}  (${FRIEND_APPS[r.app].source} -> distribution-snapshots/${r.snapshot})`);
     out.push(`  files: ${r.same} identical, ${r.changed.length} changed, ${r.onlyGenerated.length} only in generated, ${r.onlySnapshot.length} only in snapshot`);
+    if (rep.cacheBump) out.push(`  cache name: content changed, version suffix added -> ${rep.cacheBump}`);
     out.push(`  local-preview removal path: ${rep.hookPaths.length ? rep.hookPaths.join(', ') : 'nothing to remove'}`);
     if (rep.warnings.length) out.push(`  WARNINGS: ${rep.warnings.join(' | ')}`);
     for (const rel of r.onlyGenerated) out.push(`  + only generated: ${rel}`);
@@ -289,6 +379,7 @@ async function main(argv) {
     } finally { await rm(out, { recursive: true, force: true }); }
     const text = formatCompare(results, reports);
     const file = option('--report') || DEFAULT_REPORT;
+    await assertSafeReportPath(file);
     await mkdir(path.dirname(file), { recursive: true });
     await writeFile(file, text);
     console.log(text);
