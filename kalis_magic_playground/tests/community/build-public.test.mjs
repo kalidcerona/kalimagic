@@ -290,18 +290,38 @@ test('personal KAIROS edits do not change either shared route', async () => {
           .replaceAll('stopwatch-settings-entry-tutorial-', `friend-${target}-settings-entry-tutorial-`)
           .replace(/<body\b/, '<body data-magic-customize="off"');
         comparable = Buffer.from(distributedBytes.toString('utf8').replace(/\n  <script id="friend-apps-check">[\s\S]*?<\/script>/, ''));
-        expected = Buffer.from(injectLegacyMigration(isolate(snapshotHtml), target));
+        // The snapshot loads its app from ./app.js, so its HTML carries no inline startup hook; app.js is checked below.
+        assert.equal(snapshotHtml.includes('else initApp();'), false);
+        expected = Buffer.from(isolate(snapshotHtml));
         // Personal zz1 loads its app from ./app.js, so its HTML no longer carries the inline startup hook.
         personalExpected = personalHtml === null ? null : Buffer.from(personalHtml.includes('else initApp();') ? injectLegacyMigration(isolate(personalHtml), target) : isolate(personalHtml));
         const html = distributedBytes.toString('utf8');
         assert.match(html, new RegExp(`tools\\/_check\\?tool=${tool}`));
-        assert.match(html, new RegExp(`${prefix}preset_cs`));
-        assert.match(html, new RegExp(`${prefix}ui_mode`));
-        assert.match(html, new RegExp(`friend-${target}-settings-entry-tutorial-v1`));
         assert.doesNotMatch(html, /["']stopwatch_/);
         assert.doesNotMatch(html, /["']stopwatch2_/);
         assert.doesNotMatch(html, /["']stopwatch-settings-entry-tutorial-/);
-        assert.doesNotMatch(html, /src="\.\/(app|install-nudge|sw-register)\.js"|href="\.\/style\.css"/);
+        assert.match(html, /src="\.\/app\.js"/);
+        assert.match(html, /href="\.\/style\.css"/);
+      } else if (['app.js', 'settings-swipe.js', 'selftest.js', 'settings-tutorial.js', 'wake-lock.js', 'install-nudge.js', 'sw-register.js', 'style.css'].includes(file)) {
+        // These files used to be inline in index.html, so they get the same per-target key isolation (and app.js the startup hook).
+        const isolate = (source) => source
+          .replaceAll('stopwatch_', prefix)
+          .replaceAll('stopwatch2_', `friend-${target}-legacy_`)
+          .replaceAll('stopwatch-settings-entry-tutorial-', `friend-${target}-settings-entry-tutorial-`);
+        const script = distributedBytes.toString('utf8');
+        comparable = Buffer.from(script);
+        expected = Buffer.from(file === 'app.js' ? injectLegacyMigration(isolate(snapshotBytes.toString('utf8')), target) : isolate(snapshotBytes.toString('utf8')));
+        personalExpected = personalBytes ? Buffer.from(file === 'app.js' ? injectLegacyMigration(isolate(personalBytes.toString('utf8')), target) : isolate(personalBytes.toString('utf8'))) : null;
+        assert.doesNotMatch(script, /["']stopwatch_/);
+        assert.doesNotMatch(script, /["']stopwatch2_/);
+        assert.doesNotMatch(script, /["']stopwatch-settings-entry-tutorial-/);
+        if (file === 'app.js') {
+          assert.match(script, new RegExp(`${prefix}preset_cs`));
+          assert.match(script, new RegExp(`${prefix}ui_mode`));
+          assert.match(script, /legacy-storage-migration\.mjs/);
+          assert.equal(script.includes('else initApp();'), false);
+        }
+        if (file === 'settings-tutorial.js') assert.match(script, new RegExp(`friend-${target}-settings-entry-tutorial-v1`));
       } else if (file === 'logic.js') {
         const isolate = (source) => source.replaceAll('stopwatch_', prefix).replaceAll('stopwatch2_', `friend-${target}-legacy_`);
         const logic = distributedBytes.toString('utf8');

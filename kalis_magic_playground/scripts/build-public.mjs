@@ -470,7 +470,17 @@ export function transformDistributionDocument(html, app) {
   // RELEASE friends get the same editor as the personal build. Other friend apps stay fixed.
   if (app.target !== 'release') next = next.replace(/<body\b/, '<body data-magic-customize="off"');
   next = next.replace('<head>', `<head>\n${accessGuard(app.tool, app.target)}`);
+  // KAIROS keeps its startup hook in app.js once the inline script is split out; transformKairosScript injects it there.
+  if (isolate && !next.includes(INIT_APP_HOOK)) return next;
   return injectLegacyMigration(next, app.target);
+}
+
+// Files that used to be inline in the KAIROS snapshot index.html. They get the same per-target key isolation.
+export const KAIROS_SPLIT_FILES = ['app.js', 'settings-swipe.js', 'selftest.js', 'settings-tutorial.js', 'wake-lock.js', 'install-nudge.js', 'sw-register.js', 'style.css'];
+
+export function transformKairosScript(source, target, file) {
+  const isolated = isolateKairosStorageKeys(source, target);
+  return file === 'app.js' ? injectLegacyMigration(isolated, target) : isolated;
 }
 
 export async function publishLegacyBridgeFiles(distRoot) {
@@ -641,6 +651,10 @@ async function buildDistributionApps() {
       const logicPath = path.join(target, 'logic.js');
       const logic = await readFile(logicPath, 'utf8');
       await writeFile(logicPath, isolateKairosStorageKeys(logic, app.target));
+      for (const file of KAIROS_SPLIT_FILES) {
+        const splitPath = path.join(target, file);
+        await writeFile(splitPath, transformKairosScript(await readFile(splitPath, 'utf8'), app.target, file));
+      }
     }
     if (LEGACY_MIGRATION_TARGETS.has(app.target)) {
       await publishLegacyMigrationModules(target);

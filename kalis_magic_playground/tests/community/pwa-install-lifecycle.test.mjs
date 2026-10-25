@@ -13,9 +13,9 @@ const PROMPTS = [
   ['distribution-snapshots/usotsuki/install-prompt.js', 'panel'],
   ['zz8/install-ui.js', 'control'],
   ['zz1/install-nudge.js', 'nudge'], ['zz3/install-nudge.js', 'nudge'],
-  ['distribution-snapshots/kairos/index.html', 'nudge'],
-  ['distribution-snapshots/gwayubulgeup/index.html', 'nudge'],
-  ['distribution-snapshots/calculator/index.html', 'nudge'],
+  ['distribution-snapshots/kairos/install-nudge.js', 'nudge'],
+  ['distribution-snapshots/gwayubulgeup/install-nudge.js', 'nudge'],
+  ['distribution-snapshots/calculator/install-nudge.js', 'nudge'],
 ];
 
 async function runtime(file, kind) {

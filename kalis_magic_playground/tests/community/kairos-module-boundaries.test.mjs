@@ -1,8 +1,6 @@
 import test, { after, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { copyFileSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { readFileSync } from 'node:fs';
 import { runInThisContext } from 'node:vm';
 import { pathToFileURL } from 'node:url';
 
@@ -13,14 +11,12 @@ import { pathToFileURL } from 'node:url';
 // Drives boot, the settings-entry guide, the two-finger downward swipe, settings saves, the stopwatch
 // performance flow (portrait and landscape), wake lock on visibility and the install prompt through the
 // listeners the app registers on a minimal stub DOM.
-// KAIROS_ROOT selects another root, for example distribution-snapshots/kairos. That snapshot keeps its
-// module inline in index.html, so the inline body is written to a temp dir next to the files it imports.
+// KAIROS_ROOT selects another root, for example distribution-snapshots/kairos, which loads from real files too.
 // Not reachable with these stubs: preset-edit gestures by hand (digit and group swipes), the landscape
 // long-press and three-finger mode toggle, ResizeObserver layout, and the appearance editor that
 // settings-ui.js mounts (it needs a full DOM; only its install-event slot and API load here).
 const root = process.env.KAIROS_ROOT ? pathToFileURL(`${process.env.KAIROS_ROOT.replace(/\/?$/, '/')}`) : new URL('../../zz1/', import.meta.url);
-const tempDir = mkdtempSync(join(tmpdir(), 'kairos-boundary-'));
-after(() => { console.error = originalConsoleError; rmSync(tempDir, { recursive: true, force: true }); });
+after(() => { console.error = originalConsoleError; });
 
 const errors = [];
 process.on('unhandledRejection', (reason) => errors.push(`unhandledRejection: ${reason?.stack || reason}`));
@@ -330,12 +326,8 @@ function runClassic(script) {
   runInThisContext(script.src ? readFileSync(new URL(script.src, root), 'utf8') : script.body, { filename });
 }
 function moduleUrlFor(script) {
-  if (script.src) return new URL(script.src, root);
-  const imports = [...script.body.matchAll(/\bfrom\s+["'](\.\/[^"']+)["']/g)].map((match) => match[1]);
-  for (const name of imports) copyFileSync(new URL(name, root), join(tempDir, name));
-  writeFileSync(join(tempDir, 'package.json'), '{"type":"module"}');
-  writeFileSync(join(tempDir, 'inline-module.mjs'), script.body);
-  return pathToFileURL(join(tempDir, 'inline-module.mjs'));
+  assert.ok(script.src, 'the module entry is a real file, not an inline script');
+  return new URL(script.src, root);
 }
 
 const pathname = process.env.KAIROS_ROOT ? '/distribution-snapshots/kairos/index.html' : '/zz1/index.html';

@@ -79,19 +79,23 @@ test('forced stop skips the trick when it would precede the last lap', () => {
 test('portrait app paints real and forced time through the same digits', () => {
   const html = read('distribution-snapshots/gwayubulgeup/index.html');
   const logic = read('distribution-snapshots/gwayubulgeup/logic.js');
+  // The page style and the app module live in their own files; the page is the three together.
+  const app = read('distribution-snapshots/gwayubulgeup/app.js');
+  const style = read('distribution-snapshots/gwayubulgeup/style.css');
+  const page = html + app + style;
   assert.equal(TRICK_STORAGE_KEY, 'gwayubulgeup_trick');
   assert.match(logic, /export function trickStopMs/);
   assert.match(logic, /export function stopwatchDigits/);
-  assert.equal(html.includes('function paint'), true);
-  assert.match(html, /function paint\(ms\) \{\s*const digits = stopwatchDigits\(ms\);/);
-  assert.match(html, /elapsedBase = trickStopMs\(elapsedNow\(\), trickOn, lastLapElapsed\);[\s\S]*paint\(elapsedBase\);/);
-  assert.doesNotMatch(html, /lastLapElapsed = elapsedBase/);
-  assert.match(html, /paint\(elapsed\)/);
-  assert.doesNotMatch(html, /landscape|preset|trickState|digitFromPoint|sequence|stopwatch_ui_mode|l-control|p-digit-guide/);
+  assert.equal(app.includes('function paint'), true);
+  assert.match(app, /function paint\(ms\) \{\s*const digits = stopwatchDigits\(ms\);/);
+  assert.match(app, /elapsedBase = trickStopMs\(elapsedNow\(\), trickOn, lastLapElapsed\);[\s\S]*paint\(elapsedBase\);/);
+  assert.doesNotMatch(page, /lastLapElapsed = elapsedBase/);
+  assert.match(app, /paint\(elapsed\)/);
+  assert.doesNotMatch(page, /landscape|preset|trickState|digitFromPoint|sequence|stopwatch_ui_mode|l-control|p-digit-guide/);
   assert.match(html, /id="p-world"/);
-  assert.match(html, /setTrick\(!trickOn\)/);
-  assert.match(html, /html\[data-gwayu-trick="on"\] \.tab-world \.core \{ fill: currentColor; \}/);
-  assert.match(html, /\.tab-world \.core \{ fill: #1C1C1E; stroke: none; \}/);
+  assert.match(app, /setTrick\(!trickOn\)/);
+  assert.match(style, /html\[data-gwayu-trick="on"\] \.tab-world \.core \{ fill: currentColor; \}/);
+  assert.match(style, /\.tab-world \.core \{ fill: #1C1C1E; stroke: none; \}/);
   assert.match(html, /gwayubulgeup_trick/);
   assert.match(html, /alt="Plan B"/);
   assert.match(html, /src="\.\/brand-logo\.png"/);
@@ -110,16 +114,16 @@ test('portrait app paints real and forced time through the same digits', () => {
   assert.match(html, /href="https:\/\/open\.kakao\.com\/o\/gUJkfxzi"/);
   assert.match(html, /id="planb-openchat"[^>]*target="_blank"/);
   assert.match(html, /id="planb-openchat"[^>]*rel="noopener noreferrer"/);
-  assert.doesNotMatch(html, /\$\('planb-openchat'\)\.addEventListener\('click'/);
-  assert.doesNotMatch(html, /window\.open\(\$\('planb-openchat'\)/);
+  assert.doesNotMatch(page, /\$\('planb-openchat'\)\.addEventListener\('click'/);
+  assert.doesNotMatch(page, /window\.open\(\$\('planb-openchat'\)/);
   assert.match(html, />Plan B 오픈채팅 참여하기</);
   assert.match(html, /<span>이 마술은 Plan B의 김훈 님과 칼리 님이<\/span>\s*<span>여러분을 위해 준비했습니다\.<\/span>/);
   const settingsUi = read('distribution-snapshots/gwayubulgeup/settings-ui.js');
   assert.match(settingsUi, /<span>수정할 점이나 버그,|수정할 점이나 버그,/);
   assert.match(settingsUi, /새로운 아이디어가 있다면/);
   assert.match(settingsUi, /카카오톡으로 알려주세요\./);
-  assert.doesNotMatch(html, /[—~]/);
-  assert.doesNotMatch(html, /requestFullscreen|webkitRequestFullscreen/);
+  assert.doesNotMatch(page, /[—~]/);
+  assert.doesNotMatch(page, /requestFullscreen|webkitRequestFullscreen/);
   const sw = read('distribution-snapshots/gwayubulgeup/sw.js');
   assert.match(sw, /gwayubulgeup-shell-/);
   assert.match(sw, /brand-logo\.png/);
@@ -165,7 +169,7 @@ test('gwayubulgeup is a separate gated friend app', () => {
 
 test('deliberate lines stay separate blocks and wrap inside a line only as a fallback', () => {
   const css = read('distribution-snapshots/gwayubulgeup/settings-ui.css');
-  const html = read('distribution-snapshots/gwayubulgeup/index.html');
+  const html = read('distribution-snapshots/gwayubulgeup/style.css');
   const rule = css.match(/#settings #settings-card \.planb-copy > span,\s*#settings #settings-card #trick-note > span,\s*#settings #settings-card > \.magic-overview > p > span \{([^}]+)\}/);
   assert.ok(rule, 'deliberate line rule');
   assert.match(rule[1], /display:\s*block/);
@@ -195,12 +199,13 @@ test('deliberate lines stay separate blocks and wrap inside a line only as a fal
 test('settings content is centre-aligned and the header stays a navigation bar', () => {
   const css = read('distribution-snapshots/gwayubulgeup/settings-ui.css');
   const html = read('distribution-snapshots/gwayubulgeup/index.html');
+  const style = read('distribution-snapshots/gwayubulgeup/style.css');
   const sw = read('distribution-snapshots/gwayubulgeup/sw.js');
   const centred = css.match(/#settings #settings-card :is\(#trick-note, \.planb-block, \.magic-settings-group, \.magic-overview, \.magic-overview :is\(h2, p\), \.magic-install, \.magic-install-status, \.magic-install-status :is\(p, li, ol\), \.magic-settings-footer, \.magic-contact-heading, \.magic-contact-note, \.magic-contact-help, \.magic-contact-help :is\(p, summary\), \.magic-contact-id\) \{([^}]+)\}/);
   assert.ok(centred, 'settings text centring rule');
   assert.match(centred[1], /text-align:\s*center !important/);
   assert.match(css, /#settings #settings-card \{[^}]*text-align:\s*center/);
-  assert.match(html, /#trick-note \{[^}]*text-align:\s*center/);
+  assert.match(style, /#trick-note \{[^}]*text-align:\s*center/);
   const header = css.match(/#settings #settings-card #settings-header \{([^}]*text-align:\s*left[^}]*)\}/);
   assert.ok(header, 'settings header stays left/right');
   assert.match(header[1], /justify-content:\s*space-between !important/);
@@ -227,13 +232,14 @@ test('settings content is centre-aligned and the header stays a navigation bar',
   assert.match(steps[1], /text-align:\s*center !important/);
   assert.match(steps[1], /list-style:\s*none/);
   assert.match(css, /#settings #settings-card \.magic-install-status li > span:first-child::before \{[^}]*content:\s*counter\(magic-install-step\) "\. "/);
-  assert.match(html, /#settings-entry-tutorial \.tutorial-card \{[^}]*text-align:\s*center/);
+  assert.match(style, /#settings-entry-tutorial \.tutorial-card \{[^}]*text-align:\s*center/);
   assert.match(sw, /v20261016-portrait-1-manual-install-1-coherent-1-planb-1-center-1/);
 });
 
 test('installed PWA open chat uses only the anchor navigation', () => {
-  const html = read('distribution-snapshots/gwayubulgeup/index.html');
-  const anchor = html.match(/<a id="planb-openchat"[^>]*>/);
+  const markup = read('distribution-snapshots/gwayubulgeup/index.html');
+  const html = markup + read('distribution-snapshots/gwayubulgeup/app.js');
+  const anchor = markup.match(/<a id="planb-openchat"[^>]*>/);
   assert.ok(anchor);
   assert.match(anchor[0], /href="https:\/\/open\.kakao\.com\/o\/gUJkfxzi"/);
   assert.match(anchor[0], /target="_blank"/);

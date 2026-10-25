@@ -14,7 +14,7 @@ import { pathToFileURL } from 'node:url';
 // downward settings swipe, settings saves, the RELEASE handoff, Shift+Esc on desktop, the install nudge, the
 // wake lock (the stub releases it when the page is hidden, like a browser) and the #selftest entry of boot.js.
 // The page clock (Date, setTimeout) is controlled by the test and moves only through advance().
-// Only the personal zz3 app is covered. The friend snapshot distribution-snapshots/calculator is one inline file.
+// Covers the personal zz3 app and, through ZZ3_ROOT, the friend snapshot distribution-snapshots/calculator.
 // Not covered: the appearance editor settings-ui.js builds (it needs a full DOM; only its mount and install slot
 // run here), the /tools/_check revoke poll (inline script, only runs under /tools/), the service worker file.
 // ZZ3_ROOT lets a mutation check point the same test at a scratch copy.
@@ -626,11 +626,15 @@ test('entry tutorial: a click right after the swipe is swallowed, a later click 
 
 test('desktop: the settings button appears for a mouse device and Shift+Esc opens settings, but not while editing', async () => {
   const button = node('desktop-settings-entry');
+  // The friend snapshot's button follows the media query only (change event); the personal one also rechecks the
+  // touch points and the user agent on focus and pageshow, and marks the page with desktop-settings-enabled.
+  const mediaOnly = !readFileSync(new URL('settings-swipe.js', root), 'utf8').includes('desktop-settings-enabled');
+  const recheck = (type) => (mediaOnly ? fire(env.media, 'change') : fire(win, type));
   env.navigator.maxTouchPoints = 0;
   env.media.matches = true;
-  await fire(win, 'focus');
+  await recheck('focus');
   assert.equal(button.hidden, false);
-  assert.equal(document.documentElement.classes.has('desktop-settings-enabled'), true);
+  if (!mediaOnly) assert.equal(document.documentElement.classes.has('desktop-settings-enabled'), true);
 
   await fire(win, 'keydown', { key: 'Escape', shiftKey: false, target: document.body });
   assert.equal(settingsOpen(), false, 'plain Escape does nothing');
@@ -649,7 +653,7 @@ test('desktop: the settings button appears for a mouse device and Shift+Esc open
   assert.equal(button.hidden, false);
   env.navigator.maxTouchPoints = 5;
   env.media.matches = false;
-  await fire(win, 'pageshow');
+  await recheck('pageshow');
   assert.equal(button.hidden, true, 'back to a touch device');
 });
 

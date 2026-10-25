@@ -5,9 +5,9 @@ import { runInNewContext } from 'node:vm';
 
 const ROOT = new URL('../../', import.meta.url);
 const APPS = [
-  ['zz1/install-nudge.js', 'nudge'], ['distribution-snapshots/kairos/index.html', 'nudge'],
+  ['zz1/install-nudge.js', 'nudge'], ['distribution-snapshots/kairos/install-nudge.js', 'nudge'],
   ['zz2/install-prompt.js', 'offer'], ['distribution-snapshots/unlock/install-prompt.js', 'offer'],
-  ['zz3/install-nudge.js', 'nudge'], ['distribution-snapshots/calculator/index.html', 'nudge'],
+  ['zz3/install-nudge.js', 'nudge'], ['distribution-snapshots/calculator/install-nudge.js', 'nudge'],
   ['zz4/install-prompt.js', 'card'], ['zz5/install-prompt.js', 'card'],
   ['distribution-snapshots/aletheia/install-prompt.js', 'card'],
   ['zz6/install-prompt.js', 'panel'], ['zz7/install-prompt.js', 'panel'],

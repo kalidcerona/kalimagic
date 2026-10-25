@@ -11,6 +11,7 @@ import {
   publishLegacyBridgeFiles,
   publishLegacyMigrationModules,
   transformDistributionDocument,
+  transformKairosScript,
 } from '../../scripts/build-public.mjs';
 import { legacyBridgeSource } from '../../scripts/legacy-sw-bridge.mjs';
 import { LEGACY_SHARED_WORKERS } from '../../scripts/legacy-shared-contract.mjs';
@@ -92,14 +93,21 @@ test('key rewrite misses raw legacy keys and the injected module keeps them', ()
 
 test('distribution transform injects migration without editing canonical snapshots', async () => {
   const kairos = await readFile(path.join(root, 'distribution-snapshots/kairos/index.html'), 'utf8');
+  const kairosApp = await readFile(path.join(root, 'distribution-snapshots/kairos/app.js'), 'utf8');
   const before = kairos;
   const classic = transformDistributionDocument(kairos, { target: 'kairos-classic', tool: 'stopwatch' });
   const uni = transformDistributionDocument(kairos, { target: 'kairos', tool: 'stopwatch-uni' });
   assert.equal(kairos, before);
-  for (const [html, prefix] of [[classic, 'friend-kairos-classic_'], [uni, 'friend-kairos_']]) {
+  for (const [html, prefix, target] of [[classic, 'friend-kairos-classic_', 'kairos-classic'], [uni, 'friend-kairos_', 'kairos']]) {
+    // The startup hook and the storage keys live in app.js now; the build injects and isolates them there.
+    const app = transformKairosScript(kairosApp, target, 'app.js');
+    assert.equal(app.includes('stopwatch_'), false);
+    assert.equal(app.includes('stopwatch2_'), false);
+    assert.match(app, new RegExp(`${prefix}preset_cs`));
+    assert.match(app, /legacy-storage-migration\.mjs/);
+    assert.equal(app.includes('else initApp();'), false);
     assert.equal(html.includes('stopwatch_'), false);
     assert.equal(html.includes('stopwatch2_'), false);
-    assert.match(html, new RegExp(`${prefix}preset_cs`));
     assert.match(html, /id="friend-apps-check"/);
     assert.match(html, /friend-apps-ok:/);
     assert.match(html, /result\.ok === false/);
@@ -109,18 +117,20 @@ test('distribution transform injects migration without editing canonical snapsho
     assert.match(html, /90 \* dayMs/);
     assert.doesNotMatch(html, /\.catch\(\(\) => \{ location\.replace\(loginUrl\); \}\)/);
     assert.match(html, /data-magic-customize="off"/);
-    assert.match(html, /legacy-storage-migration\.mjs/);
     assert.equal(html.includes('else initApp();'), false);
   }
+  assert.throws(() => transformKairosScript('const x = 1;', 'kairos', 'app.js'), /missing legacy migration hook/);
   const calculator = await readFile(path.join(root, 'distribution-snapshots/calculator/index.html'), 'utf8');
   const hitsuzen = transformDistributionDocument(calculator, { target: 'hitsuzen', tool: 'calc' });
   assert.equal(calculator.includes('legacy-storage-migration.mjs'), false);
   assert.match(hitsuzen, /target: "hitsuzen"/);
-  assert.match(hitsuzen, /magic-calc-date-delay/);
-  assert.match(hitsuzen, /magic-calc-hour-cycle/);
-  assert.match(hitsuzen, /magic-calc-skin/);
+  // The HITSUZEN storage keys live in the classic app.js now, which the build copies unchanged.
+  const calculatorApp = await readFile(path.join(root, 'distribution-snapshots/calculator/app.js'), 'utf8');
+  assert.match(calculatorApp, /magic-calc-date-delay/);
+  assert.match(calculatorApp, /magic-calc-hour-cycle/);
+  assert.match(calculatorApp, /magic-calc-skin/);
   assert.match(hitsuzen, /id="friend-apps-check"/);
-  assert.equal(hitsuzen.includes('stopwatch_preset_cs'), false);
+  assert.equal((hitsuzen + calculatorApp).includes('stopwatch_preset_cs'), false);
 });
 
 test('build publishes bridge files outside the excluded legacy trees', async () => {
