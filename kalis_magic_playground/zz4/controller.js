@@ -1,4 +1,4 @@
-import './backup.js';
+import { bindBackup } from './backup.js';
 import {
   APPEARANCES, MSG, addPreset, emptyState, wizardPayload, normalizeBuiltins, loadFromStorage,
   overwritePreset, replaceStoreKeepingBackup, saveState, splitForcePreset,
@@ -7,18 +7,22 @@ import {
   nameInput, appearanceInput, itemsInput, forceInput, editorMessage, recoveryEl, recoveryError,
   recoverySlim,
 } from './dom.js';
-import { setEditorMessage, confirmSaveReport, renderTargets } from './editor.js';
-import { renderOptions } from './options.js';
-import { renderPrecheck, renderRecovery } from './precheck.js';
+import { setEditorMessage, confirmSaveReport, renderTargets, bindEditorInputs } from './editor.js';
+import { renderOptions, bindOptionModes, bindOptionRanges } from './options.js';
+import { renderPrecheck, renderRecovery, bindPrecheckRefresh, bindRecovery } from './precheck.js';
 import {
   wizard, noteStoreDirty, flushDirtyViews, renderSaved, notesFate, finishWizard, bindSettingsViews,
 } from './views.js';
 import { commitItemEdits, renderWizardStep3 } from './wizard.js';
-import { renderMemoryTable, renderExtras } from './extras.js';
-import { syncUserIconsFromStorage, renderUserIcons } from './user-icons.js';
+import { renderMemoryTable, renderExtras, bindExtras } from './extras.js';
+import { syncUserIconsFromStorage, renderUserIcons, bindUserIcons } from './user-icons.js';
 import { initPreviews } from './previews.js';
-import { loadInputGuidePreference } from './input-guide.js';
-import { startBootPerformance, armArtworkWarmup } from './performance.js';
+import { loadInputGuidePreference, bindInputGuide } from './input-guide.js';
+import {
+  startBootPerformance, armArtworkWarmup, bindStartButton, bindPerformanceInput,
+} from './performance.js';
+import { bindFakeNotes } from './fake-notes.js';
+import { bindWallpaper } from './wallpaper.js';
 
 let store = emptyState();
 let recoveryState = null;
@@ -91,6 +95,22 @@ async function saveWizard() {
   if (wizard.mode === 'new') finishWizard(`${notesFate(result.preset.id, wizard.title)} 예언 항목은 목록에서 언제든 바꿀 수 있어요.`);
   else finishWizard('', { detailId: wizard.id });
 }
+
+// Registration order is the order of the pre-split single file (tests/community/choice-startup-order.test.mjs).
+// The settings gesture guide registers when its module is evaluated, which is first.
+bindStartButton();
+bindInputGuide();
+bindOptionModes();
+bindPrecheckRefresh();
+bindFakeNotes();
+bindEditorInputs();
+bindRecovery();
+bindExtras();
+bindBackup();
+bindUserIcons();
+bindWallpaper();
+bindOptionRanges();
+bindPerformanceInput();
 
 loadInputGuidePreference();
 bindSettingsViews();

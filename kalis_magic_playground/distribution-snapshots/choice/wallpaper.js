@@ -132,10 +132,12 @@ function renderWallpaperState() {
   if (node) node.textContent = normalizeOptions(store.options).wallpaper === 'photo' ? '지금 내 배경 사진을 쓰고 있습니다.' : '지금 기본 배경을 쓰고 있습니다.';
 }
 
-document.getElementById('wallpaper-file').addEventListener('change', (event) => { onWallpaperFile(event); });
-document.getElementById('wallpaper-apply').addEventListener('click', () => { onWallpaperApply(); });
-document.getElementById('wallpaper-cancel').addEventListener('click', closeWallpaperEditor);
-bindWallpaperCropper();
-document.getElementById('wallpaper-reset').addEventListener('click', () => { onWallpaperReset(); });
+function bindWallpaper() {
+  document.getElementById('wallpaper-file').addEventListener('change', (event) => { onWallpaperFile(event); });
+  document.getElementById('wallpaper-apply').addEventListener('click', () => { onWallpaperApply(); });
+  document.getElementById('wallpaper-cancel').addEventListener('click', closeWallpaperEditor);
+  bindWallpaperCropper();
+  document.getElementById('wallpaper-reset').addEventListener('click', () => { onWallpaperReset(); });
+}
 
-export { renderWallpaperState };
+export { renderWallpaperState, bindWallpaper };

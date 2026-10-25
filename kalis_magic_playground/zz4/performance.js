@@ -449,73 +449,80 @@ function gestureMoves() {
   return [...armed.values()].map((record) => record.lastY - record.startY);
 }
 
-document.getElementById('start-notes-show').addEventListener('click', startNotesShow);
-
-document.addEventListener('pointerdown', onFakeHomePointerDown);
-document.addEventListener('pointermove', onFakeHomePointerMove);
-document.addEventListener('pointerup', onFakeHomePointerUp);
-document.addEventListener('pointercancel', onFakeHomePointerCancel);
-
-document.addEventListener('touchstart', (event) => {
-  if (!rehearsalSurfaceOpen()) return;
-  if (event.touches.length === 2) {
-    if (fakeHomeGesture) fakeHomeGesture.canceled = true;
-    rememberTouches(event.touches);
-  } else armed = null;
-}, { passive: true });
-
-document.addEventListener('touchmove', (event) => {
-  if (!rehearsalSurfaceOpen() || !armed || event.touches.length !== 2) return;
-  const moves = [];
-  for (const touch of event.touches) {
-    const record = armed.get(touch.identifier);
-    if (!record) {
-      armed = null;
-      return;
-    }
-    record.lastY = touch.screenY;
-    moves.push(touch.screenY - record.startY);
-  }
-  if (moves.length === 2 && moves.every((delta) => delta > 8)) event.preventDefault();
-}, { passive: false });
-
-document.addEventListener('touchend', (event) => {
-  if (!rehearsalSurfaceOpen() || !armed) return;
-  for (const touch of event.changedTouches) {
-    const record = armed.get(touch.identifier);
-    if (record) record.lastY = touch.screenY;
-  }
-  if (armed.size === 2 && isTwoFingerDownSwipe(gestureMoves())) {
-    armed = null;
-    leaveRehearsalSurface();
-    return;
-  }
-  if (event.touches.length < 2) armed = null;
-}, { passive: true });
-
-document.addEventListener('touchcancel', resetTransientInput, { passive: true });
-window.addEventListener('blur', resetTransientInput);
-window.addEventListener('pagehide', resetTransientInput);
-window.addEventListener('resize', resetTransientInput);
-document.addEventListener('visibilitychange', () => {
-  resetTransientInput();
-  if (document.visibilityState === 'visible') acquireWakeLock();
-  else releaseWakeLock();
-});
+// Startup listener registration lives in bind functions. controller.js calls them in the order the
+// pre-split single file registered them (tests/community/choice-startup-order.test.mjs).
+function bindStartButton() {
+  document.getElementById('start-notes-show').addEventListener('click', startNotesShow);
+}
 
 // While a performance surface is open nothing may lead to editing or a menu. Only the
 // two-finger downward swipe above leaves it.
 function blockWhilePerforming(event) {
   if (rehearsalSurfaceOpen()) event.preventDefault();
 }
-for (const type of ['contextmenu', 'selectstart', 'dragstart']) {
-  document.addEventListener(type, blockWhilePerforming, true);
+
+function bindPerformanceInput() {
+  document.addEventListener('pointerdown', onFakeHomePointerDown);
+  document.addEventListener('pointermove', onFakeHomePointerMove);
+  document.addEventListener('pointerup', onFakeHomePointerUp);
+  document.addEventListener('pointercancel', onFakeHomePointerCancel);
+
+  document.addEventListener('touchstart', (event) => {
+    if (!rehearsalSurfaceOpen()) return;
+    if (event.touches.length === 2) {
+      if (fakeHomeGesture) fakeHomeGesture.canceled = true;
+      rememberTouches(event.touches);
+    } else armed = null;
+  }, { passive: true });
+
+  document.addEventListener('touchmove', (event) => {
+    if (!rehearsalSurfaceOpen() || !armed || event.touches.length !== 2) return;
+    const moves = [];
+    for (const touch of event.touches) {
+      const record = armed.get(touch.identifier);
+      if (!record) {
+        armed = null;
+        return;
+      }
+      record.lastY = touch.screenY;
+      moves.push(touch.screenY - record.startY);
+    }
+    if (moves.length === 2 && moves.every((delta) => delta > 8)) event.preventDefault();
+  }, { passive: false });
+
+  document.addEventListener('touchend', (event) => {
+    if (!rehearsalSurfaceOpen() || !armed) return;
+    for (const touch of event.changedTouches) {
+      const record = armed.get(touch.identifier);
+      if (record) record.lastY = touch.screenY;
+    }
+    if (armed.size === 2 && isTwoFingerDownSwipe(gestureMoves())) {
+      armed = null;
+      leaveRehearsalSurface();
+      return;
+    }
+    if (event.touches.length < 2) armed = null;
+  }, { passive: true });
+
+  document.addEventListener('touchcancel', resetTransientInput, { passive: true });
+  window.addEventListener('blur', resetTransientInput);
+  window.addEventListener('pagehide', resetTransientInput);
+  window.addEventListener('resize', resetTransientInput);
+  document.addEventListener('visibilitychange', () => {
+    resetTransientInput();
+    if (document.visibilityState === 'visible') acquireWakeLock();
+    else releaseWakeLock();
+  });
+
+  for (const type of ['contextmenu', 'selectstart', 'dragstart']) {
+    document.addEventListener(type, blockWhilePerforming, true);
+  }
+  document.addEventListener('click', (event) => {
+    if (!rehearsalSurfaceOpen() || Date.now() >= clickGuardUntil) return;
+    event.preventDefault();
+    event.stopPropagation();
+  }, true);
 }
-document.addEventListener('click', (event) => {
-  if (!rehearsalSurfaceOpen() || Date.now() >= clickGuardUntil) return;
-  event.preventDefault();
-  event.stopPropagation();
-}, true);
 
 // Boot never rewrites a saved or corrupt store. The app opens on the settings screen unless the performer
 // chose to start in the performance, which always begins on the first page of the fake home screen.
@@ -586,5 +593,5 @@ function armArtworkWarmup() {
 export {
   fakeHomeSession, rehearsalSurfaceOpen, applyHomeStyle, vibrateCue, renderEntryReadout,
   attachPinchZoom, closeFakeHome, backToFakeHome, startBlockReason, showStartProblem,
-  startNotesShow, startBootPerformance, armArtworkWarmup,
+  startNotesShow, startBootPerformance, armArtworkWarmup, bindStartButton, bindPerformanceInput,
 };

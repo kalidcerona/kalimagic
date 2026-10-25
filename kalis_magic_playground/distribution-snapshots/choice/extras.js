@@ -186,15 +186,17 @@ function renderExtras() {
   renderEditorPreview();
 }
 
-document.getElementById('dummy-save').addEventListener('click', onDummySave);
-document.getElementById('dummy-new').addEventListener('click', () => { fillDummyForm(null); dummyMessage.textContent = ''; });
-document.getElementById('dummy-examples').addEventListener('click', onDummyExamples);
-setActive.addEventListener('change', () => {
-  persistExtras({ activeSetId: setActive.value || null }, '', setMessage);
-});
-setSelect.addEventListener('change', () => { setLoadedId = setSelect.value || null; if (!setLoadedId) setName.value = ''; renderSets(); });
-document.getElementById('set-save').addEventListener('click', onSetSave);
-document.getElementById('set-delete').addEventListener('click', () => { onSetDelete(); });
-document.getElementById('set-new').addEventListener('click', () => { setLoadedId = null; setName.value = ''; setMessage.textContent = ''; renderSets(); });
+function bindExtras() {
+  document.getElementById('dummy-save').addEventListener('click', onDummySave);
+  document.getElementById('dummy-new').addEventListener('click', () => { fillDummyForm(null); dummyMessage.textContent = ''; });
+  document.getElementById('dummy-examples').addEventListener('click', onDummyExamples);
+  setActive.addEventListener('change', () => {
+    persistExtras({ activeSetId: setActive.value || null }, '', setMessage);
+  });
+  setSelect.addEventListener('change', () => { setLoadedId = setSelect.value || null; if (!setLoadedId) setName.value = ''; renderSets(); });
+  document.getElementById('set-save').addEventListener('click', onSetSave);
+  document.getElementById('set-delete').addEventListener('click', () => { onSetDelete(); });
+  document.getElementById('set-new').addEventListener('click', () => { setLoadedId = null; setName.value = ''; setMessage.textContent = ''; renderSets(); });
+}
 
-export { renderDummies, renderSets, renderMemoryTable, renderExtras };
+export { renderDummies, renderSets, renderMemoryTable, renderExtras, bindExtras };

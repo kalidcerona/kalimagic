@@ -298,10 +298,12 @@ function ensureFakeHomeIcons(root = fakeHomeEl) {
   }
 }
 
-document.getElementById('usericon-file').addEventListener('change', (event) => { onIconFile(event); });
-document.getElementById('usericon-add').addEventListener('click', onIconAdd);
-document.getElementById('usericon-cancel').addEventListener('click', closeIconEditor);
-iconPage.addEventListener('change', renderSlotPicker);
-bindIconCropper();
+function bindUserIcons() {
+  document.getElementById('usericon-file').addEventListener('change', (event) => { onIconFile(event); });
+  document.getElementById('usericon-add').addEventListener('click', onIconAdd);
+  document.getElementById('usericon-cancel').addEventListener('click', closeIconEditor);
+  iconPage.addEventListener('change', renderSlotPicker);
+  bindIconCropper();
+}
 
-export { syncUserIconsFromStorage, renderUserIcons, ensureFakeHomeIcons };
+export { syncUserIconsFromStorage, renderUserIcons, ensureFakeHomeIcons, bindUserIcons };

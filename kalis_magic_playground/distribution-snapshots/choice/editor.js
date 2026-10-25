@@ -128,8 +128,10 @@ async function onDelete() {
   setEditorMessage('목록을 삭제했습니다.');
 }
 
-form.addEventListener('submit', (event) => event.preventDefault());
-itemsInput.addEventListener('input', () => renderTargets());
-forceInput.addEventListener('input', () => renderEditorPreview());
+function bindEditorInputs() {
+  form.addEventListener('submit', (event) => event.preventDefault());
+  itemsInput.addEventListener('input', () => renderTargets());
+  forceInput.addEventListener('input', () => renderEditorPreview());
+}
 
-export { setEditorMessage, confirmAsk, renderEditorPreview, confirmSaveReport, renderTargets };
+export { setEditorMessage, confirmAsk, renderEditorPreview, confirmSaveReport, renderTargets, bindEditorInputs };

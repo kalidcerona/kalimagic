@@ -95,6 +95,8 @@ function showInputGuide(page) {
   }, INPUT_GUIDE_HOLD_MS);
 }
 
-inputGuideInput?.addEventListener('change', () => { persistInputGuidePreference(); renderPrecheck(); });
+function bindInputGuide() {
+  inputGuideInput?.addEventListener('change', () => { persistInputGuidePreference(); renderPrecheck(); });
+}
 
-export { isInputGuideEnabled, loadInputGuidePreference, dismissInputGuide, showInputGuide };
+export { isInputGuideEnabled, loadInputGuidePreference, dismissInputGuide, showInputGuide, bindInputGuide };

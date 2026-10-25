@@ -172,34 +172,39 @@ function renderRecovery() {
   document.getElementById('recovery-partial').disabled = !(recoveryState.partial?.presets?.length);
 }
 
-precheckRefresh?.addEventListener('click', () => renderPrecheck());
+function bindPrecheckRefresh() {
+  precheckRefresh?.addEventListener('click', () => renderPrecheck());
+}
 
-document.getElementById('recovery-partial').addEventListener('click', () => {
-  if (!recoveryState?.partial?.presets?.length) return;
-  const partial = recoveryState.partial;
-  if (!persist(partial)) return;
-  fillEditor(null);
-  setEditorMessage('복구된 목록만 저장했습니다. 이전 원본은 백업에 남아 있습니다.');
-});
+function bindRecovery() {
+  document.getElementById('recovery-partial').addEventListener('click', () => {
+    if (!recoveryState?.partial?.presets?.length) return;
+    const partial = recoveryState.partial;
+    if (!persist(partial)) return;
+    fillEditor(null);
+    setEditorMessage('복구된 목록만 저장했습니다. 이전 원본은 백업에 남아 있습니다.');
+  });
 
-document.getElementById('recovery-fresh').addEventListener('click', async () => {
-  const accepted = await confirmAsk('손상된 원본은 백업으로 옮기고, 빈 목록으로 다시 시작할까요?', '새로 시작');
-  if (!accepted) return;
-  if (!persist(emptyState())) return;
-  fillEditor(null);
-  setEditorMessage('새 저장소로 시작했습니다. 이전 원본은 백업에 남아 있습니다.');
-});
+  document.getElementById('recovery-fresh').addEventListener('click', async () => {
+    const accepted = await confirmAsk('손상된 원본은 백업으로 옮기고, 빈 목록으로 다시 시작할까요?', '새로 시작');
+    if (!accepted) return;
+    if (!persist(emptyState())) return;
+    fillEditor(null);
+    setEditorMessage('새 저장소로 시작했습니다. 이전 원본은 백업에 남아 있습니다.');
+  });
 
-document.getElementById('recovery-dismiss').addEventListener('click', () => {
-  recoveryEl.hidden = true;
-  recoverySlim.hidden = false;
-});
+  document.getElementById('recovery-dismiss').addEventListener('click', () => {
+    recoveryEl.hidden = true;
+    recoverySlim.hidden = false;
+  });
 
-document.getElementById('recovery-reopen').addEventListener('click', () => {
-  recoveryEl.hidden = false;
-  recoverySlim.hidden = true;
-});
+  document.getElementById('recovery-reopen').addEventListener('click', () => {
+    recoveryEl.hidden = false;
+    recoverySlim.hidden = true;
+  });
+}
 
 export {
   choiceArtworkUrls, precheckRow, renderPrecheck, refreshVisibleOfflineReady, renderRecovery,
+  bindPrecheckRefresh, bindRecovery,
 };

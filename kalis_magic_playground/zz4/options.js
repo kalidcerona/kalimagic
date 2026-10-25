@@ -82,11 +82,15 @@ function saveOptionsFromControls() {
   if (optionsMessage) optionsMessage.textContent = ok ? '' : '설정을 저장하지 못했습니다. 저장된 목록은 그대로입니다.';
 }
 
-for (const control of [optStartMode, optDisplay, optVibrate]) control?.addEventListener('change', saveOptionsFromControls);
-
-for (const range of [optNoteFont, optNoteLine, optNoteEmphasis, optIconSize, optLabelSize, optBottomGap]) {
-  range?.addEventListener('input', renderOptionLabels);
-  range?.addEventListener('change', saveOptionsFromControls);
+function bindOptionModes() {
+  for (const control of [optStartMode, optDisplay, optVibrate]) control?.addEventListener('change', saveOptionsFromControls);
 }
 
-export { LINE_HEIGHTS, renderOptions, controlOptions };
+function bindOptionRanges() {
+  for (const range of [optNoteFont, optNoteLine, optNoteEmphasis, optIconSize, optLabelSize, optBottomGap]) {
+    range?.addEventListener('input', renderOptionLabels);
+    range?.addEventListener('change', saveOptionsFromControls);
+  }
+}
+
+export { LINE_HEIGHTS, renderOptions, controlOptions, bindOptionModes, bindOptionRanges };

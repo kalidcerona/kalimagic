@@ -78,7 +78,11 @@ function onImportCancel() {
   backupMessage.textContent = '가져오기를 취소했습니다. 아무것도 바뀌지 않았습니다.';
 }
 
-document.getElementById('export-backup').addEventListener('click', onBackupExport);
-document.getElementById('import-file').addEventListener('change', (event) => { onImportFile(event); });
-document.getElementById('import-apply').addEventListener('click', onImportApply);
-document.getElementById('import-cancel').addEventListener('click', onImportCancel);
+function bindBackup() {
+  document.getElementById('export-backup').addEventListener('click', onBackupExport);
+  document.getElementById('import-file').addEventListener('change', (event) => { onImportFile(event); });
+  document.getElementById('import-apply').addEventListener('click', onImportApply);
+  document.getElementById('import-cancel').addEventListener('click', onImportCancel);
+}
+
+export { bindBackup };

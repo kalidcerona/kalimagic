@@ -205,7 +205,9 @@ function backToFakeNotesIndex() {
   renderFakeNotesIndex(focusId);
 }
 
-fakeNotesBack?.addEventListener('click', backToFakeNotesIndex);
-fakeNotesHome?.addEventListener('click', backToFakeHome);
+function bindFakeNotes() {
+  fakeNotesBack?.addEventListener('click', backToFakeNotesIndex);
+  fakeNotesHome?.addEventListener('click', backToFakeHome);
+}
 
-export { syncFakeHomeSurface, clearFakeNotesView, emphasisRow, buildNoteScroller };
+export { syncFakeHomeSurface, clearFakeNotesView, emphasisRow, buildNoteScroller, bindFakeNotes };
