@@ -864,8 +864,8 @@ test('feedback footer: the link follows the platform and the ID copy falls back 
   assert.equal(document.body.querySelectorAll('textarea').filter((area) => area.getAttribute('readonly') !== null).length, 0, 'the temporary textarea is removed');
 });
 
-test('relaunch: a fresh page load keeps the saved configuration and starts a clean session', async () => {
-  // Build a session worth discarding: a generated QR with one edit, then frozen.
+test('relaunch: a fresh page load restores the saved configuration and the session where it was', async () => {
+  // Build a mid-performance session: a generated QR with one edit, then frozen.
   await openSettings();
   node('target').value = 'https://example.com/target';
   node('ordinal').value = '1';
@@ -892,24 +892,24 @@ test('relaunch: a fresh page load keeps the saved configuration and starts a cle
   const store = env.store;
   env = stubBrowser({ store });
   await bootPage('?relaunch=1');
-  // A new launch keeps the configuration but starts a fresh session: no QR, no count, not frozen.
-  assert.deepEqual(JSON.parse(stored(SESSION_KEY)), { ...before, counter: 0, frozen: false, bag: [], last: null, current: null });
-  assert.equal(node('qr').hidden, true);
-  assert.equal(node('empty').hidden, false);
-  assert.equal(node('freeze').textContent, '고정');
-  assert.equal(node('freeze').disabled, true);
-  assert.equal(node('generate').disabled, false);
-  assert.equal(node('clean').disabled, true);
+  // A new launch continues where it was: same count, frozen, current QR and dot edits.
+  assert.deepEqual(JSON.parse(stored(SESSION_KEY)), before);
+  assert.equal(node('qr').hidden, false);
+  assert.equal(node('empty').hidden, true);
+  assert.equal(node('freeze').textContent, '고정됨');
+  assert.equal(node('freeze').disabled, false);
+  assert.equal(node('generate').disabled, true);
+  assert.equal(node('clean').disabled, false);
   assert.equal(env.wake.requests.length, 1);
   assert.equal(document.querySelector('.first-run-guide'), null, 'the guide stays dismissed');
+  placeCanvas();
+  assert.equal(decodeCanvas(), 'https://example.com/target', 'the restored QR is painted and still decodes');
   await openSettings();
-  assert.equal(node('session').textContent, '현재 생성 횟수: 0');
+  assert.equal(node('session').textContent, '현재 생성 횟수: 1 · 고정 중');
   assert.equal(node('dotvalue').textContent, '110%');
   assert.equal(node('target').value, 'https://example.com/target');
   assert.equal(node('ordinal').value, 1);
   await closeSettings();
-  await fire(node('generate'), 'click');
-  assert.equal(decodeCanvas(), 'https://example.com/target', 'the saved ordinal and target apply to the new session');
 });
 
 test('stored data that cannot be used: the original is held, never overwritten by automatic saves, and kept before an explicit replace', async () => {
