@@ -225,7 +225,7 @@ export const CHOICE_DISTRIBUTION_FILES = [...CHOICE_FILES, ...CHOICE_MODULE_FILE
 export function shouldCopyChoice(relativePath) {
   return relativePath === '' || relativePath === 'home-icons' || CHOICE_DISTRIBUTION_FILES.includes(relativePath.split(path.sep).join('/'));
 }
-export const USOTSUKI_FILES = NEW_APP_FILES.filter((file) => file !== 'app.js').concat('first-run-guide.js', 'detector.js', 'detector-panel-grok.svg', 'holdem-assets/felt-grain.svg', 'holdem-assets/leather-grain.svg', 'holdem-assets/table-rail.svg', 'recorder-assets/recorder-shell-blank.webp', 'recorder-theme.js', 'recorder-engine.js', 'recorder-trace.js', 'recorder-a.html', 'recorder-d.html', 'controller.js', 'dom.js', 'storage.js', 'heartbeat.js', 'vibration.js', 'wake-lock.js', 'preferences.js', 'stage.js', 'bindings.js');
+export const USOTSUKI_FILES = NEW_APP_FILES.filter((file) => file !== 'app.js').concat('first-run-guide.js', 'detector.js', 'detector-panel-grok.svg', 'holdem-assets/felt-grain.svg', 'holdem-assets/leather-grain.svg', 'holdem-assets/table-rail.svg', 'recorder-assets/recorder-shell-blank.webp', 'recorder-theme.js', 'recorder-engine.js', 'recorder-trace.js', 'recorder-a.html', 'recorder-d.html', 'controller.js', 'controller-state.js', 'controller-themes.js', 'controller-audio.js', 'controller-storage.js', 'controller-hold.js', 'controller-haptic.js', 'controller-screens.js', 'controller-attempts.js', 'controller-gestures.js', 'controller-display-theme.js', 'dom.js', 'storage.js', 'heartbeat.js', 'vibration.js', 'wake-lock.js', 'preferences.js', 'stage.js', 'bindings.js');
 export const ASRAI_FILES = [
   'brand-logo.jpg', 'brand-logo.png', 'contacts.js', 'contacts-gestures.js',
   'contacts-list.js', 'contacts-screen.js', 'contacts-settings.js',

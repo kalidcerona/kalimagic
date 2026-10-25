@@ -203,7 +203,7 @@ let keys;
 
 test('boot: guide script, install-prompt and detector.js load as separate modules and reach the ready stage', async () => {
   const storage = await import(new URL('storage.js', root));
-  keys = { ...storage, THEME: readFileSync(fileURLToPath(new URL('controller.js', root)), 'utf8').match(/DISPLAY_THEME_KEY = "([^"]+)"/)[1] };
+  keys = { ...storage, THEME: readFileSync(fileURLToPath(new URL('controller-display-theme.js', root)), 'utf8').match(/DISPLAY_THEME_KEY = "([^"]+)"/)[1] };
   // Script order in index.html: deferred classic first-run-guide.js, then the module entries.
   runInThisContext(readFileSync(fileURLToPath(new URL('first-run-guide.js', root)), 'utf8'), { filename: 'first-run-guide.js' });
   await import(new URL('install-prompt.js', root));

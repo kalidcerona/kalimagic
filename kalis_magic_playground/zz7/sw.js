@@ -1,6 +1,6 @@
 // Cache only the explicit app shell. API, authentication and user data stay on the network.
 const CACHE_PREFIX = 'usotsuki-shell-' + encodeURIComponent(self.registration.scope) + '-';
-const CACHE_NAME = CACHE_PREFIX + 'v20261009-continuous-paper-20-haptic-dip-manual-install-1-perf-1-coherent-1-compat-1-gesture-1-wake-1-modules-1-local-preview-module-1';
+const CACHE_NAME = CACHE_PREFIX + 'v20261009-continuous-paper-20-haptic-dip-manual-install-1-perf-1-coherent-1-compat-1-gesture-1-wake-1-modules-1-split-1-local-preview-module-1';
 const SHELL = [
   "./recorder-trace.js",
   "./recorder-d.html",
@@ -19,6 +19,16 @@ const SHELL = [
   "./detector.js",
   "./local-preview.js", // local-preview-hook
   "./controller.js",
+  "./controller-state.js",
+  "./controller-themes.js",
+  "./controller-audio.js",
+  "./controller-storage.js",
+  "./controller-hold.js",
+  "./controller-haptic.js",
+  "./controller-screens.js",
+  "./controller-attempts.js",
+  "./controller-gestures.js",
+  "./controller-display-theme.js",
   "./dom.js",
   "./storage.js",
   "./heartbeat.js",

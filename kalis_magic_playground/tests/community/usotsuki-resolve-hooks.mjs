@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs';
 import path from 'node:path';
 
 // Loader hooks for usotsuki-app-script.mjs, registered with module.register() so they also run on Node 20.
-const USOTSUKI_FEATURE_MODULES = new Set(['controller.js', 'dom.js', 'storage.js', 'heartbeat.js',
+const USOTSUKI_FEATURE_MODULES = new Set(['controller.js', 'controller-state.js', 'controller-themes.js', 'controller-audio.js', 'controller-storage.js', 'controller-hold.js', 'controller-haptic.js', 'controller-screens.js', 'controller-attempts.js', 'controller-gestures.js', 'controller-display-theme.js', 'dom.js', 'storage.js', 'heartbeat.js',
   'vibration.js', 'wake-lock.js', 'preferences.js', 'stage.js', 'bindings.js']);
 
 export async function resolve(specifier, context, nextResolve) {
