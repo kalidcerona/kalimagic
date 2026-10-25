@@ -1036,8 +1036,9 @@ test('panic works by Escape, by holding the GO key (without a GO), and by the he
   assert.equal(env.calls.vibrate.at(-1), 60);
   endStopped();
   await settle(10);
-  // The engine drops the ended cue; the active list on screen only refreshes on the next render event.
+  // The engine drops the ended cue and PANIC's completion must still trigger a render (no card left on screen).
   assert.equal(playback.runtime.engine.active.size, 0);
+  assert.deepEqual(activeNames(), [], 'the active list renders empty after panic');
   assert.equal(byId('pendingLine').textContent, '예약된 큐: 0');
 });
 

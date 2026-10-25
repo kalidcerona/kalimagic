@@ -82,7 +82,8 @@ export class CueEngine {
     const token = ++this.runSerial;
     let completed = false;
     const complete = () => {
-      if (epoch !== this.generation || completed) return;
+      if (epoch !== this.generation) { this.changed(); return; } // PANIC already dropped the cue from `active`; refresh the screen
+      if (completed) return;
       completed = true;
       if (origin.listId === 'hits') return;
       const next = this.list(origin.listId)[origin.index + 1];
