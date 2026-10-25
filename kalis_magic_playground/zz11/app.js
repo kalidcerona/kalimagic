@@ -363,6 +363,7 @@ window.addEventListener('beforeinstallprompt', event => { if (standaloneDisplay(
 document.getElementById('install-app').addEventListener('click', async () => {
   const help = document.getElementById('install-help');
   if (standaloneDisplay()) return syncInstallGroup();
+  if (installPrompt && window.__magicInstallPrompt !== installPrompt) installPrompt = null; // the settings button already used this one-shot event
   if (installPrompt) {
     const revision = installRevision;
     const prompt = installPrompt; installPrompt = null;

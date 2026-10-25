@@ -72,9 +72,12 @@ async function runtime(file, kind, { saved = new Map(), standalone = false } = {
     assert.equal(typeof handler, 'function', `${file}: ${act}`);
     return handler({ stopPropagation() {}, target: { closest: () => ({ dataset: { act } }) } });
   };
-  const prompt = (choice, request = async () => {}) => events.get('beforeinstallprompt')({
-    isTrusted: true, preventDefault() {}, prompt: request, userChoice: choice,
-  });
+  const prompt = (choice, request = async () => {}) => {
+    const event = { isTrusted: true, preventDefault() {}, prompt: request, userChoice: choice };
+    // The spinner pages also load settings-ui.js, which keeps the same event in this shared slot.
+    if (kind === 'spinner') window.__magicInstallPrompt = event;
+    return events.get('beforeinstallprompt')(event);
+  };
   function assertPending() {
     assert.equal(box.hidden, false);
     assert.match(description.textContent, /설치 요청.*아이콘.*메뉴/);
