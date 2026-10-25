@@ -2,6 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile, stat } from 'node:fs/promises';
 import vm from 'node:vm';
+import { fileURLToPath } from 'node:url';
+import { tobiraAppScript } from './tobira-app-script.mjs';
 import toolsGate, { classifyPath } from '../../netlify/edge-functions/tools-gate.mjs';
 import { signGateCookie, gateCookieName } from '../../netlify/functions/_lib/tool-gate.mjs';
 import { allowOnCheckError, selectGate } from '../../netlify/functions/tool-check.mjs';
@@ -91,7 +93,7 @@ test('new friends require their own approval and cookie; legacy all grants canno
   }
 });
 test('TOBIRA and TYCHE snapshots isolate local state and install identities', async () => {
-  const tobira = await readFile(new URL('../../distribution-snapshots/tobira/app.js', import.meta.url), 'utf8');
+  const tobira = tobiraAppScript(fileURLToPath(new URL('../../distribution-snapshots/tobira/', import.meta.url)));
   const tobiraLogic = await readFile(new URL('../../distribution-snapshots/tobira/logic.js', import.meta.url), 'utf8');
   assert.match(tobira, /'friend-tobira\.localImages\.v1'/);
   assert.match(tobiraLogic, /STORAGE_KEY = 'friend-tobira\.v1'/);

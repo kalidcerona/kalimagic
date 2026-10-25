@@ -66,11 +66,13 @@ const APPS = [
   },
   {
     file: 'distribution-snapshots/aletheia/app.js',
+    modules: 'aletheia',
     settings: /function stopPerformance\(\) \{[\s\S]*?view = 'settings'[\s\S]*?syncPerformanceWakeLock\(\)/,
     wanted: /return view === 'performance'/,
   },
   {
     file: 'distribution-snapshots/tobira/app.js',
+    modules: true,
     settings: /function showSettings\(\) \{[\s\S]*?state\.mode = 'settings'[\s\S]*?syncPerformanceWakeLock\(\)/,
     wanted: /return state\.mode === 'performance'/,
   },
@@ -100,8 +102,8 @@ for (const app of APPS) {
   test(`${app.file} requests a screen wake lock, releases it on the settings path, and feature-detects`, () => {
     const source = app.modules === 'usotsuki' ? usotsukiAppScript(fileURLToPath(new URL(`../../${app.file.replace(/detector\.js$/, '')}`, import.meta.url)))
       : app.modules === 'choice' ? choiceAppScript(fileURLToPath(new URL('../../zz4/', import.meta.url)))
-      : app.modules === 'aletheia' ? aletheiaAppScript(fileURLToPath(new URL('../../zz5/', import.meta.url)))
-      : app.modules ? tobiraAppScript(fileURLToPath(new URL('../../zz6/', import.meta.url))) : sourceOf(app.file);
+      : app.modules === 'aletheia' ? aletheiaAppScript(fileURLToPath(new URL(`../../${app.file.replace(/app\.js$/, '')}`, import.meta.url)))
+      : app.modules ? tobiraAppScript(fileURLToPath(new URL(`../../${app.file.replace(/app\.js$/, '')}`, import.meta.url))) : sourceOf(app.file);
     assert.match(source, /navigator\.wakeLock\.request\(\s*"screen"\s*\)/);
     assert.match(source, /!\(\s*"wakeLock" in navigator\s*\)/);
     assert.match(source, /else releaseWakeLock\(\)/);

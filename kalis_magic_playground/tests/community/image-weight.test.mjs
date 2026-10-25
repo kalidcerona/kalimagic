@@ -23,10 +23,10 @@ const courtApps = [
   ['distribution-snapshots/aletheia', sharedCourtCard]
 ];
 // Personal ALETHEIA keeps its court-card list in feature modules, so read app.js with its local modules.
-const modularCourtApps = new Set(['zz5']);
+const modularCourtApps = new Set(['zz5', 'distribution-snapshots/aletheia']);
 const coinApps = ['zz6', 'distribution-snapshots/tobira'];
 // Personal TOBIRA keeps its image list in a feature module, so read app.js with its local modules.
-const modularCoinApps = new Set(['zz6']);
+const modularCoinApps = new Set(['zz6', 'distribution-snapshots/tobira']);
 
 function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));

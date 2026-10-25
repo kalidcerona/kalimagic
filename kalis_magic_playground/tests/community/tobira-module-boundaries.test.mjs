@@ -1,5 +1,6 @@
 import test, { afterEach } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 
 // Loads zz6/app.js and its real imports as separate ES modules (no concatenation, no shared scope).
@@ -8,6 +9,8 @@ import { pathToFileURL } from 'node:url';
 // settings swipe and settings saves through the listeners the app registers on the stub DOM.
 // TOBIRA_ROOT lets a mutation check point the same test at a scratch copy.
 const root = process.env.TOBIRA_ROOT ? pathToFileURL(`${process.env.TOBIRA_ROOT.replace(/\/?$/, '/')}`) : new URL('../../zz6/', import.meta.url);
+// The friend snapshot uses its own storage prefix and a Shift+Esc exit.
+const P = readFileSync(new URL('logic.js', root), 'utf8').includes("'friend-tobira.v1'") ? 'friend-tobira.' : 'tobira.';
 
 const errors = [];
 process.on('unhandledRejection', (reason) => errors.push(`unhandledRejection: ${reason?.stack || reason}`));
@@ -191,7 +194,7 @@ test('boot imports the real zz6 modules and reaches the ready performance stage'
   assert.match(env.el('coin-art').src, /coin-kennedy\.webp$/, 'default object image is shown');
   assert.equal(env.el('preset-list').children.length, 1);
   assert.match(env.el('preset-list').children[0].children[0].textContent, /^1\. /);
-  assert.equal(env.local.getItem('tobira.v1'), null, 'ready start does not write the saved mode');
+  assert.equal(env.local.getItem(`${P}v1`), null, 'ready start does not write the saved mode');
   assert.deepEqual(env.navigator.registered, [{ url: './sw.js', options: { scope: './' } }]);
   assert.equal(typeof window.MagicTobiraAppearance.read, 'function');
   assert.equal(window.MagicTobiraAppearance.read().coinSize, logic.defaultState().presets[0].coinSize);
@@ -250,7 +253,7 @@ test('gesture guide blocks the stage until dismissed, then remembers the dismiss
   const dismiss = env.el('settings-gesture-dismiss');
   assert.equal(guide.hidden, false, 'guide is shown on the first ready stage');
   assert.equal(document.activeElement, dismiss, 'focus moves to the dismiss button');
-  assert.equal(env.local.getItem('tobira.settings-gesture-guide.v1'), null);
+  assert.equal(env.local.getItem(`${P}settings-gesture-guide.v1`), null);
 
   await emit(env.window, 'pointerdown', pointer(1, 200, 300));
   await emit(env.window, 'pointermove', pointer(1, 200, 340));
@@ -262,7 +265,7 @@ test('gesture guide blocks the stage until dismissed, then remembers the dismiss
   assert.equal(stopped, 1, 'touches on the guide do not reach the stage');
   await emit(dismiss, 'click');
   assert.equal(guide.hidden, true);
-  assert.equal(env.local.getItem('tobira.settings-gesture-guide.v1'), 'done');
+  assert.equal(env.local.getItem(`${P}settings-gesture-guide.v1`), 'done');
   assert.equal(env.AudioContextStub.instances.length, 1, 'dismissal unlocks audio');
   assert.ok(env.AudioContextStub.instances[0].resumed >= 1);
 });
@@ -289,15 +292,15 @@ test('performance: a trusted tap enables motion, a swipe reveals the object, a s
   assert.equal(env.el('breakthrough').style.left, '50.0000%');
   assert.equal(env.el('breakthrough').style.top, '42.5000%');
   assert.equal(env.coin.classList.contains('is-gone'), true, 'object disappears with the crack');
-  assert.equal(env.session.get('tobira.session-gone'), '1');
-  assert.equal(env.session.get('tobira.session-crack'), '1');
-  assert.equal(env.session.get('tobira.session-crack-at'), '0.500000,0.425000');
+  assert.equal(env.session.get(`${P}session-gone`), '1');
+  assert.equal(env.session.get(`${P}session-crack`), '1');
+  assert.equal(env.session.get(`${P}session-crack-at`), '0.500000,0.425000');
 
   await twoFingerSwipe(-140);
   assert.equal(env.stage.classList.contains('is-breaking'), false, 'two-finger swipe up clears the crack');
   assert.equal(env.el('breakthrough').style.left, '');
-  assert.equal(env.session.has('tobira.session-crack'), false);
-  assert.equal(env.session.has('tobira.session-gone'), false);
+  assert.equal(env.session.has(`${P}session-crack`), false);
+  assert.equal(env.session.has(`${P}session-gone`), false);
   assert.equal(env.coin.classList.contains('is-gone'), true, 'object is back to the empty ready stage');
   assert.equal(document.body.dataset.mode, 'performance');
 });
@@ -308,8 +311,8 @@ test('two-finger downward swipe opens settings and releases the wake lock', asyn
   assert.equal(document.title, 'TOBIRA');
   assert.equal(env.el('settings').getAttribute('inert'), null);
   assert.equal(env.el('settings').inert, false);
-  assert.equal(stored('tobira.v1').mode, 'settings', 'entering settings saves the mode');
-  assert.equal(env.el('selected-preset-name').textContent, stored('tobira.v1').presets[0].name);
+  assert.equal(stored(`${P}v1`).mode, 'settings', 'entering settings saves the mode');
+  assert.equal(env.el('selected-preset-name').textContent, stored(`${P}v1`).presets[0].name);
   assert.equal(env.wake.requests.at(-1).released, true, 'settings does not hold the screen awake');
 });
 
@@ -317,48 +320,48 @@ test('settings changes are saved through the state store', async () => {
   const size = env.el('coin-size');
   size.value = '0.5';
   await emit(size, 'input');
-  assert.equal(stored('tobira.v1').presets[0].coinSize, 0.5);
+  assert.equal(stored(`${P}v1`).presets[0].coinSize, 0.5);
   assert.equal(env.el('coin-size-value').textContent, '50%');
 
   await emit(env.edgeGroup, 'click', { target: env.edgeButtons.top });
-  assert.equal(stored('tobira.v1').presets[0].exitEdge, 'top');
+  assert.equal(stored(`${P}v1`).presets[0].exitEdge, 'top');
   assert.equal(env.edgeButtons.top.getAttribute('aria-checked'), 'true');
   let prevented = 0;
   await emit(env.edgeGroup, 'keydown', { key: 'ArrowRight', preventDefault() { prevented += 1; } });
   assert.equal(prevented, 1);
-  assert.equal(stored('tobira.v1').presets[0].exitEdge, 'left', 'arrow key moves to the next edge');
+  assert.equal(stored(`${P}v1`).presets[0].exitEdge, 'left', 'arrow key moves to the next edge');
   assert.equal(document.activeElement, env.edgeButtons.left);
 
   const name = env.el('preset-name');
   name.value = '첫째';
   await emit(name, 'input');
-  assert.equal(stored('tobira.v1').presets[0].name, '첫째');
+  assert.equal(stored(`${P}v1`).presets[0].name, '첫째');
   assert.equal(env.el('preset-list').children[0].children[0].textContent, '1. 첫째');
 
   await emit(env.el('add-preset'), 'click');
-  assert.equal(stored('tobira.v1').presets.length, 2);
-  assert.equal(stored('tobira.v1').selectedId, stored('tobira.v1').presets[1].id);
+  assert.equal(stored(`${P}v1`).presets.length, 2);
+  assert.equal(stored(`${P}v1`).selectedId, stored(`${P}v1`).presets[1].id);
   assert.equal(env.el('preset-list').children.length, 2);
   const first = env.el('preset-list').children[0].children[0];
   await emit(first, 'click');
-  assert.equal(stored('tobira.v1').selectedId, stored('tobira.v1').presets[0].id);
+  assert.equal(stored(`${P}v1`).selectedId, stored(`${P}v1`).presets[0].id);
   assert.equal(env.el('preset-list').children[0].children[0].getAttribute('aria-pressed'), 'true');
   await emit(env.el('preset-list').children[1].children[0], 'click');
   await emit(env.el('delete-preset'), 'click');
   assert.equal(env.el('form-note').textContent, '한 번 더 누르면 이 프리셋을 삭제합니다.');
   await emit(env.el('delete-preset'), 'click');
-  assert.equal(stored('tobira.v1').presets.length, 1);
-  assert.equal(stored('tobira.v1').presets[0].name, '첫째');
+  assert.equal(stored(`${P}v1`).presets.length, 1);
+  assert.equal(stored(`${P}v1`).presets[0].name, '첫째');
 
   const wobble = env.el('motion-wobble');
   wobble.checked = true;
   await emit(wobble, 'change');
-  assert.equal(stored('tobira.motion-effects.v1').wobble, true);
+  assert.equal(stored(`${P}motion-effects.v1`).wobble, true);
   const exit = env.el('motion-exit');
   exit.checked = true;
   await emit(exit, 'change');
-  assert.equal(stored('tobira.motion-effects.v1').exit, true);
-  assert.equal(stored('tobira.motion-effects.v1').tilt, true, 'wall exit also turns tilt on');
+  assert.equal(stored(`${P}motion-effects.v1`).exit, true);
+  assert.equal(stored(`${P}motion-effects.v1`).tilt, true, 'wall exit also turns tilt on');
   assert.equal(env.el('motion-enabled').checked, true);
 
   const volume = env.el('motion-wall-volume');
@@ -366,7 +369,7 @@ test('settings changes are saved through the state store', async () => {
   await emit(volume, 'input');
   assert.equal(env.el('motion-wall-volume-value').textContent, '40%');
   await emit(volume, 'change');
-  assert.equal(stored('tobira.motion-effects.v1').wallVolume, 40);
+  assert.equal(stored(`${P}motion-effects.v1`).wallVolume, 40);
 });
 
 test('start button returns to the performance stage, saves the mode and requests the wake lock', async () => {
@@ -376,7 +379,7 @@ test('start button returns to the performance stage, saves the mode and requests
   await settle();
   assert.equal(start.disabled, false);
   assert.equal(document.body.dataset.mode, 'performance');
-  assert.equal(stored('tobira.v1').mode, 'performance');
+  assert.equal(stored(`${P}v1`).mode, 'performance');
   assert.equal(env.wake.requests.length, before + 1);
   assert.equal(env.wake.requests.at(-1).released, false);
   assert.equal(env.el('settings').getAttribute('inert'), '');

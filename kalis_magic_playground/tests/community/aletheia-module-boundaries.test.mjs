@@ -43,8 +43,8 @@ async function emit(target, type, event = {}) {
 }
 
 const html = readFileSync(new URL('index.html', root), 'utf8');
-// The friend snapshot is an older single-file build with its own storage prefix and a Shift+Esc exit.
-const K = readFileSync(new URL('app.js', root), 'utf8').includes('aletheia.distribution.') ? 'aletheia.distribution.' : 'aletheia.';
+// The friend snapshot is an older build with its own storage prefix and a Shift+Esc exit.
+const K = readFileSync(new URL('dom.js', root), 'utf8').includes('aletheia.distribution.') ? 'aletheia.distribution.' : 'aletheia.';
 const kebabToCamel = (name) => name.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
 
 let document;

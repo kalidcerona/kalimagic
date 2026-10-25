@@ -2,10 +2,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
+import { fileURLToPath } from 'node:url';
+import { aletheiaAppScript } from './aletheia-app-script.mjs';
 
 const dir = new URL('../../distribution-snapshots/aletheia/', import.meta.url);
 const html = readFileSync(new URL('index.html', dir), 'utf8');
-const app = readFileSync(new URL('app.js', dir), 'utf8');
+const app = aletheiaAppScript(fileURLToPath(dir));
 
 test('shared ALETHEIA gesture-guide setup runs against its published HTML', () => {
   const ids = new Set([...html.matchAll(/\bid="([^"]+)"/g)].map((match) => match[1]));

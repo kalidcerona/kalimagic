@@ -30,6 +30,7 @@ const apps = [
     motion: 'friend-tobira.motion-effects.v1',
     images: 'friend-tobira.coinChoices.v1',
     cache: 'v20261004-first-guide-1',
+    modules: true,
   },
 ];
 

@@ -1,12 +1,27 @@
 // Cache only the explicit app shell. API, authentication and user data stay on the network.
 const CACHE_PREFIX = 'friend-aletheia-shell-' + encodeURIComponent(self.registration.scope) + '-';
-const CACHE_NAME = CACHE_PREFIX + 'v20261004-first-guide-1-manual-install-1-perf-1-coherent-1-img-1-compat-1-gesture-1-wake-1';
+const CACHE_NAME = CACHE_PREFIX + 'v20261004-first-guide-1-manual-install-1-perf-1-coherent-1-img-1-compat-1-gesture-1-wake-1-modules-1';
 const SHELL = [
   "./settings-ui.js",
   "./settings-ui.css",
   "./index.html",
   "./style.css",
   "./app.js",
+  "./controller.js",
+  "./gesture-guide.js",
+  "./dom.js",
+  "./status.js",
+  "./images.js",
+  "./image-db.js",
+  "./presets.js",
+  "./photo-sets.js",
+  "./court-cards.js",
+  "./card-select.js",
+  "./preferences.js",
+  "./cell-guide.js",
+  "./veil.js",
+  "./pointer.js",
+  "./wake-lock.js",
   "./deck-loader.js",
   "./logic.js",
   "./manifest.webmanifest",
