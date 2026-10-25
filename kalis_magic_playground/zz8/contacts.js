@@ -28,11 +28,12 @@ import {
   onTouchEnd,
   onTouchCancel,
   showGestureGuideOnce,
-  openSettings,
 } from "./contacts-gestures.js";
+import { openSettings } from "./contacts-gestures.js"; // local-preview-hook
 import { onListClick, renderList } from "./contacts-list.js";
 import { resetClicks, startPerformance } from "./contacts-settings.js";
 import { loadRecord, applyRecord } from "./contacts-storage.js";
+import { installLocalPreview } from './local-preview.js'; // local-preview-hook
 
 function registerShell() {
   if (!("serviceWorker" in navigator)) return;
@@ -79,11 +80,4 @@ startBootPerformance();
 showGestureGuideOnce();
 registerShell();
 
-const localSettingsHost = typeof location !== 'undefined' && ['localhost', '127.0.0.1', '::1', '[::1]'].includes(location.hostname);
-if (localSettingsHost && new URLSearchParams(location.search).get('local-preview') === '1') {
-  window.addEventListener('magic-local-settings', () => {
-    document.querySelector('.gesture-guide button')?.click();
-    openSettings();
-  });
-  document.documentElement.dataset.localSettingsReady = 'true';
-}
+installLocalPreview(() => { document.querySelector('.gesture-guide button')?.click(); openSettings(); }); // local-preview-hook

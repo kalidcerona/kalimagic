@@ -7,6 +7,7 @@ function contactHref(nav) {
 import {STACKS,RANKS,SUITS,label,red} from './data.mjs';
 import {freshState,loadState,validateState,validateCards,range,randomPosition,newSession,grade,record,weakPositions,totals,duePositions,scheduleReview,rankPositions,newRankSession,answerRank,replaceStack,escapeHTML,applyRecall,buildReviewQueue} from './core.mjs';
 import {STARTER_PALACE,LIMITS,starterNumberImage,starterCardImage,starterScene,starterStory,sameText,classifyRecall,enqueueRetry,schedulesRecall,buildPairQueue,buildDirectQueue,buildImageQueue,buildPalaceQueue,validateMnemonics,groupPositions} from './mnemonic.mjs';
+import { installLocalPreview } from './local-preview.mjs'; // local-preview-hook
 const KEY='magic-memdeck-v1',PRESERVED_KEY=KEY+'-preserved-raw';let state=freshState(),storageWarning='',persistenceError=false,writeBlocked=false,originalRaw=null,recoveryReady=false;
 // Missing data may be saved. A failed read or invalid payload keeps the original bytes until a validated backup is imported.
 try{
@@ -348,11 +349,4 @@ keepVisibleScreenAwake();
 
 if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
 render();
-const localSettingsHost = typeof location !== 'undefined' && ['localhost', '127.0.0.1', '::1', '[::1]'].includes(location.hostname);
-if (localSettingsHost && new URLSearchParams(location.search).get('local-preview') === '1') {
-  window.addEventListener('magic-local-settings', () => {
-    document.querySelector(".first-run-guide button")?.click();
-    document.querySelector('[data-tab="settings"]')?.click();
-  });
-  document.documentElement.dataset.localSettingsReady = 'true';
-}
+installLocalPreview(() => { document.querySelector(".first-run-guide button")?.click(); document.querySelector('[data-tab="settings"]')?.click(); }); // local-preview-hook

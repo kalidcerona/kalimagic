@@ -1,4 +1,5 @@
 import { angleAtPoint, mod, landingRotation, randomInt, chooseOutcome } from './logic.js';
+import { installLocalPreview } from './local-preview.js'; // local-preview-hook
 
 const stage = document.querySelector('.stage');
 const wrap = document.getElementById('wheel-wrap');
@@ -402,11 +403,4 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
       .catch(() => {});
   } catch { /* Registration failure stays on this performance. */ }
 }
-const localSettingsHost = typeof location !== 'undefined' && ['localhost', '127.0.0.1', '::1', '[::1]'].includes(location.hostname);
-if (localSettingsHost && new URLSearchParams(location.search).get('local-preview') === '1') {
-  window.addEventListener('magic-local-settings', () => {
-    document.getElementById("guide-close")?.click();
-    showSettings();
-  });
-  document.documentElement.dataset.localSettingsReady = 'true';
-}
+installLocalPreview(() => { document.getElementById("guide-close")?.click(); showSettings(); }); // local-preview-hook

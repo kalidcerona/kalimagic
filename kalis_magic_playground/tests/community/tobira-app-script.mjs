@@ -1,10 +1,11 @@
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
+import { inlineLocalPreview, readSiblingFrom } from './local-preview-inline.mjs';
 
 // Personal TOBIRA runs as ES modules. vm tests run app.js and its local feature modules as one classic script,
 // in module evaluation order. logic.js and sensor-motion.js names are supplied by the test sandbox.
-export const TOBIRA_IMPORT = /^import\s+\{[\s\S]*?\}\s+from '\.\/([\w-]+\.js)';\n/gm;
-const SHARED = new Set(['logic.js', 'sensor-motion.js']);
+export const TOBIRA_IMPORT = /^import\s+\{[\s\S]*?\}\s+from '\.\/([\w-]+\.js)';(?: \/\/ local-preview-hook)?\n/gm;
+const SHARED = new Set(['local-preview.js', 'logic.js', 'sensor-motion.js']);
 
 export function tobiraAppModules(dir) {
   const order = [];
@@ -23,7 +24,7 @@ export function tobiraAppModules(dir) {
 }
 
 export function tobiraAppScript(dir) {
-  return tobiraAppModules(dir).map((file) => readFileSync(path.join(dir, file), 'utf8')
+  return tobiraAppModules(dir).map((file) => inlineLocalPreview(readFileSync(path.join(dir, file), 'utf8'), readSiblingFrom(dir))
     .replace(TOBIRA_IMPORT, '')
     .replace(/^export\s+\{[\s\S]*?\};\n/m, '')).join('\n');
 }

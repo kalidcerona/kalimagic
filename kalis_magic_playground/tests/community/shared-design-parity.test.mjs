@@ -4,17 +4,16 @@ import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { USOTSUKI_FILES, SPINNER_FILES } from '../../scripts/build-public.mjs';
+import { stripLocalPreview, stripInlineLocalPreview, dropUnusedSingleImports } from './local-preview-strip.mjs';
 import { usotsukiAppModules, usotsukiAppSource } from './usotsuki-app-script.mjs';
 
 const read = (route, file) => readFile(new URL(`../../${route}/${file}`, import.meta.url));
 // USOTSUKI detector.js is an ES module entry with local feature modules; both builds carry the same files.
 const detectorFiles = (route) => usotsukiAppModules(fileURLToPath(new URL(`../../${route}/`, import.meta.url)));
 
-// Personal USOTSUKI keeps the localhost preview hook. The friend snapshot excludes it.
-const LOCAL_PREVIEW_HOOK = /\nconst localSettingsHost = typeof location !== 'undefined' && \['localhost', '127\.0\.0\.1', '::1', '\[::1\]'\]\.includes\(location\.hostname\);\nif \(localSettingsHost && new URLSearchParams\(location\.search\)\.get\('local-preview'\) === '1'\) \{[\s\S]*?\n\}\n?$/;
-
+// Personal USOTSUKI keeps the localhost preview hook as one marked line plus local-preview.js. The friend snapshot excludes it.
 function withoutLocalPreviewHook(source) {
-  const stripped = source.replace(LOCAL_PREVIEW_HOOK, '\n');
+  const stripped = stripLocalPreview(source);
   if (stripped === source) throw new Error('local preview hook was not removed');
   return stripped;
 }
@@ -43,13 +42,16 @@ test('shared performance code differs only in its explicitly isolated storage ke
   assert.deepEqual(detectorFiles('distribution-snapshots/usotsuki'), detectorFiles('zz7'));
   for (const [personal, snapshot, file] of [...detectorFiles('zz7').map((file) => ['zz7', 'usotsuki', file]), ['zz11', 'spinner', 'app.js']]) {
     let source = (await read(personal, file)).toString();
-    const shared = (await read(`distribution-snapshots/${snapshot}`, file)).toString();
+    let shared = (await read(`distribution-snapshots/${snapshot}`, file)).toString();
     if (personal === 'zz7' && file === 'detector.js') {
       assert.match(source, /local-preview/);
       assert.doesNotMatch(shared, /magic-local-settings|local-preview/);
-      source = withoutLocalPreviewHook(source);
+      source = dropUnusedSingleImports(withoutLocalPreviewHook(source));
+      shared = dropUnusedSingleImports(shared);
     }
-    const normalized = shared.replaceAll('usotsuki.distribution.', 'usotsuki.')
+    // The pinned spinner snapshot still carries the old inline hook; the personal app now keeps it in local-preview.js.
+    if (personal === 'zz11') source = withoutLocalPreviewHook(source);
+    const normalized = (snapshot === 'spinner' ? stripInlineLocalPreview(shared) : shared).replaceAll('usotsuki.distribution.', 'usotsuki.')
       .replaceAll('friend-spinner-state-', 'zz11-spinner-state-')
       .replaceAll('friend-spinner-guide-', 'zz11-guide-')
       .replaceAll('friend-spinner-table-theme-', 'zz11-table-theme-')
@@ -99,12 +101,14 @@ test('Three recorder themes retain exact bytes and cache isolation', async () =>
       assert.doesNotMatch(snapshot, /magic-local-settings|local-preview/);
       if (file === 'detector.js') {
         assert.match(personalText, /local-preview/);
-        personalText = withoutLocalPreviewHook(personalText);
+        personalText = dropUnusedSingleImports(withoutLocalPreviewHook(personalText));
+        snapshot = dropUnusedSingleImports(snapshot);
       }
     } else if (file === 'sw.js') {
       assert.ok(snapshot.includes("CACHE_NAME = CACHE_PREFIX + 'v20261009-continuous-paper-20-haptic-dip-manual-install-1-perf-1-coherent-1-compat-1-gesture-1-wake-1-modules-1-distribution'"));
       snapshot = snapshot.replace('v20261009-continuous-paper-20-haptic-dip-manual-install-1-perf-1-coherent-1-compat-1-gesture-1-wake-1-modules-1-distribution', 'v20261009-continuous-paper-20-haptic-dip-manual-install-1-perf-1-coherent-1-compat-1-gesture-1-wake-1-modules-1');
       assert.ok(personal.includes('v20261009-continuous-paper-20-haptic-dip-manual-install-1-perf-1-coherent-1-compat-1-gesture-1-wake-1-modules-1'));
+      personalText = stripLocalPreview(personalText);
     }
     assert.equal(snapshot, personalText, `normalized snapshot ${file}`);
     if (file === 'style.css') {

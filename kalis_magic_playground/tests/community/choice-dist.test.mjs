@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile, readdir, stat } from 'node:fs/promises';
 import vm from 'node:vm';
 import { CHOICE_FILES, CHOICE_DISTRIBUTION_FILES, DISTRIBUTION_APPS, shouldCopyChoice } from '../../scripts/build-public.mjs';
+import { stripLocalPreview, stripInlineLocalPreview, dropUnusedSingleImports, LOCAL_PREVIEW_FILE } from './local-preview-strip.mjs';
 import gate, { classifyPath } from '../../netlify/edge-functions/tools-gate.mjs';
 import { FRIEND_APP_TOOLS } from '../../netlify/functions/_lib/friend-app-access.mjs';
 import { gateCookieName, signGateCookie, verifyGateCookie } from '../../netlify/functions/_lib/tool-gate.mjs';
@@ -38,12 +39,15 @@ function normalize(file, bytes) {
 }
 
 test('Choice snapshot preserves every personal runtime byte except explicit distribution differences', async () => {
-  const personalFiles = (await filesUnder('zz4')).filter(file => !/\.test\./.test(file));
+  // The personal-only local-preview module is never part of the friend snapshot.
+  const personalFiles = (await filesUnder('zz4')).filter(file => !/\.test\./.test(file) && !LOCAL_PREVIEW_FILE.test(file));
   assert.deepEqual(await filesUnder(shared), personalFiles);
   assert.deepEqual([...CHOICE_DISTRIBUTION_FILES].sort(), personalFiles);
   for (const file of personalFiles) {
     const snapshot = await read(`${shared}/${file}`);
-    assert.deepEqual(normalize(file, snapshot), await read(`zz4/${file}`), file);
+    const personal = await read(`zz4/${file}`);
+    const personalNormalized = file === 'app.js' ? Buffer.from(dropUnusedSingleImports(stripLocalPreview(personal.toString()))) : file === 'sw.js' ? Buffer.from(stripLocalPreview(personal.toString())) : personal;
+    assert.deepEqual(file === 'app.js' ? Buffer.from(stripInlineLocalPreview(normalize(file, snapshot).toString())) : normalize(file, snapshot), personalNormalized, file);
     assert.equal(snapshot.includes(Buffer.from('magic-choice.')), false, file);
     assert.equal(shouldCopyChoice(file), true, file);
   }

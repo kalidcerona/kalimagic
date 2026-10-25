@@ -7,7 +7,8 @@ import {
   wallVolumeInput, wallVolumeValue, wallTestButton, motionInputs, motionEdges,
 } from './dom.js';
 import { unlockBreakSound, playWallSound } from './audio.js';
-import { gestureGuide, hideGestureGuide } from './gesture-guide.js';
+import { gestureGuide } from './gesture-guide.js';
+import { hideGestureGuide } from './gesture-guide.js'; // local-preview-hook
 import {
   state, selected, readObjectKind, applyObjectKind, persistObjectKind, loadState, renderRecovery,
 } from './state-store.js';
@@ -22,9 +23,11 @@ import {
 } from './presets.js';
 import {
   loadMotionEffects, saveMotionEffects, saveSoundPreferences, motionEnabled, enableMotion,
-  concealCoin, showSettings, showPerformance, onPointerDown, onPointerMove, onPointerUp, onResize,
+  concealCoin, showPerformance, onPointerDown, onPointerMove, onPointerUp, onResize,
   onEdgeKey,
 } from './performance.js';
+import { showSettings } from './performance.js'; // local-preview-hook
+import { installLocalPreview } from './local-preview.js'; // local-preview-hook
 
 let wallpaperOriginal = null;
 let cropDrag = null;
@@ -371,11 +374,4 @@ fillForm();
 // Coin disappearance and the crack stay in sessionStorage, not in this record.
 showPerformance({ persistMode: false, keepGone: false, showGuide: true });
 imagesReady.then(refreshCoinImage, refreshCoinImage);
-const localSettingsHost = typeof location !== 'undefined' && ['localhost', '127.0.0.1', '::1', '[::1]'].includes(location.hostname);
-if (localSettingsHost && new URLSearchParams(location.search).get('local-preview') === '1') {
-  window.addEventListener('magic-local-settings', () => {
-    hideGestureGuide();
-    showSettings();
-  });
-  document.documentElement.dataset.localSettingsReady = 'true';
-}
+installLocalPreview(() => { hideGestureGuide(); showSettings(); }); // local-preview-hook

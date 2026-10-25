@@ -1,12 +1,13 @@
 // Cache only the explicit app shell. API, authentication and user data stay on the network.
 const CACHE_PREFIX = 'choice-shell-' + encodeURIComponent(self.registration.scope) + '-';
-const CACHE_NAME = CACHE_PREFIX + 'v20261010-choice-perf-1-coherent-1-compat-1-wake-1-ready-1-nostatus-1-local-preview-1-modules-1-order-1';
+const CACHE_NAME = CACHE_PREFIX + 'v20261010-choice-perf-1-coherent-1-compat-1-wake-1-ready-1-nostatus-1-local-preview-1-modules-1-order-1-local-preview-module-1';
 const SHELL = [
   "./settings-ui.js",
   "./settings-ui.css",
   "./index.html",
   "./style.css",
   "./app.js",
+  "./local-preview.js", // local-preview-hook
   "./module-start.js",
   "./gesture-guide.js",
   "./dom.js",

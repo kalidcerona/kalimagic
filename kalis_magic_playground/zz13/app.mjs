@@ -5,6 +5,7 @@ function contactHref(nav) {
   return 'https://qr.kakao.com/talk/' + code;
 }
 import {DEFAULTS,settings,next,reset,restore,sessionConsistent,save,serialize,raster,toggle,undo,hit} from './core.mjs';
+import { installLocalPreview } from './local-preview.mjs'; // local-preview-hook
 const $=id=>document.getElementById(id), key=location.pathname.toLowerCase().startsWith('/tools/arosaegida')?'magic-qr-session-v1-arosaegida':'magic-qr-session-v1', preservedKey=key+'-preserved-raw';
 const NOTE_UNREADABLE='저장된 내용을 읽지 못했습니다.\n원본을 읽고 보관할 수 있을 때까지 저장과 복원을 멈췄습니다.';
 const NOTE_INVALID='저장된 내용을 확인하지 못했습니다.\n원본은 그대로 두었고 자동 저장은 멈췄습니다.\n설정 백업으로 그 원본을 받을 수 있습니다.\n저장하고 시작이나 백업 복원은 원본을 바꿉니다.';
@@ -156,11 +157,4 @@ loadStored();
 syncDot();
 persist();render();renderInstall();if(storageNote)notice(storageNote);if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js',{scope:'./'}).catch(()=>{});
 syncPerformanceWakeLock();
-const localSettingsHost = typeof location !== 'undefined' && ['localhost', '127.0.0.1', '::1', '[::1]'].includes(location.hostname);
-if (localSettingsHost && new URLSearchParams(location.search).get('local-preview') === '1') {
-  window.addEventListener('magic-local-settings', () => {
-    document.querySelector(".first-run-guide button")?.click();
-    open();
-  });
-  document.documentElement.dataset.localSettingsReady = 'true';
-}
+installLocalPreview(() => { document.querySelector(".first-run-guide button")?.click(); open(); }); // local-preview-hook

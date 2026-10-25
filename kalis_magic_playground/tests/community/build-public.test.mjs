@@ -160,7 +160,7 @@ test('public build serves integrated stopwatch on both retained entitlement rout
   await stat(new URL('../../dist/zz10/index.html', import.meta.url));
   await stat(new URL('../../dist/zz11/index.html', import.meta.url));
   const trainer = new URL('../../dist/zz12/', import.meta.url);
-  assert.deepEqual((await readdir(trainer)).sort(), [...MEMDECK_FILES].sort());
+  assert.deepEqual((await readdir(trainer)).sort(), [...MEMDECK_FILES, 'local-preview.mjs'].sort());
   const trainerSource = await stat(new URL('../../../../magic-memdeck/', import.meta.url)).catch((error) => { if (error.code === 'ENOENT') return null; throw error; });
   for (const file of MEMDECK_FILES) {
     assert.ok(MIRROR_PAIRS.some(([source, mirror]) => source === `../../magic-memdeck/${file}` && mirror === `zz12/${file}`));
@@ -178,7 +178,7 @@ test('public build serves integrated stopwatch on both retained entitlement rout
     }
   }
   await collectQrFiles(qr);
-  assert.deepEqual(qrFiles.sort(), [...QR_FILES].sort());
+  assert.deepEqual(qrFiles.sort(), [...QR_FILES, 'local-preview.mjs'].sort());
   const qrSource = await stat(new URL('../../../../magic-qr/', import.meta.url)).catch((error) => { if (error.code === 'ENOENT') return null; throw error; });
   for (const file of QR_FILES) {
     assert.ok(MIRROR_PAIRS.some(([source, mirror]) => source === `../../magic-qr/${file}` && mirror === `zz13/${file}`));
@@ -493,7 +493,7 @@ test('Asrai, ALTER, and spinner personal builds keep exact runtime mirrors and d
     ['magic-spinner', 'zz11', SPINNER_FILES, 'TYCHE']
   ]) {
     const distDir = path.join(root, 'dist', route);
-    const runtimeFiles = [...files, ...SETTINGS_UI_FILES];
+    const runtimeFiles = [...files, ...SETTINGS_UI_FILES, 'local-preview.js'];
     assert.deepEqual(await filesUnder(distDir), runtimeFiles.sort());
     const manifest = JSON.parse(await readFile(path.join(distDir, 'manifest.webmanifest'), 'utf8'));
     assert.equal(manifest.id, undefined);

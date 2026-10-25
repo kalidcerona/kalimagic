@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import { inlineLocalPreview, readSiblingFrom } from './local-preview-inline.mjs';
 
 // Pi Max runs as ES modules. vm tests run app.mjs and its local feature modules as one classic script,
 // in module evaluation order, with the core.mjs names read from globalThis.__core.
@@ -20,7 +21,7 @@ export function pimaxAppModules(dir) {
 
 export function pimaxAppScript(dir) {
   const coreNames = new Set();
-  const bodies = pimaxAppModules(dir).map((file) => readFileSync(new URL(file, dir), 'utf8')
+  const bodies = pimaxAppModules(dir).map((file) => inlineLocalPreview(readFileSync(new URL(file, dir), 'utf8'), readSiblingFrom(dir))
     .replace(PIMAX_APP_IMPORT, (_, names, from) => {
       if (from === 'core.mjs') for (const name of names.split(',').map((item) => item.trim()).filter(Boolean)) coreNames.add(name);
       return '';

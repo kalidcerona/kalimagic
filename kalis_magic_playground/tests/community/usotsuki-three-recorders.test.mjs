@@ -7,6 +7,7 @@ import vm from 'node:vm';
 import { createRecorderThemeController } from '../../zz7/recorder-theme.js';
 import { fileURLToPath } from 'node:url';
 import { usotsukiAppScript, usotsukiAppSource } from './usotsuki-app-script.mjs';
+import { stripLocalPreview } from './local-preview-strip.mjs';
 
 const read = file => readFileSync(new URL('../../zz7/'+file, import.meta.url), 'utf8');
 function engineFixture({ reduced=false, AudioContext }={}) {
@@ -180,11 +181,11 @@ test('snapshot changes exactly three named constants and excludes the localhost 
   const pattern=new RegExp('(const '+name+' = ")usotsuki\\.distribution\\.');
   assert.match(shared,pattern);shared=shared.replace(pattern,'$1usotsuki.');changes++;
  }
- const hook=/\nconst localSettingsHost = typeof location !== 'undefined' && \['localhost', '127\.0\.0\.1', '::1', '\[::1\]'\]\.includes\(location\.hostname\);\nif \(localSettingsHost && new URLSearchParams\(location\.search\)\.get\('local-preview'\) === '1'\) \{[\s\S]*?\n\}\n?$/;
  assert.equal(changes,3);
  assert.match(personal,/local-preview/);
  assert.doesNotMatch(shared,/magic-local-settings|local-preview/);
- assert.equal(shared,personal.replace(hook,'\n'));
+ // The pinned snapshot keeps the import that only the hook used; the personal copy marks it with the hook.
+ assert.equal(shared.replace('import { openSettings } from "./controller.js";\n',''),stripLocalPreview(personal));
 });
 
 

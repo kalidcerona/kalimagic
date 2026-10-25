@@ -1,12 +1,13 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { register } from 'node:module';
 import path from 'node:path';
+import { inlineLocalPreview, readSiblingFrom } from './local-preview-inline.mjs';
 
 // USOTSUKI (personal zz7 and the friend snapshot) runs detector.js as an ES module entry with local
 // feature modules. Source-reading tests read the entry and those modules as one script, in module
 // evaluation order. logic.js and the recorder-*.js files stay separate shared files.
-export const USOTSUKI_IMPORT = /^import\s+\{[\s\S]*?\}\s+from "\.\/([\w-]+\.js)";\n/gm;
-const SHARED = new Set(['logic.js', 'recorder-trace.js', 'recorder-theme.js', 'recorder-engine.js']);
+export const USOTSUKI_IMPORT = /^import\s+\{[\s\S]*?\}\s+from "\.\/([\w-]+\.js)";(?: \/\/ local-preview-hook)?\n/gm;
+const SHARED = new Set(['local-preview.js', 'logic.js', 'recorder-trace.js', 'recorder-theme.js', 'recorder-engine.js']);
 export const USOTSUKI_FEATURE_MODULES = new Set(['controller.js', 'dom.js', 'storage.js', 'heartbeat.js',
   'vibration.js', 'wake-lock.js', 'preferences.js', 'stage.js', 'bindings.js']);
 
@@ -27,7 +28,7 @@ export function usotsukiAppModules(dir) {
 }
 
 export function usotsukiAppScript(dir) {
-  return usotsukiAppModules(dir).map((file) => readFileSync(path.join(dir, file), 'utf8')
+  return usotsukiAppModules(dir).map((file) => inlineLocalPreview(readFileSync(path.join(dir, file), 'utf8'), readSiblingFrom(dir))
     .replace(USOTSUKI_IMPORT, '')
     .replace(/^export\s+\{[\s\S]*?\};\n/m, '')).join('\n');
 }

@@ -344,10 +344,5 @@ function keepVisibleScreenAwake() {
 keepVisibleScreenAwake();
 
 if (typeof document !== "undefined") boot();
-const localSettingsHost = typeof location !== 'undefined' && ['localhost', '127.0.0.1', '::1', '[::1]'].includes(location.hostname);
-if (localSettingsHost && new URLSearchParams(location.search).get('local-preview') === '1') {
-  window.addEventListener('magic-local-settings', () => {
-    document.querySelector('#nav [data-tab="settings"]')?.click();
-  });
-  document.documentElement.dataset.localSettingsReady = 'true';
-}
+import { installLocalPreview } from './local-preview.mjs'; // local-preview-hook
+installLocalPreview(() => { document.querySelector('#nav [data-tab="settings"]')?.click(); }); // local-preview-hook

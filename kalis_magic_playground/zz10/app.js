@@ -5,6 +5,7 @@ import { coverGeometry, samplePointToView } from "./camera-geometry.js";
 import { claimCalibrationReady, createBackgroundCalibrator, observeCalibration } from "./calibration.js";
 import { cameraStartMessage, requestCameraStream } from "./camera-stream.js";
 import { createPaperMatch, remapOcclusionToDisplay, resolveOverlayMask, sampleCardPaper, updatePaperMatch } from "./appearance.js";
+import { installLocalPreview } from './local-preview.js'; // local-preview-hook
 
 const $ = (id) => document.getElementById(id);
 const setup = $("setup");
@@ -619,10 +620,4 @@ updateStateNote();
 if ("serviceWorker" in navigator && window.isSecureContext) {
   navigator.serviceWorker.register("./sw.js").catch(() => {});
 }
-const localSettingsHost = typeof location !== 'undefined' && ['localhost', '127.0.0.1', '::1', '[::1]'].includes(location.hostname);
-if (localSettingsHost && new URLSearchParams(location.search).get('local-preview') === '1') {
-  window.addEventListener('magic-local-settings', () => {
-    openSettings();
-  });
-  document.documentElement.dataset.localSettingsReady = 'true';
-}
+installLocalPreview(() => { openSettings(); }); // local-preview-hook

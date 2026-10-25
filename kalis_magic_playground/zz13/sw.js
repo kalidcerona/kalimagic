@@ -1,5 +1,5 @@
 // Cache only the explicit app shell. API, authentication and user data stay on the network.
-const scope=new URL(self.registration.scope),PREFIX='magic-qr-'+encodeURIComponent(scope.href)+'-',CACHE=PREFIX+'v20261004-first-guide-1-coherent-1-gesture-1-compat-1-wake-1-defer-1-local-preview-1-relaunch-restore-4';
+const scope=new URL(self.registration.scope),PREFIX='magic-qr-'+encodeURIComponent(scope.href)+'-',CACHE=PREFIX+'v20261004-first-guide-1-coherent-1-gesture-1-compat-1-wake-1-defer-1-local-preview-1-relaunch-restore-4-local-preview-module-1';
 const GUARDED=scope.pathname.startsWith('/tools/');
 const SHELL = [
   "./first-run-guide.js",
@@ -7,6 +7,7 @@ const SHELL = [
   "./style.css",
   "./brand-logo.png",
   "./app.mjs",
+  "./local-preview.mjs", // local-preview-hook
   "./core.mjs",
   "./manifest.webmanifest",
   "./icons/icon-192.png",

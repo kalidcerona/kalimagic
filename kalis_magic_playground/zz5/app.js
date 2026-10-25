@@ -1,9 +1,10 @@
 // ALETHEIA settings, local storage, and performance surface.
 import { MESSAGES } from './logic.js';
 import { view, warmCourtDeck, boot, startBootPerformance } from './controller.js';
-import { hideGestureGuide } from './gesture-guide.js';
+import { hideGestureGuide } from './gesture-guide.js'; // local-preview-hook
 import { setError } from './status.js';
-import { openSettings } from './pointer.js';
+import { openSettings } from './pointer.js'; // local-preview-hook
+import { installLocalPreview } from './local-preview.js'; // local-preview-hook
 
 boot().catch(() => {
   setError(MESSAGES.storageReadFailed);
@@ -13,11 +14,4 @@ boot().catch(() => {
 requestAnimationFrame(() => {
   if (view === 'settings') warmCourtDeck();
 });
-const localSettingsHost = typeof location !== 'undefined' && ['localhost', '127.0.0.1', '::1', '[::1]'].includes(location.hostname);
-if (localSettingsHost && new URLSearchParams(location.search).get('local-preview') === '1') {
-  window.addEventListener('magic-local-settings', () => {
-    hideGestureGuide();
-    openSettings();
-  });
-  document.documentElement.dataset.localSettingsReady = 'true';
-}
+installLocalPreview(() => { hideGestureGuide(); openSettings(); }); // local-preview-hook

@@ -3,6 +3,7 @@ import { installSettingsSwipe } from "./settings-swipe.js";
 import { runSelfTests } from "./selftest.js";
 import { showSettingsEntryTutorial } from "./settings-tutorial.js";
 import { wakeLock, acquireWakeLock } from "./wake-lock.js";
+import { installLocalPreview } from './local-preview.js'; // local-preview-hook
     const $ = id => document.getElementById(id);
     const shell=$("shell"), portraitApp=$("portrait-app"), landscapeFrame=$("landscape-frame"), landscapeApp=$("landscape-app");
     const pTime=$("p-time-display"),pNumeric=$("p-numeric-display"),pMinutes=$("p-minutes"),pCustom=$("p-custom-display"),pColon=$("p-colon"),pControl=$("p-control"),pLap=$("p-lap"),pLapArea=$("p-lap-area"),pLapRows=$("p-lap-rows"),pDigitGuide=$("p-digit-guide"),pDigitGuideOn=$("p-digit-guide-enabled"),pWorld=portraitApp.querySelector(".tab-world"),pAlarm=portraitApp.querySelector("#p-tabs .tab:nth-child(2)"),pTimer=portraitApp.querySelector("#p-tabs .tab:nth-child(4)"),pDigits=[...pTime.querySelectorAll("[data-p-digit]")],pGroups=[...pTime.querySelectorAll("[data-p-group]")];
@@ -155,14 +156,7 @@ import { wakeLock, acquireWakeLock } from "./wake-lock.js";
     function releasePress(){if(!pressed)return;pressed=false;renderState();}
     function cycleTrick(){if(presetMode||!settings.hidden||!quickSettings.hidden)return;const previous=trickState;trickState=nextTrickState(trickState,trick3Enabled);if(previous==="seq"&&trickState!=="seq")sequenceStopCount=0;pendingDigits=[];reservedTens=stopDigit=null;pWorld.classList.remove("feedback");renderState();hidePortraitDigitGuide();}
 
-const localSettingsHost = typeof location !== 'undefined' && ['localhost', '127.0.0.1', '::1', '[::1]'].includes(location.hostname);
-if (localSettingsHost && new URLSearchParams(location.search).get('local-preview') === '1') {
-  window.addEventListener('magic-local-settings', () => {
-    document.getElementById("settings-entry-tutorial-dismiss")?.click();
-    openSettings();
-  });
-  document.documentElement.dataset.localSettingsReady = 'true';
-}
+installLocalPreview(() => { document.getElementById("settings-entry-tutorial-dismiss")?.click(); openSettings(); }); // local-preview-hook
     function initApp(){installSettingsSwipe(openSettings,cancelPendingInteractions,()=>$("settings-entry-tutorial").hidden&&!presetMode&&state!=="running"&&settings.hidden&&quickSettings.hidden,()=>{clearHold();tap=null;alarmTap=null;});loadStorage();try{pDigitGuideOn.checked=localStorage.getItem(DIGIT_GUIDE_KEY)==="1";}catch(_){pDigitGuideOn.checked=false;}setMode(uiMode);showPortraitDigitGuide();
       document.addEventListener("pointerdown",onGlobalPointerDown,{capture:true,passive:false});window.addEventListener("pointermove",handlePointerMove,{passive:false});window.addEventListener("pointerup",e=>{onGlobalPointerEnd(e);handlePresetEnd(e);if(hold&&hold.pointerId===e.pointerId)clearHold();releasePress();});window.addEventListener("pointercancel",e=>{onGlobalPointerEnd(e);handlePresetEnd(e);if(hold&&hold.pointerId===e.pointerId)clearHold();releasePress();});
       document.addEventListener("pointerdown",handlePresetDown,{capture:true,passive:false});

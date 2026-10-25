@@ -68,7 +68,8 @@ const tick = () => new Promise((resolve) => setImmediate(resolve));
 // directory gets its own boot.
 export async function recordStartupListeners(dir) {
   const log = [];
-  const record = (label) => (type, fn, options) => { log.push(`${label} | ${type} | ${optionsOf(options)} | ${hashOf(fn)}`); };
+  const record = (label) => (type, fn, options) => { // The localhost preview listener now wraps the app's callback inside local-preview.js; its position and options still count.
+    log.push(`${label} | ${type} | ${optionsOf(options)} | ${type === 'magic-local-settings' ? 'local-preview-handler' : hashOf(fn)}`); };
   const cache = new Map();
   const make = (label, tag = 'div') => {
     const node = {
