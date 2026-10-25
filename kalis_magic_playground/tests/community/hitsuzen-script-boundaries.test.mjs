@@ -13,7 +13,7 @@ import { pathToFileURL } from 'node:url';
 // Drives the key pad (expression path), the percent trick, the date trick, the stack lookups, the two-finger
 // downward settings swipe, settings saves, the RELEASE handoff, Shift+Esc on desktop, the install nudge, the
 // wake lock (the stub releases it when the page is hidden, like a browser) and the #selftest entry of boot.js.
-// The clock starts at a fixed time so the date trick has an exact answer, then runs in real time.
+// The page clock (Date, setTimeout) is controlled by the test and moves only through advance().
 // Only the personal zz3 app is covered. The friend snapshot distribution-snapshots/calculator is one inline file.
 // Not covered: the appearance editor settings-ui.js builds (it needs a full DOM; only its mount and install slot
 // run here), the /tools/_check revoke poll (inline script, only runs under /tools/), the service worker file.
@@ -27,7 +27,7 @@ const originalConsoleError = console.error;
 const originalConsoleLog = console.log;
 console.error = (...args) => { errors.push(`console.error: ${args.join(' ')}`); };
 afterEach(async () => {
-  await settle(5);
+  await settle();
   assert.deepEqual(errors, [], 'no uncaught errors, unhandled rejections or console.error');
 });
 const settle = (ms = 0) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -203,16 +203,30 @@ function parseHtml(source) {
   return { top };
 }
 
-// A clock that starts at 2026-10-25 14:05:00 local time and then runs in real time (the settings-swipe click
-// suppression and the long press depend on time passing). The date trick adds the 20 s default delay, so the
-// answer is exact as long as the whole file finishes within 40 s.
-const START = new Date(2026, 9, 25, 14, 5, 0).getTime();
-const started = performance.now();
-const clock = () => START + Math.round(performance.now() - started);
+// A controlled clock: 2026-10-25 14:05:00 local time, moved only by advance(). The page's Date and its
+// setTimeout/clearTimeout both use it, so nothing here depends on real elapsed time (the date trick answer, the
+// 500 ms long press and the 700 ms click suppression after a settings swipe are all driven by advance()).
+let clockNow = new Date(2026, 9, 25, 14, 5, 0).getTime();
+const timers = new Map();
+let timerId = 0;
+const pageSetTimeout = (fn, ms = 0) => { timerId += 1; timers.set(timerId, { fn, at: clockNow + Number(ms) }); return timerId; };
+const pageClearTimeout = (id) => { timers.delete(id); };
+async function advance(ms) {
+  const target = clockNow + ms;
+  for (;;) {
+    const due = [...timers].filter(([, t]) => t.at <= target).sort((a, b) => a[1].at - b[1].at || a[0] - b[0])[0];
+    if (!due) break;
+    timers.delete(due[0]);
+    clockNow = Math.max(clockNow, due[1].at);
+    due[1].fn();
+  }
+  clockNow = target;
+  await settle();
+}
 const RealDate = Date;
 class FixedDate extends RealDate {
-  constructor(...args) { if (args.length) super(...args); else super(clock()); }
-  static now() { return clock(); }
+  constructor(...args) { if (args.length) super(...args); else super(clockNow); }
+  static now() { return clockNow; }
 }
 
 function stubBrowser() {
@@ -267,7 +281,7 @@ function stubBrowser() {
 
   // The vm context global IS the stub window: scripts see these as plain globals and as window.<name>.
   const sandbox = {
-    document, navigator, location, localStorage, console, setTimeout, clearTimeout, Date: FixedDate,
+    document, navigator, location, localStorage, console, setTimeout: pageSetTimeout, clearTimeout: pageClearTimeout, Date: FixedDate,
     innerWidth: 390, innerHeight: 844,
     // Animation frames are queued and never run: they only lay out the appearance editor, which is not driven here.
     requestAnimationFrame: (fn) => { frameId += 1; frames.set(frameId, fn); return frameId; },
@@ -528,7 +542,7 @@ test('stack icon: a short press looks up the Mnemonica stack, a long press the u
   const id = (pointerId += 1);
   await fire(icon, 'pointerdown', touch(id, 20, 20));
   assert.equal(icon.pointerCaptured.at(-1), id, 'the icon captures the pointer');
-  await settle(560);
+  await advance(560);
   await fire(icon, 'pointerup', touch(id, 20, 20));
   assert.equal(result.hidden, false);
   assert.equal(result.textContent, '28번째 · 35번째', 'undo setup for 6:25');
@@ -604,7 +618,7 @@ test('entry tutorial: a click right after the swipe is swallowed, a later click 
   const swallowed = await fire(node('settings-entry-tutorial-dismiss'), 'click');
   assert.equal(swallowed.defaultPrevented, true, 'the click that follows a settings swipe is suppressed');
   assert.equal(stored(tutorialKey), null, 'so it does not reach the dismiss button');
-  await settle(750);
+  await advance(750);
   await fire(node('settings-entry-tutorial-dismiss'), 'click');
   assert.equal(node('settings-entry-tutorial').hidden, true);
   assert.equal(stored('calculator-settings-entry-tutorial-v1:/zz3'), '1');
