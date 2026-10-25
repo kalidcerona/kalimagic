@@ -25,6 +25,25 @@ function textFiles(dir, prefix = '') {
   });
 }
 
+
+// Modules reachable from the entry through static relative imports (including side-effect-only imports).
+// With stripMarked, the lines marked for the friend build are removed first and local-preview.* no longer exists.
+function reachable(dir, entry, { stripMarked = false } = {}) {
+  const seen = new Set();
+  const visit = (file) => {
+    if (seen.has(file) || !existsSync(path.join(dir, file))) return;
+    if (stripMarked && LOCAL_PREVIEW_FILE.test(path.basename(file))) return;
+    seen.add(file);
+    let source = readFileSync(path.join(dir, file), 'utf8');
+    if (stripMarked) source = source.split('\n').filter((line) => !line.includes(MARK)).join('\n');
+    const specifiers = [...source.matchAll(/^\s*(?:import|export)\b\s*(?:[^'";]*?\bfrom\s*)?['"](\.{1,2}\/[^'"]+)['"]/gm)].map((match) => match[1]);
+    for (const specifier of specifiers) visit(path.posix.normalize(path.posix.join(path.posix.dirname(file), specifier)));
+  };
+  visit(entry);
+  return seen;
+}
+const LOCAL_PREVIEW_FILE = /^local-preview\.m?js$/;
+
 for (const [zz, ext, entry] of apps) {
   test(`${zz}: the preview hook is local-preview.${ext} plus marked lines only`, () => {
     const dir = root(zz);
@@ -57,6 +76,12 @@ for (const [zz, ext, entry] of apps) {
     }
     assert.equal(calls, 1, `${zz} has exactly one hook call line`);
     assert.equal(imports, 1, `${zz} has exactly one installLocalPreview import line`);
+
+    // A marked import must never be the only way a real app module gets loaded (a friend build would boot without it).
+    const full = reachable(dir, entry);
+    const stripped = reachable(dir, entry, { stripMarked: true });
+    assert.ok(full.has(moduleName), `${zz}: the entry imports ${moduleName}`);
+    assert.deepEqual([...stripped].sort(), [...full].filter((file) => !LOCAL_PREVIEW_FILE.test(file)).sort(), `${zz}: stripping the hook leaves every other module reachable`);
 
     const sw = readFileSync(path.join(dir, 'sw.js'), 'utf8').split('\n');
     const swRefs = sw.filter((line) => line.includes(`./${moduleName}`));
