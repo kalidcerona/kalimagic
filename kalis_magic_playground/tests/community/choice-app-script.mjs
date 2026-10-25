@@ -8,17 +8,19 @@ import { inlineLocalPreview, readSiblingFrom } from './local-preview-inline.mjs'
 // and export footers. home-manifest.js and builtin-lists.js stay separate shared files.
 export const CHOICE_IMPORT = /^import\s+(?:\{[\s\S]*?\}\s+from\s+)?'\.\/([\w-]+\.js)';(?: \/\/ local-preview-hook)?\n/gm;
 const CHOICE_EXPORT = /^export\s+\{[\s\S]*?\}(?:\s+from\s+'\.\/[\w-]+\.js')?;\n/gm;
+// Facades such as performance.js and views.js re-export from their feature modules; those files are modules too.
+const CHOICE_IMPORT_OR_REEXPORT = /^(?:import\s+(?:\{[\s\S]*?\}\s+from\s+)?|export\s+\{[\s\S]*?\}\s+from\s+)'\.\/([\w-]+\.js)';/gm;
 const APP_SHARED = new Set(['local-preview.js', 'logic.js', 'home-manifest.js', 'builtin-lists.js']);
 const LOGIC_SHARED = new Set(['builtin-lists.js']);
 
-function modules(dir, entry, shared) {
+function modules(dir, entry, shared, followExports = false) {
   const order = [];
   const seen = new Set();
   const visit = (file) => {
     if (seen.has(file)) return;
     seen.add(file);
     const source = readFileSync(path.join(dir, file), 'utf8');
-    for (const [, from] of source.matchAll(CHOICE_IMPORT)) {
+    for (const [, from] of source.matchAll(followExports ? CHOICE_IMPORT_OR_REEXPORT : CHOICE_IMPORT)) {
       if (!shared.has(from) && existsSync(path.join(dir, from))) visit(from);
     }
     order.push(file);
@@ -32,7 +34,7 @@ export function choiceModuleScript(dir, file) {
 }
 
 export function choiceAppModules(dir) {
-  return modules(dir, 'app.js', APP_SHARED);
+  return modules(dir, 'app.js', APP_SHARED, true);
 }
 
 export function choiceAppScript(dir) {

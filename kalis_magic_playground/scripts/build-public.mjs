@@ -214,7 +214,9 @@ export const CHOICE_FILES = [...NEW_APP_FILES, ...CHOICE_HOME_FILES];
 export const CHOICE_MODULE_FILES = [
   'module-start.js', 'gesture-guide.js', 'dom.js', 'editor.js', 'options.js', 'precheck.js', 'views.js',
   'wizard.js', 'extras.js', 'backup.js', 'user-icons.js', 'wallpaper.js', 'previews.js', 'input-guide.js',
-  'performance.js', 'fake-notes.js', 'wake-lock.js', 'controller.js', 'logic-core.js', 'logic-presets.js',
+  'performance.js', 'fake-home-surface.js', 'performance-start.js', 'performance-gestures.js',
+  'artwork-warmup.js', 'views-home.js', 'wizard-view.js', 'detail-view.js',
+  'fake-notes.js', 'wake-lock.js', 'controller.js', 'logic-core.js', 'logic-presets.js',
   'logic-performance.js', 'logic-extras.js', 'logic-storage.js', 'logic-fake-home.js', 'logic-notes.js',
   'logic-backup.js', 'logic-user-icons.js', 'logic-wizard.js'
 ];
@@ -354,6 +356,13 @@ export const MIRROR_PAIRS = [
   ['../../magic-choice/previews.js', 'zz4/previews.js'],
   ['../../magic-choice/input-guide.js', 'zz4/input-guide.js'],
   ['../../magic-choice/performance.js', 'zz4/performance.js'],
+  ['../../magic-choice/fake-home-surface.js', 'zz4/fake-home-surface.js'],
+  ['../../magic-choice/performance-start.js', 'zz4/performance-start.js'],
+  ['../../magic-choice/performance-gestures.js', 'zz4/performance-gestures.js'],
+  ['../../magic-choice/artwork-warmup.js', 'zz4/artwork-warmup.js'],
+  ['../../magic-choice/views-home.js', 'zz4/views-home.js'],
+  ['../../magic-choice/wizard-view.js', 'zz4/wizard-view.js'],
+  ['../../magic-choice/detail-view.js', 'zz4/detail-view.js'],
   ['../../magic-choice/fake-notes.js', 'zz4/fake-notes.js'],
   ['../../magic-choice/wake-lock.js', 'zz4/wake-lock.js'],
   ['../../magic-choice/controller.js', 'zz4/controller.js'],

@@ -192,6 +192,10 @@ test('zz4 performance requests the screen lock once and settings releases it', a
     releaseWallpaper() {},
     endPeek() {},
     showView() {},
+    // The gesture state moved to performance-gestures.js; openFakeHome and closeFakeHome now reset it through these setters.
+    setFakeHomeGesture() {},
+    setResetTaps() {},
+    setReadoutCleared() {},
   };
   sandbox.window = sandbox;
   vm.runInNewContext(source, sandbox, { filename: 'zz4/app.js' });
