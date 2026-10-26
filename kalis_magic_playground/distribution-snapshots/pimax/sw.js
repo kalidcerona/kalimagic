@@ -1,9 +1,12 @@
 // Cache only the explicit app shell. API, authentication and user data stay on the network.
 const CACHE_PREFIX = 'pimax-practice-';
-const CACHE_NAME = CACHE_PREFIX + 'v20261024-wake-3-v20261021-wake-1-v20261016-sheet-1-modes-1-coherent-1-v2-brand5-modules-1-distribution';
+const CACHE_NAME = CACHE_PREFIX + 'v20261024-wake-3-v20261021-wake-1-v20261016-sheet-1-modes-1-coherent-1-v2-brand5-modules-1-css-1-distribution';
 const SHELL = [
   "./index.html",
   "./style.css",
+  "./style-practice.css",
+  "./style-quiz-shapes.css",
+  "./style-checker-install.css",
   "./app.mjs",
   "./state.mjs",
   "./session.mjs",
