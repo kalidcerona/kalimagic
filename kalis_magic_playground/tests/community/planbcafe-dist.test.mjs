@@ -12,6 +12,7 @@ const root = new URL('../../', import.meta.url);
 const snapshot = new URL('distribution-snapshots/planbcafe/', root);
 const files = ['game.data', 'game.js', 'icons/icon-192.png', 'icons/icon-512.png',
   'icons/maskable-512.png', 'index.html', 'love.js', 'love.wasm', 'manifest.webmanifest', 'sw.js'].sort();
+const repositoryFiles = [...files, '.gitattributes'].sort();
 async function filesUnder(directory, prefix = '') {
   const result = [];
   for (const entry of await readdir(directory, { withFileTypes: true })) {
@@ -35,10 +36,10 @@ test('PLAN B cafe publishes exactly its frozen game files with an explicit copy 
   assert.deepEqual(DISTRIBUTION_APPS.find(app => app.tool === 'planbcafe'), {
     source: 'distribution-snapshots/planbcafe', target: 'planbcafe', tool: 'planbcafe'
   });
-  assert.deepEqual(await filesUnder(snapshot), files);
+  assert.deepEqual(await filesUnder(snapshot), repositoryFiles);
   for (const file of ['', 'icons', ...files]) assert.equal(shouldCopyPlanbcafe(file), true, file);
   for (const file of ['README.md', '.env', 'icons/private.png', 'icons/nested', 'icons/icon-192.png.bak',
-    'game.data.map', 'game.js.map', 'private.wasm', 'test.js', '../index.html']) {
+    'game.data.map', 'game.js.map', 'private.wasm', 'test.js', '.gitattributes', '../index.html']) {
     assert.equal(shouldCopyPlanbcafe(file), false, file);
   }
   const temp = await mkdtemp(path.join(os.tmpdir(), 'planbcafe-copy-'));
