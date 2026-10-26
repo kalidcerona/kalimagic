@@ -516,8 +516,8 @@ export function injectLegacyMigration(html, target) {
 }
 
 export function transformDistributionDocument(html, app) {
-  // Magicshow is a public beta; the sync script owns its document additions.
-  if (app.target === 'magicshow') return html;
+  // Public game betas own their documents and do not use the friend access guard.
+  if (app.target === 'magicshow' || app.target === 'planbcafe') return html;
   const isolate = app.target === 'kairos' || app.target === 'kairos-classic';
   let next = isolate ? isolateKairosStorageKeys(html, app.target) : html;
   // RELEASE friends get the same editor as the personal build. Other friend apps stay fixed.
@@ -600,9 +600,18 @@ export function shouldCopyMagicshow(relativePath) {
     /^assets\/(?:(?:ui|kit)\/)?[A-Za-z0-9_-]+\.(?:png|webp)$/.test(file) || /^fonts\/[A-Za-z0-9_-]+\.woff2$/.test(file);
 }
 
+// This game is a frozen web build; no generated or private files may leak in.
+export function shouldCopyPlanbcafe(relativePath) {
+  const file = relativePath.split(path.sep).join('/');
+  return ['', 'icons', 'index.html', 'game.js', 'love.js', 'love.wasm', 'game.data',
+    'sw.js', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png',
+    'icons/maskable-512.png'].includes(file);
+}
+
 export const DISTRIBUTION_APPS = [
   { source: 'distribution-snapshots/gwayubulgeup', target: 'gwayubulgeup', tool: 'gwayubulgeup' },
   { source: 'distribution-snapshots/magicshow', target: 'magicshow', tool: 'magicshow' },
+  { source: 'distribution-snapshots/planbcafe', target: 'planbcafe', tool: 'planbcafe' },
   { source: 'distribution-snapshots/choice', target: 'choice', tool: 'choice' },
   { source: 'distribution-snapshots/pimax', target: 'pimax', tool: 'pimax' },
   { source: 'distribution-snapshots/calculator', target: 'hitsuzen', tool: 'calc' },
@@ -689,6 +698,8 @@ async function buildDistributionApps() {
       recursive: true,
       filter: (entry) => app.target === 'magicshow'
         ? shouldCopyMagicshow(path.relative(source, entry))
+        : app.target === 'planbcafe'
+        ? shouldCopyPlanbcafe(path.relative(source, entry))
         : app.target === 'pimax'
         ? shouldCopyPimax(path.relative(source, entry))
         : app.target === 'choice'
@@ -714,6 +725,8 @@ async function buildDistributionApps() {
       const swPath = path.join(target, 'sw.js');
       await writeFile(swPath, injectLegacyShellModules(await readFile(swPath, 'utf8')));
     }
+    // Preserve the game's manifest bytes as well as its relative identity.
+    if (app.target === 'planbcafe') continue;
     const manifestPath = path.join(target, 'manifest.webmanifest');
     const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
     if (app.target !== 'magicshow') Object.assign(manifest, { id: `/tools/${app.target}/`, start_url: './', scope: './' });
@@ -832,10 +845,13 @@ export async function verifyAppDisplayPolicy(directory = DIST, routes = [
   for (const route of routes) {
     const appDirectory = path.join(directory, route);
     const manifest = JSON.parse(await readFile(path.join(appDirectory, 'manifest.webmanifest'), 'utf8'));
-    const expectedDisplay = route === 'tools/magicshow' ? 'fullscreen' : 'standalone';
-    if (manifest.display !== expectedDisplay || (route !== 'tools/magicshow' && (manifest.display_override || []).includes('fullscreen'))) {
+    const isGame = route === 'tools/magicshow' || route === 'tools/planbcafe';
+    const expectedDisplay = isGame ? 'fullscreen' : 'standalone';
+    if (manifest.display !== expectedDisplay || (!isGame && (manifest.display_override || []).includes('fullscreen'))) {
       throw new Error(`App display policy: ${route} must remain ${expectedDisplay}`);
     }
+    // PLAN B cafe owns its runtime; personal magic-app policies do not apply.
+    if (route === 'tools/planbcafe') continue;
     const html = await readFile(path.join(appDirectory, 'index.html'), 'utf8');
     const disabled = /<body\b[^>]*\bdata-magic-customize=["']off["']/.test(html);
     const customizeOff = route.startsWith('tools/') && route !== 'tools/release';

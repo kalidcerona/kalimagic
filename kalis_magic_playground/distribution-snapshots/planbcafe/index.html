@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#f7f0e0">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <title>플랜비 카페</title>
+    <!-- Page for the love.js 11.4.1 compatibility build (tools/build_web.sh copies it over
+         the generated index.html). Layout uses a 1280x720 logical space and a DPR-aware
+         backing store inside the largest CSS 16:9 box, with black bars around it. -->
+    <style>
+      html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; }
+      body { touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+      #canvas, #loading {
+        position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+        display: block; touch-action: none; outline: none;
+      }
+      #canvas { visibility: hidden; }
+      #loading {
+        color: #f8f0e0; font: 600 28px/1.5 -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
+        text-align: center; width: 90%; word-break: keep-all;
+      }
+      #loading small { display: block; font-size: 18px; font-weight: 400; opacity: 0.75; }
+      #install-hint { position: fixed; left: max(12px, env(safe-area-inset-left)); top: max(8px, env(safe-area-inset-top));
+        z-index: 10; max-width: 85%; padding: 8px 12px; background: #f7f0e0; color: #33241a;
+        border: 2px solid #8c6b52; border-radius: 12px; font: 14px/1.4 sans-serif; }
+      #install-hint[hidden], #install-button[hidden] { display: none; }
+      #install-hint button { min-height: 44px; min-width: 44px; font: inherit; margin-left: 8px; }
+    </style>
+  </head>
+  <body>
+    <div id="loading">플랜비 카페 불러오는 중...<small id="loading-detail">잠시만 기다려 주세요</small></div>
+    <aside id="install-hint" hidden><span id="install-text"></span><button id="install-button" hidden>설치</button><button id="dismiss-hint" aria-label="설치 안내 닫기">닫기</button></aside>
+    <canvas id="canvas" width="1280" height="720" oncontextmenu="event.preventDefault()"></canvas>
+
+    <script type="text/javascript">
+      var GAME_W = 1280, GAME_H = 720;
+      var installEvent = null;
+      var installHint = document.getElementById("install-hint");
+      var installButton = document.getElementById("install-button");
+      var installed = window.matchMedia("(display-mode: standalone)").matches ||
+        window.matchMedia("(display-mode: fullscreen)").matches || navigator.standalone;
+      var dismissed = false;
+      try { dismissed = localStorage.getItem("planb-install-dismissed") === "yes"; } catch (_) {}
+      var ios = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+        (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+      document.getElementById("install-text").textContent = ios ?
+        "공유 메뉴 → 홈 화면에 추가하면 앱처럼 크게 할 수 있어요" :
+        "브라우저 메뉴에서 홈 화면에 추가하면 앱처럼 크게 할 수 있어요";
+      installHint.hidden = installed || dismissed;
+      document.getElementById("dismiss-hint").onclick = function () {
+        dismissed = true; installHint.hidden = true;
+        try { localStorage.setItem("planb-install-dismissed", "yes"); } catch (_) {}
+      };
+      window.addEventListener("beforeinstallprompt", function (event) {
+        event.preventDefault(); installEvent = event;
+        if (!installed && !dismissed) { installButton.hidden = false; installHint.hidden = false; }
+      });
+      installButton.onclick = function () {
+        if (!installEvent) return;
+        installEvent.prompt();
+        installEvent.userChoice.then(function () { installEvent = null; installButton.hidden = true; });
+      };
+      window.addEventListener("appinstalled", function () { installed = true; installHint.hidden = true; });
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", function () {
+          navigator.serviceWorker.register("./sw.js", { updateViaCache: "none" }).catch(console.error);
+        });
+      }
+
+      var viewportStamp = "";
+      // Largest 16:9 box that fits the window; the rest stays black.
+      function fitCanvas() {
+        var canvas = document.getElementById("canvas");
+        var w = window.innerWidth, h = window.innerHeight;
+        var scale = Math.min(w / GAME_W, h / GAME_H);
+        var cssW = Math.floor(GAME_W * scale), cssH = Math.floor(GAME_H * scale);
+        var dpr = Math.min(3, window.devicePixelRatio || 1);
+        var pixelW = Math.round(cssW * dpr), pixelH = Math.round(cssH * dpr);
+        if (canvas.width !== pixelW || canvas.height !== pixelH) {
+          if (typeof Module !== "undefined" && Module.setCanvasSize) {
+            Module.setCanvasSize(pixelW, pixelH, false);
+          } else { canvas.width = pixelW; canvas.height = pixelH; }
+        }
+        canvas.style.width = cssW + "px";
+        canvas.style.height = cssH + "px";
+        // Exported Emscripten MEMFS bridge: SDL window/GL viewport must also resize.
+        // This file exists only in the browser's volatile filesystem, never in saves.
+        var stamp = pixelW + " " + pixelH;
+        if (typeof Module !== "undefined" && Module.FS_createDataFile && viewportStamp !== stamp) {
+          try {
+            if (viewportStamp) Module.FS_unlink("/tmp/planb-viewport");
+            Module.FS_createDataFile("/tmp", "planb-viewport", stamp, true, false);
+            viewportStamp = stamp;
+          } catch (_) { /* MEMFS may still be initializing; postRun retries. */ }
+        }
+      }
+      window.addEventListener("resize", fitCanvas);
+      window.addEventListener("orientationchange", function () { setTimeout(fitCanvas, 200); });
+      fitCanvas();
+      if (typeof MutationObserver !== "undefined") {
+        new MutationObserver(fitCanvas).observe(document.getElementById("canvas"), {
+          attributes: true, attributeFilter: ["width", "height"]
+        });
+      }
+      window.addEventListener("pageshow", fitCanvas);
+
+      // Keep the screen on while the game is open and visible (rejection is fine).
+      var wakeLock = null;
+      function requestWakeLock() {
+        if (!("wakeLock" in navigator) || document.visibilityState !== "visible") return;
+        navigator.wakeLock.request("screen").then(function (lock) {
+          wakeLock = lock;
+          lock.addEventListener("release", function () { wakeLock = null; });
+        }).catch(function () {});
+      }
+      document.addEventListener("visibilitychange", function () {
+        if (document.visibilityState === "visible") requestWakeLock();
+      });
+      window.addEventListener("load", requestWakeLock);
+      // Some browsers only grant the lock after a user gesture.
+      window.addEventListener("pointerdown", function () { if (!wakeLock) requestWakeLock(); });
+
+      // No page scroll, zoom or long-press menu; taps go to the game.
+      ["touchstart", "touchmove", "touchend", "gesturestart"].forEach(function (name) {
+        document.addEventListener(name, function (e) { if (!e.target.closest("#install-hint") && e.cancelable) e.preventDefault(); }, { passive: false });
+      });
+      window.addEventListener("keydown", function (e) {
+        if ([32, 37, 38, 39, 40].indexOf(e.keyCode) > -1) e.preventDefault();
+      }, false);
+      window.onload = function () { window.focus(); };
+      window.onclick = function () { window.focus(); };
+
+      function setLoading(main, detail) {
+        document.getElementById("loading").firstChild.nodeValue = main;
+        document.getElementById("loading-detail").textContent = detail || "";
+      }
+
+      var Module = {
+        arguments: ["./game.love"],
+        postRun: [fitCanvas],
+        INITIAL_MEMORY: 134217728,
+        printErr: console.error.bind(console),
+        canvas: (function () {
+          var canvas = document.getElementById("canvas");
+          canvas.addEventListener("webglcontextlost", function (e) {
+            setLoading("화면을 다시 불러와 주세요", "그래픽 연결이 끊겼어요");
+            document.getElementById("loading").style.display = "block";
+            e.preventDefault();
+          }, false);
+          return canvas;
+        })(),
+        setStatus: function (text) {
+          if (text) {
+            setLoading("플랜비 카페 불러오는 중...", "준비 중 (" + (this.totalDependencies - this.remainingDependencies) + "/" + Math.max(1, this.totalDependencies) + ")");
+          } else if (Module.remainingDependencies === 0) {
+            document.getElementById("loading").style.display = "none";
+            document.getElementById("canvas").style.visibility = "visible";
+            fitCanvas();
+          }
+        },
+        totalDependencies: 0,
+        remainingDependencies: 0,
+        monitorRunDependencies: function (left) {
+          this.remainingDependencies = left;
+          this.totalDependencies = Math.max(this.totalDependencies, left);
+          Module.setStatus(left ? "loading" : "");
+          if (!left) Module.setStatus("");
+        }
+      };
+      Module.setStatus("loading");
+      window.onerror = function () {
+        setLoading("문제가 생겼어요", "페이지를 새로 고쳐 주세요");
+        document.getElementById("loading").style.display = "block";
+      };
+
+      var applicationLoad = function () { Love(Module); };
+    </script>
+    <script type="text/javascript" src="game.js"></script>
+    <script async type="text/javascript" src="love.js" onload="applicationLoad(this)"></script>
+  </body>
+</html>

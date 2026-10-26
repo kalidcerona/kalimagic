@@ -105,7 +105,11 @@ async function buildPlan() {
     const entries = shellEntries(worker);
     if (!entries.length) throw new Error(`${source}/sw.js has no SHELL or precache list`);
     for (const route of routesFor(source)) {
-      for (const entry of entries) required.push(resolvePublished(route, entry, `${source}/sw.js`));
+      for (const entry of entries) {
+        // The frozen cafe worker caches its directory URL, served by index.html.
+        const fileEntry = source === 'distribution-snapshots/planbcafe' && entry === './' ? 'index.html' : entry;
+        required.push(resolvePublished(route, fileEntry, `${source}/sw.js`));
+      }
     }
   }
   for (const [source, cardAtIndex] of courtApps) {

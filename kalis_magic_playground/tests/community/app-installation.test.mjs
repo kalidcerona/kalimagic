@@ -56,7 +56,7 @@ test('public app identities remain distinct while FALSE MEMORY stays private', a
   assert.equal(PUBLIC_DIRS.includes('zz9'), false);
 });
 
-test('all 27 app manifests resolve to stable distinct identities and usable PNG icons', async () => {
+test('all 28 app manifests resolve to stable distinct identities and usable PNG icons', async () => {
   const { PUBLIC_DIRS, DISTRIBUTION_APPS } = await import('../../scripts/build-public.mjs');
   const expectedPersonal = {
     zz1: '/zz1/index.html', zz2: '/zz2/index.html', zz3: '/zz3/index.html',
@@ -72,7 +72,7 @@ test('all 27 app manifests resolve to stable distinct identities and usable PNG 
   for (const { source, route, shared } of apps) {
     const root = new URL(`../../${source}/`, import.meta.url);
     const manifest = JSON.parse(await readFile(new URL('manifest.webmanifest', root), 'utf8'));
-    if (shared) Object.assign(manifest, { id: `/${route}/`, start_url: './', scope: './' });
+    if (shared && route !== 'tools/planbcafe') Object.assign(manifest, { id: `/${route}/`, start_url: './', scope: './' });
     const manifestUrl = new URL(`https://example.test/${route}/manifest.webmanifest`);
     const start = new URL(manifest.start_url, manifestUrl);
     const scope = new URL(manifest.scope, manifestUrl);
@@ -80,10 +80,11 @@ test('all 27 app manifests resolve to stable distinct identities and usable PNG 
     const id = new URL(manifest.id || start.href, start.origin);
     id.hash = '';
     identities.push(id.href);
-    assert.equal(id.pathname, shared ? `/${route}/` : expectedPersonal[route], route);
+    const expectedId = route === 'tools/planbcafe' ? '/' : shared ? `/${route}/` : expectedPersonal[route];
+    assert.equal(id.pathname, expectedId, route);
     assert.equal(start.origin, scope.origin);
     assert.ok(start.pathname.startsWith(scope.pathname), `${route} launch URL stays in scope`);
-    assert.equal(manifest.display, route === 'tools/magicshow' ? 'fullscreen' : 'standalone');
+    assert.equal(manifest.display, ['tools/magicshow', 'tools/planbcafe'].includes(route) ? 'fullscreen' : 'standalone');
     assert.equal(manifest.prefer_related_applications, undefined);
     for (const size of [192, 512]) {
       const icon = manifest.icons.find((entry) => entry.sizes === `${size}x${size}`
@@ -95,6 +96,6 @@ test('all 27 app manifests resolve to stable distinct identities and usable PNG 
       assert.deepEqual(pngSize(await readFile(iconUrl)), [size, size], route);
     }
   }
-  assert.equal(apps.length, 27);
-  assert.equal(new Set(identities).size, 27);
+  assert.equal(apps.length, 28);
+  assert.equal(new Set(identities).size, 28);
 });

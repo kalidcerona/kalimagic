@@ -9,6 +9,8 @@ import { legacySharedWorkerResponse } from '../../scripts/legacy-sw-bridge.mjs';
 
 // Temporary link-only beta; set false to restore the retained friend grant gate.
 export const MAGICSHOW_PUBLIC_BETA = true;
+// Link-only game beta; no entitlement product is registered for this route.
+export const PLANBCAFE_PUBLIC_BETA = true;
 
 const COOKIE_MAX_AGE = 7_776_000;
 const RENEWAL_WINDOW_SECONDS = 3_888_000;
@@ -79,6 +81,12 @@ function analyzePath(rawPathname) {
       return { mode: 'public', pathname };
     }
     return { mode: 'gated', tool: 'magicshow', pathname };
+  }
+
+  if (pathname === '/tools/planbcafe' || pathname.startsWith('/tools/planbcafe/')) {
+    if (/\/{2,}/.test(lowerPath)) return { mode: 'block', pathname };
+    if (PLANBCAFE_PUBLIC_BETA) return { mode: 'public', pathname };
+    return { mode: 'block', pathname };
   }
 
   const isLoginPath =

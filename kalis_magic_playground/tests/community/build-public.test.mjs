@@ -96,6 +96,7 @@ test('public build mirrors the current calculator and integrated stopwatch sourc
   assert.deepEqual(DISTRIBUTION_APPS, [
     { source: 'distribution-snapshots/gwayubulgeup', target: 'gwayubulgeup', tool: 'gwayubulgeup' },
     { source: 'distribution-snapshots/magicshow', target: 'magicshow', tool: 'magicshow' },
+    { source: 'distribution-snapshots/planbcafe', target: 'planbcafe', tool: 'planbcafe' },
     { source: 'distribution-snapshots/choice', target: 'choice', tool: 'choice' },
     { source: 'distribution-snapshots/pimax', target: 'pimax', tool: 'pimax' },
     { source: 'distribution-snapshots/calculator', target: 'hitsuzen', tool: 'calc' },
@@ -695,7 +696,10 @@ test('all final apps resolve to distinct install identities', async () => {
     const start = new URL(manifest.start_url, `${origin}/${route}/manifest.webmanifest`);
     const id = manifest.id ? new URL(manifest.id, start.origin + '/') : start;
     ids.push(id.href);
-    if (route.startsWith('tools/')) assert.equal(id.href, `${origin}/${route}/`);
+    if (route === 'tools/planbcafe') {
+      assert.equal(manifest.id, './');
+      assert.equal(id.href, `${origin}/`);
+    } else if (route.startsWith('tools/')) assert.equal(id.href, `${origin}/${route}/`);
   }
   assert.equal(new Set(ids).size, routes.length, JSON.stringify(ids));
   assert.ok(ids.includes(origin + '/zz13/'));
