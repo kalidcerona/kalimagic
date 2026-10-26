@@ -1,6 +1,6 @@
 // Cache only the explicit app shell. API, authentication and user data stay on the network.
 const CACHE_PREFIX = 'kaname-cue-' + encodeURIComponent(new URL(self.registration.scope).pathname) + '-';
-const CACHE_NAME = CACHE_PREFIX + 'v20261023-web-2-modules-1-panic-render-1';
+const CACHE_NAME = CACHE_PREFIX + 'v20261023-web-2-modules-1-panic-render-1-copy-1';
 const SHELL = [
   "./", // Canonical navigation avoids Netlify pretty-URL redirects from index.html.
   "./style.css",
