@@ -496,7 +496,11 @@ test('preset performance: scratch reveals the image, two-finger up repaints the 
   assert.equal(inPerformance(), true);
 
   if (env.window.listeners['magic-local-settings']) await emit(env.window, 'magic-local-settings');
-  else await emit(env.window, 'keydown', { key: 'Escape', shiftKey: true, preventDefault() {} });
+  else {
+    // No Shift+Escape shortcut any more (desktop-only control removed); settings are reached by the two-finger down swipe.
+    assert.equal(env.window.listeners.keydown, undefined, 'no keydown shortcut is registered on window');
+    await swipe(140);
+  }
   assert.equal(inPerformance(), false);
   assert.equal(settings().hidden, false);
   assert.equal(env.wake.requests.at(-1).released, true);

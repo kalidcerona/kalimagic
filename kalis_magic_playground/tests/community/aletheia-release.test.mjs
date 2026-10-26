@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 import { fileURLToPath } from 'node:url';
 import { aletheiaAppScript } from './aletheia-app-script.mjs';
+import { readAppStyle } from './app-style.mjs';
 
 const dir = new URL('../../distribution-snapshots/aletheia/', import.meta.url);
 const html = readFileSync(new URL('index.html', dir), 'utf8');
@@ -19,6 +20,6 @@ test('shared ALETHEIA gesture-guide setup runs against its published HTML', () =
   assert.doesNotThrow(() => vm.runInNewContext(setup, { document }));
   assert.ok(events.some(([id, type]) => id === 'settings-gesture-dismiss' && type === 'click'));
   assert.match(html, /id="settings-gesture-guide"[^>]*\bhidden/);
-  const css = readFileSync(new URL('style.css', dir), 'utf8');
+  const css = readAppStyle(dir);
   assert.match(css, /\.gesture-guide\[hidden\]\s*\{\s*display:\s*none\s*!important/);
 });

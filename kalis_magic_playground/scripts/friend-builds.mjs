@@ -201,6 +201,9 @@ export async function ensureFreshCacheName(outDir, baselineDir, files, tail = ''
   if (!found || baseline === null) return null;
   const baseLiteral = findCacheLiteral(baseline)?.[1];
   let changed = withCacheSlot(generated) !== withCacheSlot(baseline);
+  // A file the baseline shipped but the new build no longer does (for example a deleted image) is a change too.
+  const built = new Set(files);
+  for (const rel of await walk(baselineDir).catch(() => [])) if (!built.has(rel)) changed = true;
   const hash = createHash('sha256');
   for (const rel of [...files].sort()) {
     if (rel === 'sw.js') continue;

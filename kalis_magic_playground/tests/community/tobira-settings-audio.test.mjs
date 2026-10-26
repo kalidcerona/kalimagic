@@ -190,7 +190,7 @@ test('guide diagram, cache scope and sound control exist in both Tobira copies',
     assert.match(source, /if \(!probe && !wallSoundEnabled\(\)\) return/);
     if (app.name === 'shared') {
       assert.match(source, /friend-tobira\.motion-effects\.v1/);
-      assert.match(source, /event\.key !== 'Escape'/);
+      assert.doesNotMatch(source, /event\.key !== 'Escape' \|\| !event\.shiftKey/);
       assert.doesNotMatch(source, /'tobira\.motion-effects\.v1'/);
     }
   }
