@@ -1,16 +1,23 @@
 // BEGIN SETTINGS SWIPE
 // BEGIN DESKTOP SETTINGS ACCESS
 function bindDesktopSettingsAccess(button, open, canOpen = () => true, canShow = canOpen) {
-  const media = window.matchMedia('(any-hover: hover) and (any-pointer: fine)');
-  const updateButton = () => { button.hidden = !media.matches || !canShow(); };
+  const media = window.matchMedia('(hover: hover) and (pointer: fine)');
+  const isDesktop = () => media.matches && navigator.maxTouchPoints === 0 && !/Android|iPhone|iPad|Mobile|SamsungBrowser/i.test(navigator.userAgent);
+  const updateButton = () => {
+    const desktop = isDesktop();
+    document.documentElement.classList.toggle('desktop-settings-enabled', desktop);
+    button.hidden = !desktop || !canShow();
+  };
   updateButton();
   media.addEventListener?.('change', updateButton);
+  window.addEventListener('pageshow', updateButton);
+  window.addEventListener('focus', updateButton);
   const isEditingTarget = (target) => {
     const element = target?.nodeType === 3 ? target.parentElement : target;
     return Boolean(element?.isContentEditable || element?.closest?.('input, textarea, select, [contenteditable]:not([contenteditable="false"])'));
   };
   const activate = (event) => {
-    if (isEditingTarget(event.target) || !canOpen()) return false;
+    if (!isDesktop() || isEditingTarget(event.target) || !canOpen()) return false;
     event.preventDefault?.();
     open();
     updateButton();

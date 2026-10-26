@@ -92,7 +92,7 @@ function createCourtDeckSlots() {
   return createDeckSlots(loaders, ({ image, url }) => {
     if (url) revokeUrl(url);
     if (image) image.src = '';
-  });
+  }, { eager: false });
 }
 
 function slotLabel(card) {

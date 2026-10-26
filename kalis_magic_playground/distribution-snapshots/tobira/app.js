@@ -22,7 +22,7 @@ import {
 } from './presets.js';
 import {
   loadMotionEffects, saveMotionEffects, saveSoundPreferences, motionEnabled, enableMotion,
-  concealCoin, showSettings, showPerformance, onPointerDown, onPointerMove, onPointerUp, onResize,
+  concealCoin, showPerformance, onPointerDown, onPointerMove, onPointerUp, onResize,
   onEdgeKey,
 } from './performance.js';
 
@@ -325,12 +325,6 @@ function bind() {
     if (state.mode !== 'performance' || !gestureGuide.hidden) return;
     unlockBreakSound();
   }, { capture: true, passive: true });
-  window.addEventListener('keydown', (event) => {
-    if (event.key !== 'Escape' || !event.shiftKey || event.repeat) return;
-    if (state.mode !== 'performance') return;
-    event.preventDefault();
-    showSettings();
-  });
   window.addEventListener('pointerdown', onPointerDown, { capture: true, passive: false });
   window.addEventListener('pointermove', onPointerMove, { capture: true, passive: false });
   window.addEventListener('pointerup', onPointerUp, { capture: true, passive: false });

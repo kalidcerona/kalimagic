@@ -414,7 +414,7 @@
     #app:has(> #date-settings.open) { touch-action: auto; }
     #date-settings { touch-action: pan-y; }
 
-    #settings-entry-tutorial { position: fixed; inset: 0; z-index: 45; display: grid; place-items: center; padding: 24px; pointer-events: auto; }
+    #settings-entry-tutorial { position: fixed; inset: 0; z-index: 45; display: grid; place-items: center; padding: 24px; pointer-events: none; }
     #settings-entry-tutorial[hidden] { display: none !important; }
     #settings-entry-tutorial .tutorial-card { width: min(100%, 320px); padding: 22px; border: 1px solid #ffffff52; border-radius: 20px; background: #1b1b20f2; color: #fff; text-align: center; box-shadow: 0 16px 48px #0009; font: 500 16px/1.55 system-ui, sans-serif; max-height: calc(100vh - 32px); max-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 32px); overflow-y: auto; }
     #settings-entry-tutorial .tutorial-fingers { position: relative; height: 110px; width: 100px; margin: 0 auto 12px; }
@@ -426,6 +426,6 @@
     #settings-entry-tutorial button { min-width: 120px; min-height: 44px; border: 0; border-radius: 12px; background: #fff; color: #111; font: 600 16px system-ui, sans-serif; pointer-events: auto; touch-action: manipulation; }
     .desktop-settings-entry { position: fixed; z-index: 30; top: max(12px, env(safe-area-inset-top)); right: max(12px, env(safe-area-inset-right)); min-height: 44px; padding: 0 14px; border: 1px solid #ffffff55; border-radius: 12px; background: #202024eF; color: #fff; font: 600 14px system-ui, sans-serif; }
     .desktop-settings-help { display: none; }
-    @media (any-hover: hover) and (any-pointer: fine) { .desktop-settings-help { display: block; color: #aeb0b8; font-size: 13px; } }
+    html.desktop-settings-enabled .desktop-settings-help { display: block; color: #aeb0b8; font-size: 13px; }
     @keyframes tutorial-swipe { 0%, 16% { transform: translateY(0); opacity: .55; } 70%, 85% { transform: translateY(45px); opacity: 1; } 100% { transform: translateY(0); opacity: .55; } }
     @media (prefers-reduced-motion: reduce) { #settings-entry-tutorial .tutorial-fingers span { animation: none; transform: translateY(25px); } }

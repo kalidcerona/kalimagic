@@ -37,7 +37,14 @@
 
     <div class="date-settings" id="date-settings" data-settings-root aria-hidden="true">
       <img class="date-settings-logo" src="brand-logo.jpg" alt="HITSUZEN">
-      <p>설정 열기: 화면에서 두 손가락을 아래로 쓸어내리세요. PC에서는 설정 버튼이나 Shift+Esc를 사용하세요.</p>
+      <header id="settings-header"><div class="header-lead"><span class="eyebrow">히츠젠 / 설정</span><h1 id="settings-title">설정</h1></div></header>
+      <div class="identity">
+        <div class="identity-copy"><span class="catalog-label">필연</span><p class="identity-name">HITSUZEN</p><p class="identity-desc">과정이 이미 품고 있던 하나의 결론.</p></div>
+        <svg class="sig" viewBox="0 0 120 80" aria-hidden="true" focusable="false"><path class="ink" pathLength="100" d="M8 18C36 18 78 40 108 40"/><path class="ink" pathLength="100" d="M8 40H108"/><path class="ink" pathLength="100" d="M8 62C36 62 78 40 108 40"/><path class="accent" d="M108 30v20"/></svg>
+      </div>
+      <p class="setting-intro">설정 열기: 화면에서 두 손가락을 아래로 쓸어내리세요.</p>
+      <p class="desktop-settings-help">PC에서는 설정 버튼이나 Shift+Esc를 사용하세요.</p>
+      <div class="body-groups">
       <details data-settings-group="date"><summary>날짜 리빌 · 시간 설정</summary>
       <div class="date-settings-controls">
       <button type="button" data-date-action="decrease">−</button>
@@ -53,6 +60,7 @@
       <p>%를 두 번 누르면 준비되고, =를 누르면 받은 일수가 나타나요.</p>
       <button type="button" data-date-action="release-clear" id="release-days-clear" disabled>받은 일수 지우기</button>
       </details>
+      </div>
       <button type="button" data-date-action="close">닫기</button>
     </div>
 
