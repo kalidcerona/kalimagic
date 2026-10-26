@@ -101,7 +101,6 @@ export const PRIVATE_PATTERNS = [
   /^supabase\//,
   /^tests\//,
   /^distribution-snapshots\//,
-  /^zz7\/app\.js$/,
   /^zz8\/app\.js$/,
   /^archive\//,
   /^docs\//,
