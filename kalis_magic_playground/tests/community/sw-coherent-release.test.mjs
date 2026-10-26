@@ -160,7 +160,7 @@ for (const [file, scope] of WORKERS) {
     const source = readFileSync(new URL(`../../${file}`, import.meta.url), 'utf8');
     assert.match(source, /-coherent-1/);
     if (file.endsWith('usotsuki/sw.js') && file.includes('distribution-snapshots')) {
-      assert.match(source, /-coherent-1-compat-1-gesture-1-wake-1-modules-1-split-1-trim-1-css-1-clean-1-distribution'/);
+      assert.match(source, /-coherent-1-compat-1-gesture-1-wake-1-modules-1-split-1-trim-1-css-1-clean-1-lieflash-2-distribution'/);
       assert.doesNotMatch(source, /-distribution-coherent-1/);
     }
     const prefix = cachePrefix(source, scope);
