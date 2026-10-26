@@ -2,13 +2,14 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
+import { readAppStyle } from './app-style.mjs';
 
 // Reopening TOBIRA while the coin is in the "gone" state (kept in sessionStorage) must not paint the coin first and then
 // hide it. The stub DOM is seeded from the real index.html and style.css; every change that can alter what is on screen
 // is sampled, and the stage counts as painted as soon as data-boot is no longer "loading" (the style.css rule).
 const root = new URL('../../zz6/', import.meta.url);
 const html = readFileSync(new URL('index.html', root), 'utf8');
-const css = readFileSync(new URL('style.css', root), 'utf8');
+const css = readAppStyle(root);
 const P = 'tobira.';
 
 const settle = (ms = 0) => new Promise((resolve) => setTimeout(resolve, ms));

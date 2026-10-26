@@ -5,6 +5,7 @@ import test from 'node:test';
 import vm from 'node:vm';
 import { pathToFileURL } from 'node:url';
 import { tobiraAppScript } from './tobira-app-script.mjs';
+import { readAppStyle } from './app-style.mjs';
 
 const root = path.resolve(import.meta.dirname, '../..');
 const apps = [
@@ -167,7 +168,7 @@ async function boot(app, storage, session = memoryStorage(), audioFactory) {
 test('guide diagram, cache scope and sound control exist in both Tobira copies', () => {
   for (const app of apps) {
     const html = fs.readFileSync(app.html, 'utf8');
-    const css = fs.readFileSync(app.css, 'utf8');
+    const css = readAppStyle(pathToFileURL(path.dirname(app.css) + path.sep));
     const sw = fs.readFileSync(app.sw, 'utf8');
     const source = app.modules ? tobiraAppScript(path.dirname(app.file)) : fs.readFileSync(app.file, 'utf8');
     assert.match(html, /id="motion-wall-sound"/);

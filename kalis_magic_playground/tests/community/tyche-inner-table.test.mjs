@@ -1,8 +1,9 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readFileSync } from 'node:fs';
+import { readAppStyle } from './app-style.mjs';
 
-const css = readFileSync(new URL('../../zz11/style.css', import.meta.url), 'utf8');
+const css = readAppStyle(new URL('../../zz11/', import.meta.url));
 const app = readFileSync(new URL('../../zz11/app.js', import.meta.url), 'utf8');
 
 function px(name) {

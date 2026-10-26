@@ -54,7 +54,7 @@ test('revealed map answers draw the look-alike and plain symbol in both directio
 });
 
 test('Pi Max has explicit runtime allowlists and source mirror checks', () => {
-  assert.equal(PIMAX_FILES.length, 25);
+  assert.equal(PIMAX_FILES.length, 28);
   assert.ok(PUBLIC_DIRS.includes(personal));
   assert.deepEqual(DISTRIBUTION_APPS.find(a => a.target === 'pimax'), { source: shared, target: 'pimax', tool: 'pimax' });
   for (const file of PIMAX_FILES) {
@@ -90,9 +90,9 @@ test('Pi Max pinned snapshot matches the personal runtime except three storage k
       assert.match(d.toString(), /keepVisibleScreenAwake/);
       assert.equal(d.toString(), preparePimaxRuntime(p.toString()));
     } else if (file === 'sw.js') {
-      const from = "+ 'v20261024-wake-3-v20261021-wake-1-v20261016-sheet-1-modes-1-coherent-1-v2-brand5-modules-1';";
+      const from = "+ 'v20261024-wake-3-v20261021-wake-1-v20261016-sheet-1-modes-1-coherent-1-v2-brand5-modules-1-css-1';";
       assert.ok(p.toString().includes(from));
-      assert.equal(d.toString(), p.toString().replace(from, from.replace("-modules-1';", "-modules-1-distribution';")));
+      assert.equal(d.toString(), p.toString().replace(from, from.replace("-css-1';", "-css-1-distribution';")));
     } else assert.deepEqual(d, p, file);
   }
 });

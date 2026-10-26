@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { readFileSync } from 'node:fs';
+import { readAppStyle } from './app-style.mjs';
 
-const css = readFileSync(new URL('../../zz7/style.css', import.meta.url), 'utf8');
+const css = readAppStyle(new URL('../../zz7/', import.meta.url));
 
 test('거짓말 탐지기 is about 30–36px at 390px and still smaller than the verdict', () => {
   const rule = css.match(/#performance-screen #performance-title \{[^}]*font-size:\s*clamp\(\s*(\d+)px\s*,\s*([\d.]+)vw\s*,\s*(\d+)px\s*\)/);

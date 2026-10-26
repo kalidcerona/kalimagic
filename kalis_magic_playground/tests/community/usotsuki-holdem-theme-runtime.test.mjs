@@ -3,6 +3,7 @@ import test from 'node:test';
 import { readFileSync } from 'node:fs';
 // Each `detector.js?<tag>` import boots a fresh USOTSUKI, including its feature modules.
 import './usotsuki-app-script.mjs';
+import { readAppStyle } from './app-style.mjs';
 
 const STATE = 'usotsuki.detector.v1';
 const THEME = 'usotsuki.detector.theme.v1';
@@ -193,7 +194,7 @@ test('both rectangular pad corners count, blank space never holds, and movement 
 
 test('recorder theme persists, falls back to green, and a hold keeps attempts, timing, sound and scan', async () => {
   const html = readFileSync(new URL('../../zz7/index.html', import.meta.url), 'utf8');
-  const css = readFileSync(new URL('../../zz7/style.css', import.meta.url), 'utf8');
+  const css = readAppStyle(new URL('../../zz7/', import.meta.url));
   const sw = readFileSync(new URL('../../zz7/sw.js', import.meta.url), 'utf8');
   assert.match(html, /<option value="recorder">목재 드럼<\/option>/);
   assert.match(css, /#performance-screen\[data-display-theme="recorder"\]/);

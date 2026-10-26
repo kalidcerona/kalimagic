@@ -6,8 +6,9 @@ import { fileURLToPath } from 'node:url';
 import { USOTSUKI_FILES, SPINNER_FILES } from '../../scripts/build-public.mjs';
 import { stripLocalPreview, stripInlineLocalPreview, dropUnusedSingleImports } from './local-preview-strip.mjs';
 import { usotsukiAppModules, usotsukiAppSource } from './usotsuki-app-script.mjs';
+import { readAppStyle } from './app-style.mjs';
 
-const read = (route, file) => readFile(new URL(`../../${route}/${file}`, import.meta.url));
+const read = (route, file) => file === 'style.css' ? Promise.resolve(Buffer.from(readAppStyle(new URL(`../../${route}/`, import.meta.url)))) : readFile(new URL(`../../${route}/${file}`, import.meta.url));
 // USOTSUKI detector.js is an ES module entry with local feature modules; both builds carry the same files.
 const detectorFiles = (route) => usotsukiAppModules(fileURLToPath(new URL(`../../${route}/`, import.meta.url)));
 
@@ -21,7 +22,7 @@ function withoutLocalPreviewHook(source) {
 test('shared USOTSUKI and TYCHE retain the approved personal surfaces and artwork', async () => {
   for (const [personal, snapshot, files] of [
     ['zz7', 'usotsuki', USOTSUKI_FILES.filter(f => /\.css$|^(holdem-assets|recorder-assets)\//.test(f))],
-    ['zz11', 'spinner', SPINNER_FILES.filter(f => /\.css$|^(casino-assets|hybrid-assets)\//.test(f))],
+    ['zz11', 'spinner', SPINNER_FILES.filter(f => !/^style-/.test(f) && /\.css$|^(casino-assets|hybrid-assets)\//.test(f))],
   ]) {
     assert.ok(files.length > 3);
     for (const file of files) assert.deepEqual(await read(`distribution-snapshots/${snapshot}`, file), await read(personal, file), `${snapshot}/${file}`);
@@ -105,8 +106,8 @@ test('Three recorder themes retain exact bytes and cache isolation', async () =>
         snapshot = dropUnusedSingleImports(snapshot);
       }
     } else if (file === 'sw.js') {
-      assert.ok(snapshot.includes("CACHE_NAME = CACHE_PREFIX + 'v20261009-continuous-paper-20-haptic-dip-manual-install-1-perf-1-coherent-1-compat-1-gesture-1-wake-1-modules-1-split-1-trim-1-distribution'"));
-      snapshot = snapshot.replace('v20261009-continuous-paper-20-haptic-dip-manual-install-1-perf-1-coherent-1-compat-1-gesture-1-wake-1-modules-1-split-1-trim-1-distribution', 'v20261009-continuous-paper-20-haptic-dip-manual-install-1-perf-1-coherent-1-compat-1-gesture-1-wake-1-modules-1-split-1-trim-1');
+      assert.ok(snapshot.includes("CACHE_NAME = CACHE_PREFIX + 'v20261009-continuous-paper-20-haptic-dip-manual-install-1-perf-1-coherent-1-compat-1-gesture-1-wake-1-modules-1-split-1-trim-1-css-1-distribution'"));
+      snapshot = snapshot.replace('v20261009-continuous-paper-20-haptic-dip-manual-install-1-perf-1-coherent-1-compat-1-gesture-1-wake-1-modules-1-split-1-trim-1-css-1-distribution', 'v20261009-continuous-paper-20-haptic-dip-manual-install-1-perf-1-coherent-1-compat-1-gesture-1-wake-1-modules-1-split-1-trim-1-css-1');
       assert.ok(personal.includes('v20261009-continuous-paper-20-haptic-dip-manual-install-1-perf-1-coherent-1-compat-1-gesture-1-wake-1-modules-1-split-1'));
       personalText = stripLocalPreview(personalText);
     }

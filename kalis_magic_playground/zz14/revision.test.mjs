@@ -5,6 +5,7 @@ import vm from 'node:vm';
 import * as core from './core.mjs';
 import { pimaxAppScript, pimaxAppModules } from '../tests/community/pimax-app-script.mjs';
 import { accessGuard, preparePimaxRuntime } from '../scripts/build-public.mjs';
+import { readAppStyle } from '../tests/community/app-style.mjs';
 
 function load(initial = {}, standalone = false) {
   const values = new Map(Object.entries(initial)), events = {};
@@ -418,7 +419,7 @@ test('birthday formulas render computed example and variable blocks reserve line
   const env = load(); click(env, 'tab', { tab: 'learn' });
   const mmdd = core.birthdayAddress(3, 14, 'MMDD'), ddmm = core.birthdayAddress(3, 14, 'DDMM');
   for (const copy of ['쪽 = 일 + 50', '줄 = 월 × 2', 'MMDD(월일) 시작 = 월 + 3', 'DDMM(일월) 시작 = 월 + 1', `예: 3월 14일 → 쪽 ${mmdd.page}, 줄 ${mmdd.line}, MMDD 시작 ${mmdd.column}, DDMM 시작 ${ddmm.column}`]) assert(env.app.innerHTML.includes(copy));
-  const css = readFileSync(new URL('./style.css', import.meta.url), 'utf8');
+  const css = readAppStyle(new URL('./', import.meta.url));
   assert.match(css, /min-height: 2lh/);
   assert.doesNotMatch(css, /min-height: [34]lh/);
 });
@@ -604,7 +605,7 @@ test('settings install card includes request and fallback expands and collapses 
 });
 
 test('answer layout grows for long sequences and uses compact per-mode reservations', () => {
-  const css = readFileSync(new URL('./style.css', import.meta.url), 'utf8');
+  const css = readAppStyle(new URL('./', import.meta.url));
   const revision = css.slice(css.indexOf('/* Revision:'));
   assert.match(revision, /grid-template-rows: minmax\(var\(--answer-height\), auto\)/);
   assert.match(revision, /\.quiz-actions \.blind-answer \{ height: auto; min-height: var\(--answer-height\); max-height: none; overflow: visible; \}/);

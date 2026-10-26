@@ -8,6 +8,7 @@ import { createRecorderThemeController } from '../../zz7/recorder-theme.js';
 import { fileURLToPath } from 'node:url';
 import { usotsukiAppScript, usotsukiAppSource } from './usotsuki-app-script.mjs';
 import { stripLocalPreview } from './local-preview-strip.mjs';
+import { readAppStyle } from './app-style.mjs';
 
 const read = file => readFileSync(new URL('../../zz7/'+file, import.meta.url), 'utf8');
 function engineFixture({ reduced=false, AudioContext }={}) {
@@ -60,7 +61,7 @@ test('A/D skins retain single stylus, long idle typebar, black 80px impressions 
  }
 });
 test('protected CSS prefix and shared preparation rule remain unchanged',()=>{
- const css=read('style.css');assert.equal(createHash('sha256').update(css.split('\n').slice(0,929).join('\n')+'\n').digest('hex'),'07ad81bbc85967754c072d262d8ef2337cf2e0077ec2d077b008139108a8e288');
+ const css=readAppStyle(new URL('../../zz7/', import.meta.url));assert.equal(createHash('sha256').update(css.split('\n').slice(0,929).join('\n')+'\n').digest('hex'),'07ad81bbc85967754c072d262d8ef2337cf2e0077ec2d077b008139108a8e288');
  assert.equal((css.match(/#performance-screen\.is-preparing #test-indicator \{ font-size: clamp\(12px, 3\.5vw, 16px\); letter-spacing: 0; white-space: nowrap; \}/g)||[]).length,1);
 });
 test('theme switch destroys old engine and ignores stale asynchronous mounts',async()=>{

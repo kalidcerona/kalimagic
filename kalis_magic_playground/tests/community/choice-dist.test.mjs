@@ -34,7 +34,7 @@ function normalize(file, bytes) {
   if (file === 'app.js' || file === 'logic.js' || STORAGE_KEY_FILES.includes(file)) source = source.replaceAll('magic-choice-dist.', 'magic-choice.');
   if (file === 'app.js' || file === 'sw.js' || file === 'index.html' || CACHE_FAMILY_FILES.includes(file)) source = source.replaceAll('choice-dist-shell-', 'choice-shell-');
   // The friend build drops the -local-preview-1 token and appends -distribution.
-  if (file === 'sw.js') source = source.replace('ready-1-nostatus-1-modules-1-order-1-split-1-distribution\';', 'ready-1-nostatus-1-local-preview-1-modules-1-order-1-split-1\';');
+  if (file === 'sw.js') source = source.replace('ready-1-nostatus-1-modules-1-order-1-split-1-css-1-distribution\';', 'ready-1-nostatus-1-local-preview-1-modules-1-order-1-split-1-css-1\';');
   if (file === 'manifest.webmanifest') source = source.replace('"id": "./"', '"id": "./choice"');
   return Buffer.from(source);
 }

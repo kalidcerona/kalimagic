@@ -5,6 +5,7 @@ import { fakeHomeSession, applyHomeStyle } from './performance.js';
 import { emphasisRow, buildNoteScroller } from './fake-notes.js';
 
 let wallpaperUrl = null;
+const PV_STYLE_FILES = ['./style.css', './style-fake-home.css', './style-guide-notes.css', './style-settings.css'];
 
 // ----- live preview of the home and notes screens (settings only) -----
 // A scaled copy of the real screens' markup, filled by the same icon code and styled by the same CSS and options.
@@ -39,10 +40,15 @@ function pvStage(host, markup, kind) {
   scale.append(home);
   // A shadow root keeps the copy out of every document query and id lookup, so nothing in the app can find or drive it.
   const root = host.shadowRoot || host.attachShadow({ mode: 'open' });
-  const sheet = document.createElement('link');
-  sheet.rel = 'stylesheet';
-  sheet.href = document.querySelector('link[rel="stylesheet"][href*="style.css"]')?.href || './style.css';
-  root.replaceChildren(sheet, scale);
+  // The stylesheet is split into style.css plus style-<feature>.css pieces; the copy needs every piece, in link order.
+  const linked = [...document.querySelectorAll('link[rel="stylesheet"]')].filter((link) => /(^|\/)style(-[a-z0-9-]+)?\.css(\?|$)/.test(link.getAttribute('href') || ''));
+  const sheets = (linked.length ? linked.map((link) => link.href) : PV_STYLE_FILES).map((href) => {
+    const sheet = document.createElement('link');
+    sheet.rel = 'stylesheet';
+    sheet.href = href;
+    return sheet;
+  });
+  root.replaceChildren(...sheets, scale);
   host.setAttribute('aria-hidden', 'true');
   host.inert = true;
   return home;

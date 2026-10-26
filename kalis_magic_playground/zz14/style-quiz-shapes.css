@@ -1,0 +1,136 @@
+.quiz-actions {
+  display: grid;
+  grid-template-rows: 120px 24px 48px 48px;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+  align-items: stretch;
+}
+
+.blind-answer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 120px;
+  min-height: 120px;
+  max-height: 120px;
+  margin: 0;
+  padding: 12px;
+  overflow: auto;
+  border-color: #E8631F;
+  background: #E8631F;
+  color: #1a1512;
+  font-weight: 700;
+  font-size: clamp(22px, 6vw, 36px);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-all;
+  text-align: center;
+}
+
+.blind-answer.map-answer { flex-direction: column; gap: 4px; padding: 8px; }
+.map-answer-pictures { display: flex; align-items: center; justify-content: center; gap: 36px; }
+.map-answer-pictures .ink-glyph { width: 54px; height: 72px; flex: 0 0 54px; }
+.map-answer-text { font-size: 20px; line-height: 1.2; }
+
+.blind-answer:disabled { opacity: 1; color: var(--text, #eee9da); }
+
+.quiz-status {
+  height: 24px;
+  min-height: 24px;
+  max-height: 24px;
+  margin: 0;
+  overflow: hidden;
+  color: var(--secondary);
+  font-size: 13px;
+  line-height: 24px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  text-align: center;
+}
+
+.weak-toggle {
+  width: 100%;
+  height: 48px;
+  min-height: 48px;
+  max-height: 48px;
+  white-space: nowrap;
+  background: var(--raised);
+  border: 1px solid #625349;
+  color: var(--text);
+}
+
+.weak-toggle[aria-pressed="true"] {
+  background: #1f7a45;
+  border-color: #2f9a5a;
+  color: #f4efe9;
+}
+
+.quiz-actions > button[data-action="new-session"] {
+  height: 48px;
+  min-height: 48px;
+  max-height: 48px;
+}
+
+/* Practice keeps the question and contact actions ahead of duplicate headings. */
+body[data-tab="practice"] .identity-desc { display: none; }
+body[data-tab="practice"] .workspace > .spread:first-child {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+}
+body[data-tab="practice"] .practice-card { min-height: 148px; }
+[aria-label="문제 수"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (min-width: 600px) { [aria-label="문제 수"] { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+
+[aria-label="연습 종류"] { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (min-width: 760px) {
+  [aria-label="연습 종류"] { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+}
+
+.shape-caption { margin: 10px 0 0; color: #3d342c; font-size: 13px; font-weight: 700; line-height: 1.4; }
+.glyph-row { display: flex; flex-wrap: nowrap; gap: 1px; min-width: 0; max-width: 100%; overflow-x: auto; align-items: center; }
+.glyph-gap { flex: 0 0 12px; height: 28px; }
+.ink-glyph { width: 26px; height: 34px; min-width: 0; flex: 0 1 26px; color: #1a1512; }
+.shape-scroll { min-width: 0; max-width: 100%; overflow-x: auto; }
+.shape-row {
+  display: grid;
+  grid-template-columns: 72px repeat(5, minmax(0, 1fr));
+  gap: 4px;
+  align-items: center;
+  width: 100%;
+  margin-top: 6px;
+}
+.shape-label { color: var(--support); font-size: 12px; font-weight: 700; line-height: 1.35; word-break: keep-all; }
+.shape-cell {
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  width: 100%;
+  height: 44px;
+  background: var(--card);
+  border-radius: 6px;
+}
+.shape-axis {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: var(--secondary);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.05;
+  text-align: center;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+

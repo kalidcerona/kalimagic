@@ -209,7 +209,9 @@ export const CHOICE_HOME_FILES = [
   'home-icons/zb.svg',
   'home-icons/zg.svg'
 ];
-export const CHOICE_FILES = [...NEW_APP_FILES, ...CHOICE_HOME_FILES];
+// CHOICE style.css is split into feature pieces linked in this order after style.css.
+export const CHOICE_STYLE_FILES = ['style-fake-home.css', 'style-guide-notes.css', 'style-settings.css'];
+export const CHOICE_FILES = [...NEW_APP_FILES, ...CHOICE_STYLE_FILES, ...CHOICE_HOME_FILES];
 // CHOICE app.js and logic.js load these feature modules (personal zz4 and the friend snapshot).
 export const CHOICE_MODULE_FILES = [
   'module-start.js', 'gesture-guide.js', 'dom.js', 'editor.js', 'options.js', 'precheck.js', 'views.js',
@@ -225,7 +227,9 @@ export const CHOICE_DISTRIBUTION_FILES = [...CHOICE_FILES, ...CHOICE_MODULE_FILE
 export function shouldCopyChoice(relativePath) {
   return relativePath === '' || relativePath === 'home-icons' || CHOICE_DISTRIBUTION_FILES.includes(relativePath.split(path.sep).join('/'));
 }
-export const USOTSUKI_FILES = NEW_APP_FILES.filter((file) => file !== 'app.js').concat('first-run-guide.js', 'detector.js', 'detector-panel-grok.svg', 'holdem-assets/felt-grain.svg', 'holdem-assets/leather-grain.svg', 'holdem-assets/table-rail.svg', 'recorder-assets/recorder-shell-blank.webp', 'recorder-theme.js', 'recorder-engine.js', 'recorder-trace.js', 'recorder-a.html', 'recorder-d.html', 'controller.js', 'controller-state.js', 'controller-themes.js', 'controller-audio.js', 'controller-storage.js', 'controller-hold.js', 'controller-haptic.js', 'controller-screens.js', 'controller-attempts.js', 'controller-gestures.js', 'controller-display-theme.js', 'dom.js', 'storage.js', 'heartbeat.js', 'vibration.js', 'wake-lock.js', 'preferences.js', 'stage.js', 'bindings.js');
+// USOTSUKI style.css is split into feature pieces linked in this order after style.css.
+export const USOTSUKI_STYLE_FILES = ['style-settings.css', 'style-holdem.css', 'style-recorder.css'];
+export const USOTSUKI_FILES = NEW_APP_FILES.filter((file) => file !== 'app.js').concat(USOTSUKI_STYLE_FILES, 'first-run-guide.js', 'detector.js', 'detector-panel-grok.svg', 'holdem-assets/felt-grain.svg', 'holdem-assets/leather-grain.svg', 'holdem-assets/table-rail.svg', 'recorder-assets/recorder-shell-blank.webp', 'recorder-theme.js', 'recorder-engine.js', 'recorder-trace.js', 'recorder-a.html', 'recorder-d.html', 'controller.js', 'controller-state.js', 'controller-themes.js', 'controller-audio.js', 'controller-storage.js', 'controller-hold.js', 'controller-haptic.js', 'controller-screens.js', 'controller-attempts.js', 'controller-gestures.js', 'controller-display-theme.js', 'dom.js', 'storage.js', 'heartbeat.js', 'vibration.js', 'wake-lock.js', 'preferences.js', 'stage.js', 'bindings.js');
 export const ASRAI_FILES = [
   'brand-logo.jpg', 'brand-logo.png', 'contacts.js', 'contacts-gestures.js',
   'contacts-list.js', 'contacts-screen.js', 'contacts-settings.js',
@@ -243,6 +247,8 @@ export const ALTER_FILES = [
   'dom.js', 'state.js', 'status.js', 'wake-lock.js', 'settings-store.js', 'card-view.js', 'overlay.js',
   'tracking-reset.js', 'settings-panel.js', 'frame.js', 'camera.js'
 ];
+// TYCHE spinner style.css is split into feature pieces linked in this order after style.css.
+export const SPINNER_STYLE_FILES = ['style-casino.css', 'style-hybrid.css'];
 export const SPINNER_FILES = [
   'hybrid-assets/arrow.svg',
   'hybrid-assets/wheel-emerald.svg',
@@ -256,14 +262,16 @@ export const SPINNER_FILES = [
   'casino-assets/field-marks.svg',
   'casino-salon.jpg',
   'app.js', 'icon-192.png', 'icon-512.png', 'index.html',
-  'logic.js', 'manifest.webmanifest', 'style.css', 'sw.js'
+  'logic.js', 'manifest.webmanifest', 'style.css', ...SPINNER_STYLE_FILES, 'sw.js'
 ];
 export const MEMDECK_FILES = [
   'first-run-guide.js',
   'index.html', 'style.css', 'app.mjs', 'core.mjs', 'data.mjs', 'mnemonic.mjs',
   'brand-logo.png', 'manifest.webmanifest', 'sw.js', 'icon.svg', 'icon-192.png', 'icon-512.png'
 ];
-export const PIMAX_FILES = ["index.html", "app.mjs", "state.mjs", "session.mjs", "practice.mjs", "glyphs.mjs", "learn.mjs", "settings.mjs", "install.mjs", "events.mjs", "core.mjs", "core-stack.mjs", "core-windows.mjs", "core-grading.mjs", "core-explain.mjs", "core-questions.mjs", "core-storage.mjs", "core-stats.mjs", "style.css", "sw.js", "brand-logo.png", "manifest.webmanifest", "icon.svg", "icon-192.png", "icon-512.png"];
+// KAIROS (pimax) style.css is split into feature pieces linked in this order after style.css.
+export const PIMAX_STYLE_FILES = ['style-practice.css', 'style-quiz-shapes.css', 'style-checker-install.css'];
+export const PIMAX_FILES = ["index.html", "app.mjs", "state.mjs", "session.mjs", "practice.mjs", "glyphs.mjs", "learn.mjs", "settings.mjs", "install.mjs", "events.mjs", "core.mjs", "core-stack.mjs", "core-windows.mjs", "core-grading.mjs", "core-explain.mjs", "core-questions.mjs", "core-storage.mjs", "core-stats.mjs", "style.css", ...PIMAX_STYLE_FILES, "sw.js", "brand-logo.png", "manifest.webmanifest", "icon.svg", "icon-192.png", "icon-512.png"];
 
 export function shouldCopyPimax(relativePath) {
   return relativePath === '' || PIMAX_FILES.includes(relativePath);
@@ -279,6 +287,10 @@ export const ALETHEIA_COURT_FILES = ['S-J', 'S-Q', 'S-K', 'D-J', 'D-Q', 'D-K',
   'C-J', 'C-Q', 'C-K', 'H-J', 'H-Q', 'H-K']
   .map((code) => `court-cards/${code}.webp`);
 
+// TOBIRA style.css is split into feature pieces linked in this order after style.css.
+export const TOBIRA_STYLE_FILES = ['style-stage.css', 'style-overlays.css'];
+// ALETHEIA style.css is split into feature pieces linked in this order after style.css.
+export const ALETHEIA_STYLE_FILES = ['style-cells.css', 'style-forms.css', 'style-guide.css'];
 export const SETTINGS_UI_FILES = ['settings-ui.js', 'settings-ui.css'];
 
 export const MIRROR_PAIRS = [
@@ -379,6 +391,7 @@ export const MIRROR_PAIRS = [
   ['../../magic-choice/logic-user-icons.js', 'zz4/logic-user-icons.js'],
   ['../../magic-choice/logic-wizard.js', 'zz4/logic-wizard.js'],
   ...NEW_APP_FILES.map((file) => [`../../magic-aletheia/${file}`, `zz5/${file}`]),
+  ...ALETHEIA_STYLE_FILES.map((file) => [`../../magic-aletheia/${file}`, `zz5/${file}`]),
   ['../../magic-aletheia/deck-loader.js', 'zz5/deck-loader.js'],
   ['../../magic-aletheia/controller.js', 'zz5/controller.js'],
   ['../../magic-aletheia/controller-state.js', 'zz5/controller-state.js'],
@@ -409,6 +422,7 @@ export const MIRROR_PAIRS = [
   ['../../magic-aletheia/wake-lock.js', 'zz5/wake-lock.js'],
   ...ALETHEIA_COURT_FILES.map((file) => [`../../magic-aletheia/${file}`, `zz5/${file}`]),
   ...NEW_APP_FILES.map((file) => [`../../magic-tobira/${file}`, `zz6/${file}`]),
+  ...TOBIRA_STYLE_FILES.map((file) => [`../../magic-tobira/${file}`, `zz6/${file}`]),
   ['../../magic-tobira/dom.js', 'zz6/dom.js'],
   ['../../magic-tobira/gesture-guide.js', 'zz6/gesture-guide.js'],
   ['../../magic-tobira/audio.js', 'zz6/audio.js'],

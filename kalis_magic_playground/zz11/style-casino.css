@@ -1,0 +1,216 @@
+/* Performance A surface. Geometry, hit area, and SVG path data stay in the rules above. */
+.wheel-area::before {
+  background: none;
+  box-shadow:
+    0 0 0 8px #1f1815,
+    0 0 0 10px #554632,
+    0 16px 24px rgba(0, 0, 0, .22);
+}
+.wheel-wrap {
+  background-color: #1a1512;
+  background-image: none;
+  box-shadow:
+    0 0 0 1px #1a120c,
+    0 16px 22px rgba(0, 0, 0, .42);
+}
+.wheel {
+  box-shadow:
+    inset 0 0 0 2px #24180f,
+    inset 0 0 0 5px #96815d,
+    inset 0 0 18px rgba(0, 0, 0, .35);
+}
+.wheel-face > circle:nth-of-type(1) { fill: #17120f; }
+.wheel-face > circle:nth-of-type(2) { fill: #96815d; }
+.wheel-face > circle:nth-of-type(3) { fill: #211912; }
+.wheel-face > circle:nth-of-type(4) { fill: #34261e; }
+.wheel-face > circle[r="24.6"] { fill: #96815d; }
+.wheel-face > circle[r="21.5"]:not([fill="none"]) { fill: #c3aa7d; }
+.wheel-face > circle:last-of-type { fill: #17120f; opacity: .12; }
+.spinner-arrow path:first-of-type { fill: #e5d6b9; stroke: #1a1512; }
+.spinner-arrow path:last-of-type { stroke: #f4efe9; opacity: .55; }
+.wheel-pin {
+  border-color: #c3aa7d;
+  background-color: #34261e;
+  background-image: none;
+  box-shadow: 0 0 0 3px #1a1512;
+}
+.wheel-pin span {
+  background-color: #c3aa7d;
+  background-image: none;
+  box-shadow: none;
+}
+
+/* Approved casino v2 surfaces. Existing responsive hit geometry stays unchanged. */
+.stage[data-table-theme="emerald"],
+.stage:not([data-table-theme="burgundy"]) {
+  --felt: #145536;
+  --print: #fffaf6;
+  --wood: #e8b15e;
+  --wood-hi: #fff1d4;
+  --wood-deep: #b87432;
+  --brass-hi: #fff6cf;
+  --brass-mid: #f2c85e;
+  --brass-deep: #c48a28;
+  --shadow: rgba(92, 52, 16, .22);
+  --lamp: rgba(255, 236, 196, .08);
+}
+
+.stage[data-table-theme="burgundy"] {
+  --felt: #641e32;
+  --print: #fffaf6;
+  --wood: #f4ecdf;
+  --wood-hi: #fffdf8;
+  --wood-deep: #d9c7a6;
+  --brass-hi: #fffaf2;
+  --brass-mid: #f3e4c4;
+  --brass-deep: #d4bc8a;
+  --shadow: rgba(120, 36, 52, .2);
+  --lamp: rgba(255, 244, 230, .08);
+}
+
+.stage {
+  position: relative;
+  background-color: #1a1512;
+  background-image: none;
+  touch-action: none;
+  user-select: none;
+}
+
+.nap {
+  position: absolute;
+  z-index: 0;
+  top: var(--table-safe-top);
+  right: env(safe-area-inset-right, 0px);
+  bottom: env(safe-area-inset-bottom, 0px);
+  left: env(safe-area-inset-left, 0px);
+  pointer-events: none;
+  background-color: var(--felt);
+  background-image:
+    radial-gradient(ellipse 88% 36% at 50% 0%, var(--lamp), transparent 62%),
+    linear-gradient(112deg, rgba(255, 255, 255, .06), transparent 46%, rgba(70, 30, 16, .06) 100%),
+    url("./casino-assets/felt-burgundy.svg");
+  background-size: auto, auto, 160px 160px;
+  background-repeat: no-repeat, no-repeat, repeat;
+}
+.stage:not([data-table-theme="burgundy"]) .nap {
+  background-image:
+    radial-gradient(ellipse 88% 36% at 50% 0%, var(--lamp), transparent 62%),
+    linear-gradient(112deg, rgba(255, 255, 255, .06), transparent 46%, rgba(70, 30, 16, .06) 100%),
+    url("./casino-assets/felt-emerald.svg");
+}
+
+.cushion,
+.brass-lip {
+  position: absolute;
+  z-index: 4;
+  pointer-events: none;
+  border-radius: 28px;
+  -webkit-mask-image: linear-gradient(#000 0 0), linear-gradient(#000 0 0);
+  -webkit-mask-clip: content-box, border-box;
+  -webkit-mask-composite: xor;
+  mask-image: linear-gradient(#000 0 0), linear-gradient(#000 0 0);
+  mask-clip: content-box, border-box;
+  mask-composite: exclude;
+}
+.cushion {
+  top: calc(5px + var(--table-safe-top));
+  right: calc(5px + env(safe-area-inset-right, 0px));
+  bottom: calc(5px + env(safe-area-inset-bottom, 0px));
+  left: calc(5px + env(safe-area-inset-left, 0px));
+  padding: 12px;
+  background-color: var(--wood);
+  background-image:
+    linear-gradient(180deg, rgba(255, 255, 255, .55), transparent 32%, rgba(90, 48, 16, .16)),
+    url("./casino-assets/wood-grain.svg");
+  background-size: auto, 140px 140px;
+}
+.brass-lip {
+  top: calc(17px + var(--table-safe-top));
+  right: calc(17px + env(safe-area-inset-right, 0px));
+  bottom: calc(17px + env(safe-area-inset-bottom, 0px));
+  left: calc(17px + env(safe-area-inset-left, 0px));
+  padding: 2px;
+  background: linear-gradient(180deg, var(--brass-hi), var(--brass-mid) 46%, var(--brass-deep));
+}
+
+.sight {
+  position: absolute;
+  z-index: 5;
+  width: 7px;
+  height: 7px;
+  background: linear-gradient(135deg, #fffef8, var(--brass-mid) 55%, var(--brass-deep));
+  box-shadow: 0 0 0 1px var(--brass-deep);
+  transform: rotate(45deg);
+  pointer-events: none;
+}
+.sight-a { top: calc(16px + var(--table-safe-top)); left: calc(16px + env(safe-area-inset-left, 0px)); }
+.sight-b { top: calc(16px + var(--table-safe-top)); right: calc(16px + env(safe-area-inset-right, 0px)); }
+.sight-c { bottom: calc(16px + env(safe-area-inset-bottom, 0px)); left: calc(16px + env(safe-area-inset-left, 0px)); }
+.sight-d { bottom: calc(16px + env(safe-area-inset-bottom, 0px)); right: calc(16px + env(safe-area-inset-right, 0px)); }
+
+.field {
+  position: absolute;
+  left: 50%;
+  top: calc(var(--table-safe-top) + (100% - var(--table-safe-top) - env(safe-area-inset-bottom, 0px)) / 2);
+  width: min(86%, 520px);
+  height: calc((100% - var(--table-safe-top) - env(safe-area-inset-bottom, 0px)) * 0.92);
+  transform: translate(-50%, -50%);
+  object-fit: contain;
+  opacity: .62;
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 20%, rgba(0, 0, 0, .28) 38%, rgba(0, 0, 0, .28) 62%, #000 80%, #000 100%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 20%, rgba(0, 0, 0, .28) 38%, rgba(0, 0, 0, .28) 62%, #000 80%, #000 100%);
+}
+
+.wheel-area::after {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  width: min(calc(100vw - 82px), 700px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  pointer-events: none;
+  box-shadow:
+    0 0 0 3px var(--brass-mid),
+    0 0 0 8px var(--wood),
+    0 0 0 10px var(--brass-deep);
+}
+@supports (width: 1cqw) {
+  .wheel-area::after { width: var(--ring-box); }
+  .wheel-wrap { width: calc(var(--ring-box) * 90 / 93); }
+}
+
+.wheel-area::before { content: none; background: none; box-shadow: none; }
+.wheel-wrap { background: transparent; box-shadow: 0 12px 18px var(--shadow), 0 2px 4px rgba(60, 32, 12, .16); }
+.wheel { background: transparent; box-shadow: none; }
+.wheel-face { display: none; width: 100%; height: 100%; }
+.stage:not([data-screen-design="hybrid"]):not([data-table-theme="burgundy"]) .casino-face.wheel-emerald,
+.stage:not([data-screen-design="hybrid"])[data-table-theme="burgundy"] .casino-face.wheel-burgundy { display: block; }
+
+.wheel-pin {
+  border: 2px solid var(--brass-hi);
+  border-radius: 50%;
+  background: radial-gradient(circle at 34% 28%, #fffef8 0%, var(--brass-hi) 34%, var(--brass-mid) 66%, var(--brass-deep) 100%);
+  box-shadow:
+    0 0 0 3px var(--brass-deep),
+    0 0 0 5px var(--brass-mid),
+    0 6px 8px rgba(60, 32, 12, .28);
+  pointer-events: none;
+}
+.wheel-pin span {
+  height: 2px;
+  border-radius: 1px;
+  background: linear-gradient(90deg, var(--brass-deep), var(--brass-hi) 48%, var(--brass-deep));
+}
+
+.status-jewel {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fffef6, var(--brass-mid) 55%, var(--brass-deep));
+}
+.stage-bottom:has(.spin-status:empty) .status-jewel { visibility: hidden; }
+.spin-status { margin: 0; min-height: 0; color: #2a2118; font-size: 13px; font-weight: 650; }
+.spin-status:empty { display: none; }
+
+
