@@ -1,7 +1,7 @@
 const CONTENT = {
   reviews: [
     { quote: "도구 수집만 하고 실제로 마술을 하고 다닐 엄두가 안 났는데 이제야 진짜 마술을 하는 느낌입니다", label: "형의 마술 배운 사람" },
-    { quote: "마술을 보기만 좋아하던 학생에서, 남들에게 보여줄 수 있는 마술이 많아졌어요", label: "형의 마술 배운 사람" },
+    { quote: "마술을 보기만 좋아하던 학생에서, 남들에게 보여줄 수 있는 마술이 많아졌어요", label: "형의 마술 배운 사람", skipMobile: true },
     { quote: "기본기를 탄탄하게 다질 수 있었고, 그것을 바탕으로 독특한 기법들도 잘 다루게 됐어요", label: "형의 마술 배운 사람" },
     { quote: "마술을 이해하는 관점이 성숙해졌습니다", label: "형의 마술 배운 사람" },
     { quote: "마술에 대한 태도가 더 진지해졌습니다", label: "형의 마술 배운 사람" },
@@ -32,9 +32,16 @@ function renderContent() {
       '<div style="background:linear-gradient(135deg, rgba(224,144,78,0.12), rgba(255,255,255,0.02)); border:1px solid rgba(224,144,78,0.3); border-radius:8px; padding:28px; display:flex; flex-direction:column; justify-content:center;"><p style="font-family:\'Noto Serif KR\',serif; font-style:italic; color:var(--point-gold); font-size:1.15rem; line-height:1.6; margin:0;">너도 곧, 이 칸에<br>네 이야기를 쓰게 될 거야.</p></div>';
     },
     'reviews-mobile': function() {
-      return CONTENT.reviews.map(function(r) {
+      var card = function(r) {
         return '<div style="background:#241712; border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:18px 20px;"><p style="color:#F0E2D5; font-size:14.5px; line-height:1.65; margin:0 0 10px;">"' + r.quote + '"</p><p style="color:#9A8775; font-size:11.5px; margin:0;">· ' + r.label + '</p></div>';
-      }).join('');
+      };
+      var list = CONTENT.reviews.filter(function(r) { return !r.skipMobile; });
+      var shown = list.slice(0, 4).map(card).join('');
+      var rest = list.slice(4).map(card).join('');
+      if (!rest) return shown;
+      return shown +
+        '<div id="reviews-more" style="display:none; flex-direction:column; gap:11px;">' + rest + '</div>' +
+        '<button type="button" data-reviews-more aria-expanded="false" aria-controls="reviews-more" style="min-height:48px; border-radius:13px; background:transparent; border:1px solid rgba(255,255,255,0.28); color:#F4E7DA; font:inherit; font-weight:700; font-size:14.5px; cursor:pointer;">후기 더 보기</button>';
     },
     'visitor-desktop': function() {
       return CONTENT.visitorCards.map(function(c) {
@@ -62,6 +69,18 @@ function renderContent() {
     var el = document.querySelector('[data-slot="' + slotName + '"]');
     if (el) el.innerHTML = slots[slotName]();
   });
+
+  var more = document.querySelector('[data-reviews-more]');
+  if (more) {
+    more.addEventListener('click', function() {
+      var box = document.getElementById('reviews-more');
+      box.style.display = 'flex';
+      more.setAttribute('aria-expanded', 'true');
+      more.style.display = 'none';
+      box.setAttribute('tabindex', '-1');
+      box.focus({ preventScroll: true });
+    });
+  }
 }
 
 renderContent();

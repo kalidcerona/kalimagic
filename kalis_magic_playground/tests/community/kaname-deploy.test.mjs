@@ -91,7 +91,7 @@ test('KanameCue worker precaches the whole shell, serves it offline and ignores 
 test('KanameCue keeps brand copy, contact footer, wake lock and the house settings gesture without fullscreen or forbidden punctuation', async () => {
   const html = await read('index.html');
   const wake = await read('wake.mjs'), gesture = await read('settings.mjs'), playback = await read('playback.mjs');
-  for (const text of ['중심', '모든 큐가 모이는 무대의 중심.', '要(かなめ)는 여러 부분을 묶는 핵심이라는 뜻임.', '무대 위의 수많은 움직임은 하나의 타이밍에서 서로 연결됨.', 'KANAME Cue는 소리와 영상, 그리고 공연자의 순간을 하나로 묶는 중심임.', 'Android Chrome: ⋮', 'iPhone Safari: 공유']) assert.ok(html.includes(text), text);
+  for (const text of ['중심', '모든 큐가 모이는 무대의 중심.', '要(かなめ)는 여러 부분을 묶는 핵심이라는 뜻임.', '무대 위의 수많은 움직임은 하나의 타이밍에서 서로 연결됨.', 'KANAME Cue는 소리와 공연자의 순간을 하나로 묶는 중심임.', 'Android Chrome: ⋮', 'iPhone Safari: 공유']) assert.ok(html.includes(text), text);
   const zz13 = await readFile(path.join(root, 'zz13', 'index.html'), 'utf8');
   assert.ok(html.includes(zz13.match(/<div class="magic-settings-footer">[\s\S]*?<\/div><\/form>/)[0].replace('</form>', '')));
   assert.match(wake, /navigator\.wakeLock\.request\('screen'\)/);
