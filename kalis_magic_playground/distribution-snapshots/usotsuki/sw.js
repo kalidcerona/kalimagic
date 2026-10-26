@@ -1,6 +1,6 @@
 // Cache only the explicit app shell. API, authentication and user data stay on the network.
 const CACHE_PREFIX = 'usotsuki-shell-' + encodeURIComponent(self.registration.scope) + '-';
-const CACHE_NAME = CACHE_PREFIX + 'v20261009-continuous-paper-20-haptic-dip-manual-install-1-perf-1-coherent-1-compat-1-gesture-1-wake-1-modules-1-split-1-distribution';
+const CACHE_NAME = CACHE_PREFIX + 'v20261009-continuous-paper-20-haptic-dip-manual-install-1-perf-1-coherent-1-compat-1-gesture-1-wake-1-modules-1-split-1-trim-1-distribution';
 const SHELL = [
   "./recorder-trace.js",
   "./recorder-d.html",
@@ -42,8 +42,7 @@ const SHELL = [
   "./icon-192.png",
   "./icon-512.png",
   "./icon.svg",
-  "./brand-logo.jpg",
-  "./detector-panel.jpg"
+  "./brand-logo.jpg"
 ];
 const SHELL_NAMES = new Set(SHELL.map((file) => file.replace(/^\.\//, '')));
 const GUARDED = new URL(self.registration.scope).pathname.startsWith('/tools/');
