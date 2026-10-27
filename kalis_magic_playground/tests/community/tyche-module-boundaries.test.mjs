@@ -362,9 +362,9 @@ const pageScripts = (() => {
 async function bootPage(search = '') {
   const immediate = pageScripts.filter((script) => !script.module && !script.defer);
   const deferred = pageScripts.filter((script) => script.module || script.defer);
-  // update-prompt.js is optional: the pinned friend snapshot gets it when it is regenerated.
-  const expectedOrder = pageScripts.some((script) => script.src === './update-prompt.js') ? ['./settings-ui.js', './update-prompt.js', './app.js'] : ['./settings-ui.js', './app.js'];
-  assert.deepEqual(deferred.map((script) => script.src), expectedOrder, 'index.html loads settings-ui.js, optionally update-prompt.js, then app.js');
+  // The personal build must ship update-prompt.js; only the pinned friend snapshot (FRIEND) lacks it until regenerated.
+  const expectedOrder = FRIEND ? ['./settings-ui.js', './app.js'] : ['./settings-ui.js', './update-prompt.js', './app.js'];
+  assert.deepEqual(deferred.map((script) => script.src), expectedOrder, 'index.html loads the expected scripts in order');
   assert.equal(deferred[deferred.length - 1].module, true);
   for (const script of immediate) runInThisContext(readFileSync(new URL(script.src, root), 'utf8'), { filename: script.src });
   for (const script of deferred) {

@@ -355,6 +355,7 @@ document.getElementById('clear-target').addEventListener('click', () => {
 });
 document.getElementById('guide-close').addEventListener('click', () => {
   guide.hidden = true;
+  window.MagicUpdate?.hide();
   try { localStorage.setItem('zz11-guide-seen-v2', '1'); } catch { /* Ignore storage failures. */ }
 });
 try { guide.hidden = localStorage.getItem('zz11-guide-seen-v2') === '1'; } catch { guide.hidden = false; }
@@ -400,8 +401,8 @@ else standaloneMedia.addListener(onStandaloneChange);
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   // A replacement shell may claim this page. Reloading would clear the live wheel, open settings, and custom preview edits.
   try {
-    // update-prompt.js registers the worker and may ask to update, only while settings or the guide is on screen.
-    if (window.MagicUpdate) window.MagicUpdate.init({ swUrl: './sw.js', safe: () => !settings.hidden || !guide.hidden });
+    // update-prompt.js registers the worker and may ask to update, only while settings is open.
+    if (window.MagicUpdate) window.MagicUpdate.init({ swUrl: './sw.js', checkForUpdate: true, safe: () => !settings.hidden });
     else navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' })
       .then(registration => registration.update())
       .catch(() => {});

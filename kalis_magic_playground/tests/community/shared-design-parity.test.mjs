@@ -20,11 +20,21 @@ function withoutLocalPreviewHook(source) {
 }
 
 // Personal TYCHE adds the update prompt (update-prompt.js); the pinned friend snapshot gets it when it is regenerated.
+// Only these exact approved hook lines are removed. Retire this exception when the snapshot is regenerated.
+const UPDATE_HOOKS = [
+  ['  window.MagicUpdate?.offer(); // settings is off-stage; never offered from the wheel\n', 1, ''],
+  ['  window.MagicUpdate?.hide();\n', 2, ''],
+  [`    // update-prompt.js registers the worker and may ask to update, only while settings is open.
+    if (window.MagicUpdate) window.MagicUpdate.init({ swUrl: './sw.js', checkForUpdate: true, safe: () => !settings.hidden });
+    else navigator`, 1, '    navigator'],
+];
 function withoutUpdatePrompt(source) {
-  const stripped = source
-    .replace(/^ *\/\/ update-prompt\.js registers[^\n]*\n *if \(window\.MagicUpdate\) window\.MagicUpdate\.init\([^\n]*\n *else navigator/m, '    navigator')
-    .replace(/^ *window\.MagicUpdate\?\.[a-z]+\([^\n]*\n/gm, '');
-  if (stripped === source) throw new Error('update prompt hook was not removed');
+  let stripped = source;
+  for (const [hook, count, replacement] of UPDATE_HOOKS) {
+    assert.equal(stripped.split(hook).length - 1, count, `approved update hook present ${count}x: ${hook.trim().slice(0, 50)}`);
+    stripped = stripped.replaceAll(hook, replacement);
+  }
+  assert.doesNotMatch(stripped, /MagicUpdate/, 'no other update-prompt change hides in the parity exception');
   return stripped;
 }
 
