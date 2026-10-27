@@ -362,8 +362,10 @@ const pageScripts = (() => {
 async function bootPage(search = '') {
   const immediate = pageScripts.filter((script) => !script.module && !script.defer);
   const deferred = pageScripts.filter((script) => script.module || script.defer);
-  assert.deepEqual(deferred.map((script) => script.src), ['./settings-ui.js', './app.js'], 'index.html loads settings-ui.js then app.js');
-  assert.equal(deferred[1].module, true);
+  // update-prompt.js is optional: the pinned friend snapshot gets it when it is regenerated.
+  const expectedOrder = pageScripts.some((script) => script.src === './update-prompt.js') ? ['./settings-ui.js', './update-prompt.js', './app.js'] : ['./settings-ui.js', './app.js'];
+  assert.deepEqual(deferred.map((script) => script.src), expectedOrder, 'index.html loads settings-ui.js, optionally update-prompt.js, then app.js');
+  assert.equal(deferred[deferred.length - 1].module, true);
   for (const script of immediate) runInThisContext(readFileSync(new URL(script.src, root), 'utf8'), { filename: script.src });
   for (const script of deferred) {
     if (script.module) { const url = new URL(script.src, root); url.search = search; await import(url); }

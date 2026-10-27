@@ -19,6 +19,15 @@ function withoutLocalPreviewHook(source) {
   return stripped;
 }
 
+// Personal TYCHE adds the update prompt (update-prompt.js); the pinned friend snapshot gets it when it is regenerated.
+function withoutUpdatePrompt(source) {
+  const stripped = source
+    .replace(/^ *\/\/ update-prompt\.js registers[^\n]*\n *if \(window\.MagicUpdate\) window\.MagicUpdate\.init\([^\n]*\n *else navigator/m, '    navigator')
+    .replace(/^ *window\.MagicUpdate\?\.[a-z]+\([^\n]*\n/gm, '');
+  if (stripped === source) throw new Error('update prompt hook was not removed');
+  return stripped;
+}
+
 test('shared USOTSUKI and TYCHE retain the approved personal surfaces and artwork', async () => {
   for (const [personal, snapshot, files] of [
     ['zz7', 'usotsuki', USOTSUKI_FILES.filter(f => /\.css$|^(holdem-assets|recorder-assets)\//.test(f))],
@@ -51,7 +60,7 @@ test('shared performance code differs only in its explicitly isolated storage ke
       shared = dropUnusedSingleImports(shared);
     }
     // The pinned spinner snapshot still carries the old inline hook; the personal app now keeps it in local-preview.js.
-    if (personal === 'zz11') source = withoutLocalPreviewHook(source);
+    if (personal === 'zz11') source = withoutUpdatePrompt(withoutLocalPreviewHook(source));
     const normalized = (snapshot === 'spinner' ? stripInlineLocalPreview(shared) : shared).replaceAll('usotsuki.distribution.', 'usotsuki.')
       .replaceAll('friend-spinner-state-', 'zz11-spinner-state-')
       .replaceAll('friend-spinner-guide-', 'zz11-guide-')

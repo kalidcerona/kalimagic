@@ -261,7 +261,7 @@ export const SPINNER_FILES = [
   'casino-assets/field-marks.svg',
   'casino-salon.jpg',
   'app.js', 'icon-192.png', 'icon-512.png', 'index.html',
-  'logic.js', 'manifest.webmanifest', 'style.css', ...SPINNER_STYLE_FILES, 'sw.js'
+  'logic.js', 'manifest.webmanifest', 'style.css', ...SPINNER_STYLE_FILES, 'sw.js', 'update-prompt.js'
 ];
 export const MEMDECK_FILES = [
   'first-run-guide.js',
@@ -312,6 +312,7 @@ export const MIRROR_PAIRS = [
   ['../../magic-asrai/local-preview.js', 'zz8/local-preview.js'],
   ['../../magic-alter/local-preview.js', 'zz10/local-preview.js'],
   ['../../magic-spinner/local-preview.js', 'zz11/local-preview.js'],
+  ['../../magic-spinner/update-prompt.js', 'zz11/update-prompt.js'],
   ['../../magic-memdeck/local-preview.mjs', 'zz12/local-preview.mjs'],
   ['../../magic-qr/local-preview.mjs', 'zz13/local-preview.mjs'],
   ['../../magic-calculator-v2/index.html', 'zz3/index.html'],
