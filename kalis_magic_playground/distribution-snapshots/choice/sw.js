@@ -1,6 +1,6 @@
 // Cache only the explicit app shell. API, authentication and user data stay on the network.
 const CACHE_PREFIX = 'choice-dist-shell-' + encodeURIComponent(self.registration.scope) + '-';
-const CACHE_NAME = CACHE_PREFIX + 'v20261010-choice-perf-1-coherent-1-compat-1-wake-1-ready-1-nostatus-1-modules-1-order-1-split-1-css-1-distribution';
+const CACHE_NAME = CACHE_PREFIX + 'v20261010-choice-perf-1-coherent-1-compat-1-wake-1-ready-1-nostatus-1-modules-1-order-1-split-1-css-1-artwork-1-distribution';
 const SHELL = [
   "./settings-ui.js",
   "./settings-ui.css",
@@ -110,16 +110,33 @@ const SHELL = [
   "./home-icons/zb.svg",
   "./home-icons/zg.svg"
 ];
-// The install only stores what the first screen needs, so it finishes quickly even on a slow phone connection.
-// The artwork is cached the first time it is used (the app asks for all of it shortly after it starts).
+// The critical shell is stored with addAll: if it fails, the install fails and the old version keeps running.
+// The artwork (about 230 KB) is stored right after it as a best-effort step, so a version that was updated at home
+// already has it offline. A missing icon never fails the install; warm-up in the app and the fetch handler still fill gaps.
 const PRECACHE = SHELL.filter((file) => !file.startsWith('./home-icons/'));
 const SHELL_NAMES = new Set(SHELL.map((file) => file.replace(/^\.\//, '')));
 const GUARDED = new URL(self.registration.scope).pathname.startsWith('/tools/');
 
+const ARTWORK = SHELL.filter((file) => !PRECACHE.includes(file));
+const ARTWORK_LIMIT_MS = 20000;
+// Best effort and bounded: nothing here can reject, and a stalled network cannot hold the install forever.
+function storeArtwork(cache) {
+  const one = async (file) => {
+    try {
+      const href = new URL(file, self.registration.scope).href;
+      const response = await fetch(new Request(href, { cache: 'reload', redirect: 'error' }));
+      if (response.ok && !response.redirected && response.type !== 'opaque') await cache.put(href, response);
+    } catch { /* The warm-up in the app retries later. */ }
+  };
+  const all = Promise.all(ARTWORK.map(one));
+  const limit = typeof setTimeout === 'function' ? new Promise((resolve) => setTimeout(resolve, ARTWORK_LIMIT_MS)) : null;
+  return limit ? Promise.race([all, limit]) : all;
+}
+
 self.addEventListener('install', (event) => {
   // Reject installation unless the whole critical shell is stored.
   // A later version stays waiting until every client of this app has closed, so the next launch applies it.
-  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE.map((file) => new Request(new URL(file, self.registration.scope).href, { cache: 'reload', redirect: 'error' })))).then(() => { if (!self.registration.active) return self.skipWaiting(); }));
+  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE.map((file) => new Request(new URL(file, self.registration.scope).href, { cache: 'reload', redirect: 'error' }))).then(() => storeArtwork(cache))).then(() => { if (!self.registration.active) return self.skipWaiting(); }));
 });
 self.addEventListener('activate', (event) => {
   event.waitUntil(caches.keys().then((names) => Promise.all(names

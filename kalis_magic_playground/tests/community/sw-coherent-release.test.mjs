@@ -218,14 +218,23 @@ for (const [file, scope] of WORKERS) {
 
     if (source.includes('"./home-icons/a1.svg"')) {
       const iconUrl = new URL('home-icons/a1.svg', scope).href;
+      if (source.includes('storeArtwork(cache)')) {
+        // Choice stores its artwork during install, so each release already holds its own copy.
+        assert.equal(v1.bucket().entries.get(iconUrl), 'v1:home-icons/a1.svg');
+        assert.equal(v2.bucket().entries.get(iconUrl), 'v2:home-icons/a1.svg');
+        const icon = await dispatch(v1, iconUrl);
+        assert.equal(await icon.response.text(), 'v1:home-icons/a1.svg');
+      } else {
       assert.equal(v1.bucket().entries.has(iconUrl), false);
       const puts = v1.bucket().puts;
       const icon = await dispatch(v1, iconUrl);
       assert.equal(await icon.response.text(), 'v2:home-icons/a1.svg');
       assert.equal(v1.bucket().entries.get(iconUrl), 'v2:home-icons/a1.svg');
       assert.equal(v1.bucket().puts, puts + 1);
+      }
       for (const [name, bucket] of stores) {
-        if (name !== v1.cacheName) assert.equal(bucket.entries.has(iconUrl), false, name);
+        if (name !== v1.cacheName && name !== v2.cacheName) assert.equal(bucket.entries.has(iconUrl), false, name);
+        if (name === v2.cacheName && !source.includes('storeArtwork(cache)')) assert.equal(bucket.entries.has(iconUrl), false, name);
       }
     }
 
