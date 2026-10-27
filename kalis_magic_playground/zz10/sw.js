@@ -1,9 +1,10 @@
 // Cache only the explicit app shell. API, authentication and user data stay on the network.
 const CACHE_PREFIX = 'alter-shell-' + encodeURIComponent(self.registration.scope) + '-';
-const CACHE_NAME = CACHE_PREFIX + 'v20261009-alter-grip-1-manual-install-1-perf-1-coherent-1-gesture-1-compat-1-wake-1-local-preview-1-modules-1-split-1-local-preview-module-1';
+const CACHE_NAME = CACHE_PREFIX + 'v20261009-alter-grip-1-manual-install-1-perf-1-coherent-1-gesture-1-compat-1-wake-1-local-preview-1-modules-1-split-1-local-preview-module-1-update-prompt-1';
 const SHELL = [
   "./settings-ui.js",
   "./settings-ui.css",
+  "./update-prompt.js",
   "./index.html",
   "./style.css",
   "./app.js",
@@ -46,6 +47,10 @@ self.addEventListener('install', (event) => {
   // Reject installation unless the whole critical shell is stored.
   // A later version stays waiting until every client of this app has closed, so the next launch applies it.
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(SHELL.map((file) => new Request(new URL(file, self.registration.scope).href, { cache: 'reload', redirect: 'error' })))).then(() => { if (!self.registration.active) return self.skipWaiting(); }));
+});
+// The page asks for this only after the performer taps "update now" (update-prompt.js).
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
 });
 self.addEventListener('activate', (event) => {
   event.waitUntil(caches.keys().then((names) => Promise.all(names

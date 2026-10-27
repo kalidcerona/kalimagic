@@ -341,7 +341,8 @@ const classicSources = env.top.querySelectorAll('script').filter((s) => s.attrs.
 
 test('index.html loads app.js and install-ui.js as modules, plus the classic settings-ui.js that is not run here', () => {
   assert.deepEqual(moduleSources, ['./app.js', './install-ui.js']);
-  assert.deepEqual(classicSources, ['./settings-ui.js']);
+  // The personal build ships update-prompt.js; only a pinned friend snapshot (ALTER_ROOT) may lack it.
+  assert.deepEqual(classicSources, process.env.ALTER_ROOT ? ['./settings-ui.js'] : ['./settings-ui.js', './update-prompt.js']);
 });
 
 test('boot imports the real zz10 modules, restores saved settings and shows the first-run guide', async () => {

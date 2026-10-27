@@ -33,6 +33,7 @@ function stopCamera(showSetup = true) {
   resetAppearance();
   setRuntimeStatus("카메라 시작 전");
   settings.hidden = true;
+  window.MagicUpdate?.hide();
   stage.hidden = true;
   if (showSetup) setup.hidden = false;
   updateStateNote();
@@ -75,6 +76,7 @@ async function startCamera() {
     setup.hidden = true;
     stage.hidden = false;
     settings.hidden = true;
+    window.MagicUpdate?.hide();
     setRuntimeStatus("카메라 준비 중 · 빈 배경을 비춰 주세요");
     setAnimation(requestAnimationFrame(processFrame));
     closeGestureGuide(false);

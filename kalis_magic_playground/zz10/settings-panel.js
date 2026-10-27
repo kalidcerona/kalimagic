@@ -21,10 +21,12 @@ function openSettings() {
   settings.hidden = false;
   $("close-settings").focus();
   syncPerformanceWakeLock();
+  window.MagicUpdate?.offer(); // settings is off-stage
 }
 
 function closeSettings() {
   settings.hidden = true;
+  window.MagicUpdate?.hide();
   setLastSampleAt(0);
   setTracker(createObservationTracker());
   resetAppearance();

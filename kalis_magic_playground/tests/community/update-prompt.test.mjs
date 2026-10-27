@@ -75,6 +75,14 @@ test('init accepts an existing registration or a promise without registering, an
   }
 });
 
+test('init without a registration source never registers by default', async () => {
+  const t = setup();
+  const status = await t.win.MagicUpdate.init({ safe: () => true });
+  assert.equal(status.ok, false);
+  assert.match(status.error, /no registration source/);
+  assert.equal(t.registered.length, 0);
+});
+
 test('registration failure is observable and init can be retried', async () => {
   const t = setup();
   const failed = await t.win.MagicUpdate.init({ registrationPromise: Promise.reject(new Error('boom')) });
@@ -273,7 +281,7 @@ test('zz11 service worker skips waiting only on the SKIP_WAITING message and shi
   listeners.message({ data: { type: 'SKIP_WAITING' } });
   assert.equal(skips, 1);
   assert.match(sw, /"\.\/update-prompt\.js"/);
-  assert.match(sw, /update-prompt-3';/);
+  assert.match(sw, /update-prompt-4';/);
 });
 
 test('zz11 page loads update-prompt.js before app.js and offers only from showSettings', () => {

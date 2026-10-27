@@ -93,8 +93,9 @@ import { installLocalPreview } from './local-preview.js'; // local-preview-hook
       $("settings-entry-tutorial").hidden=true;
       settings.classList.toggle("preset-focus",section==="presets");$("settings-title").textContent=section==="presets"?"프리셋":"설정";
       presetEditor.hidden=true;editingSlotIndex=null;updateModeButtons();renderSequenceSlots();updateSequenceStatus();settings.hidden=false;settings.scrollTop=0;
+      window.MagicUpdate?.offer(); // settings is off-stage
     }
-    function closeSettings(){cancelPendingInteractions();settings.hidden=true;trick2Text.blur();sequenceInput.blur();presetName.blur();hidePortraitDigitGuide();}
+    function closeSettings(){cancelPendingInteractions();settings.hidden=true;window.MagicUpdate?.hide();trick2Text.blur();sequenceInput.blur();presetName.blur();hidePortraitDigitGuide();}
     function applyPresetSlotToDom(slot){
       const applied=applyPresetSlot(slot,{customText,sequence,trick3Enabled});
       if(applied){customText=applied.customText;sequence=applied.sequence;trickState=applied.trickState;trick3Enabled=applied.trick3Enabled;sequenceStopCount=0;sequenceForceAfter=slot.forceAfter??2;textAt=customText?Date.now():0;
@@ -157,7 +158,7 @@ import { installLocalPreview } from './local-preview.js'; // local-preview-hook
     function cycleTrick(){if(presetMode||!settings.hidden||!quickSettings.hidden)return;const previous=trickState;trickState=nextTrickState(trickState,trick3Enabled);if(previous==="seq"&&trickState!=="seq")sequenceStopCount=0;pendingDigits=[];reservedTens=stopDigit=null;pWorld.classList.remove("feedback");renderState();hidePortraitDigitGuide();}
 
 installLocalPreview(() => { document.getElementById("settings-entry-tutorial-dismiss")?.click(); openSettings(); }); // local-preview-hook
-    function initApp(){installSettingsSwipe(openSettings,cancelPendingInteractions,()=>$("settings-entry-tutorial").hidden&&!presetMode&&state!=="running"&&settings.hidden&&quickSettings.hidden,()=>{clearHold();tap=null;alarmTap=null;});loadStorage();try{pDigitGuideOn.checked=localStorage.getItem(DIGIT_GUIDE_KEY)==="1";}catch(_){pDigitGuideOn.checked=false;}setMode(uiMode);showPortraitDigitGuide();
+    function initApp(){window.MagicUpdate?.init({registrationPromise:navigator.serviceWorker?.ready,safe:()=>!settings.hidden&&state!=="running"&&!presetMode});installSettingsSwipe(openSettings,cancelPendingInteractions,()=>$("settings-entry-tutorial").hidden&&!presetMode&&state!=="running"&&settings.hidden&&quickSettings.hidden,()=>{clearHold();tap=null;alarmTap=null;});loadStorage();try{pDigitGuideOn.checked=localStorage.getItem(DIGIT_GUIDE_KEY)==="1";}catch(_){pDigitGuideOn.checked=false;}setMode(uiMode);showPortraitDigitGuide();
       document.addEventListener("pointerdown",onGlobalPointerDown,{capture:true,passive:false});window.addEventListener("pointermove",handlePointerMove,{passive:false});window.addEventListener("pointerup",e=>{onGlobalPointerEnd(e);handlePresetEnd(e);if(hold&&hold.pointerId===e.pointerId)clearHold();releasePress();});window.addEventListener("pointercancel",e=>{onGlobalPointerEnd(e);handlePresetEnd(e);if(hold&&hold.pointerId===e.pointerId)clearHold();releasePress();});
       document.addEventListener("pointerdown",handlePresetDown,{capture:true,passive:false});
       pControl.addEventListener("click",()=>{if(suppressClick)return;if(presetMode){if(presetKind!=="portrait-group")return;exitPresetMode(false);}if(state==="running")stopTimer();else startTimer();});pLap.addEventListener("click",()=>{if(presetMode||suppressClick)return;if(state==="running")addLap();else resetTimer();});pTime.addEventListener("click",()=>{if(!suppressClick)cycleTrick();});

@@ -15,6 +15,7 @@ import {
   backButton,
   resetButton,
   startButton,
+  settingsScreen,
 } from "./contacts-state.js";
 import { showScreen } from "./contacts-screen.js";
 import {
@@ -39,9 +40,11 @@ function registerShell() {
   if (!("serviceWorker" in navigator)) return;
   if (location.protocol !== "http:" && location.protocol !== "https:") return;
   try {
-    navigator.serviceWorker.register("./sw.js").catch(() => {
+    const registration = navigator.serviceWorker.register("./sw.js");
+    registration.catch(() => {
       // Registration can fail offline or when workers are blocked. The page still runs.
     });
+    window.MagicUpdate?.init({ registrationPromise: registration, safe: () => !settingsScreen.hidden });
   } catch {
     // Older browsers can throw instead of rejecting.
   }

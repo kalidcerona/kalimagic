@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
+import { UPDATE_PROMPT_HOOKS, stripUpdatePrompt } from './update-prompt-hooks.mjs';
 import * as logic from '../../zz2/logic.js';
 
 test('personal reveal selects configured attempt and formats valid birthday separately', () => {
@@ -115,11 +116,12 @@ test('personal and friend RELEASE reveal home2 immediately and clear gestures th
 test('friend snapshot matches personal RELEASE except the install id and cache family', () => {
   const personalDir = new URL('../../zz2/', import.meta.url);
   const snapDir = new URL('../../distribution-snapshots/unlock/', import.meta.url);
-  const personalFiles = readdirSync(personalDir).filter((file) => file !== 'brand-logo.png').sort();
+  // update-prompt.js and its exact hook lines are pending on the pinned snapshot (tests/community/update-prompt-hooks.mjs).
+  const personalFiles = readdirSync(personalDir).filter((file) => file !== 'brand-logo.png' && file !== 'update-prompt.js').sort();
   const snapFiles = readdirSync(snapDir).sort();
   assert.deepEqual(snapFiles, personalFiles);
   for (const file of snapFiles) {
-    const personal = readFileSync(new URL(file, personalDir));
+    const personal = UPDATE_PROMPT_HOOKS[`zz2/${file}`] ? Buffer.from(stripUpdatePrompt('zz2', file, readFileSync(new URL(file, personalDir), 'utf8'))) : readFileSync(new URL(file, personalDir));
     const snap = readFileSync(new URL(file, snapDir));
     if (file === 'manifest.webmanifest') {
       const personalManifest = JSON.parse(personal.toString('utf8'));

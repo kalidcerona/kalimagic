@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
+import { UPDATE_PROMPT_HOOKS, stripUpdatePrompt } from './update-prompt-hooks.mjs';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { USOTSUKI_FILES, SPINNER_FILES } from '../../scripts/build-public.mjs';
@@ -8,7 +9,9 @@ import { stripLocalPreview, stripInlineLocalPreview, dropUnusedSingleImports } f
 import { usotsukiAppModules, usotsukiAppSource } from './usotsuki-app-script.mjs';
 import { readAppStyle } from './app-style.mjs';
 
-const read = (route, file) => file === 'style.css' ? Promise.resolve(Buffer.from(readAppStyle(new URL(`../../${route}/`, import.meta.url)))) : readFile(new URL(`../../${route}/${file}`, import.meta.url));
+// Personal apps carry the approved update-prompt hook lines that pinned snapshots lack until regeneration (update-prompt-hooks.mjs).
+const withoutApprovedHooks = async (route, file, bytes) => UPDATE_PROMPT_HOOKS[`${route}/${file}`] ? Buffer.from(stripUpdatePrompt(route, file, bytes.toString('utf8'))) : bytes;
+const read = (route, file) => file === 'style.css' ? Promise.resolve(Buffer.from(readAppStyle(new URL(`../../${route}/`, import.meta.url)))) : readFile(new URL(`../../${route}/${file}`, import.meta.url)).then((bytes) => withoutApprovedHooks(route, file, bytes));
 // USOTSUKI detector.js is an ES module entry with local feature modules; both builds carry the same files.
 const detectorFiles = (route) => usotsukiAppModules(fileURLToPath(new URL(`../../${route}/`, import.meta.url)));
 

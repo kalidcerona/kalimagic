@@ -380,7 +380,7 @@ test('boot: the real scripts run in browser order in one shared context and the 
   const deferred = pageScripts.filter((script) => script.defer);
   assert.deepEqual(immediate.filter((s) => s.src).map((s) => s.src), [
     './settings-swipe.js', './selftest.js', './cards.js', './decimal.js', './expression.js', './tricks.js', './ui-helpers.js',
-    './settings-tutorial.js', './app.js', './wake-lock.js', './boot.js', './install-nudge.js',
+    './settings-tutorial.js', ...(process.env.ZZ3_ROOT ? [] : ['./update-prompt.js']), './app.js', './wake-lock.js', './boot.js', './install-nudge.js',
   ], 'index.html loads the classic scripts in this order');
   assert.deepEqual(deferred.map((s) => s.src), ['./settings-ui.js', './performance-link.js']);
   immediate.forEach(runClassic);

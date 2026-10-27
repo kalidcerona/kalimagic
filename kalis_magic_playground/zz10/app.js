@@ -108,6 +108,8 @@ readSavedSettings();
 renderCard();
 updateStateNote();
 if ("serviceWorker" in navigator && window.isSecureContext) {
-  navigator.serviceWorker.register("./sw.js").catch(() => {});
+  const registration = navigator.serviceWorker.register("./sw.js");
+  registration.catch(() => {});
+  window.MagicUpdate?.init({ registrationPromise: registration, safe: () => !settings.hidden });
 }
 installLocalPreview(() => { openSettings(); }); // local-preview-hook

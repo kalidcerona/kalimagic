@@ -58,6 +58,7 @@ export function stopPerformance() {
   if (theme) theme.setAttribute('content', '#4C1420');
   warmCourtDeck();
   syncPerformanceWakeLock();
+  window.MagicUpdate?.offer(); // settings is off-stage
 }
 
 export async function startPerformance() {
@@ -124,6 +125,7 @@ export async function startPerformance() {
 
 function showPerformanceSurface() {
   setView('performance');
+  window.MagicUpdate?.hide();
   settings.hidden = true;
   stage.hidden = false;
   document.body.classList.remove('view-settings');

@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { register } from 'node:module';
 import path from 'node:path';
 import { inlineLocalPreview, readSiblingFrom } from './local-preview-inline.mjs';
+import { UPDATE_PROMPT_HOOKS, stripUpdatePrompt } from './update-prompt-hooks.mjs';
 
 // USOTSUKI (personal zz7 and the friend snapshot) runs detector.js as an ES module entry with local
 // feature modules. Source-reading tests read the entry and those modules as one script, in module
@@ -35,7 +36,12 @@ export function usotsukiAppScript(dir) {
 
 // The same files with their import headers and export footers kept, for byte comparisons.
 export function usotsukiAppSource(dir) {
-  return usotsukiAppModules(dir).map((file) => readFileSync(path.join(dir, file), 'utf8')).join('\n');
+  // The personal zz7 files carry the approved update-prompt hook lines that the pinned snapshot lacks (update-prompt-hooks.mjs).
+  const personal = path.basename(path.resolve(dir)) === 'zz7';
+  return usotsukiAppModules(dir).map((file) => {
+    const text = readFileSync(path.join(dir, file), 'utf8');
+    return personal && UPDATE_PROMPT_HOOKS[`zz7/${file}`] ? stripUpdatePrompt('zz7', file, text) : text;
+  }).join('\n');
 }
 
 // Runtime tests import `detector.js?<tag>` once per fixture to boot a fresh app against a fresh fake DOM.

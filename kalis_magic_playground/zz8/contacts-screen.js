@@ -19,6 +19,8 @@ function showScreen(screen) {
   listScreen.hidden = screen !== "list";
   detailScreen.hidden = screen !== "detail";
   syncPerformanceWakeLock();
+  // Update prompt: asked only on the settings screen, hidden on every other screen.
+  if (screen === "settings") window.MagicUpdate?.offer(); else window.MagicUpdate?.hide();
 }
 
 function performanceOpen() {

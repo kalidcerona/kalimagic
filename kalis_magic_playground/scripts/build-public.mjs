@@ -235,13 +235,13 @@ export const ASRAI_FILES = [
   'contacts-state.js', 'contacts-storage.js', 'icon-192.png',
   'icon-512.png', 'icon.svg', 'index.html', 'install-ui.js',
   'logic.js', 'logic-clicks.js', 'logic-library.js', 'logic-limits.js',
-  'logic-search.js', 'logic-zones.js', 'manifest.webmanifest', 'style.css', 'sw.js'
+  'logic-search.js', 'logic-zones.js', 'manifest.webmanifest', 'style.css', 'sw.js', 'update-prompt.js'
 ];
 export const ALTER_FILES = [
   'app.js', 'appearance.js', 'brand-logo.jpg', 'brand-logo.png', 'calibration.js', 'camera-geometry.js', 'camera-stream.js', 'icon-192.png',
   'icon-512.png', 'index.html', 'install-ui.js', 'logic.js',
   'manifest.webmanifest', 'performance.js', 'style.css', 'sw.js', 'vision.js',
-  'vision-detect.js', 'vision-geometry.js', 'vision-grip.js', 'vision-homography.js', 'vision-paper.js',
+  'vision-detect.js', 'vision-geometry.js', 'vision-grip.js', 'vision-homography.js', 'vision-paper.js', 'update-prompt.js',
   'vision-quad.js', 'vision-sampling.js',
   'dom.js', 'state.js', 'status.js', 'wake-lock.js', 'settings-store.js', 'card-view.js', 'overlay.js',
   'tracking-reset.js', 'settings-panel.js', 'frame.js', 'camera.js'
@@ -313,6 +313,11 @@ export const MIRROR_PAIRS = [
   ['../../magic-alter/local-preview.js', 'zz10/local-preview.js'],
   ['../../magic-spinner/local-preview.js', 'zz11/local-preview.js'],
   ['../../magic-spinner/update-prompt.js', 'zz11/update-prompt.js'],
+  // The shared update prompt: one identical file in every adopting personal app and its sibling original (zz8, zz10 and zz11 declare it in their file lists).
+  ...[
+    ['magic-stopwatch-uni', 'zz1'], ['magic-unlock', 'zz2'], ['magic-calculator-v2', 'zz3'], ['magic-aletheia', 'zz5'],
+    ['magic-tobira', 'zz6'], ['magic-usotsuki', 'zz7']
+  ].map(([source, route]) => [`../../${source}/update-prompt.js`, `${route}/update-prompt.js`]),
   ['../../magic-memdeck/local-preview.mjs', 'zz12/local-preview.mjs'],
   ['../../magic-qr/local-preview.mjs', 'zz13/local-preview.mjs'],
   ['../../magic-calculator-v2/index.html', 'zz3/index.html'],

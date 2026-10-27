@@ -1,5 +1,5 @@
 /* Shared "update available" prompt. Classic script, no imports, no CSS file.
-   MagicUpdate.init({ registration | registrationPromise | swUrl, safe, checkForUpdate, timeoutMs })
+   MagicUpdate.init({ registration | registrationPromise | swUrl (one is required), safe, checkForUpdate, timeoutMs })
      Attaches to a worker registration the page already owns (preferred, never registers twice), or registers swUrl
      with updateViaCache:'none' as a convenience. checkForUpdate:true also calls registration.update().
      Returns a Promise of { ok, registered, error? }; after a failure init() may be called again.
@@ -170,11 +170,12 @@
     safeFn = options.safe;
     if (typeof options.timeoutMs === 'number') timeoutMs = options.timeoutMs;
     if (!controllerBound && sw.addEventListener) { controllerBound = true; sw.addEventListener('controllerchange', takenOver); }
+    if (!options.registration && !options.registrationPromise && !options.swUrl) return Promise.resolve({ ok: false, registered: false, error: 'no registration source' }); // never registers by default
     var source;
     try {
       source = options.registration ? Promise.resolve(options.registration)
         : options.registrationPromise ? Promise.resolve(options.registrationPromise)
-        : sw.register(options.swUrl || './sw.js', { updateViaCache: 'none' });
+        : sw.register(options.swUrl, { updateViaCache: 'none' });
     } catch (e) { source = Promise.reject(e); }
     initPromise = Promise.resolve(source).then(function (reg) {
       if (!reg) throw new Error('no registration');
