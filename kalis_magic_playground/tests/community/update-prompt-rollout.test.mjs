@@ -3,8 +3,10 @@ import test from 'node:test';
 import vm from 'node:vm';
 import { readFileSync, readdirSync } from 'node:fs';
 import { MIRROR_PAIRS } from '../../scripts/build-public.mjs';
-import { UPDATE_PROMPT_APPS, UPDATE_PROMPT_HOOKS, stripUpdatePrompt } from './update-prompt-hooks.mjs';
 
+const UPDATE_PROMPT_APPS = ['zz1', 'zz2', 'zz3', 'zz4', 'zz5', 'zz6', 'zz7', 'zz8', 'zz10', 'zz11', 'zz12', 'zz13', 'zz14', 'zz15', 'TabataTimer', 'KanameCue'];
+// Friend snapshots (distribution-snapshots/<name>) that carry the same prompt as their personal app.
+const SNAPSHOT = { zz1: 'kairos', zz2: 'unlock', zz3: 'calculator', zz4: 'choice', zz5: 'aletheia', zz6: 'tobira', zz7: 'usotsuki', zz11: 'spinner', zz13: 'qr', zz14: 'pimax' };
 const read = (app, file) => readFileSync(new URL(`../../${app}/${file}`, import.meta.url), 'utf8');
 const SIBLING = { zz1: 'magic-stopwatch-uni', zz2: 'magic-unlock', zz3: 'magic-calculator-v2', zz5: 'magic-aletheia', zz6: 'magic-tobira', zz7: 'magic-usotsuki', zz8: 'magic-asrai', zz10: 'magic-alter', zz11: 'magic-spinner', zz4: 'magic-choice', zz12: 'magic-memdeck', zz13: 'magic-qr', zz14: 'magic-pimax' };
 // zz15, TabataTimer and KanameCue have no sibling original; they live only in this repository.
@@ -84,10 +86,13 @@ test('offer() is called only where settings opens, hide() where any safe screen 
   }
 });
 
-test('the approved hook table strips back to text without any update-prompt trace', () => {
-  for (const key of Object.keys(UPDATE_PROMPT_HOOKS)) {
-    const [app, file] = key.split('/');
-    const stripped = stripUpdatePrompt(app, file, read(app, file));
-    assert.doesNotMatch(stripped, /MagicUpdate|update-prompt/, key);
+test('every friend snapshot carries the identical prompt, worker listener and script tag', () => {
+  const source = read('zz11', 'update-prompt.js');
+  for (const [app, snapshot] of Object.entries(SNAPSHOT)) {
+    const dir = `distribution-snapshots/${snapshot}`;
+    assert.equal(readFileSync(new URL(`../../${dir}/update-prompt.js`, import.meta.url), 'utf8'), source, dir);
+    assert.match(readFileSync(new URL(`../../${dir}/sw.js`, import.meta.url), 'utf8'), /SKIP_WAITING/, dir);
+    assert.match(readFileSync(new URL(`../../${dir}/index.html`, import.meta.url), 'utf8'), /update-prompt\.js/, dir);
+    assert.ok(app);
   }
 });

@@ -2,5 +2,7 @@ import './module-start.js';
 import './controller.js';
 
 if ('serviceWorker' in navigator && (location.protocol === 'http:' || location.protocol === 'https:')) {
-  navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(() => {});
+  const registration = navigator.serviceWorker.register('./sw.js', { scope: './' });
+  registration.catch(() => {});
+  globalThis.MagicUpdate?.init({ registrationPromise: registration, safe: () => document.body.dataset.view === 'settings' });
 }

@@ -132,7 +132,8 @@ export const SHARED_UNLOCK_FILES = [
   'manifest.webmanifest',
   'sw.js',
   'time-machine.js',
-  'performance-link.js'
+  'performance-link.js',
+  'update-prompt.js'
 ];
 
 export const NEW_APP_FILES = [
@@ -221,7 +222,7 @@ export const CHOICE_MODULE_FILES = [
   'logic-performance.js', 'logic-extras.js', 'logic-storage.js', 'logic-fake-home.js', 'logic-notes.js',
   'logic-backup.js', 'logic-user-icons.js', 'logic-wizard.js'
 ];
-export const CHOICE_DISTRIBUTION_FILES = [...CHOICE_FILES, ...CHOICE_MODULE_FILES, 'brand-logo.png', 'fullscreen.js', 'settings-ui.js', 'settings-ui.css'];
+export const CHOICE_DISTRIBUTION_FILES = [...CHOICE_FILES, ...CHOICE_MODULE_FILES, 'brand-logo.png', 'fullscreen.js', 'settings-ui.js', 'settings-ui.css', 'update-prompt.js'];
 
 export function shouldCopyChoice(relativePath) {
   return relativePath === '' || relativePath === 'home-icons' || CHOICE_DISTRIBUTION_FILES.includes(relativePath.split(path.sep).join('/'));
@@ -313,9 +314,9 @@ export const MIRROR_PAIRS = [
   ['../../magic-alter/local-preview.js', 'zz10/local-preview.js'],
   ['../../magic-spinner/local-preview.js', 'zz11/local-preview.js'],
   ['../../magic-spinner/update-prompt.js', 'zz11/update-prompt.js'],
-  // The shared update prompt: one identical file in every adopting personal app and its sibling original (zz8, zz10 and zz11 declare it in their file lists).
+  // The shared update prompt: one identical file in every adopting personal app and its sibling original (zz2, zz8, zz10 and zz11 declare it in their file lists).
   ...[
-    ['magic-stopwatch-uni', 'zz1'], ['magic-unlock', 'zz2'], ['magic-calculator-v2', 'zz3'], ['magic-aletheia', 'zz5'],
+    ['magic-stopwatch-uni', 'zz1'], ['magic-calculator-v2', 'zz3'], ['magic-aletheia', 'zz5'],
     ['magic-tobira', 'zz6'], ['magic-usotsuki', 'zz7'], ['magic-choice', 'zz4'], ['magic-memdeck', 'zz12'],
     ['magic-qr', 'zz13'], ['magic-pimax', 'zz14']
   ].map(([source, route]) => [`../../${source}/update-prompt.js`, `${route}/update-prompt.js`]),

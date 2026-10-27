@@ -450,8 +450,8 @@ test('boot imports the real zz2 modules in index.html order and shows the PIN sc
   const scripts = [...html.matchAll(/<script type="module" src="\.\/([\w-]+\.js)"/g)].map((match) => match[1]);
   assert.deepEqual(scripts, ['install-prompt.js', 'app.js'], 'index.html loads install-prompt.js, then app.js as modules');
   const classic = [...html.matchAll(/<script src="\.\/([\w-]+\.js)" defer>/g)].map((match) => match[1]);
-  // The personal build ships update-prompt.js; only the pinned friend snapshot (RELEASE_ROOT) lacks it until regenerated.
-  assert.deepEqual(classic, process.env.RELEASE_ROOT ? ['performance-link.js', 'settings-ui.js'] : ['performance-link.js', 'settings-ui.js', 'update-prompt.js']);
+  // Personal and friend builds both ship update-prompt.js.
+  assert.deepEqual(classic, ['performance-link.js', 'settings-ui.js', 'update-prompt.js']);
   await import(new URL('performance-link.js', root));
   assert.equal(typeof window.MagicPerformanceLink.write, 'function');
   logic = await import(new URL('logic.js', root));

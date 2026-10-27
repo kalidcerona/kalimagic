@@ -133,6 +133,8 @@ let timeFrame = null;
       if (next === 'settings') { $('settings-entry-tutorial').hidden = true; populateForm(); $('settings-screen').scrollTop = 0; }
       if (next === 'time-black') startRewindGuide();
       else stopRewindGuide();
+      // Update prompt: asked only on the settings screen, hidden on every other screen.
+      if (next === 'settings') globalThis.MagicUpdate?.offer(); else globalThis.MagicUpdate?.hide();
       // Extracted rewind tests run showScreen without this helper in scope.
       if (typeof syncPerformanceWakeLock === 'function') syncPerformanceWakeLock();
     }

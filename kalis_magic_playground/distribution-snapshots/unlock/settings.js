@@ -120,6 +120,7 @@ const REWIND_DND_KEY = 'release.rewindDnd.v1';
         watch(registration.installing);
         registration.addEventListener('updatefound', () => watch(registration.installing));
         updateStatus();
+        globalThis.MagicUpdate?.init({ registration, safe: () => session.screen === 'settings' });
       } catch { $('offline-status').textContent = '오프라인 준비 실패. 보안 연결 또는 localhost에서 다시 열어 주세요.'; }
     }
 

@@ -360,12 +360,14 @@
         dateSettings.classList.add("open");
         dateSettings.setAttribute("aria-hidden", "false");
         desktopSettingsAccess?.updateButton();
+        window.MagicUpdate?.offer(); // settings is off-stage
       };
 
       stackIcon.addEventListener("pointerup", finishStackPress);
       stackIcon.addEventListener("pointercancel", cancelStackPress);
       stackIcon.addEventListener("pointerleave", cancelStackPress);
 
+      window.MagicUpdate?.init({ registrationPromise: navigator.serviceWorker?.ready, safe: () => dateSettings.classList.contains("open") });
       installSettingsSwipe(openDateSettings, cancelStackPress, () => !dateSettings.classList.contains("open"));
       desktopSettingsAccess = bindDesktopSettingsAccess(
         document.getElementById("desktop-settings-entry"),
@@ -397,6 +399,7 @@
         if (button.dataset.dateAction === "close") {
           dateSettings.classList.remove("open");
           dateSettings.setAttribute("aria-hidden", "true");
+          window.MagicUpdate?.hide();
           desktopSettingsAccess?.updateButton();
           return;
         }

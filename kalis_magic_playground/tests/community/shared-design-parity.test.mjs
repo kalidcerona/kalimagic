@@ -1,7 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { UPDATE_PROMPT_HOOKS, stripUpdatePrompt } from './update-prompt-hooks.mjs';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { USOTSUKI_FILES, SPINNER_FILES } from '../../scripts/build-public.mjs';
@@ -9,9 +8,7 @@ import { stripLocalPreview, stripInlineLocalPreview, dropUnusedSingleImports } f
 import { usotsukiAppModules, usotsukiAppSource } from './usotsuki-app-script.mjs';
 import { readAppStyle } from './app-style.mjs';
 
-// Personal apps carry the approved update-prompt hook lines that pinned snapshots lack until regeneration (update-prompt-hooks.mjs).
-const withoutApprovedHooks = async (route, file, bytes) => UPDATE_PROMPT_HOOKS[`${route}/${file}`] ? Buffer.from(stripUpdatePrompt(route, file, bytes.toString('utf8'))) : bytes;
-const read = (route, file) => file === 'style.css' ? Promise.resolve(Buffer.from(readAppStyle(new URL(`../../${route}/`, import.meta.url)))) : readFile(new URL(`../../${route}/${file}`, import.meta.url)).then((bytes) => withoutApprovedHooks(route, file, bytes));
+const read = (route, file) => file === 'style.css' ? Promise.resolve(Buffer.from(readAppStyle(new URL(`../../${route}/`, import.meta.url)))) : readFile(new URL(`../../${route}/${file}`, import.meta.url));
 // USOTSUKI detector.js is an ES module entry with local feature modules; both builds carry the same files.
 const detectorFiles = (route) => usotsukiAppModules(fileURLToPath(new URL(`../../${route}/`, import.meta.url)));
 
@@ -19,25 +16,6 @@ const detectorFiles = (route) => usotsukiAppModules(fileURLToPath(new URL(`../..
 function withoutLocalPreviewHook(source) {
   const stripped = stripLocalPreview(source);
   if (stripped === source) throw new Error('local preview hook was not removed');
-  return stripped;
-}
-
-// Personal TYCHE adds the update prompt (update-prompt.js); the pinned friend snapshot gets it when it is regenerated.
-// Only these exact approved hook lines are removed. Retire this exception when the snapshot is regenerated.
-const UPDATE_HOOKS = [
-  ['  window.MagicUpdate?.offer(); // settings is off-stage; never offered from the wheel\n', 1, ''],
-  ['  window.MagicUpdate?.hide();\n', 2, ''],
-  [`    // update-prompt.js registers the worker and may ask to update, only while settings is open.
-    if (window.MagicUpdate) window.MagicUpdate.init({ swUrl: './sw.js', checkForUpdate: true, safe: () => !settings.hidden });
-    else navigator`, 1, '    navigator'],
-];
-function withoutUpdatePrompt(source) {
-  let stripped = source;
-  for (const [hook, count, replacement] of UPDATE_HOOKS) {
-    assert.equal(stripped.split(hook).length - 1, count, `approved update hook present ${count}x: ${hook.trim().slice(0, 50)}`);
-    stripped = stripped.replaceAll(hook, replacement);
-  }
-  assert.doesNotMatch(stripped, /MagicUpdate/, 'no other update-prompt change hides in the parity exception');
   return stripped;
 }
 
@@ -73,7 +51,7 @@ test('shared performance code differs only in its explicitly isolated storage ke
       shared = dropUnusedSingleImports(shared);
     }
     // The pinned spinner snapshot still carries the old inline hook; the personal app now keeps it in local-preview.js.
-    if (personal === 'zz11') source = withoutUpdatePrompt(withoutLocalPreviewHook(source));
+    if (personal === 'zz11') source = withoutLocalPreviewHook(source);
     const normalized = (snapshot === 'spinner' ? stripInlineLocalPreview(shared) : shared).replaceAll('usotsuki.distribution.', 'usotsuki.')
       .replaceAll('friend-spinner-state-', 'zz11-spinner-state-')
       .replaceAll('friend-spinner-guide-', 'zz11-guide-')
@@ -128,8 +106,8 @@ test('Three recorder themes retain exact bytes and cache isolation', async () =>
         snapshot = dropUnusedSingleImports(snapshot);
       }
     } else if (file === 'sw.js') {
-      assert.ok(snapshot.includes("CACHE_NAME = CACHE_PREFIX + 'v20261009-continuous-paper-20-haptic-dip-manual-install-1-perf-1-coherent-1-compat-1-gesture-1-wake-1-modules-1-split-1-trim-1-css-1-clean-1-lieflash-2-distribution'"));
-      snapshot = snapshot.replace('v20261009-continuous-paper-20-haptic-dip-manual-install-1-perf-1-coherent-1-compat-1-gesture-1-wake-1-modules-1-split-1-trim-1-css-1-clean-1-lieflash-2-distribution', 'v20261009-continuous-paper-20-haptic-dip-manual-install-1-perf-1-coherent-1-compat-1-gesture-1-wake-1-modules-1-split-1-trim-1-css-1-clean-1-lieflash-2');
+      assert.ok(snapshot.includes("CACHE_NAME = CACHE_PREFIX + 'v20261009-continuous-paper-20-haptic-dip-manual-install-1-perf-1-coherent-1-compat-1-gesture-1-wake-1-modules-1-split-1-trim-1-css-1-clean-1-lieflash-2-update-prompt-2-distribution'"));
+      snapshot = snapshot.replace('v20261009-continuous-paper-20-haptic-dip-manual-install-1-perf-1-coherent-1-compat-1-gesture-1-wake-1-modules-1-split-1-trim-1-css-1-clean-1-lieflash-2-update-prompt-2-distribution', 'v20261009-continuous-paper-20-haptic-dip-manual-install-1-perf-1-coherent-1-compat-1-gesture-1-wake-1-modules-1-split-1-trim-1-css-1-clean-1-lieflash-2-update-prompt-2');
       assert.ok(personal.includes('v20261009-continuous-paper-20-haptic-dip-manual-install-1-perf-1-coherent-1-compat-1-gesture-1-wake-1-modules-1-split-1'));
       personalText = stripLocalPreview(personalText);
     }

@@ -113,9 +113,11 @@ function showSettings() {
   settings.hidden = false;
   drag = null;
   syncPerformanceWakeLock();
+  window.MagicUpdate?.offer(); // settings is off-stage; never offered from the wheel
 }
 function closeSettings() {
   settings.hidden = true;
+  window.MagicUpdate?.hide();
   syncPerformanceWakeLock();
 }
 function angleAt(event) {
@@ -352,6 +354,7 @@ document.getElementById('clear-target').addEventListener('click', () => {
 });
 document.getElementById('guide-close').addEventListener('click', () => {
   guide.hidden = true;
+  window.MagicUpdate?.hide();
   try { localStorage.setItem('friend-spinner-guide-seen-v2', '1'); } catch { /* Ignore storage failures. */ }
 });
 try { guide.hidden = localStorage.getItem('friend-spinner-guide-seen-v2') === '1'; } catch { guide.hidden = false; }
@@ -397,7 +400,9 @@ else standaloneMedia.addListener(onStandaloneChange);
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   // A replacement shell may claim this page. Reloading would clear the live wheel, open settings, and custom preview edits.
   try {
-    navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' })
+    // update-prompt.js registers the worker and may ask to update, only while settings is open.
+    if (window.MagicUpdate) window.MagicUpdate.init({ swUrl: './sw.js', checkForUpdate: true, safe: () => !settings.hidden });
+    else navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' })
       .then(registration => registration.update())
       .catch(() => {});
   } catch { /* Registration failure stays on this performance. */ }

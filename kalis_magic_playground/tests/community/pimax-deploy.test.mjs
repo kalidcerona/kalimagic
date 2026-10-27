@@ -1,5 +1,4 @@
 import test from 'node:test';
-import { UPDATE_PROMPT_HOOKS, stripUpdatePrompt } from './update-prompt-hooks.mjs';
 import assert from 'node:assert/strict';
 import { readFile, readdir, stat } from 'node:fs/promises';
 import vm from 'node:vm';
@@ -77,12 +76,9 @@ test('Pi Max production boundary preserves runtime and drops appended developmen
 });
 
 test('Pi Max pinned snapshot matches the personal runtime except three storage keys and the distribution cache family', async () => {
-  // update-prompt.js and its hook lines are pending on the pinned snapshot (update-prompt-hooks.mjs).
-  const pinnedFiles = PIMAX_FILES.filter((file) => file !== 'update-prompt.js');
-  assert.deepEqual((await readdir(new URL(`../../${shared}/`, import.meta.url))).sort(), [...pinnedFiles].sort());
-  for (const file of pinnedFiles) {
-    const praw = await read(personal, file);
-    const p = UPDATE_PROMPT_HOOKS[`zz14/${file}`] ? Buffer.from(stripUpdatePrompt('zz14', file, praw.toString())) : praw;
+  assert.deepEqual((await readdir(new URL(`../../${shared}/`, import.meta.url))).sort(), [...PIMAX_FILES].sort());
+  for (const file of PIMAX_FILES) {
+    const p = await read(personal, file);
     const d = await read(shared, file);
     if (file === 'state.mjs') {
       // The three storage keys moved with KEYS from app.mjs into state.mjs.
@@ -94,9 +90,9 @@ test('Pi Max pinned snapshot matches the personal runtime except three storage k
       assert.match(d.toString(), /keepVisibleScreenAwake/);
       assert.equal(d.toString(), preparePimaxRuntime(p.toString()));
     } else if (file === 'sw.js') {
-      const from = "+ 'v20261024-wake-3-v20261021-wake-1-v20261016-sheet-1-modes-1-coherent-1-v2-brand5-modules-1-css-1';";
+      const from = "+ 'v20261024-wake-3-v20261021-wake-1-v20261016-sheet-1-modes-1-coherent-1-v2-brand5-modules-1-css-1-update-prompt-2';";
       assert.ok(p.toString().includes(from));
-      assert.equal(d.toString(), p.toString().replace(from, from.replace("-css-1';", "-css-1-distribution';")));
+      assert.equal(d.toString(), p.toString().replace(from, from.replace("-update-prompt-2';", "-update-prompt-2-distribution';")));
     } else assert.deepEqual(d, p, file);
   }
 });

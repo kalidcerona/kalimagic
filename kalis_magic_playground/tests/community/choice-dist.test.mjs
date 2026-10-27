@@ -1,5 +1,4 @@
 import test from 'node:test';
-import { UPDATE_PROMPT_HOOKS, stripUpdatePrompt } from './update-prompt-hooks.mjs';
 import assert from 'node:assert/strict';
 import { readFile, readdir, stat } from 'node:fs/promises';
 import vm from 'node:vm';
@@ -35,20 +34,19 @@ function normalize(file, bytes) {
   if (file === 'app.js' || file === 'logic.js' || STORAGE_KEY_FILES.includes(file)) source = source.replaceAll('magic-choice-dist.', 'magic-choice.');
   if (file === 'app.js' || file === 'sw.js' || file === 'index.html' || CACHE_FAMILY_FILES.includes(file)) source = source.replaceAll('choice-dist-shell-', 'choice-shell-');
   // The friend build drops the -local-preview-1 token and appends -distribution.
-  if (file === 'sw.js') source = source.replace('ready-1-nostatus-1-modules-1-order-1-split-1-css-1-artwork-1-distribution\';', 'ready-1-nostatus-1-local-preview-1-modules-1-order-1-split-1-css-1-artwork-1\';');
+  if (file === 'sw.js') source = source.replace('ready-1-nostatus-1-modules-1-order-1-split-1-css-1-artwork-1-update-prompt-2-distribution\';', 'ready-1-nostatus-1-local-preview-1-modules-1-order-1-split-1-css-1-artwork-1-update-prompt-2\';');
   if (file === 'manifest.webmanifest') source = source.replace('"id": "./"', '"id": "./choice"');
   return Buffer.from(source);
 }
 
 test('Choice snapshot preserves every personal runtime byte except explicit distribution differences', async () => {
   // The personal-only local-preview module is never part of the friend snapshot.
-  const personalFiles = (await filesUnder('zz4')).filter(file => !/\.test\./.test(file) && !LOCAL_PREVIEW_FILE.test(file) && file !== 'update-prompt.js'); // update-prompt.js and its hook lines are pending on the pinned snapshot (update-prompt-hooks.mjs)
+  const personalFiles = (await filesUnder('zz4')).filter(file => !/\.test\./.test(file) && !LOCAL_PREVIEW_FILE.test(file));
   assert.deepEqual(await filesUnder(shared), personalFiles);
   assert.deepEqual([...CHOICE_DISTRIBUTION_FILES].sort(), personalFiles);
   for (const file of personalFiles) {
     const snapshot = await read(`${shared}/${file}`);
-    const personalRaw = await read(`zz4/${file}`);
-    const personal = UPDATE_PROMPT_HOOKS[`zz4/${file}`] ? Buffer.from(stripUpdatePrompt('zz4', file, personalRaw.toString())) : personalRaw;
+    const personal = await read(`zz4/${file}`);
     const personalNormalized = file === 'app.js' ? Buffer.from(dropUnusedSingleImports(stripLocalPreview(personal.toString()))) : file === 'sw.js' ? Buffer.from(stripLocalPreview(personal.toString())) : personal;
     assert.deepEqual(file === 'app.js' ? Buffer.from(stripInlineLocalPreview(normalize(file, snapshot).toString())) : normalize(file, snapshot), personalNormalized, file);
     assert.equal(snapshot.includes(Buffer.from('magic-choice.')), false, file);

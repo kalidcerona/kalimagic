@@ -28,6 +28,7 @@ function showSettings() {
   fillForm();
   persist();
   syncPerformanceWakeLock();
+  window.MagicUpdate?.offer(); // settings is off-stage
 }
 
 function showPerformance({ persistMode = true, keepGone = false, showGuide = true } = {}) {
@@ -36,6 +37,7 @@ function showPerformance({ persistMode = true, keepGone = false, showGuide = tru
   cancelExit();
   endPointers();
   state.mode = 'performance';
+  window.MagicUpdate?.hide();
   refreshCoinImage();
   applyChrome('performance');
   updateMotionActivation();

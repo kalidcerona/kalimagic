@@ -221,6 +221,8 @@ function render() {
   notice().textContent = state.notice || "";
   focusAnswer = false;
   syncInstallLayer();
+  // Update prompt: asked only on the settings tab, hidden on every other tab.
+  if (state.tab === "settings") globalThis.MagicUpdate?.offer(); else globalThis.MagicUpdate?.hide();
   if (scrollY != null && typeof window.scrollTo === "function" && window.scrollY !== scrollY) window.scrollTo(0, scrollY);
 }
 
@@ -308,6 +310,7 @@ function boot() {
   document.body.addEventListener("focusin", onFocusIn);
   document.body.addEventListener("submit", onSubmit);
   document.body.addEventListener("input", onInput);
+  globalThis.MagicUpdate?.init({ registrationPromise: navigator.serviceWorker?.ready, safe: () => state.tab === "settings" });
   render();
 }
 

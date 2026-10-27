@@ -345,9 +345,11 @@ function bind() {
     window.visualViewport.addEventListener('scroll', onResize);
   }
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(() => {
+    const registration = navigator.serviceWorker.register('./sw.js', { scope: './' });
+    registration.catch(() => {
       // file:// and locked-down browsers have no offline shell. The page still runs.
     });
+    window.MagicUpdate?.init({ registrationPromise: registration, safe: () => state.mode === 'settings' });
   }
 }
 

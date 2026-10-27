@@ -42,9 +42,11 @@ let bootingPerformance = true;
 
 function registerShell() {
   if (!('serviceWorker' in navigator)) return;
-  navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(() => {
+  const registration = navigator.serviceWorker.register('./sw.js', { scope: './' });
+  registration.catch(() => {
     // Registration needs http(s). The page still runs without a worker.
   });
+  window.MagicUpdate?.init({ registrationPromise: registration, safe: () => view === 'settings' && !settings.hidden });
 }
 
 function bindEvents() {

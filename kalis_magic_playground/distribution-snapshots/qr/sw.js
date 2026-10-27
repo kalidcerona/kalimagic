@@ -1,8 +1,9 @@
 // Cache only the explicit app shell. API, authentication and user data stay on the network.
-const scope=new URL(self.registration.scope),PREFIX='magic-qr-'+encodeURIComponent(scope.href)+'-',CACHE=PREFIX+'v20261004-first-guide-1-coherent-1-gesture-1-compat-1-wake-1-defer-1-relaunch-restore-4-fcf180c5a';
+const scope=new URL(self.registration.scope),PREFIX='magic-qr-'+encodeURIComponent(scope.href)+'-',CACHE=PREFIX+'v20261004-first-guide-1-coherent-1-gesture-1-compat-1-wake-1-defer-1-relaunch-restore-4-update-prompt-2';
 const GUARDED=scope.pathname.startsWith('/tools/');
 const SHELL = [
   "./first-run-guide.js",
+  "./update-prompt.js",
   "./index.html",
   "./style.css",
   "./brand-logo.png",
@@ -22,6 +23,10 @@ self.addEventListener('install', (event) => {
   // Reject installation unless the whole critical shell is stored.
   // A later version stays waiting until every client of this app has closed, so the next launch applies it.
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(SHELL.map((file) => new Request(new URL(file, self.registration.scope).href, { cache: 'reload', redirect: 'error' })))).then(() => { if (!self.registration.active) return self.skipWaiting(); }));
+});
+// The page asks for this only after the performer taps "update now" (update-prompt.js).
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
 });
 self.addEventListener('activate', (event) => {
   event.waitUntil(caches.keys().then((names) => Promise.all(names

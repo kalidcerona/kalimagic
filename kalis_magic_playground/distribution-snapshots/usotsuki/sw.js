@@ -1,6 +1,6 @@
 // Cache only the explicit app shell. API, authentication and user data stay on the network.
 const CACHE_PREFIX = 'usotsuki-shell-' + encodeURIComponent(self.registration.scope) + '-';
-const CACHE_NAME = CACHE_PREFIX + 'v20261009-continuous-paper-20-haptic-dip-manual-install-1-perf-1-coherent-1-compat-1-gesture-1-wake-1-modules-1-split-1-trim-1-css-1-clean-1-lieflash-2-distribution';
+const CACHE_NAME = CACHE_PREFIX + 'v20261009-continuous-paper-20-haptic-dip-manual-install-1-perf-1-coherent-1-compat-1-gesture-1-wake-1-modules-1-split-1-trim-1-css-1-clean-1-lieflash-2-update-prompt-2-distribution';
 const SHELL = [
   "./recorder-trace.js",
   "./recorder-d.html",
@@ -14,6 +14,7 @@ const SHELL = [
   "./holdem-assets/table-rail.svg",
   "./settings-ui.js",
   "./settings-ui.css",
+  "./update-prompt.js",
   "./index.html",
   "./style.css",
   "./style-settings.css",
@@ -54,6 +55,10 @@ self.addEventListener('install', (event) => {
   // Reject installation unless the whole critical shell is stored.
   // A later version stays waiting until every client of this app has closed, so the next launch applies it.
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(SHELL.map((file) => new Request(new URL(file, self.registration.scope).href, { cache: 'reload', redirect: 'error' })))).then(() => { if (!self.registration.active) return self.skipWaiting(); }));
+});
+// The page asks for this only after the performer taps "update now" (update-prompt.js).
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
 });
 self.addEventListener('activate', (event) => {
   event.waitUntil(caches.keys().then((names) => Promise.all(names

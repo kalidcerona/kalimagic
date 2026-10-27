@@ -91,9 +91,9 @@ function syncPerformanceWakeLock() {
   else releaseWakeLock();
 }
 
-function open(){if(dropPreview())render();renderInstall();$('target').value=state.config.target;$('ordinal').value=state.config.ordinal;renderExtras(state.config.extraTargets||[]);$('decoys').value=state.config.decoys.join('\n');syncDot();$('session').textContent=`현재 생성 횟수: ${state.counter}${state.frozen?' · 고정 중':''}`;$('error').textContent=storageNote;if(!$('settings').open)$('settings').showModal();syncPerformanceWakeLock();}
-$('close').onclick=()=>{$('settings').close();syncPerformanceWakeLock();};
-if (typeof $('settings').addEventListener === 'function') $('settings').addEventListener('close', () => syncPerformanceWakeLock());
+function open(){if(dropPreview())render();renderInstall();$('target').value=state.config.target;$('ordinal').value=state.config.ordinal;renderExtras(state.config.extraTargets||[]);$('decoys').value=state.config.decoys.join('\n');syncDot();$('session').textContent=`현재 생성 횟수: ${state.counter}${state.frozen?' · 고정 중':''}`;$('error').textContent=storageNote;if(!$('settings').open)$('settings').showModal();syncPerformanceWakeLock();globalThis.MagicUpdate?.offer();}
+$('close').onclick=()=>{$('settings').close();globalThis.MagicUpdate?.hide();syncPerformanceWakeLock();};
+if (typeof $('settings').addEventListener === 'function') $('settings').addEventListener('close', () => { globalThis.MagicUpdate?.hide(); syncPerformanceWakeLock(); });
 $('dot').oninput=()=>showDot($('dot').value);
 $('add-extra').onclick=()=>$('extras').appendChild(extraRow());
 $('form').onsubmit=e=>{e.preventDefault();try{const config=settings({target:$('target').value,ordinal:$('ordinal').value,decoys:$('decoys').value,dot:$('dot').value,extraTargets:readExtras()});const replaced=prepareExplicitWrite();if(replaced==='blocked')return;dropPreview();undoPointer=null;state.config=config;reset(state);const saved=persist(true);render();if(!saved){$('error').textContent=storageNote;return;}$('settings').close();syncPerformanceWakeLock();const note=replacementNote(replaced);if(note)notice(note);}catch(err){$('error').textContent=err.message;}};
@@ -154,5 +154,5 @@ const contactLink=$('contact-open');if(contactLink)contactLink.href=contactHref(
 $('contact-copy').onclick=()=>copyContactId($('contact-copy'));
 loadStored();
 syncDot();
-persist();render();renderInstall();if(storageNote)notice(storageNote);if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js',{scope:'./'}).catch(()=>{});
+persist();render();renderInstall();if(storageNote)notice(storageNote);if('serviceWorker'in navigator){const registration=navigator.serviceWorker.register('./sw.js',{scope:'./'});registration.catch(()=>{});globalThis.MagicUpdate?.init({registrationPromise:registration,safe:()=>$('settings').open===true});}
 syncPerformanceWakeLock();

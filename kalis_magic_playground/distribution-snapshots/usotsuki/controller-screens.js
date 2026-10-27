@@ -16,6 +16,7 @@ function showPerformance() {
   setReadyFeedbackShown(false);
   pointers.clear();
   settingsScreen.hidden = true;
+  window.MagicUpdate?.hide();
   performanceScreen.hidden = false;
   centerWoodText();
   resumeRecorderTheme();
@@ -37,6 +38,7 @@ function openSettings() {
   setGestureConsumed(false);
   clearHoldTimer();
   showSettings();
+  window.MagicUpdate?.offer(); // settings is off-stage
 }
 
 function resumeRecorderTheme() {
