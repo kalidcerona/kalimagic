@@ -522,6 +522,8 @@ export function transformDistributionDocument(html, app) {
   let next = isolate ? isolateKairosStorageKeys(html, app.target) : html;
   // RELEASE friends get the same editor as the personal build. Other friend apps stay fixed.
   if (app.target !== 'release') next = next.replace(/<body\b/, '<body data-magic-customize="off"');
+  // A missing marker would ship the app without its access guard, so fail the build instead.
+  if (!next.includes('<head>')) throw new Error(`missing <head> for the ${app.target} access guard`);
   next = next.replace('<head>', `<head>\n${accessGuard(app.tool, app.target)}`);
   // KAIROS keeps its startup hook in app.js once the inline script is split out; transformKairosScript injects it there.
   if (isolate && !next.includes(INIT_APP_HOOK)) return next;
