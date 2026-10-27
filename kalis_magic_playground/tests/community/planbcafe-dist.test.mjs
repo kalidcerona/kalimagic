@@ -59,7 +59,8 @@ test('PLAN B cafe keeps its original HTML, manifest and game display policy', as
   assert.equal(transformDistributionDocument(html, { target: 'planbcafe', tool: 'planbcafe' }), html);
   assert.doesNotMatch(html, /friend-apps-check|\/tools\/_check/);
   const manifest = JSON.parse(await readFile(new URL('manifest.webmanifest', snapshot), 'utf8'));
-  for (const field of ['id', 'start_url', 'scope']) assert.equal(manifest[field], './');
+  assert.equal(manifest.id, '/tools/planbcafe/');
+  for (const field of ['start_url', 'scope']) assert.equal(manifest[field], './');
   assert.equal(manifest.display, 'fullscreen');
   assert.deepEqual(manifest.display_override, ['fullscreen', 'standalone']);
   assert.equal(manifest.orientation, 'landscape');

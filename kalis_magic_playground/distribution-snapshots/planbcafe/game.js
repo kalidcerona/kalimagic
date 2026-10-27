@@ -284,6 +284,6 @@ Module.expectedDataFileDownloads++;
     }
 
   }
-  loadPackage({"package_uuid":"plan-b-cafe-web","remote_package_size":2382454,"files":[{"filename":"/game.love","crunched":0,"start":0,"end":2382454,"audio":false}]});
+  loadPackage({"package_uuid":"plan-b-cafe-web","remote_package_size":2381884,"files":[{"filename":"/game.love","crunched":0,"start":0,"end":2381884,"audio":false}]});
 
 })();

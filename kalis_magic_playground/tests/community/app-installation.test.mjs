@@ -80,7 +80,7 @@ test('all 28 app manifests resolve to stable distinct identities and usable PNG 
     const id = new URL(manifest.id || start.href, start.origin);
     id.hash = '';
     identities.push(id.href);
-    const expectedId = route === 'tools/planbcafe' ? '/' : shared ? `/${route}/` : expectedPersonal[route];
+    const expectedId = shared ? `/${route}/` : expectedPersonal[route];
     assert.equal(id.pathname, expectedId, route);
     assert.equal(start.origin, scope.origin);
     assert.ok(start.pathname.startsWith(scope.pathname), `${route} launch URL stays in scope`);

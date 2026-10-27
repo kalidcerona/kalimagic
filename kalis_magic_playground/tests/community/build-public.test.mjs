@@ -697,8 +697,8 @@ test('all final apps resolve to distinct install identities', async () => {
     const id = manifest.id ? new URL(manifest.id, start.origin + '/') : start;
     ids.push(id.href);
     if (route === 'tools/planbcafe') {
-      assert.equal(manifest.id, './');
-      assert.equal(id.href, `${origin}/`);
+      assert.equal(manifest.id, '/tools/planbcafe/');
+      assert.equal(id.href, `${origin}/tools/planbcafe/`);
     } else if (route.startsWith('tools/')) assert.equal(id.href, `${origin}/${route}/`);
   }
   assert.equal(new Set(ids).size, routes.length, JSON.stringify(ids));
