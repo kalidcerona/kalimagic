@@ -349,7 +349,8 @@ async function answerShown(correct) {
 const statsOf = (pos) => JSON.stringify(stored().progress.redford.stats[pos] ?? null);
 
 test('boot: first-run-guide.js runs as a classic script, then app.mjs and its real imports load and render the study tab', async () => {
-  assert.deepEqual(pageScripts.map((s) => [s.src, s.module, s.defer]), [['./first-run-guide.js', false, true], ['app.mjs', true, false]]);
+  // The personal build ships update-prompt.js; only the pinned friend snapshot (MEMDECK_ROOT) lacks it until regenerated.
+  assert.deepEqual(pageScripts.map((s) => [s.src, s.module, s.defer]), [['./first-run-guide.js', false, true], ...(process.env.MEMDECK_ROOT ? [] : [['./update-prompt.js', false, true]]), ['app.mjs', true, false]]);
   data = await import(new URL('data.mjs', root));
   runInThisContext(readFileSync(new URL('first-run-guide.js', root), 'utf8'), { filename: 'first-run-guide.js' });
   await import(new URL('app.mjs', root));

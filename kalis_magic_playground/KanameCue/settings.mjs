@@ -64,6 +64,7 @@ function openSettings() {
   for (const dialog of document.querySelectorAll('dialog[open]')) dialog.close();
   renderSettings();
   $('settings').showModal();
+  globalThis.MagicUpdate?.offer(); // asked only when no show is running (safe())
 }
 function renderSettings() {
   $('fadeCurve').value = prefs.get('fadeCurve');
@@ -140,7 +141,7 @@ function keyEditor(show, save) {
 $('openSettings').addEventListener('click', openSettings);
 $('editorSettings').addEventListener('click', () => { settingsShowId = current?.id || null; openSettings(); });
 $('closeSettings').addEventListener('click', () => $('settings').close());
-$('settings').addEventListener('close', () => { if (learning) learning.cancel(); });
+$('settings').addEventListener('close', () => { globalThis.MagicUpdate?.hide(); if (learning) learning.cancel(); });
 $('fadeCurve').addEventListener('change', () => prefs.set('fadeCurve', $('fadeCurve').value));
 $('goTrigger').addEventListener('change', () => { keyGate.reset(); pointerGate.reset(); prefs.set('goTrigger', $('goTrigger').value); });
 function copyContactId(node) {

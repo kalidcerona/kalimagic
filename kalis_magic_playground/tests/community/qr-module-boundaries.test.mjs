@@ -366,8 +366,8 @@ const pageScripts = (() => {
 async function bootPage(search = '') {
   const immediate = pageScripts.filter((script) => !script.module && !script.defer);
   const deferred = pageScripts.filter((script) => script.module || script.defer);
-  assert.deepEqual(deferred.map((script) => script.src), ['./first-run-guide.js', './vendor/qrcodegen.js', './vendor/jsQR.js', './app.mjs'], 'index.html script order');
-  assert.equal(deferred[3].module, true);
+  assert.deepEqual(deferred.map((script) => script.src), SNAPSHOT ? ['./first-run-guide.js', './vendor/qrcodegen.js', './vendor/jsQR.js', './app.mjs'] : ['./first-run-guide.js', './update-prompt.js', './vendor/qrcodegen.js', './vendor/jsQR.js', './app.mjs'], 'index.html script order');
+  assert.equal(deferred[deferred.length - 1].module, true);
   for (const script of immediate) runInThisContext(readFileSync(new URL(script.src, root), 'utf8'), { filename: script.src });
   for (const script of deferred) {
     if (script.module) { const url = new URL(script.src, root); url.search = search; await import(url); }

@@ -349,8 +349,9 @@
   });
 
 
-  $('openInfo').addEventListener('click', () => $('settings').showModal());
+  $('openInfo').addEventListener('click', () => { $('settings').showModal(); globalThis.MagicUpdate?.offer(); }); // the info dialog is off-stage
   $('closeInfo').addEventListener('click', () => $('settings').close());
+  $('settings').addEventListener('close', () => globalThis.MagicUpdate?.hide());
   function copyContactId(button){
   const text='KaliDCerona';
   const finish=ok=>{button.textContent=ok?'복사됨':'ID 복사';if(ok)setTimeout(()=>{if(button.textContent==='복사됨')button.textContent='ID 복사';},1500);};
@@ -361,7 +362,11 @@
 }
 
   $('contact-copy').addEventListener('click', () => copyContactId($('contact-copy')));
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(() => {});
+  if ('serviceWorker' in navigator) {
+    const registration = navigator.serviceWorker.register('./sw.js');
+    registration.catch(() => {});
+    globalThis.MagicUpdate?.init({ registrationPromise: registration, safe: () => $('settings').open === true && $('run').hidden && !running });
+  }
 
   renderHome();
   keepAwake();

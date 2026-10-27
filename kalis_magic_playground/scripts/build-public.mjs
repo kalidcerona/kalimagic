@@ -84,13 +84,13 @@ export const PUBLIC_DIRS = [
 ];
 
 // Publish only the offline shell and worker for this personal app.
-export const TABATA_FILES = ['data.js', 'install-ui.js', 'icon-maskable-192.png', 'icon-maskable-512.png', 'index.html', 'style.css', 'app.js', 'manifest.webmanifest', 'sw.js', 'brand-logo.png', 'icon.svg', 'icon-192.png', 'icon-512.png'];
+export const TABATA_FILES = ['data.js', 'install-ui.js', 'icon-maskable-192.png', 'icon-maskable-512.png', 'index.html', 'style.css', 'app.js', 'manifest.webmanifest', 'sw.js', 'update-prompt.js', 'brand-logo.png', 'icon.svg', 'icon-192.png', 'icon-512.png'];
 
 // KANAME Cue web app: the same explicit-shell rule as TabataTimer.
-export const KANAME_FILES = ['index.html', 'style.css', 'app.mjs', 'prefs.mjs', 'clock.mjs', 'ui.mjs', 'show.mjs', 'playback.mjs', 'settings.mjs', 'wake.mjs', 'engine.mjs', 'engine-model.mjs', 'engine-output.mjs', 'engine-timing.mjs', 'engine-keys.mjs', 'engine-cues.mjs', 'audio.mjs', 'store.mjs', 'install-ui.js', 'manifest.webmanifest', 'sw.js', 'brand-logo.png', 'icon-192.png', 'icon-512.png', 'icon-maskable-192.png', 'icon-maskable-512.png'];
+export const KANAME_FILES = ['index.html', 'style.css', 'app.mjs', 'prefs.mjs', 'clock.mjs', 'ui.mjs', 'show.mjs', 'playback.mjs', 'settings.mjs', 'wake.mjs', 'engine.mjs', 'engine-model.mjs', 'engine-output.mjs', 'engine-timing.mjs', 'engine-keys.mjs', 'engine-cues.mjs', 'audio.mjs', 'store.mjs', 'install-ui.js', 'update-prompt.js', 'manifest.webmanifest', 'sw.js', 'brand-logo.png', 'icon-192.png', 'icon-512.png', 'icon-maskable-192.png', 'icon-maskable-512.png'];
 
 // URAMICHI web app (zz15): explicit shell, including the vendored QR decoder and its licence.
-export const URAMICHI_FILES = ['index.html', 'style.css', 'app.mjs', 'dom.mjs', 'presets.mjs', 'detect.mjs', 'chrome.mjs', 'scan.mjs', 'camera.mjs', 'core.mjs', 'core-model.mjs', 'core-url.mjs', 'core-encode.mjs', 'core-scan.mjs', 'core-gate.mjs', 'core-card.mjs', 'core-resolve.mjs', 'core-logic.mjs', 'core-json.mjs', 'picker.mjs', 'install-ui.js', 'manifest.webmanifest', 'sw.js', 'brand-logo.png', 'icon-192.png', 'icon-512.png', 'icon-maskable-192.png', 'icon-maskable-512.png', 'vendor/jsQR.js', 'vendor/LICENSE-jsqr.txt'];
+export const URAMICHI_FILES = ['index.html', 'style.css', 'app.mjs', 'dom.mjs', 'presets.mjs', 'detect.mjs', 'chrome.mjs', 'scan.mjs', 'camera.mjs', 'core.mjs', 'core-model.mjs', 'core-url.mjs', 'core-encode.mjs', 'core-scan.mjs', 'core-gate.mjs', 'core-card.mjs', 'core-resolve.mjs', 'core-logic.mjs', 'core-json.mjs', 'picker.mjs', 'install-ui.js', 'update-prompt.js', 'manifest.webmanifest', 'sw.js', 'brand-logo.png', 'icon-192.png', 'icon-512.png', 'icon-maskable-192.png', 'icon-maskable-512.png', 'vendor/jsQR.js', 'vendor/LICENSE-jsqr.txt'];
 
 export const PRIVATE_PATTERNS = [
   /(?:^|\/)fullscreen\.js$/,
@@ -265,12 +265,12 @@ export const SPINNER_FILES = [
 ];
 export const MEMDECK_FILES = [
   'first-run-guide.js',
-  'index.html', 'style.css', 'app.mjs', 'core.mjs', 'data.mjs', 'mnemonic.mjs',
+  'index.html', 'style.css', 'app.mjs', 'core.mjs', 'data.mjs', 'mnemonic.mjs', 'update-prompt.js',
   'brand-logo.png', 'manifest.webmanifest', 'sw.js', 'icon.svg', 'icon-192.png', 'icon-512.png'
 ];
 // KAIROS (pimax) style.css is split into feature pieces linked in this order after style.css.
 export const PIMAX_STYLE_FILES = ['style-practice.css', 'style-quiz-shapes.css', 'style-checker-install.css'];
-export const PIMAX_FILES = ["index.html", "app.mjs", "state.mjs", "session.mjs", "practice.mjs", "glyphs.mjs", "learn.mjs", "settings.mjs", "install.mjs", "events.mjs", "core.mjs", "core-stack.mjs", "core-windows.mjs", "core-grading.mjs", "core-explain.mjs", "core-questions.mjs", "core-storage.mjs", "core-stats.mjs", "style.css", ...PIMAX_STYLE_FILES, "sw.js", "brand-logo.png", "manifest.webmanifest", "icon.svg", "icon-192.png", "icon-512.png"];
+export const PIMAX_FILES = ["update-prompt.js", "index.html", "app.mjs", "state.mjs", "session.mjs", "practice.mjs", "glyphs.mjs", "learn.mjs", "settings.mjs", "install.mjs", "events.mjs", "core.mjs", "core-stack.mjs", "core-windows.mjs", "core-grading.mjs", "core-explain.mjs", "core-questions.mjs", "core-storage.mjs", "core-stats.mjs", "style.css", ...PIMAX_STYLE_FILES, "sw.js", "brand-logo.png", "manifest.webmanifest", "icon.svg", "icon-192.png", "icon-512.png"];
 
 export function shouldCopyPimax(relativePath) {
   return relativePath === '' || PIMAX_FILES.includes(relativePath);
@@ -278,7 +278,7 @@ export function shouldCopyPimax(relativePath) {
 
 export const QR_FILES = [
   'first-run-guide.js',
-  'index.html', 'style.css', 'app.mjs', 'core.mjs', 'manifest.webmanifest', 'sw.js', 'brand-logo.png',
+  'index.html', 'style.css', 'app.mjs', 'core.mjs', 'manifest.webmanifest', 'sw.js', 'update-prompt.js', 'brand-logo.png',
   'icons/icon-192.png', 'icons/icon-512.png', 'vendor/qrcodegen.js', 'vendor/jsQR.js',
   'vendor/LICENSE-nayuki.txt', 'vendor/LICENSE-jsqr.txt'
 ];
@@ -316,7 +316,8 @@ export const MIRROR_PAIRS = [
   // The shared update prompt: one identical file in every adopting personal app and its sibling original (zz8, zz10 and zz11 declare it in their file lists).
   ...[
     ['magic-stopwatch-uni', 'zz1'], ['magic-unlock', 'zz2'], ['magic-calculator-v2', 'zz3'], ['magic-aletheia', 'zz5'],
-    ['magic-tobira', 'zz6'], ['magic-usotsuki', 'zz7']
+    ['magic-tobira', 'zz6'], ['magic-usotsuki', 'zz7'], ['magic-choice', 'zz4'], ['magic-memdeck', 'zz12'],
+    ['magic-qr', 'zz13'], ['magic-pimax', 'zz14']
   ].map(([source, route]) => [`../../${source}/update-prompt.js`, `${route}/update-prompt.js`]),
   ['../../magic-memdeck/local-preview.mjs', 'zz12/local-preview.mjs'],
   ['../../magic-qr/local-preview.mjs', 'zz13/local-preview.mjs'],

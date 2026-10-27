@@ -1,8 +1,9 @@
 // Cache only the explicit app shell. API, authentication and user data stay on the network.
 const CACHE_PREFIX = 'pimax-practice-';
-const CACHE_NAME = CACHE_PREFIX + 'v20261024-wake-3-v20261021-wake-1-v20261016-sheet-1-modes-1-coherent-1-v2-brand5-modules-1-css-1';
+const CACHE_NAME = CACHE_PREFIX + 'v20261024-wake-3-v20261021-wake-1-v20261016-sheet-1-modes-1-coherent-1-v2-brand5-modules-1-css-1-update-prompt-2';
 const SHELL = [
   "./index.html",
+  "./update-prompt.js",
   "./style.css",
   "./style-practice.css",
   "./style-quiz-shapes.css",
@@ -37,6 +38,10 @@ self.addEventListener('install', (event) => {
   // Reject installation unless the whole critical shell is stored.
   // A later version stays waiting until every client of this app has closed, so the next launch applies it.
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(SHELL.map((file) => new Request(new URL(file, self.registration.scope).href, { cache: 'reload', redirect: 'error' })))).then(() => { if (!self.registration.active) return self.skipWaiting(); }));
+});
+// The page asks for this only after the performer taps "update now" (update-prompt.js).
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
 });
 self.addEventListener('activate', (event) => {
   // Personal and distribution releases share this prefix and stay in separate families.

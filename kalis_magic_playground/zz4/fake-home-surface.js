@@ -148,6 +148,7 @@ function openFakeHome(notes) {
   fakeHomeEl.hidden = false;
   document.title = '메모';
   document.body.dataset.view = 'fake-home';
+  globalThis.MagicUpdate?.hide();
   applyWallpaper(fakeHomeSession.options);
   fakeHomeEl.focus();
   maybeShowGestureGuide();
@@ -173,6 +174,7 @@ function closeFakeHome() {
   settingsEl.hidden = false;
   document.title = '너의 선택은?';
   document.body.dataset.view = 'settings';
+  globalThis.MagicUpdate?.offer(); // the settings screen is off-stage
   showView('home', { push: false });
   // The history entry under the performance must say what is visible now.
   try { history.replaceState(navState('home'), ''); } catch { /* History can be blocked. */ }

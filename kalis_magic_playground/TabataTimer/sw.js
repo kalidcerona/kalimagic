@@ -1,12 +1,13 @@
 // Cache only the explicit app shell. API, authentication and user data stay on the network.
 const CACHE_PREFIX = 'tabata-timer-' + encodeURIComponent(new URL(self.registration.scope).pathname) + '-';
-const CACHE_NAME = CACHE_PREFIX + 'v20261024-5-brand5';
+const CACHE_NAME = CACHE_PREFIX + 'v20261024-5-brand5-update-prompt-2';
 const SHELL = [
   "./", // Canonical navigation avoids Netlify pretty-URL redirects from index.html.
   "./style.css",
   "./app.js",
   "./data.js",
   "./install-ui.js",
+  "./update-prompt.js",
   "./icon-maskable-192.png",
   "./icon-maskable-512.png",
 
@@ -24,6 +25,10 @@ self.addEventListener('install', (event) => {
   // Reject installation unless the whole critical shell is stored.
   // A later version stays waiting until every client of this app has closed, so the next launch applies it.
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(SHELL.map((file) => new Request(new URL(file, self.registration.scope).href, { cache: 'reload', redirect: 'error' })))).then(() => { if (!self.registration.active) return self.skipWaiting(); }));
+});
+// The page asks for this only after the performer taps "update now" (update-prompt.js).
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
 });
 self.addEventListener('activate', (event) => {
   // Personal and distribution releases share this prefix and stay in separate families.

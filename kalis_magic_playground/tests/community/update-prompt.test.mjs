@@ -24,7 +24,7 @@ function el(tag) {
 }
 function find(node, pred, out = []) { if (pred(node)) out.push(node); node.children.forEach((c) => find(c, pred, out)); return out; }
 
-function setup({ controller = {}, waiting = false, installing = null } = {}) {
+function setup({ controller = {}, waiting = false, installing = null, popover = false } = {}) {
   const swListeners = {}, regListeners = {}, reloads = [], messages = [], timers = [], registered = [], docListeners = {};
   const body = el('body');
   const stage = el('main'); body.appendChild(stage);
@@ -32,7 +32,7 @@ function setup({ controller = {}, waiting = false, installing = null } = {}) {
   const registration = { waiting: waiting ? worker() : null, installing, active: {}, addEventListener: (t, f) => { regListeners[t] = f; }, updates: 0, update: async () => { registration.updates++; } };
   const doc = {
     body, activeElement: null,
-    createElement: (tag) => { const n = el(tag); n.ownerDoc = doc; return n; },
+    createElement: (tag) => { const n = el(tag); n.ownerDoc = doc; if (popover) n.showPopover = () => { n.popoverShown = true; }; return n; },
     addEventListener: (t, f) => { docListeners[t] = f; }, removeEventListener: (t) => { delete docListeners[t]; },
   };
   const win = {
@@ -113,6 +113,18 @@ test('offer() shows an accessible dialog with two 44px+ buttons and makes the pa
   assert.equal(t.stage.hasAttribute('inert'), true, 'background is inert while shown');
   t.btn('나중에').click();
   assert.equal(t.stage.hasAttribute('inert'), false, 'inert is restored on close');
+});
+
+test('the dialog is a top-layer popover when supported (shows above a modal <dialog>) and Escape is consumed', async () => {
+  const t = setup({ waiting: true, popover: true });
+  await t.win.MagicUpdate.init({ registration: t.registration, safe: () => true });
+  const overlay = find(t.body, (n) => n.hasAttribute('data-magic-update'))[0];
+  assert.equal(overlay.attrs.popover, 'manual');
+  assert.equal(overlay.popoverShown, true);
+  let prevented = false;
+  t.docListeners.keydown({ key: 'Escape', preventDefault() { prevented = true; } });
+  assert.equal(prevented, true, 'Escape must not also close a modal dialog underneath');
+  assert.equal(t.dialogs().length, 0);
 });
 
 test('Tab and Shift+Tab stay inside the dialog; focus that escapes is pulled back', async () => {
@@ -281,7 +293,7 @@ test('zz11 service worker skips waiting only on the SKIP_WAITING message and shi
   listeners.message({ data: { type: 'SKIP_WAITING' } });
   assert.equal(skips, 1);
   assert.match(sw, /"\.\/update-prompt\.js"/);
-  assert.match(sw, /update-prompt-4';/);
+  assert.match(sw, /update-prompt-5';/);
 });
 
 test('zz11 page loads update-prompt.js before app.js and offers only from showSettings', () => {

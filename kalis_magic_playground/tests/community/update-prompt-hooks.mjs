@@ -3,7 +3,7 @@
 // Each entry is [text in the personal file, text in the pinned snapshot, expected count]. Nothing else is stripped.
 // Retire an app's entries when its snapshot is regenerated.
 const SW = [
-  ["-update-prompt-1';", "';", 1],
+  ["-update-prompt-2';", "';", 1],
   ['  "./update-prompt.js",\n', '', 1],
   ['// The page asks for this only after the performer taps "update now" (update-prompt.js).\nself.addEventListener(\'message\', (event) => {\n  if (event.data && event.data.type === \'SKIP_WAITING\') self.skipWaiting();\n});\n', '', 1],
 ];
@@ -87,6 +87,32 @@ export const UPDATE_PROMPT_HOOKS = {
   registration.catch(() => {});
   window.MagicUpdate?.init({ registrationPromise: registration, safe: () => !settings.hidden });`,
     '  navigator.serviceWorker.register("./sw.js").catch(() => {});', 1]],
+  'zz4/sw.js': SW,
+  'zz4/index.html': [[DEFER_TAG, '', 1]],
+  'zz4/app.js': [[`  const registration = navigator.serviceWorker.register('./sw.js', { scope: './' });
+  registration.catch(() => {});
+  globalThis.MagicUpdate?.init({ registrationPromise: registration, safe: () => document.body.dataset.view === 'settings' });`,
+    "  navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(() => {});", 1]],
+  'zz4/fake-home-surface.js': [['  globalThis.MagicUpdate?.hide();\n', '', 1], ["  globalThis.MagicUpdate?.offer(); // the settings screen is off-stage\n", '', 1]],
+  'zz12/sw.js': SW,
+  'zz12/index.html': [['<script src="./update-prompt.js" defer></script>', '', 1]],
+  'zz12/app.mjs': [
+    ["if(tab==='settings')globalThis.MagicUpdate?.offer();else globalThis.MagicUpdate?.hide();", '', 1],
+    ["if('serviceWorker' in navigator){const registration=navigator.serviceWorker.register('./sw.js');registration.catch(()=>{});globalThis.MagicUpdate?.init({registrationPromise:registration,safe:()=>tab==='settings'});}",
+      "if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});", 1]],
+  'zz13/sw.js': SW,
+  'zz13/index.html': [['<script src="./update-prompt.js" defer></script>', '', 1]],
+  'zz13/app.mjs': [
+    ['globalThis.MagicUpdate?.offer();}', '}', 1],
+    ['globalThis.MagicUpdate?.hide();syncPerformanceWakeLock();};', 'syncPerformanceWakeLock();};', 1],
+    ["() => { globalThis.MagicUpdate?.hide(); syncPerformanceWakeLock(); }", '() => syncPerformanceWakeLock()', 1],
+    ["if('serviceWorker'in navigator){const registration=navigator.serviceWorker.register('./sw.js',{scope:'./'});registration.catch(()=>{});globalThis.MagicUpdate?.init({registrationPromise:registration,safe:()=>$('settings').open===true});}",
+      "if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js',{scope:'./'}).catch(()=>{});", 1]],
+  'zz14/sw.js': SW,
+  'zz14/index.html': [['<script src="update-prompt.js" defer></script>\n', '', 1]],
+  'zz14/app.mjs': [
+    ['  // Update prompt: asked only on the settings tab, hidden on every other tab.\n  if (state.tab === "settings") globalThis.MagicUpdate?.offer(); else globalThis.MagicUpdate?.hide();\n', '', 1],
+    ['  globalThis.MagicUpdate?.init({ registrationPromise: navigator.serviceWorker?.ready, safe: () => state.tab === "settings" });\n', '', 1]],
 };
 
 export function stripUpdatePrompt(app, file, text) {
@@ -104,4 +130,4 @@ export function stripUpdatePrompt(app, file, text) {
 
 // Files a personal app has that its pinned snapshot lacks until regeneration.
 export const UPDATE_PROMPT_ONLY_FILE = 'update-prompt.js';
-export const UPDATE_PROMPT_APPS = ['zz1', 'zz2', 'zz3', 'zz5', 'zz6', 'zz7', 'zz8', 'zz10', 'zz11'];
+export const UPDATE_PROMPT_APPS = ['zz1', 'zz2', 'zz3', 'zz4', 'zz5', 'zz6', 'zz7', 'zz8', 'zz10', 'zz11', 'zz12', 'zz13', 'zz14', 'zz15', 'TabataTimer', 'KanameCue'];

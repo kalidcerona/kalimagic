@@ -11,7 +11,7 @@ import { PUBLIC_DIRS, URAMICHI_FILES } from '../../scripts/build-public.mjs';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const read = (file) => readFile(path.join(root, 'zz15', file), 'utf8');
-const shell = ['index.html', 'style.css', 'app.mjs', 'dom.mjs', 'presets.mjs', 'detect.mjs', 'chrome.mjs', 'scan.mjs', 'camera.mjs', 'core.mjs', 'core-model.mjs', 'core-url.mjs', 'core-encode.mjs', 'core-scan.mjs', 'core-gate.mjs', 'core-card.mjs', 'core-resolve.mjs', 'core-logic.mjs', 'core-json.mjs', 'picker.mjs', 'install-ui.js', 'manifest.webmanifest', 'brand-logo.png', 'icon-192.png', 'icon-512.png', 'icon-maskable-192.png', 'icon-maskable-512.png', 'vendor/jsQR.js', 'vendor/LICENSE-jsqr.txt'];
+const shell = ['index.html', 'style.css', 'app.mjs', 'dom.mjs', 'presets.mjs', 'detect.mjs', 'chrome.mjs', 'scan.mjs', 'camera.mjs', 'core.mjs', 'core-model.mjs', 'core-url.mjs', 'core-encode.mjs', 'core-scan.mjs', 'core-gate.mjs', 'core-card.mjs', 'core-resolve.mjs', 'core-logic.mjs', 'core-json.mjs', 'picker.mjs', 'install-ui.js', 'update-prompt.js', 'manifest.webmanifest', 'brand-logo.png', 'icon-192.png', 'icon-512.png', 'icon-maskable-192.png', 'icon-maskable-512.png', 'vendor/jsQR.js', 'vendor/LICENSE-jsqr.txt'];
 
 async function listFiles(dir, prefix = '') {
   const out = [];
@@ -85,7 +85,7 @@ test('zz15 worker precaches the whole shell, serves it offline and ignores other
   let pending;
   listeners.install({ waitUntil(value) { pending = value; } }); await pending;
   assert.ok(names[0].startsWith('uramichi-web-'));
-  assert.match(names[0], /v20261024-web-5-modules-2$/);
+  assert.match(names[0], /v20261024-web-5-modules-2-coherent-1-update-prompt-2$/);
   assert.deepEqual([...cached.keys()].sort(), shell.map((file) => new URL(file, scope).href).sort());
   for (const file of ['', ...shell.filter((f) => f !== 'manifest.webmanifest')]) {
     listeners.fetch({ request: new Request(new URL(file, scope)), respondWith(value) { pending = value; } });

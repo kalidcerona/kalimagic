@@ -246,7 +246,11 @@ function bootKaname(keepAwake) {
   renderHome();
   showScreen('home');
   keepAwake();
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(() => {});
+  if ('serviceWorker' in navigator) {
+    const registration = navigator.serviceWorker.register('./sw.js');
+    registration.catch(() => {});
+    globalThis.MagicUpdate?.init({ registrationPromise: registration, safe: () => $('settings').open === true && $('run').hidden });
+  }
 })();
 }
 

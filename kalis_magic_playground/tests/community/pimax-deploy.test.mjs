@@ -1,4 +1,5 @@
 import test from 'node:test';
+import { UPDATE_PROMPT_HOOKS, stripUpdatePrompt } from './update-prompt-hooks.mjs';
 import assert from 'node:assert/strict';
 import { readFile, readdir, stat } from 'node:fs/promises';
 import vm from 'node:vm';
@@ -54,7 +55,7 @@ test('revealed map answers draw the look-alike and plain symbol in both directio
 });
 
 test('Pi Max has explicit runtime allowlists and source mirror checks', () => {
-  assert.equal(PIMAX_FILES.length, 28);
+  assert.equal(PIMAX_FILES.length, 29);
   assert.ok(PUBLIC_DIRS.includes(personal));
   assert.deepEqual(DISTRIBUTION_APPS.find(a => a.target === 'pimax'), { source: shared, target: 'pimax', tool: 'pimax' });
   for (const file of PIMAX_FILES) {
@@ -76,9 +77,12 @@ test('Pi Max production boundary preserves runtime and drops appended developmen
 });
 
 test('Pi Max pinned snapshot matches the personal runtime except three storage keys and the distribution cache family', async () => {
-  assert.deepEqual((await readdir(new URL(`../../${shared}/`, import.meta.url))).sort(), [...PIMAX_FILES].sort());
-  for (const file of PIMAX_FILES) {
-    const p = await read(personal, file);
+  // update-prompt.js and its hook lines are pending on the pinned snapshot (update-prompt-hooks.mjs).
+  const pinnedFiles = PIMAX_FILES.filter((file) => file !== 'update-prompt.js');
+  assert.deepEqual((await readdir(new URL(`../../${shared}/`, import.meta.url))).sort(), [...pinnedFiles].sort());
+  for (const file of pinnedFiles) {
+    const praw = await read(personal, file);
+    const p = UPDATE_PROMPT_HOOKS[`zz14/${file}`] ? Buffer.from(stripUpdatePrompt('zz14', file, praw.toString())) : praw;
     const d = await read(shared, file);
     if (file === 'state.mjs') {
       // The three storage keys moved with KEYS from app.mjs into state.mjs.

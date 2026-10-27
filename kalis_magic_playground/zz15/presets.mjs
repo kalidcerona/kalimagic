@@ -110,9 +110,11 @@ function openSettings() {
   $('sameWindow').checked = store.settings.sameWindow;
   $('settings').showModal();
   $('settings').scrollTop = 0;
+  globalThis.MagicUpdate?.offer(); // the settings dialog is off-stage
 }
 function closeSettings() { if ($('settings').open) $('settings').close(); }
 $('closeSettings').addEventListener('click', closeSettings);
+$('settings').addEventListener('close', () => globalThis.MagicUpdate?.hide());
 $('sameWindow').addEventListener('change', (ev) => {
   store.settings = { ...store.settings, sameWindow: ev.target.checked };
   write(KEY.settings, JSON.stringify(store.settings));

@@ -10,7 +10,7 @@ import { PUBLIC_DIRS, TABATA_FILES, MIRROR_PAIRS, preparePimaxRuntime } from '..
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const read = file => readFile(path.join(root, 'TabataTimer', file), 'utf8');
-const shell = ['index.html', 'style.css', 'app.js', 'manifest.webmanifest', 'brand-logo.png', 'icon.svg', 'icon-192.png', 'icon-512.png', 'data.js', 'install-ui.js', 'icon-maskable-192.png', 'icon-maskable-512.png'];
+const shell = ['index.html', 'style.css', 'app.js', 'manifest.webmanifest', 'brand-logo.png', 'icon.svg', 'icon-192.png', 'icon-512.png', 'data.js', 'install-ui.js', 'update-prompt.js', 'icon-maskable-192.png', 'icon-maskable-512.png'];
 
 function worker(scope, caches) {
   const listeners = {};
@@ -102,7 +102,7 @@ test('TabataTimer worker precaches the complete shell, serves offline and isolat
       async addAll(requests) { for (const request of requests) cached.set(request.url, new Response(request.url)); },
       async match(url) { return cached.get(url)?.clone(); }
     };
-    const caches = { async open(name) { names.push(name); return cache; }, async keys() { return [names.at(-1), names.at(-1).replace(/v20261024-5-brand5$/, 'old'), 'pimax-practice-old', 'tabata-timer-unrelated-old']; }, async delete(name) { deleted.push(name); } };
+    const caches = { async open(name) { names.push(name); return cache; }, async keys() { return [names.at(-1), names.at(-1).replace(/v20261024-5-brand5-update-prompt-2$/, 'old'), 'pimax-practice-old', 'tabata-timer-unrelated-old']; }, async delete(name) { deleted.push(name); } };
     const { context, listeners } = worker(scope, caches);
     vm.runInContext(source, context);
     let pending;
@@ -110,11 +110,11 @@ test('TabataTimer worker precaches the complete shell, serves offline and isolat
     await pending;
     const cacheName = names.at(-1);
     assert.equal(cacheName.startsWith('tabata-timer-'), true);
-    assert.match(cacheName, /v20261024-5-brand5$/);
+    assert.match(cacheName, /v20261024-5-brand5-update-prompt-2$/);
     assert.deepEqual([...cached.keys()].sort(), shell.map(file => new URL(file === 'index.html' ? './' : file, scope).href).sort());
     listeners.activate({ waitUntil(value) { pending = value; } });
     await pending;
-    assert.deepEqual(deleted, [cacheName.replace(/v20261024-5-brand5$/, 'old')]);
+    assert.deepEqual(deleted, [cacheName.replace(/v20261024-5-brand5-update-prompt-2$/, 'old')]);
     for (const file of ['', ...shell]) {
       listeners.fetch({ request: new Request(new URL(file, scope)), respondWith(value) { pending = value; } });
       const response = await pending;
@@ -138,7 +138,7 @@ test('TabataTimer preserves Korean copy and zz13 contact footer without fullscre
   for (const text of ['개요', 'Android Chrome: ⋮', '앱 설치', 'iPhone Safari: 공유', '홈 화면에 추가', '준비', '운동', '일시정지', '사이클', '종료']) {
     assert.ok((html + await read('app.js')).includes(text), text);
   }
-  for (const file of ['index.html', 'app.js', 'style.css', 'manifest.webmanifest', 'sw.js', 'data.js', 'install-ui.js']) {
+  for (const file of ['index.html', 'app.js', 'style.css', 'manifest.webmanifest', 'sw.js', 'data.js', 'install-ui.js', 'update-prompt.js']) {
     const source = await read(file);
     assert.doesNotMatch(source, /\b(?:requestFullscreen|webkitRequestFullscreen|webkitRequestFullScreen|mozRequestFullScreen|msRequestFullscreen)\b/, file);
     assert.doesNotMatch(source, /[\u2014~\uFF5E\u301C]/, file);

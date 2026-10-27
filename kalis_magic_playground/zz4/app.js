@@ -6,6 +6,8 @@ import { closeFakeHome } from './performance.js'; // local-preview-hook
 import { installLocalPreview } from './local-preview.js'; // local-preview-hook
 
 if ('serviceWorker' in navigator && (location.protocol === 'http:' || location.protocol === 'https:')) {
-  navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(() => {});
+  const registration = navigator.serviceWorker.register('./sw.js', { scope: './' });
+  registration.catch(() => {});
+  globalThis.MagicUpdate?.init({ registrationPromise: registration, safe: () => document.body.dataset.view === 'settings' });
 }
 installLocalPreview(() => { hideGestureGuide(); closeFakeHome(); showView('home', { push: false }); }); // local-preview-hook

@@ -1,8 +1,9 @@
 // Cache only the explicit app shell. API, authentication and user data stay on the network.
-const scope=new URL(self.registration.scope),PREFIX='uramichi-web-'+encodeURIComponent(scope.href)+'-',CACHE=PREFIX+'v20261024-web-5-modules-2';
+const scope=new URL(self.registration.scope),PREFIX='uramichi-web-'+encodeURIComponent(scope.href)+'-',CACHE=PREFIX+'v20261024-web-5-modules-2-coherent-1-update-prompt-2';
 const GUARDED=scope.pathname.startsWith('/tools/');
 const SHELL = [
   "./index.html",
+  "./update-prompt.js",
   "./style.css",
   "./app.mjs",
   "./dom.mjs",
@@ -38,6 +39,10 @@ self.addEventListener('install', (event) => {
   // Reject installation unless the whole critical shell is stored.
   // A later version stays waiting until every client of this app has closed, so the next launch applies it.
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(SHELL.map((file) => new Request(new URL(file, self.registration.scope).href, { cache: 'reload', redirect: 'error' })))).then(() => { if (!self.registration.active) return self.skipWaiting(); }));
+});
+// The page asks for this only after the performer taps "update now" (update-prompt.js).
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
 });
 self.addEventListener('activate', (event) => {
   event.waitUntil(caches.keys().then((names) => Promise.all(names

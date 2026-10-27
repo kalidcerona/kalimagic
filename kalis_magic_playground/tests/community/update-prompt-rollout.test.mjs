@@ -1,14 +1,15 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import vm from 'node:vm';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { MIRROR_PAIRS } from '../../scripts/build-public.mjs';
 import { UPDATE_PROMPT_APPS, UPDATE_PROMPT_HOOKS, stripUpdatePrompt } from './update-prompt-hooks.mjs';
 
 const read = (app, file) => readFileSync(new URL(`../../${app}/${file}`, import.meta.url), 'utf8');
-const SIBLING = { zz1: 'magic-stopwatch-uni', zz2: 'magic-unlock', zz3: 'magic-calculator-v2', zz5: 'magic-aletheia', zz6: 'magic-tobira', zz7: 'magic-usotsuki', zz8: 'magic-asrai', zz10: 'magic-alter', zz11: 'magic-spinner' };
+const SIBLING = { zz1: 'magic-stopwatch-uni', zz2: 'magic-unlock', zz3: 'magic-calculator-v2', zz5: 'magic-aletheia', zz6: 'magic-tobira', zz7: 'magic-usotsuki', zz8: 'magic-asrai', zz10: 'magic-alter', zz11: 'magic-spinner', zz4: 'magic-choice', zz12: 'magic-memdeck', zz13: 'magic-qr', zz14: 'magic-pimax' };
+// zz15, TabataTimer and KanameCue have no sibling original; they live only in this repository.
 // Entry script each app's index.html loads right after update-prompt.js (it must load first).
-const ENTRY = { zz1: './app.js', zz2: './app.js', zz3: './app.js', zz5: './app.js', zz6: './app.js', zz7: 'detector.js', zz8: 'contacts.js', zz10: './app.js', zz11: './app.js' };
+const ENTRY = { zz1: './app.js', zz2: './app.js', zz3: './app.js', zz5: './app.js', zz6: './app.js', zz7: 'detector.js', zz8: 'contacts.js', zz10: './app.js', zz11: './app.js', zz4: './app.js', zz12: 'app.mjs', zz13: './app.mjs', zz14: 'app.mjs', zz15: './app.mjs', TabataTimer: './app.js', KanameCue: './app.mjs' };
 // Where the prompt is offered (settings only) and the exact safe() expression each app passes.
 const WIRING = {
   zz1: { offer: ['app.js'], hide: ['app.js'], init: ['app.js'], safe: '!settings.hidden&&state!=="running"&&!presetMode' },
@@ -20,17 +21,24 @@ const WIRING = {
   zz8: { offer: ['contacts-screen.js'], hide: ['contacts-screen.js'], init: ['contacts.js'], safe: '!settingsScreen.hidden' },
   zz10: { offer: ['settings-panel.js'], hide: ['settings-panel.js', 'camera.js'], init: ['app.js'], safe: '!settings.hidden' },
   zz11: { offer: ['app.js'], hide: ['app.js'], init: ['app.js'], safe: '!settings.hidden' },
+  zz4: { offer: ['fake-home-surface.js'], hide: ['fake-home-surface.js'], init: ['app.js'], safe: "document.body.dataset.view === 'settings'" },
+  zz12: { offer: ['app.mjs'], hide: ['app.mjs'], init: ['app.mjs'], safe: "tab==='settings'" },
+  zz13: { offer: ['app.mjs'], hide: ['app.mjs'], init: ['app.mjs'], safe: "$('settings').open===true" },
+  zz14: { offer: ['app.mjs'], hide: ['app.mjs'], init: ['app.mjs'], safe: 'state.tab === "settings"' },
+  zz15: { offer: ['presets.mjs'], hide: ['presets.mjs'], init: ['camera.mjs'], safe: "$('settings').open === true" },
+  TabataTimer: { offer: ['app.js'], hide: ['app.js'], init: ['app.js'], safe: "$('settings').open === true && $('run').hidden && !running" },
+  KanameCue: { offer: ['settings.mjs'], hide: ['settings.mjs'], init: ['show.mjs'], safe: "$('settings').open === true && $('run').hidden" },
 };
-const JS_FILES = (app) => Object.keys(UPDATE_PROMPT_HOOKS).filter((key) => key.startsWith(`${app}/`)).map((key) => key.slice(app.length + 1));
+const JS_FILES = (app) => readdirSync(new URL(`../../${app}/`, import.meta.url)).filter((file) => /\.m?js$/.test(file) && file !== 'update-prompt.js' && file !== 'sw.js');
 
 test('update-prompt.js is one byte-identical file in every adopting app', () => {
   const source = read('zz11', 'update-prompt.js');
-  assert.equal(UPDATE_PROMPT_APPS.length, 9);
+  assert.equal(UPDATE_PROMPT_APPS.length, 16);
   for (const app of UPDATE_PROMPT_APPS) assert.equal(read(app, 'update-prompt.js'), source, app);
 });
 
 test('every adopting app mirrors update-prompt.js to its sibling original', () => {
-  for (const app of UPDATE_PROMPT_APPS) {
+  for (const app of UPDATE_PROMPT_APPS.filter((name) => SIBLING[name])) {
     assert.ok(MIRROR_PAIRS.some(([original, mirror]) => original === `../../${SIBLING[app]}/update-prompt.js` && mirror === `${app}/update-prompt.js`), app);
   }
 });
@@ -39,7 +47,7 @@ test('each app worker precaches the prompt, answers SKIP_WAITING and carries a n
   for (const app of UPDATE_PROMPT_APPS) {
     const sw = read(app, 'sw.js');
     assert.equal(sw.split('"./update-prompt.js"').length - 1, 1, `${app} shell lists update-prompt.js once`);
-    assert.match(sw, /const CACHE_NAME = CACHE_PREFIX \+ '[^']*-update-prompt-\d+';/, app);
+    assert.match(sw, /(?:CACHE_NAME = CACHE_PREFIX \+ |CACHE=PREFIX\+)'[^']*-update-prompt-\d+';/, app);
     const listeners = {}; let skips = 0;
     vm.runInNewContext(sw, { URL, Response, Request, self: { registration: { scope: `https://example.test/${app}/` }, addEventListener: (n, f) => { listeners[n] = f; }, skipWaiting: async () => { skips++; }, clients: { claim: async () => {} } } });
     listeners.message({ data: { type: 'other' } });
@@ -63,7 +71,7 @@ test('each app page loads update-prompt.js before its entry script', () => {
 test('offer() is called only where settings opens, hide() where any safe screen closes, init() once with the app safe()', () => {
   for (const app of UPDATE_PROMPT_APPS.filter((name) => name !== 'zz11')) {
     const wiring = WIRING[app];
-    const files = JS_FILES(app).filter((file) => file.endsWith('.js') && file !== 'sw.js');
+    const files = JS_FILES(app);
     for (const [kind, pattern] of [['offer', /MagicUpdate\??\.offer\(\)/], ['hide', /MagicUpdate\??\.hide\(\)/], ['init', /MagicUpdate\??\.init\(/]]) {
       const where = files.filter((file) => pattern.test(read(app, file)));
       assert.deepEqual(where.sort(), [...wiring[kind]].sort(), `${app} ${kind}`);

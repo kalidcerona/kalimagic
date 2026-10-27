@@ -18,6 +18,7 @@ const WORKERS = [
   ['zz12/sw.js', 'https://example.test/zz12/'],
   ['zz13/sw.js', 'https://example.test/zz13/'],
   ['zz14/sw.js', 'https://example.test/zz14/'],
+  ['zz15/sw.js', 'https://example.test/zz15/'],
   ['distribution-snapshots/aletheia/sw.js', 'https://example.test/tools/aletheia/'],
   ['distribution-snapshots/calculator/sw.js', 'https://example.test/tools/hitsuzen/'],
   ['distribution-snapshots/kairos/sw.js', 'https://example.test/tools/kairos/'],
@@ -150,9 +151,9 @@ async function dispatch(worker, url) {
   return { response: await result, background };
 }
 
-test('coherent release covers the 26 deployed worker scopes', () => {
-  assert.equal(WORKERS.length, 26);
-  assert.equal(new Set(WORKERS.map(([file, scope]) => `${file}@${scope}`)).size, 26);
+test('coherent release covers the 27 deployed worker scopes', () => {
+  assert.equal(WORKERS.length, 27);
+  assert.equal(new Set(WORKERS.map(([file, scope]) => `${file}@${scope}`)).size, 27);
 });
 
 for (const [file, scope] of WORKERS) {

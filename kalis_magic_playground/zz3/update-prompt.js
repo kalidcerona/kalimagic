@@ -75,7 +75,7 @@
   }
   function onKey(event) {
     if (!dialog) return;
-    if (event.key === 'Escape') { if (pending) hide(); else decline(); return; }
+    if (event.key === 'Escape') { event.preventDefault(); if (pending) hide(); else decline(); return; } // also keeps a modal <dialog> underneath from closing
     if (event.key !== 'Tab') return;
     var list = enabledButtons(), active = root.document.activeElement, at = list.indexOf(active);
     event.preventDefault();
@@ -134,7 +134,9 @@
     previousFocus = doc.activeElement || null;
     var overlay = doc.createElement('div');
     overlay.setAttribute('data-magic-update', '');
-    overlay.style.cssText = 'position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.55);';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;box-sizing:border-box;width:100%;height:100%;max-width:none;max-height:none;margin:0;border:0;padding:16px;overflow:visible;color:inherit;background:rgba(0,0,0,.55);';
+    // A manual popover sits in the top layer, so the prompt also shows above an open modal <dialog> (QR settings).
+    if (overlay.showPopover) overlay.setAttribute('popover', 'manual');
     var card = doc.createElement('div');
     card.setAttribute('role', 'dialog');
     card.setAttribute('aria-modal', 'true');
@@ -155,6 +157,7 @@
     overlay.appendChild(card);
     (doc.body || doc.documentElement).appendChild(overlay);
     dialog = overlay;
+    if (overlay.showPopover) { try { overlay.showPopover(); } catch (e) { /* stays a fixed overlay */ } }
     ui = { card: card, message: message, later: later, now: now };
     setInert(true);
     doc.addEventListener('keydown', onKey, true);

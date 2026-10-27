@@ -301,4 +301,8 @@ keepAwake();
 introDone = read(KEY.intro) === '1';
 if (introDone) startCamera();
 else showGate('카메라를 켭니다', 'URAMICHI는 코드를 읽으려고 카메라를 씁니다. 다음에 뜨는 창에서 카메라 사용을 허용해 주세요. 영상은 이 기기 밖으로 나가지 않습니다.', '카메라 켜기', true);
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(() => {});
+if ('serviceWorker' in navigator) {
+  const registration = navigator.serviceWorker.register('./sw.js');
+  registration.catch(() => {});
+  globalThis.MagicUpdate?.init({ registrationPromise: registration, safe: () => $('settings').open === true });
+}

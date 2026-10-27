@@ -1,4 +1,5 @@
 import test from 'node:test';
+import { UPDATE_PROMPT_HOOKS, stripUpdatePrompt } from './update-prompt-hooks.mjs';
 import assert from 'node:assert/strict';
 import { readFile, readdir, stat } from 'node:fs/promises';
 import vm from 'node:vm';
@@ -41,12 +42,13 @@ function normalize(file, bytes) {
 
 test('Choice snapshot preserves every personal runtime byte except explicit distribution differences', async () => {
   // The personal-only local-preview module is never part of the friend snapshot.
-  const personalFiles = (await filesUnder('zz4')).filter(file => !/\.test\./.test(file) && !LOCAL_PREVIEW_FILE.test(file));
+  const personalFiles = (await filesUnder('zz4')).filter(file => !/\.test\./.test(file) && !LOCAL_PREVIEW_FILE.test(file) && file !== 'update-prompt.js'); // update-prompt.js and its hook lines are pending on the pinned snapshot (update-prompt-hooks.mjs)
   assert.deepEqual(await filesUnder(shared), personalFiles);
   assert.deepEqual([...CHOICE_DISTRIBUTION_FILES].sort(), personalFiles);
   for (const file of personalFiles) {
     const snapshot = await read(`${shared}/${file}`);
-    const personal = await read(`zz4/${file}`);
+    const personalRaw = await read(`zz4/${file}`);
+    const personal = UPDATE_PROMPT_HOOKS[`zz4/${file}`] ? Buffer.from(stripUpdatePrompt('zz4', file, personalRaw.toString())) : personalRaw;
     const personalNormalized = file === 'app.js' ? Buffer.from(dropUnusedSingleImports(stripLocalPreview(personal.toString()))) : file === 'sw.js' ? Buffer.from(stripLocalPreview(personal.toString())) : personal;
     assert.deepEqual(file === 'app.js' ? Buffer.from(stripInlineLocalPreview(normalize(file, snapshot).toString())) : normalize(file, snapshot), personalNormalized, file);
     assert.equal(snapshot.includes(Buffer.from('magic-choice.')), false, file);
