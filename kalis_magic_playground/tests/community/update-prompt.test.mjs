@@ -61,7 +61,7 @@ test('nothing is shown without a waiting worker; swUrl registers once with updat
   assert.equal(t.dialogs().length, 0);
   assert.equal(json(t.registered), json([{ url: './sw.js', opts: { updateViaCache: 'none' } }]));
   assert.equal(t.registration.updates, 0, 'update() only when checkForUpdate is true');
-  await t.win.MagicUpdate.init({ swUrl: './sw.js' });
+  await t.win.MagicUpdate.init({ swUrl: './sw.js', safe: () => true });
   assert.equal(t.registered.length, 1, 'no double registration');
 });
 
@@ -85,14 +85,16 @@ test('registration failure is observable and init can be retried', async () => {
 
 test('a waiting worker with no controller (first install) is not offered', async () => {
   const t = setup({ controller: null, waiting: true });
-  await t.win.MagicUpdate.init({ registration: t.registration });
+  await t.win.MagicUpdate.init({ registration: t.registration, safe: () => true });
   assert.equal(t.win.MagicUpdate.offer(), false);
 });
 
 test('offer() shows an accessible dialog with two 44px+ buttons and makes the page inert', async () => {
   const t = setup({ waiting: true });
-  await t.win.MagicUpdate.init({ registration: t.registration });
-  assert.equal(t.dialogs().length, 0, 'default safe() never auto-shows');
+  let ok = false;
+  await t.win.MagicUpdate.init({ registration: t.registration, safe: () => ok });
+  assert.equal(t.dialogs().length, 0);
+  ok = true;
   assert.equal(t.win.MagicUpdate.offer(), true);
   assert.equal(t.dialogs().length, 1);
   assert.equal(t.win.MagicUpdate.offer(), false, 'no second dialog');
@@ -107,7 +109,7 @@ test('offer() shows an accessible dialog with two 44px+ buttons and makes the pa
 
 test('Tab and Shift+Tab stay inside the dialog; focus that escapes is pulled back', async () => {
   const t = setup({ waiting: true });
-  await t.win.MagicUpdate.init({ registration: t.registration });
+  await t.win.MagicUpdate.init({ registration: t.registration, safe: () => true });
   t.win.MagicUpdate.offer();
   const later = t.btn('나중에'), now = t.btn('지금 업데이트');
   assert.equal(t.key('Tab'), true);
@@ -121,6 +123,13 @@ test('Tab and Shift+Tab stay inside the dialog; focus that escapes is pulled bac
   const outside = el('button'); outside.ownerDoc = t.doc; t.stage.appendChild(outside); outside.focus();
   t.docListeners.focusin({ target: outside });
   assert.ok([later, now].includes(t.doc.activeElement));
+});
+
+test('safe is required: without it even explicit offer() is blocked', async () => {
+  const t = setup({ waiting: true });
+  await t.win.MagicUpdate.init({ registration: t.registration });
+  assert.equal(t.win.MagicUpdate.offer(), false);
+  assert.equal(t.dialogs().length, 0);
 });
 
 test('explicit offer() obeys safe(); hide() closes without counting as later', async () => {
@@ -138,7 +147,7 @@ test('explicit offer() obeys safe(); hide() closes without counting as later', a
 
 test('later suppresses further offers and a late takeover never reloads', async () => {
   const t = setup({ waiting: true });
-  await t.win.MagicUpdate.init({ registration: t.registration });
+  await t.win.MagicUpdate.init({ registration: t.registration, safe: () => true });
   t.win.MagicUpdate.offer();
   t.btn('나중에').click();
   assert.equal(t.win.MagicUpdate.offer(), false);
@@ -162,6 +171,13 @@ test('update now: pending state, SKIP_WAITING, reload once only when the accepte
   t.swListeners.controllerchange();
   assert.equal(t.reloads.length, 0, 'a different/unrelated takeover (worker not activating) does not reload');
   accepted.state = 'activated';
+  t.win.navigator.serviceWorker.controller = {};
+  t.swListeners.controllerchange();
+  assert.equal(t.reloads.length, 0, 'controller is a different worker: no reload');
+  t.win.navigator.serviceWorker.controller = null;
+  t.swListeners.controllerchange();
+  assert.equal(t.reloads.length, 0, 'controller null: no reload');
+  t.win.navigator.serviceWorker.controller = accepted;
   t.swListeners.controllerchange();
   t.swListeners.controllerchange();
   assert.equal(t.reloads.length, 1);
@@ -175,7 +191,7 @@ test('no reload when the performer left the safe screen', async () => {
   t.win.MagicUpdate.offer();
   t.btn('지금 업데이트').click();
   t.win.MagicUpdate.hide(); // settings closed
-  accepted.state = 'activated';
+  accepted.state = 'activated'; t.win.navigator.serviceWorker.controller = accepted;
   t.swListeners.controllerchange();
   assert.equal(t.reloads.length, 0);
   // and when safe() flips without hide()
@@ -184,7 +200,7 @@ test('no reload when the performer left the safe screen', async () => {
   await u.win.MagicUpdate.init({ registration: u.registration, safe: () => ok });
   u.win.MagicUpdate.offer();
   u.btn('지금 업데이트').click();
-  ok = false; w2.state = 'activated';
+  ok = false; w2.state = 'activated'; u.win.navigator.serviceWorker.controller = w2;
   u.swListeners.controllerchange();
   assert.equal(u.reloads.length, 0);
   assert.equal(u.dialogs().length, 0);
@@ -200,7 +216,7 @@ test('timeout disarms auto reload and offers retry only when safe; never reloads
   t.fireTimer();
   assert.equal(t.reloads.length, 0);
   assert.equal(t.btn('다시 시도').disabled, false);
-  accepted.state = 'activated';
+  accepted.state = 'activated'; t.win.navigator.serviceWorker.controller = accepted;
   t.swListeners.controllerchange();
   assert.equal(t.reloads.length, 0, 'late takeover after timeout does not reload');
   t.btn('다시 시도').click();
@@ -257,7 +273,7 @@ test('zz11 service worker skips waiting only on the SKIP_WAITING message and shi
   listeners.message({ data: { type: 'SKIP_WAITING' } });
   assert.equal(skips, 1);
   assert.match(sw, /"\.\/update-prompt\.js"/);
-  assert.match(sw, /update-prompt-2';/);
+  assert.match(sw, /update-prompt-3';/);
 });
 
 test('zz11 page loads update-prompt.js before app.js and offers only from showSettings', () => {

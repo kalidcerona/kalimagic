@@ -4,9 +4,9 @@
      with updateViaCache:'none' as a convenience. checkForUpdate:true also calls registration.update().
      Returns a Promise of { ok, registered, error? }; after a failure init() may be called again.
    MagicUpdate.offer() shows the dialog only when a replacement is waiting, safe() allows it, and the performer
-     has not said "later" this launch. Without a safe() function, explicit offer() calls are trusted and automatic ones never show.
+     has not said "later" this launch. safe is required: without it nothing is ever shown.
    MagicUpdate.hide() closes the dialog (also cancels a pending update) without counting as "later"; call it when any safe screen closes.
-   The page reloads only when the worker the performer accepted takes control, while safe() still holds. Never because time passed. */
+   The page reloads only when the worker the performer accepted becomes navigator.serviceWorker.controller, while safe() still holds. Never because time passed. */
 (function (root) {
   'use strict';
   var TEXT = '새 버전이 있어요. 지금 업데이트할까요?';
@@ -18,12 +18,12 @@
 
   function container() { return root.navigator && root.navigator.serviceWorker; }
   function isSafe(auto) {
-    if (typeof safeFn !== 'function') return !auto;
+    if (typeof safeFn !== 'function') return false; // safe is required: without it nothing is ever shown
     try { return safeFn() === true; } catch (e) { return false; }
   }
   function waitingWorker() {
     var sw = container();
-    // Without a controller this is the first install: nothing to replace.
+    // A page without a controller is not controlled by any worker yet (typically the first install), so there is nothing to replace.
     return registration && registration.waiting && sw && sw.controller ? registration.waiting : null;
   }
   function maybeShow() { offer(true); }
@@ -112,7 +112,8 @@
   function takenOver() {
     if (!pending || reloaded) return;
     var worker = pending.worker;
-    if (!(worker.state === 'activating' || worker.state === 'activated' || (registration && registration.active === worker))) return;
+    var sw = container();
+    if (!sw || sw.controller !== worker) return; // only the accepted worker taking control counts
     if (!isSafe(false)) { hide(); return; }
     reloaded = true;
     clearPending();
