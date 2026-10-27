@@ -45,17 +45,28 @@
     pending = null;
   }
   function setInert(on) {
-    var body = root.document.body;
     if (!on) {
       inerted.forEach(function (node) { node.removeAttribute('inert'); });
       inerted = [];
       return;
     }
-    Array.prototype.slice.call(body.children || []).forEach(function (node) {
-      if (node === dialog || node.tagName === 'SCRIPT' || (node.hasAttribute && node.hasAttribute('inert'))) return;
-      node.setAttribute('inert', '');
-      inerted.push(node);
-    });
+    // Inert every sibling on the path from the prompt up to body, never the prompt's own ancestors
+    // (an inert ancestor, such as an open modal <dialog>, would make the prompt unclickable).
+    var body = root.document.body, node = dialog;
+    while (node && node !== body) {
+      var parent = node.parentNode;
+      if (!parent) break;
+      Array.prototype.slice.call(parent.children || []).forEach(function (sib) {
+        if (sib === node || sib.tagName === 'SCRIPT' || (sib.hasAttribute && sib.hasAttribute('inert'))) return;
+        sib.setAttribute('inert', '');
+        inerted.push(sib);
+      });
+      node = parent;
+    }
+  }
+  function modalHost() {
+    // A modal <dialog> makes everything outside it inert, and showPopover() does not lift that, so mount inside it.
+    try { return root.document.querySelector('dialog:modal'); } catch (e) { return null; }
   }
   function close(restoreFocus) {
     if (!dialog) return;
@@ -155,7 +166,7 @@
     card.appendChild(message);
     card.appendChild(row);
     overlay.appendChild(card);
-    (doc.body || doc.documentElement).appendChild(overlay);
+    (modalHost() || doc.body || doc.documentElement).appendChild(overlay);
     dialog = overlay;
     if (overlay.showPopover) { try { overlay.showPopover(); } catch (e) { /* stays a fixed overlay */ } }
     ui = { card: card, message: message, later: later, now: now };

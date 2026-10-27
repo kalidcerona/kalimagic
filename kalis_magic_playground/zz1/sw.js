@@ -1,6 +1,6 @@
 // Cache only the explicit app shell. API, authentication and user data stay on the network.
 const CACHE_PREFIX = 'stopwatch-uni-shell-' + encodeURIComponent(self.registration.scope) + '-';
-const CACHE_NAME = CACHE_PREFIX + 'v20261004-first-guide-1-manual-install-1-perf-1-coherent-1-compat-1-local-preview-1-modules-1-local-preview-module-1-update-prompt-2';
+const CACHE_NAME = CACHE_PREFIX + 'v20261004-first-guide-1-manual-install-1-perf-1-coherent-1-compat-1-local-preview-1-modules-1-local-preview-module-1-update-prompt-3';
 const SHELL = [
   "./settings-ui.js",
   "./settings-ui.css",

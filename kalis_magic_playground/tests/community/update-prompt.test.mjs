@@ -13,25 +13,30 @@ function el(tag) {
     setAttribute(k, v) { node.attrs[k] = v; },
     removeAttribute(k) { delete node.attrs[k]; },
     hasAttribute(k) { return k in node.attrs; },
-    appendChild(c) { c.parent = node; node.children.push(c); return c; },
+    appendChild(c) { c.parent = node; c.parentNode = node; node.children.push(c); return c; },
     addEventListener(t, f) { listeners[t] = f; },
     click() { if (!node.disabled) listeners.click(); },
     focus() { if (node.ownerDoc) node.ownerDoc.activeElement = node; },
     contains(n) { return n === node || node.children.some((c) => c.contains(c === n ? c : n)); },
-    remove() { if (node.parent) node.parent.children = node.parent.children.filter((c) => c !== node); node.parent = null; },
+    remove() { if (node.parent) node.parent.children = node.parent.children.filter((c) => c !== node); node.parent = null; node.parentNode = null; },
   };
   return node;
 }
 function find(node, pred, out = []) { if (pred(node)) out.push(node); node.children.forEach((c) => find(c, pred, out)); return out; }
 
-function setup({ controller = {}, waiting = false, installing = null, popover = false } = {}) {
+function setup({ controller = {}, waiting = false, installing = null, popover = false, modal = false } = {}) {
   const swListeners = {}, regListeners = {}, reloads = [], messages = [], timers = [], registered = [], docListeners = {};
   const body = el('body');
   const stage = el('main'); body.appendChild(stage);
+  // modal: an open modal <dialog> (as showModal() leaves it) holding the settings screen; everything outside it is inert in a real browser.
+  const modalDialog = modal ? el('dialog') : null;
+  const modalContent = modal ? el('section') : null;
+  if (modal) { body.appendChild(modalDialog); modalDialog.appendChild(modalContent); }
   const worker = (state = 'installed') => { const l = {}; const w = { state, failPost: false, postMessage: (m) => { if (w.failPost) throw new Error('gone'); messages.push(m); }, addEventListener: (t, f) => { l[t] = f; }, fire: (t) => l[t]() }; return w; };
   const registration = { waiting: waiting ? worker() : null, installing, active: {}, addEventListener: (t, f) => { regListeners[t] = f; }, updates: 0, update: async () => { registration.updates++; } };
   const doc = {
     body, activeElement: null,
+    querySelector: (sel) => (sel === 'dialog:modal' ? modalDialog : null),
     createElement: (tag) => { const n = el(tag); n.ownerDoc = doc; if (popover) n.showPopover = () => { n.popoverShown = true; }; return n; },
     addEventListener: (t, f) => { docListeners[t] = f; }, removeEventListener: (t) => { delete docListeners[t]; },
   };
@@ -48,7 +53,7 @@ function setup({ controller = {}, waiting = false, installing = null, popover = 
   const btn = (label) => buttons().find((b) => b.textContent === label);
   const key = (k, shiftKey = false) => { let prevented = false; docListeners.keydown({ key: k, shiftKey, preventDefault() { prevented = true; } }); return prevented; };
   const fireTimer = () => { const t = timers.find((x) => x.live); t.live = false; t.fn(); };
-  return { win, body, stage, doc, registration, worker, messages, reloads, swListeners, regListeners, registered, dialogs, buttons, btn, key, timers, fireTimer, docListeners };
+  return { modalDialog, modalContent, win, body, stage, doc, registration, worker, messages, reloads, swListeners, regListeners, registered, dialogs, buttons, btn, key, timers, fireTimer, docListeners };
 }
 const tick = () => new Promise((r) => setImmediate(r));
 const json = (v) => JSON.stringify(v);
@@ -293,7 +298,7 @@ test('zz11 service worker skips waiting only on the SKIP_WAITING message and shi
   listeners.message({ data: { type: 'SKIP_WAITING' } });
   assert.equal(skips, 1);
   assert.match(sw, /"\.\/update-prompt\.js"/);
-  assert.match(sw, /update-prompt-5';/);
+  assert.match(sw, /update-prompt-6';/);
 });
 
 test('zz11 page loads update-prompt.js before app.js and offers only from showSettings', () => {
@@ -309,4 +314,27 @@ test('zz11 page loads update-prompt.js before app.js and offers only from showSe
   const guideClose = app.slice(app.indexOf("getElementById('guide-close')"), app.indexOf('try { guide.hidden = localStorage'));
   assert.match(guideClose, /MagicUpdate\?\.hide\(\)/);
   assert.match(app.slice(app.indexOf('function closeSettings()'), app.indexOf('function angleAt')), /MagicUpdate\?\.hide\(\)/);
+});
+
+test('over an open modal <dialog> the prompt is mounted inside it and never inerts the dialog or its ancestors', async () => {
+  const t = setup({ waiting: true, popover: true, modal: true });
+  await t.win.MagicUpdate.init({ registration: t.registration, safe: () => true });
+  const overlay = find(t.body, (n) => n.hasAttribute('data-magic-update'))[0];
+  assert.equal(overlay.parent, t.modalDialog, 'mounted inside the modal dialog, where it stays interactive');
+  assert.equal(t.modalDialog.hasAttribute('inert'), false);
+  assert.equal(t.body.hasAttribute('inert'), false);
+  assert.equal(t.stage.hasAttribute('inert'), true, 'unrelated page content is still inert');
+  assert.equal(t.modalContent.hasAttribute('inert'), true, 'the settings content under the prompt is inert');
+  t.btn('나중에').click();
+  assert.equal(t.modalContent.hasAttribute('inert'), false);
+  assert.equal(t.stage.hasAttribute('inert'), false);
+  assert.equal(t.modalDialog.children.length, 1, 'prompt removed from the dialog');
+});
+
+test('without a modal <dialog> the prompt stays on body', async () => {
+  const t = setup({ waiting: true });
+  await t.win.MagicUpdate.init({ registration: t.registration, safe: () => true });
+  const overlay = find(t.body, (n) => n.hasAttribute('data-magic-update'))[0];
+  assert.equal(overlay.parent, t.body);
+  assert.equal(t.stage.hasAttribute('inert'), true);
 });

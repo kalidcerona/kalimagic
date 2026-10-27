@@ -85,7 +85,7 @@ test('zz15 worker precaches the whole shell, serves it offline and ignores other
   let pending;
   listeners.install({ waitUntil(value) { pending = value; } }); await pending;
   assert.ok(names[0].startsWith('uramichi-web-'));
-  assert.match(names[0], /v20261024-web-5-modules-2-coherent-1-update-prompt-2$/);
+  assert.match(names[0], /v20261024-web-5-modules-2-coherent-1-update-prompt-3$/);
   assert.deepEqual([...cached.keys()].sort(), shell.map((file) => new URL(file, scope).href).sort());
   for (const file of ['', ...shell.filter((f) => f !== 'manifest.webmanifest')]) {
     listeners.fetch({ request: new Request(new URL(file, scope)), respondWith(value) { pending = value; } });
