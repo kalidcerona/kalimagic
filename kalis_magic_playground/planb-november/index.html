@@ -265,9 +265,7 @@
   </div>
   <ul class="price-notes">
     <li>절약 금액은 같은 기간 단독권 두 장 가격과 비교한 금액이에요.</li>
-    <li>통합권은 11월 15일(일)까지 판매해요.</li>
-    <li>단독권을 샀어도 11월 15일까지 차액만 내면 통합권으로 바꿀 수 있어요.</li>
-    <li>버스킹 참가자가 슬리빙을 따로 신청하면 1만원 할인해 드려요.</li>
+    <li>통합권과 슬리빙 단독권은 신청이 마감됐어요. 버스킹 단독권은 신청할 수 있어요.</li>
   </ul>
   <div style="margin-top:28px; display:flex; flex-wrap:wrap; align-items:center; gap:10px 16px"><a href="https://smore.im/form/52BkxmIm19" target="_blank" rel="noopener" class="btn btn-amber" data-cta>통합권 신청하기</a></div>
 </section>
@@ -316,7 +314,7 @@
 
 <section class="wrap sec" style="padding-top:88px">
   <div class="final">
-    <p>두 회차 모두 스넥 연습실 · 자리가 다 차면 일찍 마감돼요</p>
+    <p>두 회차 모두 스넥 연습실 · 통합권은 신청이 마감됐어요</p>
     <a href="https://smore.im/form/52BkxmIm19" target="_blank" rel="noopener" class="btn btn-amber" data-cta data-final-cta>통합권 8.5만원으로 신청하기</a>
   </div>
 </section>
@@ -334,6 +332,7 @@
   // 테스트: window.PLANB_NOW = "2026-10-30" 처럼 지정하면 그 날짜 기준으로 보여 줘요.
   var root = typeof globalThis !== "undefined" ? globalThis : window;
   var OPEN = 20261017, SUPER_END = 20261027, EARLY_END = 20261108, BUSKING_DAY = 20261115, SLEEVING_DAY = 20261122;
+  var SOLD_OUT = true; // 통합권·슬리빙 단독권 신청 마감 (2026-10-28)
 
   function kstToday(now) {
     if (now == null && root.PLANB_NOW != null) now = root.PLANB_NOW;
@@ -387,6 +386,11 @@
     }
     s.comboEnded = t > BUSKING_DAY;
     s.fullCombo = s.comboEnded ? "판매 종료" : "14만원";
+    if (SOLD_OUT && s.phase !== "done") {
+      s.phase = "soldout"; s.was = "NO PLAN SEASON. 3"; s.price = "통합권 마감"; s.stamp = ""; s.small = true;
+      s.deadline = "통합권과 슬리빙 단독권은 신청이 마감됐어요"; s.sticky = "통합권 마감"; s.finalCta = "통합권 마감";
+      s.chips = { super: "마감", early: "마감", full: "마감" }; s.active = ""; s.comboEnded = true; s.fullCombo = "판매 종료";
+    }
     return s;
   }
 
@@ -408,9 +412,9 @@
         chip.className = "tier-chip" + (text === "판매 중" ? " is-now" : text === "오픈 예정" ? " is-soon" : text === "마감" ? " is-done" : "");
       }
     });
-    if (s.phase === "done") {
+    if (s.phase === "done" || s.phase === "soldout") {
       document.querySelectorAll("a[data-cta]").forEach(function (a) {
-        a.textContent = "이번 세미나는 끝났어요"; a.setAttribute("aria-disabled", "true"); a.removeAttribute("href");
+        a.textContent = s.phase === "done" ? "이번 세미나는 끝났어요" : "통합권 마감"; a.setAttribute("aria-disabled", "true"); a.removeAttribute("href");
       });
     } else if (s.phase === "sleeving-only") {
       document.querySelectorAll("a[data-cta]").forEach(function (a) {
@@ -427,7 +431,7 @@
     if (sticky) {
       sticky.querySelector(".sticky-ticket-text").textContent = s.sticky;
       sticky.hidden = true;
-      if (s.phase !== "done" && heroCta && ticket && typeof IntersectionObserver !== "undefined") {
+      if (s.phase !== "done" && s.phase !== "soldout" && heroCta && ticket && typeof IntersectionObserver !== "undefined") {
         var heroAbove = false, ticketVisible = false;
         var io = new IntersectionObserver(function (entries) {
           entries.forEach(function (e) {

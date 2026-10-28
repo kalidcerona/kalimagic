@@ -421,9 +421,7 @@
     </article>
   </div>
   <ul class="price-notes">
-    <li>통합권은 11월 15일(일)까지 판매</li>
-    <li>11/15까지 차액만 내면 통합권으로 변경</li>
-    <li>버스킹 참가자는 슬리빙 단독 신청 시 1만원 할인</li>
+    <li>슬리빙 단독권과 통합권은 신청이 마감됐어요</li>
   </ul>
 
   <div class="encore">
@@ -506,7 +504,7 @@
   <div class="final">
     <p class="en">The Vanisher <br class="m">Trilogy · Sleeving</p>
     <h2>소매 안의 1초,<br>가까이서 배워요</h2>
-    <p>11.22(일) 오후 2시 · 스넥 연습실<br>자리가 다 차면 일찍 마감돼요</p>
+    <p>11.22(일) 오후 2시 · 스넥 연습실<br>신청이 마감됐어요</p>
     <div class="final-actions">
       <a href="https://smore.im/form/52BkxmIm19" target="_blank" rel="noopener" class="btn" data-cta>자리 마감 전에 신청하기</a>
       <a class="alt" href="../planb-november/">버스킹까지 통합권으로 →</a>
@@ -531,6 +529,7 @@
   var root = typeof globalThis !== "undefined" ? globalThis : window;
   var OPEN = 20261017, SUPER_END = 20261027, EARLY_END = 20261108, BUSKING_DAY = 20261115, EVENT_DAY = 20261122;
   var FULL = "6만원";
+  var SOLD_OUT = true; // 슬리빙 단독권·통합권 신청 마감 (2026-10-28)
   var PRICE = {
     super: { now: "3.5만원", off: "42%", label: "슈퍼 얼리버드", short: "10/27까지" },
     early: { now: "5만원", off: "17%", label: "얼리버드", short: "11/8까지" }
@@ -579,6 +578,11 @@
       s.chips = { super: "판매 중", early: "", full: "" };
     }
     s.comboEnded = t > BUSKING_DAY;
+    if (SOLD_OUT && s.phase !== "done") {
+      s.phase = "soldout"; s.main = "신청 마감"; s.sub = "슬리빙 단독권과 통합권 모두 마감됐어요"; s.hideDeadline = false;
+      s.tier = null; s.endText = "신청 마감"; s.sticky = "신청 마감";
+      s.chips = { super: "마감", early: "마감", full: "마감" }; s.active = ""; s.comboEnded = true;
+    }
     return s;
   }
 
@@ -609,16 +613,16 @@
     if (combo && s.comboEnded) combo.textContent = '통합권 판매 종료';
     var comboLink = document.querySelector(".final-actions a.alt");
     if (comboLink) comboLink.hidden = !!s.comboEnded;
-    if (s.phase === "done") {
+    if (s.phase === "done" || s.phase === "soldout") {
       document.querySelectorAll("a[data-cta]").forEach(function (a) {
-        a.textContent = "이번 세미나는 끝났어요"; a.setAttribute("aria-disabled", "true"); a.removeAttribute("href");
+        a.textContent = s.phase === "done" ? "이번 세미나는 끝났어요" : "신청 마감"; a.setAttribute("aria-disabled", "true"); a.removeAttribute("href");
       });
     }
     var sticky = document.querySelector(".sticky-ticket"), ticket = document.getElementById("ticket"), heroCta = document.querySelector("[data-hero-cta]");
     if (sticky) {
       sticky.querySelector(".sticky-ticket-text").textContent = s.sticky;
       sticky.hidden = true;
-      if (s.phase !== "done" && heroCta && ticket && typeof IntersectionObserver !== "undefined") {
+      if (s.phase !== "done" && s.phase !== "soldout" && heroCta && ticket && typeof IntersectionObserver !== "undefined") {
         var heroAbove = false, ticketVisible = false;
         var io = new IntersectionObserver(function (entries) {
           entries.forEach(function (e) {
