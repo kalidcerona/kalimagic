@@ -440,9 +440,13 @@ test('Magicshow rest hook is read-only and excludes fights, story, minigames, cu
   const body = source.match(/isRestScreen: \(\) => \{([\s\S]*?)\n    \},/)[1];
   const state = { mode: 'fight', u15: { scene: null, queue: [], tutorial: { active: false } }, batchD: { twist: { scene: null } }, features: { climax: { left: 0 } } };
   const visible = new Set(); let sheet = false;
-  const context = { state, document: { hidden: false }, $: id => ({ hidden: !visible.has(id) }), blockingSheetOpen: () => sheet, chainFighting: false, dealerBusy: false, menu: '', dealerGameView: null, presentation: { busy: false }, wonMoment: null, stageRewardHost: null, clock: 0 };
+  const context = { state, titleLaunchPending: false, document: { hidden: false }, $: id => ({ hidden: !visible.has(id) }), blockingSheetOpen: () => sheet, chainFighting: false, dealerBusy: false, menu: '', dealerGameView: null, presentation: { busy: false }, wonMoment: null, stageRewardHost: null, clock: 0, titleLaunchPending: false };
   const rest = vm.runInNewContext(`() => {${body}}`, context);
   const before = JSON.stringify(state);
+  context.titleLaunchPending = true; visible.add('titleScreen');
+  assert.equal(rest(), true, 'button title waits at rest before a choice, even when the new-game state starts in fight');
+  assert.equal(JSON.stringify(state), before, 'waiting on the title does not mutate progress');
+  context.titleLaunchPending = false; visible.clear();
   assert.equal(rest(), false, 'active fight');
   sheet = true; assert.equal(rest(), true, 'paused menu/settings');
   for (const id of ['storyDialog', 'introStory', 'sceneCard', 'tutorialCoach', 'routineCutin']) { visible.add(id); assert.equal(rest(), false, id); visible.clear(); }
@@ -457,6 +461,7 @@ test('Magicshow rest hook is read-only and excludes fights, story, minigames, cu
   state.mode = 'ending'; assert.equal(rest(), true, 'result');
   state.mode = 'fight'; visible.add('titleScreen'); assert.equal(rest(), false, 'title cannot override a running fight');
   state.mode = 'transition'; assert.equal(rest(), true, 'quiet title'); visible.clear(); state.mode = 'fight';
+  context.titleLaunchPending = true; assert.equal(rest(), true, 'game waits behind the title screen'); context.titleLaunchPending = false;
   assert.equal(JSON.stringify(state), before, 'hook does not mutate state');
 });
 

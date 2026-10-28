@@ -189,25 +189,35 @@
     const audience=$('audienceCard'),r=audience.getBoundingClientRect(),stage=$('stage').getBoundingClientRect();
     host.dataset.compact=String(phone&&r.width<330);
     host.style.width=`${phone?Math.min(250,Math.max(r.width*.42-16,!portraitLayout()&&r.width>=330?200:0)):340}px`; // fixP 5: landscape keeps room for the name plate beside the wider 건너뛰기
-    const portraitFight=portraitLayout()&&(upgrade||(chain&&mark.step.endsWith('-fight'))||(state.u15.tutorial.active&&state.u15.tutorial.phase==='fight'&&!state.u15.tutorial.won));
     if(portraitLayout()&&menu==='book'&&upgrade){
       host.dataset.dock='';host.style.right='auto';host.style.left='8px';host.style.top='64px';host.style.bottom='auto';host.style.width=`${Math.min(240,Math.max(160,layoutWidth-96))}px`;return;
     }
-    if(portraitFight&&menu!=='book'){
-      host.dataset.dock='bottom';host.style.left='0px';host.style.right='0px';host.style.top='auto';host.style.bottom='0px';host.style.width=`${layoutWidth}px`;return;
+    // r22b (owner 10-28: 「제일 하단에서 대사를 할 때가 있는데 대사는 중간에서 나오게 해줘」): the coach that used to sit on the bottom edge (portrait fight dock,
+    // landscape book/upgrade) is centred on the screen height; when that would cover the coached target it steps just above it (or below it).
+    const middleTop=avoid=>{const box=host.getBoundingClientRect(),h=box.height;let y=(innerHeight-h)/2;const t=avoid&&avoid.getBoundingClientRect();
+      if(t&&t.width&&box.left<t.right&&box.right>t.left&&y<t.bottom&&y+h>t.top)y=t.top-h-6>=stage.top?t.top-h-6:t.bottom+6;return `${(y-stage.top)/scale}px`;};
+    // r25: every portrait coach step (the first 「카드 케이스」 step too, which ran off the right edge at 360/390 px) uses the centred full-width dock.
+    if(portraitLayout()&&menu!=='book'){
+      host.dataset.dock='bottom';host.style.left='0px';host.style.right='0px';host.style.bottom='auto';host.style.width=`${layoutWidth}px`;host.style.top=middleTop(node);return;
     }
     host.dataset.dock='';host.style.right='';
-    if(menu==='book'){host.style.left='8px';host.style.top='auto';host.style.bottom='8px';return;}
-    if(upgrade){host.style.left='8px';host.style.top='auto';host.style.bottom='64px';return;}
+    if(menu==='book'||upgrade){host.style.left='8px';host.style.bottom='auto';host.style.top=middleTop(upgradeBuy||node);return;}
     const protectedRects=[node,$('magicianMini'),$('audience'),$('stageStats'),$('statsButton'),document.querySelector('.doubt'),$('audienceLine')].filter(el=>el&&!el.hidden&&getComputedStyle(el).visibility!=='hidden').map(el=>el.getBoundingClientRect());
     const w=host.getBoundingClientRect().width,h=host.getBoundingClientRect().height;
-    const candidates=[{x:r.left+8,y:r.top+32,edge:'top'},{x:r.left+8,y:r.top+8,edge:'top'},{x:r.right-w-8,y:r.top+8,edge:'top'},{x:r.right-w-8,y:r.bottom-h-8,edge:'bottom'},{x:r.left+8,y:r.bottom-h-8,edge:'bottom'}];
+    const candidates=[{x:r.left+8,y:r.top+32,edge:'top'},{x:r.left+8,y:r.top+8,edge:'top'},{x:r.right-w-8,y:r.top+8,edge:'top'},{x:r.right-w-8,y:(innerHeight-h)/2,edge:'middle'},{x:r.left+8,y:(innerHeight-h)/2,edge:'middle'}];
     const overlap=p=>protectedRects.reduce((n,z)=>n+Math.max(0,Math.min(p.x+w,z.right)-Math.max(p.x,z.left))*Math.max(0,Math.min(p.y+h,z.bottom)-Math.max(p.y,z.top)),0);
     candidates.sort((a,b)=>overlap(a)-overlap(b));let best=candidates[0];
     if(phone&&overlap(best)>0){
-      // Beside Kali at the bottom edge, keep the same 44px dismissal target.
+      // r25b C-1: the rotated doubt bar, the audience line and Kali leave no listed spot clear on small landscape phones; scan the card for a clear box nearest to mid height.
+      // Second pass (no clear box inside the card): the board side of the stage, still clear of the coached target.
+      let scan=null;
+      for(const right of [r.right,stage.right])if(!scan)for(let y=r.top+8;y+h<=r.bottom-8;y+=6)for(let x=r.left+8;x+w<=right-8;x+=6){const p={x,y,edge:'middle'};if(overlap(p)>0)continue;const d=Math.abs(y+h/2-innerHeight/2)+Math.abs(x-r.left)*.01;if(!scan||d<scan.d)scan={x,y,edge:'middle',d};}
+      if(scan)best=scan;
+    }
+    if(phone&&overlap(best)>0){
+      // Beside Kali (r22b: at mid height, was the bottom edge), keep the same 44px dismissal target.
       const kali=$('magicianMini').getBoundingClientRect(),available=r.right-kali.right-16;
-      if(available>=120){host.style.width=`${Math.min(250,available)}px`;const rh=host.getBoundingClientRect().height,rw=host.getBoundingClientRect().width;const beside={x:r.right-rw-8,y:r.bottom-rh-8,edge:'bottom'};const hits=protectedRects.some(z=>beside.x<z.right&&beside.x+rw>z.left&&beside.y<z.bottom&&beside.y+rh>z.top);if(!hits)best=beside;}
+      if(available>=120){const kept=host.style.width;host.style.width=`${Math.min(250,available)}px`;const rh=host.getBoundingClientRect().height,rw=host.getBoundingClientRect().width;const beside={x:r.right-rw-8,y:(innerHeight-rh)/2,edge:'middle'};const hits=protectedRects.some(z=>beside.x<z.right&&beside.x+rw>z.left&&beside.y<z.bottom&&beside.y+rh>z.top);if(!hits)best=beside;else host.style.width=kept;} // r25 C-1: a rejected beside spot must not leave its wider box on the chosen candidate
     }
     host.dataset.edge=best.edge;host.style.left=`${(best.x-stage.left)/scale}px`;host.style.top=`${(best.y-stage.top)/scale}px`;host.style.bottom='auto';
 

@@ -106,19 +106,23 @@
       const currency = { coins: '🪙 동전', keys: '📕 책', starlight: '🕊️ 비둘기' }[info.currency];
       const status=nodeStatus(selected,info);
       detail.dataset.state=status.kind;
-      detail.append(element('strong', maxed ? '✓ MAX · 완성했어요' : `${currency} ${C.formatNumber(info.cost)}`, 'tree-cost'));
+      if (maxed) detail.append(element('strong', '✓ MAX · 완성했어요', 'tree-cost'));
+      else {
+        const buy = action(`${currency} ${C.formatNumber(info.cost)}`, () => {
+          const paid = state[info.currency];
+          if (!C.buyNode(state, selected.id)) return;
+          if(newTutorialLesson()&&chainMark()?.step==='upgrade-play'&&selected.id===chainNodeId&&!state.u15.bios.includes('lesson:bought'))state.u15.bios.push('lesson:bought');
+          // s4e2 G: the answer comes inside the 비법서 (node pop, rising tone, wallet counting down); no late toast after closing.
+          tutorialSignal('learn'); sound('learn'); save(); tree(); render(); learnedMoment(selected.id, info.currency, paid);
+        }, !info.purchasable);
+        buy.classList.add('tree-cost', 'tree-buy');
+        buy.type = 'button';
+        buy.setAttribute('aria-label', `배우기, ${status.currency} ${C.formatNumber(info.cost)}`);
+        detail.append(buy);
+      }
       if(status.kind==='unaffordable')detail.append(element('p',`${status.currency} ${C.formatNumber(status.missing)} 부족`,'tree-missing'));
       if (!maxed && info.blockedReason) detail.append(element('p', info.blockedReason, 'tree-reason'));
       if (info.gate) detail.append(element('p', info.gate.text, 'tree-gate'));
-      const buy = action('배우기', () => {
-        const paid = state[info.currency];
-        if (!C.buyNode(state, selected.id)) return;
-        if(newTutorialLesson()&&chainMark()?.step==='upgrade-play'&&selected.id===chainNodeId&&!state.u15.bios.includes('lesson:bought'))state.u15.bios.push('lesson:bought');
-        // s4e2 G: the answer comes inside the 비법서 (node pop, rising tone, wallet counting down); no late toast after closing.
-        tutorialSignal('learn'); sound('learn'); save(); tree(); render(); learnedMoment(selected.id, info.currency, paid);
-      }, !info.purchasable);
-      buy.classList.add('tree-buy');
-      if (!maxed) detail.append(buy); // fixP 4: a finished 비법 shows only 「MAX · 완성했어요」, no disabled 배우기
     }
     if (typeof phone !== 'undefined' && phone) {
       detail.hidden = !treeView.sheet;
@@ -208,7 +212,7 @@
       const picked = world.querySelector('.constellation-node.selected'), m = map.getBoundingClientRect(), r = picked && picked.getBoundingClientRect();
       if (r && (r.left < m.left || r.right > m.right)) { treeView.x += (m.left + m.width / 2) - (r.left + r.width / 2); transform(); }
     }
-    if (focusMap) map.focus({ preventScroll: true });
+    if (focusMap) (detail.querySelector('.tree-buy:not([disabled])') || map).focus({ preventScroll: true });
   }
   let pendingIntro = null;
   function venueHeckles(venue) {

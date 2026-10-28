@@ -86,8 +86,18 @@
   let saveStore = null, loaded0 = false, repairedSave = false, recoveredSave = false, refundedCoins = 0, refundedKeys = 0;
   let state = C.newGame(Date.now() >>> 0);
   const launchQuery = new URLSearchParams(location.search);
+  // A one-navigation launch token lives in the URL, never in serialized state.
+  const titleLaunchPending = !(navigator.webdriver && launchQuery.get('title') !== '1') && launchQuery.get('_titleStart') !== '1';
+  if (launchQuery.has('_titleStart')) {
+    const url = new URL(location.href); url.searchParams.delete('_titleStart');
+    try { history.replaceState(null, '', url.href); } catch (error) { /* Cosmetic URL cleanup. */ }
+  }
   let seasonReset = false;
-  try {
+  if (titleLaunchPending) {
+    // Do not migrate, repair or overwrite a save before the player chooses a path.
+    try { saveStore = C.createSaveStore(localStorage); newerSave = C.isNewerSave(localStorage.getItem(KEY)); }
+    catch (error) { inaccessible = true; }
+  } else try {
     // v4 U45: one-time test-season reset before anything reads the save (see Core.applySaveEpoch and CONST.saveEpoch).
     try { seasonReset = C.applySaveEpoch(localStorage).reset; } catch (error) { /* storage blocked: the store below reports it */ }
     saveStore = C.createSaveStore(localStorage);
@@ -105,7 +115,7 @@
   } catch (error) { inaccessible = true; }
   // ?restore=1: one-tap automatic restore of the most progressed backup, before anything can save over it.
   let restoreNoBetter = false;
-  if (launchQuery.get('restore') === '1' && saveStore && !inaccessible) {
+  if (!titleLaunchPending && launchQuery.get('restore') === '1' && saveStore && !inaccessible) {
     try {
       const rank = (s) => [s.dimension|0, s.stage|0, typeof s.coins === 'number' && isFinite(s.coins) ? s.coins : 0, s.date|0];
       const better = (a, b) => { for (let i = 0; i < a.length; i++) { if (a[i] !== b[i]) return a[i] > b[i]; } return false; };
@@ -203,7 +213,8 @@
       const timer = setTimeout(done, ms); slotSaveWake = done;
     });
   }
-  function openSaveSlots() {
+  function openSaveSlots(loadOnly = false) {
+    loadOnly = loadOnly === true; // Menu click events keep the normal save-and-load mode.
     if (slotSavePending) return;
     release(); $('phoneMore').hidden = true; $('moreButton').setAttribute('aria-expanded', 'false');
     openPanel('saveslots', '저장 칸');
@@ -263,7 +274,7 @@
             if (leaving) { leavePending = false; if ($('panel').hidden && $('leaveConfirm').hidden) showLeaveConfirm(true); }
             return;
           }
-          openSaveSlots();
+          openSaveSlots(loadOnly);
           if (leaving) { leavePending = false; closePanel(); showLeaveConfirm(true); }
         }, inaccessible || newerSave || restoring);
         const loadButton = action('불러오기', () => {
@@ -275,16 +286,18 @@
           try {
             const latest = SaveSlots.read(localStorage, n).slot;
             if (!latest || latest.data !== slot.data || latest.savedAt !== slot.savedAt) {
-              openSaveSlots(); toast('저장 칸이 바뀌었어요. 다시 골라 주세요'); return;
+              openSaveSlots(loadOnly); toast('저장 칸이 바뀌었어요. 다시 골라 주세요'); return;
             }
             if (!SaveSlots.restore(localStorage, saveStore, latest)) { status.textContent = '불러올 수 없어요'; return; }
             restoring = true;
             const url = new URL(location.href); url.searchParams.delete('restore'); url.searchParams.set('restored', '1');
+            if (loadOnly) url.searchParams.set('_titleStart', '1');
             location.replace(url.href);
           } catch (error) { status.textContent = '불러오기를 마치지 못했어요. 백업을 확인해 주세요'; }
         }, !slot || inaccessible || newerSave || restoring || !saveStore);
         for (const button of [saveButton, loadButton]) { button.dataset.label = button.textContent; buttons.push(button); }
-        controls.append(saveButton, loadButton); row.append(controls); body.append(row);
+        if (!loadOnly) controls.append(saveButton);
+        controls.append(loadButton); row.append(controls); body.append(row);
       }
     } catch (error) { status.textContent = '저장 칸을 읽을 수 없어요'; }
     body.append(status);

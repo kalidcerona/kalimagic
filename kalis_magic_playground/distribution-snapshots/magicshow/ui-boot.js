@@ -1,4 +1,5 @@
 'use strict';
+  titleScreen();
   window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installPrompt=e;});
   function installGuide() {
     installGuideShown = true;
@@ -38,7 +39,7 @@
   let lastRun = 0;
   function loop(now) {
     // U29: nothing runs while hidden; when paused with no effects on screen, 30 fps is enough.
-    if (document.hidden) { previous = 0; requestAnimationFrame(loop); return; }
+    if (titleLaunchPending || document.hidden) { previous = 0; requestAnimationFrame(loop); return; }
     // U35: 60 fps cap (120 Hz phones ran the whole render twice as often); a quiet stage (paused, or nothing drawn and no held press) idles at 30 fps.
     const quiet = !particles.length && !flights.length && !numbers.length && !badges.length && (paused() || !boardHolds.length);
     if (now - lastRun < (quiet ? 30 : 14)) { requestAnimationFrame(loop); return; }
@@ -89,6 +90,7 @@
     if (practiceOn && !document.hidden) requestPracticeWake();
     if (!document.hidden) requestScreenWake();
     $('feverOverlay').classList.toggle('fever-paused',document.hidden||paused()||state.mode!=='fight');
+    if (titleLaunchPending) return;
     if(document.hidden){C.markAway(state,Date.now());save();}
     else {receiveOffline(Date.now());save();showOffline();}
   });
@@ -155,19 +157,20 @@
   $('banner').addEventListener('click',()=>{if(phone)presentation.finish();});
   let periodicSavePending = false;
   setInterval(() => {
-    if (periodicSavePending) return;
+    if (titleLaunchPending || periodicSavePending) return;
     if (document.hidden || typeof window.requestIdleCallback !== 'function') { save(); return; }
     periodicSavePending = true;
     window.requestIdleCallback(() => { periodicSavePending = false; save(); }, {timeout:1000});
   }, 5000);
   setInterval(() => {
-    if (newerSave || restoring || !saveStore) return;
+    if (titleLaunchPending || newerSave || restoring || !saveStore) return;
     try { saveStore.rollingBackup(); } catch (error) { /* Keep the current save when backup storage is full. */ }
   }, 300000);
   // Stable screen/audio integration hooks for U4 and U5.
   window.MagicShowUI = {
     // Read-only deployment signal: paused menus are safe; active stories, games and animation beats are not.
     isRestScreen: () => {
+      if (titleLaunchPending) return true;
       const visible = id => { const node = $(id); return !!node && !node.hidden; };
       if (document.hidden || state.u15.scene || state.u15.queue.length || state.batchD.twist.scene ||
           state.u15.tutorial.active || chainFighting || dealerBusy || (menu === 'dealer' && dealerGameView) ||
@@ -198,8 +201,8 @@
   revealEnding = state.mode === 'ending' && state.endings.length === 1;
   updateSoundButton();
   initIdleControls();
-  receiveOffline(Date.now());
-  const launchSaved = save();
+  if (!titleLaunchPending) receiveOffline(Date.now());
+  const launchSaved = !titleLaunchPending && save();
   for(const name of ['ui-panel','ui-panel-inner','ui-button','ui-button-pressed','ui-button-primary','ui-button-disabled','ui-bar-frame','ui-bar-frame-main','ui-board-cell','ui-board-cell-next','ui-top-bar','ui-dialog']){
     const image=assetImage('assets/ui/'+name+'.png');const failed=()=>document.body.classList.add('missing-'+name);if(image.complete&&!image.naturalWidth)failed();else image.addEventListener('error',failed,{once:true});
   }
@@ -229,8 +232,10 @@
   for (const el of [document.querySelector('.stats'), document.querySelector('.hud'), $('coffeeButton')]) pxIcons(el);
   { const iconize = list => { for (const m of list) for (const n of m.addedNodes) if (n.nodeType === 1 ? !n.classList.contains('px-icon') : n.nodeType === 3) pxIcons(n.nodeType === 1 ? n : n.parentElement); };
     for (const root of [$('panelBody'), $('phoneMore'), $('panel').querySelector('header')]) if (root) { pxIcons(root); new MutationObserver(iconize).observe(root, { childList: true, subtree: true }); } }
+  fit();
+  if (!titleLaunchPending) {
   owedCurtainCall(); // curtain fix: before the first render, which would start the 공연 뒤 lines
-  fit(); render(); showOffline();
+  render(); showOffline();
   if(state.u18.map)openStageMap();
   if (typeof markPassedHints === 'function') markPassedHints(); // s5c: a save past venue 1 never gets a burst of first-use hints
   if (C.twistLoadIntro && C.twistLoadIntro(state)) save(); // s5t: an old save mid-fight at the meetup headliner, before the twist began, starts with its intro
@@ -258,22 +263,82 @@
     if (restoreNoBetter && saveStore && !inaccessible) $('panelBody').prepend(element('p','지금 저장이 가장 많이 진행된 저장이에요'));
   }
   if (inaccessible) toast('저장을 사용할 수 없어요. 공연은 계속돼요');
-  // U36 TEMPORARY title screen (owner art). It is plain markup in index.html (first paint). It fades out (250 ms, none under Reduce Motion) once the
-  // game is ready and at least 1.2 s have passed since the page started, or at once on a tap. It never touches the game state, saves or the
-  // install prompt. Browser automation (navigator.webdriver) skips it unless the URL has ?title=1, so tests and capture tools see the game directly.
-  (function titleScreen() {
-    const title = document.getElementById('titleScreen');
-    if (!title) return;
-    if (navigator.webdriver && launchQuery.get('title') !== '1') { title.remove(); return; }
-    let leaving = false;
-    const hide = () => {
-      if (leaving) return; leaving = true;
-      if (reduced) { title.remove(); return; }
-      title.classList.add('leaving'); setTimeout(() => title.remove(), 300);
+  }
+  // Title navigation owns only transient UI state. Every chosen path reloads through normal boot.
+  function titleScreen() {
+    const title = $('titleScreen');
+    if (!titleLaunchPending) { title?.remove(); return; }
+    const gameSave = save;
+    save = () => false; // Includes panel-close and integration calls while the title owns the page.
+    const viewport = $('viewport'), actions = $('titleActions'), confirm = $('titleNewConfirm');
+    viewport.inert = true;
+    let progress = false, hasSlots = false, leaving = false;
+    try {
+      progress = localStorage.getItem(KEY) !== null;
+      for (let n = 1; n <= 3; n++) if (SaveSlots.read(localStorage, n).slot) hasSlots = true;
+    } catch (error) { /* A player with blocked storage can still start a new game. */ }
+    $('titleContinue').hidden = !progress;
+    $('titleLoad').hidden = !hasSlots;
+    const focusAction = () => [...actions.querySelectorAll('button')].find(b => !b.hidden)?.focus();
+    const enter = (fresh = false) => {
+      if (leaving) return;
+      try {
+        if (fresh) {
+          if (newerSave) throw new Error('Newer save');
+          state = C.newGame(Date.now() >>> 0);
+          // Reuse the existing new-game factory and normal save writer, with no custom state fields.
+          if (saveStore && !inaccessible && !gameSave()) throw new Error('Save failed');
+        }
+        leaving = true;
+        for (const button of title.querySelectorAll('button')) button.disabled = true;
+        const url = new URL(location.href); url.searchParams.delete('restore'); url.searchParams.delete('restored');
+        url.searchParams.set('_titleStart', '1');
+        const start = () => { restoring = true; location.replace(url.href); };
+        if (reduced) start();
+        else { title.classList.add('leaving'); setTimeout(start, 250); }
+      } catch (error) {
+        $('titleStatus').textContent = newerSave ? '새 버전의 저장이에요. 새 버전에서 열어 주세요.' : '시작할 수 없어요. 저장 공간을 확인하고 다시 눌러 주세요.';
+      }
     };
-    title.addEventListener('pointerdown', hide);
-    setTimeout(hide, Math.max(0, 1200 - performance.now()));
-  })();
+    $('titleContinue').addEventListener('click', () => enter());
+    $('titleNew').addEventListener('click', () => {
+      if (!progress) { enter(true); return; }
+      actions.hidden = true; confirm.hidden = false; $('titleNewCancel').focus();
+    });
+    const cancel = () => { confirm.hidden = true; actions.hidden = false; $('titleNew').focus(); };
+    $('titleNewCancel').addEventListener('click', cancel);
+    $('titleNewYes').addEventListener('click', () => enter(true));
+    $('titleLoad').addEventListener('click', () => {
+      title.hidden = true; viewport.inert = false;
+      for (const child of $('stage').children) if (child !== $('panel')) child.inert = true;
+      fit(); openSaveSlots(true);
+    });
+    const returnToTitle = () => {
+      menu = ''; $('panel').hidden = true; previous = 0;
+      title.hidden = false; viewport.inert = true; $('titleLoad').focus();
+    };
+    $('closePanel').addEventListener('click', e => {
+      if (!title.hidden) return;
+      e.preventDefault(); e.stopImmediatePropagation(); returnToTitle();
+    }, true);
+    // Capture shortcuts before game handlers; keep native button activation and trap focus in this dialog.
+    document.addEventListener('keydown', e => {
+      if (!titleLaunchPending) return;
+      if (!title.hidden) {
+        e.stopImmediatePropagation();
+        if (e.key === 'Escape' && !confirm.hidden) { e.preventDefault(); cancel(); }
+        if (e.key === 'Tab') {
+          const buttons = [...title.querySelectorAll('button')].filter(b => !b.disabled && !b.closest('[hidden]'));
+          const first = buttons[0], last = buttons[buttons.length - 1];
+          if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last?.focus(); }
+          else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first?.focus(); }
+        }
+      } else if (e.key === 'Escape') {
+        e.preventDefault(); e.stopImmediatePropagation(); returnToTitle();
+      } else if (!['Tab','Enter',' '].includes(e.key)) e.stopImmediatePropagation();
+    }, true);
+    focusAction();
+  }
   // v4 U47 6: leaving the game. A history guard entry (pushed at the first tap, because browsers skip entries made without a user gesture) turns the first
   // Back press (Android back, browser back, PWA back) into the in-game panel "저장하고 나갈까요?". The guard is not re-armed behind it, so a second Back
   // press at the page's first entry leaves natively (the browser exits or goes to the previous page; a page cannot close an installed app by itself).
@@ -294,7 +359,7 @@
     if (!guardOn || leaveGo) return;
     guardOn = false; showLeaveConfirm();
   });
-  document.addEventListener('pointerdown', () => { if (!guardOn && !leaveGo && $('leaveConfirm').hidden) armLeaveGuard(); }, true);
+  document.addEventListener('pointerdown', () => { if (!titleLaunchPending && !guardOn && !leaveGo && $('leaveConfirm').hidden) armLeaveGuard(); }, true);
   $('leaveStay').addEventListener('click', () => { $('leaveConfirm').hidden = true; leavePending = false; armLeaveGuard(); });
   $('leaveSave').addEventListener('click', () => { $('leaveConfirm').hidden = true; openSaveSlots(); leavePending = true; });
   $('leaveNow').addEventListener('click', () => {
@@ -306,7 +371,7 @@
     }, 500);
   });
   window.addEventListener('beforeunload', e => {
-    if (restoring || leaveGo) return;
+    if (titleLaunchPending || restoring || leaveGo) return;
     save();
     let newest = lastSlotSaveAt;
     for (let n = 1; n <= 3; n++) { try { newest = Math.max(newest, SaveSlots.read(localStorage, n).slot?.savedAt || 0); } catch (error) { /* unreadable slot */ } }
@@ -320,5 +385,5 @@
   const audienceTextObserver = new MutationObserver(() => syncFlags());
   for (const id of ['audienceLine', 'patternLabel', 'phaseIndicator', 'toasts']) audienceTextObserver.observe($(id), { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['hidden'] });
   updateTextSpeedButton();
-  mountRound8();
+  if (!titleLaunchPending) mountRound8();
   requestAnimationFrame(loop);

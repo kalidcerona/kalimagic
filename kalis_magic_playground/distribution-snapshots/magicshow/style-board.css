@@ -205,10 +205,12 @@ html body.phone:not(.tablet):not(.portrait-layout) #viewport#viewport #stage#sta
    three corners). Bought pads keep their own art. */
 html body #viewport#viewport #stage#stage#stage#stage#stage #boardCard #board[data-pad-path$="floor-wood-512.webp"] {
   background-color:#63372f !important;
-  background-image:url('assets/kit/prop-cards.webp'),url('assets/kit/prop-coins.webp'),url('assets/kit/prop-mat.webp'),url('assets/kit/light-pool.webp'),url('assets/kit/board-wood.webp') !important;
-  background-repeat:no-repeat,no-repeat,no-repeat,no-repeat,repeat !important;
-  background-size:48px 32px,32px 24px,80px 56px,92% 92%,256px 256px !important;
-  background-position:left 20px bottom 18px,right 26px top 26px,left 4px bottom 6px,center,left top !important;
+  /* r22b (owner 10-28: 「왼쪽 하단에 카드 패드, 우측 상단에 동전 안 보이는 게 이쁜 거 같아.」): the felt mat with the card fan and the coin stack props are
+     dropped from the wood pad (background layers only; no flight starts or lands on them). */
+  background-image:url('assets/kit/light-pool.webp'),url('assets/kit/board-wood.webp') !important;
+  background-repeat:no-repeat,repeat !important;
+  background-size:92% 92%,256px 256px !important;
+  background-position:center,left top !important;
   background-origin:border-box !important; background-clip:border-box !important; image-rendering:pixelated;
 }
 html body #viewport#viewport #stage#stage#stage#stage#stage #boardCard #board::before {
