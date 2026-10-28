@@ -284,6 +284,6 @@ Module.expectedDataFileDownloads++;
     }
 
   }
-  loadPackage({"package_uuid":"plan-b-cafe-2764d3aa7974839cd7f86e7f5034e92604b11ff0223054957874465ab99d406d","remote_package_size":3697952,"files":[{"filename":"/game.love","crunched":0,"start":0,"end":3697952,"audio":false}]});
+  loadPackage({"package_uuid":"plan-b-cafe-cf6e2859c6cdbfb564bf9ab0ba9b873244a603c2d56a77e24fd9995071dc5873","remote_package_size":3708947,"files":[{"filename":"/game.love","crunched":0,"start":0,"end":3708947,"audio":false}]});
 
 })();

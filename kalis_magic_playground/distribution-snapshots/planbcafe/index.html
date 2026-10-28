@@ -31,14 +31,14 @@
         border: 2px solid #8c6b52; border-radius: 12px; font: 14px/1.4 sans-serif; }
       #install-hint[hidden], #install-button[hidden] { display: none; }
       #install-hint button { min-height: 44px; min-width: 44px; font: inherit; margin-left: 8px; }
-      #update-prompt { position: fixed; z-index: 20; left: 50%; top: 50%; transform: translate(-50%, -50%);
+      #update-prompt, #install-help { position: fixed; z-index: 20; left: 50%; top: 50%; transform: translate(-50%, -50%);
         width: min(420px, calc(100% - 32px)); box-sizing: border-box; padding: 20px;
         color: #33241a; background: #f7f0e0; border: 2px solid #8c6b52; border-radius: 14px;
         font: 16px/1.5 -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; text-align: center; }
-      #update-prompt[hidden] { display: none; }
-      #update-prompt h2 { margin: 0 0 8px; font-size: 21px; }
-      #update-prompt p { margin: 0 0 16px; }
-      #update-prompt button { width: 100%; min-height: 52px; margin-top: 8px; font: inherit; font-weight: 700;
+      #update-prompt[hidden], #install-help[hidden] { display: none; }
+      #update-prompt h2, #install-help h2 { margin: 0 0 8px; font-size: 21px; }
+      #update-prompt p, #install-help p { margin: 0 0 16px; word-break: keep-all; }
+      #update-prompt button, #install-help button { width: 100%; min-height: 52px; margin-top: 8px; font: inherit; font-weight: 700;
         color: #33241a; background: #fffaf0; border: 1px solid #8c6b52; border-radius: 9px; }
     </style>
   </head>
@@ -49,6 +49,11 @@
       <p>지금 업데이트할까요? 저장한 진행은 그대로예요.</p>
       <button id="update-now">지금 업데이트</button>
       <button id="update-later">나중에</button>
+    </section>
+    <section id="install-help" role="dialog" aria-modal="true" aria-labelledby="install-help-title" hidden>
+      <h2 id="install-help-title">홈 화면에 설치</h2>
+      <p id="install-help-text"></p>
+      <button id="install-help-close">닫기</button>
     </section>
     <aside id="install-hint" hidden><span id="install-text"></span><button id="install-button" hidden>설치</button><button id="dismiss-hint" aria-label="설치 안내 닫기">닫기</button></aside>
     <canvas id="canvas" width="1280" height="720" oncontextmenu="event.preventDefault()"></canvas>
@@ -72,9 +77,11 @@
         dismissed = true; installHint.hidden = true;
         try { localStorage.setItem("planb-install-dismissed", "yes"); } catch (_) {}
       };
+      // Keep the event for the in-game 「홈 화면에 설치」 button. Chrome's own install
+      // banner is only suppressed while this page shows its own install button.
       window.addEventListener("beforeinstallprompt", function (event) {
-        event.preventDefault(); installEvent = event;
-        if (!installed && !dismissed) { installButton.hidden = false; installHint.hidden = false; }
+        installEvent = event;
+        if (!installed && !dismissed) { event.preventDefault(); installButton.hidden = false; installHint.hidden = false; }
       });
       installButton.onclick = function () {
         if (!installEvent) return;
@@ -82,6 +89,51 @@
         installEvent.userChoice.then(function () { installEvent = null; installButton.hidden = true; });
       };
       window.addEventListener("appinstalled", function () { installed = true; installHint.hidden = true; });
+
+      // In-game 「더 보기」 → 「홈 화면에 설치」 calls love.system.openURL("planb:install");
+      // love.js 11.4.1 implements openURL as window.open(url), so the page catches that URL.
+      var installHelp = document.getElementById("install-help");
+      function showInstallHelp(message) {
+        document.getElementById("install-help-text").textContent = message;
+        installHelp.hidden = false;
+        document.getElementById("install-help-close").focus();
+      }
+      function closeInstallHelp() { installHelp.hidden = true; window.focus(); }
+      document.getElementById("install-help-close").onclick = closeInstallHelp;
+      installHelp.onkeydown = function (event) {
+        if (event.key === "Escape") { event.preventDefault(); closeInstallHelp(); }
+      };
+      function runningAsApp() {   // browser fullscreen (Fullscreen API) is not the home screen app
+        return window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true ||
+          (window.matchMedia("(display-mode: fullscreen)").matches && !document.fullscreenElement);
+      }
+      var MANUAL_STEPS = ios ?
+        "Safari 아래쪽 공유 버튼 → 「홈 화면에 추가」를 눌러 주세요." :
+        "Chrome 오른쪽 위 메뉴 ⋮ → 「홈 화면에 추가」 또는 「앱 설치」를 눌러 주세요. " +
+        "이미 설치되었다고 나오면 홈 화면이나 앱 목록의 「플랜비 카페」 아이콘으로 열어 주세요.";
+      var ALREADY_INSTALLED = "이미 설치되어 있어요. 홈 화면이나 앱 목록의 「플랜비 카페」 아이콘으로 열어 주세요.";
+      function requestInstall() {
+        if (runningAsApp()) { showInstallHelp("이미 홈 화면 앱으로 실행 중이에요."); return; }
+        if (installEvent) {
+          var event = installEvent;
+          installHelp.hidden = true;
+          new Promise(function (resolve) { resolve(event.prompt()); }).then(function () {
+            return event.userChoice;
+          }).then(function () {
+            if (installEvent === event) { installEvent = null; installButton.hidden = true; }
+          }).catch(function () { installEvent = null; showInstallHelp(MANUAL_STEPS); });
+          return;
+        }
+        if (!navigator.getInstalledRelatedApps) { showInstallHelp(MANUAL_STEPS); return; }
+        navigator.getInstalledRelatedApps().then(function (apps) {
+          showInstallHelp(apps && apps.length ? ALREADY_INSTALLED : MANUAL_STEPS);
+        }).catch(function () { showInstallHelp(MANUAL_STEPS); });
+      }
+      var openWindow = window.open;
+      window.open = function (url) {
+        if (String(url) === "planb:install") { requestInstall(); return null; }
+        return openWindow.apply(window, arguments);
+      };
       var updatePrompt = document.getElementById("update-prompt");
       var startGame = null;
       var startRequested = false;
@@ -202,7 +254,7 @@
 
       // No page scroll, zoom or long-press menu; taps go to the game.
       ["touchstart", "touchmove", "touchend", "gesturestart"].forEach(function (name) {
-        document.addEventListener(name, function (e) { if (!e.target.closest("#install-hint, #update-prompt") && e.cancelable) e.preventDefault(); }, { passive: false });
+        document.addEventListener(name, function (e) { if (!e.target.closest("#install-hint, #update-prompt, #install-help") && e.cancelable) e.preventDefault(); }, { passive: false });
       });
       window.addEventListener("keydown", function (e) {
         if ([32, 37, 38, 39, 40].indexOf(e.keyCode) > -1) e.preventDefault();
