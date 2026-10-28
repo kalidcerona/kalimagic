@@ -1,0 +1,168 @@
+/* style-stage-meters.css: doubt and heckle gauges, pattern label, phase/telegraph, crowd and stage number. (CSS regroup 10-28)
+ * Earlier or later rules for the same elements may also sit in style-base.css (early layer) and
+ * style-overrides-*.css (late layer) when the cascade needs them there. */
+.attack{position:absolute;left:20px;top:60px;z-index:5;display:flex;gap:12px;align-items:center;font-size:33px}.next{font-size:22px;color:#f4d8ac;line-height:1.6}.next span{color:var(--yellow)}
+.heckle:after{content:"";position:absolute;bottom:-14px;left:50%;width:16px;height:16px;background:#211713;border-right:4px solid #ffcb58;border-bottom:4px solid #ffcb58;transform:rotate(45deg)}.telegraph .heckle{visibility:visible}
+#crowd{position:absolute;left:98px;top:228px;width:440px;height:296px;z-index:1;overflow:hidden;opacity:.65}
+#crowdLabel{position:absolute;left:212px;top:174px;width:266px;text-align:center;font-size:22px;color:#fff2ce;text-shadow:2px 2px #000;z-index:3}
+.telegraph .attack{color:#ff9262}
+.attack{top:62px;gap:10px;align-items:center}.attack>span:first-child{font-size:33px;width:34px;flex:none}.next{margin-left:12px;font-size:22px;line-height:1.45;background:#16131bdd;padding:3px 8px}
+#crowdLabel{left:238px;top:98px;width:300px;background:#171319da;padding:4px 10px;z-index:4}
+#patternLabel{position:absolute;left:240px;top:165px;width:290px;z-index:6;text-align:center;font-size:22px;color:#cfe8ff;background:#101323e6;padding:8px;border:2px solid #86b9ec}
+#patternLabel:empty{display:none}
+#patternLabel{top:588px}
+#crowd.asset-ready{opacity:.85}
+#phaseIndicator{position:absolute;left:152px;top:132px;width:390px;padding:9px;text-align:center;border:2px solid #edc8ff;background:#190e2aed;color:#f2deff;font-size:22px;z-index:6}
+.boss-mirror #phaseIndicator{border-color:#ffe278;color:#ffe278}
+#crowd,#crowd.asset-ready{left:134px;top:342px;width:440px;height:296px;transform:scale(.62);transform-origin:50% 100%;opacity:.65;filter:brightness(.72);z-index:1}
+.attack{left:12px;top:58px;padding:6px;gap:8px;font-size:22px}
+.attack .next{margin-left:0;background:transparent;padding:0;font-size:11px}
+#crowdLabel{top:98px}
+.board .cell.empty:not(.locked) .spawn-timer{display:flex}
+#crowd,#crowd.asset-ready{width:272px;height:184px;left:218px;top:454px;transform:none}
+.phone .venue-heading .stage-number{font-size:11px}
+.phone #board .cell .spawn-timer{left:calc(50% - 12px);top:4px;width:24px;height:24px;font-size:11px;border-width:1px}
+.phone #doubtTitle{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.phone #doubtNumber{font-size:11px}
+.phone .attack{left:52%;right:6px;top:40px;width:auto;padding:3px;gap:4px;font-size:11px;border-width:1px;height:40px}
+.phone .attack>span:first-child{font-size:11px;width:auto}
+
+.phone .attack .next{font-size:11px;line-height:14px;white-space:nowrap;margin-left:auto}
+.phone #countdown{font-size:11px}
+.phone #patternLabel,.phone #phaseIndicator{left:8px;top:38px;width:42%;padding:2px;font-size:11px;line-height:13px;border-width:1px;max-height:40px;overflow:hidden}
+.phone #phaseIndicator{top:80px}
+.phone .heckle,.phone .telegraph .heckle{left:8px;top:40px;max-width:44%;padding:4px;font-size:11px;border-width:2px}
+/* visualViewport may shrink without changing CSS media-query height. */
+.phone.phone-tight .attack{top:38px;height:32px}
+.phone #phoneVenue .stage-number{font-size:10px;flex:none}
+.phone #doubtNumber{font-size:10px}
+.phone #patternLabel,.phone #phaseIndicator{left:138px;right:4px;top:30px;width:auto;font-size:10px;max-height:32px;z-index:5}.phone #patternLabel:empty{display:none}
+.phone #patternLabel{left:6px;right:auto;top:50px;width:calc(40% - 12px);max-height:32px;line-height:12px}
+.phone #phaseIndicator{left:6px;right:auto;top:30px;width:calc(40% - 12px);max-height:16px;line-height:14px}
+.phone #doubtTitle{font-size:9px;letter-spacing:-.3px;flex:none}
+#stage :is(.venue-name,.spotlight,#audienceLine,#patternLabel,#phaseIndicator,.heckle){text-shadow:1px 1px #100D16}
+.phone #phoneVenue .stage-number{color:var(--brass)}
+.phone #stage .doubt-label,.phone #stage #doubtNumber{font-size:11px;letter-spacing:0;line-height:16px}
+.phone #stage #doubtTitle{font-size:11px;letter-spacing:0;min-width:0;flex:1}
+#futureTelegraph[hidden]{display:none}
+.phone #futureTelegraph{left:6px;top:86px;width:calc(40% - 12px);padding:4px;font-size:10px;line-height:13px}
+.boo-scene #heckle{display:block;opacity:1;max-width:90%;white-space:normal}
+.boo-scene #heckle{visibility:visible;left:5%;top:24px;font-size:12px;line-height:18px}
+#heckleMeter{position:absolute;left:8px;right:8px;bottom:3px;height:3px;background:#45343b;pointer-events:none}
+#heckleMeter span{display:block;height:100%;background:#b59470;transform-origin:left;transition:background 220ms var(--motion-in)}
+.telegraph #heckleMeter span{background:#d77b68;animation:u23-warning 600ms var(--motion-in) 1}
+.phone #stage .heckle-meter{left:6px;right:6px;top:29px;width:auto;height:18px}
+.phone #stage .heckle-label{font-size:10px;line-height:16px}
+#stage #heckleMeter.imminent{border-color:#e6a66a;animation:hecklePulse 600ms var(--motion-in) 1}
+@media(prefers-reduced-motion:reduce){#stage #heckleMeter.imminent{animation:none}.board-worker.worker-travel:before{display:none}}
+#stage #heckleMeter{top:46px;bottom:auto;height:20px;left:12px;right:12px;width:auto;pointer-events:none}
+.phone #stage #heckleMeter{top:29px;bottom:auto;height:18px;left:6px;right:6px}
+#stage #heckleMeter{top:40px;height:16px;border:3px solid #A68A58;border-image:url('assets/ui/ui-bar-frame.webp') 3 fill / 3px / 0 stretch;background:#17141F;box-sizing:border-box;border-radius:0}
+#stage #heckleFill{background:#A68A58 url('assets/ui/ui-bar-fill-heckle.webp') repeat-x;background-size:48px 30px}
+#stage #heckleMeter .heckle-label{font-size:8px;line-height:10px}
+.phone #stage .doubt{top:4px;height:24px}
+.phone #stage #heckleMeter .heckle-label{display:none}
+#stage .doubt-label :is(#doubtNumber,.bitmap){font-family:Galmuri11,sans-serif}
+.phone #stage #heckleMeter .heckle-label{display:flex;justify-content:space-between;font-size:9px;line-height:10px;padding:0 4px}
+/* v4 U38: the heckle bar shows how hard the heckling is per second ("야유 120/초"); the doubt bar shows regrowth ("회복 120만/초") when there is any. */
+.phone #stage #heckleMeter #attackNumber{display:inline;flex:none;font-weight:700;color:#FFD9A8}
+#stage #doubtRegen{flex:none;margin:0 6px 0 auto;font-size:10px;line-height:16px;color:#FFD27A;font-weight:700}
+.phone #stage #heckleMeter .heckle-label span{background:none;color:#F2E6C8}
+.tablet #stage #phoneVenue .stage-number{font-size:15px}
+.tablet #stage .doubt{height:30px}
+.tablet #stage .doubt-label{font-size:16px;line-height:22px}
+.tablet #stage #heckleMeter .heckle-label{font-size:13px;line-height:14px}
+.phone #stage #audienceCard #phaseIndicator{top:50px;max-height:20px}
+.phone #stage #audienceCard #patternLabel{top:72px;max-height:44px}
+.phone #stage #audienceCard.f-line-over #patternLabel{left:42%;right:6%;width:auto}
+.tablet #stage #audienceCard #phaseIndicator{top:64px;max-height:24px}
+.tablet #stage #audienceCard #patternLabel{top:92px}
+/* Compact and tight heights: when the dialog bubble and the pattern label would collide, the label drops to the right column above the toast lane (below the face) instead of sitting over the head. */
+.phone-compact #stage #audienceCard.f-line-over #patternLabel{top:auto;bottom:118px}
+.phone-low #stage #audienceCard #phaseIndicator{top:46px;max-height:20px;line-height:14px;width:auto;max-width:calc(100% - 12px);white-space:nowrap}
+.phone-xshort #stage #audienceCard #phaseIndicator{display:none}
+.phone-xshort #stage #audienceCard #patternLabel{left:42%;right:6%;width:auto;top:auto;bottom:118px}
+.phone-narrow #stage #audienceCard #phaseIndicator{width:auto;max-width:calc(100% - 12px);white-space:nowrap}
+.phone #viewport #stage :is(#stageNumber,.goal-cost,.shield-label,.constellation-level,.fan-stamp){font-size:var(--fs-s)}
+#viewport #stage .venue-heading #stageNumber{color:#f0c9a0;opacity:.9;flex:none}
+/* far left: the doubt as a vertical applause meter (name plate on top) and the 야유 bar beside it; the bars are turned upright, the plates are siblings (ui.js U50) */
+.phone #viewport #stage #audienceCard .doubt{left:8px!important;right:auto!important;top:calc(30px + var(--CH) - 96px)!important;width:calc(var(--CH) - 96px)!important;height:20px!important;transform-origin:0 0;transform:rotate(-90deg);overflow:hidden!important}
+.phone #viewport #stage #audienceCard .doubt-fill{-webkit-mask:repeating-linear-gradient(90deg,#000 0 10px,#0006 10px 12px);mask:repeating-linear-gradient(90deg,#000 0 10px,#0006 10px 12px)}
+.phone #viewport #stage #audienceCard #patternLabel{left:56px!important;right:auto!important;top:50px!important;bottom:auto!important;max-width:calc(var(--CW) * .58 - 60px)!important;max-height:34px!important}
+@media(max-width:740px){.phone #viewport #stage #audienceCard #mental:before{content:none}.phone #viewport #stage #audienceCard #doubtRegen{display:none}
+.phone:not(.tablet) #viewport #stage #audienceCard :is(#patternLabel,#phaseIndicator){max-width:calc(var(--CW) - 64px)!important;width:auto!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}
+body:not(.phone) #viewport #stage #audienceCard .doubt{left:8px!important;top:690px!important;width:600px!important;height:28px!important;transform-origin:0 0;transform:rotate(-90deg);overflow:hidden!important}
+body:not(.phone) #viewport #stage #audienceCard .doubt-fill{-webkit-mask:repeating-linear-gradient(90deg,#000 0 18px,#0006 18px 22px);mask:repeating-linear-gradient(90deg,#000 0 18px,#0006 18px 22px)}
+body:not(.phone) #viewport #stage #audienceCard .doubt-plate{position:absolute!important;inset:auto!important;left:8px!important;top:48px!important;width:max-content!important;max-width:560px;overflow:hidden;height:34px;padding:0 10px!important;background:#120f1add;border:2px solid #a68a58;justify-content:flex-start!important;box-sizing:border-box;z-index:6}
+body:not(.phone) #viewport #stage #audienceCard #heckleMeter{left:44px!important;top:690px!important;width:600px!important;height:16px!important;transform-origin:0 0;transform:rotate(-90deg);overflow:hidden!important}
+body:not(.phone) #viewport #stage #audienceCard .heckle-plate{position:absolute!important;inset:auto!important;left:70px!important;top:86px!important;width:max-content!important;height:24px;padding:0 8px!important;background:#120f1add;gap:10px;font-size:var(--fs-s);z-index:6}
+body:not(.phone) #viewport #stage #audienceCard #patternLabel{left:70px!important;right:auto!important;top:120px!important;width:auto!important;bottom:auto!important}
+body:not(.phone) #viewport #stage #audienceCard #phaseIndicator{left:70px!important;right:auto!important;top:176px!important;width:300px!important}
+/* v4 U53 2: the audience name on the doubt plate is never cut with an ellipsis (it read "미인 심사..." at 891 x 412). The name keeps its full width;
+   ui.js fitDoubtPlate drops the regen text when the line is full (plate-noregen) and, on narrow phones, sets the name on two lines in the 9 px pixel
+   font inside the same 22 px plate (plate-2l), so nothing under the plate moves. */
+#viewport #stage #audienceCard .doubt-plate #doubtTitle{flex:none;min-width:auto;overflow:visible;text-overflow:clip;white-space:nowrap}
+#viewport #stage #audienceCard .doubt-plate.plate-noregen #doubtRegen{display:none}
+#viewport #stage #audienceCard .doubt-plate.plate-2l #doubtTitle{flex:1 1 auto;min-width:0;white-space:normal;font:400 9px/10px Galmuri9,Galmuri11,monospace;letter-spacing:0}
+#viewport #stage #audienceCard .doubt-plate.plate-2l{align-items:center}
+html body.phone #viewport#viewport #stage #audienceCard #patternLabel{top:calc(var(--TB) + 50px)!important;left:56px!important;max-width:calc(var(--CW) * .58 - 62px)!important;max-height:34px!important}
+html body.phone.phone-narrow #viewport#viewport #stage #audienceCard #phaseIndicator{white-space:normal!important;max-height:none!important;font-size:10px!important;line-height:12px!important}
+html body.tablet #viewport#viewport #stage #phoneTop .venue-heading #stageNumber{font-size:12px;line-height:16px}
+html body:not(.phone) #viewport#viewport #stage #audienceCard .doubt{top:calc(780px - var(--SB))!important;width:calc(780px - 150px - var(--TB) - var(--SB))!important}
+html body:not(.phone) #viewport#viewport #stage #audienceCard .doubt-plate{top:10px!important}
+html body:not(.phone) #viewport#viewport #stage #audienceCard .heckle-plate{top:50px!important}
+html body:not(.phone) #viewport#viewport #stage #audienceCard #patternLabel{top:calc(var(--TB) + 84px)!important;left:70px!important}
+html body:not(.phone) #viewport#viewport #stage #audienceCard #phaseIndicator{top:calc(var(--TB) + 140px)!important;left:70px!important}
+html body:not(.phone) #viewport#viewport #stage #audienceCard #crowdLabel{top:calc(var(--TB) + 10px)!important;right:20px!important;left:auto!important}
+html body:not(.phone) #viewport#viewport #stage #audienceCard .venue-heading #stageNumber{font-size:16px;line-height:18px}
+html body.phone:not(.tablet) #viewport#viewport #stage #audienceCard #patternLabel,
+html body.phone:not(.tablet) #viewport#viewport #stage #audienceCard #phaseIndicator{max-width:calc(var(--CW) * .5 - 62px)!important;max-height:none!important;white-space:normal!important;overflow:visible!important}
+html body.phone:not(.tablet) #viewport#viewport #stage #audienceCard #phaseIndicator{top:var(--phase-top, 86px)!important}
+/* Spoken warnings use the fitted audience bubble; the boo scene keeps its own line. */
+#audienceCard.telegraph #heckle{visibility:hidden}
+#viewport #stage #board .cell.empty:not(.locked) .spawn-timer{
+  display:block;left:0;right:0;top:auto;bottom:0;width:auto;height:auto;border:0;border-radius:0;
+  font-size:8px;line-height:9px;text-align:center;color:#F2E6C8;background:transparent;z-index:6;pointer-events:none;
+}
+html body #viewport#viewport #stage#stage#stage#stage :is(#patternLabel,#audienceLine) { border:0; border-image:url('assets/kit/tooltip-frame.webp') 24 fill / 8px / 0 stretch; background:transparent; box-shadow:none; padding:6px 12px; color:#f2e6c8; }
+html body #viewport#viewport #stage#stage#stage#stage #heckle { border:0; border-image:url('assets/kit/tooltip-frame.webp') 24 fill / 12px / 0 stretch; background:none; box-shadow:none; padding:10px 14px; color:#f2e6c8; }
+html body #viewport#viewport #stage#stage#stage#stage #heckle::after { border:0; width:24px; height:12px; bottom:-8px; background:url('assets/kit/tooltip-tail.webp') center / contain no-repeat; transform:none; }
+html body #viewport#viewport #stage#stage#stage#stage #heckleBang { border:0; border-image:url('assets/kit/price-tag.webp') 16 fill / 8px / 0 stretch; background:none; box-shadow:none; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #audienceCard.has-audience-line #patternLabel { top:60px; left:10px; right:auto; max-width:44%; font:12px/16px system-ui,sans-serif; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #patternLabel > span { white-space:nowrap; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #audienceCard #patternLabel { top:84px !important; left:12px !important; max-width:calc(100% - 24px) !important; }
+html body.phone.compact-notice:not(.portrait-layout):not(.tablet) #viewport#viewport #stage#stage#stage#stage #audienceCard #patternLabel { top:54px !important; max-width:82px !important; }
+html body.phone.compact-notice:not(.portrait-layout):not(.tablet) #viewport#viewport #stage#stage#stage#stage #audienceCard #phaseIndicator { left:var(--compact-phase-left,110px) !important; max-width:var(--compact-phase-width,82px) !important; }
+/* Owner 10-24: the 야유 plate is the heckle gauge. A yellow bar (kit act fill) grows behind the number and is full exactly when the heckle fires
+   (--heckle, 0 to 100, written by render() from the core heckle timer). Landscape folds the old upright heckle bar into the plate. */
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage#stage #audienceCard #heckleMeter { display:none !important; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage#stage #audienceCard .heckle-plate { isolation:isolate; overflow:hidden; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage#stage #audienceCard .heckle-plate::before,
+html body.portrait-layout #viewport#viewport #stage#stage#stage#stage#stage #portraitMeters #heckleMeter::before {
+  content:''; position:absolute; z-index:0; left:3px; top:3px; bottom:3px; width:calc((100% - 6px) * var(--heckle,0) / 100); pointer-events:none;
+  background:url('assets/kit/gauge-fill-act.webp') left center / 16px 100% repeat-x; image-rendering:pixelated;
+}
+html body.portrait-layout #viewport#viewport #stage#stage#stage#stage#stage #portraitMeters #heckleMeter::before { left:22px; width:calc((100% - 25px) * var(--heckle,0) / 100); }
+html body #viewport#viewport #stage#stage#stage#stage#stage .heckle-plate > * { position:relative; z-index:1; text-shadow:1px 0 #17141f,-1px 0 #17141f,0 1px #17141f,0 -1px #17141f; }
+html body #viewport #stage.headliner-fight .doubt { box-shadow:inset 0 0 0 2px #ffe895; }
+/* s4e1 C: doubt bar keeps the chunk just removed, and the frame flashes for 80 ms. */
+html body #viewport #stage .doubt > .doubt-ghost {
+  position:absolute; z-index:1; left:0; top:0; bottom:0; width:var(--ghost,0%); max-width:100%;
+  background:#ffd0c4; opacity:0; pointer-events:none;
+}
+html body #viewport #stage .doubt > .doubt-fill { position:relative; z-index:2; }
+html body #viewport #stage .doubt.meter-hit { animation:doubt-frame-hit 80ms linear; }
+html body #viewport #stage .doubt.meter-hit > .doubt-ghost { animation:meter-ghost-d 360ms linear forwards; }
+/* s4e2 E: during a full finale the removed doubt chunk stays lit until the cards land (ui.js trailDoubt hold), then trails off as in s4e1 C. */
+html body #viewport #stage .doubt.ghost-hold > .doubt-ghost { opacity:.95; }
+/* s5f: the slow-pattern clock was a 55 px "◷" drawn over every slow headliner's face (it hid 카드1412's hooded face). It is now a small round
+   badge on the top-left corner of the "시간 감속" pattern plate (the marker under the name plate), never on the figure, and it takes no room
+   in the plate (so the label never wraps on narrow layouts); the figure keeps its blue glow. */
+html body #viewport #stage #audienceCard[data-pattern="slow"] #patternLabel:not(:empty)::before {
+  content:"◷"; position:absolute; left:-7px; top:-7px; width:16px; height:16px; border-radius:50%; z-index:1;
+  background:#16304a; box-shadow:0 0 0 1px #86b9ec; color:#bbe0ff; font:700 12px/16px system-ui,sans-serif; text-align:center; text-shadow:none;
+}
+/* Task 2: keep the lose line clear and curtain-call text inside its frame. */
+html body.phone #viewport#viewport #stage#stage#stage#stage #audienceCard.boo-scene #patternLabel { visibility:hidden; }
+/* Fix A: the landscape lose bubble owns this space while its line is open. fixP 1: the plate is a child of #audienceCard (ui.js U50 moves it there), not of #heckle. */
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage#stage #audienceCard.boo-scene > .heckle-plate { visibility:hidden; }

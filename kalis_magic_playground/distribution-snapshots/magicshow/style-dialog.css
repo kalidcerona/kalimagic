@@ -1,0 +1,181 @@
+/* style-dialog.css: story dialogue, curtain call, intro story, endings, twist (batch D) scenes. (CSS regroup 10-28)
+ * Earlier or later rules for the same elements may also sit in style-base.css (early layer) and
+ * style-overrides-*.css (late layer) when the cascade needs them there. */
+.room[data-venue="moon"] .curtain{background:#475579;box-shadow:181px 0 #475579,7px 0 #7e8fb7,174px 0 #7e8fb7}
+.headliner-dialogue{width:100%;height:230px;border:0;background:transparent;display:flex;align-items:center;justify-content:center;gap:30px;position:relative;font-size:33px}.dialogue-emoji{font-size:110px}.headliner-dialogue small{position:absolute;bottom:0;font-size:22px;color:#bdbdce}
+.dialogue-emoji,.dealer-emoji{position:relative;display:inline-grid;place-items:center;width:140px;height:150px;flex:none}
+.climax-scene,.ending-scene{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;min-height:610px;text-align:center;padding:28px 70px;background:radial-gradient(ellipse,#29213b,#090710 75%)}
+.climax-scene h2,.ending-scene h2{font-size:33px;line-height:1.6;margin:0;color:#ffeab0}
+.climax-scene p,.ending-scene p{max-width:1050px;font-size:22px;line-height:1.8;margin:0;color:#d9d5e5}.ending-scene small{color:#c2afdb;font-size:22px}
+.ending-actions{display:flex;justify-content:center;gap:24px;flex-wrap:wrap;margin-top:20px}
+.true-ending{border-color:#ffe895!important;background:radial-gradient(ellipse,#4e3f19,#100d18 75%)!important}
+.ending-archive{display:grid;grid-template-columns:repeat(2,1fr);gap:24px}
+.ending-entry h2{font-size:22px;color:#ffe895}.ending-entry p{font-size:22px;line-height:1.7}
+.rebirth-scene{padding:12px 28px}.rebirth-scene h2{text-align:center;font-size:33px}.rebirth-gain{text-align:center;color:#ffe895;font-size:33px}.rebirth-lists{display:grid;grid-template-columns:1.3fr 1fr;gap:30px}.rebirth-lists section{padding:16px 22px;border:2px solid #8f85af;background:#171222}.rebirth-lists h3{margin:0 0 12px;color:#e2cdff;font-size:22px}.rebirth-lists ul{margin:0;padding-left:28px}.rebirth-lists li{font-size:22px;line-height:1.7;margin-bottom:5px}
+.feature-hud #encoreStatus{color:#ffe65c}
+.curtain-call p{font-size:22px}
+.review-active::after { content: '★'; position: absolute; right: 8px; top: 5px; color: #fff3a4; pointer-events: none; font-size: 24px; }
+.homecoming-picture.asset-ready .homecoming-portraits { visibility: hidden; }
+.homecoming-scene p { font-size: 20px; line-height: 1.4; }
+.homecoming-scene .ending-actions { margin-top: 8px; }
+.phone #panelBody .result,.phone .climax-scene,.phone .ending-scene{min-height:0;height:auto;gap:8px;padding:8px;text-align:center}
+.phone .ending-actions{gap:8px;margin-top:8px}
+.phone .bestiary-grid,.phone .ending-archive,.phone .rebirth-lists{grid-template-columns:1fr;gap:8px}
+.phone .rebirth-scene{padding:4px}.phone .rebirth-lists section{padding:8px}
+.phone .headliner-dialogue,.phone .climax-dialogue .headliner-dialogue{height:auto;min-height:160px;font-size:22px;gap:12px;padding-bottom:28px}
+.phone .dialogue-emoji,.phone .dealer-emoji{width:80px;height:90px;font-size:55px}
+.phone .homecoming-picture,.phone .meetup-memory{width:min(100%,320px);height:auto;aspect-ratio:16/9}
+.phone .homecoming-face{width:90px;height:120px}
+.homecoming-face{flex:1;min-width:0}
+.phone .homecoming-face{width:72px}
+#introStory{position:absolute;inset:0;z-index:70;overflow:hidden;background:#141321}
+.intro-backdrop{position:absolute;width:100%;height:100%;object-fit:cover;image-rendering:pixelated;opacity:.5}
+.intro-kali{position:absolute;left:42%;bottom:24%;width:256px;height:256px;background:url('assets/kali-performance.webp') 0 0/300% 100%;image-rendering:pixelated}
+.intro-kali[data-frame="1"]{background-position:50% 0}.intro-kali[data-frame="2"]{background-position:100% 0}
+.intro-dad{position:absolute;left:20%;bottom:24%;width:256px;image-rendering:pixelated}
+.intro-line{position:absolute;bottom:90px;left:10%;width:80%;margin:0;background:#141321e8;padding:20px;font-size:22px;text-align:center}
+.phone .intro-kali{width:128px;height:128px}.phone .intro-dad{width:128px}
+.phone .intro-line{bottom:65px;padding:10px;font-size:22px}
+/* U15: phone columns share one top bar and explicit content lanes. */
+#storyDialog[hidden],#easyTooltip[hidden]{display:none}
+#storyDialog{position:absolute;left:12px;right:12px;bottom:8px;z-index:28;display:grid;grid-template-columns:54px minmax(0,1fr) 64px 100px;align-items:center;gap:8px;padding:8px;background:#101522;border:2px solid #a3aac8;font-size:18px;line-height:1.4;cursor:pointer}
+.story-copy p{margin:4px 0;white-space:pre-line;word-break:keep-all}#storyDialog button{min-width:44px;min-height:44px;font-size:13px;padding:4px}
+.phone #storyDialog{left:4px;right:4px;bottom:4px;padding:5px;gap:5px;font-size:11px;grid-template-columns:40px minmax(0,1fr) 44px 66px;line-height:14px}
+.phone #storyDialog .story-portrait{width:30px;height:44px}
+.phone #storyDialog .story-copy{min-width:0;overflow:hidden}
+.phone #storyDialog .story-copy p{margin:0;white-space:nowrap;overflow-x:auto;line-height:18px;touch-action:pan-x}
+/* Dialogue and skill feedback preserve existing target sizes. */
+.phone #stage #storyDialog .story-copy strong,#stage #tutorialCoach strong{font-size:11px;font-weight:700;line-height:14px;color:var(--gold)}
+.phone #stage #storyDialog .story-copy p,.phone #stage #tutorialCoach p{font-size:12px;line-height:16px}
+.phone #stage #storyDialog{height:56px}
+.phone #stage #storyDialog{height:auto;min-height:56px}
+.phone #stage #storyDialog .story-copy p{white-space:normal;overflow-wrap:anywhere;font-size:11px;line-height:13px;overflow-x:visible}
+
+@media(max-width:740px){
+ .phone #storyDialog .story-portrait{grid-column:1;grid-row:1 / 3;justify-self:center}
+ .phone #storyDialog .story-copy{grid-column:2 / -1;grid-row:1}
+ .phone #storyDialog button{grid-row:2}
+ .phone #storyDialog button:first-of-type{grid-column:3}
+ .phone #storyDialog button:last-of-type{grid-column:4}
+ .phone #audienceCard#audienceCard.f-story #audience{bottom:90px;height:calc(100% - 120px)}
+}
+.phone #stage #phoneMore #encoreStatus{display:none}
+#stage :is(#storyDialog,.curtain-bubble){image-rendering:pixelated;border:solid 12px transparent;border-image:url('assets/ui/ui-dialog.webp') 12 fill / 12px / 0 stretch;background-color:#E3D2BA;color:#17141F}
+#stage #storyDialog :is(p,strong){color:#17141F}
+.tablet #stage #storyDialog .story-copy p{font-size:16px;line-height:22px}
+.curtain-actor.speaking{box-shadow:0 0 0 3px #E8BF68}
+#stage #curtainSkip{position:relative;z-index:4;margin-top:4px}
+.tablet .curtain-memory{min-height:440px}
+.tablet .curtain-cast{min-height:280px}
+#stage :is(#storyDialog,.curtain-bubble){border-color:#A68A58}
+/* Fail panel: audience that heckled + Kali's sad face. */
+#stage #storyDialog .story-copy strong{color:#7A3A10;font-weight:700}
+/* v4 U46 A8: dialog portrait shows the face. The head crop was shifted half its width off the frame (translateX(-50%)), so only the hair showed. */
+#viewport #stage #storyDialog .story-portrait.asset-ready{font-size:0}
+/* v4 U47 8: the scene-change card (curtain colours, centred place name); fades in and out unless Reduce Motion is on. */
+#stage #sceneCard{position:absolute;inset:0;z-index:55;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:var(--p-void);color:var(--p-gold);animation:u47-card 1.5s linear both}
+#stage #sceneCard:before,#stage #sceneCard:after{content:"";position:absolute;top:0;bottom:0;width:14%;background:repeating-linear-gradient(90deg,var(--p-danger) 0 6px,#7d3036 6px 12px)}
+#stage #sceneCard:before{left:0}#stage #sceneCard:after{right:0}
+#stage #sceneCard span{position:relative;font:400 var(--fs-l)/1.3 Galmuri11,monospace}
+#stage #sceneCard small{position:relative;font:400 var(--fs-s)/1.3 Galmuri11,monospace;color:var(--p-ink-2)}
+@media(prefers-reduced-motion:reduce){#stage #sceneCard{animation:none}}
+/* v4 U47 4: the not-yet-typed rest of a dialog line keeps its place (so the lines do not reflow) but is invisible. */
+#viewport #stage #storyDialog .type-rest{color:transparent;-webkit-text-fill-color:transparent;text-shadow:none}
+/* right thumb: in a character dialog the frequent 다음 is the last button (right end, next to the skill column); 건너뛰기 moves before it */
+/* v4 U50b: ui.js puts 건너뛰기 before 다음 in the DOM (Tab order = visual order) and, on phones and tablets, moves the dialog out of the isolated
+   #audienceCard into #stage, so its z-index 28 is above the board card and the skill column it reaches over (Codex Sol U50 FAIL 1) */
+.phone #viewport #stage #storyDialog{grid-template-columns:30px minmax(0,1fr) 66px 44px;left:10px!important;right:calc(var(--board-size) + 10px)!important;bottom:10px!important} /* reaches over the (paused) skill column up to the board */
+.phone #viewport #stage #storyDialog.stage-launch{grid-template-columns:30px minmax(0,1fr) 66px}
+body:not(.phone) #viewport #stage #storyDialog{grid-template-columns:54px minmax(0,1fr) 100px 64px}
+#stage .curtain-line .curtain-bubble{flex:1;min-width:0;width:auto}
+#stage #curtainNext{position:relative;z-index:4;flex:none;margin:0 0 0 auto;min-width:88px}
+/* v4 U51 5: Kali's size cap on phones (--K in the U50b audience-card rule) is CH - PH - 156px (was 146): his box sits 10 px above the plate, so the old
+   cap kept his top only 136 px down (6 px under the toast lane) and his idle/act motion (up to 9 px) touched the lane at 844 x 390 with 47 px insets, the
+   intermittent test-u50 group 4 "toast covers kali". His top is now at least 146 px down, as the U50c note says. */
+/* 다음 is the primary (gold) button of every line window (ui.js gives it u26-primary); 건너뛰기 is a plain button (it was the gold one in the dialog) */
+#stage #storyDialog button.line-skip{background:#25202D;color:#F2E6C8;font-weight:400}
+/* a character dialog: at the top of the stage (the speakers stand on the stage floor below it), up to the board; 다음 stays the rightmost */
+html body.phone #viewport#viewport #stage #storyDialog{top:calc(var(--ST) + 4px)!important;bottom:auto!important}
+html body:not(.phone) #viewport#viewport #stage #audienceCard #storyDialog{top:96px!important;bottom:auto!important;left:12px!important;right:12px!important}
+:is(#storyDialog .story-copy p,#audienceLine,#easyTooltip,.toast,#tutorialCoach p,#offlineSummary,#leaveConfirm p,.headliner-dialogue,.curtain-bubble,.ending-scene p,.rebirth-scene li,.homecoming-recap,#panelBody :is(p,li,.easy-description,.tree-effect,.tree-note,.tree-reason,.entry-flavor,.dealer-rules,.dealer-note)){
+  font-family:"Apple SD Gothic Neo","Noto Sans KR","Noto Sans CJK KR","Malgun Gothic",system-ui,sans-serif;
+}
+#viewport #stage #storyDialog{z-index:45;pointer-events:auto}
+/* Isolated gate A: landscape dialogue can grow without moving any other stage geometry. */
+html body.tablet:not(.portrait-layout) #viewport#viewport #stage #storyDialog{height:auto;max-height:calc(var(--CH) - 16px);overflow-y:auto}
+.batch-d-scene button { max-width: 100%; white-space: normal; }
+.batch-d-card { position: absolute; top: 25px; left: calc(var(--mixed) * 15%); width: 17%; border-radius: 8px; border: 3px solid; background: #fff8e7; box-sizing: border-box; animation: batch-d-separate 1.4s ease-in-out 3 forwards; }
+.batch-d-card img { display: block; width: 100%; height: 88px; object-fit: contain; }
+.batch-d-card span { position: absolute; top: 3px; left: 4px; font-size: 22px; font-weight: bold; }
+.batch-d-card.is-red { color: #b82031; border-color: #b82031; }
+.batch-d-card.is-black { color: #17202c; border-color: #17202c; }
+.batch-d-lock::after, .batch-d-hide::after { content: attr(data-interference); position: absolute; inset: 12% 3%; display: flex; align-items: center; justify-content: center; border-radius: 8px; background: #221b34e8; color: #fff4c4; font: bold 13px sans-serif; text-align: center; z-index: 4; pointer-events: none; }
+@media (prefers-reduced-motion: reduce) { .batch-d-card { animation: none; left: calc(var(--sorted) * 15%); } }
+html body #viewport#viewport #stage#stage#stage#stage :is(#storyDialog#storyDialog,.curtain-bubble,.batch-d-scene) { border:0; border-image:url('assets/kit/dialogue-frame.webp') 16 fill / 8px / 0 stretch; background:transparent; box-shadow:none; }
+html body #viewport#viewport #stage#stage#stage#stage :is(.line-next,.curtain-next):active:enabled { border-image-source:url('assets/kit/dialogue-next-pressed.webp'); }
+html body #viewport#viewport #stage#stage#stage#stage .line-skip:active:enabled { border-image-source:url('assets/kit/dialogue-skip-pressed.webp'); }
+html body #viewport#viewport #stage#stage#stage#stage :is(.toast,#banner#banner,#sceneCard#sceneCard,.batch-d-note,.tree-wallet,.dealer-wallet) { border:0; border-image:url('assets/kit/toast-frame.webp') 24 fill / 12px / 0 stretch; background:transparent; box-shadow:none; padding:10px 16px; }
+html body #viewport#viewport #stage#stage#stage#stage :is(.constellation-map,.constellation-world,.result,.rebirth-scene,.rebirth-lists section,.batch-d-scene,.ending-scene,.panel-tabs,.music-volume) { background:none; box-shadow:none; border-color:transparent; }
+html body #viewport#viewport #stage#stage#stage#stage .batch-d-scene { padding:18px; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panelBody:has( > .gem-game) .dealer-speech { max-height:150px; overflow:auto; padding:8px; font:10px/14px system-ui,sans-serif; }
+/* A2 P1: landscape dialogue and scene notices occupy separate readable lanes. */
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #storyDialog { height:auto; min-height:64px; max-height:90px; box-sizing:border-box; padding:6px 10px; gap:6px; color:#f2e6c8; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #storyDialog .story-copy p { color:#f2e6c8; font:13px/18px system-ui,sans-serif; white-space:normal; max-height:54px; overflow:auto; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #storyDialog .story-copy strong { color:#ffe9ac; padding:2px 10px; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #storyDialog .story-copy { grid-column:2; grid-row:1; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #storyDialog .story-portrait { grid-column:1; grid-row:1; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #storyDialog button:first-of-type { grid-column:3; grid-row:1; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #storyDialog button:last-of-type { grid-column:4; grid-row:1; }
+/* A3: let long dialogue use its full copy width, then put actions below it on phones. */
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #storyDialog { max-height:none; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #storyDialog .story-copy p { max-height:none; overflow:visible; }
+html body.phone:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #storyDialog .story-copy { grid-column:2 / -1; }
+html body.phone:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #storyDialog button:first-of-type { grid-column:3; grid-row:2; }
+html body.phone:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #storyDialog button:last-of-type { grid-column:4; grid-row:2; }
+/* 12-119: phone landscape. During a dialogue the message box takes the place of the controls that cannot be used then: from the left edge of the
+   skill rail to the right edge of the board, bottom-aligned with the board frame. It never reaches the stage; 다음 stays on the right-thumb side. */
+html body.phone:not(.tablet):not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #storyDialog {
+  width:auto; top:auto !important; bottom:6px !important; right:6px !important;
+  left:calc(var(--stage-w) - 6px - var(--board-size) - 62px) !important;
+}
+html body #viewport#viewport #stage#stage#stage#stage#stage #panel[data-cutscene="1"] .batch-d-scene { display:block; margin:0; padding:0; border:0; border-image:none; background:none; box-shadow:none; min-height:0; }
+html body #viewport#viewport #stage#stage#stage#stage#stage #panel[data-cutscene="1"] .batch-d-scene:empty { display:none; }
+#stage .twist-art > img { display:block; width:100%; height:100%; object-fit:cover; object-position:50% 50%; image-rendering:pixelated; }
+#stage .twist-art > img.twist-mentor { position:absolute; left:2%; bottom:0; width:46%; height:auto; max-height:72%; object-fit:contain; object-position:50% 100%; }
+#stage .twist-portrait.is-empty { visibility:hidden; }
+#stage .twist-copy { min-width:0; text-align:left; }
+#stage .twist-copy h2 { margin:0 0 2px; font:700 14px/18px system-ui,sans-serif; color:#ffe9ac; }
+#stage .twist-copy strong { display:inline-block; padding:1px 10px; color:#ffe9ac; font:700 12px/16px system-ui,sans-serif; border:0; border-image:url('assets/kit/name-plate.webp') 14 fill / 4px / 0 stretch; }
+#stage .twist-copy p { margin:3px 0 0; font:13px/18px system-ui,sans-serif; color:#F2E6C8; white-space:normal; overflow-wrap:anywhere; }
+#stage .twist-copy p.twist-note { font-size:11px; line-height:14px; color:#d9c38f; }
+html body #viewport#viewport #stage#stage#stage#stage #room > img.twist-room-art { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:1; visibility:visible; opacity:1; image-rendering:pixelated; pointer-events:none; }
+/* 12-117: the new-game intro. Same frame, name plate, text and 다음 as the dialogue box and the 12-116 cutscene, as a full-screen scene (the game is
+   not shown yet): the beat's illustration and a speaker box with the speaker's figure. Landscape: illustration left, speaker box right. */
+html body #viewport#viewport #stage#stage#stage#stage#stage #introStory.intro-dialog { background:#2e2838; }
+html body #viewport#viewport #stage#stage#stage#stage#stage #introStory#introStory .intro-art { left:6px; top:6px; bottom:6px; right:292px; width:auto; height:auto; }
+html body #viewport#viewport #stage#stage#stage#stage#stage #introStory#introStory .intro-box { left:auto; right:6px; top:6px; bottom:6px; width:280px; min-height:0; grid-template-columns:minmax(0,1fr); grid-template-rows:minmax(0,1fr) auto auto; align-items:stretch; gap:6px; padding:8px; }
+html body #viewport#viewport #stage#stage#stage#stage#stage #introStory#introStory .intro-box > .twist-portrait { width:auto; height:100%; max-width:100%; aspect-ratio:1 / 1; min-height:0; justify-self:center; border:0; background-color:transparent; background-size:contain; background-position:50% 100%; }
+html body #viewport#viewport #stage#stage#stage#stage#stage #introStory#introStory .intro-box > .twist-portrait.is-sheet { background-size:300% auto; background-position:0 100%; } /* opus-H: keep the frame square in a box taller than wide (no stretch) */
+html body #viewport#viewport #stage#stage#stage#stage#stage #introStory#introStory .intro-box .twist-copy p { font-size:15px; line-height:21px; }
+html body #viewport#viewport #stage#stage#stage#stage#stage #introStory#introStory .intro-box > .intro-next { position:static; left:auto; right:auto; bottom:auto; width:auto; justify-self:end; }
+html body #viewport#viewport #stage#stage#stage#stage#stage #introStory#introStory .intro-skip { position:absolute; z-index:3; top:12px; right:auto; bottom:auto; left:calc(var(--stage-w,1600px) - 304px); transform:translateX(-100%); width:auto; }
+/* opus-H: 12-116 cutscene on PC (no .phone: the 1600x900 stage) and tablets. The phone formula (rail to board) does not fit there: the line box takes the
+   width right of the illustration down at the bottom, with explicit type sizes (the panel's 22px body text with the 18px line height overlapped). */
+html body:not(.phone) #viewport#viewport #stage#stage#stage#stage#stage #panel[data-cutscene="1"] .twist-line { left:calc(var(--audience-width,884px) + 12px); right:24px; bottom:12px; min-height:112px; grid-template-columns:80px minmax(0,1fr) auto; gap:14px; padding:10px 16px; }
+html body:not(.phone) #viewport#viewport #stage#stage#stage#stage#stage #panel[data-cutscene="1"] .twist-portrait { width:80px; height:80px; line-height:76px; font-size:40px; }
+html body:not(.phone) #viewport#viewport #stage#stage#stage#stage#stage #panel[data-cutscene="1"] .twist-copy p.twist-note { font-size:16px; line-height:22px; }
+html body:not(.phone) #viewport#viewport #stage#stage#stage#stage#stage #panel[data-cutscene="1"] .twist-line > button.twist-next { min-width:96px; min-height:56px; font-size:20px; line-height:28px; }
+html body.tablet #viewport#viewport #stage#stage#stage#stage#stage #panel[data-cutscene="1"] .twist-copy p.twist-note { font-size:12px; line-height:16px; }
+/* s4c: landscape story dialog. A larger speaker portrait (head readable on a phone) beside the name plate and the line; the box grows to fit it. */
+html body.phone:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage#stage #storyDialog { grid-template-columns:76px minmax(0,1fr) 76px 60px; grid-template-rows:minmax(0,1fr) 44px; align-content:stretch; min-height:116px; }
+html body.phone:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage#stage #storyDialog .story-portrait { grid-column:1; grid-row:1 / 3; width:76px; height:100px; align-self:center; }
+html body.tablet:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage#stage #storyDialog { grid-template-columns:96px minmax(0,1fr) 84px 64px; min-height:140px; }
+html body.tablet:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage#stage #storyDialog .story-portrait { width:96px; height:128px; }
+html body.phone:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage#stage #storyDialog .story-copy { grid-column:2 / -1; grid-row:1; align-self:start; }
+html body.phone:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage#stage #storyDialog button { width:100%; min-width:0; padding:0 4px; white-space:nowrap; }
+html body.phone #viewport#viewport #stage#stage#stage#stage .curtain-line .curtain-bubble {
+  box-sizing:border-box; padding:12px 16px; height:auto; min-height:44px;
+  white-space:normal; overflow-wrap:anywhere; line-height:20px; text-align:left;
+}
+/* fixP 3: the shop manager's speech reads like the other dialogue: one paragraph per speaker, left-aligned, the name as a gold label. */
+html body #viewport#viewport #stage#stage#stage#stage #panel .dealer-speech { text-align:left; }

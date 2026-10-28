@@ -1,0 +1,321 @@
+/* style-stage.css: stage scene: audience card, room/venue dressing, Kali, colleagues, banners, fail/win scenes. (CSS regroup 10-28)
+ * Earlier or later rules for the same elements may also sit in style-base.css (early layer) and
+ * style-overrides-*.css (late layer) when the cascade needs them there. */
+#audienceCard{left:76px;isolation:isolate}
+.window:before{content:"";position:absolute;left:61px;top:0;width:10px;height:100%;background:#d1b17a}.window:after{content:"";position:absolute;left:0;top:74px;height:10px;width:100%;background:#d1b17a}
+.shelf:before{content:"";position:absolute;left:0;top:76px;width:86px;height:10px;background:#b78550;box-shadow:0 86px #b78550}
+.sofa:before{content:"";position:absolute;left:-32px;top:52px;width:40px;height:112px;background:#73745c;border:8px solid #424438;box-shadow:366px 0 #73745c}.sofa:after{content:"";position:absolute;left:152px;top:0;width:7px;height:125px;background:#4c5143}
+.telegraph .audience{filter:drop-shadow(6px 6px 0 #e76743)}
+.room[data-venue="vegas"] .wall{background:#241536;background-image:repeating-linear-gradient(90deg,transparent 0,transparent 68px,#351e47 68px,#351e47 78px)}.room[data-venue="vegas"] .wall-top{background:#7f253e;border-color:#ffc667}.room[data-venue="vegas"] .floor{background:#281e34}.room[data-venue="vegas"] .rug{background:#5d2344;border-color:#caad66}.room[data-venue="vegas"] .sofa{background:#792745;border-color:#431c35;box-shadow:inset 0 14px #a73c61,0 12px #181322}.room[data-venue="vegas"] .window{background:#391c52;box-shadow:0 0 0 5px #fbd869,inset 0 0 0 6px #af5cbe}.room[data-venue="moon"] .wall{background:#101a33;background-image:radial-gradient(#a5b6d7 2px,transparent 3px);background-size:64px 53px}.room[data-venue="moon"] .wall-top{background:#343d56;border-color:#8e9bb1}.room[data-venue="moon"] .floor{background:#636b7c;background-image:repeating-linear-gradient(0deg,transparent 0,transparent 38px,#4c556a 38px,#4c556a 44px)}.room[data-venue="moon"] .rug{background:#8791a0;border-color:#a9b3c6}.room[data-venue="moon"] .sofa{background:#535f7b;border-color:#2a354e;box-shadow:inset 0 14px #9eacc3,0 12px #323a4b}.room[data-venue="moon"] .window{background:#0a1225;border-color:#7c8da8;box-shadow:0 0 0 5px #bec8d7,inset 0 0 0 6px #495e86}
+.caption{pointer-events:none}
+.room{background:var(--venue-bg1)}
+#banner{position:absolute;top:100px;left:130px;width:580px;background:#111e;border:4px solid #ffe65c;padding:16px;text-align:center;color:#ffe65c;font-size:22px;font-weight:bold;z-index:26;pointer-events:none;box-shadow:8px 8px #0008}#banner.big{top:330px;left:300px;width:1000px;padding:34px;font-size:44px}#banner small{display:block;font-size:22px;color:#eee;margin-top:10px}
+#audienceCard[data-pattern="slow"] .audience{filter:drop-shadow(0 0 22px #90bbff)}
+#audienceCard[data-pattern="invisible"] .audience{opacity:.23;filter:drop-shadow(0 0 18px #c9c2ff)}
+#magicianMini{position:absolute;left:160px;top:681px;width:46px;height:52px;font-size:33px;z-index:6}#magicianMini.asset-ready{font-size:0}
+.final-boss .audience{filter:drop-shadow(0 0 24px #c481ff)}
+.boss-mirror .audience{transform:scaleX(-1);filter:drop-shadow(0 0 28px #ffe278) hue-rotate(140deg)}
+.boss-mirror .room{box-shadow:inset 0 0 100px #f0b9ff55}
+.room.asset-ready:before{background:var(--venue-accent);opacity:.06}
+#audience{left:134px;top:210px;width:404px;height:300px;z-index:3;transform-origin:50% 85%}
+#audience.headliner{left:114px;top:186px;width:444px;height:324px}
+.spotlight{left:130px;width:390px;top:529px;z-index:4}
+.helper-actor.paused{opacity:.4}
+.achievement-list{display:grid;gap:12px}.achievement-head{margin:0;color:#ffe65c}.achievement-group{display:grid;gap:8px}
+.achievement-stamp{display:flex;align-items:flex-start;gap:20px;color:#f4f4ec}
+.achievement-copy{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}.achievement-copy strong{font-size:22px;line-height:1.3}
+.achievement-stamp.earned .achievement-state{color:#ffe65c}.achievement-state{flex:none;white-space:nowrap}
+.medal.pending{filter:grayscale(1) brightness(.62)}
+.reward-badge{margin:0;flex:1;text-align:center;opacity:.25}.reward-badge.earned{opacity:1}
+.reward-badge figcaption{font-size:11px}
+.phone #gameLogo,.phone .caption,.phone .board-footer,.phone #crowd,.phone #crowdLabel,.phone #magicianMini,.phone .audience-shadow{display:none}
+.phone #audienceCard{left:6px;top:50px;width:var(--audience-width);height:calc(100% - 82px);border-width:2px;overflow:hidden}
+.phone .room>div{display:none}
+.phone #audience,.phone #audience.headliner{left:8px;top:40px;width:42%;height:calc(100% - 122px);font-size:55px}
+.phone #banner,.phone #banner.big{left:8px;top:51px;width:calc(var(--audience-width) - 4px);padding:10px;font-size:11px;border-width:2px;pointer-events:auto;max-height:calc(100% - 90px);overflow:auto}
+.phone .helper-dove,.phone .helper-rabbit,.phone .spotlight-beam{display:none}
+.phone .result .result-icon,.phone .climax-scene .result-icon,.phone .ending-scene .result-icon{font-size:44px}
+.phone .stage-reward,.phone .curtain-call{inset:6px;width:auto;max-height:calc(100% - 12px);padding:10px;overflow:auto;gap:6px;border-width:2px}
+.phone .stage-reward img,.phone .curtain-call img{width:80px;height:80px}
+.phone .stage-reward h2,.phone .curtain-call h2{font-size:22px;margin:6px}
+.phone .stage-reward p,.phone .curtain-call p{font-size:11px;margin:6px}
+.phone #audience,.phone #audience.headliner{height:calc(100% - 180px)}
+.phone .spotlight{display:none}
+.phone .reward-badges{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-bottom:10px}
+.phone .reward-badge img{width:44px;height:44px}.phone .reward-badge figcaption{font-size:11px}
+.phone .achievement-list{gap:8px}
+.phone .achievement-stamp{gap:8px;align-items:flex-start}.phone .achievement-stamp small{font-size:11px;line-height:1.35}.phone .medal{width:32px;height:32px}
+.phone.phone-tight #audience,.phone.phone-tight #audience.headliner{height:calc(100% - 166px)}
+#magicianMini{left:36px;top:520px;width:170px;height:170px;z-index:4;pointer-events:none}
+#magicianMini.performance-ready{background-image:url('assets/kali-performance.webp');background-size:300% 100%;background-position:0% 0%;image-rendering:pixelated;font-size:0}
+#magicianMini.performance-ready[data-frame="1"]{background-position:50% 0%}
+#magicianMini.performance-ready[data-frame="2"]{background-position:100% 0%}
+.phone #magicianMini{display:block;left:8px;top:auto;bottom:46px;width:100px;height:100px;z-index:3}
+.phone #audienceCard{top:76px;height:calc(100% - 108px)}
+.phone #audienceCard{height:calc(100% - 120px)}
+/* U14 visitors, collection ribbons and today's performance. */
+#eventVisitor{position:absolute;top:52%;z-index:18;width:64px;height:64px;min-width:44px;min-height:44px;padding:0;border:2px solid #ffe65c;border-radius:50%;background:#17182ade;font-size:30px;touch-action:manipulation;box-shadow:0 0 12px #ffe65c88}
+#eventVisitor.visitor-art{font-size:0}#eventVisitor.visitor-art img{display:block}
+.phone #eventVisitor{width:52px;height:52px;top:48%}
+#magicianMini.outfit-sparkle{animation:outfitSparkle 240ms cubic-bezier(.2,.8,.2,1)}
+@media(prefers-reduced-motion:reduce){#magicianMini.outfit-sparkle{animation:none}}
+.phone #phoneVenue .venue-heading{position:static;display:flex;align-items:center;gap:6px;width:auto;height:44px;margin:0;padding:0}
+.phone #audienceCard{left:6px;top:88px;bottom:6px;width:var(--audience-width);height:calc(100% - 94px);overflow:hidden}
+.phone #audience,.phone #audience.headliner{left:42%;right:6%;top:30px;bottom:42px;width:52%;height:calc(100% - 72px);font-size:70px;z-index:2;background-size:contain;background-position:center bottom}
+.phone #magicianMini,.phone #magicianMini.performance-ready{left:12px;top:auto;bottom:44px;width:120px;height:120px;max-height:48%;z-index:2;transform:scaleX(-1)}
+.phone #audienceLine{display:block;left:44%;right:6px;top:30px;bottom:auto;width:auto;max-height:36px;line-height:12px;font-size:10px;padding:2px;background:#101522e8;border:0;z-index:3}
+.phone #audienceLine[hidden]{display:none}
+/* U36: the old :has() selectors on #stage, #audienceCard and #activeSkills re-evaluated the whole stage subtree on every DOM insertion or
+   hidden change (about 70 percent of the late-game style cost). ui.js syncFlags() now sets the classes f-story, f-coach, f-coachc, f-more,
+   f-panel, f-statsx, f-toast, f-banner, f-routine, f-solo on those anchors; each selector below keeps the specificity of the :has() form. */
+.phone #audienceCard#audienceCard.f-story .mental,.phone #audienceCard#audienceCard.f-story .shield,.phone #audienceCard#audienceCard.f-story .combo,.phone #audienceCard#audienceCard.f-story #audienceLine{visibility:hidden}
+/* Menu and stats are dedicated modal surfaces; covered content is not visible. */
+.phone #stage#stage.f-more #audienceCard,.phone #stage#stage.f-more #boardCard,.phone #stage#stage.f-more #goalStrip,.phone #stage#stage.f-more #tutorialCoach,.phone #stage#stage.f-more #toasts{visibility:hidden}
+.phone #stage#stage.f-panel #audienceCard,.phone #stage#stage.f-panel #boardCard,.phone #stage#stage.f-panel #phoneTop,.phone #stage#stage.f-panel #tutorialCoach,.phone #stage#stage.f-panel #toasts{visibility:hidden}
+.phone #audienceCard.f-statsx.f-statsx>:not(.stats):not(#statsButton):not(.room){visibility:hidden}
+/* Existing portraits include transparent padding; zoom the image, not its lane. */
+.phone #audience{overflow:hidden}
+.phone #magicianMini{scale:-1 1;transform:none}
+.phone #stage#stage.f-coach #magicianMini{width:80px;height:80px}
+#stage#stage.f-story #banner{visibility:hidden}
+.phone #audienceCard{top:44px;height:calc(100% - 50px)}
+.phone #audience,.phone #audience.headliner,.phone.phone-tight #audience,.phone.phone-tight #audience.headliner{height:calc(100% - 72px)}
+.phone #audienceCard#audienceCard.f-story #audience{bottom:64px;height:calc(100% - 94px)}
+#stage #audienceCard{border:2px solid var(--brass);box-shadow:0 2px 0 #100D16}
+#stage#stage.f-panel #banner{visibility:hidden}
+#stage #magicianMini.performance-ready.routine-art:not(.reacting):not(.disappointed){background-image:var(--routine-art)!important;background-size:200% 100%!important;background-position:0% 0%;animation:kali-routine-frame 1.6s steps(1) both}
+@media(prefers-reduced-motion:reduce){#stage #magicianMini.performance-ready.routine-art:not(.reacting):not(.disappointed){animation:none;background-position:100% 0%}}
+.future-target{outline:3px solid #ffe17a!important;box-shadow:0 0 12px #ffe17a!important}
+#stage #audience.normalized-figure{position:absolute;overflow:visible}
+.failure-lesson{display:flex;align-items:center;justify-content:center;gap:8px;margin:6px 0}
+.failure-lesson span,.failure-lesson small{white-space:nowrap}
+.phone #stage [data-screen="fail"] .result{padding:4px}
+.phone #stage [data-screen="fail"] .result-icon{font-size:24px}
+.phone #stage [data-screen="fail"] .result h2{font-size:14px;margin:4px}
+.phone #stage [data-screen="fail"] .result p{font-size:11px;margin:4px}
+.phone #stage [data-screen="fail"] .result button{font-size:11px;white-space:nowrap;min-height:44px;padding:6px}
+#magicianMini.disappointed{filter:saturate(.3);transform:rotate(-10deg) translateY(5px)}
+#stage.decorations-paused :is(.helper-actor,.magic-layer,.projectile-impact){visibility:hidden!important}
+#stage #audience.normalized-figure{height:300px}
+.phone #stage #audience.normalized-figure{height:calc(100% - 72px)}
+.phone #stage #audienceCard#audienceCard.f-story #audience.normalized-figure{height:calc(100% - 94px)}
+#sceneLight{position:absolute;inset:0;pointer-events:none;z-index:21;opacity:0;background:radial-gradient(ellipse at center,#fff2c8 0%,#a97743 100%)}
+.telegraph .audience{filter:none}
+@keyframes u23-banner{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+@keyframes u23-banner-cycle{0%{opacity:0;transform:translateY(4px);animation-timing-function:var(--motion-in)}29%,71%{opacity:1;transform:translateY(0);animation-timing-function:var(--motion-out)}100%{opacity:0;transform:translateY(-4px)}}
+
+#banner.big:not([hidden]){animation-name:u23-banner-big;animation-duration:1600ms}
+@keyframes u23-banner-big{0%{opacity:0;transform:translateY(4px);animation-timing-function:var(--motion-in)}22%,78%{opacity:1;transform:translateY(0);animation-timing-function:var(--motion-out)}100%{opacity:0;transform:translateY(-4px)}}
+#stage #magicianMini.reacting{background-image:none!important}
+#stage #audienceCard{border:0;border-radius:0;background:transparent;box-shadow:none;isolation:isolate}
+#stage #audienceCard:before,.curtain-memory:before{content:'';position:absolute;inset:0;pointer-events:none;z-index:2;box-shadow:inset 0 0 0 8px rgba(23,20,31,.35),inset 0 0 0 20px rgba(23,20,31,.15)}
+#stage #audienceLine{top:auto;bottom:52px;left:6px;right:6px;width:auto;max-height:42px;background:#E3D2BA;color:#17141F;border:3px solid #A68A58;padding:3px;font-size:11px;line-height:14px;z-index:6}
+.phone #stage #audience.normalized-figure{bottom:52px;height:calc(100% - 104px)}
+.phone #stage #audienceCard#audienceCard.f-story #audience.normalized-figure{bottom:64px;height:calc(100% - 112px)}
+.tablet #stage #audience.normalized-figure{height:calc(100% - 176px);bottom:100px}
+#stage #audienceCard :is(.audience,.asset-sprite){filter:none}
+#stage #banner:not([hidden]){animation:none}
+#stage #audience{cursor:pointer}
+/* U31 colleague magicians: small row on the stage floor beside Kali, below the audience face and above the status strip. */
+#colleagues{position:absolute;left:136px;right:8px;bottom:56px;height:calc(var(--h) + 12px);display:flex;align-items:flex-end;gap:2px;z-index:3;pointer-events:none;--h:44px}
+#colleagues[data-n="4"],#colleagues[data-n="5"]{--h:38px}#colleagues[data-n="6"]{--h:32px}
+.tablet #colleagues{left:150px;bottom:92px;--h:78px}.tablet #colleagues[data-n="4"],.tablet #colleagues[data-n="5"]{--h:66px}.tablet #colleagues[data-n="6"]{--h:56px}
+#colleagues .colleague img{position:absolute;left:0;bottom:0;width:100%;height:100%;image-rendering:pixelated}
+#colleagues .colleague-perform{display:none}#colleagues .colleague.performing .colleague-perform{display:block}#colleagues .colleague.performing .colleague-idle{display:none}
+#colleagues .colleague.performing .colleague-trick{display:block}
+.phone #colleagues[data-n="5"] .colleague-name,.phone #colleagues[data-n="6"] .colleague-name{display:none}
+/* U31b: five or six colleagues shrink and sit lower so they stay below the audience body instead of covering it. */
+.phone #colleagues[data-n="5"],.phone #colleagues[data-n="6"]{bottom:50px}
+.phone #colleagues[data-n="5"]{--h:30px}.phone #colleagues[data-n="6"]{--h:26px}
+.phone #colleagues[data-n="5"] .colleague,.phone #colleagues[data-n="6"] .colleague{margin-bottom:2px}
+.tablet #colleagues .colleague-name{font-size:10px;line-height:12px;bottom:-13px}.tablet #colleagues .colleague-trick{font-size:18px;line-height:18px;top:-18px}
+@keyframes colleagueHop{0%,100%{transform:translateY(0)}40%{transform:translateY(-4px)}}
+.phone #stage #phoneVenue .venue-heading{height:40px}
+.tablet #stage #panel[data-screen="fail"] .result .fail-hint{font-size:15px;line-height:20px}
+#stage #panel[data-screen="fail"] .fail-scene{display:flex;align-items:flex-end;justify-content:center;gap:14px;height:76px;margin:0 0 2px}
+.tablet #stage #panel[data-screen="fail"] .fail-scene{height:150px;gap:28px}
+.tablet #stage #panel[data-screen="fail"] .fail-face,.tablet #stage #panel[data-screen="fail"] .fail-kali{width:150px;height:150px}
+/* v4 U44: the venue's 칼리 product row on the fail panel (one quiet line). On short phones the two faces shrink so the row costs little scrolling. */
+#stage #panel[data-screen="fail"] .fail-product{margin:0 0 2px;padding:0 6px;justify-content:center}
+.tablet #stage #panel[data-screen="fail"] .fail-product{font-size:15px;line-height:20px;padding:4px 14px}
+@media(max-height:430px){.phone:not(.tablet) #stage #panel[data-screen="fail"] .fail-scene{height:52px;margin:0}.phone:not(.tablet) #stage #panel[data-screen="fail"] .fail-face,.phone:not(.tablet) #stage #panel[data-screen="fail"] .fail-kali{width:52px;height:52px}}
+/* v4 U39: dialog lane (a speech bubble in the left column above Kali), its own one-row toast lane above the stats bar, phase chip and pattern
+   label below the doubt and heckle bars, and the clear moment (stamp and flash). Presentation only. */
+.phone #stage #audienceCard #audienceLine{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:4;overflow:hidden;left:6px;right:auto;top:auto;bottom:168px;width:calc(var(--audience-width) * .42 - 6px);height:auto;max-height:none;padding:4px 6px 0;border:2px solid #A68A58;background:#E3D2BA;color:#17141F;text-shadow:none;font-size:11px;line-height:14px;box-shadow:0 2px 0 #100D16;z-index:8}
+/* v4 U39 addendum: bubble tail (own element: the clamp's overflow:hidden would clip a pseudo-element), pattern label parts, win banner lane, toast row. */
+.phone #stage #audienceCard #audienceLine{text-align:left;word-break:keep-all}
+.phone #stage #audienceCard #audienceTail{display:none;position:absolute;width:0;height:0;border:7px solid transparent;border-left:8px solid #A68A58;border-right:0;left:calc(var(--audience-width) * .42 - 2px);bottom:calc(168px + var(--line-h, 20px) * .66 - 7px);z-index:9;pointer-events:none}
+.phone #stage #audienceCard #audienceTail:after{content:'';position:absolute;left:-10px;top:-5px;width:0;height:0;border:5px solid transparent;border-left:6px solid #E3D2BA;border-right:0}
+.phone #stage #audienceCard #audienceLine:not([hidden])+#audienceTail{display:block}
+.phone #audienceCard#audienceCard.f-story #audienceTail{visibility:hidden}
+@media(max-width:700px){.phone #stage #audienceCard #audienceTail{bottom:calc(148px + var(--line-h, 20px) * .66 - 7px)}}
+.tablet #stage #audienceCard #audienceTail{bottom:calc(264px + var(--line-h, 20px) * .66 - 7px)}
+.phone #stage #banner.win-banner,.phone #stage #banner.big.win-banner{top:auto;bottom:88px}
+.tablet #stage #banner.win-banner,.tablet #stage #banner.big.win-banner{bottom:120px}
+body:not(.phone) #viewport #stage #audienceCard #audienceLine{left:48px;right:auto;width:380px;top:auto;bottom:286px;max-height:96px;font-size:var(--fs-m);line-height:28px;padding:3px 6px;box-sizing:border-box;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;text-align:left}
+#audienceCard.healing .audience:after{content:"";background:url('assets/ui/ic-sparkle.webp') 30% 30%/32px 32px no-repeat,url('assets/ui/ic-sparkle.webp') 70% 40%/32px 32px no-repeat;image-rendering:pixelated;font-size:0}
+/* v4 U46 C3: stage dressing overlays (img27), over the venue art and under the audience, at whole-number scales (--dk: 1 on small phones, 2 otherwise). */
+#stageDressing{position:absolute;inset:46px 0 98px;z-index:1;pointer-events:none;overflow:hidden;--dk:2}
+#stageDressing img{position:absolute;image-rendering:pixelated;display:block}
+.phone #stageDressing .dress-shelf{bottom:34px}
+@keyframes u46-dress-in{0%{opacity:0}100%{opacity:1}}
+#stageDressing.dress-new img{animation:u46-dress-in .6s var(--motion-in) both}
+@keyframes u46-dress-note{0%{opacity:0}10%,80%{opacity:1}100%{opacity:0}}
+@media(prefers-reduced-motion:reduce){#stageDressing.dress-new img{animation:none}}
+@keyframes u47-card{0%{opacity:0}20%,80%{opacity:1}100%{opacity:0}}
+.phone #viewport #stage #phoneTop .venue-heading{width:100%;height:30px;margin-top:6px;padding:0 10px}
+.phone #viewport #stage #audienceCard{--CH:calc(var(--layout-height) - var(--T) - 6px);--PH:92px;--K:min(120px, calc(var(--CW) * .3), calc(var(--CH) * .3), calc(var(--CH) - var(--PH) - 156px));--PW:max(var(--K), 124px);
+  top:var(--T)!important;height:var(--CH)!important;bottom:auto!important;border:0!important;background:none;box-shadow:none;overflow:visible!important}
+.tablet #viewport #stage #audienceCard{--K:min(180px, calc(var(--CW) * .32), calc(var(--CH) * .3))}
+.phone-low #viewport #stage #audienceCard{--PH:46px}
+.phone #viewport #stage #audienceCard:before{content:none!important}
+.phone #viewport #stage #audienceCard #room,.phone #viewport #stage #audienceCard #stageDressing{left:-6px!important;top:calc(-1 * var(--T))!important;width:var(--stage-w)!important;height:var(--layout-height)!important;right:auto!important;bottom:auto!important}
+.phone #viewport #stage #stageDressing .dress-lights{left:6px!important;width:var(--CW)!important;top:calc(var(--T) - 2px)!important;transform:none!important;translate:none!important}
+.phone #viewport #stage #stageDressing .dress-shelf{display:none}
+/* the audience: centre left, the line bubble top right */
+/* v4 U50b (owner: the audience must not overlap the bubble, the 체력바 plate or the 의심 gauge): the audience box lives between the upright bars (left), the bubble band (top, 84 px)
+   and Kali's column with his plate (right, --PW wide), so the figure never touches the bubble, the plate, the bars or their tags */
+.phone #viewport #stage #audienceCard{--AW:calc(var(--CW) - 50px - var(--PW) - 8px)}
+.phone-low #viewport #stage #audienceCard{--AW:calc(var(--CW) * .38 - 58px)}
+.phone #viewport #stage #audienceCard #audience{left:50px!important;right:auto!important;width:var(--AW)!important;top:auto!important;bottom:4px!important;height:min(calc(100% - 136px), calc(var(--AW) * 1.15))!important;max-height:none!important}
+/* v4 U50d (Codex Sol U50c FAIL 1): no full-width audience on tall stages any more (it ran over Kali's plate and, with the tablet whole-pixel snap,
+   up into the toast lane, e.g. a110 at 1024x768). Tall stages keep the same column as phones; the box height leaves 6 percent for the snap
+   (ui.js snapAudience lets the image reach 1.06 x its box), so the drawn figure stays below the 136 px band. */
+.tablet #viewport #stage #audienceCard #audience{height:min(calc((100% - 136px) / 1.06), calc(var(--AW) * 1.15 / 1.06))!important}
+.phone #viewport #stage #audienceCard .audience-shadow{display:none}
+.phone #viewport #stage #audienceCard #audienceLine{left:auto!important;right:4px!important;top:4px!important;bottom:auto!important;width:calc(var(--CW) * .42)!important;max-width:none!important}
+/* the bubble's tail now hangs from its lower edge and points down at the audience below it */
+.phone #viewport #stage #audienceCard #audienceTail{left:calc(100% - 4px - var(--CW) * .42 + 24px)!important;right:auto!important;bottom:auto!important;top:calc(4px + var(--line-h, 20px))!important;border:7px solid transparent!important;border-top:8px solid #A68A58!important;border-bottom:0!important}
+.phone #viewport #stage #audienceCard #audienceTail:after{left:-5px!important;top:-10px!important;border:5px solid transparent!important;border-top:6px solid #E3D2BA!important;border-bottom:0!important}
+/* v4 U50c (Codex Sol U50b FAIL 2, rule: no bubble text is cut off): the bubble is never line-clamped; it grows to the lines it needs (the longest
+   data.js line takes 4 lines in the narrowest bubble) inside the bubble band above the audience box */
+#viewport #stage #audienceCard #audienceLine{-webkit-line-clamp:unset!important;max-height:none!important;height:auto!important;text-overflow:clip}
+/* front right: Kali, his spotlight plate under him; his helpers at the front left */
+.phone #viewport #stage #audienceCard #magicianMini{left:auto!important;right:4px!important;top:auto!important;bottom:calc(var(--PH) + 10px)!important;width:var(--K)!important;height:var(--K)!important;max-height:none!important;z-index:4}
+.phone #viewport #stage #audienceCard #stageStats > *{justify-content:flex-start;height:20px;white-space:nowrap;overflow:hidden;min-width:0;width:auto!important;max-width:100%;margin:0!important;box-sizing:border-box;font-size:var(--fs-s)}
+.phone #viewport #stage #audienceCard #colleagues{left:50px!important;right:auto!important;width:calc(var(--CW) - 50px - var(--PW) - 12px)!important;bottom:2px!important;top:auto!important;justify-content:flex-start;--h:30px;overflow:hidden}
+.phone-low #viewport #stage #audienceCard #colleagues{display:none}
+.phone #viewport #stage #banner small{margin-top:0!important;font-size:10px}
+/* ---- desktop 1600 x 900 stage ---- */
+body:not(.phone) #viewport #stage #audienceCard{border:0!important;background:none;box-shadow:none;overflow:visible!important}
+body:not(.phone) #viewport #stage #audienceCard:before{content:none!important}
+body:not(.phone) #viewport #stage #audienceCard #room,body:not(.phone) #viewport #stage #audienceCard #stageDressing{left:-76px!important;top:-48px!important;width:1600px!important;height:900px!important}
+body:not(.phone) #viewport #stage #stageDressing .dress-lights{left:200px!important;width:600px!important;top:40px!important;transform:none!important;translate:none!important}
+body:not(.phone) #viewport #stage #stageDressing .dress-shelf{display:none}
+body:not(.phone) #viewport #stage #audienceCard .venue-heading{left:380px!important;top:-40px!important;width:420px!important;height:52px!important}
+body:not(.phone) #viewport #stage #audienceCard #audience{left:120px!important;top:150px!important;width:300px!important;height:440px!important}
+body:not(.phone) #viewport #stage #audienceCard .audience-shadow,body:not(.phone) #viewport #stage #audienceCard #crowd{display:none}
+body:not(.phone) #viewport #stage #audienceCard #audienceLine{left:auto!important;right:24px!important;top:110px!important;width:220px!important;bottom:auto!important}
+body:not(.phone) #viewport #stage #audienceCard #magicianMini{left:auto!important;right:24px!important;top:370px!important;width:230px!important;height:230px!important}
+body:not(.phone) #viewport #stage #audienceCard #stageStats > *{justify-content:flex-start;height:30px;white-space:nowrap;overflow:hidden;min-width:0;font-size:var(--fs-s)}
+body:not(.phone) #viewport #stage #audienceCard #colleagues{left:120px!important;width:380px!important;top:724px!important;bottom:auto!important;justify-content:flex-start;gap:6px;--h:48px}
+/* v4 U50c: desktop lane = the free top bar between the marquee and 도감 (the currencies are in the board card below it) */
+body:not(.phone) #viewport #stage #banner{left:456px!important;width:420px!important;top:6px!important;bottom:auto!important;max-height:56px;overflow:hidden;padding:4px 12px!important;font-size:var(--fs-m);z-index:26}
+/* ===== v4 U54: the owner's mix of layout5 proposals 1 and 3 (owner: "시안 1과 3을 더하면 좋겠다 ... 위에 저렇게 버튼이나 재화를 볼 수 있는게 좋아 ...
+   주인공의 자신감이나 멘탈은 ... 시안 1처럼 밑에 ... 대사창 위치 ... 미감 좋게"). Phones in landscape first.
+   1. One thin full-width top row (proposal 3 without the stats): the venue name as plain text, the currencies, 도감, 메뉴.
+   2. Kali's stats (액트, 멘탈, 자신감) in a band along the bottom of the stage (proposal 1, release 7 place).
+   3. Release 7 places (Kali bottom left, audience middle to right, companions between), the vertical doubt gauge and 야유 bar, a framed left
+      stage with the venue art only inside it, and a right board half painted in the venue palette (proposal 1's soft spotlight).
+   4. The audience bubble sits above the audience with its tail at the audience's centre; a character dialog sits at the top of the stage,
+      clear of the speakers standing on the stage floor. The name tag keeps the U53 fit (fitDoubtPlate). */
+/* -- the stage card: only the stage, framed, the venue art stays inside it -- */
+html body.phone #viewport#viewport #stage #audienceCard{--CH:calc(var(--layout-height) - var(--ST) - 6px);top:var(--ST)!important;height:var(--CH)!important;bottom:auto!important;overflow:hidden!important;border-radius:8px;
+  box-shadow:0 0 0 2px #2a2333,0 0 0 3px color-mix(in srgb,var(--venue-accent,#e9b44c) 55%,#000);
+  --K:min(120px, calc(var(--CW) * .3), calc(var(--CW) * .42 - 54px), calc(var(--CH) - var(--TB) - 142px - var(--SB)));
+  --AW:calc(var(--CW) * .58 - 4px)}
+html body.phone.phone-narrow #viewport#viewport #stage #audienceCard{--K:min(120px, calc(var(--CW) * .3), calc(var(--CW) * .42 - 54px), calc(var(--CH) - var(--TB) - 158px - var(--SB)))}
+html body.phone.phone-narrow #viewport#viewport #stage #audienceCard #audience{height:min(calc(var(--CH) - var(--TB) - 158px - var(--SB)), calc(var(--AW) * 1.15))!important}
+html body.phone-low #viewport#viewport #stage #audienceCard #colleagues{display:flex!important;--h:26px}
+html body.tablet #viewport#viewport #stage #audienceCard{--K:min(180px, calc(var(--CW) * .32), calc(var(--CW) * .42 - 54px), calc(var(--CH) - var(--TB) - 142px - var(--SB)))}
+html body.phone #viewport#viewport #stage #phoneTop .venue-heading{background:none;box-shadow:none;border:0!important;height:40px!important;padding:0 4px!important;margin:0!important;flex-direction:column;align-items:flex-start!important;justify-content:center!important;gap:0!important;width:auto!important}
+html body.tablet #viewport#viewport #stage #phoneTop .venue-heading{height:52px!important}
+/* the audience bubble: above the audience (right of the name tag), its tail at the audience's centre pointing down at the head */
+html body.phone #viewport#viewport #stage #audienceCard #audienceLine{top:4px!important;right:4px!important;left:auto!important;width:calc(var(--CW) * .42 - 6px)!important;max-width:none!important}
+html body.phone #viewport#viewport #stage #audienceCard #audienceTail{left:calc(var(--CW) * .42 + var(--AW) / 2 - 7px)!important;right:auto!important;bottom:auto!important;top:calc(4px + var(--line-h, 20px))!important}
+html body:not(.phone) #viewport#viewport #stage #audienceCard{left:24px!important;top:64px!important;width:740px!important;height:812px!important;overflow:visible!important;border-radius:10px;box-shadow:0 0 0 3px #2a2333,0 0 0 5px color-mix(in srgb,var(--venue-accent,#e9b44c) 55%,#000)}
+html body:not(.phone) #viewport#viewport #stage #audienceCard #room,html body:not(.phone) #viewport#viewport #stage #audienceCard #stageDressing{left:0!important;top:0!important;width:100%!important;height:100%!important;border-radius:10px;overflow:hidden}
+html body:not(.phone) #viewport#viewport #stage #stageDressing .dress-lights{left:120px!important;width:600px!important;top:var(--TB)!important}
+html body:not(.phone) #viewport#viewport #stage #audienceCard #audienceLine{top:50px!important;right:20px!important;left:auto!important;width:300px!important}
+html body:not(.phone) #viewport#viewport #stage #audienceCard #audience{left:330px!important;width:390px!important;top:calc(var(--TB) + 240px)!important;height:calc(812px - var(--TB) - 240px - var(--SB) - 70px)!important}
+html body:not(.phone) #viewport#viewport #stage #audienceCard #magicianMini{left:90px!important;right:auto!important;top:auto!important;bottom:calc(var(--SB) + 20px)!important;width:220px!important;height:220px!important}
+html body:not(.phone) #viewport#viewport #stage #audienceCard #colleagues{left:320px!important;width:400px!important;top:auto!important;bottom:calc(var(--SB) + 12px)!important}
+html body:not(.phone) #viewport#viewport #stage .caption{top:878px}
+html body:not(.phone) #viewport#viewport #stage #audienceCard #stageStats > *{height:36px!important;font-size:var(--fs-s)!important;width:auto!important;flex:none!important;overflow:visible!important}
+/* v4 U54b: reserve the left column for labels, toasts and Kali; use the whole free right column for the audience.
+   fitStageAudience measures the complete bubble and cropped art. A wide face fits by width as well as height. */
+html body.phone:not(.tablet) #viewport#viewport #stage #audienceCard{--AW:calc(var(--CW) * .5 - 8px);--K:max(1px, min(120px, calc(var(--CW) * .3), calc(var(--CW) * .5 - 54px), calc(var(--CH) - var(--SB) - var(--left-floor, 142px))))}
+html body.phone:not(.tablet) #viewport#viewport #stage #audienceCard #audience{left:calc(var(--CW) * .5 + 4px)!important;width:var(--AW)!important;height:var(--aud-fit-h, 1px)!important}
+html body.phone #viewport#viewport #stage #audienceCard #audienceLine{top:var(--bubble-top, 4px)!important}
+html body.phone #viewport#viewport #stage #audienceCard #audienceTail{top:calc(var(--bubble-top, 4px) + var(--line-h, 20px))!important}
+html body.phone:not(.tablet) #viewport#viewport #stage #audienceCard #audienceTail{left:calc(var(--CW) * .75 - 7px)!important}
+html body.phone #viewport#viewport #stage #audienceCard #stageStats .stage-rate,
+html body:not(.phone) #viewport#viewport #stage #audienceCard #stageStats .stage-rate{display:flex;align-items:center;gap:3px;color:#F2E6C8;white-space:nowrap}
+/* v4 U54c: tablets reserve the entire bubble/toast band before snapping the portrait. */
+html body.tablet #viewport#viewport #stage #audienceCard #audience{height:var(--aud-fit-h, 1px)!important}
+/* v4 U54d: keep the complete clear-stamp pop below the bubble and inside the portrait lane.
+   Its top-right origin and unrotated scale animation keep this edge fixed even at scale(2). */
+html body.tablet #viewport#viewport #stage #audienceCard #winStamp,
+html body.phone.phone-narrow #viewport#viewport #stage #audienceCard #winStamp{top:calc(var(--bubble-top, 4px) + var(--line-h, 20px) + 18px);right:8px;transform-origin:100% 0;line-height:1.25;font-size:max(1px,min(44px,calc((var(--CW) - 84px) / 10),calc((var(--aud-fit-h, 120px) - 20px) / 2.5)))}
+@keyframes kali-flinch{0%{transform:translateX(0)}40%{transform:translateX(-6px)}100%{transform:translateX(0)}}
+#stage #magicianMini.flinch{animation:kali-flinch 180ms linear}
+/* s4j 6: the band fades out in place before the cards land (1000 ms); it used to slide right across the audience and left a 칼리 cut-out over them at the impact. */
+@keyframes finale-kali{0%,33%{transform:translateX(-160%)}58%{transform:translateX(0)}75%{transform:translateX(0)}100%{transform:translateX(30%)}}
+#stage #magicianMini.finale-glint{animation:finale-glint 400ms linear}
+#viewport #stage #board .respawn-stage{
+  position:absolute;z-index:4;pointer-events:none;background:none;border:0;box-shadow:none;
+}
+/* Static motion-contract reference: @keyframes portrait-kali-pop { filter: brightness(1.55); } (portrait.css) */
+/* Respawn art uses the same shared footprint as the backup chest. */
+#viewport #stage #board .respawn-stage {
+  inset: auto;
+  left: 14%;
+  top: 14%;
+  width: 72%;
+  height: 72%;
+}
+html body #viewport#viewport #stage#stage #audienceCard,
+html body #viewport#viewport #stage#stage #stageStats { border-image:url('assets/kit/stats-frame.webp') 8 fill / 4px / 0 stretch; }
+/* The same stage dressing is painted behind and around the existing landscape actors. */
+#stage #mockupDressing { display:block; }
+#stage #audienceLine { color:#F2E6C8; }
+/* Lane 1f: the painted tabletop starts at 19 percent above the stage floor in every layout. */
+html body #viewport#viewport #stage#stage #audienceCard #magicianMini { bottom:19% !important; }
+html body #viewport#viewport #stage#stage#stage#stage :is(.achievement-stamp.secret,.kit-row.locked) { border-image-source:url('assets/kit/row-locked.webp'); }
+html body #viewport#viewport #stage#stage#stage#stage #audienceTail { background:none; box-shadow:none; border:0; }
+html body:not(.phone) #viewport#viewport #stage#stage#stage#stage #audienceCard #audience { left:auto !important; right:6% !important; top:auto !important; bottom:var(--aud-foot,20%) !important; width:var(--aud-fit-w,1px) !important; height:var(--aud-fit-h,1px) !important; }
+html body #viewport#viewport #stage#stage#stage#stage .stage-reward { border:0; border-image:url('assets/kit/modal-panel.webp') 40 fill / 20px / 0 stretch; background:none; }
+html body #viewport#viewport #stage#stage#stage#stage #banner#banner small { display:block; font:12px/18px system-ui,sans-serif; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #audienceCard .caption { bottom:10px; min-height:36px; height:auto; line-height:18px; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #audienceCard #levelXp { bottom:88px; }
+/* Decorative tier announcements yield to the current audience's speech. */
+html body #viewport#viewport #stage#stage#stage#stage #audienceCard.has-audience-line .dress-note { visibility:hidden; }
+html body.phone:not(.portrait-layout) #viewport#viewport #stage#stage #audienceCard #audience { left:calc(var(--CW) * .75 - var(--aud-fit-w,1px) / 2) !important; }
+html body:not(.phone) #viewport#viewport #stage#stage#stage#stage .caption { color:#f2e6c8; font-family:system-ui,sans-serif; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #storyDialog.stage-launch .stage-start { grid-column:3 / -1; }
+html body.phone:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #storyDialog.stage-launch .stage-start { grid-column:3 / -1; }
+/* R0: scale complete actor frames around the existing landscape table centres. */
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #audienceCard { --actor-size:min(calc(var(--CW,740px) * .60),calc((var(--layout-height,900px) - var(--ST,88px) - 6px) * .54)); }
+html body.phone:not(.tablet):not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #audienceCard { --actor-size:min(calc(var(--CW,740px) * .60),calc((var(--layout-height,900px) - var(--ST,88px) - 6px) * .54),calc(var(--CH) - var(--SB) - var(--left-floor,142px))); }
+html body:not(.phone):not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #audienceCard { --actor-size:438px; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #audienceCard #magicianMini { left:calc(30% - var(--actor-size) / 2) !important; width:var(--actor-size) !important; height:var(--actor-size) !important; max-height:none; transform:none; scale:-1 1 !important; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #audienceCard #audience { left:calc(74% - var(--aud-fit-w,1px) / 2) !important; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #mockupDressing :is(.mockup-table-top,.mockup-skirt) { left:12.5%; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #mockupDressing .mockup-desk { right:5%; width:42%; }
+
+/* Leave a horizontal gap beside the enlarged tablet actor, including long dialogue. */
+html body.phone.tablet:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #audienceCard #audienceLine { left:max(58%,calc(30% + var(--actor-size) / 2 + 8px)) !important; right:4px !important; width:auto !important; }
+html body.phone #viewport#viewport #stage#stage#stage#stage[data-cutscene="1"].f-panel :is(#audienceCard,#boardCard,#phoneTop) { visibility:visible; }
+/* s4e1 A: 900 ms entrance. Reuses .finale-dark (30%) and .finale-spot; the plate is the only new piece. */
+#finaleFx .headliner-plate { display:none; }
+/* s4j 4: landscape phones placed the win stamp at top:60px of the audience card, under the win banner (z 26, stage top 92px), so it never showed.
+   It now sits under the audience line like the tablet and narrow layouts (same formula as above), right of the audience's head. */
+html body.phone:not(.portrait-layout):not(.tablet):not(.phone-narrow) #viewport#viewport #stage #audienceCard #winStamp { top:calc(var(--bubble-top, 4px) + var(--line-h, 20px) + 18px); right:8px; }
+/* s5b (owner 10-24): the theater subway memory (the rest of beforeHeadliner, played between the two theater phases) dims the stage behind the
+   lines: "memory" = grey and dark; "present" (from 밍기리's "인간... 실패... 크다!") = a little dark, with 밍기리 himself lit. The dialog box, the
+   doubt plate and the buttons are not touched. Reduced motion drops the fade (the global reduce rule). !important: the portrait layer
+   sets filter:none on the figures with a long id chain; the shade is only on while those lines are open. */
+html body #viewport #stage[data-story-shade] #audienceCard :is(#room,#stageDressing,#mockupDressing,#crowd,.audience-shadow,#audience,#kaliTable,#magicianMini,#stageLight) { transition:filter .45s ease; }
+html body #viewport #stage[data-story-shade="memory"] #audienceCard :is(#room,#stageDressing,#mockupDressing,#crowd,.audience-shadow,#audience,#kaliTable,#magicianMini,#stageLight) { filter:grayscale(.85) brightness(.5) !important; }
+html body #viewport #stage[data-story-shade="present"] #audienceCard :is(#room,#stageDressing,#mockupDressing,#crowd,.audience-shadow,#kaliTable,#magicianMini,#stageLight) { filter:saturate(.7) brightness(.72) !important; }
+html body.phone:not(.portrait-layout) #viewport #stage #finaleFx.finale-intro .headliner-plate { font-size:20px; }

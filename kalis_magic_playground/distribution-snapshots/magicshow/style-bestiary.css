@@ -1,0 +1,33 @@
+/* style-bestiary.css: bestiary, collection ribbons, true fans, daily missions. (CSS regroup 10-28)
+ * Earlier or later rules for the same elements may also sit in style-base.css (early layer) and
+ * style-overrides-*.css (late layer) when the cascade needs them there. */
+.bestiary-list{display:grid;gap:28px}.bestiary-venue{border:2px solid #585d70;padding:18px;background:#101018}.bestiary-venue h2{margin:0;font-size:22px;color:#ffe65c}.bestiary-venue>p{font-size:22px}
+.bestiary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.bestiary-entry{position:relative;border:2px solid #606577;background:#191923;padding:16px;display:flex;flex-direction:column;gap:8px;min-width:0;font-size:22px}.entry-emoji{font-size:44px}.bestiary-entry h3{margin:0;font-size:22px}.bestiary-entry p{margin:0;font-size:22px;line-height:1.5}.bestiary-entry small{font-size:22px;line-height:1.5}.entry-flavor{color:#b8bac8;min-height:48px}
+.bestiary-silhouettes{display:flex;gap:20px;margin-top:22px}.bestiary-silhouettes span{font-size:44px;filter:brightness(0);text-shadow:0 0 4px #ccc;opacity:.55}
+.constellation-lines line.owned{stroke:#70de88}
+.phone .bestiary-venue{padding:8px}.phone .bestiary-entry{padding:10px;gap:4px;font-size:11px}
+.phone .entry-flavor{min-height:0}
+.phone .bestiary-list{gap:12px}
+.phone .bestiary-silhouettes{flex-wrap:wrap;gap:8px}.phone .bestiary-silhouettes span{font-size:33px}
+.u14-art img{display:none;width:100%;height:100%;image-rendering:pixelated}
+.u14-art.art-loaded img{display:block}
+.streak-cycle span{padding:8px;background:#252338}.streak-cycle .current{outline:2px solid #ffe65c}
+.daily-mission progress{width:100%;accent-color:#ffe65c}
+.phone .daily-mission{padding:8px}.phone .streak-cycle span{padding:6px}
+.phone .bestiary-entry h3{font-size:11px;letter-spacing:-.3px}
+#stage .constellation-lines line.owned{stroke:var(--ok)}
+#stage .outfit-collection{gap:12px}
+.phone #stage .bestiary-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+#stage .entry-portrait{display:flex;align-items:center;gap:12px;min-height:64px}
+#stage .entry-portrait .entry-emoji{width:64px;height:64px;flex:none}
+#stage .bestiary-entry.completed{border-color:var(--ok)}
+.truefan-slot p{overflow-wrap:anywhere}
+body.phone:not(.portrait-layout) .routine-collection{grid-template-columns:repeat(5,minmax(0,1fr))}
+.routine-collection>strong{grid-column:1 / -1}
+#stage .bestiary-guide .entry-emoji{height:64px}
+.tablet #stage .bestiary-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+html body #viewport#viewport #stage#stage#stage#stage :is(.achievement-stamp.earned,.bestiary-entry.completed,.ending-entry.seen,.kit-row.selected) { border-image-source:url('assets/kit/row-selected.webp'); color:#302014; }
+html body #viewport#viewport #stage#stage#stage#stage .medal-check { font-size:0; width:20px; height:20px; background:url('assets/kit/icon-checkmark.webp') center / contain no-repeat; }
+/* Drawn replacements for the remaining small surfaces found in the screen sweep. */
+html body #viewport#viewport #stage#stage#stage#stage :is(.daily-mission,#audienceLine) { border:0; border-image:url('assets/kit/row-normal.webp') 24 fill / 12px / 0 stretch; background:transparent; padding:12px; box-shadow:none; }
+html body #viewport#viewport #stage#stage#stage#stage .outfit-collection { gap:8px; justify-content:flex-start; font:14px/20px system-ui,sans-serif; }

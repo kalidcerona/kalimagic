@@ -1,0 +1,228 @@
+/* style-overrides-2.css: late override layer 2 of 3 (CSS regroup 10-28).
+ * Chronological patch rules that could not be untangled: each one sets a property that a rule of another
+ * feature also sets on the same element at the same specificity, so source order decides the winner. Either
+ * it must win over a rule that now lives in a feature file, or a later rule in this layer must win over it.
+ * The layer therefore loads after every feature file and keeps the original order. Do not move a rule from
+ * here into its feature file without re-running .runs-v5/css-regroup/regroup.cjs and the css-equivalence gate.
+ * Rules per owning feature here: stage 39, minigames 33, panel 20, stats-strip 15, stage-meters 14, dialog 14, topbar 10, effects 10, board 8, base 8, skills 7, menu 7, skilltree 7, shop 2, bestiary 2. */
+#stage :is(button,.chip){image-rendering:pixelated;border-style:solid;border-width:8px;border-image:url('assets/ui/ui-button.webp') 8 fill / 8px / 0 stretch;background-color:#25202D;border-radius:0;color:#F2E6C8;box-sizing:border-box;min-height:44px}
+#stage :is(button,.chip):disabled{border-image-source:url('assets/ui/ui-button-disabled.webp');color:#A68A58}
+#stage :is(.stage-start,.tree-buy,.failure-retry){border-image-source:url('assets/ui/ui-button-primary.webp');color:#17141F}
+#stage .audience-shadow{background:rgba(232,191,104,.10);box-shadow:0 0 0 16px rgba(232,191,104,.05);border-radius:0;filter:none;transform:none;left:20%;width:60%;height:45%;bottom:60px}
+#stage #phoneWallet .hud{background:none;border:0;box-shadow:none}
+#stage #phoneWallet .currency{background:none;border:0;box-shadow:none;padding:0;white-space:nowrap}
+#stage .doubt{box-sizing:border-box;height:24px;border:3px solid #A68A58;border-image:url('assets/ui/ui-bar-frame-main.webp') 3 fill / 3px / 0 stretch;background:#17141F;border-radius:0;overflow:hidden}
+#stage .doubt-fill{background:#B5444C url('assets/ui/ui-bar-fill-doubt.webp') repeat-x;background-size:48px 30px;box-shadow:none}
+#stage .doubt-label{inset:0;white-space:nowrap;text-shadow:1px 0 #17141F,-1px 0 #17141F,0 1px #17141F,0 -1px #17141F;color:#F2E6C8;padding:0 4px;line-height:18px}
+#stage #board .cell{border-radius:0;image-rendering:pixelated;background:transparent;border:3px solid transparent;border-image:url('assets/ui/ui-board-cell.webp') 3 fill / 3px / 0 stretch}
+#stage #stageStats :is(.mental,.shield,.combo){position:static;inset:auto;display:flex;align-items:center;gap:3px;width:auto;height:auto;min-width:0;background:none;border:0;box-shadow:none;margin:0;padding:0;white-space:nowrap;color:#F2E6C8;font-size:11px}
+#stage #stageStats .mental-label,#stage #stageStats .hearts{display:none}
+.phone #stage #audienceCard{width:var(--audience-width);overflow:visible}
+.phone #stage #boardCard{width:calc(44% - 12px);height:var(--board-size);right:6px;top:44px}
+.phone #stage #board{position:absolute;right:0;top:0;width:var(--board-size);height:var(--board-size)}
+.phone #stage #activeSkills{left:0;top:var(--board-size);right:0;display:flex;flex-direction:row;justify-content:flex-end;gap:4px}
+.phone #stage #heckleMeter{top:38px;height:10px}
+.phone #stage #stageStats{bottom:22px;height:28px}
+.phone #stage #storyDialog{border-width:9px;padding:3px;color:#17141F}
+.tablet #stage #phoneTop{height:56px;gap:12px;background-size:256px 88px}
+.tablet #stage #phoneVenue{font-size:20px}
+.tablet #stage #phoneWallet{font-size:18px;padding:4px 12px}
+.tablet #stage #audienceCard,.tablet #stage #boardCard{top:56px}
+.tablet #stage #audienceCard{height:calc(100% - 68px)}
+.tablet #stage #boardCard{height:calc(100% - 68px)}
+.tablet #stage #board{top:48px;right:12px}
+.tablet #stage #activeSkills{top:calc(var(--board-size) + 60px);right:12px;gap:12px}
+.tablet #stage #magicianMini{width:160px;height:160px;bottom:100px}
+.tablet #stage #stageStats{height:44px;bottom:32px}
+.tablet #stage #mentalNumber{font-size:16px}
+.tablet #stage #storyDialog{height:100px;min-height:100px;font-size:16px;bottom:0}
+.tablet #stage #panel{inset:64px 12px 12px;width:auto;height:auto;transform:none;font-size:16px}
+.tablet #stage #panelBody{font-size:16px}
+.curtain-memory{position:relative;min-height:250px;isolation:isolate;background-size:cover;background-position:center;padding:8px 12px;text-align:center;overflow:hidden}
+.curtain-memory h2,.curtain-closing{position:relative;z-index:4;margin:4px;color:#F2E6C8}
+.curtain-cast{position:relative;z-index:3;display:flex;flex-wrap:wrap;justify-content:center;align-items:flex-end;min-height:140px;background:rgba(232,191,104,.10);box-shadow:inset 0 0 0 16px rgba(232,191,104,.05);padding:12px 20px}
+.curtain-actor{position:relative;width:70px;height:120px;margin:0 -6px;flex:none}
+.curtain-actor.headliner{width:84px;height:140px}
+.curtain-actor .asset-sprite{position:absolute;bottom:0;left:0;width:100%;height:84%;object-fit:contain;object-position:center bottom;image-rendering:pixelated}
+.curtain-actor.headliner .asset-sprite{height:95%}
+#stage .curtain-bubble{position:relative;z-index:4;width:100%;min-height:44px;height:auto;font-size:12px;padding:8px;white-space:normal}
+.tablet .curtain-actor{width:110px;height:210px}
+.tablet .curtain-actor.headliner{width:132px;height:240px}
+#stage .routine-table{position:relative;max-width:520px;width:100%;height:180px;margin:0 auto;background: url('assets/ui/dealer-table.webp') center bottom / 100% 100% no-repeat;overflow:visible}
+#stage .routine-mat{position:absolute;left:6%;top:16%;width:88%;height:70%;image-rendering:pixelated}
+#stage .game-cup,#stage .routine-card{position:absolute;left:calc(8% + var(--slot) * 28%);top:24px;width:28%;height:112px;min-height:44px;border:0;background:none;box-shadow:none;padding:0;transition:none;image-rendering:pixelated}
+#stage .cup-prop{position:absolute;inset:0;width:100%;height:96px;object-fit:contain;image-rendering:pixelated;z-index:2}
+#stage .cup-ball{position:absolute;width:24px;height:24px;left:calc(50% - 12px);bottom:8px;image-rendering:pixelated}
+#stage .routine-wand{position:absolute;width:192px;height:48px;left:8%;top:-16px;object-fit:contain;z-index:3;image-rendering:pixelated}
+#stage .routine-hand{position:absolute;width:100px;height:75px;left:calc(50% - 50px);top:-32px;image-rendering:pixelated;z-index:4;pointer-events:none}
+#stage .cup-lifting{background:url('assets/ui/fx-cup-lift.webp') no-repeat 0 0 / 384px 96px;object-position:-999px;animation:u26-cup-lift 480ms steps(4) 1}
+#stage .ball-popping{animation:u26-ball-pop 320ms steps(4) 1;background:url('assets/ui/fx-ball-pop.webp') no-repeat 0 0 / 128px 32px}
+#stage .card-flipping{background:url('assets/ui/fx-card-flip.webp') no-repeat center / 384px 88px;animation:u26-card-flip 240ms steps(6) 1}
+#stage .money-win{box-shadow:0 0 0 3px #E8BF68;animation:u26-prize 150ms ease-out 1}
+#stage .gem-game{position:relative;padding:4px;text-align:center}
+@media(max-height:360px){.phone #stage #activeSkills{top:0;left:calc(100% - var(--board-size) - 54px);right:auto;flex-direction:column}.phone #stage #boardCard{height:var(--board-size)}}
+#stage #audienceCard .audience-shadow{display:block;z-index:1;pointer-events:none}
+#stage :is(.stage-start,.tree-buy,.failure-retry){border-image-source:url('assets/ui/ui-button.webp');color:#F2E6C8}
+#stage .u26-primary{border-image-source:url('assets/ui/ui-button-primary.webp');color:#17141F}
+#stage .u26-primary:active{border-image-source:url('assets/ui/ui-button-pressed.webp')}
+.tablet #stage #audienceLine{bottom:80px;font-size:16px;line-height:22px}
+@media(prefers-reduced-motion:reduce){#stage :is(.cup-lifting,.ball-popping,.card-flipping,.money-win){animation:none}#stage .card-flipping img{visibility:visible}}
+@media(max-width:779px){.phone-compact #stage #stageStats{bottom:56px}.phone-compact #stage #audience.normalized-figure{bottom:90px;height:calc(100% - 142px)}}
+.phone #stage #board{left:auto;padding:calc(var(--board-size) * 8 / 608)}
+#stage .curtain-confetti{position:absolute;width:32px;height:32px;z-index:4;pointer-events:none;image-rendering:pixelated;background:url('assets/ui/fx-ribbon.webp') no-repeat 0 0 / 128px 32px;animation:u26-confetti 400ms steps(4) 1}
+.missing-ui-panel #stage :is(#panel,#phoneMore,#offlineCard,.constellation-detail){border-image:none;border:2px solid #A68A58;background:#25202D}
+.missing-ui-panel-inner #stage :is(.bestiary-entry,.gem-shop-item,.cosmetic-card,.map-venue,#stageStats,#phoneWallet){border-image:none;border:1px solid #6B5A3A;background:#25202D}
+.missing-ui-button #stage :is(button,.chip),.missing-ui-button-primary #stage .u26-primary,.missing-ui-button-pressed #stage button:active,.missing-ui-button-disabled #stage button:disabled{border-image:none;border:2px solid #A68A58;background:#25202D}
+.missing-ui-button-primary #stage .u26-primary{background:#E8BF68;color:#17141F}
+.missing-ui-dialog #stage :is(#storyDialog,.curtain-bubble){border-image:none;border:2px solid #A68A58;background:#E3D2BA}
+.missing-ui-bar-frame-main #stage .doubt,.missing-ui-bar-frame #stage #heckleMeter{border-image:none;border:1px solid #A68A58}
+#stage .u26-primary:disabled{border-image-source:url('assets/ui/ui-button-disabled.webp');color:#A68A58}
+#stage .curtain-confetti{animation:u26-confetti-frames 400ms steps(4) 1,u26-confetti-drift 400ms ease-out 1}
+#stage .routine-card.card-flipping{background:none;animation:none}
+.tablet #stage :is(#panel,#phoneMore,#offlineCard,.constellation-detail){border-width:32px;border-image-width:32px}
+.tablet #stage :is(.bestiary-entry,.gem-shop-item,.cosmetic-card,.map-venue,#stageStats,#phoneWallet){border-image-width:16px}
+.tablet #stage :is(.doubt,#heckleMeter){border-image-width:4px}
+.tablet #stage .doubt-fill,.tablet #stage #heckleFill{background-size:64px 40px}
+.tablet #stage #storyDialog{border-image-width:16px}
+#stage .u26-primary:hover:enabled{color:#17141F}
+#stage #panelBody:has(>.gem-game){display:grid;grid-template-columns:76px minmax(0,1fr);align-items:start;gap:4px}
+#stage .routine-highlight{box-shadow:0 0 0 3px #E8BF68}
+#stage .final-load{animation:u26-prize 150ms ease-out 1}
+#stage .final-load-fx{position:absolute;left:calc(50% - 16px);bottom:40px;width:32px;height:32px;z-index:3;image-rendering:pixelated;background:url('assets/ui/fx-coin-spark.webp') no-repeat 0 0 / 128px 32px;animation:u26-confetti-frames 400ms steps(4) 1}
+/* U27-0: save recovery notice. */
+.save-version-notice{position:fixed;z-index:10000;left:12px;right:12px;top:12px;padding:10px 14px;border-radius:12px;background:#252039;color:#fff;text-align:center;font-size:14px;box-shadow:0 2px 12px #0008}
+.save-update-button{display:inline-block;padding:6px 10px;border-radius:8px;background:#f6db89;color:#241c38;text-decoration:none;font-weight:700}
+#stage .gem-game .game-cup,#stage .gem-game .routine-card{left:calc(25% + var(--slot) * 25%);margin-left:-48px;top:calc(55% - 48px);width:96px;height:96px;min-height:0;padding:0;border:0;background:none;box-shadow:none}
+#stage .gem-game .routine-card{height:132px;top:calc(50% - 66px)}
+#stage .gem-game .routine-card .card-num{position:absolute;left:22px;right:22px;top:50%;transform:translateY(-50%);text-align:center;font-size:24px;line-height:30px;font-weight:bold;color:#322048;background:#F2E6C8;border:2px solid #A68A58}
+#stage .gem-game .game-result{display:inline-block;padding:4px 12px;margin:6px 0;background-color:#25202D;border:2px solid #A68A58}
+.tablet #stage #board{top:calc((100% - var(--board-size) - 76px) / 2);right:calc((100% - var(--board-size)) / 2)}
+.tablet #stage #activeSkills{top:calc((100% - var(--board-size) - 76px) / 2);left:calc((100% - var(--board-size)) / 2 - 56px);right:auto;flex-direction:column;align-items:center;gap:6px}
+#stage .gem-game .game-result{flex:0 0 auto;margin:6px auto}
+#stage .gem-game .routine-card{width:min(21%,96px);height:auto;aspect-ratio:64/88;margin-left:calc(min(21%,96px) / -2);top:50%;margin-top:calc(min(21%,96px) * -0.6875)}
+#stage .gem-game .routine-card .card-num{left:18%;right:18%;font-size:clamp(14px,4.4vw,24px);line-height:1.3}
+#stage .gem-game .game-cup{width:var(--cup);height:var(--cup);margin-left:calc(var(--cup) / -2);top:calc(54% - var(--cup) / 2)}
+#stage .gem-game .cup-lifting{background-size:calc(var(--cup) * 4) var(--cup);animation-name:u28-cup-lift}
+#stage .gem-game .monte-line{min-height:18px;font-weight:bold;color:#F2E6C8}
+@media(prefers-reduced-motion:reduce){#stage .routine-card.gold-shine{animation:none}}
+/* U30b bent corner: a folded top-right corner drawn in CSS, so it needs no new art. */
+#stage .routine-card .bent-corner{position:absolute;right:0;top:0;width:30%;aspect-ratio:1;z-index:2;pointer-events:none;background:linear-gradient(225deg,#2b1b24 0 48%,#7d6a4a 48% 56%,#f2e6c8 56% 100%);image-rendering:pixelated}
+#colleagues .colleague{position:relative;height:var(--h);aspect-ratio:154/204;flex:none;margin-bottom:10px}
+#colleagues .colleague.performing{animation:colleagueHop 360ms ease-out}
+#colleagues .colleague-trick{position:absolute;left:50%;top:-12px;transform:translateX(-50%);font-size:12px;line-height:12px;display:none}
+#colleagues .colleague-name{position:absolute;left:50%;bottom:-11px;transform:translateX(-50%);white-space:nowrap;font:9px/11px Galmuri9,Galmuri11,monospace;color:#F2E6C8;background:#17141Fcc;padding:0 2px}
+@media(prefers-reduced-motion:reduce){#colleagues .colleague.performing{animation:none}}
+
+/* U30c fever banner: inside the audience card, centered under the heckle bar. */
+#feverBanner{position:absolute;left:50%;transform:translateX(-50%);z-index:14;padding:2px 10px;font-size:clamp(12px,2.2vw,22px);line-height:1.4;white-space:nowrap;color:#fff3a6;background:#2b2236cc;border:2px solid #d5a94e;text-shadow:1px 1px #9b5c15;pointer-events:none}
+/* U30c monte cover: opaque cloth with a plain hand, laid over the three cards inside the table. */
+#stage .routine-table .monte-cover{position:absolute;z-index:6;pointer-events:none;display:flex;align-items:center;justify-content:center;box-sizing:border-box;background:#2b2236;border:3px solid #a68a58;box-shadow:0 2px 0 #100D16;opacity:0}
+/* U31b: soft fail suggestion, quiet 추천 tag in the practice book, practice header that keeps the wallet readable. */
+.sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+#stage .fail-hint{margin:2px 0 8px;font-size:11px;line-height:14px;color:var(--ink-2,#a9a3b8);opacity:.9}
+/* ===== U32 first-pass aesthetic polish ===== */
+/* Top bar: one continuous strip, equal 40px cells, one gold rule underneath. */
+.phone #stage #phoneTop{box-sizing:border-box;height:44px;padding:0 4px;gap:4px;align-items:center;background:#1b1621;border:0;border-bottom:4px solid #A68A58;overflow:visible}
+.phone #stage #phoneVenue{height:40px;min-width:90px}
+/* The heckle bar says what it is. */
+.phone #stage #heckleMeter{top:30px;height:16px}
+#stage #doubtRegen:empty{display:none}
+#stage .stat-text{font-family:Galmuri11,sans-serif;font-size:12px;line-height:16px;color:#F2E6C8;white-space:nowrap}
+body:not(.phone) .stats{gap:8px;padding-top:8px;padding-bottom:8px}
+.tablet #stage #doubtRegen{font-size:13px;line-height:22px}
+@media(max-width:740px){.phone #panel[data-screen="book"]:not([data-practice]) h1{display:block;font-size:14px;line-height:18px;white-space:nowrap}}
+#stage #storyIcon>.asset-sprite{position:absolute;inset:0;width:100%;height:100%}
+/* Tablet: bigger type, 56px bar, whole-number sprite scale (ui.js snapAudience). */
+.tablet #stage #phoneTop{height:56px;gap:10px;padding:0 8px}
+.tablet #stage #phoneTop #phoneWallet,.tablet #stage #phoneTop #phoneWallet .hud,.tablet #stage #phoneVenue,.tablet #stage #phoneVenue .venue-heading,.tablet #stage #phoneTop #goalStrip{height:52px;min-height:52px}
+.tablet #stage #heckleMeter{top:38px;height:22px}
+.tablet #stage #stageStats .shield-label,.tablet #stage #stageStats .combo>span:last-child{font-size:15px}
+.tablet #stage #activeSkills .active-skill>span:not(.skill-art),.tablet #stage #activeSkills .active-skill small{font-size:10px;letter-spacing:-.5px}
+/* Cups intro: the lifted cup is held and the ball sits in front of it so the ball is seen. */
+#stage .gem-game .cup-lifting{animation:u32-cup-lift 480ms steps(3) forwards}
+/* Monte cover: a velvet cloth in the mat's green, with a pixel weave, a fold and a gold hem. */
+#stage .routine-table .monte-cover{background:
+linear-gradient(115deg,transparent 0 38%,rgba(255,255,255,.10) 38% 41%,rgba(0,0,0,.22) 41% 47%,transparent 47% 100%),
+repeating-linear-gradient(0deg,rgba(0,0,0,.14) 0 2px,transparent 2px 4px),
+repeating-linear-gradient(90deg,rgba(255,255,255,.04) 0 2px,transparent 2px 4px),
+#16573a;border:3px solid #A68A58;box-shadow:inset 0 0 0 2px #0d3523,inset 0 -6px 0 rgba(0,0,0,.28),0 2px 0 #100D16}
+/* Book header: 3 main buttons, the rest behind one more button. */
+.tree-more{position:relative;flex:none;display:flex;align-items:center}
+.tree-more-pop{display:none;position:absolute;right:0;top:calc(100% + 6px);z-index:30;flex-wrap:wrap;gap:6px;width:max-content;max-width:min(420px,90vw);padding:8px;background:#25202D;border:2px solid #A68A58}
+.tree-more-pop .constellation-controls{display:flex!important;gap:6px;position:static;margin:0;padding:0}
+#stage #panel .tree-more-toggle{min-width:44px;min-height:44px;padding:2px 8px;font-size:16px}
+#stage #panel .tree-wallet{display:flex;align-items:center;gap:6px;white-space:nowrap}
+/* Practice note: quiet gate lesson row (not a primary button). */
+#stage #panel .practice-gate{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 4px;padding:2px 8px;font-size:11px;line-height:14px;color:#A89C82;background:#1b1621;border:1px solid #4a4058}
+#stage #panel .practice-gate button{min-height:36px;padding:2px 10px;font-size:11px;flex:none}
+#stage #panel[data-screen="fail"] .fail-face,#stage #panel[data-screen="fail"] .fail-kali{position:relative;display:block;width:76px;height:76px;flex:none}
+/* U34: menu in two groups (놀기 / 설정), bestiary helper title */
+.menu-group{display:none}
+.tablet #stage #panel[data-screen="dealer"] :is(.dealer-host,.dealer-rules,.dealer-note,.dealer-gem-menu small){font-size:18px;line-height:26px}
+#stage #panel[data-screen="fail"] .fail-actions{display:flex;flex-wrap:nowrap;justify-content:center;align-items:stretch;gap:10px;margin-top:6px}
+.bestiary-guides-title{margin:16px 0 8px;font-size:18px;color:#E8BF68}
+.phone .bestiary-guides-title{font-size:13px;margin:10px 0 6px}
+.phone #stage #toasts{left:146px;top:auto;bottom:60px;width:calc(var(--audience-width) - 152px);height:24px;max-height:24px;overflow:hidden;z-index:16}
+@media(max-width:700px){.phone #stage #audienceCard #audienceLine{bottom:148px}.phone #stage #toasts{left:116px;width:calc(var(--audience-width) - 122px)}}
+.tablet #stage #audienceCard #audienceLine{bottom:264px;font-size:14px;line-height:19px}
+.tablet #stage #toasts{left:122px;bottom:92px;width:calc(var(--audience-width) - 128px)}
+.win-flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:7}
+.win-stamp{position:absolute;right:8px;top:60px;font:700 24px/30px Galmuri11,sans-serif;white-space:nowrap;color:#ffe65c;text-shadow:2px 0 #17141F,-2px 0 #17141F,0 2px #17141F,0 -2px #17141F,2px 2px #17141F,-2px -2px #17141F,2px -2px #17141F,-2px 2px #17141F;pointer-events:none;z-index:21}
+.tablet .win-stamp{font-size:44px;line-height:54px;top:200px;right:16px}
+.pat-part{display:inline-block;max-width:100%;vertical-align:top}
+/* U43: audience card narrower than 260 px (iPhone Duo outer with Dynamic Island insets): smaller stage stats and a one-line phase chip. */
+.phone-narrow #stage #stageStats :is(.mental,.shield,.combo){font-size:8px;gap:1px}
+.phone-narrow #stage #stageStats .combo>span:last-child,.phone-narrow #stage #stageStats .shield-label{font-size:8px}
+.phone-narrow #stage #stageStats{gap:3px;justify-content:space-between;padding:0 2px}
+.phone-narrow #stage #audienceLine{font-size:10px;line-height:13px}
+.phone-tight #stage #audienceCard #audienceLine{-webkit-line-clamp:3;font-size:10px;line-height:12px}
+.phone-low #stage #audienceCard #audienceLine{-webkit-line-clamp:2;padding:1px 6px 0}
+.phone-xshort #stage #audienceCard #audienceLine{-webkit-line-clamp:1}
+/* Below 300 px of height (Fold cover in a browser) the skill column fits with 44/40 px buttons. */
+.phone-xshort:not(.tablet) #stage #activeSkills{gap:2px}
+.phone-xshort:not(.tablet) #stage #activeSkills .active-skill>span:not(.skill-art),.phone-xshort:not(.tablet) #stage #activeSkills .active-skill small{line-height:10px}.phone-xshort:not(.tablet) #stage #activeSkills .gem-shop-quick{height:40px;min-height:40px}
+/* Compact height under 780 px wide: the stats bar sits 56 px up, so the toast lane and the win banner move above it. */
+@media(max-width:779px){.phone-compact #stage #toasts{bottom:90px}.phone-compact #stage #banner.win-banner,.phone-compact #stage #banner.big.win-banner{bottom:122px}}
+.phone #stage #panel[data-screen="book"] .constellation-detail>h2{grid-column:1;align-self:center;padding:0;font-size:14px;line-height:18px;color:var(--gold);white-space:normal;word-break:keep-all}
+.tablet #stage #panel[data-screen="book"] .constellation-detail>h2{font-size:18px;line-height:24px}
+#stage #panel[data-screen="saveslots"]{inset:12px;width:calc(100% - 24px);height:calc(100% - 24px);min-height:0;max-height:none;transform:none;padding:12px;display:flex;flex-direction:column}
+#stage #panel[data-screen="saveslots"] p{font-size:14px;line-height:20px;margin:4px 0;overflow-wrap:anywhere}
+#stage #panel[data-screen="saveslots"] .save-slots-actions{display:flex;gap:8px;align-items:stretch;margin-top:8px}
+#viewport #stage #board .cell.next-slot>*{visibility:hidden}
+/* v4 U46 A5: pixel icons (16x16 art, img27) at integer scales only: 1x (16 px) on phones and in small desktop text, 2x (32 px) in normal desktop text. */
+.px-icon{display:inline-block;width:16px;height:16px;vertical-align:-3px;image-rendering:pixelated;object-fit:contain;flex:none;pointer-events:none}
+body:not(.phone) #viewport #stage .px-icon{width:32px;height:32px;vertical-align:-8px}
+#viewport #stage .stat-value small .px-icon,#viewport #stage #shield .px-icon{vertical-align:middle}
+.normalized-figure[data-mood="surprised"]:after{content:none}
+.phone #stageDressing{inset:0;--dk:1}
+@media(min-width:800px) and (min-height:390px){.phone #stageDressing{--dk:2}}
+#stageDressing .dress-lights{left:50%;top:0;width:calc(176px * var(--dk));height:calc(24px * var(--dk));transform:translateX(-50%)}
+.phone #stageDressing .dress-lights{top:44px}
+#stageDressing .dress-trim{left:0;top:0;width:calc(24px * var(--dk));height:calc(144px * var(--dk))}
+.phone #stageDressing .dress-trim{top:44px}
+#stageDressing .dress-trim.right{left:auto;right:0;transform:scaleX(-1)}
+#stageDressing .dress-shelf{right:calc(4px * var(--dk));bottom:0;width:calc(64px * var(--dk));height:calc(40px * var(--dk))}
+#stageDressing .dress-note{position:absolute;left:50%;top:calc(30px * var(--dk));transform:translateX(-50%);padding:2px 8px;background:var(--p-void);border:2px solid var(--p-gold);color:var(--p-gold-hi);font:400 var(--fs-m)/1.3 Galmuri11,monospace;white-space:nowrap;animation:u46-dress-note 2.2s linear both}
+.phone #stageDressing .dress-note{top:72px}
+@media(prefers-reduced-motion:reduce){#stageDressing .dress-note{animation:none}}
+/* v4 U47 1: the heckle stat prints one heckle ("한 번에 120") and the interval as a small second line. */
+#viewport #stage .stat-sub{font:400 var(--fs-s)/1.2 Galmuri11,monospace;color:var(--p-gold-hi,#E8D7A8);white-space:nowrap}
+.phone #stage #panel[data-screen="stats"] .easy-stat h2{font-size:var(--fs-m)}
+body:not(.phone) #viewport #stage .stats.phone-expanded{display:grid;grid-template-columns:minmax(0,1fr);grid-auto-rows:1fr;gap:8px;padding:8px;text-align:left}
+#stage #feverConfetti .confetti-piece{position:absolute;left:var(--x);top:0;width:6px;height:6px;opacity:.9;will-change:transform;animation:u47-confetti var(--t) var(--d) linear infinite}
+#stage #feverConfetti .c0{background:var(--p-gold)}#stage #feverConfetti .c1{background:var(--p-pink)}#stage #feverConfetti .c2{background:var(--p-info)}#stage #feverConfetti .c3{background:var(--p-ok)}#stage #feverConfetti .c4{background:var(--p-violet)}
+#stage #leaveConfirm .leave-box{box-sizing:border-box;width:min(560px,92%);max-height:92%;overflow:auto;padding:14px;background:var(--panel);border:3px solid var(--panel-border);display:grid;gap:10px;text-align:center}
+#stage #leaveConfirm p{margin:0;font:400 var(--fs-m)/1.4 Galmuri11,monospace;color:var(--p-cream)}
+#stage #leaveConfirm .leave-actions{display:grid;gap:8px;grid-template-columns:repeat(3,minmax(0,1fr))}
+/* v4 U48 M2: no LV text over the cases; 1 to 4 small gold dots (drawn, not text) give the place inside the colour band. */
+#viewport #stage #board .cell .lv{font-size:0;color:transparent;text-shadow:none;left:50%;right:auto;transform:translateX(-50%);height:6px;min-height:0;top:3px;padding:0;background:radial-gradient(circle,#ffe9ac 0 2px,#120F1A 2px 3px,transparent 3px) 0 0/8px 6px repeat-x;pointer-events:none}
+#viewport #stage .tree-routine-art{width:128px;height:128px;margin:6px auto;background-size:200% 100%;background-position:100% 0;background-repeat:no-repeat;image-rendering:pixelated;border:2px solid var(--line)}
+/* the marquee sign: bulbs along the edge, the place name in the middle, the stage count small inside the sign */
+#viewport #stage .venue-heading{box-sizing:border-box;display:flex;align-items:center;justify-content:center;gap:10px;background:#5a1a22;border:0;border-radius:6px;
+  box-shadow:0 0 0 3px #2a0c10,0 0 0 5px #e9b44c,0 4px 0 5px #2a0c10;
+  background-image:radial-gradient(circle,#fff3c4 0 2px,#e9b44c 2px 3px,transparent 3.5px),radial-gradient(circle,#fff3c4 0 2px,#e9b44c 2px 3px,transparent 3.5px);
+  background-size:14px 8px,14px 8px;background-repeat:repeat-x;background-position:4px 0,4px 100%}
+.phone #viewport #stage #audienceCard .doubt-plate{position:absolute!important;inset:auto!important;left:8px!important;top:4px!important;width:max-content!important;max-width:calc(var(--CW) * .58 - 16px);overflow:hidden;height:22px;padding:0 6px!important;background:#120f1add;border:1px solid #a68a58;justify-content:flex-start!important;box-sizing:border-box;z-index:6}
+.phone #viewport #stage #audienceCard .heckle-plate{position:absolute!important;inset:auto!important;left:56px!important;top:28px!important;width:max-content!important;max-width:calc(var(--CW) * .58 - 60px);overflow:hidden;height:18px;padding:0 6px!important;background:#120f1add;gap:8px;box-sizing:border-box;z-index:6}
+/* the result banner flashes on the marquee (the sign shows the result), then the place name comes back */
+.phone #viewport #stage #banner,.phone #viewport #stage #banner.big{left:6px!important;width:calc(var(--CW) - 4px)!important;top:2px!important;bottom:auto!important;max-height:40px!important;height:auto;padding:2px 8px!important;font-size:11px;line-height:17px;box-sizing:border-box;overflow:hidden!important;z-index:26}

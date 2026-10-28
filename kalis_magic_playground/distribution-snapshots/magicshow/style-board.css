@@ -1,0 +1,232 @@
+/* style-board.css: case board, cells, chests, wand, respawn, board footer. (CSS regroup 10-28)
+ * Earlier or later rules for the same elements may also sit in style-base.css (early layer) and
+ * style-overrides-*.css (late layer) when the cascade needs them there. */
+#boardCard{left:824px}
+.heart.empty{color:#48252b}
+.board{position:absolute;left:42px;top:108px;width:608px;height:608px;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);gap:18px}.cell{position:relative;display:flex;align-items:center;justify-content:center;padding-top:28px}
+.box{position:relative;width:158px;height:144px;border:4px solid #eeeade;background:#11112a;box-shadow:4px 4px #2c2d35;overflow:hidden;transform-origin:center bottom}
+.chest{position:absolute;left:12px;right:12px;top:30px;height:76px;background:#70462d;border:8px solid #c6893e;box-shadow:inset 0 8px #e3ad5b,0 8px #261a20}.chest:before{content:"";position:absolute;left:-8px;right:-8px;top:26px;height:10px;background:#352b31;border-top:4px solid #e2ae60}.chest:after{content:"";position:absolute;left:45px;top:26px;width:18px;height:27px;background:#f7d56d;border:4px solid #39282a}.working .chest{opacity:.18}.box-number{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:6px;color:#fff;z-index:2;font-weight:bold;text-shadow:3px 3px #111}
+.percent-symbol{font-size:22px}
+.max.gold .box{border-color:#fff3a0}.max.gold .chest{background:#8c5826;border-color:#e9be55;box-shadow:inset 0 8px #fff29b,0 8px #2d1f14}.box.opening{visibility:hidden}.board-footer{position:absolute;left:42px;right:42px;top:752px;display:flex;align-items:center;justify-content:space-between;font-size:22px;color:#b6b6b6}.board-footer strong{color:#d6f5b7;font-weight:normal}
+#wand:before,#wand:after{content:"";position:absolute;width:24px;height:24px;border:5px solid #afff87}#wand:before{left:-4px;top:-4px;border-right:0;border-bottom:0}#wand:after{right:-4px;bottom:-4px;border-left:0;border-top:0}.wand-icon{position:absolute;left:50%;top:50%;font-size:55px;transform:translate(-50%,-50%) rotate(-22deg);text-shadow:4px 4px #000}.wand-spark{position:absolute;left:calc(50% + 25px);top:calc(50% - 36px);color:#f4ffd2;font-size:22px}
+#board{touch-action:none;cursor:crosshair}
+#wand.visible{display:block}.cell{min-width:0;min-height:0}.cell .box{width:var(--box-w,158px);height:var(--box-h,144px)}.cell .chest{top:22%;height:54%;border-width:6px}
+.cell .percent-symbol{font-size:var(--cell-font,25px)}
+.cell.sealed .box{border-color:#ff6f78}.cell.sealed .box-number{color:#ff8c9c}
+.wand-icon{left:auto;top:8px;right:8px;font-size:33px;opacity:.65;transform:rotate(-22deg);text-shadow:none}.wand-spark{left:auto;right:36px;top:10px;font-size:22px;opacity:.6}
+.chest.asset-ready{background:transparent!important;border:0!important;box-shadow:none!important}.chest.asset-ready:before,.chest.asset-ready:after{display:none}
+.cell .box-fill{z-index:1;height:8px!important;transform:scaleX(var(--fill,0));transform-origin:left;transition:transform 120ms cubic-bezier(.2,.8,.2,1);border-top-width:2px}
+.cell.empty .box{opacity:1}
+.board .cell{width:112px;height:112px;padding:0;display:block}
+.board .cell .box{position:absolute;left:4px;top:18px;width:104px;height:80px;border:2px solid #eeeade;box-shadow:none}
+.board .cell .chest{left:8px;right:8px;top:8px;height:48px;border-width:4px}
+.board .cell .chest.asset-ready{inset:0;width:100%;height:100%}
+.board .cell .box-number{inset:auto 0 6px;height:18px;gap:3px}
+.board .cell .percent-symbol{font-size:11px}
+.board .cell .box-fill{height:6px!important;border-top-width:1px;z-index:3}
+.board .cell.locked .box{opacity:.16;background:transparent}
+.board .cell.next-slot .box{opacity:.45}
+.board .cell.locked .chest,.board .cell.locked .box-number,.board .cell.locked .box-fill,
+.board .cell.empty .chest,.board .cell.empty .box-number,.board .cell.empty .box-fill{display:none}
+.board .cell.locked:after{display:none}
+.board .cell.next-slot{cursor:pointer}
+.board .cell:focus-visible{outline:2px solid var(--yellow)}
+.encore-active #board{box-shadow:0 0 28px #ffe65c,inset 0 0 18px #ffe65c77}.encore-active #wand{filter:drop-shadow(0 0 12px #ffe65c)}
+.cell.golden .chest{background:linear-gradient(#fff09b,#daa527);border-color:#ffe65c;box-shadow:0 0 16px #ffd447}
+.cell.golden .box{border-color:#ffe65c}
+.cell.golden-broken .chest{background:#b88922;border-color:#ffe65c;transform:rotate(-8deg);opacity:.65}
+/* U4b stage effects stay outside the board's grid flow. */
+.board-footer{gap:12px;justify-content:flex-start}.board-footer>span:last-child{margin-left:auto}
+.board-footer strong{white-space:nowrap}
+.cell.mirrored .box{border-color:#8effff;box-shadow:0 0 18px #8effff}
+.phone #boardCard{left:auto;right:6px;top:50px;width:var(--board-size);height:var(--board-size);border:0;background:#181724}
+.phone #board{left:0;top:0;width:100%;height:100%;padding:calc(100% * 8 / 608);gap:calc(var(--board-size) * 8 / 608);grid-template-columns:repeat(5,minmax(0,1fr));grid-template-rows:repeat(5,minmax(0,1fr))}
+.phone #board .cell{width:auto;height:auto;padding:0}
+.phone #board .cell .box{left:3.5714%;top:16.0714%;width:92.8571%;height:71.4286%;border-width:1px}
+.phone #board .cell .box-number{bottom:3px;height:15px;gap:1px}
+.phone #board .cell .percent-symbol{font-size:11px}
+.phone #board .cell.sealed:after{font-size:11px;top:17px;padding:0;border-width:1px}
+.phone #wand{left:0;top:0;border-width:2px}
+.phone #wand:before,.phone #wand:after{width:12px;height:12px;border-width:2px}
+.phone #wand .wand-icon{font-size:22px;top:0;right:0}
+.phone #board .cell .box{top:15px;height:calc(100% - 17px)}
+.phone #boardCard{top:62px}
+.phone #board .cell .box{top:20px;height:calc(100% - 22px)}
+.phone #board .cell .box-number{height:9px;bottom:1px;font-size:9px}
+.phone #boardCard{right:6px;top:50px;left:auto;width:var(--board-size);height:var(--board-size);margin:0}
+#item-auto-glove.glove-active{opacity:1;border-color:#8ee9d0;background:#17392c}
+.phone #boardCard{top:44px}
+.phone #wand{overflow:hidden}
+.phone #wand .wand-icon{left:auto;right:4px;top:14px;font-size:16px;line-height:18px;transform:none;pointer-events:none}
+/* Board decoration changes only; cell positions and hit regions remain native. */
+#stage #board{background:#1A1626;box-shadow:inset 0 0 0 1px #2A2640}
+#stage #board .cell.locked .box{border:1px dotted var(--line-dim);background:transparent;box-shadow:none;opacity:1}
+#stage #board .cell.next-slot .box{border:1px dashed var(--line);background:transparent;box-shadow:none;opacity:1}
+#stage #board .case-customized .chest{outline:2px solid var(--info);outline-offset:-3px}
+#stage #board .case-customized[data-tier="box-1"] .chest{outline-color:var(--ok)}
+#stage #board .case-customized[data-tier="box-2"] .chest{outline-color:#bc8cff}
+#stage #board .case-customized[data-tier="box-3"] .chest{outline-color:var(--gold)}
+#stage #board .case-customized[data-tier="box-4"] .chest,#stage #board .case-customized[data-tier="box-golden"] .chest{outline-color:#ff9270}
+#stage #board .box-number,.phone #stage #board .box-number{top:auto;bottom:2px;left:50%;transform:translateX(-50%);z-index:5}
+#stage #board .chest,.phone #stage #board .chest{inset:auto;left:10%;top:10%;width:80%;height:80%}
+.encore-active #wand{filter:none}
+#stage #board .cell.next-slot .box{animation:none;box-shadow:none}
+#stage #wand{background:#74f4470c;box-shadow:none}.wand-spark{opacity:.35}
+.board-worker.worker-travel:before{content:'· · ·';position:absolute;right:100%;bottom:4px;color:#89d8c1;white-space:nowrap;pointer-events:none}
+.board-worker[data-action]:after{content:attr(data-action);position:absolute;bottom:100%;left:0;color:#89d8c1;font-size:10px;white-space:nowrap;pointer-events:none}
+#stage #boardCard,#stage #board{background:#17141F;border:0;border-radius:0;box-shadow:none}
+#stage #board .cell:not(.locked) .box{opacity:1}
+#stage #board .cell.next-slot .box{border:0;background:none;opacity:1;transform:none}
+.phone #stage .board-footer{display:none}
+@media(prefers-reduced-motion:reduce){#stage .cell.next-slot{animation:none!important}}
+#stage .cell.next-slot[data-motion-loop='true']{animation-name:u26-next-slot}
+@keyframes u26-next-slot{0%,100%{opacity:1}50%{opacity:.6}}
+.missing-ui-board-cell #stage #board .cell{border-image:none;border:1px solid #3C3541;background:#19131D}
+.missing-ui-board-cell-next #stage #board .cell.next-slot{border:1px dashed #A68A58;background:#25202D}
+.tablet #stage #board .cell{border-image-width:4px}
+/* Phone cells: the case art fills the cell (the old top offset left only 20px of art). */
+.phone #stage #board .cell .box{top:2px;left:2px;width:calc(100% - 4px);height:calc(100% - 4px)}
+/* Empty case cells: the outer ring is only a faint dot, the centre 3x3 stays readable. */
+#stage #board .cell.locked:not(.next-slot){border-image:none;border-color:transparent;background:transparent}
+#stage #board .cell.locked:not(.next-slot):before{content:'';position:absolute;left:50%;top:50%;width:4px;height:4px;margin:-2px 0 0 -2px;background:#4a4058;opacity:.6}
+#stage #board .cell.locked[data-center="1"]:not(.next-slot){border-image:url('assets/ui/ui-board-cell.webp') 3 fill / 3px / 0 stretch;opacity:.7}
+#stage #board .cell.locked[data-center="1"]:not(.next-slot):before{display:none}
+.tablet #stage #board .cell.locked[data-center="1"]:not(.next-slot){border-image-width:4px}
+/* v4 U46 A1 + A3: case cells without box frames (presentation only). The whole cell stays the touch target; the case sprite is about 72 percent of it
+   with even gaps, a soft ellipse shadow under it, LV above, one thin progress bar under it, a slow 2 px idle bob per cell (stops while opening or under
+   reduced motion). Locked cells show nothing; the next slot to unlock shows a small lock. The wand box (#wand) keeps its frame. Board background darker. */
+#viewport #stage #board{background:var(--p-void);box-shadow:none}
+#viewport #stage #boardCard{background:var(--p-void)}
+#viewport #stage #board .cell:before,#viewport #stage #board .cell.locked:not(.next-slot):before{display:none}
+#viewport #stage #board .cell .box,#viewport #stage #board .cell.locked .box,#viewport #stage #board .cell.next-slot .box{position:absolute;inset:0;left:0;top:0;width:100%;height:100%;border:0;background:transparent;box-shadow:none;overflow:visible;opacity:1;transform:none}
+#viewport #stage #board .cell .chest,#viewport #stage #board .cell .chest.asset-ready{inset:auto;left:14%;top:14%;width:72%;height:72%;outline-offset:0;z-index:2}
+#viewport #stage #board .cell:not(.locked):not(.empty) .box:after{content:"";position:absolute;left:22%;width:56%;top:80%;height:7%;border-radius:50%;background:#000;opacity:.45;z-index:1;pointer-events:none}
+#viewport #stage #board .cell .lv:empty,#viewport #stage #board .cell.empty .lv,#viewport #stage #board .cell.empty .spawn-timer{display:none}
+#viewport #stage #board .cell .box-number{display:none}
+#viewport #stage #board .cell .box-fill{left:22%;width:56%;top:90%;bottom:auto;height:3px!important;border:0;background:var(--p-gold);box-shadow:0 0 0 1px #000;z-index:3}
+#viewport #stage #board .cell:not(.case-opening) .box-fill{visibility:hidden}
+#viewport #stage #board .cell.locked .box-fill,#viewport #stage #board .cell.empty .box-fill{display:none}
+/* v4 U49 2: no lock on the board. The next slot to open is a dimmed empty cell (a faint dashed square where a case would stand); its tap and aria-label still tell the condition. */
+/* v4 U51 7 (owner: "다음 케이스가 들어올 자리에 빈 칸으로 보이는 거 같아"): nothing is drawn on the next slot any more (no square, border, fill or
+   pulse); the cell keeps its place, its tap (the condition toast) and its aria-label. */
+#viewport #stage #board .cell.next-slot .box:after,#viewport #stage #board .cell.next-slot .box:before,#viewport #stage #board .cell.next-slot:before,#viewport #stage #board .cell.next-slot:after{content:none;display:none}
+#viewport #stage #board .cell.next-slot,#viewport #stage #board .cell.next-slot .box{border:0;border-image:none;background:transparent;box-shadow:none;outline:0}
+body:not(.phone) #viewport #stage #board .cell .box-fill{height:4px!important}
+#viewport #stage #board .cell:not(.locked):not(.empty):not(.case-opening) .chest{animation:u46-bob 2.8s step-end infinite;animation-delay:var(--bob,0s)}
+@media(hover:hover){#viewport #stage #board .cell:not(.locked):hover .chest{filter:brightness(1.12)}}
+@media(prefers-reduced-motion:reduce){#viewport #stage #board .cell .chest{animation:none!important}}
+/* the board stands on the stage: translucent dark glass, gold corner ornaments only */
+.phone #viewport #stage #boardCard{background:none;border:0!important;box-shadow:none;overflow:visible!important}
+.phone #viewport #stage #boardCard #board{background:#120f1a8c;border:0;box-shadow:none;z-index:1}
+#viewport #stage #boardCard:after{content:"";position:absolute;pointer-events:none;z-index:2;--g:#e9b44c;--a:18px;--b:3px;
+  background:linear-gradient(var(--g),var(--g)) 0 0/var(--a) var(--b),linear-gradient(var(--g),var(--g)) 0 0/var(--b) var(--a),linear-gradient(var(--g),var(--g)) 100% 0/var(--a) var(--b),linear-gradient(var(--g),var(--g)) 100% 0/var(--b) var(--a),
+  linear-gradient(var(--g),var(--g)) 0 100%/var(--a) var(--b),linear-gradient(var(--g),var(--g)) 0 100%/var(--b) var(--a),linear-gradient(var(--g),var(--g)) 100% 100%/var(--a) var(--b),linear-gradient(var(--g),var(--g)) 100% 100%/var(--b) var(--a);background-repeat:no-repeat}
+.phone #viewport #stage #boardCard:after{left:calc(100% - var(--board-size) - 4px);top:-3px;width:calc(var(--board-size) + 8px);height:calc(var(--board-size) + 8px)}
+body:not(.phone) #viewport #stage #boardCard{background:none;border:0!important;box-shadow:none;overflow:visible!important}
+body:not(.phone) #viewport #stage #boardCard #board{background:#120f1a8c;border:0;box-shadow:none;outline:0!important}
+body:not(.phone) #viewport #stage #boardCard:after{left:34px;top:100px;width:624px;height:624px;--a:32px;--b:5px}
+body:not(.phone) #viewport #stage .board-footer{display:none}
+/* -- the board half: its own background, from the skill column to the right edge -- */
+html body.phone #viewport#viewport #stage #boardCard{overflow:visible!important}
+html body.phone #viewport#viewport #stage #boardCard:before{content:"";position:absolute;z-index:0;pointer-events:none;border-radius:8px;
+  left:calc(var(--CW) + 6px - var(--stage-w) * .56);right:0;top:0;bottom:0;background:var(--board-bg);box-shadow:var(--board-frame,0 0 0 2px #2a2333)}
+html body.phone #viewport#viewport #stage #boardCard #board{background:#120f1a66}
+html body.phone #viewport#viewport #stage #boardCard:after{display:none}
+/* the board half under the row: board centred in it */
+html body.phone #viewport#viewport #stage #boardCard{top:var(--ST)!important;height:calc(var(--layout-height) - var(--ST) - 6px)!important}
+html body.phone #viewport#viewport #stage #boardCard #board{top:calc((var(--layout-height) - var(--ST) - 6px - var(--board-size)) / 2)!important;left:auto!important;right:0!important}
+html body:not(.phone) #viewport#viewport #stage #boardCard{left:784px!important;top:64px!important;width:792px!important;height:812px!important;border-radius:10px;background:var(--board-bg);box-shadow:var(--board-frame,0 0 0 3px #2a2333);overflow:visible!important}
+html body:not(.phone) #viewport#viewport #stage #boardCard #board{left:96px!important;top:96px!important;background:#120f1a66}
+html body:not(.phone) #viewport#viewport #stage #boardCard:after{display:none}
+#viewport #stage #board .cell.empty[data-respawn="case"] .chest{display:block;visibility:visible}
+#viewport #stage #board .cell[data-respawn="wood"] .chest,
+#viewport #stage #board .cell[data-respawn="paper"] .chest{visibility:hidden}
+/* Placeholder only after the webp fails. A loaded image is the sprite alone, same box as .chest. */
+#viewport #stage #board .respawn-stage.asset-failed.respawn-wood{
+  background-color:#6b3a1e;
+  background-image:repeating-linear-gradient(180deg,transparent 0 7px,#3d2412 7px 9px);
+  background-size:auto;
+  background-position:center;
+  background-repeat:repeat;
+}
+#viewport #stage #board .respawn-stage.asset-failed.respawn-paper{
+  background-color:#f4ead4;
+  background-image:linear-gradient(#c8b89a,#c8b89a),linear-gradient(#c8b89a,#c8b89a);
+  background-size:70% 1px,1px 70%;
+  background-position:center,center;
+  background-repeat:no-repeat;
+}
+#viewport #stage #board .respawn-puff{
+  position:absolute;left:18%;top:18%;width:64%;height:64%;border-radius:50%;z-index:6;pointer-events:none;opacity:0;
+  background:radial-gradient(circle,rgba(236,236,228,.9),rgba(170,170,160,.25) 62%,transparent 72%);
+}
+#viewport #stage #board .respawn-puff.on{animation:respawn-puff 180ms ease-out}
+@media(prefers-reduced-motion:reduce){#viewport #stage #board .respawn-puff.on{animation:none;opacity:.35}}
+/* Batch B: arrangement feedback is shared by both orientations. */
+#stage #board.arranging .cell { cursor:move; }
+#stage #board.arranging .cell.arrange-selected { outline:3px solid #ffe08a; outline-offset:-3px; }
+.batch-d-hide .chest { visibility: hidden; }
+html body #viewport#viewport #stage#stage #boardCard #board {
+  background:var(--equipped-pad,url('assets/kit/felt-tile.webp')) center / 100% 100% no-repeat;
+  border-image:url('assets/kit/board-frame.webp') 44 / 10px / 0 stretch;
+}
+#viewport #stage #board .cell .chest { filter:none; }
+#viewport #stage #board .cell:not(.locked):not(.empty) .box:after { display:none; }
+/* Preserve tier colour on the existing level pips while every tier uses the approved tin. */
+#viewport #stage #board .cell[data-tier="box-1"] { --case-pip:#6fbd87; }
+#viewport #stage #board .cell[data-tier="box-2"] { --case-pip:#bc8cff; }
+#viewport #stage #board .cell[data-tier="box-3"] { --case-pip:#e8bf68; }
+#viewport #stage #board .cell:is([data-tier="box-4"],[data-tier="box-golden"]) { --case-pip:#ff9270; }
+html body #viewport#viewport #stage#stage#stage#stage :is(.constellation-node,.flow-node).locked::after { content:''; width:24px; height:24px; background:url('assets/kit/icon-lock.webp') center / contain no-repeat; border:0; box-shadow:none; }
+/* Remove the retired CSS backing and duplicate stat glyphs under the drawn pieces. */
+html body #viewport#viewport #stage#stage#stage#stage #boardCard::before,
+html body #viewport#viewport #stage#stage#stage#stage #boardCard::after,
+html body #viewport#viewport #stage#stage#stage#stage #stageStats > div::before { content:none; display:none; background:none; border:0; box-shadow:none; }
+/* Verification A: shared geometry follows the actual grid and content flow. */
+html body #viewport#viewport #stage#stage#stage#stage #board .cell { translate:var(--grid-shift-x,0px) var(--grid-shift-y,0px); }
+html body #viewport#viewport #stage#stage#stage#stage #board { border-image-width:16px; }
+html body #viewport#viewport #stage#stage#stage#stage #board .cell .box { width:100%; height:100%; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #board { border-image-width:20px !important; }
+html body #viewport#viewport #stage#stage#stage#stage #boardCard #board { border-image-source:url('assets/kit/board-frame.webp'); border-image-slice:44; }
+html body #viewport#viewport #stage#stage#stage#stage .pad-upgrade { display:grid; grid-template-columns:minmax(0,1fr); justify-items:center; gap:8px; margin:12px auto; max-width:680px; text-align:center; }
+html body #viewport#viewport #stage#stage#stage#stage .pad-upgrade > :is(p,small) { margin:0; }
+html body #viewport#viewport #stage#stage#stage#stage .pad-upgrade > button { width:100%; min-height:44px; font:14px/20px system-ui,sans-serif; white-space:normal; }
+/* 12-115: phone landscape. The board's wood and frame reach from the top bar to the bottom edge of its column (no empty bands above and below it on
+   taller screens such as an opened Fold); the extra height goes into the top and bottom padding, so the case cells keep their size and position mapping. */
+html body.phone:not(.tablet):not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #boardCard #board {
+  --board-room:calc(var(--layout-height) - var(--ST) - 6px);
+  top:0 !important; height:max(var(--board-size),var(--board-room)) !important; box-sizing:border-box;
+  padding-top:calc(max(0px,(var(--board-room) - var(--board-size)) / 2) + var(--board-size) * 8 / 608) !important;
+  padding-bottom:calc(max(0px,(var(--board-room) - var(--board-size)) / 2) + var(--board-size) * 8 / 608) !important;
+}
+/* s4c (stage 4c): 칼리's magic workbench. The default 바닥 pad is a tiled warm wood top (board-wood, 256 px tiles = one art pixel per CSS pixel, no seams)
+   with a soft light pool under the cases and a few props near the corners (felt mat with a fan of cards, a coin stack) where the corner cases sit, so
+   a filled board covers them; they are board backgrounds, so cases and controls are always drawn over them. Every pad gets four brass corner plates on the frame (brass-corner mirrored in CSS for the other
+   three corners). Bought pads keep their own art. */
+html body #viewport#viewport #stage#stage#stage#stage#stage #boardCard #board[data-pad-path$="floor-wood-512.webp"] {
+  background-color:#63372f !important;
+  background-image:url('assets/kit/prop-cards.webp'),url('assets/kit/prop-coins.webp'),url('assets/kit/prop-mat.webp'),url('assets/kit/light-pool.webp'),url('assets/kit/board-wood.webp') !important;
+  background-repeat:no-repeat,no-repeat,no-repeat,no-repeat,repeat !important;
+  background-size:48px 32px,32px 24px,80px 56px,92% 92%,256px 256px !important;
+  background-position:left 20px bottom 18px,right 26px top 26px,left 4px bottom 6px,center,left top !important;
+  background-origin:border-box !important; background-clip:border-box !important; image-rendering:pixelated;
+}
+html body #viewport#viewport #stage#stage#stage#stage#stage #boardCard #board::before {
+  content:''; display:block; position:absolute; inset:0; z-index:auto; pointer-events:none;
+  background:url('assets/kit/brass-corner.webp') left top / 32px 32px no-repeat,url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' width='64' height='64' viewBox='0 0 64 64'%3E%3Cimage width='64' height='64' transform='matrix(-1 0 0 1 64 0)' style='image-rendering:pixelated' href='data:image/webp;base64,UklGRvYAAABXRUJQVlA4TOkAAAAvP8APEF+gJpKt5scyVUkC9Ph3hg41kaRIFOH/xSggwsL5t3IeFDWSpCy+8NjDKTj/wi6Z/wAAFqeSczbYX61a3PLAjeW95v/rzANIjSRJkorCUEgKQ2EpBIWkEBScQlEYCgWv78ztf0T/J2D8h/FgjXi2xve35s2KiBKx5pqAt+w77YWqzLWQAJvjdHpRBv8WAQne2NgGVYFcKDm207azkuYf2hNnC/FxxkYXKYQESHG9zlaK66OUFBHjxhqZm4gYbeyd0QbbL4ed7dyOlyPdjWzHm6W7YffSJLNVCEmKLiNOjibjaLRpDgA=' xlink:href='data:image/webp;base64,UklGRvYAAABXRUJQVlA4TOkAAAAvP8APEF+gJpKt5scyVUkC9Ph3hg41kaRIFOH/xSggwsL5t3IeFDWSpCy+8NjDKTj/wi6Z/wAAFqeSczbYX61a3PLAjeW95v/rzANIjSRJkorCUEgKQ2EpBIWkEBScQlEYCgWv78ztf0T/J2D8h/FgjXi2xve35s2KiBKx5pqAt+w77YWqzLWQAJvjdHpRBv8WAQne2NgGVYFcKDm207azkuYf2hNnC/FxxkYXKYQESHG9zlaK66OUFBHjxhqZm4gYbeyd0QbbL4ed7dyOlyPdjWzHm6W7YffSJLNVCEmKLiNOjibjaLRpDgA='/%3E%3C/svg%3E") right top / 32px 32px no-repeat,url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' width='64' height='64' viewBox='0 0 64 64'%3E%3Cimage width='64' height='64' transform='matrix(1 0 0 -1 0 64)' style='image-rendering:pixelated' href='data:image/webp;base64,UklGRvYAAABXRUJQVlA4TOkAAAAvP8APEF+gJpKt5scyVUkC9Ph3hg41kaRIFOH/xSggwsL5t3IeFDWSpCy+8NjDKTj/wi6Z/wAAFqeSczbYX61a3PLAjeW95v/rzANIjSRJkorCUEgKQ2EpBIWkEBScQlEYCgWv78ztf0T/J2D8h/FgjXi2xve35s2KiBKx5pqAt+w77YWqzLWQAJvjdHpRBv8WAQne2NgGVYFcKDm207azkuYf2hNnC/FxxkYXKYQESHG9zlaK66OUFBHjxhqZm4gYbeyd0QbbL4ed7dyOlyPdjWzHm6W7YffSJLNVCEmKLiNOjibjaLRpDgA=' xlink:href='data:image/webp;base64,UklGRvYAAABXRUJQVlA4TOkAAAAvP8APEF+gJpKt5scyVUkC9Ph3hg41kaRIFOH/xSggwsL5t3IeFDWSpCy+8NjDKTj/wi6Z/wAAFqeSczbYX61a3PLAjeW95v/rzANIjSRJkorCUEgKQ2EpBIWkEBScQlEYCgWv78ztf0T/J2D8h/FgjXi2xve35s2KiBKx5pqAt+w77YWqzLWQAJvjdHpRBv8WAQne2NgGVYFcKDm207azkuYf2hNnC/FxxkYXKYQESHG9zlaK66OUFBHjxhqZm4gYbeyd0QbbL4ed7dyOlyPdjWzHm6W7YffSJLNVCEmKLiNOjibjaLRpDgA='/%3E%3C/svg%3E") left bottom / 32px 32px no-repeat,url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' width='64' height='64' viewBox='0 0 64 64'%3E%3Cimage width='64' height='64' transform='matrix(-1 0 0 -1 64 64)' style='image-rendering:pixelated' href='data:image/webp;base64,UklGRvYAAABXRUJQVlA4TOkAAAAvP8APEF+gJpKt5scyVUkC9Ph3hg41kaRIFOH/xSggwsL5t3IeFDWSpCy+8NjDKTj/wi6Z/wAAFqeSczbYX61a3PLAjeW95v/rzANIjSRJkorCUEgKQ2EpBIWkEBScQlEYCgWv78ztf0T/J2D8h/FgjXi2xve35s2KiBKx5pqAt+w77YWqzLWQAJvjdHpRBv8WAQne2NgGVYFcKDm207azkuYf2hNnC/FxxkYXKYQESHG9zlaK66OUFBHjxhqZm4gYbeyd0QbbL4ed7dyOlyPdjWzHm6W7YffSJLNVCEmKLiNOjibjaLRpDgA=' xlink:href='data:image/webp;base64,UklGRvYAAABXRUJQVlA4TOkAAAAvP8APEF+gJpKt5scyVUkC9Ph3hg41kaRIFOH/xSggwsL5t3IeFDWSpCy+8NjDKTj/wi6Z/wAAFqeSczbYX61a3PLAjeW95v/rzANIjSRJkorCUEgKQ2EpBIWkEBScQlEYCgWv78ztf0T/J2D8h/FgjXi2xve35s2KiBKx5pqAt+w77YWqzLWQAJvjdHpRBv8WAQne2NgGVYFcKDm207azkuYf2hNnC/FxxkYXKYQESHG9zlaK66OUFBHjxhqZm4gYbeyd0QbbL4ed7dyOlyPdjWzHm6W7YffSJLNVCEmKLiNOjibjaLRpDgA='/%3E%3C/svg%3E") right bottom / 32px 32px no-repeat;
+  image-rendering:pixelated;
+}
+/* s4c: tablets in landscape. The board's frame and wood reach from the top bar to the bottom edge of its column (as on phones, 12-115), the extra
+   height goes into the top and bottom padding so the cells keep their size and input mapping; the skill rail is the full-height framed column that
+   closes the gap between the stage and the board (4 px seams). */
+html body.tablet:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage#stage #boardCard #board {
+  --board-room:calc(var(--layout-height) - var(--ST) - 6px);
+  top:0 !important; right:0 !important; height:max(var(--board-size),var(--board-room)) !important; box-sizing:border-box;
+  padding-top:calc(max(0px,(var(--board-room) - var(--board-size)) / 2) + var(--board-size) * 8 / 608) !important;
+  padding-bottom:calc(max(0px,(var(--board-room) - var(--board-size)) / 2) + var(--board-size) * 8 / 608) !important;
+}
+html body #viewport#viewport #stage #boardCard #feverGauge span { background:url('assets/kit/gauge-fill-doubt.webp') left center / 16px 100% repeat-x; image-rendering:pixelated; }
+html body #viewport#viewport #stage #boardCard #feverGauge.active span { background:url('assets/kit/gauge-fill-act.webp') left center / 16px 100% repeat-x; }
+/* Phone landscape: the board column is only a few px taller than the grid, so the frame is drawn thinner (12 px) and the case art is 84 % of its
+   cell; the cases then sit on the wood inside the frame instead of on its rim (cell size and input mapping unchanged). */
+html body.phone:not(.tablet):not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage#stage #boardCard #board { border-image-width:12px !important; }

@@ -1,0 +1,197 @@
+/* style-overrides-1.css: late override layer 1 of 3 (CSS regroup 10-28).
+ * Chronological patch rules that could not be untangled: each one sets a property that a rule of another
+ * feature also sets on the same element at the same specificity, so source order decides the winner. Either
+ * it must win over a rule that now lives in a feature file, or a later rule in this layer must win over it.
+ * The layer therefore loads after every feature file and keeps the original order. Do not move a rule from
+ * here into its feature file without re-running .runs-v5/css-regroup/regroup.cjs and the css-equivalence gate.
+ * Rules per owning feature here: stage 25, bestiary 24, dialog 22, board 17, stats-strip 14, stage-meters 13, skilltree 13, effects 11, base 10, minigames 10, shop 9, tutorial 8, topbar 7, menu 7, skills 7, panel 2, map 1. */
+.dimension-footer{display:flex;gap:20px;align-items:center;justify-content:flex-end;white-space:nowrap;color:#d6caff}
+.asset-sprite{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;image-rendering:pixelated;pointer-events:none}
+.final-boss{border-color:#e8a8ff;box-shadow:0 0 30px #b650d944,inset 0 0 60px #a53af32a}
+.panel-tabs{display:flex;gap:16px;margin-bottom:24px}
+.ending-entry{border:3px solid #515368;padding:24px;background:#16121e}
+.stats{right:12px;top:194px;width:148px;padding:12px 10px;gap:18px;background:#080b13db;border:2px solid #b8b8aa;box-shadow:3px 3px #0008;text-shadow:2px 0 #000,-2px 0 #000,0 2px #000,0 -2px #000}
+.stat{color:#fff0d3;gap:8px;text-shadow:inherit}
+.stat-value{color:#fff;min-height:24px;max-width:100%;gap:8px}
+.attack,.venue-name,#crowdLabel,.spotlight,.mental,.shield,.combo,.finisher-label{background:#080b13d9;border:2px solid #a8a89c;text-shadow:2px 0 #000,-2px 0 #000,0 2px #000,0 -2px #000}
+.venue-name{left:238px;top:58px;width:300px}
+.combo{padding:4px 6px;font-size:22px}
+.doubt-label,.xp-number,.lv,.box-number{ text-shadow:2px 0 #000,-2px 0 #000,0 2px #000,0 -2px #000,2px 2px #000,-2px -2px #000}
+/* v4 U1: fixed board geometry, independent of owned capacity. */
+.board{padding:8px;grid-template-columns:repeat(5,112px);grid-template-rows:repeat(5,112px);gap:8px}
+.spawn-timer{display:none;position:absolute;left:32px;top:20px;width:36px;height:36px;border:2px solid #8f9db8;border-radius:50%;align-items:center;justify-content:center;font-size:11px;color:#cfe8ff}
+.constellation-map{position:relative;overflow:hidden;background:radial-gradient(ellipse at center,#1c2034,#070910);border:2px solid #59617d;touch-action:none;cursor:grab;min-width:0}
+.constellation-lines{position:absolute;left:0;top:0;width:1px;height:1px;overflow:visible;pointer-events:none}
+.constellation-node{position:absolute;width:64px;height:64px;min-height:0;border-radius:50%;padding:0;transform:translate(-50%,-50%);border:3px solid #777e98;background:#161b30;color:#fff;z-index:1;overflow:visible}
+.constellation-icon-host{position:absolute;inset:5px;display:grid;place-items:center;border-radius:50%;overflow:hidden}.constellation-icon{font-size:33px}
+.constellation-name{position:absolute;top:68px;left:50%;transform:translateX(-50%);width:138px;text-align:center;font-size:22px;white-space:nowrap;text-shadow:2px 2px #000}.constellation-level{position:absolute;top:90px;left:0;width:100%;font-size:11px;color:#bdd4e5}
+.constellation-detail{padding:16px;border:2px solid #59617d;background:#121522;overflow:auto;font-size:22px;line-height:1.6}
+.feature-hud{position:static;display:flex;align-items:center;gap:8px;z-index:20;font-size:11px}
+.helper-actor{position:absolute;width:58px;height:58px;display:grid;place-items:center;font-size:44px;pointer-events:none;z-index:24}
+.helper-dove{left:791px;top:261px}.helper-rabbit{left:791px;top:651px}
+.achievement-group h2{margin:4px 0 0;font-size:22px;color:#ffe9ac}
+.achievement-stamp small{font-size:22px;line-height:1.35;color:#c9c3b0}
+.medal{position:relative;width:48px;height:48px;flex:none;display:grid;place-items:center}
+.medal-check{position:absolute;right:-4px;bottom:-4px;z-index:2;line-height:1;color:#ffe65c}
+/* Board workers stay small and below the percentage readout. */
+.board-worker{width:40px;height:44px;font-size:33px;z-index:19;transition:transform 50ms linear;filter:drop-shadow(1px 3px 1px #0007)}
+.entry-emoji{position:relative;display:inline-grid;place-items:center;width:58px;height:58px}
+/* U4a case progression and short chain feedback. */
+.case-lightning { position: absolute; height: 5px; z-index: 30; pointer-events: none; transform-origin: left center; background: #e0fcff; box-shadow: 0 0 12px 4px #75ceff; animation: case-lightning-out 180ms ease-out forwards; }
+@media (prefers-reduced-motion: reduce) { .case-lightning { animation: none; opacity: .5; } }
+.magic-layer{position:absolute;inset:0;pointer-events:none;z-index:12}.sponge-projectile{position:absolute;width:32px;height:32px;object-fit:contain}.paper-drop{position:absolute;width:50px;height:50px;pointer-events:auto;font-size:0;background-size:contain;border-color:#ffe65c;animation:none}
+.magic-controls{position:static;display:flex;gap:4px;z-index:20}
+.spotlight-beam{position:absolute;left:878px;width:592px;height:112px;background:linear-gradient(90deg,transparent,#fff6aacc,transparent);z-index:13;pointer-events:none;animation:beam-sweep .6s ease-out forwards}
+.stage-reward{position:absolute;left:350px;top:220px;width:900px;padding:24px;text-align:center;background:#15102ff2;border:4px solid #ffe65c;z-index:32;pointer-events:none}
+.stage-reward h2{color:#ffe65c;font-size:33px}.curtain-call{position:absolute;inset:80px 180px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;background:radial-gradient(ellipse,#492346,#130b20);z-index:34}
+.curtain-call h2{font-size:55px;color:#ffe65c}
+.reward-badges{display:flex;gap:12px;margin-bottom:20px}
+.guide-highlight{border:4px solid #ffe65c!important;box-shadow:0 0 22px #ffe65c;animation:none}.guide-line{color:#ffe65c}
+.curtain-call>*{pointer-events:none}
+.feature-hud{gap:4px;flex:none}
+.asset-sprite{border:0;outline:0;image-rendering:pixelated}
+.venue-heading{position:absolute;left:238px;top:58px;width:300px;display:flex;align-items:center;gap:8px;background:#080b13d9;border:2px solid #a8a89c;padding:8px;z-index:4}
+.toast{width:auto;flex:1;min-width:0;max-height:24px;padding:1px 6px;border-width:2px;font-size:11px;line-height:18px;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+.stage-reward{pointer-events:auto;cursor:pointer}
+/* U7 review targets and homecoming. */
+.review-warning { outline: 3px dashed #ffe59b; outline-offset: -4px; }
+.review-active { outline: 4px solid #ffe16a; outline-offset: -4px; }
+.homecoming-scene { gap: 10px; padding: 12px 24px; min-height: 0; }
+.homecoming-picture { position: relative; width: 576px; height: 324px; flex: none; margin: 0 auto; background-size: cover; overflow: hidden; }
+.homecoming-portraits { display: flex; align-items: end; justify-content: center; height: 100%; gap: 12px; }
+.homecoming-face { position: relative; display: block; width: 180px; height: 220px; color: white; text-shadow: 1px 1px black; }
+.homecoming-scene h2 { margin: 0; font-size: 32px; line-height: 1.3; }
+.meetup-memory { position: relative; width: 480px; height: 270px; margin: 12px auto; }
+.phone .board-worker{width:24px;height:26px;transform:translate(8px,12px);font-size:22px}
+.phone .paper-drop{width:44px;height:44px;min-width:44px;padding:0}
+.phone .panel-tabs{gap:5px;flex-wrap:wrap;margin-bottom:8px}
+.phone .dealer-rules{font-size:11px}
+.phone .dealer-controls button{font-size:11px;padding:6px 10px}
+.phone .equip-grid button{font-size:11px}
+.phone .achievement-head,.phone .achievement-group h2,.phone .achievement-copy strong{font-size:13px;line-height:1.3}
+.phone.phone-tight .combo{top:143px;height:20px}
+.homecoming-portraits{gap:4px}
+/* U12 typography, bulk learning and non-blocking onboarding. */
+:root{font-synthesis:none;-webkit-font-smoothing:none;font-size:22px}
+p,li,.constellation-detail,.intro-line,#tutorialCoach{word-break:keep-all;overflow-wrap:break-word}
+#board,.constellation-map,#introStory{touch-action:none}
+.phone .menu button{width:66px;font-size:11px}
+.intro-next{position:absolute;bottom:20px;left:calc(50% - 180px);width:360px;min-height:44px;font-size:22px}
+.intro-skip{position:absolute;right:12px;top:12px;min-height:44px;font-size:22px}
+.tutorial-target{outline:2px solid #ffe65c;outline-offset:-2px}
+.phone .intro-next{font-size:11px;bottom:10px;width:250px;left:calc(50% - 125px)}.phone .intro-skip{font-size:11px}
+.active-skill{position:relative;width:56px;min-height:62px;padding:3px;font-size:11px;display:grid;place-items:center;background:#171827;--cooldown:0deg}
+.skill-art{position:relative;width:26px;height:26px;font-size:22px}.skill-art .asset-sprite{width:100%;height:100%;object-fit:contain}
+.phone .active-skill{width:44px;height:52px;min-height:52px;border-width:1px;padding:1px;font-size:9px;line-height:11px}
+.phone .skill-art{width:20px;height:20px;font-size:18px}
+.phone .spotlight{bottom:81px}
+.phone #board .cell .box-number .bitmap,.phone #board .cell .percent-symbol{font-size:9px;line-height:9px}
+.u14-art{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;font-size:24px;vertical-align:middle;margin-right:8px}
+.u14-art.art-loaded{font-size:0}
+.outfit-collection{display:flex;align-items:center;gap:16px}.outfit-preview{width:96px;height:96px;background-size:300% 100%;background-position:0 0;image-rendering:pixelated;font-size:40px}.outfit-preview.art-loaded{font-size:0}
+.set-progress{color:#ffe65c}.set-ribbon{width:24px;height:24px}.mission-heading{display:flex;align-items:center;gap:8px}
+.streak-cycle{display:flex;gap:8px;flex-wrap:wrap}
+.daily-mission{padding:12px;margin:10px 0;border:2px solid #45425e;background:#151724}.daily-mission.completed{border-color:#91eaaa}
+.story-portrait{width:54px;height:64px;object-fit:contain;image-rendering:pixelated}
+.coach-helper{float:left;width:48px;height:48px;object-fit:contain;image-rendering:pixelated}.stat-meaning{font-size:11px;line-height:1.4}
+.phone .menu{display:none}
+.phone .doubt{left:6px;right:6px;top:4px;width:auto;height:22px;border-width:1px;z-index:4}.phone .doubt-label{font-size:10px;padding:1px 4px;line-height:18px}
+.phone .mental-label,.phone .hearts{display:none}
+.phone .combo{left:65%;right:6px;top:auto;bottom:4px;height:30px;padding:2px;gap:3px;font-size:10px;z-index:4}
+.phone .attack,.phone #crowd,.phone #crowdLabel,.phone .audience-shadow,.phone .xp-row,.phone .finisher,.phone .finisher-label,.phone #perSecond,.phone #coinSecond,.phone .board-footer,.phone .caption{display:none}
+.phone .stats{inset:28px 4px 40px;z-index:12}
+.phone .heckle,.phone .telegraph .heckle{left:44%;right:6px;top:30px;width:auto;max-width:none;font-size:10px;z-index:6}
+.phone .active-skill{width:44px;height:48px;min-height:48px;font-size:9px;line-height:10px;padding:1px}.phone .skill-art{height:18px;width:18px}
+.phone .story-portrait{width:40px;height:52px}
+.phone .story-copy p{margin:3px 0}
+@media(max-width:700px){.phone #phoneWallet .hud{gap:5px}.phone #phoneVenue .venue-name{font-size:10px}.phone #magicianMini{width:100px;height:100px}.phone #storyDialog{grid-template-columns:30px minmax(0,1fr) 44px 64px}.phone .story-portrait{width:30px}}
+.phone #stage.f-statsx.f-statsx #tutorialCoach{visibility:hidden}
+.bestiary-guides{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.bestiary-guide{display:grid;grid-template-columns:64px minmax(0,1fr);gap:8px;padding:8px;background:#141a28}.bestiary-guide .entry-emoji{grid-row:1 / 3;width:64px;height:72px}.bestiary-guide h3,.bestiary-guide p{margin:2px}.phone .bestiary-guide{font-size:11px}
+.phone .easy-stat{border:1px solid #929bb7;padding:8px;margin:6px 0}
+.phone .easy-stat strong{font-size:18px}
+.item-count{display:inline-block;border-radius:6px;padding:0 3px;min-width:14px;background:#273749;color:#fff}
+.coach-helper,.story-portrait{object-fit:cover;object-position:50% 70%}
+.constellation-name{white-space:nowrap}
+.tree-cost{display:block;white-space:nowrap;overflow:visible;font-size:14px}
+.entry-portrait{position:relative;min-height:76px;flex:none}
+.entry-portrait .entry-emoji{width:72px;height:72px}
+.entry-portrait .fan-stamp{position:absolute;right:6px;top:5px;width:108px;box-sizing:border-box;margin:0;padding:4px 2px;background:#163225;color:#a8ffb6;border:2px solid #a8ffb6;font-size:11px;line-height:16px;white-space:nowrap;transform:rotate(5deg);z-index:1}
+.phone #storyDialog{height:56px;grid-template-columns:30px minmax(0,1fr) 44px 66px;padding:4px;gap:4px}
+.bestiary-entry h3{white-space:nowrap;font-size:18px;letter-spacing:-.5px}
+/* U17: lightweight gem games, impact responses, and a screen-wide fever. */
+.dealer-gem-menu,.gem-shop-item,.gem-game{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:12px;border:2px solid #bc8cff;border-radius:12px;margin:8px 0}
+.dealer-gem-menu small,.gem-shop-item h2,.gem-shop-item p,.gem-shop-item small,.gem-game h2,.gem-game p{flex-basis:100%;margin:0}
+.cups-table{position:relative;flex-basis:100%;height:115px;max-width:440px;margin:auto;width:100%}
+.game-cup{position:absolute;left:calc(6% + var(--slot)*31%);top:12px;width:25%;height:85px;font-size:42px;transition:left .18s ease;overflow:visible}
+.cup-ball{position:absolute;bottom:-16px;left:40%;font-size:22px}
+.music-volume{display:flex;align-items:center;gap:8px;font-size:12px}
+.fever-petal{position:absolute;left:var(--x);top:-10%;color:#ffe66c;font-size:20px;animation:fever-fall 3s var(--delay) linear forwards}
+.projectile-impact{position:absolute;width:32px;height:32px;font-size:26px;pointer-events:none;z-index:15;background-size:contain;background-repeat:no-repeat;animation:card-impact .45s forwards}
+.sponge-impact{animation:sponge-impact .48s ease-out forwards}
+.dove-impact{animation:card-impact .5s forwards}
+@media(prefers-reduced-motion:reduce){.game-cup{transition:none}.fever-petal{display:none}.projectile-impact{animation:none;opacity:.65}}
+.menu{flex-wrap:wrap;max-width:calc(100% - 400px);justify-content:flex-end}
+.phone .gem-shop-quick{height:44px;min-height:44px;font-size:18px}
+#stage *,#stage *:before,#stage *:after{border-radius:0}
+#stage :is(.stats,.mental,.shield,.combo,.bestiary-venue,.bestiary-entry,.easy-stat,.daily-mission,.dealer-gem-menu,.gem-shop-item,.gem-game){background:var(--raised);border:1px solid var(--line);box-shadow:0 2px 0 #100D16;text-shadow:none}
+#stage :is(.doubt-label,.xp-number,.lv,.box-number){text-shadow:none}
+#stage :is(.guide-highlight,.tutorial-target){outline:none;border-color:var(--gold)!important;box-shadow:inset 0 0 0 2px var(--gold);animation:none}
+/* Top bar and HUD retain the U17 44px baseline and safe-area coordinates. */
+.phone #phoneTop{background:#120F1A;border-bottom:1px solid #2A2640;gap:6px}
+.phone #phoneVenue .venue-name{font-size:13px;font-weight:700;color:var(--ink);letter-spacing:0;text-shadow:none}
+@media(max-width:740px){.phone #phoneTop #goalStrip{display:none}.phone #phoneWallet .hud{gap:5px}.phone #phoneTop{gap:4px}}
+.phone.phone-tight .mental,.phone.phone-tight .shield,.phone.phone-tight .combo,.phone .mental,.phone .shield,.phone .combo{top:auto;bottom:4px;height:30px;border:1px solid var(--line);background:var(--raised);align-items:center}
+.phone .combo{left:calc(14px + (100% - 20px) * .62);right:6px;color:var(--gold)}
+#stage .doubt{background:#4A1D20;border:2px solid var(--brass)}
+#stage .doubt-fill{background:var(--danger);border-top-color:var(--danger-hi)}
+#stage .constellation-map{background:radial-gradient(ellipse at center,#2A2040,#0E0B18);border:1px solid var(--line)}
+#stage .constellation-name,#stage .constellation-node.collection .constellation-name{top:60px;width:138px;font-size:12px;line-height:16px;letter-spacing:0;text-shadow:none}
+#stage .active-skill{background:#302735;border:1px solid var(--line);box-shadow:0 2px 0 #100D16}
+#stage .active-skill.in-use,#stage #item-auto-glove.glove-active{border-color:var(--ok);background:#24321F}
+.truefan-slot{margin-top:8px;padding:8px;border:1px solid var(--line);background:var(--panel)}
+.truefan-slot.earned,.truefan-ribbon{border:2px solid var(--gold);color:var(--gold)}
+.stage-map,.cosmetic-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.map-venue,.cosmetic-card{min-width:0;padding:12px;background:var(--raised);border:1px solid var(--line)}
+.cosmetic-icon{display:block;width:96px;height:96px;font-size:64px;margin:auto;position:relative}
+.cosmetic-icon.art-loaded{font-size:0}
+.phone .cosmetic-grid,.phone .stage-map{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.phone .cosmetic-card,.phone .map-venue{padding:8px}
+.phone .cosmetic-icon{width:64px;height:64px;font-size:44px}
+.phone .truefan-slot{padding:6px;font-size:11px}
+.phone .truefan-slot button,.phone .map-audience button,.phone .cosmetic-card button{font-size:11px;min-height:44px;white-space:nowrap}
+
+.story-portrait{display:block;position:relative;flex:none;overflow:hidden}
+.story-portrait .asset-sprite{width:100%;height:100%;object-fit:contain}
+
+.chest .sprite-fallback{display:block;text-align:center;font-size:32px}
+.future-suit{filter:sepia(.5) saturate(1.8) hue-rotate(235deg);border-bottom:3px solid #e4ba65}
+.routine-collection{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin:12px 0;align-items:start}
+.routine-collection .routine-item{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0}
+.routine-icon{width:100%;aspect-ratio:1;height:auto}
+#futureTelegraph{position:absolute;left:46px;top:290px;width:470px;padding:18px;background:#342334f5;border:2px solid #ffe17a;white-space:pre-line;line-height:1.6;z-index:10;pointer-events:none}
+/* U19b: opaque figure geometry, compact controls and persistent arrangement panels. */
+#stage .normalized-figure{position:relative;overflow:hidden}
+#stage :is(.panel-tabs button,.equip-grid button,.equip-collection button,.failure-lesson button,.map-audience button,.cosmetic-card button,.gem-shop-item button,.dealer-controls button){white-space:nowrap;min-width:0}
+.boo-scene #audience{animation:audience-boo 120ms cubic-bezier(.2,.8,.2,1)}
+@media(prefers-reduced-motion:reduce){.boo-scene #audience{animation:none}}
+#magicianMini.disappointed{background-image:none}
+.fever-petal{animation-duration:2.4s;animation-delay:0s;animation-iteration-count:1;font-size:12px}
+.encore-active #board{box-shadow:none}
+.telegraph .doubt{border-color:var(--line)}
+.guide-highlight{box-shadow:inset 0 0 0 1px #ffe65c88}
+[data-motion-loop="true"]{animation:u23-breathe 2s var(--motion-in) infinite}
+.board-worker{transition:transform 240ms var(--motion-in)}
+#stage .box{box-shadow:1px 1px #17121d}.case-lightning{opacity:.35}
+.projectile-impact{animation-duration:280ms}
+#banner:not([hidden]),.stage-reward,.curtain-call{animation:u23-banner 350ms var(--motion-in)}
+@media(prefers-reduced-motion:reduce){[data-motion-loop="true"],.telegraph #heckleMeter span{animation:none!important}.fever-petal{display:none}}
+
+#banner:not([hidden]){animation:u23-banner-cycle 1200ms linear}
+.spotlight-beam{animation-duration:280ms;background:linear-gradient(90deg,transparent,#fff6aa16,transparent)}
+/* U25: stage launch and live HUD. */
+#storyDialog .stage-start{height:44px;min-height:44px;white-space:nowrap;line-height:24px;background:#eac568;color:#231c29}
+.heckle-meter{position:absolute;left:12px;top:46px;width:668px;height:20px;border:1px solid var(--danger);background:#321b24;z-index:5;overflow:hidden}
+.heckle-fill{height:100%;width:0;background:#9f453c}
+.heckle-label{position:absolute;inset:0;display:flex;align-items:center;justify-content:space-between;padding:0 6px;gap:4px;white-space:nowrap;font-size:11px;line-height:16px;color:var(--ink)}
+.paper-drop{z-index:17;pointer-events:auto;min-width:44px;min-height:44px}
+#stage #heckleMeter .heckle-label{height:auto;background:transparent;transition:none;animation:none}

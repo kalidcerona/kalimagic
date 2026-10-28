@@ -2,6 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile, readdir } from 'node:fs/promises';
 import vm from 'node:vm';
+import { createHash } from 'node:crypto';
+import { MAGICSHOW_EXTRAS, magicshowRuntimeFiles } from '../../scripts/magicshow-files.mjs';
 import { DISTRIBUTION_APPS, shouldCopyMagicshow, transformDistributionDocument, verifyAppDisplayPolicy } from '../../scripts/build-public.mjs';
 import gate, { classifyPath, MAGICSHOW_PUBLIC_BETA } from '../../netlify/edge-functions/tools-gate.mjs';
 import { FRIEND_APP_TOOLS } from '../../netlify/functions/_lib/friend-app-access.mjs';
@@ -23,21 +25,26 @@ async function filesUnder(route) {
 
 test('Magicshow snapshot contains only allowed runtime files and exact deployment precache', async () => {
   const files = await filesUnder(shared);
-  const base = ['index.html', 'style.css', 'portrait.css', 'data.js', 'core.js', 'audio.js', 'ui.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png', 'favicon-32.png', 'og-image.png', 'sw.js', 'install-prompt.js', 'install-prompt.css', 'update.html'];
+  const html = (await read(`${shared}/index.html`)).toString();
+  const runtime = magicshowRuntimeFiles(html);
+  const base = [...new Set([...runtime, ...MAGICSHOW_EXTRAS])];
   assert.deepEqual(files.filter(file => !file.startsWith('assets/') && !file.startsWith('fonts/')), base.sort());
+  for (const anchor of ['</head>', '<body', '</body>']) assert.equal(html.split(anchor).length, 2, anchor);
   assert.ok(files.some(file => file.startsWith('assets/')));
-  for (const file of ['assets/aud-a1.webp', 'assets/ui/ui-button.webp', 'assets/kit/panel.webp']) assert.equal(shouldCopyMagicshow(file), true, file);
+  for (const file of ['assets/aud-a1.webp', 'assets/ui/ui-button.webp', 'assets/kit/panel.webp', 'assets/story/intro-1-living.webp', 'assets/ui/minigames/monte-queen.webp', 'assets/future/deeper/art.webp']) assert.equal(shouldCopyMagicshow(file), true, file);
   for (const font of ['fonts/Galmuri11.woff2', 'fonts/Galmuri11-Bold.woff2', 'fonts/Galmuri9.woff2', 'fonts/OFL.md']) assert.ok(files.includes(font), font);
   for (const file of files) {
     assert.equal(shouldCopyMagicshow(file), true, file);
     assert.deepEqual(classifyPath(`/tools/magicshow/${file}`), { mode: 'public' }, file);
   }
-  for (const file of ['.env', '.gen/icon.png', 'README.md', 'PLAN.md', 'test-core.mjs', 'sim.mjs', 'tools/x.js', 'assets/.private.png', 'assets/logo.bak.png', 'assets/nested/private.png', 'assets/nested/private.webp', 'assets/.private.webp', 'assets/logo.bak.webp.txt', 'fonts/private.js', 'fonts/.private.woff2', 'fonts/nested/private.woff2']) assert.equal(shouldCopyMagicshow(file), false, file);
+  for (const file of ['.env', '.gen/icon.png', 'README.md', 'PLAN.md', 'test-core.mjs', 'sim.mjs', 'tools/x.js', 'assets/.private.png', 'assets/logo.bak.png', 'assets/.private.webp', 'assets/logo.bak.webp.txt', 'fonts/private.js', 'fonts/.private.woff2', 'fonts/nested/private.woff2']) assert.equal(shouldCopyMagicshow(file), false, file);
   assert.deepEqual(DISTRIBUTION_APPS.find(app => app.tool === 'magicshow'), { source: shared, target: 'magicshow', tool: 'magicshow' });
   const sw = (await read(`${shared}/sw.js`)).toString();
   const precache = JSON.parse(sw.match(/const SHELL = (\[[\s\S]*?\]);/)[1]);
   assert.deepEqual(precache.map(file => file.replace(/^\.\//, '')).sort(), files.filter(file => file !== 'update.html'));
   assert.equal(new Set(precache).size, files.length - 1);
+  for (const file of runtime) { assert.ok(files.includes(file), file); assert.ok(precache.includes('./' + file), file); }
+  assert.deepEqual(precache.slice(1, runtime.length + 1), runtime.map(file => './' + file));
   assert.match(sw, /CACHE_PREFIX = 'magicshow-dist-'/);
   assert.match(sw, /CACHE_NAME = CACHE_PREFIX \+ '[a-f0-9]{16}-coherent-1-distribution'/);
   assert.ok(!precache.some(file => file.includes('/tools/_check')));
@@ -66,7 +73,7 @@ test('Magicshow manifest and HTML preserve the fullscreen beta identity (any ori
   const html = (await read(`${shared}/index.html`)).toString();
   const description = '가족 거실에서 우주까지, 마술로 관객을 감탄시키는 방치형 게임';
   for (const value of ['<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">', '<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">', `<meta name="description" content="${description}">`, '<meta property="og:type" content="website">', '<meta property="og:site_name" content="칼리의 마술 성장기">', '<meta property="og:title" content="칼리의 마술 성장기">', `<meta property="og:description" content="${description}">`, '<meta property="og:url" content="https://kalimagic.netlify.app/tools/magicshow/">', '<meta property="og:image" content="https://kalimagic.netlify.app/tools/magicshow/og-image.png">', '<meta property="og:image:width" content="1200">', '<meta property="og:image:height" content="630">', '<meta name="twitter:card" content="summary_large_image">']) assert.ok(html.includes(value), value);
-  for (const value of ['rel="manifest"', 'apple-mobile-web-app-capable', 'theme-color', "register('./sw.js')", 'data-magic-customize="off"', 'src="install-prompt.js"', 'href="install-prompt.css"']) assert.ok(html.includes(value), value);
+  for (const value of ['rel="manifest"', 'apple-mobile-web-app-capable', 'theme-color', 'src="update-prompt.js"', 'data-magic-customize="off"', 'src="install-prompt.js"', 'href="install-prompt.css"']) assert.ok(html.includes(value), value);
   assert.doesNotMatch(html, /friend-apps-check|\/tools\/_check|accessGuard/);
   assert.equal(transformDistributionDocument(html, { target: 'magicshow', tool: 'magicshow' }), html);
 });
@@ -139,7 +146,7 @@ test('Magicshow built files equal the pinned snapshot and all local references e
   assert.deepEqual(await filesUnder('dist/tools/magicshow'), await filesUnder(shared));
   for (const file of await filesUnder(shared)) assert.deepEqual(await read(`dist/tools/magicshow/${file}`), await read(`${shared}/${file}`), file);
   const html = (await read('dist/tools/magicshow/index.html')).toString();
-  for (const [, file] of html.matchAll(/(?:src|href)="([^"#]+)"/g)) await read(`dist/tools/magicshow/${file}`);
+  for (const [, file] of html.matchAll(/(?:src|href)="([^"#]+)"/g)) { if (!/^(?:https?:|data:)/.test(file)) await read(`dist/tools/magicshow/${file}`); }
   await verifyAppDisplayPolicy(new URL('../../dist/', import.meta.url).pathname, ['tools/magicshow']);
 });
 
@@ -298,11 +305,13 @@ async function runWorker({ active }) {
 }
 const waitFor = async (listeners, name) => { let promise; listeners.get(name)({ waitUntil: p => { promise = p; } }); return promise; };
 
-test('Magicshow service worker skips waiting on every install after the whole shell is cached, and still claims and prunes', async () => {
+test('Magicshow service worker waits on install, accepts SKIP_WAITING and still claims and prunes', async () => {
   for (const active of [null, { state: 'activated' }]) {
     const worker = await runWorker({ active });
     await waitFor(worker.listeners, 'install');
-    assert.equal(worker.calls.skipWaiting, 1, `active=${Boolean(active)}`);
+    assert.equal(worker.calls.skipWaiting, 0, `active=${Boolean(active)}`);
+    let accepted; worker.listeners.get('message')({ data: { type: 'SKIP_WAITING' }, waitUntil: p => { accepted = p; } });
+    await accepted; assert.equal(worker.calls.skipWaiting, 1);
     assert.ok(worker.cached() > 0);
     await waitFor(worker.listeners, 'activate');
     assert.equal(worker.calls.claim, 1);
@@ -314,67 +323,88 @@ test('Magicshow service worker skips waiting on every install after the whole sh
   assert.equal(failing.calls.skipWaiting, 0, 'incomplete shell must not take over');
 });
 
-test('Magicshow service worker install precaches only critical files, not assets images', async () => {
+test('Magicshow art warms after shell, tolerates a missing asset, and retries only missing files next launch', async () => {
   const template = (await read('scripts/magicshow-dist/sw-template.js')).toString();
-  const shell = ['./index.html', './style.css', './ui.js', './core.js', './manifest.webmanifest', './icon-192.png', './apple-touch-icon.png', './fonts/Galmuri11.woff2', './fonts/OFL.md', './assets/box-0.png', './assets/ui/ui-panel.png', './sw.js'];
+  const shell = ['./index.html', './ui.js', './fonts/Galmuri11.woff2', './assets/missing.webp', './assets/ok.webp'];
   const source = template.replace(/const SHELL = \[[\s\S]*?\];/, `const SHELL = ${JSON.stringify(shell)};`);
-  let requested = [], skipped = 0; const listeners = new Map();
-  const self = { registration: { scope: 'https://example.test/tools/magicshow/' }, skipWaiting() { skipped++; return Promise.resolve(); }, clients: { claim: () => Promise.resolve() }, addEventListener: (name, callback) => listeners.set(name, callback) };
-  const caches = { open: async () => ({ addAll: async requests => { requested = requests.map(r => new URL(r.url).pathname.replace('/tools/magicshow/', '')); } }), keys: async () => [], delete: async () => true };
-  vm.runInNewContext(source, { self, caches, URL, Request, Promise, Response, fetch: async () => new Response('') });
+  const listeners = new Map(), stored = new Map(), requests = [], warnings = [];
+  let critical = [], fail = true;
+  const self = { registration: { scope: 'https://example.test/tools/magicshow/' }, clients: { claim: async () => {} }, addEventListener: (name, callback) => listeners.set(name, callback) };
+  const cache = { addAll: async items => { critical = items.map(r => new URL(r.url).pathname.split('/').pop()); }, match: async url => stored.get(url), put: async (url, response) => stored.set(url, response) };
+  const caches = { open: async () => cache, keys: async () => [], delete: async () => true };
+  vm.runInNewContext(source, { self, caches, URL, Request, Promise, Response, console: { warn: (...args) => warnings.push(args) }, fetch: async request => { requests.push(request.url); if (fail && request.url.endsWith('missing.webp')) throw Error('offline'); return new Response('art'); } });
   await waitFor(listeners, 'install');
-  assert.equal(JSON.stringify(requested.sort()), JSON.stringify(['apple-touch-icon.png', 'core.js', 'fonts/Galmuri11.woff2', 'icon-192.png', 'index.html', 'manifest.webmanifest', 'style.css', 'sw.js', 'ui.js']));
-  assert.equal(skipped, 1);
+  assert.deepEqual(Array.from(critical), ['index.html', 'ui.js']); assert.equal(requests.length, 0);
+  await waitFor(listeners, 'activate');
+  assert.equal(requests.length, 0, 'activation must not start or await optional art');
+  let warm; listeners.get('message')({ data: { type: 'PRECACHE_ART' }, waitUntil: p => { warm = p; } }); await warm;
+  assert.equal(stored.size, 2); assert.equal(warnings.length, 1);
+  fail = false; requests.length = 0;
+  let retry; listeners.get('message')({ data: { type: 'PRECACHE_ART' }, waitUntil: p => { retry = p; } }); await retry;
+  assert.equal(stored.size, 3); assert.equal(requests.length, 1); assert.match(requests[0], /missing\.webp$/);
 });
 
-async function runRegistration({ controller }) {
-  const source = (await readFile(new URL('scripts/sync-magicshow-snapshot.mjs', root), 'utf8')).match(/const REGISTER_SW = `([\s\S]*?)`;/)[1];
+async function runRegistration({ waiting = true, safe = false } = {}) {
+  const source = (await read('scripts/magicshow-dist/update-prompt.js')).toString();
   const listen = () => { const map = new Map(); return { map, addEventListener: (name, callback) => map.set(name, callback) }; };
-  const sw = Object.assign(listen(), { controller, register: async () => registration });
-  let updates = 0, reloads = 0, now = 1000000000;
-  const registration = { update: async () => { updates++; } };
-  const win = listen(), doc = Object.assign(listen(), { visibilityState: 'visible' });
-  const saved = [];
-  win.dispatchEvent = event => saved.push(event.type);
-  win.MagicShowUI = { save: () => saved.push('save') };
-  win.location = { reload: () => { reloads++; } };
-  vm.runInNewContext(source, { navigator: { serviceWorker: sw }, window: win, document: doc, location: win.location, Date: { now: () => now }, Event: class { constructor(type) { this.type = type; } } });
-  await win.map.get('load')();
-  await Promise.resolve();
-  return { sw, doc, saved, tick: ms => { now += ms; }, count: () => ({ updates, reloads }) };
+  const messages = [], saved = [], nodes = new Map();
+  const node = id => { if (!nodes.has(id)) nodes.set(id, Object.assign(listen(), { hidden: true, isConnected: true, setAttribute() {}, focus() { doc.activeElement = this; }, querySelector: node, querySelectorAll: () => [node('[data-update]'), node('[data-later]')] })); return nodes.get(id); };
+  const worker = { postMessage: message => messages.push(message.type) };
+  const registration = Object.assign(listen(), { waiting: waiting ? worker : null, active: worker, update: async () => { updates++; } });
+  const sw = Object.assign(listen(), { controller: worker, register: async () => registration });
+  let updates = 0, reloads = 0, now = 1000000000, poll, timeout;
+  const win = listen(), doc = Object.assign(listen(), { visibilityState: 'visible', body: { append() {} }, querySelector: () => null, createElement: () => node('panel') });
+  win.MagicShowUI = { save: () => { saved.push('save'); }, isRestScreen: () => safe };
+  const location = { reload: () => { reloads++; } };
+  vm.runInNewContext(source, { navigator: { serviceWorker: sw }, window: win, document: doc, location, Date: { now: () => now }, console, setTimeout: (fn, ms) => { assert.equal(ms, 5000); timeout = fn; }, setInterval: fn => { poll = fn; }, MutationObserver: class { observe() {} } });
+  win.map.get('load')(); await Promise.resolve();
+  return { sw, doc, win, registration, messages, saved, node, poll: () => poll(), safe: value => { safe = value; poll(); }, click: id => node(id).map.get('click')(), tick: ms => { now += ms; }, timeout: () => timeout(), count: () => ({ updates, reloads }) };
 }
 
-test('Magicshow page reloads exactly once when a new worker replaces a previous controller, after saving', async () => {
-  const page = await runRegistration({ controller: {} });
-  const change = page.sw.map.get('controllerchange');
-  change(); change();
-  assert.equal(page.count().reloads, 1);
-  assert.deepEqual(page.saved, ['pagehide', 'save']);
+test('Magicshow popup waits for rest, hides when play resumes, and accepts save then reload exactly once', async () => {
+  const page = await runRegistration();
+  assert.equal(page.node('panel').hidden, true);
+  page.safe(true); assert.equal(page.node('panel').hidden, false);
+  page.safe(false); assert.equal(page.node('panel').hidden, true);
+  page.sw.map.get('controllerchange')(); assert.equal(page.count().reloads, 0);
+  page.safe(true); page.click('[data-update]');
+  assert.deepEqual(page.saved, ['save']); assert.equal(page.messages.at(-1), 'SKIP_WAITING');
+  page.sw.map.get('controllerchange')(); page.sw.map.get('controllerchange')();
+  page.timeout(); assert.equal(page.count().reloads, 1);
 });
 
-test('Magicshow first install does not reload; a later update in the same page does', async () => {
-  const page = await runRegistration({ controller: null });
-  const change = page.sw.map.get('controllerchange');
-  change();
-  assert.equal(page.count().reloads, 0);
-  change();
+test('Magicshow save conflict stays visible and missing controllerchange reloads only once', async () => {
+  const page = await runRegistration({ safe: true });
+  page.win.MagicShowUI.save = () => false;
+  page.click('[data-update]');
+  assert.equal(page.node('panel').hidden, false);
+  assert.equal(page.node('[data-save-error]').hidden, false);
+  assert.ok(!page.messages.includes('SKIP_WAITING'));
+  page.win.MagicShowUI.save = () => true;
+  page.click('[data-update]');
+  assert.equal(page.node('[data-save-error]').hidden, true);
+  page.timeout(); page.timeout(); page.sw.map.get('controllerchange')();
   assert.equal(page.count().reloads, 1);
+});
+
+test('Magicshow later suppresses prompts for this launch, reappears next launch, and detects late waiting workers', async () => {
+  const page = await runRegistration({ safe: true });
+  page.click('[data-later]'); page.poll(); assert.equal(page.node('panel').hidden, true);
+  assert.ok(!page.messages.includes('SKIP_WAITING'));
+  const next = await runRegistration({ safe: true }); assert.equal(next.node('panel').hidden, false);
+  const late = await runRegistration({ safe: true, waiting: false }); assert.equal(late.node('panel').hidden, true);
+  late.registration.waiting = { postMessage() {} }; late.poll(); assert.equal(late.node('panel').hidden, false);
+  const css = (await read('scripts/magicshow-dist/update-prompt.css')).toString(); assert.match(css, /min-height: 44px/);
 });
 
 test('Magicshow page checks for updates when visible again at most once per ten minutes', async () => {
-  const page = await runRegistration({ controller: {} });
+  const page = await runRegistration();
   const visible = page.doc.map.get('visibilitychange');
-  visible();
-  assert.equal(page.count().updates, 0, 'too soon after load');
-  page.tick(10 * 60 * 1000);
-  page.doc.visibilityState = 'hidden'; visible();
-  assert.equal(page.count().updates, 0, 'hidden does not check');
-  page.doc.visibilityState = 'visible'; visible();
-  assert.equal(page.count().updates, 1);
-  page.tick(9 * 60 * 1000); visible();
-  assert.equal(page.count().updates, 1, 'throttled');
-  page.tick(60 * 1000); visible();
-  assert.equal(page.count().updates, 2);
+  visible(); assert.equal(page.count().updates, 0);
+  page.tick(600000); page.doc.visibilityState = 'hidden'; visible(); assert.equal(page.count().updates, 0);
+  page.doc.visibilityState = 'visible'; visible(); assert.equal(page.count().updates, 1);
+  page.tick(540000); visible(); assert.equal(page.count().updates, 1);
+  page.tick(60000); visible(); assert.equal(page.count().updates, 2);
 });
 
 test('Magicshow update.html escape page is public, never precached, and only clears the app shell caches', async () => {
@@ -393,4 +423,49 @@ test('Magicshow update.html escape page is public, never precached, and only cle
   assert.match(html, /k\.indexOf\(PREFIX\) === 0/);
   assert.match(html, /location\.replace\('\/tools\/magicshow\/\?fresh=' \+ Date\.now\(\)\)/);
   assert.match(html, /다시 시도/);
+});
+
+test('Magicshow runtime extraction follows document order and rejects unsafe or duplicate paths', () => {
+  const html = '<link href="style-new.css" rel="stylesheet"><script src="data-new.js"></script><script src="modules/future.js"></script>';
+  assert.deepEqual(magicshowRuntimeFiles(html), ['style-new.css', 'data-new.js', 'modules/future.js']);
+  assert.ok(shouldCopyMagicshow('modules/future.js', magicshowRuntimeFiles(html)));
+  assert.ok(shouldCopyMagicshow('modules', magicshowRuntimeFiles(html)));
+  assert.equal(shouldCopyMagicshow('test-new.js', magicshowRuntimeFiles(html)), false);
+  for (const value of ['../escape.js', '/absolute.js', 'https://example.test/a.js']) assert.throws(() => magicshowRuntimeFiles(`<script src="${value}"></script>`));
+  assert.throws(() => magicshowRuntimeFiles('<script src="same.js"></script><script src="same.js"></script>'));
+});
+
+test('Magicshow rest hook is read-only and excludes fights, story, minigames, cutscenes and coaching', async () => {
+  const source = (await read(`${shared}/ui-boot.js`)).toString();
+  const body = source.match(/isRestScreen: \(\) => \{([\s\S]*?)\n    \},/)[1];
+  const state = { mode: 'fight', u15: { scene: null, queue: [], tutorial: { active: false } }, batchD: { twist: { scene: null } }, features: { climax: { left: 0 } } };
+  const visible = new Set(); let sheet = false;
+  const context = { state, document: { hidden: false }, $: id => ({ hidden: !visible.has(id) }), blockingSheetOpen: () => sheet, chainFighting: false, dealerBusy: false, menu: '', dealerGameView: null, presentation: { busy: false }, wonMoment: null, stageRewardHost: null, clock: 0 };
+  const rest = vm.runInNewContext(`() => {${body}}`, context);
+  const before = JSON.stringify(state);
+  assert.equal(rest(), false, 'active fight');
+  sheet = true; assert.equal(rest(), true, 'paused menu/settings');
+  for (const id of ['storyDialog', 'introStory', 'sceneCard', 'tutorialCoach', 'routineCutin']) { visible.add(id); assert.equal(rest(), false, id); visible.clear(); }
+  for (const key of ['dealerBusy', 'chainFighting', 'wonMoment']) { context[key] = true; assert.equal(rest(), false, key); context[key] = false; }
+  context.menu = 'dealer'; context.dealerGameView = 'cups'; assert.equal(rest(), false, 'idle minigame is still a minigame'); context.menu = ''; context.dealerGameView = null;
+  state.u15.scene = {}; assert.equal(rest(), false); state.u15.scene = null;
+  state.u15.queue.push('next'); assert.equal(rest(), false); state.u15.queue = [];
+  state.batchD.twist.scene = {}; assert.equal(rest(), false); state.batchD.twist.scene = null;
+  state.u15.tutorial.active = true; assert.equal(rest(), false); state.u15.tutorial.active = false;
+  context.presentation.busy = true; assert.equal(rest(), false); context.presentation.busy = false;
+  sheet = false; state.mode = 'transition'; assert.equal(rest(), true, 'venue end');
+  state.mode = 'ending'; assert.equal(rest(), true, 'result');
+  state.mode = 'fight'; visible.add('titleScreen'); assert.equal(rest(), false, 'title cannot override a running fight');
+  state.mode = 'transition'; assert.equal(rest(), true, 'quiet title'); visible.clear(); state.mode = 'fight';
+  assert.equal(JSON.stringify(state), before, 'hook does not mutate state');
+});
+
+
+test('Magicshow version fingerprint covers every art/font and runtime byte', async () => {
+  const worker = (await read(`${shared}/sw.js`)).toString();
+  const version = worker.match(/CACHE_NAME = CACHE_PREFIX \+ '([a-f0-9]{16})/)[1];
+  const hash = createHash('sha256').update(worker.replace(version, '__VERSION__'));
+  const files = (await filesUnder(shared)).filter(name => !['sw.js', 'update.html'].includes(name)).sort((a, b) => a.localeCompare(b, 'en'));
+  for (const name of files) hash.update(name).update('\0').update(await read(`${shared}/${name}`));
+  assert.equal(hash.digest('hex').slice(0, 16), version);
 });

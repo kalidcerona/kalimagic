@@ -13,21 +13,41 @@ const SHELL = [
   "./icon-512.png"
 ];
 const SHELL_NAMES = new Set(SHELL.map((file) => file.replace(/^\.\//, '')));
-// Install precaches only what the app cannot run without (pages, scripts, styles, manifest, icons, fonts).
-// Images under assets/ stay in SHELL for routing and are cached on first use, so one failed image cannot block an update.
-const CRITICAL = SHELL.filter((file) => !/^\.\/assets\//.test(file) && (/\.(?:html|m?js|css|webmanifest|woff2?|ttf|otf)$/.test(file) || /^\.\/(?:[^/]*icon[^/]*|favicon[^/]*)\.(?:svg|png)$/.test(file)));
+// Art and fonts are optional: store the executable shell first, then warm these in the background.
+const ART = SHELL.filter(file => /^\.\/(?:assets|fonts)\//.test(file));
+const CRITICAL = SHELL.filter(file => !ART.includes(file));
 const GUARDED = new URL(self.registration.scope).pathname.startsWith('/tools/');
-
-self.addEventListener('install', (event) => {
-  // Reject installation unless the whole critical shell is stored (images are cached lazily).
-  // Once the new shell is fully stored, take over immediately; the page reloads once on controllerchange.
-  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(CRITICAL.map((file) => new Request(new URL(file, self.registration.scope).href, { cache: 'reload', redirect: 'error' })))).then(() => self.skipWaiting()));
+let artPending = null;
+function precacheArt() {
+  if (artPending) return artPending;
+  artPending = (async () => {
+    const cache = await caches.open(CACHE_NAME);
+    // Sequential requests bound memory and bandwidth; a missing file never aborts the remaining downloads.
+    for (const file of ART) {
+      try {
+        const url = new URL(file, self.registration.scope).href;
+        if (await cache.match(url)) continue;
+        const response = await fetch(new Request(url, { cache: 'reload', redirect: 'error' }));
+        if (!response.ok || response.redirected || response.type === 'opaque') throw new Error('Invalid art response');
+        await cache.put(url, response);
+      } catch (error) { console.warn('Magicshow precache retry next launch:', file, error); }
+    }
+  })().catch(error => console.warn('Magicshow art cache unavailable:', error)).finally(() => { artPending = null; });
+  return artPending;
+}
+self.addEventListener('install', event => {
+  // Updates remain waiting until the player accepts, or all existing clients close.
+  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(CRITICAL.map(file => new Request(new URL(file, self.registration.scope).href, { cache: 'reload', redirect: 'error' })))));
 });
-self.addEventListener('activate', (event) => {
-  // Only this game's distribution owns the cache prefix.
-  event.waitUntil(caches.keys().then((names) => Promise.all(names
-    .filter((name) => name.startsWith(CACHE_PREFIX) && name !== CACHE_NAME)
-    .map((name) => caches.delete(name)))).then(() => self.clients.claim()));
+self.addEventListener('message', event => {
+  if (event.data?.type === 'SKIP_WAITING') event.waitUntil(self.skipWaiting());
+  if (event.data?.type === 'PRECACHE_ART') event.waitUntil(precacheArt());
+});
+self.addEventListener('activate', event => {
+  event.waitUntil(caches.keys().then(names => Promise.all(names
+    .filter(name => name.startsWith(CACHE_PREFIX) && name !== CACHE_NAME)
+    .map(name => caches.delete(name)))).then(() => self.clients.claim()));
+  // Optional art warms through PRECACHE_ART messages; activation never waits for downloads.
 });
 function shellName(rawUrl) {
   const url = new URL(rawUrl), scope = new URL(self.registration.scope);

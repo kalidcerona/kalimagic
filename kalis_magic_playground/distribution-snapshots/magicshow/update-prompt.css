@@ -1,0 +1,9 @@
+#magicUpdatePrompt[hidden] { display: none; }
+#magicUpdatePrompt { position: fixed; inset: 0; z-index: 20000; display: grid; place-items: center; padding: 16px; background: #151020c9; font-family: Galmuri11, monospace; color: #ffe5a3; }
+#magicUpdatePrompt .magic-update-box { width: min(440px, 100%); padding: 24px; box-sizing: border-box; border: 3px solid #bb914f; background: #281b36; box-shadow: 0 0 0 4px #151020, inset 0 0 0 2px #4c345c; text-align: center; }
+#magicUpdatePrompt p { margin: 0 0 20px; line-height: 1.8; }
+#magicUpdatePrompt .magic-update-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+#magicUpdatePrompt button { min-height: 44px; min-width: 120px; padding: 10px 16px; border: 2px solid #bb914f; background: #3a264a; color: #ffe5a3; font: inherit; cursor: pointer; }
+#magicUpdatePrompt [data-update] { background: #e0b968; color: #281b36; }
+#magicUpdatePrompt button:focus-visible { outline: 3px solid #fff3c9; outline-offset: 3px; }
+#magicUpdatePrompt [data-save-error] { font-size: 12px; }

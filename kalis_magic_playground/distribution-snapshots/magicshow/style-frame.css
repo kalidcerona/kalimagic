@@ -1,0 +1,43 @@
+/* style-frame.css: #viewport / #frame / #stage frame geometry and body-level layout classes. (CSS regroup 10-28)
+ * Earlier or later rules for the same elements may also sit in style-base.css (early layer) and
+ * style-overrides-*.css (late layer) when the cascade needs them there. */
+#viewport{position:fixed;inset:0;display:grid;place-items:center}#frame{position:relative;flex:none}#stage{position:absolute;left:0;top:0;width:1600px;height:900px;transform-origin:top left;background:#000;image-rendering:pixelated;user-select:none;overflow:hidden}
+#stage{touch-action:none}
+.portrait #stage{pointer-events:none}
+/* U5 dimension, optional pixel assets and final performance. */
+#stage{filter:hue-rotate(var(--dimension-hue,28deg))}
+/* Imported pixel art: readable HUD and a clear foreground target. */
+#stage{filter:none}
+.phone #viewport{height:100dvh;display:block}
+.phone #stage{background:#111018;font-family:Galmuri11,monospace}
+html,body,#stage{background:var(--bg);color:var(--ink)}
+body.tablet{--kit-scale:4}
+body.tablet{background:#17141F;background-image:linear-gradient(90deg,#25202D 0 4px,transparent 4px 20px,#3C3541 20px 24px,transparent 24px 40px);background-size:40px 100%}
+body.phone{--fs-s:10px;--fs-m:11px;--fs-l:16px}
+/* ===== v4 U50: layout proposal 3 "한 장면 무대 + 세로 박수 미터" (owner chose it 2026-10-14), re-based on U49/U49b =====
+   One continuous scene: the venue art runs behind the whole screen (also behind the board, the top bar, the safe-area and letterbox bands);
+   the case board keeps today's size and place on the right with only gold corner ornaments (no panel frame). Reading order left to right
+   (owner: "한국사람들은 습관적으로 왼쪽부터 오른쪽으로 보는 경우가 많아"): the audience side first (the doubt as a tall vertical applause meter at the far left
+   with its name plate on top, the 야유 bar beside it, the audience), then Kali at the front right of the stage with his own spotlight plate
+   (액트, 멘탈, 자신감) under him, then the skill column and the board (right thumb: "오른손을 주로 사용해야"). The venue name is a marquee sign in
+   the top bar over the stage. The result banner flashes on the marquee; toasts have their own lane at the bottom left of the stage. */
+/* the scene fills every band around the game frame (safe area on notch phones, letterbox on 16:10 desktops) */
+#viewport:before{content:"";position:absolute;inset:0;background:#1a1420 var(--venue-art,none) 50% 60%/cover no-repeat;filter:brightness(.45) saturate(.85);image-rendering:pixelated;pointer-events:none;z-index:0}
+#viewport #frame{z-index:1}
+/* ---- phones and tablets ---- */
+.phone #viewport #stage{--T:44px;--CW:var(--audience-width)}
+.tablet #viewport #stage{--T:56px}
+/* -- phones and tablets: the stage and the board half start 2 px under the one top row -- */
+html body.phone #viewport#viewport #stage{--ST:46px;--TB:0px;--SB:52px}
+html body.tablet #viewport#viewport #stage{--ST:58px;--SB:46px}
+@media(max-width:740px){html body.phone:not(.tablet) #viewport#viewport #stage{--SB:52px}}
+/* the board half: the venue palette as a soft spotlight; the gaps around the panels are a muted venue colour, not black */
+html body #viewport#viewport #stage{--board-bg:radial-gradient(ellipse 70% 60% at 50% 45%,color-mix(in srgb,var(--venue-bg2,#5c3a28) 70%,#000),color-mix(in srgb,var(--venue-bg1,#2a1a12) 85%,#000) 70%);
+  --board-frame:0 0 0 2px #2a2333,0 0 0 3px color-mix(in srgb,var(--venue-accent,#e9b44c) 45%,#000);background:color-mix(in srgb,var(--venue-bg2,#5c3a28) 40%,#2e2838)}
+
+/* ---- U54 desktop 1600 x 900: the same arrangement in stage pixels ---- */
+html body:not(.phone) #viewport#viewport #stage{--TB:0px;--SB:64px}
+/* The venue palette fills frame gaps and letterbox edges rather than leaving black bands. */
+html body #viewport#viewport { background-color:#30283a; }
+html body #viewport#viewport #stage#stage#stage#stage { background-color:var(--venue-bg2,#30283a); }
+html body:not(.phone) #viewport#viewport #stage#stage#stage#stage { background-color:#211b2a; }

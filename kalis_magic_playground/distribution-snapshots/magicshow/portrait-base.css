@@ -1,0 +1,306 @@
+/* portrait-base.css: portrait layout base and frame rules. (CSS regroup 10-28)
+ * Early shared layer: 20 rules here belong to other features but must load before every feature
+ * file, because later feature files override them at equal specificity. Base and early rules keep their original order.
+ * Earlier or later rules for the same elements may also sit in portrait-base.css (early layer) and
+ * portrait-overrides-*.css (late layer) when the cascade needs them there. */
+html body.portrait-layout #stage {
+  pointer-events: auto;
+}
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #phoneTop .venue-heading {
+  min-width: 0;
+  width: 100% !important;
+  max-width: 100%;
+  flex-direction: column;
+  margin: 0;
+  padding: 0 !important;
+  overflow: visible;
+  background: none;
+  border: 0;
+  box-shadow: none;
+  display: grid;
+  grid-template-columns: auto minmax(0,1fr);
+  grid-template-rows: 20px 13px;
+  height: 33px !important;
+  max-height: 33px;
+  align-items: center !important;
+  justify-content: stretch !important;
+  row-gap: 0 !important;
+  column-gap: 6px !important;
+}
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #phoneWallet .hud {
+  min-width: 0;
+  height: 22px;
+  row-gap: 6px;
+  column-gap: 6px;
+  align-items: center;
+}
+
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #phoneWallet .cur-icon {
+  width: 18px;
+  height: 18px;
+}
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #portraitMeters .meter-left {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: flex-start;
+  row-gap: 4px;
+  column-gap: 4px;
+  height: 14px;
+  min-height: 14px;
+  max-height: 14px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
+}
+
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #portraitMeters .doubt-name {
+  min-width: 0;
+  text-align: left;
+  position: static;
+  top: auto;
+  right: auto;
+  bottom: auto;
+  left: auto;
+  display: inline-flex;
+  align-items: center;
+  width: auto;
+  height: 14px;
+  margin: 0;
+  padding: 0;
+  background: none;
+  border: 0;
+  box-shadow: none;
+  transform: none;
+  font-style: normal;
+  font-variant: normal;
+  font-weight: 700;
+  font-stretch: normal;
+  font-size: 11px;
+  line-height: 14px;
+  font-family: Galmuri11,monospace;
+  color: #F2E6C8;
+  white-space: nowrap;
+  overflow: hidden;
+  flex: 0 1 auto;
+  max-width: 42%;
+  text-overflow: ellipsis;
+}
+
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #portraitMeters .doubt-plate {
+  max-height: none;
+  justify-content: flex-start;
+  z-index: auto;
+  position: static;
+  top: auto;
+  right: auto;
+  bottom: auto;
+  left: auto;
+  display: inline-flex;
+  align-items: center;
+  flex: 0 1 auto;
+  width: auto;
+  height: 14px;
+  margin: 0;
+  padding: 0;
+  background: none;
+  border: 0;
+  box-shadow: none;
+  transform: none;
+  font-style: normal;
+  font-variant: normal;
+  font-weight: 700;
+  font-stretch: normal;
+  font-size: 11px;
+  line-height: 14px;
+  font-family: Galmuri11,monospace;
+  color: #F2E6C8;
+  white-space: nowrap;
+  row-gap: 4px;
+  column-gap: 4px;
+  max-width: none;
+  overflow: visible;
+}
+
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #portraitMeters #doubtTitle {
+  text-overflow: clip;
+  position: static;
+  top: auto;
+  right: auto;
+  bottom: auto;
+  left: auto;
+  display: inline-flex;
+  align-items: center;
+  flex: 0 1 auto;
+  width: auto;
+  max-width: 70%;
+  height: 14px;
+  margin: 0;
+  padding: 0;
+  background: none;
+  border: 0;
+  box-shadow: none;
+  transform: none;
+  font-style: normal;
+  font-variant: normal;
+  font-weight: 700;
+  font-stretch: normal;
+  font-size: 11px;
+  line-height: 14px;
+  font-family: Galmuri11,monospace;
+  color: #F2E6C8;
+  white-space: nowrap;
+  overflow: hidden;
+}
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #audienceCard #audience > .asset-sprite {
+  height: 100%;
+  width: auto;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+}
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #audienceCard #patternLabel {
+  left: 6px !important;
+  right: auto;
+  width: auto;
+  max-width: 42% !important;
+  top: 20px !important;
+  z-index: 6;
+}
+
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #audienceCard #phaseIndicator {
+  left: 6px !important;
+  right: auto;
+  width: auto;
+  max-width: 42% !important;
+  z-index: 6;
+  top: var(--portrait-phase-top, 40px) !important; /* fixP 2: under a two-line rule plate (ui.js renderU19) */
+}
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #audienceCard #stageStats .bitmap {
+  flex: 1 1 auto;
+  min-width: 0;
+  position: static;
+  grid-column: auto;
+  grid-row: auto;
+  margin: 0;
+  font-style: normal;
+  font-variant: normal;
+  font-weight: 700;
+  font-stretch: normal;
+  font-size: 10px;
+  line-height: 14px;
+  font-family: Galmuri11,monospace;
+  color: #F2E6C8;
+  text-align: right;
+  --pixel: 2px;
+}
+html body.portrait-layout {
+  --theatre: #100D16;
+  --panel: #25202D;
+  --brass: #A68A58;
+  --gold: #E8BF68;
+  --cream: #F2E6C8;
+  --velvet: #8E2F3C;
+  --felt: #2F5B4A;
+  --doubt: #BC8CFF;
+  --confidence: #8FD3FF;
+  --mental: #DC7970;
+  --p-void: #100D16;
+  --p-bg: #100D16;
+  --p-panel: #25202D;
+  --p-brass: #A68A58;
+  --p-gold: #E8BF68;
+  --p-cream: #F2E6C8;
+  --p-violet: #BC8CFF;
+  --p-info: #8FD3FF;
+  --p-danger-hi: #DC7970;
+  --bg: #100D16;
+  --ink: #F2E6C8;
+}
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #tutorialCoach[data-dock="bottom"] {
+  left: 0;
+  right: 0;
+  top: auto;
+  bottom: 0;
+  width: auto;
+  max-width: none;
+  height: auto;
+  max-height: 108px;
+  z-index: 46;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: 44px minmax(0,1fr) 72px;
+  grid-template-rows: auto auto;
+  align-items: center;
+  column-gap: 6px;
+  row-gap: 2px;
+  padding: 8px;
+  border: 2px solid #A68A58;
+  pointer-events: none;
+  border-style: solid;
+  border-width: 8px;
+  border-image: var(--kit-panel) 20 fill / 8px / 0 stretch;
+  background: #17141c;
+  background-image: none;
+  color: #F2E6C8;
+  box-shadow: none;
+  image-rendering: pixelated;
+}
+html body.portrait-layout.phone:not(.tablet) {
+  --kit-panel: url('assets/kit/panel.webp');
+  --kit-dark: url('assets/kit/btn-dark.webp');
+  --kit-dark-down: url('assets/kit/btn-dark-pressed.webp');
+  --kit-gold: url('assets/kit/btn-gold.webp');
+  --kit-gold-down: url('assets/kit/btn-gold-pressed.webp');
+}
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #activeSkills .active-skill:active,
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #activeSkills .kit-btn:active,
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #actionDock > button:active,
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #skillRow > .active-skill:active {
+  border-image-source: var(--kit-dark-down);
+}
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #audienceCard #room > .asset-sprite {
+  filter: brightness(.55) saturate(.72);
+}
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #portraitPlain .bitmap,
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #portraitMeters .bitmap {
+  --pixel: 2px;
+}
+html body.portrait-layout #viewport#viewport #stage button:disabled { opacity:1; color:#C9C0AD; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #phoneWallet .currency .bitmap::after { content:attr(aria-label); font:14px/16px system-ui,sans-serif; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #audienceCard #room > .asset-sprite { filter:none; opacity:1; object-fit:cover; object-position:center; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #audienceCard #stageStats .bitmap::after { content:attr(aria-label); font:10px/16px system-ui,sans-serif; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #boardCard #board .chest > .asset-sprite { position:absolute; left:50%; top:50%; width:100%; height:100%; transform:translate(-50%,-60%); object-fit:contain; filter:none; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #audienceCard #stageStats .bitmap::after { font:11px/16px system-ui,sans-serif; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #audienceCard #stageStats .bitmap::after { display:block; font:11px/14px system-ui,sans-serif; color:#f2e6c8; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage * { -webkit-font-smoothing:antialiased; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #boardCard #board .chest > .asset-sprite { width:82%; height:82%; transform:translate(-50%,-50%); }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #activeSkills #actionDock > :is(#bookButton,#wardrobeButton,#practiceButton,#caseArrangeButton) .kit-ico { width:18px; height:18px; flex:0 0 18px; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #activeSkills :is(.kit-label,.finisher-label,#skillRow > button > span:not(.skill-art)) { font:11px/15px system-ui,sans-serif; height:15px; min-height:15px; max-height:none; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #boardCard #board .chest > .asset-sprite { width:100%; height:110%; max-height:none; transform:translate(-50%,-50%); }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #boardCard #board .chest > .asset-sprite { width:140%; height:96%; }
+html body.portrait-layout.phone:not(.tablet).portrait-compact #viewport#viewport #stage#stage#stage#stage #portraitMeters #doubtNumber::after { line-height:16px; font-size:11px; }
+html body.portrait-layout.phone:not(.tablet).portrait-compact #viewport#viewport #stage#stage#stage#stage #activeSkills .skill-art { width:22px; height:22px; flex-basis:22px; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #phoneWallet .cur-icon { width:22px; height:22px; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #audienceCard #stageStats .bitmap::after { font:12px/16px system-ui,sans-serif; }
+/* 12-115 round 4: the seam art runs along the thin gaps between the top bar and the meters, the stage and the stats bar, and the stats bar and the
+   button rows (seam-h drawn 6 px high, centred on each gap, one centre ornament; the zones on top crop it to the gap). */
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage {
+  background-image:url('assets/kit/seam-h.webp'),url('assets/kit/seam-h.webp'),url('assets/kit/seam-h.webp');
+  background-repeat:repeat-x; background-size:auto 6px;
+  background-position:center calc(var(--p-venue) + var(--p-row-gap) / 2 - 3px),center calc(var(--p-top) + var(--p-stage) + var(--p-row-gap) / 2 - 3px),center calc(var(--p-board-top) - var(--p-row-gap) / 2 - 3px);
+  image-rendering:pixelated;
+}
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage #activeSkills #actionDock > :is(#bookButton,#practiceButton,#bestiaryButton,#moreButton) .kit-label { font:10px/13px system-ui,sans-serif; height:13px; min-height:13px; letter-spacing:-.3px; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage #phoneWallet .currency .bitmap::after { font-size:14px; line-height:16px; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #actionDock > :is(#bookButton,#practiceButton,#bestiaryButton,#moreButton) .kit-ico { flex:0 0 24px; width:24px; height:24px; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #actionDock > :is(#bookButton,#practiceButton,#bestiaryButton,#moreButton) .kit-label { font:10px/13px system-ui,sans-serif; height:13px; letter-spacing:-.2px; }
+html body.portrait-layout.phone.portrait-compact:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #actionDock > :is(#bookButton,#practiceButton,#bestiaryButton,#moreButton) .kit-ico { flex-basis:24px; width:24px; height:24px; } /* 24 px like 390 (test-u75 A2: tool icons at least 24 px) */
+html body.portrait-layout.phone.portrait-compact:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #actionDock > :is(#bookButton,#practiceButton,#bestiaryButton,#moreButton) .kit-label { font-size:9.5px; letter-spacing:-.4px; }

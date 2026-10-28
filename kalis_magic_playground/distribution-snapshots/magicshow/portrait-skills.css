@@ -1,0 +1,329 @@
+/* portrait-skills.css: portrait skill row and action dock. (CSS regroup 10-28)
+ * Earlier or later rules for the same elements may also sit in portrait-base.css (early layer) and
+ * portrait-overrides-*.css (late layer) when the cascade needs them there. */
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #activeSkills {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0 !important;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  transform: none;
+  z-index: 14;
+  touch-action: manipulation;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  justify-content: stretch;
+  align-items: stretch;
+  padding: 2px 4px;
+  box-sizing: border-box;
+  overflow: hidden;
+  height: var(--p-skills,140px);
+  grid-template-columns: none;
+  grid-template-rows: none;
+  row-gap: 6px;
+  column-gap: 6px;
+}
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #actionDock {
+  margin-left: 0;
+  box-sizing: border-box;
+  min-width: 0;
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  order: 2;
+  min-height: 64px;
+  max-height: 70px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  grid-column: auto;
+  grid-row: auto;
+  row-gap: 6px;
+  column-gap: 6px;
+}
+
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #actionDock > button {
+  border: 1px solid #A68A58;
+  white-space: normal;
+  text-align: center;
+  font-size: 8px;
+  line-height: 11px;
+  position: static;
+  box-sizing: border-box;
+  flex: 1 1 0;
+  align-self: stretch;
+  width: auto;
+  max-width: none;
+  min-width: 0;
+  height: auto;
+  min-height: 64px;
+  max-height: 70px;
+  margin: 0;
+  padding: 2px 1px 1px;
+  overflow: hidden;
+  transform: none;
+  scale: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  row-gap: 0;
+  column-gap: 0;
+  border-style: solid;
+  border-width: 4px;
+  border-radius: 0;
+  border-image: var(--kit-dark) 16 fill / 4px / 0 stretch;
+  background: transparent;
+  background-image: none;
+  box-shadow: none;
+  color: #F2E6C8;
+  image-rendering: pixelated;
+}
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #actionDock > #gemShopQuick img {
+  color: #100D16;
+  font-size: 10px;
+  line-height: 12px;
+  width: 12px;
+  height: 12px;
+}
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #activeSkills .active-skill,
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #activeSkills .kit-btn {
+  position: static;
+  box-sizing: border-box;
+  flex: 1 1 0;
+  align-self: stretch;
+  width: auto;
+  max-width: none;
+  min-width: 0;
+  height: auto;
+  min-height: 0;
+  margin: 0;
+  padding: 3px 0 0;
+  overflow: hidden;
+  transform: none;
+  scale: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  row-gap: 0;
+  column-gap: 0;
+  border-style: solid;
+  border-width: 4px;
+  border-radius: 0;
+  border-image: var(--kit-dark) 16 fill / 4px / 0 stretch;
+  background: transparent;
+  background-image: none;
+  box-shadow: none;
+  color: #F2E6C8;
+  image-rendering: pixelated;
+  font-size: 8px;
+  line-height: 11px;
+}
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage .kit-ico,
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage .skill-art,
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #skillRow .kit-ico,
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #skillRow .skill-art,
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #actionDock .kit-ico,
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #actionDock .skill-art {
+  display: block;
+  flex: 0 0 28px;
+  width: 28px;
+  height: 28px;
+  margin: 0;
+  padding: 0;
+  object-fit: contain;
+  image-rendering: pixelated;
+  font-size: 0;
+  line-height: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage .skill-art img,
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage .skill-art .asset-sprite,
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #skillRow .skill-art img,
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #skillRow .skill-art .asset-sprite,
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #actionDock .skill-art img,
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #actionDock .skill-art .asset-sprite {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #actionDock small,
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #skillRow > .active-skill > small {
+  display: block;
+  flex: none;
+  box-sizing: border-box;
+  width: 100%;
+  max-height: 10px;
+  margin: 0;
+  padding: 0 1px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: center;
+  letter-spacing: 0;
+  height: 12px;
+  font-style: normal;
+  font-variant: normal;
+  font-weight: 400;
+  font-stretch: normal;
+  font-size: 11px;
+  line-height: 12px;
+  font-family: Galmuri11,monospace;
+  color: #F2E6C8;
+}
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #skillRow {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  min-height: 64px;
+  max-height: 70px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  row-gap: 6px;
+  column-gap: 6px;
+}
+
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #skillRow > .active-skill {
+  position: static;
+  box-sizing: border-box;
+  flex: 1 1 0;
+  align-self: stretch;
+  width: auto;
+  max-width: none;
+  min-width: 0;
+  height: auto;
+  min-height: 64px;
+  max-height: 70px;
+  margin: 0;
+  padding: 2px 1px 1px;
+  overflow: hidden;
+  transform: none;
+  scale: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  row-gap: 0;
+  column-gap: 0;
+  border-style: solid;
+  border-width: 4px;
+  border-radius: 0;
+  background: transparent;
+  image-rendering: pixelated;
+  border-image: var(--kit-dark) 16 fill / 4px / 0 stretch;
+  background-color: transparent;
+  background-image: none;
+  color: #F2E6C8;
+  box-shadow: none;
+}
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #actionDock > button:not(#gemShopQuick) {
+  border-image: var(--kit-dark) 16 fill / 4px / 0 stretch;
+  background-color: transparent;
+  background-image: none;
+  color: #F2E6C8;
+  box-shadow: none;
+}
+html body.portrait-layout.phone:not(.tablet).portrait-compact #viewport#viewport #stage #activeSkills { padding: 2px 4px; row-gap: 2px; }
+html body.portrait-layout.phone:not(.tablet).portrait-compact #viewport#viewport #stage #skillRow > .active-skill,
+html body.portrait-layout.phone:not(.tablet).portrait-compact #viewport#viewport #stage #actionDock > button { height: 44px; min-height: 44px; max-height: 44px; padding: 1px; border-width: 2px; }
+html body.portrait-layout.phone:not(.tablet).portrait-compact #viewport#viewport #stage #skillRow > .active-skill > small,
+html body.portrait-layout.phone:not(.tablet).portrait-compact #viewport#viewport #stage #actionDock small { font-size: 8px; line-height: 10px; height: 10px; }
+html body.portrait-layout.phone:not(.tablet).portrait-compact #viewport#viewport #stage #actionDock > #gemShopQuick small {
+  font-size: 8px;
+  line-height: 10px;
+}
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #activeSkills .active-skill:disabled small { color:#C9C0AD; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #activeSkills { display:flex; flex-direction:row; flex-wrap:nowrap; gap:8px; padding:2px 8px 6px; height:var(--p-skills); overflow:visible; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #skillRow { display:flex; flex-direction:row; flex:4 1 0; min-width:0; min-height:0; max-height:none; width:auto; gap:3px; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #actionDock { display:flex; flex-direction:row; flex:3 1 0; min-width:0; min-height:0; max-height:none; width:auto; gap:3px; position:relative; margin:0; padding:0 0 0 5px; background:url("assets/kit/divider.webp") no-repeat left center / 2px 100%; border:0; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #activeSkills #skillRow > button:disabled { border-image-source:url("assets/kit/button-disabled.webp"); opacity:1; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #activeSkills #skillRow > button:active:enabled,
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #activeSkills #actionDock > button:active:enabled { border-image-source:url("assets/kit/button-pressed.webp"); }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #activeSkills small { display:block; font:8px/10px system-ui,sans-serif; height:10px; margin:0; color:#8fd3ff; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #activeSkills :is(#skillRow,#actionDock) { display:contents; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #activeSkills #skillRow small { font-size:9px; letter-spacing:-.3px; }
+html body.portrait-layout.phone:not(.tablet).portrait-compact #viewport#viewport #stage#stage#stage#stage #activeSkills { grid-template-rows:52px 40px; }
+html body.portrait-layout.phone:not(.tablet).portrait-compact #viewport#viewport #stage#stage#stage#stage #activeSkills { grid-template-rows:52px 44px; }
+html body.portrait-layout.phone:not(.tablet).portrait-compact #viewport#viewport #stage#stage#stage#stage #activeSkills { grid-template-rows:56px 44px; }
+html body.portrait-layout.phone:not(.tablet).portrait-compact #viewport#viewport #stage#stage#stage#stage #activeSkills #skillRow small { font:10px/13px system-ui,sans-serif; letter-spacing:0; }
+html body.portrait-layout.phone:not(.tablet).portrait-compact #viewport#viewport #stage#stage#stage#stage #activeSkills #finaleStat .skill-art { width:18px; height:18px; flex-basis:18px; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #activeSkills #actionDock > button { justify-content:center; padding:4px 6px; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #activeSkills #skillRow > button { padding:4px; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #activeSkills #skillRow small { font:8px/12px system-ui,sans-serif; letter-spacing:0; }
+@media (max-width:380px) {
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #activeSkills #skillRow > button > span:not(.skill-art) { font-size:9px; letter-spacing:-.2px; }
+}
+/* s4c (stage 4c): one button row (owner 10-23, review3 P1-6 with 12-58): the skills, then 비법 over 연습 모드, the gold 실크 상점, then 도감 over 메뉴.
+   Column flow over two 44 px rows: a skill or the shop spans both rows, a stacked tool takes one. 정리 and 옷장 are in the menu sheet. */
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage #activeSkills { display:grid; grid-auto-flow:column; grid-template-columns:none; grid-auto-columns:minmax(44px,1fr); grid-template-rows:repeat(2,minmax(44px,1fr)); gap:2px 3px; padding:2px 6px 4px; height:var(--p-skills); box-sizing:border-box; }
+html body.portrait-layout.phone:not(.tablet).portrait-compact #viewport#viewport #stage#stage#stage#stage#stage #activeSkills { padding:1px 6px 2px; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage #activeSkills :is(#skillRow,#actionDock) > [hidden] { display:none !important; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage #activeSkills :is(#skillRow > button,#finaleStat,#gemShopQuick) :is(.skill-art,.kit-ico) { flex:0 0 32px; width:32px; height:32px; }
+html body.portrait-layout.phone:not(.tablet).portrait-compact #viewport#viewport #stage#stage#stage#stage#stage #activeSkills :is(#skillRow > button,#finaleStat,#gemShopQuick) :is(.skill-art,.kit-ico) { flex:0 0 28px; width:28px; height:28px; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage #activeSkills #skillRow small { font:10px/13px system-ui,sans-serif; height:auto; white-space:normal; text-align:center; }
+/* ===== s5f: portrait button row (owner option 4 = option 1 + option 2, aligned), 2026-10-24 =====
+   Left: four equal action tiles (카드 비, 마술 모자, 비둘기, 칼리 덱). Right: tools 2 x 2 (비법, 도감 / 연습 모드, 메뉴) and the gold 실크 상점,
+   with a pixel divider between the groups. 피날레 lives in the stats strip only (style.css s5f), so the row has no 피날레 tile.
+   Alignment: each action tile is a 5-row grid (free space, icon, name, status, free space) with fixed row heights, so the icon centre, the name
+   and the status line sit at the same height in every tile even when the status line is empty, and the icon image fills its box (it was a
+   fixed 28 px in the top left of a 32 px box). ui.js: placePortraitDock() puts 칼리 덱 in #skillRow, renderU15() keeps it at 0 decks
+   (disabled: a tap does nothing), renderIdle() marks locked skills .skill-locked. */
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills { grid-auto-flow:row; grid-template-columns:repeat(4,minmax(44px,4.7fr)) 4px repeat(2,minmax(44px,4.45fr)) minmax(0,5.4fr); grid-template-rows:repeat(2,minmax(44px,1fr)); grid-auto-columns:auto; gap:2px; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills::after { content:''; grid-column:5; grid-row:1 / 3; background:url("assets/kit/divider.webp") no-repeat center / 2px 92%; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #skill-cardrain { grid-column:1; grid-row:1 / 3; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #skill-showtime { grid-column:2; grid-row:1 / 3; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #skill-cheer { grid-column:3; grid-row:1 / 3; }
+/* action tiles: one grid for all four */
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #skillRow > :is(#skill-cardrain,#skill-showtime,#skill-cheer,#item-auto-glove) { display:grid; grid-template-columns:minmax(0,1fr); grid-template-rows:minmax(0,1fr) var(--ic,34px) var(--lb,14px) var(--st,12px) minmax(0,1fr); row-gap:2px; justify-items:center; align-items:center; padding:0 2px; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #skillRow > :is(#skill-cardrain,#skill-showtime,#skill-cheer,#item-auto-glove) > .skill-art { grid-row:2; position:relative; display:block; width:var(--ic,34px); height:var(--ic,34px); flex:none; margin:0; padding:0; font-size:0; line-height:0; overflow:visible; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #skillRow > :is(#skill-cardrain,#skill-showtime,#skill-cheer,#item-auto-glove) > .skill-art > .asset-sprite { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; object-position:center; image-rendering:pixelated; transform:none; }
+/* the 칼리 덱 tile also carries a 28 px pixel-emoji image (.sprite-glyph > img.px-icon) under its real icon, offset to the top left;
+   once the real icon has loaded it is hidden, so only one picture sits on the centre line */
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #skillRow > :is(#skill-cardrain,#skill-showtime,#skill-cheer,#item-auto-glove) > .skill-art.asset-ready > .sprite-glyph { display:none; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #skillRow > :is(#skill-cardrain,#skill-showtime,#skill-cheer,#item-auto-glove) > span:not(.skill-art) { grid-row:3; display:block; width:100%; height:var(--lb,14px); min-height:0; max-height:none; margin:0; padding:0; font:600 11px/var(--lb,14px) system-ui,sans-serif; letter-spacing:-.3px; text-align:center; white-space:nowrap; color:#f2e6c8; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #skillRow > :is(#skill-cardrain,#skill-showtime,#skill-cheer,#item-auto-glove) > small { grid-row:4; display:block; width:100%; height:var(--st,12px); min-height:0; margin:0; padding:0; font:10px/var(--st,12px) system-ui,sans-serif; letter-spacing:-.2px; text-align:center; white-space:nowrap; color:#8fd3ff; background:none; border-radius:0; min-width:0; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #skillRow > #item-auto-glove.glove-active > small { color:#e8bf68; }
+/* locked skill (option 2 look): dimmed icon, small lock in the top right, '무대 해금' on the status line */
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #skillRow > button.skill-locked .skill-art { opacity:.4; filter:grayscale(.8); }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #skillRow > button.skill-locked::after { content:''; position:absolute; top:6px; right:5px; width:14px; height:14px; background:url("assets/kit/icon-lock.webp") center / contain no-repeat; image-rendering:pixelated; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #skillRow > button.skill-locked > span:not(.skill-art) { color:#a99d86; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #skillRow > button.skill-locked > small { color:#c9b892; }
+/* 360 x 640: one step smaller for every action tile (icon 30, name 10 px, status 9 px) and every tool tile */
+html body.portrait-layout.phone.portrait-compact:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #skillRow > :is(#skill-cardrain,#skill-showtime,#skill-cheer,#item-auto-glove) { --ic:30px; --lb:13px; --st:11px; }
+html body.portrait-layout.phone.portrait-compact:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #skillRow > :is(#skill-cardrain,#skill-showtime,#skill-cheer,#item-auto-glove) > span:not(.skill-art) { font-size:10px; }
+html body.portrait-layout.phone.portrait-compact:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #skillRow > :is(#skill-cardrain,#skill-showtime,#skill-cheer,#item-auto-glove) > small { font-size:9px; letter-spacing:-.3px; }
+/* 칼리 덱 at 0 decks: the tile stays (the row never shifts), disabled and dimmed; a tap does nothing (owner). In use it is pressed and gold. */
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #skillRow > #item-auto-glove.glove-empty .skill-art { opacity:.45; filter:grayscale(.7); }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #skillRow > #item-auto-glove.glove-empty > :is(span:not(.skill-art),small) { color:#a99d86; }
+
+/* s5f: phones narrower than 360 px (e.g. the 344 px Fold cover, tall so not .portrait-compact) take the same one-step-smaller tiles, so the
+   names keep a margin inside the 44 px tiles */
+@media (max-width:359px) {
+  html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #skillRow > :is(#skill-cardrain,#skill-showtime,#skill-cheer,#item-auto-glove) { --ic:30px; --lb:13px; --st:11px; }
+  html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #skillRow > :is(#skill-cardrain,#skill-showtime,#skill-cheer,#item-auto-glove) > span:not(.skill-art) { font-size:10px; }
+  html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #skillRow > :is(#skill-cardrain,#skill-showtime,#skill-cheer,#item-auto-glove) > small { font-size:9px; letter-spacing:-.3px; }
+  html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #actionDock > :is(#bookButton,#practiceButton,#bestiaryButton,#moreButton) .kit-ico { flex-basis:24px; width:24px; height:24px; } /* 24 px like 390 (test-u75 A2: tool icons at least 24 px) */
+  html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #actionDock > :is(#bookButton,#practiceButton,#bestiaryButton,#moreButton) .kit-label { font-size:9.5px; letter-spacing:-.4px; }
+  html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #actionDock > #gemShopQuick .kit-ico { flex-basis:28px; width:28px; height:28px; }
+  html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #actionDock > #gemShopQuick .kit-label { font-size:10px; letter-spacing:-.3px; }
+}

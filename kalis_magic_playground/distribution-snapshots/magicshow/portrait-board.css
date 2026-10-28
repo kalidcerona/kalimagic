@@ -1,0 +1,154 @@
+/* portrait-board.css: portrait case board. (CSS regroup 10-28)
+ * Earlier or later rules for the same elements may also sit in portrait-base.css (early layer) and
+ * portrait-overrides-*.css (late layer) when the cascade needs them there. */
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #boardCard {
+  left: 0;
+  right: 0;
+  width: auto;
+  top: var(--p-board-top, 58%) !important;
+  bottom: auto;
+  height: calc(var(--p-skills, 52px) + var(--board-size)) !important;
+  overflow: visible;
+  background: none;
+}
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #boardCard #board {
+  position: absolute;
+  left: 0 !important;
+  right: 0;
+  bottom: auto;
+  margin-left: auto;
+  margin-right: auto;
+  transform: none;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-rows: repeat(5, minmax(0, 1fr));
+  justify-content: center;
+  align-content: center;
+  top: var(--p-skills,140px) !important;
+  width: min(var(--board-size),calc(100% - 8px));
+  height: min(var(--board-size),calc(100% - var(--p-skills,140px) - 4px));
+  border: 24px solid transparent !important;
+  border-image: url('assets/kit/board-frame.webp') 32 / 24px / 0 stretch !important;
+  image-rendering: pixelated;
+  box-shadow: none;
+  background-color: #1c4638 !important;
+  background-image: var(--equipped-pad,url('assets/kit/board-felt.webp')) !important;
+  background-size: 100% 100% !important;
+  background-repeat: no-repeat !important;
+  background-clip: padding-box !important;
+  background-origin: padding-box !important;
+  box-sizing: border-box;
+  overflow: hidden;
+  padding: 6px;
+  row-gap: 3px;
+  column-gap: 3px;
+}
+
+html body.portrait-layout.phone:not(.tablet).portrait-solo #viewport#viewport #stage #boardCard {
+  top: var(--p-board-top) !important;
+  bottom: 108px;
+  height: auto !important;
+}
+
+html body.portrait-layout.phone:not(.tablet).portrait-solo #viewport#viewport #stage #boardCard #board {
+  bottom: auto;
+  top: var(--p-skills,140px) !important;
+  width: var(--p-solo,240px);
+  height: var(--p-solo,240px);
+  border: 24px solid transparent !important;
+  border-image: url('assets/kit/board-frame.webp') 32 / 24px / 0 stretch !important;
+  background-clip: padding-box !important;
+  background-origin: padding-box !important;
+  box-sizing: border-box;
+  overflow: hidden;
+  padding: 6px;
+  row-gap: 3px;
+  column-gap: 3px;
+}
+
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #boardFrame {
+  display: none;
+  position: absolute;
+  z-index: 4;
+  pointer-events: none;
+  box-sizing: border-box;
+  left: 50%;
+  transform: translateX(-50%);
+  top: calc(var(--p-skills, 62px) - 2px);
+  width: min(calc(var(--board-size) + 8px), calc(100% - 4px));
+  height: min(calc(var(--board-size) + 8px), calc(100% - 4px));
+  border: 10px solid transparent;
+  border-image: url('assets/kit/board-frame.webp') 32 / 10px / 0 stretch;
+  image-rendering: pixelated;
+}
+
+html body.portrait-layout.phone:not(.tablet).portrait-solo #viewport#viewport #stage #boardFrame {
+  top: calc(var(--p-skills, 62px) - 2px);
+  width: calc(var(--p-solo, 240px) + 16px);
+  height: calc(var(--p-solo, 240px) + 16px);
+}
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #board .cell:not(.locked):not(.empty) .chest {
+  filter: drop-shadow(2px 2px 0 #100D16);
+}
+html body.portrait-layout #viewport #stage #board .cell .chest,
+html body.portrait-layout #viewport #stage #board .cell .chest.asset-ready,
+html body.portrait-layout #viewport #stage #board .respawn-stage {
+  left: 4%;
+  top: 4%;
+  width: 92%;
+  height: 92%;
+}
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #board .cell .box {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: auto;
+  height: auto;
+  margin: 0;
+  overflow: hidden;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #board .cell .chest,
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #board .cell .chest.asset-ready {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: auto;
+  bottom: auto;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #board .cell .box-number {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 10px;
+  z-index: 5;
+  background: transparent;
+}
+/* Five 44px cells plus the existing frame, padding and gaps need 292px. */
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #boardCard #board { height:var(--board-size); }
+html body.portrait-layout.phone:not(.tablet).portrait-compact #viewport#viewport #stage #boardCard #board { border-width: 8px !important; border-image-width: 8px !important; padding: 2px; }
+/* Lane 1e: owner-approved Mockup A, painted out57 surfaces. */
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #boardCard { background:none !important; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #boardCard { height:calc(var(--p-skills) + var(--p-board-h)) !important; border:0; box-shadow:none; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #boardCard #board { width:calc(100% - 8px); height:var(--p-board-h) !important; border:0 !important; border-image:url("assets/kit/board-frame.webp") 44 / 10px / 0 stretch !important; padding:14px; gap:4px; background-color:transparent !important; background-image:var(--equipped-pad,url("assets/kit/felt-tile.webp")) !important; background-size:100% 100% !important; background-clip:border-box !important; background-origin:border-box !important; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #boardCard #board .cell.locked { opacity:.20; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #boardCard #board .cell .box { border:0; background:none; box-shadow:none; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #boardCard #board { max-width:none; }
+/* Lane 1f: keep upright tins and their progression marks inside the painted frame. */
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #boardCard #board { padding:14px !important; gap:4px !important; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #boardCard #board { border-image-width:16px !important; padding:16px !important; grid-template-rows:repeat(5,minmax(44px,1fr)); }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #boardCard #board .cell .box { width:100%; height:100%; inset:0; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #boardCard #board { gap:0 !important; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #skillRow > #item-auto-glove { display:grid !important; grid-column:4; grid-row:1 / 3; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #skillRow > #item-auto-glove.glove-active { border-image-source:url("assets/kit/button-pressed.webp"); }

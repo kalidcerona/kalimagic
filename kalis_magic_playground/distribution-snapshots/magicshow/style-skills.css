@@ -1,0 +1,84 @@
+/* style-skills.css: active skill buttons, skill rail and action dock. (CSS regroup 10-28)
+ * Earlier or later rules for the same elements may also sit in style-base.css (early layer) and
+ * style-overrides-*.css (late layer) when the cascade needs them there. */
+/* U13: board-edge skills have independent 44px touch targets. */
+#activeSkills{position:absolute;left:-62px;top:200px;display:flex;flex-direction:column;gap:6px;z-index:12}
+.active-skill:before{content:"";position:absolute;inset:-2px;border-radius:8px;background:conic-gradient(#777b99 var(--cooldown),#ffe65c 0);z-index:-1}
+.active-skill.ready{box-shadow:0 0 10px #ffe65c88;border-color:#ffe65c}
+.phone #activeSkills{left:-50px;top:42px;gap:4px}
+.phone .active-skill small{font-size:9px}
+.phone #activeSkills{top:8px}
+.phone #activeSkills{left:-50px;top:0;gap:4px;display:flex;flex-direction:column}
+.phone .active-skill small{font-size:9px;line-height:10px}
+.phone #activeSkills{left:-50px;top:0;display:flex;flex-direction:column;gap:4px}
+.phone #activeSkills{gap:3px}
+#stage .active-skill:before{background:none;box-shadow:none}
+#stage .active-skill.ready{border-color:var(--gold);box-shadow:0 2px 0 #100D16}
+.phone #stage #activeSkills{gap:4px}
+.phone #stage .active-skill{font-size:11px;line-height:12px;height:48px;min-height:48px;padding:1px}
+.phone #stage .active-skill small{font:400 9px/10px Galmuri9,monospace;color:var(--ink-2)}
+.phone #stage .active-skill > span:not(.skill-art){white-space:nowrap;letter-spacing:-2px}
+.phone #stage .active-skill small{letter-spacing:0}
+.phone #stage #activeSkills{height:auto;min-height:0;max-height:none;align-items:center;padding:0;background:transparent;border:0;box-shadow:none}
+.phone #stage #activeSkills.f-solo.f-solo.f-solo.f-solo{width:44px;height:44px}
+.tablet #stage .active-skill{width:72px;min-width:72px;height:64px;font-size:14px}
+.tablet #stage .skill-art{width:28px;height:28px}
+.tablet #stage #activeSkills .active-skill,.tablet #stage #activeSkills .gem-shop-quick{width:52px;min-width:0}
+.tablet #stage #activeSkills .active-skill>span:not(.skill-art),.tablet #stage #activeSkills .active-skill small{letter-spacing:0;white-space:nowrap;font-size:10px;line-height:12px}
+@media(max-height:360px){
+.phone #stage #activeSkills .active-skill,.phone #stage #activeSkills .gem-shop-quick{width:50px}
+.phone #stage #activeSkills .active-skill{height:auto;min-height:48px;padding:2px 1px;overflow:visible}
+.phone #stage #activeSkills .active-skill>span:not(.skill-art),.phone #stage #activeSkills .active-skill small{letter-spacing:0;white-space:nowrap;font-size:9px;line-height:11px}
+}
+/* Short screens (891x340, 780x360): the skill column must end above the bottom edge. */
+/* U43: below 400 px of usable height (also with a bottom inset on 375 px phones) the 5-item skill column uses the compact 50/44 px buttons. */
+.phone-short:not(.tablet) #stage #activeSkills{gap:3px}.phone-short:not(.tablet) #stage #activeSkills :is(.active-skill,.gem-shop-quick){border-width:4px;border-image-width:4px;padding:0}
+@media(max-height:360px){.phone:not(.tablet) #stage #activeSkills{top:0;gap:3px}.phone:not(.tablet) #stage #activeSkills .active-skill{height:50px;min-height:44px;box-sizing:border-box}.phone:not(.tablet) #stage #activeSkills .gem-shop-quick{height:44px;min-height:44px}}
+.phone:not(.tablet) #stage #activeSkills .active-skill{padding-top:0;padding-bottom:0}
+.phone-xshort:not(.tablet) #stage #activeSkills .active-skill{height:44px;min-height:44px}.phone-xshort:not(.tablet) #stage #activeSkills .active-skill .skill-art{width:14px;height:14px;font-size:12px}
+html body.phone #viewport#viewport #stage #activeSkills{top:2px!important}
+/* tablets (found with the new iPad sizes in tools/devices.json, also in release 8): the skill buttons' labels did not fit their 48 px inner height
+   (scrollHeight 53) and the 💎 glyph's 40 px line in 28 px; a smaller label step and the glyph line to the box */
+html body.tablet #viewport#viewport #stage #activeSkills > .active-skill:not(.gem-shop-quick) .skill-art{height:22px!important}
+html body:not(.phone) #viewport#viewport #stage #activeSkills{left:20px!important;top:110px!important;right:auto!important}
+html body #viewport#viewport #stage#stage#stage#stage .active-skill::before { background:none; box-shadow:none; }
+html body #viewport#viewport #stage#stage#stage#stage #phoneMore > button.kit-btn { display:flex; flex-direction:row; align-items:center; justify-content:center; gap:6px; padding:8px; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage .active-skill > span:not(.skill-art) { width:100%; max-width:none; height:auto; max-height:none; font:11px/14px system-ui,sans-serif; white-space:nowrap; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage .active-skill > small { width:100%; white-space:normal; word-break:keep-all; font:10px/12px system-ui,sans-serif; }
+/* 12-115: phone landscape. The skill column is a full-height framed rail between the stage and the board (6 px seam to the stage, 4 px to the board);
+   the buttons sit centred in it. Frame: skill-rail art (ornaments only in the top and bottom 16 px, the middle stretches). */
+html body.phone:not(.tablet):not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #activeSkills {
+  top:0 !important; bottom:0; height:auto; left:calc(100% - var(--board-size) - 62px); right:auto;
+  width:58px; box-sizing:border-box; padding:0; justify-content:center; align-items:center;
+  border-style:solid; border-color:transparent; border-width:12px 4px; border-image:url('assets/kit/skill-rail.webp') 16 6 fill / 12px 4px / 0 stretch; background:transparent; image-rendering:pixelated;
+}
+html body.tablet:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage#stage #activeSkills {
+  top:0 !important; bottom:0; height:auto; left:calc(100% - var(--board-size) - 80px); right:auto; width:76px; box-sizing:border-box; padding:0;
+  justify-content:center; align-items:center; gap:8px;
+  border-style:solid; border-color:transparent; border-width:12px 4px; border-image:url('assets/kit/skill-rail.webp') 16 6 fill / 12px 4px / 0 stretch; background:transparent; image-rendering:pixelated;
+}
+html body.tablet:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage#stage #activeSkills > .active-skill .skill-art { width:32px; height:32px !important; font-size:28px; }
+html body.tablet:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage#stage #activeSkills > .active-skill > span:not(.skill-art) { font-size:12px !important; line-height:16px !important; }
+html body.tablet:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage#stage #activeSkills > .active-skill > small { font-size:11px !important; line-height:14px !important; white-space:normal !important; }
+/* The landscape skill rail: its buttons share the full rail height (no empty frame above and below them). */
+html body.phone:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage#stage #activeSkills { justify-content:stretch !important; gap:4px !important; }
+html body.phone:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage#stage #activeSkills > :is(.active-skill,.gem-shop-quick):not([hidden]) { flex:1 1 0 !important; height:auto !important; max-height:none !important; align-content:center; }
+html body.tablet:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage#stage #activeSkills { gap:8px !important; padding:4px 0 !important; }
+html body.tablet:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage#stage #activeSkills > .active-skill .skill-art { width:44px; height:44px !important; font-size:36px; }
+/* Tablet landscape: the story dialog spans the stage and the rail at the top, so while it is open the rail starts 4 px below it (its buttons
+   were half under the dialog; --story-h is the dialog height, written by syncFlags()). */
+html body.tablet:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage#stage.f-story #activeSkills { top:calc(var(--story-h,140px) + 8px) !important; }
+/* Owner 10-24: the 도감 explains each performance skill in full (the main-screen buttons show only the icon and the name). */
+html body #viewport#viewport #stage#stage#stage#stage#stage #panelBody .skill-guide { display:grid; gap:8px; margin:12px 0; }
+html body #viewport#viewport #stage#stage#stage#stage#stage #panelBody .skill-guide-entry { display:grid; grid-template-columns:40px minmax(0,1fr); gap:10px; align-items:start; padding:8px; border:4px solid transparent; border-image:url('assets/kit/panel.webp') 20 fill / 4px / 0 stretch; image-rendering:pixelated; }
+html body #viewport#viewport #stage#stage#stage#stage#stage #panelBody .skill-guide-entry .skill-art { position:relative; width:40px; height:40px; font-size:30px; }
+html body #viewport#viewport #stage#stage#stage#stage#stage #panelBody .skill-guide-entry.locked .skill-art { filter:grayscale(1) brightness(.6); }
+html body #viewport#viewport #stage#stage#stage#stage#stage #panelBody .skill-guide-copy { min-width:0; }
+/* The skill buttons have no effect line now: an empty state line takes no room. */
+html body #viewport#viewport #stage#stage#stage#stage#stage :is(#activeSkills,#skillRow) .active-skill > small:empty { display:none; }
+/* Landscape rail labels sit in the middle of their button (they were pinned 9 px from the left, so 관객 호응 ran into the right frame). */
+html body.phone:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage#stage #activeSkills > :is(.active-skill,.gem-shop-quick) > span:not(.skill-art) { justify-self:center; text-align:center; margin-left:0; margin-right:0; }
+html body.phone:not(.tablet):not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage#stage #activeSkills > :is(.active-skill,.gem-shop-quick) { border-width:4px; border-image-width:4px; padding:0 1px; grid-template-columns:minmax(0,1fr); }
+html body.phone:not(.tablet):not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage#stage #activeSkills > :is(.active-skill,.gem-shop-quick) > span:not(.skill-art) { letter-spacing:-.4px; }
+/* The rail buttons are taller now (they share the rail height), so on phones of 400 px and more the icons grow to 28 px. */
+html body.phone:not(.tablet):not(.portrait-layout):not(.phone-short) #viewport#viewport #stage#stage#stage#stage#stage #activeSkills > .active-skill .skill-art { width:28px !important; height:28px !important; }

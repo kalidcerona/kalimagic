@@ -1,0 +1,213 @@
+/* portrait-stage.css: portrait stage scene, audience, Kali and stage effects. (CSS regroup 10-28)
+ * Earlier or later rules for the same elements may also sit in portrait-base.css (early layer) and
+ * portrait-overrides-*.css (late layer) when the cascade needs them there. */
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #audienceCard {
+  left: 4px;
+  right: 4px;
+  width: auto;
+  top: var(--p-top, 44px) !important;
+  height: var(--p-stage, 38%) !important;
+  bottom: auto;
+  overflow: visible !important;
+  --SB: 2px;
+  --TB: 0px;
+  --kali-size: min(calc((var(--stage-w) - 8px) * .44), max(1px, calc(var(--p-stage, 200px) - 64px)));
+}
+
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #audienceCard #audience {
+  left: auto !important;
+  right: 2% !important;
+  top: auto;
+  bottom: 0 !important;
+  width: 40% !important;
+  height: 59% !important;
+  max-height: 214px !important;
+}
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #audienceCard #magicianMini {
+  scale: -1 1;
+  left: 1% !important;
+  right: auto;
+  top: auto;
+  bottom: 0 !important;
+  width: var(--kali-size) !important;
+  height: var(--kali-size) !important;
+  max-height: none;
+  z-index: 4;
+}
+
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #audienceCard #colleagues {
+  right: auto !important;
+  bottom: 0 !important;
+  top: auto;
+  width: 28% !important;
+  --h: 28px;
+  justify-content: flex-start;
+  left: 50% !important;
+}
+
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #audienceCard #audienceLine {
+  left: auto;
+  right: 4px;
+  top: 20px !important;
+  bottom: auto;
+  width: 52% !important;
+  max-width: none;
+  z-index: 6;
+}
+
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #audienceCard #audienceTail {
+  left: auto !important;
+  right: 18% !important;
+  top: calc(20px + var(--line-h, 20px)) !important;
+  bottom: auto;
+}
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #audienceCard #stageStats > * {
+  position: static;
+  order: 0;
+  flex: 1 1 0;
+  width: auto;
+  height: auto;
+  min-width: 0;
+  max-width: none;
+  display: flex;
+  row-gap: 2px;
+  column-gap: 2px;
+  font-size: 10px;
+  line-height: 14px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  align-content: center;
+  justify-content: flex-start;
+  overflow: hidden;
+  background: none;
+  border: 0;
+  box-shadow: none;
+  color: #F2E6C8;
+}
+html body.portrait-layout #stage .sponge-projectile {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  transform: none;
+}
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #toasts {
+  left: 8px !important;
+  right: auto;
+  width: calc(100% - 16px) !important;
+  top: calc(var(--p-top, 44px) + 4px) !important;
+  bottom: auto;
+  max-height: 24px;
+  z-index: 16;
+}
+
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #banner,
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #banner.big {
+  left: 8px;
+  width: calc(100% - 16px);
+  top: calc(var(--p-top, 44px) + 4px);
+  max-height: 56px;
+  z-index: 26;
+}
+html body.portrait-layout #audience.land-pop {
+  animation: portrait-land-pop 180ms cubic-bezier(.2, .8, .2, 1);
+}
+
+html body.portrait-layout #magicianMini.land-pop {
+  animation: portrait-kali-pop 180ms cubic-bezier(.2, .8, .2, 1);
+}
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #finaleFx .finale-word,
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #audienceCard > .finale-num {
+  font-size: 28px;
+}
+
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #finaleFx .finale-cut {
+  top: 32%;
+  height: 34%;
+}
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #kaliTable {
+  display: block;
+  position: absolute;
+  image-rendering: pixelated;
+  left: 0;
+  bottom: 0;
+  width: calc(var(--kali-size) * 1.05);
+  height: auto;
+  z-index: 2;
+  pointer-events: none;
+  object-fit: contain;
+  object-position: center bottom;
+}
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #stageLight {
+  display: block;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: radial-gradient(ellipse 48% 78% at 30% -6%, rgba(255,220,160,.62), rgba(255,186,90,.16) 48%, transparent 72%),
+    linear-gradient(180deg, rgba(255,210,140,.28) 0%, rgba(255,196,110,.08) 36%, transparent 58%),
+    radial-gradient(ellipse 130% 108% at 50% 42%, transparent 22%, rgba(6,4,10,.78) 100%);
+}
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #portraitPlain {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  row-gap: 8px;
+  column-gap: 8px;
+  height: 13px;
+  min-width: 0;
+  overflow: hidden;
+}
+@keyframes portrait-land-pop { 40% { scale: 1.12; } 100% { scale: 1; } }
+@keyframes portrait-kali-pop { 40% { filter: brightness(1.55); } 100% { filter: none; } }
+/* Portrait stage uses the same reference envelope, without the old 40%/59% expression fit. */
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #audienceCard #audience {
+  width:var(--aud-fit-w,1px) !important;
+  height:var(--aud-fit-h,1px) !important;
+  max-height:none !important;
+  bottom:var(--aud-foot,0px) !important;
+}
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #audienceCard #audienceLine {
+  top:4px !important;
+  max-height:48px;
+  overflow-y:auto;
+}
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #audienceCard #audienceTail {
+  top:calc(4px + var(--line-h, 20px)) !important;
+}
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #audienceCard { border:0; border-image:none; background:none; box-shadow:none; --kali-size:min(calc(var(--stage-w) * .40), calc(var(--p-stage) * .54)); }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #audienceCard #room { border:0; box-shadow:none; background:none; overflow:hidden; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #audienceCard #room::after,
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #audienceCard .audience-shadow,
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #audienceCard #crowd,
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #audienceCard #crowdLabel,
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #audienceCard #stageDressing,
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #stageLight { display:none !important; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #audienceCard #magicianMini { left:9% !important; bottom:19% !important; z-index:4; scale:1; filter:none; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #audienceCard #audience { right:8% !important; bottom:var(--aud-foot) !important; z-index:4; filter:none; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #audienceCard #kaliTable { display:block; position:absolute; width:40%; height:13%; left:9%; top:auto; bottom:6%; z-index:5; object-fit:fill; filter:none; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #audienceCard #kaliTable::before { display:none; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #audienceCard #audienceLine { top:4px !important; right:10px; width:47% !important; max-height:38px; font:11px/14px system-ui,sans-serif; padding:4px 7px; border:0; border-image:url("assets/kit/dialogue-frame.webp") 16 fill / 4px / 0 stretch; background:none; box-shadow:none; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #audienceCard #audienceTail { display:none; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #audienceCard #mockupDressing { display:block; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #audienceCard #kaliTable { pointer-events:none; }
+html body.portrait-layout #viewport #stage #finaleFx.finale-intro .finale-spot { left:auto; right:4%; }
+html body.portrait-layout #viewport #stage #finaleFx.finale-intro .headliner-plate { font-size:18px; top:36%; }
+html body.portrait-layout.phone:not(.tablet).portrait-compact #viewport#viewport #stage#stage #phoneTop .venue-heading { min-height:41px; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #activeSkills :is(#skillRow,#actionDock) > :is(button,.finale-skill) { width:100%; min-width:0; min-height:36px; order:0; padding:3px 1px; box-sizing:border-box; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #audienceCard #magicianMini { left:calc(29% - var(--kali-size) / 2) !important; bottom:19% !important; transform:none; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #audienceCard #audience { left:calc(74% - var(--aud-fit-w,1px) / 2) !important; right:auto !important; height:var(--aud-fit-h,1px) !important; width:var(--aud-fit-w,1px) !important; bottom:26% !important; }
+html body.portrait-layout.phone:not(.tablet).portrait-compact #viewport#viewport #stage#stage#stage#stage #phoneTop .venue-heading { min-height:0; height:36px; }
+/* Keep complete square frames while the painted actor occupies 40-45% of the stage. */
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #audienceCard { --kali-size:min(calc(var(--stage-w) * .48),calc(var(--p-stage) * .54)); }
+/* Task 0: give the portrait loss line its own lane while reward toasts remain visible. */
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage:has(#audienceCard.boo-scene) #toasts {
+  top: calc(var(--p-top, 44px) + 64px) !important;
+}

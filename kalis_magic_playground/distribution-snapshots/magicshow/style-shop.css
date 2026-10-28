@@ -1,0 +1,51 @@
+/* style-shop.css: silk shop, cosmetics, wardrobe and equipment. (CSS regroup 10-28)
+ * Earlier or later rules for the same elements may also sit in style-base.css (early layer) and
+ * style-overrides-*.css (late layer) when the cascade needs them there. */
+.equip-grid{display:grid;grid-template-columns:repeat(3,200px);gap:14px;margin:20px 0}
+.equip-collection{display:flex;flex-wrap:wrap;gap:10px}
+.phone .equip-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+@keyframes outfitSparkle{0%,100%{filter:none}40%{filter:brightness(1.08) drop-shadow(0 0 12px #ffe65c)}}
+#stage .outfit-preview{width:64px;height:64px;flex:none}
+.cosmetic-icon img{width:100%;height:100%;object-fit:contain;image-rendering:pixelated}
+.cosmetic-card.locked .cosmetic-icon{filter:brightness(0);opacity:.6}
+.phone .cosmetic-card h3{font-size:12px}
+.phone #stage .equip-collection{grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}
+#stage :is(.bestiary-entry,.gem-shop-item,.cosmetic-card,.map-venue,#stageStats,#phoneWallet){border-color:#6B5A3A}
+#stage .equip-collected-item{min-width:0;flex:1 1 180px}
+#stage .equip-collected-item button{max-width:100%}
+html body #viewport#viewport #stage#stage#stage#stage :is(.shop-cosmetic-tile.shop-cosmetic-tile,.constellation-node.constellation-node,.equip-slot,.flow-node,.routine-item,.reward-badge) {
+  position:relative; border:0; border-image:url('assets/kit/tile-normal.webp') 24 fill / 12px / 0 stretch;
+  background:transparent; box-shadow:none; border-radius:0; padding:10px; color:#f2e6c8;
+}
+html body #viewport#viewport #stage#stage#stage#stage :is(.shop-cosmetic-tile.shop-cosmetic-tile[aria-pressed="true"],.constellation-node.selected,.flow-node.current,.equip-slot.selected) { border-image-source:url('assets/kit/tile-selected.webp'); color:#302014; }
+html body #viewport#viewport #stage#stage#stage#stage :is(.shop-abilities,.shop-routines,.shop-pads,.shop-customization,.wardrobe-pads,.wardrobe-outfits,.achievement-group) > h2 { padding:0 0 16px; margin:12px 0 8px; background:url('assets/kit/section-divider.webp') center bottom / 100% 12px no-repeat; border:0; }
+html body #viewport#viewport #stage#stage#stage#stage .gem-shop-item button { display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap; padding:8px 12px; }
+html body #viewport#viewport #stage#stage#stage#stage .shop-cosmetic-tile .cosmetic-icon img { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; }
+html body #viewport#viewport #stage#stage#stage#stage .shop-cosmetic-tile[aria-pressed="true"] :is(small,.shop-cosmetic-name) { color:#302014; }
+html body #viewport#viewport #stage#stage#stage#stage .shop-cosmetic-tile { display:flex; flex-direction:column; height:auto; min-height:150px; gap:8px; align-items:center; justify-content:flex-start; overflow:visible; }
+html body #viewport#viewport #stage#stage#stage#stage .shop-cosmetic-tile :is(small,.gear-effect,.gear-difference,.shop-cosmetic-name) { display:block; position:static; width:100%; height:auto; max-height:none; margin:0; white-space:normal; word-break:keep-all; overflow-wrap:normal; line-height:1.5; }
+html body #viewport#viewport #stage#stage#stage#stage .shop-cosmetic-grid { align-items:stretch; grid-auto-rows:auto; }
+html body #viewport#viewport #stage#stage#stage#stage .wardrobe-sections { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; align-items:start; max-width:680px; margin:0 auto; }
+html body #viewport#viewport #stage#stage#stage#stage #panel[data-screen="wardrobe"] .shop-cosmetic-grid { grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); justify-items:center; }
+html body #viewport#viewport #stage#stage#stage#stage .wardrobe-sections .wardrobe-equipped { min-height:42px; font:12px/18px system-ui,sans-serif; }
+html body #viewport#viewport #stage#stage#stage#stage .shop-cosmetic-tile { padding:12px 10px 28px; box-sizing:border-box; }
+html body #viewport#viewport #stage#stage#stage#stage #panel header .shop-balance { flex:none; margin:0; padding:6px 12px; font:14px/24px Galmuri11,sans-serif; }
+html body #viewport#viewport #stage#stage#stage#stage #panel .shop-cosmetic-tile { padding:12px 10px 28px; }
+@media (max-height:500px) {
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="gemShop"] .gem-shop-item { flex-wrap:nowrap; margin:0; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="gemShop"] .gem-shop-item > * { flex:none; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="wardrobe"] .wardrobe-equipped { min-height:18px; margin:4px 0; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="wardrobe"] .shop-cosmetic-tile { min-height:132px; gap:4px; padding:8px 10px 20px; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="wardrobe"] .shop-cosmetic-tile .cosmetic-icon { width:40px; height:40px; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="wardrobe"] :is(h2,.wardrobe-equipped) { margin:4px 0; }
+}
+html body #viewport#viewport #stage#stage#stage#stage .shop-item-icon { display:inline-block; position:relative; width:24px; height:24px; margin-right:6px; vertical-align:middle; }
+html body #viewport#viewport #stage#stage#stage#stage .shop-item-icon img { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; }
+@media (max-height:500px) {
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="gemShop"] h2 { min-height:28px; margin:4px 0; padding:4px 12px; font-size:16px; line-height:20px; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="gemShop"] .gem-shop-item { padding:6px 8px; gap:3px; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="gemShop"] .gem-shop-item :is(h3,p,small) { font-size:10px; line-height:13px; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="gemShop"] .gem-shop-item button { padding:2px 4px; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="gemShop"] .shop-item-icon { width:18px; height:18px; }
+}
+html body #viewport#viewport #stage#stage#stage#stage .outfit-preview { order:-1; width:48px; height:48px; }

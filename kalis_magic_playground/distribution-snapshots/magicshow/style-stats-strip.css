@@ -1,0 +1,252 @@
+/* style-stats-strip.css: Kali's stats strip: mental, shield, finisher/finale, combo, rate, xp. (CSS regroup 10-28)
+ * Earlier or later rules for the same elements may also sit in style-base.css (early layer) and
+ * style-overrides-*.css (late layer) when the cascade needs them there. */
+.finisher{position:absolute;left:14px;top:436px;height:220px;width:26px;background:#191716;border:3px solid #f1eee1;z-index:5}.finisher-fill{position:absolute;bottom:0;left:0;right:0;height:60%;background:#ffe047;box-shadow:inset 6px 0 #fff383;transition:height 140ms cubic-bezier(.2,.8,.2,1)}.finisher:after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent 0,transparent 37px,#574726 37px,#574726 40px)}.finisher-label{position:absolute;left:8px;top:407px;font-size:11px;color:var(--yellow)}
+.mental{position:absolute;left:224px;top:648px;width:252px;text-align:center;z-index:6}.mental-label{font-size:11px;color:#cecad0;margin-bottom:9px}
+.shield{position:absolute;left:536px;top:660px;width:132px;display:flex;justify-content:center;align-items:center;gap:10px;font-size:33px;z-index:6}
+.xp-row{position:absolute;left:12px;right:12px;top:748px;height:28px;display:flex;align-items:center;gap:12px}.level{font-size:22px;display:flex;gap:6px;align-items:center;color:#b3ff92;font-weight:bold}.xp{height:26px;position:relative;flex:1;border:3px solid var(--white);background:#1d2e21}
+.xp-number{position:absolute;right:8px;top:3px;--pixel:3px;color:#fff;text-shadow:2px 2px #000}
+.lv{position:absolute;left:0;right:0;top:2px;text-align:center;font-size:22px;font-weight:bold;letter-spacing:2px;line-height:25px;color:#f2eee7}
+.cell .lv{font-size:var(--cell-font,19px);letter-spacing:1px}
+#mentalNumber{font-size:11px;color:#ddc3ca;margin-bottom:5px}.mental{top:628px}
+.mental{top:660px;background:#08080dec;padding:6px 8px;width:280px;left:210px}.mental-label{font-size:22px;margin-bottom:5px;color:#fff0d3}#mentalNumber{font-size:22px}.hearts{font-size:33px}.shield{top:690px}.combo{top:701px}
+.mental{top:650px}
+.stat-value small{flex:none}
+.mental{top:650px;padding:6px 8px}
+.shield{padding:4px;font-size:33px}
+.finisher-label{padding:2px 3px;left:6px;top:403px}
+.board .cell .lv{top:0;height:18px;line-height:18px;font-size:11px;letter-spacing:1px}
+#comboGoal{display:block;font-size:11px;line-height:1.4;color:#fff1b0;white-space:nowrap}
+.cell.golden .lv{color:#ffe65c}
+/* U5: explicit shield context and crisp sprite rendering. */
+.shield-label{position:absolute;top:-21px;left:0;width:100%;text-align:center;font-size:11px;color:#a8e8ff}
+.cell .lv{letter-spacing:0;font-size:22px}
+.phone #board .cell .lv{top:0;height:14px;line-height:14px;font-size:11px;letter-spacing:-.3px;white-space:nowrap}
+.phone .mental{left:52%;right:6px;top:85px;width:auto;height:54px;padding:3px;border-width:1px}
+.phone .mental-label{font-size:11px;margin:0}
+.phone #mentalNumber{font-size:11px;margin:0;line-height:15px}
+.phone .hearts{font-size:22px;gap:3px}
+.phone .shield{left:52%;right:6px;top:143px;width:auto;height:25px;padding:2px;gap:3px;font-size:22px;border-width:1px;justify-content:flex-end}
+.phone .shield-label{position:static;width:auto;margin-right:auto;font-size:11px}
+.phone .combo{left:52%;right:6px;top:172px;padding:2px;gap:5px;border-width:1px;height:25px;font-size:11px;align-items:center}
+.phone .finisher-label{left:8px;top:auto;bottom:40px;font-size:11px;padding:0;border:0;background:none}
+.phone .finisher{left:52px;right:6px;top:auto;bottom:42px;width:auto;height:12px;border-width:1px;overflow:hidden}
+.phone .finisher-fill{width:100%;box-shadow:none}
+.phone .finisher:after{display:none}
+.phone .xp-row{left:8px;right:6px;top:auto;bottom:8px;height:24px;gap:6px}
+.phone .level{font-size:11px;gap:3px}
+.phone .xp{height:20px;border-width:1px}
+.phone .xp-number{top:1px;right:4px}
+.phone .stats{display:none;left:4px;right:4px;top:38px;width:auto;bottom:34px;padding:8px;gap:4px;background:#10121afa;z-index:10;border-width:2px;overflow:auto;touch-action:pan-y}
+.phone .stats.phone-expanded{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));padding-bottom:48px}
+.phone .stat{font-size:11px;gap:2px;align-items:flex-start;text-align:left}
+.phone .stat-value{font-size:11px;min-height:16px;gap:3px}
+.phone.phone-tight .mental{top:74px;height:38px}
+.phone.phone-tight .mental-label{display:none}
+.phone.phone-tight .shield{top:116px;height:23px}
+.phone #board .cell .lv{font-size:9px;letter-spacing:-.6px;overflow:hidden;text-overflow:ellipsis}
+.phone .finisher{bottom:32px;height:8px}
+.phone .finisher-label{bottom:32px;font-size:9px;line-height:8px}
+.phone #board .cell .lv{height:18px;line-height:9px;white-space:normal;text-overflow:clip}
+.phone .mental{left:6px;right:auto;top:auto;bottom:4px;width:38%;height:30px;display:flex;align-items:center;gap:4px;padding:2px;border-width:1px;z-index:4}
+.phone #mentalNumber{font-size:10px;line-height:14px;white-space:nowrap}.phone #mental:before{content:'♥';color:#ed849d}
+.phone .shield{left:40%;right:auto;top:auto;bottom:4px;width:23%;height:30px;padding:2px;display:flex;justify-content:center;font-size:13px;z-index:4}.phone .shield-label{display:none}
+.phone #comboGoal{display:none}
+#audienceCard#audienceCard.f-story .xp-row,#audienceCard#audienceCard.f-story .combo{visibility:hidden}
+.phone #board .cell .lv{height:12px;line-height:12px;font-size:9px;letter-spacing:-.6px;white-space:nowrap;overflow:hidden;text-overflow:clip}
+#feverGauge{position:fixed;left:30%;right:30%;bottom:3px;height:5px;background:#382243;border:1px solid #d5a94e;z-index:30;pointer-events:none;border-radius:4px;overflow:hidden}
+#feverGauge span{display:block;height:100%;background:#eaa9ff;width:0}#feverGauge.active span{background:#ffe359}
+.phone .mental{left:6px;width:calc((100% - 20px) * .4)}
+.phone .shield{left:calc(10px + (100% - 20px) * .4);width:calc((100% - 20px) * .22)}
+#stage #board .cell .lv:empty{display:none}
+/* U18 ports U16e/f release layout fixes with U17b specificity. */
+#stage #board .cell .lv,.phone #stage #board .cell .lv{position:absolute}
+#stage #board .cell .lv,.phone #stage #board .cell .lv{top:2px;left:2px}
+#feverGauge[hidden]{display:none}
+#stage .mental-label{display:none}#stage #mentalNumber{white-space:nowrap}
+#stage .shield-label{position:static;display:inline;width:auto;font-size:inherit;flex:none}
+#stage .shield{white-space:nowrap;gap:3px}
+.phone #stage #mentalNumber{font-size:clamp(6px,calc(var(--audience-width) * .027),11px);line-height:14px}
+.phone #stage #mental:before{content:none}
+#stage #stageStats{position:absolute;left:6px;right:6px;bottom:22px;height:28px;padding:0;display:flex;align-items:center;justify-content:space-around;border-width:6px;z-index:5;gap:4px}
+#stage #stageStats .mental:before{content:'♥';color:#B5444C;position:static}
+#stage #stageStats .combo>span:last-child{font-size:10px}
+#stage #stageStats .shield-label{font-size:10px}
+.phone-narrow #stage #stageStats .shield-label{display:none}
+body:not(.phone) #viewport #stage #board .cell .lv{font:400 11px/1 Galmuri11,monospace}
+body:not(.phone) #viewport #stage .stats:not(.phone-expanded){display:none}
+body:not(.phone) #viewport #stage .stats.phone-expanded{top:250px;max-height:490px;overflow:auto}
+#viewport #stage .stat-sub:empty{display:none}
+body:not(.phone) #viewport #stage .stats.phone-expanded .stat{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"l s" "v v";align-items:center;align-content:center;column-gap:8px;row-gap:2px;box-sizing:border-box;min-width:0;padding:4px 8px;overflow:hidden;text-align:left}
+body:not(.phone) #viewport #stage .stats.phone-expanded .stat-label{grid-area:l;text-align:left;white-space:nowrap}
+body:not(.phone) #viewport #stage .stats.phone-expanded .stat-value{grid-area:v;justify-content:flex-end;min-width:0;max-width:100%;gap:4px}
+body:not(.phone) #viewport #stage .stats.phone-expanded .stat-sub{grid-area:s;text-align:right}
+body:not(.phone) #viewport #stage .stats.phone-expanded .stat-text{white-space:normal;overflow-wrap:anywhere;text-align:right;max-width:100%}
+#viewport #stage #board .cell .lv[data-pips="1"]{width:8px}#viewport #stage #board .cell .lv[data-pips="2"]{width:16px}#viewport #stage #board .cell .lv[data-pips="3"]{width:24px}#viewport #stage #board .cell .lv[data-pips="4"]{width:32px}
+#viewport #stage #board .cell.locked .lv,#viewport #stage #board .cell .lv:not([data-pips]){display:none}
+#viewport #stage #board .cell:not(.empty):not(.locked) .lv[data-pips]:empty{display:block}
+.phone #viewport #stage #audienceCard #stageStats{left:auto!important;right:4px!important;top:auto!important;bottom:4px!important;width:var(--PW)!important;height:auto!important;display:grid!important;grid-template-columns:minmax(0,1fr);gap:2px;padding:4px;background:#120f1add;border-radius:8px;box-shadow:0 -6px 18px #ffe9ac33;z-index:5;box-sizing:border-box}
+.phone-low #viewport #stage #audienceCard #stageStats{grid-template-columns:repeat(2,minmax(0,1fr));gap:2px 4px;padding:2px 4px;width:calc(var(--CW) * .62)!important}
+.phone-low #viewport #stage #audienceCard #stageStats > #mental{grid-column:1 / -1;grid-row:2}
+.phone #viewport #stage #audienceCard #stageStats > #combo{width:90%!important;transform-origin:0 50%}
+.phone:not(.phone-low) #viewport #stage #audienceCard #stageStats > #mental{height:auto;min-height:20px;flex-wrap:wrap;row-gap:0} /* the narrow plate: the 멘탈 numbers take their own second line */
+.phone:not(.phone-low) #viewport #stage #audienceCard #stageStats > #mental #mentalNumber{flex:1 0 100%;min-width:0;white-space:normal;line-height:16px;max-height:32px;overflow:hidden}
+.phone:not(.phone-low) #viewport #stage #audienceCard #stageStats > #mental{height:32px!important}
+.phone:not(.phone-low) #viewport #stage #audienceCard #stageStats > #mental:before{content:none} /* the plate is the spotlight; the 멘탈 word and heart name the row */
+#viewport #stage #audienceCard#audienceCard.f-story #stageStats{visibility:hidden} /* no empty plate box behind a character dialog (U50c: every size; on desktop the dialog would cover the plate) */
+.phone #viewport #stage #audienceCard #combo:before{content:"";flex:none;width:16px;height:16px;margin-right:4px;background:url('assets/ui/ic-clap.webp') center/16px no-repeat;image-rendering:pixelated}
+.phone #viewport #stage #audienceCard #mental:before{content:"";flex:none;width:16px;height:16px;margin-right:4px;background:url('assets/ui/ic-spotlight.webp') center/16px no-repeat;image-rendering:pixelated}
+body:not(.phone) #viewport #stage #audienceCard .finisher{left:70px!important;right:auto!important;top:260px!important}
+body:not(.phone) #viewport #stage #audienceCard .finisher-label{left:62px!important;right:auto!important;top:228px!important}
+body:not(.phone) #viewport #stage #audienceCard #stageStats{left:auto!important;right:24px!important;top:610px!important;bottom:auto!important;width:360px!important;height:auto!important;display:grid!important;grid-template-columns:minmax(0,1fr);gap:6px;padding:10px 14px;background:#120f1add;border-radius:12px;box-shadow:0 -10px 30px #ffe9ac33;z-index:5}
+body:not(.phone) #viewport #stage #audienceCard #stageStats .mental:before{content:"";flex:none;width:28px;height:28px;margin-right:6px;background:url('assets/ui/ic-spotlight.webp') center/28px no-repeat;image-rendering:pixelated}
+body:not(.phone) #viewport #stage #audienceCard #combo:before{content:"";width:28px;height:28px;margin-right:6px;background:url('assets/ui/ic-clap.webp') center/28px no-repeat;image-rendering:pixelated}
+body:not(.phone) #viewport #stage #audienceCard #comboGoal{display:none}
+body:not(.phone) #viewport #stage #audienceCard .xp-row{left:120px;right:auto;top:690px;width:190px}
+body:not(.phone) #viewport #stage #audienceCard .stats.phone-expanded{left:12px!important;right:auto!important;top:auto!important;bottom:20px!important;width:736px!important;height:auto!important;max-height:none;grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:84px;gap:8px;padding:8px;overflow:hidden;z-index:9}
+body:not(.phone) #viewport #stage #audienceCard .stats.phone-expanded .stat{grid-template-columns:minmax(0,1fr) auto;align-content:space-between;height:84px;padding:6px 10px}
+html body.phone #viewport#viewport #stage #audienceCard #stageStats > #mental{flex-wrap:nowrap!important}
+/* phones: two lines (액트 and 자신감 on top, 멘탈 under them) so the big late-game numbers never overflow the band */
+html body.phone:not(.tablet) #viewport#viewport #stage #audienceCard #stageStats{height:46px!important;flex-wrap:wrap!important;row-gap:0!important;align-content:center}
+html body:not(.phone) #viewport#viewport #stage #audienceCard .xp-row{left:90px;right:auto;top:auto;bottom:calc(var(--SB) + 246px);width:220px}
+html body:not(.phone) #viewport#viewport #stage #audienceCard .stats.phone-expanded{left:20px!important;bottom:20px!important}
+html body:not(.phone) #viewport#viewport #stage #audienceCard #stageStats{left:70px!important;right:20px!important;width:auto!important;top:auto!important;bottom:12px!important;height:44px!important;display:flex!important;justify-content:space-around;align-items:center;padding:0 16px!important;background:#120f1acc;border-radius:8px!important;box-shadow:none}
+/* DOM order is also reading order: act, confidence, output on row one, mental on row two. */
+html body.phone:not(.tablet) #viewport#viewport #stage #audienceCard #stageStats{display:grid!important;grid-template-columns:auto auto minmax(0,1fr);column-gap:4px!important;padding:0 4px!important}
+/* short landscape (under 320 px): the act pulse scales 액트 by about 5%, so a wider gap keeps it off 자신감 */
+html body.phone.phone-low:not(.tablet) #viewport#viewport #stage #audienceCard #stageStats{column-gap:6px!important}
+html body.phone:not(.tablet) #viewport#viewport #stage #audienceCard #stageStats > #mental{order:0;grid-column:1 / -1}
+html body.phone:not(.tablet) #viewport#viewport #stage #audienceCard #stageStats > #combo{width:auto!important}
+html body.phone #viewport#viewport #stage #audienceCard #stageStats .shield-label{display:inline!important;font-size:10px!important}
+html body.phone:not(.tablet) #viewport#viewport #stage #audienceCard #stageStats #combo > span:last-child{font-size:10px!important}
+html body.phone #viewport#viewport #stage #audienceCard #stageStats #stageRateNumber{font:400 10px/14px Galmuri11,monospace}
+html body.phone:not(.tablet) #viewport#viewport #stage #audienceCard #stageStats #stageRate{flex-direction:column;gap:0!important;line-height:10px}
+html body.phone:not(.tablet) #viewport#viewport #stage #audienceCard #stageStats #stageRateNumber{line-height:12px}
+html body.tablet #viewport#viewport #stage #audienceCard #stageStats #stageRateNumber{font-size:14px}
+html body.phone.phone-narrow #viewport#viewport #stage #audienceCard #stageStats :is(.shield-label,#combo > span:last-child,#stageRate,#stageRateNumber){font-size:9px!important}
+html body.phone.phone-narrow #viewport#viewport #stage #audienceCard #stageStats > #mental{grid-column:1 / -1;grid-row:3;height:16px!important}
+html body.phone.phone-narrow #viewport#viewport #stage #audienceCard #stageStats > #stageRate{grid-column:1 / -1;grid-row:2;flex-direction:row;gap:3px!important;height:16px!important}
+html body.phone.phone-narrow #viewport#viewport #stage #audienceCard #stageStats #mentalNumber{font-size:9px;line-height:14px;margin:0}
+/* The 678 px / 62 px inset class was short by 2 px with late-game bitmap digits. */
+html body.phone.phone-narrow #viewport#viewport #stage #audienceCard #combo:before{margin-right:0}
+#mentalEdge{position:absolute;inset:0;z-index:7;pointer-events:none;box-shadow:inset 0 0 22px 3px rgba(255,72,82,.55);opacity:0;display:none}
+.meter-bar{display:none}
+
+.meter-fill,.meter-ghost{position:absolute;left:0;top:0;bottom:0;width:var(--meter,0%)}
+#mental .meter-fill{background:#DC7970}
+#shield .meter-fill{background:#8FD3FF}
+.meter-ghost{width:var(--ghost,0%);opacity:0}
+#mental .meter-ghost{background:#f6d2cc}
+#shield .meter-ghost{background:#fff}
+#mental.meter-hit .meter-ghost{animation:meter-ghost-m 450ms linear forwards}
+#shield.meter-hit .meter-ghost{animation:meter-ghost-s 400ms linear forwards}
+/* Keep the finale track visible on phones in either orientation. */
+html body.phone #viewport #stage #audienceCard .finisher { display:block; }
+/* Combat balance: share the existing mental gauge in both orientations. */
+#viewport#viewport #stage #audienceCard #stageStats > #mental{flex-wrap:wrap!important;align-content:center;row-gap:1px!important}
+#viewport#viewport #stage #audienceCard #stageStats > #mental > .meter-bar{display:block;position:relative;flex:1 0 100%;width:100%;min-width:32px;height:6px;min-height:6px;overflow:hidden;background:#100d16;pointer-events:none}
+html body.phone #viewport#viewport #stage #audienceCard #stageStats > #mental{flex-wrap:nowrap!important}
+html body.phone #viewport#viewport #stage #audienceCard #stageStats > #mental > .meter-bar{flex:1 1 64px;width:64px;max-width:120px}
+#stage .finisher { border-image:url('assets/kit/gauge-frame.webp') 4 fill / 3px / 0 stretch; background:none; box-shadow:none; }
+#stage .finisher-fill { background:url('assets/kit/gauge-direction.webp') repeat; box-shadow:none; }
+#stage .finisher:after { background:none; }
+#viewport#viewport #stage#stage .xp, #viewport#viewport #stage#stage .heckle-meter { border-image:url('assets/kit/gauge-frame.webp') 4 fill / 3px / 0 stretch; background:none; box-shadow:none; }
+#viewport#viewport #stage#stage #xpFill { background:url('assets/kit/gauge-act.webp') repeat; box-shadow:none; }
+#viewport#viewport #stage#stage #heckleFill, #viewport#viewport #stage#stage #mental .meter-fill { background:url('assets/kit/gauge-mental.webp') repeat; box-shadow:none; }
+#viewport #stage #board .cell .lv[data-pips] { background-image:radial-gradient(circle,var(--case-pip,#ffe9ac) 0 2px,#120f1a 2px 3px,transparent 3px); }
+html body #viewport#viewport #stage#stage#stage#stage #board .lv[data-pips] { background-image:url('assets/kit/icon-spark.webp'); background-size:7px 7px; background-repeat:repeat-x; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #audienceCard #stageStats {
+  position:absolute; left:20px; right:12px; bottom:36px; top:auto; width:auto; height:var(--stats-band-height,44px) !important;
+  display:grid !important; grid-template-columns:repeat(4,minmax(0,1fr)); grid-template-rows:1fr; gap:var(--stats-band-gap,6px) !important;
+  padding:6px 10px; align-items:center; z-index:14; box-sizing:border-box;
+}
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #stageStats > :is(#combo,#mental,#shield,#stageRate) {
+  position:static !important; inset:auto; transform:none; display:grid !important; grid-template-columns:12px auto 1fr; grid-template-rows:14px 14px 6px;
+  grid-column:auto !important; grid-row:auto !important; width:auto; min-width:0; height:var(--stats-cell-height,34px) !important; padding:0; margin:0;
+  align-content:center; align-items:center; gap:0 !important; border:0; background:none; box-shadow:none; font:10px/14px system-ui,sans-serif;
+}
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #stageStats #combo { order:0; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #stageStats #mental { order:1; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #stageStats #shield { order:2; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #stageStats #stageRate { order:3; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #stageStats .stat-ico { display:block; position:static; width:12px; height:12px; grid-column:1; grid-row:1; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #stageStats :is(.mental-label,.shield-label,#combo > span:not(.bitmap):not(.meter-bar),#stageRate > span:not(#stageRateNumber):not(.meter-bar)) { position:static; display:block; grid-column:2; grid-row:1; font:10px/14px system-ui,sans-serif; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #stageStats :is(#mentalNumber,#comboNumber,#shieldNumber,#stageRateNumber) { position:static; display:block; grid-column:3; grid-row:1; width:auto; text-align:right; margin:0; white-space:nowrap; font:10px/14px system-ui,sans-serif; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #stageStats :is(#hearts,#shield > span[aria-hidden]) { display:none; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #stageStats .meter-bar { display:block; position:relative; inset:auto; grid-column:1 / -1; grid-row:2; width:100%; height:7px; min-height:7px; max-width:none; padding:2px; box-sizing:border-box; border:0; border-image:url('assets/kit/gauge-frame.webp') 4 fill / 2px / 0 stretch; background:none; overflow:hidden; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #stageStats .meter-fill { position:absolute; top:2px; left:2px; bottom:2px; width:var(--meter,0%); max-width:calc(100% - 4px); background:url('assets/kit/gauge-act.webp') center / 20px 4px repeat-x; box-shadow:none; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #stageStats #mental .meter-fill { background-image:url('assets/kit/gauge-mental.webp'); }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #stageStats #shield .meter-fill { background-image:url('assets/kit/gauge-confidence.webp'); }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #stageStats #stageRate .meter-fill { background-image:url('assets/kit/gauge-direction.webp'); }
+html body #viewport#viewport #stage#stage#stage#stage #stageStats > div::after { box-shadow:none; }
+html body #viewport#viewport #stage#stage#stage#stage #stageStats > #combo .meter-bar { margin:0; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #stageStats :is(#combo,#mental,#shield,#stageRate) { font:12px/16px system-ui,sans-serif; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #stageStats :is(.mental-label,.shield-label,#combo > span:not(.bitmap):not(.meter-bar),#stageRate > span:not(#stageRateNumber):not(.meter-bar),#mentalNumber,#comboNumber,#shieldNumber,#stageRateNumber),
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #stageStats .bitmap::after { font:12px/14px system-ui,sans-serif; }
+/* Long values keep a separate row in the shared landscape stats strip. */
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #stageStats :is(#mentalNumber,#comboNumber,#shieldNumber,#stageRateNumber) { grid-column:1 / -1; grid-row:2; text-align:center; min-width:0; line-height:14px; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #stageStats .meter-bar { grid-row:3; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #audienceCard #stageStats { padding:4px 8px; }
+/* Measured 237px stages need two full-value columns rather than four clipped tiles. */
+html body.phone.phone-narrow:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #audienceCard #stageStats { --stats-band-height:48px; --stats-cell-height:20px; --stats-band-gap:2px; grid-template-columns:repeat(2,minmax(0,1fr)); grid-template-rows:repeat(2,20px); padding:2px 6px !important; }
+html body.phone.phone-narrow:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #stageStats > :is(#combo,#mental,#shield,#stageRate) { grid-template-columns:10px auto minmax(0,1fr); grid-template-rows:14px 6px; font:10px/14px system-ui,sans-serif; }
+html body.phone.phone-narrow:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #stageStats :is(#mentalNumber,#comboNumber,#shieldNumber,#stageRateNumber) { grid-row:1; grid-column:3; text-align:right; font:10px/14px system-ui,sans-serif; }
+html body.phone.phone-narrow:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #stageStats .meter-bar { grid-row:2; height:6px; min-height:6px; }
+html body.phone.phone-narrow:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #stageStats .stat-ico { width:10px; height:10px; }
+/* s4c: a thicker landscape stats strip (labels 12 px, values 15 px bold, 8 px gauges). The two-row narrow variant keeps its own grid. */
+html body.phone:not(.portrait-layout):not(.phone-narrow) #viewport#viewport #stage#stage#stage#stage#stage #audienceCard #stageStats { --stats-band-height:56px; --stats-cell-height:44px; padding:6px 12px; }
+html body.phone:not(.portrait-layout):not(.phone-narrow) #viewport#viewport #stage#stage#stage#stage#stage #stageStats .stat-ico { width:14px; height:14px; grid-column:1; grid-row:1; }
+html body.phone:not(.portrait-layout):not(.phone-narrow) #viewport#viewport #stage#stage#stage#stage#stage #stageStats :is(.mental-label,.shield-label,#combo > span:not(.bitmap):not(.meter-bar),#stageRate > span:not(#stageRateNumber):not(.meter-bar)) { grid-column:2; grid-row:1; font:12px/16px system-ui,sans-serif; white-space:nowrap; overflow:hidden; }
+html body.phone:not(.portrait-layout):not(.phone-narrow) #viewport#viewport #stage#stage#stage#stage#stage #stageStats :is(#mentalNumber,#comboNumber,#shieldNumber,#stageRateNumber) { grid-column:1 / -1; grid-row:2; text-align:right; font:700 15px/18px system-ui,sans-serif; min-width:0; overflow:hidden; }
+html body.phone:not(.portrait-layout):not(.phone-narrow) #viewport#viewport #stage#stage#stage#stage#stage #stageStats .meter-bar { grid-column:1 / -1; grid-row:3; height:8px; min-height:8px; }
+html body.phone:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage#stage #stageStats :is(.mental-label,.shield-label,#combo > span:not(.bitmap):not(.meter-bar),#stageRate > span:not(#stageRateNumber):not(.meter-bar)) { text-align:left; }
+html body.phone:not(.portrait-layout):not(.phone-narrow) #viewport#viewport #stage#stage#stage#stage#stage #audienceCard #stageStats :is(.mental-label,.shield-label,#combo > span:not(.bitmap):not(.meter-bar),#stageRate > span:not(#stageRateNumber):not(.meter-bar)) { font-size:12px !important; line-height:16px; }
+/* Owner 10-24: 액트 and 연출 are plain numbers; only 멘탈, 자신감, 피날레 and 피버타임 are gauges, so the two count cells have no track. */
+html body #viewport#viewport #stage#stage#stage#stage#stage#stage #audienceCard #stageStats > :is(#combo,#stageRate) > .meter-bar { display:none !important; }
+/* 피버타임 gauge in the kit style of the other gauges (frame + pixel fill), larger so it reads as a gauge, not a thin line. */
+html body #viewport#viewport #stage #boardCard #feverGauge { position:absolute; left:28%; right:28%; bottom:1px; top:auto; z-index:6; height:12px; border:0; border-radius:0; background:none; border-style:solid; border-color:transparent; border-width:3px; border-image:url('assets/kit/gauge-frame.webp') 4 fill / 3px / 0 stretch; box-sizing:border-box; image-rendering:pixelated; }
+/* s4e2 G: level-up refills 멘탈 with one glow; a learned 비법 node pops in place (scale, so the centring transform stays). */
+html body #viewport #stage #statMental.meter-refill .ms-bar { animation:meter-refill 600ms ease-out; }
+/* ===== s5f: the stats strip (owner option 1, 2026-10-24), the same panel in every layout =====
+   One framed panel. Left: 멘탈, 자신감, 피날레 rows (icon, label, bar, value). A pixel divider. Right: 액트 (big gold) over 연출 (no "/초").
+   The landscape 피날레 cell (s4j 3) and the four old cells are gone; in landscape the panel takes the finale slot (left 4 px). Height unchanged.
+   ui.js stripRow() writes --p (0..1) and the value of each row; actCountUp() rolls and pops 액트. */
+html body #viewport#viewport #stage#stage#stage#stage#stage#stage #audienceCard #stageStats { display:block !important; padding:5px 10px !important; gap:0 !important; border-width:0 !important; border-style:solid; border-image:url('assets/kit/stats-frame.webp') 16 fill / 8px / 0 stretch !important; background:transparent !important; overflow:hidden !important; }
+html body.phone:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage#stage#stage #audienceCard #stageStats { left:4px !important; }
+html body #viewport#viewport #stage#stage#stage#stage#stage#stage #audienceCard #stageStats > .ms-strip {
+  display:grid !important; grid-template-columns:minmax(0,1fr) var(--side-w,108px); align-items:stretch;
+  position:relative; width:100% !important; height:100% !important; margin:0 !important; padding:0 !important; overflow:visible !important;
+  font:11px/13px system-ui,sans-serif !important; color:#f2e6c8; white-space:nowrap !important; gap:0 8px !important; text-shadow:none;
+}
+#stageStats #statMental.meter-hit .ms-ghost { animation:meter-ghost-m 450ms linear forwards; }
+#stageStats #statShield.meter-hit .ms-ghost { animation:meter-ghost-s 400ms linear forwards; }
+#stage #stageStats #statMental.bar-shake { animation:bar-shake 120ms linear; }
+/* the "-N" chip of a heckle stays on the 멘탈 row, over its bar (s4e1 B) */
+html body #viewport #stage #stageStats #statMental > .bar-chip.hurt { position:absolute; left:auto; right:38px; top:50%; width:auto; transform:translateY(-50%); font-size:11px; line-height:12px; z-index:4; }
+/* 85% or more: a slow (800 ms) warm glow on the 피날레 bar, one fade in, no loop (s4e2 E), small so it does not spill on the next rows */
+#stageStats .ms-finale.finale-near .ms-bar { box-shadow:0 0 6px 2px #E8BF68d0, inset 0 0 3px #E8BF6890; overflow:visible; }
+#stageStats #comboGoal { display:none; }
+/* small panels (360 x 640 portrait 46 px, the 44 px desktop band): 12 px rows */
+html body:is(.portrait-compact,:not(.phone)) #stageStats .ms-strip { --side-w:100px; }
+html body:is(.portrait-compact,:not(.phone)) #viewport#viewport #stage#stage#stage#stage#stage#stage #audienceCard #stageStats { padding:4px 10px !important; }
+html body:is(.portrait-compact,:not(.phone)) #stageStats .ms-gauges { row-gap:0; column-gap:3px; grid-template-columns:11px auto minmax(0,1fr) minmax(30px,auto); }
+html body:is(.portrait-compact,:not(.phone)) #stageStats :is(.ms-label,.ms-num) { font-size:10px; line-height:12px; }
+html body:is(.portrait-compact,:not(.phone)) #stageStats .ms-strip img { width:11px; height:11px; }
+html body:is(.portrait-compact,:not(.phone)) #stageStats .ms-bar { height:6px; }
+html body:is(.portrait-compact,:not(.phone)) #stageStats .ms-act-num { font-size:16px; line-height:19px; }
+html body:is(.portrait-compact,:not(.phone)) #stageStats .ms-act-num.ms-long { font-size:13px; }
+/* the narrowest landscape stage (phone-narrow, e.g. 678 x 466 with 62 px notch insets: a 227 px panel): the small sizes, a 96 px right slot,
+   and no icons on the three gauge rows (the labels name them), so 멘탈 14,356 and 액트 99,999 fit without clipping */
+html body.phone-narrow #stageStats .ms-strip { --side-w:96px; }
+html body.phone-narrow #viewport#viewport #stage#stage#stage#stage#stage#stage #audienceCard #stageStats { padding:4px 8px !important; }
+html body.phone-narrow #stageStats .ms-gauges { row-gap:0; column-gap:3px; grid-template-columns:0 auto minmax(0,1fr) minmax(28px,auto); }
+html body.phone-narrow #stageStats .ms-g > img { visibility:hidden; width:0; }
+html body.phone-narrow #stageStats :is(.ms-label,.ms-num) { font-size:10px; line-height:12px; }
+html body.phone-narrow #stageStats .ms-strip img { width:11px; height:11px; }
+html body.phone-narrow #stageStats .ms-g > img { width:0; }
+html body.phone-narrow #stageStats .ms-bar { height:6px; }
+html body.phone-narrow #stageStats .ms-act-num { font-size:14px; line-height:18px; }
+html body.phone-narrow #stageStats .ms-act-num.ms-long { font-size:12px; }
+/* Task 5: block feedback is clipped to its own bar, with labels and numeric columns outside. */
+html body #viewport #stage #stageStats #statShield > .ms-bar { min-height:11px; min-width:24px; }
+html body #viewport #stage #stageStats #statShield > .ms-bar > .bar-chip.block { left:auto; right:2px; top:50%; transform:translateY(-50%); max-width:calc(100% - 4px); overflow:hidden; font-size:11px; line-height:12px; font-weight:700; padding:0 1px; z-index:4; }

@@ -1,0 +1,174 @@
+/* style-panel.css: the shared #panel modal, tabs, drawn kit frames and primary buttons. (CSS regroup 10-28)
+ * Earlier or later rules for the same elements may also sit in style-base.css (early layer) and
+ * style-overrides-*.css (late layer) when the cascade needs them there. */
+#panel{position:absolute;left:76px;top:48px;width:1448px;height:800px;background:#07070cf5;border:4px solid var(--white);z-index:35;padding:28px;overflow:auto}#panel header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}#panel h1{font-size:33px;color:var(--yellow);margin:0}#panelBody{font-size:22px}
+/* U4 panels scroll within the approved card boundary. */
+#panel{display:flex;flex-direction:column;overflow:hidden;touch-action:pan-y}
+#panel header{flex:none}
+#panelBody{flex:1;min-height:0;overflow:auto;padding:6px 12px 24px 0;overscroll-behavior:contain;touch-action:pan-y;scrollbar-color:#ffe65c #181820;scrollbar-width:auto}
+#panel[data-screen="dealer"] #panelBody>small{display:block;text-align:center}
+#panel[data-screen="headliner"]{left:190px;top:235px;width:1220px;height:400px;background:#10101af5;border-color:#ffe65c}#panel[data-screen="headliner"] header{margin-bottom:8px}
+#panel.climax-dialogue{height:440px;top:200px;border-color:#e8a8ff;background:radial-gradient(ellipse,#342349,#090710)}
+.panel-tabs button[aria-pressed="true"]{border-color:#ffe895;background:#3c3120;color:#ffe895}
+/* v4 U3 feature feedback and panels. */
+#panel:has(.constellation-layout) #panelBody{display:flex;flex-direction:column;gap:12px}
+.phone #panel,.phone #panel[data-screen="headliner"],.phone #panel.climax-dialogue{left:4px;top:2px;width:calc(100% - 8px);height:calc(100% - 4px);padding:6px 10px;border-width:2px}
+.phone #panel header{height:44px;min-height:44px;margin:0 0 4px;gap:8px}
+.phone #panel h1{font-size:22px}
+.phone #panelBody{font-size:11px;padding:0 0 10px;overflow-x:hidden;overscroll-behavior:none}
+.phone #panelBody h3{font-size:11px}
+.phone .panel-tabs button{font-size:11px;padding:5px 10px}
+.phone #panel:has(.constellation-layout) #panelBody{gap:4px;overflow:hidden;padding:0}
+#panel[data-screen="bestiary"]{background:#07070c}
+.phone #panel[data-screen="book"]{inset:0;width:100%;height:100%;padding:0;border:0;gap:0}
+.phone #panel[data-screen="book"] header{height:44px;min-height:44px;margin:0;padding:0 6px;gap:6px;justify-content:flex-start;overflow:hidden;background:#101522}
+.phone #panel[data-screen="book"] h1{font-size:11px;white-space:nowrap}
+.phone #panel[data-screen="book"] .constellation-controls button{padding:2px 5px;font-size:11px;min-width:44px}
+.phone #panel[data-screen="book"] #closePanel{position:static;margin:0;flex:none;padding:2px 5px}
+.phone #panel[data-screen="book"] #panelBody{flex:1;min-height:0;padding:0}
+.phone #panel[data-screen="book"] .constellation-detail h2{padding-right:110px}
+.phone #panel[data-screen="book"] header{gap:3px;flex-wrap:wrap;height:auto;min-height:44px;overflow:visible}
+.phone #panel[data-screen="book"] h1{font-size:11px}
+#panel[data-screen="missions"]{background:#07070c}.phone #panel[data-screen="missions"]{font-size:12px}
+/* U16: single-line actions and a portrait-contained completion badge. */
+#panel button,#phoneMore button,.menu button{white-space:nowrap;line-height:20px}
+.phone #panel[data-screen="book"] .constellation-detail h2{padding-right:0}
+#stage #panel button:not(.constellation-node):not(.headliner-dialogue),#stage #phoneMore button,.menu button{white-space:nowrap;line-height:24px;min-height:44px;padding-top:8px;padding-bottom:8px}
+#stage #storyDialog button,#stage #tutorialCoach button,#stage #closePanel{white-space:nowrap;line-height:24px;padding-top:8px;padding-bottom:8px}
+#stage :is(#panel,#phoneMore,#storyDialog,#tutorialCoach,.constellation-detail,#offlineCard){background:var(--panel);border:2px solid var(--brass);box-shadow:0 2px 0 #100D16;color:var(--ink);text-shadow:none}
+#stage .panel-tabs button[aria-pressed="true"]{border-color:var(--ok);background:#24321F;color:var(--ink)}
+/* Opaque panels, compact readable typography and tree sheets. */
+.phone #stage #panelBody{font-size:12px;line-height:16px}
+.phone #stage #panel h1{font-size:18px;font-weight:700;color:var(--gold)}
+.phone #stage #panel :is(h2,h3){font-size:14px;font-weight:700}
+.phone #stage #panel button:not(.constellation-node):not(.headliner-dialogue){min-height:44px;line-height:24px;padding-top:8px;padding-bottom:8px;border-width:2px}
+.phone #stage #panel header{min-height:44px;flex-wrap:wrap;gap:4px;overflow:visible}
+.phone #stage #panel[data-screen="book"] .constellation-detail h2{font-size:14px;line-height:18px}
+.phone #stage #panel[data-screen="book"] .constellation-detail p{margin:4px 0;font-size:12px;line-height:16px}
+.phone #stage #panel[data-screen="stats"] #panelBody{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:stretch;grid-auto-rows:auto}
+.phone #stage #panel .easy-stat h2,.phone #stage #panel .easy-stat p{margin:0}
+.phone #stage #panel .easy-stat strong{font-size:22px;line-height:26px;color:var(--gold);order:-1}
+.phone #stage #panel .easy-stat p{font-size:11px;line-height:16px;color:var(--ink-2)}
+.phone #stage #panel[data-screen="book"] header{height:auto;overflow:visible;background:var(--panel)}
+#stage :is(button,.chip):active{border-image-source:url('assets/ui/ui-button-pressed.webp')}
+#stage :is(#panel,#phoneMore,#offlineCard,.constellation-detail){image-rendering:pixelated;border:solid 24px transparent;border-image:url('assets/ui/ui-panel.webp') 24 fill / 24px / 0 stretch;background-color:#17141F;border-radius:0}
+#stage :is(#panel,#phoneMore,#offlineCard,.constellation-detail){border-color:#A68A58}
+.tablet #stage #panelBody:has(>.gem-game){grid-template-columns:140px minmax(0,1fr);gap:12px}
+#stage #panel .constellation-node .rec-tag{position:absolute;right:-10px;top:-8px;padding:0 3px;font:9px/12px Galmuri9,Galmuri11,monospace;color:#b99a58;background:#2a2230;border:1px solid #6b5a33;pointer-events:none;white-space:nowrap}
+#stage #panel[data-practice] header h1{white-space:nowrap}
+@media(max-width:740px){.phone #stage #panel[data-practice] header h1{display:block;font-size:14px;line-height:18px}}
+#stage #panel .panel-tabs button[aria-pressed="true"]{background:#E8BF68;color:#17141F;font-weight:700}
+/* Tablet fail panel: sized to its content, bigger type. */
+.tablet #stage #panel[data-screen="fail"]{inset:auto;top:12%;left:50%;width:min(760px,calc(100% - 24px));height:auto;min-height:0;max-height:76%;transform:translateX(-50%)}
+.tablet #stage #panel[data-screen="fail"] .result h2{font-size:28px;line-height:36px;margin:10px}
+.tablet #stage #panel[data-screen="fail"] .result p{font-size:18px;line-height:26px;margin:8px}
+.tablet #stage #panel[data-screen="fail"] .result button{font-size:18px;line-height:22px;min-height:48px;padding:4px 32px}
+@media(max-height:440px){#stage #panel[data-screen="dealer"] #panelBody{padding-bottom:30px;-webkit-mask-image:linear-gradient(#000 calc(100% - 26px),transparent);mask-image:linear-gradient(#000 calc(100% - 26px),transparent)}}
+#stage #panel[data-screen="fail"] .fail-actions button{flex:0 1 auto;min-width:0;white-space:nowrap}
+.phone #stage #panel[data-screen="book"] .constellation-detail>:not(button){grid-column:1/-1;margin:0}
+#stage #panel[data-screen="saveslots"] header{flex:none;min-height:44px;height:auto;margin:0 0 8px;gap:8px}
+#stage #panel[data-screen="saveslots"] #panelTitle{font-size:22px;line-height:28px}
+#stage #panel[data-screen="saveslots"] #closePanel{min-height:44px}
+#stage #panel[data-screen="saveslots"] #panelBody{min-height:0;overflow:auto;padding:0 8px 12px 0;display:block;touch-action:pan-y}
+#stage #panel[data-screen="saveslots"] .save-slots-row h2{font-size:18px;line-height:24px;margin:0 0 4px;color:var(--gold,#E8BF68)}
+#stage #panel[data-screen="saveslots"] .save-slots-actions button{flex:1;min-width:0;min-height:44px;height:auto;font-size:14px;line-height:20px;padding:8px;white-space:normal;overflow-wrap:anywhere}
+#stage #panel[data-screen="saveslots"] .save-slots-actions button,#stage #panel[data-screen="saveslots"] #closePanel{min-height:60px}
+.phone #stage #panel[data-screen="saveslots"] .save-slots-actions button,.phone #stage #panel[data-screen="saveslots"] #closePanel{min-height:44px}
+body:not(.phone) #viewport #stage :is(#panelTitle,.hud .currency>span:not(.currency-label)){font-size:var(--fs-l)}
+/* v4 U49 6 (owner: "능력치가 4,4로 보이는 거 깔끔하다"): the stats part of layout proposal A only. Phones and tablets: 능력치 = 4 x 2 equal tiles, all visible
+   without scrolling (ui.js still sets every row to the tallest tile); a long meaning line is clamped to 3 lines (2 on short phones). Desktop is unchanged. */
+.phone #viewport #stage #panel[data-screen="stats"] #panelBody{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;align-content:start}
+.phone #viewport #stage #panel[data-screen="stats"] .easy-stat p{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden;overflow-wrap:normal}
+.phone-short #viewport #stage #panel[data-screen="stats"] .easy-stat p{-webkit-line-clamp:2}
+.phone:not(.tablet) #viewport #stage #panel[data-screen="stats"] #panelBody .easy-stat strong{font-size:var(--fs-l);line-height:20px}
+.tablet #viewport #stage #panel[data-screen="stats"] #panelBody .easy-stat strong{font-size:22px;line-height:28px}
+.tablet #viewport #stage #panel[data-screen="stats"] #panelBody .easy-stat h2{font-size:var(--fs-l)}
+.tablet #viewport #stage #panel[data-screen="stats"] #panelBody .easy-stat p{font-size:14px;line-height:20px}
+/* the pressed 도감 tab (관객 도감) was a blank dark box: the button frame image's fill covered its gold background; it uses the primary frame now */
+#stage #panel .panel-tabs button[aria-pressed="true"]{border-image-source:url('assets/ui/ui-button-primary.webp')}
+html body #viewport#viewport #stage#stage #panel button,
+html body #viewport#viewport #stage#stage #phoneMore button { border-image:url('assets/kit/button-normal.webp') 20 fill / 6px / 0 stretch; }
+/* Manual save feedback uses solid brand colours in both orientations. */
+html body #viewport#viewport #stage#stage#stage#stage #panel[data-screen="saveslots"] .save-slots-actions button[data-save-state] {
+  border-image:none; border-color:var(--p-cream); background:var(--p-gold); color:#302014;
+  opacity:1; filter:none; animation:none; transition:none;
+}
+html body #viewport#viewport #stage#stage#stage#stage #panel[data-screen="saveslots"] .save-slots-actions button[data-save-state="saved"] {
+  border-color:var(--p-ok); background:var(--p-ok);
+}
+html body #viewport#viewport #stage#stage#stage#stage .u26-primary:disabled { border-image-source:url('assets/kit/button-disabled.webp'); color:#bcb4a6; }
+html body #viewport#viewport #stage#stage#stage#stage #panel#panel > header {
+  border:0; border-image:none; background:none; box-shadow:none; padding:0 0 12px; gap:10px; min-height:56px; align-items:center;
+}
+html body #viewport#viewport #stage#stage#stage#stage :is(#panelTitle#panelTitle,.kit-menu-title,#offlineCard h2,.leave-box h2) {
+  border:0; border-image:url('assets/kit/modal-title.webp') 24 fill / 12px / 0 stretch; background:none; color:#f2e6c8;
+  padding:10px 18px; margin:0; min-height:44px; box-sizing:border-box; font-family:system-ui,sans-serif; font-weight:700; line-height:1.3;
+}
+html body #viewport#viewport #stage#stage#stage#stage #panelTitle#panelTitle { flex:1; }
+html body #viewport#viewport #stage#stage#stage#stage #panelBody#panelBody { padding:4px 2px 12px; background:none; border:0; gap:12px; }
+html body #viewport#viewport #stage#stage#stage#stage #closePanel#closePanel.kit-close {
+  flex:0 0 44px; width:44px; height:44px; min-width:44px; padding:0; border:0; border-image:none;
+  background:url('assets/kit/close-normal.webp') center / 44px 44px no-repeat; color:transparent; font-size:0;
+}
+html body #viewport#viewport #stage#stage#stage#stage #closePanel#closePanel.kit-close:active { background-image:url('assets/kit/close-pressed.webp'); }
+html body #viewport#viewport #stage#stage#stage#stage .panel-tabs button { flex:1 0 72px; min-height:44px; padding:10px 12px; border-image:url('assets/kit/tab-normal.webp') 20 fill / 10px / 0 stretch; }
+html body #viewport#viewport #stage#stage#stage#stage .panel-tabs button[aria-pressed="true"] { border-image-source:url('assets/kit/tab-selected.webp'); color:#302014; }
+html body #viewport#viewport #stage#stage#stage#stage :is(.kit-price,.tree-cost,.tree-level,.shop-cosmetic-tile small.kit-price) { display:inline-flex; align-items:center; justify-content:center; min-height:28px; padding:4px 10px; border:0; border-image:url('assets/kit/price-tag.webp') 16 fill / 8px / 0 stretch; color:#f2e6c8; box-sizing:border-box; }
+html body #viewport#viewport #stage#stage#stage#stage .kit-equipped { position:absolute; right:4px; top:4px; width:24px; height:24px; object-fit:contain; pointer-events:none; }
+html body #viewport#viewport #stage#stage#stage#stage .kit-lock-mark { display:inline-block; width:24px; height:24px; object-fit:contain; vertical-align:middle; }
+/* Keep selected artwork, price text and menu controls readable on their painted faces. */
+html body #viewport#viewport #stage#stage#stage#stage #panel .kit-price-silk { border-image:none; min-width:76px; height:32px; padding:4px 8px 4px 28px; background:url('assets/kit/price-tag-silk.webp') center / 100% 100% no-repeat; color:#f2e6c8; }
+html body #viewport#viewport #stage#stage#stage#stage #phoneMore .kit-menu-title { order:-100; }
+html body #viewport#viewport #stage#stage#stage#stage #phoneMore > button.kit-btn .kit-label { position:static; height:auto; font:12px/18px system-ui,sans-serif; }
+html body #viewport#viewport #stage#stage#stage#stage button.shared-kit { color:transparent; }
+html body #viewport#viewport #stage#stage#stage#stage .shared-kit-face { color:#f2e6c8; }
+html body #viewport#viewport #stage#stage#stage#stage #gemShopButton .shared-kit-face { color:#302014; }
+html body #viewport#viewport #stage#stage#stage#stage .shared-kit-face img { width:24px; height:24px; }
+/* Keep the dealer's side conversation from stretching the landscape game rows. */
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panelBody:has( > .gem-game) { grid-template-columns:88px minmax(0,1fr); grid-template-rows:38px auto auto; grid-auto-rows:min-content; align-content:start; }
+html body #viewport#viewport #stage#stage#stage#stage button.shared-kit { color:transparent; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #phoneMore #gemShopButton .shared-kit-face { color:#f2e6c8; }
+html body:not(.phone) #viewport#viewport #stage#stage#stage#stage #panel#panel { left:50%; width:720px; max-width:calc(100% - 40px); transform:translateX(-50%); }
+html body:not(.phone) #viewport#viewport #stage#stage#stage#stage #panelBody { font:16px/1.5 system-ui,sans-serif; }
+html body:not(.phone) #viewport#viewport #stage#stage#stage#stage #panel :is(h1,h2) { font-size:22px; }
+html body #viewport#viewport #stage#stage#stage#stage #panel[data-screen="wardrobe"] #panelBody { background:#282330; }
+@media (max-height:500px) {
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="gemShop"] { padding:10px 14px; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="gemShop"] > header { min-height:44px; height:44px; margin:0; padding:0; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="gemShop"] #panelTitle { min-height:44px; padding:8px 14px; font-size:20px; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="gemShop"] :is(.shop-abilities,.shop-routines) { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="gemShop"] h2 { grid-column:1 / -1; margin:8px 0 0; font-size:16px; padding-bottom:8px; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="gemShop"] .gem-shop-item { padding:10px; display:flex; flex-direction:column; gap:4px; align-items:stretch; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="gemShop"] .gem-shop-item :is(h3,p,small) { margin:0; font:11px/15px system-ui,sans-serif; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="gemShop"] .gem-shop-item h3 { font-weight:700; flex-basis:auto; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="gemShop"] .gem-shop-item button { min-height:44px; height:auto; padding:4px; font-size:11px; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="gemShop"] .gem-shop-item[data-shop-item="refill"] { grid-column:1 / -1; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="gemShop"] .gem-shop-item[data-shop-item="refill"] :is(h3,p) { grid-column:1 / -1; }
+}
+html body #viewport#viewport #stage#stage#stage#stage .panel-tabs { flex-wrap:nowrap; overflow-x:auto; flex:none; }
+html body #viewport#viewport #stage#stage#stage#stage #phoneMore .kit-menu-title { font-size:22px; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage .shared-kit-face > span { font:13px/18px system-ui,sans-serif; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #bookButton .shared-kit-face { padding-right:14px; }
+@media (max-width:740px) {
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #phoneTop .shared-kit-face { flex-direction:column; gap:0; padding:2px; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #phoneTop .shared-kit-face img { width:18px; height:18px; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #phoneTop .shared-kit-face > span { font:13px/16px system-ui,sans-serif; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #phoneTop .hud .bitmap::after { font-size:12px; line-height:16px; }
+}
+/* The compact stats sheet keeps complete descriptions instead of ellipsizing them. */
+html body.phone:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="stats"] .easy-stat p { display:block; -webkit-line-clamp:unset; overflow:visible; }
+html body #viewport#viewport #stage#stage#stage#stage#stage #panel[data-cutscene="1"] { left:0; top:0; right:0; bottom:0; width:auto; height:auto; max-height:none; margin:0; padding:0; border:0; border-image:none; background:transparent; box-shadow:none; overflow:visible; transform:none; }
+html body #viewport#viewport #stage#stage#stage#stage#stage #panel[data-cutscene="1"] > header { position:absolute; z-index:3; top:calc(var(--ST,46px) + 6px); left:calc(6px + var(--audience-width,700px) - 6px); transform:translateX(-100%); margin:0; padding:0; height:auto; min-height:0; background:none; border:0; border-image:none; box-shadow:none; }
+html body #viewport#viewport #stage#stage#stage#stage#stage #panel[data-cutscene="1"] #panelTitle { display:none; }
+html body #viewport#viewport #stage#stage#stage#stage#stage #panel[data-cutscene="1"] #panelBody { position:static; height:auto; max-height:none; margin:0; padding:0; overflow:visible; background:none; display:block; }
+html body:not(.phone) #viewport#viewport #stage#stage#stage#stage#stage #panel[data-cutscene="1"] .twist-copy h2 { font-size:22px; line-height:28px; }
+html body:not(.phone) #viewport#viewport #stage#stage#stage#stage#stage #panel[data-cutscene="1"] .twist-copy strong { font-size:18px; line-height:24px; }
+html body:not(.phone) #viewport#viewport #stage#stage#stage#stage#stage #panel[data-cutscene="1"] .twist-copy p { font-size:20px; line-height:28px; }
+html body.tablet #viewport#viewport #stage#stage#stage#stage#stage #panel[data-cutscene="1"] .twist-copy p { font-size:15px; line-height:20px; }
+html body.tablet #viewport#viewport #stage#stage#stage#stage#stage #panel[data-cutscene="1"] .twist-copy :is(strong,h2) { font-size:14px; line-height:20px; }
+html body #viewport#viewport #stage#stage#stage#stage#stage #panelBody .skill-guide-copy b { display:block; margin:0 0 4px; font-size:14px; line-height:18px; color:#ffe9ac; word-break:keep-all; }
+html body #viewport#viewport #stage#stage#stage#stage#stage #panelBody .skill-guide-copy p { margin:0 0 2px; font-size:13px; line-height:18px; word-break:keep-all; overflow-wrap:break-word; }
+/* The 도감 has six tabs since 옷장 joined it: every tab stays visible (two rows of three upright, wrapping in landscape) instead of a sideways scroll. */
+html body.portrait-layout #viewport#viewport #stage#stage#stage#stage#stage #panel[data-screen="bestiary"] #panelBody > .panel-tabs { display:grid !important; grid-template-columns:repeat(3,minmax(0,1fr)); overflow:visible !important; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage#stage #panel[data-screen="bestiary"] #panelBody > .panel-tabs { flex-wrap:wrap !important; overflow:visible !important; }
+@keyframes headliner-plate { 0% { opacity:0; transform:translateX(-110%) } 28% { opacity:1; transform:translateX(0) } 72% { opacity:1; transform:translateX(0) } 100% { opacity:0; transform:translateX(110%) } }

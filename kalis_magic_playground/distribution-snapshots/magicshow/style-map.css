@@ -1,0 +1,16 @@
+/* style-map.css: stage map / venue progress flow. (CSS regroup 10-28)
+ * Earlier or later rules for the same elements may also sit in style-base.css (early layer) and
+ * style-overrides-*.css (late layer) when the cascade needs them there. */
+.map-audience{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:8px 0;padding:6px;border-top:1px solid var(--line)}
+.map-audience strong,.map-audience small{flex-basis:100%;overflow-wrap:anywhere}
+.map-portrait{display:block;flex:none;width:48px;height:60px}
+.flow-spine>.flow-stop:before{content:'';position:absolute;left:8px;top:0;bottom:0;width:2px;background:#655567}
+.flow-spine>.flow-stop:first-child:before{top:18px}
+.flow-stop.is-future .flow-node,.flow-stop.is-hidden .flow-node{opacity:.5}
+#stage button.flow-node{border-color:var(--gold);background:#25202D;color:var(--ink)}
+.flow-stop.is-cleared .flow-name{color:var(--gold)}
+.flow-stop.is-current .flow-name{color:#F2E6C8}
+.flow-stop.is-future .flow-name,.flow-stop.is-hidden .flow-name{color:var(--ink-2)}
+.flow-stop.is-current .flow-dot.is-filled{background:var(--brass);border-color:var(--brass)}
+.flow-fork-grid:before{content:'';position:absolute;left:8px;top:0;width:calc(50% + 4px);height:2px;background:#655567}
+.flow-branch:before{content:'';position:absolute;left:8px;top:0;bottom:16px;width:2px;background:#655567}

@@ -1,0 +1,113 @@
+/* style-menu.css: title screen, menu sheet, settings, save slots, offline card, leave confirm, stats sheet. (CSS regroup 10-28)
+ * Earlier or later rules for the same elements may also sit in style-base.css (early layer) and
+ * style-overrides-*.css (late layer) when the cascade needs them there. */
+.menu{position:absolute;right:76px;top:4px;display:flex;gap:8px;z-index:25}
+#gameLogo{position:absolute;left:200px;top:3px;width:180px;height:38px;z-index:3}
+#gameLogo{display:none}
+/* v4 U6: bounded effects and dedicated notification strip. */
+#gameLogo{display:block;left:76px;top:6px;width:340px;height:28px;font-size:22px;color:#ffe65c;white-space:nowrap}
+.phone .menu{right:6px;top:2px;height:44px;gap:4px}
+.phone #statsButton{position:absolute;left:8px;bottom:81px;z-index:9;width:100px;min-height:44px;background:#161827ed}
+.phone #statsButton.expanded{bottom:38px;z-index:11}
+.phone #soundButton:before{content:'♫ '}
+.phone.phone-tight #statsButton{bottom:68px}
+.phone.phone-tight #statsButton.expanded{bottom:38px}
+.phone #statsButton{left:114px;width:min(100px,calc(52% - 122px));bottom:81px}
+#offlineCard{position:absolute;left:400px;top:250px;width:800px;padding:30px;background:#171827f5;border:3px solid #ffe65c;z-index:40;text-align:center}
+#offlineCard h2{font-size:22px}
+#offlineCard button{min-height:44px;margin:4px}
+#offlineArt{display:inline-block;position:relative;width:70px;height:70px;font-size:55px}
+#offlineCard.performing #offlineArt{animation:none}
+.phone #offlineCard{left:8%;top:14%;width:84%;padding:12px;font-size:11px}
+.phone #offlineArt{width:44px;height:44px;font-size:33px}
+.menu #missionsButton,.menu #hapticsButton{font-size:16px;padding:4px 8px}
+.phone #statsButton{left:8px;top:30px;bottom:auto;width:88px;min-height:44px;font-size:10px;z-index:4}
+.phone #statsButton.expanded{top:auto;bottom:40px;z-index:13}
+.phone #audienceCard#audienceCard.f-story #statsButton{visibility:hidden}
+.phone #stage#stage.f-coach #statsButton{visibility:hidden}
+.phone #phoneMore #statsButton{visibility:visible!important}
+.music-volume input{width:90px;min-height:44px}
+.phone #phoneMore .music-volume{grid-column:span 2;min-height:44px;white-space:nowrap;font-size:11px}
+.phone #stage #panel .easy-stat{margin:0;padding:12px;display:flex;flex-direction:column;gap:8px}
+#coffeeButton{grid-column:1 / -1;white-space:nowrap}
+.menu #coffeeButton{order:1;flex-basis:100%}
+.phone #stage #phoneMore :is(#coffeeButton,#openChatButton){grid-column:span 2;order:100}
+#openChatButton{white-space:nowrap}
+#openChatButton img{width:1.2em;height:1.2em;object-fit:contain;vertical-align:middle}
+.tablet #stage #phoneMore button,.tablet #stage #phoneMore #statsButton{height:48px;min-height:48px;font-size:16px;line-height:24px}
+:is(.phone,.tablet) #stage #phoneMore .menu-group{display:block;grid-column:1 / -1;margin:0;padding:0 2px 2px;font-size:12px;line-height:16px;color:#E8BF68;border-bottom:1px solid #6B5A3A;letter-spacing:0}
+.tablet #stage #phoneMore .menu-group{font-size:16px;line-height:22px}
+:is(.phone,.tablet) #stage #phoneMore #menuGroupPlay{order:-2}
+:is(.phone,.tablet) #stage #phoneMore #menuGroupSettings{order:59;margin-top:4px}
+:is(.phone,.tablet) #stage #phoneMore :is(#soundButton,#musicButton,#hapticsButton,#textSpeedButton,#replayTutorial){order:60}
+/* U36 TEMPORARY title screen (art from the owner, assets/title-cafe.webp, title text and signature are part of the art). Landscape: cover,
+   shifted down a little so the title (upper left) and the signature (lower right) both stay inside the crop at 2.1:1 phones; portrait: contain. */
+#titleScreen{position:fixed;inset:0;z-index:2147483000;background:#151020;display:flex;align-items:center;justify-content:center;transition:opacity 250ms ease-out;touch-action:manipulation}
+#titleScreen img{display:block;width:100%;height:100%;object-fit:cover;object-position:50% 55%;image-rendering:auto;pointer-events:none}
+/* Narrower than 1.7:1 (portrait, tablets at 1180x820 and 1280x800) cover would cut the title and the signature at the sides, so the whole art is shown (contain). */
+@media(max-aspect-ratio:17/10){#titleScreen img{object-fit:contain;object-position:50% 50%}}
+#titleScreen.leaving{opacity:0;pointer-events:none}
+@media(prefers-reduced-motion:reduce){#titleScreen{transition:none}}
+/* Manual save slots: panel-local scrolling and the existing pixel frame/buttons. */
+#stage #phoneMore #saveSlotsButton{order:-3;grid-column:1 / -1;min-height:44px}
+#stage #panel[data-screen="saveslots"] .save-slots-row{border:2px solid var(--line,#6B5A3A);background:#17141F;padding:10px;margin:0 0 8px}
+#stage #panel[data-screen="saveslots"] .save-slots-time,#stage #panel[data-screen="saveslots"] .save-slots-note{color:var(--ink-2,#C4B9DC)}
+#stage #panel[data-screen="saveslots"] .save-slots-status{color:var(--gold,#E8BF68)}
+#stage #phoneMore #saveSlotsButton{min-height:60px}
+.phone #stage #phoneMore #saveSlotsButton{min-height:44px}
+/* v4 U46 A7: desktop 1600x900 like the phone. Top: only 비법서 and 메뉴 (the rest is in the menu sheet, ui.js DESKTOP_MENU); the stats panel is
+   collapsed behind a 능력치 button and opens beside the audience (right column of the card, never over the face); U39 lanes: the dialog bubble sits
+   above Kali in the left column, the toast row at the bottom right of the audience card above the stats bar. */
+body:not(.phone) #viewport #stage nav.menu{flex-wrap:nowrap;max-width:none;left:auto;right:76px;top:4px;gap:8px}
+body:not(.phone) #viewport #stage #phoneMore .menu-group{display:block;grid-column:1 / -1;margin:0;padding:0 2px 2px;font-size:var(--fs-m);line-height:28px;color:var(--p-gold);border-bottom:2px solid var(--p-line)}
+body:not(.phone) #viewport #stage #phoneMore #menuGroupPlay{order:-2}
+body:not(.phone) #viewport #stage #phoneMore #menuGroupSettings{order:59;margin-top:4px}
+body:not(.phone) #viewport #stage #phoneMore :is(#soundButton,#musicButton,#hapticsButton,#textSpeedButton,#replayTutorial){order:60}
+body:not(.phone) #viewport #stage #phoneMore .music-volume{order:61;grid-column:span 2;display:flex;align-items:center;gap:12px;font-size:var(--fs-m)}
+body:not(.phone) #viewport #stage #phoneMore :is(#coffeeButton,#openChatButton){order:100;grid-column:span 3;flex-basis:auto}
+body:not(.phone) #viewport #stage #statsButton{display:block;position:absolute;right:12px;top:194px;left:auto;width:148px;height:48px;min-height:48px;padding:4px;font-size:var(--fs-m);line-height:28px;z-index:5}
+/* v4 U47 13: every 능력치 cell is the same size. Phone and tablet panel: one 3-column grid whose rows are all as tall as the tallest cell (ui.js measures the cells and sets grid-auto-rows in px),
+   text starts at the top of every cell, long numbers and texts wrap inside the cell. Desktop list: one column, every row the same height (the heckle interval is a second
+   line inside its own cell, so no cell grows), label left and value right, long values wrap or clip inside the cell. */
+.phone #stage #panel[data-screen="stats"] .easy-stat{min-width:0;box-sizing:border-box;justify-content:flex-start;overflow:hidden;overflow-wrap:anywhere}
+body:not(.phone) #viewport #stage .stats.phone-expanded .stat-meaning{display:none}
+/* v4 U47 6: the leave question ("저장하고 나갈까요?") is a centred card over a dimmed stage, above the panels (z 35) and toasts (z 30). */
+#stage #leaveConfirm{position:absolute;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;background:#000000b8}
+#stage #leaveConfirm h2{margin:0;font:400 var(--fs-l)/1.3 Galmuri11,monospace;color:var(--p-gold)}
+#stage #leaveConfirm button{min-width:0;min-height:44px;font:400 var(--fs-m)/1.2 Galmuri11,monospace;padding:6px 4px;white-space:normal}
+body:not(.phone) #stage #leaveConfirm .leave-box{width:min(900px,92%);padding:28px;gap:18px}
+body:not(.phone) #stage #leaveConfirm button{min-height:64px}
+.phone #viewport #stage #panel[data-screen="stats"] .easy-stat{padding:8px 10px;gap:4px}
+body:not(.phone) #viewport #stage #gameLogo{top:14px}
+body:not(.phone) #viewport #stage #audienceCard #statsButton{left:auto!important;right:24px!important;top:752px!important;width:150px!important}
+html body:not(.phone) #viewport#viewport #stage #audienceCard #statsButton{left:auto!important;right:20px!important;top:auto!important;bottom:68px!important}
+/* Lane 1g: out59 drawn UI kit v2, shared by both orientations. */
+html body #viewport#viewport #stage#stage#stage#stage :is(button,#panel,#phoneMore,#storyDialog,#tutorialCoach,#offlineCard,#easyTooltip,.practice-box,.leave-box,.gem-shop-item,.constellation-detail,.bestiary-entry,.achievement-stamp,.cosmetic-card,.easy-stat,.mission-card,.ending-entry,.save-slot,.restore-entry) {
+  box-shadow:none; text-shadow:none; border-radius:0; image-rendering:pixelated;
+}
+html body #viewport#viewport #stage#stage#stage#stage :is(#soundButton,#musicButton,#hapticsButton) { padding-right:64px; position:relative; }
+html body #viewport#viewport #stage#stage#stage#stage :is(#soundButton,#musicButton,#hapticsButton)::after { content:''; position:absolute; right:8px; top:50%; transform:translateY(-50%); width:48px; height:28px; background:url('assets/kit/toggle-off.webp') center / contain no-repeat; }
+html body #viewport#viewport #stage#stage#stage#stage :is(#soundButton,#musicButton,#hapticsButton)[aria-pressed="true"]::after { background-image:url('assets/kit/toggle-on.webp'); }
+html body #viewport#viewport #stage#stage#stage#stage #phoneMore :is(#soundButton,#musicButton,#hapticsButton) { grid-column:span 2; text-align:left; padding-left:12px; }
+html body .save-version-notice { border:0; border-image:url('assets/kit/toast-frame.webp') 24 fill / 12px / 0 stretch; background:none; box-shadow:none; border-radius:0; color:#f2e6c8; }
+/* A2 P2: shared modal, wardrobe and numeric presentation. */
+html body #viewport#viewport #stage#stage#stage#stage #modalBackdrop { display:none; position:absolute; inset:-1000px; background:#120f1af5; z-index:34; pointer-events:none; }
+html body #viewport#viewport #stage#stage#stage#stage.f-panel #modalBackdrop { display:block; }
+html body:not(.phone) #viewport#viewport #stage#stage#stage#stage #gameLogo { width:300px; height:44px; padding:8px 14px; font:700 20px/28px system-ui,sans-serif; border-image:url('assets/kit/header-panel.webp') 24 fill / 8px / 0 stretch; }
+html body #viewport#viewport #stage#stage#stage#stage #phoneMore :is(#soundButton,#musicButton,#hapticsButton) { grid-column:span 2; min-height:44px; font:14px/20px system-ui,sans-serif; }
+html body #viewport#viewport #stage#stage#stage#stage #phoneMore #musicButton { order:60; }
+html body #viewport#viewport #stage#stage#stage#stage #phoneMore #soundButton { order:61; }
+html body #viewport#viewport #stage#stage#stage#stage #phoneMore .music-volume { order:62; grid-column:1 / -1; border-image:url('assets/kit/row-normal.webp') 24 fill / 8px / 0 stretch; padding:4px 12px; font:14px/20px system-ui,sans-serif; }
+html body #viewport#viewport #stage#stage#stage#stage #phoneMore #hapticsButton { order:63; }
+html body #viewport#viewport #stage#stage#stage#stage #phoneMore #textSpeedButton { order:64; grid-column:span 2; }
+html body #viewport#viewport #stage#stage#stage#stage #phoneMore #replayTutorial { order:65; }
+html body #viewport#viewport #stage#stage#stage#stage #phoneMore .menu-build { text-align:center; padding:4px 8px; color:#f2e6c8; }
+@media(max-width:700px) {
+html body.phone:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="stats"] .easy-stat { padding:6px; gap:4px; }
+html body.phone:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="stats"] .easy-stat strong { font:18px/22px Galmuri11,sans-serif; }
+html body.phone:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="stats"] .easy-stat h2 { font:14px/16px Galmuri11,sans-serif; }
+html body.phone:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="stats"] .easy-stat p { font:10px/12px system-ui,sans-serif; }
+}
+/* 12-116: 반전 무대 cutscene. The panel keeps the state (menu batchD / batchDReplay, 건너뛰기) but becomes a clear layer over the stage: one large
+   illustration over the stage area and the line in the dialogue box place (12-119). Without an illustration the stage itself stays in view. */
+html body #viewport#viewport #stage#stage#stage#stage[data-cutscene="1"].f-panel #modalBackdrop { display:none; }

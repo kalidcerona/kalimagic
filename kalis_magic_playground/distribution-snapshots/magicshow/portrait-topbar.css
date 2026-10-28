@@ -1,0 +1,351 @@
+/* portrait-topbar.css: portrait top bar and wallet. (CSS regroup 10-28)
+ * Earlier or later rules for the same elements may also sit in portrait-base.css (early layer) and
+ * portrait-overrides-*.css (late layer) when the cascade needs them there. */
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #phoneTop {
+  left: 0;
+  right: 0;
+  top: 0;
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0,1fr) auto auto;
+  column-gap: 6px !important;
+  row-gap: 0 !important;
+  box-sizing: border-box;
+  z-index: 30;
+  image-rendering: pixelated;
+  height: var(--p-venue,44px);
+  grid-template-rows: 1fr;
+  align-items: center;
+  padding: 2px 6px !important;
+  overflow: hidden;
+  border: 4px solid transparent;
+  border-image: var(--kit-panel) 20 fill / 4px / 0 stretch;
+  background: #17141c !important;
+  background-image: none !important;
+  box-shadow: none;
+  color: #F2E6C8;
+}
+
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #phoneVenue {
+  grid-column: 1;
+  grid-row: 1;
+  order: 0;
+  width: auto;
+  min-width: 0;
+  max-width: 100%;
+}
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #phoneTop .venue-heading #venueName {
+  min-width: 0;
+  position: static;
+  top: auto;
+  left: auto;
+  display: block;
+  width: auto;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-shadow: none;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap;
+  grid-column: 2;
+  grid-row: 1;
+  height: 20px;
+  font-size: 18px;
+  line-height: 20px;
+  color: #F2E6C8;
+}
+
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #phoneWallet {
+  grid-column: 2;
+  grid-row: 1;
+  order: 1;
+  flex: none;
+  min-width: 0;
+  width: auto;
+  height: auto;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-image: none;
+  background: none;
+  box-shadow: none;
+  overflow: hidden;
+}
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #activeSkills #moreButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  line-height: 14px;
+  white-space: nowrap;
+}
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #phoneMore {
+  left: 0;
+  right: 0;
+  top: var(--p-top, 44px);
+  width: auto;
+  max-height: calc(100% - var(--p-top, 44px));
+  z-index: 40;
+  border: 1px solid #A68A58;
+  border-radius: 0;
+  border-style: solid;
+  border-width: 12px;
+  border-image: var(--kit-panel) 20 fill / 12px / 0 stretch;
+  background: #17141c;
+  background-image: none;
+  image-rendering: pixelated;
+  box-shadow: none;
+  color: #F2E6C8;
+}
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #phoneTop > #bestiaryButton {
+  font-size: 16px;
+  line-height: 1;
+  display: flex;
+  grid-column: 3;
+  grid-row: 1;
+  order: 2;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 34px;
+  min-width: 34px;
+  height: 30px;
+  min-height: 30px;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 2px solid #A68A58;
+  border-style: solid;
+  border-width: 4px;
+  border-image: var(--kit-dark) 16 fill / 4px / 0 stretch;
+  background: transparent;
+  box-shadow: none;
+  color: #F2E6C8;
+}
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #actionDock > #bookButton {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  max-width: 100%;
+  min-width: 40px;
+  height: auto;
+  min-height: 44px;
+  margin: 0;
+  padding: 1px 0;
+  border: 1px solid #A68A58;
+  border-image: none;
+  background: #25202D;
+  color: #F2E6C8;
+  box-shadow: none;
+  font-size: 10px;
+  line-height: 12px;
+  white-space: normal;
+  text-align: center;
+  transform: none;
+  scale: 1;
+  position: relative;
+  overflow: visible;
+  order: 1;
+}
+
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #actionDock > #gemShopQuick {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  max-width: none;
+  min-width: 0;
+  height: auto;
+  min-height: 44px;
+  margin: 0;
+  padding: 2px 1px 1px;
+  border: 1px solid #A68A58;
+  font-size: 10px;
+  line-height: 12px;
+  white-space: normal;
+  text-align: center;
+  overflow: hidden;
+  transform: none;
+  scale: 1;
+  order: 2;
+  background: transparent;
+  border-style: solid;
+  border-width: 4px;
+  border-image: url('assets/kit/btn-gold.webp') 16 fill / 4px / 0 stretch;
+  background-color: #E8BF68;
+  background-image: none;
+  color: #24180c;
+  box-shadow: none;
+}
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #actionDock > #bookButton.tutorial-target {
+  box-shadow: inset 0 0 0 3px #ffe14a;
+  background: #403225;
+}
+
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #actionDock > #bookButton:after {
+  content: attr(data-affordable);
+  top: 0;
+  right: 0;
+  left: auto;
+  bottom: auto;
+  min-width: 0;
+  width: auto;
+  height: auto;
+  margin: 0;
+  padding: 0 2px;
+  border-radius: 0;
+  font-style: normal;
+  font-variant: normal;
+  font-weight: 400;
+  font-stretch: normal;
+  font-size: 8px;
+  font-family: Galmuri9,monospace;
+  line-height: 10px;
+  text-align: center;
+  transform: none;
+  z-index: 3;
+  pointer-events: none;
+}
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #activeSkills #gemShopQuick,
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #activeSkills #gemShopQuick:hover:enabled {
+  border-image-source: var(--kit-gold);
+  color: #24180c;
+  background: transparent;
+}
+
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #activeSkills #gemShopQuick:active,
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage button.u26-primary:active,
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage button.game-start:active,
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #practiceStart:active,
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #actionDock > #gemShopQuick:active {
+  border-image-source: var(--kit-gold-down);
+}
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #phoneTop > #bestiaryButton .top-dogam-ico {
+  display: block;
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #actionDock > #practiceButton {
+  order: 3;
+}
+
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #actionDock > #moreButton {
+  order: 4;
+}
+
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #actionDock > #gemShopQuick,
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #actionDock > #gemShopQuick:hover:enabled {
+  background: transparent;
+  border-style: solid;
+  border-width: 4px;
+  border-image: url('assets/kit/btn-gold.webp') 16 fill / 4px / 0 stretch;
+  background-color: #E8BF68;
+  background-image: none;
+  color: #24180c;
+  box-shadow: none;
+}
+/* Batch B: five grouped actions retain the existing centered icon and label layout. */
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #actionDock > #caseArrangeButton { order:4; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #actionDock > #moreButton { order:5; }
+/* Owner 10-18: the gold shop shares its dock siblings' box and icon metrics. */
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #actionDock > #gemShopQuick { flex:1 1 0; min-width:0; max-width:none; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #phoneTop > #bestiaryButton { border-image:var(--kit-dark) 16 fill / 4px / 0 stretch; background:transparent; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #phoneTop > #bestiaryButton .top-dogam-ico { width:16px; height:16px; margin:0 auto; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #phoneTop > #bestiaryButton .top-dogam-label { display:block; font-size:8px; line-height:10px; color:#F2E6C8; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #actionDock > button:active:enabled,
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #skillRow > button:active:enabled,
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #phoneTop > #bestiaryButton:active:enabled { border-image-source:var(--kit-dark-down); }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #actionDock > #gemShopQuick:active:enabled { border-image-source:var(--kit-gold-down); }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #actionDock > #gemShopQuick { min-height:64px; max-height:70px; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #actionDock > #wardrobeButton { flex:1 1 0; min-width:44px; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #phoneTop { grid-template-columns:minmax(0,1fr) auto; padding:5px 12px !important; border:0; border-image:url("assets/kit/header-panel.webp") 24 fill / 9px / 0 stretch; background:transparent !important; overflow:visible; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #phoneTop #phoneVenue { grid-column:1; width:auto; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #phoneTop #venueName { font-family:system-ui,sans-serif; font-weight:800; font-size:24px; line-height:27px; color:#f2e6c8; margin:0; width:auto; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #phoneTop #portraitPlain,
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #phoneTop #goalStrip,
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #phoneTop #starlightLabel,
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #phoneTop > button { display:none !important; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #phoneWallet { grid-column:2; grid-row:1; width:auto; align-self:center; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #phoneWallet .currency-label { display:block; grid-column:2; grid-row:1; font:11px/12px system-ui,sans-serif; color:#f2e6c8; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #phoneWallet .currency .bitmap > * { display:none; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #activeSkills #actionDock > #gemShopQuick { order:0; border-image-source:url("assets/kit/shop-normal.webp"); min-width:44px; font-size:10px; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #activeSkills #actionDock > #bestiaryButton { order:1; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #activeSkills #actionDock > #moreButton { order:2; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #activeSkills #actionDock > #gemShopQuick:active:enabled { border-image-source:url("assets/kit/shop-pressed.webp"); }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #phoneMore { gap:6px; padding:12px; border:0; border-image:url("assets/kit/dialogue-frame.webp") 16 fill / 8px / 0 stretch; background:transparent; box-shadow:none; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #phoneMore > button { min-height:44px; border:0; border-image:url("assets/kit/button-normal.webp") 20 fill / 7px / 0 stretch; background:none; box-shadow:none; color:#f2e6c8; }
+/* Lane 1f: readable header and meter typography at phone display size. */
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #phoneTop #venueName { font-size:26px; line-height:28px; height:auto; max-height:none; }
+html body.portrait-layout.phone:not(.tablet).portrait-compact #viewport#viewport #stage#stage #phoneTop { padding-top:3px !important; padding-bottom:3px !important; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #phoneTop #venueName { flex-shrink:0; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #activeSkills #actionDock > :is(#bookButton,#wardrobeButton,#practiceButton,#caseArrangeButton) { grid-row:2; flex-direction:row; gap:3px; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #activeSkills #bookButton { grid-column:1 / 3; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #activeSkills #wardrobeButton { grid-column:3 / 5; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #activeSkills #practiceButton { grid-column:5 / 7; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #activeSkills #caseArrangeButton { grid-column:7; }
+/* Compact budget keeps the 600px viewport and its safe inset fully usable. */
+html body.portrait-layout.phone:not(.tablet).portrait-compact #viewport#viewport #stage#stage#stage#stage #phoneTop { min-height:0; height:36px; padding:0 6px !important; }
+html body.portrait-layout.phone:not(.tablet).portrait-compact #viewport#viewport #stage#stage#stage#stage #phoneTop #venueName { font-size:20px; line-height:22px; }
+html body.portrait-layout.phone:not(.tablet).portrait-compact #viewport#viewport #stage#stage#stage#stage #phoneTop,
+html body.portrait-layout.phone:not(.tablet).portrait-compact #viewport#viewport #stage#stage#stage#stage #phoneTop .venue-heading { height:38px; }
+html body.portrait-layout.phone:not(.tablet).portrait-compact #viewport#viewport #stage#stage#stage#stage #phoneWallet .currency { height:32px; grid-template-rows:14px 18px; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #activeSkills #actionDock > :is(#bookButton,#wardrobeButton,#practiceButton,#caseArrangeButton) { min-height:44px; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #activeSkills #gemShopQuick { grid-column:5; grid-row:1; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #activeSkills #bestiaryButton { grid-column:6; grid-row:1; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #activeSkills #moreButton { grid-column:7; grid-row:1; }
+html body.portrait-layout.phone:not(.tablet).portrait-compact #viewport#viewport #stage#stage#stage#stage #phoneTop,
+html body.portrait-layout.phone:not(.tablet).portrait-compact #viewport#viewport #stage#stage#stage#stage #phoneTop .venue-heading { height:38px; }
+
+/* The compact heading stays inside the frame rather than inheriting a 27px title box. */
+html body.portrait-layout.phone:not(.tablet).portrait-compact #viewport#viewport #stage#stage#stage#stage #phoneTop #venueName { flex:none; min-height:0; height:auto; font-size:18px; line-height:20px; }
+/* A2 P2: preserve the compact height budget while keeping painted labels inside their frames. */
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #phoneTop { padding-right:12px !important; padding-left:8px !important; }
+html body.portrait-layout.phone:not(.tablet).portrait-compact #viewport#viewport #stage#stage#stage#stage #phoneTop #venueName { font-size:18px; line-height:19px; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #phoneWallet .hud { gap:6px; padding-right:2px; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #phoneWallet .currency { grid-template-columns:22px max-content; grid-template-rows:14px 16px; column-gap:2px; height:30px; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #phoneWallet :is(.currency-label,#mockupDoves,.currency .bitmap::after) { font:12px/14px system-ui,sans-serif; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #phoneMore:not([hidden]) { grid-template-columns:repeat(2,minmax(0,1fr)); }
+html body.portrait-layout.phone:not(.tablet):not(.portrait-compact) #viewport#viewport #stage#stage#stage#stage #phoneTop #venueName { font-size:24px; line-height:26px; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage #activeSkills #actionDock > :is(#bookButton,#practiceButton,#bestiaryButton,#moreButton) { grid-row:span 1; flex-direction:column; gap:0; padding:2px 1px; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage #activeSkills #actionDock > #bookButton { order:1; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage #activeSkills #actionDock > #practiceButton { order:2; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage #activeSkills #actionDock > #gemShopQuick { order:3; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage #activeSkills #actionDock > #bestiaryButton { order:4; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage #activeSkills #actionDock > #moreButton { order:5; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage #activeSkills #actionDock > :is(#bookButton,#practiceButton,#bestiaryButton,#moreButton) .kit-ico { position:static; flex:0 0 24px; width:24px; height:24px; margin:0 auto; }
+/* s4c: 정리 and 옷장 in the menu sheet: icon and label side by side inside the frame. */
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage #phoneMore > :is(#caseArrangeButton,#wardrobeButton) { display:flex; flex-direction:row; align-items:center; justify-content:center; gap:8px; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage #phoneMore > :is(#caseArrangeButton,#wardrobeButton) small[data-kit] { display:none; }
+/* s4i: the coin counter is back in the wallet (first of four). Tighter cells so four currencies and the venue name share the top bar;
+   the venue name shrinks to its column by its width in em (--venue-em from ui.js, container query) before it falls back to an ellipsis. */
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage #phoneWallet .hud { gap:5px; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage #phoneWallet .currency { grid-template-columns:20px max-content; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage #phoneTop #phoneVenue { container-type:inline-size; min-width:0; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage #phoneTop #venueName { font-size:clamp(12px, calc(100cqi / var(--venue-em, 4.4)), 24px); }
+html body.portrait-layout.phone:not(.tablet).portrait-compact #viewport#viewport #stage#stage#stage#stage#stage #phoneTop #venueName { font-size:clamp(12px, calc(100cqi / var(--venue-em, 4.4)), 18px); }
+html body.portrait-layout.phone:not(.tablet).portrait-compact #viewport#viewport #stage#stage#stage#stage#stage #phoneTop { padding-right:10px !important; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #actionDock > #bookButton { grid-column:6; grid-row:1; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #actionDock > #bestiaryButton { grid-column:7; grid-row:1; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #actionDock > #practiceButton { grid-column:6; grid-row:2; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #actionDock > #moreButton { grid-column:7; grid-row:2; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #actionDock > #gemShopQuick { grid-column:8; grid-row:1 / 3; }
+/* tools (option 2) */
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #actionDock > :is(#bookButton,#practiceButton,#bestiaryButton,#moreButton) { gap:1px; padding:3px 1px 2px; justify-content:center; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #actionDock > #gemShopQuick { border-image:url("assets/kit/btn-gold.webp") 8 fill / 4px / 0 stretch; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #actionDock > #gemShopQuick:active:enabled { border-image-source:url("assets/kit/btn-gold-pressed.webp"); }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #actionDock > .is-new { overflow:visible; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills .is-new::after { width:30px !important; height:15px !important; top:-5px !important; right:-1px !important; }

@@ -101,11 +101,24 @@
     oscillator.onended = () => { voices.delete(oscillator); oscillator.disconnect(); gain.disconnect(); };
     oscillator.start(start); oscillator.stop(start + duration + .01);
   }
+  // s4e2 F: one hand clap = a short band-passed noise burst (same voice cap as tone()). The buffer is built once per context.
+  let clapBuffer;
+  function clap(delay, volume) {
+    if (!context || context.state !== 'running' || muted || document.hidden || voices.size >= 16) return;
+    if (!clapBuffer) { clapBuffer = context.createBuffer(1, Math.ceil(context.sampleRate * .06), context.sampleRate); const d = clapBuffer.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 3); }
+    const source = context.createBufferSource(), gain = context.createGain(), start = context.currentTime + delay;
+    source.buffer = clapBuffer; gain.gain.setValueAtTime(volume, start);
+    let out = source;
+    if (context.createBiquadFilter) { const band = context.createBiquadFilter(); band.type = 'bandpass'; band.frequency.value = 1400 + Math.random() * 900; band.Q.value = 1.2; source.connect(band); out = band; }
+    out.connect(gain); gain.connect(master); voices.add(source);
+    source.onended = () => { voices.delete(source); source.disconnect(); if (out !== source) out.disconnect(); gain.disconnect(); };
+    source.start(start); source.stop(start + .07);
+  }
   function play(name, options = {}) {
     if (!context || muted) return;
     // v4 U46 A9: the same sound never starts twice within SAME_GAP seconds (a 25-case chain would otherwise stack 25 copies into one blur).
     if (name !== 'tap') { const now = context.currentTime; if (now - (lastPlayed.get(name) ?? -Infinity) < SAME_GAP) return; lastPlayed.set(name, now); }
-    const quiet = options.auto ? .23 : 1;
+    const quiet = (options.auto ? .23 : 1) * (Number.isFinite(options.gain) ? Math.max(0, options.gain) : 1);
     const note = (f, d, t = 0, type = 'sine', v = .4, end = f) => tone(f, d, t, type, v * quiet, end);
     const melody = (notes, step, type = 'triangle') => notes.forEach((f, i) => note(f, step * 1.7, i * step, type, .35));
     switch (name) {
@@ -120,6 +133,8 @@
       case 'hit': note(130, .09, 0, 'square', .3, 45); break;
       case 'heckle': note(340, .15, 0, 'sawtooth', .2, 210); note(240, .13, .13, 'sawtooth', .18, 150); break;
       case 'mental': note(95, .22, 0, 'triangle', .6, 32); break;
+      case 'drumroll': for (let i = 0; i < 7; i++) note(70 + i * 10, .04, i * .055, 'square', .11, 42); break;
+      case 'rise': note(494, .1, 0, 'triangle', .28, 988); break;
       case 'combo': note(330 * Math.pow(2, Math.min(24, options.combo || 1) / 12), .09, 0, 'triangle', .25); break;
       case 'crit': note(1320, .08, 0, 'triangle', .4, 1980); break;
       case 'caseLevel': melody([659, 880, 1047], .055); break;
@@ -134,6 +149,12 @@
       case 'flip': note(800, .06, 0, 'triangle', .25, 220); break;
       case 'rebirth': melody([262, 392, 523, 659, 784, 1047, 1319], .12); break;
       case 'ending': melody([392, 440, 523, 659, 587, 523, 440, 523, 784], .3); break;
+      // s4e2: a win claps (a few bursts, a headliner about 1.1 s of them, under the 16-voice cap), the curtain call opens on a short fanfare,
+      // and a level-up or a learned 비법 answers with a short rising tone.
+      case 'applause': { const n = options.big ? 10 : 5, span = options.big ? 1.1 : .42; for (let i = 0; i < n; i++) clap(i * span / n + (i % 3) * .013, .5 * quiet * (options.big && i > n * .6 ? .7 : 1)); break; }
+      case 'fanfare': melody([392, 523, 659], .08); note(784, .38, .24, 'triangle', .35); note(1047, .3, .3, 'sine', .18); break;
+      case 'levelUp': note(392, .16, 0, 'triangle', .32, 784); note(1047, .12, .12, 'sine', .22); break;
+      case 'learn': note(523, .12, 0, 'triangle', .3, 1047); note(1319, .08, .1, 'sine', .18); break;
     }
   }
   function toggle() {

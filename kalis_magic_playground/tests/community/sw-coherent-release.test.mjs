@@ -175,7 +175,7 @@ for (const [file, scope] of WORKERS) {
     const state = { generation: 'v1', offline: false, fetches: [], active: null };
     const v1 = boot(versioned(source, 'v1'), scope, state, stores);
     await lifecycle(v1, 'install');
-    assert.equal(v1.skips, 1, 'the first install takes control');
+    assert.equal(v1.skips, file === 'distribution-snapshots/magicshow/sw.js' ? 0 : 1, 'first magicshow install activates naturally without skipWaiting');
     const htmlUrl = new URL('index.html', scope).href;
     const jsUrl = v1.jsUrl;
     assert.equal(v1.bucket().entries.get(htmlUrl), 'v1:index.html');
@@ -200,11 +200,8 @@ for (const [file, scope] of WORKERS) {
     state.fetches = [];
     const v2 = boot(versioned(source, 'v2'), scope, state, stores);
     await lifecycle(v2, 'install');
-    // Magicshow saves and reloads on controllerchange, so a stored update takes over immediately.
-    const immediateClaim = file === 'distribution-snapshots/magicshow/sw.js';
-    assert.equal(v2.skips, immediateClaim ? 1 : 0, immediateClaim
-      ? 'magicshow stores the next shell and takes over immediately'
-      : 'an update must stay waiting while a client is open');
+    // Magicshow now waits for the player to accept the update prompt (SKIP_WAITING), like the other apps.
+    assert.equal(v2.skips, 0, 'an update must stay waiting while a client is open');
     assert.notEqual(v1.cacheName, v2.cacheName);
     assert.equal(v2.bucket().entries.get(htmlUrl), 'v2:index.html');
     assert.equal(v2.bucket().entries.get(jsUrl).startsWith('v2:'), true);

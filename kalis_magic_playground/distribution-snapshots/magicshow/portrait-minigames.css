@@ -1,0 +1,53 @@
+/* portrait-minigames.css: portrait dealer and mini games. (CSS regroup 10-28)
+ * Earlier or later rules for the same elements may also sit in portrait-base.css (early layer) and
+ * portrait-overrides-*.css (late layer) when the cascade needs them there. */
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage .gem-game {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+}
+
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage .gem-game .routine-table {
+  width: min(100%, 420px);
+  max-width: 100%;
+  margin: 8px auto 12px;
+  flex: 0 0 auto;
+  grid-column: auto;
+  grid-row: auto;
+}
+
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage .gem-game .dealer-controls {
+  width: 100%;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #panel[data-screen="dealer"] .dealer-host {
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  row-gap: 8px;
+  column-gap: 8px;
+  font-size: 15px;
+  line-height: 22px;
+}
+
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #panel[data-screen="dealer"] .dealer-host .dealer-emoji {
+  width: 168px;
+  height: 200px;
+}
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #panel[data-screen="dealer"] .dealer-pick {
+  grid-template-columns: repeat(2,minmax(0,1fr));
+}
+
+@media (max-width:360px) {
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #panel[data-screen="dealer"] .dealer-pick {
+  grid-template-columns: 1fr;
+}
+}
+html body.portrait-layout #viewport#viewport #stage#stage#stage#stage #panel .gem-game { flex-wrap:nowrap; height:auto; max-height:none; min-height:0; align-items:stretch; width:100%; margin:8px 0; }
+html body.portrait-layout #viewport#viewport #stage#stage#stage#stage #panel .gem-game .routine-table { flex:none; align-self:center; width:100%; max-width:100%; margin:32px auto 12px; }
+html body.portrait-layout #viewport#viewport #stage#stage#stage#stage #panel .gem-game > :is(h2,p,small,button,.dealer-controls) { flex:none; width:100%; box-sizing:border-box; }
+html body.portrait-layout #viewport#viewport #stage#stage#stage#stage #panelBody:has( > .gem-game) .dealer-emoji { flex:0 0 64px; width:64px; height:96px; }
+html body.portrait-layout #viewport#viewport #stage#stage#stage#stage #panelBody:has( > .gem-game) .dealer-serona { width:100%; height:100%; object-fit:contain; }

@@ -1,0 +1,241 @@
+/* style-overrides-3.css: late override layer 3 of 3 (CSS regroup 10-28).
+ * Chronological patch rules that could not be untangled: each one sets a property that a rule of another
+ * feature also sets on the same element at the same specificity, so source order decides the winner. Either
+ * it must win over a rule that now lives in a feature file, or a later rule in this layer must win over it.
+ * The layer therefore loads after every feature file and keeps the original order. Do not move a rule from
+ * here into its feature file without re-running .runs-v5/css-regroup/regroup.cjs and the css-equivalence gate.
+ * Rules per owning feature here: stats-strip 31, map 24, skin-mockup 21, effects 19, stage 16, dialog 15, minigames 15, skilltree 8, panel 7, base 6, shop 4, tutorial 4, topbar 3, stage-meters 3, frame 2, board 2, bestiary 1. */
+/* v4 U51 2: the curtain call's 다음 sits at the right under the line (right thumb); the ending's 다음 is the rightmost of its row. */
+#stage .curtain-line{position:relative;z-index:4;display:flex;align-items:stretch;gap:6px}
+/* the old-save intro pictures: 다음 at the bottom right (right thumb), 건너뛰기 stays top right */
+#stage #introStory .intro-next{left:auto;right:12px}
+/* short phones (882 x 288): the curtain call fits the panel without clipping its line row */
+@media (max-height:340px){.phone #stage .curtain-memory{min-height:0;padding:4px 8px}.phone #stage .curtain-cast{min-height:0;padding:4px 12px}.phone #stage .curtain-actor{height:88px;width:56px}.phone #stage .curtain-actor.headliner{height:100px;width:66px}.phone #stage .curtain-memory h2,.phone #stage .curtain-closing{margin:2px}}
+#stage .ending-line-actions{justify-content:flex-end;width:100%;margin-top:8px}
+html body:not(.phone) #viewport#viewport #stage #boardCard .hud{left:96px!important;top:20px!important;width:608px!important}
+html body:not(.phone) #viewport#viewport #stage #audienceCard .venue-heading{left:760px!important;top:-58px!important;width:auto!important;height:48px!important;background:none;box-shadow:none;border:0!important;flex-direction:column;align-items:flex-start!important;justify-content:center;gap:0!important;padding:0!important}
+html body.phone:not(.tablet) #viewport#viewport #stage #audienceCard #stageStats > *{font-size:10px!important;min-width:0!important;overflow:visible!important;gap:2px!important}
+/* Only the existing narrow-stage class needs a compact band: act/confidence, output, then mental. */
+html body.phone.phone-narrow #viewport#viewport #stage #audienceCard #stageStats{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(3,16px);height:48px!important;align-content:center;row-gap:0!important}
+html body.phone.phone-narrow #viewport#viewport #stage #audienceCard #stageStats > *{height:16px!important;line-height:14px!important}
+/* Shared additions approved in arch/css-plan.md, section 3. */
+.cur-icon{display:inline-block;width:20px;height:20px;vertical-align:-4px;image-rendering:pixelated;object-fit:contain;flex:none;pointer-events:none}
+#gemShopQuick .cur-icon{width:18px;height:18px}
+#stage #panel[data-screen="dealer"] .dealer-host{display:flex;align-items:center;justify-content:flex-start;gap:16px;font-size:16px;line-height:22px;text-align:left}
+#stage #panel[data-screen="dealer"] .dealer-speech{flex:1;margin:0;padding:12px 14px;background:#25202D;color:#F2E6C8;border:2px solid #A68A58;border-radius:16px}
+#stage #panel[data-screen="dealer"] .dealer-pick{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:stretch;gap:12px;width:100%;margin:8px 0}
+#stage #panel[data-screen="dealer"] .dealer-game-card{display:flex;flex-direction:column;align-items:center;gap:6px;box-sizing:border-box;width:100%;height:100%;min-width:0;padding:12px;text-align:center;background:#25202D;border:2px solid #A68A58}
+#stage #panel[data-screen="dealer"] .dealer-game-art{position:relative;flex:none;width:84px;height:84px;display:grid;place-items:center}
+#stage #panel[data-screen="dealer"] .dealer-game-emoji{font-size:40px;line-height:1}
+#stage #panel[data-screen="dealer"] .dealer-game-card h2{box-sizing:border-box;width:100%;height:26px;margin:0;overflow:hidden;font-size:20px;line-height:26px}
+#stage #panel[data-screen="dealer"] .dealer-cost{box-sizing:border-box;width:100%;height:22px;margin:0;overflow:hidden;color:#E8BF68;font-size:16px;line-height:22px}
+#stage #panel[data-screen="dealer"] .dealer-reward{box-sizing:border-box;width:100%;height:54px;margin:0;overflow:hidden;color:#F2E6C8;font-size:13px;line-height:18px}
+#stage #panel[data-screen="dealer"] .dealer-need{box-sizing:border-box;width:100%;height:18px;margin:0;overflow:hidden;font-size:12px;line-height:18px}
+#stage #panel[data-screen="dealer"] .dealer-game-card .game-start{width:100%;min-height:48px;margin-top:auto}
+#heckleBang{position:absolute;z-index:9;display:none;width:22px;height:22px;margin:-22px 0 0 -11px;place-items:center;font:700 16px/1 Galmuri11,monospace;color:#ffe08a;background:#3a1820;border:2px solid #ffb15a;pointer-events:none}
+#audienceCard.telegraph #heckleBang{display:none}
+#audienceCard.mental-low #mentalEdge{display:block;animation:mental-edge 800ms ease-out infinite}
+#stage #mental.bar-shake{animation:bar-shake 120ms linear}
+.bar-chip{position:absolute;z-index:12;pointer-events:none;font:700 13px/16px Galmuri11,monospace;white-space:nowrap}
+.bar-chip.block{color:#083038;background:#8FD3FF;padding:0 4px;transform:translateY(-110%)}
+.bar-chip.hurt{color:#ff6d78;font-size:16px;text-shadow:1px 1px 0 #100D16,-1px 0 #100D16,0 -1px #100D16;transform:translate(2px,-50%)}
+#finaleFx .finale-dark{position:absolute;inset:0;background:#100D16;opacity:0}
+#finaleFx .finale-spot{position:absolute;left:4%;bottom:0;width:46%;height:92%;opacity:0;transform:scaleY(0);transform-origin:50% 0;background:linear-gradient(to bottom,rgba(255,214,150,0),rgba(255,186,80,.62));clip-path:polygon(42% 0,58% 0,100% 100%,0 100%)}
+#finaleFx .finale-cut{position:absolute;left:0;right:0;top:36%;height:30%;display:flex;align-items:center;gap:8px;padding-left:8px;overflow:hidden;background:linear-gradient(90deg,rgba(24,16,10,0),rgba(28,18,12,.94) 10%,rgba(48,32,18,.96) 50%,rgba(28,18,12,.94) 90%,rgba(24,16,10,0));border-top:3px solid #E8BF68;border-bottom:3px solid #E8BF68;transform:translateX(-110%)}
+#finaleFx .finale-kali{flex:none;background-position:0 0;background-size:300% 100%;background-repeat:no-repeat;image-rendering:pixelated;transform:translateX(-140%)}
+#finaleFx .finale-word{font:700 36px/1 Galmuri11,monospace;color:#F6E7C4;text-shadow:3px 3px 0 #1a1008;white-space:nowrap}
+#finaleFx .finale-flash{position:absolute;inset:0;background:#fff;opacity:0;animation:none}
+#audienceCard > .finale-num{position:absolute;z-index:11;transform:translate(-50%,-50%);font:700 36px/1 Galmuri11,monospace;color:#E8BF68;text-shadow:2px 2px 0 #100D16,-2px 0 #100D16,0 -2px #100D16;opacity:0;pointer-events:none}
+#audienceCard > .finale-num.on{animation:finale-num 700ms ease-out}
+#audienceCard > .finale-num.short{font-size:28px}
+#finaleFx.finale-full .finale-dark{animation:finale-dark 1200ms linear}
+#finaleFx.finale-full .finale-spot{animation:finale-spot 1200ms linear}
+#finaleFx.finale-full .finale-cut{visibility:visible;animation:finale-cut 1200ms linear forwards}
+#finaleFx.finale-full .finale-kali{animation:finale-kali 1200ms linear}
+#finaleFx.finale-short .finale-dark,#finaleFx.finale-short .finale-spot,#finaleFx.finale-short .finale-cut,#finaleFx.finale-short .finale-flash{animation:none;opacity:0;visibility:hidden}
+#finaleFx.finale-reduced .finale-dark{animation:finale-dark-r 400ms linear}
+@media(prefers-reduced-motion:reduce){
+  #audienceCard.mental-low #mentalEdge{animation:none;opacity:.7}
+  #mental.meter-hit .meter-ghost,#shield.meter-hit .meter-ghost,#stage #mental.bar-shake,#stage #magicianMini.flinch{animation:none}
+  #audienceCard > .finale-num.on{animation:none;opacity:1}
+  #stage #magicianMini.finale-glint{animation:none}
+}
+#stage .equip-effect{display:block;margin-top:4px;font-size:11px;line-height:1.5;overflow-wrap:anywhere}
+#stage .audience-benefit{font-size:11px;line-height:1.5;overflow-wrap:anywhere}
+#viewport #stage #board .respawn-stage>.asset-sprite{
+  object-fit:contain;image-rendering:pixelated;background:transparent;
+}
+#practicePrompt .practice-box{box-sizing:border-box;width:min(320px,88%);padding:14px;background:#25202D;border:2px solid #A68A58;color:#F2E6C8}
+#practiceVeil span{padding:4px 10px;background:#25202D;color:#F2E6C8;border:1px solid #A68A58;font-size:14px;line-height:20px;pointer-events:none}
+.progress-flow{padding:2px 0 16px}
+.flow-lead{margin:0 0 8px;color:var(--ink-2)}
+.flow-spine,.flow-branch-spine{list-style:none;margin:0;padding:0}
+.flow-stop{position:relative;min-height:48px;padding:0 0 2px 26px}
+.flow-mark{position:absolute;left:2px;top:16px;width:14px;height:14px;box-sizing:border-box;border:2px solid #655567;border-radius:50%;background:#17141F;z-index:1}
+.flow-stop.is-cleared .flow-mark{background:var(--gold);border-color:var(--gold)}
+.flow-stop.is-current .flow-mark{background:var(--brass);border-color:#F2E6C8;animation:flow-pulse 1.4s ease-out infinite}
+.flow-stop.is-future .flow-mark,.flow-stop.is-hidden .flow-mark{background:transparent;opacity:.7}
+.flow-node{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:4px;width:100%;min-height:44px;margin:2px 0 4px;padding:6px 8px;box-sizing:border-box;border:1px solid #39313F;background:#25202D;color:var(--ink);text-align:left}
+.flow-stop.is-cleared .flow-node{border-color:var(--gold)}
+.flow-stop.is-current .flow-node{border-color:var(--brass)}
+#stage button.flow-node,#stage button.flow-node:disabled{
+  border-image:none;border-style:solid;border-width:1px;border-radius:0;box-shadow:none;
+  font:700 13px/16px Galmuri11,sans-serif;white-space:normal;min-height:44px;
+}
+#stage button.flow-node:disabled{border-color:var(--gold);opacity:.55}
+.flow-name{font:700 13px/16px Galmuri11,sans-serif;white-space:normal}
+.flow-dots{display:flex;flex-wrap:wrap;gap:4px;max-width:100%}
+.flow-dot{display:block;width:8px;height:8px;box-sizing:border-box;border:1.5px solid #655567;border-radius:50%;background:transparent}
+.flow-dot.is-filled{background:var(--gold);border-color:var(--gold)}
+.flow-dot.is-ring{background:transparent;border:2px solid var(--brass);box-shadow:0 0 0 1px var(--brass)}
+.flow-fork{position:relative;margin:0}
+.flow-fork-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;position:relative}
+.flow-branch{position:relative;min-width:0}
+.flow-choice{margin:8px 0 4px 26px;color:var(--ink-2);font-size:11px;line-height:14px}
+.flow-branch-if .flow-choice{color:#d7c4ff}
+@media(prefers-reduced-motion:reduce){.flow-stop.is-current .flow-mark{animation:none;box-shadow:0 0 0 3px var(--brass)}}
+/* Batch A: shared shop accessibility and screen care. */
+#stage #panel .gem-shop-item { min-width:0; max-width:100%; box-sizing:border-box; }
+#stage #panel .gem-shop-item button { white-space:normal; overflow-wrap:anywhere; max-width:100%; flex:1 1 120px; }
+#practiceVeil span { text-align:center; color:#918b80; background:transparent; border:0; will-change:transform; }
+#stage .magic-invitation { display:inline-block; padding:12px; margin:6px; color:#ffe3a0; border:1px solid currentColor; }
+#caseArrangeButton[aria-pressed="true"], #caseArrangeMenuButton[aria-pressed="true"] { box-shadow:inset 0 0 0 3px #ffe08a; }
+
+/* Batch D shared encounters and replay, identical in both orientations. */
+.batch-d-scene { display: flex; flex-direction: column; align-items: center; gap: 16px; width: 100%; padding: 18px; box-sizing: border-box; text-align: center; }
+.batch-d-scene p { max-width: 42em; line-height: 1.65; margin: 0; overflow-wrap: anywhere; }
+.batch-d-note { width: 100%; padding: 12px; box-sizing: border-box; color: #ffe9a8; }
+.batch-d-cards { position: relative; width: min(100%, 390px); height: 160px; overflow: hidden; }
+/* Tap range detail uses the same per-level table as combat. */
+.area-range-preview{display:grid;gap:6px;margin:8px 0}
+.area-range-grid{display:grid;grid-template-columns:repeat(5,14px);gap:3px;width:max-content}
+.area-range-grid .range-current{background:#f7cf67;border-color:#f7cf67}
+.area-range-grid .range-added{background:#59d6c6;border-color:#c6fff5}
+.area-range-preview small{display:block;font-size:11px;line-height:1.4}
+.shared-kit-face { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0; color:#F2E6C8; pointer-events:none; }
+#gemShopButton .shared-kit-face { color:#24180c; }
+.game-build { font:11px/1.4 sans-serif; color:#C9C0AD; }
+#titleScreen .title-build { position:absolute; right:16px; bottom:max(16px,env(safe-area-inset-bottom)); padding:4px 8px; background:#100D16; color:#F2E6C8; pointer-events:none; }
+#stage #panel .shop-cosmetic-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(96px,1fr)); gap:8px; margin:8px 0 16px; }
+#stage #panel .shop-cosmetic-tile .cosmetic-icon { position:relative; flex:none; display:grid; place-items:center; width:48px; height:56px; font-size:24px; }
+#stage #panel .shop-cosmetic-tile .cosmetic-icon img { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; }
+#stage #panel .shop-cosmetic-name { width:100%; text-align:center; overflow-wrap:anywhere; }
+#stage #panel .gear-effect, #stage #panel .gear-difference { overflow-wrap:anywhere; white-space:normal; }
+#stage #panel .wardrobe-equipped { color:#E8BF68; }
+/* Lane 1e shared painted skin: geometry is kept by the existing landscape rules. */
+#stage button, #stage #phoneMore, #stage #panel, #stage #storyDialog, #stage .practice-box {
+  border-color:transparent; border-image:url('assets/kit/button-normal.webp') 20 fill / 6px / 0 stretch;
+  background:transparent; box-shadow:none; text-shadow:none;
+}
+#stage #panel, #stage #storyDialog, #stage #phoneMore { border-image:url('assets/kit/dialogue-frame.webp') 16 fill / 8px / 0 stretch; }
+#stage button:active:enabled { border-image-source:url('assets/kit/button-pressed.webp'); }
+#stage #gemShopQuick:active:enabled, #stage #gemShopButton:active:enabled { border-image-source:url('assets/kit/shop-pressed.webp'); }
+#stage .doubt { border-image:url('assets/kit/doubt-frame.webp') 8 / 4px / 0 stretch; background-image:url('assets/kit/doubt-empty.webp'); box-shadow:none; }
+#stage .doubt-fill { background:url('assets/kit/doubt-fill.webp') repeat; box-shadow:none; }
+#stage .mockup-spot { top:0; left:0; z-index:1; }
+#stage .mockup-curtain { top:0; z-index:2; }
+#stage .mockup-curtain.left { left:0; }
+#stage .mockup-curtain.right { right:0; }
+#stage .mockup-crowd { bottom:0; left:0; width:100%; z-index:6; }
+html body #viewport#viewport #stage#stage { background-color:#100d16; }
+#stage .shared-kit-face { border-image:none; background:none; box-shadow:none; }
+#viewport #stage #board .cell .chest, #viewport #stage #board .cell .chest.asset-ready { left:2%; top:2%; width:96%; height:96%; }
+#viewport #stage #board .cell .chest > .asset-sprite { width:100%; height:100%; object-fit:contain; }
+#stage .doubt-plate, #stage .heckle-plate, #stage #audienceLine, #stage #patternLabel { border-image:url('assets/kit/doubt-label.webp') 8 fill / 4px / 0 stretch; background:none; box-shadow:none; }
+#stage #mockupDressing .mockup-spot { left:4%; width:60%; height:100%; }
+#stage #mockupDressing .mockup-curtain { width:8%; height:100%; }
+#stage #mockupDressing .mockup-desk { right:2%; bottom:10%; width:49%; height:20%; }
+#stage #mockupDressing .mockup-table-top { left:8%; bottom:16%; width:35%; height:3%; z-index:5; }
+#stage #mockupDressing .mockup-skirt { left:8%; bottom:6%; width:35%; height:11%; z-index:5; }
+#stage #mockupDressing .mockup-crowd { height:10%; }
+#stage :is(.constellation-detail,.gem-shop-item,.cosmetic-card,.bestiary-entry,.map-venue,.dealer-speech,.dealer-game-card,#offlineCard,#introStory,#sceneCard,#tutorialCoach,#banner,.toast) {
+  border-color:transparent; border-image:url('assets/kit/dialogue-frame.webp') 16 fill / 6px / 0 stretch; background:transparent; box-shadow:none;
+}
+html body #viewport#viewport #stage#stage#stage#stage :where(#gemShopQuick,#gemShopButton,.u26-primary) { border-image-source:url('assets/kit/shop-normal.webp'); color:#302014; }
+html body #viewport#viewport #stage#stage#stage#stage :is(#stageStats#stageStats,#audienceCard#audienceCard) { border-image-slice:16 fill; border-image-width:8px; }
+html body #viewport#viewport #stage#stage#stage#stage .kit-menu-title { grid-column:1 / -1; flex-basis:100%; text-align:center; font-size:18px; }
+html body #viewport#viewport #stage#stage#stage#stage :is(.save-slots-row,.practice-gate,.streak-cycle span,.trophy,.truefan-slot,.equip-detail,.entry-portrait) { border:0; border-image:url('assets/kit/row-normal.webp') 24 fill / 12px / 0 stretch; background:transparent; box-shadow:none; padding:12px; }
+html body #viewport#viewport #stage#stage#stage#stage :is(button,.kit-row,.shop-cosmetic-tile,.constellation-node)::before { box-shadow:none; }
+/* Landscape retains its two-card layout and gets the same painted stat strip. */
+html body #viewport#viewport #stage#stage#stage#stage :is(#boardCard#boardCard,.constellation-map.constellation-map) { border:0; outline:0; border-radius:0; background:transparent; box-shadow:none; }
+html body:not(.phone) #viewport#viewport #stage#stage#stage#stage .venue-heading { border:0; border-image:url('assets/kit/header-panel.webp') 24 fill / 12px / 0 stretch; padding:8px 14px; background:none; box-shadow:none; }
+html body #viewport#viewport #stage#stage#stage#stage .stage-reward h2 { border:0; border-image:url('assets/kit/modal-title.webp') 24 fill / 12px / 0 stretch; padding:12px 18px; }
+html body #viewport#viewport #stage#stage#stage#stage .routine-card .bent-corner { background:url('assets/kit/tooltip-tail.webp') center / 100% 100% no-repeat; box-shadow:none; }
+html body #viewport#viewport #stage#stage#stage#stage .routine-card.gold-shine { border-image:url('assets/kit/tile-selected.webp') 24 / 8px / 0 stretch; }
+html body #viewport#viewport #stage#stage#stage#stage #banner#banner { position:absolute; top:92px !important; bottom:auto !important; left:10px !important; right:10px !important; width:auto !important; max-width:none; height:auto; min-height:44px; box-sizing:border-box; padding:12px 18px; white-space:normal; font:700 14px/20px system-ui,sans-serif; color:#f2e6c8; text-align:center; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage .shared-kit-face { flex-direction:row; gap:4px; font:12px/16px system-ui,sans-serif; padding:4px; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage .xp-row { top:auto; bottom:104px; left:20px; width:240px; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage .caption { bottom:20px; min-height:40px; height:auto; line-height:20px; font-size:14px; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage .caption { top:auto; bottom:4px; }
+html body #viewport#viewport #stage#stage#stage#stage .constellation-detail .tree-detail-dismiss { position:static; display:block; width:auto; grid-column:1 / -1; justify-self:end; margin:0 0 8px; }
+html body #viewport#viewport #stage#stage#stage#stage .area-range-grid .range-added { background-image:url('assets/kit/tile-selected.webp'); filter:hue-rotate(130deg); }
+html body #viewport#viewport #stage#stage#stage#stage .shop-cosmetic-tile :is(.gear-effect,.gear-difference) { flex:none; min-height:18px; padding:0; background:none; font:12px/18px system-ui,sans-serif; }
+/* A2 P3: drawn section plates, a balanced tab row and consistent settings controls. */
+html body #viewport#viewport #stage#stage#stage#stage :is(.shop-abilities,.shop-routines,.shop-pads,.shop-customization,.wardrobe-pads,.wardrobe-outfits,.achievement-group) > h2 { width:fit-content; min-width:130px; max-width:100%; min-height:36px; padding:6px 14px; margin:12px 0; border-image:url('assets/kit/name-plate.webp') 14 fill / 7px / 0 stretch; background:none; font:700 18px/24px system-ui,sans-serif; }
+html body #viewport#viewport #stage#stage#stage#stage .panel-tabs button { flex:1 0 auto; padding:8px 12px; }
+/* 12-115: on phones the seams between the top bar, stage, stats, buttons and board are the dark kit colour of the panels (not the venue colour), so the
+   framed zones read as one picture as in 시안 A. Not near black, so the safe-area and edge band checks stay clear. */
+html body.phone #viewport#viewport #stage#stage#stage#stage { background-color:#2e2838; }
+#stage .twist-art { position:absolute; z-index:1; left:6px; top:var(--ST,46px); width:var(--audience-width,700px); bottom:6px; overflow:hidden; background:#17141c; border:4px solid transparent; border-image:url('assets/kit/panel.webp') 20 / 4px / 0 stretch; box-sizing:border-box; }
+#stage .twist-line { position:absolute; z-index:2; box-sizing:border-box; left:calc(var(--stage-w,1600px) - 6px - var(--board-size,608px) - 62px); right:6px; bottom:6px; min-height:100px;
+  display:grid; grid-template-columns:52px minmax(0,1fr) auto; align-items:center; gap:8px; padding:6px 10px; color:#F2E6C8;
+  border:8px solid transparent; border-image:url('assets/kit/dialogue-frame.webp') 16 fill / 8px / 0 stretch; background:transparent; image-rendering:pixelated; }
+#stage .twist-portrait { width:52px; height:52px; background:#100d16 no-repeat 50% 16% / 210% auto; border:2px solid #A68A58; box-sizing:border-box; font-size:28px; line-height:48px; text-align:center; image-rendering:pixelated; }
+#stage .twist-portrait.is-sheet { background-size:420% auto; background-position:3% 12%; }
+#stage .twist-line > button.twist-next { min-width:64px; min-height:44px; padding:8px 10px; white-space:nowrap; font:700 13px/20px system-ui,sans-serif; color:#24180c; border:0; border-image:url('assets/kit/dialogue-next-normal.webp') 14 fill / 6px / 0 stretch; background:#E8BF68; }
+html body.tablet:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage#stage #activeSkills > .gem-shop-quick .cur-icon { width:36px; height:36px; }
+/* s4e1 A: a later #audienceCard rule sets filter:none on every sprite and cancelled the headliner rim. Headliner only. */
+html body #viewport#viewport #stage#stage #audienceCard #audience.headliner > .asset-sprite { filter:drop-shadow(0 0 12px #ffe895aa); }
+#finaleFx.finale-intro .finale-dark { animation:headliner-dark 900ms linear both; }
+#finaleFx.finale-intro .finale-spot { animation:headliner-spot 900ms linear both; }
+#finaleFx.finale-intro .headliner-plate {
+  display:block; position:absolute; z-index:3; left:8%; right:8%; top:42%; padding:8px 12px; text-align:center;
+  font:700 28px/1.3 Galmuri11,monospace; color:#F6E7C4; pointer-events:none;
+  background:linear-gradient(90deg,rgba(24,16,10,0),rgba(28,18,12,.94) 12%,rgba(48,32,18,.96) 50%,rgba(28,18,12,.94) 88%,rgba(24,16,10,0));
+  border-top:3px solid #E8BF68; border-bottom:3px solid #E8BF68; animation:headliner-plate 900ms linear both;
+}
+@media (prefers-reduced-motion:reduce) {
+  #finaleFx.finale-intro :is(.finale-dark,.finale-spot,.headliner-plate),
+  #stage .doubt.meter-hit,
+  #stage .doubt.meter-hit > .doubt-ghost { animation:none !important; }
+  #finaleFx.finale-intro .finale-dark { opacity:.3; }
+  #finaleFx.finale-intro .finale-spot { opacity:0; visibility:hidden; }
+  #finaleFx.finale-intro .headliner-plate { opacity:1; transform:none; }
+}
+#stageStats .ms-strip * { box-sizing:border-box; }
+#stageStats .ms-strip img { display:block; width:12px; height:12px; image-rendering:pixelated; flex:none; }
+/* one column grid for the three rows (subgrid), so the bars line up and the value column fits the widest value ("8,100", "18/20") */
+#stageStats .ms-gauges { min-width:0; display:grid; grid-template-columns:12px auto minmax(0,1fr) minmax(32px,auto); grid-template-rows:repeat(3,minmax(0,1fr)); row-gap:1px; column-gap:4px; align-content:stretch; }
+#stageStats .ms-g { position:relative; min-width:0; grid-column:1 / -1; display:grid; grid-template-columns:subgrid; align-items:center; }
+#stageStats .ms-label { color:#e8bf68; font:11px/13px system-ui,sans-serif; }
+#stageStats .ms-num { color:#f2e6c8; font:700 11px/13px system-ui,sans-serif; text-align:right; font-variant-numeric:tabular-nums; }
+#stageStats .ms-shield .ms-num { color:#8FD3FF; }
+#stageStats .ms-bar { position:relative; display:block; height:7px; min-width:0; border:0; border-image:url('assets/kit/gauge-frame.webp') 4 fill / 2px / 0 stretch; overflow:hidden; transition:box-shadow 800ms ease-in; }
+#stageStats .ms-fill, #stageStats .ms-ghost { position:absolute; left:2px; top:2px; bottom:2px; width:calc((100% - 4px) * var(--p,0)); background:url('assets/kit/gauge-mental.webp') repeat-x center / 20px 4px; }
+#stageStats .ms-shield .ms-fill { background-image:url('assets/kit/gauge-confidence.webp'); }
+#stageStats .ms-finale .ms-fill { background-image:url('assets/kit/gauge-direction.webp'); }
+/* the chunk a heckle just took trails off (s4e1, trailMeter: --ghost is the value before the hit) */
+#stageStats .ms-ghost { width:calc((100% - 4px) * var(--ghost,0)); background:#f6d2cc; opacity:0; }
+#stageStats .ms-shield .ms-ghost { background:#fff; }
+#stageStats .ms-finale.finale-near .ms-label { color:#ffe7a8; text-shadow:0 0 6px #E8BF68; }
+/* the right slot: a pixel divider, then 액트 (line 1) and 연출 (line 2) */
+#stageStats .ms-side { min-width:0; padding-left:9px; background:url('assets/kit/divider.webp') left center / 3px 100% no-repeat; display:grid; grid-template-rows:auto auto; row-gap:1px; align-content:center; }
+#stageStats .ms-act, #stageStats .ms-rate { display:flex; align-items:center; gap:3px; min-width:0; }
+#stageStats .ms-act-num { margin-left:auto; font:700 18px/22px Galmuri11,monospace; color:#E8BF68; text-shadow:1px 1px 0 #100D16,-1px 0 #100D16,0 -1px #100D16; display:inline-block; transform-origin:100% 80%; font-variant-numeric:tabular-nums; }
+#stageStats .ms-act-num.ms-long { font-size:14px; }
+#stageStats .ms-rate .ms-num { margin-left:auto; font:700 12px/14px system-ui,sans-serif; }
+#stageStats .ms-rate .ms-label { color:#c9b892; }
+/* 액트 count-up: the number rolls up and pops once per rise (ui.js actCountUp) */
+#stageStats .ms-act-num.ms-pop { animation:ms-act-pop 240ms cubic-bezier(.2,.8,.2,1); }
+@media (prefers-reduced-motion:reduce) {
+  #stageStats .ms-act-num.ms-pop, #stageStats #statMental.meter-hit .ms-ghost, #stageStats #statShield.meter-hit .ms-ghost, #stage #stageStats #statMental.bar-shake { animation:none; }
+  #stageStats .ms-bar { transition:none; }
+}
+/* s5c: a first-use hint toast never sits over a story dialogue or an open panel (it is only started outside them; this covers a scene that opens while it shows). */
+#stage#stage.f-story #toasts .hint-toast, #stage#stage.f-panel #toasts .hint-toast { visibility:hidden; }
+/* Task 4: movement acts on props; shadows stay on the mat. Drawn folds replace the full flat card. */
+#stage .routine-card.motion-flipping { filter:drop-shadow(0 5px 2px #100d1655); }
+#stage .routine-card .bent-corner.drawn-fold { inset:0; width:100%; height:100%; aspect-ratio:auto; background-color:transparent; background-size:100% 100%; background-repeat:no-repeat; animation:none; }
+#stage .game-cup .prop-shadow { position:absolute; z-index:0; pointer-events:none; left:18%; right:18%; bottom:5%; height:9%; border-radius:50%; background:#100d16; opacity:.3; }
+html body #viewport#viewport #stage#stage#stage#stage #panel .dealer-speech > .dealer-turn:last-child { margin-bottom:0; }
+html body.phone:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #tutorialCoach:not([data-compact="true"]) > button { width:60px; min-width:60px; padding-left:4px; padding-right:4px; }

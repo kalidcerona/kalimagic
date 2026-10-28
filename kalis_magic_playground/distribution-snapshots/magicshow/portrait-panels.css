@@ -1,0 +1,207 @@
+/* portrait-panels.css: portrait panels: modal, book, bestiary, shop, menu. (CSS regroup 10-28)
+ * Earlier or later rules for the same elements may also sit in portrait-base.css (early layer) and
+ * portrait-overrides-*.css (late layer) when the cascade needs them there. */
+/* Portrait presentation. Loaded after style.css; body class owns activation.
+   Source: arch/css-plan.md P blocks, merged for the final portrait DOM.
+   Priority flags below resolve only the documented shared backup conflicts. */
+html body.portrait-layout .routine-collection {
+  grid-template-columns: repeat(3,minmax(0,1fr));
+}
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #panel {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  z-index: 50;
+  box-sizing: border-box;
+  border: 1px solid #A68A58;
+  border-radius: 0;
+  border-style: solid;
+  border-width: 12px;
+  border-image: var(--kit-panel) 20 fill / 12px / 0 stretch;
+  background: #17141c;
+  background-image: none;
+  image-rendering: pixelated;
+  box-shadow: none;
+  color: #F2E6C8;
+}
+
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #panel[data-screen="headliner"],
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #panel.climax-dialogue,
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #panel[data-screen="book"] {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  z-index: 50;
+  box-sizing: border-box;
+}
+
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #panel header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #25202D;
+}
+
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #closePanel {
+  min-width: 72px;
+  min-height: 44px;
+}
+
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #panelBody {
+  overflow: auto;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+}
+
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #panelBody:has( > .gem-game) {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  overflow: auto;
+  row-gap: 8px;
+  column-gap: 8px;
+}
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #offlineCard,
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #leaveConfirm .leave-box {
+  left: 8px;
+  right: 8px;
+  width: auto;
+  top: 18%;
+  max-height: 70%;
+  overflow: auto;
+  border: 1px solid #A68A58;
+  border-radius: 0;
+  border-style: solid;
+  border-width: 12px;
+  border-image: var(--kit-panel) 20 fill / 12px / 0 stretch;
+  background: #17141c;
+  background-image: none;
+  image-rendering: pixelated;
+  box-shadow: none;
+  color: #F2E6C8;
+}
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #actionDock > #gemShopQuick span,
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #actionDock > #gemShopQuick .kit-label,
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #actionDock > #gemShopQuick small {
+  color: #24180c;
+  font-size: 10px;
+  line-height: 12px;
+}
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #panel .achievement-group h2 {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #07070c;
+  padding: 4px 0;
+}
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage .kit-label {
+  display: block;
+  flex: none;
+  box-sizing: border-box;
+  width: 100%;
+  height: 11px;
+  max-width: 100%;
+  margin: 1px 0 0;
+  padding: 0 1px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: center;
+  font-style: normal;
+  font-variant: normal;
+  font-weight: 700;
+  font-stretch: normal;
+  font-size: 8px;
+  line-height: 11px;
+  font-family: Galmuri9,monospace;
+  color: inherit;
+  letter-spacing: 0;
+}
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #activeSkills #gemShopQuick .kit-label,
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #activeSkills #gemShopQuick small,
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #activeSkills #gemShopQuick span {
+  color: #24180c;
+}
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage button.u26-primary,
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage button.game-start,
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #practiceStart {
+  border-style: solid;
+  border-width: 8px;
+  border-image: var(--kit-gold) 16 fill / 8px / 0 stretch;
+  background: transparent;
+  color: #24180c;
+  image-rendering: pixelated;
+}
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #panel h1,
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #panelTitle,
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #phoneMore h3 {
+  font-size: 18px;
+  line-height: 22px;
+  color: #F2E6C8;
+  text-shadow: none;
+}
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #panel.true-ending {
+  border-color: #A68A58 !important;
+  background-color: #17141c !important;
+  background-image: none !important;
+}
+html body.portrait-layout.phone:not(.tablet).portrait-compact #viewport#viewport #stage #skillRow .kit-ico,
+html body.portrait-layout.phone:not(.tablet).portrait-compact #viewport#viewport #stage #skillRow .skill-art,
+html body.portrait-layout.phone:not(.tablet).portrait-compact #viewport#viewport #stage #actionDock .kit-ico { flex: 0 0 16px; width: 16px; height: 16px; }
+html body.portrait-layout.phone:not(.tablet).portrait-compact #viewport#viewport #stage #skillRow > .active-skill > span:not(.skill-art),
+html body.portrait-layout.phone:not(.tablet).portrait-compact #viewport#viewport #stage #actionDock .kit-label { font-size: 10px; line-height: 12px; height: 12px; }
+html body.portrait-layout.phone:not(.tablet).portrait-compact #viewport#viewport #stage #actionDock > #gemShopQuick .kit-label {
+  font-size: 10px;
+  line-height: 12px;
+}
+/* The short visible name keeps the existing one-line dock geometry. */
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #actionDock > #caseArrangeButton .kit-label {
+  font-size:0;
+  text-overflow:clip;
+}
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #actionDock > #caseArrangeButton .kit-label::after {
+  content:'정리';
+  font-size:11px;
+}
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #actionDock > #gemShopQuick .kit-ico { flex:0 0 28px; width:28px; height:28px; }
+html body.portrait-layout.phone:not(.tablet).portrait-compact #viewport#viewport #stage #actionDock > #gemShopQuick .kit-ico { flex:0 0 16px; width:16px; height:16px; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #actionDock > #gemShopQuick .kit-label { font-size:13px; line-height:14px; height:14px; }
+html body.portrait-layout.phone:not(.tablet).portrait-compact #viewport#viewport #stage #actionDock > #gemShopQuick .kit-label { font-size:10px; line-height:12px; height:12px; }
+html body.portrait-layout #viewport#viewport #stage #panel .shop-pads .shop-cosmetic-grid { grid-template-columns:repeat(auto-fill,minmax(96px,1fr)); }
+/* Lane 1g: readable detail cards inside the shared v2 modal. */
+html body.portrait-layout #viewport#viewport #stage#stage#stage#stage #panel[data-screen="stats"] #panelBody { grid-template-columns:repeat(2,minmax(0,1fr)); grid-auto-rows:auto !important; align-content:start; }
+html body.portrait-layout #viewport#viewport #stage#stage#stage#stage #panel[data-screen="stats"] .easy-stat { min-height:128px; padding:14px; }
+html body.portrait-layout #viewport#viewport #stage#stage#stage#stage #panel[data-screen="stats"] .easy-stat p { display:block; overflow:visible; font:12px/18px system-ui,sans-serif; }
+html body.portrait-layout #viewport#viewport #stage#stage#stage#stage #phoneMore > button.kit-btn .kit-ico { position:static; flex:0 0 24px; margin:0; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #activeSkills #caseArrangeButton .kit-ico { display:none; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #activeSkills #caseArrangeButton .kit-label { font-size:11px; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #activeSkills #caseArrangeButton .kit-label::after { content:none; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #panel .shop-cosmetic-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #activeSkills #actionDock > :is(#bookButton,#wardrobeButton,#practiceButton) .kit-ico { position:static; inset:auto; transform:none; translate:none; margin:0; flex:0 0 24px; width:24px; height:24px; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #activeSkills #actionDock .kit-label { position:static; inset:auto; transform:none; margin:0; width:auto; text-align:center; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="book"] > header { display:grid; grid-template-columns:minmax(0,1fr) 54px 44px; grid-template-rows:44px 36px; height:auto; min-height:86px; gap:6px; padding:0 0 8px; overflow:visible; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="book"] #panelTitle { grid-column:1; grid-row:1; padding:8px 12px; font-size:18px; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="book"] .tree-wallet { grid-column:1 / -1; grid-row:2; width:100%; height:36px; box-sizing:border-box; padding:4px 10px; justify-content:center; gap:5px; overflow:visible; font:12px/20px Galmuri11,sans-serif; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="book"] .tree-more { grid-column:2; grid-row:1; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="book"] #closePanel { grid-column:3; grid-row:1; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="book"] .tree-more-toggle { font:12px/20px system-ui,sans-serif; width:54px; min-height:44px; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="wardrobe"] .wardrobe-sections .shop-cosmetic-grid { grid-template-columns:1fr; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="wardrobe"] .wardrobe-sections h2 { font-size:18px; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="gemShop"] > header { flex-wrap:wrap; height:auto; gap:6px; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="gemShop"] .shop-balance { order:3; flex-basis:100%; text-align:center; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #phoneMore :is(#musicButton,#soundButton,#hapticsButton,#textSpeedButton) { grid-column:auto; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage #panel[data-cutscene="1"] > header { top:calc(var(--p-top) + 8px); left:auto; right:10px; transform:none; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #actionDock > #gemShopQuick .kit-ico { flex:0 0 32px; width:32px; height:32px; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #actionDock > #gemShopQuick .kit-label { font:700 11px/14px system-ui,sans-serif; height:14px; letter-spacing:-.2px; }
+html body.portrait-layout.phone.portrait-compact:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #actionDock > #gemShopQuick .kit-ico { flex-basis:28px; width:28px; height:28px; }
+html body.portrait-layout.phone.portrait-compact:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #actionDock > #gemShopQuick .kit-label { font-size:10px; letter-spacing:-.3px; }

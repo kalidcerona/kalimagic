@@ -1,0 +1,86 @@
+/* style-skin-mockup.css: Owner 10-18 shared mockup A painted skin (buttons, shop tiles, stage dressing), kept as one block for test-u71. (CSS regroup 10-28)
+ * Earlier or later rules for the same elements may also sit in style-base.css (early layer) and
+ * style-overrides-*.css (late layer) when the cascade needs them there. */
+/* Owner 10-18: shared mockup A skin. Geometry stays in the existing layout rules. */
+html body #viewport#viewport #stage button:where(.active-skill,.kit-btn,.shared-kit,.menu button,#phoneTop > button,#phoneMore button,#panel button:not(.game-cup):not(.routine-card):not(.dealer-card):not(.constellation-node):not(.curtain-bubble):not(.flow-node),#storyDialog button,#introStory button,#tutorialCoach button,#practicePrompt button,#offlineCard button,#leaveConfirm button) {
+  border-image-source: url('assets/kit/btn-dark.webp');
+  border-image-slice: 16 fill;
+  background-color: #171827;
+  background-image: none;
+  border-radius: 0;
+  min-width: 44px;
+  min-height: 44px;
+  color: #F2E6C8;
+  box-shadow: none;
+  text-shadow: none;
+  image-rendering: pixelated;
+}
+html body #viewport#viewport #stage button:where(.active-skill,.kit-btn,.shared-kit,.menu button,#phoneTop > button,#phoneMore button,#panel button:not(.game-cup):not(.routine-card):not(.dealer-card):not(.constellation-node):not(.curtain-bubble):not(.flow-node),#storyDialog button,#introStory button,#tutorialCoach button,#practicePrompt button,#offlineCard button,#leaveConfirm button):active:enabled {
+  border-image-source: url('assets/kit/btn-dark-pressed.webp');
+}
+html body #viewport#viewport #stage :is(#gemShopQuick,#gemShopButton) {
+  border-image-source: url('assets/kit/btn-gold.webp');
+  background-color: #E8BF68;
+  color: #24180c;
+}
+html body #viewport#viewport #stage :is(#gemShopQuick,#gemShopButton):active:enabled {
+  border-image-source: url('assets/kit/btn-gold-pressed.webp');
+}
+html body #viewport#viewport #stage button:where(.active-skill,.kit-btn,.shared-kit,.menu button,#phoneTop > button,#phoneMore button,#panel button:not(.game-cup):not(.routine-card):not(.dealer-card):not(.constellation-node):not(.curtain-bubble):not(.flow-node),#storyDialog button,#introStory button,#tutorialCoach button,#practicePrompt button,#offlineCard button,#leaveConfirm button):disabled {
+  opacity: 1;
+  color: #C9C0AD;
+  filter: saturate(.5);
+}
+html body #viewport#viewport #stage .active-skill small { color: #8FD3FF; }
+html body #viewport#viewport #stage .active-skill:disabled small { color: #C9C0AD; }
+html body #viewport#viewport #stage button.shared-kit { position: relative; color: transparent; }
+html body #viewport#viewport #stage button.shared-kit > :not(.shared-kit-face) { visibility: hidden; }
+.shared-kit-face img { display:block; width:16px; height:16px; object-fit:contain; }
+.shared-kit-face > span { font-size:10px; line-height:12px; white-space:nowrap; }
+#phoneMore .menu-build { display:block; flex:1 0 100%; grid-column:1 / -1; order:100; text-align:right; }
+/* Shop cosmetics use one compact tile as the complete purchase/equip hit target. */
+#stage #panel .gem-shop-item h3 { flex-basis:100%; margin:0; font-size:inherit; }
+html body #viewport#viewport #stage #panel .shop-cosmetic-tile { display:flex; flex-direction:column; align-items:center; justify-content:flex-start; gap:3px; width:100%; min-width:44px; min-height:44px; padding:6px; font-size:12px; line-height:16px; white-space:normal; }
+#stage #panel .shop-cosmetic-tile small { font-size:10px; line-height:13px; color:#E8BF68; }
+#stage #panel .shop-cosmetic-tile .shop-cosmetic-lock { color:#C9C0AD; }
+html body #viewport#viewport #stage #panel .shop-cosmetic-tile[aria-pressed="true"] { border-image-source:url('assets/kit/btn-gold.webp'); color:#24180c; background-color:#E8BF68; }
+#stage #panel .shop-cosmetic-tile[aria-pressed="true"] small { color:#24180c; }
+
+/* Stable audience envelopes share one scale and foot line across expressions and bubble visibility. */
+html body #viewport#viewport #stage#stage #audienceCard #audience {
+  width:var(--aud-fit-w,1px) !important;
+  height:var(--aud-fit-h,1px) !important;
+  top:auto !important;
+  bottom:var(--aud-foot,52px) !important;
+  overflow:visible;
+  transform-origin:50% 100%;
+}
+html body #viewport#viewport #stage #audienceCard #audience > .asset-sprite {
+  position:absolute; left:0; top:0; bottom:auto; right:auto;
+  width:100% !important; height:100% !important;
+  max-width:100% !important; max-height:100% !important;
+  object-fit:contain; object-position:center bottom;
+  transform:none !important;
+}
+html body.phone #viewport#viewport #stage #audienceCard #audienceLine {
+  max-height:72px; overflow-y:auto; box-sizing:border-box;
+}
+
+/* Equipped pad covers the board floor while the original felt remains the loading fallback. */
+#stage #board { background-image:var(--equipped-pad,url('assets/kit/board-felt.webp')); background-size:100% 100%; background-repeat:no-repeat; }
+#stage #storyDialog button { border-image:url('assets/kit/dialogue-next-normal.webp') 14 fill / 6px / 0 stretch; }
+#stage #gemShopQuick, #stage #gemShopButton { border-image:url('assets/kit/shop-normal.webp') 20 fill / 7px / 0 stretch; }
+#stage #board { border-image:url('assets/kit/board-frame.webp') 44 / 12px / 0 stretch; box-shadow:none; }
+#stage #mockupDressing img { position:absolute; object-fit:fill; image-rendering:pixelated; pointer-events:none; }
+#stage .mockup-desk { z-index:5; }
+/* Shared out57 materials override the earlier phone/desktop paint without changing boxes. */
+html body #viewport#viewport #stage#stage,
+html body #viewport#viewport #stage#stage #phoneTop,
+html body #viewport#viewport #stage#stage #audienceCard,
+html body #viewport#viewport #stage#stage #boardCard,
+html body #viewport#viewport #stage#stage #stageStats,
+html body #viewport#viewport #stage#stage #panel,
+html body #viewport#viewport #stage#stage #phoneMore,
+html body #viewport#viewport #stage#stage #storyDialog {
+  background:transparent; box-shadow:none; border-radius:0;
+}

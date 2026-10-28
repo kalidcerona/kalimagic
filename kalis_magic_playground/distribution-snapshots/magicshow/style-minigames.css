@@ -1,0 +1,137 @@
+/* style-minigames.css: dealer, routine tables, cups and monte mini games. (CSS regroup 10-28)
+ * Earlier or later rules for the same elements may also sit in style-base.css (early layer) and
+ * style-overrides-*.css (late layer) when the cascade needs them there. */
+.dealer-host{display:flex;align-items:center;justify-content:center;gap:28px;font-size:22px}.dealer-emoji{font-size:88px}.dealer-wallet{color:#ffe65c;text-align:center;margin:8px}.dealer-rules{text-align:center;font-size:22px;color:#ffeeb2;margin:12px}.dealer-note{text-align:center;font-size:22px;color:#b8bacb;margin:8px}.dealer-message{text-align:center;min-height:30px;color:#a3ffc0;margin:10px}.dealer-controls{display:flex;justify-content:center;gap:24px;margin:18px 0}
+.phone .dealer-host{gap:8px;font-size:11px}
+.phone .dealer-controls{gap:6px;flex-wrap:wrap}
+.dealer-gem-menu button,.gem-game button,.gem-shop-item button{min-width:44px;min-height:44px;touch-action:manipulation}
+.game-result{color:#ffe65c;font-weight:bold}
+.monte-card{font-size:42px;padding:10px 30px;background:#fff;color:#322048;border-radius:10px;border:4px solid #ca85ec}
+/* v4 U49 1: a routine cut-in plays in Kali's own spot. #magicianMini keeps its box (same size and place on every layout); only its background swaps from the
+   kali-performance strip (3 frames) to the routine strip (2 frames, same 256 frame format). A reaction face (.reacting, .disappointed) wins over it.
+   #routineCutin is only the invisible "cut-in playing" marker now. */
+#routineCutin,#routineCutin:not([hidden]){display:none!important}
+@keyframes kali-routine-frame{0%{background-position:0% 0%}45%,100%{background-position:100% 0%}}
+body #viewport #stage #panel #panelBody .routine-collection .routine-name{display:block;width:100%;height:2.6em;margin:0;overflow:hidden;text-align:center;line-height:1.3;font-size:12px}
+#stage .cup-ball[src*='lemon']{width:64px;height:64px;left:calc(50% - 32px);bottom:0}
+#stage .routine-card img{width:64px;height:88px;object-fit:contain;image-rendering:pixelated}
+#stage .card-flipping img{visibility:hidden}
+#stage .gem-game h2{margin:4px;font-size:16px}
+#stage .gem-game p{margin:4px;font-size:12px;line-height:18px}
+#stage .gem-game .dealer-controls{display:flex;justify-content:center;gap:8px;flex-wrap:wrap}
+#stage .dealer-host{align-items:center;gap:12px}
+#stage .dealer-host .dealer-emoji{height:72px;width:64px;flex:none}
+#stage .gem-game .dealer-controls button{padding:4px;white-space:nowrap}
+.tablet #stage .routine-table{max-width:640px;height:260px}
+.tablet #stage .game-cup,.tablet #stage .routine-card{top:52px;height:160px}
+.tablet #stage .cup-prop{height:140px}
+.tablet #stage .routine-card img{width:96px;height:132px}
+@keyframes u26-cup-lift{to{background-position:-384px 0}}
+@keyframes u26-ball-pop{to{background-position:-128px 0}}
+#stage .routine-card.card-flipping:after{content:'';position:absolute;left:calc(50% - 32px);top:0;width:64px;height:88px;background:url('assets/ui/fx-card-flip.webp') no-repeat 0 0 / 384px 88px;animation:u26-card-flip 240ms steps(6) 1}
+.tablet #stage .routine-card.card-flipping:after{left:calc(50% - 48px);width:96px;height:132px;background-size:576px 132px;animation-name:u26-card-flip-tablet}
+@media(prefers-reduced-motion:reduce){#stage .routine-card.card-flipping:after{display:none}}
+#stage .game-cup:disabled{opacity:1;cursor:default}
+#stage #panelBody:has(>.gem-game)>.dealer-host{grid-column:1;grid-row:1 / span 3;flex-direction:column;gap:4px;font-size:10px;line-height:14px;padding-top:24px}
+#stage #panelBody:has(>.gem-game)>.dealer-wallet,#stage #panelBody:has(>.gem-game)>.gem-game{grid-column:2}
+#stage #panelBody:has(>.gem-game)>.dealer-wallet{margin:0;font-size:12px}
+.tablet #stage #panelBody:has(>.gem-game)>.dealer-host{font-size:16px;line-height:22px}
+.tablet #stage .dealer-host .dealer-emoji{width:120px;height:180px}
+@media(prefers-reduced-motion:reduce){#stage .final-load-fx{display:none}}
+/* U28: dealer tables (cups 96px, one-piece wand, monte cards), board centering, menu uniformity, pixel slider. */
+#stage .gem-game .routine-table{max-width:480px;height:auto;aspect-ratio:12/5;margin:56px auto 8px}
+.tablet #stage .gem-game .routine-table{max-width:520px;height:auto}
+@media(max-height:480px){#stage .gem-game .routine-table{max-width:400px;margin-top:52px}}
+#stage .gem-game .routine-mat{left:6%;top:16%;width:88%;height:70%}
+#stage #panel .gem-game button.game-cup img.cup-prop{position:absolute;inset:0;width:96px;height:96px;margin:0;object-fit:none;image-rendering:pixelated;z-index:2}
+#stage #panel .gem-game button.game-cup img.cup-ball{position:absolute;width:28px;height:28px;margin:0;left:calc(50% - 14px);bottom:10px;image-rendering:pixelated;z-index:1}
+#stage #panel .gem-game button.game-cup img.cup-ball[src*='lemon']{width:40px;height:40px;left:calc(50% - 20px);bottom:6px}
+#stage .gem-game .routine-wand{width:192px;height:48px;left:6%;top:-48px;filter:drop-shadow(1px 0 0 #F2E6C8) drop-shadow(-1px 0 0 #F2E6C8) drop-shadow(0 1px 0 #F2E6C8) drop-shadow(0 -1px 0 #F2E6C8)}
+#stage .gem-game .routine-hand{top:-52px}
+#stage .gem-game .routine-card img{width:96px;height:132px;display:block}
+#stage .gem-game .monte-card{display:inline-block;font-size:20px;line-height:26px;padding:4px 16px;margin:8px 0;color:#F2E6C8;background-color:#25202D;border:solid 12px transparent;border-image:url('assets/ui/ui-panel-inner.webp') 12 fill / 12px / 0 stretch;border-radius:0;image-rendering:pixelated}
+#stage .gem-game .monte-card{flex:0 0 auto;margin:6px auto;padding:0 14px;border-width:8px;border-image-width:8px}
+#stage .gem-game .routine-table{flex:0 0 100%}
+#stage .gem-game .routine-card img{width:100%;height:100%}
+#stage .gem-game .flex-break{flex:0 0 100%;height:0;margin:0;padding:0}
+
+/* U28b: wand lies on the mat; phone-height tables fit without scrolling. */
+#stage .gem-game{--cup:96px}
+@media(max-height:480px){#stage .gem-game{--cup:60px}}
+#stage .gem-game .routine-wand{width:144px;height:36px;left:6%;top:14%;z-index:1;transform:rotate(-5deg);filter:none}
+#stage #panel .gem-game button.game-cup img.cup-prop{width:var(--cup);height:var(--cup);object-fit:contain}
+@keyframes u28-cup-lift{to{background-position:calc(var(--cup) * -4) 0}}
+@media(max-height:480px){
+#stage .gem-game{gap:2px 10px}
+#stage .gem-game .routine-table{max-width:300px;margin-top:30px;margin-bottom:2px}
+#stage .gem-game .routine-wand{width:96px;height:24px}
+#stage .gem-game .routine-hand{width:64px;height:48px;top:-34px}
+#stage .gem-game h2{margin:0;font-size:14px;line-height:18px}
+#stage .gem-game p{margin:0}
+#stage .gem-game .monte-card{display:none}
+#stage #panel .gem-game button.game-cup img.cup-ball{width:20px;height:20px;left:calc(50% - 10px);bottom:6px}
+}
+@media(max-height:480px){
+#stage .gem-game{display:grid;grid-template-columns:300px minmax(0,1fr);align-items:center;justify-content:center;column-gap:12px}
+#stage .gem-game>h2,#stage .gem-game>p:first-of-type{grid-column:1 / -1}
+#stage .gem-game>*{grid-column:2;min-width:0}
+#stage .gem-game>h2,#stage .gem-game>p:first-of-type{grid-column:1 / -1}
+#stage .gem-game>.routine-table{grid-column:1;grid-row:span 5;flex:none}
+#stage .gem-game>.flex-break{display:none}
+}
+
+/* U30: spectator mini games. The cup or card is the big target; the dealer menu is a quiet secondary button. */
+#stage .gem-game button.routine-card{display:block;position:absolute;padding:0;cursor:pointer;touch-action:manipulation;overflow:visible}
+#stage #panel .gem-game button.routine-card img.card-art{position:absolute;left:0;top:0;width:100%;height:100%;max-width:none;object-fit:contain;margin:0;image-rendering:pixelated}
+#stage .gem-game .routine-card:disabled{opacity:1;cursor:default}
+#stage .gem-game .routine-card:not(:disabled):active img{transform:translateY(2px)}
+#stage .gem-game .routine-card.gold-shine img{filter:drop-shadow(0 0 4px #E8BF68) drop-shadow(0 0 1px #FFE9A8)}
+#stage .gem-game.monte-game>small{flex:0 0 100%}
+#stage .gem-game .dealer-back{justify-self:center;width:auto;min-width:44px;min-height:44px;padding:4px 12px;font-size:12px;line-height:16px;opacity:.9}
+#stage #panel .gem-game button.game-cup img.cup-ball[src*='orange']{width:40px;height:40px;left:calc(50% - 20px);bottom:6px}
+#stage .routine-card .bent-corner.bend-in{animation:u30b-bend 420ms ease-out 1}
+@media(prefers-reduced-motion:reduce){#stage .routine-card .bent-corner.bend-in{animation:none}}
+#stage .routine-table .monte-cover-hand{width:64px;height:48px;image-rendering:pixelated;transform:rotate(-8deg)}
+#stage .gem-game .routine-table .monte-cover-hand{width:96px;height:72px}
+/* Mini game: the cup or card is the large target, 딜러 메뉴 is a quiet corner link. */
+@media(max-height:480px){
+#stage .gem-game{grid-template-columns:minmax(300px,1.7fr) minmax(150px,1fr);--cup:72px}
+#stage .gem-game .routine-table{max-width:min(460px,calc((100vh - 150px) * 2.4))}
+}
+@keyframes u32-cup-lift{to{background-position:calc(var(--cup) * -3) 0}}
+#stage #panel .gem-game button.game-cup img.cup-ball.ball-popping{z-index:3;width:32px;height:32px;left:calc(50% - 16px);bottom:calc(var(--cup) * .12);animation:u32-ball-pop 320ms steps(3) forwards}
+@keyframes u32-ball-pop{to{background-position:-96px 0}}
+#stage .routine-table .monte-cover-hand{transform:translate(18%,6%);filter:drop-shadow(2px 3px 0 rgba(0,0,0,.35))}
+/* A small marker over each cup or card that can be tapped now. */
+#stage .gem-game :is(.game-cup,.routine-card):not(:disabled):before{content:'▼';position:absolute;left:0;right:0;top:-16px;text-align:center;font-size:12px;line-height:14px;color:#E8BF68;z-index:5;pointer-events:none;animation:u32-tap-hint 700ms ease-in-out 6 alternate}
+@media(prefers-reduced-motion:reduce){#stage .gem-game :is(.game-cup,.routine-card):not(:disabled):before{animation:none}}
+.tablet #stage #panel[data-screen="dealer"] .dealer-wallet{font-size:24px;line-height:32px}
+/* v4 U48 N6: 나의 마술 shows the trick pictures only (no text over them). N5: a routine 비법's detail shows frame 2 of its strip. */
+#viewport #stage .routine-collection .routine-item{line-height:normal}
+#viewport #stage .routine-collection .routine-icon{image-rendering:pixelated}
+#viewport #stage .routine-collection .routine-icon.routine-frame{display:block;width:100%;aspect-ratio:1;height:auto;box-sizing:border-box;background-repeat:no-repeat;background-size:200% 100%;background-position:100% 0;image-rendering:pixelated}
+#viewport #stage .routine-collection .routine-item.routine-locked .routine-icon{filter:brightness(0);opacity:.55}
+#stage #panel[data-screen="dealer"] .dealer-host .dealer-emoji{width:128px;height:156px;flex:none;font-size:72px}
+
+#stage #panel[data-screen="dealer"] .dealer-serona{width:100%;height:100%;object-fit:contain;image-rendering:pixelated;display:block}
+#stage #panel[data-screen="dealer"] .dealer-game-img{position:absolute;inset:0;width:84px;height:84px;object-fit:contain;image-rendering:pixelated}
+#stage #panel[data-screen="dealer"] .dealer-leave{display:block;margin:8px auto 0;min-height:44px}
+html body #viewport#viewport #stage#stage#stage#stage .dealer-cost { display:inline-flex; padding:6px 12px; border:0; border-image:url('assets/kit/price-tag.webp') 16 fill / 8px / 0 stretch; background:none; }
+/* The remaining popovers and mini-game controls share drawn framing. */
+html body #viewport#viewport #stage#stage#stage#stage :is(.gem-game,.tree-more-pop) { border:0; border-image:url('assets/kit/tooltip-frame.webp') 24 fill / 12px / 0 stretch; background:transparent; box-shadow:none; border-radius:0; padding:12px; box-sizing:border-box; }
+html body #viewport#viewport #stage#stage#stage#stage :is(.game-cup,.routine-card) { border:0; border-image:none; background:none; box-shadow:none; }
+html body #viewport#viewport #stage#stage#stage#stage .gem-game > .flex-break { display:none; }
+html body #viewport#viewport #stage#stage#stage#stage .routine-card.gold-shine img { filter:none; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panelBody:has( > .gem-game) > .dealer-host { grid-column:1; grid-row:1 / span 2; align-self:start; min-height:0; height:auto; max-height:260px; overflow:auto; padding:0; gap:4px; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panelBody:has( > .gem-game) .dealer-emoji { flex:none; width:72px; height:92px; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panelBody:has( > .gem-game) > .dealer-wallet { grid-column:2; grid-row:1; margin:0; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panelBody:has( > .gem-game) > .dealer-message { grid-column:2; grid-row:3; margin:0; }
+html body #viewport#viewport #stage#stage#stage#stage #panelBody > .dealer-message:empty { display:none; }
+html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panelBody > .gem-game { grid-column:2; grid-row:2; margin:0; padding:8px; min-height:0; }
+#stage .routine-card.has-drawn-fold > img.card-art { visibility:hidden; }
+#stage .routine-card { filter:drop-shadow(0 2px 0 #100d1644); }
+/* A crossing outer pair passes behind/in front of the stationary middle prop (rear 1, idle 2, front 3). */
+#stage .gem-game :is(.routine-card,.game-cup) { z-index:2; }
+html body #viewport#viewport #stage#stage#stage#stage #panel .dealer-speech > .dealer-turn { margin:0 0 4px; text-align:left; }
+html body #viewport#viewport #stage#stage#stage#stage #panel .dealer-speech .dealer-name { margin-right:6px; color:#ffe17a; font-weight:700; white-space:nowrap; }
+html body #viewport#viewport #stage#stage#stage#stage #panel .dealer-speech .dealer-said { word-break:keep-all; overflow-wrap:anywhere; }

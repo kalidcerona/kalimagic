@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { MAGICSHOW_EXTRAS, magicshowRuntimeFiles } from './magicshow-files.mjs';
 import { cp, mkdir, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -603,11 +605,12 @@ export function injectLegacyShellModules(source) {
   const withShell = shellChanged ? source.replace(match[0], `const SHELL = [${body}\n];`) : source;
   return withLegacyCacheSuffix(withShell);
 }
-export function shouldCopyMagicshow(relativePath) {
+const magicshowRuntime = magicshowRuntimeFiles(readFileSync(path.join(ROOT, 'distribution-snapshots/magicshow/index.html'), 'utf8'));
+export function shouldCopyMagicshow(relativePath, runtime = magicshowRuntime) {
   const file = relativePath.split(path.sep).join('/');
-  return file === '' || file === 'assets' || file === 'assets/ui' || file === 'assets/kit' || file === 'fonts' || file === 'fonts/OFL.md' ||
-    ['install-prompt.js', 'install-prompt.css', 'index.html', 'style.css', 'portrait.css', 'data.js', 'core.js', 'audio.js', 'ui.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png', 'favicon-32.png', 'og-image.png', 'sw.js', 'update.html'].includes(file) ||
-    /^assets\/(?:(?:ui|kit)\/)?[A-Za-z0-9_-]+\.(?:png|webp)$/.test(file) || /^fonts\/[A-Za-z0-9_-]+\.woff2$/.test(file);
+  return file === '' || file === 'assets' || file === 'fonts' || file === 'fonts/OFL.md' ||
+    MAGICSHOW_EXTRAS.includes(file) || runtime.includes(file) || runtime.some(name => name.startsWith(file + '/')) ||
+    /^assets\/(?:[A-Za-z0-9_-]+\/)*[A-Za-z0-9_-]+(?:\.(?:png|webp))?$/.test(file) || file === 'assets/ui/cheer.json' || /^fonts\/[A-Za-z0-9_-]+\.woff2$/.test(file);
 }
 
 // This game is a frozen web build; no generated or private files may leak in.
