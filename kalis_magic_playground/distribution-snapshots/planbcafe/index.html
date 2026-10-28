@@ -106,33 +106,64 @@
       });
       function waitForUpdateChoice(registration) {
         if (bootDecision) return;
-        var waitingWorker = registration && registration.waiting;
-        if (!waitingWorker || !navigator.serviceWorker.controller) { bootDecision = true; startOnce(); return; }
-        clearTimeout(bootTimer);
-        updatePrompt.hidden = false;
-        var nowButton = document.getElementById("update-now");
-        var laterButton = document.getElementById("update-later");
-        var finished = false;
-        function finishLater() {
-          if (finished) return;
-          finished = true; bootDecision = true; updatePrompt.hidden = true; startOnce();
+        if (!registration || !navigator.serviceWorker.controller) { bootDecision = true; startOnce(); return; }
+        var watchingWorker = null;
+        var prompting = false;
+        function startWithoutUpdate() {
+          if (bootDecision) return;
+          bootDecision = true; startOnce();
         }
-        laterButton.onclick = finishLater;
-        nowButton.onclick = function () {
-          if (finished) return;
-          nowButton.disabled = true; laterButton.disabled = true;
-          var timer = setTimeout(finishLater, 10000);
-          navigator.serviceWorker.addEventListener("controllerchange", function () {
-            if (!finished && navigator.serviceWorker.controller === waitingWorker) {
-              finished = true; clearTimeout(timer); location.reload();
-            }
-          });
-          waitingWorker.postMessage("SKIP_WAITING");
-        };
-        updatePrompt.onkeydown = function (event) {
-          if (event.key === "Escape") { event.preventDefault(); finishLater(); }
-        };
-        nowButton.focus();
+        function watchInstall() {
+          var worker = registration.installing;
+          if (!worker || worker === watchingWorker || bootDecision) return;
+          watchingWorker = worker;
+          clearTimeout(bootTimer);
+          bootTimer = setTimeout(startWithoutUpdate, 8000);
+          function stateChanged() {
+            if (bootDecision || prompting) return;
+            if (worker.state === "installed") showPrompt(worker);
+            else if (worker.state === "redundant") startWithoutUpdate();
+          }
+          worker.addEventListener("statechange", stateChanged);
+          stateChanged();
+        }
+        if (registration.waiting) { showPrompt(registration.waiting); return; }
+        registration.addEventListener("updatefound", watchInstall);
+        watchInstall();
+        registration.update().then(function () {
+          if (bootDecision) return;
+          if (registration.waiting) showPrompt(registration.waiting);
+          else { watchInstall(); if (!watchingWorker) startWithoutUpdate(); }
+        }).catch(function () { if (!watchingWorker) startWithoutUpdate(); });
+        function showPrompt(waitingWorker) {
+          if (bootDecision || prompting) return;
+          prompting = true;
+          clearTimeout(bootTimer);
+          updatePrompt.hidden = false;
+          var nowButton = document.getElementById("update-now");
+          var laterButton = document.getElementById("update-later");
+          var finished = false;
+          function finishLater() {
+            if (finished) return;
+            finished = true; bootDecision = true; updatePrompt.hidden = true; startOnce();
+          }
+          laterButton.onclick = finishLater;
+          nowButton.onclick = function () {
+            if (finished) return;
+            nowButton.disabled = true; laterButton.disabled = true;
+            var timer = setTimeout(finishLater, 10000);
+            navigator.serviceWorker.addEventListener("controllerchange", function () {
+              if (!finished && navigator.serviceWorker.controller === waitingWorker) {
+                finished = true; clearTimeout(timer); location.reload();
+              }
+            });
+            waitingWorker.postMessage("SKIP_WAITING");
+          };
+          updatePrompt.onkeydown = function (event) {
+            if (event.key === "Escape") { event.preventDefault(); finishLater(); }
+          };
+          nowButton.focus();
+        }
       }
       serviceWorkerReady.then(waitForUpdateChoice);
 
