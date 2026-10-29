@@ -243,7 +243,7 @@ GAME_DATA.storyReview.tutorialLesson={
   {speaker:'세로나',text:'괜찮아요. 여기까지가 실패 연습이에요.',mood:'happy',review:'신규'},
   {speaker:'세로나',text:'동전은 그대로예요. 비법 하나 배워요.',mood:'happy',review:'신규'}
  ],
- buy:[{speaker:'세로나',text:'빛나는 비법에서 배우기를 눌러요.',mood:'happy',review:'신규'}],
+ buy:[{speaker:'세로나',text:'빛나는 비법의 가격을 눌러 배워요.',mood:'happy',review:'신규'}],
  retry:[{speaker:'세로나',text:'배운 비법으로 다시 보여 줘요.',mood:'happy',review:'신규'}]
 };
 

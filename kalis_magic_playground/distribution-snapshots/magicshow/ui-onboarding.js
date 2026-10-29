@@ -169,28 +169,31 @@
     else setTutorialTargets(node?[node]:[]);
     if (host.hidden) { host.dataset.dock = ''; return; }
     const pack=D.storyV15.tutorial.schoolChain;
-    const spoken=spokenTutorialLine(chain, upgrade, mark);
-    const key=spoken?`${spoken.speaker}:${spoken.text}:${menu||''}`:(upgrade?(menu==='book'?'upgrade-book':'upgrade-dock'):(chain&&mark.step.endsWith('-fight')?'chain-fight':String(t.step)));
+    // Keep the opening instruction through the first press until the case opens. Existing facts own completion.
+    const openingCase=chain&&mark.step==='girl-fight'&&t.step<2;
+    const spoken=openingCase?null:spokenTutorialLine(chain, upgrade, mark);
+    const key=openingCase?'0':spoken?`${spoken.speaker}:${spoken.text}:${menu||''}`:(upgrade?(menu==='book'?'upgrade-book':'upgrade-dock'):(chain&&mark.step.endsWith('-fight')?'chain-fight':String(t.step)));
     if (host.dataset.step!==key) {
       host.dataset.step=key; host.replaceChildren();
-      const copy=D.onboarding.tutorial[t.step]||D.onboarding.tutorial[0];
+      const copy=D.onboarding.tutorial[openingCase?0:t.step]||D.onboarding.tutorial[0];
       const speaker=spoken?spoken.speaker:'세로나';
       const face=speaker==='세로나'?'assets/serona.png':(speakerPortrait(speaker)||'assets/serona.png');
       const helper=element('img','','coach-helper');helper.src=face;helper.alt=speaker;helper.onerror=()=>{helper.hidden=true;};
-      let coachText=copy.body, coachTitle=`${(t.step||0)+1} / 8 · ${copy.title}`;
+      let coachText=copy.body, coachTitle=`${(openingCase?0:t.step||0)+1} / 8 · ${copy.title}`;
       if(spoken){coachText=spoken.text;coachTitle=spoken.speaker;}
       else if(upgrade){coachText=menu==='book'?pack.upgrade[1].text:pack.upgrade[0].text;coachTitle=menu==='book'?(pack.upgrade[1].speaker||'세로나'):(pack.upgrade[0].speaker||'세로나');}
-      else if(chain&&mark.step.endsWith('-fight')){const line=mark.step.startsWith('teacher')?pack.teacherDuring[0]:pack.girlDuring[0];coachText=(line&&line.text)||copy.body;coachTitle=(line&&line.speaker)||'세로나';}
+      else if(!openingCase&&chain&&mark.step.endsWith('-fight')){const line=mark.step.startsWith('teacher')?pack.teacherDuring[0]:pack.girlDuring[0];coachText=(line&&line.text)||copy.body;coachTitle=(line&&line.speaker)||'세로나';}
       else if(state.u15.tutorial.active){const line=D.storyV15.tutorial.coaching[Math.min(D.storyV15.tutorial.coaching.length-1,Math.floor(state.fightMs/18000))]||D.storyV15.tutorial.coaching[0];coachText=line.text;coachTitle=line.speaker;}
       host.append(helper,element('strong',coachTitle),element('p',coachText));
       const abortTutorial=state.u15.tutorial.active||!!chainMark();
       const skip=action(abortTutorial?'건너뛰기':'안내 닫기',()=>{if(abortTutorial)endSchoolTutorial();else t.step=8; save(); renderCoach();}); host.append(skip);
     }
+    host.dataset.placement='';
     const audience=$('audienceCard'),r=audience.getBoundingClientRect(),stage=$('stage').getBoundingClientRect();
     host.dataset.compact=String(phone&&r.width<330);
     host.style.width=`${phone?Math.min(250,Math.max(r.width*.42-16,!portraitLayout()&&r.width>=330?200:0)):340}px`; // fixP 5: landscape keeps room for the name plate beside the wider 건너뛰기
     if(portraitLayout()&&menu==='book'&&upgrade){
-      host.dataset.dock='';host.style.right='auto';host.style.left='8px';host.style.top='64px';host.style.bottom='auto';host.style.width=`${Math.min(240,Math.max(160,layoutWidth-96))}px`;return;
+      host.dataset.dock='';host.dataset.placement='book';host.style.right='auto';host.style.left='8px';host.style.top='64px';host.style.bottom='auto';host.style.width=`${Math.min(240,Math.max(160,layoutWidth-96))}px`;return;
     }
     // r22b (owner 10-28: 「제일 하단에서 대사를 할 때가 있는데 대사는 중간에서 나오게 해줘」): the coach that used to sit on the bottom edge (portrait fight dock,
     // landscape book/upgrade) is centred on the screen height; when that would cover the coached target it steps just above it (or below it).
@@ -198,7 +201,18 @@
       if(t&&t.width&&box.left<t.right&&box.right>t.left&&y<t.bottom&&y+h>t.top)y=t.top-h-6>=stage.top?t.top-h-6:t.bottom+6;return `${(y-stage.top)/scale}px`;};
     // r25: every portrait coach step (the first 「카드 케이스」 step too, which ran off the right edge at 360/390 px) uses the centred full-width dock.
     if(portraitLayout()&&menu!=='book'){
-      host.dataset.dock='bottom';host.style.left='0px';host.style.right='0px';host.style.bottom='auto';host.style.width=`${layoutWidth}px`;host.style.top=middleTop(node);return;
+      host.dataset.dock='bottom';host.style.left='0px';host.style.right='0px';host.style.bottom='auto';host.style.width=`${layoutWidth}px`;
+      if(phone&&layoutWidth<=500&&!document.body.classList.contains('tablet')){
+        // Use the exact story band unless it contains the coached target. CSS owns its geometry.
+        host.dataset.placement='band';
+        const band=host.getBoundingClientRect(),target=node.getBoundingClientRect();
+        if(!(band.left<target.right&&band.right>target.left&&band.top<target.bottom&&band.bottom>target.top))return;
+        // Keep control targets fully exposed: prefer the stage above the entire band.
+        host.dataset.placement='stage';
+        const h=host.getBoundingClientRect().height,y=band.top-h-6;
+        host.style.top=y>=stage.top&&!(y<target.bottom&&y+h>target.top)?`${(y-stage.top)/scale}px`:middleTop(node);return;
+      }
+      host.style.top=middleTop(node);return;
     }
     host.dataset.dock='';host.style.right='';
     if(menu==='book'||upgrade){host.style.left='8px';host.style.bottom='auto';host.style.top=middleTop(upgradeBuy||node);return;}

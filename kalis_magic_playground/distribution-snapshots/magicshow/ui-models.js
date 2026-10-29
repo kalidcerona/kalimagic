@@ -217,7 +217,7 @@ globalThis.Presentation = (() => {
     constructor(){this.items=[];this.active=null;this.gap=0;this.serial=0;}
     push(item){
       // s5c: a first-use hint (item.hint) gives way at once to any other notice; its own end() decides whether it shows again later
-      if(!item.hint&&this.active&&this.active.hint&&this.active.age<this.active.minimum){this.active.cut=true;this.active.minimum=this.active.age;}
+      if(!item.hint&&this.active&&this.active.hint&&this.active.age<Math.min(this.active.minimum,1500)){this.active.cut=true;this.active.minimum=this.active.age;}
       const old=item.merge&&this.items.find(x=>x.merge===item.merge);
       if(old){old.count=(old.count||1)+1;old.extra='외 '+(old.count-1)+'건';return old;}
       const next={...item,minimum:item.minimum??1200,age:0,serial:this.serial++};this.items.push(next);return next;

@@ -35,11 +35,50 @@ function precacheArt() {
   })().catch(error => console.warn('Magicshow art cache unavailable:', error)).finally(() => { artPending = null; });
   return artPending;
 }
+let installProgress = { type: 'MAGICSHOW_UPDATE_PROGRESS', done: 0, total: CRITICAL.length, failed: false };
+async function reportInstall() {
+  // Progress delivery must never decide whether a release can install.
+  try {
+    const progress = { ...installProgress };
+    const windows = await self.clients.matchAll({ includeUncontrolled: true, type: 'window' });
+    for (const client of windows) client.postMessage(progress);
+  } catch {}
+}
 self.addEventListener('install', event => {
   // Updates remain waiting until the player accepts, or all existing clients close.
-  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(CRITICAL.map(file => new Request(new URL(file, self.registration.scope).href, { cache: 'reload', redirect: 'error' })))));
+  event.waitUntil((async () => {
+    const cache = await caches.open(CACHE_NAME);
+    let next = 0, failure = null, lastReport = Date.now();
+    await reportInstall();
+    const download = async () => {
+      while (!failure && next < CRITICAL.length) {
+        const file = CRITICAL[next++];
+        try {
+          const url = new URL(file, self.registration.scope).href;
+          const response = await fetch(new Request(url, { cache: 'reload', redirect: 'error' }));
+          if (!response.ok || response.redirected || response.type === 'opaque' || response.status === 206 || response.headers.get('Vary') === '*') throw new Error('Invalid shell response');
+          await cache.put(url, response);
+          installProgress.done++;
+          if (!failure && installProgress.done < CRITICAL.length && Date.now() - lastReport >= 100) {
+            lastReport = Date.now();
+            await reportInstall();
+          }
+        } catch (error) { failure = failure || error; }
+      }
+    };
+    // Drain in-flight writes before removing an incomplete release's cache.
+    await Promise.all(Array.from({ length: Math.min(6, CRITICAL.length) }, download));
+    if (failure) {
+      installProgress.failed = true;
+      await reportInstall();
+      await caches.delete(CACHE_NAME);
+      throw failure;
+    }
+    await reportInstall();
+  })());
 });
 self.addEventListener('message', event => {
+  if (event.data?.type === 'GET_UPDATE_PROGRESS') event.source?.postMessage({ ...installProgress });
   if (event.data?.type === 'SKIP_WAITING') event.waitUntil(self.skipWaiting());
   if (event.data?.type === 'PRECACHE_ART') event.waitUntil(precacheArt());
 });

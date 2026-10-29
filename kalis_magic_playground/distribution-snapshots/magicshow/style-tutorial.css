@@ -36,3 +36,10 @@ html body #viewport#viewport #stage#stage#stage#stage #practiceVeil > span { bor
 #stage #toasts .hint-toast .hint-speaker { font-weight:700; margin-right:2px; }
 /* fixP 5: phone landscape coach. 건너뛰기 is wider than the old 44 px column; the column grows so the label stays inside its button and the box frame. */
 html body.phone:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #tutorialCoach:not([data-compact="true"]) { grid-template-columns:24px minmax(0,1fr) 60px; }
+
+/* Narrow landscape: preserve room for the opening title inside its name plate. */
+@media (orientation:landscape) and (max-width:900px) and (max-height:500px) {
+  html body.phone:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #tutorialCoach[data-step="0"] > strong {
+    font-size:10px; padding:4px; white-space:normal; word-break:keep-all; overflow-wrap:normal;
+  }
+}

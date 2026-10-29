@@ -286,22 +286,22 @@ test('Magicshow in-app browsers explain external opening and copy the current li
   assert.match(css, /max-height:calc\(100dvh/);
 });
 
-async function runWorker({ active }) {
+async function runWorker({ active, onProgress = () => {}, network = null, clock = Date }) {
   const listeners = new Map(), calls = { skipWaiting: 0, claim: 0, deleted: [] };
-  let cachedAll = null, installDone;
+  const stored = new Map(), requests = [], progress = [];
   const self = {
     registration: { scope: 'https://example.test/tools/magicshow/', active },
     skipWaiting() { calls.skipWaiting++; return Promise.resolve(); },
-    clients: { claim() { calls.claim++; return Promise.resolve(); } },
+    clients: { claim() { calls.claim++; return Promise.resolve(); }, matchAll: async options => { assert.equal(options.includeUncontrolled, true); assert.equal(options.type, 'window'); return [{ postMessage: data => { progress.push(data); onProgress(data); } }]; } },
     addEventListener: (name, callback) => listeners.set(name, callback)
   };
   const caches = {
-    open: async () => ({ addAll: async requests => { cachedAll = requests.length; if (self.failCache) throw Error('offline'); } }),
+    open: async () => ({ put: async (url, response) => { await response.text(); stored.set(url, true); } }),
     keys: async () => ['magicshow-dist-old', 'other-cache'],
-    delete: async name => { calls.deleted.push(name); return true; }
+    delete: async name => { calls.deleted.push(name); if (name.includes('__VERSION__')) stored.clear(); return true; }
   };
-  vm.runInNewContext((await read('scripts/magicshow-dist/sw-template.js')).toString(), { self, caches, URL, Request, Promise, Response, fetch: async () => new Response('') });
-  return { listeners, calls, self, cached: () => cachedAll };
+  vm.runInNewContext((await read('scripts/magicshow-dist/sw-template.js')).toString(), { self, caches, URL, Request, Promise, Response, Date: clock, fetch: async request => { requests.push(request); if (network) return network(request); if (self.failCache) throw Error('offline'); return new Response(''); } });
+  return { listeners, calls, self, cached: () => stored.size, requests, progress };
 }
 const waitFor = async (listeners, name) => { let promise; listeners.get(name)({ waitUntil: p => { promise = p; } }); return promise; };
 
@@ -329,36 +329,40 @@ test('Magicshow art warms after shell, tolerates a missing asset, and retries on
   const source = template.replace(/const SHELL = \[[\s\S]*?\];/, `const SHELL = ${JSON.stringify(shell)};`);
   const listeners = new Map(), stored = new Map(), requests = [], warnings = [];
   let critical = [], fail = true;
-  const self = { registration: { scope: 'https://example.test/tools/magicshow/' }, clients: { claim: async () => {} }, addEventListener: (name, callback) => listeners.set(name, callback) };
-  const cache = { addAll: async items => { critical = items.map(r => new URL(r.url).pathname.split('/').pop()); }, match: async url => stored.get(url), put: async (url, response) => stored.set(url, response) };
+  const self = { registration: { scope: 'https://example.test/tools/magicshow/' }, clients: { claim: async () => {}, matchAll: async () => [] }, addEventListener: (name, callback) => listeners.set(name, callback) };
+  const cache = { addAll: async items => { critical = items.map(r => new URL(r.url).pathname.split('/').pop()); }, match: async url => stored.get(url), put: async (url, response) => { stored.set(url, response); if (!/\/(assets|fonts)\//.test(url)) critical.push(url.split('/').pop()); } };
   const caches = { open: async () => cache, keys: async () => [], delete: async () => true };
   vm.runInNewContext(source, { self, caches, URL, Request, Promise, Response, console: { warn: (...args) => warnings.push(args) }, fetch: async request => { requests.push(request.url); if (fail && request.url.endsWith('missing.webp')) throw Error('offline'); return new Response('art'); } });
   await waitFor(listeners, 'install');
-  assert.deepEqual(Array.from(critical), ['index.html', 'ui.js']); assert.equal(requests.length, 0);
+  assert.deepEqual(Array.from(critical), ['index.html', 'ui.js']); assert.equal(requests.length, 2);
   await waitFor(listeners, 'activate');
-  assert.equal(requests.length, 0, 'activation must not start or await optional art');
+  assert.equal(requests.length, 2, 'activation must not start or await optional art');
   let warm; listeners.get('message')({ data: { type: 'PRECACHE_ART' }, waitUntil: p => { warm = p; } }); await warm;
-  assert.equal(stored.size, 2); assert.equal(warnings.length, 1);
+  assert.equal(stored.size, 4); assert.equal(warnings.length, 1);
   fail = false; requests.length = 0;
   let retry; listeners.get('message')({ data: { type: 'PRECACHE_ART' }, waitUntil: p => { retry = p; } }); await retry;
-  assert.equal(stored.size, 3); assert.equal(requests.length, 1); assert.match(requests[0], /missing\.webp$/);
+  assert.equal(stored.size, 5); assert.equal(requests.length, 1); assert.match(requests[0], /missing\.webp$/);
 });
 
-async function runRegistration({ waiting = true, safe = false } = {}) {
+async function runRegistration({ waiting = true, safe = false, title = false, installing = false, controlled = true, online = true, updateFails = false } = {}) {
   const source = (await read('scripts/magicshow-dist/update-prompt.js')).toString();
   const listen = () => { const map = new Map(); return { map, addEventListener: (name, callback) => map.set(name, callback) }; };
   const messages = [], saved = [], nodes = new Map();
-  const node = id => { if (!nodes.has(id)) nodes.set(id, Object.assign(listen(), { hidden: true, isConnected: true, setAttribute() {}, focus() { doc.activeElement = this; }, querySelector: node, querySelectorAll: () => [node('[data-update]'), node('[data-later]')] })); return nodes.get(id); };
-  const worker = { postMessage: message => messages.push(message.type) };
-  const registration = Object.assign(listen(), { waiting: waiting ? worker : null, active: worker, update: async () => { updates++; } });
-  const sw = Object.assign(listen(), { controller: worker, register: async () => registration });
+  const node = id => { if (!nodes.has(id)) nodes.set(id, Object.assign(listen(), { hidden: true, isConnected: true, style: {}, attributes: {}, setAttribute(key, value) { this.attributes[key] = value; }, focus() { doc.activeElement = this; }, querySelector: node, querySelectorAll: () => [node('[data-update]'), node('[data-later]'), node('[data-continue]')] })); return nodes.get(id); };
+  const worker = Object.assign(listen(), { state: installing ? 'installing' : 'installed', postMessage: message => messages.push(message.type) });
+  const registration = Object.assign(listen(), { waiting: waiting ? worker : null, active: controlled ? worker : null, installing: installing ? worker : null, update: async () => { updates++; if (updateFails) throw Error('offline'); } });
+  const sw = Object.assign(listen(), { controller: controlled ? worker : null, register: async () => registration });
   let updates = 0, reloads = 0, now = 1000000000, poll, timeout;
-  const win = listen(), doc = Object.assign(listen(), { visibilityState: 'visible', body: { append() {} }, querySelector: () => null, createElement: () => node('panel') });
+  const win = listen(), doc = Object.assign(listen(), { visibilityState: 'visible', body: { append() {} }, getElementById: id => id === 'titleScreen' && title ? node('title') : null, querySelector: () => null, createElement: () => node('panel') });
+  node('title').hidden = !title;
+  node('#magicUpdateText').hidden = false;
+  node('[data-update]').hidden = false; node('[data-later]').hidden = false;
   win.MagicShowUI = { save: () => { saved.push('save'); }, isRestScreen: () => safe };
   const location = { reload: () => { reloads++; } };
-  vm.runInNewContext(source, { navigator: { serviceWorker: sw }, window: win, document: doc, location, Date: { now: () => now }, console, setTimeout: (fn, ms) => { assert.equal(ms, 5000); timeout = fn; }, setInterval: fn => { poll = fn; }, MutationObserver: class { observe() {} } });
-  win.map.get('load')(); await Promise.resolve();
-  return { sw, doc, win, registration, messages, saved, node, poll: () => poll(), safe: value => { safe = value; poll(); }, click: id => node(id).map.get('click')(), tick: ms => { now += ms; }, timeout: () => timeout(), count: () => ({ updates, reloads }) };
+  vm.runInNewContext(source, { navigator: { serviceWorker: sw, onLine: online }, window: win, document: doc, location, Date: { now: () => now }, console, setTimeout: (fn, ms) => { assert.equal(ms, 5000); timeout = fn; }, setInterval: fn => { poll = fn; }, MutationObserver: class { observe() {} } });
+  assert.equal(win.map.has('load'), false, 'registration starts before window.load');
+  await Promise.resolve(); await Promise.resolve();
+  return { sw, doc, win, registration, worker, messages, saved, node, hasTimeout: () => !!timeout, state: value => { worker.state = value; if (value === 'installed') { registration.installing = null; registration.waiting = worker; } if (value === 'redundant') registration.installing = null; worker.map.get('statechange')(); }, poll: () => poll(), safe: value => { safe = value; poll(); }, click: id => node(id).map.get('click')(), tick: ms => { now += ms; }, timeout: () => timeout(), count: () => ({ updates, reloads }) };
 }
 
 test('Magicshow popup waits for rest, hides when play resumes, and accepts save then reload exactly once', async () => {
@@ -400,11 +404,85 @@ test('Magicshow later suppresses prompts for this launch, reappears next launch,
 test('Magicshow page checks for updates when visible again at most once per ten minutes', async () => {
   const page = await runRegistration();
   const visible = page.doc.map.get('visibilitychange');
-  visible(); assert.equal(page.count().updates, 0);
-  page.tick(600000); page.doc.visibilityState = 'hidden'; visible(); assert.equal(page.count().updates, 0);
-  page.doc.visibilityState = 'visible'; visible(); assert.equal(page.count().updates, 1);
-  page.tick(540000); visible(); assert.equal(page.count().updates, 1);
-  page.tick(60000); visible(); assert.equal(page.count().updates, 2);
+  visible(); assert.equal(page.count().updates, 1);
+  page.tick(600000); page.doc.visibilityState = 'hidden'; visible(); assert.equal(page.count().updates, 1);
+  page.doc.visibilityState = 'visible'; visible(); assert.equal(page.count().updates, 2);
+  page.tick(540000); visible(); assert.equal(page.count().updates, 2);
+  page.tick(60000); visible(); assert.equal(page.count().updates, 3);
+});
+
+test('Magicshow title offers an installing update before download completes and waits before activation', async () => {
+  const page = await runRegistration({ waiting: false, safe: true, title: true, installing: true });
+  assert.equal(page.count().updates, 1);
+  assert.equal(page.node('panel').hidden, false);
+  assert.equal(page.node('title').inert, true);
+  page.win.MagicShowUI.save = () => { throw Error('title save must stay untouched'); };
+  page.click('[data-update]');
+  assert.equal(page.node('[data-download]').hidden, false);
+  assert.equal(page.node('[data-update]').disabled, true);
+  assert.equal(page.doc.activeElement, page.node('[data-later]'));
+  assert.equal(page.hasTimeout(), false);
+  page.sw.map.get('controllerchange')(); assert.equal(page.count().reloads, 0);
+  page.poll(); assert.equal(page.node('panel').hidden, false);
+  assert.ok(!page.messages.includes('SKIP_WAITING'));
+  page.state('installed');
+  assert.equal(page.messages.filter(m => m === 'SKIP_WAITING').length, 1);
+  page.poll(); page.sw.map.get('controllerchange')(); page.timeout();
+  assert.equal(page.count().reloads, 1);
+  assert.deepEqual(page.saved, []);
+});
+
+test('Magicshow installing updates stay gated during gameplay and first install', async () => {
+  for (const options of [{ title: false }, { title: true, controlled: false }]) {
+    const page = await runRegistration({ waiting: false, safe: true, installing: true, ...options });
+    assert.equal(page.node('panel').hidden, true);
+    page.state('installed');
+    assert.equal(page.node('panel').hidden, false);
+  }
+});
+
+test('Magicshow updatefound shows the title question immediately and failure offers continue', async () => {
+  const page = await runRegistration({ waiting: false, safe: true, title: true, installing: true });
+  page.click('[data-update]'); page.state('redundant');
+  assert.equal(page.node('panel').hidden, false);
+  assert.equal(page.node('[data-install-error]').hidden, false);
+  assert.equal(page.node('[data-progress]').hidden, true);
+  page.poll(); assert.equal(page.node('panel').hidden, false);
+  page.click('[data-continue]');
+  assert.equal(page.node('panel').hidden, true);
+  assert.equal(Boolean(page.node('title').inert), false);
+  assert.equal(page.hasTimeout(), false);
+  page.sw.map.get('controllerchange')(); assert.equal(page.count().reloads, 0);
+  const late = await runRegistration({ waiting: false, safe: true, title: true });
+  late.worker.state = 'installing'; late.registration.installing = late.worker;
+  late.registration.map.get('updatefound')();
+  assert.equal(late.node('panel').hidden, false);
+});
+
+test('Magicshow title Escape and focus trap win over title handlers and cancel pending acceptance', async () => {
+  const page = await runRegistration({ waiting: false, safe: true, title: true, installing: true });
+  let stopped = 0, prevented = 0;
+  const key = name => page.win.map.get('keydown')({ key: name, stopImmediatePropagation() { stopped++; }, preventDefault() { prevented++; } });
+  key('Tab'); assert.equal(page.doc.activeElement, page.node('[data-later]'));
+  page.click('[data-update]'); key('Tab');
+  assert.equal(page.doc.activeElement, page.node('[data-later]'));
+  key('Escape'); assert.equal(page.node('panel').hidden, true);
+  assert.equal(Boolean(page.node('title').inert), false);
+  page.state('installed'); page.poll();
+  assert.equal(page.node('panel').hidden, true);
+  assert.ok(!page.messages.includes('SKIP_WAITING'));
+  assert.equal(stopped, 3); assert.equal(prevented, 3);
+});
+
+test('Magicshow offline launch stays usable and update rejection is tolerated', async () => {
+  const page = await runRegistration({ safe: true, title: true, online: false, updateFails: true });
+  assert.equal(page.count().updates, 1);
+  assert.equal(page.node('panel').hidden, true);
+  assert.equal(Boolean(page.node('title').inert), false);
+  const fresh = await runRegistration({ waiting: true, safe: true, title: true });
+  assert.equal(fresh.node('panel').hidden, false, 'already waiting update still appears on title');
+  fresh.click('[data-later]'); fresh.poll();
+  assert.equal(fresh.node('panel').hidden, true);
 });
 
 test('Magicshow update.html escape page is public, never precached, and only clears the app shell caches', async () => {
@@ -473,4 +551,125 @@ test('Magicshow version fingerprint covers every art/font and runtime byte', asy
   const files = (await filesUnder(shared)).filter(name => !['sw.js', 'update.html'].includes(name)).sort((a, b) => a.localeCompare(b, 'en'));
   for (const name of files) hash.update(name).update('\0').update(await read(`${shared}/${name}`));
   assert.equal(hash.digest('hex').slice(0, 16), version);
+});
+
+
+test('Magicshow question, download, reopening and failure expose only their state controls', async () => {
+  const key = (page, name, shiftKey = false) => page.win.map.get('keydown')({ key: name, shiftKey, stopImmediatePropagation() {}, preventDefault() {} });
+  const assertHidden = (page, selectors) => {
+    for (const selector of selectors) assert.equal(page.node(selector).hidden, true, selector);
+  };
+  const page = await runRegistration({ waiting: false, safe: true, title: true, installing: true });
+  assert.equal(page.node('#magicUpdateText').hidden, false);
+  assert.equal(page.node('[data-update]').hidden, false);
+  assert.equal(page.node('[data-later]').hidden, false);
+  page.click('[data-update]');
+  assertHidden(page, ['#magicUpdateText', '[data-update]', '[data-continue]', '[data-install-error]']);
+  for (const selector of ['[data-download]', '[data-progress]', '[data-download-help]', '[data-later]']) assert.equal(page.node(selector).hidden, false, selector);
+  assert.equal(page.doc.activeElement, page.node('[data-later]'));
+  // Prove hidden controls are skipped even independently of their disabled state.
+  page.node('[data-update]').disabled = false;
+  for (const shift of [false, true]) { key(page, 'Tab', shift); assert.equal(page.doc.activeElement, page.node('[data-later]')); }
+  page.sw.map.get('message')({ source: page.worker, data: { type: 'MAGICSHOW_UPDATE_PROGRESS', done: 10, total: 10 } });
+  assert.equal(page.node('[data-download]').textContent, '다시 여는 중이에요');
+  assertHidden(page, ['#magicUpdateText', '[data-update]', '[data-later]', '[data-continue]']);
+  for (const shift of [false, true]) { key(page, 'Tab', shift); assert.equal(page.doc.activeElement, page.node('.magic-update-box')); }
+  page.state('installed');
+  assertHidden(page, ['[data-progress]', '[data-download-help]', '[data-later]']);
+  const completed = await runRegistration({ waiting: false, safe: true, title: true, installing: true });
+  completed.sw.map.get('message')({ source: completed.worker, data: { type: 'MAGICSHOW_UPDATE_PROGRESS', done: 10, total: 10 } });
+  completed.click('[data-update]');
+  assert.equal(completed.node('[data-later]').hidden, true);
+  assert.equal(completed.doc.activeElement, completed.node('.magic-update-box'));
+  const waiting = await runRegistration({ safe: true, title: true });
+  waiting.click('[data-update]');
+  assertHidden(waiting, ['#magicUpdateText', '[data-update]', '[data-later]', '[data-continue]', '[data-progress]', '[data-download-help]']);
+  assert.equal(waiting.doc.activeElement, waiting.node('.magic-update-box'));
+  key(waiting, 'Escape'); assert.equal(waiting.node('panel').hidden, false, 'activation cannot be cancelled');
+  for (const accepted of [false, true]) {
+    const failure = await runRegistration({ waiting: false, safe: true, title: true, installing: true });
+    if (accepted) failure.click('[data-update]');
+    failure.state('redundant');
+    assertHidden(failure, ['#magicUpdateText', '[data-update]', '[data-later]', '[data-download]', '[data-progress]', '[data-download-help]', '[data-save-error]']);
+    assert.equal(failure.node('[data-install-error]').hidden, false);
+    assert.equal(failure.node('[data-continue]').hidden, false);
+    assert.equal(failure.doc.activeElement, failure.node('[data-continue]'));
+    failure.node('[data-update]').disabled = false;
+    for (const shift of [false, true]) { key(failure, 'Tab', shift); assert.equal(failure.doc.activeElement, failure.node('[data-continue]')); }
+    key(failure, 'Escape'); assert.equal(failure.node('panel').hidden, true);
+    assert.equal(Boolean(failure.node('title').inert), false);
+  }
+  const cancel = await runRegistration({ waiting: false, safe: true, title: true, installing: true });
+  cancel.click('[data-update]'); cancel.click('[data-later]'); cancel.state('installed');
+  assert.equal(cancel.node('panel').hidden, true);
+  assert.ok(!cancel.messages.includes('SKIP_WAITING'));
+});
+
+test('Magicshow real SW progress reaches page, starts mid-download, and reaches reopening', async () => {
+  const page = await runRegistration({ waiting: false, safe: true, title: true, installing: true });
+  let tick = 0, peak = 0, active = 0;
+  const worker = await runWorker({ active: {}, clock: { now: () => tick += 110 }, network: async request => {
+    active++; peak = Math.max(peak, active);
+    assert.equal(request.cache, 'reload'); assert.equal(request.redirect, 'error');
+    await Promise.resolve(); active--; return new Response('shell');
+  }, onProgress: data => {
+    page.sw.map.get('message')({ source: page.worker, data });
+    if (data.done === 3) {
+      page.click('[data-update]');
+      assert.equal(page.node('[data-progress]').attributes['aria-valuenow'], '33');
+      assert.equal(page.node('[data-progress-fill]').style.width, '33%');
+      assert.equal(page.node('[data-download]').textContent, '업데이트를 받는 중이에요 33%');
+    }
+  } });
+  await waitFor(worker.listeners, 'install');
+  assert.ok(peak <= 6); assert.ok(peak > 1);
+  assert.equal(worker.progress.at(-1).done, worker.progress.at(-1).total);
+  assert.equal(page.node('[data-progress-fill]').style.width, '100%');
+  assert.equal(page.node('[data-download]').textContent, '다시 여는 중이에요');
+  assert.equal(page.hasTimeout(), false);
+  page.state('installed'); assert.equal(page.node('[data-progress]').hidden, true);
+  const waiting = await runRegistration({ safe: true, title: true });
+  waiting.click('[data-update]');
+  assert.equal(waiting.node('[data-progress]').hidden, true);
+  assert.equal(waiting.node('[data-download]').textContent, '다시 여는 중이에요');
+});
+
+test('Magicshow failed file drains concurrent writes, removes partial cache and reports failure to page', async () => {
+  const page = await runRegistration({ waiting: false, safe: true, title: true, installing: true });
+  page.click('[data-update]');
+  const worker = await runWorker({ active: {}, network: async request => {
+    if (request.url.endsWith('style.css')) return new Response('missing', { status: 404 });
+    await new Promise(resolve => setTimeout(resolve, 2)); return new Response('shell');
+  }, onProgress: data => page.sw.map.get('message')({ source: page.worker, data }) });
+  await assert.rejects(waitFor(worker.listeners, 'install'));
+  assert.equal(worker.cached(), 0); assert.equal(worker.calls.skipWaiting, 0);
+  assert.equal(worker.progress.at(-1).failed, true);
+  assert.ok(worker.progress.at(-1).done < worker.progress.at(-1).total);
+  assert.equal(page.node('[data-install-error]').hidden, false);
+  assert.equal(page.doc.activeElement, page.node('[data-continue]'));
+  page.state('redundant'); page.poll();
+  assert.equal(page.node('panel').hidden, false);
+  page.click('[data-continue]'); assert.equal(page.node('panel').hidden, true);
+  assert.equal(Boolean(page.node('title').inert), false);
+  assert.deepEqual(page.saved, []); assert.equal(page.count().reloads, 0);
+  const source = (await read('scripts/magicshow-dist/update-prompt.js')).toString();
+  assert.ok(source.includes('업데이트를 받지 못했어요. 다음에 다시 시도할게요.'));
+  assert.ok(source.includes('잠시만 기다려 주세요. 창을 닫지 마세요.'));
+  assert.match(source, /aria-valuemin="0" aria-valuemax="100"/);
+  const css = (await read('scripts/magicshow-dist/update-prompt.css')).toString();
+  assert.match(css, /prefers-reduced-motion: reduce/);
+});
+
+test('Magicshow progress is throttled, queryable, and ignores other workers', async () => {
+  const worker = await runWorker({ active: {}, clock: { now: () => 1000 } });
+  await waitFor(worker.listeners, 'install');
+  assert.equal(worker.progress.length, 2, 'initial and final only within 100 ms');
+  let current;
+  worker.listeners.get('message')({ data: { type: 'GET_UPDATE_PROGRESS' }, source: { postMessage: data => { current = data; } } });
+  assert.equal(current.done, current.total);
+  const page = await runRegistration({ waiting: false, safe: true, title: true, installing: true });
+  page.sw.map.get('message')({ source: {}, data: { type: 'MAGICSHOW_UPDATE_PROGRESS', done: 7, total: 10, failed: true } });
+  page.click('[data-update]');
+  assert.equal(page.node('[data-progress-fill]').style.width, '0%');
+  assert.equal(page.node('[data-install-error]').hidden, true);
 });

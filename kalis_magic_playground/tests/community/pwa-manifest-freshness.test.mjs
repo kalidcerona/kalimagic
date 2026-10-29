@@ -29,11 +29,13 @@ function worker(app, network, { emptyCache = false, failCacheWrite = false } = {
   const added = [];
   let claims = 0;
   let skips = 0;
+  let installing = false;
   const cache = {
     match: async () => emptyCache ? undefined : jsonResponse(manifest('/')),
     put: async (key, response) => {
       if (failCacheWrite) throw new Error('Quota');
-      puts.push({ key, value: await response.json() });
+      if (installing) { added.push(key); await response.arrayBuffer(); }
+      else puts.push({ key, value: await response.json() });
     },
     addAll: async assets => { added.push(...assets); }
   };
@@ -67,8 +69,11 @@ function worker(app, network, { emptyCache = false, failCacheWrite = false } = {
   }
   async function lifecycle(name) {
     let pending;
-    events[name]({ waitUntil: value => { pending = value; } });
-    await pending;
+    installing = name === 'install';
+    try {
+      events[name]({ waitUntil: value => { pending = value; } });
+      await pending;
+    } finally { installing = false; }
   }
   return { scope, dispatch, lifecycle, calls, puts, deletes, opened, added, claims: () => claims, skips: () => skips };
 }

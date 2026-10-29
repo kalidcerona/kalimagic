@@ -67,6 +67,8 @@ function boot(source, scope, state, stores) {
   let jsUrl = '';
   const network = async (input) => {
     const url = new URL(typeof input === 'string' ? input : input.url);
+    // Both addAll and explicit install fetches identify the executable probe.
+    if (!jsUrl && /\.(?:mjs|js)$/.test(url.pathname)) jsUrl = url.href;
     const base = new URL(scope).pathname;
     let name = url.pathname.startsWith(base) ? url.pathname.slice(base.length) : url.pathname;
     if (name === '') name = 'index.html';

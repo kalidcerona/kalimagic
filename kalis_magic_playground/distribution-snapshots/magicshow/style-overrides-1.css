@@ -136,6 +136,8 @@ p,li,.constellation-detail,.intro-line,#tutorialCoach{word-break:keep-all;overfl
 #stage :is(.stats,.mental,.shield,.combo,.bestiary-venue,.bestiary-entry,.easy-stat,.daily-mission,.dealer-gem-menu,.gem-shop-item,.gem-game){background:var(--raised);border:1px solid var(--line);box-shadow:0 2px 0 #100D16;text-shadow:none}
 #stage :is(.doubt-label,.xp-number,.lv,.box-number){text-shadow:none}
 #stage :is(.guide-highlight,.tutorial-target){outline:none;border-color:var(--gold)!important;box-shadow:inset 0 0 0 2px var(--gold);animation:none}
+/* Keep the existing coach target visible above the frameless board reset in every layout. */
+html body #viewport#viewport #stage#stage#stage#stage #board .cell.tutorial-target:not(.locked):not(.empty){box-shadow:inset 0 0 0 2px #74f447;animation:none}
 /* Top bar and HUD retain the U17 44px baseline and safe-area coordinates. */
 .phone #phoneTop{background:#120F1A;border-bottom:1px solid #2A2640;gap:6px}
 .phone #phoneVenue .venue-name{font-size:13px;font-weight:700;color:var(--ink);letter-spacing:0;text-shadow:none}

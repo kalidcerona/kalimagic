@@ -24,7 +24,7 @@
   P(D.storyReview.tutorialLesson.before, L([["세로나","옆 반에서 소문 듣고 온 친구네요. 칼리씨, 이번엔 조금 어려울 수도 있어요.","serious",{"review":"신규"}],["세로나","막히는 순간도 연습이에요. 오늘은 잘 안 돼도 괜찮아요.","serious"]]));
   P(D.storyV15.tutorial.coaching, L([["NDD","젓가락 이리 줘 봐용. 나도 해 볼래용.","serious"],["NDD","손만 빠르면 되지 않용?","serious"],["NDD","방금 소매로 넣은 거 아니에용?","serious"],["NDD","한 번만 더, 천천히용!","serious"]]));
   P(D.storyReview.tutorialLesson.fail, L([["칼리","빠르다고 다 되는 건 아니네요. ㅋㅋ","serious",{"review":"신규"}],["세로나","괜찮아요, 칼리씨. 처음엔 누구나 막혀요. 여기까지가 실패 연습이에요.","happy",{"review":"신규"}],["세로나","동전은 그대로예요. 잠깐 쉬고, 비법 노트에서 비법 하나 배워 봐요.","happy",{"review":"신규"}]]));
-  P(D.storyReview.tutorialLesson.buy, L([["세로나","빛나는 비법에서 배우기를 눌러요.","happy",{"review":"신규"}]]));
+  P(D.storyReview.tutorialLesson.buy, L([["세로나","빛나는 비법의 가격을 눌러 배워요.","happy",{"review":"신규"}]]));
   P(D.storyReview.tutorialLesson.retry, L([["세로나","배운 비법으로 다시 보여 줘요. 이번엔 NDD 눈을 보면서요.","happy",{"review":"신규"}]]));
   P(D.storyV15.tutorial.defeat, L([["NDD","아니 이거 진짜에용","surprised"],["NDD","안경에 김이 서네용. 다시 봐도 모르겠어용.","surprised"],["칼리","오늘 세 번째 관객인데 제일 떨렸어요. 그래도 끝까지 하니까 웃어 주네요.","serious"],["세로나","잘했어요, 칼리씨. 이제 집에 가서 가족에게도 보여 줄까요? 저는 늘 옆에서 지켜볼게요.","serious"]]));
   P(D.storyV15.tutorial.schoolChain.upgrade, L([["세로나","비법은 여기서 한 번만 올려요.","serious"],["세로나","아이컨택, 한 단계면 돼요.","serious"],["칼리","아이컨택, 한 단계 올려 볼게요.","serious"]]));
