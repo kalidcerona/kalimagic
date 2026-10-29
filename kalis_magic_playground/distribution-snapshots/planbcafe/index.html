@@ -29,32 +29,31 @@
       #install-hint { position: fixed; left: max(12px, env(safe-area-inset-left)); top: max(8px, env(safe-area-inset-top));
         z-index: 10; max-width: 85%; padding: 8px 12px; background: #f7f0e0; color: #33241a;
         border: 2px solid #8c6b52; border-radius: 12px; font: 14px/1.4 sans-serif; }
-      #install-hint[hidden], #install-button[hidden] { display: none; }
+      #install-hint[hidden], #install-button[hidden], #update-notice[hidden] { display: none; }
+      #update-notice { position: fixed; right: max(12px, env(safe-area-inset-right)); top: max(8px, env(safe-area-inset-top));
+        z-index: 10; max-width: 60%; padding: 8px 12px; background: #f7f0e0; color: #33241a; word-break: keep-all;
+        border: 2px solid #8c6b52; border-radius: 12px; font: 14px/1.4 sans-serif; }
+      #update-notice button { min-height: 44px; min-width: 44px; font: inherit; margin-left: 8px; }
       #install-hint button { min-height: 44px; min-width: 44px; font: inherit; margin-left: 8px; }
-      #update-prompt, #install-help { position: fixed; z-index: 20; left: 50%; top: 50%; transform: translate(-50%, -50%);
+      #install-help { position: fixed; z-index: 20; left: 50%; top: 50%; transform: translate(-50%, -50%);
         width: min(420px, calc(100% - 32px)); box-sizing: border-box; padding: 20px;
         color: #33241a; background: #f7f0e0; border: 2px solid #8c6b52; border-radius: 14px;
         font: 16px/1.5 -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; text-align: center; }
-      #update-prompt[hidden], #install-help[hidden] { display: none; }
-      #update-prompt h2, #install-help h2 { margin: 0 0 8px; font-size: 21px; }
-      #update-prompt p, #install-help p { margin: 0 0 16px; word-break: keep-all; }
-      #update-prompt button, #install-help button { width: 100%; min-height: 52px; margin-top: 8px; font: inherit; font-weight: 700;
+      #install-help[hidden] { display: none; }
+      #install-help h2 { margin: 0 0 8px; font-size: 21px; }
+      #install-help p { margin: 0 0 16px; word-break: keep-all; }
+      #install-help button { width: 100%; min-height: 52px; margin-top: 8px; font: inherit; font-weight: 700;
         color: #33241a; background: #fffaf0; border: 1px solid #8c6b52; border-radius: 9px; }
     </style>
   </head>
   <body>
     <div id="loading">플랜비 카페 불러오는 중...<small id="loading-detail">잠시만 기다려 주세요</small></div>
-    <section id="update-prompt" role="dialog" aria-modal="true" aria-labelledby="update-title" hidden>
-      <h2 id="update-title">새 버전이 있어요</h2>
-      <p>지금 업데이트할까요? 저장한 진행은 그대로예요.</p>
-      <button id="update-now">지금 업데이트</button>
-      <button id="update-later">나중에</button>
-    </section>
     <section id="install-help" role="dialog" aria-modal="true" aria-labelledby="install-help-title" hidden>
       <h2 id="install-help-title">홈 화면에 설치</h2>
       <p id="install-help-text"></p>
       <button id="install-help-close">닫기</button>
     </section>
+    <aside id="update-notice" role="status" hidden>새 버전이 나왔어요. 다시 열면 바로 바뀌어요.<button id="update-notice-close">닫기</button></aside>
     <aside id="install-hint" hidden><span id="install-text"></span><button id="install-button" hidden>설치</button><button id="dismiss-hint" aria-label="설치 안내 닫기">닫기</button></aside>
     <canvas id="canvas" width="1280" height="720" oncontextmenu="event.preventDefault()"></canvas>
 
@@ -132,47 +131,96 @@
       var openWindow = window.open;
       window.open = function (url) {
         if (String(url) === "planb:install") { requestInstall(); return null; }
-        if (String(url) === "planb:sync") { requestPersist(); return null; }
+        if (String(url).indexOf("planb:sync") === 0) { requestPersist(String(url)); return null; }
         return openWindow.apply(window, arguments);
       };
 
       // Saves: love.js keeps love.filesystem in memory and copies it to IndexedDB only on
       // "beforeunload", which phones rarely fire when an app is swiped away. The game calls
-      // love.system.openURL("planb:sync") after each write (src/core/websync.lua), and the
-      // page also copies when it is hidden or closed. tools/build_web.sh sets Module.FS once
-      // the saved files have been loaded, so an early copy can never wipe them.
-      // One FS.syncfs at a time; a request during a copy queues exactly one more.
-      var syncing = false, syncAgain = false, syncTimer = null;
+      // love.system.openURL("planb:sync?<n>&<session>&<save dir>") after each write
+      // (src/core/websync.lua); the copy starts as soon as that Lua call returns (no timer).
+      // tools/build_web.sh sets Module.FS once the saved files have been loaded, so an early
+      // copy can never wipe them. One FS.syncfs at a time; a request during a copy queues
+      // exactly one more. After a copy the page writes "<session> <n> ok|err" to
+      // <save dir>/websync.txt, so the game says 「저장했어요」 only once it is in IndexedDB.
+      // A copy makes IndexedDB equal to this page's files, so a page that wrote nothing must
+      // never copy: an old browser tab would delete a save made in the installed app. Hiding
+      // or closing copies only unsaved writes (build_web.sh drops love.js's unconditional
+      // beforeunload copy), and after a copy other open pages reload their files from it.
+      var syncing = false, syncAgain = false, syncQueued = false, syncDirty = false;
+      var syncWanted = 0, syncFlag = null, lastReport = null;
+      var saveChannel = typeof BroadcastChannel === "function" ? new BroadcastChannel("planb-saves") : null;
       function persistSaves() {
-        if (syncTimer !== null) { clearTimeout(syncTimer); syncTimer = null; }
         if (syncing || !Module.FS) { syncAgain = true; return; }
-        syncing = true; syncAgain = false;
+        syncing = true; syncAgain = false; syncDirty = false;
+        var covers = syncWanted, flag = syncFlag;
         Module.FS.syncfs(false, function (err) {
-          if (err) console.error(err);
+          if (err) { console.error(err); syncDirty = true; }
+          else if (saveChannel) saveChannel.postMessage("saved");
+          if (flag && covers) {
+            lastReport = { path: flag.dir + "/websync.txt", text: flag.session + " " + covers + (err ? " err" : " ok") + "\n" };
+            try { Module.FS.writeFile(lastReport.path, lastReport.text); } catch (e) { console.error(e); }
+          }
           syncing = false;
           if (syncAgain) persistSaves();
         });
       }
-      function requestPersist() {   // several writes in one frame make one copy
-        if (syncTimer === null) syncTimer = setTimeout(persistSaves, 0);
+      function requestPersist(url) {
+        var args = String(url || "").split("?")[1];
+        if (args) {
+          var parts = args.split("&"), n = Number(parts[0]);
+          if (n > 0 && parts[1] && parts[2]) {
+            syncFlag = { session: parts[1], dir: parts.slice(2).join("&") };
+            syncWanted = Math.max(syncWanted, n);
+          }
+        }
+        syncDirty = true;
+        if (syncQueued) return;   // several writes in one Lua call make one copy
+        syncQueued = true;
+        Promise.resolve().then(function () { syncQueued = false; persistSaves(); });
       }
+      function flushUnsaved() { if (syncDirty || syncAgain) persistSaves(); }
       document.addEventListener("visibilitychange", function () {
-        if (document.visibilityState === "hidden") persistSaves();
+        if (document.visibilityState === "hidden") flushUnsaved();
       });
-      window.addEventListener("pagehide", persistSaves);
-      var updatePrompt = document.getElementById("update-prompt");
+      window.addEventListener("pagehide", flushUnsaved);
+      if (saveChannel) saveChannel.onmessage = function () {   // another page saved: take its files
+        if (syncing || syncDirty || syncAgain || !Module.FS) return;   // our own writes copy first
+        syncing = true;
+        Module.FS.syncfs(true, function (err) {
+          if (err) console.error(err);
+          if (lastReport) { try { Module.FS.writeFile(lastReport.path, lastReport.text); } catch (e) { console.error(e); } }
+          syncing = false;
+          if (syncAgain) persistSaves();
+        });
+      };
       var startGame = null;
       var startRequested = false;
+      // Every launch runs the newest deployed build: before the game starts the page asks the
+      // network for sw.js (5 s limit). A new version is downloaded and switched to at once
+      // (「새 버전으로 바꾸는 중...」, then one reload); offline or a failed check starts the
+      // cached build. A version found after the game started is never applied mid-game: a
+      // small notice says the next launch will use it.
       var bootDecision = false;
       var gameStarted = false;
-      var bootTimer = setTimeout(function () {
-        bootDecision = true; updatePrompt.hidden = true; startOnce();
-      }, 3000);
+      var updatingText = null;
+      var bootTimer = setTimeout(startWithoutUpdate, 5000);
       function startOnce() {
         if (gameStarted || !startRequested || !bootDecision) return;
         gameStarted = true;
         clearTimeout(bootTimer);
         if (startGame) startGame();
+      }
+      function startWithoutUpdate() {
+        if (bootDecision) return;
+        bootDecision = true;
+        if (updatingText) { updatingText = null; setLoading("플랜비 카페 불러오는 중...", ""); }
+        startOnce();
+      }
+      function showUpdating(text) {
+        updatingText = text;
+        setLoading(text, "저장한 진행은 그대로예요");
+        document.getElementById("loading").style.display = "block";
       }
       var serviceWorkerReady = new Promise(function (resolve) {
         if (!("serviceWorker" in navigator)) { resolve(null); return; }
@@ -182,68 +230,61 @@
           });
         }, { once: true });
       });
-      function waitForUpdateChoice(registration) {
+      function updateBeforeStart(registration) {
         if (bootDecision) return;
-        if (!registration || !navigator.serviceWorker.controller) { bootDecision = true; startOnce(); return; }
-        var watchingWorker = null;
-        var prompting = false;
-        function startWithoutUpdate() {
-          if (bootDecision) return;
-          bootDecision = true; startOnce();
+        if (!registration || !navigator.serviceWorker.controller) { startWithoutUpdate(); return; }
+        var watchingWorker = null, applying = false;
+        function apply(worker) {   // switch to the downloaded version, then reload once
+          if (bootDecision || applying) return;
+          applying = true;
+          clearTimeout(bootTimer);
+          bootTimer = setTimeout(startWithoutUpdate, 15000);
+          showUpdating("새 버전으로 바꾸는 중...");
+          navigator.serviceWorker.addEventListener("controllerchange", function () {
+            if (bootDecision) return;
+            bootDecision = true; location.reload();
+          });
+          worker.postMessage("SKIP_WAITING");
         }
         function watchInstall() {
           var worker = registration.installing;
           if (!worker || worker === watchingWorker || bootDecision) return;
           watchingWorker = worker;
           clearTimeout(bootTimer);
-          bootTimer = setTimeout(startWithoutUpdate, 8000);
+          bootTimer = setTimeout(startWithoutUpdate, 60000);   // a known new version is downloading
+          showUpdating("새 버전 받는 중...");
           function stateChanged() {
-            if (bootDecision || prompting) return;
-            if (worker.state === "installed") showPrompt(worker);
+            if (worker.state === "installed") apply(worker);
             else if (worker.state === "redundant") startWithoutUpdate();
           }
           worker.addEventListener("statechange", stateChanged);
           stateChanged();
         }
-        if (registration.waiting) { showPrompt(registration.waiting); return; }
+        if (registration.waiting) { apply(registration.waiting); return; }
         registration.addEventListener("updatefound", watchInstall);
         watchInstall();
         registration.update().then(function () {
-          if (bootDecision) return;
-          if (registration.waiting) showPrompt(registration.waiting);
+          if (bootDecision || applying) return;
+          if (registration.waiting) apply(registration.waiting);
           else { watchInstall(); if (!watchingWorker) startWithoutUpdate(); }
         }).catch(function () { if (!watchingWorker) startWithoutUpdate(); });
-        function showPrompt(waitingWorker) {
-          if (bootDecision || prompting) return;
-          prompting = true;
-          clearTimeout(bootTimer);
-          updatePrompt.hidden = false;
-          var nowButton = document.getElementById("update-now");
-          var laterButton = document.getElementById("update-later");
-          var finished = false;
-          function finishLater() {
-            if (finished) return;
-            finished = true; bootDecision = true; updatePrompt.hidden = true; startOnce();
-          }
-          laterButton.onclick = finishLater;
-          nowButton.onclick = function () {
-            if (finished) return;
-            nowButton.disabled = true; laterButton.disabled = true;
-            var timer = setTimeout(finishLater, 10000);
-            navigator.serviceWorker.addEventListener("controllerchange", function () {
-              if (!finished && navigator.serviceWorker.controller === waitingWorker) {
-                finished = true; clearTimeout(timer); location.reload();
-              }
-            });
-            waitingWorker.postMessage("SKIP_WAITING");
-          };
-          updatePrompt.onkeydown = function (event) {
-            if (event.key === "Escape") { event.preventDefault(); finishLater(); }
-          };
-          nowButton.focus();
-        }
       }
-      serviceWorkerReady.then(waitForUpdateChoice);
+      var updateNotice = document.getElementById("update-notice");
+      document.getElementById("update-notice-close").onclick = function () { updateNotice.hidden = true; };
+      function noticeLateUpdate(registration) {
+        if (!registration || !navigator.serviceWorker.controller) return;
+        function late() { if (gameStarted && registration.waiting) updateNotice.hidden = false; }
+        function follow() {
+          var worker = registration.installing;
+          if (worker) worker.addEventListener("statechange", late);
+        }
+        registration.addEventListener("updatefound", follow);
+        follow(); late();
+      }
+      serviceWorkerReady.then(function (registration) {
+        updateBeforeStart(registration);
+        noticeLateUpdate(registration);
+      });
 
       // Largest 16:9 box that fits the window; the rest stays black.
       function fitCanvas() {
@@ -280,7 +321,7 @@
 
       // No page scroll, zoom or long-press menu; taps go to the game.
       ["touchstart", "touchmove", "touchend", "gesturestart"].forEach(function (name) {
-        document.addEventListener(name, function (e) { if (!e.target.closest("#install-hint, #update-prompt, #install-help") && e.cancelable) e.preventDefault(); }, { passive: false });
+        document.addEventListener(name, function (e) { if (!e.target.closest("#install-hint, #install-help, #update-notice") && e.cancelable) e.preventDefault(); }, { passive: false });
       });
       window.addEventListener("keydown", function (e) {
         if ([32, 37, 38, 39, 40].indexOf(e.keyCode) > -1) e.preventDefault();
@@ -308,6 +349,7 @@
           return canvas;
         })(),
         setStatus: function (text) {
+          if (updatingText) return;   // 「새 버전으로 바꾸는 중...」 stays until the switch
           if (text) {
             setLoading("플랜비 카페 불러오는 중...", "준비 중 (" + (this.totalDependencies - this.remainingDependencies) + "/" + Math.max(1, this.totalDependencies) + ")");
           } else if (Module.remainingDependencies === 0) {
