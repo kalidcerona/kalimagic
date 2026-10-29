@@ -132,8 +132,34 @@
       var openWindow = window.open;
       window.open = function (url) {
         if (String(url) === "planb:install") { requestInstall(); return null; }
+        if (String(url) === "planb:sync") { requestPersist(); return null; }
         return openWindow.apply(window, arguments);
       };
+
+      // Saves: love.js keeps love.filesystem in memory and copies it to IndexedDB only on
+      // "beforeunload", which phones rarely fire when an app is swiped away. The game calls
+      // love.system.openURL("planb:sync") after each write (src/core/websync.lua), and the
+      // page also copies when it is hidden or closed. tools/build_web.sh sets Module.FS once
+      // the saved files have been loaded, so an early copy can never wipe them.
+      // One FS.syncfs at a time; a request during a copy queues exactly one more.
+      var syncing = false, syncAgain = false, syncTimer = null;
+      function persistSaves() {
+        if (syncTimer !== null) { clearTimeout(syncTimer); syncTimer = null; }
+        if (syncing || !Module.FS) { syncAgain = true; return; }
+        syncing = true; syncAgain = false;
+        Module.FS.syncfs(false, function (err) {
+          if (err) console.error(err);
+          syncing = false;
+          if (syncAgain) persistSaves();
+        });
+      }
+      function requestPersist() {   // several writes in one frame make one copy
+        if (syncTimer === null) syncTimer = setTimeout(persistSaves, 0);
+      }
+      document.addEventListener("visibilitychange", function () {
+        if (document.visibilityState === "hidden") persistSaves();
+      });
+      window.addEventListener("pagehide", persistSaves);
       var updatePrompt = document.getElementById("update-prompt");
       var startGame = null;
       var startRequested = false;
@@ -269,7 +295,7 @@
 
       var Module = {
         arguments: ["./game.love"],
-        postRun: [fitCanvas],
+        postRun: [fitCanvas, function () { if (syncAgain) requestPersist(); }],
         INITIAL_MEMORY: 134217728,
         printErr: console.error.bind(console),
         canvas: (function () {
