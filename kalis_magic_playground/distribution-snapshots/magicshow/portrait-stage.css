@@ -208,6 +208,6 @@ html body.portrait-layout.phone:not(.tablet).portrait-compact #viewport#viewport
 /* Keep complete square frames while the painted actor occupies 40-45% of the stage. */
 html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #audienceCard { --kali-size:min(calc(var(--stage-w) * .48),calc(var(--p-stage) * .54)); }
 /* Task 0: give the portrait loss line its own lane while reward toasts remain visible. */
-html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage:has(#audienceCard.boo-scene) #toasts {
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage.f-boo-scene #toasts {
   top: calc(var(--p-top, 44px) + 64px) !important;
 }

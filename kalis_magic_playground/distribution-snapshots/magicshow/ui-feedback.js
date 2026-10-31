@@ -47,7 +47,7 @@
     const board=$('board');
     // All saved slots belong to the same 5x5 logical board (including arranged positions).
     // Match the core pitch exactly so boardTransform(), wand areas and effects stay aligned.
-    const k=C.CONST, pad=phone ? (portraitLayout() ? 16 : 12) : 20;
+    const k=C.CONST, pad=phone ? (portraitLayout() ? 8 : 2) : 2;
     const room=Math.min(board.clientWidth,board.clientHeight)-2*pad;
     if(room<=0)return;
     const unit=room/(k.boardCols*k.cellSize+(k.boardCols-1)*k.cellGap);
@@ -375,7 +375,7 @@
     const MS = 2500, CHEER = 150, PAY = CHEER, card = $('audienceCard'), aud = $('audience');
     const stamp = element('div', headliner ? '기립박수!' : '감탄!', 'win-stamp'); stamp.id = 'winStamp'; stamp.setAttribute('aria-hidden', 'true');
     const flash = element('div', '', 'win-flash'); flash.setAttribute('aria-hidden', 'true');
-    card.append(flash, stamp);
+    card.append(flash, stamp); card.classList.add('f-win-stamp');
     const anims = [];
     const run = (el, frames, opts) => { const a = el.animate(frames, { fill: 'both', easing: 'linear', ...opts }); anims.push(a); return a; };
     const at = ms => ms / MS;
@@ -409,7 +409,7 @@
     if (gems) fly(mid.x, mid.y, target('gems'), '🧣', '', '#ffe35b', PAY + 260); // first, so the eight coins cannot fill the flight cap before it
     coinStream(mid.x, mid.y, coins, PAY);
     const pulse = setTimeout(() => { const el = $('coins')?.closest('.currency') || $('coins'); if (!reduced && el) el.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.18)' }, { transform: 'scale(1)' }], { duration: 220 }); }, PAY + 240 + Math.min(coins, 8) * 28);
-    return { stop() { clearTimeout(cheer); clearTimeout(pulse); anims.forEach(a => { if (a !== audience.winExit) a.cancel(); }); stamp.remove(); flash.remove(); } };
+    return { stop() { clearTimeout(cheer); clearTimeout(pulse); anims.forEach(a => { if (a !== audience.winExit) a.cancel(); }); stamp.remove(); flash.remove(); card.classList.remove('f-win-stamp'); } };
   }
   function cellCenter(i) {
     const p = C.cellPosition(state, i), k = C.CONST;

@@ -103,3 +103,10 @@ html body.phone.compact-notice:not(.portrait-layout):not(.tablet) #viewport#view
 @keyframes ms-act-pop { 0% { transform:scale(1); color:#E8BF68 } 35% { transform:scale(1.12); color:#FFF3C4; text-shadow:1px 1px 0 #100D16,-1px 0 #100D16,0 -1px #100D16,0 0 6px #FFE38A } 100% { transform:scale(1); color:#E8BF68 } }
 /* fixP 6: the headliner plate keeps 「오늘의 헤드라이너」 and 「· 이름」 whole; phone landscape uses the portrait size so one line usually fits. */
 #finaleFx .headliner-plate .nobr { white-space:nowrap; }
+
+/* Compact landscape notices use the open lane below the two plates. */
+html body.phone.compact-notice:not(.portrait-layout):not(.tablet) #viewport#viewport #stage#stage#stage#stage #toasts { left:14px !important; top:calc(var(--ST) + 64px) !important; width:calc(var(--CW) * .5 - 16px) !important; }
+html body.phone.compact-notice:not(.portrait-layout):not(.tablet) #viewport#viewport #stage#stage#stage#stage #toasts#toasts .toast { min-height:0; height:auto; max-height:none; white-space:normal; overflow-wrap:anywhere; text-overflow:clip; }
+/* Keep two portrait notices in one row while allowing their text to wrap. */
+html body.portrait-layout.phone #viewport#viewport #stage#stage#stage#stage #toasts { height:auto; max-height:none !important; flex-direction:row; }
+html body.portrait-layout.phone #viewport#viewport #stage#stage#stage#stage #toasts .toast { flex:1 1 0; width:0; height:auto; max-height:none; white-space:normal; overflow-wrap:anywhere; text-overflow:clip; }

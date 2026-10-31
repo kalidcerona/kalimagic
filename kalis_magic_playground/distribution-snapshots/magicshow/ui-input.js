@@ -23,37 +23,17 @@
     $('wand').classList.toggle('visible', pointer.inside && !menu && !portrait());
     if (!pointer.inside) return;
     const r = wandRect();
-    let ratio = boardWidth() / C.CONST.boardSize;
-    // Portrait: #board used to be centred with translateX(-50%). offsetLeft ignores that transform, so the green
-    // square was drawn half a board to the right of the finger. Place the wand from the visual rect instead
-    // (the same rect boardTransform uses for hits) and do not use a CSS translate on the board.
-    if (portraitLayout()) {
-      let base = wandOffset;
-      if (!base || base.portrait !== true) {
-        const board = $('board').getBoundingClientRect(), card = $('boardCard').getBoundingClientRect();
-        base = wandOffset = {
-          portrait: true,
-          x: (board.left - card.left) / scale, y: (board.top - card.top) / scale,
-          ratioX: board.width / scale / C.CONST.boardSize, ratioY: board.height / scale / C.CONST.boardSize
-        };
-      }
-      ratio = base.ratioX;
-      const wand = $('wand');
-      wand.style.left = `${base.x + r.x * base.ratioX}px`; wand.style.top = `${base.y + r.y * base.ratioY}px`;
-      wand.style.width = `${r.width * base.ratioX}px`; wand.style.height = `${r.height * base.ratioY}px`;
-      wand.style.transform = 'none';
-    } else {
-    if ($('wand').style.left) { $('wand').style.left = ''; $('wand').style.top = ''; }
-    $('wand').style.width = `${r.width * ratio}px`; $('wand').style.height = `${r.height * ratio}px`;
-    // U36: since the skill column moved into #boardCard (U30c) the board sits 60 px right of and 27 px below the wand's own origin on phones,
-    // so the drawn box was shifted by about half a case against the cells it hit. The board's offset inside the card is added here.
-    // v4 U40: the offset only changes with the layout, so it is kept until fit() clears it (it used to be re-read every frame, forcing a layout after the frame's DOM writes).
-    let off = wandOffset;
-    // 12-115: a phone landscape board taller than wide puts the extra height into its top padding (above the usual inset, which equals the side padding),
-    // so the cells sit that much lower than the 608-space mapping assumes; the drawn box follows them (was up to 100 px high on an opened Fold).
-    if (!off || off.portrait) { const board = $('board'), bs = getComputedStyle(board), extraTop = Math.max(0, (parseFloat(bs.paddingTop) - parseFloat(bs.paddingLeft)) || 0); off = { x: board.offsetLeft + board.clientLeft + (parseFloat(board.style?.getPropertyValue('--grid-shift-x')) || 0) - $('wand').offsetLeft, y: board.offsetTop + board.clientTop + extraTop + (parseFloat(board.style?.getPropertyValue('--grid-shift-y')) || 0) - $('wand').offsetTop }; wandOffset = off; }
-    $('wand').style.transform = `translate(${off.x + r.x * ratio}px,${off.y + r.y * ratio}px)`;
-    }
+    const first = $('board').querySelector('.cell');
+    if (!first) return;
+    const cell = first.getBoundingClientRect(), card = $('boardCard').getBoundingClientRect();
+    const k = C.CONST, pos = C.cellPosition(state, 0), pitch = k.cellSize + k.cellGap;
+    const ratioX = cell.width / scale / k.cellSize, ratioY = cell.height / scale / k.cellSize;
+    const x = (cell.left - card.left) / scale - (k.boardInset + pos.col * pitch) * ratioX;
+    const y = (cell.top - card.top) / scale - (k.boardInset + pos.row * pitch) * ratioY;
+    const wand = $('wand'), ratio = ratioX;
+    wand.style.left = `${x + r.x * ratioX}px`; wand.style.top = `${y + r.y * ratioY}px`;
+    wand.style.width = `${r.width * ratioX}px`; wand.style.height = `${r.height * ratioY}px`;
+    wand.style.transform = 'none';
     if(phone){
       const target=coveredCells().find(i=>i<state.board.length),icon=$('wandIcon');
       icon.hidden=target===undefined;
@@ -314,11 +294,11 @@
     const v=D.venues[e.venue-1],head=C.roster(v).find(a=>a.id===e.audId),a=e.theaterPhase===1&&D.theaterPhases&&v.audiences.find(x=>x.id===D.theaterPhases.face)||head; // s5b: a theater phase-1 loss is against 앞줄 관객
     failureAudience=a?a.id:e.audId;
     if(a)sprite($('audience'),tutorialStageBase()||audienceAsset(v,a));
-    $('audienceCard').classList.add('boo-scene');
+    $('audienceCard').classList.add('boo-scene'); $('stage').classList.add('f-boo-scene');
     // v6 script (owner Q11): the lose moment is the audience's own regretful line (missLine), with no 「우우!」; a heckle line only when it has none.
     $('heckle').textContent=(typeof tutorialMissLine==='function'?tutorialMissLine():'')||a?.missLine||a?.lines?.heckles?.[0]||a?.heckles?.[0]||'다음에는 더 잘해 봐!';
     $('heckle').classList.add('visible');$('magicianMini').classList.add('disappointed','reacting');$('magicianMini').dataset.face='boo';sprite($('magicianMini'),kaliReact('sad'));
-    clearTimeout(booTimer);booTimer=setTimeout(()=>{$('audienceCard').classList.remove('boo-scene');$('heckle').classList.remove('visible');$('magicianMini').classList.remove('disappointed','reacting');$('magicianMini').dataset.face='';kaliMoodState='normal';audMoodState='doubt';sprite($('magicianMini'),'assets/magician-idle.png');menu='';showFailure();},1500);
+    clearTimeout(booTimer);booTimer=setTimeout(()=>{$('audienceCard').classList.remove('boo-scene');$('stage').classList.remove('f-boo-scene');$('heckle').classList.remove('visible');$('magicianMini').classList.remove('disappointed','reacting');$('magicianMini').dataset.face='';kaliMoodState='normal';audMoodState='doubt';sprite($('magicianMini'),'assets/magician-idle.png');menu='';showFailure();},1500);
   }
   function practiceGoLabel() {
     const name = D.venues[state.venue - 1]?.name || '', code = name ? name.charCodeAt(name.length - 1) : 0;

@@ -272,3 +272,6 @@ html body.phone:not(.portrait-layout) #viewport#viewport #stage #stageStats #sta
 html body.phone:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage#stage#stage #stageStats :is(.ms-label,.ms-num) { font-size:9px !important; line-height:10px !important; }
 html body.phone:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage#stage#stage #stageStats .ms-strip img { width:9px; height:9px; }
 html body.phone:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage#stage#stage #stageStats .ms-act-num { font-size:12px; line-height:13px; }
+
+/* Three gauge rows retain their full line height on the narrow landscape band. */
+html body.phone.phone-narrow:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage#stage#stage #audienceCard #stageStats { --stats-band-height:56px; }

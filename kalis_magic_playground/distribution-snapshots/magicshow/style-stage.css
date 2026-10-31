@@ -353,5 +353,10 @@ html body.phone:not(.portrait-layout):not(.tablet) #viewport#viewport #stage#sta
   /* r51: audienceCard must release its stacking context for this to beat banner z26. */
   z-index:27;
 }
-html body.phone:not(.portrait-layout):not(.tablet) #viewport#viewport #stage#stage #audienceCard:has(> #winStamp) { isolation:auto; }
+html body.phone:not(.portrait-layout):not(.tablet) #viewport#viewport #stage#stage #audienceCard.f-win-stamp { isolation:auto; }
+}
+
+/* Keep the pop below the heckle plate in compact landscape scenes. */
+@media (max-height:380px), (max-width:700px) {
+html body.phone:not(.portrait-layout):not(.tablet) #viewport#viewport #stage#stage #audienceCard #winStamp { top:64px; left:56px; right:auto; font-size:11px; line-height:1.25; transform-origin:100% 0; }
 }

@@ -147,7 +147,7 @@
     running.forEach(a=>a.cancel());return true;
   }
   async function revealCups(c,table,choice){
-    if(dealerBusy||c.phase!=='pick')return;dealerBusy=true;
+    if(dealerBusy||c.phase!=='pick')return;dealerBusy=true;$('closePanel').disabled=true;
     const cups=[...table.querySelectorAll('.game-cup')];cups.forEach(el=>el.disabled=true);dealerBack(true);
     // Pick first (saved), then animate, so a reload cannot be used to pick again.
     C.dealerCupsPick(state,choice);save();

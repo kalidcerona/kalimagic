@@ -190,3 +190,8 @@ html body.phone:not(.tablet):not(.portrait-layout) #viewport#viewport #stage #au
   flex:1 1 auto; min-width:0; white-space:nowrap; word-break:keep-all; overflow-wrap:normal;
   overflow:hidden; text-overflow:ellipsis; font-size:10px; line-height:16px;
 }
+
+/* Let the full audience name and value use the available stage width. */
+html body.phone:not(.tablet):not(.portrait-layout) #viewport#viewport #stage #audienceCard .doubt-plate { max-width:calc(var(--CW) - 16px); }
+html body.phone:not(.tablet):not(.portrait-layout) #viewport#viewport #stage #audienceCard .doubt-plate #doubtTitle,
+html body.phone:not(.tablet):not(.portrait-layout) #viewport#viewport #stage #audienceCard .doubt-plate.plate-2l #doubtTitle { flex:none; min-width:auto; overflow:visible; text-overflow:clip; }
