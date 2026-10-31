@@ -28,7 +28,12 @@ html body.phone.phone-narrow #viewport#viewport #stage #audienceCard #stageStats
 #stage #panel[data-screen="dealer"] .dealer-game-art{position:relative;flex:none;width:84px;height:84px;display:grid;place-items:center}
 #stage #panel[data-screen="dealer"] .dealer-game-emoji{font-size:40px;line-height:1}
 #stage #panel[data-screen="dealer"] .dealer-game-card h2{box-sizing:border-box;width:100%;height:26px;margin:0;overflow:hidden;font-size:20px;line-height:26px}
-#stage #panel[data-screen="dealer"] .dealer-cost{box-sizing:border-box;width:100%;height:22px;margin:0;overflow:hidden;color:#E8BF68;font-size:16px;line-height:22px}
+#stage #panel[data-screen="dealer"] .dealer-cost{box-sizing:border-box;width:100%;height:42px;margin:0;overflow:hidden;color:#E8BF68;font-size:16px;line-height:22px}
+/* r51: reserve the price tag's 8px art edges in every choice layout.
+   Trade 20px of artwork height for label room, preserving the card's total height. */
+html body #viewport#viewport #stage#stage#stage#stage #panel[data-screen="dealer"] .dealer-cost { padding:10px 12px; justify-content:center; flex-shrink:0; }
+#stage #panel[data-screen="dealer"] .dealer-game-art { height:64px; }
+#stage #panel[data-screen="dealer"] .dealer-game-img { height:64px; }
 #stage #panel[data-screen="dealer"] .dealer-reward{box-sizing:border-box;width:100%;height:54px;margin:0;overflow:hidden;color:#F2E6C8;font-size:13px;line-height:18px}
 #stage #panel[data-screen="dealer"] .dealer-need{box-sizing:border-box;width:100%;height:18px;margin:0;overflow:hidden;font-size:12px;line-height:18px}
 #stage #panel[data-screen="dealer"] .dealer-game-card .game-start{width:100%;min-height:48px;margin-top:auto}
@@ -233,9 +238,30 @@ html body #viewport#viewport #stage#stage #audienceCard #audience.headliner > .a
 }
 /* s5c: a first-use hint toast never sits over a story dialogue or an open panel (it is only started outside them; this covers a scene that opens while it shows). */
 #stage#stage.f-story #toasts .hint-toast, #stage#stage.f-panel #toasts .hint-toast { visibility:hidden; }
-/* Task 4: movement acts on props; shadows stay on the mat. Drawn folds replace the full flat card. */
-#stage .routine-card.motion-flipping { filter:drop-shadow(0 5px 2px #100d1655); }
-#stage .routine-card .bent-corner.drawn-fold { inset:0; width:100%; height:100%; aspect-ratio:auto; background-color:transparent; background-size:100% 100%; background-repeat:no-repeat; animation:none; }
-#stage .game-cup .prop-shadow { position:absolute; z-index:0; pointer-events:none; left:18%; right:18%; bottom:5%; height:9%; border-radius:50%; background:#100d16; opacity:.3; }
+/* R43: hard-edged corner curl and contact shadows; only the surface lifts. */
+#stage .routine-card.motion-flipping { filter:none; }
+#stage .routine-card .motion-surface { position:absolute; inset:0; z-index:1; pointer-events:none; }
+#stage .routine-card.has-drawn-fold img.card-art { visibility:visible; clip-path:polygon(0 0,72% 0,100% 28%,100% 100%,0 100%); }
+#stage .routine-card.has-drawn-fold:has(.bend-in) img.card-art { animation:r43-corner-cut 420ms linear both; }
+html body #viewport#viewport #stage#stage#stage#stage .routine-card .bent-corner {
+  inset:0 0 auto auto; width:28%; height:28%; aspect-ratio:auto; transform:none;
+  clip-path:polygon(0 0,100% 100%,0 100%); transform-origin:100% 0;
+  background:#322048 url('assets/ui/minigames/monte-back.webp') right top / 357% 357% no-repeat;
+  box-shadow:none; border:0;
+}
+#stage .routine-card .bent-corner:after {
+  content:''; position:absolute; inset:0;
+  background:#100d16; clip-path:polygon(0 0,100% 100%,94% 100%,0 6%);
+}
+#stage .routine-card .bent-corner:before {
+  content:''; position:absolute; left:0; top:0; bottom:0; width:2px; background:#e8d5af;
+}
+#stage .routine-card .bent-corner.bend-in { animation:u30b-bend 420ms linear both; }
+#stage :is(.game-cup,.routine-card) .prop-shadow { position:absolute; z-index:0; pointer-events:none; left:18%; right:18%; bottom:5%; height:9%; border-radius:0; clip-path:polygon(12% 0,88% 0,100% 35%,100% 65%,88% 100%,12% 100%,0 65%,0 35%); background:#100d16; opacity:.3; }
+#stage .routine-card .prop-shadow { bottom:-3px; height:5%; }
+@media(prefers-reduced-motion:reduce) {
+  #stage .routine-card.has-drawn-fold:has(.bend-in) img.card-art,
+  #stage .routine-card .bent-corner.bend-in { animation:none; }
+}
 html body #viewport#viewport #stage#stage#stage#stage #panel .dealer-speech > .dealer-turn:last-child { margin-bottom:0; }
 html body.phone:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #tutorialCoach:not([data-compact="true"]) > button { width:60px; min-width:60px; padding-left:4px; padding-right:4px; }

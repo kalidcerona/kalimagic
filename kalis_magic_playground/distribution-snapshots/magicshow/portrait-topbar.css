@@ -278,7 +278,7 @@ html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #ph
 html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #phoneTop #portraitPlain,
 html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #phoneTop #goalStrip,
 html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #phoneTop #starlightLabel,
-html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #phoneTop > button { display:none !important; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #phoneTop > button:not(#mapButton) { display:none !important; }
 html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #phoneWallet { grid-column:2; grid-row:1; width:auto; align-self:center; }
 html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #phoneWallet .currency-label { display:block; grid-column:2; grid-row:1; font:11px/12px system-ui,sans-serif; color:#f2e6c8; }
 html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #phoneWallet .currency .bitmap > * { display:none; }
@@ -349,3 +349,14 @@ html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#sta
 html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #actionDock > #gemShopQuick:active:enabled { border-image-source:url("assets/kit/btn-gold-pressed.webp"); }
 html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #actionDock > .is-new { overflow:visible; }
 html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills .is-new::after { width:30px !important; height:15px !important; top:-5px !important; right:-1px !important; }
+
+/* r46: reserve 44 px beside the wallet; the title takes the remaining width. */
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage #phoneTop {
+  grid-template-columns:minmax(0,1fr) minmax(0,200px) 44px; column-gap:4px !important;
+}
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage #phoneTop #mapButton {
+  grid-column:3; grid-row:1; align-self:center;
+}
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage #phoneWallet {
+  max-width:100%; overflow:hidden;
+}

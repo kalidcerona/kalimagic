@@ -29,6 +29,7 @@
       for (const child of skills.children) if (child.classList.contains('active-skill') && !child.classList.contains('gem-shop-quick') && !child.hidden) { other = true; break; }
       skills.classList.toggle('f-solo', !other && !!skills.querySelector(':scope > .gem-shop-quick'));
     }
+    syncCaseArrange();
   }
   function invalidateStageAudience() {
     fitStageAudience.revision = (fitStageAudience.revision || 0) + 1;
@@ -151,6 +152,7 @@
     if (path && dom.respawn.dataset.asset !== path) sprite(dom.respawn, path);
   }
   function render() {
+    if (caseArrange && (state.mode !== 'fight' || menu || lineOpen() || wonMoment)) setCaseArrange(false);
     renderBoardPad();
     if (moreReturn && $('panel').hidden && $('phoneMore').hidden) moreReturn = false; // v4 U48 M: the show was reached another way (stage travel, a scene)
     $('stage').classList.toggle('decorations-paused',paused());
@@ -186,6 +188,12 @@
     if(C.bossProfile(state)==='future'&&!wonMoment){const u=state.u19;$('phaseIndicator').hidden=false;$('phaseIndicator').textContent=['','1막 · 거울 쇼타임','2막 · 완벽한 루틴','3막 · 마지막 한 장'][u.phase];$('patternLabel').textContent=u.telegraph>0?['','쇼타임을 쓰면 내 방어도 올라가. 끝난 뒤 노려 봐.','빛나는 케이스를 2초마다 눌러 액트를 이어 줘.','이게 진짜 미래의 나야. 20초 동안 빛나는 칸만!'][u.phase]:u.phase===1?'쇼타임 중 거울 방어 상승':u.phase===2?'빛나는 칸을 계속 눌러요':u.window>0?`빛나는 최강 케이스만 · ${Math.ceil(u.window/1000)}초`:'마지막 한 장을 이어 가요';}
     if(state.u18.challenge){const c=state.u18.challenge;$('patternLabel').textContent=c.kind==='trueFan'?'찐팬 도전 · '+C.trueFanRule(c.slug).label:'다시 만난 관객';}
     $('mapButton').disabled=!state.u18.map&&!C.travelAllowed(state);
+    // Recompute outside audience()'s face cache: travel and theater phases can reuse a face.
+    $('stageNumber').textContent = encounterNumber();
+    $('mapButton').hidden = state.u15.tutorial.active || !state.u15.tutorial.done || !!state.u15.scene
+      || !!state.batchD.twist.scene || state.features.climax.left > 0 || !!wonMoment
+      || ['boo','fail','ending','rebirth','bossPhase','headliner','dealer'].includes(menu)
+      || !$('introStory').hidden || !$('sceneCard').hidden || $('stage').dataset.cutscene === '1';
     $('rebirthButton').hidden = !state.seenEnding || state.homecomingCleared&&!state.u19.cleared;
     pxText($('rebirthButton'),phone ? (state.homecomingCleared ? '✨ 환생' : '✨ 이어서') : (state.homecomingCleared?'다음 차원의 공연':'이어지는 공연'));
     if (state.pattern === 'heal' && state.mode === 'fight') $('audienceCard').classList.toggle('healing', state.patternHealMs > C.CONST.patternHealEvery - 600);
@@ -247,6 +255,21 @@
       if ($('statFinale').classList.contains('finale-near') !== near) $('statFinale').classList.toggle('finale-near', near);
     }
     numText($('levelNumber'), state.level);
+    if (phone) {
+      const values = [state.level, C.wandDamage(state) * C.CONST.tapPower,
+        C.nodeEffects(state).critRate * 100, state.u14.visitor.incomeRate];
+      ['phoneLevel','phoneTap','phoneCrit','phoneIncome'].forEach((id, i) => {
+        const el = $(id), value = Math.max(0, values[i] || 0);
+        const shown = i === 2 ? String(Math.round(value * 10) / 10) : C.formatNumber(value);
+        if (i && el.__fightValue !== undefined && value > el.__fightValue) {
+          el.classList.remove('fight-stat-up');
+          void el.offsetWidth;
+          el.classList.add('fight-stat-up');
+        }
+        el.__fightValue = value;
+        numText(el, shown);
+      });
+    }
     const xpNeed = C.xpNeed(state);
     numText($('xpNumber'), `${rounded(state.xp)}/${C.formatNumber(xpNeed)}`, true);
     $('xpFill').style.width = `${Math.min(100, state.xp / xpNeed * 100)}%`;

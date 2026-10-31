@@ -43,12 +43,13 @@
     const stop=(v,status)=>{
       const li=element('li','',`flow-stop is-${status}`);li.dataset.venue=v.slug;
       const mark=element('span','','flow-mark');mark.setAttribute('aria-hidden','true');
-      const name=status==='hidden'?'???':v.name;
+      const venueNumber=D.venues.findIndex(venue=>venue.slug===v.slug)+1;
+      const name=status==='hidden'?'???':`${venueNumber ? venueNumber+' · ' : ''}${v.name}`;
       let node;
       if(status==='cleared'){
         const first=castOf(v)[0];
         node=action('',()=>['young-kali','mirror-stage'].includes(v.slug)?startBatchDSide(v.slug==='young-kali'?'young':'mirror'):startMapFight(v.slug,first.id,'normal'),!state.u18.map&&!C.travelAllowed(state));
-        node.className='flow-node';node.setAttribute('aria-label',v.name+'로 이동');
+        node.className='flow-node';node.setAttribute('aria-label',name+'로 이동');
       }else node=element('div','','flow-node');
       node.append(element('span',name,'flow-name'),dots(v,status));
       li.append(mark,node);return li;
@@ -118,18 +119,25 @@
     return parts.length?'착용 중 대비 '+parts.join(' · '):'착용 중과 같은 효과';
   }
   function renderBoardPad(){
-    const board=$('board'),path=padArt(state.u18.pads.equipped);
+    const board=$('board'),path=state.u18.pads.equipped==='personal:green'?'assets/kit/felt-tile.webp':padArt(state.u18.pads.equipped);
     if(board.dataset.padPath===path)return;
     board.dataset.padPath=path;board.style.removeProperty('--equipped-pad');
-    const image=assetImage(path),ready=()=>{if(board.dataset.padPath!==path)return;if(image.naturalWidth>0)board.style.setProperty('--equipped-pad',`url('${state.u18.pads.equipped==='personal:green'?'assets/kit/felt-tile.webp':assetUrl(path)}')`);};
+    const image=assetImage(path),ready=()=>{if(board.dataset.padPath!==path)return;if(image.naturalWidth>0)board.style.setProperty('--equipped-pad',`url('${assetUrl(path)}')`);};
     if(image.complete)ready();else image.addEventListener('load',ready,{once:true});
   }
   function padShopSection(){
     const section=element('section','','shop-pads');section.append(element('h2','마술 패드'));
     const grid=element('div','','shop-cosmetic-grid');
-    for(const pad of D.pads.filter(p=>p.id!=='floor'))for(const color of pad.colors){
+    for(const pad of D.pads.filter(p=>p.id!=='floor'&&!p.hidden))for(const color of pad.colors){
       const info=C.padInfo(state,pad.id,color),key=info.key,status=info.equipped?'착용 중':info.owned?'착용':`실크 ${info.cost}`;
-      const tile=action('',()=>{if(!info.owned&&!C.buyPad(state,pad.id,color))return;if(C.equipPad(state,key)){save();render();gemShop();}},info.equipped||!info.available);
+      const tile=action('',()=>{
+        const bought=!info.owned;
+        if(bought&&!C.buyPad(state,pad.id,color))return;
+        if(!C.equipPad(state,key))return;
+        save();render();
+        if(bought&&pad.id==='lecturenote'&&typeof playManagerLines==='function')playManagerLines(D.dealer.padMention,'dealer:padMention',()=>{if(menu==='gemShop')gemShop();});
+        else gemShop();
+      },info.equipped||!info.available);
       tile.className='shop-cosmetic-tile';tile.dataset.pad=key;tile.setAttribute('aria-pressed',String(info.equipped));
       tile.setAttribute('aria-label',`${padName(key)} · ${status} · ${effectText(C.gearEffects(state,'pads',key))}`);
       tile.append(artFallback(padArt(key,true),'▰','cosmetic-icon'),element('span',padName(key),'shop-cosmetic-name'),element('small',status),element('small',effectText(C.gearEffects(state,'pads',key)),'gear-effect'));
@@ -138,6 +146,7 @@
     section.append(grid);appendPadUpgrade(section,gemShop);return section;
   }
   function appendPadUpgrade(host,refresh){
+    if(!state.u18.pads.owned.some(key=>key.startsWith('kali:')))return;
     const info=C.padUpgradeInfo(state), block=element('div','','pad-upgrade');host.append(block);host=block;
     host.append(element('p',`칼리 패드 강화 ${info.level}회 · 꾹 누르기 속도 +${+(info.level*5).toFixed(2)}%p`));
     const button=action(`강화 +5%p · 동전 ${C.formatNumber(info.cost)}`,()=>{if(C.upgradePad(state)){save();render();refresh();}},!info.available);button.dataset.padUpgrade='true';host.append(button);
@@ -178,11 +187,13 @@
     $('panel').querySelector('header').insertBefore(balance,$('closePanel'));
     // Purchases keep their existing handlers and save keys; sections only change presentation.
     const abilities = element('section','','shop-abilities'), routines = element('section','','shop-routines');
-    abilities.append(element('h2','스킬'));
-    routines.append(element('h2','마술 루틴'));
+    abilities.append(element('p','실크는 동전보다 귀해요. 오래 남는 아이템에 써 보세요.','shop-silk-note'),element('h2','스킬'));
+    routines.append(element('h2','마술 루틴'),element('p','칼리가 무대에서 선보이는 마술이에요','shop-routine-note'));
     for(const item of D.gemShop){
       if((item.id==='glove'||item.id==='brick')&&!C.hasDeck(state))continue;
       const card=element('section','','gem-shop-item');card.dataset.shopItem=item.id;
+      const ownedRoutine=item.id.startsWith('routine-')&&state.u19.routines.includes(item.id.slice('routine-'.length));
+      if(ownedRoutine)card.className+=' is-owned';
       const iconPath=item.id.startsWith('routine-')?`assets/icon-${item.id}.webp`:item.id==='potion'?'assets/node-chicken.webp':item.id==='refill'?'assets/kit/icon-showtime.webp':'assets/kit/icon-card-rain.webp';
       const heading=element('h3',item.name);heading.prepend(artFallback(iconPath,'✦','shop-item-icon'));
       card.append(heading,element('p',item.desc));
@@ -190,6 +201,7 @@
         const buy=action('',()=>{if(C.gemShopBuy(state,item.id,skill)){save();sound('skill');gemShop();render();}},!info.available);
         buy.setAttribute('aria-label',`${label} · 실크 ${info.cost}`);buy.append(element('span',label),element('span',String(info.cost),'kit-price kit-price-silk'));card.append(buy);if(info.reason&&item.id!=='refill')card.append(element('small',info.reason));};
       if(item.id==='refill')D.skills.forEach(k=>add(k.id));else add();
+      if(ownedRoutine)card.append(element('span','배움','shop-owned-badge'));
       (item.id.startsWith('routine-')?routines:abilities).append(card);
     }
     const pads=padShopSection();

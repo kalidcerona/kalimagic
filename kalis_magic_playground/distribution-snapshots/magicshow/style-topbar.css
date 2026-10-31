@@ -226,3 +226,13 @@ html body.tablet:not(.portrait-layout) #viewport#viewport #stage#stage#stage#sta
 html body.phone:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage#stage #phoneTop { height:var(--ST) !important; min-height:var(--ST) !important; }
 /* Owner 10-24: 옷장 lives in the 도감 panel (its own tab), so the separate 옷장 button is gone from the top bar, the dock and the menu. */
 html body #viewport#viewport #stage#stage#stage#stage#stage #wardrobeButton, html body #wardrobeButton { display:none !important; }
+
+/* r46: one main-screen map button, using the same painted button skin as its siblings. */
+html body.phone #viewport#viewport #stage#stage#stage#stage #phoneTop #mapButton {
+  position:relative; flex:0 0 44px; width:44px; min-width:44px; height:44px; min-height:44px;
+  box-sizing:border-box; margin:0; padding:2px; border-width:6px;
+  font:11px/16px Galmuri11,sans-serif; white-space:nowrap;
+}
+html body.phone:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #phoneTop { gap:4px !important; }
+html body.phone:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #phoneTop #goalStrip { flex:0 1 112px; min-width:0; }
+html body #viewport#viewport #stage#stage#stage#stage #mapButton[hidden] { display:none !important; }

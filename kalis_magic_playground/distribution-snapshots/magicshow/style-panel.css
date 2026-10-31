@@ -172,3 +172,27 @@ html body #viewport#viewport #stage#stage#stage#stage#stage #panelBody .skill-gu
 html body.portrait-layout #viewport#viewport #stage#stage#stage#stage#stage #panel[data-screen="bestiary"] #panelBody > .panel-tabs { display:grid !important; grid-template-columns:repeat(3,minmax(0,1fr)); overflow:visible !important; }
 html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage#stage #panel[data-screen="bestiary"] #panelBody > .panel-tabs { flex-wrap:wrap !important; overflow:visible !important; }
 @keyframes headliner-plate { 0% { opacity:0; transform:translateX(-110%) } 28% { opacity:1; transform:translateX(0) } 72% { opacity:1; transform:translateX(0) } 100% { opacity:0; transform:translateX(110%) } }
+
+/* Portable saves and a host-independent exit screen. */
+#panelBody .save-transfer {word-break:keep-all; display:grid; gap:12px; margin-top:16px}
+#panelBody .save-transfer button {min-height:44px; min-width:44px; white-space:normal; word-break:keep-all}
+#panelBody .save-transfer textarea {box-sizing:border-box; width:100%; min-height:100px; font-size:16px; overflow-wrap:anywhere}
+#panelBody .dealer-intro-dialog {display:grid; grid-template-columns:80px minmax(0,1fr); gap:12px; align-items:center; word-break:keep-all}
+#panelBody .dealer-intro-dialog .story-portrait {width:80px; height:110px}
+#panelBody .dealer-intro-dialog button {min-height:44px; min-width:44px; word-break:keep-all}
+#panelBody .dealer-intro-dialog p {white-space:pre-line; word-break:keep-all}
+.game-end-screen {position:fixed; inset:0; z-index:2147483647; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:24px; padding:24px; background:#141321; color:#ffeab0; text-align:center; word-break:keep-all; font-size:clamp(18px,3vw,28px)}
+.game-end-screen button {min-height:44px; min-width:120px; font:inherit; padding:12px 20px}
+#viewport #stage #panelBody .dealer-intro-dialog .story-portrait > .asset-sprite {position:absolute; left:50%; width:auto; max-width:none; object-fit:fill; image-rendering:pixelated}
+
+/* Shared panel help */
+#panel .panel-help-button { flex: 0 0 44px; width: 44px; min-width: 44px; height: 44px; min-height: 44px; padding: 0; }
+#panel .panel-help-card { padding: 10px 12px; margin: 8px 0; border: 1px solid #b89555; border-radius: 8px; background: #f6e9c9; color: #382818; word-break: keep-all; }
+#panel .panel-help-card p { margin: 3px 0; line-height: 1.4; }
+#panel .panel-help-card button { min-width: 44px; min-height: 44px; }
+#panel .shop-silk-note { grid-column: 1 / -1; word-break: keep-all; }
+
+#panel[data-screen="book"] .panel-help-card { position:absolute; z-index:10; top:100px; left:12px; right:12px; max-height:calc(100% - 112px); overflow:auto; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #panel#panel[data-screen="book"] > header { grid-template-columns:minmax(0,1fr) 54px 44px 44px; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="book"] .panel-help-button { grid-column:3; grid-row:1; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #panel#panel[data-screen="book"] #closePanel { grid-column:4; }

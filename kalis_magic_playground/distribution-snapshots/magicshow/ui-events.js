@@ -128,7 +128,8 @@
       } else if (e.type === 'flash') {
         const p = cellCenter(e.cell);
         burst(p.x, p.y, '#ffbd73');
-        fly(p.x, p.y, target('damage'), '🔥', '플래시 페이퍼', '#ffbd73');
+        const phoneDrop = typeof document !== 'undefined' && !!(document.body && document.body.classList.contains('phone'));
+        fly(p.x, p.y, (portraitLayout() || phoneDrop) ? portraitDropTarget('damage') : target('damage'), '🔥', '플래시 페이퍼', '#ffbd73');
         sceneLight(.05); sound('whoosh');
       } else if (e.type === 'audHit') {
         if (!e.blocked && e.dmg > 0) trailDoubt(events.finaleHit && e.source !== 'colleague' && $('finaleFx')?._impact ? FINALE_LAND : 0);

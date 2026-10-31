@@ -127,6 +127,7 @@
   }
   function release() {
     const arranging = arrangePress; arrangePress = null;
+    arrangeFeedback();
     if (arranging && $('board').hasPointerCapture(arranging.id)) $('board').releasePointerCapture(arranging.id);
     const old = boardHolds; boardHolds = []; holdMarks.clear(); syncPointer();
     for (const p of old) if ($('board').hasPointerCapture(p.id)) $('board').releasePointerCapture(p.id);
@@ -137,6 +138,13 @@
     const hit = document.elementFromPoint(e.clientX, e.clientY)?.closest('#board .cell');
     const index = cells.findIndex(c => c.el === hit);
     return index < 0 ? null : state.u15.positions[index];
+  }
+  function arrangeFeedback(slot = null) {
+    const from = caseArrange && arrangePress ? state.u15.positions.indexOf(arrangePress.slot) : -1;
+    for (let i = 0; i < cells.length; i++) {
+      cells[i].el.classList.toggle('arrange-source', slot !== null && from >= 0 && from < state.board.length && from === i);
+      cells[i].el.classList.toggle('arrange-target', from >= 0 && from < state.board.length && slot !== null && state.u15.positions[i] === slot);
+    }
   }
   function arrangeSelect(slot) {
     if (slot === null) return;
@@ -150,16 +158,39 @@
     render();
   }
   $('board').addEventListener('click', e => { if (caseArrange) { e.preventDefault(); e.stopImmediatePropagation(); } }, true);
-  for (const id of ['caseArrangeButton','caseArrangeMenuButton']) $(id).addEventListener('click', () => {
-    release(); arrangeFrom = null; arrangePress = null; caseArrange = !caseArrange;
+  function setCaseArrange(on) {
+    release(); arrangeFrom = null; arrangePress = null; caseArrange = on;
     for (const id of ['caseArrangeButton','caseArrangeMenuButton']) $(id).setAttribute('aria-pressed', String(caseArrange));
     $('board').classList.toggle('arranging', caseArrange);
-    hideMore(); render();
+    $('caseArrangeControls').hidden = !caseArrange;
+    $('activeSkills').classList.toggle('arrange-replaced', caseArrange);
+    geo.clear(); wandOffset = null;
+  }
+  // Borrow the disabled skill rail/row, leaving all case slots and the stats strip untouched.
+  function syncCaseArrange() {
+    if (!caseArrange) return;
+    const rail = $('activeSkills').getBoundingClientRect(), card = $('boardCard').getBoundingClientRect();
+    const controls = $('caseArrangeControls');
+    controls.style.left = `${(rail.left - card.left) / scale}px`;
+    controls.style.top = `${(rail.top - card.top) / scale}px`;
+    controls.style.width = `${rail.width / scale}px`; controls.style.height = `${rail.height / scale}px`;
+    controls.style.setProperty('--arrange-touch', `${44 / scale}px`);
+    const row = rail.width > rail.height;
+    controls.classList.toggle('arrange-row', row);
+    $('caseArrangeHint').hidden = row ? rail.width < 240 : rail.width < 44 || rail.height < 120;
+  }
+  for (const id of ['caseArrangeButton','caseArrangeMenuButton']) $(id).addEventListener('click', () => {
+    setCaseArrange(!caseArrange); hideMore(); render();
+  });
+  $('caseArrangeDone').addEventListener('click', () => {
+    setCaseArrange(false); hideMore(); render();
   });
   $('board').addEventListener('pointerdown', e => {
     if (paused() || state.mode !== 'fight' || (e.pointerType === 'mouse' && e.button !== 0) || boardHolds.length >= 3) return;
     if (caseArrange) {
+      if (arrangePress) return;
       e.preventDefault(); arrangePress = {id:e.pointerId, slot:arrangeSlot(e)};
+      arrangeFeedback(arrangePress.slot);
       $('board').setPointerCapture(e.pointerId); return;
     }
     // Let the next locked slot receive its click without board pointer capture.
@@ -175,7 +206,10 @@
     window.dispatchEvent(new CustomEvent('magicshow:gesture'));
   });
   $('board').addEventListener('pointermove', e => {
-    if (caseArrange) return;
+    if (caseArrange) {
+      if (arrangePress?.id === e.pointerId) arrangeFeedback(arrangeSlot(e));
+      return;
+    }
     if (boardHolds.some(p=>p.id===e.pointerId)) {
       const p=boardTransform().toBoard(e.clientX,e.clientY);
       if (typeof portraitLayout === 'function' && portraitLayout()) { const hit = portraitBoardPoint(e.clientX, e.clientY); if (hit) { p.x = hit.x; p.y = hit.y; } }
@@ -188,6 +222,7 @@
   for (const name of ['pointerup','pointercancel','lostpointercapture']) $('board').addEventListener(name,e=> {
     if (caseArrange && arrangePress?.id === e.pointerId) {
       const press = arrangePress; arrangePress = null;
+      arrangeFeedback();
       if (name === 'pointerup' && !paused() && state.mode === 'fight') {
         const slot = arrangeSlot(e);
         if (slot !== null && slot !== press.slot) {
@@ -203,7 +238,31 @@
   document.addEventListener('contextmenu', e => e.preventDefault());
   document.addEventListener('dragstart', e => e.preventDefault());
 
+  function setupPanelHelp(kind) {
+    const header = $('panel').querySelector('header');
+    header.querySelector('.panel-help-button')?.remove();
+    const entry = D.panelHelp && D.panelHelp[kind];
+    if (!entry) return;
+    const button = action('?', () => {
+      const body = $('panelBody');
+      const existing = body.querySelector('.panel-help-card');
+      if (existing) { existing.remove(); button.setAttribute('aria-expanded', 'false'); return; }
+      const selected = kind === 'bestiary' ? entry[bestiaryTab] : entry;
+      const lines = typeof selected === 'function' ? selected(state) : selected;
+      if (!lines) return;
+      const card = element('section', '', 'panel-help-card');
+      card.setAttribute('aria-label', '도움말');
+      lines.forEach(line => card.append(element('p', line)));
+      const close = action('닫기', () => { card.remove(); button.setAttribute('aria-expanded', 'false'); button.focus(); });
+      card.append(close); body.prepend(card); body.scrollTop = 0;
+      button.setAttribute('aria-expanded', 'true');
+    });
+    button.className = 'panel-help-button';
+    button.setAttribute('aria-label', '도움말'); button.setAttribute('aria-expanded', 'false');
+    header.insertBefore(button, $('closePanel'));
+  }
   function openPanel(kind, title) {
+    if (caseArrange) setCaseArrange(false);
     delete $('panel').dataset.cutscene; delete $('stage').dataset.cutscene; // 12-116: a twist beat sets it again after opening
     if(menu==='curtain'&&kind!=='curtain'){curtainFinish=null;clearTimeout(curtainTimer);curtainScene?.remove();curtainScene=null;presentation.finish();}
     // v4 U51 1: one top layer. A panel opened while the menu sheet is open (from inside the menu or from the top bar 도감) replaces the menu: the menu
@@ -217,6 +276,7 @@
     $('closePanel').textContent = '닫기'; $('closePanel').removeAttribute('aria-label'); // v4 U51 2: the curtain call relabels it 건너뛰기
     $('panelTitle').textContent = title;
     $('panelBody').replaceChildren(); $('panelBody').scrollTop = 0; $('panel').hidden = false;
+    setupPanelHelp(kind);
     $('closePanel').hidden = kind === 'fail'; $('closePanel').disabled = false;
     // Reset the Core hold before pausing so the next gesture starts immediately.
     state.holding=false; state.tapAcc=0;

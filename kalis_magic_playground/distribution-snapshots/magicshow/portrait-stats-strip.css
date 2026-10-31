@@ -2,7 +2,7 @@
  * Earlier or later rules for the same elements may also sit in portrait-base.css (early layer) and
  * portrait-overrides-*.css (late layer) when the cascade needs them there. */
 html body.portrait-layout .rotate,
-html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #phoneTop > button,
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #phoneTop > button:not(#mapButton),
 html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #portraitMeters #doubtRegen,
 html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #audienceCard #heckleMeter,
 html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #audienceCard #stageStats > #shield > span[aria-hidden="true"],

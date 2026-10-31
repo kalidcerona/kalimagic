@@ -34,7 +34,7 @@
 .tablet #stage #activeSkills{top:calc(var(--board-size) + 60px);right:12px;gap:12px}
 .tablet #stage #magicianMini{width:160px;height:160px;bottom:100px}
 .tablet #stage #stageStats{height:44px;bottom:32px}
-.tablet #stage #mentalNumber{font-size:16px}
+
 .tablet #stage #storyDialog{height:100px;min-height:100px;font-size:16px;bottom:0}
 .tablet #stage #panel{inset:64px 12px 12px;width:auto;height:auto;transform:none;font-size:16px}
 .tablet #stage #panelBody{font-size:16px}

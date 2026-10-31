@@ -49,3 +49,8 @@ html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #pan
 html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="gemShop"] .shop-item-icon { width:18px; height:18px; }
 }
 html body #viewport#viewport #stage#stage#stage#stage .outfit-preview { order:-1; width:48px; height:48px; }
+html body #viewport#viewport #stage#stage#stage#stage .shop-routines > .shop-routine-note { grid-column:1 / -1; margin:0 0 8px; color:#b8bacb; font:13px/18px system-ui,sans-serif; word-break:keep-all; }
+html body #viewport#viewport #stage#stage#stage#stage #panel[data-screen="gemShop"] .shop-routines .gem-shop-item.is-owned { position:relative; border-image:url('assets/kit/tile-selected.webp') 24 fill / 8px / 0 stretch; outline:3px solid #ffe5a3; outline-offset:-6px; }
+/* Owned routine text sits on the pale gold tile fill (#f2e6c8 / #e8bf68). #302014 is >= 4.5:1 on both, including the darker tan band. */
+html body #viewport#viewport #stage#stage#stage#stage #panel[data-screen="gemShop"] .shop-routines .gem-shop-item.is-owned :is(h3, p, small) { color:#302014; }
+html body #viewport#viewport #stage#stage#stage#stage #panel[data-screen="gemShop"] .shop-routines .gem-shop-item.is-owned .shop-owned-badge { position:absolute; top:8px; right:8px; z-index:1; margin:0; padding:2px 6px; color:#302014; background:#ffe5a3; font:700 11px/16px system-ui,sans-serif; word-break:keep-all; pointer-events:none; }

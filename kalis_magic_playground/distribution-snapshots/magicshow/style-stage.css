@@ -328,3 +328,30 @@ html body #viewport#viewport #stage #audienceCard #magicianMini { translate:0 8%
    so hands and props stay where r25 had them, above the tabletop (test-u76). The box's own copy of the strip is clipped to text, i.e. invisible; the pseudo inherits its frame position/animation. */
 html body #viewport#viewport #stage #audienceCard #magicianMini.performance-ready.routine-art:not(.reacting):not(.disappointed) { background-clip:text; -webkit-background-clip:text; }
 html body #viewport#viewport #stage #audienceCard #magicianMini.performance-ready.routine-art:not(.reacting):not(.disappointed)::before { content:''; position:absolute; left:0; top:-8%; width:100%; height:100%; pointer-events:none; background-image:var(--routine-art); background-size:200% 100%; background-repeat:no-repeat; background-position:inherit; animation:inherit; }
+
+/* r46: use the approved subway still only for the existing memory line interval.
+   The room's venue sprite stays mounted, so present/skip/close restores the theater immediately. */
+html body #viewport#viewport #stage#stage#stage#stage[data-story-shade="memory"] #audienceCard #room {
+  background-image:url('assets/story/subway-memory.webp') !important;
+  background-size:cover !important; background-position:center !important; filter:none !important;
+}
+html body #viewport#viewport #stage#stage#stage#stage[data-story-shade="memory"] #audienceCard #room > *,
+html body #viewport#viewport #stage#stage#stage#stage[data-story-shade="memory"] #audienceCard :is(#stageDressing,#mockupDressing,#crowd,.audience-shadow,#audience,#kaliTable,#magicianMini,#stageLight) {
+  visibility:hidden !important;
+}
+
+html body #viewport#viewport #stage#stage#stage#stage[data-story-shade="memory"] #audienceCard #room::before,
+html body #viewport#viewport #stage#stage#stage#stage[data-story-shade="memory"] #audienceCard #room::after { display:none !important; }
+
+/* r49: reserve the stamp's rotated 2x pop and the audience's 1.12x pop above the head.
+   Bottom-right origin keeps the enlarged stamp growing upward. Wide 844x390 is unchanged. */
+@media (max-height:380px), (max-width:700px) {
+html body.phone:not(.portrait-layout):not(.tablet) #viewport#viewport #stage#stage #audienceCard #winStamp {
+  top:min(calc(var(--bubble-top,4px) + var(--line-h,20px) + 18px),calc(100% - var(--aud-foot,52px) - var(--aud-fit-h,120px) * 1.12 - 80px));
+  right:8px;
+  transform-origin:100% 100%;
+  /* r51: audienceCard must release its stacking context for this to beat banner z26. */
+  z-index:27;
+}
+html body.phone:not(.portrait-layout):not(.tablet) #viewport#viewport #stage#stage #audienceCard:has(> #winStamp) { isolation:auto; }
+}

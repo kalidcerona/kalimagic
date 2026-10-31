@@ -166,3 +166,27 @@ html body #viewport #stage #audienceCard[data-pattern="slow"] #patternLabel:not(
 html body.phone #viewport#viewport #stage#stage#stage#stage #audienceCard.boo-scene #patternLabel { visibility:hidden; }
 /* Fix A: the landscape lose bubble owns this space while its line is open. fixP 1: the plate is a child of #audienceCard (ui.js U50 moves it there), not of #heckle. */
 html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage#stage #audienceCard.boo-scene > .heckle-plate { visibility:hidden; }
+
+/* Landscape phones: keep the label and gauge in the left top lane, clear of the bubble and audience. */
+html body.phone:not(.tablet):not(.portrait-layout) #viewport#viewport #stage #audienceCard .doubt-plate {
+  left:8px!important; top:4px!important; max-width:calc(var(--CW) * .5 - 16px); height:20px;
+}
+html body.phone:not(.tablet):not(.portrait-layout) #viewport#viewport #stage #audienceCard .doubt {
+  left:8px!important; right:auto!important; top:26px!important;
+  width:calc(var(--CW) * .5 - 16px)!important; height:12px!important; transform:none;
+}
+html body.phone:not(.tablet):not(.portrait-layout) #viewport#viewport #stage #audienceCard .doubt-fill {
+  -webkit-mask:none; mask:none;
+}
+html body.phone:not(.tablet):not(.portrait-layout) #viewport#viewport #stage #audienceCard .heckle-plate {
+  left:8px!important; top:42px!important; max-width:calc(var(--CW) * .5 - 16px);
+}
+html body.phone:not(.tablet):not(.portrait-layout) #viewport#viewport #stage #audienceCard #patternLabel {
+  top:calc(var(--TB) + 64px)!important;
+}
+/* 640x360: plate-2l word-break wraps the audience gauge title. Keep one line. */
+html body.phone:not(.tablet):not(.portrait-layout) #viewport#viewport #stage #audienceCard .doubt-plate #doubtTitle,
+html body.phone:not(.tablet):not(.portrait-layout) #viewport#viewport #stage #audienceCard .doubt-plate.plate-2l #doubtTitle {
+  flex:1 1 auto; min-width:0; white-space:nowrap; word-break:keep-all; overflow-wrap:normal;
+  overflow:hidden; text-overflow:ellipsis; font-size:10px; line-height:16px;
+}

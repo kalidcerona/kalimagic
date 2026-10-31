@@ -63,7 +63,9 @@
       // The case is the origin. Common drops are icon-only in every layout.
       const named = ['rare', 'hero', 'legend', 'myth'].includes(b.rarity);
       const color = D.items.rarities.find(r => r.id === b.rarity)?.color || '#ffe35b';
-      fly(b.x, b.y, portraitLayout() ? portraitDropTarget(b.effect) : target(b.effect), b.emoji || b.icon, named ? String(b.name || '').slice(0, 12) : '', color, 0, b.image);
+      // Phone landscape shares the portrait drop: damage to the audience, a self buff to Kali. The stats button sits in the closed menu, so it is not a target. Coin and silk flights still call target().
+      const phoneDrop = typeof document !== 'undefined' && !!(document.body && document.body.classList.contains('phone'));
+      fly(b.x, b.y, (portraitLayout() || phoneDrop) ? portraitDropTarget(b.effect) : target(b.effect), b.emoji || b.icon, named ? String(b.name || '').slice(0, 12) : '', color, 0, b.image);
       badges.splice(i, 1);
     }
     const paintFlight = f => {

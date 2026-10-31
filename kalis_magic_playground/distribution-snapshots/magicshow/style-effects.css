@@ -39,7 +39,8 @@
 @keyframes u26-confetti-frames{to{background-position:-128px 0}}
 @keyframes u26-confetti-drift{to{transform:translateY(48px);opacity:0}}
 @keyframes u26-card-flip-tablet{to{background-position:-576px 0}}
-@keyframes u30b-bend{0%{transform:scale(.2);transform-origin:100% 0;opacity:.2}70%{transform:scale(1.25);transform-origin:100% 0;opacity:1}100%{transform:scale(1);transform-origin:100% 0}}
+@keyframes u30b-bend{0%{width:0;height:0}30%{width:9%;height:6%}65%{width:21%;height:17%}85%{width:27%;height:25%}100%{width:28%;height:28%}}
+@keyframes r43-corner-cut{0%{clip-path:polygon(0 0,100% 0,100% 0,100% 100%,0 100%)}30%{clip-path:polygon(0 0,91% 0,100% 6%,100% 100%,0 100%)}65%{clip-path:polygon(0 0,79% 0,100% 17%,100% 100%,0 100%)}85%{clip-path:polygon(0 0,73% 0,100% 25%,100% 100%,0 100%)}100%{clip-path:polygon(0 0,72% 0,100% 28%,100% 100%,0 100%)}}
 @keyframes u32-tap-hint{to{transform:translateY(3px)}}
 .phone #stage #toasts .toast{height:24px;max-height:24px;min-height:0;line-height:18px;padding:2px 4px;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .phone #stage #toasts .toast{box-sizing:border-box;line-height:22px;padding:0 4px}

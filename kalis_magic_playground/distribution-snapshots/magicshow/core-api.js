@@ -2,7 +2,7 @@
   globalThis.Core = {
     achievementInfo:achievementInfo,achievementBonus:achievementBonus,beginFuture:beginFuture,strongestCase:strongestCase,
     openMap:openMap,travelTo:travelTo,returnToStage:returnToStage,travelAllowed:travelAllowed,trueFanRule:trueFanRule,trueFanReward:trueFanReward,trueFanProgress:trueFanProgress,challengeBonus:challengeBonus,beatenOnce:beatenOnce,CHALLENGE_CAP:CHALLENGE_CAP,cosmeticInfo:cosmeticInfo,buyCosmetic:buyCosmetic,equipCosmetic:equipCosmetic,
-    dealerGameStart:dealerGameStart,dealerCupsReady:dealerCupsReady,dealerCupsPick:dealerCupsPick,dealerMontePick:dealerMontePick,monteRound:monteRound,monteMoveMs:monteMoveMs,dealerMonteBank:dealerMonteBank,gemShopBuy:gemShopBuy,gemShopInfo:gemShopInfo,
+    dealerGameStart:dealerGameStart,dealerGameSettled:dealerGameSettled,dealerCupsReady:dealerCupsReady,dealerCupsPick:dealerCupsPick,dealerMontePick:dealerMontePick,monteRound:monteRound,monteMoveMs:monteMoveMs,dealerMonteBank:dealerMonteBank,gemShopBuy:gemShopBuy,gemShopInfo:gemShopInfo,
     startTutorial:startTutorial,finishTutorial:finishTutorial,moveCase:moveCase,useGlove:useGlove,queueScene:queueScene,startScene:startScene,advanceScene:advanceScene,
     theaterPhase:theaterPhase,doubtView:doubtView,theaterSceneDue:theaterSceneDue,startTheaterScene:startTheaterScene,
     slotSummary: slotSummary, validSlot: validSlot,

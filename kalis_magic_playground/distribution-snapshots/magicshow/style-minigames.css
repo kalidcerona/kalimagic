@@ -1,7 +1,7 @@
 /* style-minigames.css: dealer, routine tables, cups and monte mini games. (CSS regroup 10-28)
  * Earlier or later rules for the same elements may also sit in style-base.css (early layer) and
  * style-overrides-*.css (late layer) when the cascade needs them there. */
-.dealer-host{display:flex;align-items:center;justify-content:center;gap:28px;font-size:22px}.dealer-emoji{font-size:88px}.dealer-wallet{color:#ffe65c;text-align:center;margin:8px}.dealer-rules{text-align:center;font-size:22px;color:#ffeeb2;margin:12px}.dealer-note{text-align:center;font-size:22px;color:#b8bacb;margin:8px}.dealer-message{text-align:center;min-height:30px;color:#a3ffc0;margin:10px}.dealer-controls{display:flex;justify-content:center;gap:24px;margin:18px 0}
+.dealer-host{display:flex;align-items:center;justify-content:center;gap:28px;font-size:22px}.dealer-emoji{font-size:88px}.dealer-wallet{color:#ffe65c;text-align:center;margin:8px}.dealer-streak{text-align:center;margin:0;font-size:12px;line-height:18px;word-break:keep-all}.dealer-rules{text-align:center;font-size:22px;color:#ffeeb2;margin:12px}.dealer-note{text-align:center;font-size:22px;color:#b8bacb;margin:8px}.dealer-message{text-align:center;min-height:30px;color:#a3ffc0;margin:10px}.dealer-controls{display:flex;justify-content:center;gap:24px;margin:18px 0}
 .phone .dealer-host{gap:8px;font-size:11px}
 .phone .dealer-controls{gap:6px;flex-wrap:wrap}
 .dealer-gem-menu button,.gem-game button,.gem-shop-item button{min-width:44px;min-height:44px;touch-action:manipulation}

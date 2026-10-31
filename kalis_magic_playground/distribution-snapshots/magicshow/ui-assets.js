@@ -51,8 +51,13 @@
   // extension where a URL reaches the browser: img.src below and CSS url() written from JS (style.css names .webp directly).
   // PNG_KEEP lists art that stayed PNG because no WebP passed the quality floor (none at the moment).
   const PNG_KEEP = new Set([]);
+  // Keep legacy audience-id lookups on the sister art, including direct image URLs.
+  function audienceArtPath(value) {
+    return String(value).replace(/^assets\/aud-a1(?:-(happy|serious|surprised|s[2-5]))?\.(png|webp)$/, (_, mood, ext) =>
+      `assets/aud-f-sister${mood === 'happy' || mood === 'surprised' ? '-happy' : /^s[2-5]$/.test(mood || '') ? '-' + mood : ''}.${ext}`);
+  }
   const assetUrl = value => {
-    const text = String(value), match = /^(assets\/(?:ui\/)?[A-Za-z0-9_-]+)\.png$/.exec(text);
+    const text = audienceArtPath(value), match = /^(assets\/(?:ui\/)?[A-Za-z0-9_-]+)\.png$/.exec(text);
     return match && !PNG_KEEP.has(match[1]) ? `${match[1]}.webp` : text;
   };
   (function installWebpMapping() {
@@ -104,6 +109,7 @@
     const next = D.venues[venueNumber]; if (!next || prefetchedFor === next.slug) return;
     prefetchedFor = next.slug;
     const paths = [`assets/${next.venueAsset}`, next.crowdAsset && `assets/${next.crowdAsset}`];
+    if(next.slug==='theater')paths.push('assets/story/subway-memory.webp');
     for (const a of [next.headliner, ...next.audiences]) {
       const base = audienceAsset(next, a), happy = base.replace(/\.png$/, '-happy.png'); paths.push(base, happy); prefetchPortraits.add(base); prefetchPortraits.add(happy);
     }
@@ -136,6 +142,10 @@
   }
   // Base alpha size and the union envelope of all installed faces. Never fit an expression independently.
   const STAGE_AUDIENCE_METRICS = {
+    "assets/aud-hotel-neighbor.png":[131,208,133,211],
+    "assets/headliner-hotel.png":[135,198,137,202],
+    "assets/aud-audition-fd.png":[135,207,137,211],
+    "assets/aud-audition-waiting.png":[162,210,167,211],
     "assets/case-closed.png":[128,180,128,200],
     "assets/aud-a1.png":[124,196,124,196],
     "assets/aud-a10.png":[164,210,164,210],

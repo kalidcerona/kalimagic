@@ -51,3 +51,16 @@ html body.portrait-layout #viewport#viewport #stage#stage#stage#stage #panel .ge
 html body.portrait-layout #viewport#viewport #stage#stage#stage#stage #panel .gem-game > :is(h2,p,small,button,.dealer-controls) { flex:none; width:100%; box-sizing:border-box; }
 html body.portrait-layout #viewport#viewport #stage#stage#stage#stage #panelBody:has( > .gem-game) .dealer-emoji { flex:0 0 64px; width:64px; height:96px; }
 html body.portrait-layout #viewport#viewport #stage#stage#stage#stage #panelBody:has( > .gem-game) .dealer-serona { width:100%; height:100%; object-fit:contain; }
+
+/* r49: compact only the two-column choice screen, leaving stacked 360px and games intact. */
+@media (min-width:361px) {
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="dealer"] #panelBody:has(> .dealer-pick) .dealer-emoji { width:144px; height:164px; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="dealer"] #panelBody:has(> .dealer-pick) .dealer-host { row-gap:4px; font-size:14px; line-height:20px; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="dealer"] #panelBody:has(> .dealer-pick) .dealer-wallet { margin:4px; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="dealer"] .dealer-pick { margin:4px 0; gap:8px; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="dealer"] .dealer-game-card { gap:4px; padding:12px; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="dealer"] .dealer-game-art { width:68px; height:68px; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="dealer"] .dealer-game-img { width:68px; height:68px; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="dealer"] .dealer-cost { height:42px; padding:10px 12px; line-height:22px; justify-content:center; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="dealer"] .dealer-leave { margin:4px auto 0; }
+}

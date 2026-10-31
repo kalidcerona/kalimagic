@@ -154,7 +154,7 @@
       else keys().slice(3).forEach(function(k){if(k!==protect)storage.removeItem(k);});
       return true;
     }
-    function rank(item) { return [item.dimension|0,item.stage|0,typeof item.coins==='number'&&isFinite(item.coins)?item.coins:0,item.date|0]; }
+    function rank(item) { return [item.dimension|0,item.stage|0,typeof item.coins==='number'&&isFinite(item.coins)?item.coins:0,Number(item.date)||0]; }
     function better(a,b) { for(var i=0;i<a.length;i++) { if(a[i]!==b[i])return a[i]>b[i]; } return false; }
     // Same ranking as the ?restore=1 page: dimension, stage, coins, then date.
     function bestBackup() {

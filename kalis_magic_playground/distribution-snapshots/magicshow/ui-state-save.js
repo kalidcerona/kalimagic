@@ -117,7 +117,7 @@
   let restoreNoBetter = false;
   if (!titleLaunchPending && launchQuery.get('restore') === '1' && saveStore && !inaccessible) {
     try {
-      const rank = (s) => [s.dimension|0, s.stage|0, typeof s.coins === 'number' && isFinite(s.coins) ? s.coins : 0, s.date|0];
+      const rank = (s) => [s.dimension|0, s.stage|0, typeof s.coins === 'number' && isFinite(s.coins) ? s.coins : 0, Number(s.date)||0];
       const better = (a, b) => { for (let i = 0; i < a.length; i++) { if (a[i] !== b[i]) return a[i] > b[i]; } return false; };
       const best = saveStore.list().filter(item => item.restorable).reduce((top, item) => (!top || better(rank(item), rank(top)) ? item : top), null);
       // A missing or unreadable current save counts as lowest; the date only orders backups against each other.
@@ -301,6 +301,7 @@
       }
     } catch (error) { status.textContent = '저장 칸을 읽을 수 없어요'; }
     body.append(status);
+    mountSaveTransfer(body, status, loadOnly);
   }
   // v4 U47 6: a plain "저장" entry at the top of the menu (above the 놀기 and 설정 groups); it opens the same save-slot panel. Auto-save is unchanged.
   const saveSlotsButton = action('저장', openSaveSlots);

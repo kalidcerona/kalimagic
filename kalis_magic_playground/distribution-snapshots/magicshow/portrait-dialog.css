@@ -1,6 +1,17 @@
 /* portrait-dialog.css: portrait dialogue, coach and intro. (CSS regroup 10-28)
  * Earlier or later rules for the same elements may also sit in portrait-base.css (early layer) and
  * portrait-overrides-*.css (late layer) when the cascade needs them there. */
+/* Center the cast and dialogue together; auto margins become zero when a large cast needs scrolling. */
+html body.portrait-layout #viewport#viewport #stage #panel[data-screen="curtain"] #panelBody {
+  display: flex;
+  flex-direction: column;
+}
+html body.portrait-layout #viewport#viewport #stage #panel[data-screen="curtain"] .curtain-memory {
+  flex: none;
+  width: 100%;
+  box-sizing: border-box;
+  margin-block: auto;
+}
 html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #storyDialog {
   left: 0 !important;
   right: 0 !important;

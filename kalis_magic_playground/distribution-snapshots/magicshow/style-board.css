@@ -164,7 +164,12 @@ html body:not(.phone) #viewport#viewport #stage #boardCard:after{display:none}
 @media(prefers-reduced-motion:reduce){#viewport #stage #board .respawn-puff.on{animation:none;opacity:.35}}
 /* Batch B: arrangement feedback is shared by both orientations. */
 #stage #board.arranging .cell { cursor:move; }
+/* r51: keep drag feedback opaque even on portrait's dimmed locked empty slots. */
+html body #viewport#viewport #stage#stage #boardCard #board.arranging .cell:is(.arrange-source,.arrange-target) { opacity:1!important; }
 #stage #board.arranging .cell.arrange-selected { outline:3px solid #ffe08a; outline-offset:-3px; }
+/* Override the portrait/next-slot resets while a drag is held. */
+#stage #board.arranging .cell.arrange-source { outline:2px solid #b6a77f!important; outline-offset:-5px; }
+#stage #board.arranging .cell.arrange-target { outline:3px solid #ffe5a3!important; outline-offset:-3px; box-shadow:0 0 0 2px #241a17,inset 0 0 0 5px #241a17!important; border-radius:0; }
 .batch-d-hide .chest { visibility: hidden; }
 html body #viewport#viewport #stage#stage #boardCard #board {
   background:var(--equipped-pad,url('assets/kit/felt-tile.webp')) center / 100% 100% no-repeat;
@@ -232,3 +237,23 @@ html body #viewport#viewport #stage #boardCard #feverGauge.active span { backgro
 /* Phone landscape: the board column is only a few px taller than the grid, so the frame is drawn thinner (12 px) and the case art is 84 % of its
    cell; the cases then sit on the wood inside the frame instead of on its rim (cell size and input mapping unchanged). */
 html body.phone:not(.tablet):not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage#stage #boardCard #board { border-image-width:12px !important; }
+
+/* r41: the arrange controls occupy only the inactive skill rail/row. */
+#stage #activeSkills.arrange-replaced { visibility:hidden !important; pointer-events:none !important; }
+#stage #caseArrangeControls { position:absolute; z-index:16; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; padding:0; box-sizing:border-box; word-break:keep-all; color:#f2e6c8; text-align:center; }
+#stage #caseArrangeControls.arrange-row { flex-direction:row; gap:12px; }
+#stage #caseArrangeHint { font:11px/18px Galmuri11,sans-serif; word-break:keep-all; overflow-wrap:normal; }
+#stage #caseArrangeDone { flex:none; min-width:var(--arrange-touch,44px); min-height:var(--arrange-touch,44px); padding:4px; border-width:4px; border-image-width:4px; font:14px/20px Galmuri11,sans-serif; word-break:keep-all; white-space:nowrap; }
+
+/* r46: explicit five-track geometry prevents implicit columns/rows from escaping the frame.
+   JS derives slot and gap from the available box; core slot ids and input pitch remain unchanged. */
+html body #viewport#viewport #stage#stage#stage#stage#stage#stage #boardCard #board {
+  box-sizing:border-box !important; padding:var(--case-pad,16px) !important;
+  grid-template-columns:repeat(5,var(--case-slot,minmax(0,1fr))) !important;
+  grid-template-rows:repeat(5,var(--case-slot,minmax(0,1fr))) !important;
+  gap:var(--case-gap,4px) !important; place-content:center !important;
+}
+html body #viewport#viewport #stage#stage#stage#stage#stage#stage #boardCard #board .cell {
+  width:auto !important; height:auto !important; min-width:0; min-height:0;
+  translate:0 0 !important;
+}

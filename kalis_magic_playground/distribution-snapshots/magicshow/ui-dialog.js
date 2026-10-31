@@ -121,8 +121,9 @@
     C.advanceScene(state, skip);
     save();
   }
-  function renderDialog(lines,index,key,advance,skip){
-    const host=$('storyDialog');host.hidden=false;clearDecorations();
+  function renderDialog(lines,index,key,advance,skip,host=$('storyDialog')){
+    if (caseArrange) setCaseArrange(false);
+    host.hidden=false;clearDecorations();
     if(dialogKey===key+':'+index)return;dialogKey=key+':'+index;host.replaceChildren();
     const line=lines[Math.min(index,lines.length-1)],art=element('span',line.speaker==='칼리'?'🎩':'👤','story-portrait');
     if(line.speaker==='칼리'){const mood=line.mood||D.lineFaces.moods[u25DialogMoodKey(key,index)]||'serious';art.classList.toggle('future-suit',state.u18.equipped.kali==='future');if(['sad','surprised'].includes(mood))sprite(art,kaliReact(mood));else moodSprite(art,kaliArtPath(),mood);}

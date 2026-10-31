@@ -134,7 +134,7 @@
     const b=state.batchD,t=b.twist,side=D.batchD.stages[b.side];
     if(side){
       $('venueName').textContent=side.name;$('doubtTitle').dataset.audience=side.character;
-      $('doubtTitle').textContent=portraitLayout()?'의심':side.character+'의 의심';$('audience').setAttribute('aria-label',side.character);
+      $('doubtTitle').dataset.kind='의심';$('doubtTitle').textContent=portraitLayout()?'의심':side.character+'의 의심';$('audience').setAttribute('aria-label',side.character);
       stageAudienceFace($('audience'),side.portrait,audienceDoubtStage());
       const script=D.storyReview.ifRoute[side.script],lines=script.fightLines&&script.fightLines.length?script.fightLines:script.beforeHeadliner.filter(l=>l.speaker===side.character).map(l=>l.text); // v6 script (Q22): the IF opponent's own fight lines
       const index=Math.floor(state.fightMs/7000)%lines.length;
@@ -144,7 +144,8 @@
     twistRoomArt(t.scene==='hidden'?D.batchD.twist.art.hidden:'');
     if(t.scene==='hidden'){
       $('hint').textContent='🃏 '+D.storyReview.twist.hidden[0].text.replace(/[.!?]+$/,'')+' · '+Math.ceil(t.left/1000)+'초'; // s5t: the hidden line itself (was a copy of the old line)
-      queueAudienceLine(D.storyReview.twist.hidden[0].text,'twist:hidden');updateAudienceLine();
+      // The four-second trick must interrupt the entrance's five-second reading budget.
+      queueAudienceLine(D.storyReview.twist.hidden[0].text,'twist:hidden',false,false,true);updateAudienceLine();
     }else if(b.interference.left>0)$('hint').textContent=(b.interference.kind==='lock'?'🔒 잠깐 잠긴 케이스':'🙈 잠깐 가린 케이스')+' · '+Math.ceil(b.interference.left/1000)+'초';
     else if(b.encore.phase==='round')$('hint').textContent='앙코르 · '+Math.ceil(b.encore.left/1000)+'초 · 추가 보상 도전';
     const key=BatchDView.panel(b);

@@ -153,7 +153,7 @@ for (const id of ['eggbag','rubberband','coloringbook','cube','wand']) {
  const S=D.storyV15;
  const setMoods=value=>{if(!value||typeof value!=='object')return;if(value.speaker&&value.text&&!value.mood)value.mood=/진짜|변했|김이/.test(value.text)?'surprised':/좋|재미|박수/.test(value.text)?'happy':'serious';for(const child of Object.values(value))setMoods(child);};
  setMoods(S.tutorial);
- S.portraits={'유명 마술사':'assets/headliner-h5.png','수상한 샵 매니저':'assets/serona-hooded.png','단골 손님':'assets/headliner-h4.png'};
+ S.portraits={'세로나':'assets/serona.png','유명 마술사':'assets/headliner-h5.png','수상한 샵 매니저':'assets/serona-hooded.png','단골 손님':'assets/headliner-h4.png'};
  S.tutorial.overview=[S.tutorial.schoolChain.girlDuring[0],S.tutorial.schoolChain.upgrade[1],S.tutorial.defeat[3]];
  // 12-117: D.onboarding.intro is the new-game intro (beats) defined above; it is no longer overwritten with the school lines.
  for(const v of D.venues){
@@ -175,7 +175,7 @@ for (const id of ['eggbag','rubberband','coloringbook','cube','wand']) {
  D.lineFaces.roles.h1.name='여동생';D.lineFaces.roles.h5.name='밍기리';D.lineFaces.roles.h5.role='heckler';D.lineFaces.roles.h4.name='카드1412';
  S.bios.h1='거실에서 마술을 본 여동생.';S.bios.h5=S.helper.bio;
  const family=D.venues.find(v=>v.slug==='family');
- Object.assign(family.headliner,{name:'여동생',portraitAsset:'aud-a1.png',bio:'거실에서 마술을 본 여동생.',flavor:'거실에서 마술을 본 여동생.'});
+ Object.assign(family.headliner,{name:'여동생',portraitAsset:'aud-f-sister.png',bio:'거실에서 마술을 본 여동생.',flavor:'거실에서 마술을 본 여동생.'});
  const theater=D.venues.find(v=>v.slug==='theater');
  Object.assign(theater.headliner,{name:'밍기리',portraitAsset:'aud-mingiri-dark.png',role:'heckler',bio:S.helper.bio,flavor:S.helper.bio,storyScale:1.25});
  // s5b (owner 10-24): the 소극장 headliner slot h5 is fought in two phases (core theaterPhase). Phase 1 is the show for 앞줄 관객 (a14 art, name and
@@ -226,7 +226,7 @@ GAME_DATA.venues.find(v=>v.slug==='lecturenote').headliner.endingLines=GAME_DATA
  // Hotel stage (10-26): the new 호텔 마술 대회 (its own row, hpFactor 44000, balance rank 6.5) sits between 대학 축제 and TV 오디션; festival x0.85 and
  // audition x0.6 (4 regulars now) give the time back, so 50-seed broadcast, vegas, multiverse and lecturenote stay inside their targets.
  // Was (v6): festival:65808.59999999999,audition:96911.1537883632.
- const HP_FINAL={family:0.7402686720000002,party:7.207782399999999,school:63.273600000000016,cafe:530.909184,meetup:783.1883584799998,theater:9249.24,festival:55937.30999999999,audition:58146.692273017914,broadcast:137855.5161984,vegas:221169.74343750003,broadway:92578.2,moon:896996.2921919998,sun:952875.9583200001,galaxy:902219.18353875,multiverse:1099951.453674474,lecturenote:678813.6960000001};
+ const HP_FINAL={family:0.7402686720000002,party:7.207782399999999,school:63.273600000000016,cafe:530.909184,meetup:548.2318509359998,theater:9249.24,festival:55937.30999999999,audition:58146.692273017914,broadcast:137855.5161984,vegas:221169.74343750003,broadway:92578.2,moon:896996.2921919998,sun:952875.9583200001,galaxy:902219.18353875,multiverse:1099951.453674474,lecturenote:678813.6960000001};
  D.venues.forEach(v=>{if(HP_FINAL[v.slug]!==undefined)v.hpFactor=HP_FINAL[v.slug];});
  D.venues.find(v=>v.slug==='lecturenote').bossHpFactor=1.9752478199999999;
 })(GAME_DATA);
@@ -249,21 +249,20 @@ GAME_DATA.storyReview.tutorialLesson={
 
 // Lane 1d: owner-approved effects. Prices follow the existing 2-20 silk curve.
 // This explicit price table is kept in data for owner review; upgrades use the coin growth curve.
-GAME_DATA.padPrices={lecturenote:2,personal:6,kali:12,upgradeBase:4000,upgradeGrowth:1.6,upgradeMax:100};
+// g1 (owner 10-30): 기본 패드 is the first silk pad. 렉노 is the second and keeps the meetup gate.
+// 칼리 패드 is not sold (hidden); both colours are granted together. padPrices stays in lockstep with each pad's cost.
+GAME_DATA.padPrices={personal:2,lecturenote:4,kali:0,upgradeBase:4000,upgradeGrowth:1.6,upgradeMax:100};
 GAME_DATA.padColors={
- black:{name:'블랙',personal:{crit:.05},kali:{crit:.06}},
- red:{name:'레드',personal:{tap:.08},kali:{tap:.10}},
- green:{name:'그린',personal:{coins:.08},kali:{coins:.10}},
- lightgreen:{name:'연두',kali:{open:.10}},
- pink:{name:'핑크',kali:{reward:.10}},
- white:{name:'화이트',kali:{recovery:.10}},
- gray:{name:'그레이',kali:{crit:.04,tap:.04,coins:.04,open:.04,reward:.04,recovery:.04}}
+ black:{name:'블랙',personal:{crit:.05}},
+ red:{name:'레드',personal:{tap:.08},kali:{tap:.20,reward:.15}},
+ green:{name:'그린',personal:{coins:.08}},
+ emerald:{name:'에메랄드',kali:{coins:.20,crit:.06}}
 };
 GAME_DATA.pads=[
  {id:'floor',name:'바닥',tier:0,speed:1,cost:0,colors:[''],asset:'floor-wood'},
- {id:'lecturenote',name:'렉노 배치패드',tier:1,speed:1.2,cost:2,requires:'floor',venue:'meetup',colors:[''],asset:'pad-lecturenote'},
- {id:'personal',name:'개인 패드',tier:2,speed:1.5,cost:6,requires:'lecturenote',colors:['black','red','green'],asset:'pad-personal'},
- {id:'kali',name:'칼리 패드',tier:3,speed:1.7,cost:12,requires:'personal',colors:['green','lightgreen','red','pink','black','white','gray'],asset:'pad-kali'}
+ {id:'personal',name:'기본 패드',tier:1,speed:1.2,cost:2,requires:'floor',colors:['black','red','green'],asset:'pad-personal'},
+ {id:'lecturenote',name:'렉노 배치패드',tier:2,speed:1.7,cost:4,requires:'personal',venue:'meetup',colors:[''],asset:'pad-lecturenote'},
+ {id:'kali',name:'칼리 패드',tier:3,speed:2,cost:0,hidden:true,colors:['emerald','red'],asset:'pad-kali'}
 ];
 // Each colour is a separate silk purchase at its tier price, including gray.
 GAME_DATA.outfitEffects={

@@ -1,10 +1,22 @@
 'use strict';
+  let dealerIntroSeen = false, dealerIntroLine = -1;
+  // Shared 다음/건너뛰기 dialogue. The host is the story dialog, so the portrait and buttons match every other line.
+  function playManagerLines(lines,key,done){
+    let index=0;
+    const close=()=>{dialogKey='';const host=$('storyDialog');if(host)host.hidden=true;done();};
+    const show=()=>{
+      if(index>=lines.length){close();return;}
+      renderDialog(lines,index,key,()=>{index++;show();},()=>{index=lines.length;show();});
+    };
+    show();
+  }
   function dealer() {
     if (['boo','fail','ending','rebirth','bossPhase'].includes(menu) || dealerBusy) return;
     if (state.mode !== 'dealer' && C.failureDealerAvailable(state) && C.openFailureDealer(state)) save();
     if (state.mode !== 'dealer' || !state.dealer) return;
     if (menu !== 'dealer') {
       dealerGameView=null; dealerMessage = '';
+      dealerIntroLine = dealerIntroSeen ? -1 : 0; dealerIntroSeen = true;
       openPanel('dealer', D.ui.dealerTitle);
     }
     drawDealer();
@@ -14,6 +26,16 @@
     const d = state.dealer;
     if (!d || menu !== 'dealer') return;
     $('panelBody').replaceChildren();
+    if (dealerIntroLine >= 0) {
+      const host = element('div', '', 'dealer-intro-dialog');
+      $('panelBody').append(host);
+      const finish = () => { finishTypingNow(); dealerIntroLine = -1; dialogKey = ''; drawDealer(); };
+      renderDialog(D.dealer.firstMeeting, dealerIntroLine, 'dealer:firstMeeting', () => {
+        if (++dealerIntroLine >= D.dealer.firstMeeting.length) finish();
+        else drawDealer();
+      }, finish, host);
+      return;
+    }
     const host = element('div', '', 'dealer-host');
     const figure = element('span', '', 'dealer-emoji');
     const portrait = element('img', '', 'dealer-serona'); portrait.src = 'assets/serona-hooded.png'; portrait.alt = D.dealer.name;
@@ -29,9 +51,19 @@
     host.append(figure, bubble);
     const wallet = element('p', `🪙 ${rounded(state.coins)} · 실크 ${state.gems} · 책 ${state.keys}`, 'dealer-wallet');
     const status = element('p', dealerMessage, 'dealer-message'); status.setAttribute('role', 'status');
-    $('panelBody').append(host, wallet, status);
+    // The streak is the hidden-pad hint. It stays hidden until the player owns the pad the manager talks about.
+    const streakN=d.winStreak|0, showStreak=state.u18.pads.owned.indexOf('lecturenote')>=0;
+    const streak=element('p', showStreak?`연속 ${streakN}`:'', 'dealer-streak');
+    if(!showStreak)streak.hidden=true; else streak.setAttribute('aria-label',`연속 성공 ${streakN}`);
+    $('panelBody').append(host, wallet, streak, status);
     // Card pick and the slot machine are out of play. A save from the middle of either still loads (phase stays valid) and lands on this menu.
     drawDealerGames(d);
+    if(d.padReward){
+      d.padReward=false;
+      if(typeof toast==='function')toast('칼리 패드를 얻었어요');
+      if(typeof sound==='function')sound('fanfare');
+      playManagerLines(D.dealer.padReward,'dealer:padReward',()=>{if(menu==='dealer')drawDealer();});
+    }
     $('closePanel').disabled = dealerBusy;
   }
   // Curtain-call presentation holds the existing story queue without mutating it.
@@ -100,9 +132,11 @@
     const pitch=table.clientWidth*.25;
     const running=[];
     for(const el of moving){const slot=Number(el.dataset.slot),next=slot===a?b:a,dx=(next-slot)*pitch;
-      if(reduced)el.classList.add('routine-highlight');
+      // Establish overlap before motion begins; keep it through the entire crossing.
+      el.style.zIndex=slot===a?'1':'3';
+      if(reduced){el.classList.add('routine-highlight');el.animate?.([{opacity:.55},{opacity:1}],{duration:300});}
       else{const animation=el.animate(MinigameMotion.arc(dx,slot!==a,Math.min(24,table.clientWidth*.06)),{duration,easing:'cubic-bezier(.4,0,.2,1)',fill:'forwards'});running.push(animation);}
-      el.dataset.nextSlot=next;el.style.zIndex=slot===a?'1':'3';
+      el.dataset.nextSlot=next;
     }
     const midpoint=onMid?setTimeout(()=>{if(table.isConnected)onMid();},reduced?150:duration*.5):null;
     if(reduced){await holdMs(300);moving.forEach(el=>el.classList.remove('routine-highlight'));}
@@ -113,17 +147,20 @@
     running.forEach(a=>a.cancel());return true;
   }
   async function revealCups(c,table,choice){
-    if(dealerBusy||c.phase!=='pick')return;dealerBusy=true;sound('flip');
+    if(dealerBusy||c.phase!=='pick')return;dealerBusy=true;
     const cups=[...table.querySelectorAll('.game-cup')];cups.forEach(el=>el.disabled=true);dealerBack(true);
     // Pick first (saved), then animate, so a reload cannot be used to pick again.
     C.dealerCupsPick(state,choice);save();
+    const chosen=cups.find(el=>Number(el.dataset.slot)===choice);
+    if(chosen){cups.splice(cups.indexOf(chosen),1);cups.unshift(chosen);}
     for(const cup of cups){if(!table.isConnected){dealerBusy=false;return;}const slot=Number(cup.dataset.slot),art=cup.querySelector('.cup-prop');
       await MinigameMotion.lift(cup,true,()=>reduced);
       if(!table.isConnected){dealerBusy=false;return;}
-      if(slot===c.ball){cup.querySelector('.cup-ball').hidden=false;sound('coin');}
+      if(slot===c.ball)cup.querySelector('.cup-ball').hidden=false;
+      if(slot===choice)sound(c.hit?'coin':'flip');
       await waitRoutine(280);if(!table.isConnected){dealerBusy=false;return;}
     }
-    dealerBusy=false;sound(c.hit?'coin':'flip');drawDealer();
+    dealerBusy=false;drawDealer();
   }
   let monteGo=-1;
   // v4 U48 D1: a chosen mini game waits for its own 시작하기 button; nothing moves on opening or on choosing (UI only, the game state is unchanged).
@@ -252,7 +289,7 @@
       for(let i=0;i<3;i++){
         const cup=action('',()=>revealCups(c,table,Number(cup.dataset.slot)),c.phase!=='pick');
         cup.className='game-cup';cup.dataset.slot=i;cup.style.setProperty('--slot',i);cup.setAttribute('aria-label',`컵 ${i+1}`);
-        const ball=gameArt(c.phase==='result'&&c.keys?(state.venue%2?'cb-lemon':'cb-orange'):'cb-ball','cup-ball');ball.hidden=waiting||!((i===c.initial&&c.phase==='shuffle')||(i===c.ball&&c.phase==='result'));const art=gameArt('fx-cup-lift-01','cup-prop');cup.append(ball,art);MinigameMotion.shadow(cup);if(c.phase==='result')MinigameMotion.lift(cup,true,true);if(c.phase==='result'&&c.keys&&i===c.ball){ball.classList.add('final-load');if(!reduced)cup.append(element('span','','final-load-fx'));}table.append(cup);
+        const ball=gameArt(c.phase==='result'&&c.keys?(state.venue%2?'cb-lemon':'cb-orange'):'cb-ball','cup-ball');ball.hidden=c.phase!=='result'||i!==c.ball;const art=gameArt('fx-cup-lift-01','cup-prop');cup.append(ball,art);MinigameMotion.shadow(cup);if(c.phase==='result')MinigameMotion.lift(cup,true,true);if(c.phase==='result'&&c.keys&&i===c.ball){ball.classList.add('final-load');if(!reduced)cup.append(element('span','','final-load-fx'));}table.append(cup);
       }
       area.append(table,element('span','','flex-break'));
       if(c.phase==='result')area.append(element('p',`동전 +${rounded(c.coins)}${c.gems?` · 실크 +${c.gems}`:''}${c.keys?' · 책 +1':''}`,'game-result'));
@@ -301,13 +338,14 @@
       ['cups','컵앤볼',2,'🔴','cb-ball','맞히면 동전·실크, 가끔 책'],
       ['monte','카드 몬테',3,'🂡','monte-queen',`정답마다 실크 +${D.silkRewards.monteCorrect}, 세 번이면 책`]
     ]){
-      const played=games[id],need=!played&&state.gems<cost;
+      const played=games[id],settled=!!played&&C.dealerGameSettled(id,played),need=(settled||!played)&&state.gems<cost;
       const card=element('article','','dealer-game-card');
       const pic=element('div','','dealer-game-art');
       pic.append(element('span',emoji,'dealer-game-emoji'),gameArt(art,'dealer-game-img'));
-      const start=action(played?(['result','lost','banked'].includes(played.phase)?'결과 보기':'이어 하기'):'시작',()=>{
+      const start=action(settled?'다시 하기':played?'이어 하기':'시작',()=>{
         if(dealerBusy)return;
-        if(played||C.dealerGameStart(state,id)){dealerGameView=id;save();drawDealer();}
+        if(settled){if(C.dealerGameStart(state,id)){dealerGameView=id;save();drawDealer();}}
+        else if(played||C.dealerGameStart(state,id)){dealerGameView=id;save();drawDealer();}
       },dealerBusy||need);
       start.className='game-start u26-primary';
       const note=element('small',need?`실크 ${cost}장이 필요해요`:'','dealer-need');if(!need)note.setAttribute('aria-hidden','true');
@@ -325,11 +363,13 @@
     for(let i=0;i<3;i++){
       if(!table.isConnected){dealerBusy=false;return;}
       const prop=nodes[i].querySelector('.cup-prop'),ball=nodes[i].querySelector('.cup-ball');
-      if(i===c.initial){ball.hidden=false;if(!reduced)ball.classList.add('ball-popping');}
+      ball.hidden=true;
       await MinigameMotion.lift(nodes[i],true,()=>reduced);
+      if(i===c.initial)ball.hidden=false;
       if(!table.isConnected){dealerBusy=false;return;}
       if(reduced)nodes[i].classList.add('routine-highlight');
       await waitRoutine(i===c.initial?900:520);
+      ball.hidden=true;
       await MinigameMotion.lift(nodes[i],false,()=>reduced);
       if(!table.isConnected){dealerBusy=false;return;}
       ball.classList.remove('ball-popping');ball.hidden=true;nodes[i].classList.remove('routine-highlight');

@@ -44,14 +44,22 @@
     return PhoneLayout.transform({left:r.left-(k.boardInset+pos.col*(k.cellSize+k.cellGap))*sx,top:r.top-(k.boardInset+pos.row*(k.cellSize+k.cellGap))*sy,width:k.boardSize*sx,height:k.boardSize*sy},k.boardSize);
   }
   function centerActiveGrid(){
-    const board=$('board'),active=cells.slice(0,state.board.length);
-    if(!active.length)return;
-    const rects=active.map(d=>({x:d.el.offsetLeft,y:d.el.offsetTop,w:d.el.offsetWidth,h:d.el.offsetHeight}));
-    const left=Math.min(...rects.map(r=>r.x)),right=Math.max(...rects.map(r=>r.x+r.w));
-    const top=Math.min(...rects.map(r=>r.y)),bottom=Math.max(...rects.map(r=>r.y+r.h));
-    const dx=(board.clientWidth-left-right)/2,dy=(board.clientHeight-top-bottom)/2;
-    if (board.style.getPropertyValue('--grid-shift-x') !== dx+'px' || board.style.getPropertyValue('--grid-shift-y') !== dy+'px') wandOffset = null;
-    board.style.setProperty('--grid-shift-x',dx+'px');board.style.setProperty('--grid-shift-y',dy+'px');
+    const board=$('board');
+    // All saved slots belong to the same 5x5 logical board (including arranged positions).
+    // Match the core pitch exactly so boardTransform(), wand areas and effects stay aligned.
+    const k=C.CONST, pad=phone ? (portraitLayout() ? 16 : 12) : 20;
+    const room=Math.min(board.clientWidth,board.clientHeight)-2*pad;
+    if(room<=0)return;
+    const unit=room/(k.boardCols*k.cellSize+(k.boardCols-1)*k.cellGap);
+    const slot=k.cellSize*unit, gap=k.cellGap*unit;
+    const signature=[board.clientWidth,board.clientHeight,pad,slot].join(':');
+    if(centerActiveGrid.key!==signature){
+      centerActiveGrid.key=signature;wandOffset=null;
+      board.style.setProperty('--case-slot',slot+'px');
+      board.style.setProperty('--case-gap',gap+'px');
+      board.style.setProperty('--case-pad',pad+'px');
+      board.style.setProperty('--grid-shift-x','0px');board.style.setProperty('--grid-shift-y','0px');
+    }
   }
   // Portrait gaps are tighter than the 608-space grid, so a finger maps to the case cell under it.
   function portraitBoardPoint(clientX, clientY) {
@@ -144,11 +152,11 @@
   function nextBanner(){ /* All notices share presentation.tick. */ }
   // s4e2 F: notes = achievements and set completions raised by the same clearing hit, shown as one line on this card (not as separate toasts).
   function showStageReward(reward,gems=0,notes=null){
-    presentation.push({stageTransition:true,minimum:2000,priority:20,start:item=>{
+    presentation.push({stageTransition:true,hold:true,minimum:2000,priority:20,start:item=>{
       sound('milestone');
       const r=D.stageRewards[reward-1],host=element('button','','stage-reward');stageRewardHost=host;host.type='button';
-      host.setAttribute('aria-label',r.effect+' · 눌러서 계속');const art=element('img');art.src='assets/reward-'+r.id+'.png';art.alt='';
-      host.append(art,element('h2',r.effect),element('p',r.quote));if(gems)host.append(element('p',`실크 +${gems}`));if(notes&&notes.length)host.append(pxIcons(element('p','함께 달성 · '+notes.join(', '),'reward-notes')));$('stage').append(host);
+      host.setAttribute('aria-label',r.effect+' · 눌러서 닫기');const art=element('img');art.src='assets/reward-'+r.id+'.png';art.alt='';
+      host.append(art,element('h2',r.effect),element('p',r.quote));if(gems)host.append(element('p',`실크 +${gems}`));if(notes&&notes.length)host.append(pxIcons(element('p','함께 달성 · '+notes.join(', '),'reward-notes')));host.append(element('p','눌러서 닫기'));$('stage').append(host);
       item.end=()=>{host.remove();stageRewardHost=null;previous=0;};host.addEventListener('click',()=>presentation.finish());release();
     }});
   }
@@ -362,9 +370,9 @@
     return { x: (r.left + r.width * fx - s.left) / scale, y: (r.top + r.height * fy - s.top) / scale, w: r.width / scale };
   }
   // s4e2 F: one sequence in the same 2500 ms. 0 ms the hit (flash; the hit stop runs at the win event), 150 ms the stamp and the audience pop with
-  // applause (onCheer swaps in the happy face), 1500-2300 ms the coins and silk fly to the wallet, and the curtain call follows at 2500 ms.
+  // applause (onCheer swaps in the happy face). Coins and silk leave with that stamp (the wallet was already paid), and the curtain call follows at 2500 ms.
   function clearMoment(headliner, coins, gems = 0, onCheer = null) {
-    const MS = 2500, CHEER = 150, PAY = 1500, card = $('audienceCard'), aud = $('audience');
+    const MS = 2500, CHEER = 150, PAY = CHEER, card = $('audienceCard'), aud = $('audience');
     const stamp = element('div', headliner ? '기립박수!' : '감탄!', 'win-stamp'); stamp.id = 'winStamp'; stamp.setAttribute('aria-hidden', 'true');
     const flash = element('div', '', 'win-flash'); flash.setAttribute('aria-hidden', 'true');
     card.append(flash, stamp);
@@ -395,7 +403,7 @@
       }
     }
     const cheer = setTimeout(() => { if (onCheer) onCheer(); sound('applause', { big: headliner }); }, CHEER);
-    // Rewards leave the audience at 1500 ms (after the bows) and the coin counter pulses as they land.
+    // Rewards leave with the win stamp (same moment as the applause), and the coin counter pulses as they land.
     // From the face top edge, so the coins do not cross the banner below.
     const mid = audiencePoint(.5, .14); clearMoment.origin = mid;
     if (gems) fly(mid.x, mid.y, target('gems'), '🧣', '', '#ffe35b', PAY + 260); // first, so the eight coins cannot fill the flight cap before it

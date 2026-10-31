@@ -42,16 +42,52 @@
     };
     if (opening) treeView.sheet = false;
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); svg.classList.add('constellation-lines');
+    // g2d book combs: four display-only arm plates (not nodes, not saved) and bus lines, the same model as .runs-v5/g2/g2d/geometry.cjs.
+    const bookArm = p => p.y < 0 && -p.y > Math.abs(p.x) ? 'up' : p.y > 0 && p.y > Math.abs(p.x) ? 'down' : p.x < 0 ? 'left' : 'right';
+    const bookDepth = (arm, p) => arm === 'up' ? -p.y : arm === 'down' ? p.y : arm === 'left' ? -p.x : p.x;
+    const bookLat = (arm, p) => arm === 'up' || arm === 'down' ? p.x : p.y;
+    const bookAt = (arm, d, l) => arm === 'up' ? { x: l, y: -d } : arm === 'down' ? { x: l, y: d } : arm === 'left' ? { x: -d, y: l } : { x: d, y: l };
+    const bookKids = id => D.tree.filter(n => !n.shopOnly && n.id !== 'autoLearn' && n.prereqs.includes(id)).length;
+    const combKids = {};
+    const bookPath = (a, b, owned) => {
+      const path = document.createElementNS(svg.namespaceURI, 'path');
+      path.setAttribute('d', `M${a.x * 140} ${a.y * 140}L${b.x * 140} ${b.y * 140}`);
+      path.setAttribute('fill', 'none'); path.setAttribute('stroke-width', '3'); path.setAttribute('stroke-linecap', 'square');
+      path.style.stroke = owned ? 'var(--ok, #70de88)' : '#4A4062';
+      path.classList.add('book-comb'); svg.append(path);
+    };
+    const bookComb = (arm, from, kids) => {
+      const P = from.id === 'root' ? bookAt(arm, 2, 0) : from, d0 = bookDepth(arm, P), l0 = bookLat(arm, P), owned = kids.some(n => infos.get(n.id).level > 0);
+      if (from.id === 'root') bookPath({ x: 0, y: 0 }, P, owned);
+      bookPath(P, bookAt(arm, d0 + .5, l0), owned);
+      const lats = kids.map(n => bookLat(arm, n)), lo = Math.min(l0, ...lats), hi = Math.max(l0, ...lats);
+      const busDepth = l => from.id === 'root' ? Math.max(d0 + .5, Math.floor(Math.abs(l) / 2) * 2 + .5) : d0 + .5;
+      const stops = [...new Set([lo, hi, l0, ...lats, ...Array.from({ length: hi - lo + 1 }, (_, i) => lo + i)])].sort((a, b) => a - b);
+      for (let i = 1; i < stops.length; i++) bookPath(bookAt(arm, busDepth(stops[i - 1]), stops[i - 1]), bookAt(arm, busDepth(stops[i]), stops[i]), owned);
+      for (const n of kids) bookPath(bookAt(arm, busDepth(bookLat(arm, n)), bookLat(arm, n)), n, infos.get(n.id).level > 0);
+      if (from.id === 'root') {
+        const plate = element('span', { up: '탭 힘', left: 'HP', down: '특수 기술', right: '버프' }[arm], 'book-arm-plate');
+        plate.setAttribute('aria-hidden', 'true');
+        Object.assign(plate.style, { position: 'absolute', left: `${P.x * 140}px`, top: `${P.y * 140}px`, transform: 'translate(-50%,-50%)', padding: '6px 14px', background: '#161b30', border: '3px solid #777e98', boxShadow: '0 3px 0 #100D16', color: '#fff', fontSize: '22px', lineHeight: '1.2', whiteSpace: 'nowrap', pointerEvents: 'none', zIndex: '1' });
+        world.append(plate);
+      }
+    };
     for (const node of D.tree) {
       if (!shown.has(node.id)) continue;
       for (const id of node.prereqs) {
         if (!shown.has(id) || (!infos.get(node.id).revealed && !infos.get(id).revealed) || (node.reveal === 'E' && !infos.get(node.id).revealed)) continue;
         const pre = D.tree.find(n => n.id === id);
+        // g2d: root children and the children of a parent with more than 3 children hang from a comb; only revealed ones extend it.
+        if (id === 'root' || (bookKids(id) > 3 && bookDepth(bookArm(pre), node) >= bookDepth(bookArm(pre), pre) + 1)) { if (infos.get(node.id).revealed) (combKids[id] = combKids[id] || []).push(node); continue; }
         if (Math.hypot(pre.x-node.x, pre.y-node.y) > 2.1) continue;
         const line = document.createElementNS(svg.namespaceURI, 'line');
         for (const [key, value] of Object.entries({ x1: pre.x * 140, y1: pre.y * 140, x2: node.x * 140, y2: node.y * 140 })) line.setAttribute(key, value);
         line.classList.toggle('owned', infos.get(node.id).level > 0); svg.append(line);
       }
+    }
+    for (const [id, kids] of Object.entries(combKids)) {
+      if (id === 'root') { for (const arm of ['up', 'left', 'down', 'right']) { const k = kids.filter(n => bookArm(n) === arm); if (k.length) bookComb(arm, { id: 'root' }, k); } }
+      else { const pre = D.tree.find(n => n.id === id); bookComb(bookArm(pre), pre, kids); }
     }
     world.append(svg);
     let suppressClick = false;
@@ -201,10 +237,10 @@
     }
     if (opening) {
       const nodes = D.tree.filter(n => shown.has(n.id) && infos.get(n.id).revealed && (!infos.get(n.id).gate || infos.get(n.id).gate.met));
-      const span = axis => (Math.max(...nodes.map(n=>n[axis])) - Math.min(...nodes.map(n=>n[axis]))) * 140;
-      treeView.zoom = Math.min(1, (map.clientWidth - 20) / (span('x') + 140), (map.clientHeight - 20) / (span('y') + 140));
+      const reach = axis => Math.max(...nodes.map(n => Math.abs(n[axis]))) * 140;
+      treeView.zoom = Math.min(1, (map.clientWidth - 20) / (reach('x') * 2 + 140), (map.clientHeight - 20) / (reach('y') * 2 + 140));
       treeView.zoom = Math.max(minTreeZoom, treeView.zoom);
-      centerUnlocked(); treeView.y -= 30 * treeView.zoom + Math.max(0, (map.clientHeight - (span('y') + 140) * treeView.zoom) / 2 - 20);
+      treeView.x = 0; treeView.y = 0;
     }
     transform();
     // fixP 4: in phone landscape the side column narrows the map; a tapped node that would fall behind it is brought back to the map's middle.
@@ -278,12 +314,15 @@
   }
   function equipPanel() {
     const body = $('panelBody'), slots = C.equipSlots(state), grid = element('div', '', 'equip-grid');
+    const keepScroll = equipPanel._scrollTop; equipPanel._scrollTop = null;
     const guiding = state.features.guide === 'place';
+    // openPanel sets #panelBody.scrollTop to 0 before this rebuild. The click stores it first.
+    const reopen = () => { equipPanel._scrollTop = body.scrollTop; bestiary(); };
     if(guiding) body.append(element('h2','첫 마술용품을 빈 자리에 놓아 보세요.','guide-line'));
     body.append(element('p', slots ? `소품 ${state.features.equipped.length} / ${slots} · 같은 종류가 더 잘 나와요 · 종류마다 최대 3개` : '비법서에서 마술용품를 배우세요.'));
     for (let i = 0; i < 9; i++) {
       const id = state.features.equipped[i], product = D.items.types.flatMap(t => t.ladder).find(p => p.id === id);
-      const button = action(product ? `${product.emoji} ${product.name} · 해제` : i < slots ? '' : '🔒 잠긴 자리', () => { C.unequipItem(state, id); save(); bestiary(); }, !product);
+      const button = action(product ? `${product.emoji} ${product.name} · 해제` : i < slots ? '' : '🔒 잠긴 자리', () => { C.unequipItem(state, id); save(); reopen(); }, !product);
       if (!product && i < slots) button.setAttribute('aria-label', '빈 자리');
       if (guiding && i===0) button.classList.add('guide-highlight');
       if (product) sprite(button, `assets/item-${id==='water-glass'?'chicken':id}.png`); if(product)easyTooltip(button,product.desc);grid.append(button);
@@ -298,7 +337,7 @@
         if (C.equipItem(state, id)) {
           save();
           if(guiding){const label=type.id==='card'?'트럼프 카드':product.name;toast(`${label} 종류가 더 잘 나와요`);}
-          bestiary();
+          reopen();
         } else toast('빈 자리와 종류별 3개 제한을 확인하세요.');
       }, !slots || state.features.equipped.includes(id));easyTooltip(prop,product.desc);
       if(guiding && id===state.features.collected[0]) prop.classList.add('guide-highlight');
@@ -307,6 +346,10 @@
       collection.append(entry);
     }
     body.append(collection);
+    if (typeof keepScroll === 'number') {
+      body.scrollTop = keepScroll;
+      if (typeof requestAnimationFrame === 'function') requestAnimationFrame(() => { body.scrollTop = keepScroll; });
+    }
   }
   const workerActors = {};
   function workerActor(id, role) {

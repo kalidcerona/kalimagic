@@ -51,6 +51,12 @@
     const desk = document.querySelector('#mockupDressing .mockup-desk');
     if (desk) desk.src = `assets/kit/judge-desk${['audition','broadcast'].includes(v.slug) ? '-tv' : ''}.webp`;
   }
+  function encounterNumber() {
+    const v=D.venues[state.venue-1], j=Math.min(state.j,v.audiences.length+1);
+    // Benched legacy roster entries are skipped by the fight rotation.
+    const step=v.audiences.slice(0,j-1).filter(a=>!a.bench).length+1;
+    return `${state.venue}-${step}`;
+  }
   function audience() {
     if(state.mode==='transition'&&state.resolved&&state.idle.next&&!audience.restored){const v=D.venues[state.venue-1],a=C.audienceAt(v,state.j);audience.restored=true;wonMoment={v,a,context:U5.encounter(D.venues,state),until:clock+state.transMs};stageAudienceFace($('audience'),stageAudienceAsset(v,a),6);$('audienceLine').textContent=a.winLine;$('audienceLine').hidden=false;}
     if (wonMoment && (wonMoment.pending||presentation.active?.winner||clock < wonMoment.until)) return;
@@ -64,6 +70,7 @@
     if (key !== lastAudience) {
       const grows = shownPhase === 2 && /:phase1$/.test(lastAudience) && lastAudience.slice(0, -7) === key; // s5b: 앞줄 관객 → 밍기리 in the same fight
       lastAudience = key; pendingIntro = null; resetAudienceLines();
+      if(v.slug==='theater')assetImage('assets/story/subway-memory.webp');
       $('room').dataset.venue = v.slug;
       sprite($('room'), venueAsset(v));
       $('viewport').style.setProperty('--venue-art', `url(${JSON.stringify(assetUrl(venueAsset(v)))})`); // v4 U50: the scene also fills the safe-area and letterbox bands (U50b: quoted with JSON.stringify, so a quote or backslash in a path cannot break the CSS)
@@ -74,7 +81,7 @@
       $('venueName').textContent = v.name;
       if (typeof syncKaliTable === 'function') syncKaliTable();
       $('doubtTitle').dataset.audience = a.name;
-      $('doubtTitle').dataset.kind = ['supporter','helper'].includes(a.role) ? '기대' : '의심';
+      $('doubtTitle').dataset.kind = ['supporter','helper'].includes(a.role) ? '기대치' : '의심';
       $('doubtTitle').textContent = portraitLayout() ? $('doubtTitle').dataset.kind : `${a.name}의 ${$('doubtTitle').dataset.kind}`;
       portraitCopy();
       $('audience').classList.remove('asset-ready','asset-pending','asset-failed');
@@ -88,7 +95,7 @@
       $('audience').classList.toggle('headliner', a === v.headliner || theaterSlot);
       const headlinerNow = (a === v.headliner || theaterSlot) && !side;
       $('stage').classList.toggle('headliner-fight', headlinerNow);
-      headlinerCue = headlinerNow ? { name: a.name, key, played: false } : null;
+      headlinerCue = headlinerNow && shownPhase !== 1 ? { name: a.name, key, played: false } : null;
       $('audience').style.setProperty('--story-scale',String(a.storyScale||1));
       $('audience').dataset.storyScale=String(a.storyScale||1);
       queueAudienceLine(a.encounterLine || a.heckles?.[0] || a.preLine || a.bio || a.flavor || a.winLine,key,false,true);
@@ -110,7 +117,6 @@
       }
       sprite($('crowd'), v.crowdAsset ? `assets/${v.crowdAsset}` : '');
       $('crowdLabel').textContent = `관객 ${v.crowd}명`;
-      $('stageNumber').textContent = `${state.venue} / ${state.visited.includes('future')?D.venues.length:D.venues.length-1}`; // hotel stage: was 16, every venue but the hidden 서재 앞 큰 테이블
       const dimension = D.dimensions[state.dimension - 1];
       $('dimensionLabel').textContent = `차원 ${state.dimension} · ${dimension ? dimension.name : '새로운 앵콜'}`;
       $('stage').style.setProperty('--dimension-hue', `${dimension ? dimension.hue : (state.dimension * 47) % 360}deg`);

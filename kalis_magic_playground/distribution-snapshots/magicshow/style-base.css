@@ -301,7 +301,7 @@ html body.phone #viewport#viewport #stage #phoneTop .venue-heading #stageNumber{
 /* Kali's stats: one band along the bottom of the stage (two lines on narrow phones) */
 html body.phone #viewport#viewport #stage #audienceCard #stageStats{left:50px!important;right:4px!important;width:auto!important;top:auto!important;bottom:4px!important;height:28px!important;display:flex!important;justify-content:space-between!important;gap:6px!important;padding:0 8px!important;align-items:center!important;background:#120f1acc;border-radius:6px!important;box-shadow:none}
 html body.phone #viewport#viewport #stage #audienceCard #stageStats > *{height:24px!important;width:auto!important;justify-content:center!important;white-space:nowrap!important;flex:none!important}
-html body.phone #viewport#viewport #stage #audienceCard #stageStats > #mental #mentalNumber{flex:none!important;white-space:nowrap!important;max-height:none!important}
+
 html body.phone:not(.tablet) #viewport#viewport #stage #audienceCard #stageStats > #mental{order:3;flex:1 0 100%!important;justify-content:center!important;height:20px!important}
 html body.phone:not(.tablet) #viewport#viewport #stage #audienceCard #stageStats > :not(#mental){height:22px!important}
 html body.tablet #viewport#viewport #stage #audienceCard #stageStats{height:38px!important}
@@ -317,7 +317,7 @@ html body.tablet #viewport#viewport #stage #audienceCard #audience > .asset-spri
 #viewport #stage #board .respawn-stage.asset-failed>.asset-sprite{display:none}
 #viewport #stage #storyDialog .story-portrait.asset-failed>.sprite-glyph{display:block;visibility:visible;font-size:28px;line-height:44px;text-align:center}
 #viewport #stage #storyDialog .story-portrait.asset-failed>.asset-sprite{display:none}
-html body.tablet #viewport#viewport #stage #audienceCard #stageStats > #mental #mentalNumber { white-space:normal !important; overflow:visible; max-height:none; height:auto; overflow-wrap:anywhere; font-size:11px; line-height:16px; }
+
 /* Keep the two-line fallback inside the existing 22px plate, including spaces in long names. */
 html body:not(.portrait-layout) #viewport #stage #audienceCard .doubt-plate.plate-2l #doubtTitle{word-break:break-all;overflow-wrap:anywhere;line-height:9px}
 #stage #mockupDressing { position:absolute; inset:0; pointer-events:none; display:none; }

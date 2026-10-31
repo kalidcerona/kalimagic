@@ -39,7 +39,7 @@
   let lastRun = 0;
   function loop(now) {
     // U29: nothing runs while hidden; when paused with no effects on screen, 30 fps is enough.
-    if (titleLaunchPending || document.hidden) { previous = 0; requestAnimationFrame(loop); return; }
+    if (titleLaunchPending || gameEnded || document.hidden) { previous = 0; requestAnimationFrame(loop); return; }
     // U35: 60 fps cap (120 Hz phones ran the whole render twice as often); a quiet stage (paused, or nothing drawn and no held press) idles at 30 fps.
     const quiet = !particles.length && !flights.length && !numbers.length && !badges.length && (paused() || !boardHolds.length);
     if (now - lastRun < (quiet ? 30 : 14)) { requestAnimationFrame(loop); return; }
@@ -323,7 +323,7 @@
     }, true);
     // Capture shortcuts before game handlers; keep native button activation and trap focus in this dialog.
     document.addEventListener('keydown', e => {
-      if (!titleLaunchPending) return;
+      if (gameEnded || !titleLaunchPending) return;
       if (!title.hidden) {
         e.stopImmediatePropagation();
         if (e.key === 'Escape' && !confirm.hidden) { e.preventDefault(); cancel(); }
@@ -339,12 +339,28 @@
     }, true);
     focusAction();
   }
-  // v4 U47 6: leaving the game. A history guard entry (pushed at the first tap, because browsers skip entries made without a user gesture) turns the first
-  // Back press (Android back, browser back, PWA back) into the in-game panel "저장하고 나갈까요?". The guard is not re-armed behind it, so a second Back
-  // press at the page's first entry leaves natively (the browser exits or goes to the previous page; a page cannot close an installed app by itself).
-  // [저장 칸에 저장] opens the save-slot panel and comes back here after a slot was written; [그냥 나가기] goes back at once; [계속하기] re-arms the guard.
-  // beforeunload (tab close or reload where the browser allows it) auto-saves and asks the browser's own generic question only when there is progress and no
-  // slot was written in the last 10 minutes; its text cannot be customised, and browsers show nothing on touch devices where the page was closed from the task list.
+  // Leaving saves synchronously, then closes if the host permits it; blocked closes end at a static screen.
+  let gameEnded = false;
+  function endGame() {
+    if (!save()) { toast('저장하지 못했어요. 다시 눌러 주세요'); return; }
+    leaveGo = true; leavePending = false; gameEnded = true; release();
+    $('leaveConfirm').hidden = true;
+    document.addEventListener('keydown', e => e.stopImmediatePropagation(), true);
+    try { window.close(); } catch (error) { /* The host may block closing a user-opened tab. */ }
+    setTimeout(() => {
+      if (window.closed) return;
+      const host = element('div', '', 'game-end-screen');
+      host.setAttribute('role', 'dialog'); host.setAttribute('aria-modal', 'true');
+      host.setAttribute('aria-label', '게임 종료');
+      const message = element('p', '게임을 저장했어요. 이제 창을 닫아도 돼요.');
+      const restart = action('다시 시작', () => {
+        const url = new URL(location.href); url.searchParams.set('_titleStart', '1'); location.replace(url.href);
+      });
+      host.append(message, restart);
+      for (const node of [...document.body.children]) if (node.tagName !== 'SCRIPT') node.inert = true;
+      document.body.append(host); restart.focus();
+    }, 250);
+  }
   let guardOn = false, leaveGo = false, leavePending = false, lastSlotSaveAt = 0;
   function armLeaveGuard() { if (guardOn) return; try { history.pushState({ magicLeaveGuard: 1 }, '', location.href); guardOn = true; } catch (error) { /* no history access: beforeunload below still applies */ } }
   function showLeaveConfirm(saved = false) {
@@ -362,14 +378,7 @@
   document.addEventListener('pointerdown', () => { if (!titleLaunchPending && !guardOn && !leaveGo && $('leaveConfirm').hidden) armLeaveGuard(); }, true);
   $('leaveStay').addEventListener('click', () => { $('leaveConfirm').hidden = true; leavePending = false; armLeaveGuard(); });
   $('leaveSave').addEventListener('click', () => { $('leaveConfirm').hidden = true; openSaveSlots(); leavePending = true; });
-  $('leaveNow').addEventListener('click', () => {
-    leaveGo = true; leavePending = false; save(); $('leaveConfirm').hidden = true;
-    try { history.back(); } catch (error) { /* nothing to go back to */ }
-    setTimeout(() => { // still here: nothing came before this page (new tab, or the installed app's first screen)
-      try { window.close(); } catch (error) { /* only script-opened windows can close */ }
-      toast('뒤로가기를 한 번 더 누르면 나가요'); leaveGo = false;
-    }, 500);
-  });
+  $('leaveNow').addEventListener('click', endGame);
   window.addEventListener('beforeunload', e => {
     if (titleLaunchPending || restoring || leaveGo) return;
     save();

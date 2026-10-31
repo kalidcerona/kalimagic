@@ -73,7 +73,7 @@ globalThis.U5 = (() => {
     const list = choices.length ? choices : valid;
     return list[Math.min(list.length - 1, Math.floor(random() * list.length))] || '';
   }
-  const happyPortraitPath = path => path.replace(/\.png$/, '-happy.png');
+  const happyPortraitPath = path => /^assets\/serona(?:-hooded|-reveal)?\.(?:png|webp)$/.test(path) ? path : path.replace(/\.png$/, '-happy.png');
   return { effectBadge, badgeStack, capBadges, selectHeckle, happyPortraitPath, badgeWidth, encounter, bannerMatches, phase2Line, noDrawZones, clearOfZones };
 })();
 /* U10: one board transform for CSS geometry, input and effects. */
@@ -96,7 +96,7 @@ globalThis.PhoneLayout = (() => {
       // Mockup A: full-width board, one action row, and the remaining height belongs to the stage.
       // s4c: the buttons are one row (skills, 비법 over 연습 모드, 실크 상점, 도감 over 메뉴: two 44 px tools stacked = 90 px), the stats strip is thicker.
       const compact = ph < 700;
-      const venue = compact ? 38 : 54, rowGap = compact ? 2 : 4, hp = compact ? 22 : 36, stats = compact ? 46 : 56;
+      const venue = compact ? 38 : 54, rowGap = compact ? 2 : 4, hp = compact ? 22 : 36, stats = (compact ? 46 : 56) + 16;
       const finale = 0, skills = compact ? 94 : 100, bottom = 4;
       const topBar = venue + rowGap + hp;
       const below = rowGap + stats + finale + rowGap;
@@ -224,12 +224,13 @@ globalThis.Presentation = (() => {
     }
     tick(dt,blocked=false){
       if(blocked)return;
-      if(this.active){this.active.age+=dt;if(this.active.age>=this.active.minimum&&!this.active.hold){const gap=this.active.gapAfter??300;this.active.end?.();this.active=null;this.gap=gap;}return;}
+      // A tap remembered before minimum (closeWhenReady) dismisses on the tick that reaches it. hold alone stays up.
+      if(this.active){this.active.age+=dt;if(this.active.closeWhenReady&&this.active.age>=this.active.minimum)this.active.hold=false;if(this.active.age>=this.active.minimum&&!this.active.hold){const gap=this.active.gapAfter??300;this.active.end?.();this.active=null;this.gap=gap;}return;}
       if(this.gap>0){this.gap=Math.max(0,this.gap-dt);if(this.gap>0)return;}
       this.items.sort((a,b)=>Number(!!b.stageTransition)-Number(!!a.stageTransition)||(b.priority||0)-(a.priority||0)||a.serial-b.serial);
       if(this.items.length){this.active=this.items.shift();this.active.start?.(this.active);}
     }
-    finish(){if(this.active&&this.active.age>=this.active.minimum)this.active.hold=false;}
+    finish(){if(!this.active)return;if(this.active.age>=this.active.minimum)this.active.hold=false;else this.active.closeWhenReady=true;}
     get busy(){return !!this.active||this.items.length>0||this.gap>0;}
     clear(){this.active?.end?.();this.active=null;this.items=[];this.gap=0;}
   }

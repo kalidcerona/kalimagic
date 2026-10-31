@@ -125,7 +125,7 @@
   for (const [sel, cls] of [['.doubt > .doubt-label', 'doubt-plate'], ['#heckleMeter > .heckle-label', 'heckle-plate']]) { const el = document.querySelector(sel); if (el) { el.classList.add(cls); $('audienceCard').append(el); } }
   const chromeHomes = new Map();
   // v4 U48 N3: 도감 stays in the top bar (nav .menu) next to 메뉴 on desktop too.
-  const DESKTOP_MENU = ['caseArrangeButton','equipButton','missionsButton','mapButton','gemShopButton','customizeButton','rebirthButton','soundButton','musicButton','musicVolume','hapticsButton','textSpeedButton','retreatButton','coffeeButton','openChatButton'];
+  const DESKTOP_MENU = ['caseArrangeButton','equipButton','missionsButton','gemShopButton','customizeButton','rebirthButton','soundButton','musicButton','musicVolume','hapticsButton','textSpeedButton','retreatButton','coffeeButton','openChatButton'];
   function moveChrome(el, host) {
     if (!el) return;
     if (!chromeHomes.has(el)) chromeHomes.set(el, { parent: el.parentNode, next: el.nextSibling });
@@ -148,7 +148,7 @@
         moveChrome($('bestiaryButton'),$('phoneTop')); moveChrome($('wardrobeButton'),$('phoneTop')); // v4 U48 N3: 도감 sits in the top bar next to 메뉴, not in the menu
         moveChrome($('moreButton'), $('phoneTop')); $('moreButton').textContent='☰ 메뉴';
       }
-      for (const id of ['storyButton','installButton','statsButton','rebirthButton','missionsButton','gemShopButton','mapButton','customizeButton','soundButton','musicButton','musicVolume','hapticsButton','textSpeedButton','retreatButton','helperControls','debug','coffeeButton','openChatButton']) moveChrome(id==='musicVolume'?$(id).parentElement:$(id), $('phoneMore'));
+      for (const id of ['storyButton','installButton','statsButton','rebirthButton','missionsButton','gemShopButton','customizeButton','soundButton','musicButton','musicVolume','hapticsButton','textSpeedButton','retreatButton','helperControls','debug','coffeeButton','openChatButton']) moveChrome(id==='musicVolume'?$(id).parentElement:$(id), $('phoneMore'));
       if (!portraitNow && $('practiceButton')) moveChrome($('practiceButton'), $('phoneMore')); // 연습 모드 is in the menu outside portrait
       if (portraitNow) pxText($('equipButton'), '🎩 마술용품');
       else { pxText($('bookButton'), '비법'); pxText($('equipButton'), '🎩 마술용품'); /* v4 U50b: a full label, it lives in the menu now */ $('moreButton').textContent=innerWidth<=740?'☰':'☰ 메뉴'; pxText($('bestiaryButton'), innerWidth<=740?'📚':'📚 도감'); }
@@ -167,6 +167,10 @@
     if ($('practiceButton')) $('practiceButton').hidden = false; // 연습 모드 is shared: every layout reaches it
     if (!portraitNow) moveChrome($('caseArrangeButton'), $('phoneMore'));
     $('caseArrangeMenuButton').hidden = true;
+    // Keep the single map control in the shared main-screen chrome across rotations.
+    moveChrome($('mapButton'), phone ? $('phoneTop') : document.querySelector('nav.menu'));
+    $('mapButton').setAttribute('aria-label', '무대 지도');
+    pxText($('mapButton'), phone ? '지도' : '무대 지도');
     placePortraitMeters(portraitNow);
     portraitCopy();
     dressSharedButtons(portraitNow);

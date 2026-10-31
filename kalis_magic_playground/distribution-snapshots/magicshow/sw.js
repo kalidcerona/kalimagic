@@ -1,6 +1,6 @@
 // Cache only the explicit app shell. API, authentication and user data stay on the network.
 const CACHE_PREFIX = 'magicshow-dist-';
-const CACHE_NAME = CACHE_PREFIX + 'e70467d5612c4977-coherent-1-distribution';
+const CACHE_NAME = CACHE_PREFIX + '6ff7c98d8c02ae37-coherent-1-distribution';
 const SHELL = [
   "./index.html",
   "./style-base.css",
@@ -68,6 +68,8 @@ const SHELL = [
   "./data-story-v15-cheers-02.js",
   "./data-extras.js",
   "./data-late-patches.js",
+  "./data-panel-help.js",
+  "./data-book-layout.js",
   "./data-script-v5.js",
   "./data-script-v6.js",
   "./data-hotel-future.js",
@@ -101,6 +103,7 @@ const SHELL = [
   "./ui-sprites.js",
   "./ui-dom-kit.js",
   "./ui-state-save.js",
+  "./ui-save-transfer.js",
   "./ui-layout.js",
   "./ui-feedback.js",
   "./ui-finale.js",
@@ -974,6 +977,7 @@ const SHELL = [
   "./assets/icon-mission.webp",
   "./assets/icon-offline.webp",
   "./assets/icon-pad-kali-black-64.webp",
+  "./assets/icon-pad-kali-emerald-64.webp",
   "./assets/icon-pad-kali-gray-64.webp",
   "./assets/icon-pad-kali-green-64.webp",
   "./assets/icon-pad-kali-lightgreen-64.webp",
@@ -1229,6 +1233,10 @@ const SHELL = [
   "./assets/pad-kali-black-512.webp",
   "./assets/pad-kali-black-phone-360.webp",
   "./assets/pad-kali-black-tile-128.webp",
+  "./assets/pad-kali-emerald-128.webp",
+  "./assets/pad-kali-emerald-512.webp",
+  "./assets/pad-kali-emerald-phone-360.webp",
+  "./assets/pad-kali-emerald-tile-128.webp",
   "./assets/pad-kali-gray-128.webp",
   "./assets/pad-kali-gray-512.webp",
   "./assets/pad-kali-gray-phone-360.webp",
@@ -1419,6 +1427,7 @@ const SHELL = [
   "./assets/story/oilwater-1-mixed.webp",
   "./assets/story/oilwater-2-separating.webp",
   "./assets/story/oilwater-3-separated.webp",
+  "./assets/story/subway-memory.webp",
   "./assets/story/twist-complete.webp",
   "./assets/story/twist-gift.webp",
   "./assets/story/twist-hidden.webp",

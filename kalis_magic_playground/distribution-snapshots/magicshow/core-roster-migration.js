@@ -57,6 +57,39 @@
   // stay; the old TV 오디션 3등 is the hotel story now, so a save that cleared the old TV 오디션 also holds the hotel trophy, and a complete old
   // TV 오디션 audience set (u14 and u18) is counted as the complete hotel set. The hotel stays unvisited, so nobody is sent back. Nested saves
   // (tutorial baseline, IF side anchor, map anchor) are migrated the same way. Returns {str, pre, restart}.
+  // g1: old kali colours (and any kali key other than emerald/red) become kali:emerald, and kali:red is granted too.
+  // Runs on the raw save before validPads, so the validator source stays unchanged. Red and emerald are kept as equipped.
+  function normalizeLegacyPads(o){
+    var pads=o&&o.u18&&o.u18.pads;
+    if(!pads||!Array.isArray(pads.owned))return false;
+    var changed=false, had=false, next=[], i, k, color, seenKali={};
+    for(i=0;i<pads.owned.length;i++){
+      k=pads.owned[i];
+      if(typeof k==='string'&&k.indexOf('kali:')===0){
+        had=true; color=k.slice(5);
+        if(color!=='emerald'&&color!=='red'){k='kali:emerald';changed=true;}
+      }
+      next.push(k);
+    }
+    if(had){
+      if(next.indexOf('kali:emerald')<0){next.push('kali:emerald');changed=true;}
+      if(next.indexOf('kali:red')<0){next.push('kali:red');changed=true;}
+    }
+    // Collapse only the kali colours this remap can duplicate. Any other duplicate (a second floor) stays, so validPads still rejects it.
+    if(changed){
+      for(i=0;i<next.length;i++){
+        k=next[i];
+        if((k==='kali:emerald'||k==='kali:red')&&seenKali[k]){next.splice(i,1);i--;}
+        else if(k==='kali:emerald'||k==='kali:red')seenKali[k]=1;
+      }
+      pads.owned=next;
+    }
+    if(typeof pads.equipped==='string'&&pads.equipped.indexOf('kali:')===0){
+      color=pads.equipped.slice(5);
+      if(color!=='emerald'&&color!=='red'){pads.equipped='kali:emerald';changed=true;}
+    }
+    return changed;
+  }
   var HOTEL_PRE = ALL_VENUES.filter(function (v) { return v.slug !== 'hotel'; });
   var OLD_AUDITION = ['a19','a20','a21','a64','a65','a66'], HOTEL_NEW = ['a-hotel-neighbor','a-audition-fd','a-audition-waiting'];
   function migrateHotelSave(str) {
@@ -112,6 +145,7 @@
     [[o.u15 && o.u15.tutorial, 'baseline'], [o.batchD, 'sideAnchor'], [o.u18, 'anchor']].forEach(function (p) {
       if (p[0] && typeof p[0][p[1]] === 'string') { var inner = migrateHotelSave(p[0][p[1]]).str; if (inner !== p[0][p[1]]) { p[0][p[1]] = inner; changed = true; } }
     });
+    if (normalizeLegacyPads(o)) changed = true;
     result.pre = pre;
     if (changed) result.str = JSON.stringify(o);
     return result;

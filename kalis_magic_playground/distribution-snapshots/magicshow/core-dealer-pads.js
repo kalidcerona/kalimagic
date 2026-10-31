@@ -15,11 +15,13 @@
     }
     return true;
   }
+  // A finished cups or monte game can be bought again in the same visit. An in-progress game cannot.
+  function dealerGameSettled(id,game){return !!game&&(id==='cups'?game.phase==='result':game.phase==='lost'||game.phase==='banked');}
   function dealerGameStart(state,id){
     var d=state.dealer,cost=id==='cups'?2:id==='monte'?3:0;
     if(state.mode!=='dealer'||!d||!cost)return false;
     if(!d.games)d.games={cups:null,monte:null};
-    if(d.games[id]||state.gems<cost)return false;
+    if((d.games[id]&&!dealerGameSettled(id,d.games[id]))||state.gems<cost)return false;
     state.gems-=cost;dailyProgress(state,'dealer',1);
     var income=Math.max(0,state.u14.visitor.incomeRate);
     if(id==='cups'){
@@ -42,11 +44,28 @@
   }
   function dealerCupsReady(state){var c=state.dealer&&state.dealer.games&&state.dealer.games.cups;if(state.mode!=='dealer'||!c||c.phase!=='shuffle')return false;c.phase='pick';return true;}
   function gemGameCoins(state,amount){earnCoins(state,amount);state.u14.visitor.incomeCoins=Math.max(0,state.u14.visitor.incomeCoins-amount);}
+  // Replay would otherwise pay dealerCapSeconds again on every win. The visit total stays inside one cap. Silk is not capped.
+  // visitCoins and winStreak live on the dealer object and are omitted from dealerSnap, so a reload or a new visit starts them at 0.
+  function dealerCoinRoom(state,income){var paid=state.dealer&&state.dealer.visitCoins||0;return Math.max(0,income*CONST.dealerCapSeconds-paid);}
+  function dealerShownCoins(state,income,amount){return Math.round(Math.min(Math.max(0,amount),dealerCoinRoom(state,income)));}
+  function dealerGrantCoins(state,income,amount){var give=dealerShownCoins(state,income,amount);if(state.dealer)state.dealer.visitCoins=(state.dealer.visitCoins||0)+give;if(give)gemGameCoins(state,give);return give;}
+  function grantKaliPads(state){
+    var p=state.u18&&state.u18.pads;if(!p||p.owned.some(function(k){var e=padEntry(k);return e&&e.id==='kali';}))return false;
+    ['emerald','red'].forEach(function(c){var key=padKey('kali',c);if(p.owned.indexOf(key)<0)p.owned.push(key);});
+    return true;
+  }
+  function bumpDealerStreak(state,outcome){
+    var d=state.dealer;if(!d||outcome==='ignore')return;
+    if(outcome==='miss'){d.winStreak=0;return;}
+    d.winStreak=(d.winStreak||0)+1;
+    if(d.winStreak>=5&&grantKaliPads(state))d.padReward=true;
+  }
   function dealerCupsPick(state,index){
     var c=state.dealer&&state.dealer.games&&state.dealer.games.cups;
     if(state.mode!=='dealer'||!c||c.phase!=='pick'||integer(index,0,2)==null)return false;
-    c.choice=index;c.hit=index===c.ball;c.phase='result';c.coins=dealerVisitCoins(state,c.income,c.hit?90:10,1);c.keys=c.hit&&state.venue>=3&&c.keyRoll?1:0;c.gems=c.hit?3:0;
-    gemGameCoins(state,c.coins);addGain(state, 'keys', c.keys, 1e6);addGain(state, 'gems', c.gems, 1e9);
+    c.choice=index;c.hit=index===c.ball;c.phase='result';c.coins=dealerGrantCoins(state,c.income,dealerVisitCoins(state,c.income,c.hit?90:10,1));c.keys=c.hit&&state.venue>=3&&c.keyRoll?1:0;c.gems=c.hit?3:0;
+    addGain(state, 'keys', c.keys, 1e6);addGain(state, 'gems', c.gems, 1e9);
+    bumpDealerStreak(state,c.hit?'hit':'miss');
     // jackpot still reads dealerFlips. The card-pick game that used to increment it is gone, so a cups hit counts.
     if(c.hit){addGain(state.features.progress, 'dealerFlips', 1, 1e24);addGain(state.features.progress, 'cupsWins', 1, 1e24);checkAchievements(state,null);}
     return true;
@@ -95,7 +114,9 @@
     var m=state.dealer&&state.dealer.games&&state.dealer.games.monte;
     if(state.mode!=='dealer'||!m||m.phase!=='playing'||integer(slot,0,2)==null)return false;
     var plan=monteRound(m,m.round),hit=slot===plan.queen;m.last={round:m.round,slot:slot,hit:hit};
-    if(!hit){m.phase='lost';m.coins=0;m.keys=0;m.gems=0;return true;}
+    // Round 0 always wins and is neither a streak success nor a miss. Later rounds count.
+    if(!hit){m.phase='lost';m.coins=0;m.keys=0;m.gems=0;if((m.round|0)>=1)bumpDealerStreak(state,'miss');return true;}
+    if((m.round|0)>=1)bumpDealerStreak(state,'hit');
     // Same dealerFlips field as cups (save key unchanged). One count per correct monte pick.
     addGain(state.features.progress, 'dealerFlips', 1, 1e24);addGain(state.features.progress, 'monteWins', 1, 1e24);
     m.round++;
@@ -105,13 +126,13 @@
     checkAchievements(state,null);
     // 행운의 박수: each correct pick in a row adds +15% per level (round 1, 2, 3).
     var streak=1+0.15*(state.tree.jackpot||0)*m.round;
-    m.coins=dealerVisitCoins(state,m.income,[0,60,150,200][m.round],streak);m.keys=m.round===3?1:0;m.gems=m.round;
+    m.coins=dealerShownCoins(state,m.income,dealerVisitCoins(state,m.income,[0,60,150,200][m.round],streak));m.keys=m.round===3?1:0;m.gems=m.round;
     if(m.round===3)dealerMonteBank(state);return true;
   }
   function dealerMonteBank(state){
     var m=state.dealer&&state.dealer.games&&state.dealer.games.monte;
     if(state.mode!=='dealer'||!m||m.phase!=='playing'||m.round<1)return false;
-    m.phase='banked';gemGameCoins(state,m.coins);addGain(state, 'keys', m.keys, 1e6);addGain(state, 'gems', (m.gems||0), 1e9);return true;
+    m.phase='banked';m.coins=dealerGrantCoins(state,m.income,m.coins);addGain(state, 'keys', m.keys, 1e6);addGain(state, 'gems', (m.gems||0), 1e9);return true;
   }
   function gemShopInfo(state,id,skill){
     var routine=DATA.routines.find(function(r){return r.shopCost && id==='routine-'+r.id;});
@@ -157,11 +178,11 @@
   function padInfo(state,id,color){
     var entry=DATA.pads.find(function(p){return p.id===id;});if(!entry||entry.colors.indexOf(color)<0)return null;
     var key=padKey(id,color),p=state.u18.pads,owned=p.owned.indexOf(key)>=0,reason='';
-    if(!owned){if(state.u15.tutorial.active)reason='첫 연습 뒤에 살 수 있어요';else if(entry.venue&&!reached(state,entry.venue))reason='전국 마술 매니아 도착 필요';else if(entry.requires&&!p.owned.some(function(k){return padEntry(k).id===entry.requires;}))reason='앞 단계 패드를 먼저 사세요';else if(state.gems<entry.cost)reason='실크 '+entry.cost+'개가 필요해요';}
+    if(!owned){if(entry.hidden)reason='판매하지 않아요';else if(state.u15.tutorial.active)reason='첫 연습 뒤에 살 수 있어요';else if(entry.requires&&!p.owned.some(function(k){return padEntry(k).id===entry.requires;}))reason='앞 단계 패드를 먼저 사세요';else if(entry.venue&&!reached(state,entry.venue))reason='전국 마술 매니아 도착 필요';else if(state.gems<entry.cost)reason='실크 '+entry.cost+'개가 필요해요';}
     return {key:key,owned:owned,cost:entry.cost,available:!reason,reason:reason,equipped:p.equipped===key};
   }
   function buyPad(state,id,color){var info=padInfo(state,id,color);if(!info||info.owned||!info.available)return false;state.gems-=info.cost;state.u18.pads.owned.push(info.key);return true;}
   function equipPad(state,key){if(state.u18.pads.owned.indexOf(key)<0)return false;state.u18.pads.equipped=key;recompute(state,true);return true;}
-  function padUpgradeInfo(state){var p=state.u18.pads,cost=Math.ceil(DATA.padPrices.upgradeBase*Math.pow(DATA.padPrices.upgradeGrowth,p.upgrades)),reason=p.upgrades>=DATA.padPrices.upgradeMax?'최대 강화':!p.owned.some(function(k){return padEntry(k).id==='kali';})?'칼리 패드 구매 필요':state.coins<cost?'동전 부족':'';return {cost:cost,level:p.upgrades,available:!reason,reason:reason};}
+  function padUpgradeInfo(state){var p=state.u18.pads,cost=Math.ceil(DATA.padPrices.upgradeBase*Math.pow(DATA.padPrices.upgradeGrowth,p.upgrades)),reason=p.upgrades>=DATA.padPrices.upgradeMax?'최대 강화':!p.owned.some(function(k){return padEntry(k).id==='kali';})?'칼리 패드를 얻으면 가능':state.coins<cost?'동전 부족':'';return {cost:cost,level:p.upgrades,available:!reason,reason:reason};}
   function upgradePad(state){var info=padUpgradeInfo(state);if(!info.available)return false;state.coins-=info.cost;state.u18.pads.upgrades++;return true;}
 
