@@ -71,6 +71,11 @@
       document.getElementById("install-text").textContent = ios ?
         "공유 메뉴 → 홈 화면에 추가하면 앱처럼 크게 할 수 있어요" :
         "브라우저 메뉴에서 홈 화면에 추가하면 앱처럼 크게 할 수 있어요";
+      // Session-only hiding never changes the saved dismissal preference.
+      var hintAutoHidden = false;
+      function hideInstallHint() { hintAutoHidden = true; installHint.hidden = true; }
+      setTimeout(hideInstallHint, 8000);
+      document.getElementById("canvas").addEventListener("pointerdown", hideInstallHint, { once: true });
       installHint.hidden = installed || dismissed;
       document.getElementById("dismiss-hint").onclick = function () {
         dismissed = true; installHint.hidden = true;
@@ -80,7 +85,7 @@
       // banner is only suppressed while this page shows its own install button.
       window.addEventListener("beforeinstallprompt", function (event) {
         installEvent = event;
-        if (!installed && !dismissed) { event.preventDefault(); installButton.hidden = false; installHint.hidden = false; }
+        if (!installed && !dismissed && !hintAutoHidden) { event.preventDefault(); installButton.hidden = false; installHint.hidden = false; }
       });
       installButton.onclick = function () {
         if (!installEvent) return;
