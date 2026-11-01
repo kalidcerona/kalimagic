@@ -445,13 +445,8 @@
         state.mental -= mentalDmg;
         state.tookMental = true;
       }
-      if (state.pattern === "stealCoins" && state.coins > 0) {
-        var take = Math.floor(state.coins * CONST.stealPct);
-        if (take < 1) take = 1;
-        if (take > state.coins) take = state.coins;
-        state.coins -= take;
-      }
-      emit(ev, { type: "heckle", dmg: dmg, shieldDmg: shieldDmg });
+      var taken = state.pattern === "stealCoins" ? takeFightCoins(state) : 0;
+      emit(ev, { type: "heckle", dmg: dmg, shieldDmg: shieldDmg, coinsTaken: taken });
       if (state.mental <= 0) {
         state.mental = 0;
         failRun(state, ev, big ? "lastHeckle" : undefined);

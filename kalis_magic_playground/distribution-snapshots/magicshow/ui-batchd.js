@@ -19,12 +19,18 @@
   let batchDPanelKey='',batchDReplayFinish=null,batchDCutsceneTimer=null,batchDFrameTimer=null,twistRoomImg=null;
   function batchDLeavePanel(){
     clearTimeout(batchDCutsceneTimer);batchDCutsceneTimer=null;clearTimeout(batchDFrameTimer);batchDFrameTimer=null;twistCutscene(false);
-    batchDPanelKey='';menu='';$('panel').hidden=true;previous=0;lastAudience='';moreReturn=false;
+    batchDPanelKey='';menu='';$('panel').hidden=true; $('stage').classList.remove('map-open');previous=0;lastAudience='';moreReturn=false;
   }
   function runBatchDAction(kind){
     const curtain=kind==='twist-next'&&state.batchD.twist.scene==='complete'&&state.batchD.twist.complete; // s5t
+    const clear=kind==='counter-finish'&&state.batchD.twist.scene==='cutscene'&&!state.batchD.twist.complete&&!state.u18.anchor;
+    const earned=state.features.progress.coinsEarned;
     if(!C.batchDAction(state,kind))return false;
-    batchDLeavePanel();if(curtain)twistCurtainCall();save();render();return true;
+    if(state.features.progress.coinsEarned>earned)sampleRates(0,[],state.features.progress.coinsEarned-earned,0);
+    batchDLeavePanel();if(curtain)twistCurtainCall();
+    if(clear&&state.batchD.twist.complete)runBatchDAction.clearNotice=venueClearBackup(true);else save();
+    if(curtain&&runBatchDAction.clearNotice){runBatchDAction.clearNotice=false;toast('자동 저장됐어요','saveClear');}
+    render();return true;
   }
   // s5t: the twist clear (counter-finish) has no win event, so the meetup trophy notice and its curtain call used to be skipped and the
   // complete panel waited behind the 공연 뒤 lines. Now: oil and water, the complete panel, then the trophy notice and the curtain call (as a

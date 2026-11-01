@@ -120,7 +120,7 @@
     state.onboarding.intro = true;
     state.onboarding.step = 8;
     if (!Array.isArray(state.onboarding.facts)) state.onboarding.facts = [];
-    if (menu) { menu = ''; $('panel').hidden = true; }
+    if (menu) { menu = ''; $('panel').hidden = true; $('stage').classList.remove('map-open'); }
     $('storyDialog').hidden = true; $('introStory').hidden = true; dialogKey = ''; lastAudience = '';
     if ($('room')) $('room').dataset.chainSchool = '';
     setTutorialTargets([]);
@@ -131,7 +131,7 @@
   }
   function beginNdd() {
     chainFighting = false; chainBackup = ''; chainNodeId = ''; chainNodeLevel = -1; chainFocused = false; chainBookChecked = false;
-    if (menu) { menu = ''; $('panel').hidden = true; }
+    if (menu) { menu = ''; $('panel').hidden = true; $('stage').classList.remove('map-open'); }
     setChain('', 0);
     dialogKey = ''; lastAudience = '';
     failure=null;

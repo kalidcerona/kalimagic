@@ -43,7 +43,7 @@
     }
   }
   function audienceDoubtStage() {
-    const dv = typeof shownDoubt === 'function' ? shownDoubt() : { hp: state.audHp, max: state.audHpMax }; // s5b: each theater phase is its own bar, so 앞줄 관객 and 밍기리 each show all their stage faces
+    const dv = phaseDoubt(); // Faces retain the progress of their own theater act.
     return 1 + Math.min(4, Math.floor(5 * (1 - Math.max(0, Math.min(1, dv.hp / Math.max(1e-9, dv.max)))) + 1e-9));
   }
   // v4 U46 A8: head framing inside the dialog portrait frame (rewritten in s5f, see below).
@@ -162,9 +162,13 @@
     if (sc && sc.slug === cfg.slug && sc.kind === 'beforeHeadliner' && sc.line >= cfg.sceneLine && sc.line < cfg.growLine) return 1;
     return C.theaterSceneDue(state) ? 1 : 2;
   }
-  // The doubt bar as shown: 앞줄 관객's emptied bar stays up through its win beat and the memory, then 밍기리's own bar (C.doubtView).
-  function shownDoubt() {
+  function phaseDoubt() {
     if (C.theaterPhase(state) === 2 && theaterShownPhase() === 1) return { hp: 0, max: Math.max(1e-9, state.audHpMax * D.theaterPhases.phase1) };
+    return C.doubtView(state);
+  }
+  // Both theater acts share one total doubt bar; portraits and story beats still follow the act.
+  function shownDoubt() {
+    if (C.theaterPhase(state)) return { hp: Math.max(0, state.audHp), max: state.audHpMax };
     return C.doubtView(state);
   }
   function fightAudience(v, j) {
@@ -202,8 +206,8 @@
     // These optional serious portraits were never shipped; use the base with its mood emote.
     const sisterSurprised = mood === 'surprised' && path === 'assets/aud-f-sister.png';
     const baseSerious = mood === 'serious' && ['assets/serona.png','assets/aud-a19.png'].includes(path);
-    const paths=preferredPaths || (baseSerious ? [] : ['happy','serious','surprised','sad'].includes(mood)?[path.replace(/\.png$/,'-'+mood+'.png')]:[path]);
-    if(!preferredPaths){if(mood==='surprised')paths.push(path.replace(/\.png$/,'-happy.png'));paths.push(path);}
+    const paths=preferredPaths || (baseSerious ? [] : ['happy','serious','surprised','sad'].includes(mood)?[mood==='happy'?U5.happyPortraitPath(path):path.replace(/\.png$/,'-'+mood+'.png')]:[path]);
+    if(!preferredPaths){if(mood==='surprised')paths.push(U5.happyPortraitPath(path));paths.push(path);}
     // Serona's three single-face portraits have no expression variants.
     if (/^assets\/serona(?:-hooded|-reveal)?\.(?:png|webp)$/.test(path)) paths.splice(0, paths.length, path);
     if(!preferredPaths)for(let i=paths.length-1;i>=0;i--)if(/-(serious|surprised|sad)\.png$/.test(paths[i])&&!shippedExpressionArt.has(paths[i])||/^assets\/kali-(?:outfit|skin)-[^/]+-happy\.png$/.test(paths[i]))paths.splice(i,1); // fixP 7: Kali's outfit and skin sheets ship no -happy face (it only 404'd before the base)

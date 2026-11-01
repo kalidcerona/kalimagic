@@ -14,12 +14,12 @@
   // the eight tutorial ids (save validator), so these two are kept for the session and derived from the save at load: a save that already has
   // a skill unlocked or a finale played (features.progress.finales) counts them as seen. No new save field and no storage.
   // buyAll is no longer a toast: the first failed show opens a 세로나 dialogue (seronaFail, the story dialogue box with 다음), once per save.
-  // Gate pressure guidance is session-only, like skill and finale hints.
+  // Gate guidance derives first entry from the existing gate record; receipts stay transient.
   const SESSION_HINTS=['skill','finale','gatePressure'], ALL_HINTS=FIRST_USE_HINTS.concat(SESSION_HINTS), sessionHintsSeen=new Set();
   let hintQueue=[], hintNextAt=0, noticesQuietSince=0, hintSkillName='';
   function hintsLive(){return state.u15.tutorial.done&&!state.u15.tutorial.active&&!chainMark()&&state.onboarding.intro&&state.onboarding.step>=4;}
-  function hintSeen(id){return SESSION_HINTS.includes(id)?sessionHintsSeen.has(id):state.onboarding.facts.includes(id);}
-  function rememberHint(id){if(SESSION_HINTS.includes(id))sessionHintsSeen.add(id);else if(!state.onboarding.facts.includes(id))state.onboarding.facts.push(id);}
+  function hintSeen(id){if(id==='gatePressure')return state._firstGate!==state.audId||sessionHintsSeen.has('gate:'+state.audId);return SESSION_HINTS.includes(id)?sessionHintsSeen.has(id):state.onboarding.facts.includes(id);}
+  function rememberHint(id){if(id==='gatePressure'){sessionHintsSeen.add('gate:'+state.audId);return;}if(SESSION_HINTS.includes(id))sessionHintsSeen.add(id);else if(!state.onboarding.facts.includes(id))state.onboarding.facts.push(id);}
   function forgetHint(id){if(SESSION_HINTS.includes(id))sessionHintsSeen.delete(id);else state.onboarding.facts=state.onboarding.facts.filter(x=>x!==id);}
   function markPassedHints(){
     sessionHintsSeen.clear();seronaFail.pending=false;seronaFail.index=-1;
@@ -39,7 +39,7 @@
     if(id==='buyAll'){if(hintsLive()&&!hintSeen(id))seronaFail.pending=true;return;}
     if(!ALL_HINTS.includes(id)||!hintsLive()||hintSeen(id)||hintQueue.includes(id))return;if(id==='skill')hintSkillName=arg||'';hintQueue.push(id);
   }
-  function hintText(id){if(id==='gatePressure')return '이 관객은 공연이 길어질수록 야유가 거세져요.';const H=D.onboarding.seronaHints||{};if(id==='skill')return hintSkillName&&H.skill?H.skill.replace('{skill}',hintSkillName):'';return H[id]||(D.onboarding.tutorial.find(h=>h.id===id)||{}).body||'';}
+  function hintText(id){if(id==='gatePressure')return state.pattern==='stealCoins'?'이 관객은 까다로워요. 마음에 안 들면 동전을 뺏고 야유도 점점 세져요.':'이 관객은 까다로워요. 마음에 안 들면 야유가 점점 세져요.';const H=D.onboarding.seronaHints||{};if(id==='skill')return hintSkillName&&H.skill?H.skill.replace('{skill}',hintSkillName):'';return H[id]||(D.onboarding.tutorial.find(h=>h.id===id)||{}).body||'';}
   function hintBlocked(){return state.mode!=='fight'||!!state.u15.scene||state.u15.queue.length>0||!$('storyDialog').hidden||!!menu||!$('panel').hidden||!!state.batchD.twist.scene||presentation.busy||!!wonMoment||!!stageRewardHost||state.features.climax.left>0||!$('introStory').hidden||!$('sceneCard').hidden||!$('offlineCard').hidden||!$('leaveConfirm').hidden||document.hidden||(portrait()&&hintQueue[0]!=='gatePressure');}
   function tickHints(){
     if(C.gatePressure(state)>0)firstUseHint('gatePressure');
@@ -52,12 +52,15 @@
     rememberHint(id);save();
     showHint(id,text);hintNextAt=clock+HINT_GAP_MS;
   }
-  // The hint uses the toast channel and look (one line, the speaker name first), stays 3.6 s, and gives way to any other notice
-  // (Presentation.Queue.push); a hint cut within its first 1.5 s goes back to the front of the hint queue and is not counted as seen.
+  // The hint uses the toast channel: ordinary hints get 3.6 s and yield; gate guidance gets seven visible seconds.
+  // A gate interrupted before seven seconds retries within its first fight; ordinary hints retry if cut before 1.5 s.
   function showHint(id,text){
-    presentation.push({merge:'hint:'+id,minimum:3600,hint:id,start:item=>{
-      const el=element('div','','toast hint-toast'),who=(D.onboarding.seronaHints||{}).speaker;if(who)el.append(element('strong',who,'hint-speaker'),' ');el.append(text);pxIcons(el);$('toasts').append(el);const expiry=setTimeout(()=>el.remove(),4200);
-      item.end=()=>{clearTimeout(expiry);el.remove();if(item.cut&&item.age<1500){forgetHint(id);if(!hintQueue.includes(id))hintQueue.unshift(id);hintNextAt=clock+HINT_GAP_MS;}};
+    const gateId=state.audId;
+    presentation.push({merge:'hint:'+id,minimum:id==='gatePressure'?7000:3600,hint:id,start:item=>{
+      const el=element('div','','toast hint-toast'),who=(D.onboarding.seronaHints||{}).speaker;if(who)el.append(element('strong',who,'hint-speaker'),' ');el.append(text);pxIcons(el);$('toasts').append(el);const expiry=id==='gatePressure'?null:setTimeout(()=>el.remove(),4200);
+      item.end=()=>{clearTimeout(expiry);el.remove();
+        if(id==='gatePressure'&&item.age<7000&&state.audId===gateId&&state._firstGate===gateId&&C.gatePressure(state)>0){sessionHintsSeen.delete('gate:'+gateId);if(!hintQueue.includes(id))hintQueue.unshift(id);hintNextAt=clock+HINT_GAP_MS;}
+        if(item.cut&&item.age<1500){forgetHint(id);if(!hintQueue.includes(id))hintQueue.unshift(id);hintNextAt=clock+HINT_GAP_MS;}};
     }});
   }
   // s5t: the first failed show (after the tutorial): when the player is back on stage, 세로나 says two lines in the story dialogue box (다음,
@@ -77,8 +80,8 @@
   function updateLearningBadge() {
     if (updateLearningBadge.at && clock-updateLearningBadge.at<250) return;
     updateLearningBadge.at=clock;
-    const count=C.affordableNodes(state).length;
-    const unseen = D.tree.some(n => !n.shopOnly && n.id !== 'autoLearn' && C.nodeInfo(state, n.id).revealed && !treeView.revealed.has(n.id));
+    const count=C.affordableNodes(state).filter(n => C.nodeInfo(state,n.id).displayable).length;
+    const unseen = D.tree.some(n => !n.shopOnly && n.id !== 'autoLearn' && C.nodeInfo(state, n.id).displayable && !treeView.revealed.has(n.id));
     $('bookButton').classList.toggle('is-new', unseen);
     $('bookButton').dataset.affordable=String(count);
     if(count>0&&typeof firstUseHint==='function')firstUseHint('learn'); // s5c: the first 비법 the player can afford

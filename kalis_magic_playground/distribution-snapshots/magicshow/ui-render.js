@@ -198,8 +198,11 @@
     pxText($('rebirthButton'),phone ? (state.homecomingCleared ? '✨ 환생' : '✨ 이어서') : (state.homecomingCleared?'다음 차원의 공연':'이어지는 공연'));
     if (state.pattern === 'heal' && state.mode === 'fight') $('audienceCard').classList.toggle('healing', state.patternHealMs > C.CONST.patternHealEvery - 600);
     else $('audienceCard').classList.remove('healing');
-    const dv = typeof shownDoubt === 'function' ? shownDoubt() : { hp: state.audHp, max: state.audHpMax }; // s5b: the theater phases show their own bar (see doubtText)
+    const dv = typeof shownDoubt === 'function' ? shownDoubt() : { hp: state.audHp, max: state.audHpMax }; // Theater shows the total across both acts (see doubtText).
     numText($('doubtNumber'), fitDoubtPlate.short ? rounded(dv.hp) : (typeof doubtText==='function'?doubtText():`${rounded(state.audHp)}/${rounded(state.audHpMax)}`), true); // v4 U53 2: only the current doubt on the narrowest plates
+    $('stage').dataset.theaterDoubt = C.theaterPhase(state) ? '1' : '0';
+    const theaterCut=`${(1-D.theaterPhases.phase1)*100}%`;
+    if($('stage').style.getPropertyValue('--theater-cut')!==theaterCut)$('stage').style.setProperty('--theater-cut',theaterCut);
     $('doubtFill').style.width = `${Math.round(dv.hp / dv.max * 500) / 5}%`;
     {
       // v4 U38: heckle strength per second, doubt regrowth per second (only when there is any) and the player's own matching numbers.
@@ -257,7 +260,7 @@
     numText($('levelNumber'), state.level);
     if (phone) {
       const values = [state.level, C.wandDamage(state) * C.CONST.tapPower,
-        C.nodeEffects(state).critRate * 100, state.u14.visitor.incomeRate];
+        C.nodeEffects(state).critRate * 100, recentCoinRate()];
       ['phoneLevel','phoneTap','phoneCrit','phoneIncome'].forEach((id, i) => {
         const el = $(id), value = Math.max(0, values[i] || 0);
         const shown = i === 2 ? String(Math.round(value * 10) / 10) : C.formatNumber(value);
@@ -333,4 +336,5 @@
     if ($('rangeShape')) { $('rangeShape').textContent = '▦'; $('rangeShape').setAttribute('aria-label', `${a.cols}열 ${a.rows}행`); }
     $('hint').textContent = caseArrange ? '케이스 정리 · 드래그하거나 두 칸을 눌러 바꾸세요' : menu ? '공연 일시정지' : `${state.wins ? '케이스' : '카드 케이스'}를 탭하면 더 강하게 · 꾹 누르면 초당 ${C.wandRate(state).toFixed(1)}회`;
     updateWand(); modeHooks(); flushHeadlinerEntrance(); renderBatchD(); updateAudienceLine(); syncFlags();
+    if (typeof watchPatternStamps === 'function') watchPatternStamps();
   }

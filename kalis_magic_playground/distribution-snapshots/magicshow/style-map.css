@@ -14,3 +14,15 @@
 .flow-stop.is-current .flow-dot.is-filled{background:var(--brass);border-color:var(--brass)}
 .flow-fork-grid:before{content:'';position:absolute;left:8px;top:0;width:calc(50% + 4px);height:2px;background:#655567}
 .flow-branch:before{content:'';position:absolute;left:8px;top:0;bottom:16px;width:2px;background:#655567}
+
+/* Map owns the whole stage; travel fights retain their ordinary HUD. */
+html body #viewport#viewport #stage#stage#stage#stage#stage.map-open > :not(#panel):not(#leaveConfirm):not(#toasts):not(#updatePrompt):not(#saveVersionNotice):not(.update-prompt):not(.save-version-notice),
+html body #viewport#viewport #stage#stage#stage#stage#stage.map-open > :not(#panel):not(#leaveConfirm):not(#toasts):not(#updatePrompt):not(#saveVersionNotice):not(.update-prompt):not(.save-version-notice) * { visibility:hidden !important; }
+html body #viewport#viewport #stage#stage#stage#stage #panel[data-screen="map"] { inset:0; width:100%; height:100%; background:#100d16; }
+
+/* Global decisions and notices remain above the map sheet. */
+html body #viewport#viewport #stage#stage#stage#stage#stage.map-open > :is(#toasts,#updatePrompt,#saveVersionNotice,.update-prompt,.save-version-notice) { z-index:70; }
+
+/* Panel/story/banner chrome also hides notices; override visibility only while the map is open. */
+html body #viewport#viewport #stage#stage#stage#stage#stage.map-open > :is(#leaveConfirm,#toasts,#updatePrompt,#saveVersionNotice,.update-prompt,.save-version-notice):not([hidden]),
+html body #viewport#viewport #stage#stage#stage#stage#stage.map-open > :is(#leaveConfirm,#toasts,#updatePrompt,#saveVersionNotice,.update-prompt,.save-version-notice):not([hidden]) :not([hidden]) { visibility:visible !important; }

@@ -4,7 +4,7 @@
     if(schoolChainPaused()||(chainMark()&&!state.u15.tutorial.done)){toast('튜토리얼을 먼저 끝내 주세요');return;}
     if(!state.u18.map&&!C.openMap(state)){toast('이 장면이 끝나면 이동할 수 있어요');return;}
     openPanel('map','무대 지도');$('phoneMore').hidden=true;
-    $('panelBody').append(element('p','도착했던 무대는 무료로 다시 갈 수 있어요','flow-lead'),action('지금 무대로 돌아가기',()=>{if(C.returnToStage(state)){menu='';$('panel').hidden=true;previous=0;lastAudience='';save();render();}}));
+    $('panelBody').append(element('p','도착했던 무대는 무료로 다시 갈 수 있어요','flow-lead'),action('지금 무대로 돌아가기',()=>{if(C.returnToStage(state)){menu='';$('panel').hidden=true; $('stage').classList.remove('map-open');previous=0;lastAudience='';save();render();}}));
     const fork=D.progressFork||{after:'multiverse',main:['lecturenote','future'],mainChoice:'내가 될 수 있는 모습만 볼까?',ifChoice:'아직 어린 나도 만나 볼까?',ifRoute:[]};
     const mainSlugs=new Set(fork.main||[]);
     const spine=D.venues.filter(v=>!v.mergedInto&&!mainSlugs.has(v.slug));
@@ -131,12 +131,12 @@
     for(const pad of D.pads.filter(p=>p.id!=='floor'&&!p.hidden))for(const color of pad.colors){
       const info=C.padInfo(state,pad.id,color),key=info.key,status=info.equipped?'착용 중':info.owned?'착용':`실크 ${info.cost}`;
       const tile=action('',()=>{
-        const bought=!info.owned;
+        const keepScroll=$('panelBody').scrollTop,bought=!info.owned;
         if(bought&&!C.buyPad(state,pad.id,color))return;
         if(!C.equipPad(state,key))return;
         save();render();
-        if(bought&&pad.id==='lecturenote'&&typeof playManagerLines==='function')playManagerLines(D.dealer.padMention,'dealer:padMention',()=>{if(menu==='gemShop')gemShop();});
-        else gemShop();
+        if(bought&&pad.id==='lecturenote'&&typeof playManagerLines==='function')playManagerLines(D.dealer.padMention,'dealer:padMention',()=>{if(menu==='gemShop')gemShop(keepScroll);});
+        else gemShop(keepScroll);
       },info.equipped||!info.available);
       tile.className='shop-cosmetic-tile';tile.dataset.pad=key;tile.setAttribute('aria-pressed',String(info.equipped));
       tile.setAttribute('aria-label',`${padName(key)} · ${status} · ${effectText(C.gearEffects(state,'pads',key))}`);
@@ -149,13 +149,13 @@
     if(!state.u18.pads.owned.some(key=>key.startsWith('kali:')))return;
     const info=C.padUpgradeInfo(state), block=element('div','','pad-upgrade');host.append(block);host=block;
     host.append(element('p',`칼리 패드 강화 ${info.level}회 · 꾹 누르기 속도 +${+(info.level*5).toFixed(2)}%p`));
-    const button=action(`강화 +5%p · 동전 ${C.formatNumber(info.cost)}`,()=>{if(C.upgradePad(state)){save();render();refresh();}},!info.available);button.dataset.padUpgrade='true';host.append(button);
+    const button=action(`강화 +5%p · 동전 ${C.formatNumber(info.cost)}`,()=>{const top=$('panelBody').scrollTop;if(C.upgradePad(state)){save();render();refresh(top);}},!info.available);button.dataset.padUpgrade='true';host.append(button);
     if(info.reason)host.append(element('small',info.reason));
   }
   // s4d (owner 10-24): 옷장 is a tab of the 도감 panel (no separate button on the main screen or in the menu).
-  function wardrobe(){
+  function wardrobe(keepScroll=0){
     if(['boo','fail','ending','rebirth','bossPhase','headliner'].includes(menu))return;
-    bestiaryTab='wardrobe'; bestiary();
+    bestiaryTab='wardrobe'; bestiary(keepScroll);
   }
   function wardrobeBody(){
     $('panelBody').append(element('p','타일을 누르면 바로 착용해요. 산 색을 눌러 패드 색을 바꿔요.'));
@@ -169,7 +169,7 @@
       const ids=tab==='pads'?state.u18.pads.owned:['',...state.u18.owned.kali],grid=element('div','','shop-cosmetic-grid');
       for(const id of ids){
         const item=tab==='kali'?D.cosmetics.kali.find(x=>x.id===id):null,label=tab==='pads'?padName(id):item?.name||'기본 의상';
-        const tile=action('',()=>{if(tab==='pads'?C.equipPad(state,id):C.equipCosmetic(state,'kali',id)){save();render();wardrobe();}},id===equipped);
+        const tile=action('',()=>{const top=$('panelBody').scrollTop;if(tab==='pads'?C.equipPad(state,id):C.equipCosmetic(state,'kali',id)){save();render();wardrobe(top);}},id===equipped);
         tile.className='shop-cosmetic-tile';tile.dataset.gear=tab+':'+id;tile.setAttribute('aria-pressed',String(id===equipped));
         const effect=effectText(C.gearEffects(state,tab,id)),difference=effectDifference(tab,id);
         tile.setAttribute('aria-label',`${label} · ${effect} · ${difference}`);
@@ -180,7 +180,12 @@
     }
     appendPadUpgrade($('panelBody'),wardrobe);
   }
-  function gemShop(){
+  function restorePanelScroll(top,body=$('panelBody')){
+    const content=body.firstChild;
+    const restore=()=>{if(body.firstChild===content)body.scrollTop=Math.max(0,Math.min(top,body.scrollHeight-body.clientHeight));};
+    restore();requestAnimationFrame(restore);
+  }
+  function gemShop(keepScroll=0){
     if(['boo','fail','ending','rebirth','bossPhase','headliner'].includes(menu))return;
     openPanel('gemShop','실크 상점');
     const balance=element('p',`실크 ${state.gems}개`,'dealer-wallet shop-balance');
@@ -198,7 +203,7 @@
       const heading=element('h3',item.name);heading.prepend(artFallback(iconPath,'✦','shop-item-icon'));
       card.append(heading,element('p',item.desc));
       const add=skill=>{const info=C.gemShopInfo(state,item.id,skill),label=skill?D.skills.find(k=>k.id===skill).name+' 충전':'사기';
-        const buy=action('',()=>{if(C.gemShopBuy(state,item.id,skill)){save();sound('skill');gemShop();render();}},!info.available);
+        const buy=action('',()=>{const top=$('panelBody').scrollTop;if(C.gemShopBuy(state,item.id,skill)){save();sound('skill');gemShop(top);render();}},!info.available);
         buy.setAttribute('aria-label',`${label} · 실크 ${info.cost}`);buy.append(element('span',label),element('span',String(info.cost),'kit-price kit-price-silk'));card.append(buy);if(info.reason&&item.id!=='refill')card.append(element('small',info.reason));};
       if(item.id==='refill')D.skills.forEach(k=>add(k.id));else add();
       if(ownedRoutine)card.append(element('span','배움','shop-owned-badge'));
@@ -213,8 +218,9 @@
         const info=C.cosmeticInfo(state,tab,x.id),equipped=state.u18.equipped[tab]===x.id;
         const status=equipped?'착용 중':info.owned?'착용':x.milestone?'잠김':`실크 ${info.cost}`;
         const tile=action('',()=>{
+          const top=$('panelBody').scrollTop;
           if(!info.owned&&!C.buyCosmetic(state,tab,x.id))return;
-          if(C.equipCosmetic(state,tab,x.id)){save();render();gemShop();}
+          if(C.equipCosmetic(state,tab,x.id)){save();render();gemShop(top);}
         },equipped||!info.available);
         tile.className='shop-cosmetic-tile';tile.dataset.cosmetic=tab+':'+x.id;
         tile.setAttribute('aria-label',`${x.name} · ${status}${!info.available?' · '+info.hint:''}`);
@@ -227,7 +233,7 @@
       }
       looks.append(grid);
     }
-    $('panelBody').append(abilities,routines,pads,looks);
+    $('panelBody').append(abilities,routines,pads,looks);restorePanelScroll(keepScroll);
   }
   // U30c: "피버 타임!" shows inside the stage, centered just below the doubt and heckle bars, then fades.
   // Reduced motion: no animation, it just stays for the same time and disappears.
@@ -288,7 +294,7 @@
     scene.append(element('span', '🪞', 'result-icon'), element('h2', line), element('p', '거울 속 내가 지팡이를 들었다. 손놀림은 느려지고, 의심은 다시 차오른다.'));
     const go = action('나를 위한 마지막 공연', () => {
       if (menu !== 'bossPhase') return;
-      clearTimeout(dialogueTimer); menu = ''; $('panel').hidden = true; previous = 0;
+      clearTimeout(dialogueTimer); menu = ''; $('panel').hidden = true; $('stage').classList.remove('map-open'); previous = 0;
       render(); $('bookButton').focus();
     });
     scene.append(go); $('panelBody').append(scene); go.focus(); save();
@@ -304,7 +310,7 @@
     clearTimeout(dialogueTimer); release(); clearEndingEffects();
     if(!state.homecomingCleared) {
       openPanel('ending','이어지는 공연');
-      const next=action('이어지는 공연',()=>{C.continueStory(state);menu='';$('panel').hidden=true;previous=0;lastAudience='';save();render();});
+      const next=action('이어지는 공연',()=>{C.continueStory(state);menu='';$('panel').hidden=true; $('stage').classList.remove('map-open');previous=0;lastAudience='';save();render();});
       $('panelBody').append(element('h2','우주 끝에서, 다시 사람 곁으로'),next); next.focus();
       return;
     }
@@ -334,7 +340,7 @@
       const counts=C.recap(state);
       scene.append(element('h2','칼리 마술 성장기'),element('p',lines[lines.length-1]), /* s5t: the last line (futureEnding was reordered; lecturenote has 4) */element('p',`관객 감탄 ${counts.wins}회 · 함께한 도우미 ${counts.helpers}종 · 방문한 무대 ${counts.venues}곳`,'homecoming-recap'));
       const buttons=element('div','','ending-actions');
-      primary=state.u19.cleared?action('가게에 남기',continueDimension):action('서재 앞 테이블로',()=>{C.beginFuture(state,true);menu='';$('panel').hidden=true;previous=0;lastAudience='';endingStep=0;save();render();});
+      primary=state.u19.cleared?action('가게에 남기',continueDimension):action('서재 앞 테이블로',()=>{C.beginFuture(state,true);menu='';$('panel').hidden=true; $('stage').classList.remove('map-open');previous=0;lastAudience='';endingStep=0;save();render();});
       buttons.append(primary);if(state.u19.cleared)buttons.append(action('다음 차원의 공연',showRebirth)); scene.append(buttons);
       if (state.u19.cleared) appendMagicInvitation(scene);
     }
@@ -347,7 +353,7 @@
     }
   }
   function continueDimension() {
-    clearTimeout(dialogueTimer); C.stayHome(state); menu=''; $('panel').hidden=true; previous=0;
+    clearTimeout(dialogueTimer); C.stayHome(state); menu=''; $('panel').hidden=true; $('stage').classList.remove('map-open'); previous=0;
     lastAudience=''; revealEnding=false; save(); render(); $('bookButton').focus();
   }
   function showRebirth() {
@@ -369,7 +375,7 @@
     const go = action('환생하고 새 공연 시작', () => {
       if (!state.homecomingCleared) return;
       C.rebirth(state); sound('rebirth');
-      menu = ''; $('panel').hidden = true; previous = 0; lastAudience = ''; lastLayout = ''; pendingIntro = null;
+      menu = ''; $('panel').hidden = true; $('stage').classList.remove('map-open'); previous = 0; lastAudience = ''; lastLayout = ''; pendingIntro = null;
       revealEnding = false; particles.length = 0; flights.length = 0; numbers.length = 0; badges.length = 0; events.recentBadges?.clear(); wonMoment = null; if (typeof stopCloseWin === 'function') stopCloseWin(); // s5t-2
       presentation.clear();clearTimeout(bannerTimer); bannerQueue.length = 0; unlockBannerQueue.length = 0; bannerActive = null; $('banner').hidden = true;
       save(); render(); toast(`차원 ${state.dimension} · 비둘기 ${gain}개를 얻었어요`); $('bookButton').focus();

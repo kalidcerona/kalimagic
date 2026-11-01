@@ -272,16 +272,20 @@
     save = () => false; // Includes panel-close and integration calls while the title owns the page.
     const viewport = $('viewport'), actions = $('titleActions'), confirm = $('titleNewConfirm');
     viewport.inert = true;
-    let progress = false, hasSlots = false, leaving = false;
+    let progress = false, hasSlots = false, hasBackups = false, needsRecovery = false, leaving = false;
     try {
-      progress = localStorage.getItem(KEY) !== null;
+      const mainRaw = localStorage.getItem(KEY);
+      progress = mainRaw !== null;
+      hasBackups = !!saveStore && saveStore.list().some(item => item.restorable);
+      needsRecovery = !newerSave && !C.deserializeRepair(mainRaw)?.state;
       for (let n = 1; n <= 3; n++) if (SaveSlots.read(localStorage, n).slot) hasSlots = true;
     } catch (error) { /* A player with blocked storage can still start a new game. */ }
-    $('titleContinue').hidden = !progress;
-    $('titleLoad').hidden = !hasSlots;
+    $('titleContinue').hidden = !progress || needsRecovery;
+    if (needsRecovery && (progress || hasSlots || hasBackups)) $('titleStatus').textContent = hasSlots ? '저장을 읽지 못했어요. 불러오기에서 저장 칸을 골라 주세요.' : hasBackups ? '저장을 읽지 못했어요. 불러오기에서 저장 백업을 골라 주세요.' : '저장을 읽지 못했어요. 새 게임으로 시작할 수 있어요.';
+    $('titleLoad').hidden = !hasSlots && !hasBackups;
     const focusAction = () => [...actions.querySelectorAll('button')].find(b => !b.hidden)?.focus();
     const enter = (fresh = false) => {
-      if (leaving) return;
+      if (leaving || (!fresh && needsRecovery)) return;
       try {
         if (fresh) {
           if (newerSave) throw new Error('Newer save');
@@ -312,9 +316,13 @@
       title.hidden = true; viewport.inert = false;
       for (const child of $('stage').children) if (child !== $('panel')) child.inert = true;
       fit(); openSaveSlots(true);
+      if (hasBackups) {
+        if (!hasSlots) openRestore();
+        else $('panelBody').append(action('저장 백업 복원', openRestore));
+      }
     });
     const returnToTitle = () => {
-      menu = ''; $('panel').hidden = true; previous = 0;
+      menu = ''; $('panel').hidden = true; $('stage').classList.remove('map-open'); previous = 0;
       title.hidden = false; viewport.inert = true; $('titleLoad').focus();
     };
     $('closePanel').addEventListener('click', e => {

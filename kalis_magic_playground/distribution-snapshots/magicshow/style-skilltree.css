@@ -7,6 +7,7 @@
 .constellation-lines line{stroke:#41485e;stroke-width:3}
 .constellation-node.unknown .constellation-icon-host{inset:0}
 .constellation-node.newly-revealed{animation:node-reveal 300ms ease-out}
+.constellation-detail{overflow-anchor:none}
 .constellation-detail h2{font-size:22px;margin:0;color:#ffe65c}
 .constellation-detail button:disabled{opacity:.5}.tree-preview{color:#a5f6bb}.tree-reason{color:#ffcd9c}.constellation-controls{display:flex;gap:12px;margin-bottom:14px}
 #panel:has(.constellation-layout) .tree-wallet{margin:0}
@@ -129,6 +130,6 @@ html body.phone:not(.portrait-layout):not(.tablet) #viewport#viewport #stage#sta
 /* The price is the learn action; keep it in the reading flow in every orientation. */
 html body.phone #viewport#viewport #stage#stage#stage#stage #panel[data-screen="book"] .constellation-detail { padding:8px 10px; }
 html body #viewport#viewport #stage#stage#stage#stage #panel .constellation-detail button.tree-cost.tree-buy { position:static; float:none; grid-column:1 / -1; justify-self:start; align-self:start; display:inline-flex; align-items:center; justify-content:center; width:auto; min-width:88px; max-width:100%; height:auto; min-height:44px; margin:6px 0; padding:8px 12px; box-sizing:border-box; white-space:normal; overflow-wrap:anywhere; border:2px solid var(--gold); border-image:url('assets/kit/price-tag.webp') 16 fill / 8px / 0 stretch; background:#403225; color:var(--gold); font-weight:700; touch-action:manipulation; }
-html body #viewport#viewport #stage#stage#stage#stage #panel .constellation-detail button.tree-cost.tree-buy:active:enabled { box-shadow:inset 0 2px 0 #100D16; filter:brightness(.85); }
+html body #viewport#viewport #stage#stage#stage#stage #panel .constellation-detail button.tree-cost.tree-buy:active:enabled:not([aria-disabled="true"]) { box-shadow:inset 0 2px 0 #100D16; filter:brightness(.85); }
 html body #viewport#viewport #stage#stage#stage#stage #panel .constellation-detail button.tree-cost.tree-buy:focus-visible { outline:2px solid #ffe14a; outline-offset:2px; }
 html body #viewport#viewport #stage#stage#stage#stage #panel .constellation-detail button.tree-cost.tree-buy:disabled { border-color:var(--line-dim); border-image-source:url('assets/kit/button-disabled.webp'); background:#302735; color:#bcb4a6; opacity:1; cursor:default; }

@@ -8,7 +8,7 @@
     for(let i=state.features.magic.balls.length;i<actors.balls.length;i++)actors.balls[i].hidden=true;
     for(let i=state.features.magic.papers.length;i<actors.papers.length;i++)actors.papers[i].hidden=true;
     state.features.magic.balls.forEach((b,i)=>{const ball=actors.balls[i] || (actors.balls[i]=element('img','','sponge-projectile'));ball.hidden=!portraitLayout()&&((renderMagic.bounces||{})[i]||0)>clock;if(!ball.__art){ball.src='assets/proj-sponge.png';ball.alt='스펀지볼';ball.__art=true;}const point=typeof phone !== 'undefined' && phone ? boardPoint(b.x,b.y) : {x:870+b.x,y:160+b.y};const half=portraitLayout()?14:16;ball.style.left=`${point.x-half}px`;ball.style.top=`${point.y-half}px`;if(!ball.dataset.mounted){layer.append(ball);ball.dataset.mounted="1";}});
-    state.features.magic.papers.forEach((p,i)=>{const at=cellCenter(p.cell);let button=actors.papers[i];if(!button){button=action('플래시 페이퍼',()=>{events(C.tapPaper(state,Number(button.dataset.cell)));save();render();});button.addEventListener('pointerdown',e=>e.stopPropagation());button.addEventListener('pointerup',e=>e.stopPropagation());actors.papers[i]=button;}button.hidden=false;button.dataset.cell=p.cell;button.className='paper-drop';button.style.left=`${at.x-25}px`;button.style.top=`${at.y-25}px`;if(button.dataset.asset!=='assets/drop-flashpaper.png')sprite(button,'assets/drop-flashpaper.png');if(!button.dataset.mounted){layer.append(button);button.dataset.mounted="1";}});
+    state.features.magic.papers.forEach((p,i)=>{const at=cellCenter(p.cell);let button=actors.papers[i];if(!button){button=action('플래시 페이퍼',()=>{const earned=state.features.progress.coinsEarned,list=C.tapPaper(state,Number(button.dataset.cell));sampleRates(0,list,state.features.progress.coinsEarned-earned,0);events(list);save();render();});button.addEventListener('pointerdown',e=>e.stopPropagation());button.addEventListener('pointerup',e=>e.stopPropagation());actors.papers[i]=button;}button.hidden=false;button.dataset.cell=p.cell;button.className='paper-drop';button.style.left=`${at.x-25}px`;button.style.top=`${at.y-25}px`;if(button.dataset.asset!=='assets/drop-flashpaper.png')sprite(button,'assets/drop-flashpaper.png');if(!button.dataset.mounted){layer.append(button);button.dataset.mounted="1";}});
     let parade=$('curtainCall');
     if(state.features.climax.left>0){
       if(!parade){parade=action('',()=>{C.skipCurtainCall(state);pendingIntro=null;save();render();});parade.id='curtainCall';parade.className='curtain-call';$('stage').append(parade);}
@@ -74,11 +74,11 @@
     const reward = D.stageRewards.find(r => r.venueSlug === venue.slug);
     return `공략하면: 🏆 ${venue.trophy}${reward ? ' · ' + reward.effect.replace(/\n/g, ' · ') : ''}`;
   }
-  function bestiary() {
+  function bestiary(keepScroll=0) {
     if (['boo','fail','dealer','headliner','ending','rebirth','bossPhase','curtain'].includes(menu)) return;
     openPanel('bestiary', bestiaryTab === 'equip' ? '마술용품' : D.ui.bestiaryTitle);
     panelTabs([['audiences','관객 도감'],['endings','엔딩 도감'],['achievements','업적'],['memories','추억'],['equip','마술용품'],['wardrobe','옷장']], bestiaryTab, tab => { bestiaryTab = tab; bestiary(); });
-    if (bestiaryTab === 'wardrobe') { wardrobeBody(); return; }
+    if (bestiaryTab === 'wardrobe') { wardrobeBody(); restorePanelScroll(keepScroll); return; }
     if(bestiaryTab==='memories'){for(const v of D.venues.filter(v=>uiSave.memories[v.slug]))$('panelBody').append(action(uiSave.memories[v.slug].title,()=>openCurtainCall(v.slug,true)));return;}
     if (bestiaryTab === 'endings') { drawArchive(); return; }
     if (bestiaryTab === 'equip') { equipPanel(); return; }

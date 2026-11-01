@@ -29,41 +29,89 @@
   // Fights themselves are rolled back: core still treats a tutorial win as the end of the only tutorial battle.
   let chainFighting = false, chainBackup = '', chainNodeId = '', chainNodeLevel = -1, chainFocused = false, chainBookChecked = false;
   // One lifetime owner survives button replacement and pointer capture changes.
-  let tooltipOwner=null,tooltipPending=0,tooltipExpiry=0;
+  let tooltipOwner=null,tooltipPending=0,tooltipExpiry=0,tooltipRelease=null;
   const tooltipBindings=new WeakMap();
   function hideEasyTooltip(){
     clearTimeout(tooltipPending);clearTimeout(tooltipExpiry);
     tooltipObserver.disconnect();
     tooltipPending=tooltipExpiry=0;tooltipOwner=null;$('easyTooltip').hidden=true;
   }
-  for(const name of ['pointerdown','pointerup','pointercancel','scroll'])document.addEventListener(name,hideEasyTooltip,true);
-  for(const name of ['resize','orientationchange','blur'])window.addEventListener(name,hideEasyTooltip);
+  for(const name of ['pointerdown','pointerup','pointercancel','scroll'])document.addEventListener(name,e=>{
+    if(e.type==='pointerdown'&&tooltipRelease){clearTimeout(tooltipRelease.releaseTimer);tooltipRelease.long=tooltipRelease.released=false;tooltipRelease=null;}
+    const owner=tooltipOwner,binding=owner&&tooltipBindings.get(owner);
+    if(binding){
+      binding.released=false;
+      if(e.type==='pointerup'&&binding.long&&e.pointerId===binding.pointerId){
+        const r=owner.getBoundingClientRect();
+        binding.released=(e.target===owner||owner.contains(e.target))&&e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom;
+        if(binding.released){tooltipRelease=binding;binding.releaseTimer=setTimeout(()=>{binding.long=binding.released=false;if(tooltipRelease===binding)tooltipRelease=null;},700);}
+      }
+      if(!binding.released)binding.long=false;
+    }
+    hideEasyTooltip();
+  },true);
+  const tooltipViewport=()=>[window.innerWidth,window.visualViewport?.width,window.visualViewport?.scale||1];
+  let tooltipViewportSize=tooltipViewport();
+  function resizeEasyTooltip(){
+    const next=tooltipViewport(),changed=next.some((v,i)=>v!==tooltipViewportSize[i]);tooltipViewportSize=next;
+    if(changed)hideEasyTooltip();
+    else if(tooltipOwner&&!$('easyTooltip').hidden)positionEasyTooltip(tooltipOwner);
+  }
+  for(const name of ['resize','scroll'])window.addEventListener(name,resizeEasyTooltip);
+  for(const name of ['orientationchange','blur'])window.addEventListener(name,hideEasyTooltip);
   document.addEventListener('visibilitychange',hideEasyTooltip);
+  for(const name of ['resize','scroll'])window.visualViewport?.addEventListener(name,resizeEasyTooltip);
   const tooltipObserver=new MutationObserver(records=>{
     const owner=tooltipOwner;if(!owner)return;
-    if(!owner.isConnected||records.some(r=>r.target===owner||owner.contains(r.target)||[...r.removedNodes].some(n=>n===owner||n.contains?.(owner))))hideEasyTooltip();
+    if(!owner.isConnected){hideEasyTooltip();return;}
+    if(!records.some(r=>r.type==='attributes'&&(r.target===owner||r.target.contains?.(owner))||r.type==='childList'&&[...r.addedNodes||[],...r.removedNodes||[]].some(n=>n===owner||n.contains?.(owner))))return;
+    if(!easyTooltipVisible(owner))hideEasyTooltip();
   });
+  function easyTooltipVisible(owner){
+    if(!owner.isConnected)return false;
+    for(let node=owner;node;node=node.parentElement){
+      if(node.hidden)return false;
+      const style=getComputedStyle(node);
+      if(style.display==='none'||style.visibility==='hidden')return false;
+    }
+    return true;
+  }
   function observeEasyTooltip(){
-  tooltipObserver.observe(document.body,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['disabled','hidden','aria-label']});
+  tooltipObserver.observe(document.body,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['hidden','class','style']});
+  }
+  function positionEasyTooltip(button){
+    const tip=$('easyTooltip');
+    const r=button.getBoundingClientRect(),stage=$('stage').getBoundingClientRect();
+    const viewport=window.visualViewport,width=viewport?.width||window.innerWidth,height=viewport?.height||window.innerHeight,pad=8;
+    const vx=viewport?.offsetLeft||0,vy=viewport?.offsetTop||0;
+    tip.style.boxSizing='border-box';tip.style.maxWidth=Math.max(0,(width-pad*2)/scale)+'px';tip.style.maxHeight=Math.max(0,(height-pad*2)/scale)+'px';tip.style.overflow='auto';
+    tip.style.left='0px';tip.style.top='0px';
+    const box=tip.getBoundingClientRect();
+    const left=Math.max(vx+pad,Math.min(vx+width-box.width-pad,r.left));
+    const below=r.bottom+pad,top=Math.max(vy+pad,Math.min(vy+height-box.height-pad,below+box.height<=vy+height-pad?below:r.top-box.height-pad));
+    tip.style.left=(left-stage.left)/scale+'px';tip.style.top=(top-stage.top)/scale+'px';
   }
   // s4i: the portrait top bar shares its row with four currencies; the title scales by its width in em (portrait.css s4i block).
   { const venueLen=()=>{ const t=[...$('venueName').textContent.trim()], em=t.reduce((n,c)=>n+(c===' '?.25:/[\u3131-\uD7A3]/.test(c)?.92:.62),0); $('venueName').style.setProperty('--venue-em',String(Math.max(4,em).toFixed(2))); }; venueLen(); new MutationObserver(venueLen).observe($('venueName'),{childList:true,characterData:true,subtree:true}); }
-  function easyTooltip(button,copy){
+  function easyTooltip(button,copy,tap=false){
     button.title=copy;button.setAttribute('aria-description',copy);
     if(tooltipBindings.has(button)){tooltipBindings.get(button).copy=copy;return;}
-    const binding={copy,long:false};tooltipBindings.set(button,binding);
+    const binding={copy,long:false,released:false,pointerId:null,releaseTimer:0};tooltipBindings.set(button,binding);
     const show=(suppressClick=true)=>{
-      if(!button.isConnected){hideEasyTooltip();return;}
-      hideEasyTooltip();tooltipOwner=button;observeEasyTooltip();binding.long=suppressClick;
+      if(!easyTooltipVisible(button)){hideEasyTooltip();return;}
+      hideEasyTooltip();tooltipOwner=button;observeEasyTooltip();if(suppressClick)binding.long=true;
       const tip=$('easyTooltip');tip.textContent=binding.copy;tip.hidden=false;
-      const r=button.getBoundingClientRect(),stage=$('stage').getBoundingClientRect();
-      tip.style.left=Math.max(4,Math.min(layoutWidth-240,(r.left-stage.left)/scale-240))+'px';tip.style.top=Math.max(48,(r.top-stage.top)/scale)+'px';
+      positionEasyTooltip(button);
       tooltipExpiry=setTimeout(hideEasyTooltip,3000);
     };
-    button.addEventListener('pointerdown',()=>{hideEasyTooltip();binding.long=false;tooltipOwner=button;observeEasyTooltip();tooltipPending=setTimeout(show,400);});
-    button.addEventListener('pointerenter',e=>{if(e.pointerType==='mouse')show(false);});
-    for(const event of ['pointerup','pointercancel','pointerleave','lostpointercapture'])button.addEventListener(event,hideEasyTooltip);
-    button.addEventListener('click',e=>{if(binding.long){e.stopImmediatePropagation();binding.long=false;}},true);
+    if(tap){button.tabIndex=0;button.setAttribute('role','button');button.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();show(false);}});}
+    button.addEventListener('pointerdown',e=>{hideEasyTooltip();clearTimeout(binding.releaseTimer);binding.long=binding.released=false;binding.pointerId=e.pointerId;tooltipOwner=button;observeEasyTooltip();tooltipPending=setTimeout(show,400);});
+    button.addEventListener('pointerenter',e=>{if(e.pointerType==='mouse'||(!e.pointerType&&matchMedia('(hover:hover)').matches))show(false);});
+    for(const event of ['pointerup','pointercancel','pointerleave','lostpointercapture'])button.addEventListener(event,()=>{
+      if(!binding.released&&(event==='pointercancel'||event==='pointerleave'||event==='lostpointercapture'))binding.long=binding.released=false;
+      hideEasyTooltip();
+    });
+    button.addEventListener('click',e=>{if(binding.long&&binding.released&&e.detail!==0&&(e.pointerId==null||e.pointerId===binding.pointerId)){e.preventDefault();e.stopImmediatePropagation();clearTimeout(binding.releaseTimer);binding.long=binding.released=false;if(tooltipRelease===binding)tooltipRelease=null;}else if(tap){e.stopImmediatePropagation();show(false);}},true);
   }
   // End transient tooltips.
   const lastHeckles = new Map(), happyCache = new Map();
@@ -309,6 +357,15 @@
   $('menuGroupSettings').insertAdjacentElement('afterend', saveSlotsButton);
   // Keep the existing more-menu host on desktop and through phone/desktop resize.
 
+  function venueClearBackup(deferNotice = false) {
+    if (!save()) return;
+    try {
+      if (saveStore.backup(localStorage.getItem(KEY), null, false)) {
+        if (!deferNotice) toast('자동 저장됐어요', 'saveClear');
+        return true;
+      }
+    } catch (error) { toast('자동 저장 백업을 만들지 못했어요','saveError'); }
+  }
   function openRestore() {
     openPanel('restore', '저장 백업 복원');
     try {

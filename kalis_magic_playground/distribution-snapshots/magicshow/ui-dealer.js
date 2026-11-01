@@ -74,7 +74,7 @@
     const v=D.venues.find(v=>v.slug===slug),data=cheerData?.[slug];
     if(!v||!data)return false;
     // curtain fix: the memory is written when the call ends (here, also via 건너뛰기), so a reload during the call still owes it (owedCurtainCall)
-    const finish=()=>{if(!review){uiSave.memories[slug]={slug,title:data.title,dimension:state.dimension};savePresentation();}curtainFinish=null;clearTimeout(curtainTimer);curtainScene?.remove();curtainScene=null;menu='';$('panel').hidden=true;presentation.finish();previous=0;dialogKey='';if(review){bestiaryTab='memories';bestiary();}else render();};
+    const finish=()=>{if(!review){uiSave.memories[slug]={slug,title:data.title,dimension:state.dimension};savePresentation();}curtainFinish=null;clearTimeout(curtainTimer);curtainScene?.remove();curtainScene=null;menu='';$('panel').hidden=true; $('stage').classList.remove('map-open');presentation.finish();previous=0;dialogKey='';if(review){bestiaryTab='memories';bestiary();}else render();};
     openPanel('curtain',data.title);clearDecorations();
     const scene=element('section','','curtain-memory');curtainScene=scene;
     scene.style.backgroundImage=`url(${assetUrl(venueAsset(v))})`;
@@ -150,7 +150,7 @@
     if(dealerBusy||c.phase!=='pick')return;dealerBusy=true;$('closePanel').disabled=true;
     const cups=[...table.querySelectorAll('.game-cup')];cups.forEach(el=>el.disabled=true);dealerBack(true);
     // Pick first (saved), then animate, so a reload cannot be used to pick again.
-    C.dealerCupsPick(state,choice);save();
+    const earned=state.features.progress.coinsEarned;C.dealerCupsPick(state,choice);sampleRates(0,[],state.features.progress.coinsEarned-earned,0);save();
     const chosen=cups.find(el=>Number(el.dataset.slot)===choice);
     if(chosen){cups.splice(cups.indexOf(chosen),1);cups.unshift(chosen);}
     for(const cup of cups){if(!table.isConnected){dealerBusy=false;return;}const slot=Number(cup.dataset.slot),art=cup.querySelector('.cup-prop');
@@ -265,7 +265,7 @@
     if(dealerBusy)return;dealerBusy=true;$('closePanel').disabled=true;dealerBack(true);
     // The pick is applied and saved first, so a reload during the reveal cannot be used to pick again.
     const round=m.round,plan=C.monteRound(m,round),cards=[...table.querySelectorAll('.routine-card')];
-    C.dealerMontePick(state,choice);save();
+    const earned=state.features.progress.coinsEarned;C.dealerMontePick(state,choice);sampleRates(0,[],state.features.progress.coinsEarned-earned,0);save();
     cards.forEach(c=>c.disabled=true);
     const chosen=cards.find(c=>Number(c.dataset.slot)===choice),others=cards.filter(c=>c!==chosen);
     const faces=Presentation.monteFaces(plan,true),face=c=>faces[Number(c.dataset.slot)];
@@ -323,7 +323,7 @@
       if(m.phase==='playing'&&settled){
         const row=element('div','','dealer-controls');
         row.append(action('다음 판',()=>{if(dealerBusy)return;monteGo=m.round;drawDealer();}));
-        const bank=action('그만하고 받기',()=>{if(dealerBusy)return;C.dealerMonteBank(state);save();sound('coin');drawDealer();},m.round<1);bank.dataset.bank='true';row.append(bank);area.append(row);
+        const bank=action('그만하고 받기',()=>{if(dealerBusy)return;const earned=state.features.progress.coinsEarned;C.dealerMonteBank(state);sampleRates(0,[],state.features.progress.coinsEarned-earned,0);save();sound('coin');drawDealer();},m.round<1);bank.dataset.bank='true';row.append(bank);area.append(row);
       }
       area.append(element('small',`정답마다 실크 +${D.silkRewards.monteCorrect} 즉시 지급 · 탈락해도 받은 실크는 남아요`));
       if(m.phase==='playing')area.append(element('small','1번 90초 동전·실크 · 2번 225초 · 3번 책·실크 + 300초'));
@@ -382,5 +382,5 @@
   function kaliArtPath(){if(state.u18.equipped.kali==='future')return 'assets/kali-outfit-2.png';return state.u18.equipped.kali?`assets/kali-skin-${state.u18.equipped.kali}.png`:`assets/kali-outfit-${state.u14.outfit}.png`;}
   function startMapFight(slug,id,kind){
     if(!C.travelTo(state,slug,id,kind)){toast('지금은 무대를 이동할 수 없어요');return;}
-    menu='';$('panel').hidden=true;$('phoneMore').hidden=true;previous=0;lastAudience='';dialogKey='';save();render();
+    menu='';$('panel').hidden=true; $('stage').classList.remove('map-open');$('phoneMore').hidden=true;previous=0;lastAudience='';dialogKey='';save();render();
   }

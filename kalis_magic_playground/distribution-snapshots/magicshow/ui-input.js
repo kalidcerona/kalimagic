@@ -111,7 +111,7 @@
     if (arranging && $('board').hasPointerCapture(arranging.id)) $('board').releasePointerCapture(arranging.id);
     const old = boardHolds; boardHolds = []; holdMarks.clear(); syncPointer();
     for (const p of old) if ($('board').hasPointerCapture(p.id)) $('board').releasePointerCapture(p.id);
-    if (!caseArrange && old.length && !document.hidden && !menu && !portrait()) events(C.step(state,.001,{taps:[]}));
+    if (!caseArrange && old.length && !document.hidden && !menu && !portrait()) { stepCombat(.001,{taps:[]}); }
   }
   // Arrangement uses the existing saved permutation, never the combat hold path.
   function arrangeSlot(e) {
@@ -248,6 +248,7 @@
     // v4 U51 1: one top layer. A panel opened while the menu sheet is open (from inside the menu or from the top bar 도감) replaces the menu: the menu
     // closes here and the panel's 닫기/뒤로 brings the menu back (the U48 M pattern), so the menu never stays drawn over (or under) a panel.
     if (!$('phoneMore').hidden) { $('phoneMore').hidden = true; $('moreButton').setAttribute('aria-expanded', 'false'); moreReturn = true; }
+    $('stage').classList.toggle('map-open', kind === 'map');
     menu = kind; previous = 0; clearDecorations();
     focusBeforePanel = document.activeElement;
     $('panel').dataset.screen = kind; delete $('panel').dataset.practice; $('panelBody').style.gridAutoRows = ''; // v4 U47 13: the stats grid sets its own row height
@@ -277,12 +278,13 @@
     }
     if(state.u18.map){C.returnToStage(state);save();}
     if (['book','dealer'].includes(menu) && failure !== null) { showFailure(); return; }
-    menu = ''; $('panel').hidden = true; previous = 0;
+    menu = ''; $('panel').hidden = true; $('stage').classList.remove('map-open'); previous = 0;
     if (focusBeforePanel && focusBeforePanel.isConnected) focusBeforePanel.focus();
     if (moreReturn) { moreReturn = false; showMore(); } // v4 U48 M: a panel opened from the menu goes back to the menu, not to the show
     render();
   }
   function clearDecorations() {
+    if(typeof hideEasyTooltip==='function')hideEasyTooltip();
     flights.length=0;particles.length=0;numbers.length=0;badges.length=0;
     $('stage').classList.add('decorations-paused');
     ctx.clearRect(0,0,canvas.width,canvas.height);
@@ -307,7 +309,7 @@
     return `${name}${final === 0 || final === 8 ? '로' : '으로'} 가기`;
   }
   function restartAfterFailure() {
-    C.restartRun(state, {v:state.venue, j:state.j});state.u15.queue=[];state.u15.scene=null;state.idle.waiting=false;delete state.idle.next; failure = null; menu = ''; $('panel').hidden = true;
+    C.restartRun(state, {v:state.venue, j:state.j});state.u15.queue=[];state.u15.scene=null;state.idle.waiting=false;delete state.idle.next; failure = null; menu = ''; $('panel').hidden = true; $('stage').classList.remove('map-open');
     previous = 0; flights.length = 0; particles.length = 0; numbers.length = 0; badges.length = 0; events.recentBadges?.clear(); wonMoment = null; if (typeof stopCloseWin === 'function') stopCloseWin(); // s5t-2
     save(); render(); $('bookButton').focus();
   }
@@ -339,7 +341,7 @@
     if(advice.hint)result.append(element('p',advice.hint,'fail-hint'));
     // v4 U44: the 칼리 product of this venue is one option among the others (a quiet row, the player decides).
     const product=C.failureProduct(state);
-    if(product){
+    if(product&&C.nodeInfo(state,product.id).displayable){
       const pinfo=C.nodeInfo(state,product.id),prow=element('div','','practice-gate fail-product');
       prow.append(element('span',`${product.name} · 연출 ×${product.productMultiplier} · 동전 ${rounded(pinfo.cost)}`),action(pinfo.purchasable?'배우기':`동전 ${rounded(Math.ceil(pinfo.cost-state.coins))} 더`,()=>learnFailureProduct(product.id),!pinfo.purchasable));
       result.append(prow);

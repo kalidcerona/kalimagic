@@ -254,9 +254,9 @@ html body #viewport #stage #stageStats #statShield > .ms-bar > .bar-chip.block {
 /* Phone fight numbers share the existing status band. */
 #phoneFightStats { display:none; }
 html body.phone #viewport#viewport #stage#stage#stage#stage#stage#stage #audienceCard #stageStats > .ms-strip { height:calc(100% - 16px) !important; }
-html body.phone #viewport#viewport #stage#stage#stage#stage#stage#stage #audienceCard #stageStats > #phoneFightStats { display:flex; height:16px; align-items:center; justify-content:space-between; gap:8px; overflow:hidden; color:#f2e6c8; font:10px/16px Galmuri11, sans-serif; white-space:nowrap; word-break:keep-all; }
+html body.phone #viewport#viewport #stage#stage#stage#stage#stage#stage #audienceCard #stageStats > #phoneFightStats { display:flex; height:16px; align-items:center; justify-content:space-between; gap:6px; overflow:hidden; color:#f2e6c8; font:10px/16px Galmuri11, sans-serif; white-space:nowrap; word-break:keep-all; }
 /* Beat the shared 2px gap and center justification on #stageStats > * so a value does not sit on the next label. */
-html body.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #audienceCard #stageStats > #phoneFightStats { gap:8px !important; justify-content:space-between !important; }
+html body.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #audienceCard #stageStats > #phoneFightStats { gap:6px !important; justify-content:space-between !important; }
 #phoneFightStats > span { min-width:0; overflow:hidden; text-overflow:clip; }
 #phoneFightStats .bitmap { color:#fff; }
 #phoneFightStats .fight-stat-up { animation:fight-stat-up 600ms ease-out; }

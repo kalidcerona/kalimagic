@@ -1,7 +1,7 @@
 'use strict';
   function modeHooks() {
     if (state.mode !== lastMode) {
-      lastMode = state.mode;
+      lastMode = state.mode;hideEasyTooltip();
       window.dispatchEvent(new CustomEvent('magicshow:mode', { detail: { mode: state.mode, state } }));
     }
     if (menu || document.hidden || state.u15.scene || state.u15.tutorial.active) return;
@@ -70,7 +70,7 @@
   $('musicVolume').addEventListener('input',()=>window.Sfx&&window.Sfx.setMusicVolume(Number($('musicVolume').value)));
   if(window.Sfx){$('musicVolume').value=window.Sfx.musicVolume();const on=window.Sfx.musicEnabled();$('musicButton').textContent=phone?(on?'음악 ON':'음악 OFF'):on?'배경음악 켜짐':'배경음악 꺼짐';$('musicButton').setAttribute('aria-pressed',String(on));}
   $('missionsButton').addEventListener('click',()=>{if(!['boo','fail','dealer','headliner','ending','rebirth','bossPhase'].includes(menu))drawMissions();});
-  $('hapticsButton').addEventListener('click',()=>{C.toggleHaptics(state);save();renderU14();});  $('eventVisitor').addEventListener('click',()=>{if(paused()&&!dialogOnlyPause()&&menu!=='boo')return;if(C.visitorBlocked(state)||paused()||lineOpen()){if(state.u14.visitor.left>0)visitorTap=state.u14.visitor.serial+1;return;}const list=C.catchVisitor(state);events(list);render();}); // v4 U49 4 / U49b 1: a tap during any line (story dialog, heckle, win, boo) is kept; renderU14 catches it after the line
+  $('hapticsButton').addEventListener('click',()=>{C.toggleHaptics(state);save();renderU14();});  $('eventVisitor').addEventListener('click',()=>{if(paused()&&!dialogOnlyPause()&&menu!=='boo')return;if(C.visitorBlocked(state)||paused()||lineOpen()){if(state.u14.visitor.left>0)visitorTap=state.u14.visitor.serial+1;return;}const list=catchVisitorIncome();events(list);render();}); // v4 U49 4 / U49b 1: a tap during any line (story dialog, heckle, win, boo) is kept; renderU14 catches it after the line
   $('soundButton').addEventListener('click', () => {
     if (window.Sfx) window.Sfx.toggle();
     updateSoundButton();
@@ -110,7 +110,7 @@
     $('debugNext').addEventListener('click', () => {
       if (dealerBusy) return;
       if (menu && menu !== 'fail') closePanel();
-      if (menu === 'fail') { menu = ''; $('panel').hidden = true; failure = null; }
+      if (menu === 'fail') { menu = ''; $('panel').hidden = true; $('stage').classList.remove('map-open'); failure = null; }
       C.dealerLeave(state);
       // Exercise automatic progression through Core wins, never assign a venue.
       const venue = state.venue;

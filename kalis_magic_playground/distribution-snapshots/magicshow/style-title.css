@@ -7,11 +7,11 @@
 #titleScreen h1 { margin:0 0 14px; color:#e8bf68; font:inherit; font-size:20px; line-height:1.5; }
 #titleScreen #titleActions { display:grid; gap:8px; }
 #titleScreen button { box-sizing:border-box; width:100%; min-width:44px; min-height:48px; padding:8px 12px; border:8px solid #a68a58; border-image:url('assets/kit/btn-dark.webp') 16 fill / 8px; border-radius:0; background:#30251d; color:#f2e6c8; box-shadow:none; font:inherit; font-size:16px; line-height:1.5; white-space:normal; word-break:keep-all; cursor:pointer; image-rendering:pixelated; }
-#titleScreen button:active:enabled { border-image-source:url('assets/kit/btn-dark-pressed.webp'); }
+#titleScreen button:active:enabled:not([aria-disabled="true"]) { border-image-source:url('assets/kit/btn-dark-pressed.webp'); }
 #titleScreen button:focus-visible { outline:3px solid #ffe69a; outline-offset:3px; }
 #titleScreen button:disabled { opacity:.65; cursor:default; }
 #titleScreen #titleContinue, #titleScreen #titleNewYes { border-image-source:url('assets/kit/btn-gold.webp'); background:#e8bf68; color:#24180c; }
-#titleScreen :is(#titleContinue,#titleNewYes):active:enabled { border-image-source:url('assets/kit/btn-gold-pressed.webp'); }
+#titleScreen :is(#titleContinue,#titleNewYes):active:enabled:not([aria-disabled="true"]) { border-image-source:url('assets/kit/btn-gold-pressed.webp'); }
 #titleScreen p { margin:0 0 12px; font-size:14px; line-height:1.6; }
 #titleScreen .title-confirm-actions { display:flex; gap:8px; }
 #titleScreen #titleStatus:empty { display:none; }
@@ -30,3 +30,10 @@
   #titleScreen button { min-height:44px; padding:4px 8px; font-size:14px; }
 }
 @media (prefers-reduced-motion:reduce) { #titleScreen { transition:none; } }
+
+/* Phone portrait only: intrinsic art and menu share a centered composition. */
+@media (max-width:600px) and (max-device-width:600px) and (orientation:portrait) and (hover:none) and (pointer:coarse) {
+  #titleScreen { display:flex; flex-direction:column; justify-content:center; align-items:center; gap:12px; box-sizing:border-box; padding:24px 0 40px; overflow:auto; }
+  #titleScreen > img { position:static; flex:none; width:100%; height:auto; max-height:none; object-fit:contain; }
+  #titleScreen .title-menu { position:static; flex:none; transform:none; max-height:none; margin:0; }
+}

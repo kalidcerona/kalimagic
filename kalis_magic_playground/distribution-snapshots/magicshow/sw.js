@@ -1,6 +1,6 @@
 // Cache only the explicit app shell. API, authentication and user data stay on the network.
 const CACHE_PREFIX = 'magicshow-dist-';
-const CACHE_NAME = CACHE_PREFIX + '77dbec0d6e324f3a-coherent-1-distribution';
+const CACHE_NAME = CACHE_PREFIX + '216efb95a14cd7e4-coherent-1-distribution';
 const SHELL = [
   "./index.html",
   "./style-base.css",

@@ -40,8 +40,27 @@
     }
   }
 
+  function futureHeadlinerHp(state) {
+    var u=state.u19,dps=u.lastDps>0?u.lastDps*(state._V||1)/u.lastPower:futurePower(state);
+    var fp=state.features.progress,retry=fp.bossLossVenue===state.venue&&fp.bossLossStreak>0?CONST.future.retryHp:1;
+    return Math.max(1,Math.round(dps*112*retry));
+  }
+  function ordinaryHpCap(state) {
+    var v=state.venue,head=Object.assign({},state,{j:headlinerJ(v),audId:getAud(v,headlinerJ(v)).id}),hp=audStats(v,head.j).hp;
+    if(VENUES[v-1].slug==='future')hp=futureHeadlinerHp(state);
+    else if(gateAudience(head)){
+      hp=Math.max(1,Math.round(hp*GATE_POLICY.hp));
+      for(var j=1;j<head.j;j++){
+        var regular=Object.assign({},state,{j:j,audId:getAud(v,j).id});
+        if(!isBenched(v,j)&&!gateAudience(regular))hp=Math.min(hp,2*audStats(v,j).hp);
+      }
+    }
+    return Math.max(1,Math.floor(hp*.8));
+  }
+
   function beginAudience(state, v, j, ev) {
     MENTAL_VISIBILITY.delete(state);
+    resetTheftBudget(state);
     if (VENUES[v-1].mergedInto) { v=venueNumber(VENUES[v-1].mergedInto); j=1; }
     state.features.progress.tapStreak=0;
     state._colMs = null;
@@ -100,9 +119,7 @@
     }
     if(profile(state)==='future'){
       var u=state.u19;u.phase=1;u.telegraph=3000;u.window=0;u.hitMs=0;u.target=strongestCase(state);
-      var dps=u.lastDps>0?u.lastDps*(state._V||1)/u.lastPower:futurePower(state);
-      var fp=state.features.progress,retry=fp.bossLossVenue===state.venue&&fp.bossLossStreak>0?CONST.future.retryHp:1;
-      state.audHp=state.audHpMax=Math.max(1,Math.round(dps*112*retry));futureThreat(state);state.heckleMs=CONST.future.firstHeckleMs;
+      state.audHp=state.audHpMax=futureHeadlinerHp(state);futureThreat(state);state.heckleMs=CONST.future.firstHeckleMs;
       emit(ev,{type:'futurePhase',phase:1});
     }
     if (profile(state) === "homecoming") emit(ev,{type:"homecomingAct",act:1,line:aud.act1Line});
@@ -114,9 +131,11 @@
       if(j===firstFightJ(v))queueScene(state,VENUES[v-1].slug,'opening');
       if(j===headlinerJ(v))queueScene(state,VENUES[v-1].slug,'beforeHeadliner');
     }
+    state._firstGate = gateAudience(state)&&!state.u19b.gates[state.audId] ? state.audId : '';
     if(gateAudience(state)&&!state.u19b.gates[state.audId])state.u19b.gates[state.audId]={prepared:preparation(state),need:gateNeed(state),cleared:false,studied:false};
     if(gatePressure(state)>0)state.audHp=state.audHpMax=Math.max(state.audHpMax,Math.round(wallPower(state)*(VENUES[v-1].slug==='theater'?GATE_POLICY.theaterFloor:GATE_POLICY.floor)));
-    if(gateAudience(state))state.audHp=state.audHpMax=Math.max(1,Math.round(state.audHpMax*GATE_POLICY.hp));
+    if(gateAudience(state))state.audHp=state.audHpMax=Math.min(gateHpCap(state),Math.max(1,Math.round(state.audHpMax*GATE_POLICY.hp)));
+    if(j<headlinerJ(v)&&!state.u15.tutorial.active&&!state.u18.anchor)state.audHp=state.audHpMax=Math.min(state.audHpMax,ordinaryHpCap(state));
     state.stallMin = state.audHp; state.stallMs = 0;
     if(twistEligible(state)&&!state.batchD.twist.failures&&!state.batchD.twist.scene)state.batchD.twist.scene='intro';
     checkAchievements(state,ev);

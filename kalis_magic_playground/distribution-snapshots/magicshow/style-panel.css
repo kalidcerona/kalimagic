@@ -5,7 +5,7 @@
 /* U4 panels scroll within the approved card boundary. */
 #panel{display:flex;flex-direction:column;overflow:hidden;touch-action:pan-y}
 #panel header{flex:none}
-#panelBody{flex:1;min-height:0;overflow:auto;padding:6px 12px 24px 0;overscroll-behavior:contain;touch-action:pan-y;scrollbar-color:#ffe65c #181820;scrollbar-width:auto}
+#panelBody{flex:1;min-height:0;overflow:auto;overflow-anchor:none;padding:6px 12px 24px 0;overscroll-behavior:contain;touch-action:pan-y;scrollbar-color:#ffe65c #181820;scrollbar-width:auto}
 #panel[data-screen="dealer"] #panelBody>small{display:block;text-align:center}
 #panel[data-screen="headliner"]{left:190px;top:235px;width:1220px;height:400px;background:#10101af5;border-color:#ffe65c}#panel[data-screen="headliner"] header{margin-bottom:8px}
 #panel.climax-dialogue{height:440px;top:200px;border-color:#e8a8ff;background:radial-gradient(ellipse,#342349,#090710)}
@@ -50,7 +50,7 @@
 .phone #stage #panel .easy-stat strong{font-size:22px;line-height:26px;color:var(--gold);order:-1}
 .phone #stage #panel .easy-stat p{font-size:11px;line-height:16px;color:var(--ink-2)}
 .phone #stage #panel[data-screen="book"] header{height:auto;overflow:visible;background:var(--panel)}
-#stage :is(button,.chip):active{border-image-source:url('assets/ui/ui-button-pressed.webp')}
+#stage :is(button,.chip):active:enabled:not([aria-disabled="true"]){border-image-source:url('assets/ui/ui-button-pressed.webp')}
 #stage :is(#panel,#phoneMore,#offlineCard,.constellation-detail){image-rendering:pixelated;border:solid 24px transparent;border-image:url('assets/ui/ui-panel.webp') 24 fill / 24px / 0 stretch;background-color:#17141F;border-radius:0}
 #stage :is(#panel,#phoneMore,#offlineCard,.constellation-detail){border-color:#A68A58}
 .tablet #stage #panelBody:has(>.gem-game){grid-template-columns:140px minmax(0,1fr);gap:12px}
@@ -110,7 +110,7 @@ html body #viewport#viewport #stage#stage#stage#stage #closePanel#closePanel.kit
   flex:0 0 44px; width:44px; height:44px; min-width:44px; padding:0; border:0; border-image:none;
   background:url('assets/kit/close-normal.webp') center / 44px 44px no-repeat; color:transparent; font-size:0;
 }
-html body #viewport#viewport #stage#stage#stage#stage #closePanel#closePanel.kit-close:active { background-image:url('assets/kit/close-pressed.webp'); }
+html body #viewport#viewport #stage#stage#stage#stage #closePanel#closePanel.kit-close:active:enabled:not([aria-disabled="true"]) { background-image:url('assets/kit/close-pressed.webp'); }
 html body #viewport#viewport #stage#stage#stage#stage .panel-tabs button { flex:1 0 72px; min-height:44px; padding:10px 12px; border-image:url('assets/kit/tab-normal.webp') 20 fill / 10px / 0 stretch; }
 html body #viewport#viewport #stage#stage#stage#stage .panel-tabs button[aria-pressed="true"] { border-image-source:url('assets/kit/tab-selected.webp'); color:#302014; }
 html body #viewport#viewport #stage#stage#stage#stage :is(.kit-price,.tree-cost,.tree-level,.shop-cosmetic-tile small.kit-price) { display:inline-flex; align-items:center; justify-content:center; min-height:28px; padding:4px 10px; border:0; border-image:url('assets/kit/price-tag.webp') 16 fill / 8px / 0 stretch; color:#f2e6c8; box-sizing:border-box; }

@@ -112,8 +112,8 @@ html body.tablet:not(.portrait-layout) #viewport#viewport #stage #storyDialog{he
 .batch-d-lock::after, .batch-d-hide::after { content: attr(data-interference); position: absolute; inset: 12% 3%; display: flex; align-items: center; justify-content: center; border-radius: 8px; background: #221b34e8; color: #fff4c4; font: bold 13px sans-serif; text-align: center; z-index: 4; pointer-events: none; }
 @media (prefers-reduced-motion: reduce) { .batch-d-card { animation: none; left: calc(var(--sorted) * 15%); } }
 html body #viewport#viewport #stage#stage#stage#stage :is(#storyDialog#storyDialog,.curtain-bubble,.batch-d-scene) { border:0; border-image:url('assets/kit/dialogue-frame.webp') 16 fill / 8px / 0 stretch; background:transparent; box-shadow:none; }
-html body #viewport#viewport #stage#stage#stage#stage :is(.line-next,.curtain-next):active:enabled { border-image-source:url('assets/kit/dialogue-next-pressed.webp'); }
-html body #viewport#viewport #stage#stage#stage#stage .line-skip:active:enabled { border-image-source:url('assets/kit/dialogue-skip-pressed.webp'); }
+html body #viewport#viewport #stage#stage#stage#stage :is(.line-next,.curtain-next):active:enabled:not([aria-disabled="true"]) { border-image-source:url('assets/kit/dialogue-next-pressed.webp'); }
+html body #viewport#viewport #stage#stage#stage#stage .line-skip:active:enabled:not([aria-disabled="true"]) { border-image-source:url('assets/kit/dialogue-skip-pressed.webp'); }
 html body #viewport#viewport #stage#stage#stage#stage :is(.toast,#banner#banner,#sceneCard#sceneCard,.batch-d-note,.tree-wallet,.dealer-wallet) { border:0; border-image:url('assets/kit/toast-frame.webp') 24 fill / 12px / 0 stretch; background:transparent; box-shadow:none; padding:10px 16px; }
 html body #viewport#viewport #stage#stage#stage#stage :is(.constellation-map,.constellation-world,.result,.rebirth-scene,.rebirth-lists section,.batch-d-scene,.ending-scene,.panel-tabs,.music-volume) { background:none; box-shadow:none; border-color:transparent; }
 html body #viewport#viewport #stage#stage#stage#stage .batch-d-scene { padding:18px; }

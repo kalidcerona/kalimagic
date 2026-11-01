@@ -18,7 +18,7 @@
   function travelAllowed(state){if(state.batchD.side||state.batchD.encore.phase||state.batchD.twist.scene||state.batchD.rebirthOffer)return false;return profile(state)!=='future'&& !state.u15.tutorial.active&&!state.u15.scene&&state.mode==='fight'&&!state.resolved&&!state.features.climax.left&&!state.telegraphed&&!state.features.climax.mirrored.length&&state.review.target<0;}
   function openMap(state){
     if(state.u18.map)return true;if(!travelAllowed(state))return false;
-    if(!state.u18.anchor)state.u18.anchor=serialize(state);
+    if(!state.u18.anchor){parkTheftBudget(state);state.u18.anchor=serialize(state);}
     else if(state.u18.challenge){restoreTimeline(state);state.u18.challenge=null;}
     state.u18.map=true;state.holding=false;state.tapAcc=0;return true;
   }
@@ -26,6 +26,7 @@
   function restoreTimeline(state){
     var original=resumeHelpers(deserialize(state.u18.anchor));if(!original)return false;
     TRAVEL_FIELDS.forEach(function(k){state[k]=original[k];});
+    restoreTheftBudget(state);
     state.u15.scene=original.u15.scene;state.u15.queue=original.u15.queue;
     state.features.climax=original.features.climax;state.features.workers=original.features.workers;
     state.skills=original.skills;state.u17.potionUsed=original.u17.potionUsed;

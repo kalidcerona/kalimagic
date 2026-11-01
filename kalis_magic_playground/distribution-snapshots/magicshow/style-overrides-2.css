@@ -6,7 +6,7 @@
  * here into its feature file without re-running .runs-v5/css-regroup/regroup.cjs and the css-equivalence gate.
  * Rules per owning feature here: stage 39, minigames 33, panel 20, stats-strip 15, stage-meters 14, dialog 14, topbar 10, effects 10, board 8, base 8, skills 7, menu 7, skilltree 7, shop 2, bestiary 2. */
 #stage :is(button,.chip){image-rendering:pixelated;border-style:solid;border-width:8px;border-image:url('assets/ui/ui-button.webp') 8 fill / 8px / 0 stretch;background-color:#25202D;border-radius:0;color:#F2E6C8;box-sizing:border-box;min-height:44px}
-#stage :is(button,.chip):disabled{border-image-source:url('assets/ui/ui-button-disabled.webp');color:#A68A58}
+#stage :is(button,.chip):is(:disabled,[aria-disabled="true"]){border-image-source:url('assets/ui/ui-button-disabled.webp');color:#A68A58}
 #stage :is(.stage-start,.tree-buy,.failure-retry){border-image-source:url('assets/ui/ui-button-primary.webp');color:#17141F}
 #stage .audience-shadow{background:rgba(232,191,104,.10);box-shadow:0 0 0 16px rgba(232,191,104,.05);border-radius:0;filter:none;transform:none;left:20%;width:60%;height:45%;bottom:60px}
 #stage #phoneWallet .hud{background:none;border:0;box-shadow:none}
@@ -64,7 +64,7 @@
 #stage #audienceCard .audience-shadow{display:block;z-index:1;pointer-events:none}
 #stage :is(.stage-start,.tree-buy,.failure-retry){border-image-source:url('assets/ui/ui-button.webp');color:#F2E6C8}
 #stage .u26-primary{border-image-source:url('assets/ui/ui-button-primary.webp');color:#17141F}
-#stage .u26-primary:active{border-image-source:url('assets/ui/ui-button-pressed.webp')}
+#stage .u26-primary:active:enabled:not([aria-disabled="true"]){border-image-source:url('assets/ui/ui-button-pressed.webp')}
 .tablet #stage #audienceLine{bottom:80px;font-size:16px;line-height:22px}
 @media(prefers-reduced-motion:reduce){#stage :is(.cup-lifting,.ball-popping,.card-flipping,.money-win){animation:none}#stage .card-flipping img{visibility:visible}}
 @media(max-width:779px){.phone-compact #stage #stageStats{bottom:56px}.phone-compact #stage #audience.normalized-figure{bottom:90px;height:calc(100% - 142px)}}
@@ -72,7 +72,7 @@
 #stage .curtain-confetti{position:absolute;width:32px;height:32px;z-index:4;pointer-events:none;image-rendering:pixelated;background:url('assets/ui/fx-ribbon.webp') no-repeat 0 0 / 128px 32px;animation:u26-confetti 400ms steps(4) 1}
 .missing-ui-panel #stage :is(#panel,#phoneMore,#offlineCard,.constellation-detail){border-image:none;border:2px solid #A68A58;background:#25202D}
 .missing-ui-panel-inner #stage :is(.bestiary-entry,.gem-shop-item,.cosmetic-card,.map-venue,#stageStats,#phoneWallet){border-image:none;border:1px solid #6B5A3A;background:#25202D}
-.missing-ui-button #stage :is(button,.chip),.missing-ui-button-primary #stage .u26-primary,.missing-ui-button-pressed #stage button:active,.missing-ui-button-disabled #stage button:disabled{border-image:none;border:2px solid #A68A58;background:#25202D}
+.missing-ui-button #stage :is(button,.chip),.missing-ui-button-primary #stage .u26-primary,.missing-ui-button-pressed #stage button:active:enabled:not([aria-disabled="true"]),.missing-ui-button-disabled #stage button:is(:disabled,[aria-disabled="true"]){border-image:none;border:2px solid #A68A58;background:#25202D}
 .missing-ui-button-primary #stage .u26-primary{background:#E8BF68;color:#17141F}
 .missing-ui-dialog #stage :is(#storyDialog,.curtain-bubble){border-image:none;border:2px solid #A68A58;background:#E3D2BA}
 .missing-ui-bar-frame-main #stage .doubt,.missing-ui-bar-frame #stage #heckleMeter{border-image:none;border:1px solid #A68A58}
@@ -84,7 +84,7 @@
 .tablet #stage :is(.doubt,#heckleMeter){border-image-width:4px}
 .tablet #stage .doubt-fill,.tablet #stage #heckleFill{background-size:64px 40px}
 .tablet #stage #storyDialog{border-image-width:16px}
-#stage .u26-primary:hover:enabled{color:#17141F}
+#stage .u26-primary:hover:enabled:not([aria-disabled="true"]){color:#17141F}
 #stage #panelBody:has(>.gem-game){display:grid;grid-template-columns:76px minmax(0,1fr);align-items:start;gap:4px}
 #stage .routine-highlight{box-shadow:0 0 0 3px #E8BF68}
 #stage .final-load{animation:u26-prize 150ms ease-out 1}
@@ -169,6 +169,7 @@ repeating-linear-gradient(90deg,rgba(255,255,255,.04) 0 2px,transparent 2px 4px)
 .win-flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:7}
 .win-stamp{position:absolute;right:8px;top:60px;font:700 24px/30px Galmuri11,sans-serif;white-space:nowrap;color:#ffe65c;text-shadow:2px 0 #17141F,-2px 0 #17141F,0 2px #17141F,0 -2px #17141F,2px 2px #17141F,-2px -2px #17141F,2px -2px #17141F,-2px 2px #17141F;pointer-events:none;z-index:21}
 .tablet .win-stamp{font-size:44px;line-height:54px;top:200px;right:16px}
+#audienceCard>.pattern-stamp.win-stamp{right:auto;bottom:auto;margin:0;z-index:20;white-space:nowrap;pointer-events:none;transform-origin:50% 50%}
 .pat-part{display:inline-block;max-width:100%;vertical-align:top}
 /* U43: audience card narrower than 260 px (iPhone Duo outer with Dynamic Island insets): smaller stage stats and a one-line phase chip. */
 .phone-narrow #stage #stageStats :is(.mental,.shield,.combo){font-size:8px;gap:1px}

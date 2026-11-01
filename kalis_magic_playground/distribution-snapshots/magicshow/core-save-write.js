@@ -145,11 +145,15 @@
       if(raw===null)return false;
       var all=keys(), kept=keepKeys();
       // Never store the same raw string twice.
-      if(all.concat(kept).some(function(k){return storage.getItem(k)===raw;}))return false;
+      if(kept.some(function(k){return storage.getItem(k)===raw;}))return false;
+      var duplicates=all.filter(function(k){return storage.getItem(k)===raw;});
+      if(!keep && duplicates.length)return false;
       var pre=keep?keepPrefix:prefix, mine=keep?kept:all;
       var stamp=Math.max(now(),mine[0]?Number(mine[0].slice(pre.length))+1:0);
       while(storage.getItem(pre+stamp)!==null)stamp++;
       storage.setItem(pre+stamp,raw);
+      // Only remove rotating duplicates after the protected write succeeds.
+      if(keep)duplicates.forEach(function(k){storage.removeItem(k);});
       if(keep)keepKeys().slice(KEEP_MAX).forEach(function(k){storage.removeItem(k);});
       else keys().slice(3).forEach(function(k){if(k!==protect)storage.removeItem(k);});
       return true;

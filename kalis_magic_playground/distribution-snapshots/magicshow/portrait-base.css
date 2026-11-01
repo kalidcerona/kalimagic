@@ -260,10 +260,10 @@ html body.portrait-layout.phone:not(.tablet) {
   --kit-gold: url('assets/kit/btn-gold.webp');
   --kit-gold-down: url('assets/kit/btn-gold-pressed.webp');
 }
-html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #activeSkills .active-skill:active,
-html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #activeSkills .kit-btn:active,
-html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #actionDock > button:active,
-html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #skillRow > .active-skill:active {
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #activeSkills .active-skill:active:enabled:not([aria-disabled="true"]),
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #activeSkills .kit-btn:active:enabled:not([aria-disabled="true"]),
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #actionDock > button:active:enabled:not([aria-disabled="true"]),
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #skillRow > .active-skill:active:enabled:not([aria-disabled="true"]) {
   border-image-source: var(--kit-dark-down);
 }
 html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #audienceCard #room > .asset-sprite {
@@ -273,7 +273,7 @@ html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #portrait
 html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #portraitMeters .bitmap {
   --pixel: 2px;
 }
-html body.portrait-layout #viewport#viewport #stage button:disabled { opacity:1; color:#C9C0AD; }
+html body.portrait-layout #viewport#viewport #stage button:is(:disabled,[aria-disabled="true"]) { opacity:1; color:#C9C0AD; }
 html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #phoneWallet .currency .bitmap::after { content:attr(aria-label); font:14px/16px system-ui,sans-serif; }
 html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #audienceCard #room > .asset-sprite { filter:none; opacity:1; object-fit:cover; object-position:center; }
 html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #audienceCard #stageStats .bitmap::after { content:attr(aria-label); font:10px/16px system-ui,sans-serif; }

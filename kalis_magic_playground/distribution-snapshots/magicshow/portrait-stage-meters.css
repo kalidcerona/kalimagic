@@ -221,3 +221,8 @@ html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#sta
 html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #portraitMeters .heckle-plate { position:static !important; inset:auto !important; width:100% !important; max-width:none; padding:0 !important; height:20px; font:12px/20px system-ui,sans-serif; }
 /* 12-115: the venue title stays inside the top bar frame (number 14 px + 1 px gap + title 26 px = the 41-44 px heading, the frame line stays clear). */
 html body.portrait-layout.phone:not(.tablet):not(.portrait-compact) #viewport#viewport #stage#stage#stage#stage #phoneTop #stageNumber { height:14px; line-height:14px; }
+
+/* Size the last-hit column from its full text instead of a fixed 104px budget. */
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage #portraitMeters { grid-template-columns:minmax(0,1fr) max-content; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage #portraitMeters #heckleMeter { min-width:max-content; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage #portraitMeters .heckle-plate > span { flex:none; white-space:nowrap; font-size:12px; }

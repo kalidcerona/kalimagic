@@ -90,7 +90,7 @@
   const toastQueue = [], visibleToasts = [];
   let lastToastKind = '';
   function toast(text,kind='') {
-    return presentation.push({merge:'toast:'+kind+':'+text,skillNotice:kind==='skill',priority:kind==='skill'?80:0,minimum:1200,start:item=>{
+    return presentation.push({merge:'toast:'+kind+':'+text,stageTransition:kind==='saveClear'||kind==='saveError',skillNotice:kind==='skill',priority:kind==='skill'?80:0,minimum:1200,start:item=>{
       const el=pxIcons(element('div',text+(item.extra?' · '+item.extra:''),'toast'));$('toasts').append(el);const expiry=setTimeout(()=>el.remove(),3500);item.end=()=>{clearTimeout(expiry);el.remove();};
     }});
   }
@@ -98,7 +98,10 @@
   function nextToasts(dt=0){
     // Ordinary notices wait behind queued dialogue; genuine clear/reward notices still finish first.
     if(state.u15.queue.length&&!presentation.active&&!skillNoticePending()){
-      if(!presentation.items.some(item=>item.stageTransition))return;
+      if(!presentation.items.some(item=>item.stageTransition)) {
+        // A finished transition must release its gap even while dialogue owns the lane.
+        presentation.gap=Math.max(0,presentation.gap-dt);return;
+      }
     }
     presentation.tick(dt,blockingSheetOpen()||!!state.u15.scene||!$('leaveConfirm').hidden||document.hidden||portrait()||!$('offlineCard').hidden||state.features.climax.left>0);
   }
@@ -128,7 +131,7 @@
       return result.saved;
     }
     catch (error) {
-      if (!saveWarning) { toast('저장할 수 없어요. 이번 공연은 계속돼요'); saveWarning = true; }
+      if (!saveWarning) { toast('저장할 수 없어요. 이번 공연은 계속돼요','saveError'); saveWarning = true; }
       return false;
     }
   }
@@ -228,7 +231,7 @@
   function colleagueHitFx(e) {
     const r = rectOf($('audience')), stage = rectOf($('stage'));
     hitParticles((r.left + r.width / 2 - stage.left) / scale, (r.top + r.height * .65 - stage.top) / scale, colleagueShapes[(e.index + state.wins) % colleagueShapes.length], '#8be9d0', 0);
-    if (e.applied > 0) float(`+${C.formatNumber(e.applied)}`, (r.left + r.width / 2 - stage.left) / scale + (e.index - 2.5) * 16, (r.top + r.height * .5 - stage.top) / scale, '#8be9d0', 12, 0, 0);
+    if (e.applied > 0) float(`-${C.formatNumber(e.applied)}`, (r.left + r.width / 2 - stage.left) / scale + (e.index - 2.5) * 16, (r.top + r.height * .5 - stage.top) / scale, '#8be9d0', 12, 0, 0);
   }
   function hitFeedback(e,source='card',maxDoubt=state.audHpMax) {
     const tier=hitTier(e.dmg,maxDoubt),model=hitTiers[tier];

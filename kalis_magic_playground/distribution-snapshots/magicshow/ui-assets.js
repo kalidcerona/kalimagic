@@ -111,7 +111,7 @@
     const paths = [`assets/${next.venueAsset}`, next.crowdAsset && `assets/${next.crowdAsset}`];
     if(next.slug==='theater')paths.push('assets/story/subway-memory.webp');
     for (const a of [next.headliner, ...next.audiences]) {
-      const base = audienceAsset(next, a), happy = base.replace(/\.png$/, '-happy.png'); paths.push(base, happy); prefetchPortraits.add(base); prefetchPortraits.add(happy);
+      const base = audienceAsset(next, a), happy = U5.happyPortraitPath(base); paths.push(base, happy); prefetchPortraits.add(base); prefetchPortraits.add(happy);
     }
     for (const path of paths) if (path && !prefetchDone.has(path)) { prefetchDone.add(path); prefetchQueue.push(path); }
     const start = () => pumpPrefetch();

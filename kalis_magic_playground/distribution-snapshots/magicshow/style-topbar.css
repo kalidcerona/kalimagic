@@ -88,7 +88,7 @@ body:not(.phone) #goalStrip:after{content:"";position:absolute;inset:0 0 auto;he
 .phone #phoneTop #bookButton:after{right:1px;top:1px;background:var(--gold);color:#120F1A}
 .phone #phoneTop #goalStrip{width:72px;min-width:0;flex-shrink:1;color:var(--ink-2);background:transparent}
 .phone #phoneTop #goalStrip .goal-title{display:none}
-#stage #phoneMore button:active,#stage #phoneTop button:active,#stage #panel button:active{box-shadow:inset 0 2px 0 #100D16}
+#stage #phoneMore button:active:enabled:not([aria-disabled="true"]),#stage #phoneTop button:active:enabled:not([aria-disabled="true"]),#stage #panel button:active:enabled:not([aria-disabled="true"]){box-shadow:inset 0 2px 0 #100D16}
 .phone #phoneTop{overflow:visible}
 .phone #phoneTop #bookButton:after{right:-6px;top:-1px;width:16px;height:16px;min-width:0;padding:0;border-radius:50%;line-height:14px;text-align:center}
 .phone #stage #phoneTop #equipButton{position:relative;flex:none;width:112px;min-width:112px;height:44px;min-height:44px;font-size:12px;line-height:24px;white-space:nowrap;margin:0;padding:8px 3px;border-width:2px;background:#302735;border-color:var(--line);color:var(--ink)}
@@ -215,7 +215,7 @@ html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage :is(
 html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage .hud .bitmap > * { display:none; }
 html body:not(.phone) #viewport#viewport #stage#stage#stage#stage .hud :is(.currency-label,#mockupDoves) { font:22px/24px Galmuri11,sans-serif; }
 html body:not(.phone) #viewport#viewport #stage#stage#stage#stage #gemShopQuick { display:grid; min-width:44px; min-height:56px; border-image-source:url('assets/kit/shop-normal.webp'); background-color:#E8BF68; color:#302014; }
-html body:not(.phone) #viewport#viewport #stage#stage#stage#stage #gemShopQuick:active:enabled { border-image-source:url('assets/kit/shop-pressed.webp'); }
+html body:not(.phone) #viewport#viewport #stage#stage#stage#stage #gemShopQuick:active:enabled:not([aria-disabled="true"]) { border-image-source:url('assets/kit/shop-pressed.webp'); }
 html body #viewport#viewport #stage#stage#stage#stage #phoneMore button { font:14px/20px system-ui,sans-serif; }
 html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #bookButton.is-new::after { width:28px; height:14px; top:-4px; right:-4px; }
 html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #bookButton:is(.is-new,.new-unlock)::after { width:24px; height:12px; top:-8px; right:-6px; }

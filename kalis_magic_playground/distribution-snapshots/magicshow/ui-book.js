@@ -4,7 +4,7 @@
     const opening = menu !== 'book';
     if (opening) openPanel('book', practice ? D.ui.practiceTitle : D.ui.bookTitle);
     if (practice) $('panel').dataset.practice = '1'; else delete $('panel').dataset.practice;
-    const body = $('panelBody'); body.replaceChildren();
+    const body = $('panelBody'), keepScroll=opening?0:body.scrollTop, detailScroll=opening?0:body.querySelector('.constellation-detail')?.scrollTop||0; body.replaceChildren();
     if(state.batchD.twist.trace)body.append(element('p','📖 트레이스 · 흔들리지 않는 마음: 숨겨진 마술 피해 90% 감소, 멘탈은 최소 1 남아요.','batch-d-note'));
     // v4 U47 10: no learn-all and no auto-learn button (the player picks 비법 one by one after a failure).
     const header = $('panel').querySelector('header');
@@ -22,7 +22,7 @@
     const detail = element('aside', '', 'constellation-detail'); detail.setAttribute('aria-live', 'polite');
     const minTreeZoom=Math.max(.8,44/(56*(scale||1)));
     treeView.zoom=Math.max(minTreeZoom,treeView.zoom);
-    const infos = new Map(D.tree.map(n => [n.id, C.nodeInfo(state, n.id)]));
+    const infos = new Map(D.tree.map(n => {const info=C.nodeInfo(state,n.id);return [n.id,{...info,revealed:info.displayable}];}));
     const nodeStatus=(node,info)=>{
       const maxed=info.revealed&&info.cost===null;
       const shortage=!!info.revealed&&/ 부족$/.test(info.blockedReason||'');
@@ -34,7 +34,7 @@
       const text=maxed?'MAX':kind==='locked'?requirement:`${currency} ${C.formatNumber(info.cost)}`;
       return {kind,text,missing,currency};
     };
-    const shown = new Set(D.tree.filter(n => !n.shopOnly && n.id !== 'autoLearn' /* v4 U47 10: retired node, never drawn */ && (infos.get(n.id).revealed ||(!n.hidden && (n.reveal === 'E' || n.prereqs.some(id => infos.get(id).revealed))))).map(n => n.id));
+    const shown = new Set(D.tree.filter(n => !n.shopOnly && !infos.get(n.id).bookHidden && n.id !== 'autoLearn' /* v4 U47 10: retired node, never drawn */ && (infos.get(n.id).revealed ||(!n.hidden && (n.reveal === 'E' || n.prereqs.some(id => infos.get(id).revealed))))).map(n => n.id));
     const centerUnlocked = () => {
       const nodes = D.tree.filter(n => shown.has(n.id) && infos.get(n.id).revealed && (!infos.get(n.id).gate || infos.get(n.id).gate.met));
       treeView.x = -(Math.min(...nodes.map(n=>n.x)) + Math.max(...nodes.map(n=>n.x))) * 70 * treeView.zoom;
@@ -248,6 +248,7 @@
       const picked = world.querySelector('.constellation-node.selected'), m = map.getBoundingClientRect(), r = picked && picked.getBoundingClientRect();
       if (r && (r.left < m.left || r.right > m.right)) { treeView.x += (m.left + m.width / 2) - (r.left + r.width / 2); transform(); }
     }
+    restorePanelScroll(keepScroll);restorePanelScroll(detailScroll,detail);
     if (focusMap) (detail.querySelector('.tree-buy:not([disabled])') || map).focus({ preventScroll: true });
   }
   let pendingIntro = null;

@@ -252,13 +252,13 @@ html body.portrait-layout.phone:not(.tablet).portrait-compact #viewport#viewport
   font-size: 8px;
   line-height: 10px;
 }
-html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #activeSkills .active-skill:disabled small { color:#C9C0AD; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #activeSkills .active-skill:is(:disabled,[aria-disabled="true"]) small { color:#C9C0AD; }
 html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #activeSkills { display:flex; flex-direction:row; flex-wrap:nowrap; gap:8px; padding:2px 8px 6px; height:var(--p-skills); overflow:visible; }
 html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #skillRow { display:flex; flex-direction:row; flex:4 1 0; min-width:0; min-height:0; max-height:none; width:auto; gap:3px; }
 html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #actionDock { display:flex; flex-direction:row; flex:3 1 0; min-width:0; min-height:0; max-height:none; width:auto; gap:3px; position:relative; margin:0; padding:0 0 0 5px; background:url("assets/kit/divider.webp") no-repeat left center / 2px 100%; border:0; }
-html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #activeSkills #skillRow > button:disabled { border-image-source:url("assets/kit/button-disabled.webp"); opacity:1; }
-html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #activeSkills #skillRow > button:active:enabled,
-html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #activeSkills #actionDock > button:active:enabled { border-image-source:url("assets/kit/button-pressed.webp"); }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #activeSkills #skillRow > button:is(:disabled,[aria-disabled="true"]) { border-image-source:url("assets/kit/button-disabled.webp"); opacity:1; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #activeSkills #skillRow > button:active:enabled:not([aria-disabled="true"]),
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #activeSkills #actionDock > button:active:enabled:not([aria-disabled="true"]) { border-image-source:url("assets/kit/button-pressed.webp"); }
 html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #activeSkills small { display:block; font:8px/10px system-ui,sans-serif; height:10px; margin:0; color:#8fd3ff; }
 html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #activeSkills :is(#skillRow,#actionDock) { display:contents; }
 html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #activeSkills #skillRow small { font-size:9px; letter-spacing:-.3px; }
@@ -327,3 +327,11 @@ html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#sta
   html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #actionDock > #gemShopQuick .kit-ico { flex-basis:28px; width:28px; height:28px; }
   html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #actionDock > #gemShopQuick .kit-label { font-size:10px; letter-spacing:-.3px; }
 }
+
+/* Keep the four-syllable skill label readable in the existing 44 px column. */
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #skillRow > #skill-cheer,
+html body.portrait-layout.phone.portrait-compact:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #skillRow > #skill-cheer { --lb:26px; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #skillRow > #skill-cheer > span:not(.skill-art) { white-space:pre-line; font-size:11px; line-height:12px; }
+
+/* Compact labels keep the same specificity as the compact tile rules. */
+html body.portrait-layout.phone.portrait-compact:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #skillRow > #skill-cheer > span:not(.skill-art) { font-size:11px; line-height:12px; white-space:pre-line; }

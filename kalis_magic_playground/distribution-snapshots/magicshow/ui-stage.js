@@ -90,7 +90,7 @@
       $('audience').dataset.reference = base; delete $('audience').dataset.faceBase;
       stageAudienceFace($('audience'),base,state.u15.tutorial.active&&state.u15.tutorial.won?6:audienceDoubtStage());
       $('audience').setAttribute('aria-label', side ? side.character : a.name);
-      { const nextA = C.audienceAt(v, state.j + 1); if (nextA && nextA !== a) { const p = audienceAsset(v, nextA); for (const q of [p, p.replace(/\.png$/, '-happy.png')]) assetImage(q); } } // v4 U49 3: warm the next audience's pictures
+      { const nextA = C.audienceAt(v, state.j + 1); if (nextA && nextA !== a) { const p = audienceAsset(v, nextA); for (const q of new Set([p, U5.happyPortraitPath(p)])) assetImage(q); } } // v4 U49 3: warm the next audience's pictures
       animate($('audience'),[{opacity:0},{opacity:1}],350); // U54b: fade in place; every frame stays inside the fitted stage space.
       $('audience').classList.toggle('headliner', a === v.headliner || theaterSlot);
       const headlinerNow = (a === v.headliner || theaterSlot) && !side;
@@ -208,6 +208,10 @@
     rateSamples.push({at:rateClock,dt,damage:list.filter(e=>e.type==='audHit').reduce((n,e)=>n+(e.applied ?? e.dmg),0),coins:Math.max(0,coins),mentalLoss:mentalLoss});
     while(rateSamples.length && rateSamples[0].at<=rateClock-3000)rateSamples.shift();
   }
+  function recentCoinRate() {
+    if(rateAudience!==state.audId)return 0;
+    const seconds=rateSamples.reduce((n,e)=>n+e.dt,0)/1000;return seconds?rateSamples.reduce((n,e)=>n+e.coins,0)/seconds:0;
+  }
   function renderIdle() {
     if(rateAudience && rateAudience!==state.audId){rateSamples.length=0;rateClock=0;rateAudience=state.audId;}
     while(state.idle.milestones.length){const id=state.idle.milestones.shift(),p=cellCenter(0);milestonePop(`${D.tree.find(n=>n.id===id).name} ×2!`,p);sound('milestone');}
@@ -216,8 +220,8 @@
     D.skills.forEach(k=>{
       const el=$('skill-'+k.id), left=state.skills.cooldowns[k.id], ready=left<=0;
       const available=C.skillUnlocked(state,k.id);
-      el.hidden=!available&&!portraitLayout();el.disabled=!available||!ready||paused()||state.mode!=='fight';
-      const face=portraitLayout()?{cardrain:['카드 비','icon-card-rain'],showtime:['마술 모자','icon-magic-hat'],cheer:['비둘기','icon-dove-summon']}[k.id]:[k.name,{cardrain:'icon-card-rain',showtime:'icon-showtime',cheer:'icon-cheer'}[k.id]];
+      el.hidden=!available&&!portraitLayout();el.setAttribute('aria-disabled',String(!available||!ready||paused()||state.mode!=='fight'));
+      const face=portraitLayout()?{cardrain:[k.name,'icon-card-rain'],showtime:[k.name,'icon-magic-hat'],cheer:[k.name.replace(' ','\n'),'icon-dove-summon']}[k.id]:[k.name,{cardrain:'icon-card-rain',showtime:'icon-showtime',cheer:'icon-cheer'}[k.id]];
       el.querySelector(':scope > span:not(.skill-art)').textContent=face[0];
       const art=el.querySelector('.skill-art');if(art.dataset.skillFace!==face[1]){sprite(art,'assets/kit/'+face[1]+'.webp');art.dataset.skillFace=face[1];}
       if(available&&ready&&state.mode==='fight'&&typeof firstUseHint==='function')firstUseHint('skill',k.name); // s5t: the first skill that becomes ready (display name)
@@ -226,11 +230,14 @@
     });
     const seconds=rateSamples.reduce((n,e)=>n+e.dt,0)/1000;
     const damage=seconds?rateSamples.reduce((n,e)=>n+e.damage,0)/seconds:0, coins=seconds?rateSamples.reduce((n,e)=>n+e.coins,0)/seconds:0;
-    const eta=damage>0?(typeof shownDoubt==='function'?shownDoubt().hp:state.audHp)/damage:Infinity; // s5b: the theater phase's own bar
+    const eta=damage>0?(typeof phaseDoubt==='function'?phaseDoubt().hp:state.audHp)/damage:Infinity; // s5b: the theater phase's own bar
     const mentalRate=seconds?Math.max(0,rateSamples.reduce((n,e)=>n+e.mentalLoss,0)/seconds):0;
     const survival=mentalRate>0?(state.mental+state.shield)/mentalRate:Infinity;
     $('perSecond').textContent=`초당 의심 −${C.formatNumber(damage)} · ${eta>survival?'버티기 힘들어요':Number.isFinite(eta)?`이 관객까지 약 ${C.formatNumber(Math.ceil(eta))}초`:'의심을 낮춰 보세요'}`;
-    $('coinSecond').textContent=`초당 동전 +${C.formatNumber(coins)}`;
+    $('coinSecond').textContent=`최근 수입/초 +${C.formatNumber(coins)}`;
+  }
+  function catchVisitorIncome() {
+    const coins=state.features.progress.coinsEarned,list=C.catchVisitor(state);sampleRates(0,list,state.features.progress.coinsEarned-coins,0);return list;
   }
   function stepCombat(dt,input) {
     if (typeof caseArrange !== 'undefined' && caseArrange) return [];
@@ -259,11 +266,12 @@
     $('offlineSummary').textContent=`${duration}${cap} · 동전 +${C.formatNumber(r.coins)} · 케이스 총 ${r.levels}레벨 상승`;
   }
   function initIdleControls() {
+  [['coins','비법을 배우고 강화할 때 써요. 케이스와 공연 보상으로 모아요.'],['gems','실크 상점에서 물건을 사거나 스킬을 바로 충전할 때 써요.'],['keys','책이 필요한 비법을 배울 때 써요. 관객 도감을 완성하면 받아요.']].forEach(([id,copy])=>easyTooltip($(id).parentElement,copy,true));
   D.skills.forEach(k=>{
     const button=document.createElement('button');button.id='skill-'+k.id;button.className='active-skill';button.hidden=true;
     button.innerHTML=`<span class="skill-art">${k.emoji}</span><span>${k.name}</span><small></small>`; // s4d: icon and name only; the effect is in the 도감 and the 비법 tree
-    easyTooltip(button,k.desc);
-    sprite(button.querySelector('.skill-art'),'assets/kit/'+({cardrain:'icon-card-rain',showtime:'icon-showtime',cheer:'icon-cheer'}[k.id])+'.webp');button.addEventListener('click',()=>activateSkill(k.id));$('activeSkills').append(button);
+    easyTooltip(button,k.name+' · '+k.desc);
+    sprite(button.querySelector('.skill-art'),'assets/kit/'+({cardrain:'icon-card-rain',showtime:'icon-showtime',cheer:'icon-cheer'}[k.id])+'.webp');button.addEventListener('click',()=>{if(button.getAttribute('aria-disabled')!=='true')activateSkill(k.id);});$('activeSkills').append(button);
   });
   // v4 U48 A: one press uses one 칼리 덱 (120 s auto practice); the button shows how many are owned, then the time left (brick time included).
   const glove=action('',()=>{if(!paused()&&C.useGlove(state)){tutorialSignal('learn');save();render();}});glove.id='item-auto-glove';glove.className='active-skill';
@@ -284,8 +292,10 @@
   }
 
   function boardCasePath(cell,skin,forming,intact) {
-    // Keep the approved upright tin in every skin/tier; the overlays carry progression.
-    return cell.hp < cell.hpMax && !intact ? 'assets/case-open.png' : 'assets/case-closed.png';
+    // Skins use their shipped pair; existing overlays retain gold and level progression.
+    const broken = cell.hp < cell.hpMax && !intact;
+    if (D.cosmetics.cases.some(item => item.id === skin)) return `assets/case-${skin}${broken ? '-broken' : ''}.png`;
+    return broken ? 'assets/case-open.png' : 'assets/case-closed.png';
   }
 
   function localDate(now=new Date()) { return `${String(now.getFullYear()).padStart(4,'0')}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`; }
@@ -309,7 +319,7 @@
     const blocked=C.visitorBlocked(state);
     host.hidden=v.left<=0||document.hidden||(!!menu&&menu!=='boo')||!!state.u18.map||state.mode==='ending'||state.features.climax.left>0||state.review.target>=0;
     if(visitorTap&&(v.left<=0||v.serial+1!==visitorTap))visitorTap=0; // visitorTap = serial + 1 of the tapped pickup (0 = none)
-    if(visitorTap&&!blocked&&!paused()&&!lineOpen()){visitorTap=0;events(C.catchVisitor(state));}
+    if(visitorTap&&!blocked&&!paused()&&!lineOpen()){visitorTap=0;events(catchVisitorIncome());}
     if(!host.hidden){
       if(host.dataset.kind!==v.kind){host.dataset.kind=v.kind;host.replaceChildren();host.append(element('span',v.kind==='rabbit'?'🐇':'✍️','sprite-glyph'));const img=element('img'),gen=nextArt(host);img.src=`assets/event-${v.kind==='rabbit'?'golden-rabbit':'fan-sign'}.png`;img.alt='';img.onload=()=>{if(host._artGen!==gen)return;host.classList.remove('asset-pending');host.classList.add('visitor-art');};img.onerror=()=>{if(host._artGen!==gen)return;host.classList.remove('visitor-art');failedArt(host);};host.classList.remove('visitor-art','asset-failed');host.classList.add('asset-pending');host.append(img);}
       host.style.left=`${6+(1-v.left/8000)*76}%`;host.setAttribute('aria-label',v.kind==='rabbit'?'황금 토끼 잡기':'사인 요청 팬 잡기');

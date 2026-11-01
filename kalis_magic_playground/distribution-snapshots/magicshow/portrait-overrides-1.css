@@ -108,7 +108,7 @@ html body.portrait-layout.phone:not(.tablet).portrait-compact #viewport#viewport
 html body.portrait-layout.phone:not(.tablet).portrait-compact #viewport#viewport #stage #skillRow,
 html body.portrait-layout.phone:not(.tablet).portrait-compact #viewport#viewport #stage #actionDock { flex: 0 0 44px; min-height: 44px; max-height: 44px; column-gap: 4px; }
 html body.portrait-layout.phone:not(.tablet).portrait-compact #viewport#viewport #stage #actionDock > #gemShopQuick,
-html body.portrait-layout.phone:not(.tablet).portrait-compact #viewport#viewport #stage #actionDock > #gemShopQuick:hover:enabled {
+html body.portrait-layout.phone:not(.tablet).portrait-compact #viewport#viewport #stage #actionDock > #gemShopQuick:hover:enabled:not([aria-disabled="true"]) {
   border-width: 2px;
   border-image-width: 2px;
 }

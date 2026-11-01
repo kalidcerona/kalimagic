@@ -133,8 +133,8 @@ html body #viewport#viewport #stage#stage#stage#stage #panel[data-screen="dealer
   background:transparent; box-shadow:none; text-shadow:none;
 }
 #stage #panel, #stage #storyDialog, #stage #phoneMore { border-image:url('assets/kit/dialogue-frame.webp') 16 fill / 8px / 0 stretch; }
-#stage button:active:enabled { border-image-source:url('assets/kit/button-pressed.webp'); }
-#stage #gemShopQuick:active:enabled, #stage #gemShopButton:active:enabled { border-image-source:url('assets/kit/shop-pressed.webp'); }
+#stage button:active:enabled:not([aria-disabled="true"]) { border-image-source:url('assets/kit/button-pressed.webp'); }
+#stage #gemShopQuick:active:enabled:not([aria-disabled="true"]), #stage #gemShopButton:active:enabled:not([aria-disabled="true"]) { border-image-source:url('assets/kit/shop-pressed.webp'); }
 #stage .doubt { border-image:url('assets/kit/doubt-frame.webp') 8 / 4px / 0 stretch; background-image:url('assets/kit/doubt-empty.webp'); box-shadow:none; }
 #stage .doubt-fill { background:url('assets/kit/doubt-fill.webp') repeat; box-shadow:none; }
 #stage .mockup-spot { top:0; left:0; z-index:1; }

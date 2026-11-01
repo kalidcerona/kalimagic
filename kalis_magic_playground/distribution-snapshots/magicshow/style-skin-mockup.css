@@ -15,7 +15,7 @@ html body #viewport#viewport #stage button:where(.active-skill,.kit-btn,.shared-
   text-shadow: none;
   image-rendering: pixelated;
 }
-html body #viewport#viewport #stage button:where(.active-skill,.kit-btn,.shared-kit,.menu button,#phoneTop > button,#phoneMore button,#panel button:not(.game-cup):not(.routine-card):not(.dealer-card):not(.constellation-node):not(.curtain-bubble):not(.flow-node),#storyDialog button,#introStory button,#tutorialCoach button,#practicePrompt button,#offlineCard button,#leaveConfirm button):active:enabled {
+html body #viewport#viewport #stage button:where(.active-skill,.kit-btn,.shared-kit,.menu button,#phoneTop > button,#phoneMore button,#panel button:not(.game-cup):not(.routine-card):not(.dealer-card):not(.constellation-node):not(.curtain-bubble):not(.flow-node),#storyDialog button,#introStory button,#tutorialCoach button,#practicePrompt button,#offlineCard button,#leaveConfirm button):active:enabled:not([aria-disabled="true"]) {
   border-image-source: url('assets/kit/btn-dark-pressed.webp');
 }
 html body #viewport#viewport #stage :is(#gemShopQuick,#gemShopButton) {
@@ -23,16 +23,16 @@ html body #viewport#viewport #stage :is(#gemShopQuick,#gemShopButton) {
   background-color: #E8BF68;
   color: #24180c;
 }
-html body #viewport#viewport #stage :is(#gemShopQuick,#gemShopButton):active:enabled {
+html body #viewport#viewport #stage :is(#gemShopQuick,#gemShopButton):active:enabled:not([aria-disabled="true"]) {
   border-image-source: url('assets/kit/btn-gold-pressed.webp');
 }
-html body #viewport#viewport #stage button:where(.active-skill,.kit-btn,.shared-kit,.menu button,#phoneTop > button,#phoneMore button,#panel button:not(.game-cup):not(.routine-card):not(.dealer-card):not(.constellation-node):not(.curtain-bubble):not(.flow-node),#storyDialog button,#introStory button,#tutorialCoach button,#practicePrompt button,#offlineCard button,#leaveConfirm button):disabled {
+html body #viewport#viewport #stage button:where(.active-skill,.kit-btn,.shared-kit,.menu button,#phoneTop > button,#phoneMore button,#panel button:not(.game-cup):not(.routine-card):not(.dealer-card):not(.constellation-node):not(.curtain-bubble):not(.flow-node),#storyDialog button,#introStory button,#tutorialCoach button,#practicePrompt button,#offlineCard button,#leaveConfirm button):is(:disabled,[aria-disabled="true"]) {
   opacity: 1;
   color: #C9C0AD;
   filter: saturate(.5);
 }
 html body #viewport#viewport #stage .active-skill small { color: #8FD3FF; }
-html body #viewport#viewport #stage .active-skill:disabled small { color: #C9C0AD; }
+html body #viewport#viewport #stage .active-skill:is(:disabled,[aria-disabled="true"]) small { color: #C9C0AD; }
 html body #viewport#viewport #stage button.shared-kit { position: relative; color: transparent; }
 html body #viewport#viewport #stage button.shared-kit > :not(.shared-kit-face) { visibility: hidden; }
 .shared-kit-face img { display:block; width:16px; height:16px; object-fit:contain; }

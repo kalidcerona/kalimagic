@@ -1,5 +1,27 @@
 'use strict';
-  var GATE_POLICY = {hp:0.75, regen:0.004, ramp:0.24, floor:45, theaterFloor:30};
+  var GATE_POLICY = {hp:0.75, regen:0.003, ramp:0.24, floor:45, theaterFloor:30};
+  // Fight-local budgets never enter serialized state. Load and audience entry reset them.
+  var THEFT_BUDGET = new WeakMap(), THEFT_ANCHOR = new WeakMap();
+  function resetTheftBudget(state) { THEFT_BUDGET.set(state, Math.floor(Math.max(0,state.coins)*.1)); }
+  function parkTheftBudget(state) { THEFT_ANCHOR.set(state,THEFT_BUDGET.get(state)); }
+  function restoreTheftBudget(state) {
+    if(THEFT_ANCHOR.has(state))THEFT_BUDGET.set(state,THEFT_ANCHOR.get(state));
+    else resetTheftBudget(state);
+  }
+  function takeFightCoins(state) {
+    if(!THEFT_BUDGET.has(state))resetTheftBudget(state);
+    var left=THEFT_BUDGET.get(state), take=Math.min(left,state.coins,Math.max(1,Math.floor(state.coins*CONST.stealPct)));
+    THEFT_BUDGET.set(state,left-take);state.coins-=take;return take;
+  }
+  function gateHpCap(state) {
+    if(!gateAudience(state))return Infinity;
+    for(var j=state.j-1;j>=1;j--){
+      if(isBenched(state.venue,j)||isRemoved(state,state.venue,j))continue;
+      var previous=Object.assign({},state,{j:j,audId:getAud(state.venue,j).id});
+      if(!gateAudience(previous))return 2*audStats(state.venue,j).hp;
+    }
+    return Infinity;
+  }
   function headlinerJ(v) {
     return VENUES[v - 1].audiences.length + 1;
   }
@@ -44,7 +66,7 @@
   }
   function failureLessons(state) {
     var ids=['mental','attack','power','speed','calm','shieldCap','boxHeal'];
-    var lessons=ids.map(function(id){return NODE_BY_ID[activePart(state,id)];}).filter(function(n){return n&&nodeInfo(state,n.id).purchasable;});
+    var lessons=ids.map(function(id){return NODE_BY_ID[activePart(state,id)];}).filter(function(n){var info=n&&nodeInfo(state,n.id);return info&&info.revealed&&info.purchasable;});
     var id=state.u19b.failedId,g=state.u19b.gates[id];
     if(!lessons.length){
       // v4 U41: nothing in the usual seven can be bought now, so offer the best node of the whole book that can be (still the player's choice).
@@ -82,19 +104,19 @@
   // v4 U41: one friendly line when the fail panel has nothing to buy (or the gate lesson cannot be paid): the nearest block and the real way to grow.
   // cause is the way the run ended ('mental', 'damage', 'gate', 'stall', 'lastHeckle'). Returns '' when there is nothing true to say.
   function failureHint(state, cause) {
-    if(cause==='lastHeckle')return '야유 막기 스킬을 마지막 야유 알림이 뜬 뒤에 눌러 보세요. 한 번 막아 줘요';
+    if(cause==='lastHeckle')return '관객 호응을 마지막 야유 알림이 뜬 뒤에 눌러 보세요. 한 번 막아 줘요';
     if(cause==='gate'){
       var gid=state.u19b.failedId,gr=state.u19b.gates[gid];
       if(gr&&!gr.cleared&&!gr.studied&&state.coins<failureLessonCost(state,gid))return '동전 '+formatNumber(Math.ceil(failureLessonCost(state,gid)-state.coins))+' 더 모으면 야유 받아넘기기를 배울 수 있어요';
       return '';
     }
-    if(failureLessons(state).some(function(n){return n.id.indexOf('gate:')!==0;}))return '';
+    if(failureLessons(state).some(function(n){return n.id.indexOf('gate:')!==0&&nodeInfo(state,n.id).displayable;}))return '';
     // The nearest wallet block: the fight nodes of the usual seven first, then everything else, the smallest shortfall first.
     var fight=['mental','attack','power','speed','calm','shieldCap','boxHeal'],near=null,nearKey=null;
     DATA.tree.forEach(function(n){
       if(n.starKey||n.pending||n.currency!=='coins')return;
       var info=nodeInfo(state,n.id);
-      if(!info.revealed||info.cost==null||!/ 부족$/.test(info.blockedReason||''))return;
+      if(!info.displayable||info.cost==null||!/ 부족$/.test(info.blockedReason||''))return;
       var key=[fight.indexOf(n.id)>=0?0:1,info.cost-state.coins];
       if(!nearKey||key[0]<nearKey[0]||key[0]===nearKey[0]&&key[1]<nearKey[1]){near=n;nearKey=key;}
     });
@@ -102,7 +124,7 @@
     // Cases gain levels by being opened, so retrying is real growth while any case is below the cap.
     if(state.board.some(function(c){return (c.lv||1)<caseCap(state);}))return '케이스 레벨을 올리면 더 세져요. 다시 열어 볼까요?';
     var stuck=null;
-    fight.forEach(function(id){if(stuck)return;var info=nodeInfo(state,id);if(info.revealed&&info.level<info.max&&info.blockedReason)stuck={name:NODE_BY_ID[id].name,reason:info.blockedReason};});
+    fight.forEach(function(id){if(stuck)return;var info=nodeInfo(state,id);if(info.displayable&&info.level<info.max&&info.blockedReason)stuck={name:NODE_BY_ID[id].name,reason:info.blockedReason};});
     return stuck?stuck.name+' 비법은 '+stuck.reason+' 뒤에 올릴 수 있어요':'';
   }
   function failureLessonCost(state,id) {var v=VENUES.find(function(v){return v.audiences.concat([v.headliner]).some(function(a){return a.id===id;});});return v?v.id*25:Infinity;}

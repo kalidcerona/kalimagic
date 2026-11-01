@@ -73,7 +73,7 @@ globalThis.U5 = (() => {
     const list = choices.length ? choices : valid;
     return list[Math.min(list.length - 1, Math.floor(random() * list.length))] || '';
   }
-  const happyPortraitPath = path => /^assets\/serona(?:-hooded|-reveal)?\.(?:png|webp)$/.test(path) ? path : path.replace(/\.png$/, '-happy.png');
+  const happyPortraitPath = path => /^assets\/serona(?:-hooded|-reveal)?\.(?:png|webp)$/.test(path) || /-happy\.(?:png|webp)$/.test(path) ? path : path.replace(/\.png$/, '-happy.png');
   return { effectBadge, badgeStack, capBadges, selectHeckle, happyPortraitPath, badgeWidth, encounter, bannerMatches, phase2Line, noDrawZones, clearOfZones };
 })();
 /* U10: one board transform for CSS geometry, input and effects. */
@@ -168,7 +168,7 @@ globalThis.Guidance = (() => {
   function target(state, D, C) {
     return D.tree.filter(n => {
       const i = C.nodeInfo(state, n.id);
-      return i.revealed && !i.level && i.currency === 'coins' && i.cost !== null &&
+      return i.displayable && !i.level && i.currency === 'coins' && i.cost !== null &&
         (!i.blockedReason || i.blockedReason.endsWith(' 부족'));
     }).sort((a,b) => C.nodeInfo(state,a.id).cost - C.nodeInfo(state,b.id).cost)[0] || null;
   }
@@ -217,7 +217,7 @@ globalThis.Presentation = (() => {
     constructor(){this.items=[];this.active=null;this.gap=0;this.serial=0;}
     push(item){
       // s5c: a first-use hint (item.hint) gives way at once to any other notice; its own end() decides whether it shows again later
-      if(!item.hint&&this.active&&this.active.hint&&this.active.age<Math.min(this.active.minimum,1500)){this.active.cut=true;this.active.minimum=this.active.age;}
+      if(!item.hint&&this.active&&this.active.hint&&this.active.hint!=='gatePressure'&&this.active.age<Math.min(this.active.minimum,1500)){this.active.cut=true;this.active.minimum=this.active.age;}
       const old=item.merge&&this.items.find(x=>x.merge===item.merge);
       if(old){old.count=(old.count||1)+1;old.extra='외 '+(old.count-1)+'건';return old;}
       const next={...item,minimum:item.minimum??1200,age:0,serial:this.serial++};this.items.push(next);return next;

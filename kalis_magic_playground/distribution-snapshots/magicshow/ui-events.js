@@ -38,10 +38,14 @@
     }
     let levelShown=false;
     const hitMaxDoubt=state.audHpMax;
+    const patternWinBatch = list.some(ev => ev.type === 'win');
+    if (patternWinBatch && typeof dismissPatternStamp === 'function') dismissPatternStamp();
     // s4e2 F: when this batch clears a stage (a reward card follows), its achievements and set completions go on that card as one line.
     const lastReward=list.filter(e=>e.type==='stageReward').at(-1),rewardNotes=lastReward?[]:null;
     let hitSource=list.find(e=>e.type==='skill')?.id || (list.some(e=>e.type==='dove')?'dove':'card');
     for (const e of list) {
+      if (e.type === 'win' && C.isHeadliner(D.venues[e.venue-1],e.j) && !state.u18.anchor) venueClearBackup();
+      if (typeof notePatternStampEvent === 'function') notePatternStampEvent(e, patternWinBatch);
       if(e.type==='colleague')colleagueTrick(e);
       if(e.type==='itemLand')hitSource=particleSource(e);
       if(e.type==='dove')hitSource='dove';
@@ -114,7 +118,7 @@
       } else if (e.type === 'encore') {
         banner('피버 타임!',`${e.duration / 1000}초 · 마술 실력 ×${(2 * (state.tree.encore ? 1 + C.nodeEffects(state).encorePower : 1)).toFixed(1)} · 자동 개봉 속도 +25%`);
       } else if (e.type === 'worker' && e.phase === 'work') {
-        squash(e.cell); const host=workerActors[e.workerId];if(host)animate(host.querySelector('.asset-sprite')||host,[{transform:'translateY(0)'},{transform:'translateY(2px)'},{transform:'translateY(0)'}],140);sound('worker', { auto: true });const p=cellCenter(e.cell);float('+'+rounded(e.dmg),p.x-20,p.y,'#89d8c1',11);
+        squash(e.cell); const host=workerActors[e.workerId];if(host)animate(host.querySelector('.asset-sprite')||host,[{transform:'translateY(0)'},{transform:'translateY(2px)'},{transform:'translateY(0)'}],140);sound('worker', { auto: true });const p=cellCenter(e.cell);float('-'+rounded(e.dmg),p.x-20,p.y,'#89d8c1',11);
       } else if (e.type === 'crit') {
         const p = cellCenter(e.cell);
         if(numbers.length>=caps.numbers)numbers.shift();float('결정타',p.x,p.y-12,'#eac568',14,2);numbers[numbers.length-1].critical=true;hitParticles(p.x,p.y,'critical','#E8BF68',2);sceneLight(.06);
@@ -157,7 +161,7 @@
           popChip($('statMental'), '-' + C.formatNumber(e.dmg - e.shieldDmg), 'hurt', 450);
           trailMeter('statMental', 450); if (big) { shakeMental(); kaliFlinch(); }
         }
-        if (state.pattern === 'stealCoins') {
+        if (e.coinsTaken > 0) {
           for (let i = 0; i < 5; i++) fly(1230, 90, { x: 426 + i * 25, y: 320 }, '🪙', '', '#ffbd73', i * 25);
           patternPulse('동전을 가져갔어요');
         }
@@ -224,7 +228,7 @@
       } else if (e.type === 'selfReconciliation') {
         openPanel('bossPhase', '나에게 보내는 박수');
         e.lines.forEach((line, i) => { const who = (D.story.revealSpeakers || [])[i]; $('panelBody').append(element('p', who ? who + ' · ' + line : line)); }); // s5t (read-through bug 6)
-        const next=action('공연 이어가기', () => { menu=''; $('panel').hidden=true; previous=0; save(); });
+        const next=action('공연 이어가기', () => { menu=''; $('panel').hidden=true; $('stage').classList.remove('map-open'); previous=0; save(); });
         $('panelBody').append(next); next.focus();
       } else if (e.type === 'homecomingAct') {
         queueAudienceLine(e.line,'homecoming:'+e.act); patternPulse(e.line);
@@ -237,4 +241,171 @@
       }
     }
     if (events.finaleHit) { if (typeof showFinaleNumber === 'function') showFinaleNumber(events.finaleDmg); events.finaleHit = false; }
+  }
+  // Pattern names beside the audience. Same paint as the win stamp, separate node (tests wait on #winStamp).
+  var patternOpeningKey = '';
+  var patternStampQueue = '';
+  var patternStampWait = null;
+  var patternStampNode = null;
+  var patternStampTimer = 0;
+  var patternHealAt = 0;
+  var patternHealPrev = { key: '', ms: 0 };
+  var patternSealPrev = { key: '', cell: -1, ms: 0 };
+  function patternAudKey() {
+    const phase = C.theaterPhase ? C.theaterPhase(state) : 0;
+    return state.dimension + ':' + state.wins + ':' + state.fails + ':' + state.audId + ':' + (state.phase2 ? 1 : 0) + ':' + phase;
+  }
+  function patternStampOk() {
+    if (!state || state.mode !== 'fight') return false;
+    if (state.u15 && state.u15.tutorial && state.u15.tutorial.active) return false;
+    if (typeof wonMoment !== 'undefined' && wonMoment) return false;
+    if (document.getElementById('winStamp')) return false;
+    const card = $('audienceCard');
+    if (card && card.classList.contains('f-win-stamp')) return false;
+    return true;
+  }
+  function patternStampCovered() {
+    const card = $('audienceCard');
+    if (!card || card.offsetWidth < 8) return true;
+    const cs = getComputedStyle(card);
+    if (cs.visibility === 'hidden' || cs.display === 'none') return true;
+    if (state.u15 && state.u15.scene) return true;
+    if ($('storyDialog') && !$('storyDialog').hidden) return true;
+    if ($('panel') && !$('panel').hidden && (menu === 'headliner' || menu === 'bossPhase')) return true;
+    return false;
+  }
+  function requestPatternStamp(name) {
+    if (!state || state.mode !== 'fight' || (state.u15 && state.u15.tutorial && state.u15.tutorial.active) || !D.ui.patterns[name]) return;
+    patternStampWait = { key: patternAudKey(), name };
+  }
+  function dismissPatternStamp() {
+    patternStampQueue = '';
+    patternStampWait = null;
+    if (patternStampTimer) clearTimeout(patternStampTimer);
+    patternStampTimer = 0;
+    if (patternStampNode) { patternStampNode.remove(); patternStampNode = null; }
+  }
+  function noteOpeningPattern() {
+    const key = patternAudKey();
+    if (patternOpeningKey === key) return;
+    patternOpeningKey = key;
+    patternSealPrev = { key: patternAudKey(), cell: state.sealCell, ms: state.sealMs };
+    patternHealPrev = { key: patternAudKey(), ms: state.patternHealMs };
+    if (state.pattern === 'sealBox' && state.sealCell >= 0 && (!C.theaterPhase || C.theaterPhase(state) !== 1)) requestPatternStamp('sealBox');
+    if (state.pattern === 'slow' || state.pattern === 'invisible') requestPatternStamp(state.pattern);
+  }
+  function notePatternStampEvent(e, winBatch) {
+    if (e.type === 'heckle' && e.coinsTaken > 0) {
+      if (!winBatch) requestPatternStamp('stealCoins');
+    }
+    if (!winBatch && e.type === 'phase2') requestPatternStamp('twoPhase');
+    if (!winBatch && e.type === 'audience') noteOpeningPattern();
+  }
+  function watchPatternSeal() {
+    const key = patternAudKey();
+    if (patternSealPrev.key !== key) { patternSealPrev = { key, cell: state.sealCell, ms: state.sealMs }; return; }
+    const cell = state.sealCell, ms = state.sealMs, prev = patternSealPrev;
+    patternSealPrev = { key, cell, ms };
+    if (state.pattern !== 'sealBox' || (C.theaterPhase && C.theaterPhase(state) === 1)) return;
+    const started = cell >= 0 && (prev.cell < 0 || (ms > prev.ms + 400 && prev.ms < 1500));
+    if (started) requestPatternStamp('sealBox');
+  }
+  function watchPatternHeal() {
+    const key = patternAudKey();
+    if (patternHealPrev.key !== key) { patternHealPrev = { key, ms: state.patternHealMs }; return; }
+    const ms = state.patternHealMs, prev = patternHealPrev.ms;
+    patternHealPrev.ms = ms;
+    if (state.pattern !== 'heal' || ms <= prev + 40) return;
+    if (performance.now() - patternHealAt < 3000) return;
+    patternHealAt = performance.now();
+    requestPatternStamp('heal');
+  }
+  function placePatternStamp(el) {
+    const card = $('audienceCard'), cr = card.getBoundingClientRect(), s = scale > 0 ? scale : 1;
+    const cs = getComputedStyle(card);
+    const bl = parseFloat(cs.borderLeftWidth) || 0, bt = parseFloat(cs.borderTopWidth) || 0;
+    const local = node => {
+      if (!node) return null;
+      const r = node.getBoundingClientRect();
+      if (r.width < 2 || r.height < 2) return null;
+      return { x: (r.left - cr.left) / s - bl, y: (r.top - cr.top) / s - bt, w: r.width / s, h: r.height / s };
+    };
+    const cardW = cr.width / s - bl - (parseFloat(cs.borderRightWidth) || 0);
+    const cardH = cr.height / s - bt - (parseFloat(cs.borderBottomWidth) || 0);
+    const floor = 11 / s;
+    const base = document.body.classList.contains('tablet') ? 44 : 24;
+    el.style.fontSize = Math.max(base, Math.ceil(floor)) + 'px';
+    el.style.lineHeight = '1.25';
+    while (el.offsetWidth > cr.width / s - 8 && parseFloat(el.style.fontSize) > floor + 0.5) el.style.fontSize = (parseFloat(el.style.fontSize) - 1) + 'px';
+    const w = el.offsetWidth, h = el.offsetHeight;
+    const aud = local($('audience')) || { x: cardW * .55, y: cardH * .35, w: cardW * .3, h: cardH * .4 };
+    const hard = [];
+    for (const sel of ['.doubt-plate', '.heckle-plate', '.doubt', '#heckleMeter', '#heckle', '#portraitMeters', '#patternLabel', '#audienceLine', '#phaseIndicator']) {
+      const box = local(document.querySelector(sel));
+      if (box) hard.push(box);
+    }
+    const hit = (a, b) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+    const onScreen = (x, y) => {
+      const left = cr.left + (x + bl) * s, top = cr.top + (y + bt) * s;
+      return left >= 1 && top >= 1 && left + w * s <= innerWidth - 1 && top + h * s <= innerHeight - 1;
+    };
+    let best = null, bestScore = Infinity;
+    const x0 = Math.max(2, aud.x - w - 8), y0 = aud.y + Math.max(8, aud.h * .28);
+    for (let y = 2; y <= cardH - h - 2; y += 10) for (let x = 2; x <= cardW - w - 2; x += 10) {
+      if (!onScreen(x, y)) continue;
+      const rect = { x, y, w, h };
+      let plates = 0, body = 0;
+      for (const b of hard) if (hit(rect, b)) plates += 1;
+      if (plates) continue;
+      if (hit(rect, aud)) body = 1;
+      const score = plates * 1000 + body * 40 + Math.abs(x - x0) + Math.abs(y - y0);
+      if (score < bestScore) { bestScore = score; best = { x, y }; }
+    }
+    if (!best) return false;
+    el.style.left = best.x + 'px';
+    el.style.top = best.y + 'px';
+    return true;
+  }
+  function mountPatternStamp(name) {
+    const text = D.ui.patterns[name];
+    const card = $('audienceCard');
+    if (!text || !card) return;
+    if (patternStampNode) patternStampNode.remove();
+    if (patternStampTimer) clearTimeout(patternStampTimer);
+    const stamp = element('div', text, 'win-stamp pattern-stamp');
+    stamp.id = 'patternStamp';
+    stamp.setAttribute('aria-hidden', 'true');
+    stamp.style.right = 'auto';
+    card.append(stamp);
+    if (!placePatternStamp(stamp)) { stamp.remove(); patternStampNode = null; return; }
+    const ms = 1000;
+    if (reduced) stamp.animate([{ opacity: 0 }, { opacity: 1, offset: .12 }, { opacity: 1, offset: .75 }, { opacity: 0 }], { duration: ms, easing: 'linear', fill: 'both' });
+    else {
+      const rot = ''; // Keep the painted box inside the collision-tested bounds.
+      stamp.animate([{ opacity: 0, transform: rot + 'scale(1)' }, { opacity: 1, transform: rot + 'scale(1)', offset: .22 }, { opacity: 1, transform: rot + 'scale(1)', offset: .75 }, { opacity: 0, transform: rot + 'scale(1)' }], { duration: ms, easing: 'linear', fill: 'both' });
+    }
+    patternStampNode = stamp;
+    patternStampTimer = setTimeout(() => { if (patternStampNode === stamp) { stamp.remove(); patternStampNode = null; patternStampTimer = 0; } }, ms);
+  }
+  function watchPatternStamps() {
+    if (!state || state.mode !== 'fight' || (state.u15 && state.u15.tutorial && state.u15.tutorial.active)) { dismissPatternStamp(); return; }
+    if (patternStampNode) {
+      // Recheck the real, possibly newly visible bubble before the next paint.
+      const bubble = $('heckle');
+      if (bubble && !bubble.hidden) {
+        const a = patternStampNode.getBoundingClientRect(), b = bubble.getBoundingClientRect();
+        if (b.width > 0 && b.height > 0 && a.left < b.right + 2 && a.right > b.left - 2 && a.top < b.bottom + 2 && a.bottom > b.top - 2) dismissPatternStamp();
+      }
+    }
+    noteOpeningPattern();
+    if (!patternStampOk()) return;
+    watchPatternSeal();
+    watchPatternHeal();
+    if (patternStampWait && patternStampWait.key !== patternAudKey()) patternStampWait = null;
+    if (patternStampWait && !patternStampCovered()) { patternStampQueue = patternStampWait.name; patternStampWait = null; }
+    if (!patternStampQueue) return;
+    if (patternStampCovered()) { patternStampWait = { key: patternAudKey(), name: patternStampQueue }; patternStampQueue = ''; return; }
+    const name = patternStampQueue;
+    patternStampQueue = '';
+    mountPatternStamp(name);
   }

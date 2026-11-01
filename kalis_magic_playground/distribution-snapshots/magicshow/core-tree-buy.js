@@ -46,6 +46,7 @@
     if (id === "autoLearn") revealed = false; // v4 U47 10: retired node (kept in the data and in saves, never offered)
     // v4 U48 C: a later part shows up once the part before it is full.
     if (node.partOf) revealed = level > 0 || (total >= node.partOffset && (node.reveal !== "E" || state.endings.length > 0));
+    var bookHidden=!!(node.partOf&&(bid==='mental'||bid==='caseMax')&&node.partOffset>=10&&level===0&&cost>state.features.progress.coinsEarned*3);
     if(node.shopOnly)revealed=false;
     var progress = gateProgress(state,node.gates ? node.gates[total] : node.gate);
     var reason = "";
@@ -68,7 +69,7 @@
       var gateLock = reason === "아직 발견하지 못한 비법" || reason === "첫 멀티버스 공연 완료" || (progress && reason === progress.text) || /도착 필요$/.test(reason);
       if (gateLock) reason = state[node.currency] < cost ? (({ coins: "동전", keys: "책", starlight: "비둘기" })[node.currency] || "재화") + " 부족" : "";
     }
-    return { level: level, max: node.max, total: total, totalMax: treeMax(bid), gate:progress, currency: node.currency, cost: cost, revealed: revealed, purchasable: !reason, blockedReason: reason };
+    return { level: level, max: node.max, total: total, totalMax: treeMax(bid), gate:progress, currency: node.currency, cost: cost, bookHidden: bookHidden, displayable: revealed && !bookHidden, revealed: revealed, purchasable: !reason, blockedReason: reason };
   }
 
   // Numeric price contract, null for unavailable upgrades. Wallet is checked by buyNode.

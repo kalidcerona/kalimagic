@@ -218,17 +218,17 @@ html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #actionDo
   pointer-events: none;
 }
 html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #activeSkills #gemShopQuick,
-html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #activeSkills #gemShopQuick:hover:enabled {
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #activeSkills #gemShopQuick:hover:enabled:not([aria-disabled="true"]) {
   border-image-source: var(--kit-gold);
   color: #24180c;
   background: transparent;
 }
 
-html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #activeSkills #gemShopQuick:active,
-html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage button.u26-primary:active,
-html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage button.game-start:active,
-html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #practiceStart:active,
-html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #actionDock > #gemShopQuick:active {
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #activeSkills #gemShopQuick:active:enabled:not([aria-disabled="true"]),
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage button.u26-primary:active:enabled:not([aria-disabled="true"]),
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage button.game-start:active:enabled:not([aria-disabled="true"]),
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #practiceStart:active:enabled:not([aria-disabled="true"]),
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #actionDock > #gemShopQuick:active:enabled:not([aria-disabled="true"]) {
   border-image-source: var(--kit-gold-down);
 }
 html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #phoneTop > #bestiaryButton .top-dogam-ico {
@@ -248,7 +248,7 @@ html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #actionDo
 }
 
 html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #actionDock > #gemShopQuick,
-html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #actionDock > #gemShopQuick:hover:enabled {
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #actionDock > #gemShopQuick:hover:enabled:not([aria-disabled="true"]) {
   background: transparent;
   border-style: solid;
   border-width: 4px;
@@ -266,10 +266,10 @@ html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #actionDo
 html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #phoneTop > #bestiaryButton { border-image:var(--kit-dark) 16 fill / 4px / 0 stretch; background:transparent; }
 html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #phoneTop > #bestiaryButton .top-dogam-ico { width:16px; height:16px; margin:0 auto; }
 html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #phoneTop > #bestiaryButton .top-dogam-label { display:block; font-size:8px; line-height:10px; color:#F2E6C8; }
-html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #actionDock > button:active:enabled,
-html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #skillRow > button:active:enabled,
-html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #phoneTop > #bestiaryButton:active:enabled { border-image-source:var(--kit-dark-down); }
-html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #actionDock > #gemShopQuick:active:enabled { border-image-source:var(--kit-gold-down); }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #actionDock > button:active:enabled:not([aria-disabled="true"]),
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #skillRow > button:active:enabled:not([aria-disabled="true"]),
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #phoneTop > #bestiaryButton:active:enabled:not([aria-disabled="true"]) { border-image-source:var(--kit-dark-down); }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #actionDock > #gemShopQuick:active:enabled:not([aria-disabled="true"]) { border-image-source:var(--kit-gold-down); }
 html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #actionDock > #gemShopQuick { min-height:64px; max-height:70px; }
 html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage #actionDock > #wardrobeButton { flex:1 1 0; min-width:44px; }
 html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #phoneTop { grid-template-columns:minmax(0,1fr) auto; padding:5px 12px !important; border:0; border-image:url("assets/kit/header-panel.webp") 24 fill / 9px / 0 stretch; background:transparent !important; overflow:visible; }
@@ -285,7 +285,7 @@ html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #ph
 html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #activeSkills #actionDock > #gemShopQuick { order:0; border-image-source:url("assets/kit/shop-normal.webp"); min-width:44px; font-size:10px; }
 html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #activeSkills #actionDock > #bestiaryButton { order:1; }
 html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #activeSkills #actionDock > #moreButton { order:2; }
-html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #activeSkills #actionDock > #gemShopQuick:active:enabled { border-image-source:url("assets/kit/shop-pressed.webp"); }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #activeSkills #actionDock > #gemShopQuick:active:enabled:not([aria-disabled="true"]) { border-image-source:url("assets/kit/shop-pressed.webp"); }
 html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #phoneMore { gap:6px; padding:12px; border:0; border-image:url("assets/kit/dialogue-frame.webp") 16 fill / 8px / 0 stretch; background:transparent; box-shadow:none; }
 html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage #phoneMore > button { min-height:44px; border:0; border-image:url("assets/kit/button-normal.webp") 20 fill / 7px / 0 stretch; background:none; box-shadow:none; color:#f2e6c8; }
 /* Lane 1f: readable header and meter typography at phone display size. */
@@ -346,7 +346,7 @@ html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#sta
 /* tools (option 2) */
 html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #actionDock > :is(#bookButton,#practiceButton,#bestiaryButton,#moreButton) { gap:1px; padding:3px 1px 2px; justify-content:center; }
 html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #actionDock > #gemShopQuick { border-image:url("assets/kit/btn-gold.webp") 8 fill / 4px / 0 stretch; }
-html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #actionDock > #gemShopQuick:active:enabled { border-image-source:url("assets/kit/btn-gold-pressed.webp"); }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #actionDock > #gemShopQuick:active:enabled:not([aria-disabled="true"]) { border-image-source:url("assets/kit/btn-gold-pressed.webp"); }
 html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #actionDock > .is-new { overflow:visible; }
 html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills .is-new::after { width:30px !important; height:15px !important; top:-5px !important; right:-1px !important; }
 
@@ -360,3 +360,23 @@ html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#sta
 html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage #phoneWallet {
   max-width:100%; overflow:hidden;
 }
+
+/* Fit both text rows inside the 38px compact frame without changing stage budgets.
+   Reset the 40px landscape parent too: centering it in a 26px row clips its first child. */
+html body.portrait-layout.phone:not(.tablet).portrait-compact #viewport#viewport #stage#stage#stage#stage#stage#stage #phoneTop #phoneVenue { height:26px; min-height:0; max-height:26px; align-self:center; }
+html body.portrait-layout.phone:not(.tablet).portrait-compact #viewport#viewport #stage#stage#stage#stage#stage#stage #phoneTop { padding:2px 10px 2px 8px !important; }
+html body.portrait-layout.phone:not(.tablet).portrait-compact #viewport#viewport #stage#stage#stage#stage#stage#stage #phoneTop .venue-heading { min-height:0; height:26px !important; max-height:26px; gap:0 !important; padding:0; margin:0; justify-content:center; }
+html body.portrait-layout.phone:not(.tablet).portrait-compact #viewport#viewport #stage#stage#stage#stage#stage#stage #phoneTop #stageNumber { height:13px; min-height:13px; padding:0; margin:0; font-size:11px; line-height:13px; }
+html body.portrait-layout.phone:not(.tablet).portrait-compact #viewport#viewport #stage#stage#stage#stage#stage#stage #phoneTop #venueName { height:13px; line-height:13px; font-size:clamp(12px, calc(100cqi / var(--venue-em, 4.4)), 13px); }
+html body.portrait-layout.phone:not(.tablet).portrait-compact #viewport#viewport #stage#stage#stage#stage#stage#stage #phoneWallet .currency { height:24px; grid-template-rows:12px 12px; }
+html body.portrait-layout.phone:not(.tablet).portrait-compact #viewport#viewport #stage#stage#stage#stage#stage#stage #phoneWallet :is(.currency-label,#mockupDoves,.currency .bitmap::after) { font:11px/12px system-ui,sans-serif; }
+html body.portrait-layout.phone:not(.tablet).portrait-compact #viewport#viewport #stage#stage#stage#stage#stage#stage #phoneWallet .cur-icon { width:22px; height:22px; }
+
+/* Include the 4px frame on both sides in the 38px border-box budget. */
+html body.portrait-layout.phone:not(.tablet).portrait-compact #viewport#viewport #stage#stage#stage#stage#stage#stage #phoneTop { grid-template-rows:minmax(0,1fr); grid-template-columns:minmax(0,1fr) max-content 44px; }
+html body.portrait-layout.phone:not(.tablet).portrait-compact #viewport#viewport #stage#stage#stage#stage#stage#stage #phoneWallet { height:24px; overflow:visible; }
+html body.portrait-layout.phone:not(.tablet).portrait-compact #viewport#viewport #stage#stage#stage#stage#stage#stage #phoneWallet .hud { height:24px; gap:4px; padding:0; }
+html body.portrait-layout.phone:not(.tablet).portrait-compact #viewport#viewport #stage#stage#stage#stage#stage#stage #phoneWallet .currency { grid-template-columns:12px max-content; column-gap:1px; row-gap:0; flex:none; }
+html body.portrait-layout.phone:not(.tablet).portrait-compact #viewport#viewport #stage#stage#stage#stage#stage#stage #phoneWallet .cur-icon { grid-row:1; width:12px; height:12px; }
+html body.portrait-layout.phone:not(.tablet).portrait-compact #viewport#viewport #stage#stage#stage#stage#stage#stage #phoneWallet .currency .bitmap { grid-column:1 / 3; display:block; font:11px/12px system-ui,sans-serif; height:12px; min-height:0; }
+html body.portrait-layout.phone:not(.tablet).portrait-compact #viewport#viewport #stage#stage#stage#stage#stage#stage #phoneWallet #mockupDoves { grid-column:1 / 3; }

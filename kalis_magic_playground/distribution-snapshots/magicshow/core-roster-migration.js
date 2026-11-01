@@ -33,6 +33,14 @@
   // Keep save validation independent of post-load reward reconciliation.
   // Removed helper pause controls: retain legacy save keys, resume after validation.
   function resumeHelpers(state){
+    if(state){
+      resetTheftBudget(state);state._firstGate='';
+      // A loaded map/challenge must retain the original timeline budget before travel resets the live one.
+      if(state.u18&&state.u18.anchor){
+        var anchor=JSON.parse(state.u18.anchor);
+        THEFT_ANCHOR.set(state,Math.floor(Math.max(0,anchor.coins)*.1));
+      }
+    }
     if(!state)return state;
     var f=state.features;
     f.dovePaused=false;f.helperPaused=false;
