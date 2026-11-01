@@ -307,7 +307,7 @@
     return `${name}${final === 0 || final === 8 ? '로' : '으로'} 가기`;
   }
   function restartAfterFailure() {
-    C.restartRun(state);state.u15.queue=[];state.u15.scene=null;state.idle.waiting=false;delete state.idle.next; failure = null; menu = ''; $('panel').hidden = true;
+    C.restartRun(state, {v:state.venue, j:state.j});state.u15.queue=[];state.u15.scene=null;state.idle.waiting=false;delete state.idle.next; failure = null; menu = ''; $('panel').hidden = true;
     previous = 0; flights.length = 0; particles.length = 0; numbers.length = 0; badges.length = 0; events.recentBadges?.clear(); wonMoment = null; if (typeof stopCloseWin === 'function') stopCloseWin(); // s5t-2
     save(); render(); $('bookButton').focus();
   }

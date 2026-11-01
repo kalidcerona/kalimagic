@@ -383,14 +383,21 @@
   // s5d: the visible-hit numbers; 미래의 칼리 uses the row of her current phase (CONST.future), every other fight the global ones.
   function visibleRule(state){if(profile(state)!=='future')return{every:CONST.mentalVisibleEvery,hit:CONST.mentalVisibleHit,absorb:CONST.mentalVisibleAbsorb,ms:CONST.mentalVisibleMs};var F=CONST.future,i=Math.max(0,Math.min(2,(state.u19.phase||1)-1)),p=state.features.progress,streak=p.bossLossVenue===state.venue?p.bossLossStreak:0,ease=i?Math.max(F.retryEase,1-F.retryEase*streak):1;return{every:F.visibleEvery[i],hit:F.visibleHit[i]*ease,absorb:F.visibleAbsorb[i],ms:F.visibleMs[i]};}
   function lastHeckleArmed(state){return state.review.lastHeckle===1&&isFinalBoss(state);}
-  function heckleStrength(state){if(lastHeckleArmed(state))return CONST.finalHeckle;var pressure=gatePressure(state),base=state.atk*nodeEffects(state).calm;if(!pressure)return base;return Math.max(Math.min(base,state.mentalMax*.05),state.mentalMax*(.04+2*Math.max(0,Math.min(1,(state.fightMs-20000)/20000)))*pressure);}
+  function heckleStrength(state){if(lastHeckleArmed(state))return CONST.finalHeckle;var pressure=gatePressure(state),base=state.atk*nodeEffects(state).calm;if(!pressure)return base;return Math.max(Math.min(base,state.mentalMax*.05),state.mentalMax*(.04+GATE_POLICY.ramp*Math.max(0,Math.min(1,(state.fightMs-20000)/20000)))*pressure);}
+  // Preview the next uncancelled hit without advancing visibility or changing state.
+  function nextHeckle(state) {
+    var vr=visibleRule(state), visibility=MENTAL_VISIBILITY.get(state), counted=!lastHeckleArmed(state)&&!state.u15.tutorial.active&&state.venue>=venueNumber('school');
+    var visible=counted&&((visibility ? visibility.count : 0)+1)%vr.every===0, dmg=heckleStrength(state);
+    if(visible&&!gatePressure(state))dmg=Math.max(dmg,state.mentalMax*vr.hit);
+    return {dmg:dmg,visible:visible,counted:counted,block:Math.min(Math.max(0,state.shield||0),dmg*(visible?vr.absorb:1))};
+  }
   // v4 U38: threat numbers the player can compare with their own. Everything is per second so 야유, 회복 and 내 공격 share one unit.
   // hit = one heckle, every = seconds between heckles, perSecond = hit / every, regen = doubt the audience wins back per second
   // (gate pressure and the heal pattern), block = how much of one heckle the 자신감 shield soaks up right now.
   function threatInfo(state) {
-    var hit = heckleStrength(state), every = Math.max(400, (state.interval || 4) * 1000) / 1000, pressure = gatePressure(state);
-    var regen = (pressure ? state.audHpMax * .012 * pressure : 0) + (state.pHeal || state.pattern === "heal" ? state.audHpMax * CONST.patternHealPct / (CONST.patternHealEvery / 1000) : 0);
-    return { last: lastHeckleArmed(state), hit: hit, every: every, perSecond: hit / every, regen: regen, block: Math.min(Math.max(0, state.shield || 0), hit), shield: Math.max(0, state.shield || 0) };
+    var next = nextHeckle(state), hit = next.dmg, every = Math.max(400, (state.interval || 4) * 1000) / 1000, pressure = gatePressure(state);
+    var regen = (pressure ? state.audHpMax * GATE_POLICY.regen * pressure : 0) + (state.pHeal || state.pattern === "heal" ? state.audHpMax * CONST.patternHealPct / (CONST.patternHealEvery / 1000) : 0);
+    return { last: lastHeckleArmed(state), hit: hit, every: every, perSecond: hit / every, regen: regen, block: next.block, shield: Math.max(0, state.shield || 0) };
   }
   // 내 공격/초: doubt removed per second, a smoothed measure of what really landed (it follows the current hold rate and skills).
   // Transient (never saved). It is seeded with the fight average after 4 seconds and then follows an 8 second smoothing.
@@ -405,7 +412,7 @@
     if(state.batchD.twist.scene)return;
     if(state.u15.tutorial.active)state.mental=Math.max(state.mental,10);
     var pressure=gatePressure(state);
-    if(pressure)state.audHp=Math.min(theaterPhase(state)===2?theaterCut(state):state.audHpMax,state.audHp+state.audHpMax*.012*pressure*dt/1000); // s5b: theater phase 2 regrows up to its own bar
+    if(pressure)state.audHp=Math.min(theaterPhase(state)===2?theaterCut(state):state.audHpMax,state.audHp+state.audHpMax*GATE_POLICY.regen*pressure*dt/1000); // s5b: theater phase 2 regrows up to its own bar
     state.heckleMs -= dt;
     if (!state.telegraphed && state.heckleMs <= CONST.telegraphMs) {
       state.telegraphed = true;
@@ -420,24 +427,19 @@
       var big = lastHeckleArmed(state);
       if (state.skills.cheerGuard) { state.skills.cheerGuard=false; if (big) state.review.lastHeckle=2; emit(ev,{type:'heckleCancelled'}); continue; }
       if (state.review.cancel) { state.review.cancel=false; if (big) state.review.lastHeckle=2; emit(ev,{type:"heckleCancelled"}); continue; }
-      var dmg = heckleStrength(state);
-      var visible = false;
-      if (!big && !pressure && !state.u15.tutorial.active && state.venue >= venueNumber('school')) {
+      var next = nextHeckle(state), dmg = next.dmg;
+      if (next.counted) {
         var visibility = MENTAL_VISIBILITY.get(state);
         if (!visibility) { visibility = { count: 0, left: 0, budget: 0, capped: false }; MENTAL_VISIBILITY.set(state, visibility); }
         var vr = visibleRule(state);
-        visible = ++visibility.count % vr.every === 0;
-        if (visible) {
-          dmg = Math.max(dmg, state.mentalMax * vr.hit);
+        visibility.count++;
+        if (next.visible) {
           visibility.left = vr.ms; visibility.budget = 0; visibility.capped = true;
         }
       }
       if (big) state.review.lastHeckle = 2;
-      var shieldDmg = 0;
-      if (state.shield > 0) {
-        shieldDmg = Math.min(state.shield, dmg * (visible ? visibleRule(state).absorb : 1));
-        state.shield -= shieldDmg;
-      }
+      var shieldDmg = next.block;
+      state.shield -= shieldDmg;
       var mentalDmg = dmg - shieldDmg;
       if (mentalDmg > 0) {
         state.mental -= mentalDmg;

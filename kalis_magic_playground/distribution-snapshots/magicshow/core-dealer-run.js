@@ -181,7 +181,15 @@
     }
   }
 
-  function restartRun(state) {
+  function failureRestartPosition(state) {
+    var v = state.venue;
+    for (var j = state.j - 1; j >= 1; j--) {
+      if (!isRemoved(state, v, j) && !isBenched(v, j)) return {v: v, j: j};
+    }
+    return {v: v, j: state.j};
+  }
+
+  function restartRun(state, failedPosition) {
     if(state.batchD.side){finishSide(state,false,null);return state;}
     if(state.batchD.encore.phase==='round'){finishEncore(state,false,null);return state;}
     if(state.batchD.twist.scene||state.batchD.encore.phase==='choice'||state.batchD.rebirthOffer)return state;
@@ -224,7 +232,7 @@
     state.shield = state.mentalMax * nodeEffects(state).openingShield * gearMultiplier(state,"confidence");
     clearBoard(state);
     if (state.tree.startFinale > 0) state.finisher = nodeEffects(state).finaleNeed;
-    var pos = retryFuture ? {v:venueNumber('future'),j:futureRetryJ} : state.homecomingCleared ? {v:venueNumber('lecturenote'),j:1} : firstOpen(state);
+    var pos = retryFuture ? {v:venueNumber('future'),j:futureRetryJ} : state.homecomingCleared ? {v:venueNumber('lecturenote'),j:1} : failedPosition || firstOpen(state);
     beginAudience(state, pos.v, pos.j, null);
     state.mode = "fight";
     return state;
@@ -258,7 +266,7 @@
     if (theaterPhase(state)) failEvent.theaterPhase = theaterPhase(state); // s5b: the UI shows 앞줄 관객 for a phase-1 loss
     emit(ev, failEvent);
     addGain(state, 'fails', 1, 1e7);
-    restartRun(state);
+    restartRun(state, state.u15.tutorial.active ? null : failureRestartPosition(state));
     state.u19b.failedId=failedId;
     if(offer)state.u19b.dealerOffer=true;
   }

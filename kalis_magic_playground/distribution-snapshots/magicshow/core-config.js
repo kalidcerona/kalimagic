@@ -129,10 +129,9 @@
     gatePrep: 30,
     // v4 U41: failed shows at one gate that remove its pressure completely (each one removes 1/gateFailSteps).
     gateFailSteps: 3,
-    // v4 U38: the final boss's last heckle. When its doubt falls to 30 percent (act 3) the next heckle is this one: a fixed, announced size that the
-    // mental and 자신감 of a build without the tail of 무대 배짱 (levels 11 to 15) cannot soak up (281k + 169k at the final boss, so 450k), the full build can
-    // (644k mental alone), and 야유 막기 cancels outright. finalHeckleWarnMs is the pause that announces it.
-    finalHeckle: 560000,
+    // The last heckle is announced at 30 percent doubt. The lower-growth route retains a finite
+    // mental-tail/no-skill solution; the arrival build still needs cheer or further preparation.
+    finalHeckle: 70000,
     finalHeckleWarnMs: 4000,
     missChance: 0.22,
     phase2At: 0.75,

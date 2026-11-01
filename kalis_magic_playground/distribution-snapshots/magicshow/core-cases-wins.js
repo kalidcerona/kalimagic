@@ -115,7 +115,8 @@
       if(j===headlinerJ(v))queueScene(state,VENUES[v-1].slug,'beforeHeadliner');
     }
     if(gateAudience(state)&&!state.u19b.gates[state.audId])state.u19b.gates[state.audId]={prepared:preparation(state),need:gateNeed(state),cleared:false,studied:false};
-    if(gatePressure(state)>0)state.audHp=state.audHpMax=Math.max(state.audHpMax,Math.round(wallPower(state)*(VENUES[v-1].slug==='theater'?75:45)));
+    if(gatePressure(state)>0)state.audHp=state.audHpMax=Math.max(state.audHpMax,Math.round(wallPower(state)*(VENUES[v-1].slug==='theater'?GATE_POLICY.theaterFloor:GATE_POLICY.floor)));
+    if(gateAudience(state))state.audHp=state.audHpMax=Math.max(1,Math.round(state.audHpMax*GATE_POLICY.hp));
     state.stallMin = state.audHp; state.stallMs = 0;
     if(twistEligible(state)&&!state.batchD.twist.failures&&!state.batchD.twist.scene)state.batchD.twist.scene='intro';
     checkAchievements(state,ev);

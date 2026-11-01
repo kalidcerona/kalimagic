@@ -14,7 +14,8 @@
   // the eight tutorial ids (save validator), so these two are kept for the session and derived from the save at load: a save that already has
   // a skill unlocked or a finale played (features.progress.finales) counts them as seen. No new save field and no storage.
   // buyAll is no longer a toast: the first failed show opens a 세로나 dialogue (seronaFail, the story dialogue box with 다음), once per save.
-  const SESSION_HINTS=['skill','finale'], ALL_HINTS=FIRST_USE_HINTS.concat(SESSION_HINTS), sessionHintsSeen=new Set();
+  // Gate pressure guidance is session-only, like skill and finale hints.
+  const SESSION_HINTS=['skill','finale','gatePressure'], ALL_HINTS=FIRST_USE_HINTS.concat(SESSION_HINTS), sessionHintsSeen=new Set();
   let hintQueue=[], hintNextAt=0, noticesQuietSince=0, hintSkillName='';
   function hintsLive(){return state.u15.tutorial.done&&!state.u15.tutorial.active&&!chainMark()&&state.onboarding.intro&&state.onboarding.step>=4;}
   function hintSeen(id){return SESSION_HINTS.includes(id)?sessionHintsSeen.has(id):state.onboarding.facts.includes(id);}
@@ -38,9 +39,12 @@
     if(id==='buyAll'){if(hintsLive()&&!hintSeen(id))seronaFail.pending=true;return;}
     if(!ALL_HINTS.includes(id)||!hintsLive()||hintSeen(id)||hintQueue.includes(id))return;if(id==='skill')hintSkillName=arg||'';hintQueue.push(id);
   }
-  function hintText(id){const H=D.onboarding.seronaHints||{};if(id==='skill')return hintSkillName&&H.skill?H.skill.replace('{skill}',hintSkillName):'';return H[id]||(D.onboarding.tutorial.find(h=>h.id===id)||{}).body||'';}
-  function hintBlocked(){return state.mode!=='fight'||!!state.u15.scene||state.u15.queue.length>0||!$('storyDialog').hidden||!!menu||!$('panel').hidden||!!state.batchD.twist.scene||presentation.busy||!!wonMoment||!!stageRewardHost||state.features.climax.left>0||!$('introStory').hidden||!$('sceneCard').hidden||!$('offlineCard').hidden||!$('leaveConfirm').hidden||document.hidden||portrait();}
+  function hintText(id){if(id==='gatePressure')return '이 관객은 공연이 길어질수록 야유가 거세져요.';const H=D.onboarding.seronaHints||{};if(id==='skill')return hintSkillName&&H.skill?H.skill.replace('{skill}',hintSkillName):'';return H[id]||(D.onboarding.tutorial.find(h=>h.id===id)||{}).body||'';}
+  function hintBlocked(){return state.mode!=='fight'||!!state.u15.scene||state.u15.queue.length>0||!$('storyDialog').hidden||!!menu||!$('panel').hidden||!!state.batchD.twist.scene||presentation.busy||!!wonMoment||!!stageRewardHost||state.features.climax.left>0||!$('introStory').hidden||!$('sceneCard').hidden||!$('offlineCard').hidden||!$('leaveConfirm').hidden||document.hidden||(portrait()&&hintQueue[0]!=='gatePressure');}
   function tickHints(){
+    if(C.gatePressure(state)>0)firstUseHint('gatePressure');
+    else hintQueue=hintQueue.filter(id=>id!=='gatePressure');
+    if(portrait()&&hintQueue.includes('gatePressure'))hintQueue=['gatePressure'].concat(hintQueue.filter(id=>id!=='gatePressure'));
     if(presentation.busy)noticesQuietSince=clock; // notices come in bursts (case, achievement, growth): a hint waits for 1.5 s of quiet
     if(!hintQueue.length||clock<hintNextAt||clock-noticesQuietSince<1500||hintBlocked())return;
     const id=hintQueue.shift(),text=hintText(id);

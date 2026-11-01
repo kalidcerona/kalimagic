@@ -25,7 +25,7 @@
   const hotelHead = lines({ id: 'h-hotel', name: '일본 지역 마술 협회장', emoji: '🎖️', portraitAsset: 'headliner-hotel.png', flavor: '오늘 대회의 심사위원장.', bio: '오늘 대회의 심사위원장.', role: 'critic', pattern: 'sealBox' },
     '즉석 참가자라니, 궁금하네요.', ['심사는 꼼꼼히 합니다.', '방금 그 카드, 다시 볼까요?', '남은 시간 1분입니다.'], '아쉽네요. 끝까지 보고 싶었는데.', '즉석이라고 믿기지 않네요.');
   Object.assign(hotelHead, { preLine: hotelHead.encounterLine, defeatLine: '3등입니다. 축하해요.' });
-  const hotel = { id: 0, balanceRank: 6.5, economyRank: 6.5, hpFactor: 44000, venueAsset: 'venue-07a-hotel.png', crowdAsset: 'crowd-07.png', slug: 'hotel', crowd: 50, crowdEmoji: '🏨🃏🎩👏',
+  const hotel = { id: 0, balanceRank: 6.5, economyRank: 6.5, hpFactor: 44000*0.65, venueAsset: 'venue-07a-hotel.png', crowdAsset: 'crowd-07.png', slug: 'hotel', crowd: 50, crowdEmoji: '🏨🃏🎩👏',
     name: '호텔 마술 대회', intro: '다음 참가자입니다, 칼리!', palette: { bg1: '#22160e', bg2: '#6e4f2a', accent: '#ffd98a' }, successLine: '3등입니다. 축하해요.', trophy: '호텔 대회 3등',
     headliner: hotelHead, audiences: hotelAud };
   // TV 오디션 (the preliminary round)

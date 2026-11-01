@@ -1,4 +1,5 @@
 'use strict';
+  var GATE_POLICY = {hp:0.75, regen:0.004, ramp:0.24, floor:45, theaterFloor:30};
   function headlinerJ(v) {
     return VENUES[v - 1].audiences.length + 1;
   }

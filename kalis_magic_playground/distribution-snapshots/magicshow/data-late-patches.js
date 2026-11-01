@@ -227,8 +227,8 @@ GAME_DATA.venues.find(v=>v.slug==='lecturenote').headliner.endingLines=GAME_DATA
  // audition x0.6 (4 regulars now) give the time back, so 50-seed broadcast, vegas, multiverse and lecturenote stay inside their targets.
  // Was (v6): festival:65808.59999999999,audition:96911.1537883632.
  const HP_FINAL={family:0.7402686720000002,party:7.207782399999999,school:63.273600000000016,cafe:530.909184,meetup:548.2318509359998,theater:9249.24,festival:55937.30999999999,audition:58146.692273017914,broadcast:137855.5161984,vegas:221169.74343750003,broadway:92578.2,moon:896996.2921919998,sun:952875.9583200001,galaxy:902219.18353875,multiverse:1099951.453674474,lecturenote:678813.6960000001};
- D.venues.forEach(v=>{if(HP_FINAL[v.slug]!==undefined)v.hpFactor=HP_FINAL[v.slug];});
- D.venues.find(v=>v.slug==='lecturenote').bossHpFactor=1.9752478199999999;
+ D.venues.forEach(v=>{if(HP_FINAL[v.slug]!==undefined)v.hpFactor=HP_FINAL[v.slug]*(v.slug==='family'?1:v.slug==='party'?0.85:0.65);});
+ D.venues.find(v=>v.slug==='lecturenote').bossHpFactor=1.9752478199999999*0.45;
 })(GAME_DATA);
 
 // 12-90: new dialogue awaits owner review; approved fourth-script lines remain intact.
