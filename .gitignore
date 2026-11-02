@@ -3,7 +3,10 @@
 skills-lock.json
 
 # 로컬 Claude Code 설정
-.claude/
+.claude/*
+!.claude/skills/
+.claude/skills/*
+!.claude/skills/pixelfx/
 .gstack/
 .superpowers/
 
@@ -34,3 +37,6 @@ kalis_magic_playground/reports/
 !/docs/superpowers/
 /.claude-intro
 .DS_Store
+
+# pixelfx generated previews
+.claude/skills/pixelfx/**/records/
