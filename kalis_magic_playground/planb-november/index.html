@@ -132,19 +132,29 @@
   .info-card p { margin:0; font-size:14.5px; color:var(--muted); }
   .info-card .more { display:inline-block; margin-top:10px; font-weight:900; }
 
-  .sponsor-band { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:20px; border:1px solid var(--line-2); border-radius:14px; padding:28px 32px; }
+  .sponsor-band { border:1px solid var(--line-2); border-radius:14px; padding:28px 32px; text-align:center; }
   .sponsor-band .label { margin:0 0 4px; font-size:12.5px; font-weight:900; letter-spacing:.22em; color:var(--soft); }
   .sponsor-band h2 { margin:0; font-size:28px; }
   .sponsor-band p { margin:6px 0 0; font-size:14.5px; color:var(--muted); }
-  .sponsor-band .logo { background:#000; border-radius:10px; padding:16px 20px; }
-  .sponsor-band .logo img { width:220px; }
+  .sponsor-cards { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:16px; margin-top:24px; }
+  .sponsor-card { min-width:0; border:1px solid var(--line-2); border-radius:12px; padding:24px; }
+  .sponsor-card .sponsor-link { width:220px; height:104px; padding:12px; box-sizing:border-box; border-radius:8px; background:#000; }
+  .sponsor-card .cardtobox { background:#fff; }
+  .sponsor-card img { width:auto; max-width:100%; height:80px; object-fit:contain; }
+  .sponsor-card h3 { margin:20px 0 12px; font-size:22px; }
 
   .final { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:20px; border-top:1px solid var(--line); padding-top:28px; }
   .final p { margin:0; font-size:14px; color:var(--soft); }
 
   footer.wrap { display:flex; flex-wrap:wrap; gap:16px 32px; align-items:center; justify-content:center; padding-block:28px 48px; font-size:13px; color:var(--soft); }
-  footer span { display:inline-flex; align-items:center; gap:10px; }
-  footer .f-snack { width:120px; border-radius:4px; }
+  footer span { display:inline-flex; flex-wrap:wrap; align-items:center; gap:10px; }
+  .sponsor-link { display:inline-flex; align-items:center; justify-content:center; max-width:100%; text-decoration:none; flex-shrink:0; }
+  .sponsor-link img { display:block; }
+  footer .sponsor-link { height:56px; padding:8px; box-sizing:border-box; border-radius:4px; }
+  footer .sponsor-link.cardtobox { background:#fff; }
+  footer .f-cardtobox, footer .f-snack { width:auto; height:40px; object-fit:contain; border-radius:4px; }
+  footer .host-link { display:inline-flex; align-items:center; }
+  footer .host-text { font-size:12px; }
 
 
   @media (max-width:760px) {
@@ -157,7 +167,7 @@
     .two { grid-template-columns:minmax(0,1fr); }
     .btn { width:100%; }
     .sponsor-band { padding:22px; }
-    .sponsor-band .logo, .sponsor-band .logo img { width:100%; }
+    .sponsor-cards { grid-template-columns:minmax(0,1fr); }
     body { padding-bottom:calc(84px + env(safe-area-inset-bottom, 0px)); }
     .sticky-ticket { position:fixed; left:0; right:0; bottom:0; z-index:20; display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px 16px calc(12px + env(safe-area-inset-bottom, 0px)); background:var(--surface); border-top:1px solid var(--line-2); }
     .sticky-ticket-text { font-size:13px; font-weight:800; }
@@ -273,12 +283,22 @@
 <!-- ============ SPONSOR ============ -->
 <section class="wrap sec">
   <div class="sponsor-band">
-    <div>
-      <p class="label">SPONSOR</p>
-      <h2 class="disp">스넥 연습실이 함께해요</h2>
-      <p>스넥 연습실이 이번 세미나를 후원해 주셨어요.<br>두 회차 모두 스넥 연습실에서 열려요.</p>
+    <p class="label">SPONSOR</p>
+    <h2 class="disp">스넥 연습실과 <span style="white-space:nowrap">Card to Box가</span> 함께해요</h2>
+    <div class="sponsor-cards">
+      <div class="sponsor-card">
+        <a class="sponsor-link" href="https://www.spacecloud.kr/space/1733" target="_blank" rel="noopener noreferrer" aria-label="스넥 연습실 홈페이지"><img src="../planb-busking/img/snack-logo.jpg" alt="스넥 연습실 로고" width="1158" height="573" decoding="async" loading="eager"></a>
+        <h3>스넥 연습실</h3>
+        <p>홍대입구역 근처의 연습실이에요.<br>이번 세미나 장소를 후원해 주셨어요.<br>두 회차 모두 스넥 연습실에서 열려요.</p>
+        <p><a href="https://www.spacecloud.kr/space/1733" target="_blank" rel="noopener noreferrer">스넥 연습실 홈페이지 →</a></p>
+      </div>
+      <div class="sponsor-card">
+        <a class="sponsor-link cardtobox" href="https://cardtobox.com/" target="_blank" rel="noopener noreferrer" aria-label="Card to Box 홈페이지"><img src="../planb-busking/img/cardtobox-logo.jpg" alt="Card to Box 로고" width="1000" height="593" loading="eager"></a>
+        <h3>Card to Box</h3>
+        <p>마술 도구와 카드, 서적, 영상을 파는 마술 샵이에요.<br>이번 세미나를 후원해 주셨어요.</p>
+        <p><a href="https://cardtobox.com/" target="_blank" rel="noopener noreferrer">Card to Box 홈페이지 →</a></p>
+      </div>
     </div>
-    <div class="logo"><img src="../planb-busking/img/snack-logo.jpg" alt="스넥 연습실 로고" width="1158" height="573" decoding="async" loading="eager"></div>
   </div>
 </section>
 
@@ -320,8 +340,8 @@
 </section>
 
 <footer class="wrap" aria-label="주최와 후원">
-  <span>주최 <img class="f-planb" src="../planb-busking/img/planb-logo.png" alt="PLAN B" width="160" height="147" loading="eager"></span>
-  <span>후원 <img class="f-snack" src="../planb-busking/img/snack-logo.jpg" alt="스넥 연습실" width="1158" height="573" loading="eager"></span>
+  <span>주최 <a class="host-link" href="https://www.instagram.com/planb_magic/" target="_blank" rel="noopener noreferrer" aria-label="플랜비 인스타그램"><img class="f-planb" src="../planb-busking/img/planb-logo.png" alt="PLAN B" width="160" height="147" loading="eager"></a> <a class="host-text" href="https://www.instagram.com/planb_magic/" target="_blank" rel="noopener noreferrer">인스타그램</a> <a class="host-text" href="https://open.kakao.com/o/gUJkfxzi" target="_blank" rel="noopener noreferrer">오픈채팅방</a></span>
+  <span>후원 <a class="sponsor-link" href="https://www.spacecloud.kr/space/1733" target="_blank" rel="noopener noreferrer" aria-label="스넥 연습실 홈페이지"><img class="f-snack" src="../planb-busking/img/snack-logo.jpg" alt="스넥 연습실" width="1158" height="573" loading="eager"></a> <a class="sponsor-link cardtobox" href="https://cardtobox.com/" target="_blank" rel="noopener noreferrer" aria-label="Card to Box 홈페이지"><img class="f-cardtobox" src="../planb-busking/img/cardtobox-logo.jpg" alt="Card to Box 로고" width="1000" height="593" loading="eager"></a></span>
 </footer>
 
 <div class="sticky-ticket" hidden><span class="sticky-ticket-text"></span><a class="btn" href="https://smore.im/form/52BkxmIm19" target="_blank" rel="noopener" data-cta>신청하기</a></div>
