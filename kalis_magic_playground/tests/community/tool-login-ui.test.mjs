@@ -54,7 +54,7 @@ test('all distribution destinations are named in the login prompt', async () => 
     ['/tools/aletheia/', 'ALETHEIA'], ['/tools/usotsuki/', 'USOTSUKI'],
     ['/tools/tobira/', 'TOBIRA'], ['/tools/tyche/', 'TYCHE'], ['/tools/arosaegida/', '아로새기다'],
     ['/tools/magicshow/', '칼리 마술 성장기 \\(베타\\)'], ['/tools/pimax/', 'Pi Max 연습실'], ['/tools/choice/', '너의 선택은\\?'],
-    ['/tools/gwayubulgeup/', '과유불급']
+    ['/tools/gwayubulgeup/', '과유불급'], ['/tools/memdeck/', '멤덱 연습실']
   ]) {
     const ui = setup(path, null, { getSession: async () => null });
     await ui.flush();

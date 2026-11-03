@@ -5,6 +5,7 @@ import vm from 'node:vm';
 
 // Personal workers plus friend scopes. Kairos and Kairos Classic share one snapshot.
 const WORKERS = [
+  ['distribution-snapshots/memdeck/sw.js', 'https://example.test/tools/memdeck/'],
   ['zz1/sw.js', 'https://example.test/zz1/'],
   ['zz2/sw.js', 'https://example.test/zz2/'],
   ['zz3/sw.js', 'https://example.test/zz3/'],
@@ -153,9 +154,9 @@ async function dispatch(worker, url) {
   return { response: await result, background };
 }
 
-test('coherent release covers the 27 deployed worker scopes', () => {
-  assert.equal(WORKERS.length, 27);
-  assert.equal(new Set(WORKERS.map(([file, scope]) => `${file}@${scope}`)).size, 27);
+test('coherent release covers the 28 deployed worker scopes', () => {
+  assert.equal(WORKERS.length, 28);
+  assert.equal(new Set(WORKERS.map(([file, scope]) => `${file}@${scope}`)).size, 28);
 });
 
 for (const [file, scope] of WORKERS) {

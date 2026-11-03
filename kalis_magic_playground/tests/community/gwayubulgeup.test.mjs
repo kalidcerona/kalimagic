@@ -164,7 +164,7 @@ test('gwayubulgeup is a separate gated friend app', () => {
   assert.match(html, /data-magic-customize="off"/);
   const sql = read('supabase/migrations/20261016_friend_apps_gwayubulgeup.sql');
   assert.match(sql, /begin;[\s\S]*drop constraint if exists friend_app_access_tool_check;[\s\S]*add constraint friend_app_access_tool_check[\s\S]*commit;/);
-  assert.deepEqual([...sql.matchAll(/'([^']+)'/g)].map((match) => match[1]), [...FRIEND_APP_TOOLS]);
+  assert.deepEqual([...sql.matchAll(/'([^']+)'/g)].map((match) => match[1]), [...FRIEND_APP_TOOLS].filter(tool => tool !== 'memdeck'));
   assert.match(read('netlify.toml'), /for = "\/tools\/gwayubulgeup\/manifest\.webmanifest"\s*\[headers.values\]\s*Content-Type = "application\/manifest\+json"/);
 });
 

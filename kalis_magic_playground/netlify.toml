@@ -465,3 +465,8 @@
   for = "/tools/planbcafe/manifest.webmanifest"
   [headers.values]
     Content-Type = "application/manifest+json"
+
+[[headers]]
+  for = "/tools/memdeck/manifest.webmanifest"
+  [headers.values]
+    Content-Type = "application/manifest+json"

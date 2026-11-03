@@ -88,9 +88,10 @@ function applyManifest(text, cfg) {
   if (cfg.manifestId) {
     next = /"id":\s*"[^"]*"/.test(next)
       ? next.replace(/("id":\s*)"[^"]*"/, `$1${JSON.stringify(cfg.manifestId)}`)
-      : next.replace(/^\{\n/, `{\n  "id": ${JSON.stringify(cfg.manifestId)},\n`);
+      : next.replace(/^\{(\n?)/, (_, newline) => `{${newline}  "id": ${JSON.stringify(cfg.manifestId)},${newline}`);
   }
   if (cfg.manifestStartUrl) next = next.replace(/("start_url":\s*)"[^"]*"/, `$1${JSON.stringify(cfg.manifestStartUrl)}`);
+  if (cfg.manifestScope) next = next.replace(/("scope":\s*)"[^"]*"/, `$1${JSON.stringify(cfg.manifestScope)}`);
   return next;
 }
 

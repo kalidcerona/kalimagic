@@ -94,6 +94,7 @@ test('public build mirrors the current calculator and integrated stopwatch sourc
   }
   assert.equal(MIRROR_PAIRS.some(([, mirror]) => mirror === 'tools/calc' || mirror.startsWith('tools/calc/')), false);
   assert.deepEqual(DISTRIBUTION_APPS, [
+    { source: 'distribution-snapshots/memdeck', target: 'memdeck', tool: 'memdeck' },
     { source: 'distribution-snapshots/gwayubulgeup', target: 'gwayubulgeup', tool: 'gwayubulgeup' },
     { source: 'distribution-snapshots/magicshow', target: 'magicshow', tool: 'magicshow' },
     { source: 'distribution-snapshots/planbcafe', target: 'planbcafe', tool: 'planbcafe' },

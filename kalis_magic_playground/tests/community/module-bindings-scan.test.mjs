@@ -43,6 +43,7 @@ const EXPECTED_APP_ROOTS = [
   'distribution-snapshots/choice',
   'distribution-snapshots/gwayubulgeup',
   'distribution-snapshots/kairos',
+  'distribution-snapshots/memdeck',
   'distribution-snapshots/pimax',
   'distribution-snapshots/qr',
   'distribution-snapshots/spinner',

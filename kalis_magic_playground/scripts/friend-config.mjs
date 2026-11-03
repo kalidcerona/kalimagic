@@ -11,7 +11,7 @@
 //   leak          regex sources that must not match anywhere in the output (a missed key would mix friend
 //                 data with the owner's data)
 //   cacheSuffix   appended to the service worker cache version literal (publish adds -legacy-1 before it)
-//   manifestId / manifestStartUrl   manifest overrides
+//   manifestId / manifestStartUrl / manifestScope   manifest overrides
 //   plain         [file, from, to] exact text replacements, each must hit exactly once (start mode etc.)
 //
 // Owner-only parts are removed by the generator itself, not configured here:
@@ -100,6 +100,20 @@ export const FRIEND_APPS = {
       k('choice-shell-', 'choice-dist-shell-')
     ],
     leak: ['[\'"`]magic-choice\\.', '[\'"`]choice-shell-']
+  },
+  memdeck: {
+    source: 'zz12',
+    snapshot: 'memdeck',
+    cacheSuffix: '-distribution',
+    manifestId: '/tools/memdeck/',
+    manifestStartUrl: '/tools/memdeck/',
+    manifestScope: '/tools/memdeck/',
+    keys: [
+      k('magic-memdeck-v1', 'friend-memdeck-v1'),
+      k('first-settings-guide:v1:', 'friend-memdeck-first-settings-guide:v1:'),
+      k('magic-memdeck-', 'friend-memdeck-shell-')
+    ],
+    leak: ['magic-memdeck-', '[\'"`]first-settings-guide:']
   },
   pimax: {
     source: 'zz14',
