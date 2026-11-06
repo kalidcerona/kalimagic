@@ -110,6 +110,16 @@ document.addEventListener('pointercancel',e=>{pointers.delete(e.pointerId);gestu
 document.addEventListener('touchcancel',()=>{pointers.clear();gesture=null;blocked=false;gestureRejected=false;armedSuppress=null;undoPointer=null;});
 window.addEventListener('blur',()=>{pointers.clear();gesture=null;blocked=false;gestureRejected=false;undoPointer=null;if(dropPreview())render();});
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){undoPointer=null;if(dropPreview())render();releaseWakeLock();}else acquireWakeLock();});
+// Ask once, after this page loads, for the browser to keep stored data. No prompt and no UI.
+function askToKeepStoredData() {
+  try {
+    if (typeof navigator === "undefined" || !navigator.storage || typeof navigator.storage.persist !== "function") return;
+    Promise.resolve(navigator.storage.persist()).catch(() => {});
+  } catch {
+    // A refusal is ignored. Nothing is shown.
+  }
+}
+askToKeepStoredData();
 function download(blob,name){const link=document.createElement('a'),href=URL.createObjectURL(blob);link.href=href;link.download=name;link.click();setTimeout(()=>URL.revokeObjectURL(href),1000);}
 function exportPng(){dropPreview();undoPointer=null;render();const q=state.current,epoch=viewEpoch;if(!q)return;$('qr').toBlob(blob=>{if(!blob||viewEpoch!==epoch||preview||state.current!==q)return;download(blob,'QR.png');});}
 $('png').onclick=exportPng;

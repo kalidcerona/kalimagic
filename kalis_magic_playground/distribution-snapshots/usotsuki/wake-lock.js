@@ -56,4 +56,15 @@ function syncPerformanceWakeLock() {
   else releaseWakeLock();
 }
 
+// Ask once, after this page loads, for the browser to keep stored data. No prompt and no UI.
+function askToKeepStoredData() {
+  try {
+    if (typeof navigator === "undefined" || !navigator.storage || typeof navigator.storage.persist !== "function") return;
+    Promise.resolve(navigator.storage.persist()).catch(() => {});
+  } catch {
+    // A refusal is ignored. Nothing is shown.
+  }
+}
+askToKeepStoredData();
+
 export { acquireWakeLock, releaseWakeLock, syncPerformanceWakeLock };

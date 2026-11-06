@@ -23,7 +23,7 @@ test('Memdeck snapshot isolates all storage families and preserves the complete 
       .replaceAll("'magic-memdeck-v1'", "'friend-memdeck-v1'")
       .replaceAll("'first-settings-guide:v1:'", "'friend-memdeck-first-settings-guide:v1:'")
       .replaceAll("'magic-memdeck-'", "'friend-memdeck-shell-'");
-    if (file === 'sw.js') expected = expected.replace('-local-preview-module-1', '').replace("-update-prompt-3'", "-update-prompt-3-distribution'");
+    if (file === 'sw.js') expected = expected.replace('-local-preview-module-1', '').replace("-update-prompt-3-persist-1'", "-update-prompt-3-persist-1-distribution'");
     assert.equal(friend, expected, file);
   }
   assert.match(read(`${snapshot}/app.mjs`), /KEY='friend-memdeck-v1',PRESERVED_KEY=KEY\+'-preserved-raw'/);

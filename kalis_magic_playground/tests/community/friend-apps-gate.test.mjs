@@ -392,4 +392,8 @@ test('distribution pages keep a 90-day offline launch and still revoke an explic
   assert.match(guard, /setTimeout\(\(\) => controller\.abort\(\), 6000\)/);
   assert.match(guard, /catch \(error\) \{ redirect\(\); return; \}/);
   assert.doesNotMatch(guard, /\.catch\(\(\) => \{ location\.replace\(loginUrl\); \}\)/);
+  assert.match(guard, /const verified = freshStamp\(launchStamp\);\s*if \(verified\) reveal\(\);\s*else document\.documentElement\.style\.visibility = 'hidden';/);
+  assert.match(guard, /const allowOffline = \(\) => \{\s*if \(verified\) return;/);
+  assert.match(guard, /if \(!verified\) redirect\(\);/);
+  assert.doesNotMatch(guard, /catch \(error\) \{\}\s*redirect\(\);/);
 });

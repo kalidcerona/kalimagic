@@ -224,7 +224,7 @@ export const CHOICE_MODULE_FILES = [
   'logic-performance.js', 'logic-extras.js', 'logic-storage.js', 'logic-fake-home.js', 'logic-notes.js',
   'logic-backup.js', 'logic-user-icons.js', 'logic-wizard.js'
 ];
-export const CHOICE_DISTRIBUTION_FILES = [...CHOICE_FILES, ...CHOICE_MODULE_FILES, 'brand-logo.png', 'fullscreen.js', 'settings-ui.js', 'settings-ui.css', 'update-prompt.js'];
+export const CHOICE_DISTRIBUTION_FILES = [...CHOICE_FILES, ...CHOICE_MODULE_FILES, 'brand-logo.png', 'fullscreen.js', 'settings-ui.js', 'settings-ui.css', 'update-prompt.js', 'update-notice.js', 'choice-update-prompt.js'];
 
 export function shouldCopyChoice(relativePath) {
   return relativePath === '' || relativePath === 'home-icons' || CHOICE_DISTRIBUTION_FILES.includes(relativePath.split(path.sep).join('/'));
@@ -388,6 +388,8 @@ export const MIRROR_PAIRS = [
   ['../../magic-choice/detail-view.js', 'zz4/detail-view.js'],
   ['../../magic-choice/fake-notes.js', 'zz4/fake-notes.js'],
   ['../../magic-choice/wake-lock.js', 'zz4/wake-lock.js'],
+  ['../../magic-choice/update-notice.js', 'zz4/update-notice.js'],
+  ['../../magic-choice/choice-update-prompt.js', 'zz4/choice-update-prompt.js'],
   ['../../magic-choice/controller.js', 'zz4/controller.js'],
   ['../../magic-choice/logic-core.js', 'zz4/logic-core.js'],
   ['../../magic-choice/logic-presets.js', 'zz4/logic-presets.js'],

@@ -29,7 +29,10 @@ function boot({ failArtwork = false, active = null } = {}) {
     caches: {
       async open() {
         return {
-          async addAll(requests) { for (const r of requests) entries.set(r.url, 'shell'); },
+          async addAll(requests) {
+            if (failArtwork && requests.some(r => isArtwork(r.url))) throw new TypeError('offline');
+            for (const r of requests) entries.set(r.url, 'shell');
+          },
           async put(key, response) { entries.set(typeof key === 'string' ? key : key.url, await response.text()); },
         };
       },
@@ -52,12 +55,10 @@ test('install has stored every artwork file before the new version can be used o
   assert.equal(worker.skips, 0, 'an update still waits for the next launch');
 });
 
-test('a failing artwork fetch never fails the install, and the critical shell stays stored', async () => {
-  const worker = boot({ failArtwork: true });
+test('a failing artwork download blocks update installation and activation', async () => {
+  const worker = boot({ failArtwork: true, active: {} });
   let done;
   worker.listeners.install({ waitUntil(p) { done = p; } });
-  await done;
-  assert.ok(worker.entries.has(scope + 'index.html'));
-  assert.equal(shellList().filter((url) => worker.entries.has(url)).length, 0);
-  assert.equal(worker.skips, 1, 'the first install still takes control');
+  await assert.rejects(done, /offline/);
+  assert.equal(worker.skips, 0);
 });

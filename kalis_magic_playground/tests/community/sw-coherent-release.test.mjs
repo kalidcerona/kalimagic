@@ -164,7 +164,7 @@ for (const [file, scope] of WORKERS) {
     const source = readFileSync(new URL(`../../${file}`, import.meta.url), 'utf8');
     assert.match(source, /-coherent-1/);
     if (file.endsWith('usotsuki/sw.js') && file.includes('distribution-snapshots')) {
-      assert.match(source, /-coherent-1-compat-1-gesture-1-wake-1-modules-1-split-1-trim-1-css-1-clean-1-lieflash-2-update-prompt-3-hold-range-76-1-distribution'/);
+      assert.match(source, /-coherent-1-compat-1-gesture-1-wake-1-modules-1-split-1-trim-1-css-1-clean-1-lieflash-2-update-prompt-3-hold-range-76-1-persist-1-distribution'/);
       assert.doesNotMatch(source, /-distribution-coherent-1/);
     }
     const prefix = cachePrefix(source, scope);
@@ -219,7 +219,7 @@ for (const [file, scope] of WORKERS) {
 
     if (source.includes('"./home-icons/a1.svg"')) {
       const iconUrl = new URL('home-icons/a1.svg', scope).href;
-      if (source.includes('storeArtwork(cache)')) {
+      if (source.includes('const PRECACHE = SHELL;')) {
         // Choice stores its artwork during install, so each release already holds its own copy.
         assert.equal(v1.bucket().entries.get(iconUrl), 'v1:home-icons/a1.svg');
         assert.equal(v2.bucket().entries.get(iconUrl), 'v2:home-icons/a1.svg');
@@ -235,7 +235,7 @@ for (const [file, scope] of WORKERS) {
       }
       for (const [name, bucket] of stores) {
         if (name !== v1.cacheName && name !== v2.cacheName) assert.equal(bucket.entries.has(iconUrl), false, name);
-        if (name === v2.cacheName && !source.includes('storeArtwork(cache)')) assert.equal(bucket.entries.has(iconUrl), false, name);
+        if (name === v2.cacheName && !source.includes('const PRECACHE = SHELL;')) assert.equal(bucket.entries.has(iconUrl), false, name);
       }
     }
 

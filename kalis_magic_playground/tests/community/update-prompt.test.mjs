@@ -298,7 +298,7 @@ test('zz11 service worker skips waiting only on the SKIP_WAITING message and shi
   listeners.message({ data: { type: 'SKIP_WAITING' } });
   assert.equal(skips, 1);
   assert.match(sw, /"\.\/update-prompt\.js"/);
-  assert.match(sw, /update-prompt-6';/);
+  assert.match(sw, /update-prompt-6-persist-1';/);
 });
 
 test('zz11 page loads update-prompt.js before app.js and offers only from showSettings', () => {

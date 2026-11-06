@@ -160,6 +160,8 @@ test('network failure with a 91-day-old stamp redirects', async () => {
     storage: new Map([[key, String(NOW - 91 * DAY)]]),
     fetchImpl: () => Promise.reject(new TypeError('Failed to fetch')),
   });
+  assert.equal(expired.hiddenWhilePending, 'hidden');
+  assert.deepEqual(expired.replacedWhilePending, []);
   assert.equal(expired.visibility, 'hidden');
   assert.deepEqual(expired.replaced, [expired.loginUrl]);
 
@@ -167,6 +169,8 @@ test('network failure with a 91-day-old stamp redirects', async () => {
     storage: new Map([[key, String(NOW - 90 * DAY)]]),
     fetchImpl: () => Promise.reject(new TypeError('Failed to fetch')),
   });
+  assert.equal(boundary.hiddenWhilePending, '');
+  assert.deepEqual(boundary.replacedWhilePending, []);
   assert.equal(boundary.visibility, '');
   assert.deepEqual(boundary.replaced, []);
 });
@@ -392,4 +396,60 @@ test('no stamp plus 401 redirects', async () => {
   assert.equal(result.hiddenWhilePending, 'hidden');
   assert.equal(result.visibility, 'hidden');
   assert.deepEqual(result.replaced, [result.loginUrl]);
+});
+
+test('an expired stamp stays hidden until the check resolves', async () => {
+  const key = 'friend-apps-ok:unlock:/tools/release/';
+  const storage = new Map([[key, String(NOW - 91 * DAY)]]);
+  let resolveCheck;
+  const replaced = [];
+  const document = { documentElement: { style: { visibility: 'visible' } } };
+  const sandbox = {
+    location: {
+      protocol: 'https:',
+      pathname: '/tools/release/',
+      search: '',
+      replace(url) { replaced.push(url); },
+    },
+    document,
+    localStorage: {
+      getItem: (k) => (storage.has(k) ? storage.get(k) : null),
+      setItem: (k, v) => storage.set(k, String(v)),
+      removeItem: (k) => storage.delete(k),
+    },
+    AbortController,
+    setTimeout(fn, delay) {
+      assert.equal(delay, 6000);
+      return 1;
+    },
+    clearTimeout() {},
+    fetch: () => new Promise((resolve) => { resolveCheck = resolve; }),
+    Date: { now: () => NOW },
+  };
+  vm.runInNewContext(guardScript('unlock', 'release'), sandbox);
+  await settle();
+  assert.equal(typeof resolveCheck, 'function', 'expired stamp still waits for the server');
+  assert.equal(document.documentElement.style.visibility, 'hidden');
+  assert.deepEqual(replaced, []);
+  assert.equal(storage.get(key), String(NOW - 91 * DAY));
+  resolveCheck(entitlement(200, { ok: false }));
+  await settle();
+  assert.equal(document.documentElement.style.visibility, 'hidden');
+  assert.deepEqual(replaced, ['/tools/login/?to=' + encodeURIComponent('/tools/release/')]);
+  assert.equal(storage.has(key), false);
+});
+
+test('opaque and status 0 leave a fresh stamp and the open app alone', async () => {
+  const key = 'friend-apps-ok:unlock:/tools/release/';
+  for (const response of [entitlement(0, { ok: false }, 'opaque'), entitlement(0, { ok: false })]) {
+    const storage = new Map([[key, String(NOW - 3 * DAY)]]);
+    const result = await runGuard({
+      storage,
+      fetchImpl: () => Promise.resolve(response),
+    });
+    assert.equal(result.hiddenWhilePending, '', response.type);
+    assert.equal(result.visibility, '', response.type);
+    assert.deepEqual(result.replaced, [], response.type);
+    assert.equal(storage.get(key), String(NOW - 3 * DAY), response.type);
+  }
 });

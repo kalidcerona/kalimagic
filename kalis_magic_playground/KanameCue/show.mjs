@@ -233,8 +233,11 @@ function editCue(original, cues, save) {
   openDialog($('cueDialog'));
 }
 
-// Ask the browser not to evict stored audio under storage pressure (iOS, low disk). Asked after an audio import.
+// Ask once per launch to retain stored audio; refusal is silent.
+let persistRequested = false;
 async function requestPersist() {
+  if (persistRequested) return;
+  persistRequested = true;
   try { if (navigator.storage?.persist && !(await navigator.storage.persisted?.())) await navigator.storage.persist(); } catch {}
 }
 
@@ -246,6 +249,7 @@ function bootKaname(keepAwake) {
   renderHome();
   showScreen('home');
   keepAwake();
+  requestPersist();
   if ('serviceWorker' in navigator) {
     const registration = navigator.serviceWorker.register('./sw.js');
     registration.catch(() => {});

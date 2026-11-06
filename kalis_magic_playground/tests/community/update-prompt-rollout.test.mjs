@@ -31,7 +31,7 @@ const WIRING = {
   TabataTimer: { offer: ['app.js'], hide: ['app.js'], init: ['app.js'], safe: "$('settings').open === true && $('run').hidden && !running" },
   KanameCue: { offer: ['settings.mjs'], hide: ['settings.mjs'], init: ['show.mjs'], safe: "$('settings').open === true && $('run').hidden" },
 };
-const JS_FILES = (app) => readdirSync(new URL(`../../${app}/`, import.meta.url)).filter((file) => /\.m?js$/.test(file) && file !== 'update-prompt.js' && file !== 'sw.js');
+const JS_FILES = (app) => readdirSync(new URL(`../../${app}/`, import.meta.url)).filter((file) => /\.m?js$/.test(file) && file !== 'update-prompt.js' && file !== 'choice-update-prompt.js' && file !== 'sw.js');
 
 test('update-prompt.js is one byte-identical file in every adopting app', () => {
   const source = read('zz11', 'update-prompt.js');
