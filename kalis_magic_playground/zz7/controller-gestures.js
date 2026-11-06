@@ -1,5 +1,5 @@
-import { updateHold } from "./logic.js";
-import { performanceScreen, pointOnButton, settingsVisible } from "./dom.js";
+import { HOLD_MOVE_TOLERANCE_PX, updateHold } from "./logic.js";
+import { detectorButton, performanceScreen, pointOnButton, settingsVisible } from "./dom.js";
 import { stopVibration } from "./vibration.js";
 import { setLiveContact, showReadyFeedback } from "./stage.js";
 import { recorderThemes } from "./controller-themes.js";
@@ -83,12 +83,19 @@ function onPointerDown(event) {
   if (onButton && activePointerId == null) startHold(event);
 }
 
+function outsideHoldRange(x, y) {
+  const rect = detectorButton.getBoundingClientRect();
+  return rect.width <= 0 || rect.height <= 0 ||
+    x < rect.left - HOLD_MOVE_TOLERANCE_PX || x > rect.left + rect.width + HOLD_MOVE_TOLERANCE_PX ||
+    y < rect.top - HOLD_MOVE_TOLERANCE_PX || y > rect.top + rect.height + HOLD_MOVE_TOLERANCE_PX;
+}
+
 function onPointerMove(event) {
   const contact = pointers.get(event.pointerId);
   if (!contact || performanceScreen.hidden) return;
   contact.x = event.clientX;
   contact.y = event.clientY;
-  if (performanceScreen.dataset.displayTheme === "recorder" && event.pointerId === holdPointerId && !pointOnButton(contact.x, contact.y, null)) {
+  if (performanceScreen.dataset.displayTheme === "recorder" && event.pointerId === holdPointerId && outsideHoldRange(contact.x, contact.y)) {
     if (!settled) cancelUnsettledHold();
     setLiveContact(false);
     setHoldPointerId(null);

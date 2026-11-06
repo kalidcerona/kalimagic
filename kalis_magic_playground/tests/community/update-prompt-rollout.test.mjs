@@ -49,7 +49,7 @@ test('each app worker precaches the prompt, answers SKIP_WAITING and carries a n
   for (const app of UPDATE_PROMPT_APPS) {
     const sw = read(app, 'sw.js');
     assert.equal(sw.split('"./update-prompt.js"').length - 1, 1, `${app} shell lists update-prompt.js once`);
-    assert.match(sw, /(?:CACHE_NAME = CACHE_PREFIX \+ |CACHE=PREFIX\+)'[^']*-update-prompt-\d+';/, app);
+    assert.match(sw, /(?:CACHE_NAME = CACHE_PREFIX \+ |CACHE=PREFIX\+)'[^']*-update-prompt-\d+(?:-[A-Za-z0-9-]+)?';/, app);
     const listeners = {}; let skips = 0;
     vm.runInNewContext(sw, { URL, Response, Request, self: { registration: { scope: `https://example.test/${app}/` }, addEventListener: (n, f) => { listeners[n] = f; }, skipWaiting: async () => { skips++; }, clients: { claim: async () => {} } } });
     listeners.message({ data: { type: 'other' } });

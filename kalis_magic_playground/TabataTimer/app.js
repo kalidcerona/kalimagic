@@ -54,7 +54,7 @@
   function renderHome() {
     $('timers').replaceChildren(...timers.map(timer=>{
       const card=document.createElement('article');card.className='timer-card';card.style.setProperty('--timer-color',timer.colors.work);
-      const launch=button('',()=>{active=D.timer(timer);cfg=active.v;start();},'timer-launch');
+      const launch=button('',()=>TabataReady.openReady(readySession,timer),'timer-launch');
       const duration=document.createElement('span');duration.className='timer-duration num';duration.textContent=fmt(totalOf(build(timer.v,timer.skipLast))).padStart(5,'0');
       const name=document.createElement('strong');name.textContent=timer.name;launch.append(duration,name);
       const menu=button('⋯',()=>openMenu(timer,menu),'timer-menu');menu.setAttribute('aria-label',timer.name+' 메뉴'); menu.setAttribute('aria-haspopup','dialog');
@@ -190,7 +190,7 @@
   function vibe(p) { if (opts.vibe && navigator.vibrate) { try { navigator.vibrate(p); } catch {} } }
 
   // ---------- run engine (time is derived from a monotonic clock, never decremented) ----------
-  let segs = [], total = 0, startedAt = 0, pausedAt = 0, offset = 0, running = false, finished = false;
+  let segs = [], total = 0, startedAt = 0, pausedAt = 0, offset = 0, running = false, finished = false, ready = false;
   let lastIdx = -1, lastWhole = -1, raf = 0, iv = 0, wake = null;
 
   const now = () => performance.now() / 1000;
@@ -237,7 +237,7 @@
     segs = build(cfg, active.skipLast); total = totalOf(segs);
     if (!total) return;
     unlockAudio();
-    offset = 0; startedAt = now(); running = true; finished = false; lastIdx = -1; lastWhole = -1;
+    offset = 0; startedAt = now(); running = true; finished = false; ready = false; lastIdx = -1; lastWhole = -1;
     $('setup').hidden = true; $('run').hidden = false;
     $('run').classList.remove('paused');
     paintStrip($('rStrip'), segs);
@@ -253,7 +253,7 @@
   function tick() {
     if ($('run').hidden || finished) return;
     const t = elapsed();
-    if (t >= total) { finish(); return; }
+    if (t >= total) { if (!ready) finish(); return; }
     const i = locate(t), s = segs[i];
     const left = s.start + s.dur - t;
     const whole = Math.ceil(left);
@@ -276,6 +276,34 @@
     }
   }
 
+  function paintStill(t) {
+    const i = locate(t), s = segs[i], left = s.start + s.dur - t, ty = TYPES[s.type];
+    $('run').style.setProperty('--ph', ty.color);
+    $('rPhase').textContent = ty.label;
+    lastIdx = i; lastWhole = Math.ceil(left);
+    draw(i, s, left, t);
+  }
+
+  function assignRun(patch) {
+    if ('active' in patch) active = patch.active;
+    if ('cfg' in patch) cfg = patch.cfg;
+    if ('segs' in patch) segs = patch.segs;
+    if ('total' in patch) total = patch.total;
+    offset = patch.offset; startedAt = patch.startedAt; pausedAt = patch.pausedAt;
+    running = patch.running; finished = patch.finished; ready = patch.ready;
+    lastIdx = patch.lastIdx; lastWhole = patch.lastWhole;
+  }
+
+  const readySession = {
+    clone: timer => D.timer(timer), segments: build, total: totalOf, applyColors, assign: assignRun,
+    cancelLoops() { cancelAnimationFrame(raf); clearInterval(iv); },
+    showRun() { $('setup').hidden = true; $('run').hidden = false; $('run').classList.remove('paused'); },
+    setPlayLabel(text) { $('pauseBtn').textContent = text; }, restoreBody: restoreRunBody,
+    paintSegments() { paintStrip($('rStrip'), segs); }, keepAwake, paintAt: paintStill, isReady: () => ready, elapsed, unlockAudio,
+    clearPaused() { $('run').classList.remove('paused'); },
+    startLoops() { loop(); clearInterval(iv); iv = setInterval(tick, 200); }
+  };
+
   function draw(i, s, left, t) {
     const whole = Math.ceil(left);
     $('rCount').textContent = whole >= 60 ? fmt(whole) : String(whole);
@@ -292,7 +320,8 @@
 
   function togglePause() {
     if (finished) return;
-    if (running) { pausedAt = now(); running = false; $('pauseBtn').textContent = '계속'; $('run').classList.add('paused'); say('일시정지'); }
+    if (TabataReady.beginReady(readySession, now())) return;
+    if (running) { pausedAt = now(); running = false; ready = false; $('pauseBtn').textContent = '계속'; $('run').classList.add('paused'); say('일시정지'); }
     else { startedAt += now() - pausedAt; running = true; $('pauseBtn').textContent = '일시정지'; $('run').classList.remove('paused'); unlockAudio(); keepAwake(); }
   }
 
@@ -300,7 +329,7 @@
     if (finished) return;
     const t = elapsed(), i = locate(t);
     let target;
-    if (dir > 0) target = i + 1 < segs.length ? segs[i + 1].start : total;
+    if (dir > 0) target = i + 1 < segs.length ? segs[i + 1].start : (ready ? segs[i].start : total);
     else target = (t - segs[i].start > 2 || i === 0) ? segs[i].start : segs[i - 1].start;
     const base = running ? now() - startedAt : pausedAt - startedAt;
     offset = target - base + 0.0001;
@@ -326,7 +355,7 @@
 
   function stop() {
     cancelAnimationFrame(raf); clearInterval(iv);
-    running = false; finished = false;
+    running = false; finished = false; ready = false;
     try { speechSynthesis.cancel(); } catch {}
     $('run').hidden = true; $('setup').hidden = false;
     renderHome();

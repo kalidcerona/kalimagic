@@ -16,7 +16,8 @@ export function normalizeHoldThresholdMs(value) {
   if (typeof value !== "number" || !Number.isFinite(value)) return HOLD_THRESHOLD_MS;
   return Math.round(Math.max(500, Math.min(10000, value)) / 500) * 500;
 }
-export const HOLD_MOVE_TOLERANCE_PX = 24;
+/** About 2cm at the CSS reference density of 96px/inch. */
+export const HOLD_MOVE_TOLERANCE_PX = 76;
 export const TRUTH_ATTEMPT_MIN = 1;
 export const TRUTH_ATTEMPT_MAX = 20;
 export const TRUTH_ATTEMPT_DEFAULT = 4;

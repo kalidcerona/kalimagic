@@ -184,9 +184,10 @@ test('both rectangular pad corners count, blank space never holds, and movement 
       }
       assert.equal(f.state().attemptCount, 2);
       f.pointer('pointerdown', rect.left + 1, rect.top + 1);
-      f.pointer('pointermove', rect.left - 30, rect.top - 30);
+      // 81px from the contact, past the 76px (about 2cm) hold range.
+      f.pointer('pointermove', rect.left - 80, rect.top + 1);
       assert.equal(f.element('test-indicator').textContent, '취소됨');
-      f.tick(700); f.pointer('pointerup', rect.left - 30, rect.top - 30); assert.equal(f.state().attemptCount, 2);
+      f.tick(700); f.pointer('pointerup', rect.left - 80, rect.top + 1); assert.equal(f.state().attemptCount, 2);
       f.pointer('pointerdown', 170, 240); f.tick(50); f.pointer('pointerup', 170, 240); assert.equal(f.state().attemptCount, 2);
     } finally { f.restore(); }
   }

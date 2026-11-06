@@ -86,7 +86,7 @@ export const PUBLIC_DIRS = [
 ];
 
 // Publish only the offline shell and worker for this personal app.
-export const TABATA_FILES = ['data.js', 'install-ui.js', 'icon-maskable-192.png', 'icon-maskable-512.png', 'index.html', 'style.css', 'app.js', 'manifest.webmanifest', 'sw.js', 'update-prompt.js', 'brand-logo.png', 'icon.svg', 'icon-192.png', 'icon-512.png'];
+export const TABATA_FILES = ['data.js', 'install-ui.js', 'icon-maskable-192.png', 'icon-maskable-512.png', 'index.html', 'style.css', 'app.js', 'ready-run.js', 'manifest.webmanifest', 'sw.js', 'update-prompt.js', 'brand-logo.png', 'icon.svg', 'icon-192.png', 'icon-512.png'];
 
 // KANAME Cue web app: the same explicit-shell rule as TabataTimer.
 export const KANAME_FILES = ['index.html', 'style.css', 'app.mjs', 'prefs.mjs', 'clock.mjs', 'ui.mjs', 'show.mjs', 'playback.mjs', 'settings.mjs', 'wake.mjs', 'engine.mjs', 'engine-model.mjs', 'engine-output.mjs', 'engine-timing.mjs', 'engine-keys.mjs', 'engine-cues.mjs', 'audio.mjs', 'store.mjs', 'install-ui.js', 'update-prompt.js', 'manifest.webmanifest', 'sw.js', 'brand-logo.png', 'icon-192.png', 'icon-512.png', 'icon-maskable-192.png', 'icon-maskable-512.png'];

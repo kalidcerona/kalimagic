@@ -10,7 +10,7 @@ import { PUBLIC_DIRS, TABATA_FILES, MIRROR_PAIRS, preparePimaxRuntime } from '..
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const read = file => readFile(path.join(root, 'TabataTimer', file), 'utf8');
-const shell = ['index.html', 'style.css', 'app.js', 'manifest.webmanifest', 'brand-logo.png', 'icon.svg', 'icon-192.png', 'icon-512.png', 'data.js', 'install-ui.js', 'update-prompt.js', 'icon-maskable-192.png', 'icon-maskable-512.png'];
+const shell = ['index.html', 'style.css', 'app.js', 'ready-run.js', 'manifest.webmanifest', 'brand-logo.png', 'icon.svg', 'icon-192.png', 'icon-512.png', 'data.js', 'install-ui.js', 'update-prompt.js', 'icon-maskable-192.png', 'icon-maskable-512.png'];
 
 function worker(scope, caches) {
   const listeners = {};
@@ -102,7 +102,7 @@ test('TabataTimer worker precaches the complete shell, serves offline and isolat
       async addAll(requests) { for (const request of requests) cached.set(request.url, new Response(request.url)); },
       async match(url) { return cached.get(url)?.clone(); }
     };
-    const caches = { async open(name) { names.push(name); return cache; }, async keys() { return [names.at(-1), names.at(-1).replace(/v20261024-5-brand5-update-prompt-3$/, 'old'), 'pimax-practice-old', 'tabata-timer-unrelated-old']; }, async delete(name) { deleted.push(name); } };
+    const caches = { async open(name) { names.push(name); return cache; }, async keys() { return [names.at(-1), names.at(-1).replace(/v20261024-5-brand5-update-prompt-3-preset-ready-1$/, 'old'), 'pimax-practice-old', 'tabata-timer-unrelated-old']; }, async delete(name) { deleted.push(name); } };
     const { context, listeners } = worker(scope, caches);
     vm.runInContext(source, context);
     let pending;
@@ -110,11 +110,11 @@ test('TabataTimer worker precaches the complete shell, serves offline and isolat
     await pending;
     const cacheName = names.at(-1);
     assert.equal(cacheName.startsWith('tabata-timer-'), true);
-    assert.match(cacheName, /v20261024-5-brand5-update-prompt-3$/);
+    assert.match(cacheName, /v20261024-5-brand5-update-prompt-3-preset-ready-1$/);
     assert.deepEqual([...cached.keys()].sort(), shell.map(file => new URL(file === 'index.html' ? './' : file, scope).href).sort());
     listeners.activate({ waitUntil(value) { pending = value; } });
     await pending;
-    assert.deepEqual(deleted, [cacheName.replace(/v20261024-5-brand5-update-prompt-3$/, 'old')]);
+    assert.deepEqual(deleted, [cacheName.replace(/v20261024-5-brand5-update-prompt-3-preset-ready-1$/, 'old')]);
     for (const file of ['', ...shell]) {
       listeners.fetch({ request: new Request(new URL(file, scope)), respondWith(value) { pending = value; } });
       const response = await pending;
@@ -138,7 +138,7 @@ test('TabataTimer preserves Korean copy and zz13 contact footer without fullscre
   for (const text of ['개요', 'Android Chrome: ⋮', '앱 설치', 'iPhone Safari: 공유', '홈 화면에 추가', '준비', '운동', '일시정지', '사이클', '종료']) {
     assert.ok((html + await read('app.js')).includes(text), text);
   }
-  for (const file of ['index.html', 'app.js', 'style.css', 'manifest.webmanifest', 'sw.js', 'data.js', 'install-ui.js', 'update-prompt.js']) {
+  for (const file of ['index.html', 'app.js', 'ready-run.js', 'style.css', 'manifest.webmanifest', 'sw.js', 'data.js', 'install-ui.js', 'update-prompt.js']) {
     const source = await read(file);
     assert.doesNotMatch(source, /\b(?:requestFullscreen|webkitRequestFullscreen|webkitRequestFullScreen|mozRequestFullScreen|msRequestFullscreen)\b/, file);
     assert.doesNotMatch(source, /[\u2014~\uFF5E\u301C]/, file);
@@ -171,8 +171,8 @@ function memoryStorage(seed={}) {
 async function dataLayer() {
   const context=vm.createContext({window:{}});vm.runInContext(await read('data.js'),context);return context.window.TabataData;
 }
-async function timerHarness({delayedWake=false,rejectWake=false,storage=memoryStorage(),blockedStorage=false}={}) {
-  const nodes=new Map(),documentEvents={},locks=[],utterances=[];
+async function timerHarness({delayedWake=false,rejectWake=false,storage=memoryStorage(),blockedStorage=false,cues=false}={}) {
+  const nodes=new Map(),documentEvents={},locks=[],utterances=[],tones=[],vibes=[];
   let clock=0,wakeRequests=0,unlocked=0,resolveWake;
   for(const match of (await read('index.html')).matchAll(/\bid="([^"]+)"/g))nodes.set(match[1],new Element());
   for(const id of ['run','editor','picker'])nodes.get(id).hidden=true;
@@ -181,8 +181,10 @@ async function timerHarness({delayedWake=false,rejectWake=false,storage=memorySt
     constructor(){this.state='running';this.currentTime=0;this.sampleRate=44100;}
     createBuffer(){return {};}
     createBufferSource(){return {connect(){},start(){unlocked++;}};}
+    createOscillator(){const osc={frequency:{value:0},connect(node){return node;},start(){tones.push(osc.frequency.value);},stop(){}};return osc;}
+    createGain(){return {gain:{setValueAtTime(){},exponentialRampToValueAtTime(){}},connect(){return {};}};}
   }
-  const navigator={wakeLock:{request:async type=>{
+  const navigator={vibrate(pattern){vibes.push(pattern);return true;},wakeLock:{request:async type=>{
     assert.equal(type,'screen');wakeRequests++;
     if(delayedWake)await new Promise(resolve=>{resolveWake=resolve;});
     if(rejectWake)throw new Error('denied');
@@ -192,12 +194,14 @@ async function timerHarness({delayedWake=false,rejectWake=false,storage=memorySt
   const context=vm.createContext({document,navigator,window:{AudioContext,speechSynthesis,matchMedia:()=>({matches:false})},speechSynthesis,
     SpeechSynthesisUtterance:class{constructor(text){this.text=text;}},localStorage:storage,
     performance:{now:()=>clock},requestAnimationFrame:()=>1,cancelAnimationFrame(){},setInterval:()=>1,clearInterval(){},setTimeout:()=>1,clearTimeout(){}});
-  // Disable beeps without disabling audio unlock or speech.
-  storage.setItem('tt.opts',JSON.stringify({beep:false,voice:true,vibe:false}));
+  // Default tests keep beeps and vibration off. cues:true leaves voice, beep and vibration on.
+  storage.setItem('tt.opts',JSON.stringify({beep:cues,voice:true,vibe:cues}));
   if(blockedStorage)Object.defineProperty(context,'localStorage',{get(){throw new Error('blocked site data');}});
-  vm.runInContext(await read('data.js'),context);vm.runInContext(await read('app.js'),context);await settle();
-  return {nodes,document,locks,utterances,storage,get wakeRequests(){return wakeRequests;},get unlocked(){return unlocked;},
-    click:async id=>click(nodes.get(id)),start:async()=>click(nodes.get('timers').children[0].children[0]),
+  vm.runInContext(await read('data.js'),context);vm.runInContext(await read('ready-run.js'),context);vm.runInContext(await read('app.js'),context);await settle();
+  return {nodes,document,locks,utterances,tones,vibes,storage,get wakeRequests(){return wakeRequests;},get unlocked(){return unlocked;},
+    click:async id=>click(nodes.get(id)),
+    start:async()=>{await click(nodes.get('timers').children[0].children[0]);await click(nodes.get('pauseBtn'));},
+    async key(key){documentEvents.keydown({key,preventDefault(){}});await settle();},
     async visibility(state){document.visibilityState=state;documentEvents.visibilitychange();await settle();},
     async advance(ms){clock+=ms;documentEvents.visibilitychange();await settle();},
     async resolveWake(){resolveWake();await settle();}
@@ -312,6 +316,59 @@ test('TabataTimer shipped UI creates, cancels drafts, edits wheels, duplicates a
   await click(n.get('menuActions').children[0]);assert.equal(n.get('timers').children.length,3);
   await menu();await click(n.get('menuActions').children[2]);await click(n.get('menuActions').children[1]);assert.equal(n.get('timers').children.length,2);
   saved=JSON.parse(app.storage.getItem('tt.timers.v2'));assert.equal(saved[1].name,'새 이름 복사');
+});
+
+test('TabataTimer saved timer waits on the run screen until the start button or Space',async()=>{
+  const app=await timerHarness({cues:true}),n=app.nodes;
+  const launch=()=>click(n.get('timers').children[0].children[0]);
+  await launch();
+  assert.equal(n.get('setup').hidden,true);
+  assert.equal(n.get('run').hidden,false);
+  assert.equal(n.get('pauseBtn').textContent,'시작');
+  assert.equal(n.get('rPhase').textContent,'준비');
+  assert.equal(n.get('rCount').textContent,'10');
+  assert.equal(n.get('rLeft').textContent,'남은 시간 4:00');
+  assert.equal(app.unlocked,0);
+  assert.deepEqual(app.utterances,[]);
+  assert.deepEqual(app.tones,[]);
+  assert.deepEqual(app.vibes,[]);
+  assert.equal(app.locks[0].released,false);
+  await app.advance(10000);
+  assert.equal(n.get('rCount').textContent,'10');
+  await app.click('nextBtn');
+  assert.equal(n.get('rPhase').textContent,'운동');
+  assert.equal(n.get('rCount').textContent,'20');
+  await app.click('prevBtn');
+  assert.equal(n.get('rPhase').textContent,'준비');
+  assert.equal(app.unlocked,0);
+  assert.deepEqual(app.utterances,[]);
+  assert.deepEqual(app.tones,[]);
+  assert.deepEqual(app.vibes,[]);
+  await app.click('pauseBtn');
+  assert.equal(n.get('pauseBtn').textContent,'일시정지');
+  assert.equal(app.unlocked,1);
+  assert.equal(app.utterances[0].text,'준비');
+  assert.equal(app.tones.length>0,true);
+  assert.equal(app.vibes.length>0,true);
+  await app.advance(10000);
+  assert.equal(n.get('rCount').textContent,'20');
+  await app.click('stopBtn');
+  assert.equal(n.get('run').hidden,false);
+  await app.click('stopBtn');
+  assert.equal(n.get('setup').hidden,false);
+  assert.equal(n.get('run').hidden,true);
+  assert.equal(app.locks[0].released,false);
+  const spoken=app.utterances.length, sounded=app.tones.length, shaken=app.vibes.length;
+  await launch();
+  await app.advance(3000);
+  assert.equal(app.utterances.length,spoken);
+  assert.equal(app.tones.length,sounded);
+  assert.equal(app.vibes.length,shaken);
+  assert.equal(n.get('rCount').textContent,'10');
+  await app.key(' ');
+  assert.equal(n.get('pauseBtn').textContent,'일시정지');
+  assert.equal(app.utterances.at(-1).text,'준비');
+  assert.equal(app.utterances.length,spoken+1);
 });
 
 test('TabataTimer idle, pause, completion and stop keep visible screen awake while monotonic timing, Korean speech and audio unlock remain intact',async()=>{
