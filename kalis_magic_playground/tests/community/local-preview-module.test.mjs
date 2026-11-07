@@ -58,7 +58,12 @@ for (const [zz, ext, entry] of apps) {
     for (const file of appFiles) {
       const lines = readFileSync(path.join(dir, file), 'utf8').split('\n');
       const marked = lines.filter((line) => line.includes(MARK));
-      const rest = lines.filter((line) => !line.includes(MARK)).join('\n');
+      // The readiness module must name the exact SW release, including its historical preview token.
+      // Only that cache identity line is exempt; executable preview hooks remain forbidden.
+      const rest = lines.filter((line) => !line.includes(MARK) && !(
+        ['zz5', 'zz6', 'zz7'].includes(zz) && file === 'launch-check.js'
+        && /^    const current = SHELL_PREFIX \+ encodeURIComponent\(scope\) \+ '/.test(line)
+      )).join('\n');
       assert.doesNotMatch(rest, REFERENCE, `${zz}/${file} has no hook reference outside marked lines`);
       for (const line of marked) {
         assert.equal(file, entry, `${zz}: marked lines live in the entry module`);

@@ -28,6 +28,7 @@ import {
 } from './performance.js';
 import { showSettings } from './performance.js'; // local-preview-hook
 import { installLocalPreview } from './local-preview.js'; // local-preview-hook
+import { startLaunchCheck } from './launch-check.js';
 
 let wallpaperOriginal = null;
 let cropDrag = null;
@@ -377,3 +378,4 @@ fillForm();
 showPerformance({ persistMode: false, keepGone: false, showGuide: true });
 imagesReady.then(refreshCoinImage, refreshCoinImage);
 installLocalPreview(() => { hideGestureGuide(); showSettings(); }); // local-preview-hook
+startLaunchCheck();

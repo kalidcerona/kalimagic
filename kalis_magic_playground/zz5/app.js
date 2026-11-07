@@ -5,6 +5,7 @@ import { hideGestureGuide } from './gesture-guide.js'; // local-preview-hook
 import { setError } from './status.js';
 import { openSettings } from './pointer.js'; // local-preview-hook
 import { installLocalPreview } from './local-preview.js'; // local-preview-hook
+import { startLaunchCheck } from './launch-check.js';
 
 boot().catch(() => {
   setError(MESSAGES.storageReadFailed);
@@ -15,3 +16,4 @@ requestAnimationFrame(() => {
   if (view === 'settings') warmCourtDeck();
 });
 installLocalPreview(() => { hideGestureGuide(); openSettings(); }); // local-preview-hook
+startLaunchCheck();

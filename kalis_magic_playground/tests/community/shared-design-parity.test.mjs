@@ -5,12 +5,15 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { USOTSUKI_FILES, SPINNER_FILES } from '../../scripts/build-public.mjs';
 import { stripLocalPreview, stripInlineLocalPreview, dropUnusedSingleImports } from './local-preview-strip.mjs';
+import { PERSONAL_LAUNCH_CHECK_FILES, stripPersonalLaunchCheck } from './personal-launch-check.mjs';
 import { usotsukiAppModules, usotsukiAppSource } from './usotsuki-app-script.mjs';
 import { readAppStyle } from './app-style.mjs';
 
 const read = (route, file) => file === 'style.css' ? Promise.resolve(Buffer.from(readAppStyle(new URL(`../../${route}/`, import.meta.url)))) : readFile(new URL(`../../${route}/${file}`, import.meta.url));
-// USOTSUKI detector.js is an ES module entry with local feature modules; both builds carry the same files.
-const detectorFiles = (route) => usotsukiAppModules(fileURLToPath(new URL(`../../${route}/`, import.meta.url)));
+// USOTSUKI detector.js is an ES module entry with local feature modules; both builds carry the same files
+// except PERSONAL_LAUNCH_CHECK_FILES, which the pinned friend snapshot does not ship.
+const detectorFiles = (route) => usotsukiAppModules(fileURLToPath(new URL(`../../${route}/`, import.meta.url)))
+  .filter((file) => !PERSONAL_LAUNCH_CHECK_FILES.includes(file));
 
 // Personal USOTSUKI keeps the localhost preview hook as one marked line plus local-preview.js. The friend snapshot excludes it.
 function withoutLocalPreviewHook(source) {
@@ -47,7 +50,7 @@ test('shared performance code differs only in its explicitly isolated storage ke
     if (personal === 'zz7' && file === 'detector.js') {
       assert.match(source, /local-preview/);
       assert.doesNotMatch(shared, /magic-local-settings|local-preview/);
-      source = dropUnusedSingleImports(withoutLocalPreviewHook(source));
+      source = dropUnusedSingleImports(withoutLocalPreviewHook(stripPersonalLaunchCheck(source)));
       shared = dropUnusedSingleImports(shared);
     }
     // The pinned spinner snapshot still carries the old inline hook; the personal app now keeps it in local-preview.js.
@@ -102,14 +105,14 @@ test('Three recorder themes retain exact bytes and cache isolation', async () =>
       assert.doesNotMatch(snapshot, /magic-local-settings|local-preview/);
       if (file === 'detector.js') {
         assert.match(personalText, /local-preview/);
-        personalText = dropUnusedSingleImports(withoutLocalPreviewHook(personalText));
+        personalText = dropUnusedSingleImports(withoutLocalPreviewHook(stripPersonalLaunchCheck(personalText)));
         snapshot = dropUnusedSingleImports(snapshot);
       }
     } else if (file === 'sw.js') {
       assert.ok(snapshot.includes("CACHE_NAME = CACHE_PREFIX + 'v20261009-continuous-paper-20-haptic-dip-manual-install-1-perf-1-coherent-1-compat-1-gesture-1-wake-1-modules-1-split-1-trim-1-css-1-clean-1-lieflash-2-update-prompt-3-hold-range-76-1-persist-1-distribution'"));
       snapshot = snapshot.replace('v20261009-continuous-paper-20-haptic-dip-manual-install-1-perf-1-coherent-1-compat-1-gesture-1-wake-1-modules-1-split-1-trim-1-css-1-clean-1-lieflash-2-update-prompt-3-hold-range-76-1-persist-1-distribution', 'v20261009-continuous-paper-20-haptic-dip-manual-install-1-perf-1-coherent-1-compat-1-gesture-1-wake-1-modules-1-split-1-trim-1-css-1-clean-1-lieflash-2-update-prompt-3-hold-range-76-1-persist-1');
       assert.ok(personal.includes('v20261009-continuous-paper-20-haptic-dip-manual-install-1-perf-1-coherent-1-compat-1-gesture-1-wake-1-modules-1-split-1'));
-      personalText = stripLocalPreview(personalText);
+      personalText = stripPersonalLaunchCheck(stripLocalPreview(personalText));
     }
     assert.equal(snapshot, personalText, `normalized snapshot ${file}`);
     if (file === 'style.css') {

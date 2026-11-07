@@ -20,7 +20,8 @@ const SNAPSHOTS = path.join(ROOT, 'distribution-snapshots');
 export const DEFAULT_REPORT = '/Users/sumpie/Desktop/AI/runtime/jobs/20261024-modularize/friend-compare.txt';
 const TEXT_EXT = /\.(?:m?js|html|css|webmanifest)$/;
 const CODE_EXT = /\.(?:m?js|html)$/;
-const OWNER_FILE = /(?:^|\/)local-preview\.m?js$/;
+// Launch readiness is personal-only, just like the local preview hook.
+const OWNER_FILE = /(?:^|\/)(?:local-preview\.m?js|launch-check\.js)$/;
 const HOOK_MARK = 'local-preview-hook';
 const FULLSCREEN_PATTERN = String.raw`(?:^|\/)fullscreen\.js$`;
 const OWNER_WORDS = /local-preview|magic-local-settings|localSettingsReady/;
@@ -54,6 +55,10 @@ export function stripLocalPreview(text) {
   if (next !== before) path = path === 'none' ? 'inline' : 'marker+inline';
   // A shell-list entry for the removed file that lost its marker.
   next = next.replace(/^[ \t]*["']\.\/local-preview\.m?js["'],?[ \t]*\n/gm, '');
+  next = next
+    .replace(/^import \{ startLaunchCheck \} from ["']\.\/launch-check\.js["'];\n/gm, '')
+    .replace(/^startLaunchCheck\(\);\n/gm, '')
+    .replace(/^[ \t]*["']\.\/launch-check\.js["'],?[ \t]*\n/gm, '');
   return { text: next, path };
 }
 
@@ -71,7 +76,7 @@ function findCacheLiteral(source) {
 export function friendCacheName(source, suffix = '') {
   const found = findCacheLiteral(source);
   if (!found) return source;
-  let literal = found[1].replace(/-local-preview(?:-module)?-\d+/g, '');
+  let literal = found[1].replace(/-local-preview(?:-module)?-\d+/g, '').replace(/-launch-check-\d+/g, '');
   if (suffix && !literal.endsWith(suffix)) literal += suffix;
   return source.replace(found[0], found[0].replace(found[1], literal));
 }

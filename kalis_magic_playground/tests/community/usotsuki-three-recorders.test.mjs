@@ -8,6 +8,7 @@ import { createRecorderThemeController } from '../../zz7/recorder-theme.js';
 import { fileURLToPath } from 'node:url';
 import { usotsukiAppScript, usotsukiAppSource } from './usotsuki-app-script.mjs';
 import { stripLocalPreview } from './local-preview-strip.mjs';
+import { excisePersonalLaunchCheck } from './personal-launch-check.mjs';
 import { readAppStyle } from './app-style.mjs';
 
 const read = file => readFileSync(new URL('../../zz7/'+file, import.meta.url), 'utf8');
@@ -187,7 +188,8 @@ test('snapshot changes exactly three named constants and excludes the localhost 
  assert.doesNotMatch(shared,/magic-local-settings|local-preview/);
  // detector.js is the only entry and controller.js boots the app, so that import is not a hook line and stays in the friend build.
  assert.match(shared,/^import \{ openSettings \} from "\.\/controller\.js";$/m);
- assert.equal(shared,stripLocalPreview(personal));
+ // launch-check.js is personal-only. The pinned friend snapshot does not include it.
+ assert.equal(shared,stripLocalPreview(excisePersonalLaunchCheck(personal, fileURLToPath(new URL('../../zz7/', import.meta.url)))));
 });
 
 

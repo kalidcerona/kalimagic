@@ -231,7 +231,7 @@ export function shouldCopyChoice(relativePath) {
 }
 // USOTSUKI style.css is split into feature pieces linked in this order after style.css.
 export const USOTSUKI_STYLE_FILES = ['style-settings.css', 'style-holdem.css', 'style-recorder.css'];
-export const USOTSUKI_FILES = NEW_APP_FILES.filter((file) => file !== 'app.js').concat(USOTSUKI_STYLE_FILES, 'first-run-guide.js', 'detector.js', 'detector-panel-grok.svg', 'holdem-assets/felt-grain.svg', 'holdem-assets/leather-grain.svg', 'holdem-assets/table-rail.svg', 'recorder-assets/recorder-shell-blank.webp', 'recorder-theme.js', 'recorder-engine.js', 'recorder-trace.js', 'recorder-a.html', 'recorder-d.html', 'controller.js', 'controller-state.js', 'controller-themes.js', 'controller-audio.js', 'controller-storage.js', 'controller-hold.js', 'controller-haptic.js', 'controller-screens.js', 'controller-attempts.js', 'controller-gestures.js', 'controller-display-theme.js', 'dom.js', 'storage.js', 'heartbeat.js', 'vibration.js', 'wake-lock.js', 'preferences.js', 'stage.js', 'bindings.js');
+export const USOTSUKI_FILES = NEW_APP_FILES.filter((file) => file !== 'app.js').concat(USOTSUKI_STYLE_FILES, 'first-run-guide.js', 'detector.js', 'launch-check.js', 'detector-panel-grok.svg', 'holdem-assets/felt-grain.svg', 'holdem-assets/leather-grain.svg', 'holdem-assets/table-rail.svg', 'recorder-assets/recorder-shell-blank.webp', 'recorder-theme.js', 'recorder-engine.js', 'recorder-trace.js', 'recorder-a.html', 'recorder-d.html', 'controller.js', 'controller-state.js', 'controller-themes.js', 'controller-audio.js', 'controller-storage.js', 'controller-hold.js', 'controller-haptic.js', 'controller-screens.js', 'controller-attempts.js', 'controller-gestures.js', 'controller-display-theme.js', 'dom.js', 'storage.js', 'heartbeat.js', 'vibration.js', 'wake-lock.js', 'preferences.js', 'stage.js', 'bindings.js');
 export const ASRAI_FILES = [
   'brand-logo.jpg', 'brand-logo.png', 'contacts.js', 'contacts-gestures.js',
   'contacts-list.js', 'contacts-screen.js', 'contacts-settings.js',
@@ -312,6 +312,8 @@ export const MIRROR_PAIRS = [
   ['../../magic-aletheia/local-preview.js', 'zz5/local-preview.js'],
   ['../../magic-tobira/local-preview.js', 'zz6/local-preview.js'],
   ['../../magic-usotsuki/local-preview.js', 'zz7/local-preview.js'],
+  ['../../magic-aletheia/launch-check.js', 'zz5/launch-check.js'],
+  ['../../magic-tobira/launch-check.js', 'zz6/launch-check.js'],
   ['../../magic-asrai/local-preview.js', 'zz8/local-preview.js'],
   ['../../magic-alter/local-preview.js', 'zz10/local-preview.js'],
   ['../../magic-spinner/local-preview.js', 'zz11/local-preview.js'],

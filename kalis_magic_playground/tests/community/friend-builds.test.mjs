@@ -40,15 +40,15 @@ test('friend build generator', async (t) => {
   const temp = await mkdtemp(path.join(os.tmpdir(), 'friend-builds-test-'));
   t.after(() => rm(temp, { recursive: true, force: true }));
 
-  await t.test('generated output has no owner-only local preview code or file', async () => {
+  await t.test('generated output has no owner-only local preview or launch check', async () => {
     for (const app of friendApps()) {
       const { report, dir } = await build(app, temp);
       assert.deepEqual(report.warnings, [], `${app}: ${report.warnings.join(' | ')}`);
       for (const rel of await walk(dir)) {
-        assert.doesNotMatch(rel, /local-preview/, `${app}/${rel}`);
+        assert.doesNotMatch(rel, /local-preview|launch-check\.js/, `${app}/${rel}`);
         if (!TEXT.test(rel)) continue;
         const text = await readFile(path.join(dir, rel), 'utf8');
-        assert.doesNotMatch(text, /local-preview|magic-local-settings|localSettingsReady/, `${app}/${rel}`);
+        assert.doesNotMatch(text, /local-preview|magic-local-settings|localSettingsReady|startLaunchCheck|launch-check-1/, `${app}/${rel}`);
       }
     }
   });
