@@ -90,9 +90,16 @@ test('Pi Max pinned snapshot matches the personal runtime except three storage k
       assert.match(d.toString(), /keepVisibleScreenAwake/);
       assert.equal(d.toString(), preparePimaxRuntime(p.toString()));
     } else if (file === 'sw.js') {
-      const from = "+ 'v20261024-wake-3-v20261021-wake-1-v20261016-sheet-1-modes-1-coherent-1-v2-brand5-modules-1-css-1-update-prompt-3-persist-1';";
-      assert.ok(p.toString().includes(from));
-      assert.equal(d.toString(), p.toString().replace(from, from.replace("-update-prompt-3-persist-1';", "-update-prompt-3-persist-1-distribution';")));
+      // Pinned friend worker keeps the previous personal version plus the distribution family suffix.
+      const personalVersion = 'v20261024-wake-3-v20261021-wake-1-v20261016-sheet-1-modes-1-coherent-1-v2-brand5-modules-1-css-1-update-prompt-3-persist-1-name-1';
+      const pinnedVersion = 'v20261024-wake-3-v20261021-wake-1-v20261016-sheet-1-modes-1-coherent-1-v2-brand5-modules-1-css-1-update-prompt-3-persist-1-distribution';
+      assert.ok(p.toString().includes(`+ '${personalVersion}';`));
+      assert.equal(d.toString(), p.toString().replace(personalVersion, pinnedVersion));
+    } else if (file === 'index.html' || file === 'settings.mjs' || file === 'manifest.webmanifest') {
+      // Pinned friend copy keeps the previous display name. Personal shell uses PI MAX.
+      assert.match(d.toString(), /Pi Max/);
+      assert.doesNotMatch(p.toString(), /Pi Max/);
+      assert.equal(d.toString().replaceAll('Pi Max', 'PI MAX'), p.toString());
     } else assert.deepEqual(d, p, file);
   }
 });

@@ -1,7 +1,7 @@
 {
   "id": "./",
-  "name": "Tabata Timer",
-  "short_name": "Tabata Timer",
+  "name": "타바타 타이머",
+  "short_name": "타바타",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

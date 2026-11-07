@@ -123,7 +123,7 @@ test('Choice login, hosting, migration and both new admin grants are registered'
   const context = {};
   vm.runInNewContext((await read('admin-app-model.js')).toString(), context);
   const html = (await read('admin.html')).toString();
-  for (const [tool, name] of [['choice', '너의 선택은?'], ['pimax', 'Pi Max 연습실']]) {
+  for (const [tool, name] of [['choice', '너의 선택은?'], ['pimax', 'PI MAX 연습실']]) {
     assert.ok(context.AdminAppModel.APP_CATALOG.some(app => app.id === tool && app.path === `/tools/${tool}/`));
     assert.equal(context.AdminAppModel.toolLabel(tool), name);
     assert.ok(html.includes(`data-app-card="${tool}"`));

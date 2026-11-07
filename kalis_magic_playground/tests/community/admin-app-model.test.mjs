@@ -40,7 +40,7 @@ test('catalog exposes all fourteen distribution apps', () => {
 });
 
 test('new friend app cards expose separate links, copy controls and counters', () => {
-  for (const [id, name] of [['aletheia', '알레테이아\\(ALETHEIA\\)'], ['usotsuki', '우소츠키\\(USOTSUKI\\)'], ['arosaegida', '아로새기다'], ['magicshow', '칼리 마술 성장기 \\(베타\\)'], ['pimax', 'Pi Max 연습실'], ['choice', '너의 선택은\\?'], ['gwayubulgeup', '과유불급'], ['memdeck', '멤덱 연습실']]) {
+  for (const [id, name] of [['aletheia', '알레테이아\\(ALETHEIA\\)'], ['usotsuki', '우소츠키\\(USOTSUKI\\)'], ['arosaegida', '아로새기다'], ['magicshow', '칼리 마술 성장기 \\(베타\\)'], ['pimax', 'PI MAX 연습실'], ['choice', '너의 선택은\\?'], ['gwayubulgeup', '과유불급'], ['memdeck', '멤덱 연습실']]) {
     const card = adminHtml.match(new RegExp('<article class="admin-app-card" data-app-card="' + id + '">([\\s\\S]*?)</article>'))?.[1];
     assert.ok(card, name + ' card exists');
     assert.match(card, new RegExp('<h3>' + name + '</h3>'));
@@ -85,7 +85,7 @@ test('friend app availability is unknown when its service is down', () => {
   assert.equal(model.isToolAvailable('stopwatch-uni', availability), false);
   assert.equal(model.isToolAvailable('aletheia', availability), false);
   assert.equal(model.isToolAvailable('usotsuki', availability), false);
-  assert.equal(model.availabilityMessage(availability), '레리즈(RELEASE)·카이로스(KAIROS)·알레테이아(ALETHEIA)·우소츠키(USOTSUKI)·토비라(TOBIRA)·티케(TYCHE)·아로새기다·Pi Max 연습실·너의 선택은?·칼리 마술 성장기 (베타)·과유불급·멤덱 연습실 권한 서비스를 사용할 수 없습니다. 조회 가능한 앱의 권한만 표시됩니다.');
+  assert.equal(model.availabilityMessage(availability), '레리즈(RELEASE)·카이로스(KAIROS)·알레테이아(ALETHEIA)·우소츠키(USOTSUKI)·토비라(TOBIRA)·티케(TYCHE)·아로새기다·PI MAX 연습실·너의 선택은?·칼리 마술 성장기 (베타)·과유불급·멤덱 연습실 권한 서비스를 사용할 수 없습니다. 조회 가능한 앱의 권한만 표시됩니다.');
 });
 
 test('friend app outage warnings override legacy response defaults', () => {

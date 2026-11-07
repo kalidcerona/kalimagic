@@ -411,7 +411,9 @@ test('both Pi Max runtimes share the install-sheet focus trap', () => {
     const personal = readFileSync(new URL(`./${file}`, import.meta.url), 'utf8');
     const shared = readFileSync(new URL(`../distribution-snapshots/pimax/${file}`, import.meta.url), 'utf8');
     const runtime = (source) => file === 'app.mjs' ? preparePimaxRuntime(source) : source;
-    assert.equal(runtime(normalize(shared)), runtime(personal), file);
+    // Pinned friend settings keep the previous display name. Personal settings use PI MAX.
+    const alignDisplayName = (source) => file === 'settings.mjs' ? source.replaceAll('Pi Max', 'PI MAX') : source;
+    assert.equal(runtime(alignDisplayName(normalize(shared))), runtime(personal), file);
   }
 });
 

@@ -2,7 +2,7 @@
   var panel = document.querySelector('[data-panel]');
   var to = window.ToolGateUtil.safeTo(new URLSearchParams(location.search).get('to'));
   var tool = window.ToolGateUtil.toolFromPath(to);
-  var names = { calc: 'HITSUZEN', stopwatch: 'KAIROS', unlock: '레리즈', 'stopwatch-uni': 'KAIROS', aletheia: 'ALETHEIA', usotsuki: 'USOTSUKI', tobira: 'TOBIRA', spinner: 'TYCHE', arosaegida: '아로새기다', pimax: 'Pi Max 연습실', choice: '너의 선택은?', magicshow: '칼리 마술 성장기 (베타)', gwayubulgeup: '과유불급', memdeck: '멤덱 연습실' };
+  var names = { calc: 'HITSUZEN', stopwatch: 'KAIROS', unlock: '레리즈', 'stopwatch-uni': 'KAIROS', aletheia: 'ALETHEIA', usotsuki: 'USOTSUKI', tobira: 'TOBIRA', spinner: 'TYCHE', arosaegida: '아로새기다', pimax: 'PI MAX 연습실', choice: '너의 선택은?', magicshow: '칼리 마술 성장기 (베타)', gwayubulgeup: '과유불급', memdeck: '멤덱 연습실' };
   var appName = names[tool];
   var busy = false;
   var signedIn = false;

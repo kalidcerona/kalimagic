@@ -59,7 +59,8 @@ test('TabataTimer has distinct standalone identity, complete metadata, icons and
     assert.equal(new URL(manifest.id,base).href,new URL('./',base).href);
     assert.equal(new URL(manifest.start_url,base).href,new URL(manifest.scope,base).href);
   }
-  for (const key of ['name', 'short_name']) assert.equal(manifest[key], 'Tabata Timer');
+  assert.equal(manifest.name, '타바타 타이머');
+  assert.equal(manifest.short_name, '타바타');
   for (const key of ['start_url', 'scope']) assert.equal(manifest[key], './');
   assert.equal(manifest.display, 'standalone');
   assert.equal(manifest.display_override, undefined);
@@ -79,7 +80,7 @@ test('TabataTimer has distinct standalone identity, complete metadata, icons and
     assert.equal(bytes.readUInt32BE(20), size);
   }
   const html = await read('index.html');
-  for (const pattern of [/^<!DOCTYPE html>/, /<html lang="ko">/, /viewport-fit=cover/, /name="theme-color" content="#1a1512"/, /name="color-scheme" content="dark"/, /rel="manifest" href="\.\/manifest.webmanifest"/, /rel="apple-touch-icon" href="\.\/icon-192.png"/, /<title>Tabata Timer<\/title>/]) assert.match(html, pattern);
+  for (const pattern of [/^<!DOCTYPE html>/, /<html lang="ko">/, /viewport-fit=cover/, /name="theme-color" content="#1a1512"/, /name="color-scheme" content="dark"/, /rel="manifest" href="\.\/manifest.webmanifest"/, /rel="apple-touch-icon" href="\.\/icon-192.png"/, /<title>타바타 타이머<\/title>/]) assert.match(html, pattern);
   const headers = await readFile(path.join(root, 'netlify.toml'), 'utf8');
   for (const route of ['TabataTimer', 'tabatatimer']) {
     for (const [file,type] of [['data.js','application/javascript; charset=utf-8'],['install-ui.js','application/javascript; charset=utf-8'],['icon-maskable-192.png','image/png'],['icon-maskable-512.png','image/png']]) {
@@ -102,7 +103,7 @@ test('TabataTimer worker precaches the complete shell, serves offline and isolat
       async addAll(requests) { for (const request of requests) cached.set(request.url, new Response(request.url)); },
       async match(url) { return cached.get(url)?.clone(); }
     };
-    const caches = { async open(name) { names.push(name); return cache; }, async keys() { return [names.at(-1), names.at(-1).replace(/v20261024-5-brand5-update-prompt-3-preset-ready-1-persist-1$/, 'old'), 'pimax-practice-old', 'tabata-timer-unrelated-old']; }, async delete(name) { deleted.push(name); } };
+    const caches = { async open(name) { names.push(name); return cache; }, async keys() { return [names.at(-1), names.at(-1).replace(/v20261024-5-brand5-update-prompt-3-preset-ready-1-persist-1-name-1$/, 'old'), 'pimax-practice-old', 'tabata-timer-unrelated-old']; }, async delete(name) { deleted.push(name); } };
     const { context, listeners } = worker(scope, caches);
     vm.runInContext(source, context);
     let pending;
@@ -110,11 +111,11 @@ test('TabataTimer worker precaches the complete shell, serves offline and isolat
     await pending;
     const cacheName = names.at(-1);
     assert.equal(cacheName.startsWith('tabata-timer-'), true);
-    assert.match(cacheName, /v20261024-5-brand5-update-prompt-3-preset-ready-1-persist-1$/);
+    assert.match(cacheName, /v20261024-5-brand5-update-prompt-3-preset-ready-1-persist-1-name-1$/);
     assert.deepEqual([...cached.keys()].sort(), shell.map(file => new URL(file === 'index.html' ? './' : file, scope).href).sort());
     listeners.activate({ waitUntil(value) { pending = value; } });
     await pending;
-    assert.deepEqual(deleted, [cacheName.replace(/v20261024-5-brand5-update-prompt-3-preset-ready-1-persist-1$/, 'old')]);
+    assert.deepEqual(deleted, [cacheName.replace(/v20261024-5-brand5-update-prompt-3-preset-ready-1-persist-1-name-1$/, 'old')]);
     for (const file of ['', ...shell]) {
       listeners.fetch({ request: new Request(new URL(file, scope)), respondWith(value) { pending = value; } });
       const response = await pending;
