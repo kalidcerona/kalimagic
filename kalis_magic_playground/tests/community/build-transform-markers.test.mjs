@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import {
   DISTRIBUTION_APPS, transformDistributionDocument, transformKairosScript, injectLegacyShellModules, preparePimaxRuntime,
+  isolateKairosStorageKeys, KAIROS_SPLIT_FILES,
 } from '../../scripts/build-public.mjs';
 
 // build-public.mjs rewrites builds by matching exact text. Each marker must occur exactly once in the source
@@ -58,6 +59,46 @@ test('legacy friend workers have one CACHE_NAME literal and one SHELL array, and
   }
   assert.throws(() => injectLegacyShellModules("const CACHE_NAME = CACHE_PREFIX + 'v1';"), /SHELL/);
   assert.throws(() => injectLegacyShellModules('const SHELL = [];'), /cache name/);
+});
+
+test('KAIROS storage key markers in the snapshot inputs are rewritten for both friend targets', () => {
+  const rules = [
+    ['stopwatch_', (target) => `friend-${target}_`],
+    ['stopwatch2_', (target) => `friend-${target}-legacy_`],
+    ['stopwatch-settings-entry-tutorial-', (target) => `friend-${target}-settings-entry-tutorial-`],
+  ];
+  const required = {
+    'logic.js': ['stopwatch_', 'stopwatch2_'],
+    'app.js': ['stopwatch_'],
+    'selftest.js': ['stopwatch_', 'stopwatch2_'],
+    'settings-tutorial.js': ['stopwatch-settings-entry-tutorial-'],
+    'install-nudge.js': ['stopwatch_'],
+  };
+  const files = ['index.html', 'logic.js', ...KAIROS_SPLIT_FILES];
+  const seen = new Map(rules.map(([marker]) => [marker, 0]));
+  for (const file of files) {
+    const source = read(`distribution-snapshots/kairos/${file}`);
+    const expectMarkers = required[file] || [];
+    for (const [marker] of rules) {
+      const before = count(source, marker);
+      seen.set(marker, seen.get(marker) + before);
+      assert.equal(before > 0, expectMarkers.includes(marker), `${file} ${marker}`);
+    }
+    for (const target of ['kairos', 'kairos-classic']) {
+      const out = isolateKairosStorageKeys(source, target);
+      for (const [marker, replacementFor] of rules) {
+        const before = count(source, marker);
+        const replacement = replacementFor(target);
+        assert.equal(count(out, marker), 0, `${file} ${target} ${marker}`);
+        assert.equal(count(out, replacement), before, `${file} ${target} ${replacement}`);
+      }
+      if (expectMarkers.length === 0) assert.equal(out, source, file);
+    }
+  }
+  for (const [marker, total] of seen) assert.ok(total > 0, marker);
+  assert.throws(() => isolateKairosStorageKeys('localStorage.getItem("prefs")', 'kairos'), /missing KAIROS storage key marker/);
+  assert.throws(() => isolateKairosStorageKeys('storage.getItem("prefs")', 'kairos-classic'), /missing KAIROS storage key marker/);
+  assert.throws(() => isolateKairosStorageKeys('sessionStorage.setItem("prefs", "1")', 'kairos'), /missing KAIROS storage key marker/);
 });
 
 test('Pi Max boot boundary occurs exactly once in the personal and snapshot runtime and the build cuts after it', () => {

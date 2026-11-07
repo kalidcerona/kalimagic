@@ -482,10 +482,24 @@ const LEGACY_MIGRATION_TARGETS = new Set(['kairos', 'kairos-classic', 'hitsuzen'
 const INIT_APP_HOOK = 'else initApp();';
 
 export function isolateKairosStorageKeys(source, target) {
-  return source
-    .replaceAll('stopwatch_', `friend-${target}_`)
-    .replaceAll('stopwatch2_', `friend-${target}-legacy_`)
-    .replaceAll('stopwatch-settings-entry-tutorial-', `friend-${target}-settings-entry-tutorial-`);
+  // index.html, style.css and the gesture files are copied through here and have no keys.
+  // replaceAll would leave a storage script unchanged if every prefix disappeared, so fail instead.
+  const markers = [
+    ['stopwatch_', `friend-${target}_`],
+    ['stopwatch2_', `friend-${target}-legacy_`],
+    ['stopwatch-settings-entry-tutorial-', `friend-${target}-settings-entry-tutorial-`]
+  ];
+  const present = markers.filter(([marker]) => source.includes(marker));
+  if (present.length === 0 && /localStorage|sessionStorage|\.getItem\s*\(|\.setItem\s*\(/.test(source)) {
+    throw new Error('missing KAIROS storage key marker');
+  }
+  let next = source;
+  for (const [marker, replacement] of markers) {
+    if (!next.includes(marker)) continue;
+    next = next.replaceAll(marker, replacement);
+    if (next.includes(marker) || !next.includes(replacement)) throw new Error(`missing ${marker} storage key marker`);
+  }
+  return next;
 }
 
 export function isExcludedLegacyTree(publicPath) {
