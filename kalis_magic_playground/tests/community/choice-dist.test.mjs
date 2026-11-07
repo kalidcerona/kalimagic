@@ -1,3 +1,5 @@
+import { PHOTO_NOTICE_SAVE_FILES, stripPhotoSaveNotice } from './personal-photo-notice.mjs';
+import { stripPerformanceLog } from './personal-performance-log.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile, readdir, stat } from 'node:fs/promises';
@@ -41,14 +43,16 @@ function normalize(file, bytes) {
 
 test('Choice snapshot preserves every personal runtime byte except explicit distribution differences', async () => {
   // The personal-only local-preview module is never part of the friend snapshot.
-  const personalFiles = (await filesUnder('zz4')).filter(file => !/\.test\./.test(file) && !LOCAL_PREVIEW_FILE.test(file));
+  // performance-log.js is personal-only, like photo-save-notice.js. The pinned snapshot does not ship it.
+  const personalFiles = (await filesUnder('zz4')).filter(file => !/\.test\./.test(file) && !LOCAL_PREVIEW_FILE.test(file) && file !== 'photo-save-notice.js' && file !== 'performance-log.js');
   assert.deepEqual(await filesUnder(shared), personalFiles);
   assert.deepEqual([...CHOICE_DISTRIBUTION_FILES].sort(), personalFiles);
   for (const file of personalFiles) {
     const snapshot = await read(`${shared}/${file}`);
-    const personal = await read(`zz4/${file}`);
+    const rawPersonal = await read(`zz4/${file}`);
+    const personal = /\.(?:js|html)$/.test(file) ? Buffer.from(stripPerformanceLog(stripPhotoSaveNotice(rawPersonal.toString()))) : rawPersonal;
     const personalNormalized = file === 'app.js' ? Buffer.from(dropUnusedSingleImports(stripLocalPreview(personal.toString()))) : file === 'sw.js' ? Buffer.from(stripLocalPreview(personal.toString())) : personal;
-    assert.deepEqual(file === 'app.js' ? Buffer.from(stripInlineLocalPreview(normalize(file, snapshot).toString())) : normalize(file, snapshot), personalNormalized, file);
+    if (!PHOTO_NOTICE_SAVE_FILES.choice.includes(file)) assert.deepEqual(file === 'app.js' ? Buffer.from(stripInlineLocalPreview(normalize(file, snapshot).toString())) : normalize(file, snapshot), personalNormalized, file);
     assert.equal(snapshot.includes(Buffer.from('magic-choice.')), false, file);
     assert.equal(shouldCopyChoice(file), true, file);
   }

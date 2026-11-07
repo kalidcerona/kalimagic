@@ -23,6 +23,7 @@ import {
 } from './performance.js';
 import { bindFakeNotes } from './fake-notes.js';
 import { bindWallpaper } from './wallpaper.js';
+import { mountPerformanceLog } from './performance-log.js';
 
 let store = emptyState();
 let recoveryState = null;
@@ -142,5 +143,6 @@ document.getElementById('notes-entry-recovery')?.addEventListener('click', () =>
 // A caught performance-start failure still finished booting. The repair watchdog only runs when this flag never arrives.
 document.documentElement.setAttribute('data-choice-ready', '1');
 armArtworkWarmup();
+mountPerformanceLog();
 
 export { store, recoveryState, repairIssues, loadedId, persist, fillEditor, saveWizard };

@@ -21,7 +21,7 @@ export const DEFAULT_REPORT = '/Users/sumpie/Desktop/AI/runtime/jobs/20261024-mo
 const TEXT_EXT = /\.(?:m?js|html|css|webmanifest)$/;
 const CODE_EXT = /\.(?:m?js|html)$/;
 // Launch readiness is personal-only, just like the local preview hook.
-const OWNER_FILE = /(?:^|\/)(?:local-preview\.m?js|launch-check\.js)$/;
+const OWNER_FILE = /(?:^|\/)(?:local-preview\.m?js|launch-check\.js|photo-save-notice\.js|performance-log\.js)$/;
 const HOOK_MARK = 'local-preview-hook';
 const FULLSCREEN_PATTERN = String.raw`(?:^|\/)fullscreen\.js$`;
 const OWNER_WORDS = /local-preview|magic-local-settings|localSettingsReady/;
@@ -76,7 +76,7 @@ function findCacheLiteral(source) {
 export function friendCacheName(source, suffix = '') {
   const found = findCacheLiteral(source);
   if (!found) return source;
-  let literal = found[1].replace(/-local-preview(?:-module)?-\d+/g, '').replace(/-launch-check-\d+/g, '');
+  let literal = found[1].replace(/-local-preview(?:-module)?-\d+/g, '').replace(/-launch-check-\d+/g, '').replace(/-perf-log-\d+/g, '');
   if (suffix && !literal.endsWith(suffix)) literal += suffix;
   return source.replace(found[0], found[0].replace(found[1], literal));
 }
@@ -247,7 +247,9 @@ export async function generate(app, outDir, { write = false, sourceDir, baseline
   const realOut = await realpath(outDir);
   for (const rel of await walk(source)) {
     if (!isShipped(rel, cfg)) continue;
-    const output = transformFile(rel, await readFile(path.join(source, rel)), cfg, report);
+    const input = await readFile(path.join(source, rel));
+    const personalOnly = /\.(?:js|html)$/.test(rel) ? Buffer.from(stripPerformanceLog(stripPhotoSaveNotice(input.toString()))) : input;
+    const output = transformFile(rel, personalOnly, cfg, report);
     const destination = path.join(outDir, rel);
     // Judge by where the write really lands, and never write through an existing symlink.
     const realParent = await realpathLoose(path.dirname(destination));
@@ -398,4 +400,34 @@ async function main(argv) {
   throw new Error('Usage: node scripts/friend-builds.mjs list | generate <app|all> [--out DIR | --write] | compare [--report FILE]');
 }
 
+export const PERFORMANCE_LOG_CACHE_SUFFIX = '-perf-log-1';
+
 if (process.argv[1] === fileURLToPath(import.meta.url)) await main(process.argv.slice(2));
+
+// Job J (2026-11-07): the performance log is personal-only. Friend generation drops the
+// module, its hooks and the cache token so pinned snapshots stay byte-identical.
+export function stripPerformanceLog(source) {
+  return source
+    .replace(/^import \{[^}\n]*\} from ["']\.\/performance-log\.js["'];\n/gm, '')
+    .replace(/^[ \t]*recordCompletedTest\([^;\n]*\);\n/gm, '')
+    .replace(/^[ \t]*recordChoiceReveal\([^;\n]*\);\n/gm, '')
+    .replace(/^[ \t]*mountPerformanceLog\(\);\n/gm, '')
+    .replace(/^[ \t]*["']\.\/performance-log\.js["'],?[ \t]*\n/gm, '')
+    .replaceAll(PERFORMANCE_LOG_CACHE_SUFFIX, '');
+}
+
+// Job I (2026-11-07): photo diagnostics are personal-only. Keep future friend generation
+// import-complete without promoting this feature or changing the pinned snapshots.
+export function stripPhotoSaveNotice(source) {
+  return source
+    .replace(/^import \{[^\n]*\} from '\.\/photo-save-notice\.js';\n/gm, '')
+    .replace(/^.*<p id="photo-save-notice"[^\n]*\n/gm, '')
+    .replace(/^[ \t]*["']\.\/photo-save-notice\.js["'],?[^\n]*\n/gm, '')
+    .replace(/-photo-notice-1/g, '')
+    .replace(/^.*observePhotoTransaction\(tx\);[^\n]*\n/gm, '')
+    .replace(/^.*recordPhotoSave\((?:true|false)(?:, storage)?\);[^\n]*\n/gm, '')
+    .replace(/^[ \t]*return trackPhotoSave\(async \(\) => \{\n/gm, '')
+    .replace(/^[ \t]*\}\); \/\/ photo-notice-wrapper\n/gm, '')
+    .replace('return trackPhotoSave(() => new Promise((resolve, reject) => {', 'return new Promise((resolve, reject) => {')
+    .replace('})); // photo-notice-wrapper', '});');
+}

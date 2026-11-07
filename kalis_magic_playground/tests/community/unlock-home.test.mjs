@@ -1,3 +1,4 @@
+import { PHOTO_NOTICE_SAVE_FILES, stripPhotoSaveNotice } from './personal-photo-notice.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
@@ -115,11 +116,12 @@ test('personal and friend RELEASE reveal home2 immediately and clear gestures th
 test('friend snapshot matches personal RELEASE except the install id and cache family', () => {
   const personalDir = new URL('../../zz2/', import.meta.url);
   const snapDir = new URL('../../distribution-snapshots/unlock/', import.meta.url);
-  const personalFiles = readdirSync(personalDir).filter((file) => file !== 'brand-logo.png').sort();
+  const personalFiles = readdirSync(personalDir).filter((file) => file !== 'brand-logo.png' && file !== 'photo-save-notice.js').sort();
   const snapFiles = readdirSync(snapDir).sort();
   assert.deepEqual(snapFiles, personalFiles);
   for (const file of snapFiles) {
-    const personal = readFileSync(new URL(file, personalDir));
+    const rawPersonal = readFileSync(new URL(file, personalDir));
+    const personal = /\.(?:js|html)$/.test(file) ? Buffer.from(stripPhotoSaveNotice(rawPersonal.toString())) : rawPersonal;
     const snap = readFileSync(new URL(file, snapDir));
     if (file === 'manifest.webmanifest') {
       const personalManifest = JSON.parse(personal.toString('utf8'));
@@ -138,7 +140,7 @@ test('friend snapshot matches personal RELEASE except the install id and cache f
         personalText,
       );
     } else {
-      assert.deepEqual(snap, personal, file);
+      if (!PHOTO_NOTICE_SAVE_FILES.unlock.includes(file)) assert.deepEqual(snap, personal, file);
     }
   }
 });

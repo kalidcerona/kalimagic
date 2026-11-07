@@ -6,6 +6,7 @@ import { stopWoodPaper, setLiveContact, setStage } from "./stage.js";
 import { recorderThemes } from "./controller-themes.js";
 import { playVerdictSound, stopScanningSound, startScanningSound } from "./controller-audio.js";
 import { storageLocked, persistState, updateAttemptProgress } from "./controller-storage.js";
+import { recordCompletedTest } from "./performance-log.js";
 import {
   appState, hold, activeScanDurationMs, settled, activePointerId, holdPointerId, setAppState, setHold,
   setSettled, setActiveScanDurationMs, setActivePointerId, setHoldPointerId,
@@ -42,6 +43,7 @@ function applyRelease(nowMs, x, y) {
     } else if (!saved) {
       setStatus("시도 횟수를 이 브라우저에 저장하지 못했습니다.");
     }
+    recordCompletedTest({ verdict: result.verdict, theme: performanceScreen?.dataset?.displayTheme });
     return;
   }
   if (result.outcome === "cancelled") {

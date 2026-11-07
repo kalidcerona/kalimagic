@@ -307,7 +307,7 @@ function bind() {
       await imageRecord(`coin:${id}`, 'put', blob);
       useImageUrl(`coin:${id}`, blob);
       imageChoices[id] = 'custom';
-      persistImageChoices();
+      persistImageChoices({ photoSave: true });
       refreshCoinImage();
     } catch (error) { coinImageNote.textContent = error.message || '물건 이미지를 저장하지 못했습니다.'; }
     coinImageInput.value = '';

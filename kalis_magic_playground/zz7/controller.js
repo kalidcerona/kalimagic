@@ -17,6 +17,7 @@ import { showPerformance } from "./controller-screens.js";
 import "./controller-attempts.js";
 import "./controller-gestures.js";
 import "./controller-display-theme.js";
+import { mountPerformanceLog } from "./performance-log.js";
 
 bootStorage();
 setAppState(resetAttempts(appState));
@@ -25,6 +26,7 @@ updateAttemptProgress();
 setStage("idle");
 showPerformance();
 bind();
+mountPerformanceLog();
 
 export { recorderThemes } from "./controller-themes.js";
 export { appState, hold, activeScanDurationMs, settled, holdPointerId, pointers } from "./controller-state.js";

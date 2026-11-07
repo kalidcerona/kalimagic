@@ -45,10 +45,10 @@ test('friend build generator', async (t) => {
       const { report, dir } = await build(app, temp);
       assert.deepEqual(report.warnings, [], `${app}: ${report.warnings.join(' | ')}`);
       for (const rel of await walk(dir)) {
-        assert.doesNotMatch(rel, /local-preview|launch-check\.js/, `${app}/${rel}`);
+        assert.doesNotMatch(rel, /local-preview|launch-check\.js|photo-save-notice\.js|performance-log\.js/, `${app}/${rel}`);
         if (!TEXT.test(rel)) continue;
         const text = await readFile(path.join(dir, rel), 'utf8');
-        assert.doesNotMatch(text, /local-preview|magic-local-settings|localSettingsReady|startLaunchCheck|launch-check-1/, `${app}/${rel}`);
+        assert.doesNotMatch(text, /local-preview|magic-local-settings|localSettingsReady|startLaunchCheck|launch-check-1|photo-save-notice|recordPhotoSave|trackPhotoSave|observePhotoTransaction|performance-log|recordCompletedTest|recordChoiceReveal|mountPerformanceLog|perf-log-1/, `${app}/${rel}`);
       }
     }
   });

@@ -9,6 +9,7 @@ import {
   fakeHomeSession, vibrateCue, renderEntryReadout, attachPinchZoom, backToFakeHome,
 } from './performance.js';
 import { store } from './controller.js';
+import { recordChoiceReveal } from './performance-log.js';
 
 const noteDateFormat = new Intl.DateTimeFormat('ko-KR', { month: 'long', day: 'numeric' });
 
@@ -197,6 +198,7 @@ function openFakeNote(noteId) {
   current.outOfRange = detail.inRange === false;
   renderFakeNoteDetail(note, detail);
   if (detail.inRange === false) vibrateCue();
+  recordChoiceReveal({ number: detail.choice, list: note.name });
 }
 
 function backToFakeNotesIndex() {

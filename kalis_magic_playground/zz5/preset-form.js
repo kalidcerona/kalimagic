@@ -1,3 +1,4 @@
+import { recordPhotoSave } from './photo-save-notice.js';
 // Preset form, selection, edit, delete and save.
 import {
   LIMITS, MESSAGES, canAddPreset, createId, validateImage, validatePresetInput,
@@ -241,6 +242,7 @@ export async function savePreset() {
       : [...meta.presets, preset];
     if (!commitMeta({ version: 1, selectedId: preset.id, presets })) {
       if (wroteNewImage) {
+        recordPhotoSave(false);
         try { await deleteImage(imageId); } catch { /* previous metadata remains */ }
       }
       return;

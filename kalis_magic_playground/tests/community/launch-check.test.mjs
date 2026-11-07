@@ -61,7 +61,7 @@ for (const [app, route, entry] of apps) {
   test(`${app}: launch hook and exact release are precached`, () => {
     assert.match(read(route, entry), /startLaunchCheck\(\)/);
     assert.match(read(route, 'sw.js'), /["']\.\/launch-check.js["']/);
-    assert.match(read(route, 'sw.js'), /-launch-check-1'/);
+    assert.match(read(route, 'sw.js'), /-launch-check-1(?:-photo-notice-1|-perf-log-1)?'/);
   });
   test(`${app}: ready single pointerdown vibrates once for about two seconds without consuming events`, async () => {
     const f = await fixture(app, route);

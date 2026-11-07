@@ -1,3 +1,4 @@
+import { recordPhotoSave } from './photo-save-notice.js';
 import { MSG } from './logic-core.js';
 import { cleanText } from './logic-extras.js';
 import { HOME_LAYOUT, HOME_PAGES, homeCellDigit } from './logic-fake-home.js';
@@ -67,11 +68,13 @@ export function loadUserIcons(storage, reserved = []) {
   }
 }
 
-export function saveUserIcons(storage, icons) {
+export function saveUserIcons(storage, icons, { photoSave = true } = {}) {
   try {
     storage.setItem(USER_ICON_KEY, JSON.stringify(normalizeUserIcons(icons)));
+    if (photoSave) recordPhotoSave(true, storage);
     return { ok: true };
   } catch {
+    if (photoSave) recordPhotoSave(false, storage);
     return { ok: false, error: MSG.storageWrite };
   }
 }

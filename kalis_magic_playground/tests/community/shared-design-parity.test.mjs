@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { USOTSUKI_FILES, SPINNER_FILES } from '../../scripts/build-public.mjs';
 import { stripLocalPreview, stripInlineLocalPreview, dropUnusedSingleImports } from './local-preview-strip.mjs';
 import { PERSONAL_LAUNCH_CHECK_FILES, stripPersonalLaunchCheck } from './personal-launch-check.mjs';
+import { PERFORMANCE_LOG_FILES, stripPerformanceLog } from './personal-performance-log.mjs';
 import { usotsukiAppModules, usotsukiAppSource } from './usotsuki-app-script.mjs';
 import { readAppStyle } from './app-style.mjs';
 
@@ -13,7 +14,7 @@ const read = (route, file) => file === 'style.css' ? Promise.resolve(Buffer.from
 // USOTSUKI detector.js is an ES module entry with local feature modules; both builds carry the same files
 // except PERSONAL_LAUNCH_CHECK_FILES, which the pinned friend snapshot does not ship.
 const detectorFiles = (route) => usotsukiAppModules(fileURLToPath(new URL(`../../${route}/`, import.meta.url)))
-  .filter((file) => !PERSONAL_LAUNCH_CHECK_FILES.includes(file));
+  .filter((file) => !PERSONAL_LAUNCH_CHECK_FILES.includes(file) && !PERFORMANCE_LOG_FILES.includes(file));
 
 // Personal USOTSUKI keeps the localhost preview hook as one marked line plus local-preview.js. The friend snapshot excludes it.
 function withoutLocalPreviewHook(source) {
@@ -47,6 +48,7 @@ test('shared performance code differs only in its explicitly isolated storage ke
   for (const [personal, snapshot, file] of [...detectorFiles('zz7').map((file) => ['zz7', 'usotsuki', file]), ['zz11', 'spinner', 'app.js']]) {
     let source = (await read(personal, file)).toString();
     let shared = (await read(`distribution-snapshots/${snapshot}`, file)).toString();
+    if (personal === 'zz7') source = stripPerformanceLog(source);
     if (personal === 'zz7' && file === 'detector.js') {
       assert.match(source, /local-preview/);
       assert.doesNotMatch(shared, /magic-local-settings|local-preview/);
@@ -97,7 +99,7 @@ test('Three recorder themes retain exact bytes and cache isolation', async () =>
     const personal = await read('zz7', file);
     let snapshot = (await read('distribution-snapshots/usotsuki', file)).toString();
     if (file === 'index.html') snapshot = snapshot.replace('usotsuki.distribution.detector.theme.v1', 'usotsuki.detector.theme.v1');
-    let personalText = personal.toString();
+    let personalText = stripPerformanceLog(personal.toString());
     if (detectorFiles('zz7').includes(file)) {
       for (const [constant, key] of [['STATE_KEY','detector.v1'], ['SOUND_KEY','detector.sound.v1'], ['DISPLAY_THEME_KEY','detector.theme.v1']]) {
         snapshot = snapshot.replace(`${constant} = "usotsuki.distribution.${key}"`, `${constant} = "usotsuki.${key}"`);
@@ -112,7 +114,7 @@ test('Three recorder themes retain exact bytes and cache isolation', async () =>
       assert.ok(snapshot.includes("CACHE_NAME = CACHE_PREFIX + 'v20261009-continuous-paper-20-haptic-dip-manual-install-1-perf-1-coherent-1-compat-1-gesture-1-wake-1-modules-1-split-1-trim-1-css-1-clean-1-lieflash-2-update-prompt-3-hold-range-76-1-persist-1-distribution'"));
       snapshot = snapshot.replace('v20261009-continuous-paper-20-haptic-dip-manual-install-1-perf-1-coherent-1-compat-1-gesture-1-wake-1-modules-1-split-1-trim-1-css-1-clean-1-lieflash-2-update-prompt-3-hold-range-76-1-persist-1-distribution', 'v20261009-continuous-paper-20-haptic-dip-manual-install-1-perf-1-coherent-1-compat-1-gesture-1-wake-1-modules-1-split-1-trim-1-css-1-clean-1-lieflash-2-update-prompt-3-hold-range-76-1-persist-1');
       assert.ok(personal.includes('v20261009-continuous-paper-20-haptic-dip-manual-install-1-perf-1-coherent-1-compat-1-gesture-1-wake-1-modules-1-split-1'));
-      personalText = stripPersonalLaunchCheck(stripLocalPreview(personalText));
+      personalText = stripPerformanceLog(stripPersonalLaunchCheck(stripLocalPreview(personalText)));
     }
     assert.equal(snapshot, personalText, `normalized snapshot ${file}`);
     if (file === 'style.css') {

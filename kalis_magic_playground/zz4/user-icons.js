@@ -159,7 +159,7 @@ function renderUserIcons() {
       remove.addEventListener('click', () => {
         const result = removeUserIcon(userIcons, icon.id, reservedCells());
         if (!result.ok) { iconMessage.textContent = result.error; return; }
-        const saved = saveUserIcons(localStorage, result.icons);
+        const saved = saveUserIcons(localStorage, result.icons, { photoSave: false });
         iconMessage.textContent = saved.ok ? '뺐습니다.' : saved.error;
         if (!saved.ok) return;
         rememberSavedIcons(result.icons);
