@@ -26,7 +26,8 @@ function renderNav(activePage) {
         const isActive = key === activePage || (activeOn || []).includes(activePage);
         const cls = ['nav-link', cta && 'nav-cta', isActive && 'active']
             .filter(Boolean).join(' ');
-        return `<a href="${href}" class="${cls}">${label}</a>`;
+        const current = isActive ? ' aria-current="page"' : '';
+        return `<a href="${href}" class="${cls}"${current}>${label}</a>`;
     }).join('');
 
     const root = document.getElementById('nav-root');
@@ -114,6 +115,7 @@ async function renderLoggedInNavLinks(root, activePage) {
         link.href = 'mypage.html';
         link.className = ['nav-link', 'nav-profile', activePage === 'mypage' && 'active'].filter(Boolean).join(' ');
         link.dataset.navMypage = 'true';
+        if (activePage === 'mypage') link.setAttribute('aria-current', 'page');
         link.textContent = '마이페이지';
         nav.appendChild(link);
 

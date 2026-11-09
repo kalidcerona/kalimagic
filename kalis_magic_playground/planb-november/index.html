@@ -76,14 +76,6 @@
   .eyebrow { margin:0 0 8px; font-size:13px; font-weight:900; letter-spacing:.22em; color:var(--soft); }
   .sec-title { margin:0 0 28px; font-size:clamp(32px, 4.6vw, 48px); line-height:1.15; }
 
-  /* 비교 막대 */
-  .bars { display:grid; gap:14px; max-width:760px; }
-  .bar-label { margin:0 0 6px; font-size:14px; color:var(--muted); }
-  .bar-row { display:flex; align-items:center; gap:12px; }
-  .bar { height:18px; border-radius:4px; }
-  .bar-row b { flex:none; width:64px; font-variant-numeric:tabular-nums; }
-  .bars-note { margin:18px 0 0; font-size:13.5px; color:var(--soft); }
-
   /* 회차 카드 */
   .two { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:16px; }
   .session { display:block; text-decoration:none; color:var(--ink); border-radius:14px; overflow:hidden; min-width:0; }
@@ -221,18 +213,6 @@
   </div>
 </header>
 
-<!-- ============ WHY COMBO ============ -->
-<section class="wrap sec">
-  <p class="eyebrow">WHY 통합권</p>
-  <h2 class="disp sec-title">따로 사면 10.5만원,<br>같이 사면 8.5만원</h2>
-  <div class="bars">
-    <div><p class="bar-label">정가 합계 (9만원 + 6만원)</p><div class="bar-row"><div class="bar" style="width:100%; background:var(--line-2)"></div><b style="color:var(--faint)">15만원</b></div></div>
-    <div><p class="bar-label">슈퍼 얼리버드 단독 2장 (7만원 + 3.5만원)</p><div class="bar-row"><div class="bar" style="width:70%; background:linear-gradient(90deg, var(--amber) 66.7%, var(--teal) 66.7%)"></div><b>10.5만원</b></div></div>
-    <div><p class="bar-label">슈퍼 얼리버드 통합권</p><div class="bar-row"><div class="bar" style="width:56.7%; background:var(--paper)"></div><b style="color:var(--amber)">8.5만원</b></div></div>
-  </div>
-  <p class="bars-note">얼리버드(10/28-11/8)에는 단독 2장 13만원, 통합권 12만원 · 정상가(11/9-11/15)에는 단독 2장 15만원, 통합권 14만원</p>
-</section>
-
 <!-- ============ SESSIONS ============ -->
 <section class="wrap sec">
   <p class="eyebrow">SESSIONS</p>
@@ -269,7 +249,7 @@
       <tbody>
         <tr data-tier="super" class="is-active"><th scope="row">슈퍼 얼리버드<span class="tier-chip"></span><span class="period"><span class="nw">10/17(토)-</span><span class="nw">10/27(화)</span></span></th><td><s class="nw">9만원</s> <span class="nw">7만원</span></td><td><s class="nw">6만원</s> <span class="nw">3.5만원</span></td><td><b class="combo">8.5만원</b> <span class="save">2만원 절약</span></td></tr>
         <tr data-tier="early"><th scope="row">얼리버드<span class="tier-chip"></span><span class="period"><span class="nw">10/28(수)-</span><span class="nw">11/8(일)</span></span></th><td><s class="nw">9만원</s> <span class="nw">8만원</span></td><td><s class="nw">6만원</s> <span class="nw">5만원</span></td><td><b class="combo">12만원</b> <span class="save">1만원 절약</span></td></tr>
-        <tr data-tier="full"><th scope="row">정상가<span class="tier-chip"></span><span class="period"><span class="nw">11/9(월)부터</span></span></th><td><span class="nw">9만원</span></td><td><span class="nw">6만원</span></td><td data-combo><b class="combo">14만원</b> <span class="save">1만원 절약</span></td></tr>
+        <tr data-tier="full"><th scope="row">정상가<span class="tier-chip"></span><span class="period"><span class="nw">11/9(월)부터</span></span></th><td><span class="nw">9만원</span></td><td data-sleeving><span class="nw">6만원</span></td><td data-combo><b class="combo">14만원</b> <span class="save">1만원 절약</span></td></tr>
       </tbody>
     </table>
   </div>
@@ -308,9 +288,7 @@
   <h2 class="disp sec-title" style="margin-bottom:20px">자주 묻는 질문</h2>
   <div class="two faq">
     <details><summary>한 회차만 신청해도 되나요?</summary><p>네. 버스킹과 슬리빙은 각각 신청할 수 있어요.</p></details>
-    <details><summary>둘 다 들으면 뭐가 좋나요?</summary><p>통합권으로 사면 단독권 두 장보다 저렴해요.<br>슈퍼 얼리버드 기준 2만원 절약이에요.</p></details>
     <details><summary>버스킹을 듣고 슬리빙을 신청해도 할인되나요?</summary><p>네. 버스킹 참가자가 슬리빙을 따로 신청하면<br>1만원 할인해 드려요.</p></details>
-    <details><summary>단독권을 통합권으로 바꿀 수 있나요?</summary><p>11월 15일까지는 차액만 내면 돼요.<br>예: 슈퍼 얼리버드 버스킹 단독권(7만원)을 얼리버드 기간에 바꾸면<br>12만원에서 7만원을 뺀 5만원을 내요.</p></details>
     <details><summary>한 회차를 못 가게 되면요?</summary><p>통합권으로 한 회차만 참여하면, 결제한 금액에서<br>참여한 세미나의 정상가를 뺀 만큼 환불해 드려요.<br>예: 얼리버드 통합권(12만원)으로 버스킹만 참여하면<br>12만원에서 버스킹 정상가 9만원을 뺀 3만원을 돌려드려요.</p></details>
     <details><summary>촬영이나 녹음을 해도 되나요?</summary><p>두 회차 모두 촬영, 녹화, 녹음은 금지예요.</p></details>
   </div>
@@ -410,6 +388,10 @@
       s.phase = "soldout"; s.was = "NO PLAN SEASON. 3"; s.price = "통합권 마감"; s.stamp = ""; s.small = true;
       s.deadline = "통합권과 슬리빙 단독권은 신청이 마감됐어요"; s.sticky = "통합권 마감"; s.finalCta = "통합권 마감";
       s.chips = { super: "마감", early: "마감", full: "마감" }; s.active = ""; s.comboEnded = true; s.fullCombo = "판매 종료";
+      if (t > EARLY_END && t <= BUSKING_DAY) {
+        s.phase = "busking-only"; s.sticky = "버스킹 9만원 · 11/15(일)"; s.finalCta = "버스킹 신청하기";
+        s.chips.full = "버스킹 판매 중"; s.active = "full"; s.fullSleevingEnded = true;
+      }
     }
     return s;
   }
@@ -429,10 +411,15 @@
       row.classList.toggle("is-past", text === "마감");
       if (chip) {
         chip.textContent = text;
-        chip.className = "tier-chip" + (text === "판매 중" ? " is-now" : text === "오픈 예정" ? " is-soon" : text === "마감" ? " is-done" : "");
+        chip.className = "tier-chip" + ((text === "판매 중" || text === "버스킹 판매 중") ? " is-now" : text === "오픈 예정" ? " is-soon" : text === "마감" ? " is-done" : "");
       }
     });
-    if (s.phase === "done" || s.phase === "soldout") {
+    if (s.phase === "busking-only") {
+      document.querySelectorAll("a[data-cta]").forEach(function (a) {
+        a.setAttribute("href", "https://smore.im/form/52BkxmIm19"); a.removeAttribute("aria-disabled");
+        a.textContent = a.closest(".sticky-ticket") ? "신청하기" : "버스킹 신청하기";
+      });
+    } else if (s.phase === "done" || s.phase === "soldout") {
       document.querySelectorAll("a[data-cta]").forEach(function (a) {
         a.textContent = s.phase === "done" ? "이번 세미나는 끝났어요" : "통합권 마감"; a.setAttribute("aria-disabled", "true"); a.removeAttribute("href");
       });
@@ -441,6 +428,11 @@
         a.setAttribute("href", "https://smore.im/form/52BkxmIm19");
         if (!a.hasAttribute("data-final-cta")) a.textContent = "슬리빙 신청하기";
       });
+    }
+    var sleevingCell = document.querySelector('[data-tier="full"] [data-sleeving]');
+    if (sleevingCell && s.fullSleevingEnded) {
+      sleevingCell.style.color = "var(--faint)";
+      sleevingCell.textContent = "마감";
     }
     var comboCell = document.querySelector('[data-tier="full"] [data-combo]');
     if (comboCell && s.comboEnded) {

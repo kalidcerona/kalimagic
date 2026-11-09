@@ -46,7 +46,7 @@
         entries.forEach(function(e){
           if (e.isIntersecting){ assignStaggerFor(e.target); e.target.classList.add(targetClass(e.target)); io.unobserve(e.target); }
         });
-      }, { threshold:0.12, rootMargin:'0px 0px -8% 0px' });
+      }, { threshold:0, rootMargin:'0px 0px -8% 0px' });
       nodes.forEach(function(el){
         if (el.dataset.pgRevealObserved) return; // 중복 관찰 방지 가드
         io.observe(el);
@@ -64,4 +64,15 @@
   window.PgReveal.init = setupReveal;
   if (document.readyState !== 'loading') setupReveal();
   else document.addEventListener('DOMContentLoaded', setupReveal);
+})();
+
+// 탭 제목 개그: 탭이 숨겨지면 제목을 바꾸고 돌아오면 복원 (리빌 로직과 독립)
+(function(){
+  try {
+    if (typeof document.addEventListener !== 'function' || !('hidden' in document)) return;
+    var t0 = document.title;
+    document.addEventListener('visibilitychange', function(){
+      try { document.title = document.hidden ? '어, 어디 갔어? \uD83E\uDE84' : t0; } catch (_) {}
+    });
+  } catch (_) {}
 })();

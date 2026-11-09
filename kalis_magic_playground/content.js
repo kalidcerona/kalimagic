@@ -27,9 +27,9 @@ function renderContent() {
   var slots = {
     'reviews-desktop': function() {
       return CONTENT.reviews.map(function(r) {
-        return '<div style="background:#261d18; border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:28px;"><span style="display:inline-block; font-size:0.74rem; font-weight:700; color:var(--point-gold); border:1px solid rgba(224,144,78,0.4); border-radius:999px; padding:4px 12px; margin-bottom:16px;">✦ ' + r.label + '</span><p style="color:#ededed; font-size:1rem; line-height:1.75; margin:0;">"' + r.quote + '"</p></div>';
+        return '<div style="background:#261d18; border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:28px;"><span style="display:inline-block; font-size:var(--kx-d-support); font-weight:700; color:#ab9f92; border:1px solid rgba(255,255,255,0.18); border-radius:999px; padding:4px 12px; margin-bottom:16px;">✦ ' + r.label + '</span><p style="color:#ededed; font-size:var(--kx-d-body); line-height:1.75; margin:0;">"' + r.quote + '"</p></div>';
       }).join('') +
-      '<div style="background:linear-gradient(135deg, rgba(224,144,78,0.12), rgba(255,255,255,0.02)); border:1px solid rgba(224,144,78,0.3); border-radius:8px; padding:28px; display:flex; flex-direction:column; justify-content:center;"><p style="font-family:\'Noto Serif KR\',serif; font-style:italic; color:var(--point-gold); font-size:1.15rem; line-height:1.6; margin:0;">너도 곧, 이 칸에<br>네 이야기를 쓰게 될 거야.</p></div>';
+      '<div style="background:linear-gradient(135deg, rgba(232,99,31,0.12), rgba(255,255,255,0.02)); border:1px solid rgba(232,99,31,0.3); border-radius:8px; padding:28px; display:flex; flex-direction:column; justify-content:center;"><p style="font-family:\'Noto Serif KR\',serif; font-style:italic; color:var(--point-gold); font-size:1.15rem; line-height:1.6; margin:0;">너도 곧, 이 칸에<br>네 이야기를 쓰게 될 거야.</p></div>';
     },
     'reviews-mobile': function() {
       var card = function(r) {
@@ -45,17 +45,17 @@ function renderContent() {
     },
     'visitor-desktop': function() {
       return CONTENT.visitorCards.map(function(c) {
-        return '<a href="' + c.href + '" style="display:flex; flex-direction:column; background:#261d18; border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:30px 26px;" data-hover="transform:translateY(-5px); border-color:rgba(224,144,78,0.5)" data-track="' + c.track + '" data-track-type="cta_click" data-track-placement="visitor_desktop"><span style="font-family:\'Noto Serif KR\',serif; font-style:italic; color:var(--point-gold); font-size:1rem; margin-bottom:16px;">' + c.num + '</span><h4 style="font-size:1.2rem; font-weight:800; line-height:1.4; margin:0 0 12px;">' + c.title + '</h4><p style="color:#ab9f92; font-size:0.96rem; line-height:1.8; margin:0 0 22px; flex:1;">' + c.desc + '</p><span style="color:var(--point-gold); font-weight:700; font-size:0.92rem;">' + c.cta + '</span></a>';
+        return '<a href="' + c.href + '" style="display:flex; flex-direction:column; background:#261d18; border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:30px 26px;" data-hover="transform:translateY(-5px); border-color:rgba(232,99,31,0.5)" data-track="' + c.track + '" data-track-type="cta_click" data-track-placement="visitor_desktop"><span style="font-family:\'Noto Serif KR\',serif; font-style:italic; color:#ab9f92; font-size:1rem; margin-bottom:16px;">' + c.num + '</span><h4 style="font-size:1.2rem; font-weight:800; line-height:1.4; margin:0 0 12px;">' + c.title + '</h4><p style="color:#ab9f92; font-size:var(--kx-d-support); line-height:1.8; margin:0 0 22px; flex:1;">' + c.desc + '</p><span class="kx-sl" style="color:#d8c8ba; text-decoration:underline; text-decoration-thickness:1px; text-underline-offset:3px; font-weight:700; font-size:var(--kx-d-support);">' + c.cta + '</span></a>';
       }).join('');
     },
     'visitor-mobile': function() {
       return CONTENT.visitorCards.map(function(c) {
-        return '<a href="' + c.href + '" style="display:block; background:#241712; border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:22px 20px; text-decoration:none;" data-track="' + c.track + '" data-track-type="cta_click" data-track-placement="visitor_mobile"><p style="font-family:\'Noto Serif KR\',serif; font-style:italic; color:var(--point-gold); font-size:14px; margin:0 0 10px;">' + c.num + '</p><h4 style="font-size:17px; font-weight:800; color:#F4E7DA; margin:0 0 8px; line-height:1.4;">' + c.title + '</h4><p style="color:#A99685; font-size:13.5px; line-height:1.72; margin:0 0 14px;">' + c.desc + '</p><span style="color:var(--point-gold); font-weight:700; font-size:13.5px;">' + c.cta + '</span></a>';
+        return '<a href="' + c.href + '" style="display:block; background:#241712; border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:22px 20px; text-decoration:none;" data-track="' + c.track + '" data-track-type="cta_click" data-track-placement="visitor_mobile"><p style="font-family:\'Noto Serif KR\',serif; font-style:italic; color:#ab9f92; font-size:14px; margin:0 0 10px;">' + c.num + '</p><h4 style="font-size:17px; font-weight:800; color:#F4E7DA; margin:0 0 8px; line-height:1.4;">' + c.title + '</h4><p style="color:#A99685; font-size:13.5px; line-height:1.72; margin:0 0 14px;">' + c.desc + '</p><span class="kx-sl" style="color:#d8c8ba; text-decoration:underline; text-decoration-thickness:1px; text-underline-offset:3px; font-weight:700; font-size:13.5px;">' + c.cta + '</span></a>';
       }).join('');
     },
     'problem-desktop': function() {
       return CONTENT.problemQuotes.map(function(q) {
-        return '<p style="margin:0; color:var(--point-gold); font-size:1.06rem; font-weight:500; font-family:\'Noto Serif KR\',serif; font-style:italic;">"' + q + '"</p>';
+        return '<p style="margin:0; color:var(--point-gold); font-size:var(--kx-d-body); font-weight:500; font-family:\'Noto Serif KR\',serif; font-style:italic;">"' + q + '"</p>';
       }).join('');
     },
     'problem-mobile': function() {

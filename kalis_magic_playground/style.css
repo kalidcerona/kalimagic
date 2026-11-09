@@ -16,6 +16,10 @@
     --border-subtle: rgba(255, 255, 255, 0.06);
     --border-light: rgba(255, 255, 255, 0.1);
     --maxw: 1080px;
+    /* desktop type roles (.kx-desktop inline sizes): body / support / label */
+    --kx-d-body: 1.04rem;
+    --kx-d-support: 0.9375rem;
+    --kx-d-label: 0.78rem;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -51,7 +55,7 @@ img { max-width: 100%; display: block; }
 .split-media:hover img{ transform:scale(1.06); }
 .kx-imgzoom img{ transition:transform 1.05s cubic-bezier(.2,.7,.2,1); }
 .kx-imgzoom:hover img{ transform:scale(1.06); }
-.kx-cue span{ display:block; width:1px; height:42px; background:linear-gradient(rgba(224,144,78,0), var(--point-gold)); animation:kxCue 1.9s ease-in-out infinite; }
+.kx-cue span{ display:block; width:1px; height:42px; background:linear-gradient(rgba(232,99,31,0), var(--point-gold)); animation:kxCue 1.9s ease-in-out infinite; }
 .js-anim .kx-desktop .kx-fade{ opacity:0; transform:translateY(28px); transition:opacity .8s cubic-bezier(.2,.7,.2,1), transform .8s cubic-bezier(.2,.7,.2,1); will-change:opacity, transform; }
 .js-anim .kx-desktop .kx-fade.kx-in{ opacity:1; transform:none; }
 .js-anim .kx-desktop .kx-fade.kx-in > *{ animation:kxOptIn .7s cubic-bezier(.2,.7,.2,1) both; animation-delay:min(calc(var(--kx-i, 0) * .08s), .72s); }
@@ -85,6 +89,7 @@ img { max-width: 100%; display: block; }
 @media (prefers-reduced-motion: reduce){
   .kx-ken{ animation:none; }
   .hero-about::before{ animation:none; }
+  .hero::before{ animation:none; }
   .kx-cue{ display:none; }
   .js-anim .kx-desktop .kx-fade{ opacity:1 !important; transform:none !important; transition:none; }
   .js-anim .kx-desktop .kx-fade.kx-in > *{ animation:none; }
@@ -93,6 +98,8 @@ img { max-width: 100%; display: block; }
   .js-anim .kx-mobile .kx-in figure, .js-anim .kx-mobile .kx-in .kx-thread > div{ animation:none; }
   .kx-mobile a[href]:active, .kx-mobile button:active, .kx-mobile .field-card:active, .kx-mobile details summary:active{ transform:none; }
 }
+
+a:focus-visible,button:focus-visible,summary:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--point-gold);outline-offset:3px;}
 
 /* ---------- 레이아웃 ---------- */
 .container { width: 100%; max-width: var(--maxw); margin: 0 auto; padding: 0 24px; }
@@ -175,7 +182,7 @@ img { max-width: 100%; display: block; }
     font-weight: 700; font-size: 1.02rem; transition: var(--transition); cursor: pointer;
     border: 1px solid transparent;
 }
-.btn--primary { background: var(--point-gold); color: #1a1512; box-shadow: 0 8px 24px rgba(var(--point-gold-rgb), 0.25); }
+.btn--primary { background: var(--point-gold); color: #1a1512; }
 .btn--primary:hover { background: var(--point-gold-hover); transform: translateY(-2px); }
 .btn--ghost { background: transparent; color: var(--text-main); border-color: var(--border-light); }
 .btn--ghost:hover { border-color: var(--point-gold); color: var(--point-gold); }
@@ -259,7 +266,7 @@ img { max-width: 100%; display: block; }
 .review-grid--wide .review-card { padding: 30px 28px; }
 .review-quote { color: #ede5dc; font-size: 0.98rem; line-height: 1.7; margin-bottom: 12px; }
 .review-grid--wide .review-quote { font-size: 1.1rem; line-height: 1.75; }
-.review-label { color: var(--point-gold); font-size: 0.85rem; font-weight: 600; }
+.review-label { color: #ab9f92; font-size: 0.85rem; font-weight: 600; }
 .reviews-photo { margin-top: 36px; }
 .reviews-photo img { border-radius: 18px; max-height: 420px; width: 100%; object-fit: cover; }
 
@@ -317,7 +324,6 @@ img { max-width: 100%; display: block; }
 .proof-card:focus-visible {
     border-color: rgba(var(--point-gold-rgb), 0.46);
     transform: translateY(-3px);
-    outline: none;
 }
 .proof-icon {
     display: block;
@@ -377,8 +383,8 @@ img { max-width: 100%; display: block; }
 }
 
 /* ---------- 제품 카드 (works) ---------- */
-.reco-label { color: var(--point-gold); font-weight: 700; letter-spacing: 0.06em; margin: 40px 0 20px; font-size: 1.05rem; }
-.category-title { color: var(--point-gold); font-weight: 700; font-size: 1.08rem; margin: 44px 0 16px; }
+.reco-label { color: #d8c8ba; font-weight: 700; letter-spacing: 0.06em; margin: 40px 0 20px; font-size: 1.05rem; }
+.category-title { color: #d8c8ba; font-weight: 700; font-size: 1.08rem; margin: 44px 0 16px; }
 .store-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
 .store-card {
     background: var(--card-bg); border: 1px solid var(--border-subtle); border-radius: 16px;
@@ -399,7 +405,7 @@ img { max-width: 100%; display: block; }
 }
 .store-pick-badge {
     position: absolute; top: 10px; left: 10px; z-index: 1;
-    background: var(--point-gold); color: #1a1410; font-size: 0.68rem; font-weight: 800;
+    background: var(--point-gold); color: #1a1410; font-size: 0.6875rem; font-weight: 800;
     padding: 4px 10px; border-radius: 999px; letter-spacing: 0.03em;
 }
 
@@ -847,7 +853,6 @@ img { max-width: 100%; display: block; }
 .cta-button--red {
     background: #8B0000;
     color: #ffffff;
-    box-shadow: 0 4px 24px rgba(139, 0, 0, 0.3);
 }
 
 @media (max-width: 480px) {
@@ -897,11 +902,12 @@ img { max-width: 100%; display: block; }
 .field-card::after { display: none; }
 .field-card:has(.field-full)::after {
     content: '전문 보기 →'; display: block; align-self: flex-end; margin-top: 10px;
-    color: var(--point-gold); font-size: 0.78rem; font-weight: 800;
+    color: #d8c8ba; font-size: 0.78rem; font-weight: 800;
+    text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px;
 }
 .field-tag {
     display: inline-block; align-self: flex-start; font-size: 0.7rem; font-weight: 700;
-    color: var(--point-gold); border: 1px solid rgba(var(--point-gold-rgb), 0.4);
+    color: #ab9f92; border: 1px solid rgba(255,255,255,0.18);
     border-radius: 999px; padding: 3px 10px; margin-bottom: 12px;
     max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
@@ -934,7 +940,7 @@ body.field-modal-open { overflow: hidden; }
 .field-modal-close:hover,
 .field-modal-close:focus-visible { border-color: rgba(var(--point-gold-rgb), 0.68); background: #2d211b; outline: none; }
 .field-modal-tag {
-    display: inline-block; color: var(--point-gold); border: 1px solid rgba(var(--point-gold-rgb), 0.42);
+    display: inline-block; color: #ab9f92; border: 1px solid rgba(255,255,255,0.18);
     border-radius: 999px; padding: 5px 12px; font-size: 0.78rem; font-weight: 800; margin-bottom: 18px;
 }
 .field-modal-quote { clear: both; color: #f1e7dc; font-size: 1rem; line-height: 1.9; white-space: pre-line; margin: 0; }
@@ -981,14 +987,14 @@ body.field-modal-open { overflow: hidden; }
 /* ========== mobile.css 흡수 (듀얼 마크업 토글 + 모바일 전용 디자인) ========== */
 /* ==========================================================================
    mobile.css - 듀얼 마크업 토글 + 모바일 전용 디자인 (색감통일 다크 톤)
-   적용 규칙: 1024px 초과 = 데스크톱(기존) 그대로 / 1024px 이하 = 모바일 디자인
+   적용 규칙: 900px 초과 = 데스크톱(기존) 그대로 / 900px 이하 = 모바일 디자인
    모든 모바일 스타일은 .kx-mobile 하위로 스코프 → 데스크톱 CSS와 영구 격리
    ========================================================================== */
 
 /* --- 토글: 기본(데스크톱) --- */
 .kx-mobile { display: none; }
 
-@media (max-width: 1024px) {
+@media (max-width: 900px) {
   .kx-desktop { display: none !important; }
   .kx-mobile  { display: block !important; }
 
@@ -1009,10 +1015,9 @@ body.field-modal-open { overflow: hidden; }
 .kx-mobile .kx-cta {
   display: flex; align-items: center; justify-content: center;
   height: 54px; border-radius: 13px;
-  background: var(--kx-terra); color: #FBEFE6;
+  background: var(--point-gold); color: #1a1512;
   font-weight: 700; font-size: 16px; letter-spacing: -0.01em;
   text-decoration: none;
-  box-shadow: 0 12px 28px rgba(217,74,26,0.4);
 }
 .kx-mobile .kx-eye {
   display: flex; align-items: center; justify-content: center; gap: 9px;
@@ -3496,4 +3501,77 @@ button.mypage-badge-tile:hover,
 .kali-badge--god::before {
   border-color: rgba(237, 218, 166, 0.76);
   background: rgba(102, 122, 190, 0.34);
+}
+
+@media print{ .js-anim .kx-fade, .js-anim .fade-in, .js-anim .kx-mobile .kx-shell > div{ opacity:1 !important; transform:none !important; } }
+
+/* ---------- 2026-11-05 landing fixes ---------- */
+/* 한 글자 마지막 줄 방지 */
+.kx-desktop :is(p,li), .kx-mobile :is(p,li){ text-wrap:pretty; }
+
+/* 스크린리더 전용 텍스트 */
+.sr-only{ position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+
+/* works 데스크톱: 마지막 줄 카드 가운데 정렬 (카드 폭/간격 유지) */
+@media (min-width:901px){
+  .kx-desktop .store-grid{ display:flex; flex-wrap:wrap; justify-content:center; gap:18px; }
+  .kx-desktop .store-grid > .store-card{ width:calc((100% - 36px) / 3); }
+}
+
+/* intro 가격 카운트: 숫자 폭 고정 + 끝날 때 한 번 안착 */
+.price-num{ font-variant-numeric:tabular-nums; display:inline-block; }
+.price-num.price-settle{ animation:priceSettle .16s ease-out; }
+@keyframes priceSettle{ from{ transform:scale(1.04); } to{ transform:scale(1); } }
+
+/* FAQ 아코디언 (lesson) */
+.kx-faq > summary > span[aria-hidden]{ display:inline-block; transition:transform .25s cubic-bezier(.2,.7,.2,1); }
+.kx-faq[open] > summary > span[aria-hidden]{ transform:rotate(45deg); }
+@supports (interpolate-size:allow-keywords){
+  .kx-faq{ interpolate-size:allow-keywords; }
+  .kx-faq::details-content{ block-size:0; overflow:hidden; transition:block-size .25s cubic-bezier(.2,.7,.2,1), content-visibility .25s allow-discrete; }
+  .kx-faq[open]::details-content{ block-size:auto; }
+}
+@media (prefers-reduced-motion: reduce){
+  .price-num.price-settle{ animation:none; }
+  .kx-faq > summary > span[aria-hidden]{ transition:none; }
+  .kx-faq::details-content{ transition:none; }
+}
+
+/* desktop type roles for class-driven text (desktop only; mobile keeps its own sizes) */
+@media (min-width:901px){
+  .kx-desktop .review-label, .kx-desktop .store-info .tag, .kx-desktop .field-author, .kx-desktop .event-block-title .ev-count{ font-size:var(--kx-d-support); }
+  .kx-desktop .review-grid:not(.review-grid--wide) .review-quote{ font-size:var(--kx-d-body); }
+  .kx-desktop .field-edited{ font-size:var(--kx-d-label); }
+}
+
+/* 보조 텍스트 링크: 주황 대신 크림 + 밑줄 (주황은 CTA 버튼·가격·아이브로에만) */
+.kx-sl:hover, .kx-sl:focus-visible, a:hover .kx-sl, a:focus-visible .kx-sl { color: #f4efe9 !important; }
+.field-card:hover::after, .field-card:focus-visible::after { color: #f4efe9; }
+
+/* ---------- 2026-11-06 home refinements ---------- */
+
+/* 모바일 상단 내비: 탭 타겟 44px */
+@media (max-width:900px){
+  .nav-link{ display:inline-flex; align-items:center; justify-content:center; min-height:44px; white-space:nowrap; }
+}
+@media (max-width:700px){
+  .nav-link{ display:inline-flex; align-items:center; justify-content:center; min-height:44px; padding:0 10px; white-space:nowrap; }
+  .nav-links{ gap:4px; align-items:center; }
+}
+@media (max-width:460px){
+  .nav-link{ padding:0 8px; }
+  .nav-links{ gap:2px; }
+}
+
+@media (prefers-reduced-motion: no-preference){
+  /* 모바일 5단계 번호: 카드가 뒤집히듯 한 번 */
+  @keyframes kxFlip{ from{ transform:perspective(320px) rotateY(180deg); } to{ transform:perspective(320px) rotateY(0); } }
+  .js-anim .kx-mobile .kx-in .kx-flip{ backface-visibility:hidden; -webkit-backface-visibility:hidden; animation:kxFlip .5s cubic-bezier(.2,.7,.2,1) both; animation-delay:.3s; }
+  .js-anim .kx-mobile .kx-in .kx-steps > a:nth-child(2) .kx-flip{ animation-delay:.4s; }
+  .js-anim .kx-mobile .kx-in .kx-steps > a:nth-child(3) .kx-flip{ animation-delay:.5s; }
+  .js-anim .kx-mobile .kx-in .kx-steps > a:nth-child(4) .kx-flip{ animation-delay:.6s; }
+  .js-anim .kx-mobile .kx-in .kx-steps > a:nth-child(5) .kx-flip{ animation-delay:.7s; }
+  /* intro 정가 취소선: 왼쪽에서 오른쪽으로 그어진다 (JS가 is-drawing을 붙일 때만) */
+  @keyframes strikeDraw{ from{ background-size:0% 1.5px; } to{ background-size:100% 1.5px; } }
+  .price-strike.is-drawing{ text-decoration:none !important; background:linear-gradient(currentColor, currentColor) no-repeat 0 56% / 0% 1.5px; animation:strikeDraw .55s cubic-bezier(.2,.7,.2,1) .15s forwards; }
 }
