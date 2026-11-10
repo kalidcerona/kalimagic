@@ -1,5 +1,5 @@
 // The build replaces this marker with SHA-256(game.data + shell sources).
-const CACHE = "planb-aad523bac0162854e702e2ce73d5977137854af87c7347dd637bb62683e5335d-a40f446b5697d29f971aa65a4ee5c58d95c98f7d6f3e81dd1f1938e93f752fab";
+const CACHE = "planb-35404ca2b97216a46e39c77e848c5a3a6d66fd7b97f33efd34dd7328bba713df-5e50f4a36eeb7905995d271e41ab1bb12cc40b629779998b4e91846165f6c1e8";
 const SHELL = ["./", "index.html", "game.js", "love.js", "love.wasm", "game.data",
   "manifest.webmanifest", "icons/icon-192.png", "icons/icon-512.png", "icons/maskable-512.png"];
 self.addEventListener("install", event => {
