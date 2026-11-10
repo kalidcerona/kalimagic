@@ -1,6 +1,7 @@
 (function () {
   var KALI_EVENTS = [
     { code: '2026-08', label: '칼리의 대번개' },
+    { code: 'mongwhan-2026', label: '서울대 특강 · 2026' },
     { code: 'garage-life-2026', label: 'GARAGE LIFE FESTIVAL (Deus Ex Machina + RSG) · 2026' },
     { code: 'kwangwoon-2026', label: '광운대 특강 · 2026' },
     { code: 'yonsei-korea-sogang-2026', label: '연세·고려·서강대 합동 특강 · 2026' },
