@@ -131,7 +131,7 @@ html body #viewport#viewport #stage#stage#stage#stage #heckleBang { border:0; bo
 html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #audienceCard.has-audience-line #patternLabel { top:60px; left:10px; right:auto; max-width:44%; font:12px/16px system-ui,sans-serif; }
 html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #patternLabel > span { white-space:nowrap; }
 html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #audienceCard #patternLabel { top:84px !important; left:12px !important; max-width:calc(100% - 24px) !important; }
-html body.phone.compact-notice:not(.portrait-layout):not(.tablet) #viewport#viewport #stage#stage#stage#stage #audienceCard #patternLabel { top:54px !important; max-width:82px !important; }
+html body.phone.compact-notice:not(.portrait-layout):not(.tablet) #viewport#viewport #stage#stage#stage#stage #audienceCard #patternLabel { top:56px !important; max-width:82px !important; }
 html body.phone.compact-notice:not(.portrait-layout):not(.tablet) #viewport#viewport #stage#stage#stage#stage #audienceCard #phaseIndicator { left:var(--compact-phase-left,110px) !important; max-width:var(--compact-phase-width,82px) !important; }
 /* Owner 10-24: the 야유 plate is the heckle gauge. A yellow bar (kit act fill) grows behind the number and is full exactly when the heckle fires
    (--heckle, 0 to 100, written by render() from the core heckle timer). Landscape folds the old upright heckle bar into the plate. */
@@ -167,31 +167,40 @@ html body.phone #viewport#viewport #stage#stage#stage#stage #audienceCard.boo-sc
 /* Fix A: the landscape lose bubble owns this space while its line is open. fixP 1: the plate is a child of #audienceCard (ui.js U50 moves it there), not of #heckle. */
 html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage#stage #audienceCard.boo-scene > .heckle-plate { visibility:hidden; }
 
-/* Landscape phones: keep the label and gauge in the left top lane, clear of the bubble and audience. */
+/* Landscape phones: fit the full name, regen and HP inside the actual stage width. */
 html body.phone:not(.tablet):not(.portrait-layout) #viewport#viewport #stage #audienceCard .doubt-plate {
-  left:8px!important; top:4px!important; max-width:calc(var(--CW) * .5 - 16px); height:20px;
+  left:8px!important; top:4px!important; max-width:calc(var(--CW) - 16px);
+  height:20px; padding:0 6px; display:flex; gap:2px;
+  font-size:11px; line-height:16px; overflow:hidden; text-overflow:clip;
+}
+html body.phone:not(.tablet):not(.portrait-layout) #viewport#viewport #stage #audienceCard .doubt-plate #doubtTitle,
+html body.phone:not(.tablet):not(.portrait-layout) #viewport#viewport #stage #audienceCard .doubt-plate.plate-2l #doubtTitle {
+  flex:none; min-width:auto; font:400 11px/16px Galmuri11,monospace; letter-spacing:0;
+  white-space:nowrap; word-break:keep-all; overflow-wrap:normal; overflow:visible; text-overflow:clip;
+}
+html body.phone:not(.tablet):not(.portrait-layout) #viewport#viewport #stage #audienceCard .doubt-plate:not(.plate-noregen) #doubtRegen {
+  display:block; margin:0; font-size:11px; line-height:16px; white-space:nowrap;
+}
+/* Keep a visible name/HP gap; fitDoubtPlate may shorten HP in the 219px narrow plate. */
+html body.phone:not(.tablet):not(.portrait-layout) #viewport#viewport #stage #audienceCard .doubt-plate.plate-noregen { gap:2px; }
+html body.phone:not(.tablet):not(.portrait-layout) #viewport#viewport #stage #audienceCard .doubt-plate #doubtNumber {
+  font-size:11px; line-height:16px; white-space:nowrap;
 }
 html body.phone:not(.tablet):not(.portrait-layout) #viewport#viewport #stage #audienceCard .doubt {
   left:8px!important; right:auto!important; top:26px!important;
   width:calc(var(--CW) * .5 - 16px)!important; height:12px!important; transform:none;
+  border-image:url('assets/kit/doubt-frame.webp') 8 / 3px / 0 stretch;
 }
 html body.phone:not(.tablet):not(.portrait-layout) #viewport#viewport #stage #audienceCard .doubt-fill {
   -webkit-mask:none; mask:none;
 }
 html body.phone:not(.tablet):not(.portrait-layout) #viewport#viewport #stage #audienceCard .heckle-plate {
-  left:8px!important; top:42px!important; max-width:calc(var(--CW) * .5 - 16px);
+  left:8px!important; top:42px!important; max-width:calc(var(--CW) - 16px);
+  height:20px; padding:0 9px; overflow:hidden; font-size:11px; line-height:16px;
 }
 html body.phone:not(.tablet):not(.portrait-layout) #viewport#viewport #stage #audienceCard #patternLabel {
   top:calc(var(--TB) + 64px)!important;
 }
-/* 640x360: plate-2l word-break wraps the audience gauge title. Keep one line. */
-html body.phone:not(.tablet):not(.portrait-layout) #viewport#viewport #stage #audienceCard .doubt-plate #doubtTitle,
-html body.phone:not(.tablet):not(.portrait-layout) #viewport#viewport #stage #audienceCard .doubt-plate.plate-2l #doubtTitle {
-  flex:1 1 auto; min-width:0; white-space:nowrap; word-break:keep-all; overflow-wrap:normal;
-  overflow:hidden; text-overflow:ellipsis; font-size:10px; line-height:16px;
+html body.phone:not(.tablet):not(.portrait-layout) #viewport#viewport #stage #audienceCard .heckle-plate #attackNumber {
+  font-size:11px; line-height:16px;
 }
-
-/* Let the full audience name and value use the available stage width. */
-html body.phone:not(.tablet):not(.portrait-layout) #viewport#viewport #stage #audienceCard .doubt-plate { max-width:calc(var(--CW) - 16px); }
-html body.phone:not(.tablet):not(.portrait-layout) #viewport#viewport #stage #audienceCard .doubt-plate #doubtTitle,
-html body.phone:not(.tablet):not(.portrait-layout) #viewport#viewport #stage #audienceCard .doubt-plate.plate-2l #doubtTitle { flex:none; min-width:auto; overflow:visible; text-overflow:clip; }

@@ -1,6 +1,7 @@
 'use strict';
   function rebirth(state) {
     if(state.batchD.side||state.batchD.encore.phase==='round'||state.batchD.twist.scene&&!state.batchD.twist.complete)return state;
+    endHelperBuffs(state, null);
     var keepCoins = Math.floor(state.coins / 2), keepGems = Math.floor(state.gems / 2), keepKeys = Math.floor(state.keys / 2);
     if(state.batchD.multiverseCleared){state.batchD.ifRoute=true;state.batchD.permanentBonus=Math.max(DATA.batchD.rebirth.permanentBonus,state.batchD.permanentBonus);}
     state.batchD.encore={phase:'',reward:0,left:0};state.batchD.rebirthOffer=false;state.batchD.interference={cell:-1,left:0,clock:0,kind:''};state.batchD.twist.scene='';
@@ -9,6 +10,10 @@
     var gain = starGain(d);
     if (gain < 1) gain = 1;
     addGain(state, 'starlight', gain, 100000);
+    var permanentTree = {}, routines = state.u19.routines.slice();
+    DATA.bookLayout.helperShop.hireKeys.concat(DATA.routines.map(function(r){return "routine-"+r.id;})).forEach(function(id){permanentTree[id]=state.tree[id]||0;});
+    // Rebirth starts a new card interval; a previous show must not retain its bonus.
+    showSequences.delete(state);
     var i;
     var has = false;
     if (state.mode === "ending" || state.seenEnding) {
@@ -16,8 +21,8 @@
       if (!has && state.endings.length < CONST.loopCap) state.endings.push(d);
     }
     state.dimension = d + 1;
-    state.u15.gloves=0;state.u15.gloveLeft=0;state.u15.deckOn=false;state.u15.drops={};state.u15.positions=CONST.slotOrder.slice();state.u15.scene=null;state.u15.queue=[];
-    state.u19=emptyU19();state.u18.anchor=null;state.u18.challenge=null;state.u18.map=false;state.u18.fans=[];state.u18.sets=[];
+    state.u15.deckOn=false;state.u15.drops={};state.u15.positions=CONST.slotOrder.slice();state.u15.scene=null;state.u15.queue=[];
+    state.u19=emptyU19();state.u19.routines=routines;state.u18.anchor=null;state.u18.challenge=null;state.u18.map=false;state.u18.fans=[];state.u18.sets=[];
     state.u14.satisfied=[];state.u14.sets=[];state.u14.collection=false;state.u14.visitor=emptyU14().visitor;state.u14.visitor.wait=90000+Math.floor(rngNext(state)*60001);
     state.seenEnding = false;
     state.level = 0;
@@ -35,6 +40,7 @@
     state.features = emptyFeatures(); state.features.reveals = reveals;
     if (guideDone) state.features.guide = "done";
     state.tree = emptyTree();
+    Object.keys(permanentTree).forEach(function(id){state.tree[id]=permanentTree[id];});
     state.skills=emptySkills(); state.idle.reward=null; state.idle.waiting=false; state.idle.autoAcc=0; state.idle.cursor=0; state.idle.milestones=[];
     state.bestiary = emptyBestiary();
     state.trophies = {};
@@ -57,6 +63,7 @@
     seed = seed >>> 0;
     var state = {
       batchD: emptyBatchD(),
+      potionCount: 0, refillCount: 0,
       u15: emptyU15(),
       u14: emptyU14(),
       features: emptyFeatures(),

@@ -38,8 +38,8 @@
       var o = JSON.parse(str);
       if (!o || typeof o !== "object" || Array.isArray(o)) return null;
       // Forward saves may share our known schema. Never persist this projection.
-      if (isNewerSave(str)) o.v = 23;
-      if (o.v !== 23 && o.v !== 22 && o.v !== 21 && o.v !== 20 && o.v !== 19 && o.v !== 18 && o.v !== 17 && o.v !== 16 && o.v !== 1&&o.v !== 2 && o.v !== 3 && o.v !== 4 && o.v !== 5 && o.v !== 6 && o.v !== 7 && o.v !== 8 && o.v !== 9 && o.v !== 10 && o.v !== 11 && o.v !== 12 && o.v !== 13 && o.v !== 14 && o.v !== 15) return null;
+      if (isNewerSave(str)) o.v = 24;
+      if (o.v !== 24 && o.v !== 23 && o.v !== 22 && o.v !== 21 && o.v !== 20 && o.v !== 19 && o.v !== 18 && o.v !== 17 && o.v !== 16 && o.v !== 1&&o.v !== 2 && o.v !== 3 && o.v !== 4 && o.v !== 5 && o.v !== 6 && o.v !== 7 && o.v !== 8 && o.v !== 9 && o.v !== 10 && o.v !== 11 && o.v !== 12 && o.v !== 13 && o.v !== 14 && o.v !== 15) return null;
       if (o.v === 7 && o.venueSlug === "lecturenote") {
         // Preserve the old index contract, then migrate by stable audience ID.
         var previousOrder = ["a-lecturenote-hecate", "a-lecturenote-jung", "h-lecturenote-kim"];
@@ -205,10 +205,26 @@
         if (hp == null || hpMax == null || spawn == null || typeof c.sealed !== "boolean") return null;
         if (o.v >= 4 && (typeof c.golden !== "boolean" || typeof c.goldenBroken !== "boolean")) return null;
         if ((hp > 0 && hpMax === 0) || (hpMax > 0 && hp > hpMax * 1.01 + 1)) return null;
-        var caseLv = o.v < 6 ? 1 : integer(c.lv,1,caseCap(state));
-        var caseXp = o.v < 6 ? 0 : num(c.xp,0,caseNeed(caseLv || 1));
-        if (caseLv == null || caseXp == null || caseXp >= caseNeed(caseLv) || (caseLv === caseCap(state) && caseXp !== 0)) return null;
+        // Golden is separate from grades: retain its legacy fields until it opens.
+        var oldCap = 5 + (state.tree.caseMax || 0), legacyCell = o.v < 24 || c.golden;
+        var caseLv = o.v < 6 ? 1 : integer(c.lv, 1, o.v < 24 ? oldCap : c.golden ? 50 : 7);
+        var oldNeed = Math.ceil(3 * Math.pow(1.35, (caseLv || 1) - 1));
+        var caseXp = o.v < 6 ? 0 : num(c.xp, 0, legacyCell ? oldNeed : 0);
+        if (caseLv == null || caseXp == null || (legacyCell && caseXp >= oldNeed) || (o.v < 24 && caseLv === oldCap && caseXp !== 0)) return null;
+        if (o.v < 24 && !c.golden) {
+          caseLv = caseLv >= 30 ? 7 : caseLv >= 18 ? 5 : caseLv >= 10 ? 4 : caseLv >= 5 ? 1 : 3;
+          caseXp = 0;
+        }
         state.board.push({ lv: caseLv, xp: caseXp, hp: hp, hpMax: hpMax, spawn: spawn, sealed: c.sealed, golden: !!c.golden, goldenBroken: !!c.goldenBroken });
+      }
+
+      if (o.v < 24) {
+        ['caseMax','caseXp','caseStart','boxXP'].forEach(function (id) {
+          var node = NODE_BY_ID[id], bought = state.tree[id] || 0, back = 0;
+          for (var level = 0; level < bought; level++) back += Array.isArray(node.cost) ? node.cost[level] : Math.ceil(node.cost.c * Math.pow(node.cost.g, level));
+          state.coins = Math.min(1e18, state.coins + back);
+          state.tree[id] = 0;
+        });
       }
 
       state.flights = [];

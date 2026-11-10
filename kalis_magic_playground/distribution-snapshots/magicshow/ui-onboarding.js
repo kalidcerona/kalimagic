@@ -1,4 +1,25 @@
 'use strict';
+  // Presentation receipts are session-only; loaded claims form the baseline, never a reward request.
+  const dailyReceiptMemory=new WeakMap();
+  function dailyReceiptBaseline() {
+    const daily=state.u14.daily,seen=new Set();
+    for(const [date,r] of Object.entries(daily.records))for(const id of r.claimed)seen.add(date+':'+id);
+    dailyReceiptMemory.set(state,{daily,seen});
+  }
+  function dailyReceiptChanges() {
+    let memory=dailyReceiptMemory.get(state);
+    if(!memory||memory.daily!==state.u14.daily){dailyReceiptBaseline();return {count:0,bonus:false};}
+    const d=state.u14.daily,r=d.records[d.date];let count=0;
+    if(r)for(const id of r.claimed){const key=d.date+':'+id;if(!memory.seen.has(key)){memory.seen.add(key);count++;}}
+    return {count,bonus:count>0&&!!r.bonus};
+  }
+  const deckReceiptMemory=new WeakMap();
+  function deckPracticeNotice() {
+    const previous=deckReceiptMemory.get(state),left=state.u15.gloveLeft;
+    if(left>0&&(!previous||previous.owner!==state.u15||!previous.left))toast('칼리 덱 자동 개봉 중 · 추가 탭 효과 없음 · 스킬·플래시 페이퍼·방문객 사용 가능');
+    if(previous&&previous.owner===state.u15&&previous.left>0&&!left)toast('칼리 덱 자동 개봉이 끝났어요. 다시 탭해서 케이스를 열어요');
+    deckReceiptMemory.set(state,{owner:state.u15,left});
+  }
   function tutorialSignal(id) {
     if (C.tutorialAction(state,id)) { save(); renderCoach(); }
     if (typeof firstUseHint === 'function') { if (id === 'learn') knownHint(id); else firstUseHint(id); } // learn: the player just did it
@@ -16,12 +37,13 @@
   // buyAll is no longer a toast: the first failed show opens a 세로나 dialogue (seronaFail, the story dialogue box with 다음), once per save.
   // Gate guidance derives first entry from the existing gate record; receipts stay transient.
   const SESSION_HINTS=['skill','finale','gatePressure'], ALL_HINTS=FIRST_USE_HINTS.concat(SESSION_HINTS), sessionHintsSeen=new Set();
-  let hintQueue=[], hintNextAt=0, noticesQuietSince=0, hintSkillName='';
+  let hintQueue=[], hintNextAt=0, noticesQuietSince=0, hintSkillName='',hintWaitingSince=null;
   function hintsLive(){return state.u15.tutorial.done&&!state.u15.tutorial.active&&!chainMark()&&state.onboarding.intro&&state.onboarding.step>=4;}
   function hintSeen(id){if(id==='gatePressure')return state._firstGate!==state.audId||sessionHintsSeen.has('gate:'+state.audId);return SESSION_HINTS.includes(id)?sessionHintsSeen.has(id):state.onboarding.facts.includes(id);}
   function rememberHint(id){if(id==='gatePressure'){sessionHintsSeen.add('gate:'+state.audId);return;}if(SESSION_HINTS.includes(id))sessionHintsSeen.add(id);else if(!state.onboarding.facts.includes(id))state.onboarding.facts.push(id);}
   function forgetHint(id){if(SESSION_HINTS.includes(id))sessionHintsSeen.delete(id);else state.onboarding.facts=state.onboarding.facts.filter(x=>x!==id);}
   function markPassedHints(){
+    dailyReceiptBaseline();
     sessionHintsSeen.clear();seronaFail.pending=false;seronaFail.index=-1;
     if(D.skills.some(k=>C.skillUnlocked(state,k.id)))sessionHintsSeen.add('skill');
     if((state.features.progress.finales||0)>0)sessionHintsSeen.add('finale');
@@ -40,23 +62,29 @@
     if(!ALL_HINTS.includes(id)||!hintsLive()||hintSeen(id)||hintQueue.includes(id))return;if(id==='skill')hintSkillName=arg||'';hintQueue.push(id);
   }
   function hintText(id){if(id==='gatePressure')return state.pattern==='stealCoins'?'이 관객은 까다로워요. 마음에 안 들면 동전을 뺏고 야유도 점점 세져요.':'이 관객은 까다로워요. 마음에 안 들면 야유가 점점 세져요.';const H=D.onboarding.seronaHints||{};if(id==='skill')return hintSkillName&&H.skill?H.skill.replace('{skill}',hintSkillName):'';return H[id]||(D.onboarding.tutorial.find(h=>h.id===id)||{}).body||'';}
-  function hintBlocked(){return state.mode!=='fight'||!!state.u15.scene||state.u15.queue.length>0||!$('storyDialog').hidden||!!menu||!$('panel').hidden||!!state.batchD.twist.scene||presentation.busy||!!wonMoment||!!stageRewardHost||state.features.climax.left>0||!$('introStory').hidden||!$('sceneCard').hidden||!$('offlineCard').hidden||!$('leaveConfirm').hidden||document.hidden||(portrait()&&hintQueue[0]!=='gatePressure');}
+  function hintBlocked(){return state.mode!=='fight'||!!state.u15.scene||state.u15.queue.length>0||!$('storyDialog').hidden||!!menu||!$('panel').hidden||!!state.batchD.twist.scene||!!wonMoment||!!stageRewardHost||state.features.climax.left>0||!$('introStory').hidden||!$('sceneCard').hidden||!$('offlineCard').hidden||!$('leaveConfirm').hidden||document.hidden||(portrait()&&hintQueue[0]!=='gatePressure');}
   function tickHints(){
     if(C.gatePressure(state)>0)firstUseHint('gatePressure');
     else hintQueue=hintQueue.filter(id=>id!=='gatePressure');
     if(portrait()&&hintQueue.includes('gatePressure'))hintQueue=['gatePressure'].concat(hintQueue.filter(id=>id!=='gatePressure'));
     if(presentation.busy)noticesQuietSince=clock; // notices come in bursts (case, achievement, growth): a hint waits for 1.5 s of quiet
-    if(!hintQueue.length||clock<hintNextAt||clock-noticesQuietSince<1500||hintBlocked())return;
+    if(!hintQueue.length){hintWaitingSince=null;return;}
+    if(hintBlocked()){hintWaitingSince=null;return;}
+    if(hintWaitingSince===null)hintWaitingSince=clock;
+    // Multi-item grade drops can keep the notice lane busy until the next story.
+    // Protect the first combat explanations so they finish before another burst.
+    const waited=hintQueue[0]==='badge'||hintQueue[0]==='heckle'||clock-hintWaitingSince>=12000;
+    if(clock<hintNextAt||(!waited&&(presentation.busy||clock-noticesQuietSince<1500)))return;
     const id=hintQueue.shift(),text=hintText(id);
     if(!text||hintSeen(id)||!hintsLive())return;
     rememberHint(id);save();
-    showHint(id,text);hintNextAt=clock+HINT_GAP_MS;
+    showHint(id,text,waited);hintWaitingSince=null;hintNextAt=clock+HINT_GAP_MS;
   }
   // The hint uses the toast channel: ordinary hints get 3.6 s and yield; gate guidance gets seven visible seconds.
   // A gate interrupted before seven seconds retries within its first fight; ordinary hints retry if cut before 1.5 s.
-  function showHint(id,text){
+  function showHint(id,text,waited=false){
     const gateId=state.audId;
-    presentation.push({merge:'hint:'+id,minimum:id==='gatePressure'?7000:3600,hint:id,start:item=>{
+    presentation.push({merge:'hint:'+id,minimum:id==='gatePressure'?7000:3600,hint:id,hintProtected:waited,priority:waited?60:0,start:item=>{
       const el=element('div','','toast hint-toast'),who=(D.onboarding.seronaHints||{}).speaker;if(who)el.append(element('strong',who,'hint-speaker'),' ');el.append(text);pxIcons(el);$('toasts').append(el);const expiry=id==='gatePressure'?null:setTimeout(()=>el.remove(),4200);
       item.end=()=>{clearTimeout(expiry);el.remove();
         if(id==='gatePressure'&&item.age<7000&&state.audId===gateId&&state._firstGate===gateId&&C.gatePressure(state)>0){sessionHintsSeen.delete('gate:'+gateId);if(!hintQueue.includes(id))hintQueue.unshift(id);hintNextAt=clock+HINT_GAP_MS;}
@@ -157,6 +185,7 @@
   }
   function renderCoach() {
     const host=$('tutorialCoach'), t=state.onboarding;
+    if (menu === 'install') { host.hidden=true; host.dataset.step=''; host.dataset.dock=''; setTutorialTargets([]); return; }
     const mark=chainMark();
     const chain=mark&&!state.u15.tutorial.active&&!state.u15.tutorial.done;
     if(chain&&!mark.step.endsWith('-fight')&&mark.step!=='upgrade-play'){host.hidden=true;host.dataset.step='';host.dataset.dock='';setTutorialTargets([]);return;}

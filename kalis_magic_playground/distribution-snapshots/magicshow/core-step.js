@@ -2,6 +2,7 @@
   function substep(state, dt, taps, ev, manualHolding, pulse) {
     if(state.mode==='fight'||state.batchD.encore.phase==='choice'||state.batchD.rebirthOffer||state.batchD.twist.scene){if(tickBatchD(state,dt,ev))return;}
     if(state.u18.map || state.u15.scene || state.u15.tutorial.won)return;
+    tickShowSequence(state,dt,ev);
     if (state.mode === "ending") return;
     if (state.mode === "dealer") return;
     tickMentalRecovery(state, dt);
@@ -38,6 +39,7 @@
       return;
     }
     if(profile(state)==='future'&&state.u19.telegraph>0){tickFuture(state,dt,ev);return;}
+    tickHelperBuffs(state,dt,ev);
     state.fightMs += dt;
     // Only the first new-player rehearsal: normal taps finish by 48 seconds regardless of drops.
     if(taps.length&&!state.u15.tutorial.done&&state.u15.bios.indexOf('lesson:v1')>=0&&state.u15.bios.indexOf('tchain:girl-fight:0')>=0){
@@ -107,6 +109,7 @@
       if(state.mode==="fight" && state.u15.gloveLeft>0)dt=Math.min(dt,state.u15.gloveLeft);
       var failuresBefore=state.fails,lessonBefore=tutorialLessonPending(state);
       substep(state, dt, taps, ev, !!(input && input.holding), input && input.pulse);
+      if(state.mode!=="fight"||state.resolved)endHelperBuffs(state,ev);
       dtMs -= dt;
       guard++;
       if (state.mode === "ending" || state.mode === "dealer" || state.fails!==failuresBefore||lessonBefore&&!state.u15.tutorial.active) break;

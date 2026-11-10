@@ -135,7 +135,8 @@ html body #viewport#viewport #stage#stage#stage#stage #panel[data-screen="dealer
 #stage #panel, #stage #storyDialog, #stage #phoneMore { border-image:url('assets/kit/dialogue-frame.webp') 16 fill / 8px / 0 stretch; }
 #stage button:active:enabled:not([aria-disabled="true"]) { border-image-source:url('assets/kit/button-pressed.webp'); }
 #stage #gemShopQuick:active:enabled:not([aria-disabled="true"]), #stage #gemShopButton:active:enabled:not([aria-disabled="true"]) { border-image-source:url('assets/kit/shop-pressed.webp'); }
-#stage .doubt { border-image:url('assets/kit/doubt-frame.webp') 8 / 4px / 0 stretch; background-image:url('assets/kit/doubt-empty.webp'); box-shadow:none; }
+:where(body:not(.phone), body.tablet, body.portrait-layout) #stage .doubt { border-image:url('assets/kit/doubt-frame.webp') 8 / 4px / 0 stretch; }
+#stage .doubt { background-image:url('assets/kit/doubt-empty.webp'); box-shadow:none; }
 #stage .doubt-fill { background:url('assets/kit/doubt-fill.webp') repeat; box-shadow:none; }
 #stage .mockup-spot { top:0; left:0; z-index:1; }
 #stage .mockup-curtain { top:0; z-index:2; }
@@ -265,3 +266,24 @@ html body #viewport#viewport #stage#stage#stage#stage .routine-card .bent-corner
 }
 html body #viewport#viewport #stage#stage#stage#stage #panel .dealer-speech > .dealer-turn:last-child { margin-bottom:0; }
 html body.phone:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage #tutorialCoach:not([data-compact="true"]) > button { width:60px; min-width:60px; padding-left:4px; padding-right:4px; }
+
+/* Release 22: presentation tiers only, independent of act rewards. */
+#stageStats #statAct[data-act-tier] { position:relative; }
+#stageStats #statAct[data-act-tier] .act-tier-line { position:absolute; left:0; top:0; width:max-content; max-width:160px; pointer-events:none; font:9px/12px Galmuri11,monospace; color:#F2E6FF; text-align:right; }
+#stageStats #statAct[data-act-tier] .act-tier-stars { position:absolute; right:0; top:0; width:min(46px,100%); height:100%; overflow:hidden; pointer-events:none; }
+#stageStats #statAct[data-act-tier] .act-tier-star { position:absolute; width:12px; height:12px; margin:-6px; background:url('assets/kit/icon-spark.webp') center/contain no-repeat; opacity:.65; animation:act-tier-glint .8s steps(2) infinite; }
+#stageStats #statAct[data-act-tier="1"] .ms-act-num { color:#FFE65C; }
+#stageStats #statAct[data-act-tier="2"] .ms-act-num { color:#FF8C9C; }
+#stageStats #statAct[data-act-tier="3"] .ms-act-num { color:#BC8CFF; }
+#stageStats #statAct[data-act-tier="4"] .ms-act-num { color:#D9CEFF; background:radial-gradient(circle at 22% 35%,#FFF 0 1px,transparent 2px),radial-gradient(circle at 75% 65%,#FFF 0 1px,transparent 2px),linear-gradient(100deg,#AEAFFF,#E6D6FF,#BC8CFF); background-clip:text; -webkit-background-clip:text; -webkit-text-fill-color:transparent; text-shadow:none; }
+#stage.decorations-paused #statAct[data-act-tier] .act-tier-stars { visibility:hidden; }
+#stageStats #statAct[data-act-tier][data-act-reduced="true"] .act-tier-star,
+#stageStats #statAct[data-act-tier][data-act-reduced="true"] .ms-act-num { animation:none; }
+@keyframes act-tier-glint { from { opacity:.35; } to { opacity:.85; } }
+@media(prefers-reduced-motion:reduce) {
+  #stageStats #statAct[data-act-tier] .act-tier-star,
+  #stageStats #statAct[data-act-tier] .ms-act-num { animation:none; }
+}
+
+/* P10b: viewport overlay escapes the clipped stats container. */
+html body > .act-tier-line { position:fixed; left:0; top:0; width:max-content; max-width:160px; margin:0; pointer-events:none; font:9px/12px Galmuri11,monospace; color:#F2E6FF; text-align:right; z-index:30; }

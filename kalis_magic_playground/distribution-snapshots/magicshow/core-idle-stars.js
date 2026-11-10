@@ -1,6 +1,6 @@
 'use strict';
   // v4 U42: shared formulas. The expression order matches the old inline copies exactly (float results must stay byte-identical).
-  function caseHp(base, lv) { return base * Math.pow(1.12, lv - 1); }
+  function caseHp(base, grade, golden) { return base * (golden ? DATA.caseGrades.goldenHp : DATA.caseGrades.hp[grade - 1]); }
   function xpNeed(state) { return CONST.xpBase + CONST.xpPerLevel * state.level; }
   function starGain(d) { return CONST.starGainBase + d; }
   function dealerCoinGrowthPow(state) { return Math.pow(CONST.dealerCoinGrowth, balanceRank(state.vMax) - 1); }
@@ -23,10 +23,10 @@
     var weights=DATA.items.types.map(function(k){var weight=k.share*100;if(k.id==='coin')weight+=t.coinLuck*statMultiplier(state,'coinLuck')*CONST.coinLuckAdd;if(t.equip)weight*=Math.pow(1+CONST.equipWeightPerItem,state.features.equipped.filter(function(id){return itemType(id)===k;}).length);return weight;});
     var totalShare=weights.reduce(function(a,b){return a+b;},0), coinShare=DATA.items.types.reduce(function(n,k,i){return n+(k.effect==='coins'?weights[i]:0);},0)/totalShare;
     state.board.forEach(function(c){
-      var hp=caseHp(state._boxHp,c.lv||1);
+      var hp=caseHp(state._boxHp,c.lv||1,c.golden);
       var opens=perCell>0?1/(hp/perCell+state._tau/1000):0;
-      xp.push(c.lv<caseCap(state)?opens*(1+.15*t.caseXp):0);
-      coins+=opens*(Math.max(1,Math.round(CONST.coinPerBox*state._coinMul))+caseItems(c.lv||1)*coinShare*CONST.itemCoins*rarityMean*state._coinMul*Math.pow(1.1,(c.lv||1)-1)*milestoneMultiplier(c.lv||1,[10,25,50])*branchBonus(state,'box')*caseItemBonus(state));
+      xp.push(0);
+      coins+=opens*(Math.max(1,Math.round(CONST.coinPerBox*state._coinMul))*caseOpeningMultiplier(c.lv||1,c.golden,state)+caseItems(c.lv||1,c.golden)*coinShare*CONST.itemCoins*rarityMean*state._coinMul*caseMultiplier(c.lv||1,'coin',c.golden,state)*branchBonus(state,'box')*caseItemBonus(state));
     });
     if(t.tipbox&&!m.paused.tipbox)coins+=(2+legacyRank(state.venue))*(1+.25*t.tipboxPower)*speed/(6*(1-.1*t.tipboxSpeed));
     if(t.rabbit&&!state.features.helperPaused)coins+=nodeEffects(state).rabbitCoins/(nodeEffects(state).rabbitEvery/1000);
@@ -38,7 +38,7 @@
     var zero={awayMs:0,coins:0,xp:state.board.map(function(){return 0;})};
     if(!Number.isFinite(now)||!state.idle.wallMs||now-state.idle.wallMs<60000)return zero;
     var ms=Math.min(now-state.idle.wallMs,(8+state.tree.nightShow)*3600000), eff=.7+.1*state.tree.manager /* v4 U51 6: base 70% (was 50%), 매니저 계약 max 3 = 100% */, rates=idleRates(state);
-    return {awayMs:ms,coins:Math.min(1e18,Math.floor(rates.coins*ms/1000*eff)),xp:rates.xp.map(function(x,i){var c=state.board[i],remaining=0;for(var lv=c.lv;lv<caseCap(state);lv++)remaining+=caseNeed(lv);remaining=Math.max(0,remaining-(c.xp||0));return Math.min(remaining,x*ms/1000*eff);})};
+    return {awayMs:ms,coins:Math.min(1e18,Math.floor(rates.coins*ms/1000*eff)),xp:rates.xp};
   }
   function collectOffline(state,now) {
     var gain=offlineGain(state,now);
@@ -46,12 +46,11 @@
     state.idle.wallMs=now;
     if(!gain.awayMs)return gain;
     earnCoins(state,gain.coins);state.u14.visitor.incomeCoins=Math.max(0,state.u14.visitor.incomeCoins-gain.coins);dailyProgress(state,'offline',1);var levels=0;
-    state.board.forEach(function(c,i){if(c.lv>=caseCap(state))return;c.xp+=gain.xp[i];while(c.lv<caseCap(state)&&c.xp>=caseNeed(c.lv)){c.xp-=caseNeed(c.lv);c.lv++;levels++;}if(c.lv>=caseCap(state))c.xp=0;});
+
     state.idle.reward={awayMs:gain.awayMs,coins:gain.coins,levels:levels,doubled:false};
-    checkAchievements(state,null);
     return gain;
   }
-  function doubleOffline(state) { var r=state.idle.reward;if(!r||r.doubled)return false;earnCoins(state,r.coins);state.u14.visitor.incomeCoins=Math.max(0,state.u14.visitor.incomeCoins-r.coins);r.doubled=true;checkAchievements(state,null);return true; }
+  function doubleOffline(state) { var r=state.idle.reward;if(!r||r.doubled)return false;earnCoins(state,r.coins);state.u14.visitor.incomeCoins=Math.max(0,state.u14.visitor.incomeCoins-r.coins);r.doubled=true;return true; }
 
   function emptyStars() {
     return { trick: 0, guard: 0, tempo: 0, bounty: 0 };

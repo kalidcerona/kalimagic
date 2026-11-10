@@ -380,3 +380,6 @@ html body.portrait-layout.phone:not(.tablet).portrait-compact #viewport#viewport
 html body.portrait-layout.phone:not(.tablet).portrait-compact #viewport#viewport #stage#stage#stage#stage#stage#stage #phoneWallet .cur-icon { grid-row:1; width:12px; height:12px; }
 html body.portrait-layout.phone:not(.tablet).portrait-compact #viewport#viewport #stage#stage#stage#stage#stage#stage #phoneWallet .currency .bitmap { grid-column:1 / 3; display:block; font:11px/12px system-ui,sans-serif; height:12px; min-height:0; }
 html body.portrait-layout.phone:not(.tablet).portrait-compact #viewport#viewport #stage#stage#stage#stage#stage#stage #phoneWallet #mockupDoves { grid-column:1 / 3; }
+
+/* R21 triage4: a larger title wraps inside its column and remains scrollable. */
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #phoneTop #venueName#venueName { white-space:normal; overflow-wrap:anywhere; height:auto; max-height:100%; line-height:1.15; overflow:auto!important; }

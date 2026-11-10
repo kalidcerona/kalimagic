@@ -32,7 +32,7 @@
     rate *= Math.pow(C.starTempoRate, state.stars.tempo);
     if (state.slow) rate *= C.slowTap;
     if (rate < 0.2) rate = 0.2;
-    state._rate = rate * statMultiplier(state,"speed") * statMultiplier(state,"starTempo");
+    state._rate = rate * statMultiplier(state,"speed") * statMultiplier(state,"starTempo") * routineMultiplier(state,"recompute","_rate");
     var wand = C.wandBase * Math.pow(C.wandGrowth, state.tree.power);
     wand *= Math.pow(C.starWand, state.stars.trick) * statMultiplier(state,"starTrick");
     state._wand = wand * statMultiplier(state,"power") * branchBonus(state, "hand");

@@ -22,7 +22,7 @@
   function mountSaveTransfer(body, status, loadOnly) {
     const host = element('section', '', 'save-transfer');
     host.append(element('h2', '다른 기기로 옮기기'));
-    let candidate = null;
+    let candidate = null, statusGeneration = 0;
     const preview = element('div'), editor = element('textarea');
     editor.hidden = true; editor.setAttribute('aria-label', '저장 코드'); editor.spellcheck = false;
     const error = () => { status.textContent = '읽을 수 없는 저장이에요. 칼리마술 저장 파일·코드를 골라 주세요.'; };
@@ -63,17 +63,19 @@
         } catch (e) { status.textContent = '내보내지 못했어요. 다시 눌러 주세요.'; }
       }, newerSave || restoring));
       host.append(action('코드 복사', async () => {
+        const generation=++statusGeneration;
         try {
           const text = SaveTransfer.encode(state);
           editor.value = text; editor.hidden = false; editor.focus(); editor.select();
-          try { await navigator.clipboard.writeText(text); status.textContent = '저장 코드를 복사했어요.'; }
-          catch (e) { status.textContent = '코드를 길게 눌러 복사해 주세요.'; }
+          try { await navigator.clipboard.writeText(text); if(generation===statusGeneration)status.textContent = '저장 코드를 복사했어요.'; }
+          catch (e) { if(generation===statusGeneration)status.textContent = '코드를 길게 눌러 복사해 주세요.'; }
         } catch (e) { status.textContent = '코드를 만들지 못했어요. 다시 눌러 주세요.'; }
       }, newerSave || restoring));
     }
     const file = document.createElement('input'); file.type = 'file'; file.accept = '.kmsave,.json,application/json'; file.hidden = true;
     let readGeneration = 0;
     file.addEventListener('change', async () => {
+      ++statusGeneration;
       const picked = file.files?.[0], generation = ++readGeneration; file.value = ''; clear();
       if (!picked) return;
       if (picked.size > SaveTransfer.maxBytes) { error(); return; }
@@ -84,9 +86,9 @@
     });
     host.append(action('파일에서 불러오기', () => { clear(); file.click(); }, inaccessible || newerSave || restoring || !saveStore), file);
     host.append(action('코드 붙여넣기', () => {
-      ++readGeneration; clear(); editor.value = ''; editor.hidden = false; editor.focus();
+      ++statusGeneration; ++readGeneration; clear(); editor.value = ''; editor.hidden = false; editor.focus();
       status.textContent = '코드를 붙여넣고 확인을 눌러 주세요.';
     }, inaccessible || newerSave || restoring || !saveStore), editor);
-    host.append(action('코드 확인', () => { ++readGeneration; prepare(editor.value); }), preview);
+    host.append(action('코드 확인', () => { ++statusGeneration; ++readGeneration; prepare(editor.value); }), preview);
     body.append(host);
   }

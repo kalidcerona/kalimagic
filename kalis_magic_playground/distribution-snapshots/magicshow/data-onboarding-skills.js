@@ -31,12 +31,12 @@ GAME_DATA.onboarding = {
     {
       "id": "doubt",
       "title": "의심 게이지",
-      "body": "능력치가 오르면 의심 게이지가 줄어요."
+      "body": "카드가 관객에게 닿으면 의심이 줄어요."
     },
     {
       "id": "heckle",
       "title": "야유 조심",
-      "body": "야유에 멘탈이 깎이면 자신감을 올려요."
+      "body": "자신감을 올리면 야유를 먼저 막아 줘요."
     },
     {
       "id": "learn",
@@ -71,7 +71,7 @@ GAME_DATA.onboarding.seronaHints = {
   skill: "{skill} 준비됐어요. 지금 눌러 봐요.",
   learn: "동전이 모였네요. 비법서에서 하나 배워 봐요.",
   finale: "피날레가 꽉 찼어요. 지금 터뜨려요!",
-  heckle: "야유에 흔들리면 자신감을 올려 봐요.",
+  heckle: "자신감을 올리면 야유를 먼저 막아 줘요.",
   badge: "케이스에서 나온 아이템이 실력을 올려 줘요.",
   win: "마지막 관객까지 감탄하면 다음 무대예요.",
   firstFail: [

@@ -82,7 +82,7 @@
   // Shared formula modifiers.
   function nodeEffects(state) {
     var t = state.tree;
-    return {
+    var effects = {
       critRate: Math.min(1, (t.crit ? Math.min(0.14, 0.08 + 0.02 * t.critRate) : 0) + gearBonus(state,"crit")),
       critPower: Math.min(1.8, 1.5 + 0.1 * t.critPower),
       comboMs: Math.min(3000, CONST.comboResetMs + 250 * t.comboHold) + (hasReward(state, 1) ? 500 : 0),
@@ -91,7 +91,10 @@
       goldEvery: Math.max(120000, 180000 - 20000 * t.goldPity),
       goldCoins: 1 + 0.2 * t.goldCoins,
       prepared: 0.05 * t.prepared,
-      boxXP: 1 + 0.1 * t.boxXP + 0.1 * t.lessonBias,
+      boxXP: 1 + 0.1 * t.lessonBias,
+      caseGradeFraction: caseGradeFraction(state),
+      caseCoinBoost: 1 + DATA.caseGrades.coinBoostPerLevel * (t.caseCoinBoost || 0),
+      caseDmgBoost: 1 + DATA.caseGrades.damageBoostPerLevel * (t.caseDmgBoost || 0),
       boxShield: 0.02 * t.boxShield * (state._U || 1),
       boxHeal: 0.05 * t.boxHeal * (state._U || 1),
       shieldRatio: CONST.shieldRatio + 0.03 * t.shieldCap,
@@ -117,5 +120,11 @@
       encorePower: 0.2 + 0.05 * t.encorePower,
       encoreSpan: 12000 + 3000 * t.encoreSpan
     };
+    ROUTINE_EFFECTS.forEach(function(a) {
+      if (currentShowId(state) !== a.id) return;
+      effects[a.key] *= a.multiplier;
+      if (a.cap != null) effects[a.key] = Math.min(a.cap, effects[a.key]);
+    });
+    return effects;
   }
 

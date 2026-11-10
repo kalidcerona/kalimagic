@@ -222,6 +222,7 @@
     state.dealerQueued = false;
     state.resolved = false;
     state.tookMental = false;
+    endHelperBuffs(state, null);
     state.fightMs = 0;
     state.pattern = "none";
     state.sealCell = -1;
@@ -266,6 +267,7 @@
     if (theaterPhase(state)) failEvent.theaterPhase = theaterPhase(state); // s5b: the UI shows 앞줄 관객 for a phase-1 loss
     emit(ev, failEvent);
     addGain(state, 'fails', 1, 1e7);
+    endHelperBuffs(state, ev);
     restartRun(state, state.u15.tutorial.active ? null : failureRestartPosition(state));
     state.u19b.failedId=failedId;
     if(offer)state.u19b.dealerOffer=true;

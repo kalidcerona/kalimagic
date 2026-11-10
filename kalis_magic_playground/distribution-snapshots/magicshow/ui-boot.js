@@ -2,7 +2,14 @@
   titleScreen();
   window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installPrompt=e;});
   function installGuide() {
+    if (window.matchMedia?.('(display-mode: standalone)').matches || navigator.standalone === true) return;
+    // The request comes from #phoneMore. That menu is not a blocking panel.
+    // A real panel or the update prompt keeps the request until it closes.
+    // Clicking while the guide panel is already open must not arm another open.
+    if (menu || $('panel').hidden === false || $('magicUpdatePrompt')?.hidden === false) { if (menu !== 'install') installGuide.manual = true; return; }
+    installGuide.manual = false;
     installGuideShown = true;
+    try { localStorage.setItem('magicshow.installGuideSeen', '1'); } catch (error) { /* Session fallback when storage is blocked. */ }
     openPanel('install', '홈 화면에 추가');
     const ua = navigator.userAgent;
     const inApp = /KAKAOTALK|Instagram|FBAN|FBAV|Line\/|NAVER|; wv\)/i.test(ua);
@@ -13,10 +20,42 @@
   }
   $('endingReplayButton').addEventListener('click', () => { if (state.u19.cleared) { endingStep = D.futureEnding.length; showEnding(); } });
   $('installButton').addEventListener('click', installGuide);
-  let installGuideShown = !!state.trophies[D.venues[0].slug];
+  function syncInstallButton() {
+    $('installButton').hidden = !!window.matchMedia?.('(display-mode: standalone)').matches || navigator.standalone === true;
+  }
+  syncInstallButton();
+  window.matchMedia?.('(display-mode: standalone)').addEventListener?.('change', syncInstallButton);
+  let installGuideShown = false;
+  try { installGuideShown = localStorage.getItem('magicshow.installGuideSeen') === '1'; } catch (error) { /* Keep the in-memory record. */ }
+  // Set when an automatic or manual guide missed this launch because another sheet was open.
+  // The seen flag stays unset until the guide actually opens.
+  let installGuideLate = false;
+  function updatePromptOpen() { return $('magicUpdatePrompt')?.hidden === false; }
+  // A book, save or other sheet, or the phone menu, is not the install guide.
+  function foreignSheetOpen() {
+    const phone = $('phoneMore');
+    return (!!menu && menu !== 'install') || ($('panel').hidden === false && menu !== 'install') || !!(phone && phone.hidden === false);
+  }
+  function installGuideDeferred() {
+    if ((installGuideShown && !installGuide.manual) || titleLaunchPending) return false;
+    if (window.matchMedia?.('(display-mode: standalone)').matches || navigator.standalone === true) return false;
+    // The update prompt is the boot layer the guide replaces. A foreign sheet or a
+    // remembered manual request must not keep the intro pending after that sheet closes.
+    return updatePromptOpen() && !foreignSheetOpen();
+  }
   function tickInstallGuide() {
     $('endingReplayButton').hidden = !state.u19.cleared;
-    if (!installGuideShown && state.trophies[D.venues[0].slug] && !paused() && state.mode === 'fight' && !state.u15.scene) { installGuideShown = true; installGuide(); }
+    if (titleLaunchPending || (installGuideShown && !installGuide.manual)) return;
+    const introPending = typeof launchPresentationPending !== 'undefined' && launchPresentationPending;
+    if (introPending && foreignSheetOpen()) { installGuideLate = true; return; }
+    // Let launchPresentation run once before a late guide covers the show.
+    if (introPending && installGuideLate && !updatePromptOpen()) return;
+    // A late automatic guide waits for a rest between fights, never covers the intro.
+    // Manual requests remain queued but do not hold launchPresentation pending.
+    if (installGuideLate && !introPending &&
+        ($('introStory')?.hidden === false || (!installGuide.manual && state.mode === 'fight'))) return;
+    if (foreignSheetOpen() || updatePromptOpen()) return;
+    installGuide();
   }
   // Session-only counters: no storage and no network.
   const portraitStats = { enter: 0, rotate: 0, leave: 0 };
@@ -55,6 +94,8 @@
     previous = now;
     tickScreenCare(dt, now);
     tickInstallGuide();
+    launchPresentation();
+    dailyClaimMoment();
     if (!document.hidden) clock += dt * presentationRate(now); // v4 U46 A2: presentation clock only; the combat step below still gets the full dt
     drawEffects(); // v4 U40: drawn before this frame's combat step and DOM writes (see the note at the end of loop); effects born in the step start drawing next frame
     if (!paused()) {
@@ -233,7 +274,10 @@
   { const iconize = list => { for (const m of list) for (const n of m.addedNodes) if (n.nodeType === 1 ? !n.classList.contains('px-icon') : n.nodeType === 3) pxIcons(n.nodeType === 1 ? n : n.parentElement); };
     for (const root of [$('panelBody'), $('phoneMore'), $('panel').querySelector('header')]) if (root) { pxIcons(root); new MutationObserver(iconize).observe(root, { childList: true, subtree: true }); } }
   fit();
-  if (!titleLaunchPending) {
+  let launchPresentationPending = !titleLaunchPending;
+  function launchPresentation() {
+  if (!launchPresentationPending || blockingSheetOpen() || (typeof installGuideDeferred === 'function' && installGuideDeferred())) return;
+  launchPresentationPending = false;
   owedCurtainCall(); // curtain fix: before the first render, which would start the 공연 뒤 lines
   render(); showOffline();
   if(state.u18.map)openStageMap();
@@ -403,4 +447,6 @@
   for (const id of ['audienceLine', 'patternLabel', 'phaseIndicator', 'toasts']) audienceTextObserver.observe($(id), { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['hidden'] });
   updateTextSpeedButton();
   if (!titleLaunchPending) mountRound8();
+  tickInstallGuide();
+  launchPresentation();
   requestAnimationFrame(loop);

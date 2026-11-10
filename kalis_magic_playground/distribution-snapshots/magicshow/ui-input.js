@@ -256,13 +256,14 @@
     $('panel').querySelector('header').querySelectorAll('.tree-wallet,.constellation-controls,.tree-learning,.practice-go,.tree-more,.shop-balance').forEach(el=>el.remove());
     $('closePanel').textContent = '닫기'; $('closePanel').removeAttribute('aria-label'); // v4 U51 2: the curtain call relabels it 건너뛰기
     $('panelTitle').textContent = title;
-    $('panelBody').replaceChildren(); $('panelBody').scrollTop = 0; $('panel').hidden = false;
+    $('panelBody').onscroll = null; $('panelBody').replaceChildren(); $('panelBody').scrollTop = 0; $('panel').hidden = false;
     setupPanelHelp(kind);
     $('closePanel').hidden = kind === 'fail'; $('closePanel').disabled = false;
     // Reset the Core hold before pausing so the next gesture starts immediately.
     state.holding=false; state.tapAcc=0;
     $('closePanel').hidden = ['boo','fail','ending','rebirth','bossPhase'].includes(kind);
-    $('closePanel').focus(); updateWand(); nextToasts();
+    // Hidden overflow containers can still be scrolled by focus or scrollIntoView.
+    $('panel').scrollTop=0; $('closePanel').focus({preventScroll:true}); updateWand(); nextToasts();
   }
   function closePanel() {
     if(menu==='batchD'){resolveBatchDPanel();return;}
@@ -278,8 +279,9 @@
     }
     if(state.u18.map){C.returnToStage(state);save();}
     if (['book','dealer'].includes(menu) && failure !== null) { showFailure(); return; }
+    if(menu==='book'){bookMemory().scroll=$('panelBody').scrollTop; $('panelBody').onscroll=null;}
     menu = ''; $('panel').hidden = true; $('stage').classList.remove('map-open'); previous = 0;
-    if (focusBeforePanel && focusBeforePanel.isConnected) focusBeforePanel.focus();
+    if (focusBeforePanel && focusBeforePanel.isConnected) focusBeforePanel.focus({preventScroll:true});
     if (moreReturn) { moreReturn = false; showMore(); } // v4 U48 M: a panel opened from the menu goes back to the menu, not to the show
     render();
   }
@@ -298,7 +300,7 @@
     if(a)sprite($('audience'),tutorialStageBase()||audienceAsset(v,a));
     $('audienceCard').classList.add('boo-scene'); $('stage').classList.add('f-boo-scene');
     // v6 script (owner Q11): the lose moment is the audience's own regretful line (missLine), with no 「우우!」; a heckle line only when it has none.
-    $('heckle').textContent=(typeof tutorialMissLine==='function'?tutorialMissLine():'')||a?.missLine||a?.lines?.heckles?.[0]||a?.heckles?.[0]||'다음에는 더 잘해 봐!';
+    $('heckle').textContent=e.missLine||(typeof tutorialMissLine==='function'?tutorialMissLine():'')||a?.missLine||a?.lines?.heckles?.[0]||a?.heckles?.[0]||'다음에는 더 잘해 봐!';
     $('heckle').classList.add('visible');$('magicianMini').classList.add('disappointed','reacting');$('magicianMini').dataset.face='boo';sprite($('magicianMini'),kaliReact('sad'));
     clearTimeout(booTimer);booTimer=setTimeout(()=>{$('audienceCard').classList.remove('boo-scene');$('stage').classList.remove('f-boo-scene');$('heckle').classList.remove('visible');$('magicianMini').classList.remove('disappointed','reacting');$('magicianMini').dataset.face='';kaliMoodState='normal';audMoodState='doubt';sprite($('magicianMini'),'assets/magician-idle.png');menu='';showFailure();},1500);
   }
@@ -322,7 +324,7 @@
       if(D.storyV15.tutorial.missLine)$('panelBody').append(element('p','NDD · '+D.storyV15.tutorial.missLine)); // v6 script: NDD's regretful line on the planned loss
       for(const line of D.storyReview.tutorialLesson.fail)$('panelBody').append(element('p',line.speaker?line.speaker+' · '+line.text:line.text)); // s5t (read-through bug 6): speaker · line, as the curtain call
       const go=action('비법 하나 배우러 가기',()=>{setChain('upgrade-play',0);const node=ensureUpgradeNode();tree();if(node)focusNode(node.id);chainFocused=true;save();});
-      $('panelBody').append(go);go.focus();return;
+      $('panelBody').append(go);go.focus({preventScroll:true});return;
     }
     openPanel('fail', '공연 종료');
     const result = document.createElement('div'); result.className = 'result';
@@ -339,6 +341,16 @@
     const sad = element('span', '', 'fail-kali'); sprite(sad, kaliReact('sad')); scene.append(sad);
     result.append(scene, title, reason, element('p',advice.line,'fail-cause'));
     if(advice.hint)result.append(element('p',advice.hint,'fail-hint'));
+    if(advice.node){
+      const n=advice.node,gate=n.id.startsWith('gate:'),label=advice.currency==='keys'?'책':advice.currency==='gems'?'실크':'동전';
+      const recommendation=element('div','','practice-gate fail-recommendation');
+      recommendation.append(element('p',`${n.name} · ${label} ${rounded(advice.cost)} · ${advice.blocked||'지금 배울 수 있어요'}`));
+      recommendation.append(action(gate?'야유 받아넘기기 배우기':`${n.name} 살펴보기`,()=>{
+        if(gate){if(C.learnFailureLesson(state,n.id)){save();sound('skill');}showFailure();}
+        else focusNode(n.id);
+      },gate&&!!advice.blocked));
+      result.append(recommendation);
+    }
     // v4 U44: the 칼리 product of this venue is one option among the others (a quiet row, the player decides).
     const product=C.failureProduct(state);
     if(product&&C.nodeInfo(state,product.id).displayable){
@@ -349,5 +361,5 @@
     if(C.failureDealerAvailable(state))result.append(action('샵 매니저와 한 판 하고 다시 도전',()=>{if(C.openFailureDealer(state)){save();menu='';dealer();}}));
     const stageGo = action(practiceGoLabel(), restartAfterFailure); stageGo.classList.add('fail-stage');
     const row = element('div', '', 'fail-actions'); row.append(button, stageGo);
-    result.append(row); $('panelBody').append(result); button.focus();
+    result.append(row); $('panelBody').append(result); button.focus({preventScroll:true});
   }

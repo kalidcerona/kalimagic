@@ -1,0 +1,21 @@
+/* P6: pixel effects stay on the stage and never intercept performance input. */
+.helper-buff-fx,.helper-buff-badge,.helper-buff-icon{position:absolute;pointer-events:none;z-index:15;image-rendering:pixelated}
+.helper-buff-fx{width:64px;height:64px}
+.helper-buff-badge{width:56px;height:20px;text-align:center;font:700 12px/20px Galmuri11,sans-serif;white-space:nowrap;background:#3a0a14;color:#ff9a8a;border:1px solid #d42a30;animation:helperBuffBadge 1.5s ease-out both}
+.helper-buff-badge[data-kind="coin"]{background:#4a2c08;color:#ffe066;border-color:#f0b424}
+.helper-buff-icon{width:24px;height:24px;object-fit:contain}
+#magicianMini[data-buff*="dmg"]{filter:drop-shadow(2px 0 0 #d42a30) drop-shadow(-2px 0 0 #ff5a50)!important}
+#magicianMini[data-buff*="coin"]{filter:drop-shadow(0 2px 0 #f0b424) drop-shadow(0 -2px 0 #ffe066)!important}
+#magicianMini[data-buff*="dmg"][data-buff*="coin"]{filter:drop-shadow(2px 0 0 #d42a30) drop-shadow(-2px 0 0 #ff5a50) drop-shadow(0 2px 0 #f0b424) drop-shadow(0 -2px 0 #ffe066)!important}
+@keyframes helperBuffBadge{0%{opacity:0;transform:translateY(0)}14%,80%{opacity:1;transform:translateY(-3px)}100%{opacity:0;transform:translateY(-3px)}}
+@keyframes helperBuffBadgeFade{0%,100%{opacity:0}14%,80%{opacity:1}}
+@media(prefers-reduced-motion:reduce){.helper-buff-icon{animation:helperBuffFade .3s ease-out both}.helper-buff-badge{animation:helperBuffBadgeFade 1.5s ease-out both}}
+@keyframes helperBuffFade{from{opacity:0}to{opacity:1}}
+/* Filter transitions preserve the magician's existing pose animation. */
+#magicianMini[data-buff],#magicianMini[data-buff-fade]{transition:filter .3s linear}
+#magicianMini.helper-buff-ending[data-buff-fade]{filter:drop-shadow(0 0 0 transparent)!important}
+@media(prefers-reduced-motion:no-preference){
+#magicianMini.helper-buff-arrive[data-buff*="dmg"]{filter:drop-shadow(3px 0 0 #ff5a50) drop-shadow(-3px 0 0 #d42a30)!important}
+#magicianMini.helper-buff-arrive[data-buff*="coin"]{filter:drop-shadow(0 3px 0 #ffe066) drop-shadow(0 -3px 0 #f0b424)!important}
+#magicianMini.helper-buff-arrive[data-buff*="dmg"][data-buff*="coin"]{filter:drop-shadow(3px 0 0 #ff5a50) drop-shadow(-3px 0 0 #d42a30) drop-shadow(0 3px 0 #ffe066) drop-shadow(0 -3px 0 #f0b424)!important}
+}

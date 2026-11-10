@@ -358,5 +358,15 @@ html body.phone:not(.portrait-layout):not(.tablet) #viewport#viewport #stage#sta
 
 /* Keep the pop below the heckle plate in compact landscape scenes. */
 @media (max-height:380px), (max-width:700px) {
-html body.phone:not(.portrait-layout):not(.tablet) #viewport#viewport #stage#stage #audienceCard #winStamp { top:64px; left:56px; right:auto; font-size:11px; line-height:1.25; transform-origin:100% 0; }
+html body.phone:not(.portrait-layout):not(.tablet) #viewport#viewport #stage#stage #audienceCard #winStamp { top:66px; left:56px; right:auto; font-size:11px; line-height:1.25; transform-origin:100% 0; }
 }
+
+/* Lift the actor without changing the bottom value used by fitStageAudience's size budget. */
+html body.phone:not(.tablet):not(.portrait-layout) #viewport#viewport #stage#stage #audienceCard #magicianMini { translate:0 calc(8% - 12px); }
+
+/* Release 22 P4c: compact overlay in free scene space during the 3s show. It does not reserve a lane. */
+#stage .show-band { position:absolute; z-index:12; height:20px; width:max-content; box-sizing:border-box; display:flex; align-items:center; justify-content:center; gap:6px; padding:0 6px; color:#fff2d2; background:#211b2a; border:1px solid #b79b60; font:11px/1.25 Galmuri11,monospace; white-space:nowrap; pointer-events:none; }
+#stage .show-band[hidden] { display:none; }
+#stage .show-band-icon { width:18px; height:18px; flex:none; }
+#stage .show-band-copy { min-width:0; overflow-wrap:anywhere; }
+@media (prefers-reduced-motion:reduce) { #stage .show-band { animation:none; transform:none; } }

@@ -1,5 +1,5 @@
 'use strict';
-  var GATE_POLICY = {hp:0.75, regen:0.003, ramp:0.24, floor:45, theaterFloor:30};
+  var GATE_POLICY = {hp:0.75, regen:0.003, ramp:0.06, floor:45, theaterFloor:30};
   // Fight-local budgets never enter serialized state. Load and audience entry reset them.
   var THEFT_BUDGET = new WeakMap(), THEFT_ANCHOR = new WeakMap();
   function resetTheftBudget(state) { THEFT_BUDGET.set(state, Math.floor(Math.max(0,state.coins)*.1)); }
@@ -64,7 +64,48 @@
     // with the coins on hand still gets through after three tries.
     return g&&!g.cleared&&!g.studied?Math.max(0,1-(preparation(state)-g.prepared)/(g.need||CONST.gatePrep)-(g.fails||0)/CONST.gateFailSteps):0;
   }
-  function failureLessons(state) {
+  // Compare full-mental survival with the actual hit cadence, visibility, absorption and gate ramp.
+  function heckleSurvivalTime(state) {
+    var c=copyPlain(state), visibility=MENTAL_VISIBILITY.get(state), every=Math.max(400,(c.interval||4)*1000), elapsed=0;
+    c.mental=c.mentalMax;
+    MENTAL_VISIBILITY.set(c,{count:visibility?visibility.count:0});
+    for(var i=0;i<2000;i++){
+      var hit=nextHeckle(c);
+      c.shield-=hit.block;c.mental-=hit.dmg-hit.block;elapsed+=every;
+      if(c.mental<=0)return elapsed;
+      if(hit.counted)MENTAL_VISIBILITY.get(c).count++;
+      c.fightMs+=every;
+    }
+    return Infinity;
+  }
+  function failureLessons(state, cause, includeBlocked) {
+    // Release 21: optional cause-aware recommendations reuse real node gates and active parts.
+    if(cause){
+      var defensive=['mental','calm','shieldCap','boxHeal','openingShield','shieldValue','healValue','winHeal','levelHeal'];
+      var offensive=['attack','power','speed','critPower','critRate','spongePower','cardthrowPower','chainPower','finalePower'];
+      var ids=cause==='mental'||cause==='lastHeckle'?defensive:cause==='gate'?defensive.concat(offensive):offensive;
+      var candidates=ids.map(function(id){
+        var n=NODE_BY_ID[activePart(state,id)];if(!n)return null;
+        var info=nodeInfo(state,n.id);
+        return Object.assign({},n,{failureInfo:info});
+      }).filter(function(n){
+        var info=n&&n.failureInfo;
+        return info&&info.displayable&&info.level<info.max&&(includeBlocked||info.purchasable);
+      });
+      var survivalGains={};
+      if(cause==='mental'){
+        var baseline=heckleSurvivalTime(state);
+        candidates.forEach(function(n){
+          var c=copyPlain(state), visibility=MENTAL_VISIBILITY.get(state);
+          if(visibility)MENTAL_VISIBILITY.set(c,{count:visibility.count});
+          survivalGains[n.id]=buyNode(c,n.id)?Math.max(0,heckleSurvivalTime(c)-baseline)||0:0;
+        });
+      }
+      candidates.sort(function(a,b){return Number(b.failureInfo.purchasable)-Number(a.failureInfo.purchasable)||(cause==='mental'?survivalGains[b.id]-survivalGains[a.id]:0);});
+      var failed=state.u19b.failedId,gate=state.u19b.gates[failed];
+      if(cause==='gate'&&gate&&!gate.studied&&!gate.cleared&&(includeBlocked||state.coins>=failureLessonCost(state,failed)))candidates.unshift({id:'gate:'+failed,name:'야유 받아넘기기'});
+      return candidates.slice(0,3);
+    }
     var ids=['mental','attack','power','speed','calm','shieldCap','boxHeal'];
     var lessons=ids.map(function(id){return NODE_BY_ID[activePart(state,id)];}).filter(function(n){var info=n&&nodeInfo(state,n.id);return info&&info.revealed&&info.purchasable;});
     var id=state.u19b.failedId,g=state.u19b.gates[id];
@@ -89,7 +130,7 @@
   }
   // v4 U41: the order a node of the whole book is offered in after a failure: what makes a fight easier first (stage nerves, damage, helpers),
   // then the coin and collection nodes, then anything else, cheapest first. Only nodes the wallet can pay for now are candidates.
-  var BOOK_LESSON_ORDER = ['shieldValue','healValue','winHeal','levelHeal','openingShield','critPower','critRate','comboHold','sweepFocus','precision','area','caseXp','caseStart','chainPower','chain4','chain8','caseMax','fanPower','helperTempo','colleaguePower','colleagueMore','colleagueTempo','spongePower','cardthrowPower','flashpaperPower','crystalPower','waterPower','spotlightPower','dovePower','doveTempo','rabbitTempo','finalePower','encorePower','comboValue','boxShield','boxXP','prepared','spawn','coinLuck','tip','jackpot','goldCoins'];
+  var BOOK_LESSON_ORDER = ['shieldValue','healValue','winHeal','levelHeal','openingShield','critPower','critRate','comboHold','sweepFocus','precision','area','caseGrade','caseCoinBoost','caseDmgBoost','chainPower','chain4','chain8','fanPower','helperTempo','colleaguePower','colleagueMore','colleagueTempo','spongePower','cardthrowPower','flashpaperPower','crystalPower','waterPower','spotlightPower','dovePower','doveTempo','rabbitTempo','finalePower','encorePower','comboValue','boxShield','prepared','spawn','coinLuck','tip','jackpot','goldCoins'];
   function bookLesson(state) {
     var best=null,bestRank=1e9,bestCost=Infinity;
     DATA.tree.forEach(function(n){
@@ -121,11 +162,10 @@
       if(!nearKey||key[0]<nearKey[0]||key[0]===nearKey[0]&&key[1]<nearKey[1]){near=n;nearKey=key;}
     });
     if(near)return '동전 '+formatNumber(Math.ceil(nearKey[1]))+' 더 모으면 '+near.name+' 비법을 올릴 수 있어요';
-    // Cases gain levels by being opened, so retrying is real growth while any case is below the cap.
-    if(state.board.some(function(c){return (c.lv||1)<caseCap(state);}))return '케이스 레벨을 올리면 더 세져요. 다시 열어 볼까요?';
     var stuck=null;
     fight.forEach(function(id){if(stuck)return;var info=nodeInfo(state,id);if(info.displayable&&info.level<info.max&&info.blockedReason)stuck={name:NODE_BY_ID[id].name,reason:info.blockedReason};});
-    return stuck?stuck.name+' 비법은 '+stuck.reason+' 뒤에 올릴 수 있어요':'';
+    if(!stuck)DATA.tree.some(function(n){var info=nodeInfo(state,n.id);if(info.displayable&&info.level<info.max&&info.blockedReason){stuck={name:n.name,reason:info.blockedReason};return true;}return false;});
+    return stuck?stuck.name+' 비법은 '+stuck.reason+' 조건을 채우면 올릴 수 있어요. 케이스를 열어 동전을 모아 보세요':'이 무대의 비법을 모두 배웠어요. 다음 무대에서 새 비법을 찾아보세요';
   }
   function failureLessonCost(state,id) {var v=VENUES.find(function(v){return v.audiences.concat([v.headliner]).some(function(a){return a.id===id;});});return v?v.id*25:Infinity;}
   function failureLessonInfo(state,id) {return id.indexOf('gate:')===0?{currency:'coins',cost:failureLessonCost(state,id.slice(5))}:{currency:nodeInfo(state,id).currency,cost:nodeCost(state,id)};}
@@ -225,7 +265,7 @@
     var cap = boardCapacity(state);
     var added = 0;
     while (state.board.length < cap) {
-      state.board.push({ lv: Math.min(caseCap(state), 1 + (state.tree.caseStart || 0) + (hasReward(state, 4) ? 1 : 0)), xp: 0, hp: 0, hpMax: 0,
+      state.board.push({ lv: 1, xp: 0, hp: 0, hpMax: 0,
         spawn: CONST.slotUnlockSpawnMs + (stagger ? added * CONST.slotRevealStaggerMs : 0), sealed: false });
       added++;
     }

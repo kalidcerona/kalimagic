@@ -25,6 +25,7 @@
   var TRAVEL_FIELDS=['venue','crowd','j','audId','audHp','audHpMax','atk','interval','mental','shield','combo','comboMs','maxCombo','finisher','finisherFired','fightMs','tookMental','phase2','pattern','slow','miss','pHeal','sealCell','sealMs','sealCd','patternHealMs','heckleMs','telegraphed','mode','transMs','after','resolved','review','dealer','dealerQueued','winsSinceDealer','buff','flights','doveMs','rabbitMs','flashBreaks'];
   function restoreTimeline(state){
     var original=resumeHelpers(deserialize(state.u18.anchor));if(!original)return false;
+    endHelperBuffs(state,null);
     TRAVEL_FIELDS.forEach(function(k){state[k]=original[k];});
     restoreTheftBudget(state);
     state.u15.scene=original.u15.scene;state.u15.queue=original.u15.queue;
@@ -76,7 +77,8 @@
   function cosmeticInfo(state,tab,id){
     var x=DATA.cosmetics[tab]&&DATA.cosmetics[tab].find(function(x){return x.id===id;});if(!x)return null;
     unlockCosmetics(state);var owned=state.u18.owned[tab].indexOf(id)>=0;
-    return {owned:owned,cost:x.cost,available:owned||(!x.milestone&&state.gems>=x.cost),hint:owned?'사용할 수 있어요':x.hint||'실크 '+x.cost+'개로 열기'};
+    var reason=owned?'':state.u15.tutorial.active?'첫 연습 뒤에 살 수 있어요':x.milestone?(x.hint||'공연 완료 보상이에요'):state.gems<x.cost?'실크 '+x.cost+'개가 필요해요':'';
+    return {owned:owned,cost:x.cost,available:!reason,reason:reason,hint:owned?'사용할 수 있어요':reason||'실크 '+x.cost+'개로 열기'};
   }
   function buyCosmetic(state,tab,id){var info=cosmeticInfo(state,tab,id);if(!info||info.owned||!info.available)return false;state.gems-=info.cost;state.u18.owned[tab].push(id);checkAchievements(state,null);return true;}
   function equipCosmetic(state,tab,id){
@@ -98,7 +100,7 @@
     return true;
   }
 
-  function strongestCase(state){var best=0;state.board.forEach(function(c,i){if(c.lv>state.board[best].lv)best=i;});return best;}
+  function strongestCase(state){var best=0;state.board.forEach(function(c,i){if(caseMultiplier(c.lv||1,'damage',c.golden,state)>caseMultiplier(state.board[best].lv||1,'damage',state.board[best].golden,state))best=i;});return best;}
   // v4 U44: a gate is sized to the build WITHOUT the product that belongs to that wall (node.wall = the audience id), so that product's attack
   // bonus is real strength on that wall instead of making the audience bigger. Other products and everything else count as usual.
   function wallProductMult(state){var m=1;DATA.tree.forEach(function(n){if(n.productMultiplier&&n.wall===state.audId&&state.tree[n.id])m*=n.productMultiplier;});return m;}
@@ -107,7 +109,7 @@
     var rarity=CONST.rarityW.reduce(function(sum,w,i){return sum+w*CONST.rarityMult[i];},0)/CONST.rarityW.reduce(function(a,b){return a+b;},0);
     var t=state.tree,mods=nodeEffects(state),rate=wandRate(state),area=wandArea(state),coverage=Math.min(state.board.length,area.cols*area.rows)/Math.max(1,state.board.length);
     var hitRate=rate*coverage+(t.boxHelper?fanCount(state)*.35/(mods.helperEvery/1000):0)/Math.max(1,state.board.length)+(t.assistant?.8/1.2:0)/Math.max(1,state.board.length);
-    var damage=state.board.reduce(function(sum,c){var lv=c.lv||1,hp=caseHp(state._boxHp,lv),opens=1/(hp/Math.max(1,wandDamage(state)*gearMultiplier(state,"open")*hitRate)+state._tau/1000);return sum+opens*(CONST.itemDamage*(state._V||1)*rarity*.56*caseItems(lv)*Math.pow(1.1,lv-1)*milestoneMultiplier(lv,[10,25,50])*branchBonus(state,'box')*caseItemBonus(state)+CONST.finisherDmg*(state._V||1)*mods.finalePower/mods.finaleNeed);},0);
+    var damage=state.board.reduce(function(sum,c){var lv=c.lv||1,hp=caseHp(state._boxHp,lv,c.golden),opens=1/(hp/Math.max(1,wandDamage(state)*gearMultiplier(state,"open")*hitRate)+state._tau/1000);return sum+opens*(CONST.itemDamage*(state._V||1)*rarity*.56*caseItems(lv,c.golden)*caseMultiplier(lv,'damage',c.golden,state)*branchBonus(state,'box')*caseItemBonus(state)+CONST.finisherDmg*(state._V||1)*mods.finalePower/mods.finaleNeed);},0);
     return Math.max(1,damage);
   }
   function beginFuture(state,prepare){if(!state.homecomingCleared||state.u19.cleared||state.u15.tutorial.active||state.u18.anchor)return false;state.u15.queue=[];state.u15.scene=null;state.dealer=null;state.dealerQueued=false;beginAudience(state,venueNumber('future'),1,null);state.mental=state.mentalMax;if(prepare){state.idle.waiting=true;state.mode='transition';state.transMs=0;state.after='fight';}return true;}
@@ -124,12 +126,9 @@
     if(u.phase===2){u.hitMs+=dt;if(u.hitMs>2500){state.combo=0;state.comboMs=0;}}
     if(u.phase===3)u.window=Math.max(0,u.window-dt);
   }
-  // v4 U48 N4: a routine is unlocked (u19.routines) and its cut-in queued only by learning its own routine 비법; the old "a related node reaches
-  // LV 1, 5 or 10" trigger is gone. Later cut-ins come from the routine's skill (routineSkill) or one of its case items (routineItem), 20 s apart.
+  // Purchases retain the legacy save arrays; only first purchase queues a large scene.
   function routineLearn(state,node){var id=node.routine;if(!id)return;if(state.u19.routines.indexOf(id)<0)state.u19.routines.push(id);if(state.u19.pending.indexOf(id)<0)state.u19.pending.push(id);}
-  // v4 U53: when several learned routines share the item (silk-handkerchief, linking-rings, cups-and-balls), they take turns (a counter outside the
-  // save, presentation only: no state but the existing cooldown changes), so thumbtie, silk and bottles are not always shadowed by the first one.
-  var routineTurn=0;
-  function routineItem(state,item,ev){if(state.u19.cooldown>0||!ev)return;var list=DATA.routines.filter(function(r){return r.items.indexOf(item)>=0&&state.u19.routines.indexOf(r.id)>=0;});if(!list.length)return;var r=list[routineTurn++%list.length];state.u19.cooldown=20000;emit(ev,{type:'routine',id:r.id});}
-  function routineSkill(state,id,ev){if(state.u19.cooldown>0)return;var r=DATA.routines.find(function(r){return r.skill===id&&state.u19.routines.indexOf(r.id)>=0;});if(r){state.u19.cooldown=20000;emit(ev,{type:'routine',id:r.id});}}
+  // Compatibility call sites stay inert. Timed shows are owned by core-show-sequence.
+  function routineItem(state,item,ev){}
+  function routineSkill(state,id,ev){}
   function validU19(u){return u&&typeof u.cleared==='boolean'&&integer(u.phase,1,3)!=null&&['telegraph','window','hitMs','damage','power','lastDps','lastPower','cooldown','target'].every(function(k){return num(u[k],0,1e100)!=null;})&&integer(u.target,0,24)!=null&&u.telegraph<=3000&&u.window<=20000&&['routines','pending'].every(function(k){return Array.isArray(u[k])&&u[k].length<=DATA.routines.length&&new Set(u[k]).size===u[k].length&&u[k].every(function(id){return DATA.routines.some(function(r){return r.id===id;});});});} /* round 14: cap follows D.routines (was 8) so the five new ids save; unknown ids still fail; shorter old lists still load */

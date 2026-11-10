@@ -65,7 +65,7 @@
   // stay; the old TV 오디션 3등 is the hotel story now, so a save that cleared the old TV 오디션 also holds the hotel trophy, and a complete old
   // TV 오디션 audience set (u14 and u18) is counted as the complete hotel set. The hotel stays unvisited, so nobody is sent back. Nested saves
   // (tutorial baseline, IF side anchor, map anchor) are migrated the same way. Returns {str, pre, restart}.
-  // g1: old kali colours (and any kali key other than emerald/red) become kali:emerald, and kali:red is granted too.
+  // Legacy unlisted Kali colours become emerald and red. Current colours keep per-colour ownership.
   // Runs on the raw save before validPads, so the validator source stays unchanged. Red and emerald are kept as equipped.
   function normalizeLegacyPads(o){
     var pads=o&&o.u18&&o.u18.pads;
@@ -74,8 +74,8 @@
     for(i=0;i<pads.owned.length;i++){
       k=pads.owned[i];
       if(typeof k==='string'&&k.indexOf('kali:')===0){
-        had=true; color=k.slice(5);
-        if(color!=='emerald'&&color!=='red'){k='kali:emerald';changed=true;}
+        color=k.slice(5);
+        if(color!=='emerald'&&color!=='red'){had=true;k='kali:emerald';changed=true;}
       }
       next.push(k);
     }

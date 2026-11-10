@@ -1,6 +1,7 @@
 'use strict';
   function serialize(state) {
     if (!state || typeof state !== "object") return "null";
+    var vitals = showSaveVitals(state);
     var bestiary = {};
     var i;
     for (i = 0; i < AUD_IDS.length; i++) {
@@ -21,11 +22,12 @@
       flights.push(sf);
     }
     var tree = {};
-    for (i = 0; i < TREE_KEYS.length; i++) tree[TREE_KEYS[i]] = state.tree[TREE_KEYS[i]];
+    for (i = 0; i < TREE_KEYS.length; i++) if (!NODE_BY_ID[TREE_KEYS[i]].retired) tree[TREE_KEYS[i]] = state.tree[TREE_KEYS[i]];
     var stars = {};
     for (i = 0; i < STAR_KEYS.length; i++) stars[STAR_KEYS[i]] = state.stars[STAR_KEYS[i]] | 0;
     var obj = {
-      v: 23,
+      v: 25,
+      potionCount: state.potionCount, refillCount: state.refillCount,
       batchD: state.batchD,
       u15: state.u15,
       u14: state.u14,
@@ -56,9 +58,9 @@
       audHpMax: state.audHpMax,
       atk: state.atk,
       interval: state.interval,
-      mental: state.mental,
-      mentalMax: state.mentalMax,
-      shield: state.shield,
+      mental: vitals.mental,
+      mentalMax: vitals.mentalMax,
+      shield: vitals.shield,
       level: state.level | 0,
       xp: state.xp,
       combo: state.combo | 0,
@@ -105,7 +107,7 @@
   }
 
   function isNewerSave(raw) {
-    try { var o=JSON.parse(raw); return !!o && typeof o.v==='number' && isFinite(o.v) && o.v>23; }
+    try { var o=JSON.parse(raw); return !!o && typeof o.v==='number' && isFinite(o.v) && o.v>25; }
     catch (error) { return false; }
   }
 

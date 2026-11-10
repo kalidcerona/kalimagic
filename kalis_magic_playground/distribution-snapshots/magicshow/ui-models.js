@@ -185,18 +185,17 @@ globalThis.Guidance = (() => {
     const learn = node ? `${nodeText} · ${costText}` : nodeText;
     return { node, done, progress, nodeText, costText, caseText: `개봉 ${progress}%`, targetText: learn, text: `다음 목표 · 개봉 ${progress}% · ${learn}` };
   }
-  // U31b: the cause line is a soft guess plus a soft suggestion. cause = how this run really ended:
-  // 'mental' (mental ran out with little doubt left) or 'damage' (mental ran out while much doubt was left).
-  // v4 U48 B (owner: no explicit "learn this" on failure): the panel only says what went wrong, in neutral words. It never names a 비법,
-  // never suggests one and has no learn button of its own (the venue's 칼리 product row in showFailure stays, by the owner's correction);
-  // the player picks in the notebook ("비법 노트로"). node is always null, so the notebook shows no 추천 tag either.
+  // Release 21 P3a: the cause stays separate from optional, real purchase recommendations.
   function failure(state,D,C,cause='mental') {
-    if (cause === 'gate') return { line: '이 관객은 준비가 조금 더 필요해 보여요.', node: null, hint: '' };
-    // v4 U38 'lastHeckle': the final boss's announced last heckle was bigger than 멘탈 and 자신감 together (the hint is about the 야유 막기 skill, not a 비법).
-    if (cause === 'lastHeckle') return { line: '마지막 야유가 한 번에 너무 컸나 봐요. 멘탈이나 스킬을 다시 살펴볼까요?', node: null, hint: C.failureHint(state, 'lastHeckle') };
-    const stall = cause === 'stall', damage = cause === 'damage' || stall;
-    const line = stall ? '관객의 의심이 다시 차오르는 게 더 빨랐나 봐요.' : damage ? '의심을 깎을 힘이 조금 모자랐나 봐요.' : '야유를 버틸 멘탈이 부족했나 봐요.';
-    return { line, node: null, hint: '' };
+    const lines={gate:'이 관객은 준비가 조금 더 필요해 보여요.',lastHeckle:'마지막 야유가 한 번에 너무 컸나 봐요. 멘탈이나 스킬을 다시 살펴볼까요?',stall:'관객의 의심이 다시 차오르는 게 더 빨랐나 봐요.',damage:'의심을 깎을 힘이 조금 모자랐나 봐요.',mental:'야유를 버틸 멘탈이 부족했나 봐요.'};
+    const node=C.failureLessons(state,cause)[0]||C.failureLessons(state,cause,true)[0]||null;
+    let blocked='',cost=null,currency='';
+    if(node){
+      const gate=node.id.startsWith('gate:'),info=gate?C.failureLessonInfo(state,node.id):(node.failureInfo||C.nodeInfo(state,node.id));
+      cost=info.cost;currency=info.currency;
+      blocked=gate?(state.coins<cost?`동전 ${C.formatNumber(Math.ceil(cost-state.coins))} 더 필요해요`:''):(info.purchasable?'':info.blockedReason);
+    }
+    return {line:lines[cause]||lines.mental,node,blocked,cost,currency,hint:cause==='lastHeckle'?C.failureHint(state,cause):''};
   }
   function firstEffects(state,list) {
     const D = globalThis.GAME_DATA || globalThis.D; // v4 U48 D3: the node names below come from the data
@@ -205,8 +204,7 @@ globalThis.Guidance = (() => {
       // v4 U48 D3: a named 비법 is always the real node's display name ("범위 비법" and "연쇄 비법" were not node names).
       ['range', state.tree.area > 0 && new Set(hits.map(e=>e.cell)).size > 1, `'${D.tree.find(n=>n.id==='area').name}' 비법 덕분에 여러 케이스를 함께 두드렸어요!`],
       ['helper', list.some(e=>e.type==='worker' && e.phase==='work' || ['dove','rabbit','magicHit','magicCoins'].includes(e.type)), '도우미 덕분에 칼리와 함께 마술을 하고 있어요!'],
-      ['chain', list.some(e=>e.type==='chain'), `'${D.tree.find(n=>n.id===(state.tree.chain8?'chain8':'chain4')).name}' 비법 덕분에 옆 케이스까지 타격이 이어졌어요!`],
-      ['case', list.some(e=>e.type==='caseLevelUp'), '개봉으로 케이스가 성장했어요! 다음 소품이 더 강해져요.']
+      ['chain', list.some(e=>e.type==='chain'), `'${D.tree.find(n=>n.id===(state.tree.chain8?'chain8':'chain4')).name}' 비법 덕분에 옆 케이스까지 타격이 이어졌어요!`]
     ].filter(([id,worked]) => worked && !state.guidance.seen.includes(id));
   }
   return {target,goal,failure,firstEffects};
@@ -217,7 +215,7 @@ globalThis.Presentation = (() => {
     constructor(){this.items=[];this.active=null;this.gap=0;this.serial=0;}
     push(item){
       // s5c: a first-use hint (item.hint) gives way at once to any other notice; its own end() decides whether it shows again later
-      if(!item.hint&&this.active&&this.active.hint&&this.active.hint!=='gatePressure'&&this.active.age<Math.min(this.active.minimum,1500)){this.active.cut=true;this.active.minimum=this.active.age;}
+      if(!item.hint&&this.active&&this.active.hint&&this.active.hint!=='gatePressure'&&!this.active.hintProtected&&this.active.age<Math.min(this.active.minimum,1500)){this.active.cut=true;this.active.minimum=this.active.age;}
       const old=item.merge&&this.items.find(x=>x.merge===item.merge);
       if(old){old.count=(old.count||1)+1;old.extra='외 '+(old.count-1)+'건';return old;}
       const next={...item,minimum:item.minimum??1200,age:0,serial:this.serial++};this.items.push(next);return next;

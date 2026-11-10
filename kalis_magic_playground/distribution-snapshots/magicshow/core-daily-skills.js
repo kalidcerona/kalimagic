@@ -24,15 +24,24 @@
     r.progress[id]=Math.min(1e12,max?Math.max(r.progress[id]||0,value):(r.progress[id]||0)+value);
     claimMission(state,id);
   }
+  var dailyClaimFeedback = new WeakMap();
+  function takeDailyClaimFeedback(state) {
+    var pending = dailyClaimFeedback.get(state);
+    dailyClaimFeedback.delete(state);
+    return pending && pending.daily === state.u14.daily ? pending.amount : 0;
+  }
   function claimMission(state,id) {
     var d=state.u14.daily,r=d.records[d.date],m=DATA.missions.find(function(m){return m.id===id;});
     if(!r||!m||dailySelection(d.date).indexOf(id)<0||r.claimed.indexOf(id)>=0||(r.progress[id]||0)<m.target)return false;
+    var beforeGems=state.gems;
     r.claimed.push(id);addGain(state, 'gems', m.gems, 1e9);
     if(r.claimed.length===1 && (!d.latest || dateOrdinal(d.date)>dateOrdinal(d.latest))) {
       d.streak=d.latest && dateOrdinal(d.date)-dateOrdinal(d.latest)===1?Math.min(1e12,d.streak+1):1;d.latest=d.date;
       r.streakReward=DATA.streakGems[(d.streak-1)%7];addGain(state, 'gems', r.streakReward, 1e9);
     }
     if(r.claimed.length===3&&!r.bonus){r.bonus=true;addGain(state, 'keys', 1, 1e6);}
+    var pending = dailyClaimFeedback.get(state);
+    dailyClaimFeedback.set(state,{daily:d,amount:(pending && pending.daily===d ? pending.amount : 0)+Math.max(0,state.gems-beforeGems)});
     return true;
   }
   function venueSetProgress(state,slug) {

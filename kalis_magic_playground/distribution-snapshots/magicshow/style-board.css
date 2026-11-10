@@ -63,10 +63,7 @@
 #stage #board .cell.locked .box{border:1px dotted var(--line-dim);background:transparent;box-shadow:none;opacity:1}
 #stage #board .cell.next-slot .box{border:1px dashed var(--line);background:transparent;box-shadow:none;opacity:1}
 #stage #board .case-customized .chest{outline:2px solid var(--info);outline-offset:-3px}
-#stage #board .case-customized[data-tier="box-1"] .chest{outline-color:var(--ok)}
-#stage #board .case-customized[data-tier="box-2"] .chest{outline-color:#bc8cff}
-#stage #board .case-customized[data-tier="box-3"] .chest{outline-color:var(--gold)}
-#stage #board .case-customized[data-tier="box-4"] .chest,#stage #board .case-customized[data-tier="box-golden"] .chest{outline-color:#ff9270}
+#stage #board .case-customized[data-tier] .chest{outline-color:var(--case-pip)}
 #stage #board .box-number,.phone #stage #board .box-number{top:auto;bottom:2px;left:50%;transform:translateX(-50%);z-index:5}
 #stage #board .chest,.phone #stage #board .chest{inset:auto;left:10%;top:10%;width:80%;height:80%}
 .encore-active #wand{filter:none}
@@ -178,10 +175,14 @@ html body #viewport#viewport #stage#stage #boardCard #board {
 #viewport #stage #board .cell .chest { filter:none; }
 #viewport #stage #board .cell:not(.locked):not(.empty) .box:after { display:none; }
 /* Preserve tier colour on the existing level pips while every tier uses the approved tin. */
-#viewport #stage #board .cell[data-tier="box-1"] { --case-pip:#6fbd87; }
-#viewport #stage #board .cell[data-tier="box-2"] { --case-pip:#bc8cff; }
-#viewport #stage #board .cell[data-tier="box-3"] { --case-pip:#e8bf68; }
-#viewport #stage #board .cell:is([data-tier="box-4"],[data-tier="box-golden"]) { --case-pip:#ff9270; }
+#viewport #stage #board .cell[data-tier="box-1"] { --case-pip:#4F8FE0; --case-art:url("assets/box-1.webp"); --case-broken-art:url("assets/box-1-broken.webp"); }
+#viewport #stage #board .cell[data-tier="box-violet"] { --case-pip:#BC8CFF; }
+#viewport #stage #board .cell[data-tier="box-0"] { --case-pip:#E8584A; --case-art:url("assets/box-0.webp"); --case-broken-art:url("assets/box-0-broken.webp"); }
+#viewport #stage #board .cell[data-tier="box-2"] { --case-pip:#B9ACBA; --case-art:url("assets/box-2.webp"); --case-broken-art:url("assets/box-2-broken.webp"); }
+#viewport #stage #board .cell[data-tier="box-3"] { --case-pip:#E4E4EE; --case-art:url("assets/box-3.webp"); --case-broken-art:url("assets/box-3-broken.webp"); }
+#viewport #stage #board .cell[data-tier="box-rainbow"] { --case-pip:#FFFFFF; }
+#viewport #stage #board .cell[data-tier="box-4"] { --case-pip:#8F70E8; --case-art:url("assets/box-4.webp"); --case-broken-art:url("assets/box-4-broken.webp"); }
+#viewport #stage #board .cell[data-tier="box-golden"] { --case-pip:#F8C838; --case-art:url("assets/box-golden.webp"); --case-broken-art:url("assets/box-golden-broken.webp"); }
 html body #viewport#viewport #stage#stage#stage#stage :is(.constellation-node,.flow-node).locked::after { content:''; width:24px; height:24px; background:url('assets/kit/icon-lock.webp') center / contain no-repeat; border:0; box-shadow:none; }
 /* Remove the retired CSS backing and duplicate stat glyphs under the drawn pieces. */
 html body #viewport#viewport #stage#stage#stage#stage #boardCard::before,
@@ -257,3 +258,22 @@ html body #viewport#viewport #stage#stage#stage#stage#stage#stage #boardCard #bo
   width:auto !important; height:auto !important; min-width:0; min-height:0;
   translate:0 0 !important;
 }
+
+/* Release 22 grade art. Preserve the chest geometry and custom skin sprite path. */
+#viewport #stage #board .cell:not(.case-customized)[data-tier] .chest > .asset-sprite { visibility:hidden; }
+#viewport #stage #board .cell:not(.case-customized)[data-tier] .chest { --case-picture:var(--case-art); }
+#viewport #stage #board .cell:not(.case-customized)[data-tier] .chest[data-asset$="/case-open.png"] { --case-picture:var(--case-broken-art); }
+#viewport #stage #board .cell:not(.case-customized)[data-tier] .chest::before {
+  content:""; display:block; position:absolute; inset:0; width:auto; height:auto; border:0;
+  background:var(--case-picture) center / contain no-repeat; box-shadow:none; pointer-events:none; image-rendering:pixelated;
+  filter:var(--case-recolour,none);
+}
+#viewport #stage #board .cell:not(.case-customized)[data-tier="box-rainbow"] .chest::before {
+  animation:case-rainbow-shimmer 6s ease-in-out infinite;
+}
+@keyframes case-rainbow-shimmer { 0%,100% { opacity:1; } 50% { opacity:.82; } }
+@media (prefers-reduced-motion:reduce) {
+  #viewport #stage #board .cell:not(.case-customized)[data-tier="box-rainbow"] .chest::before { animation:none; }
+}
+#viewport #stage #board .cell[data-tier="box-violet"] { --case-art:url("assets/box-violet.webp"); --case-broken-art:url("assets/box-violet-broken.webp"); }
+#viewport #stage #board .cell[data-tier="box-rainbow"] { --case-art:url("assets/box-rainbow.webp"); --case-broken-art:url("assets/box-rainbow-broken.webp"); }

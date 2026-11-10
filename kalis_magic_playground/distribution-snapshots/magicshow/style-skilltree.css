@@ -133,3 +133,76 @@ html body #viewport#viewport #stage#stage#stage#stage #panel .constellation-deta
 html body #viewport#viewport #stage#stage#stage#stage #panel .constellation-detail button.tree-cost.tree-buy:active:enabled:not([aria-disabled="true"]) { box-shadow:inset 0 2px 0 #100D16; filter:brightness(.85); }
 html body #viewport#viewport #stage#stage#stage#stage #panel .constellation-detail button.tree-cost.tree-buy:focus-visible { outline:2px solid #ffe14a; outline-offset:2px; }
 html body #viewport#viewport #stage#stage#stage#stage #panel .constellation-detail button.tree-cost.tree-buy:disabled { border-color:var(--line-dim); border-image-source:url('assets/kit/button-disabled.webp'); background:#302735; color:#bcb4a6; opacity:1; cursor:default; }
+/* Release 21 4b: fixed chrome, contract-ordered cards and one scrolling body. */
+html body #viewport#viewport #stage#stage#stage#stage #panel[data-screen="book"] { display:flex; flex-direction:column; min-height:0; }
+html body #viewport#viewport #stage#stage#stage#stage #panel[data-screen="book"][hidden] { display:none; }
+html body #viewport#viewport #stage#stage#stage#stage #panel[data-screen="book"] header { display:flex; flex-wrap:wrap; flex:none; gap:6px; min-height:0; }
+html body #viewport#viewport #stage#stage#stage#stage #panel[data-screen="book"] h1 { display:block; flex:1 1 auto; font-size:16px; line-height:1.4; }
+html body #viewport#viewport #stage#stage#stage#stage #panel[data-screen="book"] .tree-wallet { display:flex; flex-wrap:wrap; max-width:none; overflow:visible; white-space:normal; font:14px/1.4 system-ui,sans-serif; }
+html body #viewport#viewport #stage#stage#stage#stage #panel[data-screen="book"] #closePanel { order:2; min-width:48px; min-height:48px; }
+html body #viewport#viewport #stage#stage#stage#stage #panel[data-screen="book"] .book-navigation { display:block; flex:0 0 100%; order:3; width:100%; min-width:0; }
+html body #viewport#viewport #stage#stage#stage#stage #panel[data-screen="book"] .book-tabs { display:flex; gap:6px; overflow-x:auto; max-width:100%; scrollbar-width:thin; }
+html body #viewport#viewport #stage#stage#stage#stage #panel[data-screen="book"] .book-tabs button { flex:0 0 auto; }
+html body #viewport#viewport #stage#stage#stage#stage #panel[data-screen="book"] .book-tabs [aria-selected="true"],
+html body #viewport#viewport #stage#stage#stage#stage #panel[data-screen="book"] .book-stages [aria-pressed="true"] { outline:2px solid var(--gold); outline-offset:-2px; }
+html body #viewport#viewport #stage#stage#stage#stage #panel[data-screen="book"] .book-tabs-hint { display:block; min-height:1.4em; color:var(--gold); font:14px/1.4 system-ui,sans-serif; }
+html body #viewport#viewport #stage#stage#stage#stage #panel[data-screen="book"] #panelBody { display:block; flex:1 1 auto; height:auto; min-height:0; overflow:auto; overflow-anchor:none; overscroll-behavior:contain; }
+html body #viewport#viewport #stage#stage#stage#stage #panel[data-screen="book"] .book-cards { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:10px; grid-auto-rows:max-content; align-content:start; align-items:start; }
+html body #viewport#viewport #stage#stage#stage#stage #panel[data-screen="book"] .book-card { display:grid; grid-template-columns:minmax(0,1fr); grid-auto-rows:max-content; height:auto; max-height:none; min-width:0; padding:8px; border:2px solid var(--line); background:#171321; overflow-wrap:anywhere; }
+html body #viewport#viewport #stage#stage#stage#stage #panel[data-screen="book"] .book-card :is(p,h3,button) { font:14px/1.5 system-ui,sans-serif; white-space:normal; overflow-wrap:anywhere; }
+html body #viewport#viewport #stage#stage#stage#stage #panel[data-screen="book"] button { min-height:48px; min-width:48px; height:auto; max-width:100%; box-sizing:border-box; touch-action:manipulation; }
+html body #viewport#viewport #stage#stage#stage#stage #panel[data-screen="book"] .book-card button { width:100%; margin:4px 0; padding:8px; }
+html body #viewport#viewport #stage#stage#stage#stage #panel[data-screen="book"] .book-stages { display:flex; flex-direction:column; }
+html body #viewport#viewport #stage#stage#stage#stage #panel[data-screen="book"] .book-detail { display:grid; grid-template-columns:minmax(0,1fr); grid-auto-rows:max-content; position:static; height:auto; max-height:none; overflow:visible; border-top:1px solid var(--line); margin-top:8px; padding-top:8px; }
+html body #viewport#viewport #stage#stage#stage#stage #panel[data-screen="book"] .book-detail .tree-buy { position:static; float:none; clear:both; display:block; }
+html body #viewport#viewport #stage#stage#stage#stage #panel[data-screen="book"] .book-card-status { color:var(--gold); }
+html body #viewport#viewport #stage#stage#stage#stage #panel[data-screen="book"] button:focus-visible { outline:3px solid #ffe14a; outline-offset:1px; }
+@media (orientation:portrait) {
+  html body #viewport#viewport #stage#stage#stage#stage #panel[data-screen="book"] .book-cards { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+/* Preserve the existing tutorial target and learn-pop hook on the card heading. */
+html body #viewport#viewport #stage#stage#stage#stage #panel[data-screen="book"] .book-card .book-card-toggle { position:static; inset:auto; transform:none; width:100%; height:auto; min-width:48px; min-height:48px; border-radius:0; padding:8px; }
+/* Override the former portrait map header grid without changing other panels. */
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #panel#panel[data-screen="book"] > header { display:flex; flex-wrap:wrap; height:auto; min-height:0; }
+html body #viewport#viewport #stage#stage#stage#stage #panel[data-screen="book"] #panelTitle { white-space:normal; }
+html body #viewport#viewport #stage#stage#stage#stage #panel[data-screen="book"] #closePanel { order:0; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #panel#panel[data-screen="book"] .tree-wallet,
+html body #viewport#viewport #stage#stage#stage#stage #panel[data-screen="book"] .tree-wallet { order:1; flex:0 0 100%; height:auto; min-height:0; padding:2px 6px; }
+
+/* Release 21 P4: intrinsic text rows keep long wallets and growth values readable. */
+html body.phone #viewport#viewport #stage#stage#stage#stage#stage#stage #panel[data-screen="book"] .tree-wallet { flex:1 1 auto; order:0; width:auto; min-width:0; height:auto; max-height:none; margin:0; padding:0; gap:2px 4px; flex-wrap:wrap; white-space:normal; font-size:var(--r21-read); line-height:1.5; }
+html body.phone #viewport#viewport #stage#stage#stage#stage#stage#stage #panel[data-screen="book"] .book-navigation { flex:0 0 100%; min-width:0; padding:0; margin:0; }
+html body.phone #viewport#viewport #stage#stage#stage#stage#stage#stage #panel[data-screen="book"] .book-tabs { padding:3px; box-sizing:border-box; gap:4px; touch-action:pan-x; }
+html body.phone #viewport#viewport #stage#stage#stage#stage#stage#stage #panel[data-screen="book"] .book-tabs button { flex:0 0 auto; padding:6px 10px; }
+html body.phone #viewport#viewport #stage#stage#stage#stage#stage#stage #panel[data-screen="book"] .book-tabs-hint { min-height:0; font-size:var(--r21-read); line-height:1.4; }
+html body.phone #viewport#viewport #stage#stage#stage#stage#stage#stage #panel[data-screen="book"] .book-cards { gap:6px; }
+html body.phone #viewport#viewport #stage#stage#stage#stage#stage#stage #panel[data-screen="book"] .book-card { padding:6px; min-width:0; }
+html body.phone #viewport#viewport #stage#stage#stage#stage#stage#stage #panel[data-screen="book"] .book-card :is(p,h3,button,small,.tree-preview) { font-size:var(--r21-read); line-height:1.5; white-space:normal; overflow-wrap:anywhere; }
+html body.phone #viewport#viewport #stage#stage#stage#stage#stage#stage #panel[data-screen="book"] .book-card :is(.book-card-toggle,.tree-buy) { min-width:48px; min-height:48px; height:auto; max-height:none; padding:6px; }
+
+html body.phone #viewport#viewport #stage#stage#stage#stage#stage#stage #panel[data-screen="book"] .practice-go { max-width:100%; overflow:visible; text-overflow:clip; flex:0 1 auto; }
+
+/* A zoomed landscape viewport can be narrower than a portrait phone. */
+@media (orientation:landscape) and (max-width:600px) {
+  html body.phone #viewport#viewport #stage#stage#stage#stage#stage#stage #panel[data-screen="book"] .book-cards { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+
+/* R21 triage2: a visible horizontal-scroll cue shares the tab row on short screens. */
+@media (max-height:280px) {
+  html body.phone #viewport#viewport #stage#stage#stage#stage#stage#stage #panel[data-screen="book"] .book-navigation { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:4px; }
+  html body.phone #viewport#viewport #stage#stage#stage#stage#stage#stage #panel[data-screen="book"] .book-tabs-hint { font-size:0; }
+  html body.phone #viewport#viewport #stage#stage#stage#stage#stage#stage #panel[data-screen="book"] .book-tabs-hint:not(:empty)::after { content:"↔"; font-size:14px; }
+}
+
+/* R21 P5f: reserve the close/help cells; wallet length cannot push either onto a new row. */
+html body.phone #viewport#viewport #stage#stage#stage#stage#stage#stage #panel#panel[data-screen="book"] > header { display:grid; grid-template-columns:minmax(0,1fr) 48px 48px; gap:4px 8px; }
+html body.phone #viewport#viewport #stage#stage#stage#stage#stage#stage #panel[data-screen="book"] #panelTitle { grid-column:1; grid-row:1; }
+html body.phone #viewport#viewport #stage#stage#stage#stage#stage#stage #panel[data-screen="book"] .panel-help-button { grid-column:2; grid-row:1; }
+html body.phone #viewport#viewport #stage#stage#stage#stage#stage#stage #panel[data-screen="book"] #closePanel#closePanel { grid-column:3; grid-row:1; }
+html body.phone #viewport#viewport #stage#stage#stage#stage#stage#stage #panel[data-screen="book"] .tree-wallet { grid-column:1 / -1; grid-row:2; width:100%; max-width:100%; box-sizing:border-box; overflow:visible; font-size:var(--r21-read); }
+html body.phone #viewport#viewport #stage#stage#stage#stage#stage#stage #panel[data-screen="book"] .tree-wallet > span { flex:0 0 auto; white-space:nowrap; }
+html body.phone #viewport#viewport #stage#stage#stage#stage#stage#stage #panel[data-screen="book"] .practice-go { grid-column:1 / -1; grid-row:3; }
+html body.phone #viewport#viewport #stage#stage#stage#stage#stage#stage #panel[data-screen="book"] .book-navigation { grid-column:1 / -1; grid-row:4; }
+html body #viewport#viewport #stage#stage#stage#stage #panel[data-screen="book"] .book-detail > strong.tree-cost { display:flex; align-items:center; min-height:44px; box-sizing:border-box; }
+/* R21 sonnet2: the desktop stage is scaled to fit the window, so the chip height is divided by that scale to stay 44 screen px. */
+html body:not(.phone) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="book"] .book-detail > strong.tree-cost { min-height:var(--menu-tap-height,44px); }

@@ -196,3 +196,18 @@ html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#sta
 html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage #phoneMore > :is(#caseArrangeButton,#wardrobeButton) .kit-ico { position:static; inset:auto; transform:none; translate:none; margin:0; flex:0 0 24px; width:24px; height:24px; }
 html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage #phoneMore > :is(#caseArrangeButton,#wardrobeButton) .kit-label { position:static; width:auto; height:auto; margin:0; }
 html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage #phoneWallet .cur-icon { width:20px; height:20px; }
+
+/* Phone key text: keep the existing card and button bounds. */
+html body.phone:not(.tablet):not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage#stage #tutorialCoach :is(strong,p,button),
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage #tutorialCoach button { font-size:12px; letter-spacing:-.3px; }
+html body.phone:not(.tablet):not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage#stage #tutorialCoach p { line-height:12px; }
+html body.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage #activeSkills .active-skill > span:not(.skill-art) { font-size:12px; line-height:12px; letter-spacing:-.8px; }
+html body.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage #activeSkills :is(.active-skill:not(#item-auto-glove):not(.skill-locked),#item-auto-glove.glove-active) > small { font-size:12px; line-height:12px; height:12px; max-height:12px; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage#stage #activeSkills #skillRow > :is(#skill-cardrain,#skill-showtime,#skill-cheer,#item-auto-glove) { --lb:14px; --st:14px; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage#stage #activeSkills #skillRow > :is(#skill-cardrain,#skill-showtime,#skill-cheer,#item-auto-glove) > span:not(.skill-art) { font-size:12px; letter-spacing:-.8px; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage#stage #activeSkills #skillRow > :is(#skill-cardrain:not(.skill-locked),#skill-showtime:not(.skill-locked),#skill-cheer:not(.skill-locked),#item-auto-glove.glove-active) > small { font-size:12px; max-height:14px; }
+html body.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage #board .cell .spawn-timer { font-size:12px; line-height:12px; }
+html body.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage #countdown { font-size:12px; }
+html body.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage #panel[data-screen="fail"] #panelBody button,
+html body.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage #panelBody .result button,
+html body.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage #panelBody .ending-actions button { font-size:12px; letter-spacing:-.3px; }

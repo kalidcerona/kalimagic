@@ -138,14 +138,12 @@
     var routine=DATA.routines.find(function(r){return r.shopCost && id==='routine-'+r.id;});
     var cost=routine?routine.shopCost:id==='glove'?2:id==='brick'?CONST.brickGems:id==='refill'?2:id==='potion'?3:0,reason='';
     if(!cost)reason='없는 상품이에요';
-    else if(routine&&state.u19.routines.indexOf(routine.id)>=0)reason='이미 배운 루틴이에요';
+    else if(routine&&routineOwned(state,routine.id))reason='이미 배운 루틴이에요';
     else if(state.u15.tutorial.active)reason='첫 연습 뒤에 살 수 있어요';
+    else if(routine&&!NODE_BY_ID[id].prereqs.every(function(pre){return nodeLevel(state,NODE_BY_ID[pre])>0;}))reason='선행 비법 필요: '+NODE_BY_ID[id].prereqs.filter(function(pre){return nodeLevel(state,NODE_BY_ID[pre])<1;}).map(function(pre){return NODE_BY_ID[pre].name;}).join(', ');
     else if((id==='glove'||id==='brick')&&!hasDeck(state))reason='칼리 덱 비법을 배우면 살 수 있어요'; // v4 U48 A/A2
     else if(id==='brick'&&state.u15.gloveLeft+CONST.brickMs>CONST.gloveLeftMax)reason='자동 연습 시간이 이미 넉넉해요';
-    else if(id==='refill'&&(!skillUnlocked(state,skill)||!(state.skills.cooldowns[skill]>0)))reason='기다리는 스킬만 충전해요';
-    else if(id==='potion'&&(state.mode!=='fight'||state.resolved||state.features.climax.left>0))reason='관객과 공연 중에 써요';
-    else if(id==='potion'&&state.u17.potionUsed)reason='이번 공연에서 이미 썼어요';
-    else if(id==='potion'&&state.mental>=state.mentalMax)reason='멘탈이 이미 가득해요';
+    else if(supplyField(id)&&state[supplyField(id)]>=99)reason='99개까지 가질 수 있어요';
     else if(state.gems<cost)reason='실크 '+cost+'개가 필요해요';
     return {cost:cost,reason:reason,available:!reason};
   }
@@ -156,8 +154,7 @@
     if(id==='glove'){var slug=VENUES[state.venue-1].slug;addGain(state.u17.gloveBuys, slug, 1, 100000);addGain(state.u15, 'gloves', 1, 100000);}
     // v4 U48 A2: 칼리 덱 한 브릭 starts 30 minutes of auto practice at once (game time; it adds on top of a running deck).
     if(id==='brick'){state.u15.gloveLeft+=CONST.brickMs;state.holding=false;state.tapAcc=0;}
-    if(id==='refill')state.skills.cooldowns[skill]=0;
-    if(id==='potion'){state.mental=Math.min(state.mentalMax,state.mental+state.mentalMax*.3*gearMultiplier(state,"recovery"));state.u17.potionUsed=true;}
+    if(supplyField(id))state[supplyField(id)]++;
     return true;
   }
 
@@ -165,15 +162,21 @@
   function emptyPads(){return {owned:['floor'],equipped:'floor',upgrades:0};}
   function padKey(id,color){return id==='floor'||id==='lecturenote'?id:id+':'+color;}
   function padEntry(key){return DATA.pads.find(function(p){return p.colors.some(function(c){return padKey(p.id,c)===key;});});}
-  function validPads(p){return !!p&&Array.isArray(p.owned)&&p.owned.indexOf('floor')>=0&&new Set(p.owned).size===p.owned.length&&p.owned.every(function(k){return !!padEntry(k);})&&p.owned.indexOf(p.equipped)>=0&&integer(p.upgrades,0,DATA.padPrices.upgradeMax)!=null&&(!p.upgrades||p.owned.some(function(k){return padEntry(k).id==='kali';}));}
-  function padSpeed(state){var p=state.u18&&state.u18.pads;if(!p)return 1;var entry=padEntry(p.equipped);return entry.speed+(entry.id==='kali'?p.upgrades*.05:0);}
+  function validPads(p){return !!p&&Array.isArray(p.owned)&&p.owned.indexOf('floor')>=0&&new Set(p.owned).size===p.owned.length&&p.owned.every(function(k){return !!padEntry(k);})&&p.owned.indexOf(p.equipped)>=0&&integer(p.upgrades,0,DATA.padPrices.upgradeMax)!=null&&(!p.upgrades||p.owned.some(function(k){return padEntry(k).id!=='floor';}));}
+  function padUpgradeBonus(state,entry) {
+    var level=state.u18.pads.upgrades;
+    if(level>10)return entry.id==='kali'?level*.05:0;
+    var cfg=DATA.bookLayout.padUpgrade[entry.id];
+    return cfg ? (Math.min(9,level)*cfg.level1to9PercentagePoints+(level===10?cfg.level10PercentagePoints:0))/100 : 0;
+  }
+  function padSpeed(state){var p=state.u18&&state.u18.pads;if(!p)return 1;var entry=padEntry(p.equipped);return entry.speed+padUpgradeBonus(state,entry);}
   function gearBonus(state,key){var p=state.u18&&state.u18.pads;if(!p)return 0;var entry=padEntry(p.equipped),color=DATA.padColors[p.equipped.split(':')[1]],bonus=color&&color[entry.id];return bonus&&bonus[key]||0;}
   function outfitBonus(state,key){var id=state.u18&&state.u18.equipped.kali,e=DATA.outfitEffects[id];return e&&e[key]||0;}
   function gearMultiplier(state,key){return (1+gearBonus(state,key))*(1+outfitBonus(state,key));}
   function gearEffects(state,tab,id){
     if(tab==='kali')return Object.assign({},DATA.outfitEffects[id]||{});
     var entry=padEntry(id);if(!entry)return {};var color=DATA.padColors[id.split(':')[1]],effect=Object.assign({},color&&color[entry.id]||{});
-    effect.hold=entry.speed-1+(entry.id==='kali'?state.u18.pads.upgrades*.05:0);return effect;
+    effect.hold=entry.speed-1+padUpgradeBonus(state,entry);return effect;
   }
   function padInfo(state,id,color){
     var entry=DATA.pads.find(function(p){return p.id===id;});if(!entry||entry.colors.indexOf(color)<0)return null;
@@ -183,6 +186,13 @@
   }
   function buyPad(state,id,color){var info=padInfo(state,id,color);if(!info||info.owned||!info.available)return false;state.gems-=info.cost;state.u18.pads.owned.push(info.key);return true;}
   function equipPad(state,key){if(state.u18.pads.owned.indexOf(key)<0)return false;state.u18.pads.equipped=key;recompute(state,true);return true;}
-  function padUpgradeInfo(state){var p=state.u18.pads,cost=Math.ceil(DATA.padPrices.upgradeBase*Math.pow(DATA.padPrices.upgradeGrowth,p.upgrades)),reason=p.upgrades>=DATA.padPrices.upgradeMax?'최대 강화':!p.owned.some(function(k){return padEntry(k).id==='kali';})?'칼리 패드를 얻으면 가능':state.coins<cost?'동전 부족':'';return {cost:cost,level:p.upgrades,available:!reason,reason:reason};}
-  function upgradePad(state){var info=padUpgradeInfo(state);if(!info.available)return false;state.coins-=info.cost;state.u18.pads.upgrades++;return true;}
-
+  function padUpgradeInfo(state) {
+    var p=state.u18.pads, cfg=DATA.bookLayout.padUpgrade, entry=padEntry(p.equipped);
+    var cost=p.upgrades<cfg.levels?cfg.costs[p.upgrades]:null;
+    var reason=p.upgrades>=cfg.levels?'최대 강화':state.u15.tutorial.active?'첫 연습 뒤에 살 수 있어요':entry.id==='floor'?'패드를 장착해 주세요':state.gems<cost?'실크 부족':'';
+    var next=cost===null?null:(p.upgrades===9?cfg[entry.id]&&cfg[entry.id].level10PercentagePoints:cfg[entry.id]&&cfg[entry.id].level1to9PercentagePoints);
+    return {cost:cost,currency:'gems',level:p.upgrades,max:cfg.levels,nextPercentagePoints:next,available:!reason,reason:reason};
+  }
+  // The retired coin API cannot bypass the silk price or the ten-level cap.
+  function upgradePad(state){return false;}
+  function upgradePadSilk(state){var info=padUpgradeInfo(state);if(!info.available)return false;state.gems-=info.cost;state.u18.pads.upgrades++;return true;}

@@ -220,9 +220,28 @@
     renderDialog(lines, mark.line, 'tutorial:' + mark.step, advance, () => { collect(true); endSchoolTutorial(); });
     return true;
   }
+  // Session-only, visible-time beat. Story resumes from its existing saved checkpoint.
+  let tutorialMoment = null;
+  function tutorialWinMoment() {
+    tutorialMoment?.stamp.remove();
+    const stamp = element('div', '감탄!', 'win-stamp'); stamp.id = 'winStamp';
+    $('audienceCard').append(stamp); $('audienceCard').classList.add('f-win-stamp');
+    tutorialMoment = { stamp, until: clock + 1350, state, tutorial: state.u15.tutorial };
+    $('storyDialog').hidden = true; dialogKey = '';
+    hitStop(); sound('applause'); kaliPose(2, 1350);
+    if (!reduced) animate(stamp, [{transform:'scale(1.3)'},{transform:'scale(1)'}],180);
+  }
+  function tutorialMomentActive() {
+    if (!tutorialMoment) return false;
+    if (tutorialMoment.state === state && tutorialMoment.tutorial === state.u15.tutorial && clock < tutorialMoment.until) return true;
+    tutorialMoment.stamp.remove(); $('audienceCard').classList.remove('f-win-stamp'); tutorialMoment = null; return false;
+  }
   function renderU15(){
+    if (tutorialMomentActive() || menu === 'boo' || menu === 'install') { $('storyDialog').hidden = true; dialogKey = ''; return; }
     const u=state.u15,t=u.tutorial,glove=$('item-auto-glove');
-    if(glove){const deck=C.hasDeck(state),left=u.gloveLeft,sec=Math.ceil(left/1000);glove.classList.toggle('glove-active',left>0);glove.classList.toggle('glove-empty',u.gloves<1&&left===0);glove.querySelector('small').className='item-count';glove.hidden=!portraitLayout()&&!deck&&u.gloves===0&&left===0;/* s5f: the portrait row keeps the 칼리 덱 tile at 0 (disabled, a tap does nothing) */glove.disabled=paused()||state.mode!=='fight'||left>0||u.gloves<1;glove.setAttribute('aria-pressed','false');glove.querySelector('small').textContent=left>0?(sec>=60?`${Math.floor(sec/60)}:${String(sec%60).padStart(2,'0')}`:sec+'초'):u.gloves+'개';glove.setAttribute('aria-label',left>0?`칼리 덱 자동 연습 중 · 남은 시간 ${sec}초 · ${u.gloves}개 보유`:`칼리 덱 쓰기 · ${u.gloves}개 보유`);if(left>gloveRun)gloveRun=left;if(!left)gloveRun=0;glove.style.setProperty('--cooldown',Math.min(1,left/Math.max(120000,gloveRun))*360+'deg');}
+    deckPracticeNotice();
+    if(glove){const deck=C.hasDeck(state),left=u.gloveLeft,sec=Math.ceil(left/1000);glove.classList.toggle('glove-active',left>0);glove.classList.toggle('glove-empty',u.gloves<1&&left===0);glove.querySelector('small').className='item-count';glove.hidden=!portraitLayout()&&!deck&&u.gloves===0&&left===0;/* s5f: the portrait row keeps the 칼리 덱 tile at 0 (disabled, a tap does nothing) */glove.disabled=paused()||state.mode!=='fight'||left>0||u.gloves<1;glove.setAttribute('aria-pressed','false');glove.querySelector('small').textContent=left>0?(sec>=60?`${Math.floor(sec/60)}:${String(sec%60).padStart(2,'0')}`:sec+'초'):u.gloves+'개';glove.setAttribute('aria-label',left>0?`칼리 덱 자동 개봉 중 · 추가 탭 효과 없음 · 스킬·플래시 페이퍼·방문객 사용 가능 · 남은 시간 ${sec}초 · ${u.gloves}개 보유`:`칼리 덱 쓰기 · ${u.gloves}개 보유`);if(left>gloveRun)gloveRun=left;if(!left)gloveRun=0;glove.style.setProperty('--cooldown',Math.min(1,left/Math.max(120000,gloveRun))*360+'deg');}
+    if(glove)easyTooltip(glove,D.panelHelp.deck.join(' '));
     if(renderSchoolChain()){updateAudienceLine();return;}
     if(t.active){
       if(t.won&&t.phase!=='overview')t.phase='defeat';
@@ -260,7 +279,11 @@
       if(renderU15.autoKey!==key){renderU15.autoKey=key;renderU15.autoAt=clock;}
       if(dialogTyping)renderU15.autoAt=clock;
       if(clock-renderU15.autoAt>=2500&&u.scene)advanceSkillScene(false);
-    }else{renderU15.autoKey='';if($('autoIndicator').textContent!=='자동')$('autoIndicator').textContent='자동';}
+    }else{renderU15.autoKey='';const active=u.gloveLeft>0&&state.mode==='fight'&&!paused();
+      const text=active?'자동 개봉 중 · 추가 탭 효과 없음':'자동';
+      if(active)$('autoIndicator').hidden=false;
+      if($('autoIndicator').textContent!==text)$('autoIndicator').textContent=text;}
+
     updateAudienceLine();
     autoStartStage(); // Check every rendered frame, including blocked frames, so closing a layer starts a fresh pause.
   }

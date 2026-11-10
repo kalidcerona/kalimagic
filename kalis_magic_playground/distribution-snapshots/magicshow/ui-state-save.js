@@ -15,7 +15,7 @@
   let wakePending = false;
   let gloveRun = 0; // v4 U48 A2: the longest auto-practice time left seen in this run (a brick is 30 minutes), for the button's ring
   function showMore() { $('phoneMore').hidden = false; $('moreButton').setAttribute('aria-expanded', 'true'); autoStartStage.since=0; release(); clearDecorations(); }
-  function hideMore() { $('phoneMore').hidden = true; $('moreButton').setAttribute('aria-expanded', 'false'); moreReturn = false; autoStartStage.since=0; }
+  function hideMore() { $('phoneMore').hidden = true; $('stage').classList.remove('f-more'); $('moreButton').setAttribute('aria-expanded', 'false'); moreReturn = false; autoStartStage.since=0; }
   let dialogueTimer, dealerBusy = false, dealerMessage = '';
   let booTimer=null, failureAudience=null, failureVenue=null;
   let failureCause = 'mental', practiceRec = null;

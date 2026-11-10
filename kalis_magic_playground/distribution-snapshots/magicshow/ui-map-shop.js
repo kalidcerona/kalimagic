@@ -84,22 +84,85 @@
     if(focus)chart.querySelector(`[data-venue="${focus}"]`)?.scrollIntoView({block:'center'});
     save();
   }
+  // Confirmation belongs to the live button, never to the save or a detached panel.
+  function silkPurchase(button, infoNow, commit, refresh, selector, afterSave) {
+    if (!button.isConnected || button.disabled || button._silkBusy) return;
+    const info = infoNow(), cost = Number(info.cost);
+    if (!info.available || !Number.isFinite(cost) || cost < 0 || state.gems < cost) {
+      button._silkCost = null; panelStatus(info.reason || info.hint || '실크가 부족해요'); return;
+    }
+    if (button._silkCost !== cost) {
+      button._silkCost = cost;
+      const question = `실크 ${cost}개로 살까요?`, scroll=$('panelBody').scrollTop;
+      button._silkScroll=scroll; panelStatus(question); restorePanelScroll(scroll); button.setAttribute('aria-label',question);
+      return;
+    }
+    button._silkBusy = true; button._silkCost = null;
+    const before = state.gems, scroll = button._silkScroll ?? $('panelBody').scrollTop;
+    if (!commit()) { button._silkBusy = false; panelStatus('지금은 살 수 없어요'); return; }
+    const saved = save(); render(); refresh(scroll);
+    panelStatus(`샀어요 · 실크 -${before - state.gems}`); restorePanelScroll(scroll); sound('learn');
+    const card = $('panelBody').querySelector(selector), wallet = $('panel').querySelector('.shop-balance');
+    for (const el of [card, wallet]) if (el && !reduced) animate(el,[{boxShadow:'0 0 0 3px #E8BF68'},{boxShadow:'none'}],300);
+    if (afterSave) afterSave(saved,scroll);
+  }
   let customizeTab='kali';
-  function customize(){
+  function visibleCosmetic(tab,x){return x.id!=='future'||state.u19.cleared||state.u18.owned.kali.includes('future');}
+  function customize(keepScroll=0){
+    if(!Number.isFinite(keepScroll))keepScroll=0;
     if(['boo','fail','ending','rebirth','bossPhase','headliner','dealer'].includes(menu)||state.u15.scene)return;
-    openPanel('customize','꾸미기');$('phoneMore').hidden=true;
-    panelTabs([['kali','칼리 의상'],['cases','카드 케이스']],customizeTab,tab=>{customizeTab=tab;customize();});
-    $('panelBody').append(element('p',`실크 ${state.gems}개 · 꾸미기는 환생해도 남아요`),action('기본 모습',()=>{C.equipCosmetic(state,customizeTab,'');save();render();customize();}));
+    openPanel('customize','커스텀');$('phoneMore').hidden=true;
+    panelTabs([['kali','칼리 의상'],['pads','마술 패드'],['cases','카드 케이스']],customizeTab,tab=>{customizeTab=tab;customize();});
+    const reset=()=>{
+      const top=$('panelBody').scrollTop;
+      const ok=customizeTab==='pads'?C.equipPad(state,'floor'):C.equipCosmetic(state,customizeTab,'');
+      if(!ok)return;save();render();customize(top);panelStatus('기본 모습으로 돌아갔어요');restorePanelScroll(top);
+    };
+    $('panelBody').append(element('p','가진 모습을 골라 입어요. 없는 것은 실크 상점에서 사요.','shop-balance'),action('기본 모습',reset));
     if(customizeTab==='kali'){
       const tiers=element('div','','story-outfits');for(let tier=1;tier<=3;tier++){const owned=tier<=state.u14.outfit;tiers.append(element('p',`${owned?'✓':'🔒'} ${['','거실 티셔츠','무대 정장','우주 망토'][tier]} · ${['','처음부터','TV 오디션 완료','달 무대 완료'][tier]}`));}$('panelBody').append(tiers);
     }
-    const grid=element('div','','cosmetic-grid');
-    for(const x of D.cosmetics[customizeTab].filter(x=>x.id!=='future'||state.u19.cleared||state.u18.owned.kali.includes('future'))){
-      const info=C.cosmeticInfo(state,customizeTab,x.id),equipped=state.u18.equipped[customizeTab]===x.id,card=element('article','',`cosmetic-card${info.owned?'':' locked'}`);
-      const icon=artFallback(`assets/icon-${customizeTab==='kali'?'kali-skin':'case'}-${x.id}.png`,x.emoji,'cosmetic-icon');card.append(icon,element('h3',x.name),element('p',info.hint));
-      card.append(action(equipped?'사용 중':info.owned?'입히기':x.milestone?'아직 잠김':`열기 · 🧣 ${x.cost}`,()=>{if(!info.owned)C.buyCosmetic(state,customizeTab,x.id);C.equipCosmetic(state,customizeTab,x.id);save();render();customize();},equipped||!info.available));grid.append(card);
+    const equipped=customizeTab==='pads'?state.u18.pads.equipped:state.u18.equipped[customizeTab];
+    const equippedName=customizeTab==='pads'?padName(equipped):D.cosmetics[customizeTab].find(x=>x.id===equipped)?.name||(customizeTab==='kali'?'기본 의상':'기본 케이스');
+    const wearing=customizeTab==='cases'?`착용 중: ${equippedName}`:`착용 중: ${equippedName} · ${effectText(C.gearEffects(state,customizeTab==='pads'?'pads':'kali',customizeTab==='pads'?equipped:equipped))}`;
+    $('panelBody').append(element('p',wearing,'wardrobe-equipped'));
+    const grid=element('div','',customizeTab==='pads'?'shop-cosmetic-grid':'cosmetic-grid');
+    if(customizeTab==='pads'){
+      for(const pad of D.pads)for(const color of pad.colors){
+        const info=C.padInfo(state,pad.id,color);if(!info||(pad.hidden&&!info.owned))continue;
+        const key=info.key,on=info.equipped,label=padName(key);
+        const tile=action('',()=>{
+          if(!C.padInfo(state,pad.id,color).owned){openShopAt('pads');return;}
+          const top=$('panelBody').scrollTop;
+          if(C.equipPad(state,key)){save();render();customize(top);panelStatus('입었어요');restorePanelScroll(top);}
+        },on);
+        tile.className='shop-cosmetic-tile'+(info.owned?'':' locked');tile.dataset.gear='pads:'+key;tile.dataset.pad=key;tile.setAttribute('aria-pressed',String(on));
+        const effect=effectText(C.gearEffects(state,'pads',key)),difference=effectDifference('pads',key);
+        tile.setAttribute('aria-label',`${label} · ${info.owned?on?'사용 중':'입히기':'실크 상점에서 열기'}`);
+        tile.append(artFallback(padArt(key,true),'▰','cosmetic-icon'),element('span',label,'shop-cosmetic-name'),element('small',on?'사용 중':info.owned?'입히기':'실크 상점에서 열기'),element('small',effect,'gear-effect'),element('small',difference,'gear-difference'));
+        grid.append(tile);
+      }
+      $('panelBody').append(grid);appendPadUpgrade($('panelBody'),customize);
+    }else{
+      const tab=customizeTab,shopSection=tab==='kali'?'outfits':'cases';
+      for(const x of D.cosmetics[tab].filter(x=>visibleCosmetic(tab,x))){
+        const info=C.cosmeticInfo(state,tab,x.id),on=state.u18.equipped[tab]===x.id;
+        const tile=action('',()=>{
+          if(!C.cosmeticInfo(state,tab,x.id).owned){openShopAt(shopSection);return;}
+          const top=$('panelBody').scrollTop;
+          if(C.equipCosmetic(state,tab,x.id)){save();render();customize(top);panelStatus('입었어요');restorePanelScroll(top);}
+        },on);
+        tile.className='shop-cosmetic-tile'+(info.owned?'':' locked');tile.dataset.gear=tab+':'+x.id;tile.dataset.cosmetic=tab+':'+x.id;tile.setAttribute('aria-pressed',String(on));
+        tile.setAttribute('aria-label',`${x.name} · ${info.owned?on?'사용 중':'입히기':'실크 상점에서 열기'}`);
+        const icon=artFallback(tab==='kali'&&x.id==='future'?'assets/kali-outfit-2.png':`assets/icon-${tab==='kali'?'kali-skin':'case'}-${x.id}.png`,x.emoji,'cosmetic-icon');
+        tile.append(icon,element('span',x.name,'shop-cosmetic-name'),element('small',on?'사용 중':info.owned?'입히기':'실크 상점에서 열기'));
+        if(tab==='kali')tile.append(element('small',effectText(C.gearEffects(state,'kali',x.id)),'gear-effect'),element('small',effectDifference('kali',x.id),'gear-difference'));
+        if(!info.owned&&info.hint)tile.append(element('small',info.hint,'shop-cosmetic-lock'));
+        grid.append(tile);
+      }
+      $('panelBody').append(grid);
     }
-    $('panelBody').append(grid);save();
+    restorePanelScroll(keepScroll);save();
   }
 
   function padArt(key,icon=false){
@@ -125,19 +188,22 @@
     const image=assetImage(path),ready=()=>{if(board.dataset.padPath!==path)return;if(image.naturalWidth>0)board.style.setProperty('--equipped-pad',`url('${assetUrl(path)}')`);};
     if(image.complete)ready();else image.addEventListener('load',ready,{once:true});
   }
+  function shopFocus(next){if(arguments.length){shopFocus.current=next||'';return shopFocus.current;}return shopFocus.current||'';}
+  function openShopAt(section){shopFocus(section);gemShop();}
+  function openCustomAt(tab,keepScroll=0){customizeTab=tab;customize(keepScroll);}
   function padShopSection(){
-    const section=element('section','','shop-pads');section.append(element('h2','마술 패드'));
+    const section=element('section','','shop-pads');section.dataset.shopSection='pads';section.append(element('h2','마술 패드'),element('p','첫 연습 뒤 판매 · 앞 단계 패드 하나 소유 필요'));
     const grid=element('div','','shop-cosmetic-grid');
     for(const pad of D.pads.filter(p=>p.id!=='floor'&&!p.hidden))for(const color of pad.colors){
-      const info=C.padInfo(state,pad.id,color),key=info.key,status=info.equipped?'착용 중':info.owned?'착용':`실크 ${info.cost}`;
+      const info=C.padInfo(state,pad.id,color),key=info.key,status=info.owned?'커스텀에서 입기':`실크 ${info.cost}`;
       const tile=action('',()=>{
-        const keepScroll=$('panelBody').scrollTop,bought=!info.owned;
-        if(bought&&!C.buyPad(state,pad.id,color))return;
-        if(!C.equipPad(state,key))return;
-        save();render();
-        if(bought&&pad.id==='lecturenote'&&typeof playManagerLines==='function')playManagerLines(D.dealer.padMention,'dealer:padMention',()=>{if(menu==='gemShop')gemShop(keepScroll);});
-        else gemShop(keepScroll);
-      },info.equipped||!info.available);
+        const now=C.padInfo(state,pad.id,color);
+        if(!now.owned){silkPurchase(tile,()=>C.padInfo(state,pad.id,color),()=>{if(!C.buyPad(state,pad.id,color))return false;return true;},keepScroll=>{
+          gemShop(keepScroll);
+          if(pad.id==='lecturenote'&&typeof playManagerLines==='function')playManagerLines(D.dealer.padMention,'dealer:padMention',()=>{if(menu==='gemShop')gemShop(keepScroll);});
+        },`[data-pad="${key}"]`);return;}
+        openCustomAt('pads');
+      },!info.owned&&!info.available);
       tile.className='shop-cosmetic-tile';tile.dataset.pad=key;tile.setAttribute('aria-pressed',String(info.equipped));
       tile.setAttribute('aria-label',`${padName(key)} · ${status} · ${effectText(C.gearEffects(state,'pads',key))}`);
       tile.append(artFallback(padArt(key,true),'▰','cosmetic-icon'),element('span',padName(key),'shop-cosmetic-name'),element('small',status),element('small',effectText(C.gearEffects(state,'pads',key)),'gear-effect'));
@@ -146,55 +212,81 @@
     section.append(grid);appendPadUpgrade(section,gemShop);return section;
   }
   function appendPadUpgrade(host,refresh){
-    if(!state.u18.pads.owned.some(key=>key.startsWith('kali:')))return;
+    if(!state.u18.pads.owned.some(key=>key!=='floor'))return;
     const info=C.padUpgradeInfo(state), block=element('div','','pad-upgrade');host.append(block);host=block;
-    host.append(element('p',`칼리 패드 강화 ${info.level}회 · 꾹 누르기 속도 +${+(info.level*5).toFixed(2)}%p`));
-    const button=action(`강화 +5%p · 동전 ${C.formatNumber(info.cost)}`,()=>{const top=$('panelBody').scrollTop;if(C.upgradePad(state)){save();render();refresh(top);}},!info.available);button.dataset.padUpgrade='true';host.append(button);
+    host.append(element('p',`패드 공통 강화 ${info.level}단계 · ${padName(state.u18.pads.equipped)} · 누르기 속도 ${+C.padSpeed(state).toFixed(3)}배`));
+    const label=info.level>info.max?'옛 강화 효과 유지 · 추가 강화 불가':info.cost===null?'최대 강화':info.nextPercentagePoints==null?`패드 장착 후 강화 · 실크 ${info.cost}개`:`다음 속도 +${info.nextPercentagePoints}%p · 실크 ${info.cost}개`;
+    const button=action(label,()=>silkPurchase(button,()=>C.padUpgradeInfo(state),()=>C.upgradePadSilk(state),refresh,'[data-pad-upgrade]'),!info.available);button.dataset.padUpgrade='true';host.append(button);
     if(info.reason)host.append(element('small',info.reason));
   }
-  // s4d (owner 10-24): 옷장 is a tab of the 도감 panel (no separate button on the main screen or in the menu).
+  // Owner 10-31: the 도감 wardrobe tab is gone. This opens 커스텀 so older calls still land on wearing.
   function wardrobe(keepScroll=0){
     if(['boo','fail','ending','rebirth','bossPhase','headliner'].includes(menu))return;
-    bestiaryTab='wardrobe'; bestiary(keepScroll);
+    openCustomAt('pads',keepScroll);
   }
-  function wardrobeBody(){
-    $('panelBody').append(element('p','타일을 누르면 바로 착용해요. 산 색을 눌러 패드 색을 바꿔요.'));
-    const sections = element('div','','wardrobe-sections'); $('panelBody').append(sections);
-    for(const tab of ['pads','kali']){
-      const section=element('section','',tab==='pads'?'wardrobe-pads':'wardrobe-outfits');section.append(element('h2',tab==='pads'?'마술 패드':'옷'));
-      const equipped=tab==='pads'?state.u18.pads.equipped:state.u18.equipped.kali;
-      const name=tab==='pads'?padName(equipped):D.cosmetics.kali.find(x=>x.id===equipped)?.name||'기본 의상';
-      section.append(element('p',`착용 중: ${name} · ${effectText(C.gearEffects(state,tab,equipped))}`,'wardrobe-equipped'));
-      if(tab==='kali')for(const x of D.cosmetics.kali)C.cosmeticInfo(state,tab,x.id);
-      const ids=tab==='pads'?state.u18.pads.owned:['',...state.u18.owned.kali],grid=element('div','','shop-cosmetic-grid');
-      for(const id of ids){
-        const item=tab==='kali'?D.cosmetics.kali.find(x=>x.id===id):null,label=tab==='pads'?padName(id):item?.name||'기본 의상';
-        const tile=action('',()=>{const top=$('panelBody').scrollTop;if(tab==='pads'?C.equipPad(state,id):C.equipCosmetic(state,'kali',id)){save();render();wardrobe(top);}},id===equipped);
-        tile.className='shop-cosmetic-tile';tile.dataset.gear=tab+':'+id;tile.setAttribute('aria-pressed',String(id===equipped));
-        const effect=effectText(C.gearEffects(state,tab,id)),difference=effectDifference(tab,id);
-        tile.setAttribute('aria-label',`${label} · ${effect} · ${difference}`);
-        tile.append(artFallback(tab==='pads'?padArt(id,true):item?`assets/icon-kali-skin-${id}.png`:'assets/magician-mini.png',item?.emoji||'▰','cosmetic-icon'),element('span',label,'shop-cosmetic-name'),element('small',effect,'gear-effect'),element('small',difference,'gear-difference'));
-        grid.append(tile);
-      }
-      section.append(grid); sections.append(section);
+  function restorePanelScroll(top,body=$('panelBody'),preserveRange=false){const content=body.firstChild;let cancelled=false,framesDone=false,imagesDone=false;const cancel=()=>{cancelled=true;cleanup();};
+    const cleanup=()=>{for(const name of ['wheel','pointerdown'])body.removeEventListener?.(name,cancel);};const finish=()=>{if(framesDone&&imagesDone)cleanup();};
+    const restore=()=>{if(cancelled||body.firstChild!==content)return;if(preserveRange){const missing=top-(body.scrollHeight-body.clientHeight);if(missing>0){let space=body.querySelector('.shop-return-space');if(!space){space=element('div','','shop-return-space');space.setAttribute('aria-hidden','true');body.append(space);}space.style.height=((parseFloat(space.style.height)||0)+Math.ceil(missing))+'px';}}body.scrollTop=Math.max(0,Math.min(top,body.scrollHeight-body.clientHeight));};
+    for(const name of ['wheel','pointerdown'])body.addEventListener?.(name,cancel,{once:true,passive:true});restore();requestAnimationFrame(()=>{restore();requestAnimationFrame(()=>{restore();framesDone=true;finish();});});
+    const images=[...(body.querySelectorAll?.('img')||[])].filter(img=>!img.complete);Promise.all(images.map(img=>new Promise(resolve=>{img.addEventListener('load',resolve,{once:true});img.addEventListener('error',resolve,{once:true});}))).then(()=>requestAnimationFrame(()=>{restore();imagesDone=true;finish();}));
+  }
+  // Shop navigation is session-only; every purchase still reads the live Core quote.
+  const shopView={tab:'supplies',scroll:{},joined:false};
+  // Return coordinates and save failures belong to this live session, never the save schema.
+  let shopRoutineReturn=null;
+  function playShopRoutine(id,scroll,saved){
+    if(!state.u19.routines.includes(id))return;
+    if(!state.u19.pending.includes(id))state.u19.pending.push(id);
+    shopRoutineReturn={state,id,scroll,more:moreReturn,ready:false,completed:false};
+    if(saved===undefined)saved=save();
+    shopRoutineReturn.ready=!!saved;
+    if(!saved){panelStatus('저장하지 못했어요. 다시 보기를 눌러 저장 후 재생해 주세요.');return;}
+    shopView.scroll.magic=scroll;moreReturn=false;closePanel();
+  }
+  function helperShopSection(){
+    const section=element('section','','shop-helpers'),cfg=D.bookLayout.helperShop;
+    section.dataset.shopSection='helpers';
+    const opened=C.helperShopOpen(state),info=C.helperShopInfo(state,'assistant'),next=info.next;
+    section.append(element('h2','도우미'),element('p',opened?'한 번에 한 명씩 함께해요.':'책 2권으로 비법 14번을 열면 어시스턴트가 무료로 합류해요.','shop-helper-note'));
+    if(!opened){
+      section.append(element('p',`개점 조건: 학교 축제 도착 · 케이스 자리 비법 1단계 · 책 ${cfg.opening.books}권`),element('p',cfg.nextGoodsNote));
+      section.append(element('p','비법에서 책 2권으로 열기','shop-helper-note'));
+    }else if(next){
+      const quote=C.helperShopInfo(state,next.id),card=element('section','','gem-shop-item');card.dataset.helper=next.id+':'+next.level;
+      const venue=D.venues.find(v=>v.slug===next.gate).name;
+      card.append(element('h3',next.name),element('p',`실크 ${quote.cost}개${state.dimension>=2?'':' · '+venue+' 도착'}`));
+      const button=action(`${next.name} 합류 · 실크 ${quote.cost}개`,()=>silkPurchase(button,()=>C.helperShopInfo(state,next.id),()=>C.helperShopBuy(state,next.id),gemShop,'[data-shop-section="helpers"]'),!quote.available);
+      card.append(button);if(quote.reason)card.append(element('small',quote.reason));section.append(card);
+    }else section.append(element('p','모든 도우미가 합류했어요.'));
+    const joined=cfg.line.filter(person=>(state.tree[person.id]||0)>=person.level);
+    if(joined.length){
+      const details=element('details','','shop-joined');details.open=shopView.joined;
+      details.ontoggle=()=>{shopView.joined=details.open;};
+      details.append(element('summary',`합류한 도우미 ${joined.length}명`));
+      joined.forEach(person=>details.append(element('p',person.name+' · 고용 완료')));section.append(details);
     }
-    appendPadUpgrade($('panelBody'),wardrobe);
-  }
-  function restorePanelScroll(top,body=$('panelBody')){
-    const content=body.firstChild;
-    const restore=()=>{if(body.firstChild===content)body.scrollTop=Math.max(0,Math.min(top,body.scrollHeight-body.clientHeight));};
-    restore();requestAnimationFrame(restore);
+    return section;
   }
   function gemShop(keepScroll=0){
     if(['boo','fail','ending','rebirth','bossPhase','headliner'].includes(menu))return;
+    const focus=shopFocus();shopFocus('');
+    if(focus)shopView.tab=focus==='helpers'?'helpers':['pads','outfits','cases'].includes(focus)?'decor':focus==='routines'||focus.startsWith('routine-')?'magic':'supplies';
     openPanel('gemShop','실크 상점');
-    const balance=element('p',`실크 ${state.gems}개`,'dealer-wallet shop-balance');
+    const balance=element('div',`실크 ${state.gems}개`,'dealer-wallet shop-balance');
     $('panel').querySelector('header').insertBefore(balance,$('closePanel'));
-    // Purchases keep their existing handlers and save keys; sections only change presentation.
+    const nav=element('nav','','shop-tabs');nav.setAttribute('aria-label','실크 상점 분류');
+    for(const [id,label] of [['supplies','준비물'],['magic','마술'],['helpers','도우미'],['decor','꾸미기']]){
+      const button=action(label+(id==='helpers'&&!C.helperShopOpen(state)?' 🔒':''),()=>{shopView.scroll[shopView.tab]=$('panelBody').scrollTop;shopView.tab=id;gemShop(shopView.scroll[id]||0);});
+      button.setAttribute('aria-pressed',String(shopView.tab===id));button.dataset.shopTab=id;nav.append(button);
+    }
+    balance.append(nav);
     const abilities = element('section','','shop-abilities'), routines = element('section','','shop-routines');
     abilities.append(element('p','실크는 동전보다 귀해요. 오래 남는 아이템에 써 보세요.','shop-silk-note'),element('h2','스킬'));
     routines.append(element('h2','마술 루틴'),element('p','칼리가 무대에서 선보이는 마술이에요','shop-routine-note'));
-    for(const item of D.gemShop){
+    const previewRoutines=D.routines.filter(r=>!D.gemShop.some(item=>item.id==='routine-'+r.id)).map(r=>{
+      const node=D.tree.find(n=>n.id==='routine-'+r.id);return {id:node.id,name:node.name,desc:node.desc,preview:true};
+    });
+    for(const item of [...D.gemShop,...previewRoutines]){
       if((item.id==='glove'||item.id==='brick')&&!C.hasDeck(state))continue;
       const card=element('section','','gem-shop-item');card.dataset.shopItem=item.id;
       const ownedRoutine=item.id.startsWith('routine-')&&state.u19.routines.includes(item.id.slice('routine-'.length));
@@ -202,38 +294,60 @@
       const iconPath=item.id.startsWith('routine-')?`assets/icon-${item.id}.webp`:item.id==='potion'?'assets/node-chicken.webp':item.id==='refill'?'assets/kit/icon-showtime.webp':'assets/kit/icon-card-rain.webp';
       const heading=element('h3',item.name);heading.prepend(artFallback(iconPath,'✦','shop-item-icon'));
       card.append(heading,element('p',item.desc));
+      const ability=D.bookLayout.routineAbilities.find(a=>a.nodeId===item.id);
+      if(ability){if(ability.id==='eggbag')card.append(element('p',ability.description,'shop-routine-condition'));
+        const key=ability.formula==='branchBonus'?'branch.'+ability.key:ability.formula==='nodeEffects'?'effects.'+ability.key:'wandRate';
+        const line=element('p',`${ownedRoutine?'공연 순서에 들어 있어요':'사면 자동 공연에 들어가요'} · 3초 동안 ${ability.name} ×${ability.multiplier}`,'shop-routine-preview');
+        line.dataset.formula=key;card.append(line);
+      }
       const add=skill=>{const info=C.gemShopInfo(state,item.id,skill),label=skill?D.skills.find(k=>k.id===skill).name+' 충전':'사기';
-        const buy=action('',()=>{const top=$('panelBody').scrollTop;if(C.gemShopBuy(state,item.id,skill)){save();sound('skill');gemShop(top);render();}},!info.available);
+        const buy=action('',()=>silkPurchase(buy,()=>C.gemShopInfo(state,item.id,skill),()=>C.gemShopBuy(state,item.id,skill),gemShop,`[data-shop-item="${item.id}"]`,item.id.startsWith('routine-')?(saved,scroll)=>playShopRoutine(item.id.slice('routine-'.length),scroll,saved):null),!info.available);
         buy.setAttribute('aria-label',`${label} · 실크 ${info.cost}`);buy.append(element('span',label),element('span',String(info.cost),'kit-price kit-price-silk'));card.append(buy);if(info.reason&&item.id!=='refill')card.append(element('small',info.reason));};
-      if(item.id==='refill')D.skills.forEach(k=>add(k.id));else add();
+      if(ownedRoutine){
+        card.append(action('무료 다시 보기',()=>playShopRoutine(item.id.slice('routine-'.length),$('panelBody').scrollTop)));
+      }else if(item.preview)card.append(element('small','배우면 무료로 다시 볼 수 있어요.'));
+      else if(item.id==='refill'||item.id==='potion')supplyBagCard(card,item);else add();
       if(ownedRoutine)card.append(element('span','배움','shop-owned-badge'));
       (item.id.startsWith('routine-')?routines:abilities).append(card);
     }
     const pads=padShopSection();
-    const looks=element('section','','shop-customization');looks.append(element('h2','옷'));
+    const outfits=element('section','','shop-customization');outfits.dataset.shopSection='outfits';outfits.append(element('h2','옷'));
+    const cases=element('section','','shop-cases');cases.dataset.shopSection='cases';cases.append(element('h2','카드 케이스'));
     for(const tab of ['kali','cases']){
-      looks.append(element('h3',tab==='kali'?'칼리 의상':'카드 케이스'));
-      const grid=element('div','','shop-cosmetic-grid');
-      for(const x of D.cosmetics[tab].filter(x=>x.id!=='future'||state.u19.cleared||state.u18.owned.kali.includes('future'))){
-        const info=C.cosmeticInfo(state,tab,x.id),equipped=state.u18.equipped[tab]===x.id;
-        const status=equipped?'착용 중':info.owned?'착용':x.milestone?'잠김':`실크 ${info.cost}`;
+      const host=tab==='kali'?outfits:cases,grid=element('div','','shop-cosmetic-grid');
+      for(const x of D.cosmetics[tab]){
+        const info=C.cosmeticInfo(state,tab,x.id);
+        const status=info.owned?'커스텀에서 입기':x.milestone?'무료 완료 보상':`실크 ${info.cost}`;
         const tile=action('',()=>{
-          const top=$('panelBody').scrollTop;
-          if(!info.owned&&!C.buyCosmetic(state,tab,x.id))return;
-          if(C.equipCosmetic(state,tab,x.id)){save();render();gemShop(top);}
-        },equipped||!info.available);
+          const now=C.cosmeticInfo(state,tab,x.id);
+          if(!now.owned){
+            if(x.milestone||!now.available){panelStatus(now.hint||'아직 잠김');return;}
+            silkPurchase(tile,()=>C.cosmeticInfo(state,tab,x.id),()=>C.buyCosmetic(state,tab,x.id),gemShop,`[data-cosmetic="${tab}:${x.id}"]`);return;
+          }
+          openCustomAt(tab);
+        },!info.owned&&!info.available);
         tile.className='shop-cosmetic-tile';tile.dataset.cosmetic=tab+':'+x.id;
-        tile.setAttribute('aria-label',`${x.name} · ${status}${!info.available?' · '+info.hint:''}`);
-        if(equipped)tile.setAttribute('aria-pressed','true');
-        const icon=artFallback(`assets/icon-${tab==='kali'?'kali-skin':'case'}-${x.id}.png`,x.emoji,'cosmetic-icon');
+        tile.setAttribute('aria-label',`${x.name} · ${status}${!info.owned&&info.hint?' · '+info.hint:''}`);
+        const icon=artFallback(tab==='kali'&&x.id==='future'?'assets/kali-outfit-2.png':`assets/icon-${tab==='kali'?'kali-skin':'case'}-${x.id}.png`,x.emoji,'cosmetic-icon');
         tile.append(icon,element('span',x.name,'shop-cosmetic-name'),element('small',status));
-        if(tab==='kali')tile.append(element('small',effectText(C.gearEffects(state,'kali',x.id)),'gear-effect'));
-        if(x.milestone&&!info.owned)tile.append(element('small',info.hint,'shop-cosmetic-lock'));
+        tile.append(element('small',tab==='kali'?effectText(C.gearEffects(state,'kali',x.id)):'케이스 모습 변경 · 능력 변화 없음','gear-effect'));
+        if(x.milestone)tile.append(element('small',info.owned?'무료 완료 보상으로 받았어요':info.hint,'shop-cosmetic-lock'));
+        else tile.append(element('small','첫 연습 뒤 판매'));
         grid.append(tile);
       }
-      looks.append(grid);
+      host.append(grid);
     }
-    $('panelBody').append(abilities,routines,pads,looks);restorePanelScroll(keepScroll);
+    const helpers=helperShopSection();
+    for(const [tab,sections] of [['supplies',[abilities]],['magic',[routines]],['helpers',[helpers]],['decor',[pads,outfits,cases]]]){
+      for(const section of sections){section.hidden=shopView.tab!==tab;$('panelBody').append(section);}
+    }
+    $('panelBody').append(element('p','남는 것: 패드와 강화, 마술, 도우미, 쓰다 남은 소모품, 케이스 외형 · 다시 쓰는 것: 보드와 케이스, 일반 비법 레벨','shop-rebirth-note'));
+    if(focus){
+      const host=$('panelBody'),node=host&&typeof host.querySelector==='function'?host.querySelector(focus.startsWith('routine-')?`[data-shop-item="${focus}"]`:`[data-shop-section="${focus}"]`):null;
+      // Scroll only the body, never clipped ancestors.
+      if(node){host.scrollTop+=node.getBoundingClientRect().top-host.getBoundingClientRect().top;node.querySelector('button')?.focus({preventScroll:true});}
+    }
+    else restorePanelScroll(keepScroll);
   }
   // U30c: "피버 타임!" shows inside the stage, centered just below the doubt and heckle bars, then fades.
   // Reduced motion: no animation, it just stays for the same time and disappears.
@@ -365,8 +479,8 @@
     scene.append(element('h2', `차원 ${state.dimension}에서 차원 ${state.dimension + 1}로`), element('p', `🕊️ 비둘기 +${gain} · 환생 후 비둘기 ${state.starlight + gain}`, 'rebirth-gain'));
     const columns = element('div', '', 'rebirth-lists');
     for (const [title, lines] of [
-      ['처음부터 시작해요', ['마술 비법서의 모든 일반 강화와 해금', '무대 진행과 초대장, 트로피', '관객 도감의 감탄 횟수, 추가 조건, 팬 기록', '공연 성공과 공연 종료 횟수, 샵 매니저 진행과 임시 버프', '보드와 케이스, 날아가는 아이템', '레벨, 경험치, 최고 액트 기록, 피날레, 자신감', '멘탈은 새 차원의 최대치로 회복하고 가족 거실에서 시작']],
-      ['다음 차원에도 남아요', ['차원 번호는 1 증가', '동전, 실크, 책의 절반', `동전 ${C.formatNumber(keptCoins)}개 · 실크 ${C.formatNumber(keptGems)}개 · 책 ${C.formatNumber(keptKeys)}개 가져가요`, '모든 비법을 처음부터 배울 수 있어요', '보유 비둘기와 이번에 얻는 비둘기', '비둘기 강화의 모든 레벨', '이미 본 모든 엔딩 기록과 감탄한 관객의 기억', '소리 설정과 저장 기능']]
+      ['다시 쓰는 것', ['마술과 도우미를 제외한 일반 비법 레벨과 해금', '무대 진행과 초대장, 트로피', '관객 도감의 감탄 횟수, 추가 조건, 팬 기록', '공연 성공과 공연 종료 횟수, 샵 매니저 진행과 임시 버프', '보드와 케이스, 날아가는 아이템', '레벨, 경험치, 최고 액트 기록, 피날레, 자신감', '멘탈은 새 차원의 최대치로 회복하고 가족 거실에서 시작']],
+      ['남는 것', ['패드와 강화, 마술, 도우미, 쓰다 남은 소모품, 케이스 외형', `멘탈 회복 물약 ${state.potionCount}개 · 스킬 바로 충전 ${state.refillCount}개`, '차원 번호는 1 증가', '동전, 실크, 책의 절반', `동전 ${C.formatNumber(keptCoins)}개 · 실크 ${C.formatNumber(keptGems)}개 · 책 ${C.formatNumber(keptKeys)}개 가져가요`, '일반 비법은 처음부터 다시 배워요', '보유 비둘기와 이번에 얻는 비둘기', '비둘기 강화의 모든 레벨', '이미 본 모든 엔딩 기록과 감탄한 관객의 기억', '소리 설정과 저장 기능']]
     ]) {
       const section = element('section'); section.append(element('h3', title));
       const list = element('ul'); lines.forEach(line => list.append(element('li', line))); section.append(list); columns.append(section);

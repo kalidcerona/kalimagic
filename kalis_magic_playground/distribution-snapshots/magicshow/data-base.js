@@ -1,5 +1,5 @@
 // Release rule (common.md): bump only GAME_BUILD here for each release; keep save versions separate.
-const GAME_BUILD = '20 (11-01)';
+const GAME_BUILD = '22 (11-10)';
 /* GAME_DATA keys (content and tree metadata; effect formulas live in core):
  * title: string.
  * venues[16]: {id: display order, slug: stable identity, balanceRank, name, intro, palette:{bg1,bg2,accent},

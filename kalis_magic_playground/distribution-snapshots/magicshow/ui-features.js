@@ -76,9 +76,9 @@
   }
   function bestiary(keepScroll=0) {
     if (['boo','fail','dealer','headliner','ending','rebirth','bossPhase','curtain'].includes(menu)) return;
+    if (bestiaryTab === 'wardrobe') bestiaryTab = 'audiences';
     openPanel('bestiary', bestiaryTab === 'equip' ? '마술용품' : D.ui.bestiaryTitle);
-    panelTabs([['audiences','관객 도감'],['endings','엔딩 도감'],['achievements','업적'],['memories','추억'],['equip','마술용품'],['wardrobe','옷장']], bestiaryTab, tab => { bestiaryTab = tab; bestiary(); });
-    if (bestiaryTab === 'wardrobe') { wardrobeBody(); restorePanelScroll(keepScroll); return; }
+    panelTabs([['audiences','관객 도감'],['endings','엔딩 도감'],['achievements','업적'],['memories','추억'],['equip','마술용품']], bestiaryTab, tab => { bestiaryTab = tab; bestiary(); });
     if(bestiaryTab==='memories'){for(const v of D.venues.filter(v=>uiSave.memories[v.slug]))$('panelBody').append(action(uiSave.memories[v.slug].title,()=>openCurtainCall(v.slug,true)));return;}
     if (bestiaryTab === 'endings') { drawArchive(); return; }
     if (bestiaryTab === 'equip') { equipPanel(); return; }

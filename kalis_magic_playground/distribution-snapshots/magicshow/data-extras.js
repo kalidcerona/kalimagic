@@ -26,7 +26,6 @@ GAME_DATA.easyNodes = {
   "goldPity": "황금 케이스를 더 자주 만나요\n기다리는 시간 20초씩 줄기",
   "goldCoins": "황금 케이스에서 동전을 더 얻어요\n동전 20%씩 추가",
   "prepared": "새 케이스를 조금 열린 채 받아요\n열린 양 5%씩 추가",
-  "boxXP": "케이스가 더 빨리 자라요\n케이스 경험치 10%씩 추가",
   "boxShield": "개봉할 때 야유를 막을 힘을 얻어요\n자신감 0.02씩 · 멘탈의 힘 적용",
   "boxHeal": "개봉할 때 마음이 회복돼요\n회복 0.05씩 · 멘탈의 힘 적용",
   "mental": "야유를 더 오래 버텨요\n최대 멘탈 1.18배씩",
@@ -46,7 +45,11 @@ GAME_DATA.easyNodes = {
   "gemFind": "좋은 소품에서 실크도 얻어요\n실크 나올 기회 1%씩 추가",
   "equip": "좋아하는 소품이 더 잘 나와요\n소품 자리 3칸 열기",
   "slotPlus": "좋아하는 소품을 더 놓아요\n소품 자리 1칸 추가 · 최대 9칸",
-  "lessonBias": "케이스가 더 빨리 자라요\n경험치 10%씩 추가 · 최대 20%",
+  "boxXP": "은퇴한 케이스 비법",
+  "caseMax": "은퇴한 케이스 비법",
+  "caseXp": "은퇴한 케이스 비법",
+  "caseStart": "은퇴한 케이스 비법",
+  "lessonBias": "개봉할 때 마술사가 더 배워요\n마술사 경험치 10%씩 추가 · 최대 20%",
   "dove": "비둘기가 관객을 놀라게 해요\n3초마다 연출의 4배",
   "rabbit": "토끼가 동전을 가져다줘요\n5초마다 동전 받기",
   "flash": "개봉을 모아 관객을 놀라게 해요\n25개 열면 연출의 8배",
@@ -65,13 +68,10 @@ GAME_DATA.easyNodes = {
   "encorePower": "피버 타임에 관객을 더 신나게 해요\n실력 5%씩 추가",
   "encoreSpan": "앵콜의 힘이 더 오래 가요\n지속 시간 3초씩 추가",
   "challenge": "도전하며 관객을 더 잘 놀라게 해요\n도전 3개 · 성공마다 연출 0.5% 추가",
-  "starTrick": "케이스를 더 빨리 열고 관객을 더 빨리 감탄시켜요\n실력 1.14배 · 연출 1.4배씩",
+  "starTrick": "케이스를 더 빨리 열고 관객을 더 빨리 감탄시켜요\n실력 1.14배 · 연출 2.4배씩",
   "starGuard": "야유를 버티고 더 잘 회복해요\n멘탈 · 자신감 · 회복 1.18배씩",
   "starTempo": "더 자주 두드리고 빨리 채워져요\n두드리기 1.06배 · 준비 시간 8% 줄기",
   "starBounty": "동전을 더 많이 얻어요\n동전 1.12배씩",
-  "caseMax": "케이스가 더 높은 레벨로 자라요\n최대 레벨 1씩 추가 · 최대 50",
-  "caseStart": "새 케이스도 잘 자란 채 받아요\n시작 레벨 1씩 추가",
-  "caseXp": "케이스가 더 빨리 자라요\n경험치 15%씩 추가",
   "chain4": "열 때 옆 케이스도 두드려요\n옆 4방향 · 실력의 30%",
   "chain8": "대각선 케이스도 함께 두드려요\n주변 8방향",
   "chainPower": "옆 케이스를 더 세게 두드려요\n실력의 10%씩 추가",
@@ -109,7 +109,7 @@ GAME_DATA.easyNodes = {
 };
 
 // U31 colleague magicians (Plan.B): a small pet-branch group that performs tricks with Kali and cuts the audience's doubt.
-GAME_DATA.colleagueNames=['Waker','Level1','선휘재','전도현','박준현','조시훈'];
+GAME_DATA.colleagueNames=['박준현','전도현','조시훈','선휘재','Level1','Waker'];
 (function(D){
  const mk=(id,name,max,cost,currency,pre,x,y,desc,easy)=>{D.tree.push({id,name,max,cost,currency,prereqs:[pre],x,y,desc,branch:'pet',reveal:'N',icon:'node-assistant.png',emoji:'🎭',pending:false,u31:true});D.easyNodes[id]=easy;};
  mk('colleague','동료 마술사 합류',1,[2],'keys','boxHelper',-4,4,'동료 마술사 1명이 무대에 올라 몇 초마다 마술 피해','동료 마술사가 무대에 올라와요\n몇 초마다 함께 마술을 보여줘요');

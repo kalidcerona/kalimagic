@@ -1,255 +1,243 @@
 'use strict';
+  // Session presentation only. Nothing here is serialized into the game state.
+  const bookSession = { owner: null, tab: '시작', tabs: new Map(), revision: 0 };
+  function bookMemory(tab = bookSession.tab) {
+    if (!bookSession.tabs.has(tab)) bookSession.tabs.set(tab, { scroll: 0, selected: new Map(), expanded: new Set() });
+    return bookSession.tabs.get(tab);
+  }
+  function bookStageInfo(slot, id) {
+    return C.nodeInfo(state, id);
+  }
+
+  function bookPick(slot, memory) {
+    if (memory.selected.has(slot.slot)) return memory.selected.get(slot.slot);
+    const id = slot.ids.find(id => { const i = bookStageInfo(slot,id); return i.displayable && i.stageOpen !== false && i.cost !== null; }) || slot.ids[0];
+    memory.selected.set(slot.slot,id);
+    return id;
+  }
+  function bookRememberScroll(body, memory, revision) {
+    const top=memory.scroll,content=body.firstChild;
+    const restore=()=>{if(menu==='book'&&bookSession.revision===revision&&body.firstChild===content){const missing=top-(body.scrollHeight-body.clientHeight);if(missing>0){let space=body.querySelector('.book-return-space');if(!space){space=element('div','','book-return-space');space.setAttribute('aria-hidden','true');body.append(space);}space.style.height=((parseFloat(space.style.height)||0)+Math.ceil(missing))+'px';}body.scrollTop=top;}};
+    // Keep the requested position through late header/content reflow, until real input.
+    bookSession.stopRestore?.();
+    let cancelled=false;
+    const apply=()=>{if(!cancelled)restore();};
+    const inputs=['wheel','pointerdown','touchstart','keydown'];
+    let observer;
+    const stop=()=>{cancelled=true;observer?.disconnect();for(const name of inputs)body.removeEventListener?.(name,stop);body.removeEventListener?.('scroll',apply);};
+    bookSession.stopRestore=stop;
+    // Native scroll clamping/focus can run after the final resize notification.
+    body.addEventListener?.('scroll',apply,{passive:true});
+    for(const name of inputs)body.addEventListener?.(name,stop,{once:true,passive:true});
+    if(typeof ResizeObserver==='function'){
+      observer=new ResizeObserver(()=>{if(menu!=='book'||bookSession.revision!==revision||body.firstChild!==content)stop();else apply();});
+      observer.observe(body);if(content)observer.observe(content);
+      observer.observe($('panel').querySelector('header'));
+    }
+    apply();requestAnimationFrame(()=>{apply();requestAnimationFrame(apply);});
+  }
+  function bookTabs(host) {
+    const row = element('div','','book-tabs'); row.setAttribute('role','tablist'); row.setAttribute('aria-label','비법 분류');
+    const hint = element('small','','book-tabs-hint'); hint.setAttribute('aria-live','polite');
+    const update = () => {
+      if (menu !== 'book' || !row.isConnected) return;
+      const left = row.scrollLeft > 1, right = row.scrollWidth - row.clientWidth - row.scrollLeft > 1;
+      hint.textContent = left && right ? '← 앞뒤에 다른 분류가 있어요 →' : right ? '다른 분류가 더 있어요 →' : left ? '← 앞에 다른 분류가 있어요' : '';
+    };
+    D.bookLayout.tabs.forEach((tab,index) => {
+      const button = action(tab, () => { bookMemory().scroll=$('panelBody').scrollTop; bookSession.tab = tab; tree(); });
+      button.setAttribute('role','tab'); button.setAttribute('aria-selected',String(tab === bookSession.tab));
+      button.setAttribute('aria-controls','bookCards'); button.tabIndex = tab === bookSession.tab ? 0 : -1;
+      button.addEventListener('keydown',event => {
+        const delta = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0;
+        if (!delta && !['Home','End'].includes(event.key)) return;
+        event.preventDefault();
+        bookMemory().scroll=$('panelBody').scrollTop;
+        bookSession.tab = D.bookLayout.tabs[event.key === 'Home' ? 0 : event.key === 'End' ? D.bookLayout.tabs.length-1 : (index+delta+D.bookLayout.tabs.length)%D.bookLayout.tabs.length];
+        tree(); $('panel').querySelector('.book-tabs [aria-selected="true"]')?.focus({preventScroll:true});
+      });
+      row.append(button);
+    });
+    row.addEventListener('scroll',update); host.append(row,hint);
+    requestAnimationFrame(() => {
+      if (menu !== 'book' || !row.isConnected) return;
+      const selected=row.querySelector('[aria-selected="true"]');
+      if(selected){const r=selected.getBoundingClientRect(),host=row.getBoundingClientRect();
+        if(r.left<host.left)row.scrollLeft+=r.left-host.left;
+        else if(r.right>host.right)row.scrollLeft+=r.right-host.right;
+      }
+      update();
+    });
+    // ResizeObserver covers rotation, text zoom and panel width changes, and is retired on rebuild.
+    bookTabs.observer?.disconnect();
+    if (typeof ResizeObserver !== 'undefined') { bookTabs.observer = new ResizeObserver(update); bookTabs.observer.observe(row); }
+  }
+  // Labels describe the formula returned by Core, not projected combat DPS.
+  const bookValueLabels = {
+    wandDamage:'탭 힘', wandRate:'누르기 속도', performance:'연출력', mentalMax:'최대 멘탈',
+    coinMultiplier:'동전 배수', spawnMs:'케이스 생성 간격 (ms)', boardCapacity:'케이스 자리',
+    areaCols:'누르기 범위 가로', areaRows:'누르기 범위 세로',
+    equipSlots:'소품 장착 자리', helperSpeed:'도우미 속도 배수', fanCount:'팬 수',
+    colleagueCount:'동료 수', colleagueDamage:'동료 힘',
+    critRate:'대박률', critPower:'대박 힘 배수', comboMs:'연속 동작 유지 시간 (ms)',
+    sweep:'한곳 집중 배수', miss:'헛손질 확률', goldEvery:'황금 케이스 간격 (ms)',
+    goldCoins:'황금 케이스 동전 배수', prepared:'케이스 시작 피해 비율', boxXP:'개봉 시 마술사 경험치 배수', caseGradeFraction:'좋은 케이스 확률 성장', caseCoinBoost:'은색 이상 동전 배수', caseDmgBoost:'은색 이상 피해 배수',
+    boxShield:'개봉 자신감', boxHeal:'개봉 멘탈 회복', shieldRatio:'자신감 상한 비율',
+    shieldValue:'자신감 아이템 배수', healValue:'회복 아이템 배수', winHeal:'공연 완료 회복 비율',
+    levelHeal:'레벨업 회복 비율', openingShield:'공연 시작 자신감 비율', calm:'야유 피해 배수',
+    tip:'공연 완료 동전 배수', dealerCoin:'딜러 동전 배수', jackpot:'슬롯 보상 배수',
+    gemFind:'실크 발견 확률', doveEvery:'비둘기 동작 간격 (ms)', dovePower:'비둘기 힘 배수',
+    rabbitEvery:'토끼 동작 간격 (ms)', rabbitCoins:'토끼 동전', helperEvery:'팬 동작 간격 (ms)',
+    colleagueEvery:'동료 동작 간격 (ms)', finalePower:'피날레 힘 배수', finaleNeed:'피날레 필요 개봉 수',
+    comboValue:'연속 동작 보상 배수', encorePower:'앙코르 추가 힘 비율', encoreSpan:'앙코르 시간 (ms)'
+  };
+  function bookNumber(value) {
+    return Number.isFinite(value) ? value.toLocaleString('ko-KR',{maximumSignificantDigits:6}) : '계산 불가';
+  }
+  function bookGrowth(id) {
+    const preview = C.treePreview(state,id,1), host = element('div','','tree-preview book-growth');
+    host.setAttribute('aria-label','1회 구매 미리보기');
+    const costs = Object.entries(preview.spent).filter(([,value])=>value>0)
+      .map(([key,value])=>`${{coins:'동전',keys:'책',starlight:'비둘기',gems:'실크'}[key]} ${bookNumber(value)}`);
+    host.append(element('p',`구매 ${preview.count}회 · 총가격 ${costs.join(' · ') || '0'}`));
+    const changes = Object.entries(preview.changes);
+    if (!changes.length) host.append(element('p',preview.count ? '이번 구매로 표시 수식의 변화는 없어요.' : '구매 전후 수식 변화 0'));
+    for (const [key,change] of changes) {
+      const label = key.startsWith('branch.') ? `${{hand:'표현력',box:'케이스',heart:'마음가짐',luck:'동전',pet:'도우미',finale:'피날레',collection:'컬렉션',star:'귀환 성장'}[key.slice(7)]} 가지 배수` : bookValueLabels[key.replace(/^effects\./,'')];
+      const delta = `${change.delta>0?'+':''}${bookNumber(change.delta)}`;
+      const percent = change.percent === null ? '기준값 0 · 변화율 계산 안 함' : `${change.percent>0?'+':''}${bookNumber(change.percent)}%`;
+      const row = element('p',`${label}: 현재 ${bookNumber(change.before)} → 구매 후 ${bookNumber(change.after)} · 변화 ${delta} (${percent})`);
+      row.dataset.formula = key; host.append(row);
+    }
+    return host;
+  }
+  // A failed write keeps ownership; retry the same state without another charge.
+  const helperOpening = { owner: null, busy: false, pending: false };
+  function openHelperShop() {
+    if (helperOpening.owner !== state) Object.assign(helperOpening,{owner:state,busy:false,pending:false});
+    if (helperOpening.busy) return;
+    helperOpening.busy = true;
+    try {
+      if (!helperOpening.pending) {
+        if (!C.buyNode(state,'autoLearn')) return;
+        helperOpening.pending = true;
+      }
+      if (!save()) { tree(); render(); panelStatus('저장하지 못했어요. 저장을 다시 시도해 주세요.'); return; }
+      helperOpening.pending = false;
+      sound('learn'); render(); shopFocus('helpers'); gemShop();
+      panelStatus('도우미 상점이 열렸어요 · 어시스턴트 무료 합류 · 다음은 팬 · 동네 카페 · 실크 10개');
+    } finally { helperOpening.busy = false; }
+  }
+  function bookDetail(slot, id, memory) {
+    const node = D.tree.find(n => n.id === id), info = bookStageInfo(slot,id);
+    const detail = element('div','','book-detail'); detail.id = `book-detail-${slot.slot}`;
+    detail.append(element('h3',node.name),element('p',node.desc,'tree-effect'));
+    if ((node.partOf || id) === 'area') detail.append(areaRangePreview());
+    detail.append(element('p',`레벨 ${C.formatNumber(info.level)} / ${C.formatNumber(info.max)}`,'tree-level'));
+    if (node.statMilestone) {
+      const next = C.nextMilestone(info.total,[10,25],info.totalMax);
+      detail.append(element('p',next ? `다음 2배: 전체 레벨 ${next} · ${next-info.total}레벨 남음` : `지금 힘 ${C.statMultiplier(state,node.partOf||id)}배`,'tree-next'),element('p',D.easyExtras.milestone,'tree-preview'));
+    }
+    if (info.stageOpen !== false) detail.append(bookGrowth(id));
+    if (id === 'autoLearn') {
+      const retry = helperOpening.owner === state && helperOpening.pending;
+      detail.append(element('p',D.bookLayout.helperShop.nextGoodsNote));
+      if (!C.helperShopOpen(state) || retry) {
+        const buy = action(retry ? '저장 다시 시도 · 추가 차감 없음' : '상점 열기 · 책 2권 · 어시스턴트 무료',openHelperShop,!retry && !info.purchasable);
+        buy.classList.add('tree-cost','tree-buy'); detail.append(buy);
+        if (info.blockedReason && !retry) detail.append(element('p',info.blockedReason,'tree-reason'));
+        return detail;
+      }
+    }
+    if (id === 'autoLearn' && C.helperShopOpen(state)) {
+      detail.append(action('도우미 상점으로 · 무료 · 성장 0', () => { shopFocus('helpers'); gemShop(); }));
+      return detail;
+    }
+    const currency = {coins:'동전',keys:'책',starlight:'비둘기'}[info.currency];
+    if (info.cost === null) detail.append(element('strong','✓ MAX · 완성했어요','tree-cost'));
+    else {
+      const buy = action(`${currency} ${C.formatNumber(info.cost)} · 배우기`, () => {
+        const current = bookStageInfo(slot,id); if (!current.purchasable) return;
+        memory.scroll=$('panelBody').scrollTop;
+        const paid = state[info.currency]; if (!C.buyNode(state,id)) return;
+        if(newTutorialLesson()&&chainMark()?.step==='upgrade-play'&&id===chainNodeId&&!state.u15.bios.includes('lesson:bought'))state.u15.bios.push('lesson:bought');
+        tutorialSignal('learn'); sound('learn'); save(); tree(); render(); learnedMoment(id,info.currency,paid);
+      }, !info.purchasable);
+      buy.classList.add('tree-cost', 'tree-buy'); buy.type = 'button';
+      buy.setAttribute('aria-label',`배우기, ${currency} ${C.formatNumber(info.cost)}`); detail.append(buy);
+      if (info.blockedReason) detail.append(element('p',info.blockedReason,'tree-reason'));
+      if (info.gate && !info.gate.met && info.gate.text !== info.blockedReason) detail.append(element('p',info.gate.text,'tree-gate'));
+    }
+    return detail;
+  }
   function tree(focusMap = false) {
+    if (bookSession.owner !== state) {
+      bookSession.owner = state; bookSession.tab = '시작'; bookSession.tabs.clear();
+    }
     const practice = typeof failure !== 'undefined' && failure !== null;
-    const opening = menu !== 'book';
-    if (opening) openPanel('book', practice ? D.ui.practiceTitle : D.ui.bookTitle);
-    if (practice) $('panel').dataset.practice = '1'; else delete $('panel').dataset.practice;
-    const body = $('panelBody'), keepScroll=opening?0:body.scrollTop, detailScroll=opening?0:body.querySelector('.constellation-detail')?.scrollTop||0; body.replaceChildren();
-    if(state.batchD.twist.trace)body.append(element('p','📖 트레이스 · 흔들리지 않는 마음: 숨겨진 마술 피해 90% 감소, 멘탈은 최소 1 남아요.','batch-d-note'));
-    // v4 U47 10: no learn-all and no auto-learn button (the player picks 비법 one by one after a failure).
-    const header = $('panel').querySelector('header');
-    header.querySelectorAll('.tree-learning,.practice-go').forEach(el=>el.remove());
-    if (practice && !(newTutorialLesson()&&!state.u15.bios.includes('lesson:bought'))) { const go = action(practiceGoLabel(), restartAfterFailure); go.classList.add('practice-go','u26-primary'); header.insertBefore(go,$('closePanel')); }
-    const wallet = element('div', '', 'tree-wallet');
+    if (menu !== 'book') openPanel('book',practice ? D.ui.practiceTitle : D.ui.bookTitle);
+    const panel = $('panel'), header = panel.querySelector('header'), body = $('panelBody');
+    if (practice) panel.dataset.practice = '1'; else delete panel.dataset.practice;
+    header.querySelectorAll('.tree-wallet,.tree-learning,.practice-go,.book-navigation').forEach(el=>el.remove());
+    body.replaceChildren();
+    if (practice && !(newTutorialLesson()&&!state.u15.bios.includes('lesson:bought'))) {
+      const go = action(practiceGoLabel(),restartAfterFailure); go.classList.add('practice-go','u26-primary'); header.insertBefore(go,$('closePanel'));
+    }
+    const wallet = element('div','','tree-wallet');
     [['🪙 ','동전 ',rounded(state.coins)],['📕 ','책 ',state.keys],['🕊️ ','비둘기 ',state.starlight]].forEach(([icon,name,value],i)=>{
       if(i)wallet.append(element('span','·','wallet-sep'));
       wallet.append(element('span',icon),element('span',name,'wallet-name'),element('span',String(value)));
     });
-    const layout = element('div', '', 'constellation-layout');
-    const map = element('div', '', 'constellation-map'); map.tabIndex = 0;
-    map.setAttribute('aria-label', '별자리 지도. 방향키로 이동하고 더하기와 빼기로 확대합니다.');
-    const world = element('div', '', 'constellation-world');
-    const detail = element('aside', '', 'constellation-detail'); detail.setAttribute('aria-live', 'polite');
-    const minTreeZoom=Math.max(.8,44/(56*(scale||1)));
-    treeView.zoom=Math.max(minTreeZoom,treeView.zoom);
-    const infos = new Map(D.tree.map(n => {const info=C.nodeInfo(state,n.id);return [n.id,{...info,revealed:info.displayable}];}));
-    const nodeStatus=(node,info)=>{
-      const maxed=info.revealed&&info.cost===null;
-      const shortage=!!info.revealed&&/ 부족$/.test(info.blockedReason||'');
-      const missing=Math.max(0,(info.cost||0)-(state[info.currency]||0));
-      const currency={coins:'동전',keys:'책',starlight:'비둘기'}[info.currency];
-      const pre=node.prereqs.find(id=>!(infos.get(id)?.level>0));
-      const requirement=node.reveal==='E'&&!state.endings.length?'첫 멀티버스 완료':pre&&node.branch!=='collection'?(D.tree.find(n=>n.id===pre).short||D.tree.find(n=>n.id===pre).name)+' 배우기':info.blockedReason==='아직 발견하지 못한 비법'?(node.venueSlug?C.venueBySlug(node.venueSlug).name+' 도착':'이웃 비법 배우기'):info.blockedReason;
-      const kind=maxed?'maxed':info.purchasable?'learnable':shortage?'unaffordable':'locked';
-      const text=maxed?'MAX':kind==='locked'?requirement:`${currency} ${C.formatNumber(info.cost)}`;
-      return {kind,text,missing,currency};
-    };
-    const shown = new Set(D.tree.filter(n => !n.shopOnly && !infos.get(n.id).bookHidden && n.id !== 'autoLearn' /* v4 U47 10: retired node, never drawn */ && (infos.get(n.id).revealed ||(!n.hidden && (n.reveal === 'E' || n.prereqs.some(id => infos.get(id).revealed))))).map(n => n.id));
-    const centerUnlocked = () => {
-      const nodes = D.tree.filter(n => shown.has(n.id) && infos.get(n.id).revealed && (!infos.get(n.id).gate || infos.get(n.id).gate.met));
-      treeView.x = -(Math.min(...nodes.map(n=>n.x)) + Math.max(...nodes.map(n=>n.x))) * 70 * treeView.zoom;
-      treeView.y = -(Math.min(...nodes.map(n=>n.y)) + Math.max(...nodes.map(n=>n.y))) * 70 * treeView.zoom;
-    };
-    if (opening) treeView.sheet = false;
-    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); svg.classList.add('constellation-lines');
-    // g2d book combs: four display-only arm plates (not nodes, not saved) and bus lines, the same model as .runs-v5/g2/g2d/geometry.cjs.
-    const bookArm = p => p.y < 0 && -p.y > Math.abs(p.x) ? 'up' : p.y > 0 && p.y > Math.abs(p.x) ? 'down' : p.x < 0 ? 'left' : 'right';
-    const bookDepth = (arm, p) => arm === 'up' ? -p.y : arm === 'down' ? p.y : arm === 'left' ? -p.x : p.x;
-    const bookLat = (arm, p) => arm === 'up' || arm === 'down' ? p.x : p.y;
-    const bookAt = (arm, d, l) => arm === 'up' ? { x: l, y: -d } : arm === 'down' ? { x: l, y: d } : arm === 'left' ? { x: -d, y: l } : { x: d, y: l };
-    const bookKids = id => D.tree.filter(n => !n.shopOnly && n.id !== 'autoLearn' && n.prereqs.includes(id)).length;
-    const combKids = {};
-    const bookPath = (a, b, owned) => {
-      const path = document.createElementNS(svg.namespaceURI, 'path');
-      path.setAttribute('d', `M${a.x * 140} ${a.y * 140}L${b.x * 140} ${b.y * 140}`);
-      path.setAttribute('fill', 'none'); path.setAttribute('stroke-width', '3'); path.setAttribute('stroke-linecap', 'square');
-      path.style.stroke = owned ? 'var(--ok, #70de88)' : '#4A4062';
-      path.classList.add('book-comb'); svg.append(path);
-    };
-    const bookComb = (arm, from, kids) => {
-      const P = from.id === 'root' ? bookAt(arm, 2, 0) : from, d0 = bookDepth(arm, P), l0 = bookLat(arm, P), owned = kids.some(n => infos.get(n.id).level > 0);
-      if (from.id === 'root') bookPath({ x: 0, y: 0 }, P, owned);
-      bookPath(P, bookAt(arm, d0 + .5, l0), owned);
-      const lats = kids.map(n => bookLat(arm, n)), lo = Math.min(l0, ...lats), hi = Math.max(l0, ...lats);
-      const busDepth = l => from.id === 'root' ? Math.max(d0 + .5, Math.floor(Math.abs(l) / 2) * 2 + .5) : d0 + .5;
-      const stops = [...new Set([lo, hi, l0, ...lats, ...Array.from({ length: hi - lo + 1 }, (_, i) => lo + i)])].sort((a, b) => a - b);
-      for (let i = 1; i < stops.length; i++) bookPath(bookAt(arm, busDepth(stops[i - 1]), stops[i - 1]), bookAt(arm, busDepth(stops[i]), stops[i]), owned);
-      for (const n of kids) bookPath(bookAt(arm, busDepth(bookLat(arm, n)), bookLat(arm, n)), n, infos.get(n.id).level > 0);
-      if (from.id === 'root') {
-        const plate = element('span', { up: '탭 힘', left: 'HP', down: '특수 기술', right: '버프' }[arm], 'book-arm-plate');
-        plate.setAttribute('aria-hidden', 'true');
-        Object.assign(plate.style, { position: 'absolute', left: `${P.x * 140}px`, top: `${P.y * 140}px`, transform: 'translate(-50%,-50%)', padding: '6px 14px', background: '#161b30', border: '3px solid #777e98', boxShadow: '0 3px 0 #100D16', color: '#fff', fontSize: '22px', lineHeight: '1.2', whiteSpace: 'nowrap', pointerEvents: 'none', zIndex: '1' });
-        world.append(plate);
+    header.insertBefore(wallet,$('closePanel')); $('closePanel').textContent = '뒤로';
+    const navigation = element('nav','','book-navigation tree-learning'); bookTabs(navigation); header.insertBefore(navigation,$('closePanel'));
+    const memory = bookMemory(), revision = ++bookSession.revision;
+    const cards = element('div','','book-cards'); cards.id = 'bookCards'; cards.setAttribute('role','tabpanel'); cards.setAttribute('aria-label',bookSession.tab);
+    // Fixed contract order, including locked placeholders. Wallet changes never reorder cards.
+    for (const slot of D.bookLayout.slots.filter(slot => slot.tab === bookSession.tab)) {
+      const id = bookPick(slot,memory), info = bookStageInfo(slot,id);
+      const card = element('section','','book-card'); card.dataset.slot = String(slot.slot);
+      const known = slot.ids.some(stage => C.nodeInfo(state,stage).displayable) && (!slot.visibleAfterHire || state.tree[slot.visibleAfterHire] > 0);
+      const toggle = action(known ? `${slot.slot}. ${slot.name}` : `${slot.slot}. 미확인 비법`, () => {
+        memory.scroll=$('panelBody').scrollTop;
+        if (memory.expanded.has(slot.slot)) memory.expanded.delete(slot.slot); else memory.expanded.add(slot.slot);
+        tree();
+      });
+      toggle.classList.add('book-card-toggle','constellation-node'); toggle.dataset.nodeId = id;
+      toggle.setAttribute('aria-expanded',String(memory.expanded.has(slot.slot))); toggle.setAttribute('aria-controls',`book-detail-${slot.slot}`);
+      if (practice && slot.ids.includes(practiceRec) && C.nodeInfo(state,practiceRec).cost !== null) toggle.append(element('span','추천','rec-tag'));
+      card.append(toggle);
+      const status = info.cost === null ? 'MAX' : info.purchasable ? '배울 수 있어요' : info.blockedReason;
+      card.append(element('p',known ? status : slot.visibleAfterHire ? '도우미 합류 후 확인해요' : '앞선 비법을 배워 확인해요','book-card-status'));
+      if (memory.expanded.has(slot.slot)) {
+        if (known) {
+          const stages = element('div','','book-stages'); stages.setAttribute('aria-label',`${slot.name} 단계`);
+          slot.ids.forEach((stage,index) => {
+            const si = bookStageInfo(slot,stage);
+            const available = si.displayable && si.stageOpen !== false;
+            const button = action(`${index+1}. ${D.tree.find(n=>n.id===stage).name}`, () => { memory.scroll=$('panelBody').scrollTop; memory.selected.set(slot.slot,stage); tree(); },!available);
+            button.setAttribute('aria-pressed',String(stage===id)); button.dataset.stage = stage; stages.append(button);
+          });
+          const detail = info.displayable ? bookDetail(slot,id,memory) : element('div','아직 발견하지 못한 비법이에요.','book-detail');
+          detail.id = `book-detail-${slot.slot}`; detail.prepend(stages); card.append(detail);
+        } else { const detail = element('p','아직 발견하지 못한 비법이에요.','book-detail'); detail.id = `book-detail-${slot.slot}`; card.append(detail); }
       }
-    };
-    for (const node of D.tree) {
-      if (!shown.has(node.id)) continue;
-      for (const id of node.prereqs) {
-        if (!shown.has(id) || (!infos.get(node.id).revealed && !infos.get(id).revealed) || (node.reveal === 'E' && !infos.get(node.id).revealed)) continue;
-        const pre = D.tree.find(n => n.id === id);
-        // g2d: root children and the children of a parent with more than 3 children hang from a comb; only revealed ones extend it.
-        if (id === 'root' || (bookKids(id) > 3 && bookDepth(bookArm(pre), node) >= bookDepth(bookArm(pre), pre) + 1)) { if (infos.get(node.id).revealed) (combKids[id] = combKids[id] || []).push(node); continue; }
-        if (Math.hypot(pre.x-node.x, pre.y-node.y) > 2.1) continue;
-        const line = document.createElementNS(svg.namespaceURI, 'line');
-        for (const [key, value] of Object.entries({ x1: pre.x * 140, y1: pre.y * 140, x2: node.x * 140, y2: node.y * 140 })) line.setAttribute(key, value);
-        line.classList.toggle('owned', infos.get(node.id).level > 0); svg.append(line);
+      cards.append(card);
+    }
+    if(state.batchD.twist.trace)body.append(element('p','📖 트레이스 · 흔들리지 않는 마음: 숨겨진 마술 피해 90% 감소, 멘탈은 최소 1 남아요.','batch-d-note'));
+    body.append(cards);
+    // A single handler reads the current tab; detached callbacks cannot scroll another panel.
+    body.onscroll = () => { if (menu === 'book' && bookSession.revision === revision) memory.scroll = body.scrollTop; };
+    bookRememberScroll(body,memory,revision);
+    if (focusMap) {
+      // Moving to the focused card is a deliberate scroll. The restore guard would undo it back to the old position.
+      bookSession.stopRestore?.();
+      const target = body.querySelector(`[data-node-id="${treeView.selected}"]`);
+      if(target){const r=target.getBoundingClientRect(),host=body.getBoundingClientRect();
+        if(r.top<host.top)body.scrollTop+=r.top-host.top;
+        else if(r.bottom>host.bottom)body.scrollTop+=r.bottom-host.bottom;
+        target.focus({preventScroll:true});
       }
     }
-    for (const [id, kids] of Object.entries(combKids)) {
-      if (id === 'root') { for (const arm of ['up', 'left', 'down', 'right']) { const k = kids.filter(n => bookArm(n) === arm); if (k.length) bookComb(arm, { id: 'root' }, k); } }
-      else { const pre = D.tree.find(n => n.id === id); bookComb(bookArm(pre), pre, kids); }
-    }
-    world.append(svg);
-    let suppressClick = false;
-    const select = id => {
-      const now = performance.now(), last = treeView.lastTap;
-      treeView.lastTap = {id, at: now}; treeView.selected = id; treeView.sheet = true;
-      if (last && last.id === id && now-last.at < 350) { focusNode(id); return; }
-      tree(true);
-    };
-    const newly = new Set();
-    for (const node of D.tree) {
-      const info = infos.get(node.id);
-      if (info.revealed && treeView.ready && !treeView.revealed.has(node.id)) newly.add(node.id);
-      if (!shown.has(node.id)) continue;
-      const unknown = !info.revealed,status=nodeStatus(node,info);
-      const button = element('button', '', `constellation-node${node.branch === 'collection' ? ' collection' : ''}${unknown ? ' unknown' : ''}${info.level ? ' owned' : ''}${treeView.selected === node.id ? ' selected' : ''}${newly.has(node.id) ? ' newly-revealed' : ''}`);
-      button.dataset.nodeId = node.id;button.dataset.state=status.kind;button.classList.add(status.kind);
-      button.setAttribute('aria-pressed',String(treeView.selected===node.id));button.title=status.text;
-      button.style.left = `${node.x * 140}px`; button.style.top = `${node.y * 140}px`;
-      button.setAttribute('aria-label', unknown ? (node.reveal === 'E' ? '첫 멀티버스 공연 완료' : '미확인 비법') : `${node.name} 레벨 ${C.formatNumber(info.level)} / ${typeof info.max==='number' ? C.formatNumber(info.max) : info.max}`);
-      button.setAttribute('aria-label',button.getAttribute('aria-label')+' · '+status.text+(status.kind==='unaffordable'?' · '+C.formatNumber(status.missing)+' 부족':''));
-      const icon = element('span', unknown ? '❔' : node.emoji, 'constellation-icon sprite-fallback');
-      const iconHost = element('span', '', 'constellation-icon-host'); iconHost.append(icon);
-      sprite(iconHost, `assets/${unknown ? 'node-unknown.png' : node.icon}`);
-      button.append(iconHost);
-      if (practice && !unknown && node.id === practiceRec && infos.get(node.id).cost !== null) button.append(element('span', '추천', 'rec-tag'));
-      if (!unknown) button.append(element('span', node.short || node.name /* v4 U45: long product names use a map label */, 'constellation-name'), element('small', `${C.formatNumber(info.level)} / ${typeof info.max==='number' ? C.formatNumber(info.max) : info.max}`, 'constellation-level'));
-      const badge=status.kind==='maxed'?'MAX':status.kind==='locked'?'🔒':status.kind==='learnable'?'↑':info.level?'✓':'';
-      if(badge)button.append(element('span',badge,'node-state-badge'));
-      if(info.level&&status.kind!=='maxed')button.append(element('span','✓','node-learned'));
-      button.append(element('span',status.text,'node-status'));
-      if(status.kind==='unaffordable')button.append(element('small',status.currency+' '+C.formatNumber(status.missing)+' 부족','node-missing'));
-      button.addEventListener('click', () => { if (!suppressClick) select(node.id); }); world.append(button);
-    }
-    treeView.revealed = new Set(D.tree.filter(n => infos.get(n.id).revealed).map(n => n.id)); treeView.ready = true;
-    const selected = D.tree.find(n => n.id === treeView.selected) || D.tree[0], info = infos.get(selected.id);
-    if (!info.revealed) {
-      detail.append(element('h2', '미확인 비법'), element('p', selected.reveal === 'E' ? '첫 멀티버스 공연 완료' : '이웃 비법을 배워 발견하세요.'));
-    } else {
-      // v4 U45: one reading order. Name with the level chip, the effect (first line) and its step (second line), the next milestone,
-      // then the price and, only when something blocks it, the reason. The arrival line is part of the reason now (it was shown twice).
-      const maxed = info.cost === null;
-      detail.append(element('h2', selected.name), element('span', `레벨 ${C.formatNumber(info.level)} / ${typeof info.max==='number' ? C.formatNumber(info.max) : info.max}`, 'tree-level'));
-      if (selected.branch === 'collection') detail.append(element('small', '칼리 컬렉션', 'tree-tag'));
-      detail.append(element('p', selected.desc, 'tree-effect'));
-      if ((selected.partOf || selected.id) === 'area') detail.append(areaRangePreview());
-      // v4 U48 N5: a routine 비법 shows its trick (frame 2 of the routine strip) at a readable size, so the player knows which trick it is.
-      if (selected.routine) { const art = element('div', '', 'tree-routine-art'); art.style.backgroundImage = `url('${assetUrl(`assets/routine-${selected.routine}.png`)}')`; art.setAttribute('role', 'img'); art.setAttribute('aria-label', selected.name); detail.append(art); }
-      // v4 U48 C: milestones count the total level of a split node (part II of 무대 배짱 continues at 11).
-      if(selected.statMilestone){const next=C.nextMilestone(info.total,[10,25],info.totalMax);const label=selected.partOf||selected.levels?'전체 레벨':'레벨';detail.append(element('p',next ? `다음 2배: ${label} ${next} · ${next-info.total}레벨 남음` : `지금 힘 ${C.statMultiplier(state,selected.partOf||selected.id)}배`,'tree-next'),element('p', D.easyExtras.milestone, 'tree-preview'));}
-      if (selected.desc.includes('L')) detail.append(element('small', 'L은 이 비법의 레벨입니다.', 'tree-note-l'));
-      const currency = { coins: '🪙 동전', keys: '📕 책', starlight: '🕊️ 비둘기' }[info.currency];
-      const status=nodeStatus(selected,info);
-      detail.dataset.state=status.kind;
-      if (maxed) detail.append(element('strong', '✓ MAX · 완성했어요', 'tree-cost'));
-      else {
-        const buy = action(`${currency} ${C.formatNumber(info.cost)}`, () => {
-          const paid = state[info.currency];
-          if (!C.buyNode(state, selected.id)) return;
-          if(newTutorialLesson()&&chainMark()?.step==='upgrade-play'&&selected.id===chainNodeId&&!state.u15.bios.includes('lesson:bought'))state.u15.bios.push('lesson:bought');
-          // s4e2 G: the answer comes inside the 비법서 (node pop, rising tone, wallet counting down); no late toast after closing.
-          tutorialSignal('learn'); sound('learn'); save(); tree(); render(); learnedMoment(selected.id, info.currency, paid);
-        }, !info.purchasable);
-        buy.classList.add('tree-cost', 'tree-buy');
-        buy.type = 'button';
-        buy.setAttribute('aria-label', `배우기, ${status.currency} ${C.formatNumber(info.cost)}`);
-        detail.append(buy);
-      }
-      if(status.kind==='unaffordable')detail.append(element('p',`${status.currency} ${C.formatNumber(status.missing)} 부족`,'tree-missing'));
-      if (!maxed && info.blockedReason) detail.append(element('p', info.blockedReason, 'tree-reason'));
-      if (info.gate) detail.append(element('p', info.gate.text, 'tree-gate'));
-    }
-    if (typeof phone !== 'undefined' && phone) {
-      detail.hidden = !treeView.sheet;
-      const dismiss = action('상세 닫기', () => { treeView.sheet = false; detail.hidden = true; transform(); }); // fixP 4: the map widens in landscape, so re-centre it
-      dismiss.classList.add('tree-detail-dismiss'); detail.prepend(dismiss);
-    }
-    const transform = () => { world.style.transform = `translate(${map.clientWidth / 2 + treeView.x}px,${map.clientHeight / 2 + treeView.y}px) scale(${treeView.zoom})`; };
-    const zoom = (factor, point = { x: map.clientWidth / 2, y: map.clientHeight / 2 }) => {
-      const z = Math.max(minTreeZoom, Math.min(Math.max(1.8,minTreeZoom), treeView.zoom * factor)), ratio = z / treeView.zoom;
-      treeView.x = point.x - map.clientWidth / 2 - (point.x - map.clientWidth / 2 - treeView.x) * ratio;
-      treeView.y = point.y - map.clientHeight / 2 - (point.y - map.clientHeight / 2 - treeView.y) * ratio;
-      treeView.zoom = z; transform();
-    };
-    const controls = element('div', '', 'constellation-controls');
-    controls.append(action('− 축소', () => zoom(1 / 1.2)), action('+ 확대', () => zoom(1.2)), action('중앙으로', () => { treeView.zoom = Math.max(1,minTreeZoom); centerUnlocked(); transform(); }));
-    const local = e => { const r = map.getBoundingClientRect(); return { x: (e.clientX - r.left) * map.clientWidth / r.width, y: (e.clientY - r.top) * map.clientHeight / r.height }; };
-    const pointers = new Map(); let drag = null;
-    map.addEventListener('pointerdown', e => {
-      if (e.button !== 0) return;
-      const point = local(e); pointers.set(e.pointerId, point);
-      drag = { point, x: treeView.x, y: treeView.y, moved: false }; suppressClick = false;
-      map.setPointerCapture(e.pointerId); map.focus({ preventScroll: true });
-    });
-    map.addEventListener('pointermove', e => {
-      if (!pointers.has(e.pointerId)) return;
-      const point = local(e), previous = pointers.get(e.pointerId);
-      if (pointers.size === 2) {
-        const other = [...pointers.entries()].find(([id]) => id !== e.pointerId)[1];
-        const oldDistance = Math.hypot(previous.x - other.x, previous.y - other.y);
-        if (oldDistance > 0) zoom(Math.hypot(point.x - other.x, point.y - other.y) / oldDistance, { x: (point.x + other.x) / 2, y: (point.y + other.y) / 2 });
-        suppressClick = true; drag.moved = true;
-      } else if (drag) {
-        const dx = point.x - drag.point.x, dy = point.y - drag.point.y;
-        if (Math.hypot(dx, dy) > 4) drag.moved = true;
-        if (drag.moved) { treeView.x = drag.x + dx; treeView.y = drag.y + dy; suppressClick = true; transform(); }
-      }
-      pointers.set(e.pointerId, point);
-    });
-    const release = e => {
-      // Pointer capture targets clicks at the viewport, so resolve a stationary node tap here.
-      if (drag && !drag.moved && e.type === 'pointerup') {
-        const target = document.elementFromPoint(e.clientX, e.clientY)?.closest('.constellation-node');
-        if (target && map.contains(target)) { suppressClick = true; select(target.dataset.nodeId); }
-      }
-      pointers.delete(e.pointerId);
-      if (pointers.size) { const point = [...pointers.values()][0]; drag = { point, x: treeView.x, y: treeView.y, moved: true }; } else drag = null;
-    };
-    map.addEventListener('pointerup', release); map.addEventListener('pointercancel', release);
-    map.addEventListener('wheel', e => { e.preventDefault(); zoom(e.deltaY < 0 ? 1.1 : 1 / 1.1, local(e)); }, { passive: false });
-    map.addEventListener('keydown', e => {
-      if (['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','+','=','-','Home'].includes(e.key)) e.preventDefault(); else return;
-      if (e.key === '+' || e.key === '=') zoom(1.2);
-      else if (e.key === '-') zoom(1 / 1.2);
-      else if (e.key === 'Home') { treeView.x = 0; treeView.y = 0; transform(); }
-      else { treeView.x += e.key === 'ArrowLeft' ? 70 : e.key === 'ArrowRight' ? -70 : 0; treeView.y += e.key === 'ArrowUp' ? 70 : e.key === 'ArrowDown' ? -70 : 0; transform(); }
-    });
-    map.append(world); layout.append(map, detail); body.append(wallet, controls, layout, element('p', '드래그·방향키로 이동 · 휠·두 손가락으로 확대 · 책은 관객 도감 완성으로 얻어요.', 'tree-note'));
-    // v4 U51 4 (owner: "야유 받아넘기기 배우기 라는게 계속 뜨는데 이거 없애줘"): the practice note no longer offers the gate lesson. Core keeps the
-    // mechanic untouched (a save that already studied a gate keeps it; a gate also loses a third of its pressure per failed show, v4 U41).
-    if (typeof phone !== 'undefined' && phone) {
-      const header = $('panel').querySelector('header');
-      header.querySelectorAll('.tree-wallet,.constellation-controls,.tree-more').forEach(el=>el.remove());
-      header.insertBefore(wallet,$('closePanel'));
-      // U32: rarely used buttons (zoom, center; the auto-learn button went away in v4 U47) sit behind one ⋯ button so the header stays calm.
-      const more = element('div','','tree-more'), pop = element('div','','tree-more-pop');
-      const toggle = action('지도', () => { const open = more.classList.toggle('open'); toggle.setAttribute('aria-expanded', String(open)); });
-      toggle.classList.add('tree-more-toggle'); toggle.setAttribute('aria-label','지도 확대와 이동'); toggle.setAttribute('aria-expanded','false');
-      pop.append(controls); more.append(toggle, pop);
-      header.insertBefore(more,$('closePanel'));
-      $('closePanel').textContent = '뒤로';
-    }
-    if (treeView.centerPending) {
-      // Keep the centered node in the visible map above the phone sheet.
-      if (typeof phone !== 'undefined' && phone && treeView.sheet && (portraitLayout() || document.body.classList.contains('tablet'))) treeView.y -= (detail.getBoundingClientRect().height + 6) / 2; // fixP 4: the landscape phone detail is a side column, not a sheet over the map
-      treeView.centerPending = false;
-    }
-    if (opening) {
-      const nodes = D.tree.filter(n => shown.has(n.id) && infos.get(n.id).revealed && (!infos.get(n.id).gate || infos.get(n.id).gate.met));
-      const reach = axis => Math.max(...nodes.map(n => Math.abs(n[axis]))) * 140;
-      treeView.zoom = Math.min(1, (map.clientWidth - 20) / (reach('x') * 2 + 140), (map.clientHeight - 20) / (reach('y') * 2 + 140));
-      treeView.zoom = Math.max(minTreeZoom, treeView.zoom);
-      treeView.x = 0; treeView.y = 0;
-    }
-    transform();
-    // fixP 4: in phone landscape the side column narrows the map; a tapped node that would fall behind it is brought back to the map's middle.
-    if (typeof phone !== 'undefined' && phone && treeView.sheet && !portraitLayout() && !document.body.classList.contains('tablet')) {
-      const picked = world.querySelector('.constellation-node.selected'), m = map.getBoundingClientRect(), r = picked && picked.getBoundingClientRect();
-      if (r && (r.left < m.left || r.right > m.right)) { treeView.x += (m.left + m.width / 2) - (r.left + r.width / 2); transform(); }
-    }
-    restorePanelScroll(keepScroll);restorePanelScroll(detailScroll,detail);
-    if (focusMap) (detail.querySelector('.tree-buy:not([disabled])') || map).focus({ preventScroll: true });
   }
   let pendingIntro = null;
   function venueHeckles(venue) {
@@ -264,8 +252,10 @@
     return D.pools.heckles.filter(line => map.every(rule => !rule.words.some(word => line.includes(word)) || rule.venues.includes(D.venues[venue-1].slug)));
   }
   function patternPulse(text) {
-    $('patternLabel').textContent = `${D.ui.patterns[state.pattern]} · ${text}`;
-    animate($('patternLabel'), [{ opacity: .3 }, { opacity: 1 }], 500);
+    $('patternLabel').textContent = C.threatInfo(state).last?`마지막 야유 · 한 번에 ${C.formatNumber(C.CONST.finalHeckle)}`:`${D.ui.patterns[state.pattern]} · ${text}`;
+    const label=$('patternLabel');
+    if(C.threatInfo(state).last){for(const a of label.getAnimations?.()||[])a.cancel();label.style.opacity='1';}
+    else animate(label, [{ opacity: .3 }, { opacity: 1 }], 500);
   }
   function headlinerIntro(a) {
     pendingIntro = null;

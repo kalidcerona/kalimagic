@@ -17,21 +17,26 @@
   // v4 U38: every finite coin/key node is at its last level (star nodes are a separate track, pending nodes cannot be learned yet).
   function allLearned(state) {
     return DATA.tree.every(function (n) {
-      return n.starKey || n.shopOnly || n.pending || nodeLevel(state, n) >= n.max || (baseNode(n).id === "board" && boardCapacity(state) >= CONST.boardMax);
+      return n.id === "autoLearn" || n.starKey || n.shopOnly || n.pending || nodeLevel(state, n) >= n.max || (baseNode(n).id === "board" && boardCapacity(state) >= CONST.boardMax);
     });
   }
   function branchMaxed(state, node) { return (node.branchMax || []).every(function(id) { return fullyLearned(state, id); }); }
   function gateProgress(state, gate) {
     if (!gate) return null;
-    var current = gate.type === 'venue' ? (reached(state,gate.slug) ? 1 : 0) : gate.type === 'casesAtLv' ? state.board.filter(function(c){return (c.lv||1)>=gate.lv;}).length : state.features.progress[gate.type] || 0;
-    var label = {venue:'공연장 도착',casesAtLv:'LV '+gate.lv+' 케이스 수',comboMax:'최고 액트',dealerFlips:'컵앤볼·카드 몬테 성공',coinsEarned:'차원 누적 동전',goldenOpened:'황금 케이스 개봉'}[gate.type];
+    var current = gate.type === 'venue' ? (reached(state,gate.slug) ? 1 : 0) : gate.type === 'casesAtGrade' ? state.board.filter(function(c){return !c.golden && (c.lv||1)>=gate.grade;}).length : state.features.progress[gate.type] || 0;
+    var label = {venue:'공연장 도착',casesAtGrade:gate.grade+'등급 이상 케이스 수',comboMax:'최고 액트',dealerFlips:'컵앤볼·카드 몬테 성공',coinsEarned:'차원 누적 동전',goldenOpened:'황금 케이스 개봉'}[gate.type];
     var target = gate.type === 'venue' ? 1 : gate.target;
     if (gate.type === 'venue') return {current:current,target:target,met:!!current,text:VENUES[venueNumber(gate.slug)-1].name+' 도착 필요'};
     return {current:current,target:target,met:current>=target,text:'조건: '+label+' ('+formatNumber(current)+'/'+formatNumber(gate.target)+')'};
   }
   function nodeInfo(state, id) {
+    if (id === 'autoLearn') {
+      var opening = helperShopInfo(state, 'assistant'), opened = helperShopOpen(state);
+      return {level:opened ? 1 : 0,max:1,total:opened ? 1 : 0,totalMax:1,currency:'keys',cost:opened ? null : 2,
+        revealed:true,displayable:true,purchasable:!opened && opening.available,blockedReason:opened ? '도우미 상점이 열려 있어요' : opening.reason};
+    }
     var node = NODE_BY_ID[id];
-    if (!node || !state || !state.tree) return { level: 0, max: 0, currency: "coins", cost: null, revealed: false, purchasable: false, blockedReason: "알 수 없는 비법" };
+    if (!node || node.retired || !state || !state.tree) return { level: 0, max: 0, currency: "coins", cost: null, revealed: false, purchasable: false, blockedReason: "알 수 없는 비법" };
     // v4 U48 C: for a split node, cost, gates and the area/board rules read the stored total level (the same index as before the split).
     var base = baseNode(node), bid = base.id, split = !!(node.partOf || node.levels);
     var level = nodeLevel(state, node), total = split ? storedLevel(state, node) : level, cost = null;
@@ -46,30 +51,27 @@
     if (id === "autoLearn") revealed = false; // v4 U47 10: retired node (kept in the data and in saves, never offered)
     // v4 U48 C: a later part shows up once the part before it is full.
     if (node.partOf) revealed = level > 0 || (total >= node.partOffset && (node.reveal !== "E" || state.endings.length > 0));
-    var bookHidden=!!(node.partOf&&(bid==='mental'||bid==='caseMax')&&node.partOffset>=10&&level===0&&cost>state.features.progress.coinsEarned*3);
+    var bookHidden=!!(node.partOf&&bid==='mental'&&node.partOffset>=10&&level===0&&cost>state.features.progress.coinsEarned*3);
     if(node.shopOnly)revealed=false;
     var progress = gateProgress(state,node.gates ? node.gates[total] : node.gate);
+    var returnRun=(state.dimension|0)>=2, order=bookOrder(state,id);
+    if(returnRun&&!node.shopOnly&&!node.pending)revealed=true;
     var reason = "";
     if (node.shopOnly) reason = "실크 상점에서 살 수 있어요";
     else if (level >= node.max) reason = "최대 레벨";
-    else if (node.reveal === "E" && !state.endings.length) reason = "첫 멀티버스 공연 완료";
+    else if (!returnRun && node.reveal === "E" && !state.endings.length) reason = "첫 멀티버스 공연 완료";
+    else if (!order.allowed) reason = order.reason;
     else if (!revealed) reason = "아직 발견하지 못한 비법";
-    else if (progress && !progress.met) reason = progress.text;
+    else if (!returnRun && progress && !progress.met) reason = progress.text;
     else if (node.pending) reason = "준비 중";
     else if (node.partOf && total < node.partOffset) reason = "선행 비법 필요: " + NODE_BY_ID[node.prereqs[0]].name;
     else if (node.branch !== "collection" && !node.prereqs.every(function (pre) { return nodeLevel(state, NODE_BY_ID[pre]) > 0; })) reason = "선행 비법 필요: " + node.prereqs.filter(function (pre) { return nodeLevel(state, NODE_BY_ID[pre]) < 1; }).map(function (pre) { return NODE_BY_ID[pre].name; }).join(", ");
-    else if (node.venueSlug && !reached(state,node.venueSlug)) reason = VENUES[venueNumber(node.venueSlug)-1].name + " 도착 필요";
-    else if (bid === "area" && !reached(state,CONST.areaVenueNeeds[total])) reason = VENUES[venueNumber(CONST.areaVenueNeeds[total])-1].name + " 도착 필요";
+    else if (!returnRun && node.venueSlug && !reached(state,node.venueSlug)) reason = VENUES[venueNumber(node.venueSlug)-1].name + " 도착 필요";
+    else if (!returnRun && bid === "area" && !reached(state,CONST.areaVenueNeeds[total])) reason = VENUES[venueNumber(CONST.areaVenueNeeds[total])-1].name + " 도착 필요";
     else if (bid === "area" && boardCapacity(state) < CONST.areaNeeds[total]) reason = "케이스 자리 " + CONST.areaNeeds[total] + "칸 필요";
     else if (bid === "board" && boardCapacity(state) >= CONST.boardMax) reason = "케이스 자리 25칸 완성";
     else if (state[node.currency] < cost) reason = ({ coins: "동전", keys: "책", starlight: "비둘기" })[node.currency] + " 부족";
-    // Dimension 2+: stage, trophy and reveal locks no longer hide a 비법. Costs and prerequisites stay.
-    if ((state.dimension | 0) >= 2 && id !== "autoLearn" && !node.shopOnly && !node.pending && !(node.partOf && total < (node.partOffset || 0))) {
-      revealed = true;
-      var gateLock = reason === "아직 발견하지 못한 비법" || reason === "첫 멀티버스 공연 완료" || (progress && reason === progress.text) || /도착 필요$/.test(reason);
-      if (gateLock) reason = state[node.currency] < cost ? (({ coins: "동전", keys: "책", starlight: "비둘기" })[node.currency] || "재화") + " 부족" : "";
-    }
-    return { level: level, max: node.max, total: total, totalMax: treeMax(bid), gate:progress, currency: node.currency, cost: cost, bookHidden: bookHidden, displayable: revealed && !bookHidden, revealed: revealed, purchasable: !reason, blockedReason: reason };
+    return { level: level, max: node.max, total: total, totalMax: treeMax(bid), gate:progress, currency: node.currency, cost: cost, stageOpen:order.allowed, bookHidden: bookHidden, displayable: revealed && !bookHidden, revealed: revealed, purchasable: !reason, blockedReason: reason };
   }
 
   // Numeric price contract, null for unavailable upgrades. Wallet is checked by buyNode.
@@ -80,6 +82,7 @@
   }
 
   function buyNode(state, id) {
+    if (id === 'autoLearn') return !helperShopOpen(state) && helperShopBuy(state, 'assistant');
     var info = nodeInfo(state, id), part = NODE_BY_ID[id];
     if (!info.purchasable) return false;
     // v4 U48 C: learning a part of a split node raises the one stored total under the original id; the rest below sees that id.
@@ -113,7 +116,7 @@
     return DATA.tree.filter(function (n) {
       if (n.currency !== "coins" || n.starKey || n.pending) return false;
       var i = nodeInfo(state,n.id);
-      return i.revealed && i.purchasable && Number.isFinite(i.cost) && i.cost > 0;
+      return i.currency === "coins" && i.revealed && i.purchasable && Number.isFinite(i.cost) && i.cost > 0;
     }).sort(function (a,b) {
       return nodeInfo(state,a.id).cost-nodeInfo(state,b.id).cost || a.id.localeCompare(b.id);
     });
@@ -183,3 +186,29 @@
     return node ? buyNode(state, activePart(state, node.id)) : false;
   }
 
+  // Hiring uses existing tree levels, including sparse legacy ownership.
+  function helperShopOpen(state) {
+    return DATA.bookLayout.helperShop.hireKeys.some(function(id){return state.tree[id] >= 1;});
+  }
+  function helperShopInfo(state,id) {
+    var cfg=DATA.bookLayout.helperShop, opened=helperShopOpen(state);
+    var next=cfg.line.find(function(stage){return (state.tree[stage.id]||0)<stage.level;});
+    var stage=next&&next.id===id ? next : null, reason='';
+    var cost=stage ? (!opened ? 0 : id==='assistant' ? cfg.opening.legacyMissingAssistantSilk : stage.silk) : null;
+    if(cfg.hireKeys.indexOf(id)<0)reason='없는 도우미예요';
+    else if(!stage)reason=next ? '앞 사람부터 합류해요' : '고용 완료';
+    else if(state.u15.tutorial.active)reason='첫 연습 뒤에 살 수 있어요';
+    else if(!opened && !state.tree.board)reason='케이스 자리 비법 1단계 필요';
+    else if(state.dimension<2 && !reached(state,stage.gate))reason=VENUES[venueNumber(stage.gate)-1].name+' 도착 필요';
+    else if(!opened && state.keys<cfg.opening.books)reason='개점에 책 2권 필요';
+    else if(state.gems<cost)reason='실크 '+cost+'개가 필요해요';
+    return {opened:opened,next:next||null,level:state.tree[id]||0,cost:cost,books:opened?0:cfg.opening.books,available:!reason,reason:reason};
+  }
+  function helperShopBuy(state,id) {
+    var info=helperShopInfo(state,id);if(!info.available)return false;
+    state.keys-=info.books;state.gems-=info.cost;state.tree[id]++;
+    dailyProgress(state,'learn',1);checkSets(state,null);recompute(state,false);
+    if(id==='boxHelper'||id==='assistant'){reveal(state,id);syncWorkers(state);}
+    DATA.tree.forEach(function(n){if(n.hidden&&branchMaxed(state,n))reveal(state,'hidden:'+n.id);});
+    checkAchievements(state,null);return true;
+  }

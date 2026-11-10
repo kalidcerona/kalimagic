@@ -151,11 +151,34 @@
     const path = RESPAWN_ART[stageName];
     if (path && dom.respawn.dataset.asset !== path) sprite(dom.respawn, path);
   }
+  function renderCombatReadouts(defenseText) {
+    const etaText=doubtEtaText();
+    // The old rate notice is hidden by shipped CSS. Reuse the visible stats surfaces.
+    if(menu==='stats'&&!$('panel').hidden){
+      const rows=[...$('panelBody').querySelectorAll('.easy-stat')],th=C.threatInfo(state);
+      const interval=th.last?'':`${+th.every.toFixed(1)}초마다`;
+      for(const [id,name,text] of [
+        ['fightEta','초당 연출',etaText],
+        ['fightDefense','야유',defenseText]
+      ]){
+        const row=rows.find(row=>row.querySelector('h2')?.textContent===name);
+        if(!row)continue;
+        const line=row.querySelector('p');line.dataset.combatReadout=id;
+        line.textContent=id==='fightDefense'?[interval,text].filter(Boolean).join(' · '):text;
+      }
+    }
+    if(!phone){
+      let line=$('fightEtaInline');
+      if(!line){line=element('span','','stat-sub');line.id='fightEtaInline';$('stat-rate').parentElement.parentElement.append(line);}
+      line.textContent=etaText;
+    }
+  }
   function render() {
     if (caseArrange && (state.mode !== 'fight' || menu || lineOpen() || wonMoment)) setCaseArrange(false);
     renderBoardPad();
     if (moreReturn && $('panel').hidden && $('phoneMore').hidden) moreReturn = false; // v4 U48 M: the show was reached another way (stage travel, a scene)
     $('stage').classList.toggle('decorations-paused',paused());
+    if(typeof syncHelperBuffPresentation==='function')syncHelperBuffPresentation();
     $('equipButton').hidden=!C.equipSlots(state); $('equipButton').classList.toggle('is-new',!!C.equipSlots(state)&&!state.guidance.seen.includes('equipButton'));
     renderU19();renderU14(); renderIdle(); renderU15();
     if ($('gemShopQuick')) $('gemShopQuick').disabled = lineOpen();
@@ -183,7 +206,7 @@
       queueAudienceLine(C.venueBySlug('lecturenote').headliner['act'+state.review.act+'Line'],'homecoming:'+state.review.act);
       $('patternLabel').textContent=['','별표 케이스를 열면 다음 질문을 쉬어요','직접 개봉과 도우미를 연결해요 · 도우미 없이 두 칸도 좋아요','개봉을 이어 마지막 피날레를 완성해요'][state.review.act];
       // v4 U38: the announced last heckle: its size is printed so the player can compare it with 멘탈 + 자신감 (and 야유 막기 can cancel it).
-      if(C.threatInfo(state).last)$('patternLabel').textContent=`마지막 야유 · 한 번에 ${C.formatNumber(C.CONST.finalHeckle)}`;
+      if(C.threatInfo(state).last)patternPulse(`마지막 야유 · 한 번에 ${C.formatNumber(C.CONST.finalHeckle)}`);
     }
     if(C.bossProfile(state)==='future'&&!wonMoment){const u=state.u19;$('phaseIndicator').hidden=false;$('phaseIndicator').textContent=['','1막 · 거울 쇼타임','2막 · 완벽한 루틴','3막 · 마지막 한 장'][u.phase];$('patternLabel').textContent=u.telegraph>0?['','쇼타임을 쓰면 내 방어도 올라가. 끝난 뒤 노려 봐.','빛나는 케이스를 2초마다 눌러 액트를 이어 줘.','이게 진짜 미래의 나야. 20초 동안 빛나는 칸만!'][u.phase]:u.phase===1?'쇼타임 중 거울 방어 상승':u.phase===2?'빛나는 칸을 계속 눌러요':u.window>0?`빛나는 최강 케이스만 · ${Math.ceil(u.window/1000)}초`:'마지막 한 장을 이어 가요';}
     if(state.u18.challenge){const c=state.u18.challenge;$('patternLabel').textContent=c.kind==='trueFan'?'찐팬 도전 · '+C.trueFanRule(c.slug).label:'다시 만난 관객';}
@@ -216,14 +239,19 @@
       const rateText=mine==null?'0':rounded(mine); // s5f (owner): the strip shows 연출 without "/초"
       if($('statRateNum').textContent!==rateText)$('statRateNum').textContent=rateText;
       if($('stat-heckle').textContent!==heckleText)$('stat-heckle').textContent=heckleText;
-      if($('stat-heckle-every')&&$('stat-heckle-every').textContent!==everyText)$('stat-heckle-every').textContent=everyText; // v4 U47 1: the interval is the small second line
+      const defenseText=state.skills.cheerGuard?'다음 야유 방어 준비':`다음 야유 · 자신감 ${rounded(th.block)} 흡수 · ${rounded(Math.max(0,th.hit-th.block))==='0'?'멘탈 피해 없음':'멘탈 −'+rounded(Math.max(0,th.hit-th.block))}`;
+      $('statShield').setAttribute('aria-label',defenseText);
+      $('statShield').title=defenseText;
+      const threatText=[everyText,defenseText].filter(Boolean).join(' · ');
+      if($('stat-heckle-every')&&$('stat-heckle-every').textContent!==threatText)$('stat-heckle-every').textContent=threatText; // v4 U47 1: the interval is the small second line
       const challengeText=`+${Math.round(C.challengeBonus(state)*100)}%`;if($('stat-challenge')&&$('stat-challenge').textContent!==challengeText)$('stat-challenge').textContent=challengeText; // v4 U46 C1
     }
+    renderCombatReadouts($('statShield').getAttribute('aria-label'));
     $('countdown').textContent = `${Math.max(0, state.heckleMs / 1000).toFixed(1)}초`;
     {
-      const card = $('audienceCard'), on = state.mode === 'fight' && state.heckleMs <= C.CONST.telegraphMs;
+      const card = $('audienceCard'), on = state.mode === 'fight' && (C.threatInfo(state).last || state.heckleMs <= C.CONST.telegraphMs);
       if (state.mode !== 'fight') heckleWarn = false;
-      const warn = on && heckleWarn;
+      const warn = on && (heckleWarn || C.threatInfo(state).last);
       if (on !== card.classList.contains('telegraph')) card.classList.toggle('telegraph', on);
       if (warn !== card.classList.contains('heckle-warn')) { card.classList.toggle('heckle-warn', warn); if (warn) placeHeckleBang(); }
       card.classList.toggle('mental-low', state.mode === 'fight' && !state.resolved && state.mentalMax > 0 && state.mental / state.mentalMax < .3);
@@ -233,7 +261,7 @@
     if(heckleFill){heckleFill.style.width=progress+'%';heckleFill.style.setProperty('--meter',progress+'%');}
     // s4d (owner 10-24): the 야유 plate fills yellow toward the next heckle (the same timer and interval as core tickHeckle), full when it fires.
     {const level=(state.mode==='fight'&&!state.resolved?progress:0).toFixed(1),plate=$('attackNumber')?.parentElement;if(meter&&meter.style.getPropertyValue('--heckle')!==level){meter.style.setProperty('--heckle',level);plate?.style.setProperty('--heckle',level);}}
-    if(meter){meter.setAttribute('aria-valuenow',String(Math.round(progress)));meter.classList.toggle('imminent',state.mode==='fight'&&!state.resolved&&state.heckleMs<=600);}
+    if(meter){meter.setAttribute('aria-valuenow',String(Math.round(progress)));meter.classList.toggle('imminent',state.mode==='fight'&&!state.resolved&&(C.threatInfo(state).last||state.heckleMs<=600));}
     syncMotionLoops();
     numText($('stat-power'), rounded(C.wandDamage(state)));
     numText($('stat-damage'), rounded(C.CONST.itemDamage * state._V));
@@ -304,10 +332,10 @@
       dom.el.setAttribute('aria-label', next ? slotCondition() : locked ? '잠긴 자리' : `카드 케이스 ${i + 1}`);
       if (locked) { dom.lv.textContent = ''; delete dom.lv.dataset.pips; if (dom.respawn) dom.respawn.hidden = true; delete dom.el.dataset.respawn; continue; }
       const pct = cell.hpMax ? Math.min(100, Math.max(0, Math.round((1 - cell.hp / cell.hpMax) * 100))) : 0;
-      // v4 U48 M2: no LV text on the board; the case colour is the level band and 1 to 4 small dots the place inside it (the level stays in the aria-label).
+      // Release 22: case art shows the grade; grade pips are intentionally absent.
       if (dom.lv.textContent) dom.lv.textContent = '';
       const pips = String(C.casePips(cell)); if (dom.lv.dataset.pips !== pips) dom.lv.dataset.pips = pips;
-      dom.el.setAttribute('aria-label', `카드 케이스 ${i + 1} · 레벨 ${cell.lv || 1}`);
+      dom.el.setAttribute('aria-label', `카드 케이스 ${i + 1} · ${cell.golden ? '황금' : '등급 ' + (cell.lv || 1)}`);
       const chest = dom.el.querySelector('.chest');
       dom.el.classList.toggle('golden', !!cell.golden);
       dom.el.classList.toggle('golden-broken', !!cell.goldenBroken && cell.hp <= 0);
@@ -337,4 +365,5 @@
     $('hint').textContent = caseArrange ? '케이스 정리 · 드래그하거나 두 칸을 눌러 바꾸세요' : menu ? '공연 일시정지' : `${state.wins ? '케이스' : '카드 케이스'}를 탭하면 더 강하게 · 꾹 누르면 초당 ${C.wandRate(state).toFixed(1)}회`;
     updateWand(); modeHooks(); flushHeadlinerEntrance(); renderBatchD(); updateAudienceLine(); syncFlags();
     if (typeof watchPatternStamps === 'function') watchPatternStamps();
+    renderShowBand();
   }

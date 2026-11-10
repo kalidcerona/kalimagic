@@ -41,7 +41,7 @@
     state.finisher = 0;
     state.finisherFired = true;
     addGain(state.features.progress, 'finales', 1, 1e24);checkAchievements(state,ev);
-    var dmg = (hasReward(state, 6) ? 1.3 : 1) * (profile(state) === "mirror" && state.phase2 ? 1 + state.features.climax.confidence / 100 : 1) * CONST.finisherDmg * (state._V || 1) * nodeEffects(state).finalePower * branchBonus(state, "finale");
+    var dmg = (hasReward(state, 6) ? 1.3 : 1) * (profile(state) === "mirror" && state.phase2 ? 1 + state.features.climax.confidence / 100 : 1) * CONST.finisherDmg * ((state._V || 1) * helperBuffMultiplier(state,'dmg')) * nodeEffects(state).finalePower * branchBonus(state, "finale");
     if (isFinalBoss(state) && state.review.finaleReady && !state.review.finaleUsed) { dmg *= 2; state.review.finaleUsed=true; state.review.finaleReady=false; emit(ev,{type:"curtainFinale"}); }
     emit(ev, { type: "finisher", dmg: dmg });
     dealAud(state, dmg, ev);
@@ -52,15 +52,10 @@
     if (!cell || cell.hpMax <= 0) return;
     var golden = !!cell.golden, f = state.features;
     reviewOpen(state,i,source,ev);
-    var itemLv = cell.lv || 1, oldTier = caseTier(cell);
-    cell.lv = itemLv; cell.xp = cell.xp || 0;
-    if (cell.lv < caseCap(state)) cell.xp += 1 + .15 * (state.tree.caseXp || 0);
-    while (cell.lv < caseCap(state) && cell.xp >= caseNeed(cell.lv)) {
-      cell.xp -= caseNeed(cell.lv); cell.lv++;
-      if ([10,25,50].indexOf(cell.lv)>=0) emit(ev,{type:'milestone',cell:i,level:cell.lv});
-      emit(ev, {type:'caseLevelUp',cell:i,level:cell.lv,tierChanged:oldTier !== caseTier(cell)});
-    }
-    if (cell.lv >= caseCap(state)) cell.xp = 0;
+    var itemLv = cell.lv || 1;
+    // A legacy golden level must not remain on the now-ordinary empty cell.
+    if (golden) cell.lv = 1;
+    cell.xp = 0;
     f.workers.actors.forEach(function (a) {
       if (a.phase !== "move" || a.cell !== i) return;
       a.phase = "idle"; a.cell = -1; a.remainingMs = 0;
@@ -71,7 +66,7 @@
     if (source === "magic" || source === "helper" || source === "fan" || source === "assistant") addGain(f, 'helperBreaks', 1, 1e9);
     if (golden) {
       dailyProgress(state,'golden',1);addGain(f.progress, 'goldenOpened', 1, 1e24); f.goldCell = -1; f.goldMs = nodeEffects(state).goldEvery;
-      var bonus = Math.round(CONST.goldCoinBase * Math.pow(1.32, balanceRank(state.vMax) - 1) * nodeEffects(state).goldCoins);
+      var bonus = Math.round(CONST.goldCoinBase * Math.pow(1.32, balanceRank(state.vMax) - 1) * nodeEffects(state).goldCoins * helperBuffMultiplier(state,"coin"));
       earnCoins(state, bonus); stamp(state, "golden", ev);
       emit(ev, { type: "goldenBreak", cell: i, coins: bonus });
     }
@@ -90,7 +85,7 @@
       for (var ci = 0; ci < CONST.comboThresholds.length; ci++) {
         if (state.combo < CONST.comboThresholds[ci] || (paid & (1 << ci))) continue;
         paid |= 1 << ci; f.comboPaid[state.audId] = paid;
-        var gift = CONST.comboCoinRewards[ci] * Math.pow(1.32, balanceRank(state.venue) - 1) * nodeEffects(state).comboValue;
+        var gift = CONST.comboCoinRewards[ci] * Math.pow(1.32, balanceRank(state.venue) - 1) * nodeEffects(state).comboValue * helperBuffMultiplier(state,"coin");
         earnCoins(state, gift); addGain(state, 'finisher', CONST.comboGaugeRewards[ci]*gearMultiplier(state,'finale'), 1000);
         emit(ev, { type: "comboMilestone", threshold: CONST.comboThresholds[ci], coins: gift, gauge: CONST.comboGaugeRewards[ci], audId: state.audId });
       }
@@ -100,8 +95,8 @@
     state.shield = Math.min(state.mentalMax * nodeEffects(state).shieldRatio, state.shield + nodeEffects(state).boxShield*gearMultiplier(state,"confidence"));
     autoHeal(state, nodeEffects(state).boxHeal);
     checkLevel(state, ev);
-    var coinMul = state._coinMul || 1;
-    earnCoins(state, Math.max(1, Math.round(CONST.coinPerBox * coinMul)));
+    var coinMul = (state._coinMul || 1) * helperBuffMultiplier(state,'coin');
+    earnCoins(state, Math.max(1, Math.round(CONST.coinPerBox * (state._coinMul || 1))) * caseOpeningMultiplier(itemLv, golden, state) * helperBuffMultiplier(state,'coin'));
     for (var tw = 0; tw < DATA.items.types.length; tw++) {
       TYPE_W[tw] = DATA.items.types[tw].share * 100;
       if (DATA.items.types[tw].id === "coin") TYPE_W[tw] += state.tree.coinLuck * statMultiplier(state,"coinLuck") * CONST.coinLuckAdd;
@@ -113,7 +108,7 @@
         TYPE_W[ei] *= Math.pow(1 + CONST.equipWeightPerItem, count);
       }
     }
-    for (var drop = 0; drop < caseItems(itemLv); drop++) {
+    for (var drop = 0; drop < caseItems(itemLv, golden); drop++) {
     var type = DATA.items.types[pickW(state, TYPE_W)];
     var dropSample={value:0};
     var ri = pickW(state, CONST.rarityW,dropSample);
@@ -137,14 +132,14 @@
     var kind = type.id;
     var effect = product.effect || type.effect;
     var amount = 0;
-    if (effect === "damage") amount = CONST.itemDamage * state._V * mult;
+    if (effect === "damage") amount = CONST.itemDamage * state._V * helperBuffMultiplier(state,'dmg') * mult;
     else if (effect === "shield") amount = CONST.itemShield * state._U * mult * nodeEffects(state).shieldValue;
     else if (effect === "heal") amount = CONST.itemHeal * state._U * mult * nodeEffects(state).healValue;
     else if (effect === "coins") amount = CONST.itemCoins * mult * coinMul;
     else if (effect === "xpBurst") amount = 0.5 * xpNeed(state);
     else if (effect === "finisher") amount = 5;
     else if (effect === "boxFill") amount = 0.3;
-    var itemBonus = milestoneMultiplier(itemLv,[10,25,50]) * Math.pow(1.10, itemLv - 1) * branchBonus(state, "box") * caseItemBonus(state);
+    var itemBonus = (effect === "coins" || effect === "damage" ? caseMultiplier(itemLv, effect === "coins" ? "coin" : "damage", golden, state) : DATA.caseGrades.goldenMultiplier) * branchBonus(state, "box") * caseItemBonus(state);
     amount *= itemBonus;
     var gem = 0;
     if (ri >= 1 && rngNext(state) < CONST.gemChance[ri] + nodeEffects(state).gemFind && state.u17.gemWait<=0) {
@@ -174,7 +169,7 @@
     state.features.climax.mirrored = state.features.climax.mirrored.filter(function (n) {return n !== i;});
     if (state.tree.flash > 0 && ++state.flashBreaks >= CONST.flashEvery) {
       state.flashBreaks = 0; usedHelper(state,"flash");
-      var burst = CONST.flashDamage * state._V;
+      var burst = CONST.flashDamage * state._V * helperBuffMultiplier(state,'dmg');
       emit(ev, { type: "flash", dmg: burst, cell: i });
       dealAud(state, burst, ev);
     }
@@ -383,12 +378,18 @@
   // s5d: the visible-hit numbers; 미래의 칼리 uses the row of her current phase (CONST.future), every other fight the global ones.
   function visibleRule(state){if(profile(state)!=='future')return{every:CONST.mentalVisibleEvery,hit:CONST.mentalVisibleHit,absorb:CONST.mentalVisibleAbsorb,ms:CONST.mentalVisibleMs};var F=CONST.future,i=Math.max(0,Math.min(2,(state.u19.phase||1)-1)),p=state.features.progress,streak=p.bossLossVenue===state.venue?p.bossLossStreak:0,ease=i?Math.max(F.retryEase,1-F.retryEase*streak):1;return{every:F.visibleEvery[i],hit:F.visibleHit[i]*ease,absorb:F.visibleAbsorb[i],ms:F.visibleMs[i]};}
   function lastHeckleArmed(state){return state.review.lastHeckle===1&&isFinalBoss(state);}
-  function heckleStrength(state){if(lastHeckleArmed(state))return CONST.finalHeckle;var pressure=gatePressure(state),base=state.atk*nodeEffects(state).calm;if(!pressure)return base;return Math.max(Math.min(base,state.mentalMax*.05),state.mentalMax*(.04+GATE_POLICY.ramp*Math.max(0,Math.min(1,(state.fightMs-20000)/20000)))*pressure);}
+  var HECKLE_RATIO_REDUCTION_PER_LEVEL = 0.04;
+  function heckleRatioScale(state) {
+    var level = nodeLevel(state, NODE_BY_ID.mental) + nodeLevel(state, NODE_BY_ID['mental-2']);
+    return Math.max(0.045, 0.075 * (1 - HECKLE_RATIO_REDUCTION_PER_LEVEL * level)) / 0.075;
+  }
+  function heckleStrength(state){if(lastHeckleArmed(state))return CONST.finalHeckle;var pressure=gatePressure(state),base=state.atk*nodeEffects(state).calm;if(!pressure)return base;return Math.max(Math.min(base,state.mentalMax*.05*heckleRatioScale(state)),state.mentalMax*(.04+GATE_POLICY.ramp*Math.max(0,Math.min(1,(state.fightMs-20000)/20000)))*pressure*heckleRatioScale(state));}
   // Preview the next uncancelled hit without advancing visibility or changing state.
   function nextHeckle(state) {
     var vr=visibleRule(state), visibility=MENTAL_VISIBILITY.get(state), counted=!lastHeckleArmed(state)&&!state.u15.tutorial.active&&state.venue>=venueNumber('school');
     var visible=counted&&((visibility ? visibility.count : 0)+1)%vr.every===0, dmg=heckleStrength(state);
-    if(visible&&!gatePressure(state))dmg=Math.max(dmg,state.mentalMax*vr.hit);
+    if(visible&&!gatePressure(state))dmg=Math.max(dmg,state.mentalMax*vr.hit*(profile(state)==='future'?1:heckleRatioScale(state)));
+    if(isFinalBoss(state)&&!lastHeckleArmed(state))dmg*=CONST.finalBossHeckleScale;
     return {dmg:dmg,visible:visible,counted:counted,block:Math.min(Math.max(0,state.shield||0),dmg*(visible?vr.absorb:1))};
   }
   // v4 U38: threat numbers the player can compare with their own. Everything is per second so 야유, 회복 and 내 공격 share one unit.
@@ -414,7 +415,7 @@
     var pressure=gatePressure(state);
     if(pressure)state.audHp=Math.min(theaterPhase(state)===2?theaterCut(state):state.audHpMax,state.audHp+state.audHpMax*GATE_POLICY.regen*pressure*dt/1000); // s5b: theater phase 2 regrows up to its own bar
     state.heckleMs -= dt;
-    if (!state.telegraphed && state.heckleMs <= CONST.telegraphMs) {
+    if (!state.telegraphed && (lastHeckleArmed(state) || state.heckleMs <= CONST.telegraphMs)) {
       state.telegraphed = true;
       emit(ev, { type: "heckleTelegraph" });
     }

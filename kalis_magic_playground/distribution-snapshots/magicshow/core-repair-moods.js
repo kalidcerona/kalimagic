@@ -114,14 +114,14 @@
       });
       if (Array.isArray(o.board) && o.tree && typeof o.tree === 'object') {
         var cap = Math.min(CONST.boardMax, 1 + (o.tree.board | 0) + DATA.slotRewardSlugs.filter(function (slug) { return venueNumber(slug) <= o.vMax; }).length + (o.legacySlots | 0));
-        var capLv = 5 + (o.tree.caseMax | 0);
+        var capLv = o.v >= 24 ? 7 : 5 + (o.tree.caseMax | 0);
         var blank = function () { return { lv: 1, xp: 0, hp: 0, hpMax: 0, spawn: 0, sealed: false, golden: false, goldenBroken: false }; };
         var before = JSON.stringify(o.board);
         var nb = o.board.slice(0, cap).map(function (c) {
           if (!c || typeof c !== 'object') return blank();
           c.hpMax = clampValue(c.hpMax, 'num', 0, 1e9); c.hp = clampValue(c.hp, 'num', 0, c.hpMax); c.spawn = clampValue(c.spawn, 'num', 0, 1e7);
-          c.lv = clampValue(c.lv, 'int', 1, capLv); if (c.lv === 0) c.lv = 1;
-          c.xp = clampValue(c.xp, 'num', 0, Math.ceil(3 * Math.pow(1.35, c.lv - 1)) - 1); if (c.lv === capLv) c.xp = 0;
+          c.lv = clampValue(c.lv, 'int', 1, c.golden ? 50 : capLv); if (c.lv === 0) c.lv = 1;
+          c.xp = clampValue(c.xp, 'num', 0, o.v >= 24 && !c.golden ? 0 : Math.ceil(3 * Math.pow(1.35, c.lv - 1)) - 1); if (c.lv === capLv) c.xp = 0;
           c.sealed = c.sealed === true; c.golden = c.golden === true; c.goldenBroken = c.goldenBroken === true;
           return c;
         });
@@ -167,7 +167,7 @@
       o = JSON.parse(str);
     } catch (error) { return { state: null, repairs: [] }; }
     if (!o || typeof o !== 'object' || Array.isArray(o) || typeof o.v !== 'number' || o.v < 1 || o.v !== Math.floor(o.v)) return { state: null, repairs: [] };
-    if (o.v > 23) o.v = 23;
+    if (o.v > globalThis.Core.SAVE_VERSION) o.v = globalThis.Core.SAVE_VERSION;
     var rep = [];
     var attempt = function (obj) { return deserialize(JSON.stringify(obj)); };
     try {
@@ -185,6 +185,11 @@
       // v6 script (10-26): the NDD after-win lines lost the 비법 line (5 -> 4); a save on that last line resumes on the new last line.
       var tut=o.u15&&o.u15.tutorial,defeatLines=DATA.storyV15.tutorial.defeat.length;
       if(tut&&tut.active&&tut.phase==='defeat'&&Number.isInteger(tut.line)&&tut.line>=defeatLines&&tut.line<5){tut.line=defeatLines-1;rep.push('resume revised tutorial lines');}
+      // v25 bag fields use the same conservative numeric repair as other counts.
+      if (o.v >= 25) ['potionCount', 'refillCount'].forEach(function (key) {
+        var count = clampValue(o[key], 'int', 0, 99);
+        if (o[key] !== count) { o[key] = count; rep.push(key); }
+      });
       clampSave(o, rep);
       var s = attempt(o);
       if (s) return { state: s, repairs: rep };

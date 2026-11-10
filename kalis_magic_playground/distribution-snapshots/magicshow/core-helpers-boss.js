@@ -204,7 +204,7 @@
       while(r.act<act) {
         r.act++; r.actMs=0; r.target=-1; r.elapsed=0;
         emit(ev,{type:'homecomingAct',act:r.act,line:getAud(state.venue,state.j)['act'+r.act+'Line']});
-        if(r.act===3&&!r.lastHeckle){r.lastHeckle=1;state.heckleMs=CONST.finalHeckleWarnMs;state.telegraphed=false;emit(ev,{type:'lastHeckle',hit:CONST.finalHeckle});}
+        if(r.act===3&&!r.lastHeckle){r.lastHeckle=1;state.heckleMs=CONST.finalHeckleWarnMs;state.telegraphed=true;emit(ev,{type:'lastHeckle',hit:CONST.finalHeckle});emit(ev,{type:'heckleTelegraph'});}
       }
       if(r.act===3) { if(r.actMs>=2000&&!r.finaleUsed)r.finaleReady=true; return; }
       if(r.act===2)return;

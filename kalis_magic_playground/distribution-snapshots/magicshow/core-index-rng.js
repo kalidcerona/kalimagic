@@ -3,6 +3,8 @@
   var TREE_KEYS = DATA.tree.filter(function (n) { return !n.starKey && !n.partOf; }).map(function (n) { return n.id; }); // v4 U48 C: parts are not saved
   var NODE_BY_ID = Object.create(null);
   DATA.tree.forEach(function (n) { NODE_BY_ID[n.id] = n; });
+  // Retired keys are load-only: keep the unchanged v24 validator/refund path.
+  DATA.legacyCaseNodes.forEach(function(n) { NODE_BY_ID[n.id]=n; TREE_KEYS.push(n.id); });
   var STAR_KEYS = ["trick", "guard", "tempo", "bounty"];
   var VENUES = DATA.venues;
   var ALL_VENUES = VENUES;

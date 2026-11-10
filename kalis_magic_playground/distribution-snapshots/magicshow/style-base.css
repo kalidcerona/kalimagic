@@ -380,3 +380,46 @@ html body.phone:not(.tablet):not(.portrait-layout) #viewport#viewport #stage#sta
    reactions are scaled to 204/209 from her feet (row 254 of 256). Measured by tools/kali-size-check.cjs. */
 html body #viewport#viewport #stage#stage#stage#stage#stage #magicianMini.reacting > .asset-sprite { transform:scale(.976); transform-origin:50% 99.2%; }
 html body.phone:not(.tablet):not(.portrait-layout):not(.phone-short) #viewport#viewport #stage#stage#stage#stage#stage #activeSkills > .gem-shop-quick .cur-icon { width:28px; height:28px; }
+
+/* Release 21 P4: phone reading chrome. The panel body owns vertical scrolling.
+ * Rem text follows the user's font size; no fixed line boxes or zoom suppression. */
+html body.phone #viewport#viewport #stage#stage#stage#stage#stage#stage #panel:is([data-screen="book"],[data-screen="gemShop"]) { --r21-read:max(14px,.875rem); --r21-heading:max(16px,1rem); inset:0; width:100%; height:100%; max-height:none; min-height:0; padding:8px; box-sizing:border-box; display:flex; flex-direction:column; overflow:hidden; }
+html body.phone #viewport#viewport #stage#stage#stage#stage#stage#stage #panel:is([data-screen="book"],[data-screen="gemShop"]) > header { position:static; display:flex; flex-wrap:wrap; flex:0 0 auto; height:auto; min-height:0; max-height:none; min-width:0; margin:0 0 4px; padding:0; gap:4px 8px; overflow:visible; }
+html body.phone #viewport#viewport #stage#stage#stage#stage#stage#stage #panel:is([data-screen="book"],[data-screen="gemShop"]) #panelTitle { flex:1 1 auto; min-width:0; max-width:100%; margin:0; padding:0; font-size:var(--r21-heading); line-height:1.4; white-space:normal; overflow-wrap:anywhere; }
+html body.phone #viewport#viewport #stage#stage#stage#stage#stage#stage #panel:is([data-screen="book"],[data-screen="gemShop"]) #panelBody { position:relative; flex:1 1 auto; width:100%; height:auto; min-height:0; min-width:0; max-height:none; padding:4px 2px 24px; box-sizing:border-box; overflow:auto; overflow-anchor:none; overscroll-behavior:contain; scroll-padding-block:8px 24px; font-size:var(--r21-read); line-height:1.5; }
+html body.phone #viewport#viewport #stage#stage#stage#stage#stage#stage #panel:is([data-screen="book"],[data-screen="gemShop"]) :is(p,li,small,summary,button,.tree-wallet span) { font-size:var(--r21-read); line-height:1.5; white-space:normal; overflow-wrap:anywhere; }
+html body.phone #viewport#viewport #stage#stage#stage#stage#stage#stage #panel:is([data-screen="book"],[data-screen="gemShop"]) :is(button,summary) { box-sizing:border-box; min-width:48px; min-height:48px; height:auto; max-height:none; max-width:100%; touch-action:manipulation; }
+html body.phone #viewport#viewport #stage#stage#stage#stage#stage#stage #panel:is([data-screen="book"],[data-screen="gemShop"]) :is(.panel-help-button,#closePanel#closePanel) { position:static; flex:0 0 48px; width:48px; height:48px; min-width:48px; min-height:48px; max-height:none; margin:0; padding:0; }
+html body.phone #viewport#viewport #stage#stage#stage#stage#stage#stage #panel:is([data-screen="book"],[data-screen="gemShop"]) #closePanel#closePanel.kit-close { font-size:0; background-size:44px 44px; }
+html body.phone #viewport#viewport #stage#stage#stage#stage#stage#stage #panel:is([data-screen="book"],[data-screen="gemShop"]) .panel-help-card { position:static; max-height:none; margin:0 0 12px; overflow:visible; }
+html body.phone #viewport#viewport #stage#stage#stage#stage#stage#stage #panel:is([data-screen="book"],[data-screen="gemShop"]) button:focus-visible { outline:3px solid #ffe14a; outline-offset:-3px; }
+
+/* R21 triage2: failure guidance keeps the phone's 48px reading controls. */
+html body.phone #viewport#viewport #stage#stage#stage#stage#stage#stage #panel[data-screen="fail"] button { box-sizing:border-box; min-width:48px; min-height:48px; height:auto; white-space:normal; overflow-wrap:anywhere; }
+
+/* R21 triage3: a report-only short viewport can scroll oversized header copy. */
+@media (max-height:280px) {
+  html body.phone #viewport#viewport #stage#stage#stage#stage#stage#stage #panel:is([data-screen="book"],[data-screen="gemShop"]) > header { max-height:calc(100% - 52px); overflow:auto; flex-shrink:0; }
+  html body.phone #viewport#viewport #stage#stage#stage#stage#stage#stage #panel:is([data-screen="book"],[data-screen="gemShop"]) :is(.panel-help-button,#closePanel#closePanel) { position:sticky; top:0; align-self:flex-start; z-index:2; }
+}
+
+/* R21 triage4: the phone contract also covers the stats close control. */
+html body.phone #viewport#viewport #stage#stage#stage#stage#stage#stage #panel[data-screen="stats"] #closePanel#closePanel { box-sizing:border-box; width:48px; height:48px; min-width:48px; min-height:48px; }
+#restoredNotice { pointer-events:none; }
+/* Long venue names remain readable when text grows, rather than overflowing one line. */
+html body.phone #viewport#viewport #stage#stage#stage#stage#stage#stage #phoneTop #venueName { white-space:normal; overflow-wrap:anywhere; max-width:100%; height:auto; min-height:0; line-height:1.15; }
+
+/* R21 triage5: isolate modal overflow from the stage. Hidden overflow is scrollable
+ * by focus/scrollIntoView; clip is not. Only the body owns the remaining height. */
+html body.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #panel:not([data-cutscene="1"]) { box-sizing:border-box; min-width:0; min-height:0; max-height:100%; overflow:clip; contain:layout paint; }
+html body.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #panel:not([data-cutscene="1"]) > header { flex:0 0 auto; height:auto; min-height:0; max-height:calc(100% - 48px); min-width:0; overflow:auto; }
+html body.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #panel:not([data-cutscene="1"]) > #panelBody { flex:1 1 0px; min-width:0; min-height:0; max-height:100%; overflow:auto; }
+
+/* R21 P5f: failure advice uses the same reading size as the book; the body scrolls above a bottom gutter. */
+html body.phone #viewport#viewport #stage#stage#stage#stage#stage#stage #panel[data-screen="fail"] { padding-bottom:16px; }
+html body.phone #viewport#viewport #stage#stage#stage#stage#stage#stage #panel[data-screen="fail"] #panelBody { padding-bottom:16px; scroll-padding-bottom:16px; }
+html body.phone #viewport#viewport #stage#stage#stage#stage#stage#stage #panel[data-screen="fail"] #panelBody :is(p,small,span,button) { font-size:max(14px,.875rem); line-height:1.5; }
+html body.phone #viewport#viewport #stage#stage#stage#stage#stage#stage #panel[data-screen="fail"] .fail-actions { flex-wrap:wrap; padding-bottom:8px; }
+html body.phone #viewport#viewport #stage#stage#stage#stage#stage#stage #panel[data-screen="fail"] :is(.fail-recommendation,.fail-product) { flex-wrap:wrap; gap:8px; }
+/* R21 sonnet2: the older phone rule sets white-space:nowrap on failure buttons; at large text a long label then pushes the body sideways. */
+html body.phone #viewport#viewport #stage#stage#stage#stage#stage#stage #panel[data-screen="fail"] #panelBody button { white-space:normal; overflow-wrap:anywhere; max-width:100%; min-width:0; box-sizing:border-box; }

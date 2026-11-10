@@ -9,7 +9,7 @@
   add('chain4','케이스 연쇄','box','caseXp',7,-1,1,1800,'node-chain',{desc:'개봉하면 인접 4방향에 마술 실력의 30%',gate:{type:'goldenOpened',target:1}});
   add('chain8','팔방 연쇄','box','chain4',8,-1,1,4500,'node-chain',{desc:'대각선까지 8방향 연쇄',gate:{type:'comboMax',target:100}});
   add('chainPower','번개의 힘','box','chain4',8,0,3,2500,'node-chain',{desc:'연쇄 피해 +10%p씩',gate:{type:'venue',target:6}});
-  const gates={area:[null,null,{type:'casesAtLv',lv:4,target:3}],precision:{type:'venue',target:9},boxHeal:{type:'casesAtLv',lv:4,target:3},calm:{type:'venue',target:5},jackpot:{type:'dealerFlips',target:3},lessonBias:{type:'coinsEarned',target:5000},encorePower:{type:'comboMax',target:50},challenge:{type:'coinsEarned',target:10000},goldCoins:{type:'goldenOpened',target:3},caseStart:{type:'casesAtLv',lv:5,target:3}};
+  const gates={area:[null,null,{type:'casesAtGrade',grade:3,target:2}],precision:{type:'venue',target:9},boxHeal:{type:'casesAtGrade',grade:3,target:2},calm:{type:'venue',target:5},jackpot:{type:'dealerFlips',target:3},lessonBias:{type:'coinsEarned',target:5000},encorePower:{type:'comboMax',target:50},challenge:{type:'coinsEarned',target:10000},goldCoins:{type:'goldenOpened',target:3},caseStart:{type:'casesAtLv',lv:5,target:3}};
   Object.keys(gates).forEach(id=>{const n=D.tree.find(n=>n.id===id);if(n){if(Array.isArray(gates[id]))n.gates=gates[id];else n.gate=gates[id];}});
   const branches=['hand','box','heart','luck','pet','finale','collection','star'];
   const ends={hand:[-6,-1,-7,-1],box:[9,0,10,0],heart:[1,-5,2,-5],luck:[5,3,5,4],pet:[-6,3,-7,3],finale:[0,6,0,6],collection:[11,4,11,4],star:[5,-6,5,-6]};
@@ -41,7 +41,7 @@
   D.tree.push({id:'fanPower',name:'팬과 어시스턴트 파워',desc:'작업 피해 +15%씩',branch:'pet',prereqs:['boxHelper'],x:-5,y:4,max:5,cost:{c:1200,g:1.5},currency:'coins',reveal:'N',icon:'node-fan.png',emoji:'👏',pending:false,u4b:true});
   const stars=D.tree.filter(n=>n.starKey);
   stars.forEach((n,i)=>{n.x=-2+i;n.y=-7;});
-  D.stageRewards = ['액트 유지 +500 ms','마술 실력 ×1.2','모든 도우미 속도 +10%','새 케이스 시작 LV +1','연쇄 피해 +15%','피날레 피해 +30%'].map((effect,i)=>({id:i+1,venue:(i+1)*2,effect,quote:['박수 사이에도 마술은 이어져요.','손끝을 믿어 주세요.','함께하면 더 빠르죠.','새 케이스도 경험을 기억해요.','놀라움은 옆자리로 번져요.','마지막까지 당신의 확신을 보여 주세요.'][i]}));
+  D.stageRewards = ['액트 유지 +500 ms','마술 실력 ×1.2','모든 도우미 속도 +10%','새 케이스 등급 +1, 최대 7등급','연쇄 피해 +15%','피날레 피해 +30%'].map((effect,i)=>({id:i+1,venue:(i+1)*2,effect,quote:['박수 사이에도 마술은 이어져요.','손끝을 믿어 주세요.','함께하면 더 빠르죠.','새 케이스를 한 등급 높여 드려요.','놀라움은 옆자리로 번져요.','마지막까지 당신의 확신을 보여 주세요.'][i]}));
 })(GAME_DATA);
 
 // U4b pace compensation for stage abilities and the expanded helper ensemble.

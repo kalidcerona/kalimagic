@@ -58,6 +58,7 @@
     return `${state.venue}-${step}`;
   }
   function audience() {
+    if (menu === 'boo' || tutorialMomentActive()) return;
     if(state.mode==='transition'&&state.resolved&&state.idle.next&&!audience.restored){const v=D.venues[state.venue-1],a=C.audienceAt(v,state.j);audience.restored=true;wonMoment={v,a,context:U5.encounter(D.venues,state),until:clock+state.transMs};stageAudienceFace($('audience'),stageAudienceAsset(v,a),6);$('audienceLine').textContent=a.winLine;$('audienceLine').hidden=false;}
     if (wonMoment && (wonMoment.pending||presentation.active?.winner||clock < wonMoment.until)) return;
     wonMoment = null;
@@ -142,7 +143,7 @@
     }
   }
   function audienceFaceTick() {
-    if (audTestMood || menu === 'boo' || wonMoment || finalePending !== null) return; // v4 U50d: audTestMood = a face held by the test hook; s4e2 E: the face changes when the finale lands
+    if (tutorialMomentActive() || audTestMood || menu === 'boo' || wonMoment || finalePending !== null) return; // v4 U50d: audTestMood = a face held by the test hook; s4e2 E: the face changes when the finale lands
     const tutorialBase = tutorialStageBase();
     const mark = tutorialBase && !state.u15.tutorial.active ? chainMark() : null;
     const tutorialFight = !!tutorialBase && ((state.u15.tutorial.active && state.u15.tutorial.phase === 'fight' && !state.u15.tutorial.won) || (!!mark && mark.step.endsWith('-fight')));
@@ -194,16 +195,43 @@
     kaliFaceTick(); audienceFaceTick();
   }
   function focusNode(id) {
-    const node = D.tree.find(n=>n.id===id); if (!node) return;
-    treeView.selected = id; treeView.sheet = true; treeView.centerPending = true;
-    treeView.x = -node.x * 140 * treeView.zoom;
-    treeView.y = -node.y * 140 * treeView.zoom;
-    tree(true);
+    const slot = D.bookLayout.slots.find(slot => slot.ids.includes(id));
+    if (!slot) {
+      if (D.bookLayout.shopKeys.includes(id)) { shopFocus(id); gemShop(); }
+      return;
+    }
+    if (bookSession.owner !== state) { bookSession.owner = state; bookSession.tabs.clear(); }
+    bookSession.tab = slot.tab;
+    const memory = bookMemory(); memory.selected.set(slot.slot,id); memory.expanded.add(slot.slot);
+    treeView.selected = id; tree(true);
   }
   const rateSamples=[];
   let rateClock=0, rateAudience='';
+  let doubtSample=null;
+  function sampleDoubt(list=[]) {
+    const view=typeof phaseDoubt==='function'?phaseDoubt():{hp:state.audHp,max:state.audHpMax};
+    const at=state.fightMs, hp=view.hp;
+    if(state.mode!=='fight'||state.resolved||!Number.isFinite(at)||!Number.isFinite(hp)||!(view.max>0)){doubtSample=null;return null;}
+    const key=[state.dimension,state.venue,state.j,state.audId,state.wins,state.fails,state.phase2,view.max,state.audHpMax].join(':');
+    const burst=list.some(e=>['finisher','phase2','theaterPhase2','futurePhase','homecomingAct'].includes(e.type));
+    if(!doubtSample||doubtSample.owner!==state||doubtSample.key!==key||at<doubtSample.at||burst||doubtSample.hp-hp>=view.max*.2)
+      doubtSample={owner:state,key,at,hp,points:[{at,hp}]};
+    const sample=doubtSample, points=sample.points;
+    sample.at=at;sample.hp=hp;
+    if(at===points[points.length-1].at)points[points.length-1].hp=hp;
+    else points.push({at,hp});
+    while(points.length>1&&points[1].at<=at-12000)points.shift();
+    const seconds=(at-points[0].at)/1000, needed=state.pHeal||state.pattern==='heal'?C.CONST.patternHealEvery/1000:3;
+    if(seconds<needed)return null;
+    const net=(points[0].hp-hp)/seconds;
+    return net>0?hp/net:Infinity;
+  }
+  function doubtEtaText(eta=sampleDoubt()) {
+    return eta===null?'계산 중':Number.isFinite(eta)?`이 관객까지 약 ${C.formatNumber(Math.ceil(eta))}초`:'의심이 줄지 않고 있어요';
+  }
   function sampleRates(dt,list,coins,mentalLoss,audienceId=state.audId) {
     if(rateAudience!==audienceId){rateSamples.length=0;rateClock=0;rateAudience=audienceId;}
+    sampleDoubt(list);
     rateClock+=dt;
     rateSamples.push({at:rateClock,dt,damage:list.filter(e=>e.type==='audHit').reduce((n,e)=>n+(e.applied ?? e.dmg),0),coins:Math.max(0,coins),mentalLoss:mentalLoss});
     while(rateSamples.length && rateSamples[0].at<=rateClock-3000)rateSamples.shift();
@@ -227,13 +255,12 @@
       if(available&&ready&&state.mode==='fight'&&typeof firstUseHint==='function')firstUseHint('skill',k.name); // s5t: the first skill that becomes ready (display name)
       el.classList.toggle('ready',ready);el.classList.toggle('skill-locked',!available&&portraitLayout());el.classList.toggle('in-use',k.id==='showtime'&&state.skills.showtimeLeft>0);el.style.setProperty('--cooldown',`${Math.round(left/C.skillCooldown(state,k.id)*360)}deg`);
       el.querySelector('small').textContent=!available && portraitLayout() ? '무대 해금' : ready ? (k.id==='showtime' && state.skills.showtimeLeft>0 ? `${Math.ceil(state.skills.showtimeLeft/1000)}초` : '') : `${Math.ceil(left/1000)}초`;
+      if(k.id==='cheer'){el.setAttribute('aria-label',state.skills.cheerGuard?'관객 호응 · 다음 야유 방어 준비':k.name);if(state.skills.cheerGuard)el.querySelector('small').textContent='방어 준비';}
     });
     const seconds=rateSamples.reduce((n,e)=>n+e.dt,0)/1000;
     const damage=seconds?rateSamples.reduce((n,e)=>n+e.damage,0)/seconds:0, coins=seconds?rateSamples.reduce((n,e)=>n+e.coins,0)/seconds:0;
-    const eta=damage>0?(typeof phaseDoubt==='function'?phaseDoubt().hp:state.audHp)/damage:Infinity; // s5b: the theater phase's own bar
-    const mentalRate=seconds?Math.max(0,rateSamples.reduce((n,e)=>n+e.mentalLoss,0)/seconds):0;
-    const survival=mentalRate>0?(state.mental+state.shield)/mentalRate:Infinity;
-    $('perSecond').textContent=`초당 의심 −${C.formatNumber(damage)} · ${eta>survival?'버티기 힘들어요':Number.isFinite(eta)?`이 관객까지 약 ${C.formatNumber(Math.ceil(eta))}초`:'의심을 낮춰 보세요'}`;
+    const eta=sampleDoubt();
+    $('perSecond').textContent=`초당 의심 −${C.formatNumber(damage)} · ${doubtEtaText(eta)}`;
     $('coinSecond').textContent=`최근 수입/초 +${C.formatNumber(coins)}`;
   }
   function catchVisitorIncome() {
@@ -243,8 +270,10 @@
     if (typeof caseArrange !== 'undefined' && caseArrange) return [];
     const coins=state.features.progress.coinsEarned,health=state.mental+state.shield,aud=state.audId;
     const fight=state.mode==='fight' && state.features.climax.left<=0;
-    const maxDoubt=state.audHpMax;
+    const maxDoubt=state.audHpMax, cheerGuard=state.skills.cheerGuard;
     const list=C.step(state,dt,input);
+    const cancelled=list.find(e=>e.type==='heckleCancelled');
+    if(cheerGuard&&cancelled)cancelled.cheerGuardUsed=true;
     list.filter(e=>e.type==='audHit').forEach(e=>e.presentationMaxDoubt=maxDoubt);
     if(fight)sampleRates(dt,list,state.features.progress.coinsEarned-coins,health-state.mental-state.shield,aud);
     events(list);return list;
@@ -264,6 +293,9 @@
     const minutes=Math.floor(total/60000), duration=minutes>=60 ? `${C.formatNumber(Math.floor(minutes/60))}시간 ${minutes%60}분` : `${minutes}분`;
     const cap=total>r.awayMs ? ` · 보상 상한 ${Math.floor(r.awayMs/3600000)}시간` : '';
     $('offlineSummary').textContent=`${duration}${cap} · 동전 +${C.formatNumber(r.coins)} · 케이스 총 ${r.levels}레벨 상승`;
+    let resume=$('offlineResume');
+    if(!resume){resume=document.createElement('p');resume.id='offlineResume';$('offlineSummary').after(resume);}
+    resume.textContent=`이어서 공연할 곳: ${encounterNumber()} · ${D.venues[state.venue-1].name}`;
   }
   function initIdleControls() {
   [['coins','비법을 배우고 강화할 때 써요. 케이스와 공연 보상으로 모아요.'],['gems','실크 상점에서 물건을 사거나 스킬을 바로 충전할 때 써요.'],['keys','책이 필요한 비법을 배울 때 써요. 관객 도감을 완성하면 받아요.']].forEach(([id,copy])=>easyTooltip($(id).parentElement,copy,true));
@@ -344,15 +376,54 @@
     $('panelBody').append(element('p',r.bonus?'세 공연 완료 · 보너스 책 +1 받음':'세 공연을 모두 마치면 책 +1'),element('p',r.streakReward?`오늘 연속 공연 실크 +${r.streakReward} 받음`:'오늘 첫 미션을 마치면 연속 공연 실크를 받아요'));
   }
   let routineUntil=0;
+  function shopRoutineReady(id){
+    return typeof shopRoutineReturn==='undefined'||!shopRoutineReturn||shopRoutineReturn.state!==state||shopRoutineReturn.ready;
+  }
+  function finishShopRoutine(id){
+    if(typeof shopRoutineReturn!=='undefined'&&shopRoutineReturn?.state===state&&shopRoutineReturn.id===id)shopRoutineReturn.completed=true;
+  }
+  function restoreRoutineShop(){
+    const back=typeof shopRoutineReturn==='undefined'?null:shopRoutineReturn;
+    if(!back)return;
+    if(back.state!==state){shopRoutineReturn=null;return;}
+    if(!back.completed||menu||state.u15.scene||state.u15.queue.length)return;
+    shopRoutineReturn=null;shopView.tab='magic';shopFocus('');moreReturn=back.more;gemShop(back.scroll);
+    const card=$('panelBody').querySelector(`[data-shop-item="routine-${back.id}"]`);
+    const button=card?.querySelector('button');
+    if(button){
+      const body=$('panelBody'),missing=back.scroll-(body.scrollHeight-body.clientHeight);
+      if(missing>0){const space=element('div','','shop-return-space');space.style.height=Math.ceil(missing)+'px';space.setAttribute('aria-hidden','true');body.append(space);}
+      button.focus({preventScroll:true});restorePanelScroll(back.scroll,body,true);
+    }
+  }
+
+
+  function routineReady(id){
+    return D.routines.some(r=>r.id===id)&&!(menu||state.u15.scene||state.u15.queue.length||state.u15.tutorial.active||state.telegraphed||state.heckleMs<=C.CONST.telegraphMs||state.features.climax.left>0||C.bossProfile(state)==='future'&&state.u19.telegraph>0)&&
+      (typeof shopRoutineReady!=='function'||shopRoutineReady(id));
+  }
   function showRoutine(id){
-    if(menu||state.u15.scene||state.u15.queue.length||state.u15.tutorial.active||state.telegraphed||state.heckleMs<=C.CONST.telegraphMs||state.features.climax.left>0||C.bossProfile(state)==='future'&&state.u19.telegraph>0)return false;
+    if(!routineReady(id))return false;
     if(presentation.items.some(x=>x.routine===id)||presentation.active?.routine===id)return true;
-    presentation.push({routine:id,minimum:1600,priority:5,start:item=>{paintRoutine(id);item.end=endRoutine;}});return true;
+    const owner=state;
+    presentation.push({routine:id,minimum:1600,priority:5,start:item=>{
+      // A menu or story may have opened after enqueueing. Keep pending until a full scene ends.
+      if(state!==owner||!routineReady(id))return;
+      item.hold=true;
+      if(!paintRoutine(id,()=>{if(presentation.active===item&&state===owner){item.age=0;item.hold=false;}})){item.hold=false;return;}
+      item.end=()=>{
+        const complete=item.age>=item.minimum&&state===owner&&!$('routineCutin').hidden&&$('routineCutin').dataset.routine===id&&routineReady(id);
+        endRoutine();
+        if(!complete)return;
+        const index=state.u19.pending.indexOf(id);if(index>=0)state.u19.pending.splice(index,1);
+        if(typeof finishShopRoutine==='function')finishShopRoutine(id);
+      };
+    }});return true;
   }
   // v4 U49 1: the routine art plays in Kali's own spot (#magicianMini) instead of a square panel. The strip (512x256, two 256 frames in the same
   // frame format as kali-performance) replaces the card-fan pose for the 1.6 s cut-in; a reaction face (.reacting / .disappointed) wins over it.
   // #routineCutin stays in the page only as the invisible "a cut-in is playing" marker the triggers and tools read.
-  function paintRoutine(id){
+  function paintRoutine(id,ready=()=>{}){
     const r=D.routines.find(r=>r.id===id);if(!r)return false;
     const skin=state.u18.equipped.kali,outfit=!!(skin&&skinReactionArt.has(skin)&&outfitRoutineArt.has(id));
     const host=$('magicianMini'),marker=$('routineCutin');
@@ -360,12 +431,13 @@
     const strip=outfit?{path:`assets/routine-${id}-${skin}.png`,image:assetImage(`assets/routine-${id}-${skin}.png`)}:(()=>{const path=`assets/routine-${id}.png`,image=assetImage(path);return {path,image};})();
     const path=strip.path,image=strip.image;
     // v5 4b: the routine strips are drawn in the default T-shirt, so an equipped outfit keeps its own performance sheet (owner: perform in the outfit).
-    const play=()=>{if(marker.hidden||marker.dataset.routine!==id||!image.naturalWidth||(state.u18.equipped.kali&&!outfit))return;host.style.setProperty('--routine-art',`url('${assetUrl(path)}')`);host.classList.remove('routine-art');void host.offsetWidth;host.classList.add('routine-art');};
+    const token={};marker._routineToken=token;
+    const play=()=>{if(marker.hidden||marker._routineToken!==token||marker.dataset.routine!==id)return;if(!image.naturalWidth||(state.u18.equipped.kali&&!outfit)){ready();return;}host.style.setProperty('--routine-art',`url('${assetUrl(path)}')`);host.classList.remove('routine-art');void host.offsetWidth;host.classList.add('routine-art');ready();};
     marker.dataset.routine=id;marker.hidden=false;routineUntil=clock+1600;
-    if(image.complete)play();else image.addEventListener('load',play,{once:true});
+    if(image.complete)play();else {image.addEventListener('load',play,{once:true});image.addEventListener('error',play,{once:true});}
     return true;
   }
-  function endRoutine(){const marker=$('routineCutin');marker.hidden=true;delete marker.dataset.routine;$('magicianMini').classList.remove('routine-art');}
+  function endRoutine(){if(presentation.active?.routine)presentation.active.hold=false;const marker=$('routineCutin');marker.hidden=true;delete marker.dataset.routine;$('magicianMini').classList.remove('routine-art');}
   function renderU19(){
     const future=C.bossProfile(state)==='future',u=state.u19;
     const warning=$('futureTelegraph');warning.hidden=!future||u.telegraph<=0;warning.textContent=u.phase===1?'네 쇼타임을 따라 할게.\n끝난 뒤에 나를 노려 봐.':['','','완벽한 루틴\n빛나는 칸을 계속 눌러 줘.','이게 진짜 미래의 나야.\n20초 동안 빛나는 칸만!'][u.phase];
@@ -379,7 +451,8 @@
     else warning.style.top='';
     $('magicianMini').classList.toggle('future-suit',state.u18.equipped.kali==='future');
     if((menu||state.u15.scene)&&!$('routineCutin').hidden)endRoutine();
-    if(u.pending.length&&$('routineCutin').hidden&&showRoutine(u.pending[0]))u.pending.shift();
+    if(typeof restoreRoutineShop==='function')restoreRoutineShop();
+    if(u.pending.length&&$('routineCutin').hidden)showRoutine(u.pending[0]);
     document.querySelectorAll('#board .cell').forEach((el,i)=>el.classList.toggle('future-target',future&&u.phase>=2&&i===u.target&&(u.phase===2||u.window>0)));
   }
   // U36: state flags that style.css used to read through :has() selectors on #stage, #audienceCard and #activeSkills (see the U36 note in style.css).

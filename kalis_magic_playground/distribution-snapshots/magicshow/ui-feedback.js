@@ -89,13 +89,32 @@
   }
   const toastQueue = [], visibleToasts = [];
   let lastToastKind = '';
-  function toast(text,kind='') {
+  function toast(text,kind='',onStart=null) {
+    if (menu && !kind) { panelStatus(text); return; }
     return presentation.push({merge:'toast:'+kind+':'+text,stageTransition:kind==='saveClear'||kind==='saveError',skillNotice:kind==='skill',priority:kind==='skill'?80:0,minimum:1200,start:item=>{
+      if (onStart) onStart();
       const el=pxIcons(element('div',text+(item.extra?' · '+item.extra:''),'toast'));$('toasts').append(el);const expiry=setTimeout(()=>el.remove(),3500);item.end=()=>{clearTimeout(expiry);el.remove();};
     }});
   }
+  function panelStatus(text) {
+    const body = $('panelBody');
+    let line = body.querySelector('.panel-action-status');
+    if (!line) { line = element('p', '', 'panel-action-status'); line.setAttribute('role','status'); body.prepend(line); }
+    line.textContent = text;
+  }
+  function dailyClaimMoment() {
+    // Keep feedback pending until the boo animation rebuilds the failure panel.
+    if (menu === 'boo') return;
+    const receipt = dailyReceiptChanges(), amount = C.takeDailyClaimFeedback(state);
+    if (!receipt.count) return;
+    const text = `오늘의 공연 ${receipt.count}개 완료 · 자동으로 받았어요${amount ? ` · 실크 +${amount}` : ''}${receipt.bonus ? ' · 보너스 책 +1' : ''}`;
+    const rewardFlight = () => { const p = audiencePoint(.5, .14); fly(p.x, p.y, target('gems'), '🧣'); };
+    if (menu) { if(menu==='missions')drawMissions(); panelStatus(text); rewardFlight(); }
+    else toast(text, 'daily-claim', rewardFlight);
+  }
   function milestonePop(text,p){presentation.push({merge:'milestone:'+text,minimum:1200,start:item=>{const el=pxIcons(element('div',text+(item.extra?' · '+item.extra:''),'toast'));$('toasts').append(el);float('×2!',p.x,p.y,'#ffe65c',22);const expiry=setTimeout(()=>el.remove(),3500);item.end=()=>{clearTimeout(expiry);el.remove();};}});}
   function nextToasts(dt=0){
+    if (tutorialMomentActive()) return;
     // Ordinary notices wait behind queued dialogue; genuine clear/reward notices still finish first.
     if(state.u15.queue.length&&!presentation.active&&!skillNoticePending()){
       if(!presentation.items.some(item=>item.stageTransition)) {
@@ -119,7 +138,7 @@
       if(source)source.features.achievements=[...new Set([...source.features.achievements,...state.features.achievements])];
       const saved = source || state;
       if (!source && !document.hidden) C.markAway(state,Date.now());
-      const snapshot = Object.assign({}, saved, {
+      const snapshot = Object.assign({}, saved, C.showSaveVitals(saved), {
         comboMs: Math.max(0, saved.comboMs),
         sealMs: Math.max(0, saved.sealMs),
         transMs: Math.max(0, saved.transMs)
@@ -214,7 +233,7 @@
         const one = element('div', '', 'colleague'); one.style.setProperty('--i', String(i)); one.dataset.index = String(i);
         const idle = assetImage('assets/colleague-idle.png').cloneNode(), perform = assetImage('assets/colleague-perform.png').cloneNode();
         idle.className = 'colleague-idle'; perform.className = 'colleague-perform'; idle.alt = perform.alt = '';
-        one.append(idle, perform, element('span', '', 'colleague-trick'), element('span', D.colleagueNames[i % D.colleagueNames.length], 'colleague-name'));
+        one.append(idle, perform, element('span', '', 'colleague-trick'), element('span', D.colleagueNames[i % D.colleagueNames.length] + (i===4?' 딜':i===5?' 돈':''), 'colleague-name'));
         host.append(one);
       }
     }
@@ -293,12 +312,12 @@
     const x = (r.left - stage.left) / scale + (collapsed ? r.width + 22 : -26), y = (r.top + r.height / 2 - stage.top) / scale;
     if(numbers.length<caps.numbers)numbers.push({text:model.text.slice(model.text.indexOf('+')),x,y,color:'#a8e8ff',size:11,start:clock,life:500,fixed:true});
   }
-  // v4 U46 A2: the break moment. A case break throws 24 star and square pixels (4 under reduced motion) inside the U36 particle cap.
+  // v4 U46 A2: the break moment. A case break throws 8 common or 24 rare star and square pixels (4 under reduced motion) inside the U36 particle cap.
   // s4e2 F: the presentation slow (hit stop) left the case break; it now marks only the stage-clear hit (hitStop, 120 ms at 0.15x).
   // The effect clock and the running animations slow down; game time (stepCombat dt) is untouched.
   const BREAK_SLOW = { ms: 120, rate: .15 }; let slowUntil = 0, slowAnims = [];
-  function breakMoment(x, y, color) {
-    const n = reduced ? 4 : 24;
+  function breakMoment(x, y, color, rarity = 'common') {
+    const n = reduced ? 4 : rarity === 'common' ? 8 : 24;
     for (let i = 0; i < n && particles.length < caps.particles; i++) {
       const angle = i * Math.PI * 2 / n + (i % 2) * .13, speed = 60 + (i * 37) % 60;
       particles.push({ x, y, dx: Math.cos(angle) * speed, dy: Math.sin(angle) * speed - 18, start: clock, life: 420 + (i % 4) * 40, color: ['#F2E6C8', '#E8BF68', color][i % 3], size: 2 + i % 2, square: i % 2 === 0 });
@@ -340,15 +359,23 @@
     if (effect === 'boxFill') return { x: 1174, y: 490 };
     return { x: 686, y: 368 };
   }
-  function fly(x, y, dest, emoji, label = '', color = '#ffe35b', delay = 0, image = null) {
+  function fly(x, y, dest, emoji, label = '', color = '#ffe35b', delay = 0, image = null, kind = 'item') {
     if (phone && (x > layoutWidth || y > layoutHeight)) {
       const origin = x >= 870 ? (y < 160 ? target('coins') : boardPoint(x - 870, y - 160)) : target('damage');
       x = origin.x; y = origin.y;
     }
-    if (reduced || flights.length >= Math.min(caps.icons, 8)) return;
+    if (reduced) return;
+    const limit = Math.min(caps.icons, 8);
+    // Coins leave room for the causal item flight; items can evict a queued coin.
+    if (kind === 'coin' && (flights.length >= limit - 2 || flights.filter(f => f.kind === 'coin').length >= 2)) return;
+    if (flights.length >= limit && kind !== 'coin') {
+      const coin = flights.findIndex(f => f.kind === 'coin');
+      if (coin >= 0) flights.splice(coin, 1);
+    }
+    if (flights.length >= limit) return;
     if (!image && PX_ICONS[String(emoji).replace(/️/g, '')] && !PX_UI_UNSHIPPED.has(PX_ICONS[String(emoji).replace(/️/g, '')])) image = assetImage(`assets/ui/ic-${PX_ICONS[String(emoji).replace(/️/g, '')]}.webp`); // v4 U46 A5: pixel icon instead of a canvas emoji
     const up = !!(dest && dest.portrait);
-    flights.push({ x, y, tx: dest.x, ty: dest.y, emoji, label, color, image, start: clock + delay, life: 220, arc: up ? 'up' : '', pop: up ? dest.pop : null });
+    flights.push({ kind, x, y, tx: dest.x, ty: dest.y, emoji, label, color, image, start: clock + delay, life: 220, arc: up ? 'up' : '', pop: up ? dest.pop : null });
   }
   // Portrait case opens rise from the case into the stage. Damage hits the audience; a self buff lands on Kali.
   function portraitDropTarget(effect) {
@@ -364,7 +391,7 @@
     el.classList.remove('land-pop'); void el.offsetWidth; el.classList.add('land-pop');
   }
   function coinStream(x, y, count, delay = 0) {
-    for (let i = 0; i < Math.min(count, 8); i++) fly(x + i * 5, y, target('coins'), '🪙', '', '#ffe35b', delay + i * 28);
+    for (let i = 0; i < Math.min(count, 8); i++) fly(x + i * 5, y, target('coins'), '🪙', '', '#ffe35b', delay + i * 28, null, 'coin');
   }
   // v4 U39: the clear moment. It fills the existing 2500 ms win item (nothing is lengthened): flash, stamp, applause, coins to the counter,
   // two bows and a slide out, all on transform and opacity through Web Animations. Reduced motion keeps opacity only and no particles.

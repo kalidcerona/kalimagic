@@ -1,7 +1,7 @@
 /* style-frame.css: #viewport / #frame / #stage frame geometry and body-level layout classes. (CSS regroup 10-28)
  * Earlier or later rules for the same elements may also sit in style-base.css (early layer) and
  * style-overrides-*.css (late layer) when the cascade needs them there. */
-#viewport{position:fixed;inset:0;display:grid;place-items:center}#frame{position:relative;flex:none}#stage{position:absolute;left:0;top:0;width:1600px;height:900px;transform-origin:top left;background:#000;image-rendering:pixelated;user-select:none;overflow:hidden}
+#viewport{position:fixed;inset:0;display:grid;place-items:center}#frame{position:relative;flex:none}#stage{position:absolute;left:0;top:0;width:1600px;height:900px;transform-origin:top left;background:#000;image-rendering:pixelated;user-select:none;overflow:clip}
 #stage{touch-action:none}
 .portrait #stage{pointer-events:none}
 /* U5 dimension, optional pixel assets and final performance. */

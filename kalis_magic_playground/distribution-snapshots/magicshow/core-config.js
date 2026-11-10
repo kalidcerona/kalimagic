@@ -46,8 +46,8 @@
     intervalPerV: 0,
     intervalMin: 1.5,
     telegraphMs: 600,
-    mentalVisibleEvery: 2, mentalVisibleHit: 0.075, mentalVisibleAbsorb: 0.8,
-    mentalVisibleMs: 500, mentalVisibleRegen: 0.005,
+    mentalVisibleEvery: 2, mentalVisibleHit: 0.075, mentalVisibleAbsorb: 0.5,
+    mentalVisibleMs: 20000, mentalVisibleRegen: 0.002,
     winTransitionMs: 2500,
     // s5d (owner 10-23 decision 12): 미래의 칼리 enters gently and the player wins narrowly. One row per phase (1-3): atk = one heckle as a
     // share of max 멘탈, interval = seconds between heckles. firstHeckleMs = the wait after the opening telegraph before the first heckle.
@@ -60,7 +60,7 @@
     // retryHp (owner Q 11-1 ①, 10-28): after a loss to 미래의 칼리 (bossLossStreak at this venue >= 1) the next entry's 기대 is that share
     // of the first try's, so a loss plus the retry stays near the first try's length; the first try is unchanged (streak 0).
     future: { firstHeckleMs: 1500, atk: [0.0046875, 0.0046875, 0.0046875], interval: [1.5, 1.5, 1.5],
-      visibleEvery: [2, 1, 1], visibleHit: [0.075, 0.055, 0.095], visibleAbsorb: [0.8, 0.7, 0.7], visibleMs: [500, 3200, 3200], retryEase: 1 / 3, retryHp: 0.65 },
+      visibleEvery: [2, 1, 1], visibleHit: [0.075, 0.055, 0.115], visibleAbsorb: [0.8, 0.7, 0.7], visibleMs: [500, 3200, 3200], retryEase: 1 / 3, retryHp: 0.65 },
     // v4 U45: test-season number. applySaveEpoch wipes progress ONCE per device when this is higher than the stored magicShowBuster.epoch.
     // Keep it at 1: later releases then keep every player's progress. Raise it only when the owner asks for another fresh start.
     saveEpoch: 1,
@@ -69,7 +69,7 @@
     finisherNeed: 20,
     finisherDmg: 22,
     colleagueEvery: 5000,
-    colleagueDmg: 2,
+    colleagueDmg: 32,
     coinPerBox: 1,
     winCoinBase: 10,
     winCoinGrowth: 1.32,
@@ -132,13 +132,14 @@
     // The last heckle is announced at 30 percent doubt. The lower-growth route retains a finite
     // mental-tail/no-skill solution; the arrival build still needs cheer or further preparation.
     finalHeckle: 70000,
-    finalHeckleWarnMs: 4000,
+    finalHeckleWarnMs: 2000,
+    finalBossHeckleScale: 0.4,
     missChance: 0.22,
     phase2At: 0.75,
     phase2Hp: 0.12,
     bossHpMult: 0.8,
     starGainBase: 3,
-    starTrick: 1.4,
+    starTrick: 2.4,
     starWand: 1.14,
     starGuard: 1.18,
     starTempoRate: 1.06,

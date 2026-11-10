@@ -1,18 +1,36 @@
 'use strict';
-  function caseCap(state) { return 5 + (state.tree.caseMax || 0); }
-  function caseNeed(lv) { return Math.ceil(3 * Math.pow(1.35, lv - 1)); }
-  // v4 U48 M2 (owner: "카드케이스에 레벨 보이는 거 지우고 케이스 색으로 레벨을 가늠하게 해줘."): the board shows no LV text; the case art tells the level
-  // band over the whole range (LV 1 to 5 + caseMax 45 = 50): red 1-4, blue 5-9, black 10-17, silver 18-29, purple galaxy 30-50 (golden stays golden).
-  // casePips is the place inside the band (1 to 4 small dots). Presentation only: nothing in the fight reads either.
-  var CASE_BANDS = [1, 5, 10, 18, 30, 51];
-  function caseBand(lv) { for (var b = 0; b < 5; b++) if (lv < CASE_BANDS[b + 1]) return b; return 4; }
-  function caseTier(cell) { return cell.golden ? 'box-golden' : 'box-' + caseBand(cell.lv || 1); }
-  function casePips(cell) { var lv = cell.lv || 1, b = caseBand(lv), lo = CASE_BANDS[b], span = CASE_BANDS[b + 1] - lo; return 1 + Math.min(3, Math.floor((lv - lo) * 4 / span)); }
-  function caseItems(lv) { return 1 + Math.floor((lv - 1) / 3); }
+  function caseGradeFraction(state) {
+    var node = NODE_BY_ID.caseGrade;
+    return node ? Math.max(0, Math.min(1, (state.tree.caseGrade || 0) / treeMax("caseGrade"))) : 0;
+  }
+  function drawCaseGrade(state, fraction) {
+    return 1 + pickW(state, DATA.caseGrades.probabilities(fraction == null ? caseGradeFraction(state) : fraction));
+  }
+  // Temporary P3c art bridge: blue 1, violet 4, red 0, black 2, silver 3, rainbow 3, galaxy 4.
+  function caseTier(cell) { return cell.golden ? 'box-golden' : ['box-1','box-violet','box-0','box-2','box-3','box-rainbow','box-4'][(cell.lv || 1)-1]; }
+  function casePips(cell) { return 0; }
+  function caseItems(grade, golden) { return golden ? DATA.caseGrades.goldenItems : DATA.caseGrades.items[grade - 1]; }
+  function caseBoost(state, grade, kind, golden) {
+    if (!state || golden || grade < DATA.caseGrades.goodGrade) return 1;
+    return 1 + (kind === 'coin' ? DATA.caseGrades.coinBoostPerLevel * (state.tree.caseCoinBoost || 0) : DATA.caseGrades.damageBoostPerLevel * (state.tree.caseDmgBoost || 0));
+  }
+  function caseMultiplier(grade, kind, golden, state) { return (golden ? DATA.caseGrades.goldenMultiplier : DATA.caseGrades[kind][grade - 1]) * caseBoost(state,grade,kind,golden); }
+  function caseOpeningMultiplier(grade, golden, state) { return (golden ? 1 : DATA.caseGrades.opening[grade - 1]) * caseBoost(state,grade,'coin',golden); }
   // v4 U38: the endless nodes are gone; only the one-level hidden node of a branch still adds its 2 percent.
-  // v4 U48 N4: each learned routine 비법 (routine-<id>) adds 3 percent to its routine's branch.
-  var ROUTINE_NODES = DATA.tree.filter(function (n) { return n.routine; });
-  function branchBonus(state, branch) { var r = 0; for (var i = 0; i < ROUTINE_NODES.length; i++) if (ROUTINE_NODES[i].routineBranch === branch && state.tree[ROUTINE_NODES[i].id]) r++; return 1 + .02 * (state.tree['hidden-' + branch] || 0) + .03 * r; }
+  var ROUTINE_FORMULAS = {};
+  DATA.bookLayout.routineAbilities.forEach(function(a) { ROUTINE_FORMULAS[a.formula + ':' + a.key] = a; });
+  var ROUTINE_EFFECTS = DATA.bookLayout.routineAbilities.filter(function(a) { return a.formula === 'nodeEffects'; });
+  // Use the ownership union even before legacy save normalization. Never stack it.
+  function routineOwned(state, id) {
+    return !!state.tree['routine-' + id] || !!(state.u19 && state.u19.routines.indexOf(id) >= 0);
+  }
+  function routineMultiplier(state, formula, key) {
+    var ability = ROUTINE_FORMULAS[formula + ':' + key];
+    return ability && currentShowId(state) === ability.id ? ability.multiplier : 1;
+  }
+  function branchBonus(state, branch) {
+    return (1 + .02 * (state.tree['hidden-' + branch] || 0)) * routineMultiplier(state, 'branchBonus', branch);
+  }
   // v4 U45: 틴 케이스 (node.caseItemMult) multiplies what every opened case's items do (damage, shield, heal, coins, xp); 1 without it.
   function caseItemBonus(state) { var m = 1; DATA.tree.forEach(function (n) { if (n.caseItemMult && state.tree[n.id]) m *= n.caseItemMult; }); return m; }
   // Saturate gains at the existing strict-save limits, before state is serialized.
@@ -26,9 +44,10 @@
     addGain(state.features.progress, 'coinsEarned', amount, 1e24);
   }
   function fillBox(state, cell) {
-    cell.lv = cell.lv || Math.min(caseCap(state), 1 + (state.tree.caseStart || 0) + (hasReward(state, 4) ? 1 : 0));
-    cell.xp = cell.xp || 0;
-    var hp = caseHp(state._boxHp || CONST.boxHpBase, cell.lv);
+    var golden = !!(state.tree.golden && state.mode === "fight" && state.features.goldPending);
+    cell.lv = golden ? 1 : Math.min(7, drawCaseGrade(state) + (hasReward(state, 4) ? 1 : 0));
+    cell.xp = 0;
+    var hp = caseHp(state._boxHp || CONST.boxHpBase, cell.lv, golden);
     cell.hp = hp * (1 - nodeEffects(state).prepared);
     cell.hpMax = hp;
     cell.sealed = false;
@@ -59,6 +78,7 @@
   }
 
   function beginAudience(state, v, j, ev) {
+    endHelperBuffs(state, ev);
     MENTAL_VISIBILITY.delete(state);
     resetTheftBudget(state);
     if (VENUES[v-1].mergedInto) { v=venueNumber(VENUES[v-1].mergedInto); j=1; }
@@ -201,7 +221,7 @@
     var venue = state.venue;
     var j = state.j;
     var audId = state.audId;
-    var coins = Math.round(CONST.winCoinBase * Math.pow(CONST.winCoinGrowth, balanceRank(venue) - 1) * (state._coinMul || 1) * nodeEffects(state).tip * gearMultiplier(state,"reward"));
+    var coins = Math.round(CONST.winCoinBase * Math.pow(CONST.winCoinGrowth, balanceRank(venue) - 1) * (state._coinMul || 1) * nodeEffects(state).tip * gearMultiplier(state,"reward") * helperBuffMultiplier(state,"coin"));
     if (coins < 1) coins = 1;
     earnCoins(state, coins);
     if(state.fightMs>0){state.u19.lastDps=state.u19.damage/(state.fightMs/1000);state.u19.lastPower=state._V||1;}

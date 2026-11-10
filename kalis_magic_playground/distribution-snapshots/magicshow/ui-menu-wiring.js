@@ -31,7 +31,6 @@
   $('mapButton').addEventListener('click',()=>openStageMap());
   $('customizeButton').addEventListener('click',customize);
   $('gemShopButton').addEventListener('click',()=>{if(lineOpen())return;gemShop();});
-  $('wardrobeButton').addEventListener('click',wardrobe);
   // v4 U50b: no shop from the skill column while a character dialog is open (Codex Sol U50 FAIL 1). U50c: this comment used to swallow the rest of the line.
   const shopQuick=action('',()=>{if(lineOpen())return;gemShop();});shopQuick.id='gemShopQuick';shopQuick.className='active-skill gem-shop-quick';shopQuick.setAttribute('aria-label','실크 상점');
   shopQuick.append(Object.assign(document.createElement('img'),{className:'cur-icon skill-art',src:'assets/cur-silk.webp',alt:'',width:18,height:18}),element('span','실크 상점'));

@@ -140,7 +140,7 @@ GAME_DATA.progressFork={
 };
 
 // Batch B: keep existing routine node ids for save compatibility; purchases use silk.
-for (const id of ['eggbag','rubberband','coloringbook','cube','wand']) {
+for (const {id} of GAME_DATA.routines) {
   const routine = GAME_DATA.routines.find(r => r.id === id);
   routine.shopCost = 10;
   const node = GAME_DATA.tree.find(n => n.id === 'routine-' + id);
@@ -226,9 +226,9 @@ GAME_DATA.venues.find(v=>v.slug==='lecturenote').headliner.endingLines=GAME_DATA
  // Hotel stage (10-26): the new 호텔 마술 대회 (its own row, hpFactor 44000, balance rank 6.5) sits between 대학 축제 and TV 오디션; festival x0.85 and
  // audition x0.6 (4 regulars now) give the time back, so 50-seed broadcast, vegas, multiverse and lecturenote stay inside their targets.
  // Was (v6): festival:65808.59999999999,audition:96911.1537883632.
- const HP_FINAL={family:0.7402686720000002,party:7.207782399999999,school:63.273600000000016,cafe:530.909184,meetup:548.2318509359998,theater:9249.24,festival:55937.30999999999,audition:58146.692273017914,broadcast:137855.5161984,vegas:221169.74343750003,broadway:92578.2,moon:896996.2921919998,sun:952875.9583200001,galaxy:902219.18353875,multiverse:1099951.453674474,lecturenote:678813.6960000001};
+ const HP_FINAL={family:1.25,party:7.207782399999999,school:1138.9248000000002,cafe:7238.94672384,meetup:548.2318509359998,theater:103637.7342,festival:81775.59254865002,audition:164845.8725940058,broadcast:299093.9127349774,vegas:549385.64269875,broadway:239650.24297500003,moon:572406.9714086724,sun:952875.9583200001,galaxy:2174968.50801707,multiverse:1607070.3219979198,lecturenote:678813.6960000001};
  D.venues.forEach(v=>{if(HP_FINAL[v.slug]!==undefined)v.hpFactor=HP_FINAL[v.slug]*(v.slug==='family'?1:v.slug==='party'?0.85:0.65);});
- D.venues.find(v=>v.slug==='lecturenote').bossHpFactor=1.9752478199999999*0.45;
+ D.venues.find(v=>v.slug==='lecturenote').bossHpFactor=1.4615;
 })(GAME_DATA);
 
 // 12-90: new dialogue awaits owner review; approved fourth-script lines remain intact.
@@ -274,6 +274,6 @@ GAME_DATA.gearEffectLabels={hold:'꾹 누르기 속도',crit:'대박 탭 확률'
 for(const item of GAME_DATA.gemShop){const node=GAME_DATA.tree.find(n=>n.id===item.id);if(node)node.shopOnly=true;}
 
 // Real silk sources, independent of the retired dealer card-flip prizes.
-GAME_DATA.silkRewards={caseDrop:2,monteCorrect:3,firstClear:5,achievement:2};
+GAME_DATA.silkRewards={caseDrop:8,monteCorrect:3,firstClear:10,achievement:2};
 
 // v5 script patch (2026-10-24): values that could not be replaced in place

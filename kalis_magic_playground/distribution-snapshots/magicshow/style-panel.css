@@ -168,7 +168,7 @@ html body.tablet #viewport#viewport #stage#stage#stage#stage#stage #panel[data-c
 html body.tablet #viewport#viewport #stage#stage#stage#stage#stage #panel[data-cutscene="1"] .twist-copy :is(strong,h2) { font-size:14px; line-height:20px; }
 html body #viewport#viewport #stage#stage#stage#stage#stage #panelBody .skill-guide-copy b { display:block; margin:0 0 4px; font-size:14px; line-height:18px; color:#ffe9ac; word-break:keep-all; }
 html body #viewport#viewport #stage#stage#stage#stage#stage #panelBody .skill-guide-copy p { margin:0 0 2px; font-size:13px; line-height:18px; word-break:keep-all; overflow-wrap:break-word; }
-/* The 도감 has six tabs since 옷장 joined it: every tab stays visible (two rows of three upright, wrapping in landscape) instead of a sideways scroll. */
+/* The 도감 has five tabs (옷장 moved to 커스텀): every tab stays visible (two rows upright, wrapping in landscape) instead of a sideways scroll. */
 html body.portrait-layout #viewport#viewport #stage#stage#stage#stage#stage #panel[data-screen="bestiary"] #panelBody > .panel-tabs { display:grid !important; grid-template-columns:repeat(3,minmax(0,1fr)); overflow:visible !important; }
 html body:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage#stage #panel[data-screen="bestiary"] #panelBody > .panel-tabs { flex-wrap:wrap !important; overflow:visible !important; }
 @keyframes headliner-plate { 0% { opacity:0; transform:translateX(-110%) } 28% { opacity:1; transform:translateX(0) } 72% { opacity:1; transform:translateX(0) } 100% { opacity:0; transform:translateX(110%) } }

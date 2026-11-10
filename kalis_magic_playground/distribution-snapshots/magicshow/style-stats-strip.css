@@ -103,8 +103,9 @@ body:not(.phone) #viewport #stage #audienceCard #stageStats .mental:before{conte
 body:not(.phone) #viewport #stage #audienceCard #combo:before{content:"";width:28px;height:28px;margin-right:6px;background:url('assets/ui/ic-clap.webp') center/28px no-repeat;image-rendering:pixelated}
 body:not(.phone) #viewport #stage #audienceCard #comboGoal{display:none}
 body:not(.phone) #viewport #stage #audienceCard .xp-row{left:120px;right:auto;top:690px;width:190px}
-body:not(.phone) #viewport #stage #audienceCard .stats.phone-expanded{left:12px!important;right:auto!important;top:auto!important;bottom:20px!important;width:736px!important;height:auto!important;max-height:none;grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:84px;gap:8px;padding:8px;overflow:hidden;z-index:9}
-body:not(.phone) #viewport #stage #audienceCard .stats.phone-expanded .stat{grid-template-columns:minmax(0,1fr) auto;align-content:space-between;height:84px;padding:6px 10px}
+body:not(.phone) #viewport #stage #audienceCard .stats.phone-expanded{left:12px!important;right:auto!important;top:auto!important;bottom:20px!important;width:736px!important;height:auto!important;max-height:none;grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:1fr;gap:8px;padding:8px;overflow:hidden;z-index:9}
+body:not(.phone) #viewport #stage #audienceCard .stats.phone-expanded .stat{grid-template-columns:minmax(0,1fr);grid-template-areas:"l" "v" "s";align-content:start;height:auto;min-height:84px;padding:6px 10px}
+body:not(.phone) #viewport #stage #audienceCard .stats.phone-expanded .stat-sub{min-width:0;max-width:100%;white-space:normal;overflow-wrap:anywhere;text-align:left}
 html body.phone #viewport#viewport #stage #audienceCard #stageStats > #mental{flex-wrap:nowrap!important}
 /* phones: two lines (액트 and 자신감 on top, 멘탈 under them) so the big late-game numbers never overflow the band */
 html body.phone:not(.tablet) #viewport#viewport #stage #audienceCard #stageStats{height:46px!important;flex-wrap:wrap!important;row-gap:0!important;align-content:center}
@@ -195,7 +196,6 @@ html body.phone.phone-narrow:not(.portrait-layout) #viewport#viewport #stage#sta
 
 /* s4c: a thicker landscape stats strip (labels 12 px, values 15 px bold, 8 px gauges). The two-row narrow variant keeps its own grid. */
 html body.phone:not(.portrait-layout):not(.phone-narrow) #viewport#viewport #stage#stage#stage#stage#stage #audienceCard #stageStats { --stats-band-height:56px; --stats-cell-height:44px; padding:6px 12px; }
-
 html body.phone:not(.portrait-layout):not(.phone-narrow) #viewport#viewport #stage#stage#stage#stage#stage #stageStats :is(.mental-label,.shield-label,#combo > span:not(.bitmap):not(.meter-bar),#stageRate > span:not(#stageRateNumber):not(.meter-bar)) { grid-column:2; grid-row:1; font:12px/16px system-ui,sans-serif; white-space:nowrap; overflow:hidden; }
 
 
@@ -211,7 +211,7 @@ html body #viewport #stage #statMental.meter-refill .ms-bar { animation:meter-re
    One framed panel. Left: 멘탈, 자신감, 피날레 rows (icon, label, bar, value). A pixel divider. Right: 액트 (big gold) over 연출 (no "/초").
    The landscape 피날레 cell (s4j 3) and the four old cells are gone; in landscape the panel takes the finale slot (left 4 px). Height unchanged.
    ui.js stripRow() writes --p (0..1) and the value of each row; actCountUp() rolls and pops 액트. */
-html body #viewport#viewport #stage#stage#stage#stage#stage#stage #audienceCard #stageStats { display:block !important; padding:5px 10px !important; gap:0 !important; border-width:0 !important; border-style:solid; border-image:url('assets/kit/stats-frame.webp') 16 fill / 8px / 0 stretch !important; background:transparent !important; overflow:hidden !important; }
+html body #viewport#viewport #stage#stage#stage#stage#stage#stage #audienceCard #stageStats { display:block !important; padding:var(--phone-stats-pad,5px) 10px !important; gap:0 !important; border-width:0 !important; border-style:solid; border-image:url('assets/kit/stats-frame.webp') 16 fill / 8px / 0 stretch !important; background:transparent !important; overflow:hidden !important; }
 html body.phone:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage#stage#stage #audienceCard #stageStats { left:4px !important; }
 html body #viewport#viewport #stage#stage#stage#stage#stage#stage #audienceCard #stageStats > .ms-strip {
   display:grid !important; grid-template-columns:minmax(0,1fr) var(--side-w,108px); align-items:stretch;
@@ -238,7 +238,7 @@ html body:is(.portrait-compact,:not(.phone)) #stageStats .ms-act-num.ms-long { f
 /* the narrowest landscape stage (phone-narrow, e.g. 678 x 466 with 62 px notch insets: a 227 px panel): the small sizes, a 96 px right slot,
    and no icons on the three gauge rows (the labels name them), so 멘탈 14,356 and 액트 99,999 fit without clipping */
 html body.phone-narrow #stageStats .ms-strip { --side-w:96px; }
-html body.phone-narrow #viewport#viewport #stage#stage#stage#stage#stage#stage #audienceCard #stageStats { padding:4px 8px !important; }
+html body.phone-narrow #viewport#viewport #stage#stage#stage#stage#stage#stage #audienceCard #stageStats { padding:var(--phone-stats-pad,4px) 8px !important; }
 html body.phone-narrow #stageStats .ms-gauges { row-gap:0; column-gap:3px; grid-template-columns:0 auto minmax(0,1fr) minmax(28px,auto); }
 html body.phone-narrow #stageStats .ms-g > img { visibility:hidden; width:0; }
 html body.phone-narrow #stageStats :is(.ms-label,.ms-num) { font-size:10px; line-height:12px; }
@@ -264,14 +264,28 @@ html body.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#s
 @media (prefers-reduced-motion:reduce) { #phoneFightStats .fight-stat-up { animation:none; } }
 
 html body.phone #phoneFightStats .bitmap::after { font:10px/16px Galmuri11, monospace !important; }
-/* Landscape only: three 11px gauge rows plus gaps overflow the strip by 5px onto #phoneFightStats. Keep the strip height; let the rows shrink inside it. */
-html body.phone:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage#stage#stage #audienceCard #stageStats .ms-gauges { height:100%; min-height:0; max-height:100%; row-gap:0; align-content:stretch; overflow:hidden; }
-html body.phone:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage#stage#stage #audienceCard #stageStats .ms-g { min-height:0; overflow:hidden; }
+/* Landscape phones, not tablets: 14px rows and 2px gaps (46px) sit in the strip above the 16px fight line. */
+html body.phone:not(.tablet):not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage#stage#stage #audienceCard #stageStats .ms-gauges { height:100%; min-height:0; max-height:100%; row-gap:2px; grid-template-rows:repeat(3, minmax(14px, 1fr)); align-content:stretch; overflow:hidden; }
+html body.phone:not(.tablet):not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage#stage#stage #audienceCard #stageStats .ms-g { min-height:14px; overflow:hidden; }
+html body.phone:where(.tablet):not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage#stage#stage #audienceCard #stageStats .ms-gauges { height:100%; min-height:0; max-height:100%; row-gap:0; align-content:stretch; overflow:hidden; }
+html body.phone:where(.tablet):not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage#stage#stage #audienceCard #stageStats .ms-g { min-height:0; overflow:hidden; }
 html body.phone:not(.portrait-layout) #viewport#viewport #stage #stageStats #statShield > .ms-bar { min-height:0; height:6px; }
 
-html body.phone:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage#stage#stage #stageStats :is(.ms-label,.ms-num) { font-size:9px !important; line-height:10px !important; }
-html body.phone:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage#stage#stage #stageStats .ms-strip img { width:9px; height:9px; }
+html body.phone:not(.tablet):not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage#stage#stage #stageStats :is(.ms-label,.ms-num) { font-size:11px !important; line-height:14px !important; }
+html body.phone:where(.tablet):not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage#stage#stage #stageStats :is(.ms-label,.ms-num) { font-size:9px !important; line-height:10px !important; }
+html body.phone:not(.tablet):not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage#stage#stage #stageStats .ms-strip img { width:12px; height:12px; }
+html body.phone:where(.tablet):not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage#stage#stage #stageStats .ms-strip img { width:9px; height:9px; }
 html body.phone:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage#stage#stage #stageStats .ms-act-num { font-size:12px; line-height:13px; }
 
 /* Three gauge rows retain their full line height on the narrow landscape band. */
 html body.phone.phone-narrow:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage#stage#stage #audienceCard #stageStats { --stats-band-height:56px; }
+
+/* Clamp the inherited important 22px height without adding an important declaration.
+   Top-aligned inline numbers keep the fight line box at 16px instead of expanding its baseline. */
+html body.phone:not(.tablet):not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage#stage#stage #audienceCard #stageStats > #phoneFightStats { min-height:16px; max-height:16px; }
+html body.phone:not(.tablet):not(.portrait-layout) #phoneFightStats .bitmap { font-size:10px; line-height:16px; vertical-align:top; }
+/* 3 * 14 + 2 * 2 + 16 + 2 * 3 = 68px; inset text past the frame's inner edge. */
+html body.phone:not(.tablet):not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage#stage#stage #audienceCard #stageStats { --stats-band-height:68px; --phone-stats-pad:3px; }
+
+/* Move the contents down 1px without changing the 68px band or its row sizes. */
+html body.phone:not(.tablet):not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage#stage#stage #audienceCard #stageStats > :is(.ms-strip,#phoneFightStats) { position:relative; top:1px; }

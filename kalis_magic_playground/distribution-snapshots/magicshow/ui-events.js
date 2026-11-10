@@ -1,5 +1,6 @@
 'use strict';
   function events(list) {
+    if(list.some(e=>e.type==='helperBuffStart'||e.type==='helperBuffEnd'))helperBuffEvents(list);
     for(const e of list.filter(e=>e.type==='batchD')){
       if(e.kind==='interference'||e.kind==='lock'||e.kind==='hide')toast(e.kind==='hide'?'🙈 케이스 내용이 잠시 가려져요':'🔒 케이스 하나가 잠시 잠겨요. 다른 케이스를 열어 주세요');
       if(e.kind==='encoreEnd')toast(e.success?'앙코르 성공! 추가 동전을 받았어요':'앙코르 종료. 기본 보상은 그대로예요');
@@ -54,14 +55,15 @@
         const signal={boxBreak:'badge',audHit:'doubt',heckle:'heckle',win:'win'}[e.type];
         if (signal) tutorialSignal(signal);
       }
-      if(e.type==='tutorialLessonFail'){failure=0;failureAudience=null;failureVenue=null;clearDecorations();showFailure();save();}
-      if(e.type==='caseLevelUp')haptic(15);
+      if(e.type==='tutorialLessonFail'){failure=0;sound('failure');haptic(50);showBoo({venue:state.venue,audId:'tutorial-ndd',missLine:D.storyV15.tutorial.missLine});save();}
+      if(e.type==='tutorialWin')tutorialWinMoment();
       if(e.type==='skill'||e.type==='visitorCatch')haptic(40);
+      if(e.type==='skill'&&e.id==='cheer'&&state.skills.cheerGuard)toast('관객 호응 · 다음 야유 방어 준비');
       if(e.type==='homecomingAct'||e.type==='phase2'||e.type==='theaterPhase2'||(e.type==='win'&&C.isHeadliner(D.venues[e.venue-1],e.j)))haptic([30,40,30]);
       if(e.type==='outfit'){renderOutfit();banner('새 무대 의상!',['','거실 티셔츠','무대 정장','우주 망토'][e.tier]);sound('milestone');const p=target('mental');burst(p.x,p.y,'#ffe65c');$('magicianMini').classList.add('outfit-sparkle');setTimeout(()=>$('magicianMini').classList.remove('outfit-sparkle'),650);save();}
       if(e.type==='trueFanReveal'){banner('숨은 도전 발견! 열렬한 찐팬','도감에서 새로운 도전을 확인해 보세요',false,true);sound('milestone');save();}
       if(e.type==='travelResult'){save();toast(e.success?`도전 성공!${e.gems?' 실크 +'+e.gems+(state.u18.paid.length*1<=C.CHALLENGE_CAP*100?' · 마술 실력 +1%':''):''}`:'도전 종료 · 다시 도전할 수 있어요');openStageMap();}
-      if(e.type==='routine')showRoutine(e.id);
+      if(e.type==='routine'){if(!state.u19.pending.includes(e.id))state.u19.pending.push(e.id);showRoutine(e.id);}
       if(e.type==='futurePhase'){sound('finisher');endRoutine();if(e.phase===3)animate($('audience'),[{opacity:0},{opacity:1}],650);}
       if(e.type==='futureWin'){banner('미래의 나','다음 한 장은 네 몫이야');sound('ending');if(state.mental<state.mentalMax*CLOSE_WIN)closeWinMoment();}
       if(e.type==='setBonus'&&rewardNotes){rewardNotes.push(e.slug==='collection'?'칼리 컬렉션 세트 완성':`${C.venueBySlug(e.slug).name} 세트 완성`);save();}
@@ -95,8 +97,8 @@
         const p = cellCenter(e.cell);
         const rarity = D.items.rarities.find(r => r.id === e.rarity);
         const color = rarity ? rarity.color : '#ffe35b';
-        hitParticles(p.x,p.y,particleSource(e),color); sound('whoosh', { auto: !pointer.held });
-        if (typeof breakMoment === 'function') breakMoment(p.x, p.y, color); // tests run this block in a vm without the effect helpers
+        hitParticles(p.x,p.y,particleSource(e),color);
+        if (typeof breakMoment === 'function') breakMoment(p.x, p.y, color, e.rarity); // tests run this block in a vm without the effect helpers
 
         coinStream(p.x, p.y, 1);
         if (e.gem) fly(p.x, p.y, target('gems'), '🧣');
@@ -156,13 +158,15 @@
         moodSprite($('audience'),stageAudienceAsset(v,a),audHeckleMood);
       } else if (e.type === 'heckle') {
         const big = heckleLandsBig(e);
-        if (e.shieldDmg > 0 && typeof popChip === 'function') { popChip($('statShield'), '막음', 'block', 200); trailMeter('statShield', 400); }
+        toast(`야유 · 자신감 ${C.formatNumber(e.shieldDmg)} 흡수 · ${C.formatNumber(Math.max(0,e.dmg-e.shieldDmg))==='0'?'멘탈 피해 없음':'멘탈 −'+C.formatNumber(Math.max(0,e.dmg-e.shieldDmg))}`);
+        if (big && !list.some(event => event.type === 'fail')) haptic(40);
+        if (e.shieldDmg > 0 && typeof popChip === 'function') { popChip($('statShield'), '−' + C.formatNumber(e.shieldDmg), 'block', 200); trailMeter('statShield', 400); }
         if (e.dmg > e.shieldDmg && typeof popChip === 'function') {
           popChip($('statMental'), '-' + C.formatNumber(e.dmg - e.shieldDmg), 'hurt', 450);
           trailMeter('statMental', 450); if (big) { shakeMental(); kaliFlinch(); }
         }
         if (e.coinsTaken > 0) {
-          for (let i = 0; i < 5; i++) fly(1230, 90, { x: 426 + i * 25, y: 320 }, '🪙', '', '#ffbd73', i * 25);
+          for (let i = 0; i < 5; i++) fly(1230, 90, { x: 426 + i * 25, y: 320 }, '🪙', '', '#ffbd73', i * 25, null, 'coin');
           patternPulse('동전을 가져갔어요');
         }
         if (big) animate($('audienceCard'),[{transform:'translateX(0)'},{transform:'translateX(2px)'},{transform:'translateX(-2px)'},{transform:'translateX(0)'}],120);
@@ -172,11 +176,6 @@
       } else if(e.type==='gloveDrop'){toast('🃏 칼리 덱 (자동 연습)을 얻었어요');sound('skill');
 
       } else if (e.type === 'autoPractice') { squash(e.cell);
-      } else if (e.type === 'caseLevelUp') {
-        const p = cellCenter(e.cell);
-        float('LV UP!', p.x, p.y - 35, '#fff18a', e.tierChanged ? 56 : 32);
-        sound(e.tierChanged ? 'caseTier' : 'caseLevel');
-        if (e.tierChanged) { burst(p.x, p.y, '#fff18a'); squash(e.cell); }
       } else if (e.type === 'chain') {
         const a = cellCenter(e.from), b = cellCenter(e.to);
         // U36: at most 6 lightning lines at once (late game chains fire hundreds per second).
@@ -189,7 +188,7 @@
         toast(`레벨 ${e.level}! 멘탈 회복`);
         if (!levelShown) { levelShown = true; levelUpMoment(); } // s4e2 G: once per batch (core can raise several levels at once)
       } else if (e.type === 'win') {
-        if (absorbChainWin()) { sound('applause'); break; }
+        if (absorbChainWin()) { tutorialWinMoment(); break; }
         prefetchWinSeen = true;
         if (typeof hitStop === 'function') hitStop(); // s4e2 F: the 120 ms hit stop belongs to the clearing hit
         const v = D.venues[e.venue - 1], a = C.audienceAt(v, e.j);
@@ -214,6 +213,7 @@
         // hotel stage (owner 10-26 answer 7): every venue without an invitation gets its arrival banner too, with its own short line
         banner(`${D.venues[e.venue - 1].name} 도착!`, D.venues[e.venue - 1].arrivalLine || '', true, false, bannerContext(), true);
       } else if (e.type === 'fail') {
+        haptic(50);
         if (absorbChainFail()) break;
         failure = e.reasonPct; failureCause = e.cause === 'damage' || e.cause === 'gate' || e.cause === 'stall' || e.cause === 'lastHeckle' ? e.cause : 'mental'; lastAudience = ''; release();
         showBoo(e); save();
@@ -234,7 +234,7 @@
         queueAudienceLine(e.line,'homecoming:'+e.act); patternPulse(e.line);
       } else if (['reviewApplause','jointApplause','heckleCancelled','curtainFinale'].includes(e.type)) {
         if (e.type === 'heckleCancelled') heckleWarn = false;
-        const message={reviewApplause:'좋은 한 수였어요',jointApplause:'함께 만든 박수',heckleCancelled:'질문 대신 박수',curtainFinale:'마지막 인사'}[e.type];
+        const message={reviewApplause:'좋은 한 수였어요',jointApplause:'함께 만든 박수',heckleCancelled:e.cheerGuardUsed?'호응 방어 사용 · 야유 1회 무효 · 자신감·멘탈 소모 없음':'질문 대신 박수',curtainFinale:'마지막 인사'}[e.type];
         patternPulse(message); toast(`👏 ${message}`); sound('milestone');
       } else if (e.type === 'ending') {
         revealEnding = state.endings.length === 1; endingStep = 0; save();

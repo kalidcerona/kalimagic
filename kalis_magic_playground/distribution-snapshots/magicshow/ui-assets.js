@@ -49,8 +49,8 @@
   })();
   // U35: shipped art is WebP (tools/webp-assets.py). Code and data keep the .png names; this one mapping swaps the
   // extension where a URL reaches the browser: img.src below and CSS url() written from JS (style.css names .webp directly).
-  // PNG_KEEP lists art that stayed PNG because no WebP passed the quality floor (none at the moment).
-  const PNG_KEEP = new Set([]);
+  // P6 sprite sheets stay PNG for the protected PixelFxSheet loader.
+  const PNG_KEEP = new Set(['assets/fx/buff-dmg-bless', 'assets/fx/buff-dmg-missile', 'assets/fx/buff-dmg-burst', 'assets/fx/buff-coin-bless', 'assets/fx/buff-coin-missile', 'assets/fx/buff-coin-burst']);
   // Keep legacy audience-id lookups on the sister art, including direct image URLs.
   function audienceArtPath(value) {
     return String(value).replace(/^assets\/aud-a1(?:-(happy|serious|surprised|s[2-5]))?\.(png|webp)$/, (_, mood, ext) =>
