@@ -40,6 +40,21 @@
         color: #33241a; background: #f7f0e0; border: 2px solid #8c6b52; border-radius: 14px;
         font: 16px/1.5 -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; text-align: center; }
       #install-help[hidden] { display: none; }
+      #name-hit { position: absolute; z-index: 5; opacity: 0; cursor: text; border: 0; padding: 0; }
+      #name-hit[hidden], #name-editor[hidden] { display: none; }
+      #name-editor { position: fixed; z-index: 30; top: max(8px, env(safe-area-inset-top)); left: 50%;
+        transform: translateX(-50%); box-sizing: border-box; width: min(440px, calc(100% - 24px));
+        padding: 16px; border: 2px solid #8c6b52; border-radius: 14px; background: #f7f0e0;
+        color: #33241a; font: 16px/1.5 -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; }
+      #name-editor label { display: block; font-weight: 700; }
+      #name-value { box-sizing: border-box; width: 100%; min-height: 48px; margin: 8px 0;
+        padding: 8px; font: inherit; color: #33241a; background: #fffaf0; border: 1px solid #8c6b52;
+        border-radius: 8px; user-select: text; -webkit-user-select: text; touch-action: auto; caret-color: #33241a; }
+      #name-editor button { min-width: 72px; min-height: 44px; margin-right: 8px; font: inherit;
+        color: #33241a; background: #fffaf0; border: 1px solid #8c6b52; border-radius: 8px; }
+      #name-editor :focus-visible { outline: 3px solid #765239; outline-offset: 2px; }
+      #name-value::selection { color: #fffaf0; background: #765239; }
+      #name-error { min-height: 24px; margin: 0; }
       #install-help h2 { margin: 0 0 8px; font-size: 21px; }
       #install-help p { margin: 0 0 16px; word-break: keep-all; }
       #install-help button { width: 100%; min-height: 52px; margin-top: 8px; font: inherit; font-weight: 700;
@@ -55,6 +70,13 @@
     </section>
     <aside id="update-notice" role="status" hidden>새 버전이 나왔어요. 다시 열면 바로 바뀌어요.<button id="update-notice-close">닫기</button></aside>
     <aside id="install-hint" hidden><span id="install-text"></span><button id="install-button" hidden>설치</button><button id="dismiss-hint" aria-label="설치 안내 닫기">닫기</button></aside>
+    <button id="name-hit" aria-label="가게 이름 입력" hidden></button>
+    <form id="name-editor" role="dialog" aria-modal="true" aria-labelledby="name-label" hidden>
+      <label id="name-label" for="name-value">가게 이름 (최대 10자)</label>
+      <input id="name-value" type="text" autocomplete="off" enterkeyhint="done" aria-describedby="name-error">
+      <p id="name-error" role="status"></p>
+      <button type="submit">확인</button><button id="name-cancel" type="button">취소</button>
+    </form>
     <canvas id="canvas" width="1280" height="720" oncontextmenu="event.preventDefault()"></canvas>
 
     <script type="text/javascript">
@@ -135,10 +157,79 @@
       }
       var openWindow = window.open;
       window.open = function (url) {
+        if (String(url).indexOf("planb:name?") === 0) { requestName(String(url)); return null; }
         if (String(url) === "planb:install") { requestInstall(); return null; }
         if (String(url).indexOf("planb:sync") === 0) { requestPersist(String(url)); return null; }
         return openWindow.apply(window, arguments);
       };
+
+      // A DOM hit target is armed on scene entry, before the user's gesture.
+      // Its click focuses a real input synchronously (including iOS Safari).
+      var nameHit = document.getElementById("name-hit");
+      var nameEditor = document.getElementById("name-editor");
+      var nameValue = document.getElementById("name-value");
+      var nameError = document.getElementById("name-error");
+      var nameRequest = null, nameComposing = false;
+      function requestName(url) {
+        var parts = url.slice("planb:name?".length).split("&");
+        if (parts[0] === "close") {
+          nameHit.hidden = true; nameEditor.hidden = true; nameRequest = null; nameValue.blur(); return;
+        }
+        nameRequest = { id: parts[1], limit: Number(parts[2]), dir: decodeURIComponent(parts[3]), value: decodeURIComponent(parts[4]) };
+        nameHit.hidden = false;
+        fitNameHit();
+        if (parts[0] === "edit") openNameEditor();
+      }
+      function fitNameHit() {
+        if (!nameRequest) return;
+        var rect = document.getElementById("canvas").getBoundingClientRect();
+        nameHit.style.left = rect.left + rect.width * 420 / GAME_W + "px";
+        nameHit.style.top = rect.top + rect.height * 376 / GAME_H + "px";
+        nameHit.style.width = rect.width * 440 / GAME_W + "px";
+        nameHit.style.height = rect.height * 80 / GAME_H + "px";
+      }
+      function openNameEditor() {
+        if (!nameRequest) return;
+        nameValue.value = nameRequest.value || "플랜비 카페";
+        nameError.textContent = ""; nameComposing = false;
+        nameEditor.hidden = false;
+        nameValue.focus(); nameValue.select();
+      }
+      nameHit.onclick = openNameEditor;
+      function finishName(cancel) {
+        if (!nameRequest || nameComposing) return;
+        var value = nameValue.value;
+        if (!cancel && (Array.from(value).length > nameRequest.limit || /[\x00-\x1f\x7f]/.test(value))) {
+          nameError.textContent = "줄바꿈 없이 " + nameRequest.limit + "자까지 입력해 주세요."; return;
+        }
+        try {
+          if (!Module.FS) throw new Error("filesystem not ready");
+          Module.FS.writeFile(nameRequest.dir + "/web-name.txt", nameRequest.id + "\n" + (cancel ? "cancel" : "ok") + "\n" + (cancel ? "" : value));
+        } catch (err) {
+          console.error(err); nameError.textContent = "이름을 적용하지 못했어요. 다시 눌러 주세요."; return;
+        }
+        if (!cancel) nameRequest.value = value;
+        nameEditor.hidden = true; nameValue.blur();
+        document.getElementById("canvas").focus();
+      }
+      // Let the browser compose Korean; SDL must never also consume these keys.
+      ["keydown", "keyup", "keypress"].forEach(function (type) {
+        window.addEventListener(type, function (event) {
+          if (nameEditor.hidden) return;
+          event.stopImmediatePropagation();
+          if (type !== "keydown" || event.isComposing || nameComposing || event.keyCode === 229) return;
+          if (event.key === "Enter") { event.preventDefault(); finishName(false); }
+          if (event.key === "Escape") { event.preventDefault(); finishName(true); }
+        }, true);
+      });
+      nameValue.oncompositionstart = function () { nameComposing = true; };
+      nameValue.oncompositionend = function () { nameComposing = false; limitName(); };
+      function limitName() {
+        if (!nameComposing && nameRequest) nameValue.value = Array.from(nameValue.value).slice(0, nameRequest.limit).join("");
+      }
+      nameValue.oninput = limitName;
+      nameEditor.onsubmit = function (event) { event.preventDefault(); finishName(false); };
+      document.getElementById("name-cancel").onclick = function () { nameComposing = false; finishName(true); };
 
       // Saves: love.js keeps love.filesystem in memory and copies it to IndexedDB only on
       // "beforeunload", which phones rarely fire when an app is swiped away. The game calls
@@ -299,6 +390,7 @@
         var cssW = Math.floor(GAME_W * scale), cssH = Math.floor(GAME_H * scale);
         canvas.style.width = cssW + "px";
         canvas.style.height = cssH + "px";
+        fitNameHit();
       }
       window.addEventListener("resize", fitCanvas);
       // Late re-fit after rotation; a resize event also lets SDL pick up the new CSS box.
@@ -326,13 +418,13 @@
 
       // No page scroll, zoom or long-press menu; taps go to the game.
       ["touchstart", "touchmove", "touchend", "gesturestart"].forEach(function (name) {
-        document.addEventListener(name, function (e) { if (!e.target.closest("#install-hint, #install-help, #update-notice") && e.cancelable) e.preventDefault(); }, { passive: false });
+        document.addEventListener(name, function (e) { if (!e.target.closest("#install-hint, #install-help, #update-notice, #name-editor, #name-hit") && e.cancelable) e.preventDefault(); }, { passive: false });
       });
       window.addEventListener("keydown", function (e) {
         if ([32, 37, 38, 39, 40].indexOf(e.keyCode) > -1) e.preventDefault();
       }, false);
       window.onload = function () { window.focus(); };
-      window.onclick = function () { window.focus(); };
+      window.onclick = function () { if (nameEditor.hidden) window.focus(); };
 
       function setLoading(main, detail) {
         document.getElementById("loading").firstChild.nodeValue = main;
