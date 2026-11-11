@@ -179,3 +179,29 @@ details.overview p, details.group p { margin: 8px 0; color: var(--muted); font-s
   .settingsbrand img { width: 150px; margin-bottom: 6px; }
   .identity-name { font-size: 18px; }
 }
+
+/* Session camera controls stay within the rotating chrome. */
+button.mode { border: 0; padding: 0; background: transparent; cursor: pointer; }
+.thumb { background-size: cover; background-position: center; }
+#video.selfie, #brackets.selfie { transform: scaleX(-1); }
+.vf { transition: opacity 180ms ease-out; }
+.vf.flipping { opacity: .25; }
+.flip:disabled svg { transform: rotate(180deg); }
+.flip svg { transition: transform 180ms ease-out; }
+.shutter.video-mode { background: #f34343; border: calc(var(--u) * 9) solid #fff; }
+.shutter.recording { border-radius: 28%; }
+.record-timer { position: absolute; top: calc(var(--u) * 110); left: 50%; transform: translateX(-50%); padding: 6px 12px; border-radius: 6px; color: #fff; background: #ba2020; font-variant-numeric: tabular-nums; }
+.session-gallery, .more-modes { position: absolute; inset: 0; z-index: 5; background: #000; }
+.session-gallery[hidden], .more-modes[hidden], .record-timer[hidden] { display: none; }
+.gallery-close { position: absolute; top: max(12px, env(safe-area-inset-top)); right: 12px; z-index: 1; }
+.session-gallery button, .mode-sheet button { color: #fff; background: #262626; border: 0; min-height: 44px; padding: 10px 16px; border-radius: 8px; }
+.session-gallery .gallery-frame { position: absolute; inset: 64px 0 64px; width: 100%; border-radius: 0; background: #000; padding: 0; }
+.gallery-frame img { width: 100%; height: 100%; object-fit: contain; }
+.gallery-frame img[hidden], #galleryEmpty[hidden] { display: none; }
+#galleryEmpty { color: #aaa; }
+.gallery-nav { position: absolute; bottom: max(12px, env(safe-area-inset-bottom)); left: 12px; right: 12px; display: flex; align-items: center; justify-content: space-between; font-variant-numeric: tabular-nums; }
+.gallery-nav button:disabled { opacity: .4; }
+.more-modes { background: #0006; }
+.mode-sheet { position: absolute; bottom: calc(var(--u) * 250); left: 5%; right: 5%; display: flex; justify-content: space-around; gap: 8px; padding: 16px; border-radius: 16px; background: #202020; }
+.chrome button:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) { .vf, .flip svg { transition: none; } }

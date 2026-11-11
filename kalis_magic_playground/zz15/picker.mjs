@@ -161,7 +161,7 @@ export function createEditor(details, root, store) {
 
   function render() {
     footer.line = h('p', { class: 'error', role: 'status' });
-    footer.save = h('button', { type: 'button', class: 'btn primary', onclick: () => { store.saveCategories(clone(draft)); store.toast('저장했습니다'); render(); } }, '저장');
+    footer.save = h('button', { type: 'button', class: 'btn primary', onclick: () => { const saved = store.saveCategories(clone(draft)); store.toast(saved ? '저장했습니다' : '저장하지 못했습니다. 저장 공간을 확인하고 다시 시도해 주세요.'); render(); } }, '저장');
     footer.revert = h('button', { type: 'button', class: 'btn2', onclick: () => { draft = clone(store.cats); render(); } }, '되돌리기');
     root.replaceChildren(
       h('div', { class: 'ed-actions' },

@@ -56,9 +56,28 @@ function outputLost(kind) {
 }
 
 // ---------- run ----------
+async function savedPosition(show) {
+  try {
+    const saved = await store.position(show.id);
+    const valid = p => {
+      if (!p || typeof p !== 'object' || Array.isArray(p)) return false;
+      const cues = p.listId === 'main' ? show.cues : show.inserts.find(s => s.id === p.listId)?.cues;
+      return Boolean(cues) && Number.isSafeInteger(p.index) && p.index >= 0 && p.index <= cues.length;
+    };
+    if (!saved || !valid(saved.standby) || !Array.isArray(saved.stack) || !saved.stack.every(valid)) return undefined;
+    return saved;
+  } catch { return undefined; }
+}
+async function savePosition(showId, snap) {
+  try { await store.savePosition(showId, snap); }
+  catch {
+    $('positionStorageNote').textContent = '위치 저장 실패: 다음 공연은 처음부터 시작할 수 있어요.';
+    $('positionStorageNote').hidden = false;
+  }
+}
 async function startShow(show) {
   ensureContext();
-  const saved = await store.position(show.id);
+  const saved = await savedPosition(show);
   const audio = new WebAudioEngine(ctx, {
     curve: () => prefs.get('fadeCurve'),
     started: cue => { if (timer.started(cue.name, { outputLatency: ctx.outputLatency, baseLatency: ctx.baseLatency })) scheduleRender(); }
@@ -74,7 +93,7 @@ async function startShow(show) {
   const scheduler = { now: () => performance.now(), schedule(delay, action) { const id = setTimeout(action, delay); return { cancel: () => clearTimeout(id) }; } };
   runtime = { show, audio, engine: null, lossKind: 'lost', decode: { done: 0, total: 0, finished: false }, problems: [], bytes: 0, resumed: Boolean(saved), notice: null, lastError: null };
   const engine = new E.CueEngine(show, audio, scheduler, saved || undefined,
-    snap => { store.savePosition(show.id, snap).catch(() => { if (runtime) runtime.lastError = '위치 저장 실패'; }); },
+    snap => { void savePosition(show.id, snap); },
     event => {
       if (!runtime) return;
       if (event.type === 'Error') runtime.lastError = event.message;

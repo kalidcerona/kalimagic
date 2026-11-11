@@ -70,11 +70,11 @@ test('shared settings footer is a real link plus an ID copy button', () => {
 });
 
 test('zz12 and zz13 contact lives in settings and uses the same url', () => {
-  const zz12 = fs.readFileSync(new URL('../../zz12/app.mjs', import.meta.url), 'utf8');
+  const zz12 = fs.readFileSync(new URL('../../zz12/settings.mjs', import.meta.url), 'utf8');
   const zz13 = fs.readFileSync(new URL('../../zz13/index.html', import.meta.url), 'utf8');
   const css = fs.readFileSync(new URL('../../zz1/settings-ui.css', import.meta.url), 'utf8');
-  assert.match(zz12, /function renderSettings\(\)\{[\s\S]*카카오톡 문의/);
-  assert.match(zz12, /href="\$\{contactHref\(navigator\)\}"/);
+  assert.match(zz12, /function renderSettings\(\)\s*\{[\s\S]*카카오톡 문의/);
+  assert.match(zz12, /href="\$\{\s*contactHref\(navigator\)\s*\}"/);
   assert.match(zz13, /dialog id="settings"[^>]*data-settings-root/);
   assert.match(zz13, new RegExp(`href="${URL_EXACT.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}"`));
   assert.match(zz13, />카카오톡 문의</);
@@ -87,7 +87,7 @@ test('zz12 and zz13 contact lives in settings and uses the same url', () => {
 
 // These URI values are the exact mobile redirects returned by the supplied Kakao QR page.
 test('contact anchors choose Kakao mobile launch URIs while retaining an HTTPS fallback', () => {
-  for (const path of ['zz1/settings-ui.js', 'zz12/app.mjs', 'zz13/app.mjs']) {
+  for (const path of ['zz1/settings-ui.js', 'zz12/settings.mjs', 'zz13/settings.mjs']) {
     const source = fs.readFileSync(new URL('../../' + path, import.meta.url), 'utf8');
     const match = source.match(/function contactHref\(nav\) \{[\s\S]*?\n\s*\}/);
     assert.ok(match, path);
@@ -99,6 +99,6 @@ test('contact anchors choose Kakao mobile launch URIs while retaining an HTTPS f
     assert.equal(uri({userAgent:'iPhone'}), 'kakaotalkqrcode://' + code);
     assert.equal(uri({userAgent:'Macintosh',platform:'MacIntel',maxTouchPoints:5}), 'kakaotalkqrcode://' + code);
     assert.equal(uri({userAgent:''}), URL_EXACT);
-    assert.match(path === 'zz13/app.mjs' ? fs.readFileSync(new URL('../../zz13/index.html', import.meta.url), 'utf8') : source, /카카오톡 친구 추가에서/);
+    assert.match(path === 'zz13/settings.mjs' ? fs.readFileSync(new URL('../../zz13/index.html', import.meta.url), 'utf8') : source, /카카오톡 친구 추가에서/);
   }
 });

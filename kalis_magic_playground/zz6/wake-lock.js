@@ -1,10 +1,8 @@
-import { state } from './state-store.js';
-
 let wakeLock = null;
 let wakeLockPending = false;
 
 function performanceWakeWanted() {
-  return state.mode === 'performance';
+  return document.visibilityState === "visible";
 }
 
 async function acquireWakeLock() {

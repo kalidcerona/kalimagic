@@ -1200,3 +1200,94 @@ test('holding exit ends the show with a short ramp, and starting again continues
   assert.deepEqual(screens(), ['home']);
   assert.equal(byId('showList').children.length, 1);
 });
+
+test('settings suppress all show keys and cancel held GO; closed settings retain press and release GO', async () => {
+  await click(buttonByText(byId('showList').children[0], '열기'));
+  await click(byId('startShow'));
+  await settle(30);
+  const engine = playback.runtime.engine;
+  const calls = [];
+  const originals = new Map(['go', 'back', 'panic', 'hit', 'insert'].map(name => [name, engine[name]]));
+  for (const name of originals.keys()) engine[name] = () => { calls.push(name); return true; };
+  try {
+    for (const trigger of ['release', 'press']) {
+      await click(byId('openSettings'));
+      byId('goTrigger').value = trigger;
+      await dispatch(byId('goTrigger'), 'change');
+      document.activeElement = null;
+      const before = calls.length;
+      for (const code of ['Space', 'Enter', 'PageDown', 'PageUp', 'Escape', 'KeyG', 'KeyP']) await press(code);
+      assert.equal(calls.length, before, `${trigger}: no show actions with settings open`);
+      await click(byId('closeSettings'));
+      document.activeElement = null;
+      for (const code of ['Space', 'Enter']) await press(code);
+      assert.deepEqual(calls.slice(before), ['go', 'go'], `${trigger}: closed settings allow both GO keys`);
+    }
+    await click(byId('openSettings'));
+    byId('goTrigger').value = 'release';
+    await dispatch(byId('goTrigger'), 'change');
+    await click(byId('closeSettings'));
+    document.activeElement = null;
+    await dispatch(document, 'keydown', { code: 'Space', key: ' ', repeat: false });
+    const before = calls.length;
+    await twoFingerSwipe(byId('runStandby'), 150);
+    assert.equal(playback.keyGate.held, null);
+    await dispatch(document, 'keyup', { code: 'Space', key: ' ' });
+    await click(byId('closeSettings'));
+    await dispatch(document, 'keyup', { code: 'Space', key: ' ' });
+    assert.equal(calls.length, before, 'opening settings cancels a previously held GO');
+  } finally {
+    for (const [name, original] of originals) engine[name] = original;
+    await holdButton('exitBtn', 750);
+  }
+});
+
+test('position read failures and malformed snapshots fall back to the start; write failures stay in settings', async () => {
+  const originalRead = showMod.store.position;
+  const originalWrite = showMod.store.savePosition;
+  const valid = { standby: { listId: 'main', index: 1 }, stack: [] };
+  const reads = [
+    () => { throw new Error('blocked read'); },
+    async () => { throw new Error('rejected read'); },
+    ...[null, 'bad', {}, { ...valid, stack: {} }, { ...valid, stack: [null] },
+      { ...valid, standby: { listId: 'main', index: '1' } },
+      { ...valid, standby: { listId: 'missing', index: 0 } },
+      { ...valid, standby: { listId: 'main', index: NaN } },
+      { ...valid, standby: { listId: 'main', index: -1 } },
+      { ...valid, standby: { listId: 'main', index: 999 } },
+    ].map(value => async () => value),
+  ];
+  try {
+    for (const read of reads) {
+      showMod.store.position = read;
+      await click(byId('startShow'));
+      await settle(30);
+      assert.deepEqual(playback.runtime.engine.position, { listId: 'main', index: 0 });
+      assert.equal(playback.runtime.resumed, false);
+      await holdButton('exitBtn', 750);
+    }
+    showMod.store.position = async () => valid;
+    for (const write of [() => { throw new Error('blocked write'); }, async () => { throw new Error('quota'); }]) {
+      showMod.store.savePosition = write;
+      byId('positionStorageNote').textContent = '';
+      byId('positionStorageNote').hidden = true;
+      await click(byId('startShow'));
+      await settle(30);
+      assert.equal(playback.runtime.engine.position.index, 1, 'valid saved position still resumes');
+      assert.equal(playback.runtime.resumed, true);
+      assert.equal(playback.runtime.lastError, null);
+      assert.equal(byId('runError').hidden, true);
+      assert.equal(byId('settings').open, false, 'failure never opens a dialog over the show');
+      await click(byId('openSettings'));
+      const note = byId('positionStorageNote');
+      assert.equal(note.closest('#settings'), byId('settings'));
+      assert.equal(note.hidden, false);
+      assert.match(note.textContent, /위치 저장 실패/);
+      await click(byId('closeSettings'));
+      await holdButton('exitBtn', 750);
+    }
+  } finally {
+    showMod.store.position = originalRead;
+    showMod.store.savePosition = originalWrite;
+  }
+});

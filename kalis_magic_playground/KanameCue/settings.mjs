@@ -18,6 +18,7 @@ document.addEventListener('keydown', event => {
     return;
   }
   if (!runtime || runtime.engine.mode === E.MODE.EDIT) return;
+  if ($('settings').open) { keyGate.reset(); return; }
   if (document.activeElement?.matches?.('input, select, textarea') || $('cueDialog').open || $('textDialog').open) return;
   const action = E.keyAction(runtime.show, code);
   if (!action) return;
@@ -28,6 +29,7 @@ document.addEventListener('keydown', event => {
   keyGate.down(code, action, prefs.get('goTrigger'), { age: eventAge(event) });
 });
 document.addEventListener('keyup', event => {
+  if ($('settings').open) { keyGate.reset(); return; }
   const code = E.androidKeyCode(event);
   if (keyGate.held && keyGate.held.key === code) { event.preventDefault(); keyGate.up(code, { age: eventAge(event) }); }
 });
@@ -61,6 +63,7 @@ document.addEventListener('touchcancel', () => { swipe = null; }, { passive: tru
 let settingsShowId = null;
 function openSettings() {
   if ($('settings').open) return;
+  keyGate.reset(); pointerGate.reset();
   for (const dialog of document.querySelectorAll('dialog[open]')) dialog.close();
   renderSettings();
   $('settings').showModal();

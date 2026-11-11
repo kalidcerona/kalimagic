@@ -1,5 +1,5 @@
 // Cache only the explicit app shell. API, authentication and user data stay on the network.
-const scope=new URL(self.registration.scope),PREFIX='uramichi-web-'+encodeURIComponent(scope.href)+'-',CACHE=PREFIX+'v20261024-web-5-modules-2-coherent-1-update-prompt-3';
+const scope=new URL(self.registration.scope),PREFIX='uramichi-web-'+encodeURIComponent(scope.href)+'-',CACHE=PREFIX+'v20261024-web-5-modules-2-coherent-1-update-prompt-3-r5-c1';
 const GUARDED=scope.pathname.startsWith('/tools/');
 const SHELL = [
   "./index.html",
@@ -12,6 +12,7 @@ const SHELL = [
   "./chrome.mjs",
   "./scan.mjs",
   "./camera.mjs",
+  "./camera-controls.mjs",
   "./core.mjs",
   "./core-model.mjs",
   "./core-url.mjs",

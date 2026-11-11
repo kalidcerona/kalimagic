@@ -28,7 +28,7 @@ function performanceOpen() {
 }
 
 function performanceWakeWanted() {
-  return performanceOpen();
+  return document.visibilityState === "visible";
 }
 
 async function acquireWakeLock() {
@@ -95,5 +95,6 @@ function askToKeepStoredData() {
   }
 }
 askToKeepStoredData();
+syncPerformanceWakeLock();
 
 export { setStatus, showScreen, performanceOpen };

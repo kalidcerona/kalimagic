@@ -13,6 +13,8 @@ import {
 
 export {
   standaloneDisplay,
+  shouldShowInstallSheet,
+  rememberInstallDismissal,
   promptReady,
   installPanel,
   installSheetOpen,
@@ -31,6 +33,14 @@ function standaloneDisplay() {
     if (typeof window.matchMedia === "function") mode = window.matchMedia("(display-mode: standalone)").matches || window.matchMedia("(display-mode: window-controls-overlay)").matches;
   } catch {}
   return mode || (typeof navigator !== "undefined" && navigator.standalone === true);
+}
+function shouldShowInstallSheet() {
+  if (standaloneDisplay()) return false;
+  try { return localStorage.getItem("pimax-practice-install-dismissed") !== "1"; }
+  catch { return true; }
+}
+function rememberInstallDismissal() {
+  try { localStorage.setItem("pimax-practice-install-dismissed", "1"); } catch {}
 }
 function promptReady(event) {
   return !!event && event.isTrusted !== false && typeof event.prompt === "function" && !!event.userChoice && typeof event.userChoice.then === "function";

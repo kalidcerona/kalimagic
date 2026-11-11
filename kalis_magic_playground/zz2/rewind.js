@@ -43,7 +43,7 @@ let timeFrame = null;
     let wakeLockPending = false;
 
     function performanceWakeWanted() {
-      return session.screen !== "settings";
+      return document.visibilityState === "visible";
     }
 
     async function acquireWakeLock() {
@@ -353,3 +353,4 @@ function askToKeepStoredData() {
   }
 }
 askToKeepStoredData();
+syncPerformanceWakeLock();

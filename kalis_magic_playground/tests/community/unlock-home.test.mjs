@@ -1,3 +1,4 @@
+import { pinnedRound5Difference } from './personal-round5.mjs';
 import { PHOTO_NOTICE_SAVE_FILES, stripPhotoSaveNotice } from './personal-photo-notice.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -123,6 +124,7 @@ test('friend snapshot matches personal RELEASE except the install id and cache f
     const rawPersonal = readFileSync(new URL(file, personalDir));
     const personal = /\.(?:js|html)$/.test(file) ? Buffer.from(stripPhotoSaveNotice(rawPersonal.toString())) : rawPersonal;
     const snap = readFileSync(new URL(file, snapDir));
+    if (pinnedRound5Difference('zz2', file)) continue;
     if (file === 'manifest.webmanifest') {
       const personalManifest = JSON.parse(personal.toString('utf8'));
       const snapManifest = JSON.parse(snap.toString('utf8'));

@@ -26,11 +26,6 @@ function layout() {
 window.addEventListener('resize', layout);
 screen.orientation?.addEventListener?.('change', () => setTimeout(layout, 50));
 
-$('shutter').addEventListener('click', () => {
-  const f = $('flash');
-  f.classList.remove('go'); void f.offsetWidth; f.classList.add('go');
-});
-
 export {
   layout,
 };

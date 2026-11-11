@@ -4,17 +4,17 @@ import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 import * as core from './core.mjs';
 import { pimaxAppScript, pimaxAppModules } from '../tests/community/pimax-app-script.mjs';
-import { accessGuard, preparePimaxRuntime } from '../scripts/build-public.mjs';
+import { accessGuard, preparePimaxRuntime, PIMAX_FILES } from '../scripts/build-public.mjs';
 import { readAppStyle } from '../tests/community/app-style.mjs';
 
-function load(initial = {}, standalone = false) {
+function load(initial = {}, standalone = false, storageBlocked = false) {
   const values = new Map(Object.entries(initial)), events = {};
   const app = { innerHTML: '', setAttribute() {}, removeAttribute() {} };
   const context = vm.createContext({ __core: core, Date, Math, JSON,
     navigator: { userAgent: 'Android Chrome', maxTouchPoints: 1, standalone },
     window: { addEventListener(name, fn) { events[name] = fn; }, matchMedia() { return { matches: standalone }; } },
     document: { body: { dataset: {}, addEventListener() {} }, querySelector: s => s === '#app' ? app : {}, querySelectorAll: () => [] },
-    localStorage: { getItem: k => values.get(k) ?? null, setItem(k, v) { values.set(k, v); } },
+    localStorage: { getItem: k => { if (storageBlocked) throw new Error("blocked"); return values.get(k) ?? null; }, setItem(k, v) { if (storageBlocked) throw new Error("blocked"); values.set(k, v); } },
   });
   const source = pimaxAppScript(new URL('./', import.meta.url));
   vm.runInContext(source + '\nglobalThis.api = { state, startSession, render, onClick, current, saveSession };', context);
@@ -101,7 +101,7 @@ test('legacy saved presentation migrates without losing drafts, flags or progres
   }
 });
 
-test('install sheet opens once per launch and settings keep the full card', async () => {
+test('install dismissal survives launches and settings keep the full card', async () => {
   const env = load();
   assert.match(env.app.innerHTML, /data-install-sheet/);
   assert.match(env.app.innerHTML, /role="dialog"/);
@@ -115,7 +115,7 @@ test('install sheet opens once per launch and settings keep the full card', asyn
   env.render();
   assert.doesNotMatch(env.app.innerHTML, /data-install-sheet/);
   const again = load(Object.fromEntries(env.values));
-  assert.match(again.app.innerHTML, /data-install-sheet/);
+  assert.doesNotMatch(again.app.innerHTML, /data-install-sheet/);
   click(again, 'tab', { tab: 'settings' });
   assert.match(again.app.innerHTML, /data-install-card/);
   assert.match(again.app.innerHTML, /설치 방법 보기/);
@@ -624,4 +624,39 @@ test('answer layout grows for long sequences and uses compact per-mode reservati
   assert.match(env.app.innerHTML, /class="quiz-actions answer-map"/);
   assert.equal((env.app.innerHTML.match(/data-action="mode"/g) || []).length, 6);
   assert.doesNotMatch(env.app.innerHTML, /data-mode="lie"|data-mode="phrase-next"|이어서 문장|거짓말/);
+});
+
+
+test('install dismissal tolerates blocked storage without interrupting practice', () => {
+  const env = load({}, false, true);
+  assert.match(env.app.innerHTML, /data-install-sheet/);
+  assert.doesNotThrow(() => click(env, 'install-later'));
+  assert.doesNotMatch(env.app.innerHTML, /data-install-sheet/);
+  click(env, 'tab', { tab: 'settings' });
+  assert.match(env.app.innerHTML, /data-install-card/);
+});
+
+test('offline shell ships every entry and includes deployed static modules reachable from index.html', () => {
+  const root = new URL('./', import.meta.url);
+  const worker = readFileSync(new URL('sw.js', root), 'utf8');
+  const shell = new Set([...worker.match(/const SHELL = \[([\s\S]*?)\];/)[1].matchAll(/["']([^"']+)["']/g)]
+    .map(([, file]) => new URL(file, root).href));
+  const shipped = new Set(PIMAX_FILES.map((file) => new URL(file, root).href));
+  for (const entry of shell) assert.ok(shipped.has(entry), `offline shell entry is not shipped: ${entry}`);
+  const html = readFileSync(new URL('index.html', root), 'utf8');
+  const pending = [...html.matchAll(/<script\b[^>]*\bsrc=["']([^"']+)["']/g)].map(([, file]) => new URL(file, root));
+  const seen = new Set();
+  while (pending.length) {
+    const file = pending.pop();
+    if (seen.has(file.href)) continue;
+    seen.add(file.href);
+    assert.ok(shell.has(file.href), `missing offline shell entry: ${file.pathname}`);
+    const raw = readFileSync(file, 'utf8');
+    const source = file.href === new URL('app.mjs', root).href ? preparePimaxRuntime(raw) : raw;
+    for (const [, ref] of source.matchAll(/(?:\bfrom\s*|\bimport\s*)["'](\.[^"']+)["']/g)) {
+      pending.push(new URL(ref, file));
+    }
+  }
+  assert.ok(seen.has(new URL('app.mjs', root).href));
+  assert.ok(!seen.has(new URL('local-preview.mjs', root).href));
 });

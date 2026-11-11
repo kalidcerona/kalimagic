@@ -378,7 +378,7 @@ test('settings opens from the setup screen and closes again with the button and 
   assert.equal(byId('settings').classes.has('is-running'), false);
   assert.equal(document.activeElement, byId('close-settings'));
   assert.equal(stateNote(), '카메라 시작 전');
-  assert.equal(env.lockState.requests.length, 0, 'no wake lock without a camera');
+  assert.equal(env.lockState.requests.length, 1, 'setup holds the wake lock before the camera starts');
   await click(byId('close-settings'));
   assert.equal(byId('settings').hidden, true);
   await click(byId('setup-settings'));
@@ -467,7 +467,7 @@ test('settings: a two-finger downward swipe opens it; short, sideways and three-
   assert.equal(stateNote(), '카메라 속 카드 표시 중');
   assert.equal(byId('card-overlay').hidden, true);
   assert.equal(document.activeElement, byId('close-settings'));
-  assert.equal(env.lockState.requests[0].released, true, 'wake lock is released while settings is open');
+  assert.equal(env.lockState.requests[0].released, false, 'wake lock is held while settings is open');
 });
 
 test('settings are saved to storage and reset the calibration', async () => {
@@ -497,22 +497,22 @@ test('wake lock follows settings and page visibility; analysis stops while hidde
   await dispatch(document, 'keydown', { key: 'Escape' });
   await settle(5);
   assert.equal(byId('settings').hidden, true);
-  assert.equal(locks.length, 2, 'closing settings takes the lock again');
-  assert.equal(locks[1].released, false);
+  assert.equal(locks.length, 1, 'closing settings keeps the existing lock');
+  assert.equal(locks[0].released, false);
 
   document.visibilityState = 'hidden';
   await dispatch(document, 'visibilitychange');
   await settle(5);
-  assert.equal(locks[1].released, true, 'a hidden page releases the lock');
-  assert.equal(locks.length, 2);
+  assert.equal(locks[0].released, true, 'a hidden page releases the lock');
+  assert.equal(locks.length, 1);
   assert.equal(env.raf.callback, null, 'analysis loop is suspended');
   assert.equal(JSON.parse(env.sessionStorage.getItem('alter-runtime-events'))['visibility-hidden'], 1);
 
   document.visibilityState = 'visible';
   await dispatch(document, 'visibilitychange');
   await settle(5);
-  assert.equal(locks.length, 3, 'a visible page takes the lock again');
-  assert.equal(locks[2].released, false);
+  assert.equal(locks.length, 2, 'a visible page takes the lock again');
+  assert.equal(locks[1].released, false);
   assert.ok(env.raf.callback, 'analysis loop is running again');
   assert.equal(JSON.parse(env.sessionStorage.getItem('alter-runtime-events'))['visible-resume'], 1);
 
@@ -553,7 +553,7 @@ test('resize with a new crop restarts calibration', async () => {
   assert.equal(JSON.parse(env.sessionStorage.getItem('alter-runtime-events')).resize, 1);
 });
 
-test('stop releases the camera, returns to setup and releases the wake lock', async () => {
+test('stop releases the camera, returns to setup and keeps the wake lock', async () => {
   const track = env.media.tracks.at(-1);
   const lock = env.lockState.requests.at(-1);
   await twoFingerSwipe(150);
@@ -566,7 +566,7 @@ test('stop releases the camera, returns to setup and releases the wake lock', as
   assert.equal(byId('settings').hidden, true);
   assert.equal(runtimeNote(), '카메라 시작 전');
   assert.equal(stateNote(), '카메라 시작 전');
-  assert.equal(lock.released, true);
+  assert.equal(lock.released, false);
   assert.equal(env.raf.callback, null);
   assert.equal(JSON.parse(env.sessionStorage.getItem('alter-runtime-events'))['user-stop'], 1);
 });

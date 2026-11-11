@@ -10,7 +10,15 @@ import { PUBLIC_DIRS, TABATA_FILES, MIRROR_PAIRS, preparePimaxRuntime } from '..
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const read = file => readFile(path.join(root, 'TabataTimer', file), 'utf8');
-const shell = ['index.html', 'style.css', 'app.js', 'ready-run.js', 'manifest.webmanifest', 'brand-logo.png', 'icon.svg', 'icon-192.png', 'icon-512.png', 'data.js', 'install-ui.js', 'update-prompt.js', 'icon-maskable-192.png', 'icon-maskable-512.png'];
+const shell = ['index.html', 'style.css', 'app.js', 'timer-view.js', 'editor.js', 'audio.js', 'wake-lock.js', 'timer-run.js', 'ready-run.js', 'manifest.webmanifest', 'brand-logo.png', 'icon.svg', 'icon-192.png', 'icon-512.png', 'data.js', 'install-ui.js', 'update-prompt.js', 'icon-maskable-192.png', 'icon-maskable-512.png'];
+
+test('TabataTimer loads feature modules before bootstrap and precaches each startup script', async () => {
+  const html = await read('index.html');
+  const scripts = [...html.matchAll(/<script src="\.\/([^"]+)" defer><\/script>/g)].map(match => match[1]);
+  assert.deepEqual(scripts, ['data.js', 'ready-run.js', 'install-ui.js', 'update-prompt.js', 'timer-view.js', 'editor.js', 'audio.js', 'wake-lock.js', 'timer-run.js', 'app.js']);
+  const sw = await read('sw.js');
+  for (const file of scripts) assert.ok(sw.includes(`"./${file}"`), file);
+});
 
 function worker(scope, caches) {
   const listeners = {};
@@ -103,7 +111,7 @@ test('TabataTimer worker precaches the complete shell, serves offline and isolat
       async addAll(requests) { for (const request of requests) cached.set(request.url, new Response(request.url)); },
       async match(url) { return cached.get(url)?.clone(); }
     };
-    const caches = { async open(name) { names.push(name); return cache; }, async keys() { return [names.at(-1), names.at(-1).replace(/v20261024-5-brand5-update-prompt-3-preset-ready-1-persist-1-name-1$/, 'old'), 'pimax-practice-old', 'tabata-timer-unrelated-old']; }, async delete(name) { deleted.push(name); } };
+    const caches = { async open(name) { names.push(name); return cache; }, async keys() { return [names.at(-1), names.at(-1).replace(/v20261024-5-brand5-update-prompt-3-preset-ready-1-persist-1-name-1-r5-1$/, 'old'), 'pimax-practice-old', 'tabata-timer-unrelated-old']; }, async delete(name) { deleted.push(name); } };
     const { context, listeners } = worker(scope, caches);
     vm.runInContext(source, context);
     let pending;
@@ -111,11 +119,11 @@ test('TabataTimer worker precaches the complete shell, serves offline and isolat
     await pending;
     const cacheName = names.at(-1);
     assert.equal(cacheName.startsWith('tabata-timer-'), true);
-    assert.match(cacheName, /v20261024-5-brand5-update-prompt-3-preset-ready-1-persist-1-name-1$/);
+    assert.match(cacheName, /v20261024-5-brand5-update-prompt-3-preset-ready-1-persist-1-name-1-r5-1$/);
     assert.deepEqual([...cached.keys()].sort(), shell.map(file => new URL(file === 'index.html' ? './' : file, scope).href).sort());
     listeners.activate({ waitUntil(value) { pending = value; } });
     await pending;
-    assert.deepEqual(deleted, [cacheName.replace(/v20261024-5-brand5-update-prompt-3-preset-ready-1-persist-1-name-1$/, 'old')]);
+    assert.deepEqual(deleted, [cacheName.replace(/v20261024-5-brand5-update-prompt-3-preset-ready-1-persist-1-name-1-r5-1$/, 'old')]);
     for (const file of ['', ...shell]) {
       listeners.fetch({ request: new Request(new URL(file, scope)), respondWith(value) { pending = value; } });
       const response = await pending;
@@ -137,9 +145,9 @@ test('TabataTimer preserves Korean copy and zz13 contact footer without fullscre
   const footer = original.match(/<div class="magic-settings-footer">[\s\S]*?<\/div><\/form>/)[0].replace('</form>', '');
   assert.ok(html.includes(footer));
   for (const text of ['개요', 'Android Chrome: ⋮', '앱 설치', 'iPhone Safari: 공유', '홈 화면에 추가', '준비', '운동', '일시정지', '사이클', '종료']) {
-    assert.ok((html + await read('app.js')).includes(text), text);
+    assert.ok((html + await read('app.js') + await read('timer-view.js') + await read('timer-run.js')).includes(text), text);
   }
-  for (const file of ['index.html', 'app.js', 'ready-run.js', 'style.css', 'manifest.webmanifest', 'sw.js', 'data.js', 'install-ui.js', 'update-prompt.js']) {
+  for (const file of ['index.html', 'app.js', 'timer-view.js', 'editor.js', 'audio.js', 'wake-lock.js', 'timer-run.js', 'ready-run.js', 'style.css', 'manifest.webmanifest', 'sw.js', 'data.js', 'install-ui.js', 'update-prompt.js']) {
     const source = await read(file);
     assert.doesNotMatch(source, /\b(?:requestFullscreen|webkitRequestFullscreen|webkitRequestFullScreen|mozRequestFullScreen|msRequestFullscreen)\b/, file);
     assert.doesNotMatch(source, /[\u2014~\uFF5E\u301C]/, file);
@@ -174,7 +182,7 @@ async function dataLayer() {
 }
 async function timerHarness({delayedWake=false,rejectWake=false,storage=memoryStorage(),blockedStorage=false,cues=false}={}) {
   const nodes=new Map(),documentEvents={},locks=[],utterances=[],tones=[],vibes=[];
-  let clock=0,wakeRequests=0,unlocked=0,resolveWake;
+  let clock=0,wakeRequests=0,unlocked=0,resolveWake,updateOptions;
   for(const match of (await read('index.html')).matchAll(/\bid="([^"]+)"/g))nodes.set(match[1],new Element());
   for(const id of ['run','editor','picker'])nodes.get(id).hidden=true;
   const document={visibilityState:'visible',documentElement:new Element(),getElementById:id=>nodes.get(id),createElement:()=>new Element(),addEventListener(type,handler){documentEvents[type]=handler;}};
@@ -185,21 +193,21 @@ async function timerHarness({delayedWake=false,rejectWake=false,storage=memorySt
     createOscillator(){const osc={frequency:{value:0},connect(node){return node;},start(){tones.push(osc.frequency.value);},stop(){}};return osc;}
     createGain(){return {gain:{setValueAtTime(){},exponentialRampToValueAtTime(){}},connect(){return {};}};}
   }
-  const navigator={vibrate(pattern){vibes.push(pattern);return true;},wakeLock:{request:async type=>{
+  const navigator={serviceWorker:{register:()=>Promise.resolve({})},vibrate(pattern){vibes.push(pattern);return true;},wakeLock:{request:async type=>{
     assert.equal(type,'screen');wakeRequests++;
     if(delayedWake)await new Promise(resolve=>{resolveWake=resolve;});
     if(rejectWake)throw new Error('denied');
     const lock={released:false,async release(){this.released=true;},addEventListener(){}};locks.push(lock);return lock;
   }}};
   const speechSynthesis={cancel(){},speak(utterance){utterances.push(utterance);}};
-  const context=vm.createContext({document,navigator,window:{AudioContext,speechSynthesis,matchMedia:()=>({matches:false})},speechSynthesis,
+  const context=vm.createContext({MagicUpdate:{init(options){updateOptions=options;},offer(){},hide(){}},document,navigator,window:{AudioContext,speechSynthesis,matchMedia:()=>({matches:false})},speechSynthesis,
     SpeechSynthesisUtterance:class{constructor(text){this.text=text;}},localStorage:storage,
     performance:{now:()=>clock},requestAnimationFrame:()=>1,cancelAnimationFrame(){},setInterval:()=>1,clearInterval(){},setTimeout:()=>1,clearTimeout(){}});
   // Default tests keep beeps and vibration off. cues:true leaves voice, beep and vibration on.
   storage.setItem('tt.opts',JSON.stringify({beep:cues,voice:true,vibe:cues}));
   if(blockedStorage)Object.defineProperty(context,'localStorage',{get(){throw new Error('blocked site data');}});
-  vm.runInContext(await read('data.js'),context);vm.runInContext(await read('ready-run.js'),context);vm.runInContext(await read('app.js'),context);await settle();
-  return {nodes,document,locks,utterances,tones,vibes,storage,get wakeRequests(){return wakeRequests;},get unlocked(){return unlocked;},
+  vm.runInContext(await read('data.js'),context);vm.runInContext(await read('ready-run.js'),context);for (const file of ['timer-view.js', 'editor.js', 'audio.js', 'wake-lock.js', 'timer-run.js', 'app.js']) vm.runInContext(await read(file),context);await settle();
+  return {nodes,document,locks,utterances,tones,vibes,storage,updateOptions,get wakeRequests(){return wakeRequests;},get unlocked(){return unlocked;},
     click:async id=>click(nodes.get(id)),
     start:async()=>{await click(nodes.get('timers').children[0].children[0]);await click(nodes.get('pauseBtn'));},
     async key(key){documentEvents.keydown({key,preventDefault(){}});await settle();},
@@ -446,4 +454,23 @@ test('zz12 and zz14 runtime and service-worker mirrors match their sibling sourc
     assert.equal(mirror==='zz14/app.mjs'?preparePimaxRuntime(copy):copy,mirror==='zz14/app.mjs'?preparePimaxRuntime(original):original,mirror);
     if(mirror.endsWith('sw.js'))assert.match(copy,/v20261021-wake-1/);
   }
+});
+
+
+test('TabataTimer update remains safe only inside settings with the run screen closed', async () => {
+  const app = await timerHarness();
+  assert.equal(app.updateOptions.safe(), false);
+  await app.click('openInfo');
+  assert.equal(app.updateOptions.safe(), true);
+  await click(app.nodes.get('timers').children[0].children[0]);
+  assert.equal(app.updateOptions.safe(), false);
+  await app.click('pauseBtn');
+  assert.equal(app.updateOptions.safe(), false);
+  await app.click('pauseBtn');
+  assert.equal(app.updateOptions.safe(), false);
+  await app.click('stopBtn');
+  await app.click('stopBtn');
+  assert.equal(app.updateOptions.safe(), true);
+  await app.click('closeInfo');
+  assert.equal(app.updateOptions.safe(), false);
 });

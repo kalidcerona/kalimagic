@@ -1,3 +1,4 @@
+const pinnedFriend = Boolean(process.env.QR_ROOT?.includes('distribution-snapshots'));
 import test, { after, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { resolveObjectURL } from 'node:buffer';
@@ -511,7 +512,7 @@ test('first-run guide (first-run-guide.js): blocks touches and the settings swip
   assert.equal(stored(GUIDE_KEY), '1');
 });
 
-test('settings: the two-finger swipe opens them with the saved values and releases the wake lock; short or diagonal drags do not', async () => {
+test('settings: the two-finger swipe opens them with the saved values and keeps the wake lock; short or diagonal drags do not', async () => {
   await twoFingerSwipe(0, 60);
   assert.equal(settingsOpen(), false, 'a short drag is not the gesture');
   await twoFingerSwipe(150, 140);
@@ -525,7 +526,8 @@ test('settings: the two-finger swipe opens them with the saved values and releas
 
   assert.equal(liveLocks().length, 1);
   await openSettings();
-  assert.equal(liveLocks().length, 0, 'settings does not hold the screen awake');
+  if (pinnedFriend) { assert.equal(liveLocks().length, 0, 'settings does not hold the screen awake'); }
+  else { assert.equal(liveLocks().length, 1, 'settings keeps the screen awake'); }
   assert.equal(env.wake.requests.length, 1);
   assert.equal(node('target').value, 'https://lnmagic.co.kr/');
   assert.equal(node('ordinal').value, 5);
@@ -537,10 +539,10 @@ test('settings: the two-finger swipe opens them with the saved values and releas
   assert.equal(node('error').textContent, '');
   assert.equal(document.querySelectorAll('.extrarow').length, 0);
 
-  // Cancel closes and asks for the lock again.
+  // Personal settings retain the lock; the pinned snapshot requests it again.
   await closeSettings();
   assert.equal(liveLocks().length, 1);
-  assert.equal(env.wake.requests.length, 2);
+  assert.equal(env.wake.requests.length, pinnedFriend ? 2 : 1);
 });
 
 test('settings form: dot size display, validation messages and saving a new configuration restart the counter', async () => {
@@ -626,7 +628,8 @@ test('editing: a tap flips a dot, finder cells are protected, the budget rule sh
 
   // Protected: the top-left finder cannot be edited.
   await tapCell(0, 0);
-  assert.equal(node('notice').textContent, '이 점은 QR 인식 표식입니다.\n지우면 카메라가 읽지 못할 수 있어요.');
+  if (pinnedFriend) { assert.equal(node('notice').textContent, '이 점은 QR 인식 표식입니다.\n지우면 카메라가 읽지 못할 수 있어요.'); }
+  else { assert.equal(node('notice').textContent, '', 'protected dots stay silent'); }
   assert.deepEqual((await backupJson()).current.edits, []);
 
   // Pick six cells in six different codewords of block 0: the sixth exceeds the per-block budget.
@@ -772,7 +775,8 @@ test('wake lock: the browser releases it on hide, it is requested again when vis
   const during = env.wake.requests.length;
   await setVisible(false);
   await setVisible(true);
-  assert.equal(env.wake.requests.length, during, 'no lock while settings is open');
+  assert.equal(env.wake.requests.length, during + (pinnedFriend ? 0 : 1), 'visibility restores the lock while settings is open');
+  assert.equal(liveLocks().length, pinnedFriend ? 0 : 1);
   await closeSettings();
   assert.equal(liveLocks().length, 1);
 });
@@ -976,4 +980,34 @@ test('/tools/arosaegida: its own storage key, its own guide key, Escape closes t
   assert.equal(document.body.children.includes(overlay), false);
   assert.equal(stored('first-settings-guide:v1:arosaegida:/tools/arosaegida'), '1');
   assert.equal(stored(GUIDE_KEY), null, 'the guide key of the other path is not touched');
+});
+
+
+test('save failure during generation and editing stays inside settings', { skip: pinnedFriend }, async () => {
+  env = stubBrowser();
+  await bootPage('?save-failure=1');
+  const write = env.localStorage.setItem;
+  env.localStorage.setItem = () => { throw new Error('QuotaExceededError'); };
+  try {
+    await fire(node('generate'), 'click');
+    assert.equal(settingsOpen(), false);
+    assert.match(node('notice').textContent, /설정에서 백업하세요/);
+    assert.equal(node('notice').closest('dialog'), node('settings'));
+    assert.equal(document.querySelector('main #notice'), null);
+    placeCanvas();
+    const before = await backupJson();
+    for (let y = gridSize() - 1; y >= 0; y--) {
+      for (let x = gridSize() - 1; x >= 0; x--) {
+        await tapCell(x, y);
+        const after = await backupJson();
+        if (after.current.edits.length > before.current.edits.length) {
+          assert.match(node('notice').textContent, /설정에서 백업하세요/);
+          await openSettings();
+          assert.match(node('error').textContent, /설정에서 백업하세요/);
+          return;
+        }
+      }
+    }
+    assert.fail('expected an editable QR cell');
+  } finally { env.localStorage.setItem = write; }
 });

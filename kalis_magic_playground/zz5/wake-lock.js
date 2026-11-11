@@ -1,10 +1,8 @@
-import { view } from './controller.js';
-
 let wakeLock = null;
 let wakeLockPending = false;
 
 function performanceWakeWanted() {
-  return view === 'performance';
+  return document.visibilityState === "visible";
 }
 
 async function acquireWakeLock() {
@@ -71,5 +69,7 @@ function askToKeepStoredData() {
   }
 }
 askToKeepStoredData();
+
+syncPerformanceWakeLock();
 
 export { syncPerformanceWakeLock };

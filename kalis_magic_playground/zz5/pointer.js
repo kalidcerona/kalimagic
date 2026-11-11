@@ -2,7 +2,7 @@ import { allowsRevealStroke, classifyGesture } from './logic.js';
 import { view, running, stopPerformance } from './controller.js';
 import { canvas } from './dom.js';
 import {
-  isCardPerformance, isCardSelectPhase, viewportCell, lockCourtCard, selectCourtCard,
+  isCardPerformance, isCardSelectPhase, viewportCell, lockCourtCard, selectCourtCard, cancelPendingCardSelection,
 } from './card-select.js';
 import { maybeAdvanceStage, redraw, pointsFor, stampPoints, resetVeil } from './veil.js';
 
@@ -29,6 +29,7 @@ function screenPoint(event) {
 }
 
 function clearContacts() {
+  cancelPendingCardSelection();
   const ids = [...contacts.keys()];
   contacts.clear();
   multiTouchGroup = false;
@@ -81,14 +82,18 @@ function onPointerDown(event) {
   }
   if (contacts.size > 1) {
     multiTouchGroup = true;
+    cancelPendingCardSelection();
     for (const item of contacts.values()) item.last = null;
     if (isCardSelectPhase()) {
       running.pendingPointerId = null;
       running.pendingCell = null;
     }
-  } else if (isCardSelectPhase()) {
-    selectCourtCard(viewportCell(event.clientX, event.clientY), event.clientX, event.clientY, event.pointerId);
-    return;
+  } else {
+    cancelPendingCardSelection();
+    if (isCardSelectPhase()) {
+      selectCourtCard(viewportCell(event.clientX, event.clientY), event.clientX, event.clientY, event.pointerId);
+      return;
+    }
   }
   if (isCardSelectPhase() || (running && running.cardPhase === 'loading')) return;
   if (allowsRevealStroke(contacts.size, multiTouchGroup) && canPaintPointer(event)) {
@@ -141,6 +146,7 @@ function endPointer(event) {
   const point = screenPoint(event);
   contact.x = point.x;
   contact.y = point.y;
+  if (event.type !== 'pointerup') cancelPendingCardSelection();
   const selecting = isCardSelectPhase();
   // pointercancel and lostpointercapture must not lock or uncover a court.
   const commitSelection = selecting

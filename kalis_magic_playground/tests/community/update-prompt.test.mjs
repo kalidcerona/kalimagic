@@ -298,13 +298,13 @@ test('zz11 service worker skips waiting only on the SKIP_WAITING message and shi
   listeners.message({ data: { type: 'SKIP_WAITING' } });
   assert.equal(skips, 1);
   assert.match(sw, /"\.\/update-prompt\.js"/);
-  assert.match(sw, /update-prompt-6-persist-1';/);
+  assert.match(sw, /update-prompt-6-persist-1-r5-1';/);
 });
 
 test('zz11 page loads update-prompt.js before app.js and offers only from showSettings', () => {
   const html = readFileSync(new URL('../../zz11/index.html', import.meta.url), 'utf8');
   assert.ok(html.indexOf('./update-prompt.js') > 0 && html.indexOf('./update-prompt.js') < html.indexOf('./app.js'));
-  const app = readFileSync(new URL('../../zz11/app.js', import.meta.url), 'utf8');
+  const app = ['spin.js', 'app.js'].map(file => readFileSync(new URL('../../zz11/' + file, import.meta.url), 'utf8')).join('\n');
   const offers = [...app.matchAll(/MagicUpdate\??\.offer\(\)/g)];
   assert.equal(offers.length, 1);
   const show = app.slice(app.indexOf('function showSettings()'), app.indexOf('function closeSettings()'));

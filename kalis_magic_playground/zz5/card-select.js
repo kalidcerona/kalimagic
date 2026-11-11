@@ -59,15 +59,26 @@ function lockCourtCard(cell) {
   redraw();
 }
 
+function cancelPendingCardSelection() {
+  if (!running || running.cardPhase !== 'loading') return;
+  running.cardLoadToken = null;
+  running.cardPhase = 'select';
+  running.queuedPoints = [];
+  running.pendingPointerId = null;
+  running.pendingCell = null;
+}
+
 function selectCourtCard(cell, clientX, clientY, pointerId) {
   if (!isCardSelectPhase() || !cell || !running.deckSlots) return;
   const session = running;
+  const token = {};
+  session.cardLoadToken = token;
   session.selectedIndex = cell.index;
   session.cardPhase = 'loading';
   session.queuedPoints = [{ x: clientX, y: clientY }];
   hideCellGuide();
   void session.deckSlots.get(cell.index).then(({ image, url }) => {
-    if (running !== session || view !== 'performance') return;
+    if (running !== session || view !== 'performance' || session.cardLoadToken !== token) return;
     session.cards[cell.index] = image;
     if (url) session.cardUrls.push(url);
     session.cardPhase = 'select';
@@ -82,7 +93,7 @@ function selectCourtCard(cell, clientX, clientY, pointerId) {
     const activeContact = contacts.get(pointerId);
     if (activeContact) activeContact.last = contact.last;
   }).catch(() => {
-    if (running !== session || view !== 'performance') return;
+    if (running !== session || view !== 'performance' || session.cardLoadToken !== token) return;
     stopPerformance();
     setError('선택한 카드를 열 수 없습니다. 저장된 데이터는 바꾸지 않았습니다.');
   });
@@ -90,5 +101,5 @@ function selectCourtCard(cell, clientX, clientY, pointerId) {
 
 export {
   isCardPerformance, isCardSelectPhase, viewportCell, paintOpaqueCardMask, lockCourtCard,
-  selectCourtCard,
+  selectCourtCard, cancelPendingCardSelection,
 };

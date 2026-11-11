@@ -1,12 +1,23 @@
 // Cache only the explicit app shell. API, authentication and user data stay on the network.
 const CACHE_PREFIX = 'magic-memdeck-' + self.registration.scope + '-';
-const CACHE_NAME = CACHE_PREFIX + 'v20261024-wake-3-v20261021-wake-1-v20261004-first-guide-1-coherent-1-compat-1-brand5-local-preview-module-1-update-prompt-3-persist-1';
+const CACHE_NAME = CACHE_PREFIX + 'v20261024-wake-3-v20261021-wake-1-v20261004-first-guide-1-coherent-1-compat-1-brand5-local-preview-module-1-update-prompt-3-persist-1-r5-d2-1';
 const SHELL = [
   "./first-run-guide.js",
   "./update-prompt.js",
   "./index.html",
   "./style.css",
   "./app.mjs",
+  "./storage.mjs",
+  "./screen-shared.mjs",
+  "./study.mjs",
+  "./quiz.mjs",
+  "./table.mjs",
+  "./records.mjs",
+  "./settings.mjs",
+  "./rank.mjs",
+  "./memory-model.mjs",
+  "./memory-training.mjs",
+  "./memory.mjs",
   "./local-preview.mjs", // local-preview-hook
   "./core.mjs",
   "./mnemonic.mjs",

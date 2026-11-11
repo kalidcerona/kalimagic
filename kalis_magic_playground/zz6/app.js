@@ -1,3 +1,4 @@
+import { renderHomeScreen } from './home-screen.js';
 import { LIMITS, cropPercentFromDrag } from './logic.js';
 import {
   stageEl, form, nameInput, sizeInput, xInput, yInput, fadeInput, durationInput, edgeGroup,
@@ -379,3 +380,5 @@ showPerformance({ persistMode: false, keepGone: false, showGuide: true });
 imagesReady.then(refreshCoinImage, refreshCoinImage);
 installLocalPreview(() => { hideGestureGuide(); showSettings(); }); // local-preview-hook
 startLaunchCheck();
+
+renderHomeScreen();

@@ -1,11 +1,8 @@
-import { settings } from "./dom.js";
-import { stream } from "./state.js";
-
 let wakeLock = null;
 let wakeLockPending = false;
 
 function performanceWakeWanted() {
-  return Boolean(stream) && settings.hidden;
+  return document.visibilityState === "visible";
 }
 
 async function acquireWakeLock() {
@@ -67,5 +64,6 @@ function askToKeepStoredData() {
   }
 }
 askToKeepStoredData();
+syncPerformanceWakeLock();
 
 export { acquireWakeLock, releaseWakeLock, syncPerformanceWakeLock };

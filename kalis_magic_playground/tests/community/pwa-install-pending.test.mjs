@@ -21,7 +21,13 @@ const APPS = [
 // settingsUi: whether settings-ui.js (which keeps the event in window.__magicInstallPrompt) loaded next to a spinner app.
 async function runtime(file, kind, { saved = new Map(), standalone = false, settingsUi = true } = {}) {
   let source = await readFile(new URL(file, ROOT), 'utf8');
-  if (kind === 'nudge') {
+  if (file === 'zz11/app.js') {
+    source = await readFile(new URL('zz11/install.js', ROOT), 'utf8');
+    source = source.replace('export ', '') + '\ninstallAppPrompt();';
+  } else if (file === 'zz13/app.mjs') {
+    source = await readFile(new URL('zz13/install.mjs', ROOT), 'utf8');
+    source = source.replace('export ', '') + '\nconst ctx = {$}; setupInstall(ctx); ctx.renderInstall();';
+  } else if (kind === 'nudge') {
     // zz1 and zz3 ship the nudge as its own classic script file instead of an inline <script>.
     source = (file.endsWith('.js') ? [[null, source]] : [...source.matchAll(/<script>\s*([\s\S]*?)<\/script>/g)])
       .map(match => match[1]).find(script => /install.nudge.done|installNudgeDone/i.test(script));

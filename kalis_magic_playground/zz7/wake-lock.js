@@ -1,10 +1,8 @@
-import { performanceScreen, settingsVisible } from "./dom.js";
-
 let wakeLock = null;
 let wakeLockPending = false;
 
 function performanceWakeWanted() {
-  return !performanceScreen.hidden && !settingsVisible();
+  return document.visibilityState === "visible";
 }
 
 async function acquireWakeLock() {
@@ -66,5 +64,6 @@ function askToKeepStoredData() {
   }
 }
 askToKeepStoredData();
+syncPerformanceWakeLock();
 
 export { acquireWakeLock, releaseWakeLock, syncPerformanceWakeLock };

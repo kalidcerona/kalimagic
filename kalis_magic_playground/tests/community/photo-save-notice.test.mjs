@@ -138,7 +138,7 @@ for (const [app, relative] of apps) {
     const settingsId = ['unlock', 'false-memory'].includes(app) ? 'settings-screen' : 'settings';
     assert.ok(html.indexOf(`id="${settingsId}"`) < html.indexOf('id="photo-save-notice"'));
     assert.match(read(base, 'sw.js'), /["']\.\/photo-save-notice\.js["']/);
-    assert.match(read(base, 'sw.js'), /-photo-notice-1(?:-perf-log-1)?["']/);
+    assert.match(read(base, 'sw.js'), /-photo-notice-1(?:-perf-log-1)?(?:-r5-(?:[a-z]\d+-)?\d+)*["']/);
   });
 }
 

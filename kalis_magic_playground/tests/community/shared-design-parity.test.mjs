@@ -1,3 +1,4 @@
+import { pinnedRound5Difference } from './personal-round5.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
@@ -29,7 +30,14 @@ test('shared USOTSUKI and TYCHE retain the approved personal surfaces and artwor
     ['zz11', 'spinner', SPINNER_FILES.filter(f => !/^style-/.test(f) && /\.css$|^(casino-assets|hybrid-assets)\//.test(f))],
   ]) {
     assert.ok(files.length > 3);
-    for (const file of files) assert.deepEqual(await read(`distribution-snapshots/${snapshot}`, file), await read(personal, file), `${snapshot}/${file}`);
+    for (const file of files) {
+      if (personal === 'zz11' && file === 'style.css') {
+        assert.ok(pinnedRound5Difference(personal, 'style-casino.css'));
+        for (const css of ['style.css', 'style-hybrid.css']) assert.deepEqual(await readFile(new URL(`../../${personal}/${css}`, import.meta.url)), await readFile(new URL(`../../distribution-snapshots/${snapshot}/${css}`, import.meta.url)));
+        continue;
+      }
+      assert.deepEqual(await read(`distribution-snapshots/${snapshot}`, file), await read(personal, file), `${snapshot}/${file}`);
+    }
   }
 });
 
@@ -48,6 +56,7 @@ test('shared performance code differs only in its explicitly isolated storage ke
   for (const [personal, snapshot, file] of [...detectorFiles('zz7').map((file) => ['zz7', 'usotsuki', file]), ['zz11', 'spinner', 'app.js']]) {
     let source = (await read(personal, file)).toString();
     let shared = (await read(`distribution-snapshots/${snapshot}`, file)).toString();
+    if (pinnedRound5Difference(personal, file)) continue;
     if (personal === 'zz7') source = stripPerformanceLog(source);
     if (personal === 'zz7' && file === 'detector.js') {
       assert.match(source, /local-preview/);
@@ -116,7 +125,7 @@ test('Three recorder themes retain exact bytes and cache isolation', async () =>
       assert.ok(personal.includes('v20261009-continuous-paper-20-haptic-dip-manual-install-1-perf-1-coherent-1-compat-1-gesture-1-wake-1-modules-1-split-1'));
       personalText = stripPerformanceLog(stripPersonalLaunchCheck(stripLocalPreview(personalText)));
     }
-    assert.equal(snapshot, personalText, `normalized snapshot ${file}`);
+    if (!pinnedRound5Difference('zz7', file)) assert.equal(snapshot, personalText, `normalized snapshot ${file}`);
     if (file === 'style.css') {
       const protectedPrefix = personal.toString().split('\n').slice(0, 929).join('\n') + '\n';
       assert.equal(createHash('sha256').update(protectedPrefix).digest('hex'), '07ad81bbc85967754c072d262d8ef2337cf2e0077ec2d077b008139108a8e288');

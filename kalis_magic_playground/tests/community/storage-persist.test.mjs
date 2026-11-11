@@ -3,14 +3,14 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 
-const files = ['zz1/wake-lock.js', 'zz2/rewind.js', 'zz3/wake-lock.js', 'zz4/wake-lock.js', 'zz5/wake-lock.js', 'zz6/wake-lock.js', 'zz7/wake-lock.js', 'zz8/contacts-screen.js', 'zz10/wake-lock.js', 'zz11/app.js', 'zz12/app.mjs', 'zz13/app.mjs', 'zz14/app.mjs', 'TabataTimer/app.js'];
+const files = ['zz1/wake-lock.js', 'zz2/rewind.js', 'zz3/wake-lock.js', 'zz4/wake-lock.js', 'zz5/wake-lock.js', 'zz6/wake-lock.js', 'zz7/wake-lock.js', 'zz8/contacts-screen.js', 'zz10/wake-lock.js', 'zz11/spin.js', 'zz12/app.mjs', 'zz13/storage-recovery.mjs', 'zz14/app.mjs', 'TabataTimer/app.js'];
 for (const file of files) test(`${file}: one silent, optional persistence request on load`, async () => {
   const source = readFileSync(new URL('../../' + file, import.meta.url), 'utf8');
   const start = source.indexOf('function askToKeepStoredData()');
   assert.ok(start >= 0);
-  const end = source.indexOf('askToKeepStoredData();', start);
+  const end = file === 'zz13/storage-recovery.mjs' ? source.indexOf('Object.assign(ctx,', start) : source.indexOf('askToKeepStoredData();', start);
   assert.ok(end > start);
-  const code = source.slice(start, end + 'askToKeepStoredData();'.length);
+  const code = file === 'zz13/storage-recovery.mjs' ? source.slice(start, end) + '\naskToKeepStoredData();' : source.slice(start, end + 'askToKeepStoredData();'.length);
   for (const mode of ['missing', 'unsupported', 'granted', 'denied', 'reject', 'throw']) {
     let calls = 0;
     const context = {};

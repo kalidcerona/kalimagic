@@ -8,7 +8,7 @@ import { aletheiaAppScript } from './aletheia-app-script.mjs';
 import { usotsukiAppScript } from './usotsuki-app-script.mjs';
 import { choiceAppScript, choiceModuleScript } from './choice-app-script.mjs';
 
-// Apps that hold a screen wake lock during performance and drop it on the settings path.
+// Personal apps stay awake in settings; pinned friend snapshots retain their previous policy.
 const APPS = [
   {
     file: 'zz2/rewind.js',
@@ -52,11 +52,13 @@ const APPS = [
   },
   {
     file: 'zz11/app.js',
+    sources: ['zz11/wake-lock.js', 'zz11/spin.js'],
     settings: /function showSettings\(\) \{[\s\S]*?settings\.hidden = false;[\s\S]*?syncPerformanceWakeLock\(\)/,
     wanted: /return settings\.hidden/,
   },
   {
     file: 'zz13/app.mjs',
+    sources: ['zz13/wake-lock.mjs', 'zz13/settings.mjs'],
     settings: /function open\(\)\{[\s\S]*?\$\('settings'\)\.showModal\(\);syncPerformanceWakeLock\(\)/,
     wanted: /return \$\('settings'\)\.open !== true/,
   },
@@ -100,7 +102,7 @@ function sourceOf(file) {
 }
 
 for (const app of APPS) {
-  test(`${app.file} requests a screen wake lock, releases it on the settings path, and feature-detects`, () => {
+  test(`${app.file} requests a screen wake lock with its personal or pinned settings policy and feature-detects`, () => {
     const source = app.modules === 'usotsuki' ? usotsukiAppScript(fileURLToPath(new URL(`../../${app.file.replace(/detector\.js$/, '')}`, import.meta.url)))
       : app.modules === 'choice' ? choiceAppScript(fileURLToPath(new URL('../../zz4/', import.meta.url)))
       : app.modules === 'aletheia' ? aletheiaAppScript(fileURLToPath(new URL(`../../${app.file.replace(/app\.js$/, '')}`, import.meta.url)))
@@ -108,8 +110,9 @@ for (const app of APPS) {
     assert.match(source, /navigator\.wakeLock\.request\(\s*"screen"\s*\)/);
     assert.match(source, /!\(\s*"wakeLock" in navigator\s*\)/);
     assert.match(source, /else releaseWakeLock\(\)/);
-    assert.match(source, app.wanted);
-    assert.match(source, app.settings);
+    const personal = app.file.startsWith('zz');
+    assert.match(source, personal && app.file !== 'zz8/contacts-screen.js' ? /return document\.visibilityState === ["']visible["']/ : app.wanted);
+    assert.match(source, app.file === 'zz11/app.js' ? /function showSettings\(\) \{[\s\S]*?settings\.hidden = false;/ : app.file === 'zz13/app.mjs' ? /showModal\(\);ctx\.syncPerformanceWakeLock\(\)/ : app.settings);
   });
 }
 
@@ -133,7 +136,7 @@ function element() {
   };
 }
 
-test('zz4 performance requests the screen lock once and settings releases it', async () => {
+test('zz4 performance and settings retain one lock until the page is hidden', async () => {
   // zz4 runs app.js with local feature modules. The lock code that sat right above openFakeHome
   // now lives in wake-lock.js, so the same code is read as that module plus openFakeHome and closeFakeHome.
   const dir = fileURLToPath(new URL('../../zz4/', import.meta.url));
@@ -210,6 +213,10 @@ test('zz4 performance requests the screen lock once and settings releases it', a
   sandbox.closeFakeHome();
   await new Promise((resolve) => setImmediate(resolve));
   assert.deepEqual(requests, ['screen']);
+  assert.deepEqual(releases, []);
+  sandbox.document.visibilityState = 'hidden';
+  sandbox.syncPerformanceWakeLock();
+  await new Promise((resolve) => setImmediate(resolve));
   assert.deepEqual(releases, ['screen']);
   assert.equal(sandbox.document.body.dataset.view, 'settings');
   assert.equal(sandbox.settingsEl.hidden, false);
@@ -223,10 +230,7 @@ function awakeSlice(source) {
 }
 
 function tabataAwakeSlice(source) {
-  const start = source.indexOf('  let wakePending = false, shortLived = 0;');
-  const end = source.indexOf('  function start()', start);
-  assert.ok(start >= 0 && end > start);
-  return `let wake = null;\n${source.slice(start, end)}\nkeepAwake();\n`;
+  return source + '\nglobalThis.TabataWakeLock(() => {}).keepAwake();';
 }
 
 // Drive the shipped release listener with a fake lock and a manual clock.
@@ -301,8 +305,8 @@ async function driveShortLivedBudget(code) {
 
 test('visible wake lock stops retrying after three short releases and resumes when shown again', async () => {
   const shared = awakeSlice(sourceOf('zz14/app.mjs'));
-  assert.equal(awakeSlice(sourceOf('zz12/app.mjs')), shared);
+  await driveShortLivedBudget(awakeSlice(sourceOf('zz12/app.mjs')));
   assert.equal(awakeSlice(sourceOf('distribution-snapshots/pimax/app.mjs')), shared);
   await driveShortLivedBudget(shared);
-  await driveShortLivedBudget(tabataAwakeSlice(sourceOf('TabataTimer/app.js')));
+  await driveShortLivedBudget(tabataAwakeSlice(sourceOf('TabataTimer/wake-lock.js')));
 });

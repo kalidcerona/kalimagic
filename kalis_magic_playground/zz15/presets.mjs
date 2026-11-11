@@ -10,7 +10,7 @@ const KEY = {
 };
 function read(key) { try { return localStorage.getItem(key); } catch { return null; } }
 function write(key, value) {
-  try { if (value === null) localStorage.removeItem(key); else localStorage.setItem(key, value); } catch { /* storage unavailable */ }
+  try { if (value === null) localStorage.removeItem(key); else localStorage.setItem(key, value); return true; } catch { return false; }
 }
 function readSettings() {
   try { const s = JSON.parse(read(KEY.settings) || '{}'); return { sameWindow: s?.sameWindow === true }; } catch { return { sameWindow: false }; }
@@ -38,11 +38,12 @@ const store = {
     refreshSettings();
   },
   saveCategories(list) {
+    if (!write(KEY.presets, C.encodeCategories(list))) return false;
     this.cats = list;
-    write(KEY.presets, C.encodeCategories(list));
     this.recents = C.pruneRecents(this.recents, list);
     write(KEY.recent, C.encodeRecents(this.recents));
     picker.render();
+    return true;
   },
   toast(message) {
     const t = $('toast');
@@ -91,7 +92,10 @@ $('importFile').addEventListener('change', async (ev) => {
   if (!result.ok) { store.toast(result.message); return; }
   const choice = await store.ask('프리셋 가져오기', `묶음 ${result.categories.length}개를 가져옵니다. 지금 프리셋을 모두 바꿀지, 지금 프리셋에 합칠지 고르세요.`, [['취소', null], ['합치기', 'merge'], ['바꾸기', 'replace']]);
   if (!choice) return;
-  store.saveCategories(choice === 'replace' ? result.categories : C.mergeCategories(store.cats, result.categories));
+  if (!store.saveCategories(choice === 'replace' ? result.categories : C.mergeCategories(store.cats, result.categories))) {
+    store.toast('저장하지 못했습니다. 저장 공간을 확인하고 다시 시도해 주세요.');
+    return;
+  }
   editor.reload();
   store.toast(choice === 'replace' ? '바꿨습니다' : '합쳤습니다');
 });

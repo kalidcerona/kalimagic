@@ -49,14 +49,26 @@
     <div id="zoom" class="zoomrow"></div>
     <div class="p bot round gray" style="--x:830;--y:1469;--w:80"><svg viewBox="0 0 24 24" aria-hidden="true"><g fill="#fff"><circle cx="9.5" cy="9.5" r="1.25"/><circle cx="14.5" cy="9.5" r="1.25"/><circle cx="9.5" cy="14.5" r="1.25"/><circle cx="14.5" cy="14.5" r="1.25"/></g></svg></div>
 
-    <div class="p bot round thumb" style="--x:148;--y:1659;--w:122"></div>
+    <button type="button" id="album" aria-label="갤러리" class="p bot round thumb" style="--x:148;--y:1659;--w:122"></button>
     <button type="button" id="shutter" class="p bot round shutter" style="--x:461;--y:1659;--w:164" aria-label="촬영"></button>
-    <div class="p bot round gray flip rot" style="--x:773;--y:1659;--w:122"><svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4.1 9.1A8.5 8.5 0 0 1 18.9 7"/><path d="M19.9 14.9A8.5 8.5 0 0 1 5.1 17"/><path d="M16.2 5.1 19 7.4l.9-3.4"/><path d="M7.8 18.9 5 16.6l-.9 3.4"/></g></svg></div>
+    <button type="button" id="switchCamera" aria-label="카메라 전환" class="p bot round gray flip rot" style="--x:773;--y:1659;--w:122"><svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4.1 9.1A8.5 8.5 0 0 1 18.9 7"/><path d="M19.9 14.9A8.5 8.5 0 0 1 5.1 17"/><path d="M16.2 5.1 19 7.4l.9-3.4"/><path d="M7.8 18.9 5 16.6l-.9 3.4"/></g></svg></button>
 
-    <span class="p bot rot mode" style="--x:315;--y:1840;--w:160;--h:60">인물 사진</span>
-    <span class="p bot rot mode on" style="--x:461;--y:1840;--w:160;--h:60">사진</span>
-    <span class="p bot rot mode" style="--x:591;--y:1840;--w:160;--h:60">동영상</span>
-    <span class="p bot rot mode" style="--x:734;--y:1840;--w:160;--h:60">더보기</span>
+    <button type="button" data-mode="portrait" class="p bot rot mode" style="--x:315;--y:1840;--w:160;--h:60">인물 사진</button>
+    <button type="button" data-mode="photo" class="p bot rot mode on" style="--x:461;--y:1840;--w:160;--h:60">사진</button>
+    <button type="button" data-mode="video" class="p bot rot mode" style="--x:591;--y:1840;--w:160;--h:60">동영상</button>
+    <button type="button" data-mode="more" class="p bot rot mode" style="--x:734;--y:1840;--w:160;--h:60">더보기</button>
+    <span id="recordTimer" class="record-timer" hidden>00:00</span>
+    <section id="gallery" class="session-gallery" aria-label="갤러리" hidden>
+      <button id="galleryClose" type="button" class="gallery-close" aria-label="갤러리 닫기">닫기</button>
+      <button id="galleryFrame" type="button" class="gallery-frame" aria-label="다음 사진">
+        <img id="galleryImage" alt="촬영한 사진" hidden>
+        <span id="galleryEmpty">사진 없음</span>
+      </button>
+      <div class="gallery-nav"><button id="galleryPrev" type="button">이전</button><span id="galleryCount"></span><button id="galleryNext" type="button">다음</button></div>
+    </section>
+    <div id="moreModes" class="more-modes" hidden><div class="mode-sheet" aria-label="촬영 모드">
+      <button type="button" data-extra="야간">야간</button><button type="button" data-extra="파노라마">파노라마</button><button type="button" data-extra="프로">프로</button>
+    </div></div>
   </div>
 
   <section id="gate" class="gate" hidden>

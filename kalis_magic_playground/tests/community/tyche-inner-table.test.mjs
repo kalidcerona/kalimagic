@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { readAppStyle } from './app-style.mjs';
 
 const css = readAppStyle(new URL('../../zz11/', import.meta.url));
-const app = readFileSync(new URL('../../zz11/app.js', import.meta.url), 'utf8');
+const app = readFileSync(new URL('../../zz11/spin.js', import.meta.url), 'utf8');
 
 function px(name) {
   const match = css.match(new RegExp(`--${name}:\\s*(\\d+)px`));

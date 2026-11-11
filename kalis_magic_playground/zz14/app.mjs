@@ -38,6 +38,8 @@ import {
 } from "./settings.mjs";
 import {
   standaloneDisplay,
+  shouldShowInstallSheet,
+  rememberInstallDismissal,
   promptReady,
   installSheetOpen,
   installSheetHtml,
@@ -174,6 +176,7 @@ let focusInstallSheet = false;
 let pullingSheetFocus = false;
 
 function closeInstallSheet() {
+  rememberInstallDismissal();
   showInstallSheet = false;
   focusInstallSheet = false;
   render();
@@ -303,7 +306,7 @@ function boot() {
   state.tab = "practice";
   state.notice = notes.join(" ");
   focusAnswer = false;
-  showInstallSheet = !standaloneDisplay();
+  showInstallSheet = shouldShowInstallSheet();
   focusInstallSheet = showInstallSheet;
   document.body.addEventListener("click", onClick);
   document.body.addEventListener("keydown", onKeyDown);

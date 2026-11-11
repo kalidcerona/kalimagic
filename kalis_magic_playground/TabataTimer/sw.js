@@ -1,10 +1,15 @@
 // Cache only the explicit app shell. API, authentication and user data stay on the network.
 const CACHE_PREFIX = 'tabata-timer-' + encodeURIComponent(new URL(self.registration.scope).pathname) + '-';
-const CACHE_NAME = CACHE_PREFIX + 'v20261024-5-brand5-update-prompt-3-preset-ready-1-persist-1-name-1';
+const CACHE_NAME = CACHE_PREFIX + 'v20261024-5-brand5-update-prompt-3-preset-ready-1-persist-1-name-1-r5-1';
 const SHELL = [
   "./", // Canonical navigation avoids Netlify pretty-URL redirects from index.html.
   "./style.css",
   "./app.js",
+  "./timer-view.js",
+  "./editor.js",
+  "./audio.js",
+  "./wake-lock.js",
+  "./timer-run.js",
   "./ready-run.js",
   "./data.js",
   "./install-ui.js",

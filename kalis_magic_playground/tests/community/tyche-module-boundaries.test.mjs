@@ -511,7 +511,7 @@ test('target: the first touch picks the secret direction, the cue changes and th
   assert.equal(node('spinner-arrow').style.transform, 'rotate(0deg)', 'choosing the target does not turn the arrow');
 });
 
-test('settings swipe: only a two-finger downward drag opens settings, and it releases the wake lock', async () => {
+test('settings swipe: only a two-finger downward drag opens settings, and it keeps the visible page awake', async () => {
   const before = await twoFingerSwipe(100, 100);
   assert.equal(before.defaultPrevented, false, 'a diagonal drag is not the gesture');
   const short = await twoFingerSwipe(0, 60);
@@ -531,7 +531,7 @@ test('settings swipe: only a two-finger downward drag opens settings, and it rel
   assert.equal(node('target-value').textContent, '위치 지정됨');
   assert.equal(node('spin-value').textContent, '0회');
   assert.equal(node('force-spin').value, '4');
-  assert.equal(liveLocks().length, 0, 'settings does not hold the screen awake');
+  assert.equal(liveLocks().length, FRIEND ? 0 : 1, 'the personal build keeps settings awake');
   assert.equal(env.wake.requests.length, 1);
 
   // While settings is open the wheel and a second swipe do nothing.
@@ -579,8 +579,8 @@ test('settings controls: forced turn, table colour, screen design and clearing t
   assert.equal(node('wheel-wrap').dataset.targetCue, 'idle');
   assert.equal(node('target-corner-right').classes.has('is-acknowledged'), false);
   assert.equal(settingsOpen(), false);
-  assert.equal(liveLocks().length, 1, 'closing settings requests the wake lock again');
-  assert.equal(env.wake.requests.length, 2);
+  assert.equal(liveLocks().length, 1, 'closing settings keeps a live wake lock');
+  assert.equal(env.wake.requests.length, FRIEND ? 2 : 1);
   await tapWheel(300, 300);
   assert.ok(Math.abs(state().targetAngle - 90) < 1e-9);
 
@@ -588,7 +588,7 @@ test('settings controls: forced turn, table colour, screen design and clearing t
   await fire(node('settings-close'), 'click');
   assert.equal(settingsOpen(), false);
   assert.equal(liveLocks().length, 1);
-  assert.equal(env.wake.requests.length, 3);
+  assert.equal(env.wake.requests.length, FRIEND ? 3 : 1);
 });
 
 test('spins: queued swipes, outcome rules, the forced turn lands on the target, motion preference and busy settings', async () => {
@@ -721,13 +721,13 @@ test('wake lock: the browser releases it on hide, it is requested again when vis
   await setVisible(true);
   assert.equal(liveLocks().length, 1);
 
-  // Settings open: going hidden and visible must not take a new lock.
+  // The visible personal settings screen reacquires its lock after hiding.
   await openSettings();
   const during = env.wake.requests.length;
   await setVisible(false);
   await setVisible(true);
-  assert.equal(env.wake.requests.length, during, 'no lock while settings is open');
-  assert.equal(liveLocks().length, 0);
+  assert.equal(env.wake.requests.length, during + (FRIEND ? 0 : 1), 'visible personal settings reacquires the lock');
+  assert.equal(liveLocks().length, FRIEND ? 0 : 1);
   await fire(node('settings-close'), 'click');
   assert.equal(liveLocks().length, 1);
 });

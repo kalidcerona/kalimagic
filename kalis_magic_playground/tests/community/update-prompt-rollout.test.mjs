@@ -22,13 +22,13 @@ const WIRING = {
   zz7: { offer: ['controller-screens.js'], hide: ['controller-screens.js'], init: ['detector.js'], safe: 'settingsVisible()' },
   zz8: { offer: ['contacts-screen.js'], hide: ['contacts-screen.js'], init: ['contacts.js'], safe: '!settingsScreen.hidden' },
   zz10: { offer: ['settings-panel.js'], hide: ['settings-panel.js', 'camera.js'], init: ['app.js'], safe: '!settings.hidden' },
-  zz11: { offer: ['app.js'], hide: ['app.js'], init: ['app.js'], safe: '!settings.hidden' },
+  zz11: { offer: ['spin.js'], hide: ['spin.js'], init: ['app.js'], safe: '!settings.hidden' },
   zz4: { offer: ['fake-home-surface.js'], hide: ['fake-home-surface.js'], init: ['app.js'], safe: "document.body.dataset.view === 'settings'" },
-  zz12: { offer: ['app.mjs'], hide: ['app.mjs'], init: ['app.mjs'], safe: "tab==='settings'" },
-  zz13: { offer: ['app.mjs'], hide: ['app.mjs'], init: ['app.mjs'], safe: "$('settings').open===true" },
+  zz12: { offer: ['app.mjs'], hide: ['app.mjs'], init: ['app.mjs'], safe: "ctx.tab === 'settings'" },
+  zz13: { offer: ['settings.mjs'], hide: ['settings.mjs'], init: ['app.mjs'], safe: "ctx.$('settings').open===true" },
   zz14: { offer: ['app.mjs'], hide: ['app.mjs'], init: ['app.mjs'], safe: 'state.tab === "settings"' },
   zz15: { offer: ['presets.mjs'], hide: ['presets.mjs'], init: ['camera.mjs'], safe: "$('settings').open === true" },
-  TabataTimer: { offer: ['app.js'], hide: ['app.js'], init: ['app.js'], safe: "$('settings').open === true && $('run').hidden && !running" },
+  TabataTimer: { offer: ['app.js'], hide: ['app.js'], init: ['app.js'], safe: "$('settings').open === true && $('run').hidden && !run.isRunning()" },
   KanameCue: { offer: ['settings.mjs'], hide: ['settings.mjs'], init: ['show.mjs'], safe: "$('settings').open === true && $('run').hidden" },
 };
 const JS_FILES = (app) => readdirSync(new URL(`../../${app}/`, import.meta.url)).filter((file) => /\.m?js$/.test(file) && file !== 'update-prompt.js' && file !== 'choice-update-prompt.js' && file !== 'sw.js');
@@ -82,7 +82,7 @@ test('offer() is called only where settings opens, hide() where any safe screen 
     assert.ok(initFile.includes(`safe: () => ${wiring.safe}`) || initFile.includes(`safe:()=>${wiring.safe}`), `${app} safe()`);
     // The registration stays owned by the app: the prompt is attached to it, never registered by update-prompt.js.
     assert.doesNotMatch(initFile, /MagicUpdate\??\.init\(\{[^}]*swUrl/, app);
-    assert.match(initFile, /MagicUpdate\??\.init\(\{ ?(registration|registrationPromise)/, app);
+    assert.match(initFile, /MagicUpdate\??\.init\(\{\s*(registration|registrationPromise)/, app);
   }
 });
 

@@ -1,4 +1,5 @@
 import * as C from './core.mjs';
+import { createCameraRecovery, mountCameraControls } from './camera-controls.mjs';
 import { $, params, DEBUG } from './dom.mjs';
 import { KEY, read, write, store, openSettings, closeSettings } from './presets.mjs';
 import { hideChip, onDetect } from './detect.mjs';
@@ -52,7 +53,8 @@ function fakeStream() {
   return c.captureStream(10);
 }
 
-let camGen = 0, introDone = false, lastEndedRestart = 0;
+let camGen = 0, introDone = false, facing = 'environment', silentStart = false;
+const recovery = createCameraRecovery({ restart: () => startCamera(), wanted: () => cameraWanted() });
 const cameraWanted = () => document.visibilityState === 'visible' && (introDone || read(KEY.intro) === '1') && $('gate').hidden;
 
 async function startCamera() {
@@ -61,14 +63,14 @@ async function startCamera() {
   const gen = camGen;
   // A stop (page hidden) during an await makes this start stale: release what it got and bail out quietly.
   const stale = () => gen !== camGen || document.visibilityState !== 'visible';
-  let local = null;
+  let local = null, failed = false;
   try {
     if (DEBUG && params.get('fake') === '1') local = fakeStream();
     else {
       if (!navigator.mediaDevices?.getUserMedia) throw Object.assign(new Error('no camera api'), { name: 'NotSupportedError' });
       local = await navigator.mediaDevices.getUserMedia({
         audio: false,
-        video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1440 }, aspectRatio: { ideal: 4 / 3 } }
+        video: { facingMode: { ideal: facing }, width: { ideal: 1920 }, height: { ideal: 1440 }, aspectRatio: { ideal: 4 / 3 } }
       });
     }
     if (stale()) { for (const t of local.getTracks()) t.stop(); return; }
@@ -78,15 +80,20 @@ async function startCamera() {
     if (stale() || stream !== local) { if (stream === local) stopCamera(); else for (const t of local.getTracks()) t.stop(); return; }
     track = local.getVideoTracks()[0] || null;
     track?.addEventListener?.('ended', () => onTrackEnded(local));
+    facing = track?.getSettings?.().facingMode || facing;
+    video.classList.toggle('selfie', facing === 'user');
+    $('brackets').classList.toggle('selfie', facing === 'user');
     const caps = track?.getCapabilities?.() || {};
     zoomCaps = caps.zoom && caps.zoom.max > caps.zoom.min ? caps.zoom : null;
     if (zoomCaps) { const z = track.getSettings?.().zoom; if (z) { zoomIndex = C.zoomSelectedIndex(z); buildZoom(); } }
     $('gate').hidden = true;
     runDetection();
   } catch (error) {
+    failed = true;
     if (local) for (const t of local.getTracks()) t.stop();
     if (stale()) return;
     stopCamera();
+    if (silentStart) { recovery.ended(); return; }
     if (error?.name === 'NotAllowedError' || error?.name === 'SecurityError') {
       showGate('카메라 권한이 필요합니다', '브라우저 주소창 옆의 설정에서 카메라를 허용한 뒤 다시 시도해 주세요.', '다시 시도');
     } else {
@@ -95,23 +102,36 @@ async function startCamera() {
   } finally {
     starting = false;
     // Hidden and shown again while this start was pending: the visible handler returned early, so start now.
-    if (gen !== camGen && !stream && cameraWanted()) queueMicrotask(startCamera);
+    if (!failed && gen !== camGen && !stream && cameraWanted()) queueMicrotask(startCamera);
   }
 }
-/** The system ended the camera track (another app took it, device change): restart while visible, at most every 2 s. */
+/** Recover a dead stream with one delayed, bounded retry rather than dropping its end. */
 function onTrackEnded(owner) {
   if (stream !== owner || document.visibilityState !== 'visible') return;
-  const now = Date.now();
-  if (now - lastEndedRestart < 2000) return;
-  lastEndedRestart = now;
   stopCamera();
-  startCamera();
+  silentStart = true;
+  recovery.ended();
+}
+async function switchCamera() {
+  if (starting || !cameraWanted()) return;
+  const previous = facing;
+  recovery.reset();
+  stopCamera();
+  facing = previous === 'environment' ? 'user' : 'environment';
+  silentStart = true;
+  await startCamera();
+  if (!stream && document.visibilityState === 'visible') {
+    recovery.cancel();
+    facing = previous;
+    await startCamera();
+  }
 }
 function stopCamera() {
   camGen++;
   loopToken++;
   if (stream) for (const t of stream.getTracks()) t.stop();
   stream = null; track = null;
+  zoomCaps = null;
   video.srcObject = null;
   hideChip(true);
   recognizerCue(false);
@@ -204,6 +224,8 @@ async function runDetection() {
 }
 
 $('gateBtn').addEventListener('click', () => {
+  recovery.reset();
+  silentStart = false;
   introDone = true;
   write(KEY.intro, '1');
   $('gate').hidden = true;
@@ -276,8 +298,10 @@ async function keepAwake() {
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') {
     keepAwake();
+    recovery.reset();
     if (cameraWanted()) startCamera();
   } else {
+    recovery.cancel();
     stopCamera();
     if (wakeLock) { const lock = wakeLock; wakeLock = null; lock.release().catch(() => {}); }
   }
@@ -295,6 +319,7 @@ if (DEBUG) {
     get chipVisible() { return !$('chips').hidden; }
   };
 }
+mountCameraControls({ $, switchCamera, isMirrored: () => facing === 'user' });
 buildZoom();
 layout();
 keepAwake();

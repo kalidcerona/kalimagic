@@ -1,3 +1,4 @@
+import { pinnedRound5Difference } from './personal-round5.mjs';
 import { PHOTO_NOTICE_SAVE_FILES, stripPhotoSaveNotice } from './personal-photo-notice.mjs';
 import { stripPerformanceLog } from './personal-performance-log.mjs';
 import test from 'node:test';
@@ -52,7 +53,7 @@ test('Choice snapshot preserves every personal runtime byte except explicit dist
     const rawPersonal = await read(`zz4/${file}`);
     const personal = /\.(?:js|html)$/.test(file) ? Buffer.from(stripPerformanceLog(stripPhotoSaveNotice(rawPersonal.toString()))) : rawPersonal;
     const personalNormalized = file === 'app.js' ? Buffer.from(dropUnusedSingleImports(stripLocalPreview(personal.toString()))) : file === 'sw.js' ? Buffer.from(stripLocalPreview(personal.toString())) : personal;
-    if (!PHOTO_NOTICE_SAVE_FILES.choice.includes(file)) assert.deepEqual(file === 'app.js' ? Buffer.from(stripInlineLocalPreview(normalize(file, snapshot).toString())) : normalize(file, snapshot), personalNormalized, file);
+    if (!pinnedRound5Difference('zz4', file) && !PHOTO_NOTICE_SAVE_FILES.choice.includes(file)) assert.deepEqual(file === 'app.js' ? Buffer.from(stripInlineLocalPreview(normalize(file, snapshot).toString())) : normalize(file, snapshot), personalNormalized, file);
     assert.equal(snapshot.includes(Buffer.from('magic-choice.')), false, file);
     assert.equal(shouldCopyChoice(file), true, file);
   }

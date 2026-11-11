@@ -1,10 +1,8 @@
-import { rehearsalSurfaceOpen } from './performance.js';
-
 let wakeLock = null;
 let wakeLockPending = false;
 
 function performanceWakeWanted() {
-  return rehearsalSurfaceOpen();
+  return document.visibilityState === "visible";
 }
 
 async function acquireWakeLock() {
@@ -66,5 +64,6 @@ function askToKeepStoredData() {
   }
 }
 askToKeepStoredData();
+syncPerformanceWakeLock();
 
 export { acquireWakeLock, releaseWakeLock, syncPerformanceWakeLock };

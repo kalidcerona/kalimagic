@@ -93,7 +93,7 @@ async function shellReady() {
     if (typeof caches === 'undefined' || !caches || typeof caches.keys !== 'function' || typeof caches.open !== 'function') return false;
     // Match this release and registration scope, never another installation or stale cache.
     const scope = new URL('./', controller.scriptURL).href;
-    const current = SHELL_PREFIX + encodeURIComponent(scope) + '-v20261009-continuous-paper-20-haptic-dip-manual-install-1-perf-1-coherent-1-compat-1-gesture-1-wake-1-modules-1-split-1-trim-1-css-1-clean-1-lieflash-2-local-preview-module-1-update-prompt-3-hold-range-76-1-persist-1-launch-check-1-perf-log-1';
+    const current = SHELL_PREFIX + encodeURIComponent(scope) + '-v20261009-continuous-paper-20-haptic-dip-manual-install-1-perf-1-coherent-1-compat-1-gesture-1-wake-1-modules-1-split-1-trim-1-css-1-clean-1-lieflash-2-local-preview-module-1-update-prompt-3-hold-range-76-1-persist-1-launch-check-1-perf-log-1-r5-b3-1';
     if (!(await caches.keys()).includes(current)) return false;
     const cache = await caches.open(current);
     return Boolean(await cache.match(new URL('index.html', scope).href));

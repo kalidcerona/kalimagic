@@ -1,3 +1,4 @@
+import { pinnedRound5Difference } from './personal-round5.mjs';
 import { createContinuousTrace } from '../../zz7/recorder-trace.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -190,7 +191,10 @@ test('snapshot changes exactly three named constants and excludes the localhost 
  // detector.js is the only entry and controller.js boots the app, so that import is not a hook line and stays in the friend build.
  assert.match(shared,/^import \{ openSettings \} from "\.\/controller\.js";$/m);
  // launch-check.js and performance-log.js are personal-only. The pinned friend snapshot does not include them.
- assert.equal(shared,stripLocalPreview(excisePerformanceLog(excisePersonalLaunchCheck(personal, fileURLToPath(new URL('../../zz7/', import.meta.url))), fileURLToPath(new URL('../../zz7/', import.meta.url)))));
+ assert.ok(pinnedRound5Difference('zz7', 'wake-lock.js'));
+ const wake = readFileSync(new URL('../../zz7/wake-lock.js', import.meta.url), 'utf8');
+ const oldWake = readFileSync(new URL('../../distribution-snapshots/usotsuki/wake-lock.js', import.meta.url), 'utf8');
+ assert.equal(shared,stripLocalPreview(excisePerformanceLog(excisePersonalLaunchCheck(personal.replace(wake, oldWake), fileURLToPath(new URL('../../zz7/', import.meta.url))), fileURLToPath(new URL('../../zz7/', import.meta.url)))));
 });
 
 

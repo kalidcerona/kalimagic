@@ -86,13 +86,13 @@ export const PUBLIC_DIRS = [
 ];
 
 // Publish only the offline shell and worker for this personal app.
-export const TABATA_FILES = ['data.js', 'install-ui.js', 'icon-maskable-192.png', 'icon-maskable-512.png', 'index.html', 'style.css', 'app.js', 'ready-run.js', 'manifest.webmanifest', 'sw.js', 'update-prompt.js', 'brand-logo.png', 'icon.svg', 'icon-192.png', 'icon-512.png'];
+export const TABATA_FILES = ['editor.js', 'audio.js', 'wake-lock.js', 'timer-run.js', 'timer-view.js', 'data.js', 'install-ui.js', 'icon-maskable-192.png', 'icon-maskable-512.png', 'index.html', 'style.css', 'app.js', 'ready-run.js', 'manifest.webmanifest', 'sw.js', 'update-prompt.js', 'brand-logo.png', 'icon.svg', 'icon-192.png', 'icon-512.png'];
 
 // KANAME Cue web app: the same explicit-shell rule as TabataTimer.
 export const KANAME_FILES = ['index.html', 'style.css', 'app.mjs', 'prefs.mjs', 'clock.mjs', 'ui.mjs', 'show.mjs', 'playback.mjs', 'settings.mjs', 'wake.mjs', 'engine.mjs', 'engine-model.mjs', 'engine-output.mjs', 'engine-timing.mjs', 'engine-keys.mjs', 'engine-cues.mjs', 'audio.mjs', 'store.mjs', 'install-ui.js', 'update-prompt.js', 'manifest.webmanifest', 'sw.js', 'brand-logo.png', 'icon-192.png', 'icon-512.png', 'icon-maskable-192.png', 'icon-maskable-512.png'];
 
 // URAMICHI web app (zz15): explicit shell, including the vendored QR decoder and its licence.
-export const URAMICHI_FILES = ['index.html', 'style.css', 'app.mjs', 'dom.mjs', 'presets.mjs', 'detect.mjs', 'chrome.mjs', 'scan.mjs', 'camera.mjs', 'core.mjs', 'core-model.mjs', 'core-url.mjs', 'core-encode.mjs', 'core-scan.mjs', 'core-gate.mjs', 'core-card.mjs', 'core-resolve.mjs', 'core-logic.mjs', 'core-json.mjs', 'picker.mjs', 'install-ui.js', 'update-prompt.js', 'manifest.webmanifest', 'sw.js', 'brand-logo.png', 'icon-192.png', 'icon-512.png', 'icon-maskable-192.png', 'icon-maskable-512.png', 'vendor/jsQR.js', 'vendor/LICENSE-jsqr.txt'];
+export const URAMICHI_FILES = ['camera-controls.mjs', 'index.html', 'style.css', 'app.mjs', 'dom.mjs', 'presets.mjs', 'detect.mjs', 'chrome.mjs', 'scan.mjs', 'camera.mjs', 'core.mjs', 'core-model.mjs', 'core-url.mjs', 'core-encode.mjs', 'core-scan.mjs', 'core-gate.mjs', 'core-card.mjs', 'core-resolve.mjs', 'core-logic.mjs', 'core-json.mjs', 'picker.mjs', 'install-ui.js', 'update-prompt.js', 'manifest.webmanifest', 'sw.js', 'brand-logo.png', 'icon-192.png', 'icon-512.png', 'icon-maskable-192.png', 'icon-maskable-512.png', 'vendor/jsQR.js', 'vendor/LICENSE-jsqr.txt'];
 
 export const PRIVATE_PATTERNS = [
   /(?:^|\/)fullscreen\.js$/,
@@ -251,7 +251,7 @@ export const ALTER_FILES = [
 ];
 // TYCHE spinner style.css is split into feature pieces linked in this order after style.css.
 export const SPINNER_STYLE_FILES = ['style-casino.css', 'style-hybrid.css'];
-export const SPINNER_FILES = [
+export const SPINNER_FILES = ['install.js', 'settings-gesture.js', 'spin.js', 'theme.js', 'wake-lock.js',
   'hybrid-assets/arrow.svg',
   'hybrid-assets/wheel-emerald.svg',
   'hybrid-assets/wheel-burgundy.svg',
@@ -266,7 +266,7 @@ export const SPINNER_FILES = [
   'app.js', 'icon-192.png', 'icon-512.png', 'index.html',
   'logic.js', 'manifest.webmanifest', 'style.css', ...SPINNER_STYLE_FILES, 'sw.js', 'update-prompt.js'
 ];
-export const MEMDECK_FILES = [
+export const MEMDECK_FILES = ['storage.mjs', 'screen-shared.mjs', 'study.mjs', 'quiz.mjs', 'table.mjs', 'records.mjs', 'settings.mjs', 'rank.mjs', 'memory-model.mjs', 'memory-training.mjs', 'memory.mjs',
   'first-run-guide.js',
   'index.html', 'style.css', 'app.mjs', 'core.mjs', 'data.mjs', 'mnemonic.mjs', 'update-prompt.js',
   'brand-logo.png', 'manifest.webmanifest', 'sw.js', 'icon.svg', 'icon-192.png', 'icon-512.png'
@@ -279,7 +279,7 @@ export function shouldCopyPimax(relativePath) {
   return relativePath === '' || PIMAX_FILES.includes(relativePath);
 }
 
-export const QR_FILES = [
+export const QR_FILES = ['storage-recovery.mjs', 'rendering.mjs', 'settings.mjs', 'gestures-editing.mjs', 'export.mjs', 'install.mjs', 'wake-lock.mjs',
   'first-run-guide.js',
   'index.html', 'style.css', 'app.mjs', 'core.mjs', 'manifest.webmanifest', 'sw.js', 'update-prompt.js', 'brand-logo.png',
   'icons/icon-192.png', 'icons/icon-512.png', 'vendor/qrcodegen.js', 'vendor/jsQR.js',
@@ -442,6 +442,7 @@ export const MIRROR_PAIRS = [
   ...NEW_APP_FILES.map((file) => [`../../magic-tobira/${file}`, `zz6/${file}`]),
   ...TOBIRA_STYLE_FILES.map((file) => [`../../magic-tobira/${file}`, `zz6/${file}`]),
   ['../../magic-tobira/dom.js', 'zz6/dom.js'],
+  ['../../magic-tobira/home-screen.js', 'zz6/home-screen.js'],
   ['../../magic-tobira/gesture-guide.js', 'zz6/gesture-guide.js'],
   ['../../magic-tobira/audio.js', 'zz6/audio.js'],
   ['../../magic-tobira/state-store.js', 'zz6/state-store.js'],

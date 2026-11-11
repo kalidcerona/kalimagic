@@ -46,13 +46,13 @@ test('restore rejects a stored finder edit; ordinary cells and generation still 
 
 test('generator controls are present from the empty initial screen', () => {
   const html = fs.readFileSync(new URL('../../zz13/index.html', import.meta.url), 'utf8');
-  const app = fs.readFileSync(new URL('../../zz13/app.mjs', import.meta.url), 'utf8');
+  const app = fs.readFileSync(new URL('../../zz13/rendering.mjs', import.meta.url), 'utf8');
   for (const id of ['png', 'undo', 'clean']) assert.match(html, new RegExp(`id="${id}"`));
   assert.match(html, /id="png" disabled/);
   assert.match(html, /id="undo" disabled/);
   assert.match(html, /id="clean" disabled/);
   assert.doesNotMatch(html, /id="(?:png|editbar)"[^>]*\shidden/);
   assert.match(app, /\$\('png'\)\.disabled=!q/);
-  assert.match(app, /\$\('clean'\)\.disabled=!q\|\|\(!preview&&!q\.edits\.size\)/);
+  assert.match(app, /\$\('clean'\)\.disabled=!q\|\|\(!ctx\.preview&&!q\.edits\.size\)/);
   assert.match(html, /큰 위치 표식과 작은 정렬 표식은 바꿀 수 없습니다/);
 });

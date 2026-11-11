@@ -380,7 +380,7 @@ test('single finger and short swipes stay in the performance; a two-finger point
   await twoFingerPointerSwipe(140);
   assert.deepEqual(visibleScreen(), ['settings-screen']);
   assert.equal(el('settings-status').textContent, '열람 횟수는 1입니다.');
-  assert.equal(env.lockState.requests[1].released, true, 'settings does not hold the screen awake');
+  assert.equal(env.lockState.requests[1].released, false, 'settings keeps the screen awake');
   assert.equal(env.lockState.requests.length, 2);
 
   const swallowed = await emit(document, 'click');
@@ -417,8 +417,8 @@ test('start performance validates the form, then saves settings and shows the de
   assert.deepEqual(visibleScreen(), ['contact-list-screen']);
   assert.deepEqual(listNames(), ['가나', '다라', '마바']);
   assert.equal(el('contact-names').value, '가나\n다라\n마바', 'form is refilled with the saved names');
-  assert.equal(env.lockState.requests.length, 3, 'returning to the performance requests the wake lock again');
-  assert.equal(env.lockState.requests[2].released, false);
+  assert.equal(env.lockState.requests.length, 2, 'returning to performance keeps the existing wake lock');
+  assert.equal(env.lockState.requests[1].released, false);
   assert.equal(env.body.querySelectorAll('.gesture-guide').length, 0, 'a dismissed guide does not come back');
 });
 
@@ -442,7 +442,7 @@ test('a two-finger touch swipe opens settings again and the form shows the saved
   assert.equal(el('settings-status').textContent, '열람 횟수는 2입니다.');
   assert.equal(el('target-click').value, '2');
   assert.equal(el('fixed-phone').value, '010-1111-2222');
-  assert.equal(env.lockState.requests[2].released, true);
+  assert.equal(env.lockState.requests[1].released, false);
 
   const swallowed = await emit(document, 'click');
   assert.equal(swallowed.defaultPrevented, true);
@@ -450,7 +450,7 @@ test('a two-finger touch swipe opens settings again and the form shows the saved
 
   await emit(el('start-performance'), 'click');
   assert.deepEqual(visibleScreen(), ['contact-list-screen']);
-  assert.equal(env.lockState.requests.length, 4);
+  assert.equal(env.lockState.requests.length, 2);
   assert.equal(stored().clickCount, 2, 'starting again keeps the count');
   assert.equal(env.calls.fetch.length, 0, 'the app never touches the network');
   console.error = originalConsoleError;
