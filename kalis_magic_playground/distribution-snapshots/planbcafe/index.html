@@ -98,6 +98,14 @@
       function hideInstallHint() { hintAutoHidden = true; installHint.hidden = true; }
       setTimeout(hideInstallHint, 8000);
       document.getElementById("canvas").addEventListener("pointerdown", hideInstallHint, { once: true });
+      // SDL reports a click at its last known mouse position, which only a mousemove
+      // updates. A click with a resting cursor (the canvas appeared under it) would
+      // land at a stale spot, so send the click's position first. Mouse only.
+      document.getElementById("canvas").addEventListener("pointerdown", function (e) {
+        if (!e || e.pointerType !== "mouse") return;
+        e.target.dispatchEvent(new MouseEvent("mousemove", { bubbles: true, clientX: e.clientX,
+          clientY: e.clientY, screenX: e.screenX, screenY: e.screenY }));
+      }, true);
       installHint.hidden = installed || dismissed;
       document.getElementById("dismiss-hint").onclick = function () {
         dismissed = true; installHint.hidden = true;
