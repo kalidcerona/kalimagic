@@ -1,6 +1,6 @@
 // Cache only the explicit app shell. API, authentication and user data stay on the network.
 const CACHE_PREFIX = 'magicshow-dist-';
-const CACHE_NAME = CACHE_PREFIX + 'fa193b47bc20dbde-coherent-1-distribution';
+const CACHE_NAME = CACHE_PREFIX + '66565f169e5b4031-coherent-1-distribution';
 const SHELL = [
   "./index.html",
   "./style-base.css",
@@ -38,6 +38,7 @@ const SHELL = [
   "./portrait-overrides-1.css",
   "./style-title.css",
   "./style-helper-buffs.css",
+  "./style-presentation-settings.css",
   "./update-prompt.css",
   "./update-prompt.js",
   "./install-prompt.css",
@@ -116,12 +117,14 @@ const SHELL = [
   "./ui-helper-buffs.js",
   "./ui-feedback.js",
   "./ui-finale.js",
+  "./ui-impact.js",
   "./ui-events.js",
   "./ui-stage.js",
   "./ui-show-band.js",
   "./ui-render.js",
   "./ui-input.js",
   "./ui-onboarding.js",
+  "./ui-book-motion.js",
   "./ui-book.js",
   "./ui-features.js",
   "./ui-dealer.js",
@@ -132,6 +135,7 @@ const SHELL = [
   "./ui-dialog.js",
   "./ui-school-chain.js",
   "./ui-batchd.js",
+  "./ui-presentation-settings.js",
   "./ui-boot.js",
   "./ui-kit-v2.js",
   "./assets/aud-a1-happy.webp",

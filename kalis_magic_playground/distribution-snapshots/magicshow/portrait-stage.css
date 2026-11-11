@@ -211,3 +211,8 @@ html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#sta
 html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage.f-boo-scene #toasts {
   top: calc(var(--p-top, 44px) + 64px) !important;
 }
+
+/* All touch sizes use the upright composition and only the new landscape guard. */
+@media (pointer:coarse) and (hover:none) { html body .rotate { display:none; } }
+/* Keep small portrait notices readable over the stage artwork. */
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #toasts .toast { background:#100d16e8; border-image:none; border:1px solid #8d7554; font:12px/16px Galmuri11,monospace; padding:4px 8px; min-height:26px; text-shadow:0 1px #000; }

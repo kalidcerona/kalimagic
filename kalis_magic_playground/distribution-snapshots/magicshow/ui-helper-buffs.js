@@ -93,7 +93,7 @@
     if(helperBuffHold())return;
     const q=C.helperBuffs(state);
     if(state!==v.owner||!q[v.kind]||state.mode!=='fight'||state.resolved){endHelperBuffView(v.kind);return;}
-    const t=(q.elapsed-v.at)/1000,reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const t=(q.elapsed-v.at)/1000;
     const from=buffStagePoint(v.helper),to=buffStagePoint($('magicianMini'));
     const arrival=reduced?.6:1.6;
     ensureBuffIcon(v);

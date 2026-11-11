@@ -66,7 +66,7 @@
     return { tier, sparkles: [0, 3, 5, 8, 12][tier], line: ['', '공연이 풍성해졌어요', '무대가 더 화려해졌어요', '객석에 감탄이 가득해요', '별빛처럼 빛나는 공연이에요'][tier] };
   }
   // Cache geometry between layout changes; combat renders do not scan layout.
-  const actLineObstacles = '#stageStats,#stageStats *,#showBand,#activeSkills,#phoneBar,.topbar,#phoneTop,#audienceLine,#audienceTail,.audience-name,.audience-nameplate,#audienceName,.hud,.xp-row,#phoneFightStats,#patternLabel,#phaseIndicator,#futureTelegraph,#heckleMeter,.doubt,.doubt-plate,#goalStrip,.board-footer,[class*="badge"],button,.is-new,.new-unlock,#featureHud,#hint,#crowdLabel,#helperControls,.caption,[role="button"],input,select,a[href],[role="meter"],[role="progressbar"]';
+  const actLineObstacles = '#stageStats,#stageStats *,#showBand,#activeSkills,#phoneBar,.topbar,#phoneTop,#audienceLine,#audienceTail,.audience-name,.audience-nameplate,#audienceName,.hud,.xp-row,#phoneFightStats,#patternLabel,#phaseIndicator,#futureTelegraph,#heckleMeter,.doubt,.doubt-plate,#goalStrip,.board-footer,[class*="badge"],button,.is-new,.new-unlock,#featureHud,#hint,#crowdLabel,#helperControls,.caption,[role="button"],input,select,a[href],[role="meter"],[role="progressbar"]' + (typeof coarse !== 'undefined' && coarse ? ',#toasts,#toasts .toast,#boardCard,#portraitMeters,body.portrait-layout #audience img.asset-sprite,body.portrait-layout #magicianMini,body.portrait-layout #colleagues' : '');
   // Only blocking surfaces belong here; finale/fever/banner/routine effects keep the caption visible.
   const actLineOverlays = '#phoneMore,#storyDialog,#sceneCard,#introStory,#offlineCard,#leaveConfirm,#curtainCall,#titleScreen,#panel,#practicePrompt,#practiceVeil,#tutorialCoach,dialog[open],[role="dialog"],[role="alertdialog"],[aria-modal="true"]';
   const actLineLayout = { dirty:true, membersDirty:true, overlaysDirty:true, key:'', nodes:[], overlays:[], observed:new Set(), affected:new Set(), scans:0 };
@@ -121,7 +121,8 @@
       actLineLayout.overlaysDirty=false;
       actLineLayout.overlays=[...document.querySelectorAll(actLineOverlays)];
     }
-    const blocked=host.dataset.actTier==='0'||blockingSheetOpen()||paused()||actLineLayout.overlays.some(actLineVisible);
+    const caption=$('actTierLine')||host.querySelector('.act-tier-line');
+    const blocked=host.dataset.actTier==='0'||!caption?.textContent.trim()||blockingSheetOpen()||paused()||actLineLayout.overlays.some(actLineVisible);
     if(blocked){
       const line=$('actTierLine')||host.querySelector('.act-tier-line');
       if(line)line.hidden=true;
@@ -164,9 +165,13 @@
     line.dataset.layoutScans=String(actLineLayout.scans);
     line.hidden=false;
     const rect=e=>e.getBoundingClientRect(),origin=rect(host);
-    const obstacles=[];
+    const touchStage=typeof coarse!=='undefined'&&coarse&&document.body.classList.contains('portrait-layout');
+    const bounds=touchStage?rect($('audienceCard')):{left:0,top:0,right:innerWidth,bottom:innerHeight};
+    const obstacles=[],art=[];
     for(const e of actLineLayout.nodes.filter(actLineVisible)){
-      const r=rect(e);if(!r.width||!r.height)continue;obstacles.push(r);
+      const r=rect(e);if(!r.width||!r.height)continue;
+      if(touchStage&&e.matches('#audience img.asset-sprite,#magicianMini,#colleagues')){art.push(r);continue;}
+      obstacles.push(r);
       // NEW markers can paint outside the button's own border box.
       if(e.matches('.is-new,.new-unlock')){
         const c=getComputedStyle(e,'::after');
@@ -179,20 +184,25 @@
       }
     }
     const gap=3,stats=rect($('stageStats'));
-    // Try narrower two-line forms if a full-width caption has no free rectangle.
-    for(const maxWidth of [160,120,96,80]){
-      line.style.maxWidth=maxWidth+'px';
-      const box=rect(line),w=box.width,h=box.height;
-      if(h>24)continue;
-      const xs=[Math.max(gap,Math.min(innerWidth-w-gap,origin.right-w)),gap,innerWidth-w-gap];
-      const ys=[stats.bottom+gap,stats.top-h-gap,origin.bottom+gap,origin.top-h-gap,gap,innerHeight-h-gap];
-      for(const o of obstacles){xs.push(o.right+gap,o.left-w-gap);ys.push(o.bottom+gap,o.top-h-gap);}
-      for(const y of ys)for(const x of xs){
-        if(x<gap||y<gap||x+w>innerWidth-gap||y+h>innerHeight-gap)continue;
-        if(obstacles.some(o=>x<o.right+1&&x+w>o.left-1&&y<o.bottom+1&&y+h>o.top-1))continue;
-        line.style.left=x+'px';line.style.top=y+'px';line.dataset.placement='clear';return;
+    // Try wrapped captions; keep controls clear and prefer free space around character art.
+    const widths = touchStage ? [bounds.right-bounds.left-16,160,120,96,80] : [160,120,96,80];
+    for(const avoidArt of touchStage?[true,false]:[false]){
+      for(const maxWidth of widths){
+        line.style.maxWidth=maxWidth+'px';
+        const box=rect(line),w=box.width,h=box.height;
+        if(!touchStage&&h>24)continue;
+        const xs=[Math.max(bounds.left+gap,Math.min(bounds.right-w-gap,origin.right-w)),bounds.left+gap,bounds.right-w-gap];
+        const ys=[stats.bottom+gap,stats.top-h-gap,origin.bottom+gap,origin.top-h-gap,bounds.top+gap,bounds.bottom-h-gap];
+        const blocked=avoidArt?obstacles.concat(art):obstacles;
+        for(const o of blocked){xs.push(o.right+gap,o.left-w-gap);ys.push(o.bottom+gap,o.top-h-gap);}
+        for(const y of ys)for(const x of xs){
+          if(x<bounds.left+gap||y<bounds.top+gap||x+w>bounds.right-gap||y+h>bounds.bottom-gap)continue;
+          if(blocked.some(o=>x<o.right+1&&x+w>o.left-1&&y<o.bottom+1&&y+h>o.top-1))continue;
+          line.style.left=x+'px';line.style.top=y+'px';line.dataset.placement='clear';return;
+        }
       }
     }
+    if(touchStage)line.hidden=true;
     line.dataset.placement='unresolved';
   }
   function renderActTier(value) {

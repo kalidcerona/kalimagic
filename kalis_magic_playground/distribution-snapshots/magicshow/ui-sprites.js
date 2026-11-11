@@ -24,9 +24,9 @@
   }
   // A doubt-stage change (about four per fight). Not the first face, and not the win face.
   function audienceStagePop(host) {
-    if (!host || reduced) return;
-    // s5a: grow from the top edge (down and out), like the s4j finale pop, so the figure never reaches up into the speech bubble.
-    animate(host, [{ transform: 'scale(1)', transformOrigin: '50% 0', filter: 'brightness(1)' }, { transform: 'scale(1.06)', transformOrigin: '50% 0', filter: 'brightness(1.15)', offset: .4 }, { transform: 'scale(1)', transformOrigin: '50% 0', filter: 'brightness(1)' }], 150);
+    if (!host) return;
+    audienceImpact.stage(audienceDoubtStage());
+    if (reduced) return;
     sound('rise');
   }
   function stageAudienceFace(host, base, stage) {

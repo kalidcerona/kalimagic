@@ -154,3 +154,9 @@ html body #viewport#viewport #stage#stage#stage#stage#stage#stage #panel[data-sc
   html body.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #panel[data-screen="gemShop"] .gem-shop-item:is([data-shop-item="potion"],[data-shop-item="refill"]) > :is(h3,p,small) { font-size:11px; line-height:14px; }
   html body.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #panel[data-screen="gemShop"] .gem-shop-item[data-shop-item] > [data-supply-buy] .kit-price-silk { min-width:52px; padding:4px 4px 4px 22px; font-size:11px; line-height:16px; }
 }
+
+/* Purchase feedback stays in the visible panel while its catalogue scrolls. */
+@media (pointer:coarse) {
+html body.portrait-layout #viewport#viewport #stage#stage#stage#stage #panel[data-screen="gemShop"] #panelBody#panelBody { padding-bottom:calc(76px + env(safe-area-inset-bottom)); }
+body.portrait-layout #panel[data-screen="gemShop"] .panel-action-status { position:fixed; left:12px; right:12px; bottom:max(calc(12px + env(safe-area-inset-bottom)), var(--shop-status-bottom, 0px)); z-index:60; margin:0; padding:10px 12px; border:1px solid #E8BF68; background:#17101af2; font-size:14px; line-height:20px; pointer-events:none; }
+}

@@ -206,3 +206,30 @@ html body.phone #viewport#viewport #stage#stage#stage#stage#stage#stage #panel[d
 html body #viewport#viewport #stage#stage#stage#stage #panel[data-screen="book"] .book-detail > strong.tree-cost { display:flex; align-items:center; min-height:44px; box-sizing:border-box; }
 /* R21 sonnet2: the desktop stage is scaled to fit the window, so the chip height is divided by that scale to stay 44 screen px. */
 html body:not(.phone) #viewport#viewport #stage#stage#stage#stage #panel[data-screen="book"] .book-detail > strong.tree-cost { min-height:var(--menu-tap-height,44px); }
+
+/* R23 B1: stable collapsed slots, full-width portrait reading and local feedback. */
+html body #viewport#viewport #stage#stage#stage#stage #panel[data-screen="book"] .book-detail > * { margin:4px 0; order:8; }
+html body #viewport#viewport #stage#stage#stage#stage #panel[data-screen="book"] .book-detail .book-stages { order:0; display:flex; flex-direction:row; flex-wrap:wrap; gap:4px; }
+html body #viewport#viewport #stage#stage#stage#stage #panel[data-screen="book"] .book-stages button { width:auto; flex:1 1 48px; }
+html body #viewport#viewport #stage#stage#stage#stage #panel[data-screen="book"] .book-detail > .tree-effect { order:1; }
+html body #viewport#viewport #stage#stage#stage#stage #panel[data-screen="book"] .book-detail > .tree-level { order:2; }
+html body #viewport#viewport #stage#stage#stage#stage #panel[data-screen="book"] .book-detail > .book-lock { order:3; color:#e8d6ac; }
+html body #viewport#viewport #stage#stage#stage#stage #panel[data-screen="book"] .book-detail > .book-remaining { order:4; }
+html body #viewport#viewport #stage#stage#stage#stage #panel[data-screen="book"] .book-detail > .tree-buy,
+html body #viewport#viewport #stage#stage#stage#stage #panel[data-screen="book"] .book-detail > strong.tree-cost { order:5; }
+html body #viewport#viewport #stage#stage#stage#stage #panel[data-screen="book"] .book-detail > .book-growth { order:7; }
+html body #viewport#viewport #stage#stage#stage#stage #panel[data-screen="book"] .book-growth p { margin:4px 0; color:inherit; }
+html body #viewport#viewport #stage#stage#stage#stage #panel[data-screen="book"] [data-status="ready"] { color:#9ee6af; }
+html body #viewport#viewport #stage#stage#stage#stage #panel[data-screen="book"] [data-status="short"] { color:#ffabab; }
+html body #viewport#viewport #stage#stage#stage#stage #panel[data-screen="book"] [data-status="complete"] { color:#e8c36a; }
+html body #viewport#viewport #stage#stage#stage#stage #panel[data-screen="book"] [data-status="locked"] { color:#e8d6ac; }
+html body #viewport#viewport #stage#stage#stage#stage #panel[data-screen="book"] .book-remaining p { margin:2px 0; }
+html body #viewport#viewport #stage#stage#stage#stage #panel[data-screen="book"] .book-remaining-bar { height:8px; overflow:hidden; background:#332b3e; border:1px solid #b4a6bd; }
+html body #viewport#viewport #stage#stage#stage#stage #panel[data-screen="book"] .book-remaining-bar span { display:block; height:100%; background:#e8c36a; }
+@media (orientation:portrait) {
+  html body #viewport#viewport #stage#stage#stage#stage #panel[data-screen="book"] .book-card-expanded { grid-column:1 / -1; }
+}
+html.reduce-motion #bookCards .book-card { animation:none; transform:none; opacity:1; }
+@media (prefers-reduced-motion:reduce) {
+  #bookCards .book-card { animation:none; transform:none; opacity:1; }
+}

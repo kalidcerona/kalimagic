@@ -120,12 +120,8 @@
       }
     }
     // v4 U40: the canvas draw (drawEffects, above) goes before the DOM writes: setting ctx.font after them forced a style recalculation about 540 times in 10 s, 1.6 ms each at 4x CPU.
-    flushNums(); renderU17(); render(); renderCoach(); updateLearningBadge(); if (typeof tickHints === 'function') tickHints(); nextToasts(dt); if (prefetchWinSeen && performance.now() >= prefetchLoadAt + 10000) prefetchNextVenue(state.venue); requestAnimationFrame(loop);
+    flushNums(); renderU17(); render(); renderCoach(); updateLearningBadge(); if (typeof tickHints === 'function') tickHints(); nextToasts(dt); audienceImpact.frame(); if (prefetchWinSeen && performance.now() >= prefetchLoadAt + 10000) prefetchNextVenue(state.venue); requestAnimationFrame(loop);
   }
-  motion.addEventListener('change', e => {
-    reduced = e.matches; particles.length = 0; flights.length = 0; numbers.length = 0;
-    for (const el of document.querySelectorAll('*')) for (const animation of el.getAnimations()) animation.cancel();
-  });
   document.addEventListener('visibilitychange', () => {
     release(); previous=0; if (document.hidden && typeof stopCloseWin === 'function') stopCloseWin(); // s5t-2: no applause after the player left
     if (practiceOn && !document.hidden) requestPracticeWake();
@@ -221,6 +217,7 @@
       return (state.mode !== 'fight' || blockingSheetOpen()) &&
         (blockingSheetOpen() || visible('titleScreen') || !!stageRewardHost || ['transition', 'ending', 'fail', 'boo'].includes(state.mode));
     },
+    presentationSettings:()=>({reduced,deviceReduced:motion.matches,choice:reducedChoice,rotateBlocked:touchLandscapeBlocked}),
     motionMetrics:()=>({particles:particles.length,flights:flights.length,numbers:numbers.length,badges:badges.length,coinOrigin:clearMoment.origin||null,flightOrigins:flights.map(f=>[f.x,f.y])}), hitTier, openCurtainCall, openRestore, getState: () => state, startScene:C.startScene, storyList, renderU15, getHolds: () => boardHolds, startIntro, events, save, toast, banner, openPanel, closePanel, render, showFailure, showBoo, clearDecorations, opaqueSprites,
     openBook: tree, focusNode, openBestiary: bestiary, openMissions:drawMissions, renderCoach,
     openDealer: dealer, openGemShop:gemShop, openWardrobe:wardrobe, openMap:openStageMap, openCustomize:customize, drawDealer, openEnding: () => { if (state.seenEnding) { revealEnding = false; showEnding(); } },
@@ -265,7 +262,7 @@
     if(records.some(r=>r.type==='childList'?[...r.addedNodes,...r.removedNodes].some(n=>n.nodeType===1):r.oldValue!==r.target.getAttribute(r.attributeName)))refreshPresentation();});
   for(const id of ['panelBody','storyDialog','phoneMore'])presentationObserver.observe($(id),{childList:true,subtree:true,attributes:true,attributeFilter:['disabled'],attributeOldValue:true});
   for(const id of ['panel','storyDialog','phoneMore','banner','leaveConfirm','sceneCard','introStory','offlineCard'])presentationObserver.observe($(id),{attributes:true,attributeFilter:['hidden'],attributeOldValue:true});
-  window.addEventListener('resize',refreshPresentation);motion.addEventListener('change',refreshPresentation);
+  window.addEventListener('resize',refreshPresentation);window.addEventListener('presentationmotionchange',refreshPresentation);motion.addEventListener('change',refreshPresentation);
   refreshPresentation();
   $('audience').addEventListener('click',()=>{replayAudienceLine();renderU15();});
   $('audience').setAttribute('tabindex','0');$('audience').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();replayAudienceLine();renderU15();}});
@@ -450,3 +447,5 @@
   tickInstallGuide();
   launchPresentation();
   requestAnimationFrame(loop);
+
+  audienceImpact.watch();

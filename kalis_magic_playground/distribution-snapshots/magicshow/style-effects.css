@@ -110,3 +110,12 @@ html body.phone.compact-notice:not(.portrait-layout):not(.tablet) #viewport#view
 /* Keep two portrait notices in one row while allowing their text to wrap. */
 html body.portrait-layout.phone #viewport#viewport #stage#stage#stage#stage #toasts { height:auto; max-height:none !important; flex-direction:row; }
 html body.portrait-layout.phone #viewport#viewport #stage#stage#stage#stage #toasts .toast { flex:1 1 0; width:0; height:auto; max-height:none; white-space:normal; overflow-wrap:anywhere; text-overflow:clip; }
+
+/* R23 I1: one local outline and one existing short spark; no full-screen flash. */
+.audience-impact-outline,.audience-impact-spark{position:absolute;pointer-events:none;z-index:8}
+.audience-impact-outline{box-sizing:border-box;border:1px solid #e8bf68;border-radius:3px}
+.audience-impact-outline.is-reduced{border-color:#b6a47a66}
+.audience-impact-spark{width:32px;height:32px;background-image:url("assets/ui/fx-ring-flash.webp");background-size:128px 32px;image-rendering:pixelated}
+.audience-impact-outline[hidden],.audience-impact-spark[hidden]{display:none}
+.reduce-motion .audience-impact-spark{display:none}
+@media(prefers-reduced-motion:reduce){.audience-impact-spark{display:none}}

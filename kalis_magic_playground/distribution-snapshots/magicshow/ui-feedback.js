@@ -96,11 +96,31 @@
       const el=pxIcons(element('div',text+(item.extra?' · '+item.extra:''),'toast'));$('toasts').append(el);const expiry=setTimeout(()=>el.remove(),3500);item.end=()=>{clearTimeout(expiry);el.remove();};
     }});
   }
+  let silkStatusAnchor = null;
+  const silkStatusCosts = new WeakMap();
   function panelStatus(text) {
     const body = $('panelBody');
     let line = body.querySelector('.panel-action-status');
     if (!line) { line = element('p', '', 'panel-action-status'); line.setAttribute('role','status'); body.prepend(line); }
     line.textContent = text;
+    if (menu === 'gemShop' && typeof coarse !== 'undefined' && coarse && document.body.classList.contains('portrait-layout')) {
+      // The second tap confirms on the same button. Keep its full price visible.
+      const buttons = [...body.querySelectorAll('button')];
+      const button = buttons.find(el => el._silkCost != null && silkStatusCosts.get(el) !== el._silkCost);
+      for (const el of buttons) silkStatusCosts.set(el, el._silkCost);
+      if (button) silkStatusAnchor = button.getBoundingClientRect();
+      if (silkStatusAnchor) {
+        line.style.removeProperty('--shop-status-bottom');
+        const baseline = line.getBoundingClientRect(), anchor = silkStatusAnchor;
+        const top = anchor.top - baseline.height - 8;
+        const panelTop = body.getBoundingClientRect().top;
+        const below = anchor.bottom + 8;
+        const y = top >= panelTop || below + baseline.height > baseline.bottom ? top : below;
+        const unit = baseline.height / line.offsetHeight || 1;
+        const bottom = parseFloat(getComputedStyle(line).bottom) + (baseline.top - y) / unit;
+        line.style.setProperty('--shop-status-bottom', bottom + 'px');
+      }
+    } else silkStatusAnchor = null;
   }
   function dailyClaimMoment() {
     // Keep feedback pending until the boo animation rebuilds the failure panel.
@@ -246,10 +266,9 @@
     one.classList.add('performing'); pxText(one.querySelector('.colleague-trick'), colleagueTricks[(e.index + state.fails + state.wins) % colleagueTricks.length]);
     clearTimeout(colleagueTimers[e.index]); colleagueTimers[e.index] = setTimeout(() => one.classList.remove('performing'), 700);
   }
-  // Only a real (not blocked) colleague hit shows particles and a damage number.
+  // Keep real colleague damage numbers; the merged impact owns the audience spark.
   function colleagueHitFx(e) {
     const r = rectOf($('audience')), stage = rectOf($('stage'));
-    hitParticles((r.left + r.width / 2 - stage.left) / scale, (r.top + r.height * .65 - stage.top) / scale, colleagueShapes[(e.index + state.wins) % colleagueShapes.length], '#8be9d0', 0);
     if (e.applied > 0) float(`-${C.formatNumber(e.applied)}`, (r.left + r.width / 2 - stage.left) / scale + (e.index - 2.5) * 16, (r.top + r.height * .5 - stage.top) / scale, '#8be9d0', 12, 0, 0);
   }
   function hitFeedback(e,source='card',maxDoubt=state.audHpMax) {
@@ -258,7 +277,7 @@
     const x=(r.left+r.width/2-stage.left)/scale,y=(r.top+r.height*.65-stage.top)/scale;
     float(e.dmg ? C.formatNumber(e.dmg) : '빗나감',x,y,model.color,model.size,tier,e.dmg);
     if(e.dmg>0) {
-      hitParticles(x,y,source,model.color,tier);sceneLight(tier===4?.08:.03);
+      if (!reduced) sceneLight(tier===4?.08:.03);
       if(tier>uiSave.bestTier){reachedTiers.add(tier);uiSave.bestTier=tier;savePresentation();banner(`새 경지: ${model.name}`,'',false,true);}
     }
   }

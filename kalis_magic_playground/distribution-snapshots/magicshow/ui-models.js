@@ -89,9 +89,9 @@ globalThis.PhoneLayout = (() => {
     // Portrait prototype: a phone held upright (shortest side under 600 CSS px) stacks the battle.
     // Landscape measure() above this return is unchanged; unit tests call landscape sizes only.
     // 12-115: up to 739 so an opened Galaxy Fold (673x841) plays upright too.
-    // s4d (owner 10-24): tablets held upright (touch screens up to 1400 css px tall) play too. They keep the phone portrait layout, laid out
+    // s4d (owner 10-24): tablets held upright at any size play too. They keep the phone portrait layout, laid out
     // 600 css px wide and scaled up (zoom, applied by fit() as the stage scale), so the screen keeps the phone composition without empty space.
-    if (height > width && (Math.min(width, height) < 740 || (coarse && Math.max(width, height) <= 1400))) {
+    if (height > width && (Math.min(width, height) < 740 || coarse)) {
       const zoom = Math.min(width, height) >= 740 ? Math.max(1, content / 600) : 1, pw = content / zoom, ph = h / zoom;
       // Mockup A: full-width board, one action row, and the remaining height belongs to the stage.
       // s4c: the buttons are one row (skills, 비법 over 연습 모드, 실크 상점, 도감 over 메뉴: two 44 px tools stacked = 90 px), the stats strip is thicker.
@@ -99,6 +99,7 @@ globalThis.PhoneLayout = (() => {
       const venue = compact ? 38 : 54, rowGap = compact ? 2 : 4, hp = compact ? 22 : 36, stats = (compact ? 46 : 56) + 16;
       const finale = 0, skills = compact ? 94 : 100, bottom = 4;
       const topBar = venue + rowGap + hp;
+      // Captions overlay the stage without reserving layout height.
       const below = rowGap + stats + finale + rowGap;
       const pad = 2, gap = 2, boardP = pw - 8;
       const boardH = Math.max(252, Math.min(boardP, Math.round(ph * .38)));

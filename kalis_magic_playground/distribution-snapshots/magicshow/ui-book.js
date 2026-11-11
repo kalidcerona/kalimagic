@@ -119,7 +119,9 @@
     helperOpening.busy = true;
     try {
       if (!helperOpening.pending) {
+        const before = typeof bookMotionBeforeBuy === 'function' ? bookMotionBeforeBuy() : null;
         if (!C.buyNode(state,'autoLearn')) return;
+        if (before) bookMotionAfterBuy(before);
         helperOpening.pending = true;
       }
       if (!save()) { tree(); render(); panelStatus('저장하지 못했어요. 저장을 다시 시도해 주세요.'); return; }
@@ -131,21 +133,21 @@
   function bookDetail(slot, id, memory) {
     const node = D.tree.find(n => n.id === id), info = bookStageInfo(slot,id);
     const detail = element('div','','book-detail'); detail.id = `book-detail-${slot.slot}`;
-    detail.append(element('h3',node.name),element('p',node.desc,'tree-effect'));
+    detail.append(element('p',node.desc,'tree-effect'));
+    if (typeof bookRemaining === 'function') bookRemaining(detail,info);
     if ((node.partOf || id) === 'area') detail.append(areaRangePreview());
     detail.append(element('p',`레벨 ${C.formatNumber(info.level)} / ${C.formatNumber(info.max)}`,'tree-level'));
     if (node.statMilestone) {
       const next = C.nextMilestone(info.total,[10,25],info.totalMax);
       detail.append(element('p',next ? `다음 2배: 전체 레벨 ${next} · ${next-info.total}레벨 남음` : `지금 힘 ${C.statMultiplier(state,node.partOf||id)}배`,'tree-next'),element('p',D.easyExtras.milestone,'tree-preview'));
     }
-    if (info.stageOpen !== false) detail.append(bookGrowth(id));
+    if (info.stageOpen !== false && info.purchasable) detail.append(bookGrowth(id));
     if (id === 'autoLearn') {
       const retry = helperOpening.owner === state && helperOpening.pending;
       detail.append(element('p',D.bookLayout.helperShop.nextGoodsNote));
       if (!C.helperShopOpen(state) || retry) {
         const buy = action(retry ? '저장 다시 시도 · 추가 차감 없음' : '상점 열기 · 책 2권 · 어시스턴트 무료',openHelperShop,!retry && !info.purchasable);
         buy.classList.add('tree-cost','tree-buy'); detail.append(buy);
-        if (info.blockedReason && !retry) detail.append(element('p',info.blockedReason,'tree-reason'));
         return detail;
       }
     }
@@ -153,20 +155,20 @@
       detail.append(action('도우미 상점으로 · 무료 · 성장 0', () => { shopFocus('helpers'); gemShop(); }));
       return detail;
     }
-    const currency = {coins:'동전',keys:'책',starlight:'비둘기'}[info.currency];
+    const currency = {coins:'동전',keys:'책',starlight:'비둘기',gems:'실크'}[info.currency];
     if (info.cost === null) detail.append(element('strong','✓ MAX · 완성했어요','tree-cost'));
     else {
       const buy = action(`${currency} ${C.formatNumber(info.cost)} · 배우기`, () => {
         const current = bookStageInfo(slot,id); if (!current.purchasable) return;
         memory.scroll=$('panelBody').scrollTop;
+        const before = typeof bookMotionBeforeBuy === 'function' ? bookMotionBeforeBuy() : null;
         const paid = state[info.currency]; if (!C.buyNode(state,id)) return;
+        if (before) bookMotionAfterBuy(before);
         if(newTutorialLesson()&&chainMark()?.step==='upgrade-play'&&id===chainNodeId&&!state.u15.bios.includes('lesson:bought'))state.u15.bios.push('lesson:bought');
         tutorialSignal('learn'); sound('learn'); save(); tree(); render(); learnedMoment(id,info.currency,paid);
       }, !info.purchasable);
       buy.classList.add('tree-cost', 'tree-buy'); buy.type = 'button';
       buy.setAttribute('aria-label',`배우기, ${currency} ${C.formatNumber(info.cost)}`); detail.append(buy);
-      if (info.blockedReason) detail.append(element('p',info.blockedReason,'tree-reason'));
-      if (info.gate && !info.gate.met && info.gate.text !== info.blockedReason) detail.append(element('p',info.gate.text,'tree-gate'));
     }
     return detail;
   }
@@ -175,7 +177,8 @@
       bookSession.owner = state; bookSession.tab = '시작'; bookSession.tabs.clear();
     }
     const practice = typeof failure !== 'undefined' && failure !== null;
-    if (menu !== 'book') openPanel('book',practice ? D.ui.practiceTitle : D.ui.bookTitle);
+    const entering = menu !== 'book';
+    if (entering) openPanel('book',practice ? D.ui.practiceTitle : D.ui.bookTitle);
     const panel = $('panel'), header = panel.querySelector('header'), body = $('panelBody');
     if (practice) panel.dataset.practice = '1'; else delete panel.dataset.practice;
     header.querySelectorAll('.tree-wallet,.tree-learning,.practice-go,.book-navigation').forEach(el=>el.remove());
@@ -195,9 +198,11 @@
     // Fixed contract order, including locked placeholders. Wallet changes never reorder cards.
     for (const slot of D.bookLayout.slots.filter(slot => slot.tab === bookSession.tab)) {
       const id = bookPick(slot,memory), info = bookStageInfo(slot,id);
-      const card = element('section','','book-card'); card.dataset.slot = String(slot.slot);
+      const expanded = memory.expanded.has(slot.slot);
+      const card = element('section','',expanded ? 'book-card book-card-expanded' : 'book-card'); card.dataset.slot = String(slot.slot);
       const known = slot.ids.some(stage => C.nodeInfo(state,stage).displayable) && (!slot.visibleAfterHire || state.tree[slot.visibleAfterHire] > 0);
-      const toggle = action(known ? `${slot.slot}. ${slot.name}` : `${slot.slot}. 미확인 비법`, () => {
+      const title = expanded ? D.tree.find(node => node.id === id).name : slot.name;
+      const toggle = action(known ? `${slot.slot}. ${title}` : `${slot.slot}. 미확인 비법`, () => {
         memory.scroll=$('panelBody').scrollTop;
         if (memory.expanded.has(slot.slot)) memory.expanded.delete(slot.slot); else memory.expanded.add(slot.slot);
         tree();
@@ -207,14 +212,19 @@
       if (practice && slot.ids.includes(practiceRec) && C.nodeInfo(state,practiceRec).cost !== null) toggle.append(element('span','추천','rec-tag'));
       card.append(toggle);
       const status = info.cost === null ? 'MAX' : info.purchasable ? '배울 수 있어요' : info.blockedReason;
-      card.append(element('p',known ? status : slot.visibleAfterHire ? '도우미 합류 후 확인해요' : '앞선 비법을 배워 확인해요','book-card-status'));
+      const statusLine = element('p',known ? status : slot.visibleAfterHire ? '도우미 합류 후 확인해요' : '앞선 비법을 배워 확인해요','book-card-status');
+      if (expanded && known && typeof bookStatus === 'function') {
+        const current = bookStatus(info); statusLine.textContent = current.text; statusLine.dataset.status = current.kind;
+      }
+      card.append(statusLine);
       if (memory.expanded.has(slot.slot)) {
         if (known) {
           const stages = element('div','','book-stages'); stages.setAttribute('aria-label',`${slot.name} 단계`);
           slot.ids.forEach((stage,index) => {
             const si = bookStageInfo(slot,stage);
             const available = si.displayable && si.stageOpen !== false;
-            const button = action(`${index+1}. ${D.tree.find(n=>n.id===stage).name}`, () => { memory.scroll=$('panelBody').scrollTop; memory.selected.set(slot.slot,stage); tree(); },!available);
+            const button = action(`${index+1}단계`, () => { memory.scroll=$('panelBody').scrollTop; memory.selected.set(slot.slot,stage); tree(); },!available);
+            button.setAttribute('aria-label',`${index+1}단계 · ${D.tree.find(n=>n.id===stage).name}`);
             button.setAttribute('aria-pressed',String(stage===id)); button.dataset.stage = stage; stages.append(button);
           });
           const detail = info.displayable ? bookDetail(slot,id,memory) : element('div','아직 발견하지 못한 비법이에요.','book-detail');
@@ -228,6 +238,7 @@
     // A single handler reads the current tab; detached callbacks cannot scroll another panel.
     body.onscroll = () => { if (menu === 'book' && bookSession.revision === revision) memory.scroll = body.scrollTop; };
     bookRememberScroll(body,memory,revision);
+    if (typeof bookMotionRender === 'function') bookMotionRender(cards,body,entering,revision);
     if (focusMap) {
       // Moving to the focused card is a deliberate scroll. The restore guard would undo it back to the old position.
       bookSession.stopRestore?.();

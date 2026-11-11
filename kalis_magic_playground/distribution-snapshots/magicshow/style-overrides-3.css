@@ -287,3 +287,8 @@ html body.phone:not(.portrait-layout) #viewport#viewport #stage#stage#stage#stag
 
 /* P10b: viewport overlay escapes the clipped stats container. */
 html body > .act-tier-line { position:fixed; left:0; top:0; width:max-content; max-width:160px; margin:0; pointer-events:none; font:9px/12px Galmuri11,monospace; color:#F2E6FF; text-align:right; z-index:30; }
+
+/* Portrait act captions share the dark notice band, anchored under the number. */
+@media (pointer:coarse) {
+  html body.portrait-layout > .act-tier-line { max-width:calc(100% - 16px); font:12px/16px Galmuri11,monospace; padding:3px 6px; box-sizing:border-box; background:#100d16e8; border:1px solid #8d7554; text-shadow:0 1px #000; text-align:center; }
+}

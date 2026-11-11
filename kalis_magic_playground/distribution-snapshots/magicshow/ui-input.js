@@ -286,6 +286,7 @@
     render();
   }
   function clearDecorations() {
+    audienceImpact.cancel();
     if(typeof hideEasyTooltip==='function')hideEasyTooltip();
     flights.length=0;particles.length=0;numbers.length=0;badges.length=0;
     $('stage').classList.add('decorations-paused');

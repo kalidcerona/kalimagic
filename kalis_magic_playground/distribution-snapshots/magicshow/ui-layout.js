@@ -43,16 +43,16 @@
   const rounded = v => C.formatNumber(Math.max(0, Math.round(v)));
   const randomLine = list => list[Math.floor(Math.random() * list.length)];
   // U36: innerWidth/innerHeight flush layout, and portrait() runs inside paused(), which a frame calls dozens of times after DOM writes.
-  // Phone portrait (shortest side under 740 CSS px, 12-115) and, since s4d, an upright touch tablet (up to 1400 CSS px) play in the portrait layout.
+  // Phone portrait (shortest side under 740 CSS px, 12-115) and, since s4d, an upright touch tablet at any size play in the portrait layout.
   // portrait() stays the pause/rotate gate for other tall viewports (a tall desktop window).
   // Same source as PhoneLayout.measure(): fit() writes this cache from layout.portrait (visual viewport).
-  const portraitLayout = () => { let v = geo.get('portraitLayout'); if (v === undefined) { v = innerHeight > innerWidth && (Math.min(innerWidth, innerHeight) < 740 || (coarse && Math.max(innerWidth, innerHeight) <= 1400)); geo.set('portraitLayout', v); } return v; };
+  const portraitLayout = () => { let v = geo.get('portraitLayout'); if (v === undefined) { v = innerHeight > innerWidth && (Math.min(innerWidth, innerHeight) < 740 || coarse); geo.set('portraitLayout', v); } return v; };
   const portrait = () => { let v = geo.get('portrait'); if (v === undefined) { v = innerHeight > innerWidth && !portraitLayout(); geo.set('portrait', v); } return v; };
   const presentation=new Presentation.Queue();
   // A tap during a character dialogue is retained and collected only after the dialogue ends.
   const lineOpen = () => !!state.u15.scene || !$('storyDialog').hidden; // v4 U49b 1: a character dialog is on screen (the pickup is never collected then)
   // Menu and panel sheets block every layout, including the portrait dock's full-screen sheets.
-  const blockingSheetOpen = () => !!menu || !$('phoneMore').hidden || $('moreButton').getAttribute('aria-expanded')==='true' || !$('panel').hidden;
+  const blockingSheetOpen = () => (typeof touchLandscapeBlocked !== 'undefined' && touchLandscapeBlocked) || !!menu || !$('phoneMore').hidden || $('moreButton').getAttribute('aria-expanded')==='true' || !$('panel').hidden;
   const dialogOnlyPause = () => lineOpen() && !blockingSheetOpen() && !state.u18.map && !wonMoment?.pending && !document.hidden && !portrait() && $('offlineCard').hidden && !stageRewardHost && $('leaveConfirm').hidden && $('sceneCard').hidden;
   var seronaFail={pending:false,index:-1}; // var: paused() can be called before this line runs
   const paused = () => skillNoticePending() || (state._theaterBeat && clock < state._theaterBeat.until) || /* s5b: the phase-1 win beat holds the show */ wonMoment?.pending || state.u18.map || !!state.u15.scene || (typeof seronaFail !== 'undefined' && !!seronaFail && seronaFail.index >= 0) /* s5t */ || (state.u15.tutorial.active && (state.u15.tutorial.phase!=='fight' || state.u15.tutorial.won)) || schoolChainPaused() || !state.onboarding.intro || document.hidden || blockingSheetOpen() || portrait() || !!stageRewardHost || !$('offlineCard').hidden || !$('leaveConfirm').hidden || !$('sceneCard').hidden;
@@ -154,11 +154,11 @@
       else { pxText($('bookButton'), '비법'); pxText($('equipButton'), '🎩 마술용품'); /* v4 U50b: a full label, it lives in the menu now */ $('moreButton').textContent=innerWidth<=740?'☰':'☰ 메뉴'; pxText($('bestiaryButton'), innerWidth<=740?'📚':'📚 도감'); }
       $('moreButton').setAttribute('aria-label','메뉴'); $('bestiaryButton').setAttribute('aria-label','도감');
       updateSoundButton();const on=window.Sfx?.musicEnabled();$('musicButton').textContent=on?'음악 ON':'음악 OFF';
-      $('closePanel').textContent = '← 뒤로';
+      if ($('panel').hidden) $('closePanel').textContent = '← 뒤로';
     } else {
       for (const [el, home] of [...chromeHomes].reverse()) home.parent.insertBefore(el, home.next?.parentNode === home.parent ? home.next : null);
       updateSoundButton();const on=window.Sfx?.musicEnabled();$('musicButton').textContent=on?'배경음악 켜짐':'배경음악 꺼짐';
-      chromeHomes.clear(); $('moreButton').textContent='☰ 메뉴'; pxText($('equipButton'), '🎩 마술용품'); showBookButton(true); pxText($('bookButton'), '비법'); pxText($('bestiaryButton'), '도감'); $('closePanel').textContent = '닫기';
+      chromeHomes.clear(); $('moreButton').textContent='☰ 메뉴'; pxText($('equipButton'), '🎩 마술용품'); showBookButton(true); pxText($('bookButton'), '비법'); pxText($('bestiaryButton'), '도감'); if ($('panel').hidden) $('closePanel').textContent = '닫기';
       // v4 U46 A7: desktop keeps only 비법서 and 메뉴 at the top, like the phone; everything else lives in the menu sheet.
       for (const id of DESKTOP_MENU) moveChrome(id==='musicVolume'?$(id).parentElement:$(id), $('phoneMore'));
       moveChrome($('statsButton'), $('phoneMore'));

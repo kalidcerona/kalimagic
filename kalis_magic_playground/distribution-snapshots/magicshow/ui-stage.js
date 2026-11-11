@@ -162,7 +162,7 @@
     $('magicianMini').classList.remove('reacting'); $('magicianMini').dataset.face = 'event';
     $('magicianMini').dataset.frame = String(frame);
     if (!$('magicianMini').classList.contains('performance-ready')) sprite($('magicianMini'),`assets/magician-${frame === 2 ? 'bow' : 'perform'}.png`);
-    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches)
+    if (!reduced)
       animate($('magicianMini'), [{transform:'translateY(0)'},{transform:'translateY(-8px)'},{transform:'translateY(0)'}], 220);
   }
   function renderGuidance() {

@@ -7,7 +7,7 @@ GAME_DATA.ui = {
     bookTitle: "마술 비법서",
     bestiaryTitle: "관객 도감",
     dealerTitle: "수상한 샵 매니저",
-    rotate: "가로로 돌려 주세요",
+    rotate: "창을 가로로 넓혀 주세요",
     restart: "비법 노트로",
     practiceTitle: "연습실 비법 노트",
     practiceFallback: "스테이지로 가기",

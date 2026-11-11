@@ -1,5 +1,6 @@
 'use strict';
   function events(list) {
+    audienceImpact.batch(list);
     if(list.some(e=>e.type==='helperBuffStart'||e.type==='helperBuffEnd'))helperBuffEvents(list);
     for(const e of list.filter(e=>e.type==='batchD')){
       if(e.kind==='interference'||e.kind==='lock'||e.kind==='hide')toast(e.kind==='hide'?'🙈 케이스 내용이 잠시 가려져요':'🔒 케이스 하나가 잠시 잠겨요. 다른 케이스를 열어 주세요');

@@ -6,6 +6,7 @@
   const motion = matchMedia('(prefers-reduced-motion: reduce)');
   const coarse = matchMedia('(pointer:coarse)').matches;
   let phone = false, layoutWidth = 1600, layoutHeight = 900;
+  let touchLandscapeBlocked = false;
   let reduced = motion.matches, scale = 1, clock = 0, previous = 0;
   let menu = '', focusBeforePanel = null, lastAudience = '', lastLayout = '';
   // v4 U48 M: true while a panel opened from the menu sheet is showing; its 닫기/뒤로 then returns to the menu.

@@ -328,10 +328,10 @@ html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#sta
   html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #actionDock > #gemShopQuick .kit-label { font-size:10px; letter-spacing:-.3px; }
 }
 
-/* Keep the four-syllable skill label readable in the existing 44 px column. */
+/* Reserve two full text lines above the separate skill status row. */
 html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #skillRow > #skill-cheer,
 html body.portrait-layout.phone.portrait-compact:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #skillRow > #skill-cheer { --lb:26px; }
-html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #skillRow > #skill-cheer > span:not(.skill-art) { white-space:pre-line; font-size:11px; line-height:12px; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #skillRow > #skill-cheer > span:not(.skill-art) { white-space:normal; word-break:keep-all; overflow-wrap:normal; font-size:11px; line-height:12px; }
 
 /* Compact labels keep the same specificity as the compact tile rules. */
-html body.portrait-layout.phone.portrait-compact:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #skillRow > #skill-cheer > span:not(.skill-art) { font-size:11px; line-height:12px; white-space:pre-line; }
+html body.portrait-layout.phone.portrait-compact:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #skillRow > #skill-cheer > span:not(.skill-art) { font-size:11px; line-height:12px; white-space:normal; word-break:keep-all; }
