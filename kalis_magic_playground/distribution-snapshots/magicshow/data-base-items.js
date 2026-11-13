@@ -9,7 +9,7 @@ GAME_DATA.items = {
       ] },
       { id: "silk", name: "자신감", effect: "shield", share: 0.19, ladder: [
         { id: "silk-handkerchief", name: "실크 손수건", emoji: "🧣", flavor: "살랑 한 번, 숨도 한 번." },
-        { id: "linking-rings", name: "링", emoji: "⭕", flavor: "고리가 이어지면 마음도 편안." },
+        { id: "linking-rings", name: "링킹 링", emoji: "⭕", flavor: "고리가 이어지면 마음도 편안." },
         { id: "slydini-silks", name: "슬라이디니 실크", emoji: "🪄", flavor: "천천히 흔들수록 차분해진다." },
         { id: "two-si-do", name: "두 에스 아이 두", emoji: "🔗", flavor: "이름을 읊으면 호흡이 고른다." },
         { id: "tin-case", name: "틴 케이스", emoji: "🧰", flavor: "작은 케이스에 여유 한 칸." }
@@ -41,7 +41,7 @@ GAME_DATA.items = {
       ] },
       { id: "silk", name: "자신감", effect: "shield", share: 0.2, rarityMap: [0, 0, 1, 1, 1], ladder: [
         { id: "silk-handkerchief", name: "실크 손수건", emoji: "🧣", flavor: "살랑 한 번, 숨도 한 번." },
-        { id: "linking-rings", name: "링", emoji: "⭕", flavor: "고리가 이어지면 마음도 편안." }
+        { id: "linking-rings", name: "링킹 링", emoji: "⭕", flavor: "고리가 이어지면 마음도 편안." }
       ] },
       { id: "water", name: "멘탈 회복", effect: "heal", share: 0.15, rarityMap: [0, 1, 1, 2, 2], ladder: [
         { id: "water-glass", name: "치킨 한 조각", emoji: "🍗", flavor: "닭다리 한 입이면 멘탈이 쑥! 칼리의 최애 간식이에요." },

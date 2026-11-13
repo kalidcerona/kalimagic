@@ -103,11 +103,14 @@
   function useSkill(state,id,options) {
     var ev=options&&options.quiet ? null : [];
     if(state.u15.scene||profile(state)==='future'&&state.u19.telegraph>0||state.mode!=='fight'||state.resolved||state.features.climax.left>0||state.skills.cooldowns[id]>0||!skillUnlocked(state,id))return ev||[];
+    var info=skillInfo(state,id);
+    if(info.paid)state.gems-=info.fee;
     state.skills.cooldowns[id]=skillCooldown(state,id);
-    routineSkill(state,id,ev);emit(ev,{type:'skill',id:id}); dailyProgress(state,'skills',1);
+    routineSkill(state,id,ev);emit(ev,info.paid?{type:'skill',id:id,variant:info.variant,fee:info.fee}:{type:'skill',id:id}); dailyProgress(state,'skills',1);
     if(id==='showtime')state.skills.showtimeLeft=20000;
     if(id==='cheer'){state.skills.cheerGuard=true;state.mental=Math.min(state.mentalMax,state.mental+state.mentalMax*.1*gearMultiplier(state,"recovery"));}
-    if(id==='cardrain'){
+    if(info.paid)paidSkillSweep(state,info.factor,ev);
+    if(id==='cardrain'&&!info.paid){
       state._skillBatch=true;
       try {for(var i=0;i<state.board.length;i++)damageCell(state,i,wandDamage(state)*3,ev,'active');}
       finally {state._skillBatch=false;}

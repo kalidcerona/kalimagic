@@ -76,5 +76,6 @@
     });
     return {id:id,count:count,purchasable:!!info.purchasable,currency:info.currency || null,
       cost:info.cost,spent:spent,blockedReason:info.blockedReason || '',
+      skillUpgrade:known&&NODE_BY_ID[id].skillUpgrade ? {name:NODE_BY_ID[id].skillUpgrade.name,fee:NODE_BY_ID[id].skillUpgrade.fee,description:NODE_BY_ID[id].desc} : null,
       before:before,after:after,changes:changes};
   }

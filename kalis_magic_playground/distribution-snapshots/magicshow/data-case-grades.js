@@ -39,7 +39,7 @@
   const gradeCosts = [40, 60, 80, 1000, 30000, 200000, 500000, 1000000, 2000000];
   const make = (id, name, max, cost, pre, x, y, desc) => ({id,name,max,cost,prereqs:[pre],x,y,desc,
     branch:'box',currency:'coins',reveal:'N',icon:'node-caselevel.png',emoji:'📦',pending:false,u31:true});
-  const grade = make('caseGrade','행운의 카드',3,gradeCosts,'board',5,-1,'행운의 카드: 좋은 등급의 케이스가 나올 확률을 높여요\n배울수록 확률이 올라요');
+  const grade = make('caseGrade','행운의 카드',3,gradeCosts,'board',5,-1,'배울수록 좋은 등급의 케이스가\n나올 확률이 높아져요.');
   grade.levels = 9;
   grade.parts = ['caseGrade','caseGrade-2','caseGrade-3'];
   D.tree.push(grade);
@@ -47,8 +47,8 @@
     id:grade.parts[i],name:'행운의 카드 '+['II','III'][i-1],partOf:grade.id,partOffset:i*3,
     prereqs:[grade.parts[i-1]],x:5,y:-1-i,levels:undefined,parts:undefined
   }));
-  D.tree.push(make('caseCoinBoost','황금 손길',3,[60,100,140],'prepared',8,2,'은색 이상 케이스의 동전 배수 +2%씩\n배울 때마다 보상이 늘어요'));
-  D.tree.push(make('caseDmgBoost','무대 장악',3,[120,180,240],'caseCoinBoost',9,2,'은색 이상 케이스의 피해 배수 +2.5%씩\n배울 때마다 피해가 늘어요'));
+  D.tree.push(make('caseCoinBoost','황금 손길',3,[60,100,140],'prepared',8,2,'은색 이상 케이스에서 얻는 동전의 배수가 레벨마다\n2%씩 늘어요.'));
+  D.tree.push(make('caseDmgBoost','무대 장악',3,[120,180,240],'caseCoinBoost',9,2,'은색 이상 케이스에서 나온 소품이 관객의 의심을\n줄이는 배수가 레벨마다 2.5%씩 늘어요.'));
   const chain = D.tree.find(n=>n.id==='chain4');
   Object.assign(chain,{prereqs:['caseGrade-3'],gate:null,cost:{c:6300000,g:1.5},x:6,y:-3});
   // Preserve slot numbers and the remaining lesson investment. Two slots disappear.

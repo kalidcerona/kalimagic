@@ -1,0 +1,22 @@
+/* Skill costs share the existing status cell; no new row in the action dock. */
+.active-skill.skill-upgraded { min-width:0; }
+.active-skill.skill-upgraded > small { white-space:pre-line; line-height:1.1; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #skillRow > :is(#skill-cardrain,#skill-cheer).skill-upgraded { --ic:28px; --lb:24px; --st:22px; row-gap:1px; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #skillRow > :is(#skill-cardrain,#skill-cheer).skill-upgraded > span:not(.skill-art) { white-space:normal; overflow-wrap:anywhere; line-height:12px; font-size:10px; }
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #skillRow > :is(#skill-cardrain,#skill-cheer).skill-upgraded > small { white-space:pre-line; line-height:11px; font-size:9px; }
+.tree-wallet { flex-wrap:wrap; }
+.skill-upgrade-fx { pointer-events:none; position:relative; color:#ffe6a5; background:#211b2ef0; border:1px solid #d9ae58; border-radius:8px; padding:8px 14px; font-size:14px; text-align:center; }
+.skill-upgrade-marks { display:flex; justify-content:center; gap:3px; height:14px; margin-top:3px; }
+.skill-upgrade-marks > i { width:18px; height:12px; border-radius:50%; border:2px solid #ffe6a5; }
+.skill-oil-fx .skill-upgrade-marks > i:first-child { background:#c84855; animation:c2-separate-left .6s ease-out; }
+.skill-oil-fx .skill-upgrade-marks > i:last-child { background:#14111a; animation:c2-separate-right .6s ease-out; }
+.skill-rings-fx .skill-upgrade-marks > i:first-child { animation:c2-link .6s ease-out; }
+@keyframes c2-separate-left { from { transform:translateX(10px); } to { transform:translateX(-4px); } }
+@keyframes c2-separate-right { from { transform:translateX(-10px); } to { transform:translateX(4px); } }
+@keyframes c2-link { from { transform:translateX(-10px); } to { transform:translateX(8px); } }
+@media (prefers-reduced-motion:reduce) { .skill-upgrade-marks { display:none; } }
+
+html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage#stage#stage #activeSkills #skillRow > :is(#skill-cardrain,#skill-cheer).skill-fallback { --ic:22px; --st:33px; }
+
+.skill-case-link { pointer-events:none; position:absolute; z-index:30; height:3px; background:#ffe6a5; box-shadow:0 0 7px #ffd16a; transform-origin:left center; animation:c2-case-link .6s ease-out; }
+@keyframes c2-case-link { from { opacity:.9; } to { opacity:0; } }

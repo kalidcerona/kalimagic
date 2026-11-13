@@ -51,7 +51,7 @@
       if(e.type==='colleague')colleagueTrick(e);
       if(e.type==='itemLand')hitSource=particleSource(e);
       if(e.type==='dove')hitSource='dove';
-      if(e.type==='skill') {hitSource=e.id;const r=rectOf($('audience')),stage=rectOf($('stage'));const p={x:(r.left+r.width/2-stage.left)/scale,y:(r.top+r.height*.65-stage.top)/scale};hitParticles(p.x,p.y,e.id,'#eac568',2);if(e.id==='showtime')sceneLight(.04);}
+      if(e.type==='skill') {skillUpgradeEffect(e);hitSource=e.id;const r=rectOf($('audience')),stage=rectOf($('stage'));const p={x:(r.left+r.width/2-stage.left)/scale,y:(r.top+r.height*.65-stage.top)/scale};hitParticles(p.x,p.y,e.id,'#eac568',2);if(e.id==='showtime')sceneLight(.04);}
       if (typeof tutorialSignal === 'function') {
         const signal={boxBreak:'badge',audHit:'doubt',heckle:'heckle',win:'win'}[e.type];
         if (signal) tutorialSignal(signal);
@@ -59,7 +59,7 @@
       if(e.type==='tutorialLessonFail'){failure=0;sound('failure');haptic(50);showBoo({venue:state.venue,audId:'tutorial-ndd',missLine:D.storyV15.tutorial.missLine});save();}
       if(e.type==='tutorialWin')tutorialWinMoment();
       if(e.type==='skill'||e.type==='visitorCatch')haptic(40);
-      if(e.type==='skill'&&e.id==='cheer'&&state.skills.cheerGuard)toast('관객 호응 · 다음 야유 방어 준비');
+      if(e.type==='skill'&&e.id==='cheer'&&!e.variant&&state.skills.cheerGuard)toast('관객 호응 · 다음 야유 방어 준비');
       if(e.type==='homecomingAct'||e.type==='phase2'||e.type==='theaterPhase2'||(e.type==='win'&&C.isHeadliner(D.venues[e.venue-1],e.j)))haptic([30,40,30]);
       if(e.type==='outfit'){renderOutfit();banner('새 무대 의상!',['','거실 티셔츠','무대 정장','우주 망토'][e.tier]);sound('milestone');const p=target('mental');burst(p.x,p.y,'#ffe65c');$('magicianMini').classList.add('outfit-sparkle');setTimeout(()=>$('magicianMini').classList.remove('outfit-sparkle'),650);save();}
       if(e.type==='trueFanReveal'){banner('숨은 도전 발견! 열렬한 찐팬','도감에서 새로운 도전을 확인해 보세요',false,true);sound('milestone');save();}
@@ -158,12 +158,12 @@
         audHeckleMood = D.lineFaces.moods['fight:'+a.id+':heckles:'+(a.heckles||[]).indexOf(line)]||D.lineFaces.faceMap.roleDefaults[a.role]||'doubt';
         moodSprite($('audience'),stageAudienceAsset(v,a),audHeckleMood);
       } else if (e.type === 'heckle') {
-        const big = heckleLandsBig(e);
-        toast(`야유 · 자신감 ${C.formatNumber(e.shieldDmg)} 흡수 · ${C.formatNumber(Math.max(0,e.dmg-e.shieldDmg))==='0'?'멘탈 피해 없음':'멘탈 −'+C.formatNumber(Math.max(0,e.dmg-e.shieldDmg))}`);
+        const big = heckleLandsBig(e), mentalLoss = typeof e.mentalDmg === 'number' ? e.mentalDmg : Math.max(0,e.dmg-e.shieldDmg);
+        toast(`야유 · 자신감 ${C.formatNumber(e.shieldDmg)} 흡수 · ${C.formatNumber(mentalLoss)==='0'?'멘탈 피해 없음':'멘탈 −'+C.formatNumber(mentalLoss)}`);
         if (big && !list.some(event => event.type === 'fail')) haptic(40);
         if (e.shieldDmg > 0 && typeof popChip === 'function') { popChip($('statShield'), '−' + C.formatNumber(e.shieldDmg), 'block', 200); trailMeter('statShield', 400); }
-        if (e.dmg > e.shieldDmg && typeof popChip === 'function') {
-          popChip($('statMental'), '-' + C.formatNumber(e.dmg - e.shieldDmg), 'hurt', 450);
+        if (mentalLoss > 0 && typeof popChip === 'function') {
+          popChip($('statMental'), '-' + C.formatNumber(mentalLoss), 'hurt', 450);
           trailMeter('statMental', 450); if (big) { shakeMental(); kaliFlinch(); }
         }
         if (e.coinsTaken > 0) {

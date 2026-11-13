@@ -2,9 +2,9 @@ GAME_DATA.glove = {id:'auto-glove',name:'칼리 덱 (자동 연습)',icon:'item-
 GAME_DATA.statMeanings = {power:'케이스를 열어 아이템을 얻는 힘',damage:'관객의 의심을 줄이는 힘',mental:'야유를 버티는 힘'};
 (function(D){
  D.venues.forEach(v=>v.audiences.concat([v.headliner]).forEach(a=>{a.bio=D.storyV15.bios[a.id]||a.flavor;}));
- D.skills[0].hint='20초 3배';D.skills[0].desc='20초 동안 마술 실력이 3배가 돼요\n케이스를 누르는 힘이 3배라서 케이스가 훨씬 빨리 열려요.\n한 번 쓰면 90초를 기다려야 다시 쓸 수 있어요. 비법 「쇼타임 준비」 1레벨마다 기다리는 시간이 10%씩 줄어요.';
- D.skills[1].hint='한번 3배';D.skills[1].desc='판 위의 모든 케이스를 한 번에 두드려요\n누른 순간 한 번, 지금 마술 실력의 3배 힘으로 모든 케이스를 두드려요.\n한 번 쓰면 60초를 기다려야 다시 쓸 수 있어요. 비법 「카드 비 준비」 1레벨마다 기다리는 시간이 10%씩 줄어요.';
- D.skills[2].hint='야유 막기';D.skills[2].desc='다음 야유 한 번을 막고 멘탈을 회복해요\n누른 뒤 처음 오는 야유 한 번을 통째로 막아요. 막을 때까지 효과가 남아 있어요.\n누른 순간 멘탈이 최대치의 10%만큼 차요.\n한 번 쓰면 75초를 기다려야 다시 쓸 수 있어요. 비법 「관객 호응 준비」 1레벨마다 기다리는 시간이 10%씩 줄어요.';
+ D.skills[0].hint='20초 3배';D.skills[0].desc="20초 동안 마술 실력이 3배가 되어 케이스를 더\n세게 두드려요. 기본 대기 시간은 90초이며, 「쇼타임 준비」 비법 1레벨마다 10%씩 줄어요.";
+ D.skills[1].hint='한번 3배';D.skills[1].desc="모든 케이스를 현재 마술 실력의 3배 힘으로 한\n번에 두드려요. 기본 대기 시간은 60초이며, 「카드 스프링 준비」 비법 1레벨마다 10%씩 줄어요.";
+ D.skills[2].hint='야유 막기';D.skills[2].desc="쓰는 즉시 최대 멘탈의 기본 10%를 회복하고 다음\n야유 한 번을 막을 때까지 보호해요. 기본 대기 시간은 75초이며, 「관객 호응 준비」 비법 1레벨마다 10%씩 줄어요.";
 })(GAME_DATA);
 
 /* Easy result-first copy; formulas remain in Core. */
@@ -104,7 +104,7 @@ GAME_DATA.easyNodes = {
   "cardthrowCount": "카드가 한 장 더 날아가요\n1장씩 추가 · 최대 4장",
   "spotlightCount": "조명이 한 줄 더 비춰요\n1줄씩 추가 · 최대 2줄",
   "showtimeCooldown": "쇼타임을 더 빨리 다시 써요\n쇼타임을 쓴 뒤 기다리는 시간이 1레벨마다 10%씩 줄어요. 기본 90초, 최대 3레벨.\n쇼타임: 20초 동안 마술 실력이 3배가 돼요.",
-  "cardrainCooldown": "카드 비를 더 빨리 다시 써요\n카드 비를 쓴 뒤 기다리는 시간이 1레벨마다 10%씩 줄어요. 기본 60초, 최대 3레벨.\n카드 비: 모든 케이스를 마술 실력의 3배 힘으로 한 번에 두드려요.",
+  "cardrainCooldown": "카드 스프링을 더 빨리 다시 써요\n카드 스프링을 쓴 뒤 기다리는 시간이 1레벨마다 10%씩 줄어요. 기본 60초, 최대 3레벨.\n카드 스프링: 모든 케이스를 마술 실력의 3배 힘으로 한 번에 두드려요.",
   "cheerCooldown": "관객 호응을 더 빨리 다시 써요\n관객 호응을 쓴 뒤 기다리는 시간이 1레벨마다 10%씩 줄어요. 기본 75초, 최대 3레벨.\n관객 호응: 다음 야유 한 번을 막고 멘탈을 최대치의 10%만큼 채워요."
 };
 
@@ -114,7 +114,7 @@ GAME_DATA.colleagueNames=['박준현','전도현','조시훈','선휘재','Level
  const mk=(id,name,max,cost,currency,pre,x,y,desc,easy)=>{D.tree.push({id,name,max,cost,currency,prereqs:[pre],x,y,desc,branch:'pet',reveal:'N',icon:'node-assistant.png',emoji:'🎭',pending:false,u31:true});D.easyNodes[id]=easy;};
  mk('colleague','동료 마술사 합류',1,[2],'keys','boxHelper',-4,4,'동료 마술사 1명이 무대에 올라 몇 초마다 마술 피해','동료 마술사가 무대에 올라와요\n몇 초마다 함께 마술을 보여줘요');
  mk('colleagueMore','동료 한 명 더',5,{c:2500,g:3.2},'coins','colleague',-3,5,'동료 마술사 +1명, 최대 6명','동료가 한 명 더 올라와요\n최대 6명까지');
- mk('colleaguePower','동료의 합',5,{c:3000,g:3.4},'coins','colleague',-4,5,'동료 마술 피해 +20%씩','동료의 마술이 더 커져요\n힘 20%씩 추가');
+ mk('colleaguePower','동료의 힘',5,{c:3000,g:3.4},'coins','colleague',-4,5,'동료 마술 피해 +20%씩','동료의 마술이 더 커져요\n힘 20%씩 추가');
  mk('colleagueTempo','동료의 템포',4,{c:3500,g:3.6},'coins','colleague',-5,5,'동료 마술 주기 5000-500L ms','동료가 마술을 더 자주 보여줘요\n기다리는 시간 0.5초씩 줄기');
 })(GAME_DATA);
 GAME_DATA.easyNodes.flashpaperPower="플래시 페이퍼가 더 세게 두드려요\n힘 20%씩 추가";
@@ -148,7 +148,7 @@ GAME_DATA.missions.find(m=>m.id==='skills').name='스킬 5번 쓰기';GAME_DATA.
 GAME_DATA.statNames={power:'마술 실력',damage:'연출',mental:'멘탈'};
 
 // U17 gem uses and child-friendly descriptions.
-GAME_DATA.gemShop=[{id:'glove',name:'칼리 덱 (자동 연습)',desc:'120초 동안 모든 케이스를 두드려요',cost:2},{id:'refill',name:'스킬 바로 충전',desc:'기다리는 스킬을 바로 쓸 수 있어요',cost:2},{id:'potion',name:'멘탈 회복 물약',desc:'마음을 30% 회복해요',cost:3}];
+GAME_DATA.gemShop=[{id:'glove',name:'칼리 덱 (자동 연습)',desc:'120초 동안 모든 케이스를 두드려요',cost:2},{id:'refill',name:'스킬 바로 충전',desc:'대기 스킬을 골라 충전해요. 버튼을 눌러 써요.',cost:2},{id:'potion',name:'멘탈 회복 물약',desc:'최대 멘탈의 기본 30% 회복, 관객마다 한 번',cost:3}];
 GAME_DATA.tree.filter(n=>['encore','encorePower','encoreSpan'].includes(n.id)).forEach(n=>{n.desc=n.id==='encoreSpan'?'피버 타임이 더 오래 이어져요\n레벨마다 3초 추가':n.id==='encorePower'?'피버 타임에 관객을 더 신나게 해요\n레벨마다 힘 5% 추가':'피버 타임에 마술이 더 강해져요\n피버 실력 20% 추가';});
 // U17 pacing: preserve rewards and fever strength; tune audience durability.
 // 12-107 S6: hp scale folded into HP_FINAL (end of file). Was: (function(D){const scale={party:1.6,school:1.6,cafe:2,meetup:1.8,theater:4,festival:2.5,audition:3.35,broadcast:1.16,moon:1.8,galaxy:1.12,multiverse:1.07};D.venues.forEach(v=>{if(scale[v.slug])v.hpFactor*=scale[v.slug];});})(GAME_DATA);
@@ -201,13 +201,13 @@ GAME_DATA.cosmetics={
  D.ifRouteScript=D.storyReview.ifRoute;
 
  D.routines=[
-  {id:'rings',name:'링',nodes:['chain4','chain8','chainPower'],branch:'hand',items:['linking-rings']},
+  {id:'rings',name:'링킹 링',nodes:['chain4','chain8','chainPower'],branch:'hand',items:['linking-rings']},
   {id:'rope',name:'로프',nodes:['area','sweepFocus'],branch:'hand',items:['silk-handkerchief']},
   {id:'thumbtie',name:'썸타이',nodes:['power','prepared'],branch:'hand',items:['silk-handkerchief','linking-rings']},
   {id:'cards',name:'카드',nodes:['cardthrow','cardthrowPower','cardrainCooldown'],branch:'collection',items:['playing-card','jumbo-card'],skill:'cardrain'},
   {id:'coins',name:'동전',nodes:['coinLuck','tip'],branch:'luck',items:['coin']},
   {id:'cupsballs',name:'컵앤볼',nodes:['sponge','spongePower'],branch:'pet',items:['sponge-balls','cups-and-balls']},
-  {id:'bottles',name:'멀티플레잉 보틀',nodes:['water','waterPower','showtimeCooldown'],branch:'finale',items:['water-glass','cups-and-balls'],skill:'showtime'},
+  {id:'bottles',name:'멀티플라잉 보틀',nodes:['water','waterPower','showtimeCooldown'],branch:'finale',items:['water-glass','cups-and-balls'],skill:'showtime'},
   {id:'silk',name:'실크',nodes:['shieldCap','mental','cheerCooldown','p-slydini-silks'],branch:'heart',items:['silk-handkerchief','linking-rings'],skill:'cheer'},
   // Round 14: existing item ids and book nodes only (no new products). A shared item still takes turns in core.js routineItem.
   // eggbag: 실크햇 top-hat (모자에서 물건을 꺼내는 소품), 반짝이는 모자. rubberband: 링 linking-rings (고리), 루틴 연결.
@@ -217,7 +217,7 @@ GAME_DATA.cosmetics={
   {id:'rubberband',name:'고무줄',nodes:['comboHold'],branch:'hand',items:['linking-rings']},
   {id:'coloringbook',name:'컬러링북',nodes:['lessonBias'],branch:'collection',items:['jumbo-card']},
   {id:'cube',name:'큐브',nodes:['sweepFocus'],branch:'hand',items:['sponge-balls']},
-  {id:'wand',name:'완드',nodes:['speed'],branch:'hand',items:['wand']}
+  {id:'wand',name:'완드 마술',nodes:['speed'],branch:'hand',items:['wand']}
  ];
 })(GAME_DATA);
 // U19 pacing: extend the late galaxy rehearsal without stretching the mirror venue.
@@ -226,3 +226,105 @@ GAME_DATA.cosmetics={
 // 12-107 S6: hp scale folded into HP_FINAL (end of file). Was: (function(D){const scale={meetup:.30,audition:.60,broadcast:.52,moon:.70,sun:.60,galaxy:.30,multiverse:.44,lecturenote:.40};D.venues.forEach(v=>{if(scale[v.slug])v.hpFactor*=scale[v.slug];});D.venues.find(v=>v.slug==='lecturenote').bossHpFactor*=3.25;})(GAME_DATA);
 
 // U25: checked-in role and per-line mood data from lines-v19b.
+
+// Release 24 N1a: approved display copy, keyed by stable IDs; gameplay fields stay untouched.
+(function (D) {
+  const names = {
+    "root": "오프닝",
+    "area": "넓은 손길",
+    "critPower": "대박의 힘",
+    "startFinale": "피날레 준비",
+    "finaleNeed": "빠른 피날레",
+    "starTempo": "비둘기의 박자",
+    "chainPower": "연쇄의 힘",
+    "spongePower": "스펀지볼의 힘",
+    "cardthrowCount": "카드 추가",
+    "cardthrowSpeed": "빠른 카드 던지기",
+    "cardthrowPower": "카드의 힘",
+    "tipboxSpeed": "빠른 팁 모으기",
+    "tipboxPower": "넉넉한 팁",
+    "flashpaperChance": "페이퍼 발견",
+    "flashpaperPower": "페이퍼의 힘",
+    "crystalSpeed": "수정구의 박자",
+    "crystalPower": "수정구의 힘",
+    "waterSpeed": "간식 리필",
+    "waterPower": "든든한 간식",
+    "spotlightCount": "조명 한 줄 더",
+    "spotlightSpeed": "빠른 조명 전환",
+    "spotlightPower": "조명의 힘",
+    "fanPower": "팬과 조수의 힘",
+    "autoLearn": "도우미 상점 열기",
+    "cardrainCooldown": "카드 스프링 준비",
+    "colleaguePower": "동료의 힘"
+  };
+  const descriptions = {
+    "root": "첫 마술을 시작할 수 있어요\n처음부터 배운 비법",
+    "p-classic-collection-remastered": "입문자 강의 1편으로 기본기를 다져요. 연출 ×6\n관객의 의심을 더 빠르게 줄여요.",
+    "p-classic-collection-remastered-2": "입문자 강의 2편으로 기본기를 넓혀요. 연출 ×6\n관객의 의심을 더 빠르게 줄여요.",
+    "p-trace": "연출 ×2.5\n관객의 의심을 더 빠르게 줄여요.",
+    "p-target": "연출 ×1.5\n관객의 의심을 더 빠르게 줄여요.",
+    "p-nao-card-tricks": "연출 ×2\n관객의 의심을 더 빠르게 줄여요.",
+    "p-chameleon": "연출 ×1.5\n관객의 의심을 더 빠르게 줄여요.",
+    "p-tin-case": "케이스에서 나온 아이템의\n효과가 2배가 돼요.",
+    "p-epiphany": "연출 ×1.5\n관객의 의심을 더 빠르게 줄여요.",
+    "p-two-si-do": "연출 ×1.5\n관객의 의심을 더 빠르게 줄여요.",
+    "p-slydini-silks": "연출 ×1.5\n관객의 의심을 더 빠르게 줄여요.",
+    "p-trace2": "연출 ×1.5\n관객의 의심을 더 빠르게 줄여요.",
+    "crit": "딱 맞는 순간에 케이스를 세게 두드려요\n8% 확률로 대박이 터져 힘이 1.5배가 돼요.",
+    "critRate": "레벨마다 대박 확률이 2%포인트씩 올라 최대\n14%가 돼요.",
+    "critPower": "세게 두드릴 때 더 크게 놀라게 해요\n레벨마다 대박으로 두드리는 힘에 0.1배씩 더해져 최대 1.8배가 돼요.",
+    "comboHold": "케이스를 연속으로 열며 쌓은 액트가 더 오래 이어져요.\n레벨마다 다음 케이스를 열 때까지의 여유가 0.25초씩 늘어요.",
+    "precision": "관객의 눈을 돌려 숨은 관객도 놀라게 해요\n레벨마다 빗나갈 확률이 2%포인트씩 줄어요.",
+    "spawn": "빈 자리에 새 케이스를 더 빨리 세팅해요\n레벨마다 준비 시간이 약 7%씩 짧아져요.",
+    "golden": "동전이 많은 황금 케이스가 나와요.\n처음에는 30초 뒤, 그다음부터는 180초마다 나와요.",
+    "prepared": "새 케이스가 조금 열린 상태로 놓여요.\n레벨마다 미리 열린 비율이 5%포인트씩 늘어요.",
+    "boxShield": "케이스를 열 때마다 야유를 막아 주는 자신감을 얻어요.\n레벨마다 기본 획득량이 0.02씩 늘고, 멘탈 계열의 강화 효과이 적용돼요.",
+    "boxHeal": "케이스를 열 때마다 멘탈을 회복해요.\n레벨마다 기본 회복량이 0.05씩 늘고, 멘탈 계열의 강화 효과이 적용돼요.",
+    "shieldCap": "야유를 막아 주는 자신감을 더 많이 모아 둘 수\n있어요. 레벨마다 자신감 한도가 최대 멘탈의 3%만큼 늘어요.",
+    "shieldValue": "실크 소품으로 얻는 자신감이\n레벨마다 5%씩 늘어요.",
+    "healValue": "회복 아이템의 멘탈 회복량이\n레벨마다 5%씩 늘어요.",
+    "winHeal": "멋진 포즈로 끝내면 마음이 더 회복돼요\n관객을 감탄시키고 공연을 마치면 레벨마다 최대 멘탈의 2%만큼 더 회복해요.",
+    "levelHeal": "마술사 레벨이 오를 때 멘탈을 더 회복해요.\n비법 레벨마다 회복량이 최대 멘탈의 2%만큼 늘어요.",
+    "openingShield": "대본을 미리 외워 새 공연을 든든하게 시작해요\n레벨마다 최대 멘탈의 1%만큼 자신감을 더 얻어요.",
+    "calm": "야유를 들어도 표정이 흔들리지 않아요\n레벨마다 야유로 받는 피해가 2%씩 줄어요.",
+    "coinLuck": "케이스에서 동전이 더 잘 나와요.\n레벨마다 동전을 뽑을 표가 6장씩 더 들어가요.",
+    "forceRemove": "카드 몬테 첫 판에서 여왕 카드를 더 오래 보여 줘요.\n레벨마다 0.6초씩 더 보여 주고, 처음 카드를 섞을 때 조금 천천히 섞어요.",
+    "tip": "관객이 만족하면 동전을 더 얻어요\n받는 동전이 레벨마다 5%씩 늘어요.",
+    "gemFind": "좋은 소품을 얻을 때 실크를 함께 얻을 확률이\n레벨마다 1%포인트씩 올라요.",
+    "lessonBias": "케이스를 열 때 얻는 마술사 경험치가 레벨마다\n10%씩 늘어요. 최대 20%까지 늘어요.",
+    "flash": "케이스를 25개 열 때마다 불꽃 연출로 관객의\n의심을 연출의 8배만큼 줄여요.",
+    "startFinale": "공연을 다시 시작할 때\n피날레를 가득 충전해요.",
+    "finalePower": "케이스 1개를 열 때마다 피날레가 1칸 차요\n기본 20칸(비법으로 줄어듦)이 차면 큰 한 방이 나가요\n기본 피해는 표시된 연출의 2.75배, 마지막 보스 3막 준비 후 첫 피날레는 2배\n타겟은 5칸 충전, 액트 보상도 충전해요\n피날레 힘 비법·무대 보상·피날레 계열 강화로 더 강해져요\n관객의 의심을 줄이는 피날레의 힘이 레벨마다 8%씩 늘어요.",
+    "finaleNeed": "피날레에 필요한 케이스 개봉 수가 레벨마다 1개씩\n줄어요. 기본 20개에서 최소 18개까지 줄어요.",
+    "comboGift": "액트가 10 · 25 · 50 · 100에 도달하면\n동전과 피날레 충전을 받아요. 각 보상은 관객마다 한 번씩 받아요.",
+    "comboValue": "액트 보상으로 받는 동전이\n레벨마다 20%씩 늘어요.",
+    "encorePower": "피버 타임에 관객을 더 신나게 해요\n더해지는 마술 실력이 레벨마다 5%씩 늘어요.",
+    "starTempo": "레벨마다 케이스를 두드리는 속도가 1.06배가 돼요.\n새 케이스 준비 시간은 8%씩 짧아져요.",
+    "hidden-hand": "케이스를 두드리는\n힘이 2% 늘어요.",
+    "hidden-box": "케이스에서 나온 아이템의\n효과가 2% 늘어요.",
+    "hidden-heart": "최대 멘탈이\n2% 늘어요.",
+    "hidden-luck": "얻는 동전이\n2% 늘어요.",
+    "hidden-pet": "도우미의 힘이\n2% 늘어요.",
+    "spongeSpeed": "스펀지볼의 이동 속도가\n레벨마다 12%씩 늘어요.",
+    "flashpaper": "케이스를 열 때 3% 확률로 플래시 페이퍼가 나와요.\n종이를 누르면 모든 케이스를 마술 실력의 150% 힘으로 두드려요.",
+    "flashpaperChance": "케이스를 열 때 플래시 페이퍼가 나올 확률이\n레벨마다 1%포인트씩 올라 최대 7%가 돼요.",
+    "crystal": "수정구가 8초마다 최대 멘탈의 0.6%만큼 자신감을\n채워 줘요.",
+    "crystalSpeed": "수정구가 자신감을 채워 주는 간격이 레벨마다\n10%씩 짧아져요.",
+    "crystalPower": "수정구로 얻는 자신감이\n레벨마다 20%씩 늘어요.",
+    "water": "칼리가 좋아하는 치킨을 먹어요\n9초마다 최대 멘탈의 3% 회복",
+    "waterPower": "치킨의 멘탈 회복량이\n레벨마다 20%씩 늘어요.",
+    "autoLearn": "책 2권으로 도우미 상점을 열어요.\n마술 어시스턴트가 무료로 합류해요.",
+    "nightShow": "자리를 비운 동안 보상을 모을 수 있는 시간이 늘어요.\n기본 8시간에 레벨마다 1시간씩 더해져요.",
+    "manager": "자리를 비운 동안 얻는 동전 보상 비율이 기본\n70%에서 레벨마다 10%포인트씩 올라요.",
+    "autoPractice": "손을 떼어도 자동으로 케이스를 두드려요.\n두드리는 속도는 직접 누를 때의 기본 40%에서 레벨마다 10%포인트씩 올라요.",
+    "showtimeCooldown": "쇼타임의 기본 대기 시간 90초가 비법 1레벨마다\n10%씩 줄고, 최대 3레벨까지 배워요. 쇼타임을 쓰면 20초 동안 마술 실력이 3배가 돼요.",
+    "cardrainCooldown": "카드 스프링의 기본 대기 시간 60초가 비법\n1레벨마다 10%씩 줄고, 최대 3레벨까지 배워요. 스킬을 쓰면 모든 케이스를 마술 실력의 3배 힘으로 한 번에 두드려요.",
+    "cheerCooldown": "관객 호응의 기본 대기 시간 75초가 비법\n1레벨마다 10%씩 줄고, 최대 3레벨까지 배워요. 스킬을 쓰면 다음 야유 한 번을 막고 최대 멘탈의 기본 10%를 회복해요.",
+    "colleaguePower": "동료 마술사가 관객의 의심을 줄이는 힘이 레벨마다\n20%씩 늘어요.",
+    "waterSpeed": "치킨을 먹는 간격이 레벨마다\n10%씩 짧아져요."
+  };
+  for (const node of D.tree) {
+    if (names[node.id]) node.name = names[node.id];
+    if (descriptions[node.id]) node.desc = descriptions[node.id];
+  }
+})(GAME_DATA);

@@ -295,9 +295,9 @@
       const heading=element('h3',item.name);heading.prepend(artFallback(iconPath,'✦','shop-item-icon'));
       card.append(heading,element('p',item.desc));
       const ability=D.bookLayout.routineAbilities.find(a=>a.nodeId===item.id);
-      if(ability){if(ability.id==='eggbag')card.append(element('p',ability.description,'shop-routine-condition'));
+      if(ability){
         const key=ability.formula==='branchBonus'?'branch.'+ability.key:ability.formula==='nodeEffects'?'effects.'+ability.key:'wandRate';
-        const line=element('p',`${ownedRoutine?'공연 순서에 들어 있어요':'사면 자동 공연에 들어가요'} · 3초 동안 ${ability.name} ×${ability.multiplier}`,'shop-routine-preview');
+        const line=element('p',`${ownedRoutine?'공연 순서에 들어 있어요':'사면 자동 공연에 들어가요'}`,'shop-routine-preview');
         line.dataset.formula=key;card.append(line);
       }
       const add=skill=>{const info=C.gemShopInfo(state,item.id,skill),label=skill?D.skills.find(k=>k.id===skill).name+' 충전':'사기';

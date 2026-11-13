@@ -11,7 +11,7 @@
     if (gain < 1) gain = 1;
     addGain(state, 'starlight', gain, 100000);
     var permanentTree = {}, routines = state.u19.routines.slice();
-    DATA.bookLayout.helperShop.hireKeys.concat(DATA.routines.map(function(r){return "routine-"+r.id;})).forEach(function(id){permanentTree[id]=state.tree[id]||0;});
+    DATA.bookLayout.helperShop.hireKeys.concat(['skillOilWater','skillLinkingRings']).concat(DATA.routines.map(function(r){return "routine-"+r.id;})).forEach(function(id){permanentTree[id]=state.tree[id]||0;});
     // Rebirth starts a new card interval; a previous show must not retain its bonus.
     showSequences.delete(state);
     var i;

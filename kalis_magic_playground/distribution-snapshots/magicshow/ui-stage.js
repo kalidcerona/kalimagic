@@ -245,18 +245,7 @@
     while(state.idle.milestones.length){const id=state.idle.milestones.shift(),p=cellCenter(0);milestonePop(`${D.tree.find(n=>n.id===id).name} ×2!`,p);sound('milestone');}
     const unlocked=C.practiceUnlocked(state);
     $('autoIndicator').hidden=!unlocked||boardHolds.length>0||state.mode!=='fight'||paused()||state.features.climax.left>0;
-    D.skills.forEach(k=>{
-      const el=$('skill-'+k.id), left=state.skills.cooldowns[k.id], ready=left<=0;
-      const available=C.skillUnlocked(state,k.id);
-      el.hidden=!available&&!portraitLayout();el.setAttribute('aria-disabled',String(!available||!ready||paused()||state.mode!=='fight'));
-      const face=portraitLayout()?{cardrain:[k.name,'icon-card-rain'],showtime:[k.name,'icon-magic-hat'],cheer:[k.name.replace(' ','\n'),'icon-dove-summon']}[k.id]:[k.name,{cardrain:'icon-card-rain',showtime:'icon-showtime',cheer:'icon-cheer'}[k.id]];
-      el.querySelector(':scope > span:not(.skill-art)').textContent=face[0];
-      const art=el.querySelector('.skill-art');if(art.dataset.skillFace!==face[1]){sprite(art,'assets/kit/'+face[1]+'.webp');art.dataset.skillFace=face[1];}
-      if(available&&ready&&state.mode==='fight'&&typeof firstUseHint==='function')firstUseHint('skill',k.name); // s5t: the first skill that becomes ready (display name)
-      el.classList.toggle('ready',ready);el.classList.toggle('skill-locked',!available&&portraitLayout());el.classList.toggle('in-use',k.id==='showtime'&&state.skills.showtimeLeft>0);el.style.setProperty('--cooldown',`${Math.round(left/C.skillCooldown(state,k.id)*360)}deg`);
-      el.querySelector('small').textContent=!available && portraitLayout() ? '무대 해금' : ready ? (k.id==='showtime' && state.skills.showtimeLeft>0 ? `${Math.ceil(state.skills.showtimeLeft/1000)}초` : '') : `${Math.ceil(left/1000)}초`;
-      if(k.id==='cheer'){el.setAttribute('aria-label',state.skills.cheerGuard?'관객 호응 · 다음 야유 방어 준비':k.name);if(state.skills.cheerGuard)el.querySelector('small').textContent='방어 준비';}
-    });
+    D.skills.forEach(renderSkillButton);
     const seconds=rateSamples.reduce((n,e)=>n+e.dt,0)/1000;
     const damage=seconds?rateSamples.reduce((n,e)=>n+e.damage,0)/seconds:0, coins=seconds?rateSamples.reduce((n,e)=>n+e.coins,0)/seconds:0;
     const eta=sampleDoubt();

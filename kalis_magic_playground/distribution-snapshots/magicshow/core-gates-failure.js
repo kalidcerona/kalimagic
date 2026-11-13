@@ -64,6 +64,11 @@
     // with the coins on hand still gets through after three tries.
     return g&&!g.cleared&&!g.studied?Math.max(0,1-(preparation(state)-g.prepared)/(g.need||CONST.gatePrep)-(g.fails||0)/CONST.gateFailSteps):0;
   }
+  // Apply protection independently to each uncancelled hit, after shield absorption.
+  function heckleMentalLoss(state, rawHit, shieldLoss) {
+    var before=Math.max(0,state.mental), loss=Math.max(0,rawHit-shieldLoss);
+    return before>=Math.max(2,state.mentalMax*.25)&&loss>=before ? before-1 : Math.min(before,loss);
+  }
   // Compare full-mental survival with the actual hit cadence, visibility, absorption and gate ramp.
   function heckleSurvivalTime(state) {
     var c=copyPlain(state), visibility=MENTAL_VISIBILITY.get(state), every=Math.max(400,(c.interval||4)*1000), elapsed=0;
@@ -71,7 +76,8 @@
     MENTAL_VISIBILITY.set(c,{count:visibility?visibility.count:0});
     for(var i=0;i<2000;i++){
       var hit=nextHeckle(c);
-      c.shield-=hit.block;c.mental-=hit.dmg-hit.block;elapsed+=every;
+      c.mental-=heckleMentalLoss(c,hit.dmg,hit.block);c.shield-=hit.block;elapsed+=every;
+      if(lastHeckleArmed(c))c.review.lastHeckle=2;
       if(c.mental<=0)return elapsed;
       if(hit.counted)MENTAL_VISIBILITY.get(c).count++;
       c.fightMs+=every;
@@ -134,7 +140,7 @@
   function bookLesson(state) {
     var best=null,bestRank=1e9,bestCost=Infinity;
     DATA.tree.forEach(function(n){
-      if(n.starKey||n.pending||n.id==='root')return;
+      if(n.starKey||n.pending||n.skillUpgrade||n.id==='root')return;
       var info=nodeInfo(state,n.id);
       if(!info.purchasable||!info.revealed)return;
       var rank=BOOK_LESSON_ORDER.indexOf(baseNode(n).id);if(rank<0)rank=BOOK_LESSON_ORDER.length;

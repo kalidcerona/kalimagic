@@ -221,8 +221,20 @@ globalThis.Presentation = (() => {
       if(old){old.count=(old.count||1)+1;old.extra='외 '+(old.count-1)+'건';return old;}
       const next={...item,minimum:item.minimum??1200,age:0,serial:this.serial++};this.items.push(next);return next;
     }
-    tick(dt,blocked=false){
+    tick(dt,blocked=false,offline=false){
       if(blocked)return;
+      // The scene curtain covers offline controls; finish only that item while other notices stay frozen.
+      if(offline){
+        const item=this.active?.sceneCard?this.active:this.items.find(x=>x.sceneCard);
+        if(!item)return;
+        item.age+=dt;
+        if(item.age>=item.minimum&&!item.hold){
+          item.end?.();
+          if(item===this.active){this.active=null;this.gap=item.gapAfter??300;}
+          else this.items.splice(this.items.indexOf(item),1);
+        }
+        return;
+      }
       // A tap remembered before minimum (closeWhenReady) dismisses on the tick that reaches it. hold alone stays up.
       if(this.active){this.active.age+=dt;if(this.active.closeWhenReady&&this.active.age>=this.active.minimum)this.active.hold=false;if(this.active.age>=this.active.minimum&&!this.active.hold){const gap=this.active.gapAfter??300;this.active.end?.();this.active=null;this.gap=gap;}return;}
       if(this.gap>0){this.gap=Math.max(0,this.gap-dt);if(this.gap>0)return;}

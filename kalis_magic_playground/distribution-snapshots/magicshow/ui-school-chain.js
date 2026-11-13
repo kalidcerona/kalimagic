@@ -3,7 +3,7 @@
   // before the family lines start, so those lines do not read as part of the NDD scene. The show waits behind the card (paused()).
   function sceneChangeCard(name){
     const card=$('sceneCard');$('sceneCardName').textContent=name;card.hidden=false;
-    const item=presentation.push({stageTransition:true,minimum:1500,hold:false,priority:90,end:()=>{card.hidden=true;}});
+    const item=presentation.push({stageTransition:true,sceneCard:true,minimum:1500,hold:false,priority:90,end:()=>{card.hidden=true;}});
     card.onclick=()=>{item.minimum=0;};
   }
   function chainMark() {

@@ -9,7 +9,7 @@
     if(info.reason)card.append(element('small',info.reason,'shop-supply-buy-reason'));
     const skills=item.id==='refill'?D.skills:[null];
     for(const skill of skills){
-      const id=skill&&skill.id,useInfo=C.gemShopUseInfo(state,item.id,id),label=skill?skill.name+' 쓰기':'쓰기';
+      const id=skill&&skill.id,useInfo=C.gemShopUseInfo(state,item.id,id),label=skill?skill.name+' 충전':'쓰기';
       const use=action(label,()=>{
         const scroll=$('panelBody').scrollTop,now=C.gemShopUseInfo(state,item.id,id);
         if(!now.available){panelStatus(now.reason);return;}

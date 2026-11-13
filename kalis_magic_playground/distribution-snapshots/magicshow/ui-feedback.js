@@ -142,7 +142,7 @@
         presentation.gap=Math.max(0,presentation.gap-dt);return;
       }
     }
-    presentation.tick(dt,blockingSheetOpen()||!!state.u15.scene||!$('leaveConfirm').hidden||document.hidden||portrait()||!$('offlineCard').hidden||state.features.climax.left>0);
+    presentation.tick(dt,blockingSheetOpen()||!!state.u15.scene||!$('leaveConfirm').hidden||document.hidden||portrait()||state.features.climax.left>0,!$('offlineCard').hidden);
   }
   function winLine() {
     // Curtain call names the final pre-boss sequence, never a generic victory.

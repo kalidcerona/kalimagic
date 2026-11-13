@@ -74,22 +74,22 @@
   }
   // Labels describe the formula returned by Core, not projected combat DPS.
   const bookValueLabels = {
-    wandDamage:'탭 힘', wandRate:'누르기 속도', performance:'연출력', mentalMax:'최대 멘탈',
+    wandDamage:'두드리는 힘', wandRate:'누르기 속도', performance:'연출', mentalMax:'최대 멘탈',
     coinMultiplier:'동전 배수', spawnMs:'케이스 생성 간격 (ms)', boardCapacity:'케이스 자리',
     areaCols:'누르기 범위 가로', areaRows:'누르기 범위 세로',
     equipSlots:'소품 장착 자리', helperSpeed:'도우미 속도 배수', fanCount:'팬 수',
     colleagueCount:'동료 수', colleagueDamage:'동료 힘',
-    critRate:'대박률', critPower:'대박 힘 배수', comboMs:'연속 동작 유지 시간 (ms)',
+    critRate:'대박 확률', critPower:'대박 힘 배수', comboMs:'액트 유지 시간 (밀리초)',
     sweep:'한곳 집중 배수', miss:'헛손질 확률', goldEvery:'황금 케이스 간격 (ms)',
-    goldCoins:'황금 케이스 동전 배수', prepared:'케이스 시작 피해 비율', boxXP:'개봉 시 마술사 경험치 배수', caseGradeFraction:'좋은 케이스 확률 성장', caseCoinBoost:'은색 이상 동전 배수', caseDmgBoost:'은색 이상 피해 배수',
+    goldCoins:'황금 케이스 동전 배수', prepared:'케이스 시작 피해 비율', boxXP:'케이스 개봉 경험치 배수', caseGradeFraction:'좋은 케이스 확률 성장', caseCoinBoost:'은색 이상 동전 배수', caseDmgBoost:'은색 이상 피해 배수',
     boxShield:'개봉 자신감', boxHeal:'개봉 멘탈 회복', shieldRatio:'자신감 상한 비율',
     shieldValue:'자신감 아이템 배수', healValue:'회복 아이템 배수', winHeal:'공연 완료 회복 비율',
     levelHeal:'레벨업 회복 비율', openingShield:'공연 시작 자신감 비율', calm:'야유 피해 배수',
-    tip:'공연 완료 동전 배수', dealerCoin:'딜러 동전 배수', jackpot:'슬롯 보상 배수',
+    tip:'공연 완료 동전 배수', dealerCoin:'딜러 동전 배수', jackpot:'카드 몬테 연속 성공 보상 배수',
     gemFind:'실크 발견 확률', doveEvery:'비둘기 동작 간격 (ms)', dovePower:'비둘기 힘 배수',
     rabbitEvery:'토끼 동작 간격 (ms)', rabbitCoins:'토끼 동전', helperEvery:'팬 동작 간격 (ms)',
     colleagueEvery:'동료 동작 간격 (ms)', finalePower:'피날레 힘 배수', finaleNeed:'피날레 필요 개봉 수',
-    comboValue:'연속 동작 보상 배수', encorePower:'앙코르 추가 힘 비율', encoreSpan:'앙코르 시간 (ms)'
+    comboValue:'연속 동작 보상 배수', encorePower:'피버 추가 마술 실력 비율', encoreSpan:'피버 시간 (밀리초)'
   };
   function bookNumber(value) {
     return Number.isFinite(value) ? value.toLocaleString('ko-KR',{maximumSignificantDigits:6}) : '계산 불가';
@@ -134,6 +134,7 @@
     const node = D.tree.find(n => n.id === id), info = bookStageInfo(slot,id);
     const detail = element('div','','book-detail'); detail.id = `book-detail-${slot.slot}`;
     detail.append(element('p',node.desc,'tree-effect'));
+    if(node.skillUpgrade)detail.append(element('p',`사용할 때마다 실크 ${node.skillUpgrade.fee}개 · 실크가 부족하면 기본 스킬 사용`,'skill-upgrade-cost'));
     if (typeof bookRemaining === 'function') bookRemaining(detail,info);
     if ((node.partOf || id) === 'area') detail.append(areaRangePreview());
     detail.append(element('p',`레벨 ${C.formatNumber(info.level)} / ${C.formatNumber(info.max)}`,'tree-level'));
@@ -156,7 +157,7 @@
       return detail;
     }
     const currency = {coins:'동전',keys:'책',starlight:'비둘기',gems:'실크'}[info.currency];
-    if (info.cost === null) detail.append(element('strong','✓ MAX · 완성했어요','tree-cost'));
+    if (info.cost === null) detail.append(element('strong',node.skillUpgrade?'✓ 배움 · 사용 시 실크 '+node.skillUpgrade.fee+'개':'✓ MAX · 완성했어요','tree-cost'));
     else {
       const buy = action(`${currency} ${C.formatNumber(info.cost)} · 배우기`, () => {
         const current = bookStageInfo(slot,id); if (!current.purchasable) return;
@@ -187,7 +188,7 @@
       const go = action(practiceGoLabel(),restartAfterFailure); go.classList.add('practice-go','u26-primary'); header.insertBefore(go,$('closePanel'));
     }
     const wallet = element('div','','tree-wallet');
-    [['🪙 ','동전 ',rounded(state.coins)],['📕 ','책 ',state.keys],['🕊️ ','비둘기 ',state.starlight]].forEach(([icon,name,value],i)=>{
+    [['🪙 ','동전 ',rounded(state.coins)],['📕 ','책 ',state.keys],['🕊️ ','비둘기 ',state.starlight],['','실크 ',state.gems]].forEach(([icon,name,value],i)=>{
       if(i)wallet.append(element('span','·','wallet-sep'));
       wallet.append(element('span',icon),element('span',name,'wallet-name'),element('span',String(value)));
     });

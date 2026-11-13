@@ -92,7 +92,7 @@ GAME_DATA.tree.find(n=>n.id==='power').cost.g=2.0;
 // U13 idle progression, stat milestones and fight-time skills.
 GAME_DATA.skills = [
   {id:'showtime',name:'쇼타임',clear:'party',duration:20000,cooldown:90000,icon:'skill-showtime.png',emoji:'🎩'},
-  {id:'cardrain',name:'카드 비',clear:'cafe',duration:0,cooldown:60000,icon:'skill-cardrain.png',emoji:'🃏'},
+  {id:'cardrain',name:'카드 스프링',clear:'cafe',duration:0,cooldown:60000,icon:'skill-cardrain.png',emoji:'🃏'},
   {id:'cheer',name:'관객 호응',clear:'theater',duration:0,cooldown:75000,icon:'skill-cheer.png',emoji:'👏'}
 ];
 (function(D){

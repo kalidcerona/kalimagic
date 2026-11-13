@@ -190,7 +190,7 @@
 // Keep the legacy coordinates above until the book UI packet consumes these stable slots.
 (function (D) {
   const slots = [
-    {"slot":1,"name":"첫 주문","tab":"시작","branch":"root","ids":["root"],"bases":["root"]},
+    {"slot":1,"name":"오프닝","tab":"시작","branch":"root","ids":["root"],"bases":["root"]},
     {"slot":2,"name":"클래식 콜렉션 리마스터 1편","tab":"컬렉션","branch":"collection","ids":["p-classic-collection-remastered"],"bases":["p-classic-collection-remastered"]},
     {"slot":3,"name":"칼리 덱","tab":"컬렉션","branch":"collection","ids":["p-kali-deck"],"bases":["p-kali-deck"]},
     {"slot":4,"name":"클래식 콜렉션 리마스터 2편","tab":"컬렉션","branch":"collection","ids":["p-classic-collection-remastered-2"],"bases":["p-classic-collection-remastered-2"]},
@@ -203,10 +203,10 @@
     {"slot":11,"name":"두 에스 아이 두","tab":"컬렉션","branch":"collection","ids":["p-two-si-do"],"bases":["p-two-si-do"]},
     {"slot":12,"name":"슬라이디니 실크","tab":"컬렉션","branch":"collection","ids":["p-slydini-silks"],"bases":["p-slydini-silks"]},
     {"slot":13,"name":"트레이스2","tab":"컬렉션","branch":"collection","ids":["p-trace2"],"bases":["p-trace2"]},
-    {"slot":14,"name":"도우미 상점 오픈","tab":"도우미","branch":"pet","ids":["autoLearn"],"bases":["autoLearn"],"displayNames":{"autoLearn":"도우미 상점 오픈"}},
+    {"slot":14,"name":"도우미 상점 열기","tab":"도우미","branch":"pet","ids":["autoLearn"],"bases":["autoLearn"],"displayNames":{"autoLearn":"도우미 상점 열기"}},
     {"slot":15,"name":"손기술","tab":"표현력","branch":"hand","ids":["power"],"bases":["power"]},
     {"slot":16,"name":"빠른 손놀림","tab":"표현력","branch":"hand","ids":["speed"],"bases":["speed"]},
-    {"slot":17,"name":"넓은 지팡이","tab":"표현력","branch":"hand","ids":["area","area-2"],"bases":["area"]},
+    {"slot":17,"name":"넓은 손길","tab":"표현력","branch":"hand","ids":["area","area-2"],"bases":["area"]},
     {"slot":18,"name":"타이밍","tab":"표현력","branch":"hand","ids":["crit","critRate","critPower","precision"],"bases":["crit","critRate","critPower","precision"],"entryRules":{"critPower":{"previous":"critRate","minLevel":1}}},
     {"slot":19,"name":"루틴 연결","tab":"표현력","branch":"hand","ids":["comboHold","comboHold-2","sweepFocus"],"bases":["comboHold","sweepFocus"]},
     {"slot":20,"name":"케이스 자리","tab":"케이스","branch":"box","ids":["board","board-2","board-3"],"bases":["board"]},
@@ -229,7 +229,7 @@
     {"slot":37,"name":"마술 토끼","tab":"도우미","branch":"pet","ids":["rabbit","rabbitTempo","rabbitPurse"],"bases":["rabbit","rabbitTempo","rabbitPurse"]},
     {"slot":38,"name":"플래시 페이퍼 연출","tab":"도우미","branch":"pet","ids":["flash"],"bases":["flash"],"displayNames":{"flash":"플래시 페이퍼 연출"}},
     {"slot":39,"name":"팬의 손놀림","tab":"도우미","branch":"pet","ids":["helperTempo","fanPower"],"bases":["helperTempo","fanPower"],"visibleAfterHire":"boxHelper"},
-    {"slot":40,"name":"개막 피날레","tab":"피날레","branch":"finale","ids":["startFinale"],"bases":["startFinale"]},
+    {"slot":40,"name":"피날레 준비","tab":"피날레","branch":"finale","ids":["startFinale"],"bases":["startFinale"]},
     {"slot":41,"name":"표현력","tab":"피날레","branch":"finale","ids":["finalePower","finalePower-2","finaleNeed","finaleNeed-2"],"bases":["finalePower","finaleNeed"]},
     {"slot":42,"name":"이어지는 박수","tab":"피날레","branch":"finale","ids":["comboGift"],"bases":["comboGift"]},
     {"slot":43,"name":"커지는 박수","tab":"피날레","branch":"finale","ids":["comboValue"],"bases":["comboValue"]},
@@ -238,14 +238,14 @@
     {"slot":46,"name":"도전 수첩","tab":"피날레","branch":"finale","ids":["challenge"],"bases":["challenge"]},
     {"slot":47,"name":"비둘기 트릭","tab":"귀환 성장","branch":"star","ids":["starTrick","starTrick-2","starTrick-3"],"bases":["starTrick"]},
     {"slot":48,"name":"비둘기 망토","tab":"귀환 성장","branch":"star","ids":["starGuard","starGuard-2","starGuard-3"],"bases":["starGuard"]},
-    {"slot":49,"name":"비둘기 손놀림","tab":"귀환 성장","branch":"star","ids":["starTempo","starTempo-2","starTempo-3"],"bases":["starTempo"]},
+    {"slot":49,"name":"비둘기의 박자","tab":"귀환 성장","branch":"star","ids":["starTempo","starTempo-2","starTempo-3"],"bases":["starTempo"]},
     {"slot":50,"name":"비둘기 모자","tab":"귀환 성장","branch":"star","ids":["starBounty","starBounty-2","starBounty-3"],"bases":["starBounty"]},
     {"slot":51,"name":"케이스 한계","tab":"케이스","branch":"box","ids":["caseMax","caseMax-2","caseMax-3","caseMax-4","caseMax-5"],"bases":["caseMax"]},
     {"slot":52,"name":"숙련된 케이스","tab":"케이스","branch":"box","ids":["caseStart"],"bases":["caseStart"]},
     {"slot":53,"name":"케이스 연습","tab":"케이스","branch":"box","ids":["caseXp"],"bases":["caseXp"]},
     {"slot":54,"name":"케이스 연쇄","tab":"케이스","branch":"box","ids":["chain4"],"bases":["chain4"],"entryRules":{"chain4":{"previous":"caseXp","previousMax":true}}},
     {"slot":55,"name":"팔방 연쇄","tab":"케이스","branch":"box","ids":["chain8"],"bases":["chain8"]},
-    {"slot":56,"name":"번개의 힘","tab":"케이스","branch":"box","ids":["chainPower"],"bases":["chainPower"]},
+    {"slot":56,"name":"연쇄의 힘","tab":"케이스","branch":"box","ids":["chainPower"],"bases":["chainPower"]},
     {"slot":57,"name":"숨은 손끝","tab":"표현력","branch":"hand","ids":["hidden-hand"],"bases":["hidden-hand"]},
     {"slot":58,"name":"숨은 케이스","tab":"케이스","branch":"box","ids":["hidden-box"],"bases":["hidden-box"]},
     {"slot":59,"name":"숨은 배짱","tab":"마음가짐","branch":"heart","ids":["hidden-heart"],"bases":["hidden-heart"]},
@@ -254,14 +254,14 @@
     {"slot":62,"name":"스펀지볼","tab":"도우미","branch":"pet","ids":["sponge","spongeSpeed","spongePower"],"bases":["sponge","spongeSpeed","spongePower"],"entryRules":{"spongePower":{"previous":"spongeSpeed","minLevel":1}}},
     {"slot":63,"name":"스펀지볼 수","tab":"도우미","branch":"pet","ids":["spongeCount","spongeCount-2"],"bases":["spongeCount"]},
     {"slot":64,"name":"카드 던지기","tab":"도우미","branch":"pet","ids":["cardthrow","cardthrowSpeed","cardthrowPower"],"bases":["cardthrow","cardthrowSpeed","cardthrowPower"],"entryRules":{"cardthrowPower":{"previous":"cardthrowSpeed","minLevel":1}}},
-    {"slot":65,"name":"카드 던지기 수","tab":"도우미","branch":"pet","ids":["cardthrowCount"],"bases":["cardthrowCount"]},
+    {"slot":65,"name":"카드 추가","tab":"도우미","branch":"pet","ids":["cardthrowCount"],"bases":["cardthrowCount"]},
     {"slot":66,"name":"팁 박스","tab":"도우미","branch":"pet","ids":["tipbox","tipboxSpeed","tipboxPower","tipboxPower-2"],"bases":["tipbox","tipboxSpeed","tipboxPower"]},
     {"slot":67,"name":"플래시 페이퍼","tab":"도우미","branch":"pet","ids":["flashpaper","flashpaperChance","flashpaperChance-2","flashpaperPower","flashpaperPower-2"],"bases":["flashpaper","flashpaperChance","flashpaperPower"]},
     {"slot":68,"name":"수정구","tab":"도우미","branch":"pet","ids":["crystal","crystalSpeed","crystalPower","crystalPower-2"],"bases":["crystal","crystalSpeed","crystalPower"]},
     {"slot":69,"name":"치킨 한 조각","tab":"도우미","branch":"pet","ids":["water","waterSpeed","waterPower","waterPower-2"],"bases":["water","waterSpeed","waterPower"]},
     {"slot":70,"name":"스포트라이트","tab":"도우미","branch":"pet","ids":["spotlight"],"bases":["spotlight"]},
-    {"slot":71,"name":"스포트라이트 행 수","tab":"도우미","branch":"pet","ids":["spotlightCount"],"bases":["spotlightCount"]},
-    {"slot":72,"name":"스포트라이트 속도","tab":"도우미","branch":"pet","ids":["spotlightSpeed","spotlightPower"],"bases":["spotlightSpeed","spotlightPower"]},
+    {"slot":71,"name":"조명 한 줄 더","tab":"도우미","branch":"pet","ids":["spotlightCount"],"bases":["spotlightCount"]},
+    {"slot":72,"name":"빠른 조명 전환","tab":"도우미","branch":"pet","ids":["spotlightSpeed","spotlightPower"],"bases":["spotlightSpeed","spotlightPower"]},
     {"slot":73,"name":"야간 공연","tab":"도우미","branch":"pet","ids":["nightShow","nightShow-2","manager"],"bases":["nightShow","manager"]},
     {"slot":74,"name":"자동 연습 속도","tab":"도우미","branch":"pet","ids":["autoPractice","autoPractice-2"],"bases":["autoPractice"]},
     {"slot":75,"name":"쇼타임 준비","tab":"도우미","branch":"pet","ids":["showtimeCooldown","cardrainCooldown","cheerCooldown"],"bases":["showtimeCooldown","cardrainCooldown","cheerCooldown"]},
@@ -355,31 +355,31 @@
   }
   D.showSequence = {gapMs:8000,showMs:3000};
   const routineAbilities = [
-    {"id":"rings","nodeId":"routine-rings","name":"피날레 힘","formula":"branchBonus","key":"finale","multiplier":1.5,"silk":10,"description":"이어진 링으로 마무리 공연을 더 힘 있게 해요."},
-    {"id":"rope","nodeId":"routine-rope","name":"자신감 획득량","formula":"nodeEffects","key":"shieldValue","multiplier":1.5,"silk":10,"description":"끊어진 줄을 이으며 자신감을 더 얻어요."},
-    {"id":"thumbtie","nodeId":"routine-thumbtie","name":"탭 힘","formula":"branchBonus","key":"hand","multiplier":1.5,"silk":10,"description":"묶인 손을 풀어 지팡이를 힘 있게 써요."},
-    {"id":"cards","nodeId":"routine-cards","name":"연출력","formula":"branchBonus","key":"collection","multiplier":1.5,"silk":10,"description":"카드의 반전으로 관객의 의심을 더 줄여요."},
-    {"id":"coins","nodeId":"routine-coins","name":"얻는 동전","formula":"branchBonus","key":"luck","multiplier":1.5,"silk":10,"description":"사라진 동전이 더 넉넉한 수입으로 돌아와요."},
-    {"id":"cupsballs","nodeId":"routine-cupsballs","name":"도우미 힘","formula":"branchBonus","key":"pet","multiplier":1.5,"silk":10,"description":"공을 주고받듯 도우미와 힘을 맞춰요."},
-    {"id":"bottles","nodeId":"routine-bottles","name":"회복 아이템 효과","formula":"nodeEffects","key":"healValue","multiplier":1.5,"silk":10,"description":"늘어나는 병처럼 회복도 조금 더 받아요."},
-    {"id":"silk","nodeId":"routine-silk","name":"최대 멘탈","formula":"branchBonus","key":"heart","multiplier":1.5,"silk":10,"description":"부드러운 실크로 무대의 긴장을 다스려요."},
-    {"id":"eggbag","nodeId":"routine-eggbag","name":"대박률","formula":"nodeEffects","key":"critRate","multiplier":1.5,"silk":10,"description":"공연 중 3초 동안 대박률 ×1.5\n타이밍 비법을 배워야 효과가 있어요.","cap":1},
-    {"id":"rubberband","nodeId":"routine-rubberband","name":"연속 동작 유지 시간","formula":"nodeEffects","key":"comboMs","multiplier":1.5,"silk":10,"description":"고무줄처럼 동작 사이의 여유가 늘어요."},
-    {"id":"coloringbook","nodeId":"routine-coloringbook","name":"마술사 개봉 경험치","formula":"nodeEffects","key":"boxXP","multiplier":1.5,"silk":10,"description":"빈 책을 채우며 케이스에서 더 배워요."},
-    {"id":"cube","nodeId":"routine-cube","name":"한곳 집중 효과","formula":"nodeEffects","key":"sweep","multiplier":1.5,"silk":10,"description":"흩어진 색을 맞추듯 한곳에 힘을 모아요."},
-    {"id":"wand","nodeId":"routine-wand","name":"누르기 속도","formula":"recompute","key":"_rate","multiplier":1.5,"silk":10,"description":"지팡이를 누르고 있을 때 더 빠르게 움직여요."},
+    {"id":"rings","nodeId":"routine-rings","name":"피날레 힘","formula":"branchBonus","key":"finale","multiplier":1.5,"silk":10,"description":"3초 동안\n피날레의 힘이 1.5배가 돼요."},
+    {"id":"rope","nodeId":"routine-rope","name":"자신감 획득량","formula":"nodeEffects","key":"shieldValue","multiplier":1.5,"silk":10,"description":"3초 동안\n자신감 획득량이 1.5배가 돼요."},
+    {"id":"thumbtie","nodeId":"routine-thumbtie","name":"두드리는 힘","formula":"branchBonus","key":"hand","multiplier":1.5,"silk":10,"description":"3초 동안 케이스를\n두드리는 힘이 1.5배가 돼요."},
+    {"id":"cards","nodeId":"routine-cards","name":"연출","formula":"branchBonus","key":"collection","multiplier":1.5,"silk":10,"description":"3초 동안\n연출이 1.5배가 돼요."},
+    {"id":"coins","nodeId":"routine-coins","name":"얻는 동전","formula":"branchBonus","key":"luck","multiplier":1.5,"silk":10,"description":"3초 동안\n얻는 동전이 1.5배가 돼요."},
+    {"id":"cupsballs","nodeId":"routine-cupsballs","name":"도우미 힘","formula":"branchBonus","key":"pet","multiplier":1.5,"silk":10,"description":"3초 동안\n도우미의 힘이 1.5배가 돼요."},
+    {"id":"bottles","nodeId":"routine-bottles","name":"회복 아이템 효과","formula":"nodeEffects","key":"healValue","multiplier":1.5,"silk":10,"description":"3초 동안 회복 아이템의\n효과가 1.5배가 돼요."},
+    {"id":"silk","nodeId":"routine-silk","name":"최대 멘탈","formula":"branchBonus","key":"heart","multiplier":1.5,"silk":10,"description":"3초 동안\n최대 멘탈이 1.5배가 돼요."},
+    {"id":"eggbag","nodeId":"routine-eggbag","name":"대박 확률","formula":"nodeEffects","key":"critRate","multiplier":1.5,"silk":10,"description":"3초간 대박 확률 ×1.5\n타이밍 비법으로 확률 강화","cap":1},
+    {"id":"rubberband","nodeId":"routine-rubberband","name":"액트 유지 시간","formula":"nodeEffects","key":"comboMs","multiplier":1.5,"silk":10,"description":"3초 동안\n액트 유지 시간이 1.5배가 돼요."},
+    {"id":"coloringbook","nodeId":"routine-coloringbook","name":"케이스 개봉 경험치","formula":"nodeEffects","key":"boxXP","multiplier":1.5,"silk":10,"description":"3초 동안 케이스 개봉\n마술사 경험치 ×1.5"},
+    {"id":"cube","nodeId":"routine-cube","name":"한곳 집중 효과","formula":"nodeEffects","key":"sweep","multiplier":1.5,"silk":10,"description":"3초 동안\n「한곳 집중」 배수가 1.5배가 돼요."},
+    {"id":"wand","nodeId":"routine-wand","name":"누르기 속도","formula":"recompute","key":"_rate","multiplier":1.5,"silk":10,"description":"3초 동안 꾹 누를 때\n두드리는 속도 ×1.5"},
   ];
   for (const ability of routineAbilities) {
     const node = D.tree.find(n => n.id === ability.nodeId);
     const item = D.gemShop.find(n => n.id === ability.nodeId);
-    node.desc = `${ability.description}\n공연 중 3초 동안 ${ability.name} ×${ability.multiplier}`;
-    item.desc = `공연 중 3초 동안 ${ability.name} ×${ability.multiplier}`;
+    node.desc = ability.description;
+    item.desc = ability.description;
   }
   const nameChanges = [
     {kind:'node',id:'shieldCap',from:'넉넉한 실크',to:'담력'},
     {kind:'node',id:'goldCoins',from:'금빛 사례',to:'황금의 축복'},
     {kind:'node',id:'flash',from:'불꽃 종이',to:'플래시 페이퍼 연출'},
-    {kind:'node',id:'autoLearn',from:'자동 배우기',to:'도우미 상점 오픈'},
+    {kind:'node',id:'autoLearn',from:'자동 배우기',to:'도우미 상점 열기'},
     {kind:'skill',id:'cheer',from:'비둘기',to:'관객 호응'},
     {kind:'skill',id:'showtime',from:'마술 모자',to:'쇼타임'}
   ];
@@ -460,7 +460,7 @@
       deferredValidatorChange:null
     }
   };
-  D.tree.find(n => n.id === 'autoLearn').desc = '책 2권으로 도우미 상점을 열어요\n어시스턴트 무료 합류';
+  D.tree.find(n => n.id === 'autoLearn').desc = '책 2권으로 도우미 상점을 열어요.\n마술 어시스턴트가 무료로 합류해요.';
   // Keep existing identifiers and save keys for hiring and sales.
   for (const id of hireKeys) D.tree.find(n => n.id === id).shopOnly = true;
   Object.assign(D.padPrices, {personal:30, lecturenote:60, kali:20});

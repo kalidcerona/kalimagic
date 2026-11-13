@@ -17,7 +17,7 @@
   // v4 U38: every finite coin/key node is at its last level (star nodes are a separate track, pending nodes cannot be learned yet).
   function allLearned(state) {
     return DATA.tree.every(function (n) {
-      return n.id === "autoLearn" || n.starKey || n.shopOnly || n.pending || nodeLevel(state, n) >= n.max || (baseNode(n).id === "board" && boardCapacity(state) >= CONST.boardMax);
+      return n.id === "autoLearn" || n.starKey || n.shopOnly || n.pending || n.skillUpgrade || nodeLevel(state, n) >= n.max || (baseNode(n).id === "board" && boardCapacity(state) >= CONST.boardMax);
     });
   }
   function branchMaxed(state, node) { return (node.branchMax || []).every(function(id) { return fullyLearned(state, id); }); }
@@ -44,6 +44,7 @@
     if(cost!==null)cost=Math.ceil(cost*gearMultiplier(state,"price"));
     var revealed = id === "root" || (node.reveal === "E" ? state.endings.length > 0 : level > 0 || node.prereqs.some(function (pre) { return nodeLevel(state, NODE_BY_ID[pre]) > 0; }));
     if (node.u13 && (bid==='autoPractice' || /Cooldown$/.test(bid))) revealed = level>0 || (bid==='autoPractice' ? practiceUnlocked(state) : skillUnlocked(state,bid.replace('Cooldown','')));
+    if (node.skillUpgrade) revealed = true;
     if (node.hidden) revealed = level > 0 || branchMaxed(state,node);
     // v4 U44: a 칼리 product is discovered by reaching its venue (no chain of earlier products is needed); its prereqs only draw the book lines.
     // v4 U45: every 칼리 컬렉션 node (branch collection: the nine wall products, 칼리 덱 and 틴 케이스) follows that rule.
@@ -60,6 +61,8 @@
     if (node.shopOnly) reason = "실크 상점에서 살 수 있어요";
     else if (level >= node.max) reason = "최대 레벨";
     else if (!returnRun && node.reveal === "E" && !state.endings.length) reason = "첫 멀티버스 공연 완료";
+    else if (node.skillUpgrade && !returnRun && !reached(state,node.venueSlug)) reason = VENUES[venueNumber(node.venueSlug)-1].name + ' 도착 필요';
+    else if (node.skillUpgrade && !skillUnlocked(state,node.skillUpgrade.base)) reason = DATA.skills.find(function(k){return k.id===node.skillUpgrade.base;}).name + ' 해금 필요';
     else if (!order.allowed) reason = order.reason;
     else if (!revealed) reason = "아직 발견하지 못한 비법";
     else if (!returnRun && progress && !progress.met) reason = progress.text;
@@ -70,7 +73,7 @@
     else if (!returnRun && bid === "area" && !reached(state,CONST.areaVenueNeeds[total])) reason = VENUES[venueNumber(CONST.areaVenueNeeds[total])-1].name + " 도착 필요";
     else if (bid === "area" && boardCapacity(state) < CONST.areaNeeds[total]) reason = "케이스 자리 " + CONST.areaNeeds[total] + "칸 필요";
     else if (bid === "board" && boardCapacity(state) >= CONST.boardMax) reason = "케이스 자리 25칸 완성";
-    else if (state[node.currency] < cost) reason = ({ coins: "동전", keys: "책", starlight: "비둘기" })[node.currency] + " 부족";
+    else if (state[node.currency] < cost) reason = ({ coins: "동전", keys: "책", starlight: "비둘기", gems: "실크" })[node.currency] + " 부족";
     return { level: level, max: node.max, total: total, totalMax: treeMax(bid), gate:progress, currency: node.currency, cost: cost, stageOpen:order.allowed, bookHidden: bookHidden, displayable: revealed && !bookHidden, revealed: revealed, purchasable: !reason, blockedReason: reason };
   }
 

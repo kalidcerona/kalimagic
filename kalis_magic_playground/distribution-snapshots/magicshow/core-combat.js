@@ -390,7 +390,8 @@
     var visible=counted&&((visibility ? visibility.count : 0)+1)%vr.every===0, dmg=heckleStrength(state);
     if(visible&&!gatePressure(state))dmg=Math.max(dmg,state.mentalMax*vr.hit*(profile(state)==='future'?1:heckleRatioScale(state)));
     if(isFinalBoss(state)&&!lastHeckleArmed(state))dmg*=CONST.finalBossHeckleScale;
-    return {dmg:dmg,visible:visible,counted:counted,block:Math.min(Math.max(0,state.shield||0),dmg*(visible?vr.absorb:1))};
+    var block=Math.min(Math.max(0,state.shield||0),dmg*(visible?vr.absorb:1));
+    return {dmg:dmg,visible:visible,counted:counted,block:block,mentalLoss:heckleMentalLoss(state,dmg,block)};
   }
   // v4 U38: threat numbers the player can compare with their own. Everything is per second so 야유, 회복 and 내 공격 share one unit.
   // hit = one heckle, every = seconds between heckles, perSecond = hit / every, regen = doubt the audience wins back per second
@@ -441,13 +442,13 @@
       if (big) state.review.lastHeckle = 2;
       var shieldDmg = next.block;
       state.shield -= shieldDmg;
-      var mentalDmg = dmg - shieldDmg;
+      var mentalDmg = next.mentalLoss;
       if (mentalDmg > 0) {
         state.mental -= mentalDmg;
         state.tookMental = true;
       }
       var taken = state.pattern === "stealCoins" ? takeFightCoins(state) : 0;
-      emit(ev, { type: "heckle", dmg: dmg, shieldDmg: shieldDmg, coinsTaken: taken });
+      emit(ev, { type: "heckle", dmg: dmg, shieldDmg: shieldDmg, mentalDmg: mentalDmg, coinsTaken: taken });
       if (state.mental <= 0) {
         state.mental = 0;
         failRun(state, ev, big ? "lastHeckle" : undefined);

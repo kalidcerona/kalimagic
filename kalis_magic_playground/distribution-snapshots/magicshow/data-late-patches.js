@@ -4,11 +4,11 @@ GAME_DATA.lineFaces={"roles":{"a1":{"role":"family","name":"여동생","venue":"
   const role=D.lineFaces.roles[a.id];if(role)a.role=role.role;
   const lines=D.lineFaces.lines[a.id];if(lines){a.heckles=lines.heckles.slice();a.winLine=lines.winLine;if(a.encounterLine&& !a.heckles.includes(a.encounterLine))a.heckles.push(a.encounterLine);}
  }));
- D.glove={id:'auto-glove',name:'칼리 덱 (자동 연습)',icon:'item-kali-deck.png',emoji:'🃏',duration:120000,desc:'누르면 120초 동안 모든 케이스를 자동으로 꾹 눌러요\n손을 떼도 연습해요. 가진 개수가 보여요'};
+ D.glove={id:'auto-glove',name:'칼리 덱 (자동 연습)',icon:'item-kali-deck.png',emoji:'🃏',duration:120000,desc:'쓰면 120초 동안 모든 케이스를 자동으로 꾹 눌러요.\n손을 떼어도 연습이 이어져요.'};
  const shop=D.gemShop.find(x=>x.id==='glove');shop.name='칼리 덱 (자동 연습)';shop.desc='120초 동안 모든 케이스를 자동으로 꾹 눌러요';
  // v4 U44: the key node deckMaster is gone. v4 U48 A: learning p-kali-deck (a product, reached at venue 2) unlocks the 칼리 덱 consumable
  // (sold here, dropped by cases). A2: the brick (a box of 12 decks) starts 30 minutes of auto practice at once.
- D.gemShop.splice(1,0,{id:'brick',name:'칼리 덱 한 브릭',desc:'덱 12개 한 묶음\n사면 바로 30분 자동 연습',cost:20});
+ D.gemShop.splice(1,0,{id:'brick',name:'칼리 덱 한 브릭',desc:'덱 12개 한 묶음, 사면 바로 30분 자동 연습',cost:20});
 })(GAME_DATA);
 
 // U25: pace tuning with fair, readable gate fights.
@@ -277,3 +277,62 @@ for(const item of GAME_DATA.gemShop){const node=GAME_DATA.tree.find(n=>n.id===it
 GAME_DATA.silkRewards={caseDrop:8,monteCorrect:3,firstClear:10,achievement:2};
 
 // v5 script patch (2026-10-24): values that could not be replaced in place
+
+// Release 24 N1a: approved display copy, keyed by stable IDs; gameplay fields stay untouched.
+(function (D) {
+  const names = {
+    "routine-wand": "완드 마술",
+    "area-2": "넓은 손길 2",
+    "shieldCap-2": "담력 2",
+    "finaleNeed-2": "빠른 피날레 2",
+    "starTempo-2": "비둘기의 박자 2",
+    "starTempo-3": "비둘기의 박자 3",
+    "tipboxPower-2": "넉넉한 팁 2",
+    "flashpaperChance-2": "페이퍼 발견 2",
+    "flashpaperPower-2": "페이퍼의 힘 2",
+    "crystalPower-2": "수정구의 힘 2",
+    "waterPower-2": "든든한 간식 2"
+  };
+  const descriptions = {
+    "area-2": "여러 케이스를 함께 두드리는 범위가 넓어져요.\n전체 6-8레벨에 해당하는 다음 단계예요.",
+    "comboHold-2": "액트를 이어 갈 수 있는 여유가 레벨마다\n0.25초씩 늘어요. 전체 4레벨에 해당하는 다음 단계예요.",
+    "board-2": "케이스를 놓을 자리가 레벨마다 1칸씩 늘어요.\n전체 11레벨에 해당하는 다음 단계예요.",
+    "board-3": "케이스를 놓을 자리가 레벨마다 1칸씩 늘어요.\n전체 12레벨에 해당하는 다음 단계예요.",
+    "prepared-2": "새 케이스가 미리 열린 비율이 레벨마다 5%포인트씩\n늘어요. 전체 2레벨에 해당하는 다음 단계예요.",
+    "boxShield-2": "케이스 개봉 시 기본 자신감 획득량이 레벨마다\n0.02씩 늘고, 멘탈 계열의 강화 효과이 적용돼요. 전체 2레벨에 해당하는 다음 단계예요.",
+    "boxHeal-2": "케이스 개봉 시 기본 멘탈 회복량이 레벨마다\n0.05씩 늘고, 멘탈 계열의 강화 효과이 적용돼요. 전체 2레벨에 해당하는 다음 단계예요.",
+    "mental-2": "최대 멘탈이 레벨마다 1.18배가 돼요.\n전체 11-15레벨에 해당하는 다음 단계예요.",
+    "shieldCap-2": "모아 둘 수 있는 자신감의 한도가 레벨마다 최대\n멘탈의 3%만큼 늘어요. 전체 4레벨에 해당하는 다음 단계예요.",
+    "shieldValue-2": "실크 소품으로 얻는 자신감이\n레벨마다 5%씩 늘어요.\n전체 4레벨에 해당하는 다음 단계예요.",
+    "healValue-2": "회복 아이템의 멘탈 회복량이\n레벨마다 5%씩 늘어요.\n전체 4레벨에 해당하는 다음 단계예요.",
+    "forceRemove-2": "카드 몬테 첫 판에서 여왕 카드를 레벨마다\n0.6초씩 더 보여 주고, 처음 카드를 섞을 때 조금 천천히 섞어요. 전체 2레벨에 해당하는 다음 단계예요.",
+    "tip-2": "관객이 만족하면 동전을 더 얻어요\n받는 동전이 레벨마다 5%씩 늘어요.\n전체 4레벨에 해당하는 다음 단계예요.",
+    "slotPlus-2": "소품을 장착할 자리가 레벨마다 1칸씩 늘어 최대\n9칸이 돼요. 전체 6레벨에 해당하는 다음 단계예요.",
+    "lessonBias-2": "케이스를 열 때 얻는 마술사 경험치가 레벨마다\n10%씩 늘어 최대 20%까지 늘어요. 전체 2레벨에 해당하는 다음 단계예요.",
+    "finalePower-2": "피날레의 힘이 레벨마다 8%씩 늘며, 기본 피해는\n표시된 연출의 2.75배예요. 전체 4레벨에 해당하는 다음 단계예요.",
+    "finaleNeed-2": "피날레에 필요한 개봉 수가 기본 20개에서 레벨마다\n1개씩 줄어 최소 18개가 돼요. 전체 2레벨에 해당하는 다음 단계예요.",
+    "encorePower-2": "피버 타임에 더해지는 마술 실력이 레벨마다 5%씩\n늘어요. 전체 2레벨에 해당하는 다음 단계예요.",
+    "encoreSpan-2": "피버 타임이 레벨마다 3초씩 길어져요.\n전체 2레벨에 해당하는 다음 단계예요.",
+    "starTrick-2": "레벨마다 마술 실력은 1.14배, 연출은 2.4배가\n돼요. 전체 11-20레벨에 해당하는 다음 단계예요.",
+    "starTrick-3": "레벨마다 마술 실력은 1.14배, 연출은 2.4배가\n돼요. 전체 21-30레벨에 해당하는 다음 단계예요.",
+    "starGuard-2": "레벨마다 멘탈·자신감·회복이 1.18배가 돼요.\n전체 11-20레벨에 해당하는 다음 단계예요.",
+    "starGuard-3": "레벨마다 멘탈·자신감·회복이 1.18배가 돼요.\n전체 21-30레벨에 해당하는 다음 단계예요.",
+    "starTempo-2": "레벨마다 케이스를 두드리는 속도는 1.06배가 되고\n새 케이스 준비 시간은 8%씩 짧아져요. 전체 11-20레벨에 해당하는 다음 단계예요.",
+    "starTempo-3": "레벨마다 케이스를 두드리는 속도는 1.06배가 되고\n새 케이스 준비 시간은 8%씩 짧아져요. 전체 21-30레벨에 해당하는 다음 단계예요.",
+    "starBounty-2": "얻는 동전이 레벨마다 1.12배가 돼요.\n전체 11-20레벨에 해당하는 다음 단계예요.",
+    "starBounty-3": "얻는 동전이 레벨마다 1.12배가 돼요.\n전체 21-30레벨에 해당하는 다음 단계예요.",
+    "spongeCount-2": "스펀지볼이 레벨마다 1개씩 늘어 최대 3개가 돼요.\n전체 2레벨에 해당하는 다음 단계예요.",
+    "tipboxPower-2": "팁 박스로 얻는 동전이 레벨마다 25%씩 늘어요.\n전체 4레벨에 해당하는 다음 단계예요.",
+    "flashpaperChance-2": "케이스 개봉 시 플래시 페이퍼가 나올 확률이\n레벨마다 1%포인트씩 올라 최대 7%가 돼요. 전체 4레벨에 해당하는 다음 단계예요.",
+    "flashpaperPower-2": "플래시 페이퍼로 케이스를 두드리는 힘이 레벨마다\n20%씩 늘어요. 전체 4레벨에 해당하는 다음 단계예요.",
+    "crystalPower-2": "수정구로 얻는 자신감이\n레벨마다 20%씩 늘어요.\n전체 4레벨에 해당하는 다음 단계예요.",
+    "waterPower-2": "치킨의 멘탈 회복량이\n레벨마다 20%씩 늘어요.\n전체 4레벨에 해당하는 다음 단계예요.",
+    "nightShow-2": "자리 비움 보상 시간이 기본 8시간에서 레벨마다\n1시간씩 늘어요. 전체 4레벨에 해당하는 다음 단계예요.",
+    "autoPractice-2": "자동으로 두드리는 속도가 직접 누를 때의 기본\n40%에서 레벨마다 10%포인트씩 올라요. 전체 4레벨에 해당하는 다음 단계예요.",
+    "colleagueTempo-2": "동료가 마술을 보여 주는 간격이 레벨마다 0.5초씩\n짧아져요. 전체 4레벨에 해당하는 다음 단계예요."
+  };
+  for (const node of D.tree) {
+    if (names[node.id]) node.name = names[node.id];
+    if (descriptions[node.id]) node.desc = descriptions[node.id];
+  }
+})(GAME_DATA);

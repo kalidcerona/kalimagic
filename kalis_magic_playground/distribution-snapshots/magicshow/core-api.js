@@ -12,7 +12,7 @@
     holdWinTransition:holdWinTransition, resumeTutorial:resumeTutorial, replayTutorial:replayTutorial, toggleAutoLearn:toggleAutoLearn, toggleHaptics:toggleHaptics, markAway:markAway, setAwayTotal:setAwayTotal,
     setDailyDate:setDailyDate, dailySelection:dailySelection, claimMission:claimMission, takeDailyClaimFeedback:takeDailyClaimFeedback, dateOrdinal:dateOrdinal, venueSetProgress:venueSetProgress, catchVisitor:catchVisitor, visitorBlocked:visitorBlocked,
     offlineGain:offlineGain, collectOffline:collectOffline, doubleOffline:doubleOffline, idleRates:idleRates,
-    practiceRate:practiceRate, practiceUnlocked:practiceUnlocked, useSkill:useSkill, skillUnlocked:skillUnlocked, skillCooldown:skillCooldown,
+    practiceRate:practiceRate, practiceUnlocked:practiceUnlocked, useSkill:useSkill, skillInfo:skillInfo, skillUnlocked:skillUnlocked, skillCooldown:skillCooldown,
     milestoneMultiplier:milestoneMultiplier, statMultiplier:statMultiplier, nextMilestone:nextMilestone, formatNumber:formatNumber,
     hasReward: hasReward, helperSpeed: helperSpeed, tapPaper: tapPaper, skipCurtainCall: skipCurtainCall,
     venueNumber:venueNumber, reached:reached, bossProfile:profile, recap:recap, stayHome:stayHome, continueStory:continueStory,

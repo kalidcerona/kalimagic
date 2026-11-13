@@ -385,7 +385,7 @@
     // #skillRow, then the dock, in one row (portrait.css s4c block stacks 비법 over 연습 모드 and 도감 over 메뉴).
     $('activeSkills').append(dock);
     dressPortraitButtons();
-    // s5f (owner option 4): 칼리 덱 is the fourth action tile of the row (after 카드 비, 마술 모자, 비둘기), not a 메뉴 sheet item.
+    // s5f (owner option 4): 칼리 덱 is the fourth action tile of the row (after 카드 스프링, 마술 모자, 비둘기), not a 메뉴 sheet item.
     const glove = $('item-auto-glove');
     if (glove) {
       if (!chromeHomes.has(glove)) chromeHomes.set(glove, { parent: $('activeSkills'), next: null });
