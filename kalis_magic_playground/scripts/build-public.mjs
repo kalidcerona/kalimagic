@@ -640,7 +640,7 @@ export function shouldCopyMagicshow(relativePath, runtime = magicshowRuntime) {
 // This game is a frozen web build; no generated or private files may leak in.
 export function shouldCopyPlanbcafe(relativePath) {
   const file = relativePath.split(path.sep).join('/');
-  return ['', 'icons', 'index.html', 'game.js', 'love.js', 'love.wasm', 'game.data',
+  return ['', 'icons', 'index.html', 'save_sync.js', 'game.js', 'love.js', 'love.wasm', 'game.data',
     'sw.js', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png',
     'icons/maskable-512.png'].includes(file);
 }

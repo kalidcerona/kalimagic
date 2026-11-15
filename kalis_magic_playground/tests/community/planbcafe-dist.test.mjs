@@ -11,7 +11,7 @@ import { isValidTool } from '../../netlify/functions/admin-tools.mjs';
 const root = new URL('../../', import.meta.url);
 const snapshot = new URL('distribution-snapshots/planbcafe/', root);
 const files = ['game.data', 'game.js', 'icons/icon-192.png', 'icons/icon-512.png',
-  'icons/maskable-512.png', 'index.html', 'love.js', 'love.wasm', 'manifest.webmanifest', 'sw.js'].sort();
+  'icons/maskable-512.png', 'index.html', 'save_sync.js', 'love.js', 'love.wasm', 'manifest.webmanifest', 'sw.js'].sort();
 const repositoryFiles = [...files, '.gitattributes'].sort();
 async function filesUnder(directory, prefix = '') {
   const result = [];
