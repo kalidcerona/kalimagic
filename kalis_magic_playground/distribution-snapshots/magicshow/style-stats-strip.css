@@ -289,3 +289,7 @@ html body.phone:not(.tablet):not(.portrait-layout) #viewport#viewport #stage#sta
 
 /* Move the contents down 1px without changing the 68px band or its row sizes. */
 html body.phone:not(.tablet):not(.portrait-layout) #viewport#viewport #stage#stage#stage#stage#stage#stage #audienceCard #stageStats > :is(.ms-strip,#phoneFightStats) { position:relative; top:1px; }
+
+/* One queued heckle label, above the mental row and outside the clipped stats strip. */
+.bar-chip.heckle-chip { color:#ff9ba3; background:#201722; padding:1px 4px; font-size:11px; line-height:14px; transform:translateY(-100%); animation:heckle-chip 900ms ease-out both; }
+@keyframes heckle-chip { 0%,65% { opacity:1; } 100% { opacity:0; } }

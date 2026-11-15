@@ -34,9 +34,17 @@
       var current = typeof o.v === 'number' && isFinite(o.v) && o.v >= 25;
       if (current && !validSupplyBag(o)) return null;
       var potion = current ? o.potionCount : 0, refill = current ? o.refillCount : 0;
+      // Additive guidance entry: old v25 saves omit it; v15-v24 validation stays frozen.
+      var seen = current && o.guidance && o.guidance.seen, heckleSeen = false;
+      if (Array.isArray(seen) && seen.indexOf('heckle') >= 0) {
+        if (seen.filter(function (id) { return id === 'heckle'; }).length !== 1) return null;
+        heckleSeen = true;
+        o.guidance.seen = seen.filter(function (id) { return id !== 'heckle'; });
+      }
       if (current) o.v = 24;
       var state = deserializeLegacy24(JSON.stringify(o));
       if (state) { state.potionCount = potion; state.refillCount = refill; }
+      if (state && heckleSeen) state.guidance.seen = seen.slice();
       return state;
     } catch (error) { return null; }
   }

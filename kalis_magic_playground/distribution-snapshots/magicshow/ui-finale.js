@@ -260,12 +260,14 @@
     const chip = element('span', text, 'bar-chip ' + kind); chip.setAttribute('aria-hidden', 'true');
     if (!hurt && kind !== 'block') {
       const r = anchor.getBoundingClientRect(), c = card.getBoundingClientRect(), sc = scale || 1;
-      const above = kind === 'block';
+      const above = kind === 'block' || kind === 'heckle-chip';
       chip.style.left = ((above ? r.left : r.right) - c.left) / sc + 'px';
-      chip.style.top = ((above ? r.top : r.top + r.height * .55) - c.top) / sc + 'px';
+      const top = kind === 'heckle-chip' ? Math.min(r.top, $('stageStats').getBoundingClientRect().top) - 2 * sc : above ? r.top : r.top + r.height * .55;
+      chip.style.top = (top - c.top) / sc + 'px';
     }
     host.append(chip);
     setTimeout(() => chip.remove(), ms);
+    return chip;
   }
   function trailMeter(id, ms) {
     const el = $(id); if (!el || reduced) return;

@@ -159,11 +159,20 @@
         moodSprite($('audience'),stageAudienceAsset(v,a),audHeckleMood);
       } else if (e.type === 'heckle') {
         const big = heckleLandsBig(e), mentalLoss = typeof e.mentalDmg === 'number' ? e.mentalDmg : Math.max(0,e.dmg-e.shieldDmg);
-        toast(`야유 · 자신감 ${C.formatNumber(e.shieldDmg)} 흡수 · ${C.formatNumber(mentalLoss)==='0'?'멘탈 피해 없음':'멘탈 −'+C.formatNumber(mentalLoss)}`);
+        const first = !state.guidance.seen.includes('heckle');
+        if (first) { state.guidance.seen.push('heckle'); save(); }
+        const longNotice = first || big || list.some(event => event.type === 'fail');
+        if (longNotice) toast(`야유 · 자신감 ${C.formatNumber(e.shieldDmg)} 흡수 · ${C.formatNumber(mentalLoss)==='0'?'멘탈 피해 없음':'멘탈 −'+C.formatNumber(mentalLoss)}`);
         if (big && !list.some(event => event.type === 'fail')) haptic(40);
-        if (e.shieldDmg > 0 && typeof popChip === 'function') { popChip($('statShield'), '−' + C.formatNumber(e.shieldDmg), 'block', 200); trailMeter('statShield', 400); }
+        if (big && e.shieldDmg > 0 && typeof popChip === 'function') { popChip($('statShield'), '−' + C.formatNumber(e.shieldDmg), 'block', 200); trailMeter('statShield', 400); }
+        const shortReaction = () => popChip($('statMental'), '야유 −' + C.formatNumber(mentalLoss), 'heckle-chip', 900);
+        // A long notice already owns the queue slot; keep other notices' timing unchanged.
+        if (longNotice) shortReaction();
+        else presentation.push({minimum:900, start:item=>{
+          const chip = shortReaction();
+          item.end = () => { if (chip) chip.remove(); };
+        }});
         if (mentalLoss > 0 && typeof popChip === 'function') {
-          popChip($('statMental'), '-' + C.formatNumber(mentalLoss), 'hurt', 450);
           trailMeter('statMental', 450); if (big) { shakeMental(); kaliFlinch(); }
         }
         if (e.coinsTaken > 0) {
