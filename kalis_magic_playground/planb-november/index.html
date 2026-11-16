@@ -255,7 +255,7 @@
   </div>
   <ul class="price-notes">
     <li>절약 금액은 같은 기간 단독권 두 장 가격과 비교한 금액이에요.</li>
-    <li>통합권과 슬리빙 단독권은 신청이 마감됐어요. 버스킹 단독권은 신청할 수 있어요.</li>
+    <li>통합권은 신청이 마감됐어요. 슬리빙 단독권은 추가 모집 중이에요.</li>
   </ul>
   <div style="margin-top:28px; display:flex; flex-wrap:wrap; align-items:center; gap:10px 16px"><a href="https://smore.im/form/52BkxmIm19" target="_blank" rel="noopener" class="btn btn-amber" data-cta>통합권 신청하기</a></div>
 </section>
@@ -386,7 +386,7 @@
     s.fullCombo = s.comboEnded ? "판매 종료" : "14만원";
     if (SOLD_OUT && s.phase !== "done") {
       s.phase = "soldout"; s.was = "NO PLAN SEASON. 3"; s.price = "통합권 마감"; s.stamp = ""; s.small = true;
-      s.deadline = "통합권과 슬리빙 단독권은 신청이 마감됐어요"; s.sticky = "통합권 마감"; s.finalCta = "통합권 마감";
+      s.deadline = "통합권은 신청이 마감됐어요. 슬리빙 단독권은 추가 모집 중이에요"; s.sticky = "통합권 마감"; s.finalCta = "통합권 마감";
       s.chips = { super: "마감", early: "마감", full: "마감" }; s.active = ""; s.comboEnded = true; s.fullCombo = "판매 종료";
       if (t > EARLY_END && t <= BUSKING_DAY) {
         s.phase = "busking-only"; s.sticky = "버스킹 9만원 · 11/15(일)"; s.finalCta = "버스킹 신청하기";
