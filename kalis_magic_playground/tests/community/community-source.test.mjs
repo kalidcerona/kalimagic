@@ -42,9 +42,9 @@ test('admin inbox can write answers and render question YouTube embeds', () => {
 
 test('post detail exposes viewer answer permission in every readable response', () => {
   const detail = source('netlify/functions/post-detail.mjs');
-  assert.match(detail, /function canViewerAnswer\(viewer\)/);
-  assert.match(detail, /viewerCanAnswer:\s*canViewerAnswer\(viewer\)/);
-  assert.equal((detail.match(/viewerCanAnswer:\s*canViewerAnswer\(viewer\)/g) || []).length, 2);
+  assert.match(detail, /canAnswerQuestion/);
+  // Both readable response shapes expose the shared policy result.
+  assert.equal((detail.match(/viewerCanAnswer\s*(?=[,}])/g) || []).length, 2);
 });
 
 test('post detail joins and returns answer author roles', () => {
@@ -59,8 +59,9 @@ test('playground detail can write answers only when post detail allows it', () =
   assert.match(detail, /function answerForm\(post\)/);
   assert.match(detail, /답변 작성/);
   assert.match(detail, /\/\.netlify\/functions\/answers/);
-  assert.match(detail, /questionPostId:\s*currentPost\.id/);
+  assert.match(detail, /const postId = currentPost\.id/);
+  assert.match(detail, /questionPostId:\s*postId/);
   assert.match(detail, /visibility:\s*formData\.get\('visibility'\)/);
   assert.match(detail, /youtubeUrl:\s*formData\.get\('youtubeUrl'\)/);
-  assert.match(detail, /await loadPost\(currentPostId\)/);
+  assert.match(detail, /await loadPost\(postId\)/);
 });

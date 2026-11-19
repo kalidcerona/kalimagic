@@ -195,6 +195,7 @@
   }
 
   function initPlaygroundDetail({ api, root }) {
+    let loadGeneration = 0;
     let currentPost = null;
     let currentPostId = null;
     let currentViewerId = null;
@@ -211,25 +212,34 @@
     }
 
     function clear() {
+      loadGeneration += 1;
+      currentViewerId = null;
       currentPost = null;
       currentPostId = null;
       root.innerHTML = '<p class="pg-detail-placeholder">글을 선택하면 상세 내용이 열립니다.</p>';
     }
 
     async function loadPost(postId) {
-      currentPostId = postId;
+      const generation = ++loadGeneration;
+      currentPost = null;
+      currentPostId = null;
+      currentViewerId = null;
       root.innerHTML = '<p class="pg-loading">글을 불러오는 중입니다.</p>';
       try {
         const data = await api.getPostDetail(postId);
+        if (generation !== loadGeneration) return;
         const session = window.MagicAuth && window.MagicAuth.getSession
           ? await window.MagicAuth.getSession()
           : null;
+        if (generation !== loadGeneration) return;
         data.viewerCanComment = Boolean(session);
         data.viewerUserId = session?.user?.id || null;
         currentPost = data.post;
+        currentPostId = data.post.id;
         currentViewerId = data.viewerUserId;
         root.innerHTML = detailHtml(data);
       } catch (error) {
+        if (generation !== loadGeneration) return;
         console.error('Failed to load playground post detail:', error);
         root.innerHTML = `
           <div class="pg-empty pg-error">
@@ -299,9 +309,11 @@
 
       const likeButton = event.target.closest('[data-like-post]');
       if (likeButton && currentPost) {
+        const generation = loadGeneration;
         const status = root.querySelector('[data-detail-status]');
         try {
           const result = await api.togglePostLike(likeButton.dataset.likePost);
+          if (generation !== loadGeneration) return;
           currentPost.likeCount = result.likeCount;
           currentPost.viewerLiked = result.viewerLiked;
           likeButton.classList.toggle('is-active', result.viewerLiked);
@@ -374,9 +386,12 @@
       if (deleteButton && currentPost) {
         const ok = window.confirm('이 글을 삭제할까요?');
         if (!ok) return;
+        const generation = loadGeneration;
         const status = root.querySelector('[data-detail-status]');
         try {
           await api.deletePost(deleteButton.dataset.deletePost);
+          if (generation !== loadGeneration) return;
+          clear();
           root.innerHTML = '<p class="pg-detail-status">글이 삭제되었습니다.</p>';
           document.dispatchEvent(new CustomEvent('playground:post-deleted'));
         } catch (error) {
@@ -398,6 +413,8 @@
       const answer = event.target.closest('[data-answer-form]');
       if (answer && currentPost) {
         event.preventDefault();
+        const generation = loadGeneration;
+        const postId = currentPost.id;
         const status = answer.querySelector('[data-answer-status]');
         const formData = new FormData(answer);
         status.textContent = '답변을 등록하는 중입니다.';
@@ -405,13 +422,13 @@
           await api.fetchJson('/.netlify/functions/answers', {
             method: 'POST',
             body: JSON.stringify({
-              questionPostId: currentPost.id,
+              questionPostId: postId,
               body: formData.get('body'),
               visibility: formData.get('visibility'),
               youtubeUrl: formData.get('youtubeUrl')
             })
           });
-          await loadPost(currentPostId);
+          if (generation === loadGeneration) await loadPost(postId);
         } catch (error) {
           status.textContent = error.message || '답변을 등록하지 못했어요.';
         }
@@ -421,6 +438,8 @@
       const comment = event.target.closest('[data-comment-form]');
       if (comment && currentPostId) {
         event.preventDefault();
+        const generation = loadGeneration;
+        const postId = currentPostId;
         const status = comment.querySelector('[data-comment-status]');
         const formData = new FormData(comment);
         const parentCommentId = comment.dataset.parentCommentId || null;
@@ -429,13 +448,13 @@
           await api.fetchJson('/.netlify/functions/comments', {
             method: 'POST',
             body: JSON.stringify({
-              postId: currentPostId,
+              postId,
               parentCommentId,
               body: formData.get('body'),
               displayMode: formData.get('displayMode')
             })
           });
-          await loadPost(currentPostId);
+          if (generation === loadGeneration) await loadPost(postId);
         } catch (error) {
           status.textContent = error.message || '댓글을 올리지 못했어요.';
         }

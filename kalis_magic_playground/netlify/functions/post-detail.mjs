@@ -1,4 +1,4 @@
-import { canReadAnswer, canReadAuthor, canReadPostBody } from './_lib/access-policy.mjs';
+import { canAnswerQuestion, canReadAnswer, canReadAuthor, canReadPostBody } from './_lib/access-policy.mjs';
 import { requireViewer } from './_lib/auth.mjs';
 import { fetchBadgeMap, resolvePostAuthorBadges } from './_lib/badges.mjs';
 import { json } from './_lib/http.mjs';
@@ -11,10 +11,6 @@ async function optionalViewer(event) {
   } catch {
     return null;
   }
-}
-
-function canViewerAnswer(viewer) {
-  return ['admin', 'kali'].includes(viewer?.role);
 }
 
 function canSeeHiddenPost(viewer) {
@@ -173,6 +169,8 @@ export async function handler(event) {
   }
 
   const question = { visibility: row.visibility, authorUserId: row.author_user_id };
+  const viewerCanAnswer = row.post_type === 'question' && row.status === 'visible'
+    && canAnswerQuestion(question, viewer);
 
   if (!canReadBody) {
     let badgeMap = {};
@@ -182,7 +180,7 @@ export async function handler(event) {
       return json(500, { error: 'db_error' });
     }
     const post = shapePost(row, viewer, { ...state, badgeMap });
-    return json(200, { post, answers: [], comments: [], viewerCanAnswer: canViewerAnswer(viewer) });
+    return json(200, { post, answers: [], comments: [], viewerCanAnswer });
   }
 
   const { data: answers, error: answersError } = await supabase
@@ -224,6 +222,6 @@ export async function handler(event) {
     post,
     answers: answers.map((answer) => shapeAnswer(question, answer, viewer, badgeMap, helpfulState)).filter(Boolean),
     comments: comments.map((comment) => shapeComment(comment, viewer, badgeMap)),
-    viewerCanAnswer: canViewerAnswer(viewer)
+    viewerCanAnswer
   });
 }

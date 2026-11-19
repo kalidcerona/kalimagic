@@ -189,7 +189,7 @@ def main():
         check(hero_fade is not None and "kx-in" in hero_fade.group(1).split(),
               f"[첫 화면] {f} 데스크톱 hero kx-fade에 kx-in 없음")
         mobile_first = re.search(
-            r'<div class="kx-mobile">\s*<div class="kx-shell">(?:\s|<!--.*?-->)*(<div\b[^>]*>)',
+            r'<(?:div|main) class="kx-mobile">\s*<(?:div|main) class="kx-shell">(?:\s|<!--.*?-->)*(<div\b[^>]*>)',
             raw,
             re.S,
         )
