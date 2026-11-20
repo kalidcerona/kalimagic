@@ -1,0 +1,29 @@
+* { box-sizing: border-box; }
+body { margin: 0; background: #e5e2dc; color: #272320; font: 1rem/1.5 system-ui, sans-serif; }
+#stage {
+  position: fixed; inset: 0; width: 100%; height: 100%; border: 0; padding: 0;
+  display: grid; place-items: center; touch-action: none; user-select: none;
+  -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent;
+  background: url("./marble.svg") center / cover, #e5e2dc;
+}
+.base, .dome { display: block; border-radius: 50%; }
+.base {
+  width: 72vmin; aspect-ratio: 1; position: relative;
+  background: radial-gradient(circle at 45% 40%, #4e4946 50%, #121112 65%, #68605b 68%, #232122 70%, #0c0b0b 72%);
+  box-shadow: 0 1.7vmin 2.5vmin #382b265c, 0 .4vmin .5vmin #27222291;
+}
+.dome {
+  position: absolute; inset: 4% 4% 6%;
+  background: radial-gradient(ellipse at 32% 18%, #fff7e7 0%, #fff2e3c9 2%, #fff2e300 10%),
+    radial-gradient(ellipse at 71% 30%, #ffd8c794 0%, transparent 13%),
+    radial-gradient(circle at 38% 28%, #ff7061, #e72826 34%, #be0c14 53%, #82030c 72%, #45030b 86%, #982027 94%);
+  box-shadow: inset 0 .6vmin .8vmin #ffb19c85, inset 0 -1vmin 1vmin #49040b99;
+}
+.dome.pressed { transform: translateY(.75%) scale(.98); filter: brightness(1.12); }
+dialog { width: min(22rem, 90vw); max-height: 84dvh; overflow: auto; border: none; border-radius: 16px; padding: 1.4rem; }
+dialog::backdrop { background: #20191866; }
+h1 { margin: 0 0 1rem; font-size: 1.3rem; }
+dialog p { font-size: .92rem; }
+dialog button, select { font: inherit; min-height: 44px; }
+dialog button { padding-inline: .85rem; }
+form { margin-top: 1rem; text-align: right; }

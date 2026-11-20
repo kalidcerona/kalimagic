@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 // pointed at a friend snapshot through an environment variable. This file runs those tests against every friend
 // snapshot that has one, each in its own child process (one at a time, so a loaded machine does not make the
 // real-module flows flaky), and requires exit code 0. The child's output is printed when one fails.
-// Friend snapshots without a boundary test yet: magicshow. gwayubulgeup has its own test file (no personal app).
+// Friend snapshots without a boundary test yet: magicshow. Bell and gwayubulgeup have dedicated shared-only tests.
 const FRIEND_BUILDS = [
   ['tobira', 'tobira-module-boundaries.test.mjs', 'TOBIRA_ROOT', 'tobira'],
   ['aletheia', 'aletheia-module-boundaries.test.mjs', 'ALETHEIA_ROOT', 'aletheia'],

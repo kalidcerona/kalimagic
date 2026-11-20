@@ -16,7 +16,7 @@ const COOKIE_MAX_AGE = 7_776_000;
 const RENEWAL_WINDOW_SECONDS = 3_888_000;
 const DEFAULT_TOOL = 'calc';
 const PRODUCT_SLUGS = { calc: 'hitsuzen', unlock: 'release', 'stopwatch-uni': 'kairos', stopwatch: 'kairos-classic', spinner: 'tyche', arosaegida: 'arosaegida' };
-const STRICT_DISTRIBUTION_TOOLS = new Set(['aletheia', 'usotsuki', 'tobira', 'spinner', 'arosaegida', 'pimax', 'choice', 'magicshow', 'gwayubulgeup', 'memdeck']);
+const STRICT_DISTRIBUTION_TOOLS = new Set(['aletheia', 'usotsuki', 'tobira', 'spinner', 'arosaegida', 'pimax', 'choice', 'magicshow', 'gwayubulgeup', 'memdeck', 'bell']);
 
 function analyzePath(rawPathname) {
   if (typeof rawPathname !== 'string') {
@@ -54,6 +54,14 @@ function analyzePath(rawPathname) {
   // 권한 회수 확인용 엔드포인트는 스스로 쿠키를 검증하므로 게이트를 통과시킨다.
   if (pathname === '/tools/_check') {
     return { mode: 'public', pathname };
+  }
+
+  if (pathname === '/tools/bell' || pathname.startsWith('/tools/bell/')) {
+    const publicFiles = ['manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
+    if (publicFiles.some((file) => pathname === `/tools/bell/${file}`)) {
+      return { mode: 'public', pathname };
+    }
+    return { mode: 'gated', tool: 'bell', pathname };
   }
 
   if (pathname === '/tools/memdeck' || pathname.startsWith('/tools/memdeck/')) {
@@ -193,6 +201,7 @@ function safeReturnPath(pathname, search, fallback) {
     pathname.startsWith('/tools/choice/') ||
     pathname.startsWith('/tools/magicshow/') ||
     pathname.startsWith('/tools/gwayubulgeup/') ||
+    pathname.startsWith('/tools/bell/') ||
     pathname.startsWith('/tools/memdeck/') ||
     pathname.startsWith('/tools/tobira/') ||
     pathname.startsWith('/tools/spinner/') ||
@@ -290,7 +299,8 @@ export default async function toolsGate(request, context) {
   );
   if (gate.valid && (gate.tool === tool ||
       (!FRIEND_APP_TOOLS.has(tool) && gate.tool === 'all'))) {
-    if (STRICT_DISTRIBUTION_TOOLS.has(tool) && !(await hasActiveDistributionGrant(request, tool))) {
+    if (STRICT_DISTRIBUTION_TOOLS.has(tool) &&
+        (!FRIEND_APP_TOOLS.has(tool) || !(await hasActiveDistributionGrant(request, tool)))) {
       return loginRedirect(request, tool, path.pathname);
     }
     const response = await context.next();

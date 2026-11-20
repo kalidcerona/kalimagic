@@ -40,6 +40,7 @@ const appRoots = discoverAppRoots();
 const EXPECTED_APP_ROOTS = [
   'KanameCue',
   'distribution-snapshots/aletheia',
+  'distribution-snapshots/bell',
   'distribution-snapshots/choice',
   'distribution-snapshots/gwayubulgeup',
   'distribution-snapshots/kairos',

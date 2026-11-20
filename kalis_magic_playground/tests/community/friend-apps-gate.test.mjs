@@ -231,6 +231,13 @@ test('one Google account can request each friend app and receive only approved a
   assert.equal((await requestFriendApp(supabase, viewer, identity, 'usotsuki', 'secret')).statusCode, 403);
   assert.equal((await requestFriendApp(supabase, viewer, identity, 'arosaegida', 'secret')).statusCode, 403);
   assert.deepEqual(rows.map((row) => row.tool), ['unlock', 'stopwatch-uni', 'aletheia', 'usotsuki', 'arosaegida']);
+  assert.equal((await requestFriendApp(supabase, viewer, identity, 'bell', 'secret')).statusCode, 403);
+  const bellRow = rows.find(row => row.tool === 'bell');
+  assert.equal(bellRow.status, 'pending');
+  bellRow.status = 'approved';
+  const bell = await requestFriendApp(supabase, viewer, identity, 'bell', 'secret');
+  assert.equal(bell.statusCode, 200);
+  assert.match(bell.headers['Set-Cookie'], /^kali_bell_gate=/);
   rows[0].status = 'approved';
   const unlock = await requestFriendApp(supabase, viewer, identity, 'unlock', 'secret');
   assert.equal(unlock.statusCode, 200);
@@ -269,39 +276,43 @@ test('admin approval and revocation target only the selected app table', async (
   assert.deepEqual(tables, ['friend_app_access']);
 });
 
-test('admin cannot approve or delete a different friend app by reusing its row id', async () => {
-  const id = '00000000-0000-4000-8000-000000000002';
-  const row = { id, tool: 'aletheia', status: 'pending' };
-  const supabase = { from(table) {
-    assert.equal(table, 'friend_app_access');
-    const filters = [];
-    let operation;
-    let patch;
-    return {
-      update(value) { operation = 'update'; patch = value; return this; },
-      delete() { operation = 'delete'; return this; },
-      eq(key, value) { filters.push([key, value]); return this; },
-      async select() {
-        const matches = filters.every(([key, value]) => row[key] === value);
-        if (!matches) return { data: [], error: null };
-        if (operation === 'update') Object.assign(row, patch);
-        if (operation === 'delete') row.deleted = true;
-        return { data: [{ id }], error: null };
-      }
-    };
-  } };
-  const viewer = { userId: 'admin-1' };
-  const wrongApproval = await postToolAccess({ body: JSON.stringify({ action: 'approve', id, tool: 'usotsuki' }) }, viewer, supabase);
-  assert.equal(wrongApproval.statusCode, 404);
-  assert.equal(row.status, 'pending');
-  assert.equal(row.tool, 'aletheia');
-  const wrongDeletion = await deleteToolAccess({ queryStringParameters: { id, tool: 'usotsuki' } }, supabase);
-  assert.equal(wrongDeletion.statusCode, 404);
-  assert.equal(row.deleted, undefined);
-  const approval = await postToolAccess({ body: JSON.stringify({ action: 'approve', id, tool: 'aletheia' }) }, viewer, supabase);
-  assert.equal(approval.statusCode, 200);
-  assert.equal(row.status, 'approved');
-});
+for (const tool of ['aletheia', 'bell']) {
+  test(tool + ' admin operations target only the selected row and tool', async () => {
+    const id = '00000000-0000-4000-8000-000000000002';
+    const row = { id, tool, status: 'pending' };
+    const supabase = { from(table) {
+      assert.equal(table, 'friend_app_access');
+      const filters = [];
+      let operation;
+      let patch;
+      return {
+        update(value) { operation = 'update'; patch = value; return this; },
+        delete() { operation = 'delete'; return this; },
+        eq(key, value) { filters.push([key, value]); return this; },
+        async select() {
+          const matches = filters.every(([key, value]) => row[key] === value);
+          if (!matches) return { data: [], error: null };
+          if (operation === 'update') Object.assign(row, patch);
+          if (operation === 'delete') row.deleted = true;
+          return { data: [{ id }], error: null };
+        }
+      };
+    } };
+    const viewer = { userId: 'admin-1' };
+    const wrongApproval = await postToolAccess({ body: JSON.stringify({ action: 'approve', id, tool: 'usotsuki' }) }, viewer, supabase);
+    assert.equal(wrongApproval.statusCode, 404);
+    assert.equal(row.status, 'pending');
+    assert.equal(row.tool, tool);
+    const wrongDeletion = await deleteToolAccess({ queryStringParameters: { id, tool: 'usotsuki' } }, supabase);
+    assert.equal(wrongDeletion.statusCode, 404);
+    assert.equal(row.deleted, undefined);
+    const approval = await postToolAccess({ body: JSON.stringify({ action: 'approve', id, tool }) }, viewer, supabase);
+    assert.equal(approval.statusCode, 200);
+    assert.equal(row.status, 'approved');
+    assert.equal((await deleteToolAccess({ queryStringParameters: { id, tool } }, supabase)).statusCode, 200);
+    assert.equal(row.deleted, true);
+  });
+}
 
 test('admin direct email grants are stored per app', async () => {
   const tables = [];
@@ -369,7 +380,7 @@ test('AROSAegida migration retains all seven friend tools and the existing RLS p
   const values = [...sql.matchAll(/'([^']+)'/g)].map(match => match[1]);
   assert.equal(values.length, 7);
   // This historical migration predates the Pi Max, Choice and Magicshow deployments.
-  assert.deepEqual(values, [...FRIEND_APP_TOOLS].filter(tool => !['pimax', 'choice', 'magicshow', 'gwayubulgeup', 'memdeck'].includes(tool)));
+  assert.deepEqual(values, [...FRIEND_APP_TOOLS].filter(tool => !['pimax', 'choice', 'magicshow', 'gwayubulgeup', 'memdeck', 'bell'].includes(tool)));
   assert.match(sql, /drop constraint if exists friend_app_access_tool_check/);
   assert.match(sql, /add constraint friend_app_access_tool_check/);
   assert.doesNotMatch(sql, /row level security|create policy|drop policy/i);

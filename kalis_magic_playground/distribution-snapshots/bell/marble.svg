@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 900" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="stone" x2=".6" y2="1"><stop stop-color="#f6f5f1"/><stop offset="1" stop-color="#d8d6cf"/></linearGradient>
+    <filter id="veins" x="-25%" y="-25%" width="150%" height="150%">
+      <feTurbulence type="fractalNoise" baseFrequency=".009 .017" numOctaves="4" seed="17" result="grain"/>
+      <feDisplacementMap in="SourceGraphic" in2="grain" scale="86" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </defs>
+  <rect width="900" height="900" fill="url(#stone)"/>
+  <g fill="none" stroke="#918e87" opacity=".33" filter="url(#veins)">
+    <path d="M-100 380 Q110 320 255 175 T620 -80 M200 210 Q260 180 295 -30 M280 980 Q450 690 630 625 T990 280" stroke-width="2.5"/>
+    <path d="M-100 390 Q105 330 255 175 M470 720 Q540 610 550 515 T704 310 M740 970 Q815 790 980 710" stroke-width="1.2"/>
+  </g>
+</svg>

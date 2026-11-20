@@ -18,6 +18,7 @@
     Object.freeze({ id: 'pimax', name: 'PI MAX 연습실', path: '/tools/pimax/', legacy: false }),
     Object.freeze({ id: 'choice', name: '너의 선택은?', path: '/tools/choice/', legacy: false }),
     Object.freeze({ id: 'magicshow', name: '칼리 마술 성장기 (베타)', path: '/tools/magicshow/', legacy: false }),
+    Object.freeze({ id: 'bell', name: '벨', path: '/tools/bell/', legacy: false }),
     Object.freeze({ id: 'gwayubulgeup', name: '과유불급', path: '/tools/gwayubulgeup/', legacy: false }),
     Object.freeze({ id: 'memdeck', name: '멤덱 연습실', path: '/tools/memdeck/', legacy: false })
   ]);
@@ -34,6 +35,7 @@
     pimax: 'PI MAX 연습실',
     choice: '너의 선택은?',
     magicshow: '칼리 마술 성장기 (베타)',
+    bell: '벨',
     gwayubulgeup: '과유불급',
     memdeck: '멤덱 연습실',
     all: '히츠젠(HITSUZEN) + 카이로스(KAIROS)'

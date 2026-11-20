@@ -54,7 +54,7 @@ test('all distribution destinations are named in the login prompt', async () => 
     ['/tools/aletheia/', 'ALETHEIA'], ['/tools/usotsuki/', 'USOTSUKI'],
     ['/tools/tobira/', 'TOBIRA'], ['/tools/tyche/', 'TYCHE'], ['/tools/arosaegida/', '아로새기다'],
     ['/tools/magicshow/', '칼리 마술 성장기 \\(베타\\)'], ['/tools/pimax/', 'PI MAX 연습실'], ['/tools/choice/', '너의 선택은\\?'],
-    ['/tools/gwayubulgeup/', '과유불급'], ['/tools/memdeck/', '멤덱 연습실']
+    ['/tools/gwayubulgeup/', '과유불급'], ['/tools/memdeck/', '멤덱 연습실'], ['/tools/bell/', '벨']
   ]) {
     const ui = setup(path, null, { getSession: async () => null });
     await ui.flush();
@@ -121,21 +121,23 @@ test('failed account change remains recoverable', async () => {
 });
 
 
-test('AROSAegida requests friend approval and returns to its own safe path after approval', async () => {
-  const path = '/tools/arosaegida/?from=invite';
-  const pending = setup(path, { ok: false, status: 403, json: async () => ({ status: 'pending' }) });
-  await pending.flush();
-  assert.match(pending.text(), /아로새기다.*신청이 접수/);
-  assert.doesNotMatch(pending.text(), /구매가 확인/);
-  assert.equal(JSON.parse(pending.calls[0][1].body).tool, 'arosaegida');
-  const approved = setup(path, { ok: true });
-  await approved.flush();
-  assert.equal(approved.location.replacedWith, path);
-  const context = vm.createContext({});
-  vm.runInContext(gateSource, context);
-  for (const bad of ['/tools/arosaegida/../admin.html', '/tools/arosaegida/%2e%2e/admin.html', '//evil.test/tools/arosaegida/', '/tools/arosaegida//evil.test']) {
-    assert.equal(context.ToolGateUtil.safeTo(bad), '/tools/hitsuzen/');
-  }
-  assert.equal(context.ToolGateUtil.toolFromPath(path), 'arosaegida');
-  assert.equal(context.ToolGateUtil.selfTest().failed, 0);
-});
+for (const [tool, label] of [['arosaegida', '아로새기다'], ['bell', '벨']]) {
+  test(tool + ' requests friend approval and returns to its own safe path after approval', async () => {
+    const path = `/tools/${tool}/?from=invite`;
+    const pending = setup(path, { ok: false, status: 403, json: async () => ({ status: 'pending' }) });
+    await pending.flush();
+    assert.match(pending.text(), new RegExp(label + '.*신청이 접수'));
+    assert.doesNotMatch(pending.text(), /구매가 확인/);
+    assert.equal(JSON.parse(pending.calls[0][1].body).tool, tool);
+    const approved = setup(path, { ok: true });
+    await approved.flush();
+    assert.equal(approved.location.replacedWith, path);
+    const context = vm.createContext({});
+    vm.runInContext(gateSource, context);
+    for (const bad of [`/tools/${tool}/../admin.html`, `/tools/${tool}/%2e%2e/admin.html`, `//evil.test/tools/${tool}/`, `/tools/${tool}//evil.test`]) {
+      assert.equal(context.ToolGateUtil.safeTo(bad), '/tools/hitsuzen/');
+    }
+    assert.equal(context.ToolGateUtil.toolFromPath(path), tool);
+    assert.equal(context.ToolGateUtil.selfTest().failed, 0);
+  });
+}
