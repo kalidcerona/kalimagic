@@ -1,5 +1,5 @@
 import { presets } from './presets.mjs';
-import { readSound, saveSound, readBackground, readCardBack } from './storage.mjs';
+import { readSound, saveSound, readBackground, readItem } from './storage.mjs';
 import { supported } from './vibration.mjs';
 
 export function setupSettings(play) {
@@ -12,7 +12,8 @@ export function setupSettings(play) {
   standalone.addEventListener?.('change', updateGuide);
   for (const [name, read] of [
     ['background', readBackground],
-    ['cardBack', readCardBack],
+    ['firstItem', () => readItem('firstItem')],
+    ['secondItem', () => readItem('secondItem')],
   ]) {
     const field = dialog.querySelector('#' + name);
     field.value = read();

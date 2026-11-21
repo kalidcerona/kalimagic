@@ -21,3 +21,11 @@ export function readBackground(getStore = () => localStorage) {
 export function readCardBack(getStore = () => localStorage) {
   return choice('friend-bell.cardBack.v1', 'red', 'blue', getStore);
 }
+
+export function readItem(slot, getStore = () => localStorage) {
+  const fallback = slot === 'firstItem' ? readCardBack(getStore) : 'none';
+  try {
+    const value = getStore().getItem('friend-bell.' + slot + '.v1');
+    return ['blue', 'red', 'kennedy', 'walking', 'barber'].includes(value) ? value : fallback;
+  } catch { return fallback; }
+}

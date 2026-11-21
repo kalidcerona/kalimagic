@@ -37,9 +37,28 @@ body:has(#stage:not([data-phase])) { visibility: hidden; background: transparent
   border-radius: 0 0 65% 30%;
   background: linear-gradient(to bottom, #b2a899, #796f62);
 }
-#stage[data-card-back="red"] .folded-card { --card-photo: url("./card-rider-red.jpg"); }
+#stage[data-item="red"] .folded-card { --card-photo: url("./card-rider-red.jpg"); }
 #stage:is([data-phase="open"], [data-phase="empty"]) .folded-card {
   visibility: visible;
 }
 #stage[data-phase="open"] .folded-card.dragging { transition: none; }
-#stage[data-phase="empty"] .folded-card { transition: transform 160ms ease-out; transform: translate(110vw, var(--drag-y, 0px)) scale(var(--zoom, 1)); }
+#stage[data-phase="empty"] .folded-card { transition: transform 210ms ease-out; transform: translate(110vw, var(--drag-y, 0px)) scale(var(--zoom, 1)); }
+
+#stage[data-item="kennedy"] .folded-card { --card-photo: url("./coin-kennedy.jpg"); }
+#stage[data-item="walking"] .folded-card { --card-photo: url("./coin-walking.jpg"); }
+#stage[data-item="barber"] .folded-card { --card-photo: url("./coin-barber.jpg"); }
+#stage:is([data-item="kennedy"], [data-item="walking"], [data-item="barber"]) .folded-card {
+  width: 30.6%; height: 30.6%; left: 34.7%; top: 34.7%;
+  background-size: cover; background-position: center; border-radius: 50%;
+  box-shadow: 0 3px 4px #080709aa;
+}
+#stage:is([data-item="kennedy"], [data-item="walking"], [data-item="barber"]) .folded-card::before {
+  background: linear-gradient(125deg, transparent 25%, #fff2 43%, transparent 65%);
+}
+#stage:is([data-item="kennedy"], [data-item="walking"], [data-item="barber"]) .folded-card::after { display: none; }
+#stage[data-phase="closing"] .dome { animation: settle-lid .5s both; }
+@keyframes settle-lid {
+  from { translate: 0 -28%; scale: 1.07; opacity: 0; }
+  78% { translate: 0 1%; scale: .99; opacity: 1; }
+  to { translate: 0; scale: 1; }
+}

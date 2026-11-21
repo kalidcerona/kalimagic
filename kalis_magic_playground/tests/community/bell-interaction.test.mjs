@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import { presets, preset } from '../../distribution-snapshots/bell/presets.mjs';
-import { readSound, saveSound } from '../../distribution-snapshots/bell/storage.mjs';
+import { readSound, saveSound, readItem } from '../../distribution-snapshots/bell/storage.mjs';
 import { createScene } from '../../distribution-snapshots/bell/dome.mjs';
 import { createGesture } from '../../distribution-snapshots/bell/gestures.mjs';
 import { createSynth } from '../../distribution-snapshots/bell/audio.mjs';
@@ -108,7 +108,7 @@ test('card sources are identical and runtime assets stay local', () => {
     assert.deepEqual(readFileSync(new URL(name, root)), readFileSync(new URL('../tobira/' + name, root)));
   }
   const links = text => text.match(/https:\/\/[^\s]+/g);
-  assert.deepEqual(links(read('CARD_CREDITS.md')), links(read('../tobira/CARD_CREDITS.md')));
+  assert.deepEqual(links(read('CARD_CREDITS.md').split('## 하프 달러')[0]), links(read('../tobira/CARD_CREDITS.md')));
   for (const file of readdirSync(root).filter(file => !/\.(jpg|png)$/.test(file) && file !== 'CARD_CREDITS.md')) {
     assert.doesNotMatch(read(file).replace('http://www.w3.org/2000/svg', ''), /(?:https?:)?\/\/[\w-]+\./);
   }
@@ -189,10 +189,10 @@ test('a visible return retries a late wake rejection once', async t => {
   assert.equal(requests.length, 2);
 });
 
-function rehearsal(cancelPending) {
+function rehearsal(cancelPending, hasSecond, afterExit) {
   let time = 0;
   const frames = [];
-  const g = createGesture({ cancelPending, now: () => time, draw: (state, frame) => frames.push(frame),
+  const g = createGesture({ cancelPending, hasSecond, afterExit, now: () => time, draw: (state, frame) => frames.push(frame),
     hit(x, y) {
       const r = Math.hypot(x, y);
       return { secret: y >= 450, dome: r <= 100, rim: r >= 45 && r <= 100,
@@ -285,8 +285,9 @@ test('a resting finger elsewhere permits repeated dome taps without arming', () 
 test('signed rim rotation crosses the angle seam in both directions', () => {
   for (const sign of [-1,1]) {
     const {g,arm,arc} = rehearsal(); arm();
-    arc(119 * sign, 170 * sign); assert.equal(g.phase(), 'stuck');
-    arc(120 * sign, 170 * sign); assert.equal(g.phase(), 'open');
+    arc(100 * sign, 170 * sign); assert.equal(g.phase(), 'stuck');
+    arc(-60 * sign); arc(94 * sign); assert.equal(g.phase(), 'stuck');
+    arc(60 * sign, 170 * sign); assert.equal(g.phase(), 'open');
   }
 });
 
@@ -306,14 +307,14 @@ test('chords, central crossings, inner starts and retraced arcs stay stuck', () 
 });
 
 test('card commits on directional release or beyond the right edge, resets explicitly', () => {
-  const {g,arm,arc} = rehearsal(); arm(); arc(120);
+  const {g,arm,arc} = rehearsal(); arm(); arc(180);
   for (const [dx,dy,cancel] of [[-90,0,false],[59,0,false],[60,40,false],[120,0,true]]) {
     g.down(1,0,0); g.move(1,dx,dy); g.up(1,dx,dy,cancel); assert.equal(g.phase(),'open');
   }
   g.down(1,30,0); g.up(1,130,0); assert.equal(g.phase(),'open');
   g.down(1,0,0); g.up(1,60,39); assert.equal(g.phase(),'empty');
   assert.equal(g.activate(),undefined); g.resetPerformance(); assert.equal(g.activate(),'ring');
-  arm(); arc(-120); g.down(1,0,0); g.move(1,260,0); assert.equal(g.phase(),'empty');
+  arm(); arc(-180); g.down(1,0,0); g.move(1,260,0); assert.equal(g.phase(),'empty');
 });
 
 test('settings wins in each committed phase and interrupts drop held input', () => {
@@ -327,7 +328,7 @@ test('settings wins in each committed phase and interrupts drop held input', () 
   settings(); hold(); tap(2,0,0); g.reset(); assert.equal(g.up(1,0,490),undefined);
   assert.equal(g.phase(),'normal');
   hold(); tap(2,0,0); g.up(1,0,490); settings(); g.activate(); settings();
-  arc(120); settings(); g.down(1,0,0); g.up(1,100,0); settings();
+  arc(180); settings(); g.down(1,0,0); g.up(1,100,0); settings();
   g.resetPerformance(); arm();
 });
 
@@ -338,20 +339,20 @@ test('the stage is concealed until startup preferences are applied and input is 
   assert.match(app, /appearance\(\);\s*gesture\.resetPerformance\(\);/);
 });
 
-test('rotation feedback begins at fifteen degrees and interruption snaps back', () => {
+test('rotation feedback waits for measurable curvature and interruption retains progress', () => {
   const {g,frames,arm} = rehearsal(); arm();
   g.down(1,80,0);
-  for (const angle of [14,15.001]) {
+  for (const angle of [5,10,15,30,60]) {
     const radians = angle * Math.PI / 180;
     g.move(1,80*Math.cos(radians),80*Math.sin(radians));
-    assert.equal(Boolean(frames.at(-1).angle), angle > 14);
+    assert.equal(Boolean(frames.at(-1).angle), angle === 60);
   }
-  g.reset(); assert.equal(g.phase(),'stuck'); assert.equal(frames.at(-1),undefined);
+  g.reset(); assert.equal(g.phase(),'stuck'); assert.ok(Math.abs(frames.at(-1).angle - 60) < 1e-6);
   assert.equal(g.up(1,-80,0),undefined);
 });
 
 test('a pinch stays zoom even after both fingers travel down together', () => {
-  const {g,arm,arc} = rehearsal(); arm(); arc(120);
+  const {g,arm,arc} = rehearsal(); arm(); arc(180);
   g.down(1,-10,0); g.down(2,10,0);
   g.move(1,-25,0); g.move(2,25,0);
   g.move(1,-10,100,true); g.move(2,10,100,true);
@@ -396,4 +397,148 @@ test('secret band spans the bottom 152 pixels above the safe inset', t => {
   assert.equal(hit(50, 734).secret, true);
   assert.equal(hit(50, 734).dome, true);
   assert.equal(phaseAfterHold(50, 734), 'normal');
+});
+
+test('item settings migrate red and retain independent selections', () => {
+  const values = new Map();
+  const store = () => ({ getItem: key => values.get(key) });
+  assert.equal(readItem('firstItem', store), 'blue');
+  assert.equal(readItem('secondItem', store), 'none');
+  values.set('friend-bell.cardBack.v1', 'red');
+  assert.equal(readItem('firstItem', store), 'red');
+  for (const item of ['kennedy', 'barber', 'walking', 'blue', 'red']) {
+    values.set('friend-bell.firstItem.v1', item);
+    values.set('friend-bell.secondItem.v1', item);
+    assert.equal(readItem('firstItem', store), item);
+    assert.equal(readItem('secondItem', store), item);
+  }
+});
+
+test('each coin photo has a local asset, source, author and license', () => {
+  for (const [key, author, license] of [
+    ['kennedy', 'United States Mint', '퍼블릭 도메인'],
+    ['walking', 'Brandon Grossardt', 'CC BY-SA 3.0'],
+    ['barber', 'Patrick20242023', 'CC BY-SA 4.0'],
+  ]) {
+    const file = 'coin-' + key + '.jpg';
+    const credit = read('CARD_CREDITS.md').split('\n').find(line => line.includes(file));
+    assert.ok(readFileSync(new URL(file, root)).length > 0);
+    assert.ok(credit.includes('https://commons.wikimedia.org/wiki/File:'));
+    for (const field of [author, license]) {
+      assert.ok(credit.includes(field));
+      assert.ok(read('index.html').includes(field));
+    }
+  }
+});
+
+test('second lid closes on lift, reopens separately and stays empty after extraction', async () => {
+  const {g, arm, arc, frames} = rehearsal(undefined, () => true);
+  arm(); arc(60); arc(-80);
+  assert.equal(frames.at(-1).angle, 0);
+  arc(180);
+  g.down(1,0,0); g.move(1,260,0);
+  assert.equal(g.phase(), 'empty');
+  g.up(1,260,0);
+  assert.equal(g.phase(), 'closing');
+  assert.equal(frames.at(-1).angle, 0);
+  await new Promise(resolve => setTimeout(resolve, 510));
+  assert.equal(g.activate(), 'stuck');
+  arc(-90); arc(-90);
+  assert.equal(g.phase(), 'open');
+  assert.equal(frames.at(-1).second, true);
+  g.down(1,0,0); g.up(1,100,0);
+  assert.equal(g.phase(), 'empty');
+  g.resetPerformance();
+  assert.deepEqual(frames.at(-1), {angle: 0, second: false});
+});
+
+test('repeated straight chords in every orientation earn zero rotation', () => {
+  const {g, arm, frames} = rehearsal();
+  arm();
+  for (const a of [0, Math.PI / 4, Math.PI / 2]) {
+    for (const y of [0, 50, 70]) {
+      const point = x => [x*Math.cos(a)-y*Math.sin(a), x*Math.sin(a)+y*Math.cos(a)];
+      for (let pass = 0; pass < 4; pass++) {
+        g.down(1, ...point(-65));
+        for (let x = -60; x <= 65; x += 5) g.move(1, ...point(x));
+        g.up(1, ...point(65));
+        assert.equal(frames.at(-1).angle, 0);
+        assert.equal(g.phase(), 'stuck');
+      }
+    }
+  }
+});
+
+test('short extraction waits for exit and settings contacts survive lid closure', async () => {
+  let finish;
+  const {g, arm, arc, frames} = rehearsal(undefined, () => true, done => { finish = done; });
+  arm(); arc(180);
+  g.down(1,0,0); g.up(1,65,0);
+  assert.equal(g.phase(), 'empty');
+  assert.equal(frames.at(-1).second, false);
+  finish();
+  assert.equal(g.phase(), 'closing');
+  g.down(1,100,80); g.down(2,210,80);
+  g.move(1,100,130,true); g.move(2,210,130,true);
+  await new Promise(resolve => setTimeout(resolve, 510));
+  assert.equal(g.phase(), 'stuck');
+  g.move(1,100,200,true);
+  assert.equal(g.move(2,210,200), 'settings');
+});
+
+function traceGesture(g, points) {
+  g.down(1, ...points[0]);
+  for (const point of points.slice(1)) g.move(1, ...point);
+  g.up(1, ...points.at(-1));
+}
+
+test('verifier chords stay at zero over five passes with rounding and seeded pixel noise', () => {
+  const { g, arm, frames } = rehearsal();
+  arm();
+  let seed = 42;
+  const noise = () => ((seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 2 ** 32) * 2 - 1;
+  for (const [x, y, ex, ey] of [[110,350,280,350],[85,419,305,419],[265,337,265,501],
+    [126,503,126,334],[105,402,202,307],[188,306,285,401],[99,374,267,335],[115,340,104,491]]) {
+    for (const rounded of [false,true]) for (const jitter of [0,1,2]) {
+      for (let pass = 0; pass < 5; pass++) {
+        const points = Array.from({length:15}, (_, i) => [
+          (x - 195 + (ex-x)*i/14)*.82, (y - 419 + (ey-y)*i/14)*.82,
+        ].map(v => rounded ? Math.round(v + noise()*jitter) : v + noise()*jitter));
+        traceGesture(g, points);
+        assert.equal(frames.at(-1).angle, 0);
+        assert.equal(g.phase(), 'stuck');
+      }
+    }
+  }
+});
+
+test('wobbly rim drags open in two near-quarter turns in either direction', () => {
+  for (const sign of [-1,1]) {
+    for (const [degreesPair, radiusPhase] of [[[54,62], .37], [[87,94], .37], [[90,90], .37], [[90,90], 1.11]]) {
+      const {g, arm} = rehearsal();
+      arm();
+      for (const [i, degrees] of degreesPair.entries()) {
+        const steps = Math.ceil(degrees/4.5);
+        const points = Array.from({length:steps+1}, (_, j) => {
+          const f = j/steps, seed = i + radiusPhase;
+          const a = (sign*([172,-45][i]+degrees*f)+1.7*Math.sin(4*Math.PI*f))*Math.PI/180;
+          const r = .82*(94+12*Math.sin(2*Math.PI*f+seed)+5*Math.sin(5*Math.PI*f+seed));
+          return [r*Math.cos(a), r*Math.sin(a)];
+        });
+        traceGesture(g, points);
+        assert.equal(g.phase(), i === 1 && degreesPair[0] >= 87 ? 'open' : 'stuck');
+      }
+    }
+  }
+});
+
+test('the lid opens at 135 credited degrees', () => {
+  for (const sign of [-1, 1]) {
+    for (const degrees of [134, 135]) {
+      const {g, arm, arc} = rehearsal();
+      arm();
+      arc(sign * degrees);
+      assert.equal(g.phase(), degrees === 135 ? 'open' : 'stuck');
+    }
+  }
 });

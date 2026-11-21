@@ -29,8 +29,11 @@ export function createScene(stage) {
     offsetY = scale === 1 ? 0 : view.offsetY + midY - pair.midY + (pair.midY - view.top) * (1 - factor);
     draw('open');
   }
-  function draw(phase, { angle = 0, dx = 0, dy = 0 } = {}) {
-    if (phase === 'normal') { scale = 1; offsetX = offsetY = 0; }
+  function draw(phase, { angle = 0, dx = 0, dy = 0, second = stage.dataset.reveal === 'second' } = {}) {
+    stage.dataset.reveal = second ? 'second' : 'first';
+    const item = second ? stage.dataset.secondItem : stage.dataset.firstItem;
+    stage.dataset.item = item;
+    if (phase === 'normal' || phase === 'closing') { scale = 1; offsetX = offsetY = 0; }
     card.style.setProperty('--zoom', scale);
     stage.dataset.phase = phase;
     if (phase !== 'open' && phase !== 'empty' || angle) dome.style.setProperty('--turn', angle + 'deg');
@@ -52,5 +55,10 @@ export function createScene(stage) {
       card: x >= bounds.left && x <= bounds.right && y >= bounds.top && y <= bounds.bottom,
     };
   }
-  return { hit, draw, zoomCard };
+  function afterExit(done) {
+    const transition = card.getAnimations().find(animation => animation.transitionProperty === 'transform');
+    if (transition) transition.finished.then(done, () => {});
+    else done();
+  }
+  return { hit, draw, zoomCard, afterExit };
 }

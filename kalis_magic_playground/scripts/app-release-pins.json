@@ -402,14 +402,14 @@
     {
       "path": "distribution-snapshots/bell/CARD_CREDITS.md",
       "kind": "file",
-      "size": 1103,
-      "sha256": "05459fe4682efe34b2409694dc976fd30d525e5bdc00c321dfe490f7245187fc"
+      "size": 2058,
+      "sha256": "3a5be24633111798d11a0b376a25e46e072cc73d570a5fbb0320f6a6660888c0"
     },
     {
       "path": "distribution-snapshots/bell/app.mjs",
       "kind": "file",
-      "size": 2328,
-      "sha256": "5561c2cae4a9126f19c575e80357ef1aeb5258f3d08128f80de11eb665edc8f5"
+      "size": 2534,
+      "sha256": "ac764322ee14604cb693a9015b9285417f13cc161e5f537bdf49f3e645e326ad"
     },
     {
       "path": "distribution-snapshots/bell/audio.mjs",
@@ -430,16 +430,34 @@
       "sha256": "5461438613c87b19603b56557434f878b1035f41104b9cf2ac318f6d26847881"
     },
     {
+      "path": "distribution-snapshots/bell/coin-barber.jpg",
+      "kind": "file",
+      "size": 98867,
+      "sha256": "a487acd673927205b8dd7a28d99c6abfa0d263007023e845c5a21dad493b79c0"
+    },
+    {
+      "path": "distribution-snapshots/bell/coin-kennedy.jpg",
+      "kind": "file",
+      "size": 76230,
+      "sha256": "0f1194ea61b58289411813d3d7307dde33f425c7ebb2405472d57332e862617f"
+    },
+    {
+      "path": "distribution-snapshots/bell/coin-walking.jpg",
+      "kind": "file",
+      "size": 112750,
+      "sha256": "d3f021bd5827571aa6a7788ed3718402596a4e99e49bcc8b70435aa078637e9d"
+    },
+    {
       "path": "distribution-snapshots/bell/dome.mjs",
       "kind": "file",
-      "size": 2488,
-      "sha256": "39bbf40a6cd5b8be4d327d2a7283dbed6c8dff164c9394a566929e5414f7d819"
+      "size": 2952,
+      "sha256": "32fe7d7a574a334a9ada817005f3c01f18a32ab067229e14e0837d93b824b086"
     },
     {
       "path": "distribution-snapshots/bell/gestures.mjs",
       "kind": "file",
-      "size": 6466,
-      "sha256": "4dc672134470921af62aff194f5797f5194b4b0df17fd5de0c047a75cbeda8dd"
+      "size": 8206,
+      "sha256": "6512ae93fe59dcb4491e2623275dc56d2bcc485ceca088b15ade032d311521c6"
     },
     {
       "path": "distribution-snapshots/bell/icon-192.png",
@@ -456,8 +474,8 @@
     {
       "path": "distribution-snapshots/bell/index.html",
       "kind": "file",
-      "size": 2479,
-      "sha256": "479d725e933b90703f549aa28feaaf2ae9e5c66db3f9dfa11a7591657d69566e"
+      "size": 3427,
+      "sha256": "c706118d76638115ef0983c4da9d8697529e985f28718ce1ab098978a9b7302d"
     },
     {
       "path": "distribution-snapshots/bell/install-update.mjs",
@@ -480,8 +498,8 @@
     {
       "path": "distribution-snapshots/bell/performance.css",
       "kind": "file",
-      "size": 2323,
-      "sha256": "52c5f64ebb61f6ba6a5a3573c16815e3a74546980dc40c00b5e6a883aa1e03cb"
+      "size": 3376,
+      "sha256": "d4ddfdefbc4ce5bb39e5578659c8c097b7488b2eafa54ca42229ce90b212d227"
     },
     {
       "path": "distribution-snapshots/bell/presets.mjs",
@@ -504,14 +522,14 @@
     {
       "path": "distribution-snapshots/bell/settings.mjs",
       "kind": "file",
-      "size": 1717,
-      "sha256": "fefc8e66ce67ddd6ea054e5e4bcad7d2f7a24f4d7db2cb15f19428d28abe21aa"
+      "size": 1779,
+      "sha256": "96574c8336ec2eb89874f601043083b6dea2ada1f6495bda5b534c43ee96f72c"
     },
     {
       "path": "distribution-snapshots/bell/storage.mjs",
       "kind": "file",
-      "size": 830,
-      "sha256": "bf25bdd850f340da5ee750ed613d449d1629922c2253de69ee2a45cacb885978"
+      "size": 1175,
+      "sha256": "2bf30fd87b6c642df2415bc3a942333dce138715485787f1587e5e664a5323fe"
     },
     {
       "path": "distribution-snapshots/bell/style.css",
@@ -522,8 +540,8 @@
     {
       "path": "distribution-snapshots/bell/sw.js",
       "kind": "file",
-      "size": 5474,
-      "sha256": "474b3e38149bd81ba337c33850b36fe84036a0b2de811fa731d1a6016634c3eb"
+      "size": 5546,
+      "sha256": "a932cbf301769a0f88026746ebda2e42bdf8453d9a72c8796536ad1afd91b12f"
     },
     {
       "path": "distribution-snapshots/bell/vibration.mjs",

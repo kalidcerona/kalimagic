@@ -1,15 +1,39 @@
 // Viewport coordinates follow the visible screen in either landscape orientation.
-export function createGesture({ hit = () => ({}), draw = () => {}, zoomCard = () => {}, cancelPending = () => {} } = {}) {
+export function createGesture({ hit = () => ({}), draw = () => {}, zoomCard = () => {}, hasSecond = () => false, afterExit = done => done(), cancelPending = () => {} } = {}) {
   const contacts = new Map();
   let phase = 'normal', hold, demo, single, pair, blocked;
 
+  let direction = 0, progress = 0, second = false, closeTimer;
+  let extractedBy, exitToken;
+  function render(extra) {
+    draw(phase, { angle: direction * progress, second, ...extra });
+  }
+  function closeForSecond() {
+    second = true;
+    direction = progress = 0;
+    phase = 'closing';
+    render();
+    closeTimer = setTimeout(() => {
+      phase = 'stuck';
+      render();
+    }, 500);
+  }
   function interrupt() {
+    if (extractedBy !== undefined) {
+      extractedBy = undefined;
+      phase = 'open';
+    }
     contacts.clear();
     hold = demo = single = pair = null;
     blocked = false;
-    draw(phase);
+    render();
   }
   function resetPerformance() {
+    clearTimeout(closeTimer);
+    exitToken = undefined;
+    extractedBy = undefined;
+    second = false;
+    direction = progress = 0;
     phase = 'normal';
     interrupt();
   }
@@ -17,7 +41,7 @@ export function createGesture({ hit = () => ({}), draw = () => {}, zoomCard = ()
     if (phase === 'normal') return 'ring';
     if (phase === 'armed' || phase === 'stuck') {
       phase = 'stuck';
-      draw(phase);
+      render();
       return 'stuck';
     }
   }
@@ -28,11 +52,11 @@ export function createGesture({ hit = () => ({}), draw = () => {}, zoomCard = ()
     if (contacts.size === 1) {
       single = point;
       if (phase === 'normal' && target.secret && !target.dome) hold = point;
-      if (phase === 'stuck' && target.rim) point.rotate = true;
+      if (phase === 'stuck' && target.rim) point.samples = [];
       return;
     }
     single = null;
-    draw(phase);
+    render();
     if (contacts.size === 2 && !blocked) {
       pair = [...contacts.values()].map(p => ({ id: p.id, x: p.x, y: p.y }));
       const [a, b] = pair;
@@ -81,33 +105,56 @@ export function createGesture({ hit = () => ({}), draw = () => {}, zoomCard = ()
     }
   }
   function moveSingle(p, oldX, oldY, x, y, dx, dy) {
-    if (p.rotate) {
+    if (p.samples) {
       const { cx, cy, radius } = p.target;
       const ax = oldX - cx, ay = oldY - cy, bx = x - cx, by = y - cy;
       const vx = bx - ax, vy = by - ay;
       const t = Math.max(0, Math.min(1, -(ax * vx + ay * vy) / (vx * vx + vy * vy || 1)));
       if (Math.hypot(ax + t * vx, ay + t * vy) < radius * .45 || Math.hypot(bx, by) > radius + 1) {
-        p.rotate = false;
-        draw(phase);
+        p.samples = null;
+        render();
         return;
       }
-      p.angle += Math.atan2(ax * by - ay * bx, ax * bx + ay * by) * 180 / Math.PI;
-      // A straight chord can subtend 120 degrees without crossing the inner radius.
-      // Require a sampled bend away from the chord leading to the current endpoint.
-      if (Math.abs(p.angle) < 15) p.bend = null;
-      if (Math.abs(p.angle) >= 45 && !p.bend) p.bend = { dx, dy };
-      const deviation = p.bend && Math.abs(p.bend.dx * dy - p.bend.dy * dx) / (Math.hypot(dx, dy) || 1);
-      if (Math.abs(p.angle) >= 120 - 1e-8 && deviation > radius * .08) {
+      const delta = Math.atan2(ax * by - ay * bx, ax * bx + ay * by) * 180 / Math.PI;
+      const chord = Math.hypot(dx, dy);
+      const length = Math.hypot(vx, vy);
+      if (!length) return;
+      const threshold = Math.max(8, chord * .1) * chord;
+      const curved = chord > 0 && p.samples.some(([sx, sy]) =>
+        Math.abs(sx * dy - sy * dx) > threshold);
+      p.samples.push([dx, dy]);
+
+      // At the midpoint the radius is perpendicular to either local tangent.
+      const rx = ax + bx, ry = ay + by;
+      const radial = Math.abs(vx * rx + vy * ry);
+      const tangential = radial <= Math.sin(36 * Math.PI / 180) * length * Math.hypot(rx, ry);
+      // Only tangent segments of a confirmed arc contribute to rotation.
+      const sweep = tangential ? delta : 0;
+      if (!curved) {
+        p.pending = (p.pending || 0) + sweep;
+        return;
+      }
+      const increment = sweep + (p.pending || 0);
+      p.pending = 0;
+      p.angle += increment;
+      if (direction) progress = Math.max(0, progress + direction * increment);
+      else if (Math.abs(p.angle) >= 15 - 1e-8) {
+        direction = Math.sign(p.angle);
+        progress = Math.abs(p.angle);
+      }
+      if (progress >= 135 - .001) {
+        progress = 180;
         phase = 'open';
         single = null;
       }
-      draw(phase, { angle: Math.abs(p.angle) >= 15 ? p.angle : 0 });
+      render();
     } else if (phase === 'open' && p.target.card) {
       if (p.target.left + dx >= p.target.width && dx > 1.5 * Math.abs(dy)) {
         phase = 'empty';
+        extractedBy = p.id;
         single = null;
       }
-      draw(phase, { dx, dy });
+      render({ dx, dy });
     }
   }
   function up(id, x, y, cancelled = false) {
@@ -136,14 +183,27 @@ export function createGesture({ hit = () => ({}), draw = () => {}, zoomCard = ()
       hold = demo = null;
     } else if (single === p && phase === 'open' && p.target.card) {
       const dx = x - p.startX;
-      if (dx >= Math.max(48, p.target.width * .12) && dx > 1.5 * Math.abs(y - p.startY)) phase = 'empty';
+      if (dx >= Math.max(48, p.target.width * .12) && dx > 1.5 * Math.abs(y - p.startY)) {
+        phase = 'empty';
+        render({ dx, dy: y - p.startY });
+        if (!second && hasSecond()) {
+          const token = exitToken = {};
+          afterExit(() => {
+            if (exitToken === token) closeForSecond();
+          });
+        }
+      }
     } else if (single === p && p.tap && p.target.dome && hit(x, y).dome) {
       result = activate();
+    }
+    if (phase === 'empty' && extractedBy === id) {
+      extractedBy = undefined;
+      if (!second && hasSecond()) closeForSecond();
     }
     if (!contacts.size) interrupt();
     return result;
   }
-  return { down, move, up, evaluatePair, activate, reset: interrupt, resetPerformance, phase: () => phase };
+  return { refresh: render, down, move, up, evaluatePair, activate, reset: interrupt, resetPerformance, phase: () => phase };
 }
 
 export function listen(surface, dispatch, options) {

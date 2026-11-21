@@ -23,13 +23,13 @@ test('appearance preferences survive reopen and notify the performance when stor
   const panel = setupSettings(() => {});
   panel.open();
   assert.equal(doc.querySelector('#background').value, 'dark');
-  const card = doc.querySelector('#cardBack');
+  const card = doc.querySelector('#firstItem');
   assert.equal(card.value, 'blue');
   const appearance = t.mock.fn();
   doc.addEventListener('bell:appearance', appearance);
   card.value = 'red';
   card.onchange();
-  assert.deepEqual(appearance.mock.calls[0].arguments[0].detail, { cardBack: 'red' });
+  assert.deepEqual(appearance.mock.calls[0].arguments[0].detail, { firstItem: 'red' });
   const reset = t.mock.fn();
   doc.addEventListener('bell:next-performance', reset);
   doc.querySelector('#next').onclick();

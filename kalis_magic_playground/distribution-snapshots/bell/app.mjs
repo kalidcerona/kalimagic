@@ -1,7 +1,7 @@
 import { createSynth } from './audio.mjs';
 import { listen } from './gestures.mjs';
 import { createScene, press, unpress } from './dome.mjs';
-import { readBackground, readCardBack } from './storage.mjs';
+import { readBackground, readItem } from './storage.mjs';
 import { vibrate } from './vibration.mjs';
 import { setupSettings } from './settings.mjs';
 import { setupWakeLock } from './wake-lock.js';
@@ -12,10 +12,11 @@ const synth = createSynth(() => device = new (window.AudioContext || window.webk
 const settings = setupSettings(synth.ring);
 const stage = document.querySelector('#stage');
 const dome = stage.querySelector('.dome');
-const gesture = listen(stage, perform, { ...createScene(stage), cancelPending: synth.cancelPending });
+const gesture = listen(stage, perform, { ...createScene(stage), hasSecond: () => stage.dataset.secondItem !== 'none', cancelPending: synth.cancelPending });
 function appearance() {
   stage.dataset.background = readBackground();
-  stage.dataset.cardBack = readCardBack();
+  stage.dataset.firstItem = readItem('firstItem');
+  stage.dataset.secondItem = readItem('secondItem');
 }
 function interrupt() {
   gesture.reset();
@@ -51,7 +52,9 @@ stage.onkeydown = event => {
 document.addEventListener('bell:next-performance', resetPerformance);
 document.addEventListener('bell:appearance', ({ detail }) => {
   if (detail.background) stage.dataset.background = detail.background;
-  if (detail.cardBack) stage.dataset.cardBack = detail.cardBack;
+  if (detail.firstItem) stage.dataset.firstItem = detail.firstItem;
+  if (detail.secondItem) stage.dataset.secondItem = detail.secondItem;
+  gesture.refresh();
 });
 window.addEventListener('blur', interrupt);
 window.addEventListener('orientationchange', interrupt);
