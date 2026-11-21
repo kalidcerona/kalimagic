@@ -43,7 +43,7 @@ test('release confirms tap, cancellation and drags stay silent', () => {
   assert.equal(g.up(1, 0, 0, true), undefined);
   g.down(1, 0, 0);
   g.down(2, 40, 0);
-  assert.equal(g.up(2, 40, 0), undefined);
+  assert.equal(g.up(2, 40, 0), 'ring');
   assert.equal(g.up(1, 0, 0), undefined);
 });
 
@@ -254,11 +254,12 @@ test('delayed resume arms only when an oscillator starts before the hold is rele
   }
 });
 
-test('only a stationary confirmed hold with a released demo arms', () => {
-  for (const [ms, dx, expected] of [[249,0,false],[250,12,true],[250,13,false]]) {
+test('a band hold is immediate and tolerates forty pixels of drift', () => {
+  for (const [ms, dx, expected] of [[0,0,true],[50,20,true],[0,40,true],[50,41,false]]) {
     const {g,hold,tap} = rehearsal();
     hold(ms); g.move(1, dx, 490);
-    assert.equal(tap(2, 0, 0), expected ? 'ring' : undefined);
+    assert.equal(tap(2, 0, 0), 'ring');
+    assert.equal(tap(2, 0, 0), 'ring');
     g.up(1, dx, 490);
     assert.equal(g.phase(), expected ? 'armed' : 'normal');
   }
@@ -269,6 +270,15 @@ test('only a stationary confirmed hold with a released demo arms', () => {
   assert.equal(g.up(2, 0, 0), undefined);
   hold(); g.down(2, 0, 0); g.down(3, 2, 0);
   for (const id of [3,2,1]) assert.equal(g.up(id, 0, id === 1 ? 490 : 0), undefined);
+  assert.equal(g.phase(), 'normal');
+});
+
+test('a resting finger elsewhere permits repeated dome taps without arming', () => {
+  const {g,tap} = rehearsal();
+  g.down(1, 170, 200);
+  assert.equal(tap(2, 0, 0), 'ring');
+  assert.equal(tap(3, 0, 0), 'ring');
+  g.up(1, 170, 200);
   assert.equal(g.phase(), 'normal');
 });
 
@@ -366,7 +376,7 @@ test('secret band spans the bottom 152 pixels above the safe inset', t => {
   const { hit } = createScene(element);
   for (const x of [0, 195, 390]) {
     for (const [y, expected] of [[657.99, false], [658, false], [658.01, true], [734, true],
-      [809, true], [810, true], [810.01, false], [843, false]]) {
+      [809, true], [810, true], [810.01, true], [843, true], [845, false]]) {
       assert.equal(hit(x, y).secret, expected);
     }
   }
@@ -380,8 +390,8 @@ test('secret band spans the bottom 152 pixels above the safe inset', t => {
     gesture.up(1, x, y);
     return gesture.phase();
   }
-  for (const y of [810, 809, 734, 658.01]) assert.equal(phaseAfterHold(195, y), 'armed');
-  for (const y of [810.01, 658, 657]) assert.equal(phaseAfterHold(195, y), 'normal');
+  for (const y of [843, 810.01, 810, 809, 734, 658.01]) assert.equal(phaseAfterHold(195, y), 'armed');
+  for (const y of [845, 658, 657]) assert.equal(phaseAfterHold(195, y), 'normal');
   box.top = 685;
   assert.equal(hit(50, 734).secret, true);
   assert.equal(hit(50, 734).dome, true);

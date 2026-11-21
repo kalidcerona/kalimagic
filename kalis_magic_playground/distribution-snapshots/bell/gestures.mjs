@@ -1,5 +1,5 @@
 // Viewport coordinates follow the visible screen in either landscape orientation.
-export function createGesture({ hit = () => ({}), now = () => performance.now(), draw = () => {}, zoomCard = () => {}, cancelPending = () => {} } = {}) {
+export function createGesture({ hit = () => ({}), draw = () => {}, zoomCard = () => {}, cancelPending = () => {} } = {}) {
   const contacts = new Map();
   let phase = 'normal', hold, demo, single, pair, blocked;
 
@@ -23,7 +23,7 @@ export function createGesture({ hit = () => ({}), now = () => performance.now(),
   }
   function down(id, x, y) {
     const target = hit(x, y);
-    const point = { id, x, y, startX: x, startY: y, time: now(), tap: true, target, angle: 0 };
+    const point = { id, x, y, startX: x, startY: y, tap: true, target, angle: 0 };
     contacts.set(id, point);
     if (contacts.size === 1) {
       single = point;
@@ -40,8 +40,7 @@ export function createGesture({ hit = () => ({}), now = () => performance.now(),
       pair.midX = (a.x + b.x) / 2;
       pair.midY = (a.y + b.y) / 2;
       pair.card = phase === 'open' && hit(pair.midX, pair.midY).card;
-      if (hold?.tap && now() - hold.time >= 250 && target.dome) demo = point;
-      else hold = null;
+      if (phase === 'normal' && target.dome) demo = point;
     } else {
       cancelPending();
       hold = demo = pair = null;
@@ -55,7 +54,10 @@ export function createGesture({ hit = () => ({}), now = () => performance.now(),
     p.x = x; p.y = y;
     const dx = x - p.startX, dy = y - p.startY;
     if (Math.hypot(dx, dy) > 12) p.tap = false;
-    if (p === hold && !p.tap) hold = demo = null;
+    if (p === hold && Math.hypot(dx, dy) > 40) {
+      if (hold.requested) cancelPending();
+      hold = null;
+    }
     if (pair) return deferPair ? undefined : evaluatePair();
     if (single !== p) return;
     moveSingle(p, oldX, oldY, x, y, dx, dy);
@@ -116,17 +118,18 @@ export function createGesture({ hit = () => ({}), now = () => performance.now(),
     if (action) return action;
     contacts.delete(id);
     pair = null;
-    if (p === demo && hold && p.tap && hit(x, y).dome) {
+    if (p === demo && p.tap && hit(x, y).dome) {
+      demo = null;
+      if (!hold) return activate();
       const demoHold = hold;
       demoHold.requested = true;
-      demo = null;
       return { action: 'ring', onStarted() {
         if (hold === demoHold) demoHold.rang = true;
       } };
     }
     let result;
-    if (p === hold && now() - p.time >= 250) {
-      if (p.requested && !contacts.size) {
+    if (p === hold) {
+      if (p.requested) {
         cancelPending();
         if (p.rang) phase = 'armed';
       }
