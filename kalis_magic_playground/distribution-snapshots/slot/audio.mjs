@@ -40,7 +40,13 @@ export function createAudio(enabled) {
         tone(205*pitch,61,.11,.12,'triangle');
       }
       if (effect === 'open') tone(510,940,.19,.085,'sine');
-      if (effect === 'win') [523,659,784,1047].forEach((f,i) => tone(f,f,.3,.075,'sine',i*.105));
+      if (effect === 'win') {
+        tone(145,48,.16,.15,'sine');
+        const melody = [523,659,784,1047,880,988,1175,1319];
+        melody.forEach((hz,i) => tone(hz,hz,.18,.085,'triangle',i*.12));
+        [131,175,196,262].forEach((hz,i) => tone(hz,hz,.21,.08,'sine',i*.24));
+        [784,1047,1319,1568].forEach((hz,i) => tone(hz,hz,.42,.048,'sine',.96+i*.06));
+      }
     }
   };
 }

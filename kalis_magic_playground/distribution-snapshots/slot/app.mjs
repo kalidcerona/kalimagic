@@ -12,6 +12,15 @@ import {vibrate} from './vibration.mjs';
 import {portraitGuard} from './orientation.mjs';
 const el = id => document.getElementById(id);
 const stage = el('stage'), dialog = document.querySelector('dialog');
+const burst = document.querySelector('.coin-burst');
+for (let i = 0; i < 16; i++) {
+  const coin = document.createElement('b');
+  const lane = i % 8;
+  coin.style.setProperty('--drift', (lane - 3.5) * 10 + 'vw');
+  coin.style.setProperty('--lift', (-42 - Math.sin(Math.PI * lane / 7) * 55) + 'px');
+  coin.style.setProperty('--delay', (Math.floor(i / 8) * 480 + (lane % 3) * 36) + 'ms');
+  burst.append(coin);
+}
 const prefs = preferences();
 const audio = createAudio(() => prefs.sound);
 let last, frame = null;

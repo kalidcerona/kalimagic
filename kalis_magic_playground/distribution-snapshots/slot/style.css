@@ -58,8 +58,8 @@ button {font:inherit;color:inherit;cursor:pointer}
 #round {width:4em;font:inherit;padding:.3em}
 @media (prefers-reduced-motion:no-preference) {
   [data-phase="spinning"] .lights::before {animation:chase .85s linear infinite}
-  [data-phase="jackpot"] #reels::after {animation:payline .58s ease-in-out 2}
-  [data-phase="jackpot"] .lights::before {animation:payline .58s ease-in-out 2}
+  [data-phase="jackpot"] #reels::after {animation:payline .48s ease-in-out 3}
+
 }
 @keyframes chase {0%,100% {opacity:.85;mask-image:conic-gradient(black,transparent,black,transparent,black)}
   50% {opacity:.55;mask-image:conic-gradient(transparent,black,transparent,black,transparent)}}

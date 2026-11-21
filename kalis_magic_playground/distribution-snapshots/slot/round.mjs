@@ -30,10 +30,10 @@ export function createRound({box, blocked, render, reels, capsule, audio, vibrat
       } else if (start === 'ready') {
         if (!attempt) {
           winningAttempt = targetRound();
+          rank = rankAt(rect,x,y);
         }
         attempt++;
         winning = attempt === winningAttempt;
-        if (winning) rank = rankAt(rect,x,y);
         elapsed = stopped = beat = 0;
         reels.start(winning);
         audio.play('motor');
@@ -69,7 +69,7 @@ export function createRound({box, blocked, render, reels, capsule, audio, vibrat
       }
     } else if (phase === 'jackpot') {
       elapsed += ms;
-      if (elapsed >= 1200) {
+      if (elapsed >= 1680) {
         elapsed = 0;
         capsule('roll');
         enter('rolling');

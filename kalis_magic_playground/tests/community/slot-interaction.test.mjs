@@ -63,7 +63,7 @@ test('button-relative and stage boundaries include the outer edges',() => {
   }
   assert.deepEqual([[0,0],[200,0],[0,400],[200,400]].map(([x,y]) => suitAt(boxes.stage,x,y)),['♠','♦','♣','♥']);
 });
-test('all 40 cards use only the winning START zone and share the same pre-reveal trace',t => {
+test('all 40 cards use only the first START zone and share the same pre-reveal trace',t => {
   const descriptor = Object.getOwnPropertyDescriptor(globalThis,'document');
   Object.defineProperty(globalThis,'document',{configurable:true,value:{createElement:() => new Element()}});
   t.after(() => descriptor ? Object.defineProperty(globalThis,'document',descriptor) : delete globalThis.document);
@@ -72,11 +72,11 @@ test('all 40 cards use only the winning START zone and share the same pre-reveal
     for (let rank=1;rank<=10;rank++) {
       const h = harness(3);
       h.tap(index%2*200+50,Math.floor(index/2)*400+40);
-      function tapZone(offset) {
+      function tapZone(offset, target = h) {
         const cell = (rank-1+offset)%10;
-        h.tap(64+(cell%5)*68,356+Math.floor(cell/5)*32);
+        target.tap(64+(cell%5)*68,356+Math.floor(cell/5)*32);
       }
-      tapZone(1);
+      tapZone(0);
       const trace = [];
       for (let loss=0;loss<2;loss++) {
         h.advance(1500);
@@ -86,12 +86,12 @@ test('all 40 cards use only the winning START zone and share the same pre-reveal
         trace.push(combo);
         assert.equal(h.events.includes('roll'),false);
         assert.equal(h.round.progress(),loss+2);
-        tapZone(loss === 0 ? 2 : 0);
+        tapZone(loss+1);
       }
       function centre() {
         return h.symbols.map(node => node.textContent.split('\n')[-parseFloat(node.style.transform.slice(11))/100]);
       }
-      for (const ms of [78,822,300,300,1200,599]) {
+      for (const ms of [78,822,300,300,1680,599]) {
         h.advance(ms);
         trace.push(h.symbols.map(node => [node.textContent,node.style.transform]));
         assert.equal(h.result.children.length,0);
@@ -124,6 +124,12 @@ test('all 40 cards use only the winning START zone and share the same pre-reveal
       assert.equal(h.result.children.length,0);
       assert.equal(h.phase(),'dark');
       assert.equal(h.round.progress(),1);
+      const immediate = harness(1);
+      immediate.tap(index%2*200+50,Math.floor(index/2)*400+40);
+      tapZone(0,immediate);
+      for (const ms of [1500,1680,600]) immediate.advance(ms);
+      immediate.tap(200,500); immediate.advance(300);
+      assert.equal(immediate.result.children[0].attributes['aria-label'],face.attributes['aria-label']);
     }
   }
 });
@@ -137,7 +143,7 @@ test('multitouch, drag, cancellation and held taps across every performance phas
     if (phase === 'spinning') return h;
     h.advance(1500);
     if (phase === 'jackpot') return h;
-    h.advance(1200);
+    h.advance(1680);
     if (phase === 'rolling') return h;
     h.advance(600);
     if (phase === 'waiting') return h;
@@ -217,7 +223,7 @@ test('service worker lists the exact app shell, manifest and PNG dimensions matc
   const sw = read('sw.js');
   const files = JSON.parse(/const SHELL = (\[[\s\S]*?\]);/.exec(sw)[1]);
   assert.deepEqual(files.sort(),readdirSync(dir).filter(f => f!=='sw.js').sort().map(f=>'./'+f));
-  assert.match(sw,/friend-slot-shell-/); assert.match(sw,/v20261121-5/);
+  assert.match(sw,/friend-slot-shell-/); assert.match(sw,/v20261121-7/);
   const manifest = JSON.parse(read('manifest.webmanifest'));
   assert.equal(manifest.orientation,'portrait'); assert.equal(manifest.id,'/tools/slot/');
   for (const n of [192,512]) {

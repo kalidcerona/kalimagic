@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "release": "apps-cf8cfd588da975726aeeb1beb6b49863294ad132",
+  "release": "apps-28171ef946e35f5c8416a4043bafa922d1721173",
   "provenance": "Retained personal app trees and distribution snapshots from the selected site release.",
   "roots": [
     "distribution-snapshots/aletheia",
@@ -1994,14 +1994,14 @@
     {
       "path": "distribution-snapshots/slot/app.mjs",
       "kind": "file",
-      "size": 2584,
-      "sha256": "2e1fcc6e1e30f363c5a31a90db044bcd61933f7047da7e95411c95c264563f4d"
+      "size": 2996,
+      "sha256": "e2956e955abc391208ce4a0f69fbabca53d843d5e9901a04452e93f3240cd94a"
     },
     {
       "path": "distribution-snapshots/slot/audio.mjs",
       "kind": "file",
-      "size": 1661,
-      "sha256": "a32077000ad75d347ccce3cab1974940235a19bcd553663b8e3bc26d579b80f2"
+      "size": 1938,
+      "sha256": "15e6c303bc0715e263fe8a9700ca25cd69d3cbd8c47a2fcb566cf9f2b00b7ecc"
     },
     {
       "path": "distribution-snapshots/slot/capsule.mjs",
@@ -2036,14 +2036,20 @@
     {
       "path": "distribution-snapshots/slot/index.html",
       "kind": "file",
-      "size": 2879,
-      "sha256": "750a72b33b45c47a30b47198eb3990855ead18210ec0d6c868e8a87a80d51ccf"
+      "size": 3198,
+      "sha256": "d9089a52ab742925eb23a69b32b19369bb55553c6f22fd3d4cbd1862b01f967f"
     },
     {
       "path": "distribution-snapshots/slot/install-update.mjs",
       "kind": "file",
       "size": 1137,
       "sha256": "86ad1a60d690428c68f9772bef4b19eb8f983f543acabbb0e52ab2367da82183"
+    },
+    {
+      "path": "distribution-snapshots/slot/jackpot.css",
+      "kind": "file",
+      "size": 3024,
+      "sha256": "5951f0ab338f978e9498b32d35c536a8fe33396840f8982df8042811bdfd03dc"
     },
     {
       "path": "distribution-snapshots/slot/manifest.webmanifest",
@@ -2066,8 +2072,8 @@
     {
       "path": "distribution-snapshots/slot/round.mjs",
       "kind": "file",
-      "size": 2735,
-      "sha256": "d1e429781606c465cdb55f4812521a58b38993b97a588d5f21ebc6680445ea9a"
+      "size": 2724,
+      "sha256": "43e3db46f144bd4466135fade677bfb11a8c675e0145ed61c726467b5cf27762"
     },
     {
       "path": "distribution-snapshots/slot/settings-panel.css",
@@ -2096,14 +2102,14 @@
     {
       "path": "distribution-snapshots/slot/style.css",
       "kind": "file",
-      "size": 5836,
-      "sha256": "9adebf27e061b3db4d2af71407ad427d0800972da56a0ba233de9ec6584ad9ae"
+      "size": 5757,
+      "sha256": "6ed0792433509372e55f9d5fca5f9ac802d285d77228b2e2cdd0d9e1279c84a6"
     },
     {
       "path": "distribution-snapshots/slot/sw.js",
       "kind": "file",
-      "size": 5531,
-      "sha256": "c84592c82f5e7b4b0649c2a8c010047918d3443e83f286a1d8fd4bed7b26819e"
+      "size": 5550,
+      "sha256": "ddc4df4b0c87b4ae602b1a5c18cc44fa1b48703be9394840147d1feff6878c2f"
     },
     {
       "path": "distribution-snapshots/slot/vibration.mjs",

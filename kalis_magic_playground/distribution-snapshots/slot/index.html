@@ -10,6 +10,7 @@
   <link rel="icon" type="image/png" href="./icon-192.png">
   <link rel="apple-touch-icon" href="./icon-192.png">
   <link rel="stylesheet" href="./style.css">
+  <link rel="stylesheet" href="./jackpot.css">
   <link rel="stylesheet" href="./settings-ui.css">
   <link rel="stylesheet" href="./settings-panel.css">
   <title>슬롯 머신</title>
@@ -17,9 +18,12 @@
 <body>
   <main id="stage" data-phase="dark">
     <section id="machine" aria-label="슬롯 머신" hidden>
+      <svg class="jackpot-rail" aria-hidden="true">
+        <rect pathLength="120" rx="22"/><rect pathLength="120" rx="22"/><rect pathLength="120" rx="22"/>
+      </svg>
       <div class="lights" aria-hidden="true"></div>
-      <div class="marquee" aria-hidden="true">SLOT MACHINE</div>
-      <div id="reels" aria-hidden="true"><div class="window"><i></i></div><div class="window"><i></i></div><div class="window"><i></i></div></div>
+      <div class="marquee" aria-hidden="true"><span>SLOT MACHINE</span><strong>JACKPOT</strong></div>
+      <div id="reels" aria-hidden="true"><div class="window"><i></i></div><div class="window"><i></i></div><div class="window"><i></i></div><div class="coin-burst" aria-hidden="true"></div></div>
       <button id="spin">START</button>
       <div class="tray"><button id="capsule" aria-label="캡슐 열기" hidden><i></i><i></i></button></div>
     </section>
@@ -40,7 +44,7 @@
             <summary>캡슐이 나올 회차</summary>
             <label>캡슐이 나올 회차 <input id="round" type="number" min="1" max="20" step="1" value="1"></label>
             <p id="progress"></p>
-            <p>첫 화면의 네 구역에서 무늬를 고르고, 캡슐이 나올 회차에 START 버튼에서 숫자를 고르세요. 왼쪽부터 윗줄은 A, 2, 3, 4, 5이고 아랫줄은 6, 7, 8, 9, 10입니다. 그 전 회차에는 어느 칸을 눌러도 됩니다. 회차 설정은 첫 START 때 적용됩니다. 다음 공연을 누르면 무늬·숫자·진행 회차가 초기화됩니다.</p>
+            <p>첫 화면의 네 구역에서 무늬를 고르고, 공연의 첫 START 버튼에서 숫자를 고르세요. 왼쪽부터 윗줄은 A, 2, 3, 4, 5이고 아랫줄은 6, 7, 8, 9, 10입니다. 두 번째부터는 어느 칸을 눌러도 처음 고른 숫자가 유지됩니다. 회차 설정은 첫 START 때 적용됩니다. 다음 공연을 누르면 무늬·숫자·진행 회차가 초기화됩니다.</p>
           </details>
           <button id="next">다음 공연</button>
         </div>
