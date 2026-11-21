@@ -2036,8 +2036,8 @@
     {
       "path": "distribution-snapshots/slot/index.html",
       "kind": "file",
-      "size": 2824,
-      "sha256": "2849a4b7079bd915da5b989870883a7148595c611fc8877d23664bc9bfc1d291"
+      "size": 2879,
+      "sha256": "750a72b33b45c47a30b47198eb3990855ead18210ec0d6c868e8a87a80d51ccf"
     },
     {
       "path": "distribution-snapshots/slot/install-update.mjs",
@@ -2103,7 +2103,7 @@
       "path": "distribution-snapshots/slot/sw.js",
       "kind": "file",
       "size": 5531,
-      "sha256": "de8a9f9e7dc775daec3a8db67611ff58df3dd3ebd902da65175596cb859f772e"
+      "sha256": "c84592c82f5e7b4b0649c2a8c010047918d3443e83f286a1d8fd4bed7b26819e"
     },
     {
       "path": "distribution-snapshots/slot/vibration.mjs",
@@ -2120,8 +2120,8 @@
     {
       "path": "distribution-snapshots/slot/zones.mjs",
       "kind": "file",
-      "size": 499,
-      "sha256": "02e917b1e90a3411807fcbdd53b32e1c1913af3f3d25c5ab83e87af81cbf3e8a"
+      "size": 571,
+      "sha256": "303908223d206f3aee58579503c8fa87b2731fe8f8274ebab7705c6d99414382"
     },
     {
       "path": "distribution-snapshots/spinner",

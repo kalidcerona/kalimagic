@@ -48,13 +48,19 @@ function harness(target=1) {
   };
 }
 test('button-relative and stage boundaries include the outer edges',() => {
-  for (let i=0;i<10;i++) {
-    assert.equal(rankAt(boxes.spin,30+34*i,404),i+1);
-    if (i) assert.equal(rankAt(boxes.spin,30+34*i-.01,340),i);
+  for (let col=0;col<5;col++) {
+    const x = 30 + col*68;
+    for (const [y,first] of [[340,1],[371.99,1],[372,6],[404,6]]) {
+      assert.equal(rankAt(boxes.spin,x,y),first+col);
+      assert.equal(rankAt(boxes.spin,x+34,y),first+col);
+      if (col) assert.equal(rankAt(boxes.spin,x-.01,y),first+col-1);
+    }
   }
+  assert.equal(rankAt(boxes.spin,370,340),5);
   assert.equal(rankAt(boxes.spin,370,404),10);
-  assert.equal(rankAt(boxes.spin,371,404),undefined);
-  assert.equal(rankAt(boxes.spin,30,339),undefined);
+  for (const [x,y] of [[29,340],[371,404],[30,339],[370,405]]) {
+    assert.equal(rankAt(boxes.spin,x,y),undefined);
+  }
   assert.deepEqual([[0,0],[200,0],[0,400],[200,400]].map(([x,y]) => suitAt(boxes.stage,x,y)),['♠','♦','♣','♥']);
 });
 test('all 40 cards use only the winning START zone and share the same pre-reveal trace',t => {
@@ -66,8 +72,11 @@ test('all 40 cards use only the winning START zone and share the same pre-reveal
     for (let rank=1;rank<=10;rank++) {
       const h = harness(3);
       h.tap(index%2*200+50,Math.floor(index/2)*400+40);
-      const zoneX = offset => 47+((rank-1+offset)%10)*34;
-      h.tap(zoneX(1),362);
+      function tapZone(offset) {
+        const cell = (rank-1+offset)%10;
+        h.tap(64+(cell%5)*68,356+Math.floor(cell/5)*32);
+      }
+      tapZone(1);
       const trace = [];
       for (let loss=0;loss<2;loss++) {
         h.advance(1500);
@@ -77,7 +86,7 @@ test('all 40 cards use only the winning START zone and share the same pre-reveal
         trace.push(combo);
         assert.equal(h.events.includes('roll'),false);
         assert.equal(h.round.progress(),loss+2);
-        h.tap(zoneX(loss === 0 ? 2 : 0),370);
+        tapZone(loss === 0 ? 2 : 0);
       }
       function centre() {
         return h.symbols.map(node => node.textContent.split('\n')[-parseFloat(node.style.transform.slice(11))/100]);
@@ -208,7 +217,7 @@ test('service worker lists the exact app shell, manifest and PNG dimensions matc
   const sw = read('sw.js');
   const files = JSON.parse(/const SHELL = (\[[\s\S]*?\]);/.exec(sw)[1]);
   assert.deepEqual(files.sort(),readdirSync(dir).filter(f => f!=='sw.js').sort().map(f=>'./'+f));
-  assert.match(sw,/friend-slot-shell-/); assert.match(sw,/v20261121-4/);
+  assert.match(sw,/friend-slot-shell-/); assert.match(sw,/v20261121-5/);
   const manifest = JSON.parse(read('manifest.webmanifest'));
   assert.equal(manifest.orientation,'portrait'); assert.equal(manifest.id,'/tools/slot/');
   for (const n of [192,512]) {

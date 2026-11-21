@@ -7,5 +7,7 @@ export function suitAt(box, x, y) {
   return y < box.top + box.height / 2 ? (right ? '♦' : '♠') : (right ? '♥' : '♣');
 }
 export function rankAt(box, x, y) {
-  if (contains(box, x, y)) return Math.min(10, 1 + Math.floor((x - box.left) * 10 / box.width));
+  if (!contains(box, x, y)) return;
+  const column = Math.min(4, Math.floor((x - box.left) * 5 / box.width));
+  return (y >= box.top + box.height / 2 ? 6 : 1) + column;
 }
