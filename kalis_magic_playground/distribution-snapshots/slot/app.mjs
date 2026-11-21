@@ -15,7 +15,7 @@ const stage = el('stage'), dialog = document.querySelector('dialog');
 const prefs = preferences();
 const audio = createAudio(() => prefs.sound);
 let last, frame = null;
-const moving = new Set(['spinning','rolling','opening']);
+const moving = new Set(['spinning','jackpot','rolling','opening']);
 function schedule() {
   if (frame === null && !blocked() && moving.has(stage.dataset.phase)) {
     last = performance.now();
@@ -25,7 +25,7 @@ function schedule() {
 const landscape = portraitGuard(sync);
 const blocked = () => landscape() || dialog.open || document.hidden;
 const round = createRound({
-  blocked, box: id => el(id).getBoundingClientRect(), audio,
+  targetRound: () => prefs.round, blocked, box: id => el(id).getBoundingClientRect(), audio,
   render(phase) {
     stage.dataset.phase = phase;
     el('machine').hidden = phase === 'dark';
@@ -43,7 +43,7 @@ const round = createRound({
   },
   vibrate: () => vibrate(prefs.vibration)
 });
-const openSettings = settings(dialog,prefs,round.reset,sync);
+const openSettings = settings(dialog,prefs,round.reset,sync,round.progress);
 const clearPointers = listen(stage,round.candidate,openSettings);
 function tick(t) {
   if (blocked()) { frame = null; return; }
@@ -57,7 +57,10 @@ function sync() {
   frame = null;
   stage.classList.toggle('paused',blocked());
   if (blocked()) audio.stop();
-  else schedule();
+  else {
+    if (stage.dataset.phase === 'spinning') audio.play('motor');
+    schedule();
+  }
 }
 window.addEventListener('blur',clearPointers);
 document.addEventListener('visibilitychange',sync);

@@ -1958,14 +1958,14 @@
     {
       "path": "distribution-snapshots/slot/app.mjs",
       "kind": "file",
-      "size": 2452,
-      "sha256": "b351946141390626160a0033dc05d8129a882df44207d948844561d1e0e017f6"
+      "size": 2584,
+      "sha256": "2e1fcc6e1e30f363c5a31a90db044bcd61933f7047da7e95411c95c264563f4d"
     },
     {
       "path": "distribution-snapshots/slot/audio.mjs",
       "kind": "file",
-      "size": 1104,
-      "sha256": "b89c06b1842e7325f2a7f3566570ed1e153b5ed71fa3377e1bcce19b0114ce1e"
+      "size": 1661,
+      "sha256": "a32077000ad75d347ccce3cab1974940235a19bcd553663b8e3bc26d579b80f2"
     },
     {
       "path": "distribution-snapshots/slot/capsule.mjs",
@@ -2000,8 +2000,8 @@
     {
       "path": "distribution-snapshots/slot/index.html",
       "kind": "file",
-      "size": 1730,
-      "sha256": "013ee43ef0fafdbc0dffda7f03e71c03df33c004ee7868abf382a76e2b385c5c"
+      "size": 2259,
+      "sha256": "e4dbb769b7df53db8f7336b54f3b19e837b4255a3be30b91824eb8dd98ce9df0"
     },
     {
       "path": "distribution-snapshots/slot/install-update.mjs",
@@ -2024,38 +2024,38 @@
     {
       "path": "distribution-snapshots/slot/reels.mjs",
       "kind": "file",
-      "size": 1083,
-      "sha256": "c3c290acd26103a80d5f5d934deb57c32c836e49c6d5481221c0f8b5bb773d3c"
+      "size": 1829,
+      "sha256": "0f7554d5ab7e913aca70f1adc222b6301aa3e875a5d61cfd715f12a5538915a5"
     },
     {
       "path": "distribution-snapshots/slot/round.mjs",
       "kind": "file",
-      "size": 1927,
-      "sha256": "6d621993808f2c9dda72012fb7f81e34f60120c97a56d366b4875b08cc94ae9c"
+      "size": 2735,
+      "sha256": "d1e429781606c465cdb55f4812521a58b38993b97a588d5f21ebc6680445ea9a"
     },
     {
       "path": "distribution-snapshots/slot/settings.mjs",
       "kind": "file",
-      "size": 511,
-      "sha256": "5ef1497eece1ee3c45ea95d83320d87035fe24cb8dadb612a5d295f6bb0ee1eb"
+      "size": 859,
+      "sha256": "f9b7c93ed83f88312a993c8a168769990df7a2614b8790c17dd17c58c206db84"
     },
     {
       "path": "distribution-snapshots/slot/storage.mjs",
       "kind": "file",
-      "size": 355,
-      "sha256": "37737ba6f7f108589999d108ae2634d96441e14f5b86f637bc8b29223ef3e286"
+      "size": 501,
+      "sha256": "32674f993e381083831f38897bd0d9f3d4ac15edca5cc9010d6f1b92a63a820c"
     },
     {
       "path": "distribution-snapshots/slot/style.css",
       "kind": "file",
-      "size": 4847,
-      "sha256": "5a438732fa460fa37c703e911e7524a2ba19f7fe8775c5d94a45894482b52334"
+      "size": 6371,
+      "sha256": "744332243c26c6ef0b3572a4dd9763ff594bef2a2861dbf027ae229b5b900a0d"
     },
     {
       "path": "distribution-snapshots/slot/sw.js",
       "kind": "file",
       "size": 5482,
-      "sha256": "9cdb34216935284d31855a2a657961435cd2dbd8cfbabd5aac8d1572987deffb"
+      "sha256": "554af923dacdc6daf1e28094c01517ec93c35d1fa5236a1a80148f0a7ef408d8"
     },
     {
       "path": "distribution-snapshots/slot/vibration.mjs",

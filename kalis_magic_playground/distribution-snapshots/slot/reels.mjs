@@ -3,17 +3,31 @@ const startCell = 14;
 export const stopTime = index => 900 + 300 * index;
 
 export function createReels(strips, random = Math.random) {
-  const travel = [];
+  const travel = [], offsets = [];
   function place(strip, cell) {
     strip.style.transform = 'translateY(' + (-100 * cell) + '%)';
   }
   return {
     reset() {
       strips.forEach((strip, i) => {
+        offsets[i] = i + 2;
         strip.textContent = Array.from({length:18}, (_, row) =>
-          symbols[(row + i + 2) % symbols.length]).join('\n');
+          symbols[(row + offsets[i]) % symbols.length]).join('\n');
         travel[i] = 8 + Math.floor(random() * symbols.length);
         place(strip, startCell);
+      });
+    },
+    start(winning) {
+      const ends = strips.map(() => Math.floor(random() * symbols.length));
+      if (winning) ends.fill(3);
+      else if (ends.every(value => value === ends[0])) ends[2] = (ends[2]+1)%4;
+      strips.forEach((strip,i) => {
+        // Rebase the strip at its previous visible symbol before starting again.
+        const previous = Math.round(-parseFloat(strip.style.transform.slice(11))/100);
+        offsets[i] = (previous + offsets[i] - startCell + 16) % 4;
+        strip.textContent = Array.from({length:18}, (_,row) => symbols[(row+offsets[i])%4]).join('\n');
+        travel[i] = 8 + (startCell + offsets[i] - ends[i]) % 4;
+        place(strip,startCell);
       });
     },
     frame(elapsed) {

@@ -48,3 +48,26 @@ dialog p {font-size:.9rem;color:#e0c9c2}
 @media (prefers-reduced-motion:reduce) {
   [data-phase="revealed"] .card,[data-phase="revealed"] #machine {animation-duration:.01s}
 }
+
+#machine {position:relative;grid-template-rows:1fr 2.5fr 1.16fr 1.56fr}
+#spin {font:900 clamp(24px,7vw,36px)/1 system-ui;letter-spacing:.12em}
+#spin[aria-disabled="true"] {filter:saturate(.68);box-shadow:0 2px #622936}
+#spin:active[aria-disabled="false"] {transform:translateY(2px)}
+.lights,.lights::before {position:absolute;inset:5px;border-radius:inherit;pointer-events:none}
+.lights {border:3px dotted #dfa572}
+.lights::before {content:"";inset:-3px;border:3px dotted #fff2b0;opacity:0;
+  mask-image:conic-gradient(from 0deg,black,transparent 25%,black 50%,transparent 75%,black)}
+#reels {position:relative}
+#reels::after {content:"";position:absolute;left:0;right:0;top:50%;height:2px;background:#ffe59c;
+  box-shadow:0 0 7px 2px #ffbf4a;opacity:0;pointer-events:none}
+[data-phase="jackpot"] #reels::after,[data-phase="jackpot"] .lights::before {opacity:1}
+[data-phase="jackpot"] .lights {box-shadow:0 0 14px #ffd686,inset 0 0 9px #ffd686}
+#round {width:4em;font:inherit;padding:.3em}
+@media (prefers-reduced-motion:no-preference) {
+  [data-phase="spinning"] .lights::before {animation:chase .85s linear infinite}
+  [data-phase="jackpot"] #reels::after {animation:payline .58s ease-in-out 2}
+  [data-phase="jackpot"] .lights::before {animation:payline .58s ease-in-out 2}
+}
+@keyframes chase {0%,100% {opacity:.85;mask-image:conic-gradient(black,transparent,black,transparent,black)}
+  50% {opacity:.55;mask-image:conic-gradient(transparent,black,transparent,black,transparent)}}
+@keyframes payline {50% {opacity:.35}}

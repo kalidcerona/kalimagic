@@ -1,9 +1,11 @@
 import {stopTime} from './reels.mjs';
 import {contains, rankAt, suitAt} from './zones.mjs';
-export function createRound({box, blocked, render, reels, capsule, audio, vibrate, reveal, now = () => performance.now()}) {
+export function createRound({box, blocked, render, reels, capsule, audio, vibrate, reveal, targetRound = () => 1, now = () => performance.now()}) {
+  let attempt, winningAttempt, beat, winning;
   let phase, suit, rank, elapsed = 0, stopped = 0;
   function enter(next) { phase = next; render(next); }
   function reset() {
+    attempt = 0;
     suit = rank = undefined;
     elapsed = stopped = 0;
     audio.stop();
@@ -26,7 +28,16 @@ export function createRound({box, blocked, render, reels, capsule, audio, vibrat
         audio.unlock();
         enter('ready');
       } else if (start === 'ready') {
-        rank = rankAt(rect,x,y);
+        if (!attempt) {
+          winningAttempt = targetRound();
+        }
+        attempt++;
+        winning = attempt === winningAttempt;
+        if (winning) rank = rankAt(rect,x,y);
+        elapsed = stopped = beat = 0;
+        reels.start(winning);
+        audio.play('motor');
+        audio.play('tick',0);
         enter('spinning');
       } else {
         audio.play('open');
@@ -41,12 +52,24 @@ export function createRound({box, blocked, render, reels, capsule, audio, vibrat
     if (blocked()) return;
     if (phase === 'spinning') {
       elapsed += ms;
+      const nextBeat = Math.floor(elapsed / 135);
+      if (nextBeat > beat && elapsed < stopTime(2)) {
+        beat = nextBeat;
+        audio.play('tick',beat);
+      }
       while (stopped < 3 && elapsed >= stopTime(stopped)) {
         stopped++;
-        audio.play('stop');
+        audio.play('stop',stopped);
       }
       reels.frame(elapsed);
       if (stopped === 3) {
+        elapsed = 0;
+        if (winning) audio.play('win');
+        enter(winning ? 'jackpot' : 'ready');
+      }
+    } else if (phase === 'jackpot') {
+      elapsed += ms;
+      if (elapsed >= 1200) {
         elapsed = 0;
         capsule('roll');
         enter('rolling');
@@ -61,5 +84,5 @@ export function createRound({box, blocked, render, reels, capsule, audio, vibrat
     }
   }
   reset();
-  return {reset,candidate,advance};
+  return {reset,candidate,advance, progress: () => attempt + (phase === 'ready' ? 1 : 0) || 1};
 }

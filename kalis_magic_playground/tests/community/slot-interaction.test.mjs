@@ -22,17 +22,17 @@ class Element extends EventTarget {
   replaceChildren() { this.children = []; }
   setAttribute(k,v) { this.attributes[k] = v; }
 }
-function harness() {
+function harness(target=1) {
   const surface = new Element(), result = new Element(), symbols = [new Element(),new Element(),new Element()];
   const events = [];
   let time = 0, phase, modal = false, sideways = false;
   const round = createRound({
-    box:key => boxes[key],blocked:() => modal || sideways,now:() => time,
+    targetRound:() => target,box:key => boxes[key],blocked:() => modal || sideways,now:() => time,
     render:value => { phase = value; events.push(value); },
     reels:createReels(symbols,() => .8),
     capsule:value => events.push(value),
     reveal:card => { drawCard(result,card); events.push(card ? 'face' : 'empty'); },
-    audio:{stop:() => events.push('mute'),unlock:() => events.push('unlock'),play:v => events.push(v)},
+    audio:{stop:() => events.push('mute'),unlock:() => events.push('unlock'),play:(v,i) => events.push([v,i])},
     vibrate:() => events.push('buzz')
   });
   const clear = listen(surface,round.candidate,() => { modal = true; });
@@ -57,22 +57,37 @@ test('button-relative and stage boundaries include the outer edges',() => {
   assert.equal(rankAt(boxes.spin,30,339),undefined);
   assert.deepEqual([[0,0],[200,0],[0,400],[200,400]].map(([x,y]) => suitAt(boxes.stage,x,y)),['♠','♦','♣','♥']);
 });
-test('40 event paths share the entire pre-reveal trace and render exactly one correct face',t => {
+test('all 40 cards use only the winning START zone and share the same pre-reveal trace',t => {
   const descriptor = Object.getOwnPropertyDescriptor(globalThis,'document');
   Object.defineProperty(globalThis,'document',{configurable:true,value:{createElement:() => new Element()}});
   t.after(() => descriptor ? Object.defineProperty(globalThis,'document',descriptor) : delete globalThis.document);
   let reference;
   for (const [index,name] of ['스페이드','다이아몬드','클럽','하트'].entries()) {
     for (let rank=1;rank<=10;rank++) {
-      const h = harness();
+      const h = harness(3);
       h.tap(index%2*200+50,Math.floor(index/2)*400+40);
-      h.tap(47+(rank-1)*34,362);
+      const zoneX = offset => 47+((rank-1+offset)%10)*34;
+      h.tap(zoneX(1),362);
       const trace = [];
-      for (const ms of [78,822,300,300,599]) {
+      for (let loss=0;loss<2;loss++) {
+        h.advance(1500);
+        assert.equal(h.phase(),'ready');
+        const combo = centre();
+        assert.ok(new Set(combo).size>1);
+        trace.push(combo);
+        assert.equal(h.events.includes('roll'),false);
+        assert.equal(h.round.progress(),loss+2);
+        h.tap(zoneX(loss === 0 ? 2 : 0),370);
+      }
+      function centre() {
+        return h.symbols.map(node => node.textContent.split('\n')[-parseFloat(node.style.transform.slice(11))/100]);
+      }
+      for (const ms of [78,822,300,300,1200,599]) {
         h.advance(ms);
         trace.push(h.symbols.map(node => [node.textContent,node.style.transform]));
         assert.equal(h.result.children.length,0);
       }
+      assert.deepEqual(centre(),['7','7','7']);
       assert.equal(h.phase(),'rolling');
       h.point('pointerdown',200,500);
       h.advance(1);
@@ -99,6 +114,7 @@ test('40 event paths share the entire pre-reveal trace and render exactly one co
       h.round.reset();
       assert.equal(h.result.children.length,0);
       assert.equal(h.phase(),'dark');
+      assert.equal(h.round.progress(),1);
     }
   }
 });
@@ -111,13 +127,15 @@ test('multitouch, drag, cancellation and held taps across every performance phas
     h.tap(50,370);
     if (phase === 'spinning') return h;
     h.advance(1500);
+    if (phase === 'jackpot') return h;
+    h.advance(1200);
     if (phase === 'rolling') return h;
     h.advance(600);
     if (phase === 'waiting') return h;
     h.tap(200,500);
     return h;
   }
-  for (const phase of ['dark','ready','spinning','rolling','waiting','opening']) {
+  for (const phase of ['dark','ready','spinning','jackpot','rolling','waiting','opening']) {
     const h = prepare(phase);
     const [x,y] = phase === 'ready' ? [50,370] : [200,500];
     for (const id of [1,2,3]) h.point('pointerdown',x+id,y,id);
@@ -153,7 +171,7 @@ test('landscape blocks input, cancels a held press and freezes the round',() => 
   h.landscape(true); h.landscape(false); h.point('pointerup',50,370);
   assert.equal(h.phase(),'ready');
   h.tap(50,370); h.landscape(true); h.advance(5000); assert.equal(h.phase(),'spinning');
-  h.landscape(false); h.advance(1500); assert.equal(h.phase(),'rolling');
+  h.landscape(false); h.advance(1500); assert.equal(h.phase(),'jackpot');
   h.round.reset(); h.advance(5000); assert.equal(h.phase(),'dark');
 });
 test('orientation guard follows landscape changes even when lock fails',async () => {
@@ -190,7 +208,7 @@ test('service worker lists the exact app shell, manifest and PNG dimensions matc
   const sw = read('sw.js');
   const files = JSON.parse(/const SHELL = (\[[\s\S]*?\]);/.exec(sw)[1]);
   assert.deepEqual(files.sort(),readdirSync(dir).filter(f => f!=='sw.js').sort().map(f=>'./'+f));
-  assert.match(sw,/friend-slot-shell-/); assert.match(sw,/v20261121-2/);
+  assert.match(sw,/friend-slot-shell-/); assert.match(sw,/v20261121-3/);
   const manifest = JSON.parse(read('manifest.webmanifest'));
   assert.equal(manifest.orientation,'portrait'); assert.equal(manifest.id,'/tools/slot/');
   for (const n of [192,512]) {
@@ -222,4 +240,18 @@ test('strips descend continuously, settle at centred cells in left-to-right orde
     if (i<2) assert.notEqual(positions(stop)[i+1],positions(stop+60)[i+1]);
   }
   assert.deepEqual(strips.map(strip => strip.textContent),text);
+});
+
+test('capsule setting survives reload and rejects invalid persisted values',async t => {
+  let value;
+  Object.defineProperty(globalThis,'localStorage',{configurable:true,value:{
+    getItem:() => value,setItem:(_,next) => {value=next;}
+  }});
+  t.after(() => delete globalThis.localStorage);
+  const {preferences,save} = await import('../../distribution-snapshots/slot/storage.mjs');
+  for (const n of [undefined,0,21,2.5,'3',1,3,20]) {
+    save({sound:false,vibration:true,round:n});
+    assert.deepEqual(preferences(),{sound:false,vibration:true,round:[1,3,20].includes(n)?n:1});
+  }
+  assert.match(read('index.html'),/<button id="spin">START<\/button>/);
 });
