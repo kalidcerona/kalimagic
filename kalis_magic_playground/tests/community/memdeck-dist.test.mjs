@@ -136,7 +136,7 @@ test('Memdeck retains visibility-controlled screen wake lock', async () => {
 
 test('Memdeck migration retains every previously allowed tool without changing RLS', () => {
   const sql = read('supabase/migrations/20261103_friend_apps_memdeck.sql');
-  assert.deepEqual([...sql.matchAll(/'([^']+)'/g)].map(match => match[1]), [...FRIEND_APP_TOOLS].filter(tool => tool !== 'bell'));
+  assert.deepEqual([...sql.matchAll(/'([^']+)'/g)].map(match => match[1]), [...FRIEND_APP_TOOLS].filter(tool => !['bell', 'slot'].includes(tool)));
   assert.match(sql, /begin;[\s\S]*drop constraint if exists friend_app_access_tool_check;[\s\S]*add constraint friend_app_access_tool_check[\s\S]*commit;/);
   assert.doesNotMatch(sql, /row level security|create policy|drop policy/i);
 });

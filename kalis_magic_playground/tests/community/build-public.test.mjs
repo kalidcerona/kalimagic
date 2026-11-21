@@ -96,6 +96,7 @@ test('public build mirrors the current calculator and integrated stopwatch sourc
   assert.deepEqual(DISTRIBUTION_APPS, [
     { source: 'distribution-snapshots/memdeck', target: 'memdeck', tool: 'memdeck' },
     { source: 'distribution-snapshots/bell', target: 'bell', tool: 'bell' },
+    { source: 'distribution-snapshots/slot', target: 'slot', tool: 'slot' },
     { source: 'distribution-snapshots/gwayubulgeup', target: 'gwayubulgeup', tool: 'gwayubulgeup' },
     { source: 'distribution-snapshots/magicshow', target: 'magicshow', tool: 'magicshow' },
     { source: 'distribution-snapshots/planbcafe', target: 'planbcafe', tool: 'planbcafe' },
@@ -123,6 +124,9 @@ test('public build serves integrated stopwatch on both retained entitlement rout
       await readFile(new URL('../../../../magic-app-common/performance-link.js', import.meta.url), 'utf8'));
   }
   const personalStopwatch = await readFile(new URL('../../dist/zz1/index.html', import.meta.url), 'utf8');
+  const sharedSlot = await readFile(new URL('../../dist/tools/slot/index.html', import.meta.url), 'utf8');
+  assert.equal(sharedSlot.split('id="friend-apps-check"').length - 1, 1);
+  assert.ok(sharedSlot.includes('/tools/_check?tool=slot'));
   const sharedUnlock = await readFile(new URL('../../dist/tools/release/index.html', import.meta.url), 'utf8');
   const sharedStopwatch = await readFile(new URL('../../dist/tools/kairos/index.html', import.meta.url), 'utf8');
   const sharedCalculator = await readFile(new URL('../../dist/tools/hitsuzen/index.html', import.meta.url), 'utf8');

@@ -238,6 +238,15 @@ test('one Google account can request each friend app and receive only approved a
   const bell = await requestFriendApp(supabase, viewer, identity, 'bell', 'secret');
   assert.equal(bell.statusCode, 200);
   assert.match(bell.headers['Set-Cookie'], /^kali_bell_gate=/);
+  assert.equal((await requestFriendApp(supabase, viewer, identity, 'slot', 'secret')).statusCode, 403);
+  const slotRow = rows.find(row => row.tool === 'slot');
+  assert.equal(slotRow.status, 'pending');
+  slotRow.status = 'approved';
+  const slot = await requestFriendApp(supabase, viewer, identity, 'slot', 'secret');
+  assert.equal(slot.statusCode, 200);
+  assert.match(slot.headers['Set-Cookie'], /^kali_slot_gate=/);
+  slotRow.status = 'pending';
+  assert.equal((await requestFriendApp(supabase, viewer, identity, 'slot', 'secret')).statusCode, 403);
   rows[0].status = 'approved';
   const unlock = await requestFriendApp(supabase, viewer, identity, 'unlock', 'secret');
   assert.equal(unlock.statusCode, 200);
@@ -276,7 +285,7 @@ test('admin approval and revocation target only the selected app table', async (
   assert.deepEqual(tables, ['friend_app_access']);
 });
 
-for (const tool of ['aletheia', 'bell']) {
+for (const tool of ['aletheia', 'bell', 'slot']) {
   test(tool + ' admin operations target only the selected row and tool', async () => {
     const id = '00000000-0000-4000-8000-000000000002';
     const row = { id, tool, status: 'pending' };
@@ -380,7 +389,7 @@ test('AROSAegida migration retains all seven friend tools and the existing RLS p
   const values = [...sql.matchAll(/'([^']+)'/g)].map(match => match[1]);
   assert.equal(values.length, 7);
   // This historical migration predates the Pi Max, Choice and Magicshow deployments.
-  assert.deepEqual(values, [...FRIEND_APP_TOOLS].filter(tool => !['pimax', 'choice', 'magicshow', 'gwayubulgeup', 'memdeck', 'bell'].includes(tool)));
+  assert.deepEqual(values, [...FRIEND_APP_TOOLS].filter(tool => !['pimax', 'choice', 'magicshow', 'gwayubulgeup', 'memdeck', 'bell', 'slot'].includes(tool)));
   assert.match(sql, /drop constraint if exists friend_app_access_tool_check/);
   assert.match(sql, /add constraint friend_app_access_tool_check/);
   assert.doesNotMatch(sql, /row level security|create policy|drop policy/i);

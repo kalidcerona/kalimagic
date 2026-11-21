@@ -54,7 +54,7 @@ test('all distribution destinations are named in the login prompt', async () => 
     ['/tools/aletheia/', 'ALETHEIA'], ['/tools/usotsuki/', 'USOTSUKI'],
     ['/tools/tobira/', 'TOBIRA'], ['/tools/tyche/', 'TYCHE'], ['/tools/arosaegida/', '아로새기다'],
     ['/tools/magicshow/', '칼리 마술 성장기 \\(베타\\)'], ['/tools/pimax/', 'PI MAX 연습실'], ['/tools/choice/', '너의 선택은\\?'],
-    ['/tools/gwayubulgeup/', '과유불급'], ['/tools/memdeck/', '멤덱 연습실'], ['/tools/bell/', '벨']
+    ['/tools/gwayubulgeup/', '과유불급'], ['/tools/memdeck/', '멤덱 연습실'], ['/tools/bell/', '벨'], ['/tools/slot/', '슬롯 머신']
   ]) {
     const ui = setup(path, null, { getSession: async () => null });
     await ui.flush();
@@ -121,7 +121,7 @@ test('failed account change remains recoverable', async () => {
 });
 
 
-for (const [tool, label] of [['arosaegida', '아로새기다'], ['bell', '벨']]) {
+for (const [tool, label] of [['arosaegida', '아로새기다'], ['bell', '벨'], ['slot', '슬롯 머신']]) {
   test(tool + ' requests friend approval and returns to its own safe path after approval', async () => {
     const path = `/tools/${tool}/?from=invite`;
     const pending = setup(path, { ok: false, status: 403, json: async () => ({ status: 'pending' }) });

@@ -648,6 +648,7 @@ export function shouldCopyPlanbcafe(relativePath) {
 export const DISTRIBUTION_APPS = [
   { source: 'distribution-snapshots/memdeck', target: 'memdeck', tool: 'memdeck' },
   { source: 'distribution-snapshots/bell', target: 'bell', tool: 'bell' },
+  { source: 'distribution-snapshots/slot', target: 'slot', tool: 'slot' },
   { source: 'distribution-snapshots/gwayubulgeup', target: 'gwayubulgeup', tool: 'gwayubulgeup' },
   { source: 'distribution-snapshots/magicshow', target: 'magicshow', tool: 'magicshow' },
   { source: 'distribution-snapshots/planbcafe', target: 'planbcafe', tool: 'planbcafe' },

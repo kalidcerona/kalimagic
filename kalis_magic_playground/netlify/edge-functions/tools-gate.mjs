@@ -16,7 +16,7 @@ const COOKIE_MAX_AGE = 7_776_000;
 const RENEWAL_WINDOW_SECONDS = 3_888_000;
 const DEFAULT_TOOL = 'calc';
 const PRODUCT_SLUGS = { calc: 'hitsuzen', unlock: 'release', 'stopwatch-uni': 'kairos', stopwatch: 'kairos-classic', spinner: 'tyche', arosaegida: 'arosaegida' };
-const STRICT_DISTRIBUTION_TOOLS = new Set(['aletheia', 'usotsuki', 'tobira', 'spinner', 'arosaegida', 'pimax', 'choice', 'magicshow', 'gwayubulgeup', 'memdeck', 'bell']);
+const STRICT_DISTRIBUTION_TOOLS = new Set(['aletheia', 'usotsuki', 'tobira', 'spinner', 'arosaegida', 'pimax', 'choice', 'magicshow', 'gwayubulgeup', 'memdeck', 'bell', 'slot']);
 
 function analyzePath(rawPathname) {
   if (typeof rawPathname !== 'string') {
@@ -62,6 +62,14 @@ function analyzePath(rawPathname) {
       return { mode: 'public', pathname };
     }
     return { mode: 'gated', tool: 'bell', pathname };
+  }
+
+  if (pathname === '/tools/slot' || pathname.startsWith('/tools/slot/')) {
+    const publicFiles = ['manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
+    if (publicFiles.some((file) => pathname === `/tools/slot/${file}`)) {
+      return { mode: 'public', pathname };
+    }
+    return { mode: 'gated', tool: 'slot', pathname };
   }
 
   if (pathname === '/tools/memdeck' || pathname.startsWith('/tools/memdeck/')) {
@@ -202,6 +210,7 @@ function safeReturnPath(pathname, search, fallback) {
     pathname.startsWith('/tools/magicshow/') ||
     pathname.startsWith('/tools/gwayubulgeup/') ||
     pathname.startsWith('/tools/bell/') ||
+    pathname.startsWith('/tools/slot/') ||
     pathname.startsWith('/tools/memdeck/') ||
     pathname.startsWith('/tools/tobira/') ||
     pathname.startsWith('/tools/spinner/') ||

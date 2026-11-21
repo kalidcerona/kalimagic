@@ -47,6 +47,7 @@ const EXPECTED_APP_ROOTS = [
   'distribution-snapshots/memdeck',
   'distribution-snapshots/pimax',
   'distribution-snapshots/qr',
+  'distribution-snapshots/slot',
   'distribution-snapshots/spinner',
   'distribution-snapshots/tobira',
   'distribution-snapshots/unlock',

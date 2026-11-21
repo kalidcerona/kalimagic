@@ -1,7 +1,7 @@
 (function () {
   var g = typeof window !== 'undefined' ? window : globalThis;
   var DEFAULT_TO = '/tools/hitsuzen/';
-  var ALLOWED = /^\/tools\/(?:calc|stopwatch|unlock|stopwatch-uni|aletheia|usotsuki|tobira|spinner|hitsuzen|release|kairos|kairos-classic|tyche|arosaegida|pimax|choice|magicshow|gwayubulgeup|memdeck|bell)\//;
+  var ALLOWED = /^\/tools\/(?:calc|stopwatch|unlock|stopwatch-uni|aletheia|usotsuki|tobira|spinner|hitsuzen|release|kairos|kairos-classic|tyche|arosaegida|pimax|choice|magicshow|gwayubulgeup|memdeck|bell|slot)\//;
 
   // Return only to allow-listed local distribution paths.
   function safeTo(raw) {
@@ -24,6 +24,7 @@
     if (/^\/tools\/gwayubulgeup\//.test(path)) return 'gwayubulgeup';
     if (/^\/tools\/memdeck\//.test(path)) return 'memdeck';
     if (/^\/tools\/bell\//.test(path)) return 'bell';
+    if (/^\/tools\/slot\//.test(path)) return 'slot';
     if (/^\/tools\/tobira\//.test(path)) return 'tobira';
     if (/^\/tools\/arosaegida\//.test(path)) return 'arosaegida';
     if (/^\/tools\/(?:spinner|tyche)\//.test(path)) return 'spinner';
