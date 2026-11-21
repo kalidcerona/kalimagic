@@ -66,8 +66,10 @@ function analyzePath(rawPathname) {
   for (const tool of ['bell', 'slot']) {
     const root = `/tools/${tool}`;
     if (pathname !== root && !pathname.startsWith(`${root}/`)) continue;
-    if (/\/{2,}/.test(lowerPath)) return { mode: 'block', pathname };
-    if (isFriendAppPublicBeta(tool)) return { mode: 'public', pathname };
+    if (isFriendAppPublicBeta(tool)) {
+      if (/\/{2,}/.test(lowerPath)) return { mode: 'block', pathname };
+      return { mode: 'public', pathname };
+    }
     const publicFiles = ['manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
     if (publicFiles.some((file) => pathname === `${root}/${file}`)) {
       return { mode: 'public', pathname };

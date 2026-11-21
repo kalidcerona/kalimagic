@@ -31,10 +31,36 @@ test('logged-out Bell and Slot requests follow independent switches and reject i
       }
     }
   }
-  for (const tool of ['bell', 'slot']) {
-    for (const pathname of [`/tools/${tool}/%2e/index.html`, `/tools/${tool}/../index.html`, `/tools//${tool}/index.html`]) {
+  for (const [tool, isPublic] of [['bell', BELL_PUBLIC_BETA], ['slot', SLOT_PUBLIC_BETA]]) {
+    const indexPath = `/tools//${tool}/index.html`;
+    assert.deepEqual(classifyPath(indexPath), isPublic ? { mode: 'block' } : { mode: 'gated', tool });
+    assert.equal((await launch(indexPath)).status, 302);
+    for (const pathname of [`/tools/${tool}/%2e/index.html`, `/tools/${tool}/../index.html`]) {
       assert.deepEqual(classifyPath(pathname), { mode: 'block' });
       assert.equal((await launch(pathname)).status, 302);
+    }
+  }
+});
+
+test('double-slash install manifests follow each app’s configured beta mode', async () => {
+  const gateUrl = new URL('../../netlify/edge-functions/tools-gate.mjs', import.meta.url);
+  const source = readFileSync(gateUrl, 'utf8')
+    .replace(/from '([.][^']+)'/g, (_, path) => `from '${new URL(path, gateUrl).href}'`);
+  for (const bellPublic of [false, true]) {
+    const slotPublic = !bellPublic;
+    const configured = source
+      .replace(/(const BELL_PUBLIC_BETA = )(true|false)/, `$1${bellPublic}`)
+      .replace(/(const SLOT_PUBLIC_BETA = )(true|false)/, `$1${slotPublic}`);
+    const gate = await import(`data:text/javascript,${encodeURIComponent(configured)}`);
+    for (const [tool, isPublic] of [['bell', bellPublic], ['slot', slotPublic]]) {
+      const path = `/tools/${tool}//manifest.webmanifest`;
+      const response = await gate.default(new Request(`https://example.com${path}`), {
+        next: () => new Response('manifest')
+      });
+      assert.equal(response.status, isPublic ? 302 : 200, path);
+      if (isPublic) {
+        assert.equal(new URL(response.headers.get('location')).searchParams.get('to'), '/tools/hitsuzen/');
+      }
     }
   }
 });

@@ -10,6 +10,8 @@
     "test": "node --test tests/community/*.test.mjs && python3 -m pytest tests",
     "test:js": "node --test tests/community/*.test.mjs",
     "test:py": "python3 -m pytest tests",
+    "check:apps": "node scripts/app-release-check.mjs --verify",
+    "audit:app-masters": "node scripts/app-release-check.mjs --audit-masters",
     "check:dist": "node scripts/check-dist-safety.mjs",
     "check:env": "node scripts/check-env.mjs",
     "smoke:api": "node scripts/smoke-community-api.mjs",

@@ -150,13 +150,30 @@ async function buildPlan() {
   return { required, logos };
 }
 
+function pngReferences(file, text) {
+  if (file === 'distribution-snapshots/magicshow/sw.js') {
+    text = text.replace(/(["'])\.\/assets\/fx\/buff-coin-(?:bless|burst|missile)\.png\1/g, '');
+  }
+  return [...text.matchAll(new RegExp(PNG_COURT_OR_COIN.source, 'gi'))].map((match) => match[0]);
+}
+
+test('only the three magicshow effect sprite paths are exempt', () => {
+  const file = 'distribution-snapshots/magicshow/sw.js';
+  const paths = ['bless', 'burst', 'missile'].map((name) => `"./assets/fx/buff-coin-${name}.png"`);
+  assert.deepEqual(pngReferences(file, paths.join(', ')), []);
+  assert.deepEqual(pngReferences('other/sw.js', paths[0]), ['coin-bless.png']);
+  const others = '"./other/buff-coin-bless.png", "./assets/fx/buff-coin-new.png", "coin-head.png", "court-cards/H-K.png"';
+  assert.deepEqual(pngReferences(file, paths.concat(others).join(', ')),
+    ['coin-bless.png', 'coin-new.png', 'coin-head.png', 'court-cards/H-K.png']);
+});
+
 async function assertNoPngCourtOrCoinReferences() {
   const hits = [];
   for (const source of appSources) {
     await walk(path.join(root, source), async (full) => {
       if (!RUNTIME.test(full)) return;
       const text = await readFile(full, 'utf8');
-      const matches = [...text.matchAll(new RegExp(PNG_COURT_OR_COIN.source, 'gi'))].map((match) => match[0]);
+      const matches = pngReferences(path.relative(root, full), text);
       if (matches.length) hits.push(`${path.relative(root, full)} -> ${[...new Set(matches)].join(', ')}`);
     });
   }

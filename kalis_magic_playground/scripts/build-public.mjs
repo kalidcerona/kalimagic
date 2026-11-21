@@ -1,3 +1,4 @@
+import { verifyAppRelease } from './app-release-pins.mjs';
 import { readFileSync } from 'node:fs';
 import { MAGICSHOW_EXTRAS, magicshowRuntimeFiles } from './magicshow-files.mjs';
 import { cp, mkdir, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises';
@@ -59,6 +60,14 @@ export const PUBLIC_FILES = [
   'post.js',
   'reviews-community.js',
 ];
+
+export const APP_RELEASE_ROOTS = Object.freeze([
+  'zz1', 'zz2', 'zz3', 'zz4', 'zz5', 'zz6', 'zz7', 'zz8',
+  'zz10', 'zz11', 'zz12', 'zz13', 'zz14', 'zz15',
+  ...['aletheia', 'calculator', 'choice', 'gwayubulgeup', 'kairos', 'memdeck', 'pimax',
+    'qr', 'spinner', 'tobira', 'unlock', 'usotsuki', 'bell', 'slot']
+    .map(name => `distribution-snapshots/${name}`)
+]);
 
 export const PUBLIC_DIRS = [
   'assets',
@@ -939,6 +948,7 @@ export async function verifyAppDisplayPolicy(directory = DIST, routes = [
 }
 
 export async function buildPublic() {
+  await verifyAppRelease({ root: ROOT, requiredRoots: APP_RELEASE_ROOTS });
   await rm(DIST, { recursive: true, force: true });
   await mkdir(DIST, { recursive: true });
   for (const file of PUBLIC_FILES) await copyIfExists(file);
@@ -946,7 +956,6 @@ export async function buildPublic() {
   await buildDistributionApps();
   // Bridge files are explicit. The legacy trees above stay excluded.
   await publishLegacyBridgeFiles(DIST);
-  await verifyMirrors();
   await verifyAppDisplayPolicy();
 }
 

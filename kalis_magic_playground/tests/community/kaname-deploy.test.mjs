@@ -25,7 +25,12 @@ test('KanameCue publishes only its explicit shell at the exact path in an isolat
     await writeFile(path.join(site, 'KanameCue', 'draft.txt'), 'private fixture');
     const result = spawnSync(process.execPath, ['scripts/build-public.mjs'], { cwd: site, encoding: 'utf8', maxBuffer: 8 * 1024 * 1024, env: { ...process.env, CI: 'true' } });
     assert.equal(result.status, 0, result.stderr + result.stdout);
-    const mirrorLog = `${result.stdout}\n${result.stderr}`;
+    assert.doesNotMatch(result.stderr + result.stdout, /mirror check skipped/);
+    const audit = spawnSync('npm', ['run', 'audit:app-masters'], {
+      cwd: site, encoding: 'utf8', env: { ...process.env, CI: 'true' }
+    });
+    assert.equal(audit.status, 0, audit.stderr + audit.stdout);
+    const mirrorLog = `${audit.stdout}\n${audit.stderr}`;
     assert.equal((mirrorLog.match(/WARNING: mirror check skipped on CI: \d+ sibling sources absent/g) || []).length, 1, mirrorLog);
     assert.equal(mirrorLog.includes('mirror check skipped:'), false);
     const published = path.join(site, 'dist', 'KanameCue');

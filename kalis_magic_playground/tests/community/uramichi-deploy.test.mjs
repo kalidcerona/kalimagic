@@ -31,11 +31,20 @@ test('zz15 publishes only its explicit shell in an isolated build', async () => 
     await cp(root, site, { recursive: true, filter: (source) => !['node_modules', 'dist', '.git'].includes(path.relative(root, source).split(path.sep)[0]) });
     await writeFile(path.join(site, 'zz15', 'draft.txt'), 'private fixture');
     await writeFile(path.join(site, 'zz15', 'vendor', 'notes.json'), '{}');
-    const result = spawnSync(process.execPath, ['scripts/build-public.mjs'], { cwd: site, encoding: 'utf8', maxBuffer: 8 * 1024 * 1024, env: { ...process.env, CI: 'true' } });
+    const build = () => spawnSync(process.execPath, ['scripts/build-public.mjs'], {
+      cwd: site, encoding: 'utf8', env: { ...process.env, CI: 'true' }
+    });
+    const rejected = build();
+    assert.equal(rejected.status, 1, rejected.stderr);
+    assert.match(rejected.stderr, /unexpected zz15\/draft\.txt/);
+    assert.match(rejected.stderr, /unexpected zz15\/vendor\/notes\.json/);
+    const candidate = spawnSync(process.execPath, ['scripts/app-release-check.mjs', '--candidate', 'zz15-filter-fixture'], {
+      cwd: site, encoding: 'utf8'
+    });
+    assert.equal(candidate.status, 0, candidate.stderr);
+    await writeFile(path.join(site, 'scripts/app-release-pins.json'), candidate.stdout);
+    const result = build();
     assert.equal(result.status, 0, result.stderr + result.stdout);
-    const mirrorLog = `${result.stdout}\n${result.stderr}`;
-    assert.equal((mirrorLog.match(/WARNING: mirror check skipped on CI: \d+ sibling sources absent/g) || []).length, 1, mirrorLog);
-    assert.equal(mirrorLog.includes('mirror check skipped:'), false);
     const published = path.join(site, 'dist', 'zz15');
     assert.deepEqual((await listFiles(published)).sort(), [...shell, 'sw.js'].sort());
     for (const file of [...shell, 'sw.js']) assert.deepEqual(await readFile(path.join(published, file)), await readFile(path.join(root, 'zz15', file)), file);

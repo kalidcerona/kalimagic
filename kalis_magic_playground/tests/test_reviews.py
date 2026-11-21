@@ -6,6 +6,9 @@ test_site.py는 deep module(수정 금지)이라 신규 페이지 검증은 여�
 """
 import os
 import sys
+from html.parser import HTMLParser
+from pathlib import Path
+from urllib.parse import unquote, urlsplit
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -17,6 +20,55 @@ def read(name):
         return None
     with open(p, encoding="utf-8") as f:
         return f.read()
+
+
+class ProductCards(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.cards = []
+        self.desktop_count = 0
+        self.active = None
+
+    def handle_starttag(self, tag, attrs):
+        attrs = dict(attrs)
+        if tag == "a":
+            desktop = "store-card" in attrs.get("class", "").split()
+            if desktop or attrs.get("data-track") == "works_product":
+                self.active = []
+                self.cards.append(self.active)
+                self.desktop_count += int(desktop)
+        elif tag == "img" and self.active is not None:
+            self.active.append(attrs)
+
+    def handle_endtag(self, tag):
+        if tag == "a":
+            self.active = None
+
+
+def image_errors(cards, root):
+    errors = []
+    for number, images in enumerate(cards, 1):
+        if not images:
+            errors.append(f"카드 {number}: img 누락")
+        for image in images:
+            urls = [image.get("src", "")]
+            for candidate in image.get("srcset", "").split(","):
+                parts = candidate.split()
+                urls.append(parts[0] if parts else "")
+            for url in urls:
+                file = unquote(urlsplit(url).path)
+                if not file or not (root / file.lstrip("/")).is_file():
+                    errors.append(f"카드 {number}: {url or '이미지 경로 누락'}")
+    return errors
+
+
+def test_missing_product_files(tmp_path):
+    (tmp_path / "exists.jpg").touch()
+    for src, srcset in [("missing.jpg", "exists.jpg 1x"),
+                        ("exists.jpg", "exists.jpg 1x, missing.jpg 2x")]:
+        parser = ProductCards()
+        parser.feed(f'<a class="store-card"><img src="{src}" srcset="{srcset}"></a>')
+        assert image_errors(parser.cards, tmp_path) == ["카드 1: missing.jpg"]
 
 
 def main():
@@ -44,7 +96,11 @@ def main():
     c("works.html 존재", works is not None)
     if works:
         c("store-grid 제품 그리드", "store-grid" in works)
-        c("store-card 12개 이상", works.count("store-card") >= 12)
+        parser = ProductCards()
+        parser.feed(works)
+        c("store-card 12개 이상", parser.desktop_count >= 12)
+        errors = image_errors(parser.cards, Path(ROOT))
+        c(f"제품 카드 {len(parser.cards)}개 이미지 파일 확인" + " ".join(errors), not errors)
         c("카테고리(강의)", "category-title" in works and "강의" in works)
         c("제품 트레이스", "트레이스" in works)
         c("제품 썸네일 경로 assets/products/", "assets/products/" in works)
@@ -52,11 +108,6 @@ def main():
 
     # --- nav.js 5페이지 ---
     c("nav.js reviews 항목", nav is not None and "reviews.html" in nav)
-
-    # --- assets/products 복사 ---
-    prod = os.path.join(ROOT, "assets", "products")
-    n = len([f for f in os.listdir(prod) if f.endswith(".jpg")]) if os.path.isdir(prod) else 0
-    c("assets/products 13개 이상", n >= 13)
 
     failed = [name for name, ok in checks if not ok]
     for name, ok in checks:

@@ -122,8 +122,10 @@ test('public build serves integrated stopwatch on both retained entitlement rout
     const appRoot = new URL(`../../dist/${route}/`, import.meta.url);
     assert.match(await readFile(new URL('index.html', appRoot), 'utf8'), /src=["']\.\/performance-link\.js["']/);
     assert.match(await readFile(new URL('sw.js', appRoot), 'utf8'), /performance-link\.js/);
-    assert.equal(await readFile(new URL('performance-link.js', appRoot), 'utf8'),
-      await readFile(new URL('../../../../magic-app-common/performance-link.js', import.meta.url), 'utf8'));
+    const source = route.startsWith('tools/')
+      ? DISTRIBUTION_APPS.find(app => route === `tools/${app.target}`).source : route;
+    assert.deepEqual(await readFile(new URL('performance-link.js', appRoot)),
+      await readFile(new URL(`../../${source}/performance-link.js`, import.meta.url)));
   }
   const personalStopwatch = await readFile(new URL('../../dist/zz1/index.html', import.meta.url), 'utf8');
   for (const [tool, isPublic] of [['bell', BELL_PUBLIC_BETA], ['slot', SLOT_PUBLIC_BETA]]) {

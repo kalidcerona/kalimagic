@@ -200,7 +200,11 @@ test('Pi Max built trees contain only runtime files with valid HTML, module, man
   for (const route of ['dist/zz14', 'dist/tools/pimax']) {
     assert.deepEqual((await readdir(new URL(`../../${route}/`, import.meta.url))).sort(), [...PIMAX_FILES].sort());
     const html = (await read(route, 'index.html')).toString();
-    assert.equal(html.includes('friend-apps-check'), route.includes('/tools/'));
+    const snapshot = route.includes('/tools/');
+    const sourceHtml = (await read(snapshot ? shared : personal, 'index.html')).toString();
+    const app = DISTRIBUTION_APPS.find(entry => entry.target === 'pimax');
+    assert.equal(html, snapshot ? transformDistributionDocument(sourceHtml, app) : sourceHtml);
+    assert.equal(html.includes('friend-apps-check'), snapshot);
     const manifest = JSON.parse((await read(route, 'manifest.webmanifest')).toString());
     assert.equal(manifest.scope, './');
     assert.equal(manifest.start_url, './');
