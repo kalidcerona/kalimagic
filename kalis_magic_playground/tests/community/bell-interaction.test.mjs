@@ -6,6 +6,7 @@ import { readSound, saveSound } from '../../distribution-snapshots/bell/storage.
 import { createGesture } from '../../distribution-snapshots/bell/gestures.mjs';
 import { createSynth } from '../../distribution-snapshots/bell/audio.mjs';
 import { transformDistributionDocument } from '../../scripts/build-public.mjs';
+import { BELL_PUBLIC_BETA } from '../../netlify/edge-functions/tools-gate.mjs';
 
 const root = new URL('../../distribution-snapshots/bell/', import.meta.url);
 const read = file => readFileSync(new URL(file, root), 'utf8');
@@ -91,7 +92,7 @@ test('first gesture resumes audio, four partials per strike, third fades the old
   assert.deepEqual(oscillators.map(o => o.stops.length), [2,2,2,2,1,1,1,1,1,1,1,1]);
 });
 
-test('all offline assets exist, all runtime URLs are local, published HTML receives one bell guard', () => {
+test('bell snapshot assets are local and the published guard follows the beta switch', () => {
   const files = readdirSync(root).sort();
   const shell = JSON.parse(read('sw.js').match(/const SHELL = (\[[\s\S]*?\]);/)[1]);
   assert.deepEqual(shell.map(path => path.slice(2)).sort(), files.filter(file => file !== 'sw.js'));
@@ -99,9 +100,8 @@ test('all offline assets exist, all runtime URLs are local, published HTML recei
     assert.doesNotMatch(read(file).replace('http://www.w3.org/2000/svg', ''), /(?:https?:)?\/\/[\w-]+\./);
   }
   const html = transformDistributionDocument(read('index.html'), { target: 'bell', tool: 'bell' });
-  assert.equal(html.split('id="friend-apps-check"').length, 2);
-  assert.match(html, /\/tools\/_check\?tool=bell/);
-  assert.match(html, /credentials: 'same-origin'/);
+  assert.equal(html.split('id="friend-apps-check"').length - 1, BELL_PUBLIC_BETA ? 0 : 1);
+  assert.equal(html.includes('/tools/_check?tool=bell'), !BELL_PUBLIC_BETA);
   assert.equal(JSON.parse(read('manifest.webmanifest')).id, '/tools/bell/');
 });
 

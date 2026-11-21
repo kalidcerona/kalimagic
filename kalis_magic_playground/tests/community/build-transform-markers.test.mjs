@@ -5,12 +5,16 @@ import {
   DISTRIBUTION_APPS, transformDistributionDocument, transformKairosScript, injectLegacyShellModules, preparePimaxRuntime,
   isolateKairosStorageKeys, KAIROS_SPLIT_FILES,
 } from '../../scripts/build-public.mjs';
+import { BELL_PUBLIC_BETA, SLOT_PUBLIC_BETA } from '../../netlify/edge-functions/tools-gate.mjs';
 
 // build-public.mjs rewrites builds by matching exact text. Each marker must occur exactly once in the source
 // and the transform must visibly happen in the output, so a silent no-op cannot ship.
 const read = (file) => readFileSync(new URL(`../../${file}`, import.meta.url), 'utf8');
 const count = (text, needle) => text.split(needle).length - 1;
-const GUARDED_APPS = DISTRIBUTION_APPS.filter((app) => app.target !== 'magicshow' && app.target !== 'planbcafe');
+const BETA_TARGETS = new Set(['magicshow', 'planbcafe']);
+if (BELL_PUBLIC_BETA) BETA_TARGETS.add('bell');
+if (SLOT_PUBLIC_BETA) BETA_TARGETS.add('slot');
+const GUARDED_APPS = DISTRIBUTION_APPS.filter((app) => !BETA_TARGETS.has(app.target));
 
 test('every friend index.html has exactly one <head> and one <body, and the transform adds the guard', () => {
   for (const app of GUARDED_APPS) {

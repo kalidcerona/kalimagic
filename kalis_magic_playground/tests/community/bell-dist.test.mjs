@@ -3,13 +3,14 @@ import { FRIEND_APP_TOOLS } from '../../netlify/functions/_lib/friend-app-access
 import { accessTableForTool, isValidTool } from '../../netlify/functions/admin-tools.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { classifyPath } from '../../netlify/edge-functions/tools-gate.mjs';
+import { BELL_PUBLIC_BETA, classifyPath } from '../../netlify/edge-functions/tools-gate.mjs';
 import { gateCookieName } from '../../netlify/functions/_lib/tool-gate.mjs';
 
-test('Bell protects its shared shell and exposes its installation files', () => {
+test('Bell follows its beta switch and exposes its installation files', () => {
+  const expected = BELL_PUBLIC_BETA ? { mode: 'public' } : { mode: 'gated', tool: 'bell' };
   for (const path of ['/tools/bell', '/tools/BELL/', '/tools/bell/index.html',
     '/tools/bell/audio.mjs', '/tools/bell/sw.js', '/tools/bell/extra/icon-192.png']) {
-    assert.deepEqual(classifyPath(path), { mode: 'gated', tool: 'bell' }, path);
+    assert.deepEqual(classifyPath(path), expected, path);
   }
   for (const file of ['manifest.webmanifest', 'icon-192.png', 'icon-512.png']) {
     assert.deepEqual(classifyPath('/tools/bell/' + file), { mode: 'public' });

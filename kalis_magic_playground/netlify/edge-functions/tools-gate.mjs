@@ -9,8 +9,15 @@ import { legacySharedWorkerResponse } from '../../scripts/legacy-sw-bridge.mjs';
 
 // Temporary link-only beta; set false to restore the retained friend grant gate.
 export const MAGICSHOW_PUBLIC_BETA = true;
+// Set either flag false and rebuild to restore that app's friend approval gate.
+export const BELL_PUBLIC_BETA = true;
+export const SLOT_PUBLIC_BETA = true;
 // Link-only game beta; no entitlement product is registered for this route.
 export const PLANBCAFE_PUBLIC_BETA = true;
+
+export function isFriendAppPublicBeta(tool) {
+  return (tool === 'bell' && BELL_PUBLIC_BETA) || (tool === 'slot' && SLOT_PUBLIC_BETA);
+}
 
 const COOKIE_MAX_AGE = 7_776_000;
 const RENEWAL_WINDOW_SECONDS = 3_888_000;
@@ -56,20 +63,16 @@ function analyzePath(rawPathname) {
     return { mode: 'public', pathname };
   }
 
-  if (pathname === '/tools/bell' || pathname.startsWith('/tools/bell/')) {
+  for (const tool of ['bell', 'slot']) {
+    const root = `/tools/${tool}`;
+    if (pathname !== root && !pathname.startsWith(`${root}/`)) continue;
+    if (/\/{2,}/.test(lowerPath)) return { mode: 'block', pathname };
+    if (isFriendAppPublicBeta(tool)) return { mode: 'public', pathname };
     const publicFiles = ['manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
-    if (publicFiles.some((file) => pathname === `/tools/bell/${file}`)) {
+    if (publicFiles.some((file) => pathname === `${root}/${file}`)) {
       return { mode: 'public', pathname };
     }
-    return { mode: 'gated', tool: 'bell', pathname };
-  }
-
-  if (pathname === '/tools/slot' || pathname.startsWith('/tools/slot/')) {
-    const publicFiles = ['manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
-    if (publicFiles.some((file) => pathname === `/tools/slot/${file}`)) {
-      return { mode: 'public', pathname };
-    }
-    return { mode: 'gated', tool: 'slot', pathname };
+    return { mode: 'gated', tool, pathname };
   }
 
   if (pathname === '/tools/memdeck' || pathname.startsWith('/tools/memdeck/')) {

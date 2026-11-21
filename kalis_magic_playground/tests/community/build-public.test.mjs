@@ -3,8 +3,10 @@ import assert from 'node:assert/strict';
 import { readdir, readFile, stat, mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
+import vm from 'node:vm';
 import { fileURLToPath } from 'node:url';
 import { PUBLIC_FILES, PUBLIC_DIRS, PRIVATE_PATTERNS, MIRROR_PAIRS, DISTRIBUTION_APPS, SHARED_UNLOCK_FILES, CHOICE_FILES, NEW_APP_FILES, USOTSUKI_FILES, ASRAI_FILES, ALTER_FILES, SPINNER_FILES, MEMDECK_FILES, QR_FILES, ALETHEIA_COURT_FILES, SETTINGS_UI_FILES, buildPublic, verifyMirrors, verifyAppDisplayPolicy, injectLegacyMigration, injectLegacyShellModules } from '../../scripts/build-public.mjs';
+import { BELL_PUBLIC_BETA, SLOT_PUBLIC_BETA } from '../../netlify/edge-functions/tools-gate.mjs';
 
 test('public build allowlist includes visible site pages', () => {
   assert.ok(PUBLIC_FILES.includes('index.html'));
@@ -114,7 +116,7 @@ test('public build mirrors the current calculator and integrated stopwatch sourc
   ]);
 });
 
-test('public build serves integrated stopwatch on both retained entitlement routes', async () => {
+test('public build serves integrated stopwatch on both retained entitlement routes', async (t) => {
   await buildPublic();
   for (const route of ['zz2', 'zz3', 'tools/release', 'tools/hitsuzen']) {
     const appRoot = new URL(`../../dist/${route}/`, import.meta.url);
@@ -124,9 +126,47 @@ test('public build serves integrated stopwatch on both retained entitlement rout
       await readFile(new URL('../../../../magic-app-common/performance-link.js', import.meta.url), 'utf8'));
   }
   const personalStopwatch = await readFile(new URL('../../dist/zz1/index.html', import.meta.url), 'utf8');
-  const sharedSlot = await readFile(new URL('../../dist/tools/slot/index.html', import.meta.url), 'utf8');
-  assert.equal(sharedSlot.split('id="friend-apps-check"').length - 1, 1);
-  assert.ok(sharedSlot.includes('/tools/_check?tool=slot'));
+  for (const [tool, isPublic] of [['bell', BELL_PUBLIC_BETA], ['slot', SLOT_PUBLIC_BETA]]) {
+    await t.test(`${tool} ships the selected HTML guard and worker policy`, async () => {
+      const root = new URL(`../../dist/tools/${tool}/`, import.meta.url);
+      const html = await readFile(new URL('index.html', root), 'utf8');
+      assert.equal(html.split('id="friend-apps-check"').length - 1, isPublic ? 0 : 1);
+      assert.equal(html.includes(`/tools/_check?tool=${tool}`), !isPublic);
+      assert.match(html, /data-magic-customize="off"/);
+
+      const worker = await readFile(new URL('sw.js', root), 'utf8');
+      const snapshot = await readFile(new URL(`../../distribution-snapshots/${tool}/sw.js`, import.meta.url), 'utf8');
+      if (!isPublic) {
+        assert.equal(worker, snapshot);
+        return;
+      }
+      assert.match(worker, /-public-beta';/);
+      const scope = `https://example.test/tools/${tool}/`;
+      const listeners = new Map();
+      const login = Response.redirect('https://example.test/tools/login/', 302);
+      const fetch = t.mock.fn(async (_request, options) => {
+        assert.equal(options.cache, 'no-store');
+        return login;
+      });
+      let precached;
+      vm.runInNewContext(worker, {
+        URL, Request, Response, fetch,
+        self: { registration: { scope, active: true }, addEventListener: (event, listener) => listeners.set(event, listener) },
+        caches: { open: async () => ({ addAll: async (requests) => { precached = Array.from(requests, ({ url }) => url); } }) }
+      });
+      let install;
+      listeners.get('install')({ waitUntil: promise => { install = promise; } });
+      await install;
+      assert.ok(precached.some(url => url.endsWith('/app.mjs')));
+      assert.ok(!precached.includes(scope + 'index.html'));
+      for (const file of ['', 'index.html']) {
+        let response;
+        listeners.get('fetch')({ request: new Request(scope + file), respondWith: promise => { response = promise; } });
+        assert.equal(await response, login);
+      }
+      assert.equal(fetch.mock.callCount(), 2);
+    });
+  }
   const sharedUnlock = await readFile(new URL('../../dist/tools/release/index.html', import.meta.url), 'utf8');
   const sharedStopwatch = await readFile(new URL('../../dist/tools/kairos/index.html', import.meta.url), 'utf8');
   const sharedCalculator = await readFile(new URL('../../dist/tools/hitsuzen/index.html', import.meta.url), 'utf8');

@@ -107,23 +107,40 @@ test('TabataTimer worker precaches the complete shell, serves offline and isolat
   const names = [];
   for (const scope of ['https://example.com/TabataTimer/', 'https://example.com/tabatatimer/']) {
     const cached = new Map(), deleted = [];
+    const prefix = 'tabata-timer-' + encodeURIComponent(new URL(scope).pathname) + '-';
+    const oldCache = prefix + 'v20261024-5-brand5-update-prompt-3-preset-ready-1-persist-1-name-1-r5-1';
     const cache = {
-      async addAll(requests) { for (const request of requests) cached.set(request.url, new Response(request.url)); },
+      async addAll(requests) {
+        for (const request of requests) {
+          assert.equal(request.cache, 'reload');
+          cached.set(request.url, new Response(request.url));
+        }
+      },
       async match(url) { return cached.get(url)?.clone(); }
     };
-    const caches = { async open(name) { names.push(name); return cache; }, async keys() { return [names.at(-1), names.at(-1).replace(/v20261024-5-brand5-update-prompt-3-preset-ready-1-persist-1-name-1-r5-1$/, 'old'), 'pimax-practice-old', 'tabata-timer-unrelated-old']; }, async delete(name) { deleted.push(name); } };
+    const caches = {
+      async open(name) { names.push(name); return cache; },
+      async keys() { return [names.at(-1), oldCache, oldCache + '-distribution', 'pimax-practice-old', 'tabata-timer-unrelated-old']; },
+      async delete(name) { deleted.push(name); }
+    };
     const { context, listeners } = worker(scope, caches);
     vm.runInContext(source, context);
+    let skipped = 0;
+    context.self.registration.active = {};
+    context.self.skipWaiting = () => { skipped++; };
     let pending;
     listeners.install({ waitUntil(value) { pending = value; } });
     await pending;
     const cacheName = names.at(-1);
-    assert.equal(cacheName.startsWith('tabata-timer-'), true);
-    assert.match(cacheName, /v20261024-5-brand5-update-prompt-3-preset-ready-1-persist-1-name-1-r5-1$/);
+    assert.equal(cacheName, prefix + 'v20261121-1');
     assert.deepEqual([...cached.keys()].sort(), shell.map(file => new URL(file === 'index.html' ? './' : file, scope).href).sort());
+    assert.equal(skipped, 0);
+    assert.deepEqual(deleted, []);
+    listeners.message({ data: { type: 'SKIP_WAITING' } });
+    assert.equal(skipped, 1);
     listeners.activate({ waitUntil(value) { pending = value; } });
     await pending;
-    assert.deepEqual(deleted, [cacheName.replace(/v20261024-5-brand5-update-prompt-3-preset-ready-1-persist-1-name-1-r5-1$/, 'old')]);
+    assert.deepEqual(deleted, [oldCache]);
     for (const file of ['', ...shell]) {
       listeners.fetch({ request: new Request(new URL(file, scope)), respondWith(value) { pending = value; } });
       const response = await pending;
@@ -378,6 +395,36 @@ test('TabataTimer saved timer waits on the run screen until the start button or 
   assert.equal(n.get('pauseBtn').textContent,'일시정지');
   assert.equal(app.utterances.at(-1).text,'준비');
   assert.equal(app.utterances.length,spoken+1);
+});
+
+test('TabataTimer restarts the same workout in ready state and waits for a second start', async () => {
+  const storage = memoryStorage({ 'tt.timers.v2': [{ name: '짧은 운동', v: {
+    prep: 1, work: 2, rest: 0, rounds: 1, cycles: 1, setrest: 0, cool: 0
+  } }] });
+  const app = await timerHarness({ storage, cues: true });
+  const node = id => app.nodes.get(id);
+  await app.start();
+  await app.advance(3000);
+  assert.equal(node('pauseBtn').textContent, '다시 시작');
+  const cues = () => [app.unlocked, app.utterances.length, app.tones.length, app.vibes.length];
+  const completed = cues();
+  await app.click('pauseBtn');
+  await app.advance(10000);
+  assert.equal(node('pauseBtn').textContent, '시작');
+  assert.equal(node('rPhase').textContent, '준비');
+  assert.equal(node('rCount').textContent, '1');
+  assert.equal(node('rLeft').textContent, '남은 시간 0:03');
+  assert.deepEqual(cues(), completed);
+  assert.equal(app.locks[0].released, false);
+  await app.click('pauseBtn');
+  assert.equal(node('pauseBtn').textContent, '일시정지');
+  await app.advance(1000);
+  assert.equal(node('rPhase').textContent, '운동');
+  assert.equal(node('rCount').textContent, '2');
+  await app.advance(2000);
+  assert.equal(node('pauseBtn').textContent, '다시 시작');
+  await app.key(' ');
+  assert.equal(node('pauseBtn').textContent, '시작');
 });
 
 test('TabataTimer idle, pause, completion and stop keep visible screen awake while monotonic timing, Korean speech and audio unlock remain intact',async()=>{

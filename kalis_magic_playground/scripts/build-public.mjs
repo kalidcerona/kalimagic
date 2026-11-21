@@ -5,6 +5,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { LEGACY_SHARED_WORKERS, TRUSTED_START_SESSION_KEY, legacyWorkerSpecByTarget } from './legacy-shared-contract.mjs';
 import { legacyBridgeSource } from './legacy-sw-bridge.mjs';
+import { isFriendAppPublicBeta } from '../netlify/edge-functions/tools-gate.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = path.join(ROOT, 'dist');
@@ -556,9 +557,11 @@ export function transformDistributionDocument(html, app) {
   let next = isolate ? isolateKairosStorageKeys(html, app.target) : html;
   // RELEASE friends get the same editor as the personal build. Other friend apps stay fixed.
   if (app.target !== 'release') next = next.replace(/<body\b/, '<body data-magic-customize="off"');
-  // A missing marker would ship the app without its access guard, so fail the build instead.
-  if (!next.includes('<head>')) throw new Error(`missing <head> for the ${app.target} access guard`);
-  next = next.replace('<head>', `<head>\n${accessGuard(app.tool, app.target)}`);
+  if (!isFriendAppPublicBeta(app.target)) {
+    // A missing marker would ship the app without its access guard, so fail the build instead.
+    if (!next.includes('<head>')) throw new Error(`missing <head> for the ${app.target} access guard`);
+    next = next.replace('<head>', `<head>\n${accessGuard(app.tool, app.target)}`);
+  }
   // KAIROS keeps its startup hook in app.js once the inline script is split out; transformKairosScript injects it there.
   if (isolate && !next.includes(INIT_APP_HOOK)) return next;
   return injectLegacyMigration(next, app.target);
@@ -730,6 +733,27 @@ export function accessGuard(tool, target) {
   </script>`;
 }
 
+function publicBetaWorker(source, target) {
+  // An installed beta worker must reach the edge on every launch, including after rollback.
+  const replacements = [
+    [/(const CACHE_NAME = CACHE_PREFIX \+ '[^']+)';/, "$1-public-beta';"],
+    [/SHELL\.map\((?=[^\n]+new Request)/, "SHELL.filter((file) => file !== './index.html').map("],
+    ['  event.respondWith((async () => {',
+      `  const name = shellName(request.url);
+  if (name === '' || name === 'index.html') {
+    event.respondWith(fetch(request, { cache: 'no-store' }));
+    return;
+  }
+  event.respondWith((async () => {`]
+  ];
+  for (const [marker, replacement] of replacements) {
+    const next = source.replace(marker, replacement);
+    if (next === source) throw new Error(`missing public beta worker marker for ${target}: ${marker}`);
+    source = next;
+  }
+  return source;
+}
+
 async function buildDistributionApps() {
   for (const app of DISTRIBUTION_APPS) {
     const source = path.join(ROOT, app.source);
@@ -751,6 +775,10 @@ async function buildDistributionApps() {
     // Key isolation follows the shared route, not the zz1 personal tree.
     // Raw stopwatch_ values are copied later by the injected migration module.
     await writeFile(indexPath, transformDistributionDocument(html, app));
+    if (isFriendAppPublicBeta(app.target)) {
+      const swPath = path.join(target, 'sw.js');
+      await writeFile(swPath, publicBetaWorker(await readFile(swPath, 'utf8'), app.target));
+    }
     if (app.target === 'kairos' || app.target === 'kairos-classic') {
       const logicPath = path.join(target, 'logic.js');
       const logic = await readFile(logicPath, 'utf8');

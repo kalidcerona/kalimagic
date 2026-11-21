@@ -14,22 +14,6 @@ globalThis.TabataRun = function ({ D, $, sound, keepAwake, renderHome }) {
     return 0;
   }
 
-  function start() {
-    applyColors(active);
-    segs = build(cfg, active.skipLast); total = totalOf(segs);
-    if (!total) return;
-    unlockAudio();
-    offset = 0; startedAt = now(); running = true; finished = false; ready = false; lastIdx = -1; lastWhole = -1;
-    $('setup').hidden = true; $('run').hidden = false;
-    $('run').classList.remove('paused');
-    paintStrip($('rStrip'), segs);
-    $('pauseBtn').textContent = '일시정지';
-    restoreRunBody();
-    keepAwake();
-    loop();
-    clearInterval(iv); iv = setInterval(tick, 200);
-  }
-
   function loop() { tick(); if (!finished && !$('run').hidden) raf = requestAnimationFrame(loop); }
 
   function tick() {
@@ -101,7 +85,10 @@ globalThis.TabataRun = function ({ D, $, sound, keepAwake, renderHome }) {
   }
 
   function togglePause() {
-    if (finished) return;
+    if (finished) {
+      TabataReady.openReady(readySession, active);
+      return;
+    }
     if (TabataReady.beginReady(readySession, now())) return;
     if (running) { pausedAt = now(); running = false; ready = false; $('pauseBtn').textContent = '계속'; $('run').classList.add('paused'); say('일시정지'); }
     else { startedAt += now() - pausedAt; running = true; $('pauseBtn').textContent = '일시정지'; $('run').classList.remove('paused'); unlockAudio(); keepAwake(); }
@@ -143,7 +130,7 @@ globalThis.TabataRun = function ({ D, $, sound, keepAwake, renderHome }) {
     renderHome();
   }
 
-  $('pauseBtn').addEventListener('click', () => { if (finished) start(); else togglePause(); });
+  $('pauseBtn').addEventListener('click', togglePause);
   $('prevBtn').addEventListener('click', () => jump(-1));
   $('nextBtn').addEventListener('click', () => jump(1));
   const stopBtn = $('stopBtn');
@@ -154,7 +141,7 @@ globalThis.TabataRun = function ({ D, $, sound, keepAwake, renderHome }) {
   });
   document.addEventListener('keydown', e => {
     if ($('run').hidden) return;
-    if (e.key === ' ') { e.preventDefault(); if (finished) start(); else togglePause(); }
+    if (e.key === ' ') { e.preventDefault(); togglePause(); }
     else if (e.key === 'ArrowRight') jump(1);
     else if (e.key === 'ArrowLeft') jump(-1);
   });

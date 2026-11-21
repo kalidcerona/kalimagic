@@ -3,12 +3,41 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { transformDistributionDocument } from '../../scripts/build-public.mjs';
 import vm from 'node:vm';
-import toolsGate, { classifyPath } from '../../netlify/edge-functions/tools-gate.mjs';
+import toolsGate, { BELL_PUBLIC_BETA, SLOT_PUBLIC_BETA, classifyPath } from '../../netlify/edge-functions/tools-gate.mjs';
 import { decideAccess, requestFriendApp } from '../../netlify/functions/tool-access.mjs';
 import { isValidTool, accessTableForTool, postToolAccess, deleteToolAccess } from '../../netlify/functions/admin-tools.mjs';
 import { signGateCookie, verifyGateCookie, gateCookieName } from '../../netlify/functions/_lib/tool-gate.mjs';
 import { clearGateCookie, allowOnCheckError, selectGate } from '../../netlify/functions/tool-check.mjs';
 import { FRIEND_APP_TOOLS, friendAccessDecision, findFriendAccess } from '../../netlify/functions/_lib/friend-app-access.mjs';
+
+test('logged-out Bell and Slot requests follow independent switches and reject invalid paths', async () => {
+  const context = { next: () => new Response('app') };
+  const launch = (pathname) => toolsGate({ url: `https://example.com${pathname}`, headers: new Headers() }, context);
+  for (const [tool, asset, isPublic] of [
+    ['bell', 'audio.mjs', BELL_PUBLIC_BETA],
+    ['slot', 'app.mjs', SLOT_PUBLIC_BETA],
+    ['memdeck', 'app.mjs', false],
+    ['pimax', 'app.mjs', false],
+    ['aletheia', 'app.js', false]
+  ]) {
+    const root = `/tools/${tool}/`;
+    for (const pathname of [root, root + asset]) {
+      const response = await launch(pathname);
+      assert.equal(response.status, isPublic ? 200 : 302, pathname);
+      if (!isPublic) {
+        const redirect = new URL(response.headers.get('location'));
+        assert.equal(redirect.pathname, '/tools/login/');
+        assert.equal(redirect.searchParams.get('to'), pathname);
+      }
+    }
+  }
+  for (const tool of ['bell', 'slot']) {
+    for (const pathname of [`/tools/${tool}/%2e/index.html`, `/tools/${tool}/../index.html`, `/tools//${tool}/index.html`]) {
+      assert.deepEqual(classifyPath(pathname), { mode: 'block' });
+      assert.equal((await launch(pathname)).status, 302);
+    }
+  }
+});
 
 test('only canonical personal routes stay public while distribution routes retain separate grants', () => {
   for (const path of ['/zz1/', '/zz1/logic.js', '/zz2/', '/zz3/', '/zz3/sw.js', '/zz4/', '/zz4/app.js', '/zz5/', '/zz5/app.js', '/zz6/', '/zz6/app.js', '/zz7/', '/zz7/detector.js']) {
