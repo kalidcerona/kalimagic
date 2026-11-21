@@ -433,7 +433,7 @@
       "path": "distribution-snapshots/bell/dome.mjs",
       "kind": "file",
       "size": 2488,
-      "sha256": "b79470310b5d88c1d3df488219844de806afd31384e93c93c56c3c1d36621752"
+      "sha256": "47a05b47acc22bebb18b7272a0db0443cac56b03cb416c04d8321a675a2df981"
     },
     {
       "path": "distribution-snapshots/bell/gestures.mjs",
@@ -523,7 +523,7 @@
       "path": "distribution-snapshots/bell/sw.js",
       "kind": "file",
       "size": 5474,
-      "sha256": "b2bbb8f1907a4e570fd5616f39e37621ded2eff78b75e7eccfde7b63a21e654b"
+      "sha256": "e5401626bafe1f805f1cf4c837610f76fc881fdc3f6eb45312d34aa46ae6a34a"
     },
     {
       "path": "distribution-snapshots/bell/vibration.mjs",

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import { presets, preset } from '../../distribution-snapshots/bell/presets.mjs';
 import { readSound, saveSound } from '../../distribution-snapshots/bell/storage.mjs';
+import { createScene } from '../../distribution-snapshots/bell/dome.mjs';
 import { createGesture } from '../../distribution-snapshots/bell/gestures.mjs';
 import { createSynth } from '../../distribution-snapshots/bell/audio.mjs';
 import { transformDistributionDocument } from '../../scripts/build-public.mjs';
@@ -349,4 +350,24 @@ test('a pinch stays zoom even after both fingers travel down together', () => {
   g.down(1,-10,0); g.down(2,10,0);
   g.move(1,-10,100,true); g.move(2,10,100,true);
   assert.equal(g.evaluatePair(),'settings');
+});
+
+test('secret band spans 76 pixels above the ordinary bottom strip and safe inset', t => {
+  const box = { left: 0, top: 0, width: 100, height: 100 };
+  const element = { setAttribute() {}, prepend() {}, getBoundingClientRect: () => box };
+  element.querySelector = () => element;
+  const globals = { document: { createElement: () => element }, innerHeight: 844,
+    innerWidth: 390, getComputedStyle: () => ({ getPropertyValue: () => '34px' }) };
+  for (const [name, value] of Object.entries(globals)) {
+    const original = Object.getOwnPropertyDescriptor(globalThis, name);
+    Object.defineProperty(globalThis, name, { configurable: true, value });
+    t.after(() => original ? Object.defineProperty(globalThis, name, original) : delete globalThis[name]);
+  }
+  const { hit } = createScene(element);
+  for (const x of [0, 195, 390]) {
+    for (const [y, expected] of [[657.99, false], [658, true], [700, true],
+      [733.99, true], [734, false], [809, false], [843, false]]) {
+      assert.equal(hit(x, y).secret, expected);
+    }
+  }
 });
