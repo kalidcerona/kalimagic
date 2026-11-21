@@ -1,6 +1,6 @@
 // Cache only the explicit app shell. API, authentication and user data stay on the network.
 const CACHE_PREFIX = 'friend-bell-shell-' + self.registration.scope + '-';
-const CACHE_NAME = CACHE_PREFIX + 'v20261121-7';
+const CACHE_NAME = CACHE_PREFIX + 'v20261121-8';
 const SHELL = [
   "./CARD_CREDITS.md",
   "./app.mjs",

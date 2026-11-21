@@ -352,7 +352,7 @@ test('a pinch stays zoom even after both fingers travel down together', () => {
   assert.equal(g.evaluatePair(),'settings');
 });
 
-test('secret band spans 76 pixels above the ordinary bottom strip and safe inset', t => {
+test('secret band spans the bottom 152 pixels above the safe inset', t => {
   const box = { left: 0, top: 0, width: 100, height: 100 };
   const element = { setAttribute() {}, prepend() {}, getBoundingClientRect: () => box };
   element.querySelector = () => element;
@@ -365,9 +365,25 @@ test('secret band spans 76 pixels above the ordinary bottom strip and safe inset
   }
   const { hit } = createScene(element);
   for (const x of [0, 195, 390]) {
-    for (const [y, expected] of [[657.99, false], [658, true], [700, true],
-      [733.99, true], [734, false], [809, false], [843, false]]) {
+    for (const [y, expected] of [[657.99, false], [658, false], [658.01, true], [734, true],
+      [809, true], [810, true], [810.01, false], [843, false]]) {
       assert.equal(hit(x, y).secret, expected);
     }
   }
+  function phaseAfterHold(x, y) {
+    let time = 0;
+    const gesture = createGesture({ hit, now: () => time });
+    gesture.down(1, x, y);
+    time = 300;
+    gesture.down(2, 50, box.top + 49);
+    gesture.up(2, 50, box.top + 49)?.onStarted?.();
+    gesture.up(1, x, y);
+    return gesture.phase();
+  }
+  for (const y of [810, 809, 734, 658.01]) assert.equal(phaseAfterHold(195, y), 'armed');
+  for (const y of [810.01, 658, 657]) assert.equal(phaseAfterHold(195, y), 'normal');
+  box.top = 685;
+  assert.equal(hit(50, 734).secret, true);
+  assert.equal(hit(50, 734).dome, true);
+  assert.equal(phaseAfterHold(50, 734), 'normal');
 });

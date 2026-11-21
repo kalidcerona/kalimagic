@@ -48,7 +48,7 @@ export function createScene(stage) {
     return {
       cx, cy, radius, width: innerWidth, left: bounds.left,
       dome: Math.hypot((x - cx) / (box.width * .46), (y - cy) / radius) <= 1, rim: distance >= radius * .45 && distance <= radius,
-      secret: y >= bottom - 152 && y < bottom - 76 && x >= 0 && x <= innerWidth,
+      secret: y > bottom - 152 && y <= bottom && x >= 0 && x <= innerWidth,
       card: x >= bounds.left && x <= bounds.right && y >= bounds.top && y <= bounds.bottom,
     };
   }
