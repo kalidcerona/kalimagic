@@ -1,0 +1,39 @@
+dialog.settings {
+  inset: 0; width: 100%; height: 100%; height: 100dvh; max-width: none; max-height: none;
+  margin: 0; border: 0; padding: 0; overscroll-behavior: contain;
+}
+dialog.settings::backdrop { background: #1a1512; overflow: hidden; overscroll-behavior: contain; }
+.settings-b {
+  height: 100%; display: grid; grid-template-rows: minmax(0, 1fr) auto;
+  font: 16px/1.5 system-ui, sans-serif; text-align: left;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+.settings-scroll { overflow-y: auto; overscroll-behavior: contain; padding: 20px 16px; }
+.settings-scroll > *, .settings-b form { width: min(100%, 560px); margin-inline: auto; }
+.settings-b header, .body-groups {
+  padding: 18px; background: #1f1815; border: 1px solid #ffffff14; border-radius: 12px;
+}
+.settings-b h1 { margin: 0; font-size: clamp(24px, 6vw, 30px); }
+.body-groups { margin-block: 16px; padding-block: 4px 14px; }
+.settings-b .body-groups details {
+  margin: 0; padding: 0; border: 0 !important; border-bottom: 1px solid #ffffff14 !important;
+  border-radius: 0; background-color: transparent !important;
+}
+.settings-b summary { display: flex; align-items: center; list-style: none; min-height: 48px; padding: 12px 0; }
+.settings-b summary::-webkit-details-marker { display: none; }
+.settings-b summary::after { content: "+"; margin-left: auto; color: #ab9f92; }
+.settings-b details[open] > summary::after { content: "−"; }
+.settings-b details[open] { padding-bottom: 12px; }
+.settings-b label { display: flex; align-items: center; gap: 10px; min-height: 44px; }
+.settings-b :is(select, input[type=number], button) {
+  min-height: 44px; max-width: 100%; padding: 6px 12px; border: 1px solid; border-radius: 9px; font: inherit;
+}
+.settings-b #next { margin-top: 12px; }
+.settings-b p { font-size: .94rem; word-break: keep-all; overflow-wrap: anywhere; }
+.settings-b form { padding: 10px 16px 14px; }
+.settings-b .primary { width: 100%; min-height: 48px; }
+.settings-b :is(summary, button, input, select, a):focus-visible { outline: 2px solid #e8631f; outline-offset: 2px; }
+@media (max-height: 500px) {
+  .settings-scroll { padding-block: 10px; }
+  .settings-b header { padding-block: 10px; }
+}

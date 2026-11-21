@@ -10,19 +10,45 @@
   <link rel="icon" type="image/png" href="./icon-192.png">
   <link rel="apple-touch-icon" href="./icon-192.png">
   <link rel="stylesheet" href="./style.css">
+  <link rel="stylesheet" href="./performance.css">
+  <link rel="stylesheet" href="./settings-ui.css">
+  <link rel="stylesheet" href="./settings-panel.css">
   <title>벨</title>
 </head>
 <body>
   <button id="stage" aria-label="벨 울리기"><span class="base"><span class="dome"></span></span></button>
-  <dialog aria-labelledby="title">
-    <h1 id="title">벨 설정</h1>
-    <label for="sound">음색</label>
-    <select id="sound"></select>
-    <button id="preview">미리듣기</button>
-    <p id="vibration"></p>
-    <p id="install-guide">홈 화면에 설치하려면 브라우저 메뉴 또는 공유 메뉴에서 ‘홈 화면에 추가’를 선택하세요.</p>
-    <button id="update" hidden>새 버전 적용</button>
-    <form method="dialog"><button>닫기</button></form>
+  <dialog aria-labelledby="title" class="settings">
+    <div class="settings-b" data-settings-root>
+      <div class="settings-scroll">
+        <header><h1 id="title">벨 설정</h1></header>
+        <div class="body-groups">
+          <details>
+            <summary>음색</summary>
+            <select id="sound" aria-label="음색"></select> <button id="preview">미리듣기</button>
+          </details>
+          <details>
+            <summary>배경</summary>
+            <select id="background" aria-label="배경"><option value="marble">대리석</option><option value="dark">어두운 배경</option></select>
+          </details>
+          <details>
+            <summary>카드 뒷면</summary>
+            <select id="cardBack" aria-label="카드 뒷면"><option value="blue">파랑</option><option value="red">빨강</option></select>
+          </details>
+          <details>
+            <summary>진동</summary>
+            <p id="vibration"></p>
+          </details>
+          <details>
+            <summary>카드 이미지 출처</summary>
+            <a href="./CARD_CREDITS.md" target="_blank" rel="noopener">카드 이미지 출처</a>
+          </details>
+          <button id="next">다음 공연</button>
+        </div>
+        <p id="install-guide">홈 화면에 설치하려면 브라우저 메뉴 또는 공유 메뉴에서 ‘홈 화면에 추가’를 선택하세요.</p>
+        <button id="update" hidden>새 버전 적용</button>
+      </div>
+      <form method="dialog"><button class="primary" autofocus>닫기</button></form>
+    </div>
   </dialog>
   <script type="module" src="./app.mjs"></script>
 </body>

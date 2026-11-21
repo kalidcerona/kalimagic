@@ -10,6 +10,8 @@
   <link rel="icon" type="image/png" href="./icon-192.png">
   <link rel="apple-touch-icon" href="./icon-192.png">
   <link rel="stylesheet" href="./style.css">
+  <link rel="stylesheet" href="./settings-ui.css">
+  <link rel="stylesheet" href="./settings-panel.css">
   <title>슬롯 머신</title>
 </head>
 <body>
@@ -24,16 +26,29 @@
     <div id="result" aria-live="polite"></div>
     <p id="rotate">세로로 돌려 주세요</p>
   </main>
-  <dialog aria-labelledby="title"><h1 id="title">슬롯 머신 설정</h1>
-    <label><input id="sound" type="checkbox"> 효과음</label>
-    <label><input id="vibration" type="checkbox"> 진동</label>
-    <label>캡슐이 나올 회차 <input id="round" type="number" min="1" max="20" step="1" value="1"></label>
-    <p id="progress"></p>
-    <p>첫 화면의 네 구역에서 무늬를 고르고, 캡슐이 나올 회차에 START의 가로 열 칸 중 하나를 눌러 숫자를 정하세요. 그 전 회차에는 어느 칸을 눌러도 됩니다. 회차 설정은 첫 START 때 적용됩니다. 다음 공연을 누르면 무늬·숫자·진행 회차가 초기화됩니다.</p>
-    <button id="next">다음 공연</button>
-    <p>설치하려면 브라우저 메뉴 또는 공유 메뉴에서 ‘홈 화면에 추가’를 선택하세요.</p>
-    <button id="update" hidden>새 버전 적용</button>
-    <form method="dialog"><button autofocus>닫기</button></form>
+  <dialog aria-labelledby="title" class="settings">
+    <div class="settings-b" data-settings-root>
+      <div class="settings-scroll">
+        <header><h1 id="title">슬롯 머신 설정</h1></header>
+        <div class="body-groups">
+          <details>
+            <summary>효과음 · 진동</summary>
+            <label><input id="sound" type="checkbox"> 효과음</label>
+            <label><input id="vibration" type="checkbox"> 진동</label>
+          </details>
+          <details>
+            <summary>캡슐이 나올 회차</summary>
+            <label>캡슐이 나올 회차 <input id="round" type="number" min="1" max="20" step="1" value="1"></label>
+            <p id="progress"></p>
+            <p>첫 화면의 네 구역에서 무늬를 고르고, 캡슐이 나올 회차에 START의 가로 열 칸 중 하나를 눌러 숫자를 정하세요. 그 전 회차에는 어느 칸을 눌러도 됩니다. 회차 설정은 첫 START 때 적용됩니다. 다음 공연을 누르면 무늬·숫자·진행 회차가 초기화됩니다.</p>
+          </details>
+          <button id="next">다음 공연</button>
+        </div>
+        <p>설치하려면 브라우저 메뉴 또는 공유 메뉴에서 ‘홈 화면에 추가’를 선택하세요.</p>
+        <button id="update" hidden>새 버전 적용</button>
+      </div>
+      <form method="dialog"><button class="primary" autofocus>닫기</button></form>
+    </div>
   </dialog>
   <script type="module" src="./app.mjs"></script>
 </body>

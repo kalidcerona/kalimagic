@@ -1,5 +1,5 @@
 import { presets } from './presets.mjs';
-import { readSound, saveSound } from './storage.mjs';
+import { readSound, saveSound, readBackground, readCardBack } from './storage.mjs';
 import { supported } from './vibration.mjs';
 
 export function setupSettings(play) {
@@ -10,6 +10,22 @@ export function setupSettings(play) {
   const updateGuide = () => { guide.hidden = standalone.matches || navigator.standalone === true; };
   updateGuide();
   standalone.addEventListener?.('change', updateGuide);
+  for (const [name, read] of [
+    ['background', readBackground],
+    ['cardBack', readCardBack],
+  ]) {
+    const field = dialog.querySelector('#' + name);
+    field.value = read();
+    field.onchange = () => {
+      const value = field.value;
+      try { localStorage.setItem('friend-bell.' + name + '.v1', value); } catch {}
+      document.dispatchEvent(new CustomEvent('bell:appearance', { detail: { [name]: value } }));
+    };
+  }
+  dialog.querySelector('#next').onclick = () => {
+    document.dispatchEvent(new Event('bell:next-performance'));
+    dialog.close();
+  };
   let sound = readSound();
   for (const preset of presets) select.add(new Option(preset.name, preset.id));
   select.value = sound;

@@ -29,13 +29,6 @@ button {font:inherit;color:inherit;cursor:pointer}
 .card span {position:absolute;font-size:20cqw;line-height:1;transform:translate(-50%,-50%)}
 .card .ace {font-size:46cqw}
 @media (orientation:landscape) {#stage #machine,#stage #result {display:none} #rotate {display:block;font-size:clamp(22px,4vh,32px)}}
-dialog {width:min(90vw,23rem);max-height:90dvh;overflow:auto;border:1px solid #835c62;border-radius:18px;background:#291e28;color:#fff2df;padding:1.5rem}
-dialog:modal {overscroll-behavior:contain}
-dialog::backdrop {background:#08070bd9;overflow:hidden;overscroll-behavior:contain}
-dialog h1 {font-size:1.35rem;margin:0 0 .8rem}
-dialog label {display:block;padding:.55rem 0}
-dialog button {width:100%;padding:.65em;margin-top:.5rem;border:1px solid #997170;background:#49303a;border-radius:8px}
-dialog p {font-size:.9rem;color:#e0c9c2}
 
 .window i {display:block;position:absolute;top:25%;width:100%;height:50%;line-height:50cqh;white-space:pre;font-style:normal;text-align:center}
 .window::after {content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(#55352d66,transparent 32%,transparent 68%,#55352d66)}

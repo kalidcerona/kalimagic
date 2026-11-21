@@ -1,0 +1,44 @@
+html:has(#stage) { background: #19191c; }
+body:has(#stage:not([data-phase])) { visibility: hidden; background: transparent; }
+#stage { overflow: hidden; --safe-bottom: env(safe-area-inset-bottom, 0px); }
+#stage[data-background="dark"] { background: radial-gradient(ellipse at center, #303033, #19191c); }
+#stage[data-background="dark"] .base { outline: 1px solid #676466; }
+.base::before {
+  content: ""; position: absolute; inset: 5%; border-radius: 50%;
+  background: radial-gradient(ellipse at 54% 65%, #373436, #201e20 63%, #0b0a0b 82%);
+  box-shadow: inset 0 .9vmin 1.8vmin #090808;
+}
+.dome { rotate: var(--turn, 0deg); }
+.dome.jammed { transform: translateY(1.5px); }
+#stage:is([data-phase="open"], [data-phase="empty"]) .dome {
+  transition: transform 180ms ease-out, opacity 180ms ease-in;
+  transform: translateY(-28%) scale(1.07); opacity: 0; pointer-events: none;
+}
+.folded-card {
+  position: absolute; left: 34%; top: 27.5%; width: 32%; height: 45%;
+  --card-photo: url("./card-rider-blue.jpg");
+  /* The crop retains the printed top and left margins. Ink runs into both folds. */
+  background: var(--card-photo) 0 0 / 200% 200% no-repeat;
+  border-radius: 6px 2px 4px 2px / 6px 4px 3px 3px;
+  box-shadow: 0 5px 6px -1px #080709aa;
+  transform: translate(var(--drag-x, 0px), var(--drag-y, 0px));
+  visibility: hidden;
+}
+.folded-card::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit;
+  background:
+    linear-gradient(to left, #30272699, #3027263d 1px, #fff3 2.5px, transparent 5px),
+    linear-gradient(to top, #31262199, #34292355 1px, #fff2 3px, transparent 6px);
+}
+.folded-card::after {
+  /* A recessed second leaf peeks out below the lower fold. */
+  content: ""; position: absolute; top: 100%; left: 3%; right: 2%; height: 2px;
+  border-radius: 0 0 65% 30%;
+  background: linear-gradient(to bottom, #b2a899, #796f62);
+}
+#stage[data-card-back="red"] .folded-card { --card-photo: url("./card-rider-red.jpg"); }
+#stage:is([data-phase="open"], [data-phase="empty"]) .folded-card {
+  visibility: visible; transition: transform 160ms ease-out;
+}
+#stage[data-phase="open"] .folded-card.dragging { transition: none; }
+#stage[data-phase="empty"] .folded-card { transform: translate(110vw, var(--drag-y, 0px)); }

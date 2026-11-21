@@ -92,11 +92,20 @@ test('first gesture resumes audio, four partials per strike, third fades the old
   assert.deepEqual(oscillators.map(o => o.stops.length), [2,2,2,2,1,1,1,1,1,1,1,1]);
 });
 
-test('bell snapshot assets are local and the published guard follows the beta switch', () => {
+test('service worker precaches every snapshot asset', () => {
   const files = readdirSync(root).sort();
   const shell = JSON.parse(read('sw.js').match(/const SHELL = (\[[\s\S]*?\]);/)[1]);
   assert.deepEqual(shell.map(path => path.slice(2)).sort(), files.filter(file => file !== 'sw.js'));
-  for (const file of files.filter(file => !file.endsWith('.png'))) {
+});
+
+test('card sources are identical and runtime assets stay local', () => {
+  for (const color of ['blue', 'red']) {
+    const name = 'card-rider-' + color + '.jpg';
+    assert.deepEqual(readFileSync(new URL(name, root)), readFileSync(new URL('../tobira/' + name, root)));
+  }
+  const links = text => text.match(/https:\/\/[^\s]+/g);
+  assert.deepEqual(links(read('CARD_CREDITS.md')), links(read('../tobira/CARD_CREDITS.md')));
+  for (const file of readdirSync(root).filter(file => !/\.(jpg|png)$/.test(file) && file !== 'CARD_CREDITS.md')) {
     assert.doesNotMatch(read(file).replace('http://www.w3.org/2000/svg', ''), /(?:https?:)?\/\/[\w-]+\./);
   }
   const html = transformDistributionDocument(read('index.html'), { target: 'bell', tool: 'bell' });
@@ -174,4 +183,155 @@ test('a visible return retries a late wake rejection once', async t => {
   requests[1].reject(new Error('permission denied'));
   await new Promise(resolve => setImmediate(resolve));
   assert.equal(requests.length, 2);
+});
+
+function rehearsal(cancelPending) {
+  let time = 0;
+  const frames = [];
+  const g = createGesture({ cancelPending, now: () => time, draw: (state, frame) => frames.push(frame),
+    hit(x, y) {
+      const r = Math.hypot(x, y);
+      return { secret: y >= 450, dome: r <= 100, rim: r >= 45 && r <= 100,
+        radius: 100, cx: 0, cy: 0, card: r <= 20, width: 500, left: 240 };
+    } });
+  const tap = (id, x, y) => {
+    g.down(id, x, y);
+    const result = g.up(id, x, y);
+    result?.onStarted?.();
+    return result?.action ?? result;
+  };
+  const hold = (ms = 250) => { g.down(1, 0, 490); time += ms; };
+  const arm = () => {
+    hold();
+    assert.equal(tap(2, 0, 0), 'ring');
+    assert.equal(tap(2, 0, 0), 'ring');
+    g.up(1, 0, 490);
+    assert.equal(g.phase(), 'armed');
+    assert.equal(tap(1, 150, 0), undefined);
+    assert.equal(tap(1, 0, 0), 'stuck');
+    assert.equal(g.activate(), 'stuck');
+  };
+  const arc = (deg, start = 160) => {
+    const point = a => [80 * Math.cos(a * Math.PI / 180), 80 * Math.sin(a * Math.PI / 180)];
+    g.down(1, ...point(start));
+    for (let i = 1; i <= Math.abs(deg); i++) g.move(1, ...point(start + i * Math.sign(deg)));
+    g.up(1, ...point(start + deg));
+  };
+  return { g, frames, hold, tap, arm, arc };
+}
+
+test('delayed resume arms only when an oscillator starts before the hold is released', async () => {
+  for (const releaseEarly of [true, false]) {
+    let resume, starts = 0;
+    const envelope = { setValueAtTime() {}, linearRampToValueAtTime() {}, exponentialRampToValueAtTime() {} };
+    const device = {
+      state: 'suspended', currentTime: 0, destination: {},
+      resume: () => new Promise(resolve => { resume = resolve; }),
+      createGain: () => ({ gain: envelope, connect: node => node }),
+      createOscillator: () => ({ frequency: {}, connect: node => node, start() { starts++; }, stop() {} }),
+    };
+    const synth = createSynth(() => device);
+    const { g, hold } = rehearsal(synth.cancelPending);
+    hold();
+    g.down(2, 0, 0);
+    const demo = g.up(2, 0, 0);
+    const ring = synth.ring('desk', () => {
+      assert.equal(starts, 1);
+      demo.onStarted();
+    });
+    if (releaseEarly) g.up(1, 0, 490);
+    device.state = 'running';
+    resume();
+    await ring;
+    if (!releaseEarly) g.up(1, 0, 490);
+    assert.equal(starts, releaseEarly ? 0 : 4);
+    assert.equal(g.phase(), releaseEarly ? 'normal' : 'armed');
+    assert.equal(g.activate(), releaseEarly ? 'ring' : 'stuck');
+  }
+});
+
+test('only a stationary confirmed hold with a released demo arms', () => {
+  for (const [ms, dx, expected] of [[249,0,false],[250,12,true],[250,13,false]]) {
+    const {g,hold,tap} = rehearsal();
+    hold(ms); g.move(1, dx, 490);
+    assert.equal(tap(2, 0, 0), expected ? 'ring' : undefined);
+    g.up(1, dx, 490);
+    assert.equal(g.phase(), expected ? 'armed' : 'normal');
+  }
+  const {g,hold,tap} = rehearsal();
+  assert.equal(tap(1, 0, 490), 'ring');
+  hold(); assert.equal(g.up(1, 0, 490), undefined);
+  hold(); g.down(2, 0, 0); g.up(1, 0, 490);
+  assert.equal(g.up(2, 0, 0), undefined);
+  hold(); g.down(2, 0, 0); g.down(3, 2, 0);
+  for (const id of [3,2,1]) assert.equal(g.up(id, 0, id === 1 ? 490 : 0), undefined);
+  assert.equal(g.phase(), 'normal');
+});
+
+test('signed rim rotation crosses the angle seam in both directions', () => {
+  for (const sign of [-1,1]) {
+    const {g,arm,arc} = rehearsal(); arm();
+    arc(119 * sign, 170 * sign); assert.equal(g.phase(), 'stuck');
+    arc(120 * sign, 170 * sign); assert.equal(g.phase(), 'open');
+  }
+});
+
+test('chords, central crossings, inner starts and retraced arcs stay stuck', () => {
+  const {g,arm} = rehearsal(); arm();
+  for (const y of [0,45]) {
+    g.down(1,-85,y);
+    for (let x = -84; x <= 85; x++) g.move(1,x,y);
+    g.up(1,85,y);
+  }
+  g.down(1,44,0); g.move(1,0,80); g.up(1,-80,0);
+  g.down(1,80,0);
+  for (let i = 0; i < 3; i++) {
+    g.move(1,56,56); g.move(1,0,80); g.move(1,56,56); g.move(1,80,0);
+  }
+  g.up(1,80,0); assert.equal(g.phase(),'stuck');
+});
+
+test('card commits on directional release or beyond the right edge, resets explicitly', () => {
+  const {g,arm,arc} = rehearsal(); arm(); arc(120);
+  for (const [dx,dy,cancel] of [[-90,0,false],[59,0,false],[60,40,false],[120,0,true]]) {
+    g.down(1,0,0); g.move(1,dx,dy); g.up(1,dx,dy,cancel); assert.equal(g.phase(),'open');
+  }
+  g.down(1,30,0); g.up(1,130,0); assert.equal(g.phase(),'open');
+  g.down(1,0,0); g.up(1,60,39); assert.equal(g.phase(),'empty');
+  assert.equal(g.activate(),undefined); g.resetPerformance(); assert.equal(g.activate(),'ring');
+  arm(); arc(-120); g.down(1,0,0); g.move(1,260,0); assert.equal(g.phase(),'empty');
+});
+
+test('settings wins in each committed phase and interrupts drop held input', () => {
+  const {g,arm,arc,hold,tap} = rehearsal();
+  function settings() {
+    const phase = g.phase();
+    g.down(1,0,0); g.down(2,40,0); g.move(1,0,96);
+    assert.equal(g.move(2,40,96),'settings'); assert.equal(g.phase(),phase);
+    assert.equal(g.up(1,0,96),undefined);
+  }
+  settings(); hold(); tap(2,0,0); g.reset(); assert.equal(g.up(1,0,490),undefined);
+  assert.equal(g.phase(),'normal');
+  hold(); tap(2,0,0); g.up(1,0,490); settings(); g.activate(); settings();
+  arc(120); settings(); g.down(1,0,0); g.up(1,100,0); settings();
+  g.resetPerformance(); arm();
+});
+
+test('the stage is concealed until startup preferences are applied and input is ready', () => {
+  const html = read('index.html'), app = read('app.mjs');
+  assert.ok(html.indexOf('href="./performance.css"') < html.indexOf('<body>'));
+  assert.match(read('performance.css'), /body:has\(#stage:not\(\[data-phase\]\)\)\s*\{\s*visibility: hidden/);
+  assert.match(app, /appearance\(\);\s*gesture\.resetPerformance\(\);/);
+});
+
+test('rotation feedback begins at fifteen degrees and interruption snaps back', () => {
+  const {g,frames,arm} = rehearsal(); arm();
+  g.down(1,80,0);
+  for (const angle of [14,15.001]) {
+    const radians = angle * Math.PI / 180;
+    g.move(1,80*Math.cos(radians),80*Math.sin(radians));
+    assert.equal(Boolean(frames.at(-1).angle), angle > 14);
+  }
+  g.reset(); assert.equal(g.phase(),'stuck'); assert.equal(frames.at(-1),undefined);
+  assert.equal(g.up(1,-80,0),undefined);
 });

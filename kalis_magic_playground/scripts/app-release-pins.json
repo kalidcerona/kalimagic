@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "release": "apps-6cf885581815e1b3c53491520ffd8e2aee09d0c7",
+  "release": "apps-cf8cfd588da975726aeeb1beb6b49863294ad132",
   "provenance": "Retained personal app trees and distribution snapshots from the selected site release.",
   "roots": [
     "distribution-snapshots/aletheia",
@@ -400,28 +400,46 @@
       "kind": "directory"
     },
     {
+      "path": "distribution-snapshots/bell/CARD_CREDITS.md",
+      "kind": "file",
+      "size": 1103,
+      "sha256": "05459fe4682efe34b2409694dc976fd30d525e5bdc00c321dfe490f7245187fc"
+    },
+    {
       "path": "distribution-snapshots/bell/app.mjs",
       "kind": "file",
-      "size": 1188,
-      "sha256": "1bd9af0226ede1ce3701ece322083157851261bb285a2105bdbf2c1133b0bab3"
+      "size": 2328,
+      "sha256": "5561c2cae4a9126f19c575e80357ef1aeb5258f3d08128f80de11eb665edc8f5"
     },
     {
       "path": "distribution-snapshots/bell/audio.mjs",
       "kind": "file",
-      "size": 3123,
-      "sha256": "5bddee9bc0a30bfd578b65f20915367b4532616a1a74ea350ead0acdffa674ac"
+      "size": 3201,
+      "sha256": "6c35a25ab8e6b655a913c95a00c70aaec06e979fe57da9eb597df2369cf8d369"
+    },
+    {
+      "path": "distribution-snapshots/bell/card-rider-blue.jpg",
+      "kind": "file",
+      "size": 199650,
+      "sha256": "031f0c250872a492a7ecce2a29e16570657cd8ffa24c90c8e3277796c5f7864b"
+    },
+    {
+      "path": "distribution-snapshots/bell/card-rider-red.jpg",
+      "kind": "file",
+      "size": 331016,
+      "sha256": "5461438613c87b19603b56557434f878b1035f41104b9cf2ac318f6d26847881"
     },
     {
       "path": "distribution-snapshots/bell/dome.mjs",
       "kind": "file",
-      "size": 171,
-      "sha256": "06f94f9f1fa8a6b4c69190ee376ab64c4be650b10867f141e23e9f2146993437"
+      "size": 1712,
+      "sha256": "00f321f63be5f42b97b5214ad2ce685e8b1b3d5dc93ff2b56b0ea2e169e93d93"
     },
     {
       "path": "distribution-snapshots/bell/gestures.mjs",
       "kind": "file",
-      "size": 2086,
-      "sha256": "30bc191c9d26fc6156d4eb5ad4dfaedc564063c5d6d226ed0631d6ec71a05f2b"
+      "size": 5295,
+      "sha256": "6e8cab34d8190c718d4e84bed8c8e76f5721686ef863648e2ae68562edf9368d"
     },
     {
       "path": "distribution-snapshots/bell/icon-192.png",
@@ -438,8 +456,8 @@
     {
       "path": "distribution-snapshots/bell/index.html",
       "kind": "file",
-      "size": 1234,
-      "sha256": "07db0d9e240467f11f377d20494311fb2affb6652c543cf6186e00bb20faa5a5"
+      "size": 2479,
+      "sha256": "479d725e933b90703f549aa28feaaf2ae9e5c66db3f9dfa11a7591657d69566e"
     },
     {
       "path": "distribution-snapshots/bell/install-update.mjs",
@@ -460,34 +478,52 @@
       "sha256": "559369b08dbb60b3b83db0fe1e9633dd290400ac0f4bc31223e76d205ca78c81"
     },
     {
+      "path": "distribution-snapshots/bell/performance.css",
+      "kind": "file",
+      "size": 2249,
+      "sha256": "14bcfdd87131508d7fc4a30a3b648a88e228ea88873c27d633799449e81f868b"
+    },
+    {
       "path": "distribution-snapshots/bell/presets.mjs",
       "kind": "file",
       "size": 562,
       "sha256": "3b58c4cd06b624f23334dc7907c72263b6944008ee3c9b2a2972b8fb0e15e760"
     },
     {
+      "path": "distribution-snapshots/bell/settings-panel.css",
+      "kind": "file",
+      "size": 2251,
+      "sha256": "a524435dfd14554984c0174f07c40ec30c855c58dd9c43fd74b980a979bf5dd2"
+    },
+    {
+      "path": "distribution-snapshots/bell/settings-ui.css",
+      "kind": "file",
+      "size": 18673,
+      "sha256": "6682263358d4dc46c9aa5678b351d622f8417c50124f973bc1102df879e95a92"
+    },
+    {
       "path": "distribution-snapshots/bell/settings.mjs",
       "kind": "file",
-      "size": 1111,
-      "sha256": "3dfa25041d35352e9456812013167471cfe54b6b6f496fa861c90ef6a684982d"
+      "size": 1717,
+      "sha256": "fefc8e66ce67ddd6ea054e5e4bcad7d2f7a24f4d7db2cb15f19428d28abe21aa"
     },
     {
       "path": "distribution-snapshots/bell/storage.mjs",
       "kind": "file",
-      "size": 392,
-      "sha256": "2cb6175f1c2dc2b09d1c948fde0160b9382b97eedbb61266b07561a0df4996a7"
+      "size": 830,
+      "sha256": "bf25bdd850f340da5ee750ed613d449d1629922c2253de69ee2a45cacb885978"
     },
     {
       "path": "distribution-snapshots/bell/style.css",
       "kind": "file",
-      "size": 1606,
-      "sha256": "a40a97843712d20023303caaa704b409319d7e85594e90f6fac291cf2201fcd1"
+      "size": 1216,
+      "sha256": "e5d6160eb53c2971480a9b762e663101a98e3a8b15d95611d1c95da127d7f25d"
     },
     {
       "path": "distribution-snapshots/bell/sw.js",
       "kind": "file",
-      "size": 5326,
-      "sha256": "f0817efba9cae111e85d4ce5a476aa42a652ce57e084559865bf0fcd5f79db58"
+      "size": 5474,
+      "sha256": "68563671a30a037df2d7e4c9f00658d443b6747f4496c7e633686acf760ea2da"
     },
     {
       "path": "distribution-snapshots/bell/vibration.mjs",
@@ -2000,8 +2036,8 @@
     {
       "path": "distribution-snapshots/slot/index.html",
       "kind": "file",
-      "size": 2259,
-      "sha256": "e4dbb769b7df53db8f7336b54f3b19e837b4255a3be30b91824eb8dd98ce9df0"
+      "size": 2824,
+      "sha256": "2849a4b7079bd915da5b989870883a7148595c611fc8877d23664bc9bfc1d291"
     },
     {
       "path": "distribution-snapshots/slot/install-update.mjs",
@@ -2034,6 +2070,18 @@
       "sha256": "d1e429781606c465cdb55f4812521a58b38993b97a588d5f21ebc6680445ea9a"
     },
     {
+      "path": "distribution-snapshots/slot/settings-panel.css",
+      "kind": "file",
+      "size": 2251,
+      "sha256": "a524435dfd14554984c0174f07c40ec30c855c58dd9c43fd74b980a979bf5dd2"
+    },
+    {
+      "path": "distribution-snapshots/slot/settings-ui.css",
+      "kind": "file",
+      "size": 18673,
+      "sha256": "6682263358d4dc46c9aa5678b351d622f8417c50124f973bc1102df879e95a92"
+    },
+    {
       "path": "distribution-snapshots/slot/settings.mjs",
       "kind": "file",
       "size": 859,
@@ -2048,14 +2096,14 @@
     {
       "path": "distribution-snapshots/slot/style.css",
       "kind": "file",
-      "size": 6371,
-      "sha256": "744332243c26c6ef0b3572a4dd9763ff594bef2a2861dbf027ae229b5b900a0d"
+      "size": 5836,
+      "sha256": "9adebf27e061b3db4d2af71407ad427d0800972da56a0ba233de9ec6584ad9ae"
     },
     {
       "path": "distribution-snapshots/slot/sw.js",
       "kind": "file",
-      "size": 5482,
-      "sha256": "554af923dacdc6daf1e28094c01517ec93c35d1fa5236a1a80148f0a7ef408d8"
+      "size": 5531,
+      "sha256": "de8a9f9e7dc775daec3a8db67611ff58df3dd3ebd902da65175596cb859f772e"
     },
     {
       "path": "distribution-snapshots/slot/vibration.mjs",

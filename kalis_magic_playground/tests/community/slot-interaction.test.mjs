@@ -208,7 +208,7 @@ test('service worker lists the exact app shell, manifest and PNG dimensions matc
   const sw = read('sw.js');
   const files = JSON.parse(/const SHELL = (\[[\s\S]*?\]);/.exec(sw)[1]);
   assert.deepEqual(files.sort(),readdirSync(dir).filter(f => f!=='sw.js').sort().map(f=>'./'+f));
-  assert.match(sw,/friend-slot-shell-/); assert.match(sw,/v20261121-3/);
+  assert.match(sw,/friend-slot-shell-/); assert.match(sw,/v20261121-4/);
   const manifest = JSON.parse(read('manifest.webmanifest'));
   assert.equal(manifest.orientation,'portrait'); assert.equal(manifest.id,'/tools/slot/');
   for (const n of [192,512]) {

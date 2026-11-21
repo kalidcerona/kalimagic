@@ -1,6 +1,6 @@
 import { preset } from './presets.mjs';
 
-function strike(context, sound, voices) {
+function strike(context, sound, voices, onStarted) {
   const time = context.currentTime;
   const bus = context.createGain();
   bus.connect(context.destination);
@@ -17,6 +17,7 @@ function strike(context, sound, voices) {
     for (const node of path) output = output.connect(node);
     output.connect(bus);
     source.start(time);
+    if (sources.length === 1) onStarted?.();
     source.stop(end);
   }
 
@@ -71,7 +72,7 @@ export function createSynth(makeContext = () => new (window.AudioContext || wind
   let generation = 0;
   return {
     cancelPending() { generation++; },
-    async ring(id) {
+    async ring(id, onStarted) {
       const ticket = generation;
       try {
         if (!context || context.state === 'closed') {
@@ -80,7 +81,7 @@ export function createSynth(makeContext = () => new (window.AudioContext || wind
         }
         const device = context;
         if (device.state !== 'running') await device.resume();
-        if (device === context && device.state === 'running' && generation === ticket) strike(device, preset(id), voices);
+        if (device === context && device.state === 'running' && generation === ticket) strike(device, preset(id), voices, onStarted);
       } catch { /* Audio can be unavailable on a restricted device. */ }
     },
   };

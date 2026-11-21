@@ -1,6 +1,6 @@
 // Cache only the explicit app shell. API, authentication and user data stay on the network.
 const CACHE_PREFIX = 'friend-slot-shell-' + self.registration.scope + '-';
-const CACHE_NAME = CACHE_PREFIX + 'v20261121-3';
+const CACHE_NAME = CACHE_PREFIX + 'v20261121-4';
 const SHELL = [
   "./app.mjs",
   "./audio.mjs",
@@ -15,6 +15,8 @@ const SHELL = [
   "./orientation.mjs",
   "./reels.mjs",
   "./round.mjs",
+  "./settings-panel.css",
+  "./settings-ui.css",
   "./settings.mjs",
   "./storage.mjs",
   "./style.css",
