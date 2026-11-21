@@ -1,5 +1,5 @@
 // Viewport coordinates follow the visible screen in either landscape orientation.
-export function createGesture({ hit = () => ({}), now = () => performance.now(), draw = () => {}, cancelPending = () => {} } = {}) {
+export function createGesture({ hit = () => ({}), now = () => performance.now(), draw = () => {}, zoomCard = () => {}, cancelPending = () => {} } = {}) {
   const contacts = new Map();
   let phase = 'normal', hold, demo, single, pair, blocked;
 
@@ -35,6 +35,11 @@ export function createGesture({ hit = () => ({}), now = () => performance.now(),
     draw(phase);
     if (contacts.size === 2 && !blocked) {
       pair = [...contacts.values()].map(p => ({ id: p.id, x: p.x, y: p.y }));
+      const [a, b] = pair;
+      pair.distance = Math.hypot(b.x - a.x, b.y - a.y);
+      pair.midX = (a.x + b.x) / 2;
+      pair.midY = (a.y + b.y) / 2;
+      pair.card = phase === 'open' && hit(pair.midX, pair.midY).card;
       if (hold?.tap && now() - hold.time >= 250 && target.dome) demo = point;
       else hold = null;
     } else {
@@ -43,7 +48,7 @@ export function createGesture({ hit = () => ({}), now = () => performance.now(),
       blocked = true;
     }
   }
-  function move(id, x, y) {
+  function move(id, x, y, deferPair = false) {
     const p = contacts.get(id);
     if (!p) return;
     const oldX = p.x, oldY = p.y;
@@ -51,14 +56,29 @@ export function createGesture({ hit = () => ({}), now = () => performance.now(),
     const dx = x - p.startX, dy = y - p.startY;
     if (Math.hypot(dx, dy) > 12) p.tap = false;
     if (p === hold && !p.tap) hold = demo = null;
-    if (pair?.every(start => {
+    if (pair) return deferPair ? undefined : evaluatePair();
+    if (single !== p) return;
+    moveSingle(p, oldX, oldY, x, y, dx, dy);
+  }
+  function evaluatePair() {
+    if (!pair) return;
+    const [a, b] = pair.map(start => contacts.get(start.id));
+    const distance = Math.hypot(b.x - a.x, b.y - a.y);
+    const spreading = Math.abs(distance - pair.distance) > Math.max(4, Math.min(24, pair.distance * .12));
+    if (pair.card && pair.distance && (pair.pinching || spreading)) {
+      pair.pinching = true;
+      zoomCard(pair, distance / pair.distance, (a.x + b.x) / 2, (a.y + b.y) / 2);
+      return;
+    }
+    if ((phase !== 'open' || !spreading) && pair.every(start => {
       const end = contacts.get(start.id);
       return end.y - start.y >= 96 && end.y - start.y > 1.5 * Math.abs(end.x - start.x);
     })) {
       interrupt();
       return 'settings';
     }
-    if (single !== p) return;
+  }
+  function moveSingle(p, oldX, oldY, x, y, dx, dy) {
     if (p.rotate) {
       const { cx, cy, radius } = p.target;
       const ax = oldX - cx, ay = oldY - cy, bx = x - cx, by = y - cy;
@@ -96,7 +116,7 @@ export function createGesture({ hit = () => ({}), now = () => performance.now(),
     if (action) return action;
     contacts.delete(id);
     pair = null;
-    if (p === demo && hold && p.tap) {
+    if (p === demo && hold && p.tap && hit(x, y).dome) {
       const demoHold = hold;
       demoHold.requested = true;
       demo = null;
@@ -114,17 +134,26 @@ export function createGesture({ hit = () => ({}), now = () => performance.now(),
     } else if (single === p && phase === 'open' && p.target.card) {
       const dx = x - p.startX;
       if (dx >= Math.max(48, p.target.width * .12) && dx > 1.5 * Math.abs(y - p.startY)) phase = 'empty';
-    } else if (single === p && p.tap && (phase === 'normal' || p.target.dome)) {
+    } else if (single === p && p.tap && p.target.dome && hit(x, y).dome) {
       result = activate();
     }
     if (!contacts.size) interrupt();
     return result;
   }
-  return { down, move, up, activate, reset: interrupt, resetPerformance, phase: () => phase };
+  return { down, move, up, evaluatePair, activate, reset: interrupt, resetPerformance, phase: () => phase };
 }
 
 export function listen(surface, dispatch, options) {
   const gesture = createGesture(options);
+  let frame;
+  function schedulePair() {
+    if (frame) return;
+    frame = requestAnimationFrame(() => {
+      frame = 0;
+      const action = gesture.evaluatePair();
+      if (action) dispatch(action);
+    });
+  }
   surface.addEventListener('pointerdown', event => {
     if (event.button !== 0) return;
     surface.setPointerCapture(event.pointerId);
@@ -133,7 +162,7 @@ export function listen(surface, dispatch, options) {
   for (const type of ['pointermove', 'pointerup', 'pointercancel', 'lostpointercapture']) {
     surface.addEventListener(type, event => {
       const action = type === 'pointermove'
-        ? gesture.move(event.pointerId, event.clientX, event.clientY)
+        ? (schedulePair(), gesture.move(event.pointerId, event.clientX, event.clientY, true))
         : gesture.up(event.pointerId, event.clientX, event.clientY, type !== 'pointerup');
       if (action?.onStarted) dispatch(action.action, action.onStarted);
       else if (action) dispatch(action);

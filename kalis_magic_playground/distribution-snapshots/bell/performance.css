@@ -21,7 +21,8 @@ body:has(#stage:not([data-phase])) { visibility: hidden; background: transparent
   background: var(--card-photo) 0 0 / 200% 200% no-repeat;
   border-radius: 6px 2px 4px 2px / 6px 4px 3px 3px;
   box-shadow: 0 5px 6px -1px #080709aa;
-  transform: translate(var(--drag-x, 0px), var(--drag-y, 0px));
+  transform-origin: top left;
+  transform: translate(var(--drag-x, 0px), var(--drag-y, 0px)) scale(var(--zoom, 1));
   visibility: hidden;
 }
 .folded-card::before {
@@ -38,7 +39,7 @@ body:has(#stage:not([data-phase])) { visibility: hidden; background: transparent
 }
 #stage[data-card-back="red"] .folded-card { --card-photo: url("./card-rider-red.jpg"); }
 #stage:is([data-phase="open"], [data-phase="empty"]) .folded-card {
-  visibility: visible; transition: transform 160ms ease-out;
+  visibility: visible;
 }
 #stage[data-phase="open"] .folded-card.dragging { transition: none; }
-#stage[data-phase="empty"] .folded-card { transform: translate(110vw, var(--drag-y, 0px)); }
+#stage[data-phase="empty"] .folded-card { transition: transform 160ms ease-out; transform: translate(110vw, var(--drag-y, 0px)) scale(var(--zoom, 1)); }

@@ -29,7 +29,10 @@ test('only known sound IDs survive invalid or inaccessible storage', () => {
 });
 
 test('release confirms tap, cancellation and drags stay silent', () => {
-  const g = createGesture();
+  const g = createGesture({ hit: x => ({ dome: x >= 0 }) });
+  for (const [start, end] of [[-1,-1],[-1,1],[1,-1]]) {
+    g.down(1,start,0); assert.equal(g.up(1,end,0),undefined);
+  }
   g.down(1, 0, 0);
   assert.equal(g.up(1, 1, 1), 'ring');
   g.down(1, 0, 0);
@@ -259,7 +262,7 @@ test('only a stationary confirmed hold with a released demo arms', () => {
     assert.equal(g.phase(), expected ? 'armed' : 'normal');
   }
   const {g,hold,tap} = rehearsal();
-  assert.equal(tap(1, 0, 490), 'ring');
+  assert.equal(tap(1, 0, 490), undefined);
   hold(); assert.equal(g.up(1, 0, 490), undefined);
   hold(); g.down(2, 0, 0); g.up(1, 0, 490);
   assert.equal(g.up(2, 0, 0), undefined);
@@ -306,7 +309,7 @@ test('settings wins in each committed phase and interrupts drop held input', () 
   const {g,arm,arc,hold,tap} = rehearsal();
   function settings() {
     const phase = g.phase();
-    g.down(1,0,0); g.down(2,40,0); g.move(1,0,96);
+    g.down(1,0,0); g.down(2,40,0); g.move(1,0,96,true);
     assert.equal(g.move(2,40,96),'settings'); assert.equal(g.phase(),phase);
     assert.equal(g.up(1,0,96),undefined);
   }
@@ -334,4 +337,16 @@ test('rotation feedback begins at fifteen degrees and interruption snaps back', 
   }
   g.reset(); assert.equal(g.phase(),'stuck'); assert.equal(frames.at(-1),undefined);
   assert.equal(g.up(1,-80,0),undefined);
+});
+
+test('a pinch stays zoom even after both fingers travel down together', () => {
+  const {g,arm,arc} = rehearsal(); arm(); arc(120);
+  g.down(1,-10,0); g.down(2,10,0);
+  g.move(1,-25,0); g.move(2,25,0);
+  g.move(1,-10,100,true); g.move(2,10,100,true);
+  assert.equal(g.evaluatePair(),undefined);
+  g.up(1,-10,100); g.up(2,10,100);
+  g.down(1,-10,0); g.down(2,10,0);
+  g.move(1,-10,100,true); g.move(2,10,100,true);
+  assert.equal(g.evaluatePair(),'settings');
 });
