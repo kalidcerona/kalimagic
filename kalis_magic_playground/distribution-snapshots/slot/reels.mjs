@@ -1,6 +1,9 @@
 const symbols = ['🍒','🍋','🔔','7'];
-const startCell = 14;
-export const stopTime = index => 900 + 300 * index;
+// Extra full rotations preserve the landing symbol while increasing peak speed.
+const extraRotations = [7, 6, 5];
+const startCell = 14 + 4 * Math.max(...extraRotations);
+const stripLength = startCell + 4;
+export const stopTime = index => 1900 + 300 * index;
 
 export function createReels(strips, random = Math.random) {
   const travel = [], offsets = [];
@@ -11,9 +14,9 @@ export function createReels(strips, random = Math.random) {
     reset() {
       strips.forEach((strip, i) => {
         offsets[i] = i + 2;
-        strip.textContent = Array.from({length:18}, (_, row) =>
+        strip.textContent = Array.from({length:stripLength}, (_, row) =>
           symbols[(row + offsets[i]) % symbols.length]).join('\n');
-        travel[i] = 8 + Math.floor(random() * symbols.length);
+        travel[i] = 8 + 4 * extraRotations[i] + Math.floor(random() * symbols.length);
         place(strip, startCell);
       });
     },
@@ -24,9 +27,9 @@ export function createReels(strips, random = Math.random) {
       strips.forEach((strip,i) => {
         // Rebase the strip at its previous visible symbol before starting again.
         const previous = Math.round(-parseFloat(strip.style.transform.slice(11))/100);
-        offsets[i] = (previous + offsets[i] - startCell + 16) % 4;
-        strip.textContent = Array.from({length:18}, (_,row) => symbols[(row+offsets[i])%4]).join('\n');
-        travel[i] = 8 + (startCell + offsets[i] - ends[i]) % 4;
+        offsets[i] = (previous + offsets[i] - startCell % 4 + 4) % 4;
+        strip.textContent = Array.from({length:stripLength}, (_,row) => symbols[(row+offsets[i])%4]).join('\n');
+        travel[i] = 8 + 4 * extraRotations[i] + (startCell + offsets[i] - ends[i]) % 4;
         place(strip,startCell);
       });
     },

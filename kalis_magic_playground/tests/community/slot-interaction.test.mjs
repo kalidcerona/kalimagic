@@ -79,7 +79,7 @@ test('all 40 cards use only the first START zone and share the same pre-reveal t
       tapZone(0);
       const trace = [];
       for (let loss=0;loss<2;loss++) {
-        h.advance(1500);
+        h.advance(2500);
         assert.equal(h.phase(),'ready');
         const combo = centre();
         assert.ok(new Set(combo).size>1);
@@ -91,7 +91,7 @@ test('all 40 cards use only the first START zone and share the same pre-reveal t
       function centre() {
         return h.symbols.map(node => node.textContent.split('\n')[-parseFloat(node.style.transform.slice(11))/100]);
       }
-      for (const ms of [78,822,300,300,1680,599]) {
+      for (const ms of [78,1822,300,300,1680,599]) {
         h.advance(ms);
         trace.push(h.symbols.map(node => [node.textContent,node.style.transform]));
         assert.equal(h.result.children.length,0);
@@ -127,7 +127,7 @@ test('all 40 cards use only the first START zone and share the same pre-reveal t
       const immediate = harness(1);
       immediate.tap(index%2*200+50,Math.floor(index/2)*400+40);
       tapZone(0,immediate);
-      for (const ms of [1500,1680,600]) immediate.advance(ms);
+      for (const ms of [2500,1680,600]) immediate.advance(ms);
       immediate.tap(200,500); immediate.advance(300);
       assert.equal(immediate.result.children[0].attributes['aria-label'],face.attributes['aria-label']);
     }
@@ -141,7 +141,7 @@ test('multitouch, drag, cancellation and held taps across every performance phas
     if (phase === 'ready') return h;
     h.tap(50,370);
     if (phase === 'spinning') return h;
-    h.advance(1500);
+    h.advance(2500);
     if (phase === 'jackpot') return h;
     h.advance(1680);
     if (phase === 'rolling') return h;
@@ -186,7 +186,7 @@ test('landscape blocks input, cancels a held press and freezes the round',() => 
   h.landscape(true); h.landscape(false); h.point('pointerup',50,370);
   assert.equal(h.phase(),'ready');
   h.tap(50,370); h.landscape(true); h.advance(5000); assert.equal(h.phase(),'spinning');
-  h.landscape(false); h.advance(1500); assert.equal(h.phase(),'jackpot');
+  h.landscape(false); h.advance(2500); assert.equal(h.phase(),'jackpot');
   h.round.reset(); h.advance(5000); assert.equal(h.phase(),'dark');
 });
 test('orientation guard follows landscape changes even when lock fails',async () => {
@@ -223,7 +223,7 @@ test('service worker lists the exact app shell, manifest and PNG dimensions matc
   const sw = read('sw.js');
   const files = JSON.parse(/const SHELL = (\[[\s\S]*?\]);/.exec(sw)[1]);
   assert.deepEqual(files.sort(),readdirSync(dir).filter(f => f!=='sw.js').sort().map(f=>'./'+f));
-  assert.match(sw,/friend-slot-shell-/); assert.match(sw,/v20261121-7/);
+  assert.match(sw,/friend-slot-shell-/); assert.match(sw,/v20261121-8/);
   const manifest = JSON.parse(read('manifest.webmanifest'));
   assert.equal(manifest.orientation,'portrait'); assert.equal(manifest.id,'/tools/slot/');
   for (const n of [192,512]) {
@@ -247,7 +247,7 @@ test('strips descend continuously, settle at centred cells in left-to-right orde
   for (let i=0;i<3;i++) {
     assert.ok(later[i]>early[i] && early[i]>start[i]);
     assert.ok(early[i]-start[i]>later[i]-early[i]);
-    const stop = 900+300*i;
+    const stop = 1900+300*i;
     const bounce = positions(stop-55)[i], end = positions(stop)[i];
     assert.ok(bounce>end);
     assert.equal(Math.abs(end)%100,0);

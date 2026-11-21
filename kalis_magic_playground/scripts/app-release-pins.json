@@ -2066,8 +2066,8 @@
     {
       "path": "distribution-snapshots/slot/reels.mjs",
       "kind": "file",
-      "size": 1829,
-      "sha256": "0f7554d5ab7e913aca70f1adc222b6301aa3e875a5d61cfd715f12a5538915a5"
+      "size": 2083,
+      "sha256": "f75ec2b7a8331f6d25eefb22a359dc08cf0d425f7e240568a34a4b1e91f00492"
     },
     {
       "path": "distribution-snapshots/slot/round.mjs",
@@ -2109,7 +2109,7 @@
       "path": "distribution-snapshots/slot/sw.js",
       "kind": "file",
       "size": 5550,
-      "sha256": "ddc4df4b0c87b4ae602b1a5c18cc44fa1b48703be9394840147d1feff6878c2f"
+      "sha256": "bdf95364f5e9abd544f623174a9c77e09dcfa908e807f51a8be7e6a38ab6ecd4"
     },
     {
       "path": "distribution-snapshots/slot/vibration.mjs",
