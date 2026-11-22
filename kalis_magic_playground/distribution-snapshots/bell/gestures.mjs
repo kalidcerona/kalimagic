@@ -1,24 +1,56 @@
+const OPEN_SWEEP = 195;
+const MIN_TANGENT_SWEEP = 135;
+const ANGLE_EPSILON = .001;
+
 // Viewport coordinates follow the visible screen in either landscape orientation.
 export function createGesture({ hit = () => ({}), draw = () => {}, zoomCard = () => {}, hasSecond = () => false, afterExit = done => done(), cancelPending = () => {} } = {}) {
   const contacts = new Map();
   let phase = 'normal', hold, demo, single, pair, blocked;
 
-  let direction = 0, progress = 0, second = false, closeTimer;
+  let direction = 0, progress = 0, tangentProgress = 0, second = false, closeTimer;
   let extractedBy, exitToken;
+  const settling = () => phase === 'closing' || (phase === 'empty' && exitToken !== undefined);
   function render(extra) {
-    draw(phase, { angle: direction * progress, second, ...extra });
+    const angle = settling() ? 0 : direction * progress;
+    draw(phase, { angle, second, ...extra });
+  }
+  function openIfTurned() {
+    if (progress < OPEN_SWEEP - ANGLE_EPSILON || tangentProgress < MIN_TANGENT_SWEEP - ANGLE_EPSILON) return;
+    phase = 'open';
+    single = null;
   }
   function closeForSecond() {
     second = true;
-    direction = progress = 0;
     phase = 'closing';
     render();
     closeTimer = setTimeout(() => {
       phase = 'stuck';
+      if (!single?.deferredTurn) openIfTurned();
       render();
     }, 500);
   }
+  function waitForSecondExit() {
+    if (second || !hasSecond()) return;
+    direction = progress = tangentProgress = 0;
+    const token = exitToken = {};
+    afterExit(() => {
+      if (exitToken !== token) return;
+      exitToken = undefined;
+      closeForSecond();
+    });
+  }
+  function discardDeferredTurn() {
+    if (!settling() && phase !== 'stuck') return;
+    for (const point of contacts.values()) {
+      if (point.deferredTurn) {
+        ({ direction, progress, tangentProgress } = point.deferredTurn);
+        point.deferredTurn = null;
+        return;
+      }
+    }
+  }
   function interrupt() {
+    discardDeferredTurn();
     if (extractedBy !== undefined) {
       extractedBy = undefined;
       phase = 'open';
@@ -33,7 +65,7 @@ export function createGesture({ hit = () => ({}), draw = () => {}, zoomCard = ()
     exitToken = undefined;
     extractedBy = undefined;
     second = false;
-    direction = progress = 0;
+    direction = progress = tangentProgress = 0;
     phase = 'normal';
     interrupt();
   }
@@ -52,9 +84,14 @@ export function createGesture({ hit = () => ({}), draw = () => {}, zoomCard = ()
     if (contacts.size === 1) {
       single = point;
       if (phase === 'normal' && target.secret && !target.dome) hold = point;
-      if (phase === 'stuck' && target.rim) point.samples = [];
+      if ((phase === 'stuck' || settling()) && target.rim) {
+        point.samples = [];
+        point.pendingAngle = point.pendingTangent = point.tangent = 0;
+        if (settling()) point.deferredTurn = { direction, progress, tangentProgress };
+      }
       return;
     }
+    discardDeferredTurn();
     single = null;
     render();
     if (contacts.size === 2 && !blocked) {
@@ -106,11 +143,11 @@ export function createGesture({ hit = () => ({}), draw = () => {}, zoomCard = ()
   }
   function moveSingle(p, oldX, oldY, x, y, dx, dy) {
     if (p.samples) {
-      const { cx, cy, radius } = p.target;
+      const { cx, cy, radius, outerRadius = radius + 1 } = p.target;
       const ax = oldX - cx, ay = oldY - cy, bx = x - cx, by = y - cy;
       const vx = bx - ax, vy = by - ay;
       const t = Math.max(0, Math.min(1, -(ax * vx + ay * vy) / (vx * vx + vy * vy || 1)));
-      if (Math.hypot(ax + t * vx, ay + t * vy) < radius * .45 || Math.hypot(bx, by) > radius + 1) {
+      if (Math.hypot(ax + t * vx, ay + t * vy) < radius * .45 || Math.hypot(bx, by) > outerRadius) {
         p.samples = null;
         render();
         return;
@@ -128,25 +165,24 @@ export function createGesture({ hit = () => ({}), draw = () => {}, zoomCard = ()
       const rx = ax + bx, ry = ay + by;
       const radial = Math.abs(vx * rx + vy * ry);
       const tangential = radial <= Math.sin(36 * Math.PI / 180) * length * Math.hypot(rx, ry);
-      // Only tangent segments of a confirmed arc contribute to rotation.
-      const sweep = tangential ? delta : 0;
-      if (!curved) {
-        p.pending = (p.pending || 0) + sweep;
-        return;
-      }
-      const increment = sweep + (p.pending || 0);
-      p.pending = 0;
+      // Track the physical turn separately from tangent credit so a wobbly arc
+      // can complete just past a half-turn without accepting a noisy chord.
+      p.pendingAngle += delta;
+      if (tangential) p.pendingTangent += delta;
+      if (!curved) return;
+      const increment = p.pendingAngle, tangent = p.pendingTangent;
+      p.pendingAngle = p.pendingTangent = 0;
       p.angle += increment;
-      if (direction) progress = Math.max(0, progress + direction * increment);
-      else if (Math.abs(p.angle) >= 15 - 1e-8) {
+      p.tangent += tangent;
+      if (direction) {
+        progress = Math.max(0, progress + direction * increment);
+        tangentProgress = Math.min(progress, Math.max(0, tangentProgress + direction * tangent));
+      } else if (Math.abs(p.angle) >= 15 - 1e-8) {
         direction = Math.sign(p.angle);
         progress = Math.abs(p.angle);
+        tangentProgress = Math.min(progress, Math.max(0, direction * p.tangent));
       }
-      if (progress >= 135 - .001) {
-        progress = 180;
-        phase = 'open';
-        single = null;
-      }
+      if (phase === 'stuck' && !p.deferredTurn) openIfTurned();
       render();
     } else if (phase === 'open' && p.target.card) {
       if (p.target.left + dx >= p.target.width && dx > 1.5 * Math.abs(dy)) {
@@ -165,6 +201,8 @@ export function createGesture({ hit = () => ({}), draw = () => {}, zoomCard = ()
     if (action) return action;
     contacts.delete(id);
     pair = null;
+    // A turn begun before settlement can reveal only once its touch ends normally.
+    if (p.deferredTurn && phase === 'stuck') openIfTurned();
     if (p === demo && p.tap && hit(x, y).dome) {
       demo = null;
       if (!hold) return activate();
@@ -186,19 +224,14 @@ export function createGesture({ hit = () => ({}), draw = () => {}, zoomCard = ()
       if (dx >= Math.max(48, p.target.width * .12) && dx > 1.5 * Math.abs(y - p.startY)) {
         phase = 'empty';
         render({ dx, dy: y - p.startY });
-        if (!second && hasSecond()) {
-          const token = exitToken = {};
-          afterExit(() => {
-            if (exitToken === token) closeForSecond();
-          });
-        }
+        waitForSecondExit();
       }
     } else if (single === p && p.tap && p.target.dome && hit(x, y).dome) {
       result = activate();
     }
     if (phase === 'empty' && extractedBy === id) {
       extractedBy = undefined;
-      if (!second && hasSecond()) closeForSecond();
+      waitForSecondExit();
     }
     if (!contacts.size) interrupt();
     return result;

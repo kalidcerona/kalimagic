@@ -50,14 +50,19 @@ export function createScene(stage) {
     const bottom = innerHeight - (parseFloat(getComputedStyle(stage).getPropertyValue('--safe-bottom')) || 0);
     return {
       cx, cy, radius, width: innerWidth, left: bounds.left,
-      dome: Math.hypot((x - cx) / (box.width * .46), (y - cy) / radius) <= 1, rim: distance >= radius * .45 && distance <= radius,
+      dome: Math.hypot((x - cx) / (box.width * .46), (y - cy) / radius) <= 1,
+      rim: distance >= radius * .45 && distance <= box.width * .52,
+      outerRadius: box.width * .54,
       secret: y > bottom - 152 && y <= innerHeight && x >= 0 && x <= innerWidth,
       card: x >= bounds.left && x <= bounds.right && y >= bounds.top && y <= bounds.bottom,
     };
   }
   function afterExit(done) {
-    const transition = card.getAnimations().find(animation => animation.transitionProperty === 'transform');
-    if (transition) transition.finished.then(done, () => {});
+    const transition = card.getAnimations().find(animation =>
+      animation.transitionProperty === 'transform' && animation.playState !== 'idle' && animation.playState !== 'finished');
+    // Releasing a diagonal swipe can retarget the transform. Follow the new
+    // transition so the second reveal is neither lost nor started too early.
+    if (transition) transition.finished.then(done, () => afterExit(done));
     else done();
   }
   return { hit, draw, zoomCard, afterExit };
