@@ -71,6 +71,7 @@ export const APP_RELEASE_ROOTS = Object.freeze([
 
 export const PUBLIC_DIRS = [
   'assets',
+  'cupsnballs',
   'imigi3',
   'planb',
   'planb-busking',
