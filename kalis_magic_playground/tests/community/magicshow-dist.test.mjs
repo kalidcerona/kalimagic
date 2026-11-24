@@ -156,6 +156,8 @@ async function installRuntime({ ua = 'Android Chrome/140', platform = 'Linux', t
     if (!nodes.has(key)) nodes.set(key, {
       hidden: false, disabled: false, textContent: '', innerHTML: '', className: '', events: new Map(),
       addEventListener(name, callback) { this.events.set(name, callback); },
+      hasAttribute() { return false; },
+      removeAttribute() {},
       focus() { document.activeElement = this; },
       querySelector: node,
       querySelectorAll() { return ['[data-close]', '[data-install]', '[data-copy]', '[data-later]'].map(node); }
@@ -163,7 +165,7 @@ async function installRuntime({ ua = 'Android Chrome/140', platform = 'Linux', t
     return nodes.get(key);
   };
   const created = [];
-  const document = { activeElement: node('game-intro'), events: new Map(), addEventListener(name, callback, capture) { this.events.set(name, { callback, capture }); }, createElement: tag => (created.push(tag), node(tag)), body: { appendChild() {} } };
+  const document = { activeElement: node('game-intro'), events: new Map(), addEventListener(name, callback, capture) { this.events.set(name, { callback, capture }); }, createElement: tag => (created.push(tag), node(tag)), body: { matches() { return false; }, appendChild() {} } };
   const location = { href: 'https://example.test/tools/magicshow/?friend=1' };
   let copied = '';
   const navigator = { userAgent: ua, platform, maxTouchPoints: touch, standalone, clipboard: { async writeText(value) { copied = value; } } };
@@ -286,9 +288,21 @@ test('Magicshow in-app browsers explain external opening and copy the current li
   assert.match(css, /max-height:calc\(100dvh/);
 });
 
-async function runWorker({ active, onProgress = () => {}, network = null, clock = Date }) {
+// Deterministic MessagePort pair: release probes exercise the worker protocol without host threads.
+class MockMessageChannel {
+  constructor() {
+    this.port1 = { close() {} };
+    this.port2 = { postMessage: data => this.port1.onmessage?.({ data }), close() {} };
+  }
+}
+async function runWorker({ active, legacy = false, cleanupFails = false, onProgress = () => {}, network = null, clock = Date }) {
   const listeners = new Map(), calls = { skipWaiting: 0, claim: 0, deleted: [] };
   const stored = new Map(), requests = [], progress = [];
+  const oldCache = 'magicshow-dist-0123456789abcdef-coherent-1-distribution';
+  const otherScope = 'magicshow-dist-old-coherent-1-distribution-%2Ftools%2Fother%2F';
+  if (active) active = { ...active, postMessage(message, ports) {
+    if (!legacy && message.type === 'GET_RELEASE') ports[0].postMessage({ type: 'MAGICSHOW_RELEASE', release: 'previous-release' });
+  } };
   const self = {
     registration: { scope: 'https://example.test/tools/magicshow/', active },
     skipWaiting() { calls.skipWaiting++; return Promise.resolve(); },
@@ -297,11 +311,15 @@ async function runWorker({ active, onProgress = () => {}, network = null, clock 
   };
   const caches = {
     open: async () => ({ put: async (url, response) => { await response.text(); stored.set(url, true); } }),
-    keys: async () => ['magicshow-dist-old', 'other-cache'],
-    delete: async name => { calls.deleted.push(name); if (name.includes('__VERSION__')) stored.clear(); return true; }
+    keys: async () => [oldCache, otherScope, 'other-cache'],
+    delete: async name => { calls.deleted.push(name); if (cleanupFails) throw Error('cleanup quota failure'); if (name.includes('__VERSION__')) stored.clear(); return true; }
   };
-  vm.runInNewContext((await read('scripts/magicshow-dist/sw-template.js')).toString(), { self, caches, URL, Request, Promise, Response, Date: clock, fetch: async request => { requests.push(request); if (network) return network(request); if (self.failCache) throw Error('offline'); return new Response(''); } });
-  return { listeners, calls, self, cached: () => stored.size, requests, progress };
+  vm.runInNewContext((await read('scripts/magicshow-dist/sw-template.js')).toString(), {
+    self, caches, URL, Request, Promise, Response, AbortController, MessageChannel: MockMessageChannel,
+    setTimeout, clearTimeout, console: { warn() {} }, Date: clock,
+    fetch: async request => { requests.push(request); if (network) return network(request); if (self.failCache) throw Error('offline'); return new Response(''); }
+  });
+  return { listeners, calls, self, oldCache, otherScope, cached: () => stored.size, requests, progress };
 }
 const waitFor = async (listeners, name) => { let promise; listeners.get(name)({ waitUntil: p => { promise = p; } }); return promise; };
 
@@ -315,54 +333,115 @@ test('Magicshow service worker waits on install, accepts SKIP_WAITING and still 
     assert.ok(worker.cached() > 0);
     await waitFor(worker.listeners, 'activate');
     assert.equal(worker.calls.claim, 1);
-    assert.deepEqual(worker.calls.deleted, ['magicshow-dist-old']);
+    assert.deepEqual(worker.calls.deleted, [worker.oldCache]);
+    assert.ok(!worker.calls.deleted.includes(worker.otherScope), 'another app scope is retained');
   }
   const failing = await runWorker({ active: { state: 'activated' } });
   failing.self.failCache = true;
   await assert.rejects(waitFor(failing.listeners, 'install'));
   assert.equal(failing.calls.skipWaiting, 0, 'incomplete shell must not take over');
+  const rescue = await runWorker({ active: { state: 'activated' }, legacy: true });
+  await waitFor(rescue.listeners, 'install');
+  assert.equal(rescue.requests.length, 9, 'legacy rescue installs the complete critical shell');
+  assert.match(rescue.requests[0].url, /index\.html$/);
+  assert.equal(rescue.progress.at(-1).done, rescue.progress.at(-1).total);
+  let skip; rescue.listeners.get('message')({ data: { type: 'SKIP_WAITING' }, waitUntil: p => { skip = p; } });
+  await skip; await waitFor(rescue.listeners, 'activate');
+  assert.equal(rescue.calls.skipWaiting, 1); assert.equal(rescue.calls.claim, 1);
+  const cleanupFailure = await runWorker({ cleanupFails: true });
+  await waitFor(cleanupFailure.listeners, 'activate');
+  assert.equal(cleanupFailure.calls.claim, 1, 'cleanup rejection cannot prevent claim');
 });
 
-test('Magicshow art warms after shell, tolerates a missing asset, and retries only missing files next launch', async () => {
+test('Magicshow art warms in abortable batches, tolerates a missing asset, and retries only missing files in the same worker', async () => {
   const template = (await read('scripts/magicshow-dist/sw-template.js')).toString();
   const shell = ['./index.html', './ui.js', './fonts/Galmuri11.woff2', './assets/missing.webp', './assets/ok.webp'];
-  const source = template.replace(/const SHELL = \[[\s\S]*?\];/, `const SHELL = ${JSON.stringify(shell)};`);
-  const listeners = new Map(), stored = new Map(), requests = [], warnings = [];
-  let critical = [], fail = true;
+  const source = template.replace(/const SHELL = \[([\s\S]*?)\];/, `const SHELL = ${JSON.stringify(shell)};`);
+  const listeners = new Map(), stored = new Map(), requests = [], warnings = [], timers = new Map(), batches = [];
+  let critical = [], fail = true, stall = false, aborts = 0, timerId = 0;
   const self = { registration: { scope: 'https://example.test/tools/magicshow/' }, clients: { claim: async () => {}, matchAll: async () => [] }, addEventListener: (name, callback) => listeners.set(name, callback) };
-  const cache = { addAll: async items => { critical = items.map(r => new URL(r.url).pathname.split('/').pop()); }, match: async url => stored.get(url), put: async (url, response) => { stored.set(url, response); if (!/\/(assets|fonts)\//.test(url)) critical.push(url.split('/').pop()); } };
+  const cache = { match: async url => stored.get(url), put: async (url, response) => { stored.set(url, response); if (!/\/(assets|fonts)\//.test(url)) critical.push(url.split('/').pop()); } };
   const caches = { open: async () => cache, keys: async () => [], delete: async () => true };
-  vm.runInNewContext(source, { self, caches, URL, Request, Promise, Response, console: { warn: (...args) => warnings.push(args) }, fetch: async request => { requests.push(request.url); if (fail && request.url.endsWith('missing.webp')) throw Error('offline'); return new Response('art'); } });
-  await waitFor(listeners, 'install');
+  const boot = () => vm.runInNewContext(source, { self, caches, URL, Request, Promise, Response, AbortController, MessageChannel: MockMessageChannel,
+    setTimeout: (fn, ms) => { assert.equal(ms, 3000); timers.set(++timerId, fn); return timerId; }, clearTimeout: id => timers.delete(id),
+    console: { warn: (...args) => warnings.push(args) }, fetch: async request => {
+      requests.push(request.url);
+      if (stall) return new Promise((resolve, reject) => request.signal.addEventListener('abort', () => { aborts++; reject(Error('aborted')); }, { once: true }));
+      if (fail && request.url.endsWith('missing.webp')) throw Error('offline');
+      return new Response('art');
+    } });
+  const message = async type => {
+    let pending;
+    listeners.get('message')({ data: { type }, source: { postMessage: data => batches.push(data) }, waitUntil: p => { pending = p; } });
+    await pending;
+  };
+  const flush = async () => { for (let i = 0; i < 12; i++) await Promise.resolve(); };
+  boot(); await waitFor(listeners, 'install');
   assert.deepEqual(Array.from(critical), ['index.html', 'ui.js']); assert.equal(requests.length, 2);
   await waitFor(listeners, 'activate');
   assert.equal(requests.length, 2, 'activation must not start or await optional art');
-  let warm; listeners.get('message')({ data: { type: 'PRECACHE_ART' }, waitUntil: p => { warm = p; } }); await warm;
+  await message('PRECACHE_ART'); assert.equal(requests.length, 2, 'legacy warming cannot start a long task');
+  self.registration.waiting = {}; await message('WARM_ART_BATCH'); assert.equal(requests.length, 2);
+  self.registration.waiting = null;
+  await message('WARM_ART_BATCH');
+  assert.equal(requests.length, 5, 'the first batch attempts all three optional files');
   assert.equal(stored.size, 4); assert.equal(warnings.length, 1);
+  assert.equal(batches.at(-1).remaining, false);
+  // The same worker scans again, fetching only the previously failed URL.
   fail = false; requests.length = 0;
-  let retry; listeners.get('message')({ data: { type: 'PRECACHE_ART' }, waitUntil: p => { retry = p; } }); await retry;
+  await message('WARM_ART_BATCH');
   assert.equal(stored.size, 5); assert.equal(requests.length, 1); assert.match(requests[0], /missing\.webp$/);
+  // Preserve failure-tolerance coverage and also prove explicit abort and request deadlines settle waitUntil.
+  stored.clear(); stall = true; boot();
+  const aborted = message('WARM_ART_BATCH'); await flush(); await message('ABORT_ART'); await aborted;
+  assert.equal(aborts, 1); assert.equal(batches.at(-1).remaining, false); assert.equal(timers.size, 0);
+  const timed = message('WARM_ART_BATCH'); await flush();
+  const deadline = [...timers.values()][0]; assert.equal(typeof deadline, 'function'); deadline();
+  await flush(); await message('ABORT_ART'); await timed;
+  assert.ok(aborts >= 2); assert.equal(timers.size, 0);
+  stall = false; requests.length = 0;
+  await message('WARM_ART_BATCH');
+  assert.equal(requests.length, 3, 'the same worker retries all aborted or unattempted files');
+  assert.ok(stored.has(new URL('./fonts/Galmuri11.woff2', self.registration.scope).href));
 });
 
 async function runRegistration({ waiting = true, safe = false, title = false, installing = false, controlled = true, online = true, updateFails = false } = {}) {
   const source = (await read('scripts/magicshow-dist/update-prompt.js')).toString();
   const listen = () => { const map = new Map(); return { map, addEventListener: (name, callback) => map.set(name, callback) }; };
-  const messages = [], saved = [], nodes = new Map();
-  const node = id => { if (!nodes.has(id)) nodes.set(id, Object.assign(listen(), { hidden: true, isConnected: true, style: {}, attributes: {}, setAttribute(key, value) { this.attributes[key] = value; }, focus() { doc.activeElement = this; }, querySelector: node, querySelectorAll: () => [node('[data-update]'), node('[data-later]'), node('[data-continue]')] })); return nodes.get(id); };
-  const worker = Object.assign(listen(), { state: installing ? 'installing' : 'installed', postMessage: message => messages.push(message.type) });
-  const registration = Object.assign(listen(), { waiting: waiting ? worker : null, active: controlled ? worker : null, installing: installing ? worker : null, update: async () => { updates++; if (updateFails) throw Error('offline'); } });
-  const sw = Object.assign(listen(), { controller: controlled ? worker : null, register: async () => registration });
-  let updates = 0, reloads = 0, now = 1000000000, poll, timeout;
+  const messages = [], oldMessages = [], saved = [], nodes = new Map(), timers = new Map(), session = new Map();
+  let updates = 0, reloads = 0, now = 1000000000, poll, timerId = 0;
+  const node = id => { if (!nodes.has(id)) nodes.set(id, Object.assign(listen(), { hidden: true, isConnected: true, style: {}, attributes: {}, setAttribute(key, value) { this.attributes[key] = value; }, focus() { doc.activeElement = this; }, querySelector: node, querySelectorAll: () => ['[data-update]', '[data-later]', '[data-retry]', '[data-continue]'].map(node) })); return nodes.get(id); };
+  const worker = Object.assign(listen(), { state: installing ? 'installing' : 'installed', postMessage(message) {
+    messages.push(message.type);
+    if (message.type === 'GET_RELEASE') sw.map.get('message')?.({ source: worker, data: { type: 'MAGICSHOW_RELEASE', release: 'accepted-release' } });
+  } });
+  const oldWorker = { state: 'activated', postMessage(message) { oldMessages.push(message.type); } };
+  const registration = Object.assign(listen(), { waiting: waiting ? worker : null, active: controlled ? oldWorker : null, installing: installing ? worker : null, update: async () => { updates++; if (updateFails) throw Error('offline'); } });
+  const sw = Object.assign(listen(), { controller: controlled ? oldWorker : null, register: async (url, options) => {
+    assert.equal(url, './sw.js'); assert.equal(options.updateViaCache, 'none'); return registration;
+  } });
   const win = listen(), doc = Object.assign(listen(), { visibilityState: 'visible', body: { append() {} }, getElementById: id => id === 'titleScreen' && title ? node('title') : null, querySelector: () => null, createElement: () => node('panel') });
   node('title').hidden = !title;
   node('#magicUpdateText').hidden = false;
   node('[data-update]').hidden = false; node('[data-later]').hidden = false;
   win.MagicShowUI = { save: () => { saved.push('save'); }, isRestScreen: () => safe };
   const location = { reload: () => { reloads++; } };
-  vm.runInNewContext(source, { navigator: { serviceWorker: sw, onLine: online }, window: win, document: doc, location, Date: { now: () => now }, console, setTimeout: (fn, ms) => { assert.equal(ms, 5000); timeout = fn; }, setInterval: fn => { poll = fn; }, MutationObserver: class { observe() {} } });
+  vm.runInNewContext(source, {
+    navigator: { serviceWorker: sw, onLine: online }, window: win, document: doc, location, Date: { now: () => now }, console,
+    MessageChannel: MockMessageChannel,
+    sessionStorage: { getItem: key => session.get(key) ?? null, setItem: (key, value) => session.set(key, value) },
+    setTimeout: (fn, ms) => { assert.equal(ms, 5000); timers.set(++timerId, fn); return timerId; },
+    clearTimeout: id => timers.delete(id), setInterval: fn => { poll = fn; }, MutationObserver: class { observe() {} }
+  });
   assert.equal(win.map.has('load'), false, 'registration starts before window.load');
   await Promise.resolve(); await Promise.resolve();
-  return { sw, doc, win, registration, worker, messages, saved, node, hasTimeout: () => !!timeout, state: value => { worker.state = value; if (value === 'installed') { registration.installing = null; registration.waiting = worker; } if (value === 'redundant') registration.installing = null; worker.map.get('statechange')(); }, poll: () => poll(), safe: value => { safe = value; poll(); }, click: id => node(id).map.get('click')(), tick: ms => { now += ms; }, timeout: () => timeout(), count: () => ({ updates, reloads }) };
+  return { sw, doc, win, registration, worker, oldWorker, messages, oldMessages, saved, session, node,
+    hasTimeout: () => timers.size > 0,
+    state: value => { worker.state = value; if (value === 'installed') { registration.installing = null; registration.waiting = worker; } if (value === 'redundant') registration.installing = null; worker.map.get('statechange')(); },
+    claim: () => { worker.state = 'activated'; registration.active = worker; registration.waiting = null; registration.installing = null; sw.controller = worker; sw.map.get('controllerchange')(); worker.map.get('statechange')?.(); },
+    poll: () => poll(), safe: value => { safe = value; poll(); }, click: id => node(id).map.get('click')(), tick: ms => { now += ms; },
+    timeout: () => { const pending = [...timers.values()]; timers.clear(); for (const fn of pending) fn(); },
+    count: () => ({ updates, reloads }) };
 }
 
 test('Magicshow popup waits for rest, hides when play resumes, and accepts save then reload exactly once', async () => {
@@ -372,12 +451,13 @@ test('Magicshow popup waits for rest, hides when play resumes, and accepts save 
   page.safe(false); assert.equal(page.node('panel').hidden, true);
   page.sw.map.get('controllerchange')(); assert.equal(page.count().reloads, 0);
   page.safe(true); page.click('[data-update]');
-  assert.deepEqual(page.saved, ['save']); assert.equal(page.messages.at(-1), 'SKIP_WAITING');
-  page.sw.map.get('controllerchange')(); page.sw.map.get('controllerchange')();
+  assert.deepEqual(page.saved, ['save']); assert.equal(page.messages.filter(m => m === 'SKIP_WAITING').length, 1);
+  page.sw.map.get('controllerchange')(); assert.equal(page.count().reloads, 0, 'old controller event is insufficient');
+  page.claim(); page.sw.map.get('controllerchange')();
   page.timeout(); assert.equal(page.count().reloads, 1);
 });
 
-test('Magicshow save conflict stays visible and missing controllerchange reloads only once', async () => {
+test('Magicshow save conflict stays visible and missing controllerchange offers delay recovery', async () => {
   const page = await runRegistration({ safe: true });
   page.win.MagicShowUI.save = () => false;
   page.click('[data-update]');
@@ -388,7 +468,19 @@ test('Magicshow save conflict stays visible and missing controllerchange reloads
   page.click('[data-update]');
   assert.equal(page.node('[data-save-error]').hidden, true);
   page.timeout(); page.timeout(); page.sw.map.get('controllerchange')();
-  assert.equal(page.count().reloads, 1);
+  assert.equal(page.count().reloads, 0);
+  assert.match(page.node('[data-download]').textContent, /전환이 늦어지고/);
+  assert.equal(page.node('[data-retry]').hidden, false);
+  assert.equal(page.node('[data-continue]').hidden, false);
+  page.click('[data-retry]'); assert.equal(page.count().reloads, 0);
+  page.claim(); assert.equal(page.count().reloads, 1);
+  const continued = await runRegistration({ safe: true });
+  continued.click('[data-update]'); continued.timeout(); continued.click('[data-continue]');
+  continued.claim(); assert.equal(continued.count().reloads, 0, 'continue cancels automatic reload');
+  const repeated = await runRegistration({ safe: true });
+  repeated.session.set('magicshow.update.reloaded', 'accepted-release');
+  repeated.click('[data-update]'); repeated.claim(); assert.equal(repeated.count().reloads, 0);
+  assert.match(repeated.node('[data-download]').textContent, /이미 적용한 버전/);
 });
 
 test('Magicshow later suppresses prompts for this launch, reappears next launch, and detects late waiting workers', async () => {
@@ -428,7 +520,8 @@ test('Magicshow title offers an installing update before download completes and 
   page.state('installed');
   assert.equal(page.messages.filter(m => m === 'SKIP_WAITING').length, 1);
   page.poll(); page.sw.map.get('controllerchange')(); page.timeout();
-  assert.equal(page.count().reloads, 1);
+  assert.equal(page.count().reloads, 0);
+  page.claim(); assert.equal(page.count().reloads, 1);
   assert.deepEqual(page.saved, []);
 });
 
@@ -571,14 +664,21 @@ test('Magicshow question, download, reopening and failure expose only their stat
   page.node('[data-update]').disabled = false;
   for (const shift of [false, true]) { key(page, 'Tab', shift); assert.equal(page.doc.activeElement, page.node('[data-later]')); }
   page.sw.map.get('message')({ source: page.worker, data: { type: 'MAGICSHOW_UPDATE_PROGRESS', done: 10, total: 10 } });
-  assert.equal(page.node('[data-download]').textContent, '다시 여는 중이에요');
-  assertHidden(page, ['#magicUpdateText', '[data-update]', '[data-later]', '[data-continue]']);
-  for (const shift of [false, true]) { key(page, 'Tab', shift); assert.equal(page.doc.activeElement, page.node('.magic-update-box')); }
+  assert.equal(page.node('[data-download]').textContent, '업데이트를 받는 중이에요 100%');
+  assertHidden(page, ['#magicUpdateText', '[data-update]', '[data-continue]']);
+  assert.equal(page.node('[data-later]').hidden, false, '100% progress is not activation');
+  for (const shift of [false, true]) { key(page, 'Tab', shift); assert.equal(page.doc.activeElement, page.node('[data-later]')); }
   page.state('installed');
   assertHidden(page, ['[data-progress]', '[data-download-help]', '[data-later]']);
+  assert.equal(page.node('[data-download]').textContent, '다시 여는 중이에요');
+  for (const shift of [false, true]) { key(page, 'Tab', shift); assert.equal(page.doc.activeElement, page.node('.magic-update-box')); }
   const completed = await runRegistration({ waiting: false, safe: true, title: true, installing: true });
   completed.sw.map.get('message')({ source: completed.worker, data: { type: 'MAGICSHOW_UPDATE_PROGRESS', done: 10, total: 10 } });
   completed.click('[data-update]');
+  assert.equal(completed.node('[data-later]').hidden, false);
+  assert.equal(completed.doc.activeElement, completed.node('[data-later]'));
+  assert.equal(completed.count().reloads, 0);
+  completed.state('installed');
   assert.equal(completed.node('[data-later]').hidden, true);
   assert.equal(completed.doc.activeElement, completed.node('.magic-update-box'));
   const waiting = await runRegistration({ safe: true, title: true });
@@ -625,9 +725,13 @@ test('Magicshow real SW progress reaches page, starts mid-download, and reaches 
   assert.ok(peak <= 6); assert.ok(peak > 1);
   assert.equal(worker.progress.at(-1).done, worker.progress.at(-1).total);
   assert.equal(page.node('[data-progress-fill]').style.width, '100%');
-  assert.equal(page.node('[data-download]').textContent, '다시 여는 중이에요');
+  assert.equal(page.node('[data-download]').textContent, '업데이트를 받는 중이에요 100%');
   assert.equal(page.hasTimeout(), false);
+  assert.equal(page.count().reloads, 0);
   page.state('installed'); assert.equal(page.node('[data-progress]').hidden, true);
+  assert.equal(page.node('[data-download]').textContent, '다시 여는 중이에요');
+  page.timeout(); assert.equal(page.count().reloads, 0);
+  page.claim(); assert.equal(page.count().reloads, 1);
   const waiting = await runRegistration({ safe: true, title: true });
   waiting.click('[data-update]');
   assert.equal(waiting.node('[data-progress]').hidden, true);

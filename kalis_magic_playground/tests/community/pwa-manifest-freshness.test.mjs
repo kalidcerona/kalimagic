@@ -22,6 +22,10 @@ const jsonResponse = value => new Response(JSON.stringify(value), {
 
 function worker(app, network, { emptyCache = false, failCacheWrite = false } = {}) {
   const scope = `https://kalimagic.netlify.app/${app.route}/`;
+  const source = readFileSync(`${root}${app.source}`, 'utf8');
+  const scopedMagicshow = source.includes('const SCOPED_CACHE =');
+  const cacheSuffix = scopedMagicshow ? '-' + encodeURIComponent(new URL(scope).pathname) : '';
+  const oldCacheName = () => scopedMagicshow ? 'magicshow-dist-old-coherent-1-distribution' + cacheSuffix : `${opened[0]}-old-version`;
   const events = {};
   const calls = [];
   const puts = [];
@@ -41,7 +45,7 @@ function worker(app, network, { emptyCache = false, failCacheWrite = false } = {
     addAll: async assets => { added.push(...assets); }
   };
   const context = {
-    URL, Request, Response, Set, Promise, encodeURIComponent,
+    URL, Request, Response, Set, Promise, encodeURIComponent, AbortController, setTimeout, clearTimeout,
     self: {
       registration: { scope }, location: new URL(`${scope}sw.js`),
       addEventListener: (name, handler) => { events[name] = handler; },
@@ -50,12 +54,16 @@ function worker(app, network, { emptyCache = false, failCacheWrite = false } = {
     },
     caches: {
       open: async name => { opened.push(name); return cache; },
-      keys: async () => [opened[0], `${opened[0]}-old-version`, 'foreign-app-cache'],
+      keys: async () => [opened[0], oldCacheName(), 'foreign-app-cache'],
       delete: async name => { deletes.push(name); return true; }
     },
-    fetch: async request => { calls.push(request); return network(request); }
+    fetch: async request => {
+      calls.push(request);
+      if (scopedMagicshow && new URL(request.url).pathname.endsWith('/sw.js') && request.cache === 'no-store') return new Response(source);
+      return network(request);
+    }
   };
-  vm.runInNewContext(readFileSync(`${root}${app.source}`, 'utf8'), context, { filename: app.source });
+  vm.runInNewContext(source, context, { filename: app.source });
   async function dispatch(url = `${scope}manifest.webmanifest`, init) {
     let answer;
     const pending = [];
@@ -76,7 +84,7 @@ function worker(app, network, { emptyCache = false, failCacheWrite = false } = {
       await pending;
     } finally { installing = false; }
   }
-  return { scope, dispatch, lifecycle, calls, puts, deletes, opened, added, claims: () => claims, skips: () => skips };
+  return { scope, dispatch, lifecycle, calls, puts, deletes, opened, added, oldCacheName, claims: () => claims, skips: () => skips };
 }
 
 test('the freshness matrix covers 24 public source workers and 25 deployed scopes', () => {
@@ -148,7 +156,7 @@ for (const app of routes) {
     await instance.lifecycle('install');
     await instance.lifecycle('activate');
     assert.equal(instance.deletes.length, 1);
-    assert.ok(instance.deletes[0].endsWith('old-version'));
+    assert.equal(instance.deletes[0], instance.oldCacheName());
     assert.ok(!instance.deletes.includes('foreign-app-cache'));
     assert.equal(instance.claims(), 1);
     // Magicshow waits for explicit acceptance; its first install activates naturally.

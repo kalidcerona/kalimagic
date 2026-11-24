@@ -38,7 +38,7 @@
       // A loaded map/challenge must retain the original timeline budget before travel resets the live one.
       if(state.u18&&state.u18.anchor){
         var anchor=JSON.parse(state.u18.anchor);
-        THEFT_ANCHOR.set(state,Math.floor(Math.max(0,anchor.coins)*.1));
+        THEFT_ANCHOR.set(state,Math.floor(Math.max(0,anchor.coins)*regularPenaltyPolicy(anchor).theftBudgetPct));
       }
     }
     if(!state)return state;

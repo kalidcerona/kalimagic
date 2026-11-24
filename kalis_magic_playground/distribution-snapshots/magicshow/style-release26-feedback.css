@@ -1,0 +1,25 @@
+/* Keep the incumbent pixel palette and controls; give the next action one clear hierarchy. */
+#panel .fail-next-benefit {
+  margin: 16px 0 12px;
+  max-width: 30ch;
+  font-size: clamp(18px, 4vw, 25px);
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+  text-wrap: pretty;
+}
+#panel .fail-next-action { display: block; width: 100%; min-height: 48px; margin: 0 0 24px; }
+#panel .fail-other-preparations { width: 100%; text-align: left; }
+#panel .fail-other-preparations summary { cursor: pointer; padding: 12px 0; min-height: 24px; }
+#panel .fail-secondary { padding: 8px 0; }
+#panel .fail-other-preparations summary:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
+#stage .show-band { height: auto; min-height: 24px; max-width: calc(100% - 8px); padding: 5px 8px; white-space: normal; }
+#stage .show-band-copy { display: flex; flex-direction: column; gap: 3px; max-width: 32ch; }
+#stage .show-band-name { font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
+#stage .show-band-bonus { font-size: 10px; line-height: 1.4; }
+#stage .show-band-icon[hidden] { display: none; }
+#stage .show-band[data-form="name-only"] .show-band-copy { max-width: 22ch; }
+#stage .first-wow-stamp { max-width: 90%; white-space: normal; font-size: clamp(16px, 4vw, 24px); line-height: 1.6; text-align: center; }
+@media (prefers-reduced-motion: reduce) {
+  #stage .show-band { opacity: 1 !important; animation: none; transition: none; }
+}
+html.reduce-motion #stage .show-band { opacity: 1 !important; animation: none; transition: none; }

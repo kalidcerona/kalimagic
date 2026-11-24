@@ -32,7 +32,7 @@
     const mark = chainMark();
     if (!mark || state.u15.tutorial.active || state.u15.tutorial.done) return null;
     const teacher = mark.step.startsWith('teacher') || mark.step.startsWith('upgrade');
-    const happy = mark.step.endsWith('-clear') || mark.step.startsWith('upgrade');
+    const happy = mark.step==='girl-wow' || mark.step.endsWith('-clear') || mark.step.startsWith('upgrade');
     if (teacher) return { name: '수학 선생님', emoji: '👩‍🏫', role: 'critic', portrait: `assets/aud-s1-teacher${happy ? '-happy' : ''}.png` };
     if (mark.step.startsWith('girl')) return { name: '같은 반 여학생', emoji: '👧', role: 'supporter', portrait: `assets/aud-s1-classmate${happy ? '-happy' : ''}.png` };
     return null;
@@ -78,7 +78,7 @@
     if (chainFighting) return;
     chainBackup = C.serialize(state);
     chainFighting = true;
-    const hp = step.startsWith('teacher') ? 180 : 120;
+    const hp = step.startsWith('teacher') ? 180 : (typeof firstWowEnabled === 'function' && firstWowEnabled() ? 40 : 120);
     state.audHp = state.audHpMax = hp;
     state.atk = 1; state.interval = 8; state.heckleMs = 8000; state.telegraphed = false;
     state.fightMs = 0; state.resolved = false; state.mode = 'fight';
@@ -93,7 +93,7 @@
     if (chainBackup) replaceState(C.deserialize(chainBackup));
     chainFighting = false; chainBackup = '';
     state.onboarding.intro = true;
-    setChain(next, 0);
+    setChain(typeof firstWowEnabled === 'function' && firstWowEnabled() && mark.step==='girl-fight' ? 'girl-wow' : next, 0);
     lastAudience = ''; dialogKey = '';
     save();
     return true;
@@ -116,6 +116,7 @@
     chainFighting = false; chainBackup = ''; chainNodeId = ''; chainNodeLevel = -1; chainFocused = false; chainBookChecked = false;
     if (state.u15.tutorial.active) C.finishTutorial(state);
     state.u15.tutorial = { done: true, active: false, won: false, baseline: null };
+    if(state.u15.bios.includes('intro:v26')&&!state.u15.bios.includes('intro:v26:complete'))state.u15.bios.push('intro:v26:complete');
     state.u15.bios = (state.u15.bios || []).filter(k => typeof k !== 'string' || !k.startsWith('tchain:'));
     state.onboarding.intro = true;
     state.onboarding.step = 8;
@@ -130,6 +131,7 @@
     save(); render();
   }
   function beginNdd() {
+    if(typeof firstWowBeforeNdd === 'function' && firstWowBeforeNdd()) return;
     chainFighting = false; chainBackup = ''; chainNodeId = ''; chainNodeLevel = -1; chainFocused = false; chainBookChecked = false;
     if (menu) { menu = ''; $('panel').hidden = true; $('stage').classList.remove('map-open'); }
     setChain('', 0);
@@ -184,7 +186,9 @@
   function renderSchoolChain() {
     if (state.u15.tutorial.done || state.u15.tutorial.active) return false;
     const mark = chainMark();
+    if(typeof firstWowReplayActive==='function' && firstWowReplayActive()){ $('storyDialog').hidden=true;return true; }
     if (!mark) return false;
+    if(typeof renderFirstWowChain === 'function' && renderFirstWowChain(mark)) return true;
     // Leave a readable gap between the classmate scene and the next teacher scene.
     if (skillNoticePending()) { $('storyDialog').hidden = true; dialogKey = ''; return true; }
     if(mark.step==='lesson-fail'){if(menu!=='fail'&&menu!=='book'){failure=0;showFailure();}return true;}
@@ -214,6 +218,7 @@
       collect(false);
       if (mark.line + 1 < lines.length) setChain(mark.step, mark.line + 1);
       else if(mark.step==='lesson-intro')beginNdd();
+      else if(typeof firstWowAfterClear === 'function' && firstWowAfterClear(mark.step)) {}
       else setChain(CHAIN_AFTER[mark.step] || 'girl-intro', 0);
       save();
     };
@@ -224,17 +229,24 @@
   let tutorialMoment = null;
   function tutorialWinMoment() {
     tutorialMoment?.stamp.remove();
-    const stamp = element('div', '감탄!', 'win-stamp'); stamp.id = 'winStamp';
+    const first=typeof firstWowEnabled === 'function' && firstWowEnabled() && chainMark()?.step==='girl-wow';
+    const duration=first?1500:1350;
+    const stamp = element('div', first?'어, 벌레 수가 변했어!':'감탄!', 'win-stamp'+(first?' first-wow-stamp':'')); stamp.id = 'winStamp';
     $('audienceCard').append(stamp); $('audienceCard').classList.add('f-win-stamp');
-    tutorialMoment = { stamp, until: clock + 1350, state, tutorial: state.u15.tutorial };
+    tutorialMoment = { stamp, until: clock + duration, state, tutorial: state.u15.tutorial };
+    if(first){
+      if(!state.u15.bios.includes('intro:v26:wow'))state.u15.bios.push('intro:v26:wow');
+      setChain('girl-clear',0);save();
+    }
     $('storyDialog').hidden = true; dialogKey = '';
-    hitStop(); sound('applause'); kaliPose(2, 1350);
+    hitStop(); sound('applause'); kaliPose(2, duration);
     if (!reduced) animate(stamp, [{transform:'scale(1.3)'},{transform:'scale(1)'}],180);
   }
   function tutorialMomentActive() {
     if (!tutorialMoment) return false;
     if (tutorialMoment.state === state && tutorialMoment.tutorial === state.u15.tutorial && clock < tutorialMoment.until) return true;
-    tutorialMoment.stamp.remove(); $('audienceCard').classList.remove('f-win-stamp'); tutorialMoment = null; return false;
+    tutorialMoment.stamp.remove(); $('audienceCard').classList.remove('f-win-stamp'); tutorialMoment = null;
+    return false;
   }
   function renderU15(){
     if (tutorialMomentActive() || menu === 'boo' || menu === 'install') { $('storyDialog').hidden = true; dialogKey = ''; return; }

@@ -9,6 +9,9 @@
   const safari = ios && /Safari/i.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS/i.test(ua);
   const android = /Android/i.test(ua);
   const media = ['fullscreen', 'standalone'].map(mode => window.matchMedia(`(display-mode: ${mode})`));
+  const isPhone = () => document.body.matches('.phone:not(.tablet)');
+  const isPortrait = () => isPhone() && document.body.classList.contains('portrait-layout');
+  const usePhoneGuide = () => isPortrait() || (isPhone() && window.matchMedia('(pointer: coarse)').matches);
   let installEvent = null, revision = 0, installedSignal = false, previousFocus = null;
   const installed = () => installedSignal || navigator.standalone === true || media.some(item => item.matches);
   const canInstall = () => inApp || safari || (android && /Chrome|SamsungBrowser/i.test(ua)) || !!installEvent;
@@ -18,7 +21,7 @@
   overlay.innerHTML = `<section role="dialog" aria-modal="true" aria-labelledby="magicshow-install-title" class="magicshow-install-card">
     <button type="button" data-close aria-label="닫기" class="magicshow-install-close">×</button>
     <h2 id="magicshow-install-title">홈 화면에 설치하기</h2>
-    <p>홈 화면에 추가하면 앱처럼 전체 화면으로 즐길 수 있어요. 휴대폰과 태블릿은 세로 화면으로 즐겨요.</p>
+    <p data-description>홈 화면에 추가하면 앱처럼 전체 화면으로 즐길 수 있어요. 휴대폰과 태블릿은 세로 화면으로 즐겨요.</p>
     <div data-guide></div>
     <p data-status aria-live="polite"></p>
     <div class="magicshow-install-actions"><button type="button" data-install>설치</button><button type="button" data-copy hidden>링크 복사</button><button type="button" data-later>나중에</button></div>
@@ -27,6 +30,21 @@
   const find = selector => overlay.querySelector(selector);
   const action = find('[data-install]'), guide = find('[data-guide]'), status = find('[data-status]');
   const copy = find('[data-copy]'), arrow = find('[data-arrow]');
+  const card = find('.magicshow-install-card');
+  guide.id = 'magicshow-install-guide';
+  let expanded = false, onDismiss = null;
+  function syncLayout() {
+    const portrait = isPortrait();
+    if (portrait === overlay.hasAttribute('data-portrait')) return;
+    overlay.hidden = true;
+    arrow.hidden = true;
+    overlay.toggleAttribute('data-portrait', portrait);
+    overlay.classList.toggle('phone-install-strip', portrait);
+    card.setAttribute('role', portrait ? 'region' : 'dialog');
+    if (portrait) card.removeAttribute('aria-modal');
+    else card.setAttribute('aria-modal', 'true');
+    (portrait ? document.getElementById('audienceCard') : document.body).appendChild(overlay);
+  }
   function remember() { try { localStorage.setItem(KEY, String(Date.now())); } catch {} }
   function due() {
     try {
@@ -36,10 +54,19 @@
     } catch { return true; }
   }
   function describe() {
+    const portrait = overlay.hasAttribute('data-portrait');
     arrow.hidden = true;
-    copy.hidden = !inApp;
+    guide.hidden = portrait && !expanded;
+    copy.hidden = !inApp || (portrait && !expanded);
     action.hidden = false;
-    action.textContent = inApp ? '브라우저로 열기' : '설치';
+    action.textContent = inApp ? '브라우저로 열기' : (portrait && !installEvent ? '설치 방법' : '설치');
+    if (portrait && !inApp && !installEvent) {
+      action.setAttribute('aria-controls', guide.id);
+      action.setAttribute('aria-expanded', String(expanded));
+    } else {
+      action.removeAttribute('aria-controls');
+      action.removeAttribute('aria-expanded');
+    }
     if (inApp) {
       guide.textContent = ios ? 'Safari로 이 링크를 열어 주세요. 링크를 복사한 뒤 Safari 주소창에 붙여 넣으면 돼요.'
         : /KAKAOTALK/i.test(ua) ? '브라우저로 열기를 누르면 Chrome으로 연결해요. 열리지 않으면 ⋮ → 다른 브라우저로 열기를 선택해 주세요.'
@@ -48,7 +75,7 @@
       guide.innerHTML = '<ol class="magicshow-install-steps"><li><b>□↑</b><span>Safari 공유 버튼</span></li><li><b>＋</b><span>홈 화면에 추가</span></li><li><b>추가</b><span>오른쪽 위 추가</span></li></ol>';
       arrow.className = `magicshow-install-arrow ${ipad ? 'is-ipad' : 'is-iphone'}`;
       arrow.textContent = ipad ? '↑ □↑ 공유' : '□↑ 공유 ↓';
-      arrow.hidden = overlay.hidden;
+      arrow.hidden = overlay.hidden || guide.hidden;
     } else if (installEvent) {
       guide.textContent = '설치를 누르면 브라우저의 설치 창이 열려요.';
     } else {
@@ -61,23 +88,31 @@
     if (installed()) { overlay.hidden = true; arrow.hidden = true; }
     else describe();
   }
-  function open(automatic = false) {
-    if (installed()) return;
-    previousFocus = document.activeElement;
+  function open(automatic = false, dismiss = null) {
+    if (installed()) return false;
+    syncLayout();
+    const portrait = isPortrait();
+    onDismiss = dismiss;
+    previousFocus = portrait ? (automatic ? null : document.getElementById('moreButton')) : document.activeElement;
+    expanded = portrait && !automatic && !installEvent;
     overlay.hidden = false;
     status.textContent = '';
     describe();
     if (automatic) remember();
-    find('[data-close]').focus();
+    if (!portrait) find('[data-close]').focus();
+    else if (!automatic) queueMicrotask(() => action.focus({preventScroll:true}));
+    return true;
   }
   function close() {
+    const restoreFocus = !isPortrait() || overlay.contains(document.activeElement);
     remember();
     overlay.hidden = true;
     arrow.hidden = true;
-    previousFocus?.focus();
+    if (onDismiss) onDismiss();
+    else if (restoreFocus) previousFocus?.focus();
   }
   document.addEventListener('click', event => {
-    if (installed() || !event.target?.closest?.('#installButton')) return;
+    if (usePhoneGuide() || installed() || !event.target?.closest?.('#installButton')) return;
     event.preventDefault();
     event.stopImmediatePropagation();
     open();
@@ -86,7 +121,7 @@
   find('[data-later]').addEventListener('click', close);
   overlay.addEventListener('keydown', event => {
     if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); close(); }
-    if (event.key !== 'Tab') return;
+    if (event.key !== 'Tab' || isPortrait()) return;
     const buttons = [...overlay.querySelectorAll('button')].filter(button => !button.hidden);
     const first = buttons[0], last = buttons[buttons.length - 1];
     if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
@@ -99,6 +134,7 @@
   action.addEventListener('click', async () => {
     if (installed()) return refresh();
     if (inApp) {
+      if (isPortrait()) { expanded = true; describe(); }
       if (android && /KAKAOTALK/i.test(ua)) {
         const url = new URL(location.href);
         if (url.protocol === 'https:' || url.protocol === 'http:') {
@@ -107,7 +143,10 @@
       } else status.textContent = ios ? '링크를 복사한 뒤 Safari에서 열어 주세요.' : '⋮ → 다른 브라우저로 열기를 선택해 주세요.';
       return;
     }
-    if (!installEvent) return describe();
+    if (!installEvent) {
+      if (isPortrait()) expanded = !expanded;
+      return describe();
+    }
     const event = installEvent, current = revision;
     installEvent = null;
     action.disabled = true;
@@ -118,6 +157,7 @@
       if (current !== revision || installed() || overlay.hidden) return;
       if (choice?.outcome === 'accepted') status.textContent = '설치 요청을 보냈어요. 홈 화면의 앱 아이콘을 확인해 주세요.';
       else { remember(); describe(); }
+      if (choice?.outcome === 'accepted' && isPortrait()) describe();
     } catch {
       if (current === revision && !installed() && !overlay.hidden) describe();
     } finally { action.disabled = false; }
@@ -139,6 +179,12 @@
     if (query.addEventListener) query.addEventListener('change', refresh);
     else query.addListener?.(refresh);
   }
+  window.magicshowDistributionInstall = {
+    offer(automatic, dismiss) {
+      return isPortrait() && (!automatic || due()) && open(automatic, dismiss);
+    }
+  };
+  syncLayout();
   refresh();
-  if (due()) open(true);
+  if (!usePhoneGuide() && due()) open(true);
 })();

@@ -1,8 +1,21 @@
 'use strict';
   var GATE_POLICY = {hp:0.75, regen:0.003, ramp:0.06, floor:45, theaterFloor:30};
+  // One policy for main-story regulars; special fights retain the shared constants.
+  var REGULAR_PENALTIES = {stallMs:90000, stealPct:0.03, theftBudgetPct:0.08, sealDur:6000, sealEvery:14000, slowTap:0.80, slowSpawn:1.25};
+  function regularPenaltyPolicy(state) {
+    var venue = VENUES[state.venue - 1], aud = venue && getAud(state.venue, state.j);
+    var special = !aud || state.j >= headlinerJ(state.venue) ||
+      state.u15.tutorial.active || state.u18.anchor ||
+      state.u15.bios.some(function(k) { return typeof k === 'string' && k.indexOf('tchain:') === 0; }) ||
+      state.batchD.side || state.batchD.encore.phase === 'round' ||
+      venue.slug === 'future' || ['review','homecoming','future'].indexOf(profile(state)) >= 0 ||
+      state.pattern === 'friendlyReview' || aud.pattern === 'friendlyReview';
+    return special ? {stallMs:CONST.stallMs, stealPct:CONST.stealPct, theftBudgetPct:0.1,
+      sealDur:CONST.sealDur, sealEvery:CONST.sealEvery, slowTap:CONST.slowTap, slowSpawn:CONST.slowSpawn} : REGULAR_PENALTIES;
+  }
   // Fight-local budgets never enter serialized state. Load and audience entry reset them.
   var THEFT_BUDGET = new WeakMap(), THEFT_ANCHOR = new WeakMap();
-  function resetTheftBudget(state) { THEFT_BUDGET.set(state, Math.floor(Math.max(0,state.coins)*.1)); }
+  function resetTheftBudget(state) { THEFT_BUDGET.set(state, Math.floor(Math.max(0,state.coins)*regularPenaltyPolicy(state).theftBudgetPct)); }
   function parkTheftBudget(state) { THEFT_ANCHOR.set(state,THEFT_BUDGET.get(state)); }
   function restoreTheftBudget(state) {
     if(THEFT_ANCHOR.has(state))THEFT_BUDGET.set(state,THEFT_ANCHOR.get(state));
@@ -10,7 +23,7 @@
   }
   function takeFightCoins(state) {
     if(!THEFT_BUDGET.has(state))resetTheftBudget(state);
-    var left=THEFT_BUDGET.get(state), take=Math.min(left,state.coins,Math.max(1,Math.floor(state.coins*CONST.stealPct)));
+    var left=THEFT_BUDGET.get(state), take=Math.min(left,state.coins,Math.max(1,Math.floor(state.coins*regularPenaltyPolicy(state).stealPct)));
     THEFT_BUDGET.set(state,left-take);state.coins-=take;return take;
   }
   function gateHpCap(state) {

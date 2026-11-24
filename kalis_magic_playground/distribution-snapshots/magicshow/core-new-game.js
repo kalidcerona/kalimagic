@@ -144,7 +144,7 @@
   function newGame(seed) {
     if (typeof seed !== "number" || !isFinite(seed)) seed = 1;
     var state = fresh(seed >>> 0);
-    state.u15.bios.push('lesson:v1');
+    state.u15.bios.push('lesson:v1','intro:v26');
     state.u14.visitor.wait=90000+Math.floor(rngNext(state)*60001);
     recompute(state, true);
     state.mental = state.mentalMax;

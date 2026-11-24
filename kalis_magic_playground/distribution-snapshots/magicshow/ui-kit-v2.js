@@ -4,8 +4,6 @@
   const stage = document.getElementById('stage');
   if (!stage) return;
   const menu = document.getElementById('phoneMore');
-  const title = document.createElement('h2');
-  title.className = 'kit-menu-title'; title.textContent = '메뉴 · 설정'; menu.prepend(title);
   const decorate = root => {
     if (!(root instanceof Element)) return;
     const close = document.getElementById('closePanel');

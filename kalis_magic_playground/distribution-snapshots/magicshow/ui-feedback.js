@@ -269,13 +269,13 @@
   // Keep real colleague damage numbers; the merged impact owns the audience spark.
   function colleagueHitFx(e) {
     const r = rectOf($('audience')), stage = rectOf($('stage'));
-    if (e.applied > 0) float(`-${C.formatNumber(e.applied)}`, (r.left + r.width / 2 - stage.left) / scale + (e.index - 2.5) * 16, (r.top + r.height * .5 - stage.top) / scale, '#8be9d0', 12, 0, 0);
+    if (e.applied > 0) float(`-${C.formatNumber(e.applied)}`, (r.left + r.width / 2 - stage.left) / scale + (e.index - 2.5) * 16, (r.top + r.height * .5 - stage.top) / scale, '#8be9d0', 12, 0, 0, true);
   }
   function hitFeedback(e,source='card',maxDoubt=state.audHpMax) {
     const tier=hitTier(e.dmg,maxDoubt),model=hitTiers[tier];
     const r=rectOf($('audience')),stage=rectOf($('stage'));
     const x=(r.left+r.width/2-stage.left)/scale,y=(r.top+r.height*.65-stage.top)/scale;
-    float(e.dmg ? C.formatNumber(e.dmg) : '빗나감',x,y,model.color,model.size,tier,e.dmg);
+    float(e.dmg ? C.formatNumber(e.dmg) : '빗나감',x,y,model.color,model.size,tier,e.dmg,true);
     if(e.dmg>0) {
       if (!reduced) sceneLight(tier===4?.08:.03);
       if(tier>uiSave.bestTier){reachedTiers.add(tier);uiSave.bestTier=tier;savePresentation();banner(`새 경지: ${model.name}`,'',false,true);}
@@ -309,14 +309,14 @@
     const ms=duration;
     animations.set(el, el.animate(frames, { duration:ms, easing: 'cubic-bezier(.2,.8,.2,1)' }));
   }
-  function float(text, x, y, color = '#f4e5bf', size = 14, tier = 0, amount = 0) {
-    if (phone && (x === 426 || x === 676)) { const r=rectOf($('audience')),stage=rectOf($('stage'));x=(r.left+r.width/2-stage.left)/scale;y=(r.top+r.height*.65-stage.top)/scale; }
+  function float(text, x, y, color = '#f4e5bf', size = 14, tier = 0, amount = 0, audienceNumber = false) {
+    if (phone && (x === 426 || x === 676)) { const r=rectOf($('audience')),stage=rectOf($('stage'));x=(r.left+r.width/2-stage.left)/scale;y=(r.top+r.height*.65-stage.top)/scale;audienceNumber=true; }
     if(numbers.length>=caps.numbers){
       let n=null;if(amount>0)for(let i=numbers.length-1;i>=0;i--)if(numbers[i].amount>0){n=numbers[i];break;}
-      if(n){n.amount+=amount;n.text=`+${C.formatNumber(n.amount)}`;n.critical=false;if(tier>(n.tier||0))Object.assign(n,{tier,size:Math.min(22,size),color,x,y});return n;}
+      if(n){n.amount+=amount;n.text=`+${C.formatNumber(n.amount)}`;n.critical=false;if(tier>(n.tier||0))Object.assign(n,{tier,size:Math.min(22,size),color,x,y,audienceNumber});return n;}
       numbers.shift();
     }
-    const n={text,amount,x:x+(numbers.length%2?12:-12),y:y-Math.floor(numbers.length/2)*12,color,size:Math.min(22,size),tier,start:clock,life:500};
+    const n={text,amount,x:x+(numbers.length%2?12:-12),y:y-Math.floor(numbers.length/2)*12,stack:Math.floor(numbers.length/2),audienceNumber,color,size:Math.min(22,size),tier,start:clock,life:500};
     numbers.push(n);return n;
   }
   function statFloat(effect, value) {

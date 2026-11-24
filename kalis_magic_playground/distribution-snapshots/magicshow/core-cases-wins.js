@@ -80,7 +80,6 @@
   function beginAudience(state, v, j, ev) {
     endHelperBuffs(state, ev);
     MENTAL_VISIBILITY.delete(state);
-    resetTheftBudget(state);
     if (VENUES[v-1].mergedInto) { v=venueNumber(VENUES[v-1].mergedInto); j=1; }
     state.features.progress.tapStreak=0;
     state._colMs = null;
@@ -122,6 +121,7 @@
     state.slow = pattern === "slow";
     state.miss = pattern === "invisible" ? CONST.missChance : 0;
     state.pHeal = pattern === "heal";
+    resetTheftBudget(state);
     recompute(state, false);
     if (pattern === "sealBox" && theaterPhase(state) !== 1) sealOne(state); // s5b: the theater phase 1 (앞줄 관객) has no sealBox
     if (VENUES[v-1].invitation && !state.invited[VENUES[v-1].slug]) {
@@ -164,7 +164,7 @@
 
   function sealOne(state) {
     unseal(state);
-    state.sealCd = CONST.sealEvery;
+    state.sealCd = regularPenaltyPolicy(state).sealEvery;
     var i;
     var n = state.board.length;
     if (n > 32) n = 32;
@@ -172,11 +172,11 @@
       if (state.board[i].hp > 0 && !state.board[i].sealed) {
         state.board[i].sealed = true;
         state.sealCell = i;
-        state.sealMs = CONST.sealDur;
+        state.sealMs = regularPenaltyPolicy(state).sealDur;
         return;
       }
     }
-    state.sealCd = CONST.sealEvery;
+    state.sealCd = regularPenaltyPolicy(state).sealEvery;
   }
 
   function unseal(state) {

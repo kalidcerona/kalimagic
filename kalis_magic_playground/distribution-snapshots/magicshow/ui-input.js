@@ -327,40 +327,54 @@
       const go=action('비법 하나 배우러 가기',()=>{setChain('upgrade-play',0);const node=ensureUpgradeNode();tree();if(node)focusNode(node.id);chainFocused=true;save();});
       $('panelBody').append(go);go.focus({preventScroll:true});return;
     }
-    openPanel('fail', '공연 종료');
+    openPanel('fail', '다음 도전 준비');
     const result = document.createElement('div'); result.className = 'result';
-    const title = document.createElement('h2'); title.textContent = randomLine(D.pools.fail);
+    const nextStep=FailureNextStep.model(state,D,C,failureCause);
+    const title = element('h2',nextStep.text,'fail-next-benefit');
     const reason = document.createElement('p'); reason.textContent = D.pools.failReason.replace('{pct}', String(failure));
     const button = action(D.ui.restart, () => { tree(); });
     button.classList.add('practice-enter');
-    const advice = Guidance.failure(state,D,C,failureCause);
+    const advice = nextStep.advice;
     practiceRec = advice.node ? advice.node.id : null;
     // U32: the audience that heckled and Kali's sad face replace the lone hat icon when art exists.
     const scene = element('div', '', 'fail-scene');
     const fv = D.venues[(failureVenue || state.venue) - 1], fa = fv && C.roster(fv).find(x => x && x.id === failureAudience);
     if (fa) { const face = element('span', '', 'fail-face'); sprite(face, audienceAsset(fv, fa)); scene.append(face); }
     const sad = element('span', '', 'fail-kali'); sprite(sad, kaliReact('sad')); scene.append(sad);
-    result.append(scene, title, reason, element('p',advice.line,'fail-cause'));
-    if(advice.hint)result.append(element('p',advice.hint,'fail-hint'));
+    let gateLessonButton=null;
+    const primary=action(nextStep.label,()=>{
+      if(nextStep.kind==='learn'){tree();focusNode(nextStep.node.id);}
+      else if(nextStep.kind==='gate'){others.open=true;gateLessonButton?.focus({preventScroll:true});}
+      else restartAfterFailure();
+    });
+    primary.classList.add('fail-next-action');
+    const others=element('details','','fail-other-preparations');
+    others.append(element('summary','다른 준비 방법'));
+    result.append(scene,title,primary,others);
+    const secondary=element('div','','fail-secondary');others.append(secondary);
+    secondary.append(reason,element('p',advice.line,'fail-cause'));
+    if(advice.hint)secondary.append(element('p',advice.hint,'fail-hint'));
     if(advice.node){
       const n=advice.node,gate=n.id.startsWith('gate:'),label=advice.currency==='keys'?'책':advice.currency==='gems'?'실크':'동전';
       const recommendation=element('div','','practice-gate fail-recommendation');
       recommendation.append(element('p',`${n.name} · ${label} ${rounded(advice.cost)} · ${advice.blocked||'지금 배울 수 있어요'}`));
-      recommendation.append(action(gate?'야유 받아넘기기 배우기':`${n.name} 살펴보기`,()=>{
+      const lessonButton=action(gate?'야유 받아넘기기 배우기':`${n.name} 살펴보기`,()=>{
         if(gate){if(C.learnFailureLesson(state,n.id)){save();sound('skill');}showFailure();}
-        else focusNode(n.id);
-      },gate&&!!advice.blocked));
-      result.append(recommendation);
+        else {tree();focusNode(n.id);}
+      },gate&&!!advice.blocked);
+      if(gate)gateLessonButton=lessonButton;
+      recommendation.append(lessonButton);
+      secondary.append(recommendation);
     }
     // v4 U44: the 칼리 product of this venue is one option among the others (a quiet row, the player decides).
     const product=C.failureProduct(state);
     if(product&&C.nodeInfo(state,product.id).displayable){
       const pinfo=C.nodeInfo(state,product.id),prow=element('div','','practice-gate fail-product');
       prow.append(element('span',`${product.name} · 연출 ×${product.productMultiplier} · 동전 ${rounded(pinfo.cost)}`),action(pinfo.purchasable?'배우기':`동전 ${rounded(Math.ceil(pinfo.cost-state.coins))} 더`,()=>learnFailureProduct(product.id),!pinfo.purchasable));
-      result.append(prow);
+      secondary.append(prow);
     }
-    if(C.failureDealerAvailable(state))result.append(action('샵 매니저와 한 판 하고 다시 도전',()=>{if(C.openFailureDealer(state)){save();menu='';dealer();}}));
+    if(C.failureDealerAvailable(state))secondary.append(action('샵 매니저와 한 판 하고 다시 도전',()=>{if(C.openFailureDealer(state)){save();menu='';dealer();}}));
     const stageGo = action(practiceGoLabel(), restartAfterFailure); stageGo.classList.add('fail-stage');
     const row = element('div', '', 'fail-actions'); row.append(button, stageGo);
-    result.append(row); $('panelBody').append(result); button.focus({preventScroll:true});
+    secondary.append(row); $('panelBody').append(result); primary.focus({preventScroll:true});
   }

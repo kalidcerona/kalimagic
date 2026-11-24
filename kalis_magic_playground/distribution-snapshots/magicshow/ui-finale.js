@@ -306,10 +306,21 @@
     kaliUntil = clock + 180;
     clearTimeout(host._flinch); host._flinch = setTimeout(() => host.classList.remove('flinch'), 180);
   }
-  // s4e2 G: a level-up answers where it happens: LV UP over Kali (the case level-up text), 멘탈 refill glow and a short rising tone.
+  // Keep the refill and tone with the level-up on both layouts.
+  let levelUpStrip = null, levelUpUntil = 0;
   function levelUpMoment() {
-    const p = stagePoint($('magicianMini'), .5, .08);
-    if (p) float('LV UP!', p.x, p.y, '#fff18a', 32);
+    if (portraitPhone()) {
+      if (!levelUpStrip) {
+        levelUpStrip = element('div', 'LV UP!');
+        levelUpStrip.id = 'stageLevelUp';
+        levelUpStrip.setAttribute('aria-hidden', 'true');
+        $('audienceCard').append(levelUpStrip);
+      }
+      levelUpUntil = clock + 500;
+    } else {
+      const p = stagePoint($('magicianMini'), .5, .08);
+      if (p) float('LV UP!', p.x, p.y, '#fff18a', 32);
+    }
     const m = $('statMental');
     if (m && !reduced) { m.classList.remove('meter-refill'); void m.offsetWidth; m.classList.add('meter-refill'); clearTimeout(m._refill); m._refill = setTimeout(() => m.classList.remove('meter-refill'), 600); }
     sound('levelUp');

@@ -36,15 +36,15 @@ const WORKERS = [
 ];
 
 function versioned(source, tag) {
-  const tokens = ["const CACHE_NAME = CACHE_PREFIX + '", "CACHE=PREFIX+'"];
-  const token = tokens.find((item) => source.includes(item));
-  if (!token) throw new Error('cache name literal');
-  const at = source.indexOf(token);
-  const end = source.indexOf("';", at);
-  if (at < 0 || end < 0 || source.indexOf(token, at + token.length) !== -1) throw new Error('cache name literal');
-  // Keep a distribution suffix last so family filters still see it after the test tag.
-  const split = source.slice(at + token.length, end).endsWith('-distribution') ? end - '-distribution'.length : end;
-  return source.slice(0, split) + '--' + tag + source.slice(split);
+  const declaration = /^(?:const CACHE_NAME = CACHE_PREFIX \+ '|.*?CACHE=PREFIX\+')(.*?)';/m;
+  const match = source.match(declaration);
+  if (!match) throw new Error('cache name declaration');
+  // Match executable declarations, not the quoted identity probe in verifyDeployment.
+  const value = match[1];
+  const next = value.endsWith('-distribution')
+    ? value.slice(0, -'-distribution'.length) + '--' + tag + '-distribution'
+    : value + '--' + tag;
+  return source.slice(0, match.index) + match[0].replace(value, next) + source.slice(match.index + match[0].length);
 }
 
 function cachePrefix(source, scope) {
@@ -75,6 +75,8 @@ function boot(source, scope, state, stores) {
     if (name === '') name = 'index.html';
     state.fetches.push(name);
     if (state.offline) throw new TypeError('offline');
+    // Identity checks must receive the installed worker source, not a manifest/body stub.
+    if (name === 'sw.js' && input.cache === 'no-store') return new Response(source);
     return new Response(`${state.generation}:${name}`, { status: 200 });
   };
   const caches = {
@@ -115,7 +117,7 @@ function boot(source, scope, state, stores) {
     async delete(name) { deleted.push(name); return stores.delete(name); },
   };
   vm.runInNewContext(source, {
-    URL, Response, Request,
+    URL, Response, Request, AbortController, setTimeout, clearTimeout,
     self: {
       registration: { scope, active: state.active },
       addEventListener(name, fn) { listeners[name] = fn; },
@@ -170,7 +172,8 @@ for (const [file, scope] of WORKERS) {
     const prefix = cachePrefix(source, scope);
     // Pi Max splits one prefix into personal and distribution families. The stale cache must belong to that family.
     const distributionFamily = source.includes("endsWith('-distribution')") && /CACHE_NAME = CACHE_PREFIX \+ '[^']*-distribution';/.test(source);
-    const stale = prefix + 'stale-release' + (distributionFamily ? '-distribution' : '');
+    const scopedMagicshow = source.includes('const SCOPED_CACHE =');
+    const stale = prefix + 'stale-release' + (scopedMagicshow ? '-' + encodeURIComponent(new URL(scope).pathname) : distributionFamily ? '-distribution' : '');
     const stores = new Map([
       ['foreign-app-cache', { entries: new Map([[scope + 'index.html', 'foreign']]), puts: 0 }],
       [stale, { entries: new Map([[scope + 'index.html', 'stale']]), puts: 0 }],
@@ -243,6 +246,20 @@ for (const [file, scope] of WORKERS) {
     v1.bucket().entries.delete(jsUrl);
     state.fetches = [];
     const missedJs = await dispatch(v1, jsUrl);
+    if (scopedMagicshow) {
+      assert.equal(missedJs.response.type, 'error', 'missing executable must not mix a later deployment');
+      assert.equal(state.fetches.length, 0);
+      assert.equal(v1.bucket().entries.has(jsUrl), false);
+      assert.equal(v1.bucket().puts, putsBeforeMiss);
+      await Promise.all(missedJs.background);
+      v1.bucket().entries.delete(htmlUrl);
+      const missedPage = await dispatch(v1, htmlUrl);
+      assert.equal(missedPage.response.status, 503, 'missing page asks for a complete replacement');
+      assert.equal(state.fetches.length, 0);
+      assert.equal(v1.bucket().entries.has(htmlUrl), false);
+      assert.equal(v1.bucket().puts, putsBeforeMiss);
+      await Promise.all(missedPage.background);
+    } else {
     assert.equal((await missedJs.response.text()).startsWith('v2:'), true);
     assert.equal(v1.bucket().entries.has(jsUrl), false, 'an evicted script is returned without being stored');
     assert.equal(state.fetches.length, 1);
@@ -253,6 +270,8 @@ for (const [file, scope] of WORKERS) {
     assert.equal(await missedPage.response.text(), 'v2:index.html');
     assert.equal(v1.bucket().entries.has(htmlUrl), false, 'an evicted page is returned without being stored');
     assert.equal(v1.bucket().puts, putsBeforeMiss);
+
+    }
 
     state.offline = true;
     const brokenJs = await dispatch(v1, jsUrl);

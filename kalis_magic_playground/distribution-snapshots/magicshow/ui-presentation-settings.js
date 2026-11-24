@@ -31,6 +31,42 @@
   const touchHover = matchMedia('(hover: none)');
   const landscapeScreen = matchMedia('(orientation: landscape)');
   let rotateFocus = null;
+  let installFocus = null;
+  const installStrip = '#phoneInstallGuide, #magicshow-install-overlay[data-portrait]';
+  const installObserver = new MutationObserver(clearInstallFocus);
+  function clearInstallFocus() {
+    restoreInstallFocus.pending = null;
+    installObserver.disconnect();
+    installFocus = null;
+  }
+  window.addEventListener('focusin', event => {
+    if (event.target === $('touchRotateGuard')) return;
+    clearInstallFocus();
+    const button = event.target.closest?.('button');
+    const strip = button?.closest(installStrip);
+    if (!strip || button !== event.target || landscapeScreen.matches || strip.hidden) return;
+    installFocus = {button, strip};
+    installObserver.observe(strip, {attributes:true, attributeFilter:['hidden', 'data-portrait']});
+  }, true);
+  window.addEventListener('focusout', event => {
+    if (event.target !== installFocus?.button || touchLandscapeBlocked || landscapeScreen.matches) return;
+    const viewport = window.visualViewport;
+    if (viewport && viewport.width > viewport.height) return;
+    clearInstallFocus();
+  }, true);
+  window.addEventListener('appinstalled', clearInstallFocus);
+  function restoreInstallFocus() {
+    const saved = restoreInstallFocus.pending;
+    if (!saved || saved !== installFocus || touchLandscapeBlocked ||
+        !document.body.classList.contains('portrait-layout')) return;
+    const changed = installObserver.takeRecords().length > 0;
+    const {button, strip} = saved;
+    clearInstallFocus();
+    if (changed || touchLandscapeBlocked || !button.isConnected || button.closest(installStrip) !== strip ||
+        button.matches(':disabled, [aria-disabled="true"]') || button.closest('[hidden], [inert]') ||
+        !button.getClientRects().length || getComputedStyle(button).visibility !== 'visible') return;
+    if ([document.body, $('touchRotateGuard')].includes(document.activeElement)) button.focus({preventScroll:true});
+  }
   function blockRotateInput(event) {
     if (!touchLandscapeBlocked || $('touchRotateGuard').contains(event.target)) return;
     event.preventDefault(); event.stopImmediatePropagation();
@@ -44,10 +80,14 @@
     const guard = $('touchRotateGuard'); guard.hidden = !blocked;
     previous = 0; autoStartStage.since = 0; release();
     if (blocked) {
+      restoreInstallFocus.pending = null;
       rotateFocus = document.activeElement;
       clearDecorations(); guard.focus({preventScroll:true});
     } else {
-      if (rotateFocus?.isConnected && !rotateFocus.closest('[hidden],[inert]')) rotateFocus.focus({preventScroll:true});
+      if (installFocus) {
+        restoreInstallFocus.pending = installFocus;
+        queueMicrotask(restoreInstallFocus);
+      } else if (!rotateFocus?.closest?.(installStrip) && rotateFocus?.isConnected && !rotateFocus.closest('[hidden],[inert]')) rotateFocus.focus({preventScroll:true});
       rotateFocus = null;
     }
   }

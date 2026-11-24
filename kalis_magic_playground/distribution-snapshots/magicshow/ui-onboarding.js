@@ -113,7 +113,7 @@
     $('bookButton').classList.toggle('is-new', unseen);
     $('bookButton').dataset.affordable=String(count);
     if(count>0&&typeof firstUseHint==='function')firstUseHint('learn'); // s5c: the first 비법 the player can afford
-    $('bookButton').setAttribute('aria-label',`비법 · 지금 배울 수 있는 비법 ${count}개${unseen ? ' · 새 비법 있음' : ''}`);
+    $('bookButton').setAttribute('aria-label',`비법서 · 지금 배울 수 있는 비법 ${count}개${unseen ? ' · 새 비법 있음' : ''}`);
   }
   // 12-117: the new-game intro. A new game (onboarding.intro false, tutorial not started) first plays D.onboarding.intro as dialogue lines (speaker,
   // portrait, text, 다음, 건너뛰기) under one illustration per beat, then flows into the school opening exactly as before. Existing saves have
@@ -123,13 +123,14 @@
   // If a ready file still fails to load, the fallback replaces it once per session.
   const introMissingArt = new Set();
   let introLine = 0, introLineBeat = -1;
-  function introLines() { return D.onboarding.intro.flatMap(beat => beat.lines.map(line => ({ line, art: beat.art }))); }
+  function introLines() { return (typeof firstWowIntroBeats==='function'?firstWowIntroBeats():D.onboarding.intro).flatMap(beat => beat.lines.map(line => ({ line, art: beat.art }))); }
   function introPortrait(speaker) {
     if (speaker === '칼리') return { path: kaliArtPath(), sheet: true };
     return { path: (D.onboarding.introPortraits || {})[speaker] || '', sheet: false };
   }
   function startIntro(replay = true) {
-    if(!replay && !state.u15.tutorial.done && (state.onboarding.intro || state.u15.tutorial.active || chainMark())){
+    if (typeof firstWowStart === 'function' && firstWowStart(replay)) return;
+    if(!replay && !(typeof firstWowReplayActive==='function'&&firstWowReplayActive()) && !(typeof firstWowMemory === 'function' && firstWowMemory()) && !state.u15.tutorial.done && (state.onboarding.intro || state.u15.tutorial.active || chainMark())){
       $('introStory').hidden=true;
       if(state.u15.tutorial.active){C.resumeTutorial(state);renderU15();save();return;}
       if(!chainMark()){setChain('girl-intro',0);state.onboarding.step=0;state.onboarding.facts=[];}
@@ -137,8 +138,8 @@
     }
 
     if (replay) { state.onboarding={intro:false,panel:0,step:0,facts:[]}; introLineBeat=-1; closePanel(); }
-    const beats=D.onboarding.intro, beat=Math.max(0,Math.min(state.onboarding.panel,beats.length-1));
-    if(introLineBeat!==beat||introLine>=beats[beat].lines.length){introLine=0;introLineBeat=beat;}
+    const beats=typeof firstWowIntroBeats==='function'?firstWowIntroBeats():D.onboarding.intro, beat=Math.max(0,Math.min(state.onboarding.panel,beats.length-1));
+    if(introLineBeat!==beat||introLine>=beats[beat].lines.length){introLine=typeof firstWowMemory==='function'&&firstWowMemory()?Math.min(chainMark().line,beats[beat].lines.length-1):0;introLineBeat=beat;}
     release(); $('phoneMore').hidden=true; $('moreButton').setAttribute('aria-expanded','false');
     const host=$('introStory'); host.hidden=false; host.replaceChildren(); host.classList.add('intro-dialog');
     const lines=introLines(), index=beats.slice(0,beat).reduce((n,b)=>n+b.lines.length,0)+introLine, item=lines[index], artDef=D.onboarding.introArt[item.art]||{};
@@ -151,12 +152,14 @@
     if(face.path) art.style.backgroundImage=`url('${assetUrl(face.path)}')`;
     const copy=element('div','','twist-copy'); copy.append(element('strong',item.line.speaker),element('p',item.line.text));
     const advance=()=> {
-      if (introLine<beats[beat].lines.length-1) { introLine++; save(); startIntro(false); }
-      else if (state.onboarding.panel<beats.length-1) { state.onboarding.panel++; save(); startIntro(false); }
+      if (introLine<beats[beat].lines.length-1) { introLine++; if(typeof firstWowMemory==='function'&&firstWowMemory())setChain(chainMark().step,introLine); save(); startIntro(false); }
+      else if (state.onboarding.panel<(typeof firstWowMemory === 'function' && firstWowMemory() ? firstWowMemoryEnd() : beats.length-1)) { state.onboarding.panel++; if(typeof firstWowMemory==='function'&&firstWowMemory())setChain(chainMark().step,0); save(); startIntro(false); }
       else finish();
     };
     const finish=()=> {
       host.hidden=true; host.classList.remove('intro-dialog'); previous=0; introLine=0; introLineBeat=-1;
+      if(typeof finishFirstWowReplay==='function' && finishFirstWowReplay()) return;
+      if(typeof finishFirstWowMemory === 'function' && finishFirstWowMemory()) return;
       if(!state.u15.tutorial.done){ if(!chainMark()){setChain('girl-intro',0);state.onboarding.step=0;state.onboarding.facts=[];} state.onboarding.intro=true; render(); save(); return; } // the school opening, as before
       state.onboarding.intro=true; save(); renderCoach();
     };
@@ -217,6 +220,7 @@
       const helper=element('img','','coach-helper');helper.src=face;helper.alt=speaker;helper.onerror=()=>{helper.hidden=true;};
       let coachText=copy.body, coachTitle=`${(openingCase?0:t.step||0)+1} / 8 · ${copy.title}`;
       if(spoken){coachText=spoken.text;coachTitle=spoken.speaker;}
+      if(openingCase && typeof firstWowEnabled === 'function' && firstWowEnabled()){coachText='케이스를 꾹 눌러 첫 마술을 보여 주세요.';coachTitle='세로나';}
       else if(upgrade){coachText=menu==='book'?pack.upgrade[1].text:pack.upgrade[0].text;coachTitle=menu==='book'?(pack.upgrade[1].speaker||'세로나'):(pack.upgrade[0].speaker||'세로나');}
       else if(!openingCase&&chain&&mark.step.endsWith('-fight')){const line=mark.step.startsWith('teacher')?pack.teacherDuring[0]:pack.girlDuring[0];coachText=(line&&line.text)||copy.body;coachTitle=(line&&line.speaker)||'세로나';}
       else if(state.u15.tutorial.active){const line=D.storyV15.tutorial.coaching[Math.min(D.storyV15.tutorial.coaching.length-1,Math.floor(state.fightMs/18000))]||D.storyV15.tutorial.coaching[0];coachText=line.text;coachTitle=line.speaker;}

@@ -226,6 +226,7 @@
         haptic(50);
         if (absorbChainFail()) break;
         failure = e.reasonPct; failureCause = e.cause === 'damage' || e.cause === 'gate' || e.cause === 'stall' || e.cause === 'lastHeckle' ? e.cause : 'mental'; lastAudience = ''; release();
+        FailureNextStep.failed(state,e,C);
         showBoo(e); save();
       } else if (e.type === 'phase2') {
         phaseTransition();

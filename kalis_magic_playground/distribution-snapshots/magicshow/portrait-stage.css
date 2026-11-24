@@ -216,3 +216,70 @@ html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#sta
 @media (pointer:coarse) and (hover:none) { html body .rotate { display:none; } }
 /* Keep small portrait notices readable over the stage artwork. */
 html body.portrait-layout.phone:not(.tablet) #viewport#viewport #stage#stage#stage#stage #toasts .toast { background:#100d16e8; border-image:none; border:1px solid #8d7554; font:12px/16px Galmuri11,monospace; padding:4px 8px; min-height:26px; text-shadow:0 1px #000; }
+
+#stageLevelUp, #phoneInstallGuide { display: none; }
+.portrait-layout.phone:not(.tablet) #stageLevelUp {
+  display: block;
+  position: absolute;
+  z-index: 8;
+  inset-block-start: max(35px, calc(var(--line-h, 0px) + 6px));
+  inset-inline-start: 12px;
+  padding: 3px 12px;
+  border: 1px solid #e8bf68;
+  border-radius: 4px;
+  background: #302119;
+  color: #ffe49f;
+  font: 700 12px/16px Galmuri11, monospace;
+  letter-spacing: .05em;
+  pointer-events: none;
+}
+
+.portrait-layout.phone:not(.tablet) .phone-install-strip {
+  position: absolute;
+  z-index: 12;
+  inset-inline: 8px;
+  inset-block-end: 0;
+  margin-inline: auto;
+  max-inline-size: 352px;
+  padding-inline: 8px;
+  border: 1px solid #a48a64;
+  border-radius: 8px;
+  background: #231a29;
+  color: #f2e6c8;
+  font: 12px/1.35 Galmuri11, monospace;
+  text-align: left;
+  pointer-events: none;
+}
+.portrait-layout.phone:not(.tablet) #phoneInstallGuide { display: block; }
+.portrait-layout.phone:not(.tablet) #stage:is(.f-panel,.f-more,.f-story) :is(#phoneInstallGuide,#magicshow-install-overlay) {
+  visibility: hidden;
+}
+.phone-install-row { display: flex; align-items: center; gap: 4px; }
+.phone-install-row strong { flex: 1; min-inline-size: 0; }
+#phoneInstallGuide button {
+  box-sizing: border-box;
+  min-block-size: 44px;
+  min-inline-size: 44px;
+  margin: 0;
+  padding: 4px;
+  border: 0;
+  border-image: none !important;
+  border-radius: 5px;
+  background: transparent;
+  color: #ffe49f;
+  font: inherit;
+  cursor: pointer;
+  pointer-events: auto;
+  box-shadow: none;
+  touch-action: manipulation;
+}
+.phone-install-row button:focus-visible { outline: 2px solid #ffe49f; outline-offset: -3px; }
+.phone-install-details { margin: 0; padding-block: 8px 2px; }
+@media (max-height: 599px) {
+  .portrait-layout.phone:not(.tablet) .phone-install-strip {
+    box-sizing: border-box;
+    inset-inline-end: auto;
+    inline-size: min(208px, 64%);
+    margin-inline-start: 0;
+  }
+}

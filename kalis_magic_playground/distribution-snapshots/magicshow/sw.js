@@ -1,6 +1,6 @@
 // Cache only the explicit app shell. API, authentication and user data stay on the network.
 const CACHE_PREFIX = 'magicshow-dist-';
-const CACHE_NAME = CACHE_PREFIX + '38e498358ebd63fd-coherent-1-distribution';
+const CACHE_NAME = CACHE_PREFIX + 'a3df89be8e4ab906-coherent-1-distribution';
 const SHELL = [
   "./index.html",
   "./style-base.css",
@@ -40,6 +40,8 @@ const SHELL = [
   "./style-helper-buffs.css",
   "./style-presentation-settings.css",
   "./style-skill-upgrades.css",
+  "./style-release26-feedback.css",
+  "./style-menu-panel.css",
   "./update-prompt.css",
   "./update-prompt.js",
   "./install-prompt.css",
@@ -111,6 +113,7 @@ const SHELL = [
   "./minigame-motion.js",
   "./pixelfx-sheet.js",
   "./ui-models.js",
+  "./ui-failure-next-step.js",
   "./ui-assets.js",
   "./ui-sprites.js",
   "./ui-dom-kit.js",
@@ -138,10 +141,13 @@ const SHELL = [
   "./ui-effects.js",
   "./ui-dialog.js",
   "./ui-school-chain.js",
+  "./ui-intro-first-wow.js",
   "./ui-batchd.js",
   "./ui-presentation-settings.js",
+  "./ui-install-guide.js",
   "./ui-boot.js",
   "./ui-kit-v2.js",
+  "./ui-menu-panel.js",
   "./assets/aud-a1-happy.webp",
   "./assets/aud-a1-serious.webp",
   "./assets/aud-a1-surprised.webp",
@@ -1613,23 +1619,59 @@ const SHELL_NAMES = new Set(SHELL.map((file) => file.replace(/^\.\//, '')));
 const ART = SHELL.filter(file => /^\.\/(?:assets|fonts)\//.test(file));
 const CRITICAL = SHELL.filter(file => !ART.includes(file));
 const GUARDED = new URL(self.registration.scope).pathname.startsWith('/tools/');
-let artPending = null;
-function precacheArt() {
+// Include scope in new cache ownership; retain the known legacy cache only at its original scope.
+const SCOPED_CACHE = CACHE_NAME + '-' + encodeURIComponent(new URL(self.registration.scope).pathname);
+let artPending = null, artAbort = null, artCursor = 0, activating = false;
+function abortArt() { artAbort?.abort(); }
+async function fetchBounded(url, consume) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 3000);
+  const parent = artAbort;
+  const abort = () => controller.abort();
+  parent?.signal.addEventListener('abort', abort, { once: true });
+  try {
+    if (parent?.signal.aborted) controller.abort();
+    const response = await fetch(new Request(url, { cache: 'reload', redirect: 'error', signal: controller.signal }));
+    if (!response.ok || response.redirected || response.type === 'opaque' || response.status === 206) throw new Error('Invalid art response');
+    await consume(response);
+  } finally {
+    clearTimeout(timer);
+    parent?.signal.removeEventListener('abort', abort);
+  }
+}
+function precacheArt(source) {
+  // Legacy PRECACHE_ART is intentionally ignored. Only a new, idle controlling page requests batches.
+  if (activating || self.registration.waiting || self.registration.installing) return Promise.resolve();
   if (artPending) return artPending;
+  artAbort = new AbortController();
   artPending = (async () => {
-    const cache = await caches.open(CACHE_NAME);
-    // Sequential requests bound memory and bandwidth; a missing file never aborts the remaining downloads.
-    for (const file of ART) {
+    const cache = await caches.open(SCOPED_CACHE);
+    for (let count = 0; count < 4 && artCursor < ART.length && !artAbort.signal.aborted; count++) {
+      const file = ART[artCursor++];
       try {
         const url = new URL(file, self.registration.scope).href;
-        if (await cache.match(url)) continue;
-        const response = await fetch(new Request(url, { cache: 'reload', redirect: 'error' }));
-        if (!response.ok || response.redirected || response.type === 'opaque') throw new Error('Invalid art response');
-        await cache.put(url, response);
-      } catch (error) { console.warn('Magicshow precache retry next launch:', file, error); }
+        if (!await cache.match(url)) await fetchBounded(url, response => cache.put(url, response));
+      } catch (error) { console.warn('Magicshow optional art deferred:', file, error); }
     }
-  })().catch(error => console.warn('Magicshow art cache unavailable:', error)).finally(() => { artPending = null; });
+  })().catch(error => console.warn('Magicshow art cache unavailable:', error)).finally(() => {
+    const aborted = artAbort.signal.aborted;
+    const remaining = !aborted && artCursor < ART.length;
+    if (aborted || artCursor >= ART.length) artCursor = 0;
+    artPending = null;
+    artAbort = null;
+    source?.postMessage({ type: 'MAGICSHOW_ART_BATCH', remaining });
+  });
   return artPending;
+}
+async function verifyDeployment() {
+  // Generated releases include sw.js. Its embedded identity pins the deployment
+  // on both sides of the shell download; a deployment change rejects installation.
+  if (!SHELL_NAMES.has('sw.js')) return;
+  const response = await fetch(new Request(new URL('sw.js', self.registration.scope).href, { cache: 'no-store', redirect: 'error' }));
+  const declaration = "const CACHE_NAME = CACHE_PREFIX + '" + CACHE_NAME.slice(CACHE_PREFIX.length) + "';";
+  if (!response.ok || response.redirected || !(await response.text()).includes(declaration)) {
+    throw new Error('Release changed; update needed');
+  }
 }
 let installProgress = { type: 'MAGICSHOW_UPDATE_PROGRESS', done: 0, total: CRITICAL.length, failed: false };
 async function reportInstall() {
@@ -1643,31 +1685,41 @@ async function reportInstall() {
 self.addEventListener('install', event => {
   // Updates remain waiting until the player accepts, or all existing clients close.
   event.waitUntil((async () => {
-    const cache = await caches.open(CACHE_NAME);
+    const cache = await caches.open(SCOPED_CACHE);
+    // Legacy and modern controllers follow the same atomic shell installation.
+    // Failure leaves the previous complete release available for offline launch.
+    const files = CRITICAL;
+    installProgress.total = Math.max(1, files.length);
     let next = 0, failure = null, lastReport = Date.now();
     await reportInstall();
     const download = async () => {
-      while (!failure && next < CRITICAL.length) {
-        const file = CRITICAL[next++];
+      while (!failure && next < files.length) {
+        const file = files[next++];
         try {
           const url = new URL(file, self.registration.scope).href;
           const response = await fetch(new Request(url, { cache: 'reload', redirect: 'error' }));
           if (!response.ok || response.redirected || response.type === 'opaque' || response.status === 206 || response.headers.get('Vary') === '*') throw new Error('Invalid shell response');
           await cache.put(url, response);
           installProgress.done++;
-          if (!failure && installProgress.done < CRITICAL.length && Date.now() - lastReport >= 100) {
+          if (!failure && installProgress.done < files.length && Date.now() - lastReport >= 100) {
             lastReport = Date.now();
             await reportInstall();
           }
         } catch (error) { failure = failure || error; }
       }
     };
-    // Drain in-flight writes before removing an incomplete release's cache.
-    await Promise.all(Array.from({ length: Math.min(6, CRITICAL.length) }, download));
+    // Check the deployed worker before and after downloading. A changed release
+    // cannot activate or retain the partial cache; the previous controller stays usable.
+    try {
+      await verifyDeployment();
+      // Drain in-flight writes before removing an incomplete release's cache.
+      await Promise.all(Array.from({ length: Math.min(6, files.length) }, download));
+      if (!failure) await verifyDeployment();
+    } catch (error) { failure = failure || error; }
     if (failure) {
       installProgress.failed = true;
       await reportInstall();
-      await caches.delete(CACHE_NAME);
+      await caches.delete(SCOPED_CACHE);
       throw failure;
     }
     await reportInstall();
@@ -1675,14 +1727,30 @@ self.addEventListener('install', event => {
 });
 self.addEventListener('message', event => {
   if (event.data?.type === 'GET_UPDATE_PROGRESS') event.source?.postMessage({ ...installProgress });
-  if (event.data?.type === 'SKIP_WAITING') event.waitUntil(self.skipWaiting());
-  if (event.data?.type === 'PRECACHE_ART') event.waitUntil(precacheArt());
+  if (event.data?.type === 'GET_RELEASE') {
+    const release = { type: 'MAGICSHOW_RELEASE', release: SCOPED_CACHE };
+    (event.ports?.[0] || event.source)?.postMessage(release);
+  }
+  if (event.data?.type === 'ABORT_ART') abortArt();
+  if (event.data?.type === 'SKIP_WAITING') { abortArt(); event.waitUntil(self.skipWaiting()); }
+  if (event.data?.type === 'WARM_ART_BATCH') event.waitUntil(precacheArt(event.source));
 });
 self.addEventListener('activate', event => {
-  event.waitUntil(caches.keys().then(names => Promise.all(names
-    .filter(name => name.startsWith(CACHE_PREFIX) && name !== CACHE_NAME)
-    .map(name => caches.delete(name)))).then(() => self.clients.claim()));
-  // Optional art warms through PRECACHE_ART messages; activation never waits for downloads.
+  activating = true;
+  abortArt();
+  event.waitUntil((async () => {
+    try {
+      const scope = new URL(self.registration.scope).pathname;
+      const suffix = '-' + encodeURIComponent(scope);
+      const names = await caches.keys();
+      await Promise.all(names.filter(name => name !== SCOPED_CACHE && name.startsWith(CACHE_PREFIX) &&
+        (name.endsWith(suffix) || (scope === '/tools/magicshow/' && /^magicshow-dist-[a-f0-9]+-coherent-1-distribution$/.test(name))))
+        .map(name => caches.delete(name)));
+    } catch (error) { console.warn('Magicshow old cache cleanup deferred:', error); }
+    // Quota/cache cleanup failures must never strand a player on the old controller.
+    await self.clients.claim();
+    activating = false;
+  })());
 });
 function shellName(rawUrl) {
   const url = new URL(rawUrl), scope = new URL(self.registration.scope);
@@ -1730,7 +1798,7 @@ self.addEventListener('fetch', (event) => {
   const request = event.request;
   if (request.method !== 'GET' || shellName(request.url) === null) return;
   event.respondWith((async () => {
-    const cache = await caches.open(CACHE_NAME);
+    const cache = await caches.open(SCOPED_CACHE);
     const name = shellName(request.url);
     if (name === 'manifest.webmanifest') return freshManifest(request, cache);
     const page = name === '' || name === 'index.html' || name.endsWith('.html');
@@ -1740,7 +1808,10 @@ self.addEventListener('fetch', (event) => {
     if (page && GUARDED && cached) return cached;
     if (executable) {
       if (cached) return cached;
-      try { return await fetch(request); } catch { return page ? unavailable() : Response.error(); }
+      // A cache miss has no release-pinned bytes. Never mix a later deployment
+      // into this release, even transiently; ask for a complete replacement.
+      event.waitUntil(Promise.resolve().then(() => self.registration.update?.()).catch(() => {}));
+      return page ? unavailable() : Response.error();
     }
     if (cached) return cached;
     try { return await refresh(request, cache); } catch { return unavailable(); }

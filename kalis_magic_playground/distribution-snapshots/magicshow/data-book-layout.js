@@ -353,21 +353,21 @@
     const costs=stageCosts[node.partOf||node.id];
     if(costs)node.cost=costs.slice();
   }
-  D.showSequence = {gapMs:8000,showMs:3000};
+  D.showSequence = {gapMs:12000,showMs:4500};
   const routineAbilities = [
-    {"id":"rings","nodeId":"routine-rings","name":"피날레 힘","formula":"branchBonus","key":"finale","multiplier":1.5,"silk":10,"description":"3초 동안\n피날레의 힘이 1.5배가 돼요."},
-    {"id":"rope","nodeId":"routine-rope","name":"자신감 획득량","formula":"nodeEffects","key":"shieldValue","multiplier":1.5,"silk":10,"description":"3초 동안\n자신감 획득량이 1.5배가 돼요."},
-    {"id":"thumbtie","nodeId":"routine-thumbtie","name":"두드리는 힘","formula":"branchBonus","key":"hand","multiplier":1.5,"silk":10,"description":"3초 동안 케이스를\n두드리는 힘이 1.5배가 돼요."},
-    {"id":"cards","nodeId":"routine-cards","name":"연출","formula":"branchBonus","key":"collection","multiplier":1.5,"silk":10,"description":"3초 동안\n연출이 1.5배가 돼요."},
-    {"id":"coins","nodeId":"routine-coins","name":"얻는 동전","formula":"branchBonus","key":"luck","multiplier":1.5,"silk":10,"description":"3초 동안\n얻는 동전이 1.5배가 돼요."},
-    {"id":"cupsballs","nodeId":"routine-cupsballs","name":"도우미 힘","formula":"branchBonus","key":"pet","multiplier":1.5,"silk":10,"description":"3초 동안\n도우미의 힘이 1.5배가 돼요."},
-    {"id":"bottles","nodeId":"routine-bottles","name":"회복 아이템 효과","formula":"nodeEffects","key":"healValue","multiplier":1.5,"silk":10,"description":"3초 동안 회복 아이템의\n효과가 1.5배가 돼요."},
-    {"id":"silk","nodeId":"routine-silk","name":"최대 멘탈","formula":"branchBonus","key":"heart","multiplier":1.5,"silk":10,"description":"3초 동안\n최대 멘탈이 1.5배가 돼요."},
-    {"id":"eggbag","nodeId":"routine-eggbag","name":"대박 확률","formula":"nodeEffects","key":"critRate","multiplier":1.5,"silk":10,"description":"3초간 대박 확률 ×1.5\n타이밍 비법으로 확률 강화","cap":1},
-    {"id":"rubberband","nodeId":"routine-rubberband","name":"액트 유지 시간","formula":"nodeEffects","key":"comboMs","multiplier":1.5,"silk":10,"description":"3초 동안\n액트 유지 시간이 1.5배가 돼요."},
-    {"id":"coloringbook","nodeId":"routine-coloringbook","name":"케이스 개봉 경험치","formula":"nodeEffects","key":"boxXP","multiplier":1.5,"silk":10,"description":"3초 동안 케이스 개봉\n마술사 경험치 ×1.5"},
-    {"id":"cube","nodeId":"routine-cube","name":"한곳 집중 효과","formula":"nodeEffects","key":"sweep","multiplier":1.5,"silk":10,"description":"3초 동안\n「한곳 집중」 배수가 1.5배가 돼요."},
-    {"id":"wand","nodeId":"routine-wand","name":"누르기 속도","formula":"recompute","key":"_rate","multiplier":1.5,"silk":10,"description":"3초 동안 꾹 누를 때\n두드리는 속도 ×1.5"},
+    {"id":"rings","nodeId":"routine-rings","name":"피날레 힘","formula":"branchBonus","key":"finale","multiplier":1.5,"silk":10,"description":"4.5초 동안\n피날레의 힘이 1.5배가 돼요."},
+    {"id":"rope","nodeId":"routine-rope","name":"자신감 획득량","formula":"nodeEffects","key":"shieldValue","multiplier":1.5,"silk":10,"description":"4.5초 동안\n자신감 획득량이 1.5배가 돼요."},
+    {"id":"thumbtie","nodeId":"routine-thumbtie","name":"두드리는 힘","formula":"branchBonus","key":"hand","multiplier":1.5,"silk":10,"description":"4.5초 동안 케이스를\n두드리는 힘이 1.5배가 돼요."},
+    {"id":"cards","nodeId":"routine-cards","name":"연출","formula":"branchBonus","key":"collection","multiplier":1.5,"silk":10,"description":"4.5초 동안\n연출이 1.5배가 돼요."},
+    {"id":"coins","nodeId":"routine-coins","name":"얻는 동전","formula":"branchBonus","key":"luck","multiplier":1.5,"silk":10,"description":"4.5초 동안\n얻는 동전이 1.5배가 돼요."},
+    {"id":"cupsballs","nodeId":"routine-cupsballs","name":"도우미 힘","formula":"branchBonus","key":"pet","multiplier":1.5,"silk":10,"description":"4.5초 동안\n도우미의 힘이 1.5배가 돼요."},
+    {"id":"bottles","nodeId":"routine-bottles","name":"회복 아이템 효과","formula":"nodeEffects","key":"healValue","multiplier":1.5,"silk":10,"description":"4.5초 동안 회복 아이템의\n효과가 1.5배가 돼요."},
+    {"id":"silk","nodeId":"routine-silk","name":"최대 멘탈","formula":"branchBonus","key":"heart","multiplier":1.5,"silk":10,"description":"4.5초 동안\n최대 멘탈이 1.5배가 돼요."},
+    {"id":"eggbag","nodeId":"routine-eggbag","name":"대박 확률","formula":"nodeEffects","key":"critRate","multiplier":1.5,"silk":10,"description":"4.5초간 대박 확률 ×1.5\n타이밍 비법으로 확률 강화","cap":1},
+    {"id":"rubberband","nodeId":"routine-rubberband","name":"액트 유지 시간","formula":"nodeEffects","key":"comboMs","multiplier":1.5,"silk":10,"description":"4.5초 동안\n액트 유지 시간이 1.5배가 돼요."},
+    {"id":"coloringbook","nodeId":"routine-coloringbook","name":"케이스 개봉 경험치","formula":"nodeEffects","key":"boxXP","multiplier":1.5,"silk":10,"description":"4.5초 동안 케이스 개봉\n마술사 경험치 ×1.5"},
+    {"id":"cube","nodeId":"routine-cube","name":"한곳 집중 효과","formula":"nodeEffects","key":"sweep","multiplier":1.5,"silk":10,"description":"4.5초 동안\n「한곳 집중」 배수가 1.5배가 돼요."},
+    {"id":"wand","nodeId":"routine-wand","name":"누르기 속도","formula":"recompute","key":"_rate","multiplier":1.5,"silk":10,"description":"4.5초 동안 꾹 누를 때\n두드리는 속도 ×1.5"},
   ];
   for (const ability of routineAbilities) {
     const node = D.tree.find(n => n.id === ability.nodeId);

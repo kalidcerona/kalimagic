@@ -1,30 +1,38 @@
 'use strict';
   titleScreen();
-  window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installPrompt=e;});
-  function installGuide() {
-    if (window.matchMedia?.('(display-mode: standalone)').matches || navigator.standalone === true) return;
-    // The request comes from #phoneMore. That menu is not a blocking panel.
-    // A real panel or the update prompt keeps the request until it closes.
-    // Clicking while the guide panel is already open must not arm another open.
-    if (menu || $('panel').hidden === false || $('magicUpdatePrompt')?.hidden === false) { if (menu !== 'install') installGuide.manual = true; return; }
-    installGuide.manual = false;
+  const installDisplayModes = ['standalone', 'fullscreen'].map(mode => window.matchMedia(`(display-mode: ${mode})`));
+  const standaloneInstall = () => navigator.standalone === true || installDisplayModes.some(mode => mode.matches);
+  const installWaitingForPortrait = () => coarse && phone && !document.body.classList.contains('tablet') && !portraitPhone();
+  const distributionInstall = () => portraitPhone() && window.magicshowDistributionInstall;
+  let installScriptsReady = document.readyState === 'complete', distributionOfferChecked = false, installedThisPage = false;
+  document.addEventListener('DOMContentLoaded', () => { installScriptsReady = true; }, {once:true});
+  window.addEventListener('beforeinstallprompt', e => {
+    if (distributionInstall()) return;
+    e.preventDefault(); installPrompt = e;
+    syncPhoneInstallAction();
+  });
+  window.addEventListener('appinstalled', () => {
+    installedThisPage = true;
+    installPrompt = null;
+    syncInstallButton();
+  });
+  const suppressInstallGuide = () => installedThisPage || standaloneInstall();
+  function syncPhoneInstallAction() {
+    const button = $('phoneInstallAction');
+    if (button) button.textContent = button.dataset.native === 'true' && installPrompt ? '설치' : '설치 방법';
+  }
+  function markInstallGuideSeen() {
     installGuideShown = true;
     try { localStorage.setItem('magicshow.installGuideSeen', '1'); } catch (error) { /* Session fallback when storage is blocked. */ }
-    openPanel('install', '홈 화면에 추가');
-    const ua = navigator.userAgent;
-    const inApp = /KAKAOTALK|Instagram|FBAN|FBAV|Line\/|NAVER|; wv\)/i.test(ua);
-    const ios = /iPhone|iPad|iPod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-    const copy = inApp ? '다른 브라우저로 열기: 메뉴에서 외부 브라우저를 선택해 Chrome 또는 Safari로 열어 주세요.' : ios ? 'Safari에서 공유 버튼을 누르고 홈 화면에 추가를 선택한 뒤 추가를 누르세요.' : 'Chrome 메뉴에서 앱 설치 또는 홈 화면에 추가를 선택하세요.';
-    $('panelBody').append(element('p', copy));
-    if (installPrompt && !inApp && !ios) $('panelBody').append(action('설치', async () => { const prompt = installPrompt; installPrompt = null; try { await prompt.prompt(); } catch (e) {} }));
   }
   $('endingReplayButton').addEventListener('click', () => { if (state.u19.cleared) { endingStep = D.futureEnding.length; showEnding(); } });
-  $('installButton').addEventListener('click', installGuide);
+  $('installButton').addEventListener('click', () => installGuide());
   function syncInstallButton() {
-    $('installButton').hidden = !!window.matchMedia?.('(display-mode: standalone)').matches || navigator.standalone === true;
+    $('installButton').hidden = suppressInstallGuide();
+    if (suppressInstallGuide()) $('phoneInstallGuide')?.remove();
   }
   syncInstallButton();
-  window.matchMedia?.('(display-mode: standalone)').addEventListener?.('change', syncInstallButton);
+  for (const mode of installDisplayModes) mode.addEventListener?.('change', syncInstallButton);
   let installGuideShown = false;
   try { installGuideShown = localStorage.getItem('magicshow.installGuideSeen') === '1'; } catch (error) { /* Keep the in-memory record. */ }
   // Set when an automatic or manual guide missed this launch because another sheet was open.
@@ -37,6 +45,7 @@
     return (!!menu && menu !== 'install') || ($('panel').hidden === false && menu !== 'install') || !!(phone && phone.hidden === false);
   }
   function installGuideDeferred() {
+    if (portraitPhone() || installWaitingForPortrait()) return updatePromptOpen() && !foreignSheetOpen();
     if ((installGuideShown && !installGuide.manual) || titleLaunchPending) return false;
     if (window.matchMedia?.('(display-mode: standalone)').matches || navigator.standalone === true) return false;
     // The update prompt is the boot layer the guide replaces. A foreign sheet or a
@@ -45,7 +54,12 @@
   }
   function tickInstallGuide() {
     $('endingReplayButton').hidden = !state.u19.cleared;
-    if (titleLaunchPending || (installGuideShown && !installGuide.manual)) return;
+    if (titleLaunchPending || suppressInstallGuide() || installWaitingForPortrait() || (portraitPhone() && !installScriptsReady)) return;
+    // On very short stages even the strip's touch targets can cover the audience.
+    // Keep the manual menu entry and leave the automatic offer eligible when there is room.
+    if (portraitPhone() && layoutHeight < 600 && !installGuide.manual) return;
+    const distribution = distributionInstall();
+    if ((distribution ? distributionOfferChecked : installGuideShown) && !installGuide.manual) return;
     const introPending = typeof launchPresentationPending !== 'undefined' && launchPresentationPending;
     if (introPending && foreignSheetOpen()) { installGuideLate = true; return; }
     // Let launchPresentation run once before a late guide covers the show.
@@ -55,7 +69,12 @@
     if (installGuideLate && !introPending &&
         ($('introStory')?.hidden === false || (!installGuide.manual && state.mode === 'fight'))) return;
     if (foreignSheetOpen() || updatePromptOpen()) return;
-    installGuide();
+    if (distribution && !installGuide.manual) {
+      distributionOfferChecked = true;
+      if (distribution.offer(true)) markInstallGuideSeen();
+      return;
+    }
+    installGuide(installGuide.manual === true);
   }
   // Session-only counters: no storage and no network.
   const portraitStats = { enter: 0, rotate: 0, leave: 0 };

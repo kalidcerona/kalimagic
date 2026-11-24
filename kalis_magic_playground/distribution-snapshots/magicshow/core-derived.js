@@ -25,12 +25,12 @@
     state._boxHp = C.boxHpBase * Math.pow(C.boxHpGrowth, b);
     var tau = C.spawnBase / Math.pow(C.spawnGrowth, state.tree.spawn) * 1000;
     tau *= Math.pow(C.starTempoTau, state.stars.tempo);
-    if (state.slow) tau *= C.slowSpawn;
+    if (state.slow) tau *= regularPenaltyPolicy(state).slowSpawn;
     if (tau < 40) tau = 40;
     state._tau = Math.max(40,tau / statMultiplier(state,"spawn") / statMultiplier(state,"starTempo"));
     var rate = Math.min(C.tapCap, C.tapBase + C.tapPerSpeed * state.tree.speed);
     rate *= Math.pow(C.starTempoRate, state.stars.tempo);
-    if (state.slow) rate *= C.slowTap;
+    if (state.slow) rate *= regularPenaltyPolicy(state).slowTap;
     if (rate < 0.2) rate = 0.2;
     state._rate = rate * statMultiplier(state,"speed") * statMultiplier(state,"starTempo") * routineMultiplier(state,"recompute","_rate");
     var wand = C.wandBase * Math.pow(C.wandGrowth, state.tree.power);

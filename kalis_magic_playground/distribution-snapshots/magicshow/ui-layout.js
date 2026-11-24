@@ -47,6 +47,7 @@
   // portrait() stays the pause/rotate gate for other tall viewports (a tall desktop window).
   // Same source as PhoneLayout.measure(): fit() writes this cache from layout.portrait (visual viewport).
   const portraitLayout = () => { let v = geo.get('portraitLayout'); if (v === undefined) { v = innerHeight > innerWidth && (Math.min(innerWidth, innerHeight) < 740 || coarse); geo.set('portraitLayout', v); } return v; };
+  const portraitPhone = () => phone && portraitLayout() && !document.body.classList.contains('tablet');
   const portrait = () => { let v = geo.get('portrait'); if (v === undefined) { v = innerHeight > innerWidth && !portraitLayout(); geo.set('portrait', v); } return v; };
   const presentation=new Presentation.Queue();
   // A tap during a character dialogue is retained and collected only after the dialogue ends.
@@ -177,19 +178,17 @@
     placePortraitDecor(portraitNow);
     // v4 U48 M: fit() runs on every viewport resize or scroll (a phone's address bar, the keyboard); the open menu stays open unless the layout kind changed.
     if (phoneChrome.kind !== phone) { phoneChrome.kind = phone; $('phoneMore').hidden = true; $('moreButton').setAttribute('aria-expanded', 'false'); }
+    window.MagicShowMenu?.sync();
+    if (typeof restoreInstallFocus === 'function' && restoreInstallFocus.pending) restoreInstallFocus();
   }
   // Portrait only: the stage light, Kali's table, the board frame and the menu sheet's close button.
   function placePortraitDecor(on) {
     for (const id of ['stageLight', 'kaliTable', 'boardFrame']) if ($(id)) $(id).hidden = !on;
     if (on) syncKaliTable();
-    let close = $('closeMore');
-    if (on && !close) {
-      close = action('메뉴 닫기', hideMore);
-      close.id = 'closeMore';
-      close.style.order = '-4'; close.style.gridColumn = '1 / -1';
+    if (!placePortraitDecor.closeBound) {
+      $('closeMore').addEventListener('click', hideMore);
+      placePortraitDecor.closeBound = true;
     }
-    if (on) { close.hidden = false; if (close.parentNode !== $('phoneMore') || close !== $('phoneMore').firstChild) $('phoneMore').prepend(close); }
-    else if (close) close.remove();
   }
   // Leaving portrait: undo the dock, the skill row and the kit faces, so the landscape chrome is the backup's.
   function leavePortraitChrome() {

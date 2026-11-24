@@ -357,7 +357,7 @@
         state.sealMs -= dt;
         if (state.sealMs <= 0) {
           unseal(state);
-          state.sealCd = CONST.sealEvery;
+          state.sealCd = regularPenaltyPolicy(state).sealEvery;
         }
       } else {
         state.sealCd -= dt;
@@ -457,14 +457,14 @@
     }
   }
 
-  // Require a cumulative two percent of max doubt to restart the 75-second stall clock.
+  // Require a cumulative two percent of max doubt to restart the audience-specific stall clock.
   // The two fields are not saved: a loaded fight starts its clock again from the loaded doubt.
   function tickStall(state, dt, ev) {
     if (state.u15.tutorial.active || state.u18.anchor) return;
     var progress = Math.max(1e-9, state.audHpMax * .02);
     if (typeof state.stallMin !== "number" || state.stallMin - state.audHp >= progress) { state.stallMin = state.audHp; state.stallMs = 0; return; }
     state.stallMs = (state.stallMs || 0) + dt;
-    if (state.stallMs >= CONST.stallMs) { state.stallMs = 0; failRun(state, ev, "stall"); }
+    if (state.stallMs >= regularPenaltyPolicy(state).stallMs) { state.stallMs = 0; failRun(state, ev, "stall"); }
   }
 
   function tickAutos(state, dt, ev) {

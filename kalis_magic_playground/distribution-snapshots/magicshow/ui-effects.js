@@ -17,6 +17,10 @@
   }
   let effectsDrawn = true;
   function drawEffects() {
+    if (levelUpStrip && clock >= levelUpUntil) {
+      levelUpStrip.remove();
+      levelUpStrip = null;
+    }
     const busy = particles.length || flights.length || numbers.length || badges.length;
     if (!busy && !effectsDrawn) return;
     effectsDrawn = !!busy;
@@ -107,13 +111,47 @@
       ctx.font = `700 ${n.size||14}px Galmuri11`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.strokeStyle = '#111'; ctx.lineWidth = 6; ctx.fillStyle = n.color;
       const progress=n.tier===4?(t<.24?t*.4:.096+(t-.24)*(.904/.76)):t;
-      const y = Math.round(n.y - (reduced || n.fixed ? 0 : progress*(14+(n.tier||0))));
-      const nx=Math.round(n.x+(!reduced&&n.tier===1?Math.sin(t*Math.PI)*8:0));
-      const width=Math.max(ctx.measureText(n.text).width+6,n.critical?ctx.measureText(n.text).width+14:0), radius=!reduced&&n.tier>=3?8+t*16:0;
+      const rise = reduced || n.fixed ? 0 : progress * (14 + (n.tier || 0));
+      let y = Math.round(n.y - rise);
+      let nx=Math.round(n.x+(!reduced&&n.tier===1?Math.sin(t*Math.PI)*8:0));
+      let width=Math.max(ctx.measureText(n.text).width+6,n.critical?ctx.measureText(n.text).width+14:0);
+      let textLimit;
+      let radius = !reduced && n.tier >= 3 ? 8 + t * 16 : 0;
+      if (n.audienceNumber && portraitPhone()) {
+        const stage = rectOf($('stage')), audience = rectOf($('audience'));
+        const head = (audience.top - stage.top) / scale;
+        const line = $('audienceLine'), bubble = !line.hidden && rectOf(line);
+        const half = n.size / 2 + 3;
+        const card = rectOf($('audienceCard')), toast = rectOf($('toasts'));
+        const top = (Math.max(card.top, bubble ? bubble.bottom : 0, toast.bottom) - stage.top) / scale + 4;
+        const bottom = head - half - 2;
+        if (top + half <= bottom) {
+          y = Math.round(Math.max(top + half, bottom - rise - n.stack * 9));
+          radius = Math.min(radius, head - y - 1, y - top);
+        } else {
+          // A pinned line can reach the hairline. Use the space between the actors below it.
+          const kali = rectOf($('magicianMini'));
+          const left = (kali.right - stage.left) / scale + 3;
+          const right = (audience.left - stage.left) / scale - 3;
+          width = Math.min(width, Math.max(12, right - left));
+          textLimit = width - 4;
+          nx = Math.round(Math.max(left + width / 2, Math.min(right - width / 2, (left + right) / 2 + (n.stack ? 8 : -8))));
+          y = Math.round(top + half + Math.max(0, 14 - rise - n.stack * 9));
+          radius = Math.min(radius, Math.max(0, (right - left) / 2), y - top);
+        }
+      }
       if(!U5.clearOfZones({x:nx-Math.max(width/2,radius),y:y-Math.max(n.size/2+3,radius),w:Math.max(width,radius*2),h:Math.max(n.size+6,radius*2)}))continue;
       if(radius){ctx.strokeStyle=n.color;ctx.lineWidth=1;ctx.beginPath();ctx.arc(nx,y,radius,0,Math.PI*2);ctx.stroke();}
       if(n.critical){const bw=Math.max(44,Math.ceil(width));ctx.fillStyle='#261b2b';ctx.fillRect(nx-bw/2,y-10,bw,20);ctx.strokeStyle='#eac568';ctx.lineWidth=1;ctx.strokeRect(nx-bw/2,y-10,bw,20);ctx.fillStyle=n.color;}
-      ctx.save();ctx.translate(nx,y);if(!reduced&&n.tier===2){const punch=1+.12*Math.max(0,1-t*4);ctx.scale(punch,punch);}ctx.strokeStyle=n.tier===4?'#c99e4d':'#17121d';ctx.lineWidth=n.tier===4?3:2;ctx.strokeText(n.text,0,0);ctx.fillText(n.text,0,0);ctx.restore();
+      ctx.save();ctx.translate(nx,y);if(!reduced&&n.tier===2){const punch=1+.12*Math.max(0,1-t*4);ctx.scale(punch,punch);}ctx.strokeStyle=n.tier===4?'#c99e4d':'#17121d';ctx.lineWidth=n.tier===4?3:2;
+      if (textLimit !== undefined) {
+        ctx.strokeText(n.text, 0, 0, textLimit);
+        ctx.fillText(n.text, 0, 0, textLimit);
+      } else {
+        ctx.strokeText(n.text,0,0);
+        ctx.fillText(n.text,0,0);
+      }
+      ctx.restore();
     }
     ctx.globalAlpha = 1; ctx.restore();
     if (rising.length) { ctx.save(); ctx.globalAlpha = 1; ctx.imageSmoothingEnabled = false; for (const f of rising) paintFlight(f); ctx.restore(); }
