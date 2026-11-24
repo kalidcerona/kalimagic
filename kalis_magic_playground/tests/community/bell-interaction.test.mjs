@@ -94,6 +94,13 @@ test('first gesture resumes audio, four partials per strike, third fades the old
   assert.equal(noises.length, 2);
   assert.deepEqual(buses[0].gain.events, [[1, 2], [0, 2.015]]);
   assert.deepEqual(oscillators.map(o => o.stops.length), [2,2,2,2,1,1,1,1,1,1,1,1]);
+
+  device.currentTime = 3;
+  await synth.knock();
+  const knock = oscillators.slice(12);
+  assert.deepEqual(knock.map(o => o.frequency.value), [240, 615]);
+  assert.ok(knock.every(o => o.stops[0] - device.currentTime < .035));
+  assert.equal(noises.length, 3);
 });
 
 test('service worker precaches every snapshot asset', () => {
@@ -215,10 +222,13 @@ function rehearsal(cancelPending, hasSecond, afterExit) {
     assert.equal(tap(1, 0, 0), 'stuck');
     assert.equal(g.activate(), 'stuck');
   };
-  const arc = (deg, start = 160) => {
+  const arc = (deg, start = 160, onStep) => {
     const point = a => [80 * Math.cos(a * Math.PI / 180), 80 * Math.sin(a * Math.PI / 180)];
     g.down(1, ...point(start));
-    for (let i = 1; i <= Math.abs(deg); i++) g.move(1, ...point(start + i * Math.sign(deg)));
+    for (let i = 1; i <= Math.abs(deg); i++) {
+      g.move(1, ...point(start + i * Math.sign(deg)));
+      onStep?.(i);
+    }
     g.up(1, ...point(start + deg));
   };
   return { g, frames, hold, tap, arm, arc };
@@ -312,7 +322,7 @@ test('card commits on directional release or beyond the right edge, resets expli
     g.down(1,0,0); g.move(1,dx,dy); g.up(1,dx,dy,cancel); assert.equal(g.phase(),'open');
   }
   g.down(1,30,0); g.up(1,130,0); assert.equal(g.phase(),'open');
-  g.down(1,0,0); g.up(1,60,39); assert.equal(g.phase(),'empty');
+  g.down(1,0,0); g.up(1,60,39); assert.equal(g.phase(),'between');
   assert.equal(g.activate(),undefined); g.resetPerformance(); assert.equal(g.activate(),'ring');
   arm(); arc(-200); g.down(1,0,0); g.move(1,260,0); assert.equal(g.phase(),'empty');
 });
@@ -365,7 +375,7 @@ test('a pinch stays zoom even after both fingers travel down together', () => {
 
 test('secret band spans the bottom 152 pixels above the safe inset', t => {
   const box = { left: 0, top: 0, width: 100, height: 100 };
-  const element = { setAttribute() {}, prepend() {}, getBoundingClientRect: () => box };
+  const element = { dataset: {}, setAttribute() {}, prepend() {}, getBoundingClientRect: () => box };
   element.querySelector = () => element;
   const globals = { document: { createElement: () => element }, innerHeight: 844,
     innerWidth: 390, getComputedStyle: () => ({ getPropertyValue: () => '34px' }) };
@@ -431,32 +441,48 @@ test('each coin photo has a local asset, source, author and license', () => {
   }
 });
 
-test('second lid counts rotation during closing and stays empty after the second extraction', async () => {
+test('the inner lid opens independently and the tray stays empty after the second extraction', () => {
   const {g, arm, arc, frames} = rehearsal(undefined, () => true);
   arm(); arc(60); arc(-80);
   assert.equal(frames.at(-1).angle, 0);
   arc(200);
+  assert.equal(frames.at(-1).innerTurn, 0);
   g.down(1,0,0); g.move(1,260,0);
   assert.equal(g.phase(), 'empty');
   g.up(1,260,0);
-  assert.equal(g.phase(), 'closing');
-  assert.equal(frames.at(-1).angle, 0);
+  assert.equal(g.phase(), 'between');
+  assert.equal(frames.at(-1).second, false);
+  assert.equal(frames.at(-1).innerTurn, 0);
   arc(-105);
-  assert.equal(g.phase(), 'closing');
-  assert.equal(frames.at(-1).angle, 0);
-  await new Promise(resolve => setTimeout(resolve, 510));
-  assert.equal(g.activate(), 'stuck');
-  assert.ok(Math.abs(frames.at(-1).angle + 105) < 1e-6);
-  arc(-100);
+  assert.equal(g.phase(), 'between');
+  assert.equal(g.activate(), undefined);
+  assert.ok(Math.abs(frames.at(-1).innerTurn + 105) < 1e-6);
+  arc(-90, 160, step => {
+    if (step === 75) assert.equal(g.phase(), 'between');
+  });
   assert.equal(g.phase(), 'open');
   assert.equal(frames.at(-1).second, true);
   g.down(1,0,0); g.up(1,100,0);
   assert.equal(g.phase(), 'empty');
   g.resetPerformance();
-  assert.deepEqual(frames.at(-1), {angle: 0, second: false});
+  assert.deepEqual(frames.at(-1), {angle: 0, innerTurn: 0, second: false});
 });
 
-test('item exit follows a replacement transform transition before closing the lid', async t => {
+test('the inner lid can be enabled after the first item leaves an empty tray', () => {
+  let enabled = false;
+  const {g, arm, arc, frames} = rehearsal(undefined, () => enabled);
+  arm(); arc(200);
+  g.down(1, 0, 0); g.up(1, 100, 0);
+  arc(200);
+  assert.equal(g.phase(), 'between');
+  assert.equal(frames.at(-1).innerTurn, 0);
+  enabled = true;
+  arc(200);
+  assert.equal(g.phase(), 'open');
+  assert.equal(frames.at(-1).second, true);
+});
+
+test('item exit follows a replacement transform transition before switching to the inner lid', async t => {
   let rejectFirst, finishReplacement, exited = 0;
   const first = { transitionProperty: 'transform', playState: 'running',
     finished: new Promise((_, reject) => { rejectFirst = reject; }) };
@@ -496,44 +522,44 @@ test('repeated straight chords in every orientation earn zero rotation', () => {
   }
 });
 
-test('short extraction waits for exit and settings contacts survive lid closure', async () => {
+test('short extraction waits for exit and settings contacts survive the switch to the inner lid', () => {
   let finish;
   const {g, arm, arc, frames} = rehearsal(undefined, () => true, done => { finish = done; });
   arm(); arc(200);
   g.down(1,0,0); g.up(1,65,0);
   assert.equal(g.phase(), 'empty');
   assert.equal(frames.at(-1).second, false);
-  finish();
-  assert.equal(g.phase(), 'closing');
   g.down(1,100,80); g.down(2,210,80);
   g.move(1,100,130,true); g.move(2,210,130,true);
-  await new Promise(resolve => setTimeout(resolve, 510));
-  assert.equal(g.phase(), 'stuck');
+  finish();
+  assert.equal(g.phase(), 'between');
   g.move(1,100,200,true);
   assert.equal(g.move(2,210,200), 'settings');
 });
 
-test('rotation during item exit is retained, but a cancelled turn cannot open the second lid', async () => {
-  let finish;
-  const { g, arm, arc, frames } = rehearsal(undefined, () => true, done => { finish = done; });
-  arm(); arc(200);
-  g.down(1, 0, 0); g.up(1, 65, 20);
-  assert.equal(g.phase(), 'empty');
-  arc(100);
-  assert.equal(g.phase(), 'empty');
-  finish();
-  assert.equal(g.phase(), 'closing');
-
+test('rotation during item exit is retained and a turn spanning exit must end normally', () => {
   const point = degrees => [80 * Math.cos(degrees * Math.PI / 180), 80 * Math.sin(degrees * Math.PI / 180)];
-  g.down(1, ...point(45));
-  for (let degrees = 49; degrees <= 149; degrees += 4) g.move(1, ...point(degrees));
-  await new Promise(resolve => setTimeout(resolve, 510));
-  assert.equal(g.phase(), 'stuck');
-  g.up(1, ...point(149), true);
-  assert.ok(Math.abs(frames.at(-1).angle - 100) < 1e-6);
-  arc(100);
-  assert.equal(g.phase(), 'open');
-  assert.equal(frames.at(-1).second, true);
+  for (const cancel of [false, true]) {
+    let finish;
+    const { g, arm, arc, frames } = rehearsal(undefined, () => true, done => { finish = done; });
+    arm(); arc(200);
+    g.down(1, 0, 0); g.up(1, 65, 20);
+    arc(100);
+    assert.equal(g.phase(), 'empty');
+    assert.ok(Math.abs(frames.at(-1).innerTurn - 100) < 1e-6);
+    g.down(1, ...point(45));
+    for (let degrees = 49; degrees <= 149; degrees += 4) g.move(1, ...point(degrees));
+    finish();
+    assert.equal(g.phase(), 'between');
+    g.up(1, ...point(149), cancel);
+    if (cancel) {
+      assert.equal(g.phase(), 'between');
+      assert.ok(Math.abs(frames.at(-1).innerTurn - 100) < 1e-6);
+      arc(100);
+    }
+    assert.equal(g.phase(), 'open');
+    assert.equal(frames.at(-1).second, true);
+  }
 });
 
 function traceGesture(g, points) {

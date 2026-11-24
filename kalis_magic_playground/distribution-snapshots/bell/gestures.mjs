@@ -7,40 +7,35 @@ export function createGesture({ hit = () => ({}), draw = () => {}, zoomCard = ()
   const contacts = new Map();
   let phase = 'normal', hold, demo, single, pair, blocked;
 
-  let direction = 0, progress = 0, tangentProgress = 0, second = false, closeTimer;
+  let direction = 0, progress = 0, tangentProgress = 0, second = false;
   let extractedBy, exitToken;
-  const settling = () => phase === 'closing' || (phase === 'empty' && exitToken !== undefined);
+  const innerLid = () => hasSecond() && (phase === 'between' || exitToken !== undefined);
   function render(extra) {
-    const angle = settling() ? 0 : direction * progress;
-    draw(phase, { angle, second, ...extra });
+    const angle = direction * progress;
+    draw(phase, { angle, innerTurn: innerLid() || second ? angle : 0, second, ...extra });
   }
   function openIfTurned() {
     if (progress < OPEN_SWEEP - ANGLE_EPSILON || tangentProgress < MIN_TANGENT_SWEEP - ANGLE_EPSILON) return;
+    if (phase === 'between') {
+      if (!hasSecond()) return;
+      second = true;
+    }
     phase = 'open';
     single = null;
   }
-  function closeForSecond() {
-    second = true;
-    phase = 'closing';
-    render();
-    closeTimer = setTimeout(() => {
-      phase = 'stuck';
-      if (!single?.deferredTurn) openIfTurned();
-      render();
-    }, 500);
-  }
   function waitForSecondExit() {
-    if (second || !hasSecond()) return;
+    if (second) return;
     direction = progress = tangentProgress = 0;
     const token = exitToken = {};
     afterExit(() => {
       if (exitToken !== token) return;
       exitToken = undefined;
-      closeForSecond();
+      phase = 'between';
+      if (!single?.deferredTurn) openIfTurned();
+      render();
     });
   }
   function discardDeferredTurn() {
-    if (!settling() && phase !== 'stuck') return;
     for (const point of contacts.values()) {
       if (point.deferredTurn) {
         ({ direction, progress, tangentProgress } = point.deferredTurn);
@@ -61,7 +56,6 @@ export function createGesture({ hit = () => ({}), draw = () => {}, zoomCard = ()
     render();
   }
   function resetPerformance() {
-    clearTimeout(closeTimer);
     exitToken = undefined;
     extractedBy = undefined;
     second = false;
@@ -84,10 +78,10 @@ export function createGesture({ hit = () => ({}), draw = () => {}, zoomCard = ()
     if (contacts.size === 1) {
       single = point;
       if (phase === 'normal' && target.secret && !target.dome) hold = point;
-      if ((phase === 'stuck' || settling()) && target.rim) {
+      if ((phase === 'stuck' || innerLid()) && target.rim) {
         point.samples = [];
         point.pendingAngle = point.pendingTangent = point.tangent = 0;
-        if (settling()) point.deferredTurn = { direction, progress, tangentProgress };
+        if (exitToken !== undefined) point.deferredTurn = { direction, progress, tangentProgress };
       }
       return;
     }
@@ -182,7 +176,7 @@ export function createGesture({ hit = () => ({}), draw = () => {}, zoomCard = ()
         progress = Math.abs(p.angle);
         tangentProgress = Math.min(progress, Math.max(0, direction * p.tangent));
       }
-      if (phase === 'stuck' && !p.deferredTurn) openIfTurned();
+      if ((phase === 'stuck' || phase === 'between') && !p.deferredTurn) openIfTurned();
       render();
     } else if (phase === 'open' && p.target.card) {
       if (p.target.left + dx >= p.target.width && dx > 1.5 * Math.abs(dy)) {
@@ -201,8 +195,8 @@ export function createGesture({ hit = () => ({}), draw = () => {}, zoomCard = ()
     if (action) return action;
     contacts.delete(id);
     pair = null;
-    // A turn begun before settlement can reveal only once its touch ends normally.
-    if (p.deferredTurn && phase === 'stuck') openIfTurned();
+    // A turn begun during item exit can reveal only once its touch ends normally.
+    if (p.deferredTurn && phase === 'between') openIfTurned();
     if (p === demo && p.tap && hit(x, y).dome) {
       demo = null;
       if (!hold) return activate();

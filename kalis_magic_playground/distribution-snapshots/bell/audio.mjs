@@ -1,12 +1,18 @@
 import { preset } from './presets.mjs';
 
+const bellNoiseBand = [3000, 8000];
+const knockSound = {
+  hz: [240, 615], weights: [1, .42], decay: [.021, .010],
+  level: .16, noise: .42, noiseBand: [500, 1800],
+};
+
 function strike(context, sound, voices, onStarted) {
   const time = context.currentTime;
   const bus = context.createGain();
   bus.connect(context.destination);
   const sources = [];
   const nodes = [bus];
-  const scale = .35 / sound.weights.reduce((total, weight) => total + weight, 0);
+  const scale = (sound.level ?? .35) / sound.weights.reduce((total, weight) => total + weight, 0);
   const previous = voices.length === 2 ? voices.shift() : null;
   if (previous) previous.fade(time);
 
@@ -40,7 +46,8 @@ function strike(context, sound, voices, onStarted) {
     const data = buffer.getChannelData(0);
     for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
     noise.buffer = buffer;
-    const filters = [['highpass', 3000], ['lowpass', 8000]].map(([type, hz]) => {
+    const [low, high] = sound.noiseBand ?? bellNoiseBand;
+    const filters = [['highpass', low], ['lowpass', high]].map(([type, hz]) => {
       const filter = context.createBiquadFilter();
       filter.type = type;
       filter.frequency.value = hz;
@@ -58,7 +65,7 @@ function strike(context, sound, voices, onStarted) {
     for (const source of sources) source.stop(now + .015);
   }};
   voices.push(voice);
-  // The first partial has the longest envelope in every preset.
+  // The first partial has the longest envelope in every sound.
   sources[0].onended = () => {
     const index = voices.indexOf(voice);
     if (index >= 0) voices.splice(index, 1);
@@ -70,19 +77,23 @@ export function createSynth(makeContext = () => new (window.AudioContext || wind
   let context;
   let voices = [];
   let generation = 0;
+
+  async function play(sound, onStarted) {
+    const ticket = generation;
+    try {
+      if (!context || context.state === 'closed') {
+        context = makeContext();
+        voices = [];
+      }
+      const device = context;
+      if (device.state !== 'running') await device.resume();
+      if (device === context && device.state === 'running' && generation === ticket) strike(device, sound, voices, onStarted);
+    } catch { /* Audio can be unavailable on a restricted device. */ }
+  }
+
   return {
     cancelPending() { generation++; },
-    async ring(id, onStarted) {
-      const ticket = generation;
-      try {
-        if (!context || context.state === 'closed') {
-          context = makeContext();
-          voices = [];
-        }
-        const device = context;
-        if (device.state !== 'running') await device.resume();
-        if (device === context && device.state === 'running' && generation === ticket) strike(device, preset(id), voices, onStarted);
-      } catch { /* Audio can be unavailable on a restricted device. */ }
-    },
+    ring(id, onStarted) { return play(preset(id), onStarted); },
+    knock() { return play(knockSound); },
   };
 }

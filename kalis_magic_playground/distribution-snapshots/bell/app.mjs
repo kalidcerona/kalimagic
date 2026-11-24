@@ -36,7 +36,10 @@ function perform(action, onStarted) {
     synth.ring(settings.sound(), onStarted);
     vibrate();
     press(dome);
-  } else if (action === 'stuck') press(dome, true);
+  } else if (action === 'stuck') {
+    synth.knock();
+    press(dome, true);
+  }
 }
 appearance();
 gesture.resetPerformance();

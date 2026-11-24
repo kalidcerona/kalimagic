@@ -29,14 +29,18 @@ export function createScene(stage) {
     offsetY = scale === 1 ? 0 : view.offsetY + midY - pair.midY + (pair.midY - view.top) * (1 - factor);
     draw('open');
   }
-  function draw(phase, { angle = 0, dx = 0, dy = 0, second = stage.dataset.reveal === 'second' } = {}) {
-    stage.dataset.reveal = second ? 'second' : 'first';
+  function draw(phase, { angle = 0, innerTurn, dx = 0, dy = 0, second = stage.dataset.reveal === 'second' } = {}) {
+    const reveal = second ? 'second' : 'first';
+    if (phase === 'normal' || reveal !== stage.dataset.reveal) { scale = 1; offsetX = offsetY = 0; }
+    stage.dataset.reveal = reveal;
     const item = second ? stage.dataset.secondItem : stage.dataset.firstItem;
     stage.dataset.item = item;
-    if (phase === 'normal' || phase === 'closing') { scale = 1; offsetX = offsetY = 0; }
     card.style.setProperty('--zoom', scale);
     stage.dataset.phase = phase;
-    if (phase !== 'open' && phase !== 'empty' || angle) dome.style.setProperty('--turn', angle + 'deg');
+    if (phase === 'normal' || phase === 'armed' || phase === 'stuck' || (phase === 'open' && !second && angle)) {
+      dome.style.setProperty('--turn', angle + 'deg');
+    }
+    if (innerTurn !== undefined) base.style.setProperty('--inner-turn', innerTurn + 'deg');
     card.classList.toggle('dragging', phase === 'open' && Boolean(dx || dy));
     card.style.setProperty('--drag-x', (offsetX + dx) + 'px');
     card.style.setProperty('--drag-y', (offsetY + dy) + 'px');
@@ -54,7 +58,7 @@ export function createScene(stage) {
       rim: distance >= radius * .45 && distance <= box.width * .52,
       outerRadius: box.width * .54,
       secret: y > bottom - 152 && y <= innerHeight && x >= 0 && x <= innerWidth,
-      card: x >= bounds.left && x <= bounds.right && y >= bounds.top && y <= bounds.bottom,
+      card: stage.dataset.item !== 'none' && x >= bounds.left && x <= bounds.right && y >= bounds.top && y <= bounds.bottom,
     };
   }
   function afterExit(done) {

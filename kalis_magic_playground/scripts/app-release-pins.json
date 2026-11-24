@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "release": "apps-28171ef946e35f5c8416a4043bafa922d1721173",
+  "release": "apps-dda14ee5fcaa7d15fddbbf8c96b76f26a96a1849",
   "provenance": "Retained personal app trees and distribution snapshots from the selected site release.",
   "roots": [
     "distribution-snapshots/aletheia",
@@ -408,14 +408,14 @@
     {
       "path": "distribution-snapshots/bell/app.mjs",
       "kind": "file",
-      "size": 2534,
-      "sha256": "ac764322ee14604cb693a9015b9285417f13cc161e5f537bdf49f3e645e326ad"
+      "size": 2563,
+      "sha256": "26f4841c8a8bb5ba0f0d2fcb868fca25f00970625f190ad10e9a1fa783722764"
     },
     {
       "path": "distribution-snapshots/bell/audio.mjs",
       "kind": "file",
-      "size": 3201,
-      "sha256": "6c35a25ab8e6b655a913c95a00c70aaec06e979fe57da9eb597df2369cf8d369"
+      "size": 3534,
+      "sha256": "09b2c06851fce80c30891cab663ce789d0f380b089f216ec00d899a4cf8538f3"
     },
     {
       "path": "distribution-snapshots/bell/card-rider-blue.jpg",
@@ -450,14 +450,14 @@
     {
       "path": "distribution-snapshots/bell/dome.mjs",
       "kind": "file",
-      "size": 3249,
-      "sha256": "30717503507c08902dbd8b98a8cddbf9ac11544c8a3ed0ad03e82c98f66ccb64"
+      "size": 3494,
+      "sha256": "8a352fe20150b72e8cdb197933460a73a67946471865e6f80059fa1c271a49cc"
     },
     {
       "path": "distribution-snapshots/bell/gestures.mjs",
       "kind": "file",
-      "size": 9748,
-      "sha256": "e2cf673a1bee8c2c113bfa3b26a9730b79bb28c044e3e6a7bcf0fceeaa281caf"
+      "size": 9630,
+      "sha256": "5bf16bda7f3a0a4ff7c5834868fa7aa13560372630b1e933c5ff31e0e55adb58"
     },
     {
       "path": "distribution-snapshots/bell/icon-192.png",
@@ -498,8 +498,8 @@
     {
       "path": "distribution-snapshots/bell/performance.css",
       "kind": "file",
-      "size": 3376,
-      "sha256": "d4ddfdefbc4ce5bb39e5578659c8c097b7488b2eafa54ca42229ce90b212d227"
+      "size": 3981,
+      "sha256": "21eadc795b9879196a2b608f650a8e65ebd9ad4a66659c1ff28cfc4940cb0ab9"
     },
     {
       "path": "distribution-snapshots/bell/presets.mjs",
@@ -541,7 +541,7 @@
       "path": "distribution-snapshots/bell/sw.js",
       "kind": "file",
       "size": 5545,
-      "sha256": "b17121b2726e937d9f19fd72c4b6340a89905eed0cfeba4b93cb2638d68fde77"
+      "sha256": "d8359b9e14b42467950a3a2e17bfe7ec20cb494d885052f00b4ea4e8a718602f"
     },
     {
       "path": "distribution-snapshots/bell/vibration.mjs",
