@@ -157,10 +157,8 @@ h2 { font: 700 clamp(2rem, 4.2vw, 3.45rem) / 1.24 var(--serif); letter-spacing: 
 .current-marker { margin-left: .5rem; font-size: .85rem; }
 .ticket-period { display: block; color: var(--muted); font-size: .875rem; }
 .ticket-prices dd { font-weight: 700; font-variant-numeric: tabular-nums; }
-.registration { display: grid; justify-items: center; gap: .6rem; margin-top: 1.75rem; text-align: center; }
-.registration .ticket-link { margin: 0; border: 1px solid transparent; font-family: inherit; }
-.registration .ticket-link:disabled { border-color: var(--brass-dark); background: var(--background); color: var(--muted); cursor: default; }
-.ticket-note { color: var(--muted); font-size: .95rem; }
+.registration { margin-top: 1.75rem; text-align: center; }
+.registration .ticket-link { margin: 0; }
 .footer-inner { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .65rem 2rem; padding-block: 1.25rem; color: var(--muted); font-size: .875rem; }
 .footer-host { color: var(--text); }
 
