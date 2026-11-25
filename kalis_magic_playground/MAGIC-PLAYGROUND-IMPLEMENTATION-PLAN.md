@@ -192,8 +192,7 @@ export const PUBLIC_FILES = [
 export const PUBLIC_DIRS = [
   'assets',
   'imigi3',
-  'kalimeeting',
-  'planb'
+  'kalimeeting'
 ];
 
 export const PRIVATE_PATTERNS = [
