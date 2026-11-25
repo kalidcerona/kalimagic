@@ -56,11 +56,11 @@ h2 { font: 700 clamp(2rem, 4.2vw, 3.45rem) / 1.24 var(--serif); letter-spacing: 
 .hero h1 { display: grid; gap: .75rem; }
 .display-title {
   color: var(--text);
-  font: italic 400 clamp(3.05rem, 7vw, 6rem) / .99 var(--display);
+  font: italic 400 clamp(1.5rem, 3vw, 2.6rem) / .99 var(--display);
   letter-spacing: -.04em;
   text-wrap: balance;
 }
-.korean-title { color: var(--brass); font: 700 clamp(1.625rem, 2.7vw, 2.625rem) / 1.35 var(--serif); letter-spacing: -.035em; }
+.korean-title { color: var(--brass); font: 700 clamp(2rem, 4vw, 3.3rem) / 1.35 var(--serif); letter-spacing: -.035em; }
 .hero-lead { margin-top: 1.55rem; color: var(--body); }
 .ticket-link {
   display: inline-flex;
@@ -119,25 +119,44 @@ h2 { font: 700 clamp(2rem, 4.2vw, 3.45rem) / 1.24 var(--serif); letter-spacing: 
 .profile strong { color: var(--text); font-size: 1.125rem; }
 .story-copy p { max-width: 45ch; margin-top: 1.3rem; color: var(--body); }
 .story-copy p + p { margin-top: .8rem; }
+.curriculum, .routine, .fees {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: clamp(2rem, 6vw, 5rem);
+}
+.curriculum, .routine { padding-block: clamp(3rem, 6vw, 5rem); border-top: 1px solid var(--line); }
+.curriculum p, .routine-copy p { color: var(--body); text-wrap: pretty; }
+.curriculum p + p, .routine-copy p { margin-top: .85rem; }
+.keep, .fee-amount, .ticket-prices dd, .ticket-period time { white-space: nowrap; }
+.routine-quotes h3, .fees h3 { margin: 0 0 .8rem; }
+.routine-quotes figure + figure { margin-top: 1.4rem; padding-top: 1.4rem; border-top: 1px solid var(--line); }
+.routine-quotes blockquote { margin: 0; font: 600 1.3rem / 1.65 var(--serif); }
+.routine-quotes blockquote p[lang="en"] { margin-top: .45rem; color: var(--body); font: 400 1rem / 1.5 var(--display); }
+.routine-quotes figcaption { margin-top: .55rem; color: var(--muted); font-size: .875rem; }
+.routine a { color: var(--brass); }
+.routine a:hover { color: var(--text); }
 
 .scenes { padding-block: clamp(2.75rem, 6vw, 4.5rem) clamp(3.75rem, 8vw, 6.5rem); border-top: 1px solid var(--line); }
 .scene-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .7rem; margin-top: 1.5rem; }
 .scene-grid figure { min-width: 0; }
 .scene-grid img { width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover; }
-.scene-stage { grid-column: 1 / -1; }
-.scene-stage img { aspect-ratio: 2.3 / 1; object-position: center 61%; }
-.scene-outdoor img { object-position: 55% center; }
+.scene-outdoor { grid-column: 1 / -1; }
+.scene-outdoor img { aspect-ratio: 960 / 553; }
 .scene-class img { object-position: 62% center; }
 
-.admission { padding-block: clamp(3.75rem, 8vw, 6rem); border-block: 1px solid var(--line); background: var(--surface); }
-.admission h2 { text-align: center; }
-.ticket-prices { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 1.8rem; border-block: 1px solid var(--brass-dark); }
-.ticket-prices > div { min-width: 0; padding: 1.5rem clamp(.7rem, 3vw, 2rem); text-align: center; }
-.ticket-prices > div + div { border-left: 1px solid var(--line); }
-.ticket-prices dt { font-size: 1rem; font-weight: 700; }
-.ticket-period { display: block; margin-block: .1rem .45rem; color: var(--muted); font-size: .875rem; font-weight: 500; }
-.ticket-prices dd { color: var(--brass); font: 400 clamp(2.3rem, 4.8vw, 3.8rem) / 1.24 var(--display); font-variant-numeric: lining-nums tabular-nums; }
-.ticket-prices dd span { margin-left: .2em; font: 600 1rem var(--sans); }
+.admission { --current-fee: #ef8a82; padding-block: clamp(3.75rem, 8vw, 6rem); border-block: 1px solid var(--line); background: var(--surface); }
+.fees { margin-top: 1.8rem; }
+.fee-summary[hidden] + div { grid-column: 1 / -1; }
+.fee-tier, .fee-next { color: var(--body); }
+.fee-amount { display: block; color: var(--current-fee); font: 500 clamp(2.8rem, 5vw, 4rem) / 1.3 var(--serif); }
+.fee-next:not(:empty) { margin-top: .75rem; }
+.ticket-prices > div { display: flex; align-items: center; justify-content: space-between; gap: .6rem; padding: .75rem 1rem; border-top: 1px solid var(--line); }
+.ticket-prices .current { outline: 1px solid var(--current-fee); outline-offset: -1px; background: var(--background); }
+.ticket-prices .current dd, .current-marker { color: var(--current-fee); }
+.current-marker { margin-left: .5rem; font-size: .85rem; }
+.ticket-period { display: block; color: var(--muted); font-size: .875rem; }
+.ticket-prices dd { font-weight: 700; font-variant-numeric: tabular-nums; }
 .registration { display: grid; justify-items: center; gap: .6rem; margin-top: 1.75rem; text-align: center; }
 .registration .ticket-link { margin: 0; border: 1px solid transparent; font-family: inherit; }
 .registration .ticket-link:disabled { border-color: var(--brass-dark); background: var(--background); color: var(--muted); cursor: default; }
@@ -163,20 +182,15 @@ h2 { font: 700 clamp(2rem, 4.2vw, 3.45rem) / 1.24 var(--serif); letter-spacing: 
   .facts dl > div:nth-child(odd) { padding-left: 0; border-left: 0; }
   .facts dl > div:nth-child(n+3) { border-top: 1px solid var(--line); }
   .facts dd { font-size: 1rem; }
-  .time-separator { display: none; }
-  .facts dd time + .time-separator + time { display: block; }
-  .facts dd time + .time-separator + time::before { content: "– "; }
+  .facts time { display: block; }
   .facts dl > .facts-venue { display: grid; }
   .facts-venue dd { display: grid; justify-items: start; }
   .story { grid-template-columns: 1fr; gap: 1.55rem; }
   .story-copy { grid-row: 1; }
   .scene-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; }
-  .scene-stage img { aspect-ratio: 3 / 2; }
   .scene-class { grid-column: 1 / -1; }
   .scene-class img { aspect-ratio: 16 / 9; object-position: center 59%; }
-  .ticket-prices { grid-template-columns: 1fr; }
-  .ticket-prices > div { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: .25rem .75rem; padding: .9rem .15rem; text-align: left; }
-  .ticket-prices > div + div { border-top: 1px solid var(--line); border-left: 0; }
+  .curriculum, .routine, .fees { grid-template-columns: 1fr; gap: 1.5rem; }
 }
 
 @media (max-width: 22rem) {
