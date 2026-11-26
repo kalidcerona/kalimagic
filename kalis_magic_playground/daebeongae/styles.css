@@ -1,0 +1,98 @@
+@font-face {
+  font-family: Anton;
+  src: url("font/anton.woff2") format("woff2");
+  font-display: swap;
+}
+:root {
+  --blue: #213c91;
+  --light: #f6f8ff;
+  --paper: #e7f0ff;
+  --ink: #132650;
+  --muted: #405477;
+  --lime: #e8f274;
+  --gutter: 20px;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font: 1rem/1.65 "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans CJK KR", "Noto Sans KR", sans-serif;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+.wrap { width: min(calc(100% - 2 * var(--gutter)), 1120px); margin-inline: auto; }
+.dark, .plate, .skip { background: var(--blue); color: var(--light); }
+h1, h2, h3, p, dl, dd, ul, ol { margin: 0; }
+ul, ol { list-style: none; padding: 0; }
+section { padding-block: 56px; }
+h1, h2, h3 { font-weight: 800; line-height: 1.1; }
+h2 { font-size: 1.875rem; margin-bottom: 16px; }
+h3, .intro strong { font-size: 1.5rem; }
+.small, dt, footer time, .status { font-size: .875rem; }
+.small, dt { color: var(--muted); }
+.dark .small, .dealers .small { color: inherit; }
+.mast { padding-block: 12px; display: flex; flex-direction: column; align-items: flex-start; border-bottom: 1px solid var(--light); }
+nav { display: flex; gap: 16px; }
+a { color: inherit; min-height: 44px; display: inline-flex; align-items: center; text-underline-offset: .25em; }
+a:focus-visible, h1:focus-visible { outline: 3px solid var(--lime); outline-offset: 4px; }
+.skip { position: absolute; top: 12px; left: 12px; z-index: 2; padding-inline: 12px; transform: translateY(-200%); }
+.skip:focus { transform: none; }
+.hero { position: relative; isolation: isolate; }
+.pattern { position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none;
+  background: linear-gradient(var(--lime), var(--lime)) no-repeat right 9% bottom 9% / 64px 3px; }
+.pattern::before, .pattern::after { content: ""; position: absolute; border: 24px solid #4059a5; border-radius: 50%; }
+.pattern::before { width: 330px; height: 330px; right: -170px; top: -180px; }
+.pattern::after { width: 480px; height: 480px; right: -220px; bottom: -240px; }
+.poster { display: grid; gap: 36px; align-items: end; }
+.plate { width: fit-content; max-width: 100%; box-shadow: 0 0 0 16px var(--blue); }
+h1 { margin-top: 12px; font-size: 2.5rem; }
+h1 span { display: block; }
+h1 span:last-child { margin-top: 4px; font-size: 4.75rem; }
+.details, .date dd { font-size: 1.25rem; font-weight: 700; }
+.details time { color: var(--lime); }
+.intro p { margin-top: 8px; }
+dl, .dealers ul { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 16px; margin-top: 32px; }
+dl div, .dealers li, ol > li { border-top: 1px solid var(--muted); padding-top: 12px; }
+dd { font-weight: 700; }
+.date { grid-column: 1 / -1; }
+#program { border-top: 1px solid var(--muted); }
+ol { margin-top: 32px; display: grid; gap: 32px; }
+ol > li { display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 12px 16px; align-items: baseline; }
+ol > li > :last-child { grid-column: 1 / -1; }
+ol > li > span { font: 2rem/1 Anton, Impact, sans-serif; color: var(--blue); }
+ol ul li + li { margin-top: 16px; }
+ol p + p, ol p + strong { display: block; margin-top: 8px; }
+.status { width: fit-content; padding: 2px 8px; background: var(--lime); color: var(--ink); }
+.dealers { background: var(--lime); }
+.dealers li { font-weight: 700; }
+#signup p + p { margin-top: 8px; }
+button:disabled { display: block; width: 100%; margin: 28px 0 8px; min-height: 52px; border: 2px solid var(--muted); background: var(--paper); color: var(--muted); opacity: 1; font: inherit; font-weight: 700; cursor: default; }
+footer { display: grid; gap: 4px; padding-block: 32px; }
+@media (min-width: 375px) {
+  h1 { font-size: 2.75rem; }
+  h1 span:last-child { font-size: 5.5rem; }
+}
+@media (min-width: 390px) { h1 span:last-child { font-size: 5.75rem; } }
+@media (min-width: 414px) {
+  h1 { font-size: 3rem; }
+  h1 span:last-child { font-size: 6rem; }
+}
+@media (min-width: 768px) {
+  :root { --gutter: 40px; }
+  section { padding-block: 80px; }
+  .mast { flex-direction: row; align-items: center; justify-content: space-between; }
+  h1 { font-size: 3.5rem; }
+  h1 span:last-child { font-size: 8rem; }
+  h2 { font-size: 2.5rem; }
+  dl { column-gap: 32px; }
+  ol > li { grid-template-columns: 64px 200px minmax(0, 1fr); column-gap: 24px; }
+  ol > li > :last-child { grid-column: 3; }
+  ol > li > span { font-size: 2.5rem; }
+  .dealers ul { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  button:disabled { width: 280px; }
+}
+@media (min-width: 1024px) {
+  .poster { grid-template-columns: minmax(0, 1fr) 340px; column-gap: 60px; }
+}
+@media (min-width: 1280px) { h1 span:last-child { font-size: 10rem; } }

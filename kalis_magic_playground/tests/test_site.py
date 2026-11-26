@@ -11,6 +11,7 @@ import subprocess
 import sys
 from html.parser import HTMLParser
 from pathlib import Path
+from xml.etree import ElementTree
 
 ROOT = Path(__file__).resolve().parent.parent
 PAGES = ["index.html", "intro.html", "lesson.html", "works.html",
@@ -126,6 +127,81 @@ def parse(path):
     p = Collector()
     p.feed(path.read_text(encoding="utf-8"))
     return p
+
+
+class DraftTree(HTMLParser):
+    """Collect the static announcement as a queryable element tree."""
+
+    def __init__(self):
+        super().__init__()
+        self.root = ElementTree.Element("document")
+        self.stack = [self.root]
+
+    def handle_starttag(self, tag, attrs):
+        node = ElementTree.SubElement(self.stack[-1], tag, dict(attrs))
+        if tag not in {"meta", "link", "br", "img", "input", "hr"}:
+            self.stack.append(node)
+
+    def handle_endtag(self, tag):
+        assert self.stack[-1].tag == tag
+        self.stack.pop()
+
+    def handle_data(self, data):
+        node = self.stack[-1]
+        if len(node):
+            node[-1].tail = (node[-1].tail or "") + data
+        else:
+            node.text = (node.text or "") + data
+
+
+def test_daebeongae_draft():
+    folder = ROOT / "daebeongae"
+    assert {str(p.relative_to(folder)) for p in folder.rglob("*") if p.is_file()} == {
+        "index.html", "styles.css", "font/anton.woff2", "font/OFL-Anton.txt", "img/og.jpg"
+    }
+    html = (folder / "index.html").read_text()
+    css = (folder / "styles.css").read_text()
+    assert all(char not in html + css for char in ("—", "~"))
+    assert re.findall(r'url\(["\']?([^"\')]+)', css) == ["font/anton.woff2"]
+    assert "@import" not in css
+    parser = DraftTree()
+    parser.feed(html)
+    doc = parser.root
+    assert doc.find("html").get("lang") == "ko"
+    assert [link.get("href") for link in doc.iter("link")] == ["styles.css"]
+    meta = {m.get("name") or m.get("property"): m.get("content") for m in doc.iter("meta")}
+    base = "https://kalimagic.netlify.app/daebeongae/"
+    assert doc.findtext(".//title") == meta["og:title"] == "칼리의 대번개 | 2027년 1월 10일"
+    assert meta["robots"] == "noindex, nofollow"
+    assert meta["viewport"] == "width=device-width, initial-scale=1"
+    assert (meta["og:url"], meta["og:image"]) == (base, base + "img/og.jpg")
+    assert (meta["og:image:width"], meta["og:image:height"]) == ("1200", "630")
+    items = doc.findall(".//section[@id='program']/ol/li")
+    assert [item.findtext(".//h3") for item in items] == ["특별 렉쳐", "렉쳐", "공연", "본모임", "오픈 세션"]
+    copy = [" ".join("".join(item.itertext()).split()) for item in items]
+    assert html.count("1시간") == 2
+    assert "김치 마술사 · 1시간" in copy[0] and "진행 여부 추후 확정" in copy[0]
+    assert "박영균 마술사, 김훈 마술사" in copy[1] and "메인 공연 1시간 김치 마술사" in copy[2]
+    assert [s.strip() for s in ("".join(li.itertext()) for li in items[3].findall("ul/li"))] == [
+        "에피타이저 갈라쇼 김시헌, 키노모토", "메인 갈라쇼 김치 마술사", "딜러부스"
+    ]
+    assert "가칭" in copy[4] and "식사 제공 없음" in copy[4]
+    dealers = doc.find(".//section[@class='dealers']/div")
+    assert dealers.findtext("p") == "예정"
+    assert [li.text for li in dealers.findall("ul/li")] == ["플랜비", "토마토 타로", "펜돌사", "헬로쿨"]
+    fields = {div.findtext("dt"): div.findtext("dd") for div in doc.findall(".//dl/div")}
+    assert all(fields[name] == "추후 안내" for name in ["장소", "시간", "참가비", "신청 링크"])
+    button, = doc.iter("button")
+    assert button.attrib == {"type": "button", "disabled": None, "aria-describedby": "signup-note"}
+    assert button.text == "신청 준비 중" and doc.findtext(".//*[@id='signup-note']") == "아직 신청을 받지 않습니다."
+    assert not any(doc.findall(".//" + tag) for tag in ["form", "script", "img", "iframe"])
+    ids = [node.get("id") for node in doc.iter() if "id" in node.attrib]
+    assert len(ids) == len(set(ids))
+    links = [a.get("href") for a in doc.iter("a")]
+    assert links == ["#title", "#program", "#signup"] and all(link[1:] in ids for link in links)
+    build = (ROOT / "scripts/build-public.mjs").read_text()
+    dirs = re.search(r"const PUBLIC_DIRS = \[(.*?)\];", build, re.S)
+    assert dirs and dirs[1].count("'daebeongae'") == 1
 
 
 def main():
@@ -299,6 +375,7 @@ def main():
 
     test_community_route_and_seo_files()
 
+    test_daebeongae_draft()
     return report()
 
 

@@ -162,6 +162,9 @@ button { display: block; width: 100%; min-height: 68px; margin-top: 40px; border
   .prices > div + div { border-top: 0; border-left: 3px solid var(--ink); }
   .prices dt { min-height: 66px; justify-content: flex-end; }
 }
+@media (min-width: 768px) and (max-width: 799px) {
+  .facts { grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr) repeat(2, minmax(0, 1fr)); }
+}
 @media (min-width: 1024px) {
   :root { --gutter: 40px; }
   .story-grid { grid-template-columns: minmax(0, .7fr) minmax(0, 1.3fr); align-items: center; gap: 64px; }
