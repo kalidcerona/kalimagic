@@ -179,21 +179,39 @@ def test_daebeongae_draft():
     items = doc.findall(".//section[@id='program']/ol/li")
     assert [item.findtext(".//h3") for item in items] == ["특별 렉쳐", "렉쳐", "공연", "본모임", "오픈 세션"]
     copy = [" ".join("".join(item.itertext()).split()) for item in items]
-    assert html.count("1시간") == 2
-    assert "김치 마술사 · 1시간" in copy[0] and "진행 여부 추후 확정" in copy[0]
-    assert "박영균 마술사, 김훈 마술사" in copy[1] and "메인 공연 1시간 김치 마술사" in copy[2]
-    assert [s.strip() for s in ("".join(li.itertext()) for li in items[3].findall("ul/li"))] == [
-        "에피타이저 갈라쇼 김시헌, 키노모토", "메인 갈라쇼 김치 마술사", "딜러부스"
+    assert [item.findtext("div/p") for item in items] == [
+        "11:00-12:00", "12:30-13:30", "14:00-15:00", "15:30-18:30", "18:30부터"
     ]
-    assert "가칭" in copy[4] and "식사 제공 없음" in copy[4]
+    assert "김치 마술사 · 1시간" in copy[0] and "진행 여부 추후 확정" in copy[0]
+    assert "박영균 마술사 · 김훈 마술사" in copy[1] and "메인 공연 1시간 김치 마술사" in copy[2]
+    assert [s.strip() for s in ("".join(li.itertext()) for li in items[3].findall("ul/li"))] == [
+        "15:10 입장", "에피타이저 갈라쇼 김시헌, 키노모토", "메인 갈라쇼 김치 마술사",
+        "네트워킹 파티 약 1시간", "딜러부스"
+    ]
+    assert "가칭" not in copy[4] and "식사 제공 없음" in copy[4]
     dealers = doc.find(".//section[@class='dealers']/div")
     assert dealers.findtext("p") == "예정"
     assert [li.text for li in dealers.findall("ul/li")] == ["플랜비", "토마토 타로", "펜돌사", "헬로쿨"]
-    fields = {div.findtext("dt"): div.findtext("dd") for div in doc.findall(".//dl/div")}
-    assert all(fields[name] == "추후 안내" for name in ["장소", "시간", "참가비", "신청 링크"])
+    fields = {"".join(div.find("dt").itertext()): "".join(div.find("dd").itertext())
+              for div in doc.findall(".//dl/div")}
+    assert fields["장소"] == "블루라움 (Blue Raum)서울 동대문구 안암로 86-1지하 1층6호선 고려대역 도보 4분"
+    assert fields["신청 링크"] == "12월 중순 오픈 예정"
+    assert fields["참가비"] == "통합권 60,000원부터단품 20,000원부터"
+    signup = doc.find(".//section[@id='signup']/div")
+    assert [h.text for h in signup.findall("h3")] == ["통합권", "단품"]
+    assert "".join(signup.find("p").itertext()) == "공연 + 렉쳐 + 본모임따로 구매하면 90,000원"
+    tiers, singles = signup.findall("dl")
+    assert [(d.findtext("dt"), [v.text for v in d.findall("dd")]) for d in tiers.findall("div")] == [
+        ("슈퍼 얼리버드", ["60,000원", "기간 추후 안내"]),
+        ("얼리버드", ["65,000원", "기간 추후 안내"]),
+        ("정가", ["70,000원", "기간 추후 안내"]),
+    ]
+    assert [(d.findtext("dt"), d.findtext("dd")) for d in singles.findall("div")] == [
+        ("공연", "40,000원"), ("렉쳐", "20,000원"), ("본모임", "30,000원"), ("특별 렉쳐", "참가비 추후 안내")
+    ]
     button, = doc.iter("button")
     assert button.attrib == {"type": "button", "disabled": None, "aria-describedby": "signup-note"}
-    assert button.text == "신청 준비 중" and doc.findtext(".//*[@id='signup-note']") == "아직 신청을 받지 않습니다."
+    assert button.text == "12월 중순 신청 오픈" and doc.findtext(".//*[@id='signup-note']") == "신청이 열리면 여기에서 접수할 수 있습니다."
     assert not any(doc.findall(".//" + tag) for tag in ["form", "script", "img", "iframe"])
     ids = [node.get("id") for node in doc.iter() if "id" in node.attrib]
     assert len(ids) == len(set(ids))
