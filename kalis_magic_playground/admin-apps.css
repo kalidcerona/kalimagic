@@ -254,7 +254,7 @@ body.admin-apps-page {
 .admin-access-card > .admin-action-status { margin-top: 9px; }
 .admin-access-card__meta { justify-content: flex-start; flex-wrap: wrap; margin-top: 12px; color: #999e97; font-size: 11px; }
 .admin-access-card__meta span:first-child { color: #c8b87f; }
-.admin-access-card__note { margin: 11px 0 0; padding: 9px 10px; border-left: 2px solid rgba(216, 189, 121, .43); color: #b8bab1; background: rgba(255, 255, 255, .025); font-size: 12px; overflow-wrap: anywhere; }
+.admin-access-card__note { margin: 11px 0 0; padding: 9px 10px; border: 1px solid var(--admin-line); border-radius: 7px; color: #b8bab1; background: rgba(255, 255, 255, .025); font-size: 12px; overflow-wrap: anywhere; }
 .admin-access-card__actions { display: flex; justify-content: flex-end; margin-top: 11px; }
 .admin-member-portfolio { display: grid; gap: 8px; margin-top: 13px; }
 .admin-member-app-row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 9px 0; border-top: 1px solid var(--admin-line); }
@@ -342,7 +342,6 @@ body.admin-apps-page {
 .admin-access-panel details { margin-block: 14px; }
 .admin-access-panel summary { min-height: 44px; padding: 10px 12px; box-sizing: border-box; color: #d2d3c9; font-size: 13px; cursor: pointer; }
 .admin-access-panel details[open] > summary { margin-bottom: 10px; }
-.admin-access-card__note { border-left: 0; border: 1px solid var(--admin-line); border-radius: 7px; }
 .admin-action-status { font-size: 13px; line-height: 1.65; overflow-wrap: anywhere; }
 .admin-app-catalog { margin-top: 28px; padding-top: 0; border-block: 1px solid var(--admin-line); }
 .admin-catalog-summary { padding: 20px 0; cursor: pointer; color: #e2e0d6; font-size: 15px; font-weight: 600; }

@@ -27,13 +27,15 @@
       <div class="admin-apps-auth" data-auth-panel aria-live="polite"></div>
     </header>
 
-    <section class="admin-access-section" aria-label="이용 권한">
+    <section class="admin-access-section" aria-labelledby="admin-access-title">
+      <h2 id="admin-access-title" class="sr-only">이용 권한</h2>
       <div class="admin-access-panel" data-tools-root aria-busy="true">
         <p class="admin-loading" role="status">관리자 세션을 확인하고 있습니다.</p>
       </div>
     </section>
     <details class="admin-app-catalog" id="admin-distribution">
       <summary class="admin-catalog-summary"><span>배포 링크</span><span class="admin-catalog-summary__hint">앱 열기 · 주소 복사</span></summary>
+      <h2 class="sr-only">배포 앱 목록</h2>
       <div class="admin-app-grid">
         <article class="admin-app-card" data-app-card="calc">
           <div class="admin-app-card__icon" aria-hidden="true">∑</div>
