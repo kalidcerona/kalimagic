@@ -565,7 +565,24 @@ test('URAMICHI paths use an isolated cookie and require an active grant without 
 
 test('new public app migration adds only the three separately gated tool keys', () => {
   const sql = readFileSync(new URL('../../supabase/migrations/20261127_friend_apps_asrai_alter_uramichi.sql', import.meta.url), 'utf8');
-  assert.deepEqual([...sql.matchAll(/'([^']+)'/g)].map(match => match[1]), [...FRIEND_APP_TOOLS]);
+  const keyArrays = [...sql.matchAll(/(?:expected|additions) constant text\[\] := array\[([^\]]+)\]/g)];
+  const keys = keyArrays.flatMap(([, values]) => [...values.matchAll(/'([^']+)'/g)].map(match => match[1]));
+  assert.deepEqual(keys, [...FRIEND_APP_TOOLS]);
+  const steps = [
+    'begin;', 'lock table public.friend_app_access', 'pg_get_constraintdef(oid)',
+    'count(*) as n from public.friend_app_access group by tool',
+    'definition is distinct from', 'raise exception', 'if allowed @> additions then',
+    'return;', 'if not (allowed @> expected and allowed <@ expected) then',
+    'raise exception', 'unnest(allowed || additions)', 'drop constraint', 'add constraint', 'commit;',
+  ];
+  let cursor = 0;
+  for (const step of steps) {
+    const position = sql.indexOf(step, cursor);
+    assert.ok(position >= cursor, step);
+    cursor = position + step.length;
+  }
+  assert.equal(sql.match(/drop constraint/gi).length, 1);
+  assert.equal(sql.match(/add constraint/gi).length, 1);
   assert.doesNotMatch(sql, /row level security|create policy|drop policy|insert into|update public/i);
   const context = vm.createContext({});
   vm.runInContext(readFileSync(new URL('../../tools/login/gate-util.js', import.meta.url), 'utf8'), context);
@@ -573,5 +590,30 @@ test('new public app migration adds only the three separately gated tool keys', 
     const path = `/tools/${tool}/index.html?launch=1`;
     assert.equal(context.ToolGateUtil.safeTo(path), path);
     assert.equal(context.ToolGateUtil.toolFromPath(path), tool);
+  }
+});
+
+test('anonymous installation reads the advertised images and still gates app code', async () => {
+  for (const tool of ['asrai', 'alter', 'uramichi']) {
+    const root = new URL(`../../distribution-snapshots/${tool}/`, import.meta.url);
+    const base = new URL(`https://example.com/tools/${tool}/`);
+    const manifest = JSON.parse(readFileSync(new URL('manifest.webmanifest', root), 'utf8'));
+    const icons = new Set(manifest.icons.map(icon => new URL(icon.src, base).pathname));
+    for (const icon of manifest.icons) {
+      const bytes = readFileSync(new URL(icon.src, root));
+      const response = await toolsGate(new Request(new URL(icon.src, base)), {
+        next: () => new Response(bytes, { headers: { 'Content-Type': icon.type } }),
+      });
+      assert.equal(response.status, 200);
+      assert.equal(response.headers.get('Content-Type'), icon.type);
+      assert.deepEqual(Buffer.from(await response.arrayBuffer()), bytes);
+    }
+    for (const file of ['', 'index.html', 'sw.js', 'contacts.js', 'camera.mjs', 'nested/icon-192.png',
+      'icon.svg', 'icon-maskable-192.png', 'icon-maskable-512.png', 'icon-256.png']) {
+      const url = new URL(file, base);
+      if (icons.has(url.pathname)) continue;
+      const response = await toolsGate(new Request(url), { next: () => assert.fail(url.pathname) });
+      assert.equal(response.status, 302, url.pathname);
+    }
   }
 });

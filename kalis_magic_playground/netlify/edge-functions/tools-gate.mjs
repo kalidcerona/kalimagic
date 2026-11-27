@@ -76,7 +76,10 @@ function analyzePath(rawPathname) {
   for (const tool of ['asrai', 'alter', 'uramichi']) {
     const root = `/tools/${tool}`;
     if (pathname !== root && !pathname.startsWith(`${root}/`)) continue;
-    if (['manifest.webmanifest', 'icon-192.png', 'icon-512.png'].some(file => pathname === `${root}/${file}`)) {
+    const publicFiles = ['manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
+    if (tool === 'asrai') publicFiles.push('icon.svg');
+    if (tool === 'uramichi') publicFiles.push('icon-maskable-192.png', 'icon-maskable-512.png');
+    if (publicFiles.some(file => pathname === `${root}/${file}`)) {
       return { mode: 'public', pathname };
     }
     return { mode: 'gated', tool, pathname };
