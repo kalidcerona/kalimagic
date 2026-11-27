@@ -52,6 +52,7 @@ const EXPECTED_APP_ROOTS = [
   'distribution-snapshots/tobira',
   'distribution-snapshots/unlock',
   'distribution-snapshots/usotsuki',
+  'seminar-signup',
   'zz1', 'zz10', 'zz11', 'zz12', 'zz13', 'zz14', 'zz15',
   'zz2', 'zz4', 'zz5', 'zz6', 'zz7', 'zz8'
 ];

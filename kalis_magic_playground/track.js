@@ -2,8 +2,8 @@
   'use strict';
 
   var ENDPOINT = '/.netlify/functions/track';
-  var SESSION_KEY = 'kalimagic_analytics_session_v1';
-  var QUEUE_KEY = 'kalimagic_analytics_queue_v1';
+  var SESSION_KEY = 'kalimagic_analytics_session_v3';
+  var QUEUE_KEY = 'kalimagic_analytics_queue_v3';
   var MAX_BATCH_SIZE = 20;
   var MAX_BODY_BYTES = 32 * 1024;
   var FLUSH_INTERVAL_MS = 5000;
@@ -17,10 +17,17 @@
   };
 
   var memorySessionId = createUuid();
+  // Start a new namespace so old account-linked session IDs cannot join new events.
+  try {
+    window.sessionStorage.removeItem('kalimagic_analytics_session_v2');
+    window.localStorage.removeItem('kalimagic_analytics_queue_v2');
+    window.localStorage.removeItem('kalimagic_analytics_session_v1');
+    window.localStorage.removeItem('kalimagic_analytics_queue_v1');
+  } catch (_error) { /* Storage can be unavailable. */ }
   var queue = loadQueue();
+  persistQueue();
   var flushTimer = null;
   var flushInProgress = false;
-  var beaconAllowed = isHomePage() || !hasMagicAuth();
 
   function createUuid() {
     try {
@@ -66,9 +73,11 @@
   }
 
   function getSessionId() {
-    var stored = getStorageItem(SESSION_KEY);
-    if (isUuid(stored)) return stored;
-    setStorageItem(SESSION_KEY, memorySessionId);
+    try {
+      var stored = window.sessionStorage.getItem(SESSION_KEY);
+      if (isUuid(stored)) return stored;
+      window.sessionStorage.setItem(SESSION_KEY, memorySessionId);
+    } catch (_error) { /* Use the in-memory session ID. */ }
     return memorySessionId;
   }
 
@@ -77,7 +86,7 @@
   }
 
   function isStoredEvent(event) {
-    return Boolean(event && typeof event === 'object' && event.eventId && event.sessionId && event.eventType && event.eventName && event.page && event.occurredAt && event.meta && typeof event.meta === 'object');
+    return Boolean(event && typeof event === 'object' && event.eventId && event.sessionId && event.eventType && event.eventName && event.page && Date.parse(event.occurredAt) >= Date.now() - 7 * 86400000 && event.meta && typeof event.meta === 'object');
   }
 
   function loadQueue() {
@@ -93,42 +102,6 @@
 
   function persistQueue() {
     setStorageItem(QUEUE_KEY, JSON.stringify(queue));
-  }
-
-  function isHomePage() {
-    try {
-      var pathname = window.location && window.location.pathname;
-      return pathname === '/' || pathname === '/index.html' || pathname === '';
-    } catch (_error) {
-      return true;
-    }
-  }
-
-  function hasMagicAuth() {
-    try {
-      return Boolean(window.MagicAuth && typeof window.MagicAuth.authHeader === 'function');
-    } catch (_error) {
-      return false;
-    }
-  }
-
-  function updateBeaconEligibility() {
-    try {
-      if (isHomePage()) {
-        beaconAllowed = true;
-        return;
-      }
-      if (!window.MagicAuth || typeof window.MagicAuth.getSession !== 'function') {
-        beaconAllowed = true;
-        return;
-      }
-      beaconAllowed = false;
-      Promise.resolve(window.MagicAuth.getSession())
-        .then(function (session) { beaconAllowed = !session; })
-        .catch(function () { beaconAllowed = false; });
-    } catch (_error) {
-      beaconAllowed = false;
-    }
   }
 
   function currentPage() {
@@ -184,6 +157,11 @@
   }
 
   function nextBatch() {
+    var fresh = queue.filter(isStoredEvent);
+    if (fresh.length !== queue.length) {
+      queue = fresh;
+      persistQueue();
+    }
     var batch = [];
     for (var index = 0; index < queue.length && batch.length < MAX_BATCH_SIZE; index += 1) {
       var candidate = batch.concat(queue[index]);
@@ -215,27 +193,9 @@
 
   async function postBatch(batch) {
     var body = JSON.stringify({ events: batch });
-    if (isHomePage()) {
-      var homeResponse = await window.fetch(ENDPOINT, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: body,
-        keepalive: true
-      });
-      return homeResponse.status === 202;
-    }
-
-    if (window.PgUtil && typeof window.PgUtil.fetchJson === 'function') {
-      var result = await window.PgUtil.fetchJson(ENDPOINT, {
-        method: 'POST',
-        body: body,
-        keepalive: true
-      });
-      return Boolean(result && Number(result.accepted) === batch.length);
-    }
-
     var response = await window.fetch(ENDPOINT, {
       method: 'POST',
+      credentials: 'omit',
       headers: { 'content-type': 'application/json' },
       body: body,
       keepalive: true
@@ -258,23 +218,7 @@
     }
   }
 
-  function flushBeacon() {
-    try {
-      if (!beaconAllowed || !window.navigator || typeof window.navigator.sendBeacon !== 'function') return;
-      while (queue.length) {
-        var batch = nextBatch();
-        if (!batch.length) return;
-        var sent = window.navigator.sendBeacon(ENDPOINT, new Blob([JSON.stringify({ events: batch })], { type: 'application/json' }));
-        if (!sent) return;
-        removeEvents(batch);
-      }
-    } catch (_error) {
-      // A failed beacon remains queued for a later page visit.
-    }
-  }
-
   try {
-    updateBeaconEligibility();
     enqueue('pageview', 'pageview', {});
 
     document.addEventListener('click', function (event) {
@@ -288,9 +232,9 @@
       }
     });
 
-    window.addEventListener('pagehide', flushBeacon);
+    window.addEventListener('pagehide', flush);
     document.addEventListener('visibilitychange', function () {
-      if (document.visibilityState === 'hidden') flushBeacon();
+      if (document.visibilityState === 'hidden') flush();
     });
     window.setInterval(function () { scheduleFlush(0); }, FLUSH_INTERVAL_MS);
   } catch (_error) {

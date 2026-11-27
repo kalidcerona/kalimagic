@@ -21,6 +21,16 @@
   function = "tools-gate"
 
 [[redirects]]
+  from = "/api/seminars/offer"
+  to = "/.netlify/functions/seminar-offer"
+  status = 200
+
+[[redirects]]
+  from = "/api/seminars/signup"
+  to = "/.netlify/functions/seminar-signup"
+  status = 200
+
+[[redirects]]
   from = "/tools/_check"
   to = "/.netlify/functions/tool-check"
   status = 200

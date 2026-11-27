@@ -1,0 +1,16 @@
+.policy-document main { max-width: 52rem; }
+.policy-document nav { display: flex; flex-wrap: wrap; gap: .5rem 1rem; padding: 1rem 0; border-block: 1px solid #50483e; }
+.policy-document section { scroll-margin-top: 1.5rem; }
+.policy-document td { overflow-wrap: anywhere; }
+.policy-document table { table-layout: fixed; font-size: .95rem; }
+.policy-document th:first-child { width: 22%; }
+.policy-document footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid #50483e; }
+.policy-document a:focus-visible { outline: 3px solid #edc995; outline-offset: 4px; }
+@media (max-width: 480px) {
+  .policy-document main { padding-inline: 1rem; }
+  .policy-document table { font-size: .9rem; }
+  .policy-document th, .policy-document td { padding: .65rem .3rem; }
+  .policy-document #processors table { table-layout: fixed; }
+  .policy-document #processors th:first-child { width: 4.5rem; }
+  .policy-document #processors thead th:first-child { white-space: nowrap; overflow-wrap: normal; }
+}

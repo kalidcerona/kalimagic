@@ -18,7 +18,7 @@ async function optionalViewerId(event) {
   }
 }
 
-export async function handler(event) {
+export async function handleLead(event, getAdmin = getSupabaseAdmin) {
   try {
     requireMethod(event, ['POST']);
   } catch {
@@ -36,14 +36,15 @@ export async function handler(event) {
   const now = new Date().toISOString();
 
   try {
-    const supabase = getSupabaseAdmin();
+    const supabase = getAdmin();
     const { data, error } = await supabase
       .from('leads')
       .insert({
         contact_type: lead.contactType,
         contact: lead.contact,
         source: lead.source,
-        session_id: lead.sessionId,
+        // The legacy NOT NULL column holds a fresh, lead-only value.
+        session_id: randomUUID(),
         user_id: userId,
         consent_at: now
       })
@@ -54,13 +55,13 @@ export async function handler(event) {
     try {
       await insertTrackedEvents(supabase, [{
         eventId: randomUUID(),
-        sessionId: lead.sessionId,
+        sessionId: randomUUID(),
         eventType: 'lead_submit',
         eventName: 'lead_submit',
-        page: lead.page,
-        meta: { source: lead.source },
-        occurredAt: now
-      }], userId);
+        page: '/',
+        meta: {},
+        occurredAt: now.slice(0, 13) + ':00:00.000Z'
+      }]);
     } catch (trackingError) {
       console.error('lead_tracking_failed', trackingError);
     }
@@ -70,3 +71,5 @@ export async function handler(event) {
     return json(500, { error: 'db_error' });
   }
 }
+
+export const handler = event => handleLead(event);

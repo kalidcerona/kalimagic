@@ -1,0 +1,2 @@
+export const POLICY_VERSION = '2026-11-28';
+export const EFFECTIVE_DATE = POLICY_VERSION;

@@ -54,7 +54,7 @@ test('mypage module loads profile, handles auth, tabs, and post navigation', () 
   assert.match(js, /encodeURIComponent\(id\)/);
   assert.match(js, /clickableCard\(card, item\.id\)/);
   assert.match(js, /clickableCard\(card, item\.postId\)/);
-  assert.match(js, /이미 사용 중인 닉네임이에요/);
+  assert.match(js, /이미 사용 중인 닉네임입니다/);
 });
 
 test('nickname onboarding checks nicknameSet once per session and handles duplicate nickname', () => {
@@ -65,8 +65,8 @@ test('nickname onboarding checks nicknameSet once per session and handles duplic
   assert.match(js, /nicknameSet\s*===\s*false/);
   assert.match(js, /sessionStorage/);
   assert.match(js, /nickname-onboarding-shown/);
-  assert.match(js, /커뮤니티에서 쓸 닉네임을 정해주세요/);
-  assert.match(js, /이미 사용 중인 닉네임이에요/);
+  assert.match(js, /커뮤니티에서 쓸 닉네임을 정해 주십시오/);
+  assert.match(js, /이미 사용 중인 닉네임입니다/);
   assert.match(js, /error\.code\s*===\s*'nickname_taken'/);
 });
 

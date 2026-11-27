@@ -36,7 +36,7 @@
 
     var title = el('span', 'field-modal-tag', '닉네임 설정');
     title.id = 'nickname-onboarding-title';
-    var guide = el('p', 'field-modal-quote', '커뮤니티에서 쓸 닉네임을 정해주세요');
+    var guide = el('p', 'field-modal-quote', '커뮤니티에서 쓸 닉네임을 정해 주십시오');
     var form = el('form', 'playground-comment-form');
     var input = document.createElement('input');
     input.name = 'nickname';
@@ -93,7 +93,7 @@
         window.dispatchEvent(new CustomEvent('profile:nickname-updated', { detail: data }));
         closeModal();
       } catch (error) {
-        status.textContent = error.code === 'nickname_taken' ? '이미 사용 중인 닉네임이에요' : '닉네임을 저장하지 못했습니다';
+        status.textContent = error.code === 'nickname_taken' ? '이미 사용 중인 닉네임입니다.' : '닉네임을 저장하지 못했습니다';
         status.classList.add('is-error');
         save.disabled = false;
         input.focus();

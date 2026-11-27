@@ -1,4 +1,3 @@
-import { bearerToken, requireViewer } from './_lib/auth.mjs';
 import { json, readJsonBody, requireMethod } from './_lib/http.mjs';
 import { getSupabaseAdmin } from './_lib/supabase.mjs';
 import { validateEventBatch } from './_lib/validators.mjs';
@@ -9,12 +8,12 @@ function bodyByteLength(body) {
   return new TextEncoder().encode(String(body || '')).byteLength;
 }
 
-export async function insertTrackedEvents(supabase, events, userId) {
+export async function insertTrackedEvents(supabase, events) {
   for (const event of events) {
     const { error } = await supabase.from('events').insert({
       id: event.eventId,
       session_id: event.sessionId,
-      user_id: userId,
+      user_id: null,
       event_type: event.eventType,
       event_name: event.eventName,
       page: event.page,
@@ -43,22 +42,9 @@ export async function handler(event) {
     return json(400, { error: 'invalid_payload' });
   }
 
-  const authorization = event.headers?.authorization || event.headers?.Authorization || '';
-  let userId = null;
-  if (String(authorization).trim()) {
-    const authEvent = { ...event, headers: event.headers || {} };
-    if (!bearerToken(authEvent)) return json(401, { error: 'auth_invalid' });
-    try {
-      const viewer = await requireViewer(authEvent);
-      userId = viewer.userId;
-    } catch {
-      return json(401, { error: 'auth_invalid' });
-    }
-  }
-
   try {
     const supabase = getSupabaseAdmin();
-    await insertTrackedEvents(supabase, events, userId);
+    await insertTrackedEvents(supabase, events);
     return json(202, { accepted: events.length });
   } catch {
     return json(500, { error: 'db_error' });

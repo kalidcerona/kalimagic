@@ -129,7 +129,7 @@
   }
 
   function commentLoginButtonHtml() {
-    return '<button type="button" class="playground-button" data-comment-login>로그인하고 댓글 남기기</button>';
+    return window.MagicAuth.noticeHtml + '<button type="button" class="playground-button" data-comment-login>로그인하고 댓글 남기기</button>';
   }
 
   function commentHtml(comments, viewerCanComment, viewerUserId) {

@@ -98,7 +98,8 @@ test('insertTrackedEvents ignores duplicate ids and continues inserting the batc
     ]
   }, { now: NOW });
 
-  await insertTrackedEvents(supabase, validated, null);
+  // A legacy caller supplying an account ID still produces anonymous rows.
+  await insertTrackedEvents(supabase, validated, EVENT_ID);
 
   assert.equal(inserted.length, 2);
   assert.equal(inserted[0].id, EVENT_ID);

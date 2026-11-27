@@ -9,8 +9,8 @@ import os from 'node:os';
 test('build rejects an incomplete release before deleting the previous dist', async t => {
   const root = await mkdtemp(path.join(os.tmpdir(), 'pin-preflight-'));
   t.after(() => rm(root, { recursive: true, force: true }));
-  for (const dir of ['scripts', 'zz-migration', 'netlify']) {
-    await cp(new URL(`../../${dir}`, import.meta.url), path.join(root, dir), { recursive: true });
+  for (const item of ['scripts', 'zz-migration', 'netlify', 'member-policy-config.mjs']) {
+    await cp(new URL(`../../${item}`, import.meta.url), path.join(root, item), { recursive: true });
   }
   const gameEntry = 'distribution-snapshots/magicshow/index.html';
   await mkdir(path.dirname(path.join(root, gameEntry)), { recursive: true });

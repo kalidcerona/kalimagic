@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>운영자에게 문의하기 | 칼리매직</title>
+  <link rel="stylesheet" href="/member-policy.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+  <script>
+    window.MAGIC_PLAYGROUND_CONFIG = {
+      supabaseUrl: 'https://wjyvssvoavzuaaxlvobo.supabase.co',
+      supabasePublishableKey: 'sb_publishable_FZwzcGFQ06F65Butggp6rQ_fv3zZfkq'
+    };
+  </script>
+  <script defer src="/auth.js"></script>
+  <script defer src="/contact.js"></script>
+</head>
+<body class="member-policy"><main>
+  <a href="/">칼리매직 홈</a>
+  <h1>운영자에게 문의하기</h1>
+  <p>회원가입 없이도 문의할 수 있습니다. 답장을 받으시려면 연락처를 남겨 주십시오.</p>
+  <form id="contact-form" action="/api/contact" method="post" hidden>
+    <label>문의 내용 <textarea name="message" required maxlength="1400" rows="7"></textarea></label>
+    <label>답장 받을 연락처 (선택) <input name="reply" maxlength="150"></label>
+    <label hidden>웹사이트 <input name="website" tabindex="-1" autocomplete="off"></label>
+    <p>문의 내용과 선택 연락처, 로그인한 경우 닉네임과 회원 ID를 비공개 Google 시트에 보관합니다. 답변이 완료된 날부터 1년 후 삭제합니다. Discord에는 문의 내용 없이 접수 알림만 전송합니다.</p>
+    <button type="submit">문의 보내기</button>
+
+  </form>
+  <section id="contact-recovery" hidden aria-label="이전 문의 결과 확인">
+    <p>결과를 확인하지 못한 문의가 있습니다. 새 문의를 보내기 전에 최초 문의 결과를 확인해 주십시오.</p>
+    <button id="contact-retry" type="button">이전 문의 결과 확인</button>
+    <button id="contact-resend" type="button" hidden>같은 문의 다시 보내기</button>
+  </section>
+  <p>전송을 시도하면 문의 내용과 답장 연락처를 이 탭의 세션 저장소에 임시 보관합니다. 재시도 키와 원래 계정 구분도 함께 보관하여 새로고침 후 최초 문의 결과를 확인합니다. 접수 확인 시 삭제되며 탭을 닫으면 세션 저장소가 종료됩니다. 공용 기기에서는 이용을 마친 뒤 탭을 닫아 주십시오.</p>
+  <p>비공개 문의 시트에는 재시도 키, 요청 지문, 알림 상태를 기록합니다. 요청 제한용 IP 대조값은 Apps Script 속성에 60초 유효기간으로 기록하고 다음 준비 확인 또는 신규 접수 때 만료분을 정리합니다. 원문 IP 주소는 이 기록에 저장하지 않습니다.</p>
+  <p id="contact-status" role="status">문의 접수 가능 여부를 확인하고 있습니다.</p>
+  <noscript>문의 폼을 사용하시려면 자바스크립트를 켜 주십시오. 아래 개인정보 보호책임자 연락처로도 문의하실 수 있습니다.</noscript>
+  <p>폼이 닫혀 있어도 <a href="/privacy.html#privacy-contact">개인정보 보호책임자 연락처</a>로 문의하실 수 있습니다.</p>
+  <footer><a href="/privacy.html">개인정보 처리방침</a> · <a href="/terms.html">이용약관</a></footer>
+</main></body></html>

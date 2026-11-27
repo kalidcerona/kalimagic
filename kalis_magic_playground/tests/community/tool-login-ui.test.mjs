@@ -17,6 +17,7 @@ function setup(path, response, overrides = {}) {
       this.attributes = {};
     }
     appendChild(child) { this.children.push(child); }
+    insertAdjacentHTML(position, html) { this.children.push({ textContent: html }); }
     replaceChildren() { this.children = []; }
     addEventListener(name, callback) { this.listeners[name] = callback; }
     setAttribute(name, value) { this.attributes[name] = value; }
@@ -28,6 +29,7 @@ function setup(path, response, overrides = {}) {
   const auth = {
     getSession: async () => ({ user: { email: 'test@example.com' } }),
     authHeader: async () => ({ Authorization: 'Bearer test' }),
+    noticeHtml: "가입 안내",
     login: async () => {},
     logout: async () => {},
     ...overrides
@@ -59,7 +61,8 @@ test('all distribution destinations are named in the login prompt', async () => 
     const ui = setup(path, null, { getSession: async () => null });
     await ui.flush();
     assert.match(ui.text(), new RegExp(name));
-    assert.ok(ui.button('구글로 로그인'));
+    assert.ok(ui.button('구글로 계속하기'));
+    assert.match(ui.text(), /가입 안내 구글로 계속하기/);
   }
 });
 

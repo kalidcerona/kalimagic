@@ -111,13 +111,11 @@ export function validateLeadPayload(input) {
   const contactType = clean(input.contactType);
   const contact = clean(input.contact);
   const source = clean(input.source);
-  const sessionId = clean(input.sessionId);
 
   if (!input.consent) throw new Error('lead consent is required');
   if (!LEAD_CONTACT_TYPES.has(contactType)) throw new Error('invalid lead contact type');
   if (contact.length < 2 || contact.length > 200) throw new Error('invalid lead contact');
   if (source.length < 1 || source.length > 80) throw new Error('invalid lead source');
-  if (!validateUuid(sessionId)) throw new Error('invalid lead session id');
 
   let page = '/';
   if (clean(input.page)) {
@@ -129,7 +127,7 @@ export function validateLeadPayload(input) {
     if (page.length > 300) throw new Error('invalid lead page');
   }
 
-  return { contactType, contact, source, sessionId, page };
+  return { contactType, contact, source, page };
 }
 
 function utf8Size(value) {

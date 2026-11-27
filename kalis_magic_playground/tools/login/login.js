@@ -30,6 +30,7 @@
       button.type = 'button';
       button.textContent = spec.label;
       button.addEventListener('click', spec.onClick);
+      if (spec.onClick === login) panel.insertAdjacentHTML('beforeend', window.MagicAuth.noticeHtml);
       panel.appendChild(button);
     });
     panel.setAttribute('aria-busy', 'false');
@@ -42,8 +43,8 @@
 
   function showLogin() {
     signedIn = false;
-    render(appName, appName + ' 이용 권한을 확인하려면 구글 계정으로 로그인해주세요.', [
-      { label: '구글로 로그인', onClick: login }
+    render(appName, '구글 계정으로 이용 권한을 확인합니다.', [
+      { label: '구글로 계속하기', onClick: login }
     ]);
   }
 
@@ -57,21 +58,21 @@
   function showPending(email) {
     var friendApp = tool === 'unlock' || tool === 'stopwatch-uni' || tool === 'aletheia' || tool === 'usotsuki' || tool === 'tobira' || tool === 'spinner' || tool === 'arosaegida' || tool === 'pimax' || tool === 'choice' || tool === 'magicshow' || tool === 'gwayubulgeup' || tool === 'memdeck' || tool === 'bell' || tool === 'slot';
     var lines = friendApp
-      ? [appName + ' 이용 신청이 접수되었습니다.', '칼리형이 이 구글 계정에 권한을 주면 사용할 수 있습니다.']
+      ? [appName + ' 이용 신청이 접수되었습니다.', '운영자가 이 구글 계정에 권한을 주면 사용할 수 있습니다.']
       : [appName + ' 이용 권한을 확인 중입니다. 구매가 확인되면 사용할 수 있습니다.'];
     if (email) lines.push({ email: email });
-    lines.push(friendApp ? '승인을 받은 뒤 다시 확인해주세요.' : '구매가 확인된 뒤 다시 확인해주세요.');
+    lines.push(friendApp ? '승인을 받은 뒤 다시 확인해 주십시오.' : '구매가 확인된 뒤 다시 확인해 주십시오.');
     render('이용 신청 확인 중', lines, actions());
   }
 
   function showDenied(email) {
-    var lines = [appName + ' 이용 권한이 이 계정에 없습니다. 칼리형에게 문의해주세요.'];
+    var lines = [appName + ' 이용 권한이 이 계정에 없습니다. 운영자에게 문의해 주십시오.'];
     if (email) lines.push({ email: email });
     render('이 도구는 아직 이용할 수 없습니다', lines, actions());
   }
 
   function showError() {
-    render(appName + ' 연결에 실패했습니다', '네트워크 상태를 확인하고 다시 시도해주세요.', [
+    render(appName + ' 연결에 실패했습니다', '네트워크 상태를 확인하고 다시 시도해 주십시오.', [
       { label: '다시 시도', onClick: start },
       ...(signedIn ? [{ label: '다른 계정으로 로그인', onClick: changeAccount }] : [])
     ]);
@@ -82,7 +83,7 @@
     busy = true;
     showLoading('구글 로그인으로 이동하는 중입니다.');
     try {
-      await window.MagicAuth.login();
+      if (await window.MagicAuth.login() === false) showLogin();
     } catch (error) {
       showError();
     } finally {

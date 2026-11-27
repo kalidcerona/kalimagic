@@ -1,0 +1,57 @@
+.signup-notice, .signup-dialog, .member-policy {
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  text-wrap: pretty;
+  line-height: 1.7;
+}
+.signup-notice {
+  display: grid;
+  gap: .5rem;
+  max-width: 48ch;
+  margin: 1rem 0;
+  text-align: left;
+  white-space: normal;
+  color: #ede6dc;
+  font-size: .95rem;
+}
+.signup-notice a, .signup-dialog a, .member-policy a { color: #edc995; text-underline-offset: .2em; }
+.phm-feed-auth:has(.signup-notice) { display: block; white-space: normal; min-width: 0; }
+.phm-feed-header:has(.signup-notice), .phm-feed-actions:has(.signup-notice) { align-items: start; flex-direction: column; }
+.signup-dialog {
+  box-sizing: border-box;
+  width: min(32rem, calc(100% - 2rem));
+  max-height: 90dvh;
+  margin: auto;
+  padding: clamp(1.25rem, 4vw, 2rem);
+  background: #201c19;
+  color: #faf5ee;
+  border: 1px solid #776958;
+  border-radius: 16px;
+  overscroll-behavior: contain;
+}
+.signup-dialog::backdrop { background: rgb(0 0 0 / 75%); overflow: hidden; overscroll-behavior: contain; }
+.signup-dialog p { margin: .85rem 0; }
+.signup-dialog form { display: grid; gap: .6rem; }
+.signup-dialog button { padding: .85rem; margin: 0; border-radius: .5rem; font: inherit; cursor: pointer; }
+.member-policy { margin: 0; background: #171513; color: #f4eee6; font-family: system-ui, sans-serif; }
+.member-policy main { max-width: 42rem; margin: auto; padding: 2rem 1.25rem 4rem; }
+.member-policy h1 { margin-bottom: 0; }
+.member-policy h2 { font-size: 1.25rem; margin: 2rem 0 .4rem; }
+.member-policy p { margin: .4rem 0 1rem; }
+.member-policy table { width: 100%; border-collapse: collapse; }
+.member-policy caption { text-align: left; margin-bottom: .6rem; }
+.member-policy th, .member-policy td { padding: .75rem .4rem; border-bottom: 1px solid #50483e; vertical-align: top; text-align: left; }
+.member-policy th:first-child { width: 5em; }
+#contact-form label:not([hidden]) { display: block; margin: 1.25rem 0; }
+#contact-form input, #contact-form textarea { display: block; box-sizing: border-box; width: 100%; margin-top: .4rem; padding: .75rem; font: inherit; background: #24201d; color: inherit; border: 1px solid #928575; border-radius: .4rem; }
+#contact-form button, #contact-recovery button { padding: .75rem 1.25rem; border: 0; border-radius: .4rem; background: #edc995; color: #241911; font: inherit; cursor: pointer; }
+
+/* Shared sign-in controls and contact accessibility. */
+.signup-dialog .signup-notice { color: inherit; }
+.signup-dialog .signup-age { display: flex; align-items: center; gap: .65rem; min-height: 48px; }
+.signup-age input { width: 1.3rem; height: 1.3rem; flex: 0 0 auto; }
+.signup-dialog button { min-height: 48px; white-space: normal; overflow-wrap: anywhere; }
+.signup-dialog :focus-visible, #contact-form :focus-visible, #contact-recovery :focus-visible { outline: 3px solid #edc995; outline-offset: 3px; }
+.signup-dialog button:focus-visible { outline-color: #fff; }
+.signup-dialog h2 { font-size: 1.4rem; line-height: 1.4; }
+#contact-form button, #contact-recovery button { min-height: 48px; }

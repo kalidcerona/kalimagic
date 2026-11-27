@@ -1,3 +1,4 @@
+import { EFFECTIVE_DATE as policyEffectiveDate } from '../member-policy-config.mjs';
 import { publishPersonalBackups } from './zz-backup-build.mjs';
 import { verifyAppRelease } from './app-release-pins.mjs';
 import { readFileSync } from 'node:fs';
@@ -14,6 +15,16 @@ const DIST = path.join(ROOT, 'dist');
 
 export const PUBLIC_FILES = [
   'about.html',
+  'privacy.html',
+  'terms.html',
+  'member-policy.css',
+  'member-policy.js',
+  'member-policy-config.mjs',
+  'policy-pages.css',
+  'policies/previous/privacy-before-2026-11-30.html',
+  'policies/previous/terms-before-2026-11-30.html',
+  'contact.html',
+  'contact.js',
   'archive.css',
   'badges.js',
   'collapsible.js',
@@ -36,6 +47,13 @@ export const PUBLIC_FILES = [
   'admin.html',
   'admin-community.html',
   'admin-session.js',
+  'seminar-signup/index.html',
+  'seminar-signup/pricing.mjs',
+  'seminar-signup/form.mjs',
+  'seminar-signup/event-config.mjs',
+  'seminar-signup/cupsnballs.html',
+  'seminar-signup/cups-form.mjs',
+  'seminar-signup/styles.css',
   'admin-app-model.js',
   'admin-apps.css',
   'reviews.html',
@@ -947,11 +965,26 @@ export async function verifyAppDisplayPolicy(directory = DIST, routes = [
   }
 }
 
+
+async function publishPolicyDates() {
+  const date = new Intl.DateTimeFormat('ko-KR', {
+    year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC'
+  }).format(new Date(policyEffectiveDate));
+  const marker = '<time data-policy-date></time>';
+  for (const file of ['privacy.html', 'terms.html']) {
+    const target = path.join(DIST, file);
+    const template = await readFile(target, 'utf8');
+    if (!template.includes(marker)) throw new Error('Missing policy date marker: ' + file);
+    await writeFile(target, template.replace(marker, `<time datetime="${policyEffectiveDate}">${date}</time>`));
+  }
+}
+
 export async function buildPublic() {
   await verifyAppRelease({ root: ROOT, requiredRoots: APP_RELEASE_ROOTS });
   await rm(DIST, { recursive: true, force: true });
   await mkdir(DIST, { recursive: true });
   for (const file of PUBLIC_FILES) await copyIfExists(file);
+  await publishPolicyDates();
   for (const dir of PUBLIC_DIRS) await copyIfExists(dir);
   await buildDistributionApps();
   await publishPersonalBackups(DIST, PUBLIC_DIRS.filter(dir => /^zz\d+$/.test(dir)));

@@ -163,13 +163,14 @@
     clear(tabsEl);
     clear(listEl);
     var box = el('article', 'playground-empty');
-    box.appendChild(el('h2', '', '로그인이 필요해요'));
+    box.appendChild(el('h2', '', '로그인이 필요합니다'));
     box.appendChild(el('p', '', '내 활동을 보려면 Google 로그인이 필요합니다.'));
-    var button = el('button', 'playground-button', 'Google로 로그인');
+    var button = el('button', 'playground-button', '구글로 계속하기');
     button.type = 'button';
     button.addEventListener('click', function () {
       window.MagicAuth.login();
     });
+    box.insertAdjacentHTML('beforeend', window.MagicAuth.noticeHtml);
     box.appendChild(button);
     listEl.appendChild(box);
   }
@@ -210,7 +211,7 @@
         state.profile = Object.assign({}, state.profile || {}, data);
         renderProfile();
       } catch (error) {
-        status.textContent = error.code === 'nickname_taken' ? '이미 사용 중인 닉네임이에요' : '닉네임을 저장하지 못했습니다';
+        status.textContent = error.code === 'nickname_taken' ? '이미 사용 중인 닉네임입니다' : '닉네임을 저장하지 못했습니다';
         status.classList.add('is-error');
         save.disabled = false;
         input.focus();
@@ -250,12 +251,12 @@
     var card = el('article', 'admin-card');
     var status = state.mmbsRequest && state.mmbsRequest.status;
     if (status === 'done') {
-      card.appendChild(el('p', '', '안내 완료 — 카카오톡을 확인해주세요'));
+      card.appendChild(el('p', '', '안내 완료 · 카카오톡을 확인해 주십시오'));
       var courseLink = el('a', 'playground-button', '강의 보러 가기');
       courseLink.href = 'mmbs.html';
       card.appendChild(courseLink);
     } else if (status === 'requested') {
-      var requestedButton = el('button', 'playground-button playground-button--ghost', '신청 접수됨 — 확인 중입니다');
+      var requestedButton = el('button', 'playground-button playground-button--ghost', '신청 접수됨 · 확인 중입니다');
       requestedButton.type = 'button';
       requestedButton.disabled = true;
       card.appendChild(requestedButton);
@@ -269,10 +270,10 @@
         try {
           state.mmbsRequest = await fetchJson('/.netlify/functions/mmbs-request', { method: 'POST' });
           clear(card);
-          card.appendChild(el('p', 'playground-form-status', '신청이 접수되었습니다. 확인 후 카카오톡으로 안내드릴게요.'));
+          card.appendChild(el('p', 'playground-form-status', '신청이 접수되었습니다. 확인 후 카카오톡으로 안내드립니다.'));
         } catch (error) {
           clear(card);
-          card.appendChild(el('p', 'playground-form-status is-error', '신청 기능을 준비 중입니다. 잠시 후 다시 시도해주세요.'));
+          card.appendChild(el('p', 'playground-form-status is-error', '신청 기능을 준비 중입니다. 잠시 후 다시 시도해 주십시오.'));
         }
       });
       card.appendChild(requestButton);
@@ -317,7 +318,7 @@
         }
         await navigator.clipboard.writeText(link);
       } catch (error) {
-        window.prompt('아래 링크를 복사해주세요.', link);
+        window.prompt('아래 링크를 복사해 주십시오.', link);
       }
       copyButton.textContent = '링크를 복사했어요';
     });
@@ -356,7 +357,7 @@
       clear(mmbsEl);
       mmbsEl.appendChild(el('h2', 'mypage-section-title', '입문 강의 (구매자 전용)'));
       var card = el('article', 'admin-card');
-      card.appendChild(el('p', 'playground-form-status is-error', '신청 기능을 준비 중입니다. 잠시 후 다시 시도해주세요.'));
+      card.appendChild(el('p', 'playground-form-status is-error', '신청 기능을 준비 중입니다. 잠시 후 다시 시도해 주십시오.'));
       mmbsEl.appendChild(card);
     }
   }
@@ -795,7 +796,7 @@
       clear(listEl);
       var box = el('article', 'playground-empty');
       box.appendChild(el('h2', '', '활동을 불러오지 못했어요'));
-      box.appendChild(el('p', '', error.message || '잠시 후 다시 시도해주세요.'));
+      box.appendChild(el('p', '', error.message || '잠시 후 다시 시도해 주십시오.'));
       listEl.appendChild(box);
     }
   }

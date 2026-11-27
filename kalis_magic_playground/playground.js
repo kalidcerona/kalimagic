@@ -4,7 +4,7 @@
     if (!slot || !window.MagicAuth) return;
     const session = await window.MagicAuth.getSession();
     if (!session) {
-      slot.innerHTML = '<button type="button" class="phm-auth-button" data-login-button>구글 로그인</button>';
+      slot.innerHTML = window.MagicAuth.noticeHtml + '<button type="button" class="phm-auth-button" data-login-button>구글로 계속하기</button>';
       slot.querySelector('[data-login-button]').addEventListener('click', () => window.MagicAuth.login());
       return;
     }

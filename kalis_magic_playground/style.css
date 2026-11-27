@@ -3582,3 +3582,6 @@ button.mypage-badge-tile:hover,
   @keyframes strikeDraw{ from{ background-size:0% 1.5px; } to{ background-size:100% 1.5px; } }
   .price-strike.is-drawing{ text-decoration:none !important; background:linear-gradient(currentColor, currentColor) no-repeat 0 56% / 0% 1.5px; animation:strikeDraw .55s cubic-bezier(.2,.7,.2,1) .15s forwards; }
 }
+
+.member-mobile-footer { padding: 1rem 1rem 6rem; text-align: center; background: #1a0f0a; color: #e6d4c4; }
+.member-mobile-footer a { display: inline-block; padding: .65rem .3rem; color: inherit; text-decoration: underline; }

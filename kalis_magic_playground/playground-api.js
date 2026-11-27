@@ -21,8 +21,7 @@
 
   async function authHeaders() {
     if (window.MagicAuth && window.MagicAuth.authHeader) {
-      const headers = await window.MagicAuth.authHeader();
-      if (headers && headers.Authorization) return headers;
+      return window.MagicAuth.authHeader();
     }
     const token = await getAccessToken();
     return token ? { Authorization: `Bearer ${token}` } : {};

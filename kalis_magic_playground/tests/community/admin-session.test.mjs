@@ -6,11 +6,12 @@ import { readFileSync } from 'node:fs';
 const source = readFileSync(new URL('../../admin-session.js', import.meta.url), 'utf8');
 function harness(auth) {
   const node = () => ({ children: [], appendChild(child) { this.children.push(child); },
+    insertAdjacentHTML(position, html) { this.children.push({ textContent: html }); },
     append(...children) { this.children.push(...children); }, setAttribute() {},
     addEventListener(type, fn) { this[type] = fn; } });
   const panel = node();
   const context = { document: { querySelector: () => panel }, window: {
-    MagicAuth: auth,
+    MagicAuth: { noticeHtml: "가입 안내", ...auth },
     PgUtil: { clear: n => { n.children = []; }, el: (tag, cls, text) => Object.assign(node(), {tag, textContent:text}) }
   } };
   vm.runInNewContext(source, context);
@@ -20,7 +21,7 @@ function harness(auth) {
 test('admin session keeps protected page loaders closed for signed-out viewers', async () => {
   const { ready, panel } = harness({ getSession: async () => null, login: async () => {} });
   assert.equal(await ready, false);
-  assert.ok(panel.children.some(n => n.tag === 'button' && n.textContent === 'Google로 로그인'));
+  assert.ok(panel.children.some(n => n.tag === 'button' && n.textContent === '구글로 계속하기'));
 });
 
 test('admin session supplies account display before protected loaders run', async () => {
@@ -43,4 +44,12 @@ test('failed Google redirect restores the login control', async () => {
   await login.click();
   assert.equal(login.disabled, false);
   assert.match(panel.children.at(-1).textContent, /다시 시도/);
+});
+
+test('declining sign-up restores admin login without opening protected loaders', async () => {
+  const {ready,panel} = harness({getSession:async()=>null,login:async()=>false});
+  assert.equal(await ready,false);
+  const login = panel.children.find(n=>n.tag==='button');
+  await login.click();
+  assert.equal(login.disabled,false);
 });
