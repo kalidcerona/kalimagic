@@ -487,6 +487,52 @@ test('permission POST updates one access row locally and a reopened tab does not
     assert.equal(checked.some((node) => node.value === 'bell'), false);
     assert.match(tools.textContent, /새로 보유하거나/);
 
+    // Revoke from the grant workspace must repaint holdings and available apps.
+    context.PgUtil.confirmAction = async () => true;
+    click(tools.querySelectorAll('button').find((node) => node.textContent === '권한 회수'));
+    await flush();
+    assert.equal(calls.at(-1).method, 'DELETE');
+    assert.match(calls.at(-1).url, /\?v=2&id=/);
+    calls.at(-1).resolve({ ok: true });
+    await flush();
+    assert.equal(tools.querySelectorAll('.admin-member-app-row').length, 0);
+    assert.equal(tools.querySelectorAll('input').some((node) => node.name === 'tools' && node.value === 'bell'), true);
+    assert.match(tools.querySelector('[data-grant-result]').textContent, /벨.*처리 완료/);
+
+    // A changed legacy selector requires the authoritative split-row projection.
+    const legacy = { id: 'shared', email: 'legacy@example.test', lifetime: false, status: 'pending' };
+    const paired = { pending: [{ ...legacy, tool: 'calc' }, { ...legacy, tool: 'stopwatch' }], approved: [], availability: payload.availability };
+    click(tools.querySelectorAll('button').find((node) => node.textContent.includes('신청 보기')));
+    await flush();
+    assert.match(calls.at(-1).url, /\?v=2$/);
+    calls.at(-1).resolve(paired);
+    await flush();
+    let requestRow = tools.querySelectorAll('.admin-pending-row')[0];
+    let selector = requestRow.querySelector('select');
+    selector.value = 'all';
+    selector.listeners.change.forEach((fn) => fn());
+    const confirmations = [];
+    context.PgUtil.confirmAction = async (message) => { confirmations.push(message); return false; };
+    const beforeCancel = calls.length;
+    await click(requestRow.querySelectorAll('button').find((node) => node.textContent === '신청대로 승인'));
+    assert.equal(calls.length, beforeCancel);
+    assert.match(confirmations[0], /legacy@example.test.*히츠젠.*카이로스.*스톱워치.*3개월/s);
+    selector.value = 'stopwatch';
+    selector.listeners.change.forEach((fn) => fn());
+    click(requestRow.querySelectorAll('button').find((node) => node.textContent === '신청대로 승인'));
+    await flush();
+    assert.equal(calls.at(-1).method, 'POST');
+    calls.at(-1).resolve({ ok: true });
+    await flush();
+    assert.equal(calls.at(-1).method, 'GET');
+    const projected = { ...paired, pending: [{ ...legacy, tool: 'calc' }], approved: [{ ...legacy, tool: 'stopwatch', status: 'approved' }] };
+    calls.at(-1).resolve(projected);
+    await flush();
+    assert.equal(tools.querySelectorAll('.admin-pending-row').length, 1);
+    assert.match(tools.querySelector('.admin-pending-row .admin-tool-badge').textContent, /히츠젠/);
+    assert.equal(confirmations.length, 1, 'single-app approval does not confirm');
+
+
   } finally {
     process.off('unhandledRejection', onRejection);
   }

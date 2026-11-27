@@ -22,6 +22,19 @@ export function legacyAccessForTool(row, tool) {
   return grant ? { ...row, ...grant, tool } : null;
 }
 
+// Old readers must never infer approval for a pending sibling. This projection
+// is intentionally incomplete for mixed states/durations; JSON remains canonical.
+export function legacyProjection(grants) {
+  const keys = Object.keys(grants);
+  const approved = keys.filter((key) => grants[key].status === 'approved');
+  const represented = approved.length ? approved : keys;
+  return {
+    tool: represented.length === 2 ? 'all' : represented[0] || null,
+    status: approved.length ? 'approved' : 'pending',
+    lifetime: represented.length > 0 && represented.every((key) => grants[key].lifetime === true)
+  };
+}
+
 function compareSnapshot(query, row) {
   query = query.eq('id', row.id).eq('status', row.status).eq('lifetime', row.lifetime === true);
   query = row.tool == null ? query.is('tool', null) : query.eq('tool', row.tool);
@@ -71,10 +84,7 @@ export async function mutateLegacyAccess(supabase, options) {
     } else {
       const patch = {
         per_app_access: grants,
-        tool: keys.length === 2 ? 'all' : keys[0],
-        status: keys.some((key) => grants[key].status === 'approved') ? 'approved' : 'pending',
-        // Conservative compatibility summary; new readers use individual values.
-        lifetime: keys.every((key) => grants[key].lifetime === true),
+        ...legacyProjection(grants),
         approved_at: new Date().toISOString(), approved_by: viewerId || row?.approved_by || null
       };
       if (action === 'request') {

@@ -207,7 +207,7 @@ test('deleting without a tool keeps the legacy member-management path', async ()
   const supabase = {
     from(table) {
       assert.equal(table, 'tool_access');
-      return { delete() { return this; }, eq() { return this; }, select: async () => ({ data: [{ id: approved.id }], error: null }) };
+      return { delete() { return this; }, eq() { return this; }, is(key, value) { assert.equal(key, 'tool'); assert.equal(value, null); return this; }, select: async () => ({ data: [{ id: approved.id }], error: null }) };
     }
   };
   const result = response(await adminTools.deleteToolAccess({ queryStringParameters: {

@@ -9,7 +9,7 @@
   var el = window.PgUtil.el;
   var clear = window.PgUtil.clear;
   var fetchJson = window.PgUtil.fetchJson;
-  var endpoint = '/.netlify/functions/admin-tools';
+  var endpoint = '/.netlify/functions/admin-tools?v=2';
   var state = { data: null, members: { pending: [], approved: [] }, tab: 'grant', batch: false, draftTouched: false, requestDrafts: new Map(), draft: { email: '', tools: [], note: '', lifetime: false }, query: '', tool: '*', loadError: '', selected: new Set(), pendingTools: new Map(), batchTools: new Set(), batchLifetime: false, busy: false };
   var permissionRefreshEpoch = 0;
   var MAX_BATCH_MEMBERS = 25;
@@ -53,6 +53,7 @@
       option.selected = entry.value === selected;
       select.appendChild(option);
     });
+    select.value = selected;
     return select;
   }
 
@@ -178,6 +179,7 @@
     state.members.pending = model.groupMembers(state.data.pending);
     state.members.approved = model.groupMembers(state.data.approved);
     updateAccessCounts();
+    if (state.tab === 'grant') { render(); return; }
     var member = (state.members[state.tab] || []).find(function (entry) {
       return accessEmailKey(entry.email) === accessEmailKey(email);
     });
@@ -194,6 +196,8 @@
   function applyLocalPermissionRow(change, control) {
     if (!state.data || !change || !change.item) return false;
     if (change.action === 'approve') {
+      // A changed selection can affect sibling rows; reload the authoritative projection.
+      if (change.tool !== change.item.tool) return false;
       var current = state.data.pending.find(function (row) { return row.id === change.item.id && row.tool === change.item.tool; });
       if (!current) return false;
       state.data.pending = state.data.pending.filter(function (row) { return !(row.id === change.item.id && row.tool === change.item.tool); });
@@ -240,18 +244,23 @@
       return;
     }
 
-    if (result && result.localRow && applyLocalPermissionRow(result.localRow, control)) {
-      var feedback = root.querySelector('[data-access-list]');
-      if (feedback) {
-        var message = el('p', 'admin-action-status is-success', result.localRow.item.email + ' · ' + adminToolLabel(result.localRow.tool || result.localRow.item.tool) + ' 처리 완료');
-        message.setAttribute('role', 'status');
-        if (feedback.insertBefore) feedback.insertBefore(message, feedback.children[resultIndex] || null);
-        else feedback.appendChild(message);
+    var localRow = result && result.localRow;
+    var applied = localRow && applyLocalPermissionRow(localRow, control);
+    var updated = applied || await refresh(true);
+    if (updated && localRow) {
+      var list = root.querySelector('[data-access-list]');
+      var message = localRow.item.email + ' · ' + adminToolLabel(localRow.tool || localRow.item.tool) + ' 처리 완료';
+      if (list) {
+        var done = el('p', 'admin-action-status is-success', message);
+        done.setAttribute('role', 'status');
+        if (list.insertBefore) list.insertBefore(done, list.children[resultIndex] || null);
+        else list.appendChild(done);
+      } else {
+        var grantResult = root.querySelector('[data-grant-result]');
+        if (grantResult) setStatus(grantResult, message, false);
       }
       return;
     }
-
-    var updated = await refresh(true);
     if (updated && resultKey) {
       Array.prototype.forEach.call(root.querySelectorAll('[data-row-result]'), function (node) {
         if (node.getAttribute('data-row-result') === resultKey) setStatus(node, '평생 권한으로 변경했습니다.', false);
@@ -661,17 +670,27 @@
     var status = el('p', 'admin-action-status');
     status.setAttribute('role', 'status');
     var approve = button('신청대로 승인', 'admin-button admin-button--gold');
-    approve.addEventListener('click', function () {
+    approve.addEventListener('click', async function () {
+      if (state.busy || approve.disabled) return;
+      var selectedTool = tool.value;
+      var selectedLifetime = lifetime.input.checked;
+      var selectedNote = note.value.trim();
+      if (selectedTool === 'all') {
+        approve.disabled = true;
+        var confirmed = await window.PgUtil.confirmAction((item.email || '이 계정') + '\n' + adminToolLabel('all') + '\n기간: ' + (selectedLifetime ? '평생' : '3개월') + '\n두 앱을 승인할까요?', '두 앱 승인');
+        approve.disabled = false;
+        if (!confirmed) return;
+      }
       runMutation(status, approve, '권한을 승인하고 있습니다.', async function () {
-        await fetchJson(endpoint, { method: 'POST', body: JSON.stringify({ action: 'approve', id: item.id, tool: tool.value, lifetime: lifetime.input.checked, note: note.value.trim() }) });
-        return { localRow: { action: 'approve', item: item, tool: tool.value, lifetime: lifetime.input.checked, note: note.value.trim() } };
+        await fetchJson(endpoint, { method: 'POST', body: JSON.stringify({ action: 'approve', id: item.id, tool: selectedTool, lifetime: selectedLifetime, note: selectedNote }) });
+        return { localRow: { action: 'approve', item: item, tool: selectedTool, lifetime: selectedLifetime, note: selectedNote } };
       });
     });
     var reject = button('요청 삭제', 'admin-button admin-button--quiet');
     reject.addEventListener('click', async function () {
       if (!await window.PgUtil.confirmAction((item.email || '이 계정') + '의 ' + adminToolLabel(item.tool) + ' 권한 요청을 삭제할까요?', '요청 삭제')) return;
       runMutation(status, reject, '요청을 삭제하고 있습니다.', async function () {
-        await fetchJson(endpoint + '?id=' + encodeURIComponent(item.id) + '&tool=' + encodeURIComponent(item.tool || ''), { method: 'DELETE' });
+        await fetchJson(endpoint + '&id=' + encodeURIComponent(item.id) + '&tool=' + encodeURIComponent(item.tool || ''), { method: 'DELETE' });
         return { localRow: { action: 'reject', item: item } };
       });
     });
@@ -720,7 +739,7 @@
     revoke.addEventListener('click', async function () {
       if (!await window.PgUtil.confirmAction((item.email || '이 계정') + '의 ' + adminToolLabel(item.tool) + ' · ' + (item.lifetime ? '평생' : '3개월') + ' 권한을 회수할까요?', '권한 회수')) return;
       runMutation(status, revoke, '권한을 회수하고 있습니다.', async function () {
-        await fetchJson(endpoint + '?id=' + encodeURIComponent(item.id) + '&tool=' + encodeURIComponent(item.tool || ''), { method: 'DELETE' });
+        await fetchJson(endpoint + '&id=' + encodeURIComponent(item.id) + '&tool=' + encodeURIComponent(item.tool || ''), { method: 'DELETE' });
         return { localRow: { action: 'revoke', item: item } };
       });
     });

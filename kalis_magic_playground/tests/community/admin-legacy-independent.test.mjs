@@ -123,7 +123,7 @@ test('friend lifetime conversion requires an approved matching app', async () =>
 
 test('migration is additive and preserves legacy rows and indexes', () => {
   const sql = readFileSync(new URL('../../supabase/migrations/20261127_tool_access_per_app.sql', import.meta.url), 'utf8');
-  assert.match(sql, /add column if not exists per_app_access jsonb/);
+  assert.match(sql, /add column per_app_access jsonb/);
   assert.doesNotMatch(sql, /\b(drop|delete|update)\b/i);
 });
 
@@ -160,6 +160,17 @@ test('cookie checks honor selected app in an old all cookie without clearing its
       assert.equal(JSON.parse(response.body).ok, tool === 'stopwatch');
       if (tool === 'calc') assert.match(response.headers['Set-Cookie'], /Max-Age=0/);
     }
+    const calc = await signGateCookie(email, 'calc', 'synthetic-secret');
+    const stopwatch = await signGateCookie(email, 'stopwatch', 'synthetic-secret');
+    const unscoped = async (cookie) => JSON.parse((await handler({ httpMethod: 'GET', headers: { cookie } })).body);
+    assert.deepEqual(await unscoped('kali_stopwatch_gate=' + stopwatch), { ok: true });
+    assert.deepEqual(await unscoped('kali_calc_gate=' + calc), { ok: false, reason: 'revoked' });
+    assert.deepEqual(await unscoped('kali_calc_gate=' + calc + '; kali_stopwatch_gate=' + stopwatch), { ok: true });
+    row.per_app_access = { calc: { status: 'approved', lifetime: false } };
+    assert.deepEqual(await unscoped('kali_calc_gate=' + calc), { ok: true });
+    const wrongTool = await handler({ httpMethod: 'GET', queryStringParameters: { tool: 'stopwatch' },
+      headers: { cookie: 'kali_calc_gate=' + calc } });
+    assert.deepEqual(JSON.parse(wrongTool.body), { ok: false, reason: 'invalid' });
   } finally {
     globalThis.fetch = originalFetch;
     for (const name of names) { if (original[name] === undefined) delete process.env[name]; else process.env[name] = original[name]; }

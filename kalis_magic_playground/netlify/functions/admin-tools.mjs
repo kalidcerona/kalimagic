@@ -71,14 +71,19 @@ async function readAccessTable(supabase, table) {
   }
 }
 
-export async function listToolAccess(supabase) {
+export async function listToolAccess(supabase, version = 2) {
   const [legacy, friendApps] = await Promise.all([
     readAccessTable(supabase, 'tool_access'),
     readAccessTable(supabase, 'friend_app_access')
   ]);
   if (!legacy.available && !friendApps.available) return json(500, { error: 'db_error' });
 
-  const rows = [...legacy.rows.flatMap(expandLegacyAccess), ...friendApps.rows].map(shapeToolAccess);
+  const legacyRows = legacy.rows.flatMap(expandLegacyAccess).map((row) => ({
+    ...row,
+    // v1 clients remove rows by ID alone; app-specific IDs preserve their sibling.
+    id: version === 2 || !row.tool ? row.id : `${row.id}:${row.tool}`
+  }));
+  const rows = [...legacyRows, ...friendApps.rows].map(shapeToolAccess);
   const pending = rows
     .filter((row) => row.status !== 'approved')
     .sort((a, b) => String(a.requestedAt || '').localeCompare(String(b.requestedAt || '')));
@@ -467,6 +472,9 @@ export async function deleteToolAccess(event, supabase) {
       .delete()
       .eq('id', id);
     if (FRIEND_APP_TOOLS.has(tool)) query = query.eq('tool', tool);
+    // A no-tool rejection identifies an unassigned request. Another admin may
+    // have granted it since the old tab or compatibility adapter read the row.
+    if (!tool) query = query.is('tool', null).eq('status', 'pending');
     result = await query.select('id');
   } catch (error) {
     return mutationDbError(error, tool);
@@ -476,6 +484,37 @@ export async function deleteToolAccess(event, supabase) {
   if (!data || data.length === 0) return json(404, { error: 'not_found' });
 
   return json(200, { ok: true });
+}
+
+// Adapt old browser tabs without allowing their local row-ID updates to hide siblings.
+export async function adaptLegacyAdminEvent(event, supabase) {
+  const version = event.queryStringParameters?.v;
+  if (version && !['1', '2'].includes(version)) return { error: json(400, { error: 'unsupported_api_version' }) };
+  if (version === '2' || !['POST', 'DELETE'].includes(event.httpMethod)) return { event };
+  let payload;
+  try { payload = event.httpMethod === 'POST' ? readJsonBody(event) : { ...event.queryStringParameters }; }
+  catch { return { event }; }
+  if (event.httpMethod === 'POST' && !['approve', 'lifetime'].includes(payload?.action)) return { event };
+  const id = clean(payload?.id);
+  const tool = clean(payload?.tool);
+  const scoped = /^([0-9a-f-]{36}):(calc|stopwatch)$/i.exec(id);
+  const conflict = () => ({ error: json(409, { error: 'admin_refresh_required', message: '앱별 권한이 변경되었습니다. 관리자 화면을 새로고침한 뒤 다시 처리해 주세요.' }) });
+  if (scoped) {
+    if (!validateUuid(scoped[1]) || (tool && tool !== scoped[2])) return conflict();
+    payload.id = scoped[1];
+    payload.tool = scoped[2];
+  } else if (validateUuid(id) && !FRIEND_APP_TOOLS.has(tool)) {
+    // A pre-release tab may still hold a raw ID. A single unchanged app is safe;
+    // split rows and cross-app selections require a fresh versioned listing.
+    const { data, error } = await supabase.from('tool_access').select('*').eq('id', id).maybeSingle();
+    if (error) return { error: json(500, { error: 'db_error' }) };
+    const apps = data ? expandLegacyAccess(data) : [];
+    if (apps.length > 1 || (apps.length === 1 && apps[0].tool && tool && apps[0].tool !== tool)) return conflict();
+    if (apps.length === 1 && !tool) payload.tool = apps[0].tool;
+  }
+  return { event: event.httpMethod === 'POST'
+    ? { ...event, body: JSON.stringify(payload) }
+    : { ...event, queryStringParameters: payload } };
 }
 
 export async function handler(event) {
@@ -491,7 +530,10 @@ export async function handler(event) {
   }
 
   const supabase = getSupabaseAdmin();
-  if (event.httpMethod === 'GET') return listToolAccess(supabase);
+  const adapted = await adaptLegacyAdminEvent(event, supabase);
+  if (adapted.error) return adapted.error;
+  event = adapted.event;
+  if (event.httpMethod === 'GET') return listToolAccess(supabase, event.queryStringParameters?.v === '2' ? 2 : 1);
   if (event.httpMethod === 'POST') return postToolAccess(event, viewer, supabase);
   return deleteToolAccess(event, supabase);
 }
