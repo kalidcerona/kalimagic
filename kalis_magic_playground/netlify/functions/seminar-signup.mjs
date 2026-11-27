@@ -24,7 +24,8 @@ export function createHandler(deps = {}) {
     // Even injected stores cannot turn an incompletely configured deployment into an open sale.
     if (!configured(settings)) return closedResponse();
     try {
-      const result = await submitSignup(body, { offer:(deps.getOffer || getOffer)(now,settings),config:settings,store:deps.store || createSheetsStore(settings),secret:settings.hmacSecret,ip:request.requestContext?.identity?.sourceIp || (process.env.NETLIFY === 'true' ? headers['x-nf-client-connection-ip'] : null),now });
+      const ip = request.requestContext?.identity?.sourceIp || headers['x-nf-client-connection-ip'];
+      const result = await submitSignup(body, { offer:(deps.getOffer || getOffer)(now,settings),config:settings,store:deps.store || createSheetsStore(settings),secret:settings.hmacSecret,ip,now });
       return json(200, { receipt: result.receipt });
     } catch (error) {
       if (error instanceof SignupError && error.message === 'signup_closed') return closedResponse();

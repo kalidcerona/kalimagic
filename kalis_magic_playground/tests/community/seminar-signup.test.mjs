@@ -96,6 +96,31 @@ test('HTTP configured closed deployment still returns previously stored receipt'
   const first=await run(request(body)); assert.equal(first.statusCode,200);
   current={...offer,open:false}; assert.deepEqual(JSON.parse((await run(request(body))).body),JSON.parse(first.body));
 });
+test('HTTP uses the Netlify client IP without a build flag and rejects requests without a trusted IP', async () => {
+  const previous = process.env.NETLIFY;
+  delete process.env.NETLIFY;
+  try {
+    const backing = memory();
+    const ipHashes = [];
+    const store = {async submit(payload) {
+      ipHashes.push(payload.ipHash);
+      return backing.submit(payload);
+    }};
+    const run = createHandler({store, config:{...config,testMode:false,account:'123456789012'}, now:()=>now});
+    const requestHeaders = {...request().headers, 'x-forwarded-for':'192.0.2.30'};
+    const netlifyHeaders = {...requestHeaders, 'X-Nf-Client-Connection-Ip':'192.0.2.20'};
+
+    assert.equal((await run(request(input(), {headers:netlifyHeaders, requestContext:undefined}))).statusCode, 200);
+    assert.equal((await run(request(input(), {headers:netlifyHeaders}))).statusCode, 200);
+    const missingIp = await run(request(input(), {headers:requestHeaders, requestContext:undefined}));
+    assert.equal(missingIp.statusCode, 503);
+    assert.deepEqual(JSON.parse(missingIp.body), {error:'service_unavailable'});
+    assert.deepEqual(ipHashes, [digest(secret, 'ip', '192.0.2.20'), digest(secret, 'ip', '127.0.0.1')]);
+  } finally {
+    if (previous === undefined) delete process.env.NETLIFY;
+    else process.env.NETLIFY = previous;
+  }
+});
 test('envelope signs exact UTF8 JSON base64 bytes with version and timestamp', () => {
   const payload={name:'테스트 참가자',action:'readiness'};
   const signed=signEnvelope(payload,config.signingSecret,123456789);
