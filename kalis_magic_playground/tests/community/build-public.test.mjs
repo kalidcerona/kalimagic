@@ -7,6 +7,11 @@ import vm from 'node:vm';
 import { fileURLToPath } from 'node:url';
 import { PUBLIC_FILES, PUBLIC_DIRS, PRIVATE_PATTERNS, DISTRIBUTION_APPS, SHARED_UNLOCK_FILES, SETTINGS_UI_FILES, buildPublic, verifyAppDisplayPolicy, injectLegacyMigration, injectLegacyShellModules } from '../../scripts/build-public.mjs';
 import { BELL_PUBLIC_BETA, SLOT_PUBLIC_BETA } from '../../netlify/edge-functions/tools-gate.mjs';
+import { ZZ_IMPORT_FILES, zzImportFiles, injectZzImport, transformZzImportWorker } from '../../scripts/zz-import-build.mjs';
+const zzFiles = target => zzImportFiles(target).map(file => `zz-import/${file}`);
+async function assertZzModules(directory, root) {
+  for (const file of zzImportFiles(path.basename(directory))) assert.deepEqual(await readFile(path.join(directory, 'zz-import', file)), await readFile(path.join(root, 'zz-import', file)), `ZZ import module ${file}`);
+}
 
 test('public build allowlist includes visible site pages', () => {
   assert.ok(PUBLIC_FILES.includes('index.html'));
@@ -141,7 +146,7 @@ test('public build serves integrated stopwatch on both retained entitlement rout
   assert.match(sharedUsotsuki, /tools\/_check\?tool=usotsuki/);
   assert.match(legacyStopwatch, /tools\/_check\?tool=stopwatch/);
   const stripGate = (html) => html.replace(/\n  <script id="friend-apps-check">[\s\S]*?<\/script>/, '');
-  assert.equal(stripGate(legacyStopwatch).replaceAll('friend-kairos-classic', 'friend-kairos').replaceAll('target: "kairos-classic"', 'target: "kairos"').replaceAll('=== "stopwatch"', '=== "stopwatch-uni"'), stripGate(sharedStopwatch));
+  assert.equal(stripGate(legacyStopwatch).replaceAll('friend-kairos-classic', 'friend-kairos').replaceAll('target: "kairos-classic"', 'target: "kairos"').replaceAll('=== "stopwatch"', '=== "stopwatch-uni"').replaceAll('data-zz-bootstrap="kairos-classic"', 'data-zz-bootstrap="kairos"'), stripGate(sharedStopwatch));
   const sharedQr = new URL('../../dist/tools/arosaegida/', import.meta.url);
   const sharedQrHtml = await readFile(new URL('index.html', sharedQr), 'utf8');
   assert.match(sharedQrHtml, /tools\/_check\?tool=arosaegida/);
@@ -220,8 +225,9 @@ test('both KAIROS routes use the canonical snapshot', async () => {
   assert.equal(snapshotFiles.includes('fullscreen.js'), false);
   for (const [target, tool] of [['kairos', 'stopwatch-uni'], ['kairos-classic', 'stopwatch']]) {
     const distributedDir = path.join(root, 'dist', 'tools', target);
-    assert.deepEqual(await filesUnder(distributedDir), [...snapshotFiles, 'legacy-shared-contract.mjs', 'legacy-storage-migration.mjs'].sort(), target);
+    assert.deepEqual(await filesUnder(distributedDir), [...snapshotFiles, 'legacy-shared-contract.mjs', 'legacy-storage-migration.mjs', ...zzFiles()].sort(), target);
     for (const file of ['legacy-shared-contract.mjs', 'legacy-storage-migration.mjs']) assert.deepEqual(await readFile(path.join(distributedDir, file)), await readFile(path.join(root, 'scripts', file)), `${target}/${file}`);
+    await assertZzModules(distributedDir, root);
     const prefix = `friend-${target}_`;
     for (const file of snapshotFiles) {
       const [snapshotBytes, distributedBytes] = await Promise.all([
@@ -240,7 +246,7 @@ test('both KAIROS routes use the canonical snapshot', async () => {
         comparable = Buffer.from(distributedBytes.toString('utf8').replace(/\n  <script id="friend-apps-check">[\s\S]*?<\/script>/, ''));
         // The snapshot loads its app from ./app.js, so its HTML carries no inline startup hook; app.js is checked below.
         assert.equal(snapshotHtml.includes('else initApp();'), false);
-        expected = Buffer.from(isolate(snapshotHtml));
+        expected = Buffer.from(injectZzImport(isolate(snapshotHtml), target));
         const html = distributedBytes.toString('utf8');
         assert.match(html, new RegExp(`tools\\/_check\\?tool=${tool}`));
         assert.doesNotMatch(html, /["']stopwatch_/);
@@ -285,7 +291,7 @@ test('both KAIROS routes use the canonical snapshot', async () => {
         assert.equal(injectLegacyShellModules(injected), injected);
         assert.match(injected, /const CACHE_NAME = CACHE_PREFIX \+ '[^']*-legacy-1';/);
         assert.doesNotMatch(snapshotSource, /-legacy-1/);
-        expected = Buffer.from(injected);
+        expected = Buffer.from(transformZzImportWorker(injected, target));
       }
       assert.deepEqual(comparable, expected, `${target}/${file} must follow the kairos snapshot`);
     }
@@ -298,7 +304,9 @@ test('shared unlock stays on the pinned snapshot until explicit promotion', asyn
   const source = path.join(root, 'distribution-snapshots', 'unlock');
   const target = path.join(root, 'dist', 'tools', 'release');
   const copiedFiles = (await readdir(target)).sort();
-  assert.deepEqual(copiedFiles, [...SHARED_UNLOCK_FILES, ...SETTINGS_UI_FILES].sort());
+  assert.deepEqual(copiedFiles, [...SHARED_UNLOCK_FILES, ...SETTINGS_UI_FILES, 'zz-import'].sort());
+  assert.deepEqual((await readdir(path.join(target, 'zz-import'))).sort(), [...ZZ_IMPORT_FILES].sort());
+  await assertZzModules(target, root);
 
   const manifest = JSON.parse(await readFile(path.join(source, 'manifest.webmanifest'), 'utf8'));
   for (const icon of manifest.icons) {
@@ -313,11 +321,13 @@ test('shared unlock stays on the pinned snapshot until explicit promotion', asyn
     if (file === 'index.html') {
       const withoutGuard = distributed.toString('utf8').replace(/\n  <script id="friend-apps-check">[\s\S]*?<\/script>/, '');
       assert.doesNotMatch(distributed.toString('utf8'), /data-magic-customize="off"/);
-      assert.equal(withoutGuard, snapshot.toString('utf8'));
+      assert.equal(withoutGuard, injectZzImport(snapshot.toString('utf8'), 'release'));
     } else if (file === 'manifest.webmanifest') {
       const expected = { ...JSON.parse(snapshot), id: '/tools/release/', start_url: './', scope: './' };
       assert.deepEqual(JSON.parse(distributed), expected);
 
+    } else if (file === 'sw.js') {
+      assert.equal(distributed.toString('utf8'), transformZzImportWorker(snapshot.toString('utf8'), 'release'));
     } else {
       assert.deepEqual(distributed, snapshot, file);
     }
@@ -339,7 +349,8 @@ test('ALETHEIA and USOTSUKI distribution builds use pinned snapshots and separat
     const snapshot = path.join(root, 'distribution-snapshots', app);
     const target = path.join(root, 'dist', 'tools', app);
     const sourceFiles = (await filesUnder(snapshot)).filter((file) => !PRIVATE_PATTERNS.some((pattern) => pattern.test(file)));
-    assert.deepEqual(await filesUnder(target), sourceFiles, `${app} file inventory`);
+    assert.deepEqual(await filesUnder(target), [...sourceFiles, ...zzFiles()].sort(), `${app} file inventory`);
+    await assertZzModules(target, root);
     const manifest = JSON.parse(await readFile(path.join(target, 'manifest.webmanifest'), 'utf8'));
     assert.equal(manifest.id, `/tools/${app}/`);
     for (const file of sourceFiles) {
@@ -349,9 +360,11 @@ test('ALETHEIA and USOTSUKI distribution builds use pinned snapshots and separat
       if (file === 'index.html') {
         const html = targetBytes.toString('utf8');
         assert.match(html, new RegExp(`tools\\/_check\\?tool=${app}`));
-        assert.equal(html.replace(/\n  <script id="friend-apps-check">[\s\S]*?<\/script>/, ''), injectLegacyMigration(sourceBytes.toString('utf8').replace(/<body\b/, '<body data-magic-customize="off"'), app.target));
+        assert.equal(html.replace(/\n  <script id="friend-apps-check">[\s\S]*?<\/script>/, ''), injectZzImport(injectLegacyMigration(sourceBytes.toString('utf8').replace(/<body\b/, '<body data-magic-customize="off"'), typeof app === 'string' ? app : app.target), typeof app === 'string' ? app : app.target));
       } else if (file === 'manifest.webmanifest') {
         assert.deepEqual(JSON.parse(targetBytes), { ...JSON.parse(sourceBytes), id: `/tools/${app}/`, start_url: './', scope: './' });
+      } else if (file === 'sw.js') {
+        assert.equal(targetBytes.toString('utf8'), transformZzImportWorker(sourceBytes.toString('utf8'), app));
       } else {
         assert.deepEqual(targetBytes, sourceBytes, `${app}/${file}`);
       }
@@ -382,7 +395,8 @@ test('HITSUZEN and AROSAEGIDA keep every pinned snapshot byte except gate, custo
     assert.ok(sourceFiles.length > 1, app.source);
     assert.ok(sourceFiles.includes('index.html') && sourceFiles.includes('manifest.webmanifest') && sourceFiles.includes('sw.js'), app.source);
     const additional = app.target === 'hitsuzen' ? ['legacy-shared-contract.mjs', 'legacy-storage-migration.mjs'] : [];
-    assert.deepEqual(await filesUnder(target), [...sourceFiles, ...additional].sort(), `${app.target} file inventory`);
+    assert.deepEqual(await filesUnder(target), [...sourceFiles, ...additional, ...zzFiles(app.target)].sort(), `${app.target} file inventory`);
+    await assertZzModules(target, root);
     for (const file of additional) assert.deepEqual(await readFile(path.join(target, file)), await readFile(path.join(root, 'scripts', file)), `${app.target}/${file}`);
     for (const file of sourceFiles) {
       const [sourceBytes, targetBytes] = await Promise.all([
@@ -393,7 +407,7 @@ test('HITSUZEN and AROSAEGIDA keep every pinned snapshot byte except gate, custo
         const html = targetBytes.toString('utf8');
         assert.match(html, new RegExp(`id="friend-apps-check"[\\s\\S]*tools\\/_check\\?tool=${app.tool}`));
         assert.match(html, /data-magic-customize="off"/);
-        assert.equal(html.replace(/\n  <script id="friend-apps-check">[\s\S]*?<\/script>/, ''), injectLegacyMigration(sourceBytes.toString('utf8').replace(/<body\b/, '<body data-magic-customize="off"'), app.target));
+        assert.equal(html.replace(/\n  <script id="friend-apps-check">[\s\S]*?<\/script>/, ''), injectZzImport(injectLegacyMigration(sourceBytes.toString('utf8').replace(/<body\b/, '<body data-magic-customize="off"'), typeof app === 'string' ? app : app.target), typeof app === 'string' ? app : app.target));
       } else if (file === 'manifest.webmanifest') {
         const manifest = JSON.parse(targetBytes);
         assert.equal(manifest.id, `/tools/${app.target}/`);
@@ -407,7 +421,9 @@ test('HITSUZEN and AROSAEGIDA keep every pinned snapshot byte except gate, custo
         assert.match(injected, /const CACHE_NAME = CACHE_PREFIX \+ '[^']*-legacy-1';/);
         assert.doesNotMatch(injected, /-legacy-1-legacy-1/);
         assert.doesNotMatch(snapshotSource, /-legacy-1/);
-        assert.equal(targetBytes.toString('utf8'), injected);
+        assert.equal(targetBytes.toString('utf8'), transformZzImportWorker(injected, app.target));
+      } else if (file === 'sw.js') {
+        assert.equal(targetBytes.toString('utf8'), transformZzImportWorker(sourceBytes.toString('utf8'), app.target));
       } else {
         assert.deepEqual(targetBytes, sourceBytes, `${app.target}/${file}`);
       }

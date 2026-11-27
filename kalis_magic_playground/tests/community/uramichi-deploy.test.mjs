@@ -8,6 +8,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import vm from 'node:vm';
 import { PUBLIC_DIRS, DISTRIBUTION_APPS, transformDistributionDocument } from '../../scripts/build-public.mjs';
+import { ZZ_IMPORT_FILES, injectZzImport, transformZzImportWorker } from '../../scripts/zz-import-build.mjs';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const read = (file) => readFile(path.join(root, 'distribution-snapshots/uramichi', file), 'utf8');
@@ -44,9 +45,12 @@ test('zz15 publishes only its explicit shell in an isolated build', async () => 
     const result = build();
     assert.equal(result.status, 0, result.stderr + result.stdout);
     const published = path.join(site, 'dist', 'tools', 'uramichi');
-    assert.deepEqual((await listFiles(published)).sort(), [...shell, 'sw.js'].sort());
-    for (const file of [...shell, 'sw.js'].filter(file => !['index.html', 'manifest.webmanifest'].includes(file))) assert.deepEqual(await readFile(path.join(published, file)), await readFile(path.join(root, 'distribution-snapshots/uramichi', file)), file);
+    assert.deepEqual((await listFiles(published)).sort(), [...shell, 'sw.js', ...ZZ_IMPORT_FILES.map(file=>`zz-import/${file}`)].sort());
+    for (const file of [...shell, 'sw.js'].filter(file => !['index.html', 'manifest.webmanifest', 'sw.js'].includes(file))) assert.deepEqual(await readFile(path.join(published, file)), await readFile(path.join(root, 'distribution-snapshots/uramichi', file)), file);
+    for (const file of ZZ_IMPORT_FILES) assert.deepEqual(await readFile(path.join(published, 'zz-import', file)), await readFile(path.join(root, 'zz-import', file)), file);
+    assert.equal(await readFile(path.join(published, 'sw.js'), 'utf8'), transformZzImportWorker(await read('sw.js'), 'uramichi'));
     const html = await readFile(path.join(published, 'index.html'), 'utf8');
+    assert.equal(html, injectZzImport(transformDistributionDocument(await read('index.html'), DISTRIBUTION_APPS.find(app=>app.target==='uramichi')), 'uramichi'));
     for (const match of html.matchAll(/(?:src|href)="(\.\/[^"#]+)"/g)) assert.ok((await stat(path.join(published, match[1]))).isFile(), match[1]);
     for (const file of shell.filter((name) => name.endsWith('.mjs') || name.endsWith('.js'))) {
       for (const match of (await readFile(path.join(published, file), 'utf8')).matchAll(/from '(\.\/[^']+)'/g)) assert.ok((await stat(path.join(published, match[1]))).isFile(), `${file} ${match[1]}`);

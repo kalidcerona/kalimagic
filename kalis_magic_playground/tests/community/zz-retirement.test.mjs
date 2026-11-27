@@ -38,11 +38,12 @@ for (const spec of ZZ_RETIREMENT_SPECS) {
   test(`${spec.id} retirement preserves unrelated caches and never moves clients`, async () => {
     const scope = origin + '/' + spec.id + '/';
     const name = spec.prefix + (spec.scopeEncoding === 'none' ? '' : (spec.scopeEncoding === 'raw' ? scope : encodeURIComponent(scope)) + '-') + spec.version;
+    const backupName = name.slice(0, -spec.version.length) + spec.backupVersion;
     async function run(entries, wrongScope = false) {
       const listeners = {}, deleted = [];
       let unregister = 0, skipped = 0;
       const self = { location: new URL(scope + 'sw.js'), registration: { scope: wrongScope ? origin + '/tools/' : scope, unregister: async () => { unregister++; } }, skipWaiting: async () => { skipped++; }, addEventListener: (name, fn) => { listeners[name] = fn; } };
-      vm.runInNewContext(retirementWorkerSource(spec), { self, URL, caches: { keys: async () => [name, name + '-distribution', name + '-unknown'], open: async () => ({ keys: async () => entries.map(url => ({ url })) }), delete: async key => deleted.push(key) } });
+      vm.runInNewContext(retirementWorkerSource(spec), { self, URL, caches: { keys: async () => [name, backupName, name + '-distribution', name + '-unknown', backupName + '-unknown'], open: async () => ({ keys: async () => entries.map(url => ({ url })) }), delete: async key => deleted.push(key) } });
       let promise;
       if (wrongScope) assert.throws(() => listeners.install({ waitUntil: p => { promise = p; } }), /Unexpected/);
       else { listeners.install({ waitUntil: p => { promise = p; } }); await promise; }
@@ -51,7 +52,7 @@ for (const spec of ZZ_RETIREMENT_SPECS) {
       assert.equal(listeners.fetch, undefined);
       return { deleted, unregister, skipped };
     }
-    assert.deepEqual(await run([scope + 'index.html', scope + 'app.js']), { deleted: [name], unregister: 1, skipped: 1 });
+    assert.deepEqual(await run([scope + 'index.html', scope + 'app.js']), { deleted: [name, backupName], unregister: 1, skipped: 1 });
     for (const entries of [[], [scope + 'index.html', origin + '/tools/kairos/app.js'], ['https://other.invalid/' + spec.id + '/app.js']]) {
       assert.deepEqual((await run(entries)).deleted, []);
     }

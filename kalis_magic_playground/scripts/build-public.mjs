@@ -1,4 +1,5 @@
 import { EFFECTIVE_DATE as policyEffectiveDate } from '../member-policy-config.mjs';
+import { injectZzImport, publishZzImport, ZZ_IMPORT_TARGETS } from './zz-import-build.mjs';
 import { writeZzRetirementWorkers } from './write-zz-retirement.mjs';
 import { verifyAppRelease } from './app-release-pins.mjs';
 import { readFileSync } from 'node:fs';
@@ -481,7 +482,10 @@ export function accessGuard(tool, target) {
       const storageKey = 'friend-apps-ok:${tool}:' + scope;
       const dayMs = 24 * 60 * 60 * 1000;
       const graceMs = 90 * dayMs;
-      const reveal = () => { document.documentElement.style.visibility = ''; };
+      ${ZZ_IMPORT_TARGETS.includes(target) ? `let resolveAccess;
+      globalThis.zzImportAccess = new Promise(resolve => { resolveAccess = resolve; });
+      const reveal = () => { document.documentElement.style.visibility = ''; resolveAccess(true); };` :
+      "const reveal = () => { document.documentElement.style.visibility = ''; };"}
       const redirect = () => { location.replace(loginUrl); };
       const freshStamp = (raw) => {
         if (raw == null || raw === '') return false;
@@ -577,7 +581,7 @@ async function buildDistributionApps() {
     const html = await readFile(indexPath, 'utf8');
     // Key isolation follows the public route.
     // Raw stopwatch_ values are copied later by the injected migration module.
-    await writeFile(indexPath, transformDistributionDocument(html, app));
+    await writeFile(indexPath, injectZzImport(transformDistributionDocument(html, app), app.target));
     if (isFriendAppPublicBeta(app.target)) {
       const swPath = path.join(target, 'sw.js');
       await writeFile(swPath, publicBetaWorker(await readFile(swPath, 'utf8'), app.target));
@@ -596,6 +600,7 @@ async function buildDistributionApps() {
       const swPath = path.join(target, 'sw.js');
       await writeFile(swPath, injectLegacyShellModules(await readFile(swPath, 'utf8')));
     }
+    await publishZzImport(target, app.target);
     // Preserve the game's manifest bytes as well as its relative identity.
     if (app.target === 'planbcafe') continue;
     const manifestPath = path.join(target, 'manifest.webmanifest');
