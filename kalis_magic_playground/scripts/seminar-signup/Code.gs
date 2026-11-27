@@ -13,12 +13,14 @@ var SEMINAR_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12
 var SEMINAR_HASH = /^[0-9a-f]{64}$/;
 function seminarConfig(requestedEvent) {
   var props = PropertiesService.getScriptProperties();
-  var deploymentEvent = props.getProperty('SEMINAR_EVENT_ID');
-  var eventId = requestedEvent || deploymentEvent;
-  if (requestedEvent && requestedEvent !== deploymentEvent) throw Error('invalid_event');
+  var events = (props.getProperty('SEMINAR_EVENT_ID') || '').split(',').map(function (entry) { return entry.trim(); });
+  if (requestedEvent && !events.includes(requestedEvent)) throw Error('invalid_event');
+  if (events.some(function (entry) { return !['daebeongae','cupsnballs'].includes(entry); })) throw Error('not_configured');
+  if (!requestedEvent && events.length !== 1) throw Error('invalid_event');
+  var eventId = requestedEvent || events[0];
   var id = props.getProperty(eventId === 'cupsnballs' ? 'CUPSNBALLS_SHEET_ID' : 'SEMINAR_SHEET_ID');
   var secret = props.getProperty(eventId === 'cupsnballs' ? 'CUPSNBALLS_SHEETS_SIGNING_SECRET' : 'SEMINAR_SHEETS_SIGNING_SECRET');
-  if (!id || !['daebeongae','cupsnballs'].includes(eventId) || !secret || Utilities.newBlob(secret).getBytes().length < 32) throw Error('not_configured');
+  if (!id || !secret || Utilities.newBlob(secret).getBytes().length < 32) throw Error('not_configured');
   if (eventId === 'cupsnballs' && !/^2026-11-27-[0-9a-f]{12}$/.test(props.getProperty('CUPSNBALLS_CONSENT_VERSION') || '')) throw Error('not_configured');
   seminarSelectHeaders(eventId);
   return { props: props, id: id, eventId: eventId, secret: secret, tab:eventId === 'daebeongae' ? SEMINAR_TAB : '컵앤볼 신청 명단', capacity:eventId === 'daebeongae' ? 60 : null };
@@ -249,6 +251,7 @@ function setupSeminarSheet(eventId) {
   } finally { lock.releaseLock(); }
 }
 
+function setupDaebeongaeSheet() { return setupSeminarSheet('daebeongae'); }
 function setupCupsnballsSheet() { return setupSeminarSheet('cupsnballs'); }
 
 

@@ -35,7 +35,9 @@ test('cups actual signed sheet allows 16th applicant, persists optional promotio
 });
 test('cups rejects stale notice and wrong event without rows',async()=>{
  const store=sheet();await assert.rejects(submitSignup(input({consentVersion:'old'}),context(store)),/consent_changed/);assert.equal(store.state.rows.length,1);
- const reply=store.submit({action:'readiness',eventId:'daebeongae'});assert.equal(reply.ok,false);assert.equal(store.state.rows.length,1);
+ const opens = store.state.opens;
+ const reply=store.submit({action:'readiness',eventId:'daebeongae'});
+ assert.equal(reply.error,'invalid_event');assert.equal(store.state.opens,opens);assert.equal(store.state.rows.length,1);
 });
 
 test('cups saved receipt survives policy changes; new old-notice requests stay closed',async()=>{
@@ -106,4 +108,45 @@ test('cups seller and required consent show the same instructor disclosure and r
   const readiness = consentVersion => store.submit({action:'readiness',eventId:'cupsnballs',consentVersion});
   assert.equal(readiness(previous).ok,false);
   assert.equal(readiness(offer.consentVersion).ready,true);
+});
+
+test('one spreadsheet isolates signed requests and setup across three named tabs', async () => {
+  const contactSecret = 'local-inquiry-test-secret-32-characters';
+  const store = createLocalSheet({setup:false, properties:{
+    SEMINAR_EVENT_ID:' daebeongae, cupsnballs ',
+    CUPSNBALLS_SHEET_ID:'local-test-sheet', CUPSNBALLS_SHEETS_SIGNING_SECRET:secret,
+    CUPSNBALLS_CONSENT_VERSION:config.consentVersion,
+    CONTACT_SHEET_ID:'local-test-sheet', CONTACT_SHEETS_SIGNING_SECRET:contactSecret
+  }});
+  assert.throws(() => store.context.setupSeminarSheet(), /invalid_event/);
+  assert.equal(store.submit({action:'readiness',eventId:'other'}).error, 'invalid_event');
+  assert.equal(store.submit({action:'readiness',eventId:'cupsnballs'}).error, 'invalid_signature');
+  assert.equal(store.state.opens, 0);
+
+  store.context.setupDaebeongaeSheet();
+  const legacy = store.tabs.get('신청 명단').state;
+  const payload = localSubmission(1, store.state.now);
+  assert.equal(store.submit(payload).ok, true);
+  const rows = structuredClone(legacy.rows);
+  const [protection] = legacy.protections;
+  const {ranges} = protection;
+  const {rules, filter} = legacy;
+  store.context.setupCupsnballsSheet();
+  store.context.setupInquirySheet();
+  const cupsStore = {submit: data => store.send(store.sign(data, store.state.now, secret))};
+  const date = new Date(store.state.now);
+  const offer = getOffer(date, config);
+  await submitSignup(input({quote:{version:offer.version,tier:offer.tier,total:offer.prices.admission}}), context(cupsStore,date));
+  const inquiry = {action:'inquiry_submit',eventId:'contact',idempotencyKey:randomUUID(),
+    fingerprint:payload.fingerprint,ipHash:payload.ipHash,receivedAt:date.toISOString(),
+    record:{message:'문의 내용',reply:'help@example.test',author:'비회원'}};
+  assert.equal(store.send(store.sign(inquiry, store.state.now, contactSecret)).ok, true);
+
+  assert.deepEqual(legacy.rows, rows);
+  assert.equal(legacy.protections[0], protection);
+  assert.equal(protection.ranges, ranges);
+  assert.equal(legacy.rules, rules);
+  assert.equal(legacy.filter, filter);
+  assert.equal(store.tabs.get('컵앤볼 신청 명단').state.rows.length, 2);
+  assert.equal(store.tabs.get('문의').state.rows.length, 2);
 });
