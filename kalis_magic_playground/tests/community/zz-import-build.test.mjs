@@ -5,6 +5,8 @@ import {
   injectZzImport,
   transformZzImportRuntime,
   ZZ_IMPORT_TARGETS,
+  zzImportFiles,
+  transformZzImportWorker,
 } from '../../scripts/zz-import-build.mjs';
 import { DISTRIBUTION_APPS, transformDistributionDocument } from '../../scripts/build-public.mjs';
 test('all 15 import destinations gate app reads after the existing access guard', async () => {
@@ -41,4 +43,17 @@ test('TYCHE resume transform is bounded to verified startup markers', async () =
       transformZzImportRuntime(source.replace('let needsFirstTouchTarget = true;', ''), 'tyche', 'app.js'),
     /boundary changed/,
   );
+});
+
+test('all public shells exclude the retired settings UI and keep the recovery bootstrap', async () => {
+  const bootstrap = await readFile(new URL('../../zz-import/ui-bootstrap.mjs', import.meta.url), 'utf8');
+  assert.doesNotMatch(bootstrap, /mountImportSettings|['"]\.\/ui\.mjs['"]/);
+  for (const target of ZZ_IMPORT_TARGETS) {
+    const app = DISTRIBUTION_APPS.find((app) => app.target === target);
+    const worker = await readFile(new URL(`../../${app.source}/sw.js`, import.meta.url), 'utf8');
+    const shell = transformZzImportWorker(worker, target);
+    assert.ok(!zzImportFiles(target).includes('ui.mjs'), target);
+    assert.doesNotMatch(shell, /zz-import\/ui\.mjs/, target);
+    assert.match(shell, /zz-import\/ui-bootstrap\.mjs/, target);
+  }
 });

@@ -5,6 +5,7 @@ import { createServer as http } from 'node:http';
 import { createServer as https } from 'node:https';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
+import { checkSettings, seedCompletedImport } from './zz-settings-browser.mjs';
 import { fileURLToPath } from 'node:url';
 const { chromium } = createRequire(import.meta.url)(process.env.MAGIC_PLAYWRIGHT_MODULE || 'playwright');
 const dist = process.env.ZZ_B_DIST || fileURLToPath(new URL('../../dist/', import.meta.url));
@@ -170,57 +171,6 @@ async function photoOperation({ row, write }) {
     db.close();
   }
 }
-async function openPanel(target) {
-  await page.waitForFunction(() => document.querySelector('[data-zz-ready="true"]'));
-  const handlers = {
-    kairos: ['app.js', 'openSettings'],
-    'kairos-classic': ['app.js', 'openSettings'],
-    aletheia: ['pointer.js', 'openSettings'],
-    tobira: ['mode-switch.js', 'showSettings'],
-    asrai: ['contacts-gestures.js', 'openSettings'],
-    usotsuki: ['controller-screens.js', 'openSettings'],
-    uramichi: ['presets.mjs', 'openSettings'],
-  };
-  if (target === 'release') {
-    await page.evaluate(async () => (await import('./session.js')).session.showScreen('settings'));
-  } else if (handlers[target]) {
-    await page.evaluate(
-      async ([file, method, ...args]) => (await import('./' + file))[method](...args),
-      handlers[target],
-    );
-  } else if (['pimax', 'memdeck', 'alter'].includes(target)) {
-    const selector = {
-      pimax: '[data-tab=settings]',
-      memdeck: '[data-tab=settings]',
-      alter: '#setup-settings',
-      hitsuzen: '#desktop-settings-entry',
-    }[target];
-    await page.locator(selector).first().evaluate((button) => button.click());
-  } else {
-    if (target === 'arosaegida' && await page.getByRole('button', { name: '알겠어요' }).isVisible()) {
-      await page.getByRole('button', { name: '알겠어요' }).click();
-    }
-    if (target === 'tyche' && await page.locator('#guide-close').isVisible()) {
-      await page.locator('#guide-close').click();
-    }
-    const cdp = await context.newCDPSession(page);
-    for (const [type, y] of [['touchStart', 120], ['touchMove', 170], ['touchMove', 280], ['touchEnd', 0]]) {
-      await cdp.send('Input.dispatchTouchEvent', {
-        type,
-        touchPoints: y ? [{ x: 110, y, id: 1 }, { x: 180, y, id: 2 }] : [],
-      });
-    }
-    await cdp.detach();
-  }
-  const panel = page.locator('[data-zz-import]');
-  await panel.waitFor({ state: 'attached', timeout: 8000 }).catch(async (error) => {
-    throw new Error(target + ' ' + await page.locator('[role=alert]').allTextContents(), { cause: error });
-  });
-  // Several native settings transitions suppress the compatibility click following a gesture.
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-  await panel.locator('summary').first().evaluate((summary) => summary.click());
-  return panel;
-}
 try {
   if (tls) {
     authorized = false;
@@ -276,25 +226,12 @@ try {
   }
   for (const [, target, source, key, value] of samples) {
     if (process.env.ZZ_ONLY && !process.env.ZZ_ONLY.split(',').includes(target)) continue;
+    // Check settings both before migration and on the same origin after activation.
     await page.goto(origin + '/tools/' + target + '/');
-    const panel = await openPanel(target);
-    console.log(target, await panel.locator(':scope > [role=status]').textContent());
-
-    await panel.getByText(historical && stageA ? '저장된 ZZ 백업 확인' : '기기에 남은 ZZ 데이터 확인', {
-      exact: true,
-    }).evaluate((button) => button.click());
-    await panel.locator('input[type=checkbox]').evaluate((input) => {
-      input.checked = true;
-    }).catch(async (error) => {
-      throw new Error(target + ' ' + await panel.textContent(), { cause: error });
-    });
-    await Promise.all([
-      page.waitForEvent('framenavigated', { timeout: 10000 }),
-      panel.getByText('둘 다 보관하고 가져오기', { exact: true }).evaluate((button) => button.click()),
-    ]).catch(async (error) => {
-      throw new Error(target + ' ' + await panel.innerText(), { cause: error });
-    });
-    await page.waitForLoadState('domcontentloaded');
+    assert.doesNotMatch(await (await checkSettings(page, target)).innerText(), /ZZ/i);
+    await seedCompletedImport(page, target, historical && stageA ? 'snapshot' : 'raw');
+    await page.reload();
+    assert.doesNotMatch(await (await checkSettings(page, target)).innerText(), /ZZ/i);
     assert.deepEqual(
       await page.evaluate(([a, b]) => [localStorage.getItem(a), localStorage.getItem(b)], [source, key]),
       [value, value],
@@ -307,21 +244,6 @@ try {
         hashes.get(target),
         target + ' decoded media',
       );
-    }
-    if (target === 'alter') {
-      const revisit = await openPanel(target);
-      assert.equal(await revisit.locator('summary').first().textContent(), '가져온 ZZ 데이터 관리');
-      assert.equal(await revisit.getByText(/저장된 ZZ 백업 확인|기기에 남은 ZZ 데이터 확인/).count(), 0);
-      assert.doesNotMatch(await revisit.locator('[role=status]').textContent(), /가져올 이전 ZZ 데이터/);
-      await page.evaluate(
-        (key) => localStorage.setItem(key, JSON.stringify({ rank: 'J', suit: 'club', brightness: 95 })),
-        source,
-      );
-      await page.reload();
-      const updated = await openPanel(target);
-      assert.equal(await updated.getByText('기기에 남은 ZZ 데이터 확인', { exact: true }).count(), 1);
-      assert.equal(await updated.getByText('저장된 ZZ 백업 확인', { exact: true }).count(), 0);
-      console.log('ALTER completed hash hidden; changed source offered');
     }
     console.log('restored', target);
   }

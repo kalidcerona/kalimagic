@@ -5,6 +5,7 @@ import { createServer as http } from 'node:http';
 import { createServer as https } from 'node:https';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
+import { checkSettings, seedCompletedImport } from './zz-settings-browser.mjs';
 import { fileURLToPath } from 'node:url';
 const { chromium } = createRequire(import.meta.url)(process.env.MAGIC_PLAYWRIGHT_MODULE || 'playwright');
 const dist = process.env.ZZ_B_DIST || fileURLToPath(new URL('../../dist/', import.meta.url));
@@ -76,57 +77,6 @@ page.on('response', (r) => {
   if (r.status() >= 400 && r.url().includes('zz-import')) console.error('HTTP', r.status(), r.url());
 });
 page.on('pageerror', (error) => console.error('page error', page.url(), error.message));
-async function openPanel(target) {
-  await page.waitForFunction(() => document.querySelector('[data-zz-ready="true"]'));
-  const handlers = {
-    kairos: ['app.js', 'openSettings'],
-    'kairos-classic': ['app.js', 'openSettings'],
-    aletheia: ['pointer.js', 'openSettings'],
-    tobira: ['mode-switch.js', 'showSettings'],
-    asrai: ['contacts-gestures.js', 'openSettings'],
-    usotsuki: ['controller-screens.js', 'openSettings'],
-    uramichi: ['presets.mjs', 'openSettings'],
-  };
-  if (target === 'release') {
-    await page.evaluate(async () => (await import('./session.js')).session.showScreen('settings'));
-  } else if (handlers[target]) {
-    await page.evaluate(
-      async ([file, method, ...args]) => (await import('./' + file))[method](...args),
-      handlers[target],
-    );
-  } else if (['pimax', 'memdeck', 'alter'].includes(target)) {
-    const selector = {
-      pimax: '[data-tab=settings]',
-      memdeck: '[data-tab=settings]',
-      alter: '#setup-settings',
-      hitsuzen: '#desktop-settings-entry',
-    }[target];
-    await page.locator(selector).first().evaluate((button) => button.click());
-  } else {
-    if (target === 'arosaegida' && await page.getByRole('button', { name: '알겠어요' }).isVisible()) {
-      await page.getByRole('button', { name: '알겠어요' }).click();
-    }
-    if (target === 'tyche' && await page.locator('#guide-close').isVisible()) {
-      await page.locator('#guide-close').click();
-    }
-    const cdp = await context.newCDPSession(page);
-    for (const [type, y] of [['touchStart', 120], ['touchMove', 170], ['touchMove', 280], ['touchEnd', 0]]) {
-      await cdp.send('Input.dispatchTouchEvent', {
-        type,
-        touchPoints: y ? [{ x: 110, y, id: 1 }, { x: 180, y, id: 2 }] : [],
-      });
-    }
-    await cdp.detach();
-  }
-  const panel = page.locator('[data-zz-import]');
-  await panel.waitFor({ state: 'attached', timeout: 8000 }).catch(async (error) => {
-    throw new Error(target + ' ' + await page.locator('[role=alert]').allTextContents(), { cause: error });
-  });
-  // Several native settings transitions suppress the compatibility click following a gesture.
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-  await panel.locator('summary').first().evaluate((summary) => summary.click());
-  return panel;
-}
 async function captureTarget(target, sourceEntries, sourceMedia = false) {
   return page.evaluate(async ({ target, sourceEntries, sourceMedia }) => {
     const { mapKey, TARGETS } = await import('/tools/' + target + '/zz-import/data.mjs');
@@ -226,21 +176,11 @@ try {
         media: sample.media.map(({ db, store, key }) => ({ db, store, key })),
       });
       await page.goto(origin + '/tools/' + sample.target + '/');
-      const panel = await openPanel(sample.target);
-      assert.ok(await panel.isVisible(), sample.target + ' native settings panel visible');
+      await checkSettings(page, sample.target);
       const publicBefore = await captureTarget(sample.target, sourceEntries);
       const sourceBefore = await captureTarget(sample.target, sourceEntries, true);
-      await panel.getByText('기기에 남은 ZZ 데이터 확인', { exact: true }).evaluate((button) =>
-        button.click()
-      );
-      await panel.locator('input[type=checkbox]').evaluate((input) => {
-        input.checked = true;
-      });
-      await Promise.all([
-        page.waitForEvent('framenavigated', { timeout: 15000 }),
-        panel.getByText('둘 다 보관하고 가져오기', { exact: true }).evaluate((button) => button.click()),
-      ]);
-      await page.waitForLoadState('domcontentloaded');
+      await seedCompletedImport(page, sample.target);
+      await page.reload();
       await page.waitForFunction(() => document.querySelector('[data-zz-ready=true]'));
       const firstResume = await page.evaluate(async ({ target, sourceEntries }) => {
         const { mapKey } = await import('./zz-import/data.mjs');
@@ -263,10 +203,9 @@ try {
       // A second real reload catches startup rewriting the newly active profile.
       await page.reload();
       await page.waitForFunction(() => document.querySelector('[data-zz-ready=true]'));
-      await openPanel(sample.target);
+      await checkSettings(page, sample.target);
       const evidence = await page.evaluate(async ({ target, sourceEntries }) => {
-        const { mapKey } = await import('./zz-import/data.mjs'),
-          { validateProfile } = await import('./zz-import/apply-validate.mjs');
+        const { mapKey } = await import('./zz-import/data.mjs');
         const rows = Object.entries(sourceEntries).map(([key, value]) => ({
           sourceKey: key,
           key: mapKey(target, key),
@@ -283,10 +222,11 @@ try {
           mismatches,
           controls,
           text: document.body.innerText.slice(0, 1200),
-          visibleSettings: document.querySelector('[data-zz-import]')?.getBoundingClientRect().height > 0,
         };
       }, { target: sample.target, sourceEntries });
-      assert.equal(evidence.visibleSettings, true);
+      if (sample.target === 'memdeck') assert.equal(await page.locator('#stack').inputValue(), 'mnemonica');
+      if (sample.target === 'release') assert.equal(await page.locator('#style').inputValue(), 'galaxy');
+      if (sample.target === 'tyche') assert.equal(await page.locator('#force-spin').inputValue(), '7');
       assert.deepEqual(evidence.mismatches, [], sample.target + ' startup changed imported raw data');
       assert.deepEqual(
         (await captureTarget(sample.target, sourceEntries)).media,
@@ -303,11 +243,12 @@ try {
       if (sample.target === 'arosaegida') {
         assert.ok(evidence.controls.some((c) => c.value === 'https://example.com/heldout'));
       }
-      const activePanel = page.locator('[data-zz-import]');
-      await Promise.all([
-        page.waitForEvent('framenavigated', { timeout: 15000 }),
-        activePanel.getByText('기존 공개본 사용', { exact: true }).evaluate((button) => button.click()),
-      ]);
+      await page.evaluate(async (target) => {
+        const { activateProfile } = await import('./zz-import/apply.mjs');
+        const { exclusiveWrite } = await import('./zz-import/ui-bootstrap.mjs');
+        await exclusiveWrite(() => activateProfile(target, 'public'));
+      }, sample.target);
+      await page.reload();
       await page.waitForFunction(() => document.querySelector('[data-zz-ready=true]'));
       assert.deepEqual(
         await captureTarget(sample.target, sourceEntries),

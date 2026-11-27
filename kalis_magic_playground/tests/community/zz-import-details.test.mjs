@@ -2,7 +2,6 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { webcrypto } from 'node:crypto';
 import { applyImport, pendingCandidates, previewImport, readImportDetails } from '../../zz-import/apply.mjs';
-import { comparisonRows } from '../../zz-import/ui.mjs';
 if (!globalThis.crypto) globalThis.crypto = webcrypto;
 function fixture() {
   const values = new Map([['magic-choice-dist.settings-gesture-guide.v1', 'before'], [
@@ -42,10 +41,6 @@ test('preview exposes both exact public and ZZ values for comparison', async () 
   assert.equal(new Map(preview.existingEntries).get('magic-choice-dist.settings-gesture-guide.v1'), 'before');
   assert.equal(new Map(preview.existingEntries).get('magic-choice-dist.v1.store'), null);
   assert.deepEqual(preview.incomingEntries, [['magic-choice-dist.settings-gesture-guide.v1', 'after']]);
-  assert.deepEqual(
-    comparisonRows([['empty', ''], ['missing', null]], [['empty', 'new'], ['only', '<script>raw</script>']]),
-    [['empty', '', 'new'], ['missing', null, null], ['only', null, '<script>raw</script>']],
-  );
 });
 test('retained file-import detail survives removed raw sources and is read-only', async () => {
   const { store, candidate, values, state } = fixture();

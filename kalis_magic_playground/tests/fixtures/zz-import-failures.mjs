@@ -454,10 +454,10 @@ try {
     const { context, page } = await contextPage();
     try {
       await page.goto(origin + '/tools/alter/');
-      await page.waitForSelector('[data-zz-import]');
+      await page.waitForSelector('[data-zz-ready=true]', { state: 'attached' });
       const sibling = await context.newPage();
       await sibling.goto(origin + '/tools/alter/');
-      await sibling.waitForSelector('[data-zz-import]');
+      await sibling.waitForSelector('[data-zz-ready=true]', { state: 'attached' });
       const blocked = await page.evaluate(async () => {
         const { exclusiveWrite } = await import('/tools/alter/zz-import/ui-bootstrap.mjs');
         try {

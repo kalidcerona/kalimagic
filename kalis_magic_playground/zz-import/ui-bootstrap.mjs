@@ -121,12 +121,7 @@ async function start() {
   if (location.hash !== '#selftest') importWorker().catch(() => {});
   bootstrap.dataset.zzReady = 'true';
 }
-start().then(() => {
-  // Settings can load after the app has registered its input handlers.
-  return import('./ui.mjs')
-    .then(({ mountImportSettings }) => mountImportSettings(target, exclusiveWrite))
-    .catch((error) => console.warn('ZZ import settings unavailable', error));
-}, (error) => {
+start().catch((error) => {
   releaseLive?.();
   const message = document.createElement('p');
   message.setAttribute('role', 'alert');

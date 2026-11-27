@@ -9,7 +9,6 @@ export const ZZ_IMPORT_FILES = [
   'apply-validate.mjs',
   'data.mjs',
   'data-zip.mjs',
-  'ui.mjs',
   'ui-bootstrap.mjs',
 ];
 export function zzImportFiles(target) {
@@ -89,7 +88,7 @@ export function transformZzImportWorker(text, target) {
   text = text.replace(
     cache,
     (_, prefix, version) =>
-      `${prefix}${version.replace(/-distribution$/, '')}-zz-import-1${
+      `${prefix}${version.replace(/-distribution$/, '')}-zz-import-2${
         version.endsWith('-distribution') ? '-distribution' : ''
       }'`,
   );
