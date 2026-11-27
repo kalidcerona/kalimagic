@@ -182,20 +182,12 @@ form.addEventListener('submit', async (event) => {
 async function sendAttempt(original) {
   if (busy) return;
   const wasUnresolved = original.unresolved;
-  original.unresolved = true;
   busy = true;
   $('recovery-check').disabled = $('recovery-login').disabled = true;
   $('errors').hidden = true;
   update();
   const payload = {...original.payload, idempotencyKey:original.key};
   try {
-    try { entry.remember(original); }
-    catch {
-      original.unresolved = wasUnresolved;
-      if (entry.recovering) { entry.showRecovery('복구 정보를 보관할 수 없습니다. 저장 공간을 확인한 뒤 다시 시도해 주세요.'); return; }
-      showErrors([['submit','이 탭에 복구 정보를 보관할 수 없습니다. 브라우저 저장 공간을 허용한 뒤 다시 신청해 주세요.']]);
-      return;
-    }
     let headers;
     try {
       headers = await entry.headers(original.account, original.renewAgreement);
@@ -203,7 +195,12 @@ async function sendAttempt(original) {
     }
     catch (error) {
       original.unresolved = wasUnresolved;
-      if (['signed_out','account_changed'].includes(error.message) || entry.recovering) {
+      if (!wasUnresolved && error.message !== 'agreement_required') {
+        attempt = null;
+        entry.authFailed(original.payload);
+        return;
+      }
+      if (wasUnresolved) {
         original.unresolved = true;
         entry.showRecovery('원래 계정으로 로그인한 뒤 신청 결과를 다시 확인해 주세요.');
         return;
@@ -213,6 +210,14 @@ async function sendAttempt(original) {
         : '원래 신청 계정으로 다시 로그인한 뒤 접수 결과를 확인해 주세요.']]);
       return;
     }
+    try { entry.remember(original); }
+    catch {
+      original.unresolved = wasUnresolved;
+      if (entry.recovering) { entry.showRecovery('복구 정보를 보관할 수 없습니다. 저장 공간을 확인한 뒤 다시 시도해 주세요.'); return; }
+      showErrors([['submit','이 탭에 복구 정보를 보관할 수 없습니다. 브라우저 저장 공간을 허용한 뒤 다시 신청해 주세요.']]);
+      return;
+    }
+    original.unresolved = true;
     const response = await fetch('/api/seminars/signup',{method:'POST',headers,body:JSON.stringify(payload),cache:'no-store'});
     const data = await response.json();
     if (entry.keepUnknown(original,response,data.error,wasUnresolved)) return;
@@ -253,6 +258,12 @@ async function sendAttempt(original) {
     if (!response.ok) {
       if (authError) {
         if (response.status === 401) {
+          if (!wasUnresolved) {
+            original.unresolved = false;
+            attempt = null;
+            entry.authFailed(original.payload);
+            return;
+          }
           entry.showRecovery('로그인이 만료되었습니다. 원래 구글 계정으로 다시 로그인해 주세요.');
           return;
         }
@@ -275,7 +286,7 @@ async function sendAttempt(original) {
   } catch { if (entry.recovering) entry.showRecovery('연결이 끊겼습니다. 원래 신청 결과를 다시 확인해 주세요.');
     else showErrors([['submit','연결이 끊겨 접수 여부를 확인하지 못했습니다. 입력 내용을 유지하고 다시 신청하십시오. 같은 요청은 중복 접수되지 않습니다.']]); }
   finally {
-    if (original.account && !original.unresolved) {
+    if (!original.unresolved) {
       entry.forget();
       entry.finishRecovery();
     }

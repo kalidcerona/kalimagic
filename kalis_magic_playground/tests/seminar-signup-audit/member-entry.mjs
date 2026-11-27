@@ -4,7 +4,7 @@ import {createRequire} from 'node:module';
 import path from 'node:path';
 import {cupsnballs, event, getOffer} from '../../netlify/functions/_lib/seminar-events.mjs';
 const require = createRequire(import.meta.url);
-const output = require('./output-dir.cjs');
+const output = process.env.SEMINAR_AUDIT_DIR ? require('./output-dir.cjs') : null;
 const {chromium} = require(process.env.PLAYWRIGHT_CORE_PATH || 'playwright-core');
 const origin = new URL(process.env.SEMINAR_AUDIT_ORIGIN || 'http://127.0.0.1:8927');
 assert.equal(origin.hostname,'127.0.0.1');
@@ -39,14 +39,14 @@ try {
       await page.addInitScript(() => {
         window.fixture = {id:'synthetic-account', token:'synthetic-token', reads:0, logins:0, agreement:true};
         window.MagicAuth = {
-          getSession:async () => { const f = window.fixture; f.reads++; return f.id ? {user:{id:f.id, phone:'+821000000001',phone_confirmed_at:'2026-01-01'},access_token:f.token} : null; },
+          getSession:async () => { const f = window.fixture; f.sessionUrl = location.href; f.reads++; return f.id ? {user:{id:f.id, phone:'+821000000001',phone_confirmed_at:'2026-01-01'},access_token:f.token} : null; },
           confirmSeminarAgreement:async () => window.fixture.agreement,
           login:async () => { window.fixture.logins++; return false; }
         };
       });
       const shot = async (state,id) => {
         await page.locator(id).evaluate(el => el.scrollIntoView({block:'start',behavior:'instant'}));
-        await page.screenshot({fullPage:state === 'member',path:path.join(output,config.id+'-'+state+'-'+width+'.png')});
+        if (output) await page.screenshot({fullPage:state === 'member',path:path.join(output,config.id+'-'+state+'-'+width+'.png')});
         assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth),false);
       };
       const fill = async () => {
@@ -152,6 +152,7 @@ try {
       await page.goto(url.origin + url.pathname + '?code=synthetic');
       await page.waitForSelector('#entry-linkage');
       assert.equal(new URL(page.url()).search,'');
+      assert.equal(new URL(await page.evaluate(() => window.fixture.sessionUrl)).search,'?code=synthetic');
       await page.fill('#name','입력 보존');
       await page.click('#entry-switch');
       assert.equal(await page.inputValue('#name'),'입력 보존');
@@ -168,6 +169,57 @@ try {
       assert.equal(await page.isDisabled('#submit'),true);
       assert.equal(await page.isVisible('#member-recovery'),false);
       assert.equal(await page.evaluate(id => sessionStorage.getItem('seminar-pending-member:'+id),config.id),null);
+      closeSignup = false;
+      await page.goto(url.href);
+      await page.click('#entry-member');
+      await fill();
+      await page.check('#linkage-consent');
+      const before = posts.length;
+      await page.evaluate(() => { window.fixture.id = null; });
+      await page.click('#submit');
+      await page.waitForSelector('#entry-choice');
+      assert.equal(posts.length,before);
+      assert.equal(await page.evaluate(id => sessionStorage.getItem('seminar-pending-member:'+id),config.id),null);
+      await page.click('#entry-member');
+      await page.waitForSelector('#entry-help');
+      assert.equal(await page.evaluate(() => window.fixture.logins),1);
+      await page.click('#entry-guest');
+      assert.equal(await page.inputValue('#name'),'테스트 참가자');
+      assert.equal(await page.isChecked('#reason-reviews'),true);
+      await fill();
+      let saved;
+      const rows = new Map();
+      await page.route('**/api/seminars/signup', async route => {
+        const body = route.request().postDataJSON();
+        rows.set(body.idempotencyKey, body);
+        if (saved) return route.fallback();
+        saved = body;
+        const pending = await page.evaluate(id => JSON.parse(sessionStorage.getItem('seminar-pending-member:'+id)),config.id);
+        assert.deepEqual({...pending.payload,idempotencyKey:pending.key},saved);
+        await route.abort();
+      }, {times:2});
+      await page.click('#submit');
+      await page.waitForSelector('#check-original');
+      await page.reload();
+      await page.click('#recovery-check');
+      await page.waitForSelector('#success');
+      assert.equal(rows.size,1);
+      assert.deepEqual(posts.at(-1).body,saved);
+      assert.equal(posts.at(-1).token,undefined);
+      assert.equal(await page.evaluate(id => sessionStorage.getItem('seminar-pending-member:'+id),config.id),null);
+      if (cups) await page.click('#new-signup');
+      for (const scenario of ['missing','expired','error','closed','disabled']) {
+        offer.open = scenario !== 'closed';
+        offer.memberLinkageEnabled = scenario !== 'disabled';
+        if (scenario === 'expired' || scenario === 'error' || !offer.open || !offer.memberLinkageEnabled)
+          await page.evaluate(({id,expired}) => sessionStorage.setItem('seminar-member-return:'+id,
+            String(Date.now()-(expired ? 3600001 : 0))),{id:config.id,expired:scenario === 'expired'});
+        await page.goto(url.origin+url.pathname+(scenario === 'error' ? '?error=access_denied' : '?code=fixture#access_token=fixture'));
+        await page.waitForFunction(() => !location.search && !location.hash);
+        if (offer.open && offer.memberLinkageEnabled) await page.click('#entry-guest');
+        await page.waitForSelector('#signup');
+      }
+      offer.open = offer.memberLinkageEnabled = true;
       assert.deepEqual(errors,[]);
       await page.close();
     }

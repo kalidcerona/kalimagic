@@ -30,7 +30,19 @@ export function createEntry(eventId, isLocked) {
   let mode, account, generation = 0, first = true, notice, version;
   let focusChoice = false;
   let guestOnBack = history.state?.seminarGuest === eventId;
-  let recovering = false;
+  let recovering = false, draft;
+  const draftKey = 'seminar-login-draft:' + eventId;
+  const hasCallback = [location.search,location.hash].some(part =>
+    [...new URLSearchParams(part.slice(1)).keys()].some(key =>
+      ['code','access_token','refresh_token','id_token','error','error_code','error_description','token_type','expires_in','provider_token','provider_refresh_token'].includes(key)));
+  let since;
+  try {
+    since = Number(sessionStorage.getItem(marker));
+    draft = JSON.parse(sessionStorage.getItem(draftKey));
+  } catch {}
+  let returning = since > 0 && since <= Date.now() && Date.now()-since < 3600000;
+  const cleanCallback = () => { if (hasCallback) history.replaceState(history.state, '', routes[eventId]); };
+  if (!returning) cleanCallback();
   function showRecovery(message) {
     recovering = true;
     $('entry-choice').hidden = $('signup').hidden = true;
@@ -46,6 +58,7 @@ export function createEntry(eventId, isLocked) {
     $('recovery-login').disabled = true;
     try {
       const api = await auth();
+      sessionStorage.setItem(marker, String(Date.now()));
       if (!await api.login(eventId)) throw new Error('cancelled');
     } catch { $('recovery-status').textContent = '로그인을 마치지 못했습니다. 원래 계정으로 다시 시도해 주세요.'; }
     finally { $('recovery-login').disabled = false; }
@@ -68,6 +81,11 @@ export function createEntry(eventId, isLocked) {
     document.querySelector('.skip').hash = 'signup';
     const phone = session?.user.phone?.replace(/^\+82/, '0');
     if (!$('contact').value && session?.user.phone_confirmed_at && /^01[016789]\d{7,8}$/.test(phone)) $('contact').value = phone;
+    if (draft) {
+      fillDraft(draft);
+      draft = null;
+      try { sessionStorage.removeItem(draftKey); } catch {}
+    }
     if (focus) $('name').focus();
   }
   function handoff() {
@@ -80,7 +98,7 @@ export function createEntry(eventId, isLocked) {
     $('handoff-title').focus();
   }
   async function member(returning) {
-    if (/kakaotalk|instagram/i.test(navigator.userAgent)) { handoff(); return; }
+    if (/kakaotalk|instagram/i.test(navigator.userAgent)) { if (returning) cleanCallback(); handoff(); return; }
     const run = ++generation;
     $('entry-member').disabled = true;
     $('entry-status').textContent = '계정을 확인하고 있습니다.';
@@ -106,7 +124,7 @@ export function createEntry(eventId, isLocked) {
       clearMarker();
       $('entry-status').textContent = '로그인을 마치지 못했습니다. 다시 로그인하거나 비회원으로 신청해 주세요.';
       $('entry-help').hidden = false;
-    } finally { if (run === generation) $('entry-member').disabled = false; }
+    } finally { if (returning) cleanCallback(); if (run === generation) $('entry-member').disabled = false; }
   }
   $('entry-member').onclick = () => member(false);
   $('entry-help').onclick = handoff;
@@ -125,20 +143,49 @@ export function createEntry(eventId, isLocked) {
   }
   if ('CommandEvent' in window) $('handoff-url').addEventListener('command', copy);
   else $('handoff-copy').onclick = copy;
+  function fillDraft(data) {
+    for (const [id,value] of Object.entries({name:data.name,'birth-date':data.birthDate,contact:data.contact,payer:data.payerName,
+      'reason-other-text':data.reasonOther,'discovery-other-text':data.discoveryOther})) $(id).value = value || '';
+    for (const name of ['gender','discovery','reason']) {
+      for (const input of document.getElementsByName(name)) input.checked = input.value === data[name];
+    }
+    $('same-payer').checked = !data.payerName;
+    $('age-confirmed').checked = data.ageConfirmed;
+    if ($('bundle')) {
+      $('bundle').checked = data.selection.includes('bundle');
+      $('single').checked = !$('bundle').checked;
+      $('open').checked = data.selection.includes('open');
+      $('open-no').checked = !$('open').checked;
+      for (const input of document.querySelectorAll('#singles input')) input.checked = data.selection.includes(input.value);
+    }
+    $('signup').dispatchEvent(new Event('change'));
+    // Reopened drafts require review against the offer currently displayed.
+    for (const id of ['consent','photo-consent','promotion-consent','linkage-consent']) if ($(id)) $(id).checked = false;
+  }
   return {
+    cleanCallback,
+    authFailed(payload) {
+      draft = payload;
+      try { sessionStorage.setItem(draftKey, JSON.stringify(payload)); } catch {}
+      mode = account = undefined;
+      $('entry-mode').hidden = $('signup').hidden = true;
+      $('entry-choice').hidden = false;
+      $('entry-status').textContent = '로그인을 확인하지 못했습니다. 다시 로그인하거나 작성한 내용으로 비회원 신청을 계속해 주세요.';
+      document.querySelector('.skip').hash = 'entry-title';
+      $('entry-title').focus();
+    },
     showRecovery,
     keepUnknown(original, response, code, wasUnresolved) {
-      if (!original.account || !wasUnresolved || response.ok) return false;
+      if (!wasUnresolved || response.ok) return false;
       const answered = ['agreement_required','signup_closed','member_unavailable','consent_changed','option_unavailable','price_changed','sold_out','rate_limited'];
       if (answered.includes(code)) return false;
       if (!recovering && response.status >= 500) return false;
       showRecovery(code === 'idempotency_conflict' ? '보관한 신청 내용이 원래 접수와 일치하지 않습니다. 운영자에게 문의해 주세요.' :
-        '원래 신청 결과를 아직 확인하지 못했습니다. 같은 계정으로 다시 확인해 주세요.');
+        '원래 신청 결과를 아직 확인하지 못했습니다. 다시 확인해 주세요.');
       return true;
     },
     get recovering() { return recovering; },
     remember(original) {
-      if (!original.account) return;
       const {account, key, payload, renewAgreement} = original;
       sessionStorage.setItem(pendingKey, JSON.stringify({account, key, payload, renewAgreement:renewAgreement === true}));
     },
@@ -148,11 +195,22 @@ export function createEntry(eventId, isLocked) {
       if (!stored) return;
       try {
         const saved = JSON.parse(stored);
-        if (saved.payload?.eventId !== eventId || saved.payload.signupMode !== 'member' || saved.payload.linkageConsent !== true ||
-            typeof saved.account !== 'string' || !saved.account || typeof saved.key !== 'string' || !saved.key) throw new Error('invalid');
+        const member = saved.payload?.signupMode === 'member' && saved.payload.linkageConsent === true &&
+          typeof saved.account === 'string' && !!saved.account;
+        const guest = saved.payload?.signupMode === undefined && saved.account === undefined;
+        if (saved.payload?.eventId !== eventId || !(member || guest) || typeof saved.key !== 'string' || !saved.key) throw new Error('invalid');
+        if (guest) {
+          $('recovery-title').textContent = '원래 비회원 신청 확인';
+          $('recovery-login').hidden = true;
+        }
+        if (returning && member) auth().then(api => api.getSession({seminar:true})).catch(() => {}).finally(cleanCallback);
+        else cleanCallback();
+        returning = false;
+        clearMarker();
         showRecovery('');
         return {...saved, fingerprint:JSON.stringify(saved.payload), unresolved:true};
       } catch {
+        cleanCallback();
         showRecovery('보관한 신청 정보를 읽지 못했습니다. 새 신청 전에 운영자에게 문의해 주세요.');
         $('recovery-check').disabled = $('recovery-login').disabled = true;
       }
@@ -163,28 +221,13 @@ export function createEntry(eventId, isLocked) {
     finishRecovery() {
       recovering = false;
       $('member-recovery').hidden = true;
+      $('recovery-title').textContent = '원래 회원 신청 확인';
+      $('recovery-login').hidden = false;
     },
     resumeForm(original) {
       this.finishRecovery();
-      choose('member', {user:{id:original.account}}, false);
-      const data = original.payload;
-      for (const [id,value] of Object.entries({name:data.name,'birth-date':data.birthDate,contact:data.contact,payer:data.payerName,
-        'reason-other-text':data.reasonOther,'discovery-other-text':data.discoveryOther})) $(id).value = value || '';
-      for (const name of ['gender','discovery','reason']) {
-        for (const input of document.getElementsByName(name)) input.checked = input.value === data[name];
-      }
-      $('same-payer').checked = !data.payerName;
-      $('age-confirmed').checked = data.ageConfirmed;
-      if ($('bundle')) {
-        $('bundle').checked = data.selection.includes('bundle');
-        $('single').checked = !$('bundle').checked;
-        $('open').checked = data.selection.includes('open');
-        $('open-no').checked = !$('open').checked;
-        for (const input of document.querySelectorAll('#singles input')) input.checked = data.selection.includes(input.value);
-      }
-      $('signup').dispatchEvent(new Event('change'));
-      // Reopened drafts require review against the offer currently displayed.
-      for (const id of ['consent','photo-consent','promotion-consent','linkage-consent']) if ($(id)) $(id).checked = false;
+      choose(original.account ? 'member' : 'guest', original.account ? {user:{id:original.account}} : null, false);
+      fillDraft(original.payload);
     },
     render(offer) {
       if (recovering) { $('signup').hidden = $('entry-choice').hidden = true; return; }
@@ -193,7 +236,9 @@ export function createEntry(eventId, isLocked) {
       notice = offer?.linkageNotice;
       $('entry-notice').textContent = $('linkage-notice').textContent = notice || '';
       if (!offer?.open || !offer.memberLinkageEnabled) {
+        cleanCallback(); returning = false; clearMarker();
         $('entry-choice').hidden = true;
+        if (draft && !mode) choose('guest', null, false);
         if (mode !== 'member') $('entry-mode').hidden = true;
         $('signup').hidden = false;
         generation++;
@@ -201,21 +246,19 @@ export function createEntry(eventId, isLocked) {
         return;
       }
       if (mode) { $('entry-mode').hidden = false; return; }
-      if (guestOnBack) { choose('guest', null, false); return; }
+      if (guestOnBack && !returning) { choose('guest', null, false); return; }
       $('signup').hidden = true;
       $('entry-choice').hidden = false;
       document.querySelector('.skip').hash = 'entry-title';
       if (focusChoice) { $('entry-title').focus(); focusChoice = false; }
       if (first) {
         first = false;
-        let since;
-        try { since = Number(sessionStorage.getItem(marker)); } catch {}
         clearMarker();
-        if (since && since <= Date.now() && Date.now()-since < 3600000) member(true);
+        if (returning) { returning = false; member(true); }
       }
     },
     reset() {
-      guestOnBack = false; focusChoice = true;
+      returning = guestOnBack = false; focusChoice = true;
       history.replaceState({...history.state, seminarGuest:null}, '');
       generation++; first = true; mode = account = undefined; clearMarker();
       $('entry-status').textContent = $('handoff-status').textContent = '';
