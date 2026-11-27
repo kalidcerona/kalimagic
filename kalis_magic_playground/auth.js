@@ -33,13 +33,15 @@
     agreements.set(key, record);
     return record;
   }
-  async function syncAgreement(session) {
+  async function syncAgreement(session, force) {
     var policy = await policyReady;
-    var userId = session.user.id, key = agreementKey(policy.POLICY_VERSION, userId);
-    var record = readAgreement(policy.POLICY_VERSION, userId);
-    if (!record || record.serverRecorded === true || syncing.has(key)) return;
+    var userId = session.user.id, key = agreementKey(policy.PRIVACY_VERSION, userId);
+    var record = readAgreement(policy.PRIVACY_VERSION, userId);
+    if (!record) return false;
+    if (syncing.has(key)) return syncing.get(key);
+    if (!force && record.serverRecorded === true) return true;
     var last = record.syncAttemptAt;
-    if (Number.isSafeInteger(last) && last <= Date.now() && Date.now() - last < agreementRetryMs) return;
+    if (!force && Number.isSafeInteger(last) && last <= Date.now() && Date.now() - last < agreementRetryMs) return;
     var work = (async function () {
       var current = (await ensureClient().auth.getSession()).data.session;
       if (!current || current.user.id !== userId || !current.access_token) return;
@@ -53,12 +55,15 @@
           signal:controller.signal, body:JSON.stringify({version:record.version,agreedAt:record.agreedAt,ageConfirmed:true})
         });
         var result = await response.json();
-        if (response.ok && result.recorded === true) { record.serverRecorded = true; rememberAgreement(key,record); }
+        var recorded = response.ok && result.recorded === true;
+        record.serverRecorded = recorded;
+        rememberAgreement(key,record);
+        return recorded;
       } catch (error) { /* Local consent remains usable; a later session check retries after the throttle. */ }
       finally { clearTimeout(timeout); }
     })();
     syncing.set(key, work);
-    try { await work; } finally { syncing.delete(key); }
+    try { return await work; } finally { syncing.delete(key); }
   }
   var loginPending;
   var pendingAgreement;
@@ -96,11 +101,11 @@
   }
   async function confirmAccount(user) {
     var policy = await policyReady;
-    var key = agreementKey(policy.POLICY_VERSION,user.id);
-    if (readAgreement(policy.POLICY_VERSION,user.id)) { clearPending(); return true; }
+    var key = agreementKey(policy.PRIVACY_VERSION,user.id);
+    if (readAgreement(policy.PRIVACY_VERSION,user.id)) { clearPending(); return true; }
     if (notices.has(key)) return notices.get(key);
     var confirmation = (async function () {
-      var agreement = readPending(policy.POLICY_VERSION) || await consentDialog(policy.POLICY_VERSION);
+      var agreement = readPending(policy.PRIVACY_VERSION) || await consentDialog(policy.PRIVACY_VERSION);
       if (!agreement) { window.dispatchEvent(new Event('member-account-switch')); return false; }
       return new Promise(function (resolve) {
         var dialog = document.createElement('dialog');
@@ -149,33 +154,51 @@
     supabaseClient = window.supabase.createClient(config.supabaseUrl, config.supabasePublishableKey);
     return supabaseClient;
   }
-  async function getSession() {
+  async function getSession(options) {
     var client = ensureClient();
+    if (!client && options?.seminar) throw new Error('로그인 서비스를 불러오지 못했습니다.');
     if (!client) return null;
     var result = await client.auth.getSession();
+    if (options?.seminar && result.error) throw result.error;
     var session = result.data.session;
-    if (!session || !await confirmAccount(session.user)) return null;
+    if (!session) return null;
+    if (!await confirmAccount(session.user)) {
+      if (options?.seminar) throw new Error('계정 확인을 취소했습니다.');
+      return null;
+    }
     var current = (await client.auth.getSession()).data.session;
     if (!current || current.user.id !== session.user.id) {
       clearPending();
       window.dispatchEvent(new Event('member-account-switch'));
+      if (options?.seminar) throw new Error('사용 중인 계정이 변경되었습니다.');
       return null;
     }
-    syncAgreement(current).catch(function () {});
+    if (!options?.seminar) syncAgreement(current).catch(function () {});
     return current;
   }
-  async function login() {
+  function seminarUrl(eventId) {
+    if (eventId === 'cupsnballs') return 'https://kalimagic.netlify.app/seminar-signup/cupsnballs.html';
+    if (eventId === 'daebeongae') return 'https://kalimagic.netlify.app/seminar-signup/';
+    throw new Error('행사 주소를 확인해 주십시오.');
+  }
+  async function confirmSeminarAgreement(session) {
+    if (!session?.user?.id || !await syncAgreement(session, true)) return false;
+    var current = (await ensureClient().auth.getSession()).data.session;
+    return current?.user.id === session.user.id;
+  }
+  async function login(eventId) {
+    var redirectTo = eventId === undefined ? window.location.href : seminarUrl(eventId);
     if (loginPending) return loginPending;
     loginPending = (async function () {
       var client = ensureClient();
       if (!client) throw new Error('로그인 설정을 확인하지 못했습니다. 잠시 후 다시 시도해 주십시오.');
       var policy = await policyReady;
-      var agreement = await consentDialog(policy.POLICY_VERSION);
+      var agreement = await consentDialog(policy.PRIVACY_VERSION);
       if (!agreement) return false;
       pendingAgreement = agreement;
       try { sessionStorage.setItem(pendingKey, JSON.stringify(agreement)); } catch (error) {}
       try {
-        var result = await client.auth.signInWithOAuth({provider:'google', options:{redirectTo:window.location.href}});
+        var result = await client.auth.signInWithOAuth({provider:'google', options:{redirectTo:redirectTo}});
         if (result.error) throw result.error;
         return true;
       } catch (error) { clearPending(); throw error; }
@@ -195,5 +218,5 @@
     var session = await getSession();
     return session ? {Authorization:'Bearer ' + session.access_token} : {};
   }
-  window.MagicAuth = {noticeHtml:noticeHtml, getSession:getSession, login:login, logout:logout, authHeader:authHeader};
+  window.MagicAuth = {noticeHtml:noticeHtml, seminarUrl:seminarUrl, confirmSeminarAgreement:confirmSeminarAgreement, getSession:getSession, login:login, logout:logout, authHeader:authHeader};
 })();

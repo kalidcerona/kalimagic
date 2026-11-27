@@ -2,6 +2,36 @@ import { json } from './_lib/http.mjs';
 import { getOffer, configured, getEvent } from './_lib/seminar-events.mjs';
 import { submitSignup, SignupError } from './_lib/seminar-signups.mjs';
 import { createSheetsStore } from './_lib/seminar-sheets.mjs';
+import { getSupabaseAdmin } from './_lib/supabase.mjs';
+import { TERMS_VERSION, PRIVACY_VERSION } from '../../member-policy-config.mjs';
+
+async function verifiedMember(headers, body, deps) {
+  if (body?.signupMode !== 'member') {
+    if (Object.hasOwn(headers,'authorization')) throw new SignupError('invalid_input');
+    return null;
+  }
+  if (body.linkageConsent !== true) throw new SignupError('invalid_input');
+  if (!headers.authorization) throw new SignupError('auth_required',401);
+  const credentials = /^Bearer ([A-Za-z0-9._~+/=-]+)$/i.exec(headers.authorization);
+  if (!credentials) throw new SignupError('auth_invalid',401);
+  const client = deps.supabase || getSupabaseAdmin();
+  const {data, error} = await client.auth.getUser(credentials[1]);
+  if (error) {
+    if ([400,401,403,404].includes(error.status)) throw new SignupError('auth_invalid',401);
+    throw new SignupError('service_unavailable',503);
+  }
+  const id = data?.user?.id;
+  if (!/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(id || '') || data.user.is_anonymous) throw new SignupError('auth_invalid',401);
+  try {
+    const {data:profile,error:profileError} = await client.from('profiles')
+      .select('terms_version,privacy_version,agreed_at').eq('user_id',id).maybeSingle();
+    if (profileError) return {id, agreementUnavailable:true};
+    return {id, agreed:profile?.terms_version === TERMS_VERSION && profile?.privacy_version === PRIVACY_VERSION && Number.isFinite(Date.parse(profile?.agreed_at))};
+  } catch {
+    // The authenticated owner can still replay an accepted signup during a profile outage.
+    return {id, agreementUnavailable:true};
+  }
+}
 
 export function createHandler(deps = {}) {
   return async request => {
@@ -22,10 +52,15 @@ export function createHandler(deps = {}) {
       return json(403, {error:'signup_closed', availabilityState});
     }
     // Even injected stores cannot turn an incompletely configured deployment into an open sale.
-    if (!configured(settings)) return closedResponse();
+    if (!configured(settings)) {
+      // A linked retry needs an authoritative store lookup before its draft can be cleared.
+      if (body?.signupMode === 'member') return json(503, {error:'service_unavailable'});
+      return closedResponse();
+    }
     try {
       const ip = request.requestContext?.identity?.sourceIp || headers['x-nf-client-connection-ip'];
-      const result = await submitSignup(body, { offer:(deps.getOffer || getOffer)(now,settings),config:settings,store:deps.store || createSheetsStore(settings),secret:settings.hmacSecret,ip,now });
+      const member = await verifiedMember(headers,body,deps);
+      const result = await submitSignup(body, { member, offer:(deps.getOffer || getOffer)(now,settings),config:settings,store:deps.store || createSheetsStore(settings),secret:settings.hmacSecret,ip,now });
       return json(200, { receipt: result.receipt });
     } catch (error) {
       if (error instanceof SignupError && error.message === 'signup_closed') return closedResponse();

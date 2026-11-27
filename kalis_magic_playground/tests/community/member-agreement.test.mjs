@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { POLICY_VERSION as version } from '../../member-policy-config.mjs';
+import { PRIVACY_VERSION as version, TERMS_VERSION } from '../../member-policy-config.mjs';
 import { createAgreementHandler } from '../../netlify/functions/member-agreement.mjs';
 
 const agreedAt = '2026-11-30T00:00:00.000Z';
@@ -45,7 +45,7 @@ test('a verified profile gets its first receipt only once, including concurrent 
   const replies = await Promise.all([f.post({...input,userId:'other'}), f.post()]);
   assert.ok(replies.some(r=>JSON.parse(r.body).recorded));
   assert.equal(f.writes,1);
-  assert.deepEqual(f.row,{terms_version:version,privacy_version:version,agreed_at:agreedAt});
+  assert.deepEqual(f.row,{terms_version:TERMS_VERSION,privacy_version:version,agreed_at:agreedAt});
   assert.equal(JSON.parse((await f.post({...input,agreedAt:'2026-11-29T23:50:00.000Z'})).body).recorded,true);
   assert.equal(f.writes,1);
 });

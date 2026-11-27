@@ -79,7 +79,7 @@ test('cups 61st signup expands physical rows, payment controls, filter and prote
  for(let i=0;i<61;i++) await submitSignup(input({contact:'010'+String(i).padStart(8,'0')}),context(store));
  assert.equal(store.state.rows.length,62);assert.ok(store.state.maxRows>=62);
  assert.equal(store.state.validation.height,store.state.maxRows-1);
- assert.equal(store.state.validation.col,32);
+ assert.equal(store.state.validation.col,34);
  assert.equal(store.state.filter.height,store.state.maxRows);
  assert.equal(store.state.protections[0].ranges[0].height,store.state.maxRows-1);
  assert.equal(store.state.rules[0].ranges[0].height,store.state.maxRows-1);
@@ -87,17 +87,23 @@ test('cups 61st signup expands physical rows, payment controls, filter and prote
 
 test('cups keeps filter object on ordinary signup and criteria across growth/retry',async()=>{
  const store=sheet(), filter=store.state.filter, criterion={synthetic:'paid-only'};
- filter.setColumnFilterCriteria(32,criterion);
+ filter.setColumnFilterCriteria(34,criterion);
+ filter.sortSpecs=[{dimensionIndex:33,sortOrder:'DESCENDING'}];
+ store.state.filterViews=[{filterViewId:4,title:'입금',namedRangeId:'roster'}];
+ store.state.namedRanges=[{namedRangeId:'roster',range:{sheetId:1,startRowIndex:0,endRowIndex:store.state.maxRows,startColumnIndex:0,endColumnIndex:34}}];
  await submitSignup(input(),context(store));assert.equal(store.state.filter,filter);
  for(let i=1;i<60;i++) await submitSignup(input({contact:'010'+String(i).padStart(8,'0')}),context(store));
  const body=input({contact:'01099999999'});store.state.failFilter=true;
  await assert.rejects(submitSignup(body,context(store)),/service_unavailable/);
- assert.equal(store.state.filter.getColumnFilterCriteria(32),criterion);
+ assert.equal(store.state.filter.getColumnFilterCriteria(34),criterion);
  assert.equal(store.state.rows.length,61);
  const retry = await submitSignup(body,context(store));
  assert.equal(retry.receipt.displayReceiptNumber,'20261127180062');
- assert.equal(store.state.filter.getColumnFilterCriteria(32),criterion);
+ assert.equal(store.state.filter.getColumnFilterCriteria(34),criterion);
  assert.equal(store.state.filter.height,store.state.maxRows);
+ assert.deepEqual(store.state.filter.sortSpecs,filter.sortSpecs);
+ assert.equal(store.state.namedRanges[0].range.endRowIndex,store.state.maxRows);
+ assert.equal(store.state.filterViews[0].namedRangeId,'roster');
 });
 
 test('cups seller and required consent show the same instructor disclosure and reject the prior sheet version', () => {
@@ -183,17 +189,17 @@ test('existing deployment adds the cups tab before upgrading the empty legacy ro
   const cups = store.tabs.get('컵앤볼 신청 명단').state;
   const cupsRows = structuredClone(cups.rows);
   assert.equal(cupsRows.length, 1);
-  assert.equal(cupsRows[0].length, 32);
-  assert.deepEqual(cupsRows[0].slice(-2), ['표시 접수번호','입금']);
+  assert.equal(cupsRows[0].length, 34);
+  assert.deepEqual(cupsRows[0].slice(-4), ['표시 접수번호','신청 구분','사이트 회원 식별자','입금']);
   const {filter, rules, validation} = cups;
   const [protection] = cups.protections;
   const {ranges} = protection;
 
   store.context.setupDaebeongaeSheet();
   assert.equal(file.getSheetByName('신청 명단'), legacySheet);
-  assert.deepEqual(legacy.rows, [Array.from(store.context.SEMINAR_BASE_HEADERS)]);
-  assert.equal(legacy.rows[0].length, 29);
-  assert.equal(legacy.validation.col, 29);
+  assert.deepEqual(legacy.rows, [Array.from(store.context.seminarLinkedHeaders(store.context.SEMINAR_BASE_HEADERS))]);
+  assert.equal(legacy.rows[0].length, 31);
+  assert.equal(legacy.validation.col, 31);
   assert.deepEqual(cups.rows, cupsRows);
   assert.equal(cups.filter, filter);
   assert.equal(cups.rules, rules);
@@ -432,7 +438,8 @@ for (const filterWidth of [31,32]) {
 
 test('cups migration refuses existing legacy rows, unknown headers and lock contention before writing', () => {
   const store = sheet(), cups = store.state;
-  cups.rows[0].splice(30,1);
+  cups.rows[0].splice(30,3);
+  cups.filter.width = 32;
   const filter = cups.filter, validation = cups.validation, flushes = cups.flushes;
   const props = {...store.props};
   const assertUntouched = (message) => {

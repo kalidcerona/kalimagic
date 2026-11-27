@@ -158,7 +158,7 @@ class DraftTree(HTMLParser):
 def test_seminar_signup_public_contract():
     public = ROOT / "seminar-signup"
     expected = {"index.html", "pricing.mjs", "form.mjs", "styles.css",
-                "event-config.mjs", "cupsnballs.html", "cups-form.mjs"}
+                "event-config.mjs", "cupsnballs.html", "cups-form.mjs", "entry.mjs"}
     assert {entry.name for entry in public.iterdir()} == expected
     tree = DraftTree()
     tree.feed((public / "index.html").read_text())
@@ -276,9 +276,10 @@ def test_daebeongae_draft():
         ("공연", "40,000원"), ("렉쳐", "20,000원"), ("본모임", "30,000원"),
         ("특별 렉쳐", "30,000원"), ("오픈 세션", "7,000원"),
     ]
-    button, = doc.iter("button")
-    assert button.attrib == {"type": "button", "disabled": None, "aria-describedby": "signup-note"}
-    assert button.text == "12월 중순 신청 오픈" and doc.findtext(".//*[@id='signup-note']") == "신청이 열리면 여기에서 접수할 수 있습니다."
+    signup_link = doc.find(".//a[@href='/seminar-signup/']")
+    assert signup_link.get("aria-describedby") == "signup-note"
+    assert signup_link.text == "대번개 신청서 열기"
+    assert doc.findtext(".//*[@id='signup-note']") == "12월 15일 오전 10시부터 신청할 수 있습니다."
     assert not any(doc.findall(".//" + tag) for tag in ["form", "script", "iframe"])
     performers = doc.findall(".//section[@id='performers']//article")
     assert ["".join(card.find(".//h3").itertext()) for card in performers] == [
@@ -352,7 +353,7 @@ def test_daebeongae_draft():
     ids = [node.get("id") for node in doc.iter() if "id" in node.attrib]
     assert len(ids) == len(set(ids))
     links = [a.get("href") for a in doc.iter("a")]
-    assert links == ["#title", "#signup", "#program"] and all(link[1:] in ids for link in links)
+    assert links == ["#title", "#signup", "#program", "/seminar-signup/"] and all(link[1:] in ids for link in links if link.startswith("#"))
     build = (ROOT / "scripts/build-public.mjs").read_text()
     dirs = re.search(r"const PUBLIC_DIRS = \[(.*?)\];", build, re.S)
     assert dirs and dirs[1].count("'daebeongae'") == 1

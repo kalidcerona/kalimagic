@@ -6,6 +6,7 @@
     <meta name="robots" content="noindex">
     <title> 대번개 신청 | 칼리매직 </title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="/member-policy.css">
     <script type="module" src="form.mjs">
     </script>
   </head>
@@ -28,8 +29,39 @@
       <noscript>
         <p> 가격 확인과 신청에는 자바스크립트가 필요합니다. 현재 접수는 준비 중입니다. </p>
       </noscript>
-      <form id="signup" action="/api/seminars/signup" method="post" novalidate aria-label="대번개 신청서">
+      <section id="member-recovery" class="card entry-card" aria-labelledby="recovery-title" hidden>
+        <h2 id="recovery-title" tabindex="-1">원래 회원 신청 확인</h2>
+        <p>이 탭에 보관한 신청 내용으로 접수 결과를 확인합니다. 처음 신청한 구글 계정을 사용해 주세요.</p>
+        <button type="button" id="recovery-check">원래 신청 결과 확인</button>
+        <button type="button" id="recovery-login" class="entry-secondary">원래 구글 계정으로 다시 로그인</button>
+        <p role="status" id="recovery-status"></p>
+      </section>
+      <section id="entry-choice" class="card entry-card" aria-labelledby="entry-title" hidden>
+        <h2 id="entry-title" tabindex="-1">신청 방법을 선택해 주세요</h2>
+        <p id="entry-notice"></p>
+        <button type="button" id="entry-member">구글로 로그인 후 신청하기</button>
+        <button type="button" id="entry-guest" class="entry-secondary">신청서 바로 가기 <small>(비회원)</small></button>
+        <p id="entry-status" role="status"></p>
+        <button type="button" id="entry-help" class="entry-secondary" hidden>외부 브라우저로 열기</button>
+        <div id="entry-handoff" hidden>
+          <h3 tabindex="-1" id="handoff-title">외부 브라우저로 열기</h3>
+          <p id="handoff-instructions"></p>
+          <a id="handoff-chrome" hidden>Chrome에서 열기</a>
+          <button type="button" id="handoff-copy" command="--copy" commandfor="handoff-url">링크 복사</button>
+          <input id="handoff-url" aria-label="신청서 주소" readonly hidden>
+          <p id="handoff-status" role="status"></p>
+        </div>
+      </section>
+      <form id="signup" action="/api/seminars/signup" method="post" novalidate aria-label="대번개 신청서" hidden>
         <div class="form-main">
+          <section class="card entry-card" id="entry-mode" hidden>
+            <h2 id="entry-mode-title"></h2>
+            <div id="entry-linkage" hidden>
+              <p id="linkage-notice"></p>
+              <div class="option"><input type="checkbox" id="linkage-consent" aria-describedby="linkage-notice"><label for="linkage-consent">[선택] 사이트 회원 식별자를 신청 내역과 함께 보관하는 데 동의합니다.</label></div>
+              <button type="button" id="entry-switch" class="entry-secondary">비회원으로 계속하기</button>
+            </div>
+          </section>
           <section class="card question" id="age-section">
             <h2>신청 연령을 확인하십시오.</h2>
             <p id="age-notice">만 14세 미만은 보호자가 <a href="/contact.html">문의 페이지</a>로 연락하여 동의 절차를 완료하기 전에는 신청할 수 없습니다.</p>
@@ -175,7 +207,7 @@
           </section>
           <section class="card question">
             <h2 id="q11"><span class="question-number">Q11. <small>필수</small></span>신청 전에 개인정보 안내를 읽어 주십시오.</h2>
-            <p id="privacy">칼리매직은 신청 확인, 참가자에 맞춘 행사 준비, 유입 경로와 신청 이유 확인, 입금 대조 및 행사 연락을 위해 이름, 생년월일, 만 14세 이상 확인, 성별, 휴대전화, 유입 경로와 신청 이유(기타 답변 포함), 선택한 이용권·오픈 세션, 입금자명을 수집·이용합니다. 명단은 행사 종료 후 30일간 보관하며 2027년 2월 9일에 명단과 내려받은 사본을 삭제합니다. 동의를 거부할 수 있으며, 거부 시 온라인 신청이 어렵습니다.</p>
+            <p id="privacy">칼리매직은 신청 확인, 참가자에 맞춘 행사 준비, 유입 경로와 신청 이유 확인, 입금 대조 및 행사 연락을 위해 이름, 생년월일, 만 14세 이상 확인, 성별, 휴대전화, 유입 경로와 신청 이유(기타 답변 포함), 선택한 이용권·오픈 세션, 입금자명을 수집·이용합니다. 명단은 행사 종료 후 30일간 보관하며 2027년 2월 9일에 명단과 내려받은 사본을 삭제합니다. 동의를 거부할 수 있으며, 거부 시 온라인 신청이 어렵습니다. 회원 신청 시 반복·부정 신청 확인을 위한 사이트 회원 식별자 보관에 별도로 동의할 수 있습니다. 동의하지 않아도 비회원으로 신청할 수 있습니다.</p>
             <p id="operator-contact" class="hint">문의: [운영자 연락처 미정]</p>
             <div class="option">
               <input id="consent" disabled name="consent" type="checkbox" required aria-describedby="privacy operator-contact">

@@ -8,9 +8,9 @@ try {
     console.error('지원하지 않는 행사입니다. daebeongae 또는 cupsnballs를 지정하세요.');
     process.exitCode = 1;
   } else {
-    const result = await createSheetsStore(event).submit({action: 'readiness', eventId: event.id, ...(event.id === 'cupsnballs' ? {consentVersion:event.consentVersion} : {})});
-    if (result?.ok !== true || result.ready !== true) throw new Error();
-    console.log('명단 접근 및 제목 행 확인 완료');
+    const result = await createSheetsStore(event).submit({action: 'readiness', eventId: event.id, consentVersion:event.consentVersion, photoConsentVersion:event.photoConsentVersion, requireMemberLinkage:true});
+    if (result?.ok !== true || result.ready !== true || result.memberLinkageReady !== true || result.consentVersion !== event.consentVersion || result.photoConsentVersion !== event.photoConsentVersion) throw new Error();
+    console.log('명단 접근, 회원 연결 열 및 동의 버전 확인 완료');
   }
 } catch {
   console.error('명단 연결 확인 실패');

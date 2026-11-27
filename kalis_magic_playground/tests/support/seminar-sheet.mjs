@@ -13,7 +13,7 @@ export function createLocalSheet({ now = Date.parse('2026-12-15T01:00:00Z'), sec
         for (let r = 0; r < height; r++) { tab.rows[row-1+r] ||= []; for (let c = 0; c < width; c++) tab.rows[row-1+r][col-1+c] = values[r][c]; } return this;
       }, clearDataValidations() {tab.cleared.push({row,col,height,width,kind:'validation'});return this;}, clearFormat() {tab.cleared.push({row,col,height,width,kind:'format'});return this;}, setDataValidation(rule) { tab.validation = {...rule,row,col,height,width}; return this; }, createFilter() { if(tab.failFilter){tab.failFilter=false;throw Error('filter_failure');} filter = {row,col,height,width,criteria:{},getRange(){return range(this.row,this.col,this.height,this.width);},getColumnFilterCriteria(col){return this.criteria[col] || null;},setColumnFilterCriteria(col,value){this.criteria[col]=value;return this;},remove(){filter=null;}}; tab.filter=filter; return filter; } };
     }
-    const sheet = { getMaxColumns:()=>tab.maxColumns, insertColumnsAfter(index,count){tab.maxColumns+=count;}, getMaxRows:()=>tab.maxRows, insertRowsAfter(index,count){tab.maxRows+=count;},
+    const sheet = { getSheetId:()=>1, getMaxColumns:()=>tab.maxColumns, insertColumnsAfter(index,count){tab.maxColumns+=count;}, getMaxRows:()=>tab.maxRows, insertRowsAfter(index,count){tab.maxRows+=count;},
       deleteRow(row) {
         tab.rows.splice(row-1,1);
         tab.maxRows--;
@@ -49,6 +49,37 @@ export function createLocalSheet({ now = Date.parse('2026-12-15T01:00:00Z'), sec
       }};
     }, flush() {state.flushes++; if (state.failFlush) {state.failFlush=false; throw Error('lost_flush_response');} }, newConditionalFormatRule() { return { whenFormulaSatisfied(formula){this.formula=formula;return this;},setBackground(color){this.color=color;return this;},setRanges(ranges){this.ranges=ranges;return this;},build(){return this;} }; }, newDataValidation() { return { requireFormulaSatisfied(formula) {this.formula=formula;return this;}, setAllowInvalid(value) {this.allowInvalid=value;return this;}, build() {return {...this};} }; } }
   });
+  // Mirror the Sheets v4 operations used for growing a final Cups roster.
+  context.Sheets={Spreadsheets:{
+    get() {
+      const tab=tabs.get('컵앤볼 신청 명단').state, width=tab.rows[0].length, height=tab.maxRows;
+      const range=(row,col,endCol)=>({sheetId:1,startRowIndex:row,endRowIndex:height,startColumnIndex:col,endColumnIndex:endCol});
+      return {sheets:[{properties:{sheetId:1},basicFilter:{range:range(0,0,width),criteria:tab.filter.criteria,
+        sortSpecs:tab.filter.sortSpecs || []},filterViews:structuredClone(tab.filterViews || []),
+        protectedRanges:[{protectedRangeId:9,unprotectedRanges:[range(1,width-1,width)]}],
+        conditionalFormats:[{ranges:[range(1,0,width)],booleanRule:{}}]}],namedRanges:structuredClone(tab.namedRanges || [])};
+    },
+    batchUpdate({requests}) {
+      const {state:tab,sheet}=tabs.get('컵앤볼 신청 명단');
+      if(!state.locked)throw Error('batch_without_lock');
+      if(tab.failFilter){tab.failFilter=false;throw Error('filter_failure');}
+      for(const req of requests) {
+        if(req.appendDimension)tab.maxRows+=req.appendDimension.length;
+        else if(req.setBasicFilter) {
+          const f=req.setBasicFilter.filter, r=f.range;
+          const filter=sheet.getRange(1,1,r.endRowIndex,r.endColumnIndex).createFilter();
+          filter.criteria=f.criteria;filter.sortSpecs=f.sortSpecs;
+        } else if(req.updateFilterView)tab.filterViews=[req.updateFilterView.filter];
+        else if(req.updateNamedRange)tab.namedRanges=[req.updateNamedRange.namedRange];
+        else if(req.updateConditionalFormatRule)tab.rules[0].ranges[0].height=req.updateConditionalFormatRule.rule.ranges[0].endRowIndex-1;
+        else if(req.updateProtectedRange)tab.protections[0].ranges[0].height=req.updateProtectedRange.protectedRange.unprotectedRanges[0].endRowIndex-1;
+        else if(req.setDataValidation){
+          if(req.setDataValidation.filteredRowsIncluded!==true)throw Error('missing_filtered_rows');
+          tab.validation.height=req.setDataValidation.range.endRowIndex-1;
+        } else if(!req.repeatCell)throw Error('unsupported_batch');
+      }
+    }
+  }};
   vm.runInContext(readFileSync(new URL('../../scripts/seminar-signup/Code.gs',import.meta.url),'utf8'),context);
   if (setup) context.setupSeminarSheet();
   return { state, tabs, props, context, secret,

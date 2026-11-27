@@ -1,4 +1,4 @@
-import { POLICY_VERSION } from '../../member-policy-config.mjs';
+import { PRIVACY_VERSION, TERMS_VERSION } from '../../member-policy-config.mjs';
 import { bearerToken, requireViewer } from './_lib/auth.mjs';
 import { json } from './_lib/http.mjs';
 import { getSupabaseAdmin } from './_lib/supabase.mjs';
@@ -18,7 +18,7 @@ export function createAgreementHandler({ getAdmin = getSupabaseAdmin, viewer = r
     let input;
     try { input = JSON.parse(event.body); } catch { return json(400, { error: 'invalid_agreement' }); }
     const time = typeof input?.agreedAt === 'string' ? Date.parse(input.agreedAt) : NaN;
-    if (input?.version !== POLICY_VERSION || input.ageConfirmed !== true ||
+    if (input?.version !== PRIVACY_VERSION || input.ageConfirmed !== true ||
         !Number.isFinite(time) || new Date(time).toISOString() !== input.agreedAt || time > now() + 300000) {
       return json(400, { error: 'invalid_agreement' });
     }
@@ -28,16 +28,16 @@ export function createAgreementHandler({ getAdmin = getSupabaseAdmin, viewer = r
       const current = await db.from('profiles').select(columns).eq('user_id', userId).maybeSingle();
       if (!checkSchema(current.error) || !current.data) return json(200, { recorded: false });
       const row = current.data;
-      if (row.terms_version === POLICY_VERSION && row.privacy_version === POLICY_VERSION && row.agreed_at) {
+      if (row.terms_version === TERMS_VERSION && row.privacy_version === PRIVACY_VERSION && row.agreed_at) {
         return json(200, { recorded: true });
       }
-      if (row.terms_version > POLICY_VERSION || row.privacy_version > POLICY_VERSION) {
+      if (row.terms_version > TERMS_VERSION || row.privacy_version > PRIVACY_VERSION) {
         return json(200, { recorded: false });
       }
 
       // Compare the observed versions so concurrent requests cannot replace the first receipt.
       let write = db.from('profiles').update({
-        terms_version: POLICY_VERSION, privacy_version: POLICY_VERSION, agreed_at: input.agreedAt
+        terms_version: TERMS_VERSION, privacy_version: PRIVACY_VERSION, agreed_at: input.agreedAt
       }).eq('user_id', userId);
       for (const name of columns.split(',')) {
         write = row[name] === null ? write.is(name, null) : write.eq(name, row[name]);

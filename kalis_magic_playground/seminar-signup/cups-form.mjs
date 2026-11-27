@@ -1,3 +1,4 @@
+import { createEntry } from './entry.mjs';
 import { quote } from './pricing.mjs';
 import { cupsDefinition, getCupsFormConfig } from './event-config.mjs';
 const $ = (id) => document.getElementById(id);
@@ -12,7 +13,9 @@ let policy = getCupsFormConfig();
 const closedState = () => offer?.availabilityState || (offer?.nextBoundary === null ? 'ended' : 'unavailable');
 const closedButton = () => ({scheduled:'접수 준비 중',ended:'접수 마감',unavailable:'접수 대기'})[closedState()] || '접수 대기';
 const selection = () => offer?.open && offer.available.includes('admission') ? ['admission'] : [];
+const entry = createEntry('cupsnballs', () => busy || Boolean(attempt?.unresolved));
 function update() {
+  entry.lock();
   $('unresolved-attempt').hidden = busy || !attempt?.unresolved;
   $('check-original').disabled = busy;
   const submit = $('submit');
@@ -104,6 +107,7 @@ function renderOffer(next) {
   }
   update();
   if (offer.open && !currentQuote) showPriceLoadError();
+  entry.render(offer.open && !currentQuote ? null : next);
   return changedNotices;
 }
 async function loadOffer() {
@@ -114,7 +118,7 @@ async function loadOffer() {
     const data = await response.json();
     if ($('success').hidden) return renderOffer(data.offer || data);
   } catch {
-    offer = null;
+    offer = null; entry.render(null);
     showPriceLoadError();
     update();
   }
@@ -203,10 +207,11 @@ form.addEventListener('submit', async (event) => {
   if (!$('same-payer').checked && (hasControls($('payer').value) || !validText(clean($('payer').value),50))) errors.push(['payer','입금자명을 1-50자로 적어줘.']);
   if (!$('photo-consent').checked) errors.push(['photo-consent','촬영 안내를 읽고 확인해줘.']);
   if (!$('consent').checked) errors.push(['consent','개인정보 안내를 읽고 동의해줘.']);
+  if (entry.needsConsent) errors.push(['linkage-consent','회원 식별자 보관에 동의하거나 비회원으로 계속해 주세요.']);
   if (errors.length) return showErrors(errors);
   $('errors').hidden = true;
-  const payload = {eventId:offer.eventId,selection:selection(),name,birthDate,gender,discovery,reason,...otherAnswers,contactType:'phone',contact,payerName:$('same-payer').checked?'':clean($('payer').value),ageConfirmed:$('age-confirmed').checked,promotionConsent:policy.photoConsentMode === 'split' ? $('promotion-consent').checked : $('photo-consent').checked,photoConsent:true,photoConsentVersion:offer.photoConsentVersion,consent:true,consentVersion:offer.consentVersion,quote:{version:currentQuote.version,tier:currentQuote.tier,total:currentQuote.total},website:$('website').value};
-  // Match the server's normalization, without persisting personal data.
+  const payload = {...entry.fields,eventId:offer.eventId,selection:selection(),name,birthDate,gender,discovery,reason,...otherAnswers,contactType:'phone',contact,payerName:$('same-payer').checked?'':clean($('payer').value),ageConfirmed:$('age-confirmed').checked,promotionConsent:policy.photoConsentMode === 'split' ? $('promotion-consent').checked : $('photo-consent').checked,photoConsent:true,photoConsentVersion:offer.photoConsentVersion,consent:true,consentVersion:offer.consentVersion,quote:{version:currentQuote.version,tier:currentQuote.tier,total:currentQuote.total},website:$('website').value};
+  // Match the server's normalization before binding the retry key.
   payload.selection.sort();
   if (payload.payerName === payload.name) payload.payerName = '';
   const fingerprint = JSON.stringify(payload);
@@ -215,20 +220,59 @@ form.addEventListener('submit', async (event) => {
     return;
   }
   if (!attempt || attempt.fingerprint !== fingerprint) {
-    attempt = {fingerprint, key:crypto.randomUUID(), payload, unresolved:false};
+    attempt = {account:entry.account, fingerprint, key:crypto.randomUUID(), payload, unresolved:false};
   }
   await sendAttempt(attempt);
 });
 async function sendAttempt(original) {
   if (busy) return;
+  const wasUnresolved = original.unresolved;
   original.unresolved = true;
   busy = true;
+  $('recovery-check').disabled = $('recovery-login').disabled = true;
   $('errors').hidden = true;
   update();
   const payload = {...original.payload, idempotencyKey:original.key};
   try {
-    const response = await fetch('/api/seminars/signup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),cache:'no-store'});
+    try { entry.remember(original); }
+    catch {
+      original.unresolved = wasUnresolved;
+      if (entry.recovering) { entry.showRecovery('복구 정보를 보관할 수 없습니다. 저장 공간을 확인한 뒤 다시 시도해 주세요.'); return; }
+      showErrors([['submit','이 탭에 복구 정보를 보관할 수 없습니다. 브라우저 저장 공간을 허용한 뒤 다시 신청해 주세요.']]);
+      return;
+    }
+    let headers;
+    try {
+      headers = await entry.headers(original.account, original.renewAgreement);
+      original.renewAgreement = false;
+    }
+    catch (error) {
+      original.unresolved = wasUnresolved;
+      if (['signed_out','account_changed'].includes(error.message) || entry.recovering) {
+        original.unresolved = true;
+        entry.showRecovery('원래 계정으로 로그인한 뒤 신청 결과를 다시 확인해 주세요.');
+        return;
+      }
+      showErrors([['submit',error.message === 'agreement_required'
+        ? '약관 동의를 확인하지 못했습니다. 다시 신청하여 동의를 확인해 주세요.'
+        : '원래 신청 계정으로 다시 로그인한 뒤 접수 결과를 확인해 주세요.']]);
+      return;
+    }
+    const response = await fetch('/api/seminars/signup',{method:'POST',headers,body:JSON.stringify(payload),cache:'no-store'});
     const data = await response.json();
+    if (entry.keepUnknown(original,response,data.error,wasUnresolved)) return;
+    const authError = original.account && (response.status === 401 || data.error === 'agreement_required');
+    if (entry.recovering && !response.ok && (authError || response.status >= 500)) {
+      original.renewAgreement = data.error === 'agreement_required';
+      entry.remember(original);
+      entry.showRecovery(authError ? '원래 계정과 약관을 확인한 뒤 다시 시도해 주세요.' : '접수 결과를 확인하지 못했습니다. 잠시 후 다시 확인해 주세요.');
+      return;
+    }
+    if (entry.recovering && !response.ok) {
+      if (!offer) await loadOffer();
+      entry.resumeForm(original);
+      if (offer) entry.render(offer);
+    }
     if (response.status === 409 && data.error === 'price_changed') {
       original.unresolved = false;
       renderOffer(data.offer); pendingPrice = true; attempt = null; $('price-change').hidden = false; $('accept-price').focus(); return;
@@ -244,11 +288,21 @@ async function sendAttempt(original) {
     }
     if (response.status === 409 && data.error === 'sold_out') {
       original.unresolved = false;
-      offer.open = false;
+      if (offer) offer.open = false;
       showResult('sold-out', '마감 안내로 건너뛰기');
       return;
     }
     if (!response.ok) {
+      if (authError) {
+        if (response.status === 401) {
+          entry.showRecovery('로그인이 만료되었습니다. 원래 구글 계정으로 다시 로그인해 주세요.');
+          return;
+        }
+        original.unresolved = wasUnresolved;
+        original.renewAgreement = data.error === 'agreement_required';
+        showErrors([['submit', original.renewAgreement ? '약관 확인이 필요합니다. 다시 신청하면 회원 동의를 확인합니다.' : '회원 계정을 확인한 뒤 다시 신청해 주세요.']]);
+        return;
+      }
       if ([400, 403, 429].includes(response.status)) original.unresolved = false;
       if (data.error === 'signup_closed') {
         const availabilityState = data.availabilityState === 'ended' ? 'ended' : 'unavailable';
@@ -267,15 +321,26 @@ async function sendAttempt(original) {
     showReceipt(receipt);
     original.unresolved = false;
     attempt = null;
-  } catch { showErrors([['submit','연결이 끊겨 접수됐는지\n아직 모르겠어.\n적은 내용 그대로 다시 신청해줘.\n같은 신청은 한 번만 접수돼.']]); }
-  finally { busy = false; update(); }
+  } catch { if (entry.recovering) entry.showRecovery('연결이 끊겼습니다. 원래 신청 결과를 다시 확인해 주세요.');
+    else showErrors([['submit','연결이 끊겨 접수됐는지\n아직 모르겠어.\n적은 내용 그대로 다시 신청해줘.\n같은 신청은 한 번만 접수돼.']]); }
+  finally {
+    if (original.account && !original.unresolved) {
+      entry.forget();
+      entry.finishRecovery();
+    }
+    busy = false;
+    $('recovery-check').disabled = $('recovery-login').disabled = false;
+    update();
+  }
 }
+$('recovery-check').onclick = () => { if (attempt?.unresolved) sendAttempt(attempt); };
 $('check-original').addEventListener('click', () => {
   if (attempt?.unresolved) sendAttempt(attempt);
 });
 function showResult(sectionId, linkText) {
   $('signup-banner').hidden = true;
   form.hidden = true;
+  $('entry-choice').hidden = true;
   $(sectionId).hidden = false;
   const heading = $(sectionId + '-title');
   const skip = document.querySelector('.skip');
@@ -415,12 +480,13 @@ function showReceipt(receipt, restored = false) {
 function showForm() {
   $('success').hidden = true;
   $('signup-header').hidden = false;
-  form.hidden = false;
+  form.hidden = true;
   const skip = document.querySelector('.skip');
   skip.hash = form.id;
   skip.textContent = '신청서로 건너뛰기';
 }
 function startNewSignup() {
+  entry.reset();
   clearStoredReceipt();
   displayedReceipt = null;
   copyText = '';
@@ -454,8 +520,9 @@ window.addEventListener('pageshow', event => {
   else if (displayedReceipt) startNewSignup();
 });
 const saved = readReceipt();
-if (saved) showReceipt(saved, true);
+if (saved) { entry.forget(); showReceipt(saved, true); }
 else {
   showForm();
+  attempt = entry.restore();
   loadOffer();
 }

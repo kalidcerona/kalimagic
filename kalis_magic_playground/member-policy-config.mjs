@@ -1,2 +1,4 @@
 export const POLICY_VERSION = '2026-11-28';
 export const EFFECTIVE_DATE = POLICY_VERSION;
+export const TERMS_VERSION = POLICY_VERSION;
+export const PRIVACY_VERSION = '2026-11-28-r2';

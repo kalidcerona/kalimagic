@@ -13,8 +13,10 @@ const clean = (value, max, normalizeWhitespace = false) => {
   return result;
 };
 export function validateSignup(body, eventId, now = new Date(), policy = null) {
-  const keys = ['eventId', 'selection', 'name', 'contactType', 'contact', 'payerName', 'consent', 'consentVersion', 'idempotencyKey', 'quote', 'website', 'birthDate', 'gender', 'discovery', 'discoveryOther', 'reason', 'reasonOther', 'photoConsent', 'photoConsentVersion', ...(policy ? ['ageConfirmed','promotionConsent'] : ['ageConfirmed'])];
+  const keys = ['signupMode', 'linkageConsent', 'eventId', 'selection', 'name', 'contactType', 'contact', 'payerName', 'consent', 'consentVersion', 'idempotencyKey', 'quote', 'website', 'birthDate', 'gender', 'discovery', 'discoveryOther', 'reason', 'reasonOther', 'photoConsent', 'photoConsentVersion', ...(policy ? ['ageConfirmed','promotionConsent'] : ['ageConfirmed'])];
   if (!body || typeof body !== 'object' || Array.isArray(body) || Object.keys(body).some(k => !keys.includes(k))) fail();
+  if (Object.hasOwn(body, 'signupMode') && !['member','guest'].includes(body.signupMode)) fail();
+  if (body.signupMode === 'member' ? body.linkageConsent !== true : Object.hasOwn(body,'linkageConsent')) fail();
   if (body.eventId !== eventId || body.consent !== true || body.photoConsent !== true || (body.website !== undefined && body.website !== '')) fail();
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(body.idempotencyKey || '')) fail();
   const name = clean(body.name, 50);
@@ -79,29 +81,33 @@ function safeReceipt(row, config) {
   }
   return {test:isolatedTestMode(config),id:row.id,eventId:row.eventId,...display,items,total:row.total,status:row.status,createdAt:new Date(created).toISOString(),payerName:row.payerName,paymentDueAt:new Date(due).toISOString(),payment:{test:isolatedTestMode(config),bank:config.bank,account:config.account,holder:config.holder,contact:config.contact,deadline:new Date(due).toISOString()}};
 }
-export async function submitSignup(body, { offer, config, store, secret, ip, now = new Date() }) {
+export async function submitSignup(body, { offer, config, store, secret, ip, member = null, now = new Date() }) {
   // Historical notices may replay an existing request after policy switches.
   // New requests carrying an old notice are still atomically rejected below.
   const oldNotice = config.policy && body?.consentVersion !== offer.consentVersion;
   const validationPolicy = oldNotice ? {...config.policy,minimumAge:0,requireBirthDate:Boolean(body?.birthDate),requireGender:Boolean(body?.gender),requireDiscovery:false,requireReason:false,splitPhotoConsent:true} : config.policy;
   const input = validateSignup(body, offer.eventId, now, validationPolicy);
-  const fingerprint = digest(secret, 'request', JSON.stringify(input));
+  if ((body.signupMode === 'member') !== Boolean(member)) throw new SignupError('auth_required',401);
+  const fingerprint = digest(secret, 'request', JSON.stringify(member ? {input,memberId:member.id,linkageConsent:true} : input));
   if (!ip) throw new SignupError('service_unavailable',503);
   let priced;
   try { priced = quote(offer, input.selection); } catch { fail(); }
   let rejection = null;
-  if (!offer.open) rejection = {error:'signup_closed'};
-  else if ((input.consentVersion !== offer.consentVersion || input.photoConsentVersion !== offer.photoConsentVersion)) rejection = {error:'consent_changed'};
+  if (input.consentVersion !== offer.consentVersion || input.photoConsentVersion !== offer.photoConsentVersion) rejection = {error:'consent_changed'};
+  else if (!offer.open) rejection = {error:'signup_closed'};
+  else if (member && !offer.memberLinkageEnabled) rejection = {error:'member_unavailable'};
+  else if (member?.agreementUnavailable) rejection = {error:'service_unavailable'};
+  else if (member && !member.agreed) rejection = {error:'agreement_required'};
   else if (input.selection.some(id => !offer.available.includes(id))) rejection = {error:'option_unavailable'};
   else if (input.quote.version !== priced.version || input.quote.tier !== priced.tier || input.quote.total !== priced.total) rejection = {error:'price_changed',quote:priced,offer};
   // One signed operation lets the sheet check existing keys before any new-request rejection.
   const payload = {action:'submit',eventId:input.eventId,idempotencyKey:input.idempotencyKey,fingerprint,receivedAt:now.toISOString(),eligible:!rejection,rejection,
-    record:{...(!config.policy && Object.hasOwn(input,'ageConfirmed') ? {ageConfirmed:input.ageConfirmed} : {}),...(config.policy ? {ageConfirmed:input.ageConfirmed,promotionConsent:input.promotionConsent} : {}),birthDate:input.birthDate,gender:input.gender,discovery:input.discovery,discoveryOther:input.discoveryOther,reason:input.reason,reasonOther:input.reasonOther,consent:true,photoConsent:true,photoConsentVersion:input.photoConsentVersion,photoConsentedAt:now.toISOString(),name:input.name,contactType:input.contactType,contact:input.contact,payerName:input.payerName,items:priced.items,total:priced.total,version:priced.version,tier:priced.tier,consentVersion:input.consentVersion,consentedAt:now.toISOString(),paymentDueAt:new Date(now.getTime()+24*60*60*1000).toISOString()},
+    record:{signupMode:member ? 'member' : 'guest', ...(member ? {memberId:member.id,linkageConsent:true,linkageConsentVersion:input.consentVersion,linkageConsentedAt:now.toISOString()} : {}),...(!config.policy && Object.hasOwn(input,'ageConfirmed') ? {ageConfirmed:input.ageConfirmed} : {}),...(config.policy ? {ageConfirmed:input.ageConfirmed,promotionConsent:input.promotionConsent} : {}),birthDate:input.birthDate,gender:input.gender,discovery:input.discovery,discoveryOther:input.discoveryOther,reason:input.reason,reasonOther:input.reasonOther,consent:true,photoConsent:true,photoConsentVersion:input.photoConsentVersion,photoConsentedAt:now.toISOString(),name:input.name,contactType:input.contactType,contact:input.contact,payerName:input.payerName,items:priced.items,total:priced.total,version:priced.version,tier:priced.tier,consentVersion:input.consentVersion,consentedAt:now.toISOString(),paymentDueAt:new Date(now.getTime()+24*60*60*1000).toISOString()},
     ipHash:digest(secret,'ip',ip),contactHash:digest(secret,'contact',`${input.eventId}:${input.contactType}:${input.contact}`),capacity:config.capacity,paymentDueHours:config.paymentDueHours};
   let result;
   try { result = await store.submit(payload); } catch { throw new SignupError('service_unavailable',503); }
   if (result?.ok === true) return {receipt:safeReceipt(result.receipt,config)};
-  const statuses = {signup_closed:403,consent_changed:409,option_unavailable:409,price_changed:409,idempotency_conflict:409,sold_out:409,rate_limited:429};
+  const statuses = {service_unavailable:503,agreement_required:403,member_unavailable:403,signup_closed:403,consent_changed:409,option_unavailable:409,price_changed:409,idempotency_conflict:409,sold_out:409,rate_limited:429};
   const status = result?.ok === false && statuses[result.error];
   if (!status) throw new SignupError('service_unavailable',503);
   const details = {};

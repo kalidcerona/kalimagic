@@ -4,10 +4,11 @@ import { createHmac, randomUUID } from 'node:crypto';
 import { validateSignup, submitSignup, digest } from '../../netlify/functions/_lib/seminar-signups.mjs';
 import { createHandler, handler } from '../../netlify/functions/seminar-signup.mjs';
 import { createSheetsStore, signEnvelope, validSheetsUrl } from '../../netlify/functions/_lib/seminar-sheets.mjs';
+import { TERMS_VERSION, PRIVACY_VERSION } from '../../member-policy-config.mjs';
 import { event, getOffer } from '../../netlify/functions/_lib/seminar-events.mjs';
 const now = new Date('2026-12-20T00:00:00+09:00');
 const secret = 'test-hmac-secret-only-not-a-real-key-123456789';
-const config = {...event,enabled:true,testMode:true,testSheetsUrl:'https://script.google.com/macros/s/test-deployment/exec',consentVersion:'2026-11-30-v2',privacyNotice:'테스트 고지',account:'000000000000',holder:'테스트',contact:'help@example.test',sheetsUrl:'https://script.google.com/macros/s/test-deployment/exec',signingSecret:'test-signing-secret-not-a-real-key-123456789',hmacSecret:secret};
+const config = {...event,enabled:true,testMode:true,testSheetsUrl:'https://script.google.com/macros/s/test-deployment/exec',consentVersion:event.consentVersion,privacyNotice:'테스트 고지',account:'000000000000',holder:'테스트',contact:'help@example.test',sheetsUrl:'https://script.google.com/macros/s/test-deployment/exec',signingSecret:'test-signing-secret-not-a-real-key-123456789',hmacSecret:secret};
 const offer = getOffer(now, config);
 function input(changes = {}) { return {eventId:config.id,selection:['bundle','open'],name:'테스트 참가자',ageConfirmed:true,birthDate:'1990-01-01',gender:'male',discovery:'instagram',reason:'content',photoConsent:true,photoConsentVersion:offer.photoConsentVersion,contactType:'phone',contact:'01012345678',payerName:'',consent:true,consentVersion:offer.consentVersion,idempotencyKey:randomUUID(),quote:{version:offer.version,tier:offer.tier,total:87000},website:'',...changes}; }
 function memory() {
@@ -88,7 +89,11 @@ test('HTTP rejects wrong method/origin/content/body and missing config without t
   assert.equal((await handler(request(undefined,{body:'{'}))).statusCode,400);
   let called=false;
   const closed=createHandler({config:{...config,account:'[계좌번호]'},store:{submit:()=>{called=true;}}});
-  assert.equal((await closed(request())).statusCode,403); assert.equal(called,false);
+  assert.equal((await closed(request())).statusCode,403);
+  const linked = request(input({signupMode:'member',linkageConsent:true}));
+  linked.headers.authorization = 'Bearer fixture';
+  assert.equal((await closed(linked)).statusCode,503);
+  assert.equal(called,false);
 });
 test('HTTP configured closed deployment still returns previously stored receipt', async () => {
   const store=memory(); const body=input(); let current=offer;
@@ -181,6 +186,11 @@ test('Netlify → Code.gs enforces IP/contact limits and recovers expired limits
   sheet.state.now+=3600001;
   assert.equal((await run(request(input()))).statusCode,200);
   const fresh=createLocalSheet({now:now.getTime(),secret:config.signingSecret}); const freshRun=connected(fresh);
+  // Populate the actual limiter through rejected attempts without consuming Dae's 60 seats.
+  for(let i=0;i<170;i++) {
+    const stale = await freshRun(request(input({consentVersion:'previous'})));
+    assert.equal(stale.statusCode,409);
+  }
   for(let i=0;i<10;i++) assert.equal((await freshRun(request(input({contact:`0101234567${i}`})))).statusCode,200);
   const ipLimited=await freshRun(request(input({contact:'01012345680'}))); assert.equal(ipLimited.statusCode,429); assert.equal(ipLimited.headers['Retry-After'],'600');
   assert.equal(ipLimited.body.includes('example.test'),false); assert.equal(fresh.state.rows.length,11);
@@ -334,4 +344,103 @@ test('future daebeongae notice versions preserve age enforcement',()=>{
 test('a March birthday is still under age on a leap day in Korea', () => {
  const leapDay = new Date('2028-02-29T12:00:00+09:00');
  assert.throws(() => validateSignup(input({birthDate:'2014-03-01'}),config.id,leapDay),error('invalid_input'));
+});
+
+test('linked signup verifies current account and separates replay from new agreement and notice decisions', async () => {
+  const id = randomUUID();
+  let activeId = id;
+  let profileUnavailable = false;
+  const profile = {terms_version:TERMS_VERSION,privacy_version:PRIVACY_VERSION,agreed_at:now.toISOString()};
+  let authCalls = 0;
+  const supabase = {
+    auth:{async getUser(token) {
+      authCalls++;
+      if (token === 'expired') return {error:{status:401}};
+      if (token === 'unavailable') return {error:{status:503}};
+      return {data:{user:{id:activeId}}};
+    }},
+    from(table) {
+      assert.equal(table,'profiles');
+      return {select:() => ({eq:(key,value) => {
+        assert.equal(key,'user_id');
+        assert.equal(value,activeId);
+        return {maybeSingle:async () => profileUnavailable ? {error:{status:503}} : {data:profile}};
+      }})};
+    }
+  };
+  const backing = createLocalSheet({now:now.getTime(),secret:config.signingSecret});
+  const payloads = [];
+  const settings = {...config,memberLinkageEnabled:true};
+  const run = createHandler({supabase,config:settings,now:()=>now,store:{submit(payload) {
+    payloads.push(payload);
+    return backing.submit(payload);
+  }}});
+  const send = (body,auth) => {
+    const req = request(body);
+    if (auth !== undefined) req.headers.authorization = auth;
+    return run(req);
+  };
+  const guest = input();
+  assert.equal((await send(guest)).statusCode,200);
+  assert.equal((await send({...guest,signupMode:'guest'})).statusCode,200);
+  assert.equal(authCalls,0);
+  assert.equal(payloads[0].fingerprint,digest(secret,'request',JSON.stringify(validateSignup(guest,config.id,now))));
+  assert.equal(payloads[0].record.signupMode,'guest');
+  assert.equal('memberId' in payloads[0].record,false);
+  const linked = input({signupMode:'member',linkageConsent:true});
+  for (const [body,auth,status] of [
+    [linked,undefined,401],[linked,'Basic bad',401],[linked,'Bearer expired',401],
+    [linked,'Bearer unavailable',503],[{...linked,linkageConsent:false},'Bearer valid',400],
+    [guest,'Bearer valid',400],[{...guest,linkageConsent:true},undefined,400],
+    [{...linked,userId:id},'Bearer valid',400],[{...linked,email:'private@example.test'},'Bearer valid',400]
+  ]) assert.equal((await send(body,auth)).statusCode,status);
+  backing.state.failFlush = true;
+  const lost = await send(linked,'Bearer original');
+  assert.equal(lost.statusCode,503);
+  const accepted = await send(linked,'Bearer renewed');
+  assert.equal(accepted.statusCode,200);
+  assert.ok(!accepted.body.includes(id));
+  assert.ok(!JSON.stringify(payloads).includes('Bearer original'));
+  const saved = payloads.at(-1).record;
+  assert.equal(saved.memberId,id);
+  assert.equal(saved.linkageConsent,true);
+  assert.equal(saved.linkageConsentVersion,linked.consentVersion);
+  assert.equal(saved.linkageConsentedAt,now.toISOString());
+  profileUnavailable = true;
+  assert.deepEqual(await send(linked,'Bearer renewed'),accepted);
+  assert.equal((await send({...linked,idempotencyKey:randomUUID()},'Bearer renewed')).statusCode,503);
+  profileUnavailable = false;
+  profile.privacy_version = 'old';
+  const incomplete = await send({...linked,idempotencyKey:randomUUID()},'Bearer renewed');
+  assert.equal(incomplete.statusCode,403);
+  assert.equal(JSON.parse(incomplete.body).error,'agreement_required');
+  settings.consentVersion = 'new';
+  assert.deepEqual(await send(linked,'Bearer renewed'),accepted);
+  assert.equal(JSON.parse((await send({...linked,idempotencyKey:randomUUID()},'Bearer renewed')).body).error,'consent_changed');
+  settings.memberLinkageEnabled = false;
+  assert.deepEqual(await send(linked,'Bearer renewed'),accepted);
+  activeId = randomUUID();
+  assert.equal(JSON.parse((await send(linked,'Bearer switched')).body).error,'idempotency_conflict');
+  const {signupMode,linkageConsent,...asGuest} = linked;
+  assert.equal(JSON.parse((await send(asGuest)).body).error,'idempotency_conflict');
+  assert.equal(backing.state.rows.length,3);
+  const [headers,guestRow,memberRow] = backing.state.rows;
+  assert.equal(guestRow[headers.indexOf('신청 구분')],'비회원');
+  assert.equal(guestRow[headers.indexOf('사이트 회원 식별자')],'');
+  assert.equal(memberRow[headers.indexOf('신청 구분')],'회원');
+  assert.equal(memberRow[headers.indexOf('사이트 회원 식별자')],id);
+});
+
+test('guest HMAC remains byte-compatible with the 0d38b0d writer', async () => {
+  const historical = input({idempotencyKey:'4e38b0a0-8b14-41e8-99ad-c37c6c5b4433',consentVersion:'2026-11-30-v2'});
+  const fingerprint = '623f06138439ad252f3c5649c0e75ae9aab24a1c9461331b2a3fba473c5ec1d4';
+  const seen = [];
+  const ctx = context({submit(payload) {
+    seen.push(payload.fingerprint);
+    return {ok:false,error:'consent_changed'};
+  }});
+  for (const body of [historical,{...historical,signupMode:'guest'}]) {
+    await assert.rejects(submitSignup(body,ctx),error('consent_changed'));
+  }
+  assert.deepEqual(seen,[fingerprint,fingerprint]);
 });

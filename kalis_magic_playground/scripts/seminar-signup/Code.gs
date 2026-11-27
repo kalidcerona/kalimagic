@@ -4,12 +4,27 @@ var SEMINAR_HEADERS = SEMINAR_LEGACY_HEADERS.slice(0,-1).concat(['생년월일',
 function seminarColumn(name) { return SEMINAR_HEADERS.indexOf(name); }
 function seminarCell(row, name) { return row[seminarColumn(name)]; }
 function seminarLetter(index) { var result = ''; for (index++; index > 0; index = Math.floor((index-1)/26)) result = String.fromCharCode(65+(index-1)%26)+result; return result; }
-var SEMINAR_CONSENT_VERSION = '2026-11-30-v2';
+var SEMINAR_CONSENT_VERSION = '2026-11-30-v3';
 var SEMINAR_PHOTO_CONSENT_VERSION = '2026-11-30-v2';
 var SEMINAR_BASE_HEADERS = SEMINAR_HEADERS.slice();
 var CUPSNBALLS_LEGACY_HEADERS = SEMINAR_BASE_HEADERS.slice(0,-1).concat(['만 14세 이상 확인','홍보용 사진 활용 동의','입금']);
 var CUPSNBALLS_DISPLAY_COLUMN = '표시 접수번호';
 function seminarSelectHeaders(eventId) { SEMINAR_HEADERS = eventId === 'cupsnballs' ? CUPSNBALLS_LEGACY_HEADERS.slice(0,-1).concat([CUPSNBALLS_DISPLAY_COLUMN,'입금']) : SEMINAR_BASE_HEADERS.slice(); }
+function seminarLinkedHeaders(headers) {
+  return headers.slice(0,-1).concat(['신청 구분','사이트 회원 식별자','입금']);
+}
+function seminarNoticeAllowed(eventId, privacy, photo, linked) {
+  var props = PropertiesService.getScriptProperties();
+  if (eventId === 'cupsnballs') {
+    var active = props.getProperty('CUPSNBALLS_CONSENT_VERSION');
+    var next = props.getProperty('CUPSNBALLS_NEXT_CONSENT_VERSION');
+    var linkedNotice = props.getProperty('CUPSNBALLS_LINKAGE_CONSENT_VERSION');
+    return /^2026-11-27-[0-9a-f]{12}$/.test(privacy) && privacy === photo &&
+      (privacy === active || privacy === next) && (!linked || privacy === linkedNotice);
+  }
+  return photo === SEMINAR_PHOTO_CONSENT_VERSION && (privacy === SEMINAR_CONSENT_VERSION ||
+    (!linked && privacy === '2026-11-30-v2' && props.getProperty('SEMINAR_ACCEPT_PREVIOUS_NOTICE') !== 'false'));
+}
 var SEMINAR_TAB = '신청 명단';
 var SEMINAR_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 var SEMINAR_HASH = /^[0-9a-f]{64}$/;
@@ -40,7 +55,12 @@ function seminarKeys(value, allowed) {
 function seminarString(value, max) { return typeof value === 'string' && value.length > 0 && Array.from(value).length <= max && !/[\u0000-\u001f\u007f]/.test(value); }
 function seminarRecordValid(r, receivedAt, requireCurrentNotice, eventId) {
   var cups = eventId === 'cupsnballs';
-  if (!seminarKeys(r, ['name','contactType','contact','payerName','items','total','version','tier','consentVersion','consentedAt','paymentDueAt','birthDate','gender','discovery','discoveryOther','reason','reasonOther','photoConsent','consent','photoConsentVersion','photoConsentedAt','ageConfirmed','promotionConsent'])) return false;
+  if (!seminarKeys(r, ['name','contactType','contact','payerName','items','total','version','tier','consentVersion','consentedAt','paymentDueAt','birthDate','gender','discovery','discoveryOther','reason','reasonOther','photoConsent','consent','photoConsentVersion','photoConsentedAt','ageConfirmed','promotionConsent','signupMode','memberId','linkageConsent','linkageConsentVersion','linkageConsentedAt'])) return false;
+  if (r.signupMode === 'member') {
+    if (typeof r.memberId !== 'string' || !SEMINAR_UUID.test(r.memberId) || r.linkageConsent !== true ||
+        r.linkageConsentVersion !== r.consentVersion || r.linkageConsentedAt !== r.consentedAt) return false;
+  } else if ((r.signupMode !== undefined && r.signupMode !== 'guest') ||
+    ['memberId','linkageConsent','linkageConsentVersion','linkageConsentedAt'].some(function (key) { return key in r; })) return false;
   if (!seminarString(r.name, 50) || !(r.payerName === null || r.payerName === '' || seminarString(r.payerName, 50))) return false;
   if (r.contactType !== 'phone' || typeof r.contact !== 'string' || !/^01[016789]\d{7,8}$/.test(r.contact)) return false;
   if (!(cups && r.birthDate === '') && (typeof r.birthDate !== 'string' || r.birthDate < '0001-01-01' || !/^\d{4}-\d{2}-\d{2}$/.test(r.birthDate))) return false;
@@ -54,7 +74,7 @@ function seminarRecordValid(r, receivedAt, requireCurrentNotice, eventId) {
   }
   if (cups && (typeof r.ageConfirmed !== 'boolean' || typeof r.promotionConsent !== 'boolean')) return false;
   if (r.photoConsent !== true || r.consent !== true || !seminarString(r.photoConsentVersion, 100) || r.photoConsentedAt !== r.consentedAt) return false;
-  if (requireCurrentNotice && (cups ? (r.consentVersion !== PropertiesService.getScriptProperties().getProperty('CUPSNBALLS_CONSENT_VERSION') || r.photoConsentVersion !== PropertiesService.getScriptProperties().getProperty('CUPSNBALLS_CONSENT_VERSION')) : (r.consentVersion !== SEMINAR_CONSENT_VERSION || r.photoConsentVersion !== SEMINAR_PHOTO_CONSENT_VERSION))) return false;
+  if (requireCurrentNotice && !seminarNoticeAllowed(eventId,r.consentVersion,r.photoConsentVersion,r.signupMode === 'member')) return false;
   if (r.discovery === 'other' ? !seminarString(r.discoveryOther,100) || !r.discoveryOther.trim() : r.discoveryOther !== '') return false;
   if (r.reason === 'other' ? !seminarString(r.reasonOther,100) || !r.reasonOther.trim() : r.reasonOther !== '') return false;
   if (!seminarString(r.version, 100) || !seminarString(r.consentVersion, 100) || !['super','early','regular'].includes(r.tier)) return false;
@@ -89,6 +109,8 @@ function seminarRow(id, p, displayReceiptNumber) {
     '신청 이유 기타':seminarText(r.reasonOther), '촬영 안내 버전':r.photoConsentVersion,
     '촬영 안내 확인 시각':r.photoConsentedAt, '만 14세 이상 확인':r.ageConfirmed ? '확인' : '해당 없음', '홍보용 사진 활용 동의':r.promotionConsent ? '동의' : '미동의', '입금':0
   };
+  cells['신청 구분'] = r.signupMode === 'member' ? '회원' : r.signupMode === 'guest' ? '비회원' : '기존 접수';
+  cells['사이트 회원 식별자'] = r.memberId || '';
   cells[CUPSNBALLS_DISPLAY_COLUMN] = displayReceiptNumber;
   return SEMINAR_HEADERS.map(function (header) { return cells[header]; });
 }
@@ -100,12 +122,15 @@ function seminarReceipt(row) {
 }
 function seminarRead(sheet, config) {
   var values = sheet.getDataRange().getValues();
+  seminarSelectHeaders(config.eventId);
+  var linked = seminarLinkedHeaders(SEMINAR_HEADERS);
+  if (values.length && JSON.stringify(values[0]) === JSON.stringify(linked)) SEMINAR_HEADERS = linked;
   if (values.length < 1 || JSON.stringify(values[0]) !== JSON.stringify(SEMINAR_HEADERS)) throw Error('invalid_sheet');
   var rows = values.slice(1), keys = {}, ids = {}, displayNumbers = {};
   rows.forEach(function (row) {
     if (row.length !== SEMINAR_HEADERS.length || !SEMINAR_UUID.test(seminarCell(row, '접수번호')) || seminarCell(row, '행사 ID') !== config.eventId || !SEMINAR_UUID.test(seminarCell(row, '재시도 키')) || !SEMINAR_HASH.test(seminarCell(row, '요청 지문')) || ![0,1].includes(seminarCell(row, '입금')) || keys[seminarCell(row, '재시도 키')] || ids[seminarCell(row, '접수번호')]) throw Error('invalid_sheet');
     var record = JSON.parse(seminarCell(row, '서버 기록'));
-    if (!seminarRecordValid(record, seminarCell(row, '접수 시각 원본'),false,config.eventId)) throw Error('invalid_sheet');
+    if ((record.signupMode === 'member' && seminarColumn('신청 구분') < 0) || !seminarRecordValid(record, seminarCell(row, '접수 시각 원본'),false,config.eventId)) throw Error('invalid_sheet');
     var receivedAt = seminarCell(row, '접수 시각 원본');
     var displayNumber;
     if (config.eventId === 'cupsnballs') {
@@ -135,20 +160,23 @@ function seminarVerify(e, config, now) {
   if (!payload || payload.eventId !== config.eventId) throw Error('invalid_event');
   return payload;
 }
-function seminarRate(props, hash, now) {
+function seminarRate(props, eventId, hash, now) {
   var all = props.getProperties(), count = 0, bytes = 0;
   Object.keys(all).forEach(function (key) {
     bytes += key.length + String(all[key]).length;
     if (key.indexOf('seminar_rate_') !== 0) return;
     var value = JSON.parse(all[key]);
     if (!value || !Number.isSafeInteger(value.count) || value.count < 1 || !Number.isSafeInteger(value.expires)) throw Error('limiter_failed');
-    if (value.expires <= now) props.deleteProperty(key); else count++;
+    if (value.expires <= now) { props.deleteProperty(key); bytes -= key.length + String(all[key]).length; } else count++;
   });
-  if (bytes > 400000 || count > 2000) throw Error('limiter_full');
-  var key = 'seminar_rate_' + hash, current = props.getProperty(key);
+  var key = 'seminar_rate_' + eventId + '_' + hash, current = props.getProperty(key);
+  if (!current && count >= 2000) throw Error('limiter_full');
   var value = current ? JSON.parse(current) : { count:0, expires:now + 600000 };
-  if (value.count >= 10) return {ok:false,error:'rate_limited',retryAfter:Math.max(1,Math.ceil((value.expires - now)/1000))};
-  value.count++; props.setProperty(key, JSON.stringify(value));
+  if (value.count >= 180) return {ok:false,error:'rate_limited',retryAfter:Math.max(1,Math.ceil((value.expires - now)/1000))};
+  value.count++;
+  var encoded = JSON.stringify(value);
+  if (bytes + encoded.length + (current ? -current.length : key.length) > 400000) throw Error('limiter_full');
+  props.setProperty(key, encoded);
   return null;
 }
 function seminarReserveCupsReceipt(config, rows, receivedAt) {
@@ -170,9 +198,23 @@ function seminarReserveCupsReceipt(config, rows, receivedAt) {
   return minute + sequence;
 }
 function seminarExpandCups(sheet, neededRow, migratedCriteria) {
-  var props=PropertiesService.getScriptProperties(), key='cups_sheet_prepared_rows';
+  var props=PropertiesService.getScriptProperties(), key='cups_sheet_prepared_rows' + (seminarColumn('신청 구분') < 0 ? '' : '_linked');
   var maxRows=sheet.getMaxRows();
   if (!migratedCriteria && neededRow <= maxRows && Number(props.getProperty(key)) === maxRows) return;
+  if (!migratedCriteria && neededRow <= maxRows && seminarColumn('신청 구분') >= 0) {
+    // An atomic migration can succeed even when its response or subsequent cache update is lost.
+    var existing = sheet.getFilter(), prepared = existing && existing.getRange();
+    if (prepared && prepared.getNumRows() === maxRows && prepared.getNumColumns() === SEMINAR_HEADERS.length) {
+      props.setProperty(key,String(maxRows));
+      return;
+    }
+  }
+  if (maxRows < neededRow && seminarColumn('신청 구분') >= 0) {
+    var newRows = Math.max(maxRows+100,neededRow);
+    seminarGrowLinkedCups(sheet,maxRows,newRows);
+    props.setProperty(key,String(newRows));
+    return;
+  }
   if (maxRows < neededRow) sheet.insertRowsAfter(maxRows,Math.max(100,neededRow-maxRows));
   var count = sheet.getMaxRows()-1, column=seminarColumn('입금'), letter=seminarLetter(column);
   var payment=sheet.getRange(2,column+1,count,1);
@@ -208,6 +250,52 @@ function seminarExpandCups(sheet, neededRow, migratedCriteria) {
     throw error;
   }
 }
+function seminarGrowLinkedCups(sheet,oldRows,newRows) {
+  var config = seminarConfig('cupsnballs');
+  SEMINAR_HEADERS = seminarLinkedHeaders(SEMINAR_HEADERS);
+  var id = sheet.getSheetId(), width = SEMINAR_HEADERS.length, letter = seminarLetter(width-1);
+  var file = seminarRosterMetadata(config), meta = file.sheets[0];
+  if (!meta || meta.properties.sheetId !== id) throw Error('invalid_sheet');
+  var requests = [{appendDimension:{sheetId:id,dimension:'ROWS',length:newRows-oldRows}}];
+  function extend(range) {
+    if (!range || (range.sheetId || 0) !== id) throw Error('unsupported_range');
+    if (range.endRowIndex === oldRows) range.endRowIndex = newRows;
+  }
+  var filter = meta.basicFilter;
+  if (!filter || filter.range.endColumnIndex !== width || filter.range.endRowIndex !== oldRows) throw Error('unsupported_filter_layout');
+  extend(filter.range);
+  requests.push({setBasicFilter:{filter:filter}});
+  (meta.filterViews || []).forEach(function(view) {
+    if (view.range) {
+      extend(view.range);
+      requests.push({updateFilterView:{filter:view,fields:'range'}});
+    } else if (view.namedRangeId) {
+      var named = (file.namedRanges || []).find(function(entry) {return entry.namedRangeId === view.namedRangeId;});
+      if (!named) throw Error('unsupported_filter_layout');
+      extend(named.range);
+      requests.push({updateNamedRange:{namedRange:named,fields:'range'}});
+    } else throw Error('unsupported_filter_layout');
+  });
+  var rules = meta.conditionalFormats || [], protections = meta.protectedRanges || [];
+  if (rules.length !== 1 || protections.length !== 1) throw Error('unsupported_roster_format');
+  var rule = rules[0], protection = protections[0], payment = protection.unprotectedRanges && protection.unprotectedRanges[0];
+  if (!payment || protection.unprotectedRanges.length !== 1 || payment.startColumnIndex !== width-1 ||
+      payment.endColumnIndex !== width || payment.startRowIndex !== 1 || payment.endRowIndex !== oldRows ||
+      rule.ranges.length !== 1 || rule.ranges[0].endColumnIndex !== width || rule.ranges[0].endRowIndex !== oldRows)
+    throw Error('unsupported_roster_format');
+  extend(rule.ranges[0]); extend(payment);
+  requests.push({updateConditionalFormatRule:{sheetId:id,index:0,rule:rule}},
+    {updateProtectedRange:{protectedRange:{protectedRangeId:protection.protectedRangeId,unprotectedRanges:[payment]},fields:'unprotectedRanges'}});
+  var extension = Object.assign({},payment,{startRowIndex:oldRows}), cell = letter+(oldRows+1);
+  requests.push({repeatCell:{range:extension,cell:{userEnteredFormat:{numberFormat:{type:'NUMBER',pattern:'0'}}},fields:'userEnteredFormat.numberFormat'}},
+    {setDataValidation:{range:extension,filteredRowsIncluded:true,rule:{condition:{type:'CUSTOM_FORMULA',
+      values:[{userEnteredValue:'=AND(ISNUMBER('+cell+'),OR('+cell+'=0,'+cell+'=1))'}]},strict:true}}});
+  Sheets.Spreadsheets.batchUpdate({requests:requests},config.id);
+}
+function seminarRosterMetadata(config) {
+  return Sheets.Spreadsheets.get(config.id,{ranges:["'"+config.tab.replace(/'/g,"''")+"'"],
+    fields:'sheets(properties(sheetId),basicFilter,filterViews,conditionalFormats,protectedRanges,merges),namedRanges'});
+}
 function doPost(e) {
   var lock, held = false;
   try {
@@ -220,23 +308,33 @@ function doPost(e) {
     var config = seminarConfig(route.eventId), p = seminarVerify(e, config, now);
     config = seminarConfig(p.eventId);
     if (p.action === 'readiness') {
-      if (!seminarKeys(p, ['action','eventId'].concat(config.eventId === 'cupsnballs' ? ['consentVersion'] : [])) || (config.eventId === 'cupsnballs' && p.consentVersion !== config.props.getProperty('CUPSNBALLS_CONSENT_VERSION'))) return seminarJson({ok:false,error:'invalid_request'});
+      if (!seminarKeys(p,['action','eventId','consentVersion','photoConsentVersion','requireMemberLinkage'])) return seminarJson({ok:false,error:'invalid_request'});
+      var detailed = p.requireMemberLinkage === true;
+      if (detailed ? !seminarNoticeAllowed(config.eventId,p.consentVersion,p.photoConsentVersion,true) :
+        ('requireMemberLinkage' in p || 'photoConsentVersion' in p || (config.eventId === 'cupsnballs' ?
+        !seminarNoticeAllowed(config.eventId,p.consentVersion,p.consentVersion,false) : 'consentVersion' in p))) return seminarJson({ok:false,error:'invalid_request'});
     } else if (p.action !== 'submit' || !seminarKeys(p, ['action','eventId','idempotencyKey','fingerprint','receivedAt','eligible','rejection','record','ipHash','contactHash','capacity','paymentDueHours']) || !SEMINAR_UUID.test(p.idempotencyKey) || !SEMINAR_HASH.test(p.fingerprint) || !SEMINAR_HASH.test(p.ipHash) || !SEMINAR_HASH.test(p.contactHash) || p.capacity !== config.capacity || p.paymentDueHours !== 24 || typeof p.eligible !== 'boolean') return seminarJson({ok:false,error:'invalid_request'});
     lock = LockService.getScriptLock(); held = lock.tryLock(10000);
     if (!held) return seminarJson({ok:false,error:'storage_unavailable'});
     var sheet = SpreadsheetApp.openById(config.id).getSheetByName(config.tab);
     if (!sheet) throw Error('invalid_sheet');
     var rows = seminarRead(sheet, config);
-    if (p.action === 'readiness') return seminarJson({ok:true,ready:true});
+    if (p.action === 'readiness') {
+      if (!detailed) return seminarJson({ok:true,ready:true});
+      if (seminarColumn('신청 구분') < 0) return seminarJson({ok:false,error:'invalid_sheet'});
+      return seminarJson({ok:true,ready:true,memberLinkageReady:true,consentVersion:p.consentVersion,photoConsentVersion:p.photoConsentVersion});
+    }
     var existing = rows.find(function (row) { return seminarCell(row, '재시도 키') === p.idempotencyKey; });
     if (existing) return seminarJson(seminarCell(existing, '요청 지문') === p.fingerprint ? {ok:true,receipt:seminarReceipt(existing)} : {ok:false,error:'idempotency_conflict'});
-    var limited = seminarRate(config.props,p.ipHash,now); if (limited) return seminarJson(limited);
+    var limited = seminarRate(config.props,config.eventId,p.ipHash,now); if (limited) return seminarJson(limited);
     if (!p.eligible) {
-      var allowed = ['signup_closed','price_changed','option_unavailable','consent_changed'];
+      var allowed = ['signup_closed','price_changed','option_unavailable','consent_changed','agreement_required','member_unavailable','service_unavailable'];
       if (!p.rejection || !allowed.includes(p.rejection.error)) return seminarJson({ok:false,error:'invalid_request'});
       return seminarJson(Object.assign({ok:false},p.rejection));
     }
-    if (!seminarRecordValid(p.record,p.receivedAt,true,config.eventId) || Math.abs(now-Date.parse(p.receivedAt)) > 300000) return seminarJson({ok:false,error:'invalid_request'});
+    if (!seminarRecordValid(p.record,p.receivedAt,false,config.eventId) || Math.abs(now-Date.parse(p.receivedAt)) > 300000) return seminarJson({ok:false,error:'invalid_request'});
+    if (!seminarNoticeAllowed(config.eventId,p.record.consentVersion,p.record.photoConsentVersion,p.record.signupMode === 'member')) return seminarJson({ok:false,error:'consent_changed'});
+    if (p.record.signupMode === 'member' && seminarColumn('신청 구분') < 0) return seminarJson({ok:false,error:'member_unavailable'});
     if (Date.parse(p.receivedAt) < Date.parse(config.eventId === 'cupsnballs' ? '2026-11-27T18:00:00+09:00' : '2026-12-15T10:00:00+09:00') || Date.parse(p.receivedAt) >= Date.parse(config.eventId === 'cupsnballs' ? '2026-12-19T00:00:00+09:00' : '2027-01-11T00:00:00+09:00')) return seminarJson({ok:false,error:'signup_closed'});
     var recent = rows.filter(function (row) { var r = JSON.parse(seminarCell(row, '서버 기록')); return r.contactType === p.record.contactType && r.contact === p.record.contact && Date.parse(seminarCell(row, '접수 시각 원본')) > now - 3600000; });
     if (recent.length >= 3) return seminarJson({ok:false,error:'rate_limited',retryAfter:Math.max(1,Math.ceil((Math.min.apply(null,recent.map(function (row) {return Date.parse(seminarCell(row, '접수 시각 원본'));})) + 3600000-now)/1000))});
@@ -264,6 +362,7 @@ function doPost(e) {
 function doGet() { return seminarJson({ok:false,error:'method_not_allowed'}); }
 function setupSeminarSheet(eventId) {
   var config = seminarConfig(eventId), lock = LockService.getScriptLock();
+  SEMINAR_HEADERS = seminarLinkedHeaders(SEMINAR_HEADERS);
   if (!lock.tryLock(10000)) throw Error('lock_unavailable');
   try {
     var file = SpreadsheetApp.openById(config.id), sheet = file.getSheetByName(config.tab);
@@ -296,7 +395,7 @@ function setupSeminarSheet(eventId) {
     protection.setUnprotectedRanges([payment]);
     protection.removeEditors(protection.getEditors());
     if (protection.canDomainEdit()) protection.setDomainEdit(false);
-    if (config.eventId === 'cupsnballs') {config.props.deleteProperty('cups_sheet_prepared_rows');seminarExpandCups(sheet,sheet.getMaxRows());}
+    if (config.eventId === 'cupsnballs') {config.props.deleteProperty('cups_sheet_prepared_rows_linked');seminarExpandCups(sheet,sheet.getMaxRows());}
     SpreadsheetApp.flush();
   } finally { lock.releaseLock(); }
 }
@@ -304,7 +403,10 @@ function setupSeminarSheet(eventId) {
 function setupDaebeongaeSheet() { return setupSeminarSheet('daebeongae'); }
 function setupCupsnballsSheet() { return setupSeminarSheet('cupsnballs'); }
 
-function seminarMigrateCupsFilterFormula(formula, tabName, movesColumn) {
+function seminarMigrateCupsFilterFormula(formula, tabName, movesColumn, oldColumn, offsetColumns) {
+  var inserting = Boolean(oldColumn);
+  oldColumn = oldColumn || 31;
+  offsetColumns = offsetColumns || 1;
   if (typeof formula !== 'string' || formula.charAt(0) !== '=' || formula.length === 1) throw Error('unsupported_filter_formula');
   // Recognize A1 references and detect functions that can resolve other addresses.
   // Quoted strings are single tokens, so literal text such as "AE2" stays intact.
@@ -322,12 +424,20 @@ function seminarMigrateCupsFilterFormula(formula, tabName, movesColumn) {
     var referencedTab = qualifier && qualifier.replace(/^'|'$/g,'').replace(/''/g,"'");
     if (first && (!referencedTab || referencedTab.toLowerCase() === tabName.toLowerCase())) {
       var start = columnNumber(first), end = match[4] ? columnNumber(match[4]) : start;
+      if (inserting && Math.max(start,end) >= oldColumn) {
+        if (Math.min(start,end) < oldColumn) throw Error('unsupported_filter_formula');
+        var prefix = qualifier ? qualifier.length+1 : 0;
+        var references = match[0].slice(prefix).replace(/(\$?)([a-z]+)/gi,function(_,absolute,letters) {
+          return absolute+seminarLetter(columnNumber(letters)-1+offsetColumns);
+        });
+        return match[0].slice(0,prefix)+references;
+      }
       // AF gains a new meaning and a range spanning AE cannot keep its old cells
       // in a single contiguous range after AE moves.
-      if (Math.min(start,end) <= 32 && Math.max(start,end) >= 31) {
-        if (start !== 31 || end !== 31) throw Error('unsupported_filter_formula');
+      if (Math.min(start,end) <= oldColumn+offsetColumns && Math.max(start,end) >= oldColumn) {
+        if (start !== oldColumn || end !== oldColumn) throw Error('unsupported_filter_formula');
         var prefixLength = qualifier ? qualifier.length+1 : 0;
-        return match[0].slice(0,prefixLength) + match[0].slice(prefixLength).replace(/AE/gi,'AF');
+        return match[0].slice(0,prefixLength) + match[0].slice(prefixLength).replace(new RegExp(seminarLetter(oldColumn-1),'gi'),seminarLetter(oldColumn+offsetColumns-1));
       }
     }
     return match[0];
@@ -381,28 +491,31 @@ function migrateCupsnballsSheet() {
   if (!lock.tryLock(10000)) throw Error('lock_unavailable');
   try {
     var sheet = SpreadsheetApp.openById(config.id).getSheetByName(config.tab);
-    if (!sheet || !sheet.getLastRow()) throw Error('invalid_sheet');
-    var header = JSON.stringify(sheet.getDataRange().getValues()[0]);
-    if (header === JSON.stringify(SEMINAR_HEADERS)) return;
-    if (header !== JSON.stringify(CUPSNBALLS_LEGACY_HEADERS)) throw Error('existing_header_preserved');
-    if (sheet.getLastRow() !== 1) throw Error('existing_rows_preserved');
-
-    var displayColumn = seminarColumn(CUPSNBALLS_DISPLAY_COLUMN)+1;
-    var criteria = seminarCupsMigrationCriteria(sheet.getFilter(),displayColumn,config.tab);
-    if (sheet.getMaxColumns() < SEMINAR_HEADERS.length) sheet.insertColumnsAfter(sheet.getMaxColumns(),SEMINAR_HEADERS.length-sheet.getMaxColumns());
-    if (sheet.getMaxRows() < 2) sheet.insertRowsAfter(sheet.getMaxRows(),2-sheet.getMaxRows());
-    var displayRange = sheet.getRange(1,displayColumn,sheet.getMaxRows(),1);
-    displayRange.clearDataValidations().setNumberFormat('@');
-    if (!sheet.getProtections(SpreadsheetApp.ProtectionType.SHEET).length) {
-      var protection = sheet.protect().setDescription('입금 상태 외 원본 보호');
-      protection.removeEditors(protection.getEditors());
-      if (protection.canDomainEdit()) protection.setDomainEdit(false);
-    }
-    // Finish preparing the new columns before changing the old header.
-    seminarExpandCups(sheet,sheet.getMaxRows(),criteria);
-    sheet.getRange(1,displayColumn,1,2).setValues([[CUPSNBALLS_DISPLAY_COLUMN,'입금']]);
-    SpreadsheetApp.flush();
+    return seminarUpgradeDisplayHeader(sheet,config);
   } finally { lock.releaseLock(); }
+}
+function seminarUpgradeDisplayHeader(sheet,config) {
+  if (!sheet || !sheet.getLastRow()) throw Error('invalid_sheet');
+  var header = JSON.stringify(sheet.getDataRange().getValues()[0]);
+  if (header === JSON.stringify(SEMINAR_HEADERS)) return;
+  if (header !== JSON.stringify(CUPSNBALLS_LEGACY_HEADERS)) throw Error('existing_header_preserved');
+  if (sheet.getLastRow() !== 1) throw Error('existing_rows_preserved');
+
+  var displayColumn = seminarColumn(CUPSNBALLS_DISPLAY_COLUMN)+1;
+  var criteria = seminarCupsMigrationCriteria(sheet.getFilter(),displayColumn,config.tab);
+  if (sheet.getMaxColumns() < SEMINAR_HEADERS.length) sheet.insertColumnsAfter(sheet.getMaxColumns(),SEMINAR_HEADERS.length-sheet.getMaxColumns());
+  if (sheet.getMaxRows() < 2) sheet.insertRowsAfter(sheet.getMaxRows(),2-sheet.getMaxRows());
+  var displayRange = sheet.getRange(1,displayColumn,sheet.getMaxRows(),1);
+  displayRange.clearDataValidations().setNumberFormat('@');
+  if (!sheet.getProtections(SpreadsheetApp.ProtectionType.SHEET).length) {
+    var protection = sheet.protect().setDescription('입금 상태 외 원본 보호');
+    protection.removeEditors(protection.getEditors());
+    if (protection.canDomainEdit()) protection.setDomainEdit(false);
+  }
+  // Finish preparing the new columns before changing the old header.
+  seminarExpandCups(sheet,sheet.getMaxRows(),criteria);
+  sheet.getRange(1,displayColumn,1,2).setValues([[CUPSNBALLS_DISPLAY_COLUMN,'입금']]);
+  SpreadsheetApp.flush();
 }
 
 var INQUIRY_HEADERS=['문의 번호','접수 시각','회원 구분','답장 연락처','문의 내용','재시도 키','요청 지문','알림 상태','답변 완료일'];
@@ -464,4 +577,124 @@ function setupInquirySheet(){
     if(!sheet)sheet=file.insertSheet('문의');sheet.getRange(1,1,1,INQUIRY_HEADERS.length).setValues([INQUIRY_HEADERS]);sheet.setFrozenRows(1);
     var protections=sheet.getProtections(SpreadsheetApp.ProtectionType.SHEET),protection=protections.length?protections[0]:sheet.protect();protection.setDescription('문의 원본 보호');protection.setUnprotectedRanges([sheet.getRange(2,9,sheet.getMaxRows()-1,1)]);protection.removeEditors(protection.getEditors());if(protection.canDomainEdit())protection.setDomainEdit(false);SpreadsheetApp.flush();
   }finally{lock.releaseLock();}
+}
+
+// Use the advanced Sheets service for one all-or-nothing schema and formatting change.
+function migrateCupsnballsMemberSheet() { return seminarMigrateMemberSheet('cupsnballs'); }
+function migrateDaebeongaeMemberSheet() { return seminarMigrateMemberSheet('daebeongae'); }
+function seminarMigrateMemberSheet(eventId) {
+  var config = seminarConfig(eventId), lock = LockService.getScriptLock();
+  if (!lock.tryLock(10000)) throw Error('lock_unavailable');
+  try {
+    var sheet = SpreadsheetApp.openById(config.id).getSheetByName(config.tab);
+    if (!sheet) throw Error('invalid_sheet');
+    if (eventId === 'cupsnballs' && JSON.stringify(sheet.getDataRange().getValues()[0]) === JSON.stringify(CUPSNBALLS_LEGACY_HEADERS))
+      seminarUpgradeDisplayHeader(sheet,config);
+    var rows = seminarRead(sheet,config);
+    var linked = seminarColumn('신청 구분') >= 0;
+    var payment = seminarColumn('입금'), id = sheet.getSheetId();
+    var dataRows = eventId === 'cupsnballs' ? sheet.getMaxRows()-1 : 60;
+    var range = function(row,col,endCol) {
+      return {sheetId:id,startRowIndex:row,endRowIndex:dataRows+1,startColumnIndex:col,endColumnIndex:endCol};
+    };
+    function equalRange(actual, expected) {
+      return actual && Object.keys(expected).every(function(k) { return (actual[k] || 0) === expected[k]; });
+    }
+    var file = seminarRosterMetadata(config);
+    var meta = file.sheets.find(function(item) { return item.properties.sheetId === id; });
+    var paid = seminarLetter(payment), validation = '=AND(ISNUMBER('+paid+'2),OR('+paid+'2=0,'+paid+'2=1))';
+    var protections = meta.protectedRanges || [], rules = meta.conditionalFormats || [];
+    var rule = rules[0], protect = protections[0];
+    if (!rule || rules.length !== 1 || rule.ranges.length !== 1 || !equalRange(rule.ranges[0],range(1,0,payment+1)) ||
+        !rule.booleanRule || !rule.booleanRule.format || !(rule.booleanRule.format.backgroundColor || rule.booleanRule.format.backgroundColorStyle) || rule.booleanRule.condition.type !== 'CUSTOM_FORMULA' ||
+        rule.booleanRule.condition.values[0].userEnteredValue !== '=$'+paid+'2=1' ||
+        !protect || protections.length !== 1 || protect.warningOnly || protect.namedRangeId ||
+        Object.keys(protect.range).some(function(k) {return k !== 'sheetId';}) ||
+        !protect.unprotectedRanges || protect.unprotectedRanges.length !== 1 ||
+        !equalRange(protect.unprotectedRanges[0],range(1,payment,payment+1)) ||
+        (meta.merges || []).length) throw Error('unsupported_roster_format');
+    var paymentRange = sheet.getRange(2,payment+1,dataRows,1);
+    if (!paymentRange.getDataValidations().every(function(row,index) {
+      var v = row[0];
+      return v && !v.getAllowInvalid() && v.getCriteriaType() === SpreadsheetApp.DataValidationCriteria.CUSTOM_FORMULA &&
+        [validation,validation.replace(/2/g,String(index+2))].includes(String(v.getCriteriaValues()[0]));
+    }) || !paymentRange.getNumberFormats().every(function(row) { return row[0] === '0'; })) throw Error('invalid_payment_validation');
+    if (sheet.getDataRange().getFormulas().some(function(row) {return row.some(Boolean);})) throw Error('unexpected_roster_formula');
+    if (!meta.basicFilter || !equalRange(meta.basicFilter.range,range(0,0,payment+1))) throw Error('unsupported_filter_layout');
+    if (linked) {
+      if (eventId === 'cupsnballs') config.props.setProperty('cups_sheet_prepared_rows_linked',String(dataRows+1));
+      return;
+    }
+    var oldWidth = payment+1, newPayment = payment+2, newWidth = oldWidth+2;
+    function shiftCriteria(criterion,index) {
+      var condition = criterion && criterion.condition;
+      if (condition && condition.type === 'CUSTOM_FORMULA') {
+        if (!condition.values || condition.values.length !== 1) throw Error('unsupported_filter_formula');
+        var value = condition.values[0];
+        value.userEnteredValue = seminarMigrateCupsFilterFormula(value.userEnteredValue,config.tab,index === payment,oldWidth,2);
+      }
+    }
+    var widenedNames = {};
+    function widenFilter(filter) {
+      if (filter.namedRangeId) {
+        var named = (file.namedRanges || []).find(function(entry) { return entry.namedRangeId === filter.namedRangeId; });
+        if (!named || filter.range || !equalRange(named.range,range(0,0,oldWidth))) throw Error('unsupported_filter_layout');
+        widenedNames[filter.namedRangeId] = true;
+      } else {
+        if (!equalRange(filter.range,range(0,0,oldWidth))) throw Error('unsupported_filter_layout');
+        filter.range = range(0,0,newWidth);
+      }
+      function column(index) {
+        if (!Number.isInteger(index) || index < 0 || index > payment) throw Error('unsupported_filter_layout');
+        return index === payment ? newPayment : index;
+      }
+      if (filter.criteria) {
+        var moved = {};
+        Object.keys(filter.criteria).forEach(function(k) {
+          var index = Number(k), criteria = filter.criteria[k];
+          shiftCriteria(criteria,index);
+          moved[column(index)] = criteria;
+        });
+        filter.criteria = moved;
+      }
+      (filter.filterSpecs || []).forEach(function(spec) {
+        shiftCriteria(spec.filterCriteria,spec.columnIndex || 0);
+        spec.columnIndex = column(spec.columnIndex || 0);
+      });
+      (filter.sortSpecs || []).forEach(function(spec) { spec.dimensionIndex = column(spec.dimensionIndex || 0); });
+      return filter;
+    }
+    var requests = [];
+    // Some Sheets grids end at payment. InsertDimension needs an in-grid endIndex.
+    var spare = Math.max(0,payment+2-sheet.getMaxColumns());
+    if (spare) requests.push({appendDimension:{sheetId:id,dimension:'COLUMNS',length:spare}});
+    requests.push(
+      {insertDimension:{range:{sheetId:id,dimension:'COLUMNS',startIndex:payment,endIndex:payment+2},inheritFromBefore:true}},
+      {setBasicFilter:{filter:widenFilter(meta.basicFilter)}}
+    );
+    if (spare) requests.push({deleteDimension:{range:{sheetId:id,dimension:'COLUMNS',
+      startIndex:sheet.getMaxColumns()+2,endIndex:sheet.getMaxColumns()+2+spare}}});
+    (meta.filterViews || []).forEach(function(view) {
+      requests.push({updateFilterView:{filter:widenFilter(view),fields:(view.namedRangeId ? '' : 'range,')+'criteria,filterSpecs,sortSpecs'}});
+    });
+    Object.keys(widenedNames).forEach(function(namedRangeId) {
+      requests.push({updateNamedRange:{namedRange:{namedRangeId:namedRangeId,range:range(0,0,newWidth)},fields:'range'}});
+    });
+    var nextLetter = seminarLetter(newPayment);
+    rule.ranges = [range(1,0,newWidth)];
+    rule.booleanRule.condition.values[0].userEnteredValue = '=$'+nextLetter+'2=1';
+    requests.push({updateConditionalFormatRule:{sheetId:id,index:0,rule:rule}},
+      {updateProtectedRange:{protectedRange:{protectedRangeId:protect.protectedRangeId,unprotectedRanges:[range(1,newPayment,newWidth)]},fields:'unprotectedRanges'}},
+      {setDataValidation:{range:range(1,newPayment,newWidth),filteredRowsIncluded:true,rule:{condition:{type:'CUSTOM_FORMULA',values:[{userEnteredValue:'=AND(ISNUMBER('+nextLetter+'2),OR('+nextLetter+'2=0,'+nextLetter+'2=1))'}]},strict:true}}},
+      {repeatCell:{range:range(0,payment,newPayment),cell:{userEnteredFormat:{numberFormat:{type:'TEXT'}}},fields:'userEnteredFormat.numberFormat,dataValidation'}});
+    function textCell(s) {return {userEnteredValue:{stringValue:s}};}
+    var values = [{values:[textCell('신청 구분'),textCell('사이트 회원 식별자')]}];
+    rows.forEach(function(row) {
+      var record = JSON.parse(seminarCell(row,'서버 기록'));
+      values.push({values:[textCell(record.signupMode === 'guest' ? '비회원' : '기존 접수')]});
+    });
+    requests.push({updateCells:{start:{sheetId:id,rowIndex:0,columnIndex:payment},rows:values,fields:'userEnteredValue'}});
+    Sheets.Spreadsheets.batchUpdate({requests:requests},config.id);
+    if (eventId === 'cupsnballs') config.props.setProperty('cups_sheet_prepared_rows_linked',String(dataRows+1));
+  } finally { lock.releaseLock(); }
 }
