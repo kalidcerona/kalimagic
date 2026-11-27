@@ -1,6 +1,6 @@
 import { acknowledgeResume, readResume, recoverImport } from './apply.mjs';
-import { mountImportSettings } from './ui.mjs';
-const target = document.querySelector('[data-zz-bootstrap]').dataset.zzBootstrap;
+const bootstrap = document.querySelector('[data-zz-bootstrap]');
+const target = bootstrap.dataset.zzBootstrap;
 let releaseLive;
 let liveRequest;
 let registration;
@@ -119,10 +119,14 @@ async function start() {
   }
   // The delayed scripts use readyState guards; never replay global lifecycle events.
   if (location.hash !== '#selftest') importWorker().catch(() => {});
-  mountImportSettings(target, exclusiveWrite);
-  document.querySelector('[data-zz-bootstrap]').dataset.zzReady = 'true';
+  bootstrap.dataset.zzReady = 'true';
 }
-start().catch((error) => {
+start().then(() => {
+  // Settings can load after the app has registered its input handlers.
+  return import('./ui.mjs')
+    .then(({ mountImportSettings }) => mountImportSettings(target, exclusiveWrite))
+    .catch((error) => console.warn('ZZ import settings unavailable', error));
+}, (error) => {
   releaseLive?.();
   const message = document.createElement('p');
   message.setAttribute('role', 'alert');

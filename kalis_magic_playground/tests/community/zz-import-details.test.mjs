@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { webcrypto } from 'node:crypto';
-import { applyImport, previewImport, readImportDetails } from '../../zz-import/apply.mjs';
+import { applyImport, pendingCandidates, previewImport, readImportDetails } from '../../zz-import/apply.mjs';
 import { comparisonRows } from '../../zz-import/ui.mjs';
 if (!globalThis.crypto) globalThis.crypto = webcrypto;
 function fixture() {
@@ -97,4 +97,16 @@ test('retained export omits binary images and can address an older imported vers
   assert.equal('value' in detail.profiles.zz.mediaRefs[0], false);
   assert.equal(JSON.stringify(detail).includes('private bytes'), false);
   assert.equal(await readImportDetails('alter', { store }), null);
+});
+
+test('offers check the destination and hash against receipts and the completed journal', async () => {
+  const { store, state } = fixture();
+  const target = 'kairos';
+  state.set('receipt:kairos:first', { target, contentHash: 'first' });
+  state.set('journal:kairos', { status: 'complete', receipt: { target, contentHash: 'second' } });
+  store.readBackupReceipt = async (route, hash) =>
+    route === target && hash === 'third' ? { target, contentHash: hash } : undefined;
+  const candidates = ['first', 'second', 'third', 'new'].map((contentHash) => ({ contentHash }));
+  assert.deepEqual(await pendingCandidates(target, candidates, { store }), [candidates[3]]);
+  assert.deepEqual(await pendingCandidates('kairos-classic', candidates, { store }), candidates);
 });

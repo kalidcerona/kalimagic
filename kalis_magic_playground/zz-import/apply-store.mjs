@@ -85,6 +85,7 @@ export async function writeMedia(item) {
 export const browserStore = {
   stateGet,
   statePut,
+  readBackupReceipt,
   readMedia,
   writeMedia,
   get: (key) => localStorage.getItem(key),
@@ -114,6 +115,17 @@ export async function readAllMedia(config) {
   }
 }
 browserStore.readAllMedia = readAllMedia;
+
+async function readBackupReceipt(target, hash) {
+  const db = await mediaDatabase('zz-migration-v1', 'receipts', false);
+  if (!db) return undefined;
+  try {
+    if (!db.objectStoreNames.contains('receipts')) return undefined;
+    return await request(db.transaction('receipts').objectStore('receipts').get([target, hash]));
+  } finally {
+    db.close();
+  }
+}
 
 async function mirrorReceipt(receipt) {
   const req = indexedDB.open('zz-migration-v1', 1);

@@ -308,6 +308,21 @@ try {
         target + ' decoded media',
       );
     }
+    if (target === 'alter') {
+      const revisit = await openPanel(target);
+      assert.equal(await revisit.locator('summary').first().textContent(), '가져온 ZZ 데이터 관리');
+      assert.equal(await revisit.getByText(/저장된 ZZ 백업 확인|기기에 남은 ZZ 데이터 확인/).count(), 0);
+      assert.doesNotMatch(await revisit.locator('[role=status]').textContent(), /가져올 이전 ZZ 데이터/);
+      await page.evaluate(
+        (key) => localStorage.setItem(key, JSON.stringify({ rank: 'J', suit: 'club', brightness: 95 })),
+        source,
+      );
+      await page.reload();
+      const updated = await openPanel(target);
+      assert.equal(await updated.getByText('기기에 남은 ZZ 데이터 확인', { exact: true }).count(), 1);
+      assert.equal(await updated.getByText('저장된 ZZ 백업 확인', { exact: true }).count(), 0);
+      console.log('ALTER completed hash hidden; changed source offered');
+    }
     console.log('restored', target);
   }
 } finally {

@@ -1,5 +1,7 @@
 // Use the app's pure readers. DOM-bound readers have equivalent narrow shape
 // guards here, with the originating module named beside the guard.
+import { TARGETS } from './data.mjs';
+
 const sourceAliases = { 'kairos-classic': 'kairos', release: 'unlock', arosaegida: 'qr', tyche: 'spinner' };
 async function native(target, name, options) {
   if (options.loadModule) return options.loadModule(name);
@@ -17,6 +19,9 @@ const JSON_KEYS =
   /(?:unlock-settings-v1|\.v1\.store(?:\.backup)?|\.user-icons|\.meta\.v1|\.custom12\.v1|\.photoSets\.v2|friend-tobira\.v1$|coinChoices|detector\.v1$|asrai\.prototype\.v2$|alter-settings$|spinner-state-v[12]$|memdeck-v1$|qr-session-v1-arosaegida$|pimax\.distribution\.(?:settings|stats|session)$|uramichi\.web\.(?:presets|armed|recent|settings)$|_seq_slots$|_named_presets_v1$|magic-performance-link:|magic-appearance:)/;
 export async function validateProfile(target, profile, options = {}) {
   const invalid = [];
+  const aletheiaPhotoRefs = new Map();
+  const currentPhotoSets = target === 'aletheia' &&
+    profile.entries.some(([key, raw]) => key === 'aletheia.distribution.photoSets.v2' && raw !== null);
   for (const [key, raw] of profile.entries) {
     if (raw === null || /preserved-raw$/.test(key)) continue;
     try {
@@ -51,12 +56,18 @@ export async function validateProfile(target, profile, options = {}) {
       } else if (key === 'usotsuki.distribution.detector.v1') {
         requireValid((await native(target, 'logic.js', options)).parseStoredPayload(raw).status === 'ok');
       } else if (key === 'aletheia.distribution.meta.v1') {
-        requireValid((await native(target, 'logic-presets.js', options)).parseMeta(raw).ok);
+        const result = (await native(target, 'logic-presets.js', options)).parseMeta(raw);
+        requireValid(result.ok);
+        aletheiaPhotoRefs.set(key, result.meta.presets.map((preset) => preset.imageId));
       } else if (
         key === 'aletheia.distribution.photoSets.v2' || key === 'aletheia.distribution.custom12.v1'
       ) {
         const parse = (await native(target, 'logic-photo-sets.js', options)).parsePhotoSets;
-        requireValid(key.endsWith('custom12.v1') ? parse(null, raw).ok : parse(raw).ok);
+        const legacy = key.endsWith('custom12.v1');
+        const result = legacy ? parse(null, raw) : parse(raw);
+        requireValid(result.ok);
+        // Like the app and the backup worker, use legacy slots only when current slots are absent.
+        if (!legacy || !currentPhotoSets) aletheiaPhotoRefs.set(key, result.sets.flat().filter(Boolean));
       } else if (/pimax\.distribution\.(settings|stats|session)$/.test(key)) {
         const module = await native(target, 'core-storage.mjs', options), kind = key.split('.').at(-1);
         const validator = module[`validate${kind[0].toUpperCase()}${kind.slice(1)}`];
@@ -164,22 +175,8 @@ export async function validateProfile(target, profile, options = {}) {
       invalid.push({ key, message: error.message });
     }
   }
-  const photoKeys = new Set(
-    profile.media.filter((item) => item.value !== undefined).map((item) => String(item.ref.key)),
-  );
-  if (target === 'aletheia') {
-    const raw = new Map(profile.entries).get('aletheia.distribution.photoSets.v2');
-    if (raw) {
-      try {
-        const sets = JSON.parse(raw).sets;
-        if (sets.flat().some((id) => id !== null && !photoKeys.has(id))) {
-          invalid.push({ key: 'aletheia.distribution.photoSets.v2', message: '사진 원본이 없습니다.' });
-        }
-      } catch {
-        /* The native reader already reports this invalid payload. */
-      }
-    }
-  }
+  const aletheiaMedia = target === 'aletheia' ? TARGETS.aletheia.media[0] : null;
+  const availablePhotos = new Set();
   for (const item of profile.media) {
     if (item.value === undefined) continue;
     const blob = item.value instanceof Blob ? item.value : item.value?.blob;
@@ -187,6 +184,10 @@ export async function validateProfile(target, profile, options = {}) {
       invalid.push({ key: String(item.ref.key), message: '사진 원본 형식이 올바르지 않습니다.' });
       continue;
     }
+    if (
+      aletheiaMedia && item.targetDb === aletheiaMedia.targetDb &&
+      item.targetStore === aletheiaMedia.targetStore && !(item.value instanceof Blob) && blob.size > 0
+    ) availablePhotos.add(item.ref.key);
     if (typeof globalThis.createImageBitmap === 'function') {
       try {
         const image = await createImageBitmap(blob);
@@ -194,6 +195,11 @@ export async function validateProfile(target, profile, options = {}) {
       } catch {
         invalid.push({ key: String(item.ref.key), message: '사진을 디코딩할 수 없습니다.' });
       }
+    }
+  }
+  for (const [key, ids] of aletheiaPhotoRefs) {
+    if (ids.some((id) => !availablePhotos.has(id))) {
+      invalid.push({ key, message: '연결된 사진 원본이 누락되었거나 비어 있습니다.' });
     }
   }
   return invalid;

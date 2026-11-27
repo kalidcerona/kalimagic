@@ -1,5 +1,12 @@
 import { discoverSources, readImportFile } from './data.mjs';
-import { activateProfile, applyImport, listProfiles, previewImport, readImportDetails } from './apply.mjs';
+import {
+  activateProfile,
+  applyImport,
+  listProfiles,
+  pendingCandidates,
+  previewImport,
+  readImportDetails,
+} from './apply.mjs';
 const containers = {
   kairos: '#settings-card',
   'kairos-classic': '#settings-card',
@@ -115,6 +122,7 @@ export function mountImportSettings(target, exclusiveWrite) {
 }
 async function createImportSettings(target, exclusiveWrite) {
   const discovered = await discoverSources(target);
+  const candidates = await pendingCandidates(target, discovered.candidates);
   const profiles = await listProfiles(target);
   const panel = node('details');
   panel.dataset.zzImport = '';
@@ -123,7 +131,11 @@ async function createImportSettings(target, exclusiveWrite) {
   panel.append(
     node(
       'summary',
-      discovered.candidates.length || profiles?.length ? '이전 ZZ 데이터 가져오기' : '백업 파일 가져오기',
+      candidates.length
+        ? '이전 ZZ 데이터 가져오기'
+        : profiles.length
+        ? '가져온 ZZ 데이터 관리'
+        : '백업 파일 가져오기',
     ),
   );
   const status = node('p');
@@ -223,7 +235,7 @@ async function createImportSettings(target, exclusiveWrite) {
       status.textContent = `확인하지 못했습니다: ${error.message}`;
     }
   }
-  for (const candidate of discovered.candidates) {
+  for (const candidate of candidates) {
     const button = node(
       'button',
       candidate.source === 'raw' ? '기기에 남은 ZZ 데이터 확인' : '저장된 ZZ 백업 확인',
@@ -285,11 +297,11 @@ async function createImportSettings(target, exclusiveWrite) {
     try {
       localStorage.setItem(
         `zz-import-dismissed:${target}`,
-        JSON.stringify(discovered.candidates.map((candidate) => candidate.contentHash)),
+        JSON.stringify(candidates.map((candidate) => candidate.contentHash)),
       );
     } catch {}
   };
-  panel.append(later);
+  if (candidates.length) panel.append(later);
   if (discovered.warnings?.length) status.textContent = discovered.warnings.join(' ');
   else {
     let dismissed = [];
@@ -297,9 +309,7 @@ async function createImportSettings(target, exclusiveWrite) {
       dismissed = JSON.parse(localStorage.getItem(`zz-import-dismissed:${target}`) || '[]');
     } catch {}
     if (
-      discovered.candidates.some((candidate) =>
-        !Array.isArray(dismissed) || !dismissed.includes(candidate.contentHash)
-      )
+      candidates.some((candidate) => !Array.isArray(dismissed) || !dismissed.includes(candidate.contentHash))
     ) status.textContent = '가져올 이전 ZZ 데이터가 있습니다. 내용을 확인해 주세요.';
   }
   const attach = () => {

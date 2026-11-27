@@ -1,7 +1,7 @@
 import { validateProfile } from './apply-validate.mjs';
 import { TARGETS } from './data.mjs';
 import { browserStore } from './apply-store.mjs';
-import { countValues, mergeValue } from './apply-merge.mjs';
+import { countValues, mergeUramichiEntries, mergeValue } from './apply-merge.mjs';
 
 async function digest(value) {
   const bytes = new TextEncoder().encode(JSON.stringify(value));
@@ -78,6 +78,23 @@ async function serialized(target, options, task) {
   }
   return navigator.locks.request(`zz-import:${target}`, { mode: 'exclusive' }, task);
 }
+async function completedReceipt(target, hash, store) {
+  const receipt = await store.stateGet(`receipt:${target}:${hash}`);
+  if (receipt) return receipt;
+  const journal = await store.stateGet(`journal:${target}`);
+  if (journal?.status === 'complete' && journal.receipt?.contentHash === hash) return journal.receipt;
+  return store.readBackupReceipt?.(target, hash);
+}
+
+export async function pendingCandidates(target, candidates, options = {}) {
+  const store = environment(options);
+  const pending = [];
+  for (const candidate of candidates) {
+    if (!await completedReceipt(target, candidate.contentHash, store)) pending.push(candidate);
+  }
+  return pending;
+}
+
 export async function previewImport(target, candidate, options = {}) {
   const store = environment(options),
     current = await capture(candidate, store, target),
@@ -91,9 +108,7 @@ export async function previewImport(target, candidate, options = {}) {
       await mediaDigest(current.media[i].value) !== await mediaDigest(candidate.media[i].value)
     ) mediaConflicts.push(candidate.media[i].ref.key);
   }
-  const previous = await store.stateGet(`journal:${target}`);
-  const alreadyImported = !!await store.stateGet(`receipt:${target}:${candidate.contentHash}`) ||
-    (previous?.status === 'complete' && previous.receipt?.contentHash === candidate.contentHash);
+  const alreadyImported = !!await completedReceipt(target, candidate.contentHash, store);
   const invalid = await validateProfile(target, { entries: incoming, media: candidate.media || [] }, options);
   return {
     existingEntries: current.entries,
@@ -178,7 +193,7 @@ export async function applyImport(target, candidate, options = {}) {
   return serialized(target, options, async () => {
     await recover(target, store);
     const receiptKey = `receipt:${target}:${candidate.contentHash}`;
-    const receipt = await store.stateGet(receiptKey);
+    const receipt = await completedReceipt(target, candidate.contentHash, store);
     if (receipt) return { ...receipt, duplicate: true };
     const invalid = await validateProfile(target, {
       entries: mappedEntries(candidate),
@@ -205,12 +220,14 @@ export async function applyImport(target, candidate, options = {}) {
       ),
     };
     const merged = {
-      entries: incoming.entries.map((
-        [key, value],
-      ) => [
-        key,
-        value === null ? store.get(key) : mergeValue(key, store.get(key), value, candidate.contentHash),
-      ]),
+      entries: target === 'uramichi'
+        ? mergeUramichiEntries(before.entries, incoming.entries, candidate.contentHash)
+        : incoming.entries.map((
+          [key, value],
+        ) => [
+          key,
+          value === null ? store.get(key) : mergeValue(key, store.get(key), value, candidate.contentHash),
+        ]),
       media: incoming.media.map((item, i) => before.media[i].value === undefined ? item : before.media[i]),
     };
     if (target === 'choice') {
