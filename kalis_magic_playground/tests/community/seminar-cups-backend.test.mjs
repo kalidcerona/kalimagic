@@ -150,3 +150,53 @@ test('one spreadsheet isolates signed requests and setup across three named tabs
   assert.equal(store.tabs.get('컵앤볼 신청 명단').state.rows.length, 2);
   assert.equal(store.tabs.get('문의').state.rows.length, 2);
 });
+
+test('existing deployment adds the cups tab before upgrading the empty legacy roster', () => {
+  const fileId = 'local-test-sheet';
+  const store = createLocalSheet({setup:false, properties:{
+    SEMINAR_EVENT_ID:'daebeongae,cupsnballs', SEMINAR_SHEET_ID:fileId,
+    CUPSNBALLS_SHEET_ID:fileId, CUPSNBALLS_SHEETS_SIGNING_SECRET:secret,
+    CUPSNBALLS_CONSENT_VERSION:config.consentVersion
+  }});
+  const file = store.context.SpreadsheetApp.openById(fileId);
+  const legacySheet = file.insertSheet('신청 명단');
+  const oldHeader = Array.from(store.context.SEMINAR_LEGACY_HEADERS);
+  assert.equal(oldHeader.length, 21);
+  legacySheet.getRange(1,1,1,21).setValues([oldHeader]);
+  file.insertSheet('시트1');
+  const blank = store.tabs.get('시트1').state;
+  const blankBefore = structuredClone(blank);
+  const legacy = store.tabs.get('신청 명단').state;
+
+  store.context.setupCupsnballsSheet();
+  assert.deepEqual(legacy.rows, [oldHeader]);
+  assert.equal(legacy.maxColumns, 21);
+  assert.equal(legacy.protections.length, 0);
+  assert.equal(legacySheet.getFilter(), null);
+  assert.equal(legacy.rules, undefined);
+  const cups = store.tabs.get('컵앤볼 신청 명단').state;
+  const cupsRows = structuredClone(cups.rows);
+  assert.equal(cupsRows.length, 1);
+  assert.equal(cupsRows[0].length, 31);
+  const {filter, rules, validation} = cups;
+  const [protection] = cups.protections;
+  const {ranges} = protection;
+
+  store.context.setupDaebeongaeSheet();
+  assert.equal(file.getSheetByName('신청 명단'), legacySheet);
+  assert.deepEqual(legacy.rows, [Array.from(store.context.SEMINAR_BASE_HEADERS)]);
+  assert.equal(legacy.rows[0].length, 29);
+  assert.equal(legacy.validation.col, 29);
+  assert.deepEqual(cups.rows, cupsRows);
+  assert.equal(cups.filter, filter);
+  assert.equal(cups.rules, rules);
+  assert.equal(cups.validation, validation);
+  assert.equal(cups.protections[0], protection);
+  assert.equal(protection.ranges, ranges);
+  assert.deepEqual(blank, blankBefore);
+  assert.deepEqual([...store.tabs.keys()], ['신청 명단','시트1','컵앤볼 신청 명단']);
+
+  const cupsRequest = {action:'readiness',eventId:'cupsnballs',consentVersion:config.consentVersion};
+  assert.equal(store.send(store.sign(cupsRequest, store.state.now, secret)).ready, true);
+  assert.equal(store.submit({action:'readiness',eventId:'daebeongae'}).ready, true);
+});
