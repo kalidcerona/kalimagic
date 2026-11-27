@@ -290,3 +290,17 @@ header { text-align:center; }
 @media (max-width:340px) {
   #q5 > .phrase, #q6 > .phrase { display:block; }
 }
+
+.cups-notice {
+  margin-block-end:12px;
+}
+.cups-notice > summary {
+  min-height:48px;
+  padding-block:10px;
+  color:var(--link);
+  font-weight:700;
+  cursor:pointer;
+}
+.cups-notice[open] > p:first-of-type {
+  margin-block-start:8px;
+}

@@ -76,8 +76,7 @@
             <h2 id="q4"><span class="question-number"><small>필수</small></span>연락 가능한 휴대전화 번호 적어줘.</h2>
             <p class="question-intro">형이 이 번호로 카톡이나 전화를 할게.</p>
             <label class="sr-only" id="contact-label" for="contact">휴대전화 번호 (필수)</label>
-            <p id="contact-hint" class="hint">010, 011, 016, 017, 018, 019로 시작하는 국내 번호 10-11자리를 적어줘. 띄어쓰기나 하이픈도 괜찮아.</p>
-            <input id="contact" name="contact" type="tel" autocomplete="tel" inputmode="tel" maxlength="24" aria-describedby="contact-hint" required>
+            <input id="contact" name="contact" type="tel" autocomplete="tel" inputmode="tel" maxlength="24" required>
           </section>
           <section class="card question">
             <h2 id="q5"><span class="question-number"><small>필수</small></span>이 수업을 어디서 처음 알게 됐어?</h2>
@@ -134,11 +133,6 @@
             </fieldset>
           </section>
           <section class="card question">
-            <h2 id="q7"><span class="question-number">필수</span>12월 19일 컵앤볼 입문 <span class="phrase">클래스에 올 거야?</span></h2>
-            <p>오후 6시 30분-11시 30분 · 렉쳐노트 퍼블리싱<br>서울 동작구 남부순환로 2043 지하 1층</p>
-            <div class="option"><input id="admission" name="selection" type="checkbox" value="admission" required><label for="admission">컵앤볼 참가권</label></div>
-          </section>
-          <section class="card question">
             <h2 id="q9"><span class="question-number"><small>필수</small></span>어떤 이름으로 입금할 거야?</h2>
             <div class="option">
               <input id="same-payer" name="samePayer" type="checkbox" checked>
@@ -151,23 +145,31 @@
           </section>
           <section class="card question">
             <h2 id="q10"><span class="question-number"><small>필수</small></span><span id="photo-prompt">현장 촬영과 사진·영상의 행사 홍보 활용에 동의하십니까?</span></h2>
-            <p id="photo-notice">현장에서 사진·영상 촬영이 진행됩니다. 본인이 나온 사진·영상을 행사 홍보에 활용하는 동의가 포함됩니다. 내용을 확인한 후 선택하십시오.</p>
-            <p id="photo-contact" class="hint">문의: <a href="../contact.html">문의 페이지</a></p>
+            <details class="cups-notice">
+              <summary>사진 촬영 안내 보기</summary>
+              <p id="photo-notice">현장에서 사진·영상 촬영이 진행됩니다. 본인이 나온 사진·영상을 행사 홍보에 활용하는 동의가 포함됩니다. 내용을 확인한 후 선택하십시오.</p>
+            </details>
             <div class="option">
-              <input id="photo-consent" disabled name="photoConsent" type="checkbox" required aria-describedby="photo-notice photo-contact">
+              <input id="photo-consent" disabled name="photoConsent" type="checkbox" required aria-describedby="photo-notice">
               <label for="photo-consent">네</label>
             </div>
           </section>
           <section id="promotion-section" class="card question" hidden>
             <h2>홍보용 사진·영상 활용에 동의하십니까? <small>선택</small></h2>
-            <p id="promotion-notice">본인 얼굴이 나온 사진·영상을 행사 홍보에 활용하는 데 동의할 수 있습니다. 동의하지 않아도 신청할 수 있습니다.</p>
+            <details class="cups-notice">
+              <summary>홍보용 사진·영상 활용 안내 보기</summary>
+              <p id="promotion-notice">본인 얼굴이 나온 사진·영상을 행사 홍보에 활용하는 데 동의할 수 있습니다. 동의하지 않아도 신청할 수 있습니다.</p>
+            </details>
             <div class="option"><input id="promotion-consent" disabled name="promotionConsent" type="checkbox" aria-describedby="promotion-notice"><label for="promotion-consent">홍보용 사진·영상 활용에 동의합니다. (선택)</label></div>
           </section>
           <section class="card question">
-            <h2 id="q11"><span class="question-number"><small>필수</small></span>신청 전에 개인정보 수집·이용 안내를 읽어 주십시오.</h2>
-            <p><a href="../privacy.html">개인정보 처리방침 보기</a></p>
-            <p id="privacy">개인정보 수집·이용 안내를 불러오는 중입니다. 안내를 확인하기 전에는 신청할 수 없습니다.</p>
-            <p id="operator-contact" class="hint">문의: <a href="../contact.html">문의 페이지</a></p>
+            <h2 id="q11"><span class="question-number"><small>필수</small></span>신청 전에 개인정보 <span class="phrase">수집·이용</span> 안내를 읽어 주십시오.</h2>
+            <details class="cups-notice">
+              <summary>개인정보 수집·이용 안내 보기</summary>
+              <p id="privacy">개인정보 수집·이용 안내를 불러오는 중입니다. 안내를 확인하기 전에는 신청할 수 없습니다.</p>
+              <p id="operator-contact" class="hint">문의: <a href="../contact.html">문의 페이지</a></p>
+              <p><a href="../privacy.html">개인정보 처리방침 보기</a></p>
+            </details>
             <div class="option">
               <input id="consent" disabled name="consent" type="checkbox" required aria-describedby="privacy operator-contact">
               <label for="consent">개인정보 수집·이용에 동의합니다</label>
@@ -177,8 +179,12 @@
         <div class="form-summary">
           <section class="card">
             <h2>신청 내역이 맞아?</h2>
-            <p id="seller-notice">신청·입금 접수 담당자를 확인하고 있습니다.</p>
-            <p id="refund-notice">환불 규정: 한국 시간으로 12월 12일까지는 전액, 13-16일에는 70%, 17-18일에는 50%를 환불해 드립니다. 행사 당일인 12월 19일에는 환불이 불가능합니다.</p>
+            <p>오후 6시 30분-11시 30분<br>렉쳐노트 퍼블리싱<br>서울 동작구 남부순환로 2043 지하 1층</p>
+            <details class="cups-notice">
+              <summary>판매·접수 주체 안내 보기</summary>
+              <p id="seller-notice">신청·입금 접수 담당자를 확인하고 있습니다.</p>
+            </details>
+            <p id="refund-notice">환불 규정: 한국 시간으로 12월 12일까지는 전액, <span class="phrase">13-16일에는</span> 70%, <span class="phrase">17-18일에는</span> 50%를 환불해 드립니다. 행사 당일인 12월 19일에는 환불이 불가능합니다.</p>
             <p>신청 정보 삭제를 원하시면 신청 후 운영자가 보내는 카카오톡 메시지에 답장하십시오.</p>
             <ul id="items" class="items"></ul>
             <p class="hint">신청할 때 가격을 한 번 더 확인할게. 금액이 바뀌면 접수 전에 알려줄게.</p>

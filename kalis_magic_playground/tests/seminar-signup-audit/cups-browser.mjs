@@ -58,7 +58,7 @@ try {
   const syntheticUrl = 'https://script.google.com/macros/s/never-contacted/exec';
   const secret = 'synthetic-browser-only-signing-secret';
   const config = {...cupsnballs, enabled:true, testMode:true, account:'0'.repeat(12), holder:'테스트 운영자',
-    contact:'테스트 문의처', signingSecret:secret, hmacSecret:'synthetic-browser-only-fingerprint-secret',
+    contact:'카카오톡 ID sample_operator', signingSecret:secret, hmacSecret:'synthetic-browser-only-fingerprint-secret',
     sheetsUrl:syntheticUrl, testSheetsUrl:syntheticUrl};
   const store = createLocalSheet({eventId:config.id, now:now.getTime(), secret, properties:{
     CUPSNBALLS_SHEET_ID:'local-test-sheet', CUPSNBALLS_SHEETS_SIGNING_SECRET:secret,
@@ -97,17 +97,17 @@ try {
     for (const width of [320,375,390,414,768,1024,1280,1440]) {
       await page.setViewportSize({width, height:900});
       await page.evaluate(() => document.fonts.ready);
-      if (state === 'initial' || state === 'selected') {
+      if (['initial','expanded','filled'].includes(state)) {
         const prices = (await page.locator('#signup').innerText()).match(/[0-9][0-9,]*원/g) || [];
-        assert.deepEqual(prices, state === 'selected' ? ['50,000원'] : [], state + ' at ' + width);
+        assert.deepEqual(prices, ['50,000원'], state + ' at ' + width);
         const summary = page.locator('.form-summary [role="status"][aria-live="polite"][aria-atomic="true"]');
-        assert.equal(await summary.locator('#total').textContent(), state === 'selected' ? '50,000원' : '선택 전');
+        assert.equal(await summary.locator('#total').textContent(), '50,000원');
       }
       const layoutIssues = await page.evaluate(() => {
         const issues = [];
         if (document.documentElement.scrollWidth > innerWidth) issues.push('horizontal overflow');
         if (/[—~～]/u.test(document.body.innerText)) issues.push('unexpected punctuation');
-        for (const element of document.querySelectorAll('h1,h2,.money,#receipt dd')) {
+        for (const element of document.querySelectorAll('h1,h2,summary,.money,#receipt dd')) {
           if (!element.getClientRects().length) continue;
           const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
           const lines = new Map();
@@ -126,7 +126,7 @@ try {
             }
           }
           const last = [...lines.values()].at(-1);
-          if (element.matches('h1,h2') && lines.size > 1 && /^[가-힣]{1,2}[.?!]?$/u.test(last)) issues.push(element.innerText);
+          if (element.matches('h1,h2,summary') && lines.size > 1 && /^[가-힣]{1,2}[.?!]?$/u.test(last)) issues.push(element.innerText);
         }
         return issues;
       });
@@ -139,7 +139,7 @@ try {
       await page.screenshot({path:path.join(output, state+'-'+width+'.png')});
       const boxes = await page.evaluate(() => {
         const rules = [['h1','#efb883','#123927'], ['#q1','#143322','#f6f0df'],
-          ['#contact-hint','#4b5b47','#f6f0df'], ['#errors a','#793118','#ebe4ce'],
+          ['.question .cups-notice summary','#793118','#f6f0df'], ['#errors a','#793118','#ebe4ce'],
           ['#success-title','#143322','#f6f0df'], ['#test-warning','#961f12','#f6f0df']];
         return rules.flatMap(([selector,fg,bg]) => {
           const element = document.querySelector(selector);
@@ -173,32 +173,53 @@ try {
   }
   assert.equal(await page.locator('#promotion-consent').isVisible(), false);
   assert.equal(await page.locator('#photo-consent').isChecked(), false);
+  assert.equal(await page.locator('#contact-hint, #q7, #admission, #photo-contact').count(), 0);
+  assert.equal(await page.locator('label[for="photo-consent"]').isVisible(), true);
+  assert.equal(await page.locator('label[for="consent"]').isVisible(), true);
+  assert.equal(await page.locator('#photo-consent').getAttribute('aria-describedby'), 'photo-notice');
+  assert.equal(await page.locator('#consent').getAttribute('aria-describedby'), 'privacy operator-contact');
+  const notices = page.locator('#signup .cups-notice:visible');
+  assert.equal(await notices.count(), 3);
+  assert.equal(await page.locator('#signup .cups-notice[open]').count(), 0);
   const seller = await page.textContent('#seller-notice');
+  assert.equal(seller, offer.formConfig.sellerNotice);
+  assert.equal(await page.textContent('#photo-notice'), offer.photoNotice);
+  assert.equal(await page.textContent('#privacy'), offer.privacyNotice);
   for (const word of ['운영자','문준영','대관비','일회용품']) assert.ok(seller.includes(word), word);
   for (const notice of [seller, await page.textContent('#privacy')]) {
     assert.match(notice,/수업 난이도 조절을 위해 문준영 강사에게 성별 비율, 연령대 등 참가자 구성 정보만 전달합니다/);
     assert.match(notice,/이름과 전화번호는 강사에게 전달하지 않습니다/);
   }
   await capture('initial');
+  for (const summary of await notices.locator('summary').all()) await summary.press('Space');
+  assert.equal(await page.locator('#signup .cups-notice[open]').count(), 3);
+  assert.deepEqual((await page.locator('#signup').innerText()).match(/문의: 카카오톡 ID sample_operator/g),
+    ['문의: 카카오톡 ID sample_operator']);
+  await capture('expanded');
+  for (const summary of await notices.locator('summary').all()) await summary.press('Enter');
+  assert.equal(await page.locator('#signup .cups-notice[open]').count(), 0);
   await page.locator('#submit').click();
   await page.locator('#errors').waitFor({state:'visible'});
+  assert.equal(await page.locator('#errors a[href="#contact"]').textContent(), '올바른 국내 휴대전화 번호를 적어줘.');
+  assert.equal(await page.locator('#contact').getAttribute('aria-describedby'), 'errors');
   assert.equal(submissions.length, 0);
   await capture('error');
   async function fillApplication() {
     await page.fill('#name','테스트 참가자');
-    await page.fill('#contact','01012345678');
+    await page.fill('#contact','010-1234-5678');
     await page.fill('#birth-date','1994-07-01');
-    for (const id of ['age-confirmed','gender-male','discovery-instagram','reason-content','admission','consent']) {
+    for (const id of ['age-confirmed','gender-male','discovery-instagram','reason-content','consent']) {
       await page.check('#'+id);
     }
   }
   await fillApplication();
+  assert.equal(await page.locator('#contact').getAttribute('aria-describedby'), null);
   await page.locator('#submit').click();
   assert.equal(submissions.length, 0);
   assert.equal(await page.evaluate(() => document.activeElement.id), 'photo-consent');
   await page.check('#photo-consent');
   assert.equal(await page.textContent('#total'), '50,000원');
-  await capture('selected');
+  await capture('filled');
   for (const ended of [true, false]) {
     config.enabled = ended;
     now = new Date(ended ? config.closesAt : config.opensAt);
@@ -218,7 +239,7 @@ try {
     store.state.now = now.getTime();
     await page.click('#retry');
     await page.waitForFunction(() => !document.querySelector('#submit').disabled);
-    await page.check('#admission');
+    assert.equal(await page.textContent('#total'), '50,000원');
   }
   await page.locator('#submit').click();
   await page.locator('#success').waitFor({state:'visible'});
@@ -226,6 +247,7 @@ try {
   const body = submissions.at(-1);
   assert.equal(submissions.length, 3);
   assert.equal(body.eventId, 'cupsnballs');
+  assert.equal(body.contact, '01012345678');
   assert.equal(body.ageConfirmed, true);
   assert.equal(body.photoConsent, true);
   assert.equal(body.promotionConsent, true);
@@ -234,6 +256,8 @@ try {
   assert.equal(body.reason, 'content');
   assert.equal(body.gender, 'male');
   assert.deepEqual(body.selection, ['admission']);
+  assert.equal(await page.locator('#receipt dt').filter({hasText:/^문의$/}).count(), 1);
+  assert.equal(await page.locator('#receipt dt').filter({hasText:/^문의$/}).locator('+ dd').textContent(), config.contact);
   async function checkResultSkip(headingId) {
     const link = page.locator('.skip');
     assert.equal(await link.evaluate(anchor => anchor.hash), '#' + headingId);
@@ -265,7 +289,7 @@ try {
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
   writeFileSync(path.join(output,'cups-samples.json'),JSON.stringify(samples));
   assert.deepEqual(errors, []);
-  console.log('PASS cups form: 5 states × 8 widths, no horizontal overflow, four analysis fields required, mandatory single photo agreement, focused receipt, two closures during entry, one saved synthetic submission');
+  console.log('PASS cups form: 6 states × 8 widths, native notice toggles, phone validation, automatic admission, receipt contact, two closures during entry, one saved synthetic submission');
 } finally {
   await browser.close();
 }

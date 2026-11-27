@@ -181,7 +181,7 @@ def test_seminar_signup_public_contract():
     for checkbox in cups_form.findall(".//input[@type='checkbox']"):
         if checkbox.get("name") != "samePayer":
             assert "checked" not in checkbox.attrib
-    refund = cups_form.findtext(".//p[@id='refund-notice']")
+    refund = "".join(cups_form.find(".//p[@id='refund-notice']").itertext())
     assert all(period in refund for period in ("12월 12일까지는 전액", "13-16일에는 70%",
                                                 "17-18일에는 50%", "행사 당일인 12월 19일에는 환불이 불가능합니다."))
     landing = (ROOT / "cupsnballs/index.html").read_text()
