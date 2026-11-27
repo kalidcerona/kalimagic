@@ -10,9 +10,9 @@
     <script type="module" src="cups-form.mjs">
     </script>
   </head>
-  <body>
+  <body class="cups-signup">
     <a class="skip" href="#signup"> 신청서로 건너뛰기 </a>
-    <header>
+    <header id="signup-header">
       <div class="mast wrap">
         <span class="brand" lang="en"><img src="../cupsnballs/img/planb.webp" width="30" height="28" alt="">PLAN B</span>
         <a class="back" href="../cupsnballs/">← 컵앤볼 행사 안내</a>
@@ -34,7 +34,7 @@
     <main class="wrap">
       <div id="signup-banner" class="notice">
         <h2> 컵앤볼 신청 준비 중 </h2>
-        <p id="availability" role="status" aria-live="polite"> 아직 접수 준비 중이야. 신청이 열릴 때까지 입금은 기다려줘. </p>
+        <p id="availability" role="status" aria-live="polite">아직 접수 준비 중이야.<br>신청이 열릴 때까지 입금은 기다려줘.</p>
         <button id="retry" type="button"> 가격 다시 확인 </button>
       </div>
       <noscript>
@@ -106,7 +106,7 @@
             </fieldset>
           </section>
           <section class="card question">
-            <h2 id="q6"><span class="question-number"><small>필수</small></span>컵앤볼을 배우고 싶은 <span class="phrase">이유가 뭐야?</span></h2>
+            <h2 id="q6"><span class="question-number"><small>필수</small></span>컵앤볼을 배우고 싶은<br>이유가 뭐야?</h2>
             <fieldset aria-labelledby="q6"><legend class="sr-only">선택지</legend>
               <div class="option" hidden><input disabled id="reason-skip" name="reason" type="radio" value=""><label for="reason-skip">답하지 않을게</label></div>
               <div class="option">
@@ -144,7 +144,7 @@
             </div>
           </section>
           <section class="card question">
-            <h2 id="q10"><span class="question-number"><small>필수</small></span><span id="photo-prompt">현장 촬영과 사진·영상의 행사 홍보 활용에 동의하십니까?</span></h2>
+            <h2 id="q10"><span class="question-number"><small>필수</small></span><span id="photo-prompt">현장 촬영과 사진·영상의<br>행사 홍보 활용에 동의하십니까?</span></h2>
             <details class="cups-notice">
               <summary>사진 촬영 안내 보기</summary>
               <p id="photo-notice">현장에서 사진·영상 촬영이 진행됩니다. 본인이 나온 사진·영상을 행사 홍보에 활용하는 동의가 포함됩니다. 내용을 확인한 후 선택하십시오.</p>
@@ -155,15 +155,15 @@
             </div>
           </section>
           <section id="promotion-section" class="card question" hidden>
-            <h2>홍보용 사진·영상 활용에 동의하십니까? <small>선택</small></h2>
+            <h2><span class="question-number"><small>선택</small></span>홍보용 사진·영상 활용에<br>동의하십니까?</h2>
             <details class="cups-notice">
               <summary>홍보용 사진·영상 활용 안내 보기</summary>
               <p id="promotion-notice">본인 얼굴이 나온 사진·영상을 행사 홍보에 활용하는 데 동의할 수 있습니다. 동의하지 않아도 신청할 수 있습니다.</p>
             </details>
-            <div class="option"><input id="promotion-consent" disabled name="promotionConsent" type="checkbox" aria-describedby="promotion-notice"><label for="promotion-consent">홍보용 사진·영상 활용에 동의합니다. (선택)</label></div>
+            <div class="option"><input id="promotion-consent" disabled name="promotionConsent" type="checkbox" aria-describedby="promotion-notice"><label for="promotion-consent">홍보용 사진·영상 활용에<br>동의합니다. (선택)</label></div>
           </section>
           <section class="card question">
-            <h2 id="q11"><span class="question-number"><small>필수</small></span>신청 전에 개인정보 <span class="phrase">수집·이용</span> 안내를 읽어 주십시오.</h2>
+            <h2 id="q11"><span class="question-number"><small>필수</small></span>신청 전에 개인정보 수집·이용<br>안내를 읽어 주십시오.</h2>
             <details class="cups-notice">
               <summary>개인정보 수집·이용 안내 보기</summary>
               <p id="privacy">개인정보 수집·이용 안내를 불러오는 중입니다. 안내를 확인하기 전에는 신청할 수 없습니다.</p>
@@ -184,29 +184,29 @@
               <summary>판매·접수 주체 안내 보기</summary>
               <p id="seller-notice">신청·입금 접수 담당자를 확인하고 있습니다.</p>
             </details>
-            <p id="refund-notice">환불 규정: 한국 시간으로 12월 12일까지는 전액, <span class="phrase">13-16일에는</span> 70%, <span class="phrase">17-18일에는</span> 50%를 환불해 드립니다. 행사 당일인 12월 19일에는 환불이 불가능합니다.</p>
+            <p id="refund-notice">환불 규정: 한국 시간으로 12월 12일까지는 전액, <span class="phrase">13-16일에는 70%,</span> <span class="phrase">17-18일에는 50%를</span> 환불해 드립니다. 행사 당일인 12월 19일에는 환불이 불가능합니다.</p>
             <p>신청 정보 삭제를 원하시면 신청 후 운영자가 보내는 카카오톡 메시지에 답장하십시오.</p>
             <ul id="items" class="items"></ul>
-            <p class="hint">신청할 때 가격을 한 번 더 확인할게. 금액이 바뀌면 접수 전에 알려줄게.</p>
+            <p class="hint">신청할 때 가격을 한 번 더 확인할게.<br>금액이 바뀌면 접수 전에 알려줄게.</p>
             <div class="trap" aria-hidden="true">
               <label for="website"> 웹사이트 </label>
               <input id="website" name="website" tabindex="-1" autocomplete="off">
             </div>
             <div id="unresolved-attempt" class="notice" hidden>
-              <p>지난 신청이 접수됐는지 아직 모르겠어. 내용을 바꿔서 신청하기 전에 지난 결과부터 확인해줘.</p>
+              <p>지난 신청이 접수됐는지<br>아직 모르겠어.<br>내용을 바꾸기 전에<br>지난 결과부터 확인해줘.</p>
               <button id="check-original" type="button">원래 신청 결과 확인</button>
             </div>
             <div id="errors" role="alert" class="error" tabindex="-1" hidden>
             </div>
             <div id="price-change" class="notice" hidden>
-              <p> 가격이 바뀌었어. 아직 접수 전이야. 새 금액을 확인하고 다시 신청해줘. </p>
+              <p>가격이 바뀌었어.<br>아직 접수 전이야.<br>새 금액을 확인하고 다시 신청해줘.</p>
               <button id="accept-price" type="button"> 새 금액 확인 </button>
             </div>
+            <p>신청하고 24시간 안에 입금해줘.</p>
             <div class="total" role="status" aria-live="polite" aria-atomic="true">
               <span> 입금할 금액 </span>
               <strong id="total" class="money"> 확인 중 </strong>
             </div>
-            <p>신청하고 24시간 안에 입금해줘.</p>
             <button id="submit" type="submit" disabled> 접수 준비 중 </button>
           </section>
         </div>
@@ -216,11 +216,10 @@
         <p>지금은 새 신청을 받지 않아. 행사 안내를 봐줘.</p>
         <a href="../cupsnballs/">행사 안내로 돌아가기</a>
       </section>
-      <section id="success" class="card" hidden>
-        <h2 id="success-title" tabindex="-1"> 칼리 컵앤볼 신청 완료 </h2>
-        <p>신청해줘서 고마워!</p>
-        <p>형이 확인하고 카톡으로 연락할게.</p>
-        <p id="test-warning"> </p>
+      <section id="success" class="card" aria-labelledby="success-title" hidden>
+        <h2 id="success-title" tabindex="-1"> 컵앤볼 신청 완료! </h2>
+        <p id="payment-message"></p>
+        <p id="test-warning" hidden></p>
         <dl id="receipt">
         </dl>
         <button id="copy" type="button"> 입금 안내 복사 </button>

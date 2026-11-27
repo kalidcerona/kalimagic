@@ -65,7 +65,9 @@ try {
     CUPSNBALLS_CONSENT_VERSION:config.consentVersion
   }});
   const submit = createHandler({config, store, now:() => now});
-  let offer = getOffer(now, config);
+  let offer = {...getOffer(now, config), test:false};
+  let loseResponse = false;
+  let expectedRows = 2;
   await page.route('**/*', async route => {
     const url = new URL(route.request().url());
     if (url.origin !== origin.origin) throw Error('Unexpected external request');
@@ -84,24 +86,85 @@ try {
       }
       assert.equal(response.statusCode, 200, response.body.includes('error') ? response.body : 'Unexpected status');
       const data = JSON.parse(response.body);
-      assert.equal(store.state.rows.length, 2);
+      assert.equal(store.state.rows.length, expectedRows);
       assert.equal(data.receipt.payment.test, true);
-      data.receipt.payment.account = '모의 계좌';
+      if (loseResponse) {
+        loseResponse = false;
+        return route.abort('connectionreset');
+      }
+      Object.assign(data.receipt.payment, {test:false, bank:'모의 은행', account:'000-000-000000', holder:'모의 운영자'});
       return route.fulfill({json:data});
     }
     if (url.pathname.startsWith('/api/')) throw Error('Unexpected API route');
     return route.continue();
   });
   const samples = [];
+  async function checkLineBreaks() {
+    return page.evaluate(() => {
+      const issues = [];
+      const selectors = [
+        'h1', 'h2', 'label', 'summary', '.hint', '.question-intro', 'button',
+        '#availability', '#payment-message', '#test-warning', '#errors a', '#copy-status',
+        '#unresolved-attempt p', '#price-change p',
+      ];
+      for (const element of document.querySelectorAll(selectors.join(','))) {
+        if (!element.offsetWidth || element.closest('.trap, .sr-only')) continue;
+        let lineTop;
+        function visit(node) {
+          if (node.nodeType === Node.ELEMENT_NODE) {
+            if (node.matches('br, .question-number')) {
+              lineTop = undefined;
+              return;
+            }
+            node.childNodes.forEach(visit);
+            return;
+          }
+          if (node.nodeType !== Node.TEXT_NODE) return;
+          const preservesBreaks = getComputedStyle(node.parentElement).whiteSpace === 'pre-line';
+          const lines = preservesBreaks ? node.textContent.split('\n') : [node.textContent];
+          let offset = 0;
+          for (const [index, line] of lines.entries()) {
+            if (index) lineTop = undefined;
+            const first = line.search(/\S/u);
+            if (first !== -1) {
+              const range = document.createRange();
+              range.setStart(node, offset + first);
+              range.setEnd(node, offset + line.trimEnd().length);
+              for (const rect of range.getClientRects()) {
+                if (!rect.width) continue;
+                lineTop ??= rect.top;
+                if (Math.abs(lineTop - rect.top) > 3) {
+                  issues.push([element.id || element.htmlFor || element.tagName, element.innerText.trim()]);
+                }
+              }
+            }
+            offset += line.length + 1;
+          }
+        }
+        element.childNodes.forEach(visit);
+      }
+      return issues;
+    });
+  }
+
   async function capture(state) {
     for (const width of [320,375,390,414,768,1024,1280,1440]) {
       await page.setViewportSize({width, height:900});
       await page.evaluate(() => document.fonts.ready);
+      const unplanned = await checkLineBreaks();
+      assert.deepEqual(unplanned, [], state + ' ' + width + ': ' + JSON.stringify(unplanned));
       if (['initial','expanded','filled'].includes(state)) {
         const prices = (await page.locator('#signup').innerText()).match(/[0-9][0-9,]*원/g) || [];
         assert.deepEqual(prices, ['50,000원'], state + ' at ' + width);
         const summary = page.locator('.form-summary [role="status"][aria-live="polite"][aria-atomic="true"]');
         assert.equal(await summary.locator('#total').textContent(), '50,000원');
+        assert.equal(await page.evaluate(() => {
+          const box = selector => document.querySelector(selector).getBoundingClientRect();
+          return box('.form-main').bottom < box('.form-summary').top &&
+            ['#refund-notice', '#seller-notice'].every(selector =>
+              document.querySelector(selector).compareDocumentPosition(document.querySelector('#submit')) &
+              Node.DOCUMENT_POSITION_FOLLOWING);
+        }), true, state + ' vertical flow at ' + width);
       }
       const layoutIssues = await page.evaluate(() => {
         const issues = [];
@@ -133,8 +196,14 @@ try {
       assert.deepEqual(layoutIssues, [], state + ' ' + width + ': ' + layoutIssues.join(', '));
       // Capture one compositor frame at document height. Some Chrome versions repeat
       // the first tile when fullPage captures a document taller than the viewport.
-      const height = await page.evaluate(() => document.documentElement.scrollHeight);
-      await page.setViewportSize({width, height});
+      if (state === 'filled') {
+        await page.locator('#submit').scrollIntoViewIfNeeded();
+        await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+      } else {
+        const height = await page.evaluate(() => document.documentElement.scrollHeight);
+        await page.setViewportSize({width, height});
+        await page.evaluate(() => window.scrollTo(0, 0));
+      }
       await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
       await page.screenshot({path:path.join(output, state+'-'+width+'.png')});
       const boxes = await page.evaluate(() => {
@@ -159,7 +228,10 @@ try {
     await pendingFailure;
     await route.fulfill({status:503, body:''});
   }, {times:1});
-  await page.goto(new URL(CUPSNBALLS_FORM_URL, origin).href);
+  const formUrl = new URL(CUPSNBALLS_FORM_URL, origin).href;
+  const landingUrl = new URL('/cupsnballs/', origin).href;
+  await page.goto(landingUrl);
+  await page.goto(formUrl);
   assert.equal(await page.textContent('#photo-notice'), fallbackNotice);
   failOffer();
   await page.waitForFunction(() => document.querySelector('#availability').textContent.includes('불러오지 못했어'));
@@ -218,6 +290,7 @@ try {
   assert.equal(submissions.length, 0);
   assert.equal(await page.evaluate(() => document.activeElement.id), 'photo-consent');
   await page.check('#photo-consent');
+  assert.equal(await page.locator('#errors').isVisible(), false);
   assert.equal(await page.textContent('#total'), '50,000원');
   await capture('filled');
   for (const ended of [true, false]) {
@@ -243,7 +316,17 @@ try {
   }
   await page.locator('#submit').click();
   await page.locator('#success').waitFor({state:'visible'});
-  assert.equal(await page.evaluate(() => document.activeElement.id), 'success-title');
+  async function checkCompletion(payerName) {
+    await page.locator('#success').waitFor({state:'visible'});
+    assert.equal(await page.evaluate(() => document.activeElement.id), 'success-title');
+    assert.equal(await page.evaluate(() => window.scrollY), 0);
+    assert.equal(await page.locator('#signup, #signup-header, #signup-banner').filter({visible:true}).count(), 0);
+    assert.equal(await page.locator('#payment-message').textContent(), '아래 계좌로 24시간 안에 입금해줘.');
+    assert.deepEqual((await page.locator('#receipt dt').allTextContents()).slice(-7),
+      ['입금할 금액', '은행', '계좌번호', '예금주', '입금자명', '입금 기한', '문의']);
+    assert.equal(await page.locator('#receipt dt').filter({hasText:/^입금자명$/}).locator('+ dd').textContent(), payerName);
+  }
+  await checkCompletion('테스트 참가자');
   const body = submissions.at(-1);
   assert.equal(submissions.length, 3);
   assert.equal(body.eventId, 'cupsnballs');
@@ -268,9 +351,38 @@ try {
   }
   await capture('success');
   await checkResultSkip('success-title');
-  await page.goto(new URL(CUPSNBALLS_FORM_URL, origin).href);
-  await page.waitForFunction(() => !document.querySelector('#submit').disabled);
+  await page.goBack();
+  assert.equal(await page.locator('#success').isVisible(), true);
+  await page.reload();
+  await page.waitForSelector('#submit:enabled');
+  assert.equal(submissions.length, 3);
+  await page.goBack();
+  assert.equal(page.url(), landingUrl);
+  await page.goForward();
+  await page.waitForSelector('#submit:enabled');
+  assert.equal(submissions.length, 3);
   assert.equal(await page.locator('.skip').getAttribute('href'), '#signup');
+
+  await fillApplication();
+  await page.fill('#contact', '010-1234-5679');
+  await page.check('#photo-consent');
+  expectedRows = 3;
+  loseResponse = true;
+  await page.click('#submit');
+  await page.waitForSelector('#check-original:enabled');
+  await page.fill('#name', '수정한 참가자');
+  await page.click('#submit');
+  assert.equal(submissions.length, 4);
+  await page.setViewportSize({width:320,height:900});
+  assert.deepEqual(await checkLineBreaks(), []);
+  await page.click('#check-original');
+  await checkCompletion('테스트 참가자');
+  assert.equal(submissions.length, 5);
+  assert.deepEqual(submissions[4], submissions[3]);
+  assert.equal(store.state.rows.length, 3);
+
+  await page.goto(formUrl);
+  await page.waitForSelector('#submit:enabled');
   await fillApplication();
   await page.check('#photo-consent');
   await page.route('**/api/seminars/signup', route =>
@@ -289,7 +401,7 @@ try {
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
   writeFileSync(path.join(output,'cups-samples.json'),JSON.stringify(samples));
   assert.deepEqual(errors, []);
-  console.log('PASS cups form: 6 states × 8 widths, native notice toggles, phone validation, automatic admission, receipt contact, two closures during entry, one saved synthetic submission');
+  console.log('PASS cups form: 6 states × 8 widths, native notice toggles, phone validation, automatic admission, receipt contact, two closures during entry, direct completion, lost-response recovery with one row per signup, back and refresh without POST');
 } finally {
   await browser.close();
 }

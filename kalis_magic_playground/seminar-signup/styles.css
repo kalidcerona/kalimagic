@@ -304,3 +304,30 @@ header { text-align:center; }
 .cups-notice[open] > p:first-of-type {
   margin-block-start:8px;
 }
+
+.cups-signup main.wrap {
+  max-width:42.5rem;
+}
+.cups-signup #signup {
+  grid-template-columns:minmax(0,1fr);
+  gap:1rem;
+}
+.cups-signup #receipt {
+  display:grid;
+  grid-template-columns:max-content minmax(0,1fr);
+  border-top:1px solid var(--rule);
+}
+.cups-signup #receipt > * {
+  margin:0;
+  padding-block:.65rem;
+  border-bottom:1px solid var(--rule);
+}
+.cups-signup #receipt dd {
+  padding-inline-start:.75rem;
+}
+.cups-signup :is(#availability, #photo-prompt, #errors, #copy-status) {
+  white-space:pre-line;
+}
+.cups-signup :is(h1, h2, summary, label, button, .hint) {
+  word-break:keep-all;
+}

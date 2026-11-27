@@ -50,7 +50,7 @@ function applyPolicy(next) {
   if (!split) $('promotion-consent').checked = false;
   $('promotion-notice').textContent = '본인 얼굴이 나온 사진·영상을 행사 홍보에 활용하는 데 동의할 수 있습니다. 동의하지 않아도 신청할 수 있습니다.';
   $('seller-notice').textContent = policy.sellerNotice;
-  $('photo-prompt').textContent = split ? '현장 촬영 안내를 확인하십시오.' : '현장 촬영과 사진·영상의 행사 홍보 활용에 동의하십니까?';
+  $('photo-prompt').textContent = split ? '현장 촬영 안내를 확인하십시오.' : '현장 촬영과 사진·영상의\n행사 홍보 활용에 동의하십니까?';
   document.querySelector('label[for="photo-consent"]').textContent = split ? '현장 촬영 안내를 확인했습니다.' : '네';
 }
 function renderOffer(next) {
@@ -82,7 +82,7 @@ function renderOffer(next) {
   if (offer.privacyNotice) $('privacy').textContent = offer.privacyNotice;
   if (offer.photoNotice) $('photo-notice').textContent = offer.photoNotice;
   if (offer.contact && !/\[|미정/.test(offer.contact)) $('operator-contact').textContent = `문의: ${offer.contact}`;
-  $('availability').textContent = offer.open ? '지금 신청할 수 있어. 참가권이랑 금액을 확인해줘.' : ({scheduled:'아직 접수 준비 중이야. 신청이 열릴 때까지 입금은 기다려줘.',ended:'신청 기간이 끝났어. 새로 신청하거나 입금하지 말아줘.',unavailable:'지금은 신청을 받지 않아. 접수가 열릴 때까지 입금은 기다려줘.'})[closedState()];
+  $('availability').textContent = offer.open ? '지금 신청할 수 있어.\n참가권이랑 금액을 확인해줘.' : ({scheduled:'아직 접수 준비 중이야.\n신청이 열릴 때까지 입금은 기다려줘.',ended:'신청 기간이 끝났어.\n새로 신청하거나 입금하지 말아줘.',unavailable:'지금은 신청을 받지 않아.\n접수가 열릴 때까지 입금은 기다려줘.'})[closedState()];
   if (offer.test && offer.open) $('availability').textContent = '테스트 접수야. 입금하지 말아줘.';
   update();
   return changedNotices;
@@ -93,7 +93,7 @@ async function loadOffer() {
     const response = await fetch('/api/seminars/offer?eventId=cupsnballs',{cache:'no-store'});
     if (!response.ok) throw new Error('offer');
     const data = await response.json(); return renderOffer(data.offer || data);
-  } catch { offer = null; $('submit').disabled = true; $('availability').textContent = '가격을 불러오지 못했어. 아직 접수 전이야. 연결 상태를 확인하고 ‘가격 다시 확인’을 눌러줘.'; }
+  } catch { offer = null; $('submit').disabled = true; $('availability').textContent = '가격을 불러오지 못했어.\n아직 접수 전이야.\n연결을 확인하고\n‘가격 다시 확인’을 눌러줘.'; }
   finally { $('retry').disabled = false; }
 }
 function clearError(control) {
@@ -121,7 +121,14 @@ function showErrors(errors) {
   ($(errors[0][0]).disabled ? $('errors') : $(errors[0][0])).focus();
 }
 form.addEventListener('input', (event) => {
-  if (event.target.getAttribute('aria-invalid') === 'true') clearError(event.target);
+  const control = event.target;
+  if (control.getAttribute('aria-invalid') !== 'true') return;
+  clearError(control);
+  const errors = $('errors');
+  for (const link of errors.querySelectorAll('a')) {
+    if (link.hash === '#' + control.id) link.remove();
+  }
+  if (!errors.textContent) errors.hidden = true;
 });
 form.addEventListener('change', () => {
   for (const key of ['discovery', 'reason']) {
@@ -147,10 +154,10 @@ form.addEventListener('submit', async (event) => {
   const birthDate = !policy.requireBirthDate ? '' : $('birth-date').value;
   const today = new Intl.DateTimeFormat('en-CA', {timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
   const date = new Date(`${birthDate}T00:00:00Z`);
-  if ((policy.requireBirthDate || birthDate) && (!/^\d{4}-\d{2}-\d{2}$/.test(birthDate) || Number.isNaN(date.getTime()) || date.toISOString().slice(0,10) !== birthDate || birthDate > today || birthDate.slice(0,4) === '0000')) errors.push(['birth-date','생년월일을 오늘까지의 실제 날짜로 적어줘.']);
+  if ((policy.requireBirthDate || birthDate) && (!/^\d{4}-\d{2}-\d{2}$/.test(birthDate) || Number.isNaN(date.getTime()) || date.toISOString().slice(0,10) !== birthDate || birthDate > today || birthDate.slice(0,4) === '0000')) errors.push(['birth-date','생년월일을\n오늘까지의 실제 날짜로 적어줘.']);
   if (policy.minimumAge && birthDate && !Number.isNaN(date.getTime())) {
     const cutoff = `${Number(today.slice(0,4)) - policy.minimumAge}${today.slice(4)}`;
-    if (birthDate > cutoff) errors.push(['birth-date',`만 ${policy.minimumAge}세 미만은 보호자 문의 후 동의 절차를 완료해야 합니다.`]);
+    if (birthDate > cutoff) errors.push(['birth-date',`만 ${policy.minimumAge}세 미만은\n보호자 문의 후 동의 절차를\n완료해야 합니다.`]);
   }
   const chosen = (key) => form.querySelector(`input[name="${key}"]:checked`)?.value;
   const gender = !policy.requireGender ? '' : (chosen('gender') || '');
@@ -160,7 +167,7 @@ form.addEventListener('submit', async (event) => {
   const discovery = chosen('discovery') || '', reason = chosen('reason') || '';
   const otherAnswers = {};
   for (const [key, value, first] of [['discovery',discovery,'instagram'],['reason',reason,'content']]) {
-    if (!value && (policy[key === 'discovery' ? 'requireDiscovery' : 'requireReason'])) errors.push([`${key}-${first}`, key === 'discovery' ? '이 수업을 처음 알게 된 경로를 골라줘.' : '컵앤볼 수업의 신청 이유를 골라줘.']);
+    if (!value && (policy[key === 'discovery' ? 'requireDiscovery' : 'requireReason'])) errors.push([`${key}-${first}`, key === 'discovery' ? '이 수업을 처음 알게 된\n경로를 골라줘.' : '컵앤볼 수업의 신청 이유를 골라줘.']);
     if (value === 'other') {
       otherAnswers[`${key}Other`] = clean($(`${key}-other-text`).value).replace(/\s+/gu, ' ');
       if (hasControls($(`${key}-other-text`).value) || !validText(otherAnswers[`${key}Other`],100)) errors.push([`${key}-other-text`,'기타 답변을 1-100자로 적어줘.']);
@@ -179,7 +186,7 @@ form.addEventListener('submit', async (event) => {
   if (payload.payerName === payload.name) payload.payerName = '';
   const fingerprint = JSON.stringify(payload);
   if (attempt?.unresolved && attempt.fingerprint !== fingerprint) {
-    showErrors([['check-original', '지난 신청 결과부터 확인해줘. 바꾼 내용은 아직 제출되지 않았어.']]);
+    showErrors([['check-original', '지난 신청 결과부터 확인해줘.\n바꾼 내용은 아직 제출되지 않았어.']]);
     return;
   }
   if (!attempt || attempt.fingerprint !== fingerprint) {
@@ -206,8 +213,8 @@ async function sendAttempt(original) {
       const changedNotices = data.offer ? renderOffer(data.offer) : await loadOffer();
       const consentChanged = data.error === 'consent_changed';
       showErrors([[consentChanged ? (changedNotices?.[0] || 'consent') : 'retry', consentChanged
-        ? '안내가 바뀌었어. 새 촬영·개인정보 안내를 읽고 다시 확인해줘.'
-        : '참가권 판매 조건이 바뀌었어. 아직 접수 전이야. 가격을 다시 확인해줘.']]);
+        ? '안내가 바뀌었어.\n새 촬영·개인정보 안내를 읽고\n다시 확인해줘.'
+        : '참가권 판매 조건이 바뀌었어.\n아직 접수 전이야.\n가격을 다시 확인해줘.']]);
       return;
     }
     if (response.status === 409 && data.error === 'sold_out') {
@@ -221,17 +228,17 @@ async function sendAttempt(original) {
       if (data.error === 'signup_closed') {
         const availabilityState = data.availabilityState === 'ended' ? 'ended' : 'unavailable';
         renderOffer({...offer, open:false, availabilityState});
-        $('errors').textContent = closedButton() + ' 상태야. 이번 신청은 저장되지 않았어.';
+        $('errors').textContent = closedButton() + ' 상태야.\n이번 신청은 저장되지 않았어.';
         $('errors').hidden = false;
         $('errors').focus();
         return;
       }
-      const message = response.status === 429 ? `지금 신청이 몰리고 있어. 이번 신청은 저장되지 않았어. ${data.retryAfter || 600}초 뒤에 다시 신청해줘.` : response.status === 503 ? '아직 접수 결과를 확인하지 못했어. 잠시 후 다시 신청하면 지난 결과를 확인할 수 있어.' : '접수를 확인하지 못했어. 적은 내용을 보고 다시 신청해줘.';
+      const message = response.status === 429 ? `지금 신청이 몰리고 있어.\n이번 신청은 저장되지 않았어.\n${data.retryAfter || 600}초 뒤에 다시 신청해줘.` : response.status === 503 ? '아직 접수 결과를 확인하지 못했어.\n잠시 후 다시 신청하면\n지난 결과를 확인할 수 있어.' : '접수를 확인하지 못했어.\n적은 내용을 보고 다시 신청해줘.';
       showErrors([['submit',message]]); return;
     }
-    showReceipt(data.receipt);
+    showReceipt(data.receipt, original.payload);
     original.unresolved = false;
-  } catch { showErrors([['submit','연결이 끊겨 접수됐는지 아직 모르겠어. 적은 내용 그대로 다시 신청해줘. 같은 신청은 한 번만 접수돼.']]); }
+  } catch { showErrors([['submit','연결이 끊겨 접수됐는지\n아직 모르겠어.\n적은 내용 그대로 다시 신청해줘.\n같은 신청은 한 번만 접수돼.']]); }
   finally { busy = false; update(); }
 }
 $('check-original').addEventListener('click', () => {
@@ -245,23 +252,31 @@ function showResult(sectionId, linkText) {
   const skip = document.querySelector('.skip');
   skip.hash = heading.id;
   skip.textContent = linkText;
-  heading.focus();
+  if (sectionId === 'success') {
+    $('signup-header').hidden = true;
+    heading.focus({preventScroll:true});
+    window.scrollTo(0, 0);
+  } else {
+    heading.focus();
+  }
 }
-function showReceipt(receipt) {
+function showReceipt(receipt, submitted) {
   const paid = receipt.status === 'paid';
-  $('success-title').textContent = '칼리 컵앤볼 신청 완료';
   const payment = receipt.payment || {};
   const due = new Date(receipt.paymentDueAt || payment.deadline || '');
   const deadline = Number.isNaN(due.getTime()) ? '[입금 기한 미정]' : `${new Intl.DateTimeFormat('ko-KR', {timeZone:'Asia/Seoul',year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(due)} (KST)`;
-  const rows = [['접수번호',receipt.id],['선택 내역',receipt.items.map((item)=>`${item.label} ${money(item.price)}`).join(', ')],[paid ? '입금 확인 금액' : '입금할 금액',money(receipt.total)],['은행',payment.bank || '[은행 미정]'],['계좌번호',payment.account || '[계좌번호 미정]'],['예금주',payment.holder || '[예금주 미정]'],['입금자명',receipt.payerName || $('name').value.trim()],['입금 기한',deadline],['문의',payment.contact || '[운영자 연락처 미정]']];
+  const rows = [['접수번호',receipt.id],['선택 내역',receipt.items.map((item)=>`${item.label} ${money(item.price)}`).join(', ')],[paid ? '입금 확인 금액' : '입금할 금액',money(receipt.total)],['은행',payment.bank || '[은행 미정]'],['계좌번호',payment.account || '[계좌번호 미정]'],['예금주',payment.holder || '[예금주 미정]'],['입금자명',receipt.payerName || submitted.payerName || submitted.name],['입금 기한',deadline],['문의',payment.contact || '[운영자 연락처 미정]']];
   const test = !payment.bank || !payment.account || !payment.holder || payment.test || /\[|미정|테스트/.test(`${payment.bank} ${payment.account} ${payment.holder}`);
-  $('test-warning').textContent = test ? '테스트 접수야. 입금하지 말아줘' : paid ? '입금 확인했어. 형이 연락할게.' : '입금 확인되면 형이 연락할게.';
+  $('test-warning').hidden = !test;
+  $('test-warning').textContent = test ? '테스트 접수야. 입금하지 말아줘.' : '';
+  $('payment-message').textContent = test ? '아래에서 신청 내역을 확인해줘.' : paid
+    ? '입금 확인했어. 형이 연락할게.' : '아래 계좌로 24시간 안에 입금해줘.';
   $('receipt').replaceChildren();
   for (const [label,value] of rows) { const dt=document.createElement('dt'),dd=document.createElement('dd'); dt.textContent=label; dd.textContent=value; $('receipt').append(dt,dd); }
-  copyText = [$('test-warning').textContent,...rows.map(([key,value])=>`${key}: ${value}`)].join('\n');
+  copyText = [test ? $('test-warning').textContent : $('payment-message').textContent,...rows.map(([key,value])=>`${key}: ${value}`)].join('\n');
   showResult('success', '신청 결과로 건너뛰기');
 }
-$('copy').addEventListener('click',async()=>{try { await navigator.clipboard.writeText(copyText); $('copy-status').textContent='입금 안내를 복사했어.'; } catch { $('copy-status').textContent='복사가 안 됐어. 화면에서 입금 안내를 직접 선택해서 복사해줘.'; }});
+$('copy').addEventListener('click',async()=>{try { await navigator.clipboard.writeText(copyText); $('copy-status').textContent='입금 안내를 복사했어.'; } catch { $('copy-status').textContent='복사가 안 됐어.\n화면에서 입금 안내를\n직접 선택해서 복사해줘.'; }});
 $('accept-price').addEventListener('click',()=>{pendingPrice=false; $('price-change').hidden=true; update(); $('submit').focus();});
 $('retry').addEventListener('click',loadOffer);
 loadOffer();
