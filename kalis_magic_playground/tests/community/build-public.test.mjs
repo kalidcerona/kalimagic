@@ -1,3 +1,4 @@
+import { inspectBackupOutput } from '../support/personal-backup-output.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readdir, readFile, stat, mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises';
@@ -118,6 +119,14 @@ test('public build mirrors the current calculator and integrated stopwatch sourc
 
 test('public build serves integrated stopwatch on both retained entitlement routes', async (t) => {
   await buildPublic();
+  for (const route of PUBLIC_DIRS.filter(route => /^zz\d+$/.test(route))) {
+    const appRoot = new URL(`../../dist/${route}/`, import.meta.url);
+    const backup = await inspectBackupOutput(appRoot);
+    for (const file of ['index.html', 'sw.js']) {
+      const source = await readFile(new URL(`../../${route}/${file}`, import.meta.url));
+      assert.deepEqual(backup.sourceBytes(file, await readFile(new URL(file, appRoot))), source, route + '/' + file);
+    }
+  }
   for (const route of ['zz2', 'zz3', 'tools/release', 'tools/hitsuzen']) {
     const appRoot = new URL(`../../dist/${route}/`, import.meta.url);
     assert.match(await readFile(new URL('index.html', appRoot), 'utf8'), /src=["']\.\/performance-link\.js["']/);
@@ -209,16 +218,18 @@ test('public build serves integrated stopwatch on both retained entitlement rout
   await stat(new URL('../../dist/zz10/index.html', import.meta.url));
   await stat(new URL('../../dist/zz11/index.html', import.meta.url));
   const trainer = new URL('../../dist/zz12/', import.meta.url);
-  assert.deepEqual((await readdir(trainer)).sort(), [...MEMDECK_FILES, 'local-preview.mjs'].sort());
+  const trainerBackup = await inspectBackupOutput(trainer);
+  assert.deepEqual((await readdir(trainer)).sort(), [...MEMDECK_FILES, 'local-preview.mjs', ...trainerBackup.entries].sort());
   const trainerSource = await stat(new URL('../../../../magic-memdeck/', import.meta.url)).catch((error) => { if (error.code === 'ENOENT') return null; throw error; });
   for (const file of MEMDECK_FILES) {
     assert.ok(MIRROR_PAIRS.some(([source, mirror]) => source === `../../magic-memdeck/${file}` && mirror === `zz12/${file}`));
     if (trainerSource) {
       const original = await readFile(new URL(`../../../../magic-memdeck/${file}`, import.meta.url));
-      assert.deepEqual(await readFile(new URL(file, trainer)), original);
+      assert.deepEqual(trainerBackup.sourceBytes(file, await readFile(new URL(file, trainer))), original);
     }
   }
   const qr = new URL('../../dist/zz13/', import.meta.url);
+  const qrBackup = await inspectBackupOutput(qr);
   const qrFiles = [];
   async function collectQrFiles(directory, prefix = '') {
     for (const entry of await readdir(directory, { withFileTypes: true })) {
@@ -227,11 +238,11 @@ test('public build serves integrated stopwatch on both retained entitlement rout
     }
   }
   await collectQrFiles(qr);
-  assert.deepEqual(qrFiles.sort(), [...QR_FILES, 'local-preview.mjs'].sort());
+  assert.deepEqual(qrFiles.sort(), [...QR_FILES, 'local-preview.mjs', ...qrBackup.files].sort());
   const qrSource = await stat(new URL('../../../../magic-qr/', import.meta.url)).catch((error) => { if (error.code === 'ENOENT') return null; throw error; });
   for (const file of QR_FILES) {
     assert.ok(MIRROR_PAIRS.some(([source, mirror]) => source === `../../magic-qr/${file}` && mirror === `zz13/${file}`));
-    if (qrSource) assert.deepEqual(await readFile(new URL(file, qr)), await readFile(new URL(`../../../../magic-qr/${file}`, import.meta.url)));
+    if (qrSource) assert.deepEqual(qrBackup.sourceBytes(file, await readFile(new URL(file, qr))), await readFile(new URL(`../../../../magic-qr/${file}`, import.meta.url)));
   }
   const sharedQr = new URL('../../dist/tools/arosaegida/', import.meta.url);
   const sharedQrHtml = await readFile(new URL('index.html', sharedQr), 'utf8');
@@ -543,7 +554,8 @@ test('Asrai, ALTER, and spinner personal builds keep exact runtime mirrors and d
   ]) {
     const distDir = path.join(root, 'dist', route);
     const runtimeFiles = [...files, ...SETTINGS_UI_FILES, 'local-preview.js'];
-    assert.deepEqual(await filesUnder(distDir), runtimeFiles.sort());
+    const backup = await inspectBackupOutput(distDir);
+    assert.deepEqual(await filesUnder(distDir), [...runtimeFiles, ...backup.files].sort());
     const manifest = JSON.parse(await readFile(path.join(distDir, 'manifest.webmanifest'), 'utf8'));
     assert.equal(manifest.id, undefined);
     assert.equal(manifest.scope, './');
@@ -554,7 +566,7 @@ test('Asrai, ALTER, and spinner personal builds keep exact runtime mirrors and d
         readFile(path.join(root, '..', '..', source, file)),
         readFile(path.join(distDir, file))
       ]);
-      assert.deepEqual(mirror, original, `${route}/${file}`);
+      assert.deepEqual(backup.sourceBytes(file, mirror), original, `${route}/${file}`);
     }
     assert.doesNotMatch(await readFile(path.join(distDir, 'index.html'), 'utf8'), /id="friend-apps-check"/);
   }

@@ -1,3 +1,4 @@
+import { inspectBackupOutput } from '../support/personal-backup-output.mjs';
 // URAMICHI web app (zz15): publication boundary, PWA metadata, offline shell, camera headers and copy rules.
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -46,8 +47,9 @@ test('zz15 publishes only its explicit shell in an isolated build', async () => 
     const result = build();
     assert.equal(result.status, 0, result.stderr + result.stdout);
     const published = path.join(site, 'dist', 'zz15');
-    assert.deepEqual((await listFiles(published)).sort(), [...shell, 'sw.js'].sort());
-    for (const file of [...shell, 'sw.js']) assert.deepEqual(await readFile(path.join(published, file)), await readFile(path.join(root, 'zz15', file)), file);
+    const backup = await inspectBackupOutput(published);
+    assert.deepEqual((await listFiles(published)).sort(), [...backup.files, ...shell, 'sw.js'].sort());
+    for (const file of [...shell, 'sw.js']) assert.deepEqual(backup.sourceBytes(file, await readFile(path.join(published, file))), await readFile(path.join(root, 'zz15', file)), file);
     const html = await readFile(path.join(published, 'index.html'), 'utf8');
     for (const match of html.matchAll(/(?:src|href)="(\.\/[^"#]+)"/g)) assert.ok((await stat(path.join(published, match[1]))).isFile(), match[1]);
     for (const file of shell.filter((name) => name.endsWith('.mjs') || name.endsWith('.js'))) {

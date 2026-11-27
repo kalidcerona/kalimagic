@@ -1,3 +1,4 @@
+import { inspectBackupOutput } from '../support/personal-backup-output.mjs';
 import { pinnedRound5Difference } from './personal-round5.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -198,12 +199,15 @@ test('Pi Max distribution HTML injects a live access check while personal HTML s
 // Full-suite build tests own dist generation. This check runs explicitly after the isolated build.
 test('Pi Max built trees contain only runtime files with valid HTML, module, manifest and SW references', { skip: process.env.PIMAX_VERIFY_DIST !== '1' }, async () => {
   for (const route of ['dist/zz14', 'dist/tools/pimax']) {
-    assert.deepEqual((await readdir(new URL(`../../${route}/`, import.meta.url))).sort(), [...PIMAX_FILES].sort());
+    const directory = new URL(`../../${route}/`, import.meta.url);
+    const backup = route === 'dist/zz14' ? await inspectBackupOutput(directory) : null;
+    assert.deepEqual((await readdir(directory)).sort(), [...PIMAX_FILES, ...(backup?.entries ?? [])].sort());
     const html = (await read(route, 'index.html')).toString();
     const snapshot = route.includes('/tools/');
     const sourceHtml = (await read(snapshot ? shared : personal, 'index.html')).toString();
     const app = DISTRIBUTION_APPS.find(entry => entry.target === 'pimax');
-    assert.equal(html, snapshot ? transformDistributionDocument(sourceHtml, app) : sourceHtml);
+    if (snapshot) assert.equal(html, transformDistributionDocument(sourceHtml, app));
+    else assert.equal(backup.sourceBytes('index.html', html).toString(), sourceHtml);
     assert.equal(html.includes('friend-apps-check'), snapshot);
     const manifest = JSON.parse((await read(route, 'manifest.webmanifest')).toString());
     assert.equal(manifest.scope, './');
@@ -224,7 +228,10 @@ test('Pi Max built trees contain only runtime files with valid HTML, module, man
     for (const file of PIMAX_FILES.filter(f => !['index.html', 'manifest.webmanifest'].includes(f))) {
       const expected = await read(route.includes('/tools/') ? shared : personal, file);
       if (file === 'app.mjs') assert.equal((await read(route, file)).toString(), preparePimaxRuntime(expected.toString()));
-      else assert.deepEqual(await read(route, file), expected);
+      else {
+        const bytes = await read(route, file);
+        assert.deepEqual(backup ? backup.sourceBytes(file, bytes) : bytes, expected);
+      }
     }
   }
 });

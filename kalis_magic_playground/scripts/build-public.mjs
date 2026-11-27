@@ -1,3 +1,4 @@
+import { publishPersonalBackups } from './zz-backup-build.mjs';
 import { verifyAppRelease } from './app-release-pins.mjs';
 import { readFileSync } from 'node:fs';
 import { MAGICSHOW_EXTRAS, magicshowRuntimeFiles } from './magicshow-files.mjs';
@@ -953,6 +954,7 @@ export async function buildPublic() {
   for (const file of PUBLIC_FILES) await copyIfExists(file);
   for (const dir of PUBLIC_DIRS) await copyIfExists(dir);
   await buildDistributionApps();
+  await publishPersonalBackups(DIST, PUBLIC_DIRS.filter(dir => /^zz\d+$/.test(dir)));
   // Bridge files are explicit. The legacy trees above stay excluded.
   await publishLegacyBridgeFiles(DIST);
   await verifyAppDisplayPolicy();
