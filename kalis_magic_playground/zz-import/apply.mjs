@@ -1,7 +1,65 @@
 import { validateProfile } from './apply-validate.mjs';
 import { TARGETS } from './data.mjs';
 import { browserStore } from './apply-store.mjs';
-import { countValues, mergeUramichiEntries, mergeValue } from './apply-merge.mjs';
+export function countValues(entries, media = []) {
+  const hasCurrentPhotoSets = entries.some(([key, raw]) =>
+    key === 'aletheia.distribution.photoSets.v2' && raw !== null
+  );
+  const counts = {
+    settings: entries.filter(([, raw]) => raw !== null).length,
+    lists: 0,
+    groups: 0,
+    records: 0,
+    photos: media.filter((item) => item.value !== undefined).length,
+    items: 0,
+    slots: 0,
+  };
+  for (const [key, raw] of entries) {
+    if (raw === null || key.endsWith('.store.backup') || key.endsWith('-preserved-raw')) continue;
+    try {
+      const value = JSON.parse(raw);
+      if (!value || typeof value !== 'object') continue;
+      if (key === 'friend-uramichi.web.presets') {
+        const categories = Array.isArray(value) ? value : value.categories || [];
+        counts.groups += categories.length;
+        counts.items += categories.reduce((n, c) => n + (c.entries?.length || 0), 0);
+        continue;
+      }
+      if (Array.isArray(value)) {
+        if (/_named_presets_v1$|_seq_slots$/.test(key)) counts.slots += value.length;
+        else if (/recent|performance-log/.test(key)) counts.records += value.length;
+        continue;
+      }
+      counts.lists += Array.isArray(value.presets) ? value.presets.length : 0;
+      counts.items += Array.isArray(value.presets)
+        ? value.presets.reduce((n, p) => n + (p.items?.length || 0), 0)
+        : 0;
+      counts.groups += Array.isArray(value.sets) ? value.sets.length : 0;
+      if (key.endsWith('photoSets.v2')) {
+        counts.slots += value.sets?.reduce((n, set) => n + set.length, 0) || 0;
+      }
+      if (
+        key === 'aletheia.distribution.custom12.v1' && !hasCurrentPhotoSets && Array.isArray(value.imageIds)
+      ) {
+        counts.slots += value.imageIds.length;
+      }
+      if (Array.isArray(value.names)) counts.items += value.names.length;
+      counts.records += ['history', 'records', 'dummyNotes', 'recent'].reduce(
+        (n, field) => n + (Array.isArray(value[field]) ? value[field].length : 0),
+        0,
+      );
+      if (key === 'friend-memdeck-v1') {
+        counts.groups += Object.keys(value.stacks || {}).length;
+        counts.items += Object.values(value.stacks || {}).reduce((n, stack) => n + stack.length, 0);
+        counts.records += Object.values(value.progress || {}).reduce(
+          (n, progress) => n + (progress.history?.length || 0) + (progress.rankHistory?.length || 0),
+          0,
+        );
+      }
+    } catch { /* Exact malformed strings remain in the durable recovery record. */ }
+  }
+  return counts;
+}
 
 async function digest(value) {
   const bytes = new TextEncoder().encode(JSON.stringify(value));
@@ -219,6 +277,7 @@ export async function applyImport(target, candidate, options = {}) {
         { ...old, value: undefined }
       ),
     };
+    const { mergeUramichiEntries, mergeValue } = await import('./apply-merge.mjs');
     const merged = {
       entries: target === 'uramichi'
         ? mergeUramichiEntries(before.entries, incoming.entries, candidate.contentHash)

@@ -55,7 +55,7 @@ const browser = await chromium.launch({
   args: ['--use-fake-device-for-media-stream', '--use-fake-ui-for-media-stream'],
 });
 
-async function checkStartup(target, mode) {
+async function checkStartup(target, module, mode) {
   const context = await browser.newContext({
     hasTouch: true,
     viewport: { width: 412, height: 850 },
@@ -64,10 +64,12 @@ async function checkStartup(target, mode) {
   let releaseResponse;
   const responseGate = new Promise((resolve) => { releaseResponse = resolve; });
   const appUrl = `${origin}/tools/${target}/`;
-  const uiUrl = appUrl + 'zz-import/ui.mjs';
+  const moduleUrl = appUrl + 'zz-import/' + module;
+  let requested = false;
   try {
     await context.route((url) => url.origin !== origin, (route) => route.abort());
-    await context.route(uiUrl, async (route) => {
+    await context.route(moduleUrl, async (route) => {
+      requested = true;
       if (mode === '503') return route.fulfill({ status: 503 });
       await responseGate;
       if (mode === 'delayed') await route.continue();
@@ -85,13 +87,15 @@ async function checkStartup(target, mode) {
       void cdp.send('Debugger.resume');
     });
     await cdp.send('Debugger.enable');
-    const uiResponse = mode === '503' ? page.waitForResponse(uiUrl) : null;
-    await Promise.all([
-      page.waitForRequest(uiUrl),
-      page.goto(appUrl, { waitUntil: 'commit' }),
-      uiResponse,
-    ]);
-    if (mode === '503') assert.equal((await uiResponse).status(), 503);
+    if (module === 'ui.mjs') {
+      await Promise.all([
+        page.waitForRequest(moduleUrl),
+        mode === '503' ? page.waitForResponse(r => r.url() === moduleUrl && r.status() === 503) : null,
+        page.goto(appUrl, { waitUntil: 'commit' }),
+      ]);
+    } else {
+      await page.goto(appUrl, { waitUntil: 'commit' });
+    }
     await page.locator('[data-zz-ready="true"]').waitFor({ state: 'attached' });
     // Pausing the preceding touch or pointer event can prevent Chrome from dispatching its click.
     await cdp.send('DOMDebugger.setEventListenerBreakpoint', { eventName: 'click' });
@@ -112,14 +116,17 @@ async function checkStartup(target, mode) {
       control.tap(),
     ]);
     assert.equal(await page.getByText('이전 데이터 복구를 완료하지 못해 앱 시작을 멈췄습니다.', { exact: false }).count(), 0);
+    if (module === 'apply-merge.mjs') {
+      assert.equal(requested, false, 'startup requested the import-only merge module');
+    }
     if (mode === 'delayed') {
-      const response = page.waitForResponse(uiUrl);
+      const response = page.waitForResponse(moduleUrl);
       releaseResponse();
       assert.equal((await response).status(), 200);
     }
     await cdp.detach();
   } catch (error) {
-    throw new Error(`${target} ${mode}: ${error.message}`, { cause: error });
+    throw new Error(`${target} ${module} ${mode}: ${error.message}`, { cause: error });
   } finally {
     releaseResponse();
     await context.close();
@@ -129,8 +136,9 @@ async function checkStartup(target, mode) {
 try {
   const targets = process.env.ZZ_TARGET ? [process.env.ZZ_TARGET] : ZZ_IMPORT_TARGETS;
   for (const target of targets) {
-    for (const mode of ['delayed', 'pending', '503']) await checkStartup(target, mode);
-    console.log(`${target}: first touch reached an app handler with delayed, pending and HTTP 503 importer UI`);
+    for (const mode of ['delayed', 'pending', '503']) await checkStartup(target, 'ui.mjs', mode);
+    for (const mode of ['pending', '503']) await checkStartup(target, 'apply-merge.mjs', mode);
+    console.log(`${target}: first touch reached an app handler with delayed, pending and HTTP 503 importer UI, and pending and HTTP 503 merge routes`);
   }
 } finally {
   await browser.close();
