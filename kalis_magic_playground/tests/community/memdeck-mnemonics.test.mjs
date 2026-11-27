@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { STACKS } from '../../zz12/data.mjs';
-import { freshState, freshProgress, loadState, replaceStack, applyRecall, duePositions, buildReviewQueue } from '../../zz12/core.mjs';
-import { freshMnemonics, starterNumberImage, starterCardImage, starterScene, STARTER_PALACE, buildImageQueue, buildPairQueue, buildPalaceQueue, buildDirectQueue, classifyRecall, enqueueRetry, schedulesRecall, sameText, groupPositions, validateMnemonics, NUMBER_PEGS } from '../../zz12/mnemonic.mjs';
+import { STACKS } from '../../distribution-snapshots/memdeck/data.mjs';
+import { freshState, freshProgress, loadState, replaceStack, applyRecall, duePositions, buildReviewQueue } from '../../distribution-snapshots/memdeck/core.mjs';
+import { freshMnemonics, starterNumberImage, starterCardImage, starterScene, STARTER_PALACE, buildImageQueue, buildPairQueue, buildPalaceQueue, buildDirectQueue, classifyRecall, enqueueRetry, schedulesRecall, sameText, groupPositions, validateMnemonics, NUMBER_PEGS } from '../../distribution-snapshots/memdeck/mnemonic.mjs';
 
 const now = 1_700_000_000_000;
 const day = 86400000;

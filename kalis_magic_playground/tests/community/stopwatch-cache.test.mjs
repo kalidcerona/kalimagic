@@ -4,15 +4,11 @@ import vm from 'node:vm';
 import { readFileSync } from 'node:fs';
 
 test('integrated stopwatch worker keeps its cache isolated by app scope', async () => {
-  const code = readFileSync(new URL('../../zz1/sw.js', import.meta.url), 'utf8');
+  const code = readFileSync(new URL('../../distribution-snapshots/kairos/sw.js', import.meta.url), 'utf8');
   const names = [];
   const workers = [];
   const deleted = [];
-  for (const scope of [
-    'https://example.com/zz1/',
-    'https://example.com/tools/stopwatch/',
-    'https://example.com/tools/stopwatch-uni/'
-  ]) {
+  for (const scope of ['https://example.com/distribution-snapshots/kairos/', 'https://example.com/tools/stopwatch/', 'https://example.com/tools/stopwatch-uni/']) {
     const listeners = {};
     vm.runInNewContext(code, {
       URL, Request,
@@ -36,7 +32,7 @@ test('integrated stopwatch worker keeps its cache isolated by app scope', async 
 });
 
 test('the ZZ1 worker does not read the calculator response left in a global cache', async () => {
-  const code = readFileSync(new URL('../../zz1/sw.js', import.meta.url), 'utf8');
+  const code = readFileSync(new URL('../../distribution-snapshots/kairos/sw.js', import.meta.url), 'utf8');
   const listeners = {};
   const staleCalculator = { source: 'old calculator shell' };
   const networkStopwatch = { source: 'integrated stopwatch' };
@@ -49,7 +45,7 @@ test('the ZZ1 worker does not read the calculator response left in a global cach
     },
     fetch: async () => networkStopwatch,
     self: {
-      registration: { scope: 'https://example.com/zz1/' },
+      registration: { scope: 'https://example.com/distribution-snapshots/kairos/' },
       location: { origin: 'https://example.com' },
       addEventListener(name, callback) { listeners[name] = callback; }
     }
@@ -57,7 +53,7 @@ test('the ZZ1 worker does not read the calculator response left in a global cach
 
   let result;
   listeners.fetch({
-    request: { method: 'GET', url: 'https://example.com/zz1/icon.svg', mode: 'cors' },
+    request: { method: 'GET', url: 'https://example.com/distribution-snapshots/kairos/icon.svg', mode: 'cors' },
     respondWith(promise) { result = promise; }
   });
   assert.equal((await result).source, 'integrated stopwatch');

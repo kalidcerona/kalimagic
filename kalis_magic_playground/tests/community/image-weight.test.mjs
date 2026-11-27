@@ -3,11 +3,10 @@ import assert from 'node:assert/strict';
 import { readdir, readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { DISTRIBUTION_APPS, PUBLIC_DIRS } from '../../scripts/build-public.mjs';
-import { cardAtIndex as personalCourtCard } from '../../zz5/logic.js';
+import { DISTRIBUTION_APPS } from '../../scripts/build-public.mjs';
 import { tobiraAppScript } from './tobira-app-script.mjs';
 import { aletheiaAppScript } from './aletheia-app-script.mjs';
-import { cardAtIndex as sharedCourtCard } from '../../distribution-snapshots/aletheia/logic.js';
+import { cardAtIndex } from '../../distribution-snapshots/aletheia/logic.js';
 
 const root = fileURLToPath(new URL('../..', import.meta.url));
 const distDir = path.join(root, 'dist');
@@ -15,18 +14,7 @@ const LOGO_LIMIT = 300 * 1024;
 const RUNTIME = /\.(?:css|html|js|json|mjs|svg|webmanifest)$/i;
 const PNG_COURT_OR_COIN = /(?:court-cards\/[^"'`\s<>]*\.png|coin-[^"'`\s<>]*\.png)\b/i;
 
-const personalApps = PUBLIC_DIRS.filter((dir) => /^zz\d+$/.test(dir));
-const sharedSources = [...new Set(DISTRIBUTION_APPS.map((app) => app.source))];
-const appSources = [...personalApps, ...sharedSources];
-const courtApps = [
-  ['zz5', personalCourtCard],
-  ['distribution-snapshots/aletheia', sharedCourtCard]
-];
-// Personal ALETHEIA keeps its court-card list in feature modules, so read app.js with its local modules.
-const modularCourtApps = new Set(['zz5', 'distribution-snapshots/aletheia']);
-const coinApps = ['zz6', 'distribution-snapshots/tobira'];
-// Personal TOBIRA keeps its image list in a feature module, so read app.js with its local modules.
-const modularCoinApps = new Set(['zz6', 'distribution-snapshots/tobira']);
+const appSources = [...new Set(DISTRIBUTION_APPS.map(app => app.source))];
 
 function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -112,8 +100,9 @@ async function buildPlan() {
       }
     }
   }
-  for (const [source, cardAtIndex] of courtApps) {
-    const sourceText = modularCourtApps.has(source) ? aletheiaAppScript(path.join(root, source)) : await readFile(path.join(root, source, 'app.js'), 'utf8');
+  {
+    const source = 'distribution-snapshots/aletheia';
+    const sourceText = aletheiaAppScript(path.join(root, source));
     const { count, extension, suits } = courtCardPaths(sourceText);
     const paths = [];
     for (let index = 0; index < count; index += 1) {
@@ -128,8 +117,9 @@ async function buildPlan() {
       for (const entry of paths) required.push(resolvePublished(route, entry, `${source}/app.js`));
     }
   }
-  for (const source of coinApps) {
-    const sourceText = modularCoinApps.has(source) ? tobiraAppScript(path.join(root, source)) : await readFile(path.join(root, source, 'app.js'), 'utf8');
+  {
+    const source = 'distribution-snapshots/tobira';
+    const sourceText = tobiraAppScript(path.join(root, source));
     const paths = coinAndCardPaths(sourceText);
     if (!paths.some((entry) => entry.includes('/coin-')) || !paths.some((entry) => entry.includes('/card-'))) {
       throw new Error(`${source} coin and card image list is ${paths.join(', ')}`);

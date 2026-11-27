@@ -5,10 +5,10 @@ import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 // Each `detector.js?<tag>` import boots a fresh USOTSUKI, including its feature modules.
 import './usotsuki-app-script.mjs';
-const appDir = resolve(import.meta.dirname, '../../zz7');
+const appDir = resolve(import.meta.dirname, '../../distribution-snapshots/usotsuki');
 
-const STATE = 'usotsuki.detector.v1';
-const THEME = 'usotsuki.detector.theme.v1';
+const STATE = 'usotsuki.distribution.detector.v1';
+const THEME = 'usotsuki.distribution.detector.theme.v1';
 const SCAN = 'usotsuki.detector.scan-duration.v1';
 let serial = 0;
 const allPaper=f=>f.paper();
@@ -18,7 +18,7 @@ async function fixture({ theme, store = new Map(), readFails = false, stateReadF
   if (!store.has(STATE)) store.set(STATE, JSON.stringify({version:1,attemptCount:0,settings:{truthAttempts:[4]}}));
   if (theme !== undefined) store.set(THEME, theme);
   if (!store.has(SCAN)) store.set(SCAN, '0.5');
-  if (!store.has('usotsuki.detector.sound.v1')) store.set('usotsuki.detector.sound.v1', '0');
+  if (!store.has('usotsuki.distribution.detector.sound.v1')) store.set('usotsuki.distribution.detector.sound.v1', '0');
   const saved = new Map();
   const replace = (name, value) => {
     saved.set(name, Object.getOwnPropertyDescriptor(globalThis, name));

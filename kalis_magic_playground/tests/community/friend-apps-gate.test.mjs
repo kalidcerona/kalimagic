@@ -67,7 +67,7 @@ test('double-slash install manifests follow each app’s configured beta mode', 
 
 test('only canonical personal routes stay public while distribution routes retain separate grants', () => {
   for (const path of ['/zz1/', '/zz1/logic.js', '/zz2/', '/zz3/', '/zz3/sw.js', '/zz4/', '/zz4/app.js', '/zz5/', '/zz5/app.js', '/zz6/', '/zz6/app.js', '/zz7/', '/zz7/detector.js']) {
-    assert.deepEqual(classifyPath(path), { mode: 'public' });
+    assert.deepEqual(classifyPath(path), { mode: 'block' });
   }
   for (const path of ['/tools/stopwatch/', '/tools/stopwatch/logic.js']) {
     assert.deepEqual(classifyPath(path), { mode: 'gated', tool: 'stopwatch' });
@@ -98,57 +98,6 @@ test('only canonical personal routes stay public while distribution routes retai
   assert.equal(accessTableForTool('aletheia'), 'friend_app_access');
   assert.equal(accessTableForTool('usotsuki'), 'friend_app_access');
   assert.equal(accessTableForTool('calc'), 'tool_access');
-});
-
-test('personal installed apps serve their cached screen immediately', async () => {
-  for (const app of ['zz1', 'zz2', 'zz3', 'zz4', 'zz5', 'zz6', 'zz7']) {
-    const source = readFileSync(new URL(`../../${app}/sw.js`, import.meta.url), 'utf8');
-    const listeners = {};
-    const networkResponse = { source: 'network' };
-    const cachedResponse = { source: 'cache' };
-    const context = vm.createContext({
-      URL,
-      self: {
-        registration: { scope: `https://example.com/${app}/` },
-        location: { origin: 'https://example.com' },
-        addEventListener(name, callback) { listeners[name] = callback; }
-      },
-      caches: {
-        open: async () => ({ match: async () => cachedResponse }),
-        match: async () => cachedResponse
-      },
-      fetch: async () => networkResponse
-    });
-    vm.runInContext(source, context);
-    let result;
-    listeners.fetch({
-      request: { method: 'GET', url: `https://example.com/${app}/`, mode: 'navigate' },
-      respondWith(promise) { result = promise; },
-      waitUntil() {}
-    });
-    assert.equal((await result).source, 'cache', `${app} should start from the installed shell`);
-  }
-});
-
-test('the integrated stopwatch worker never caches the Google approval check', () => {
-  const source = readFileSync(new URL('../../zz1/sw.js', import.meta.url), 'utf8');
-  const listeners = {};
-  vm.runInNewContext(source, {
-    URL,
-    caches: { match: async () => null },
-    fetch: async () => ({ ok: false }),
-    self: {
-      registration: { scope: 'https://example.com/zz1/' },
-      location: { origin: 'https://example.com' },
-      addEventListener(name, callback) { listeners[name] = callback; }
-    }
-  });
-  let intercepted = false;
-  listeners.fetch({
-    request: { method: 'GET', url: 'https://example.com/tools/_check?tool=stopwatch-uni', mode: 'cors' },
-    respondWith() { intercepted = true; }
-  });
-  assert.equal(intercepted, false);
 });
 
 test('each app has its own signed cookie and can be revoked separately', async () => {
@@ -444,7 +393,7 @@ test('AROSAegida migration retains all seven friend tools and the existing RLS p
   const values = [...sql.matchAll(/'([^']+)'/g)].map(match => match[1]);
   assert.equal(values.length, 7);
   // This historical migration predates the Pi Max, Choice and Magicshow deployments.
-  assert.deepEqual(values, [...FRIEND_APP_TOOLS].filter(tool => !['pimax', 'choice', 'magicshow', 'gwayubulgeup', 'memdeck', 'bell', 'slot'].includes(tool)));
+  assert.deepEqual(values, [...FRIEND_APP_TOOLS].filter(tool => !['pimax', 'choice', 'magicshow', 'gwayubulgeup', 'memdeck', 'bell', 'slot', 'asrai', 'alter', 'uramichi'].includes(tool)));
   assert.match(sql, /drop constraint if exists friend_app_access_tool_check/);
   assert.match(sql, /add constraint friend_app_access_tool_check/);
   assert.doesNotMatch(sql, /row level security|create policy|drop policy/i);
@@ -471,4 +420,158 @@ test('distribution pages keep a 90-day offline launch and still revoke an explic
   assert.match(guard, /const allowOffline = \(\) => \{\s*if \(verified\) return;/);
   assert.match(guard, /if \(!verified\) redirect\(\);/);
   assert.doesNotMatch(guard, /catch \(error\) \{\}\s*redirect\(\);/);
+});
+
+test('ASRAI paths use an isolated cookie and require an active grant without self redirects', async () => {
+  for (const path of ['/tools/asrai', '/tools/asrai/', '/tools/asrai/core.mjs', '/tools/ASRAI/app.mjs', '/tools//asrai/app.mjs']) {
+    assert.deepEqual(classifyPath(path), { mode: 'gated', tool: 'asrai' });
+  }
+  assert.equal(isValidTool('asrai'), true);
+  assert.equal(accessTableForTool('asrai'), 'friend_app_access');
+  assert.equal(gateCookieName('asrai'), 'kali_asrai_gate');
+  assert.equal(new Set([...FRIEND_APP_TOOLS].map(gateCookieName)).size, FRIEND_APP_TOOLS.size);
+  assert.match(clearGateCookie('asrai'), /kali_asrai_gate=.*Path=\/tools/);
+  assert.equal(allowOnCheckError('asrai'), false);
+  assert.equal(selectGate([{ valid: true, tool: 'all' }], 'asrai').valid, false);
+  const beforeFetch = globalThis.fetch, beforeNetlify = globalThis.Netlify;
+  const secret = 'ar-gate-test';
+  let active = false, nextCalls = 0, checks = 0;
+  globalThis.Netlify = { env: { get: () => secret } };
+  try {
+    globalThis.fetch = async (url, options) => {
+      checks++;
+      assert.equal(new URL(url).searchParams.get('tool'), 'asrai');
+      assert.match(options.headers.cookie, /kali_asrai_gate=/);
+      return Response.json({ ok: active });
+    };
+    const context = { next: async () => { nextCalls++; return new Response('AR app'); } };
+    const all = await signGateCookie('friend@example.com', 'all', secret);
+    const bypass = await toolsGate(new Request('https://example.com/tools/asrai/', { headers: { cookie: `kali_tool_gate=${all}` } }), context);
+    assert.equal(bypass.status, 302);
+    assert.equal(checks, 0);
+    assert.equal(nextCalls, 0);
+    const token = await signGateCookie('friend@example.com', 'asrai', secret);
+    assert.equal((await verifyGateCookie(token, secret)).tool, 'asrai');
+    const request = new Request('https://example.com/tools/asrai/app.mjs?x=1', { headers: { cookie: `kali_asrai_gate=${token}` } });
+    const revoked = await toolsGate(request, context);
+    assert.equal(revoked.status, 302);
+    assert.equal(new URL(revoked.headers.get('location')).searchParams.get('to'), '/tools/asrai/app.mjs?x=1');
+    active = true;
+    assert.equal((await toolsGate(request, context)).status, 200);
+    assert.equal(nextCalls, 1);
+    globalThis.fetch = async () => { throw new Error('grant check unavailable'); };
+    assert.equal((await toolsGate(request, context)).status, 302);
+    assert.equal(nextCalls, 1);
+  } finally {
+    globalThis.fetch = beforeFetch;
+    if (beforeNetlify === undefined) delete globalThis.Netlify;
+    else globalThis.Netlify = beforeNetlify;
+  }
+});
+
+test('ALTER paths use an isolated cookie and require an active grant without self redirects', async () => {
+  for (const path of ['/tools/alter', '/tools/alter/', '/tools/alter/core.mjs', '/tools/ALTER/app.mjs', '/tools//alter/app.mjs']) {
+    assert.deepEqual(classifyPath(path), { mode: 'gated', tool: 'alter' });
+  }
+  assert.equal(isValidTool('alter'), true);
+  assert.equal(accessTableForTool('alter'), 'friend_app_access');
+  assert.equal(gateCookieName('alter'), 'kali_alter_gate');
+  assert.equal(new Set([...FRIEND_APP_TOOLS].map(gateCookieName)).size, FRIEND_APP_TOOLS.size);
+  assert.match(clearGateCookie('alter'), /kali_alter_gate=.*Path=\/tools/);
+  assert.equal(allowOnCheckError('alter'), false);
+  assert.equal(selectGate([{ valid: true, tool: 'all' }], 'alter').valid, false);
+  const beforeFetch = globalThis.fetch, beforeNetlify = globalThis.Netlify;
+  const secret = 'ar-gate-test';
+  let active = false, nextCalls = 0, checks = 0;
+  globalThis.Netlify = { env: { get: () => secret } };
+  try {
+    globalThis.fetch = async (url, options) => {
+      checks++;
+      assert.equal(new URL(url).searchParams.get('tool'), 'alter');
+      assert.match(options.headers.cookie, /kali_alter_gate=/);
+      return Response.json({ ok: active });
+    };
+    const context = { next: async () => { nextCalls++; return new Response('AR app'); } };
+    const all = await signGateCookie('friend@example.com', 'all', secret);
+    const bypass = await toolsGate(new Request('https://example.com/tools/alter/', { headers: { cookie: `kali_tool_gate=${all}` } }), context);
+    assert.equal(bypass.status, 302);
+    assert.equal(checks, 0);
+    assert.equal(nextCalls, 0);
+    const token = await signGateCookie('friend@example.com', 'alter', secret);
+    assert.equal((await verifyGateCookie(token, secret)).tool, 'alter');
+    const request = new Request('https://example.com/tools/alter/app.mjs?x=1', { headers: { cookie: `kali_alter_gate=${token}` } });
+    const revoked = await toolsGate(request, context);
+    assert.equal(revoked.status, 302);
+    assert.equal(new URL(revoked.headers.get('location')).searchParams.get('to'), '/tools/alter/app.mjs?x=1');
+    active = true;
+    assert.equal((await toolsGate(request, context)).status, 200);
+    assert.equal(nextCalls, 1);
+    globalThis.fetch = async () => { throw new Error('grant check unavailable'); };
+    assert.equal((await toolsGate(request, context)).status, 302);
+    assert.equal(nextCalls, 1);
+  } finally {
+    globalThis.fetch = beforeFetch;
+    if (beforeNetlify === undefined) delete globalThis.Netlify;
+    else globalThis.Netlify = beforeNetlify;
+  }
+});
+
+test('URAMICHI paths use an isolated cookie and require an active grant without self redirects', async () => {
+  for (const path of ['/tools/uramichi', '/tools/uramichi/', '/tools/uramichi/core.mjs', '/tools/URAMICHI/app.mjs', '/tools//uramichi/app.mjs']) {
+    assert.deepEqual(classifyPath(path), { mode: 'gated', tool: 'uramichi' });
+  }
+  assert.equal(isValidTool('uramichi'), true);
+  assert.equal(accessTableForTool('uramichi'), 'friend_app_access');
+  assert.equal(gateCookieName('uramichi'), 'kali_uramichi_gate');
+  assert.equal(new Set([...FRIEND_APP_TOOLS].map(gateCookieName)).size, FRIEND_APP_TOOLS.size);
+  assert.match(clearGateCookie('uramichi'), /kali_uramichi_gate=.*Path=\/tools/);
+  assert.equal(allowOnCheckError('uramichi'), false);
+  assert.equal(selectGate([{ valid: true, tool: 'all' }], 'uramichi').valid, false);
+  const beforeFetch = globalThis.fetch, beforeNetlify = globalThis.Netlify;
+  const secret = 'ar-gate-test';
+  let active = false, nextCalls = 0, checks = 0;
+  globalThis.Netlify = { env: { get: () => secret } };
+  try {
+    globalThis.fetch = async (url, options) => {
+      checks++;
+      assert.equal(new URL(url).searchParams.get('tool'), 'uramichi');
+      assert.match(options.headers.cookie, /kali_uramichi_gate=/);
+      return Response.json({ ok: active });
+    };
+    const context = { next: async () => { nextCalls++; return new Response('AR app'); } };
+    const all = await signGateCookie('friend@example.com', 'all', secret);
+    const bypass = await toolsGate(new Request('https://example.com/tools/uramichi/', { headers: { cookie: `kali_tool_gate=${all}` } }), context);
+    assert.equal(bypass.status, 302);
+    assert.equal(checks, 0);
+    assert.equal(nextCalls, 0);
+    const token = await signGateCookie('friend@example.com', 'uramichi', secret);
+    assert.equal((await verifyGateCookie(token, secret)).tool, 'uramichi');
+    const request = new Request('https://example.com/tools/uramichi/app.mjs?x=1', { headers: { cookie: `kali_uramichi_gate=${token}` } });
+    const revoked = await toolsGate(request, context);
+    assert.equal(revoked.status, 302);
+    assert.equal(new URL(revoked.headers.get('location')).searchParams.get('to'), '/tools/uramichi/app.mjs?x=1');
+    active = true;
+    assert.equal((await toolsGate(request, context)).status, 200);
+    assert.equal(nextCalls, 1);
+    globalThis.fetch = async () => { throw new Error('grant check unavailable'); };
+    assert.equal((await toolsGate(request, context)).status, 302);
+    assert.equal(nextCalls, 1);
+  } finally {
+    globalThis.fetch = beforeFetch;
+    if (beforeNetlify === undefined) delete globalThis.Netlify;
+    else globalThis.Netlify = beforeNetlify;
+  }
+});
+
+test('new public app migration adds only the three separately gated tool keys', () => {
+  const sql = readFileSync(new URL('../../supabase/migrations/20261127_friend_apps_asrai_alter_uramichi.sql', import.meta.url), 'utf8');
+  assert.deepEqual([...sql.matchAll(/'([^']+)'/g)].map(match => match[1]), [...FRIEND_APP_TOOLS]);
+  assert.doesNotMatch(sql, /row level security|create policy|drop policy|insert into|update public/i);
+  const context = vm.createContext({});
+  vm.runInContext(readFileSync(new URL('../../tools/login/gate-util.js', import.meta.url), 'utf8'), context);
+  for (const tool of ['asrai', 'alter', 'uramichi']) {
+    const path = `/tools/${tool}/index.html?launch=1`;
+    assert.equal(context.ToolGateUtil.safeTo(path), path);
+    assert.equal(context.ToolGateUtil.toolFromPath(path), tool);
+  }
 });

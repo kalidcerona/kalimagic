@@ -5,7 +5,7 @@ import vm from 'node:vm';
 import { DISTRIBUTION_APPS } from '../../scripts/build-public.mjs';
 
 const COPIES = [
-  ...['zz1', 'zz2', 'zz3', 'zz4', 'zz5', 'zz6', 'zz7', 'zz8', 'zz10', 'zz11'],
+  ...['distribution-snapshots/asrai', 'distribution-snapshots/alter', 'distribution-snapshots/kairos', 'distribution-snapshots/unlock', 'distribution-snapshots/calculator', 'distribution-snapshots/choice', 'distribution-snapshots/aletheia', 'distribution-snapshots/tobira', 'distribution-snapshots/usotsuki', 'distribution-snapshots/spinner'],
   ...['aletheia', 'calculator', 'kairos', 'spinner', 'tobira', 'unlock', 'usotsuki'].map((name) => `distribution-snapshots/${name}`),
 ];
 const read = (route, file) => fs.readFileSync(new URL(`../../${route}/${file}`, import.meta.url), 'utf8');
@@ -34,7 +34,7 @@ function sandboxFor(source, { userAgent = ANDROID_CHROME, standalone = false, cu
       querySelector: (selector) => (String(selector).includes('data-settings-root') || selector === '#settings .settings-panel' ? container : null),
       addEventListener() {},
     },
-    location: { hash: '', search: '', pathname: '/zz11/', origin: 'https://example.test' },
+    location: { hash: '', search: '', pathname: '/distribution-snapshots/spinner/', origin: 'https://example.test' },
     navigator: { userAgent, platform: 'Linux', maxTouchPoints: 5, standalone: undefined },
     matchMedia: (query) => ({ matches: standalone && query.includes('standalone') }),
     localStorage: { getItem() { return null; }, setItem() {}, removeItem() {} },
@@ -56,7 +56,7 @@ test('every shared settings-ui copy is byte-identical and carries the manual ins
 });
 
 test('button sits directly below the overview (the customizable mode is checked in a real browser)', () => {
-  const source = read('zz1', 'settings-ui.js');
+  const source = read('distribution-snapshots/kairos', 'settings-ui.js');
   for (const customize of ['off']) {
     const { container } = sandboxFor(source, { customize });
     const names = container.children.map((child) => child.className);
@@ -71,7 +71,7 @@ test('button sits directly below the overview (the customizable mode is checked 
 });
 
 test('early capture shares one slot and prompt() is called once', async () => {
-  const { sandbox, container, windowListeners } = sandboxFor(read('zz1', 'settings-ui.js'));
+  const { sandbox, container, windowListeners } = sandboxFor(read('distribution-snapshots/kairos', 'settings-ui.js'));
   let prevented = 0; let prompts = 0;
   const event = { preventDefault() { prevented += 1; }, prompt() { prompts += 1; return Promise.resolve(); }, userChoice: Promise.resolve({ outcome: 'accepted' }) };
   windowListeners.beforeinstallprompt(event);
@@ -91,7 +91,7 @@ test('early capture shares one slot and prompt() is called once', async () => {
 });
 
 test('dismissed prompt and a prompt another script already used both end in plain Korean', async () => {
-  const { container, windowListeners } = sandboxFor(read('zz1', 'settings-ui.js'));
+  const { container, windowListeners } = sandboxFor(read('distribution-snapshots/kairos', 'settings-ui.js'));
   const status = container.children.find((child) => child.className === 'magic-install').children[1];
   const button = container.children.find((child) => child.className === 'magic-install').children[0];
   windowListeners.beforeinstallprompt({ preventDefault() {}, prompt: () => Promise.resolve(), userChoice: Promise.resolve({ outcome: 'dismissed' }) });
@@ -104,7 +104,7 @@ test('dismissed prompt and a prompt another script already used both end in plai
 });
 
 test('without a deferred prompt each browser gets its own steps', () => {
-  const source = read('zz1', 'settings-ui.js');
+  const source = read('distribution-snapshots/kairos', 'settings-ui.js');
   const expectations = [
     [ANDROID_CHROME, /길게 눌러 삭제[\s\S]*다시 여세요[\s\S]*홈 화면에 추가[\s\S]*설치/],
     [SAMSUNG, /현재 페이지 추가[\s\S]*홈 화면/],
@@ -124,7 +124,7 @@ test('without a deferred prompt each browser gets its own steps', () => {
 });
 
 test('copy has no em dash or tilde', () => {
-  const source = read('zz1', 'settings-ui.js');
+  const source = read('distribution-snapshots/kairos', 'settings-ui.js');
   const block = source.slice(source.indexOf('function installGuide'), source.indexOf('var api ='));
   assert.doesNotMatch(block, /[—~]/);
 });
@@ -136,9 +136,6 @@ test('installable manifests never share an id once published', () => {
     assert.ok(!published.has(id), `${url} collides with ${published.get(id)} on ${id}`);
     published.set(id, url);
   };
-  for (const route of ['zz1', 'zz2', 'zz3', 'zz4', 'zz5', 'zz6', 'zz7', 'zz8', 'zz10', 'zz11', 'zz12', 'zz13', 'zz14']) {
-    add(`/${route}/manifest.webmanifest`, JSON.parse(read(route, 'manifest.webmanifest')));
-  }
   for (const app of DISTRIBUTION_APPS) {
     const manifest = JSON.parse(read(app.source, 'manifest.webmanifest'));
     // The pinned Pi Max snapshot keeps zz14's id on purpose; the build rewrites every snapshot id to its published route.

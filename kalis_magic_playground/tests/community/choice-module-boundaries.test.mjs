@@ -1,4 +1,3 @@
-const pinnedFriend = Boolean(process.env.CHOICE_ROOT?.includes('distribution-snapshots'));
 import test, { afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -15,7 +14,7 @@ import { pathToFileURL } from 'node:url';
 // Not reachable with these stubs: settings-ui.js (shared classic appearance script, not a CHOICE module),
 // the wallpaper photo store (IndexedDB), and the corrupt-storage recovery panel (needs a corrupt boot).
 // CHOICE_ROOT points the same test at the friend snapshot distribution-snapshots/choice.
-const root = process.env.CHOICE_ROOT ? pathToFileURL(`${process.env.CHOICE_ROOT.replace(/\/?$/, '/')}`) : new URL('../../zz4/', import.meta.url);
+const root = process.env.CHOICE_ROOT ? pathToFileURL(`${process.env.CHOICE_ROOT.replace(/\/?$/, '/')}`) : new URL('../../distribution-snapshots/choice/', import.meta.url);
 const html = readFileSync(new URL('index.html', root), 'utf8');
 
 const errors = [];
@@ -334,7 +333,7 @@ function stubBrowser() {
     delete: async (name) => { const i = cacheNames.indexOf(name); if (i >= 0) cacheNames.splice(i, 1); return i >= 0; },
     open: async () => ({ match: async (url) => (cachedUrls.has(url) ? {} : undefined) }),
   };
-  const registration = { scope: 'https://example.test/zz4/', active: { state: 'activated' }, unregistered: 0 };
+  const registration = { scope: 'https://example.test/tools/choice/', active: { state: 'activated' }, unregistered: 0 };
   registration.unregister = async () => { registration.unregistered += 1; return true; };
   const serviceWorker = {
     registered: [], controller: null,
@@ -368,7 +367,7 @@ function stubBrowser() {
     back() { if (at > 0) { at -= 1; const state = entries[at].state; setTimeout(() => dispatch(window, 'popstate', { state, bubbles: false }), 0); } },
   };
   const location = {
-    href: 'https://example.test/zz4/', protocol: 'https:', hostname: 'example.test', search: '', pathname: '/zz4/',
+    href: 'https://example.test/tools/choice/', protocol: 'https:', hostname: 'example.test', search: '', pathname: '/tools/choice/',
     reload() { calls.reload += 1; },
   };
 
@@ -645,8 +644,7 @@ test('a two-finger downward swipe leaves the performance for the settings and ke
   assert.equal(document.title, '너의 선택은?');
   assert.equal(document.body.dataset.view, 'settings');
   assert.deepEqual(visibleViews(), ['home']);
-  if (pinnedFriend) { assert.equal(env.lockState.requests.at(-1).released, true, 'settings does not hold the screen awake'); }
-  else { assert.equal(env.lockState.requests.at(-1).released, false, 'settings keeps the screen awake'); }
+  assert.equal(env.lockState.requests.at(-1).released, true, 'settings does not hold the screen awake');
   assert.equal(history.state.sv, 'home');
   assert.equal(byId('fake-notes').hidden, true);
   assert.equal(byId('entry-readout').hidden, true);
@@ -925,7 +923,7 @@ test('dummy notes and a performance set decide which notes the performance shows
 
 test('the check screen reports the show state and reads offline readiness from the caches', async () => {
   const prefixes = ['choice-shell-', 'choice-dist-shell-'];
-  const scope = encodeURIComponent('https://example.test/zz4/');
+  const scope = encodeURIComponent('https://example.test/tools/choice/');
   await click(env.top.querySelector('[data-sv-go="check"]'));
   assert.deepEqual(visibleViews(), ['check']);
   await settle(10);
@@ -1032,8 +1030,7 @@ test('the saved practice display, vibration and bold emphasis drive the next per
   await settle(5);
   assert.ok(perf.fakeHomeSession);
   assert.equal(byId('settings-gesture-guide').hidden, guideHidden, 'a dismissed guide stays hidden');
-  if (pinnedFriend) { assert.equal(env.lockState.requests.length, locks + 1); }
-  else { assert.equal(env.lockState.requests.length, locks); }
+  assert.equal(env.lockState.requests.length, locks + 1);
   assert.equal(env.lockState.requests.at(-1).released, false);
   assert.equal(byId('entry-readout').hidden, false, 'practice shows the entry from the start');
   assert.equal(byId('entry-readout').textContent, '○ ○');
@@ -1122,7 +1119,7 @@ test('the inline self-repair stays idle after a clean boot and clears only this 
   const prefix = env.repairSource.match(/var prefix = '([^']+)'/)[1];
   env.htmlEl.removeAttribute('data-choice-ready');
   env.cacheNames.length = 0;
-  const scope = encodeURIComponent('https://example.test/zz4/');
+  const scope = encodeURIComponent('https://example.test/tools/choice/');
   env.cacheNames.push(`${prefix}${scope}-v1`, `${prefix}${encodeURIComponent('https://example.test/other/')}-v1`, 'unrelated-cache');
   armed[0].fn();
   await settle(10);

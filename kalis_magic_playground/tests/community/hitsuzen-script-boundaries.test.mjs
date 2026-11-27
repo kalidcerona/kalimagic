@@ -18,7 +18,7 @@ import { pathToFileURL } from 'node:url';
 // Not covered: the appearance editor settings-ui.js builds (it needs a full DOM; only its mount and install slot
 // run here), the /tools/_check revoke poll (inline script, only runs under /tools/), the service worker file.
 // ZZ3_ROOT lets a mutation check point the same test at a scratch copy.
-const root = process.env.ZZ3_ROOT ? pathToFileURL(`${process.env.ZZ3_ROOT.replace(/\/?$/, '/')}`) : new URL('../../zz3/', import.meta.url);
+const root = process.env.ZZ3_ROOT ? pathToFileURL(`${process.env.ZZ3_ROOT.replace(/\/?$/, '/')}`) : new URL('../../distribution-snapshots/calculator/', import.meta.url);
 
 const errors = [];
 process.on('unhandledRejection', (reason) => errors.push(`unhandledRejection: ${reason?.stack || reason}`));
@@ -277,7 +277,7 @@ function stubBrowser() {
   let frameId = 0;
   const media = { matches: false };
   listenerHost(media);
-  const location = { hash: '', search: '', hostname: 'example.test', pathname: '/zz3/index.html' };
+  const location = { hash: '', search: '', hostname: 'example.test', pathname: '/distribution-snapshots/calculator/index.html' };
 
   // The vm context global IS the stub window: scripts see these as plain globals and as window.<name>.
   const sandbox = {
@@ -611,7 +611,7 @@ test('two-finger downward swipe opens settings (short or sideways swipes do not)
 });
 
 test('entry tutorial: a click right after the swipe is swallowed, a later click dismisses it and stores the flag for this path', async () => {
-  const tutorialKey = 'calculator-settings-entry-tutorial-v1:/zz3';
+  const tutorialKey = 'calculator-settings-entry-tutorial-v1:/distribution-snapshots/calculator';
   assert.equal(stored(tutorialKey), null);
   await twoFingerSwipe(140);
   await settingsAction('close');
@@ -621,7 +621,7 @@ test('entry tutorial: a click right after the swipe is swallowed, a later click 
   await advance(750);
   await fire(node('settings-entry-tutorial-dismiss'), 'click');
   assert.equal(node('settings-entry-tutorial').hidden, true);
-  assert.equal(stored('calculator-settings-entry-tutorial-v1:/zz3'), '1');
+  assert.equal(stored('calculator-settings-entry-tutorial-v1:/distribution-snapshots/calculator'), '1');
 });
 
 test('desktop: the settings button appears for a mouse device and Shift+Esc opens settings, but not while editing', async () => {
@@ -660,11 +660,11 @@ test('desktop: the settings button appears for a mouse device and Shift+Esc open
 
 test('RELEASE handoff: performance-link.js data arms the stored number, clearing it from settings or storage disarms it', async () => {
   const link = win.MagicPerformanceLink;
-  const storageKey = link.keyFor('/zz3/index.html');
+  const storageKey = link.keyFor('/distribution-snapshots/calculator/index.html');
   assert.equal(storageKey, 'magic-performance-link:v1:release-hitsuzen:personal');
   await key('C');
   assert.equal(node('stack-result').hidden, true);
-  assert.equal(link.write(env.localStorage, '/zz3/index.html', 42, 1000), true);
+  assert.equal(link.write(env.localStorage, '/distribution-snapshots/calculator/index.html', 42, 1000), true);
   await fire(win, 'focus');
   assert.equal(node('release-days-value').textContent, '42일을 받았어요.');
   assert.equal(node('release-days-clear').disabled, false);
@@ -684,7 +684,7 @@ test('RELEASE handoff: performance-link.js data arms the stored number, clearing
   assert.equal(node('release-days-clear').disabled, true);
   assert.equal(stored(storageKey), null, 'clearing removes the handoff from storage');
 
-  assert.equal(link.write(env.localStorage, '/zz3/index.html', 7, 2000), true);
+  assert.equal(link.write(env.localStorage, '/distribution-snapshots/calculator/index.html', 7, 2000), true);
   await fire(win, 'focus');
   assert.equal(node('release-days-value').textContent, '7일을 받았어요.');
   assert.equal(need('.keypad [data-key="%"]').classes.has('trick-set'), true);

@@ -2,15 +2,15 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
-import * as core from '../../zz13/core.mjs';
+import * as core from '../../distribution-snapshots/qr/core.mjs';
 
 const KEY = 'magic-qr-session-v1';
 const PRESERVED = KEY + '-preserved-raw';
-const html = fs.readFileSync(new URL('../../zz13/index.html', import.meta.url), 'utf8');
+const html = fs.readFileSync(new URL('../../distribution-snapshots/qr/index.html', import.meta.url), 'utf8');
 
-vm.runInThisContext(fs.readFileSync(new URL('../../zz13/vendor/qrcodegen.js', import.meta.url), 'utf8'));
+vm.runInThisContext(fs.readFileSync(new URL('../../distribution-snapshots/qr/vendor/qrcodegen.js', import.meta.url), 'utf8'));
 const decoderContext = { module: { exports: {} }, exports: {}, Uint8ClampedArray };
-vm.runInNewContext(fs.readFileSync(new URL('../../zz13/vendor/jsQR.js', import.meta.url), 'utf8'), decoderContext);
+vm.runInNewContext(fs.readFileSync(new URL('../../distribution-snapshots/qr/vendor/jsQR.js', import.meta.url), 'utf8'), decoderContext);
 globalThis.jsQR = decoderContext.module.exports;
 if (typeof globalThis.ImageData !== 'function') {
   globalThis.ImageData = class ImageData {
@@ -68,7 +68,7 @@ class El {
 
 function installDom({ raw, throwGet = false, rejectSet = null, shared = false, pathname } = {}) {
   const markup = shared ? fs.readFileSync(new URL('../../distribution-snapshots/qr/index.html', import.meta.url), 'utf8') : html;
-  pathname = pathname || (shared ? '/distribution-snapshots/qr/' : '/zz13/');
+  pathname = pathname || (shared ? '/distribution-snapshots/qr/' : '/distribution-snapshots/qr/');
   const primaryKey = pathname.toLowerCase().startsWith('/tools/arosaegida') ? KEY + '-arosaegida' : KEY;
   const store = new Map();
   if (raw !== undefined) store.set(primaryKey, raw);
@@ -98,7 +98,7 @@ function installDom({ raw, throwGet = false, rejectSet = null, shared = false, p
     if (/(?:^|\s)disabled(?:\s|$)/.test(match[2])) el.disabled = true;
     if (/(?:^|\s)hidden(?:\s|$)/.test(match[2])) el.hidden = true;
   }
-  for (const id of ['notice', 'empty', 'qr', 'png', 'generate', 'freeze', 'undo', 'clean', 'dot', 'dotvalue', 'extras', 'settings', 'target', 'ordinal', 'decoys', 'session', 'error', 'close', 'add-extra', 'form', 'backup', 'import', 'install-status', 'install', 'install-manual', 'install-android', 'install-android-recovery']) {
+  for (const id of ['storage-notice', 'notice', 'empty', 'qr', 'png', 'generate', 'freeze', 'undo', 'clean', 'dot', 'dotvalue', 'extras', 'settings', 'target', 'ordinal', 'decoys', 'session', 'error', 'close', 'add-extra', 'form', 'backup', 'import', 'install-status', 'install', 'install-manual', 'install-android', 'install-android-recovery']) {
     if (shared && id === 'clean') continue;
     assert.ok(elements.has(id), `actual markup provides #${id}`);
   }
@@ -159,7 +159,7 @@ function savedSession(config, extra = {}) {
 async function boot(name, options) {
   const dom = installDom(options);
   try {
-    await import(`../../${options?.shared ? 'distribution-snapshots/qr' : 'zz13'}/app.mjs?storage=${encodeURIComponent(name)}`);
+    await import(`../../${options?.shared ? 'distribution-snapshots/qr' : 'distribution-snapshots/qr'}/app.mjs?storage=${encodeURIComponent(name)}`);
   } catch (error) {
     dom.restore();
     throw error;
@@ -268,9 +268,9 @@ test('missing storage is a normal default and is not reported as a failed read',
 });
 
 test('the scoped service worker cache includes this app change', () => {
-  const sw = fs.readFileSync(new URL('../../zz13/sw.js', import.meta.url), 'utf8');
-  const app = fs.readFileSync(new URL('../../zz13/storage-recovery.mjs', import.meta.url), 'utf8');
-  assert.match(sw, /CACHE=PREFIX\+'v20261004-first-guide-1-coherent-1-gesture-1-compat-1-wake-1-defer-1-local-preview-1-relaunch-restore-4-local-preview-module-1(?:-update-prompt-\d+)?-persist-1-r5-1'/);
+  const sw = fs.readFileSync(new URL('../../distribution-snapshots/qr/sw.js', import.meta.url), 'utf8');
+  const app = fs.readFileSync(new URL('../../distribution-snapshots/qr/app.mjs', import.meta.url), 'utf8');
+  assert.match(sw, /CACHE=PREFIX\+'[^']*storage-notice-1'/);
   assert.match(sw, /\.\/app\.mjs/);
   assert.match(app, /writesHeld/);
   assert.doesNotMatch(app, /distribution-snapshots/);
@@ -710,9 +710,9 @@ for (const shared of [false,true]) test(`${shared?'shared':'personal'}: normal g
   const dom=await boot(`normal-write-notice-${shared}`,{raw,shared,rejectSet:key=>key===KEY});
   try {
     dom.elements.get('generate').onclick();
-    assert.match(dom.elements.get('notice').textContent,/저장할 수 없습니다/);
+    assert.match(dom.elements.get('storage-notice').textContent,/저장할 수 없습니다/);
     assert.equal(await editOneCell(dom),true);
-    assert.match(dom.elements.get('notice').textContent,/저장할 수 없습니다/);
+    assert.match(dom.elements.get('storage-notice').textContent,/저장할 수 없습니다/);
     assert.equal(stored(dom),raw);
   } finally {dom.restore();}
 });

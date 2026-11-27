@@ -15,7 +15,7 @@ import { pathToFileURL } from 'node:url';
 // Not reachable with these stubs: preset-edit gestures by hand (digit and group swipes), the landscape
 // long-press and three-finger mode toggle, ResizeObserver layout, and the appearance editor that
 // settings-ui.js mounts (it needs a full DOM; only its install-event slot and API load here).
-const root = process.env.KAIROS_ROOT ? pathToFileURL(`${process.env.KAIROS_ROOT.replace(/\/?$/, '/')}`) : new URL('../../zz1/', import.meta.url);
+const root = process.env.KAIROS_ROOT ? pathToFileURL(`${process.env.KAIROS_ROOT.replace(/\/?$/, '/')}`) : new URL('../../distribution-snapshots/kairos/', import.meta.url);
 after(() => { console.error = originalConsoleError; });
 
 const errors = [];
@@ -330,7 +330,7 @@ function moduleUrlFor(script) {
   return new URL(script.src, root);
 }
 
-const pathname = process.env.KAIROS_ROOT ? '/distribution-snapshots/kairos/index.html' : '/zz1/index.html';
+const pathname = process.env.KAIROS_ROOT ? '/distribution-snapshots/kairos/index.html' : '/distribution-snapshots/kairos/index.html';
 const env = stubBrowser(pathname);
 const node = env.byId;
 const MODE_KEY = 'stopwatch_ui_mode';

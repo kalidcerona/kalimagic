@@ -5,16 +5,15 @@ import { fileURLToPath } from 'node:url';
 import vm from 'node:vm';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
-const personal = [1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13]
-  .map(number => ({ route: `zz${number}`, source: `zz${number}/sw.js` }));
 const shared = [
+  ['asrai', 'asrai'], ['alter', 'alter'], ['uramichi', 'uramichi'],
   ['memdeck', 'memdeck'],
   ['gwayubulgeup', 'gwayubulgeup'],
   ['magicshow', 'magicshow'], ['choice', 'choice'], ['calculator', 'hitsuzen'], ['unlock', 'release'], ['aletheia', 'aletheia'],
   ['usotsuki', 'usotsuki'], ['tobira', 'tobira'], ['spinner', 'tyche'],
   ['kairos', 'kairos'], ['kairos', 'kairos-classic'], ['qr', 'arosaegida']
 ].map(([snapshot, slug]) => ({ route: `tools/${slug}`, source: `distribution-snapshots/${snapshot}/sw.js` }));
-const routes = [...personal, ...shared];
+const routes = shared;
 const manifest = id => ({ name: 'Install metadata', start_url: './', scope: './', display: 'standalone', id });
 const jsonResponse = value => new Response(JSON.stringify(value), {
   headers: { 'Content-Type': 'application/manifest+json; charset=utf-8' }
@@ -87,10 +86,10 @@ function worker(app, network, { emptyCache = false, failCacheWrite = false } = {
   return { scope, dispatch, lifecycle, calls, puts, deletes, opened, added, oldCacheName, claims: () => claims, skips: () => skips };
 }
 
-test('the freshness matrix covers 24 public source workers and 25 deployed scopes', () => {
-  assert.equal(routes.length, 25);
-  assert.equal(new Set(routes.map(app => app.source)).size, 24);
-  assert.equal(new Set(routes.map(app => app.route)).size, 25);
+test('the freshness matrix covers 15 public source workers and 16 deployed scopes', () => {
+  assert.equal(routes.length, 16);
+  assert.equal(new Set(routes.map(app => app.source)).size, 15);
+  assert.equal(new Set(routes.map(app => app.route)).size, 16);
   assert.ok(routes.every(app => app.route !== 'zz9'));
 });
 

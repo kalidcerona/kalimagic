@@ -7,7 +7,7 @@ import { pathToFileURL } from 'node:url';
 // drives the same call path picker.mjs uses: C.resolve(...) then C.armResolved(...). A name that one
 // module uses but never imports (it only exists as a re-export in core.mjs) throws ReferenceError here.
 // URAMICHI_ROOT lets a mutation check point the same test at a scratch copy.
-const root = process.env.URAMICHI_ROOT ? pathToFileURL(`${process.env.URAMICHI_ROOT.replace(/\/?$/, '/')}`) : new URL('../../zz15/', import.meta.url);
+const root = process.env.URAMICHI_ROOT ? pathToFileURL(`${process.env.URAMICHI_ROOT.replace(/\/?$/, '/')}`) : new URL('../../distribution-snapshots/uramichi/', import.meta.url);
 const C = await import(new URL('core.mjs', root));
 
 const fixed = C.category('c1', '목록', 'NONE', [C.entry('e1', '첫째', ' https://example.test/a ')]);

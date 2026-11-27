@@ -1,4 +1,3 @@
-import { inspectBackupOutput } from '../support/personal-backup-output.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readdir, readFile, stat, mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises';
@@ -6,7 +5,7 @@ import path from 'node:path';
 import os from 'node:os';
 import vm from 'node:vm';
 import { fileURLToPath } from 'node:url';
-import { PUBLIC_FILES, PUBLIC_DIRS, PRIVATE_PATTERNS, MIRROR_PAIRS, DISTRIBUTION_APPS, SHARED_UNLOCK_FILES, CHOICE_FILES, NEW_APP_FILES, USOTSUKI_FILES, ASRAI_FILES, ALTER_FILES, SPINNER_FILES, MEMDECK_FILES, QR_FILES, ALETHEIA_COURT_FILES, SETTINGS_UI_FILES, buildPublic, verifyMirrors, verifyAppDisplayPolicy, injectLegacyMigration, injectLegacyShellModules } from '../../scripts/build-public.mjs';
+import { PUBLIC_FILES, PUBLIC_DIRS, PRIVATE_PATTERNS, DISTRIBUTION_APPS, SHARED_UNLOCK_FILES, SETTINGS_UI_FILES, buildPublic, verifyAppDisplayPolicy, injectLegacyMigration, injectLegacyShellModules } from '../../scripts/build-public.mjs';
 import { BELL_PUBLIC_BETA, SLOT_PUBLIC_BETA } from '../../netlify/edge-functions/tools-gate.mjs';
 
 test('public build allowlist includes visible site pages', () => {
@@ -36,67 +35,10 @@ test('public build explicitly excludes local planning and source folders', () =>
   assert.equal(PUBLIC_DIRS.includes('distribution-snapshots'), false);
 });
 
-test('personal ALTER, Asrai, and spinner are included while unfinished FALSE MEMORY stays private', () => {
-  assert.deepEqual(PUBLIC_DIRS.filter((entry) => /^zz\d+$/.test(entry)), ['zz1', 'zz2', 'zz3', 'zz4', 'zz5', 'zz6', 'zz7', 'zz8', 'zz10', 'zz11', 'zz12', 'zz13', 'zz14', 'zz15']);
-  assert.equal(MIRROR_PAIRS.some(([, mirror]) => mirror.startsWith('zz9/')), false);
-  assert.ok(PRIVATE_PATTERNS.some((pattern) => pattern.test('zz8/app.js')));
-});
-
-test('public build mirrors the current calculator and integrated stopwatch sources', () => {
-  for (const file of ['index.html', 'sw.js', 'icon-192.png', 'icon-512.png', 'icon.svg', 'manifest.webmanifest', 'brand-logo.jpg']) {
-    assert.ok(MIRROR_PAIRS.some(([source, mirror]) =>
-      source === `../../magic-calculator-v2/${file}` && mirror === `zz3/${file}`), `calculator ${file}`);
-    assert.ok(MIRROR_PAIRS.some(([source, mirror]) =>
-      source === `../../magic-stopwatch-uni/${file}` && mirror === `zz1/${file}`), `stopwatch ${file}`);
-  }
-  assert.ok(MIRROR_PAIRS.some(([source, mirror]) =>
-    source === '../../magic-calculator-v2/brand-logo.jpg' && mirror === 'zz3/brand-logo.jpg'));
-  for (const file of CHOICE_FILES) {
-    assert.ok(MIRROR_PAIRS.some(([source, mirror]) =>
-      source === `../../magic-choice/${file}` && mirror === `zz4/${file}`), `choice ${file}`);
-  }
-  // Only the choice app ships the home screen artwork; the shared new-app file list stays unchanged.
-  assert.ok(CHOICE_FILES.includes('home-manifest.js') && CHOICE_FILES.includes('home-icons/a1.svg') && CHOICE_FILES.includes('home-icons/own-memdeck.png'));
-  assert.equal(NEW_APP_FILES.some((file) => file.startsWith('home-')), false);
-  for (const [source, route] of [['magic-aletheia', 'zz5'], ['magic-tobira', 'zz6']]) {
-    for (const file of NEW_APP_FILES) {
-      assert.ok(MIRROR_PAIRS.some(([original, mirror]) =>
-        original === `../../${source}/${file}` && mirror === `${route}/${file}`), `${route} ${file}`);
-    }
-  }
-  for (const file of USOTSUKI_FILES) {
-    assert.ok(MIRROR_PAIRS.some(([source, mirror]) =>
-      source === `../../magic-usotsuki/${file}` && mirror === `zz7/${file}`), `zz7 ${file}`);
-  }
-  for (const [source, route, files] of [
-    ['magic-asrai', 'zz8', ASRAI_FILES],
-    ['magic-alter', 'zz10', ALTER_FILES],
-    ['magic-spinner', 'zz11', SPINNER_FILES]
-  ]) {
-    for (const file of files) {
-      assert.ok(MIRROR_PAIRS.some(([original, mirror]) =>
-        original === `../../${source}/${file}` && mirror === `${route}/${file}`), `${route} ${file}`);
-    }
-  }
-  assert.equal(ALETHEIA_COURT_FILES.length, 12);
-  for (const file of ALETHEIA_COURT_FILES) {
-    assert.ok(MIRROR_PAIRS.some(([source, mirror]) =>
-      source === `../../magic-aletheia/${file}` && mirror === `zz5/${file}`), `zz5 ${file}`);
-  }
-  for (const [source, route] of [
-    ['magic-stopwatch-uni', 'zz1'],
-    ['magic-unlock', 'zz2'],
-    ['magic-calculator-v2', 'zz3'],
-    ['magic-choice', 'zz4'],
-    ['magic-aletheia', 'zz5'],
-    ['magic-tobira', 'zz6'],
-    ['magic-usotsuki', 'zz7']
-  ]) {
-    assert.ok(MIRROR_PAIRS.some(([original, mirror]) =>
-      original === `../../${source}/brand-logo.png` && mirror === `${route}/brand-logo.png`), `${route} high-resolution logo`);
-  }
-  assert.equal(MIRROR_PAIRS.some(([, mirror]) => mirror === 'tools/calc' || mirror.startsWith('tools/calc/')), false);
+test('distribution catalog uses canonical snapshots', () => {
+  assert.deepEqual(PUBLIC_DIRS.filter(route => /^zz\d+$/.test(route)), []);
   assert.deepEqual(DISTRIBUTION_APPS, [
+    ...['asrai', 'alter', 'uramichi'].map(name => ({ source: `distribution-snapshots/${name}`, target: name, tool: name })),
     { source: 'distribution-snapshots/memdeck', target: 'memdeck', tool: 'memdeck' },
     { source: 'distribution-snapshots/bell', target: 'bell', tool: 'bell' },
     { source: 'distribution-snapshots/slot', target: 'slot', tool: 'slot' },
@@ -119,24 +61,15 @@ test('public build mirrors the current calculator and integrated stopwatch sourc
 
 test('public build serves integrated stopwatch on both retained entitlement routes', async (t) => {
   await buildPublic();
-  for (const route of PUBLIC_DIRS.filter(route => /^zz\d+$/.test(route))) {
-    const appRoot = new URL(`../../dist/${route}/`, import.meta.url);
-    const backup = await inspectBackupOutput(appRoot);
-    for (const file of ['index.html', 'sw.js']) {
-      const source = await readFile(new URL(`../../${route}/${file}`, import.meta.url));
-      assert.deepEqual(backup.sourceBytes(file, await readFile(new URL(file, appRoot))), source, route + '/' + file);
-    }
-  }
-  for (const route of ['zz2', 'zz3', 'tools/release', 'tools/hitsuzen']) {
+  for (const route of ['tools/release', 'tools/hitsuzen']) {
     const appRoot = new URL(`../../dist/${route}/`, import.meta.url);
     assert.match(await readFile(new URL('index.html', appRoot), 'utf8'), /src=["']\.\/performance-link\.js["']/);
     assert.match(await readFile(new URL('sw.js', appRoot), 'utf8'), /performance-link\.js/);
-    const source = route.startsWith('tools/')
-      ? DISTRIBUTION_APPS.find(app => route === `tools/${app.target}`).source : route;
+    const source = DISTRIBUTION_APPS.find(app => route === `tools/${app.target}`).source;
     assert.deepEqual(await readFile(new URL('performance-link.js', appRoot)),
       await readFile(new URL(`../../${source}/performance-link.js`, import.meta.url)));
   }
-  const personalStopwatch = await readFile(new URL('../../dist/zz1/index.html', import.meta.url), 'utf8');
+
   for (const [tool, isPublic] of [['bell', BELL_PUBLIC_BETA], ['slot', SLOT_PUBLIC_BETA]]) {
     await t.test(`${tool} ships the selected HTML guard and worker policy`, async () => {
       const root = new URL(`../../dist/tools/${tool}/`, import.meta.url);
@@ -183,18 +116,18 @@ test('public build serves integrated stopwatch on both retained entitlement rout
   const sharedCalculator = await readFile(new URL('../../dist/tools/hitsuzen/index.html', import.meta.url), 'utf8');
   const sharedAletheia = await readFile(new URL('../../dist/tools/aletheia/index.html', import.meta.url), 'utf8');
   const sharedUsotsuki = await readFile(new URL('../../dist/tools/usotsuki/index.html', import.meta.url), 'utf8');
-  const personalUsotsuki = await readFile(new URL('../../dist/zz7/index.html', import.meta.url), 'utf8');
-  for (const html of [personalUsotsuki, sharedUsotsuki]) {
+
+  for (const html of [sharedUsotsuki]) {
     assert.match(html, /id="scan-duration"/);
     assert.match(html, /id="vibration-level"/);
   }
   const legacyStopwatch = await readFile(new URL('../../dist/tools/kairos-classic/index.html', import.meta.url), 'utf8');
-  assert.doesNotMatch(personalStopwatch, /id="friend-apps-check"/);
+
   assert.match(sharedUnlock, /id="friend-apps-check"/);
   assert.match(sharedUnlock, /tools\/_check\?tool=unlock/);
   assert.doesNotMatch(sharedUnlock, /data-magic-customize="off"/);
   for (const html of [sharedStopwatch, sharedCalculator, sharedAletheia, sharedUsotsuki]) assert.match(html, /data-magic-customize="off"/);
-  assert.doesNotMatch(personalStopwatch, /data-magic-customize="off"/);
+
   assert.match(sharedStopwatch, /id="friend-apps-check"/);
   assert.match(sharedStopwatch, /tools\/_check\?tool=stopwatch-uni/);
   assert.match(sharedStopwatch, /<title>KAIROS · 스톱워치<\/title>/);
@@ -209,41 +142,6 @@ test('public build serves integrated stopwatch on both retained entitlement rout
   assert.match(legacyStopwatch, /tools\/_check\?tool=stopwatch/);
   const stripGate = (html) => html.replace(/\n  <script id="friend-apps-check">[\s\S]*?<\/script>/, '');
   assert.equal(stripGate(legacyStopwatch).replaceAll('friend-kairos-classic', 'friend-kairos').replaceAll('target: "kairos-classic"', 'target: "kairos"').replaceAll('=== "stopwatch"', '=== "stopwatch-uni"'), stripGate(sharedStopwatch));
-  await stat(new URL('../../dist/zz4/index.html', import.meta.url));
-  await stat(new URL('../../dist/zz5/index.html', import.meta.url));
-  await stat(new URL('../../dist/zz6/index.html', import.meta.url));
-  await stat(new URL('../../dist/zz7/index.html', import.meta.url));
-  await assert.rejects(stat(new URL('../../dist/zz7/app.js', import.meta.url)), { code: 'ENOENT' });
-  await stat(new URL('../../dist/zz8/index.html', import.meta.url));
-  await stat(new URL('../../dist/zz10/index.html', import.meta.url));
-  await stat(new URL('../../dist/zz11/index.html', import.meta.url));
-  const trainer = new URL('../../dist/zz12/', import.meta.url);
-  const trainerBackup = await inspectBackupOutput(trainer);
-  assert.deepEqual((await readdir(trainer)).sort(), [...MEMDECK_FILES, 'local-preview.mjs', ...trainerBackup.entries].sort());
-  const trainerSource = await stat(new URL('../../../../magic-memdeck/', import.meta.url)).catch((error) => { if (error.code === 'ENOENT') return null; throw error; });
-  for (const file of MEMDECK_FILES) {
-    assert.ok(MIRROR_PAIRS.some(([source, mirror]) => source === `../../magic-memdeck/${file}` && mirror === `zz12/${file}`));
-    if (trainerSource) {
-      const original = await readFile(new URL(`../../../../magic-memdeck/${file}`, import.meta.url));
-      assert.deepEqual(trainerBackup.sourceBytes(file, await readFile(new URL(file, trainer))), original);
-    }
-  }
-  const qr = new URL('../../dist/zz13/', import.meta.url);
-  const qrBackup = await inspectBackupOutput(qr);
-  const qrFiles = [];
-  async function collectQrFiles(directory, prefix = '') {
-    for (const entry of await readdir(directory, { withFileTypes: true })) {
-      if (entry.isDirectory()) await collectQrFiles(new URL(`${entry.name}/`, directory), `${prefix}${entry.name}/`);
-      else qrFiles.push(`${prefix}${entry.name}`);
-    }
-  }
-  await collectQrFiles(qr);
-  assert.deepEqual(qrFiles.sort(), [...QR_FILES, 'local-preview.mjs', ...qrBackup.files].sort());
-  const qrSource = await stat(new URL('../../../../magic-qr/', import.meta.url)).catch((error) => { if (error.code === 'ENOENT') return null; throw error; });
-  for (const file of QR_FILES) {
-    assert.ok(MIRROR_PAIRS.some(([source, mirror]) => source === `../../magic-qr/${file}` && mirror === `zz13/${file}`));
-    if (qrSource) assert.deepEqual(qrBackup.sourceBytes(file, await readFile(new URL(file, qr))), await readFile(new URL(`../../../../magic-qr/${file}`, import.meta.url)));
-  }
   const sharedQr = new URL('../../dist/tools/arosaegida/', import.meta.url);
   const sharedQrHtml = await readFile(new URL('index.html', sharedQr), 'utf8');
   assert.match(sharedQrHtml, /tools\/_check\?tool=arosaegida/);
@@ -251,7 +149,7 @@ test('public build serves integrated stopwatch on both retained entitlement rout
   assert.match(sharedQrHtml, /아로새기다/);
   assert.deepEqual(await readFile(new URL('brand-logo.png', sharedQr)), await readFile(new URL('../../distribution-snapshots/qr/brand-logo.png', import.meta.url)));
   assert.match(await readFile(new URL('sw.js', sharedQr), 'utf8'), /scope\.pathname\.startsWith\('\/tools\/'\)/);
-  for (const route of [...PUBLIC_DIRS.filter((route) => /^zz\d+$/.test(route)), ...DISTRIBUTION_APPS.map((app) => 'tools/' + app.target)]) {
+  for (const route of DISTRIBUTION_APPS.map((app) => 'tools/' + app.target)) {
     const fullscreen = new URL('../../dist/' + route + '/fullscreen.js', import.meta.url);
     // Choice publishes the compatibility stub. It must not request fullscreen. Every other route omits the file.
     if (route === 'tools/choice') {
@@ -262,14 +160,8 @@ test('public build serves integrated stopwatch on both retained entitlement rout
     }
     await assert.rejects(stat(fullscreen), { code: 'ENOENT' });
   }
-  const qrManifest = JSON.parse(await readFile(new URL('manifest.webmanifest', qr), 'utf8'));
-  assert.equal(qrManifest.display, 'standalone');
+  const qrManifest = JSON.parse(await readFile(new URL('manifest.webmanifest', sharedQr), 'utf8'));
   assert.equal(qrManifest.scope, './');
-  const trainerManifest = JSON.parse(await readFile(new URL('manifest.webmanifest', trainer), 'utf8'));
-  assert.equal(trainerManifest.display, 'standalone');
-  assert.equal(trainerManifest.scope, './');
-  const headers = await readFile(new URL('../../netlify.toml', import.meta.url), 'utf8');
-  assert.match(headers, /for = "\/zz12\/manifest\.webmanifest"\s+\[headers.values\]\s+Content-Type = "application\/manifest\+json"/);
   await assert.rejects(stat(new URL('../../dist/zz8/app.js', import.meta.url)), { code: 'ENOENT' });
   await assert.rejects(stat(new URL('../../dist/zz9/index.html', import.meta.url)), { code: 'ENOENT' });
 });
@@ -311,11 +203,10 @@ test('legacy shell injection appends legacy-1 before a distribution suffix and s
   assert.match(plainOnce, /const CACHE_NAME = CACHE_PREFIX \+ 'v20261004-coherent-1-legacy-1';/);
 });
 
-test('personal KAIROS edits do not change either shared route', async () => {
+test('both KAIROS routes use the canonical snapshot', async () => {
   await buildPublic();
   const root = fileURLToPath(new URL('../..', import.meta.url));
   const snapshotDir = path.join(root, 'distribution-snapshots', 'kairos');
-  const personalDir = path.join(root, 'zz1');
   async function filesUnder(dir, prefix = '') {
     const entries = await readdir(dir, { withFileTypes: true });
     const parts = await Promise.all(entries.map(async (entry) => {
@@ -333,17 +224,14 @@ test('personal KAIROS edits do not change either shared route', async () => {
     for (const file of ['legacy-shared-contract.mjs', 'legacy-storage-migration.mjs']) assert.deepEqual(await readFile(path.join(distributedDir, file)), await readFile(path.join(root, 'scripts', file)), `${target}/${file}`);
     const prefix = `friend-${target}_`;
     for (const file of snapshotFiles) {
-      const [snapshotBytes, distributedBytes, personalBytes] = await Promise.all([
+      const [snapshotBytes, distributedBytes] = await Promise.all([
         readFile(path.join(snapshotDir, file)),
         readFile(path.join(distributedDir, file)),
-        readFile(path.join(personalDir, file)).catch((error) => { if (error.code === 'ENOENT') return null; throw error; })
       ]);
       let comparable = distributedBytes;
       let expected = snapshotBytes;
-      let personalExpected = personalBytes;
       if (file === 'index.html') {
         const snapshotHtml = snapshotBytes.toString('utf8');
-        const personalHtml = personalBytes ? personalBytes.toString('utf8') : null;
         const isolate = (html) => html
           .replaceAll('stopwatch_', prefix)
           .replaceAll('stopwatch2_', `friend-${target}-legacy_`)
@@ -353,8 +241,6 @@ test('personal KAIROS edits do not change either shared route', async () => {
         // The snapshot loads its app from ./app.js, so its HTML carries no inline startup hook; app.js is checked below.
         assert.equal(snapshotHtml.includes('else initApp();'), false);
         expected = Buffer.from(isolate(snapshotHtml));
-        // Personal zz1 loads its app from ./app.js, so its HTML no longer carries the inline startup hook.
-        personalExpected = personalHtml === null ? null : Buffer.from(personalHtml.includes('else initApp();') ? injectLegacyMigration(isolate(personalHtml), target) : isolate(personalHtml));
         const html = distributedBytes.toString('utf8');
         assert.match(html, new RegExp(`tools\\/_check\\?tool=${tool}`));
         assert.doesNotMatch(html, /["']stopwatch_/);
@@ -371,7 +257,6 @@ test('personal KAIROS edits do not change either shared route', async () => {
         const script = distributedBytes.toString('utf8');
         comparable = Buffer.from(script);
         expected = Buffer.from(file === 'app.js' ? injectLegacyMigration(isolate(snapshotBytes.toString('utf8')), target) : isolate(snapshotBytes.toString('utf8')));
-        personalExpected = personalBytes ? Buffer.from(file === 'app.js' ? injectLegacyMigration(isolate(personalBytes.toString('utf8')), target) : isolate(personalBytes.toString('utf8'))) : null;
         assert.doesNotMatch(script, /["']stopwatch_/);
         assert.doesNotMatch(script, /["']stopwatch2_/);
         assert.doesNotMatch(script, /["']stopwatch-settings-entry-tutorial-/);
@@ -387,7 +272,6 @@ test('personal KAIROS edits do not change either shared route', async () => {
         const logic = distributedBytes.toString('utf8');
         comparable = Buffer.from(logic);
         expected = Buffer.from(isolate(snapshotBytes.toString('utf8')));
-        personalExpected = personalBytes ? Buffer.from(isolate(personalBytes.toString('utf8'))) : null;
         assert.match(logic, new RegExp(`${prefix}preset_cs`));
         assert.match(logic, new RegExp(`friend-${target}-legacy_preset_cs`));
         assert.match(logic, new RegExp(`${prefix}storage_migrated_v2`));
@@ -395,9 +279,6 @@ test('personal KAIROS edits do not change either shared route', async () => {
         assert.doesNotMatch(logic, /["']stopwatch2_/);
       } else if (file === 'manifest.webmanifest') {
         expected = Buffer.from(JSON.stringify({ ...JSON.parse(snapshotBytes), id: `/tools/${target}/`, start_url: './', scope: './' }, null, 2) + '\n');
-        personalExpected = personalBytes
-          ? Buffer.from(JSON.stringify({ ...JSON.parse(personalBytes), id: `/tools/${target}/`, start_url: './', scope: './' }, null, 2) + '\n')
-          : null;
       } else if (file === 'sw.js') {
         const snapshotSource = snapshotBytes.toString('utf8');
         const injected = injectLegacyShellModules(snapshotSource);
@@ -407,9 +288,6 @@ test('personal KAIROS edits do not change either shared route', async () => {
         expected = Buffer.from(injected);
       }
       assert.deepEqual(comparable, expected, `${target}/${file} must follow the kairos snapshot`);
-      if (personalExpected && !personalBytes.equals(snapshotBytes)) {
-        assert.notDeepEqual(comparable, personalExpected, `${target}/${file} leaked personal zz1`);
-      }
     }
   }
 });
@@ -439,6 +317,7 @@ test('shared unlock stays on the pinned snapshot until explicit promotion', asyn
     } else if (file === 'manifest.webmanifest') {
       const expected = { ...JSON.parse(snapshot), id: '/tools/release/', start_url: './', scope: './' };
       assert.deepEqual(JSON.parse(distributed), expected);
+
     } else {
       assert.deepEqual(distributed, snapshot, file);
     }
@@ -536,43 +415,6 @@ test('HITSUZEN and AROSAEGIDA keep every pinned snapshot byte except gate, custo
   }
 });
 
-test('Asrai, ALTER, and spinner personal builds keep exact runtime mirrors and distinct install identities', async () => {
-  await buildPublic();
-  const root = fileURLToPath(new URL('../..', import.meta.url));
-  async function filesUnder(dir, prefix = '') {
-    const entries = await readdir(dir, { withFileTypes: true });
-    const parts = await Promise.all(entries.map(async (entry) => {
-      const name = path.join(prefix, entry.name);
-      return entry.isDirectory() ? filesUnder(path.join(dir, entry.name), name) : [name];
-    }));
-    return parts.flat().sort();
-  }
-  for (const [source, route, files, name] of [
-    ['magic-asrai', 'zz8', ASRAI_FILES, '아스라이'],
-    ['magic-alter', 'zz10', ALTER_FILES, 'ALTER'],
-    ['magic-spinner', 'zz11', SPINNER_FILES, 'TYCHE']
-  ]) {
-    const distDir = path.join(root, 'dist', route);
-    const runtimeFiles = [...files, ...SETTINGS_UI_FILES, 'local-preview.js'];
-    const backup = await inspectBackupOutput(distDir);
-    assert.deepEqual(await filesUnder(distDir), [...runtimeFiles, ...backup.files].sort());
-    const manifest = JSON.parse(await readFile(path.join(distDir, 'manifest.webmanifest'), 'utf8'));
-    assert.equal(manifest.id, undefined);
-    assert.equal(manifest.scope, './');
-    assert.equal(manifest.name, name);
-    assert.match(manifest.start_url, /^\.\/(?:index\.html)?$/);
-    for (const file of runtimeFiles) {
-      const [original, mirror] = await Promise.all([
-        readFile(path.join(root, '..', '..', source, file)),
-        readFile(path.join(distDir, file))
-      ]);
-      assert.deepEqual(backup.sourceBytes(file, mirror), original, `${route}/${file}`);
-    }
-    assert.doesNotMatch(await readFile(path.join(distDir, 'index.html'), 'utf8'), /id="friend-apps-check"/);
-  }
-  await assert.rejects(stat(path.join(root, 'dist', 'zz9', 'index.html')), { code: 'ENOENT' });
-});
-
 test('public build does not copy dotfiles from public directories', async () => {
   await buildPublic();
   await assert.rejects(
@@ -632,9 +474,9 @@ test('public build includes every local src and href referenced by dist html', a
 
 test('final app policy rejects fullscreen and mixed personal/friend customization', async () => {
   const fixture = await mkdtemp(path.join(os.tmpdir(), 'magic-display-policy-'));
-  const route = 'zz1';
+  const route = 'tools/release';
   const app = path.join(fixture, route);
-  await mkdir(app);
+  await mkdir(app, { recursive: true });
   const manifest = path.join(app, 'manifest.webmanifest');
   const html = path.join(app, 'index.html');
   try {
@@ -673,13 +515,13 @@ test('fullscreen exception is limited to RELEASE index and pin files with the re
   const fixture = await mkdtemp(path.join(os.tmpdir(), 'magic-rewind-policy-'));
   const fullscreen = '<script>function enterRewindFullscreen() { document.documentElement.requestFullscreen(); }</script>';
   try {
-    for (const route of ['zz2', 'tools/release', 'zz1']) {
+    for (const route of ['tools/release', 'tools/kairos']) {
       const app = path.join(fixture, route);
       await mkdir(app, { recursive: true });
       await writeFile(path.join(app, 'manifest.webmanifest'), JSON.stringify({ display: 'standalone' }));
-      const body = '<body></body>';
+      const body = route === 'tools/kairos' ? '<body data-magic-customize="off"></body>' : '<body></body>';
       await writeFile(path.join(app, 'index.html'), body + fullscreen);
-      if (route === 'zz1') {
+      if (route === 'tools/kairos') {
         await assert.rejects(verifyAppDisplayPolicy(fixture, [route]), /Fullscreen is disabled/);
       } else {
         await verifyAppDisplayPolicy(fixture, [route]);
@@ -697,59 +539,10 @@ test('fullscreen exception is limited to RELEASE index and pin files with the re
   }
 });
 
-test('mirror check skips only when every sibling source is absent on CI', async () => {
-  const temp = await mkdtemp(path.join(os.tmpdir(), 'mirror-check-'));
-  const root = path.join(temp, 'repo', 'kalis_magic_playground');
-  const pairs = [
-    ['../../magic-a/app.js', 'zz/a.js'],
-    ['../../magic-b/app.mjs', 'zz14/app.mjs']
-  ];
-  const warnings = [];
-  const warn = (line) => warnings.push(line);
-  const boot = 'if (typeof document !== "undefined") boot();\n';
-  const absent = 'WARNING: mirror check skipped on CI: 2 sibling sources absent';
-  try {
-    await verifyMirrors({ root, pairs, env: { CI: 'true' }, warn });
-    await verifyMirrors({ root, pairs, env: { NETLIFY: 'true' }, warn });
-    // Any non-empty CI value counts; NETLIFY must be exactly "true".
-    await verifyMirrors({ root, pairs, env: { CI: 'false' }, warn });
-    assert.deepEqual(warnings, [absent, absent, absent]);
-    warnings.length = 0;
-    await assert.rejects(() => verifyMirrors({ root, pairs, env: {}, warn }), /mirror sources missing: \.\.\/\.\.\/magic-a\/app\.js, \.\.\/\.\.\/magic-b\/app\.mjs/);
-    await assert.rejects(() => verifyMirrors({ root, pairs, env: { NETLIFY: '1' }, warn }), /mirror sources missing: \.\.\/\.\.\/magic-a\/app\.js, \.\.\/\.\.\/magic-b\/app\.mjs/);
-    assert.equal(warnings.length, 0);
-
-    await mkdir(path.join(temp, 'magic-a'), { recursive: true });
-    await writeFile(path.join(temp, 'magic-a', 'app.js'), 'present');
-    await assert.rejects(() => verifyMirrors({ root, pairs, env: { CI: 'true', NETLIFY: 'true' }, warn }), /mirror sources missing: \.\.\/\.\.\/magic-b\/app\.mjs$/);
-    assert.equal(warnings.length, 0);
-
-    const runtime = `const ready = 1;\n${boot}`;
-    await mkdir(path.join(temp, 'magic-b'), { recursive: true });
-    await mkdir(path.join(root, 'zz'), { recursive: true });
-    await mkdir(path.join(root, 'zz14'), { recursive: true });
-    await writeFile(path.join(temp, 'magic-a', 'app.js'), 'same');
-    await writeFile(path.join(root, 'zz', 'a.js'), 'same');
-    await writeFile(path.join(temp, 'magic-b', 'app.mjs'), runtime + 'window.__dev = 1;\n');
-    await writeFile(path.join(root, 'zz14', 'app.mjs'), runtime);
-    await verifyMirrors({ root, pairs, env: {}, warn });
-    assert.equal(warnings.length, 0);
-
-    await writeFile(path.join(root, 'zz', 'a.js'), 'drift');
-    await assert.rejects(() => verifyMirrors({ root, pairs, env: { CI: 'true' }, warn }), /mirror drift: \.\.\/\.\.\/magic-a\/app\.js ↔ zz\/a\.js/);
-    await writeFile(path.join(root, 'zz', 'a.js'), 'same');
-    await writeFile(path.join(root, 'zz14', 'app.mjs'), runtime.replace('const ready = 1;', 'const ready = 2;'));
-    await assert.rejects(() => verifyMirrors({ root, pairs, env: {}, warn }), /mirror drift: \.\.\/\.\.\/magic-b\/app\.mjs ↔ zz14\/app\.mjs/);
-  } finally {
-    await rm(temp, { recursive: true, force: true });
-  }
-});
-
-// Manifest id resolves against start_url's origin, not the manifest directory (W3C 1.11).
 test('all final apps resolve to distinct install identities', async () => {
   await buildPublic();
   const origin = 'https://kalimagic.netlify.app';
-  const routes = [...PUBLIC_DIRS.filter((entry) => /^zz\d+$/.test(entry)), ...DISTRIBUTION_APPS.map((app) => `tools/${app.target}`)];
+  const routes = DISTRIBUTION_APPS.map((app) => `tools/${app.target}`);
   const ids = [];
   for (const route of routes) {
     const manifest = JSON.parse(await readFile(new URL(`../../dist/${route}/manifest.webmanifest`, import.meta.url), 'utf8'));
@@ -762,5 +555,5 @@ test('all final apps resolve to distinct install identities', async () => {
     } else if (route.startsWith('tools/')) assert.equal(id.href, `${origin}/${route}/`);
   }
   assert.equal(new Set(ids).size, routes.length, JSON.stringify(ids));
-  assert.ok(ids.includes(origin + '/zz13/'));
+  assert.ok(ids.includes(origin + '/tools/arosaegida/'));
 });

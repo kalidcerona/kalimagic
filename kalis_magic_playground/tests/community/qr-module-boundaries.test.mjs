@@ -1,4 +1,4 @@
-const pinnedFriend = Boolean(process.env.QR_ROOT?.includes('distribution-snapshots'));
+const pinnedFriend = true;
 import test, { after, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { resolveObjectURL } from 'node:buffer';
@@ -20,9 +20,9 @@ import { pathToFileURL } from 'node:url';
 // QR_ROOT selects another root, for example distribution-snapshots/qr.
 // Not reachable with these stubs: native form validation (required/type=url), the localhost-only local-preview hook,
 // real PNG encoding (the stub canvas hands toBlob the raw RGBA bytes), camera decoding, real animation or CSS.
-const SNAPSHOT = Boolean(process.env.QR_ROOT);
-const root = SNAPSHOT ? pathToFileURL(`${process.env.QR_ROOT.replace(/\/?$/, '/')}`) : new URL('../../zz13/', import.meta.url);
-const pathname = SNAPSHOT ? '/distribution-snapshots/qr/' : '/zz13/';
+const SNAPSHOT = true;
+const root = process.env.QR_ROOT ? pathToFileURL(`${process.env.QR_ROOT.replace(/\/?$/, '/')}`) : new URL('../../distribution-snapshots/qr/', import.meta.url);
+const pathname = SNAPSHOT ? '/distribution-snapshots/qr/' : '/distribution-snapshots/qr/';
 const GUIDE_KEY = `first-settings-guide:v1:arosaegida:${pathname.replace(/\/$/, '')}`;
 const SESSION_KEY = 'magic-qr-session-v1';
 
@@ -983,7 +983,7 @@ test('/tools/arosaegida: its own storage key, its own guide key, Escape closes t
 });
 
 
-test('save failure during generation and editing stays inside settings', { skip: pinnedFriend }, async () => {
+test('save failure during generation and editing stays inside settings', async () => {
   env = stubBrowser();
   await bootPage('?save-failure=1');
   const write = env.localStorage.setItem;
@@ -991,9 +991,9 @@ test('save failure during generation and editing stays inside settings', { skip:
   try {
     await fire(node('generate'), 'click');
     assert.equal(settingsOpen(), false);
-    assert.match(node('notice').textContent, /설정에서 백업하세요/);
-    assert.equal(node('notice').closest('dialog'), node('settings'));
-    assert.equal(document.querySelector('main #notice'), null);
+    assert.match(node('storage-notice').textContent, /설정에서 백업하세요/);
+    assert.equal(node('storage-notice').closest('dialog'), node('settings'));
+    assert.equal(document.querySelector('main #storage-notice'), null);
     placeCanvas();
     const before = await backupJson();
     for (let y = gridSize() - 1; y >= 0; y--) {
@@ -1001,7 +1001,7 @@ test('save failure during generation and editing stays inside settings', { skip:
         await tapCell(x, y);
         const after = await backupJson();
         if (after.current.edits.length > before.current.edits.length) {
-          assert.match(node('notice').textContent, /설정에서 백업하세요/);
+          assert.match(node('storage-notice').textContent, /설정에서 백업하세요/);
           await openSettings();
           assert.match(node('error').textContent, /설정에서 백업하세요/);
           return;

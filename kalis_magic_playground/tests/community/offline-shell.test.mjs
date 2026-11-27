@@ -17,7 +17,7 @@ function worker(source, scope, overrides = {}) {
   vm.runInNewContext(source, context);
   return listeners;
 }
-const routes = ['zz1', 'zz2', 'zz3', 'zz4', 'zz5', 'zz6', 'zz7', 'zz8', 'zz10', 'zz11'];
+const routes = ['distribution-snapshots/asrai', 'distribution-snapshots/alter', 'distribution-snapshots/kairos', 'distribution-snapshots/unlock', 'distribution-snapshots/calculator', 'distribution-snapshots/choice', 'distribution-snapshots/aletheia', 'distribution-snapshots/tobira', 'distribution-snapshots/usotsuki', 'distribution-snapshots/spinner'];
 test('every personal shell precaches existing runtime assets and waits for a complete install', async () => {
   for (const route of routes) {
     const source = await readFile(new URL(`../../${route}/sw.js`, import.meta.url), 'utf8');
@@ -31,7 +31,7 @@ test('every personal shell precaches existing runtime assets and waits for a com
     assert.equal(completed, false);
     assert.ok(files.includes('./index.html')); assert.ok(files.includes('./settings-ui.js'));
     for (const file of files) await stat(new URL(`../../${route}/${file.slice(2)}`, import.meta.url));
-    if (route === 'zz5') assert.equal(files.filter((f) => f.startsWith('./court-cards/')).length, 12);
+    if (route === 'distribution-snapshots/aletheia') assert.equal(files.filter((f) => f.startsWith('./court-cards/')).length, 12);
     release(); await installation;
     assert.equal(completed, true);
     const failing = worker(source, `https://example.test/${route}/`, { caches: { open: async () => ({ addAll: async () => { throw new Error('missing asset'); } }) } });

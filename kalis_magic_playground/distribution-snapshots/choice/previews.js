@@ -247,6 +247,7 @@ async function mediaRun(mode, run) {
     const request = run(tx.objectStore('wallpaper'));
     tx.oncomplete = () => { db.close(); resolve(request?.result); };
     tx.onerror = () => { db.close(); reject(tx.error); };
+    tx.onabort = () => { db.close(); reject(tx.error); };
   });
 }
 // Each photo has its own key. A new photo is written first, the saved settings point at it only after

@@ -13,7 +13,7 @@ import { pathToFileURL } from 'node:url';
 // Not reachable with these stubs: settings-ui.js (classic deferred appearance script shared by every magic app,
 // not an Asrai module) and the ?local-preview=1 localhost hook (needs a localhost boot).
 // ASRAI_ROOT points the same test at another copy of the app folder (for example a friend snapshot).
-const root = process.env.ASRAI_ROOT ? pathToFileURL(`${process.env.ASRAI_ROOT.replace(/\/?$/, '/')}`) : new URL('../../zz8/', import.meta.url);
+const root = process.env.ASRAI_ROOT ? pathToFileURL(`${process.env.ASRAI_ROOT.replace(/\/?$/, '/')}`) : new URL('../../distribution-snapshots/asrai/', import.meta.url);
 const html = readFileSync(new URL('index.html', root), 'utf8');
 
 const errors = [];
@@ -219,8 +219,8 @@ function stubBrowser() {
 
 const env = stubBrowser();
 const { el } = env;
-const STORAGE_KEY = 'asrai.prototype.v2';
-const GUIDE_KEY = 'asrai.prototype.settings-guide.v1';
+const STORAGE_KEY = 'friend-asrai.prototype.v2';
+const GUIDE_KEY = 'friend-asrai.prototype.settings-guide.v1';
 const stored = () => JSON.parse(env.localStorage.getItem(STORAGE_KEY));
 const scriptSources = [...html.matchAll(/<script\s+type="module"\s+src="([^"]+)"/g)].map((m) => m[1]);
 const visibleScreen = () => ['settings-screen', 'contact-list-screen', 'contact-detail-screen'].filter((id) => !el(id).hidden);
@@ -380,7 +380,7 @@ test('single finger and short swipes stay in the performance; a two-finger point
   await twoFingerPointerSwipe(140);
   assert.deepEqual(visibleScreen(), ['settings-screen']);
   assert.equal(el('settings-status').textContent, '열람 횟수는 1입니다.');
-  assert.equal(env.lockState.requests[1].released, false, 'settings keeps the screen awake');
+  assert.equal(env.lockState.requests[1].released, true, 'settings releases the screen wake lock');
   assert.equal(env.lockState.requests.length, 2);
 
   const swallowed = await emit(document, 'click');
@@ -417,8 +417,8 @@ test('start performance validates the form, then saves settings and shows the de
   assert.deepEqual(visibleScreen(), ['contact-list-screen']);
   assert.deepEqual(listNames(), ['가나', '다라', '마바']);
   assert.equal(el('contact-names').value, '가나\n다라\n마바', 'form is refilled with the saved names');
-  assert.equal(env.lockState.requests.length, 2, 'returning to performance keeps the existing wake lock');
-  assert.equal(env.lockState.requests[1].released, false);
+  assert.equal(env.lockState.requests.length, 3, 'returning to performance acquires a new wake lock');
+  assert.equal(env.lockState.requests[2].released, false);
   assert.equal(env.body.querySelectorAll('.gesture-guide').length, 0, 'a dismissed guide does not come back');
 });
 
@@ -442,7 +442,7 @@ test('a two-finger touch swipe opens settings again and the form shows the saved
   assert.equal(el('settings-status').textContent, '열람 횟수는 2입니다.');
   assert.equal(el('target-click').value, '2');
   assert.equal(el('fixed-phone').value, '010-1111-2222');
-  assert.equal(env.lockState.requests[1].released, false);
+  assert.equal(env.lockState.requests[2].released, true);
 
   const swallowed = await emit(document, 'click');
   assert.equal(swallowed.defaultPrevented, true);
@@ -450,7 +450,7 @@ test('a two-finger touch swipe opens settings again and the form shows the saved
 
   await emit(el('start-performance'), 'click');
   assert.deepEqual(visibleScreen(), ['contact-list-screen']);
-  assert.equal(env.lockState.requests.length, 2);
+  assert.equal(env.lockState.requests.length, 4);
   assert.equal(stored().clickCount, 2, 'starting again keeps the count');
   assert.equal(env.calls.fetch.length, 0, 'the app never touches the network');
   console.error = originalConsoleError;

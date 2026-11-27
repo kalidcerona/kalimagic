@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { pathToFileURL, fileURLToPath } from 'node:url';
 import {corners,paperScene,movingQuad,jitterSeries} from './alter-realism-fixture.mjs';
-const source=process.env.ALTER_SOURCE || fileURLToPath(new URL('../../zz10/', import.meta.url));
+const source=process.env.ALTER_SOURCE || fileURLToPath(new URL('../../distribution-snapshots/alter/', import.meta.url));
 if(!source)throw new Error('ALTER_SOURCE required for new helper tests');
 const {createDisplaySmoother,smoothDisplayedCorners}=await import(pathToFileURL(`${source}/performance.js`));
 const {createPaperMatch,sampleCardPaper,updatePaperMatch}=await import(pathToFileURL(`${source}/appearance.js`));

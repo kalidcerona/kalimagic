@@ -453,3 +453,29 @@ test('opaque and status 0 leave a fresh stamp and the open app alone', async () 
     assert.equal(storage.get(key), String(NOW - 3 * DAY), response.type);
   }
 });
+
+for (const tool of ['asrai', 'alter', 'uramichi']) {
+  test(`${tool} offline approval is isolated and revocation blocks the next launch`, async () => {
+    const pathname = `/tools/${tool}/`;
+    const key = `friend-apps-ok:${tool}:${pathname}`;
+    const otherKey = 'friend-apps-ok:unlock:/tools/release/';
+    const storage = new Map([[otherKey, String(NOW)]]);
+    const options = { tool, target: tool, pathname, storage };
+    const offline = () => Promise.reject(new TypeError('offline'));
+    const denied = await runGuard({ ...options, fetchImpl: offline });
+    assert.deepEqual(denied.replaced, [denied.loginUrl]);
+    assert.equal(denied.visibility, 'hidden');
+    const approved = await runGuard({ ...options, fetchImpl: () => Promise.resolve(entitlement(200, { ok: true })) });
+    assert.equal(approved.visibility, '');
+    assert.equal(storage.get(key), String(NOW));
+    const cached = await runGuard({ ...options, fetchImpl: offline });
+    assert.equal(cached.visibility, '');
+    assert.deepEqual(cached.replaced, []);
+    const revoked = await runGuard({ ...options, fetchImpl: () => Promise.resolve(entitlement(403, { ok: false })) });
+    assert.equal(storage.has(key), false);
+    assert.deepEqual(revoked.replaced, [], 'do not interrupt a verified performance');
+    const nextLaunch = await runGuard({ ...options, fetchImpl: offline });
+    assert.deepEqual(nextLaunch.replaced, [nextLaunch.loginUrl]);
+    assert.equal(storage.get(otherKey), String(NOW));
+  });
+}

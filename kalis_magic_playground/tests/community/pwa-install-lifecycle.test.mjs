@@ -5,14 +5,13 @@ import { runInNewContext } from 'node:vm';
 
 const ROOT = new URL('../../', import.meta.url);
 const PROMPTS = [
-  ['zz2/install-prompt.js', 'offer'], ['distribution-snapshots/unlock/install-prompt.js', 'offer'],
-  ['zz4/install-prompt.js', 'card'], ['zz5/install-prompt.js', 'card'],
+  ['distribution-snapshots/unlock/install-prompt.js', 'offer'], ['distribution-snapshots/unlock/install-prompt.js', 'offer'],
+  ['distribution-snapshots/choice/install-prompt.js', 'card'], ['distribution-snapshots/aletheia/install-prompt.js', 'card'],
   ['distribution-snapshots/aletheia/install-prompt.js', 'card'],
-  ['zz6/install-prompt.js', 'panel'], ['zz7/install-prompt.js', 'panel'],
+  ['distribution-snapshots/tobira/install-prompt.js', 'panel'], ['distribution-snapshots/usotsuki/install-prompt.js', 'panel'],
   ['distribution-snapshots/tobira/install-prompt.js', 'panel'],
   ['distribution-snapshots/usotsuki/install-prompt.js', 'panel'],
-  ['zz8/install-ui.js', 'control'],
-  ['zz1/install-nudge.js', 'nudge'], ['zz3/install-nudge.js', 'nudge'],
+  ['distribution-snapshots/kairos/install-nudge.js', 'nudge'], ['distribution-snapshots/calculator/install-nudge.js', 'nudge'],
   ['distribution-snapshots/kairos/install-nudge.js', 'nudge'],
   ['distribution-snapshots/gwayubulgeup/install-nudge.js', 'nudge'],
   ['distribution-snapshots/calculator/install-nudge.js', 'nudge'],
@@ -46,7 +45,7 @@ async function runtime(file, kind) {
   const navigator = { userAgent: 'Mozilla/5.0 Android Chrome/140', standalone: false };
   const window = { navigator, matchMedia: media, addEventListener(name, handler) { events.set(name, handler); } };
   runInNewContext(source.replace(/export function /g, 'function '), {
-    window, navigator, matchMedia: media, location: { pathname: '/zz2/', hash: '' },
+    window, navigator, matchMedia: media, location: { pathname: '/distribution-snapshots/unlock/', hash: '' },
     localStorage: { getItem: (key) => saved.get(key), setItem: (key, value) => saved.set(key, value) },
     document: { getElementById: node, querySelector: node, createElement: () => box, body: { appendChild() {} } },
   }, { filename: file });

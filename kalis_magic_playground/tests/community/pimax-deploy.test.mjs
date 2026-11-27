@@ -1,22 +1,20 @@
-import { inspectBackupOutput } from '../support/personal-backup-output.mjs';
-import { pinnedRound5Difference } from './personal-round5.mjs';
+import { assertPinnedSnapshot } from './public-snapshot-pins.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile, readdir, stat } from 'node:fs/promises';
 import vm from 'node:vm';
-import * as core from '../../zz14/core.mjs';
-import { PIMAX_FILES, PUBLIC_DIRS, MIRROR_PAIRS, DISTRIBUTION_APPS, shouldCopyPimax, preparePimaxRuntime, transformDistributionDocument } from '../../scripts/build-public.mjs';
+import * as core from '../../distribution-snapshots/pimax/core.mjs';
+import { PIMAX_FILES, PUBLIC_DIRS, DISTRIBUTION_APPS, shouldCopyPimax, preparePimaxRuntime, transformDistributionDocument } from '../../scripts/build-public.mjs';
 import gate, { classifyPath } from '../../netlify/edge-functions/tools-gate.mjs';
 import { gateCookieName, signGateCookie } from '../../netlify/functions/_lib/tool-gate.mjs';
 import { allowOnCheckError, selectGate } from '../../netlify/functions/tool-check.mjs';
 import { accessTableForTool, isValidTool } from '../../netlify/functions/admin-tools.mjs';
 import { pimaxAppScript } from './pimax-app-script.mjs';
 const read = (route, file) => readFile(new URL(`../../${route}/${file}`, import.meta.url));
-const personal = 'zz14';
 const shared = 'distribution-snapshots/pimax';
 
 test('revealed map answers draw the look-alike and plain symbol in both directions', async () => {
-  for (const route of [personal, shared]) {
+  for (const route of [shared]) {
     const source = pimaxAppScript(new URL(`../../${route}/`, import.meta.url));
     const context = vm.createContext({ __core: core, Date, Math, JSON });
     vm.runInContext(source + '\nglobalThis.quiz = { state, practiceHtml, onClick };', context);
@@ -57,11 +55,10 @@ test('revealed map answers draw the look-alike and plain symbol in both directio
 
 test('Pi Max has explicit runtime allowlists and source mirror checks', () => {
   assert.equal(PIMAX_FILES.length, 29);
-  assert.ok(PUBLIC_DIRS.includes(personal));
+  assert.ok(!PUBLIC_DIRS.some(route => /^zz\d+$/.test(route)));
   assert.deepEqual(DISTRIBUTION_APPS.find(a => a.target === 'pimax'), { source: shared, target: 'pimax', tool: 'pimax' });
   for (const file of PIMAX_FILES) {
     assert.equal(shouldCopyPimax(file), true);
-    assert.ok(MIRROR_PAIRS.some(([s, m]) => s === `../../magic-pimax/${file}` && m === `zz14/${file}`));
   }
   assert.equal(shouldCopyPimax(''), true);
   for (const file of ['README.md', 'core.test.mjs', 'source-spec.md', 'Projects', 'Projects/index.html', 'docs', 'docs/index.html', 'package.json', 'private.pdf', 'icons/secret.png']) {
@@ -77,34 +74,12 @@ test('Pi Max production boundary preserves runtime and drops appended developmen
   assert.throws(() => preparePimaxRuntime(runtime + runtime), /exactly one boot boundary/);
 });
 
-test('Pi Max pinned snapshot matches the personal runtime except three storage keys and the distribution cache family', async () => {
+test('Pi Max canonical snapshot retains its public storage and pinned runtime', async () => {
   assert.deepEqual((await readdir(new URL(`../../${shared}/`, import.meta.url))).sort(), [...PIMAX_FILES].sort());
-  for (const file of PIMAX_FILES) {
-    const p = await read(personal, file);
-    const d = await read(shared, file);
-    if (pinnedRound5Difference('zz14', file)) continue;
-    if (file === 'state.mjs') {
-      // The three storage keys moved with KEYS from app.mjs into state.mjs.
-      assert.equal((d.toString().match(/pimax\.distribution\./g) || []).length, 3);
-      const normalized = d.toString().replaceAll('pimax.distribution.settings', 'pimax-practice-settings').replaceAll('pimax.distribution.stats', 'pimax-practice-stats').replaceAll('pimax.distribution.session', 'pimax-practice-session');
-      assert.equal(normalized, p.toString());
-    } else if (file === 'app.mjs') {
-      assert.equal((d.toString().match(/pimax\.distribution\./g) || []).length, 0);
-      assert.match(d.toString(), /keepVisibleScreenAwake/);
-      assert.equal(d.toString(), preparePimaxRuntime(p.toString()));
-    } else if (file === 'sw.js') {
-      // Pinned friend worker keeps the previous personal version plus the distribution family suffix.
-      const personalVersion = 'v20261024-wake-3-v20261021-wake-1-v20261016-sheet-1-modes-1-coherent-1-v2-brand5-modules-1-css-1-update-prompt-3-persist-1-name-1';
-      const pinnedVersion = 'v20261024-wake-3-v20261021-wake-1-v20261016-sheet-1-modes-1-coherent-1-v2-brand5-modules-1-css-1-update-prompt-3-persist-1-distribution';
-      assert.ok(p.toString().includes(`+ '${personalVersion}';`));
-      assert.equal(d.toString(), p.toString().replace(personalVersion, pinnedVersion));
-    } else if (file === 'index.html' || file === 'settings.mjs' || file === 'manifest.webmanifest') {
-      // Pinned friend copy keeps the previous display name. Personal shell uses PI MAX.
-      assert.match(d.toString(), /Pi Max/);
-      assert.doesNotMatch(p.toString(), /Pi Max/);
-      assert.equal(d.toString().replaceAll('Pi Max', 'PI MAX'), p.toString());
-    } else assert.deepEqual(d, p, file);
-  }
+  for (const file of PIMAX_FILES) assertPinnedSnapshot(shared, file);
+  const state = (await read(shared, 'state.mjs')).toString();
+  assert.equal((state.match(/pimax\.distribution\./g) || []).length, 3);
+  assert.doesNotMatch(state, /pimax-practice-(?:settings|stats|session)/);
 });
 
 test('Pi Max entry and code path variants retain the specific gate, with exact metadata exceptions', () => {
@@ -165,10 +140,10 @@ test('Pi Max login return allowlist selects its own tool and rejects unsafe vari
 });
 
 test('Pi Max service workers delete only their own cache family and never intercept access checks or sibling scopes', async () => {
-  for (const route of [personal, shared]) {
+  for (const route of [shared]) {
     const listeners = {};
     const deleted = [];
-    const scope = `https://example.com/${route === personal ? 'zz14' : 'tools/pimax'}/`;
+    const scope = 'https://example.com/tools/pimax/';
     const keys = ['pimax-practice-old', 'pimax-practice-old-distribution', 'other-app'];
     vm.runInNewContext((await read(route, 'sw.js')).toString(), {
       URL, Response,
@@ -178,8 +153,8 @@ test('Pi Max service workers delete only their own cache family and never interc
     let done;
     listeners.activate({ waitUntil(p) { done = p; } });
     await done;
-    assert.deepEqual(deleted, [route === personal ? keys[0] : keys[1]]);
-    for (const path of ['/tools/_check?tool=pimax', route === personal ? '/tools/pimax/' : '/zz14/', '/tools/pimax-other/']) {
+    assert.deepEqual(deleted, [keys[1]]);
+    for (const path of ['/tools/_check?tool=pimax', '/tools/kairos/', '/tools/pimax-other/']) {
       let intercepted = false;
       listeners.fetch({ request: { method: 'GET', url: `https://example.com${path}` }, respondWith() { intercepted = true; } });
       assert.equal(intercepted, false, path);
@@ -187,8 +162,8 @@ test('Pi Max service workers delete only their own cache family and never interc
   }
 });
 
-test('Pi Max distribution HTML injects a live access check while personal HTML stays public', async () => {
-  const html = (await read(personal, 'index.html')).toString();
+test('Pi Max distribution HTML injects a live access check during the build', async () => {
+  const html = (await read(shared, 'index.html')).toString();
   assert.equal(html.includes('friend-apps-check'), false);
   const transformed = transformDistributionDocument(html, { target: 'pimax', tool: 'pimax' });
   assert.match(transformed, /fetch\('\/tools\/_check\?tool=pimax'/);
@@ -198,22 +173,18 @@ test('Pi Max distribution HTML injects a live access check while personal HTML s
 
 // Full-suite build tests own dist generation. This check runs explicitly after the isolated build.
 test('Pi Max built trees contain only runtime files with valid HTML, module, manifest and SW references', { skip: process.env.PIMAX_VERIFY_DIST !== '1' }, async () => {
-  for (const route of ['dist/zz14', 'dist/tools/pimax']) {
-    const directory = new URL(`../../${route}/`, import.meta.url);
-    const backup = route === 'dist/zz14' ? await inspectBackupOutput(directory) : null;
-    assert.deepEqual((await readdir(directory)).sort(), [...PIMAX_FILES, ...(backup?.entries ?? [])].sort());
+  for (const route of ['dist/tools/pimax']) {
+    assert.deepEqual((await readdir(new URL(`../../${route}/`, import.meta.url))).sort(), [...PIMAX_FILES].sort());
     const html = (await read(route, 'index.html')).toString();
-    const snapshot = route.includes('/tools/');
-    const sourceHtml = (await read(snapshot ? shared : personal, 'index.html')).toString();
+    const sourceHtml = (await read(shared, 'index.html')).toString();
     const app = DISTRIBUTION_APPS.find(entry => entry.target === 'pimax');
-    if (snapshot) assert.equal(html, transformDistributionDocument(sourceHtml, app));
-    else assert.equal(backup.sourceBytes('index.html', html).toString(), sourceHtml);
-    assert.equal(html.includes('friend-apps-check'), snapshot);
+    assert.equal(html, transformDistributionDocument(sourceHtml, app));
+    assert.equal(html.includes('friend-apps-check'), true);
     const manifest = JSON.parse((await read(route, 'manifest.webmanifest')).toString());
     assert.equal(manifest.scope, './');
     assert.equal(manifest.start_url, './');
     assert.equal(manifest.display, 'standalone');
-    if (route.includes('/tools/')) assert.equal(manifest.id, '/tools/pimax/');
+    assert.equal(manifest.id, '/tools/pimax/');
     const refs = [...html.matchAll(/(?:src|href)="([^"#]+)"/g)].map(m => m[1]);
     for (const icon of manifest.icons) refs.push(icon.src);
     for (const file of PIMAX_FILES.filter(f => f.endsWith('.mjs'))) {
@@ -226,12 +197,9 @@ test('Pi Max built trees contain only runtime files with valid HTML, module, man
       assert.ok((await stat(url)).isFile() || ref === './', `${route}/${ref}`);
     }
     for (const file of PIMAX_FILES.filter(f => !['index.html', 'manifest.webmanifest'].includes(f))) {
-      const expected = await read(route.includes('/tools/') ? shared : personal, file);
+      const expected = await read(shared, file);
       if (file === 'app.mjs') assert.equal((await read(route, file)).toString(), preparePimaxRuntime(expected.toString()));
-      else {
-        const bytes = await read(route, file);
-        assert.deepEqual(backup ? backup.sourceBytes(file, bytes) : bytes, expected);
-      }
+      else assert.deepEqual(await read(route, file), expected);
     }
   }
 });

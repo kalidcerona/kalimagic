@@ -5,7 +5,7 @@ import vm from 'node:vm';
 import { fileURLToPath } from 'node:url';
 import { choiceAppScript } from './choice-app-script.mjs';
 
-const settingsSource = fs.readFileSync(new URL('../../zz4/settings-ui.js', import.meta.url), 'utf8');
+const settingsSource = fs.readFileSync(new URL('../../distribution-snapshots/choice/settings-ui.js', import.meta.url), 'utf8');
 
 function element(tag) {
   const listeners = {};
@@ -165,7 +165,7 @@ function mountSettings({ app, source = true, tobira = false }) {
       addEventListener() {},
       dispatchEvent() { return true; },
     },
-    location: { hash: '', search: '', pathname: '/zz4/', origin: 'https://example.test' },
+    location: { hash: '', search: '', pathname: '/editor-fixture/', origin: 'https://example.test' },
     navigator: { userAgent: 'test', platform: 'Mac', maxTouchPoints: 0 },
     innerWidth: 412,
     innerHeight: 915,
@@ -335,7 +335,7 @@ function domElement(tag = 'div') {
 test('persist writes the store once without parsing it back, and a second performance entry does not parse icons', async () => {
   const store = new Map();
   const icon = JSON.stringify([{ id: 'probe', label: 'Probe', page: 2, row: 0, col: 0, dataUrl: 'data:image/png;base64,aaaa' }]);
-  store.set('magic-choice.v1.user-icons', icon);
+  store.set('magic-choice-dist.v1.user-icons', icon);
   const writes = [];
   const storage = {
     getItem(key) { return store.has(key) ? store.get(key) : null; },
@@ -402,7 +402,7 @@ test('persist writes the store once without parsing it back, and a second perfor
   globalThis.document = document;
   globalThis.window = globalThis;
   if (typeof globalThis.addEventListener !== 'function') globalThis.addEventListener = () => {};
-  globalThis.location = { protocol: 'file:', href: 'file:///zz4/', pathname: '/zz4/', hash: '', search: '' };
+  globalThis.location = { protocol: 'file:', href: 'file:///tools/choice/', pathname: '/tools/choice/', hash: '', search: '' };
   const navigatorDescriptor = Object.getOwnPropertyDescriptor(globalThis, 'navigator');
   Object.defineProperty(globalThis, 'navigator', { configurable: true, writable: true, value: { userAgent: 'test' } });
   globalThis.history = { state: null, pushState() {}, replaceState() {}, back() {} };
@@ -423,7 +423,7 @@ test('persist writes the store once without parsing it back, and a second perfor
   globalThis.setInterval = () => 0;
   globalThis.clearInterval = () => {};
   try {
-    await import('../../zz4/app.js');
+    await import('../../distribution-snapshots/choice/app.js');
     assert.equal(iconParses, 1, 'boot parses the icon store once');
     const built = gridBuilds;
     const parsed = parses;
@@ -441,9 +441,9 @@ test('persist writes the store once without parsing it back, and a second perfor
     const startMode = byId.get('opt-start-mode');
     startMode.value = 'performance';
     startMode.dispatchEvent({ type: 'change' });
-    assert.deepEqual(writes.filter((key) => key === 'magic-choice.v1.store'), ['magic-choice.v1.store']);
+    assert.deepEqual(writes.filter((key) => key === 'magic-choice-dist.v1.store'), ['magic-choice-dist.v1.store']);
     assert.equal(parses, before, 'persist does not parse what it just wrote');
-    assert.equal(realParse(store.get('magic-choice.v1.store')).options.startMode, 'performance');
+    assert.equal(realParse(store.get('magic-choice-dist.v1.store')).options.startMode, 'performance');
   } finally {
     JSON.parse = realParse;
     globalThis.document = previous.document;
@@ -831,12 +831,12 @@ function urlShim() {
 }
 
 async function bootChoice(dom, patch = {}, trail = '') {
-  const logic = await import('../../zz4/logic.js');
-  const manifest = await import('../../zz4/home-manifest.js');
-  const lists = await import('../../zz4/builtin-lists.js');
+  const logic = await import('../../distribution-snapshots/choice/logic.js');
+  const manifest = await import('../../distribution-snapshots/choice/home-manifest.js');
+  const lists = await import('../../distribution-snapshots/choice/builtin-lists.js');
   const noteBuilds = { n: 0 };
   // app.js runs as an ES module entry with local feature modules; read them as one script, in evaluation order.
-  let source = choiceAppScript(fileURLToPath(new URL('../../zz4/', import.meta.url)));
+  let source = choiceAppScript(fileURLToPath(new URL('../../distribution-snapshots/choice/', import.meta.url)));
   const marker = 'const gestureGuide';
   source = source.slice(source.indexOf(marker));
   source = source.replace(
@@ -851,7 +851,7 @@ async function bootChoice(dom, patch = {}, trail = '') {
     __noteBuilds: noteBuilds,
     document: dom.document,
     history: { state: null, pushState() {}, replaceState() {}, back() {} },
-    location: { protocol: 'file:', href: 'file:///zz4/', pathname: '/zz4/', hash: '', search: '' },
+    location: { protocol: 'file:', href: 'file:///tools/choice/', pathname: '/tools/choice/', hash: '', search: '' },
     navigator: { userAgent: 'test', platform: 'test', maxTouchPoints: 0 },
     localStorage: { getItem() { return null; }, setItem() {}, removeItem() {} },
     HTMLElement: class HTMLElement {},
@@ -892,7 +892,7 @@ async function bootChoice(dom, patch = {}, trail = '') {
   Object.assign(sandbox, patch);
   sandbox.window = sandbox;
   sandbox.globalThis = sandbox;
-  vm.runInNewContext(source, sandbox, { filename: 'zz4/app.js' });
+  vm.runInNewContext(source, sandbox, { filename: 'distribution-snapshots/choice/app.js' });
   return { noteBuilds, sandbox, flush() { const queued = dom.frames.splice(0); queued.forEach((fn) => fn()); } };
 }
 
@@ -1129,7 +1129,7 @@ test('artwork warm-up waits for a controller and retries', async () => {
   let controller = null;
   let resolveReady = () => {};
   const ready = new Promise((resolve) => { resolveReady = resolve; });
-  const scope = 'https://play.test/zz4/';
+  const scope = 'https://play.test/tools/choice/';
   const failing = new URL('home-icons/a1.svg', scope).href;
   const worker = {
     get controller() { return controller; },
@@ -1140,7 +1140,7 @@ test('artwork warm-up waits for a controller and retries', async () => {
     getRegistration() { return Promise.resolve(null); },
   };
   await bootChoice(dom, {
-    location: { protocol: 'https:', href: scope, pathname: '/zz4/', hash: '', search: '' },
+    location: { protocol: 'https:', href: scope, pathname: '/tools/choice/', hash: '', search: '' },
     navigator: { userAgent: 'test', platform: 'test', maxTouchPoints: 0, serviceWorker: worker },
     fetch(url) {
       const href = String(url);
@@ -1163,7 +1163,7 @@ test('artwork warm-up waits for a controller and retries', async () => {
   controller = { scriptURL: './sw.js' };
   listeners.forEach((fn) => fn({ type: 'controllerchange' }));
   await settleVm();
-  const manifest = await import('../../zz4/home-manifest.js');
+  const manifest = await import('../../distribution-snapshots/choice/home-manifest.js');
   const urls = manifest.manifestFiles().map((file) => new URL(manifest.iconSrc(file), scope).href);
   assert.equal(urls.length, 55);
   assert.equal(new Set(calls).size, 55, 'every artwork file is requested once a controller exists');
@@ -1191,10 +1191,10 @@ test('visible check view updates readiness when artwork warm-up finishes', async
   check.dataset.viewName = 'check';
   check.hidden = true;
   dom.get('settings').appendChild(check);
-  const scope = 'https://play.test/zz4/';
-  const manifest = await import('../../zz4/home-manifest.js');
+  const scope = 'https://play.test/tools/choice/';
+  const manifest = await import('../../distribution-snapshots/choice/home-manifest.js');
   const urls = manifest.manifestFiles().map((file) => new URL(manifest.iconSrc(file), scope).href);
-  const prefix = 'choice-shell-' + encodeURIComponent(scope) + '-';
+  const prefix = 'choice-dist-shell-' + encodeURIComponent(scope) + '-';
   const stored = new Set();
   const stores = new Map([[prefix + 'v20261010-choice-perf-1-coherent-1-compat-1-wake-1-ready-1-nostatus-1', stored]]);
   const pendingFetches = [];
@@ -1202,7 +1202,7 @@ test('visible check view updates readiness when artwork warm-up finishes', async
   const ready = new Promise((resolve) => { resolveReady = resolve; });
   const controller = { scriptURL: './sw.js' };
   const booted = await bootChoice(dom, {
-    location: { protocol: 'https:', href: scope, pathname: '/zz4/', hash: '', search: '' },
+    location: { protocol: 'https:', href: scope, pathname: '/tools/choice/', hash: '', search: '' },
     navigator: {
       userAgent: 'test',
       platform: 'test',
@@ -1282,12 +1282,12 @@ test('visible check view updates readiness when artwork warm-up finishes', async
 });
 
 test('readiness is false while any artwork is missing', async () => {
-  const scope = 'https://play.test/zz4/';
-  const manifest = await import('../../zz4/home-manifest.js');
+  const scope = 'https://play.test/tools/choice/';
+  const manifest = await import('../../distribution-snapshots/choice/home-manifest.js');
   const urls = manifest.manifestFiles().map((file) => new URL(manifest.iconSrc(file), scope).href);
   assert.equal(urls.length, 55);
-  const prefix = 'choice-shell-' + encodeURIComponent(scope) + '-';
-  const foreignName = 'choice-shell-' + encodeURIComponent('https://play.test/zz5/') + '-v1';
+  const prefix = 'choice-dist-shell-' + encodeURIComponent(scope) + '-';
+  const foreignName = 'choice-dist-shell-' + encodeURIComponent('https://play.test/tools/aletheia/') + '-v1';
   const ours = new Set(urls.slice(1));
   const stores = new Map([
     [prefix + 'v20261010-choice-perf-1', ours],
@@ -1307,7 +1307,7 @@ test('readiness is false while any artwork is missing', async () => {
   };
   const dom = choiceHarness();
   const booted = await bootChoice(dom, {
-    location: { protocol: 'https:', href: scope, pathname: '/zz4/', hash: '', search: '' },
+    location: { protocol: 'https:', href: scope, pathname: '/tools/choice/', hash: '', search: '' },
     navigator: {
       userAgent: 'test',
       platform: 'test',
@@ -1336,12 +1336,12 @@ test('readiness is false while any artwork is missing', async () => {
 });
 
 test('the watchdog does nothing when the network probe is rejected', async () => {
-  const html = fs.readFileSync(new URL('../../zz4/index.html', import.meta.url), 'utf8');
+  const html = fs.readFileSync(new URL('../../distribution-snapshots/choice/index.html', import.meta.url), 'utf8');
   const match = html.match(/<script id="choice-repair">([\s\S]*?)<\/script>/);
   assert.ok(match, 'choice repair script');
-  const scope = 'http://127.0.0.1:18741/zz4/';
-  const prefix = 'choice-shell-' + encodeURIComponent(scope) + '-';
-  const foreign = 'choice-shell-' + encodeURIComponent('http://127.0.0.1:18741/zz5/') + '-v1';
+  const scope = 'http://127.0.0.1:18741/tools/choice/';
+  const prefix = 'choice-dist-shell-' + encodeURIComponent(scope) + '-';
+  const foreign = 'choice-dist-shell-' + encodeURIComponent('http://127.0.0.1:18741/tools/aletheia/') + '-v1';
   const names = [prefix + 'v20261010-choice-perf-1', prefix + 'old', foreign, 'notes-cache-v1'];
   const deleted = [];
   const fetches = [];
@@ -1384,7 +1384,7 @@ test('the watchdog does nothing when the network probe is rejected', async () =>
           unregisters += 1;
           return Promise.resolve([
             { scope, unregister() { unregisters += 1; return Promise.resolve(true); } },
-            { scope: 'http://127.0.0.1:18741/zz5/', unregister() { unregisters += 1; return Promise.resolve(true); } },
+            { scope: 'http://127.0.0.1:18741/tools/aletheia/', unregister() { unregisters += 1; return Promise.resolve(true); } },
           ]);
         },
       },
@@ -1404,7 +1404,7 @@ test('the watchdog does nothing when the network probe is rejected', async () =>
   Object.defineProperty(sandbox, 'localStorage', { get() { storageReads += 1; throw new Error('localStorage'); } });
   Object.defineProperty(sandbox, 'indexedDB', { get() { storageReads += 1; throw new Error('indexedDB'); } });
   sandbox.window = sandbox;
-  vm.runInNewContext(match[1], sandbox, { filename: 'zz4/index.html' });
+  vm.runInNewContext(match[1], sandbox, { filename: 'distribution-snapshots/choice/index.html' });
   assert.equal(timers.length, 0, 'the watchdog stays disarmed until the module starts');
   document.dispatchEvent({ type: 'choice-module-start' });
   assert.equal(timers.length, 1);
@@ -1754,7 +1754,7 @@ test('unlock clock preview survives repeated syncs', () => {
   let minute;
   const preview = mountPreview({
     app: 'unlock',
-    pathname: '/zz2/',
+    pathname: '/tools/release/',
     build(el, body) {
       const screen = el('div');
       screen.id = 'settings-screen';
@@ -1834,7 +1834,7 @@ test('closing customize discards the mounted preview', () => {
   let canvas;
   const preview = mountPreview({
     app: 'choice',
-    pathname: '/zz4/',
+    pathname: '/editor-fixture/',
     build(el, body) {
       const settings = el('div');
       settings.id = 'settings';
@@ -1925,9 +1925,9 @@ test('deleteEditRow updates #wz-num', async () => {
 });
 
 function loadRepair(options = {}) {
-  const scope = 'http://127.0.0.1:18741/zz4/';
-  const prefix = 'choice-shell-' + encodeURIComponent(scope) + '-';
-  const foreign = 'choice-shell-' + encodeURIComponent('http://127.0.0.1:18741/zz5/') + '-v1';
+  const scope = 'http://127.0.0.1:18741/tools/choice/';
+  const prefix = 'choice-dist-shell-' + encodeURIComponent(scope) + '-';
+  const foreign = 'choice-dist-shell-' + encodeURIComponent('http://127.0.0.1:18741/tools/aletheia/') + '-v1';
   const names = [prefix + 'v20261010-choice-perf-1', prefix + 'old', foreign, 'notes-cache-v1'];
   const deleted = [];
   const fetches = [];
@@ -1979,7 +1979,7 @@ function loadRepair(options = {}) {
         getRegistrations() {
           return Promise.resolve([
             { scope, unregister() { unregistered.push(scope); trace.push('unregister'); return Promise.resolve(true); } },
-            { scope: 'http://127.0.0.1:18741/zz5/', unregister() { unregistered.push('zz5'); trace.push('unregister'); return Promise.resolve(true); } },
+            { scope: 'http://127.0.0.1:18741/tools/aletheia/', unregister() { unregistered.push('distribution-snapshots/aletheia'); trace.push('unregister'); return Promise.resolve(true); } },
           ]);
         },
       },
@@ -2001,10 +2001,10 @@ function loadRepair(options = {}) {
   Object.defineProperty(sandbox, 'localStorage', { get() { storageReads += 1; throw new Error('localStorage'); } });
   Object.defineProperty(sandbox, 'indexedDB', { get() { storageReads += 1; throw new Error('indexedDB'); } });
   sandbox.window = sandbox;
-  const html = fs.readFileSync(new URL('../../zz4/index.html', import.meta.url), 'utf8');
+  const html = fs.readFileSync(new URL('../../distribution-snapshots/choice/index.html', import.meta.url), 'utf8');
   const match = html.match(/<script id="choice-repair">([\s\S]*?)<\/script>/);
   assert.ok(match, 'choice repair script');
-  vm.runInNewContext(match[1], sandbox, { filename: 'zz4/index.html' });
+  vm.runInNewContext(match[1], sandbox, { filename: 'distribution-snapshots/choice/index.html' });
   return {
     html, document, timers, moduleListeners, fetches, deleted, trace, unregistered, session, prefix, foreign, names, scope,
     get reloads() { return reloads; },
@@ -2016,7 +2016,7 @@ function loadRepair(options = {}) {
 }
 
 test('the watchdog arms on a module error event and on the fallback timer', () => {
-  const html = fs.readFileSync(new URL('../../zz4/index.html', import.meta.url), 'utf8');
+  const html = fs.readFileSync(new URL('../../distribution-snapshots/choice/index.html', import.meta.url), 'utf8');
   const moduleAt = html.indexOf('<script type="module" src="./app.js"></script>');
   const repairAt = html.indexOf('<script id="choice-repair">');
   assert.ok(moduleAt !== -1 && repairAt > moduleAt, 'the repair script can see the module element during parse');
@@ -2120,7 +2120,7 @@ test('a caught performance-start failure does not trigger the repair', async () 
   await bootChoice(dom, {
     localStorage: {
       getItem(key) {
-        if (key === 'magic-choice.v1.store') {
+        if (key === 'magic-choice-dist.v1.store') {
           return JSON.stringify({ version: 1, presets: [], options: { startMode: 'performance' } });
         }
         return null;

@@ -1,4 +1,4 @@
-const pinnedFriend = Boolean(process.env.USOTSUKI_ROOT?.includes('distribution-snapshots'));
+const pinnedFriend = true;
 import test, { after, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -14,7 +14,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 // usotsuki-resolve-hooks.mjs is not needed: it only carries a `?tag` query to feature modules so one
 // process can boot several fresh apps. This file imports the app once with no query.
 // USOTSUKI_ROOT selects another root, for example distribution-snapshots/usotsuki.
-const root = process.env.USOTSUKI_ROOT ? pathToFileURL(`${process.env.USOTSUKI_ROOT.replace(/\/?$/, '/')}`) : new URL('../../zz7/', import.meta.url);
+const root = process.env.USOTSUKI_ROOT ? pathToFileURL(`${process.env.USOTSUKI_ROOT.replace(/\/?$/, '/')}`) : new URL('../../distribution-snapshots/usotsuki/', import.meta.url);
 
 const errors = [];
 process.on('unhandledRejection', (reason) => errors.push(`unhandledRejection: ${reason?.stack || reason}`));
@@ -160,7 +160,7 @@ function stubBrowser() {
   let frameId = 0;
   const window = {
     document, localStorage, AudioContext: AudioContextStub, matchMedia: () => ({ matches: false }),
-    location: { hostname: 'example.test', search: '', pathname: '/zz7/index.html' },
+    location: { hostname: 'example.test', search: '', pathname: '/distribution-snapshots/usotsuki/index.html' },
     setTimeout, clearTimeout,
     requestAnimationFrame: (fn) => { frameId += 1; frames.set(frameId, fn); return frameId; },
     cancelAnimationFrame: (id) => { frames.delete(id); },
@@ -240,7 +240,7 @@ test('first-run guide: shown once, blocks stage touches, remembers dismissal, th
   const dismiss = card.children[3];
   assert.equal(dismiss.textContent, '알겠어요');
   assert.equal(document.activeElement, dismiss);
-  assert.equal(stored('first-settings-guide:v1:usotsuki:/zz7'), null);
+  assert.equal(stored('first-settings-guide:v1:usotsuki:/distribution-snapshots/usotsuki'), null);
 
   let stopped = 0;
   await emit(overlay, 'pointerdown', { stopPropagation() { stopped += 1; } });
@@ -248,7 +248,7 @@ test('first-run guide: shown once, blocks stage touches, remembers dismissal, th
 
   await emit(dismiss, 'click');
   assert.equal(document.body.children.includes(overlay), false, 'guide is removed');
-  assert.equal(stored('first-settings-guide:v1:usotsuki:/zz7'), '1');
+  assert.equal(stored('first-settings-guide:v1:usotsuki:/distribution-snapshots/usotsuki'), '1');
 
   // The dismissing click also reaches the document: the browser now has user activation.
   env.navigator.userActivation.hasBeenActive = true;

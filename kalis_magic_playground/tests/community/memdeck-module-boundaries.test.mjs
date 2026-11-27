@@ -16,7 +16,7 @@ import { pathToFileURL } from 'node:url';
 // MEMDECK_ROOT lets a mutation check point the same test at a scratch copy.
 // Not covered: the corrupt-storage recovery path (needs a fresh evaluation of the module), the
 // local-preview query hook and the service worker file itself. No friend snapshot of this app exists.
-const root = process.env.MEMDECK_ROOT ? pathToFileURL(`${process.env.MEMDECK_ROOT.replace(/\/?$/, '/')}`) : new URL('../../zz12/', import.meta.url);
+const root = process.env.MEMDECK_ROOT ? pathToFileURL(`${process.env.MEMDECK_ROOT.replace(/\/?$/, '/')}`) : new URL('../../distribution-snapshots/memdeck/', import.meta.url);
 
 const errors = [];
 process.on('unhandledRejection', (reason) => errors.push(`unhandledRejection: ${reason?.stack || reason}`));
@@ -248,7 +248,7 @@ function stubBrowser() {
     if (document.hidden) for (const lock of wake.requests) if (!lock.released) lock.release();
   });
 
-  const location = { hash: '', search: '', hostname: 'example.test', pathname: '/zz12/index.html' };
+  const location = { hash: '', search: '', hostname: 'example.test', pathname: '/distribution-snapshots/memdeck/index.html' };
   window = { document, localStorage, location, navigator, setTimeout, clearTimeout };
   listenerHost(window);
 
@@ -312,7 +312,7 @@ const pageScripts = (() => {
 })();
 
 const env = stubBrowser();
-const STORE_KEY = 'magic-memdeck-v1';
+const STORE_KEY = 'friend-memdeck-v1';
 const $ = (selector) => document.querySelector(selector);
 const need = (selector) => { const el = $(selector); assert.ok(el, `the page rendered ${selector}`); return el; };
 const click = (selector) => fire(need(selector), 'click');
@@ -380,7 +380,7 @@ test('first-run guide: shown over the study tab, traps keys and touches, dismiss
   const dismiss = need('.first-run-guide__card button');
   assert.equal(dismiss.textContent, '알겠어요');
   assert.equal(document.activeElement, dismiss, 'focus moves to the dismiss button');
-  const key = 'first-settings-guide:v1:memdeck:/zz12';
+  const key = 'friend-memdeck-first-settings-guide:v1:memdeck:/distribution-snapshots/memdeck';
   assert.equal(env.localStorage.getItem(key), null);
 
   const tabbed = await fire(overlay, 'keydown', { key: 'Tab' });

@@ -3,10 +3,10 @@ import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
 const APPS = [
-  { route: 'zz4', name: '너의 선택은?', id: './choice' },
-  { route: 'zz5', name: 'ALETHEIA', id: './aletheia' },
-  { route: 'zz6', name: 'TOBIRA', id: './tobira' },
-  { route: 'zz7', name: 'USOTSUKI', id: './usotsuki' },
+  { route: 'distribution-snapshots/choice', name: '너의 선택은?', id: './' },
+  { route: 'distribution-snapshots/aletheia', name: 'ALETHEIA', id: './' },
+  { route: 'distribution-snapshots/tobira', name: 'TOBIRA', id: './' },
+  { route: 'distribution-snapshots/usotsuki', name: 'USOTSUKI', id: './' },
 ];
 
 function pngSize(bytes) {
@@ -41,38 +41,14 @@ for (const { route, name, id } of APPS) {
   });
 }
 
-test('public app identities remain distinct while FALSE MEMORY stays private', async () => {
-  const identities = APPS.map(({ route, id }) => new URL(id, 'https://example.test/').href);
-  for (const route of ['zz8', 'zz10']) {
-    const manifest = JSON.parse(await readFile(new URL(`../../${route}/manifest.webmanifest`, import.meta.url), 'utf8'));
-    assert.equal(manifest.id, undefined);
-    assert.equal(manifest.scope, './');
-    identities.push(new URL(manifest.start_url, `https://example.test/${route}/manifest.webmanifest`).href);
-  }
-  assert.equal(new Set(identities).size, identities.length);
-  const { PUBLIC_DIRS } = await import('../../scripts/build-public.mjs');
-  assert.equal(PUBLIC_DIRS.includes('zz8'), true);
-  assert.equal(PUBLIC_DIRS.includes('zz10'), true);
-  assert.equal(PUBLIC_DIRS.includes('zz9'), false);
-});
-
-test('all 31 app manifests resolve to stable distinct identities and usable PNG icons', async () => {
-  const { PUBLIC_DIRS, DISTRIBUTION_APPS } = await import('../../scripts/build-public.mjs');
-  const expectedPersonal = {
-    zz1: '/zz1/index.html', zz2: '/zz2/index.html', zz3: '/zz3/index.html',
-    zz4: '/choice', zz5: '/aletheia', zz6: '/tobira', zz7: '/usotsuki',
-    zz8: '/zz8/', zz10: '/zz10/index.html', zz11: '/zz11/index.html',
-    zz12: '/zz12/', zz13: '/zz13/', zz14: '/zz14/', zz15: '/zz15/',
-  };
-  const apps = [
-    ...PUBLIC_DIRS.filter((route) => /^zz\d+$/.test(route)).map((route) => ({ source: route, route })),
-    ...DISTRIBUTION_APPS.map((app) => ({ source: app.source, route: `tools/${app.target}`, shared: true })),
-  ];
+test('all 20 app manifests resolve to stable distinct identities and usable PNG icons', async () => {
+  const { DISTRIBUTION_APPS } = await import('../../scripts/build-public.mjs');
+  const apps = DISTRIBUTION_APPS.map((app) => ({ source: app.source, route: `tools/${app.target}` }));
   const identities = [];
-  for (const { source, route, shared } of apps) {
+  for (const { source, route } of apps) {
     const root = new URL(`../../${source}/`, import.meta.url);
     const manifest = JSON.parse(await readFile(new URL('manifest.webmanifest', root), 'utf8'));
-    if (shared && route !== 'tools/planbcafe') Object.assign(manifest, { id: `/${route}/`, start_url: './', scope: './' });
+    if (route !== 'tools/planbcafe') Object.assign(manifest, { id: `/${route}/`, start_url: './', scope: './' });
     const manifestUrl = new URL(`https://example.test/${route}/manifest.webmanifest`);
     const start = new URL(manifest.start_url, manifestUrl);
     const scope = new URL(manifest.scope, manifestUrl);
@@ -80,7 +56,7 @@ test('all 31 app manifests resolve to stable distinct identities and usable PNG 
     const id = new URL(manifest.id || start.href, start.origin);
     id.hash = '';
     identities.push(id.href);
-    const expectedId = shared ? `/${route}/` : expectedPersonal[route];
+    const expectedId = `/${route}/`;
     assert.equal(id.pathname, expectedId, route);
     assert.equal(start.origin, scope.origin);
     assert.ok(start.pathname.startsWith(scope.pathname), `${route} launch URL stays in scope`);
@@ -96,6 +72,6 @@ test('all 31 app manifests resolve to stable distinct identities and usable PNG 
       assert.deepEqual(pngSize(await readFile(iconUrl)), [size, size], route);
     }
   }
-  assert.equal(apps.length, 31);
-  assert.equal(new Set(identities).size, 31);
+  assert.equal(apps.length, 20);
+  assert.equal(new Set(identities).size, 20);
 });

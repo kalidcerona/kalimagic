@@ -16,14 +16,14 @@ import { pathToFileURL } from 'node:url';
 // TYCHE_ROOT selects another root, for example distribution-snapshots/spinner.
 // Not reachable with these stubs: the live preview inside the appearance page (needs shadow DOM and getComputedStyle),
 // ResizeObserver/MutationObserver relayout, the localhost-only local-preview hook, real animation timing.
-const FRIEND = Boolean(process.env.TYCHE_ROOT);
-const root = FRIEND ? pathToFileURL(`${process.env.TYCHE_ROOT.replace(/\/?$/, '/')}`) : new URL('../../zz11/', import.meta.url);
-const PREFIX = FRIEND ? 'friend-spinner' : 'zz11';
-const OTHER_PREFIX = FRIEND ? 'zz11' : 'friend-spinner';
+const FRIEND = true;
+const root = process.env.TYCHE_ROOT ? pathToFileURL(`${process.env.TYCHE_ROOT.replace(/\/?$/, '/')}`) : new URL('../../distribution-snapshots/spinner/', import.meta.url);
+const PREFIX = FRIEND ? 'friend-spinner' : 'distribution-snapshots/spinner';
+const OTHER_PREFIX = FRIEND ? 'distribution-snapshots/spinner' : 'friend-spinner';
 const KEYS = FRIEND
   ? { state: 'friend-spinner-state-v2', theme: 'friend-spinner-table-theme-v1', design: 'friend-spinner-screen-design-v1', guide: 'friend-spinner-guide-seen-v2' }
-  : { state: 'zz11-spinner-state-v2', theme: 'zz11-table-theme-v1', design: 'zz11-screen-design-v1', guide: 'zz11-guide-seen-v2' };
-const pathname = FRIEND ? '/distribution-snapshots/spinner/' : '/zz11/';
+  : { state: 'friend-spinner-state-v2', theme: 'friend-spinner-table-theme-v1', design: 'friend-spinner-screen-design-v1', guide: 'friend-spinner-guide-seen-v2' };
+const pathname = FRIEND ? '/distribution-snapshots/spinner/' : '/distribution-snapshots/spinner/';
 const APPEARANCE_KEY = `magic-appearance:v1:spinner:https://example.test${pathname}`;
 
 const errors = [];

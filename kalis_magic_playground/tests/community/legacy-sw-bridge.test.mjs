@@ -117,9 +117,9 @@ test('existing alias navigation and return-path login stay in place', async () =
   assert.equal(unknown.status, 302);
   assert.match(unknown.headers.get('location'), /\/tools\/login\//);
   assert.equal(new URL(unknown.headers.get('location')).pathname.includes('kairos'), false);
-  assert.deepEqual(classifyPath('/zz3/'), { mode: 'public' });
-  assert.deepEqual(classifyPath('/zz4/'), { mode: 'public' });
-  assert.deepEqual(classifyPath('/zz6/'), { mode: 'public' });
+  assert.deepEqual(classifyPath('/zz3/'), { mode: 'block' });
+  assert.deepEqual(classifyPath('/zz4/'), { mode: 'block' });
+  assert.deepEqual(classifyPath('/zz6/'), { mode: 'block' });
   assert.deepEqual(classifyPath('/tools/stopwatch/sw.js'), { mode: 'legacy-worker', tool: 'stopwatch' });
   assert.deepEqual(classifyPath('/tools/./stopwatch/sw.js'), { mode: 'block' });
   assert.deepEqual(classifyPath('/tools/stopwatch/%2e%2e/sw.js'), { mode: 'block' });

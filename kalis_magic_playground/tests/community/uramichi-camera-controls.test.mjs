@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
-import { initialControls, controlState, timerLabel, createCameraRecovery } from '../../zz15/camera-controls.mjs';
+import { initialControls, controlState, timerLabel, createCameraRecovery } from '../../distribution-snapshots/uramichi/camera-controls.mjs';
 
 function clock() {
   let time = 10000, id = 0, restarts = 0;
@@ -53,7 +53,7 @@ test('album is capped at twenty and stepping wraps safely including an empty gal
   s = controlState(s, { type: 'step', delta: -1 }); assert.equal(s.index, 19);
 });
 test('preset write reports failure without replacing the saved in-memory categories', () => {
-  const src = readFileSync(new URL('../../zz15/presets.mjs', import.meta.url), 'utf8');
+  const src = readFileSync(new URL('../../distribution-snapshots/uramichi/presets.mjs', import.meta.url), 'utf8');
   const write = src.slice(src.indexOf('function write('), src.indexOf('function readSettings'));
   const save = src.slice(src.indexOf('  saveCategories(list)'), src.indexOf('  toast(message)'));
   let fail = true;
@@ -67,7 +67,7 @@ test('preset write reports failure without replacing the saved in-memory categor
 });
 
 test('failed recovery does not bypass backoff through the stale-start microtask', async () => {
-  const src = readFileSync(new URL('../../zz15/camera.mjs', import.meta.url), 'utf8');
+  const src = readFileSync(new URL('../../distribution-snapshots/uramichi/camera.mjs', import.meta.url), 'utf8');
   const body = src.slice(0, src.indexOf("$('gateBtn').addEventListener")).replace(/^import .*;\n/gm, '');
   const microtasks = [], timers = [], elements = new Map();
   const context = vm.createContext({ createCameraRecovery, DEBUG: false, KEY: { intro: 'intro' }, read: () => '1',
@@ -88,7 +88,7 @@ test('failed recovery does not bypass backoff through the stale-start microtask'
 });
 
 test('camera switches both directions and honors a single-camera device actual facing', async () => {
-  const src = readFileSync(new URL('../../zz15/camera.mjs', import.meta.url), 'utf8');
+  const src = readFileSync(new URL('../../distribution-snapshots/uramichi/camera.mjs', import.meta.url), 'utf8');
   const body = src.slice(0, src.indexOf("$('gateBtn').addEventListener")).replace(/^import .*;\n/gm, '');
   const requested = [], stopped = [], mirrored = [], elements = new Map();
   let oneCamera = false;
@@ -114,7 +114,7 @@ test('camera switches both directions and honors a single-camera device actual f
 });
 
 test('editor save notice follows the persistence result', () => {
-  const src = readFileSync(new URL('../../zz15/picker.mjs', import.meta.url), 'utf8');
+  const src = readFileSync(new URL('../../distribution-snapshots/uramichi/picker.mjs', import.meta.url), 'utf8');
   const handler = src.match(/onclick: (\(\) => \{ const saved = store\.saveCategories[\s\S]*?render\(\); \})/)[1];
   for (const saved of [false, true]) {
     const messages = [];

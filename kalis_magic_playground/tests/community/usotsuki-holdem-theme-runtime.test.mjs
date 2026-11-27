@@ -5,8 +5,8 @@ import { readFileSync } from 'node:fs';
 import './usotsuki-app-script.mjs';
 import { readAppStyle } from './app-style.mjs';
 
-const STATE = 'usotsuki.detector.v1';
-const THEME = 'usotsuki.detector.theme.v1';
+const STATE = 'usotsuki.distribution.detector.v1';
+const THEME = 'usotsuki.distribution.detector.theme.v1';
 const SCAN = 'usotsuki.detector.scan-duration.v1';
 let serial = 0;
 
@@ -15,7 +15,7 @@ async function fixture({ theme, store = new Map(), readFails = false, stateReadF
   if (!store.has(STATE)) store.set(STATE, JSON.stringify({version:1,attemptCount:0,settings:{truthAttempts:[4]}}));
   if (theme !== undefined) store.set(THEME, theme);
   if (!store.has(SCAN)) store.set(SCAN, '0.5');
-  if (!store.has('usotsuki.detector.sound.v1')) store.set('usotsuki.detector.sound.v1', '0');
+  if (!store.has('usotsuki.distribution.detector.sound.v1')) store.set('usotsuki.distribution.detector.sound.v1', '0');
   const saved = new Map();
   const replace = (name, value) => {
     saved.set(name, Object.getOwnPropertyDescriptor(globalThis, name));
@@ -55,7 +55,7 @@ async function fixture({ theme, store = new Map(), readFails = false, stateReadF
     remove() {}
     querySelector() { return null; }
   }
-  const html = readFileSync(new URL('../../zz7/index.html', import.meta.url), 'utf8');
+  const html = readFileSync(new URL('../../distribution-snapshots/usotsuki/index.html', import.meta.url), 'utf8');
   const stack = [];
   for (const match of html.matchAll(/<(\/)?([a-z][a-z0-9-]*)\b([^>]*)>/gi)) {
     const tag = match[2].toLowerCase();
@@ -94,7 +94,7 @@ async function fixture({ theme, store = new Map(), readFails = false, stateReadF
   };
   const nav = vibrateSupported ? { vibrate: x => { vibrations.push(x); return true; } } : {};
   replace('Element', FakeElement); replace('document', doc); replace('window', win); replace('navigator', nav); replace('performance', { now: () => now });
-  await import(`../../zz7/detector.js?holdem-test=${++serial}`);
+  await import(`../../distribution-snapshots/usotsuki/detector.js?holdem-test=${++serial}`);
   const element = id => { const el = nodes.get(id); assert.ok(el, `${id} exists in actual HTML`); return el; };
   return {
     writes,
@@ -194,9 +194,9 @@ test('both rectangular pad corners count, blank space never holds, and movement 
 });
 
 test('recorder theme persists, falls back to green, and a hold keeps attempts, timing, sound and scan', async () => {
-  const html = readFileSync(new URL('../../zz7/index.html', import.meta.url), 'utf8');
-  const css = readAppStyle(new URL('../../zz7/', import.meta.url));
-  const sw = readFileSync(new URL('../../zz7/sw.js', import.meta.url), 'utf8');
+  const html = readFileSync(new URL('../../distribution-snapshots/usotsuki/index.html', import.meta.url), 'utf8');
+  const css = readAppStyle(new URL('../../distribution-snapshots/usotsuki/', import.meta.url));
+  const sw = readFileSync(new URL('../../distribution-snapshots/usotsuki/sw.js', import.meta.url), 'utf8');
   assert.match(html, /<option value="recorder">목재 드럼<\/option>/);
   assert.match(css, /#performance-screen\[data-display-theme="recorder"\]/);
   assert.match(css, /recorder-assets\/recorder-shell-blank\.webp/);
@@ -206,7 +206,7 @@ test('recorder theme persists, falls back to green, and a hold keeps attempts, t
   assert.match(sw, /v20261009-continuous-paper-20/);
   assert.match(sw, /recorder-assets\/recorder-shell-blank\.webp/);
   assert.match(sw, /pathname\.startsWith\('\/tools\/'\)/);
-  const store = new Map([['usotsuki.detector.sound.v1', '0']]);
+  const store = new Map([['usotsuki.distribution.detector.sound.v1', '0']]);
   const f = await fixture({ store, theme: 'recorder' });
   try {
     assert.equal(f.element('performance-screen').dataset.displayTheme, 'recorder');
@@ -231,7 +231,7 @@ test('recorder theme persists, falls back to green, and a hold keeps attempts, t
     assert.equal(f.element('test-indicator').textContent, '');
     assert.equal(f.element('performance-screen').classes.has('is-testing'),true);
     assert.equal(f.element('sound-enabled').checked, false);
-    assert.equal(store.get('usotsuki.detector.sound.v1'), '0');
+    assert.equal(store.get('usotsuki.distribution.detector.sound.v1'), '0');
     assert.equal(f.element('scan-duration').value, '0.5');
     assert.equal(store.get(SCAN), '0.5');
     f.tick(499);

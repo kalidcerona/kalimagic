@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {pathToFileURL, fileURLToPath} from 'node:url';
 import {resolve} from 'node:path';
 
-const source = process.env.ALTER_SOURCE || fileURLToPath(new URL('../../zz10/', import.meta.url));
+const source = process.env.ALTER_SOURCE || fileURLToPath(new URL('../../distribution-snapshots/alter/', import.meta.url));
 const load = name => import(pathToFileURL(resolve(source, name)));
 const {captureBackground, detectCard, detectCardAgainstBackground, cardOcclusionMask, orderCorners} = await load('vision.js');
 const {createBackgroundCalibrator, observeCalibration} = await load('calibration.js');

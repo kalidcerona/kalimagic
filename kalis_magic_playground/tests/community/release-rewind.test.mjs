@@ -1,10 +1,11 @@
 import test from 'node:test';
+import { assertPinnedSnapshot } from './public-snapshot-pins.mjs';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
-import * as clock from '../../zz2/time-machine.js';
-import * as logic from '../../zz2/logic.js';
-const builds = ['zz2', 'distribution-snapshots/unlock'];
+import * as clock from '../../distribution-snapshots/unlock/time-machine.js';
+import * as logic from '../../distribution-snapshots/unlock/logic.js';
+const builds = ['distribution-snapshots/unlock'];
 const entryFiles = ['session.js', 'pin.js', 'gestures.js', 'images.js', 'rewind.js', 'settings.js', 'app.js'];
 const page = build => readFileSync(new URL(`../../${build}/index.html`, import.meta.url), 'utf8');
 const style = build => readFileSync(new URL(`../../${build}/style.css`, import.meta.url), 'utf8');
@@ -103,12 +104,11 @@ for (const build of builds) {
 test('RELEASE entry and original settings shape retain distinct storage namespaces',()=>{
   for(const saved of [{},{performance:'pin'},{performance:'time-machine'}])
     assert.equal(logic.normalizeSettings(saved).performance,'time-machine');
-  assert.notEqual(logic.storageIdentityForPath('/zz2/').settingsKey,logic.storageIdentityForPath('/tools/release/').settingsKey);
-  assert.notEqual(logic.storageIdentityForPath('/zz2/').imageDb,logic.storageIdentityForPath('/tools/release/').imageDb);
+  assert.notEqual(logic.storageIdentityForPath('/distribution-snapshots/unlock/').settingsKey,logic.storageIdentityForPath('/tools/release/').settingsKey);
+  assert.notEqual(logic.storageIdentityForPath('/distribution-snapshots/unlock/').imageDb,logic.storageIdentityForPath('/tools/release/').imageDb);
   assert.equal(Object.hasOwn(logic.normalizeSettings({clockFormat:'12'}),'clockFormat'),false);
 });
 test('status-bar covering policy matches in manifest, meta, safe-area CSS and entry JS',async()=>{
-  const personal=bundle(builds[0]), distribution=bundle(builds[1]);
   for(const build of builds) {
     const manifest=JSON.parse(readFileSync(new URL(`../../${build}/manifest.webmanifest`,import.meta.url),'utf8'));
     assert.equal(manifest.display,'standalone');
@@ -133,7 +133,6 @@ test('status-bar covering policy matches in manifest, meta, safe-area CSS and en
     assert.equal(fullscreenCalls.length,2);
     assert.equal(section(text,'    function enterRewindFullscreen()','    function exitRewindFullscreen()').match(/requestFullscreen|webkitRequestFullscreen/g).length,2);
   }
-  assert.equal(section(personal,'    function enterRewindFullscreen()',"    backspaceKey.addEventListener"),section(distribution,'    function enterRewindFullscreen()',"    backspaceKey.addEventListener"));
 });
 test('PIN success uses shared transition with reduced motion and upward lock/home frames',()=>{
   for(const build of builds) {
@@ -151,10 +150,8 @@ test('PIN success uses shared transition with reduced motion and upward lock/hom
     f.advance(0);assert.equal(f.node('unlocked-screen').hidden,false);
   }
 });
-test('entry handlers, minute renderer and unlock compositor remain byte-identical across builds',()=>{
-  for(const [start,end]of [['    function renderTimeMachine()',"    $('settings-form').addEventListener('input'"],["    $('emergency').addEventListener","    backspaceKey.addEventListener"]])
-    assert.equal(section(bundle(builds[0]),start,end),section(bundle(builds[1]),start,end));
-  assert.equal(readFileSync(new URL('../../zz2/time-machine.js',import.meta.url),'utf8'),readFileSync(new URL('../../distribution-snapshots/unlock/time-machine.js',import.meta.url),'utf8'));
+test('entry handlers, minute renderer and unlock compositor retain canonical public bytes',()=>{
+  for (const file of [...entryFiles, 'time-machine.js']) assertPinnedSnapshot(builds[0], file);
   const animation=section(bundle(builds[0]),'    // One geometry read',"    for (const id of ['time-black', 'time-lock'])");
   assert.doesNotMatch(animation,/offsetWidth|offsetHeight|filter:|style\.(top|height|width|left)/);
   assert.equal(clock.unlockDragTarget(0,3,800),false);

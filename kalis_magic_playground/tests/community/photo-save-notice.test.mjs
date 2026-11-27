@@ -5,8 +5,8 @@ import vm from 'node:vm';
 import { parse } from 'acorn';
 
 const apps = [
-  ['aletheia', '../../zz5/'], ['unlock', '../../zz2/'], ['choice', '../../zz4/'],
-  ['tobira', '../../zz6/'], ['false-memory', '../../../../magic-false-memory/'],
+  ['aletheia', '../../distribution-snapshots/aletheia/'], ['unlock', '../../distribution-snapshots/unlock/'], ['choice', '../../distribution-snapshots/choice/'],
+  ['tobira', '../../distribution-snapshots/tobira/'], ['false-memory', '../../../../magic-false-memory/'],
 ];
 const text = '저장 공간이 부족해 사진을 저장하지 못했어요';
 const read = (base, file) => readFileSync(new URL(file, base), 'utf8');
@@ -50,7 +50,7 @@ function database(outcome) {
 for (const [app, relative] of apps) {
   const base = new URL(relative, import.meta.url);
   const available = existsSync(new URL('photo-save-notice.js', base));
-  test(`${app}: quota rejection persists a timestamp, renders settings only, and success clears it`, { skip: !available }, async () => {
+  test(`${app}: quota rejection persists a timestamp, renders settings only, and success clears it`, { skip: app === 'false-memory' && !available }, async () => {
     const f = fixture(base);
     const before = JSON.stringify(f.performance);
     const quota = Object.assign(new Error('quota'), { name: 'QuotaExceededError' });
@@ -69,7 +69,7 @@ for (const [app, relative] of apps) {
     assert.equal(f.line.textContent, '');
     assert.equal(JSON.stringify(f.performance), before);
   });
-  test(`${app}: fully exhausted localStorage falls back to session storage without masking errors`, { skip: !available }, async () => {
+  test(`${app}: fully exhausted localStorage falls back to session storage without masking errors`, { skip: app === 'false-memory' && !available }, async () => {
     const f = fixture(base, storage(new Map(), () => true));
     await assert.rejects(f.run('trackPhotoSave(() => { throw new Error("write"); })'), /write/);
     const key = f.run('PHOTO_SAVE_NOTICE_KEY');
@@ -83,7 +83,7 @@ for (const [app, relative] of apps) {
     assert.equal(await blocked.run('trackPhotoSave(() => 2)'), 2);
     assert.equal(blocked.line.hidden, true);
   });
-  test(`${app}: actual image save path reports transaction failure and subsequent success`, { skip: !available }, async () => {
+  test(`${app}: actual image save path reports transaction failure and subsequent success`, { skip: app === 'false-memory' && !available }, async () => {
     const f = fixture(base);
     if (app === 'choice') {
       Object.assign(f.context, { USER_ICON_KEY: 'icons', normalizeUserIcons: value => value, MSG: { storageWrite: 'failed' } });
@@ -132,18 +132,18 @@ for (const [app, relative] of apps) {
       assert.equal(f.line.hidden, true);
     }
   });
-  test(`${app}: notice is inside settings and shell caches its feature module`, { skip: !available }, () => {
+  test(`${app}: notice is inside settings and shell caches its feature module`, { skip: app === 'false-memory' && !available }, () => {
     const html = read(base, 'index.html');
     assert.equal((html.match(/id="photo-save-notice"/g) || []).length, 1);
     const settingsId = ['unlock', 'false-memory'].includes(app) ? 'settings-screen' : 'settings';
     assert.ok(html.indexOf(`id="${settingsId}"`) < html.indexOf('id="photo-save-notice"'));
     assert.match(read(base, 'sw.js'), /["']\.\/photo-save-notice\.js["']/);
-    assert.match(read(base, 'sw.js'), /-photo-notice-1(?:-perf-log-1)?(?:-r5-(?:[a-z]\d+-)?\d+)*["']/);
+    assert.match(read(base, 'sw.js'), app !== 'false-memory' ? /-photo-save-1(?:-distribution)?["']/ : /-photo-notice-1(?:-perf-log-1)?(?:-r5-(?:[a-z]\d+-)?\d+)*["']/);
   });
 }
 
 test('Choice wallpaper catches both blob writes and metadata failures, and only clears on committed success', async () => {
-  const base = new URL('../../zz4/', import.meta.url);
+  const base = new URL('../../distribution-snapshots/choice/', import.meta.url);
   const f = fixture(base);
   const message = {};
   let failure = 'blob';
@@ -166,10 +166,26 @@ test('Choice wallpaper catches both blob writes and metadata failures, and only 
 
 
 test('TOBIRA: a late successful transaction cannot erase a newer metadata failure', () => {
-  const f = fixture(new URL('../../zz6/', import.meta.url));
+  const f = fixture(new URL('../../distribution-snapshots/tobira/', import.meta.url));
   f.context.transaction = {};
   f.run('observePhotoTransaction(transaction); recordPhotoSave(false); transaction.oncomplete()');
   assert.equal(f.line.textContent, text);
   f.run('observePhotoTransaction(transaction); transaction.oncomplete()');
   assert.equal(f.line.hidden, true);
+});
+
+test('an aborted CHOICE wallpaper transaction rejects and closes the database', async () => {
+  const base = new URL('../../distribution-snapshots/choice/', import.meta.url);
+  const failure = new Error('wallpaper transaction aborted');
+  let closed = 0;
+  const transaction = { error: failure, objectStore: () => ({ put: () => ({}) }) };
+  const db = { transaction: () => transaction, close: () => { closed++; } };
+  const context = vm.createContext({ mediaDb: () => db });
+  vm.runInContext(functions(base, 'previews.js', ['mediaRun']), context);
+  const pending = context.mediaRun('readwrite', store => store.put('image', 'key'));
+  await Promise.resolve();
+  assert.equal(typeof transaction.onabort, 'function');
+  transaction.onabort();
+  await assert.rejects(pending, error => error === failure);
+  assert.equal(closed, 1);
 });

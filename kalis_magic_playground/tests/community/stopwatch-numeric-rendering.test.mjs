@@ -9,13 +9,13 @@ import {
   portraitPresetEntryFromCs,
   presetRenderModel,
   resolveStopOutcome,
-} from '../../zz1/logic.js';
+} from '../../distribution-snapshots/kairos/logic.js';
 
-const page = readFileSync(new URL('../../zz1/index.html', import.meta.url), 'utf8');
+const page = readFileSync(new URL('../../distribution-snapshots/kairos/index.html', import.meta.url), 'utf8');
 // The page style and the app module moved out of index.html into their own files.
-const style = readFileSync(new URL('../../zz1/style.css', import.meta.url), 'utf8');
-const app = readFileSync(new URL('../../zz1/app.js', import.meta.url), 'utf8');
-const worker = readFileSync(new URL('../../zz1/sw.js', import.meta.url), 'utf8');
+const style = readFileSync(new URL('../../distribution-snapshots/kairos/style.css', import.meta.url), 'utf8');
+const app = readFileSync(new URL('../../distribution-snapshots/kairos/app.js', import.meta.url), 'utf8');
+const worker = readFileSync(new URL('../../distribution-snapshots/kairos/sw.js', import.meta.url), 'utf8');
 
 function stopDisplay(customText, elapsed = 3450) {
   const outcome = resolveStopOutcome({

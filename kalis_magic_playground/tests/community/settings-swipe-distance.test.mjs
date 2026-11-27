@@ -2,10 +2,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-for (const app of ['zz1', 'zz3', 'tools/calc', 'tools/stopwatch']) {
+for (const app of ['distribution-snapshots/kairos', 'distribution-snapshots/calculator', 'tools/calc', 'tools/stopwatch']) {
   test(`${app} opens settings only after both fingers move at least 96px`, async () => {
     // zz1 and zz3 keep their installer verbatim in their own settings-swipe.js.
-    const html = await readFile(new URL(app === 'zz1' || app === 'zz3' ? `../../${app}/settings-swipe.js` : `../../${app}/index.html`, import.meta.url), 'utf8');
+    const html = await readFile(new URL(app === 'distribution-snapshots/kairos' || app === 'distribution-snapshots/calculator' ? `../../${app}/settings-swipe.js` : `../../${app}/index.html`, import.meta.url), 'utf8');
     const start = html.indexOf('function installSettingsSwipe(');
     const end = html.indexOf('// END SETTINGS SWIPE', start);
     assert.ok(start >= 0 && end > start);
@@ -29,7 +29,7 @@ for (const app of ['zz1', 'zz3', 'tools/calc', 'tools/stopwatch']) {
 
 // RELEASE uses its shared gesture helper rather than the inline installer.
 test('zz2 requires both fingers to move at least 96px in screen coordinates', async () => {
-  const { isSettingsSwipe } = await import('../../zz2/time-machine.js');
+  const { isSettingsSwipe } = await import('../../distribution-snapshots/unlock/time-machine.js');
   const start = [{ id: 1, x: 60, y: 10 }, { id: 2, x: 200, y: 10 }];
   assert.equal(isSettingsSwipe(start, [{ id: 1, x: 60, y: 105 }, { id: 2, x: 200, y: 105 }]), false);
   assert.equal(isSettingsSwipe(start, [{ id: 1, x: 60, y: 106 }, { id: 2, x: 200, y: 105 }]), false);

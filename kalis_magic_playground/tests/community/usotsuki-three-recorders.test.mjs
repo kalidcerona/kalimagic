@@ -1,19 +1,16 @@
-import { pinnedRound5Difference } from './personal-round5.mjs';
-import { createContinuousTrace } from '../../zz7/recorder-trace.js';
+import { assertPinnedSnapshot } from './public-snapshot-pins.mjs';
+import { createContinuousTrace } from '../../distribution-snapshots/usotsuki/recorder-trace.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import vm from 'node:vm';
-import { createRecorderThemeController } from '../../zz7/recorder-theme.js';
+import { createRecorderThemeController } from '../../distribution-snapshots/usotsuki/recorder-theme.js';
 import { fileURLToPath } from 'node:url';
 import { usotsukiAppScript, usotsukiAppSource } from './usotsuki-app-script.mjs';
-import { stripLocalPreview } from './local-preview-strip.mjs';
-import { excisePersonalLaunchCheck } from './personal-launch-check.mjs';
-import { excisePerformanceLog } from './personal-performance-log.mjs';
 import { readAppStyle } from './app-style.mjs';
 
-const read = file => readFileSync(new URL('../../zz7/'+file, import.meta.url), 'utf8');
+const read = file => readFileSync(new URL('../../distribution-snapshots/usotsuki/'+file, import.meta.url), 'utf8');
 function engineFixture({ reduced=false, AudioContext }={}) {
  let now=0, serial=0; const timers=new Map(), frames=new Map(), ids=new Map();
  class Node {
@@ -64,7 +61,7 @@ test('A/D skins retain single stylus, long idle typebar, black 80px impressions 
  }
 });
 test('protected CSS prefix and shared preparation rule remain unchanged',()=>{
- const css=readAppStyle(new URL('../../zz7/', import.meta.url));assert.equal(createHash('sha256').update(css.split('\n').slice(0,929).join('\n')+'\n').digest('hex'),'07ad81bbc85967754c072d262d8ef2337cf2e0077ec2d077b008139108a8e288');
+ const css=readAppStyle(new URL('../../distribution-snapshots/usotsuki/', import.meta.url));assert.equal(createHash('sha256').update(css.split('\n').slice(0,929).join('\n')+'\n').digest('hex'),'07ad81bbc85967754c072d262d8ef2337cf2e0077ec2d077b008139108a8e288');
  assert.equal((css.match(/#performance-screen\.is-preparing #test-indicator \{ font-size: clamp\(12px, 3\.5vw, 16px\); letter-spacing: 0; white-space: nowrap; \}/g)||[]).length,1);
 });
 test('theme switch destroys old engine and ignores stale asynchronous mounts',async()=>{
@@ -171,32 +168,20 @@ test('opened AudioContext is closed on suspend and release cannot queue frames',
 });
 
 test('A/D gesture unlock does not open the legacy detector AudioContext',()=>{
- const code=usotsukiAppScript(fileURLToPath(new URL('../../zz7/',import.meta.url)));const body=code.slice(code.indexOf('function unlockFromGesture()'),code.indexOf('function commitTruthAttempt()'));
+ const code=usotsukiAppScript(fileURLToPath(new URL('../../distribution-snapshots/usotsuki/',import.meta.url)));const body=code.slice(code.indexOf('function unlockFromGesture()'),code.indexOf('function commitTruthAttempt()'));
  let legacy=0,unlocked=0;
  vm.runInNewContext(body+';unlockFromGesture();',{recorderThemes:{active:()=>true,setSoundEnabled(){},unlock(){unlocked++;}},soundEnabled:()=>true,settingsVisible:()=>false,document:{hidden:false},ensureAudio(){legacy++;return null;}});
  assert.equal(unlocked,1);assert.equal(legacy,0);
 });
 
-test('snapshot changes exactly three named constants and excludes the localhost preview hook',()=>{
- const personal=usotsukiAppSource(fileURLToPath(new URL('../../zz7/',import.meta.url)));let shared=usotsukiAppSource(fileURLToPath(new URL('../../distribution-snapshots/usotsuki/',import.meta.url)));
+test('public snapshot isolates three keys and excludes personal hooks', () => {
+ const shared=usotsukiAppSource(fileURLToPath(new URL('../../distribution-snapshots/usotsuki/',import.meta.url)));
  assert.equal((shared.match(/usotsuki\.distribution\./g)||[]).length,3);
- let changes=0;
- for(const name of ['STATE_KEY','SOUND_KEY','DISPLAY_THEME_KEY']){
-  const pattern=new RegExp('(const '+name+' = ")usotsuki\\.distribution\\.');
-  assert.match(shared,pattern);shared=shared.replace(pattern,'$1usotsuki.');changes++;
- }
- assert.equal(changes,3);
- assert.match(personal,/local-preview/);
- assert.doesNotMatch(shared,/magic-local-settings|local-preview/);
- // detector.js is the only entry and controller.js boots the app, so that import is not a hook line and stays in the friend build.
+ for (const name of ['STATE_KEY','SOUND_KEY','DISPLAY_THEME_KEY']) assert.match(shared,new RegExp('const '+name+' = "usotsuki\\.distribution\\.'));
+ assert.doesNotMatch(shared,/magic-local-settings|local-preview|performance-log|launch-check/);
  assert.match(shared,/^import \{ openSettings \} from "\.\/controller\.js";$/m);
- // launch-check.js and performance-log.js are personal-only. The pinned friend snapshot does not include them.
- assert.ok(pinnedRound5Difference('zz7', 'wake-lock.js'));
- const wake = readFileSync(new URL('../../zz7/wake-lock.js', import.meta.url), 'utf8');
- const oldWake = readFileSync(new URL('../../distribution-snapshots/usotsuki/wake-lock.js', import.meta.url), 'utf8');
- assert.equal(shared,stripLocalPreview(excisePerformanceLog(excisePersonalLaunchCheck(personal.replace(wake, oldWake), fileURLToPath(new URL('../../zz7/', import.meta.url))), fileURLToPath(new URL('../../zz7/', import.meta.url)))));
+ assertPinnedSnapshot('distribution-snapshots/usotsuki', 'wake-lock.js');
 });
-
 
 test('nameplate retains referenced prototype glyphs with local masks and unique ids',()=>{
  for(const skin of ['a','d']){

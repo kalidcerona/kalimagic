@@ -23,7 +23,7 @@ test('Slot uses the individual friend grant table and its current migration', ()
   assert.equal(isValidTool('slot'), true);
   assert.equal(accessTableForTool('slot'), 'friend_app_access');
   const sql = readFileSync(new URL('../../supabase/migrations/20261121_friend_apps_slot.sql', import.meta.url), 'utf8');
-  assert.deepEqual([...sql.matchAll(/'([^']+)'/g)].map(match => match[1]), [...FRIEND_APP_TOOLS]);
+  assert.deepEqual([...sql.matchAll(/'([^']+)'/g)].map(match => match[1]), [...FRIEND_APP_TOOLS].filter(tool => !['asrai', 'alter', 'uramichi'].includes(tool)));
 });
 
 test('Slot checks its own grant only while approval is required', async (t) => {

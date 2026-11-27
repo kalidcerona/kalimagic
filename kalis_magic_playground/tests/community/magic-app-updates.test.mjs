@@ -8,8 +8,8 @@ import {
   emptyState,
   revealList,
   toPublic,
-} from '../../zz4/logic.js';
-import { parseTruthAttempts, verdictForAttempt } from '../../zz7/logic.js';
+} from '../../distribution-snapshots/choice/logic.js';
+import { parseTruthAttempts, verdictForAttempt } from '../../distribution-snapshots/usotsuki/logic.js';
 
 test('Choice inserts a separate force item at the chosen number without removing ordinary items', () => {
   const preset = createPreset({

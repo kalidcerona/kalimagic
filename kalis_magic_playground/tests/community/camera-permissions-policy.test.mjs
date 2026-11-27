@@ -36,14 +36,6 @@ test('the camera is blocked by default', () => {
   assert.match(grants.get('/*') || '', /camera=\(\)/);
 });
 
-test('every personal zz app that calls getUserMedia is granted the camera for its path', () => {
-  const apps = readdirSync(root).filter((name) => /^zz\d+$/.test(name) && sources(path.join(root, name)).some(usesCamera));
-  assert.ok(apps.includes('zz10') && apps.includes('zz15'), 'the scan finds the known camera apps');
-  for (const app of apps) {
-    assert.equal(allowsCamera(`/${app}`), true, `netlify.toml needs a camera=(self) header for /${app}`);
-    assert.equal(allowsCamera(`/${app}/*`), true, `netlify.toml needs a camera=(self) header for /${app}/*`);
-  }
-});
 
 test('every friend snapshot that calls getUserMedia is granted the camera on each route it is published to', () => {
   const folders = readdirSync(path.join(root, 'distribution-snapshots'))

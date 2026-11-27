@@ -3,7 +3,7 @@ import test from 'node:test';
 import { pathToFileURL, fileURLToPath } from 'node:url';
 import {cadence,finalJitter,paperValues} from './alter-realism-mask-fixture.mjs';
 import {paperScene,corners} from './alter-realism-fixture.mjs';
-const source=process.env.ALTER_SOURCE || fileURLToPath(new URL('../../zz10/', import.meta.url));if(!source)throw new Error('ALTER_SOURCE required');
+const source=process.env.ALTER_SOURCE || fileURLToPath(new URL('../../distribution-snapshots/alter/', import.meta.url));if(!source)throw new Error('ALTER_SOURCE required');
 const {createObservationTracker,trackObservation,createDisplaySmoother,smoothDisplayedCorners}=await import(pathToFileURL(`${source}/performance.js`));
 const {createPaperMatch,sampleCardPaper,updatePaperMatch}=await import(pathToFileURL(`${source}/appearance.js`));
 const card=x=>({corners:[{x,y:45},{x:x+58,y:45},{x:x+58,y:133},{x,y:133}]});

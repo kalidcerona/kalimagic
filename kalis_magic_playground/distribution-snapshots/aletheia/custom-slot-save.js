@@ -1,3 +1,4 @@
+import { recordPhotoSave } from './photo-save-notice.js';
 // Saving one custom photo slot.
 import { LIMITS, MESSAGES, cardAtIndex, createId, validateImage } from './logic.js';
 import { CUSTOM_COUNT } from './dom.js';
@@ -70,6 +71,7 @@ export async function saveCustomSlot(index) {
     next[index] = imageId;
     // Store the blob first. Metadata is the commit point; roll back the new blob if it fails.
     if (!commitCustom(next)) {
+      recordPhotoSave(false);
       if (wroteNewImage) {
         try {
           await deleteImage(imageId);

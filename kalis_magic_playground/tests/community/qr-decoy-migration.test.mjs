@@ -2,11 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
-import * as core from '../../zz13/core.mjs';
+import * as core from '../../distribution-snapshots/qr/core.mjs';
 
-vm.runInThisContext(fs.readFileSync(new URL('../../zz13/vendor/qrcodegen.js', import.meta.url), 'utf8'));
+vm.runInThisContext(fs.readFileSync(new URL('../../distribution-snapshots/qr/vendor/qrcodegen.js', import.meta.url), 'utf8'));
 const decoderContext = { module: { exports: {} }, exports: {}, Uint8ClampedArray };
-vm.runInNewContext(fs.readFileSync(new URL('../../zz13/vendor/jsQR.js', import.meta.url), 'utf8'), decoderContext);
+vm.runInNewContext(fs.readFileSync(new URL('../../distribution-snapshots/qr/vendor/jsQR.js', import.meta.url), 'utf8'), decoderContext);
 globalThis.jsQR = decoderContext.module.exports;
 
 const PREVIOUS = [
@@ -36,7 +36,7 @@ test('default decoys keep the previous list and add the nine new urls', () => {
   assert.deepEqual(core.DEFAULTS.decoys.slice(0, PREVIOUS.length), PREVIOUS);
   assert.deepEqual(core.DEFAULTS.decoys.slice(PREVIOUS.length), ADDED);
   assert.equal(core.DEFAULTS.target, 'https://lnmagic.co.kr/');
-  const html = fs.readFileSync(new URL('../../zz13/index.html', import.meta.url), 'utf8');
+  const html = fs.readFileSync(new URL('../../distribution-snapshots/qr/index.html', import.meta.url), 'utf8');
   assert.match(html, /<h1 class="apptitle">QR 코드<br>랜덤 생성기<\/h1>/);
   assert.match(html, /id="generate"/);
   assert.match(html, /id="png" disabled/);

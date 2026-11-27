@@ -25,7 +25,7 @@ function prepareExplicitWrite(){if(!writesHeld)return 'ready';const raw=readable
 function replacementNote(kind){if(kind==='kept')return retainedDownload?NOTE_KEPT_FILE:NOTE_KEPT_DEVICE;return '';}
 // Ephemeral rejected-cell inversion. It is not an edit, history entry, or backup field.
 let preview=null,armedSuppress=null,undoPointer=null,viewEpoch=0;
-function persist(explicit=false){if(writesHeld&&!explicit)return false;let ok=false;try{ok=save(localStorage,key,state);}catch{}if(!ok){storageIssue=true;storageNote='이 기기에 저장할 수 없습니다.\n설정에서 백업하세요.';notice(storageNote);return false;}if(explicit){writesHeld=false;preservedRaw=null;}storageIssue=false;storageNote='';return true;}
+function persist(explicit=false){if(writesHeld&&!explicit)return false;let ok=false;try{ok=save(localStorage,key,state);}catch{}if(!ok){storageIssue=true;storageNote='이 기기에 저장할 수 없습니다.\n설정에서 백업하세요.';$('storage-notice').textContent=storageNote;return false;}if(explicit){writesHeld=false;preservedRaw=null;}storageIssue=false;storageNote='';$('storage-notice').textContent='';return true;}
 function notice(message){$('notice').textContent=message;}
 function shownEdits(q){if(!preview)return q.edits;const nextEdits=new Set(q.edits),cell=preview.y*q.size+preview.x;if(nextEdits.has(cell))nextEdits.delete(cell);else nextEdits.add(cell);return nextEdits;}
 function render(){viewEpoch++;const epoch=viewEpoch;const q=state.current;$('empty').hidden=!!q;$('empty').textContent=state.config.target?'생성을 눌러 주세요.':'설정을 완료해 주세요.';$('qr').hidden=!q;$('png').disabled=!q;$('generate').disabled=state.frozen||!state.config.target;$('freeze').disabled=!q;$('freeze').textContent=state.frozen?'고정됨':'고정';$('freeze').setAttribute('aria-pressed',String(state.frozen));$('undo').disabled=!preview&&!q?.history.length;$('clean').disabled=!q||(!preview&&!q.edits.size);if(q&&epoch===viewEpoch){const r=raster(q,16,shownEdits(q));$('qr').width=r.width;$('qr').height=r.height;$('qr').getContext('2d').putImageData(new ImageData(r.data,r.width,r.height),0,0);}}
@@ -154,5 +154,5 @@ const contactLink=$('contact-open');if(contactLink)contactLink.href=contactHref(
 $('contact-copy').onclick=()=>copyContactId($('contact-copy'));
 loadStored();
 syncDot();
-persist();render();renderInstall();if(storageNote)notice(storageNote);if('serviceWorker'in navigator){const registration=navigator.serviceWorker.register('./sw.js',{scope:'./'});registration.catch(()=>{});globalThis.MagicUpdate?.init({registrationPromise:registration,safe:()=>$('settings').open===true});}
+persist();render();renderInstall();if(writesHeld&&storageNote)notice(storageNote);if('serviceWorker'in navigator){const registration=navigator.serviceWorker.register('./sw.js',{scope:'./'});registration.catch(()=>{});globalThis.MagicUpdate?.init({registrationPromise:registration,safe:()=>$('settings').open===true});}
 syncPerformanceWakeLock();

@@ -1,12 +1,8 @@
-import { pinnedRound5Difference } from './personal-round5.mjs';
-import { PHOTO_NOTICE_SAVE_FILES, stripPhotoSaveNotice } from './personal-photo-notice.mjs';
-import { stripPerformanceLog } from './personal-performance-log.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile, readdir, stat } from 'node:fs/promises';
 import vm from 'node:vm';
-import { CHOICE_FILES, CHOICE_DISTRIBUTION_FILES, DISTRIBUTION_APPS, shouldCopyChoice } from '../../scripts/build-public.mjs';
-import { stripLocalPreview, stripInlineLocalPreview, dropUnusedSingleImports, LOCAL_PREVIEW_FILE } from './local-preview-strip.mjs';
+import { CHOICE_DISTRIBUTION_FILES, DISTRIBUTION_APPS, shouldCopyChoice } from '../../scripts/build-public.mjs';
 import gate, { classifyPath } from '../../netlify/edge-functions/tools-gate.mjs';
 import { FRIEND_APP_TOOLS } from '../../netlify/functions/_lib/friend-app-access.mjs';
 import { gateCookieName, signGateCookie, verifyGateCookie } from '../../netlify/functions/_lib/tool-gate.mjs';
@@ -24,40 +20,10 @@ async function filesUnder(route) {
   }
   return files.sort();
 }
-
-// app.js and logic.js load feature modules. The approved key and cache-family differences moved with their
-// lines: storage keys into these modules, the cache-family prefix into precheck.js.
-const STORAGE_KEY_FILES = ['gesture-guide.js', 'input-guide.js', 'previews.js', 'logic-core.js', 'logic-user-icons.js'];
-const CACHE_FAMILY_FILES = ['precheck.js'];
-
-// Normalize only the approved per-file differences; every other runtime byte must match.
-function normalize(file, bytes) {
-  if (!['app.js', 'logic.js', 'sw.js', 'index.html', 'manifest.webmanifest', ...STORAGE_KEY_FILES, ...CACHE_FAMILY_FILES].includes(file)) return bytes;
-  let source = bytes.toString();
-  if (file === 'app.js' || file === 'logic.js' || STORAGE_KEY_FILES.includes(file)) source = source.replaceAll('magic-choice-dist.', 'magic-choice.');
-  if (file === 'app.js' || file === 'sw.js' || file === 'index.html' || CACHE_FAMILY_FILES.includes(file)) source = source.replaceAll('choice-dist-shell-', 'choice-shell-');
-  // The friend build drops the -local-preview-1 token and appends -distribution.
-  if (file === 'sw.js') source = source.replace('ready-1-nostatus-1-modules-1-order-1-split-1-css-1-artwork-1-update-prompt-3-images-1-persist-1-distribution\';', 'ready-1-nostatus-1-local-preview-1-modules-1-order-1-split-1-css-1-artwork-1-update-prompt-3-images-1-persist-1\';');
-  if (file === 'manifest.webmanifest') source = source.replace('"id": "./"', '"id": "./choice"');
-  return Buffer.from(source);
-}
-
-test('Choice snapshot preserves every personal runtime byte except explicit distribution differences', async () => {
-  // The personal-only local-preview module is never part of the friend snapshot.
-  // performance-log.js is personal-only, like photo-save-notice.js. The pinned snapshot does not ship it.
-  const personalFiles = (await filesUnder('zz4')).filter(file => !/\.test\./.test(file) && !LOCAL_PREVIEW_FILE.test(file) && file !== 'photo-save-notice.js' && file !== 'performance-log.js');
-  assert.deepEqual(await filesUnder(shared), personalFiles);
-  assert.deepEqual([...CHOICE_DISTRIBUTION_FILES].sort(), personalFiles);
-  for (const file of personalFiles) {
-    const snapshot = await read(`${shared}/${file}`);
-    const rawPersonal = await read(`zz4/${file}`);
-    const personal = /\.(?:js|html)$/.test(file) ? Buffer.from(stripPerformanceLog(stripPhotoSaveNotice(rawPersonal.toString()))) : rawPersonal;
-    const personalNormalized = file === 'app.js' ? Buffer.from(dropUnusedSingleImports(stripLocalPreview(personal.toString()))) : file === 'sw.js' ? Buffer.from(stripLocalPreview(personal.toString())) : personal;
-    if (!pinnedRound5Difference('zz4', file) && !PHOTO_NOTICE_SAVE_FILES.choice.includes(file)) assert.deepEqual(file === 'app.js' ? Buffer.from(stripInlineLocalPreview(normalize(file, snapshot).toString())) : normalize(file, snapshot), personalNormalized, file);
-    assert.equal(snapshot.includes(Buffer.from('magic-choice.')), false, file);
-    assert.equal(shouldCopyChoice(file), true, file);
-  }
-  for (const file of CHOICE_FILES) assert.ok(personalFiles.includes(file));
+test('Choice ships its approved snapshot assets', async () => {
+  const files = await filesUnder(shared);
+  assert.deepEqual([...CHOICE_DISTRIBUTION_FILES].sort(), files);
+  for (const file of files) assert.equal(shouldCopyChoice(file), true, file);
   for (const file of ['app.test.js', 'logic.test.mjs', 'other.test.css', 'README.md', 'home-icons/private.png']) assert.equal(shouldCopyChoice(file), false);
   assert.equal(shouldCopyChoice('home-icons'), true);
   assert.deepEqual(DISTRIBUTION_APPS.find(app => app.tool === 'choice'), { source: shared, target: 'choice', tool: 'choice' });
@@ -137,7 +103,7 @@ test('Choice login, hosting, migration and both new admin grants are registered'
   assert.match((await read('netlify.toml')).toString(), /for = "\/tools\/choice\/manifest\.webmanifest"\s*\[headers.values\]\s*Content-Type = "application\/manifest\+json"/);
   const sql = (await read('supabase/migrations/20261010_friend_apps_choice.sql')).toString();
   assert.match(sql, /begin;[\s\S]*drop constraint if exists friend_app_access_tool_check;[\s\S]*add constraint friend_app_access_tool_check[\s\S]*commit;/);
-  assert.deepEqual([...sql.matchAll(/'([^']+)'/g)].map(match => match[1]), [...FRIEND_APP_TOOLS].filter(tool => !['magicshow', 'gwayubulgeup', 'memdeck', 'bell', 'slot'].includes(tool)));
+  assert.deepEqual([...sql.matchAll(/'([^']+)'/g)].map(match => match[1]), [...FRIEND_APP_TOOLS].filter(tool => !['magicshow', 'gwayubulgeup', 'memdeck', 'bell', 'slot', 'asrai', 'alter', 'uramichi'].includes(tool)));
   assert.doesNotMatch(sql, /row level security|create policy|drop policy/i);
 });
 

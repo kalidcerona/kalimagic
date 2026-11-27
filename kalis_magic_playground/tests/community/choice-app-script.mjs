@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { inlineLocalPreview, readSiblingFrom } from './local-preview-inline.mjs';
 
-// CHOICE (personal zz4 and the friend snapshot) runs app.js as an ES module entry with local feature
+// CHOICE runs app.js as an ES module entry with local feature
 // modules, and logic.js is a facade over logic-*.js. Source-reading tests read the entry or the facade
 // and their modules as one script, in module evaluation order, without the generated import headers
 // and export footers. home-manifest.js and builtin-lists.js stay separate shared files.

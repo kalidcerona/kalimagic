@@ -4,8 +4,8 @@ import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 
 // CHOICE (zz4) stores its artwork during install, so an update done at home is complete offline at the venue.
-const source = readFileSync(new URL('../../zz4/sw.js', import.meta.url), 'utf8');
-const scope = 'https://example.test/zz4/';
+const source = readFileSync(new URL('../../distribution-snapshots/choice/sw.js', import.meta.url), 'utf8');
+const scope = 'https://example.test/tools/choice/';
 
 function boot({ failArtwork = false, active = null } = {}) {
   const listeners = {};

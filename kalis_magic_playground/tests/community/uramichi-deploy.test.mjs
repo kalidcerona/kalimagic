@@ -1,4 +1,3 @@
-import { inspectBackupOutput } from '../support/personal-backup-output.mjs';
 // URAMICHI web app (zz15): publication boundary, PWA metadata, offline shell, camera headers and copy rules.
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -8,10 +7,10 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import vm from 'node:vm';
-import { PUBLIC_DIRS, URAMICHI_FILES } from '../../scripts/build-public.mjs';
+import { PUBLIC_DIRS, DISTRIBUTION_APPS, transformDistributionDocument } from '../../scripts/build-public.mjs';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
-const read = (file) => readFile(path.join(root, 'zz15', file), 'utf8');
+const read = (file) => readFile(path.join(root, 'distribution-snapshots/uramichi', file), 'utf8');
 const shell = ['index.html', 'style.css', 'app.mjs', 'dom.mjs', 'presets.mjs', 'detect.mjs', 'chrome.mjs', 'scan.mjs', 'camera.mjs', 'camera-controls.mjs', 'core.mjs', 'core-model.mjs', 'core-url.mjs', 'core-encode.mjs', 'core-scan.mjs', 'core-gate.mjs', 'core-card.mjs', 'core-resolve.mjs', 'core-logic.mjs', 'core-json.mjs', 'picker.mjs', 'install-ui.js', 'update-prompt.js', 'manifest.webmanifest', 'brand-logo.png', 'icon-192.png', 'icon-512.png', 'icon-maskable-192.png', 'icon-maskable-512.png', 'vendor/jsQR.js', 'vendor/LICENSE-jsqr.txt'];
 
 async function listFiles(dir, prefix = '') {
@@ -24,32 +23,29 @@ async function listFiles(dir, prefix = '') {
 }
 
 test('zz15 publishes only its explicit shell in an isolated build', async () => {
-  assert.ok(PUBLIC_DIRS.includes('zz15'));
-  assert.deepEqual([...URAMICHI_FILES].sort(), [...shell, 'sw.js'].sort());
+  assert.ok(!PUBLIC_DIRS.some(route => /^zz\d+$/.test(route)));
+  assert.ok(DISTRIBUTION_APPS.some(app => app.source === 'distribution-snapshots/uramichi' && app.target === 'uramichi'));
+
   const temp = await mkdtemp(path.join(tmpdir(), 'uramichi-deploy-'));
   try {
     const site = path.join(temp, 'site');
     await cp(root, site, { recursive: true, filter: (source) => !['node_modules', 'dist', '.git'].includes(path.relative(root, source).split(path.sep)[0]) });
-    await writeFile(path.join(site, 'zz15', 'draft.txt'), 'private fixture');
-    await writeFile(path.join(site, 'zz15', 'vendor', 'notes.json'), '{}');
+    await writeFile(path.join(site, 'distribution-snapshots/uramichi', 'draft.txt'), 'private fixture');
+    await writeFile(path.join(site, 'distribution-snapshots/uramichi', 'vendor', 'notes.json'), '{}');
     const build = () => spawnSync(process.execPath, ['scripts/build-public.mjs'], {
       cwd: site, encoding: 'utf8', env: { ...process.env, CI: 'true' }
     });
     const rejected = build();
     assert.equal(rejected.status, 1, rejected.stderr);
-    assert.match(rejected.stderr, /unexpected zz15\/draft\.txt/);
-    assert.match(rejected.stderr, /unexpected zz15\/vendor\/notes\.json/);
-    const candidate = spawnSync(process.execPath, ['scripts/app-release-check.mjs', '--candidate', 'zz15-filter-fixture'], {
-      cwd: site, encoding: 'utf8'
-    });
-    assert.equal(candidate.status, 0, candidate.stderr);
-    await writeFile(path.join(site, 'scripts/app-release-pins.json'), candidate.stdout);
+    assert.match(rejected.stderr, /unexpected distribution-snapshots\/uramichi\/draft\.txt/);
+    assert.match(rejected.stderr, /unexpected distribution-snapshots\/uramichi\/vendor\/notes\.json/);
+    await rm(path.join(site, 'distribution-snapshots/uramichi', 'draft.txt'));
+    await rm(path.join(site, 'distribution-snapshots/uramichi', 'vendor', 'notes.json'));
     const result = build();
     assert.equal(result.status, 0, result.stderr + result.stdout);
-    const published = path.join(site, 'dist', 'zz15');
-    const backup = await inspectBackupOutput(published);
-    assert.deepEqual((await listFiles(published)).sort(), [...backup.files, ...shell, 'sw.js'].sort());
-    for (const file of [...shell, 'sw.js']) assert.deepEqual(backup.sourceBytes(file, await readFile(path.join(published, file))), await readFile(path.join(root, 'zz15', file)), file);
+    const published = path.join(site, 'dist', 'tools', 'uramichi');
+    assert.deepEqual((await listFiles(published)).sort(), [...shell, 'sw.js'].sort());
+    for (const file of [...shell, 'sw.js'].filter(file => !['index.html', 'manifest.webmanifest'].includes(file))) assert.deepEqual(await readFile(path.join(published, file)), await readFile(path.join(root, 'distribution-snapshots/uramichi', file)), file);
     const html = await readFile(path.join(published, 'index.html'), 'utf8');
     for (const match of html.matchAll(/(?:src|href)="(\.\/[^"#]+)"/g)) assert.ok((await stat(path.join(published, match[1]))).isFile(), match[1]);
     for (const file of shell.filter((name) => name.endsWith('.mjs') || name.endsWith('.js'))) {
@@ -64,28 +60,31 @@ test('zz15 has its own standalone identity, PNG icons, camera permission and Net
   const manifest = JSON.parse(await read('manifest.webmanifest'));
   for (const key of ['name', 'short_name']) assert.equal(manifest[key], 'URAMICHI');
   for (const key of ['start_url', 'scope']) assert.equal(manifest[key], './');
-  assert.equal(manifest.id, undefined, 'identity comes from the start URL, like the other zz apps');
+  assert.equal(manifest.id, undefined, 'build assigns the public install identity');
   assert.equal(manifest.display, 'standalone');
   for (const key of ['background_color', 'theme_color']) assert.equal(manifest[key], '#000000');
   for (const [index, size] of [192, 512, 192, 512].entries()) {
-    const bytes = await readFile(path.join(root, 'zz15', manifest.icons[index].src));
+    const bytes = await readFile(path.join(root, 'distribution-snapshots/uramichi', manifest.icons[index].src));
     assert.equal(bytes.subarray(0, 8).toString('hex'), '89504e470d0a1a0a');
     assert.equal(bytes.readUInt32BE(16), size); assert.equal(bytes.readUInt32BE(20), size);
   }
   const html = await read('index.html');
   for (const pattern of [/^<!DOCTYPE html>/, /<html lang="ko">/, /viewport-fit=cover/, /name="theme-color" content="#000000"/, /rel="manifest" href="\.\/manifest.webmanifest"/, /<title>URAMICHI<\/title>/, /alt="URAMICHI ウラミチ 로고"/]) assert.match(html, pattern);
   const headers = await readFile(path.join(root, 'netlify.toml'), 'utf8');
-  assert.match(headers, /for = "\/zz15\/manifest\.webmanifest"\s+\[headers.values\]\s+Content-Type = "application\/manifest\+json"/);
-  assert.match(headers, /for = "\/zz15\/sw\.js"\s+\[headers.values\]\s+Content-Type = "application\/javascript; charset=utf-8"\s+Cache-Control = "no-store, no-cache"/);
-  for (const route of ['/zz15', '/zz15/\\*']) assert.match(headers, new RegExp(`for = "${route}"\\s+\\[headers.values\\]\\s+Permissions-Policy = "camera=\\(self\\)`));
+  assert.match(headers, /for = "\/tools\/uramichi\/manifest\.webmanifest"\s+\[headers.values\]\s+Content-Type = "application\/manifest\+json"/);
+  assert.match(headers, /for = "\/tools\/uramichi\/sw\.js"\s+\[headers.values\]\s+Content-Type = "application\/javascript; charset=utf-8"\s+Cache-Control = "no-store, no-cache"/);
+  for (const route of ['/tools/uramichi', '/tools/uramichi/*']) {
+    const section = headers.split(`for = "${route}"`)[1]?.split('[[headers]]')[0];
+    assert.ok(section?.includes('Permissions-Policy = "camera=(self)'), route);
+  }
   const license = await read('vendor/LICENSE-jsqr.txt');
   assert.match(license, /Apache License/);
-  assert.deepEqual(await readFile(path.join(root, 'zz15', 'vendor', 'jsQR.js')), await readFile(path.join(root, 'zz13', 'vendor', 'jsQR.js')));
+  assert.deepEqual(await readFile(path.join(root, 'distribution-snapshots/uramichi', 'vendor', 'jsQR.js')), await readFile(path.join(root, 'distribution-snapshots/qr', 'vendor', 'jsQR.js')));
 });
 
 test('zz15 worker precaches the whole shell, serves it offline and ignores other paths', async () => {
   const source = await read('sw.js');
-  const scope = 'https://example.com/zz15/';
+  const scope = 'https://example.com/tools/uramichi/';
   const cached = new Map(), names = [];
   const cache = { async addAll(requests) { for (const r of requests) cached.set(r.url, new Response(r.url)); }, async match(url) { return cached.get(url)?.clone(); } };
   const caches = { async open(name) { names.push(name); return cache; }, async keys() { return []; }, async delete() {} };
@@ -95,8 +94,8 @@ test('zz15 worker precaches the whole shell, serves it offline and ignores other
   vm.runInContext(source, context);
   let pending;
   listeners.install({ waitUntil(value) { pending = value; } }); await pending;
-  assert.ok(names[0].startsWith('uramichi-web-'));
-  assert.match(names[0], /v20261024-web-5-modules-2-coherent-1-update-prompt-3-r5-c1$/);
+  assert.ok(names[0].startsWith('friend-uramichi-web-'));
+  assert.match(names[0], /v20261024-web-5-modules-2-coherent-1-update-prompt-3-r5-c1-[a-f0-9]+-distribution$/);
   assert.deepEqual([...cached.keys()].sort(), shell.map((file) => new URL(file, scope).href).sort());
   for (const file of ['', ...shell.filter((f) => f !== 'manifest.webmanifest')]) {
     listeners.fetch({ request: new Request(new URL(file, scope)), respondWith(value) { pending = value; } });
@@ -118,7 +117,7 @@ test('zz15 keeps the brand copy, footer, wake lock, gesture and storage rules wi
     assert.ok(html.includes(text), text);
   }
   assert.ok(html.indexOf('class="settingsbrand"') < html.indexOf('class="identity"') && html.indexOf('class="identity"') < html.indexOf('<details class="overview">'));
-  const zz13 = await readFile(path.join(root, 'zz13', 'index.html'), 'utf8');
+  const zz13 = await readFile(path.join(root, 'distribution-snapshots/qr', 'index.html'), 'utf8');
   assert.ok(html.includes(zz13.match(/<div class="magic-settings-footer">[\s\S]*?<\/div><\/form>/)[0].replace('</form>', '')));
   assert.match(dom, /const LOCAL_HOSTS = \['localhost', '127\.0\.0\.1', '::1', '\[::1\]'\];\nconst DEBUG = LOCAL_HOSTS\.includes\(location\.hostname\) && params\.get\('debug'\) === '1';/);
   assert.match(camera, /navigator\.wakeLock\.request\('screen'\)/);
@@ -140,18 +139,11 @@ test('zz15 keeps the brand copy, footer, wake lock, gesture and storage rules wi
   assert.match(scan, /a\.target = '_blank'/);
   assert.match(presets, /navigator\.vibrate\?\.\(20\)/);
   for (const match of presets.matchAll(/localStorage\.\w+\(/g)) assert.ok(presets.slice(Math.max(0, match.index - 90), match.index).includes('try {'), 'storage access is wrapped');
-  for (const key of presets.matchAll(/'(uramichi\.[^']+)'/g)) assert.match(key[1], /^uramichi\.web\./);
-  const personal = '/Users/sumpie/Desktop/URAMICHI-개인-프리셋.json';
-  let vendorUrls = [];
-  try {
-    const data = JSON.parse(await readFile(personal, 'utf8'));
-    vendorUrls = data.categories.flatMap((c) => c.entries.map((e) => e.url)).filter((u) => !/^https:\/\/www\.google\.com\/search\?q=\{text\}$/.test(u));
-  } catch { /* personal file not on this machine */ }
-  for (const file of [...URAMICHI_FILES.filter((f) => /\.(?:html|mjs|js|css|webmanifest)$/.test(f) && !f.startsWith('vendor/'))]) {
+  for (const key of presets.matchAll(/'(uramichi\.[^']+)'/g)) assert.match(key[1], /^friend-uramichi\.web\./);
+  for (const file of [...[...shell, 'sw.js'].filter((f) => /\.(?:html|mjs|js|css|webmanifest)$/.test(f) && !f.startsWith('vendor/'))]) {
     const text = await read(file);
     assert.doesNotMatch(text, /\b(?:requestFullscreen|webkitRequestFullscreen|webkitRequestFullScreen|mozRequestFullScreen|msRequestFullscreen)\b/, file);
     assert.doesNotMatch(text, /[—~～〜]/, file);
-    for (const u of vendorUrls) assert.ok(!text.includes(u), `${file} must not contain personal preset URLs`);
   }
 });
 

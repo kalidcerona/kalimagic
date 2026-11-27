@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { advanceTiltBody, isBreakthroughSnap, outwardTravel, shakeImpulse } from '../../zz6/sensor-motion.js';
+import { advanceTiltBody, isBreakthroughSnap, outwardTravel, shakeImpulse } from '../../distribution-snapshots/tobira/sensor-motion.js';
 
 test('Tobira bounces at the selected wall before leaving on its second hit', () => {
   const stage = { width: 300, height: 600 };

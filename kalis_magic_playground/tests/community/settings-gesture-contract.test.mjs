@@ -3,12 +3,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 const APPS = [
-  { file: 'zz10/app.js', html: 'zz10/index.html', kind: 'alter', rotation: true, storage: { 'alter-settings-gesture-guide-v1': 'seen' } },
-  { file: 'zz11/app.js', html: 'zz11/index.html', kind: 'spinner', rotation: true, storage: { 'zz11-guide-seen-v2': '1' } },
   { file: 'distribution-snapshots/spinner/app.js', html: 'distribution-snapshots/spinner/index.html', kind: 'spinner', rotation: true, storage: { 'friend-spinner-guide-seen-v2': '1' } },
-  { file: 'zz13/app.mjs', html: 'zz13/index.html', kind: 'qr', rotation: true, storage: {} },
   { file: 'distribution-snapshots/qr/app.mjs', html: 'distribution-snapshots/qr/index.html', kind: 'qr', rotation: true, storage: {} },
-  { file: 'zz8/contacts.js', html: 'zz8/index.html', kind: 'asrai', rotation: false, storage: { 'asrai.prototype.settings-guide.v1': '1' } },
 ];
 
 function element(id) {
@@ -117,7 +113,7 @@ function installPage(htmlText, storageSeed) {
     clearTimeout: (id) => clearTimeout(id),
     matchMedia: (query) => mediaFor(query),
     addEventListener(type, fn, options) { windowListeners.set(type, { fn, options }); },
-    location: { protocol: 'https:', pathname: '/zz13/' },
+    location: { protocol: 'https:', pathname: '/distribution-snapshots/qr/' },
   };
   const navigatorStub = {
     userAgent: 'Mozilla/5.0',

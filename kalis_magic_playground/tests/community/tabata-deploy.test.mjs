@@ -1,4 +1,5 @@
 import test from 'node:test';
+import { assertPinnedSnapshot } from './public-snapshot-pins.mjs';
 import assert from 'node:assert/strict';
 import { cp, mkdtemp, readFile, readdir, rm, stat, writeFile, mkdir } from 'node:fs/promises';
 import { spawnSync } from 'node:child_process';
@@ -6,7 +7,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import vm from 'node:vm';
-import { PUBLIC_DIRS, TABATA_FILES, MIRROR_PAIRS, preparePimaxRuntime } from '../../scripts/build-public.mjs';
+import { PUBLIC_DIRS, TABATA_FILES, preparePimaxRuntime } from '../../scripts/build-public.mjs';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const read = file => readFile(path.join(root, 'TabataTimer', file), 'utf8');
@@ -46,7 +47,7 @@ test('TabataTimer publishes only its explicit shell at the exact case-sensitive 
     });
     assert.equal(audit.status, 0, audit.stderr + audit.stdout);
     const mirrorLog = `${audit.stdout}\n${audit.stderr}`;
-    assert.equal((mirrorLog.match(/WARNING: mirror check skipped on CI: \d+ sibling sources absent/g) || []).length, 1, mirrorLog);
+    assert.match(mirrorLog, /"roots":17/);
     assert.equal(mirrorLog.includes('mirror check skipped:'), false);
     const published = path.join(site, 'dist', 'TabataTimer');
     assert.deepEqual((await readdir(published)).sort(), [...shell, 'sw.js'].sort());
@@ -152,7 +153,7 @@ test('TabataTimer worker precaches the complete shell, serves offline and isolat
       assert.equal(response.status, 200, file);
       assert.equal(await response.text(), new URL(file === '' || file === 'index.html' ? './' : file, scope).href);
     }
-    for (const url of ['https://example.com/zz14/', 'https://example.com/TabataTimerSibling/', new URL('notes.txt', scope).href, 'https://other.example/TabataTimer/index.html']) {
+    for (const url of ['https://example.com/distribution-snapshots/pimax/', 'https://example.com/TabataTimerSibling/', new URL('notes.txt', scope).href, 'https://other.example/TabataTimer/index.html']) {
       let intercepted = false;
       listeners.fetch({ request: new Request(url), respondWith() { intercepted = true; } });
       assert.equal(intercepted, false, url);
@@ -163,7 +164,7 @@ test('TabataTimer worker precaches the complete shell, serves offline and isolat
 
 test('TabataTimer preserves Korean copy and zz13 contact footer without fullscreen calls or forbidden punctuation', async () => {
   const html = await read('index.html');
-  const original = await readFile(path.join(root, 'zz13', 'index.html'), 'utf8');
+  const original = await readFile(path.join(root, 'distribution-snapshots/qr', 'index.html'), 'utf8');
   const footer = original.match(/<div class="magic-settings-footer">[\s\S]*?<\/div><\/form>/)[0].replace('</form>', '');
   assert.ok(html.includes(footer));
   for (const text of ['개요', 'Android Chrome: ⋮', '앱 설치', 'iPhone Safari: 공유', '홈 화면에 추가', '준비', '운동', '일시정지', '사이클', '종료']) {
@@ -478,7 +479,7 @@ test('TabataTimer installation invokes captured native prompt only on click and 
   const changed=await installHarness();changed.mode.matches=true;changed.events.mode();assert.equal(changed.nodes.get('installSheet').open,false);
 });
 
-for(const route of ['zz12','zz14'])test(`${route} visible wake lock requests idle, releases hidden, retries visible, handles pending and rejected requests`,async()=>{
+for(const route of ['distribution-snapshots/memdeck', 'distribution-snapshots/pimax'])test(`${route} visible wake lock requests idle, releases hidden, retries visible, handles pending and rejected requests`,async()=>{
   const source=await readFile(path.join(root,route,'app.mjs'),'utf8');
   const start=source.indexOf('function keepVisibleScreenAwake()');
   const code=source.slice(start,source.indexOf('keepVisibleScreenAwake();',start)+'keepVisibleScreenAwake();'.length);
@@ -498,14 +499,8 @@ for(const route of ['zz12','zz14'])test(`${route} visible wake lock requests idl
   vm.runInNewContext(code,{});
 });
 
-test('zz12 and zz14 runtime and service-worker mirrors match their sibling sources including cache bumps',async()=>{
-  for(const [source,mirror] of MIRROR_PAIRS.filter(([,mirror])=>/^zz(?:12|14)\/(?:app.mjs|sw.js)$/.test(mirror))){
-    const original=await readFile(path.join(root,source),'utf8').catch(error=>{if(error.code==='ENOENT')return null;throw error;});
-    if(original===null)continue;
-    const copy=await readFile(path.join(root,mirror),'utf8');
-    assert.equal(mirror==='zz14/app.mjs'?preparePimaxRuntime(copy):copy,mirror==='zz14/app.mjs'?preparePimaxRuntime(original):original,mirror);
-    if(mirror.endsWith('sw.js'))assert.match(copy,/v20261021-wake-1/);
-  }
+test('Memdeck and Pi Max runtime and workers match canonical public pins', () => {
+ for (const app of ['memdeck', 'pimax']) for (const file of ['app.mjs', 'sw.js']) assertPinnedSnapshot(`distribution-snapshots/${app}`, file);
 });
 
 

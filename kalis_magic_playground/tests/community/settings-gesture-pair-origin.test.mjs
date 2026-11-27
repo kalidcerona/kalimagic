@@ -382,12 +382,12 @@ async function exerciseUsotsuki(route) {
 
 test('ALETHEIA and USOTSUKI count 96px only after the touch pair forms', async () => {
   try {
-    for (const route of ['zz5', 'distribution-snapshots/aletheia']) await exerciseAletheia(route);
+    for (const route of ['distribution-snapshots/aletheia']) await exerciseAletheia(route);
   } finally {
     restore();
   }
   try {
-    for (const route of ['zz7', 'distribution-snapshots/usotsuki']) await exerciseUsotsuki(route);
+    for (const route of ['distribution-snapshots/usotsuki']) await exerciseUsotsuki(route);
   } finally {
     restore();
   }

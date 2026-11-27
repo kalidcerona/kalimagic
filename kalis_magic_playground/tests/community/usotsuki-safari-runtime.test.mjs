@@ -4,15 +4,15 @@ import assert from 'node:assert/strict';
 import './usotsuki-app-script.mjs';
 
 test('personal and friend USOTSUKI commit focused scan input before Start without a change event', async () => {
-  for (const route of ['zz7', 'distribution-snapshots/usotsuki']) {
+  for (const route of ['distribution-snapshots/usotsuki']) {
     let now = 0;
     let timerId = 0;
     const timers = new Map();
     const stored = new Map([
-      ['usotsuki.detector.v1', JSON.stringify({version:1, attemptCount:12, settings:{truthAttempts:[4,7]}})],
+      ['usotsuki.distribution.detector.v1', JSON.stringify({version:1, attemptCount:12, settings:{truthAttempts:[4,7]}})],
       ['usotsuki.distribution.detector.v1', JSON.stringify({version:1, attemptCount:12, settings:{truthAttempts:[4,7]}})],
       ['usotsuki.detector.settings-guide.v1', '1'],
-      ['usotsuki.detector.sound.v1', '0'],
+      ['usotsuki.distribution.detector.sound.v1', '0'],
       ['usotsuki.distribution.detector.sound.v1', '0'],
     ]);
     const nodes = new Map();
@@ -40,7 +40,7 @@ test('personal and friend USOTSUKI commit focused scan input before Start withou
     Object.defineProperty(globalThis, 'navigator', { configurable:true, value:{} });
     globalThis.performance = { now:()=>now };
     await import(`../../${route}/detector.js?scan-regression`);
-    const stateKey = route === 'zz7' ? 'usotsuki.detector.v1' : 'usotsuki.distribution.detector.v1';
+    const stateKey = route === 'distribution-snapshots/usotsuki' ? 'usotsuki.distribution.detector.v1' : 'usotsuki.distribution.detector.v1';
     assert.equal(get('#settings-screen').hidden, true, `${route} opens ready to play`);
     assert.equal(get('#performance-screen').hidden, false);
     assert.equal(JSON.parse(stored.get(stateKey)).attemptCount, 12, `${route} load preserves stored attempts until a user action`);

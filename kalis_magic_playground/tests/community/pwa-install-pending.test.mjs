@@ -5,29 +5,22 @@ import { runInNewContext } from 'node:vm';
 
 const ROOT = new URL('../../', import.meta.url);
 const APPS = [
-  ['zz1/install-nudge.js', 'nudge'], ['distribution-snapshots/kairos/install-nudge.js', 'nudge'],
-  ['zz2/install-prompt.js', 'offer'], ['distribution-snapshots/unlock/install-prompt.js', 'offer'],
-  ['zz3/install-nudge.js', 'nudge'], ['distribution-snapshots/calculator/install-nudge.js', 'nudge'],
-  ['zz4/install-prompt.js', 'card'], ['zz5/install-prompt.js', 'card'],
+  ['distribution-snapshots/kairos/install-nudge.js', 'nudge'], ['distribution-snapshots/kairos/install-nudge.js', 'nudge'],
+  ['distribution-snapshots/unlock/install-prompt.js', 'offer'], ['distribution-snapshots/unlock/install-prompt.js', 'offer'],
+  ['distribution-snapshots/calculator/install-nudge.js', 'nudge'], ['distribution-snapshots/calculator/install-nudge.js', 'nudge'],
+  ['distribution-snapshots/choice/install-prompt.js', 'card'], ['distribution-snapshots/aletheia/install-prompt.js', 'card'],
   ['distribution-snapshots/aletheia/install-prompt.js', 'card'],
-  ['zz6/install-prompt.js', 'panel'], ['zz7/install-prompt.js', 'panel'],
+  ['distribution-snapshots/tobira/install-prompt.js', 'panel'], ['distribution-snapshots/usotsuki/install-prompt.js', 'panel'],
   ['distribution-snapshots/usotsuki/install-prompt.js', 'panel'],
   ['distribution-snapshots/tobira/install-prompt.js', 'panel'],
-  ['zz8/install-ui.js', 'control'], ['zz10/install-ui.js', 'controls'],
-  ['zz11/app.js', 'spinner'], ['distribution-snapshots/spinner/app.js', 'spinner'],
-  ['zz13/app.mjs', 'qr'], ['distribution-snapshots/qr/app.mjs', 'qr'],
+  ['distribution-snapshots/spinner/app.js', 'spinner'], ['distribution-snapshots/spinner/app.js', 'spinner'],
+  ['distribution-snapshots/qr/app.mjs', 'qr'], ['distribution-snapshots/qr/app.mjs', 'qr'],
 ];
 
 // settingsUi: whether settings-ui.js (which keeps the event in window.__magicInstallPrompt) loaded next to a spinner app.
 async function runtime(file, kind, { saved = new Map(), standalone = false, settingsUi = true } = {}) {
   let source = await readFile(new URL(file, ROOT), 'utf8');
-  if (file === 'zz11/app.js') {
-    source = await readFile(new URL('zz11/install.js', ROOT), 'utf8');
-    source = source.replace('export ', '') + '\ninstallAppPrompt();';
-  } else if (file === 'zz13/app.mjs') {
-    source = await readFile(new URL('zz13/install.mjs', ROOT), 'utf8');
-    source = source.replace('export ', '') + '\nconst ctx = {$}; setupInstall(ctx); ctx.renderInstall();';
-  } else if (kind === 'nudge') {
+  if (kind === 'nudge') {
     // zz1 and zz3 ship the nudge as its own classic script file instead of an inline <script>.
     source = (file.endsWith('.js') ? [[null, source]] : [...source.matchAll(/<script>\s*([\s\S]*?)<\/script>/g)])
       .map(match => match[1]).find(script => /install.nudge.done|installNudgeDone/i.test(script));
@@ -67,7 +60,7 @@ async function runtime(file, kind, { saved = new Map(), standalone = false, sett
   const navigator = { userAgent: 'Mozilla/5.0 Android Chrome/140', standalone: false };
   const window = { navigator, matchMedia: media, addEventListener: (name, listener) => events.set(name, listener) };
   runInNewContext(source.replace(/export function /g, 'function '), {
-    window, navigator, matchMedia: media, location: { pathname: '/zz2/', hash: '' },
+    window, navigator, matchMedia: media, location: { pathname: '/distribution-snapshots/unlock/', hash: '' },
     localStorage: { getItem: key => saved.get(key), setItem: (key, value) => saved.set(key, value) },
     document: { getElementById: node, querySelector: node, createElement: () => box,
       documentElement: node('documentElement'), body: { appendChild() { box.hidden = false; } } },

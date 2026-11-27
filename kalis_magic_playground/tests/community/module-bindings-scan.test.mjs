@@ -40,6 +40,8 @@ const appRoots = discoverAppRoots();
 const EXPECTED_APP_ROOTS = [
   'KanameCue',
   'distribution-snapshots/aletheia',
+  'distribution-snapshots/alter',
+  'distribution-snapshots/asrai',
   'distribution-snapshots/bell',
   'distribution-snapshots/choice',
   'distribution-snapshots/gwayubulgeup',
@@ -51,10 +53,9 @@ const EXPECTED_APP_ROOTS = [
   'distribution-snapshots/spinner',
   'distribution-snapshots/tobira',
   'distribution-snapshots/unlock',
+  'distribution-snapshots/uramichi',
   'distribution-snapshots/usotsuki',
   'seminar-signup',
-  'zz1', 'zz10', 'zz11', 'zz12', 'zz13', 'zz14', 'zz15',
-  'zz2', 'zz4', 'zz5', 'zz6', 'zz7', 'zz8'
 ];
 
 test('discovered module roots equal the expected list', () => {
@@ -102,19 +103,9 @@ function editFile(file, transform) {
   fs.writeFileSync(file, after);
 }
 
-test('scanner reports labelFor when zz15 core-logic.mjs loses its import', () => {
-  withTemp((tmp) => {
-    copyApp('zz15', tmp, (dir) => {
-      editFile(path.join(dir, 'core-logic.mjs'), (text) => text.replace(/^import \{ labelFor \} from .*\n/m, ''));
-    });
-    const { undeclared } = scanAppDir(tmp);
-    assert.ok(undeclared.some((u) => u.name === 'labelFor' && u.file === 'core-logic.mjs'));
-  });
-});
-
 test('scanner reports resetTwoFingerTaps when zz2 settings.js loses it from its import', () => {
   withTemp((tmp) => {
-    copyApp('zz2', tmp, (dir) => {
+    copyApp('distribution-snapshots/unlock', tmp, (dir) => {
       editFile(path.join(dir, 'settings.js'), (text) => text.replace(/^import \{ resetTwoFingerTaps \} from .*\n/m, ''));
     });
     const { undeclared } = scanAppDir(tmp);

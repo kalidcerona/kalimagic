@@ -5,8 +5,8 @@ import vm from 'node:vm';
 
 // RELEASE live editor (settings-ui profile.editor): pure math and profile wiring.
 const read = (path) => fs.readFileSync(new URL(`../../${path}`, import.meta.url), 'utf8');
-const source = read('zz2/settings-ui.js');
-const html = read('zz2/index.html');
+const source = read('distribution-snapshots/unlock/settings-ui.js');
+const html = read('distribution-snapshots/unlock/index.html');
 const sandbox = {};
 vm.runInContext(source, vm.createContext(sandbox));
 const ui = sandbox.MagicSettingsUI;
@@ -92,7 +92,7 @@ test('editor screens and parts point at real RELEASE elements', () => {
 });
 
 test('RELEASE customization is on for the personal build and the friend build', () => {
-  assert.equal(ui.customizationAllowed('/zz2/', undefined), true);
+  assert.equal(ui.customizationAllowed('/distribution-snapshots/unlock/', undefined), true);
   assert.equal(ui.customizationAllowed('/tools/release/', undefined), true);
   assert.equal(ui.customizationAllowed('/tools/unlock/', undefined), false);
   assert.equal(ui.customizationAllowed('/distribution-snapshots/unlock/', undefined), true);
@@ -181,10 +181,10 @@ test('layout presets: saved preset and style survive sanitize; junk values and o
 });
 
 test('One UI 8.5 style variant lives under the preset class in personal and friend RELEASE', () => {
-  const personalCss = read('zz2/style.css');
+  const personalCss = read('distribution-snapshots/unlock/style.css');
   assert.match(personalCss, /#time-lock\.galaxy\.magic-style-oneui85 #time-face \{ top: 16%; flex-direction: column; \}/);
   assert.match(personalCss, /#time-lock\.galaxy\.magic-style-oneui85 #time-clock \{[^}]*font-weight: 400;/);
-  const css = read('zz2/settings-ui.css');
+  const css = read('distribution-snapshots/unlock/settings-ui.css');
   assert.match(css, /@media \(orientation:landscape\) and \(max-height:540px\)/, 'phones in landscape get the rotate hint');
   const dist = read('distribution-snapshots/unlock/style.css');
   assert.match(dist, /#time-lock\.galaxy\.magic-style-oneui85 #time-face \{ top: 16%; flex-direction: column; \}/);

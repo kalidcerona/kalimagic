@@ -73,7 +73,7 @@ let toastTimer = null;
         $('hitsuzen-link-status').textContent = '일수를 저장하지 못했습니다. 브라우저의 저장 공간을 확인해 주세요.';
         return;
       }
-      location.assign(/^\/tools\/(?:unlock|release)(?:\/|$)/.test(location.pathname) ? '/tools/hitsuzen/' : '/zz3/');
+      location.assign('/tools/hitsuzen/');
     });
 
     function handleAttemptOutcome(previousCount) {

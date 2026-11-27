@@ -5,16 +5,16 @@ import path from 'node:path';
 import os from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { APP_PIN_FILE, createAppReleasePins, verifyAppRelease } from '../../scripts/app-release-pins.mjs';
-import { APP_RELEASE_ROOTS, PUBLIC_DIRS, DISTRIBUTION_APPS } from '../../scripts/build-public.mjs';
+import { APP_RELEASE_ROOTS, DISTRIBUTION_APPS } from '../../scripts/build-public.mjs';
 
 async function fixture(t) {
   const root = await mkdtemp(path.join(os.tmpdir(), 'app-release-'));
   t.after(() => rm(root, { recursive: true, force: true }));
-  await mkdir(path.join(root, 'zz1/sub'), { recursive: true });
+  await mkdir(path.join(root, 'example-app/sub'), { recursive: true });
   await mkdir(path.join(root, 'scripts'));
-  await writeFile(path.join(root, 'zz1/index.html'), '<head></head><body>retained</body>');
-  await writeFile(path.join(root, 'zz1/sub/runtime.js'), 'const version = "retained";');
-  const options = { root, requiredRoots: ['zz1'] };
+  await writeFile(path.join(root, 'example-app/index.html'), '<head></head><body>retained</body>');
+  await writeFile(path.join(root, 'example-app/sub/runtime.js'), 'const version = "retained";');
+  const options = { root, requiredRoots: ['example-app'] };
   const pins = await createAppReleasePins({ ...options, release: 'retained-test-v1' });
   const save = value => writeFile(path.join(root, APP_PIN_FILE), JSON.stringify(value));
   await save(pins);
@@ -36,13 +36,13 @@ for (const mutation of ['change', 'missing', 'extra', 'empty-directory', 'file-l
     await mkdir(path.join(f.root, 'dist'));
     const sentinel = path.join(f.root, 'dist/keep');
     await writeFile(sentinel, 'last usable artifact');
-    const file = path.join(f.root, 'zz1/sub/runtime.js');
+    const file = path.join(f.root, 'example-app/sub/runtime.js');
     if (mutation === 'change') await writeFile(file, 'const version = "changed";');
     if (mutation === 'missing') await rm(file);
-    if (mutation === 'extra') await writeFile(path.join(f.root, 'zz1/new.mjs'), 'unexpected');
-    if (mutation === 'empty-directory') await mkdir(path.join(f.root, 'zz1/new'));
+    if (mutation === 'extra') await writeFile(path.join(f.root, 'example-app/new.mjs'), 'unexpected');
+    if (mutation === 'empty-directory') await mkdir(path.join(f.root, 'example-app/new'));
     if (mutation === 'file-link') { await rm(file); await symlink('../index.html', file); }
-    if (mutation === 'directory-link') { await rm(path.join(f.root, 'zz1/sub'), { recursive: true }); await symlink('../scripts', path.join(f.root, 'zz1/sub')); }
+    if (mutation === 'directory-link') { await rm(path.join(f.root, 'example-app/sub'), { recursive: true }); await symlink('../scripts', path.join(f.root, 'example-app/sub')); }
     if (mutation === 'ancestor-link') {
       await mkdir(path.join(f.root, 'real')); await symlink('real', path.join(f.root, 'alias'));
       f.requiredRoots = ['alias/app']; await mkdir(path.join(f.root, 'real/app'));
@@ -60,9 +60,9 @@ for (const mutation of ['change', 'missing', 'extra', 'empty-directory', 'file-l
 for (const corruption of ['traversal', 'absolute', 'backslash', 'duplicate', 'out-of-scope', 'hash', 'size', 'root', 'schema', 'omitted', 'unexpected-key']) {
   test(`rejects manifest ${corruption}`, async t => {
     const f = await fixture(t), pins = structuredClone(f.pins);
-    if (corruption === 'traversal') pins.entries[0].path = 'zz1/../outside';
-    if (corruption === 'absolute') pins.entries[0].path = '/zz1';
-    if (corruption === 'backslash') pins.entries[0].path = 'zz1\\outside';
+    if (corruption === 'traversal') pins.entries[0].path = 'example-app/../outside';
+    if (corruption === 'absolute') pins.entries[0].path = '/example-app';
+    if (corruption === 'backslash') pins.entries[0].path = 'example-app\\outside';
     if (corruption === 'duplicate') pins.entries.push(pins.entries[0]);
     if (corruption === 'out-of-scope') pins.entries[0].path = 'other';
     if (corruption === 'hash') pins.entries.find(e => e.kind === 'file').sha256 = 'bad';
@@ -75,18 +75,18 @@ for (const corruption of ['traversal', 'absolute', 'backslash', 'duplicate', 'ou
   });
 }
 
-test('retained project inventory covers every selected personal app and distribution snapshot', async () => {
+test('retained project inventory covers every selected canonical public snapshot', async () => {
   const root = fileURLToPath(new URL('../../', import.meta.url));
   const result = await verifyAppRelease({ root, requiredRoots: APP_RELEASE_ROOTS });
   const sources = DISTRIBUTION_APPS.filter(app => !['magicshow', 'planbcafe'].includes(app.target)).map(app => app.source);
-  const expected = new Set([...PUBLIC_DIRS.filter(dir => /^zz\d+$/.test(dir)), ...sources]);
+  const expected = new Set(sources);
   assert.deepEqual([...APP_RELEASE_ROOTS].sort(), [...expected].sort());
-  assert.equal(result.roots, 28);
+  assert.equal(result.roots, 17);
 });
 
 test('candidate rejects duplicate and nested roots', async t => {
   const f = await fixture(t);
-  for (const requiredRoots of [['zz1', 'zz1'], ['zz1/sub', 'zz1']]) {
+  for (const requiredRoots of [['example-app', 'example-app'], ['example-app/sub', 'example-app']]) {
     await assert.rejects(createAppReleasePins({ ...f, requiredRoots, release: 'test' }), /overlapping/);
   }
 });

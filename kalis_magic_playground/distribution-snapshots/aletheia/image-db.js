@@ -1,3 +1,4 @@
+import { trackPhotoSave } from './photo-save-notice.js';
 import { DB_NAME, DB_STORE } from './dom.js';
 
 let dbPromise = null;
@@ -51,10 +52,12 @@ function finishTransaction(transaction) {
 }
 
 async function putImage(id, blob) {
-  const db = await database();
-  const transaction = db.transaction(DB_STORE, 'readwrite');
-  transaction.objectStore(DB_STORE).put({ blob, savedAt: Date.now() }, id);
-  await finishTransaction(transaction);
+  return trackPhotoSave(async () => {
+    const db = await database();
+    const transaction = db.transaction(DB_STORE, 'readwrite');
+    transaction.objectStore(DB_STORE).put({ blob, savedAt: Date.now() }, id);
+    await finishTransaction(transaction);
+  }); // photo-notice-wrapper
 }
 
 async function getImage(id) {

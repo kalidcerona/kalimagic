@@ -1,4 +1,4 @@
-const pinnedFriend = Boolean(process.env.TOBIRA_ROOT?.includes('distribution-snapshots'));
+const pinnedFriend = true;
 import test, { afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -9,7 +9,7 @@ import { pathToFileURL } from 'node:url';
 // Drives boot, gesture guide, wake lock, install prompt, the performance and crack flow, the two-finger
 // settings swipe and settings saves through the listeners the app registers on the stub DOM.
 // TOBIRA_ROOT lets a mutation check point the same test at a scratch copy.
-const root = process.env.TOBIRA_ROOT ? pathToFileURL(`${process.env.TOBIRA_ROOT.replace(/\/?$/, '/')}`) : new URL('../../zz6/', import.meta.url);
+const root = process.env.TOBIRA_ROOT ? pathToFileURL(`${process.env.TOBIRA_ROOT.replace(/\/?$/, '/')}`) : new URL('../../distribution-snapshots/tobira/', import.meta.url);
 // The friend snapshot uses its own storage prefix and a Shift+Esc exit.
 const P = readFileSync(new URL('logic.js', root), 'utf8').includes("'friend-tobira.v1'") ? 'friend-tobira.' : 'tobira.';
 

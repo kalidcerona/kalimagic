@@ -6,7 +6,7 @@ import { pathToFileURL } from 'node:url';
 // then drives boot, install sheet, all three tabs, settings, checkers, weak review and reset through DOM events.
 // Click targets are parsed from the rendered markup (real data-* and disabled attributes).
 // PIMAX_ROOT lets the mutation check point the same test at a scratch copy.
-const root = process.env.PIMAX_ROOT ? pathToFileURL(`${process.env.PIMAX_ROOT.replace(/\/?$/, '/')}`) : new URL('../../zz14/', import.meta.url);
+const root = process.env.PIMAX_ROOT ? pathToFileURL(`${process.env.PIMAX_ROOT.replace(/\/?$/, '/')}`) : new URL('../../distribution-snapshots/pimax/', import.meta.url);
 
 const errors = [];
 process.on('unhandledRejection', (reason) => errors.push(`unhandledRejection: ${reason?.stack || reason}`));
@@ -100,7 +100,7 @@ test('Pi Max modules run as real separate ES modules through boot, install sheet
   const settle = (ms = 0) => new Promise((resolve) => setTimeout(resolve, ms));
   const step = async (name, action) => { await action(); await settle(); assert.deepEqual(errors, [], `${name} raised errors`); };
   // The friend snapshot keeps the same state under pimax.distribution.* instead of pimax-practice-*.
-  const stored = (key) => JSON.parse(env.storage.get(/distribution-snapshots\/pimax\/?$/.test(process.env.PIMAX_ROOT || '') ? key.replace('pimax-practice-', 'pimax.distribution.') : key));
+  const stored = (key) => JSON.parse(env.storage.get(true ? key.replace('pimax-practice-', 'pimax.distribution.') : key));
   const submit = (id) => { const form = new env.HTMLFormElement(id); for (const fn of env.handlers.submit) fn({ target: form, preventDefault: () => form.preventDefault() }); assert.ok(form.prevented, `${id} default prevented`); };
   const type = (id, value) => { env.inputs[`#${id}`].value = value; for (const fn of env.handlers.input) fn({ target: env.inputs[`#${id}`] }); };
 

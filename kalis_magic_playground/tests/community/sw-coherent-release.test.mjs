@@ -5,21 +5,8 @@ import vm from 'node:vm';
 
 // Personal workers plus friend scopes. Kairos and Kairos Classic share one snapshot.
 const WORKERS = [
+  ...['asrai', 'alter', 'uramichi'].map(name => [`distribution-snapshots/${name}/sw.js`, `https://example.test/tools/${name}/`]),
   ['distribution-snapshots/memdeck/sw.js', 'https://example.test/tools/memdeck/'],
-  ['zz1/sw.js', 'https://example.test/zz1/'],
-  ['zz2/sw.js', 'https://example.test/zz2/'],
-  ['zz3/sw.js', 'https://example.test/zz3/'],
-  ['zz4/sw.js', 'https://example.test/zz4/'],
-  ['zz5/sw.js', 'https://example.test/zz5/'],
-  ['zz6/sw.js', 'https://example.test/zz6/'],
-  ['zz7/sw.js', 'https://example.test/zz7/'],
-  ['zz8/sw.js', 'https://example.test/zz8/'],
-  ['zz10/sw.js', 'https://example.test/zz10/'],
-  ['zz11/sw.js', 'https://example.test/zz11/'],
-  ['zz12/sw.js', 'https://example.test/zz12/'],
-  ['zz13/sw.js', 'https://example.test/zz13/'],
-  ['zz14/sw.js', 'https://example.test/zz14/'],
-  ['zz15/sw.js', 'https://example.test/zz15/'],
   ['distribution-snapshots/aletheia/sw.js', 'https://example.test/tools/aletheia/'],
   ['distribution-snapshots/calculator/sw.js', 'https://example.test/tools/hitsuzen/'],
   ['distribution-snapshots/kairos/sw.js', 'https://example.test/tools/kairos/'],
@@ -156,9 +143,9 @@ async function dispatch(worker, url) {
   return { response: await result, background };
 }
 
-test('coherent release covers the 28 deployed worker scopes', () => {
-  assert.equal(WORKERS.length, 28);
-  assert.equal(new Set(WORKERS.map(([file, scope]) => `${file}@${scope}`)).size, 28);
+test('coherent release covers the 17 deployed worker scopes', () => {
+  assert.equal(WORKERS.length, 17);
+  assert.equal(new Set(WORKERS.map(([file, scope]) => `${file}@${scope}`)).size, 17);
 });
 
 for (const [file, scope] of WORKERS) {

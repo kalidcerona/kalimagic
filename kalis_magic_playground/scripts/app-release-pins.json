@@ -1,9 +1,11 @@
 {
   "schemaVersion": 1,
-  "release": "apps-dda14ee5fcaa7d15fddbbf8c96b76f26a96a1849",
-  "provenance": "Retained personal app trees and distribution snapshots from the selected site release.",
+  "release": "apps-zz-public-20261127",
+  "provenance": "Canonical public distribution snapshots from the selected site release.",
   "roots": [
     "distribution-snapshots/aletheia",
+    "distribution-snapshots/alter",
+    "distribution-snapshots/asrai",
     "distribution-snapshots/bell",
     "distribution-snapshots/calculator",
     "distribution-snapshots/choice",
@@ -16,21 +18,8 @@
     "distribution-snapshots/spinner",
     "distribution-snapshots/tobira",
     "distribution-snapshots/unlock",
-    "distribution-snapshots/usotsuki",
-    "zz1",
-    "zz10",
-    "zz11",
-    "zz12",
-    "zz13",
-    "zz14",
-    "zz15",
-    "zz2",
-    "zz3",
-    "zz4",
-    "zz5",
-    "zz6",
-    "zz7",
-    "zz8"
+    "distribution-snapshots/uramichi",
+    "distribution-snapshots/usotsuki"
   ],
   "entries": [
     {
@@ -58,8 +47,8 @@
     {
       "path": "distribution-snapshots/aletheia/card-select.js",
       "kind": "file",
-      "size": 3283,
-      "sha256": "5dfc01bbf43d70e6788ab0e54075eb6e197e16de4dee6560a45b7fc69f6f11c9"
+      "size": 3694,
+      "sha256": "51d37578877f9fd0f27c07fc38c05abb9761fd224511549124cf95ce69ddc289"
     },
     {
       "path": "distribution-snapshots/aletheia/cell-guide.js",
@@ -76,8 +65,8 @@
     {
       "path": "distribution-snapshots/aletheia/controller.js",
       "kind": "file",
-      "size": 8948,
-      "sha256": "763cd235d93031ef10ab144ee4476eb7d8c6f2bd4c4b85d30ec0ee729760ce2c"
+      "size": 9161,
+      "sha256": "7dc139b3835334befe82df9aa2b4aa3dca8f3527b82724b811b79a23fcc54a77"
     },
     {
       "path": "distribution-snapshots/aletheia/court-cards",
@@ -164,8 +153,8 @@
     {
       "path": "distribution-snapshots/aletheia/custom-slot-save.js",
       "kind": "file",
-      "size": 4557,
-      "sha256": "32f08de5b9b45b87f0d75e9867c00eacb1951b09517cdb24dc5a7bfc135c56f4"
+      "size": 4645,
+      "sha256": "ae7bb908fb2fa74a201300dd6f3fb049f000b0fe2090dbea6f79a9e81fdcf09e"
     },
     {
       "path": "distribution-snapshots/aletheia/deck-loader.js",
@@ -212,8 +201,8 @@
     {
       "path": "distribution-snapshots/aletheia/image-db.js",
       "kind": "file",
-      "size": 2467,
-      "sha256": "08bfb48b5a55e6c80c0b6b3ad8e6f02d223accf2947567341fb845addf877cf2"
+      "size": 2600,
+      "sha256": "a798fc702e0b0b9f1703f054e6b9587ee1ce39d2fc6b5d1b27bb3baab500d4d5"
     },
     {
       "path": "distribution-snapshots/aletheia/images.js",
@@ -224,8 +213,8 @@
     {
       "path": "distribution-snapshots/aletheia/index.html",
       "kind": "file",
-      "size": 16453,
-      "sha256": "15b163903e3fbb0f162a8239287cca1a1dba575cabad5bc09a4bd4d512226701"
+      "size": 16510,
+      "sha256": "602eb5c043ddae6765ba3ab0350dec2e385d10250bbf59f645aa7a6c4896f3f6"
     },
     {
       "path": "distribution-snapshots/aletheia/install-prompt.js",
@@ -288,6 +277,12 @@
       "sha256": "46b713cd6e052bb5e305ac0905b9a601e65fe0ab8d0e57215bb0e70eec6658d5"
     },
     {
+      "path": "distribution-snapshots/aletheia/photo-save-notice.js",
+      "kind": "file",
+      "size": 1880,
+      "sha256": "d7eb4de846cf7eaf5a56b8996adf6be7a8d88519539cca832d5d15198682b2f5"
+    },
+    {
       "path": "distribution-snapshots/aletheia/photo-sets.js",
       "kind": "file",
       "size": 9883,
@@ -296,8 +291,8 @@
     {
       "path": "distribution-snapshots/aletheia/pointer.js",
       "kind": "file",
-      "size": 6518,
-      "sha256": "39128e75cb71e2f83bdce458142dc9e8695d01d3a372f98a9bad6542f044bf72"
+      "size": 6726,
+      "sha256": "cbd1278217248d7d9fb5eef5c50d3b04f2a289319e2b65ff7f48eb8e2da5f2e6"
     },
     {
       "path": "distribution-snapshots/aletheia/preferences.js",
@@ -308,8 +303,8 @@
     {
       "path": "distribution-snapshots/aletheia/preset-form.js",
       "kind": "file",
-      "size": 8257,
-      "sha256": "41cd1560f40e84b2e022f1158662756d58c09cf06b59fb849d7ddce384828a6d"
+      "size": 8347,
+      "sha256": "6cfe17dabb8310f0bad246d5afe9e1f6b61ed8ef46ca1467c3e34c1d6eb8ff30"
     },
     {
       "path": "distribution-snapshots/aletheia/presets.js",
@@ -374,8 +369,8 @@
     {
       "path": "distribution-snapshots/aletheia/sw.js",
       "kind": "file",
-      "size": 6437,
-      "sha256": "430d597e6591ce0d713a4355ea6b1b6f4f72f1bc20854f4eb579b842b0a780a4"
+      "size": 6478,
+      "sha256": "b147e3e2fd0f92935729a679750fae1cba9b3451a500a5504e2dc2ed0fe5f231"
     },
     {
       "path": "distribution-snapshots/aletheia/update-prompt.js",
@@ -394,6 +389,410 @@
       "kind": "file",
       "size": 1423,
       "sha256": "dddd1fff4b97ff87c77b130f9b46ce02c5bb4771ef7ebcbd1a403fc92a47a608"
+    },
+    {
+      "path": "distribution-snapshots/alter",
+      "kind": "directory"
+    },
+    {
+      "path": "distribution-snapshots/alter/app.js",
+      "kind": "file",
+      "size": 4506,
+      "sha256": "a30cbaff0ccfb7883b2547a315d36126c9463a7e9260da87e9a5f2926fc59a43"
+    },
+    {
+      "path": "distribution-snapshots/alter/appearance.js",
+      "kind": "file",
+      "size": 10828,
+      "sha256": "072c0ffdb7af5f9496951ad6dfbd568e540b60d05e236ee4cf5d72ddae40a911"
+    },
+    {
+      "path": "distribution-snapshots/alter/brand-logo.jpg",
+      "kind": "file",
+      "size": 38799,
+      "sha256": "f85bef47a58edc8fa69b9120b977696ae34643d5b2a6e7ae6300180cda897b8d"
+    },
+    {
+      "path": "distribution-snapshots/alter/brand-logo.png",
+      "kind": "file",
+      "size": 129847,
+      "sha256": "f8e040768ad4cfd984debf13ea971e4b8fd7150feff29d8b015f5ee03573131a"
+    },
+    {
+      "path": "distribution-snapshots/alter/calibration.js",
+      "kind": "file",
+      "size": 1350,
+      "sha256": "5cfc409caa5979513bbcc15c69de987b48b625a0cfd7c1380f06aba2639e15dd"
+    },
+    {
+      "path": "distribution-snapshots/alter/camera-geometry.js",
+      "kind": "file",
+      "size": 1330,
+      "sha256": "4349696de198b6855103997d1252b71b392623d55dccae47024668cfcaaf9676"
+    },
+    {
+      "path": "distribution-snapshots/alter/camera-stream.js",
+      "kind": "file",
+      "size": 1659,
+      "sha256": "96ba4186cf375b77e9adcdd8283ecd09cf0575243c792415c678e792529f2c2d"
+    },
+    {
+      "path": "distribution-snapshots/alter/camera.js",
+      "kind": "file",
+      "size": 4320,
+      "sha256": "5ad5f76cd8068ea493d5be8bb9d5cafb3b06b0ffef05e259ca6886f6fc3f69bd"
+    },
+    {
+      "path": "distribution-snapshots/alter/card-view.js",
+      "kind": "file",
+      "size": 1306,
+      "sha256": "8da5494b3536cbdb04f0b928a9eba4a5533df975258af36b7de6c1996ec943d1"
+    },
+    {
+      "path": "distribution-snapshots/alter/dom.js",
+      "kind": "file",
+      "size": 809,
+      "sha256": "67deb22b047233cfecbeaa575a84b309e6b8905ff95e8863dfc8a829127dc2b7"
+    },
+    {
+      "path": "distribution-snapshots/alter/frame.js",
+      "kind": "file",
+      "size": 6386,
+      "sha256": "8ead42d85b7f1abf76a42c557cc9c0c61af53b8086827978d39a0430e1ff7090"
+    },
+    {
+      "path": "distribution-snapshots/alter/fullscreen.js",
+      "kind": "file",
+      "size": 433,
+      "sha256": "f2edda30898f546aea69efe29f5823ac7fbcd286c46787af12c88560a420bb9f"
+    },
+    {
+      "path": "distribution-snapshots/alter/icon-192.png",
+      "kind": "file",
+      "size": 1898,
+      "sha256": "8d2a6754ff2a2d5b2b6bdd6f548124ef342eb8e223c720be3a991d374661fd90"
+    },
+    {
+      "path": "distribution-snapshots/alter/icon-512.png",
+      "kind": "file",
+      "size": 5233,
+      "sha256": "6929714401fbe68afc1fc1c181060e20c34fffcf17a31422aee6b975af15bc1d"
+    },
+    {
+      "path": "distribution-snapshots/alter/index.html",
+      "kind": "file",
+      "size": 7204,
+      "sha256": "4c3f6f3751e825cc7d5bd049867a021db351e0716e9b932e585a479470ba7e30"
+    },
+    {
+      "path": "distribution-snapshots/alter/install-ui.js",
+      "kind": "file",
+      "size": 2750,
+      "sha256": "b79b5505490922a936b04cf7f22f09da4dfaa6ac990e63a732b7c1190454cbae"
+    },
+    {
+      "path": "distribution-snapshots/alter/logic.js",
+      "kind": "file",
+      "size": 8287,
+      "sha256": "9705f375d56cb793829ff1f995230e2bdf068aa9ac176d630f006c8e57c828c7"
+    },
+    {
+      "path": "distribution-snapshots/alter/manifest.webmanifest",
+      "kind": "file",
+      "size": 463,
+      "sha256": "fb1cc8b7de47ff606dddf3fc4dd4014ee63c0f26164514735f8d2f893414c573"
+    },
+    {
+      "path": "distribution-snapshots/alter/overlay.js",
+      "kind": "file",
+      "size": 2783,
+      "sha256": "c7c1093adce28bff5cf8a5f68da77ae5000786bdba1df39f7332dc38c0a63f6a"
+    },
+    {
+      "path": "distribution-snapshots/alter/performance.js",
+      "kind": "file",
+      "size": 10102,
+      "sha256": "3345a9feb07c2e8780349ee828e76b62596ec5dc8937ba8848af9ca9c26b3099"
+    },
+    {
+      "path": "distribution-snapshots/alter/settings-panel.js",
+      "kind": "file",
+      "size": 1821,
+      "sha256": "5c4fde64ff98854d8b15ab909c63356bbb31013d89ffdae13c3c4779c0eecd95"
+    },
+    {
+      "path": "distribution-snapshots/alter/settings-store.js",
+      "kind": "file",
+      "size": 1670,
+      "sha256": "67dc8040fc0820f7a2e194c06562010419f2dc596fc1bf1ab91611355994c5cc"
+    },
+    {
+      "path": "distribution-snapshots/alter/settings-ui.css",
+      "kind": "file",
+      "size": 32535,
+      "sha256": "47fefa8bcb8fda35c099d300ff778c0ec42f35bbb44e3207eb69336d7a14ca6a"
+    },
+    {
+      "path": "distribution-snapshots/alter/settings-ui.js",
+      "kind": "file",
+      "size": 85270,
+      "sha256": "7c1f78db54b3cde3a37d8f3f5e5bc7930b7ccf8fd85fb4e1bb57ae343f509da6"
+    },
+    {
+      "path": "distribution-snapshots/alter/state.js",
+      "kind": "file",
+      "size": 1548,
+      "sha256": "88e5c6775b30dcea789aaf2f9cc8d2edef5665ab074b87c51d1aee3c0ee4822c"
+    },
+    {
+      "path": "distribution-snapshots/alter/status.js",
+      "kind": "file",
+      "size": 568,
+      "sha256": "f1a776771b5ff74986e302be66f7f38c1e765f1bc99e096edb71dc4a2d9f4f3d"
+    },
+    {
+      "path": "distribution-snapshots/alter/style.css",
+      "kind": "file",
+      "size": 8511,
+      "sha256": "7ccdd38feb5b3516a842ad06ffdf51f5e5fec6a631a5512278cbd8cd59424cc4"
+    },
+    {
+      "path": "distribution-snapshots/alter/sw.js",
+      "kind": "file",
+      "size": 5942,
+      "sha256": "df0241cad76c86b6039dd5983d849b372f4ae8970b578b035b3b6e0edbb6b848"
+    },
+    {
+      "path": "distribution-snapshots/alter/tracking-reset.js",
+      "kind": "file",
+      "size": 1629,
+      "sha256": "d186a567962b9ee17fb33e557433b3f00fff9ad3aad4ec205bd86bb3b733e6d3"
+    },
+    {
+      "path": "distribution-snapshots/alter/update-prompt.js",
+      "kind": "file",
+      "size": 10985,
+      "sha256": "31db2f3865d6481514c3323c0bd878a31286bed74084979cc9abc5552bec57ab"
+    },
+    {
+      "path": "distribution-snapshots/alter/vision-detect.js",
+      "kind": "file",
+      "size": 16632,
+      "sha256": "f776d56bb8e8107be13b54083bfbb83196ca3aa3adb48bff63e02d5a0679c237"
+    },
+    {
+      "path": "distribution-snapshots/alter/vision-geometry.js",
+      "kind": "file",
+      "size": 7548,
+      "sha256": "27439f14fdce3ec11ca31fcd564afcc43aa689cf9947c4ef7a3d4fb68d530446"
+    },
+    {
+      "path": "distribution-snapshots/alter/vision-grip.js",
+      "kind": "file",
+      "size": 9905,
+      "sha256": "5e6371bf3b1f46ba7b4678a4ac59009b0084ec894852186832f32f7d0ddf4183"
+    },
+    {
+      "path": "distribution-snapshots/alter/vision-homography.js",
+      "kind": "file",
+      "size": 5896,
+      "sha256": "8b4029dbc584445ceec75d6267700d8a0ea293f8409638fe03e8b445f9c4c84a"
+    },
+    {
+      "path": "distribution-snapshots/alter/vision-paper.js",
+      "kind": "file",
+      "size": 14584,
+      "sha256": "d29674eae1d52c417eb08c9050c0fbe7114644b8e306c09be8f17dfe53943eee"
+    },
+    {
+      "path": "distribution-snapshots/alter/vision-quad.js",
+      "kind": "file",
+      "size": 12290,
+      "sha256": "2b1a5c3ecb212c6d0ad4dae3af238e957595487877c61fb47ca589355f6a4e1e"
+    },
+    {
+      "path": "distribution-snapshots/alter/vision-sampling.js",
+      "kind": "file",
+      "size": 7572,
+      "sha256": "4b6362d9b244fbd67935550508b848b783155885b25a51c6cafa73f54d3bdb44"
+    },
+    {
+      "path": "distribution-snapshots/alter/vision.js",
+      "kind": "file",
+      "size": 2681,
+      "sha256": "f225f05b72b41eeabaedb39099827fab5575ffbe7c142cae7301f0719d5b3751"
+    },
+    {
+      "path": "distribution-snapshots/alter/wake-lock.js",
+      "kind": "file",
+      "size": 1812,
+      "sha256": "16b6b01587efd7d4cac64b3cdeaa74fe0bb389a9150b29f0b536cba8bda5882f"
+    },
+    {
+      "path": "distribution-snapshots/asrai",
+      "kind": "directory"
+    },
+    {
+      "path": "distribution-snapshots/asrai/brand-logo.jpg",
+      "kind": "file",
+      "size": 36700,
+      "sha256": "5a8679b52d5187dadb8718e1f616a1aeae885c5730367ea6d94e0eb6e8f4b09d"
+    },
+    {
+      "path": "distribution-snapshots/asrai/brand-logo.png",
+      "kind": "file",
+      "size": 124568,
+      "sha256": "b7f7c23095da9d6ed610772f4c2659842e11a79792642c5e4016716f002c0d1f"
+    },
+    {
+      "path": "distribution-snapshots/asrai/contacts-gestures.js",
+      "kind": "file",
+      "size": 5960,
+      "sha256": "b0e3523953423c33ff8e5e88050839dba7bedd2ec3da0bd4c8d149df9ec9a0d2"
+    },
+    {
+      "path": "distribution-snapshots/asrai/contacts-list.js",
+      "kind": "file",
+      "size": 2480,
+      "sha256": "1b51e458648f48e73b9ef9a30ad4c2e724ceb00c6d51c2c92dbf0da890aa4903"
+    },
+    {
+      "path": "distribution-snapshots/asrai/contacts-screen.js",
+      "kind": "file",
+      "size": 2541,
+      "sha256": "96edd980dedff0d5751526793ce5a2e67038d36416a954e92fb1e5b6fe6fd3e9"
+    },
+    {
+      "path": "distribution-snapshots/asrai/contacts-settings.js",
+      "kind": "file",
+      "size": 4783,
+      "sha256": "b267c1d33a37f46073aa0f79da685df14e3580bf7c4fdad1308686de0b99b57d"
+    },
+    {
+      "path": "distribution-snapshots/asrai/contacts-state.js",
+      "kind": "file",
+      "size": 2019,
+      "sha256": "f219840d62c243449defa81d895137aeb8d54b4997260949d861b3a8b78a3bfb"
+    },
+    {
+      "path": "distribution-snapshots/asrai/contacts-storage.js",
+      "kind": "file",
+      "size": 4306,
+      "sha256": "be9cabde48f7ae267a8affb441c1d1417ed0b60651377aac11186c3d16cabc99"
+    },
+    {
+      "path": "distribution-snapshots/asrai/contacts.js",
+      "kind": "file",
+      "size": 2880,
+      "sha256": "7b54496796be9876f22126f688438c1ebbf054a0d6906dfbaefd63e937339d4e"
+    },
+    {
+      "path": "distribution-snapshots/asrai/fullscreen.js",
+      "kind": "file",
+      "size": 433,
+      "sha256": "f2edda30898f546aea69efe29f5823ac7fbcd286c46787af12c88560a420bb9f"
+    },
+    {
+      "path": "distribution-snapshots/asrai/icon-192.png",
+      "kind": "file",
+      "size": 3741,
+      "sha256": "ad1e052ca7285a9fc4483970f9450ffbeb7c543effb1bc2d24c9eb8adaf49655"
+    },
+    {
+      "path": "distribution-snapshots/asrai/icon-512.png",
+      "kind": "file",
+      "size": 14760,
+      "sha256": "5f5d5463b190e9ff9d1c35887e2c46bbff7a3b63ea8cd9e14515f4a542af2cb7"
+    },
+    {
+      "path": "distribution-snapshots/asrai/icon.svg",
+      "kind": "file",
+      "size": 278,
+      "sha256": "9360a22705f9aa3a986a07706c5c61e8882ebc24a6fb9576a6975aaa26b66f8f"
+    },
+    {
+      "path": "distribution-snapshots/asrai/index.html",
+      "kind": "file",
+      "size": 6030,
+      "sha256": "4bad0a08f3f1048bd65c1cdc6c7149add5e62908af2bd5397659044fe8f70bd7"
+    },
+    {
+      "path": "distribution-snapshots/asrai/install-ui.js",
+      "kind": "file",
+      "size": 2464,
+      "sha256": "88dc584d1efef4f289cd94d2df76ecd01a8e57fb55d3f69d74d67d43aa25a7d9"
+    },
+    {
+      "path": "distribution-snapshots/asrai/logic-clicks.js",
+      "kind": "file",
+      "size": 7527,
+      "sha256": "41692076df262a3c4207ef9d66529455b2e9c6d940fc71db3183a8475f2564bd"
+    },
+    {
+      "path": "distribution-snapshots/asrai/logic-library.js",
+      "kind": "file",
+      "size": 7733,
+      "sha256": "9921d13ec37980161880c1218a32acbbafe068c454b912f36f058582bd58a9bd"
+    },
+    {
+      "path": "distribution-snapshots/asrai/logic-limits.js",
+      "kind": "file",
+      "size": 4038,
+      "sha256": "8f85b1bff02d532810b083383e5a2fbee23091a76607c781894ece176eae11df"
+    },
+    {
+      "path": "distribution-snapshots/asrai/logic-search.js",
+      "kind": "file",
+      "size": 930,
+      "sha256": "e7d4adc00c484d6ba480b694f18ee26c1f7d403b2085085ea7ca8ebc4b1f50be"
+    },
+    {
+      "path": "distribution-snapshots/asrai/logic-zones.js",
+      "kind": "file",
+      "size": 2427,
+      "sha256": "3f8d109592b90f1e6a5a5180e2408abbb0074f2dfe8ed3330b7632a2c324db0a"
+    },
+    {
+      "path": "distribution-snapshots/asrai/logic.js",
+      "kind": "file",
+      "size": 1226,
+      "sha256": "28510bcfc1a165f2b672833eff597071afd50b24ac9c22a785745fc6302e73cb"
+    },
+    {
+      "path": "distribution-snapshots/asrai/manifest.webmanifest",
+      "kind": "file",
+      "size": 571,
+      "sha256": "84ef4929df445b18adf8c44f76493054b9ab0dcc74b5c1fb24909225f01f97f9"
+    },
+    {
+      "path": "distribution-snapshots/asrai/settings-ui.css",
+      "kind": "file",
+      "size": 32994,
+      "sha256": "5106b780ed20eede6a9583b5684e7fc9a84ff5d63b4588242d3885a9271cbfa5"
+    },
+    {
+      "path": "distribution-snapshots/asrai/settings-ui.js",
+      "kind": "file",
+      "size": 85270,
+      "sha256": "7c1f78db54b3cde3a37d8f3f5e5bc7930b7ccf8fd85fb4e1bb57ae343f509da6"
+    },
+    {
+      "path": "distribution-snapshots/asrai/style.css",
+      "kind": "file",
+      "size": 9503,
+      "sha256": "cc0ef3df071e164f8e07ec34cc3fe6574accc4c7dc5089b82ee77906b974382b"
+    },
+    {
+      "path": "distribution-snapshots/asrai/sw.js",
+      "kind": "file",
+      "size": 5702,
+      "sha256": "1af1a8c6a470fc64574cba09354e88624cfcda2c53f5ce5de20af5e218bb3603"
+    },
+    {
+      "path": "distribution-snapshots/asrai/update-prompt.js",
+      "kind": "file",
+      "size": 10985,
+      "sha256": "31db2f3865d6481514c3323c0bd878a31286bed74084979cc9abc5552bec57ab"
     },
     {
       "path": "distribution-snapshots/bell",
@@ -1176,8 +1575,8 @@
     {
       "path": "distribution-snapshots/choice/index.html",
       "kind": "file",
-      "size": 45825,
-      "sha256": "1b6dad5cd1ee1be5bebda83db86170ab165eee7d03d06e1c895e594d9f56155c"
+      "size": 45882,
+      "sha256": "f4ccc0a05d8a863f3c88f16b56b9cbba7ca381ff363eb41d83d87decdce4af0d"
     },
     {
       "path": "distribution-snapshots/choice/input-guide.js",
@@ -1242,8 +1641,8 @@
     {
       "path": "distribution-snapshots/choice/logic-user-icons.js",
       "kind": "file",
-      "size": 4103,
-      "sha256": "dd6dd4b3a71a12e880d56c9434d252e88415c362f2c69a5818820b55529be4d2"
+      "size": 4291,
+      "sha256": "d76ad98398f042c8d4e6437ec419987fb71f1e4b77bdba75423bdc5f44a12aa3"
     },
     {
       "path": "distribution-snapshots/choice/logic-wizard.js",
@@ -1294,6 +1693,12 @@
       "sha256": "725a6ad771560f285798357f8bc1272ffc8af7ebe5d4e67ec87b8d57f1b90282"
     },
     {
+      "path": "distribution-snapshots/choice/photo-save-notice.js",
+      "kind": "file",
+      "size": 1878,
+      "sha256": "be6ab92147a34d3ecad896084172543a13598fd2f766f76daa01a16cfaa7674b"
+    },
+    {
       "path": "distribution-snapshots/choice/precheck.js",
       "kind": "file",
       "size": 9342,
@@ -1302,8 +1707,8 @@
     {
       "path": "distribution-snapshots/choice/previews.js",
       "kind": "file",
-      "size": 11765,
-      "sha256": "f49e39029659f43e5008c68ef378278165353631868004a0dca26faa7397e8d3"
+      "size": 11823,
+      "sha256": "1f4e32d7676f7563c3956215cb4bb731b89f39743afa4b1bcba9c30cb31be4cc"
     },
     {
       "path": "distribution-snapshots/choice/settings-ui.css",
@@ -1344,8 +1749,8 @@
     {
       "path": "distribution-snapshots/choice/sw.js",
       "kind": "file",
-      "size": 7967,
-      "sha256": "9408f4e4ea6defbd2a8f4780cdabd363d07a1daaafba66df032087acc30f34e3"
+      "size": 8008,
+      "sha256": "c60db45cd246f4155add96be623c5b630433324f9bf0d8815334b6ccd1600ac9"
     },
     {
       "path": "distribution-snapshots/choice/update-notice.js",
@@ -1362,8 +1767,8 @@
     {
       "path": "distribution-snapshots/choice/user-icons.js",
       "kind": "file",
-      "size": 12343,
-      "sha256": "08874148a92c98c831727374b523ab18a31c96b5eef85c9701f9e1b57fc2961e"
+      "size": 12365,
+      "sha256": "9b1e88f74d28885c6ec072648f098dd01ad34aa940b99f5c8fe2cbfe2e95e3b3"
     },
     {
       "path": "distribution-snapshots/choice/views-home.js",
@@ -1386,8 +1791,8 @@
     {
       "path": "distribution-snapshots/choice/wallpaper.js",
       "kind": "file",
-      "size": 6056,
-      "sha256": "6d1135a4723384b388f4eee28109288f62d1746b9d2b5c44752f71c49775eccf"
+      "size": 6169,
+      "sha256": "4a9465fe099bf665a08c914b139a35ad7887d62fab7756cee23e8eb001b2ba7d"
     },
     {
       "path": "distribution-snapshots/choice/wizard-view.js",
@@ -1910,8 +2315,8 @@
     {
       "path": "distribution-snapshots/qr/app.mjs",
       "kind": "file",
-      "size": 21954,
-      "sha256": "05dec18e974fa5b100642c4aa113d9a320939653905051e8bb4b8f8a32a57564"
+      "size": 22025,
+      "sha256": "6d6b2ddf379a5cc02fd867daaabd9211a874daa9c4bf819194590d98addb4110"
     },
     {
       "path": "distribution-snapshots/qr/brand-logo.png",
@@ -1950,8 +2355,8 @@
     {
       "path": "distribution-snapshots/qr/index.html",
       "kind": "file",
-      "size": 6750,
-      "sha256": "f1d7ef99d67fb2a4b5ef8b2da41767bc06e46dd783234f3143b25a1c53942e30"
+      "size": 6791,
+      "sha256": "3ff5bd59650fdba0132397874b0b58e583d884e805eaa18c8abaa5c2b6ef4c3e"
     },
     {
       "path": "distribution-snapshots/qr/manifest.webmanifest",
@@ -1968,8 +2373,8 @@
     {
       "path": "distribution-snapshots/qr/sw.js",
       "kind": "file",
-      "size": 5384,
-      "sha256": "55d40cb03ac87b3cbe3e9d8a661c956f41ec8b3f13b9367c03848683dd88e4d9"
+      "size": 5401,
+      "sha256": "5797760840721ab92360674c041102c7fd2ceb79d226ee8f90b777d557040df0"
     },
     {
       "path": "distribution-snapshots/qr/update-prompt.js",
@@ -2328,8 +2733,8 @@
     {
       "path": "distribution-snapshots/tobira/app.js",
       "kind": "file",
-      "size": 16768,
-      "sha256": "5924bb52cac3b09e1df0914bdd12e96899137d6490b0f12ae0542774d9832a0e"
+      "size": 16787,
+      "sha256": "8ebcceceb0ef47c20fb67055c60bc561140f3d73eabe9ca338c901c21dd0d108"
     },
     {
       "path": "distribution-snapshots/tobira/audio.js",
@@ -2412,14 +2817,14 @@
     {
       "path": "distribution-snapshots/tobira/images.js",
       "kind": "file",
-      "size": 7382,
-      "sha256": "7958590018c383a54302f4a1a95170086f673ee090cefef4e34e756ece6129ef"
+      "size": 7831,
+      "sha256": "4ebc51b2fd010f4568fddacd7c6ed64ade8ed0c0fcc5b86bd0e61f1b692e1573"
     },
     {
       "path": "distribution-snapshots/tobira/index.html",
       "kind": "file",
-      "size": 20631,
-      "sha256": "6bde20563ccdb5373736e64af22f4bb8b71de7a862e9140793e725f3f7c04b2e"
+      "size": 20688,
+      "sha256": "bcfb43fadfcaf6b00c31cedcf56ced882ccf01a58b1464848c427e5359bd8ac6"
     },
     {
       "path": "distribution-snapshots/tobira/install-prompt.js",
@@ -2462,6 +2867,12 @@
       "kind": "file",
       "size": 788,
       "sha256": "ff56d29065b2752290ff17ec16fc106562a07db2b4a7f273884256ef60f1cc1f"
+    },
+    {
+      "path": "distribution-snapshots/tobira/photo-save-notice.js",
+      "kind": "file",
+      "size": 2399,
+      "sha256": "9e59e3ac3aad92bc35f86aa77b6a9b6ee56369c14d294ea1a05d23a2c876b648"
     },
     {
       "path": "distribution-snapshots/tobira/pointer-gestures.js",
@@ -2526,8 +2937,8 @@
     {
       "path": "distribution-snapshots/tobira/sw.js",
       "kind": "file",
-      "size": 5905,
-      "sha256": "50524bb3e5e0924aa800061989a541fd660eb9029b7136855aae7e1a1d68877f"
+      "size": 5946,
+      "sha256": "f93d4321052752bb0bb1fbb31ba627486c3a54e11cfedda3fce964130f0c7bef"
     },
     {
       "path": "distribution-snapshots/tobira/update-prompt.js",
@@ -2596,14 +3007,14 @@
     {
       "path": "distribution-snapshots/unlock/images.js",
       "kind": "file",
-      "size": 10662,
-      "sha256": "1d16ff8cd75830e4a0f073c2970f9baf413a72ea7523bfaea70a0c984ad4cd24"
+      "size": 10891,
+      "sha256": "161e9461597432720d8c791c484c3205e4f01c9ed17ebb950cb48175a805df14"
     },
     {
       "path": "distribution-snapshots/unlock/index.html",
       "kind": "file",
-      "size": 17492,
-      "sha256": "f27e10a25be4d10048186bd08d0cea866e81e3280c14e05244f1f6c98c65bb0a"
+      "size": 17549,
+      "sha256": "08abc36e0c04fa8a7666359e4b674e9eccf577bb29d3c1834aba208d5f10b844"
     },
     {
       "path": "distribution-snapshots/unlock/install-prompt.js",
@@ -2630,10 +3041,16 @@
       "sha256": "8863d2ae0ce0711dccde532992e56f31d3595b8f3514d2d9a12764faa50c2a0e"
     },
     {
+      "path": "distribution-snapshots/unlock/photo-save-notice.js",
+      "kind": "file",
+      "size": 1878,
+      "sha256": "d7fe2bbb88fd23d6669949f15f27336bc5440a7fa3b58eff4653ab0767c44c29"
+    },
+    {
       "path": "distribution-snapshots/unlock/pin.js",
       "kind": "file",
-      "size": 11679,
-      "sha256": "feb6e338d17685aeda46d4ff1ee753096e68b41ed7f93d28af0eee29d8bec4fa"
+      "size": 11604,
+      "sha256": "da18d387831890b7a09b3121c1bb6831ff1d2356ea57691510d730587745e081"
     },
     {
       "path": "distribution-snapshots/unlock/rewind.js",
@@ -2674,8 +3091,8 @@
     {
       "path": "distribution-snapshots/unlock/sw.js",
       "kind": "file",
-      "size": 5625,
-      "sha256": "c997ac00aaaf402bc5ecfa791115f2b81fb8d4f80e8f9479aafc76825d0a6a10"
+      "size": 5666,
+      "sha256": "556d84f72dee1cb66e6920c49bf259e534bd4813c4e2130399924aec0b301760"
     },
     {
       "path": "distribution-snapshots/unlock/time-machine.js",
@@ -2688,6 +3105,206 @@
       "kind": "file",
       "size": 10985,
       "sha256": "31db2f3865d6481514c3323c0bd878a31286bed74084979cc9abc5552bec57ab"
+    },
+    {
+      "path": "distribution-snapshots/uramichi",
+      "kind": "directory"
+    },
+    {
+      "path": "distribution-snapshots/uramichi/app.mjs",
+      "kind": "file",
+      "size": 210,
+      "sha256": "9c26709d15c9bd6a010f298056f472c0a67338a1137239ae227e8e8c1642f836"
+    },
+    {
+      "path": "distribution-snapshots/uramichi/brand-logo.png",
+      "kind": "file",
+      "size": 115144,
+      "sha256": "b3caf80bdd6e3266706253f4d21440eea30e87a8d800bfbbdafb62517e22a55f"
+    },
+    {
+      "path": "distribution-snapshots/uramichi/camera-controls.mjs",
+      "kind": "file",
+      "size": 8542,
+      "sha256": "7acf8b7bb6bbaca79ec5db517287668abd8f3d119de2dc635a3fb7a5b239a4c6"
+    },
+    {
+      "path": "distribution-snapshots/uramichi/camera.mjs",
+      "kind": "file",
+      "size": 14640,
+      "sha256": "d997decfee23fa42ce3c68fd5a91e5981926036203108878294603da3b2a6583"
+    },
+    {
+      "path": "distribution-snapshots/uramichi/chrome.mjs",
+      "kind": "file",
+      "size": 1132,
+      "sha256": "895937485e25798d590a955e4e5cbc672cf870af71e29b97fa264a8a40eac79d"
+    },
+    {
+      "path": "distribution-snapshots/uramichi/core-card.mjs",
+      "kind": "file",
+      "size": 1440,
+      "sha256": "eb700c9fbd43b26d5b8a9bc3b6ae0de6b49a9fe7aa44b3d34bd3d593466a89b7"
+    },
+    {
+      "path": "distribution-snapshots/uramichi/core-encode.mjs",
+      "kind": "file",
+      "size": 425,
+      "sha256": "6399b15fc6c4b14d08c08d86e6f479d7e70d8426bba5a134a806b5da41fc6c70"
+    },
+    {
+      "path": "distribution-snapshots/uramichi/core-gate.mjs",
+      "kind": "file",
+      "size": 406,
+      "sha256": "a1ac7f19a46d9737671b3148f6c1d25abe8b939e95786c6128eb32a573432795"
+    },
+    {
+      "path": "distribution-snapshots/uramichi/core-json.mjs",
+      "kind": "file",
+      "size": 6331,
+      "sha256": "af989182cc57faf40d5139088cf1ad97717b05c7b2b11eaef31f2ede812935a8"
+    },
+    {
+      "path": "distribution-snapshots/uramichi/core-logic.mjs",
+      "kind": "file",
+      "size": 6053,
+      "sha256": "5490fd66f65fabe010a42bcaf2d9809d9d1020e887fbe3915e5349874fbc2e6b"
+    },
+    {
+      "path": "distribution-snapshots/uramichi/core-model.mjs",
+      "kind": "file",
+      "size": 2007,
+      "sha256": "a765e1481826bb9dba7cf79fc4e9e256b93a244dd0ca1be635652545229f1949"
+    },
+    {
+      "path": "distribution-snapshots/uramichi/core-resolve.mjs",
+      "kind": "file",
+      "size": 6586,
+      "sha256": "854a552c3f58280d867d1437e16c8ba4c6297ab78f5eb242ba32e9049ed2ae85"
+    },
+    {
+      "path": "distribution-snapshots/uramichi/core-scan.mjs",
+      "kind": "file",
+      "size": 1359,
+      "sha256": "3d6a74ea8c45f0c89a4f15286da8ee9e8ec338e366ec6a5bd173d1ff927be031"
+    },
+    {
+      "path": "distribution-snapshots/uramichi/core-url.mjs",
+      "kind": "file",
+      "size": 2912,
+      "sha256": "ce56a80807e06f1d80f26037ee00757adcb7296f69c977330d868720fee2bea9"
+    },
+    {
+      "path": "distribution-snapshots/uramichi/core.mjs",
+      "kind": "file",
+      "size": 1286,
+      "sha256": "583b8fe5305a4fbaa8620594b414e0edf89b67ad371b134ba91caa8e4ae4a6bd"
+    },
+    {
+      "path": "distribution-snapshots/uramichi/detect.mjs",
+      "kind": "file",
+      "size": 2751,
+      "sha256": "9fcc98e39e4b88f528858ca25d0cfdb0bf5aa9af4d69fdd2f0822c6eb613fd2b"
+    },
+    {
+      "path": "distribution-snapshots/uramichi/dom.mjs",
+      "kind": "file",
+      "size": 403,
+      "sha256": "932f82e027a73b6092c4a599f06e363d919e37c7e047f0f55a3d6e04967c96b0"
+    },
+    {
+      "path": "distribution-snapshots/uramichi/icon-192.png",
+      "kind": "file",
+      "size": 28089,
+      "sha256": "650a40c7100eaabcdac8c2860f0da22fb36e843cbae1bdd489d0bdb4b9fa8b9e"
+    },
+    {
+      "path": "distribution-snapshots/uramichi/icon-512.png",
+      "kind": "file",
+      "size": 141484,
+      "sha256": "54c88da65de2234abf2f36d01b13de1e94435db8e5b06be262aedd424d07b1b9"
+    },
+    {
+      "path": "distribution-snapshots/uramichi/icon-maskable-192.png",
+      "kind": "file",
+      "size": 17238,
+      "sha256": "7d3000b1b425909d1383627f89245dbc24e55402c5023082d4fbad4eff8cf780"
+    },
+    {
+      "path": "distribution-snapshots/uramichi/icon-maskable-512.png",
+      "kind": "file",
+      "size": 85546,
+      "sha256": "253aeeb742fd21814ba22e69d9951941085e0b596c26802f15d4298e0b32ff6a"
+    },
+    {
+      "path": "distribution-snapshots/uramichi/index.html",
+      "kind": "file",
+      "size": 13235,
+      "sha256": "86987b547ae3755d3c6bb6a8f9c5e750030ad28f2b2b43b7a33780ba82981c04"
+    },
+    {
+      "path": "distribution-snapshots/uramichi/install-ui.js",
+      "kind": "file",
+      "size": 2738,
+      "sha256": "977bf48ff853a01e731794cca3c4bb4745a657708e43f05ad8e4890f02ff8917"
+    },
+    {
+      "path": "distribution-snapshots/uramichi/manifest.webmanifest",
+      "kind": "file",
+      "size": 729,
+      "sha256": "23e5e6703c4ce1e5c48af6b8fec2867f86263978e352f4037b5b7dc276f89a6d"
+    },
+    {
+      "path": "distribution-snapshots/uramichi/picker.mjs",
+      "kind": "file",
+      "size": 14475,
+      "sha256": "63aa6e8c5e31b043fc7d4df58165bc04175a37b58812e4eb6b5c10792f8e2a22"
+    },
+    {
+      "path": "distribution-snapshots/uramichi/presets.mjs",
+      "kind": "file",
+      "size": 5521,
+      "sha256": "e63fec284a0f10ece1b4fd28296d60631930a073c1e04558b06a4eefce26a1bc"
+    },
+    {
+      "path": "distribution-snapshots/uramichi/scan.mjs",
+      "kind": "file",
+      "size": 1260,
+      "sha256": "423466b67df1402f79f801d5d2d2455457fccc29c6a0a1ee9b872ad3f14ba0d2"
+    },
+    {
+      "path": "distribution-snapshots/uramichi/style.css",
+      "kind": "file",
+      "size": 16877,
+      "sha256": "20da4bb2ba5d7fdb02129fbde285f8cd6cdb89b7691926e3977043f6cc308d4f"
+    },
+    {
+      "path": "distribution-snapshots/uramichi/sw.js",
+      "kind": "file",
+      "size": 5698,
+      "sha256": "ddc0a8f7c1aeedd6df02a94a8b96fc9378cf3d0f1ff2a3a44de58d890d3c6194"
+    },
+    {
+      "path": "distribution-snapshots/uramichi/update-prompt.js",
+      "kind": "file",
+      "size": 10985,
+      "sha256": "31db2f3865d6481514c3323c0bd878a31286bed74084979cc9abc5552bec57ab"
+    },
+    {
+      "path": "distribution-snapshots/uramichi/vendor",
+      "kind": "directory"
+    },
+    {
+      "path": "distribution-snapshots/uramichi/vendor/LICENSE-jsqr.txt",
+      "kind": "file",
+      "size": 11358,
+      "sha256": "c6596eb7be8581c18be736c846fb9173b69eccf6ef94c5135893ec56bd92ba08"
+    },
+    {
+      "path": "distribution-snapshots/uramichi/vendor/jsQR.js",
+      "kind": "file",
+      "size": 256885,
+      "sha256": "bc40c8a15196236b2314db0856f72ca0b49980cd5413b8c852a7349f5fee0859"
     },
     {
       "path": "distribution-snapshots/usotsuki",
@@ -3000,3506 +3617,6 @@
       "kind": "file",
       "size": 1768,
       "sha256": "c0dd12b6d17af92777f4796a163a42f22da9d7bc8ed172367aa783e1f84d5b70"
-    },
-    {
-      "path": "zz1",
-      "kind": "directory"
-    },
-    {
-      "path": "zz1/app.js",
-      "kind": "file",
-      "size": 37457,
-      "sha256": "a2f914858b72ab8560b6f25e2bbddcc0f4b628e831d95f24280de03decc0fbaf"
-    },
-    {
-      "path": "zz1/brand-logo.jpg",
-      "kind": "file",
-      "size": 35622,
-      "sha256": "1fbcc02dd7d96c0930295b51198cb25c9d7ccb09533ac5c09cce2f24c40a0c0d"
-    },
-    {
-      "path": "zz1/brand-logo.png",
-      "kind": "file",
-      "size": 131356,
-      "sha256": "0cc285b6fb802c8bcf52d4f6cc3d7d19ec98920c8b61128636718c4a9ab02420"
-    },
-    {
-      "path": "zz1/fullscreen.js",
-      "kind": "file",
-      "size": 433,
-      "sha256": "f2edda30898f546aea69efe29f5823ac7fbcd286c46787af12c88560a420bb9f"
-    },
-    {
-      "path": "zz1/icon-192.png",
-      "kind": "file",
-      "size": 10201,
-      "sha256": "472958c13d69b9e17eb638e676957cb72ccbc5a9451ab717227772cc7bee88af"
-    },
-    {
-      "path": "zz1/icon-512.png",
-      "kind": "file",
-      "size": 24750,
-      "sha256": "bf76ee3f581cba3f0470f96c4071c9d12fb53d8c7fcf7eed547dc61d8c0a92e1"
-    },
-    {
-      "path": "zz1/icon.svg",
-      "kind": "file",
-      "size": 490,
-      "sha256": "098b2c4935fa64ae7fbdf2c7d9197ea8d93c69bee82c83c12487214e095d79bd"
-    },
-    {
-      "path": "zz1/index.html",
-      "kind": "file",
-      "size": 10449,
-      "sha256": "92fe5b629322fbe5d55f4eeab47390f1dc1635698602d4a27f49017ceb5d8ba9"
-    },
-    {
-      "path": "zz1/install-nudge.js",
-      "kind": "file",
-      "size": 3434,
-      "sha256": "29251972639f1a925c26d5022e192b995a44828748a183f106956b3ca447b979"
-    },
-    {
-      "path": "zz1/local-preview.js",
-      "kind": "file",
-      "size": 568,
-      "sha256": "30d58ce4c52e88eeb5bc0cb49bec51ab2f8f02fd78dedc0bbace37f9baa7b084"
-    },
-    {
-      "path": "zz1/logic.js",
-      "kind": "file",
-      "size": 14036,
-      "sha256": "052253bee610ffa0ccc53046eb92e5c2aba85a9aa5c42d1bd828763d405e9867"
-    },
-    {
-      "path": "zz1/manifest.webmanifest",
-      "kind": "file",
-      "size": 436,
-      "sha256": "a0a90016f113efbdf1055244b659293a48c6484350830eebfeb1d91a066a6fd8"
-    },
-    {
-      "path": "zz1/selftest.js",
-      "kind": "file",
-      "size": 24581,
-      "sha256": "f12da964a52f95032dc5227887bb966f093e69b6901cdd05ba516cd3815914cd"
-    },
-    {
-      "path": "zz1/settings-swipe.js",
-      "kind": "file",
-      "size": 1918,
-      "sha256": "3331123aacf82da31372f8672088f440d61037be52801979fc1d35f125250b48"
-    },
-    {
-      "path": "zz1/settings-tutorial.js",
-      "kind": "file",
-      "size": 1035,
-      "sha256": "e80b3dc4684eb93482e1be5645c79d6206b82c1ebcf462f78e60d8efbda89c75"
-    },
-    {
-      "path": "zz1/settings-ui.css",
-      "kind": "file",
-      "size": 35593,
-      "sha256": "74405d1dee2149e9ebfa6d511611e0c4dc845d45257e284fbc4ffd06eac305d5"
-    },
-    {
-      "path": "zz1/settings-ui.js",
-      "kind": "file",
-      "size": 85270,
-      "sha256": "7c1f78db54b3cde3a37d8f3f5e5bc7930b7ccf8fd85fb4e1bb57ae343f509da6"
-    },
-    {
-      "path": "zz1/style.css",
-      "kind": "file",
-      "size": 21219,
-      "sha256": "b6f7c288cd8b6bf3313295963f3bfd0082c85372d5fd3b1c81ca6ac6c8cfcb46"
-    },
-    {
-      "path": "zz1/sw-register.js",
-      "kind": "file",
-      "size": 160,
-      "sha256": "2c06aec77a44240e5acf29cabcc28de82261d0346a74d33090b8e8af771aed91"
-    },
-    {
-      "path": "zz1/sw.js",
-      "kind": "file",
-      "size": 5589,
-      "sha256": "3bf054740218bec8ecf2d5c4f84c1ee56e997a1ba2c4b3861b8dd8729edcfbfe"
-    },
-    {
-      "path": "zz1/update-prompt.js",
-      "kind": "file",
-      "size": 10985,
-      "sha256": "31db2f3865d6481514c3323c0bd878a31286bed74084979cc9abc5552bec57ab"
-    },
-    {
-      "path": "zz1/wake-lock.js",
-      "kind": "file",
-      "size": 723,
-      "sha256": "63de511f333f213e52fe68a65fcd27052d8172625fd95cf27221e9fd789595a8"
-    },
-    {
-      "path": "zz10",
-      "kind": "directory"
-    },
-    {
-      "path": "zz10/app.js",
-      "kind": "file",
-      "size": 4656,
-      "sha256": "fe56679944cb2f3f10141f56c4a99b99a7f07d1fea26082af3363d24fd771c7b"
-    },
-    {
-      "path": "zz10/appearance.js",
-      "kind": "file",
-      "size": 10828,
-      "sha256": "072c0ffdb7af5f9496951ad6dfbd568e540b60d05e236ee4cf5d72ddae40a911"
-    },
-    {
-      "path": "zz10/brand-logo.jpg",
-      "kind": "file",
-      "size": 38799,
-      "sha256": "f85bef47a58edc8fa69b9120b977696ae34643d5b2a6e7ae6300180cda897b8d"
-    },
-    {
-      "path": "zz10/brand-logo.png",
-      "kind": "file",
-      "size": 129847,
-      "sha256": "f8e040768ad4cfd984debf13ea971e4b8fd7150feff29d8b015f5ee03573131a"
-    },
-    {
-      "path": "zz10/calibration.js",
-      "kind": "file",
-      "size": 1350,
-      "sha256": "5cfc409caa5979513bbcc15c69de987b48b625a0cfd7c1380f06aba2639e15dd"
-    },
-    {
-      "path": "zz10/camera-geometry.js",
-      "kind": "file",
-      "size": 1330,
-      "sha256": "4349696de198b6855103997d1252b71b392623d55dccae47024668cfcaaf9676"
-    },
-    {
-      "path": "zz10/camera-stream.js",
-      "kind": "file",
-      "size": 1659,
-      "sha256": "96ba4186cf375b77e9adcdd8283ecd09cf0575243c792415c678e792529f2c2d"
-    },
-    {
-      "path": "zz10/camera.js",
-      "kind": "file",
-      "size": 4320,
-      "sha256": "5ad5f76cd8068ea493d5be8bb9d5cafb3b06b0ffef05e259ca6886f6fc3f69bd"
-    },
-    {
-      "path": "zz10/card-view.js",
-      "kind": "file",
-      "size": 1306,
-      "sha256": "8da5494b3536cbdb04f0b928a9eba4a5533df975258af36b7de6c1996ec943d1"
-    },
-    {
-      "path": "zz10/dom.js",
-      "kind": "file",
-      "size": 809,
-      "sha256": "67deb22b047233cfecbeaa575a84b309e6b8905ff95e8863dfc8a829127dc2b7"
-    },
-    {
-      "path": "zz10/frame.js",
-      "kind": "file",
-      "size": 6386,
-      "sha256": "8ead42d85b7f1abf76a42c557cc9c0c61af53b8086827978d39a0430e1ff7090"
-    },
-    {
-      "path": "zz10/fullscreen.js",
-      "kind": "file",
-      "size": 433,
-      "sha256": "f2edda30898f546aea69efe29f5823ac7fbcd286c46787af12c88560a420bb9f"
-    },
-    {
-      "path": "zz10/icon-192.png",
-      "kind": "file",
-      "size": 1898,
-      "sha256": "8d2a6754ff2a2d5b2b6bdd6f548124ef342eb8e223c720be3a991d374661fd90"
-    },
-    {
-      "path": "zz10/icon-512.png",
-      "kind": "file",
-      "size": 5233,
-      "sha256": "6929714401fbe68afc1fc1c181060e20c34fffcf17a31422aee6b975af15bc1d"
-    },
-    {
-      "path": "zz10/index.html",
-      "kind": "file",
-      "size": 7204,
-      "sha256": "4c3f6f3751e825cc7d5bd049867a021db351e0716e9b932e585a479470ba7e30"
-    },
-    {
-      "path": "zz10/install-ui.js",
-      "kind": "file",
-      "size": 2750,
-      "sha256": "b79b5505490922a936b04cf7f22f09da4dfaa6ac990e63a732b7c1190454cbae"
-    },
-    {
-      "path": "zz10/local-preview.js",
-      "kind": "file",
-      "size": 568,
-      "sha256": "30d58ce4c52e88eeb5bc0cb49bec51ab2f8f02fd78dedc0bbace37f9baa7b084"
-    },
-    {
-      "path": "zz10/logic.js",
-      "kind": "file",
-      "size": 8287,
-      "sha256": "9705f375d56cb793829ff1f995230e2bdf068aa9ac176d630f006c8e57c828c7"
-    },
-    {
-      "path": "zz10/manifest.webmanifest",
-      "kind": "file",
-      "size": 463,
-      "sha256": "fb1cc8b7de47ff606dddf3fc4dd4014ee63c0f26164514735f8d2f893414c573"
-    },
-    {
-      "path": "zz10/overlay.js",
-      "kind": "file",
-      "size": 2783,
-      "sha256": "c7c1093adce28bff5cf8a5f68da77ae5000786bdba1df39f7332dc38c0a63f6a"
-    },
-    {
-      "path": "zz10/performance.js",
-      "kind": "file",
-      "size": 10102,
-      "sha256": "3345a9feb07c2e8780349ee828e76b62596ec5dc8937ba8848af9ca9c26b3099"
-    },
-    {
-      "path": "zz10/settings-panel.js",
-      "kind": "file",
-      "size": 1821,
-      "sha256": "5c4fde64ff98854d8b15ab909c63356bbb31013d89ffdae13c3c4779c0eecd95"
-    },
-    {
-      "path": "zz10/settings-store.js",
-      "kind": "file",
-      "size": 1649,
-      "sha256": "5200a9d9c7fab74d6952670dd24b18ab04a524d250ae22664b2ff319bb9188ec"
-    },
-    {
-      "path": "zz10/settings-ui.css",
-      "kind": "file",
-      "size": 32535,
-      "sha256": "47fefa8bcb8fda35c099d300ff778c0ec42f35bbb44e3207eb69336d7a14ca6a"
-    },
-    {
-      "path": "zz10/settings-ui.js",
-      "kind": "file",
-      "size": 85270,
-      "sha256": "7c1f78db54b3cde3a37d8f3f5e5bc7930b7ccf8fd85fb4e1bb57ae343f509da6"
-    },
-    {
-      "path": "zz10/state.js",
-      "kind": "file",
-      "size": 1548,
-      "sha256": "88e5c6775b30dcea789aaf2f9cc8d2edef5665ab074b87c51d1aee3c0ee4822c"
-    },
-    {
-      "path": "zz10/status.js",
-      "kind": "file",
-      "size": 561,
-      "sha256": "602d21674c612371c2fd8ed3e76fa32d0d41e49cc33695e0155d558aece9a383"
-    },
-    {
-      "path": "zz10/style.css",
-      "kind": "file",
-      "size": 8511,
-      "sha256": "7ccdd38feb5b3516a842ad06ffdf51f5e5fec6a631a5512278cbd8cd59424cc4"
-    },
-    {
-      "path": "zz10/sw.js",
-      "kind": "file",
-      "size": 5997,
-      "sha256": "0d3ad7a3199bd75157b81d7f09d1afa7f4d9ab601979a3e9e062a8f8309ecfcf"
-    },
-    {
-      "path": "zz10/tracking-reset.js",
-      "kind": "file",
-      "size": 1629,
-      "sha256": "d186a567962b9ee17fb33e557433b3f00fff9ad3aad4ec205bd86bb3b733e6d3"
-    },
-    {
-      "path": "zz10/update-prompt.js",
-      "kind": "file",
-      "size": 10985,
-      "sha256": "31db2f3865d6481514c3323c0bd878a31286bed74084979cc9abc5552bec57ab"
-    },
-    {
-      "path": "zz10/vision-detect.js",
-      "kind": "file",
-      "size": 16632,
-      "sha256": "f776d56bb8e8107be13b54083bfbb83196ca3aa3adb48bff63e02d5a0679c237"
-    },
-    {
-      "path": "zz10/vision-geometry.js",
-      "kind": "file",
-      "size": 7548,
-      "sha256": "27439f14fdce3ec11ca31fcd564afcc43aa689cf9947c4ef7a3d4fb68d530446"
-    },
-    {
-      "path": "zz10/vision-grip.js",
-      "kind": "file",
-      "size": 9905,
-      "sha256": "5e6371bf3b1f46ba7b4678a4ac59009b0084ec894852186832f32f7d0ddf4183"
-    },
-    {
-      "path": "zz10/vision-homography.js",
-      "kind": "file",
-      "size": 5896,
-      "sha256": "8b4029dbc584445ceec75d6267700d8a0ea293f8409638fe03e8b445f9c4c84a"
-    },
-    {
-      "path": "zz10/vision-paper.js",
-      "kind": "file",
-      "size": 14584,
-      "sha256": "d29674eae1d52c417eb08c9050c0fbe7114644b8e306c09be8f17dfe53943eee"
-    },
-    {
-      "path": "zz10/vision-quad.js",
-      "kind": "file",
-      "size": 12290,
-      "sha256": "2b1a5c3ecb212c6d0ad4dae3af238e957595487877c61fb47ca589355f6a4e1e"
-    },
-    {
-      "path": "zz10/vision-sampling.js",
-      "kind": "file",
-      "size": 7572,
-      "sha256": "4b6362d9b244fbd67935550508b848b783155885b25a51c6cafa73f54d3bdb44"
-    },
-    {
-      "path": "zz10/vision.js",
-      "kind": "file",
-      "size": 2681,
-      "sha256": "f225f05b72b41eeabaedb39099827fab5575ffbe7c142cae7301f0719d5b3751"
-    },
-    {
-      "path": "zz10/wake-lock.js",
-      "kind": "file",
-      "size": 1722,
-      "sha256": "d0896b84786a37fda0b2e0cefa15aad0b426bce51f5371854d9bee8c53f24bfb"
-    },
-    {
-      "path": "zz11",
-      "kind": "directory"
-    },
-    {
-      "path": "zz11/app.js",
-      "kind": "file",
-      "size": 1195,
-      "sha256": "13f44428eb825db6307be3a1cfeec6eea43b3897eb6850f33923fed43af33220"
-    },
-    {
-      "path": "zz11/casino-assets",
-      "kind": "directory"
-    },
-    {
-      "path": "zz11/casino-assets/arrow.svg",
-      "kind": "file",
-      "size": 1032,
-      "sha256": "fe1a9dd56ecc34bc2f9a21805e5972b78f201d7faf50e0c72a4bc3df73d999e2"
-    },
-    {
-      "path": "zz11/casino-assets/felt-burgundy.svg",
-      "kind": "file",
-      "size": 77321,
-      "sha256": "d3ce922d045c209cb297140f9b928e0687ec8271eb2460b594f272038817aa3c"
-    },
-    {
-      "path": "zz11/casino-assets/felt-emerald.svg",
-      "kind": "file",
-      "size": 77300,
-      "sha256": "75613937ee93653babba2f67a7b83af67d1817b08ccf3c04ee5627920b324abe"
-    },
-    {
-      "path": "zz11/casino-assets/field-marks.svg",
-      "kind": "file",
-      "size": 1215,
-      "sha256": "5f3a98d24711822f0cb3dadeddbdb32b33823aa620fcfa68dcb23513643f5837"
-    },
-    {
-      "path": "zz11/casino-assets/wheel-burgundy.svg",
-      "kind": "file",
-      "size": 23141,
-      "sha256": "4cbddb02e7ac5a4ed2d46e70d65b00af520af920fc834c82bb65c6052b59f634"
-    },
-    {
-      "path": "zz11/casino-assets/wheel-emerald.svg",
-      "kind": "file",
-      "size": 23141,
-      "sha256": "a7b77155b21c5dadaa8043f6562d3ba20a9b8d20eb16962a1eebddd6f3db5b5b"
-    },
-    {
-      "path": "zz11/casino-assets/wood-grain.svg",
-      "kind": "file",
-      "size": 919,
-      "sha256": "2536c215d8f7fe873a3f0ca8a44c32ca4576988992de2c8187a2e1b314494338"
-    },
-    {
-      "path": "zz11/casino-salon.jpg",
-      "kind": "file",
-      "size": 84757,
-      "sha256": "300e15af90e7ccafa28e9ec29975c5987deb667f9fbb501f48393ade598946a0"
-    },
-    {
-      "path": "zz11/fullscreen.js",
-      "kind": "file",
-      "size": 433,
-      "sha256": "f2edda30898f546aea69efe29f5823ac7fbcd286c46787af12c88560a420bb9f"
-    },
-    {
-      "path": "zz11/hybrid-assets",
-      "kind": "directory"
-    },
-    {
-      "path": "zz11/hybrid-assets/arrow.svg",
-      "kind": "file",
-      "size": 662,
-      "sha256": "da61c3b1243b72e8617766677315c22b855143eab9516bdd48578b813e68dd68"
-    },
-    {
-      "path": "zz11/hybrid-assets/wheel-burgundy.svg",
-      "kind": "file",
-      "size": 12030,
-      "sha256": "5d029bb76171100559ef239f5fb5173599f2a5e576171fa2410ea1b2245e4e0f"
-    },
-    {
-      "path": "zz11/hybrid-assets/wheel-emerald.svg",
-      "kind": "file",
-      "size": 12030,
-      "sha256": "5aa453b64d225a5f404121c6c697cc4c7c37d8881bfd58b93c8a4b56ab37166a"
-    },
-    {
-      "path": "zz11/icon-192.png",
-      "kind": "file",
-      "size": 21202,
-      "sha256": "9e15c570dbfa73fa48c04482909b34fc8be79efc95ce658ce6c66f13005a4203"
-    },
-    {
-      "path": "zz11/icon-512.png",
-      "kind": "file",
-      "size": 57270,
-      "sha256": "1fb895f51df92d8aa6e68d17a1f3b6abcd022c5476edb115b2eaf8d2343a0df1"
-    },
-    {
-      "path": "zz11/index.html",
-      "kind": "file",
-      "size": 6790,
-      "sha256": "db3d181d508a133b896a20b0676d32ff0c02ffe4213ffc7a1d701508ee52c765"
-    },
-    {
-      "path": "zz11/install.js",
-      "kind": "file",
-      "size": 3044,
-      "sha256": "befb10e26364c55179af12230bf5225d8137c4be9420bd4f16867c3929bc5184"
-    },
-    {
-      "path": "zz11/local-preview.js",
-      "kind": "file",
-      "size": 568,
-      "sha256": "30d58ce4c52e88eeb5bc0cb49bec51ab2f8f02fd78dedc0bbace37f9baa7b084"
-    },
-    {
-      "path": "zz11/logic.js",
-      "kind": "file",
-      "size": 1490,
-      "sha256": "8a5da8c6740611877a81420541c68c5e297ec824ba5240b27c9c67ba910f38f9"
-    },
-    {
-      "path": "zz11/manifest.webmanifest",
-      "kind": "file",
-      "size": 514,
-      "sha256": "3066718802e61692accd60bb6b5e0d0970e0db85055d71f6c45d2a5be2892a61"
-    },
-    {
-      "path": "zz11/settings-gesture.js",
-      "kind": "file",
-      "size": 1847,
-      "sha256": "e12b050adbd8f4785b859b75ee5c3a2fa05ff541cdcccca4150137e1c92a68e4"
-    },
-    {
-      "path": "zz11/settings-ui.css",
-      "kind": "file",
-      "size": 32641,
-      "sha256": "43c869c73963571877ab89bf37dfd70fe9678191b65a1f20edff94aef5bb01b8"
-    },
-    {
-      "path": "zz11/settings-ui.js",
-      "kind": "file",
-      "size": 85270,
-      "sha256": "7c1f78db54b3cde3a37d8f3f5e5bc7930b7ccf8fd85fb4e1bb57ae343f509da6"
-    },
-    {
-      "path": "zz11/spin.js",
-      "kind": "file",
-      "size": 9016,
-      "sha256": "4e325b1df15639e4b6329d417886ad908b7c6517b13042afec16efe64a7ea3f8"
-    },
-    {
-      "path": "zz11/style-casino.css",
-      "kind": "file",
-      "size": 7865,
-      "sha256": "e5ac13729161d84a85eb4580d2895ee8e7425dee33eda50b986aba9287b0255a"
-    },
-    {
-      "path": "zz11/style-hybrid.css",
-      "kind": "file",
-      "size": 6112,
-      "sha256": "1913c1768478e877adb878ed9890d625ee4e586efe7370d589a3be3c02b0adb8"
-    },
-    {
-      "path": "zz11/style.css",
-      "kind": "file",
-      "size": 8637,
-      "sha256": "2144ad8de7a66a8d7e597a4918ae7f12918e33e0e23f5088b501b014308ce7e7"
-    },
-    {
-      "path": "zz11/sw.js",
-      "kind": "file",
-      "size": 5964,
-      "sha256": "dc2fa7af958e219d1fd746631d67f7397f37c6173be7d43026acc2f77098953e"
-    },
-    {
-      "path": "zz11/theme.js",
-      "kind": "file",
-      "size": 2383,
-      "sha256": "8f5479d1e38ac863bb2bf852466216d645b20f6c535cca080b06b80e1ce16288"
-    },
-    {
-      "path": "zz11/update-prompt.js",
-      "kind": "file",
-      "size": 10985,
-      "sha256": "31db2f3865d6481514c3323c0bd878a31286bed74084979cc9abc5552bec57ab"
-    },
-    {
-      "path": "zz11/wake-lock.js",
-      "kind": "file",
-      "size": 1532,
-      "sha256": "9f8befd28129361810cb1a0e796c50ca8a5d4a44d4d93a8034c3066e10a15b02"
-    },
-    {
-      "path": "zz12",
-      "kind": "directory"
-    },
-    {
-      "path": "zz12/app.mjs",
-      "kind": "file",
-      "size": 6343,
-      "sha256": "0532d28c0cace1842784593eccb14a4ca79c5ae80d54f47b84fe418a44b86af6"
-    },
-    {
-      "path": "zz12/brand-logo.png",
-      "kind": "file",
-      "size": 122931,
-      "sha256": "1aecc836c06ccc15d5e680fe27ed7dc2ce6946bf411a8cbf52d680110ae9d980"
-    },
-    {
-      "path": "zz12/core.mjs",
-      "kind": "file",
-      "size": 11514,
-      "sha256": "9c87f05975d066d9a1d729d9a1f1d166917285b1c681c1a91323318c573e6ce7"
-    },
-    {
-      "path": "zz12/data.mjs",
-      "kind": "file",
-      "size": 828,
-      "sha256": "8829356e4a885f791e7d44fcc4b4372654435015a2045c75dc76516df79d5669"
-    },
-    {
-      "path": "zz12/first-run-guide.js",
-      "kind": "file",
-      "size": 7282,
-      "sha256": "d173e5833e896ee8f2fbd62386c139f46008e89f198fa56807a1c9e2e0f40521"
-    },
-    {
-      "path": "zz12/icon-192.png",
-      "kind": "file",
-      "size": 16474,
-      "sha256": "449ad67c67905a8370dd62332deecc5b40a913833ba32bfcdd9dbf1f59cb1dca"
-    },
-    {
-      "path": "zz12/icon-512.png",
-      "kind": "file",
-      "size": 82454,
-      "sha256": "b100d5f7b65e430cfa34b030c1aa8c40a2098881d85d1885dac58627d2be31c7"
-    },
-    {
-      "path": "zz12/icon.svg",
-      "kind": "file",
-      "size": 353,
-      "sha256": "f05d01e15d6ccba8d574a5c0188dec0e100aacb3b9f0f3fa0e5225c8b44f9a0e"
-    },
-    {
-      "path": "zz12/index.html",
-      "kind": "file",
-      "size": 2265,
-      "sha256": "6d3f04ecb88045c6b2a0054531cd73f29a2268251b673c7df959eac7badac5a7"
-    },
-    {
-      "path": "zz12/local-preview.mjs",
-      "kind": "file",
-      "size": 568,
-      "sha256": "30d58ce4c52e88eeb5bc0cb49bec51ab2f8f02fd78dedc0bbace37f9baa7b084"
-    },
-    {
-      "path": "zz12/manifest.webmanifest",
-      "kind": "file",
-      "size": 333,
-      "sha256": "7dfae0c4c07ca6f28e8a55f3bec99d57b5ef46580f713371101d65a9fb07948b"
-    },
-    {
-      "path": "zz12/memory-model.mjs",
-      "kind": "file",
-      "size": 6599,
-      "sha256": "05e84449c375eab93780728582057d4725a606deaaf15c3972f300bbd742ef26"
-    },
-    {
-      "path": "zz12/memory-training.mjs",
-      "kind": "file",
-      "size": 6723,
-      "sha256": "8b5482a8d198e3ea4c2d8c931f2e23a23db85bacbbee7ae34c7d62df957041d8"
-    },
-    {
-      "path": "zz12/memory.mjs",
-      "kind": "file",
-      "size": 20352,
-      "sha256": "dba2fdc8eb1aea5f5779ddc45bdda5887f3df11a080284ffb2c0221e423f6d65"
-    },
-    {
-      "path": "zz12/mnemonic.mjs",
-      "kind": "file",
-      "size": 7811,
-      "sha256": "ad5dae864dd55560056852f6e8ec88995447c60d49f56803bafb402800a11ae3"
-    },
-    {
-      "path": "zz12/quiz.mjs",
-      "kind": "file",
-      "size": 6917,
-      "sha256": "0fd8c796271ccdff39271f460ca55f9a0fdc30bb7fedbe5266bf0cc612ecc438"
-    },
-    {
-      "path": "zz12/rank.mjs",
-      "kind": "file",
-      "size": 4387,
-      "sha256": "6ac2e515504010f6afc80c9cbf83d82dfc8ca396e54e5c9d02f62a570e319469"
-    },
-    {
-      "path": "zz12/records.mjs",
-      "kind": "file",
-      "size": 3351,
-      "sha256": "21f8e4c3d2f85c08ce203905bf6259ef3179a80bbf4f42c5cf9bbff06ac2ca92"
-    },
-    {
-      "path": "zz12/screen-shared.mjs",
-      "kind": "file",
-      "size": 3347,
-      "sha256": "00ca5309314b29d7ff6a26ce7a679c30f740b4ddbc7b9e214031b67db2625c04"
-    },
-    {
-      "path": "zz12/settings.mjs",
-      "kind": "file",
-      "size": 6443,
-      "sha256": "f04c1b1c6215e4afb207b60c4adf04ca64795fdbdb0f467aed76b2d19e08052b"
-    },
-    {
-      "path": "zz12/storage.mjs",
-      "kind": "file",
-      "size": 6592,
-      "sha256": "43422815406c6b89e2f4f637eb1dc8c8104121abdad57ee79e4df6efc0bf9989"
-    },
-    {
-      "path": "zz12/study.mjs",
-      "kind": "file",
-      "size": 2844,
-      "sha256": "545afbdb241f658b829cf8817ab9149be3b84b6adcf59fef7f350348c2fa2c37"
-    },
-    {
-      "path": "zz12/style.css",
-      "kind": "file",
-      "size": 14382,
-      "sha256": "15d2abc6710f9650c79f8091ab231fd818444f2c4de8c9bce16bcc64f23eca9f"
-    },
-    {
-      "path": "zz12/sw.js",
-      "kind": "file",
-      "size": 5661,
-      "sha256": "eb35b1e4414eb60e89c05e633679e95e6b42d4e4ec2b9be75a95515e0321647c"
-    },
-    {
-      "path": "zz12/table.mjs",
-      "kind": "file",
-      "size": 841,
-      "sha256": "3627362ee4605b24826f68941d6223f32c526f2325d4a1a4554ae4c539a20615"
-    },
-    {
-      "path": "zz12/update-prompt.js",
-      "kind": "file",
-      "size": 10985,
-      "sha256": "31db2f3865d6481514c3323c0bd878a31286bed74084979cc9abc5552bec57ab"
-    },
-    {
-      "path": "zz13",
-      "kind": "directory"
-    },
-    {
-      "path": "zz13/app.mjs",
-      "kind": "file",
-      "size": 1424,
-      "sha256": "ec1e923f5f8290d791622ff70e67dd80acd157585f265d8b6f3d32819d1e1f7f"
-    },
-    {
-      "path": "zz13/brand-logo.png",
-      "kind": "file",
-      "size": 131181,
-      "sha256": "8e49a4aa8f3072c195d17dc675eae19d23322f4c6a7351fbfd17b5f383d372bd"
-    },
-    {
-      "path": "zz13/core.mjs",
-      "kind": "file",
-      "size": 18872,
-      "sha256": "56a1757b51c80230e4e9581452f9148710d7475ecb1953231fce789b5385b303"
-    },
-    {
-      "path": "zz13/export.mjs",
-      "kind": "file",
-      "size": 1770,
-      "sha256": "8d61bbb75ab3e05599a7468074f2c4231ef5e90e3195aee55e780c0db454380d"
-    },
-    {
-      "path": "zz13/first-run-guide.js",
-      "kind": "file",
-      "size": 7282,
-      "sha256": "d173e5833e896ee8f2fbd62386c139f46008e89f198fa56807a1c9e2e0f40521"
-    },
-    {
-      "path": "zz13/gestures-editing.mjs",
-      "kind": "file",
-      "size": 4056,
-      "sha256": "51d8d3c4f8c58883ea647f57c083ea92ddfb9580704804e7f2aaf25a03c1cc6e"
-    },
-    {
-      "path": "zz13/icons",
-      "kind": "directory"
-    },
-    {
-      "path": "zz13/icons/icon-192.png",
-      "kind": "file",
-      "size": 1231,
-      "sha256": "e905348b1fa7066cf5631e66cd9be711d17823ed8c3738b73a0017cd85e02031"
-    },
-    {
-      "path": "zz13/icons/icon-512.png",
-      "kind": "file",
-      "size": 7645,
-      "sha256": "7ec587141a4be20c771c795a03d917b497fb9159b5f756b9c6e2038d7bb2fc30"
-    },
-    {
-      "path": "zz13/index.html",
-      "kind": "file",
-      "size": 6750,
-      "sha256": "c45ec27a70fdefec44c6062e429dc11374961e7342a72341ec61765743bee4bf"
-    },
-    {
-      "path": "zz13/install.mjs",
-      "kind": "file",
-      "size": 5545,
-      "sha256": "2e05a88f6d906835ef9bc8d05b8d713c8339cf86ad4337fd2777f3aaeb266b53"
-    },
-    {
-      "path": "zz13/local-preview.mjs",
-      "kind": "file",
-      "size": 568,
-      "sha256": "30d58ce4c52e88eeb5bc0cb49bec51ab2f8f02fd78dedc0bbace37f9baa7b084"
-    },
-    {
-      "path": "zz13/manifest.webmanifest",
-      "kind": "file",
-      "size": 394,
-      "sha256": "6613b2e42c7dddb44896049fb5980b9b1dbc2724e09c2d68913bf104d981cfac"
-    },
-    {
-      "path": "zz13/rendering.mjs",
-      "kind": "file",
-      "size": 1303,
-      "sha256": "ab7fcdb622aad7a6136d111911fe1cd284ca3a3a7d7e51534febb323d2f1934e"
-    },
-    {
-      "path": "zz13/settings.mjs",
-      "kind": "file",
-      "size": 4943,
-      "sha256": "5cca051ebc3ad1d1c3de238810935474aba896b5d8c8a06a58a94a2eddc6a6d8"
-    },
-    {
-      "path": "zz13/storage-recovery.mjs",
-      "kind": "file",
-      "size": 4408,
-      "sha256": "045d09a59d0c6b2b1f74539dce7287a60fb27573da67df10825245953f05ad7c"
-    },
-    {
-      "path": "zz13/style.css",
-      "kind": "file",
-      "size": 15586,
-      "sha256": "a3c067f158c27a4e0699a83ae43e71974dcb5dc325b66bc34f811c0b10b4a254"
-    },
-    {
-      "path": "zz13/sw.js",
-      "kind": "file",
-      "size": 5640,
-      "sha256": "b9d9de276176565185583188038b433eb887474c2b2a4a1e8b310f88daf602a3"
-    },
-    {
-      "path": "zz13/update-prompt.js",
-      "kind": "file",
-      "size": 10985,
-      "sha256": "31db2f3865d6481514c3323c0bd878a31286bed74084979cc9abc5552bec57ab"
-    },
-    {
-      "path": "zz13/vendor",
-      "kind": "directory"
-    },
-    {
-      "path": "zz13/vendor/LICENSE-jsqr.txt",
-      "kind": "file",
-      "size": 11358,
-      "sha256": "c6596eb7be8581c18be736c846fb9173b69eccf6ef94c5135893ec56bd92ba08"
-    },
-    {
-      "path": "zz13/vendor/LICENSE-nayuki.txt",
-      "kind": "file",
-      "size": 1245,
-      "sha256": "aa22f0fefb530552bfcc713e3791c80796c2a2e666ed61856bcf4767a6852984"
-    },
-    {
-      "path": "zz13/vendor/jsQR.js",
-      "kind": "file",
-      "size": 256885,
-      "sha256": "bc40c8a15196236b2314db0856f72ca0b49980cd5413b8c852a7349f5fee0859"
-    },
-    {
-      "path": "zz13/vendor/qrcodegen.js",
-      "kind": "file",
-      "size": 45336,
-      "sha256": "6a1116192ed1dd67fa1bf31e77f5817103d71c23bbac24c382e698b7668bdd01"
-    },
-    {
-      "path": "zz13/wake-lock.mjs",
-      "kind": "file",
-      "size": 1368,
-      "sha256": "918d4145a8943c4b66c9897ee8dcb678fdfcaf6d47bb12650785309067e72534"
-    },
-    {
-      "path": "zz14",
-      "kind": "directory"
-    },
-    {
-      "path": "zz14/README.md",
-      "kind": "file",
-      "size": 3623,
-      "sha256": "7b1064c2a1f2d5aad8c7599111bd7dc10bbd41e1feeb8cbb7be22f48251340a7"
-    },
-    {
-      "path": "zz14/app.mjs",
-      "kind": "file",
-      "size": 12056,
-      "sha256": "971c39ace3eb289af3bc1da30184cc8f4d39dcabe116807abfa0601245ce1ff8"
-    },
-    {
-      "path": "zz14/blind.test.mjs",
-      "kind": "file",
-      "size": 9095,
-      "sha256": "889d01ebc6f88d7de043946195f554cdcf8f184ed7f077059ceaeeaebfb1dad3"
-    },
-    {
-      "path": "zz14/brand-logo.png",
-      "kind": "file",
-      "size": 108332,
-      "sha256": "a13cca2e98bd3bf2f69d2407207151acbcda37a5957d7b2840f070e35140e2b7"
-    },
-    {
-      "path": "zz14/core-explain.mjs",
-      "kind": "file",
-      "size": 4745,
-      "sha256": "37b71ac933ac78fa33b05f8c3ab994f3b36da91e0fafacd73ad6c8264164e32a"
-    },
-    {
-      "path": "zz14/core-grading.mjs",
-      "kind": "file",
-      "size": 6377,
-      "sha256": "fd7e8bab6dfafc09aff2ac34f7756d87b52359e9ae574c91ecf7eab3f9425a2f"
-    },
-    {
-      "path": "zz14/core-questions.mjs",
-      "kind": "file",
-      "size": 15389,
-      "sha256": "611422d5f53794b6dbea1570f284877b4a9486b7147035fadb469669bdf0137f"
-    },
-    {
-      "path": "zz14/core-stack.mjs",
-      "kind": "file",
-      "size": 4615,
-      "sha256": "d8ba29f243002bb8c592a7e5b5665885491aab34c20ac9657aa2ad997d4cb4b9"
-    },
-    {
-      "path": "zz14/core-stats.mjs",
-      "kind": "file",
-      "size": 3635,
-      "sha256": "bad50d574892bf74ce8d65176325f272e6322df90373449bf6ef49d2b157c9f9"
-    },
-    {
-      "path": "zz14/core-storage.mjs",
-      "kind": "file",
-      "size": 8273,
-      "sha256": "1662720b169563605b6cc3f676e4a5d94075189ba4c177a958f6f132433b7fda"
-    },
-    {
-      "path": "zz14/core-windows.mjs",
-      "kind": "file",
-      "size": 2257,
-      "sha256": "d5ee0c69389ac33508adb54fe288aa937584be6844e51d81ae6c3c5b6434b40d"
-    },
-    {
-      "path": "zz14/core.mjs",
-      "kind": "file",
-      "size": 1393,
-      "sha256": "652c7e72159c4cc05873420496b14884441dfdae0f4480df2ee4d9181d109265"
-    },
-    {
-      "path": "zz14/core.test.mjs",
-      "kind": "file",
-      "size": 15033,
-      "sha256": "76eaf77821d8198e91fa14663471c56e027b46ba8b32273319f9b2a2eece187f"
-    },
-    {
-      "path": "zz14/events.mjs",
-      "kind": "file",
-      "size": 4449,
-      "sha256": "313decc766dca0ced91e36fafc052d9d04b28e95f74dc438f4e6aa02b9c76376"
-    },
-    {
-      "path": "zz14/glyphs.mjs",
-      "kind": "file",
-      "size": 4245,
-      "sha256": "bf9f427fea3f562288e84935bfbb927a46342de9e72baa0da2a7db92738bfbd2"
-    },
-    {
-      "path": "zz14/icon-192.png",
-      "kind": "file",
-      "size": 16792,
-      "sha256": "091ceda405332992c7faa9d4bd153eb007c9af20a9c9a03de8aa0c5d076e8888"
-    },
-    {
-      "path": "zz14/icon-512.png",
-      "kind": "file",
-      "size": 78392,
-      "sha256": "9dcad6a5a75aff1f43377fd90211b1f67c0bfacd7f21aecb6526285133b93edc"
-    },
-    {
-      "path": "zz14/icon.svg",
-      "kind": "file",
-      "size": 460,
-      "sha256": "8fae4282a00224f4fb93851b5bf81a416e6332e2a56fe63e7ea42993ea425360"
-    },
-    {
-      "path": "zz14/index.html",
-      "kind": "file",
-      "size": 2235,
-      "sha256": "2d59ff6c8797495ddd099be2520878c82fe2610374b1143a968580cd52506206"
-    },
-    {
-      "path": "zz14/install.mjs",
-      "kind": "file",
-      "size": 11106,
-      "sha256": "759d5c20fb473d545348151aa32e7f50dc03847b67919fa590a1d5bb0dc04b60"
-    },
-    {
-      "path": "zz14/learn.mjs",
-      "kind": "file",
-      "size": 8111,
-      "sha256": "84997570defc69886c4d130dce120525f29f55ce5b9aab7d3e03871d89b31269"
-    },
-    {
-      "path": "zz14/legacy-v1-sessions.json",
-      "kind": "file",
-      "size": 29350,
-      "sha256": "245913d64f525bf412499b89df1b26d4b2c27af1bf5a3d2b7db47b83fcf4c870"
-    },
-    {
-      "path": "zz14/local-preview.mjs",
-      "kind": "file",
-      "size": 568,
-      "sha256": "30d58ce4c52e88eeb5bc0cb49bec51ab2f8f02fd78dedc0bbace37f9baa7b084"
-    },
-    {
-      "path": "zz14/manifest.webmanifest",
-      "kind": "file",
-      "size": 300,
-      "sha256": "895058a526a7a4dd8e8d5790c22a4cdedac2864eed326581597a6d8d09f88f96"
-    },
-    {
-      "path": "zz14/package.json",
-      "kind": "file",
-      "size": 33,
-      "sha256": "89c47db7851f89caec72da4f215ebc21cf1e294aeef3b45d2583562d846ab035"
-    },
-    {
-      "path": "zz14/phrase.test.mjs",
-      "kind": "file",
-      "size": 12952,
-      "sha256": "4cc391d4ac83e9c724e2cdcb135017857fc18fd635b9835b9fed99eed6c82984"
-    },
-    {
-      "path": "zz14/practice.mjs",
-      "kind": "file",
-      "size": 5880,
-      "sha256": "72e01a9732a45d0460e2b7d897a57824eccb91f031cafea51b90161294156a94"
-    },
-    {
-      "path": "zz14/revision.test.mjs",
-      "kind": "file",
-      "size": 34453,
-      "sha256": "743e0219059eb6315c4ee506f9a4ad98deebe24b03d65a402d9dc7b9416e30d0"
-    },
-    {
-      "path": "zz14/session.mjs",
-      "kind": "file",
-      "size": 5096,
-      "sha256": "4895dd8b553b0d65d2b81e85fbe98f596e32f3f16ff5682feeb16ae0d3547443"
-    },
-    {
-      "path": "zz14/settings.mjs",
-      "kind": "file",
-      "size": 4620,
-      "sha256": "e5e8bb6e69d9194d1281a64fda3ac6f018d4b422c4172081a1c97b36c35ad861"
-    },
-    {
-      "path": "zz14/state.mjs",
-      "kind": "file",
-      "size": 2867,
-      "sha256": "d612079d7802920db854118a2b73272ef70afdfc7d08592adde831675109985e"
-    },
-    {
-      "path": "zz14/style-checker-install.css",
-      "kind": "file",
-      "size": 7290,
-      "sha256": "2271c1e6ff6451c8c144669a3cf33a0a93bf2060a1cdd43c90b6926fe09ba39f"
-    },
-    {
-      "path": "zz14/style-practice.css",
-      "kind": "file",
-      "size": 6059,
-      "sha256": "be78318c3ce8dcbb9495ceb2e4811ce3549c0484bcd114c5757e01148cdcf0f2"
-    },
-    {
-      "path": "zz14/style-quiz-shapes.css",
-      "kind": "file",
-      "size": 3678,
-      "sha256": "08b2718f76f274fde111d9d7835d3517fc787b5bf50a8c025f73918699b9591d"
-    },
-    {
-      "path": "zz14/style.css",
-      "kind": "file",
-      "size": 4138,
-      "sha256": "ff391db1261f066bd11a479e6e894c997dcf27f023c5fe5d631213a4e61c5e44"
-    },
-    {
-      "path": "zz14/sw.js",
-      "kind": "file",
-      "size": 5867,
-      "sha256": "d387fb4841bd56f1e2e191e9d82be2b07e389bca7ebcc8ac3324eb9508b3e265"
-    },
-    {
-      "path": "zz14/update-prompt.js",
-      "kind": "file",
-      "size": 10985,
-      "sha256": "31db2f3865d6481514c3323c0bd878a31286bed74084979cc9abc5552bec57ab"
-    },
-    {
-      "path": "zz15",
-      "kind": "directory"
-    },
-    {
-      "path": "zz15/app.mjs",
-      "kind": "file",
-      "size": 210,
-      "sha256": "9c26709d15c9bd6a010f298056f472c0a67338a1137239ae227e8e8c1642f836"
-    },
-    {
-      "path": "zz15/brand-logo.png",
-      "kind": "file",
-      "size": 115144,
-      "sha256": "b3caf80bdd6e3266706253f4d21440eea30e87a8d800bfbbdafb62517e22a55f"
-    },
-    {
-      "path": "zz15/camera-controls.mjs",
-      "kind": "file",
-      "size": 8542,
-      "sha256": "7acf8b7bb6bbaca79ec5db517287668abd8f3d119de2dc635a3fb7a5b239a4c6"
-    },
-    {
-      "path": "zz15/camera.mjs",
-      "kind": "file",
-      "size": 14334,
-      "sha256": "6dd11d89ea16c3e6b7d0b7b43858cc993fde97e93b688855174b2a407814879f"
-    },
-    {
-      "path": "zz15/chrome.mjs",
-      "kind": "file",
-      "size": 1132,
-      "sha256": "895937485e25798d590a955e4e5cbc672cf870af71e29b97fa264a8a40eac79d"
-    },
-    {
-      "path": "zz15/core-card.mjs",
-      "kind": "file",
-      "size": 1440,
-      "sha256": "eb700c9fbd43b26d5b8a9bc3b6ae0de6b49a9fe7aa44b3d34bd3d593466a89b7"
-    },
-    {
-      "path": "zz15/core-encode.mjs",
-      "kind": "file",
-      "size": 425,
-      "sha256": "6399b15fc6c4b14d08c08d86e6f479d7e70d8426bba5a134a806b5da41fc6c70"
-    },
-    {
-      "path": "zz15/core-gate.mjs",
-      "kind": "file",
-      "size": 406,
-      "sha256": "a1ac7f19a46d9737671b3148f6c1d25abe8b939e95786c6128eb32a573432795"
-    },
-    {
-      "path": "zz15/core-json.mjs",
-      "kind": "file",
-      "size": 6331,
-      "sha256": "af989182cc57faf40d5139088cf1ad97717b05c7b2b11eaef31f2ede812935a8"
-    },
-    {
-      "path": "zz15/core-logic.mjs",
-      "kind": "file",
-      "size": 6053,
-      "sha256": "5490fd66f65fabe010a42bcaf2d9809d9d1020e887fbe3915e5349874fbc2e6b"
-    },
-    {
-      "path": "zz15/core-model.mjs",
-      "kind": "file",
-      "size": 2007,
-      "sha256": "a765e1481826bb9dba7cf79fc4e9e256b93a244dd0ca1be635652545229f1949"
-    },
-    {
-      "path": "zz15/core-resolve.mjs",
-      "kind": "file",
-      "size": 6586,
-      "sha256": "854a552c3f58280d867d1437e16c8ba4c6297ab78f5eb242ba32e9049ed2ae85"
-    },
-    {
-      "path": "zz15/core-scan.mjs",
-      "kind": "file",
-      "size": 1359,
-      "sha256": "3d6a74ea8c45f0c89a4f15286da8ee9e8ec338e366ec6a5bd173d1ff927be031"
-    },
-    {
-      "path": "zz15/core-url.mjs",
-      "kind": "file",
-      "size": 2912,
-      "sha256": "ce56a80807e06f1d80f26037ee00757adcb7296f69c977330d868720fee2bea9"
-    },
-    {
-      "path": "zz15/core.mjs",
-      "kind": "file",
-      "size": 1286,
-      "sha256": "583b8fe5305a4fbaa8620594b414e0edf89b67ad371b134ba91caa8e4ae4a6bd"
-    },
-    {
-      "path": "zz15/detect.mjs",
-      "kind": "file",
-      "size": 2751,
-      "sha256": "9fcc98e39e4b88f528858ca25d0cfdb0bf5aa9af4d69fdd2f0822c6eb613fd2b"
-    },
-    {
-      "path": "zz15/dom.mjs",
-      "kind": "file",
-      "size": 403,
-      "sha256": "932f82e027a73b6092c4a599f06e363d919e37c7e047f0f55a3d6e04967c96b0"
-    },
-    {
-      "path": "zz15/icon-192.png",
-      "kind": "file",
-      "size": 28089,
-      "sha256": "650a40c7100eaabcdac8c2860f0da22fb36e843cbae1bdd489d0bdb4b9fa8b9e"
-    },
-    {
-      "path": "zz15/icon-512.png",
-      "kind": "file",
-      "size": 141484,
-      "sha256": "54c88da65de2234abf2f36d01b13de1e94435db8e5b06be262aedd424d07b1b9"
-    },
-    {
-      "path": "zz15/icon-maskable-192.png",
-      "kind": "file",
-      "size": 17238,
-      "sha256": "7d3000b1b425909d1383627f89245dbc24e55402c5023082d4fbad4eff8cf780"
-    },
-    {
-      "path": "zz15/icon-maskable-512.png",
-      "kind": "file",
-      "size": 85546,
-      "sha256": "253aeeb742fd21814ba22e69d9951941085e0b596c26802f15d4298e0b32ff6a"
-    },
-    {
-      "path": "zz15/index.html",
-      "kind": "file",
-      "size": 13235,
-      "sha256": "86987b547ae3755d3c6bb6a8f9c5e750030ad28f2b2b43b7a33780ba82981c04"
-    },
-    {
-      "path": "zz15/install-ui.js",
-      "kind": "file",
-      "size": 2710,
-      "sha256": "d914197d27da3b5b5093707ad12df6351a2011cf0a08020ef95f5dde62c0eda7"
-    },
-    {
-      "path": "zz15/manifest.webmanifest",
-      "kind": "file",
-      "size": 729,
-      "sha256": "23e5e6703c4ce1e5c48af6b8fec2867f86263978e352f4037b5b7dc276f89a6d"
-    },
-    {
-      "path": "zz15/picker.mjs",
-      "kind": "file",
-      "size": 14475,
-      "sha256": "63aa6e8c5e31b043fc7d4df58165bc04175a37b58812e4eb6b5c10792f8e2a22"
-    },
-    {
-      "path": "zz15/presets.mjs",
-      "kind": "file",
-      "size": 5479,
-      "sha256": "0e9dece925a639e4ec8834fb47e352da3691e04270c8b136b1e393f4416e75aa"
-    },
-    {
-      "path": "zz15/scan.mjs",
-      "kind": "file",
-      "size": 1260,
-      "sha256": "423466b67df1402f79f801d5d2d2455457fccc29c6a0a1ee9b872ad3f14ba0d2"
-    },
-    {
-      "path": "zz15/style.css",
-      "kind": "file",
-      "size": 16877,
-      "sha256": "20da4bb2ba5d7fdb02129fbde285f8cd6cdb89b7691926e3977043f6cc308d4f"
-    },
-    {
-      "path": "zz15/sw.js",
-      "kind": "file",
-      "size": 5668,
-      "sha256": "20545301e10e74442cb0171759fe42d3a6effc15ee0d408ea5cb22150a3b844f"
-    },
-    {
-      "path": "zz15/update-prompt.js",
-      "kind": "file",
-      "size": 10985,
-      "sha256": "31db2f3865d6481514c3323c0bd878a31286bed74084979cc9abc5552bec57ab"
-    },
-    {
-      "path": "zz15/vendor",
-      "kind": "directory"
-    },
-    {
-      "path": "zz15/vendor/LICENSE-jsqr.txt",
-      "kind": "file",
-      "size": 11358,
-      "sha256": "c6596eb7be8581c18be736c846fb9173b69eccf6ef94c5135893ec56bd92ba08"
-    },
-    {
-      "path": "zz15/vendor/jsQR.js",
-      "kind": "file",
-      "size": 256885,
-      "sha256": "bc40c8a15196236b2314db0856f72ca0b49980cd5413b8c852a7349f5fee0859"
-    },
-    {
-      "path": "zz2",
-      "kind": "directory"
-    },
-    {
-      "path": "zz2/app.js",
-      "kind": "file",
-      "size": 168,
-      "sha256": "3681d70d29f82b37e00ada0be237e065f038d0c5a6ccfafab5adaa3970540491"
-    },
-    {
-      "path": "zz2/brand-logo.jpg",
-      "kind": "file",
-      "size": 36839,
-      "sha256": "6f47cd73b7ae7fdd39ce6b7903859f72b95cccff8cd3c8f4eb71d9cb685c08e6"
-    },
-    {
-      "path": "zz2/brand-logo.png",
-      "kind": "file",
-      "size": 134048,
-      "sha256": "ba1abbc1f6c7416d2728f39ed04670a1153a108cd6944439fab9a6c1848277d8"
-    },
-    {
-      "path": "zz2/gestures.js",
-      "kind": "file",
-      "size": 10837,
-      "sha256": "13ec3e3f9f3aba75c3e41d55d8ebb7e43055553eee59cbb093ca3b1e6297680a"
-    },
-    {
-      "path": "zz2/icon-192.png",
-      "kind": "file",
-      "size": 2592,
-      "sha256": "fefd6180de29534ee910d7d6f631fc2ee7130452f187983b7c4db5ab73664dd6"
-    },
-    {
-      "path": "zz2/icon-512.png",
-      "kind": "file",
-      "size": 5247,
-      "sha256": "9f47803532748e00bdfdfebbabeff963fa7b558babe5f72cc6f21ad177a6e45d"
-    },
-    {
-      "path": "zz2/icon-maskable-192.png",
-      "kind": "file",
-      "size": 4024,
-      "sha256": "5c8d9713dd7086344c1ded887d8fc421e98b6da42ed4fe6bd465eab9a3b23488"
-    },
-    {
-      "path": "zz2/icon-maskable-512.png",
-      "kind": "file",
-      "size": 6422,
-      "sha256": "17d2bbc749d7c29e633a5718b00d0c2f4cf9cc60a9da3ca16a2343d7dd8777d8"
-    },
-    {
-      "path": "zz2/icon.svg",
-      "kind": "file",
-      "size": 521,
-      "sha256": "5903fb46bc40c3eff753c22a466c5e3566af3f42b02e45a28697e199d8e3a191"
-    },
-    {
-      "path": "zz2/images.js",
-      "kind": "file",
-      "size": 10891,
-      "sha256": "161e9461597432720d8c791c484c3205e4f01c9ed17ebb950cb48175a805df14"
-    },
-    {
-      "path": "zz2/index.html",
-      "kind": "file",
-      "size": 17549,
-      "sha256": "08abc36e0c04fa8a7666359e4b674e9eccf577bb29d3c1834aba208d5f10b844"
-    },
-    {
-      "path": "zz2/install-prompt.js",
-      "kind": "file",
-      "size": 3724,
-      "sha256": "ce413d0383a77c1950f6c4dc496cd486c308c1b0d44b7ab23559ed4485766c04"
-    },
-    {
-      "path": "zz2/logic.js",
-      "kind": "file",
-      "size": 13522,
-      "sha256": "f4d71d2d7583dcb3ce94fd2064776e1e2ed95027befd8de9b0dd4bf675f770d7"
-    },
-    {
-      "path": "zz2/manifest.webmanifest",
-      "kind": "file",
-      "size": 761,
-      "sha256": "56872eef4cf49cecc2a6d2369cc7f58d62d15173e06e9d0870a3c868fcd2bc55"
-    },
-    {
-      "path": "zz2/performance-link.js",
-      "kind": "file",
-      "size": 1508,
-      "sha256": "8863d2ae0ce0711dccde532992e56f31d3595b8f3514d2d9a12764faa50c2a0e"
-    },
-    {
-      "path": "zz2/photo-save-notice.js",
-      "kind": "file",
-      "size": 1871,
-      "sha256": "8aad26686b7a533ba63dbabff4383f473abfa2d3eaa9b10449ddddaadfa458b5"
-    },
-    {
-      "path": "zz2/pin.js",
-      "kind": "file",
-      "size": 11679,
-      "sha256": "feb6e338d17685aeda46d4ff1ee753096e68b41ed7f93d28af0eee29d8bec4fa"
-    },
-    {
-      "path": "zz2/rewind.js",
-      "kind": "file",
-      "size": 15989,
-      "sha256": "5b65e2479ae97d23e05c99bb45d3d826b89a039ab7853a7120d603b100bac33f"
-    },
-    {
-      "path": "zz2/session.js",
-      "kind": "file",
-      "size": 2200,
-      "sha256": "7ad775f2ba43b57570664d9f42d2bb5cc3966b2988aba8233ad9d4516e7f0879"
-    },
-    {
-      "path": "zz2/settings-ui.css",
-      "kind": "file",
-      "size": 39815,
-      "sha256": "73c1135c850f0abd82a859c3dfc8143b90ce188f1e809bfc16a83708f6069fb2"
-    },
-    {
-      "path": "zz2/settings-ui.js",
-      "kind": "file",
-      "size": 85270,
-      "sha256": "7c1f78db54b3cde3a37d8f3f5e5bc7930b7ccf8fd85fb4e1bb57ae343f509da6"
-    },
-    {
-      "path": "zz2/settings.js",
-      "kind": "file",
-      "size": 10138,
-      "sha256": "03b712cacdb5ce1de1c1d734cc79bc318dce6a9031c874f726633bd9c57668c0"
-    },
-    {
-      "path": "zz2/style.css",
-      "kind": "file",
-      "size": 26381,
-      "sha256": "8386cd3e9702a8588783e3e173c8c820bb709214188a2103c909b81006ac025d"
-    },
-    {
-      "path": "zz2/sw.js",
-      "kind": "file",
-      "size": 5669,
-      "sha256": "9be71ff0760848e0ee9f558fdac1d289c3a2bb11af9fd7256d98175f22b2e7f4"
-    },
-    {
-      "path": "zz2/time-machine.js",
-      "kind": "file",
-      "size": 3102,
-      "sha256": "310d259f39164aaf0b0d7823ba36a4b53173ae09286264698f00696e8af71cca"
-    },
-    {
-      "path": "zz2/update-prompt.js",
-      "kind": "file",
-      "size": 10985,
-      "sha256": "31db2f3865d6481514c3323c0bd878a31286bed74084979cc9abc5552bec57ab"
-    },
-    {
-      "path": "zz3",
-      "kind": "directory"
-    },
-    {
-      "path": "zz3/app.js",
-      "kind": "file",
-      "size": 17102,
-      "sha256": "f7b53436d038781c5a2a5e7407fb4462dd03b21b5f4603f9c1a5324792e75a52"
-    },
-    {
-      "path": "zz3/boot.js",
-      "kind": "file",
-      "size": 313,
-      "sha256": "7e2147853391f5776bde94baf83561bfd078af0122a470e1c51ca57ea2b529ab"
-    },
-    {
-      "path": "zz3/brand-logo.jpg",
-      "kind": "file",
-      "size": 39409,
-      "sha256": "95c63c773f7244214873fd07299dd2577c926acd6295b087eee8b2c25e570fdf"
-    },
-    {
-      "path": "zz3/brand-logo.png",
-      "kind": "file",
-      "size": 132565,
-      "sha256": "0c6f90a9d0146a909027f03bbaa37ded453944860187ac7ac1225765f637e957"
-    },
-    {
-      "path": "zz3/cards.js",
-      "kind": "file",
-      "size": 3030,
-      "sha256": "1a857f560a35b0a8ac94dae624e5991a08e69588012a7513a59dc9333c6125c3"
-    },
-    {
-      "path": "zz3/decimal.js",
-      "kind": "file",
-      "size": 4902,
-      "sha256": "61f0eca68c5071a0ab8718ab11e1c7184fa325a33c67bc300155ef810ac343dc"
-    },
-    {
-      "path": "zz3/expression.js",
-      "kind": "file",
-      "size": 9431,
-      "sha256": "34df45f18e51ceed9abaf5ebe7e37fd620bd47030c5d03100456b2c041e81cb9"
-    },
-    {
-      "path": "zz3/icon-192.png",
-      "kind": "file",
-      "size": 9040,
-      "sha256": "d8b4816d5fe366d7066baad44c5bc770a5b827d630c322383a54a6dcf002660b"
-    },
-    {
-      "path": "zz3/icon-512.png",
-      "kind": "file",
-      "size": 19983,
-      "sha256": "f69326a962a496eca4b22f52fa8cee4c6c1deda15c6bd02db8892f9744b4f58e"
-    },
-    {
-      "path": "zz3/icon.svg",
-      "kind": "file",
-      "size": 665,
-      "sha256": "3d8e6c9dce1b9c5dc8a6642246ea4e913cbf0fb653a11c8f9f7263be53ac08be"
-    },
-    {
-      "path": "zz3/index.html",
-      "kind": "file",
-      "size": 8785,
-      "sha256": "16d87cb846aa744d3b7cf67924c19fe4711ec31f0bef2c438ecba0ad291bcd07"
-    },
-    {
-      "path": "zz3/install-nudge.css",
-      "kind": "file",
-      "size": 698,
-      "sha256": "2989832be8995231e332ab040ce26916cd25da913da8176e25fdf4d9ba70ccea"
-    },
-    {
-      "path": "zz3/install-nudge.js",
-      "kind": "file",
-      "size": 3367,
-      "sha256": "e10b896ab8ebb521fe8c0e1ea4d9bfcefb0fe008a03495811bf18c4cf19fd051"
-    },
-    {
-      "path": "zz3/manifest.webmanifest",
-      "kind": "file",
-      "size": 491,
-      "sha256": "75503aa17d6aa3279629a6fd5b347b347bf229c79cc815866e35e9dabadcca89"
-    },
-    {
-      "path": "zz3/performance-link.js",
-      "kind": "file",
-      "size": 1508,
-      "sha256": "8863d2ae0ce0711dccde532992e56f31d3595b8f3514d2d9a12764faa50c2a0e"
-    },
-    {
-      "path": "zz3/selftest.js",
-      "kind": "file",
-      "size": 19958,
-      "sha256": "d2c839156702aaebe7c052e00e120510c4a09511005548c1b02b1a1408090379"
-    },
-    {
-      "path": "zz3/settings-swipe.js",
-      "kind": "file",
-      "size": 3409,
-      "sha256": "aa7236fc8a42abc1924e2494c08d73807ca3bb5cf755d9b93af3ac72e89dda96"
-    },
-    {
-      "path": "zz3/settings-tutorial.js",
-      "kind": "file",
-      "size": 645,
-      "sha256": "25cd7c808f0a6e698a6793f1b0209ed4695cf495d3c95f9dfc62c4f50f51ae09"
-    },
-    {
-      "path": "zz3/settings-ui.css",
-      "kind": "file",
-      "size": 30390,
-      "sha256": "0b9d1265c43f4170b9bc3d58853674b4944f1204f6664fcac3e478302c02adeb"
-    },
-    {
-      "path": "zz3/settings-ui.js",
-      "kind": "file",
-      "size": 85270,
-      "sha256": "7c1f78db54b3cde3a37d8f3f5e5bc7930b7ccf8fd85fb4e1bb57ae343f509da6"
-    },
-    {
-      "path": "zz3/style.css",
-      "kind": "file",
-      "size": 12154,
-      "sha256": "47d2332d3ffd482518a645a69a8d0b12c39fce2c2dfb742788abd16d56bbee0d"
-    },
-    {
-      "path": "zz3/sw.js",
-      "kind": "file",
-      "size": 5642,
-      "sha256": "45bf6983a1a73a0d6a3988e37f366b915dda4bb5b855837882d15d0ce2a0c9cb"
-    },
-    {
-      "path": "zz3/tricks.js",
-      "kind": "file",
-      "size": 4430,
-      "sha256": "5fe91887b2343fb94884c636db0623fda6fe80c10ea6d43dbe30b839b6d599a2"
-    },
-    {
-      "path": "zz3/ui-helpers.js",
-      "kind": "file",
-      "size": 1720,
-      "sha256": "0b29e65dffbed6b18196642edfe2369b99a4dc9b526715a753487ef55b3197aa"
-    },
-    {
-      "path": "zz3/update-prompt.js",
-      "kind": "file",
-      "size": 10985,
-      "sha256": "31db2f3865d6481514c3323c0bd878a31286bed74084979cc9abc5552bec57ab"
-    },
-    {
-      "path": "zz3/wake-lock.js",
-      "kind": "file",
-      "size": 1754,
-      "sha256": "be6044d5ac5412d24add1e47a09359057b1a50b172779c19bba821e4919d7d5a"
-    },
-    {
-      "path": "zz4",
-      "kind": "directory"
-    },
-    {
-      "path": "zz4/app.js",
-      "kind": "file",
-      "size": 821,
-      "sha256": "7a2973d5df3058bafba8bd0b0fdcae317319d852aa4bddac91f3ac324d616810"
-    },
-    {
-      "path": "zz4/artwork-warmup.js",
-      "kind": "file",
-      "size": 1943,
-      "sha256": "db1e2239ac352841773bcdf5a34d1df53e3357a2172ef887fb9dd8380ff60766"
-    },
-    {
-      "path": "zz4/backup.js",
-      "kind": "file",
-      "size": 4416,
-      "sha256": "f16d59fa9ccdf2d12581e4e5687eda79378a1026377ab8657cd3ae4507531404"
-    },
-    {
-      "path": "zz4/brand-logo.jpg",
-      "kind": "file",
-      "size": 39018,
-      "sha256": "9353961d950cc7fa8a2087669cdc80ecde983ca1ef9f04c9042ec6375d099962"
-    },
-    {
-      "path": "zz4/brand-logo.png",
-      "kind": "file",
-      "size": 134100,
-      "sha256": "8782a701a86889aa526588442488b8ee0c410b17ac058cfda170f75e67d50209"
-    },
-    {
-      "path": "zz4/builtin-lists.js",
-      "kind": "file",
-      "size": 6003,
-      "sha256": "27c9553c36fe0beb2a2ecba0615bc529c7f0a802a44df48c17a88900b44ae140"
-    },
-    {
-      "path": "zz4/choice-update-prompt.js",
-      "kind": "file",
-      "size": 11096,
-      "sha256": "1614429b29e8c7e2cb6f71bb2b248d7aef242674dd2e3256a3d6e991cd0cfbf2"
-    },
-    {
-      "path": "zz4/controller.js",
-      "kind": "file",
-      "size": 6311,
-      "sha256": "869879b11de62af2af20263cd896c2caf08a78f405077880199a137743efe250"
-    },
-    {
-      "path": "zz4/detail-view.js",
-      "kind": "file",
-      "size": 3301,
-      "sha256": "23f41331ab17b6ea33c82b2d18832b401fd4f4f5ae806a3eef85730b8855035f"
-    },
-    {
-      "path": "zz4/dom.js",
-      "kind": "file",
-      "size": 3949,
-      "sha256": "3b85deca3d44e36ae6d727bc0059ff8619016c4c2df59e526db4f0dd74cfdbb3"
-    },
-    {
-      "path": "zz4/editor.js",
-      "kind": "file",
-      "size": 4904,
-      "sha256": "809f7cb4a2d8812b557460bfdf114f12946f1afd9500a39b6c2433817ddd01d4"
-    },
-    {
-      "path": "zz4/extras.js",
-      "kind": "file",
-      "size": 9778,
-      "sha256": "2e76295f3e0f78ea9caee69175b972b6afc41655912fa34436262e04474b6c8e"
-    },
-    {
-      "path": "zz4/fake-home-surface.js",
-      "kind": "file",
-      "size": 8185,
-      "sha256": "3ba7aca3f84e37fd4eb593e2b80fe4798ad9bc3e795c2b3eb5392936465250eb"
-    },
-    {
-      "path": "zz4/fake-notes.js",
-      "kind": "file",
-      "size": 8090,
-      "sha256": "da333b765bd6fe274d9d6e30d3c2eb52632d35cb2c746f468eed82d8ee603b5c"
-    },
-    {
-      "path": "zz4/fullscreen.js",
-      "kind": "file",
-      "size": 433,
-      "sha256": "f2edda30898f546aea69efe29f5823ac7fbcd286c46787af12c88560a420bb9f"
-    },
-    {
-      "path": "zz4/gesture-guide.js",
-      "kind": "file",
-      "size": 1019,
-      "sha256": "505a76d854c63b2c7a4e9e9d277936d7b640a9c5d9fda16746bc42c5a7272e15"
-    },
-    {
-      "path": "zz4/home-icons",
-      "kind": "directory"
-    },
-    {
-      "path": "zz4/home-icons/a1.svg",
-      "kind": "file",
-      "size": 1411,
-      "sha256": "7ea66bbb5484c593c6977b077835ed5ab12110204257e0ef0d9e780cfdf28fdf"
-    },
-    {
-      "path": "zz4/home-icons/a2.svg",
-      "kind": "file",
-      "size": 1558,
-      "sha256": "f0ff5fccd9b9bf6a8e72a072383b39ccb060083c94d06a8616f8f4bb06e3f47e"
-    },
-    {
-      "path": "zz4/home-icons/a3.svg",
-      "kind": "file",
-      "size": 1401,
-      "sha256": "c6cbfef521aeb0ce82e429f3f9fbe4838dd9887ea90b2ad7bfdf40ee94e2580d"
-    },
-    {
-      "path": "zz4/home-icons/a4.svg",
-      "kind": "file",
-      "size": 1417,
-      "sha256": "c74e38641ef2eceade164c791df988d3bdc5728a369dd6a968fe90f053356755"
-    },
-    {
-      "path": "zz4/home-icons/a5.svg",
-      "kind": "file",
-      "size": 1440,
-      "sha256": "f9a6775a96c37ffaf33a37381d9543c72d92eb39a512dd9ee47f43f6c74cec99"
-    },
-    {
-      "path": "zz4/home-icons/a6.svg",
-      "kind": "file",
-      "size": 1761,
-      "sha256": "dd50c0219f1c0dc2f37095f6b8ac105a52869d4cb8d214c72176d12b28a074af"
-    },
-    {
-      "path": "zz4/home-icons/a7.svg",
-      "kind": "file",
-      "size": 1236,
-      "sha256": "c592d964880f307cdb44a9e34e6e05a0ba32f4d5682edbf228da77299517c4a2"
-    },
-    {
-      "path": "zz4/home-icons/a8.svg",
-      "kind": "file",
-      "size": 1405,
-      "sha256": "ecec220e4fcab28b7b404bbbb6c9d70f6a5c6c4b0cfcdb29579ca88f691c049b"
-    },
-    {
-      "path": "zz4/home-icons/a9.svg",
-      "kind": "file",
-      "size": 1398,
-      "sha256": "c68eb1d48248e211377365bdd934ba41e3b556a458c814d9ad4c80ba131389a5"
-    },
-    {
-      "path": "zz4/home-icons/b1.svg",
-      "kind": "file",
-      "size": 1310,
-      "sha256": "32f976142aae81771cf004be8934f821468490e02a1140036664c7890db73ee1"
-    },
-    {
-      "path": "zz4/home-icons/b2.svg",
-      "kind": "file",
-      "size": 1452,
-      "sha256": "9b12db7cd28c3e1ed9ea96c7792c8df5a794ce97d6d26f9e2360abfe7147ca30"
-    },
-    {
-      "path": "zz4/home-icons/b3.svg",
-      "kind": "file",
-      "size": 1414,
-      "sha256": "72167c084c6f89d4eb4c1caaab9ffae7bba598aed670819922eae86c2356d3e8"
-    },
-    {
-      "path": "zz4/home-icons/b4.svg",
-      "kind": "file",
-      "size": 1438,
-      "sha256": "cadf66989d9034230d1d490634ba4da7957ecbbf96689e46a5ee5eb80866e69b"
-    },
-    {
-      "path": "zz4/home-icons/b5.svg",
-      "kind": "file",
-      "size": 1330,
-      "sha256": "e21cfc264f17184338502fc3e57fa184c6a028ab129279fa8a9d78efa6a44d1e"
-    },
-    {
-      "path": "zz4/home-icons/b6.svg",
-      "kind": "file",
-      "size": 1213,
-      "sha256": "730b1ad7362ff3f899cfdc00392a12b84d54e9f0ac69adb0cf5d739f4cbf5d85"
-    },
-    {
-      "path": "zz4/home-icons/b7.svg",
-      "kind": "file",
-      "size": 1446,
-      "sha256": "041dba1ca022b24a06cbada8c29d308109c277dca4189cb5dc0bbdd763137580"
-    },
-    {
-      "path": "zz4/home-icons/b8.svg",
-      "kind": "file",
-      "size": 1600,
-      "sha256": "3c93e512569cc66246cb1a0ebfba60cd92ef5389ef9375514a3ae02ba076b72f"
-    },
-    {
-      "path": "zz4/home-icons/b9.svg",
-      "kind": "file",
-      "size": 1509,
-      "sha256": "6cc0f44bcc534a0dc62ad1c53a7054d038a94afb1d5e6f09313ebaf9928848d1"
-    },
-    {
-      "path": "zz4/home-icons/f1.svg",
-      "kind": "file",
-      "size": 1318,
-      "sha256": "52dcce4c3eebc769573464e4c5fca49dce61f3fb71a5a4b1921346b5ec96a713"
-    },
-    {
-      "path": "zz4/home-icons/f2.svg",
-      "kind": "file",
-      "size": 2592,
-      "sha256": "7e57e4000595585bf6814d3bab81564ab28f3c89e91dc5d9cf343b9f224cfd3f"
-    },
-    {
-      "path": "zz4/home-icons/f3.svg",
-      "kind": "file",
-      "size": 2568,
-      "sha256": "f9d2ec6946a6d039870a2867a60815538c5eb3120d58ab6769e5bc626ba90a3c"
-    },
-    {
-      "path": "zz4/home-icons/f4.svg",
-      "kind": "file",
-      "size": 2619,
-      "sha256": "74bcb8bcb78cf5f23a085dc42ccf29190b86a068d52e76072c687c883fd05d30"
-    },
-    {
-      "path": "zz4/home-icons/f5.svg",
-      "kind": "file",
-      "size": 1371,
-      "sha256": "60496b9823daad05528ccc7e931eeb00ff054d63f826c6c117baa5b25c24125a"
-    },
-    {
-      "path": "zz4/home-icons/f6.svg",
-      "kind": "file",
-      "size": 2300,
-      "sha256": "0247eb541bf160da430b2c3971fef0acf7445ac4f9a625e7217389cade8896f5"
-    },
-    {
-      "path": "zz4/home-icons/f7.svg",
-      "kind": "file",
-      "size": 1603,
-      "sha256": "b8346b47c79dc207345e1e80d53501dcbc7991cead76f1fff38b77d1b67d7d18"
-    },
-    {
-      "path": "zz4/home-icons/own-aletheia.png",
-      "kind": "file",
-      "size": 2707,
-      "sha256": "1572e579d71ed3a0d378610c9ee5d1cdd0dbd54b77581d1500fa82e6e0388874"
-    },
-    {
-      "path": "zz4/home-icons/own-alter.png",
-      "kind": "file",
-      "size": 2356,
-      "sha256": "4d0556aa8fad6ecaedc00545b0de0ddaf0afd1195bf0569fff505b7f0adcf08d"
-    },
-    {
-      "path": "zz4/home-icons/own-asrai.png",
-      "kind": "file",
-      "size": 2656,
-      "sha256": "5a09a9f639bad262bd83f6d5b3e1c7c253b1dd751f3c5462a4fe7c1c09bd69cd"
-    },
-    {
-      "path": "zz4/home-icons/own-memdeck.png",
-      "kind": "file",
-      "size": 1048,
-      "sha256": "6ad472c5003329267f39fcac7ec8b9227e4f13528b42f0c59a8fbe3f45197026"
-    },
-    {
-      "path": "zz4/home-icons/own-release.png",
-      "kind": "file",
-      "size": 4232,
-      "sha256": "d476d25d52ef7c1282a5bda5910aa6986a369b984e826cf86aa52fc778b1481b"
-    },
-    {
-      "path": "zz4/home-icons/own-stopwatch.png",
-      "kind": "file",
-      "size": 7548,
-      "sha256": "0d1a8ebea6f043e931f2bf3f9e30c01ca037c2f9589a93f2bc880664a19fae5f"
-    },
-    {
-      "path": "zz4/home-icons/own-tobira.png",
-      "kind": "file",
-      "size": 6841,
-      "sha256": "6a3cc96f2fa7f4324309150138becd3d45f8a86bdddaa41537400a35b8dfc7a4"
-    },
-    {
-      "path": "zz4/home-icons/own-usotsuki.png",
-      "kind": "file",
-      "size": 3856,
-      "sha256": "8d77fb6e9d7c5e1a61c9ec2a9b270f84ac405e762e20ecbd44088d5eff32244b"
-    },
-    {
-      "path": "zz4/home-icons/y1.svg",
-      "kind": "file",
-      "size": 1211,
-      "sha256": "d23011a76b7cd2d6d8122e36581423e88160bfcd2d5df7949d56e72c7a741d81"
-    },
-    {
-      "path": "zz4/home-icons/y10.svg",
-      "kind": "file",
-      "size": 1244,
-      "sha256": "ba635e0b7ee46138350193dbf1a8da1ebfe7f3ab7ad2258e9b601d3bd7c5ddcc"
-    },
-    {
-      "path": "zz4/home-icons/y11.svg",
-      "kind": "file",
-      "size": 1654,
-      "sha256": "08debed3c9b6f4b448f6c92c0249b34b4613498a024b125e688a882897f6e61b"
-    },
-    {
-      "path": "zz4/home-icons/y2.svg",
-      "kind": "file",
-      "size": 1209,
-      "sha256": "5009efc07294a9c1817ffad6b4a224e77e553ee9c17db0c1fd0d08a1731e957d"
-    },
-    {
-      "path": "zz4/home-icons/y3.svg",
-      "kind": "file",
-      "size": 1256,
-      "sha256": "9b61a35f1cd999da3edc88fc0165788b6a855ea2eda576b4b4efa83fab62f358"
-    },
-    {
-      "path": "zz4/home-icons/y4.svg",
-      "kind": "file",
-      "size": 1197,
-      "sha256": "63d784e83d76a707f9f47fff8bff62c022d05d932a587189104f063a66875024"
-    },
-    {
-      "path": "zz4/home-icons/y5.svg",
-      "kind": "file",
-      "size": 1332,
-      "sha256": "e364bd24bc397cc7cf11688828055e27e1c8e9d48edeb0e6b29d930428a7f2fc"
-    },
-    {
-      "path": "zz4/home-icons/y7.svg",
-      "kind": "file",
-      "size": 1198,
-      "sha256": "e0e5b1b1309030a1a956d8963599324bd993b98ca0463bb754c24145406b6eea"
-    },
-    {
-      "path": "zz4/home-icons/y9.svg",
-      "kind": "file",
-      "size": 1261,
-      "sha256": "b762eacb8bb19626cd0819f129bd664fea86aec081e73250915745d9cd687d8a"
-    },
-    {
-      "path": "zz4/home-icons/z1.svg",
-      "kind": "file",
-      "size": 1239,
-      "sha256": "b167b03a27f8febe3d7153df05c85dd3433b741969e38916a1827e523bf530c1"
-    },
-    {
-      "path": "zz4/home-icons/z10.svg",
-      "kind": "file",
-      "size": 1263,
-      "sha256": "af25974954b810fb199f03e3c34248cada77f4d70df23408c7ac5fc47e9acdc4"
-    },
-    {
-      "path": "zz4/home-icons/z11.svg",
-      "kind": "file",
-      "size": 1344,
-      "sha256": "0e4c65514a495c82ee56ee98efaeba2f475b5865840c1016b1a3bdf25d1729c2"
-    },
-    {
-      "path": "zz4/home-icons/z12.svg",
-      "kind": "file",
-      "size": 1176,
-      "sha256": "1c1189b67e1574139a0013094504cec81d0a72a4e2a6af6304371c277be8ca5b"
-    },
-    {
-      "path": "zz4/home-icons/z13.svg",
-      "kind": "file",
-      "size": 1202,
-      "sha256": "91d6b68dd318c05b74c2d423104f79243c2f5d062993f9632c31b48a467faf26"
-    },
-    {
-      "path": "zz4/home-icons/z14.svg",
-      "kind": "file",
-      "size": 1329,
-      "sha256": "5eb34d895b5a3cad855d319111b986e4bebe342aaba90839a3c42c83be5b58d7"
-    },
-    {
-      "path": "zz4/home-icons/z2.svg",
-      "kind": "file",
-      "size": 1284,
-      "sha256": "0c1be1ab5f29be0d15119b829eaa09a8cf8462f45e0e5282541ae80056884c49"
-    },
-    {
-      "path": "zz4/home-icons/z4.svg",
-      "kind": "file",
-      "size": 1630,
-      "sha256": "7824ec673e9e18387380c8c3b2bcc54e5771e266d560fe4fd6351d788814b759"
-    },
-    {
-      "path": "zz4/home-icons/z5.svg",
-      "kind": "file",
-      "size": 2604,
-      "sha256": "0aeebd4c5b22e70f0b86c96459d7fb99daddacccf8cc77d960b38c1fc04469b4"
-    },
-    {
-      "path": "zz4/home-icons/z6.svg",
-      "kind": "file",
-      "size": 1178,
-      "sha256": "dca39e5b72304514b501e3034b55e7d0e4c5ed9542353768cdb01ce0c4364ca0"
-    },
-    {
-      "path": "zz4/home-icons/z8.svg",
-      "kind": "file",
-      "size": 1384,
-      "sha256": "5907cdd103f19403260123cf55cc910f1fd2c24cfdaee51005577fc153663533"
-    },
-    {
-      "path": "zz4/home-icons/zb.svg",
-      "kind": "file",
-      "size": 1406,
-      "sha256": "cc18a603b648690500562bff42cf3f0c4ac6a0311e33a39612e60ce14c4cad31"
-    },
-    {
-      "path": "zz4/home-icons/zg.svg",
-      "kind": "file",
-      "size": 1786,
-      "sha256": "5cb982404afd5a1beb2d3f9aa6a2b135145ef05e06aebfa0775b6200ac49c748"
-    },
-    {
-      "path": "zz4/home-manifest.js",
-      "kind": "file",
-      "size": 5970,
-      "sha256": "c5c270fac6a2d7aa8ef6f29c44402ee5c90cdd6e357dee870b500b11fc74a8c4"
-    },
-    {
-      "path": "zz4/icon-192.png",
-      "kind": "file",
-      "size": 2863,
-      "sha256": "65e7788bc9e75df8a8b912524109b14b7ed11570a337511e910e80136d0ed849"
-    },
-    {
-      "path": "zz4/icon-512.png",
-      "kind": "file",
-      "size": 12456,
-      "sha256": "8acc3dc8be326fbbd84d1731796ffa68cfc4d5aa820b76b31eb635fe523100f3"
-    },
-    {
-      "path": "zz4/icon.svg",
-      "kind": "file",
-      "size": 572,
-      "sha256": "498e6f227105e18fcf0380d71c128c0624be16872588c411368ac3e2240da48f"
-    },
-    {
-      "path": "zz4/index.html",
-      "kind": "file",
-      "size": 45877,
-      "sha256": "87822088661c2d2c7595694a667a08123f5a31f9ab9d6d286addf2ade10866ea"
-    },
-    {
-      "path": "zz4/input-guide.js",
-      "kind": "file",
-      "size": 3149,
-      "sha256": "bea0a0a9637ad491dd9d75187499ea8435cd693d6df34dc90af5a9acbf181c94"
-    },
-    {
-      "path": "zz4/install-prompt.js",
-      "kind": "file",
-      "size": 2692,
-      "sha256": "17007cbde8828b4ce59c36ba4293274c58b1a0fbb3ac5fca611dc70d88bc67ed"
-    },
-    {
-      "path": "zz4/local-preview.js",
-      "kind": "file",
-      "size": 568,
-      "sha256": "30d58ce4c52e88eeb5bc0cb49bec51ab2f8f02fd78dedc0bbace37f9baa7b084"
-    },
-    {
-      "path": "zz4/logic-backup.js",
-      "kind": "file",
-      "size": 8925,
-      "sha256": "4db2b3304e7e25128bf06b3fb3ff48e1be4ff0ea5f2ee3f508bca68bce6cfd65"
-    },
-    {
-      "path": "zz4/logic-core.js",
-      "kind": "file",
-      "size": 4979,
-      "sha256": "1d21b14db8f41635e73be3446d2bf27d4c960a441a7d6ec72464973587950b82"
-    },
-    {
-      "path": "zz4/logic-extras.js",
-      "kind": "file",
-      "size": 6439,
-      "sha256": "23851afe1e516d20793d4f656eef8824add29c1cc22d91cc76b8f4b475df36e5"
-    },
-    {
-      "path": "zz4/logic-fake-home.js",
-      "kind": "file",
-      "size": 7397,
-      "sha256": "005f8ecf032b786b2747c0b580dc72ee30742cbc33f87fc7d9ff05c8bf8365d0"
-    },
-    {
-      "path": "zz4/logic-notes.js",
-      "kind": "file",
-      "size": 8746,
-      "sha256": "6230d46987427e01f485ebe2d1153d6d0f8e102f71904f3fe5524d08aef4bf11"
-    },
-    {
-      "path": "zz4/logic-performance.js",
-      "kind": "file",
-      "size": 4388,
-      "sha256": "f4a7349c9f9acc4228856bef829b1483e6661fa7f2a74d3566088804901df2a0"
-    },
-    {
-      "path": "zz4/logic-presets.js",
-      "kind": "file",
-      "size": 7960,
-      "sha256": "079a91b0220075cf50ad7224c9ea98c894bde88eb625151ad2d471e4c9655e3e"
-    },
-    {
-      "path": "zz4/logic-storage.js",
-      "kind": "file",
-      "size": 8070,
-      "sha256": "93353bfb2b4eed6c77bf25c22a08b30f0a746ee33e3227f5cde0132cd9496790"
-    },
-    {
-      "path": "zz4/logic-user-icons.js",
-      "kind": "file",
-      "size": 4286,
-      "sha256": "ecc7e61956916bfd825bce811691903c06f61aa943bd3de52f115745b1bdc083"
-    },
-    {
-      "path": "zz4/logic-wizard.js",
-      "kind": "file",
-      "size": 5350,
-      "sha256": "f8bfa296084d1b3d1e271967a91b2e1cb4d42748fdfe30cfa362a86dff6d96fb"
-    },
-    {
-      "path": "zz4/logic.js",
-      "kind": "file",
-      "size": 2032,
-      "sha256": "e19479d88a20d458785bffc9a017733b2ca4e136a447933c388f9ea41bdef1b9"
-    },
-    {
-      "path": "zz4/manifest.webmanifest",
-      "kind": "file",
-      "size": 568,
-      "sha256": "0a71f825d9d863a58d9c8712db31716ae04e1a7714986f8044ae0ec95a5930cb"
-    },
-    {
-      "path": "zz4/module-start.js",
-      "kind": "file",
-      "size": 146,
-      "sha256": "d5206eeacce82b689c104379220e7bc696af213dc51b9866b9a02fa29d73ba17"
-    },
-    {
-      "path": "zz4/options.js",
-      "kind": "file",
-      "size": 4187,
-      "sha256": "47cc88d2537e58186a6de6aef3e0b9abd5d2702987fbbeba3f6007458690059e"
-    },
-    {
-      "path": "zz4/performance-gestures.js",
-      "kind": "file",
-      "size": 9063,
-      "sha256": "275eca9a10b16add169be24cc4be5d6f86019fd789f3b084d9906aa1a13f3432"
-    },
-    {
-      "path": "zz4/performance-log.js",
-      "kind": "file",
-      "size": 5796,
-      "sha256": "1d20a0a232449a099817ed0aee4b0afeef04ed3f1f88f3586eb359dd44c8ba23"
-    },
-    {
-      "path": "zz4/performance-start.js",
-      "kind": "file",
-      "size": 4455,
-      "sha256": "5dd4351d82fa442df8731d27d5c83691601351741876d8e7f4dd49c5b0ca8ede"
-    },
-    {
-      "path": "zz4/performance.js",
-      "kind": "file",
-      "size": 438,
-      "sha256": "725a6ad771560f285798357f8bc1272ffc8af7ebe5d4e67ec87b8d57f1b90282"
-    },
-    {
-      "path": "zz4/photo-save-notice.js",
-      "kind": "file",
-      "size": 1871,
-      "sha256": "31463865e8d69a8ba271594fd9173cc16b8307fc0bea79b0e6306c1efddf8833"
-    },
-    {
-      "path": "zz4/precheck.js",
-      "kind": "file",
-      "size": 9337,
-      "sha256": "898a60621b8b5979de37f36dd58126714aa91473973e55fb7ebcc8d4542441c4"
-    },
-    {
-      "path": "zz4/previews.js",
-      "kind": "file",
-      "size": 11818,
-      "sha256": "359c8bf3b5b76463fe970f000b8d30f0b8ecab551413d4d412744cc3a0cf293e"
-    },
-    {
-      "path": "zz4/settings-ui.css",
-      "kind": "file",
-      "size": 29624,
-      "sha256": "59423cd0e43f622c618e603c74bb7dee2232211c0b9416c49038bc1900849f56"
-    },
-    {
-      "path": "zz4/settings-ui.js",
-      "kind": "file",
-      "size": 85270,
-      "sha256": "7c1f78db54b3cde3a37d8f3f5e5bc7930b7ccf8fd85fb4e1bb57ae343f509da6"
-    },
-    {
-      "path": "zz4/style-fake-home.css",
-      "kind": "file",
-      "size": 10320,
-      "sha256": "f915d3d4f7745327acdee4dfe4360a23db6bd4fea852e37871ab5e55d9290c7b"
-    },
-    {
-      "path": "zz4/style-guide-notes.css",
-      "kind": "file",
-      "size": 3462,
-      "sha256": "49641d12b302fe0c5cb187ac5117297ed31b3695e98a6c220565f60b52197a64"
-    },
-    {
-      "path": "zz4/style-settings.css",
-      "kind": "file",
-      "size": 17132,
-      "sha256": "1406b3f37ff4d006255a83876072cc27556e32e029a307d388ce35b5a2a59fe8"
-    },
-    {
-      "path": "zz4/style.css",
-      "kind": "file",
-      "size": 9667,
-      "sha256": "a659fdf94ad09eb8986d18f55b371b946ff1113793c8854f92825abf93aa3d5d"
-    },
-    {
-      "path": "zz4/sw.activation.test.mjs",
-      "kind": "file",
-      "size": 2579,
-      "sha256": "c9f83dbea93476b0ba3c7c6d6d6d883940126e6096595478ff2936d67b59dc37"
-    },
-    {
-      "path": "zz4/sw.js",
-      "kind": "file",
-      "size": 8122,
-      "sha256": "aea63f8be600fdb20d1d0b909e984b90d177bdf74975dd88063751b03806f8b3"
-    },
-    {
-      "path": "zz4/update-notice.js",
-      "kind": "file",
-      "size": 1764,
-      "sha256": "f8ccb7ce1cb68563df2ae949119ef13f1746ad27db4de6d662d484fde78e6350"
-    },
-    {
-      "path": "zz4/update-prompt.js",
-      "kind": "file",
-      "size": 10985,
-      "sha256": "31db2f3865d6481514c3323c0bd878a31286bed74084979cc9abc5552bec57ab"
-    },
-    {
-      "path": "zz4/user-icons.js",
-      "kind": "file",
-      "size": 12365,
-      "sha256": "9b1e88f74d28885c6ec072648f098dd01ad34aa940b99f5c8fe2cbfe2e95e3b3"
-    },
-    {
-      "path": "zz4/views-home.js",
-      "kind": "file",
-      "size": 6133,
-      "sha256": "67b671efbd05daa71ce39f976aa8a34014accf5fa45ca44cded67a8b30070902"
-    },
-    {
-      "path": "zz4/views.js",
-      "kind": "file",
-      "size": 13343,
-      "sha256": "103f74dc0316f29246157e93235c1c01002e76bcd639e078be905bd6e1428058"
-    },
-    {
-      "path": "zz4/wake-lock.js",
-      "kind": "file",
-      "size": 1722,
-      "sha256": "d0896b84786a37fda0b2e0cefa15aad0b426bce51f5371854d9bee8c53f24bfb"
-    },
-    {
-      "path": "zz4/wallpaper.js",
-      "kind": "file",
-      "size": 6169,
-      "sha256": "4a9465fe099bf665a08c914b139a35ad7887d62fab7756cee23e8eb001b2ba7d"
-    },
-    {
-      "path": "zz4/wizard-view.js",
-      "kind": "file",
-      "size": 5897,
-      "sha256": "063162fcea1153d1ade6cd03988694d8b75720fb4d7688ab436d2f973561527e"
-    },
-    {
-      "path": "zz4/wizard.js",
-      "kind": "file",
-      "size": 20071,
-      "sha256": "b62e54d9e8a64bf56baf186dcb2fd8c4ab4c1f8bc4f21f373eac34eb68b9ed4b"
-    },
-    {
-      "path": "zz5",
-      "kind": "directory"
-    },
-    {
-      "path": "zz5/app.js",
-      "kind": "file",
-      "size": 912,
-      "sha256": "6f24bc416aa74ba1d36d22aead900f3277f7fd0ca7f209267b9fe051919a4e74"
-    },
-    {
-      "path": "zz5/brand-logo.jpg",
-      "kind": "file",
-      "size": 41744,
-      "sha256": "dc5e01b93f89f67222e217f06dc4fbb0290b682bbc000df748caecc1fb677f88"
-    },
-    {
-      "path": "zz5/brand-logo.png",
-      "kind": "file",
-      "size": 135433,
-      "sha256": "d94abbad709414d5a951e73d245e173d36e9ae952c1af4e2eb5085afd5f5f67c"
-    },
-    {
-      "path": "zz5/card-select.js",
-      "kind": "file",
-      "size": 3694,
-      "sha256": "51d37578877f9fd0f27c07fc38c05abb9761fd224511549124cf95ce69ddc289"
-    },
-    {
-      "path": "zz5/cell-guide.js",
-      "kind": "file",
-      "size": 3827,
-      "sha256": "2627423d2e5808c80f949a6469c209190fbaba47717f282d8ff9745ac34787ae"
-    },
-    {
-      "path": "zz5/controller-state.js",
-      "kind": "file",
-      "size": 1341,
-      "sha256": "9e57bc9fe375c31141a578f966421566f64fee6c46404a52f94cc23846f71e36"
-    },
-    {
-      "path": "zz5/controller.js",
-      "kind": "file",
-      "size": 9161,
-      "sha256": "7dc139b3835334befe82df9aa2b4aa3dca8f3527b82724b811b79a23fcc54a77"
-    },
-    {
-      "path": "zz5/court-cards",
-      "kind": "directory"
-    },
-    {
-      "path": "zz5/court-cards.js",
-      "kind": "file",
-      "size": 3876,
-      "sha256": "3603443a89e7e4c3f8b0b692e5715402d846b2e7e14cb1728031fc69f878a1c8"
-    },
-    {
-      "path": "zz5/court-cards/C-J.webp",
-      "kind": "file",
-      "size": 70692,
-      "sha256": "cda196aa29433dd1ac9ffd6bbe004aa9aeefc978b2cd113a7462bf6ee70f2501"
-    },
-    {
-      "path": "zz5/court-cards/C-K.webp",
-      "kind": "file",
-      "size": 71008,
-      "sha256": "52e6842448c77603b0ed860db0df23c566ecfa26a80a04bbf0c04d3fa74e2f00"
-    },
-    {
-      "path": "zz5/court-cards/C-Q.webp",
-      "kind": "file",
-      "size": 74768,
-      "sha256": "f0af50eb930612968bf13ff9769eb2b4f42db69240afd43651d824104f8a0915"
-    },
-    {
-      "path": "zz5/court-cards/D-J.webp",
-      "kind": "file",
-      "size": 76176,
-      "sha256": "db3cc279ffaaf010e5249753750c229e927eb3748430bd6eb875d44762f78b49"
-    },
-    {
-      "path": "zz5/court-cards/D-K.webp",
-      "kind": "file",
-      "size": 73408,
-      "sha256": "90eac296711bd7d1fee43fe705aef738c1a7aa6eb8e2e8532687e4f6bbaa8791"
-    },
-    {
-      "path": "zz5/court-cards/D-Q.webp",
-      "kind": "file",
-      "size": 69644,
-      "sha256": "b8e142345cf8b7fa3ea5ebb84c6ec921df4b0e830b0e276700f75c30e9c8f83b"
-    },
-    {
-      "path": "zz5/court-cards/H-J.webp",
-      "kind": "file",
-      "size": 76904,
-      "sha256": "7d3e3faa425d949e566c854a0344da20f6977704fc67244821ac76056fee8957"
-    },
-    {
-      "path": "zz5/court-cards/H-K.webp",
-      "kind": "file",
-      "size": 78286,
-      "sha256": "261c6bdb51344bddb8fcdf86baa7bc391486f205fec9a5289cebfc8914187f16"
-    },
-    {
-      "path": "zz5/court-cards/H-Q.webp",
-      "kind": "file",
-      "size": 76588,
-      "sha256": "af30667873870460f86a369bd3088e5bda82dbe06a4c5bd70dee08e5243ea6d1"
-    },
-    {
-      "path": "zz5/court-cards/S-J.webp",
-      "kind": "file",
-      "size": 72360,
-      "sha256": "9e554d7a67025fd3065a3075d4124fd0b9d77374f621c5e24cd8179406398473"
-    },
-    {
-      "path": "zz5/court-cards/S-K.webp",
-      "kind": "file",
-      "size": 70756,
-      "sha256": "f6aeb0c1818e5f459e8a7fd46443aff7c052cc40cdee01b41ce39f72af984eee"
-    },
-    {
-      "path": "zz5/court-cards/S-Q.webp",
-      "kind": "file",
-      "size": 71474,
-      "sha256": "32d47bfd7fd8a3cbf620463b79ff58b5cf1b9ef63da1a2268087678fbe838816"
-    },
-    {
-      "path": "zz5/custom-slot-save.js",
-      "kind": "file",
-      "size": 4645,
-      "sha256": "ae7bb908fb2fa74a201300dd6f3fb049f000b0fe2090dbea6f79a9e81fdcf09e"
-    },
-    {
-      "path": "zz5/deck-loader.js",
-      "kind": "file",
-      "size": 1060,
-      "sha256": "8aa1e49f5c09ab3f7d41693c975c277ed83034124dadd2aa1f357ef1c1ccbcf0"
-    },
-    {
-      "path": "zz5/dom.js",
-      "kind": "file",
-      "size": 3383,
-      "sha256": "5d2dee29e7e2e178a51e054ea385e01eb085fb8832565699c684cbb74077cc2e"
-    },
-    {
-      "path": "zz5/fullscreen.js",
-      "kind": "file",
-      "size": 433,
-      "sha256": "f2edda30898f546aea69efe29f5823ac7fbcd286c46787af12c88560a420bb9f"
-    },
-    {
-      "path": "zz5/gesture-guide.js",
-      "kind": "file",
-      "size": 1073,
-      "sha256": "9f7cbd24b2c36f536c7098731f6565cff9aaafbe20647ec6402538d8e1bacca8"
-    },
-    {
-      "path": "zz5/icon-192.png",
-      "kind": "file",
-      "size": 2759,
-      "sha256": "9328cc73c578e5f57db4bf1b617197c1018f226d5d4486f48ae52dc0bb014d19"
-    },
-    {
-      "path": "zz5/icon-512.png",
-      "kind": "file",
-      "size": 11879,
-      "sha256": "f75643a952ba4077b52fcaf50b0bb10223eaccf2a79b883fd14bce90340d68f3"
-    },
-    {
-      "path": "zz5/icon.svg",
-      "kind": "file",
-      "size": 330,
-      "sha256": "5026e07f3d8882e29591759dabc3e3f96c41dd171022b74b81fcf7842234577b"
-    },
-    {
-      "path": "zz5/image-db.js",
-      "kind": "file",
-      "size": 2600,
-      "sha256": "a798fc702e0b0b9f1703f054e6b9587ee1ce39d2fc6b5d1b27bb3baab500d4d5"
-    },
-    {
-      "path": "zz5/images.js",
-      "kind": "file",
-      "size": 1038,
-      "sha256": "b38d7be92719ee6c4f78f70a6a55161a67935d896a4dfedbba137f0840f2b081"
-    },
-    {
-      "path": "zz5/index.html",
-      "kind": "file",
-      "size": 16510,
-      "sha256": "602eb5c043ddae6765ba3ab0350dec2e385d10250bbf59f645aa7a6c4896f3f6"
-    },
-    {
-      "path": "zz5/install-prompt.js",
-      "kind": "file",
-      "size": 2692,
-      "sha256": "17007cbde8828b4ce59c36ba4293274c58b1a0fbb3ac5fca611dc70d88bc67ed"
-    },
-    {
-      "path": "zz5/launch-check.js",
-      "kind": "file",
-      "size": 8903,
-      "sha256": "9e150689ea547ac027d3173908046928fcfce385cdd84956a8bc800fa1ecf077"
-    },
-    {
-      "path": "zz5/local-preview.js",
-      "kind": "file",
-      "size": 568,
-      "sha256": "30d58ce4c52e88eeb5bc0cb49bec51ab2f8f02fd78dedc0bbace37f9baa7b084"
-    },
-    {
-      "path": "zz5/logic-cells.js",
-      "kind": "file",
-      "size": 2730,
-      "sha256": "5ef6546192dc51d696fb47e2e4e70e0f6f3c9238914ba6ce1ed9aa4b01b3e69e"
-    },
-    {
-      "path": "zz5/logic-geometry.js",
-      "kind": "file",
-      "size": 5413,
-      "sha256": "5c2271ec4db93061aa53a2f8797702947d67a20d0f7de2d7c4174dc4843c93aa"
-    },
-    {
-      "path": "zz5/logic-gestures.js",
-      "kind": "file",
-      "size": 1264,
-      "sha256": "be52dd884ab62e5a67d21f99cacd58a83c2ca6013f044d6caeba0443e41a5b1e"
-    },
-    {
-      "path": "zz5/logic-limits.js",
-      "kind": "file",
-      "size": 3795,
-      "sha256": "a9f525dfc819543beaf9aacfc8db425affa6268afa8edfdad2367cf15210613a"
-    },
-    {
-      "path": "zz5/logic-photo-sets.js",
-      "kind": "file",
-      "size": 1091,
-      "sha256": "d192965ebcac54185b6ca0f586bfa071d0df99641f553d43c1f00d04e0e1fd8f"
-    },
-    {
-      "path": "zz5/logic-presets.js",
-      "kind": "file",
-      "size": 7969,
-      "sha256": "43d196091dfda93496336c38b277e7277726016e80ca27047565b20465cd2bb3"
-    },
-    {
-      "path": "zz5/logic.js",
-      "kind": "file",
-      "size": 335,
-      "sha256": "f31609c9e5a89f28299f9b75779458fc298f65ebd1f91c7a401a727cf03d290c"
-    },
-    {
-      "path": "zz5/manifest.webmanifest",
-      "kind": "file",
-      "size": 586,
-      "sha256": "a0d5556e93ad2877eadfa28efb4449219f50c44964c3c8d27817a6b1fa08be04"
-    },
-    {
-      "path": "zz5/performance-run.js",
-      "kind": "file",
-      "size": 7438,
-      "sha256": "46b713cd6e052bb5e305ac0905b9a601e65fe0ab8d0e57215bb0e70eec6658d5"
-    },
-    {
-      "path": "zz5/photo-save-notice.js",
-      "kind": "file",
-      "size": 1873,
-      "sha256": "89803ecf146984968e84e4e6818998677b598028f3c8dfa33ccb37a6fafecee1"
-    },
-    {
-      "path": "zz5/photo-sets.js",
-      "kind": "file",
-      "size": 9883,
-      "sha256": "802fa252c439e303a91b54df0559e962a5ee7bb63e2368a88a2049cae6735024"
-    },
-    {
-      "path": "zz5/pointer.js",
-      "kind": "file",
-      "size": 6726,
-      "sha256": "cbd1278217248d7d9fb5eef5c50d3b04f2a289319e2b65ff7f48eb8e2da5f2e6"
-    },
-    {
-      "path": "zz5/preferences.js",
-      "kind": "file",
-      "size": 3168,
-      "sha256": "ca870396c429513f93b52f8c6f77ae80e34b1644d5bd165b298249f27c4eae9e"
-    },
-    {
-      "path": "zz5/preset-form.js",
-      "kind": "file",
-      "size": 8347,
-      "sha256": "6cfe17dabb8310f0bad246d5afe9e1f6b61ed8ef46ca1467c3e34c1d6eb8ff30"
-    },
-    {
-      "path": "zz5/presets.js",
-      "kind": "file",
-      "size": 2522,
-      "sha256": "46422d8c46290e1425fb491bae398814632a5fbaccaa582a799326de0246c0e8"
-    },
-    {
-      "path": "zz5/settings-ui.css",
-      "kind": "file",
-      "size": 33048,
-      "sha256": "2d06906034f75fd71cb29a48d41b963eb72b6c19f70340ce4ab7fade3852c6d8"
-    },
-    {
-      "path": "zz5/settings-ui.js",
-      "kind": "file",
-      "size": 85270,
-      "sha256": "7c1f78db54b3cde3a37d8f3f5e5bc7930b7ccf8fd85fb4e1bb57ae343f509da6"
-    },
-    {
-      "path": "zz5/status.js",
-      "kind": "file",
-      "size": 570,
-      "sha256": "1fa2e7859821d7f20d63468dccded6ed73fcca6d53cb3650356541fc728a512a"
-    },
-    {
-      "path": "zz5/storage-commit.js",
-      "kind": "file",
-      "size": 2586,
-      "sha256": "512a0f98a99fda12de98635f7de0ce5016de65d7632f5b8d24b5048af7a8afc9"
-    },
-    {
-      "path": "zz5/stored-recovery.js",
-      "kind": "file",
-      "size": 2794,
-      "sha256": "e225b9e482a8f839e656a2f0e600a278769f84d21c00e9104ef398b0d14db1f3"
-    },
-    {
-      "path": "zz5/style-cells.css",
-      "kind": "file",
-      "size": 2714,
-      "sha256": "42e47e608f5e0de47f6937163a46c5afe334df0cda88e7b8ec73bb4eab5c2a39"
-    },
-    {
-      "path": "zz5/style-forms.css",
-      "kind": "file",
-      "size": 2246,
-      "sha256": "ad5c748b4bf4fe196446bb99fe677b394844ee46a845bc091c461983deb47c5d"
-    },
-    {
-      "path": "zz5/style-guide.css",
-      "kind": "file",
-      "size": 2024,
-      "sha256": "db063394750264a24a1314e0f6ff1b72b7ff8c115f71f8565d7c7294f645717b"
-    },
-    {
-      "path": "zz5/style.css",
-      "kind": "file",
-      "size": 4547,
-      "sha256": "6c55889385067ebb9c5bf2cbee08c273752332f774af76145ce5e57597e13519"
-    },
-    {
-      "path": "zz5/sw.js",
-      "kind": "file",
-      "size": 6611,
-      "sha256": "2259cd054a7f5d5fed873b754e2c56dccdd83525795db4d414458694743160da"
-    },
-    {
-      "path": "zz5/update-prompt.js",
-      "kind": "file",
-      "size": 10985,
-      "sha256": "31db2f3865d6481514c3323c0bd878a31286bed74084979cc9abc5552bec57ab"
-    },
-    {
-      "path": "zz5/veil.js",
-      "kind": "file",
-      "size": 7771,
-      "sha256": "8b6d1c41df8be32a6fc1e1ace163c2108771cd89b6358a20480810b8baacdf60"
-    },
-    {
-      "path": "zz5/wake-lock.js",
-      "kind": "file",
-      "size": 1839,
-      "sha256": "06491e2348b7a0d7073b441dcbfb72d28d3ec0545e4a7ab879bc9c6f76b3a283"
-    },
-    {
-      "path": "zz6",
-      "kind": "directory"
-    },
-    {
-      "path": "zz6/CARD_CREDITS.md",
-      "kind": "file",
-      "size": 990,
-      "sha256": "878fac460afb8b2f26cb50d61c8634060045c3bd4c7da1535b0f7abd51cd0202"
-    },
-    {
-      "path": "zz6/COIN_CREDITS.md",
-      "kind": "file",
-      "size": 918,
-      "sha256": "3783c374c0ee76f3e86736b09cd673c99afa9243a753db9b04d3ada9cab9d4c8"
-    },
-    {
-      "path": "zz6/app.js",
-      "kind": "file",
-      "size": 17253,
-      "sha256": "84a777d4a9ca6daef45adc8b4dcea87f04b85da38efcc5133d7fef19c1ee1477"
-    },
-    {
-      "path": "zz6/audio.js",
-      "kind": "file",
-      "size": 3764,
-      "sha256": "b76445b39129ee62e95865fe8ad608df11f3a0d9cecc0779111a006217daae2d"
-    },
-    {
-      "path": "zz6/brand-logo.jpg",
-      "kind": "file",
-      "size": 38799,
-      "sha256": "4b16028a00b527113240fb8df2f7b529ccf5052597797f203812db1b9ceecdd9"
-    },
-    {
-      "path": "zz6/brand-logo.png",
-      "kind": "file",
-      "size": 127621,
-      "sha256": "f0b5d9d77bbe84dda0354b317de38f2d845178dcb7160444340ac28a90bcc3f1"
-    },
-    {
-      "path": "zz6/card-rider-blue.jpg",
-      "kind": "file",
-      "size": 199650,
-      "sha256": "031f0c250872a492a7ecce2a29e16570657cd8ffa24c90c8e3277796c5f7864b"
-    },
-    {
-      "path": "zz6/card-rider-red.jpg",
-      "kind": "file",
-      "size": 331016,
-      "sha256": "5461438613c87b19603b56557434f878b1035f41104b9cf2ac318f6d26847881"
-    },
-    {
-      "path": "zz6/coin-500won.svg",
-      "kind": "file",
-      "size": 1110,
-      "sha256": "e0e89484a1946494f73caaac114d005ea18485e48a1e6eff38c6af55fbbd53c7"
-    },
-    {
-      "path": "zz6/coin-500won.webp",
-      "kind": "file",
-      "size": 51240,
-      "sha256": "cf0b9a0f006c220635ac3121aa8d69827e159da0a6c46d48da52c222694cb652"
-    },
-    {
-      "path": "zz6/coin-kennedy.svg",
-      "kind": "file",
-      "size": 1196,
-      "sha256": "0dec0ae35587a216a38a28353b7465813a44e0f0e7fd06689525e63dfb82131a"
-    },
-    {
-      "path": "zz6/coin-kennedy.webp",
-      "kind": "file",
-      "size": 232168,
-      "sha256": "6c46e753f17fcd89f30cc1c35774d362256d666ed1a4a3595a5f41edd16cf824"
-    },
-    {
-      "path": "zz6/coin-paint.js",
-      "kind": "file",
-      "size": 1698,
-      "sha256": "f30cbe36bda1b6c162649ad79bc2eeb78ef067b89a396fcd803f730c8889e1e9"
-    },
-    {
-      "path": "zz6/crack-session.js",
-      "kind": "file",
-      "size": 5079,
-      "sha256": "13479e390c694f058776327d00a77b75d8578c2548049879f71e92e48d3a5125"
-    },
-    {
-      "path": "zz6/dom.js",
-      "kind": "file",
-      "size": 5623,
-      "sha256": "e2a5e593ef6dd7c9af0dfe33ceddafe003eb848bc2644623cfa91a22e85426ea"
-    },
-    {
-      "path": "zz6/gesture-guide.js",
-      "kind": "file",
-      "size": 1173,
-      "sha256": "de07a18fe578fb30cd06a6aca1db9e37f7a3b90c0ff5cd927f26813a419798cf"
-    },
-    {
-      "path": "zz6/home-screen.js",
-      "kind": "file",
-      "size": 2311,
-      "sha256": "c2e249e62b07a1635d8d2a15509f2f33a160b545357200a4c9796a98632976d1"
-    },
-    {
-      "path": "zz6/icon-192.png",
-      "kind": "file",
-      "size": 6797,
-      "sha256": "e2bb4d4f493c89a8dd64338ca0731489b11f00ecfdd55456c1886d1117e7ed1c"
-    },
-    {
-      "path": "zz6/icon-512.png",
-      "kind": "file",
-      "size": 24436,
-      "sha256": "9c82f48ed054e2a49086c167fe47c57adf2065eb46ee046bc693e2548ec93f6b"
-    },
-    {
-      "path": "zz6/icon.svg",
-      "kind": "file",
-      "size": 485,
-      "sha256": "55c2c0f89545557affe3657f9e1aacedbeba2e6e96305642e5c72d3dfd02fc26"
-    },
-    {
-      "path": "zz6/images.js",
-      "kind": "file",
-      "size": 7824,
-      "sha256": "edad7e72a97b84ce4bc9f72fae656ff2794d875a3a09569c488df800b3fdd1d4"
-    },
-    {
-      "path": "zz6/index.html",
-      "kind": "file",
-      "size": 20688,
-      "sha256": "bcfb43fadfcaf6b00c31cedcf56ced882ccf01a58b1464848c427e5359bd8ac6"
-    },
-    {
-      "path": "zz6/install-prompt.js",
-      "kind": "file",
-      "size": 3550,
-      "sha256": "07bc2a6d4789f7b8315e050dd866e07d2796c33a96086ec8105cdde7b0426101"
-    },
-    {
-      "path": "zz6/launch-check.js",
-      "kind": "file",
-      "size": 8289,
-      "sha256": "f683abb9ba56bb6a33c1087579cfd7a28a80a85c20c148248d6f8e09768a557f"
-    },
-    {
-      "path": "zz6/local-preview.js",
-      "kind": "file",
-      "size": 568,
-      "sha256": "30d58ce4c52e88eeb5bc0cb49bec51ab2f8f02fd78dedc0bbace37f9baa7b084"
-    },
-    {
-      "path": "zz6/logic.js",
-      "kind": "file",
-      "size": 14754,
-      "sha256": "d4cba48c954a1b02925e638ef2bbfb31af6530f4f6137d016029990454d4efb4"
-    },
-    {
-      "path": "zz6/manifest.webmanifest",
-      "kind": "file",
-      "size": 578,
-      "sha256": "4ae7b61ca323949a283346106fb28b9d3f516981cf67ffc4fddf8751d6da8ee0"
-    },
-    {
-      "path": "zz6/mode-switch.js",
-      "kind": "file",
-      "size": 2344,
-      "sha256": "22dbd695ffb117d10c61a0668bdb5833355983d1c66ac732abff7ac6752848bb"
-    },
-    {
-      "path": "zz6/motion-prefs.js",
-      "kind": "file",
-      "size": 5590,
-      "sha256": "a844adca4afb8a305627911a01d58d8557e42798d3dc259b06573b8a272dea69"
-    },
-    {
-      "path": "zz6/perf-state.js",
-      "kind": "file",
-      "size": 343,
-      "sha256": "1cb16fc389678a44ce404d3b563f8f40cb684ccc7638d8ae4bcfd78d3e6ee4f5"
-    },
-    {
-      "path": "zz6/performance.js",
-      "kind": "file",
-      "size": 788,
-      "sha256": "ff56d29065b2752290ff17ec16fc106562a07db2b4a7f273884256ef60f1cc1f"
-    },
-    {
-      "path": "zz6/photo-save-notice.js",
-      "kind": "file",
-      "size": 2392,
-      "sha256": "9b7f2deeb8900728c73b3df3f538925a61b25e91c34f6d3fbca07c3a0a4f27aa"
-    },
-    {
-      "path": "zz6/pointer-gestures.js",
-      "kind": "file",
-      "size": 17013,
-      "sha256": "6af5f84c1206a1da271a0c2a6c5e151139b3146ec7bbd1e1ee6dff2a8da851d7"
-    },
-    {
-      "path": "zz6/presets.js",
-      "kind": "file",
-      "size": 8479,
-      "sha256": "18079aa8004e58a9e1a2980200246c94735757ba1c9765985735eb8e8846049c"
-    },
-    {
-      "path": "zz6/sensor-effects.js",
-      "kind": "file",
-      "size": 12930,
-      "sha256": "d6f2079b8e543b3751150c6e6ef941a2fe1e891e35318935afaee6aa878e0f5d"
-    },
-    {
-      "path": "zz6/sensor-motion.js",
-      "kind": "file",
-      "size": 8815,
-      "sha256": "d9d440325a5db8ceb93dd16304ef905f9df34b0156d868a254167e6a799cb387"
-    },
-    {
-      "path": "zz6/settings-ui.css",
-      "kind": "file",
-      "size": 33846,
-      "sha256": "1ad55dcaaa6e858436b6cd9069f297c8418ad9745070dd7d5996834c32aa717c"
-    },
-    {
-      "path": "zz6/settings-ui.js",
-      "kind": "file",
-      "size": 85270,
-      "sha256": "7c1f78db54b3cde3a37d8f3f5e5bc7930b7ccf8fd85fb4e1bb57ae343f509da6"
-    },
-    {
-      "path": "zz6/state-store.js",
-      "kind": "file",
-      "size": 6772,
-      "sha256": "2aaac458d904c44abac86dc557011081a1d48f6138f9ef3bc47b148c63f000c7"
-    },
-    {
-      "path": "zz6/style-overlays.css",
-      "kind": "file",
-      "size": 2064,
-      "sha256": "26f5e594328800520ce5b6eff571b381e51049fb02985691e9e1ddfce1ebb726"
-    },
-    {
-      "path": "zz6/style-stage.css",
-      "kind": "file",
-      "size": 10307,
-      "sha256": "e842e279359014ade295f1fd182b76fd7d104d1eb31d0534f0a8a0df38f1931f"
-    },
-    {
-      "path": "zz6/style.css",
-      "kind": "file",
-      "size": 6977,
-      "sha256": "5c8ad3e238e13f3b30ffb38816728a9b32b950f7d910c280a78eefcdb2ea9647"
-    },
-    {
-      "path": "zz6/sw.js",
-      "kind": "file",
-      "size": 6154,
-      "sha256": "9c5c17a2958d032d78abc3a103942fb39b390de2f56e9b2b233fe422dcd0618b"
-    },
-    {
-      "path": "zz6/update-prompt.js",
-      "kind": "file",
-      "size": 10985,
-      "sha256": "31db2f3865d6481514c3323c0bd878a31286bed74084979cc9abc5552bec57ab"
-    },
-    {
-      "path": "zz6/wake-lock.js",
-      "kind": "file",
-      "size": 1811,
-      "sha256": "c281da1785b9ff3a930a71bd27a125b57ed657f42c3a9d1379bfc5b59082710f"
-    },
-    {
-      "path": "zz7",
-      "kind": "directory"
-    },
-    {
-      "path": "zz7/bindings.js",
-      "kind": "file",
-      "size": 2868,
-      "sha256": "f5d23c85b5b3a2e4b35e77796a011785c1a505a713cf68ae35a23a9a2a71e6f0"
-    },
-    {
-      "path": "zz7/brand-logo.jpg",
-      "kind": "file",
-      "size": 41218,
-      "sha256": "87ec7dd8d6dc29a76a0c6d3793b751301aa30db6520058fb1e8bc520b1587df8"
-    },
-    {
-      "path": "zz7/brand-logo.png",
-      "kind": "file",
-      "size": 129979,
-      "sha256": "5a47623fdde521f130655511f8ee23a662f479818f7b9d861210ffd31f1b8258"
-    },
-    {
-      "path": "zz7/controller-attempts.js",
-      "kind": "file",
-      "size": 3247,
-      "sha256": "38ad532b2a16e479f211530a7da99aa93a77412be106311c2c621119d37a7a7a"
-    },
-    {
-      "path": "zz7/controller-audio.js",
-      "kind": "file",
-      "size": 5543,
-      "sha256": "4861ecebd7b16b866e4f6ff3da9e58a133c8dfc8f5d20d23db2ef89742ff0b76"
-    },
-    {
-      "path": "zz7/controller-display-theme.js",
-      "kind": "file",
-      "size": 1682,
-      "sha256": "4888755e0607c860c56bd87ea08a0b5a375adb7827fc4c991bfda6a70422e3c4"
-    },
-    {
-      "path": "zz7/controller-gestures.js",
-      "kind": "file",
-      "size": 6262,
-      "sha256": "6a1ccf01b1da78be4be70a9ea28278ccfaff24b83b665ea64a14677b90ce4494"
-    },
-    {
-      "path": "zz7/controller-haptic.js",
-      "kind": "file",
-      "size": 949,
-      "sha256": "9fc35cec04af2eefe225e1eb2b9053dd2b81bbc8697788609e9947f7e7db11dc"
-    },
-    {
-      "path": "zz7/controller-hold.js",
-      "kind": "file",
-      "size": 3634,
-      "sha256": "d54ba2e9af4ec4daf64bbe46fe09cf130de0e75c1129f75100ee1570660db62e"
-    },
-    {
-      "path": "zz7/controller-screens.js",
-      "kind": "file",
-      "size": 2952,
-      "sha256": "631bf139915b9d2c548902fe4af1667eaf6c9e959a19ee5b5a9a8fb6be16e439"
-    },
-    {
-      "path": "zz7/controller-state.js",
-      "kind": "file",
-      "size": 1494,
-      "sha256": "484f81fc3d10c33bdef5b22007340d1ce3b0810dda9973b944687b0f6ca4119e"
-    },
-    {
-      "path": "zz7/controller-storage.js",
-      "kind": "file",
-      "size": 1939,
-      "sha256": "ace2a9393de201cb6813b0ad803978ff1b4da3d02d37ed72a2e23f08fe332fa2"
-    },
-    {
-      "path": "zz7/controller-themes.js",
-      "kind": "file",
-      "size": 671,
-      "sha256": "2fd8a7b64816b35788662c02880527cc10b6a0cede03e5959e97173065a53588"
-    },
-    {
-      "path": "zz7/controller.js",
-      "kind": "file",
-      "size": 1721,
-      "sha256": "4b7c1fe31e8a94457214365a7091df09c602bfe1803da462d0f7d922f3d3fa5b"
-    },
-    {
-      "path": "zz7/detector-panel-grok.svg",
-      "kind": "file",
-      "size": 5613,
-      "sha256": "5e72ca3ea3a3deb4162855ac0fe033bfef727b627b747fccdbcfb086191cf24f"
-    },
-    {
-      "path": "zz7/detector-panel.jpg",
-      "kind": "file",
-      "size": 248940,
-      "sha256": "3e83f502fdee91cf54b5d0e7591c03ab118b049efca938afb72ee47ac49298fb"
-    },
-    {
-      "path": "zz7/detector.js",
-      "kind": "file",
-      "size": 613,
-      "sha256": "a7770cba1622db9c7584e8d3569de50a159d382505c396f4fd5ff3e6ea0e6be1"
-    },
-    {
-      "path": "zz7/dom.js",
-      "kind": "file",
-      "size": 2336,
-      "sha256": "3842c33f97e788ca4862d6f03c8ecb7d4e7449eeeb4488425bfd06bcfa5de9f6"
-    },
-    {
-      "path": "zz7/first-run-guide.js",
-      "kind": "file",
-      "size": 7282,
-      "sha256": "d173e5833e896ee8f2fbd62386c139f46008e89f198fa56807a1c9e2e0f40521"
-    },
-    {
-      "path": "zz7/fullscreen.js",
-      "kind": "file",
-      "size": 433,
-      "sha256": "f2edda30898f546aea69efe29f5823ac7fbcd286c46787af12c88560a420bb9f"
-    },
-    {
-      "path": "zz7/heartbeat.js",
-      "kind": "file",
-      "size": 8339,
-      "sha256": "2e2f34032615750658d644f9146450b14da9df2754fd5e7c62ecd3ba0584a8d6"
-    },
-    {
-      "path": "zz7/holdem-assets",
-      "kind": "directory"
-    },
-    {
-      "path": "zz7/holdem-assets/felt-grain.svg",
-      "kind": "file",
-      "size": 393,
-      "sha256": "a4732d97e48355eebfa9112d82d2d24c24a9861665891ac6c6b3e4d4ef65e5ff"
-    },
-    {
-      "path": "zz7/holdem-assets/leather-grain.svg",
-      "kind": "file",
-      "size": 385,
-      "sha256": "de73d30a0558fa9512fe96235b7538cd11ee761b0d0482d5af3c05110b4016fd"
-    },
-    {
-      "path": "zz7/holdem-assets/table-rail.svg",
-      "kind": "file",
-      "size": 265,
-      "sha256": "36382c119feae7ff9599f4c1e554adfd29e4aa13a5e5f64929a706afe8d7b2b6"
-    },
-    {
-      "path": "zz7/icon-192.png",
-      "kind": "file",
-      "size": 4620,
-      "sha256": "08cf040eb659418f5a1db31c2f2347a8bd1dac67e9d82eda81aca584c4f31825"
-    },
-    {
-      "path": "zz7/icon-512.png",
-      "kind": "file",
-      "size": 17367,
-      "sha256": "97deea821d244e083d45d6296aaef98cae5461834227bed33c125d96271dd756"
-    },
-    {
-      "path": "zz7/icon.svg",
-      "kind": "file",
-      "size": 430,
-      "sha256": "8220097afd4e67b5b06167b13fdb057eb98a1553028033972cd4b327f27b8327"
-    },
-    {
-      "path": "zz7/index.html",
-      "kind": "file",
-      "size": 38257,
-      "sha256": "ae594bc4eade6151e42afc02f00c028c5164388472952a7f8b91c5492dcde3bf"
-    },
-    {
-      "path": "zz7/install-prompt.js",
-      "kind": "file",
-      "size": 3550,
-      "sha256": "07bc2a6d4789f7b8315e050dd866e07d2796c33a96086ec8105cdde7b0426101"
-    },
-    {
-      "path": "zz7/launch-check.js",
-      "kind": "file",
-      "size": 5955,
-      "sha256": "2088c193ea4329968cedff73b87a91865c3223617bb363214a1c5d1d78f2c884"
-    },
-    {
-      "path": "zz7/local-preview.js",
-      "kind": "file",
-      "size": 568,
-      "sha256": "30d58ce4c52e88eeb5bc0cb49bec51ab2f8f02fd78dedc0bbace37f9baa7b084"
-    },
-    {
-      "path": "zz7/logic.js",
-      "kind": "file",
-      "size": 10936,
-      "sha256": "4dcc3c1f7c1deb315124d09dc8309e87d3a14fbd3885d4c1993fdb442a0059aa"
-    },
-    {
-      "path": "zz7/manifest.webmanifest",
-      "kind": "file",
-      "size": 588,
-      "sha256": "22e43d747fdbfe2ba5de0b93fce7a4d8be8183e75da31a3b59e517ba667ed791"
-    },
-    {
-      "path": "zz7/performance-log.js",
-      "kind": "file",
-      "size": 6014,
-      "sha256": "5f8602036c477dd0fe307fcac3d1efda482a2fd1d7973710a5a0c07a8fe92541"
-    },
-    {
-      "path": "zz7/preferences.js",
-      "kind": "file",
-      "size": 3512,
-      "sha256": "381de312305010eace85f51ce6cfb92d0d06fe343145b35c26af13084d64574a"
-    },
-    {
-      "path": "zz7/recorder-a.html",
-      "kind": "file",
-      "size": 58361,
-      "sha256": "cf1065c7e45176f9ecf34b94ab922d945ab6a6eedf86aaaa8d5a96e5f9765143"
-    },
-    {
-      "path": "zz7/recorder-assets",
-      "kind": "directory"
-    },
-    {
-      "path": "zz7/recorder-assets/recorder-shell-blank.webp",
-      "kind": "file",
-      "size": 115890,
-      "sha256": "0a9608c0c4f19d37b6a7180edce4fddc1386760c24c5edd24800e7daba16dcc8"
-    },
-    {
-      "path": "zz7/recorder-d.html",
-      "kind": "file",
-      "size": 60156,
-      "sha256": "54a59940180c9bb03e0c10eaf6de16f7dd66db71a9a2683820b20c20e7f8542a"
-    },
-    {
-      "path": "zz7/recorder-engine.js",
-      "kind": "file",
-      "size": 27048,
-      "sha256": "ce2a1d71015d7ffc05b09d3901c28bef50fdaf44a0e01147e7522f365ff11323"
-    },
-    {
-      "path": "zz7/recorder-theme.js",
-      "kind": "file",
-      "size": 4785,
-      "sha256": "4854f52970a1322d032bbd8dabc49bc766dd19c1a2b89a52fd490eac7abe780c"
-    },
-    {
-      "path": "zz7/recorder-trace.js",
-      "kind": "file",
-      "size": 3560,
-      "sha256": "7c6b4a3795e32d319cdb145997e542f31c39d1d615edb8af3de1b2cc09b62cd3"
-    },
-    {
-      "path": "zz7/settings-ui.css",
-      "kind": "file",
-      "size": 33227,
-      "sha256": "df6aeceafff90df2992859cca2f7242dafedc7c603f30b0dc90619e065253a5d"
-    },
-    {
-      "path": "zz7/settings-ui.js",
-      "kind": "file",
-      "size": 85270,
-      "sha256": "7c1f78db54b3cde3a37d8f3f5e5bc7930b7ccf8fd85fb4e1bb57ae343f509da6"
-    },
-    {
-      "path": "zz7/stage.js",
-      "kind": "file",
-      "size": 11015,
-      "sha256": "5ab06231193bf6e3a5c8dc004c0aa1102e3e19746fe551609994a4f790337967"
-    },
-    {
-      "path": "zz7/storage.js",
-      "kind": "file",
-      "size": 602,
-      "sha256": "f8f0b2a1420aeef6cf40046b43b76bfcc99c17abe756903a23ff02373a859b04"
-    },
-    {
-      "path": "zz7/style-holdem.css",
-      "kind": "file",
-      "size": 11249,
-      "sha256": "4cb61be5db71d303e622c9b3cd6658f74b4536d7b7b09d7560dc6a052fdaec32"
-    },
-    {
-      "path": "zz7/style-recorder.css",
-      "kind": "file",
-      "size": 20429,
-      "sha256": "75aa95fe297484049558399b1a429d1330d3dbd8f50d4e9a9e378c6a3eb4e254"
-    },
-    {
-      "path": "zz7/style-settings.css",
-      "kind": "file",
-      "size": 9377,
-      "sha256": "f0d8bcad4e17c08bff6a0087bb2dc9a09b7e05e738c755d777d5d8c762ffed0c"
-    },
-    {
-      "path": "zz7/style.css",
-      "kind": "file",
-      "size": 8906,
-      "sha256": "2522c917043d1d91326771ee9f7434a01c3b0463f0f0d4ec745f668b1e88cd62"
-    },
-    {
-      "path": "zz7/sw.js",
-      "kind": "file",
-      "size": 6476,
-      "sha256": "1b5442b94398fbf24d42478f7f3aff939f4ea598104e44a5345730bd1af512e1"
-    },
-    {
-      "path": "zz7/update-prompt.js",
-      "kind": "file",
-      "size": 10985,
-      "sha256": "31db2f3865d6481514c3323c0bd878a31286bed74084979cc9abc5552bec57ab"
-    },
-    {
-      "path": "zz7/vibration.js",
-      "kind": "file",
-      "size": 3262,
-      "sha256": "d614f170f02e32ad6c3e6bf05482ca0740401dd66397d567536a6949a13facec"
-    },
-    {
-      "path": "zz7/wake-lock.js",
-      "kind": "file",
-      "size": 1722,
-      "sha256": "d0896b84786a37fda0b2e0cefa15aad0b426bce51f5371854d9bee8c53f24bfb"
-    },
-    {
-      "path": "zz8",
-      "kind": "directory"
-    },
-    {
-      "path": "zz8/brand-logo.jpg",
-      "kind": "file",
-      "size": 36700,
-      "sha256": "5a8679b52d5187dadb8718e1f616a1aeae885c5730367ea6d94e0eb6e8f4b09d"
-    },
-    {
-      "path": "zz8/brand-logo.png",
-      "kind": "file",
-      "size": 124568,
-      "sha256": "b7f7c23095da9d6ed610772f4c2659842e11a79792642c5e4016716f002c0d1f"
-    },
-    {
-      "path": "zz8/contacts-gestures.js",
-      "kind": "file",
-      "size": 5960,
-      "sha256": "b0e3523953423c33ff8e5e88050839dba7bedd2ec3da0bd4c8d149df9ec9a0d2"
-    },
-    {
-      "path": "zz8/contacts-list.js",
-      "kind": "file",
-      "size": 2480,
-      "sha256": "1b51e458648f48e73b9ef9a30ad4c2e724ceb00c6d51c2c92dbf0da890aa4903"
-    },
-    {
-      "path": "zz8/contacts-screen.js",
-      "kind": "file",
-      "size": 2520,
-      "sha256": "3b3686368f8397fc1cf54e57d7fda7222bce537338f19d0fe57b0bd309b23728"
-    },
-    {
-      "path": "zz8/contacts-settings.js",
-      "kind": "file",
-      "size": 4783,
-      "sha256": "b267c1d33a37f46073aa0f79da685df14e3580bf7c4fdad1308686de0b99b57d"
-    },
-    {
-      "path": "zz8/contacts-state.js",
-      "kind": "file",
-      "size": 2005,
-      "sha256": "22e1725c87493f8f7ea2d74b6c5bd0ce432f7a3bd7f2ff896a8cb5a84cc232c6"
-    },
-    {
-      "path": "zz8/contacts-storage.js",
-      "kind": "file",
-      "size": 4306,
-      "sha256": "be9cabde48f7ae267a8affb441c1d1417ed0b60651377aac11186c3d16cabc99"
-    },
-    {
-      "path": "zz8/contacts.js",
-      "kind": "file",
-      "size": 3166,
-      "sha256": "303da4516e2127f11f2874c32771bbb94a23ab3fd30c8a32ddaebc274bf5c941"
-    },
-    {
-      "path": "zz8/fullscreen.js",
-      "kind": "file",
-      "size": 433,
-      "sha256": "f2edda30898f546aea69efe29f5823ac7fbcd286c46787af12c88560a420bb9f"
-    },
-    {
-      "path": "zz8/icon-192.png",
-      "kind": "file",
-      "size": 3741,
-      "sha256": "ad1e052ca7285a9fc4483970f9450ffbeb7c543effb1bc2d24c9eb8adaf49655"
-    },
-    {
-      "path": "zz8/icon-512.png",
-      "kind": "file",
-      "size": 14760,
-      "sha256": "5f5d5463b190e9ff9d1c35887e2c46bbff7a3b63ea8cd9e14515f4a542af2cb7"
-    },
-    {
-      "path": "zz8/icon.svg",
-      "kind": "file",
-      "size": 278,
-      "sha256": "9360a22705f9aa3a986a07706c5c61e8882ebc24a6fb9576a6975aaa26b66f8f"
-    },
-    {
-      "path": "zz8/index.html",
-      "kind": "file",
-      "size": 6030,
-      "sha256": "4bad0a08f3f1048bd65c1cdc6c7149add5e62908af2bd5397659044fe8f70bd7"
-    },
-    {
-      "path": "zz8/install-ui.js",
-      "kind": "file",
-      "size": 2464,
-      "sha256": "88dc584d1efef4f289cd94d2df76ecd01a8e57fb55d3f69d74d67d43aa25a7d9"
-    },
-    {
-      "path": "zz8/local-preview.js",
-      "kind": "file",
-      "size": 568,
-      "sha256": "30d58ce4c52e88eeb5bc0cb49bec51ab2f8f02fd78dedc0bbace37f9baa7b084"
-    },
-    {
-      "path": "zz8/logic-clicks.js",
-      "kind": "file",
-      "size": 7527,
-      "sha256": "41692076df262a3c4207ef9d66529455b2e9c6d940fc71db3183a8475f2564bd"
-    },
-    {
-      "path": "zz8/logic-library.js",
-      "kind": "file",
-      "size": 7733,
-      "sha256": "9921d13ec37980161880c1218a32acbbafe068c454b912f36f058582bd58a9bd"
-    },
-    {
-      "path": "zz8/logic-limits.js",
-      "kind": "file",
-      "size": 4038,
-      "sha256": "8f85b1bff02d532810b083383e5a2fbee23091a76607c781894ece176eae11df"
-    },
-    {
-      "path": "zz8/logic-search.js",
-      "kind": "file",
-      "size": 930,
-      "sha256": "e7d4adc00c484d6ba480b694f18ee26c1f7d403b2085085ea7ca8ebc4b1f50be"
-    },
-    {
-      "path": "zz8/logic-zones.js",
-      "kind": "file",
-      "size": 2427,
-      "sha256": "3f8d109592b90f1e6a5a5180e2408abbb0074f2dfe8ed3330b7632a2c324db0a"
-    },
-    {
-      "path": "zz8/logic.js",
-      "kind": "file",
-      "size": 1226,
-      "sha256": "28510bcfc1a165f2b672833eff597071afd50b24ac9c22a785745fc6302e73cb"
-    },
-    {
-      "path": "zz8/manifest.webmanifest",
-      "kind": "file",
-      "size": 571,
-      "sha256": "84ef4929df445b18adf8c44f76493054b9ab0dcc74b5c1fb24909225f01f97f9"
-    },
-    {
-      "path": "zz8/settings-ui.css",
-      "kind": "file",
-      "size": 32994,
-      "sha256": "5106b780ed20eede6a9583b5684e7fc9a84ff5d63b4588242d3885a9271cbfa5"
-    },
-    {
-      "path": "zz8/settings-ui.js",
-      "kind": "file",
-      "size": 85270,
-      "sha256": "7c1f78db54b3cde3a37d8f3f5e5bc7930b7ccf8fd85fb4e1bb57ae343f509da6"
-    },
-    {
-      "path": "zz8/style.css",
-      "kind": "file",
-      "size": 9503,
-      "sha256": "cc0ef3df071e164f8e07ec34cc3fe6574accc4c7dc5089b82ee77906b974382b"
-    },
-    {
-      "path": "zz8/sw.js",
-      "kind": "file",
-      "size": 5767,
-      "sha256": "9a1339350e3e710249067a36087fd9d95e3e622a0e299ff0fdc62f5db845789f"
-    },
-    {
-      "path": "zz8/update-prompt.js",
-      "kind": "file",
-      "size": 10985,
-      "sha256": "31db2f3865d6481514c3323c0bd878a31286bed74084979cc9abc5552bec57ab"
     }
   ]
 }

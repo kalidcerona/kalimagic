@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { pathToFileURL, fileURLToPath } from 'node:url';
-const source = process.env.ALTER_SOURCE || fileURLToPath(new URL('../../zz10/', import.meta.url));
+const source = process.env.ALTER_SOURCE || fileURLToPath(new URL('../../distribution-snapshots/alter/', import.meta.url));
 const { createObservationTracker, trackObservation, overlayCorners } = await import(pathToFileURL(`${source}/performance.js`));
 const card = (x) => ({ corners: [{x,y:72},{x:x+73,y:72},{x:x+73,y:179},{x,y:179}] });
 const step = (tracker, x, t) => trackObservation(tracker, x === null ? null : card(x), t, 256, 256);

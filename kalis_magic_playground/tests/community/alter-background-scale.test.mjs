@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {pathToFileURL, fileURLToPath} from 'node:url';
 import {resolve} from 'node:path';
-const source=process.env.ALTER_SOURCE||fileURLToPath(new URL('../../zz10/', import.meta.url));
+const source=process.env.ALTER_SOURCE||fileURLToPath(new URL('../../distribution-snapshots/alter/', import.meta.url));
 const {detectCard}=await import(pathToFileURL(resolve(source,'vision.js')));
 const {createBackgroundCalibrator,observeCalibration}=await import(pathToFileURL(resolve(source,'calibration.js')));
 function frame(w,h,colorAt) {

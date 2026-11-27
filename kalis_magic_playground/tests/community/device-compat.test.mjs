@@ -10,10 +10,7 @@ const NOTICE = '이 브라우저는 진동을 지원하지 않아요. 나머지 
 
 function customizeStyles() {
   const files = [];
-  for (const dir of readdirSync(root)) {
-    if (!/^zz\d+$/.test(dir)) continue;
-    files.push(join(root, dir, 'settings-ui.css'));
-  }
+
   const snapshots = join(root, 'distribution-snapshots');
   for (const dir of readdirSync(snapshots)) {
     files.push(join(snapshots, dir, 'settings-ui.css'));
@@ -29,7 +26,7 @@ function customizeStyles() {
 
 test('customize header and body pad with lateral safe insets', () => {
   const files = customizeStyles();
-  assert.ok(files.length >= 17);
+  assert.ok(files.length >= 11);
   const lateral = /max\(16px, env\(safe-area-inset-right, 0px\)\)[^;]*max\(16px, env\(safe-area-inset-left, 0px\)\)/;
   for (const file of files) {
     const css = readFileSync(file, 'utf8');
@@ -58,7 +55,7 @@ function vibrationControl() {
 
 function runVibrationCapability(sandbox) {
   // zz4 runs app.js with local feature modules; read them as one script.
-  const source = choiceAppScript(join(root, 'zz4'));
+  const source = choiceAppScript(join(root, 'distribution-snapshots/choice'));
   const start = source.indexOf('function applyVibrationCapability()');
   assert.ok(start >= 0);
   let depth = 0;
@@ -80,7 +77,7 @@ function runVibrationCapability(sandbox) {
 }
 
 test('zz4 disables vibration controls and shows one notice without the vibrate API', () => {
-  const html = readFileSync(join(root, 'zz4/index.html'), 'utf8');
+  const html = readFileSync(join(root, 'distribution-snapshots/choice/index.html'), 'utf8');
   const labelAt = html.indexOf('id="opt-vibrate"');
   const noticeAt = html.indexOf('id="vibrate-capability"');
   const nextAt = html.indexOf('id="input-guide"');
@@ -121,9 +118,9 @@ test('zz4 disables vibration controls and shows one notice without the vibrate A
 
 test('installable shells expose apple and mobile web app capability', () => {
   const pages = [
-    'zz12/index.html',
-    'zz13/index.html',
-    'zz14/index.html',
+    'distribution-snapshots/memdeck/index.html',
+    'distribution-snapshots/qr/index.html',
+    'distribution-snapshots/pimax/index.html',
     'distribution-snapshots/qr/index.html',
     'distribution-snapshots/pimax/index.html',
   ];

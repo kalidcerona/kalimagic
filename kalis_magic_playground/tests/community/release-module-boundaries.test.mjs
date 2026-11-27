@@ -1,4 +1,4 @@
-const pinnedFriend = Boolean(process.env.RELEASE_ROOT?.includes('distribution-snapshots'));
+const pinnedFriend = true;
 import test, { afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -17,15 +17,15 @@ import { pathToFileURL } from 'node:url';
 // fullscreen by a dedicated module (index.html loads none; the fullscreen helpers live in pin.js and are driven by the
 // emergency double tap).
 // RELEASE_ROOT points the same test at a scratch copy or at distribution-snapshots/unlock.
-const root = process.env.RELEASE_ROOT ? pathToFileURL(`${process.env.RELEASE_ROOT.replace(/\/?$/, '/')}`) : new URL('../../zz2/', import.meta.url);
+const root = process.env.RELEASE_ROOT ? pathToFileURL(`${process.env.RELEASE_ROOT.replace(/\/?$/, '/')}`) : new URL('../../distribution-snapshots/unlock/', import.meta.url);
 const html = readFileSync(new URL('index.html', root), 'utf8');
 const friend = process.env.RELEASE_PATHNAME ? /^\/tools\/(?:unlock|release)\//.test(process.env.RELEASE_PATHNAME) : /distribution-snapshots/.test(root.href);
-const pathname = process.env.RELEASE_PATHNAME || (friend ? '/tools/unlock/' : '/zz2/');
+const pathname = process.env.RELEASE_PATHNAME || (friend ? '/tools/unlock/' : '/distribution-snapshots/unlock/');
 const SETTINGS_KEY = friend ? 'unlock-settings-v1' : 'unlock-settings-personal-v2';
 const TUTORIAL_KEY = friend ? 'friend-unlock-settings-entry-tutorial-v1' : 'unlock-settings-entry-tutorial-v1';
 const INSTALL_KEY = friend ? 'unlock-install-shared-v1' : 'unlock-install-personal-v1';
 const LINK_KEY = `magic-performance-link:v1:release-hitsuzen:${/^\/tools(?:\/|$)/.test(pathname) ? 'shared' : 'personal'}`;
-const HITSUZEN_URL = friend ? '/tools/hitsuzen/' : '/zz3/';
+const HITSUZEN_URL = friend ? '/tools/hitsuzen/' : '/distribution-snapshots/calculator/';
 
 const errors = [];
 process.on('unhandledRejection', (reason) => errors.push(`unhandledRejection: ${reason?.stack || reason}`));

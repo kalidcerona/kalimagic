@@ -1,3 +1,4 @@
+import { recordPhotoSave, observePhotoTransaction } from './photo-save-notice.js';
 import { createRevisionQueue, wallpaperCropRect } from './logic.js';
 import {
   IMAGE_CHOICE_KEY, IMAGE_DB, DEFAULT_COIN_IMAGES, stageEl, wallpaperEl, wallpaperCrop,
@@ -26,13 +27,21 @@ function openImageDb() {
 }
 
 async function imageRecord(key, operation, value) {
-  const db = await openImageDb();
+  let db;
+  try { db = await openImageDb(); } catch (error) {
+    if (operation === 'put') recordPhotoSave(false);
+    throw error;
+  }
   return new Promise((resolve, reject) => {
     const tx = db.transaction('images', operation === 'get' ? 'readonly' : 'readwrite');
+    if (operation === 'put') observePhotoTransaction(tx);
     const store = tx.objectStore('images');
     const request = operation === 'put' ? store.put(value, key) : operation === 'delete' ? store.delete(key) : store.get(key);
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error);
+  }).catch((error) => {
+    if (operation === 'put') recordPhotoSave(false);
+    throw error;
   });
 }
 
@@ -165,8 +174,9 @@ function loadImageChoices() {
   }
 }
 
-function persistImageChoices() {
+function persistImageChoices({ photoSave = false } = {}) {
   if (imageChoicesBlocked) {
+    if (photoSave) recordPhotoSave(false);
     coinImageNote.textContent = '이미지 선택을 읽지 못해 저장하지 않았습니다. 기존 기록은 그대로입니다.';
     return false;
   }
@@ -174,6 +184,7 @@ function persistImageChoices() {
     localStorage.setItem(IMAGE_CHOICE_KEY, JSON.stringify(imageChoices));
     return true;
   } catch {
+    if (photoSave) recordPhotoSave(false);
     coinImageNote.textContent = '이미지 선택을 저장하지 못했습니다.';
     return false;
   }

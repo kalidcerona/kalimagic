@@ -90,7 +90,7 @@ async function fixture(appDir, theme = 'recorder', layout = false, scan = '0.5')
 }
 
 
-const appDirs = [resolve(import.meta.dirname, '../../zz7'), resolve(import.meta.dirname, '../../distribution-snapshots/usotsuki')];
+const appDirs = [resolve(import.meta.dirname, '../../distribution-snapshots/usotsuki'), resolve(import.meta.dirname, '../../distribution-snapshots/usotsuki')];
 
 for (const appDir of appDirs) {
   for (const end of ['off-plate','pointerup']) test(`${appDir}: ${end} after verdict preserves the trace`, async()=>{

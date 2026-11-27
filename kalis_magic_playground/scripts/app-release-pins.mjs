@@ -60,7 +60,7 @@ export async function createAppReleasePins({ root, requiredRoots, release }) {
   return {
     schemaVersion: 1,
     release,
-    provenance: 'Retained personal app trees and distribution snapshots from the selected site release.',
+    provenance: 'Canonical public distribution snapshots from the selected site release.',
     roots,
     entries: await inventory(root, roots)
   };

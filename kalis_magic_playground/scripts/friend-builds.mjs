@@ -1,15 +1,12 @@
-// Friend build generator: personal source (zz*) minus owner-only parts plus the per-app friend config.
+// Explicit private-source generator for asrai, alter and uramichi. Existing public snapshots are canonical.
 //
 //   node scripts/friend-builds.mjs list
-//   node scripts/friend-builds.mjs generate <app|all> [--out DIR]     (default: a fresh OS temp dir)
-//   node scripts/friend-builds.mjs compare [--report FILE]            (generate all, diff against distribution-snapshots)
-//   node scripts/friend-builds.mjs generate <app|all> --write         (rewrites distribution-snapshots/<name>; ONLY on "친구용 반영")
+//   node scripts/friend-builds.mjs generate <asrai|alter|uramichi> --source DIR --out DIR
+//   node scripts/friend-builds.mjs generate <asrai|alter|uramichi> --source DIR --write
 //
 // Without --write nothing under distribution-snapshots/ is ever touched.
-import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { cp, lstat, mkdir, mkdtemp, readFile, readdir, realpath, rm, stat, writeFile } from 'node:fs/promises';
-import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { FRIEND_APPS } from './friend-config.mjs';
@@ -17,7 +14,6 @@ import { PRIVATE_PATTERNS, SHARED_UNLOCK_FILES, SETTINGS_UI_FILES, shouldCopyCho
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SNAPSHOTS = path.join(ROOT, 'distribution-snapshots');
-export const DEFAULT_REPORT = '/Users/sumpie/Desktop/AI/runtime/jobs/20261024-modularize/friend-compare.txt';
 const TEXT_EXT = /\.(?:m?js|html|css|webmanifest)$/;
 const CODE_EXT = /\.(?:m?js|html)$/;
 // Launch readiness is personal-only, just like the local preview hook.
@@ -25,15 +21,6 @@ const OWNER_FILE = /(?:^|\/)(?:local-preview\.m?js|launch-check\.js|photo-save-n
 const HOOK_MARK = 'local-preview-hook';
 const FULLSCREEN_PATTERN = String.raw`(?:^|\/)fullscreen\.js$`;
 const OWNER_WORDS = /local-preview|magic-local-settings|localSettingsReady/;
-
-export const friendApps = () => Object.keys(FRIEND_APPS);
-
-// Accepts the app name (release) or its snapshot folder name (unlock).
-export function resolveApp(name) {
-  const app = FRIEND_APPS[name] ? name : friendApps().find((key) => FRIEND_APPS[key].snapshot === name);
-  if (!app) throw new Error(`Unknown friend app: ${name}. Known: ${friendApps().join(', ')}`);
-  return app;
-}
 
 function escapeRegExp(text) { return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
 
@@ -174,17 +161,6 @@ async function insideSnapshots(target) {
   return within(await realpathLoose(SNAPSHOTS), await realpathLoose(target));
 }
 
-// The report is a plain text file outside the app: never the snapshots, the personal apps, any other file of this checkout or a magic-* sibling.
-export async function assertSafeReportPath(file) {
-  const real = await realpathLoose(file);
-  const projects = path.resolve(ROOT, '../..');
-  const siblings = (await readdir(projects).catch(() => [])).filter((name) => name.startsWith('magic-'));
-  const forbidden = [await realpathLoose(ROOT), ...await Promise.all(siblings.map((name) => realpathLoose(path.join(projects, name))))];
-  if (forbidden.some((dir) => within(dir, real))) throw new Error(`Refusing to write the report inside the app tree: ${file}`);
-  const existing = await lstat(file).catch(() => null);
-  if (existing && !existing.isFile()) throw new Error(`Refusing to overwrite a non-regular report path: ${file}`);
-}
-
 async function filesEqual(a, b) {
   const [x, y] = await Promise.all([readFile(a).catch(() => null), readFile(b).catch(() => null)]);
   return Boolean(x && y && x.equals(y));
@@ -211,6 +187,7 @@ export async function ensureFreshCacheName(outDir, baselineDir, files, tail = ''
   const built = new Set(files);
   for (const rel of await walk(baselineDir).catch(() => [])) if (!built.has(rel)) changed = true;
   const hash = createHash('sha256');
+  hash.update(withCacheSlot(generated));
   for (const rel of [...files].sort()) {
     if (rel === 'sw.js') continue;
     const bytes = await readFile(path.join(outDir, rel));
@@ -229,19 +206,25 @@ export async function ensureFreshCacheName(outDir, baselineDir, files, tail = ''
     }
     return null;
   }
-  if (baseLiteral !== generatedLiteral) return null;
   await writeFile(swPath, generated.replace(found[0], found[0].replace(generatedLiteral, bumped)));
   return bumped;
 }
 
-// Writes the friend build of one app into outDir and nothing else. sourceDir is only for RELEASE promotion from its sibling checkout.
+// Generate one approved new public app from an explicit private source into outDir.
 // baselineDir is the build to stay compatible with (default: the current snapshot); it only decides the cache name.
-export async function generate(app, outDir, { write = false, sourceDir, baselineDir } = {}) {
+export async function generate(app, outDir, { sourceDir, baselineDir } = {}) {
   const cfg = FRIEND_APPS[app];
-  if (!cfg) throw new Error(`Unknown friend app: ${app}`);
+  if (!cfg?.generated || !sourceDir) throw new Error('Personal app generation is retired except asrai/alter/uramichi with explicit --source DIR; canonical snapshots must never be generation inputs.');
   if (!outDir) throw new Error('generate needs an output directory');
-  if (!write && await insideSnapshots(outDir)) throw new Error(`Refusing to write into distribution-snapshots without --write: ${outDir}`);
-  const source = sourceDir ? path.resolve(sourceDir) : path.join(ROOT, cfg.source);
+  if (await insideSnapshots(outDir)) throw new Error(`Refusing to write into distribution-snapshots without --write: ${outDir}`);
+  const source = await realpath(path.resolve(sourceDir));
+  if (await insideSnapshots(source)) throw new Error('Canonical snapshots cannot be generator inputs');
+  const output = await realpathLoose(outDir);
+  if (within(source, output) || within(output, source)) throw new Error('Source and output must not overlap');
+  const existingOut = await lstat(outDir).catch(error => { if (error.code !== 'ENOENT') throw error; return null; });
+  if (existingOut && (existingOut.isSymbolicLink() || !existingOut.isDirectory() || (await readdir(outDir)).length)) {
+    throw new Error('Output must be a new or empty non-symlink directory');
+  }
   const report = { app, warnings: [], hookPaths: [], keyHits: (cfg.keys || []).map(() => 0), plainHits: 0, files: [], cacheBump: null };
   await mkdir(outDir, { recursive: true });
   const realOut = await realpath(outDir);
@@ -254,7 +237,7 @@ export async function generate(app, outDir, { write = false, sourceDir, baseline
     // Judge by where the write really lands, and never write through an existing symlink.
     const realParent = await realpathLoose(path.dirname(destination));
     if (!within(realOut, realParent)) throw new Error(`Refusing to write outside the output directory: ${rel}`);
-    if (!write && within(await realpathLoose(SNAPSHOTS), realParent)) throw new Error(`Refusing to write into distribution-snapshots without --write: ${rel}`);
+    if (within(await realpathLoose(SNAPSHOTS), realParent)) throw new Error(`Refusing to write into distribution-snapshots without --write: ${rel}`);
     const existing = await lstat(destination).catch(() => null);
     if (existing?.isSymbolicLink()) throw new Error(`Refusing to write through a symlink: ${rel}`);
     await mkdir(path.dirname(destination), { recursive: true });
@@ -277,8 +260,17 @@ export async function generate(app, outDir, { write = false, sourceDir, baseline
 // "친구용 반영": replace distribution-snapshots/<name> with a fresh build. Explicit callers only.
 export async function writeFriendBuild(app, { sourceDir, targetDir } = {}) {
   const cfg = FRIEND_APPS[app];
-  const target = targetDir || path.join(SNAPSHOTS, cfg.snapshot);
-  const staging = await mkdtemp(path.join(os.tmpdir(), `friend-${app}-`));
+  if (!cfg?.generated || !sourceDir) throw new Error('Personal app generation is retired except asrai/alter/uramichi with explicit --source DIR');
+  const expected = path.join(SNAPSHOTS, cfg.snapshot);
+  const target = targetDir ? path.resolve(targetDir) : expected;
+  if (target !== expected) throw new Error('Write target must be the configured canonical snapshot');
+  const targetInfo = await lstat(target).catch(error => { if (error.code !== 'ENOENT') throw error; return null; });
+  if (targetInfo && (!targetInfo.isDirectory() || targetInfo.isSymbolicLink())) throw new Error('Unsafe canonical target');
+  const source = await realpath(sourceDir);
+  const realTarget = await realpathLoose(target);
+  if (await insideSnapshots(source) || within(source, realTarget) || within(realTarget, source)) throw new Error('Source and target must not overlap');
+  if (realTarget !== path.join(await realpath(SNAPSHOTS), cfg.snapshot)) throw new Error('Unsafe canonical target path');
+  const staging = await mkdtemp(path.join(ROOT, `.friend-${app}-`));
   try {
     const report = await generate(app, staging, { sourceDir, baselineDir: target });
     if (report.warnings.length) throw new Error(`Refusing to write ${app}: ${report.warnings.join('; ')}`);
@@ -293,111 +285,24 @@ export async function writeFriendBuild(app, { sourceDir, targetDir } = {}) {
 
 const keyLiterals = (text) => new Set([...text.matchAll(/(['"`])([A-Za-z0-9_.\-]{4,})\1/g)].map((m) => m[2]).filter((x) => /[._\-]/.test(x)));
 
-function changedLines(a, b) {
-  try {
-    execFileSync('diff', ['-U0', a, b], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
-    return { removed: 0, added: 0 };
-  } catch (error) {
-    const lines = String(error.stdout || '').split('\n');
-    return {
-      removed: lines.filter((line) => line.startsWith('-') && !line.startsWith('---')).length,
-      added: lines.filter((line) => line.startsWith('+') && !line.startsWith('+++')).length
-    };
-  }
-}
-
-export async function compareApp(app, generatedDir) {
-  const cfg = FRIEND_APPS[app];
-  const snapDir = path.join(SNAPSHOTS, cfg.snapshot);
-  const gen = new Set(await walk(generatedDir));
-  const snap = new Set(await walk(snapDir));
-  const result = { app, snapshot: cfg.snapshot, onlyGenerated: [], onlySnapshot: [], changed: [], same: 0, keyDeltas: [], cacheName: null };
-  for (const rel of gen) if (!snap.has(rel)) result.onlyGenerated.push(rel);
-  for (const rel of snap) if (!gen.has(rel)) result.onlySnapshot.push(rel);
-  for (const rel of gen) {
-    if (!snap.has(rel)) continue;
-    const [a, b] = await Promise.all([readFile(path.join(snapDir, rel)), readFile(path.join(generatedDir, rel))]);
-    if (a.equals(b)) { result.same += 1; continue; }
-    if (!TEXT_EXT.test(rel)) { result.changed.push({ rel, binary: true }); continue; }
-    const lines = changedLines(path.join(snapDir, rel), path.join(generatedDir, rel));
-    result.changed.push({ rel, ...lines });
-    const A = keyLiterals(a.toString('utf8'));
-    const B = keyLiterals(b.toString('utf8'));
-    const snapOnly = [...A].filter((x) => !B.has(x));
-    const genOnly = [...B].filter((x) => !A.has(x));
-    if (snapOnly.length || genOnly.length) result.keyDeltas.push({ rel, snapOnly, genOnly });
-    if (rel === 'sw.js') {
-      const pick = (buf) => findCacheLiteral(buf.toString('utf8'))?.[1] ?? null;
-      result.cacheName = { snapshot: pick(a), generated: pick(b) };
-    }
-  }
-  return result;
-}
-
-export function formatCompare(results, reports) {
-  const out = [`Friend build compare (generated from personal source vs current distribution-snapshots)`, ''];
-  for (const r of results) {
-    const rep = reports[r.app];
-    out.push(`== ${r.app}  (${FRIEND_APPS[r.app].source} -> distribution-snapshots/${r.snapshot})`);
-    out.push(`  files: ${r.same} identical, ${r.changed.length} changed, ${r.onlyGenerated.length} only in generated, ${r.onlySnapshot.length} only in snapshot`);
-    if (rep.cacheBump) out.push(`  cache name: content changed, version suffix added -> ${rep.cacheBump}`);
-    out.push(`  local-preview removal path: ${rep.hookPaths.length ? rep.hookPaths.join(', ') : 'nothing to remove'}`);
-    if (rep.warnings.length) out.push(`  WARNINGS: ${rep.warnings.join(' | ')}`);
-    for (const rel of r.onlyGenerated) out.push(`  + only generated: ${rel}`);
-    for (const rel of r.onlySnapshot) out.push(`  - only snapshot:  ${rel}`);
-    for (const c of r.changed) out.push(`  ~ ${c.rel}: ${c.binary ? 'binary differs' : `-${c.removed}/+${c.added} lines`}`);
-    if (r.cacheName) out.push(`  cache version: snapshot "${r.cacheName.snapshot}" -> generated "${r.cacheName.generated}"`);
-    for (const d of r.keyDeltas) {
-      if (d.snapOnly.length) out.push(`  key-like literals only in snapshot (${d.rel}): ${d.snapOnly.join(' ')}`);
-      if (d.genOnly.length) out.push(`  key-like literals only in generated (${d.rel}): ${d.genOnly.join(' ')}`);
-    }
-    out.push('');
-  }
-  return out.join('\n');
-}
-
 async function main(argv) {
-  const [command, target, ...rest] = argv;
-  const flag = (name) => rest.includes(name) || target === name;
-  const option = (name) => { const i = argv.indexOf(name); return i >= 0 ? argv[i + 1] : undefined; };
-  if (command === 'list') {
-    for (const [app, cfg] of Object.entries(FRIEND_APPS)) console.log(`${app}\t${cfg.source}\t-> distribution-snapshots/${cfg.snapshot}`);
+  const [command, target] = argv;
+  if (command === 'list' && argv.length === 1) {
+    for (const [app, cfg] of Object.entries(FRIEND_APPS)) console.log(`${app}\tdistribution-snapshots/${cfg.snapshot}${cfg.generated ? ' (explicit private source supported)' : ' (canonical)'}`);
     return;
   }
-  const apps = !target || target.startsWith('--') || target === 'all' ? friendApps() : [resolveApp(target)];
-  if (command === 'generate') {
-    if (flag('--write')) {
-      for (const app of apps) { const rep = await writeFriendBuild(app); console.log(`wrote distribution-snapshots/${FRIEND_APPS[app].snapshot} (${rep.files.length} files)`); }
-      return;
-    }
-    const out = option('--out') || await mkdtemp(path.join(os.tmpdir(), 'friend-builds-'));
-    for (const app of apps) {
-      const rep = await generate(app, path.join(out, FRIEND_APPS[app].snapshot));
-      console.log(`${app}: ${rep.files.length} files${rep.warnings.length ? ` WARNINGS ${rep.warnings.join(' | ')}` : ''}`);
-    }
-    console.log(`output: ${out}`);
-    return;
+  const sourceIndex = argv.indexOf('--source');
+  const sourceDir = sourceIndex >= 0 ? argv[sourceIndex + 1] : undefined;
+  if (command !== 'generate' || !sourceDir || !FRIEND_APPS[target]?.generated) {
+    throw new Error('Personal app generation is retired except: generate <asrai|alter|uramichi> --source DIR [--out DIR | --write]');
   }
-  if (command === 'compare') {
-    const out = await mkdtemp(path.join(os.tmpdir(), 'friend-compare-'));
-    const results = [];
-    const reports = {};
-    try {
-      for (const app of friendApps()) {
-        reports[app] = await generate(app, path.join(out, app));
-        results.push(await compareApp(app, path.join(out, app)));
-      }
-    } finally { await rm(out, { recursive: true, force: true }); }
-    const text = formatCompare(results, reports);
-    const file = option('--report') || DEFAULT_REPORT;
-    await assertSafeReportPath(file);
-    await mkdir(path.dirname(file), { recursive: true });
-    await writeFile(file, text);
-    console.log(text);
-    console.log(`report written to ${file}`);
-    return;
-  }
-  throw new Error('Usage: node scripts/friend-builds.mjs list | generate <app|all> [--out DIR | --write] | compare [--report FILE]');
+  const outIndex = argv.indexOf('--out');
+  const out = outIndex >= 0 ? argv[outIndex + 1] : undefined;
+  const write = argv.includes('--write');
+  if (write === Boolean(out)) throw new Error('Choose exactly one of --out DIR or --write');
+  const report = write ? await writeFriendBuild(target, { sourceDir }) : await generate(target, out, { sourceDir });
+  if (report.warnings.length) throw new Error(report.warnings.join('; '));
+  console.log(`${target}: ${report.files.length} files`);
 }
 
 export const PERFORMANCE_LOG_CACHE_SUFFIX = '-perf-log-1';

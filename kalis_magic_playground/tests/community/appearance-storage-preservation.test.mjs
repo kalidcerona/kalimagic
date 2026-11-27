@@ -3,7 +3,7 @@ import test from 'node:test';
 import fs from 'node:fs';
 import vm from 'node:vm';
 
-const source = fs.readFileSync(new URL('../../zz11/settings-ui.js', import.meta.url), 'utf8');
+const source = fs.readFileSync(new URL('../../distribution-snapshots/unlock/settings-ui.js', import.meta.url), 'utf8');
 function runtime(options = {}) {
   const store = new Map([['performance-state', '{"counter":3,"revealed":true}']]);
   const nodes = [];
@@ -26,7 +26,7 @@ function runtime(options = {}) {
   const body=node('body'); body.dataset.magicApp=options.app||'spinner';
   const container=node('section');body.appendChild(container);
   const document={body,readyState:'complete',activeElement:null,querySelector(selector){return selector.startsWith('[data-settings-root]')||selector==='#settings'?container:null;},querySelectorAll(){return [];},createElement:node,addEventListener(){},dispatchEvent(){}};
-  const context={localStorage:storage,location:{origin:'https://example.test',pathname:'/zz11/',hash:'',search:''},requestAnimationFrame(){},addEventListener(){},Event:class {constructor(type){this.type=type;}}};
+  const context={localStorage:storage,location:{origin:'https://example.test',pathname:'/tools/release/',hash:'',search:''},requestAnimationFrame(){},addEventListener(){},Event:class {constructor(type){this.type=type;}}};
   vm.createContext(context);
   // Load the complete real script without mounting so its public key/API can seed storage.
   vm.runInContext(source,context);

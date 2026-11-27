@@ -9,9 +9,9 @@ if (extra.length) throw new Error('Unexpected app release arguments');
 if (mode === '--candidate' && release) {
   // Print only. Normal verification/build never writes or refreshes the selected pins.
   console.log(JSON.stringify(await createAppReleasePins({ root, requiredRoots: APP_RELEASE_ROOTS, release }), null, 2));
-} else if (mode === '--audit-masters' && !release) {
-  await verifyMirrors();
+} else if ((mode === '--audit-masters' || mode === '--audit-sources') && !release) {
+  console.log(JSON.stringify(await verifyMirrors()));
 
 } else if ((!mode || mode === '--verify') && !release) {
   console.log(JSON.stringify(await verifyAppRelease({ root, requiredRoots: APP_RELEASE_ROOTS })));
-} else throw new Error('Usage: node scripts/app-release-check.mjs [--verify | --audit-masters | --candidate RELEASE]');
+} else throw new Error('Usage: node scripts/app-release-check.mjs [--verify | --audit-sources | --audit-masters | --candidate RELEASE]');

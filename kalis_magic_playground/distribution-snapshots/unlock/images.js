@@ -1,3 +1,4 @@
+import { trackPhotoSave, recordPhotoSave } from './photo-save-notice.js';
 import { $, session } from './session.js';
 
 const toast = (...args) => session.toast(...args);
@@ -53,13 +54,13 @@ session.imageKeys = imageKeys;
     }
 
     function saveImage(key, blob) {
-      return new Promise((resolve, reject) => {
+      return trackPhotoSave(() => new Promise((resolve, reject) => {
         const transaction = session.db.transaction('images', 'readwrite');
         transaction.objectStore('images').put(blob, key);
         transaction.oncomplete = resolve;
         transaction.onerror = () => reject(transaction.error);
         transaction.onabort = () => reject(transaction.error);
-      });
+      })); // photo-notice-wrapper
     }
 
     function decodeImage(blob) {
@@ -201,7 +202,10 @@ session.imageKeys = imageKeys;
         $('start').disabled = true;
         try {
           if (!session.db && session.dbReady) await session.dbReady;
-          if (!session.db) throw new Error('이미지 저장소를 사용할 수 없습니다.');
+          if (!session.db) {
+            recordPhotoSave(false);
+            throw new Error('이미지 저장소를 사용할 수 없습니다.');
+          }
           await decodedImage(file);
           await saveImage(key, file);
           stored = true;
@@ -210,6 +214,7 @@ session.imageKeys = imageKeys;
           await displayImage(key, formSettings().cropTop);
           $('storage-status').textContent = '이미지를 이 기기의 IndexedDB에 저장했습니다.';
         } catch (error) {
+          if (!stored) recordPhotoSave(false);
           $('storage-status').textContent = stored
             ? '이미지는 저장했지만 미리보기를 만들지 못했습니다. 잘라낼 높이를 줄이고 다시 시작하세요.'
             : `이미지 등록 실패: ${error.message} 저장 공간과 파일 형식을 확인하세요.`;

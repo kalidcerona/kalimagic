@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 import { runInNewContext } from 'node:vm';
 
-const ROUTES = ['zz1', 'zz2', 'zz3', 'zz4', 'zz5', 'zz6', 'zz7'];
+const ROUTES = ['distribution-snapshots/kairos', 'distribution-snapshots/unlock', 'distribution-snapshots/calculator', 'distribution-snapshots/choice', 'distribution-snapshots/aletheia', 'distribution-snapshots/tobira', 'distribution-snapshots/usotsuki'];
 
 for (const route of ROUTES) {
   test(`${route} service worker preserves caches owned by other apps`, async () => {

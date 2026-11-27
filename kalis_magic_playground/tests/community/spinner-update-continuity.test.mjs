@@ -149,16 +149,16 @@ async function loadApp(options) {
 }
 
 test('service worker updates do not reload a live personal or shared spinner', async () => {
-  assert.match(readFileSync(new URL('../../zz11/sw.js', import.meta.url), 'utf8'), /v20261004-design-choice-1-manual-install-1-perf-1-coherent-1-gesture-1-compat-1-wake-1/);
+  assert.match(readFileSync(new URL('../../distribution-snapshots/spinner/sw.js', import.meta.url), 'utf8'), /v20261004-design-choice-1-manual-install-1-perf-1-coherent-1-gesture-1-compat-1-wake-1/);
   assert.match(readFileSync(new URL('../../distribution-snapshots/spinner/sw.js', import.meta.url), 'utf8'), /v20261004-design-choice-1-manual-install-1-perf-1-coherent-1-gesture-1-compat-1-wake-1/);
   const apps = [
     {
       name: 'personal',
-      html: new URL('../../zz11/index.html', import.meta.url),
-      module: '../../zz11/app.js',
-      stateKey: 'zz11-spinner-state-v2',
-      guideKey: 'zz11-guide-seen-v2',
-      themeKey: 'zz11-table-theme-v1',
+      html: new URL('../../distribution-snapshots/spinner/index.html', import.meta.url),
+      module: '../../distribution-snapshots/spinner/app.js',
+      stateKey: 'friend-spinner-state-v2',
+      guideKey: 'friend-spinner-guide-seen-v2',
+      themeKey: 'friend-spinner-table-theme-v1',
     },
     {
       name: 'shared',
@@ -242,12 +242,12 @@ test('service worker updates do not reload a live personal or shared spinner', a
 
   for (const mode of ['reject', 'throw']) {
     const dom = await loadApp({
-      html: new URL('../../zz11/index.html', import.meta.url),
-      module: '../../zz11/app.js',
+      html: new URL('../../distribution-snapshots/spinner/index.html', import.meta.url),
+      module: '../../distribution-snapshots/spinner/app.js',
       moduleId: `register-${mode}`,
-      stateKey: 'zz11-spinner-state-v2',
-      guideKey: 'zz11-guide-seen-v2',
-      themeKey: 'zz11-table-theme-v1',
+      stateKey: 'friend-spinner-state-v2',
+      guideKey: 'friend-spinner-guide-seen-v2',
+      themeKey: 'friend-spinner-table-theme-v1',
       controller: { scriptURL: './sw.js' },
       registerMode: mode,
     });
@@ -263,12 +263,12 @@ test('service worker updates do not reload a live personal or shared spinner', a
   }
 
   const update = await loadApp({
-    html: new URL('../../zz11/index.html', import.meta.url),
-    module: '../../zz11/app.js',
+    html: new URL('../../distribution-snapshots/spinner/index.html', import.meta.url),
+    module: '../../distribution-snapshots/spinner/app.js',
     moduleId: 'update-reject',
-    stateKey: 'zz11-spinner-state-v2',
-    guideKey: 'zz11-guide-seen-v2',
-    themeKey: 'zz11-table-theme-v1',
+    stateKey: 'friend-spinner-state-v2',
+    guideKey: 'friend-spinner-guide-seen-v2',
+    themeKey: 'friend-spinner-table-theme-v1',
     controller: { scriptURL: './sw.js' },
     updateMode: 'reject',
   });

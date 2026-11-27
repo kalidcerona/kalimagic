@@ -10,18 +10,6 @@ import { readAppStyle } from './app-style.mjs';
 const root = path.resolve(import.meta.dirname, '../..');
 const apps = [
   {
-    name: 'personal',
-    file: path.join(root, 'zz6/app.js'),
-    html: path.join(root, 'zz6/index.html'),
-    css: path.join(root, 'zz6/style.css'),
-    sw: path.join(root, 'zz6/sw.js'),
-    state: 'tobira.v1',
-    motion: 'tobira.motion-effects.v1',
-    images: 'tobira.coinChoices.v1',
-    cache: 'v20261004-first-guide-1',
-    modules: true,
-  },
-  {
     name: 'shared',
     file: path.join(root, 'distribution-snapshots/tobira/app.js'),
     html: path.join(root, 'distribution-snapshots/tobira/index.html'),

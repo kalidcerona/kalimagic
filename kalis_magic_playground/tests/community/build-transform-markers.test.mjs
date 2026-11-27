@@ -33,15 +33,14 @@ test('a friend document without <head> fails the build instead of shipping witho
   assert.throws(() => transformDistributionDocument('<body></body>', { tool: 'unlock', target: 'release' }), /missing <head>/);
 });
 
-test('KAIROS startup hook occurs exactly once in the personal and snapshot app.js and is replaced in the output', () => {
-  for (const file of ['zz1/app.js', 'distribution-snapshots/kairos/app.js']) {
-    const source = read(file);
-    assert.equal(count(source, 'else initApp();'), 1, file);
-    for (const target of ['kairos', 'kairos-classic']) {
-      const out = transformKairosScript(source, target, 'app.js');
-      assert.equal(count(out, 'else initApp();'), 0, `${file} ${target}`);
-      assert.match(out, /legacy-storage-migration\.mjs/, `${file} ${target}`);
-    }
+test('KAIROS startup hook occurs exactly once in the snapshot app.js and is replaced in the output', () => {
+  const file = 'distribution-snapshots/kairos/app.js';
+  const source = read(file);
+  assert.equal(count(source, 'else initApp();'), 1, file);
+  for (const target of ['kairos', 'kairos-classic']) {
+    const out = transformKairosScript(source, target, 'app.js');
+    assert.equal(count(out, 'else initApp();'), 0, `${file} ${target}`);
+    assert.match(out, /legacy-storage-migration\.mjs/, `${file} ${target}`);
   }
   assert.throws(() => transformKairosScript('else initApp(); else initApp();', 'kairos', 'app.js'), /missing legacy migration hook/);
 });
@@ -105,13 +104,12 @@ test('KAIROS storage key markers in the snapshot inputs are rewritten for both f
   assert.throws(() => isolateKairosStorageKeys('sessionStorage.setItem("prefs", "1")', 'kairos'), /missing KAIROS storage key marker/);
 });
 
-test('Pi Max boot boundary occurs exactly once in the personal and snapshot runtime and the build cuts after it', () => {
+test('Pi Max boot boundary occurs exactly once in the snapshot runtime and the build cuts after it', () => {
   const boundary = 'if (typeof document !== "undefined") boot();\n';
-  for (const file of ['zz14/app.mjs', 'distribution-snapshots/pimax/app.mjs']) {
-    const source = read(file);
-    assert.equal(count(source, boundary), 1, file);
-    const out = preparePimaxRuntime(source);
-    assert.ok(out.endsWith(boundary), file);
-    assert.ok(source.startsWith(out), file);
-  }
+  const file = 'distribution-snapshots/pimax/app.mjs';
+  const source = read(file);
+  assert.equal(count(source, boundary), 1, file);
+  const out = preparePimaxRuntime(source);
+  assert.ok(out.endsWith(boundary), file);
+  assert.ok(source.startsWith(out), file);
 });

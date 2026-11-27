@@ -3,7 +3,7 @@ import test from 'node:test';
 import vm from 'node:vm';
 import { readFileSync } from 'node:fs';
 
-const source = readFileSync(new URL('../../zz11/update-prompt.js', import.meta.url), 'utf8');
+const source = readFileSync(new URL('../../distribution-snapshots/spinner/update-prompt.js', import.meta.url), 'utf8');
 
 // Minimal DOM: just what update-prompt.js touches.
 function el(tag) {
@@ -289,22 +289,22 @@ test('a worker already installing at init is tracked', async () => {
 });
 
 test('zz11 service worker skips waiting only on the SKIP_WAITING message and ships the prompt script', async () => {
-  const sw = readFileSync(new URL('../../zz11/sw.js', import.meta.url), 'utf8');
+  const sw = readFileSync(new URL('../../distribution-snapshots/spinner/sw.js', import.meta.url), 'utf8');
   const listeners = {}; let skips = 0;
-  vm.runInNewContext(sw, { URL, Response, Request, self: { registration: { scope: 'https://example.test/zz11/' }, addEventListener: (n, f) => { listeners[n] = f; }, skipWaiting: async () => { skips++; }, clients: { claim: async () => {} } } });
+  vm.runInNewContext(sw, { URL, Response, Request, self: { registration: { scope: 'https://example.test/distribution-snapshots/spinner/' }, addEventListener: (n, f) => { listeners[n] = f; }, skipWaiting: async () => { skips++; }, clients: { claim: async () => {} } } });
   listeners.message({ data: { type: 'other' } });
   listeners.message({ data: null });
   assert.equal(skips, 0);
   listeners.message({ data: { type: 'SKIP_WAITING' } });
   assert.equal(skips, 1);
   assert.match(sw, /"\.\/update-prompt\.js"/);
-  assert.match(sw, /update-prompt-6-persist-1-r5-1';/);
+  assert.match(sw, /update-prompt-6-persist-1';/);
 });
 
 test('zz11 page loads update-prompt.js before app.js and offers only from showSettings', () => {
-  const html = readFileSync(new URL('../../zz11/index.html', import.meta.url), 'utf8');
+  const html = readFileSync(new URL('../../distribution-snapshots/spinner/index.html', import.meta.url), 'utf8');
   assert.ok(html.indexOf('./update-prompt.js') > 0 && html.indexOf('./update-prompt.js') < html.indexOf('./app.js'));
-  const app = ['spin.js', 'app.js'].map(file => readFileSync(new URL('../../zz11/' + file, import.meta.url), 'utf8')).join('\n');
+  const app = ['app.js'].map(file => readFileSync(new URL('../../distribution-snapshots/spinner/' + file, import.meta.url), 'utf8')).join('\n');
   const offers = [...app.matchAll(/MagicUpdate\??\.offer\(\)/g)];
   assert.equal(offers.length, 1);
   const show = app.slice(app.indexOf('function showSettings()'), app.indexOf('function closeSettings()'));

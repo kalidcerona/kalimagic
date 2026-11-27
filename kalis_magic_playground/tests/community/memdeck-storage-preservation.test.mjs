@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readFileSync } from 'node:fs';
-import { freshState, loadState } from '../../zz12/core.mjs';
-import { STACKS } from '../../zz12/data.mjs';
+import { freshState, loadState } from '../../distribution-snapshots/memdeck/core.mjs';
+import { STACKS } from '../../distribution-snapshots/memdeck/data.mjs';
 
-const KEY = 'magic-memdeck-v1';
+const KEY = 'friend-memdeck-v1';
 const VOID = new Set(['AREA', 'BASE', 'BR', 'COL', 'EMBED', 'HR', 'IMG', 'INPUT', 'LINK', 'META', 'SOURCE', 'TRACK', 'WBR']);
 
 function historyEntry(at, mode, total, correct, ms) {
@@ -127,7 +127,7 @@ function parseHTML(html) {
 }
 
 function installDocument() {
-  const html = readFileSync(new URL('../../zz12/index.html', import.meta.url), 'utf8');
+  const html = readFileSync(new URL('../../distribution-snapshots/memdeck/index.html', import.meta.url), 'utf8');
   const root = new El('document');
   root.children = parseHTML(html);
   const downloads = [];
@@ -179,7 +179,7 @@ async function boot(moduleId, storage) {
     navigator: { serviceWorker: { register: () => Promise.resolve() } },
   });
   try {
-    await import(`../../zz12/app.mjs?memdeck=${moduleId}`);
+    await import(`../../distribution-snapshots/memdeck/app.mjs?memdeck=${moduleId}`);
   } catch (error) {
     restore();
     dom.restoreURL();

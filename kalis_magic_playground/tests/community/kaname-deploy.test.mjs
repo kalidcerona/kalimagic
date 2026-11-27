@@ -30,9 +30,7 @@ test('KanameCue publishes only its explicit shell at the exact path in an isolat
       cwd: site, encoding: 'utf8', env: { ...process.env, CI: 'true' }
     });
     assert.equal(audit.status, 0, audit.stderr + audit.stdout);
-    const mirrorLog = `${audit.stdout}\n${audit.stderr}`;
-    assert.equal((mirrorLog.match(/WARNING: mirror check skipped on CI: \d+ sibling sources absent/g) || []).length, 1, mirrorLog);
-    assert.equal(mirrorLog.includes('mirror check skipped:'), false);
+    assert.equal(JSON.parse(audit.stdout.trim().split('\n').at(-1)).roots, 17);
     const published = path.join(site, 'dist', 'KanameCue');
     assert.deepEqual((await readdir(published)).sort(), [...shell, 'sw.js'].sort());
     for (const file of [...shell, 'sw.js']) assert.deepEqual(await readFile(path.join(published, file)), await readFile(path.join(root, 'KanameCue', file)), file);
@@ -97,7 +95,7 @@ test('KanameCue keeps brand copy, contact footer, wake lock and the house settin
   const html = await read('index.html');
   const wake = await read('wake.mjs'), gesture = await read('settings.mjs'), playback = await read('playback.mjs');
   for (const text of ['중심', '모든 큐가 모이는 무대의 중심.', '要(かなめ)는 여러 부분을 묶는 핵심이라는 뜻임.', '무대 위의 수많은 움직임은 하나의 타이밍에서 서로 연결됨.', 'KANAME Cue는 소리와 공연자의 순간을 하나로 묶는 중심임.', 'Android Chrome: ⋮', 'iPhone Safari: 공유']) assert.ok(html.includes(text), text);
-  const zz13 = await readFile(path.join(root, 'zz13', 'index.html'), 'utf8');
+  const zz13 = await readFile(path.join(root, 'distribution-snapshots/qr', 'index.html'), 'utf8');
   assert.ok(html.includes(zz13.match(/<div class="magic-settings-footer">[\s\S]*?<\/div><\/form>/)[0].replace('</form>', '')));
   assert.match(wake, /navigator\.wakeLock\.request\('screen'\)/);
   assert.match(wake, /visibilitychange/);

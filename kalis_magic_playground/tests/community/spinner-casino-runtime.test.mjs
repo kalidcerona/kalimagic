@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readFileSync } from 'node:fs';
-import { angularDistance } from '../../zz11/logic.js';
+import { angularDistance } from '../../distribution-snapshots/spinner/logic.js';
 
 function installDom({ guideSeen = true, finePointer = true, initialState = null, initialTheme, storageReadFails = false, storageWriteFails = false, reducedMotion = false, sharedStore = null } = {}) {
   const elements = new Map();
@@ -9,9 +9,9 @@ function installDom({ guideSeen = true, finePointer = true, initialState = null,
   const windowListeners = new Map();
   const mediaQueries = [];
   const store = sharedStore || new Map();
-  if (initialTheme !== undefined) store.set('zz11-table-theme-v1', initialTheme);
-  if (guideSeen) store.set('zz11-guide-seen-v2', '1');
-  if (initialState) store.set('zz11-spinner-state-v2', JSON.stringify(initialState));
+  if (initialTheme !== undefined) store.set('friend-spinner-table-theme-v1', initialTheme);
+  if (guideSeen) store.set('friend-spinner-guide-seen-v2', '1');
+  if (initialState) store.set('friend-spinner-state-v2', JSON.stringify(initialState));
   const savedGlobals = new Map();
   function replace(name, value) {
     savedGlobals.set(name, Object.getOwnPropertyDescriptor(globalThis, name));
@@ -49,7 +49,7 @@ function installDom({ guideSeen = true, finePointer = true, initialState = null,
     elements.set(id, el);
     return el;
   }
-  const html = readFileSync(new URL('../../zz11/index.html', import.meta.url), 'utf8');
+  const html = readFileSync(new URL('../../distribution-snapshots/spinner/index.html', import.meta.url), 'utf8');
   let stage = null;
   for (const match of html.matchAll(/<([a-z][a-z0-9-]*)\b([^>]+)>/gi)) {
     const attributes = Object.fromEntries(Array.from(match[2].matchAll(/([\w-]+)="([^"]*)"/g), item => [item[1], item[2]]));
@@ -95,8 +95,8 @@ function installDom({ guideSeen = true, finePointer = true, initialState = null,
   replace('navigator', windowStub.navigator);
   replace('matchMedia', (query) => windowStub.matchMedia(query));
   replace('localStorage', {
-    getItem: (key) => { if (storageReadFails && key === 'zz11-table-theme-v1') throw new Error('Storage unavailable'); return store.has(key) ? store.get(key) : null; },
-    setItem: (key, value) => { if (storageWriteFails && key === 'zz11-table-theme-v1') throw new Error('Storage unavailable'); store.set(key, String(value)); },
+    getItem: (key) => { if (storageReadFails && key === 'friend-spinner-table-theme-v1') throw new Error('Storage unavailable'); return store.has(key) ? store.get(key) : null; },
+    setItem: (key, value) => { if (storageWriteFails && key === 'friend-spinner-table-theme-v1') throw new Error('Storage unavailable'); store.set(key, String(value)); },
   });
   return {
     elements, documentListeners, windowListeners, mediaQueries, store, stage, html,
@@ -121,8 +121,8 @@ function pointer(target, x, y, pointerId = 1) {
 }
 
 function savedState(store) {
-  assert.equal(store.has('zz11-spinner-state-v2'), true);
-  return JSON.parse(store.get('zz11-spinner-state-v2'));
+  assert.equal(store.has('friend-spinner-state-v2'), true);
+  return JSON.parse(store.get('friend-spinner-state-v2'));
 }
 
 function assertCornerCue(dom, cue) {
@@ -149,7 +149,7 @@ function assertCornerCue(dom, cue) {
 
 async function loadSpinner(options) {
   const dom = installDom(options);
-  await import(`../../zz11/app.js?casino=${options.moduleId}`);
+  await import(`../../distribution-snapshots/spinner/app.js?casino=${options.moduleId}`);
   return dom;
 }
 
@@ -174,7 +174,7 @@ test('table theme validates stored palettes and tolerates missing or unavailable
   try {
     fire(dom.elements.get('table-theme').listeners, 'change', { target: { value: 'burgundy' } });
     assert.equal(dom.stage.dataset.tableTheme, 'burgundy', 'storage failure keeps the selected table usable');
-    assert.equal(dom.store.has('zz11-table-theme-v1'), false);
+    assert.equal(dom.store.has('friend-spinner-table-theme-v1'), false);
     assert.equal(savedState(dom.store).targetAngle, null);
   } finally { dom.restore(); }
 });
@@ -194,7 +194,7 @@ test('table theme preserves the round and wheel position, survives restart and r
     fire(dom.elements.get('table-theme').listeners, 'change', { target: { value: 'burgundy' } });
     assert.deepEqual(savedState(store), before, 'appearance selection never resets the performance state');
     assert.equal(dom.elements.get('spinner-arrow').style.transform, arrowTransform);
-    assert.equal(store.get('zz11-table-theme-v1'), 'burgundy');
+    assert.equal(store.get('friend-spinner-table-theme-v1'), 'burgundy');
     assertCornerCue(dom, 'acknowledged');
     fire(dom.elements.get('start-performance').listeners, 'click', {});
     assert.equal(savedState(store).targetAngle, null);

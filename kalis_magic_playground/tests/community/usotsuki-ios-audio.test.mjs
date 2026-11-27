@@ -11,7 +11,7 @@ async function mount(route, sound = true) {
   const documentListeners = new Map();
   const stored = new Map([
     ['usotsuki.detector.settings-guide.v1', '1'],
-    ['usotsuki.detector.sound.v1', sound ? '1' : '0'],
+    ['usotsuki.distribution.detector.sound.v1', sound ? '1' : '0'],
     ['usotsuki.distribution.detector.sound.v1', sound ? '1' : '0'],
   ]);
   class ElementStub {
@@ -56,7 +56,7 @@ async function mount(route, sound = true) {
 }
 
 test('personal and friend audio recover from iOS interruption and background, without delayed cancelled scans', async () => {
-  for (const route of ['zz7','distribution-snapshots/usotsuki']) {
+  for (const route of ['distribution-snapshots/usotsuki']) {
     const app = await mount(route);
     app.get('#start-performance').dispatch('click');
     const ctx = app.contexts[0];
@@ -89,7 +89,7 @@ test('personal and friend audio recover from iOS interruption and background, wi
 });
 
 test('saved sound off creates no audio context on either route', async () => {
-  for (const route of ['zz7','distribution-snapshots/usotsuki']) {
+  for (const route of ['distribution-snapshots/usotsuki']) {
     const app = await mount(route,false);
     app.get('#start-performance').dispatch('click'); app.down(); await app.flush();
     assert.equal(app.contexts.length,0,route);

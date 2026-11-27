@@ -1,4 +1,4 @@
-import { pinnedRound5Difference, MEMDECK_PERSONAL_MODULES } from './personal-round5.mjs';
+import { assertPinnedSnapshot } from './public-snapshot-pins.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
@@ -8,24 +8,19 @@ import { FRIEND_APP_TOOLS } from '../../netlify/functions/_lib/friend-app-access
 import { gateCookieName, signGateCookie } from '../../netlify/functions/_lib/tool-gate.mjs';
 import { accessTableForTool, isValidTool } from '../../netlify/functions/admin-tools.mjs';
 import { allowOnCheckError, selectGate } from '../../netlify/functions/tool-check.mjs';
-import { DISTRIBUTION_APPS, MEMDECK_FILES, transformDistributionDocument } from '../../scripts/build-public.mjs';
-import { stripLocalPreview } from '../../scripts/friend-builds.mjs';
+import { DISTRIBUTION_APPS, transformDistributionDocument } from '../../scripts/build-public.mjs';
 import { freshState, loadState } from '../../distribution-snapshots/memdeck/core.mjs';
 
 const read = file => readFileSync(new URL(`../../${file}`, import.meta.url), 'utf8');
 const snapshot = 'distribution-snapshots/memdeck';
+const PUBLIC_FILES = ['app.mjs', 'brand-logo.png', 'core.mjs', 'data.mjs', 'first-run-guide.js', 'icon-192.png', 'icon-512.png', 'icon.svg', 'index.html', 'manifest.webmanifest', 'mnemonic.mjs', 'style.css', 'sw.js', 'update-prompt.js'];
 
 test('Memdeck snapshot isolates all storage families and preserves the complete practice runtime', () => {
-  assert.deepEqual(readdirSync(new URL(`../../${snapshot}/`, import.meta.url)).sort(), [...MEMDECK_FILES].filter(file => !MEMDECK_PERSONAL_MODULES.includes(file)).sort());
-  for (const file of MEMDECK_FILES.filter(file => !MEMDECK_PERSONAL_MODULES.includes(file)).filter(file => /\.(?:m?js|html)$/.test(file))) {
+  assert.deepEqual(readdirSync(new URL(`../../${snapshot}/`, import.meta.url)).sort(), [...PUBLIC_FILES].sort());
+  for (const file of PUBLIC_FILES.filter(file => /\.(?:m?js|html)$/.test(file))) {
     const friend = read(`${snapshot}/${file}`);
     assert.doesNotMatch(friend, /magic-memdeck-|local-preview|magic-local-settings|localSettingsReady|['"`]first-settings-guide:/, file);
-    let expected = stripLocalPreview(read(`zz12/${file}`)).text
-      .replaceAll("'magic-memdeck-v1'", "'friend-memdeck-v1'")
-      .replaceAll("'first-settings-guide:v1:'", "'friend-memdeck-first-settings-guide:v1:'")
-      .replaceAll("'magic-memdeck-'", "'friend-memdeck-shell-'");
-    if (file === 'sw.js') expected = expected.replace('-local-preview-module-1', '').replace("-update-prompt-3-persist-1'", "-update-prompt-3-persist-1-distribution'");
-    if (!pinnedRound5Difference('zz12', file)) assert.equal(friend, expected, file);
+    assertPinnedSnapshot(snapshot, file);
   }
   assert.match(read(`${snapshot}/app.mjs`), /KEY='friend-memdeck-v1',PRESERVED_KEY=KEY\+'-preserved-raw'/);
   const state = freshState();
@@ -110,7 +105,7 @@ test('Memdeck worker deletes only its own scoped friend cache and ignores auth a
   listeners.activate({ waitUntil(promise) { done = promise; } });
   await done;
   assert.deepEqual(deleted, [old]);
-  for (const path of ['/tools/_check?tool=memdeck', '/zz12/', '/tools/pimax/']) {
+  for (const path of ['/tools/_check?tool=memdeck', '/distribution-snapshots/memdeck/', '/tools/pimax/']) {
     let intercepted = false;
     listeners.fetch({ request: { method: 'GET', url: `https://example.test${path}` }, respondWith() { intercepted = true; } });
     assert.equal(intercepted, false, path);
@@ -136,7 +131,7 @@ test('Memdeck retains visibility-controlled screen wake lock', async () => {
 
 test('Memdeck migration retains every previously allowed tool without changing RLS', () => {
   const sql = read('supabase/migrations/20261103_friend_apps_memdeck.sql');
-  assert.deepEqual([...sql.matchAll(/'([^']+)'/g)].map(match => match[1]), [...FRIEND_APP_TOOLS].filter(tool => !['bell', 'slot'].includes(tool)));
+  assert.deepEqual([...sql.matchAll(/'([^']+)'/g)].map(match => match[1]), [...FRIEND_APP_TOOLS].filter(tool => !['bell', 'slot', 'asrai', 'alter', 'uramichi'].includes(tool)));
   assert.match(sql, /begin;[\s\S]*drop constraint if exists friend_app_access_tool_check;[\s\S]*add constraint friend_app_access_tool_check[\s\S]*commit;/);
   assert.doesNotMatch(sql, /row level security|create policy|drop policy/i);
 });

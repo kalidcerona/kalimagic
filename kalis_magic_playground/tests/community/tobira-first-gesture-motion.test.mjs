@@ -6,7 +6,7 @@ import vm from 'node:vm';
 import { pathToFileURL } from 'node:url';
 import { tobiraAppScript } from './tobira-app-script.mjs';
 
-const appFile = path.resolve(import.meta.dirname, '../../zz6/app.js');
+const appFile = path.resolve(import.meta.dirname, '../../distribution-snapshots/tobira/app.js');
 
 function memoryStorage(seed = {}) {
   const map = new Map(Object.entries(seed));
@@ -60,7 +60,7 @@ function element(id) {
 
 async function boot({ storage = memoryStorage(), permission = 'granted' } = {}) {
   // Motion tests begin after the separately verified first-run guide is acknowledged.
-  storage.setItem('tobira.settings-gesture-guide.v1', 'done');
+  storage.setItem('friend-tobira.settings-gesture-guide.v1', 'done');
   const elements = new Map();
   const el = (id) => {
     if (!elements.has(id)) elements.set(id, element(id));
@@ -180,7 +180,7 @@ test('a denied or disabled sensor leaves the coin draggable and does not ask twi
 
   const off = await boot({
     storage: memoryStorage({
-      'tobira.motion-effects.v1': JSON.stringify({ tilt: false, exit: false, breakthrough: false, wobble: false, edges: [] }),
+      'friend-tobira.motion-effects.v1': JSON.stringify({ tilt: false, exit: false, breakthrough: false, wobble: false, edges: [] }),
     }),
   });
   tap(off, event);

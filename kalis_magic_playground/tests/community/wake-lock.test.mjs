@@ -11,56 +11,10 @@ import { choiceAppScript, choiceModuleScript } from './choice-app-script.mjs';
 // Personal apps stay awake in settings; pinned friend snapshots retain their previous policy.
 const APPS = [
   {
-    file: 'zz2/rewind.js',
-    settings: /function showScreen\(next, animate = false\) \{[\s\S]*?next === 'settings'[\s\S]*?syncPerformanceWakeLock\(\)/,
-    wanted: /return session\.screen !== "settings"/,
-  },
-  {
-    file: 'zz4/app.js',
+    file: 'distribution-snapshots/choice/app.js',
     modules: 'choice',
     settings: /function closeFakeHome\(\) \{[\s\S]*?fakeHomeSession = null;[\s\S]*?dataset\.view = 'settings'[\s\S]*?syncPerformanceWakeLock\(\)/,
     wanted: /function performanceWakeWanted\(\) \{\s*return rehearsalSurfaceOpen\(\);\s*\}/,
-  },
-  {
-    file: 'zz5/app.js',
-    modules: 'aletheia',
-    settings: /function stopPerformance\(\) \{[\s\S]*?(?:view = |setView\()'settings'[\s\S]*?syncPerformanceWakeLock\(\)/,
-    wanted: /return view === 'performance'/,
-  },
-  {
-    file: 'zz6/app.js',
-    modules: true,
-    settings: /function showSettings\(\) \{[\s\S]*?state\.mode = 'settings'[\s\S]*?syncPerformanceWakeLock\(\)/,
-    wanted: /return state\.mode === 'performance'/,
-  },
-  {
-    file: 'zz7/detector.js',
-    modules: 'usotsuki',
-    settings: /function showSettings\(\) \{[\s\S]*?settingsScreen\.hidden = false[\s\S]*?syncPerformanceWakeLock\(\)/,
-    wanted: /return !performanceScreen\.hidden && !settingsVisible\(\)/,
-  },
-  {
-    file: 'zz8/contacts-screen.js',
-    settings: /function showScreen\(screen\) \{\s*settingsScreen\.hidden = screen !== "settings";[\s\S]*?syncPerformanceWakeLock\(\)/,
-    wanted: /function performanceOpen\(\) \{\s*return settingsScreen\.hidden;\s*\}/,
-  },
-  {
-    file: 'zz10/app.js',
-    sources: ['zz10/wake-lock.js', 'zz10/settings-panel.js'],
-    settings: /function openSettings\(\) \{[\s\S]*?settings\.hidden = false;[\s\S]*?syncPerformanceWakeLock\(\)/,
-    wanted: /return Boolean\(stream\) && settings\.hidden/,
-  },
-  {
-    file: 'zz11/app.js',
-    sources: ['zz11/wake-lock.js', 'zz11/spin.js'],
-    settings: /function showSettings\(\) \{[\s\S]*?settings\.hidden = false;[\s\S]*?syncPerformanceWakeLock\(\)/,
-    wanted: /return settings\.hidden/,
-  },
-  {
-    file: 'zz13/app.mjs',
-    sources: ['zz13/wake-lock.mjs', 'zz13/settings.mjs'],
-    settings: /function open\(\)\{[\s\S]*?\$\('settings'\)\.showModal\(\);syncPerformanceWakeLock\(\)/,
-    wanted: /return \$\('settings'\)\.open !== true/,
   },
   {
     file: 'distribution-snapshots/unlock/rewind.js',
@@ -104,7 +58,7 @@ function sourceOf(file) {
 for (const app of APPS) {
   test(`${app.file} requests a screen wake lock with its personal or pinned settings policy and feature-detects`, () => {
     const source = app.modules === 'usotsuki' ? usotsukiAppScript(fileURLToPath(new URL(`../../${app.file.replace(/detector\.js$/, '')}`, import.meta.url)))
-      : app.modules === 'choice' ? choiceAppScript(fileURLToPath(new URL('../../zz4/', import.meta.url)))
+      : app.modules === 'choice' ? choiceAppScript(fileURLToPath(new URL('../../distribution-snapshots/choice/', import.meta.url)))
       : app.modules === 'aletheia' ? aletheiaAppScript(fileURLToPath(new URL(`../../${app.file.replace(/app\.js$/, '')}`, import.meta.url)))
       : app.modules ? tobiraAppScript(fileURLToPath(new URL(`../../${app.file.replace(/app\.js$/, '')}`, import.meta.url))) : app.sources ? app.sources.map(sourceOf).join('\n') : sourceOf(app.file);
     assert.match(source, /navigator\.wakeLock\.request\(\s*"screen"\s*\)/);
@@ -112,7 +66,7 @@ for (const app of APPS) {
     assert.match(source, /else releaseWakeLock\(\)/);
     const personal = app.file.startsWith('zz');
     assert.match(source, personal && app.file !== 'zz8/contacts-screen.js' ? /return document\.visibilityState === ["']visible["']/ : app.wanted);
-    assert.match(source, app.file === 'zz11/app.js' ? /function showSettings\(\) \{[\s\S]*?settings\.hidden = false;/ : app.file === 'zz13/app.mjs' ? /showModal\(\);ctx\.syncPerformanceWakeLock\(\)/ : app.settings);
+    assert.match(source, app.file === 'distribution-snapshots/spinner/app.js' ? /function showSettings\(\) \{[\s\S]*?settings\.hidden = false;/ : app.file === 'distribution-snapshots/qr/app.mjs' ? /showModal\(\);syncPerformanceWakeLock\(\)/ : app.settings);
   });
 }
 
@@ -136,91 +90,6 @@ function element() {
   };
 }
 
-test('zz4 performance and settings retain one lock until the page is hidden', async () => {
-  // zz4 runs app.js with local feature modules. The lock code that sat right above openFakeHome
-  // now lives in wake-lock.js, so the same code is read as that module plus openFakeHome and closeFakeHome.
-  const dir = fileURLToPath(new URL('../../zz4/', import.meta.url));
-  const app = choiceAppScript(dir);
-  const source = [
-    cut(app, 'function rehearsalSurfaceOpen()', 'function leaveRehearsalSurface()'),
-    choiceModuleScript(dir, 'wake-lock.js'),
-    cut(app, 'function openFakeHome(', 'function resetForNextSpectator()'),
-  ].join('\n');
-  const requests = [];
-  const releases = [];
-  const sandbox = {
-    fakeHomeSession: null,
-    fakeHomeGesture: null,
-    resetTaps: null,
-    readoutCleared: false,
-    statusClock: 0,
-    store: { options: {} },
-    fakeHomeEl: element(),
-    fakeNotesEl: element(),
-    settingsEl: element(),
-    document: {
-      visibilityState: 'visible',
-      title: '',
-      body: { dataset: {} },
-      getElementById() { return null; },
-    },
-    history: { replaceState() {} },
-    navigator: {
-      wakeLock: {
-        request(type) {
-          requests.push(type);
-          return Promise.resolve({
-            release() {
-              releases.push(type);
-              return Promise.resolve();
-            },
-            addEventListener() {},
-          });
-        },
-      },
-    },
-    syncUserIconsFromStorage() {},
-    ensureFakeHomeIcons() {},
-    clearFakeNotesView() {},
-    createFakeHomeEntry() { return {}; },
-    normalizeOptions(options) { return options; },
-    applyHomeStyle() {},
-    updateStatusTime() {},
-    setInterval() { return 1; },
-    clearInterval() {},
-    syncFakeHomeSurface() {},
-    applyWallpaper() {},
-    maybeShowGestureGuide() {},
-    hideGestureGuide() {},
-    dismissInputGuide() {},
-    releaseWallpaper() {},
-    endPeek() {},
-    showView() {},
-    // The gesture state moved to performance-gestures.js; openFakeHome and closeFakeHome now reset it through these setters.
-    setFakeHomeGesture() {},
-    setResetTaps() {},
-    setReadoutCleared() {},
-  };
-  sandbox.window = sandbox;
-  vm.runInNewContext(source, sandbox, { filename: 'zz4/app.js' });
-
-  sandbox.openFakeHome([]);
-  await new Promise((resolve) => setImmediate(resolve));
-  assert.deepEqual(requests, ['screen']);
-  assert.deepEqual(releases, []);
-  assert.equal(sandbox.document.body.dataset.view, 'fake-home');
-
-  sandbox.closeFakeHome();
-  await new Promise((resolve) => setImmediate(resolve));
-  assert.deepEqual(requests, ['screen']);
-  assert.deepEqual(releases, []);
-  sandbox.document.visibilityState = 'hidden';
-  sandbox.syncPerformanceWakeLock();
-  await new Promise((resolve) => setImmediate(resolve));
-  assert.deepEqual(releases, ['screen']);
-  assert.equal(sandbox.document.body.dataset.view, 'settings');
-  assert.equal(sandbox.settingsEl.hidden, false);
-});
 
 function awakeSlice(source) {
   const start = source.indexOf('function keepVisibleScreenAwake()');
@@ -304,8 +173,8 @@ async function driveShortLivedBudget(code) {
 }
 
 test('visible wake lock stops retrying after three short releases and resumes when shown again', async () => {
-  const shared = awakeSlice(sourceOf('zz14/app.mjs'));
-  await driveShortLivedBudget(awakeSlice(sourceOf('zz12/app.mjs')));
+  const shared = awakeSlice(sourceOf('distribution-snapshots/pimax/app.mjs'));
+  await driveShortLivedBudget(awakeSlice(sourceOf('distribution-snapshots/memdeck/app.mjs')));
   assert.equal(awakeSlice(sourceOf('distribution-snapshots/pimax/app.mjs')), shared);
   await driveShortLivedBudget(shared);
   await driveShortLivedBudget(tabataAwakeSlice(sourceOf('TabataTimer/wake-lock.js')));

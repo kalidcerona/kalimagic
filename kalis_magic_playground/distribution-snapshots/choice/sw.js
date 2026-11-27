@@ -1,7 +1,8 @@
 // Cache only the explicit app shell. API, authentication and user data stay on the network.
 const CACHE_PREFIX = 'choice-dist-shell-' + encodeURIComponent(self.registration.scope) + '-';
-const CACHE_NAME = CACHE_PREFIX + 'v20261010-choice-perf-1-coherent-1-compat-1-wake-1-ready-1-nostatus-1-modules-1-order-1-split-1-css-1-artwork-1-update-prompt-3-images-1-persist-1-distribution';
+const CACHE_NAME = CACHE_PREFIX + 'v20261010-choice-perf-1-coherent-1-compat-1-wake-1-ready-1-nostatus-1-modules-1-order-1-split-1-css-1-artwork-1-update-prompt-3-images-1-persist-1-photo-save-1-distribution';
 const SHELL = [
+  "./photo-save-notice.js",
   "./settings-ui.js",
   "./settings-ui.css",
   "./update-prompt.js",

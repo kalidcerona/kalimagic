@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { hiddenDigit, appendMinuteDigit, registerEmergencyTap, timeMachineOffset, timeMachineClock, REWIND_STEP_MS, isSettingsSwipe } from '../../zz2/time-machine.js';
+import { hiddenDigit, appendMinuteDigit, registerEmergencyTap, timeMachineOffset, timeMachineClock, REWIND_STEP_MS, isSettingsSwipe } from '../../distribution-snapshots/unlock/time-machine.js';
 
 test('hidden keypad includes zero and ignores unused bottom corners', () => {
   assert.equal(hiddenDigit(10, 10, 300, 800), 1);

@@ -4,13 +4,14 @@ import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
 const { chromium } = require(process.env.MAGIC_PLAYWRIGHT_MODULE || 'playwright');
-const appUrl = process.env.MAGIC_ASRAI_TEST_URL || 'http://127.0.0.1:19405/kalis_magic_playground/zz8/';
+const appUrl = process.env.MAGIC_ASRAI_TEST_URL || 'http://127.0.0.1:19405/kalis_magic_playground/distribution-snapshots/asrai/';
 
 async function newPage(browser, viewport = { width: 390, height: 844 }) {
   const context = await browser.newContext({ viewport, isMobile: true, hasTouch: true, serviceWorkers: 'block' });
   const page = await context.newPage();
   await page.goto(appUrl);
   await page.locator('#contact-list-screen:not([hidden])').waitFor();
+  await page.getByRole('button', { name: '알겠습니다' }).tap();
   return { context, page, cdp: await context.newCDPSession(page) };
 }
 

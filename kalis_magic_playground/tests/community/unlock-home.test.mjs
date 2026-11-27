@@ -1,9 +1,8 @@
-import { pinnedRound5Difference } from './personal-round5.mjs';
-import { PHOTO_NOTICE_SAVE_FILES, stripPhotoSaveNotice } from './personal-photo-notice.mjs';
+import { assertPinnedSnapshot } from './public-snapshot-pins.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
-import * as logic from '../../zz2/logic.js';
+import * as logic from '../../distribution-snapshots/unlock/logic.js';
 
 test('personal reveal selects configured attempt and formats valid birthday separately', () => {
   const attempts = [[1, 2, 3, 4, 5, 6], [0, 8, 0, 2, 2, 9], [9, 9, 9, 9, 9, 9]];
@@ -32,8 +31,8 @@ test('upward peek finds a valid birthday regardless of its attempt number', () =
 
 test('personal and shared unlock use different persistent storage identities', () => {
   assert.equal(typeof logic.storageIdentityForPath, 'function');
-  assert.notDeepEqual(logic.storageIdentityForPath('/zz2/'), logic.storageIdentityForPath('/tools/unlock/'));
-  assert.equal(logic.storageIdentityForPath('/zz2/').personal, true);
+  assert.notDeepEqual(logic.storageIdentityForPath('/distribution-snapshots/unlock/'), logic.storageIdentityForPath('/tools/unlock/'));
+  assert.equal(logic.storageIdentityForPath('/distribution-snapshots/unlock/').personal, true);
   assert.equal(logic.storageIdentityForPath('/tools/unlock/').personal, false);
 });
 
@@ -91,7 +90,7 @@ test('personal home requires both uploaded home screenshots before starting', ()
 
 test('personal and friend RELEASE reveal home2 immediately and clear gestures the same way', () => {
   const modules = ['session.js', 'pin.js', 'gestures.js', 'images.js', 'rewind.js', 'settings.js', 'app.js'];
-  for (const dir of ['zz2', 'distribution-snapshots/unlock']) {
+  for (const dir of ['distribution-snapshots/unlock']) {
     const html = readFileSync(new URL(`../../${dir}/index.html`, import.meta.url), 'utf8');
     const script = modules.map((file) => readFileSync(new URL(`../../${dir}/${file}`, import.meta.url), 'utf8')).join('\n');
     assert.match(html, /class="file-picker"/);
@@ -114,35 +113,9 @@ test('personal and friend RELEASE reveal home2 immediately and clear gestures th
   }
 });
 
-test('friend snapshot matches personal RELEASE except the install id and cache family', () => {
-  const personalDir = new URL('../../zz2/', import.meta.url);
-  const snapDir = new URL('../../distribution-snapshots/unlock/', import.meta.url);
-  const personalFiles = readdirSync(personalDir).filter((file) => file !== 'brand-logo.png' && file !== 'photo-save-notice.js').sort();
-  const snapFiles = readdirSync(snapDir).sort();
-  assert.deepEqual(snapFiles, personalFiles);
-  for (const file of snapFiles) {
-    const rawPersonal = readFileSync(new URL(file, personalDir));
-    const personal = /\.(?:js|html)$/.test(file) ? Buffer.from(stripPhotoSaveNotice(rawPersonal.toString())) : rawPersonal;
-    const snap = readFileSync(new URL(file, snapDir));
-    if (pinnedRound5Difference('zz2', file)) continue;
-    if (file === 'manifest.webmanifest') {
-      const personalManifest = JSON.parse(personal.toString('utf8'));
-      const snapManifest = JSON.parse(snap.toString('utf8'));
-      assert.equal(snapManifest.id, './');
-      delete snapManifest.id;
-      assert.deepEqual(snapManifest, personalManifest);
-    } else if (file === 'sw.js') {
-      const personalText = personal.toString('utf8');
-      const snapText = snap.toString('utf8');
-      assert.match(personalText, /const CACHE_PREFIX = 'unlock-shell-' \+/);
-      assert.match(snapText, /const CACHE_PREFIX = 'friend-unlock-shell-' \+/);
-      assert.match(personalText, /oneui9-6/);
-      assert.equal(
-        snapText.replace("const CACHE_PREFIX = 'friend-unlock-shell-' +", "const CACHE_PREFIX = 'unlock-shell-' +"),
-        personalText,
-      );
-    } else {
-      if (!PHOTO_NOTICE_SAVE_FILES.unlock.includes(file)) assert.deepEqual(snap, personal, file);
-    }
-  }
+test('RELEASE runtime remains pinned with its public identity and cache family', () => {
+  const dir = new URL('../../distribution-snapshots/unlock/', import.meta.url);
+  for (const file of readdirSync(dir)) assertPinnedSnapshot('distribution-snapshots/unlock', file);
+  assert.equal(JSON.parse(readFileSync(new URL('manifest.webmanifest', dir))).id, './');
+  assert.match(readFileSync(new URL('sw.js', dir), 'utf8'), /const CACHE_PREFIX = 'friend-unlock-shell-' \+/);
 });

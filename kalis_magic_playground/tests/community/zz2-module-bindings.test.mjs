@@ -6,7 +6,7 @@ import vm from 'node:vm';
 
 // Loads the split modules in separate module scopes and submits the real settings form.
 const trees = [
-  ['zz2', '../../zz2/'],
+  ['distribution-snapshots/unlock', '../../distribution-snapshots/unlock/'],
   ['distribution-snapshots/unlock', '../../distribution-snapshots/unlock/'],
 ];
 
@@ -61,7 +61,7 @@ async function exercise(root) {
       getItem: (key) => (storage.has(key) ? storage.get(key) : null),
       setItem: (key, value) => storage.set(key, String(value)),
     },
-    location: { pathname: '/zz2/' },
+    location: { pathname: '/distribution-snapshots/unlock/' },
     navigator: {},
     performance: { now: () => 1000 },
     setTimeout(fn) { const id = timerId; timerId += 1; timers.set(id, fn); return id; },

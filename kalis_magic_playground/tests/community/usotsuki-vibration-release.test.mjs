@@ -96,7 +96,7 @@ const stopped = (f, label) => {
 
 const appDirs = existsSync(resolve(import.meta.dirname, 'detector.js'))
   ? [resolve(import.meta.dirname)]
-  : [resolve(import.meta.dirname, '../../zz7'), resolve(import.meta.dirname, '../../distribution-snapshots/usotsuki')];
+  : [resolve(import.meta.dirname, '../../distribution-snapshots/usotsuki'), resolve(import.meta.dirname, '../../distribution-snapshots/usotsuki')];
 const BUTTON = [194, 634], OFF = [10, 20];
 const endings = {
   'pointerup on button': f => f.pointer('pointerup', ...BUTTON),

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readFile } from 'node:fs/promises';
 import { pathToFileURL, fileURLToPath } from 'node:url';
-const source = process.env.ALTER_SOURCE || fileURLToPath(new URL('../../zz10/', import.meta.url));
+const source = process.env.ALTER_SOURCE || fileURLToPath(new URL('../../distribution-snapshots/alter/', import.meta.url));
 const dataUrl = code => `data:text/javascript;base64,${Buffer.from(code).toString('base64')}`;
 test('actual DOM loop hides failed mask rather than showing stale foreground geometry', async () => {
   const saved = new Map();

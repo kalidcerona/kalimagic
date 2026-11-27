@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { detectCard } from "../../zz10/vision.js";
+import { detectCard } from "../../distribution-snapshots/alter/vision.js";
 
 test("ALTER finds a printed card against an unevenly lit background", () => {
   const width = 240;

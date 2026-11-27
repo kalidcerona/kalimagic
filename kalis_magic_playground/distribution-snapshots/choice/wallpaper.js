@@ -1,3 +1,4 @@
+import { recordPhotoSave } from './photo-save-notice.js';
 import { normalizeOptions } from './logic.js';
 import { controlOptions } from './options.js';
 import {
@@ -75,11 +76,13 @@ async function onWallpaperApply() {
       try { await clearWallpaper(key); } catch { /* Nothing more to undo. */ }
       throw new Error('save');
     }
+    recordPhotoSave(true);
     if (previous.wallpaper === 'photo') { try { await clearWallpaper(wallpaperKey(previous)); } catch { /* A stray old photo is harmless. */ } }
     message.textContent = '';
     closeWallpaperEditor();
     renderWallpaperState();
   } catch {
+    recordPhotoSave(false);
     message.textContent = '배경화면을 저장하지 못했습니다. 지금 쓰던 배경은 그대로입니다.';
   }
 }

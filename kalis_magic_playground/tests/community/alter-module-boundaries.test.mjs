@@ -15,7 +15,7 @@ import { pathToFileURL } from 'node:url';
 // Not reachable with these stubs: settings-ui.js (the shared classic appearance script, deferred and not an ALTER
 // module), real camera pixels, the service worker itself (sw.js), and browser rendering of the overlay.
 // ALTER_ROOT points the same test at a friend snapshot (none exists under distribution-snapshots today).
-const root = process.env.ALTER_ROOT ? pathToFileURL(`${process.env.ALTER_ROOT.replace(/\/?$/, '/')}`) : new URL('../../zz10/', import.meta.url);
+const root = process.env.ALTER_ROOT ? pathToFileURL(`${process.env.ALTER_ROOT.replace(/\/?$/, '/')}`) : new URL('../../distribution-snapshots/alter/', import.meta.url);
 const html = readFileSync(new URL('index.html', root), 'utf8');
 
 const errors = [];
@@ -26,7 +26,7 @@ const settle = (ms = 0) => new Promise((resolve) => setTimeout(resolve, ms));
 afterEach(async () => {
   await settle(5);
   assert.deepEqual(errors, [], 'no uncaught errors, unhandled rejections or console.error');
-  const events = JSON.parse(env.sessionStorage.getItem('alter-runtime-events') || '{}');
+  const events = JSON.parse(env.sessionStorage.getItem('friend-alter-runtime-events') || '{}');
   assert.equal(events['analysis-error'], undefined, 'no frame analysis error was swallowed by app.js');
   assert.notEqual(document.getElementById('runtime-note').textContent, '카드 분석을 다시 시도하는 중');
 });
@@ -288,7 +288,7 @@ function stubBrowser() {
     matchMedia: () => ({ get matches() { return standalone.matches; }, addEventListener() {} }),
   };
   listen(window);
-  const location = { href: 'https://example.test/zz10/', hostname: 'example.test', search: '' };
+  const location = { href: 'https://example.test/distribution-snapshots/alter/', hostname: 'example.test', search: '' };
   const define = (name, value) => Object.defineProperty(globalThis, name, { value, configurable: true, writable: true });
   define('document', document);
   define('window', window);
@@ -308,7 +308,7 @@ const byId = (id) => {
   assert.ok(el, `index.html defines #${id}`);
   return el;
 };
-const savedSettings = () => JSON.parse(env.localStorage.getItem('alter-settings'));
+const savedSettings = () => JSON.parse(env.localStorage.getItem('friend-alter-settings'));
 const runtimeNote = () => byId('runtime-note').textContent;
 const stateNote = () => byId('state-note').textContent;
 
@@ -335,7 +335,7 @@ async function frames(count, which) {
 }
 
 // ----- seed saved settings, then load the module scripts exactly as index.html lists them -----
-env.localStorage.setItem('alter-settings', JSON.stringify({ rank: 'K', suit: 'diamond', brightness: 200 }));
+env.localStorage.setItem('friend-alter-settings', JSON.stringify({ rank: 'K', suit: 'diamond', brightness: 200 }));
 const moduleSources = env.top.querySelectorAll('script').filter((s) => s.attrs.get('type') === 'module').map((s) => s.attrs.get('src'));
 const classicSources = env.top.querySelectorAll('script').filter((s) => s.attrs.get('type') !== 'module').map((s) => s.attrs.get('src'));
 
@@ -369,7 +369,7 @@ test('boot imports the real zz10 modules, restores saved settings and shows the 
 test('guide: the close button hides it and remembers that it was seen', async () => {
   await click(byId('close-gesture-guide'));
   assert.equal(byId('gesture-guide').hidden, true);
-  assert.equal(env.localStorage.getItem('alter-settings-gesture-guide-v1'), 'seen');
+  assert.equal(env.localStorage.getItem('friend-alter-settings-gesture-guide-v1'), 'seen');
 });
 
 test('settings opens from the setup screen and closes again with the button and Escape', async () => {
@@ -378,7 +378,7 @@ test('settings opens from the setup screen and closes again with the button and 
   assert.equal(byId('settings').classes.has('is-running'), false);
   assert.equal(document.activeElement, byId('close-settings'));
   assert.equal(stateNote(), '카메라 시작 전');
-  assert.equal(env.lockState.requests.length, 1, 'setup holds the wake lock before the camera starts');
+  assert.equal(env.lockState.requests.length, 0, 'setup does not hold the wake lock');
   await click(byId('close-settings'));
   assert.equal(byId('settings').hidden, true);
   await click(byId('setup-settings'));
@@ -416,7 +416,7 @@ test('camera start falls back to a generic camera, then shows the stage with a h
   assert.equal(env.lockState.requests.length, 1);
   assert.equal(env.lockState.requests[0].type, 'screen');
   assert.equal(env.lockState.requests[0].released, false);
-  assert.equal(JSON.parse(env.sessionStorage.getItem('alter-runtime-events'))['camera-start'], 1);
+  assert.equal(JSON.parse(env.sessionStorage.getItem('friend-alter-runtime-events'))['camera-start'], 1);
 });
 
 test('performance: calibrates on the empty wall, then draws the alter card over the detected card', async () => {
@@ -467,7 +467,7 @@ test('settings: a two-finger downward swipe opens it; short, sideways and three-
   assert.equal(stateNote(), '카메라 속 카드 표시 중');
   assert.equal(byId('card-overlay').hidden, true);
   assert.equal(document.activeElement, byId('close-settings'));
-  assert.equal(env.lockState.requests[0].released, false, 'wake lock is held while settings is open');
+  assert.equal(env.lockState.requests[0].released, true, 'wake lock is released while settings is open');
 });
 
 test('settings are saved to storage and reset the calibration', async () => {
@@ -497,24 +497,24 @@ test('wake lock follows settings and page visibility; analysis stops while hidde
   await dispatch(document, 'keydown', { key: 'Escape' });
   await settle(5);
   assert.equal(byId('settings').hidden, true);
-  assert.equal(locks.length, 1, 'closing settings keeps the existing lock');
-  assert.equal(locks[0].released, false);
+  assert.equal(locks.length, 2, 'closing settings reacquires the lock');
+  assert.equal(locks[1].released, false);
 
   document.visibilityState = 'hidden';
   await dispatch(document, 'visibilitychange');
   await settle(5);
-  assert.equal(locks[0].released, true, 'a hidden page releases the lock');
-  assert.equal(locks.length, 1);
+  assert.equal(locks[1].released, true, 'a hidden page releases the lock');
+  assert.equal(locks.length, 2);
   assert.equal(env.raf.callback, null, 'analysis loop is suspended');
-  assert.equal(JSON.parse(env.sessionStorage.getItem('alter-runtime-events'))['visibility-hidden'], 1);
+  assert.equal(JSON.parse(env.sessionStorage.getItem('friend-alter-runtime-events'))['visibility-hidden'], 1);
 
   document.visibilityState = 'visible';
   await dispatch(document, 'visibilitychange');
   await settle(5);
-  assert.equal(locks.length, 2, 'a visible page takes the lock again');
-  assert.equal(locks[1].released, false);
+  assert.equal(locks.length, 3, 'a visible page takes the lock again');
+  assert.equal(locks[2].released, false);
   assert.ok(env.raf.callback, 'analysis loop is running again');
-  assert.equal(JSON.parse(env.sessionStorage.getItem('alter-runtime-events'))['visible-resume'], 1);
+  assert.equal(JSON.parse(env.sessionStorage.getItem('friend-alter-runtime-events'))['visible-resume'], 1);
 
   await dispatch(window, 'pagehide');
   assert.equal(env.raf.callback, null);
@@ -550,10 +550,10 @@ test('resize with a new crop restarts calibration', async () => {
   byId('stage').clientWidth = 280;
   await dispatch(window, 'resize');
   assert.equal(runtimeNote(), '카메라 준비 중 · 빈 배경을 비춰 주세요');
-  assert.equal(JSON.parse(env.sessionStorage.getItem('alter-runtime-events')).resize, 1);
+  assert.equal(JSON.parse(env.sessionStorage.getItem('friend-alter-runtime-events')).resize, 1);
 });
 
-test('stop releases the camera, returns to setup and keeps the wake lock', async () => {
+test('stop releases the camera and wake lock and returns to setup', async () => {
   const track = env.media.tracks.at(-1);
   const lock = env.lockState.requests.at(-1);
   await twoFingerSwipe(150);
@@ -566,9 +566,9 @@ test('stop releases the camera, returns to setup and keeps the wake lock', async
   assert.equal(byId('settings').hidden, true);
   assert.equal(runtimeNote(), '카메라 시작 전');
   assert.equal(stateNote(), '카메라 시작 전');
-  assert.equal(lock.released, false);
+  assert.equal(lock.released, true);
   assert.equal(env.raf.callback, null);
-  assert.equal(JSON.parse(env.sessionStorage.getItem('alter-runtime-events'))['user-stop'], 1);
+  assert.equal(JSON.parse(env.sessionStorage.getItem('friend-alter-runtime-events'))['user-stop'], 1);
 });
 
 test('a camera track that ends mid-show asks for a restart', async () => {
@@ -578,7 +578,7 @@ test('a camera track that ends mid-show asks for a restart', async () => {
   await dispatch(track, 'ended', { bubbles: false });
   assert.equal(runtimeNote(), '카메라 연결이 끊겼습니다. 설정에서 종료한 뒤 다시 시작해 주세요.');
   assert.equal(env.raf.callback, null, 'analysis stopped');
-  assert.equal(JSON.parse(env.sessionStorage.getItem('alter-runtime-events'))['track-ended'], 1);
+  assert.equal(JSON.parse(env.sessionStorage.getItem('friend-alter-runtime-events'))['track-ended'], 1);
   await dispatch(document, 'visibilitychange');
   assert.equal(env.raf.callback, null, 'a lost camera is not resumed by visibility');
   await twoFingerSwipe(150);

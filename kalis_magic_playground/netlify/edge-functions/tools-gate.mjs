@@ -23,7 +23,7 @@ const COOKIE_MAX_AGE = 7_776_000;
 const RENEWAL_WINDOW_SECONDS = 3_888_000;
 const DEFAULT_TOOL = 'calc';
 const PRODUCT_SLUGS = { calc: 'hitsuzen', unlock: 'release', 'stopwatch-uni': 'kairos', stopwatch: 'kairos-classic', spinner: 'tyche', arosaegida: 'arosaegida' };
-const STRICT_DISTRIBUTION_TOOLS = new Set(['aletheia', 'usotsuki', 'tobira', 'spinner', 'arosaegida', 'pimax', 'choice', 'magicshow', 'gwayubulgeup', 'memdeck', 'bell', 'slot']);
+const STRICT_DISTRIBUTION_TOOLS = new Set(['aletheia', 'usotsuki', 'tobira', 'spinner', 'arosaegida', 'pimax', 'choice', 'magicshow', 'gwayubulgeup', 'memdeck', 'bell', 'slot', 'asrai', 'alter', 'uramichi']);
 
 function analyzePath(rawPathname) {
   if (typeof rawPathname !== 'string') {
@@ -49,10 +49,6 @@ function analyzePath(rawPathname) {
   if (legacyWorker) {
     return { mode: 'legacy-worker', tool: legacyWorker.tool, pathname };
   }
-  if (['/zz1', '/zz2', '/zz3', '/zz4', '/zz5', '/zz6', '/zz7'].some((route) =>
-    pathname === route || pathname.startsWith(`${route}/`))) {
-    return { mode: 'public', pathname };
-  }
   const isToolsPath = pathname === '/tools' || pathname.startsWith('/tools/');
   if (!isToolsPath) {
     return { mode: 'block', pathname };
@@ -72,6 +68,15 @@ function analyzePath(rawPathname) {
     }
     const publicFiles = ['manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
     if (publicFiles.some((file) => pathname === `${root}/${file}`)) {
+      return { mode: 'public', pathname };
+    }
+    return { mode: 'gated', tool, pathname };
+  }
+
+  for (const tool of ['asrai', 'alter', 'uramichi']) {
+    const root = `/tools/${tool}`;
+    if (pathname !== root && !pathname.startsWith(`${root}/`)) continue;
+    if (['manifest.webmanifest', 'icon-192.png', 'icon-512.png'].some(file => pathname === `${root}/${file}`)) {
       return { mode: 'public', pathname };
     }
     return { mode: 'gated', tool, pathname };
@@ -216,6 +221,9 @@ function safeReturnPath(pathname, search, fallback) {
     pathname.startsWith('/tools/gwayubulgeup/') ||
     pathname.startsWith('/tools/bell/') ||
     pathname.startsWith('/tools/slot/') ||
+    pathname.startsWith('/tools/asrai/') ||
+    pathname.startsWith('/tools/alter/') ||
+    pathname.startsWith('/tools/uramichi/') ||
     pathname.startsWith('/tools/memdeck/') ||
     pathname.startsWith('/tools/tobira/') ||
     pathname.startsWith('/tools/spinner/') ||

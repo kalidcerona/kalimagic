@@ -23,5 +23,5 @@ test('Bell uses the individual friend grant table and its current migration', ()
   assert.equal(isValidTool('bell'), true);
   assert.equal(accessTableForTool('bell'), 'friend_app_access');
   const sql = readFileSync(new URL('../../supabase/migrations/20261120_friend_apps_bell.sql', import.meta.url), 'utf8');
-  assert.deepEqual([...sql.matchAll(/'([^']+)'/g)].map(match => match[1]), [...FRIEND_APP_TOOLS].filter(tool => tool !== 'slot'));
+  assert.deepEqual([...sql.matchAll(/'([^']+)'/g)].map(match => match[1]), [...FRIEND_APP_TOOLS].filter(tool => !['slot', 'asrai', 'alter', 'uramichi'].includes(tool)));
 });

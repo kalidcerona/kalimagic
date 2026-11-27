@@ -21,7 +21,10 @@
     Object.freeze({ id: 'bell', name: '벨', path: '/tools/bell/', legacy: false }),
     Object.freeze({ id: 'slot', name: '슬롯 머신', path: '/tools/slot/', legacy: false }),
     Object.freeze({ id: 'gwayubulgeup', name: '과유불급', path: '/tools/gwayubulgeup/', legacy: false }),
-    Object.freeze({ id: 'memdeck', name: '멤덱 연습실', path: '/tools/memdeck/', legacy: false })
+    Object.freeze({ id: 'memdeck', name: '멤덱 연습실', path: '/tools/memdeck/', legacy: false }),
+    Object.freeze({ id: 'asrai', name: '아스라이', path: '/tools/asrai/', legacy: false }),
+    Object.freeze({ id: 'alter', name: 'ALTER', path: '/tools/alter/', legacy: false }),
+    Object.freeze({ id: 'uramichi', name: 'URAMICHI', path: '/tools/uramichi/', legacy: false })
   ]);
   var TOOL_LABELS = Object.freeze({
     calc: '히츠젠(HITSUZEN)',
@@ -40,6 +43,9 @@
     slot: '슬롯 머신',
     gwayubulgeup: '과유불급',
     memdeck: '멤덱 연습실',
+    asrai: '아스라이',
+    alter: 'ALTER',
+    uramichi: 'URAMICHI',
     all: '히츠젠(HITSUZEN) + 카이로스(KAIROS)'
   });
   var LEGACY_TOOLS = Object.freeze(['calc', 'stopwatch']);

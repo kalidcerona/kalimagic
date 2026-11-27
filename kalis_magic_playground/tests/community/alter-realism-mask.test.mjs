@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { pathToFileURL, fileURLToPath } from 'node:url';
 import {rotatedGeometry} from './alter-realism-mask-fixture.mjs';
-const source=process.env.ALTER_SOURCE || fileURLToPath(new URL('../../zz10/', import.meta.url));if(!source)throw new Error('ALTER_SOURCE required');
+const source=process.env.ALTER_SOURCE || fileURLToPath(new URL('../../distribution-snapshots/alter/', import.meta.url));if(!source)throw new Error('ALTER_SOURCE required');
 const {remapOcclusionToDisplay}=await import(pathToFileURL(`${source}/appearance.js`));
 const {computeHomography,applyHomography}=await import(pathToFileURL(`${source}/vision.js`));
 test('new rotated heldout transparent hand pixels remain transparent in live frame coordinates',()=>{

@@ -3,7 +3,7 @@ import test from 'node:test';
 import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
 
-const routes = ['zz7', 'distribution-snapshots/usotsuki'];
+const routes = ['distribution-snapshots/usotsuki'];
 
 async function logicOf(route) {
   return import(new URL(`../../${route}/logic.js`, import.meta.url));

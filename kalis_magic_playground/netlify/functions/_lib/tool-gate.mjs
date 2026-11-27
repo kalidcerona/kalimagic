@@ -1,7 +1,7 @@
 const encoder = new TextEncoder();
 const decoder = new TextDecoder('utf-8', { fatal: true });
 const GATE_LIFETIME_SECONDS = 7_776_000;
-const VALID_TOOLS = new Set(['stopwatch', 'calc', 'unlock', 'stopwatch-uni', 'aletheia', 'usotsuki', 'tobira', 'spinner', 'arosaegida', 'pimax', 'choice', 'magicshow', 'gwayubulgeup', 'memdeck', 'bell', 'slot', 'all']);
+const VALID_TOOLS = new Set(['stopwatch', 'calc', 'unlock', 'stopwatch-uni', 'aletheia', 'usotsuki', 'tobira', 'spinner', 'arosaegida', 'pimax', 'choice', 'magicshow', 'gwayubulgeup', 'memdeck', 'bell', 'slot', 'asrai', 'alter', 'uramichi', 'all']);
 const VALID_KINDS = new Set(['std', 'life']);
 
 export function gateCookieName(tool) {
@@ -19,6 +19,9 @@ export function gateCookieName(tool) {
   if (tool === 'tobira') return 'kali_tobira_gate';
   if (tool === 'spinner') return 'kali_spinner_gate';
   if (tool === 'arosaegida') return 'kali_arosaegida_gate';
+  if (tool === 'asrai') return 'kali_asrai_gate';
+  if (tool === 'alter') return 'kali_alter_gate';
+  if (tool === 'uramichi') return 'kali_uramichi_gate';
   return 'kali_tool_gate';
 }
 

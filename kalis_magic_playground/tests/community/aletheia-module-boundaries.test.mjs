@@ -1,4 +1,3 @@
-const pinnedFriend = Boolean(process.env.ALETHEIA_ROOT?.includes('distribution-snapshots'));
 import test, { after, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -13,7 +12,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 // card flow, the cell-guide preview and the custom photo set flow through the listeners the app registers
 // on a stub DOM. The element ids come from the real index.html, so a removed id fails.
 // ALETHEIA_ROOT selects another root, for example distribution-snapshots/aletheia.
-const root = process.env.ALETHEIA_ROOT ? pathToFileURL(`${process.env.ALETHEIA_ROOT.replace(/\/?$/, '/')}`) : new URL('../../zz5/', import.meta.url);
+const root = process.env.ALETHEIA_ROOT ? pathToFileURL(`${process.env.ALETHEIA_ROOT.replace(/\/?$/, '/')}`) : new URL('../../distribution-snapshots/aletheia/', import.meta.url);
 
 const errors = [];
 process.on('unhandledRejection', (reason) => errors.push(`unhandledRejection: ${reason?.stack || reason}`));
@@ -246,7 +245,7 @@ function stubBrowser() {
       if (value) setTimeout(() => this.onload?.(), 0);
     }
   }
-  const location = { hostname: 'localhost', search: '?local-preview=1', pathname: '/zz5/', hash: '' };
+  const location = { hostname: 'localhost', search: '?local-preview=1', pathname: '/tools/aletheia/', hash: '' };
   const window = {
     innerWidth: 400, innerHeight: 800, setTimeout, clearTimeout, navigator, location, document,
     matchMedia: () => ({ matches: false }),
@@ -410,8 +409,7 @@ test('default card flow: a tap locks a card, a two-finger reset keeps it, a two-
   assert.equal(stage().hidden, true);
   assert.equal(env.theme.getAttribute('content'), '#4C1420');
   assert.equal(env.wake.requests.length, requestsBefore);
-  if (pinnedFriend) { assert.equal(env.wake.requests.at(-1).released, true, 'settings does not hold the screen awake'); }
-  else { assert.equal(env.wake.requests.at(-1).released, false, 'settings holds the screen awake'); }
+  assert.equal(env.wake.requests.at(-1).released, true, 'settings does not hold the screen awake');
   assert.equal(env.el('settings-gesture-guide').hidden, true);
 
   let stopped = 0;
@@ -474,8 +472,7 @@ test('preset performance: scratch reveals the image, two-finger up repaints the 
   await emit(env.el('start-button'), 'click');
   await until(inPerformance, 'preset performance');
   assert.equal(document.title, '이미지');
-  if (pinnedFriend) { assert.equal(env.wake.requests.length, requests + 1); }
-  else { assert.equal(env.wake.requests.length, requests); }
+  assert.equal(env.wake.requests.length, requests + 1);
   assert.equal(env.wake.requests.at(-1).released, false);
   const ctx = maskCtx();
   assert.ok(ctx.ops.some((op) => op.name === 'fillRect' && op.style === '#121212'), 'the veil is painted over the image');
@@ -506,7 +503,7 @@ test('preset performance: scratch reveals the image, two-finger up repaints the 
   }
   assert.equal(inPerformance(), false);
   assert.equal(settings().hidden, false);
-  assert.equal(env.wake.requests.at(-1).released, pinnedFriend);
+  assert.equal(env.wake.requests.at(-1).released, true);
 
   // A new coverage setting changes the erase size of the next performance: the 600px mask is shown 400px wide.
   const coverage = env.el('coverage-size');
@@ -587,13 +584,13 @@ test('default cards with the cell preview: previews show the kept card images an
   assert.match(lastDraw().args[0].src, /court-cards\/S-J\.webp$/, 'top-left cell is the spade jack');
   await swipe(140);
   assert.equal(inPerformance(), false);
-  assert.equal(env.wake.requests.at(-1).released, pinnedFriend);
+  assert.equal(env.wake.requests.at(-1).released, true);
 });
 
 after(() => { console.error = originalConsoleError; });
 
 for (const ending of ['pointercancel', 'lostpointercapture', 'second finger', 'blur', 'hidden', 'pagehide', 'normal', 'superseded', 'cancelled rejection']) {
-  test(`slow card load: ${ending} cannot replay an invalid touch`, { skip: pinnedFriend }, async () => {
+  test(`slow card load: ${ending} cannot replay an invalid touch`, async () => {
     await emit(env.el('card-start-button'), 'click');
     await until(inPerformance, 'slow-load performance');
     const { running } = await import(new URL('controller-state.js', root));
@@ -638,23 +635,3 @@ for (const ending of ['pointercancel', 'lostpointercapture', 'second finger', 'b
     stopPerformance();
   });
 }
-
-test('settings retains wake lock, reacquires on visibility and tolerates rejection', { skip: pinnedFriend }, async () => {
-  assert.equal(inPerformance(), false);
-  assert.equal(env.wake.requests.at(-1).released, pinnedFriend);
-  document.visibilityState = 'hidden';
-  await emit(document, 'visibilitychange');
-  assert.equal(env.wake.requests.at(-1).released, true);
-  const request = env.navigator.wakeLock.request;
-  env.navigator.wakeLock.request = async () => { throw new Error('denied'); };
-  document.visibilityState = 'visible';
-  await emit(document, 'visibilitychange');
-  await settle();
-  env.navigator.wakeLock.request = request;
-  document.visibilityState = 'hidden';
-  await emit(document, 'visibilitychange');
-  document.visibilityState = 'visible';
-  await emit(document, 'visibilitychange');
-  await settle();
-  assert.equal(env.wake.requests.at(-1).released, false);
-});

@@ -2,7 +2,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
-import * as C from '../../zz15/core.mjs';
+import * as C from '../../distribution-snapshots/uramichi/core.mjs';
 
 const fixturePath = new URL('./uramichi-android-presets.fixture.json', import.meta.url);
 const PERSONAL = '/Users/sumpie/Desktop/URAMICHI-개인-프리셋.json';

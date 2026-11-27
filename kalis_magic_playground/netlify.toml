@@ -54,25 +54,9 @@
     Referrer-Policy = "strict-origin-when-cross-origin"
     Permissions-Policy = "camera=(), microphone=(), geolocation=()"
 
-[[headers]]
-  for = "/zz10"
-  [headers.values]
-    Permissions-Policy = "camera=(self), microphone=(), geolocation=()"
 
-[[headers]]
-  for = "/zz10/*"
-  [headers.values]
-    Permissions-Policy = "camera=(self), microphone=(), geolocation=()"
 
-[[headers]]
-  for = "/zz15"
-  [headers.values]
-    Permissions-Policy = "camera=(self), microphone=(), geolocation=()"
 
-[[headers]]
-  for = "/zz15/*"
-  [headers.values]
-    Permissions-Policy = "camera=(self), microphone=(), geolocation=()"
 
 [[headers]]
   for = "/tools/hitsuzen/manifest.webmanifest"
@@ -109,60 +93,16 @@
   [headers.values]
     Content-Type = "application/manifest+json"
 
-[[headers]]
-  for = "/zz1/manifest.webmanifest"
-  [headers.values]
-    Content-Type = "application/manifest+json"
 
-[[headers]]
-  for = "/zz2/manifest.webmanifest"
-  [headers.values]
-    Content-Type = "application/manifest+json"
 
-[[headers]]
-  for = "/zz3/manifest.webmanifest"
-  [headers.values]
-    Content-Type = "application/manifest+json"
 
-[[headers]]
-  for = "/zz4/manifest.webmanifest"
-  [headers.values]
-    Content-Type = "application/manifest+json"
 
-[[headers]]
-  for = "/zz5/manifest.webmanifest"
-  [headers.values]
-    Content-Type = "application/manifest+json"
 
-[[headers]]
-  for = "/zz6/manifest.webmanifest"
-  [headers.values]
-    Content-Type = "application/manifest+json"
 
-[[headers]]
-  for = "/zz7/manifest.webmanifest"
-  [headers.values]
-    Content-Type = "application/manifest+json"
 
-[[headers]]
-  for = "/zz8/manifest.webmanifest"
-  [headers.values]
-    Content-Type = "application/manifest+json"
 
-[[headers]]
-  for = "/zz10/manifest.webmanifest"
-  [headers.values]
-    Content-Type = "application/manifest+json"
 
-[[headers]]
-  for = "/zz11/manifest.webmanifest"
-  [headers.values]
-    Content-Type = "application/manifest+json"
 
-[[headers]]
-  for = "/zz12/manifest.webmanifest"
-  [headers.values]
-    Content-Type = "application/manifest+json"
 
 [[headers]]
   for = "/tools/tobira/manifest.webmanifest"
@@ -256,10 +196,6 @@
   status = 301
   force = true
 
-[[headers]]
-  for = "/zz13/manifest.webmanifest"
-  [headers.values]
-    Content-Type = "application/manifest+json"
 
 [[headers]]
   for = "/tools/stopwatch/sw.js"
@@ -285,10 +221,6 @@
     Content-Type = "application/javascript; charset=utf-8"
     Cache-Control = "no-store, no-cache"
 
-[[headers]]
-  for = "/zz14/manifest.webmanifest"
-  [headers.values]
-    Content-Type = "application/manifest+json"
 
 [[headers]]
   for = "/tools/pimax/manifest.webmanifest"
@@ -455,16 +387,7 @@
     Content-Type = "application/javascript; charset=utf-8"
     Cache-Control = "no-store, no-cache"
 
-[[headers]]
-  for = "/zz15/manifest.webmanifest"
-  [headers.values]
-    Content-Type = "application/manifest+json"
 
-[[headers]]
-  for = "/zz15/sw.js"
-  [headers.values]
-    Content-Type = "application/javascript; charset=utf-8"
-    Cache-Control = "no-store, no-cache"
 
 [[headers]]
   for = "/tools/planbcafe/*.wasm"
@@ -480,3 +403,574 @@
   for = "/tools/memdeck/manifest.webmanifest"
   [headers.values]
     Content-Type = "application/manifest+json"
+
+# Exact retirement workers precede navigation and asset disposal rules.
+
+[[redirects]]
+  from = "/zz1/sw.js"
+  to = "/legacy-bridges/zz1/sw.js"
+  status = 200
+  force = true
+
+[[headers]]
+  for = "/zz1/sw.js"
+  [headers.values]
+    Content-Type = "application/javascript; charset=utf-8"
+    Cache-Control = "no-store"
+
+[[redirects]]
+  from = "/zz1"
+  to = "/tools/kairos/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/zz1/"
+  to = "/tools/kairos/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/zz1/index.html"
+  to = "/tools/kairos/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/zz1/*"
+  to = "/zz-retired.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/zz2/sw.js"
+  to = "/legacy-bridges/zz2/sw.js"
+  status = 200
+  force = true
+
+[[headers]]
+  for = "/zz2/sw.js"
+  [headers.values]
+    Content-Type = "application/javascript; charset=utf-8"
+    Cache-Control = "no-store"
+
+[[redirects]]
+  from = "/zz2"
+  to = "/tools/release/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/zz2/"
+  to = "/tools/release/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/zz2/index.html"
+  to = "/tools/release/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/zz2/*"
+  to = "/zz-retired.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/zz3/sw.js"
+  to = "/legacy-bridges/zz3/sw.js"
+  status = 200
+  force = true
+
+[[headers]]
+  for = "/zz3/sw.js"
+  [headers.values]
+    Content-Type = "application/javascript; charset=utf-8"
+    Cache-Control = "no-store"
+
+[[redirects]]
+  from = "/zz3"
+  to = "/tools/hitsuzen/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/zz3/"
+  to = "/tools/hitsuzen/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/zz3/index.html"
+  to = "/tools/hitsuzen/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/zz3/*"
+  to = "/zz-retired.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/zz4/sw.js"
+  to = "/legacy-bridges/zz4/sw.js"
+  status = 200
+  force = true
+
+[[headers]]
+  for = "/zz4/sw.js"
+  [headers.values]
+    Content-Type = "application/javascript; charset=utf-8"
+    Cache-Control = "no-store"
+
+[[redirects]]
+  from = "/zz4"
+  to = "/tools/choice/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/zz4/"
+  to = "/tools/choice/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/zz4/index.html"
+  to = "/tools/choice/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/zz4/*"
+  to = "/zz-retired.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/zz5/sw.js"
+  to = "/legacy-bridges/zz5/sw.js"
+  status = 200
+  force = true
+
+[[headers]]
+  for = "/zz5/sw.js"
+  [headers.values]
+    Content-Type = "application/javascript; charset=utf-8"
+    Cache-Control = "no-store"
+
+[[redirects]]
+  from = "/zz5"
+  to = "/tools/aletheia/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/zz5/"
+  to = "/tools/aletheia/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/zz5/index.html"
+  to = "/tools/aletheia/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/zz5/*"
+  to = "/zz-retired.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/zz6/sw.js"
+  to = "/legacy-bridges/zz6/sw.js"
+  status = 200
+  force = true
+
+[[headers]]
+  for = "/zz6/sw.js"
+  [headers.values]
+    Content-Type = "application/javascript; charset=utf-8"
+    Cache-Control = "no-store"
+
+[[redirects]]
+  from = "/zz6"
+  to = "/tools/tobira/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/zz6/"
+  to = "/tools/tobira/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/zz6/index.html"
+  to = "/tools/tobira/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/zz6/*"
+  to = "/zz-retired.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/zz7/sw.js"
+  to = "/legacy-bridges/zz7/sw.js"
+  status = 200
+  force = true
+
+[[headers]]
+  for = "/zz7/sw.js"
+  [headers.values]
+    Content-Type = "application/javascript; charset=utf-8"
+    Cache-Control = "no-store"
+
+[[redirects]]
+  from = "/zz7"
+  to = "/tools/usotsuki/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/zz7/"
+  to = "/tools/usotsuki/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/zz7/index.html"
+  to = "/tools/usotsuki/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/zz7/recorder-a.html"
+  to = "/tools/usotsuki/recorder-a.html"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/zz7/recorder-d.html"
+  to = "/tools/usotsuki/recorder-d.html"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/zz7/*"
+  to = "/zz-retired.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/zz8/sw.js"
+  to = "/legacy-bridges/zz8/sw.js"
+  status = 200
+  force = true
+
+[[headers]]
+  for = "/zz8/sw.js"
+  [headers.values]
+    Content-Type = "application/javascript; charset=utf-8"
+    Cache-Control = "no-store"
+
+[[redirects]]
+  from = "/zz8"
+  to = "/tools/asrai/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/zz8/"
+  to = "/tools/asrai/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/zz8/index.html"
+  to = "/tools/asrai/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/zz8/*"
+  to = "/zz-retired.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/zz10/sw.js"
+  to = "/legacy-bridges/zz10/sw.js"
+  status = 200
+  force = true
+
+[[headers]]
+  for = "/zz10/sw.js"
+  [headers.values]
+    Content-Type = "application/javascript; charset=utf-8"
+    Cache-Control = "no-store"
+
+[[redirects]]
+  from = "/zz10"
+  to = "/tools/alter/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/zz10/"
+  to = "/tools/alter/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/zz10/index.html"
+  to = "/tools/alter/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/zz10/*"
+  to = "/zz-retired.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/zz11/sw.js"
+  to = "/legacy-bridges/zz11/sw.js"
+  status = 200
+  force = true
+
+[[headers]]
+  for = "/zz11/sw.js"
+  [headers.values]
+    Content-Type = "application/javascript; charset=utf-8"
+    Cache-Control = "no-store"
+
+[[redirects]]
+  from = "/zz11"
+  to = "/tools/tyche/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/zz11/"
+  to = "/tools/tyche/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/zz11/index.html"
+  to = "/tools/tyche/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/zz11/*"
+  to = "/zz-retired.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/zz12/sw.js"
+  to = "/legacy-bridges/zz12/sw.js"
+  status = 200
+  force = true
+
+[[headers]]
+  for = "/zz12/sw.js"
+  [headers.values]
+    Content-Type = "application/javascript; charset=utf-8"
+    Cache-Control = "no-store"
+
+[[redirects]]
+  from = "/zz12"
+  to = "/tools/memdeck/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/zz12/"
+  to = "/tools/memdeck/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/zz12/index.html"
+  to = "/tools/memdeck/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/zz12/*"
+  to = "/zz-retired.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/zz13/sw.js"
+  to = "/legacy-bridges/zz13/sw.js"
+  status = 200
+  force = true
+
+[[headers]]
+  for = "/zz13/sw.js"
+  [headers.values]
+    Content-Type = "application/javascript; charset=utf-8"
+    Cache-Control = "no-store"
+
+[[redirects]]
+  from = "/zz13"
+  to = "/tools/arosaegida/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/zz13/"
+  to = "/tools/arosaegida/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/zz13/index.html"
+  to = "/tools/arosaegida/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/zz13/*"
+  to = "/zz-retired.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/zz14/sw.js"
+  to = "/legacy-bridges/zz14/sw.js"
+  status = 200
+  force = true
+
+[[headers]]
+  for = "/zz14/sw.js"
+  [headers.values]
+    Content-Type = "application/javascript; charset=utf-8"
+    Cache-Control = "no-store"
+
+[[redirects]]
+  from = "/zz14"
+  to = "/tools/pimax/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/zz14/"
+  to = "/tools/pimax/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/zz14/index.html"
+  to = "/tools/pimax/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/zz14/*"
+  to = "/zz-retired.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/zz15/sw.js"
+  to = "/legacy-bridges/zz15/sw.js"
+  status = 200
+  force = true
+
+[[headers]]
+  for = "/zz15/sw.js"
+  [headers.values]
+    Content-Type = "application/javascript; charset=utf-8"
+    Cache-Control = "no-store"
+
+[[redirects]]
+  from = "/zz15"
+  to = "/tools/uramichi/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/zz15/"
+  to = "/tools/uramichi/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/zz15/index.html"
+  to = "/tools/uramichi/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/zz15/*"
+  to = "/zz-retired.html"
+  status = 404
+  force = true
+
+[[headers]]
+  for = "/tools/asrai/manifest.webmanifest"
+  [headers.values]
+    Content-Type = "application/manifest+json"
+
+[[headers]]
+  for = "/tools/alter/manifest.webmanifest"
+  [headers.values]
+    Content-Type = "application/manifest+json"
+
+[[headers]]
+  for = "/tools/alter"
+  [headers.values]
+    Permissions-Policy = "camera=(self), microphone=(), geolocation=()"
+
+[[headers]]
+  for = "/tools/alter/*"
+  [headers.values]
+    Permissions-Policy = "camera=(self), microphone=(), geolocation=()"
+
+[[headers]]
+  for = "/tools/uramichi/manifest.webmanifest"
+  [headers.values]
+    Content-Type = "application/manifest+json"
+
+[[headers]]
+  for = "/tools/uramichi"
+  [headers.values]
+    Permissions-Policy = "camera=(self), microphone=(), geolocation=()"
+
+[[headers]]
+  for = "/tools/uramichi/*"
+  [headers.values]
+    Permissions-Policy = "camera=(self), microphone=(), geolocation=()"
+
+[[headers]]
+  for = "/tools/asrai/sw.js"
+  [headers.values]
+    Content-Type = "application/javascript; charset=utf-8"
+    Cache-Control = "no-store, no-cache"
+
+[[headers]]
+  for = "/tools/alter/sw.js"
+  [headers.values]
+    Content-Type = "application/javascript; charset=utf-8"
+    Cache-Control = "no-store, no-cache"
+
+[[headers]]
+  for = "/tools/uramichi/sw.js"
+  [headers.values]
+    Content-Type = "application/javascript; charset=utf-8"
+    Cache-Control = "no-store, no-cache"

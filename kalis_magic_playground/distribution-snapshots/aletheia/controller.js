@@ -23,7 +23,7 @@ import {
 import './cell-guide.js';
 import { onViewportChange } from './veil.js';
 import {
-  blockPointerUntil, onPointerDown, onPointerMove, endPointer,
+  clearContacts, blockPointerUntil, onPointerDown, onPointerMove, endPointer,
 } from './pointer.js';
 import './wake-lock.js';
 import {
@@ -135,7 +135,12 @@ function bindEvents() {
     const observer = new ResizeObserver(() => onViewportChange());
     observer.observe(stage);
   }
+  window.addEventListener('blur', clearContacts);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState !== 'visible') clearContacts();
+  });
   window.addEventListener('pagehide', (event) => {
+    clearContacts();
     if (!event.persisted) revokeAllUrls();
   });
 }
