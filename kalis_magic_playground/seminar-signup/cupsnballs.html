@@ -12,7 +12,7 @@
   </head>
   <body class="cups-signup">
     <a class="skip" href="#signup"> 신청서로 건너뛰기 </a>
-    <header id="signup-header">
+    <header id="signup-header" hidden>
       <div class="mast wrap">
         <span class="brand" lang="en"><img src="../cupsnballs/img/planb.webp" width="30" height="28" alt="">PLAN B</span>
         <a class="back" href="../cupsnballs/">← 컵앤볼 행사 안내</a>
@@ -21,7 +21,7 @@
         <div class="cover-copy">
           <p class="nameplate" lang="en">CUPS <i>&amp;</i> BALLS</p>
           <h1>칼리의 <span>컵앤볼 신청</span></h1>
-          <p class="instructions">필수 질문에 답해줘.<br>형이 확인하고 연락할게.</p>
+          <p class="instructions">필수 질문에 답해줘. <br>형이 확인하고 연락할게.</p>
         </div>
         <figure>
           <img class="scene" src="../cupsnballs/img/hero.webp" width="1500" height="1000" alt="문준영이 관객 앞에서 구리색 컵으로 마술을 보여주는 모습">
@@ -32,7 +32,7 @@
       </div>
     </header>
     <main class="wrap">
-      <div id="signup-banner" class="notice">
+      <div id="signup-banner" class="notice" hidden>
         <h2> 컵앤볼 신청 준비 중 </h2>
         <p id="availability" role="status" aria-live="polite">아직 접수 준비 중이야.<br>신청이 열릴 때까지 입금은 기다려줘.</p>
         <button id="retry" type="button"> 가격 다시 확인 </button>
@@ -40,27 +40,29 @@
       <noscript>
         <p> 가격을 보고 신청하려면 자바스크립트를 켜줘. </p>
       </noscript>
-      <form id="signup" action="/api/seminars/signup" method="post" novalidate aria-label="컵앤볼 신청서">
+      <form id="signup" action="/api/seminars/signup" method="post" novalidate aria-label="컵앤볼 신청서" hidden>
         <div class="form-main">
           <section id="age-section" class="card question">
             <h2>신청 가능 연령을 <span class="phrase">확인하십시오.</span></h2>
             <p id="age-notice">만 14세 미만은 보호자가 <a href="../contact.html">문의 페이지</a>로 연락하여 동의 절차를 완료할 때까지 온라인 신청을 받지 않습니다.</p>
-            <div class="option"><input id="age-confirmed" name="ageConfirmed" type="checkbox" required aria-describedby="age-notice"><label id="age-label" for="age-confirmed">만 14세 이상입니다. (필수)</label></div>
+            <div class="option-group">
+              <div class="option"><input id="age-confirmed" name="ageConfirmed" type="checkbox" required aria-describedby="age-notice"><label id="age-label" for="age-confirmed">만 14세 이상입니다. (필수)</label></div>
+            </div>
           </section>
           <section class="card question">
-            <h2 id="q1"><span class="question-number"><small>필수</small></span>이름이 뭐야?</h2>
+            <h2 id="q1">이름이 뭐야? <span class="question-number"><small>필수</small></span></h2>
             <label class="sr-only" for="name">이름 (필수)</label>
             <input id="name" name="name" autocomplete="name" required>
           </section>
           <section id="birth-section" class="card question">
-            <h2 id="q2"><span class="question-number"><small>필수</small></span>생년월일 알려줘.</h2>
+            <h2 id="q2">생년월일 알려줘. <span class="question-number"><small>필수</small></span></h2>
             <p class="question-intro">형이 맞춤으로 챙겨주려고.</p>
             <label class="sr-only" for="birth-date">생년월일 (필수)</label>
             <p id="birth-hint" class="hint">예: 1995-01-10 · 오늘까지의 날짜로 적어줘.</p>
             <input id="birth-date" name="birthDate" type="date" autocomplete="bday" aria-describedby="birth-hint" required>
           </section>
           <section id="gender-section" class="card question">
-            <h2 id="q3"><span class="question-number"><small>필수</small></span>성별은?</h2>
+            <h2 id="q3">성별은? <span class="question-number"><small>필수</small></span></h2>
             <fieldset aria-labelledby="q3"><legend class="sr-only">선택지</legend>
               <div class="option">
                 <input id="gender-male" name="gender" type="radio" value="male" required>
@@ -73,13 +75,13 @@
             </fieldset>
           </section>
           <section class="card question">
-            <h2 id="q4"><span class="question-number"><small>필수</small></span>연락 가능한 휴대전화 번호 적어줘.</h2>
+            <h2 id="q4">연락 가능한 <span class="phrase">휴대전화 번호 적어줘.</span> <span class="question-number"><small>필수</small></span></h2>
             <p class="question-intro">형이 이 번호로 카톡이나 전화를 할게.</p>
             <label class="sr-only" id="contact-label" for="contact">휴대전화 번호 (필수)</label>
             <input id="contact" name="contact" type="tel" autocomplete="tel" inputmode="tel" maxlength="24" required>
           </section>
-          <section class="card question">
-            <h2 id="q5"><span class="question-number"><small>필수</small></span>이 수업을 어디서 처음 알게 됐어?</h2>
+          <section class="card question group-start">
+            <h2 id="q5">이 수업을 어디서 처음 알게 됐어? <span class="question-number"><small>필수</small></span></h2>
             <fieldset aria-labelledby="q5"><legend class="sr-only">선택지</legend>
               <div class="option" hidden><input disabled id="discovery-skip" name="discovery" type="radio" value=""><label for="discovery-skip">답하지 않을게</label></div>
               <div class="option">
@@ -106,7 +108,7 @@
             </fieldset>
           </section>
           <section class="card question">
-            <h2 id="q6"><span class="question-number"><small>필수</small></span>컵앤볼을 배우고 싶은<br>이유가 뭐야?</h2>
+            <h2 id="q6">컵앤볼을 배우고 싶은<br>이유가 뭐야? <span class="question-number"><small>필수</small></span></h2>
             <fieldset aria-labelledby="q6"><legend class="sr-only">선택지</legend>
               <div class="option" hidden><input disabled id="reason-skip" name="reason" type="radio" value=""><label for="reason-skip">답하지 않을게</label></div>
               <div class="option">
@@ -132,53 +134,61 @@
               </div>
             </fieldset>
           </section>
-          <section class="card question">
-            <h2 id="q9"><span class="question-number"><small>필수</small></span>어떤 이름으로 입금할 거야?</h2>
-            <div class="option">
-              <input id="same-payer" name="samePayer" type="checkbox" checked>
-              <label for="same-payer">신청한 이름과 같아</label>
-            </div>
-            <div id="payer-field" class="field" hidden>
-              <label for="payer">실제 입금자명 (필수)</label>
-              <input id="payer" name="payerName" disabled>
+          <section class="card question group-start">
+            <h2 id="q9">어떤 이름으로 <span class="phrase">입금할 거야?</span> <span class="question-number"><small>필수</small></span></h2>
+            <div class="option-group">
+              <div class="option">
+                <input id="same-payer" name="samePayer" type="checkbox" checked>
+                <label for="same-payer">신청한 이름과 같아</label>
+              </div>
+              <div id="payer-field" class="field" hidden>
+                <label for="payer">실제 입금자명 (필수)</label>
+                <input id="payer" name="payerName" disabled>
+              </div>
             </div>
           </section>
-          <section class="card question">
-            <h2 id="q10"><span class="question-number"><small>필수</small></span><span id="photo-prompt">현장 촬영과 사진·영상의<br>행사 홍보 활용에 동의하십니까?</span></h2>
-            <details class="cups-notice">
-              <summary>사진 촬영 안내 보기</summary>
-              <p id="photo-notice">현장에서 사진·영상 촬영이 진행됩니다. 본인이 나온 사진·영상을 행사 홍보에 활용하는 동의가 포함됩니다. 내용을 확인한 후 선택하십시오.</p>
-            </details>
-            <div class="option">
-              <input id="photo-consent" disabled name="photoConsent" type="checkbox" required aria-describedby="photo-notice">
-              <label for="photo-consent">네</label>
+          <section class="card question group-start">
+            <h2 id="q10"><span id="photo-prompt">현장 촬영과 사진·영상의<br>행사 홍보 활용에 동의하십니까?</span> <span class="question-number"><small>필수</small></span></h2>
+            <div class="option-group consent-pair">
+              <details class="cups-notice">
+                <summary>사진 촬영 안내 보기</summary>
+                <p id="photo-notice">현장에서 사진·영상 촬영이 진행됩니다. 본인이 나온 사진·영상을 행사 홍보에 활용하는 동의가 포함됩니다. 내용을 확인한 후 선택하십시오.</p>
+              </details>
+              <div class="option">
+                <input id="photo-consent" disabled name="photoConsent" type="checkbox" required aria-describedby="photo-notice">
+                <label for="photo-consent">네</label>
+              </div>
             </div>
           </section>
           <section id="promotion-section" class="card question" hidden>
-            <h2><span class="question-number"><small>선택</small></span>홍보용 사진·영상 활용에<br>동의하십니까?</h2>
-            <details class="cups-notice">
-              <summary>홍보용 사진·영상 활용 안내 보기</summary>
-              <p id="promotion-notice">본인 얼굴이 나온 사진·영상을 행사 홍보에 활용하는 데 동의할 수 있습니다. 동의하지 않아도 신청할 수 있습니다.</p>
-            </details>
-            <div class="option"><input id="promotion-consent" disabled name="promotionConsent" type="checkbox" aria-describedby="promotion-notice"><label for="promotion-consent">홍보용 사진·영상 활용에<br>동의합니다. (선택)</label></div>
+            <h2>홍보용 사진·영상 활용에<br>동의하십니까? <span class="question-number"><small>선택</small></span></h2>
+            <div class="option-group consent-pair">
+              <details class="cups-notice">
+                <summary>홍보용 사진·영상 활용 안내 보기</summary>
+                <p id="promotion-notice">본인 얼굴이 나온 사진·영상을 행사 홍보에 활용하는 데 동의할 수 있습니다. 동의하지 않아도 신청할 수 있습니다.</p>
+              </details>
+              <div class="option"><input id="promotion-consent" disabled name="promotionConsent" type="checkbox" aria-describedby="promotion-notice"><label for="promotion-consent">홍보용 사진·영상 활용에<br>동의합니다. (선택)</label></div>
+            </div>
           </section>
           <section class="card question">
-            <h2 id="q11"><span class="question-number"><small>필수</small></span>신청 전에 개인정보 수집·이용<br>안내를 읽어 주십시오.</h2>
-            <details class="cups-notice">
-              <summary>개인정보 수집·이용 안내 보기</summary>
-              <p id="privacy">개인정보 수집·이용 안내를 불러오는 중입니다. 안내를 확인하기 전에는 신청할 수 없습니다.</p>
-              <p id="operator-contact" class="hint">문의: <a href="../contact.html">문의 페이지</a></p>
-              <p><a href="../privacy.html">개인정보 처리방침 보기</a></p>
-            </details>
-            <div class="option">
-              <input id="consent" disabled name="consent" type="checkbox" required aria-describedby="privacy operator-contact">
-              <label for="consent">개인정보 수집·이용에 동의합니다</label>
+            <h2 id="q11">신청 전에 개인정보 수집·이용<br>안내를 읽어 주십시오. <span class="question-number"><small>필수</small></span></h2>
+            <div class="option-group consent-pair">
+              <details class="cups-notice">
+                <summary>개인정보 수집·이용 안내 보기</summary>
+                <p id="privacy">개인정보 수집·이용 안내를 불러오는 중입니다. 안내를 확인하기 전에는 신청할 수 없습니다.</p>
+                <p id="operator-contact" class="hint">문의: <a href="../contact.html">문의 페이지</a></p>
+                <p><a href="../privacy.html">개인정보 처리방침 보기</a></p>
+              </details>
+              <div class="option">
+                <input id="consent" disabled name="consent" type="checkbox" required aria-describedby="privacy operator-contact">
+                <label for="consent">개인정보 수집·이용에 동의합니다</label>
+              </div>
             </div>
           </section>
         </div>
         <div class="form-summary">
           <section class="card">
-            <h2>신청 내역이 맞아?</h2>
+            <h2>안내사항</h2>
             <p>오후 6시 30분-11시 30분<br>렉쳐노트 퍼블리싱<br>서울 동작구 남부순환로 2043 지하 1층</p>
             <details class="cups-notice">
               <summary>판매·접수 주체 안내 보기</summary>
@@ -186,7 +196,6 @@
             </details>
             <p id="refund-notice">환불 규정: 한국 시간으로 12월 12일까지는 전액, <span class="phrase">13-16일에는 70%,</span> <span class="phrase">17-18일에는 50%를</span> 환불해 드립니다. 행사 당일인 12월 19일에는 환불이 불가능합니다.</p>
             <p>신청 정보 삭제를 원하시면 신청 후 운영자가 보내는 카카오톡 메시지에 답장하십시오.</p>
-            <ul id="items" class="items"></ul>
             <p class="hint">신청할 때 가격을 한 번 더 확인할게.<br>금액이 바뀌면 접수 전에 알려줄게.</p>
             <div class="trap" aria-hidden="true">
               <label for="website"> 웹사이트 </label>
@@ -205,6 +214,7 @@
             <p>신청하고 24시간 안에 입금해줘.</p>
             <div class="total" role="status" aria-live="polite" aria-atomic="true">
               <span> 입금할 금액 </span>
+              <ul id="items" class="items"></ul>
               <strong id="total" class="money"> 확인 중 </strong>
             </div>
             <button id="submit" type="submit" disabled> 접수 준비 중 </button>
@@ -217,13 +227,23 @@
         <a href="../cupsnballs/">행사 안내로 돌아가기</a>
       </section>
       <section id="success" class="card" aria-labelledby="success-title" hidden>
-        <h2 id="success-title" tabindex="-1"> 컵앤볼 신청 완료! </h2>
-        <p id="payment-message"></p>
-        <p id="test-warning" hidden></p>
-        <dl id="receipt">
-        </dl>
-        <button id="copy" type="button"> 입금 안내 복사 </button>
-        <p id="copy-status" role="status"> </p>
+        <div class="receipt-head">
+          <h2 id="success-title" tabindex="-1">컵앤볼 신청 완료!</h2>
+          <p>접수번호 <span id="display-receipt-number"></span></p>
+        </div>
+        <div class="receipt-body">
+          <p id="payment-amount-label">입금할 금액</p>
+          <p id="payment-amount"></p>
+          <p id="payment-message"></p>
+          <p id="test-warning" hidden></p>
+          <p id="restored-notice" hidden></p>
+          <dl id="receipt"></dl>
+          <div class="receipt-actions">
+            <button id="copy" type="button">입금 안내 복사</button>
+            <button id="new-signup" type="button">새로 신청하기</button>
+          </div>
+          <p id="copy-status" role="status"></p>
+        </div>
       </section>
     </main>
     <footer class="wrap">

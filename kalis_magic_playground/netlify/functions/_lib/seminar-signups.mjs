@@ -68,7 +68,16 @@ function safeReceipt(row, config) {
   });
   const created = Date.parse(row.createdAt); const due = Date.parse(row.paymentDueAt);
   if (!Number.isFinite(created) || due-created !== 24*60*60*1000 || items.reduce((sum,item)=>sum+item.price,0) !== row.total) throw new SignupError('service_unavailable',503);
-  return {test:isolatedTestMode(config),id:row.id,eventId:row.eventId,items,total:row.total,status:row.status,createdAt:new Date(created).toISOString(),payerName:row.payerName,paymentDueAt:new Date(due).toISOString(),payment:{test:isolatedTestMode(config),bank:config.bank,account:config.account,holder:config.holder,contact:config.contact,deadline:new Date(due).toISOString()}};
+  const display = {};
+  if (config.id === 'cupsnballs' && Object.hasOwn(row, 'displayReceiptNumber')) {
+    const number = row.displayReceiptNumber;
+    const minute = new Date(created + 9*60*60*1000).toISOString().slice(0,16).replace(/\D/g, '');
+    if (typeof number !== 'string' || number.length !== 14 || !/^\d{12}(?:0[1-9]|[1-9]\d)$/.test(number) || number.slice(0,12) !== minute) {
+      throw new SignupError('service_unavailable',503);
+    }
+    display.displayReceiptNumber = number;
+  }
+  return {test:isolatedTestMode(config),id:row.id,eventId:row.eventId,...display,items,total:row.total,status:row.status,createdAt:new Date(created).toISOString(),payerName:row.payerName,paymentDueAt:new Date(due).toISOString(),payment:{test:isolatedTestMode(config),bank:config.bank,account:config.account,holder:config.holder,contact:config.contact,deadline:new Date(due).toISOString()}};
 }
 export async function submitSignup(body, { offer, config, store, secret, ip, now = new Date() }) {
   // Historical notices may replay an existing request after policy switches.

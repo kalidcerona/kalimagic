@@ -32,7 +32,7 @@ try {
   async function checkTier(amount) {
     assert.deepEqual(await landing.locator('.ticket-prices .current .amount').allTextContents(), amount ? [amount] : []);
     assert.equal(await landing.locator('.current .current-marker').count(), amount ? 1 : 0);
-    assert.equal(await landing.locator('.pill-cta.wide').textContent(), amount ? amount + '에 자리 신청하기' : '자리 신청하기');
+    assert.equal(await landing.locator('.pill-cta.wide').textContent(), '자리 신청하기');
   }
   await landing.clock.install({time:new Date('2026-11-26T00:00:00+09:00')});
   for (const [boundary, before, after] of boundaries) {
@@ -50,11 +50,28 @@ try {
       assert.equal(await landing.locator('.fee-next').textContent(), '');
     }
   }
+  await landing.clock.setFixedTime(new Date('2026-11-28T01:07:00+09:00'));
+  await landing.evaluate(() => window.dispatchEvent(new Event('focus')));
+  await checkTier('50,000원');
+  assert.equal(await landing.locator('.nav-hot').getAttribute('href'), '#tickets');
+  for (const width of [320,375,390,414,768,1024,1280,1440]) {
+    await landing.setViewportSize({width,height:900});
+    await landing.evaluate(() => document.fonts.ready);
+    assert.ok(await landing.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+    await landing.screenshot({path:path.join(output, 'detail-'+width+'.png'),fullPage:true});
+  }
+  for (const selector of ['.hero .pill-cta','.pill-cta.wide']) {
+    await landing.locator(selector).click();
+    assert.equal(new URL(landing.url()).pathname, CUPSNBALLS_FORM_URL);
+    await landing.goBack();
+  }
   await landing.close();
   console.log('PASS landing: opening, both price changes and closing at KST boundaries');
   const submissions = [];
   page.on('pageerror', error => errors.push(error.message));
   let now = new Date('2026-11-27T18:00:00+09:00');
+  await page.clock.setFixedTime(now);
+  await page.context().grantPermissions(['clipboard-read','clipboard-write'], {origin:origin.origin});
   const syntheticUrl = 'https://script.google.com/macros/s/never-contacted/exec';
   const secret = 'synthetic-browser-only-signing-secret';
   const config = {...cupsnballs, enabled:true, testMode:true, account:'0'.repeat(12), holder:'테스트 운영자',
@@ -66,12 +83,15 @@ try {
   }});
   const submit = createHandler({config, store, now:() => now});
   let offer = {...getOffer(now, config), test:false};
+  let offerRequests = 0;
+  let lastReceipt;
   let loseResponse = false;
   let expectedRows = 2;
   await page.route('**/*', async route => {
     const url = new URL(route.request().url());
     if (url.origin !== origin.origin) throw Error('Unexpected external request');
     if (url.pathname === '/api/seminars/offer') {
+      offerRequests++;
       assert.equal(url.searchParams.get('eventId'), 'cupsnballs');
       return route.fulfill({json:{offer}});
     }
@@ -92,13 +112,16 @@ try {
         loseResponse = false;
         return route.abort('connectionreset');
       }
+      data.receipt.test = false;
       Object.assign(data.receipt.payment, {test:false, bank:'모의 은행', account:'000-000-000000', holder:'모의 운영자'});
+      lastReceipt = data.receipt;
       return route.fulfill({json:data});
     }
     if (url.pathname.startsWith('/api/')) throw Error('Unexpected API route');
     return route.continue();
   });
   const samples = [];
+  const wrapFailures = [];
   async function checkLineBreaks() {
     return page.evaluate(() => {
       const issues = [];
@@ -152,7 +175,7 @@ try {
       await page.setViewportSize({width, height:900});
       await page.evaluate(() => document.fonts.ready);
       const unplanned = await checkLineBreaks();
-      assert.deepEqual(unplanned, [], state + ' ' + width + ': ' + JSON.stringify(unplanned));
+      if (unplanned.length) wrapFailures.push({state,width,unplanned});
       if (['initial','expanded','filled'].includes(state)) {
         const prices = (await page.locator('#signup').innerText()).match(/[0-9][0-9,]*원/g) || [];
         assert.deepEqual(prices, ['50,000원'], state + ' at ' + width);
@@ -207,13 +230,16 @@ try {
       await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
       await page.screenshot({path:path.join(output, state+'-'+width+'.png')});
       const boxes = await page.evaluate(() => {
-        const rules = [['h1','#efb883','#123927'], ['#q1','#143322','#f6f0df'],
-          ['.question .cups-notice summary','#793118','#f6f0df'], ['#errors a','#793118','#ebe4ce'],
-          ['#success-title','#143322','#f6f0df'], ['#test-warning','#961f12','#f6f0df']];
-        return rules.flatMap(([selector,fg,bg]) => {
+        const selectors = ['h1','#q1','.question .cups-notice summary','#errors a','#success-title','#test-warning'];
+        return selectors.flatMap(selector => {
           const element = document.querySelector(selector);
           if (!element?.getClientRects().length) return [];
           const r = element.getBoundingClientRect();
+          const fg = getComputedStyle(element).color;
+          let bg = 'rgba(0, 0, 0, 0)';
+          for (let ancestor = element; ancestor && bg === 'rgba(0, 0, 0, 0)'; ancestor = ancestor.parentElement) {
+            bg = getComputedStyle(ancestor).backgroundColor;
+          }
           return [{selector,fg,bg,box:[r.left,r.top+scrollY,r.right,r.bottom+scrollY]}];
         });
       });
@@ -231,7 +257,9 @@ try {
   const formUrl = new URL(CUPSNBALLS_FORM_URL, origin).href;
   const landingUrl = new URL('/cupsnballs/', origin).href;
   await page.goto(landingUrl);
+  const pendingOffer = page.waitForRequest(offerPath);
   await page.goto(formUrl);
+  await pendingOffer;
   assert.equal(await page.textContent('#photo-notice'), fallbackNotice);
   failOffer();
   await page.waitForFunction(() => document.querySelector('#availability').textContent.includes('불러오지 못했어'));
@@ -289,7 +317,8 @@ try {
   await page.locator('#submit').click();
   assert.equal(submissions.length, 0);
   assert.equal(await page.evaluate(() => document.activeElement.id), 'photo-consent');
-  await page.check('#photo-consent');
+  await page.locator('#photo-consent').press('Space');
+  assert.ok(await page.locator('#photo-consent').isChecked());
   assert.equal(await page.locator('#errors').isVisible(), false);
   assert.equal(await page.textContent('#total'), '50,000원');
   await capture('filled');
@@ -322,8 +351,8 @@ try {
     assert.equal(await page.evaluate(() => window.scrollY), 0);
     assert.equal(await page.locator('#signup, #signup-header, #signup-banner').filter({visible:true}).count(), 0);
     assert.equal(await page.locator('#payment-message').textContent(), '아래 계좌로 24시간 안에 입금해줘.');
-    assert.deepEqual((await page.locator('#receipt dt').allTextContents()).slice(-7),
-      ['입금할 금액', '은행', '계좌번호', '예금주', '입금자명', '입금 기한', '문의']);
+    assert.deepEqual((await page.locator('#receipt dt').allTextContents()).slice(-6),
+      [ '은행', '계좌번호', '예금주', '입금자명', '입금 기한', '문의']);
     assert.equal(await page.locator('#receipt dt').filter({hasText:/^입금자명$/}).locator('+ dd').textContent(), payerName);
   }
   await checkCompletion('테스트 참가자');
@@ -351,17 +380,50 @@ try {
   }
   await capture('success');
   await checkResultSkip('success-title');
-  await page.goBack();
-  assert.equal(await page.locator('#success').isVisible(), true);
+  async function copiedReceipt() {
+    await page.click('#copy');
+    return page.evaluate(() => navigator.clipboard.readText());
+  }
+  const receiptText = await copiedReceipt();
+  assert.match(receiptText, /접수번호: 20261127180001/);
+  const saved = await page.evaluate(() => {
+    const keys = Object.keys(sessionStorage);
+    if (keys.length !== 1) throw Error('Expected one saved receipt');
+    sessionStorage.setItem('another-event', 'keep');
+    return {key:keys[0], value:sessionStorage.getItem(keys[0])};
+  });
+  assert.doesNotMatch(saved.value, /01012345678|1994-07-01|instagram|idempotencyKey/);
+  const initialCount = submissions.length;
+  const initialOffers = offerRequests;
   await page.reload();
-  await page.waitForSelector('#submit:enabled');
-  assert.equal(submissions.length, 3);
+  await checkCompletion('테스트 참가자');
+  assert.equal(await copiedReceipt(), receiptText);
+  await capture('restored');
+  await page.goto(landingUrl);
   await page.goBack();
-  assert.equal(page.url(), landingUrl);
+  await checkCompletion('테스트 참가자');
   await page.goForward();
+  assert.equal(page.url(), landingUrl);
+  await page.goto(formUrl);
+  await page.goBack();
+  await page.goForward();
+  await checkCompletion('테스트 참가자');
+  assert.equal(await copiedReceipt(), receiptText);
+  await page.clock.setFixedTime(new Date(config.closesAt));
+  await page.reload();
+  await page.waitForSelector('#success-title:visible');
+  assert.match(await page.locator('#success').innerText(), /지났/);
+  assert.match(await copiedReceipt(), /지났/);
+  assert.equal(submissions.length, initialCount);
+  assert.equal(offerRequests, initialOffers);
+  await page.clock.setFixedTime(now);
+  await page.getByRole('button',{name:'새로 신청하기'}).click();
   await page.waitForSelector('#submit:enabled');
-  assert.equal(submissions.length, 3);
-  assert.equal(await page.locator('.skip').getAttribute('href'), '#signup');
+  assert.equal(await page.evaluate(() => sessionStorage.getItem('another-event')), 'keep');
+  assert.equal(await page.evaluate(key => sessionStorage.getItem(key), saved.key), null);
+  assert.equal(await page.locator('#name').inputValue(),'');
+  assert.equal(await page.locator('#consent').isChecked(),false);
+  assert.equal(await page.locator('.skip').evaluate(link => link.hash), '#signup');
 
   await fillApplication();
   await page.fill('#contact', '010-1234-5679');
@@ -381,7 +443,7 @@ try {
   assert.deepEqual(submissions[4], submissions[3]);
   assert.equal(store.state.rows.length, 3);
 
-  await page.goto(formUrl);
+  await page.getByRole('button',{name:'새로 신청하기'}).click();
   await page.waitForSelector('#submit:enabled');
   await fillApplication();
   await page.check('#photo-consent');
@@ -396,12 +458,54 @@ try {
   await page.waitForFunction(() => !document.querySelector('#retry').disabled);
   assert.equal(await page.locator('#submit').isDisabled(), true);
   await capture('closed');
+  const mismatched = JSON.parse(saved.value);
+  mismatched.receipt.eventId = 'daebeongae';
+  const invalidNumber = JSON.parse(saved.value);
+  invalidNumber.receipt.displayReceiptNumber = '20260231180000';
+  for (const [value, clock] of [
+    ['{', now], [JSON.stringify(mismatched), now], [JSON.stringify(invalidNumber), now],
+    [saved.value, new Date('2026-12-19T23:30:00+09:00')]
+  ]) {
+    await page.evaluate(({key,value}) => sessionStorage.setItem(key,value), {key:saved.key,value});
+    await page.clock.setFixedTime(clock);
+    await page.reload();
+    await page.waitForSelector('#retry:enabled');
+    assert.ok(await page.locator('#success').isHidden());
+    assert.equal(await page.evaluate(key => sessionStorage.getItem(key), saved.key), null);
+  }
+  // Storage can be disabled by browser policy. The live legacy receipt must still work.
+  offer = {...getOffer(now,config),test:false};
+  await page.addInitScript(() => {
+    Object.defineProperty(window, 'sessionStorage', {get() {throw new DOMException('Disabled','SecurityError');}});
+  });
+  await page.clock.setFixedTime(now);
+  await page.reload();
+  await page.waitForSelector('#submit:enabled');
+  await fillApplication();
+  await page.check('#photo-consent');
+  const {displayReceiptNumber, ...legacyReceipt} = lastReceipt;
+  assert.ok(displayReceiptNumber);
+  await page.route('**/api/seminars/signup', route => route.fulfill({json:{receipt:legacyReceipt}}), {times:1});
+  await page.click('#submit');
+  await page.waitForSelector('#success-title:visible');
+  assert.equal(await page.textContent('#display-receipt-number'), legacyReceipt.id);
+  assert.ok((await copiedReceipt()).includes(legacyReceipt.id));
   await page.setViewportSize({width:320,height:900});
   await page.evaluate(() => { document.body.style.zoom = '2'; });
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+  offer = {...offer,formConfig:{...offer.formConfig,minimumAge:0,requireBirthDate:false,requireGender:false,
+    requireDiscovery:false,requireReason:false,photoConsentMode:'split'}};
+  await page.getByRole('button', {name:'새로 신청하기'}).click();
+  await page.waitForSelector('#submit:enabled');
+  for (const id of ['birth-date','age-confirmed','gender-male']) assert.ok(await page.locator('#'+id).isHidden());
+  for (const id of ['discovery-skip','reason-skip','promotion-consent']) {
+    assert.ok(await page.locator('#'+id).isVisible());
+    assert.equal(await page.locator('#'+id).evaluate(input => input.required), false);
+  }
   writeFileSync(path.join(output,'cups-samples.json'),JSON.stringify(samples));
   assert.deepEqual(errors, []);
-  console.log('PASS cups form: 6 states × 8 widths, native notice toggles, phone validation, automatic admission, receipt contact, two closures during entry, direct completion, lost-response recovery with one row per signup, back and refresh without POST');
+  assert.deepEqual(wrapFailures, []);
+  console.log('PASS cups form: 8 states × 8 widths, native notice toggles, phone validation, automatic admission, receipt contact, two closures during entry, direct completion, lost-response recovery with one row per signup, back and refresh without POST');
 } finally {
   await browser.close();
 }

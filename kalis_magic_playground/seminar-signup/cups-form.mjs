@@ -1,9 +1,13 @@
 import { quote } from './pricing.mjs';
-import { getCupsFormConfig } from './event-config.mjs';
+import { cupsDefinition, getCupsFormConfig } from './event-config.mjs';
 const $ = (id) => document.getElementById(id);
 const form = $('signup');
 const money = (value) => `${new Intl.NumberFormat('ko-KR').format(value)}원`;
+const receiptKey = `seminar-receipt:${cupsDefinition.id}:${cupsDefinition.startsAt}`;
+const receiptVersion = 1;
+const receiptExpiry = Date.parse(cupsDefinition.endsAt);
 let offer, noticeVersions, currentQuote, busy = false, pendingPrice = false, attempt, copyText = '';
+let displayedReceipt, receiptWithoutStorage;
 let policy = getCupsFormConfig();
 const closedState = () => offer?.availabilityState || (offer?.nextBoundary === null ? 'ended' : 'unavailable');
 const closedButton = () => ({scheduled:'접수 준비 중',ended:'접수 마감',unavailable:'접수 대기'})[closedState()] || '접수 대기';
@@ -92,7 +96,8 @@ async function loadOffer() {
   try {
     const response = await fetch('/api/seminars/offer?eventId=cupsnballs',{cache:'no-store'});
     if (!response.ok) throw new Error('offer');
-    const data = await response.json(); return renderOffer(data.offer || data);
+    const data = await response.json();
+    if ($('success').hidden) return renderOffer(data.offer || data);
   } catch { offer = null; $('submit').disabled = true; $('availability').textContent = '가격을 불러오지 못했어.\n아직 접수 전이야.\n연결을 확인하고\n‘가격 다시 확인’을 눌러줘.'; }
   finally { $('retry').disabled = false; }
 }
@@ -130,7 +135,7 @@ form.addEventListener('input', (event) => {
   }
   if (!errors.textContent) errors.hidden = true;
 });
-form.addEventListener('change', () => {
+function syncConditionalFields() {
   for (const key of ['discovery', 'reason']) {
     const other = $(`${key}-other`).checked;
     $(`${key}-other-field`).hidden = !other;
@@ -141,7 +146,8 @@ form.addEventListener('change', () => {
   $('payer-field').hidden = $('same-payer').checked;
   $('payer').disabled = $('same-payer').checked; $('payer').required = !$('same-payer').checked;
   update();
-});
+}
+form.addEventListener('change', syncConditionalFields);
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
   if (form.hidden || busy || !offer?.open || pendingPrice) return;
@@ -236,8 +242,12 @@ async function sendAttempt(original) {
       const message = response.status === 429 ? `지금 신청이 몰리고 있어.\n이번 신청은 저장되지 않았어.\n${data.retryAfter || 600}초 뒤에 다시 신청해줘.` : response.status === 503 ? '아직 접수 결과를 확인하지 못했어.\n잠시 후 다시 신청하면\n지난 결과를 확인할 수 있어.' : '접수를 확인하지 못했어.\n적은 내용을 보고 다시 신청해줘.';
       showErrors([['submit',message]]); return;
     }
-    showReceipt(data.receipt, original.payload);
+    const receipt = receiptSnapshot(data.receipt);
+    if (!receipt) throw new Error('receipt');
+    saveReceipt(receipt);
+    showReceipt(receipt);
     original.unresolved = false;
+    attempt = null;
   } catch { showErrors([['submit','연결이 끊겨 접수됐는지\n아직 모르겠어.\n적은 내용 그대로 다시 신청해줘.\n같은 신청은 한 번만 접수돼.']]); }
   finally { busy = false; update(); }
 }
@@ -260,23 +270,165 @@ function showResult(sectionId, linkText) {
     heading.focus();
   }
 }
-function showReceipt(receipt, submitted) {
+function receiptSnapshot(receipt) {
+  if (receipt?.eventId !== cupsDefinition.id || !['pending','paid'].includes(receipt.status)) return null;
+  const {displayReceiptNumber, id, payerName, total, items} = receipt;
+  if (typeof receipt.createdAt !== 'string' || typeof receipt.paymentDueAt !== 'string' ||
+      !receipt.payment || typeof receipt.payment !== 'object' || Array.isArray(receipt.payment)) return null;
+  const created = Date.parse(receipt.createdAt);
+  const due = Date.parse(receipt.paymentDueAt);
+  if (!Number.isFinite(created) || due - created !== 86400000) return null;
+  if (Object.hasOwn(receipt, 'displayReceiptNumber')) {
+    const minute = new Date(created + 9*60*60*1000).toISOString().slice(0,16).replace(/\D/g, '');
+    if (typeof displayReceiptNumber !== 'string' || displayReceiptNumber.length !== 14 ||
+        !/^\d{12}(?:0[1-9]|[1-9]\d)$/.test(displayReceiptNumber) || displayReceiptNumber.slice(0,12) !== minute) return null;
+  } else if (typeof id !== 'string' || id.length !== 36 ||
+      !/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(id)) return null;
+
+  const validText = (value, max) => typeof value === 'string' &&
+    value.length <= max && !/[\u0000-\u001f\u007f]/u.test(value);
+  if (!validText(payerName, 100) || !payerName.trim() || [...payerName].length > 50 ||
+      !Number.isSafeInteger(total) || total <= 0 || !Array.isArray(items) || items.length !== 1) return null;
+  const [item] = items;
+  if (!item || !validText(item.label, 80) || !item.label.trim() || item.price !== total) return null;
+  const payment = {};
+  for (const key of ['bank','account','holder','contact']) {
+    const value = receipt.payment?.[key] ?? '';
+    if (!validText(value, 300)) return null;
+    payment[key] = value;
+  }
+  const test = receipt.test === true || receipt.payment?.test === true ||
+    !payment.bank || !payment.account || !payment.holder ||
+    /\[|미정|테스트/.test(`${payment.bank} ${payment.account} ${payment.holder}`);
+  return {
+    eventId:receipt.eventId, ...(displayReceiptNumber ? {displayReceiptNumber} : {id}),
+    status:receipt.status, createdAt:new Date(created).toISOString(), paymentDueAt:new Date(due).toISOString(),
+    items:[{label:item.label,price:item.price}], total, payerName, payment, test
+  };
+}
+function clearStoredReceipt() {
+  receiptWithoutStorage = null;
+  try { sessionStorage.removeItem(receiptKey); } catch { /* Storage may be blocked. */ }
+}
+function saveReceipt(receipt) {
+  clearStoredReceipt();
+  if (Date.now() >= receiptExpiry) return;
+  try {
+    sessionStorage.setItem(receiptKey, JSON.stringify({version:receiptVersion, receipt}));
+  } catch {
+    // Keep the current document usable even if storage is blocked or full.
+    receiptWithoutStorage = receipt;
+  }
+}
+function readReceipt() {
+  if (Date.now() < receiptExpiry) {
+    if (receiptWithoutStorage) return receiptWithoutStorage;
+    try {
+      const stored = sessionStorage.getItem(receiptKey);
+      if (stored === null) return null;
+      const saved = JSON.parse(stored);
+      const receipt = saved?.version === receiptVersion && receiptSnapshot(saved.receipt);
+      if (receipt) return receipt;
+    } catch { /* Storage may be unavailable, or the record may be invalid. */ }
+  }
+  clearStoredReceipt();
+  return null;
+}
+function showReceipt(receipt, restored = false) {
+  displayedReceipt = receipt;
   const paid = receipt.status === 'paid';
-  const payment = receipt.payment || {};
-  const due = new Date(receipt.paymentDueAt || payment.deadline || '');
-  const deadline = Number.isNaN(due.getTime()) ? '[입금 기한 미정]' : `${new Intl.DateTimeFormat('ko-KR', {timeZone:'Asia/Seoul',year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(due)} (KST)`;
-  const rows = [['접수번호',receipt.id],['선택 내역',receipt.items.map((item)=>`${item.label} ${money(item.price)}`).join(', ')],[paid ? '입금 확인 금액' : '입금할 금액',money(receipt.total)],['은행',payment.bank || '[은행 미정]'],['계좌번호',payment.account || '[계좌번호 미정]'],['예금주',payment.holder || '[예금주 미정]'],['입금자명',receipt.payerName || submitted.payerName || submitted.name],['입금 기한',deadline],['문의',payment.contact || '[운영자 연락처 미정]']];
-  const test = !payment.bank || !payment.account || !payment.holder || payment.test || /\[|미정|테스트/.test(`${payment.bank} ${payment.account} ${payment.holder}`);
+  const {payment, test} = receipt;
+  const due = new Date(receipt.paymentDueAt);
+  const deadline = `${new Intl.DateTimeFormat('ko-KR', {timeZone:'Asia/Seoul',year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(due)} (KST)`;
+  const number = receipt.displayReceiptNumber || receipt.id;
+  const amountLabel = paid ? '입금 확인 금액' : '입금할 금액';
+  const amount = money(receipt.total);
+  const selectionText = receipt.items.map(item => `${item.label} ${money(item.price)}`).join(', ');
+  const rows = [
+    ['선택 내역',selectionText], ['은행',payment.bank || '[은행 미정]',true],
+    ['계좌번호',payment.account || '[계좌번호 미정]'], ['예금주',payment.holder || '[예금주 미정]'],
+    ['입금자명',receipt.payerName], ['입금 기한',deadline,true], ['문의',payment.contact || '[운영자 연락처 미정]']
+  ];
+  const warning = '테스트 접수야. 입금하지 말아줘.';
+  const pastDue = Date.now() >= due.getTime();
+  const expiredNotice = '안내된 입금 기한은 지났어.';
+  let message = '아래 계좌로 24시간 안에 입금해줘.';
+  if (test) message = '아래에서 신청 내역을 확인해줘.';
+  else if (paid) message = restored ? '접수 당시 입금 확인 상태였어.' : '입금 확인했어. 형이 연락할게.';
+  else if (pastDue) message = '입금 기한이 지났어.\n입금 전에 형에게 문의해줘.';
+
+  $('display-receipt-number').textContent = number;
+  $('payment-amount-label').textContent = amountLabel;
+  $('payment-amount').textContent = amount;
   $('test-warning').hidden = !test;
-  $('test-warning').textContent = test ? '테스트 접수야. 입금하지 말아줘.' : '';
-  $('payment-message').textContent = test ? '아래에서 신청 내역을 확인해줘.' : paid
-    ? '입금 확인했어. 형이 연락할게.' : '아래 계좌로 24시간 안에 입금해줘.';
+  $('test-warning').textContent = test ? warning : '';
+  $('payment-message').textContent = message;
+  $('restored-notice').hidden = !restored;
+  $('restored-notice').textContent = restored
+    ? ['접수 당시 안내야.', ...(pastDue && (paid || test) ? [expiredNotice] : [])].join('\n') : '';
   $('receipt').replaceChildren();
-  for (const [label,value] of rows) { const dt=document.createElement('dt'),dd=document.createElement('dd'); dt.textContent=label; dd.textContent=value; $('receipt').append(dt,dd); }
-  copyText = [test ? $('test-warning').textContent : $('payment-message').textContent,...rows.map(([key,value])=>`${key}: ${value}`)].join('\n');
+  for (const [label,value,ruled] of rows) {
+    const dt = document.createElement('dt'), dd = document.createElement('dd');
+    dt.textContent = label;
+    dd.textContent = value;
+    if (ruled) { dt.className = 'ruled'; dd.className = 'ruled'; }
+    $('receipt').append(dt,dd);
+  }
+  const copyRows = [['접수번호',number], rows[0], [amountLabel,amount], ...rows.slice(1)];
+  copyText = [
+    test ? warning : message,
+    ...(pastDue && (paid || test) ? [expiredNotice] : []),
+    ...copyRows.map(([key,value]) => `${key}: ${value}`)
+  ].join('\n');
+  $('copy-status').textContent = '';
   showResult('success', '신청 결과로 건너뛰기');
 }
+function showForm() {
+  $('success').hidden = true;
+  $('signup-header').hidden = false;
+  $('signup-banner').hidden = false;
+  form.hidden = false;
+  const skip = document.querySelector('.skip');
+  skip.hash = form.id;
+  skip.textContent = '신청서로 건너뛰기';
+}
+function startNewSignup() {
+  clearStoredReceipt();
+  displayedReceipt = null;
+  copyText = '';
+  $('receipt').replaceChildren();
+  for (const id of ['display-receipt-number','payment-amount','copy-status']) $(id).textContent = '';
+  offer = noticeVersions = currentQuote = attempt = null;
+  pendingPrice = false;
+  $('price-change').hidden = true;
+  $('errors').hidden = true;
+  $('errors').replaceChildren();
+  form.querySelectorAll('[aria-invalid="true"]').forEach(clearError);
+  form.reset();
+  form.querySelectorAll('details[open]').forEach(details => { details.open = false; });
+  syncConditionalFields();
+  for (const id of ['consent','photo-consent','promotion-consent','submit']) $(id).disabled = true;
+  $('submit').textContent = '접수 준비 중';
+  $('items').replaceChildren();
+  $('total').textContent = '확인 중';
+  $('availability').textContent = '접수 안내와 가격을 다시 확인하고 있어.';
+  showForm();
+  $('name').focus();
+  loadOffer();
+}
 $('copy').addEventListener('click',async()=>{try { await navigator.clipboard.writeText(copyText); $('copy-status').textContent='입금 안내를 복사했어.'; } catch { $('copy-status').textContent='복사가 안 됐어.\n화면에서 입금 안내를\n직접 선택해서 복사해줘.'; }});
+$('new-signup').addEventListener('click', startNewSignup);
 $('accept-price').addEventListener('click',()=>{pendingPrice=false; $('price-change').hidden=true; update(); $('submit').focus();});
 $('retry').addEventListener('click',loadOffer);
-loadOffer();
+window.addEventListener('pageshow', event => {
+  if (!event.persisted) return;
+  const saved = readReceipt();
+  if (saved) showReceipt(saved, true);
+  else if (displayedReceipt) startNewSignup();
+});
+const saved = readReceipt();
+if (saved) showReceipt(saved, true);
+else {
+  showForm();
+  loadOffer();
+}

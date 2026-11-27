@@ -9,7 +9,7 @@ export function createLocalSheet({ now = Date.parse('2026-12-15T01:00:00Z'), sec
   function makeSheet(tab) {
     let filter = null;
     function range(row, col, height = 1, width = 1) {
-      return { row,col,height,width, getNumRows:()=>height, setValue(value){return this.setValues([[value]]);}, setNumberFormat(format) { tab.formats.push({row,col,height,width,format}); return this; }, setValues(values) {
+      return { row,col,height,width, getNumRows:()=>height, getNumColumns:()=>width, getRow:()=>row, getColumn:()=>col, setValue(value){return this.setValues([[value]]);}, setNumberFormat(format) { tab.formats.push({row,col,height,width,format}); return this; }, setValues(values) {
         for (let r = 0; r < height; r++) { tab.rows[row-1+r] ||= []; for (let c = 0; c < width; c++) tab.rows[row-1+r][col-1+c] = values[r][c]; } return this;
       }, clearDataValidations() {tab.cleared.push({row,col,height,width,kind:'validation'});return this;}, clearFormat() {tab.cleared.push({row,col,height,width,kind:'format'});return this;}, setDataValidation(rule) { tab.validation = {...rule,row,col,height,width}; return this; }, createFilter() { if(tab.failFilter){tab.failFilter=false;throw Error('filter_failure');} filter = {row,col,height,width,criteria:{},getRange:()=>range(row,col,height,width),getColumnFilterCriteria(col){return this.criteria[col] || null;},setColumnFilterCriteria(col,value){this.criteria[col]=value;return this;},remove(){filter=null;}}; tab.filter=filter; return filter; } };
     }
@@ -21,10 +21,16 @@ export function createLocalSheet({ now = Date.parse('2026-12-15T01:00:00Z'), sec
   class LocalDate extends Date { constructor(...args) { super(...(args.length ? args : [state.now])); } static now() { return state.now; } }
   const context = vm.createContext({ Date: LocalDate, console,
     PropertiesService: { getScriptProperties: () => ({ getProperty: key => props[key] ?? null, getProperties: () => ({...props}), setProperty(key,value) { if (state.failProperties) throw Error('quota'); props[key] = value; }, deleteProperty(key) { if (state.failProperties) throw Error('quota'); delete props[key]; } }) },
-    Utilities: { newBlob(value) { const buffer = typeof value === 'string' ? Buffer.from(value) : Buffer.from(value); return { getBytes: () => [...buffer], getDataAsString: () => buffer.toString('utf8') }; }, computeHmacSha256Signature: (value,key) => [...createHmac('sha256',key).update(value).digest()], base64Decode: value => [...Buffer.from(value,'base64')], getUuid: randomUUID, formatDate(value) { return new Date(value.getTime()+9*3600000).toISOString().slice(0,19).replace('T',' '); } },
+    Utilities: { newBlob(value) { const buffer = typeof value === 'string' ? Buffer.from(value) : Buffer.from(value); return { getBytes: () => [...buffer], getDataAsString: () => buffer.toString('utf8') }; }, computeHmacSha256Signature: (value,key) => [...createHmac('sha256',key).update(value).digest()], base64Decode: value => [...Buffer.from(value,'base64')], getUuid: randomUUID, formatDate(value, timeZone, format) {
+      if (timeZone !== 'Asia/Seoul') throw Error('unsupported_time_zone');
+      const kst = new Date(value.getTime()+9*3600000).toISOString();
+      if (format === 'yyyyMMddHHmm') return kst.slice(0,16).replace(/[^0-9]/g,'');
+      if (format === 'yyyy-MM-dd HH:mm:ss') return kst.slice(0,19).replace('T',' ');
+      throw Error('unsupported_date_format');
+    } },
     ContentService: { MimeType: {JSON:'application/json'}, createTextOutput: value => ({value,setMimeType() {return this;} }) },
     LockService: { getScriptLock: () => ({ tryLock() { if (state.lockUnavailable || state.locked) return false; state.locked = true; return true; }, releaseLock() {state.locked=false;} }) },
-    SpreadsheetApp: { ProtectionType:{SHEET:'SHEET'}, openById(id) { state.opens++;
+    SpreadsheetApp: { ProtectionType:{SHEET:'SHEET'}, BooleanCriteria:{CUSTOM_FORMULA:'CUSTOM_FORMULA'}, openById(id) { state.opens++;
       if (id !== 'local-test-sheet') throw Error('nonlocal_sheet');
       return {getSheetByName: name => tabs.get(name)?.sheet || null, insertSheet(name) {
         if (tabs.has(name)) throw Error('duplicate_sheet');

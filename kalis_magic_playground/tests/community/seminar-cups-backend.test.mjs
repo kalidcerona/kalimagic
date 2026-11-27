@@ -30,6 +30,8 @@ test('cups actual signed sheet allows 16th applicant, persists optional promotio
  const store=sheet();let first,receipt;
  for(let i=0;i<16;i++){const body=input({contact:'010'+String(i).padStart(8,'0')}); const result=await submitSignup(body,context(store));if(!first){first=body;receipt=result.receipt;}}
  assert.equal(store.state.rows.length,17);assert.equal(store.state.tab,'컵앤볼 신청 명단');assert.equal(receipt.total,50000);
+ assert.equal(store.state.rows[1][30],'20261127180001');assert.equal(store.state.rows[16][30],'20261127180016');
+ assert.equal(receipt.displayReceiptNumber,store.state.rows[1][30]);
  const record=JSON.parse(store.state.rows[1][19]);assert.equal(record.promotionConsent,true);assert.equal(record.birthDate,'1990-01-01');assert.equal(record.ageConfirmed,true);
  const later=new Date('2026-12-20T00:00:00+09:00');store.state.now=later.getTime();assert.deepEqual((await submitSignup(first,context(store,later))).receipt,receipt);
 });
@@ -75,6 +77,7 @@ test('cups 61st signup expands physical rows, payment controls, filter and prote
  for(let i=0;i<61;i++) await submitSignup(input({contact:'010'+String(i).padStart(8,'0')}),context(store));
  assert.equal(store.state.rows.length,62);assert.ok(store.state.maxRows>=62);
  assert.equal(store.state.validation.height,store.state.maxRows-1);
+ assert.equal(store.state.validation.col,32);
  assert.equal(store.state.filter.height,store.state.maxRows);
  assert.equal(store.state.protections[0].ranges[0].height,store.state.maxRows-1);
  assert.equal(store.state.rules[0].ranges[0].height,store.state.maxRows-1);
@@ -82,15 +85,16 @@ test('cups 61st signup expands physical rows, payment controls, filter and prote
 
 test('cups keeps filter object on ordinary signup and criteria across growth/retry',async()=>{
  const store=sheet(), filter=store.state.filter, criterion={synthetic:'paid-only'};
- filter.setColumnFilterCriteria(31,criterion);
+ filter.setColumnFilterCriteria(32,criterion);
  await submitSignup(input(),context(store));assert.equal(store.state.filter,filter);
  for(let i=1;i<60;i++) await submitSignup(input({contact:'010'+String(i).padStart(8,'0')}),context(store));
  const body=input({contact:'01099999999'});store.state.failFilter=true;
  await assert.rejects(submitSignup(body,context(store)),/service_unavailable/);
- assert.equal(store.state.filter.getColumnFilterCriteria(31),criterion);
+ assert.equal(store.state.filter.getColumnFilterCriteria(32),criterion);
  assert.equal(store.state.rows.length,61);
- await submitSignup(body,context(store));
- assert.equal(store.state.filter.getColumnFilterCriteria(31),criterion);
+ const retry = await submitSignup(body,context(store));
+ assert.equal(retry.receipt.displayReceiptNumber,'20261127180062');
+ assert.equal(store.state.filter.getColumnFilterCriteria(32),criterion);
  assert.equal(store.state.filter.height,store.state.maxRows);
 });
 
@@ -177,7 +181,8 @@ test('existing deployment adds the cups tab before upgrading the empty legacy ro
   const cups = store.tabs.get('컵앤볼 신청 명단').state;
   const cupsRows = structuredClone(cups.rows);
   assert.equal(cupsRows.length, 1);
-  assert.equal(cupsRows[0].length, 31);
+  assert.equal(cupsRows[0].length, 32);
+  assert.deepEqual(cupsRows[0].slice(-2), ['표시 접수번호','입금']);
   const {filter, rules, validation} = cups;
   const [protection] = cups.protections;
   const {ranges} = protection;
@@ -199,4 +204,173 @@ test('existing deployment adds the cups tab before upgrading the empty legacy ro
   const cupsRequest = {action:'readiness',eventId:'cupsnballs',consentVersion:config.consentVersion};
   assert.equal(store.send(store.sign(cupsRequest, store.state.now, secret)).ready, true);
   assert.equal(store.submit({action:'readiness',eventId:'daebeongae'}).ready, true);
+});
+
+test('cup display number uses the stored maximum, survives deletion and resets at the next KST minute', async () => {
+  const store = sheet(), first = input();
+  const accepted = (await submitSignup(first,context(store))).receipt;
+  delete store.props.seminar_receipt_cupsnballs_20261127;
+  const second = input({contact:'01000000002'});
+  assert.equal((await submitSignup(second,context(store))).receipt.displayReceiptNumber,'20261127180002');
+  store.state.rows.pop();
+  const third = input({contact:'01000000003'});
+  assert.equal((await submitSignup(third,context(store))).receipt.displayReceiptNumber,'20261127180003');
+  store.state.now += 60000;
+  const next = (await submitSignup(input({contact:'01000000004'}),context(store,new Date(store.state.now)))).receipt;
+  assert.equal(next.displayReceiptNumber,'20261127180101');
+  assert.deepEqual((await submitSignup(first,context(store,new Date(store.state.now)))).receipt,accepted);
+});
+
+test('cup requests serialize display numbers and replay a stored receipt after response loss', async () => {
+  const store = sheet(), first = input(), second = input({contact:'01000000002'});
+  store.state.failFlush = true;
+  await assert.rejects(submitSignup(first,context(store)), /service_unavailable/);
+  const responses = await Promise.all([first,second,first].map(body => submitSignup(body,context(store))));
+  assert.equal(responses[0].receipt.displayReceiptNumber,'20261127180001');
+  assert.equal(responses[1].receipt.displayReceiptNumber,'20261127180002');
+  assert.deepEqual(responses[0],responses[2]);
+  assert.equal(store.state.rows.length,3);
+  await assert.rejects(submitSignup({...first,name:'다른 신청 이름'},context(store)), /idempotency_conflict/);
+});
+
+test('cup 100th request waits for the next minute while replay succeeds at the cap', async () => {
+  const store = sheet();
+  const bodies = Array.from({length:99},(_,i) => input({contact:'010'+String(i).padStart(8,'0')}));
+  for (const [index, body] of bodies.entries()) {
+    const result = await submitSignup(body,context(store));
+    assert.equal(result.receipt.displayReceiptNumber,'202611271800'+String(index+1).padStart(2,'0'));
+  }
+  const overflow = input({contact:'01099999999'});
+  await assert.rejects(submitSignup(overflow,context(store)), error => error.message === 'rate_limited' && error.status === 429 && error.details.retryAfter === 60);
+  assert.equal(store.state.rows.length,100);
+  assert.equal((await submitSignup(bodies[98],context(store))).receipt.displayReceiptNumber,'20261127180099');
+  store.state.now += 60000;
+  const result = await submitSignup(overflow,context(store,new Date(store.state.now)));
+  assert.equal(result.receipt.displayReceiptNumber,'20261127180101');
+});
+
+test('cup sheet rejects wrong-minute, zero, non-text and duplicate display numbers', async () => {
+  const store = sheet();
+  await submitSignup(input(),context(store));
+  await submitSignup(input({contact:'01000000002'}),context(store));
+  for (const number of ['20261127180102','20261127180000',20261127180002,'20261127180001']) {
+    store.state.rows[2][30] = number;
+    const readiness = {action:'readiness',eventId:'cupsnballs',consentVersion:config.consentVersion};
+    assert.equal(store.submit(readiness).error,'storage_unavailable');
+  }
+});
+
+test('cup signup accepts a legacy UUID receipt and rejects malformed display numbers from the store', async () => {
+  const body = input();
+  const raw = {
+    id:randomUUID(), eventId:'cupsnballs', items:[{id:'admission',label:'컵앤볼',quantity:1,price:50000}],
+    total:50000, status:'pending', createdAt:now.toISOString(), payerName:body.name,
+    paymentDueAt:new Date(now.getTime()+86400000).toISOString()
+  };
+  const submitReceipt = receipt => submitSignup(body,context({submit:() => ({ok:true,receipt})}));
+  const legacy = (await submitReceipt(raw)).receipt;
+  assert.equal(legacy.id,raw.id);
+  assert.equal(Object.hasOwn(legacy,'displayReceiptNumber'),false);
+  const valid = '20261127180001';
+  assert.equal((await submitReceipt({...raw,displayReceiptNumber:valid})).receipt.displayReceiptNumber,valid);
+  for (const number of [Number(valid), '20261131180001', '20261127180101', '20261127180000', valid+'\n', null]) {
+    await assert.rejects(submitReceipt({...raw,displayReceiptNumber:number}), {message:'service_unavailable',status:503});
+  }
+});
+
+function checkCupsMigration(filterWidth) {
+  const store = createLocalSheet({setup:false, properties:{
+    SEMINAR_EVENT_ID:'daebeongae,cupsnballs', CUPSNBALLS_SHEET_ID:'local-test-sheet',
+    CUPSNBALLS_SHEETS_SIGNING_SECRET:secret, CUPSNBALLS_CONSENT_VERSION:config.consentVersion,
+    CONTACT_SHEET_ID:'local-test-sheet', CONTACT_SHEETS_SIGNING_SECRET:'local-inquiry-test-secret-32-characters'
+  }});
+  store.context.setupDaebeongaeSheet();
+  store.context.setupInquirySheet();
+  const file = store.context.SpreadsheetApp.openById('local-test-sheet');
+  const cupsSheet = file.insertSheet('컵앤볼 신청 명단');
+  cupsSheet.insertColumnsAfter(21,filterWidth-21);
+  const oldHeader = [...store.context.SEMINAR_BASE_HEADERS.slice(0,-1),'만 14세 이상 확인','홍보용 사진 활용 동의','입금'];
+  cupsSheet.getRange(1,1,1,31).setValues([oldHeader]);
+  const cups = store.tabs.get('컵앤볼 신청 명단').state;
+  const payment = cupsSheet.getRange(2,31,cups.maxRows-1,1);
+  payment.setDataValidation({formula:'=ISNUMBER(AE2)'});
+  const protection = cupsSheet.protect().setUnprotectedRanges([payment]);
+  const paymentCriterion = {synthetic:'paid-only',getCriteriaType:() => null};
+  const secondCriterion = {synthetic:'selected',getCriteriaType:() => null};
+  cupsSheet.getRange(1,1,cups.maxRows,filterWidth).createFilter()
+    .setColumnFilterCriteria(31,paymentCriterion).setColumnFilterCriteria(5,secondCriterion);
+  const daebeongae = store.tabs.get('신청 명단').state;
+  const inquiry = store.tabs.get('문의').state;
+  const legacyRows = structuredClone(daebeongae.rows);
+  const inquiryRows = structuredClone(inquiry.rows);
+  const legacyFilter = daebeongae.filter, legacyValidation = daebeongae.validation;
+  const legacyRange = daebeongae.protections[0].ranges, inquiryRange = inquiry.protections[0].ranges;
+
+  cups.failFilter = true;
+  assert.throws(() => store.context.migrateCupsnballsSheet(), /filter_failure/);
+  assert.deepEqual(cups.rows, [oldHeader]);
+  assert.equal(cups.filter.width,filterWidth);
+  assert.equal(cups.filter.getColumnFilterCriteria(31),paymentCriterion);
+  assert.equal(cups.filter.getColumnFilterCriteria(5),secondCriterion);
+  store.state.failFlush = true;
+  assert.throws(() => store.context.migrateCupsnballsSheet(), /lost_flush_response/);
+  assert.deepEqual(cups.rows, [oldHeader]);
+  assert.equal(store.state.locked,false);
+  store.context.migrateCupsnballsSheet();
+  assert.deepEqual(cups.rows, [[...oldHeader.slice(0,-1),'표시 접수번호','입금']]);
+  assert.equal(cups.maxColumns,32);
+  assert.ok(cups.cleared.some(({kind,col}) => kind === 'validation' && col === 31));
+  assert.ok(cups.formats.some(({col,format}) => col === 31 && format === '@'));
+  assert.equal(cups.validation.formula,'=AND(ISNUMBER(AF2),OR(AF2=0,AF2=1))');
+  assert.equal(cups.rules[0].formula,'=$AF2=1');
+  assert.equal(cups.rules[0].ranges[0].width,32);
+  assert.equal(protection.ranges[0].col,32);
+  assert.equal(cups.filter.width,32);
+  assert.equal(cups.filter.getColumnFilterCriteria(31),null);
+  assert.equal(cups.filter.getColumnFilterCriteria(32),paymentCriterion);
+  assert.equal(cups.filter.getColumnFilterCriteria(5),secondCriterion);
+  assert.deepEqual(daebeongae.rows, legacyRows);
+  assert.deepEqual(inquiry.rows, inquiryRows);
+  assert.equal(daebeongae.filter, legacyFilter);
+  assert.equal(daebeongae.validation, legacyValidation);
+  assert.equal(daebeongae.protections[0].ranges, legacyRange);
+  assert.equal(inquiry.protections[0].ranges, inquiryRange);
+
+  const filter = cups.filter, flushes = store.state.flushes;
+  store.context.migrateCupsnballsSheet();
+  assert.equal(cups.filter,filter);
+  assert.equal(store.state.flushes,flushes);
+}
+for (const filterWidth of [31,32]) {
+  test(`cups migration preserves payment controls across tabs with a ${filterWidth}-column filter`, () => checkCupsMigration(filterWidth));
+}
+
+test('cups migration refuses existing legacy rows, unknown headers and lock contention before writing', () => {
+  const store = sheet(), cups = store.state;
+  cups.rows[0].splice(30,1);
+  const filter = cups.filter, validation = cups.validation, flushes = cups.flushes;
+  const props = {...store.props};
+  const assertUntouched = (message) => {
+    const rows = structuredClone(cups.rows);
+    assert.throws(() => store.context.migrateCupsnballsSheet(),message);
+    assert.deepEqual(cups.rows,rows);
+    assert.deepEqual(store.props,props);
+    assert.equal(cups.flushes,flushes);
+    assert.equal(cups.filter,filter);
+    assert.equal(cups.validation,validation);
+  };
+  cups.rows.push(['existing application']);
+  assertUntouched(/existing_rows_preserved/);
+  cups.rows.pop();
+  cups.rows[0][29] = '알 수 없는 열';
+  assertUntouched(/existing_header_preserved/);
+  cups.rows[0][29] = '홍보용 사진 활용 동의';
+  filter.setColumnFilterCriteria(5,{getCriteriaType:() => 'CUSTOM_FORMULA'});
+  assertUntouched(/unsupported_filter_formula/);
+  filter.setColumnFilterCriteria(5,null);
+  filter.setColumnFilterCriteria(31,{getCriteriaType:() => null});
+  filter.setColumnFilterCriteria(32,{getCriteriaType:() => null});
+  assertUntouched(/payment_filter_conflict/);
+  store.state.lockUnavailable = true;
+  assertUntouched(/lock_unavailable/);
 });

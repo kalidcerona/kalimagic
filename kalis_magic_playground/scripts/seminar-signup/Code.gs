@@ -7,7 +7,9 @@ function seminarLetter(index) { var result = ''; for (index++; index > 0; index 
 var SEMINAR_CONSENT_VERSION = '2026-11-30-v2';
 var SEMINAR_PHOTO_CONSENT_VERSION = '2026-11-30-v2';
 var SEMINAR_BASE_HEADERS = SEMINAR_HEADERS.slice();
-function seminarSelectHeaders(eventId) { SEMINAR_HEADERS = eventId === 'cupsnballs' ? SEMINAR_BASE_HEADERS.slice(0,-1).concat(['만 14세 이상 확인','홍보용 사진 활용 동의','입금']) : SEMINAR_BASE_HEADERS.slice(); }
+var CUPSNBALLS_LEGACY_HEADERS = SEMINAR_BASE_HEADERS.slice(0,-1).concat(['만 14세 이상 확인','홍보용 사진 활용 동의','입금']);
+var CUPSNBALLS_DISPLAY_COLUMN = '표시 접수번호';
+function seminarSelectHeaders(eventId) { SEMINAR_HEADERS = eventId === 'cupsnballs' ? CUPSNBALLS_LEGACY_HEADERS.slice(0,-1).concat([CUPSNBALLS_DISPLAY_COLUMN,'입금']) : SEMINAR_BASE_HEADERS.slice(); }
 var SEMINAR_TAB = '신청 명단';
 var SEMINAR_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 var SEMINAR_HASH = /^[0-9a-f]{64}$/;
@@ -30,6 +32,7 @@ function seminarText(value) {
   return /^[\s\u0000-\u001f\u007f]*[=+@-]/.test(text) ? "’" + text : text;
 }
 function seminarKst(value) { return Utilities.formatDate(new Date(value), 'Asia/Seoul', 'yyyy-MM-dd HH:mm:ss'); }
+function seminarKstMinute(value) { return Utilities.formatDate(new Date(value), 'Asia/Seoul', 'yyyyMMddHHmm'); }
 function seminarJson(result) { return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON); }
 function seminarKeys(value, allowed) {
   return value && typeof value === 'object' && !Array.isArray(value) && Object.keys(value).every(function (key) { return allowed.indexOf(key) !== -1; });
@@ -69,7 +72,7 @@ function seminarRecordValid(r, receivedAt, requireCurrentNotice, eventId) {
   }
   return Number.isSafeInteger(r.total) && Number.isSafeInteger(sum) && !(ids.length === 1 && ids[0] === 'open') && !(ids.includes('bundle') && ids.some(function (id) { return !['bundle','open'].includes(id); })) && r.total === sum;
 }
-function seminarRow(id, p) {
+function seminarRow(id, p, displayReceiptNumber) {
   var r = p.record;
   var cells = {
     '접수번호':id, '접수 시각 (KST)':seminarKst(p.receivedAt), '신청자명':seminarText(r.name),
@@ -86,21 +89,31 @@ function seminarRow(id, p) {
     '신청 이유 기타':seminarText(r.reasonOther), '촬영 안내 버전':r.photoConsentVersion,
     '촬영 안내 확인 시각':r.photoConsentedAt, '만 14세 이상 확인':r.ageConfirmed ? '확인' : '해당 없음', '홍보용 사진 활용 동의':r.promotionConsent ? '동의' : '미동의', '입금':0
   };
+  cells[CUPSNBALLS_DISPLAY_COLUMN] = displayReceiptNumber;
   return SEMINAR_HEADERS.map(function (header) { return cells[header]; });
 }
 function seminarReceipt(row) {
   var record = JSON.parse(seminarCell(row, '서버 기록'));
-  return { id:seminarCell(row, '접수번호'),eventId:seminarCell(row, '행사 ID'),items:record.items,total:record.total,status:seminarCell(row, '입금') === 1 ? 'paid' : 'pending',createdAt:seminarCell(row, '접수 시각 원본'),payerName:record.payerName || record.name,paymentDueAt:seminarCell(row, '입금 기한 원본') };
+  var receipt = { id:seminarCell(row, '접수번호'),eventId:seminarCell(row, '행사 ID'),items:record.items,total:record.total,status:seminarCell(row, '입금') === 1 ? 'paid' : 'pending',createdAt:seminarCell(row, '접수 시각 원본'),payerName:record.payerName || record.name,paymentDueAt:seminarCell(row, '입금 기한 원본') };
+  if (receipt.eventId === 'cupsnballs') receipt.displayReceiptNumber = seminarCell(row, CUPSNBALLS_DISPLAY_COLUMN);
+  return receipt;
 }
 function seminarRead(sheet, config) {
   var values = sheet.getDataRange().getValues();
   if (values.length < 1 || JSON.stringify(values[0]) !== JSON.stringify(SEMINAR_HEADERS)) throw Error('invalid_sheet');
-  var rows = values.slice(1), keys = {}, ids = {};
+  var rows = values.slice(1), keys = {}, ids = {}, displayNumbers = {};
   rows.forEach(function (row) {
     if (row.length !== SEMINAR_HEADERS.length || !SEMINAR_UUID.test(seminarCell(row, '접수번호')) || seminarCell(row, '행사 ID') !== config.eventId || !SEMINAR_UUID.test(seminarCell(row, '재시도 키')) || !SEMINAR_HASH.test(seminarCell(row, '요청 지문')) || ![0,1].includes(seminarCell(row, '입금')) || keys[seminarCell(row, '재시도 키')] || ids[seminarCell(row, '접수번호')]) throw Error('invalid_sheet');
     var record = JSON.parse(seminarCell(row, '서버 기록'));
     if (!seminarRecordValid(record, seminarCell(row, '접수 시각 원본'),false,config.eventId)) throw Error('invalid_sheet');
-    var expected = seminarRow(seminarCell(row, '접수번호'), {record:record,eventId:seminarCell(row, '행사 ID'),idempotencyKey:seminarCell(row, '재시도 키'),fingerprint:seminarCell(row, '요청 지문'),receivedAt:seminarCell(row, '접수 시각 원본')});
+    var receivedAt = seminarCell(row, '접수 시각 원본');
+    var displayNumber;
+    if (config.eventId === 'cupsnballs') {
+      displayNumber = seminarCell(row, CUPSNBALLS_DISPLAY_COLUMN);
+      if (typeof displayNumber !== 'string' || displayNumber.length !== 14 || !/^[0-9]{14}$/.test(displayNumber) || displayNumber.slice(0,12) !== seminarKstMinute(receivedAt) || displayNumber.slice(-2) === '00' || displayNumbers[displayNumber]) throw Error('invalid_sheet');
+      displayNumbers[displayNumber] = true;
+    }
+    var expected = seminarRow(seminarCell(row, '접수번호'), {record:record,eventId:seminarCell(row, '행사 ID'),idempotencyKey:seminarCell(row, '재시도 키'),fingerprint:seminarCell(row, '요청 지문'),receivedAt:receivedAt}, displayNumber);
     expected.forEach(function (cell, index) {
       if (index === seminarColumn('입금')) return;
       if (row[index] !== cell) throw Error('invalid_sheet');
@@ -138,10 +151,28 @@ function seminarRate(props, hash, now) {
   value.count++; props.setProperty(key, JSON.stringify(value));
   return null;
 }
-function seminarExpandCups(sheet, neededRow) {
+function seminarReserveCupsReceipt(config, rows, receivedAt) {
+  var minute = seminarKstMinute(receivedAt);
+  // Two digits per minute keep a full day's counters within the per-property size limit.
+  var key = 'seminar_receipt_' + config.eventId + '_' + minute.slice(0,8);
+  var counters = config.props.getProperty(key) || '';
+  if (!/^(?:[0-9]{2}){0,1440}$/.test(counters)) throw Error('invalid_receipt_counter');
+  var offset = 2 * (Number(minute.slice(8,10)) * 60 + Number(minute.slice(10,12)));
+  var last = Number(counters.slice(offset,offset+2));
+  rows.forEach(function (row) {
+    var number = seminarCell(row, CUPSNBALLS_DISPLAY_COLUMN);
+    if (number.slice(0,12) === minute) last = Math.max(last,Number(number.slice(-2)));
+  });
+  if (last >= 99) return null;
+  var sequence = ('0' + (last+1)).slice(-2);
+  // Reserve before writing the row so a failed write or deleted row cannot reuse the number.
+  config.props.setProperty(key,counters.slice(0,offset).padEnd(offset,'0') + sequence + counters.slice(offset+2));
+  return minute + sequence;
+}
+function seminarExpandCups(sheet, neededRow, priorPaymentColumn) {
   var props=PropertiesService.getScriptProperties(), key='cups_sheet_prepared_rows';
   var maxRows=sheet.getMaxRows();
-  if (neededRow <= maxRows && Number(props.getProperty(key)) === maxRows) return;
+  if (!priorPaymentColumn && neededRow <= maxRows && Number(props.getProperty(key)) === maxRows) return;
   if (maxRows < neededRow) sheet.insertRowsAfter(maxRows,Math.max(100,neededRow-maxRows));
   var count = sheet.getMaxRows()-1, column=seminarColumn('입금'), letter=seminarLetter(column);
   var payment=sheet.getRange(2,column+1,count,1);
@@ -149,13 +180,19 @@ function seminarExpandCups(sheet, neededRow) {
   sheet.setConditionalFormatRules([SpreadsheetApp.newConditionalFormatRule().whenFormulaSatisfied('=$'+letter+'2=1').setBackground('#d9ead3').setRanges([sheet.getRange(2,1,count,SEMINAR_HEADERS.length)]).build()]);
   sheet.getProtections(SpreadsheetApp.ProtectionType.SHEET).forEach(function (protection) {protection.setUnprotectedRanges([payment]);});
   var filter=sheet.getFilter();
-  if (!filter || filter.getRange().getNumRows() !== count+1) {
-    var criteria=[], previousRange=filter && filter.getRange();
-    if (filter) for (var col=1;col<=SEMINAR_HEADERS.length;col++) criteria[col]=filter.getColumnFilterCriteria(col);
-    function restore(target) { for(var col=1;col<criteria.length;col++) if(criteria[col]) target.setColumnFilterCriteria(col,criteria[col]); }
+  var previousRange=filter && filter.getRange();
+  var movePayment=filter && priorPaymentColumn && previousRange.getNumColumns() >= priorPaymentColumn && filter.getColumnFilterCriteria(priorPaymentColumn);
+  if (!previousRange || previousRange.getNumRows() !== count+1 || previousRange.getNumColumns() !== SEMINAR_HEADERS.length || movePayment) {
+    var criteria=[], previousWidth=previousRange ? previousRange.getNumColumns() : 0;
+    for (var col=1;col<=previousWidth;col++) criteria[col]=filter.getColumnFilterCriteria(col);
+    function restore(target, movePayment) {
+      for (var col=1;col<criteria.length;col++) {
+        if (criteria[col]) target.setColumnFilterCriteria(movePayment && col === priorPaymentColumn ? column+1 : col,criteria[col]);
+      }
+    }
     try {
       if (filter) filter.remove();
-      restore(sheet.getRange(1,1,count+1,SEMINAR_HEADERS.length).createFilter());
+      restore(sheet.getRange(1,1,count+1,SEMINAR_HEADERS.length).createFilter(),movePayment);
     } catch(error) {
       // Restore the original criteria before returning a failed write; a retry
       // repeats preparation because its completion marker is not advanced.
@@ -199,8 +236,16 @@ function doPost(e) {
     var recent = rows.filter(function (row) { var r = JSON.parse(seminarCell(row, '서버 기록')); return r.contactType === p.record.contactType && r.contact === p.record.contact && Date.parse(seminarCell(row, '접수 시각 원본')) > now - 3600000; });
     if (recent.length >= 3) return seminarJson({ok:false,error:'rate_limited',retryAfter:Math.max(1,Math.ceil((Math.min.apply(null,recent.map(function (row) {return Date.parse(seminarCell(row, '접수 시각 원본'));})) + 3600000-now)/1000))});
     if (config.capacity !== null && rows.length >= config.capacity) return seminarJson({ok:false,error:'sold_out'});
-    if (config.eventId === 'cupsnballs') seminarExpandCups(sheet,rows.length+2);
-    var row = seminarRow(Utilities.getUuid(),p);
+    var displayReceiptNumber;
+    if (config.eventId === 'cupsnballs') {
+      displayReceiptNumber = seminarReserveCupsReceipt(config,rows,p.receivedAt);
+      if (!displayReceiptNumber) {
+        var nextMinute = (Math.floor(Date.parse(p.receivedAt)/60000)+1)*60000;
+        return seminarJson({ok:false,error:'rate_limited',retryAfter:Math.max(1,Math.ceil((nextMinute-now)/1000))});
+      }
+      seminarExpandCups(sheet,rows.length+2);
+    }
+    var row = seminarRow(Utilities.getUuid(),p,displayReceiptNumber);
     var range = sheet.getRange(rows.length+2,1,1,SEMINAR_HEADERS.length);
     range.setNumberFormat('@'); range.setValues([row]);
     sheet.getRange(rows.length+2,seminarColumn('입금할 금액')+1).setNumberFormat('0');
@@ -254,6 +299,46 @@ function setupSeminarSheet(eventId) {
 function setupDaebeongaeSheet() { return setupSeminarSheet('daebeongae'); }
 function setupCupsnballsSheet() { return setupSeminarSheet('cupsnballs'); }
 
+function seminarCheckCupsMigrationFilter(filter, displayColumn) {
+  if (!filter) return;
+  var range = filter.getRange();
+  if (range.getRow() !== 1 || range.getColumn() !== 1 || range.getNumColumns() > SEMINAR_HEADERS.length) throw Error('unsupported_filter_layout');
+  var criteria = [];
+  for (var col=1;col<=range.getNumColumns();col++) {
+    var criterion = filter.getColumnFilterCriteria(col);
+    if (criterion && criterion.getCriteriaType() === SpreadsheetApp.BooleanCriteria.CUSTOM_FORMULA) throw Error('unsupported_filter_formula');
+    criteria[col] = criterion;
+  }
+  if (criteria[displayColumn] && criteria[displayColumn+1]) throw Error('payment_filter_conflict');
+}
+function migrateCupsnballsSheet() {
+  var config = seminarConfig('cupsnballs'), lock = LockService.getScriptLock();
+  if (!lock.tryLock(10000)) throw Error('lock_unavailable');
+  try {
+    var sheet = SpreadsheetApp.openById(config.id).getSheetByName(config.tab);
+    if (!sheet || !sheet.getLastRow()) throw Error('invalid_sheet');
+    var header = JSON.stringify(sheet.getDataRange().getValues()[0]);
+    if (header === JSON.stringify(SEMINAR_HEADERS)) return;
+    if (header !== JSON.stringify(CUPSNBALLS_LEGACY_HEADERS)) throw Error('existing_header_preserved');
+    if (sheet.getLastRow() !== 1) throw Error('existing_rows_preserved');
+
+    var displayColumn = seminarColumn(CUPSNBALLS_DISPLAY_COLUMN)+1;
+    seminarCheckCupsMigrationFilter(sheet.getFilter(),displayColumn);
+    if (sheet.getMaxColumns() < SEMINAR_HEADERS.length) sheet.insertColumnsAfter(sheet.getMaxColumns(),SEMINAR_HEADERS.length-sheet.getMaxColumns());
+    if (sheet.getMaxRows() < 2) sheet.insertRowsAfter(sheet.getMaxRows(),2-sheet.getMaxRows());
+    var displayRange = sheet.getRange(1,displayColumn,sheet.getMaxRows(),1);
+    displayRange.clearDataValidations().setNumberFormat('@');
+    if (!sheet.getProtections(SpreadsheetApp.ProtectionType.SHEET).length) {
+      var protection = sheet.protect().setDescription('입금 상태 외 원본 보호');
+      protection.removeEditors(protection.getEditors());
+      if (protection.canDomainEdit()) protection.setDomainEdit(false);
+    }
+    // Finish preparing the new columns before changing the old header.
+    seminarExpandCups(sheet,sheet.getMaxRows(),displayColumn);
+    sheet.getRange(1,displayColumn,1,2).setValues([[CUPSNBALLS_DISPLAY_COLUMN,'입금']]);
+    SpreadsheetApp.flush();
+  } finally { lock.releaseLock(); }
+}
 
 var INQUIRY_HEADERS=['문의 번호','접수 시각','회원 구분','답장 연락처','문의 내용','재시도 키','요청 지문','알림 상태','답변 완료일'];
 function inquiryConfig() {

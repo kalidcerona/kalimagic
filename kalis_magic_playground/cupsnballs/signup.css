@@ -1,85 +1,685 @@
-@font-face{font-family:Anton;src:url(font/anton.woff2) format("woff2");font-display:swap}
-@font-face{font-family:Gothic;src:url(font/display.woff2) format("woff2");font-weight:900;font-display:swap}
-:root{--heading:Gothic,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;--measure:70rem;--blue:var(--action);--paper:var(--bg);--light:var(--surface);--lime:var(--selected)}
-body{font:1rem/1.65 "Apple SD Gothic Neo","Malgun Gothic",sans-serif;letter-spacing:-.012em;word-break:keep-all;overflow-wrap:break-word}
-.wrap{width:min(calc(100% - 2.5rem),var(--measure))}
-header{text-align:start;padding:0;background:var(--hero);color:var(--hero-text)}
-.mast{display:flex;align-items:center;justify-content:space-between;gap:.8rem;padding-block:10px}
-.brand{display:inline-flex;align-items:center;gap:9px;font:1.25rem/1 Anton,sans-serif;letter-spacing:.06em}
-.brand img{object-fit:contain;border-radius:2px}
-a{display:inline;min-height:0;text-underline-offset:.2em}
-.back,.steps a,.pricebar a{display:inline-flex;align-items:center;min-height:44px}
-.back{color:inherit;text-decoration:none;font-size:.875rem;font-weight:700}
-.back:hover,.steps a:hover{text-decoration:underline}
-h1,h2,.question h2{font-family:var(--heading);font-weight:900;letter-spacing:-.035em;text-wrap:balance}
-h1 span,.meta span,.ticket-info span{display:inline-block}
-figure,.mast p,.cover p,.ticket p,.details p{margin:0}
-figure{overflow:hidden}
-.scene{display:block;width:100%;height:100%;object-fit:cover}
-.instructions{font-size:.95rem;line-height:1.65;text-wrap:pretty}
-.meta{display:flex;gap:2px 1rem;align-items:center;flex-wrap:wrap;font-size:.875rem;font-weight:700;font-variant-numeric:tabular-nums}
-main{padding-block:1.5rem 3rem}
-form,.form-main,.form-summary{gap:1rem}
-.card,.notice{color:var(--ink);background:var(--surface);border:0;border-radius:0;padding:clamp(18px,3.3vw,36px)}
-#signup-banner{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:0 1rem;background:var(--notice);border:1px solid var(--rule);margin-bottom:1.25rem;padding:16px 20px}
-#signup-banner h2{font-size:1rem;grid-column:1;margin:0 0 2px}
-#availability{font-size:.875rem;color:var(--muted);grid-column:1;margin:0}
-#retry{grid-row:1 / 3;grid-column:2;font-size:.8125rem;color:var(--ink);background:transparent;border:1px solid var(--edge);padding:6px 12px}
-#signup-banner h2:before{content:"";display:inline-block;border-radius:50%;width:.48em;height:.48em;margin-right:.5em;background:var(--accent);vertical-align:.1em}
-.question h2,.form-summary h2{font-size:clamp(1.18rem,1.05rem + .65vw,1.55rem);line-height:1.38;margin:0 0 14px;text-align:left}
-.question-number,.question-number small{font:700 .75rem/1.5 "Apple SD Gothic Neo",sans-serif;letter-spacing:.02em;color:var(--muted)}
-.question-number{display:block;margin:0 0 5px}
-.question-intro{text-align:start}
-.card p{max-width:68ch;text-wrap:pretty}
-.card a{color:var(--link)}
-.option{align-items:center;gap:.75rem;position:relative;color:var(--ink);min-height:48px}
-.option label,.question .option label{display:block;padding:13px 0;line-height:1.45;font-size:.97rem}
-.option label:after{content:"";position:absolute;inset:0;cursor:pointer}
-.option label .money{float:right;margin-left:.6em}
-.option:has(input:checked) label{background:transparent}
-.option input{width:21px;height:21px;flex:0 0 21px;accent-color:var(--accent);margin:0}
-input:not([type=checkbox]):not([type=radio]){background:var(--field);color:var(--ink);border:1px solid var(--edge);border-radius:var(--radius);caret-color:var(--accent);padding:11px 13px}
-button{background:var(--action);color:var(--on-action);border:1px solid transparent;border-radius:var(--radius)}
-button:not(:disabled):hover{filter:brightness(.92)}
-.total{align-items:center;display:flex;border-color:var(--rule);font-variant-numeric:tabular-nums}
-.total strong{font-size:clamp(1.35rem,2vw,1.8rem)}
-.form-summary .card{border-top:3px solid var(--accent)}
-.form-summary p{font-size:.9375rem}
-#submit{margin-top:4px}
-:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
-header :focus-visible{outline-color:var(--hero-text)}
-.skip{z-index:9;background:var(--action);color:var(--on-action)}
-::selection{background:var(--action);color:var(--on-action)}
-footer.wrap{border-top:1px solid var(--rule);font-size:.875rem}
-@media(max-width:480px){.wrap{width:calc(100% - 36px)}#signup-banner{gap:3px 10px;padding:14px}#retry{padding:6px 9px}.instructions{font-size:.9rem}}
-@media(max-width:349px){#signup-banner{grid-template-columns:1fr}#retry{grid-row:auto;grid-column:auto;justify-self:start;margin-top:5px}.wrap{width:calc(100% - 28px)}}
-.skip{position:fixed;inset:8px auto auto 8px}
-:root{--bg:#f6f0df;--surface:#f6f0df;--ink:#143322;--muted:#4b5b47;--link:#793118;--hero:#123927;--hero-text:#fff3d7;--accent:#9e331e;--action:#17432e;--on-action:#fff5dc;--selected:#e7ddbc;--field:#fffbf0;--notice:#ede6ce;--edge:#6f765f;--rule:#b7b39c;--focus:#973118;--error:#961f12;--radius:2px}
-.mast{border-bottom:1px solid #64816b}
-.cover{display:grid;align-items:center;grid-template-columns:1.12fr 1fr;gap:clamp(22px,4vw,64px);padding-block:clamp(26px,4vw,60px)}
-.nameplate{font:400 clamp(3rem,6.7vw,6.15rem)/1 Anton,sans-serif;letter-spacing:-.025em;white-space:nowrap}
-.nameplate i{font-family:Georgia,serif;font-weight:400;color:#edac77}
-h1{color:#efb883;font-size:clamp(1.6rem,2.6vw,2.5rem);margin:12px 0 16px}
-.cover figure{aspect-ratio:1.93;border:1px solid #93a086;padding:5px}
-.cover .scene{object-position:center 59%}
-.details{background:#e8c59a;color:#2e301c;border-bottom:1px solid #9c895c}
-.details .meta{padding-block:10px;width:min(calc(100% - 2.5rem),var(--measure));margin:auto}
-.meta span + span{padding-left:1rem;border-left:1px solid #876f4d}
-.form-main{gap:0}
-.question{border-top:1px solid var(--rule);padding-inline:0}
-.question:first-child{border-top:3px solid var(--action)}
-.question h2{font-size:clamp(1.35rem,2.2vw,1.85rem)}
-.question-number{color:#81361e}
-.option{border-bottom:1px solid var(--rule);padding-inline:.65rem}
-.option:has(:checked){background:var(--selected)}
-.form-summary .card{background:#ebe4ce}
-@media(min-width:900px){form{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:clamp(2rem,5vw,5rem)}}
-@media(max-width:699px){.cover{grid-template-columns:1fr;gap:16px;padding-block:22px 19px}.nameplate{font-size:clamp(3.3rem,14.2vw,5.6rem)}h1{font-size:1.65rem;margin:7px 0}.cover figure{aspect-ratio:2.9}.cover .scene{object-position:center 61%}.details .meta{font-size:.8rem;gap:2px .58rem}.meta span + span{padding-left:.58rem}}
-@media(max-width:699px){.cover figure{aspect-ratio:2.45}.cover .scene{object-position:50% 72%}}
-      .option input { position: relative; z-index: 1; }
-      header { container-type: inline-size; }
-      @container (max-width: 260px) {
-        .nameplate { font-size: 14cqi; }
-        .mast { flex-wrap: wrap; }
-        .meta span { max-width: 100%; }
-      }
+@font-face {
+  font-family: Anton;
+  src: url(font/anton.woff2) format("woff2");
+  font-display: swap;
+}
+
+@font-face {
+  font-family: Gothic;
+  src: url(font/display.woff2) format("woff2");
+  font-weight: 900;
+  font-display: swap;
+}
+
+:root {
+  --heading: Gothic, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  --measure: 47.5rem;
+  --paper: #f6f0df;
+  --surface: #fffbf0;
+  --ink: #143322;
+  --muted: #4b5b47;
+  --link: #793118;
+  --hero: #16402e;
+  --hero-text: #fff3d7;
+  --accent: #9e331e;
+  --action: #17432e;
+  --on-action: #fff5dc;
+  --selected: #e6e9d9;
+  --notice: #ede6ce;
+  --edge: #6f765f;
+  --rule: #c7c0a9;
+  --focus: #973118;
+  --error: #961f12;
+}
+
+body {
+  letter-spacing: -.012em;
+  overflow-wrap: break-word;
+}
+
+.cups-signup .wrap,
+.cups-signup .details .meta {
+  width: min(calc(100% - 48px), var(--measure));
+}
+
+.cups-signup main.wrap {
+  max-width: var(--measure);
+  padding-block: 24px 48px;
+}
+
+header {
+  padding: 0;
+  background: var(--hero);
+  color: var(--hero-text);
+  text-align: start;
+  container-type: inline-size;
+}
+
+.mast {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .8rem;
+  padding-block: 4px;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font: 1.25rem/1 Anton, sans-serif;
+  letter-spacing: .06em;
+}
+
+.brand img {
+  object-fit: contain;
+  border-radius: 2px;
+}
+
+a {
+  display: inline;
+  min-height: 0;
+  text-underline-offset: .2em;
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: inherit;
+  text-decoration: none;
+  font-size: .875rem;
+  font-weight: 700;
+}
+
+.back:hover {
+  text-decoration: underline;
+}
+
+h1,
+h2,
+.question h2 {
+  font-family: var(--heading);
+  font-weight: 900;
+  letter-spacing: -.035em;
+  text-wrap: balance;
+}
+
+.cover {
+  display: grid;
+  align-items: center;
+  grid-template-columns: minmax(0, 1fr) 168px;
+  gap: 24px;
+  padding-block: 16px 20px;
+}
+
+.cover figure {
+  aspect-ratio: 1.6;
+  margin: 0;
+  overflow: hidden;
+}
+
+.cover .scene {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 59%;
+}
+
+.nameplate {
+  margin: 0;
+  font: 400 2.25rem/1 Anton, sans-serif;
+  letter-spacing: -.025em;
+  white-space: nowrap;
+}
+
+.nameplate i {
+  font-family: Georgia, serif;
+  color: #edac77;
+}
+
+h1 {
+  margin: 6px 0;
+  color: #efb883;
+  font-size: 2rem;
+}
+
+h1 span,
+.meta span {
+  display: inline-block;
+}
+
+.instructions {
+  margin: 0;
+  font-size: .9375rem;
+}
+
+.instructions br {
+  display: none;
+}
+
+.details {
+  background: #e8c59a;
+  color: #2e301c;
+  border-bottom: 1px solid #9c895c;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 1rem;
+  margin: 0 auto;
+  padding-block: 8px;
+  font-size: .875rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.meta span + span {
+  padding-left: 1rem;
+  border-left: 1px solid #876f4d;
+}
+
+.card,
+.notice {
+  border: 0;
+  border-radius: 0;
+  background: var(--surface);
+}
+
+#signup-banner {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0 1rem;
+  margin-bottom: 24px;
+  padding: 0 0 16px;
+  border-bottom: 1px solid var(--rule);
+  background: transparent;
+}
+
+#signup-banner h2 {
+  grid-column: 1;
+  margin: 0 0 2px;
+  font-size: 1rem;
+}
+
+#signup-banner h2::before {
+  content: "";
+  display: inline-block;
+  width: .48em;
+  height: .48em;
+  margin-right: .5em;
+  border-radius: 50%;
+  background: var(--hero);
+  vertical-align: .1em;
+}
+
+#availability {
+  grid-column: 1;
+  margin: 0;
+  color: var(--muted);
+  font-size: .875rem;
+}
+
+#retry {
+  grid-row: 1 / 3;
+  grid-column: 2;
+  min-height: 44px;
+  padding: 6px 12px;
+  border: 1px solid var(--edge);
+  background: transparent;
+  color: var(--ink);
+  font-size: .8125rem;
+}
+
+.cups-signup #signup {
+  gap: 24px;
+}
+
+.form-main {
+  display: block;
+}
+
+.card.question {
+  margin-bottom: 28px;
+  padding: 0;
+  background: transparent;
+}
+
+.card.question:last-child {
+  margin-bottom: 0;
+}
+
+.card.question.group-start {
+  margin-top: 32px;
+  padding-top: 28px;
+  border-top: 1px solid var(--rule);
+}
+
+.question h2,
+.form-summary h2 {
+  margin: 0 0 10px;
+  font-size: 1.4375rem;
+  line-height: 1.32;
+  text-align: start;
+  text-wrap: wrap;
+}
+
+.question-number {
+  display: inline-block;
+  margin: 0 0 0 4px;
+  color: var(--muted);
+  font: 700 .75rem/1.5 "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  letter-spacing: .02em;
+}
+
+.question-intro {
+  text-align: start;
+}
+
+.card p {
+  max-width: 68ch;
+}
+
+.question p {
+  margin-bottom: 8px;
+}
+
+.card a {
+  color: var(--link);
+}
+
+.question .option {
+  position: relative;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  padding-inline: 12px;
+  border-radius: 4px;
+}
+
+.question .option label {
+  display: block;
+  padding: 13px 0;
+  font-size: .97rem;
+  line-height: 1.45;
+}
+
+.option label::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
+.option:has(input:checked) {
+  background: var(--selected);
+}
+
+.option:has(input:checked) label {
+  background: transparent;
+}
+
+.option input {
+  position: relative;
+  z-index: 1;
+  flex: 0 0 21px;
+  width: 21px;
+  height: 21px;
+  margin: 0;
+  accent-color: var(--hero);
+}
+
+.option input:disabled + label {
+  cursor: not-allowed;
+}
+
+.question fieldset,
+.option-group {
+  padding: 4px;
+  border: 1px solid var(--rule);
+  border-radius: 5px;
+  background: var(--surface);
+}
+
+.question .field {
+  margin: 12px;
+}
+
+input:not([type=checkbox]):not([type=radio]) {
+  padding: 11px 13px;
+  border: 1px solid var(--edge);
+  border-radius: 4px;
+  background: var(--surface);
+  caret-color: var(--accent);
+}
+
+.cups-notice > summary {
+  min-height: 44px;
+  padding-block: 11px;
+  font-size: .875rem;
+}
+
+.consent-pair .cups-notice {
+  margin: 0 8px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.form-summary .card {
+  padding: 28px;
+  border: 1px solid var(--edge);
+  border-radius: 6px;
+}
+
+.form-summary p {
+  font-size: .9375rem;
+}
+
+.form-summary .total {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0 16px;
+  margin-block: 16px;
+  padding: 16px 0 0;
+  border: 0;
+  border-top: 1px solid var(--rule);
+  font-variant-numeric: tabular-nums;
+}
+
+.total .items {
+  grid-column: 1;
+  color: var(--muted);
+  font-size: .875rem;
+  font-weight: 400;
+}
+
+.total .items li {
+  margin: 0;
+}
+
+.total strong {
+  grid-row: 1 / 3;
+  grid-column: 2;
+  font-size: 1.875rem;
+}
+
+button {
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: var(--action);
+  color: var(--on-action);
+}
+
+button:disabled {
+  background: var(--notice);
+  color: var(--muted);
+}
+
+button:not(:disabled):hover {
+  filter: brightness(.92);
+}
+
+#submit,
+#copy {
+  border-radius: 999px;
+}
+
+#submit {
+  margin-top: 4px;
+}
+
+#unresolved-attempt,
+#price-change {
+  margin-bottom: 12px;
+  background: var(--notice);
+}
+
+#success {
+  padding: 0;
+  border: 2px solid var(--hero);
+  border-radius: 8px;
+}
+
+.receipt-head {
+  padding: 28px 40px;
+  border-radius: 6px 6px 0 0;
+  background: var(--hero);
+  color: var(--hero-text);
+}
+
+.receipt-head h2 {
+  margin: 0 0 12px;
+  font-size: 2.25rem;
+  line-height: 1.2;
+  text-wrap: wrap;
+}
+
+.receipt-head p {
+  margin: 0;
+  color: #e9d2af;
+  font-size: .9375rem;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.receipt-body {
+  padding: 28px 40px 32px;
+}
+
+#payment-amount-label {
+  margin: 0;
+  font-size: .9375rem;
+  font-weight: 700;
+}
+
+#payment-amount {
+  margin: 4px 0 8px;
+  font: 900 2.375rem/1.2 var(--heading);
+  font-variant-numeric: tabular-nums;
+}
+
+#payment-message {
+  margin-bottom: 20px;
+}
+
+#payment-message,
+#restored-notice {
+  white-space: pre-line;
+}
+
+#restored-notice {
+  color: var(--muted);
+  font-size: .875rem;
+}
+
+.cups-signup #success #receipt {
+  grid-template-columns: 100px minmax(0, 1fr);
+  align-items: baseline;
+  margin: 0 0 20px;
+  border: 0;
+}
+
+.cups-signup #success #receipt > * {
+  margin: 0;
+  padding: 4px 0;
+  border: 0;
+}
+
+.cups-signup #success #receipt dt {
+  color: var(--muted);
+  font-size: .875rem;
+}
+
+.cups-signup #success #receipt .ruled {
+  margin-top: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--rule);
+}
+
+.receipt-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+}
+
+#new-signup {
+  border: 0;
+  background: none;
+  color: var(--link);
+  font-size: .875rem;
+  text-decoration: underline;
+  text-underline-offset: .2em;
+}
+
+#copy-status:empty {
+  display: none;
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+
+header :focus-visible,
+.receipt-head :focus-visible,
+.skip:focus-visible {
+  outline-color: var(--hero-text);
+}
+
+.skip {
+  position: fixed;
+  z-index: 9;
+  inset: 8px auto auto 8px;
+  background: var(--action);
+  color: var(--on-action);
+}
+
+::selection {
+  background: var(--action);
+  color: var(--on-action);
+}
+
+footer.wrap {
+  border-top: 1px solid var(--rule);
+  font-size: .875rem;
+}
+
+@media (max-width: 699px) {
+  .cups-signup .wrap,
+  .cups-signup .details .meta {
+    width: calc(100% - 36px);
+  }
+
+  .cover {
+    grid-template-columns: minmax(0, 1fr) 96px;
+    gap: 12px;
+    padding-block: 12px 16px;
+  }
+
+  .cover figure {
+    aspect-ratio: .95;
+  }
+
+  .cover .scene {
+    object-position: 50% 72%;
+  }
+
+  .nameplate {
+    font-size: 1.75rem;
+  }
+
+  h1 {
+    font-size: 1.5625rem;
+  }
+
+  .instructions {
+    font-size: .875rem;
+  }
+
+  .instructions br {
+    display: block;
+  }
+
+  .meta {
+    gap: 2px .58rem;
+    font-size: .8rem;
+  }
+
+  .meta span + span {
+    padding-left: .58rem;
+  }
+
+  .question h2,
+  .form-summary h2 {
+    font-size: 1.25rem;
+  }
+
+  .form-summary .card,
+  .receipt-body {
+    padding: 20px;
+  }
+
+  .receipt-head {
+    padding: 24px 20px;
+  }
+
+  .receipt-head h2 {
+    font-size: 1.75rem;
+  }
+
+  #payment-amount {
+    font-size: 2rem;
+  }
+
+  .cups-signup #success #receipt {
+    grid-template-columns: 76px minmax(0, 1fr);
+  }
+
+  .receipt-actions {
+    gap: 6px;
+  }
+}
+
+@media (max-width: 349px) {
+  h1 {
+    font-size: 1.375rem;
+  }
+
+  .question h2 {
+    font-size: 1.1875rem;
+  }
+
+  #errors {
+    padding-inline: 8px;
+    font-size: .9375rem;
+  }
+
+  #signup-banner {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  #retry {
+    grid-row: auto;
+    grid-column: auto;
+    justify-self: start;
+    margin-top: 5px;
+  }
+}
+
+@container (max-width: 260px) {
+  .nameplate {
+    font-size: 14cqi;
+  }
+
+  .mast {
+    flex-wrap: wrap;
+  }
+
+  .meta span {
+    max-width: 100%;
+  }
+}
